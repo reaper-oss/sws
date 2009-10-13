@@ -1,0 +1,359 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_CONSOLE DIALOGEX 0, 0, 215, 58
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SWS ReaConsole"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_COMMAND,7,7,201,14,ES_AUTOHSCROLL
+    LTEXT           "http://www.standingwaterstudios.com/reaper \rEnter a command...\r...",IDC_STATUS,7,25,201,26
+END
+
+IDD_MACRODEBUG DIALOGEX 0, 0, 318, 146
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Debug Custom Action"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Go",IDOK,205,125,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,261,125,50,14
+    CONTROL         "",IDC_LIST,"SysListView32",LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP,7,7,304,109
+END
+
+IDD_SAVE DIALOGEX 0, 0, 118, 47
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Save Marker Set"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    COMBOBOX        IDC_COMBO,7,7,104,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "OK",IDOK,7,26,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,61,26,50,14
+END
+
+IDD_MARKERLIST DIALOGEX 0, 0, 224, 129
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "SWS Marker List"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,3,3,218,122
+    EDITTEXT        IDC_EDIT,109,30,59,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | NOT WS_BORDER
+END
+
+IDD_LOAD DIALOGEX 0, 0, 118, 47
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Load MarkerList"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    COMBOBOX        IDC_COMBO,7,7,104,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "OK",IDOK,7,26,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,61,26,50,14
+END
+
+IDD_FORMAT DIALOGEX 0, 0, 159, 166
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Export Format"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "OK",IDOK,7,145,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,102,145,50,14
+    EDITTEXT        IDC_EDIT,7,7,145,14,ES_AUTOHSCROLL
+    LTEXT           "Desc",IDC_DESC,7,26,145,114
+END
+
+IDD_SNAPS DIALOGEX 0, 0, 228, 153
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "Snapshots"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT,45,28,40,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | NOT WS_BORDER
+    LTEXT           "Del: Alt-click\nSave:Ctrl-click",IDC_HELPTEXT,171,3,54,18
+    GROUPBOX        "Filter",IDC_FILTERGROUP,135,18,88,60
+    CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,2,3,128,148
+    PUSHBUTTON      "&New",IDC_SAVE,136,3,27,13
+    CONTROL         "Pan",IDC_PAN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,27,28,10
+    CONTROL         "Volume",IDC_VOL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,171,27,39,10
+    CONTROL         "Mute",IDC_MUTE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,39,27,10
+    CONTROL         "FX Params",IDC_FX,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,171,39,49,10
+    CONTROL         "Solo",IDC_SOLO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,51,27,10
+    CONTROL         "Sends",IDC_SENDS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,171,51,35,10
+    CONTROL         "Vis",IDC_VISIBILITY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,64,27,10
+    CONTROL         "Selection",IDC_SELECTION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,171,64,45,10
+    CONTROL         "Selected Tracks Only",IDC_SELECTEDONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,93,81,10
+    CONTROL         "Filter on Recall",IDC_APPLYRECALL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,81,63,10
+    CONTROL         "Prompt for Name",IDC_NAMEPROMPT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,105,70,10
+    CONTROL         "Hide New Tracks on Vis Recall",IDC_HIDENEW,"Button",BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP,140,118,78,14
+    PUSHBUTTON      "Hide Options <-",IDC_OPTIONS,136,138,85,13
+END
+
+IDD_COLOR DIALOGEX 0, 0, 123, 146
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SWS Color Management"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "Color1",IDC_COLOR1,"Button",BS_OWNERDRAW | WS_TABSTOP,7,6,32,14,WS_EX_STATICEDGE
+    CONTROL         "Color2",IDC_COLOR2,"Button",BS_OWNERDRAW | WS_TABSTOP,7,23,32,14,WS_EX_STATICEDGE
+    PUSHBUTTON      "Set custom colors...",IDC_SETCUST,7,58,109,18,BS_MULTILINE
+    LTEXT           "Gradient start color",IDC_STATIC,45,10,71,8
+    LTEXT           "Gradient stop color",IDC_STATIC,45,24,71,8
+    LTEXT           "(Click to change)",IDC_STATIC,7,41,57,8
+    PUSHBUTTON      "Save color set to file...",IDC_SAVECOL,7,79,109,18,BS_MULTILINE
+    PUSHBUTTON      "Load color set from file...",IDC_LOADCOL,7,100,109,18,BS_MULTILINE
+    PUSHBUTTON      "Load colors from current theme",IDC_LOADFROMTHEME,7,122,109,18,BS_MULTILINE
+END
+
+IDD_TRACKLIST DIALOGEX 0, 0, 302, 220
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "SWS Tracklist"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,3,3,296,161
+    EDITTEXT        IDC_FILTER,26,168,273,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Clear",IDC_CLEAR,3,182,36,12
+    CONTROL         "Hide Filtered Tracks",IDC_HIDE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,196,79,10
+    CONTROL         "Link TCP and MCP Vis",IDC_LINK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,206,83,10
+    EDITTEXT        IDC_EDIT,109,30,59,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
+    LTEXT           "Filter:",IDC_STATIC_FILTER,3,170,20,8
+END
+
+IDD_ABOUT DIALOGEX 0, 0, 255, 147
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About SWS Extension"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Close",IDCANCEL,103,126,50,14
+    CONTROL         "<a>http://www.standingwaterstudios.com/reaper/</a>",IDC_WEBSITE,
+                    "SysLink",WS_TABSTOP,7,84,241,11
+    CONTROL         "<a>http://www.standingwaterstudios.com/reaper/sws_extension.exe</a>",IDC_LATESTVER,
+                    "SysLink",WS_TABSTOP,7,110,241,11
+    PUSHBUTTON      "&License...",IDC_LICENSE,202,48,46,14
+    LTEXT           "Copyright (C) 2009 Tim Payne of Standing Water Studios\rCopyright (C) 2009 Xenakios\r\rDocumentation is available at the SWS website:",IDC_STATIC,7,47,187,35
+    LTEXT           "Version String",IDC_VERSION,7,31,241,8
+    LTEXT           "SWS Extension, a REAPER plugin.\rMerged with Xenakios Command Extensions, October 2009",IDC_STATIC,7,7,241,19
+    LTEXT           "Download the latest version:",IDC_STATIC,7,98,92,9
+END
+
+IDD_PROMPT DIALOGEX 0, 0, 161, 46
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Enter Snapshot Name"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT,7,6,147,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,7,25,71,14
+    PUSHBUTTON      "Cancel",IDCANCEL,83,25,71,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_CONSOLE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 208
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 51
+    END
+
+    IDD_MACRODEBUG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 311
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 139
+    END
+
+    IDD_SAVE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 111
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 40
+    END
+
+    IDD_MARKERLIST, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 221
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 125
+    END
+
+    IDD_LOAD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 111
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 40
+    END
+
+    IDD_FORMAT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 152
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 159
+    END
+
+    IDD_SNAPS, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 226
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 151
+    END
+
+    IDD_COLOR, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 116
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 139
+    END
+
+    IDD_TRACKLIST, DIALOG
+    BEGIN
+        LEFTMARGIN, 3
+        RIGHTMARGIN, 299
+        TOPMARGIN, 3
+        BOTTOMMARGIN, 216
+    END
+
+    IDD_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 248
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 140
+    END
+
+    IDD_PROMPT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 154
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 39
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_UP                  BITMAP                  "uparrow.bmp"
+IDB_DOWN                BITMAP                  "downarrow.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,2,0,105
+ PRODUCTVERSION 1,2,0,105
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "Standing Water Studios"
+            VALUE "FileDescription", "SWS Reaper Extension Dynamic Link Library"
+            VALUE "FileVersion", "1, 2, 0, 105"
+            VALUE "InternalName", "SWS Reaper Extension"
+            VALUE "LegalCopyright", "Copyright (C) 2009"
+            VALUE "OriginalFilename", "reaper_sws.dll"
+            VALUE "ProductName", "SWS Reaper Extension"
+            VALUE "ProductVersion", "1, 2, 0, 105"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

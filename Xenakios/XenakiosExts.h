@@ -1,0 +1,365 @@
+/******************************************************************************
+/ XenakiosExts.h
+/
+/ Copyright (c) 2009 Tim Payne (SWS), original code by Xenakios
+/ http://www.standingwaterstudios.com/reaper
+/
+/ Permission is hereby granted, free of charge, to any person obtaining a copy
+/ of this software and associated documentation files (the "Software"), to deal
+/ in the Software without restriction, including without limitation the rights to
+/ use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+/ of the Software, and to permit persons to whom the Software is furnished to
+/ do so, subject to the following conditions:
+/ 
+/ The above copyright notice and this permission notice shall be included in all
+/ copies or substantial portions of the Software.
+/ 
+/ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+/ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+/ OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+/ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+/ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+/ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+/ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+/ OTHER DEALINGS IN THE SOFTWARE.
+/
+******************************************************************************/
+
+#pragma once
+
+using namespace std;
+
+//===========================================================
+// AutoRename.cpp
+void DoAutoRename(COMMAND_T*);
+
+//===========================================================
+// BroadCastWavCommands.cpp
+int GetNumSelectedItems();
+void DoRenameTakesWithBWAVDesc(COMMAND_T*);
+void DoRenameTakeDlg(COMMAND_T*);
+void DoOpenRPPofBWAVdesc(COMMAND_T*);
+void DoNudgeSectionLoopStartPlus(COMMAND_T*);
+void DoNudgeSectionLoopStartMinus(COMMAND_T*);
+void DoNudgeSectionLoopLenPlus(COMMAND_T*);
+void DoNudgeSectionLoopLenMinus(COMMAND_T*);
+void DoNudgeSectionLoopOlapPlus(COMMAND_T*);
+void DoNudgeSectionLoopOlapMinus(COMMAND_T*);
+
+//===========================================================
+// CommandRegistering.cpp
+extern COMMAND_T g_XenCommandTable[];
+
+//===========================================================
+// CreateTrax.cpp
+void DoCreateTraxDlg(COMMAND_T*);
+
+//===========================================================
+// DiskSpaceCalculator.cpp
+void DoShowDiskspaceCalc(COMMAND_T*);
+
+//===========================================================
+// Envelope_actions.cpp
+void DoShiftEnvelopeLater(COMMAND_T*);
+void DoShiftEnvelopeEarlier(COMMAND_T*);
+
+//===========================================================
+// ExoticCommands.cpp
+void DoJumpEditCursorByRandomAmount(COMMAND_T*);
+void DoNudgeSelectedItemsPositions(bool UseConfig,bool Positive,double NudgeTime);
+void DoSetItemFadesConfLen(COMMAND_T*);
+void DoSetItemFadesConfLenB(COMMAND_T*);
+void DoNudgeItemPitches(double NudgeAmount,bool Resampled);
+void DoNudgeItemPitchesDown(COMMAND_T*);
+void DoNudgeItemPitchesUp(COMMAND_T*);
+void DoNudgeItemPitchesDownB(COMMAND_T*);
+void DoNudgeItemPitchesUpB(COMMAND_T*);
+void DoNudgeUpTakePitchResampledA(COMMAND_T*);
+void DoNudgeDownTakePitchResampledA(COMMAND_T*);
+void DoNudgeUpTakePitchResampledB(COMMAND_T*);
+void DoNudgeDownTakePitchResampledB(COMMAND_T*);
+void DoNudgeItemsBeatsBased(bool UseConf,bool Positive,double theNudgeAmount);
+void DoNudgeItemsLeftBeatsAndConfBased(COMMAND_T*);
+void DoNudgeItemsRightBeatsAndConfBased(COMMAND_T*);
+void DoSplitItemsAtTransients(COMMAND_T*);
+void DoNudgeItemVols(bool UseConf,bool Positive,double TheNudgeAmount);
+void DoNudgeItemVolsDown(COMMAND_T*);
+void DoNudgeItemVolsUp(COMMAND_T*);
+void DoNudgeTakeVols(bool UseConf,bool Positive,double TheNudgeAmount);
+void DoNudgeTakeVolsDown(COMMAND_T*);
+void DoNudgeTakeVolsUp(COMMAND_T*);
+void DoResetItemVol(COMMAND_T*);
+void DoResetTakeVol(COMMAND_T*);
+void DoShowPVocDlg(COMMAND_T*);
+void DoScaleItemPosStaticDlg(COMMAND_T*);
+void DoRandomizePositionsDlg(COMMAND_T*);
+void DoInsertRandomEnvelopePoints(COMMAND_T*);
+void DoShowTakeMixerDlg(COMMAND_T*);
+void DoHoldKeyTest1(COMMAND_T*);
+void DoHoldKeyTest2(COMMAND_T*);
+void DoInsertMediaFromClipBoard(COMMAND_T*);
+void TokenizeString(const string& str,vector<string>&tokens,const string& delimiters = " ");
+void DoSearchTakesDLG(COMMAND_T*);
+void DoMoveCurConfPixRight(COMMAND_T*);
+void DoMoveCurConfPixLeft(COMMAND_T*);
+void DoMoveCurConfPixRightCts(COMMAND_T*);
+void DoMoveCurConfPixLeftCts(COMMAND_T*);
+void DoMoveCurConfSecsLeft(COMMAND_T*);
+void DoMoveCurConfSecsRight(COMMAND_T*);
+void DoStoreEditCursorPosition(COMMAND_T*);
+void DoRecallEditCursorPosition(COMMAND_T*);
+
+//===========================================================
+// FloatingInspector.cpp
+extern HWND g_hItemInspector;
+BOOL WINAPI MyItemInspectorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+void DoTglFltItemInspector(COMMAND_T*);
+
+//===========================================================
+// fractions.cpp
+double parseFrac(const char *buf);
+double GetBeatValueFromTable(int indx);
+void InitFracBox(HWND hwnd,char *buf);
+
+//===========================================================
+// ItemTakeCommands.cpp
+int XenGetProjectItems(vector<MediaItem*>& TheItems,bool OnlySelectedItems=true, bool IncEmptyItems=false);
+int XenGetProjectTakes(vector<MediaItem_Take*>& TheTakes,bool OnlyActive,bool OnlyFromSelectedItems);
+void DoMoveItemsLeftByItemLen(COMMAND_T*);
+extern int NumRepeatPasteRuns;
+void DoToggleTakesNormalize(COMMAND_T*);
+void GetDialogItemString(HWND DialogHandle,int DialogItem,WDL_String *TheString);
+void DoShowItemVolumeDialog(COMMAND_T*);
+void DoShowVolPanDialog(COMMAND_T*);
+void DoChooseNewSourceFileForSelTakes(COMMAND_T*);
+void DoInvertItemSelection(COMMAND_T*);
+bool DoLaunchExternalTool(const char *ExeFilename);
+void DoRepeatPaste(COMMAND_T*);
+void DoSkipSelectAllItemsOnTracks(COMMAND_T*);
+void DoSkipSelectFromSelectedItems(COMMAND_T*);
+void DoShuffleSelectTakesInItems(COMMAND_T*);
+void DoMoveItemsToEditCursor(COMMAND_T*);
+void DoRemoveItemFades(COMMAND_T*);
+void DoTrimLeftEdgeToEditCursor(COMMAND_T*);
+void DoTrimRightEdgeToEditCursor(COMMAND_T*);
+void DoResetItemRateAndPitch(COMMAND_T*);
+void DoApplyTrackFXStereoAndResetVol(COMMAND_T*);
+void DoApplyTrackFXMonoAndResetVol(COMMAND_T*);
+void DoAnalyzeAndShowPeakInItemMedia(COMMAND_T*);
+void DoSelItemsToEndOfTrack(COMMAND_T*);
+void DoSelItemsToStartOfTrack(COMMAND_T*);
+void DoPanTakesSymmetricallyWithUndo(COMMAND_T*);
+void DoImplodeTakesSetPlaySetSymPans(COMMAND_T*);
+void DoInterpolateItemPropertyOverTime(COMMAND_T*);
+void DoRenderItemsWithTail(COMMAND_T*);
+void DoOpenAssociatedRPP(COMMAND_T*);
+void DoReposItemsDlg(COMMAND_T*);
+void DoSpeadSelItemsOverNewTx(COMMAND_T*);
+void DoOpenInExtEditor1(COMMAND_T*);
+void DoOpenInExtEditor2(COMMAND_T*);
+void DoMatrixItemImplode(COMMAND_T*);
+void DoSwingItemPositions(COMMAND_T*);
+void DoTimeSelAdaptDelete(COMMAND_T*);
+void DoDeleteMutedItems(COMMAND_T*);
+
+//===========================================================
+// main.cpp
+void DoToggleRippleOneTrack(COMMAND_T*);
+int BrowseForFiles(HWND parent, WDL_PtrList<char> *filenames_out, const char *filterlist="Wav-files\0*.wav\0",
+	const char *title="Browse For Files", bool allow_multiselect=true, const char *defext="", const char *initialdir=NULL);
+int BrowseForSaveFile(HWND parent, WDL_PtrList<char> *filenames_out, const char *filterlist="Wav-files\0*.wav\0",
+	const char *title="Browse For Files", bool allow_multiselect=true, const char *defext="", const char *initialdir=NULL);
+void DoSelectFiles(COMMAND_T*);
+void DoInsertRandom(COMMAND_T*);
+void DoInsRndFileRndLen(COMMAND_T*);
+void DoInsRndFileAtTimeSel(COMMAND_T*);
+void DoInsRndFileRndOffset(COMMAND_T*);
+void DoInsRndFileRndOffsetAtTimeSel(COMMAND_T*);
+void DoRoundRobinSelectTakes(COMMAND_T*);
+void DoSelectFirstTakesInItems(COMMAND_T*);
+void DoSelectLastTakesInItems(COMMAND_T*);
+void DoInsertShuffledRandomFile(COMMAND_T*);
+void DoNudgeItemsLeftSecsAndConfBased(COMMAND_T*);
+void DoNudgeItemsRightSecsAndConfBased(COMMAND_T*);
+void DoSaveMarkersAsTextFile(COMMAND_T*);
+void DoResampleTakeOneSemitoneDown(COMMAND_T*);
+void DoResampleTakeOneSemitoneUp(COMMAND_T*);
+void DoLoopAndPlaySelectedItems(COMMAND_T*);
+void DoPlayItemsOnce(COMMAND_T*);
+void DoMoveCurNextTransMinusFade(COMMAND_T*);
+void DoMoveCurPrevTransMinusFade(COMMAND_T*);
+void DoMoveCursor10pixRight(COMMAND_T*);
+void DoMoveCursor10pixLeft(COMMAND_T*);
+void DoMoveCursor10pixLeftCreateSel(COMMAND_T*);
+void DoMoveCursor10pixRightCreateSel(COMMAND_T*);
+void DoItemAsPcmSource(COMMAND_T*);
+void DoDumpActionsWindow(COMMAND_T*);
+void DoScrollTVPageDown(COMMAND_T*);
+void DoScrollTVPageUp(COMMAND_T*);
+void DoScrollTVHome(COMMAND_T*);
+void DoScrollTVEnd(COMMAND_T*);
+void DoRenameMarkersWithAscendingNumbers(COMMAND_T*);
+void DoToggleSTopAtEndOfTimeSel(COMMAND_T*);
+int XenakiosInit();
+
+//===========================================================
+// MediaDialog.cpp
+string RemoveDoubleBackSlashes(string TheFileName);
+int SearchDirectory(vector<string>&, const string&, const string&, bool);
+void DoShowProjectMediaDlg(COMMAND_T*);
+void DoFindMissingMedia(COMMAND_T*);
+
+//===========================================================
+// MixerActions.cpp
+extern project_config_extension_t xen_reftrack_pcreg;
+typedef vector<MediaTrack*> t_vect_of_Reaper_tracks;
+int XenGetProjectTracks(t_vect_of_Reaper_tracks& RefVecTracks, bool OnlySelected);
+void DoSelectNextTrack(COMMAND_T*);
+void DoSelectPreviousTrack(COMMAND_T*);
+void DoSelectNextTrackKeepCur(COMMAND_T*);
+void DoSelectPrevTrackKeepCur(COMMAND_T*);
+void DoToggleTraxVisMixer(COMMAND_T*);
+void DoTraxPanLawDefault(COMMAND_T*);
+void DoTraxPanLawZero(COMMAND_T*);
+void DoTraxRecArmed(COMMAND_T*);
+void DoTraxRecUnArmed(COMMAND_T*);
+void DoBypassFXofSelTrax(COMMAND_T*);
+void DoUnBypassFXofSelTrax(COMMAND_T*);
+void DoResetTracksVolPan(COMMAND_T*);
+void DoSetSymmetricalpansL2R(COMMAND_T*);
+void DoSetSymmetricalpansR2L(COMMAND_T*);
+void DoPanTracksRandom(COMMAND_T*);
+void DoSetSymmetricalpans(COMMAND_T*);
+void DoSelRandomTrack(COMMAND_T*);
+void DoSelTraxHeightA(COMMAND_T*);
+void DoSelTraxHeightB(COMMAND_T*);
+void DoStoreSelTraxHeights(COMMAND_T*);
+void DoRecallSelectedTrackHeights(COMMAND_T*);
+void DoSelectTracksWithNoItems(COMMAND_T*);
+void DoSelectTracksContainingBuss(COMMAND_T*);
+void DoUnSelectTracksContainingBuss(COMMAND_T*);
+void DoSelectLastTrackOfFolder(COMMAND_T*);
+void DoSetSelectedTrackNormal(COMMAND_T*);
+void DoSetSelectedTracksAsFolder(COMMAND_T*);
+void DoRenameTracksDlg(COMMAND_T*);
+void DoSelectFirstOfSelectedTracks(COMMAND_T*);
+void DoSelectLastOfSelectedTracks(COMMAND_T*);
+void DoInsertNewTrackAtTop(COMMAND_T*);
+void DoLabelTraxDefault(COMMAND_T*);
+void DoTraxLabelPrefix(COMMAND_T*);
+void DoTraxLabelSuffix(COMMAND_T*);
+void DoMinMixSendPanelH(COMMAND_T*);
+void DoMinMixSendAndFxPanelH(COMMAND_T*);
+void DoMaxMixFxPanHeight(COMMAND_T*);
+void DoToggleEnvEditMode(COMMAND_T*);
+void DoRemoveTimeSelectionLeaveLoop(COMMAND_T*);
+void DoToggleTrackHeightAB(COMMAND_T*);
+void DoFolderDepthDump(COMMAND_T*);
+void DoPanTracksCenter(COMMAND_T*);
+void DoPanTracksLeft(COMMAND_T*);
+void DoPanTracksRight(COMMAND_T*);
+void DoSetTrackVolumeToZero(COMMAND_T*);
+void DoRenderReceivesAsStems(COMMAND_T*);
+void DoSetRenderSpeedToRealtime2(COMMAND_T*);
+void DoSetRenderSpeedToNonLim(COMMAND_T*);
+void DoStoreRenderSpeed(COMMAND_T*);
+void DoRecallRenderSpeed(COMMAND_T*);
+void DoSetSelTrackAsRefTrack(COMMAND_T*);
+void DoToggleReferenceTrack(COMMAND_T*);
+void DoNudgeMasterVol1dbUp(COMMAND_T*);
+void DoNudgeMasterVol1dbDown(COMMAND_T*);
+void DoNudgeSelTrackVolumeUp(COMMAND_T*);
+void DoNudgeSelTrackVolumeDown(COMMAND_T*);
+void DoSetMasterToZeroDb(COMMAND_T*);
+void ToggleMasterSendMute(int indx,int mode=0);
+void DoToggleMasterSendMute(COMMAND_T*);
+void DoSetMasterSendMute(COMMAND_T*);
+void DoUnSetMasterSendMute(COMMAND_T*);
+void DoSetAllMastersSendsMuted(COMMAND_T*);
+void DoSetAllMastersSendsUnMuted(COMMAND_T*);
+
+//===========================================================
+// MoreItemCommands.cpp
+extern void(*g_KeyUpUndoHandler)();
+void DoItemPosRemapDlg(COMMAND_T*);
+void ExtractFileNameEx(const char *FullFileName,char *Filename,bool StripExtension);
+void DoShowRubberbandDlg(COMMAND_T*);
+void DoSwitchItemToNextCue(COMMAND_T*);
+void DoSwitchItemToPreviousCue(COMMAND_T*);
+void DoSwitchItemToNextCuePresvLen(COMMAND_T*);
+void DoSwitchItemToPreviousCuePresvLen(COMMAND_T*);
+void DoSwitchItemToFirstCue(COMMAND_T*);
+void DoSwitchItemToRandomCue(COMMAND_T*);
+void DoSwitchItemToRandomCuePresvLen(COMMAND_T*);
+void DoStoreSelectedTakes(COMMAND_T*);
+void DoRecallSelectedTakes(COMMAND_T*);
+void DoDeleteItemAndMedia(COMMAND_T*);
+int SendFileToRecycleBin(const char *FileName);
+void DoDelSelItemAndSendActiveTakeMediaToRecycler(COMMAND_T*);
+void DoNukeTakeAndSourceMedia(COMMAND_T*);
+void DoDeleteActiveTakeAndRecycleSourceMedia(COMMAND_T*);
+void DoSelectFirstItemInSelectedTrack(COMMAND_T*);
+void DoSetNextFadeInShape(COMMAND_T*);
+void DoSetPrevFadeInShape(COMMAND_T*);
+void DoSetNextFadeOutShape(COMMAND_T*);
+void DoSetPrevFadeOutShape(COMMAND_T*);
+void DoSetFadeToAutofade(COMMAND_T*);
+void DoItemPitch2Playrate(COMMAND_T*);
+void DoItemPlayrate2Pitch(COMMAND_T*);
+void DoSpreadSelItemsOver4Tracks(COMMAND_T*);
+void DoShowSpreadItemsDlg(COMMAND_T*);
+void DoToggleSelectedItemsRndDlg(COMMAND_T*);
+void InitUndoKeyUpHandler01();
+void DoSlipItemContentsOneSampleLeft(COMMAND_T*);
+void DoSlipItemContentsOneSampleRight(COMMAND_T*);
+void DoReplaceItemFileWithNextInFolder(COMMAND_T*);
+void DoReplaceItemFileWithPrevInFolder(COMMAND_T*);
+void DoReplaceItemFileWithRandomInFolder(COMMAND_T*);
+void DoReplaceItemFileWithNextRPPInFolder(COMMAND_T*);
+void DoReplaceItemFileWithPrevRPPInFolder(COMMAND_T*);
+void DoReverseItemOrder(COMMAND_T*);
+void DoShuffleItemOrder(COMMAND_T*);
+void DoShuffleItemOrder2(COMMAND_T*);
+void DoCreateMarkersFromSelItems1(COMMAND_T*);
+void DoSaveItemAsFile1(COMMAND_T*);
+void DoSelectItemUnderEditCursorOnSelTrack(COMMAND_T*);
+void DoNormalizeSelTakesTodB(COMMAND_T*);
+void DoResetItemsOffsetAndLength(COMMAND_T*);
+void DoFadesOfSelItemsToConfC(COMMAND_T*);
+void DoFadesOfSelItemsToConfD(COMMAND_T*);
+void DoFadesOfSelItemsToConfE(COMMAND_T*);
+void DoFadesOfSelItemsToConfF(COMMAND_T*);
+
+
+
+//===========================================================
+// Parameters.cpp -- see parameters.h!
+
+//===========================================================
+// PropertyInterpolator.cpp
+void DoShowItemInterpDLG(COMMAND_T*);
+
+//===========================================================
+// TakeRenaming.cpp
+void DoRenameSourceFileDialog666(COMMAND_T*);
+void DoRenameTakeAndSourceFileDialog(COMMAND_T*);
+void DoRenameTakeDialog666(COMMAND_T*);
+void DoRenameTakeAllDialog666(COMMAND_T*);
+
+//===========================================================
+// TrackTemplateActions.cpp
+void SplitFileNameComponents(string FullFileName,vector<string>& FNComponents);
+void DoOpenTrackTemplate(COMMAND_T*);
+void DoOpenProjectTemplate(COMMAND_T*);
+
+//===========================================================
+// XenQueryDlg.cpp
+int XenSingleStringQueryDlg(HWND hParent,const char *QueryTitle,char *QueryResult,int maxchars);
+
+// XenUtils.cpp functions, globals:
+extern WDL_PtrList<char>* g_filenames;
+
+string GetDialogItemString(HWND hDlg,int ItemID);
+int GetActiveTakes(WDL_PtrList<MediaItem_Take> *MediaTakes);
+
+

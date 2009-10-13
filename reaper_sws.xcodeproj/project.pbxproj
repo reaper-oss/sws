@@ -1,0 +1,455 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 45;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		22B4C24F0FE311C7009A6731 /* Prompt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22B4C24D0FE311C7009A6731 /* Prompt.cpp */; };
+		22B4C2500FE311C7009A6731 /* Prompt.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B4C24E0FE311C7009A6731 /* Prompt.h */; };
+		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
+		980764230F5B23180091104D /* wndsize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 980764220F5B23180091104D /* wndsize.cpp */; };
+		980764260F5B233C0091104D /* swell-miscdlg.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764240F5B233C0091104D /* swell-miscdlg.mm */; };
+		980764270F5B233C0091104D /* swell-wnd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764250F5B233C0091104D /* swell-wnd.mm */; };
+		980765310F5B43070091104D /* Snapshots.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006E50F4768020072D712 /* Snapshots.h */; };
+		980765320F5B43080091104D /* SnapshotClass.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006E40F4768020072D712 /* SnapshotClass.h */; };
+		980765330F5B430A0091104D /* resource.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006FF0F4768020072D712 /* resource.h */; };
+		980765340F5B430B0091104D /* reaper_plugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 9879B7340F489BE4004D98EB /* reaper_plugin.h */; };
+		981007190F4768020072D712 /* TrackItemState.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006CF0F4768010072D712 /* TrackItemState.cpp */; };
+		9810071A0F4768020072D712 /* TimeState.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006D00F4768010072D712 /* TimeState.cpp */; };
+		9810071B0F4768020072D712 /* ActiveTake.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006D10F4768010072D712 /* ActiveTake.cpp */; };
+		9810071C0F4768020072D712 /* Freeze.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006D20F4768010072D712 /* Freeze.cpp */; };
+		9810071D0F4768020072D712 /* MuteState.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006D30F4768010072D712 /* MuteState.h */; };
+		9810071E0F4768020072D712 /* ItemSelState.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006D40F4768010072D712 /* ItemSelState.cpp */; };
+		981007250F4768020072D712 /* MuteState.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006DB0F4768010072D712 /* MuteState.cpp */; };
+		981007260F4768020072D712 /* Console.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006DD0F4768010072D712 /* Console.cpp */; };
+		981007290F4768020072D712 /* SnapshotClass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006E20F4768020072D712 /* SnapshotClass.cpp */; };
+		9810072A0F4768020072D712 /* Snapshots.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006E30F4768020072D712 /* Snapshots.cpp */; };
+		9810072D0F4768020072D712 /* sws_extension.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006E60F4768020072D712 /* sws_extension.cpp */; };
+		9810072E0F4768020072D712 /* sws_about.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006E70F4768020072D712 /* sws_about.cpp */; };
+		9810072F0F4768020072D712 /* sws_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006E90F4768020072D712 /* sws_util.cpp */; };
+		981007300F4768020072D712 /* sws_util.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006EA0F4768020072D712 /* sws_util.h */; };
+		981007330F4768020072D712 /* MarkerActions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006F10F4768020072D712 /* MarkerActions.cpp */; };
+		981007390F4768020072D712 /* stdafx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006FA0F4768020072D712 /* stdafx.cpp */; };
+		9870F7800F5B461C0007258C /* swell.h in Headers */ = {isa = PBXBuildFile; fileRef = 9870F77F0F5B461C0007258C /* swell.h */; };
+		9879B3D90F48977C004D98EB /* reaper_plugin_functions.h in Headers */ = {isa = PBXBuildFile; fileRef = 9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */; };
+		9879B7480F489D9D004D98EB /* stdafx.h in Headers */ = {isa = PBXBuildFile; fileRef = 9879B7400F489CE7004D98EB /* stdafx.h */; };
+		9882DB880F6D961100BD2BC7 /* swell-dlggen.h in Headers */ = {isa = PBXBuildFile; fileRef = 9882DB870F6D961100BD2BC7 /* swell-dlggen.h */; };
+		98B408870F5B519500865A09 /* swell-ini.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B408860F5B519500865A09 /* swell-ini.cpp */; };
+		98B408930F5B524D00865A09 /* swell-gdi.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98B4088E0F5B524D00865A09 /* swell-gdi.mm */; };
+		98B408A50F5B544A00865A09 /* swell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B408A20F5B544A00865A09 /* swell.cpp */; };
+		98B75DAF0F48F8F900AC5A25 /* Base64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B75DAE0F48F8F900AC5A25 /* Base64.cpp */; };
+		98D3CA9C0F871B6F009B006A /* TracklistFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98D3CA9B0F871B6F009B006A /* TracklistFilter.cpp */; };
+		98D3CA9E0F871B80009B006A /* TracklistFilter.h in Headers */ = {isa = PBXBuildFile; fileRef = 98D3CA9D0F871B80009B006A /* TracklistFilter.h */; };
+		98D590480F628703003F75B4 /* Tracklist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98D590460F628703003F75B4 /* Tracklist.cpp */; };
+		98D590490F628703003F75B4 /* Tracklist.h in Headers */ = {isa = PBXBuildFile; fileRef = 98D590470F628703003F75B4 /* Tracklist.h */; };
+		98DDBD130F5B566F003E9B2C /* swell-dlg.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98B4088D0F5B524D00865A09 /* swell-dlg.mm */; };
+		98DDBD180F5B568D003E9B2C /* swell-kb.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98B4088F0F5B524D00865A09 /* swell-kb.mm */; };
+		98DDBD290F5B56ED003E9B2C /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 98DDBD280F5B56ED003E9B2C /* Carbon.framework */; };
+		98DDBDFB0F5B5A49003E9B2C /* Console.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006DE0F4768010072D712 /* Console.h */; };
+		98DDBDFC0F5B5A4B003E9B2C /* Freeze.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006D80F4768010072D712 /* Freeze.h */; };
+		98DDBDFD0F5B5A4F003E9B2C /* ItemSelState.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006D60F4768010072D712 /* ItemSelState.h */; };
+		98DDBDFE0F5B5A51003E9B2C /* MarkerActions.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006F20F4768020072D712 /* MarkerActions.h */; };
+		98DDBDFF0F5B5A5A003E9B2C /* TimeState.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006D50F4768010072D712 /* TimeState.h */; };
+		98DDBE000F5B5A5C003E9B2C /* TrackItemState.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006DA0F4768010072D712 /* TrackItemState.h */; };
+		98DDBE010F5B5A5E003E9B2C /* version.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006FD0F4768020072D712 /* version.h */; };
+		98DDBE130F5B60F1003E9B2C /* swell-menu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98DDBE120F5B60F1003E9B2C /* swell-menu.mm */; };
+		98E89AC20FC9C02B00A56C44 /* Zoom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98E89AC10FC9C02B00A56C44 /* Zoom.cpp */; };
+		98E89AC40FC9C03700A56C44 /* Zoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 98E89AC30FC9C03700A56C44 /* Zoom.h */; };
+		98E89AC80FC9C05C00A56C44 /* TrackEnvelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98E89AC60FC9C05C00A56C44 /* TrackEnvelope.cpp */; };
+		98E89AC90FC9C05C00A56C44 /* TrackEnvelope.h in Headers */ = {isa = PBXBuildFile; fileRef = 98E89AC70FC9C05C00A56C44 /* TrackEnvelope.h */; };
+		98E8A0B00F9123F900FC657D /* sws_util.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98E8A0AF0F9123F900FC657D /* sws_util.mm */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		22B4C24D0FE311C7009A6731 /* Prompt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Prompt.cpp; sourceTree = "<group>"; };
+		22B4C24E0FE311C7009A6731 /* Prompt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Prompt.h; sourceTree = "<group>"; };
+		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		980764220F5B23180091104D /* wndsize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wndsize.cpp; path = ../WDL/wingui/wndsize.cpp; sourceTree = SOURCE_ROOT; };
+		980764240F5B233C0091104D /* swell-miscdlg.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-miscdlg.mm"; path = "../WDL/swell/swell-miscdlg.mm"; sourceTree = SOURCE_ROOT; };
+		980764250F5B233C0091104D /* swell-wnd.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-wnd.mm"; path = "../WDL/swell/swell-wnd.mm"; sourceTree = SOURCE_ROOT; };
+		9807642C0F5B237B0091104D /* swell-modstub.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-modstub.mm"; path = "../WDL/swell/swell-modstub.mm"; sourceTree = SOURCE_ROOT; };
+		981006CF0F4768010072D712 /* TrackItemState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrackItemState.cpp; path = Freeze/TrackItemState.cpp; sourceTree = "<group>"; };
+		981006D00F4768010072D712 /* TimeState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TimeState.cpp; path = Freeze/TimeState.cpp; sourceTree = "<group>"; };
+		981006D10F4768010072D712 /* ActiveTake.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ActiveTake.cpp; path = Freeze/ActiveTake.cpp; sourceTree = "<group>"; };
+		981006D20F4768010072D712 /* Freeze.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Freeze.cpp; path = Freeze/Freeze.cpp; sourceTree = "<group>"; };
+		981006D30F4768010072D712 /* MuteState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MuteState.h; path = Freeze/MuteState.h; sourceTree = "<group>"; };
+		981006D40F4768010072D712 /* ItemSelState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ItemSelState.cpp; path = Freeze/ItemSelState.cpp; sourceTree = "<group>"; };
+		981006D50F4768010072D712 /* TimeState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TimeState.h; path = Freeze/TimeState.h; sourceTree = "<group>"; };
+		981006D60F4768010072D712 /* ItemSelState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ItemSelState.h; path = Freeze/ItemSelState.h; sourceTree = "<group>"; };
+		981006D70F4768010072D712 /* ActiveTake.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ActiveTake.h; path = Freeze/ActiveTake.h; sourceTree = "<group>"; };
+		981006D80F4768010072D712 /* Freeze.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Freeze.h; path = Freeze/Freeze.h; sourceTree = "<group>"; };
+		981006DA0F4768010072D712 /* TrackItemState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TrackItemState.h; path = Freeze/TrackItemState.h; sourceTree = "<group>"; };
+		981006DB0F4768010072D712 /* MuteState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MuteState.cpp; path = Freeze/MuteState.cpp; sourceTree = "<group>"; };
+		981006DD0F4768010072D712 /* Console.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Console.cpp; path = Console/Console.cpp; sourceTree = "<group>"; };
+		981006DE0F4768010072D712 /* Console.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Console.h; path = Console/Console.h; sourceTree = "<group>"; };
+		981006E20F4768020072D712 /* SnapshotClass.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnapshotClass.cpp; path = Snapshots/SnapshotClass.cpp; sourceTree = "<group>"; };
+		981006E30F4768020072D712 /* Snapshots.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Snapshots.cpp; path = Snapshots/Snapshots.cpp; sourceTree = "<group>"; };
+		981006E40F4768020072D712 /* SnapshotClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnapshotClass.h; path = Snapshots/SnapshotClass.h; sourceTree = "<group>"; };
+		981006E50F4768020072D712 /* Snapshots.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Snapshots.h; path = Snapshots/Snapshots.h; sourceTree = "<group>"; };
+		981006E60F4768020072D712 /* sws_extension.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sws_extension.cpp; sourceTree = "<group>"; };
+		981006E70F4768020072D712 /* sws_about.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sws_about.cpp; sourceTree = "<group>"; };
+		981006E90F4768020072D712 /* sws_util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sws_util.cpp; sourceTree = "<group>"; };
+		981006EA0F4768020072D712 /* sws_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sws_util.h; sourceTree = "<group>"; };
+		981006F10F4768020072D712 /* MarkerActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MarkerActions.cpp; path = MarkerActions/MarkerActions.cpp; sourceTree = "<group>"; };
+		981006F20F4768020072D712 /* MarkerActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerActions.h; path = MarkerActions/MarkerActions.h; sourceTree = "<group>"; };
+		981006F40F4768020072D712 /* Markerlist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Markerlist.cpp; path = MarkerList/Markerlist.cpp; sourceTree = "<group>"; };
+		981006F50F4768020072D712 /* Markerlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Markerlist.h; path = MarkerList/Markerlist.h; sourceTree = "<group>"; };
+		981006F60F4768020072D712 /* MarkerListClass.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MarkerListClass.cpp; path = MarkerList/MarkerListClass.cpp; sourceTree = "<group>"; };
+		981006F70F4768020072D712 /* MarkerListClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerListClass.h; path = MarkerList/MarkerListClass.h; sourceTree = "<group>"; };
+		981006FA0F4768020072D712 /* stdafx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stdafx.cpp; sourceTree = "<group>"; };
+		981006FD0F4768020072D712 /* version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = version.h; sourceTree = "<group>"; };
+		981006FF0F4768020072D712 /* resource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = resource.h; sourceTree = "<group>"; };
+		981007010F4768020072D712 /* Color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Color.cpp; path = Color/Color.cpp; sourceTree = "<group>"; };
+		981007020F4768020072D712 /* Color.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Color.h; path = Color/Color.h; sourceTree = "<group>"; };
+		981007030F4768020072D712 /* reaper_sws.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = reaper_sws.xcodeproj; sourceTree = "<group>"; };
+		981007060F4768020072D712 /* mac_resgen.php */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.php; path = mac_resgen.php; sourceTree = "<group>"; };
+		981007170F4768020072D712 /* sws_extension.rc_mac_menu */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc_mac_menu; sourceTree = "<group>"; };
+		981007180F4768020072D712 /* sws_extension.rc_mac_dlg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc_mac_dlg; sourceTree = "<group>"; };
+		9870F77F0F5B461C0007258C /* swell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = swell.h; path = ../WDL/swell/swell.h; sourceTree = SOURCE_ROOT; };
+		9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reaper_plugin_functions.h; path = ../jmde/reaper_plugin_functions.h; sourceTree = SOURCE_ROOT; };
+		9879B7340F489BE4004D98EB /* reaper_plugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reaper_plugin.h; path = ../jmde/reaper_plugin.h; sourceTree = SOURCE_ROOT; };
+		9879B7400F489CE7004D98EB /* stdafx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stdafx.h; sourceTree = "<group>"; };
+		9882DB870F6D961100BD2BC7 /* swell-dlggen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "swell-dlggen.h"; path = "../WDL/swell/swell-dlggen.h"; sourceTree = SOURCE_ROOT; };
+		98B408860F5B519500865A09 /* swell-ini.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "swell-ini.cpp"; path = "../WDL/swell/swell-ini.cpp"; sourceTree = SOURCE_ROOT; };
+		98B4088D0F5B524D00865A09 /* swell-dlg.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-dlg.mm"; path = "../WDL/swell/swell-dlg.mm"; sourceTree = SOURCE_ROOT; };
+		98B4088E0F5B524D00865A09 /* swell-gdi.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-gdi.mm"; path = "../WDL/swell/swell-gdi.mm"; sourceTree = SOURCE_ROOT; };
+		98B4088F0F5B524D00865A09 /* swell-kb.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-kb.mm"; path = "../WDL/swell/swell-kb.mm"; sourceTree = SOURCE_ROOT; };
+		98B408A20F5B544A00865A09 /* swell.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = swell.cpp; path = ../WDL/swell/swell.cpp; sourceTree = SOURCE_ROOT; };
+		98B75DAE0F48F8F900AC5A25 /* Base64.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Base64.cpp; path = ../Shared/Base64.cpp; sourceTree = SOURCE_ROOT; };
+		98D3CA9B0F871B6F009B006A /* TracklistFilter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TracklistFilter.cpp; path = TrackList/TracklistFilter.cpp; sourceTree = "<group>"; };
+		98D3CA9D0F871B80009B006A /* TracklistFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TracklistFilter.h; path = TrackList/TracklistFilter.h; sourceTree = "<group>"; };
+		98D590460F628703003F75B4 /* Tracklist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Tracklist.cpp; path = TrackList/Tracklist.cpp; sourceTree = "<group>"; };
+		98D590470F628703003F75B4 /* Tracklist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Tracklist.h; path = TrackList/Tracklist.h; sourceTree = "<group>"; };
+		98DDBD280F5B56ED003E9B2C /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		98DDBE120F5B60F1003E9B2C /* swell-menu.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-menu.mm"; path = "../WDL/swell/swell-menu.mm"; sourceTree = SOURCE_ROOT; };
+		98E89AC10FC9C02B00A56C44 /* Zoom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Zoom.cpp; sourceTree = "<group>"; };
+		98E89AC30FC9C03700A56C44 /* Zoom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Zoom.h; sourceTree = "<group>"; };
+		98E89AC60FC9C05C00A56C44 /* TrackEnvelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrackEnvelope.cpp; path = ObjectState/TrackEnvelope.cpp; sourceTree = "<group>"; };
+		98E89AC70FC9C05C00A56C44 /* TrackEnvelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TrackEnvelope.h; path = ObjectState/TrackEnvelope.h; sourceTree = "<group>"; };
+		98E8A0AF0F9123F900FC657D /* sws_util.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = sws_util.mm; sourceTree = "<group>"; };
+		D2AAC0630554660B00DB518D /* reaper_sws.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = reaper_sws.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D289988505E68E00004EDB86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */,
+				98DDBD290F5B56ED003E9B2C /* Carbon.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* reaper_sws */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* Source */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = reaper_sws;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				98B408960F5B525200865A09 /* SWELL */,
+				981006D10F4768010072D712 /* ActiveTake.cpp */,
+				981006D70F4768010072D712 /* ActiveTake.h */,
+				98B75DAE0F48F8F900AC5A25 /* Base64.cpp */,
+				981007010F4768020072D712 /* Color.cpp */,
+				981007020F4768020072D712 /* Color.h */,
+				981006DD0F4768010072D712 /* Console.cpp */,
+				981006DE0F4768010072D712 /* Console.h */,
+				981006D20F4768010072D712 /* Freeze.cpp */,
+				981006D80F4768010072D712 /* Freeze.h */,
+				981006D40F4768010072D712 /* ItemSelState.cpp */,
+				981006D60F4768010072D712 /* ItemSelState.h */,
+				981007060F4768020072D712 /* mac_resgen.php */,
+				981006F10F4768020072D712 /* MarkerActions.cpp */,
+				981006F20F4768020072D712 /* MarkerActions.h */,
+				981006F40F4768020072D712 /* Markerlist.cpp */,
+				981006F50F4768020072D712 /* Markerlist.h */,
+				981006F60F4768020072D712 /* MarkerListClass.cpp */,
+				981006F70F4768020072D712 /* MarkerListClass.h */,
+				981006DB0F4768010072D712 /* MuteState.cpp */,
+				981006D30F4768010072D712 /* MuteState.h */,
+				22B4C24D0FE311C7009A6731 /* Prompt.cpp */,
+				22B4C24E0FE311C7009A6731 /* Prompt.h */,
+				9879B7340F489BE4004D98EB /* reaper_plugin.h */,
+				9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */,
+				981007030F4768020072D712 /* reaper_sws.xcodeproj */,
+				981006FF0F4768020072D712 /* resource.h */,
+				981006E30F4768020072D712 /* Snapshots.cpp */,
+				981006E50F4768020072D712 /* Snapshots.h */,
+				981006E20F4768020072D712 /* SnapshotClass.cpp */,
+				981006E40F4768020072D712 /* SnapshotClass.h */,
+				981006FA0F4768020072D712 /* stdafx.cpp */,
+				9879B7400F489CE7004D98EB /* stdafx.h */,
+				981006E70F4768020072D712 /* sws_about.cpp */,
+				981006E60F4768020072D712 /* sws_extension.cpp */,
+				981007180F4768020072D712 /* sws_extension.rc_mac_dlg */,
+				981007170F4768020072D712 /* sws_extension.rc_mac_menu */,
+				981006E90F4768020072D712 /* sws_util.cpp */,
+				981006EA0F4768020072D712 /* sws_util.h */,
+				981006D00F4768010072D712 /* TimeState.cpp */,
+				981006D50F4768010072D712 /* TimeState.h */,
+				98E89AC60FC9C05C00A56C44 /* TrackEnvelope.cpp */,
+				98E89AC70FC9C05C00A56C44 /* TrackEnvelope.h */,
+				981006CF0F4768010072D712 /* TrackItemState.cpp */,
+				981006DA0F4768010072D712 /* TrackItemState.h */,
+				98D590460F628703003F75B4 /* Tracklist.cpp */,
+				98D590470F628703003F75B4 /* Tracklist.h */,
+				98D3CA9B0F871B6F009B006A /* TracklistFilter.cpp */,
+				98D3CA9D0F871B80009B006A /* TracklistFilter.h */,
+				981006FD0F4768020072D712 /* version.h */,
+				980764220F5B23180091104D /* wndsize.cpp */,
+				98E89AC10FC9C02B00A56C44 /* Zoom.cpp */,
+				98E89AC30FC9C03700A56C44 /* Zoom.h */,
+				98DDBD280F5B56ED003E9B2C /* Carbon.framework */,
+				3327DE910E955E14001FCE4E /* Cocoa.framework */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2AAC0630554660B00DB518D /* reaper_sws.dylib */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		981007040F4768020072D712 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		98B408960F5B525200865A09 /* SWELL */ = {
+			isa = PBXGroup;
+			children = (
+				98E8A0AF0F9123F900FC657D /* sws_util.mm */,
+				9882DB870F6D961100BD2BC7 /* swell-dlggen.h */,
+				98DDBE120F5B60F1003E9B2C /* swell-menu.mm */,
+				98B408A20F5B544A00865A09 /* swell.cpp */,
+				98B408860F5B519500865A09 /* swell-ini.cpp */,
+				9870F77F0F5B461C0007258C /* swell.h */,
+				980764240F5B233C0091104D /* swell-miscdlg.mm */,
+				9807642C0F5B237B0091104D /* swell-modstub.mm */,
+				980764250F5B233C0091104D /* swell-wnd.mm */,
+				98B4088D0F5B524D00865A09 /* swell-dlg.mm */,
+				98B4088E0F5B524D00865A09 /* swell-gdi.mm */,
+				98B4088F0F5B524D00865A09 /* swell-kb.mm */,
+			);
+			name = SWELL;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		D2AAC0600554660B00DB518D /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9810071D0F4768020072D712 /* MuteState.h in Headers */,
+				981007300F4768020072D712 /* sws_util.h in Headers */,
+				9879B3D90F48977C004D98EB /* reaper_plugin_functions.h in Headers */,
+				9879B7480F489D9D004D98EB /* stdafx.h in Headers */,
+				980765310F5B43070091104D /* Snapshots.h in Headers */,
+				980765320F5B43080091104D /* SnapshotClass.h in Headers */,
+				980765330F5B430A0091104D /* resource.h in Headers */,
+				980765340F5B430B0091104D /* reaper_plugin.h in Headers */,
+				9870F7800F5B461C0007258C /* swell.h in Headers */,
+				98DDBDFB0F5B5A49003E9B2C /* Console.h in Headers */,
+				98DDBDFC0F5B5A4B003E9B2C /* Freeze.h in Headers */,
+				98DDBDFD0F5B5A4F003E9B2C /* ItemSelState.h in Headers */,
+				98DDBDFE0F5B5A51003E9B2C /* MarkerActions.h in Headers */,
+				98DDBDFF0F5B5A5A003E9B2C /* TimeState.h in Headers */,
+				98DDBE000F5B5A5C003E9B2C /* TrackItemState.h in Headers */,
+				98DDBE010F5B5A5E003E9B2C /* version.h in Headers */,
+				98D590490F628703003F75B4 /* Tracklist.h in Headers */,
+				9882DB880F6D961100BD2BC7 /* swell-dlggen.h in Headers */,
+				98D3CA9E0F871B80009B006A /* TracklistFilter.h in Headers */,
+				98E89AC40FC9C03700A56C44 /* Zoom.h in Headers */,
+				98E89AC90FC9C05C00A56C44 /* TrackEnvelope.h in Headers */,
+				22B4C2500FE311C7009A6731 /* Prompt.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		D2AAC0620554660B00DB518D /* reaper_sws */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB914A08733D8E0010E9CD /* Build configuration list for PBXNativeTarget "reaper_sws" */;
+			buildPhases = (
+				D2AAC0600554660B00DB518D /* Headers */,
+				D2AAC0610554660B00DB518D /* Sources */,
+				D289988505E68E00004EDB86 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = reaper_sws;
+			productName = reaper_sws;
+			productReference = D2AAC0630554660B00DB518D /* reaper_sws.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB914E08733D8E0010E9CD /* Build configuration list for PBXProject "reaper_sws" */;
+			compatibilityVersion = "Xcode 3.1";
+			hasScannedForEncodings = 1;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* reaper_sws */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 981007040F4768020072D712 /* Products */;
+					ProjectRef = 981007030F4768020072D712 /* reaper_sws.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				D2AAC0620554660B00DB518D /* reaper_sws */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D2AAC0610554660B00DB518D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				981007190F4768020072D712 /* TrackItemState.cpp in Sources */,
+				9810071A0F4768020072D712 /* TimeState.cpp in Sources */,
+				9810071B0F4768020072D712 /* ActiveTake.cpp in Sources */,
+				9810071C0F4768020072D712 /* Freeze.cpp in Sources */,
+				9810071E0F4768020072D712 /* ItemSelState.cpp in Sources */,
+				981007250F4768020072D712 /* MuteState.cpp in Sources */,
+				981007260F4768020072D712 /* Console.cpp in Sources */,
+				981007290F4768020072D712 /* SnapshotClass.cpp in Sources */,
+				9810072A0F4768020072D712 /* Snapshots.cpp in Sources */,
+				9810072D0F4768020072D712 /* sws_extension.cpp in Sources */,
+				9810072E0F4768020072D712 /* sws_about.cpp in Sources */,
+				9810072F0F4768020072D712 /* sws_util.cpp in Sources */,
+				981007330F4768020072D712 /* MarkerActions.cpp in Sources */,
+				981007390F4768020072D712 /* stdafx.cpp in Sources */,
+				98B75DAF0F48F8F900AC5A25 /* Base64.cpp in Sources */,
+				980764230F5B23180091104D /* wndsize.cpp in Sources */,
+				980764260F5B233C0091104D /* swell-miscdlg.mm in Sources */,
+				980764270F5B233C0091104D /* swell-wnd.mm in Sources */,
+				98B408870F5B519500865A09 /* swell-ini.cpp in Sources */,
+				98B408930F5B524D00865A09 /* swell-gdi.mm in Sources */,
+				98B408A50F5B544A00865A09 /* swell.cpp in Sources */,
+				98DDBD130F5B566F003E9B2C /* swell-dlg.mm in Sources */,
+				98DDBD180F5B568D003E9B2C /* swell-kb.mm in Sources */,
+				98DDBE130F5B60F1003E9B2C /* swell-menu.mm in Sources */,
+				98D590480F628703003F75B4 /* Tracklist.cpp in Sources */,
+				98D3CA9C0F871B6F009B006A /* TracklistFilter.cpp in Sources */,
+				98E8A0B00F9123F900FC657D /* sws_util.mm in Sources */,
+				98E89AC20FC9C02B00A56C44 /* Zoom.cpp in Sources */,
+				98E89AC80FC9C05C00A56C44 /* TrackEnvelope.cpp in Sources */,
+				22B4C24F0FE311C7009A6731 /* Prompt.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB914B08733D8E0010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				EXECUTABLE_PREFIX = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = reaper_sws;
+			};
+			name = Debug;
+		};
+		1DEB914C08733D8E0010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				EXECUTABLE_PREFIX = "";
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /Applications/REAPER/REAPER.app/Contents/Plugins;
+				OBJROOT = "$(SYMROOT)";
+				PRODUCT_NAME = reaper_sws;
+				SYMROOT = build;
+			};
+			name = Release;
+		};
+		1DEB914F08733D8E0010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = SWELL_NOT_PROVIDED_BY_APP;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.4;
+				SYMROOT = "";
+			};
+			name = Debug;
+		};
+		1DEB915008733D8E0010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CONFIGURATION_BUILD_DIR = /Applications/REAPER.app/Contents/Plugins;
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_PREPROCESSOR_DEFINITIONS = SWELL_NOT_PROVIDED_BY_APP;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = macosx10.4;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB914A08733D8E0010E9CD /* Build configuration list for PBXNativeTarget "reaper_sws" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB914B08733D8E0010E9CD /* Debug */,
+				1DEB914C08733D8E0010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB914E08733D8E0010E9CD /* Build configuration list for PBXProject "reaper_sws" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB914F08733D8E0010E9CD /* Debug */,
+				1DEB915008733D8E0010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

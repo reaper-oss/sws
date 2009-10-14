@@ -92,7 +92,7 @@ void DoNudgeSelectedItemsPositions(bool UseConfig,bool Positive,double NudgeTime
 	delete[] MediaItemsOnTrack;
 
 	}
-	Undo_OnStateChangeEx("Nudge Item Position(s)",4,-1);
+	Undo_OnStateChangeEx("Nudge item position(s)",4,-1);
 	UpdateTimeline();
 }
 
@@ -138,7 +138,7 @@ void DoSetItemFadesConfLen(COMMAND_T*)
 
 		}
 	}
-	Undo_OnStateChangeEx("Set Item Fades To Configured Lenghts",4,-1);
+	Undo_OnStateChangeEx("Set item fades to configured lenghts",4,-1);
 	UpdateTimeline();
 }
 
@@ -148,7 +148,7 @@ void DoSetItemFadesConfLenB(COMMAND_T*)
 	double NewFadeOutLen;
 	NewFadeInLen=g_command_params.CommandFadeInB;
 	NewFadeOutLen=g_command_params.CommandFadeOutB;
-	MediaTrack* MunRaita;
+	MediaTrack* pTrack;
 	MediaItem* CurItem;
 	int numItems=666;
 	bool ItemSelected=false;
@@ -158,11 +158,11 @@ void DoSetItemFadesConfLenB(COMMAND_T*)
 	int j;
 	for (i=0;i<GetNumTracks();i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
+		pTrack = CSurf_TrackFromID(i+1,FALSE);
+		numItems=GetTrackNumMediaItems(pTrack);
 		for (j=0;j<numItems;j++)
 		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
+			CurItem = GetTrackMediaItem(pTrack,j);
 			//propertyName="D_";
 			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
 			if (ItemSelected==TRUE)

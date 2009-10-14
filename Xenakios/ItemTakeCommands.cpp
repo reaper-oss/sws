@@ -509,10 +509,6 @@ WDL_DLGRET RepeatPasteDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 				//JokuBuf=_strdup(TempString->Get());
 			//delete TempString;
 			InitFracBox(GetDlgItem(hwnd, IDC_NOTEVALUECOMBO),JokuBuf);
-			
-			//if (LastRepeatMode==0) Button_SetCheck(GetDlgItem(hwnd, IDC_RADIO1),BST_CHECKED);
-			//if (LastRepeatMode==1) Button_SetCheck(GetDlgItem(hwnd, IDC_RADIO2),BST_CHECKED);
-			//if (LastRepeatMode==2) Button_SetCheck(GetDlgItem(hwnd, IDC_RADIO3),BST_CHECKED);
 			if (LastRepeatMode==0) CheckDlgButton(hwnd,IDC_RADIO1,BST_CHECKED);
 			if (LastRepeatMode==1) CheckDlgButton(hwnd,IDC_RADIO2,BST_CHECKED);
 			if (LastRepeatMode==2) CheckDlgButton(hwnd,IDC_RADIO3,BST_CHECKED);
@@ -523,10 +519,12 @@ WDL_DLGRET RepeatPasteDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
             {
 				case IDOK:
 				{
-				WDL_String *TempString;
-				TempString=new WDL_String;
-				GetDialogItemString(hwnd,IDC_NUMREPEDIT,TempString);
-				int NumRepeats=atoi(TempString->Get());
+				char numberBuf[100];
+				GetDlgItemText(hwnd,IDC_NUMREPEDIT,numberBuf,100);
+		        //WDL_String *TempString;
+				//TempString=new WDL_String;
+				//GetDialogItemString(hwnd,IDC_NUMREPEDIT,TempString);
+				int NumRepeats=atoi(numberBuf);
 				LRESULT Nappi1=Button_GetState(GetDlgItem(hwnd, IDC_RADIO1));
 				LRESULT Nappi2=Button_GetState(GetDlgItem(hwnd, IDC_RADIO2));
 				LRESULT Nappi3=Button_GetState(GetDlgItem(hwnd, IDC_RADIO3));
@@ -537,13 +535,13 @@ WDL_DLGRET RepeatPasteDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 				double BeatInterval;
 				if (LastRepeatMode==2)
 				{
-				
-					GetDialogItemString(hwnd,IDC_NOTEVALUECOMBO,TempString);
-					BeatInterval=parseFrac(TempString->Get());
+					GetDlgItemText(hwnd,IDC_NOTEVALUECOMBO,numberBuf,100);
+					//GetDialogItemString(hwnd,IDC_NOTEVALUECOMBO,TempString);
+					BeatInterval=parseFrac(numberBuf);
 					if (BeatInterval!=1.0) 
 					{
 						if (BeatInterval!=0)
-							JokuBuf=_strdup(TempString->Get()); 
+							JokuBuf=_strdup(numberBuf); 
 						else JokuBuf="1";
 					}
 						else JokuBuf="1";
@@ -556,8 +554,9 @@ WDL_DLGRET RepeatPasteDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 				}
 				if (LastRepeatMode==1)
 				{
-					GetDialogItemString(hwnd,IDC_EDIT1,TempString);
-					TimeInterval=atof(TempString->Get());
+					GetDlgItemText(hwnd,IDC_EDIT1,numberBuf,100);
+					//GetDialogItemString(hwnd,IDC_EDIT1,TempString);
+					TimeInterval=atof(numberBuf);
 					PasteMultipletimes(NumRepeats,TimeInterval,LastRepeatMode);
 					LastTimeIntervalForPaste=TimeInterval;
 				}
@@ -569,7 +568,7 @@ WDL_DLGRET RepeatPasteDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 				LastNumRepeats=NumRepeats;
 				
 				
-				delete TempString;
+				//delete TempString;
 				EndDialog(hwnd,0);
 				return 0;
 				}
@@ -719,7 +718,12 @@ void DoRepeatPaste(COMMAND_T*)
 {
 	if (NumRepeatPasteRuns==0)
 	{
-		JokuBuf="1";
+		// looks like this was the only mem alloc done for the string...niiiice, a crash waiting to happen probably 
+		//JokuBuf="1";
+		// maybe this is better, maybe not. char* should be banned from use anyway, we live in 2009
+		// and there are safer and easier to understand ways available to deal with strings
+		JokuBuf=new char[64];
+		strcpy(JokuBuf,"1");
 	}
 	
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_REPEATPASTEDLG), g_hwndParent, RepeatPasteDialogProc);

@@ -2477,6 +2477,9 @@ double g_swingAmt=0.2;
 
 void PerformSwingItemPositions(double swingBase,double swingAmt)
 {
+	// 14th October 2009 (X)
+	// too bad this doesn't work so well
+	// maybe someone could make it work :)
 	vector<MediaItem*> TheItems;
 	XenGetProjectItems(TheItems,true,false);
 	int i;
@@ -2533,7 +2536,7 @@ void DoSwingItemPositions(COMMAND_T*)
 {
 	static bool firstRun=true;
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SWINGITEMPOS), g_hwndParent, SwingItemsDlgProc);
-	//PerformSwingItemPositions(1.0/4.0,0.20);
+	
 }
 
 void DoTimeSelAdaptDelete(COMMAND_T*)
@@ -2581,6 +2584,7 @@ void DoTimeSelAdaptDelete(COMMAND_T*)
 
 void DoDeleteMutedItems(COMMAND_T*)
 {
+	
 	Undo_BeginBlock();
 	Main_OnCommand(40289,0); // unselect all items
 	vector<MediaItem*> pitems;

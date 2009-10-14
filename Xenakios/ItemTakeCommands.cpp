@@ -228,27 +228,12 @@ void DoSetVolPan(double Vol, double Pan, bool SetVol, bool SetPan)
 		if (SetPan) GetSetMediaItemTakeInfo(TheTakes[i],"D_PAN",&NewPan);
 
 	}
-	Undo_OnStateChangeEx("Set Take Volume And Pan",4,-1);
+	Undo_OnStateChangeEx("Set take volume and pan",4,-1);
 	UpdateTimeline();
-	/*
-	WDL_PtrList<MediaItem_Take> *TheTakes=new (WDL_PtrList<MediaItem_Take>);
-	double NewVol=Vol;
-	double NewPan=Pan;
-	int NumActiveTakes=GetActiveTakes(TheTakes);
-	int i;
-	for (i=0;i<NumActiveTakes;i++)
-	
-	{
-		//
-		if (SetVol) GetSetMediaItemTakeInfo(TheTakes->Get(i),"D_VOL",&NewVol);
-		if (SetPan) GetSetMediaItemTakeInfo(TheTakes->Get(i),"D_PAN",&NewPan);
-	}
-	Undo_OnStateChangeEx("Set Take Volume And Pan",4,-1);
-	UpdateTimeline();
-	delete TheTakes;
-	*/
 }
 
+// This function is some horrible contraption that probably serves no useful purpose
+// Done when Xenakios didn't understand anything about anything, like using simple GetDlgItemText()
 
 void GetDialogItemString(HWND DialogHandle, int DialogItem, WDL_String *TheString)
 {
@@ -271,7 +256,7 @@ void GetDialogItemString(HWND DialogHandle, int DialogItem, WDL_String *TheStrin
 
 void DoSetItemVols(double theVol)
 {
-	MediaTrack* MunRaita;
+	MediaTrack* pTrack;
 	MediaItem* CurItem;
 	
 	int numItems;;
@@ -284,11 +269,11 @@ void DoSetItemVols(double theVol)
 	int j;
 	for (i=0;i<GetNumTracks();i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
+		pTrack = CSurf_TrackFromID(i+1,FALSE);
+		numItems=GetTrackNumMediaItems(pTrack);
 		for (j=0;j<numItems;j++)
 		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
+			CurItem = GetTrackMediaItem(pTrack,j);
 			//propertyName="D_";
 			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
 			if (ItemSelected==TRUE)

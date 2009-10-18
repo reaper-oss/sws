@@ -175,16 +175,19 @@ public:
 		{
 			m_bChanged = false;
 			ScheduleTracklistUpdate();
-#ifdef _WIN32
 			pMarkerList->Update();
-#endif
 			UpdateSnapshotsDialog();
 		}
 	}
 
+	// This is our only notification of active project tab change, so update everything
 	void SetTrackListChange()							{ m_bChanged = true; }
+	// The rest only are applicable only to the TrackList
 	void SetSurfaceSelected(MediaTrack *tr, bool bSel)	{ ScheduleTracklistUpdate(); }
 	void SetTrackTitle(MediaTrack *tr, const char *c)	{ ScheduleTracklistUpdate(); }
+	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); }
+	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); }
+	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); }
 };
 
 // WDL Stuff
@@ -231,6 +234,7 @@ extern "C"
 		int errcnt=0;
 		IMPAPI(AddExtensionsMainMenu);
 		IMPAPI(AddMediaItemToTrack);
+		IMPAPI(AddProjectMarker);
 		IMPAPI(AddTakeToMediaItem);
 		IMPAPI(adjustZoom);
 		IMPAPI(Audio_RegHardwareHook);

@@ -79,18 +79,17 @@ Snapshot* GetSS(int slot)
 static SWS_LVColumn g_cols[] = { { 20, 0, "#" }, { 60, 1, "Name" }, { 60, 0, "Date" }, { 60, 0, "Time" } };
 
 SWS_SnapshotsView::SWS_SnapshotsView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "Snapshots View State", ListComparo, true)
+:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "Snapshots View State", true)
 {
 }
 
-int CALLBACK SWS_SnapshotsView::ListComparo(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int SWS_SnapshotsView::OnItemSort(LPARAM lParam1, LPARAM lParam2)
 {
-	int iCol = (int)lParamSort;
 	Snapshot* item1 = (Snapshot*)lParam1;
 	Snapshot* item2 = (Snapshot*)lParam2;
 	int iRet = 0;
 
-	switch (abs(iCol))
+	switch (abs(m_iSortCol))
 	{
 	case 1: // #
 		if (item1->m_iSlot > item2->m_iSlot)
@@ -109,7 +108,7 @@ int CALLBACK SWS_SnapshotsView::ListComparo(LPARAM lParam1, LPARAM lParam2, LPAR
 			iRet = -1;
 		break;
 	}
-	if (iCol < 0)
+	if (m_iSortCol < 0)
 		return -iRet;
 	else
 		return iRet;

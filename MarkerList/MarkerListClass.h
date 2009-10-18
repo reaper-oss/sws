@@ -37,12 +37,14 @@ public:
 	bool m_bReg;
 	double m_dRegEnd;
 	int m_id;
-	char* m_cName;
 	char* ItemString(char* str, int iSize);
 	void SetName(const char* newname);
+	const char* GetName() { return m_cName ? m_cName : ""; }
 	void SetFromString(LineParser* lp);
 	bool Compare(bool bReg, double dPos, double dRegEnd, const char* cName, int id);
 	bool Compare(MarkerItem* mi);
+private:
+	char* m_cName;
 };
 
 class MarkerList

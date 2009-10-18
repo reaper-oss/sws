@@ -442,7 +442,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\reaper\reaper_plugin_functions.h"
+				RelativePath="..\..\Program Files\REAPER\reaper_plugin_functions.h"
 				>
 			</File>
 			<File

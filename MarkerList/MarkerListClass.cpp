@@ -56,7 +56,7 @@ MarkerItem::~MarkerItem()
 
 char* MarkerItem::ItemString(char* str, int iSize)
 {
-	_snprintf(str, iSize, "%d %.14f \"%s\" %d %.14f", m_id, m_dPos, m_cName ? m_cName : "", m_bReg ? 1 : 0, m_dRegEnd);
+	_snprintf(str, iSize, "%d %.14f \"%s\" %d %.14f", m_id, m_dPos, GetName(), m_bReg ? 1 : 0, m_dRegEnd);
 	return str;
 }
 void MarkerItem::SetName(const char* newname)
@@ -72,12 +72,12 @@ void MarkerItem::SetName(const char* newname)
 
 bool MarkerItem::Compare(bool bReg, double dPos, double dRegEnd, const char* cName, int id)
 {
-	return (bReg == m_bReg && dPos == m_dPos && (m_cName ? strcmp(cName, m_cName) == 0 : (!cName || cName[0] == 0)) && id == m_id && (!bReg || dRegEnd == m_dRegEnd));
+	return (bReg == m_bReg && dPos == m_dPos && strcmp(cName, GetName()) == 0 && id == m_id && (!bReg || dRegEnd == m_dRegEnd));
 }
 
 bool MarkerItem::Compare(MarkerItem* mi)
 {
-	return Compare(mi->m_bReg, mi->m_dPos, mi->m_dRegEnd, mi->m_cName, mi->m_id);
+	return Compare(mi->m_bReg, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), mi->m_id);
 }
 
 MarkerList::MarkerList(const char* name, bool bGetCurList)
@@ -118,7 +118,7 @@ bool MarkerList::BuildFromReaper()
 
 	while ((x=EnumProjectMarkers(x, &bR, &dPos, &dRend, &cName, &id)))
 	{
-		if (i >= m_items.GetSize() || !m_items.Get(i)->Compare(bR, dPos, dRend, cName, id))
+		if (i >= m_items.GetSize() || !m_items.Get(i)->Compare(bR, dPos, dRend, cName ? cName : "", id))
 		{ // not found, try ahead one more
 			if (i+1 >= m_items.GetSize() || !m_items.Get(i+1)->Compare(bR, dPos, dRend, cName, id))
 			{	// not found one ahead, assume new and insert at current position
@@ -153,12 +153,12 @@ void MarkerList::UpdateReaper()
 		DeleteProjectMarker(NULL, iID, bReg);
 
 	SectionLock lock(m_hLock);
-	// Tweak the zoom
-	SetMarkerInfo(1);
+
 	for (int i = 0; i < m_items.GetSize(); i++)
-		SetMarkerInfo(0, m_items.Get(i)->m_dPos, m_items.Get(i)->m_dRegEnd, m_items.Get(i)->m_bReg, m_items.Get(i)->m_id, m_items.Get(i)->m_cName, true);
-	SetEditCurPos(dSavedCur, true, false);
-	SetMarkerInfo(2);
+	{
+		MarkerItem* mi = m_items.Get(i);
+		AddProjectMarker(NULL, mi->m_bReg, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), mi->m_id);
+	}
 }
 
 #ifdef _WIN32
@@ -279,11 +279,7 @@ void MarkerList::ExportToClipboard(const char* format)
 					break;
 				}
 				case 'd':
-					if (m_items.Get(i)->m_cName)
-					{
-						strcpy(s, m_items.Get(i)->m_cName);
-						s += strlen(s);
-					}
+					s += sprintf(s, "%s", m_items.Get(i)->GetName());
 					break;
 				case 't':
 					format_timestr_pos(m_items.Get(i)->m_dPos, s, (int)(4096-(s-str)), 5);
@@ -330,8 +326,7 @@ int MarkerList::ApproxSize()
 	for (int i = 0; i < m_items.GetSize(); i++)
 	{
 		size += 64;
-		if (m_items.Get(i)->m_cName)
-			size += (int)strlen(m_items.Get(i)->m_cName);
+		size += (int)strlen(m_items.Get(i)->GetName());
 	}
 	return size;
 }

@@ -38,7 +38,7 @@ typedef struct SWS_LVColumn
 class SWS_ListView
 {
 public:
-	SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, PFNLVCOMPARE pCompare, bool bTooltips);
+	SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips);
 	virtual ~SWS_ListView();
 	LPARAM GetListItem(int iIndex);
 	int OnNotify(WPARAM wParam, LPARAM lParam);
@@ -70,27 +70,27 @@ protected:
 	virtual bool OnItemSelChange(LPARAM item, bool bSel) { return false; } // Returns TRUE to prevent the change, or FALSE to allow the change
 	virtual void OnItemClk(LPARAM item, int iCol) {}
 	virtual void OnItemDblClk(LPARAM item, int iCol) {}
+	virtual int OnItemSort(LPARAM item1, LPARAM item2);
 
 	HWND m_hwndList;
 	bool m_bDisableUpdates;
+	int m_iSortCol; // 1 based col index, negative for desc sort
 
 private:
 	void ShowColumns();
 	void SetListviewColumnArrows(int iSortCol);
 	int DisplayToDataCol(int iCol);
 	int DataToDisplayCol(int iCol);
-	void TweakSubitem(int* iSubItem);
+	static int CALLBACK sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam);
 
 	HWND m_hwndEdit;
 	HWND m_hwndTooltip;
-	int m_iSortCol; // 1 based col index, negative for desc sort
 	int m_iEditingItem;
 	int m_iEditingCol;
 	const int m_iCols;
 	SWS_LVColumn* m_pCols;
 	const char* m_cINIKey;
 	WNDPROC m_prevEditProc;
-	PFNLVCOMPARE m_pCompare;
 	static const unsigned int COLEDIT_MSG = 0xFF0001;
 };
 

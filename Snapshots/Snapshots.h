@@ -34,7 +34,7 @@ public:
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 
 protected:
-	static int CALLBACK ListComparo(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+	int OnItemSort(LPARAM lParam1, LPARAM lParam2);
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void GetItemTooltip(LPARAM item, char* str, int iStrMax);

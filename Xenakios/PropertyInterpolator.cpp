@@ -26,7 +26,6 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../../WDL/lice/lice.h"
 
 using namespace std;
 

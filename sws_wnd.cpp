@@ -288,9 +288,9 @@ LPARAM SWS_DockWnd::screensetCallback(int action, char *id, void *param, int par
 	return 0;
 }
 
-SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, PFNLVCOMPARE pCompare, bool bTooltips)
+SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips)
 :m_hwndList(hwndList), m_hwndEdit(hwndEdit), m_hwndTooltip(NULL), m_iSortCol(1), m_iEditingItem(-1), m_iEditingCol(0),
- m_iCols(iCols), m_pCols(pCols), m_bDisableUpdates(false), m_cINIKey(cINIKey), m_pCompare(pCompare)
+ m_iCols(iCols), m_pCols(pCols), m_bDisableUpdates(false), m_cINIKey(cINIKey)
 {
 	SetWindowLongPtr(hwndList, GWLP_USERDATA, (LONG_PTR)this);
 	// Setup the edit control procedure
@@ -524,7 +524,7 @@ void SWS_ListView::Update()
 					iCol++;
 				}
 		}
-		ListView_SortItems(m_hwndList, m_pCompare, m_iSortCol);
+		ListView_SortItems(m_hwndList, sListCompare, this);
 		int iCol = abs(m_iSortCol) - 1;
 		iCol = DataToDisplayCol(iCol) + 1;
 		if (m_iSortCol < 0)
@@ -779,6 +779,21 @@ LRESULT SWS_ListView::editProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		return 0;
 }
 
+int SWS_ListView::OnItemSort(LPARAM item1, LPARAM item2)
+{
+	// Just sort by string
+	char str1[64];
+	char str2[64];
+	GetItemText(item1, abs(m_iSortCol)-1, str1, 64);
+	GetItemText(item2, abs(m_iSortCol)-1, str2, 64);
+
+	int iRet = strcmp(str1, str2);
+	if (m_iSortCol < 0)
+		return -iRet;
+	else
+		return iRet;
+}
+
 void SWS_ListView::ShowColumns()
 {
 	LVCOLUMN col;
@@ -864,4 +879,10 @@ int SWS_ListView::DataToDisplayCol(int iCol)
 		if (m_pCols[i].iPos == -1)
 			iCol--;
 	return iCol;
+}
+
+int SWS_ListView::sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam)
+{
+	SWS_ListView* pLV = (SWS_ListView*)lSortParam;
+	return pLV->OnItemSort(lParam1, lParam2);
 }

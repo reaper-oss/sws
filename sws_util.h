@@ -117,7 +117,6 @@ void SWSCheckMenuItem(HMENU hMenu, int iCmd, bool bChecked);
 void SWSSetMenuText(HMENU hMenu, int iCmd, const char* cText);
 void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
-void SetMarkerInfo(int iTweakZoom, double dPos = -666.0, double dRegEnd = -666.0, bool bReg = false, int id = -1, char* cName = NULL, bool bNew = false);
 int NumSelTracks();
 void SaveSelected();
 void RestoreSelected();

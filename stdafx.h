@@ -63,6 +63,7 @@
 #include "../WDL/lineparse.h"
 #include "../WDL/db2val.h"
 #include "../WDL/wingui/wndsize.h"
+#include "../WDL/lice/lice.h"
 #include "reaper/reaper_plugin.h"
 #include "reaper/sws_rpf_wrapper.h"
 #include "sws_util.h"

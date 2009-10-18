@@ -62,61 +62,14 @@ void HideUnSel(COMMAND_T* = NULL);
 void ShowAll(COMMAND_T* = NULL);
 void NewVisSnapshot(COMMAND_T* = NULL);
 
-static SWS_LVColumn g_cols[] = { { 25, 0, "#" }, { 250, 1, "Name" }, { 35, 0, "TCP" }, { 35, 0, "MCP" } };
+static enum { COL_NUM, COL_NAME, COL_TCP, COL_MCP, COL_ARM, COL_MUTE, COL_SOLO, /*COL_INPUT, */ NUM_COLS };
+
+static SWS_LVColumn g_cols[] = { { 25, 0, "#" }, { 250, 1, "Name" }, { 40, 0, "TCP" }, { 40, 0, "MCP" },
+	{ 40, 0, "Arm", -1 },  { 40, 0, "Mute", -1 }, { 40, 0, "Solo", -1 } /*, { 40, 0, "Input", -1 } */ };
 
 SWS_TrackListView::SWS_TrackListView(HWND hwndList, HWND hwndEdit, SWS_TrackListWnd* pTrackListWnd)
-:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "TrackList View State", ListComparo, false), m_pTrackListWnd(pTrackListWnd)
+:SWS_ListView(hwndList, hwndEdit, NUM_COLS, g_cols, "TrackList View State", false), m_pTrackListWnd(pTrackListWnd)
 {
-}
-
-int CALLBACK SWS_TrackListView::ListComparo(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-{
-	int iCol = (int)lParamSort;
-	MediaTrack* item1 = (MediaTrack*)lParam1;
-	MediaTrack* item2 = (MediaTrack*)lParam2;
-	int iRet = 0;
-
-	switch (abs(iCol))
-	{
-		case 1: // #
-			if (CSurf_TrackToID(item1, false) > CSurf_TrackToID(item2, false))
-				iRet = 1;
-			else if (CSurf_TrackToID(item1, false) < CSurf_TrackToID(item2, false))
-				iRet = -1;
-			break;
-		case 2: // Name
-			if (!GetSetMediaTrackInfo(item1, "P_NAME", NULL))
-				iRet = 1;
-			else if (!GetSetMediaTrackInfo(item2, "P_NAME", NULL))
-				iRet = -1;
-			else
-				iRet = strcmp((char*)GetSetMediaTrackInfo(item1, "P_NAME", NULL), (char*)GetSetMediaTrackInfo(item2, "P_NAME", NULL));
-			break;
-		case 3: // TCP State
-		{
-			int v1 = GetTrackVis(item1) & 2;
-			int v2 = GetTrackVis(item2) & 2;
-			if (!v1 && v2)
-				iRet = 1;
-			else if (v1 && !v2)
-				iRet = -1;
-			break;
-		}
-		case 4: // MCP State
-		{
-			int v1 = GetTrackVis(item1) & 1;
-			int v2 = GetTrackVis(item2) & 1;
-			if (!v1 && v2)
-				iRet = 1;
-			else if (v1 && !v2)
-				iRet = -1;
-			break;
-		}
-	}
-	if (iCol < 0)
-		return -iRet;
-	else
-		return iRet;
 }
 
 void SWS_TrackListView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
@@ -126,18 +79,30 @@ void SWS_TrackListView::GetItemText(LPARAM item, int iCol, char* str, int iStrMa
 	{
 		switch (iCol)
 		{
-		case 0: // #
+		case COL_NUM: // #
 			_snprintf(str, iStrMax, "%d", CSurf_TrackToID(tr, false));
 			break;
-		case 1: // Name
+		case COL_NAME: // Name
 			lstrcpyn(str, (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), iStrMax);
 			break;
-		case 2: // TCP
+		case COL_TCP: // TCP
 			lstrcpyn(str, GetTrackVis(tr) & 2 ? "*" : "", iStrMax);
 			break;
-		case 3: // MCP
+		case COL_MCP: // MCP
 			lstrcpyn(str, GetTrackVis(tr) & 1 ? "*" : "", iStrMax);
 			break;
+		case COL_ARM:
+			lstrcpyn(str, *(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL) ? "*" : "", iStrMax);
+			break;
+		case COL_MUTE:
+			lstrcpyn(str, *(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL) ? "*" : "", iStrMax);
+			break;
+		case COL_SOLO:
+			lstrcpyn(str, *(int*)GetSetMediaTrackInfo(tr, "I_SOLO", NULL) ? "*" : "", iStrMax);
+			break;
+//		case COL_INPUT:
+//			_snprintf(str, iStrMax, "%d", *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL) + 1);
+//			break;
 		}
 	}
 }
@@ -150,7 +115,7 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol)
 
 	MediaTrack* tr = (MediaTrack*)item;
 
-	if (!tr || (iCol != 2 && iCol != 3) || !*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+	if (!tr || iCol == COL_NUM || iCol == COL_NAME || !*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 	{
 		bShift = false; // override shift
 		// Update the track selections
@@ -165,10 +130,10 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol)
 		m_bDisableUpdates = false;
 	}
 
-	if (tr && iCol == 2 || iCol == 3)
+	if (tr && iCol == COL_TCP || iCol == COL_MCP)
 	{
-		bool bClickedStar = ((iCol == 2 && GetTrackVis(tr) & 2) || 
-							 (iCol == 3 && GetTrackVis(tr) & 1));
+		bool bClickedStar = ((iCol == COL_TCP && GetTrackVis(tr) & 2) || 
+							 (iCol == COL_MCP && GetTrackVis(tr) & 1));
 		m_bDisableUpdates = true;
 
 		if (m_pTrackListWnd->Linked() && !bShift)
@@ -180,7 +145,7 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol)
 			else
 				ShowInMCPandTCP();
 		}
-		else if (iCol == 2)
+		else if (iCol == COL_TCP)
 		{
 			if (bCtrl && bAlt)
 				ShowInTCPEx();
@@ -189,7 +154,7 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol)
 			else
 				ShowInTCP();
 		}
-		else // iCol == 3
+		else // iCol == COL_MCP
 		{
 			if (bCtrl && bAlt)
 				ShowInMCPEx();
@@ -201,6 +166,12 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol)
 		m_bDisableUpdates = false;
 		m_pTrackListWnd->Update();
 	}
+	else if (iCol == COL_MUTE)
+		Main_OnCommand(6, 0);
+	else if (iCol == COL_SOLO)
+		Main_OnCommand(7, 0);
+	else if (iCol == COL_ARM)
+		Main_OnCommand(9, 0);
 }
 
 void SWS_TrackListView::SetItemText(LPARAM item, int iCol, const char* str)

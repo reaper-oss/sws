@@ -221,18 +221,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\Shared\SWSTimer.cpp"
-				>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath=".\Freeze\TimeState.cpp"
 				>
 			</File>
@@ -331,7 +319,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\reaper\reaper_plugin_functions.h"
+				RelativePath="..\..\program files\reaper\reaper_plugin_functions.h"
 				>
 			</File>
 			<File

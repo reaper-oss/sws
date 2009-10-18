@@ -93,44 +93,27 @@ void DeleteAllRegions(COMMAND_T*)
 
 void RenumberIds(COMMAND_T*)
 {
-	int x = 0;
-	int id = 1;
-	bool bReg;
-	double dPrevCursor = GetCursorPosition();
-	double dPos;
-	Main_OnCommand(1016, 0); // Stop! necessary??
-	SetMarkerInfo(1);
-	while ((x = EnumProjectMarkers(x, &bReg, &dPos, NULL, NULL, NULL)))
-		if (!bReg)
-			SetMarkerInfo(0, dPos, -1, bReg, id++);
-	SetEditCurPos(dPrevCursor, true, true);	
-	SetMarkerInfo(2);
+	MarkerList ml(NULL, true);
+	DeleteAllMarkers();
+	for (int i = 0; i < ml.m_items.GetSize(); i++)
+	{
+		MarkerItem* mi = ml.m_items.Get(i);
+		if (!mi->m_bReg)
+			AddProjectMarker(NULL, false, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), i+1);
+	}
 	pMarkerList->Update();
 }
 
 void RenumberRegions(COMMAND_T*)
 {
-	int x = 0;
-	int id = 100000;
-	bool bReg;
-	double dPrevCursor = GetCursorPosition();
-	double dPos;
-	Main_OnCommand(1016, 0); // Stop! necessary??
-	SetMarkerInfo(1);
-	// Loop through once to set region numbers to something outrageous
-	while ((x = EnumProjectMarkers(x, &bReg, &dPos, NULL, NULL, NULL)))
+	MarkerList ml(NULL, true);
+	DeleteAllMarkers();
+	for (int i = 0; i < ml.m_items.GetSize(); i++)
 	{
-		if (bReg)
-			SetMarkerInfo(0, dPos, -1, bReg, id++);
+		MarkerItem* mi = ml.m_items.Get(i);
+		if (mi->m_bReg)
+			AddProjectMarker(NULL, true, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), i+1);
 	}
-	id = 1;
-	while ((x = EnumProjectMarkers(x, &bReg, &dPos, NULL, NULL, NULL)))
-	{
-		if (bReg)
-			SetMarkerInfo(0, dPos, -1, bReg, id++);
-	}
-	SetEditCurPos(dPrevCursor, true, true);	
-	SetMarkerInfo(2);
 	pMarkerList->Update();
 }
 

@@ -34,7 +34,6 @@ public:
 	SWS_MarkerListView(HWND hwndList, HWND hwndEdit);
 
 protected:
-	static int CALLBACK ListComparo(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	bool OnItemSelChange(LPARAM item, bool bSel);

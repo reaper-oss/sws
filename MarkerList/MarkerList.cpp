@@ -46,50 +46,8 @@ SWS_MarkerListWnd* pMarkerList = NULL;
 static SWS_LVColumn g_cols[] = { { 75, 0, "Time" }, { 45, 0, "Type" }, { 30, 0, "ID" }, { 170, 1, "Description" } };
 
 SWS_MarkerListView::SWS_MarkerListView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "MarkerList View State", ListComparo, false)
+:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "MarkerList View State", false)
 {
-}
-
-int CALLBACK SWS_MarkerListView::ListComparo(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-{
-	int iCol = (int)lParamSort;
-	MarkerItem* item1 = (MarkerItem*)lParam1;
-	MarkerItem* item2 = (MarkerItem*)lParam2;
-	int iRet = 0;
-
-	switch (abs(iCol))
-	{
-	case 1: // Time
-		if (item1->m_dPos > item2->m_dPos)
-			iRet = 1;
-		else if (item1->m_dPos < item2->m_dPos)
-			iRet = -1;
-		break;
-	case 2: // Type
-		if (item1->m_bReg && !item2->m_bReg)
-			iRet = 1;
-		else if (!item1->m_bReg && item2->m_bReg)
-			iRet = -1;
-		break;
-	case 3: // ID
-		if (item1->m_id > item2->m_id)
-			iRet = 1;
-		else if (item1->m_id < item2->m_id)
-			iRet = -1;
-		break;
-	case 4: // Desc
-		if (!item1->m_cName)
-			iRet = 1;
-		else if (!item2->m_cName)
-			iRet = -1;
-		else
-			iRet = strcmp(item1->m_cName, item2->m_cName);
-		break;
-	}
-	if (iCol < 0)
-		return -iRet;
-	else
-		return iRet;
 }
 
 void SWS_MarkerListView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
@@ -109,10 +67,7 @@ void SWS_MarkerListView::GetItemText(LPARAM item, int iCol, char* str, int iStrM
 			_snprintf(str, iStrMax, "%d", mi->m_id);
 			break;
 		case 3:
-			if (mi->m_cName)
-				lstrcpyn(str, mi->m_cName, iStrMax);
-			else
-				str[0] = 0;
+			lstrcpyn(str, mi->GetName(), iStrMax);
 			break;
 		}
 	}

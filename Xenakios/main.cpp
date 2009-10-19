@@ -442,6 +442,8 @@ void DoSaveMarkersAsTextFile(COMMAND_T*)
 	//               char *fn, int fnsize)
 
 	char* OutFileName;
+	if (filenames_out.GetSize()>0)
+	{
 	OutFileName=filenames_out.Get(0);
 	int x=0;
 	bool isrgn;
@@ -463,6 +465,7 @@ void DoSaveMarkersAsTextFile(COMMAND_T*)
 	}
 
 	filenames_out.Empty(true);
+	}
 #else
 	MessageBox(g_hwndParent,"Not implemented for OS-X","Sorry... :,(",MB_OK);
 #endif

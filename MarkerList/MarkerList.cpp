@@ -91,6 +91,25 @@ void SWS_MarkerListView::OnItemDblClk(LPARAM item, int iCol)
 		GetSet_LoopTimeRange(true, true, &mi->m_dPos, &mi->m_dRegEnd, false);
 }
 
+int SWS_MarkerListView::OnItemSort(LPARAM item1, LPARAM item2)
+{
+	if (abs(m_iSortCol) == 3)
+	{
+		int iRet;
+		MarkerItem* mi1 = (MarkerItem*)item1;
+		MarkerItem* mi2 = (MarkerItem*)item2;
+		if (mi1->m_id > mi2->m_id)
+			iRet = 1;
+		else if (mi1->m_id < mi2->m_id)
+			iRet = -1;
+		if (m_iSortCol < 0)
+			return -iRet;
+		else
+			return iRet;
+	}
+	return SWS_ListView::OnItemSort(item1, item2);
+}
+
 void SWS_MarkerListView::SetItemText(LPARAM item, int iCol, const char* str)
 {
 	if (iCol == 3)

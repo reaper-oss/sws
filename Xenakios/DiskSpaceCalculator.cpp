@@ -34,13 +34,11 @@ void UpdateDialogControls(HWND hwnd)
 	// IDC_STATIC7
 	int combosel=0;
 	char buf[50];
-	combosel=ComboBox_GetCurSel(GetDlgItem(hwnd,IDC_COMBO2));
-	ComboBox_GetLBText(GetDlgItem(hwnd,IDC_COMBO2),combosel,buf);
-	//GetDlgItemText(hwnd,IDC_COMBO2,buf,49);
+	combosel=SendMessage(GetDlgItem(hwnd,IDC_COMBO2), CB_GETCURSEL, 0, 0);
+	SendMessage(GetDlgItem(hwnd,IDC_COMBO2), CB_GETLBTEXT, combosel, (LPARAM)buf);
 	int samplerate=atoi(buf);
-	combosel=ComboBox_GetCurSel(GetDlgItem(hwnd,IDC_COMBO1));
-	ComboBox_GetLBText(GetDlgItem(hwnd,IDC_COMBO1),combosel,buf);
-	//GetDlgItemText(hwnd,IDC_COMBO1,buf,49);
+	combosel=SendMessage(GetDlgItem(hwnd,IDC_COMBO1), CB_GETCURSEL, 0, 0);
+	SendMessage(GetDlgItem(hwnd,IDC_COMBO1), CB_GETLBTEXT, combosel, (LPARAM)buf);
 	int bits=atoi(buf);
 	int bytemultip=bits/8;
 	GetDlgItemText(hwnd,IDC_EDIT2,buf,49);
@@ -63,29 +61,25 @@ WDL_DLGRET DiskCalcDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 {
 	if (Message==WM_INITDIALOG)
 	{
-		ComboBox_AddString(GetDlgItem(hwnd,IDC_COMBO1),"8");
-		ComboBox_AddString(GetDlgItem(hwnd,IDC_COMBO1),"16");
-		ComboBox_AddString(GetDlgItem(hwnd,IDC_COMBO1),"24");
-		ComboBox_AddString(GetDlgItem(hwnd,IDC_COMBO1),"32");
-		ComboBox_AddString(GetDlgItem(hwnd,IDC_COMBO2),"22050");
-		ComboBox_AddString(GetDlgItem(hwnd,IDC_COMBO2),"24000");
-		ComboBox_AddString(GetDlgItem(hwnd,IDC_COMBO2),"44100");
-		ComboBox_AddString(GetDlgItem(hwnd,IDC_COMBO2),"48000");
-		ComboBox_AddString(GetDlgItem(hwnd,IDC_COMBO2),"88200");
-		ComboBox_AddString(GetDlgItem(hwnd,IDC_COMBO2),"96000");
-		ComboBox_AddString(GetDlgItem(hwnd,IDC_COMBO2),"176400");
-		ComboBox_AddString(GetDlgItem(hwnd,IDC_COMBO2),"192000");
-		ComboBox_SetCurSel(GetDlgItem(hwnd,IDC_COMBO1),2);
-		ComboBox_SetCurSel(GetDlgItem(hwnd,IDC_COMBO2),2);
-		//HFONT uusfontti=CreateFont(
-		//SetWindow (GetDlgItem(hwnd,IDC_STATIC7),uusfontti,true);
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO1), CB_ADDSTRING, 0, (LPARAM)"8");
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO1), CB_ADDSTRING, 0, (LPARAM)"16");
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO1), CB_ADDSTRING, 0, (LPARAM)"24");
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO1), CB_ADDSTRING, 0, (LPARAM)"32");
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO2), CB_ADDSTRING, 0, (LPARAM)"22050");
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO2), CB_ADDSTRING, 0, (LPARAM)"24000");
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO2), CB_ADDSTRING, 0, (LPARAM)"44100");
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO2), CB_ADDSTRING, 0, (LPARAM)"48000");
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO2), CB_ADDSTRING, 0, (LPARAM)"88200");
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO2), CB_ADDSTRING, 0, (LPARAM)"96000");
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO2), CB_ADDSTRING, 0, (LPARAM)"176400");
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO2), CB_ADDSTRING, 0, (LPARAM)"192000");
+		
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO1), CB_SETCURSEL, 2, 0);
+		SendMessage(GetDlgItem(hwnd, IDC_COMBO2), CB_SETCURSEL, 2, 0);
+		
 		SetDlgItemText(hwnd,IDC_EDIT1,"8");
 		SetDlgItemText(hwnd,IDC_EDIT2,"4");
 		UpdateDialogControls(hwnd);
-		
-
-
-
 	}
 	if (Message==WM_COMMAND && (LOWORD(wParam)==IDOK || LOWORD(wParam)==IDCANCEL))
 	{

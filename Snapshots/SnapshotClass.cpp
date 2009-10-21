@@ -376,7 +376,7 @@ bool TrackSnapshot::Cleanup()
 MediaTrack* TrackSnapshot::GetTrack()
 {
 	MediaTrack* tr = NULL;
-	if (m_guid == GUID_NULL)
+	if (memcmp(&m_guid, &GUID_NULL, sizeof(GUID)) == 0)
 		tr = CSurf_TrackFromID(0, false);
 	else
 	{

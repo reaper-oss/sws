@@ -7,6 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		22257D87108BDC6B0058CF75 /* AutoRename.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D6F108BDC6B0058CF75 /* AutoRename.cpp */; };
+		22257D88108BDC6B0058CF75 /* BroadCastWavCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D70108BDC6B0058CF75 /* BroadCastWavCommands.cpp */; };
+		22257D89108BDC6B0058CF75 /* CommandRegistering.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D71108BDC6B0058CF75 /* CommandRegistering.cpp */; };
+		22257D8A108BDC6B0058CF75 /* CreateTrax.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D72108BDC6B0058CF75 /* CreateTrax.cpp */; };
+		22257D8B108BDC6B0058CF75 /* DiskSpaceCalculator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D73108BDC6B0058CF75 /* DiskSpaceCalculator.cpp */; };
+		22257D8C108BDC6B0058CF75 /* Envelope_actions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D74108BDC6B0058CF75 /* Envelope_actions.cpp */; };
+		22257D8D108BDC6B0058CF75 /* ExoticCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D75108BDC6B0058CF75 /* ExoticCommands.cpp */; };
+		22257D8E108BDC6B0058CF75 /* FloatingInspector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D76108BDC6B0058CF75 /* FloatingInspector.cpp */; };
+		22257D8F108BDC6B0058CF75 /* fractions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D77108BDC6B0058CF75 /* fractions.cpp */; };
+		22257D90108BDC6B0058CF75 /* ItemTakeCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D78108BDC6B0058CF75 /* ItemTakeCommands.cpp */; };
+		22257D91108BDC6B0058CF75 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D79108BDC6B0058CF75 /* main.cpp */; };
+		22257D92108BDC6B0058CF75 /* MediaDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D7A108BDC6B0058CF75 /* MediaDialog.cpp */; };
+		22257D93108BDC6B0058CF75 /* MixerActions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D7B108BDC6B0058CF75 /* MixerActions.cpp */; };
+		22257D94108BDC6B0058CF75 /* MoreItemCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D7C108BDC6B0058CF75 /* MoreItemCommands.cpp */; };
+		22257D95108BDC6B0058CF75 /* Parameters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D7D108BDC6B0058CF75 /* Parameters.cpp */; };
+		22257D96108BDC6B0058CF75 /* Parameters.h in Headers */ = {isa = PBXBuildFile; fileRef = 22257D7E108BDC6B0058CF75 /* Parameters.h */; };
+		22257D97108BDC6B0058CF75 /* PropertyInterpolator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D7F108BDC6B0058CF75 /* PropertyInterpolator.cpp */; };
+		22257D98108BDC6B0058CF75 /* res.h in Headers */ = {isa = PBXBuildFile; fileRef = 22257D80108BDC6B0058CF75 /* res.h */; };
+		22257D99108BDC6B0058CF75 /* resource.h in Headers */ = {isa = PBXBuildFile; fileRef = 22257D81108BDC6B0058CF75 /* resource.h */; };
+		22257D9A108BDC6B0058CF75 /* TakeRenaming.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D82108BDC6B0058CF75 /* TakeRenaming.cpp */; };
+		22257D9B108BDC6B0058CF75 /* TrackTemplateActions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D83108BDC6B0058CF75 /* TrackTemplateActions.cpp */; };
+		22257D9C108BDC6B0058CF75 /* XenakiosExts.h in Headers */ = {isa = PBXBuildFile; fileRef = 22257D84108BDC6B0058CF75 /* XenakiosExts.h */; };
+		22257D9D108BDC6B0058CF75 /* XenQueryDlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D85108BDC6B0058CF75 /* XenQueryDlg.cpp */; };
+		22257D9E108BDC6B0058CF75 /* XenUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D86108BDC6B0058CF75 /* XenUtils.cpp */; };
 		22B4C24F0FE311C7009A6731 /* Prompt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22B4C24D0FE311C7009A6731 /* Prompt.cpp */; };
 		22B4C2500FE311C7009A6731 /* Prompt.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B4C24E0FE311C7009A6731 /* Prompt.h */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
@@ -64,6 +88,32 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		22257D6F108BDC6B0058CF75 /* AutoRename.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AutoRename.cpp; path = Xenakios/AutoRename.cpp; sourceTree = "<group>"; };
+		22257D70108BDC6B0058CF75 /* BroadCastWavCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BroadCastWavCommands.cpp; path = Xenakios/BroadCastWavCommands.cpp; sourceTree = "<group>"; };
+		22257D71108BDC6B0058CF75 /* CommandRegistering.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommandRegistering.cpp; path = Xenakios/CommandRegistering.cpp; sourceTree = "<group>"; };
+		22257D72108BDC6B0058CF75 /* CreateTrax.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CreateTrax.cpp; path = Xenakios/CreateTrax.cpp; sourceTree = "<group>"; };
+		22257D73108BDC6B0058CF75 /* DiskSpaceCalculator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DiskSpaceCalculator.cpp; path = Xenakios/DiskSpaceCalculator.cpp; sourceTree = "<group>"; };
+		22257D74108BDC6B0058CF75 /* Envelope_actions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Envelope_actions.cpp; path = Xenakios/Envelope_actions.cpp; sourceTree = "<group>"; };
+		22257D75108BDC6B0058CF75 /* ExoticCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ExoticCommands.cpp; path = Xenakios/ExoticCommands.cpp; sourceTree = "<group>"; };
+		22257D76108BDC6B0058CF75 /* FloatingInspector.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FloatingInspector.cpp; path = Xenakios/FloatingInspector.cpp; sourceTree = "<group>"; };
+		22257D77108BDC6B0058CF75 /* fractions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fractions.cpp; path = Xenakios/fractions.cpp; sourceTree = "<group>"; };
+		22257D78108BDC6B0058CF75 /* ItemTakeCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ItemTakeCommands.cpp; path = Xenakios/ItemTakeCommands.cpp; sourceTree = "<group>"; };
+		22257D79108BDC6B0058CF75 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = Xenakios/main.cpp; sourceTree = "<group>"; };
+		22257D7A108BDC6B0058CF75 /* MediaDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MediaDialog.cpp; path = Xenakios/MediaDialog.cpp; sourceTree = "<group>"; };
+		22257D7B108BDC6B0058CF75 /* MixerActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MixerActions.cpp; path = Xenakios/MixerActions.cpp; sourceTree = "<group>"; };
+		22257D7C108BDC6B0058CF75 /* MoreItemCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MoreItemCommands.cpp; path = Xenakios/MoreItemCommands.cpp; sourceTree = "<group>"; };
+		22257D7D108BDC6B0058CF75 /* Parameters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Parameters.cpp; path = Xenakios/Parameters.cpp; sourceTree = "<group>"; };
+		22257D7E108BDC6B0058CF75 /* Parameters.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Parameters.h; path = Xenakios/Parameters.h; sourceTree = "<group>"; };
+		22257D7F108BDC6B0058CF75 /* PropertyInterpolator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PropertyInterpolator.cpp; path = Xenakios/PropertyInterpolator.cpp; sourceTree = "<group>"; };
+		22257D80108BDC6B0058CF75 /* res.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = res.h; path = Xenakios/res.h; sourceTree = "<group>"; };
+		22257D81108BDC6B0058CF75 /* resource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = resource.h; path = Xenakios/resource.h; sourceTree = "<group>"; };
+		22257D82108BDC6B0058CF75 /* TakeRenaming.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TakeRenaming.cpp; path = Xenakios/TakeRenaming.cpp; sourceTree = "<group>"; };
+		22257D83108BDC6B0058CF75 /* TrackTemplateActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrackTemplateActions.cpp; path = Xenakios/TrackTemplateActions.cpp; sourceTree = "<group>"; };
+		22257D84108BDC6B0058CF75 /* XenakiosExts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XenakiosExts.h; path = Xenakios/XenakiosExts.h; sourceTree = "<group>"; };
+		22257D85108BDC6B0058CF75 /* XenQueryDlg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XenQueryDlg.cpp; path = Xenakios/XenQueryDlg.cpp; sourceTree = "<group>"; };
+		22257D86108BDC6B0058CF75 /* XenUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XenUtils.cpp; path = Xenakios/XenUtils.cpp; sourceTree = "<group>"; };
+		22257D9F108BDCAC0058CF75 /* res.rc_mac_dlg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = res.rc_mac_dlg; path = Xenakios/res.rc_mac_dlg; sourceTree = "<group>"; };
+		22257DA0108BDCAC0058CF75 /* res.rc_mac_menu */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = res.rc_mac_menu; path = Xenakios/res.rc_mac_menu; sourceTree = "<group>"; };
 		22B4C24D0FE311C7009A6731 /* Prompt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Prompt.cpp; sourceTree = "<group>"; };
 		22B4C24E0FE311C7009A6731 /* Prompt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Prompt.h; sourceTree = "<group>"; };
 		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
@@ -109,8 +159,8 @@
 		981007170F4768020072D712 /* sws_extension.rc_mac_menu */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc_mac_menu; sourceTree = "<group>"; };
 		981007180F4768020072D712 /* sws_extension.rc_mac_dlg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc_mac_dlg; sourceTree = "<group>"; };
 		9870F77F0F5B461C0007258C /* swell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = swell.h; path = ../WDL/swell/swell.h; sourceTree = SOURCE_ROOT; };
-		9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reaper_plugin_functions.h; path = ../jmde/reaper_plugin_functions.h; sourceTree = SOURCE_ROOT; };
-		9879B7340F489BE4004D98EB /* reaper_plugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reaper_plugin.h; path = ../jmde/reaper_plugin.h; sourceTree = SOURCE_ROOT; };
+		9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reaper_plugin_functions.h; path = /Applications/reaper_plugin_functions.h; sourceTree = "<absolute>"; };
+		9879B7340F489BE4004D98EB /* reaper_plugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reaper_plugin.h; path = reaper/reaper_plugin.h; sourceTree = "<group>"; };
 		9879B7400F489CE7004D98EB /* stdafx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stdafx.h; sourceTree = "<group>"; };
 		9882DB870F6D961100BD2BC7 /* swell-dlggen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "swell-dlggen.h"; path = "../WDL/swell/swell-dlggen.h"; sourceTree = SOURCE_ROOT; };
 		98B408860F5B519500865A09 /* swell-ini.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "swell-ini.cpp"; path = "../WDL/swell/swell-ini.cpp"; sourceTree = SOURCE_ROOT; };
@@ -118,7 +168,7 @@
 		98B4088E0F5B524D00865A09 /* swell-gdi.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-gdi.mm"; path = "../WDL/swell/swell-gdi.mm"; sourceTree = SOURCE_ROOT; };
 		98B4088F0F5B524D00865A09 /* swell-kb.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-kb.mm"; path = "../WDL/swell/swell-kb.mm"; sourceTree = SOURCE_ROOT; };
 		98B408A20F5B544A00865A09 /* swell.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = swell.cpp; path = ../WDL/swell/swell.cpp; sourceTree = SOURCE_ROOT; };
-		98B75DAE0F48F8F900AC5A25 /* Base64.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Base64.cpp; path = ../Shared/Base64.cpp; sourceTree = SOURCE_ROOT; };
+		98B75DAE0F48F8F900AC5A25 /* Base64.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Base64.cpp; path = Utility/Base64.cpp; sourceTree = "<group>"; };
 		98D3CA9B0F871B6F009B006A /* TracklistFilter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TracklistFilter.cpp; path = TrackList/TracklistFilter.cpp; sourceTree = "<group>"; };
 		98D3CA9D0F871B80009B006A /* TracklistFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TracklistFilter.h; path = TrackList/TracklistFilter.h; sourceTree = "<group>"; };
 		98D590460F628703003F75B4 /* Tracklist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Tracklist.cpp; path = TrackList/Tracklist.cpp; sourceTree = "<group>"; };
@@ -149,6 +199,7 @@
 		08FB7794FE84155DC02AAC07 /* reaper_sws */ = {
 			isa = PBXGroup;
 			children = (
+				22257D6D108BDC330058CF75 /* Xenakios */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
@@ -225,6 +276,39 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		22257D6D108BDC330058CF75 /* Xenakios */ = {
+			isa = PBXGroup;
+			children = (
+				22257D9F108BDCAC0058CF75 /* res.rc_mac_dlg */,
+				22257DA0108BDCAC0058CF75 /* res.rc_mac_menu */,
+				22257D6F108BDC6B0058CF75 /* AutoRename.cpp */,
+				22257D70108BDC6B0058CF75 /* BroadCastWavCommands.cpp */,
+				22257D71108BDC6B0058CF75 /* CommandRegistering.cpp */,
+				22257D72108BDC6B0058CF75 /* CreateTrax.cpp */,
+				22257D73108BDC6B0058CF75 /* DiskSpaceCalculator.cpp */,
+				22257D74108BDC6B0058CF75 /* Envelope_actions.cpp */,
+				22257D75108BDC6B0058CF75 /* ExoticCommands.cpp */,
+				22257D76108BDC6B0058CF75 /* FloatingInspector.cpp */,
+				22257D77108BDC6B0058CF75 /* fractions.cpp */,
+				22257D78108BDC6B0058CF75 /* ItemTakeCommands.cpp */,
+				22257D79108BDC6B0058CF75 /* main.cpp */,
+				22257D7A108BDC6B0058CF75 /* MediaDialog.cpp */,
+				22257D7B108BDC6B0058CF75 /* MixerActions.cpp */,
+				22257D7C108BDC6B0058CF75 /* MoreItemCommands.cpp */,
+				22257D7D108BDC6B0058CF75 /* Parameters.cpp */,
+				22257D7E108BDC6B0058CF75 /* Parameters.h */,
+				22257D7F108BDC6B0058CF75 /* PropertyInterpolator.cpp */,
+				22257D80108BDC6B0058CF75 /* res.h */,
+				22257D81108BDC6B0058CF75 /* resource.h */,
+				22257D82108BDC6B0058CF75 /* TakeRenaming.cpp */,
+				22257D83108BDC6B0058CF75 /* TrackTemplateActions.cpp */,
+				22257D84108BDC6B0058CF75 /* XenakiosExts.h */,
+				22257D85108BDC6B0058CF75 /* XenQueryDlg.cpp */,
+				22257D86108BDC6B0058CF75 /* XenUtils.cpp */,
+			);
+			name = Xenakios;
+			sourceTree = "<group>";
+		};
 		981007040F4768020072D712 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -280,6 +364,10 @@
 				98E89AC40FC9C03700A56C44 /* Zoom.h in Headers */,
 				98E89AC90FC9C05C00A56C44 /* TrackEnvelope.h in Headers */,
 				22B4C2500FE311C7009A6731 /* Prompt.h in Headers */,
+				22257D96108BDC6B0058CF75 /* Parameters.h in Headers */,
+				22257D98108BDC6B0058CF75 /* res.h in Headers */,
+				22257D99108BDC6B0058CF75 /* resource.h in Headers */,
+				22257D9C108BDC6B0058CF75 /* XenakiosExts.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -361,6 +449,26 @@
 				98E89AC20FC9C02B00A56C44 /* Zoom.cpp in Sources */,
 				98E89AC80FC9C05C00A56C44 /* TrackEnvelope.cpp in Sources */,
 				22B4C24F0FE311C7009A6731 /* Prompt.cpp in Sources */,
+				22257D87108BDC6B0058CF75 /* AutoRename.cpp in Sources */,
+				22257D88108BDC6B0058CF75 /* BroadCastWavCommands.cpp in Sources */,
+				22257D89108BDC6B0058CF75 /* CommandRegistering.cpp in Sources */,
+				22257D8A108BDC6B0058CF75 /* CreateTrax.cpp in Sources */,
+				22257D8B108BDC6B0058CF75 /* DiskSpaceCalculator.cpp in Sources */,
+				22257D8C108BDC6B0058CF75 /* Envelope_actions.cpp in Sources */,
+				22257D8D108BDC6B0058CF75 /* ExoticCommands.cpp in Sources */,
+				22257D8E108BDC6B0058CF75 /* FloatingInspector.cpp in Sources */,
+				22257D8F108BDC6B0058CF75 /* fractions.cpp in Sources */,
+				22257D90108BDC6B0058CF75 /* ItemTakeCommands.cpp in Sources */,
+				22257D91108BDC6B0058CF75 /* main.cpp in Sources */,
+				22257D92108BDC6B0058CF75 /* MediaDialog.cpp in Sources */,
+				22257D93108BDC6B0058CF75 /* MixerActions.cpp in Sources */,
+				22257D94108BDC6B0058CF75 /* MoreItemCommands.cpp in Sources */,
+				22257D95108BDC6B0058CF75 /* Parameters.cpp in Sources */,
+				22257D97108BDC6B0058CF75 /* PropertyInterpolator.cpp in Sources */,
+				22257D9A108BDC6B0058CF75 /* TakeRenaming.cpp in Sources */,
+				22257D9B108BDC6B0058CF75 /* TrackTemplateActions.cpp in Sources */,
+				22257D9D108BDC6B0058CF75 /* XenQueryDlg.cpp in Sources */,
+				22257D9E108BDC6B0058CF75 /* XenUtils.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

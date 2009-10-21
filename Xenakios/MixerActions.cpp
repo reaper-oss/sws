@@ -857,48 +857,46 @@ WDL_DLGRET RenameTraxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	switch(Message)
     {
         case WM_INITDIALOG:
-			{
-				SetDlgItemText(hwnd,IDC_EDIT1,g_OldTrackName.c_str());
-				SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_EDIT1), TRUE);
-				if (g_MultipleSelected)
-					Button_Enable(GetDlgItem(hwnd,IDC_CHECK1),true);
-				else Button_Enable(GetDlgItem(hwnd,IDC_CHECK1),false);
-				if (g_RenaTraxDialogSetAutorename) Button_SetCheck(GetDlgItem(hwnd,IDC_CHECK1),BST_CHECKED);
-				else Button_SetCheck(GetDlgItem(hwnd,IDC_CHECK1),BST_UNCHECKED);
-				char buf[500];
-				sprintf(buf,"Rename track %d / %d",g_RenaCurTrack,g_RenaSelTrax);
-				SetWindowText(hwnd,buf);
-				return 0;
-			}
+		{
+			SetDlgItemText(hwnd,IDC_EDIT1,g_OldTrackName.c_str());
+			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
+			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
+			if (g_MultipleSelected)
+				Button_Enable(GetDlgItem(hwnd, IDC_CHECK1), true);
+			else
+				Button_Enable(GetDlgItem(hwnd, IDC_CHECK1), false);
+			if (g_RenaTraxDialogSetAutorename)
+				Button_SetCheck(GetDlgItem(hwnd, IDC_CHECK1), BST_CHECKED);
+			else Button_SetCheck(GetDlgItem(hwnd, IDC_CHECK1), BST_UNCHECKED);
+			char buf[500];
+			sprintf(buf,"Rename track %d / %d",g_RenaCurTrack,g_RenaSelTrax);
+			SetWindowText(hwnd,buf);
+			break;
+		}
 		case WM_COMMAND:
+		{
+			if (LOWORD(wParam)==IDOK)
 			{
-				if (LOWORD(wParam)==IDOK)
-				{
-					char buf[500];
-					GetDlgItemText(hwnd,IDC_EDIT1,buf,499);
-					g_NewTrackName.assign(buf);
-					LRESULT bleh=Button_GetCheck(GetDlgItem(hwnd,IDC_CHECK1));
-					g_RenaTraxDialogSetAutorename=false;
-					if (bleh==BST_CHECKED) g_RenaTraxDialogSetAutorename=true;
-					//if (bleh==BST
-					EndDialog(hwnd,0);
-					return 0;
-				}
-				if (LOWORD(wParam)==IDCANCEL)
-				{
-					g_RenaTraxDialogCancelled=true;
-					EndDialog(hwnd,0);
-					return 0;
-				}
-				return 0;
+				char buf[500];
+				GetDlgItemText(hwnd, IDC_EDIT1, buf, 499);
+				g_NewTrackName.assign(buf);
+				g_RenaTraxDialogSetAutorename = Button_GetCheck(GetDlgItem(hwnd, IDC_CHECK1)) == BST_CHECKED;
+				EndDialog(hwnd,0);
+				break;
 			}
+			else if (LOWORD(wParam)==IDCANCEL)
+			{
+				g_RenaTraxDialogCancelled = true;
+				EndDialog(hwnd,0);
+				break;
+			}
+		}
 	}
 	return 0;
 }
 
 void DoRenameTracksDlg(COMMAND_T*)
 {
-	//IDD_RNMTRAX	
 	static bool FirstRun=true;
 	if (FirstRun)
 	{
@@ -917,7 +915,6 @@ void DoRenameTracksDlg(COMMAND_T*)
 		if (isSel==1)
 			VecSelTracks.push_back(CurTrack);
 	}
-	//g_RenaTraxDialogSetAutorename=false;
 	if (VecSelTracks.size()==0) 
 	{
 		MessageBox(g_hwndParent,"No tracks selected!","Info",MB_OK);
@@ -963,8 +960,6 @@ void DoSelectFirstOfSelectedTracks(COMMAND_T*)
 		int isSel=1;
 		GetSetMediaTrackInfo(TheTracks[0],"I_SELECTED",&isSel);
 	}
-	//GetSetMediaTrackInfo(TheTracks[TheTracks.size()-1],"I_SELECTED",&isSel);
-
 }
 
 void DoSelectLastOfSelectedTracks(COMMAND_T*)
@@ -975,10 +970,8 @@ void DoSelectLastOfSelectedTracks(COMMAND_T*)
 	{
 		Main_OnCommand(40297,0); // unselect all tracks
 		int isSel=1;
-		//GetSetMediaTrackInfo(TheTracks[0],"I_SELECTED",&isSel);
 		GetSetMediaTrackInfo(TheTracks[TheTracks.size()-1],"I_SELECTED",&isSel);
 	}
-
 }
 
 void DoInsertNewTrackAtTop(COMMAND_T*)
@@ -1426,9 +1419,9 @@ vector<t_track_solostate> g_RefTrackSolostates;
 
 MediaTrack* GetTrackWithGUID(GUID theguid)
 {
-	if (theguid == GUID_NULL)
+	if (memcmp(&theguid, &GUID_NULL, sizeof(GUID)) == 0)
 		return NULL;
-	for (int i=0;i<GetNumTracks();i++)
+	for (int i=0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* tk=CSurf_TrackFromID(i+1,false);
 		if (tk)

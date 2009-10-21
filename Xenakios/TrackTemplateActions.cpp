@@ -29,74 +29,6 @@
 
 using namespace std;
 
-int SearchDirectoryForTrackTemplates(vector<string> &refvecFiles,
-                    const string        &refcstrRootDirectory,
-                    const string        &refcstrExtension,
-                    bool                     bSearchSubdirectories = true)
-{
-  string     strFilePath;             // Filepath
-  string     strPattern;              // Pattern
-  string     strExtension;            // Extension
-  HANDLE          hFile;                   // Handle to file
-  WIN32_FIND_DATA FileInformation;         // File information
-
-
-  strPattern = refcstrRootDirectory + "\\*.*";
-
-  hFile = ::FindFirstFile(strPattern.c_str(), &FileInformation);
-  if(hFile != INVALID_HANDLE_VALUE)
-  {
-    do
-    {
-      if(FileInformation.cFileName[0] != '.')
-      {
-        strFilePath.erase();
-		strFilePath = refcstrRootDirectory + "\\" + FileInformation.cFileName;
-        if(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        {
-          if(bSearchSubdirectories)
-          {
-            // Search subdirectory
-            int iRC = SearchDirectoryForTrackTemplates(refvecFiles,
-                                      strFilePath,
-                                      refcstrExtension,
-                                      bSearchSubdirectories);
-            if(iRC)
-              return iRC;
-          }
-        }
-        else
-        {
-          // Check extension
-          strExtension = FileInformation.cFileName;
-          strExtension = strExtension.substr(strExtension.rfind(".") + 1);
-			transform(strExtension.begin(), strExtension.end(), strExtension.begin(), (int(*)(int)) toupper);	
-			//transform(refcstrExtension.begin(), refcstrExtension.end(), refcstrExtension.begin(), (int(*)(int)) toupper);
-			string paskaKopio;
-			paskaKopio=refcstrExtension;
-			transform(paskaKopio.begin(), paskaKopio.end(), paskaKopio.begin(), (int(*)(int)) toupper);
-		int extMatch=0;
-		if (strExtension=="RTRACKTEMPLATE")
-			extMatch++;
-		
-		if (extMatch>0)
-            // Save filename
-            refvecFiles.push_back(strFilePath);
-        }
-      }
-    } while(::FindNextFile(hFile, &FileInformation) == TRUE);
-
-    // Close handle
-    ::FindClose(hFile);
-
-    DWORD dwError = ::GetLastError();
-    if(dwError != ERROR_NO_MORE_FILES)
-      return dwError;
-  }
-
-  return 0;
-}
-
 void SplitFileNameComponents(string FullFileName,vector<string>& FNComponents)
 {
 	FNComponents.clear();
@@ -126,7 +58,7 @@ void DoOpenTrackTemplate(COMMAND_T* t)
 	TemplatesFolder.assign(blah[0].c_str());
 	TemplatesFolder.append("TrackTemplates");
 	vector<string> Filut;
-	SearchDirectoryForTrackTemplates(Filut,TemplatesFolder,"jeesus",true);
+	SearchDirectory(Filut, TemplatesFolder.c_str(), "RTRACKTEMPLATE", true);
 	if (Filut.size()==0)
 	{
 		MessageBox(g_hwndParent,"No templates at all were found!","Error",MB_OK);
@@ -145,74 +77,6 @@ void DoOpenTrackTemplate(COMMAND_T* t)
 	MessageBox(g_hwndParent,"No matching template found!","Error",MB_OK);
 }
 
-int SearchDirectoryForProjectTemplates(vector<string> &refvecFiles,
-                    const string        &refcstrRootDirectory,
-                    const string        &refcstrExtension,
-                    bool                     bSearchSubdirectories = true)
-{
-  string     strFilePath;             // Filepath
-  string     strPattern;              // Pattern
-  string     strExtension;            // Extension
-  HANDLE          hFile;                   // Handle to file
-  WIN32_FIND_DATA FileInformation;         // File information
-
-
-  strPattern = refcstrRootDirectory + "\\*.*";
-
-  hFile = ::FindFirstFile(strPattern.c_str(), &FileInformation);
-  if(hFile != INVALID_HANDLE_VALUE)
-  {
-    do
-    {
-      if(FileInformation.cFileName[0] != '.')
-      {
-        strFilePath.erase();
-		strFilePath = refcstrRootDirectory + "\\" + FileInformation.cFileName;
-        if(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        {
-          if(bSearchSubdirectories)
-          {
-            // Search subdirectory
-            int iRC = SearchDirectoryForTrackTemplates(refvecFiles,
-                                      strFilePath,
-                                      refcstrExtension,
-                                      bSearchSubdirectories);
-            if(iRC)
-              return iRC;
-          }
-        }
-        else
-        {
-          // Check extension
-          strExtension = FileInformation.cFileName;
-          strExtension = strExtension.substr(strExtension.rfind(".") + 1);
-			transform(strExtension.begin(), strExtension.end(), strExtension.begin(), (int(*)(int)) toupper);	
-			//transform(refcstrExtension.begin(), refcstrExtension.end(), refcstrExtension.begin(), (int(*)(int)) toupper);
-			string paskaKopio;
-			paskaKopio=refcstrExtension;
-			transform(paskaKopio.begin(), paskaKopio.end(), paskaKopio.begin(), (int(*)(int)) toupper);
-		int extMatch=0;
-		if (strExtension=="RPP")
-			extMatch++;
-		
-		if (extMatch>0)
-            // Save filename
-            refvecFiles.push_back(strFilePath);
-        }
-      }
-    } while(::FindNextFile(hFile, &FileInformation) == TRUE);
-
-    // Close handle
-    ::FindClose(hFile);
-
-    DWORD dwError = ::GetLastError();
-    if(dwError != ERROR_NO_MORE_FILES)
-      return dwError;
-  }
-
-  return 0;
-}
-
 void DoOpenProjectTemplate(COMMAND_T* t)
 {
 	char templateFNbeginswith[10];
@@ -225,7 +89,7 @@ void DoOpenProjectTemplate(COMMAND_T* t)
 	TemplatesFolder.assign(blah[0].c_str());
 	TemplatesFolder.append("ProjectTemplates");
 	vector<string> Filut;
-	SearchDirectoryForProjectTemplates(Filut,TemplatesFolder,"jeesus",true);
+	SearchDirectory(Filut, TemplatesFolder.c_str(), "RPP", true);
 	if (Filut.size()==0)
 	{
 		MessageBox(g_hwndParent,"No project templates at all were found!","Error",MB_OK);

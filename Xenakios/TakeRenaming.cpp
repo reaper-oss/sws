@@ -65,44 +65,33 @@ BOOL WINAPI RenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		SetWindowText(hwnd,buf);
 		
 		
-		SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_EDIT1), TRUE);
-		return 0;
+		SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
+		SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
 	}
-	if (Message==WM_COMMAND && LOWORD(wParam)==IDCANCEL)
+	else if (Message==WM_COMMAND && LOWORD(wParam)==IDCANCEL)
 	{
 		g_renameparams.DialogRC=1;
 		EndDialog(hwnd,0);
-		return 0;
 	}
-	if (Message==WM_COMMAND && LOWORD(wParam)==IDOK)
+	else if (Message==WM_COMMAND && LOWORD(wParam)==IDOK)
 	{
 		GetDlgItemText(hwnd,IDC_EDIT1,buf,2047);
 		if (strlen(buf)>0)
 		{
-		if (g_renameparams.mode==0)
-		{
-			g_renameparams.NewTakeName.assign(buf);
+			if (g_renameparams.mode==0)
+				g_renameparams.NewTakeName.assign(buf);
+			else if (g_renameparams.mode==1)
+				g_renameparams.NewFileName.assign(buf);
+			else if (g_renameparams.mode==2)
+				g_renameparams.NewFileName.assign(buf);
+			g_renameparams.DialogRC = 0;
+			EndDialog(hwnd,0);
 		}
-		if (g_renameparams.mode==1)
-		{
-			g_renameparams.NewFileName.assign(buf);
-			
-		}
-		if (g_renameparams.mode==2)
-		{
-			g_renameparams.NewFileName.assign(buf);
-			
-		}
-		g_renameparams.DialogRC=0;
-		EndDialog(hwnd,0);
-		return 0;
-		} else
+		else
 		{
 			MessageBox(hwnd,"New file name empty","Error",MB_OK);
-			g_renameparams.DialogRC=1;
+			g_renameparams.DialogRC = 1;
 		}
-		
-		return 0;
 	}
 	return 0;
 }

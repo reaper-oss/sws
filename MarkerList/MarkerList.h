@@ -38,6 +38,8 @@ protected:
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	bool OnItemSelChange(LPARAM item, bool bSel);
 	void OnItemDblClk(LPARAM item, int iCol);
+	int OnItemSort(LPARAM item1, LPARAM item2);
+
 	int GetItemCount();
 	LPARAM GetItemPointer(int iItem);
 	bool GetItemState(LPARAM item);

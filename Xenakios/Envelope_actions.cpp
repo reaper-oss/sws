@@ -57,7 +57,6 @@ public:
 		m_envnodes.clear();
 		
 		char rpplinebuf[4096];
-		int j=0;
 		stringstream ss;
 		ss << rppstate;
 		

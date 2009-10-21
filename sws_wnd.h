@@ -44,8 +44,7 @@ public:
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 	void OnDestroy();
 	void Update();
-	HMENU GetColumnMenu();
-	void OnCommand(WPARAM wParam, LPARAM lParam);
+	bool DoColumnMenu(int x, int y);
 	LPARAM GetHitItem(int x, int y, int* iCol);
 	void EditListItem(LPARAM item, int iCol);
 	
@@ -91,7 +90,6 @@ private:
 	SWS_LVColumn* m_pCols;
 	const char* m_cINIKey;
 	WNDPROC m_prevEditProc;
-	static const unsigned int COLEDIT_MSG = 0xFF0001;
 };
 
 class SWS_DockWnd

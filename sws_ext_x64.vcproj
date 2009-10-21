@@ -63,7 +63,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="shlwapi.lib"
 				OutputFile="$(OutDir)\reaper_sws64.dll"
 				LinkIncremental="0"
 				GenerateDebugInformation="true"

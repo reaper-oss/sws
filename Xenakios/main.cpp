@@ -53,105 +53,6 @@ void DoToggleRippleOneTrack(COMMAND_T*)
 	}
 }
 
-#ifdef _WIN32
-
-int BrowseForFiles(HWND parent, WDL_PtrList<char> *filenames_out, const char *filterlist,
-	const char *title, bool allow_multiselect, const char *defext, const char *initialdir)
-{
-  int rv=0;
-  int temp_size=allow_multiselect ? (512*1024) : 8192; 
-  char *temp=(char *)malloc(temp_size);
-  if (!temp) return rv;
-
-  memset(temp,0,temp_size);
-
-  OPENFILENAME l={sizeof(l),};
-  l.hwndOwner = parent;
-  l.lpstrFilter = filterlist;
-  l.lpstrFile = temp;
-  l.nMaxFile = temp_size-1;
-  l.lpstrTitle = title;
-  l.lpstrDefExt = defext;
-  l.lpstrInitialDir = initialdir;
-  l.Flags = OFN_HIDEREADONLY|OFN_EXPLORER|
-            (allow_multiselect?OFN_ALLOWMULTISELECT:0)|OFN_FILEMUSTEXIST;
-
-  if (GetOpenFileName(&l)) 
-  {
-    if (allow_multiselect && temp[strlen(temp)+1]) 
-    {
-      char *p=temp+strlen(temp)+1;
-      bool append_slash=strlen(temp)>0 && p[-2]!='\\'&&p[-2]!='/';
-      while (*p)
-      {
-        WDL_String b(temp);
-        if (append_slash) b.Append("\\");
-        b.Append(p);
-        filenames_out->Add(_strdup(b.Get()));
-        p+=strlen(p)+1;
-        rv++;
-      }
-    }
-    else 
-    {
-      filenames_out->Add(_strdup(temp));
-      rv++;
-    }
-    
-  }
-  free(temp);
-  return rv;
-}
-
-int BrowseForSaveFile(HWND parent, WDL_PtrList<char> *filenames_out, const char *filterlist,
-	const char *title, bool allow_multiselect, const char *defext, const char *initialdir)
-{
-  int rv=0;
-  int temp_size=allow_multiselect ? (512*1024) : 8192; 
-  char *temp=(char *)malloc(temp_size);
-  if (!temp) return rv;
-
-  memset(temp,0,temp_size);
-
-  OPENFILENAME l={sizeof(l),};
-  l.hwndOwner = parent;
-  l.lpstrFilter = filterlist;
-  l.lpstrFile = temp;
-  l.nMaxFile = temp_size-1;
-  l.lpstrTitle = title;
-  l.lpstrDefExt = defext;
-  l.lpstrInitialDir = initialdir;
-  l.Flags = OFN_HIDEREADONLY|OFN_EXPLORER|
-            (allow_multiselect?OFN_ALLOWMULTISELECT:0)|OFN_OVERWRITEPROMPT;
-
-  if (GetSaveFileName(&l)) 
-  {
-    if (allow_multiselect && temp[strlen(temp)+1]) 
-    {
-      char *p=temp+strlen(temp)+1;
-      bool append_slash=strlen(temp)>0 && p[-2]!='\\'&&p[-2]!='/';
-      while (*p)
-      {
-        WDL_String b(temp);
-        if (append_slash) b.Append("\\");
-        b.Append(p);
-        filenames_out->Add(_strdup(b.Get()));
-        p+=strlen(p)+1;
-        rv++;
-      }
-    }
-    else 
-    {
-      filenames_out->Add(_strdup(temp));
-      rv++;
-    }
-    
-  }
-  free(temp);
-  return rv;
-}
-#endif
-
 bool GenerateShuffledRandomTable(int *IntTable,int numItems,int badFirstNumber)
 {
 	//
@@ -189,26 +90,29 @@ bool GenerateShuffledRandomTable(int *IntTable,int numItems,int badFirstNumber)
 			IntTable[i]=rndInt;
 			CheckTable[rndInt]=1;
 		}
-		
-
 	}
-
 
 	delete[] CheckTable;
 	return FALSE;
-
 }
 
-#ifdef _WIN32
 void DoSelectFiles(COMMAND_T*)
 {
-	g_filenames->Empty(true,free);
-	BrowseForFiles(g_hwndParent,g_filenames,"Wav-files\0*.wav\0",NULL,true,NULL,NULL);
+	char* cFiles = BrowseForFiles("Select files", NULL, NULL, true, "WAV Files\0*.wav\0");
+	if (cFiles)
+	{
+		g_filenames->Empty(true, free);
+		char* pStr = cFiles;
+		while(*pStr)
+		{
+			strcpy(g_filenames->Add((char*)malloc(strlen(pStr)+1)), pStr);
+			pStr += strlen(pStr)+1;
+		}
+		free(cFiles);
+	}
 	ShuffledNumbersGenerated=0;
 	GenerateShuffledRandomTable(ShuffledNumbers,g_filenames->GetSize(),-1);
 }
-#endif
-
 
 void DoInsertRandom(COMMAND_T*)
 {
@@ -430,27 +334,17 @@ void DoNudgeItemsRightSecsAndConfBased(COMMAND_T*)
 
 void DoSaveMarkersAsTextFile(COMMAND_T*)
 {
-
 	// argh what a mess here, GOTTA make this more sensible!!!!!
-#ifdef _WIN32
-	WDL_PtrList<char> filenames_out;
-	// "Wav-files\0*.wav\0"
+	// Looks ok to me, maybe people can just use SWS track sheet export facility instead?  TRP Oct 20 2009
+	char OutFileName[512];
+	BrowseForSaveFile("Choose text file to save markers to", NULL, NULL, "TXT files\0*.txt\0", OutFileName, 512);
 
-	BrowseForSaveFile(g_hwndParent,&filenames_out,".txt-files\0*.txt\0","Save Marker List As...",FALSE,"*.txt",NULL);
-	// following would be for SWELL
-	//BrowseForSaveFile(const char *text, const char *initialdir, const char *initialfile, const char *extlist,
-	//               char *fn, int fnsize)
+	char TimeText1[32];
 
-	char* OutFileName;
-	if (filenames_out.GetSize()>0)
-	{
-	OutFileName=filenames_out.Get(0);
 	int x=0;
 	bool isrgn;
 	double pos, rgnend;
 	char *name;
-	char TimeText1[32];
-
 	int number;
 	std::ofstream os(OutFileName);
 	os << "#\tPosition\tName" << "\n";
@@ -460,16 +354,10 @@ void DoSaveMarkersAsTextFile(COMMAND_T*)
 
 		format_timestr(pos, TimeText1,25);
 		if (!isrgn)
-		os << x << "\t" << TimeText1 << "\t" << name << "\n"; else 
-		os << x << "\t" << TimeText1 << "\t" << name << " (Region)\n";
+			os << x << "\t" << TimeText1 << "\t" << name << "\n";
+		else
+			os << x << "\t" << TimeText1 << "\t" << name << " (Region)\n";
 	}
-
-	filenames_out.Empty(true);
-	}
-#else
-	MessageBox(g_hwndParent,"Not implemented for OS-X","Sorry... :,(",MB_OK);
-#endif
-
 }
 
 void DoResampleTakeOneSemitoneDown(COMMAND_T*)
@@ -477,7 +365,7 @@ void DoResampleTakeOneSemitoneDown(COMMAND_T*)
 	Undo_BeginBlock();
 	Main_OnCommand(40518, 0);
 	Main_OnCommand(40205, 0);
-	Undo_EndBlock("Pitch Item down by 1 semitone (Resampled)",0);	
+	Undo_EndBlock("Pitch item down by 1 semitone (resampled)",0);	
 }
 
 void DoResampleTakeOneSemitoneUp(COMMAND_T*)
@@ -485,7 +373,7 @@ void DoResampleTakeOneSemitoneUp(COMMAND_T*)
 	Undo_BeginBlock();
 	Main_OnCommand(40517, 0);
 	Main_OnCommand(40204, 0);
-	Undo_EndBlock("Pitch Item up by 1 semitone (Resampled)",0);
+	Undo_EndBlock("Pitch item up by 1 semitone (resampled)",0);
 }
 
 void DoLoopAndPlaySelectedItems(COMMAND_T*)
@@ -499,18 +387,10 @@ void DoLoopAndPlaySelectedItems(COMMAND_T*)
 
 #ifdef _WIN32
 
-VOID CALLBACK MyTimerProc1(      
-    HWND hwnd,
-    UINT uMsg,
-    UINT_PTR idEvent,
-    DWORD dwTime
-)
+void CALLBACK MyTimerProc1(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
-	//
 	if (idEvent==8193)
 	{
-		//
-		//MessageBox(g_hwndParent,"Timer triggered!","Info",MB_OK);
 		if (GetPlayPosition2()<g_FirstSelectedItemPos)
 		{
 			g_PlayItemsOncePlaying=false;
@@ -518,8 +398,6 @@ VOID CALLBACK MyTimerProc1(
 		}
 		if (GetPlayState() & 0)
 		{
-			//
-			//DoInvertItemSelection(COMMAND_T*);
 			g_PlayItemsOncePlaying=false;
 			KillTimer(g_hwndParent,8193);
 		}
@@ -537,12 +415,8 @@ VOID CALLBACK MyTimerProc1(
 			KillTimer(g_hwndParent,8193);
 			Main_OnCommand(1016,0); // Transport Stop
 		}
-
-		
 	}
-
 }
-
 #endif
 
 void DoPlayItemsOnce(COMMAND_T*)
@@ -550,44 +424,33 @@ void DoPlayItemsOnce(COMMAND_T*)
 #ifdef _WIN32
 	if (GetNumSelectedItems()>0)
 	{
-	if (g_PlayItemsOncePlaying==true)
-	{
-		//
-		g_PlayItemsOncePlaying=false;
-		KillTimer(g_hwndParent,8193);
-		Main_OnCommand(1016,0); // Transport Stop
-	}
+		if (g_PlayItemsOncePlaying==true)
+		{
+			//
+			g_PlayItemsOncePlaying=false;
+			KillTimer(g_hwndParent,8193);
+			Main_OnCommand(1016,0); // Transport Stop
+		}
 
-	//DoInvertItemSelection(COMMAND_T*);
-	//Main_OnCommand(40175,0);
-	//DoInvertItemSelection(COMMAND_T*);
-	Main_OnCommand(40634,0); // remove loop points
-	DoSetLoopPointsToSelectedItems(false);
-	SetEditCurPos(g_FirstSelectedItemPos,false,false);
-	g_PlayItemsOncePlaying=true;
-	
-	Main_OnCommand(1007,0); // Transport Play
-	Sleep(100);
-	SetTimer(g_hwndParent,8193,25,(TIMERPROC)MyTimerProc1);
-
-	
+		//DoInvertItemSelection(COMMAND_T*);
+		//Main_OnCommand(40175,0);
+		//DoInvertItemSelection(COMMAND_T*);
+		Main_OnCommand(40634,0); // remove loop points
+		DoSetLoopPointsToSelectedItems(false);
+		SetEditCurPos(g_FirstSelectedItemPos,false,false);
+		g_PlayItemsOncePlaying=true;
+		
+		Main_OnCommand(1007,0); // Transport Play
+		Sleep(100);
+		SetTimer(g_hwndParent,8193,25,(TIMERPROC)MyTimerProc1);
 	}
 #else
 	MessageBox(g_hwndParent,"Not implemented for OS-X","Sorry... :,(",MB_OK);
 #endif
 }
 
-/*
-
-int kbd_enumerateActions(KbdSectionInfo *section, int idx, const char **nameOut); // returns 0 on not found, otherwise command
-              ID
-00:47 < db``> count from idx=0 until it returns 0
-
-*/
-
 void DoMoveCurNextTransMinusFade(COMMAND_T*)
 {
-	
 	int sz=0; double *defFadeLen = (double *)get_config_var("deffadelen",&sz);
 	static double prevCurPos = -666.0;
 	double CurPos=GetCursorPosition();
@@ -609,45 +472,10 @@ void DoMoveCurPrevTransMinusFade(COMMAND_T*)
 
 #define ALEXPIXELS 12
 
-void DoMoveCursor10pixRight(COMMAND_T*)
-{
-	int i;
-	for (i=0;i<ALEXPIXELS;i++)
-	{
-		Main_OnCommand(40105,0);
-	}
-
-}
-
-void DoMoveCursor10pixLeft(COMMAND_T*)
-{
-	int i;
-	for (i=0;i<ALEXPIXELS;i++)
-	{
-		Main_OnCommand(40104,0);
-	}
-
-}
-
-void DoMoveCursor10pixLeftCreateSel(COMMAND_T*)
-{
-	int i;
-	for (i=0;i<ALEXPIXELS;i++)
-	{
-		Main_OnCommand(40102,0);
-	}
-
-}
-
-void DoMoveCursor10pixRightCreateSel(COMMAND_T*)
-{
-	int i;
-	for (i=0;i<ALEXPIXELS;i++)
-	{
-		Main_OnCommand(40103,0);
-	}
-
-}
+void DoMoveCursor10pixRight(COMMAND_T*) { for (int i = 0; i < ALEXPIXELS; i++) Main_OnCommand(40105,0); }
+void DoMoveCursor10pixLeft(COMMAND_T*)  { for (int i = 0; i < ALEXPIXELS; i++) Main_OnCommand(40104,0); }
+void DoMoveCursor10pixLeftCreateSel(COMMAND_T*)  { for (int i = 0; i < ALEXPIXELS; i++) Main_OnCommand(40102,0); }
+void DoMoveCursor10pixRightCreateSel(COMMAND_T*) { for (int i = 0; i < ALEXPIXELS; i++) Main_OnCommand(40103,0); }
 
 preview_register_t *g_ItemPreview;
 CRITICAL_SECTION g_ItemPreviewCS;
@@ -655,17 +483,10 @@ bool g_itemPreviewPlaying=false;
 PCM_source *Kaatuu=0;
 double PreviewItemPos=0.0;
 #ifdef _WIN32
-VOID CALLBACK ItemPreviewTimerProc1(      
-    HWND hwnd,
-    UINT uMsg,
-    UINT_PTR idEvent,
-    DWORD dwTime
-)
+void CALLBACK ItemPreviewTimerProc1(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
-	//
 	if (idEvent==11112)
 	{
-		//
 		double haju=Kaatuu->GetLength()+PreviewItemPos;
 		if (g_itemPreviewPlaying==false) KillTimer(g_hwndParent,11112);
 		if (g_itemPreviewPlaying==true && g_ItemPreview->curpos>=haju)
@@ -685,9 +506,9 @@ VOID CALLBACK ItemPreviewTimerProc1(
 	}
 }
 #endif
+
 void DoItemAsPcmSource(COMMAND_T*)
 {
-	//
 #ifdef _WIN32
 	if (g_itemPreviewPlaying==true)
 	{
@@ -897,14 +718,19 @@ void DoRenameMarkersWithAscendingNumbers(COMMAND_T*)
 void DoSetStopAtEndOfTimeSel(int enabled) // -1 toggle 0 unset 1 set
 {
 	// stopendofloop
-	int sz=0; int *stopatend = (int *)get_config_var("stopendofloop",&sz);
+	int sz=0;
+	int *stopatend = (int *)get_config_var("stopendofloop",&sz);
     if (stopatend) 
 	{ 
 		if (enabled==-1)
 		{
-			if (*stopatend==0) *stopatend=1;
-			else *stopatend=0;
-		} else *stopatend=enabled;
+			if (*stopatend==0)
+				*stopatend=1;
+			else
+				*stopatend=0;
+		}
+		else
+			*stopatend=enabled;
 	}
 }
 

@@ -83,7 +83,7 @@ int AboutBoxInit()
 {
 	SWSRegisterCommands(g_commandTable);
 
-	if (!plugin_register("hookmenu", menuhook))
+	if (!plugin_register("hookmenu", (void*)menuhook))
 		return 0;
 
 	return 1;

@@ -62,7 +62,7 @@ void HideUnSel(COMMAND_T* = NULL);
 void ShowAll(COMMAND_T* = NULL);
 void NewVisSnapshot(COMMAND_T* = NULL);
 
-static enum { COL_NUM, COL_NAME, COL_TCP, COL_MCP, COL_ARM, COL_MUTE, COL_SOLO, /*COL_INPUT, */ NUM_COLS };
+enum TL_COLS { COL_NUM, COL_NAME, COL_TCP, COL_MCP, COL_ARM, COL_MUTE, COL_SOLO, /*COL_INPUT, */ NUM_COLS };
 
 static SWS_LVColumn g_cols[] = { { 25, 0, "#" }, { 250, 1, "Name" }, { 40, 0, "TCP" }, { 40, 0, "MCP" },
 	{ 40, 0, "Arm", -1 },  { 40, 0, "Mute", -1 }, { 40, 0, "Solo", -1 } /*, { 40, 0, "Input", -1 } */ };
@@ -172,6 +172,25 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol)
 		Main_OnCommand(7, 0);
 	else if (iCol == COL_ARM)
 		Main_OnCommand(9, 0);
+}
+
+int SWS_TrackListView::OnItemSort(LPARAM item1, LPARAM item2)
+{
+	if (abs(m_iSortCol) == 1)
+	{
+		int iRet;
+		MediaTrack* tr1 = (MediaTrack*)item1;
+		MediaTrack* tr2 = (MediaTrack*)item2;
+		if (CSurf_TrackToID(tr1, false) > CSurf_TrackToID(tr2, false))
+			iRet = 1;
+		else if (CSurf_TrackToID(tr1, false) < CSurf_TrackToID(tr2, false))
+			iRet = -1;
+		if (m_iSortCol < 0)
+			return -iRet;
+		else
+			return iRet;
+	}
+	return SWS_ListView::OnItemSort(item1, item2);
 }
 
 void SWS_TrackListView::SetItemText(LPARAM item, int iCol, const char* str)
@@ -663,7 +682,7 @@ static void ClearFilter(COMMAND_T*)
 	g_pList->ClearFilter();
 }
 
-static void NewVisSnapshot(COMMAND_T*)
+void NewVisSnapshot(COMMAND_T*)
 {
 	NewSnapshot(VIS_MASK, false);
 }
@@ -823,7 +842,7 @@ int TrackListInit()
 	SWSRegisterCommands(g_commandTable);
 	g_pCommandTable = g_commandTable;
 
-	if (!plugin_register("hookmenu", menuhook))
+	if (!plugin_register("hookmenu", (void*)menuhook))
 		return 0;
 
 	g_pList = new SWS_TrackListWnd;

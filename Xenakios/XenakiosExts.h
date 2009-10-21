@@ -128,7 +128,6 @@ int XenGetProjectTakes(vector<MediaItem_Take*>& TheTakes,bool OnlyActive,bool On
 void DoMoveItemsLeftByItemLen(COMMAND_T*);
 extern int NumRepeatPasteRuns;
 void DoToggleTakesNormalize(COMMAND_T*);
-void GetDialogItemString(HWND DialogHandle,int DialogItem,WDL_String *TheString);
 void DoShowItemVolumeDialog(COMMAND_T*);
 void DoShowVolPanDialog(COMMAND_T*);
 void DoChooseNewSourceFileForSelTakes(COMMAND_T*);
@@ -165,10 +164,6 @@ void DoDeleteMutedItems(COMMAND_T*);
 //===========================================================
 // main.cpp
 void DoToggleRippleOneTrack(COMMAND_T*);
-int BrowseForFiles(HWND parent, WDL_PtrList<char> *filenames_out, const char *filterlist="Wav-files\0*.wav\0",
-	const char *title="Browse For Files", bool allow_multiselect=true, const char *defext="", const char *initialdir=NULL);
-int BrowseForSaveFile(HWND parent, WDL_PtrList<char> *filenames_out, const char *filterlist="Wav-files\0*.wav\0",
-	const char *title="Browse For Files", bool allow_multiselect=true, const char *defext="", const char *initialdir=NULL);
 void DoSelectFiles(COMMAND_T*);
 void DoInsertRandom(COMMAND_T*);
 void DoInsRndFileRndLen(COMMAND_T*);
@@ -205,7 +200,6 @@ int XenakiosInit();
 //===========================================================
 // MediaDialog.cpp
 string RemoveDoubleBackSlashes(string TheFileName);
-int SearchDirectory(vector<string>&, const string&, const string&, bool);
 void DoShowProjectMediaDlg(COMMAND_T*);
 void DoFindMissingMedia(COMMAND_T*);
 
@@ -358,8 +352,12 @@ int XenSingleStringQueryDlg(HWND hParent,const char *QueryTitle,char *QueryResul
 
 // XenUtils.cpp functions, globals:
 extern WDL_PtrList<char>* g_filenames;
-
-string GetDialogItemString(HWND hDlg,int ItemID);
+extern char g_CurrentScanFile[1024];
+extern bool g_bAbortScan;
 int GetActiveTakes(WDL_PtrList<MediaItem_Take> *MediaTakes);
-
-
+int SearchDirectory(vector<string> &refvecFiles, const char* cDir, const char* cExt, bool bSubdirs = true);
+// Browse fcns to match SWELL
+bool BrowseForSaveFile(const char *text, const char *initialdir, const char *initialfile, const char *extlist, char *fn, int fnsize);
+char *BrowseForFiles(const char *text, const char *initialdir, const char *initialfile, bool allowmul, const char *extlist);
+bool BrowseForDirectory(const char *text, const char *initialdir, char *fn, int fnsize);
+bool FileExists(const char* file);

@@ -53,15 +53,12 @@ BOOL WINAPI CreateTxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		int idx=0;
 		while (GetInputChannelName(idx))
 		{
-			ComboBox_AddString(hCombo,GetInputChannelName(idx));
+			SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)GetInputChannelName(idx));
 			idx++;
 		}
-		ComboBox_SetCurSel(hCombo,0);
-		
-		//SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_EDIT1), TRUE);
+		SendMessage(hCombo, CB_SETCURSEL, 0, 0);
 		SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
 		SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
-
 		return 0;
 	}
 	if (Message==WM_COMMAND && LOWORD(wParam)==IDOK)

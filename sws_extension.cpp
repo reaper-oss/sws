@@ -33,11 +33,9 @@
 #include "Snapshots/SnapshotClass.h"
 #include "Snapshots/Snapshots.h"
 #include "Zoom.h"
-#ifdef _WIN32
 #include "Color/Color.h"
 #include "MarkerList/MarkerListClass.h"
 #include "MarkerList/MarkerList.h"
-#endif
 #include "TrackList/TrackListFilter.h"
 #include "TrackList/Tracklist.h"
 #include "ProjectMgr.h"
@@ -295,6 +293,7 @@ extern "C"
 		IMPAPI(guidToString);
 		IMPAPI(InsertMedia);
 		IMPAPI(InsertTrackAtIndex);
+		IMPAPI(IsMediaExtension);
 		IMPAPI(kbd_enumerateActions);
 		IMPAPI(kbd_getCommandName);
 		IMPAPI(kbd_getTextFromCmd);
@@ -346,8 +345,8 @@ extern "C"
 
 		if (errcnt)
 		{
-			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have Reaper v2.x installed.  You can either install "
-				"v3 of Reaper from the www.reaper.fm or the SWS extension v1.2.4 from www.standingwaterstudios.com.", "Version Incompatibility", MB_OK);
+			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have a Reaper version less than 3.13 installed. "
+				"Please install the latest version of Reaper from www.reaper.fm.", "Version Incompatibility", MB_OK);
 			return 0;
 		}
 

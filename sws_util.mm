@@ -25,6 +25,9 @@
 ******************************************************************************/
 
 #import <Cocoa/Cocoa.h>
+#include "swell.h"
+
+const GUID GUID_NULL = { 0, 0, 0, "\0\0\0\0\0\0\0" };
 
 void GetDateString(int time, char* buf, int bufsize)
 {
@@ -48,6 +51,7 @@ void GetTimeString(int time, char* buf, int bufsize)
 
 int GetCustomColors()
 {
+	/*
 		id colorSwatch = nil;
 		NSArray *colors = nil;
 		
@@ -88,4 +92,7 @@ int GetCustomColors()
 		}
 		
 		return (NSArray *)userSwatchColors;
-	}}
+	}
+	 */
+	return 0;
+}

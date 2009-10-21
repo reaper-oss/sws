@@ -49,11 +49,8 @@ void DoNudgeSelectedItemsPositions(bool UseConfig,bool Positive,double NudgeTime
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	
-	int numItems=666;
+	int numItems;
 	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
-	double EditCurPos=GetCursorPosition();
 	
 	int i;
 	int j;
@@ -104,11 +101,10 @@ void DoSetItemFadesConfLen(COMMAND_T*)
 	NewFadeOutLen=g_command_params.CommandFadeOutA;
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	int numItems=666;
+	int numItems;
 	
 	bool ItemSelected=false;
 	
-	bool NewSelectedStatus=false;
 	int i;
 	int j;
 	for (i=0;i<GetNumTracks();i++)
@@ -150,10 +146,9 @@ void DoSetItemFadesConfLenB(COMMAND_T*)
 	NewFadeOutLen=g_command_params.CommandFadeOutB;
 	MediaTrack* pTrack;
 	MediaItem* CurItem;
-	int numItems=666;
+	int numItems;
 	bool ItemSelected=false;
 	
-	bool NewSelectedStatus=false;
 	int i;
 	int j;
 	for (i=0;i<GetNumTracks();i++)
@@ -181,7 +176,7 @@ void DoSetItemFadesConfLenB(COMMAND_T*)
 			} 
 		}
 	}
-	Undo_OnStateChangeEx("Set Item Fades To Configured Lenghts",4,-1);
+	Undo_OnStateChangeEx("Set item fades to configured lenghts",4,-1);
 	UpdateTimeline();
 }
 
@@ -206,10 +201,10 @@ void DoNudgeItemPitches(double NudgeAmount,bool Resampled)
 			double OldPlayRate=*(double*)GetSetMediaItemTakeInfo(ProjectTakes[i],"D_PLAYRATE",NULL);
 			double OldPitchSemis=12.0*log(OldPlayRate)/log(2.0);
 			//double OldItemSnapsOffs=*(double*)GetSetMediaItemInfo(CurItem,"D_SNAPOFFSET",0);
-			double OldItemPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",0);
+			//double OldItemPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",0);
 			double NewPitchSemis=OldPitchSemis+NudgeAmount;
 			double NewPlayRate=pow(2.0,NewPitchSemis/12.0);
-			double NewItemPos=OldItemPos*(NewPlayRate/OldPlayRate);
+			//double NewItemPos=OldItemPos*(NewPlayRate/OldPlayRate);
 			double OldLength=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
 			double NewLength=OldLength*(1.0/(NewPlayRate/OldPlayRate));
 			//double NewItemSnapOffs=OldItemSnapsOffs*NewPlayRate;
@@ -222,7 +217,7 @@ void DoNudgeItemPitches(double NudgeAmount,bool Resampled)
 			GetSetMediaItemTakeInfo(ProjectTakes[i],"D_PLAYRATE",&NewPlayRate);
 		}
 	}
-	Undo_OnStateChangeEx("Nudge Item Pitch",4,-1);
+	Undo_OnStateChangeEx("Nudge item pitch",4,-1);
 	UpdateTimeline();
 }
 
@@ -271,11 +266,10 @@ void DoNudgeItemsBeatsBased(bool UseConf,bool Positive, double theNudgeAmount)
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	
-	int numItems=666;
+	int numItems;
 	double NudgeAmount=g_command_params.ItemPosNudgeBeats;
 	bool ItemSelected=false;
 	
-	bool NewSelectedStatus=false;
 	int i;
 	int j;
 	for (i=0;i<GetNumTracks();i++)
@@ -323,13 +317,10 @@ void DoNudgeItemsRightBeatsAndConfBased(COMMAND_T*)
 
 void DoSplitItemsAtTransients(COMMAND_T*)
 {
-	//
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	//int numItems=666;
 	bool ItemSelected=false;
 	
-	bool NewSelectedStatus=false;
 	//double EditCurPos=GetCursorPosition();
 	
 	//MediaItem** MediaItemsOnTrack;
@@ -419,7 +410,6 @@ void DoNudgeItemVols(bool UseConf,bool Positive,double TheNudgeAmount)
 	int numItems;
 	double NudgeAmount=g_command_params.ItemVolumeNudge;
 	bool ItemSelected=false;
-	bool NewSelectedStatus=false;
 	int i;
 	int j;
 	for (i=0;i<GetNumTracks();i++)
@@ -501,10 +491,9 @@ void DoResetItemVol(COMMAND_T*)
 	//
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	int numItems=666;
+	int numItems;
 	bool ItemSelected=false;
 	
-	bool NewSelectedStatus=false;
 	int i;
 	int j;
 	for (i=0;i<GetNumTracks();i++)
@@ -561,8 +550,7 @@ char *FFT_sizes_strs[]=
   NULL
 };
 
-// TODO maybe eliminate this?
-char *fftSizeTxt;
+char fftSizeTxt[256] = "";
 
 typedef struct
 {
@@ -598,17 +586,16 @@ void InitFFTWNDBox(HWND hwnd, char *buf)
 
 void DoCSoundPvoc()
 {
+#ifdef _WIN32
 	//
 	
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	MediaItem_Take* CurTake;
 	PCM_source *ThePCMSource;
-	int numItems=666;
+	int numItems;
 	
 	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
 	bool FirstSelFound=false;
 	int i;
 	int j;
@@ -629,10 +616,7 @@ void DoCSoundPvoc()
 				if (GetMediaItemNumTakes(CurItem)>0)
 				{
 					CurTake=GetMediaItemTake(CurItem,-1);
-				
-					double NewVol=1.0;
 					FirstSelFound=true;				
-					
 					ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
 				}
 				
@@ -698,7 +682,7 @@ void DoCSoundPvoc()
 			GetProjectPath(ProjectPath,1024);
 			sprintf(buf,"\\PVOCrender %03d.wav",x);
 			strcat(ProjectPath,buf);
-			if (!PathFileExists(ProjectPath)) 
+			if (!FileExists(ProjectPath))
 			{ 
 				break;
 			}
@@ -744,6 +728,7 @@ void DoCSoundPvoc()
 		}
 	}
 	UpdateTimeline();
+#endif
 }
 
 WDL_DLGRET CSPVOCItemDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -752,7 +737,7 @@ WDL_DLGRET CSPVOCItemDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	switch(Message)
     {
         case WM_INITDIALOG:
-			{
+		{
 			char TextBuf[32];
 			
 			sprintf(TextBuf,"%.2f",g_last_PVOC_Params.StretchFact);
@@ -763,42 +748,30 @@ WDL_DLGRET CSPVOCItemDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			InitFFTWNDBox (GetDlgItem(hwnd,IDC_COMBO1),fftSizeTxt);
 			g_hPVOCconfDlg=hwnd;
 			//MessageBox(g_hwndParent,g_last_PVOC_Params.fftSize,"info",MB_OK);	
-#ifdef _WIN32
-			SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_EDIT1), TRUE);
-#endif
+			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
+			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
 			//SendMessage(GetDlgItem(hwnd, IDC_COMBO1), CB_SETCURSEL, 0, 0);
-			//delete TextBuf;
-			return 0;
-			}
+			break;
+		}
 		case WM_COMMAND:
             switch(LOWORD(wParam))
             {
                 case IDOK:
-					{
-						
-						WDL_String *TempString=new WDL_String;
-						//g_last_PVOC_Params.fftSize=
-						GetDialogItemString(g_hPVOCconfDlg,IDC_COMBO1,TempString);
-						//strcpy(fftSizeTxt,TempString->Get());
-						if (fftSizeTxt) free (fftSizeTxt);
-						fftSizeTxt=_strdup(TempString->Get());
-						//strcpy(g_last_PVOC_Params.fftSize, TempString->Get());
-						g_last_PVOC_Params.fftSize=atoi(TempString->Get());
-						//MessageBox(g_hwndParent,g_last_PVOC_Params.fftSize,"info",MB_OK);
-						GetDialogItemString(g_hPVOCconfDlg,IDC_EDIT1,TempString);
-						g_last_PVOC_Params.StretchFact =strtod(TempString->Get(),NULL);
-						GetDialogItemString(g_hPVOCconfDlg,IDC_EDIT2,TempString);
-						g_last_PVOC_Params.Transpose =strtod(TempString->Get(),NULL);
-						DoCSoundPvoc();
-						delete TempString;
-						EndDialog(hwnd,0);
-						return 0;
-					}
+				{
+					char str[256];
+					GetDlgItemText(g_hPVOCconfDlg, IDC_COMBO1, fftSizeTxt, 256);
+					g_last_PVOC_Params.fftSize = atoi(fftSizeTxt);
+					GetDlgItemText(g_hPVOCconfDlg, IDC_EDIT1, str, 256);
+					g_last_PVOC_Params.StretchFact = strtod(str, NULL);
+					GetDlgItemText(g_hPVOCconfDlg, IDC_EDIT2, str, 256);
+					g_last_PVOC_Params.Transpose = strtod(str, NULL);
+					DoCSoundPvoc();
+					EndDialog(hwnd,0);
+					break;
+				}
 				case IDCANCEL:
-					{
-						EndDialog(hwnd,0);
-						return 0;
-					}
+					EndDialog(hwnd,0);
+					break;
 			}
 	}
 	return 0;
@@ -811,7 +784,7 @@ void DoShowPVocDlg(COMMAND_T*)
 	//
 	if (g_PVOC_firstrun==true)
 	{
-		fftSizeTxt="2048";
+		strcpy(fftSizeTxt, "2048");
 		g_last_PVOC_Params.fftSize=2048;
 		g_last_PVOC_Params.StretchFact=2.0;
 		g_last_PVOC_Params.Transpose=0.0;
@@ -847,8 +820,6 @@ void DoScaleItemPosStatic2(double TheScaling,double TheLengthScaling,bool Restor
 
 	
 	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
 	//double EditCurPos=GetCursorPosition();
 	
 	//MediaItem** MediaItemsOnTrack;
@@ -952,7 +923,7 @@ WDL_DLGRET ScaleItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 	switch(Message)
     {
         case WM_INITDIALOG:
-			{
+		{
 #ifdef _WIN32
 			hPosScaler = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER1", 
 				WS_CHILD | WS_VISIBLE | TBS_VERT, 
@@ -967,76 +938,70 @@ WDL_DLGRET ScaleItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
 			sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.LengthScaling);
 			SetDlgItemText(hwnd, IDC_EDIT5, TextBuf);
-
-			SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_EDIT1), TRUE);
-			
-			return 0;
 #else
 			hPosScaler= SWELL_MakeControl("DLGFADER1", 667, "REAPERhfader", 0, 110, 5, 100, 10, 0);
 			char TextBuf[32];
 			sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.Scaling);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
 #endif
-			}
+			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
+			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
+			break;
+		}
         case WM_HSCROLL:
+		{
+			char TextBuf[128];
+			int SliderPos=(int)SendMessage((HWND)lParam,TBM_GETPOS,0,0);
+			double PosScalFact=10+((190.0/1000)*SliderPos);
+			if ((HWND)lParam==hPosScaler)
 			{
-				
-				char TextBuf[128];
-				int SliderPos=(int)SendMessage((HWND)lParam,TBM_GETPOS,0,0);
-				double PosScalFact=10+((190.0/1000)*SliderPos);
-				if ((HWND)lParam==hPosScaler)
-				{
-					g_last_ScaleItemPosParams.Scaling=PosScalFact;
-					sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.Scaling);
-					SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
-				}
-				if ((HWND)lParam==hLenScaler)
-				{
-					g_last_ScaleItemPosParams.LengthScaling=PosScalFact;
-					sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.LengthScaling);
-					SetDlgItemText(hwnd, IDC_EDIT5, TextBuf);
-				}
-				DoScaleItemPosStatic2(g_last_ScaleItemPosParams.Scaling,g_last_ScaleItemPosParams.LengthScaling, false);
-				UpdateTimeline();
-				return 0;
+				g_last_ScaleItemPosParams.Scaling=PosScalFact;
+				sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.Scaling);
+				SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
 			}
+			if ((HWND)lParam==hLenScaler)
+			{
+				g_last_ScaleItemPosParams.LengthScaling=PosScalFact;
+				sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.LengthScaling);
+				SetDlgItemText(hwnd, IDC_EDIT5, TextBuf);
+			}
+			DoScaleItemPosStatic2(g_last_ScaleItemPosParams.Scaling,g_last_ScaleItemPosParams.LengthScaling, false);
+			UpdateTimeline();
+			break;
+		}
 
 		case WM_COMMAND:
             switch(LOWORD(wParam))
             {
 				case IDC_APPLY:
-					{
-						char textbuf[100];
-						GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
-						g_last_ScaleItemPosParams.Scaling=atof(textbuf);
-						GetDlgItemText(hwnd,IDC_EDIT5,textbuf,100);
-						g_last_ScaleItemPosParams.LengthScaling=atof(textbuf);
-						DoScaleItemPosStatic2(g_last_ScaleItemPosParams.Scaling,g_last_ScaleItemPosParams.LengthScaling, false);
-						UpdateTimeline();
-						return 0;
-					}
-
+				{
+					char textbuf[100];
+					GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
+					g_last_ScaleItemPosParams.Scaling=atof(textbuf);
+					GetDlgItemText(hwnd,IDC_EDIT5,textbuf,100);
+					g_last_ScaleItemPosParams.LengthScaling=atof(textbuf);
+					DoScaleItemPosStatic2(g_last_ScaleItemPosParams.Scaling,g_last_ScaleItemPosParams.LengthScaling, false);
+					UpdateTimeline();
+					break;
+				}
 				case IDOK:
-					{
-						char textbuf[100];
-						GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
-						g_last_ScaleItemPosParams.Scaling=atof(textbuf);
-						GetDlgItemText(hwnd,IDC_EDIT5,textbuf,100);
-						g_last_ScaleItemPosParams.LengthScaling=atof(textbuf);
-						DoScaleItemPosStatic2(g_last_ScaleItemPosParams.Scaling,g_last_ScaleItemPosParams.LengthScaling, false);
-						Undo_OnStateChangeEx("Scale Item Positions By Static Percentage",4,-1);
-						UpdateTimeline();
-						EndDialog(hwnd,0);
-						return 0;
-					}
+				{
+					char textbuf[100];
+					GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
+					g_last_ScaleItemPosParams.Scaling=atof(textbuf);
+					GetDlgItemText(hwnd,IDC_EDIT5,textbuf,100);
+					g_last_ScaleItemPosParams.LengthScaling=atof(textbuf);
+					DoScaleItemPosStatic2(g_last_ScaleItemPosParams.Scaling,g_last_ScaleItemPosParams.LengthScaling, false);
+					Undo_OnStateChangeEx("Scale Item Positions By Static Percentage",4,-1);
+					UpdateTimeline();
+					EndDialog(hwnd,0);
+					break;
+				}
 				case IDCANCEL:
-					{
-						//MessageBox(hwnd,"cancel pressed","info",MB_OK);
-						DoScaleItemPosStatic2(g_last_ScaleItemPosParams.Scaling,g_last_ScaleItemPosParams.LengthScaling,true);
-						UpdateTimeline();
-						EndDialog(hwnd,0);
-						return 0;
-					}
+					DoScaleItemPosStatic2(g_last_ScaleItemPosParams.Scaling,g_last_ScaleItemPosParams.LengthScaling,true);
+					UpdateTimeline();
+					EndDialog(hwnd,0);
+					break;
 			}
 	}
 	return 0;
@@ -1058,12 +1023,9 @@ void DoScaleItemPosStaticDlg(COMMAND_T*)
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	
-	int numItems=666;
-	
-	
+	int numItems;
 	bool ItemSelected=false;
 	int ItemCounter=0;
-	bool NewSelectedStatus=false;
 	int i;
 	int j;
 	for (i=0;i<GetNumTracks();i++)
@@ -1135,38 +1097,33 @@ void DoRandomizePositions2()
 
 WDL_DLGRET RandomizeItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	//
 	switch(Message)
     {
         case WM_INITDIALOG:
-			{
+		{
 			char TextBuf[32];
 			
 			sprintf(TextBuf,"%.2f",g_last_RandomizeItemPosParams.RandRange);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
-#ifdef _WIN32
-			SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_EDIT1), TRUE);
-#endif
-			return 0;
-			}
+			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
+			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
+			break;
+		}
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
                 case IDOK:
-					{
-						char textbuf[100];
-						GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
-						g_last_RandomizeItemPosParams.RandRange=atof(textbuf);
-						DoRandomizePositions2();
-						EndDialog(hwnd,0);
-						return 0;
-					}
+				{
+					char textbuf[100];
+					GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
+					g_last_RandomizeItemPosParams.RandRange=atof(textbuf);
+					DoRandomizePositions2();
+					EndDialog(hwnd,0);
+					break;
+				}
 				case IDCANCEL:
-					{
-						//MessageBox(hwnd,"cancel pressed","info",MB_OK);
-						EndDialog(hwnd,0);
-						return 0;
-					}
+					EndDialog(hwnd,0);
+					break;
 			}
 	}
 	return 0;
@@ -1176,7 +1133,6 @@ void DoRandomizePositionsDlg(COMMAND_T*)
 {
 	if (g_RandItemPosFirstRun)
 	{
-		//
 		g_last_RandomizeItemPosParams.RandRange=0.1;
 		g_RandItemPosFirstRun=false;
 		
@@ -1316,9 +1272,8 @@ WDL_DLGRET GenEnvesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 			SetDlgItemText(hwnd, IDC_EDIT3, TextBuf);
 			//sprintf(TextBuf,"%.2f",g_last_RandomizeItemPosParams.RandRange);
 			//SetDlgItemText(hwnd, IDC_EDIT1, "440.0");
-#ifdef _WIN32
-			SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_EDIT2), TRUE);
-#endif
+			SetFocus(GetDlgItem(hwnd, IDC_EDIT2));
+			SendMessage(GetDlgItem(hwnd, IDC_EDIT2), EM_SETSEL, 0, -1);
 			return 0;
 			}
         case WM_COMMAND:
@@ -1657,12 +1612,8 @@ void DoShowTakeMixerDlg(COMMAND_T*)
 		MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	
-	int numItems=666;
-	
-	
+	int numItems;
 	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
 	bool FirstItemFound=false;
 	int i;
 	int j;
@@ -1755,11 +1706,11 @@ void DoSplitAndChangeLen(bool BeatBased)
 					//
 		double NewStartSecs=GetCursorPosition();
 		double NewStartBeats=TimeMap_timeToQN(NewStartSecs);
-		//ComboBox_GetText(g_hNudgeComboBox,NudgeComboText,200);
 		double BeatNudgeValFromCombo;
-		int NudgeComboSel=ComboBox_GetCurSel(g_hNudgeComboBox);
-		ComboBox_GetText(g_hNudgeComboBox,NudgeComboText,200);
-		NudgeComboSel=ComboBox_FindStringExact(g_hNudgeComboBox,-1,NudgeComboText);
+		int NudgeComboSel=SendMessage(g_hNudgeComboBox, CB_GETCURSEL, 0, 0);
+		GetWindowText(g_hNudgeComboBox, NudgeComboText, 200);
+		// ?? TODO
+		// NudgeComboSel=ComboBox_FindStringExact(g_hNudgeComboBox,-1,NudgeComboText);
 		//t_Notevalue_struct paska;
 		//paska=g_NoteValues[NudgeComboSel];
 		if (NudgeComboSel!=CB_ERR)
@@ -1839,12 +1790,6 @@ void ConstructItemDatabase()
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	MediaItem_Take* CurTake;
-	//int numItems=666;
-	
-	
-	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
 	//double EditcurPos=GetCursorPosition();
 	int NumItems=0;
 	int i;
@@ -1964,50 +1909,42 @@ WDL_DLGRET TakeFinderDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	switch(Message)
     {
         case WM_INITDIALOG:
-			{
-				char labtxt[256];
-#ifdef _WIN32
-				SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_EDIT1), TRUE);				
-#endif
-				sprintf(labtxt,"Search from %d items",g_NumProjectItems);
-				SetDlgItemText(hwnd,IDC_STATIC1,labtxt);
-				return 0;
-			}
+		{
+			char labtxt[256];
+			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
+			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
+			sprintf(labtxt,"Search from %d items",g_NumProjectItems);
+			SetDlgItemText(hwnd,IDC_STATIC1,labtxt);
+			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
+			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
+			break;
+		}
 		case WM_COMMAND:
 			if (HIWORD(wParam) == EN_CHANGE && LOWORD(wParam) == IDC_EDIT1)
+			{
+				Main_OnCommand(40289,0); // unselect all items
+				char labtxt[256];
+				GetDlgItemText(hwnd,IDC_EDIT1,labtxt,256);
+				int len=(int)strlen(labtxt);
+				if (len>0)
 				{
-					Main_OnCommand(40289,0); // unselect all items
-					char labtxt[256];
-					GetDlgItemText(hwnd,IDC_EDIT1,labtxt,256);
-					int len=(int)strlen(labtxt);
-					if (len>0)
+					int NumMatches=PerformTakeSearch(labtxt);
+					sprintf(labtxt,"Found %d matching items",NumMatches);
+					SetDlgItemText(hwnd,IDC_STATIC1,labtxt);
+					if (NumMatches>0) 
 					{
-						int NumMatches=PerformTakeSearch(labtxt);
-						sprintf(labtxt,"Found %d matching items",NumMatches);
-						SetDlgItemText(hwnd,IDC_STATIC1,labtxt);
-						if (NumMatches>0) 
-						{
-							Main_OnCommand(40290,0); // time selection to selected items
-							Main_OnCommand(40031,0); // zoom to time selection
-						}
-
+						Main_OnCommand(40290,0); // time selection to selected items
+						Main_OnCommand(40031,0); // zoom to time selection
 					}
-					return 0;
 				}
+				break;
+			}
 			switch(LOWORD(wParam))
             {
 				case IDOK:
-					
-					{
-						EndDialog(hwnd,0);
-						return 0;
-					}
 				case IDCANCEL:
-					
-					{
-						EndDialog(hwnd,0);
-						return 0;
-					}
+					EndDialog(hwnd,0);
+					break;
 			}
 	}
 	return 0;

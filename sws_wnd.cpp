@@ -151,17 +151,9 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_CONTEXTMENU:
 		{
 			int x = LOWORD(lParam), y = HIWORD(lParam);
-			if (m_pList)
-			{
-				// Are we over the column header?
-				int iCol;
-				LPARAM item = m_pList->GetHitItem(x, y, &iCol);
-				if (!item && iCol != -1)
-				{
-					TrackPopupMenu(m_pList->GetColumnMenu(), 0, x, y, 0, m_hwnd, NULL);
-					break;
-				}
-			}
+			// Are we over the column header?
+			if (m_pList && m_pList->DoColumnMenu(x, y))
+				break;
 
 			HMENU hMenu = OnContextMenu(x, y);
 			if (!hMenu)
@@ -189,13 +181,11 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			kbd_reprocessMenu(hMenu, NULL);
 			TrackPopupMenu(hMenu, 0, xPos, yPos, 0, m_hwnd, NULL);
+			DestroyMenu(hMenu);
 
 			break;
 		}
 		case WM_COMMAND:
-			if (m_pList)
-				m_pList->OnCommand(wParam, lParam);
-
 			OnCommand(wParam, lParam);
 
 			switch (wParam)
@@ -560,74 +550,80 @@ void SWS_ListView::Update()
 	}
 }
 
-HMENU SWS_ListView::GetColumnMenu()
+// Return TRUE if a the column header was clicked
+bool SWS_ListView::DoColumnMenu(int x, int y)
 {
-	HMENU hMenu = CreatePopupMenu();
-	AddToMenu(hMenu, "Visible columns", 0);
-	EnableMenuItem(hMenu, 0, MF_BYPOSITION | MF_GRAYED);
-
-	for (int i = 0; i < m_iCols; i++)
+	int iCol;
+	LPARAM item = GetHitItem(x, y, &iCol);
+	if (!item && iCol != -1)
 	{
-		AddToMenu(hMenu, m_pCols[i].cLabel, COLEDIT_MSG + i);
-		if (m_pCols[i].iPos != -1)
-			CheckMenuItem(hMenu, i+1, MF_BYPOSITION | MF_CHECKED);
-	}
-	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hMenu, "Reset", COLEDIT_MSG + m_iCols);
+		HMENU hMenu = CreatePopupMenu();
+		AddToMenu(hMenu, "Visible columns", 0);
+		EnableMenuItem(hMenu, 0, MF_BYPOSITION | MF_GRAYED);
 
-	return hMenu;
-}
-
-void SWS_ListView::OnCommand(WPARAM wParam, LPARAM lParam)
-{
-	if (wParam >= COLEDIT_MSG && wParam <= COLEDIT_MSG + m_iCols)
-	{
-		int iCol = (int)(wParam - COLEDIT_MSG);
-		if (iCol == m_iCols)
+		for (int i = 0; i < m_iCols; i++)
 		{
-			for (int i = 0; i < m_iCols; i++)
-				m_pCols[i].iPos = i;
+			AddToMenu(hMenu, m_pCols[i].cLabel, i + 1);
+			if (m_pCols[i].iPos != -1)
+				CheckMenuItem(hMenu, i+1, MF_BYPOSITION | MF_CHECKED);
 		}
-		else
-		{
-			// Save all visible column widths
-			for (int i = 0; i < m_iCols; i++)
-				if (m_pCols[i].iPos != -1)
-					m_pCols[i].iWidth = ListView_GetColumnWidth(m_hwndList, DataToDisplayCol(i));
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+		AddToMenu(hMenu, "Reset", m_iCols + 1);
 
-			if (m_pCols[iCol].iPos == -1)
-			{	// Adding column
+		int iCol = TrackPopupMenu(hMenu, TPM_RETURNCMD, x, y, 0, m_hwndList, NULL);
+		DestroyMenu(hMenu);
+
+		if (iCol)
+		{
+			iCol--;
+			if (iCol == m_iCols)
+			{
 				for (int i = 0; i < m_iCols; i++)
-					if (m_pCols[i].iPos >= iCol)
-						m_pCols[i].iPos++;
-				m_pCols[iCol].iPos = iCol;
+					m_pCols[i].iPos = i;
 			}
 			else
-			{	// Deleting column
-				int iDelPos = m_pCols[iCol].iPos;
-				m_pCols[iCol].iPos = -1;
+			{
+				// Save all visible column widths
 				for (int i = 0; i < m_iCols; i++)
-					if (m_pCols[i].iPos > iDelPos)
-						m_pCols[i].iPos--;
+					if (m_pCols[i].iPos != -1)
+						m_pCols[i].iWidth = ListView_GetColumnWidth(m_hwndList, DataToDisplayCol(i));
 
-				// Fix the sort column
-				if (abs(m_iSortCol) - 1 == iCol)
+				if (m_pCols[iCol].iPos == -1)
+				{	// Adding column
 					for (int i = 0; i < m_iCols; i++)
-						if (m_pCols[i].iPos != -1)
-						{
-							m_iSortCol = i+1;
-							break;
-							// Possible to break out leaving the sort column pointing to
-							// an invisible col if there's no columns shown!
-						}
-			}
-		}
+						if (m_pCols[i].iPos >= iCol)
+							m_pCols[i].iPos++;
+					m_pCols[iCol].iPos = iCol;
+				}
+				else
+				{	// Deleting column
+					int iDelPos = m_pCols[iCol].iPos;
+					m_pCols[iCol].iPos = -1;
+					for (int i = 0; i < m_iCols; i++)
+						if (m_pCols[i].iPos > iDelPos)
+							m_pCols[i].iPos--;
 
-		ListView_DeleteAllItems(m_hwndList);
-		while(ListView_DeleteColumn(m_hwndList, 0));
-		ShowColumns();
-		Update();
+					// Fix the sort column
+					if (abs(m_iSortCol) - 1 == iCol)
+						for (int i = 0; i < m_iCols; i++)
+							if (m_pCols[i].iPos != -1)
+							{
+								m_iSortCol = i+1;
+								break;
+								// Possible to break out leaving the sort column pointing to
+								// an invisible col if there's no columns shown!
+							}
+				}
+			}
+
+			ListView_DeleteAllItems(m_hwndList);
+			while(ListView_DeleteColumn(m_hwndList, 0));
+			ShowColumns();
+			Update();
+		}
+		return true;
 	}
+	return false;
 }
 
 LPARAM SWS_ListView::GetHitItem(int x, int y, int* iCol)

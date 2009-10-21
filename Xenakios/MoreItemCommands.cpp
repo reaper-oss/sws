@@ -175,70 +175,65 @@ WDL_DLGRET ItemPosRemapDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 	switch(Message)
     {
         case WM_INITDIALOG:
-			{
-				char labtxt[256];
-				sprintf(labtxt,"%.2f",g_itemposremap_params.Curve);
-				SetDlgItemText(hwnd,IDC_IPRCURVE,labtxt);
-				RECT rect1;
-				GetClientRect(GetDlgItem(hwnd,IDC_STATIC1),&rect1);
-				int CurveSliderLeft=rect1.right+15;
-				GetClientRect(GetDlgItem(hwnd,IDC_IPRCURVE),&rect1);
-				int CurveSliderRight=rect1.left-10;
-				HWND hCurveSlider = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER1", 
-					WS_CHILD | WS_VISIBLE | TBS_VERT, 
-					45, 5, 150, 25, hwnd, NULL, g_hInst, NULL);
-#ifdef _WIN32
-				SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_IPRCURVE), TRUE);
-#endif
-				return 0;
-			}
+		{
+			char labtxt[256];
+			sprintf(labtxt,"%.2f",g_itemposremap_params.Curve);
+			SetDlgItemText(hwnd,IDC_IPRCURVE,labtxt);
+			RECT rect1;
+			GetClientRect(GetDlgItem(hwnd,IDC_STATIC1),&rect1);
+			int CurveSliderLeft=rect1.right+15;
+			GetClientRect(GetDlgItem(hwnd,IDC_IPRCURVE),&rect1);
+			int CurveSliderRight=rect1.left-10;
+			HWND hCurveSlider = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER1", 
+				WS_CHILD | WS_VISIBLE | TBS_VERT, 
+				45, 5, 150, 25, hwnd, NULL, g_hInst, NULL);
+
+			SetFocus(GetDlgItem(hwnd, IDC_IPRCURVE));
+			SendMessage(GetDlgItem(hwnd, IDC_IPRCURVE), EM_SETSEL, 0, -1);
+			break;
+		}
         case WM_HSCROLL:
-			{
-				char TextBuf[128];
-				int SliderPos=(int)SendMessage((HWND)lParam,TBM_GETPOS,0,0);
-				double PosScalFact=.1+1.9*SliderPos/1000.0;
-				sprintf(TextBuf,"%.2f",PosScalFact);
-				SetDlgItemText(hwnd, IDC_IPRCURVE, TextBuf);
-				return 0;
-			}
+		{
+			char TextBuf[128];
+			int SliderPos=(int)SendMessage((HWND)lParam,TBM_GETPOS,0,0);
+			double PosScalFact=.1+1.9*SliderPos/1000.0;
+			sprintf(TextBuf,"%.2f",PosScalFact);
+			SetDlgItemText(hwnd, IDC_IPRCURVE, TextBuf);
+			break;
+		}
 		case WM_COMMAND:
+		{
+			switch(LOWORD(wParam))
 			{
-				switch(LOWORD(wParam))
-				{
 				case IDC_APPLY:
-					{
-						char txtbuf[256];
-						GetDlgItemText(hwnd,IDC_IPRCURVE,txtbuf,256);
-						g_itemposremap_params.Curve=atof(txtbuf);
-						DoRemapItemPositions(false);
-						UpdateTimeline();
-						return 0;
-					}
-
+				{
+					char txtbuf[256];
+					GetDlgItemText(hwnd,IDC_IPRCURVE,txtbuf,256);
+					g_itemposremap_params.Curve=atof(txtbuf);
+					DoRemapItemPositions(false);
+					UpdateTimeline();
+					break;
+				}
 				case IDOK:
-					
-					{
-						char txtbuf[256];
-						GetDlgItemText(hwnd,IDC_IPRCURVE,txtbuf,256);
-						g_itemposremap_params.Curve=atof(txtbuf);
-						DoRemapItemPositions(false);
-						UpdateTimeline();
-						Undo_OnStateChangeEx("Remap Item Positions",4,-1);
-						EndDialog(hwnd,0);
-						return 0;
-					}
+				{
+					char txtbuf[256];
+					GetDlgItemText(hwnd,IDC_IPRCURVE,txtbuf,256);
+					g_itemposremap_params.Curve=atof(txtbuf);
+					DoRemapItemPositions(false);
+					UpdateTimeline();
+					Undo_OnStateChangeEx("Remap Item Positions",4,-1);
+					EndDialog(hwnd,0);
+					break;
+				}
 				case IDCANCEL:
-					
-					{
-						DoRemapItemPositions(true);
-						UpdateTimeline();
-						EndDialog(hwnd,0);
-						return 0;
-					}
-				
-
+				{
+					DoRemapItemPositions(true);
+					UpdateTimeline();
+					EndDialog(hwnd,0);
+					break;
 				}
 			}
+		}
 	}
 	return 0;
 }
@@ -370,8 +365,7 @@ void DoRubberBandProcessing()
 					{
 						
 						sprintf(RenderOutName,"%s\\%s %03d.wav",ProjectPath, OriginalSourceFileName,x);
-						//strcat(RenderOutName,buf);
-						if (!PathFileExists(RenderOutName)) 
+						if (!FileExists(RenderOutName))
 						{ 
 							break;
 						}
@@ -442,10 +436,8 @@ WDL_DLGRET RubberBandDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 				SetDlgItemText(hwnd,IDC_RBPEDIT3,txt);
 				sprintf(txt,"%d",g_RubberBandParams.Mode);
 				SetDlgItemText(hwnd,IDC_RBPEDIT1,txt);
-#ifdef _WIN32
-				SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_RBPEDIT2), TRUE);
-				//SetFocus(GetDlgItem(hwnd,IDC_RBPEDIT2));
-#endif
+				SetFocus(GetDlgItem(hwnd, IDC_RBPEDIT2));
+				SendMessage(GetDlgItem(hwnd, IDC_RBPEDIT2), EM_SETSEL, 0, -1);
 			}
 		case WM_COMMAND:
 			{
@@ -764,7 +756,7 @@ void DoDeleteItemAndMedia(COMMAND_T*)
 					CurTake=GetMediaItemTake(CurItem,k);
 					PCM_source *CurPCM;
 					CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					if (PathFileExists(CurPCM->GetFileName()))
+					if (FileExists(CurPCM->GetFileName()))
 					{
 						char buf[2000];
 						sprintf(buf,"Do you really want to immediately delete file (NO UNDO) %s?",CurPCM->GetFileName());
@@ -832,7 +824,7 @@ void DoDelSelItemAndSendActiveTakeMediaToRecycler(COMMAND_T*)
 				{
 					CurTake=GetMediaItemTake(CurItem,k);
 					PCM_source* CurPCM = (PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					if (PathFileExists(CurPCM->GetFileName()))
+					if (FileExists(CurPCM->GetFileName()))
 					{
 						SendFileToRecycleBin(CurPCM->GetFileName());
 						char fileName[512];
@@ -869,7 +861,7 @@ void DoNukeTakeAndSourceMedia(COMMAND_T*)
 				CurTake=GetMediaItemTake(CurItem,-1);
 				PCM_source *CurPCM;
 				CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-				if (PathFileExists(CurPCM->GetFileName()))
+				if (FileExists(CurPCM->GetFileName()))
 				{
 					char buf[2000];
 					sprintf(buf,"Do you really want to immediately delete file (NO UNDO) %s?",CurPCM->GetFileName());
@@ -912,7 +904,7 @@ void DoDeleteActiveTakeAndRecycleSourceMedia(COMMAND_T*)
 				CurTake=GetMediaItemTake(CurItem,-1);
 				PCM_source *CurPCM;
 				CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-				if (PathFileExists(CurPCM->GetFileName()))
+				if (FileExists(CurPCM->GetFileName()))
 				{
 					SendFileToRecycleBin(CurPCM->GetFileName());	
 					char fileName[512];
@@ -1266,7 +1258,6 @@ WDL_DLGRET TogItemsSelDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 {
 	static bool Applied=false;
 	char tbuf[200];
-	static string dlgString;
 	static stringstream dlgSS;
 	if (Message==WM_INITDIALOG)
 	{
@@ -1277,7 +1268,8 @@ WDL_DLGRET TogItemsSelDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 		dlgSS << g_itemseltogprob*100.0;
 		//sprintf(tbuf,"%.1f",g_itemseltogprob*100.0);
 		SetDlgItemText(hwnd,IDC_EDIT1,dlgSS.str().c_str());
-		SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_EDIT1), TRUE);
+		SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
+		SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
 		return 0;
 	}
 	if (Message==WM_COMMAND && LOWORD(wParam)==IDCANCEL)
@@ -1289,12 +1281,11 @@ WDL_DLGRET TogItemsSelDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 	}
 	if (Message==WM_COMMAND && LOWORD(wParam)==IDC_BUTTON1)
 	{
-		dlgString.assign(GetDialogItemString(hwnd,IDC_EDIT1));
-		GetDlgItemText(hwnd,IDC_EDIT1,tbuf,199);
-		g_itemseltogprob=atof(dlgString.c_str())/100.0;
+		GetDlgItemText(hwnd, IDC_EDIT1, tbuf, 199);
+		g_itemseltogprob=atof(tbuf)/100.0;
 		if (g_itemseltogprob<0.0) g_itemseltogprob=0.0;
 		if (g_itemseltogprob>1.0) g_itemseltogprob=1.0;
-		DoTogSelItemsRandomly(false,g_itemseltogprob);
+		DoTogSelItemsRandomly(false, g_itemseltogprob);
 		UpdateTimeline();
 		Applied=true;
 	}
@@ -1377,71 +1368,6 @@ void DoSlipItemContentsOneSampleRight(COMMAND_T*)
 	DoSlipItemContents(0,1,false);
 }
 
-int SearchDirectoryForRPPFiles(vector<string> &refvecFiles, const string &refcstrRootDirectory,
-	const string &refcstrExtension, bool bSearchSubdirectories = true)
-{
-	string     strFilePath;             // Filepath
-	string     strPattern;              // Pattern
-	string     strExtension;            // Extension
-	HANDLE          hFile;                   // Handle to file
-	WIN32_FIND_DATA FileInformation;         // File information
-
-	strPattern = refcstrRootDirectory + "\\*.*";
-
-	hFile = ::FindFirstFile(strPattern.c_str(), &FileInformation);
-	if(hFile != INVALID_HANDLE_VALUE)
-	{
-	    do
-		{
-			if(FileInformation.cFileName[0] != '.')
-			{
-				//if (g_scan_aborted)
-				//	return 0;
-				strFilePath.erase();
-				//strFilePath = refcstrRootDirectory + FileInformation.cFileName;
-				strFilePath = refcstrRootDirectory + "\\" + FileInformation.cFileName;
-				if(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-				{
-					if(bSearchSubdirectories)
-					{
-						// Search subdirectory
-						int iRC = SearchDirectory(refvecFiles, strFilePath, refcstrExtension, bSearchSubdirectories);
-						if(iRC)
-							return iRC;
-					}
-				}
-				else
-				{
-					// Check extension
-					strExtension = FileInformation.cFileName;
-					strExtension = strExtension.substr(strExtension.rfind(".") + 1);
-					transform(strExtension.begin(), strExtension.end(), strExtension.begin(), (int(*)(int)) toupper);	
-					//transform(refcstrExtension.begin(), refcstrExtension.end(), refcstrExtension.begin(), (int(*)(int)) toupper);
-					string paskaKopio;
-					paskaKopio=refcstrExtension;
-					transform(paskaKopio.begin(), paskaKopio.end(), paskaKopio.begin(), (int(*)(int)) toupper);
-					int extMatch=0;
-
-					if (strExtension=="RPP")
-						extMatch++;
-					if (extMatch>0)
-						// Save filename
-						refvecFiles.push_back(strFilePath);
-				}
-			}
-		}
-		while(::FindNextFile(hFile, &FileInformation) == TRUE);
-
-		// Close handle
-		::FindClose(hFile);
-
-		DWORD dwError = ::GetLastError();
-		if(dwError != ERROR_NO_MORE_FILES)
-			return dwError;
-	}
-	return 0;
-}
-
 void ReplaceItemSourceFileFromFolder(bool askforFolder,int mode,int param,bool onlyRPP=false)
 {
 	vector<MediaItem_Take*> thetakes;
@@ -1459,16 +1385,12 @@ void ReplaceItemSourceFileFromFolder(bool askforFolder,int mode,int param,bool o
 		fncompns.clear();
 		SplitFileNameComponents(srcfn,fncompns);
 		foundfiles.clear();
-		if (!onlyRPP)
-			SearchDirectory(foundfiles,fncompns[0],"pelle",false);
-		else
-			SearchDirectoryForRPPFiles(foundfiles,fncompns[0],"pelle",false);
+		SearchDirectory(foundfiles, fncompns[0].c_str(), onlyRPP ? "RPP" : NULL, false);
 		int j;
 		// find index take's source file in the found files
 		int fileindx=-1;
 		for (j=0;j<(int)foundfiles.size();j++)
 		{
-			
 			string temps;
 		
 			temps.assign(RemoveDoubleBackSlashes(foundfiles[j]));
@@ -1696,36 +1618,33 @@ void DoCreateMarkersFromSelItems1(COMMAND_T*)
 
 void DoSaveItemAsFile1(COMMAND_T*)
 {
-	
 	vector<MediaItem*> theitems;
 	XenGetProjectItems(theitems,true,false);
 	if (theitems.size()>0)
 	{
 		Main_OnCommand(40601,0); // render items as new takes
-		WDL_PtrList<char> filez;
-		char ppath[2048];
+		char ppath[MAX_PATH];
+		char savedlgtitle[2048];
+		char newfilename[512];
 		GetProjectPath(ppath,2048);
 		int i;
 		for (i=0;i<(int)theitems.size();i++)
 		{
 			MediaItem_Take* ptake=GetMediaItemTake(theitems[i],-1);
-			filez.Empty(false);
-			char savedlgtitle[2048];
-			sprintf(savedlgtitle,"Save item \"%s\" as",(char*)GetSetMediaItemTakeInfo(ptake,"P_NAME",0));
-			BrowseForSaveFile(g_hwndParent,	&filez,"Wav files\0*.wav\0",savedlgtitle, false, "", ppath); 	
-			if (filez.Get(0) &&  strlen(filez.Get(0))>0)
+			PCM_source *src=(PCM_source*)GetSetMediaItemTakeInfo(ptake,"P_SOURCE",0);
+			if (src)
 			{
-				PCM_source *src=(PCM_source*)GetSetMediaItemTakeInfo(ptake,"P_SOURCE",0);
-				if (src)
+				_snprintf(savedlgtitle, 2048, "Save item \"%s\" as", (char*)GetSetMediaItemTakeInfo(ptake, "P_NAME", 0));
+				if (BrowseForSaveFile(savedlgtitle, ppath, NULL, "WAV files\0*.wav\0", newfilename, 512))
 				{
 					Main_OnCommand(40440,0); // set selected media offline
-					MoveFile(src->GetFileName(),filez.Get(0));
+					MoveFile(src->GetFileName(), newfilename);
 				}
 			}
 		}
 		Main_OnCommand(40129,0); // delete active takes of items
 		Main_OnCommand(40439,0); // set selected media online
-		Main_OnCommand(40029,0); // undo
+		Main_OnCommand(40029,0); // undo ??
 		Main_OnCommand(40029,0); // undo
 	}
 }

@@ -99,10 +99,13 @@ extern bool g_bFalse;
 #ifndef _WIN32
 #define WM_KILLFOCUS 0x0BADF00D
 #define BS_MULTILINE 0
+#define _strdup strdup
 #define _strndup strndup
 #define _snprintf snprintf
 #define _stricmp stricmp
 #define _strnicmp strnicmp
+#define CF_TEXT 1
+extern const GUID GUID_NULL;
 //sws_util.mm
 void GetDateString(int time, char* buf, int bufsize);
 void GetTimeString(int time, char* buf, int bufsize);

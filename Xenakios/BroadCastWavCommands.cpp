@@ -28,6 +28,8 @@
 #include "stdafx.h"
 #include "Parameters.h"
 
+using namespace std;
+
 int GetNumSelectedItems()
 {
 	MediaTrack* CurTrack;
@@ -75,9 +77,8 @@ void DoRenameTakesWithBWAVDesc(COMMAND_T*)
 	MediaItem_Take* CurTake;
 	PCM_source *ThePCMSource;
 	bool ItemSelected;
-	int numItems=-666;
-	int numTakes=-666;
-	int TakeToSelect=0;
+	int numItems;
+	int numTakes;
 	char Buf[8192];
 	int sz=8192;
 	int trackID;
@@ -104,7 +105,7 @@ void DoRenameTakesWithBWAVDesc(COMMAND_T*)
 						sz=8192;
 						CurTake=GetMediaItemTake(CurItem,takeInd);
 						ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-						sz=ThePCMSource->Extended(PCM_SOURCE_EXT_GETMETADATA,"DESC",Buf,(void *)sz);
+						sz=ThePCMSource->Extended(PCM_SOURCE_EXT_GETMETADATA,(void*)"DESC",Buf,(void *)sz);
 						if (sz>0)
 						{
 							//MessageBox(g_hwndParent,Buf,"Broadcast Wave Desc:",MB_OK); 
@@ -120,7 +121,7 @@ void DoRenameTakesWithBWAVDesc(COMMAND_T*)
 			}
 		}
 	}	
-	Undo_OnStateChangeEx("Rename Takes With BWAV Description",4,-1);
+	Undo_OnStateChangeEx("Rename takes with BWAV description",4,-1);
 	UpdateTimeline();
 }
 
@@ -143,8 +144,6 @@ t_takerenameParams  g_takerenameParams;
 
 WDL_DLGRET NewRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	//static WDL_WndSizer resizer;
-
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -181,18 +180,22 @@ WDL_DLGRET NewRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 					}
 				}
 				char wintitle[200];
-				//SendMessage(GetDlgItem(hwnd,ID_TAKEONLY), DM_SETDEFID, ID_TAKEONLY,0);
+#ifdef _WIN32
 				SendMessage(hwnd, DM_SETDEFID, ID_TAKEONLY,0);
 				
 				Button_SetStyle(GetDlgItem(hwnd,ID_TAKEONLY) ,BS_DEFPUSHBUTTON ,true);
 				Button_SetStyle(GetDlgItem(hwnd,ID_TAKEANDSOURCE) ,BS_PUSHBUTTON,true);
 				Button_SetStyle(GetDlgItem(hwnd,IDC_RENAMEMEDIA) ,BS_PUSHBUTTON,true);
-				SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_TAKENAME_EDIT), TRUE);
+#endif
+				SetFocus(GetDlgItem(hwnd, IDC_TAKENAME_EDIT));
+				SendMessage(GetDlgItem(hwnd, IDC_TAKENAME_EDIT), EM_SETSEL, 0, -1);
 				sprintf(wintitle,"Rename take %d / %d",g_takerenameParams.RenameTakeNumber,g_takerenameParams.TakesToRename);
 				SetWindowText(hwnd,wintitle);
+#ifdef _WIN32
 				Button_Enable(GetDlgItem(hwnd,ID_TAKEANDSOURCE),0);
 				Button_Enable(GetDlgItem(hwnd,IDC_RENAMEMEDIA),0);
 				Button_SetStyle(GetDlgItem(hwnd,IDCANCEL) ,BS_PUSHBUTTON,true);
+#endif
 				return 0;
 			}
 		case WM_COMMAND:
@@ -254,61 +257,23 @@ WDL_DLGRET NewRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 	return 0;
 }
 
-void ExtractFilePath(char *FullFileName,char *FilePath)
+void ExtractFilePath(const char *FullFileName,char *FilePath)
 {
-	//
-	int LastDelimiternIndx=-1;
-	int FileExtensionIndex=-1;
-	int FullFileNameLen=(int)strlen(FullFileName);
-	int i;
-	for (i=FullFileNameLen;i>=0;i--)
-	{
-		char x=FullFileName[i];
-		if (x=='\\')
-		{
-				LastDelimiternIndx=i;
-				break;
-		}
-		
-
-	}
-	int j=0;
-	for (i=0;i<LastDelimiternIndx+1;i++)
-	{
-		FilePath[j]=FullFileName[i];
-		j++;
-	}
-	FilePath[j]=0;
-
+	strcpy(FilePath, FullFileName);
+	char* pEnd = strrchr(FilePath, '\\');
+	if (!pEnd)
+		pEnd = strrchr(FilePath, '/');
+	if (pEnd)
+		*pEnd = 0;
 }
 
-void ExtractFileExtension(char *FullFileName, char *FileExtension)
+void ExtractFileExtension(const char *FullFileName, char *FileExtension)
 {
-	//
-	int LastDelimiternIndx=-1;
-	int FileExtensionIndex=-1;
-	int FullFileNameLen=(int)strlen(FullFileName);
-	int i;
-	for (i=FullFileNameLen;i>=0;i--)
-	{
-		char x=FullFileName[i];
-		if (FileExtensionIndex==-1 && x=='.')
-		{
-			FileExtensionIndex=i;
-			break;
-		}
-
-
-	}
-	
-	//if (StripExtension==false) FileExtensionIndex=FullFileNameLen;
-	int j=0;
-	for (i=FileExtensionIndex+0;i<FullFileNameLen;i++)
-	{
-		FileExtension[j]=FullFileName[i];
-		j++;
-	}
-	FileExtension[j]=0;
+	char* pExt = strrchr((char*)FullFileName, '.');
+	if (!pExt)
+		*FileExtension = 0;
+	else
+		strcpy(FileExtension, pExt+1);
 }
 
 int ReplaceProjectMedia(char *OldFileName,char *NewFileName)
@@ -382,75 +347,6 @@ void DoRenameTakeDlg(COMMAND_T*)
 	Undo_OnStateChangeEx("Rename take(s)",4,-1);
 }
 
-int SearchDirectoryForRPPs(std::vector<std::string> &refvecFiles,
-                    const std::string        &refcstrRootDirectory,
-                    const std::string        &refcstrExtension,
-                    bool                     bSearchSubdirectories = true)
-{
-  std::string     strFilePath;             // Filepath
-  std::string     strPattern;              // Pattern
-  std::string     strExtension;            // Extension
-  HANDLE          hFile;                   // Handle to file
-  WIN32_FIND_DATA FileInformation;         // File information
-
-
-  strPattern = refcstrRootDirectory + "\\*.*";
-
-  hFile = ::FindFirstFile(strPattern.c_str(), &FileInformation);
-  if(hFile != INVALID_HANDLE_VALUE)
-  {
-    do
-    {
-      if(FileInformation.cFileName[0] != '.')
-      {
-        strFilePath.erase();
-        //strFilePath = refcstrRootDirectory + FileInformation.cFileName;
-		strFilePath = refcstrRootDirectory + "\\" + FileInformation.cFileName;
-        if(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-        {
-          if(bSearchSubdirectories)
-          {
-            // Search subdirectory
-            int iRC = SearchDirectoryForRPPs(refvecFiles,
-                                      strFilePath,
-                                      refcstrExtension,
-                                      bSearchSubdirectories);
-            if(iRC)
-              return iRC;
-          }
-        }
-        else
-        {
-          // Check extension
-          strExtension = FileInformation.cFileName;
-          strExtension = strExtension.substr(strExtension.rfind(".") + 1);
-			std::transform(strExtension.begin(), strExtension.end(), strExtension.begin(), (int(*)(int)) toupper);	
-			//std::transform(refcstrExtension.begin(), refcstrExtension.end(), refcstrExtension.begin(), (int(*)(int)) toupper);
-			std::string paskaKopio;
-			paskaKopio=refcstrExtension;
-			std::transform(paskaKopio.begin(), paskaKopio.end(), paskaKopio.begin(), (int(*)(int)) toupper);
-		int extMatch=0;
-		if (strExtension=="RPP")
-			extMatch++;
-		
-		if (extMatch>0)
-            // Save filename
-            refvecFiles.push_back(strFilePath);
-        }
-      }
-    } while(::FindNextFile(hFile, &FileInformation) == TRUE);
-
-    // Close handle
-    ::FindClose(hFile);
-
-    DWORD dwError = ::GetLastError();
-    if(dwError != ERROR_NO_MORE_FILES)
-      return dwError;
-  }
-
-  return 0;
-}
-
 void DoOpenRPPofBWAVdesc(COMMAND_T*)
 {
 	vector<MediaItem_Take*> TheTakes;
@@ -473,48 +369,27 @@ void DoOpenRPPofBWAVdesc(COMMAND_T*)
 		int sz=8192;
 		char Buf[8192];		
 						
-		sz=ThePCM->Extended(PCM_SOURCE_EXT_GETMETADATA,"DESC",Buf,(void *)sz);
+		sz=ThePCM->Extended(PCM_SOURCE_EXT_GETMETADATA,(void*)"DESC",Buf,(void *)sz);
 		if (sz>0)
 		{
 			string RPPFileName;
 			string RPPdesc;
 			RPPdesc.assign(Buf);
 			RPPFileName=RPPdesc.substr(4,RPPdesc.size());
-			int rc=PathFileExists(RPPFileName.c_str());
-			if (rc==TRUE)
+			if (FileExists(RPPFileName.c_str()))
 			{
 				char RPPFileNameBuf[1024];
 				sprintf(RPPFileNameBuf,"%s\\reaper.exe \"%s\"",GetExePath(),RPPFileName.c_str());
 				if (!DoLaunchExternalTool(RPPFileNameBuf)) MessageBox(g_hwndParent,"Could not launch REAPER.","Error",MB_OK);
 				
-			} else
+			}
+			else
 			{
-				bool FolderCancelled=false;
 				char RppSearchFolderName[1024];
-				LPITEMIDLIST Folder_pidl=NULL;
-				BROWSEINFO bi;
-				
-				bi.pszDisplayName=RppSearchFolderName;
-				bi.pidlRoot=Folder_pidl;
-				bi.hwndOwner=g_hwndParent;
-				bi.lpszTitle="Select folder to find RPP files...";
-				bi.ulFlags=0x0040|0x0200;
-				bi.lpfn=NULL;
-				bi.lParam=NULL;
-				bi.iImage=0;
-				LPITEMIDLIST pidl     = NULL;
-				bool bResult;
-
-				if ((pidl = SHBrowseForFolder(&bi)) != NULL)
-				{
-					bResult = SHGetPathFromIDList(pidl, RppSearchFolderName) ? true : false;
-					
-					CoTaskMemFree(pidl);
-				} else FolderCancelled=true;
-				if (!FolderCancelled)
+				if (BrowseForDirectory("Select folder to with RPP files", NULL, RppSearchFolderName, 1024))
 				{
 					vector<string> FoundRPPs;
-					SearchDirectoryForRPPs(FoundRPPs,RppSearchFolderName,"pelle",true);
+					SearchDirectory(FoundRPPs, RppSearchFolderName, "RPP", true);
 					int i;
 					vector<string> FnCompos;
 					SplitFileNameComponents(RPPFileName,FnCompos);

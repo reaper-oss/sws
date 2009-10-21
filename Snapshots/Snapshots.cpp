@@ -888,7 +888,7 @@ int SnapshotsInit()
 
 	SWSRegisterCommands(g_commandTable);
 
-	if (!plugin_register("hookmenu", menuhook))
+	if (!plugin_register("hookmenu", (void*)menuhook))
 		return 0;
 
 	g_pSSWnd = new SWS_SnapshotsWnd;

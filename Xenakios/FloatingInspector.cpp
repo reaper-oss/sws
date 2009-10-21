@@ -40,63 +40,53 @@ BOOL WINAPI MyItemInspectorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 	switch(Message)
     {
         case WM_INITDIALOG:
-			{
-				g_hItemInspCtxMenu=CreatePopupMenu();
-				MENUITEMINFO mi={sizeof(MENUITEMINFO),};
-				mi.fMask = MIIM_TYPE | MIIM_ID;
-				mi.fType = MFT_STRING;
-				mi.dwTypeData = "Show number of selected items/tracks";
-				mi.wID = 666;
-				InsertMenuItem(g_hItemInspCtxMenu,0,TRUE,&mi);
-				mi.fMask = MIIM_TYPE | MIIM_ID;
-				mi.fType = MFT_STRING;
-				mi.dwTypeData = "Show item properties";
-				mi.wID = 667;
-				InsertMenuItem(g_hItemInspCtxMenu,1,TRUE,&mi);
-				//SetMenu(hwnd,g_hItemInspCtxMenu);
-				return 0;
-			}
-			case WM_RBUTTONUP:
-			{
-				//int ContextResult=TrackPopupMenuEx(g_hItemInspCtxMenu,TPM_LEFTALIGN|TPM_RETURNCMD,LOWORD(lParam),HIWORD(lParam),hwnd,NULL);
-				POINT pieru;
-				pieru.x=GET_X_LPARAM(lParam);
-				pieru.y=GET_Y_LPARAM(lParam);
-				ClientToScreen(hwnd,&pieru);
+			g_hItemInspCtxMenu = CreatePopupMenu();
+			AddToMenu(g_hItemInspCtxMenu, "Show number of selected items/tracks", 666);
+			AddToMenu(g_hItemInspCtxMenu, "Show item properties", 667);
+			break;
+		case WM_RBUTTONUP:
+		{
+			POINT pieru;
+			pieru.x=GET_X_LPARAM(lParam);
+			pieru.y=GET_Y_LPARAM(lParam);
+			ClientToScreen(hwnd,&pieru);
+			
+			int ContextResult = TrackPopupMenu(g_hItemInspCtxMenu,TPM_LEFTALIGN|TPM_RETURNCMD,pieru.x,pieru.y,0,hwnd,NULL);
 				
-				int ContextResult=TrackPopupMenuEx(g_hItemInspCtxMenu,TPM_LEFTALIGN|TPM_RETURNCMD,pieru.x,pieru.y,hwnd,NULL);
-				
-				if (ContextResult==666) g_InspshowMode=0;
-				if (ContextResult==667) g_InspshowMode=1;
+			if (ContextResult == 666)
+				g_InspshowMode = 0;
+			else if (ContextResult == 667)
+				g_InspshowMode = 1;
 
-				return 0;
-			}
+			break;
+		}
 		case WM_COMMAND:
+			if (LOWORD(wParam)==IDCANCEL)
 			{
-				if (LOWORD(wParam)==IDCANCEL)
-				{
-					KillTimer(g_hItemInspector,0);
-					ShowWindow(g_hItemInspector, SW_HIDE);
-					g_ItemInspectorVisible=false;	
-				}
-				return 0;
+				KillTimer(g_hItemInspector,0);
+				ShowWindow(g_hItemInspector, SW_HIDE);
+				g_ItemInspectorVisible=false;	
 			}
+			break;
 		case WM_TIMER:
-			{
-				ostringstream infoText;
-				DWORD TickA=GetTickCount();
-				int NumSelItems=GetNumSelectedItems();
-				DWORD TickB=GetTickCount();
+		{
+			ostringstream infoText;
+			DWORD TickA=GetTickCount();
+			int NumSelItems=GetNumSelectedItems();
+			DWORD TickB=GetTickCount();
 				
-				double elapsedTime=(TickB-TickA)/1000.0;
-				if (g_InspshowMode==0)
-				{
+			double elapsedTime=(TickB-TickA)/1000.0;
+			if (g_InspshowMode==0)
+			{
 				if (NumSelItems>0)
 				{
 					if (NumSelItems>1)
 						infoText << NumSelItems << " items selected ";
-					else infoText << "1 item selected ";
-				} else infoText << "No items selected";
+					else
+						infoText << "1 item selected ";
+				}
+				else
+					infoText << "No items selected";
 				//SetDlgItemText(hwnd,IDC_IISTATIC1,textbuf);
 				//IDC_IISTATIC2
 				int i;
@@ -107,24 +97,26 @@ BOOL WINAPI MyItemInspectorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 					CurTrack=CSurf_TrackFromID(i+1,false);
 					int isSel=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
 					if (isSel==1)
-					{
 						n++;
-					}
 						
 				}
 				if (n>0)
+				{
 					if (n>1)
 						infoText << "\t" << n << " tracks selected"; //sprintf(textbuf,"%d tracks selected",n);
-					else infoText << "\t1 track selected";
-				else infoText << "\tNo tracks selected";
-				SetDlgItemText(hwnd,IDC_IISTATIC1,infoText.str().c_str());
+					else
+						infoText << "\t1 track selected";
 				}
-				if (g_InspshowMode==1)
+				else
+					infoText << "\tNo tracks selected";
+				SetDlgItemText(hwnd,IDC_IISTATIC1,infoText.str().c_str());
+			}
+			if (g_InspshowMode==1)
+			{
+				vector<MediaItem_Take*> TheTakes;
+				XenGetProjectTakes(TheTakes,true,true);
+				if (TheTakes.size()>0)
 				{
-					vector<MediaItem_Take*> TheTakes;
-					XenGetProjectTakes(TheTakes,true,true);
-					if (TheTakes.size()>0)
-					{
 					infoText << (char*)GetSetMediaItemTakeInfo(TheTakes[0],"P_NAME",NULL) << " Pitch : ";
 					infoText << std::setprecision(3) << *(double*)GetSetMediaItemTakeInfo(TheTakes[0],"D_PITCH",NULL);
 					infoText << "\tPlayrate : " << *(double*)GetSetMediaItemTakeInfo(TheTakes[0],"D_PLAYRATE",NULL);
@@ -137,13 +129,15 @@ BOOL WINAPI MyItemInspectorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 						infoText << " / " << GetMediaItemNumTakes(CurItem);
 					}
 					SetDlgItemText(hwnd,IDC_IISTATIC1,infoText.str().c_str());	
-					} else SetDlgItemText(hwnd,IDC_IISTATIC1,"No item selected");
-					//SetDlgItemText(hwnd,IDC_IISTATIC2,"this all");
 				}
-				return 0;
+				else
+					SetDlgItemText(hwnd,IDC_IISTATIC1,"No item selected");
 			}
-
-
+			break;
+		}
+		case WM_DESTROY:
+			DestroyMenu(g_hItemInspCtxMenu);
+			break;
 	}
 	return 0;
 }
@@ -152,13 +146,14 @@ void DoTglFltItemInspector(COMMAND_T*)
 {
 	if (g_ItemInspectorVisible)
 	{
-		g_ItemInspectorVisible=false;
-		KillTimer(g_hItemInspector,0);
-		ShowWindow(g_hItemInspector,SW_HIDE);
-	} else
+		g_ItemInspectorVisible = false;
+		KillTimer(g_hItemInspector, 0);
+		ShowWindow(g_hItemInspector, SW_HIDE);
+	}
+	else
 	{
-		g_ItemInspectorVisible=true;
-		SetTimer(g_hItemInspector,0,200,NULL);
-		ShowWindow(g_hItemInspector,SW_SHOW);
+		g_ItemInspectorVisible = true;
+		SetTimer(g_hItemInspector, 0, 200, NULL);
+		ShowWindow(g_hItemInspector, SW_SHOW);
 	}
 }

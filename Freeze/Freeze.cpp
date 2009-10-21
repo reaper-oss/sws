@@ -861,7 +861,6 @@ void MakeFolder(COMMAND_T* = NULL)
 	int i = 0;
 	bool bUndo = false;
 	MediaTrack* tr = CSurf_TrackFromID(1, false);
-	MediaTrack* gfd = NULL;
 	while (++i < GetNumTracks())
 	{
 		MediaTrack* nextTr = CSurf_TrackFromID(i+1, false);
@@ -892,7 +891,7 @@ void IndentTracks(COMMAND_T* = NULL)
 {
 	bool bUndo = false;
 	MediaTrack* prevTr = CSurf_TrackFromID(1, false);
-	MediaTrack* gfd = NULL;
+
 	for (int i = 2; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);

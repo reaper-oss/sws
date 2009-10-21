@@ -107,16 +107,13 @@ void GetAllProjectTakes(vector<t_project_take>& ATakeList)
 					}
 				TakeBlah.TheTake=CurTake;
 				TakeBlah.FileMissing=false;
-				//if (PathFileExists(ThePCM->GetFileName())==0)
 				if (!pureMIDItake)
 				{
-					if (PathFileExists(TakeBlah.FileName.c_str())==0)
+					if (!FileExists(TakeBlah.FileName.c_str()))
 						TakeBlah.FileMissing=true;
 
 					ATakeList.push_back(TakeBlah);
 				}
-				//string FName;
-				//FName.assign(ThePCM->GetFileName());
 			}
 		}
 	}
@@ -192,87 +189,9 @@ void GetProjectFileList(vector<t_mediafile_status>& AMediaList)
 		string::size_type pos;
 		while ((pos = newstatus.FileName.find('/')) != string::npos)
 			newstatus.FileName[pos] = '\\';
-		newstatus.IsOnline = PathFileExists(TempList[i].c_str()) ? true : false;
+		newstatus.IsOnline = FileExists(TempList[i].c_str());
 		AMediaList.push_back(newstatus);
 	}
-}
-
-string g_CurrentScanFile;
-
-bool g_scan_aborted=false;
-
-int SearchDirectory(vector<string> &refvecFiles, const string &refcstrRootDirectory,
-	const string &refcstrExtension, bool bSearchSubdirectories)
-{
-	string     strFilePath;             // Filepath
-	string     strPattern;              // Pattern
-	string     strExtension;            // Extension
-	HANDLE          hFile;                   // Handle to file
-	WIN32_FIND_DATA FileInformation;         // File information
-
-	strPattern = refcstrRootDirectory + "\\*.*";
-
-	hFile = ::FindFirstFile(strPattern.c_str(), &FileInformation);
-	if(hFile != INVALID_HANDLE_VALUE)
-	{
-		do
-		{
-			if(FileInformation.cFileName[0] != '.')
-			{
-				if (g_scan_aborted)
-					return 0;
-				strFilePath.erase();
-				strFilePath = refcstrRootDirectory + "\\" + FileInformation.cFileName;
-				if(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-				{
-					if(bSearchSubdirectories)
-					{
-						// Search subdirectory
-						int iRC = SearchDirectory(refvecFiles, strFilePath, refcstrExtension, bSearchSubdirectories);
-						if(iRC)
-							return iRC;
-					}
-				}
-				else
-				{
-					// Check extension
-					strExtension = FileInformation.cFileName;
-					strExtension = strExtension.substr(strExtension.rfind(".") + 1);
-					transform(strExtension.begin(), strExtension.end(), strExtension.begin(), (int(*)(int)) toupper);	
-					//transform(refcstrExtension.begin(), refcstrExtension.end(), refcstrExtension.begin(), (int(*)(int)) toupper);
-					string paskaKopio;
-					paskaKopio=refcstrExtension;
-					transform(paskaKopio.begin(), paskaKopio.end(), paskaKopio.begin(), (int(*)(int)) toupper);
-					int extMatch=0;
-					if (strExtension=="WAV") extMatch++;
-					//if (strExtension=="RPP") extMatch++;
-					if (strExtension=="MID") extMatch++;
-					if (strExtension=="AIF") extMatch++;
-					if (strExtension=="MP3") extMatch++;
-					if (strExtension=="WV") extMatch++;
-					if (strExtension=="FLAC") extMatch++;
-					if (strExtension=="APE") extMatch++;
-					if (strExtension=="OGG") extMatch++;
-					if (extMatch>0)
-					{
-						// Save filename
-						refvecFiles.push_back(strFilePath);
-						g_CurrentScanFile.assign(strFilePath);
-					}
-				}
-			}
-		}
-		while(::FindNextFile(hFile, &FileInformation) == TRUE);
-
-		// Close handle
-		::FindClose(hFile);
-
-		DWORD dwError = ::GetLastError();
-		if(dwError != ERROR_NO_MORE_FILES)
-		return dwError;
-	}
-
-	return 0;
 }
 
 int IsFileUsedInProject(string AFile)
@@ -318,10 +237,7 @@ void UpdateProjFolderList(HWND hList, bool onlyUnused)
 	ListView_DeleteAllItems(hList);
 	GetProjectPath(buf,2048);
 				
-	char buf2[2048];
-	sprintf(buf2,"%s",buf);
-	SearchDirectory(g_ProjFolFiles,buf2,"WAVA",true);
-	//SearchDirectory(ProjFolFiles,buf2,"RPP",true);
+	SearchDirectory(g_ProjFolFiles,buf,NULL,true);
 	int j=0;
 	bool HidePaths=false;
 	if (Button_GetCheck(GetDlgItem(g_hMediaDlg,IDC_HIDEPATHS))==BST_CHECKED)
@@ -471,7 +387,7 @@ char g_FolderName[1024] = "";
 void DirScanThreadFunc(void *Param)
 {
 	FoundMediaFiles.clear();
-	SearchDirectory(FoundMediaFiles,g_FolderName,"blah",true);
+	SearchDirectory(FoundMediaFiles, g_FolderName, NULL, true);
 	g_ScanStatus=0;
 }
 
@@ -482,7 +398,7 @@ BOOL WINAPI ScanProgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
         case WM_INITDIALOG:
 			{
 				g_ScanStatus=1;
-				g_scan_aborted=false;
+				g_bAbortScan=false;
 				_beginthread(DirScanThreadFunc, 0, NULL);
 				SetTimer(hwnd,1717,250,NULL);
 				return 0;
@@ -491,7 +407,7 @@ BOOL WINAPI ScanProgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			{
 				if (wParam==1717)
 				{
-					SetDlgItemText(hwnd,IDC_SCANFILE,g_CurrentScanFile.c_str());
+					SetDlgItemText(hwnd,IDC_SCANFILE,g_CurrentScanFile);
 					if (g_ScanStatus==0)
 					{
 						KillTimer(hwnd,1717);
@@ -510,12 +426,12 @@ BOOL WINAPI ScanProgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			{
 				if (LOWORD(wParam==IDC_ABORT))
 				{
-					g_scan_aborted=true;
+					g_bAbortScan=true;
 					return 0;
 				}
 				if (wParam==0xff)
 				{
-					SetDlgItemText(g_hScanProgressDlg,IDC_SCANFILE,g_CurrentScanFile.c_str());
+					SetDlgItemText(g_hScanProgressDlg,IDC_SCANFILE,g_CurrentScanFile);
 					RedrawWindow(g_hScanProgressDlg, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 				}
 				return 0;
@@ -528,128 +444,102 @@ BOOL WINAPI ScanProgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
 void FindMissingFiles()
 {
-	bool FolderCancelled=false;
-	BROWSEINFO bi;
-	bi.pszDisplayName=g_FolderName;
-	bi.pidlRoot=NULL;
-	bi.hwndOwner=g_hMediaDlg;
-	bi.lpszTitle="Select search folder";
-	bi.ulFlags=0x0040|0x0200;
-	bi.lpfn=NULL;
-	bi.lParam=NULL;
-	bi.iImage=0;
-	LPITEMIDLIST pidl     = NULL;
-	bool bResult;
-
-	if ((pidl = SHBrowseForFolder(&bi)) != NULL)
+	if (BrowseForDirectory("Select search folder", NULL, g_FolderName, 1024))
 	{
-		bResult = SHGetPathFromIDList(pidl, g_FolderName) ? true : false;
-		
-		CoTaskMemFree(pidl);
-	} else FolderCancelled=true;
-
-	if (FolderCancelled==false)
-	{
-	
 		char FullFilename[2048];
 		char FullFilenameB[2048];
 		char Shortfilename[2048];
 		char ShortfilenameB[2048];
 		
-		//newstatus.OnlyFileName.assign(Shortfilename);
-	
-	DWORD TickA=GetTickCount();
-	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_SCANPROGR),g_hMediaDlg,(DLGPROC)ScanProgDlgProc);
-	g_ScanStatus=0;
-	g_ScanFinished=true;
-	SetForegroundWindow(g_hMediaDlg);
-	DWORD TickB=GetTickCount();
-	DWORD TickC=TickB-TickA;
-// 	char buf[2058];
-	vector<t_project_take> ProjectTakes;
-	vector<t_project_take> TakesMissingFiles;
-	GetAllProjectTakes(ProjectTakes);
-	int i;
-	for (i=0;i<(int)ProjectTakes.size();i++)
-		if (ProjectTakes[i].FileMissing==true)
-			TakesMissingFiles.push_back(ProjectTakes[i]);
-	int OfflineTakes=0;
-	int MediasFound=0;
-	Main_OnCommand(40100,0); // set all media offline
-	int SanityCheck=(int)TakesMissingFiles.size();
-	i=0;
-	
-	bool TakesLeft=true;
-	if (TakesMissingFiles.size()==0) TakesLeft=false;
-	while (TakesLeft==true)
-	{
-		t_project_take TempTake;
-		TempTake=TakesMissingFiles[i];
-		int FileMatches=0;
-		strcpy(FullFilename,TakesMissingFiles[i].FileName.c_str());
-		ExtractFileNameEx(FullFilename,Shortfilename,false);
-		g_MatchingFiles.clear();
-		int j;
-		for (j=0;j<(int)FoundMediaFiles.size();j++)
-		{
-			strcpy(FullFilenameB,FoundMediaFiles[j].c_str());
-			ExtractFileNameEx(FullFilenameB,ShortfilenameB,false);
-			if (strcmp(Shortfilename,ShortfilenameB)==0)
-			{
-				FileMatches++;
-				g_MatchingFiles.push_back(FoundMediaFiles[j]);
-			}
-		}
-		string TheMatchingFile;
-		TheMatchingFile.assign(TakesMissingFiles[i].FileName);
-		if (g_MatchingFiles.size()==0) 
-			TakesMissingFiles.erase(TakesMissingFiles.begin()+i);
-		else if (g_MatchingFiles.size()==1) 
-		{
-			TheMatchingFile.assign(g_MatchingFiles[0]);
-			ReplaceTakeSourceFile(TakesMissingFiles[i].TheTake,TheMatchingFile);
-			TakesMissingFiles.erase(TakesMissingFiles.begin()+i);
-		}
-		else if (g_MatchingFiles.size()>1)
-		{
-			g_SelectedMatchFile=-1;
-			DialogBox(g_hInst,MAKEINTRESOURCE(IDD_MULMATCH),g_hMediaDlg , (DLGPROC)MulMatchesFoundDlgProc);
-			if (g_SelectedMatchFile>=0)
-			{
-				TheMatchingFile.assign(g_MatchingFiles[g_SelectedMatchFile]);
-				ReplaceTakeSourceFile(TakesMissingFiles[i].TheTake,TheMatchingFile);
-			}
-			TakesMissingFiles.erase(TakesMissingFiles.begin()+i);
-		}
-		// Searching remaining takes using the same file...
-		int k;
-		for (k=0;k<(int)TakesMissingFiles.size();k++)
-		{
-			if (TakesMissingFiles[k].FileName.compare(FullFilename)==0)
-			{
-				// replace file
-				ReplaceTakeSourceFile(TakesMissingFiles[k].TheTake,TheMatchingFile);
-				TakesMissingFiles.erase(TakesMissingFiles.begin()+k);
-			}
-		}
+		DWORD TickA=GetTickCount();
+		DialogBox(g_hInst,MAKEINTRESOURCE(IDD_SCANPROGR),g_hMediaDlg,(DLGPROC)ScanProgDlgProc);
+		g_ScanStatus=0;
+		g_ScanFinished=true;
+		SetForegroundWindow(g_hMediaDlg);
+		DWORD TickB=GetTickCount();
+		DWORD TickC=TickB-TickA;
+		vector<t_project_take> ProjectTakes;
+		vector<t_project_take> TakesMissingFiles;
+		GetAllProjectTakes(ProjectTakes);
+		int i;
+		for (i=0;i<(int)ProjectTakes.size();i++)
+			if (ProjectTakes[i].FileMissing==true)
+				TakesMissingFiles.push_back(ProjectTakes[i]);
+		int OfflineTakes=0;
+		int MediasFound=0;
+		Main_OnCommand(40100,0); // set all media offline
+		int SanityCheck=(int)TakesMissingFiles.size();
+		i=0;
+		
+		bool TakesLeft=true;
 		if (TakesMissingFiles.size()==0) TakesLeft=false;
-		SanityCheck--;
-		if (SanityCheck<0) 
+		while (TakesLeft==true)
 		{
-			// Sanity check, exiting while (TakesMissingFiles.size()>0)
-			break;
+			t_project_take TempTake;
+			TempTake=TakesMissingFiles[i];
+			int FileMatches=0;
+			strcpy(FullFilename,TakesMissingFiles[i].FileName.c_str());
+			ExtractFileNameEx(FullFilename,Shortfilename,false);
+			g_MatchingFiles.clear();
+			int j;
+			for (j=0;j<(int)FoundMediaFiles.size();j++)
+			{
+				strcpy(FullFilenameB,FoundMediaFiles[j].c_str());
+				ExtractFileNameEx(FullFilenameB,ShortfilenameB,false);
+				if (strcmp(Shortfilename,ShortfilenameB)==0)
+				{
+					FileMatches++;
+					g_MatchingFiles.push_back(FoundMediaFiles[j]);
+				}
+			}
+			string TheMatchingFile;
+			TheMatchingFile.assign(TakesMissingFiles[i].FileName);
+			if (g_MatchingFiles.size()==0) 
+				TakesMissingFiles.erase(TakesMissingFiles.begin()+i);
+			else if (g_MatchingFiles.size()==1) 
+			{
+				TheMatchingFile.assign(g_MatchingFiles[0]);
+				ReplaceTakeSourceFile(TakesMissingFiles[i].TheTake,TheMatchingFile);
+				TakesMissingFiles.erase(TakesMissingFiles.begin()+i);
+			}
+			else if (g_MatchingFiles.size()>1)
+			{
+				g_SelectedMatchFile=-1;
+				DialogBox(g_hInst,MAKEINTRESOURCE(IDD_MULMATCH),g_hMediaDlg , (DLGPROC)MulMatchesFoundDlgProc);
+				if (g_SelectedMatchFile>=0)
+				{
+					TheMatchingFile.assign(g_MatchingFiles[g_SelectedMatchFile]);
+					ReplaceTakeSourceFile(TakesMissingFiles[i].TheTake,TheMatchingFile);
+				}
+				TakesMissingFiles.erase(TakesMissingFiles.begin()+i);
+			}
+			// Searching remaining takes using the same file...
+			int k;
+			for (k=0;k<(int)TakesMissingFiles.size();k++)
+			{
+				if (TakesMissingFiles[k].FileName.compare(FullFilename)==0)
+				{
+					// replace file
+					ReplaceTakeSourceFile(TakesMissingFiles[k].TheTake,TheMatchingFile);
+					TakesMissingFiles.erase(TakesMissingFiles.begin()+k);
+				}
+			}
+			if (TakesMissingFiles.size()==0) TakesLeft=false;
+			SanityCheck--;
+			if (SanityCheck<0) 
+			{
+				// Sanity check, exiting while (TakesMissingFiles.size()>0)
+				break;
+			}
 		}
-	}
-	Main_OnCommand(40101,0); // set all media online
-	Main_OnCommand(40047,0); // build any missing peaks
-	Undo_OnStateChangeEx("Find missing project media",4,-1);
+		Main_OnCommand(40101,0); // set all media online
+		Main_OnCommand(40047,0); // build any missing peaks
+		Undo_OnStateChangeEx("Find missing project media",4,-1);
 	}
 }
 
-int NumTimesFileUsedInProject(string &fn)
+int NumTimesFileUsedInProject(string &fn, vector<MediaItem_Take*>& thetakes)
 {
-	vector<MediaItem_Take*> thetakes;
-	XenGetProjectTakes(thetakes,false,false);
 	int i;
 	int matches=0;
 	string cmpfn;
@@ -675,33 +565,36 @@ int NumTimesFileUsedInProject(string &fn)
 
 void PopulateProjectUsedList(bool HidePaths)
 {
-	ListView_DeleteAllItems(GetDlgItem(g_hMediaDlg,IDC_PROJFILES_USED));
+	ListView_DeleteAllItems(GetDlgItem(g_hMediaDlg, IDC_PROJFILES_USED));
 	LVITEM item;
 	char buf[2048];
-	int i;
-	for (i=0;i<(int)g_RProjectFiles.size();i++)
+	vector<MediaItem_Take*> thetakes;
+	XenGetProjectTakes(thetakes, false, false);
+
+	for (int i = 0; i < (int)g_RProjectFiles.size(); i++)
 	{
-					item.mask=LVIF_TEXT;
-					strcpy(buf,g_RProjectFiles[i].FileName.c_str());
-					if (HidePaths)
-					{
-						char ShortName[1024];
-						ExtractFileNameEx(buf,ShortName,false);
-						item.pszText=ShortName;
-					} else item.pszText=buf;
-					item.iItem=i;
-					item.iSubItem = 0;
-					ListView_InsertItem(GetDlgItem(g_hMediaDlg,IDC_PROJFILES_USED),&item);
-					if (g_RProjectFiles[i].IsOnline==true)
-						ListView_SetItemText(GetDlgItem(g_hMediaDlg,IDC_PROJFILES_USED),i,2,"Online")
-					else ListView_SetItemText(GetDlgItem(g_hMediaDlg,IDC_PROJFILES_USED),i,2,"Missing");
-					char ynh[20];
-					sprintf(ynh,"%d",NumTimesFileUsedInProject(g_RProjectFiles[i].FileName));
-					ListView_SetItemText(GetDlgItem(g_hMediaDlg,IDC_PROJFILES_USED),i,1,ynh);
+		item.mask = LVIF_TEXT;
+		strcpy(buf, g_RProjectFiles[i].FileName.c_str());
+		if (HidePaths)
+		{
+			char ShortName[1024];
+			ExtractFileNameEx(buf, ShortName, false);
+			item.pszText = ShortName;
+		}
+		else
+			item.pszText = buf;
+		item.iItem = i;
+		item.iSubItem = 0;
+		ListView_InsertItem(GetDlgItem(g_hMediaDlg, IDC_PROJFILES_USED), &item);
+		if (g_RProjectFiles[i].IsOnline == true)
+			ListView_SetItemText(GetDlgItem(g_hMediaDlg,IDC_PROJFILES_USED), i, 2, "Online")
+		else
+			ListView_SetItemText(GetDlgItem(g_hMediaDlg,IDC_PROJFILES_USED), i, 2, "Missing");
+		char ynh[20];
+		sprintf(ynh, "%d", NumTimesFileUsedInProject(g_RProjectFiles[i].FileName, thetakes));
+		ListView_SetItemText(GetDlgItem(g_hMediaDlg, IDC_PROJFILES_USED), i, 1, ynh);
 	}	
 }
-
-WDL_WndSizer g_wdlresizer;
 
 void SendSelectedProjFolFilesToRecycleBin()
 {
@@ -731,144 +624,107 @@ void SendSelectedProjFolFilesToRecycleBin()
 
 BOOL WINAPI ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	//static WDL_WndSizer resizer;
+	static WDL_WndSizer resizer;
 
 	switch(Message)
     {
         case WM_INITDIALOG:
-			{
-				RECT r;
-				r.left=10;
-				r.right=300;
-				r.top=50;
-				r.bottom=300;
-				g_wdlresizer.init(hwnd);
-				//resizer.init_item(IDOK,0.0,1.0,0.0f,1.0f);
-				r.left=10;
-				r.right=20;
-				r.top=5;
-				r.bottom=60;
-				//SendMessage(GetDlgItem(hwnd,IDC_SHOWUNUS),WM_CHANGEUISTATE,
-				
-				//SetParent(GetDlgItem(hwnd,IDC_SHOWUNUS), GetDlgItem(hwnd,IDC_GROUP2));
-				//SetParent(GetDlgItem(hwnd,IDC_DELFILESBUT), GetDlgItem(hwnd,IDC_GROUP2));
-				//SetParent(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), GetDlgItem(hwnd,IDC_GROUP2));
-				//SendMessage(GetDlgItem(hwnd,IDC_SHOWUNUS),WM_CHANGEUISTATE,
-				
-
-				//g_wdlresizer.init_item(IDC_GROUP1,0.5,0.0,1.0,0.0);
-				g_wdlresizer.init_item(IDC_STATIC2,0.5,0.0,0.5,0.0);
-				g_wdlresizer.init_item(ID_CLOSE,0.0f,1.0f,0.0f,1.0f);
-				g_wdlresizer.init_item(IDC_DELFILESBUT,0.5,1.0,0.5,1.0);
-				g_wdlresizer.init_item(IDC_SHOWUNUS,0.5,1.0,0.5,1.0);
-				g_wdlresizer.init_item(IDC_FINDMISSING,0,1,0,1);
-				g_wdlresizer.init_item(IDC_PROJFILES_USED,0.0,0.0,0.5,1.0);
-				g_wdlresizer.init_item(IDC_PROJFOLMEDLIST,0.5,0.0,1.0,1.0);
-				g_wdlresizer.init_item(IDC_DELFILESBUT2,0.5,1.0,0.5,1.0);
-				g_wdlresizer.init_item(IDC_COPYTOPROJFOL,0,1,0,1);
-				ListView_SetExtendedListViewStyle(GetDlgItem(hwnd, IDC_PROJFILES_USED), LVS_EX_FULLROWSELECT);
-				ListView_SetExtendedListViewStyle(GetDlgItem(hwnd, IDC_PROJFOLMEDLIST), LVS_EX_FULLROWSELECT);
-				
-				//g_wdlresizer.init_item(IDC_DELFILESBUT,0.5,0.0,0.0,0.0);
-
-				//g_wdlresizer.init_itemhwnd(GetDlgItem(hwnd,ID_CLOSE),1.0,1.0,1.0,1.0);
-				g_hMediaDlg=hwnd;
-				
-				GetProjectFileList(g_RProjectFiles);
-				LVCOLUMN col;
-				col.mask=LVCF_TEXT|LVCF_WIDTH;
-				col.cx=295;
-				col.pszText=TEXT("File name");
-				ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFILES_USED), 0 , &col);
-				col.cx=50;
-				col.pszText=TEXT("Used");
-				ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFILES_USED), 1 , &col);
-				col.cx=50;
-				col.pszText=TEXT("Status");
-				ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFILES_USED), 2 , &col);
-					
-				col.cx=345;
-				col.pszText=TEXT("File name");
-				ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), 0 , &col);
-
-				col.cx=50;
-				col.pszText=TEXT("Used in project");
-				ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), 1 , &col);
-
-				
-				if (Button_GetCheck(GetDlgItem(hwnd,IDC_HIDEPATHS))==BST_CHECKED)
-					PopulateProjectUsedList(true); else PopulateProjectUsedList(false);
-				
-				if (Button_GetCheck(GetDlgItem(hwnd,IDC_SHOWUNUS))==BST_CHECKED)
-								UpdateProjFolderList(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST),true);
-							else UpdateProjFolderList(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST),false);
-
-				return 0;
-			}
-		case WM_SIZE:
 		{
+			RECT r;
+			r.left=10;
+			r.right=300;
+			r.top=50;
+			r.bottom=300;
+			resizer.init(hwnd);
+			//resizer.init_item(IDOK,0.0,1.0,0.0f,1.0f);
+			r.left=10;
+			r.right=20;
+			r.top=5;
+			r.bottom=60;
+			
+			//SendMessage(GetDlgItem(hwnd,IDC_SHOWUNUS),WM_CHANGEUISTATE,
+			//SetParent(GetDlgItem(hwnd,IDC_SHOWUNUS), GetDlgItem(hwnd,IDC_GROUP2));
+			//SetParent(GetDlgItem(hwnd,IDC_DELFILESBUT), GetDlgItem(hwnd,IDC_GROUP2));
+			//SetParent(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), GetDlgItem(hwnd,IDC_GROUP2));
+			//SendMessage(GetDlgItem(hwnd,IDC_SHOWUNUS),WM_CHANGEUISTATE,
+			
+
+			//resizer.init_item(IDC_GROUP1,0.5,0.0,1.0,0.0);
+			resizer.init_item(IDC_STATIC2,0.5,0.0,0.5,0.0);
+			resizer.init_item(ID_CLOSE,0.0f,1.0f,0.0f,1.0f);
+			resizer.init_item(IDC_DELFILESBUT,0.5,1.0,0.5,1.0);
+			resizer.init_item(IDC_SHOWUNUS,0.5,1.0,0.5,1.0);
+			resizer.init_item(IDC_FINDMISSING,0,1,0,1);
+			resizer.init_item(IDC_PROJFILES_USED,0.0,0.0,0.5,1.0);
+			resizer.init_item(IDC_PROJFOLMEDLIST,0.5,0.0,1.0,1.0);
+			resizer.init_item(IDC_DELFILESBUT2,0.5,1.0,0.5,1.0);
+			resizer.init_item(IDC_COPYTOPROJFOL,0,1,0,1);
+			ListView_SetExtendedListViewStyle(GetDlgItem(hwnd, IDC_PROJFILES_USED), LVS_EX_FULLROWSELECT);
+			ListView_SetExtendedListViewStyle(GetDlgItem(hwnd, IDC_PROJFOLMEDLIST), LVS_EX_FULLROWSELECT);
+			
+			//resizer.init_item(IDC_DELFILESBUT,0.5,0.0,0.0,0.0);
+
+			//resizer.init_itemhwnd(GetDlgItem(hwnd,ID_CLOSE),1.0,1.0,1.0,1.0);
+			g_hMediaDlg=hwnd;
+			
+			GetProjectFileList(g_RProjectFiles);
+			LVCOLUMN col;
+			col.mask=LVCF_TEXT|LVCF_WIDTH;
+			col.cx=295;
+			col.pszText=TEXT("File name");
+			ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFILES_USED), 0 , &col);
+			col.cx=50;
+			col.pszText=TEXT("Used");
+			ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFILES_USED), 1 , &col);
+			col.cx=50;
+			col.pszText=TEXT("Status");
+			ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFILES_USED), 2 , &col);
+				
+			col.cx=345;
+			col.pszText=TEXT("File name");
+			ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), 0 , &col);
+
+			col.cx=50;
+			col.pszText=TEXT("Used in project");
+			ListView_InsertColumn(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), 1 , &col);
+
+			PopulateProjectUsedList(IsDlgButtonChecked(hwnd, IDC_HIDEPATHS) == BST_CHECKED);
+			UpdateProjFolderList(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST), IsDlgButtonChecked(hwnd, IDC_SHOWUNUS) == BST_CHECKED);
+
+			break;
+		}
+		case WM_SIZE:
 			if (wParam != SIZE_MINIMIZED) 
 			{
-				g_wdlresizer.onResize(); 
-			}		
-		return 0;
-		}
-
-		case WM_COMMAND:
-			{
-				switch(LOWORD(wParam))
-				{
-					case IDCANCEL:
-						{
-							EndDialog(hwnd,0);
-							return 0;
-						}
-					case ID_CLOSE:
-						{
-							
-							EndDialog(hwnd,0);
-							return 0;
-						}
-					case IDC_SHOWUNUS:
-						{
-							if (Button_GetCheck(GetDlgItem(hwnd,IDC_SHOWUNUS))==BST_CHECKED)
-								UpdateProjFolderList(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST),true);
-							else UpdateProjFolderList(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST),false);
-							return 0;
-						}
-					case IDC_FINDMISSING:
-						{
-							FindMissingFiles();
-							return 0;
-						}
-					case IDC_HIDEPATHS:
-						{
-							
-							if (Button_GetCheck(GetDlgItem(hwnd,IDC_SHOWUNUS))==BST_CHECKED)
-								UpdateProjFolderList(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST),true);
-							else UpdateProjFolderList(GetDlgItem(hwnd,IDC_PROJFOLMEDLIST),false);
-							if (Button_GetCheck(GetDlgItem(hwnd,IDC_HIDEPATHS))==BST_CHECKED)
-								PopulateProjectUsedList(true); else
-									PopulateProjectUsedList(false);
-							return 0;
-						
-						}
-					case IDC_DELFILESBUT:
-						{
-							MessageBox(hwnd,"Delete files!","debug",MB_OK);
-							return 0;
-						}
-					case IDC_DELFILESBUT2:
-						
-						{
-							SendSelectedProjFolFilesToRecycleBin();
-							//MessageBox(hwnd,"Send files to recycle bin!","debug",MB_OK);
-							return 0;
-						}
-
-				}
+				resizer.onResize(); 
 			}
-
+			break;
+		case WM_COMMAND:
+			switch(LOWORD(wParam))
+			{
+				case IDCANCEL:
+					EndDialog(hwnd,0);
+					break;
+				case ID_CLOSE:
+					EndDialog(hwnd,0);
+					break;
+				case IDC_SHOWUNUS:
+					UpdateProjFolderList(GetDlgItem(hwnd, IDC_PROJFOLMEDLIST), IsDlgButtonChecked(hwnd, IDC_SHOWUNUS) == BST_CHECKED);
+				case IDC_FINDMISSING:
+					FindMissingFiles();
+					break;
+				case IDC_HIDEPATHS:
+					UpdateProjFolderList(GetDlgItem(hwnd, IDC_PROJFOLMEDLIST), IsDlgButtonChecked(hwnd, IDC_SHOWUNUS) == BST_CHECKED);
+					PopulateProjectUsedList(IsDlgButtonChecked(hwnd, IDC_HIDEPATHS) == BST_CHECKED);
+				case IDC_DELFILESBUT:
+					MessageBox(hwnd,"Delete files!","debug",MB_OK);
+					break;
+				case IDC_DELFILESBUT2:
+					SendSelectedProjFolFilesToRecycleBin();
+					//MessageBox(hwnd,"Send files to recycle bin!","debug",MB_OK);
+					break;
+			}
+			break;
 	}		
 	return 0;
 }

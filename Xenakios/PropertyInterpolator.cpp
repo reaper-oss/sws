@@ -29,6 +29,9 @@
 
 using namespace std;
 
+#ifdef _WIN32
+// TODO OSX compatibility!  Biggest hurdle at this point is the use of checkboxes in the listview.  Should be doable at some point.
+
 LICE_SysBitmap *g_framebuffer=0;
 
 double g_MinItemTime=0;
@@ -233,10 +236,6 @@ void IIDoPaint(HWND hwndDlg)
 	//srcrect.bottom=g_peaksbitmap->getHeight();
 	//LICE_Blit(g_framebuffer, g_peaksbitmap, 0, 0, &srcrect, 0.4, 0);
 	DrawEnvelope();
-  int PeakTableIndex=0;
-  
-
-	//
 	BitBlt(dc,r.left,r.top,g_framebuffer->getWidth(),g_framebuffer->getHeight(),g_framebuffer->getDC(),0,0,SRCCOPY);
   //      bmp->blitToDC(dc, NULL, 0, 0);
   //char buf[50];
@@ -260,7 +259,6 @@ int GetHotNodeIndex(int xcor,int ycor)
 	GetWindowRect(g_hIIdlg,&dlgRect);
 	
 	RECT compareRECT;
-	int hotresult=-1;
 	t_interpolator_envelope *TargetEnvelope=g_IIproperties[g_activePropertyEnvelope].Envelope;
 	
 	for (i=0;i<(int)TargetEnvelope->size();i++)
@@ -388,9 +386,6 @@ BOOL WINAPI EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				}
 				if (LeftMouseBtnDown)
 				{
-					//NodeIsDragged=false;
-					int mouseDeltaX=mouseX-PrevMouseX;
-					int mouseDeltaY=mouseY-PrevMouseY;
 					if (HotNodeIndex>=0)
 					{
 						MoveNodeByCoords(HotNodeIndex,mouseX,mouseY);
@@ -733,41 +728,41 @@ BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 		t_interpolator_envelope_node NewNode;
 		if (FirstRun)
 		{
-		while (!endofProps)
-		{
-		
-			g_IIproperties[i].Envelope=new t_interpolator_envelope;
-			NewNode.Time=0.0;
-			NewNode.Value=RealValToNormzdVal(i,g_IIproperties[i].NeutralValue);
-			g_IIproperties[i].Envelope->push_back(NewNode);
-			g_IIproperties[i].RndSpreadEnv=new t_interpolator_envelope;
-			NewNode.Time=0.0;
-			NewNode.Value=0.0;
-			g_IIproperties[i].RndSpreadEnv->push_back(NewNode);
-			//NewNode.Time=0.5;
-			//NewNode.Value=0.75;
-			//g_IIproperties[i].Envelope->push_back(NewNode);
-			NewNode.Time=1.0;
-			NewNode.Value=RealValToNormzdVal(i,g_IIproperties[i].NeutralValue);
-			g_IIproperties[i].Envelope->push_back(NewNode);
-			NewNode.Time=1.0;
-			NewNode.Value=0.0;
-			g_IIproperties[i].RndSpreadEnv->push_back(NewNode);
-			i++;
-			if (g_IIproperties[i].Name==NULL) break;
-		}
-		FirstRun=false;
+			while (!endofProps)
+			{
+			
+				g_IIproperties[i].Envelope=new t_interpolator_envelope;
+				NewNode.Time=0.0;
+				NewNode.Value=RealValToNormzdVal(i,g_IIproperties[i].NeutralValue);
+				g_IIproperties[i].Envelope->push_back(NewNode);
+				g_IIproperties[i].RndSpreadEnv=new t_interpolator_envelope;
+				NewNode.Time=0.0;
+				NewNode.Value=0.0;
+				g_IIproperties[i].RndSpreadEnv->push_back(NewNode);
+				//NewNode.Time=0.5;
+				//NewNode.Value=0.75;
+				//g_IIproperties[i].Envelope->push_back(NewNode);
+				NewNode.Time=1.0;
+				NewNode.Value=RealValToNormzdVal(i,g_IIproperties[i].NeutralValue);
+				g_IIproperties[i].Envelope->push_back(NewNode);
+				NewNode.Time=1.0;
+				NewNode.Value=0.0;
+				g_IIproperties[i].RndSpreadEnv->push_back(NewNode);
+				i++;
+				if (g_IIproperties[i].Name==NULL) break;
+			}
+			FirstRun=false;
 		}
 		LVCOLUMN col;
-				col.mask=LVCF_TEXT|LVCF_WIDTH;
-				col.cx=150;
-				col.pszText=TEXT("col1");
-				ListView_InsertColumn(GetDlgItem(hwnd,IDC_IIACTPARLIST), 0 , &col);
+		col.mask=LVCF_TEXT|LVCF_WIDTH;
+		col.cx=150;
+		col.pszText=TEXT("col1");
+		ListView_InsertColumn(GetDlgItem(hwnd,IDC_IIACTPARLIST), 0 , &col);
 		ListView_SetExtendedListViewStyleEx(GetDlgItem(hwnd,IDC_IIACTPARLIST),LVS_EX_CHECKBOXES,LVS_EX_CHECKBOXES);
 		i=0;
 		while (!endofProps)
 		{
-			ComboBox_AddString(GetDlgItem(hwnd,IDC_IIPROPERTY),g_IIproperties[i].Name);	
+			SendMessage(GetDlgItem(hwnd,IDC_IIPROPERTY), CB_ADDSTRING, 0, (LPARAM)g_IIproperties[i].Name);
 			LVITEM item;
 			item.mask=LVIF_TEXT;
 			item.iItem=i;
@@ -779,9 +774,6 @@ BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 			i++;
 			if (g_IIproperties[i].Name==NULL) break;
 		}
-		//ComboBox_AddString(GetDlgItem(hwnd,IDC_IIPROPERTY),"Item length");
-		//ComboBox_AddString(GetDlgItem(hwnd,IDC_IIPROPERTY),"Item volume");
-		//ComboBox_SetCurSel(GetDlgItem(hwnd,IDC_IIPROPERTY),g_activePropertyEnvelope);
 		
 		RECT r;
 		GetWindowRect(GetDlgItem(hwnd,IDC_IIENVAREA),&r);
@@ -892,8 +884,7 @@ BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 	}
 	if (Message==WM_COMMAND && LOWORD(wParam)==IDC_IIPROPERTY && HIWORD(wParam)==CBN_SELCHANGE)
 	{
-		return 0;			
-		g_activePropertyEnvelope=ComboBox_GetCurSel(GetDlgItem(hwnd,IDC_IIPROPERTY));
+		g_activePropertyEnvelope=SendMessage(GetDlgItem(hwnd,IDC_IIPROPERTY), CB_GETCURSEL, 0, 0);
 		IIDoPaint(GetDlgItem(hwnd,IDC_IIENVAREA));
 		InvalidateRect(hwnd,NULL,FALSE);
 		return 0;
@@ -907,8 +898,6 @@ BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 				{
 					for (int i=0;i<ListView_GetItemCount(GetDlgItem(hwnd,IDC_IIACTPARLIST));i++)
 					{
-		
-		
 						UINT itemState=ListView_GetItemState(GetDlgItem(hwnd,IDC_IIACTPARLIST),i,LVIS_SELECTED);
 						if (itemState==LVIS_SELECTED)
 						{
@@ -918,7 +907,6 @@ BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 						}
 					}
 				}
-				
 			}
 			return 0;
 	}
@@ -929,9 +917,13 @@ BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 	}
 	return 0;
 }
-
+#endif
 
 void DoShowItemInterpDLG(COMMAND_T*)
 {
+#ifdef _WIN32
 	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_ITEMPROPINTERP),g_hwndParent,(DLGPROC)ItemInterpDlgProc);
+#else
+	MessageBox(g_hwndParent, "Not supported on OSX (yet), sorry!", "Unsupported", MB_OK);
+#endif
 }

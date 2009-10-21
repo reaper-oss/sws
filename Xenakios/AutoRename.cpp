@@ -219,107 +219,93 @@ WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	switch(Message)
     {
         case WM_INITDIALOG:
+		{
+			g_AutoNamePresets.clear();
+			t_autorenamepreset newAutonamePreset;
+			newAutonamePreset.Description.assign("Increasing suffix, track-by-track");
+			newAutonamePreset.FormattingString.assign("[takename]%-%[inctrackorder]");
+			g_AutoNamePresets.push_back(newAutonamePreset);
+			newAutonamePreset.Description.assign("Increasing suffix, time order across all tracks");
+			newAutonamePreset.FormattingString.assign("[takename]%-%[inctimeorder]");
+			g_AutoNamePresets.push_back(newAutonamePreset);
+			newAutonamePreset.Description.assign("Folder.Track.Increasing suffix");
+			newAutonamePreset.FormattingString.assign("[foldername]%.%[trackname]%.%[inctrackorder]");
+			g_AutoNamePresets.push_back(newAutonamePreset);
+			newAutonamePreset.Description.assign("Strip file extension");
+			newAutonamePreset.FormattingString.assign("[takename]%[NOEXT]");
+			g_AutoNamePresets.push_back(newAutonamePreset);
+			
+			for (int i = 0; i < (int)g_AutoNamePresets.size(); i++)
 			{
-				g_AutoNamePresets.clear();
-				t_autorenamepreset newAutonamePreset;
-				newAutonamePreset.Description.assign("Increasing suffix, track-by-track");
-				newAutonamePreset.FormattingString.assign("[takename]%-%[inctrackorder]");
-				g_AutoNamePresets.push_back(newAutonamePreset);
-				newAutonamePreset.Description.assign("Increasing suffix, time order across all tracks");
-				newAutonamePreset.FormattingString.assign("[takename]%-%[inctimeorder]");
-				g_AutoNamePresets.push_back(newAutonamePreset);
-				newAutonamePreset.Description.assign("Folder.Track.Increasing suffix");
-				newAutonamePreset.FormattingString.assign("[foldername]%.%[trackname]%.%[inctrackorder]");
-				g_AutoNamePresets.push_back(newAutonamePreset);
-				newAutonamePreset.Description.assign("Strip file extension");
-				newAutonamePreset.FormattingString.assign("[takename]%[NOEXT]");
-				g_AutoNamePresets.push_back(newAutonamePreset);
-				
-				int i;
-				for (i=0;i<(int)g_AutoNamePresets.size();i++)
-				{
-					// fill preset combobox
-					//
-#ifdef _WIN32
-					ComboBox_AddString(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS),g_AutoNamePresets[i].Description.c_str());
-					ComboBox_SetItemData(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS),i,(LPARAM)&g_AutoNamePresets[i].FormattingString);
-#else
-					SWELL_CB_AddString(hwnd,IDC_AUTONAMEPRESETS,g_AutoNamePresets[i].Description.c_str());
-					SWELL_CB_SetItemData(hwnd, IDC_AUTONAMEPRESETS, i, (LONG)&g_AutoNamePresets[i].FormattingString);
-#endif
-				}
-				
-				SetDlgItemText(hwnd,IDC_EDIT1,"[trackname]%.My take.%[inctrackorder]");
-				SetDlgItemText(hwnd,IDC_SAMPLEOUT,"Kick My take 01");
-				
-				g_hAutoNameDlg=hwnd;
-				//
-				LVCOLUMN col;
-				col.mask=LVCF_TEXT|LVCF_WIDTH;
-				col.cx=250;
-				
-				col.pszText=("Current take name");
-				//col.
-				
-				ListView_InsertColumn(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT), 0 , &col);
-				
-				col.mask=LVCF_TEXT|LVCF_WIDTH;
-				col.cx=250;
-				col.pszText="New take name";
-				ListView_InsertColumn(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT), 1 , &col);
-				
-				UpdateSampleNameList();
-				
-				return 0;
+				// fill preset combobox
+				SendMessage(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS), CB_ADDSTRING, 0, (LPARAM)g_AutoNamePresets[i].Description.c_str());
+				SendMessage(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS), CB_SETITEMDATA, i, (LPARAM)&g_AutoNamePresets[i].FormattingString);
 			}
+			
+			SetDlgItemText(hwnd,IDC_EDIT1,"[trackname]%.My take.%[inctrackorder]");
+			SetDlgItemText(hwnd,IDC_SAMPLEOUT,"Kick My take 01");
+			
+			g_hAutoNameDlg=hwnd;
+			//
+			LVCOLUMN col;
+			col.mask=LVCF_TEXT|LVCF_WIDTH;
+			col.cx=250;
+			
+			col.pszText=("Current take name");
+			//col.
+			
+			ListView_InsertColumn(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT), 0 , &col);
+			
+			col.mask=LVCF_TEXT|LVCF_WIDTH;
+			col.cx=250;
+			col.pszText="New take name";
+			ListView_InsertColumn(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT), 1 , &col);
+			
+			UpdateSampleNameList();
+			break;
+		}
 		case WM_COMMAND:
 			{
 				if (HIWORD(wParam) == EN_CHANGE && LOWORD(wParam) == IDC_EDIT1)
-					{
-						char buf[500];
-						GetDlgItemText(hwnd,IDC_EDIT1,buf,500);
-						g_FormattingString.assign(buf);
-						string SampleTakeName=GetNewTakeNameFromFormatString(buf,g_VecTakesToRename[0],1);
-						SetDlgItemText(hwnd,IDC_SAMPLEOUT,SampleTakeName.c_str());
-						UpdateSampleNameList();
-						return 0;
-					}
+				{
+					char buf[500];
+					GetDlgItemText(hwnd,IDC_EDIT1,buf,500);
+					g_FormattingString.assign(buf);
+					string SampleTakeName=GetNewTakeNameFromFormatString(buf,g_VecTakesToRename[0],1);
+					SetDlgItemText(hwnd,IDC_SAMPLEOUT,SampleTakeName.c_str());
+					UpdateSampleNameList();
+					break;
+				}
 				if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==IDC_AUTONAMEPRESETS)
 				{
 					string *formattingString;
-					int comboIndex=ComboBox_GetCurSel(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS));
+					int comboIndex=SendMessage(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS), CB_GETCURSEL, 0, 0);
 					if (comboIndex>=0 && comboIndex<(int)g_AutoNamePresets.size())
 					{
-						formattingString=(string*)(LPARAM)ComboBox_GetItemData(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS),comboIndex);
+						formattingString=(string*)SendMessage(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS),CB_GETITEMDATA, comboIndex, 0);
 						if (formattingString!=0)
 						{
 							SetDlgItemText(hwnd,IDC_EDIT1,formattingString->c_str());
 							g_FormattingString.assign(*formattingString);
 						}
 					}
-					return 0;
+					break;
 				}
 				switch(LOWORD(wParam))
 				{
-					
-					
 					case IDCANCEL:
-						{
-							
-							g_AutonameCancelled=true;
-							EndDialog(hwnd,0);
-							return 0;
-						}
+						g_AutonameCancelled=true;
+						EndDialog(hwnd,0);
+						break;
 					case IDOK:
-						{
-							char buf[500];
-							GetDlgItemText(hwnd,IDC_EDIT1,buf,500);
-							g_FormattingString.assign(buf);
-							g_AutonameCancelled=false;
-							EndDialog(hwnd,0);
-							return 0;
-						}
-					return 0;
+					{
+						char buf[500];
+						GetDlgItemText(hwnd,IDC_EDIT1,buf,500);
+						g_FormattingString.assign(buf);
+						g_AutonameCancelled=false;
+						EndDialog(hwnd,0);
+						break;
+					}
 				}
 			}
 	}

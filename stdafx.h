@@ -38,13 +38,13 @@
 #include <commctrl.h>
 #else
 #include "../WDL/swell/swell.h"
-#define _strdup strdup
 #endif
 #include <stdio.h>
 #include <math.h>
 #include <ctype.h>
 #include <time.h>
 #include <float.h>
+#include <sys/stat.h>
 
 // stl
 #include <sstream>
@@ -60,13 +60,14 @@
 #include "../WDL/ptrlist.h"
 #include "../WDL/wdlstring.h"
 #include "../WDL/heapbuf.h"
-#include "../WDL/lineparse.h"
 #include "../WDL/db2val.h"
 #include "../WDL/wingui/wndsize.h"
 #include "../WDL/lice/lice.h"
+#include "../WDL/dirscan.h"
 #include "reaper/reaper_plugin.h"
 #include "reaper/sws_rpf_wrapper.h"
 #include "sws_util.h"
+#include "../WDL/lineparse.h"
 #include "sws_wnd.h"
 #include "resource.h"
 #include "Xenakios/res.h"

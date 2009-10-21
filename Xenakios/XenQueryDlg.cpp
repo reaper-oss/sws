@@ -39,9 +39,10 @@ BOOL WINAPI GenQueryDlgProc1(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 		if (strlen(g_QueryTitle)>0)
 			SetWindowText(hwnd,g_QueryTitle);
 		if (strlen(g_QueryString)>0)
-
 			SetDlgItemText(hwnd,IDC_EDIT1,g_QueryString);
-		SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_EDIT1), TRUE);
+
+		SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
+		SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
 		return 0;
 	}
 	if (Message==WM_COMMAND && LOWORD(wParam)==IDOK)

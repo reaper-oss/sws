@@ -42,6 +42,7 @@ protected:
 	LPARAM GetItemPointer(int iItem);
 	bool GetItemState(LPARAM item);
 	void OnItemClk(LPARAM item, int iCol);
+	int OnItemSort(LPARAM item1, LPARAM item2);
 
 private:
 	SWS_TrackListWnd* m_pTrackListWnd;

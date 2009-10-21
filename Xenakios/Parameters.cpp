@@ -301,19 +301,19 @@ WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 			sprintf(textBuf,"%.2f",g_command_params.ItemVolumeNudge);
 			SetDlgItemText(hwnd, IDC_IVOL_NUDGE, textBuf);
 
-			SetDlgItemText(hwnd,IDC_EXTTOOLPATH1,g_external_app_paths.PathToTool1);
-			SetDlgItemText(hwnd,IDC_EXTTOOLPATH2,g_external_app_paths.PathToTool2);
-			SetDlgItemText(hwnd,IDC_EXTEDITPATH1,g_external_app_paths.PathToAudioEditor1);
-			SetDlgItemText(hwnd,IDC_EXTEDITPATH2,g_external_app_paths.PathToAudioEditor2);
+			if (g_external_app_paths.PathToTool1)
+				SetDlgItemText(hwnd,IDC_EXTTOOLPATH1,g_external_app_paths.PathToTool1);
+			if (g_external_app_paths.PathToTool2)
+				SetDlgItemText(hwnd,IDC_EXTTOOLPATH2,g_external_app_paths.PathToTool2);
+			if (g_external_app_paths.PathToAudioEditor1)
+				SetDlgItemText(hwnd,IDC_EXTEDITPATH1,g_external_app_paths.PathToAudioEditor1);
+			if (g_external_app_paths.PathToAudioEditor2)
+				SetDlgItemText(hwnd,IDC_EXTEDITPATH2,g_external_app_paths.PathToAudioEditor2);
 			
 			SetDlgItemText(hwnd,IDC_EDITDEFAULTTRACKNAME,g_command_params.DefaultTrackLabel.c_str());
 			SetDlgItemText(hwnd,IDC_EDITTRPREFIX,g_command_params.TrackLabelPrefix.c_str());
 			SetDlgItemText(hwnd,IDC_EDITTRSUFFIX,g_command_params.TrackLabelSuffix.c_str());
-//#ifdef _WIN32
-//			SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDC_EDIT6), TRUE);
-//#endif
-			
-			return 0;
+			break;
 		}
 		case WM_COMMAND:
 			switch(LOWORD(wParam))
@@ -396,65 +396,55 @@ WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 				}
 				case IDC_EXTTOOL1BUT:
 				{
-					//
-					//MessageBox(hwnd,"tool 1 browse pressed!","info",MB_OK);
-					WDL_PtrList<char> *TheFileNames=new WDL_PtrList<char>;
-					BrowseForFiles(hwnd,TheFileNames,"EXE-Files\0*.exe","Browse For External Tool 1",false,"",NULL);
-					if (TheFileNames->GetSize()>0)
+					char* cFile = BrowseForFiles("Browse for external tool 1", NULL, NULL, false, "Executables\0*.exe\0");
+					if (cFile)
 					{
-						g_external_app_paths.PathToTool1=new char[strlen(TheFileNames->Get(0))+sizeof(char)];
-						strcpy(g_external_app_paths.PathToTool1, TheFileNames->Get(0));
+						delete [] g_external_app_paths.PathToTool1;
+						g_external_app_paths.PathToTool1 = new char[strlen(cFile)+1];
+						strcpy(g_external_app_paths.PathToTool1, cFile);
+						free(cFile);
 					}
-					SetDlgItemText(hwnd,IDC_EXTTOOLPATH1,g_external_app_paths.PathToTool1);
-					TheFileNames->Empty(true, free);
-					delete TheFileNames;
+					SetDlgItemText(hwnd, IDC_EXTTOOLPATH1, g_external_app_paths.PathToTool1);
 					return 0;
 				}
 				case IDC_EXTTOOL2BUT:
 				{
-					//
-					//MessageBox(hwnd,"tool 1 browse pressed!","info",MB_OK);
-					WDL_PtrList<char> *TheFileNames=new WDL_PtrList<char>;
-					BrowseForFiles(hwnd,TheFileNames,"EXE-Files\0*.exe","Browse For External Tool 2",false,"",NULL);
-					if (TheFileNames->GetSize()>0)
+					char* cFile = BrowseForFiles("Browse for external tool 2", NULL, NULL, false, "Executables\0*.exe\0");
+					if (cFile)
 					{
-						g_external_app_paths.PathToTool2=new char[strlen(TheFileNames->Get(0))+sizeof(char)];
-						strcpy(g_external_app_paths.PathToTool2, TheFileNames->Get(0));
+						delete [] g_external_app_paths.PathToTool2;
+						g_external_app_paths.PathToTool2 = new char[strlen(cFile)+1];
+						strcpy(g_external_app_paths.PathToTool2, cFile);
+						free(cFile);
 					}
-					SetDlgItemText(hwnd,IDC_EXTTOOLPATH2,g_external_app_paths.PathToTool2);
-					TheFileNames->Empty(true, free);
-					delete TheFileNames;
+					SetDlgItemText(hwnd, IDC_EXTTOOLPATH2, g_external_app_paths.PathToTool2);
 					return 0;
 				}
 				case IDC_EXTEDIT1BUT:
 				{
-					WDL_PtrList<char> *TheFileNames=new WDL_PtrList<char>;
-					BrowseForFiles(hwnd,TheFileNames,"EXE-Files\0*.exe","Browse For External Editor",false,"",NULL);
-					if (TheFileNames->GetSize()>0)
+					char* cFile = BrowseForFiles("Browse for external editor 1", NULL, NULL, false, "Executables\0*.exe\0");
+					if (cFile)
 					{
-						g_external_app_paths.PathToAudioEditor1=new char[strlen(TheFileNames->Get(0))+sizeof(char)];
-						strcpy(g_external_app_paths.PathToAudioEditor1, TheFileNames->Get(0));
+						delete [] g_external_app_paths.PathToAudioEditor1;
+						g_external_app_paths.PathToAudioEditor1 = new char[strlen(cFile)+1];
+						strcpy(g_external_app_paths.PathToAudioEditor1, cFile);
+						free(cFile);
 					}
-					SetDlgItemText(hwnd,IDC_EXTEDITPATH1,g_external_app_paths.PathToAudioEditor1);
-					//UpdateExternalToolMenuEntries();
-					TheFileNames->Empty(true, free);
-					delete TheFileNames;
-					return 0;	
+					SetDlgItemText(hwnd, IDC_EXTEDITPATH1, g_external_app_paths.PathToAudioEditor1);
+					return 0;
 				}
 				case IDC_EXTEDIT2BUT:
 				{
-					WDL_PtrList<char> *TheFileNames=new WDL_PtrList<char>;
-					BrowseForFiles(hwnd,TheFileNames,"EXE-Files\0*.exe","Browse For External Editor",false,"",NULL);
-					if (TheFileNames->GetSize()>0)
+					char* cFile = BrowseForFiles("Browse for external editor 2", NULL, NULL, false, "Executables\0*.exe\0");
+					if (cFile)
 					{
-						g_external_app_paths.PathToAudioEditor2=new char[strlen(TheFileNames->Get(0))+sizeof(char)];
-						strcpy(g_external_app_paths.PathToAudioEditor2, TheFileNames->Get(0));
+						delete [] g_external_app_paths.PathToAudioEditor2;
+						g_external_app_paths.PathToAudioEditor2 = new char[strlen(cFile)+1];
+						strcpy(g_external_app_paths.PathToAudioEditor2, cFile);
+						free(cFile);
 					}
-					SetDlgItemText(hwnd,IDC_EXTEDITPATH2,g_external_app_paths.PathToAudioEditor2);
-					TheFileNames->Empty(true, free);
-					//UpdateExternalToolMenuEntries();
-					delete TheFileNames;
-					return 0;	
+					SetDlgItemText(hwnd, IDC_EXTEDITPATH2, g_external_app_paths.PathToAudioEditor2);
+					return 0;
 				}
 			}
 	}

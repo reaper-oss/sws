@@ -71,11 +71,7 @@ BOOL WINAPI MyItemInspectorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 		case WM_TIMER:
 		{
 			ostringstream infoText;
-			DWORD TickA=GetTickCount();
 			int NumSelItems=GetNumSelectedItems();
-			DWORD TickB=GetTickCount();
-				
-			double elapsedTime=(TickB-TickA)/1000.0;
 			if (g_InspshowMode==0)
 			{
 				if (NumSelItems>0)

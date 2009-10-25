@@ -44,21 +44,13 @@ void DoRemapItemPositions(bool RestorePos)
 	//
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	
-	int numItems=666;
+	int numItems;
 	
 	//double PositionScalingFactor=TheScaling/100.0;
 	//if (PositionScalingFactor<0.0001) PositionScalingFactor=0.0001;
 	//if (PositionScalingFactor>1) PositionScalingFactor=1.0;
-
-	
 	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
-	//double EditCurPos=GetCursorPosition();
-	
-	//MediaItem** MediaItemsOnTrack;
-	
+
 	// Find minimum and maximum item positions from all selected
 	double MinTime;
 	double MaxTime;
@@ -172,6 +164,8 @@ void DoRemapItemPositions(bool RestorePos)
 
 WDL_DLGRET ItemPosRemapDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	static HWND hCurveSlider = NULL;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -179,15 +173,13 @@ WDL_DLGRET ItemPosRemapDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 			char labtxt[256];
 			sprintf(labtxt,"%.2f",g_itemposremap_params.Curve);
 			SetDlgItemText(hwnd,IDC_IPRCURVE,labtxt);
-			RECT rect1;
-			GetClientRect(GetDlgItem(hwnd,IDC_STATIC1),&rect1);
-			int CurveSliderLeft=rect1.right+15;
-			GetClientRect(GetDlgItem(hwnd,IDC_IPRCURVE),&rect1);
-			int CurveSliderRight=rect1.left-10;
-			HWND hCurveSlider = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER1", 
+#ifdef _WIN32
+			hCurveSlider = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER1", 
 				WS_CHILD | WS_VISIBLE | TBS_VERT, 
 				45, 5, 150, 25, hwnd, NULL, g_hInst, NULL);
-
+#else
+			hCurveSlider = SWELL_MakeControl("DLGFADER1", 666, "REAPERhfader", 0, 45, 5, 150, 25, 0);
+#endif
 			SetFocus(GetDlgItem(hwnd, IDC_IPRCURVE));
 			SendMessage(GetDlgItem(hwnd, IDC_IPRCURVE), EM_SETSEL, 0, -1);
 			break;
@@ -234,6 +226,9 @@ WDL_DLGRET ItemPosRemapDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 				}
 			}
 		}
+		case WM_DESTROY:
+			DestroyWindow(hCurveSlider);
+			break;
 	}
 	return 0;
 }
@@ -252,13 +247,9 @@ void DoItemPosRemapDlg(COMMAND_T*)
 	g_itemposremap_params.StoredPositions=new double [NumSelItems];
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	
 	int numItems;
-	
-	
 	bool ItemSelected=false;
 	int ItemCounter=0;
-	bool NewSelectedStatus=false;
 	int i;
 	int j;
 	for (i=0;i<GetNumTracks();i++)
@@ -281,15 +272,6 @@ void DoItemPosRemapDlg(COMMAND_T*)
 	delete[] g_itemposremap_params.StoredPositions;
 }
 
-typedef struct
-{
-	int Mode;
-	double StretchFactor;
-	double PitchSemis;
-} t_RubberBandParams;
-
-t_RubberBandParams g_RubberBandParams;
-
 void ExtractFileNameEx(const char *FullFileName,char *Filename,bool StripExtension)
 {
 	const char* pFile = strrchr(FullFileName, '\\');
@@ -310,6 +292,15 @@ void ExtractFileNameEx(const char *FullFileName,char *Filename,bool StripExtensi
 	}
 }
 
+#ifdef _WIN32
+typedef struct
+{
+	int Mode;
+	double StretchFactor;
+	double PitchSemis;
+} t_RubberBandParams;
+
+t_RubberBandParams g_RubberBandParams;
 
 void DoRubberBandProcessing()
 {
@@ -375,7 +366,6 @@ void DoRubberBandProcessing()
 						g_RubberBandParams.StretchFactor,PitchFactor,ThePCMSource->GetFileName(),RenderOutName);
 					STARTUPINFO          si = { sizeof(si) };
 					PROCESS_INFORMATION  pi;
-					//if(CreateProcess(0, ExeLine, 0, 0, FALSE, CREATE_NO_WINDOW, 0, 0, &si, &pi))
 					if(CreateProcess(0, ExeLine, 0, 0, FALSE, 0, 0, 0, &si, &pi))
 					{
 						DWORD TheResult;
@@ -469,10 +459,11 @@ WDL_DLGRET RubberBandDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	}		
 	return 0;
 }
-
+#endif
 
 void DoShowRubberbandDlg(COMMAND_T*)
 {
+#ifdef _WIN32
 	static bool firstRun=true;
 	if (firstRun==true)
 	{
@@ -483,6 +474,9 @@ void DoShowRubberbandDlg(COMMAND_T*)
 	}
 
 	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_RUBBERBAND), g_hwndParent, RubberBandDlgProc);	
+#else
+	MessageBox(g_hwndParent, "Not supported on OSX (yet), sorry!", "Unsupported", MB_OK);
+#endif
 }
 
 struct t_cuestruct
@@ -520,13 +514,9 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 			{
 				double itemSnapOffs=*(double*)GetSetMediaItemInfo(CurItem,"D_SNAPOFFSET",0);
 				VecItemCues.clear();
-				double NewStartOffSet=0.0;
-				double ItemLength=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
 				CurTake=GetMediaItemTake(CurItem,-1);
 				double TakePlayRate=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_PLAYRATE",NULL);
 				PCM_source *TakeSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-				double OldStartOffset=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",NULL);
-				double TimeCounter=OldStartOffset;
 				REAPER_cue *CurCue;
 				int cueIndx=0;
 				bool morecues=true;
@@ -605,7 +595,6 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 					//if (NewTimeA<0.0) NewTimeA=0.0;
 					double NewTimeB=VecItemCues[NewCueIndex].EndTime;
 					double NewLength=(NewTimeB*(1.0/TakePlayRate)) - (NewTimeA*(1.0/TakePlayRate));
-					double Blaaaah=NewTimeA*TakePlayRate;
 					if (!PreserveItemLen)
 						GetSetMediaItemInfo(CurItem,"D_LENGTH",&NewLength);
 					GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",&NewTimeA);
@@ -976,7 +965,7 @@ void CycleItemsFadeShape(int whichfade, bool nextshape)
 			bool IsSel=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
 			if (IsSel)
 			{
-				char* cType = whichfade ? "C_FADEOUTSHAPE" : "C_FADEINSHAPE";
+				const char* cType = whichfade ? "C_FADEOUTSHAPE" : "C_FADEINSHAPE";
 				char cShape = *(char*)GetSetMediaItemInfo(CurItem,cType,NULL) + (nextshape ? 1 : -1);
 				if (cShape < 0)
 					cShape = 5;
@@ -1129,8 +1118,6 @@ void DoSpreadItemsOverTracks(int NumTracks, int StartTrack, int Mode)
 	for (i=0;i<GetNumTracks();i++)
 	{
 		CurTrack=CSurf_TrackFromID(i+1,false);
-		int IsTrackSel=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		//if (IsTrackSel==1 && IndexOfFirstSelTrack==-1) IndexOfFirstSelTrack=i+1;
 		for (j=0;j<GetTrackNumMediaItems(CurTrack);j++)
 		{
 			CurItem=GetTrackMediaItem(CurTrack,j);
@@ -1749,8 +1736,8 @@ void SetSelItemsFadesToConf(const char *confID)
 	{
 		GetSetMediaItemInfo(selitems[i],"D_FADEINLEN",&fadeinlen);
 		GetSetMediaItemInfo(selitems[i],"D_FADEOUTLEN",&fadeoutlen);
-		GetSetMediaItemInfo(selitems[i],"I_FADEINSHAPE",&fadeinshape);
-		GetSetMediaItemInfo(selitems[i],"I_FADEOUTSHAPE",&fadeoutshape);
+		GetSetMediaItemInfo(selitems[i],"C_FADEINSHAPE",&fadeinshape);
+		GetSetMediaItemInfo(selitems[i],"C_FADEOUTSHAPE",&fadeoutshape);
 	}
 	UpdateTimeline();
 	Undo_OnStateChangeEx("Change item fades",4,-1);

@@ -41,10 +41,10 @@ typedef struct t_command_params
 	double CommandFadeInB;
 	double CommandFadeOutA;
 	double CommandFadeOutB;
-	int CommandFadeInShapeA;
-	int CommandFadeOutShapeA;
-	int CommandFadeInShapeB;
-	int CommandFadeOutShapeB;
+	char CommandFadeInShapeA;
+	char CommandFadeOutShapeA;
+	char CommandFadeInShapeB;
+	char CommandFadeOutShapeB;
 	double RndItemSelProb;
 	int PixAmount;
 	double CurPosSecsAmount;

@@ -64,10 +64,14 @@
 #include "../WDL/wingui/wndsize.h"
 #include "../WDL/lice/lice.h"
 #include "../WDL/dirscan.h"
+#include "../WDL/win32_utf8.h"
+#pragma warning(disable : 4996) // Disables POSIX deprecation warnings
+#include "../WDL/lineparse.h"
+#pragma warning(default : 4996)
+
 #include "reaper/reaper_plugin.h"
 #include "reaper/sws_rpf_wrapper.h"
 #include "sws_util.h"
-#include "../WDL/lineparse.h"
 #include "sws_wnd.h"
 #include "resource.h"
 #include "Xenakios/res.h"

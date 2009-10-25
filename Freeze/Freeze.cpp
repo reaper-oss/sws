@@ -1036,6 +1036,36 @@ void SelMutedItemsSel(COMMAND_T* = NULL)
 	UpdateTimeline();
 }
 
+void SelSoloedTracks(COMMAND_T* = NULL)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		int iSel = *(int*)GetSetMediaTrackInfo(tr, "I_SOLO", NULL) ? 1 : 0;
+		GetSetMediaTrackInfo(tr, "I_SELECTED", &iSel);
+	}
+}
+
+void SelPhaseTracks(COMMAND_T* = NULL)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		int iSel = *(bool*)GetSetMediaTrackInfo(tr, "B_PHASE", NULL) ? 1 : 0;
+		GetSetMediaTrackInfo(tr, "I_SELECTED", &iSel);
+	}
+}
+
+void SelArmedTracks(COMMAND_T* = NULL)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		int iSel = *(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL) ? 1 : 0;
+		GetSetMediaTrackInfo(tr, "I_SELECTED", &iSel);
+	}
+}
+
 void SelLockedItems(COMMAND_T* = NULL)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -1531,6 +1561,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Select muted tracks" },									 "SWS_SELMUTEDTRACKS", SelMutedTracks,   NULL, },
 	{ { DEFACCEL, "SWS: Select muted items" },									 "SWS_SELMUTEDITEMS",  SelMutedItems,    NULL, },
 	{ { DEFACCEL, "SWS: Select muted items on selected track(s)" },				 "SWS_SELMUTEDITEMS2", SelMutedItemsSel, NULL, },
+	{ { DEFACCEL, "SWS: Select soloed tracks" },								 "SWS_SELSOLOEDTRACKS", SelSoloedTracks,   NULL, },
+	{ { DEFACCEL, "SWS: Select tracks with flipped phase" },					 "SWS_SELPHASETRACKS", SelPhaseTracks,   NULL, },
+	{ { DEFACCEL, "SWS: Select armed tracks" },								     "SWS_SELARMEDTRACKS", SelArmedTracks,   NULL, },
 	{ { DEFACCEL, "SWS: Select tracks with active routing to selected track(s)" },"SWS_SELROUTED",      SelRouted,        NULL, },
 	{ { DEFACCEL, "SWS: Select locked items" },									 "SWS_SELLOCKITEMS",   SelLockedItems,   NULL, },
 	{ { DEFACCEL, "SWS: Select locked items on selected track(s)" },				 "SWS_SELLOCKITEMS2",  SelLockedItemsSel,NULL, },
@@ -1540,11 +1573,11 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Restore master FX enabled state" },					     "SWS_RESTMSTFXEN",    RestMasterFXEn,   NULL, },
 	{ { DEFACCEL, "SWS: Show master track in track control panel" },              "SWS_SHOWMASTER",     ShowMaster,       NULL, },
 	{ { DEFACCEL, "SWS: Hide master track in track control panel" },              "SWS_HIDEMASTER",     HideMaster,       NULL, },
-	{ { DEFACCEL, "SWS: Enable master FX" },										 "SWS_ENMASTERFX",     EnableMasterFX,   NULL, },
-	{ { DEFACCEL, "SWS: Disable master FX" },									 "SWS_DISMASTERFX",    DisableMasterFX,  NULL, },
-	{ { DEFACCEL, "SWS: Select master track" },									 "SWS_SELMASTER",      SelMaster,        NULL, },
-	{ { DEFACCEL, "SWS: Unselect master track" },								 "SWS_UNSELMASTER",    UnselMaster,      NULL, },
-	{ { DEFACCEL, "SWS: Toggle master track select" },							 "SWS_TOGSELMASTER",   TogSelMaster,     NULL, },
+	{ { DEFACCEL, "SWS: Enable master FX" },									  "SWS_ENMASTERFX",     EnableMasterFX,   NULL, },
+	{ { DEFACCEL, "SWS: Disable master FX" },									  "SWS_DISMASTERFX",    DisableMasterFX,  NULL, },
+	{ { DEFACCEL, "SWS: Select master track" },									  "SWS_SELMASTER",      SelMaster,        NULL, },
+	{ { DEFACCEL, "SWS: Unselect master track" },								  "SWS_UNSELMASTER",    UnselMaster,      NULL, },
+	{ { DEFACCEL, "SWS: Toggle master track select" },							  "SWS_TOGSELMASTER",   TogSelMaster,     NULL, },
 
 	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 1" },       "SWS_SAVESELITEMS1",  SaveSelTrackSelItems,	NULL, 0 },
 	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 2" },       "SWS_SAVESELITEMS2",  SaveSelTrackSelItems,	NULL, 1 },
@@ -1557,8 +1590,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Restore selected track(s) selected item(s), slot 4" },    "SWS_RESTSELITEMS4",  RestoreSelTrackSelItems,	NULL, 3 },
 	{ { DEFACCEL, "SWS: Restore selected track(s) selected item(s), slot 5" },    "SWS_RESTSELITEMS5",  RestoreSelTrackSelItems,	NULL, 4 },
 	{ { DEFACCEL, "SWS: Restore last item selection on selected track(s)" },      "SWS_RESTLASTSEL",    RestoreLastSelItemTrack,	NULL, },
-	{ { DEFACCEL, "SWS: Save selected item(s)" },								 "SWS_SAVEALLSELITEMS1", SaveSelItems,          NULL, 0 }, // Slots aren't supported here (yet?)
-	{ { DEFACCEL, "SWS: Restore saved selected item(s)" },						 "SWS_RESTALLSELITEMS1", RestoreSelItems,       NULL, 0 },
+	{ { DEFACCEL, "SWS: Save selected item(s)" },								  "SWS_SAVEALLSELITEMS1", SaveSelItems,          NULL, 0 }, // Slots aren't supported here (yet?)
+	{ { DEFACCEL, "SWS: Restore saved selected item(s)" },						  "SWS_RESTALLSELITEMS1", RestoreSelItems,       NULL, 0 },
 
 	{ { DEFACCEL, "SWS: Save time selection, slot 1" },                           "SWS_SAVETIME1",      SaveTimeSel,      NULL, 1 },
 	{ { DEFACCEL, "SWS: Save time selection, slot 2" },                           "SWS_SAVETIME2",      SaveTimeSel,      NULL, 2 },

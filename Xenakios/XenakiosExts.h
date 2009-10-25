@@ -149,7 +149,6 @@ void DoSelItemsToEndOfTrack(COMMAND_T*);
 void DoSelItemsToStartOfTrack(COMMAND_T*);
 void DoPanTakesSymmetricallyWithUndo(COMMAND_T*);
 void DoImplodeTakesSetPlaySetSymPans(COMMAND_T*);
-void DoInterpolateItemPropertyOverTime(COMMAND_T*);
 void DoRenderItemsWithTail(COMMAND_T*);
 void DoOpenAssociatedRPP(COMMAND_T*);
 void DoReposItemsDlg(COMMAND_T*);

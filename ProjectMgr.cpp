@@ -42,29 +42,14 @@ void SaveProjectList(COMMAND_T*)
 			bValid = true;
 	if (!bValid)
 	{
-		MessageBox(g_hwndParent, "No saved projects are open.  Please save your project(s) first.", "SWS Project List Save", MB_OK | MB_ICONERROR);
+		MessageBox(g_hwndParent, "No saved projects are open.  Please save your project(s) first.", "SWS Project List Save", MB_OK);
 		return;
 	}
 
-	filename[0] = 0;
 	char cPath[256];
 	GetProjectPath(cPath, 256);
-	OPENFILENAME ofn;
-	memset(&ofn, 0, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = g_hwndParent;
-	ofn.lpstrFilter = "Reaper Project List (*.RPL)\0*.RPL\0All Files\0*.*\0";
-	ofn.lpstrFile = filename;
-	ofn.lpstrInitialDir = cPath;
-	ofn.nMaxFile = 256;
-#if _MSC_VER > 1310
-	ofn.Flags = OFN_DONTADDTORECENT | OFN_EXPLORER | OFN_OVERWRITEPROMPT;
-#else
-	ofn.Flags = OFN_EXPLORER | OFN_OVERWRITEPROMPT;
-#endif
-	ofn.lpstrDefExt = "RPL";
-
-	if (GetSaveFileName(&ofn))
+//	ofn.lpstrDefExt = "RPL";
+	if (BrowseForSaveFile("Select project list", cPath, NULL, "Reaper Project List (*.RPL)\0*.RPL\0All Files\0*.*\0", filename, 256))
 	{
 		FILE* f = fopen(filename, "w");
 		if (f)
@@ -81,31 +66,16 @@ void SaveProjectList(COMMAND_T*)
 			fclose(f);
 		}
 		else
-			MessageBox(g_hwndParent, "Unable to write to file.", "SWS Project List Save", MB_OK | MB_ICONERROR);
+			MessageBox(g_hwndParent, "Unable to write to file.", "SWS Project List Save", MB_OK);
 	}
 }
 
 void OpenProjectList(COMMAND_T*)
 {
-	char filename[256] = { 0, };
 	char cPath[256];
 	GetProjectPath(cPath, 256);
-	OPENFILENAME ofn;
-	memset(&ofn, 0, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = g_hwndParent;
-	ofn.lpstrFilter = "Reaper Project List (*.RPL)\0*.RPL\0All Files\0*.*\0";
-	ofn.lpstrFile = filename;
-	ofn.lpstrInitialDir = cPath;
-	ofn.nMaxFile = 256;
-#if _MSC_VER > 1310
-	ofn.Flags = OFN_DONTADDTORECENT | OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-#else
-	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-#endif
-	ofn.lpstrDefExt = "RPL";
-
-	if (GetOpenFileName(&ofn))
+	char* filename = BrowseForFiles("Select project list", cPath, NULL, false, "Reaper Project List (*.RPL)\0*.RPL\0All Files\0*.*\0");
+	if (filename)
 	{
 		FILE* f = fopen(filename, "r");
 		if (f)
@@ -140,7 +110,9 @@ void OpenProjectList(COMMAND_T*)
 			*pNewProjOpts = iNewProjOpts;
 		}
 		else
-			MessageBox(g_hwndParent, "Unable to open file.", "SWS Project List Open", MB_OK | MB_ICONERROR);
+			MessageBox(g_hwndParent, "Unable to open file.", "SWS Project List Open", MB_OK);
+		
+		free(filename);
 	}
 }
 
@@ -153,28 +125,14 @@ void AddRelatedProject(COMMAND_T* = NULL)
 		return;
 	}
 
-	char filename[256] = { 0, };
 	char cPath[256];
 	GetProjectPath(cPath, 256);
-	OPENFILENAME ofn;
-	memset(&ofn, 0, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = g_hwndParent;
-	ofn.lpstrFilter = "Reaper Project (*.RPP)\0*.RPP";
-	ofn.lpstrFile = filename;
-	ofn.lpstrInitialDir = cPath;
-	ofn.nMaxFile = 256;
-	ofn.lpstrTitle = "Pick Related Project";
-#if _MSC_VER > 1310
-	ofn.Flags = OFN_DONTADDTORECENT | OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-#else
-	ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-#endif
-	ofn.lpstrDefExt = "RPP";
 
-	if (GetOpenFileName(&ofn))
+	char* filename = BrowseForFiles("Select related project", cPath, NULL, false, "Reaper Project (*.RPP)\0*.RPP");
+	if (filename)
 	{
 		g_relatedProjects.Get()->Add(new WDL_String(filename));
+		free(filename);
 	}
 }
 
@@ -296,7 +254,7 @@ static void menuhook(int menuid, HMENU hMenu, int flag)
 				MENUITEMINFO mi={sizeof(MENUITEMINFO),};
 				mi.fMask = MIIM_TYPE | MIIM_STATE;
 				mi.fType = MFT_STRING;
-				mi.fState = MFS_DISABLED;
+				mi.fState = MFS_GRAYED;
 				mi.dwTypeData = g_commandTable[g_iORPCmdIndex].menuText;
 				SetMenuItemInfo(hMenu, iPos, true, &mi);
 			}
@@ -321,7 +279,7 @@ int ProjectMgrInit()
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
 
-	if (!plugin_register("hookmenu", menuhook))
+	if (!plugin_register("hookmenu", (void*)menuhook))
 		return 0;
 
 	return 1;

@@ -753,6 +753,8 @@ BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 			}
 			FirstRun=false;
 		}
+
+		WDL_UTF8_HookListView(GetDlgItem(hwnd,IDC_IIACTPARLIST));
 		LVCOLUMN col;
 		col.mask=LVCF_TEXT|LVCF_WIDTH;
 		col.cx=150;

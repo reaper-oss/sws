@@ -30,11 +30,6 @@
 
 using namespace std;
 
-char NudgeComboText[200] = "";
-HWND g_hNudgeComboBox = NULL;
-
-bool g_ScaleItemPosFirstRun=true;
-
 void DoJumpEditCursorByRandomAmount(COMMAND_T*)
 {
 	double RandomMean;
@@ -125,8 +120,8 @@ void DoSetItemFadesConfLen(COMMAND_T*)
 					NewFadeOutLen=ItemLen-(NewFadeInLen+0.05);
 				}
 
-				GetSetMediaItemInfo(CurItem,"I_FADEINSHAPE",&g_command_params.CommandFadeInShapeA);
-				GetSetMediaItemInfo(CurItem,"I_FADEOUTSHAPE",&g_command_params.CommandFadeOutShapeA);
+				GetSetMediaItemInfo(CurItem,"C_FADEINSHAPE",&g_command_params.CommandFadeInShapeA);
+				GetSetMediaItemInfo(CurItem,"C_FADEOUTSHAPE",&g_command_params.CommandFadeOutShapeA);
 				GetSetMediaItemInfo(CurItem,"D_FADEINLEN",&NewFadeInLen);
 				GetSetMediaItemInfo(CurItem,"D_FADEOUTLEN",&NewFadeOutLen);
 				
@@ -169,8 +164,8 @@ void DoSetItemFadesConfLenB(COMMAND_T*)
 					NewFadeOutLen=ItemLen-(NewFadeInLen+0.05);
 				}
 
-				GetSetMediaItemInfo(CurItem,"I_FADEINSHAPE",&g_command_params.CommandFadeInShapeB);
-				GetSetMediaItemInfo(CurItem,"I_FADEOUTSHAPE",&g_command_params.CommandFadeOutShapeB);
+				GetSetMediaItemInfo(CurItem,"C_FADEINSHAPE",&g_command_params.CommandFadeInShapeB);
+				GetSetMediaItemInfo(CurItem,"C_FADEOUTSHAPE",&g_command_params.CommandFadeOutShapeB);
 				GetSetMediaItemInfo(CurItem,"D_FADEINLEN",&NewFadeInLen);
 				GetSetMediaItemInfo(CurItem,"D_FADEOUTLEN",&NewFadeOutLen);
 			} 
@@ -538,6 +533,8 @@ void DoResetTakeVol(COMMAND_T*)
 	UpdateTimeline();
 }
 
+#ifdef _WIN32
+
 char *FFT_sizes_strs[]=
 {
   "256",
@@ -586,7 +583,6 @@ void InitFFTWNDBox(HWND hwnd, char *buf)
 
 void DoCSoundPvoc()
 {
-#ifdef _WIN32
 	//
 	
 	MediaTrack* MunRaita;
@@ -728,7 +724,6 @@ void DoCSoundPvoc()
 		}
 	}
 	UpdateTimeline();
-#endif
 }
 
 WDL_DLGRET CSPVOCItemDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -744,10 +739,9 @@ WDL_DLGRET CSPVOCItemDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
 			sprintf(TextBuf,"%.2f",g_last_PVOC_Params.Transpose);
 			SetDlgItemText(hwnd, IDC_EDIT2, TextBuf);
-			//MessageBox(g_hwndParent,g_last_PVOC_Params.fftSize,"info",MB_OK);
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_COMBO1));
 			InitFFTWNDBox (GetDlgItem(hwnd,IDC_COMBO1),fftSizeTxt);
 			g_hPVOCconfDlg=hwnd;
-			//MessageBox(g_hwndParent,g_last_PVOC_Params.fftSize,"info",MB_OK);	
 			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
 			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
 			//SendMessage(GetDlgItem(hwnd, IDC_COMBO1), CB_SETCURSEL, 0, 0);
@@ -777,11 +771,10 @@ WDL_DLGRET CSPVOCItemDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	return 0;
 }
 
-
-
+#endif
 void DoShowPVocDlg(COMMAND_T*)
 {
-	//
+#ifdef _WIN32
 	if (g_PVOC_firstrun==true)
 	{
 		strcpy(fftSizeTxt, "2048");
@@ -792,6 +785,9 @@ void DoShowPVocDlg(COMMAND_T*)
 	}
 
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_CSPVOC_CONF), g_hwndParent, CSPVOCItemDlgProc);
+#else
+	MessageBox(g_hwndParent, "Not supported on OSX (yet), sorry!", "Unsupported", MB_OK);
+#endif
 }
 
 typedef struct 
@@ -928,22 +924,20 @@ WDL_DLGRET ScaleItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 			hPosScaler = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER1", 
 				WS_CHILD | WS_VISIBLE | TBS_VERT, 
 				175, 5, 175, 25, hwnd, NULL, g_hInst, NULL);
-			char TextBuf[32];
 			hLenScaler = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER2", 
 				WS_CHILD | WS_VISIBLE | TBS_VERT, 
 				175, 40, 175, 25, hwnd, NULL, g_hInst, NULL);
+#else
+			hPosScaler = SWELL_MakeControl("DLGFADER1", 666, "REAPERhfader", 0, 175,  5, 175, 25, 0);
+			hLenScaler = SWELL_MakeControl("DLGFADER2", 667, "REAPERhfader", 0, 175, 40, 175, 25, 0);
+#endif
 			SendMessage(hPosScaler,TBM_SETTIC,0,500);
 			SendMessage(hLenScaler,TBM_SETTIC,0,500);
+			char TextBuf[32];
 			sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.Scaling);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
 			sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.LengthScaling);
 			SetDlgItemText(hwnd, IDC_EDIT5, TextBuf);
-#else
-			hPosScaler= SWELL_MakeControl("DLGFADER1", 667, "REAPERhfader", 0, 110, 5, 100, 10, 0);
-			char TextBuf[32];
-			sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.Scaling);
-			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
-#endif
 			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
 			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
 			break;
@@ -1003,6 +997,10 @@ WDL_DLGRET ScaleItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 					EndDialog(hwnd,0);
 					break;
 			}
+		case WM_DESTROY:
+			DestroyWindow(hPosScaler);
+			DestroyWindow(hLenScaler);
+			break;
 	}
 	return 0;
 }
@@ -1010,12 +1008,11 @@ WDL_DLGRET ScaleItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 
 void DoScaleItemPosStaticDlg(COMMAND_T*)
 {
+	static bool g_ScaleItemPosFirstRun = true;
 	if (g_ScaleItemPosFirstRun)
 	{
-		//
 		g_last_ScaleItemPosParams.Scaling=100.0;
 		g_ScaleItemPosFirstRun=false;
-		
 	}
 	int NumSelItems=GetNumSelectedItems();
 	g_StoredPositions=new double [NumSelItems];
@@ -1470,7 +1467,7 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 	switch(Message)
     {
         case WM_INITDIALOG:
-			{
+		{
 			RECT MyRect;
 			GetWindowRect(hwnd,&MyRect);
 			RECT MyRect2;
@@ -1486,117 +1483,106 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			int i;
 			for (i=0;i<g_TakeMixerState.NumTakes;i++)
 			{
-				
+#ifdef _WIN32				
 				sprintf(textbuf,"TAKESTATIC_%d",i+1);
 				g_TakeMixerState.g_hNumLabels[i] = CreateWindowEx(WS_EX_LEFT, "STATIC", textbuf, 
 				WS_CHILD | WS_VISIBLE, 
 				45+(1+i)*50, 170, 40, 13, hwnd, NULL, g_hInst, NULL);
-				sprintf(textbuf,"%d",i+1);
-				SetWindowText(g_TakeMixerState.g_hNumLabels[i],textbuf);
 				
 				sprintf(textbuf,"VOLSLIDER_%d",i+1);
 				g_TakeMixerState.g_hVolSliders[i] = CreateWindowEx(WS_EX_LEFT, "REAPERvfader", textbuf, 
 				WS_CHILD | WS_VISIBLE | TBS_VERT, 
 				40+(1+i)*50, 95, 30, 120, hwnd, NULL, g_hInst, NULL);
-				SendMessage(g_TakeMixerState.g_hVolSliders[i],TBM_SETTIC,0,500);
 				
 				sprintf(textbuf,"PANSLIDER_%d",i+1);
 				g_TakeMixerState.g_hPanSliders[i] = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", textbuf,
 				WS_CHILD | WS_VISIBLE | TBS_HORZ, 
 				33+(1+i)*50, 55, 45, 25, hwnd, NULL, g_hInst, NULL);
-				SendMessage(g_TakeMixerState.g_hPanSliders[i],TBM_SETTIC,0,500);
 				
 				sprintf(textbuf,"OFFSETSLIDER_%d",i+1);
 				g_TakeMixerState.g_hMedOffsSliders[i] = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", textbuf, 
 				WS_CHILD | WS_VISIBLE | TBS_HORZ, 
 				33+(1+i)*50, 25, 45, 25, hwnd, NULL, g_hInst, NULL);
-				
-			}
+#else
+				g_TakeMixerState.g_hNumLabels[i]  = SWELL_MakeLabel(0, "STATIC", i*4+1, 45+(1+i)*50, 170, 40, 13, 0);
+				g_TakeMixerState.g_hVolSliders[i] = SWELL_MakeControl("DLGFADER1", i*4+2, "REAPERhfader", 0, 40+(1+i)*50, 95, 30, 120, 0);
+				g_TakeMixerState.g_hPanSliders[i] = SWELL_MakeControl("DLGFADER1", i*4+3, "REAPERhfader", 0, 33+(1+i)*50, 55, 45, 25, 0);
+				g_TakeMixerState.g_hMedOffsSliders[i] = SWELL_MakeControl("DLGFADER1", i*4+4, "REAPERhfader", 0, 33+(1+i)*50, 25, 45, 25, 0);
+#endif
 
+				sprintf(textbuf,"%d",i+1);
+				SetWindowText(g_TakeMixerState.g_hNumLabels[i],textbuf);
+				SendMessage(g_TakeMixerState.g_hVolSliders[i],TBM_SETTIC,0,500);
+				SendMessage(g_TakeMixerState.g_hPanSliders[i],TBM_SETTIC,0,500);
+			}
+#ifdef _WIN32
 			g_TakeMixerState.g_hItemVolSlider = CreateWindowEx(WS_EX_LEFT, "REAPERvfader", "ITEMVOLSLIDER", 
 			WS_CHILD | WS_VISIBLE | TBS_VERT, 
 			40, 95, 30, 120, hwnd, NULL, g_hInst, NULL);
+#else
+			g_TakeMixerState.g_hItemVolSlider = SWELL_MakeControl("DLGFADER1", 666, "REAPERhfader", 0, 40, 95, 30, 120, 0);
+#endif
 			SendMessage(g_TakeMixerState.g_hItemVolSlider,TBM_SETTIC,0,500);
 			UpdateTakeMixerSliders();
 			return 0;
-			}
+		}
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
 				case IDC_BUTTON1:
-					{
-						TakeMixerResetTakes(true,false); // true for volume, false for pan
-						UpdateTimeline();
-						return 0;
-					}
+					TakeMixerResetTakes(true,false); // true for volume, false for pan
+					UpdateTimeline();
+					break;
 				case IDC_BUTTON2:
-					{
-						TakeMixerResetTakes(false,true); // true for volume, false for pan
-						UpdateTimeline();
-						return 0;
-					}
-
+					TakeMixerResetTakes(false,true); // true for volume, false for pan
+					UpdateTimeline();
+					break;
 				case IDOK:
-					{
-						//MessageBox(hwnd,"ok pressed","Info",MB_OK);
-						Undo_OnStateChangeEx("Change take vol/pan",4,-1);
-						EndDialog(hwnd,0);
-						return 0;
-
-					}
+					Undo_OnStateChangeEx("Change take vol/pan",4,-1);
+					EndDialog(hwnd,0);
+					break;
 				case IDCANCEL:
+				{
+					MediaItem_Take *CurTake;
+					int i;
+					for (i=0;i<g_TakeMixerState.NumTakes;i++)
 					{
-						//MessageBox(hwnd,"cancel pressed","Info",MB_OK);	
-						MediaItem_Take *CurTake;
-						int i;
-						for (i=0;i<g_TakeMixerState.NumTakes;i++)
-						{
-							//
-							CurTake=GetMediaItemTake(g_TargetItem,i);
-							double NewVol=g_TakeMixerState.StoredVolumes[i];
-							GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVol);
-							double NewPan=g_TakeMixerState.StoredPans[i];
-							GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
-						}
-						GetSetMediaItemInfo(g_TargetItem,"B_ALLTAKESPLAY",&g_TakeMixerState.AllTakesPlay);
-						GetSetMediaItemInfo(g_TargetItem,"D_VOL",&g_TakeMixerState.StoredItemVolume);
-						UpdateTimeline();
-						EndDialog(hwnd,0);
-						return 0;
+						//
+						CurTake=GetMediaItemTake(g_TargetItem,i);
+						double NewVol=g_TakeMixerState.StoredVolumes[i];
+						GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVol);
+						double NewPan=g_TakeMixerState.StoredPans[i];
+						GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
 					}
+					GetSetMediaItemInfo(g_TargetItem,"B_ALLTAKESPLAY",&g_TakeMixerState.AllTakesPlay);
+					GetSetMediaItemInfo(g_TargetItem,"D_VOL",&g_TakeMixerState.StoredItemVolume);
+					UpdateTimeline();
+					EndDialog(hwnd,0);
+					break;
+				}
 			}
 		case WM_VSCROLL:
-			{
-				int ThePos=(int)SendMessage((HWND)lParam,TBM_GETPOS,0,0);
-				On_SliderMove(hwnd,wParam,lParam,(HWND)lParam,ThePos);
-				switch(LOWORD(wParam))
-				{
-					case SB_THUMBTRACK:
-						{
-							//
-							//On_SliderMove(hwnd,wParam,lParam);
-							return 0;								
-						}
-					case SB_THUMBPOSITION:
-						{
-							//On_SliderMove(hwnd,wParam,lParam);
-							return 0;
-						}
-				}
-			}
+		{
+			int ThePos=(int)SendMessage((HWND)lParam,TBM_GETPOS,0,0);
+			On_SliderMove(hwnd,wParam,lParam,(HWND)lParam,ThePos);
+			break;
+		}
 		case WM_HSCROLL:
+		{
+			int ThePos=(int)SendMessage((HWND)lParam,TBM_GETPOS,0,0);
+			On_SliderMove(hwnd,wParam,lParam,(HWND)lParam,ThePos);
+			break;
+		}
+		case WM_DESTROY:
+			DestroyWindow(g_TakeMixerState.g_hItemVolSlider);
+			for (int i = 0; i < g_TakeMixerState.NumTakes; i++)
 			{
-				int ThePos=(int)SendMessage((HWND)lParam,TBM_GETPOS,0,0);
-				On_SliderMove(hwnd,wParam,lParam,(HWND)lParam,ThePos);
-				switch(LOWORD(wParam))
-				{
-					case SB_THUMBPOSITION:
-						{
-							//On_SliderMove(hwnd,wParam,lParam);
-							return 0;
-						}
-				}
+				DestroyWindow(g_TakeMixerState.g_hNumLabels[i]);
+				DestroyWindow(g_TakeMixerState.g_hVolSliders[i]);
+				DestroyWindow(g_TakeMixerState.g_hPanSliders[i]);
+				DestroyWindow(g_TakeMixerState.g_hMedOffsSliders[i]);
 			}
+			break;
 	}
 	return 0;
 }
@@ -1695,39 +1681,24 @@ void DoSplitAndChangeLen(bool BeatBased)
 	GetSet_LoopTimeRange(false,false,&StoredTimeSelStart,&StoredTimeSelEnd,false);
 	Undo_BeginBlock();
 	Main_OnCommand(40012,0); // split item at edit cursor
-	if (BeatBased==false)
+	if (!BeatBased)
 	{
 		double NewStart=GetCursorPosition();
 		double NewEnd=NewStart+g_command_params.ItemPosNudgeSecs;
 		GetSet_LoopTimeRange(true,false,&NewStart,&NewEnd,false);
 	}
-	if (BeatBased==true)
+	else
 	{
-					//
 		double NewStartSecs=GetCursorPosition();
 		double NewStartBeats=TimeMap_timeToQN(NewStartSecs);
-		double BeatNudgeValFromCombo;
-		int NudgeComboSel=SendMessage(g_hNudgeComboBox, CB_GETCURSEL, 0, 0);
-		GetWindowText(g_hNudgeComboBox, NudgeComboText, 200);
-		// ?? TODO
-		// NudgeComboSel=ComboBox_FindStringExact(g_hNudgeComboBox,-1,NudgeComboText);
-		//t_Notevalue_struct paska;
-		//paska=g_NoteValues[NudgeComboSel];
-		if (NudgeComboSel!=CB_ERR)
-			BeatNudgeValFromCombo=GetBeatValueFromTable(NudgeComboSel);
-		else BeatNudgeValFromCombo=parseFrac(NudgeComboText);
-		double NewEndBeats=NewStartBeats+BeatNudgeValFromCombo;
-		//double NewEndBeats=NewStartBeats+g_command_params.ItemPosNudgeBeats;
+		double NewEndBeats=NewStartBeats+g_command_params.ItemPosNudgeBeats;
 		double NewEndSecs=TimeMap_QNToTime(NewEndBeats);
-					
 		GetSet_LoopTimeRange(true,false,&NewStartSecs,&NewEndSecs,false);
 	}
-
 
 	Main_OnCommand(40061,0); // split item at time selection
 	Main_OnCommand(40006,0); // remove selected items
 	Undo_EndBlock("Erase time from item",0);
-	//Main_OnCommand(40635,0); // remove time selection
 	GetSet_LoopTimeRange(true,false,&StoredTimeSelStart,&StoredTimeSelEnd,false);
 }
 
@@ -1758,8 +1729,6 @@ void DoInsertMediaFromClipBoard(COMMAND_T*)
 	
 	if ( OpenClipboard(g_hwndParent) ) 
 	{
-	//get the buffer
-
 		HANDLE hData = GetClipboardData(CF_TEXT);
 		char * buffer = (char *)GlobalLock( hData );
 

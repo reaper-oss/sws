@@ -33,92 +33,44 @@ using namespace std;
 int XenGetProjectItems(vector<MediaItem*>& TheItems,bool OnlySelectedItems, bool IncEmptyItems)
 {
 	TheItems.clear();
-	MediaTrack *CurTrack;
-	MediaItem *CurItem;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		if (CurTrack!=0)
+		MediaTrack* CurTrack = CSurf_TrackFromID(i+1, false);
+		for (int j = 0; j < GetTrackNumMediaItems(CurTrack); j++)
 		{
-			for (j=0;j<GetTrackNumMediaItems(CurTrack);j++)
+			MediaItem* CurItem = GetTrackMediaItem(CurTrack, j);
+			if (CurItem && (!OnlySelectedItems || *(bool*)GetSetMediaItemInfo(CurItem, "B_UISEL", NULL)))
 			{
-				CurItem=GetTrackMediaItem(CurTrack,j);
-				if (CurItem!=0)
-				{
-					bool isSel=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-					int NumTakes=GetMediaItemNumTakes(CurItem);
-					if (OnlySelectedItems)
-					{
-						if (isSel)
-						{
-							
-							if (IncEmptyItems && NumTakes>=0) 
-								TheItems.push_back(CurItem);
-							if ((!IncEmptyItems) && NumTakes>0)
-								TheItems.push_back(CurItem);
-							
-						}
-						
-					}
-					if (!OnlySelectedItems)
-					{
-						if (IncEmptyItems && NumTakes==0)
-							TheItems.push_back(CurItem);
-						if (!IncEmptyItems && NumTakes>0)
-							TheItems.push_back(CurItem);
-					}
-					
-				}
+				if (IncEmptyItems || GetMediaItemNumTakes(CurItem) > 0)
+					TheItems.push_back(CurItem);
 			}
 		}
-
 	}
 	return (int)TheItems.size();
 }
 
-int XenGetProjectTakes(vector<MediaItem_Take*>& TheTakes, bool OnlyActive,bool OnlyFromSelectedItems)
+int XenGetProjectTakes(vector<MediaItem_Take*>& TheTakes, bool OnlyActive, bool OnlyFromSelectedItems)
 {
-	MediaItem *CurItem;
-	MediaItem_Take *CurTake;
-	MediaTrack *CurTrack;
 	TheTakes.clear();
-	int i;
-	int j;
-	int k;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		if (CurTrack!=0)
+		MediaTrack* CurTrack = CSurf_TrackFromID(i+1,false);
+		for (int j = 0; j < GetTrackNumMediaItems(CurTrack); j++)
 		{
-			for (j=0;j<GetTrackNumMediaItems(CurTrack);j++)
+			MediaItem* CurItem=GetTrackMediaItem(CurTrack,j);
+			if (CurItem && (!OnlyFromSelectedItems || *(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL)))
 			{
-				CurItem=GetTrackMediaItem(CurTrack,j);
-				if (CurItem!=0)
+				if (OnlyActive)
 				{
-					if (GetMediaItemNumTakes(CurItem)>0)
-					{
-						if (!OnlyFromSelectedItems || *(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL))
-						{
-							if (OnlyActive)
-							{
-								CurTake=0;
-								CurTake=GetMediaItemTake(CurItem,-1);
-								if (CurTake!=0)
-									TheTakes.push_back(CurTake);
-							} else
-							{
-								for (k=0;k<GetMediaItemNumTakes(CurItem);k++)
-								{
-									CurTake=0;
-									CurTake=GetMediaItemTake(CurItem,k);
-									if (CurTake!=0)
-										TheTakes.push_back(CurTake);
-								}
-							}
-						}
-					}
+					MediaItem_Take* CurTake = GetMediaItemTake(CurItem, -1);
+					if (CurTake)
+						TheTakes.push_back(CurTake);
+				}
+				else for (int k = 0; k < GetMediaItemNumTakes(CurItem); k++)
+				{
+					MediaItem_Take* CurTake = GetMediaItemTake(CurItem, k);
+					if (CurTake)
+						TheTakes.push_back(CurTake);
 				}
 			}
 		}
@@ -128,30 +80,26 @@ int XenGetProjectTakes(vector<MediaItem_Take*>& TheTakes, bool OnlyActive,bool O
 
 void DoMoveItemsLeftByItemLen(COMMAND_T*)
 {
-	MediaItem *CurItem;
-	MediaTrack *CurTrack;
 	vector<MediaItem*> VecItems;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		for (j=0;j<GetTrackNumMediaItems(CurTrack);j++)
+		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
+		for (int j = 0; j < GetTrackNumMediaItems(CurTrack); j++)
 		{
-			CurItem=GetTrackMediaItem(CurTrack,j);
-			bool isSel=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
+			MediaItem* CurItem = GetTrackMediaItem(CurTrack,j);
+			bool isSel = *(bool*)GetSetMediaItemInfo(CurItem, "B_UISEL", NULL);
 			if (isSel) VecItems.push_back(CurItem);
 		}
 	}
-	for (i=0;i<(int)VecItems.size();i++)
+	for (int i = 0; i < (int)VecItems.size(); i++)
 	{
-		double CurPos=*(double*)GetSetMediaItemInfo(VecItems[i],"D_POSITION",NULL);
-		double ItemLen=*(double*)GetSetMediaItemInfo(VecItems[i],"D_LENGTH",NULL);
-		double NewPos=CurPos-ItemLen;
-		GetSetMediaItemInfo(VecItems[i],"D_POSITION",&NewPos);
+		double CurPos = *(double*)GetSetMediaItemInfo(VecItems[i], "D_POSITION", NULL);
+		double ItemLen = *(double*)GetSetMediaItemInfo(VecItems[i], "D_LENGTH", NULL);
+		double NewPos = CurPos - ItemLen;
+		GetSetMediaItemInfo(VecItems[i], "D_POSITION", &NewPos);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Move item back by item length",4,-1);
+	Undo_OnStateChangeEx("Move item back by item length", 4, -1);
 }
 
 int NumRepeatPasteRuns=0;
@@ -162,8 +110,7 @@ void DoToggleTakesNormalize(COMMAND_T*)
 	WDL_PtrList<MediaItem_Take> *TheTakes=new (WDL_PtrList<MediaItem_Take>);
 	int NumActiveTakes=GetActiveTakes(TheTakes);
 	int NumNormalizedTakes=0;
-	int i;
-	for (i=0;i<NumActiveTakes;i++)
+	for (int i=0;i<NumActiveTakes;i++)
 	{
 		//
 		double TakeVol=*(double*)GetSetMediaItemTakeInfo(TheTakes->Get(i),"D_VOL",NULL);
@@ -171,20 +118,20 @@ void DoToggleTakesNormalize(COMMAND_T*)
 	}
 	if (NumNormalizedTakes>0)
 	{
-		for (i=0;i<NumActiveTakes;i++)
+		for (int i=0;i<NumActiveTakes;i++)
 		{
 			//
 			double TheGain=1.0;
 			GetSetMediaItemTakeInfo(TheTakes->Get(i),"D_VOL",&TheGain);
 		}
-		Undo_OnStateChangeEx("Set Take(s) To Unity Gain",4,-1);
+		Undo_OnStateChangeEx("Set take(s) to unity gain",4,-1);
 		UpdateTimeline();
 
 	}
 	else
 	{
 		Main_OnCommand(40108, 0);
-		Undo_OnStateChangeEx("Normalize Take(s)",4,-1);
+		Undo_OnStateChangeEx("Normalize take(s)",4,-1);
 		UpdateTimeline();
 	}
 
@@ -200,8 +147,7 @@ void DoSetVolPan(double Vol, double Pan, bool SetVol, bool SetPan)
 	XenGetProjectTakes(TheTakes,true,true);
 	double NewVol=Vol;
 	double NewPan=Pan;
-	int i;
-	for (i=0;i<(int)TheTakes.size();i++)
+	for (int i=0;i<(int)TheTakes.size();i++)
 	{
 		if (SetVol) GetSetMediaItemTakeInfo(TheTakes[i],"D_VOL",&NewVol);
 		if (SetPan) GetSetMediaItemTakeInfo(TheTakes[i],"D_PAN",&NewPan);
@@ -213,37 +159,17 @@ void DoSetVolPan(double Vol, double Pan, bool SetVol, bool SetPan)
 
 void DoSetItemVols(double theVol)
 {
-	MediaTrack* pTrack;
-	MediaItem* CurItem;
-	
-	int numItems;;
-	
-	
-	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i=0;i<GetNumTracks();i++)
 	{
-		pTrack = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(pTrack);
-		for (j=0;j<numItems;j++)
+		MediaTrack* pTrack = CSurf_TrackFromID(i+1, false);
+		for (int j = 0; j < GetTrackNumMediaItems(pTrack); j++)
 		{
-			CurItem = GetTrackMediaItem(pTrack,j);
-			//propertyName="D_";
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				double NewVolume=theVol;
-				GetSetMediaItemInfo(CurItem,"D_VOL",&NewVolume);
-				
-			} 
-
-
+			MediaItem* CurItem = GetTrackMediaItem(pTrack,j);
+			if (*(bool*)GetSetMediaItemInfo(CurItem, "B_UISEL", NULL))
+				GetSetMediaItemInfo(CurItem, "D_VOL", &theVol);
 		}
 	}
-	Undo_OnStateChangeEx("Set Item Volume",4,-1);
+	Undo_OnStateChangeEx("Set item volume", 4, -1);
 	UpdateTimeline();
 }
 
@@ -315,7 +241,6 @@ WDL_DLGRET ItemPanVolDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 				{
 					char TempString[100];
 					GetDlgItemText(hwnd,IDC_VOLEDIT,TempString,99);
-					int VPFlag=0;
 					bool SetVol=FALSE;
 					bool SetPan=FALSE;
 					double NewVol=strtod(TempString,NULL);
@@ -407,11 +332,11 @@ WDL_DLGRET RepeatPasteDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 			SendMessage(GetDlgItem(hwnd, IDC_NUMREPEDIT), EM_SETSEL, 0, -1);
 			InitFracBox(GetDlgItem(hwnd, IDC_NOTEVALUECOMBO),JokuBuf);
 			if (LastRepeatMode==0)
-				CheckDlgButton(hwnd,IDC_RADIO1,BST_CHECKED);
+				CheckDlgButton(hwnd, IDC_RADIO1, BST_CHECKED);
 			else if (LastRepeatMode==1)
-				CheckDlgButton(hwnd,IDC_RADIO2,BST_CHECKED);
+				CheckDlgButton(hwnd, IDC_RADIO2, BST_CHECKED);
 			else if (LastRepeatMode==2)
-				CheckDlgButton(hwnd,IDC_RADIO3,BST_CHECKED);
+				CheckDlgButton(hwnd, IDC_RADIO3, BST_CHECKED);
 			break;
 		}
 		case WM_COMMAND:
@@ -422,9 +347,9 @@ WDL_DLGRET RepeatPasteDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 					char numberBuf[100];
 					GetDlgItemText(hwnd,IDC_NUMREPEDIT,numberBuf,100);
 					int NumRepeats=atoi(numberBuf);
-					LRESULT Nappi1=Button_GetState(GetDlgItem(hwnd, IDC_RADIO1));
-					LRESULT Nappi2=Button_GetState(GetDlgItem(hwnd, IDC_RADIO2));
-					LRESULT Nappi3=Button_GetState(GetDlgItem(hwnd, IDC_RADIO3));
+					LRESULT Nappi1=IsDlgButtonChecked(hwnd, IDC_RADIO1);
+					LRESULT Nappi2=IsDlgButtonChecked(hwnd, IDC_RADIO2);
+					LRESULT Nappi3=IsDlgButtonChecked(hwnd, IDC_RADIO3);
 					if (Nappi1==BST_CHECKED) LastRepeatMode=0;
 					if (Nappi2==BST_CHECKED) LastRepeatMode=1;
 					if (Nappi3==BST_CHECKED) LastRepeatMode=2;
@@ -546,12 +471,17 @@ bool DoLaunchExternalTool(const char *ExeFilename)
 	if (!ExeFilename)
 		return false;
 
+#ifdef _WIN32
 	STARTUPINFO          si = { sizeof(si) };
 	PROCESS_INFORMATION  pi;
 	char* cFile = _strdup(ExeFilename);
 	bool bRet = CreateProcess(0, cFile, 0, 0, FALSE, 0, 0, 0, &si, &pi) ? true : false;
 	free(cFile);
 	return bRet;
+#else
+	MessageBox(g_hwndParent, "Not supported on OSX (yet), sorry!", "Unsupported", MB_OK);
+	return false;
+#endif
 }
 
 void DoRepeatPaste(COMMAND_T*)
@@ -604,11 +534,9 @@ void DoSelectSkipSelectOnSelectedItems(int Step,int ItemOffset)
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	
-	int numItems;;
+	int numItems;
 	
 	//Main_OnCommand(40289,0); // Unselect all items
-	bool ItemSelected=false;
-	
 	bool NewSelectedStatus=false;
 	int flags; 
 	int i;
@@ -870,15 +798,9 @@ void DoMoveItemsToEditCursor(COMMAND_T*)
 	//
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	
-	int numItems;;
-	
-	
+	int numItems;
 	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
 	double EditCurPos=GetCursorPosition();
-	
 	//MediaItem** MediaItemsOnTrack;
 	int i;
 	int j;
@@ -901,7 +823,7 @@ void DoMoveItemsToEditCursor(COMMAND_T*)
 			{
 				double SnapOffset=*(double*)GetSetMediaItemInfo(CurItem,"D_SNAPOFFSET",NULL);
 				double NewPos=EditCurPos-SnapOffset;
-				double OldPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
+				//double OldPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
 				//if (OldPos!=NewPos)
 				//{					
 					GetSetMediaItemInfo(MediaItemsOnTrack[j],"D_POSITION",&NewPos);
@@ -924,13 +846,8 @@ void DoRemoveItemFades(COMMAND_T*)
 	//
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	
-	int numItems;;
-	
-	
+	int numItems;
 	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
 	int i;
 	int j;
 	for (i=0;i<GetNumTracks();i++)
@@ -964,12 +881,8 @@ void DoTrimLeftEdgeToEditCursor(COMMAND_T*)
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	MediaItem_Take* CurTake;
-	int numItems;;
-	
-	
+	int numItems;
 	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
 	double EditcurPos=GetCursorPosition();
 	int i;
 	int j;
@@ -1013,11 +926,8 @@ void DoTrimRightEdgeToEditCursor(COMMAND_T*)
 	//
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	int numItems;;
-	
+	int numItems;
 	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
 	double EditcurPos=GetCursorPosition();
 	int i;
 	int j;
@@ -1033,8 +943,6 @@ void DoTrimRightEdgeToEditCursor(COMMAND_T*)
 			if (ItemSelected==TRUE)
 			{
 				double OldPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
-				double OldLength=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
-				double OldRightEdge=OldPos+OldLength;
 				double NewRightEdge=EditcurPos;
 				double NewLength=NewRightEdge-OldPos;
 				//GetSetMediaItemInfo(CurItem,"D_POSITION",&NewLeftEdge);
@@ -1065,13 +973,8 @@ void DoApplyTrackFXStereoAndResetVol(COMMAND_T*)
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	
-	int numItems;;
-	
-	
+	int numItems;
 	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
-	double EditcurPos=GetCursorPosition();
 	int i;
 	int j;
 	for (i=0;i<GetNumTracks();i++)
@@ -1101,14 +1004,8 @@ void DoApplyTrackFXMonoAndResetVol(COMMAND_T*)
 	Main_OnCommand(40361,0); // apply track fx in mono to items
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	
-	int numItems;;
-	
-	
+	int numItems;
 	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
-	double EditcurPos=GetCursorPosition();	
 	int i;
 	int j;
 	for (i=0;i<GetNumTracks();i++)
@@ -1154,7 +1051,6 @@ int AnalyzePCMSourceForPeaks(PCM_source *APCMSource,double *PeakLeft,double *Pea
 	TransferBlock.nch=NumChans;
 	//APCMSource->
 	int NumFramesInFile=(int)(LenFile*SampleRate);
-	int NumBlocksToProcess=NumFramesInFile/AudioBufLenFrames;
 	INT64 SampleCounter=0;
 	double TempMaxLeft=-666;
 	double TempMaxRight=0.0;
@@ -1243,9 +1139,7 @@ void DoAnalyzeAndShowPeakInItemMedia(COMMAND_T*)
 					double rmsL=-666.0;
 					double rmsR=666.0;
 					CurItem=(MediaItem*)GetSetMediaItemTakeInfo(CurTake,"P_ITEM",NULL);
-					double ItemLen=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
-					double MediaOffset=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",NULL);
-					int joops=AnalyzePCMSourceForPeaks(DuplPCMSource,&PeakLeft,&PeakRight,ItemLen,MediaOffset,&rmsL,&rmsR);
+					//int joops=AnalyzePCMSourceForPeaks(DuplPCMSource,&PeakLeft,&PeakRight,ItemLen,MediaOffset,&rmsL,&rmsR);
 					char MesBuf[256];
 					double PeakLeftDB=20.0*(log10(PeakLeft));
 					double PeakRightDB=20.0*(log10(PeakRight));
@@ -1271,10 +1165,8 @@ void DoSelItemsToEndOfTrack(COMMAND_T*)
 {
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	
 	int numItems;
 	bool ItemSelected=false;
-	bool NewSelectedStatus=false;
 	int flags;
 	int i;
 	int j;
@@ -1323,13 +1215,8 @@ void DoSelItemsToStartOfTrack(COMMAND_T*)
 {
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	
 	int numItems;
-	
-	
 	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
 	int flags;
 	int j;
 	int i;
@@ -1417,14 +1304,8 @@ void DoPanTakesOfItemSymmetrically()
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	MediaItem_Take* CurTake;
-	int numItems;;
-	
+	int numItems;
 	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
-	//double EditCurPos=GetCursorPosition();
-	
-	//MediaItem** MediaItemsOnTrack;
 	int i;
 	int j;
 	int k;
@@ -1432,10 +1313,6 @@ void DoPanTakesOfItemSymmetrically()
 	{
 		MunRaita = CSurf_TrackFromID(i+1,FALSE);
 		numItems=GetTrackNumMediaItems(MunRaita);
-		//MediaItem* **MediaItemsOnTrack = new (MediaItem*)[numItems];
-		
-
-		
 		for (j=0;j<numItems;j++)
 		{
 			CurItem = GetTrackMediaItem(MunRaita,j);
@@ -1447,26 +1324,17 @@ void DoPanTakesOfItemSymmetrically()
 					int NumTakes=GetMediaItemNumTakes(CurItem);
 					for (k=0;k<NumTakes;k++)
 					{
-					CurTake=GetMediaItemTake(CurItem,k);
-				
-					//double SnapOffset=*(double*)GetSetMediaItemInfo(CurItem,"D_SNAPOFFSET",NULL);
-					double NewPan=-1.0+((2.0/(NumTakes-1))*k);
-										
-					GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
+						CurTake=GetMediaItemTake(CurItem,k);
+					
+						//double SnapOffset=*(double*)GetSetMediaItemInfo(CurItem,"D_SNAPOFFSET",NULL);
+						double NewPan=-1.0+((2.0/(NumTakes-1))*k);
+											
+						GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
 					}
 				}
-				//j=0;
-				//}
-				
 			} 
-
-
 		}
-	
-
 	}
-	//Undo_OnStateChangeEx("Set Pan Of Takes In Item",4,-1);
-	//UpdateTimeline();
 }
 
 void DoPanTakesSymmetricallyWithUndo(COMMAND_T*)
@@ -1479,393 +1347,12 @@ void DoPanTakesSymmetricallyWithUndo(COMMAND_T*)
 
 void DoImplodeTakesSetPlaySetSymPans(COMMAND_T*)
 {
-	//
 	Undo_BeginBlock();
-	
 	Main_OnCommand(40438,0); // implode items across tracks into takes
 	DoSetAllTakesPlay();
 	DoPanTakesOfItemSymmetrically();
 	Undo_EndBlock("Implode Items And Pan Symmetrically",0);
 	//UpdateTimeline();
-}
-
-char *prop_strs[]=
-{
-  "Length",
-  "Item Vol",
-  
-  "Take Vol",
-  "Take Pan",
-  "Take Pitch",
-  "Take Pitch Resampled",
-  "Take Media Offset",
-  "Item FIPM Y-Pos",
-  NULL
-};
-
-typedef struct
-{
-	char *Parameter;
-	double StartVal;
-	double EndVal;
-	double Curve;
-	double RandRange;
-} t_InterPolateParams;
-
-
-void InitPropBox(HWND hwnd, char *buf)
-{
-
-  int x;
-  int a=0;
-  for (x = 0; prop_strs[x]; x ++)
-  {
-    int r=(int)SendMessage(hwnd,CB_ADDSTRING,0,(LPARAM)prop_strs[x]);
-    if (!a && !strcmp(buf,prop_strs[x]))
-    {
-      a=1;
-      SendMessage(hwnd,CB_SETCURSEL,r,0);
-    }
-  }
-
-  if (!a)
-    SetWindowText(hwnd,buf);
-}
-
-HWND hInterpolateDlg;
-bool g_InterpDlgFirstRun=true;
-t_InterPolateParams LastInterpolateRunParams;
-
-void GetSelItemsMinMaxTimes(double *MinTime,double *MaxTime)
-{
-	//
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	
-	int numItems;;
-	
-	bool FirstSelFound=false;
-	double FirstSelStart=-666.0;
-	double LastSelStart=-666.0;
-	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
-	
-	double MaxItemEnd=-1.0;
-	double MinItemPos;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
-	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			double CurItemStart=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
-			double CurItemLength=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
-			//propertyName="D_";
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				
-				LastSelStart=CurItemStart;
-				if (LastSelStart>MaxItemEnd) MaxItemEnd=LastSelStart;
-			}
-
-
-		}
-	}
-	MinItemPos=LastSelStart;
-	for (i=0;i<GetNumTracks();i++)
-	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			double CurItemStart=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
-			double CurItemLength=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
-			//propertyName="D_";
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				
-				LastSelStart=CurItemStart+CurItemLength;
-				if (CurItemStart<MinItemPos) MinItemPos=CurItemStart;
-			}
-
-
-		}
-	}
-	*MinTime=MinItemPos;
-	*MaxTime=MaxItemEnd;
-	//g_FirstSelectedItemPos=MinItemPos;
-	//g_LastSelectedItemEnd=MaxItemEnd;
-	//if (SetTheLoop)
-		//GetSet_LoopTimeRange(true,true,&MinItemPos,&MaxItemEnd,false);
-	
-}
-
-void DoInterpolateItemProperty(double StartValue,double EndValue,double Curve,double RandRange)
-{
-	//
-	char TempString[64];
-	int len = GetWindowTextLength(GetDlgItem(hInterpolateDlg, IDC_COMBO1));
-	if(len > 0)
-	{
-		GetDlgItemText(hInterpolateDlg,  IDC_COMBO1, TempString, 63);
-	} 
-	bool IsForTakeProperty=false;
-	char* ParamStr = NULL;
-	
-	MediaItem *CurItem;
-	//"Take Pitch"
-	if (strcmp(TempString,"Length")==0) { ParamStr="D_LENGTH";};
-	if (strcmp(TempString,"Take Vol")==0) {ParamStr="D_VOL";IsForTakeProperty=true;};
-	if (strcmp(TempString,"Take Pan")==0) {ParamStr="D_PAN";IsForTakeProperty=true;};
-	if (strcmp(TempString,"Item FIPM Y-Pos")==0) {ParamStr="F_FREEMODE_Y";};
-	if (strcmp(TempString,"Take Pitch")==0) {ParamStr="D_PITCH";IsForTakeProperty=true;};
-	if (strcmp(TempString,"Take Pitch Resampled")==0) {ParamStr="D_PLAYRATE";IsForTakeProperty=true;};
-	if (strcmp(TempString,"Item Vol")==0) {ParamStr="D_VOL";};
-	if (strcmp(TempString,"Take Media Offset")==0) {ParamStr="D_STARTOFFS";IsForTakeProperty=true;}
-	else LastInterpolateRunParams.Parameter=TempString;
-	MediaTrack* MunRaita;
-	double FirstItemStart=0.0;
-	double LastItemStart=0.0;
-    
-	GetSelItemsMinMaxTimes(&FirstItemStart,&LastItemStart);
-	
-	double InterpolationDuration=LastItemStart-FirstItemStart;
-	
-	
-	int numItems;
-	
-	
-
-	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
-	PCM_source *ThePCMSource;
-	//Undo_BeginBlock();
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
-	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				if (IsForTakeProperty==false)
-				{
-					double ItemPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
-					double NormalizedTime=(1.0/(LastItemStart-FirstItemStart))*(ItemPos-FirstItemStart);
-					ItemPos=ItemPos-FirstItemStart;
-					double ValueRange=EndValue-StartValue;
-					double NewPropertyValue=StartValue+((EndValue-StartValue)/InterpolationDuration)*ItemPos;
-					double NormalizedValue;
-					double Booh=pow(NormalizedTime,Curve);
-					// TODO - the below 3 lines were commented out before - why??
-					if (EndValue>StartValue)
-						NormalizedValue=(1.0/(EndValue-StartValue))*NewPropertyValue;
-					else	NormalizedValue=1.0+((1.0/(EndValue-StartValue))*NewPropertyValue);	 
-					double ShapedVal=pow(NormalizedValue,Curve);
-					if (EndValue>StartValue)
-						ShapedVal=StartValue+((EndValue-StartValue)*ShapedVal);
-					else ShapedVal=StartValue+((EndValue-StartValue)*ShapedVal);
-					ShapedVal=StartValue+(ValueRange*Booh);
-					double RandDelta=-(RandRange)+(1.0/RAND_MAX)*rand()*(2.0*RandRange);
-					ShapedVal=ShapedVal+RandDelta;
-					if (strcmp(ParamStr,"F_FREEMODE_Y")!=0)
-					{
-						//Math.pow(2,(centin/100/12));
-						
-						GetSetMediaItemInfo(CurItem,ParamStr,&ShapedVal);
-					}
-					else
-					{
-						//
-						float yPos=(float)ShapedVal;
-						GetSetMediaItemInfo(CurItem,ParamStr,&yPos);
-					}
-
-				} else
-				{
-					//
-					
-					
-					if (GetMediaItemNumTakes(CurItem)>0)
-					{
-					MediaItem_Take *CurTake=GetMediaItemTake(CurItem,-1);
-					ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					double SourceMediaLen=ThePCMSource->GetLength();
-					
-					double ItemPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
-					double NormalizedTime=(1.0/(LastItemStart-FirstItemStart))*(ItemPos-FirstItemStart);
-					ItemPos=ItemPos-FirstItemStart;
-					
-					double Poo=pow(NormalizedTime,Curve);
-					double ValueRange;
-					//if (EndValue>StartValue)
-						ValueRange=EndValue-StartValue;
-					//else ValueRange=fabs(StartValue)-fabs(EndValue);
-
-					double NewPropertyValue=StartValue+((ValueRange)/InterpolationDuration)*ItemPos;
-					double NormalizedValue;
-					double MaxBooh=pow(1.0,Curve);
-					double Booh=pow(NormalizedTime,Curve);
-					//Booh=(1.0/MaxBooh)*Booh;
-					// (startVal-EndVal)*f(t)+startVal
-
-					//if (EndValue>StartValue)
-						NormalizedValue=(1.0/ValueRange)*(NewPropertyValue-StartValue);
-					//else	NormalizedValue=1.0+((1.0/(EndValue-StartValue))*NewPropertyValue);	 
-					double ShapedVal=pow(NormalizedValue,Curve);
-					//if (EndValue>StartValue)
-						ShapedVal=StartValue+(ValueRange*ShapedVal);
-					//else ShapedVal=StartValue+(ValueRange*(ShapedVal));
-					ShapedVal=StartValue+(ValueRange*Booh);
-					double RandDelta=-(RandRange)+(1.0/RAND_MAX)*rand()*(2.0*RandRange);
-					ShapedVal=ShapedVal+RandDelta;
-					if (strcmp(TempString,"Take Pitch Resampled")==0)
-						{
-							ShapedVal=pow(2.0,ShapedVal/12.0);
-							bool Preserve=false;
-							GetSetMediaItemTakeInfo(CurTake,"B_PPITCH",&Preserve);
-						}
-					if (strcmp(TempString,"Take Media Offset")==0)
-						{
-							ShapedVal=(SourceMediaLen/100.0)*ShapedVal;
-						}
-					GetSetMediaItemTakeInfo(CurTake,ParamStr,&ShapedVal);
-					}
-				}
-
-				
-			} 
-
-
-		}
-	}
-	//delete ThePCMSource;
-	Undo_OnStateChangeEx("Interpolate Item Property Over Time",4,-1);
-	//Undo_EndBlock("Interpolate Item Property Over Time",0);
-	UpdateTimeline();
-	delete[] ParamStr;
-}
-
-HWND *g_hPropNameLabels;
-HWND *g_hStartValueEdits;
-HWND *g_hEndValueEdits;
-
-WDL_DLGRET InterpolateItemPropDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
-{
-	//
-	
-	switch(Message)
-    {
-        case WM_INITDIALOG:
-		{
-			char TextBuf[64];
-			bool PropEnd=false;
-			int i=0;
-			g_hPropNameLabels=new HWND[32];
-			g_hStartValueEdits=new HWND[32];
-			g_hEndValueEdits=new HWND[32];
-			while (!PropEnd)
-			{
-				if (prop_strs[i]!=NULL)
-				{
-					sprintf(TextBuf,"PROPLABEL%d",i);
-					g_hPropNameLabels[i] = CreateWindowEx(WS_EX_LEFT, "Static", TextBuf, 
-					WS_CHILD | WS_VISIBLE, 
-					10, i*22+30, 90, 20, hwnd, NULL, g_hInst, NULL);
-					SetWindowText(g_hPropNameLabels[i],prop_strs[i]);
-					sprintf(TextBuf,"STARTVALBOX%d",i);
-					g_hStartValueEdits[i] = CreateWindowEx(WS_EX_LEFT, "Edit", TextBuf, 
-					WS_CHILD | WS_VISIBLE, 
-					110, i*22+30, 40, 18, hwnd, NULL, g_hInst, NULL);
-					SetWindowText(g_hStartValueEdits[i],"0.0");
-
-					sprintf(TextBuf,"ENDVALBOX%d",i);
-					g_hEndValueEdits[i] = CreateWindowEx(WS_EX_LEFT, "Edit", TextBuf, 
-					WS_CHILD | WS_VISIBLE, 
-					160, i*22+30, 40, 18, hwnd, NULL, g_hInst, NULL);
-					SetWindowText(g_hEndValueEdits[i],"0.0");
-				}
-				else
-					PropEnd=true;
-				i++;
-				if (i>50)
-					break;
-			}
-			sprintf(TextBuf,"%.2f",LastInterpolateRunParams.StartVal);
-			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
-			sprintf(TextBuf,"%.2f",LastInterpolateRunParams.EndVal);
-			SetDlgItemText(hwnd, IDC_EDIT2, TextBuf);
-			sprintf(TextBuf,"%.2f",LastInterpolateRunParams.Curve);
-			SetDlgItemText(hwnd, IDC_EDIT3, TextBuf);
-			sprintf(TextBuf,"%.2f",LastInterpolateRunParams.RandRange);
-			SetDlgItemText(hwnd, IDC_EDIT4, TextBuf);
-			InitPropBox(GetDlgItem(hwnd,IDC_COMBO1),LastInterpolateRunParams.Parameter);
-			hInterpolateDlg=hwnd;
-			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
-			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
-			break;
-		}
-        case WM_COMMAND:
-            switch(LOWORD(wParam))
-            {
-                case IDOK:
-				{
-					double StartValue=0.0;
-					double EndValue=0.0;
-					double Curve=1.0;
-					double RandRange=0.0;
-					char TempString[101];
-					GetDlgItemText(hwnd,IDC_EDIT1,TempString,100);
-					StartValue=atof(TempString);
-					GetDlgItemText(hwnd,IDC_EDIT2,TempString,100);
-					EndValue=atof(TempString);
-					GetDlgItemText(hwnd,IDC_EDIT3,TempString,100);
-					Curve=atof(TempString);
-					GetDlgItemText(hwnd,IDC_EDIT4,TempString,100);
-					RandRange=atof(TempString);
-					
-					DoInterpolateItemProperty(StartValue,EndValue,Curve,RandRange);
-					LastInterpolateRunParams.StartVal=StartValue;
-					LastInterpolateRunParams.EndVal=EndValue;
-					LastInterpolateRunParams.Curve=Curve;
-					LastInterpolateRunParams.RandRange=RandRange;
-					EndDialog(hwnd,0);
-					break;
-				}
-				case IDCANCEL:
-					EndDialog(hwnd,0);
-					break;
-			}
-	}
-	return 0;
-}
-
-void DoInterpolateItemPropertyOverTime(COMMAND_T*)
-{
-	if (g_InterpDlgFirstRun)
-	{
-		LastInterpolateRunParams.Curve=1.0;
-		LastInterpolateRunParams.StartVal=1.0;
-		LastInterpolateRunParams.EndVal=1.0;
-		LastInterpolateRunParams.RandRange=0.0;
-		LastInterpolateRunParams.Parameter="Item Vol";
-		g_InterpDlgFirstRun=false;
-	}
-
-	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_INTERPOLATEITEMPROP), g_hwndParent, InterpolateItemPropDlgProc);
 }
 
 double g_lastTailLen;
@@ -1891,8 +1378,6 @@ void DoWorkForRenderItemsWithTail(double TailLen)
 	}
 
 	bool ItemSelected=false;
-	int NewTrackSelStatus=1;
-	bool NewSelectedStatus=false;
 	int i;
 	int j;
 	for (i=0;i<GetNumTracks();i++)
@@ -1907,21 +1392,9 @@ void DoWorkForRenderItemsWithTail(double TailLen)
 			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
 			if (ItemSelected==TRUE)
 			{
-				//
-				double ItemStart=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
-				double ItemLen=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
-				double ItemEnd=ItemStart+ItemLen;
-				double EndOfEmptyItem=ItemEnd+TailLen;
-				
-				//GetSet_LoopTimeRange(true,false,&ItemEnd,&EndOfEmptyItem,false);
 				Main_OnCommand(40601,0); // render items as new take
-
-
 			} 
-
-
 		}
-		
 	}
 	*fxtail=OldTail;
 	UpdateTimeline();
@@ -2008,8 +1481,6 @@ void RepositionItems(double theGap,int ModeA,int ModeB,int ModeC) // ModeA : gap
 	
 	int numItems;
 	bool ItemSelected=false;
-	bool NewSelectedStatus=false;
-	int ItemCounter=0;
 	int PrevSelItemInd=-1;
 	int FirstSelItemInd=-1;
 	int i;
@@ -2076,8 +1547,10 @@ WDL_DLGRET ReposItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
     {
 		case WM_INITDIALOG:
 		{
-			if (g_ReposItemsParams.ModeA==0)  SendMessage(GetDlgItem(hwnd,IDC_RADIO1),BM_CLICK,0,0);
-			if (g_ReposItemsParams.ModeA==1)  SendMessage(GetDlgItem(hwnd,IDC_RADIO2),BM_CLICK,0,0);
+			if (g_ReposItemsParams.ModeA == 0)
+				CheckDlgButton(hwnd, IDC_RADIO1, BST_CHECKED);
+			else if (g_ReposItemsParams.ModeA == 1)
+				CheckDlgButton(hwnd, IDC_RADIO2, BST_CHECKED);
 			char TextBuf[32];
 			
 			sprintf(TextBuf,"%.2f",g_ReposItemsParams.Gap);
@@ -2095,8 +1568,8 @@ WDL_DLGRET ReposItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 					GetDlgItemText(hwnd,IDC_EDIT1,textbuf,30);
 					double theGap=atof(textbuf);
 					int modeA=0;
-					if (Button_GetCheck(GetDlgItem(hwnd,IDC_RADIO1))==BST_CHECKED) modeA=0;
-					if (Button_GetCheck(GetDlgItem(hwnd,IDC_RADIO2))==BST_CHECKED) modeA=1;
+					if (IsDlgButtonChecked(hwnd,IDC_RADIO1) == BST_CHECKED) modeA = 0;
+					if (IsDlgButtonChecked(hwnd,IDC_RADIO2) == BST_CHECKED) modeA = 1;
 					RepositionItems(theGap,modeA,0,0);
 					UpdateTimeline();
 					Undo_OnStateChangeEx("Reposition Items",4,-1);
@@ -2178,7 +1651,7 @@ int OpenInExtEditor(int editorIdx)
 		
 		//Main_OnCommand(40639,0); // duplicate active take
 		Main_OnCommand(40601,0); // render items and add as new take
-		int curTakeIndex=*(int*)GetSetMediaItemInfo(CurItem,"I_CURTAKE",NULL);
+		//int curTakeIndex=*(int*)GetSetMediaItemInfo(CurItem,"I_CURTAKE",NULL);
 		MediaItem_Take *CopyTake=GetMediaItemTake(CurItem,-1);
 		PCM_source *ThePCM=(PCM_source*)GetSetMediaItemTakeInfo(CopyTake,"P_SOURCE",NULL);
 		char ExeString[2048];
@@ -2248,13 +1721,13 @@ void PerformSwingItemPositions(double swingBase,double swingAmt)
 	vector<MediaItem*> TheItems;
 	XenGetProjectItems(TheItems,true,false);
 	int i;
-	double temvo=TimeMap_GetDividedBpmAtTime(0.0);
+	//double temvo=TimeMap_GetDividedBpmAtTime(0.0);
 	for (i=0;i<(int)TheItems.size();i++)
 	{
 		double itempos=*(double*)GetSetMediaItemInfo(TheItems[i],"D_POSITION",0);
 		double itemposQN=TimeMap_timeToQN(itempos);
 		int itemposSXTHN=(int)((itemposQN*4.0)+0.5);
-		double itemposinsixteenths=itemposQN*4.0;
+		//double itemposinsixteenths=itemposQN*4.0;
 		int oddOreven=itemposSXTHN % 2;
 		double yay=fabs(swingAmt);
 		double newitemposQN=itemposQN;
@@ -2299,9 +1772,7 @@ WDL_DLGRET SwingItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 
 void DoSwingItemPositions(COMMAND_T*)
 {
-	static bool firstRun=true;
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SWINGITEMPOS), g_hwndParent, SwingItemsDlgProc);
-	
 }
 
 void DoTimeSelAdaptDelete(COMMAND_T*)

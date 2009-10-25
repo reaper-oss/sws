@@ -54,11 +54,9 @@ public:
 	~MarkerList();
 	bool BuildFromReaper();
 	void UpdateReaper();
-#ifdef _WIN32
 	void ListToClipboard();
 	void ClipboardToList();
 	void ExportToClipboard(const char* format);
-#endif
 	int ApproxSize();
 	void CropToTimeSel(bool bOffset);
 

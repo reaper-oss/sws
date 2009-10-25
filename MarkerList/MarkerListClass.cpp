@@ -144,8 +144,6 @@ bool MarkerList::BuildFromReaper()
 
 void MarkerList::UpdateReaper()
 {	// Function to take content of list and update Reaper environment
-	double dSavedCur = GetCursorPosition();
-
 	// First delete all markers/regions, then regen from list
 	bool bReg;
 	int iID;
@@ -161,7 +159,6 @@ void MarkerList::UpdateReaper()
 	}
 }
 
-#ifdef _WIN32
 void MarkerList::ListToClipboard()
 {
 	SectionLock lock(m_hLock);
@@ -195,7 +192,8 @@ void MarkerList::ListToClipboard()
 void MarkerList::ClipboardToList()
 {
 	SectionLock lock(m_hLock);
-	if (IsClipboardFormatAvailable(CF_TEXT) && OpenClipboard(g_hwndParent))
+	//if (IsClipboardFormatAvailable(CF_TEXT) && OpenClipboard(g_hwndParent))
+	if (OpenClipboard(g_hwndParent))
 	{
 		m_items.Empty(true);
 		LineParser lp(false);
@@ -318,7 +316,6 @@ void MarkerList::ExportToClipboard(const char* format)
 	CloseClipboard();
 	delete [] str;
 }
-#endif
 
 int MarkerList::ApproxSize()
 {

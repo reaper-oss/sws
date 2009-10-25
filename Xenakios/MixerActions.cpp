@@ -853,7 +853,6 @@ int g_RenaCurTrack=0;
 
 WDL_DLGRET RenameTraxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	//
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -861,13 +860,8 @@ WDL_DLGRET RenameTraxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			SetDlgItemText(hwnd,IDC_EDIT1,g_OldTrackName.c_str());
 			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
 			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
-			if (g_MultipleSelected)
-				Button_Enable(GetDlgItem(hwnd, IDC_CHECK1), true);
-			else
-				Button_Enable(GetDlgItem(hwnd, IDC_CHECK1), false);
-			if (g_RenaTraxDialogSetAutorename)
-				Button_SetCheck(GetDlgItem(hwnd, IDC_CHECK1), BST_CHECKED);
-			else Button_SetCheck(GetDlgItem(hwnd, IDC_CHECK1), BST_UNCHECKED);
+			EnableWindow(GetDlgItem(hwnd, IDC_CHECK1), g_MultipleSelected);
+			CheckDlgButton(hwnd, IDC_CHECK1, g_RenaTraxDialogSetAutorename ? BST_CHECKED : BST_UNCHECKED);
 			char buf[500];
 			sprintf(buf,"Rename track %d / %d",g_RenaCurTrack,g_RenaSelTrax);
 			SetWindowText(hwnd,buf);
@@ -880,7 +874,7 @@ WDL_DLGRET RenameTraxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 				char buf[500];
 				GetDlgItemText(hwnd, IDC_EDIT1, buf, 499);
 				g_NewTrackName.assign(buf);
-				g_RenaTraxDialogSetAutorename = Button_GetCheck(GetDlgItem(hwnd, IDC_CHECK1)) == BST_CHECKED;
+				g_RenaTraxDialogSetAutorename = IsDlgButtonChecked(hwnd, IDC_CHECK1) == BST_CHECKED;
 				EndDialog(hwnd,0);
 				break;
 			}

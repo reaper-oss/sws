@@ -123,7 +123,7 @@ char *BrowseForFiles(const char *text, const char *initialdir, const char *initi
 	l.lpstrFile = temp;
 	l.nMaxFile = temp_size;
 	l.lpstrTitle = text;
-	l.lpstrDefExt = extlist;
+	l.lpstrDefExt = NULL;
 	l.lpstrInitialDir = initialdir;
 	l.Flags = OFN_DONTADDTORECENT | OFN_EXPLORER | (allowmul ? OFN_ALLOWMULTISELECT : 0) | OFN_FILEMUSTEXIST;
 
@@ -140,6 +140,22 @@ bool BrowseForSaveFile(const char *text, const char *initialdir, const char *ini
 		lstrcpyn(fn, initialfile, fnsize);
 	else
 		memset(fn,0,fnsize);
+	
+	// Find the first extension in the extlist and use that as the default
+	char defExt[64] = { 0, };
+	if (extlist)
+	{
+		const char* pExt = extlist + strlen(extlist)+1;
+		// Ignore *.*
+		if (pExt[2] != '*')
+		{
+			lstrcpyn(defExt, pExt+2, 64);
+			// Chop at ';' to select the first in the list
+			char* pNextExt = strchr(defExt, ';');
+			if (pNextExt)
+				*pNextExt = 0;
+		}
+	}
 
 	OPENFILENAME l={sizeof(l),};
 	l.hwndOwner = g_hwndParent;
@@ -147,7 +163,7 @@ bool BrowseForSaveFile(const char *text, const char *initialdir, const char *ini
 	l.lpstrFile = fn;
 	l.nMaxFile = fnsize-1;
 	l.lpstrTitle = text;
-	l.lpstrDefExt = extlist;
+	l.lpstrDefExt = defExt;
 	l.lpstrInitialDir = initialdir;
 	
 	l.Flags = OFN_DONTADDTORECENT | OFN_HIDEREADONLY | OFN_EXPLORER;

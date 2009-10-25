@@ -364,12 +364,10 @@ extern "C"
 			ERR_RETURN("Marker action init error\n")
 		if (!SnapshotsInit())
 			ERR_RETURN("Snapshots init error\n")
-#ifdef _WIN32
 		if (!MarkerListInit())
 			ERR_RETURN("Marker list init error\n")
 		if (!ColorInit())
 			ERR_RETURN("Color init error\n")
-#endif
 		if (!TrackListInit())
 			ERR_RETURN("Tracklist init error\n")
 		if (!ZoomInit())
@@ -400,8 +398,10 @@ extern "C"
 #ifndef _WIN32 // MAC resources
 #include "../WDL/swell/swell-dlggen.h"
 #include "sws_extension.rc_mac_dlg"
+#include "Xenakios/res.rc_mac_dlg"
 #undef BEGIN
 #undef END
 #include "../WDL/swell/swell-menugen.h"
 #include "sws_extension.rc_mac_menu"
+#include "Xenakios/res.rc_mac_menu"
 #endif

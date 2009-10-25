@@ -218,8 +218,10 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			sprintf(str, "%d %d", m_bUserClosed ? 0 : 1, m_bDocked ? 1 : 0);
 			WritePrivateProfileString(SWS_INI, m_cWndStateKey, str, get_ini_file());
 			m_bUserClosed = false;
+#ifdef _WIN32
 			break;
 		case WM_NCDESTROY:
+#endif
 			delete m_pList;
 			m_pList = NULL;
 			m_hwnd = NULL;
@@ -327,6 +329,9 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 #ifdef _WIN32
 	ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP);
 
+	// Setup UTF8
+	WDL_UTF8_HookListView(hwndList);
+
 	// Create the tooltip window (if it's necessary)
 	if (bTooltips)
 	{
@@ -366,6 +371,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 {
 	NMLISTVIEW* s = (NMLISTVIEW*)lParam;
 
+#ifdef _WIN32
 	if (s->hdr.code == LVN_ITEMCHANGING && s->iItem >= 0 && (s->uNewState ^ s->uOldState) & LVIS_SELECTED)
 	{
 		// NOTE this is called *before* click, so if you need to decide
@@ -375,9 +381,21 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		SetWindowLongPtr(GetParent(m_hwndList), DWLP_MSGRESULT, iRet);
 		return iRet;
 	}
+#else
+	// TODO fix swell uNew/uOld/uChanged fields?
+	if (s->hdr.code == LVN_ITEMCHANGED && s->iItem >= 0)
+		return OnItemSelChange(GetListItem(s->iItem), ListView_GetItemState(m_hwndList, s->iItem, LVIS_SELECTED) ? true : false);
+#endif
 	else if (s->hdr.code == NM_CLICK)
 	{
 		ShowWindow(m_hwndEdit, SW_HIDE);
+#ifndef _WIN32
+		LVHITTESTINFO ht;
+		ht.pt = s->pt;
+		ListView_SubItemHitTest(m_hwndList, &ht);
+		s->iItem = ht.iItem;
+		s->iSubItem = ht.iSubItem;
+#endif
 		OnItemClk(GetListItem(s->iItem), DisplayToDataCol(s->iSubItem));
 	}
 	else if (s->hdr.code == NM_DBLCLK && s->iItem >= 0)
@@ -425,12 +443,17 @@ void SWS_ListView::OnDestroy()
 	// Save cols
 	char str[256];
 	int cols[20];
-	HWND header = ListView_GetHeader(m_hwndList);
 	int iCols = 0;
 	for (int i = 0; i < m_iCols; i++)
 		if (m_pCols[i].iPos != -1)
 			iCols++;
+#ifdef _WIN32
+	HWND header = ListView_GetHeader(m_hwndList);
 	Header_GetOrderArray(header, iCols, &cols);
+#else
+	for (int i = 0; i < iCols; i++)
+		cols[i] = i;
+#endif
 	iCols = 0;
 
 	for (int i = 0; i < m_iCols; i++)
@@ -514,7 +537,7 @@ void SWS_ListView::Update()
 					iCol++;
 				}
 		}
-		ListView_SortItems(m_hwndList, sListCompare, this);
+		ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
 		int iCol = abs(m_iSortCol) - 1;
 		iCol = DataToDisplayCol(iCol) + 1;
 		if (m_iSortCol < 0)
@@ -617,7 +640,9 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 			}
 
 			ListView_DeleteAllItems(m_hwndList);
+#ifdef _WIN32 // TODO must implement in SWELL!
 			while(ListView_DeleteColumn(m_hwndList, 0));
+#endif
 			ShowColumns();
 			Update();
 		}
@@ -634,10 +659,15 @@ LPARAM SWS_ListView::GetHitItem(int x, int y, int* iCol)
 	ht.flags = LVHT_ONITEM;
 	ScreenToClient(m_hwndList, &ht.pt);
 	int iItem = ListView_SubItemHitTest(m_hwndList, &ht);
-	HWND header = ListView_GetHeader(m_hwndList);
 	RECT r;
+#ifdef _WIN32
+	HWND header = ListView_GetHeader(m_hwndList);
 	GetWindowRect(header, &r);
-	if (x >= r.left && x < r.right && y >= r.top && y < r.bottom)
+#else
+	GetWindowRect(m_hwndList, &r);
+	r.bottom = r.top + 15;
+#endif
+	if (PtInRect(&r, ht.pt))
 	{
 		if (iCol)
 			*iCol = ht.iSubItem != -1 ? ht.iSubItem : 0; // iCol != -1 means "header", set 0 for "unknown column"
@@ -657,11 +687,26 @@ LPARAM SWS_ListView::GetHitItem(int x, int y, int* iCol)
 void SWS_ListView::EditListItem(LPARAM item, int iCol)
 {
 	// Convert to index and call edit
+#ifdef _WIN32
 	LVFINDINFO fi;
 	fi.flags = LVFI_PARAM;
 	fi.lParam = item;
-
 	int iItem = ListView_FindItem(m_hwndList, -1, &fi);
+#else
+	int iItem = -1;
+	LVITEM li;
+	li.mask = LVIF_PARAM;
+	for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
+	{
+		li.iItem = i;
+		ListView_GetItem(m_hwndList, &li);
+		if (li.lParam == item)
+		{
+			iItem = i;
+			break;
+		}
+	}
+#endif
 	if (iItem >= 0)
 		EditListItem(iItem, iCol);
 }
@@ -808,12 +853,14 @@ void SWS_ListView::ShowColumns()
 	}
 
 	int cols[20];
-	HWND header = ListView_GetHeader(m_hwndList);
 	int iCols = 0;
 	for (int i = 0; i < m_iCols; i++)
 		if (m_pCols[i].iPos != -1)
 			cols[iCols++] = m_pCols[i].iPos;
+#ifdef _WIN32
+	HWND header = ListView_GetHeader(m_hwndList);
 	Header_SetOrderArray(header, iCols, &cols);
+#endif
 }
 
 void SWS_ListView::SetListviewColumnArrows(int iSortCol)

@@ -100,5 +100,5 @@ WDL_DLGRET DiskCalcDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 
 void DoShowDiskspaceCalc(COMMAND_T*)
 {
-	DialogBoxA(g_hInst,MAKEINTRESOURCE(IDD_DISKSPACECALC),g_hwndParent,DiskCalcDlgProc);
+	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_DISKSPACECALC),g_hwndParent,DiskCalcDlgProc);
 }

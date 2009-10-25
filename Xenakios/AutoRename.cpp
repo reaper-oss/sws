@@ -234,6 +234,9 @@ WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			newAutonamePreset.Description.assign("Strip file extension");
 			newAutonamePreset.FormattingString.assign("[takename]%[NOEXT]");
 			g_AutoNamePresets.push_back(newAutonamePreset);
+
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS));
+			WDL_UTF8_HookListView(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT));
 			
 			for (int i = 0; i < (int)g_AutoNamePresets.size(); i++)
 			{

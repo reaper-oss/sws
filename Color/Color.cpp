@@ -84,6 +84,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case IDC_COLOR2:
 				case IDC_SETCUST:
 				{
+#ifdef _WIN32
 					CHOOSECOLOR cc;
 					memset(&cc, 0, sizeof(CHOOSECOLOR));
 					cc.lStructSize = sizeof(CHOOSECOLOR);
@@ -114,40 +115,27 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						if (ChooseColor(&cc))
 							bChanged = true;
 					}
+#endif
+					break;
 				}
-				break;
+
 				case IDC_SAVECOL:
 				case IDC_LOADCOL:
 				case IDC_LOADFROMTHEME:
 				{
-					char filename[256] = { 0 };
-					char cPath[256] = { 0 };
-					GetPrivateProfileString("REAPER", "lastthemefn", "", cPath, 256, get_ini_file());
+					char cPath[512] = { 0 };
+					const char* cExt = "SWS Color Files (*.SWSColor)\0*.SWSColor\0Color Theme Files (*.ReaperTheme)\0*.ReaperTheme\0All Files\0*.*\0";
+					GetPrivateProfileString("REAPER", "lastthemefn", "", cPath, 512, get_ini_file());
 					char* pC = strrchr(cPath, '\\');
 					if (!pC)
 						pC = strrchr(cPath, '/');
 					if (pC)
 						*pC = 0;
 
-					OPENFILENAME ofn;
-					memset(&ofn, 0, sizeof(ofn));
-					ofn.lStructSize = sizeof(ofn);
-					ofn.hwndOwner = hwndDlg;
-					ofn.lpstrFilter = "SWS Color Files (*.SWSColor)\0*.SWSColor\0Color Theme Files (*.ReaperTheme)\0*.ReaperTheme\0All Files\0*.*\0";
-					ofn.lpstrFile = filename;
-					ofn.lpstrInitialDir = cPath;
-					ofn.nMaxFile = 256;
-#if _MSC_VER > 1310
-					ofn.Flags = OFN_DONTADDTORECENT | OFN_EXPLORER;
-#else
-					ofn.Flags = OFN_EXPLORER;
-#endif
-					ofn.lpstrDefExt = "SWSColor";
-
 					if (wParam == IDC_SAVECOL)
 					{
-						ofn.Flags |= OFN_OVERWRITEPROMPT;
-						if (GetSaveFileName(&ofn))
+						char cFilename[512];
+						if (BrowseForSaveFile("Save color theme", cPath, NULL, cExt, cFilename, 512))
 						{
 							char key[32];
 							char val[32];
@@ -155,27 +143,40 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							{
 								sprintf(key, "custcolor%d", i+1);
 								sprintf(val, "%d", g_custColors[i]);
-								WritePrivateProfileString("SWS Color", key, val, ofn.lpstrFile);
+								WritePrivateProfileString("SWS Color", key, val, cFilename);
 							}
 							sprintf(val, "%d", g_crGradStart);
-							WritePrivateProfileString("SWS Color", "gradientStart", val, ofn.lpstrFile);
+							WritePrivateProfileString("SWS Color", "gradientStart", val, cFilename);
 							sprintf(val, "%d", g_crGradEnd);
-							WritePrivateProfileString("SWS Color", "gradientEnd", val, ofn.lpstrFile);
+							WritePrivateProfileString("SWS Color", "gradientEnd", val, cFilename);
 						}
 					}
 					else if (wParam == IDC_LOADCOL || wParam == IDC_LOADFROMTHEME)
 					{
-						ofn.Flags |= OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
-						if (wParam == IDC_LOADFROMTHEME || GetOpenFileName(&ofn))
+						if (wParam == IDC_LOADCOL)
+						{
+							char* cFile = BrowseForFiles("Choose color theme file", cPath, NULL, false, cExt);
+							if (cFile)
+							{
+								lstrcpyn(cPath, cFile, 512);
+								free(cFile);
+							}
+							else
+								cPath[0] = 0;
+						}
+						else
+							GetPrivateProfileString("REAPER", "lastthemefn", "", cPath, 512, get_ini_file());
+
+						if (cPath[0])
 						{
 							char key[32];
 							for (int i = 0; i < 16; i++)
 							{
 								sprintf(key, "custcolor%d", i+1);
-								g_custColors[i] = GetPrivateProfileInt("SWS Color", key, g_custColors[i], ofn.lpstrFile);
+								g_custColors[i] = GetPrivateProfileInt("SWS Color", key, g_custColors[i], cPath);
 							}
-							g_crGradStart = GetPrivateProfileInt("SWS Color", "gradientStart", g_crGradStart, ofn.lpstrFile);
-							g_crGradEnd   = GetPrivateProfileInt("SWS Color", "gradientEnd", g_crGradEnd, ofn.lpstrFile);
+							g_crGradStart = GetPrivateProfileInt("SWS Color", "gradientStart", g_crGradStart, cPath);
+							g_crGradEnd   = GetPrivateProfileInt("SWS Color", "gradientEnd", g_crGradEnd, cPath);
 							bChanged = true;
 						}
 					}
@@ -196,7 +197,11 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				sprintf(str, "%d %d", g_crGradStart, g_crGradEnd);
 				WritePrivateProfileString(SWS_INI, GRADIENT_COLOR_KEY, str, get_ini_file());
 				WritePrivateProfileStruct("REAPER", "custcolors", g_custColors, sizeof(g_custColors), get_ini_file());
+#ifdef _WIN32
 				RedrawWindow(hwndDlg, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+#else
+				InvalidateRect(hwndDlg, NULL, 0);
+#endif
 			}
 
 			return 0;
@@ -762,8 +767,8 @@ static void menuhook(int menuid, HMENU hMenu, int flag)
 {
 	if ((menuid == CTXMENU_TCP || menuid == CTXMENU_ITEM) && flag == 0)
 	{	// Initialize the menu
-		void* pFirstCommand;
-		void* pLastCommand;
+		void (*pFirstCommand)(COMMAND_T*);
+		void (*pLastCommand)(COMMAND_T*);
 		if (menuid == CTXMENU_TCP)
 		{
 			pFirstCommand = TrackRandomCol;
@@ -862,7 +867,7 @@ int ColorInit()
 	SWSRegisterCommands(g_commandTable);
 	srand((UINT)time(NULL));
 
-	if (!plugin_register("hookmenu", menuhook))
+	if (!plugin_register("hookmenu", (void*)menuhook))
 		return 0;
 
 	// Load color gradients from the INI file

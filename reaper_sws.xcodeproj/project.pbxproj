@@ -31,8 +31,26 @@
 		22257D9C108BDC6B0058CF75 /* XenakiosExts.h in Headers */ = {isa = PBXBuildFile; fileRef = 22257D84108BDC6B0058CF75 /* XenakiosExts.h */; };
 		22257D9D108BDC6B0058CF75 /* XenQueryDlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D85108BDC6B0058CF75 /* XenQueryDlg.cpp */; };
 		22257D9E108BDC6B0058CF75 /* XenUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D86108BDC6B0058CF75 /* XenUtils.cpp */; };
+		229AC7DE108F880800E4A962 /* reaper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC7DD108F880800E4A962 /* reaper.cpp */; };
+		229AC7E6108F891700E4A962 /* ProjectMgr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC7E2108F891700E4A962 /* ProjectMgr.cpp */; };
+		229AC7E7108F891700E4A962 /* ProjectMgr.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC7E3108F891700E4A962 /* ProjectMgr.h */; };
+		229AC7E8108F891700E4A962 /* sws_wnd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC7E4108F891700E4A962 /* sws_wnd.cpp */; };
+		229AC7E9108F891700E4A962 /* sws_wnd.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC7E5108F891700E4A962 /* sws_wnd.h */; };
+		229AC7F6108F985C00E4A962 /* MarkerList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC7F2108F985C00E4A962 /* MarkerList.cpp */; };
+		229AC7F7108F985C00E4A962 /* MarkerList.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC7F3108F985C00E4A962 /* MarkerList.h */; };
+		229AC7F8108F985C00E4A962 /* MarkerListActions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC7F4108F985C00E4A962 /* MarkerListActions.cpp */; };
+		229AC7F9108F985C00E4A962 /* MarkerListActions.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC7F5108F985C00E4A962 /* MarkerListActions.h */; };
+		229AC7FE108FB39600E4A962 /* Color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981007010F4768020072D712 /* Color.cpp */; };
+		229AC801108FB3B600E4A962 /* ActiveTake.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006D70F4768010072D712 /* ActiveTake.h */; };
+		229AC802108FB3B800E4A962 /* Color.h in Headers */ = {isa = PBXBuildFile; fileRef = 981007020F4768020072D712 /* Color.h */; };
+		229AC803108FB3BD00E4A962 /* MarkerListClass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006F60F4768020072D712 /* MarkerListClass.cpp */; };
+		229AC804108FB3BE00E4A962 /* MarkerListClass.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006F70F4768020072D712 /* MarkerListClass.h */; };
+		229AC80C108FBFCB00E4A962 /* SectionLock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC80A108FBFCB00E4A962 /* SectionLock.cpp */; };
+		229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC80B108FBFCB00E4A962 /* SectionLock.h */; };
 		22B4C24F0FE311C7009A6731 /* Prompt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22B4C24D0FE311C7009A6731 /* Prompt.cpp */; };
 		22B4C2500FE311C7009A6731 /* Prompt.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B4C24E0FE311C7009A6731 /* Prompt.h */; };
+		22B671341091DD2A00C494D0 /* swell-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B671331091DD2A00C494D0 /* swell-internal.h */; };
+		22B671381091DDC700C494D0 /* swell-misc.mm in Sources */ = {isa = PBXBuildFile; fileRef = 22B671361091DDC700C494D0 /* swell-misc.mm */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
 		980764230F5B23180091104D /* wndsize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 980764220F5B23180091104D /* wndsize.cpp */; };
 		980764260F5B233C0091104D /* swell-miscdlg.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764240F5B233C0091104D /* swell-miscdlg.mm */; };
@@ -114,8 +132,21 @@
 		22257D86108BDC6B0058CF75 /* XenUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XenUtils.cpp; path = Xenakios/XenUtils.cpp; sourceTree = "<group>"; };
 		22257D9F108BDCAC0058CF75 /* res.rc_mac_dlg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = res.rc_mac_dlg; path = Xenakios/res.rc_mac_dlg; sourceTree = "<group>"; };
 		22257DA0108BDCAC0058CF75 /* res.rc_mac_menu */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = res.rc_mac_menu; path = Xenakios/res.rc_mac_menu; sourceTree = "<group>"; };
+		229AC7DD108F880800E4A962 /* reaper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = reaper.cpp; path = reaper/reaper.cpp; sourceTree = "<group>"; };
+		229AC7E2108F891700E4A962 /* ProjectMgr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ProjectMgr.cpp; sourceTree = "<group>"; };
+		229AC7E3108F891700E4A962 /* ProjectMgr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProjectMgr.h; sourceTree = "<group>"; };
+		229AC7E4108F891700E4A962 /* sws_wnd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sws_wnd.cpp; sourceTree = "<group>"; };
+		229AC7E5108F891700E4A962 /* sws_wnd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sws_wnd.h; sourceTree = "<group>"; };
+		229AC7F2108F985C00E4A962 /* MarkerList.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MarkerList.cpp; path = MarkerList/MarkerList.cpp; sourceTree = "<group>"; };
+		229AC7F3108F985C00E4A962 /* MarkerList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerList.h; path = MarkerList/MarkerList.h; sourceTree = "<group>"; };
+		229AC7F4108F985C00E4A962 /* MarkerListActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MarkerListActions.cpp; path = MarkerList/MarkerListActions.cpp; sourceTree = "<group>"; };
+		229AC7F5108F985C00E4A962 /* MarkerListActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerListActions.h; path = MarkerList/MarkerListActions.h; sourceTree = "<group>"; };
+		229AC80A108FBFCB00E4A962 /* SectionLock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SectionLock.cpp; path = Utility/SectionLock.cpp; sourceTree = "<group>"; };
+		229AC80B108FBFCB00E4A962 /* SectionLock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SectionLock.h; path = Utility/SectionLock.h; sourceTree = "<group>"; };
 		22B4C24D0FE311C7009A6731 /* Prompt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Prompt.cpp; sourceTree = "<group>"; };
 		22B4C24E0FE311C7009A6731 /* Prompt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Prompt.h; sourceTree = "<group>"; };
+		22B671331091DD2A00C494D0 /* swell-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "swell-internal.h"; path = "../WDL/swell/swell-internal.h"; sourceTree = SOURCE_ROOT; };
+		22B671361091DDC700C494D0 /* swell-misc.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-misc.mm"; path = "../WDL/swell/swell-misc.mm"; sourceTree = SOURCE_ROOT; };
 		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		980764220F5B23180091104D /* wndsize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wndsize.cpp; path = ../WDL/wingui/wndsize.cpp; sourceTree = SOURCE_ROOT; };
 		980764240F5B233C0091104D /* swell-miscdlg.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-miscdlg.mm"; path = "../WDL/swell/swell-miscdlg.mm"; sourceTree = SOURCE_ROOT; };
@@ -123,7 +154,7 @@
 		9807642C0F5B237B0091104D /* swell-modstub.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-modstub.mm"; path = "../WDL/swell/swell-modstub.mm"; sourceTree = SOURCE_ROOT; };
 		981006CF0F4768010072D712 /* TrackItemState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrackItemState.cpp; path = Freeze/TrackItemState.cpp; sourceTree = "<group>"; };
 		981006D00F4768010072D712 /* TimeState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TimeState.cpp; path = Freeze/TimeState.cpp; sourceTree = "<group>"; };
-		981006D10F4768010072D712 /* ActiveTake.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ActiveTake.cpp; path = Freeze/ActiveTake.cpp; sourceTree = "<group>"; };
+		981006D10F4768010072D712 /* ActiveTake.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ActiveTake.cpp; path = Freeze/ActiveTake.cpp; sourceTree = "<group>"; };
 		981006D20F4768010072D712 /* Freeze.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Freeze.cpp; path = Freeze/Freeze.cpp; sourceTree = "<group>"; };
 		981006D30F4768010072D712 /* MuteState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MuteState.h; path = Freeze/MuteState.h; sourceTree = "<group>"; };
 		981006D40F4768010072D712 /* ItemSelState.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ItemSelState.cpp; path = Freeze/ItemSelState.cpp; sourceTree = "<group>"; };
@@ -145,8 +176,6 @@
 		981006EA0F4768020072D712 /* sws_util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sws_util.h; sourceTree = "<group>"; };
 		981006F10F4768020072D712 /* MarkerActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MarkerActions.cpp; path = MarkerActions/MarkerActions.cpp; sourceTree = "<group>"; };
 		981006F20F4768020072D712 /* MarkerActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerActions.h; path = MarkerActions/MarkerActions.h; sourceTree = "<group>"; };
-		981006F40F4768020072D712 /* Markerlist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Markerlist.cpp; path = MarkerList/Markerlist.cpp; sourceTree = "<group>"; };
-		981006F50F4768020072D712 /* Markerlist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Markerlist.h; path = MarkerList/Markerlist.h; sourceTree = "<group>"; };
 		981006F60F4768020072D712 /* MarkerListClass.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MarkerListClass.cpp; path = MarkerList/MarkerListClass.cpp; sourceTree = "<group>"; };
 		981006F70F4768020072D712 /* MarkerListClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerListClass.h; path = MarkerList/MarkerListClass.h; sourceTree = "<group>"; };
 		981006FA0F4768020072D712 /* stdafx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stdafx.cpp; sourceTree = "<group>"; };
@@ -224,18 +253,25 @@
 				981007060F4768020072D712 /* mac_resgen.php */,
 				981006F10F4768020072D712 /* MarkerActions.cpp */,
 				981006F20F4768020072D712 /* MarkerActions.h */,
-				981006F40F4768020072D712 /* Markerlist.cpp */,
-				981006F50F4768020072D712 /* Markerlist.h */,
+				229AC7F2108F985C00E4A962 /* MarkerList.cpp */,
+				229AC7F3108F985C00E4A962 /* MarkerList.h */,
+				229AC7F4108F985C00E4A962 /* MarkerListActions.cpp */,
+				229AC7F5108F985C00E4A962 /* MarkerListActions.h */,
 				981006F60F4768020072D712 /* MarkerListClass.cpp */,
 				981006F70F4768020072D712 /* MarkerListClass.h */,
 				981006DB0F4768010072D712 /* MuteState.cpp */,
 				981006D30F4768010072D712 /* MuteState.h */,
+				229AC7E2108F891700E4A962 /* ProjectMgr.cpp */,
+				229AC7E3108F891700E4A962 /* ProjectMgr.h */,
 				22B4C24D0FE311C7009A6731 /* Prompt.cpp */,
 				22B4C24E0FE311C7009A6731 /* Prompt.h */,
+				229AC7DD108F880800E4A962 /* reaper.cpp */,
 				9879B7340F489BE4004D98EB /* reaper_plugin.h */,
 				9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */,
 				981007030F4768020072D712 /* reaper_sws.xcodeproj */,
 				981006FF0F4768020072D712 /* resource.h */,
+				229AC80A108FBFCB00E4A962 /* SectionLock.cpp */,
+				229AC80B108FBFCB00E4A962 /* SectionLock.h */,
 				981006E30F4768020072D712 /* Snapshots.cpp */,
 				981006E50F4768020072D712 /* Snapshots.h */,
 				981006E20F4768020072D712 /* SnapshotClass.cpp */,
@@ -248,6 +284,8 @@
 				981007170F4768020072D712 /* sws_extension.rc_mac_menu */,
 				981006E90F4768020072D712 /* sws_util.cpp */,
 				981006EA0F4768020072D712 /* sws_util.h */,
+				229AC7E4108F891700E4A962 /* sws_wnd.cpp */,
+				229AC7E5108F891700E4A962 /* sws_wnd.h */,
 				981006D00F4768010072D712 /* TimeState.cpp */,
 				981006D50F4768010072D712 /* TimeState.h */,
 				98E89AC60FC9C05C00A56C44 /* TrackEnvelope.cpp */,
@@ -319,6 +357,8 @@
 		98B408960F5B525200865A09 /* SWELL */ = {
 			isa = PBXGroup;
 			children = (
+				22B671361091DDC700C494D0 /* swell-misc.mm */,
+				22B671331091DD2A00C494D0 /* swell-internal.h */,
 				98E8A0AF0F9123F900FC657D /* sws_util.mm */,
 				9882DB870F6D961100BD2BC7 /* swell-dlggen.h */,
 				98DDBE120F5B60F1003E9B2C /* swell-menu.mm */,
@@ -368,6 +408,15 @@
 				22257D98108BDC6B0058CF75 /* res.h in Headers */,
 				22257D99108BDC6B0058CF75 /* resource.h in Headers */,
 				22257D9C108BDC6B0058CF75 /* XenakiosExts.h in Headers */,
+				229AC7E7108F891700E4A962 /* ProjectMgr.h in Headers */,
+				229AC7E9108F891700E4A962 /* sws_wnd.h in Headers */,
+				229AC7F7108F985C00E4A962 /* MarkerList.h in Headers */,
+				229AC7F9108F985C00E4A962 /* MarkerListActions.h in Headers */,
+				229AC801108FB3B600E4A962 /* ActiveTake.h in Headers */,
+				229AC802108FB3B800E4A962 /* Color.h in Headers */,
+				229AC804108FB3BE00E4A962 /* MarkerListClass.h in Headers */,
+				229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */,
+				22B671341091DD2A00C494D0 /* swell-internal.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -469,6 +518,15 @@
 				22257D9B108BDC6B0058CF75 /* TrackTemplateActions.cpp in Sources */,
 				22257D9D108BDC6B0058CF75 /* XenQueryDlg.cpp in Sources */,
 				22257D9E108BDC6B0058CF75 /* XenUtils.cpp in Sources */,
+				229AC7DE108F880800E4A962 /* reaper.cpp in Sources */,
+				229AC7E6108F891700E4A962 /* ProjectMgr.cpp in Sources */,
+				229AC7E8108F891700E4A962 /* sws_wnd.cpp in Sources */,
+				229AC7F6108F985C00E4A962 /* MarkerList.cpp in Sources */,
+				229AC7F8108F985C00E4A962 /* MarkerListActions.cpp in Sources */,
+				229AC7FE108FB39600E4A962 /* Color.cpp in Sources */,
+				229AC803108FB3BD00E4A962 /* MarkerListClass.cpp in Sources */,
+				229AC80C108FBFCB00E4A962 /* SectionLock.cpp in Sources */,
+				22B671381091DDC700C494D0 /* swell-misc.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -507,18 +565,20 @@
 		1DEB914F08733D8E0010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CONFIGURATION_BUILD_DIR = "$(SYMROOT)";
+				ARCHS = "$(NATIVE_ARCH)";
+				CONFIGURATION_BUILD_DIR = /Applications/REAPER.app/Contents/Plugins;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = SWELL_NOT_PROVIDED_BY_APP;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = "$(SYMROOT)";
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
 				SDKROOT = macosx10.4;
-				SYMROOT = "";
+				SHARED_PRECOMPS_DIR = "/Users/tim/Dev/sws-extension/build/PrecompiledHeaders";
+				SYMROOT = "/Users/tim/Dev/sws-extension";
 			};
 			name = Debug;
 		};
@@ -528,11 +588,16 @@
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CONFIGURATION_BUILD_DIR = /Applications/REAPER.app/Contents/Plugins;
 				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = SWELL_NOT_PROVIDED_BY_APP;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = NO;
+				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
 				SDKROOT = macosx10.4;
+				SHARED_PRECOMPS_DIR = "/Users/tim/Dev/sws-extension/build/PrecompiledHeaders";
+				SYMROOT = "/Users/tim/Dev/sws-extension";
 			};
 			name = Release;
 		};

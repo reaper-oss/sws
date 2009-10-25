@@ -134,7 +134,6 @@ LPARAM SWS_MarkerListView::GetItemPointer(int iItem)
 bool SWS_MarkerListView::GetItemState(LPARAM item)
 {
 	MarkerItem* mi = (MarkerItem*)item;
-	double dPos = GetCursorPosition();
 	return GetCursorPosition() == mi->m_dPos;
 }
 
@@ -315,6 +314,7 @@ INT_PTR WINAPI doSaveDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		case WM_INITDIALOG:
 		{
 			HWND list = GetDlgItem(hwndDlg, IDC_COMBO);
+			WDL_UTF8_HookComboBox(list);
 			for (int i = 0; i < g_savedLists.Get()->GetSize(); i++)
 				SendMessage(list, CB_ADDSTRING, 0, (LPARAM)g_savedLists.Get()->Get(i)->m_name);
 			RestoreWindowPos(hwndDlg, SAVEWINDOW_POS_KEY);
@@ -332,7 +332,7 @@ INT_PTR WINAPI doSaveDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 						// Check to see if there's already a saved spot with that name (and overwrite if necessary)
 						int i;
 						for (i = 0; i < g_savedLists.Get()->GetSize(); i++)
-							if (_strcmpi(g_savedLists.Get()->Get(i)->m_name, str) == 0)
+							if (_stricmp(g_savedLists.Get()->Get(i)->m_name, str) == 0)
 							{
 								delete g_savedLists.Get()->Get(i);
 								g_savedLists.Get()->Set(i, new MarkerList(str, true));
@@ -359,6 +359,7 @@ INT_PTR WINAPI doLoadDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		case WM_INITDIALOG:
 		{
 			HWND list = GetDlgItem(hwndDlg, IDC_COMBO);
+			WDL_UTF8_HookComboBox(list);
 			for (int i = 0; i < g_savedLists.Get()->GetSize(); i++)
 				SendMessage(list, CB_ADDSTRING, 0, (LPARAM)g_savedLists.Get()->Get(i)->m_name);
             SendMessage(list, CB_SETCURSEL, 0, 0);
@@ -393,6 +394,7 @@ INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 		case WM_INITDIALOG:
 		{
 			HWND list = GetDlgItem(hwndDlg, IDC_COMBO);
+			WDL_UTF8_HookComboBox(list);
 			for (int i = 0; i < g_savedLists.Get()->GetSize(); i++)
 				SendMessage(list, CB_ADDSTRING, 0, (LPARAM)g_savedLists.Get()->Get(i)->m_name);
             SendMessage(list, CB_SETCURSEL, 0, 0);
@@ -609,7 +611,7 @@ int MarkerListInit()
 
 	SWSRegisterCommands(g_commandTable);
 
-	if (!plugin_register("hookmenu", menuhook))
+	if (!plugin_register("hookmenu", (void*)menuhook))
 		return 0;
 
 	pMarkerList = new SWS_MarkerListWnd();

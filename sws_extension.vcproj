@@ -354,6 +354,28 @@
 				>
 			</File>
 			<File
+				RelativePath="..\WDL\win32_utf8.c"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						WarningLevel="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Test|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+						WarningLevel="2"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\wdl\wingui\wndsize.cpp"
 				>
 				<FileConfiguration
@@ -517,6 +539,10 @@
 				RelativePath=".\uparrow.bmp"
 				>
 			</File>
+			<File
+				RelativePath=".\version.rc"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Xenakios"
@@ -610,6 +636,10 @@
 				>
 				<File
 					RelativePath=".\Xenakios\Parameters.h"
+					>
+				</File>
+				<File
+					RelativePath=".\Xenakios\resource.h"
 					>
 				</File>
 				<File

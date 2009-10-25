@@ -402,6 +402,12 @@ WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 						delete [] g_external_app_paths.PathToTool1;
 						g_external_app_paths.PathToTool1 = new char[strlen(cFile)+1];
 						strcpy(g_external_app_paths.PathToTool1, cFile);
+
+						char* cMenuText;
+						SWSGetCommandID(DoLaunchExtTool, 1, &cMenuText);
+						char cExeName[100];
+						ExtractFileNameEx(cFile, cExeName, false);
+						_snprintf(g_external_app_paths.Tool1MenuText, 100, "%s : %s", cMenuText, cExeName);
 						free(cFile);
 					}
 					SetDlgItemText(hwnd, IDC_EXTTOOLPATH1, g_external_app_paths.PathToTool1);
@@ -415,6 +421,12 @@ WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 						delete [] g_external_app_paths.PathToTool2;
 						g_external_app_paths.PathToTool2 = new char[strlen(cFile)+1];
 						strcpy(g_external_app_paths.PathToTool2, cFile);
+
+						char* cMenuText;
+						SWSGetCommandID(DoLaunchExtTool, 2, &cMenuText);
+						char cExeName[100];
+						ExtractFileNameEx(cFile, cExeName, false);
+						_snprintf(g_external_app_paths.Tool2MenuText, 100, "%s : %s", cMenuText, cExeName);
 						free(cFile);
 					}
 					SetDlgItemText(hwnd, IDC_EXTTOOLPATH2, g_external_app_paths.PathToTool2);

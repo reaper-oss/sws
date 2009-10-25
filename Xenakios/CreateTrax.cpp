@@ -50,6 +50,7 @@ BOOL WINAPI CreateTxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		SetDlgItemText(hwnd,IDC_EDIT1,buf);
 		SetDlgItemText(hwnd,IDC_EDIT2,g_newtrackparams.basename.c_str());
 		HWND hCombo = GetDlgItem(hwnd,IDC_COMBO1);
+		WDL_UTF8_HookComboBox(hCombo);
 		int idx=0;
 		while (GetInputChannelName(idx))
 		{

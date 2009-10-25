@@ -30,6 +30,7 @@
 
 SectionLock::SectionLock(HANDLE& pMutex, DWORD dwTimeoutMs)
 {
+#ifdef _WIN32
 	if (pMutex == NULL)
 		pMutex = CreateMutex(NULL, false, NULL);
 
@@ -38,6 +39,7 @@ SectionLock::SectionLock(HANDLE& pMutex, DWORD dwTimeoutMs)
 	// Does caller want to acquire sync lock?
 	if (dwTimeoutMs != SECLOCK_NO_INITIAL_LOCK)
 		WaitForSingleObject(pMutex, dwTimeoutMs);
+#endif
 }
 
 SectionLock::~SectionLock()
@@ -47,10 +49,18 @@ SectionLock::~SectionLock()
 
 bool SectionLock::Lock(DWORD dwTimeoutMs)
 {
+#ifdef _WIN32
 	return WaitForSingleObject(m_hMutex, dwTimeoutMs) != WAIT_FAILED;
+#else
+	return true;
+#endif
 }
 
 bool SectionLock::Unlock(void)
 {
+#ifdef _WIN32
 	return ReleaseMutex(m_hMutex) ? true : false;
+#else
+	return true;
+#endif
 }

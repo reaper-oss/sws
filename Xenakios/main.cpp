@@ -269,8 +269,6 @@ void DoSelectLastTakesInItems(COMMAND_T*)
 	UpdateTimeline();
 }
 
-#ifdef _WIN32
-
 void DoInsertShuffledRandomFile(COMMAND_T*)
 {
 	if (g_filenames->GetSize()>2)
@@ -289,8 +287,6 @@ void DoInsertShuffledRandomFile(COMMAND_T*)
 	} else MessageBox(g_hwndParent,"Too few files to choose from for random shuffled insert!","Error",MB_OK);
 	
 }
-
-#endif
 
 double g_FirstSelectedItemPos;
 double g_LastSelectedItemEnd;
@@ -478,11 +474,11 @@ void DoMoveCursor10pixLeftCreateSel(COMMAND_T*)  { for (int i = 0; i < ALEXPIXEL
 void DoMoveCursor10pixRightCreateSel(COMMAND_T*) { for (int i = 0; i < ALEXPIXELS; i++) Main_OnCommand(40103,0); }
 
 preview_register_t *g_ItemPreview;
-CRITICAL_SECTION g_ItemPreviewCS;
 bool g_itemPreviewPlaying=false;
 PCM_source *Kaatuu=0;
 double PreviewItemPos=0.0;
 #ifdef _WIN32
+CRITICAL_SECTION g_ItemPreviewCS;
 void CALLBACK ItemPreviewTimerProc1(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
 	if (idEvent==11112)
@@ -772,7 +768,7 @@ int XenakiosInit()
 	if(!plugin_register("projectconfig",&xen_reftrack_pcreg))
 		return 0;
 
-	if (!plugin_register("hookmenu", menuhook))
+	if (!plugin_register("hookmenu", (void*)menuhook))
 		return 0;
 
 	ShuffledNumbers=new int[1024];

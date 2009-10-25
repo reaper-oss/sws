@@ -180,22 +180,12 @@ WDL_DLGRET NewRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 					}
 				}
 				char wintitle[200];
-#ifdef _WIN32
-				SendMessage(hwnd, DM_SETDEFID, ID_TAKEONLY,0);
-				
-				Button_SetStyle(GetDlgItem(hwnd,ID_TAKEONLY) ,BS_DEFPUSHBUTTON ,true);
-				Button_SetStyle(GetDlgItem(hwnd,ID_TAKEANDSOURCE) ,BS_PUSHBUTTON,true);
-				Button_SetStyle(GetDlgItem(hwnd,IDC_RENAMEMEDIA) ,BS_PUSHBUTTON,true);
-#endif
 				SetFocus(GetDlgItem(hwnd, IDC_TAKENAME_EDIT));
 				SendMessage(GetDlgItem(hwnd, IDC_TAKENAME_EDIT), EM_SETSEL, 0, -1);
 				sprintf(wintitle,"Rename take %d / %d",g_takerenameParams.RenameTakeNumber,g_takerenameParams.TakesToRename);
 				SetWindowText(hwnd,wintitle);
-#ifdef _WIN32
-				Button_Enable(GetDlgItem(hwnd,ID_TAKEANDSOURCE),0);
-				Button_Enable(GetDlgItem(hwnd,IDC_RENAMEMEDIA),0);
-				Button_SetStyle(GetDlgItem(hwnd,IDCANCEL) ,BS_PUSHBUTTON,true);
-#endif
+				EnableWindow(GetDlgItem(hwnd,ID_TAKEANDSOURCE), 0);
+				EnableWindow(GetDlgItem(hwnd,IDC_RENAMEMEDIA), 0);
 				return 0;
 			}
 		case WM_COMMAND:

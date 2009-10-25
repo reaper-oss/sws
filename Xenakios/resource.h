@@ -8,7 +8,6 @@
 #define IDD_SELECT_NTH_ITEMDLG          107
 #define IDD_EXOCOM_PARDLG               108
 #define IDD_ITEMVOLUME                  111
-#define IDD_INTERPOLATEITEMPROP         112
 #define IDD_DISKSPACECALC               114
 #define IDD_CSPVOC_CONF                 116
 #define IDD_RENDITEMS                   118
@@ -99,11 +98,6 @@
 #define IDC_XENACTLIST                  1096
 #define IDC_DELFILESBUT2                1096
 #define IDC_MENUTOCONF                  1097
-#define IDC_IIPLENA                     1104
-#define IDC_IIPLENB                     1105
-#define IDC_IIPCUR1                     1106
-#define IDC_IIPRNDA                     1107
-#define IDC_IIPRNDB                     1108
 #define IDC_TAKENAME_EDIT               1111
 #define IDC_FILENAME_EDIT               1112
 #define IDC_FULLFILENAME                1113

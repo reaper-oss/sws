@@ -42,6 +42,11 @@ protected:
 	LPARAM GetItemPointer(int iItem);
 	bool GetItemState(LPARAM item);
 	void OnItemClk(LPARAM item, int iCol);
+#ifndef _WIN32
+	bool OnItemSelChange(LPARAM item, bool bSel);
+	MediaTrack* m_pClickedTrack;
+	int m_iClickedCol;
+#endif
 	int OnItemSort(LPARAM item1, LPARAM item2);
 
 private:
@@ -76,4 +81,5 @@ private:
 };
 
 int TrackListInit();
+void TrackListExit();
 void ScheduleTracklistUpdate();

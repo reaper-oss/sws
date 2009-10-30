@@ -130,12 +130,25 @@ static COMMAND_T g_commandTable[] =
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
-static void menuhook(int menuid, HMENU hMenu, int flag)
+static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
-	if (flag == 0 && menuid == MAINMENU_OPTIONS)
+	if (flag == 0 && strcmp(menustr, "Main options") == 0)
 		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40745);
 	else if (flag == 1)
 		SWSCheckMenuItem(hMenu, g_commandTable[0].accel.accel.cmd, g_bMAEnabled);
+}
+
+static void oldmenuhook(int menuid, HMENU hmenu, int flag)
+{
+	switch (menuid)
+	{
+	case MAINMENU_OPTIONS:
+		menuhook("Main options", hmenu, flag);
+		break;
+	default:
+		menuhook("", hmenu, flag);
+		break;
+	}
 }
 
 int MarkerActionsInit()
@@ -144,8 +157,9 @@ int MarkerActionsInit()
 
 	g_bMAEnabled = GetPrivateProfileInt("SWS", "MarkerActionsEnabled", 1, get_ini_file()) ? true : false;
 
-	if (!plugin_register("hookmenu",(void*)menuhook))
-		return 0;
+	if (!plugin_register("hookcustommenu", (void*)menuhook))
+		if (!plugin_register("hookmenu", (void*)oldmenuhook))
+			return 0;
 
 	return 1;
 }

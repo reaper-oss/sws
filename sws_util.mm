@@ -25,7 +25,8 @@
 ******************************************************************************/
 
 #import <Cocoa/Cocoa.h>
-#include "swell.h"
+#include "stdafx.h"
+#include "../WDL/swell/swell-internal.h"
 
 void GetDateString(int time, char* buf, int bufsize)
 {
@@ -47,50 +48,40 @@ void GetTimeString(int time, char* buf, int bufsize)
 	[s getCString:buf maxLength:bufsize];
 }
 
+void SetColumnArrows(HWND h, int iSortCol)
+{
+	if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return;
+	SWELL_ListView *v=(SWELL_ListView *)h;
+	if (!v->m_cols) return;
+	for (int i = 0; i < v->m_cols->GetSize(); i++)
+	{
+		if (i == abs(iSortCol)-1)
+		{
+			if (iSortCol > 0)
+				[v setIndicatorImage:[NSImage imageNamed:@"NSAscendingSortIndicator"] inTableColumn:v->m_cols->Get(i)];
+			else
+				[v setIndicatorImage:[NSImage imageNamed:@"NSDescendingSortIndicator"] inTableColumn:v->m_cols->Get(i)];
+		}
+		else
+			[v setIndicatorImage:0 inTableColumn:v->m_cols->Get(i)];
+	}			
+}
+
 int GetCustomColors()
 {
-	/*
-		id colorSwatch = nil;
-		NSArray *colors = nil;
-		
-		// Try to get the colour swatch, load its colours and get a reference to them.
-		// We're trying to access private NSColorPanel variables and methods here, so
-		// we look out for an exception being thrown (which would be NSUndefinedKeyException)
-		// in case they are changed. This way we can exit safely by returning nil, so that
-		// the user isn't affected.
-		@try
-		{
-			// Get the colour swatch.
-			colorSwatch = [self valueForKey:@"_colorSwatch"];
-			
-			// Load the user-defined colours into the swatch.
-			if ([colorSwatch respondsToSelector:@selector(readColors)])
-				[colorSwatch performSelector:@selector(readColors)];
-			
-			// Get the colours.
-			colors = [colorSwatch valueForKey:@"colors"];
-		}
-		
-		@catch (NSException *e)
-		{
-			// NSColorPanel has been changed and no longer users all of these
-			// private methods, so abandon ship.
-			return nil;
-		}
-		
-		// Find all swatch colours which aren't the default white.
-		NSMutableArray *userSwatchColors = [NSMutableArray array];
-		NSEnumerator *e = [colors objectEnumerator];
-		NSColor *color;
-		while(color = [e nextObject])
-		{
-			if ([color colorSpace] == [NSColorSpace genericGrayColorSpace] && [color whiteComponent] == 1.0)
-				continue;
-			[userSwatchColors addObject:color];
-		}
-		
-		return (NSArray *)userSwatchColors;
+	[[[NSColorPanel sharedColorPanel] valueForKey:@"_colorSwatch"] readColors];
+	
+	// Get the NSColorSwatch's internal mutable array of NSColors
+	NSMutableArray *colors = [[[NSColorPanel sharedColorPanel] valueForKey:@"_colorSwatch"] valueForKey:@"colors"];
+	
+	NSEnumerator *e = [colors objectEnumerator];
+	NSColor *color;
+	while(color = [e nextObject])
+	{
+		if ([color colorSpace] == [NSColorSpace genericGrayColorSpace] && [color whiteComponent] == 1.0)
+			continue;
+//		[userSwatchColors addObject:color];
 	}
-	 */
+		
 	return 0;
 }

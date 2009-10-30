@@ -1,13 +1,13 @@
 ; sws_extension.nsi
 ;
-; Dump sws_extension.dll into the proper plugins dir and delete old vers
+; Dump reaper_sws.dll into the proper plugins dir and delete old vers
 
 ;--------------------------------
 
 Name "SWS Extension"
 OutFile "Release\sws_extension.exe"
 InstallDir $PROGRAMFILES\Reaper\Plugins
-RequestExecutionLevel user
+RequestExecutionLevel highest
 LicenseData license.txt
 
 Function .onInit

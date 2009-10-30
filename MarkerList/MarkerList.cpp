@@ -217,37 +217,28 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case SELPREV_MSG:
 		{
 			HWND hwndList = GetDlgItem(m_hwnd, IDC_LIST);
-			int i;
-			for (i = 0; i < ListView_GetItemCount(hwndList); i++)
-				if (ListView_GetItemState(hwndList, i, LVIS_SELECTED))
-					break;
-			if (i >= ListView_GetItemCount(hwndList))
-				i = 1;
-
-			if (i > 0)
+			int iSel = ListView_GetItemCount(hwndList) - 1;
+			for (int i = 0; i < ListView_GetItemCount(hwndList); i++)
 			{
-				i--;
-				SetEditCurPos(((MarkerItem*)m_pList->GetListItem(i))->m_dPos, true, true);
-				ListView_SetItemState(hwndList, i, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+				if (ListView_GetItemState(hwndList, i, LVIS_SELECTED) && i)
+					iSel = i - 1;
+				ListView_SetItemState(hwndList, i, 0, LVIS_SELECTED | LVIS_FOCUSED);
 			}
+			ListView_SetItemState(hwndList, iSel, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
 			break;
 		}
 		case SELNEXT_MSG:
 		{
 			HWND hwndList = GetDlgItem(m_hwnd, IDC_LIST);
-			int i;
-			for (i = ListView_GetItemCount(hwndList)-1; i >= 0; i--)
-				if (ListView_GetItemState(hwndList, i, LVIS_SELECTED))
-					break;
-			if (i < 0)
-				i = ListView_GetItemCount(hwndList) - 2;
-
-			if (i < ListView_GetItemCount(hwndList) - 1)
+			int iSel;
+			int iCount = ListView_GetItemCount(hwndList);
+			for (int i = iCount - 1; i >= 0; i--)
 			{
-				i++;
-				SetEditCurPos(((MarkerItem*)m_pList->GetListItem(i))->m_dPos, true, true);
-				ListView_SetItemState(hwndList, i, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
+				if (ListView_GetItemState(hwndList, i, LVIS_SELECTED) && i < iCount - 1)
+					iSel = i + 1;
+				ListView_SetItemState(hwndList, i, 0, LVIS_SELECTED | LVIS_FOCUSED);
 			}
+			ListView_SetItemState(hwndList, iSel, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
 			break;
 		}
 		default:
@@ -490,7 +481,7 @@ void ExportFormat(COMMAND_T*)
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { { FSHIFT   | FCONTROL | FVIRTKEY, 'M', 0 }, "SWS: Open marker list" },					"SWSMARKERLIST1",  OpenMarkerList,    "Show SWS MarkerList",  },
+	{ { { FSHIFT   | FCONTROL | FVIRTKEY, 'M', 0 }, "SWS: Open marker list" },					"SWSMARKERLIST1",  OpenMarkerList,    "SWS MarkerList",  },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL,                                "SWS: Load marker set" },					"SWSMARKERLIST2",  LoadMarkerList,    "Load marker set...",   },
 	{ { DEFACCEL,                                "SWS: Save marker set" },					"SWSMARKERLIST3",  SaveMarkerList,    "Save marker set...",   },
@@ -592,14 +583,30 @@ static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 
 static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
-static void menuhook(int menuid, HMENU hMenu, int flag)
+static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
-	if (menuid == MAINMENU_VIEW && flag == 0)
+	if (strcmp(menustr, "Main view") == 0 && flag == 0)
 		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40075);
-	else if (menuid == MAINMENU_EDIT && flag == 0)
+	else if (strcmp(menustr, "Main edit") == 0 && flag == 0)
 		AddSubMenu(hMenu, SWSCreateMenu(g_commandTable), "SWS Marker utilites");
 	else if (flag == 1)
 		SWSCheckMenuItem(hMenu, g_commandTable[0].accel.accel.cmd, pMarkerList->IsValidWindow());
+}
+
+static void oldmenuhook(int menuid, HMENU hmenu, int flag)
+{
+	switch (menuid)
+	{
+	case MAINMENU_VIEW:
+		menuhook("Main view", hmenu, flag);
+		break;
+	case MAINMENU_EDIT:
+		menuhook("Main edit", hmenu, flag);
+		break;
+	default:
+		menuhook("", hmenu, flag);
+		break;
+	}
 }
 
 int MarkerListInit()
@@ -611,10 +618,16 @@ int MarkerListInit()
 
 	SWSRegisterCommands(g_commandTable);
 
-	if (!plugin_register("hookmenu", (void*)menuhook))
-		return 0;
+	if (!plugin_register("hookcustommenu", (void*)menuhook))
+		if (!plugin_register("hookmenu", (void*)oldmenuhook))
+			return 0;
 
 	pMarkerList = new SWS_MarkerListWnd();
 
 	return 1;
+}
+
+void MarkerListExit()
+{
+	delete pMarkerList;
 }

@@ -37,24 +37,35 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		char cVersion[256];
 		sprintf(cVersion, "Version %d.%d.%d Build #%d, built on %s", PRODUCT_VERSION, __DATE__);
 		SetWindowText(GetDlgItem(hwndDlg, IDC_VERSION), cVersion);
+#ifdef WIN64
+		SetDlgItemText(hwndDlg, IDC_LATESTVER, "http://www.standingwaterstudios.com/reaper/reaper_sws64.dll");
+#endif
+#ifndef _WIN32
+		SetDlgItemText(hwndDlg, IDC_LATESTVER, "http://www.standingwaterstudios.com/reaper/sws_osx.dmg");
+#endif
+		
 	}
-#if defined(_WIN32) && (_MSC_VER > 1310)
-	else if (uMsg == WM_NOTIFY)
+	else if (uMsg == WM_DRAWITEM)
 	{
-		NMLINK* s = (NMLINK*)lParam;
-		if (s->hdr.code == NM_CLICK)// && s->hdr.idFrom == IDC_LATESTVER)
+		DRAWITEMSTRUCT *di = (DRAWITEMSTRUCT *)lParam;
+		if (di->CtlType == ODT_BUTTON) 
 		{
-			char cLink[256];
-			GetWindowText(GetDlgItem(hwndDlg, (int)s->hdr.idFrom), cLink, 256);
-			// Strip out leading/trailing <a> </a>
-			*strrchr(cLink,'<') = 0;
-			ShellExecute(hwndDlg, "open", strchr(cLink,'>')+1, NULL, NULL, SW_SHOWNORMAL);
+			SetTextColor(di->hDC, (di->itemState & ODS_SELECTED) ? RGB(0,0,0) : RGB(0,0,220));
+			RECT r = di->rcItem;
+			char buf[512];
+			GetWindowText(di->hwndItem, buf, sizeof(buf));
+			DrawText(di->hDC, buf, -1, &r, DT_NOPREFIX | DT_LEFT | DT_VCENTER);
 		}
 	}
-#endif
 	else if (uMsg == WM_COMMAND)
 	{
-		if (wParam == IDC_LICENSE)
+		if (wParam == IDC_WEBSITE || wParam == IDC_LATESTVER)
+		{
+			char cLink[512];
+			GetDlgItemText(hwndDlg, wParam, cLink, 512);
+			ShellExecute(hwndDlg, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
+		}
+		else if (wParam == IDC_LICENSE)
 			MessageBox(hwndDlg, LICENSE_TEXT, "SWS License", MB_OK);
 		else if (wParam == IDCANCEL)
 			EndDialog(hwndDlg, 0);
@@ -73,18 +84,32 @@ static COMMAND_T g_commandTable[] =
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
-static void menuhook(int menuid, HMENU hMenu, int flag)
+static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
-	if (menuid == MAINMENU_EXT && flag == 0)
+	if (strcmp(menustr, "Main extensions") == 0 && flag == 0)
 		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
+}
+
+static void oldmenuhook(int menuid, HMENU hmenu, int flag)
+{
+	switch (menuid)
+	{
+	case MAINMENU_EXT:
+		menuhook("Main extensions", hmenu, flag);
+		break;
+	default:
+		menuhook("", hmenu, flag);
+		break;
+	}
 }
 
 int AboutBoxInit()
 {
 	SWSRegisterCommands(g_commandTable);
 
-	if (!plugin_register("hookmenu", (void*)menuhook))
-		return 0;
+	if (!plugin_register("hookcustommenu", (void*)menuhook))
+		if (!plugin_register("hookmenu", (void*)oldmenuhook))
+			return 0;
 
 	return 1;
 }

@@ -1005,6 +1005,7 @@ void SelMutedTracks(COMMAND_T* = NULL)
 		int iSel = *(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL) ? 1 : 0;
 		GetSetMediaTrackInfo(tr, "I_SELECTED", &iSel);
 	}
+	TrackList_AdjustWindows(false);
 }
 
 void SelMutedItems(COMMAND_T* = NULL)
@@ -1044,6 +1045,7 @@ void SelSoloedTracks(COMMAND_T* = NULL)
 		int iSel = *(int*)GetSetMediaTrackInfo(tr, "I_SOLO", NULL) ? 1 : 0;
 		GetSetMediaTrackInfo(tr, "I_SELECTED", &iSel);
 	}
+	TrackList_AdjustWindows(false);
 }
 
 void SelPhaseTracks(COMMAND_T* = NULL)
@@ -1054,6 +1056,7 @@ void SelPhaseTracks(COMMAND_T* = NULL)
 		int iSel = *(bool*)GetSetMediaTrackInfo(tr, "B_PHASE", NULL) ? 1 : 0;
 		GetSetMediaTrackInfo(tr, "I_SELECTED", &iSel);
 	}
+	TrackList_AdjustWindows(false);
 }
 
 void SelArmedTracks(COMMAND_T* = NULL)
@@ -1064,6 +1067,7 @@ void SelArmedTracks(COMMAND_T* = NULL)
 		int iSel = *(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL) ? 1 : 0;
 		GetSetMediaTrackInfo(tr, "I_SELECTED", &iSel);
 	}
+	TrackList_AdjustWindows(false);
 }
 
 void SelLockedItems(COMMAND_T* = NULL)

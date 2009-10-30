@@ -430,6 +430,7 @@
 				D2AAC0600554660B00DB518D /* Headers */,
 				D2AAC0610554660B00DB518D /* Sources */,
 				D289988505E68E00004EDB86 /* Frameworks */,
+				220182DA109B77CE00F2CA9A /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -462,6 +463,23 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		220182DA109B77CE00F2CA9A /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/sws_osx/reaper_sws.dylib",
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cp sws_osx/reaper_sws.dylib ~/Library/Application\\ Support/REAPER/UserPlugins/\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		D2AAC0610554660B00DB518D /* Sources */ = {
@@ -566,19 +584,19 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(NATIVE_ARCH)";
-				CONFIGURATION_BUILD_DIR = /Applications/REAPER.app/Contents/Plugins;
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/sws_osx";
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = SWELL_NOT_PROVIDED_BY_APP;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				OBJROOT = "$(SYMROOT)";
 				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
 				SDKROOT = macosx10.4;
-				SHARED_PRECOMPS_DIR = "/Users/tim/Dev/sws-extension/build/PrecompiledHeaders";
-				SYMROOT = "/Users/tim/Dev/sws-extension";
+				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";
+				SYMROOT = "~/Dev/sws-extension";
 			};
 			name = Debug;
 		};
@@ -586,18 +604,19 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CONFIGURATION_BUILD_DIR = /Applications/REAPER.app/Contents/Plugins;
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/sws_osx";
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_PREPROCESSOR_DEFINITIONS = SWELL_NOT_PROVIDED_BY_APP;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = "$(SYMROOT)";
 				PREBINDING = NO;
 				SDKROOT = macosx10.4;
-				SHARED_PRECOMPS_DIR = "/Users/tim/Dev/sws-extension/build/PrecompiledHeaders";
-				SYMROOT = "/Users/tim/Dev/sws-extension";
+				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";
+				SYMROOT = "~/Dev/sws-extension";
 			};
 			name = Release;
 		};

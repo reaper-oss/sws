@@ -735,13 +735,13 @@ void DoToggleSTopAtEndOfTimeSel(COMMAND_T*)
 	DoSetStopAtEndOfTimeSel(-1);
 }
 
-static void menuhook(int menuid, HMENU hMenu, int flag)
+static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
-	if (menuid == MAINMENU_EXT && flag == 0)
+	if (strcmp(menustr, "Main extensions") == 0 && flag == 0)
 	{
 		SWSCreateMenu(g_XenCommandTable, hMenu);
 	}
-	else if (menuid == CTXMENU_ITEM && flag == 0)
+	else if (strcmp(menustr, "Media item context") == 0 && flag == 0)
 	{
 		int i = 0;
 		while (g_XenCommandTable[i++].accel.accel.cmd != 1);
@@ -750,7 +750,7 @@ static void menuhook(int menuid, HMENU hMenu, int flag)
 		while (g_XenCommandTable[i++].accel.accel.cmd != 2);
 		AddSubMenu(hMenu, SWSCreateMenu(&g_XenCommandTable[i]), "Extensions : Item/Take manipulation", -24);
 	}
-	else if (menuid == CTXMENU_TCP && flag == 0)
+	else if (strcmp(menustr, "Track control panel context") == 0 && flag == 0)
 	{
 		int i = 0;
 		while (g_XenCommandTable[i++].accel.accel.cmd != 3);
@@ -763,13 +763,33 @@ static void menuhook(int menuid, HMENU hMenu, int flag)
 	}
 }
 
+static void oldmenuhook(int menuid, HMENU hmenu, int flag)
+{
+	switch (menuid)
+	{
+	case MAINMENU_EXT:
+		menuhook("Main extensions", hmenu, flag);
+	case CTXMENU_TCP:
+		menuhook("Track control panel context", hmenu, flag);
+		break;
+	case CTXMENU_ITEM:
+		menuhook("Media item context", hmenu, flag);
+		break;
+	default:
+		menuhook("", hmenu, flag);
+		break;
+	}
+}
+
+
 int XenakiosInit()
 {
 	if(!plugin_register("projectconfig",&xen_reftrack_pcreg))
 		return 0;
 
-	if (!plugin_register("hookmenu", (void*)menuhook))
-		return 0;
+	if (!plugin_register("hookcustommenu", (void*)menuhook))
+		if (!plugin_register("hookmenu", (void*)oldmenuhook))
+			return 0;
 
 	ShuffledNumbers=new int[1024];
 

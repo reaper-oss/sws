@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by sws_extension.rc
 //
-#define IDB_LICENSE                     3
 #define IDC_LICENSE                     3
 #define IDD_CONSOLE                     201
 #define IDD_SNAPS                       202
@@ -60,7 +59,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        216
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1035
+#define _APS_NEXT_CONTROL_VALUE         1036
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

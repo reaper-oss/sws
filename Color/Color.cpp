@@ -763,13 +763,19 @@ static COMMAND_T g_commandTable[] =
 	{ {}, LAST_COMMAND, NULL }, // Denote end of table
 };
 
-static void menuhook(int menuid, HMENU hMenu, int flag)
+static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
-	if ((menuid == CTXMENU_TCP || menuid == CTXMENU_ITEM) && flag == 0)
+	int menuid = -1;
+	if (strcmp(menustr, "Track control panel context") == 0)
+		menuid = 0;
+	else if (strcmp(menustr, "Media item context") == 0)
+		menuid = 1;
+
+	if (menuid >= 0 && flag == 0)
 	{	// Initialize the menu
 		void (*pFirstCommand)(COMMAND_T*);
 		void (*pLastCommand)(COMMAND_T*);
-		if (menuid == CTXMENU_TCP)
+		if (menuid == 0)
 		{
 			pFirstCommand = TrackRandomCol;
 			pLastCommand  = TrackCustCol;
@@ -794,20 +800,28 @@ static void menuhook(int menuid, HMENU hMenu, int flag)
 		// Finish with color dialog
 		AddToMenu(hSubMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
 
-		if (menuid == CTXMENU_TCP)
+		if (menuid == 0)
 			AddSubMenu(hMenu, hSubMenu, "SWS track color", 40359);
-		else if (menuid == CTXMENU_ITEM)
+		else
 			AddSubMenu(hMenu, hSubMenu, "SWS item color", 40707);
 	}
 #ifdef _WIN32
 	else if (flag == 1)
 	{	// Update the color swatches
 		// Color commands can be anywhere on the menu, so find 'em no matter where
-		bool bInitialized = false;
-
-		HDC hdcScreen;
-		HDC hDC;
-
+		static WDL_PtrList<void> pBitmaps;
+		HDC hdcScreen = NULL;
+		HDC hDC = NULL;
+		
+		if (pBitmaps.GetSize() == 0)
+		{
+			hdcScreen = CreateDC("DISPLAY", NULL, NULL, NULL); 
+			int s = GetSystemMetrics(SM_CYMENUCHECK);
+			UpdateCustomColors();
+			for (int i = 0; i < 16; i++)
+				pBitmaps.Add(CreateCompatibleBitmap(hdcScreen, s+3, s));
+		}
+		
 		int iCommand1 = SWSGetCommandID(TrackCustCol, 0);
 		int iCommand2 = SWSGetCommandID(ItemCustCol, 0);
 
@@ -821,45 +835,52 @@ static void menuhook(int menuid, HMENU hMenu, int flag)
 				h = FindMenuItem(hMenu, iCommand2 + i-16, &iPos);
 			if (h)
 			{
-				if (!bInitialized)
+				if (!hDC)
 				{	// Reduce thrashing
 					UpdateCustomColors();
-					hdcScreen = CreateDC("DISPLAY", NULL, NULL, NULL); 
+					if (!hdcScreen)
+						hdcScreen = CreateDC("DISPLAY", NULL, NULL, NULL);
 					hDC = CreateCompatibleDC(hdcScreen);
-					bInitialized = true;
 				}
 
-				HBITMAP hBMP;
 				int s = GetSystemMetrics(SM_CYMENUCHECK);
 				RECT rColor = { 0, 0, s, s };
 				RECT rSpace = { s, 0, s+3, s };
-				MENUITEMINFO mi={sizeof(MENUITEMINFO),};
-				mi.fMask = MIIM_BITMAP;
 
-				GetMenuItemInfo(h, iPos, true, &mi);
-				if (mi.hbmpItem)
-					hBMP = mi.hbmpItem;
-				else
-					hBMP = CreateCompatibleBitmap(hdcScreen, rSpace.right, s);
-				SelectObject(hDC, hBMP);
+				SelectObject(hDC, pBitmaps.Get(i%16));
 				HBRUSH hb = CreateSolidBrush(g_custColors[i%16]);
 				FillRect(hDC, &rColor, hb);
 				DeleteObject(hb);
 				FillRect(hDC, &rSpace, (HBRUSH)(COLOR_MENU+1));
-				if (!mi.hbmpItem)
-				{
-					mi.hbmpItem = hBMP;
-					SetMenuItemInfo(h, iPos, true, &mi);
-				}
+
+				MENUITEMINFO mi={sizeof(MENUITEMINFO),};
+				mi.fMask = MIIM_BITMAP;
+				mi.hbmpItem = (HBITMAP)pBitmaps.Get(i%16);
+				SetMenuItemInfo(h, iPos, true, &mi);
 			}
 		}
-	    if (bInitialized)
-		{
+		if (hDC)
 			DeleteDC(hDC);
+		if (hdcScreen)
 			DeleteDC(hdcScreen);
-		}
 	}
 #endif
+}
+
+static void oldmenuhook(int menuid, HMENU hmenu, int flag)
+{
+	switch (menuid)
+	{
+	case CTXMENU_TCP:
+		menuhook("Track control panel context", hmenu, flag);
+		break;
+	case CTXMENU_ITEM:
+		menuhook("Media item context", hmenu, flag);
+		break;
+	default:
+		menuhook("", hmenu, flag);
+		break;
+	}
 }
 
 int ColorInit()
@@ -867,8 +888,9 @@ int ColorInit()
 	SWSRegisterCommands(g_commandTable);
 	srand((UINT)time(NULL));
 
-	if (!plugin_register("hookmenu", (void*)menuhook))
-		return 0;
+	if (!plugin_register("hookcustommenu", (void*)menuhook))
+		if (!plugin_register("hookmenu", (void*)oldmenuhook))
+			return 0;
 
 	// Load color gradients from the INI file
 	// Restore state

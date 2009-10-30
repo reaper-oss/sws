@@ -284,17 +284,12 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 :m_hwndList(hwndList), m_hwndEdit(hwndEdit), m_hwndTooltip(NULL), m_iSortCol(1), m_iEditingItem(-1), m_iEditingCol(0),
  m_iCols(iCols), m_pCols(pCols), m_bDisableUpdates(false), m_cINIKey(cINIKey)
 {
-	SetWindowLongPtr(hwndList, GWLP_USERDATA, (LONG_PTR)this);
-	// Setup the edit control procedure
-	WNDPROC prevEditProc = (WNDPROC)GetWindowLongPtr(hwndEdit, GWLP_WNDPROC);
-	if (prevEditProc != (WNDPROC)sEditProc)
-	{
-		m_prevEditProc = prevEditProc;
-		SetWindowLongPtr(hwndEdit, GWLP_WNDPROC, (LONG_PTR)sEditProc);
-	}
-	else
-		m_prevEditProc = NULL;
+	m_ar.translateAccel = keyHandler;
+	m_ar.isLocal = true;
+	m_ar.user = this;
+	plugin_register("accelerator", &m_ar);
 
+	SetWindowLongPtr(hwndList, GWLP_USERDATA, (LONG_PTR)this);
 	SetWindowLongPtr(m_hwndEdit, GWLP_USERDATA, 0xdeadf00b);
 
 	// Load sort and column data
@@ -353,6 +348,7 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 
 SWS_ListView::~SWS_ListView()
 {
+	plugin_register("-accelerator", &m_ar);
 }
 
 LPARAM SWS_ListView::GetListItem(int index)
@@ -382,20 +378,19 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		return iRet;
 	}
 #else
-	// TODO fix swell uNew/uOld/uChanged fields?
+	// OK, with OSX if you CLICK on the listview, you only get ONE "i've changed" message!
+	// If the state is changed by called ListView_SetItemState, you get TWO messages. Fun.
+	// Could emulate by saving state, updating SWEL, etc.
+	// Fortunately all of the current SWS windows don't really care, so leave for now.
 	if (s->hdr.code == LVN_ITEMCHANGED && s->iItem >= 0)
-		return OnItemSelChange(GetListItem(s->iItem), ListView_GetItemState(m_hwndList, s->iItem, LVIS_SELECTED) ? true : false);
+	{
+		bool bNewState = ListView_GetItemState(m_hwndList, s->iItem, LVIS_SELECTED) ? true : false;
+		return OnItemSelChange(GetListItem(s->iItem), bNewState);
+	}
 #endif
 	else if (s->hdr.code == NM_CLICK)
 	{
-		ShowWindow(m_hwndEdit, SW_HIDE);
-#ifndef _WIN32
-		LVHITTESTINFO ht;
-		ht.pt = s->pt;
-		ListView_SubItemHitTest(m_hwndList, &ht);
-		s->iItem = ht.iItem;
-		s->iSubItem = ht.iSubItem;
-#endif
+		EditListItemEnd(true);
 		OnItemClk(GetListItem(s->iItem), DisplayToDataCol(s->iSubItem));
 	}
 	else if (s->hdr.code == NM_DBLCLK && s->iItem >= 0)
@@ -480,9 +475,11 @@ void SWS_ListView::OnDestroy()
 
 void SWS_ListView::Update()
 {
+	static bool bRecurseCheck = false;
 	// Fill in the data by pulling it from the derived class
-	if (m_iEditingItem == -1 && !m_bDisableUpdates)
+	if (m_iEditingItem == -1 && !m_bDisableUpdates && !bRecurseCheck)
 	{
+		bRecurseCheck = true;
 		char str[256];
 
 		// Check for deletions - items in the lstwnd are quite likely out of order so gotta do a full O(n^2) search
@@ -570,6 +567,7 @@ void SWS_ListView::Update()
 			}
 		}
 #endif
+		bRecurseCheck = false;
 	}
 }
 
@@ -640,9 +638,7 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 			}
 
 			ListView_DeleteAllItems(m_hwndList);
-#ifdef _WIN32 // TODO must implement in SWELL!
 			while(ListView_DeleteColumn(m_hwndList, 0));
-#endif
 			ShowColumns();
 			Update();
 		}
@@ -659,15 +655,14 @@ LPARAM SWS_ListView::GetHitItem(int x, int y, int* iCol)
 	ht.flags = LVHT_ONITEM;
 	ScreenToClient(m_hwndList, &ht.pt);
 	int iItem = ListView_SubItemHitTest(m_hwndList, &ht);
-	RECT r;
 #ifdef _WIN32
+	RECT r;
 	HWND header = ListView_GetHeader(m_hwndList);
 	GetWindowRect(header, &r);
-#else
-	GetWindowRect(m_hwndList, &r);
-	r.bottom = r.top + 15;
-#endif
 	if (PtInRect(&r, ht.pt))
+#else
+	if (ht.pt.y < 0)
+#endif
 	{
 		if (iCol)
 			*iCol = ht.iSubItem != -1 ? ht.iSubItem : 0; // iCol != -1 means "header", set 0 for "unknown column"
@@ -713,13 +708,13 @@ void SWS_ListView::EditListItem(LPARAM item, int iCol)
 
 void SWS_ListView::EditListItem(int iIndex, int iCol)
 {
-#ifdef _WIN32
 	RECT r;
 	m_iEditingItem = iIndex;
 	m_iEditingCol = iCol;
 	ListView_GetSubItemRect(m_hwndList, iIndex, DataToDisplayCol(iCol), LVIR_LABEL, &r);
 
 	// Create a new edit control to go over that rect
+#ifdef _WIN32
 	// Ridiculous code just to get the proper offsets
 	RECT rList, rDlg, rDlg2;
 	TITLEBARINFO tb = { sizeof(TITLEBARINFO), };
@@ -740,6 +735,9 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	}
 	if (iCol == 1 && m_pCols[0].iPos == -1)
 		lOffset -= 4; // WTF, when the first column is hidden (for whatever reason), editing is offset.  Huh.
+#else
+	int lOffset = 0, tOffset = -1;
+#endif
 	SetWindowPos(m_hwndEdit, HWND_TOP, r.left+lOffset, r.top+tOffset, r.right-r.left, r.bottom-r.top+ECOFFSET_HEIGHT, 0);
 	ShowWindow(m_hwndEdit, SW_SHOW);
 	SetWindowLongPtr(m_hwndEdit, GWLP_USERDATA, 0xdeadf00b);
@@ -748,76 +746,87 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	char str[100];
 	GetItemText(item, iCol, str, 100);
 	SetWindowText(m_hwndEdit, str);
-	SendMessage(m_hwndEdit, EM_SETSEL, 0, -1);
 	SetFocus(m_hwndEdit);
-#endif
+	SendMessage(m_hwndEdit, EM_SETSEL, 0, -1);
 }
 
-LRESULT SWS_ListView::sEditProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+void SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 {
-	// The EDIT control needs to have special USERDATA value for Reaper, so get the pointer to the class
-	// from the list control.  This is a total hack because what if the list isn't IDC_LIST, or there's
-	// more than one list?  Hmm...
-	HWND hDlg = GetParent(hwnd);
-	HWND hList = GetDlgItem(hDlg, IDC_LIST);
-	SWS_ListView* pObj = (SWS_ListView*)GetWindowLongPtr(hList, GWLP_USERDATA);
-	if (pObj)
-		return pObj->editProc(uMsg, wParam, lParam);
-	else
-		return 0;
-}
-
-LRESULT SWS_ListView::editProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-#ifdef _WIN32
-	if (uMsg == WM_GETDLGCODE)
-		return DLGC_WANTALLKEYS;
-#endif
-	if (uMsg == WM_KEYDOWN && wParam == VK_TAB)
-	{		
-		int iNext = m_iEditingItem + 1;
-		int count = ListView_GetItemCount(m_hwndList);
-		if (iNext >= count)
-			iNext = 0;
-
-		m_bDisableUpdates = true;
-		ShowWindow(m_hwndEdit, SW_HIDE);  // Forces KILLFOCUS message which saves edit
-		EditListItem(iNext, m_iEditingCol);
-		m_bDisableUpdates = false;
-	}
-	else if (uMsg == WM_KEYDOWN && wParam == VK_ESCAPE)
+	if (m_iEditingItem != -1 && bSave && IsWindow(m_hwndList) && IsWindow(m_hwndEdit))
 	{
-		m_iEditingItem = -1;
-		ShowWindow(m_hwndEdit, SW_HIDE);
-	}
-	else if (m_iEditingItem >= 0 && (uMsg == WM_KILLFOCUS || (uMsg == WM_KEYDOWN && wParam == VK_RETURN)))
-	{
-		if (IsWindow(m_hwndList) && IsWindow(m_hwndEdit))
+		char newStr[100];
+		char curStr[100];
+		GetWindowText(m_hwndEdit, newStr, 100);
+		LPARAM item = GetListItem(m_iEditingItem);
+		GetItemText(item, m_iEditingCol, curStr, 100);
+		if (strcmp(curStr, newStr))
 		{
-			LPARAM item = GetListItem(m_iEditingItem); // Get the item before hiding the window and setting g_iEI to -1
-			int i = m_iEditingItem;
-			m_iEditingItem = -1;
-
-			char newStr[100];
-			char curStr[100];
-			GetWindowText(m_hwndEdit, newStr, 100);
-			GetItemText(item, m_iEditingCol, curStr, 100);
-			if (strcmp(curStr, newStr))
-			{
-				ListView_SetItemText(m_hwndList, i, DataToDisplayCol(m_iEditingCol), newStr);
-				SetItemText(item, m_iEditingCol, newStr);
-			}
-			ShowWindow(m_hwndEdit, SW_HIDE);
-			Update();
+			ListView_SetItemText(m_hwndList, m_iEditingItem, DataToDisplayCol(m_iEditingCol), newStr);
+			SetItemText(item, m_iEditingCol, newStr);
 		}
-		else
-			m_iEditingItem = -1;
+		if (bResort)
+			ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
+		// TODO resort? Just call update?
+		// Update is likely called when SetItemText is called too...
 	}
+	m_iEditingItem = -1;
+	ShowWindow(m_hwndEdit, SW_HIDE);
+}
 
-	if (m_prevEditProc)
-		return CallWindowProc(m_prevEditProc, m_hwndEdit, uMsg, wParam, lParam);
-	else
-		return 0;
+int SWS_ListView::keyHandler(MSG *msg, accelerator_register_t *ctx)
+{
+	SWS_ListView* lv = (SWS_ListView*)ctx->user;
+	if (msg->message == WM_KEYDOWN && lv->m_iEditingItem != -1)// TODO huh? why doesn't this work?  What message is actually sending VK_ENTER? && msg->hwnd == lv->m_hwndEdit)
+	{
+		bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
+
+		if (msg->wParam == VK_ESCAPE)
+		{
+			lv->EditListItemEnd(false);
+			return 1;
+		}
+		else if (msg->wParam == VK_TAB)
+		{
+			int iItem = lv->m_iEditingItem;
+			lv->DisableUpdates(true);
+			lv->EditListItemEnd(true, false);
+			if (!bShift)
+			{
+				if (++iItem >= ListView_GetItemCount(lv->m_hwndList))
+					iItem = 0;
+			}
+			else
+			{
+				if (--iItem < 0)
+					iItem = ListView_GetItemCount(lv->m_hwndList) - 1;
+			}
+			lv->EditListItem(lv->GetListItem(iItem), lv->m_iEditingCol);
+			lv->DisableUpdates(false);
+			return 1;
+		}
+		else if (msg->wParam == VK_RETURN)
+		{
+			lv->EditListItemEnd(true);
+			return 1;
+		}
+	}
+	/* perhaps it's possible to move these keycommands from the derived classes here.
+	 * but there is specific things going on for each, so maybe not?  TODO.
+	else if (msg->hwnd == lv->m_hwndList)
+	{
+		if (msg->wParam == VK_UP && !bCtrl && !bAlt)
+		{
+			SendMessage(hwnd, WM_COMMAND, SELPREV_MSG, 0);
+			return 1;
+		}
+		else if (msg->wParam == VK_DOWN && !bCtrl && !bAlt)
+		{
+			SendMessage(hwnd, WM_COMMAND, SELNEXT_MSG, 0);
+			return 1;
+		}
+	}
+	*/
+	return 0;
 }
 
 int SWS_ListView::OnItemSort(LPARAM item1, LPARAM item2)
@@ -865,7 +874,7 @@ void SWS_ListView::ShowColumns()
 
 void SWS_ListView::SetListviewColumnArrows(int iSortCol)
 {
-#if defined(_WIN32) && (_MSC_VER > 1310)
+#ifdef _WIN32
 	// Set the column arrows
 	HWND header = ListView_GetHeader(m_hwndList);
 	for (int i = 0; i < Header_GetItemCount(header); i++)
@@ -899,6 +908,8 @@ void SWS_ListView::SetListviewColumnArrows(int iSortCol)
 		}
 		Header_SetItem(header, i, &hi);
 	}
+#else
+	SetColumnArrows(m_hwndList, iSortCol);
 #endif
 }
 

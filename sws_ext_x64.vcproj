@@ -339,6 +339,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Xenakios\resource.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Utility\SectionLock.h"
 				>
 			</File>

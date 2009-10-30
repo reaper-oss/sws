@@ -869,14 +869,30 @@ static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 
 static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
-static void menuhook(int menuid, HMENU hMenu, int flag)
+static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
-	if (menuid == MAINMENU_VIEW && flag == 0)
-		AddToMenu(hMenu, "Show SWS Snapshots", g_commandTable[0].accel.accel.cmd, 40075);
-	else if (menuid == CTXMENU_TCP && flag == 0)
+	if (strcmp(menustr, "Main view") == 0 && flag == 0)
+		AddToMenu(hMenu, "SWS Snapshots", g_commandTable[0].accel.accel.cmd, 40075);
+	else if (strcmp(menustr, "Track control panel context") == 0 && flag == 0)
 		AddSubMenu(hMenu, SWSCreateMenu(g_commandTable), "SWS Snapshots");
 	else if (flag == 1)
 		SWSCheckMenuItem(hMenu, g_commandTable[0].accel.accel.cmd, g_pSSWnd->IsValidWindow());
+}
+
+static void oldmenuhook(int menuid, HMENU hmenu, int flag)
+{
+	switch (menuid)
+	{
+	case MAINMENU_VIEW:
+		menuhook("Main view", hmenu, flag);
+		break;
+	case CTXMENU_TCP:
+		menuhook("Track control panel context", hmenu, flag);
+		break;
+	default:
+		menuhook("", hmenu, flag);
+		break;
+	}
 }
 
 int SnapshotsInit()
@@ -888,10 +904,16 @@ int SnapshotsInit()
 
 	SWSRegisterCommands(g_commandTable);
 
-	if (!plugin_register("hookmenu", (void*)menuhook))
-		return 0;
+	if (!plugin_register("hookcustommenu", (void*)menuhook))
+		if (!plugin_register("hookmenu", (void*)oldmenuhook))
+			return 0;
 
 	g_pSSWnd = new SWS_SnapshotsWnd;
 
 	return 1;
+}
+
+void SnapshotsExit()
+{
+	delete g_pSSWnd;
 }

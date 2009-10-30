@@ -55,8 +55,6 @@ public:
 
 protected:
 	void EditListItem(int iIndex, int iCol);
-	static LRESULT sEditProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	LRESULT editProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	// These methods are used to "pull" data for updating the listview
 	virtual void SetItemText(LPARAM item, int iCol, const char* str) {}
@@ -76,12 +74,15 @@ protected:
 	int m_iSortCol; // 1 based col index, negative for desc sort
 
 private:
+	void EditListItemEnd(bool bSave, bool bResort = true);
 	void ShowColumns();
 	void SetListviewColumnArrows(int iSortCol);
 	int DisplayToDataCol(int iCol);
 	int DataToDisplayCol(int iCol);
 	static int CALLBACK sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam);
+	static int keyHandler(MSG *msg, accelerator_register_t *ctx);
 
+	accelerator_register_t m_ar;
 	HWND m_hwndEdit;
 	HWND m_hwndTooltip;
 	int m_iEditingItem;
@@ -89,7 +90,6 @@ private:
 	const int m_iCols;
 	SWS_LVColumn* m_pCols;
 	const char* m_cINIKey;
-	WNDPROC m_prevEditProc;
 };
 
 class SWS_DockWnd

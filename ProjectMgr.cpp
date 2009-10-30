@@ -239,9 +239,9 @@ static COMMAND_T g_commandTable[] =
 };
 
 static int g_iORPCmdIndex = 0;
-static void menuhook(int menuid, HMENU hMenu, int flag)
+static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
-	if (menuid == MAINMENU_FILE && flag == 0)
+	if (strcmp(menustr, "Main file") == 0 && flag == 0)
 		AddSubMenu(hMenu, SWSCreateMenu(g_commandTable), "SWS Project management", 40897);
 	else if (flag == 1)
 	{
@@ -268,6 +268,19 @@ static void menuhook(int menuid, HMENU hMenu, int flag)
 	}
 }
 
+static void oldmenuhook(int menuid, HMENU hmenu, int flag)
+{
+	switch (menuid)
+	{
+	case MAINMENU_FILE:
+		menuhook("Main file", hmenu, flag);
+		break;
+	default:
+		menuhook("", hmenu, flag);
+		break;
+	}
+}
+
 int ProjectMgrInit()
 {
 	SWSRegisterCommands(g_commandTable);
@@ -279,8 +292,9 @@ int ProjectMgrInit()
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
 
-	if (!plugin_register("hookmenu", (void*)menuhook))
-		return 0;
+	if (!plugin_register("hookcustommenu", (void*)menuhook))
+		if (!plugin_register("hookmenu", (void*)oldmenuhook))
+			return 0;
 
 	return 1;
 }

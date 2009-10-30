@@ -218,6 +218,9 @@ extern "C"
 	{
 		if (!rec)
 		{
+			SnapshotsExit();
+			TrackListExit();
+			MarkerListExit();
 			ERR_RETURN("Exiting Reaper.\n")
 		}
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)

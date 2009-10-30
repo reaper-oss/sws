@@ -59,6 +59,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     EDITTEXT        IDC_COMMAND,7,7,201,14,ES_AUTOHSCROLL
     LTEXT           "http://www.standingwaterstudios.com/reaper \rEnter a command...\r...",IDC_STATUS,7,25,201,26
+    DEFPUSHBUTTON   "OK",IDOK,158,37,50,14,NOT WS_VISIBLE
 END
 
 IDD_MACRODEBUG DIALOGEX 0, 0, 318, 146
@@ -175,15 +176,15 @@ CAPTION "About SWS Extension"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "&Close",IDCANCEL,103,126,50,14
-    CONTROL         "<a>http://www.standingwaterstudios.com/reaper/</a>",IDC_WEBSITE,
-                    "SysLink",WS_TABSTOP,7,83,241,11
-    CONTROL         "<a>http://www.standingwaterstudios.com/reaper/sws_extension.exe</a>",IDC_LATESTVER,
-                    "SysLink",WS_TABSTOP,7,110,241,11
     PUSHBUTTON      "&License...",IDC_LICENSE,202,48,46,14
     LTEXT           "Copyright (C) 2009 Tim Payne of Standing Water Studios\rCopyright (C) 2009 Xenakios\r\rDocumentation is available at the SWS website:",IDC_STATIC,7,47,187,35
     LTEXT           "Version String",IDC_VERSION,7,31,241,8
     LTEXT           "SWS Extension, a REAPER plugin.\rMerged with Xenakios Command Extensions, October 2009",IDC_STATIC,7,7,241,19
     LTEXT           "Download the latest version:",IDC_STATIC,7,98,92,9
+    CONTROL         "http://www.standingwaterstudios.com/reaper/",IDC_WEBSITE,
+                    "Button",BS_OWNERDRAW | WS_TABSTOP,7,83,241,11
+    CONTROL         "http://www.standingwaterstudios.com/reaper/sws_extension.exe",IDC_LATESTVER,
+                    "Button",BS_OWNERDRAW | WS_TABSTOP,7,111,241,11
 END
 
 IDD_PROMPT DIALOGEX 0, 0, 161, 46

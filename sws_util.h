@@ -97,7 +97,6 @@ extern bool g_bFalse;
 
 // Stuff to do in swell someday
 #ifndef _WIN32
-#define WM_KILLFOCUS 0x0BADF00D
 #define BS_MULTILINE 0
 #define _strdup strdup
 #define _strndup strndup
@@ -109,6 +108,7 @@ extern const GUID GUID_NULL;
 //sws_util.mm
 void GetDateString(int time, char* buf, int bufsize);
 void GetTimeString(int time, char* buf, int bufsize);
+void SetColumnArrows(HWND h, int iSortCol);
 int GetCustomColors();
 #endif
 // Utility functions

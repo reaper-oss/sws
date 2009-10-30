@@ -648,8 +648,8 @@ INT_PTR WINAPI doConsole(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				SetDlgItemText(hwndDlg, IDC_COMMAND, strCommand);
 				// Move the cursor to the end 
 				HWND hwndCommand = GetDlgItem(hwndDlg, IDC_COMMAND);  
-				SendMessage(hwndCommand, EM_SETSEL, 1, 2);
 				SetFocus(hwndCommand);
+				SendMessage(hwndCommand, EM_SETSEL, 1, 2);
 				command = Tokenize(strCommand, &pTrackId, &pArgs);
 				ParseTrackId(pTrackId);
 				SetDlgItemText(hwndDlg, IDC_STATUS, StatusString(command, pArgs));
@@ -779,7 +779,7 @@ static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { { 0, 'c', 0 }, "SWS: Open console" },										"SWSCONSOLE",       ConsoleCommand,  "Show SWS ReaConsole", 0 },
+	{ { { 0, 'c', 0 }, "SWS: Open console" },										"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0 },
 	{ { DEFACCEL,   "SWS: Open console and copy keystroke" },					"SWSCONSOLE2",      BringKeyCommand, NULL, },
 	{ { DEFACCEL,   "SWS: Open console with 'S' to select track(s)" },			"SWSCONSOLEEXSEL",  ConsoleCommand,  NULL, 'S' },
 	{ { DEFACCEL,   "SWS: Open console with 'n' to name track(s)" },				"SWSCONSOLENAME",   ConsoleCommand,  NULL, 'n' },
@@ -802,11 +802,24 @@ static COMMAND_T g_commandTable[] =
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
-static void menuhook(int menuid, HMENU hMenu, int flag)
+static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
-	if (menuid == MAINMENU_VIEW && flag == 0)
+	if (strcmp(menustr, "Main view") == 0 && flag == 0)
 		// Add reaconsole menu item
 		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40075);
+}
+
+static void oldmenuhook(int menuid, HMENU hmenu, int flag)
+{
+	switch (menuid)
+	{
+	case MAINMENU_VIEW:
+		menuhook("Main view", hmenu, flag);
+		break;
+	default:
+		menuhook("", hmenu, flag);
+		break;
+	}
 }
 
 int ConsoleInit()
@@ -816,8 +829,9 @@ int ConsoleInit()
 
 	SWSRegisterCommands(g_commandTable);
 
-	if (!plugin_register("hookmenu", (void*)menuhook))
-		return 0;
+	if (!plugin_register("hookcustommenu", (void*)menuhook))
+		if (!plugin_register("hookmenu", (void*)oldmenuhook))
+			return 0;
 
 	// Add custom commands
 	char cBuf[256];

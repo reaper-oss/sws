@@ -63,6 +63,7 @@ protected:
 #define TRACKLIST_FORMAT_DEFAULT "an - d (l)"
 
 int MarkerListInit();
+void MarkerListExit();
 extern MarkerList* g_curList;
 extern SWS_MarkerListWnd* pMarkerList;
 

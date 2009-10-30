@@ -69,6 +69,9 @@ static SWS_LVColumn g_cols[] = { { 25, 0, "#" }, { 250, 1, "Name" }, { 40, 0, "T
 
 SWS_TrackListView::SWS_TrackListView(HWND hwndList, HWND hwndEdit, SWS_TrackListWnd* pTrackListWnd)
 :SWS_ListView(hwndList, hwndEdit, NUM_COLS, g_cols, "TrackList View State", false), m_pTrackListWnd(pTrackListWnd)
+#ifndef _WIN32
+, m_pClickedTrack(false)
+#endif
 {
 }
 
@@ -114,10 +117,12 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol)
 	bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
 
 	MediaTrack* tr = (MediaTrack*)item;
-
+	
 	if (!tr || iCol == COL_NUM || iCol == COL_NAME || !*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 	{
 		bShift = false; // override shift
+	
+#ifdef _WIN32
 		// Update the track selections
 		m_bDisableUpdates = true;
 		for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
@@ -128,6 +133,13 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol)
 				GetSetMediaTrackInfo(trSel, "I_SELECTED", &iNewState);
 		}
 		m_bDisableUpdates = false;
+#else
+		// In SWELL the updates aren't done until the mouseUp even.  So, set some variables here and wait until we get
+		// the message; handle in OnItemSelChange below.
+		m_iClickedCol = iCol;
+		m_pClickedTrack = tr;
+		return;
+#endif
 	}
 
 	if (tr && iCol == COL_TCP || iCol == COL_MCP)
@@ -173,6 +185,35 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol)
 	else if (iCol == COL_ARM)
 		Main_OnCommand(9, 0);
 }
+
+#ifndef _WIN32
+// On mac, the selection isn't updated until the mouse button is *lifted*, so handle clicks a little later
+// but only if the selection is changing
+bool SWS_TrackListView::OnItemSelChange(LPARAM item, bool bSel)
+{
+	if (m_pClickedTrack)
+	{
+		// Update the track selections
+		// Do them all right away, don't wait for all the notifies to arrive
+		m_bDisableUpdates = true;
+		for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
+		{
+			int iNewState = ListView_GetItemState(m_hwndList, i, LVIS_SELECTED) ? 1 : 0;
+			MediaTrack* trSel =(MediaTrack*)GetListItem(i);
+			if (iNewState != *(int*)GetSetMediaTrackInfo(trSel, "I_SELECTED", NULL))
+				GetSetMediaTrackInfo(trSel, "I_SELECTED", &iNewState);
+		}
+		m_bDisableUpdates = false;
+		OnItemClk((LPARAM)m_pClickedTrack, m_iClickedCol);
+		m_pClickedTrack = NULL;
+	}
+	else // if (bSel != (*(int*)GetSetMediaTrackInfo((MediaTrack*)item, "I_SELECTED", NULL) ? true : false))
+		// OK if the listview selection was updated, but the CLICK handler doesn't want the selection
+		// to change, then redraw (with the correct selections) here.
+		m_pTrackListWnd->Update();
+	return false;
+}
+#endif
 
 int SWS_TrackListView::OnItemSort(LPARAM item1, LPARAM item2)
 {
@@ -241,7 +282,7 @@ void SWS_TrackListWnd::Update()
 	if (!IsValidWindow() || bRecurseCheck || !m_pList || m_pList->UpdatesDisabled())
 		return;
 	bRecurseCheck = true;
-
+	
 	//Update the check boxes
 	CheckDlgButton(m_hwnd, IDC_HIDE, m_bHideFiltered ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_LINK, m_bLink ? BST_CHECKED : BST_UNCHECKED);
@@ -734,7 +775,7 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 
 static COMMAND_T g_commandTable[] =
 {
-	{ { DEFACCEL, "SWS: Show Tracklist" },								"SWSTL_OPEN",		OpenTrackList,		"Show SWS Tracklist", },
+	{ { DEFACCEL, "SWS: Show Tracklist" },								"SWSTL_OPEN",		OpenTrackList,		"SWS Tracklist", },
 	{ { DEFACCEL, "SWS: Show Tracklist with filter focused" },			"SWSTL_OPENFILT",	OpenTrackListFilt,	NULL, },
 
 	// Set all bits
@@ -795,10 +836,12 @@ static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 			if (msg->wParam == VK_LEFT && !bCtrl && !bAlt && !bShift)
 			{
 				TogInTCP();
+				return 1;
 			}
 			else if (msg->wParam == VK_RIGHT && !bCtrl && !bAlt && !bShift)
 			{
 				TogInMCP();
+				return 1;
 			}
 			else if (msg->wParam == VK_DELETE && !bCtrl && !bAlt && !bShift)
 			{
@@ -823,14 +866,26 @@ static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 
 static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
-static void menuhook(int menuid, HMENU hMenu, int flag)
+static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
-	if (menuid == MAINMENU_VIEW && flag == 0)
+	if (strcmp(menustr, "Main view") == 0 && flag == 0)
 		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40075);
 	else if (flag == 1)
 		SWSCheckMenuItem(hMenu, g_commandTable[0].accel.accel.cmd, g_pList->IsValidWindow());
 }
 
+static void oldmenuhook(int menuid, HMENU hmenu, int flag)
+{
+	switch (menuid)
+	{
+	case MAINMENU_VIEW:
+		menuhook("Main view", hmenu, flag);
+		break;
+	default:
+		menuhook("", hmenu, flag);
+		break;
+	}
+}
 
 int TrackListInit()
 {
@@ -842,10 +897,16 @@ int TrackListInit()
 	SWSRegisterCommands(g_commandTable);
 	g_pCommandTable = g_commandTable;
 
-	if (!plugin_register("hookmenu", (void*)menuhook))
-		return 0;
+	if (!plugin_register("hookcustommenu", (void*)menuhook))
+		if (!plugin_register("hookmenu", (void*)oldmenuhook))
+			return 0;
 
 	g_pList = new SWS_TrackListWnd;
 
 	return 1;
+}
+
+void TrackListExit()
+{
+	delete g_pList;
 }

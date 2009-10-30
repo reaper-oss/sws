@@ -50,8 +50,6 @@
 #define IDC_CHECK1                      1023
 #define IDC_PANEDIT                     1024
 #define IDC_VOLEDIT                     1025
-#define IDC_SPIN1                       1026
-#define IDC_TIMEINTERVEDIT              1028
 #define IDC_NUMREPEDIT                  1029
 #define IDC_NOTEVALUECOMBO              1030
 #define IDC_EDIT2                       1032

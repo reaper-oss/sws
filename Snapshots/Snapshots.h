@@ -67,6 +67,7 @@ private:
 
 
 int SnapshotsInit();
+void SnapshotsExit();
 void OpenSnapshotsDialog(COMMAND_T* = NULL);
 void NewSnapshot(int iMask, bool bSelOnly);
 void NewSnapshot(COMMAND_T* = NULL);

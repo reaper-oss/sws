@@ -67,21 +67,55 @@ void SetColumnArrows(HWND h, int iSortCol)
 	}			
 }
 
-int GetCustomColors()
+int GetCustomColors(COLORREF custColors[])
 {
-	[[[NSColorPanel sharedColorPanel] valueForKey:@"_colorSwatch"] readColors];
+	NSColorPanel* cp = [NSColorPanel sharedColorPanel];
+	[[cp valueForKey:@"_colorSwatch"] readColors];
 	
 	// Get the NSColorSwatch's internal mutable array of NSColors
-	NSMutableArray *colors = [[[NSColorPanel sharedColorPanel] valueForKey:@"_colorSwatch"] valueForKey:@"colors"];
-	
-	NSEnumerator *e = [colors objectEnumerator];
-	NSColor *color;
-	while(color = [e nextObject])
+	NSMutableArray *colors = [[cp valueForKey:@"_colorSwatch"] valueForKey:@"colors"];
+	for (int i = 0; i < 16; i++)
 	{
-		if ([color colorSpace] == [NSColorSpace genericGrayColorSpace] && [color whiteComponent] == 1.0)
-			continue;
-//		[userSwatchColors addObject:color];
+		NSColor* col = [colors objectAtIndex:i*10];
+		col = [col colorUsingColorSpaceName:@"NSCalibratedRGBColorSpace"];
+		
+		custColors[i] = ((int)([col redComponent] * 255) << 16) | ((int)([col greenComponent] * 255) << 8) | (int)([col blueComponent] * 255);
 	}
 		
 	return 0;
+}
+
+@interface SWS_ColorChooser : NSObject
+{
+	bool bChose;
+}
+-(bool)isChose;
+-(void)colorPanelAction:(id)sender;
+-(bool)ChooseColor;
+@end
+
+@implementation SWS_ColorChooser
+- (void)colorPanelAction:(id)sender
+{
+	bChose = true;
+}
+-(bool)isChose { return bChose; }
+-(bool)ChooseColor
+{
+	bChose = false;
+	NSColorPanel *colorPanel = [NSColorPanel sharedColorPanel];
+	[colorPanel setTarget:self];
+	[colorPanel setAction:@selector(colorPanelAction:)];
+	[[NSApplication sharedApplication] orderFrontColorPanel:self];
+	return true;
+}
+@end
+
+bool ChooseColor(COLORREF* pColor)
+{
+	SWS_ColorChooser* cc = [SWS_ColorChooser alloc];
+	[cc ChooseColor];
+	NSColor* col = [[NSColorPanel sharedColorPanel] color];
+	*pColor = ((int)([col redComponent] * 255) << 16) | ((int)([col greenComponent] * 255) << 8) | (int)([col blueComponent] * 255);
+	return false;
 }

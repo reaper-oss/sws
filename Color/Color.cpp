@@ -38,7 +38,11 @@ static COLORREF g_crGradEnd = 0;
 
 void UpdateCustomColors()
 {
+#ifdef _WIN32
 	GetPrivateProfileStruct("REAPER", "custcolors", g_custColors, sizeof(g_custColors), get_ini_file());
+#else
+	GetCustomColors(g_custColors);
+#endif
 }
 
 bool AllBlack()
@@ -115,6 +119,12 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						if (ChooseColor(&cc))
 							bChanged = true;
 					}
+#else
+					COLORREF newcol;
+					if (ChooseColor(&newcol))
+					{
+						bChanged = true;
+					}
 #endif
 					break;
 				}
@@ -135,6 +145,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					if (wParam == IDC_SAVECOL)
 					{
 						char cFilename[512];
+						UpdateCustomColors();
 						if (BrowseForSaveFile("Save color theme", cPath, NULL, cExt, cFilename, 512))
 						{
 							char key[32];

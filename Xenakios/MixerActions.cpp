@@ -990,6 +990,11 @@ void DoLabelTraxDefault(COMMAND_T*)
 
 void DoTraxLabelPrefix(COMMAND_T*)
 {
+	if (!g_command_params.TrackLabelPrefix.size())
+	{
+		MessageBox(g_hwndParent, "Please enter a prefix in the command parameters window first.", "Missing prefix", MB_OK);
+		return;
+	}
 	vector<MediaTrack*> TheTracks;
 	XenGetProjectTracks(TheTracks,true);
 	int i;
@@ -1007,6 +1012,11 @@ void DoTraxLabelPrefix(COMMAND_T*)
 
 void DoTraxLabelSuffix(COMMAND_T*)
 {
+	if (!g_command_params.TrackLabelSuffix.size())
+	{
+		MessageBox(g_hwndParent, "Please enter a suffix in the command parameters window first.", "Missing suffix", MB_OK);
+		return;
+	}
 	vector<MediaTrack*> TheTracks;
 	XenGetProjectTracks(TheTracks,true);
 	int i;

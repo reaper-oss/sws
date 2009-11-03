@@ -31,16 +31,35 @@ using namespace std;
 
 void SplitFileNameComponents(string FullFileName,vector<string>& FNComponents)
 {
+#ifdef _WIN32
+	char cSlash = '\\';
+#else
+	char cSlash = '/';
+#endif
 	FNComponents.clear();
-	size_t LastBackSlashIndex=FullFileName.find_last_of("\\");
-	size_t LastFwsSlashIndex=FullFileName.find_first_of("/");
-	string FileNameWithExt=FullFileName.substr(LastBackSlashIndex+1,FullFileName.size()-LastBackSlashIndex);
-	string JustPathToFile=FullFileName.substr(0,LastBackSlashIndex+1);
-	size_t LastDotIndex=FileNameWithExt.find_last_of(".");
-	string JustFileName=FileNameWithExt.substr(0,LastDotIndex);
-	string JustExtension=FileNameWithExt.substr(LastDotIndex,FileNameWithExt.size());
-	size_t FirstBackSlashIndex=FullFileName.find_first_of("\\");
-	string JustDriveRoot=FullFileName.substr(0,FirstBackSlashIndex+1);
+	string FileNameWithExt;
+	string JustFileName;
+	string JustExtension;
+	string JustPathToFile;
+
+	size_t iLastSlash = FullFileName.find_last_of(cSlash);
+	if (iLastSlash != string::npos)
+	{
+		FileNameWithExt = FullFileName.substr(iLastSlash + 1);
+		JustPathToFile  = FullFileName.substr(0, iLastSlash + 1);
+	}
+	else
+		FileNameWithExt = FullFileName;
+
+	size_t iLastDot = FileNameWithExt.find_last_of(".");
+	if (iLastDot != string::npos)
+	{
+		JustExtension = FileNameWithExt.substr(iLastDot);
+		JustFileName = FileNameWithExt.substr(0, iLastDot);
+	}
+	else
+		JustFileName = FileNameWithExt;
+
 	FNComponents.push_back(JustPathToFile);
 	FNComponents.push_back(JustFileName);
 	FNComponents.push_back(JustExtension);

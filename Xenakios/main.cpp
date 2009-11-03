@@ -330,29 +330,28 @@ void DoNudgeItemsRightSecsAndConfBased(COMMAND_T*)
 
 void DoSaveMarkersAsTextFile(COMMAND_T*)
 {
-	// argh what a mess here, GOTTA make this more sensible!!!!!
-	// Looks ok to me, maybe people can just use SWS track sheet export facility instead?  TRP Oct 20 2009
+	// People can just use SWS track sheet export facility instead?  TRP Oct 20 2009
 	char OutFileName[512];
-	BrowseForSaveFile("Choose text file to save markers to", NULL, NULL, "TXT files\0*.txt\0", OutFileName, 512);
-
-	char TimeText1[32];
-
-	int x=0;
-	bool isrgn;
-	double pos, rgnend;
-	char *name;
-	int number;
-	std::ofstream os(OutFileName);
-	os << "#\tPosition\tName" << "\n";
-	while ((x=EnumProjectMarkers(x,&isrgn,&pos,&rgnend,&name,&number)))
+	if (BrowseForSaveFile("Choose text file to save markers to", NULL, NULL, "TXT files\0*.txt\0", OutFileName, 512))
 	{
-		//look_at_values; rgnend only valid if isrgn=true.
-
-		format_timestr(pos, TimeText1,25);
-		if (!isrgn)
-			os << x << "\t" << TimeText1 << "\t" << name << "\n";
-		else
-			os << x << "\t" << TimeText1 << "\t" << name << " (Region)\n";
+		char TimeText1[32];
+		int x=0;
+		bool isrgn;
+		double pos, rgnend;
+		char *name;
+		int number;
+		std::ofstream os(OutFileName);
+		if (!os)
+			return;
+		os << "#\tPosition\tName" << "\n";
+		while ((x=EnumProjectMarkers(x,&isrgn,&pos,&rgnend,&name,&number)))
+		{
+			format_timestr(pos, TimeText1,25);
+			if (!isrgn)
+				os << x << "\t" << TimeText1 << "\t" << name << "\n";
+			else
+				os << x << "\t" << TimeText1 << "\t" << name << " (Region)\n";
+		}
 	}
 }
 

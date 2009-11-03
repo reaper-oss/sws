@@ -109,7 +109,9 @@ extern const GUID GUID_NULL;
 void GetDateString(int time, char* buf, int bufsize);
 void GetTimeString(int time, char* buf, int bufsize);
 void SetColumnArrows(HWND h, int iSortCol);
-int GetCustomColors();
+int GetCustomColors(COLORREF custColors[]);
+bool ChooseColor(COLORREF* pColor);
+
 #endif
 // Utility functions
 BOOL IsCommCtrlVersion6();

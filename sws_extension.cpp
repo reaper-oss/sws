@@ -389,11 +389,6 @@ extern "C"
 			ERR_RETURN("TimeSlice init error\n")
 		}
 
-#ifndef _WIN32
-		// Debug stuff
-		GetCustomColors();
-#endif
-
 		OK_RETURN("SWS Extension successfully loaded.\n");
 	}
 };   // end extern C

@@ -124,9 +124,7 @@ void DoSetItemFadesConfLen(COMMAND_T*)
 				GetSetMediaItemInfo(CurItem,"C_FADEOUTSHAPE",&g_command_params.CommandFadeOutShapeA);
 				GetSetMediaItemInfo(CurItem,"D_FADEINLEN",&NewFadeInLen);
 				GetSetMediaItemInfo(CurItem,"D_FADEOUTLEN",&NewFadeOutLen);
-				
 			} 
-
 		}
 	}
 	Undo_OnStateChangeEx("Set item fades to configured lenghts",4,-1);
@@ -1725,19 +1723,37 @@ void DoHoldKeyTest2(COMMAND_T*)
 
 void DoInsertMediaFromClipBoard(COMMAND_T*)
 {
-	char clipstring[4096];
-	
-	if ( OpenClipboard(g_hwndParent) ) 
+	if (OpenClipboard(g_hwndParent)) 
 	{
+		char clipstring[4096] = "";
 		HANDLE hData = GetClipboardData(CF_TEXT);
-		char * buffer = (char *)GlobalLock( hData );
+		if (hData)
+		{
+			char* buffer = (char*)GlobalLock(hData);
+			lstrcpyn(clipstring,buffer,4096);
+			GlobalUnlock(hData);
+		}
+		else
+		{
+			HANDLE hData = GetClipboardData(CF_HDROP);
+			if (hData)
+			{
+				char* pFile = (char*)GlobalLock(hData);
+				pFile += *pFile;
+				int i = 0;
+				while (*pFile)
+				{
+					clipstring[i++] = *pFile;
+					pFile += 2;
+				}
 
-		//make a local copy
-		strcpy(clipstring,buffer);
-		
-		GlobalUnlock( hData );
+				GlobalUnlock(hData);
+			}
+		}
+
+		if (clipstring[0] && FileExists(clipstring))
+			InsertMedia(clipstring,0);
 		CloseClipboard();
-		InsertMedia(clipstring,0);
 	}
 }
 

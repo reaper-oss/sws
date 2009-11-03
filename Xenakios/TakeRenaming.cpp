@@ -121,76 +121,11 @@ void DoRenameSourceFileDialog666(COMMAND_T*)
 	g_renameparams.takesToRename=(int)thetakes.size();
 	g_renameparams.mode=1;
 	int i;
+	bool bChanges = false;
 	for (i=0;i<(int)thetakes.size();i++)
 	{
-		
 		PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
-		if (strcmp(thesrc->GetType(),"SECTION")!=0)
-		{
-		g_renameparams.curTakeInx=i+1;
-		string oldname;
-		oldname.assign(thesrc->GetFileName());
-		vector<string> fnsplit;
-		SplitFileNameComponents(oldname,fnsplit);
-		g_renameparams.OldFileName.assign(fnsplit[1]);
-
-		DialogBox(g_hInst,MAKEINTRESOURCE(IDD_RENAMEDLG666), g_hwndParent, (DLGPROC)RenameDlgProc);
-		if (g_renameparams.DialogRC==1)
-		{
-			break;
-		}
-		if (g_renameparams.DialogRC==0)
-		{
-			Main_OnCommand(40100,0); // offline all media
-			string newfilename;
-			newfilename.append(fnsplit[0]);
-			newfilename.append(g_renameparams.NewFileName);
-			newfilename.append(fnsplit[2]);
-			MoveFile(oldname.c_str(),newfilename.c_str());
-			AddToRenameLog(oldname,newfilename);
-			int j;
-			for (j=0;j<(int)alltakes.size();j++)
-			{
-				PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",0);
-				if (strcmp(thesrc->GetType(),"SECTION")!=0)
-				{
-					string fname;
-					fname.assign(thesrc->GetFileName());
-					if (oldname.compare(fname)==0)
-					{
-						PCM_source *newsrc=PCM_Source_CreateFromFile(newfilename.c_str());
-						GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",newsrc);
-						
-						delete thesrc;
-					}
-				}
-			}
-		}
-			Main_OnCommand(40047,0); // build any missing peaks
-			Main_OnCommand(40101,0); // online all media
-			
-			
-		}
-	}
-	UpdateTimeline();
-	Undo_OnStateChangeEx("Rename take source file (doesn't really undo file rename!!!)",4,-1);	
-}
-
-void DoRenameTakeAndSourceFileDialog(COMMAND_T*)
-{
-	vector<MediaItem_Take*> thetakes;
-	vector<MediaItem_Take*> alltakes;
-	XenGetProjectTakes(alltakes,false,false);
-	XenGetProjectTakes(thetakes,true,true);
-	if (thetakes.size()==0) return;
-	g_renameparams.takesToRename=(int)thetakes.size();
-	g_renameparams.mode=1;
-	int i;
-	for (i=0;i<(int)thetakes.size();i++)
-	{
-		
-		PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
-		if (strcmp(thesrc->GetType(),"SECTION")!=0)
+		if (strcmp(thesrc->GetType(),"SECTION")!=0 && thesrc->GetFileName() && thesrc->GetFileName()[0])
 		{
 			g_renameparams.curTakeInx=i+1;
 			string oldname;
@@ -201,9 +136,8 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T*)
 
 			DialogBox(g_hInst,MAKEINTRESOURCE(IDD_RENAMEDLG666), g_hwndParent, (DLGPROC)RenameDlgProc);
 			if (g_renameparams.DialogRC==1)
-			{
 				break;
-			}
+
 			if (g_renameparams.DialogRC==0)
 			{
 				Main_OnCommand(40100,0); // offline all media
@@ -225,11 +159,80 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T*)
 						{
 							PCM_source *newsrc=PCM_Source_CreateFromFile(newfilename.c_str());
 							GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",newsrc);
-							GetSetMediaItemTakeInfo(alltakes[j],"P_NAME",(char*)g_renameparams.NewFileName.c_str());
+							
 							delete thesrc;
 						}
 					}
 				}
+			}
+			Main_OnCommand(40047,0); // build any missing peaks
+			Main_OnCommand(40101,0); // online all media
+		}
+	}
+	if (bChanges)
+	{
+		UpdateTimeline();
+		Undo_OnStateChangeEx("Rename take source file (doesn't really undo file rename!!!)",4,-1);
+	}
+}
+
+void DoRenameTakeAndSourceFileDialog(COMMAND_T*)
+{
+	vector<MediaItem_Take*> thetakes;
+	vector<MediaItem_Take*> alltakes;
+	XenGetProjectTakes(alltakes,false,false);
+	XenGetProjectTakes(thetakes,true,true);
+	if (thetakes.size()==0) return;
+	g_renameparams.takesToRename=(int)thetakes.size();
+	g_renameparams.mode=1;
+	int i;
+	for (i=0;i<(int)thetakes.size();i++)
+	{
+		PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
+		if (strcmp(thesrc->GetType(),"SECTION")!=0)
+		{
+			char *oldtakename=(char*)GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",0);
+			g_renameparams.OldTakeName.assign(oldtakename);
+			g_renameparams.curTakeInx=i+1;
+			DialogBox(g_hInst,MAKEINTRESOURCE(IDD_RENAMEDLG666), g_hwndParent, (DLGPROC)RenameDlgProc);
+			if (g_renameparams.DialogRC==1)
+				break;
+			if (g_renameparams.DialogRC==0)
+			{
+				Main_OnCommand(40100,0); // offline all media
+				// Can only do the filename if it exists
+				if (thesrc->GetFileName() && thesrc->GetFileName()[0])
+				{
+					string oldname;
+					oldname.assign(thesrc->GetFileName());
+					vector<string> fnsplit;
+					SplitFileNameComponents(oldname,fnsplit);
+					string newfilename;
+					newfilename.append(fnsplit[0]);
+					newfilename.append(g_renameparams.NewFileName);
+					newfilename.append(fnsplit[2]);
+					MoveFile(oldname.c_str(),newfilename.c_str());
+					AddToRenameLog(oldname,newfilename);
+
+					for (int j=0;j<(int)alltakes.size();j++)
+					{
+						PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",0);
+						if (strcmp(thesrc->GetType(),"SECTION")!=0)
+						{
+							string fname;
+							fname.assign(thesrc->GetFileName());
+							if (oldname.compare(fname)==0)
+							{
+								PCM_source *newsrc=PCM_Source_CreateFromFile(newfilename.c_str());
+								GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",newsrc);
+								GetSetMediaItemTakeInfo(alltakes[j],"P_NAME",(char*)g_renameparams.NewFileName.c_str());
+								delete thesrc;
+							}
+						}
+					}
+				}
+				else
+					GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",(char*)g_renameparams.NewFileName.c_str());
 			}
 			Main_OnCommand(40047,0); // build any missing peaks
 			Main_OnCommand(40101,0); // online all media
@@ -252,8 +255,6 @@ void DoRenameTakeDialog666(COMMAND_T*)
 	int i;
 	for (i=0;i<(int)thetakes.size();i++)
 	{
-		
-		//PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
 		char *oldtakename=(char*)GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",0);
 		g_renameparams.OldTakeName.assign(oldtakename);
 		g_renameparams.curTakeInx=i+1;

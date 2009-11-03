@@ -420,6 +420,10 @@
 				RelativePath=".\uparrow.bmp"
 				>
 			</File>
+			<File
+				RelativePath=".\version.rc"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Xenakios"

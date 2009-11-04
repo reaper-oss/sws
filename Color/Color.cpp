@@ -54,11 +54,28 @@ bool AllBlack()
 	return true;
 }
 
+void PersistColors()
+{
+	char str[256];
+	sprintf(str, "%d %d", g_crGradStart, g_crGradEnd);
+	WritePrivateProfileString(SWS_INI, GRADIENT_COLOR_KEY, str, get_ini_file());
+#ifdef _WIN32
+	WritePrivateProfileStruct("REAPER", "custcolors", g_custColors, sizeof(g_custColors), get_ini_file());
+#else
+	SetCustomColors(g_custColors);
+#endif
+}
+
 INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+#ifndef _WIN32
+	static int iSettingColor = -1;
+#endif
+	
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
+			UpdateCustomColors();
 			RestoreWindowPos(hwndDlg, COLORDLG_WINDOWPOS_KEY, false);
 			return 0;
 		case WM_DRAWITEM:
@@ -78,10 +95,35 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			DeleteObject(hb);
 			return 1;
 		}
+#ifndef _WIN32
+		case WM_TIMER:
+		{
+			COLORREF cr;
+			if (iSettingColor != -1 && GetChosenColor(&cr))
+			{
+				switch (iSettingColor)
+				{	
+				case 0:
+					g_crGradStart = cr;
+					break;
+				case 1:
+					g_crGradEnd = cr;
+					break;
+				case 2:
+					UpdateCustomColors();
+					break;
+				}
+				PersistColors();
+				InvalidateRect(hwndDlg, NULL, 0);
+				KillTimer(hwndDlg, 0);
+				iSettingColor = -1;
+			}
+			break;
+		}
+#endif
 		case WM_COMMAND:
 		{
 			wParam = LOWORD(wParam);
-			bool bChanged = false;
 			switch(wParam)
 			{
 				case IDC_COLOR1:
@@ -102,7 +144,8 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						if (ChooseColor(&cc))
 						{
 							g_crGradStart = cc.rgbResult;
-							bChanged = true;
+							PersistColors();
+							RedrawWindow(hwndDlg, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 						}
 					}
 					else if (wParam == IDC_COLOR2)
@@ -111,24 +154,23 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						if (ChooseColor(&cc))
 						{
 							g_crGradEnd = cc.rgbResult;
-							bChanged = true;
+							PersistColors();
+							RedrawWindow(hwndDlg, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 						}
 					}
-					else if (wParam == IDC_SETCUST)
-					{
-						if (ChooseColor(&cc))
-							bChanged = true;
-					}
+					else if (wParam == IDC_SETCUST && ChooseColor(&cc))
+						PersistColors();
 #else
-					COLORREF newcol;
-					if (ChooseColor(&newcol))
+					switch(wParam)
 					{
-						bChanged = true;
+						case IDC_COLOR1:  iSettingColor = 0; ShowColorChooser(g_crGradStart); break;
+						case IDC_COLOR2:  iSettingColor = 1; ShowColorChooser(g_crGradEnd);   break;
+						case IDC_SETCUST: iSettingColor = 2; ShowColorChooser(g_custColors[0]); break;
 					}
+					SetTimer(hwndDlg, 0, 50, NULL);
 #endif
 					break;
 				}
-
 				case IDC_SAVECOL:
 				case IDC_LOADCOL:
 				case IDC_LOADFROMTHEME:
@@ -164,6 +206,10 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					}
 					else if (wParam == IDC_LOADCOL || wParam == IDC_LOADFROMTHEME)
 					{
+#ifndef _WIN32
+						if (MessageBox(hwndDlg, "WARNING: Loading colors from file will overwrite your global personalized color choices.  If these are important to you, press press cancel to abort the loading of new colors!", "OSX Color Load WARNING", MB_OKCANCEL) == IDCANCEL)
+							break;
+#endif
 						if (wParam == IDC_LOADCOL)
 						{
 							char* cFile = BrowseForFiles("Choose color theme file", cPath, NULL, false, cExt);
@@ -188,7 +234,12 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							}
 							g_crGradStart = GetPrivateProfileInt("SWS Color", "gradientStart", g_crGradStart, cPath);
 							g_crGradEnd   = GetPrivateProfileInt("SWS Color", "gradientEnd", g_crGradEnd, cPath);
-							bChanged = true;
+							PersistColors();
+#ifdef _WIN32
+							RedrawWindow(hwndDlg, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+#else
+							InvalidateRect(hwndDlg, NULL, 0);
+#endif							
 						}
 					}
 				}
@@ -197,29 +248,19 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					// Do something ?
 					// fall through!
 				case IDCANCEL:
+#ifndef _WIN32
+					if (iSettingColor != -1)
+					{
+						HideColorChooser();
+						KillTimer(hwndDlg, 0);
+					}
+#endif
 					SaveWindowPos(hwndDlg, COLORDLG_WINDOWPOS_KEY);
 					EndDialog(hwndDlg,0);
 					break;
 			}
-
-			if (bChanged)
-			{
-				char str[256];
-				sprintf(str, "%d %d", g_crGradStart, g_crGradEnd);
-				WritePrivateProfileString(SWS_INI, GRADIENT_COLOR_KEY, str, get_ini_file());
-				WritePrivateProfileStruct("REAPER", "custcolors", g_custColors, sizeof(g_custColors), get_ini_file());
-#ifdef _WIN32
-				RedrawWindow(hwndDlg, NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
-#else
-				InvalidateRect(hwndDlg, NULL, 0);
-#endif
-			}
-
 			return 0;
 		}
-		case WM_DESTROY:
-			// We're done
-			return 0;
 	}
 	return 0;
 }

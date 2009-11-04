@@ -37,7 +37,7 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		char cVersion[256];
 		sprintf(cVersion, "Version %d.%d.%d Build #%d, built on %s", PRODUCT_VERSION, __DATE__);
 		SetWindowText(GetDlgItem(hwndDlg, IDC_VERSION), cVersion);
-#ifdef WIN64
+#ifdef _WIN64
 		SetDlgItemText(hwndDlg, IDC_LATESTVER, "http://www.standingwaterstudios.com/reaper/reaper_sws64.dll");
 #endif
 #ifndef _WIN32

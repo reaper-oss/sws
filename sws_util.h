@@ -104,13 +104,17 @@ extern bool g_bFalse;
 #define _stricmp stricmp
 #define _strnicmp strnicmp
 #define CF_TEXT 1
+#define CF_HDROP 15
 extern const GUID GUID_NULL;
 //sws_util.mm
 void GetDateString(int time, char* buf, int bufsize);
 void GetTimeString(int time, char* buf, int bufsize);
 void SetColumnArrows(HWND h, int iSortCol);
 int GetCustomColors(COLORREF custColors[]);
-bool ChooseColor(COLORREF* pColor);
+void SetCustomColors(COLORREF custColors[]);
+void ShowColorChooser(COLORREF initialCol);
+bool GetChosenColor(COLORREF* pColor);
+void HideColorChooser();
 
 #endif
 // Utility functions
@@ -135,3 +139,4 @@ int GetTrackVis(MediaTrack* tr); // &1 == mcp, &2 == tcp
 void SetTrackVis(MediaTrack* tr, int vis); // &1 == mcp, &2 == tcp
 int AboutBoxInit(); // Not worth its own .h
 void* GetConfigVar(const char* cVar);
+HWND GetTrackWnd();

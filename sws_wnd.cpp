@@ -45,6 +45,11 @@ SWS_DockWnd::SWS_DockWnd(int iResource, const char* cName, int iDockOrder)
 {
 	screenset_register((char*)m_cName, screensetCallback, this);
 
+	m_ar.translateAccel = keyHandler;
+	m_ar.isLocal = true;
+	m_ar.user = this;
+	plugin_register("accelerator", &m_ar);
+
 	m_cWndPosKey = new char[strlen(m_cName)+8];
 	sprintf(m_cWndPosKey, "%s WndPos", m_cName);
 	m_cWndStateKey = new char[strlen(m_cName)+7];
@@ -64,6 +69,7 @@ SWS_DockWnd::~SWS_DockWnd()
 {
 	delete m_cWndPosKey;
 	delete m_cWndStateKey;
+	plugin_register("-accelerator", &m_ar);
 }
 
 void SWS_DockWnd::Show(bool bToggle, bool bActivate)
@@ -280,14 +286,19 @@ LPARAM SWS_DockWnd::screensetCallback(int action, char *id, void *param, int par
 	return 0;
 }
 
+int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
+{
+	SWS_DockWnd* p = (SWS_DockWnd*)ctx->user;
+	if (p && p->m_pList)
+		return p->m_pList->KeyHandler(msg);
+	else
+		return 0;
+}
+
 SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips)
 :m_hwndList(hwndList), m_hwndEdit(hwndEdit), m_hwndTooltip(NULL), m_iSortCol(1), m_iEditingItem(-1), m_iEditingCol(0),
  m_iCols(iCols), m_pCols(pCols), m_bDisableUpdates(false), m_cINIKey(cINIKey)
 {
-	m_ar.translateAccel = keyHandler;
-	m_ar.isLocal = true;
-	m_ar.user = this;
-	plugin_register("accelerator", &m_ar);
 
 	SetWindowLongPtr(hwndList, GWLP_USERDATA, (LONG_PTR)this);
 	SetWindowLongPtr(m_hwndEdit, GWLP_USERDATA, 0xdeadf00b);
@@ -348,7 +359,6 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 
 SWS_ListView::~SWS_ListView()
 {
-	plugin_register("-accelerator", &m_ar);
 }
 
 LPARAM SWS_ListView::GetListItem(int index)
@@ -471,6 +481,61 @@ void SWS_ListView::OnDestroy()
 		DestroyWindow(m_hwndTooltip);
 		m_hwndTooltip = NULL;
 	}
+}
+
+int SWS_ListView::KeyHandler(MSG *msg)
+{
+	if (msg->message == WM_KEYDOWN && m_iEditingItem != -1)// TODO huh? why doesn't this work?  What message is actually sending VK_ENTER? && msg->hwnd == m_hwndEdit)
+	{
+		bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
+
+		if (msg->wParam == VK_ESCAPE)
+		{
+			EditListItemEnd(false);
+			return 1;
+		}
+		else if (msg->wParam == VK_TAB)
+		{
+			int iItem = m_iEditingItem;
+			DisableUpdates(true);
+			EditListItemEnd(true, false);
+			if (!bShift)
+			{
+				if (++iItem >= ListView_GetItemCount(m_hwndList))
+					iItem = 0;
+			}
+			else
+			{
+				if (--iItem < 0)
+					iItem = ListView_GetItemCount(m_hwndList) - 1;
+			}
+			EditListItem(GetListItem(iItem), m_iEditingCol);
+			DisableUpdates(false);
+			return 1;
+		}
+		else if (msg->wParam == VK_RETURN)
+		{
+			EditListItemEnd(true);
+			return 1;
+		}
+	}
+	/* perhaps it's possible to move these keycommands from the derived classes here.
+	 * but there is specific things going on for each, so maybe not?  TODO.
+	else if (msg->hwnd == m_hwndList)
+	{
+		if (msg->wParam == VK_UP && !bCtrl && !bAlt)
+		{
+			SendMessage(hwnd, WM_COMMAND, SELPREV_MSG, 0);
+			return 1;
+		}
+		else if (msg->wParam == VK_DOWN && !bCtrl && !bAlt)
+		{
+			SendMessage(hwnd, WM_COMMAND, SELNEXT_MSG, 0);
+			return 1;
+		}
+	}
+	*/
+	return 0;
 }
 
 void SWS_ListView::Update()
@@ -771,62 +836,6 @@ void SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 	}
 	m_iEditingItem = -1;
 	ShowWindow(m_hwndEdit, SW_HIDE);
-}
-
-int SWS_ListView::keyHandler(MSG *msg, accelerator_register_t *ctx)
-{
-	SWS_ListView* lv = (SWS_ListView*)ctx->user;
-	if (msg->message == WM_KEYDOWN && lv->m_iEditingItem != -1)// TODO huh? why doesn't this work?  What message is actually sending VK_ENTER? && msg->hwnd == lv->m_hwndEdit)
-	{
-		bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
-
-		if (msg->wParam == VK_ESCAPE)
-		{
-			lv->EditListItemEnd(false);
-			return 1;
-		}
-		else if (msg->wParam == VK_TAB)
-		{
-			int iItem = lv->m_iEditingItem;
-			lv->DisableUpdates(true);
-			lv->EditListItemEnd(true, false);
-			if (!bShift)
-			{
-				if (++iItem >= ListView_GetItemCount(lv->m_hwndList))
-					iItem = 0;
-			}
-			else
-			{
-				if (--iItem < 0)
-					iItem = ListView_GetItemCount(lv->m_hwndList) - 1;
-			}
-			lv->EditListItem(lv->GetListItem(iItem), lv->m_iEditingCol);
-			lv->DisableUpdates(false);
-			return 1;
-		}
-		else if (msg->wParam == VK_RETURN)
-		{
-			lv->EditListItemEnd(true);
-			return 1;
-		}
-	}
-	/* perhaps it's possible to move these keycommands from the derived classes here.
-	 * but there is specific things going on for each, so maybe not?  TODO.
-	else if (msg->hwnd == lv->m_hwndList)
-	{
-		if (msg->wParam == VK_UP && !bCtrl && !bAlt)
-		{
-			SendMessage(hwnd, WM_COMMAND, SELPREV_MSG, 0);
-			return 1;
-		}
-		else if (msg->wParam == VK_DOWN && !bCtrl && !bAlt)
-		{
-			SendMessage(hwnd, WM_COMMAND, SELNEXT_MSG, 0);
-			return 1;
-		}
-	}
-	*/
-	return 0;
 }
 
 int SWS_ListView::OnItemSort(LPARAM item1, LPARAM item2)

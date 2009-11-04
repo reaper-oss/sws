@@ -333,3 +333,12 @@ void* GetConfigVar(const char* cVar)
 	void* v = projectconfig_var_addr(Enum_Projects(-1, NULL, 0), projectconfig_var_getoffs(cVar, &sztmp));
 	return v;
 }
+
+HWND GetTrackWnd()
+{
+#ifdef _WIN32
+	return FindWindowEx(g_hwndParent,0,"REAPERTrackListWindow","trackview");
+#else
+	return GetWindow(g_hwndParent, GW_CHILD); // Not guaranteed to work?
+#endif
+}

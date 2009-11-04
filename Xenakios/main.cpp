@@ -646,7 +646,7 @@ void DoDumpActionsWindow(COMMAND_T*)
 
 void DoScrollTVPageDown(COMMAND_T*)
 {
-	HWND hTrackView=FindWindowEx(g_hwndParent,0,"REAPERTrackListWindow","trackview");
+	HWND hTrackView=GetTrackWnd();
 	if (hTrackView) 
 	{
 		SendMessage(hTrackView,WM_VSCROLL,SB_PAGEDOWN,0);	
@@ -655,7 +655,7 @@ void DoScrollTVPageDown(COMMAND_T*)
 
 void DoScrollTVPageUp(COMMAND_T*)
 {
-	HWND hTrackView=FindWindowEx(g_hwndParent,0,"REAPERTrackListWindow","trackview");
+	HWND hTrackView=GetTrackWnd();
 	if (hTrackView) 
 	{
 		SendMessage(hTrackView,WM_VSCROLL,SB_PAGEUP,0);	
@@ -664,7 +664,7 @@ void DoScrollTVPageUp(COMMAND_T*)
 
 void DoScrollTVHome(COMMAND_T*)
 {
-	HWND hTrackView=FindWindowEx(g_hwndParent,0,"REAPERTrackListWindow","trackview");
+	HWND hTrackView=GetTrackWnd();
 	if (hTrackView) 
 	{
 		SendMessage(hTrackView,WM_VSCROLL,SB_TOP,0);	
@@ -673,7 +673,7 @@ void DoScrollTVHome(COMMAND_T*)
 
 void DoScrollTVEnd(COMMAND_T*)
 {
-	HWND hTrackView=FindWindowEx(g_hwndParent,0,"REAPERTrackListWindow","trackview");
+	HWND hTrackView=GetTrackWnd();
 	if (hTrackView) 
 	{
 		SendMessage(hTrackView,WM_VSCROLL,SB_BOTTOM,0);	

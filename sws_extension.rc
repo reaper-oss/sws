@@ -34,14 +34,13 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""afxres.h""\r\n"
-    "\0"
+    "#include ""afxres.h""\r\0"
 END
 
 3 TEXTINCLUDE 
 BEGIN
-    "\r\n"
-    "\0"
+    "#include ""version.h""\r\n"
+    "#include ""version.rc2\0"
 END
 
 #endif    // APSTUDIO_INVOKED
@@ -314,8 +313,8 @@ IDB_DOWN                BITMAP                  "downarrow.bmp"
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
-
-
+#include "version.h"
+#include "version.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

@@ -252,16 +252,11 @@ void DoUnBypassFXofSelTrax(COMMAND_T*)
 
 void DoResetTracksVolPan(COMMAND_T*)
 {
-	
 	Undo_BeginBlock();
-	MediaTrack *CurTrack;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i=0;i<GetNumTracks();i++)
 	{
-		//
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int TkSelected=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		if (TkSelected==1)
+		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
+		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
 		{
 			double NewPan=0;
 			GetSetMediaTrackInfo(CurTrack,"D_PAN",&NewPan);
@@ -269,313 +264,71 @@ void DoResetTracksVolPan(COMMAND_T*)
 			GetSetMediaTrackInfo(CurTrack,"D_VOL",&NewVol);
 		}
 	}
-	//CSurf_FlushUndo(TRUE);
 	Undo_EndBlock("Reset track volume and pan",UNDO_STATE_TRACKCFG);
 }
 
 void DoSetSymmetricalpansL2R(COMMAND_T*)
 {
-	double newPan;
-	MediaTrack* MunRaita;
-	// let's get the selected tracks
-	int* SelectedTracks;
-	SelectedTracks=new int[1024]; // geez, CAN'T be more tracks. Ever :)
-	int n=GetNumTracks();
-	
-	int flags; 
-	
-	int numselectedTracks=0;
-	int i;
-	for (i=0; i<n; i++)
+	int numselectedTracks = NumSelTracks();
+	if (numselectedTracks > 1)
 	{
-		GetTrackInfo(i,&flags);
-		if (flags & 0x02)
-		{ 
-		  SelectedTracks[numselectedTracks]=i;
-		  numselectedTracks++;
-		}
-	}
-	int seltrackID;
-	Undo_BeginBlock();
-	if (numselectedTracks>1)
-	{
-		for (i=0; i<numselectedTracks; i++)
-	
+		Undo_BeginBlock();
+		int iSel = 0;
+		for (int i=0;i<GetNumTracks();i++)
 		{
-			seltrackID=SelectedTracks[i];
-			//seltrackID=i;
-			MunRaita = CSurf_TrackFromID(seltrackID+1,TRUE); // in this case 0=Master Track	
-			newPan=-1.0+((2.0/double((numselectedTracks-1)))*double(i));
-			//newPan=-1.0+(1.0/RAND_MAX)*rand()*2.0;
-			// gotta unselect track to be panned to prevent Reaper's ganged behaviour
-			CSurf_OnSelectedChange(MunRaita, 0);
-			CSurf_OnPanChange(MunRaita,newPan,FALSE);
+			MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
+			if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
+			{
+				double newpan = -1.0+((2.0/double((numselectedTracks-1)))*double(iSel++));
+				GetSetMediaTrackInfo(CurTrack, "D_PAN", &newpan);
+			}
 		}
-	} else
-	{
-		if (numselectedTracks==1)
-		{
-		seltrackID=SelectedTracks[0];
-		//seltrackID=i;
-		MunRaita = CSurf_TrackFromID(seltrackID+1,TRUE); // in this case 0=Master Track	
-		newPan=0;
-		//newPan=-1.0+(1.0/RAND_MAX)*rand()*2.0;
-		CSurf_OnSelectedChange(MunRaita, 0);
-		CSurf_OnPanChange(MunRaita,newPan,FALSE);	
-		}
+		Undo_EndBlock("Pan tracks, left to right",0);	
 	}
-	if (numselectedTracks==0) MessageBox(g_hwndParent,"No tracks selected!","Info",MB_OK);
-	// let's restore the selected status for the tracks
-	for (i=0; i<numselectedTracks; i++)
-	{
-		seltrackID=SelectedTracks[i];
-		MunRaita = CSurf_TrackFromID(seltrackID+1,TRUE); // in this case 0=Master Track	
-		CSurf_OnSelectedChange(MunRaita, 1);	
-	}
-
-	delete[] SelectedTracks;
-	CSurf_FlushUndo(TRUE);
-	Undo_EndBlock("Pan tracks, left to right",0);	
 }
 
 
 void DoSetSymmetricalpansR2L(COMMAND_T*)
 {
-	double newPan;
-	MediaTrack* MunRaita;
-	// let's get the selected tracks
-	int* SelectedTracks;
-	SelectedTracks=new int[1024]; // geez, CAN'T be more tracks. Ever :)
-	int n=GetNumTracks();
-	
-	int flags; 
-	
-	int numselectedTracks=0;
-	int i;
-	for (i=0; i<n; i++)
+	int numselectedTracks = NumSelTracks();
+	if (numselectedTracks > 1)
 	{
-		GetTrackInfo(i,&flags);
-		if (flags & 0x02)
-		{ 
-		  SelectedTracks[numselectedTracks]=i;
-		  numselectedTracks++;
-		}
-	}
-	int seltrackID;
-	Undo_BeginBlock();
-	if (numselectedTracks>1)
-	{
-		for (i=0; i<numselectedTracks; i++)
-	
+		Undo_BeginBlock();
+		int iSel = 0;
+		for (int i=0;i<GetNumTracks();i++)
 		{
-			seltrackID=SelectedTracks[i];
-			//seltrackID=i;
-			MunRaita = CSurf_TrackFromID(seltrackID+1,TRUE); // in this case 0=Master Track	
-			newPan=1.0-((2.0/double((numselectedTracks-1)))*double(i));
-			//newPan=-1.0+(1.0/RAND_MAX)*rand()*2.0;
-			// gotta unselect track to be panned to prevent Reaper's ganged behaviour
-			CSurf_OnSelectedChange(MunRaita, 0);
-			CSurf_OnPanChange(MunRaita,newPan,FALSE);
+			MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
+			if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
+			{
+				double newpan = 1.0+((2.0/double((numselectedTracks-1)))*double(iSel++));
+				GetSetMediaTrackInfo(CurTrack, "D_PAN", &newpan);
+			}
 		}
-	} else
-	{
-		if (numselectedTracks==1)
-		{
-		seltrackID=SelectedTracks[0];
-		//seltrackID=i;
-		MunRaita = CSurf_TrackFromID(seltrackID+1,TRUE); // in this case 0=Master Track	
-		newPan=0;
-		//newPan=-1.0+(1.0/RAND_MAX)*rand()*2.0;
-		CSurf_OnSelectedChange(MunRaita, 0);
-		CSurf_OnPanChange(MunRaita,newPan,FALSE);	
-		}
+		Undo_EndBlock("Pan tracks, left to right",0);	
 	}
-	if (numselectedTracks==0) MessageBox(g_hwndParent,"No tracks selected!","Info",MB_OK);
-	// let's restore the selected status for the tracks
-	for (i=0; i<numselectedTracks; i++)
-	{
-		seltrackID=SelectedTracks[i];
-		MunRaita = CSurf_TrackFromID(seltrackID+1,TRUE); // in this case 0=Master Track	
-		CSurf_OnSelectedChange(MunRaita, 1);	
-	}
-
-	delete[] SelectedTracks;
-	CSurf_FlushUndo(TRUE);
-	Undo_EndBlock("Pan tracks, right to left",0);
 }
 
 void DoPanTracksRandom(COMMAND_T*)
 {
-	
 	Undo_BeginBlock();
-	MediaTrack *CurTrack;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i=0;i<GetNumTracks();i++)
 	{
-		//
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int TkSelected=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		if (TkSelected==1)
+		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
+		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
 		{
 			double NewPan=-1.0+(1.0/RAND_MAX)*rand()*2.0;
 			GetSetMediaTrackInfo(CurTrack,"D_PAN",&NewPan);
 		}
 	}
-	//CSurf_FlushUndo(TRUE);
 	Undo_EndBlock("Pan tracks randomly",UNDO_STATE_TRACKCFG);
-	//CSurf_FlushUndo(TRUE);
-	//Undo_OnStateChangeEx("Pan tracks randomly",UNDO_STATE_TRACKCFG,-1);
-	//UpdateTimeline();
-	/*
-	double newPan;
-	MediaTrack* MunRaita;
-	// let's get the selected tracks
-	int* SelectedTracks;
-	SelectedTracks=new int[1024]; // geez, CAN'T be more tracks. Ever :)
-	int n=GetNumTracks();
-	
-	int flags; 
-	
-	int numselectedTracks=0;
-	 
-	for (int i=0; i<n; i++)
-	{
-		GetTrackInfo(i,&flags);
-		if (flags & 0x02)
-		{ 
-		  SelectedTracks[numselectedTracks]=i;
-		  numselectedTracks++;
-		}
-	}
-	int seltrackID;
-	Undo_BeginBlock();
-	if (numselectedTracks>1)
-	{
-		for (i=0; i<numselectedTracks; i++)
-	
-		{
-			seltrackID=SelectedTracks[i];
-			//seltrackID=i;
-			MunRaita = CSurf_TrackFromID(seltrackID+1,TRUE); // in this case 0=Master Track	
-			//newPan=1.0-((2.0/double((numselectedTracks-1)))*double(i));
-			newPan=-1.0+(1.0/RAND_MAX)*rand()*2.0;
-			// gotta unselect track to be panned to prevent Reaper's ganged behaviour
-			CSurf_OnSelectedChange(MunRaita, 0);
-			CSurf_OnPanChange(MunRaita,newPan,FALSE);
-		}
-	} else
-	{
-		if (numselectedTracks==1)
-		{
-		seltrackID=SelectedTracks[0];
-		//seltrackID=i;
-		MunRaita = CSurf_TrackFromID(seltrackID+1,TRUE); // in this case 0=Master Track	
-		newPan=0;
-		newPan=-1.0+(1.0/RAND_MAX)*rand()*2.0;
-		CSurf_OnSelectedChange(MunRaita, 0);
-		CSurf_OnPanChange(MunRaita,newPan,FALSE);	
-		}
-	}
-	if (numselectedTracks==0) MessageBox(g_hwndParent,"No tracks selected!","Info",MB_OK);
-	// let's restore the selected status for the tracks
-	for (i=0; i<numselectedTracks; i++)
-	{
-		seltrackID=SelectedTracks[i];
-		MunRaita = CSurf_TrackFromID(seltrackID+1,TRUE); // in this case 0=Master Track	
-		CSurf_OnSelectedChange(MunRaita, 1);	
-	}
-
-	delete[] SelectedTracks;
-	CSurf_FlushUndo(TRUE);
-	Undo_EndBlock("Pan tracks randomly",0);	
-	*/
-
-}
-
-
-void DoSetSymmetricalpans(COMMAND_T*)
-{
-	double newPan;
-	MediaTrack* MunRaita;
-	// let's get the selected tracks
-	int* SelectedTracks;
-	SelectedTracks=new int[1024]; // geez, CAN'T be more tracks. Ever :)
-	int n=GetNumTracks();
-	
-	int flags; 
-	
-	int numselectedTracks=0;
-	int i; 
-	for (i=0; i<n; i++)
-	{
-		GetTrackInfo(i,&flags);
-		if (flags & 0x02)
-		{ 
-		  SelectedTracks[numselectedTracks]=i;
-		  numselectedTracks++;
-		}
-	}
-	int seltrackID;
-	Undo_BeginBlock();
-	if (numselectedTracks>1)
-	{
-		for (i=0; i<numselectedTracks; i++)
-	
-		{
-			seltrackID=SelectedTracks[i];
-			//seltrackID=i;
-			MunRaita = CSurf_TrackFromID(seltrackID+1,TRUE); // in this case 0=Master Track	
-			newPan=-1.0+((2.0/double((numselectedTracks-1)))*double(i));
-			//newPan=-1.0+(1.0/RAND_MAX)*rand()*2.0;
-			// gotta unselect track to be panned to prevent Reaper's ganged behaviour
-			CSurf_OnSelectedChange(MunRaita, 0);
-			CSurf_OnPanChange(MunRaita,newPan,FALSE);
-		}
-	} else
-	{
-		if (numselectedTracks==1)
-		{
-		seltrackID=SelectedTracks[0];
-		//seltrackID=i;
-		MunRaita = CSurf_TrackFromID(seltrackID+1,TRUE); // in this case 0=Master Track	
-		newPan=0;
-		//newPan=-1.0+(1.0/RAND_MAX)*rand()*2.0;
-		CSurf_OnSelectedChange(MunRaita, 0);
-		CSurf_OnPanChange(MunRaita,newPan,FALSE);	
-		}
-	}
-	if (numselectedTracks==0) MessageBox(g_hwndParent,"No tracks selected!","Info",MB_OK);
-	// let's restore the selected status for the tracks
-	for (i=0; i<numselectedTracks; i++)
-	{
-		seltrackID=SelectedTracks[i];
-		MunRaita = CSurf_TrackFromID(seltrackID+1,TRUE); // in this case 0=Master Track	
-		CSurf_OnSelectedChange(MunRaita, 1);	
-	}
-
-	delete[] SelectedTracks;
-	CSurf_FlushUndo(TRUE);
-	Undo_EndBlock("Set symmetric pans for tracks",0);
 }
 
 void DoSelRandomTrack(COMMAND_T*)
 {
 	Main_OnCommand(40297,0); // unselect all tracks
-	MediaTrack *CurTrack;
-	int n=GetNumTracks();
-	int x=rand() % n;
-	CurTrack= CSurf_TrackFromID(x+1,false);
-	CSurf_OnSelectedChange(CurTrack, 1);
-	//SetTrackSelected(CurTrack,true);
-	//for (i=0;i<x;i++)
-	//	Main_OnCommand(40285,0);
-	//
-	//
-	//CSurf_OnTrackSelection(CurTrack);
-	//SetTrackSelected(CurTrack,true);
-	//UpdateTimeline();
-	// 40285 go to next track
-	TrackList_AdjustWindows(false);
+	int x = rand() % GetNumTracks();
+	MediaTrack* tr = CSurf_TrackFromID(x+1, false);
+	GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
 }
 
 typedef struct 
@@ -588,17 +341,11 @@ vector<t_trackheight_struct> g_vec_trackheighs;
 
 void DoSelTraxHeightA(COMMAND_T*)
 {
-	
-	MediaTrack *CurTrack;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i=0;i<GetNumTracks();i++)
 	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int issel=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		if (issel==1)
-		{
+		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
+		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
 			GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",&g_command_params.TrackHeightA);
-		}
 	}
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();
@@ -606,16 +353,11 @@ void DoSelTraxHeightA(COMMAND_T*)
 
 void DoSelTraxHeightB(COMMAND_T*)
 {
-	MediaTrack *CurTrack;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i=0;i<GetNumTracks();i++)
 	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int issel=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		if (issel==1)
-		{
+		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
+		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
 			GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",&g_command_params.TrackHeightB);
-		}
 	}
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();
@@ -624,20 +366,15 @@ void DoSelTraxHeightB(COMMAND_T*)
 void DoStoreSelTraxHeights(COMMAND_T*)
 {
 	g_vec_trackheighs.clear();
-	MediaTrack *CurTrack;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i=0;i<GetNumTracks();i++)
 	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int issel=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		if (issel==1)
+		MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
+		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
 		{
-			int curhei=*(int*)GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",NULL);
-			GUID curGUID=*(GUID*)GetSetMediaTrackInfo(CurTrack,"GUID",NULL);
-			t_trackheight_struct blah;
-			blah.guid=curGUID;
-			blah.Heigth=curhei;
-			g_vec_trackheighs.push_back(blah);
+			t_trackheight_struct th;
+			th.guid=*(GUID*)GetSetMediaTrackInfo(CurTrack,"GUID",NULL);
+			th.Heigth=*(int*)GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",NULL);
+			g_vec_trackheighs.push_back(th);
 		}
 	}
 }
@@ -645,26 +382,19 @@ void DoStoreSelTraxHeights(COMMAND_T*)
 
 void DoRecallSelectedTrackHeights(COMMAND_T*)
 {
-	MediaTrack *CurTrack;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i=0;i<GetNumTracks();i++)
 	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int issel=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		GUID curGUID=*(GUID*)GetSetMediaTrackInfo(CurTrack,"GUID",NULL);
-		if (issel==1)
+		MediaTrack* CurTrack = CSurf_TrackFromID(i+1,false);
+		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
 		{
-			int j;
-			for (j=0;j<(int)g_vec_trackheighs.size();j++)
-			{
+			GUID curGUID=*(GUID*)GetSetMediaTrackInfo(CurTrack,"GUID",NULL);
+			for (int j=0;j<(int)g_vec_trackheighs.size();j++)
 				if (memcmp(&curGUID,&g_vec_trackheighs[j].guid,sizeof(GUID))==0)
-				{
 					GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",&g_vec_trackheighs[j].Heigth);	
-				}
-			}
 		}
 	}
 	TrackList_AdjustWindows(false);
+	UpdateTimeline();
 }
 
 void DoSelectTracksWithNoItems(COMMAND_T*)

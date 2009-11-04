@@ -85,37 +85,45 @@ int GetCustomColors(COLORREF custColors[])
 	return 0;
 }
 
-@interface SWS_ColorChooser : NSObject
+void SetCustomColors(COLORREF custColors[])
 {
-	bool bChose;
+	NSColorPanel* cp = [NSColorPanel sharedColorPanel];
+	[[cp valueForKey:@"_colorSwatch"] readColors];
+	
+	// Get the NSColorSwatch's internal mutable array of NSColors
+	NSMutableArray *colors = [[cp valueForKey:@"_colorSwatch"] valueForKey:@"colors"];
+	for (int i = 0; i < 16; i++)
+	{
+		NSColor* col = [NSColor colorWithCalibratedRed:(custColors[i]>>16)/255.0 green:((custColors[i]&0xFF00)>>8)/255.0 blue:(custColors[i]&0xFF)/255.0 alpha:1.0];
+		[colors replaceObjectAtIndex:i*10 withObject:col];
+	}
+	[[cp valueForKey:@"_colorSwatch"] writeColors];
 }
--(bool)isChose;
--(void)colorPanelAction:(id)sender;
--(bool)ChooseColor;
-@end
 
-@implementation SWS_ColorChooser
-- (void)colorPanelAction:(id)sender
+void ShowColorChooser(COLORREF initialCol)
 {
-	bChose = true;
-}
--(bool)isChose { return bChose; }
--(bool)ChooseColor
-{
-	bChose = false;
 	NSColorPanel *colorPanel = [NSColorPanel sharedColorPanel];
-	[colorPanel setTarget:self];
-	[colorPanel setAction:@selector(colorPanelAction:)];
-	[[NSApplication sharedApplication] orderFrontColorPanel:self];
-	return true;
+	NSColor* col = [NSColor colorWithCalibratedRed:(initialCol>>16)/255.0 green:((initialCol&0xFF00)>>8)/255.0 blue:(initialCol&0xFF)/255.0 alpha:1.0];
+	[colorPanel setColor:col];
+	[[NSApplication sharedApplication] orderFrontColorPanel:(id)g_hwndParent];
 }
-@end
 
-bool ChooseColor(COLORREF* pColor)
+bool GetChosenColor(COLORREF* pColor)
 {
-	SWS_ColorChooser* cc = [SWS_ColorChooser alloc];
-	[cc ChooseColor];
-	NSColor* col = [[NSColorPanel sharedColorPanel] color];
-	*pColor = ((int)([col redComponent] * 255) << 16) | ((int)([col greenComponent] * 255) << 8) | (int)([col blueComponent] * 255);
+	if (![[NSColorPanel sharedColorPanel] isVisible])
+	{
+		if (pColor)
+		{
+			NSColor* col = [[NSColorPanel sharedColorPanel] color];
+			col = [col colorUsingColorSpaceName:@"NSCalibratedRGBColorSpace"];
+			*pColor = ((int)([col redComponent] * 255) << 16) | ((int)([col greenComponent] * 255) << 8) | (int)([col blueComponent] * 255);
+		}
+		return true;
+	}
 	return false;
+}
+		
+void HideColorChooser()
+{
+	ShowWindow((HWND)[NSColorPanel sharedColorPanel], SW_HIDE);
 }

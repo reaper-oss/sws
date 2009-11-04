@@ -783,7 +783,7 @@ BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 		
 		g_framebuffer=new LICE_SysBitmap(r.right-r.left,r.bottom-r.top);
 
-		g_OldGraphAreaWndProc = (WNDPROC)SetWindowLongPtr(GetDlgItem(hwnd,IDC_IIENVAREA) , GWLP_WNDPROC, (LONG)EnveAreaWndProc);
+		g_OldGraphAreaWndProc = (WNDPROC)SetWindowLongPtr(GetDlgItem(hwnd,IDC_IIENVAREA), GWLP_WNDPROC, (LONG_PTR)EnveAreaWndProc);
 		IIDoPaint(GetDlgItem(hwnd,IDC_IIENVAREA));
 		InvalidateRect(hwnd,NULL,TRUE);
 		SetListViewSingleSelected(GetDlgItem(hwnd,IDC_IIACTPARLIST),g_activePropertyEnvelope);

@@ -1,11 +1,11 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SWS_Extension", "sws_extension.vcproj", "{FB45A787-C2B0-4784-A418-3429C0FBC42D}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SWS_Ext_x64", "sws_ext_x64.vcproj", "{F1A71299-1E6D-49E6-8AE1-E0CDE8E5EBD6}"
 	ProjectSection(ProjectDependencies) = postProject
-		{FB45A787-C2B0-4784-A418-3429C0FBC42D} = {FB45A787-C2B0-4784-A418-3429C0FBC42D}
+		{32B96F1E-3FE1-434B-9F50-C27F5902678E} = {32B96F1E-3FE1-434B-9F50-C27F5902678E}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SWS_VersionInc", "sws_versioninc.vcproj", "{32B96F1E-3FE1-434B-9F50-C27F5902678E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,9 +17,8 @@ Global
 		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Release|All.Build.0 = Release|Win32
 		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Test|All.ActiveCfg = Test|Win32
 		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Test|All.Build.0 = Test|Win32
-		{F1A71299-1E6D-49E6-8AE1-E0CDE8E5EBD6}.Release|All.ActiveCfg = Release|x64
-		{F1A71299-1E6D-49E6-8AE1-E0CDE8E5EBD6}.Release|All.Build.0 = Release|x64
-		{F1A71299-1E6D-49E6-8AE1-E0CDE8E5EBD6}.Test|All.ActiveCfg = Release|x64
+		{32B96F1E-3FE1-434B-9F50-C27F5902678E}.Release|All.ActiveCfg = Release|Win32
+		{32B96F1E-3FE1-434B-9F50-C27F5902678E}.Test|All.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

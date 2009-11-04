@@ -139,7 +139,7 @@ void SetVertPos(HWND hwnd, int iTrack, bool bPixels) // 1 based track index!
 
 void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 {
-	HWND hTrackView = FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", "trackview");
+	HWND hTrackView = GetTrackWnd();
 	if (!hTrackView || iNum == 0)
 		return;
 
@@ -294,7 +294,7 @@ void VertZoomSelItems(int iOthers)
 
 void HorizZoomSelItems()
 {
-	HWND hTrackView = FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", "trackview");
+	HWND hTrackView = GetTrackWnd();
 	if (!hTrackView)
 		return;
 
@@ -331,7 +331,7 @@ void HorizZoomSelItems()
 
 void CursorTo10(COMMAND_T* = NULL)
 {
-	SetHorizPos(FindWindowEx(g_hwndParent, NULL, "REAPERTrackListWindow", "trackview"), GetCursorPosition(), 0.10);
+	SetHorizPos(GetTrackWnd(), GetCursorPosition(), 0.10);
 }
 
 void ZoomToSelItems(COMMAND_T* = NULL)		{ VertZoomSelItems(0); HorizZoomSelItems(); }
@@ -357,7 +357,7 @@ public:
 	void Clear() { dVZoom = 0.0; iXPos = 0; iYPos = 0; hbTrackHeights.Resize(0, false); hbTrackVis.Resize(0, false); }
 	void Save()
 	{
-		HWND hTrackView = FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", "trackview");
+		HWND hTrackView = GetTrackWnd();
 		if (!hTrackView)
 			return;
 
@@ -384,7 +384,7 @@ public:
 
 	void Restore()
 	{
-		HWND hTrackView = FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", "trackview");
+		HWND hTrackView = GetTrackWnd();
 		if (!hTrackView || dVZoom == 0.0 || hbTrackHeights.GetSize() == 0)
 			return;
 

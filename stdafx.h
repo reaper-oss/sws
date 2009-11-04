@@ -57,6 +57,8 @@
 #include <iomanip>
 #include <string>
 
+#pragma warning(disable : 4996) // POSIX deprecation warnings
+#pragma warning(disable : 4267) // size_t to int warnings
 #include "../WDL/ptrlist.h"
 #include "../WDL/wdlstring.h"
 #include "../WDL/heapbuf.h"
@@ -65,14 +67,14 @@
 #include "../WDL/lice/lice.h"
 #include "../WDL/dirscan.h"
 #include "../WDL/win32_utf8.h"
-#pragma warning(disable : 4996) // Disables POSIX deprecation warnings
 #include "../WDL/lineparse.h"
 #pragma warning(default : 4996)
+#pragma warning(default : 4267)
 
 #include "reaper/reaper_plugin.h"
 #include "reaper/sws_rpf_wrapper.h"
 #include "sws_util.h"
 #include "sws_wnd.h"
 #include "resource.h"
-#include "Xenakios/res.h"
+#include "Xenakios/resource.h"
 #include "Xenakios/XenakiosExts.h"

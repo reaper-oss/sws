@@ -43,6 +43,7 @@ public:
 	LPARAM GetListItem(int iIndex);
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 	void OnDestroy();
+	int KeyHandler(MSG *msg);
 	void Update();
 	bool DoColumnMenu(int x, int y);
 	LPARAM GetHitItem(int x, int y, int* iCol);
@@ -80,9 +81,7 @@ private:
 	int DisplayToDataCol(int iCol);
 	int DataToDisplayCol(int iCol);
 	static int CALLBACK sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam);
-	static int keyHandler(MSG *msg, accelerator_register_t *ctx);
 
-	accelerator_register_t m_ar;
 	HWND m_hwndEdit;
 	HWND m_hwndTooltip;
 	int m_iEditingItem;
@@ -129,4 +128,6 @@ private:
 	static INT_PTR WINAPI sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	int wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static LPARAM screensetCallback(int action, char *id, void *param, int param2);
+	static int keyHandler(MSG *msg, accelerator_register_t *ctx);
+	accelerator_register_t m_ar;
 };

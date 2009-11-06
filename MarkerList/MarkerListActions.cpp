@@ -67,26 +67,46 @@ void ExportToClipboard(COMMAND_T*)
 	g_curList->ExportToClipboard(format);
 }
 
-void DeleteAllMarkers(COMMAND_T*)
+void DeleteAllMarkers()
 {
 	bool bReg;
 	int iID;
-	Undo_BeginBlock();
-	while (EnumProjectMarkers(0, &bReg, NULL, NULL, NULL, &iID))
+	int x = 0;
+	while ((x = EnumProjectMarkers(x, &bReg, NULL, NULL, NULL, &iID)))
 		if (!bReg)
+		{
 			DeleteProjectMarker(NULL, iID, false);
+			x = 0;
+		}
+}
+
+// Command version with undo point and wnd update
+void DeleteAllMarkers(COMMAND_T*)
+{
+	Undo_BeginBlock();
+	DeleteAllMarkers();
 	Undo_EndBlock("Delete all markers", UNDO_STATE_MISCCFG);
 	pMarkerList->Update();
 }
 
-void DeleteAllRegions(COMMAND_T*)
+void DeleteAllRegions()
 {
 	bool bReg;
 	int iID;
-	Undo_BeginBlock();
-	while (EnumProjectMarkers(0, &bReg, NULL, NULL, NULL, &iID))
+	int x = 0;
+	while ((x = EnumProjectMarkers(x, &bReg, NULL, NULL, NULL, &iID)))
 		if (bReg)
+		{
 			DeleteProjectMarker(NULL, iID, true);
+			x = 0;
+		}
+}
+
+// Command version with undo point and wnd update
+void DeleteAllRegions(COMMAND_T*)
+{
+	Undo_BeginBlock();
+	DeleteAllRegions();
 	Undo_EndBlock("Delete all regions", UNDO_STATE_MISCCFG);
 	pMarkerList->Update();
 }
@@ -95,26 +115,30 @@ void RenumberIds(COMMAND_T*)
 {
 	MarkerList ml(NULL, true);
 	DeleteAllMarkers();
+	int iID = 1;
 	for (int i = 0; i < ml.m_items.GetSize(); i++)
 	{
 		MarkerItem* mi = ml.m_items.Get(i);
 		if (!mi->m_bReg)
-			AddProjectMarker(NULL, false, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), i+1);
+			AddProjectMarker(NULL, false, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), iID++);
 	}
 	pMarkerList->Update();
+	UpdateTimeline();
 }
 
 void RenumberRegions(COMMAND_T*)
 {
 	MarkerList ml(NULL, true);
-	DeleteAllMarkers();
+	DeleteAllRegions();
+	int iID = 1;
 	for (int i = 0; i < ml.m_items.GetSize(); i++)
 	{
 		MarkerItem* mi = ml.m_items.Get(i);
 		if (mi->m_bReg)
-			AddProjectMarker(NULL, true, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), i+1);
+			AddProjectMarker(NULL, true, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), iID++);
 	}
 	pMarkerList->Update();
+	UpdateTimeline();
 }
 
 void SelNextRegion(COMMAND_T*)

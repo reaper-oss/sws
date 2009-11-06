@@ -39,6 +39,10 @@
 #define SWS_ENDSUBMENU ((char*)-3)
 #define MINTRACKHEIGHT 24
 #define DEFACCEL { 0, 0, 0 }
+#define UTF8_BULLET "\xE2\x80\xA2"
+#define UTF8_CIRCLE "\xE2\x97\xA6"
+#define UTF8_BOX "\xE2\x96\xA1"
+#define UTF8_BBOX "\xE2\x96\xA0"
 
 typedef struct COMMAND_T
 {

@@ -119,7 +119,7 @@ void DoTglFltItemInspector(COMMAND_T*);
 // fractions.cpp
 double parseFrac(const char *buf);
 double GetBeatValueFromTable(int indx);
-void InitFracBox(HWND hwnd,char *buf);
+void InitFracBox(HWND hwnd, const char *buf);
 
 //===========================================================
 // ItemTakeCommands.cpp

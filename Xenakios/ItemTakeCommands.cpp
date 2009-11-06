@@ -102,8 +102,6 @@ void DoMoveItemsLeftByItemLen(COMMAND_T*)
 	Undo_OnStateChangeEx("Move item back by item length", 4, -1);
 }
 
-int NumRepeatPasteRuns=0;
-
 void DoToggleTakesNormalize(COMMAND_T*)
 {
 	//
@@ -270,73 +268,75 @@ WDL_DLGRET ItemPanVolDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	return 0;
 }
 
-int LastNumRepeats=1;
-double LastTimeIntervalForPaste=1.0;
-double LastBeatIntervalForPaste=1.0;
-int LastRepeatMode=0;
-
-void PasteMultipletimes(int NumPastes,double TimeIntervalQN,int RepeatMode)
+void PasteMultipletimes(int NumPastes, double TimeIntervalQN, int RepeatMode)
 {
-	// TODO there were two versions of this code uncommented in this
-	// function.  The first looked best.  Deleted the second, but if
-	// something is amiss check SVN for the old version.  Oct 18 2009 TRP
-	if (NumPastes>0)
+	if (NumPastes > 0)
 	{
-		if (RepeatMode>0)
+		//Main_OnCommand(40698,0); // Copy?
+		int* pCursorMode = (int*)GetConfigVar("itemclickmovecurs");
+		int savedMode = *pCursorMode;
+		*pCursorMode &= ~8;
+		Undo_BeginBlock();
+
+		switch (RepeatMode)
 		{
-			Undo_BeginBlock();
-			
-			double TimeAccum=GetCursorPosition();
-			double BeatAccum=TimeMap_timeToQN(TimeAccum);
-			double OriginTimeBeats=BeatAccum;
-			double OriginTimeSecs=TimeAccum;
-			int i;
-			for (i=0;i<NumPastes;i++)
-			{
-				if (RepeatMode==1)
-				{
-					SetEditCurPos(TimeAccum, FALSE, FALSE);
+			case 0: // No gaps
+				for (int i = 0; i < NumPastes; i++)
 					Main_OnCommand(40058,0); // Paste
-					TimeAccum=OriginTimeSecs+TimeIntervalQN*(1+i);
-				}
-				if (RepeatMode==2)
+				break;
+			case 1: // Time interval
+				for (int i = 0; i < NumPastes; i++)
 				{
-					SetEditCurPos(TimeMap_QNToTime(BeatAccum), FALSE, FALSE);
 					Main_OnCommand(40058,0); // Paste
-					BeatAccum=OriginTimeBeats+TimeIntervalQN*(1+i);
+					double dNewCur = GetCursorPosition() + TimeIntervalQN;
+					SetEditCurPos(dNewCur, false, false);
 				}
-			}
-			Undo_EndBlock("Repeat Paste",0);
+				break;
+			case 2: // Beat interval
+				for (int i = 0; i < NumPastes; i++)
+				{
+					Main_OnCommand(40058,0); // Paste
+					double dCurBeatPos = TimeMap_timeToQN(GetCursorPosition());
+					SetEditCurPos(TimeMap_QNToTime(dCurBeatPos + TimeIntervalQN), false, false);
+				}
+				break;
 		}
+		Undo_EndBlock("Repeat Paste",0);
+		*pCursorMode = savedMode;
 	}
 }
 
 
-// TODO check mem alloc on JokuBuf!
-// ...and probably all the repeat paste stuff
-char *JokuBuf;
 
 WDL_DLGRET RepeatPasteDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	static double dTimeInterval = 1.0;
+	static double dBeatInterval = 1.0;
+	static char cBeatStr[50] = "1";
+	static int iNumRepeats = 1;
+	static int iRepeatMode = 0;	
+
 	switch(Message)
     {
 		case WM_INITDIALOG:
 		{
 			char TextBuf[32];
-			sprintf(TextBuf,"%.2f",LastTimeIntervalForPaste);
-			
+			sprintf(TextBuf,"%.2f", dTimeInterval);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
-			sprintf(TextBuf,"%d",LastNumRepeats);
+
+			sprintf(TextBuf,"%d", iNumRepeats);
 			SetDlgItemText(hwnd, IDC_NUMREPEDIT, TextBuf);
+			InitFracBox(GetDlgItem(hwnd, IDC_NOTEVALUECOMBO), cBeatStr);
+
 			SetFocus(GetDlgItem(hwnd, IDC_NUMREPEDIT));
 			SendMessage(GetDlgItem(hwnd, IDC_NUMREPEDIT), EM_SETSEL, 0, -1);
-			InitFracBox(GetDlgItem(hwnd, IDC_NOTEVALUECOMBO),JokuBuf);
-			if (LastRepeatMode==0)
-				CheckDlgButton(hwnd, IDC_RADIO1, BST_CHECKED);
-			else if (LastRepeatMode==1)
-				CheckDlgButton(hwnd, IDC_RADIO2, BST_CHECKED);
-			else if (LastRepeatMode==2)
-				CheckDlgButton(hwnd, IDC_RADIO3, BST_CHECKED);
+
+			switch (iRepeatMode)
+			{
+				case 0: CheckDlgButton(hwnd, IDC_RADIO1, BST_CHECKED); break;
+				case 1: CheckDlgButton(hwnd, IDC_RADIO2, BST_CHECKED); break;
+				case 2: CheckDlgButton(hwnd, IDC_RADIO3, BST_CHECKED); break;
+			}
 			break;
 		}
 		case WM_COMMAND:
@@ -344,46 +344,32 @@ WDL_DLGRET RepeatPasteDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
             {
 				case IDOK:
 				{
-					char numberBuf[100];
-					GetDlgItemText(hwnd,IDC_NUMREPEDIT,numberBuf,100);
-					int NumRepeats=atoi(numberBuf);
-					LRESULT Nappi1=IsDlgButtonChecked(hwnd, IDC_RADIO1);
-					LRESULT Nappi2=IsDlgButtonChecked(hwnd, IDC_RADIO2);
-					LRESULT Nappi3=IsDlgButtonChecked(hwnd, IDC_RADIO3);
-					if (Nappi1==BST_CHECKED) LastRepeatMode=0;
-					if (Nappi2==BST_CHECKED) LastRepeatMode=1;
-					if (Nappi3==BST_CHECKED) LastRepeatMode=2;
-					double TimeInterval;
-					double BeatInterval;
-					if (LastRepeatMode==2)
+					char str[100];
+					GetDlgItemText(hwnd, IDC_NUMREPEDIT, str, 100);
+					iNumRepeats = atoi(str);
+					
+					if (IsDlgButtonChecked(hwnd, IDC_RADIO1) == BST_CHECKED)
+						iRepeatMode = 0;
+					else if (IsDlgButtonChecked(hwnd, IDC_RADIO2) == BST_CHECKED)
+						iRepeatMode = 1;
+					else if (IsDlgButtonChecked(hwnd, IDC_RADIO3) == BST_CHECKED)
+						iRepeatMode = 2;
+
+					if (iRepeatMode == 2)
 					{
-						GetDlgItemText(hwnd,IDC_NOTEVALUECOMBO,numberBuf,100);
-						BeatInterval=parseFrac(numberBuf);
-						if (BeatInterval!=1.0) 
-						{
-							if (BeatInterval!=0)
-								JokuBuf=_strdup(numberBuf); 
-							else JokuBuf="1";
-						}
-						else
-							JokuBuf="1";
-						PasteMultipletimes(NumRepeats,BeatInterval,LastRepeatMode);
-						LastBeatIntervalForPaste=BeatInterval;
-						LastBeatIntervalForPaste=BeatInterval;
+						GetDlgItemText(hwnd, IDC_NOTEVALUECOMBO, cBeatStr, 100);
+						dBeatInterval = parseFrac(cBeatStr);
+						PasteMultipletimes(iNumRepeats, dBeatInterval, iRepeatMode);
 					}
-					else if (LastRepeatMode==1)
+					else if (iRepeatMode == 1)
 					{
-						GetDlgItemText(hwnd,IDC_EDIT1,numberBuf,100);
-						TimeInterval=atof(numberBuf);
-						PasteMultipletimes(NumRepeats,TimeInterval,LastRepeatMode);
-						LastTimeIntervalForPaste=TimeInterval;
+						GetDlgItemText(hwnd, IDC_EDIT1, str, 100);
+						dTimeInterval = atof(str);
+						PasteMultipletimes(iNumRepeats, dTimeInterval, iRepeatMode);
 					}
-					else if (LastRepeatMode==0)
-					{
-						TimeInterval=1.0;
-						PasteMultipletimes(NumRepeats,TimeInterval,LastRepeatMode);
-					}
-					LastNumRepeats=NumRepeats;
+					else if (iRepeatMode == 0)
+						PasteMultipletimes(iNumRepeats, 1.0, iRepeatMode);
+
 					EndDialog(hwnd,0);
 					break;
 				}
@@ -486,18 +472,7 @@ bool DoLaunchExternalTool(const char *ExeFilename)
 
 void DoRepeatPaste(COMMAND_T*)
 {
-	if (NumRepeatPasteRuns==0)
-	{
-		// looks like this was the only mem alloc done for the string...niiiice, a crash waiting to happen probably 
-		//JokuBuf="1";
-		// maybe this is better, maybe not. char* should be banned from use anyway, we live in 2009
-		// and there are safer and easier to understand ways available to deal with strings
-		JokuBuf=new char[64];
-		strcpy(JokuBuf,"1");
-	}
-	
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_REPEATPASTEDLG), g_hwndParent, RepeatPasteDialogProc);
-	NumRepeatPasteRuns++;
 }
 
 void DoSelectEveryNthItemOnSelectedTracks(int Step,int ItemOffset)

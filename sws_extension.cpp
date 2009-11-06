@@ -241,6 +241,7 @@ extern "C"
 		IMPAPI(Audio_RegHardwareHook);
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
+		IMPAPI(CountSelectedMediaItems);
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
 		IMPAPI(CSurf_OnMuteChange);

@@ -111,9 +111,7 @@
 #define IDC_EDITDEFAULTTRACKNAME        1123
 #define IDC_EDITTRPREFIX                1124
 #define IDC_STATIC7                     1125
-#define IDC_IIPROPERTY                  1126
 #define IDC_IIENVAREA                   1127
-#define IDC_IIENVAREA2                  1128
 #define IDC_IIACTPARLIST                1129
 #define IDC_IIRESETENV                  1130
 #define IDC_IIPLAYPROJ                  1131

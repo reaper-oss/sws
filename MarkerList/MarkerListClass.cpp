@@ -157,6 +157,7 @@ void MarkerList::UpdateReaper()
 		MarkerItem* mi = m_items.Get(i);
 		AddProjectMarker(NULL, mi->m_bReg, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), mi->m_id);
 	}
+	UpdateTimeline();
 }
 
 void MarkerList::ListToClipboard()

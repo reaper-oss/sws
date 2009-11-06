@@ -115,58 +115,19 @@ double parseFrac(const char *buf)
   return v;
 }
 
-
-
-char *fraction_strs[]=
+void InitFracBox(HWND hwnd, const char *buf)
 {
-  "1/128",
-  "1/64",
-  "1/32",
-  "1/16",
-  "1/12",
-  "1/8",
-  "1/4",
-  "1/2",
-  "1",
-  "2",
-  "4",
-  NULL
-};
+	bool bFound = false;
+	for (int x = 0; g_NoteValues[x].NotevalueStr; x ++)
+	{
+		int r = (int)SendMessage(hwnd, CB_ADDSTRING, 0, (LPARAM)g_NoteValues[x].NotevalueStr);
+		if (!bFound && !strcmp(buf,g_NoteValues[x].NotevalueStr))
+		{
+			bFound = true;
+			SendMessage(hwnd, CB_SETCURSEL, r, 0);
+		}
+	}
 
-char *notevalue_strs[]=
-{
-  "1/128",
-  "1/64",
-  "1/32",
-  "1/16",
-  "1/12",
-  "1/8",
-  "1/4",
-  "1/8",
-  "4th",
-  "2nd",
-  "1",
-  NULL
-};
-
-void InitFracBox(HWND hwnd, char *buf)
-{
-
-  int x;
-  int a=0;
-  //for (x = 0; fraction_strs[x]; x ++)
-  for (x = 0; g_NoteValues[x].NotevalueStr; x ++)
-  {
-    //int r=SendMessage(hwnd,CB_ADDSTRING,0,(LPARAM)fraction_strs[x]);
-	int r=(int)SendMessage(hwnd,CB_ADDSTRING,0,(LPARAM)g_NoteValues[x].NotevalueStr);
-    //if (!a && !strcmp(buf,fraction_strs[x]))
-	if (!a && !strcmp(buf,g_NoteValues[x].NotevalueStr))
-    {
-      a=1;
-      SendMessage(hwnd,CB_SETCURSEL,r,0);
-    }
-  }
-
-  if (!a)
-    SetWindowText(hwnd,buf);
+	if (!bFound)
+		SetWindowText(hwnd, buf);
 }

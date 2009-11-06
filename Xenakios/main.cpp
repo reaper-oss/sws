@@ -682,7 +682,6 @@ void DoScrollTVEnd(COMMAND_T*)
 
 void DoRenameMarkersWithAscendingNumbers(COMMAND_T*)
 {
-	// use this like:
 	int x=0;
 	
 	bool isrgn;
@@ -700,12 +699,6 @@ void DoRenameMarkersWithAscendingNumbers(COMMAND_T*)
 			SetProjectMarker(number,false,pos,rgnend,newmarkname);
 			j++;
 		}
-		//x++;
-		i++;
-		
-		if (i>1000) 
-			// sanity check...
-			break;
 	}
 	Undo_OnStateChangeEx("Rename markers with ascending numbers",8,-1);
 }

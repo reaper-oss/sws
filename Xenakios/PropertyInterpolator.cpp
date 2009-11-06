@@ -29,18 +29,16 @@
 
 using namespace std;
 
-#ifdef _WIN32
-// TODO OSX compatibility!  Biggest hurdle at this point is the use of checkboxes in the listview.  Should be doable at some point.
-
-LICE_SysBitmap *g_framebuffer=0;
+LICE_SysBitmap *g_framebuffer = NULL;
 
 double g_MinItemTime=0;
 double g_MaxItemTime=0;
 
-void UpdateEnabledParams();
 void PerformPropertyChanges();
 
+#ifdef _WIN32
 WNDPROC g_OldGraphAreaWndProc;
+#endif
 vector<MediaItem_Take*> g_IItakes;
 
 HWND g_hIIdlg=0;
@@ -128,9 +126,7 @@ void DrawEnvelope()
 {
 	int i;
 	RECT r;
-	GetWindowRect(GetDlgItem(g_hIIdlg,IDC_IIENVAREA),&r);
-	int GraphWidth=r.right-r.left;
-	int GraphHeigth=r.bottom-r.top;
+	GetClientRect(GetDlgItem(g_hIIdlg,IDC_IIENVAREA), &r);
 	int NodeSize=3;
 	double itemTimeRange=g_MaxItemTime-g_MinItemTime;
 	if (strcmp(g_IIproperties[g_activePropertyEnvelope].Name,"Take pitch")==0||strcmp(g_IIproperties[g_activePropertyEnvelope].Name,"Take pitch (resampled)")==0)
@@ -138,11 +134,11 @@ void DrawEnvelope()
 		double pitchGridSpacing=2.0;
 		double parRange=g_IIproperties[g_activePropertyEnvelope].MaxValue-g_IIproperties[g_activePropertyEnvelope].MinValue;
 		int numVertlines=1+(parRange/pitchGridSpacing);
-		double ycorScaler=GraphHeigth/parRange;
+		double ycorScaler=r.bottom/parRange;
 		for (i=0;i<numVertlines;i++)
 		{
 			double ycor=ycorScaler*i*pitchGridSpacing;
-			LICE_Line(g_framebuffer,0,ycor,GraphWidth,ycor,LICE_RGBA(90,90,90,255));	
+			LICE_Line(g_framebuffer,0,ycor,r.right,ycor,LICE_RGBA(90,90,90,255));	
 		}
 	}
 	for (i=0;i<(int)g_ii_storeditemstates.size();i++)
@@ -153,11 +149,11 @@ void DrawEnvelope()
 			//double itemPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",0);
 			double itemPos=g_ii_storeditemstates[i].position;
 			itemPos-=g_MinItemTime;
-			double xcor=(GraphWidth/itemTimeRange)*itemPos;
-			LICE_Line(g_framebuffer,xcor,0,xcor,GraphHeigth,LICE_RGBA(128,128,128,255));
+			double xcor=(r.right/itemTimeRange)*itemPos;
+			LICE_Line(g_framebuffer,xcor,0,xcor,r.bottom,LICE_RGBA(128,128,128,255));
 			if (strcmp(g_IIproperties[g_activePropertyEnvelope].Name,"Item position")==0)
 			{
-				double ycor=GraphHeigth-(GraphHeigth/(g_MaxItemTime-g_MinItemTime))*itemPos;
+				double ycor=r.bottom-(r.bottom/(g_MaxItemTime-g_MinItemTime))*itemPos;
 				LICE_Line(g_framebuffer,xcor-3,ycor,xcor+3,ycor,LICE_RGBA(128,128,128,255));
 			
 			}
@@ -170,16 +166,16 @@ void DrawEnvelope()
 	for (i=0;i<(int)pActiveEnvelope->size();i++)
 	{
 		double Xcor1;
-		Xcor1=GraphWidth*pActiveEnvelope->at(i).Time; // [i].Time;
+		Xcor1=r.right*pActiveEnvelope->at(i).Time; // [i].Time;
 		double Ycor1;
-		Ycor1=GraphHeigth*(1.0-pActiveEnvelope->at(i).Value); // [i].Value);
+		Ycor1=r.bottom*(1.0-pActiveEnvelope->at(i).Value); // [i].Value);
 		double Xcor2;
 		
 		double Ycor2;
 		if (i<(int)pActiveEnvelope->size()-1)
 		{
-			Xcor2=GraphWidth*pActiveEnvelope->at(i+1).Time; // [i+1].Time;
-			Ycor2=GraphHeigth*(1.0-pActiveEnvelope->at(i+1).Value); // [i+1].Value);
+			Xcor2=r.right*pActiveEnvelope->at(i+1).Time; // [i+1].Time;
+			Ycor2=r.bottom*(1.0-pActiveEnvelope->at(i+1).Value); // [i+1].Value);
 			LICE_Line(g_framebuffer, Xcor1, Ycor1, Xcor2, Ycor2, LICE_RGBA(255,255,255,255));
 			
 		}
@@ -189,8 +185,8 @@ void DrawEnvelope()
 		LICE_Line(g_framebuffer, Xcor1-NodeSize, Ycor1+NodeSize, Xcor1-NodeSize, Ycor1-NodeSize, thecolor);
 		if (i==0 && Xcor1>0)
 			LICE_Line(g_framebuffer,0,Ycor1,Xcor1,Ycor1,LICE_RGBA(255,255,255,255));
-		if (i==pActiveEnvelope->size()-1 && Xcor1<GraphWidth)
-			LICE_Line(g_framebuffer,Xcor1,Ycor1,GraphWidth,Ycor1,LICE_RGBA(255,255,255,255));
+		if (i==pActiveEnvelope->size()-1 && Xcor1 < r.right)
+			LICE_Line(g_framebuffer,Xcor1,Ycor1,r.right,Ycor1,LICE_RGBA(255,255,255,255));
 
 	}
 
@@ -198,53 +194,12 @@ void DrawEnvelope()
 
 void IIDoPaint(HWND hwndDlg)
 {
-  if (2==2)
-	//if (!g_DialogIsResizing)
-  {
-	//PAINTSTRUCT paska;
-  //HDC dc=BeginPaint(hwndDlg,&paska);
-  //SetBkColor(dc,0);
-
-	
-  //EndPaint(g_LICEDLG,&paska);
-  PAINTSTRUCT ps;
-  HDC dc = BeginPaint(hwndDlg, &ps);
-  RECT r;
-  GetClientRect(hwndDlg, &r);
-/*  
-#ifdef _WIN32
-  r.top+=00;
-  if (r.top >= r.bottom) r.top=r.bottom-1;
-#endif
-  r.bottom-=0;
-*/  
-/*
-  if (framebuffer->resize(r.right-r.left,r.bottom-r.top))
-  {
-    m_doeff=1;
-    memset(framebuffer->getBits(),0,framebuffer->getWidth()*framebuffer->getHeight()*4);
-  }
-  */
+	PAINTSTRUCT ps;
+	HDC dc = BeginPaint(hwndDlg, &ps);
 	LICE_Clear(g_framebuffer, LICE_RGBA(0,0,0,1));
-
-	//LICE_Line(g_framebuffer, 0, 0, g_framebuffer->getWidth(), g_framebuffer->getHeight(), LICE_RGBA(255,255,255,255));
-	//LICE_Copy(g_framebuffer,g_peaksbitmap);
-	//RECT srcrect;
-	//srcrect.left=0;
-	//srcrect.right=g_peaksbitmap->getWidth();
-	//srcrect.top=0;
-	//srcrect.bottom=g_peaksbitmap->getHeight();
-	//LICE_Blit(g_framebuffer, g_peaksbitmap, 0, 0, &srcrect, 0.4, 0);
 	DrawEnvelope();
-	BitBlt(dc,r.left,r.top,g_framebuffer->getWidth(),g_framebuffer->getHeight(),g_framebuffer->getDC(),0,0,SRCCOPY);
-  //      bmp->blitToDC(dc, NULL, 0, 0);
-  //char buf[50];
-  //sprintf(buf,"%d",g_RedrawCnt);
-  //SetWindowText(GetDlgItem(g_hBenderDlg,IDC_STATDBG1),buf);
-  //g_RedrawCnt++;
-  //DrawFocusRect(dc,&playcurRect);
-  EndPaint(hwndDlg, &ps);
-  }
+	BitBlt(dc,0,0,g_framebuffer->getWidth(),g_framebuffer->getHeight(),g_framebuffer->getDC(),0,0,SRCCOPY);
+	EndPaint(hwndDlg, &ps);
 }
 
 int GetHotNodeIndex(int xcor,int ycor)
@@ -254,7 +209,7 @@ int GetHotNodeIndex(int xcor,int ycor)
 	GetWindowRect(GetDlgItem(g_hIIdlg,IDC_IIENVAREA),&r);
 	int detectRange=6;
 	int GraphWidth=r.right-r.left;
-	int GraphHeigth=r.bottom-r.top;
+	int GraphHeight=abs(r.bottom-r.top);
 	RECT dlgRect;
 	GetWindowRect(g_hIIdlg,&dlgRect);
 	
@@ -265,8 +220,8 @@ int GetHotNodeIndex(int xcor,int ycor)
 	{
 		compareRECT.left=(GraphWidth*TargetEnvelope->at(i).Time)-detectRange+r.left;
 		compareRECT.right=(GraphWidth*TargetEnvelope->at(i).Time)+detectRange+r.left;
-		compareRECT.top=(GraphHeigth*(1.0-TargetEnvelope->at(i).Value))-detectRange+r.top;
-		compareRECT.bottom=(GraphHeigth*(1.0-TargetEnvelope->at(i).Value))+detectRange+r.top;
+		compareRECT.top=(GraphHeight*(1.0-TargetEnvelope->at(i).Value))-detectRange+r.top;
+		compareRECT.bottom=(GraphHeight*(1.0-TargetEnvelope->at(i).Value))+detectRange+r.top;
 		POINT pt;
 		pt.x=xcor+r.left;
 		pt.y=ycor+r.top;
@@ -282,17 +237,15 @@ int GetHotNodeIndex(int xcor,int ycor)
 void MoveNodeByCoords(int nodeIndex,int x,int y)
 {
 	RECT r;
-	GetWindowRect(GetDlgItem(g_hIIdlg,IDC_IIENVAREA),&r);
-	int GraphWidth=r.right-r.left;
-	int GraphHeigth=r.bottom-r.top;
+	GetClientRect(GetDlgItem(g_hIIdlg,IDC_IIENVAREA),&r);
 	t_interpolator_envelope *TargetEnvelope=g_IIproperties[g_activePropertyEnvelope].Envelope;
 	//if (g_CurrentBenderState.ActiveEnvelope==0) TargetEnvelope=&g_CurrentBenderState.PitchNodes;
 	//if (g_CurrentBenderState.ActiveEnvelope==1) TargetEnvelope=&g_CurrentBenderState.FormantNodes;
 
 	if (nodeIndex>=0 && nodeIndex<(int)TargetEnvelope->size())
 	{
-		double NewTime=(1.0/GraphWidth)*x;
-		double NewValue=1.0-((1.0/GraphHeigth)*y);
+		double NewTime=(1.0/r.right)*x;
+		double NewValue=1.0-((1.0/r.bottom)*y);
 		if (nodeIndex==0 && NewTime<0) NewTime=0.0;
 		if (TargetEnvelope->size()>1)
 			if (nodeIndex==0 && NewTime>=TargetEnvelope->at(1).Time) NewTime=TargetEnvelope->at(1).Time-0.001;
@@ -301,7 +254,7 @@ void MoveNodeByCoords(int nodeIndex,int x,int y)
 		if (nodeIndex>0 && nodeIndex<(int)TargetEnvelope->size()-1 && NewTime>=TargetEnvelope->at(nodeIndex+1).Time) NewTime=TargetEnvelope->at(nodeIndex+1).Time-0.001;// [nodeIndex+1].Time-0.001;
 		if (nodeIndex>0 && NewTime<=TargetEnvelope->at(nodeIndex-1).Time) NewTime=TargetEnvelope->at(nodeIndex-1).Time+0.001;
 		
-		if (nodeIndex==TargetEnvelope->size()-1 && x>=GraphWidth) NewTime=1.0;
+		if (nodeIndex==TargetEnvelope->size()-1 && x>=r.right) NewTime=1.0;
 		if (NewValue<0.0) NewValue=0.0;
 		if (NewValue>1.0) NewValue=1.0;
 		TargetEnvelope->at(nodeIndex).Time=NewTime;// [nodeIndex].Time=NewTime;
@@ -309,18 +262,15 @@ void MoveNodeByCoords(int nodeIndex,int x,int y)
 	}
 	if (TargetEnvelope->size()>1)
 		sort(TargetEnvelope->begin(),TargetEnvelope->end(),MyNodeSortFunction);
-	IIDoPaint(GetDlgItem(g_hIIdlg,IDC_IIENVAREA));
 	InvalidateRect(g_hIIdlg,NULL,FALSE);
 }
 
 int AddNodeFromCoordinates(int x,int y)
 {
 	RECT r;
-	GetWindowRect(GetDlgItem(g_hIIdlg,IDC_IIENVAREA),&r);
-	int GraphWidth=r.right-r.left;
-	int GraphHeigth=r.bottom-r.top;
-	double NewTime=((1.0/GraphWidth)*x);
-	double NewValue=1.0-((1.0/GraphHeigth)*y);
+	GetClientRect(GetDlgItem(g_hIIdlg,IDC_IIENVAREA),&r);
+	double NewTime=((1.0/r.right)*x);
+	double NewValue=1.0-((1.0/r.bottom)*y);
 	t_interpolator_envelope *TargetEnv=g_IIproperties[g_activePropertyEnvelope].Envelope;
 	//if (g_CurrentBenderState.ActiveEnvelope==0) TargetEnv=&g_CurrentBenderState.PitchNodes;
 	//if (g_CurrentBenderState.ActiveEnvelope==1) TargetEnv=&g_CurrentBenderState.FormantNodes;
@@ -329,7 +279,6 @@ int AddNodeFromCoordinates(int x,int y)
 	NewNode.Value=NewValue;
 	TargetEnv->push_back(NewNode);
 	sort(TargetEnv->begin(),TargetEnv->end(),MyNodeSortFunction);
-	IIDoPaint(GetDlgItem(g_hIIdlg,IDC_IIENVAREA));
 	InvalidateRect(g_hIIdlg,NULL,FALSE);
 	return -666;
 }	
@@ -357,12 +306,10 @@ void RecallOrigProps()
 	}
 }
 
-BOOL WINAPI EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	static bool LeftMouseBtnDown=false;
 	static bool NodeIsDragged=false;
-	static int PrevMouseX=0;
-	static int PrevMouseY=0;
 	static int HotNodeIndex=-1;
 	static HCURSOR hLinkCursor=LoadCursor(NULL, MAKEINTRESOURCE(32649));;
 	static HCURSOR hDefaultCursor=LoadCursor(NULL, IDC_ARROW);
@@ -404,7 +351,11 @@ BOOL WINAPI EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		case WM_LBUTTONDOWN:
 			{
 				SetCapture(hwnd);
+#ifdef _WIN32
 				if (wParam==MK_CONTROL + MK_LBUTTON)
+#else
+				if (wParam == MK_LBUTTON)
+#endif
 				{
 					if (HotNodeIndex>=0)
 					{
@@ -416,7 +367,6 @@ BOOL WINAPI EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 						{
 							TargetEnv->erase(TargetEnv->begin()+HotNodeIndex);
 							sort(TargetEnv->begin(),TargetEnv->end(),MyNodeSortFunction);
-							IIDoPaint(GetDlgItem(g_hIIdlg,IDC_IIENVAREA));
 							InvalidateRect(g_hIIdlg,NULL,FALSE);
 							
 						} else MessageBox(g_hIIdlg,"Cannot remove only point of envelope!","Error",MB_OK);
@@ -436,7 +386,6 @@ BOOL WINAPI EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 		case WM_LBUTTONUP:
 			{
 				RecallOrigProps();
-				UpdateEnabledParams();
 				PerformPropertyChanges();
 				ReleaseCapture();
 				HotNodeIndex=-1;
@@ -445,14 +394,14 @@ BOOL WINAPI EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				return 0;
 			}
 		case WM_PAINT:
-			{
-				IIDoPaint(hwnd);
-				//IIDoPaint(GetDlgItem(g_hIIdlg,IDC_IIENVAREA));
-				InvalidateRect(g_hIIdlg,NULL,FALSE);
-				return 0;
-			}
+			IIDoPaint(hwnd);
+			return 0;
 	}
+#ifdef _WIN32	
 	return CallWindowProc(g_OldGraphAreaWndProc, hwnd, Message, wParam, lParam);
+#else
+	return DefWindowProc(hwnd, Message, wParam, lParam);
+#endif
 }
 
 
@@ -582,7 +531,6 @@ void PerformPropertyChanges()
 			{
 				double ItemPosX=g_ii_storeditemstates[i].position-g_MinItemTime;
 				double newItemPropValueF=MinValue+((MaxValue-MinValue)*interpValue);	
-				double ItemTimeRange=g_MaxItemTime-g_MinItemTime;
 				
 				ItemPosX=g_MinItemTime+(ItemPosX*newItemPropValueF);
 				GetSetMediaItemInfo((MediaItem*)GetSetMediaItemTakeInfo(g_IItakes[i],"P_ITEM",0),"D_POSITION",&ItemPosX);
@@ -596,10 +544,7 @@ void PerformPropertyChanges()
 			if (strcmp(g_IIproperties[j].APIAccessID,"D_LENGTH")==0 && g_IIproperties[j].enabled)
 			{
 				double valRange=MaxValue-MinValue;
-				double scaler=valRange/pow(2.0,4.0);
-				//newItemPropValue=MinValue+(scaler*pow(2.0,4.0*interpValue));
 				newItemPropValue=(MinValue+valRange*interpValue)*itemLen;
-				//newItemPropValue=MinValue+((MaxValue-MinValue)*interpValue);	
 				itemLen=newItemPropValue;
 				GetSetMediaItemInfo((MediaItem*)GetSetMediaItemTakeInfo(g_IItakes[i],"P_ITEM",0),"D_LENGTH",&newItemPropValue);
 				
@@ -661,18 +606,6 @@ void PerformPropertyChanges()
 	
 }
 
-void UpdateEnabledParams()
-{
-	HWND hlist=GetDlgItem(g_hIIdlg,IDC_IIACTPARLIST);
-	int i;
-	int n=ListView_GetItemCount(hlist);
-	for (i=0;i<n;i++)
-	{
-		if (ListView_GetCheckState(hlist,i)!=0)
-			g_IIproperties[i].enabled=true; else g_IIproperties[i].enabled=false;
-	}
-}
-
 void StoreOrigProps()
 {
 	int i;
@@ -711,221 +644,193 @@ void SetListViewSingleSelected(HWND hList,int idx)
 
 BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	static bool FirstRun=true;
+	static bool FirstRun = true;
 	static bool projectPlays=false;
-	if (Message==WM_INITDIALOG)
+	static HWND hGraph;
+	switch (Message)
 	{
-		
-		g_hIIdlg=hwnd;
-		g_IItakes.clear();
-		XenGetProjectTakes(g_IItakes,true,true);
-		StoreOrigProps();
-		double MinItemTime=0;
-		double MaxItemTime=1;
-		GetActItemsMinMaxTimes(&g_MinItemTime,&g_MaxItemTime);
-		bool endofProps=false;
-		int i=0;
-		t_interpolator_envelope_node NewNode;
-		if (FirstRun)
+		case WM_INITDIALOG:
 		{
-			while (!endofProps)
+			g_hIIdlg=hwnd;
+			g_IItakes.clear();
+			XenGetProjectTakes(g_IItakes,true,true);
+			StoreOrigProps();
+			GetActItemsMinMaxTimes(&g_MinItemTime,&g_MaxItemTime);
+			t_interpolator_envelope_node NewNode;
+			if (FirstRun)
 			{
-			
-				g_IIproperties[i].Envelope=new t_interpolator_envelope;
-				NewNode.Time=0.0;
-				NewNode.Value=RealValToNormzdVal(i,g_IIproperties[i].NeutralValue);
-				g_IIproperties[i].Envelope->push_back(NewNode);
-				g_IIproperties[i].RndSpreadEnv=new t_interpolator_envelope;
-				NewNode.Time=0.0;
-				NewNode.Value=0.0;
-				g_IIproperties[i].RndSpreadEnv->push_back(NewNode);
-				//NewNode.Time=0.5;
-				//NewNode.Value=0.75;
-				//g_IIproperties[i].Envelope->push_back(NewNode);
-				NewNode.Time=1.0;
-				NewNode.Value=RealValToNormzdVal(i,g_IIproperties[i].NeutralValue);
-				g_IIproperties[i].Envelope->push_back(NewNode);
-				NewNode.Time=1.0;
-				NewNode.Value=0.0;
-				g_IIproperties[i].RndSpreadEnv->push_back(NewNode);
-				i++;
-				if (g_IIproperties[i].Name==NULL) break;
-			}
-			FirstRun=false;
-		}
-
-		WDL_UTF8_HookListView(GetDlgItem(hwnd,IDC_IIACTPARLIST));
-		LVCOLUMN col;
-		col.mask=LVCF_TEXT|LVCF_WIDTH;
-		col.cx=150;
-		col.pszText=TEXT("col1");
-		ListView_InsertColumn(GetDlgItem(hwnd,IDC_IIACTPARLIST), 0 , &col);
-		ListView_SetExtendedListViewStyleEx(GetDlgItem(hwnd,IDC_IIACTPARLIST),LVS_EX_CHECKBOXES,LVS_EX_CHECKBOXES);
-		i=0;
-		while (!endofProps)
-		{
-			SendMessage(GetDlgItem(hwnd,IDC_IIPROPERTY), CB_ADDSTRING, 0, (LPARAM)g_IIproperties[i].Name);
-			LVITEM item;
-			item.mask=LVIF_TEXT;
-			item.iItem=i;
-			item.iSubItem=0;
-			item.pszText=(g_IIproperties[i].Name);
-			ListView_InsertItem(GetDlgItem(hwnd,IDC_IIACTPARLIST),&item);
-			if (g_IIproperties[i].enabled)
-				ListView_SetCheckState(GetDlgItem(hwnd,IDC_IIACTPARLIST),i,true);
-			i++;
-			if (g_IIproperties[i].Name==NULL) break;
-		}
-		
-		RECT r;
-		GetWindowRect(GetDlgItem(hwnd,IDC_IIENVAREA),&r);
-		int GraphWidth=r.right-r.left;
-		
-		g_framebuffer=new LICE_SysBitmap(r.right-r.left,r.bottom-r.top);
-
-		g_OldGraphAreaWndProc = (WNDPROC)SetWindowLongPtr(GetDlgItem(hwnd,IDC_IIENVAREA), GWLP_WNDPROC, (LONG_PTR)EnveAreaWndProc);
-		IIDoPaint(GetDlgItem(hwnd,IDC_IIENVAREA));
-		InvalidateRect(hwnd,NULL,TRUE);
-		SetListViewSingleSelected(GetDlgItem(hwnd,IDC_IIACTPARLIST),g_activePropertyEnvelope);
-		return 0;
-
-	}
-	if (Message==WM_COMMAND && LOWORD(wParam)==IDC_IIPLAYPROJ)
-	{
-		
-		if (projectPlays)
-		{
-			projectPlays=false;
-			Main_OnCommand(1016,0); // stop project play
-			SetEditCurPos(g_MinItemTime,false,false);
-			SetWindowText(GetDlgItem(hwnd,IDC_IIPLAYPROJ),"Play");
-		} else
-		{
-			RecallOrigProps();
-			UpdateEnabledParams();
-			PerformPropertyChanges();
-			projectPlays=true;
-			SetWindowText(GetDlgItem(hwnd,IDC_IIPLAYPROJ),"Stop");
-			SetEditCurPos(g_MinItemTime,false,false);
-			Main_OnCommand(1007,0);
-
-
-		}
-		
-		return 0;
-	}
-	if (Message==WM_COMMAND && LOWORD(wParam)==IDOK)
-	{
-		UpdateEnabledParams();
-		PerformPropertyChanges();
-		Undo_OnStateChangeEx("Interpolate item properties",4,-1);
-		EndDialog(hwnd,0);
-		return 0;
-	}
-	if (Message==WM_COMMAND && LOWORD(wParam)==IDC_IIPRESETALL)
-	{
-		int i=0;
-		t_interpolator_envelope_node NewNode;
-		while (g_IIproperties[i].Name)
-		{
-			t_interpolator_envelope *TargetEnv=g_IIproperties[i].Envelope;
-			TargetEnv->clear();
-			NewNode.Time=0.0;
-			NewNode.Value=RealValToNormzdVal(i,g_IIproperties[i].NeutralValue);
-			g_IIproperties[i].Envelope->push_back(NewNode);
-			NewNode.Time=1.0;
-			NewNode.Value=RealValToNormzdVal(i,g_IIproperties[i].NeutralValue);
-			g_IIproperties[i].Envelope->push_back(NewNode);
-			i++;
-			if (i>16) break; // Sanity check failed
-
-		}
-		RecallOrigProps();
-		UpdateEnabledParams();
-		PerformPropertyChanges();
-		IIDoPaint(GetDlgItem(hwnd,IDC_IIENVAREA));
-		InvalidateRect(hwnd,NULL,FALSE);
-		return 0;
-	}
-	if (Message==WM_COMMAND && LOWORD(wParam)==IDC_IIRESETENV)
-	{
-		
-		t_interpolator_envelope *TargetEnv=g_IIproperties[g_activePropertyEnvelope].Envelope;
-		int i=0;
-		TargetEnv->clear();
-		t_interpolator_envelope_node NewNode;
-		NewNode.Time=0.0;
-		NewNode.Value=RealValToNormzdVal(g_activePropertyEnvelope,g_IIproperties[g_activePropertyEnvelope].NeutralValue);
-		g_IIproperties[g_activePropertyEnvelope].Envelope->push_back(NewNode);
-		NewNode.Time=1.0;
-		NewNode.Value=RealValToNormzdVal(g_activePropertyEnvelope,g_IIproperties[g_activePropertyEnvelope].NeutralValue);
-		g_IIproperties[g_activePropertyEnvelope].Envelope->push_back(NewNode);
-		RecallOrigProps();
-		UpdateEnabledParams();
-		PerformPropertyChanges();
-		IIDoPaint(GetDlgItem(hwnd,IDC_IIENVAREA));
-		//IIDoPaint(GetDlgItem(hwnd,IDC_IIENVAREA2));
-		InvalidateRect(hwnd,NULL,FALSE);
-		//for (i=0;i<TargetEnv->size();i++)
-		//{
-				
-		//}
-		return 0;
-	}
-	if (Message==WM_COMMAND && LOWORD(wParam)==IDCANCEL)
-	{
-		Main_OnCommand(1016,0); // stop project play
-		UpdateEnabledParams();
-		RecallOrigProps();
-		UpdateTimeline();
-		projectPlays=false;
-		
-		SetEditCurPos(g_MinItemTime,false,false);
-		EndDialog(hwnd,0);
-		return 0;
-	}
-	if (Message==WM_COMMAND && LOWORD(wParam)==IDC_IIPROPERTY && HIWORD(wParam)==CBN_SELCHANGE)
-	{
-		g_activePropertyEnvelope=SendMessage(GetDlgItem(hwnd,IDC_IIPROPERTY), CB_GETCURSEL, 0, 0);
-		IIDoPaint(GetDlgItem(hwnd,IDC_IIENVAREA));
-		InvalidateRect(hwnd,NULL,FALSE);
-		return 0;
-	}
-	if (Message==WM_NOTIFY && wParam==IDC_IIACTPARLIST)
-	{
-			NMLISTVIEW *nm=(NMLISTVIEW*)lParam;
-			if (nm->hdr.code==LVN_ITEMCHANGED)
-			{
-				if (ListView_GetSelectedCount(GetDlgItem(hwnd,IDC_IIACTPARLIST))==1)
+				for (int i = 0; g_IIproperties[i].Name; i++)
 				{
-					for (int i=0;i<ListView_GetItemCount(GetDlgItem(hwnd,IDC_IIACTPARLIST));i++)
+					g_IIproperties[i].Envelope=new t_interpolator_envelope;
+					NewNode.Time=0.0;
+					NewNode.Value=RealValToNormzdVal(i,g_IIproperties[i].NeutralValue);
+					g_IIproperties[i].Envelope->push_back(NewNode);
+					g_IIproperties[i].RndSpreadEnv=new t_interpolator_envelope;
+					NewNode.Time=0.0;
+					NewNode.Value=0.0;
+					g_IIproperties[i].RndSpreadEnv->push_back(NewNode);
+					NewNode.Time=1.0;
+					NewNode.Value=RealValToNormzdVal(i,g_IIproperties[i].NeutralValue);
+					g_IIproperties[i].Envelope->push_back(NewNode);
+					NewNode.Time=1.0;
+					NewNode.Value=0.0;
+					g_IIproperties[i].RndSpreadEnv->push_back(NewNode);
+				}
+				FirstRun=false;
+			}
+
+			HWND hList = GetDlgItem(hwnd,IDC_IIACTPARLIST);
+			WDL_UTF8_HookListView(hList);
+			ListView_SetExtendedListViewStyleEx(hList, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
+			LVCOLUMN col;
+			col.mask=LVCF_TEXT|LVCF_WIDTH;
+			col.cx=15;
+			col.pszText="";
+			ListView_InsertColumn(GetDlgItem(hwnd,IDC_IIACTPARLIST), 0 ,&col);
+			col.cx=140;
+			col.pszText="Property";
+			ListView_InsertColumn(GetDlgItem(hwnd,IDC_IIACTPARLIST), 1 ,&col);
+			for (int i = 0; g_IIproperties[i].Name; i++)
+			{
+				LVITEM item;
+				item.mask = LVIF_TEXT;
+				item.iItem = i;
+				item.iSubItem = 0;
+				item.pszText = (char*)(g_IIproperties[i].enabled ? UTF8_BULLET : UTF8_CIRCLE);
+				ListView_InsertItem(GetDlgItem(hwnd,IDC_IIACTPARLIST),&item);
+				item.iSubItem = 1;
+				item.pszText=(g_IIproperties[i].Name);
+				ListView_SetItem(GetDlgItem(hwnd,IDC_IIACTPARLIST),&item);
+			}
+			
+			RECT r;
+			GetWindowRect(GetDlgItem(hwnd,IDC_IIENVAREA), &r);
+			g_framebuffer = new LICE_SysBitmap(r.right-r.left, abs(r.bottom-r.top));
+
+#ifdef _WIN32
+			hGraph = GetDlgItem(hwnd,IDC_IIENVAREA);
+			g_OldGraphAreaWndProc = (WNDPROC)SetWindowLongPtr(hGraph, GWLP_WNDPROC, (LONG_PTR)EnveAreaWndProc);
+#else
+			hGraph = CreateDialog(0, 0, hwnd, EnveAreaWndProc);
+			SetOpaque(hGraph, true);
+			ScreenToClient(hwnd, (LPPOINT)&r);
+			ScreenToClient(hwnd, ((LPPOINT)&r)+1);
+			SetWindowPos(hGraph, HWND_TOP, r.left, r.top < r.bottom ? r.top : r.bottom, r.right-r.left, abs(r.bottom-r.top), 0);
+			ShowWindow(hGraph, SW_SHOW);
+#endif
+			InvalidateRect(hwnd,NULL,TRUE);
+			SetListViewSingleSelected(GetDlgItem(hwnd,IDC_IIACTPARLIST),g_activePropertyEnvelope);
+			break;
+		}
+		case WM_COMMAND:
+			switch (LOWORD(wParam))
+			{
+				case IDC_IIPLAYPROJ:
+					if (projectPlays)
 					{
-						UINT itemState=ListView_GetItemState(GetDlgItem(hwnd,IDC_IIACTPARLIST),i,LVIS_SELECTED);
-						if (itemState==LVIS_SELECTED)
+						projectPlays=false;
+						Main_OnCommand(1016,0); // stop project play
+						SetEditCurPos(g_MinItemTime,false,false);
+						SetWindowText(GetDlgItem(hwnd,IDC_IIPLAYPROJ),"Play");
+					}
+					else
+					{
+						RecallOrigProps();
+						PerformPropertyChanges();
+						projectPlays=true;
+						SetWindowText(GetDlgItem(hwnd,IDC_IIPLAYPROJ),"Stop");
+						SetEditCurPos(g_MinItemTime,false,false);
+						Main_OnCommand(1007,0);
+					}
+					break;
+				case IDOK:
+					PerformPropertyChanges();
+					Undo_OnStateChangeEx("Interpolate item properties",4,-1);
+					EndDialog(hwnd,0);
+					break;
+				case IDCANCEL:
+					Main_OnCommand(1016,0); // stop project play
+					RecallOrigProps();
+					UpdateTimeline();
+					projectPlays=false;
+					SetEditCurPos(g_MinItemTime,false,false);
+					EndDialog(hwnd,0);
+					break;
+				case IDC_IIPRESETALL:
+					for (int i = 0; g_IIproperties[i].Name; i++)
+					{
+						t_interpolator_envelope *TargetEnv=g_IIproperties[i].Envelope;
+						TargetEnv->clear();
+						t_interpolator_envelope_node NewNode;
+						NewNode.Time=0.0;
+						NewNode.Value=RealValToNormzdVal(i,g_IIproperties[i].NeutralValue);
+						g_IIproperties[i].Envelope->push_back(NewNode);
+						NewNode.Time=1.0;
+						NewNode.Value=RealValToNormzdVal(i,g_IIproperties[i].NeutralValue);
+						g_IIproperties[i].Envelope->push_back(NewNode);
+					}
+					RecallOrigProps();
+					PerformPropertyChanges();
+					InvalidateRect(hwnd,NULL,FALSE);
+					break;
+				case IDC_IIRESETENV:
+				{
+					t_interpolator_envelope* TargetEnv=g_IIproperties[g_activePropertyEnvelope].Envelope;
+					TargetEnv->clear();
+					t_interpolator_envelope_node NewNode;
+					NewNode.Time=0.0;
+					NewNode.Value=RealValToNormzdVal(g_activePropertyEnvelope,g_IIproperties[g_activePropertyEnvelope].NeutralValue);
+					g_IIproperties[g_activePropertyEnvelope].Envelope->push_back(NewNode);
+					NewNode.Time=1.0;
+					NewNode.Value=RealValToNormzdVal(g_activePropertyEnvelope,g_IIproperties[g_activePropertyEnvelope].NeutralValue);
+					g_IIproperties[g_activePropertyEnvelope].Envelope->push_back(NewNode);
+					RecallOrigProps();
+					PerformPropertyChanges();
+					InvalidateRect(hwnd,NULL,FALSE);
+					break;
+				}
+			}
+		case WM_NOTIFY:
+			if (wParam==IDC_IIACTPARLIST)
+			{
+				NMLISTVIEW *nm = (NMLISTVIEW*)lParam;
+				if (nm->hdr.code == LVN_ITEMCHANGED)
+				{
+					if (ListView_GetSelectedCount(GetDlgItem(hwnd,IDC_IIACTPARLIST))==1)
+					{
+						for (int i=0;i<ListView_GetItemCount(GetDlgItem(hwnd,IDC_IIACTPARLIST));i++)
 						{
-							g_activePropertyEnvelope=i;
-							IIDoPaint(GetDlgItem(hwnd,IDC_IIENVAREA));
-							InvalidateRect(hwnd,NULL,FALSE);	
+							UINT itemState=ListView_GetItemState(GetDlgItem(hwnd,IDC_IIACTPARLIST),i,LVIS_SELECTED);
+							if (itemState==LVIS_SELECTED)
+							{
+								g_activePropertyEnvelope=i;
+								InvalidateRect(hwnd,NULL,FALSE);	
+							}
 						}
 					}
 				}
+				else if (nm->hdr.code == NM_CLICK && nm->iItem >=0 && nm->iSubItem == 0)
+				{
+					g_IIproperties[nm->iItem].enabled = !g_IIproperties[nm->iItem].enabled;
+					ListView_SetItemText(GetDlgItem(g_hIIdlg, IDC_IIACTPARLIST), nm->iItem, 0, g_IIproperties[nm->iItem].enabled ? UTF8_BULLET : UTF8_CIRCLE);
+				}
 			}
-			return 0;
-	}
-	if (Message==WM_PAINT)
-	{
-		IIDoPaint(GetDlgItem(hwnd,IDC_IIENVAREA));
-		return 0;
+			break;
+//		case WM_PAINT:
+//			IIDoPaint(hGraph);
+//			break;
+		case WM_DESTROY:
+			delete g_framebuffer;
+			g_hIIdlg = NULL;
+			break;
 	}
 	return 0;
 }
-#endif
 
 void DoShowItemInterpDLG(COMMAND_T*)
 {
-#ifdef _WIN32
-	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_ITEMPROPINTERP),g_hwndParent,(DLGPROC)ItemInterpDlgProc);
-#else
-	MessageBox(g_hwndParent, "Not supported on OSX (yet), sorry!", "Unsupported", MB_OK);
-#endif
+	if (CountSelectedMediaItems(NULL) < 2)
+		MessageBox(g_hwndParent, "You must have 2 or more items selected.", "Item Interpolator Error", MB_OK);
+	else
+		DialogBox(g_hInst,MAKEINTRESOURCE(IDD_ITEMPROPINTERP),g_hwndParent,(DLGPROC)ItemInterpDlgProc);
 }

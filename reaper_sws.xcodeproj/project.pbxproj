@@ -30,6 +30,8 @@
 		22257D9C108BDC6B0058CF75 /* XenakiosExts.h in Headers */ = {isa = PBXBuildFile; fileRef = 22257D84108BDC6B0058CF75 /* XenakiosExts.h */; };
 		22257D9D108BDC6B0058CF75 /* XenQueryDlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D85108BDC6B0058CF75 /* XenQueryDlg.cpp */; };
 		22257D9E108BDC6B0058CF75 /* XenUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D86108BDC6B0058CF75 /* XenUtils.cpp */; };
+		2296249010A3A22500A1090C /* lice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2296248E10A3A22500A1090C /* lice.cpp */; };
+		2296249110A3A22500A1090C /* lice_line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2296248F10A3A22500A1090C /* lice_line.cpp */; };
 		229AC7DE108F880800E4A962 /* reaper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC7DD108F880800E4A962 /* reaper.cpp */; };
 		229AC7E6108F891700E4A962 /* ProjectMgr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC7E2108F891700E4A962 /* ProjectMgr.cpp */; };
 		229AC7E7108F891700E4A962 /* ProjectMgr.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC7E3108F891700E4A962 /* ProjectMgr.h */; };
@@ -130,6 +132,8 @@
 		22257D86108BDC6B0058CF75 /* XenUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XenUtils.cpp; path = Xenakios/XenUtils.cpp; sourceTree = "<group>"; };
 		22257D9F108BDCAC0058CF75 /* res.rc_mac_dlg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = res.rc_mac_dlg; path = Xenakios/res.rc_mac_dlg; sourceTree = "<group>"; };
 		22257DA0108BDCAC0058CF75 /* res.rc_mac_menu */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = res.rc_mac_menu; path = Xenakios/res.rc_mac_menu; sourceTree = "<group>"; };
+		2296248E10A3A22500A1090C /* lice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice.cpp; path = ../WDL/lice/lice.cpp; sourceTree = SOURCE_ROOT; };
+		2296248F10A3A22500A1090C /* lice_line.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice_line.cpp; path = ../WDL/lice/lice_line.cpp; sourceTree = SOURCE_ROOT; };
 		229AC7DD108F880800E4A962 /* reaper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = reaper.cpp; path = reaper/reaper.cpp; sourceTree = "<group>"; };
 		229AC7E2108F891700E4A962 /* ProjectMgr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ProjectMgr.cpp; sourceTree = "<group>"; };
 		229AC7E3108F891700E4A962 /* ProjectMgr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ProjectMgr.h; sourceTree = "<group>"; };
@@ -236,6 +240,8 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				2296248E10A3A22500A1090C /* lice.cpp */,
+				2296248F10A3A22500A1090C /* lice_line.cpp */,
 				98B408960F5B525200865A09 /* SWELL */,
 				981006D10F4768010072D712 /* ActiveTake.cpp */,
 				981006D70F4768010072D712 /* ActiveTake.h */,
@@ -541,6 +547,8 @@
 				229AC803108FB3BD00E4A962 /* MarkerListClass.cpp in Sources */,
 				229AC80C108FBFCB00E4A962 /* SectionLock.cpp in Sources */,
 				22B671381091DDC700C494D0 /* swell-misc.mm in Sources */,
+				2296249010A3A22500A1090C /* lice.cpp in Sources */,
+				2296249110A3A22500A1090C /* lice_line.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

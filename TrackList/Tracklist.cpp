@@ -89,19 +89,19 @@ void SWS_TrackListView::GetItemText(LPARAM item, int iCol, char* str, int iStrMa
 			lstrcpyn(str, (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), iStrMax);
 			break;
 		case COL_TCP: // TCP
-			lstrcpyn(str, GetTrackVis(tr) & 2 ? "*" : "", iStrMax);
+			lstrcpyn(str, GetTrackVis(tr) & 2 ? UTF8_BULLET : UTF8_CIRCLE, iStrMax);
 			break;
 		case COL_MCP: // MCP
-			lstrcpyn(str, GetTrackVis(tr) & 1 ? "*" : "", iStrMax);
+			lstrcpyn(str, GetTrackVis(tr) & 1 ? UTF8_BULLET : UTF8_CIRCLE, iStrMax);
 			break;
 		case COL_ARM:
-			lstrcpyn(str, *(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL) ? "*" : "", iStrMax);
+			lstrcpyn(str, *(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL) ? UTF8_BULLET : UTF8_CIRCLE, iStrMax);
 			break;
 		case COL_MUTE:
-			lstrcpyn(str, *(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL) ? "*" : "", iStrMax);
+			lstrcpyn(str, *(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL) ? UTF8_BULLET : UTF8_CIRCLE, iStrMax);
 			break;
 		case COL_SOLO:
-			lstrcpyn(str, *(int*)GetSetMediaTrackInfo(tr, "I_SOLO", NULL) ? "*" : "", iStrMax);
+			lstrcpyn(str, *(int*)GetSetMediaTrackInfo(tr, "I_SOLO", NULL) ? UTF8_BULLET : UTF8_CIRCLE, iStrMax);
 			break;
 //		case COL_INPUT:
 //			_snprintf(str, iStrMax, "%d", *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL) + 1);

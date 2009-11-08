@@ -32,8 +32,10 @@
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS/S&M: Cuetrack from track selection" }, "S&M_SENDS1", cueTrack, NULL, },
+#ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Close all I/O window(s)" }, "S&M_WNCLS1", closeRoutingWindows, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Close all envelope window(s)" }, "S&M_WNCLS2", closeEnvWindows, NULL, },
+#endif
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 1 online/offline for selected track(s)" }, "S&M_FXOFF1", toggleFXOfflineSelectedTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 2 online/offline for selected track(s)" }, "S&M_FXOFF2", toggleFXOfflineSelectedTracks, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 3 online/offline for selected track(s)" }, "S&M_FXOFF3", toggleFXOfflineSelectedTracks, NULL, 3},

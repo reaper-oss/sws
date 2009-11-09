@@ -91,6 +91,7 @@ public:
 	int m_iSel;
     WDL_PtrList<SendSnapshot> m_sends;
     WDL_PtrList<FXSnapshot> m_fx;
+	WDL_String m_sFXChain;
 };
 
 // Mask:
@@ -103,6 +104,7 @@ public:
 //#define SELONLY_MASK	0x040
 #define VIS_MASK		0x080
 #define SEL_MASK		0x100
+#define FXCHAIN_MASK	0x200
 #define ALL_MASK        0xFFF // large enough for forward compat
 
 class Snapshot

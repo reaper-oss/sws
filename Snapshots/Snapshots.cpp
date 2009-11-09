@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "../ObjectState/TrackFX.h"
 #include "SnapshotClass.h"
 #include "Snapshots.h"
 #include "../Prompt.h"
@@ -59,6 +60,8 @@ void UpdateSnapshotsDialog()
 	g_pSSWnd->Update();
 }
 
+static int g_iCustomMask = ALL_MASK;
+static int g_iMaskOverride = 0;
 static int g_iMask = ALL_MASK;
 static bool g_bSelOnly = false;
 static int g_iSavedMask;
@@ -204,6 +207,8 @@ void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol)
 	}
 
 	Snapshot* ss = (Snapshot*)item;
+
+	g_pSSWnd->m_pLastTouched = ss;
 	bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
 	bool bCtrl  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? true : false;
 	bool bAlt   = GetAsyncKeyState(VK_MENU)    & 0x8000 ? true : false;
@@ -256,11 +261,11 @@ bool SWS_SnapshotsView::OnItemSelChange(LPARAM item, bool bSel)
 }
 
 SWS_SnapshotsWnd::SWS_SnapshotsWnd()
-:SWS_DockWnd(IDD_SNAPS, "Snapshots", 30002),m_pLastTouched(NULL)
+:SWS_DockWnd(IDD_SNAPS, "Snapshots", 30002),m_pLastTouched(NULL),m_iSelType(0)
 {
 	// Restore state
 	char str[32];
-	GetPrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, "63 0 0 0 0 0", str, 32, get_ini_file());
+	GetPrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, "63 0 0 0 1 0 0", str, 32, get_ini_file());
 	LineParser lp(false);
 	if (!lp.parse(str))
 	{
@@ -270,6 +275,7 @@ SWS_SnapshotsWnd::SWS_SnapshotsWnd()
 		g_bPromptOnNew = lp.gettoken_int(3) ? true : false;
 		g_bHideNewOnRecall = lp.gettoken_int(4) ? true : false;
 		g_bSelOnly = lp.gettoken_int(5) ? true : false;
+		m_iSelType = lp.gettoken_int(6);
 	}
 	g_iSavedMask = g_iMask;
 	g_bSavedSelOnly = g_bSelOnly;
@@ -286,11 +292,14 @@ void SWS_SnapshotsWnd::Update()
 	bRecurseCheck = true;
 
 	//Update the check boxes
+	CheckDlgButton(m_hwnd, IDC_MIX,          m_iSelType == 0		? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_CURVIS,       m_iSelType == 1		? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_CUSTOM,       m_iSelType == 2		? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_VOL,          g_iMask & VOL_MASK     ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_PAN,          g_iMask & PAN_MASK     ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_MUTE,         g_iMask & MUTE_MASK    ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_SOLO,         g_iMask & SOLO_MASK    ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_FX,           g_iMask & FXATM_MASK   ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_FXCHAIN,      g_iMask & FXCHAIN_MASK ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_SENDS,        g_iMask & SENDS_MASK   ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_SELECTION,    g_iMask & SEL_MASK     ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_VISIBILITY,   g_iMask & VIS_MASK		? BST_CHECKED : BST_UNCHECKED);
@@ -298,6 +307,15 @@ void SWS_SnapshotsWnd::Update()
 	CheckDlgButton(m_hwnd, IDC_APPLYRECALL,  g_bApplyFilterOnRecall	? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_NAMEPROMPT,	 g_bPromptOnNew			? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_HIDENEW,		 g_bHideNewOnRecall		? BST_CHECKED : BST_UNCHECKED);
+
+	EnableWindow(GetDlgItem(m_hwnd, IDC_VOL), m_iSelType == 2);
+	EnableWindow(GetDlgItem(m_hwnd, IDC_PAN), m_iSelType == 2);
+	EnableWindow(GetDlgItem(m_hwnd, IDC_MUTE), m_iSelType == 2);
+	EnableWindow(GetDlgItem(m_hwnd, IDC_SOLO), m_iSelType == 2);
+	EnableWindow(GetDlgItem(m_hwnd, IDC_FXCHAIN), m_iSelType == 2);
+	EnableWindow(GetDlgItem(m_hwnd, IDC_SENDS), m_iSelType == 2);
+	EnableWindow(GetDlgItem(m_hwnd, IDC_SELECTION), m_iSelType == 2);
+	EnableWindow(GetDlgItem(m_hwnd, IDC_VISIBILITY), m_iSelType == 2);
 
 	m_pList->Update();
 
@@ -319,6 +337,9 @@ void SWS_SnapshotsWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_resize.init_item(IDC_FILTERGROUP, 1.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_MIX, 1.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_CURVIS, 1.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_CUSTOM, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_SAVE, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_PAN, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_MUTE, 1.0, 0.0, 1.0, 0.0);
@@ -326,7 +347,7 @@ void SWS_SnapshotsWnd::OnInitDlg()
 	m_resize.init_item(IDC_SELECTEDONLY, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_HELPTEXT, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_VOL, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_FX, 1.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_FXCHAIN, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_SENDS, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_VISIBILITY, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_SELECTION, 1.0, 0.0, 1.0, 0.0);
@@ -396,12 +417,15 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				Update();						
 			}
 			break;
+		case BN_CLICKED << 16 | IDC_MIX:
+		case BN_CLICKED << 16 | IDC_CURVIS:
+		case BN_CLICKED << 16 | IDC_CUSTOM:
 		case BN_CLICKED << 16 | IDC_VOL:
 		case BN_CLICKED << 16 | IDC_PAN:
 		case BN_CLICKED << 16 | IDC_MUTE:
 		case BN_CLICKED << 16 | IDC_SOLO:
 		case BN_CLICKED << 16 | IDC_SENDS:
-		case BN_CLICKED << 16 | IDC_FX:
+		case BN_CLICKED << 16 | IDC_FXCHAIN:
 		case BN_CLICKED << 16 | IDC_SELECTEDONLY:
 		case BN_CLICKED << 16 | IDC_VISIBILITY:
 		case BN_CLICKED << 16 | IDC_SELECTION:
@@ -409,6 +433,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case BN_CLICKED << 16 | IDC_NAMEPROMPT:
 		case BN_CLICKED << 16 | IDC_HIDENEW:
 			GetOptions();
+			Update();
 			break;
 		default:
 			if (wParam >= LOAD_MSG && wParam < (WPARAM)(LOAD_MSG + g_ss.Get()->m_snapshots.GetSize()))
@@ -484,13 +509,14 @@ void SWS_SnapshotsWnd::OnDestroy()
 	char str[256];
 
 	// Save window state
-	sprintf(str, "%d %d %d %d %d %d",
+	sprintf(str, "%d %d %d %d %d %d %d",
 		g_iMask,
 		g_bApplyFilterOnRecall ? 1 : 0,
 		g_bHideOptions ? 1 : 0,
 		g_bPromptOnNew ? 1 : 0,
 		g_bHideNewOnRecall ? 1 : 0,
-		g_bSelOnly ? 1 : 0);
+		g_bSelOnly ? 1 : 0,
+		m_iSelType);
 	WritePrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, str, get_ini_file());
 
 	m_pList->OnDestroy();
@@ -501,31 +527,48 @@ void SWS_SnapshotsWnd::GetOptions()
 	if (!IsValidWindow())
 		return;
 
-	g_iMask = 0;
-	if (IsDlgButtonChecked(m_hwnd, IDC_VOL) == BST_CHECKED)
-		g_iMask |= VOL_MASK;
-	if (IsDlgButtonChecked(m_hwnd, IDC_PAN) == BST_CHECKED)
-		g_iMask |= PAN_MASK;
-	if (IsDlgButtonChecked(m_hwnd, IDC_MUTE) == BST_CHECKED)
-		g_iMask |= MUTE_MASK;
-	if (IsDlgButtonChecked(m_hwnd, IDC_SOLO) == BST_CHECKED)
-		g_iMask |= SOLO_MASK;
-	if (IsDlgButtonChecked(m_hwnd, IDC_FX) == BST_CHECKED)
-		g_iMask |= FXATM_MASK;
-	if (IsDlgButtonChecked(m_hwnd, IDC_SENDS) == BST_CHECKED)
-		g_iMask |= SENDS_MASK;
-	if (IsDlgButtonChecked(m_hwnd, IDC_VISIBILITY) == BST_CHECKED)
-		g_iMask |= VIS_MASK;
-	if (IsDlgButtonChecked(m_hwnd, IDC_SELECTION) == BST_CHECKED)
-		g_iMask |= SEL_MASK;
+	if (IsDlgButtonChecked(m_hwnd, IDC_MIX) == BST_CHECKED)
+	{
+		m_iSelType = 0;
+		g_iMask = VOL_MASK | PAN_MASK | MUTE_MASK | SOLO_MASK | FXCHAIN_MASK | SENDS_MASK;
+	}
+	else if (IsDlgButtonChecked(m_hwnd, IDC_CURVIS) == BST_CHECKED)
+	{
+		m_iSelType = 1;
+		g_iMask = VIS_MASK;
+	}
+	else
+	{
+		g_iMask = 0;
+		m_iSelType = 2;
+		if (IsDlgButtonChecked(m_hwnd, IDC_VOL) == BST_CHECKED)
+			g_iMask |= VOL_MASK;
+		if (IsDlgButtonChecked(m_hwnd, IDC_PAN) == BST_CHECKED)
+			g_iMask |= PAN_MASK;
+		if (IsDlgButtonChecked(m_hwnd, IDC_MUTE) == BST_CHECKED)
+			g_iMask |= MUTE_MASK;
+		if (IsDlgButtonChecked(m_hwnd, IDC_SOLO) == BST_CHECKED)
+			g_iMask |= SOLO_MASK;
+		if (IsDlgButtonChecked(m_hwnd, IDC_FXCHAIN) == BST_CHECKED)
+			g_iMask |= FXCHAIN_MASK;
+		if (IsDlgButtonChecked(m_hwnd, IDC_SENDS) == BST_CHECKED)
+			g_iMask |= SENDS_MASK;
+		if (IsDlgButtonChecked(m_hwnd, IDC_VISIBILITY) == BST_CHECKED)
+			g_iMask |= VIS_MASK;
+		if (IsDlgButtonChecked(m_hwnd, IDC_SELECTION) == BST_CHECKED)
+			g_iMask |= SEL_MASK;
+	}
 	g_bSelOnly = IsDlgButtonChecked(m_hwnd, IDC_SELECTEDONLY) == BST_CHECKED;
+	g_bHideNewOnRecall = IsDlgButtonChecked(m_hwnd, IDC_HIDENEW) == BST_CHECKED;
 	g_bApplyFilterOnRecall = IsDlgButtonChecked(m_hwnd, IDC_APPLYRECALL) == BST_CHECKED;
 	g_bPromptOnNew = IsDlgButtonChecked(m_hwnd, IDC_NAMEPROMPT) == BST_CHECKED;
-	g_bHideNewOnRecall = IsDlgButtonChecked(m_hwnd, IDC_HIDENEW) == BST_CHECKED;
 }
 
 void SWS_SnapshotsWnd::ShowControls(bool bShow)
 {
+	ShowWindow(GetDlgItem(m_hwnd, IDC_MIX), bShow);
+	ShowWindow(GetDlgItem(m_hwnd, IDC_CURVIS), bShow);
+	ShowWindow(GetDlgItem(m_hwnd, IDC_CUSTOM), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_FILTERGROUP), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_SAVE), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_PAN), bShow);
@@ -534,7 +577,7 @@ void SWS_SnapshotsWnd::ShowControls(bool bShow)
 	ShowWindow(GetDlgItem(m_hwnd, IDC_SELECTEDONLY), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_HELPTEXT), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_VOL), bShow);
-	ShowWindow(GetDlgItem(m_hwnd, IDC_FX), bShow);
+	ShowWindow(GetDlgItem(m_hwnd, IDC_FXCHAIN), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_SENDS), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_VISIBILITY), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_SELECTION), bShow);
@@ -781,22 +824,46 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 				break;
 			if (strcmp("TRACK", lp.gettoken_str(0)) == 0)
 				s->m_tracks.Add(new TrackSnapshot(&lp));
-			else if (s->m_tracks.GetSize() && strcmp("SEND", lp.gettoken_str(0)) == 0)
-				s->m_tracks.Get(s->m_tracks.GetSize()-1)->m_sends.Add(new SendSnapshot(&lp));
-			else if (s->m_tracks.GetSize() && strcmp("FX", lp.gettoken_str(0)) == 0)
-				s->m_tracks.Get(s->m_tracks.GetSize()-1)->m_fx.Add(new FXSnapshot(&lp));
-			else if (s->m_tracks.GetSize() && strcmp("<FX", lp.gettoken_str(0)) == 0)
+			else if (s->m_tracks.GetSize())
 			{
-				FXSnapshot* fx = s->m_tracks.Get(s->m_tracks.GetSize()-1)->m_fx.Add(new FXSnapshot(&lp));
-				while(true)
-					if (!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
-					{
-						if (lp.gettoken_str(0)[0] == '>')
+				if (strcmp("SEND", lp.gettoken_str(0)) == 0)
+					s->m_tracks.Get(s->m_tracks.GetSize()-1)->m_sends.Add(new SendSnapshot(&lp));
+				else if (strcmp("FX", lp.gettoken_str(0)) == 0) // "One liner"
+					s->m_tracks.Get(s->m_tracks.GetSize()-1)->m_fx.Add(new FXSnapshot(&lp));
+				else if (strcmp("<FX", lp.gettoken_str(0)) == 0) // Multiple lines
+				{
+					FXSnapshot* fx = s->m_tracks.Get(s->m_tracks.GetSize()-1)->m_fx.Add(new FXSnapshot(&lp));
+					while(true)
+						if (!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
+						{
+							if (lp.gettoken_str(0)[0] == '>')
+								break;
+							fx->RestoreParams(lp.gettoken_str(0));
+						}
+						else
 							break;
-						fx->RestoreParams(lp.gettoken_str(0));
+				}
+				else if (strcmp("<FXCHAIN", lp.gettoken_str(0)) == 0) // Multiple lines
+				{
+					TrackSnapshot* ts = s->m_tracks.Get(s->m_tracks.GetSize()-1);
+					ts->m_sFXChain.Set("");
+					ts->m_sFXChain.Append(linebuf);
+					int iDepth = 1;
+					while(iDepth)
+					{
+						if (!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
+						{
+							if (lp.gettoken_str(0)[0] == '>')
+								iDepth--;
+							else if (lp.gettoken_str(0)[0] == '<')
+								iDepth++;
+							ts->m_sFXChain.Append("\n");
+							ts->m_sFXChain.Append(linebuf);
+						}
+						else
+							break;
 					}
-					else
-						break;
+				}
 			}
 		}
 		else
@@ -812,20 +879,36 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 	for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
 	{
-		ctx->AddLine("<SWSSNAPSHOT \"%s\" %d %d %d", g_ss.Get()->m_snapshots.Get(i)->m_cName, g_ss.Get()->m_snapshots.Get(i)->m_iSlot,
-			g_ss.Get()->m_snapshots.Get(i)->m_iMask, g_ss.Get()->m_snapshots.Get(i)->m_time); 
-		for (int j = 0; j < g_ss.Get()->m_snapshots.Get(i)->m_tracks.GetSize(); j++)
+		Snapshot* ss = g_ss.Get()->m_snapshots.Get(i);
+		ctx->AddLine("<SWSSNAPSHOT \"%s\" %d %d %d", ss->m_cName, ss->m_iSlot, ss->m_iMask, ss->m_time); 
+		for (int j = 0; j < ss->m_tracks.GetSize(); j++)
 		{
-			ctx->AddLine(g_ss.Get()->m_snapshots.Get(i)->m_tracks.Get(j)->ItemString(str, 4096));
-			for (int k = 0; k < g_ss.Get()->m_snapshots.Get(i)->m_tracks.Get(j)->m_sends.GetSize(); k++)
-				ctx->AddLine(g_ss.Get()->m_snapshots.Get(i)->m_tracks.Get(j)->m_sends.Get(k)->ItemString(str, 4096));
-			for (int k = 0; k < g_ss.Get()->m_snapshots.Get(i)->m_tracks.Get(j)->m_fx.GetSize(); k++)
+			TrackSnapshot* ts = ss->m_tracks.Get(j);
+			ctx->AddLine(ts->ItemString(str, 4096));
+			for (int k = 0; k < ts->m_sends.GetSize(); k++)
+				ctx->AddLine(ts->m_sends.Get(k)->ItemString(str, 4096));
+			for (int k = 0; k < ts->m_fx.GetSize(); k++)
 			{
 				bool bDone;
-				FXSnapshot* fx = g_ss.Get()->m_snapshots.Get(i)->m_tracks.Get(j)->m_fx.Get(k);
+				FXSnapshot* fx = ts->m_fx.Get(k);
 				do
 					ctx->AddLine(fx->ItemString(str, 4096, &bDone));
 				while (!bDone);
+			}
+			if (ts->m_sFXChain.GetLength())
+			{
+				const char* cFXString = ts->m_sFXChain.Get();
+				const char* cNewLine = strchr(cFXString, '\n');
+				while (cNewLine)
+				{
+					int iLineLen = cNewLine - cFXString;
+					strncpy(str, cFXString, iLineLen);
+					str[iLineLen] = 0;
+					ctx->AddLine(str);
+					cFXString = cNewLine+1;
+					cNewLine = strchr(cFXString, '\n');
+				}
+				ctx->AddLine(cFXString); // Add the remainder (this will always be a >)
 			}
 		}
 		ctx->AddLine(">");
@@ -857,6 +940,11 @@ static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 		else if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE)
 		{
 			SendMessage(hwnd, WM_COMMAND, DELETE_MSG, 0);
+			return 1;
+		}
+		else if (msg->message == WM_KEYDOWN && msg->wParam == VK_F2)
+		{
+			SendMessage(hwnd, WM_COMMAND, RENAME_MSG, 0);
 			return 1;
 		}
 		else if (msg->message == WM_KEYDOWN && (msg->wParam == VK_TAB || msg->wParam == VK_ESCAPE || msg->wParam == VK_DOWN || msg->wParam == VK_UP))

@@ -192,16 +192,6 @@ void DrawEnvelope()
 
 }
 
-void IIDoPaint(HWND hwndDlg)
-{
-	PAINTSTRUCT ps;
-	HDC dc = BeginPaint(hwndDlg, &ps);
-	LICE_Clear(g_framebuffer, LICE_RGBA(0,0,0,1));
-	DrawEnvelope();
-	BitBlt(dc,0,0,g_framebuffer->getWidth(),g_framebuffer->getHeight(),g_framebuffer->getDC(),0,0,SRCCOPY);
-	EndPaint(hwndDlg, &ps);
-}
-
 int GetHotNodeIndex(int xcor,int ycor)
 {
 	int i;
@@ -239,8 +229,6 @@ void MoveNodeByCoords(int nodeIndex,int x,int y)
 	RECT r;
 	GetClientRect(GetDlgItem(g_hIIdlg,IDC_IIENVAREA),&r);
 	t_interpolator_envelope *TargetEnvelope=g_IIproperties[g_activePropertyEnvelope].Envelope;
-	//if (g_CurrentBenderState.ActiveEnvelope==0) TargetEnvelope=&g_CurrentBenderState.PitchNodes;
-	//if (g_CurrentBenderState.ActiveEnvelope==1) TargetEnvelope=&g_CurrentBenderState.FormantNodes;
 
 	if (nodeIndex>=0 && nodeIndex<(int)TargetEnvelope->size())
 	{
@@ -272,8 +260,6 @@ int AddNodeFromCoordinates(int x,int y)
 	double NewTime=((1.0/r.right)*x);
 	double NewValue=1.0-((1.0/r.bottom)*y);
 	t_interpolator_envelope *TargetEnv=g_IIproperties[g_activePropertyEnvelope].Envelope;
-	//if (g_CurrentBenderState.ActiveEnvelope==0) TargetEnv=&g_CurrentBenderState.PitchNodes;
-	//if (g_CurrentBenderState.ActiveEnvelope==1) TargetEnv=&g_CurrentBenderState.FormantNodes;
 	t_interpolator_envelope_node NewNode;
 	NewNode.Time=NewTime;
 	NewNode.Value=NewValue;
@@ -308,94 +294,74 @@ void RecallOrigProps()
 
 LRESULT CALLBACK EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	static bool LeftMouseBtnDown=false;
-	static bool NodeIsDragged=false;
-	static int HotNodeIndex=-1;
-	static HCURSOR hLinkCursor=LoadCursor(NULL, MAKEINTRESOURCE(32649));;
-	static HCURSOR hDefaultCursor=LoadCursor(NULL, IDC_ARROW);
+	static bool LeftMouseBtnDown = false;
+	static int HotNodeIndex = -1;
+	static HCURSOR hLinkCursor    = LoadCursor(NULL, MAKEINTRESOURCE(32649));;
+	static HCURSOR hDefaultCursor = LoadCursor(NULL, IDC_ARROW);
 	switch (Message)
 	{
-		case WM_INITDIALOG:
-			{
-				return 0;
-			}
 		case WM_MOUSEMOVE:
-			{
-				int mouseX=GET_X_LPARAM(lParam);
-				int mouseY=GET_Y_LPARAM(lParam);
-				if (!LeftMouseBtnDown)
-				{
-					HotNodeIndex=GetHotNodeIndex(mouseX,mouseY);
-					if (HotNodeIndex>=0)
-					{
-						//NodeIsDragged=true;
-					}
-				}
-				if (LeftMouseBtnDown)
-				{
-					if (HotNodeIndex>=0)
-					{
-						MoveNodeByCoords(HotNodeIndex,mouseX,mouseY);
-					}
-				}
-				if (HotNodeIndex>=0)
-					SetCursor(hLinkCursor); else SetCursor(hDefaultCursor);
-				return 0;
-			}
-		case WM_SETCURSOR:
-			{
-				//if (HotNodeIndex>=0)
-				  //SetCursor(hLinkCursor); else SetCursor(hDefaultCursor);
-				return 0;
-			}
-		case WM_LBUTTONDOWN:
-			{
-				SetCapture(hwnd);
-#ifdef _WIN32
-				if (wParam==MK_CONTROL + MK_LBUTTON)
-#else
-				if (wParam == MK_LBUTTON)
-#endif
-				{
-					if (HotNodeIndex>=0)
-					{
-						
-						t_interpolator_envelope *TargetEnv=g_IIproperties[g_activePropertyEnvelope].Envelope;
-						//if (g_CurrentBenderState.ActiveEnvelope==0) TargetEnv=&g_CurrentBenderState.PitchNodes;
-						//if (g_CurrentBenderState.ActiveEnvelope==1) TargetEnv=&g_CurrentBenderState.FormantNodes;
-						if (TargetEnv->size()>1)
-						{
-							TargetEnv->erase(TargetEnv->begin()+HotNodeIndex);
-							sort(TargetEnv->begin(),TargetEnv->end(),MyNodeSortFunction);
-							InvalidateRect(g_hIIdlg,NULL,FALSE);
-							
-						} else MessageBox(g_hIIdlg,"Cannot remove only point of envelope!","Error",MB_OK);
-						
-					}
-					return 0;
-				}
-				LeftMouseBtnDown=true;
-				//NodeIsDragged=false;
-				if (HotNodeIndex<0)
-				{
-					AddNodeFromCoordinates(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-					HotNodeIndex=GetHotNodeIndex(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-				}
-				return 0;
-			}
-		case WM_LBUTTONUP:
-			{
-				RecallOrigProps();
-				PerformPropertyChanges();
-				ReleaseCapture();
-				HotNodeIndex=-1;
-				LeftMouseBtnDown=false;
-				NodeIsDragged=false;
-				return 0;
-			}
-		case WM_PAINT:
-			IIDoPaint(hwnd);
+		{
+			int mouseX=GET_X_LPARAM(lParam);
+			int mouseY=GET_Y_LPARAM(lParam);
+			if (!LeftMouseBtnDown)
+				HotNodeIndex=GetHotNodeIndex(mouseX, mouseY);
+			else if (LeftMouseBtnDown && HotNodeIndex >= 0)
+				MoveNodeByCoords(HotNodeIndex, mouseX, mouseY);
+			else if (HotNodeIndex >= 0)
+				SetCursor(hLinkCursor);
+			else
+				SetCursor(hDefaultCursor);
 			return 0;
+		}
+		case WM_LBUTTONDOWN:
+		{
+			SetCapture(hwnd);
+			if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
+			{	// Remove point if CTRL pressed
+				if (HotNodeIndex>=0)
+				{
+					t_interpolator_envelope *TargetEnv=g_IIproperties[g_activePropertyEnvelope].Envelope;
+					if (TargetEnv->size() > 1)
+					{
+						TargetEnv->erase(TargetEnv->begin() + HotNodeIndex);
+						sort(TargetEnv->begin(), TargetEnv->end(), MyNodeSortFunction);
+						InvalidateRect(g_hIIdlg, NULL, FALSE);
+						
+					}
+					else
+						MessageBox(g_hIIdlg, "Cannot remove only point of envelope!", "Error", MB_OK);
+					
+				}
+				return 0;
+			}
+			LeftMouseBtnDown = true;
+			if (HotNodeIndex < 0)
+			{
+				AddNodeFromCoordinates(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+				HotNodeIndex=GetHotNodeIndex(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+			}
+			return 0;
+		}
+		case WM_LBUTTONUP:
+		{
+			RecallOrigProps();
+			PerformPropertyChanges();
+			ReleaseCapture();
+			HotNodeIndex = -1;
+			LeftMouseBtnDown = false;
+			return 0;
+		}
+		case WM_PAINT:
+		{
+			PAINTSTRUCT ps;
+			HDC dc = BeginPaint(hwnd, &ps);
+			LICE_Clear(g_framebuffer, LICE_RGBA(0,0,0,1));
+			DrawEnvelope();
+			BitBlt(dc,0,0,g_framebuffer->getWidth(),g_framebuffer->getHeight(),g_framebuffer->getDC(),0,0,SRCCOPY);
+			EndPaint(hwnd, &ps);
+			return 0;
+		}
 	}
 #ifdef _WIN32	
 	return CallWindowProc(g_OldGraphAreaWndProc, hwnd, Message, wParam, lParam);
@@ -816,9 +782,6 @@ BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 				}
 			}
 			break;
-//		case WM_PAINT:
-//			IIDoPaint(hGraph);
-//			break;
 		case WM_DESTROY:
 			delete g_framebuffer;
 			g_hIIdlg = NULL;

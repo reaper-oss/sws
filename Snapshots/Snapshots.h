@@ -51,6 +51,8 @@ public:
 	SWS_SnapshotsWnd();
 	void Update();
 	void RenameCurrent();
+
+	Snapshot* m_pLastTouched;
 	
 protected:
 	void OnInitDlg();
@@ -62,7 +64,7 @@ protected:
 	void ShowControls(bool bShow);
 
 private:
-	Snapshot* m_pLastTouched;
+	int m_iSelType;
 };
 
 

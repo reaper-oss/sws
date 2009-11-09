@@ -648,6 +648,7 @@ INT_PTR WINAPI doConsole(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				SetDlgItemText(hwndDlg, IDC_COMMAND, strCommand);
 				// Move the cursor to the end 
 				HWND hwndCommand = GetDlgItem(hwndDlg, IDC_COMMAND);  
+				SetWindowLongPtr(hwndCommand, GWLP_USERDATA, 0xdeadf00b);
 				SetFocus(hwndCommand);
 				SendMessage(hwndCommand, EM_SETSEL, 1, 2);
 				command = Tokenize(strCommand, &pTrackId, &pArgs);

@@ -28,6 +28,7 @@
 
 #include "stdafx.h"
 #include "../Utility/Base64.h"
+#include "../ObjectState/TrackFX.h"
 #include "SnapshotClass.h"
 
 FXSnapshot::FXSnapshot(MediaTrack* tr, int fx)
@@ -229,7 +230,8 @@ bool SendSnapshot::Exists(MediaTrack* tr)
 
 TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 {
-	if (CSurf_TrackToID(tr, false) == 0)
+	bool bMaster = CSurf_TrackToID(tr, false) == 0;
+	if (bMaster)
 		m_guid = GUID_NULL;
 	else
 		m_guid = *(GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
@@ -251,6 +253,15 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 	if (mask & FXATM_MASK)
 		for (int i = 0; i < TrackFX_GetCount(tr); i++)
 			m_fx.Add(new FXSnapshot(tr, i));
+
+	// and the full FX chain
+	if (mask & FXCHAIN_MASK) // Master's not supported (yet?)
+	{
+		TrackFX fx(tr);
+		m_sFXChain.Set(fx.GetFXString());
+	}
+	else
+		m_sFXChain.Set("");
 }
 
 TrackSnapshot::TrackSnapshot(LineParser* lp)
@@ -323,6 +334,11 @@ bool TrackSnapshot::UpdateReaper(int mask, int* sendErr, int* fxErr, bool bSelOn
 		}
 		else
 			*fxErr += m_fx.GetSize();
+	}
+	if (mask & FXCHAIN_MASK && m_sFXChain.GetLength())
+	{
+		TrackFX fx(tr);
+		fx.SetFXString(m_sFXChain.Get());
 	}
 	if (mask & SENDS_MASK)
 	{

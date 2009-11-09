@@ -27,4 +27,5 @@
 
 #pragma once
 
+void ZoomSlice();
 int ZoomInit();

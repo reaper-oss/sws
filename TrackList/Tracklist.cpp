@@ -28,6 +28,7 @@
 
 #include "stdafx.h"
 #include "../Freeze/Freeze.h"
+#include "../ObjectState/TrackFX.h"
 #include "../Snapshots/SnapshotClass.h"
 #include "../Snapshots/Snapshots.h"
 #include "TracklistFilter.h"
@@ -321,6 +322,8 @@ void SWS_TrackListWnd::OnInitDlg()
 	m_resize.init_item(IDC_LINK, 0.0, 1.0, 0.0, 1.0);
 
 	m_pList = new SWS_TrackListView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT), this);
+	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
+
 
 	Update();
 
@@ -856,6 +859,11 @@ static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 			else if (msg->wParam == VK_DOWN && !bCtrl && !bAlt)
 			{
 				SendMessage(hwnd, WM_COMMAND, SELNEXT_MSG, 0);
+				return 1;
+			}
+			else if (msg->wParam == VK_F2 && !bCtrl && !bAlt && !bShift)
+			{
+				SendMessage(hwnd, WM_COMMAND, RENAME_MSG, 0);
 				return 1;
 			}
 		}

@@ -126,7 +126,6 @@ void InitFracBox(HWND hwnd, const char *buf);
 int XenGetProjectItems(vector<MediaItem*>& TheItems,bool OnlySelectedItems=true, bool IncEmptyItems=false);
 int XenGetProjectTakes(vector<MediaItem_Take*>& TheTakes,bool OnlyActive,bool OnlyFromSelectedItems);
 void DoMoveItemsLeftByItemLen(COMMAND_T*);
-extern int NumRepeatPasteRuns;
 void DoToggleTakesNormalize(COMMAND_T*);
 void DoShowItemVolumeDialog(COMMAND_T*);
 void DoShowVolPanDialog(COMMAND_T*);

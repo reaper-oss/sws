@@ -30,6 +30,7 @@
 #include "Console/Console.h"
 #include "Freeze/Freeze.h"
 #include "MarkerActions/MarkerActions.h"
+#include "ObjectState/TrackFX.h"
 #include "Snapshots/SnapshotClass.h"
 #include "Snapshots/Snapshots.h"
 #include "Zoom.h"
@@ -39,6 +40,7 @@
 #include "TrackList/TrackListFilter.h"
 #include "TrackList/Tracklist.h"
 #include "ProjectMgr.h"
+#include "SnM/SnM_Actions.h"
 
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
@@ -167,6 +169,7 @@ public:
 
 	void Run()
 	{
+		ZoomSlice();
 		MarkerActionSlice();
 
 		if (m_bChanged)
@@ -380,6 +383,8 @@ extern "C"
 			ERR_RETURN("Project Mgr init error\n")
 		if (!XenakiosInit())
 			ERR_RETURN("Xenakios init error\n")
+		if (!SnMActionsInit())
+			ERR_RETURN("SnM init error\n")
 		if (!AboutBoxInit())
 			ERR_RETURN("About box init error\n")
 

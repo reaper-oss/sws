@@ -97,7 +97,89 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Building installer and copying to c:\dev\sws-deploy..."
-				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files\reaper\plugins&quot;&#x0D;&#x0A;copy /y $(OutDir)\$(TargetFilename) &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;&quot;c:\program files\nsis\makensis.exe&quot; /v2 $(SolutionName).nsi&#x0D;&#x0A;copy /y &quot;$(OutDir)\$(SolutionName).exe&quot; &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
+				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files\reaper\plugins&quot;&#x0D;&#x0A;&quot;c:\program files\nsis\makensis.exe&quot; /v2 $(SolutionName).nsi&#x0D;&#x0A;copy /y &quot;$(OutDir)\$(SolutionName).exe&quot; &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="2"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="0"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+				CommandLine=""
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories=""
+				PreprocessorDefinitions="WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
+				StringPooling="true"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				OutputFile="$(OutDir)\reaper_sws64.dll"
+				IgnoreDefaultLibraryNames=""
+				GenerateDebugInformation="true"
+				GenerateMapFile="true"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Copying x64 to c:\dev\sws-deploy"
+				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\dev\sws-deploy&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -184,88 +266,6 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|x64"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="0"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-				CommandLine=""
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=""
-				PreprocessorDefinitions="WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
-				StringPooling="true"
-				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="2"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				OutputFile="$(OutDir)\reaper_sws64.dll"
-				IgnoreDefaultLibraryNames=""
-				GenerateDebugInformation="true"
-				GenerateMapFile="true"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Copying x64 to c:\dev\sws-deploy"
-				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\dev\sws-deploy&quot;"
-			/>
-		</Configuration>
-		<Configuration
 			Name="Test|x64"
 			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
@@ -345,7 +345,6 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description=""
 				CommandLine=""
 			/>
 		</Configuration>
@@ -374,7 +373,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Test|Win32"
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -382,7 +381,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Test|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -454,7 +453,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Test|Win32"
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -462,7 +461,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Test|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -502,7 +501,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Test|Win32"
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -510,7 +509,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Test|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -548,6 +547,10 @@
 			</File>
 			<File
 				RelativePath=".\ObjectState\TrackEnvelope.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\ObjectState\TrackFX.cpp"
 				>
 			</File>
 			<File
@@ -662,6 +665,10 @@
 			</File>
 			<File
 				RelativePath=".\ObjectState\TrackEnvelope.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ObjectState\TrackFX.h"
 				>
 			</File>
 			<File
@@ -839,7 +846,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Test|Win32"
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -848,7 +855,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Test|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -879,7 +886,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Test|Win32"
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -888,7 +895,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Test|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -921,7 +928,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Test|Win32"
+						Name="Release|x64"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -929,7 +936,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|x64"
+						Name="Test|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -961,7 +968,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Test|Win32"
+						Name="Release|x64"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -969,7 +976,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|x64"
+						Name="Test|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -986,6 +993,30 @@
 					</FileConfiguration>
 				</File>
 			</Filter>
+		</Filter>
+		<Filter
+			Name="SnM"
+			>
+			<File
+				RelativePath=".\SnM\SnM_Actions.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_Actions.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_fx.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_sends.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_Windows.cpp"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\license.txt"

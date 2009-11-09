@@ -715,8 +715,8 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 LPARAM SWS_ListView::GetHitItem(int x, int y, int* iCol)
 {
 	LVHITTESTINFO ht;
-	ht.pt.x = x;
-	ht.pt.y = y;
+	POINT pt = { x, y };
+	ht.pt = pt;
 	ht.flags = LVHT_ONITEM;
 	ScreenToClient(m_hwndList, &ht.pt);
 	int iItem = ListView_SubItemHitTest(m_hwndList, &ht);
@@ -724,7 +724,7 @@ LPARAM SWS_ListView::GetHitItem(int x, int y, int* iCol)
 	RECT r;
 	HWND header = ListView_GetHeader(m_hwndList);
 	GetWindowRect(header, &r);
-	if (PtInRect(&r, ht.pt))
+	if (PtInRect(&r, pt))
 #else
 	if (ht.pt.y < 0)
 #endif
@@ -805,7 +805,6 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 #endif
 	SetWindowPos(m_hwndEdit, HWND_TOP, r.left+lOffset, r.top+tOffset, r.right-r.left, r.bottom-r.top+ECOFFSET_HEIGHT, 0);
 	ShowWindow(m_hwndEdit, SW_SHOW);
-	SetWindowLongPtr(m_hwndEdit, GWLP_USERDATA, 0xdeadf00b);
 
 	LPARAM item = GetListItem(iIndex);
 	char str[100];

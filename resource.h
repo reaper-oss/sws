@@ -26,7 +26,6 @@
 #define IDC_SOLO                        1008
 #define IDC_VOL                         1009
 #define IDC_PAN                         1010
-#define IDC_FX                          1011
 #define IDC_SENDS                       1012
 #define IDC_HELPTEXT                    1013
 #define IDC_SELECTEDONLY                1014
@@ -40,6 +39,7 @@
 #define IDC_COLOR1                      1021
 #define IDC_HIDENEW                     1021
 #define IDC_COLOR2                      1022
+#define IDC_FXCHAIN                     1022
 #define IDC_SETCUST                     1023
 #define IDC_SAVECOL                     1024
 #define IDC_LOADCOL                     1025
@@ -52,14 +52,17 @@
 #define IDC_CLEAR                       1032
 #define IDC_STATIC_FILTER               1033
 #define IDC_LINK                        1034
+#define IDC_MIX                         1037
+#define IDC_CURVIS                      1038
+#define IDC_CUSTOM                      1039
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        216
+#define _APS_NEXT_RESOURCE_VALUE        217
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1036
+#define _APS_NEXT_CONTROL_VALUE         1038
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

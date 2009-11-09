@@ -334,6 +334,16 @@ void CursorTo10(COMMAND_T* = NULL)
 	SetHorizPos(GetTrackWnd(), GetCursorPosition(), 0.10);
 }
 
+void CursorTo50(COMMAND_T* = NULL)
+{
+	SetHorizPos(GetTrackWnd(), GetCursorPosition(), 0.50);
+}
+
+void PCursorTo50(COMMAND_T* = NULL)
+{
+	SetHorizPos(GetTrackWnd(), GetPlayPosition(), 0.50);
+}
+
 void ZoomToSelItems(COMMAND_T* = NULL)		{ VertZoomSelItems(0); HorizZoomSelItems(); }
 void ZoomToSelItemsMin(COMMAND_T* = NULL)	{ VertZoomSelItems(1);  HorizZoomSelItems(); }
 void VZoomToSelItems(COMMAND_T* = NULL)		{ VertZoomSelItems(0); }
@@ -454,6 +464,9 @@ void TogZoomItemsHide(COMMAND_T* = NULL)	{ TogZoom(1, 2); }
 void SaveArngView(COMMAND_T* = NULL)		{ g_stdAS.Get()->Save(); }
 void RestoreArngView(COMMAND_T* = NULL)		{ g_stdAS.Get()->Restore(); }
 
+bool g_bSmoothScroll = false;
+void TogSmoothScroll(COMMAND_T* = NULL)		{ g_bSmoothScroll = !g_bSmoothScroll; }
+
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
 	return false;
@@ -475,27 +488,37 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS: Set reaper window size to reaper.ini setwndsize" },			"SWS_SETWINDOWSIZE",	SetReaperWndSize,	NULL, false },
-	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 10%" },				"SWS_HSCROLL10",		CursorTo10,			NULL, false },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected track(s)" },	 					"SWS_VZOOMFIT",			FitSelTracks,		NULL, false },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected track(s), minimize others" }, 		"SWS_VZOOMFITMIN",		FitSelTracksMin,	NULL, false },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected items(s)" },	 					"SWS_VZOOMIITEMS",		VZoomToSelItems,	NULL, false },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected items(s), minimize others" },		"SWS_VZOOMITEMSMIN",	VZoomToSelItemsMin,	NULL, false },
-	{ { DEFACCEL, "SWS: Horizontal zoom to selected items(s)" },	 					"SWS_HZOOMITEMS",		HZoomToSelItems,	NULL, false },
-	{ { DEFACCEL, "SWS: Zoom to selected item(s)" },				 					"SWS_ITEMZOOM",			ZoomToSelItems,		NULL, false },
-	{ { DEFACCEL, "SWS: Zoom to selected item(s), minimize others" },				"SWS_ITEMZOOMMIN",		ZoomToSelItemsMin,	NULL, false },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel" },					"SWS_TOGZOOMTT",		TogZoomTT,			NULL, false },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, minimize others" },	"SWS_TOGZOOMTTMIN",		TogZoomTTMin,		NULL, false },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, hide others" },		"SWS_TOGZOOMTTHIDE",	TogZoomTTHide,		NULL, false },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s)" },								"SWS_TOGZOOMI",			TogZoomItems,		NULL, false },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), minimize other tracks" },		"SWS_TOGZOOMIMIN",		TogZoomItemsMin,	NULL, false },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), hide other tracks" },			"SWS_TOGZOOMIHIDE",		TogZoomItemsHide,	NULL, false },
+	{ { DEFACCEL, "SWS: Set reaper window size to reaper.ini setwndsize" },			"SWS_SETWINDOWSIZE",	SetReaperWndSize,	NULL, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 10%" },				"SWS_HSCROLL10",		CursorTo10,			NULL, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 50%" },				"SWS_HSCROLL50",		CursorTo50,			NULL, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put play cursor at 50%" },				"SWS_HSCROLLPLAY50",	PCursorTo50,		NULL, },
+	{ { DEFACCEL, "SWS: Vertical zoom to selected track(s)" },	 					"SWS_VZOOMFIT",			FitSelTracks,		NULL, },
+	{ { DEFACCEL, "SWS: Vertical zoom to selected track(s), minimize others" }, 	"SWS_VZOOMFITMIN",		FitSelTracksMin,	NULL, },
+	{ { DEFACCEL, "SWS: Vertical zoom to selected items(s)" },	 					"SWS_VZOOMIITEMS",		VZoomToSelItems,	NULL, },
+	{ { DEFACCEL, "SWS: Vertical zoom to selected items(s), minimize others" },		"SWS_VZOOMITEMSMIN",	VZoomToSelItemsMin,	NULL, },
+	{ { DEFACCEL, "SWS: Horizontal zoom to selected items(s)" },	 				"SWS_HZOOMITEMS",		HZoomToSelItems,	NULL, },
+	{ { DEFACCEL, "SWS: Zoom to selected item(s)" },				 				"SWS_ITEMZOOM",			ZoomToSelItems,		NULL, },
+	{ { DEFACCEL, "SWS: Zoom to selected item(s), minimize others" },				"SWS_ITEMZOOMMIN",		ZoomToSelItemsMin,	NULL, },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel" },					"SWS_TOGZOOMTT",		TogZoomTT,			NULL, },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, minimize others" },	"SWS_TOGZOOMTTMIN",		TogZoomTTMin,		NULL, },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, hide others" },		"SWS_TOGZOOMTTHIDE",	TogZoomTTHide,		NULL, },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s)" },								"SWS_TOGZOOMI",			TogZoomItems,		NULL, },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), minimize other tracks" },		"SWS_TOGZOOMIMIN",		TogZoomItemsMin,	NULL, },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), hide other tracks" },			"SWS_TOGZOOMIHIDE",		TogZoomItemsHide,	NULL, },
 	
-	{ { DEFACCEL, "SWS: Save current arrange view" },				 				"SWS_SAVEVIEW",		   SaveArngView,		NULL, false },
-	{ { DEFACCEL, "SWS: Restore arrange view" },				 						"SWS_RESTOREVIEW",	   RestoreArngView,		NULL, false },
+	{ { DEFACCEL, "SWS: Save current arrange view" },				 				"SWS_SAVEVIEW",			SaveArngView,		NULL, },
+	{ { DEFACCEL, "SWS: Restore arrange view" },				 					"SWS_RESTOREVIEW",		RestoreArngView,	NULL, },
+
+	{ { DEFACCEL, "SWS: Toggle experimental smooth scroll" },						"SWS_SMOOTHSCROLL",		TogSmoothScroll,	NULL, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+
+void ZoomSlice()
+{
+	if (g_bSmoothScroll && GetPlayState() & 1)
+		PCursorTo50();
+}
 
 int ZoomInit()
 {

@@ -1,5 +1,5 @@
 /******************************************************************************
-/ Version.h
+/ TrackFX.h
 /
 / Copyright (c) 2009 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
@@ -23,10 +23,25 @@
 / FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 / OTHER DEALINGS IN THE SOFTWARE.
 /
-/ Auto build # increment code from MS Knowledge base article 237870
 ******************************************************************************/
 
-#define FILE_VERSION			1,3,2,5
-#define PRODUCT_VERSION			1,3,2,5
-#define FILE_VERSION_STR		"1, 3, 2, 5\0"
-#define PRODUCT_VERSION_STR		"1, 3, 2, 5\0"
+
+#pragma once
+
+class TrackFX
+{
+public:
+	TrackFX(MediaTrack* tr);
+	~TrackFX();
+	// Always get and set without ending newline
+	const char* GetFXString();
+	void SetFXString(const char* cFX);
+
+private:
+	void UpdateState();
+
+	MediaTrack* m_pTr;
+	char* m_cTrackState;
+	char* m_cFXString;
+	char* m_cStateSuffix;
+};

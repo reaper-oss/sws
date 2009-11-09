@@ -230,8 +230,7 @@ bool SendSnapshot::Exists(MediaTrack* tr)
 
 TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 {
-	bool bMaster = CSurf_TrackToID(tr, false) == 0;
-	if (bMaster)
+	if (CSurf_TrackToID(tr, false) == 0)
 		m_guid = GUID_NULL;
 	else
 		m_guid = *(GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
@@ -250,12 +249,13 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 			m_sends.Add(new SendSnapshot(tr, i));
 
 	// Same for the fx
+	// DEPRECATED
 	if (mask & FXATM_MASK)
 		for (int i = 0; i < TrackFX_GetCount(tr); i++)
 			m_fx.Add(new FXSnapshot(tr, i));
 
 	// and the full FX chain
-	if (mask & FXCHAIN_MASK) // Master's not supported (yet?)
+	if (mask & FXCHAIN_MASK)
 	{
 		TrackFX fx(tr);
 		m_sFXChain.Set(fx.GetFXString());
@@ -314,7 +314,7 @@ bool TrackSnapshot::UpdateReaper(int mask, int* sendErr, int* fxErr, bool bSelOn
 		SetTrackVis(tr, m_iVis); // ignores master
 	if (mask & SEL_MASK)
 		GetSetMediaTrackInfo(tr, "I_SELECTED", &m_iSel);
-	if (mask & FXATM_MASK)
+	if (mask & FXATM_MASK) // DEPRECATED, keep for previously saved snapshots
 	{
 		GetSetMediaTrackInfo(tr, "I_FXEN", &m_iFXEn);
 		int numFX = TrackFX_GetCount(tr);
@@ -527,6 +527,8 @@ char* Snapshot::Tooltip(char* str, int maxLen)
 	if (m_iMask & SOLO_MASK && n < maxLen)
 		n += _snprintf(str + n, maxLen - n, "%s", ", solo");
 	if (m_iMask & FXATM_MASK && n < maxLen)
+		n += _snprintf(str + n, maxLen - n, "%s", ", fx (old style)");
+	if (m_iMask & FXCHAIN_MASK && n < maxLen)
 		n += _snprintf(str + n, maxLen - n, "%s", ", fx");
 	if (m_iMask & SENDS_MASK && n < maxLen)
 		n += _snprintf(str + n, maxLen - n, "%s", ", sends");
@@ -551,7 +553,8 @@ void Snapshot::SetName(const char* name)
 			case PAN_MASK:		sprintf(newName, "Pan %d", m_iSlot);	break;
 			case MUTE_MASK:		sprintf(newName, "Mute %d", m_iSlot);	break;
 			case SOLO_MASK:		sprintf(newName, "Solo %d", m_iSlot);	break;
-			case FXATM_MASK:	sprintf(newName, "FX %d", m_iSlot);		break;
+			case FXATM_MASK: // fallthrough
+			case FXCHAIN_MASK:	sprintf(newName, "FX %d", m_iSlot);		break;
 			case SENDS_MASK:	sprintf(newName, "Sends %d", m_iSlot);	break;
 			case VIS_MASK:		sprintf(newName, "Vis %d", m_iSlot);	break;
 			case SEL_MASK:		sprintf(newName, "Sel %d", m_iSlot);	break;

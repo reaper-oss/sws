@@ -22,7 +22,6 @@
 #define IDD_RUBBERBAND                  130
 #define IDD_MEDIADLG                    133
 #define IDD_MULMATCH                    134
-#define IDD_MENU_EDITOR                 135
 #define IDD_AUTORENAMETAKES             138
 #define IDD_SCANPROGR                   139
 #define IDD_SPREADITEMS                 142
@@ -93,9 +92,7 @@
 #define IDC_MULMATCHLIST                1093
 #define IDC_DELFILESBUT                 1094
 #define ID_CLOSE                        1095
-#define IDC_XENACTLIST                  1096
 #define IDC_DELFILESBUT2                1096
-#define IDC_MENUTOCONF                  1097
 #define IDC_TAKENAME_EDIT               1111
 #define IDC_FILENAME_EDIT               1112
 #define IDC_FULLFILENAME                1113

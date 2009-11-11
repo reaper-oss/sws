@@ -44,6 +44,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 6 online/offline for selected track(s)" }, "S&M_FXOFF6", toggleFXOfflineSelectedTracks, NULL, 6},
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 7 online/offline for selected track(s)" }, "S&M_FXOFF7", toggleFXOfflineSelectedTracks, NULL, 7},
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 8 online/offline for selected track(s)" }, "S&M_FXOFF8", toggleFXOfflineSelectedTracks, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Toggle last FX online/offline for selected track(s)" }, "S&M_FXOFFLAST", toggleFXOfflineSelectedTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 1 bypass for selected track(s)" }, "S&M_FXBYP1", toggleFXBypassSelectedTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 2 bypass for selected track(s)" }, "S&M_FXBYP2", toggleFXBypassSelectedTracks, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 3 bypass for selected track(s)" }, "S&M_FXBYP3", toggleFXBypassSelectedTracks, NULL, 3},
@@ -52,6 +53,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 6 bypass for selected track(s)" }, "S&M_FXBYP6", toggleFXBypassSelectedTracks, NULL, 6},
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 7 bypass for selected track(s)" }, "S&M_FXBYP7", toggleFXBypassSelectedTracks, NULL, 7},
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 8 bypass for selected track(s)" }, "S&M_FXBYP8", toggleFXBypassSelectedTracks, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Toggle last FX bypass for selected track(s)" }, "S&M_FXBYPLAST", toggleFXBypassSelectedTracks, NULL, -1},
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 

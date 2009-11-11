@@ -30,6 +30,31 @@
 
 static bool g_bMAEnabled = true;
 
+void RunActionMarker(const char* cName)
+{
+	if (cName && cName[0] == '!')
+	{
+		LineParser lp(false);
+		lp.parse(&cName[1]);
+		for (int i = 0; i < lp.getnumtokens(); i++)
+			if (lp.gettoken_int(i))
+			{
+				int iCommand = lp.gettoken_int(i);
+				int iZero = 0;
+				bool b = kbd_RunCommandThroughHooks(NULL, &iCommand, &iZero, &iZero, &iZero, g_hwndParent);
+				if (!b)
+				{
+					if (KBD_OnMainActionEx)
+					{
+						KBD_OnMainActionEx(lp.gettoken_int(i), 0, 0, 0, g_hwndParent, NULL);
+					}
+					else
+						Main_OnCommand(lp.gettoken_int(i), 0);
+				}
+			}
+	}
+}
+
 void MarkerActionSlice()
 {
 	static double dLastPos = 0.0;
@@ -48,29 +73,8 @@ void MarkerActionSlice()
 			double dMarkerPos;
 			// Look for markers with '!' as the first char with the right time
 			while ((x = EnumProjectMarkers(x, NULL, &dMarkerPos, NULL, &cName, NULL)))
-			{
-				if (cName && cName[0] == '!' && dMarkerPos >= dLastPos && dMarkerPos < dPlayPos)
-				{
-					LineParser lp(false);
-					lp.parse(&cName[1]);
-					for (int i = 0; i < lp.getnumtokens(); i++)
-						if (lp.gettoken_int(i))
-						{
-							int iCommand = lp.gettoken_int(i);
-							int iZero = 0;
-							bool b = kbd_RunCommandThroughHooks(NULL, &iCommand, &iZero, &iZero, &iZero, g_hwndParent);
-							if (!b)
-							{
-								if (KBD_OnMainActionEx)
-								{
-									KBD_OnMainActionEx(lp.gettoken_int(i), 0, 0, 0, g_hwndParent, NULL);
-								}
-								else
-									Main_OnCommand(lp.gettoken_int(i), 0);
-							}
-						}
-				}
-			}
+				if (dMarkerPos >= dLastPos && dMarkerPos < dPlayPos)
+					RunActionMarker(cName);
 		}			
 		dLastPos = dPlayPos;
 	}
@@ -94,6 +98,21 @@ void MarkerActionsDisable(COMMAND_T*)
 {
 	if (g_bMAEnabled)
 		MarkerActionsToggle();
+}
+
+void MarkerActionRunUnderCursor(COMMAND_T*)
+{
+	if (!g_bMAEnabled)
+		return;
+
+	int x = 0;
+	char* cName;
+	double dMarkerPos;
+	double dCurPos = GetCursorPosition();
+	// Look for markers with '!' as the first char with the right time
+	while ((x = EnumProjectMarkers(x, NULL, &dMarkerPos, NULL, &cName, NULL)))
+		if (dMarkerPos == dCurPos)
+			RunActionMarker(cName);
 }
 
 void MarkerNudge(bool bRight)
@@ -121,11 +140,12 @@ void MarkerNudgeRight(COMMAND_T*) { MarkerNudge(true); }
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS: Toggle marker actions enable" },    "SWSMA_TOGGLE",  MarkerActionsToggle,	"Enable SWS marker actions", },
-	{ { DEFACCEL, "SWS: Enable marker actions" },           "SWSMA_ENABLE",  MarkerActionsEnable,	NULL, },
-	{ { DEFACCEL, "SWS: Disable marker actions" },          "SWSMA_DISABLE", MarkerActionsDisable,	NULL, },
-	{ { DEFACCEL, "SWS: Nudge marker under cursor left" },  "SWS_MNUDGEL",   MarkerNudgeLeft,		NULL, },
-	{ { DEFACCEL, "SWS: Nudge marker under cursor right" }, "SWS_MNUDGER",	MarkerNudgeRight,		NULL, },
+	{ { DEFACCEL, "SWS: Toggle marker actions enable" },    "SWSMA_TOGGLE",		MarkerActionsToggle,		"Enable SWS marker actions", },
+	{ { DEFACCEL, "SWS: Enable marker actions" },           "SWSMA_ENABLE",		MarkerActionsEnable,		NULL, },
+	{ { DEFACCEL, "SWS: Disable marker actions" },          "SWSMA_DISABLE",	MarkerActionsDisable,		NULL, },
+	{ { DEFACCEL, "SWS: Run action marker under cursor" },  "SWSMA_RUNEDIT",	MarkerActionRunUnderCursor,	NULL, },
+	{ { DEFACCEL, "SWS: Nudge marker under cursor left" },  "SWS_MNUDGEL",		MarkerNudgeLeft,			NULL, },
+	{ { DEFACCEL, "SWS: Nudge marker under cursor right" }, "SWS_MNUDGER",		MarkerNudgeRight,			NULL, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

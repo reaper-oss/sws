@@ -25,22 +25,21 @@
 /
 ******************************************************************************/
 
-
 #include "stdafx.h"
 
 
-WDL_String * m_fxout = new WDL_String();
-
 int getSetFXOnline(int _type, MediaTrack * _tr, int _fx, int * _value)
 {
-	// Some chacks (_type is checked later)
+	// Some checks (_type is checked later)
 	if (_tr && _fx >= 0)
 	{
+		WDL_String _fxout;
+
 		char* cData = GetSetObjectState(_tr, NULL);
 		if (cData)
 		{
 			WDL_String curLine;
-			m_fxout->Set("");
+			_fxout.Set("");
 			char* pEOL = cData-1;
 			int iDepth = 0;
 			int parsedFX = 0;
@@ -89,15 +88,15 @@ int getSetFXOnline(int _type, MediaTrack * _tr, int _fx, int * _value)
 							switch (_type)
 							{
 								case 1:
-									m_fxout->Append("BYPASS ");
-									m_fxout->Append(lp.gettoken_str(1));
-									m_fxout->AppendFormatted(3, " %d\n", *_value);
+									_fxout.Append("BYPASS ");
+									_fxout.Append(lp.gettoken_str(1));
+									_fxout.AppendFormatted(3, " %d\n", *_value);
 									break;
 								case 2:
-									m_fxout->Append("BYPASS ");
-									m_fxout->AppendFormatted(2, "%d ", *_value);
-									m_fxout->Append(lp.gettoken_str(2));
-									m_fxout->Append("\n");
+									_fxout.Append("BYPASS ");
+									_fxout.AppendFormatted(2, "%d ", *_value);
+									_fxout.Append(lp.gettoken_str(2));
+									_fxout.Append("\n");
 									break;
 								default:
 									appended = false;
@@ -110,8 +109,8 @@ int getSetFXOnline(int _type, MediaTrack * _tr, int _fx, int * _value)
 
 				if (_value && !appended && lp.getnumtokens())
 				{
-					m_fxout->Append(curLine.Get());
-					m_fxout->Append("\n");
+					_fxout.Append(curLine.Get());
+					_fxout.Append("\n");
 				}
 			}
 			while (pEOL);
@@ -119,9 +118,9 @@ int getSetFXOnline(int _type, MediaTrack * _tr, int _fx, int * _value)
 			FreeHeapPtr(cData);
 
 			// Sets the new state
-			if (_value && m_fxout->GetLength())
+			if (_value && _fxout.GetLength())
 			{
-				GetSetObjectState(_tr, m_fxout->Get());
+				GetSetObjectState(_tr, _fxout.Get());
 			}
 		}
 	}
@@ -130,12 +129,14 @@ int getSetFXOnline(int _type, MediaTrack * _tr, int _fx, int * _value)
 
 void toggleFXOfflineSelectedTracks(COMMAND_T* _ct)
 {
-	for (int i = 1; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			int fxId = (int)_ct->user - 1;
+			if (fxId < 0)
+				fxId = TrackFX_GetCount(tr) + _ct->user; // Could support "second to last" action with -2, etc
 			int toggleCurrent = getSetFXOnline(1, tr, fxId, NULL);
 			if (toggleCurrent >= 0)
 			{
@@ -153,12 +154,14 @@ void toggleFXOfflineSelectedTracks(COMMAND_T* _ct)
 
 void toggleFXBypassSelectedTracks(COMMAND_T* _ct)
 {
-	for (int i = 1; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			int fxId = (int)_ct->user - 1;
+			if (fxId < 0)
+				fxId = TrackFX_GetCount(tr) + _ct->user;
 			int toggleCurrent = getSetFXOnline(2, tr, fxId, NULL);
 			if (toggleCurrent >= 0)
 			{

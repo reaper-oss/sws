@@ -272,37 +272,46 @@ void PasteMultipletimes(int NumPastes, double TimeIntervalQN, int RepeatMode)
 {
 	if (NumPastes > 0)
 	{
-		//Main_OnCommand(40698,0); // Copy?
 		int* pCursorMode = (int*)GetConfigVar("itemclickmovecurs");
-		int savedMode = *pCursorMode;
-		*pCursorMode &= ~8;
+		double dStartTime = GetCursorPosition();
+
 		Undo_BeginBlock();
 
 		switch (RepeatMode)
 		{
 			case 0: // No gaps
+			{
+				// Cursor mode must set to move the cursor after paste
+				// Clear bit 8 of itemclickmovecurs
+				int savedMode = *pCursorMode;
+				*pCursorMode &= ~8;
 				for (int i = 0; i < NumPastes; i++)
 					Main_OnCommand(40058,0); // Paste
+				*pCursorMode = savedMode; // Restore the cursor mode
 				break;
+			}
 			case 1: // Time interval
 				for (int i = 0; i < NumPastes; i++)
 				{
 					Main_OnCommand(40058,0); // Paste
-					double dNewCur = GetCursorPosition() + TimeIntervalQN;
-					SetEditCurPos(dNewCur, false, false);
+					SetEditCurPos(dStartTime + (i+1) * TimeIntervalQN, false, false);
 				}
 				break;
 			case 2: // Beat interval
+			{
+				double dStartBeat = TimeMap_timeToQN(dStartTime);
 				for (int i = 0; i < NumPastes; i++)
 				{
 					Main_OnCommand(40058,0); // Paste
-					double dCurBeatPos = TimeMap_timeToQN(GetCursorPosition());
-					SetEditCurPos(TimeMap_QNToTime(dCurBeatPos + TimeIntervalQN), false, false);
+					SetEditCurPos(TimeMap_QNToTime(dStartBeat + (i+1) * TimeIntervalQN), false, false);
 				}
 				break;
+			}
 		}
+		if (*pCursorMode & 8) // If "don't move cursor after paste" move the cursor back
+			SetEditCurPos(dStartTime, false, false);
+			
 		Undo_EndBlock("Repeat Paste",0);
-		*pCursorMode = savedMode;
 	}
 }
 
@@ -314,7 +323,7 @@ WDL_DLGRET RepeatPasteDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 	static double dBeatInterval = 1.0;
 	static char cBeatStr[50] = "1";
 	static int iNumRepeats = 1;
-	static int iRepeatMode = 0;	
+	static int iRepeatMode = 2;	
 
 	switch(Message)
     {

@@ -337,6 +337,7 @@ bool TrackSnapshot::UpdateReaper(int mask, int* sendErr, int* fxErr, bool bSelOn
 	}
 	if (mask & FXCHAIN_MASK && m_sFXChain.GetLength())
 	{
+		GetSetMediaTrackInfo(tr, "I_FXEN", &m_iFXEn);
 		TrackFX fx(tr);
 		fx.SetFXString(m_sFXChain.Get());
 	}

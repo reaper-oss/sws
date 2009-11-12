@@ -27,22 +27,27 @@
 
 
 #include "stdafx.h"
+#include "SnM_Actions.h"
 
 
-WDL_String * m_sendout = new WDL_String();
-
+// Adds a send
+// _srcTr:  source track (unchanged)
+// _destTr: destination track
+// _type:   reaper's type
+//          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
 bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 {
 	bool ok = false;
 
 	int srcId = CSurf_TrackToID(_srcTr, false); // for (usefull?) check
-	if (_srcTr && _destTr && _type && srcId >= 0)
+	if (_srcTr && _destTr && _type >= 0 && srcId >= 0)
 	{
 		char* cData = GetSetObjectState(_destTr, NULL);
 		if (cData)
 		{
 			WDL_String curLine;
-			m_sendout->Set("");
+			WDL_String sendout;
+			sendout.Set("");
 			char* pEOL = cData-1;
 			int iDepth = 0;
 			int rcvId = 0;
@@ -73,15 +78,15 @@ bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 				if (iDepth == 1 && lp.getnumtokens() == 2 && 
 					strcmp(lp.gettoken_str(0), "MIDIOUT") == 0)
 				{
-					m_sendout->Append("AUXRECV ");
-					m_sendout->AppendFormatted(2, "%d ", srcId-1);
-					m_sendout->Append("0 1.00000000000000 0.00000000000000 0 0 0 0 0 -1.00000000000000 0 -1\n");
+					sendout.Append("AUXRECV ");
+					sendout.AppendFormatted(2, "%d ", srcId-1);
+					sendout.Append("2 1.00000000000000 0.00000000000000 0 0 0 0 0 -1.00000000000000 0 -1\n");
 				}
 
 				if (lp.getnumtokens())
 				{
-					m_sendout->Append(curLine.Get());
-					m_sendout->Append("\n");
+					sendout.Append(curLine.Get());
+					sendout.Append("\n");
 				}
 			}
 			while (pEOL);
@@ -89,9 +94,9 @@ bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 			FreeHeapPtr(cData);
 
 			// Sets the new state
-			if (m_sendout->GetLength())
+			if (sendout.GetLength())
 			{
-				if (GetSetObjectState(_destTr, m_sendout->Get()) == 0)
+				if (GetSetObjectState(_destTr, sendout.Get()) == 0)
 				{
 					// I DO THAT WAY TO ALSO FORCE REFRESH IN REAPER!!!
 					GetSetTrackSendInfo(_destTr, -1, rcvId, "I_SENDMODE" , &_type);
@@ -103,7 +108,12 @@ bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 	return ok;
 }
 
-void cueTrack(COMMAND_T* _ct)
+// Adds a cuetrack from track selection
+// _busName
+// _type:   reaper's type
+//          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
+// _undoMsg NULL=no undo
+void cueTrack(char * _busName, int _type, const char * _undoMsg)
 {
 	MediaTrack * cueTr = NULL;
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -120,17 +130,18 @@ void cueTrack(COMMAND_T* _ct)
 				InsertTrackAtIndex(GetNumTracks(), false);
 				TrackList_AdjustWindows(false);
 				cueTr = CSurf_TrackFromID(GetNumTracks(), false);
-				GetSetMediaTrackInfo(cueTr, "P_NAME", "Cue Bus");
+				GetSetMediaTrackInfo(cueTr, "P_NAME", _busName);
 				UpdateTimeline();
 			}
 
-			// add a Pre-Fader-Post-FX send
+			// add a send
 			if (cueTr && tr != cueTr)
 			{
-				addSend(tr, cueTr, 3); // returned error not managed yet..
+				addSend(tr, cueTr, _type); // returned error not managed yet..
 			}
 		}
 	}
+
 	if (cueTr)
 	{
 		GetSetMediaTrackInfo(cueTr, "I_SELECTED", &g_i1);
@@ -141,6 +152,86 @@ void cueTrack(COMMAND_T* _ct)
 		Main_OnCommand(iCommand, 0);
 
 		// Undo point
-		Undo_OnStateChangeEx("Cuetrack from track selection", UNDO_STATE_TRACKCFG, -1);
+		if (_undoMsg)
+			Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL, -1);
 	}
 }
+
+void cueTrackPrompt(COMMAND_T* _ct)
+{
+	char reply[128]={',','2','\0'}; // default bus name and user type
+	if (GetUserInputs && GetUserInputs(SNMSWS_ZAP(_ct), 2, "Bus name:,Send type (1 to 3. Other=help):", reply, 128))
+	{
+		int validType = 0;
+		int userType = 2;
+		int reaType = 3;
+		char busName[128] = {'\0'};
+
+		// Swap separators ',' to ' ' and translate spaces of the bus name
+		for (unsigned int i=0; i < strlen(reply); i++)
+		{
+			if (reply[i] == ' ') reply[i] = '§';
+			else if (reply[i] == ',') reply[i] = ' ';
+		}
+
+		// Parse user inputs
+		LineParser lp(false);
+		lp.parse(reply);
+
+		// No name entered ?
+		if (lp.getnumtokens() == 1)
+		{
+			userType = lp.gettoken_int(0, &validType);
+		}
+		// Name + type
+		else if (lp.getnumtokens() == 2)
+		{
+			userType = lp.gettoken_int(1, &validType);
+			strcpy(busName, lp.gettoken_str(0));
+		}
+
+		if (validType)
+		{
+			switch(userType)
+			{
+				case 1:
+					reaType=0;
+					break;
+				case 2:
+					reaType=3;
+					break;
+				case 3:
+					reaType=1;
+					break;
+				default:
+					validType = 0;
+					break;
+			}
+		}
+
+		// re-test (can be update avove)
+		if (validType)
+		{
+			// Restore space charracters in bus name
+			for (unsigned int i=0; i < strlen(busName); i++)
+				if (busName[i] == '§') busName[i] = ' ';
+
+			// hook
+			cueTrack(busName, reaType, SNMSWS_ZAP(_ct));
+		}
+		else
+		{
+			MessageBox(GetMainHwnd(), 
+				"Valid send types:\n1=Post-Fader (Post-Pan)\n2=Pre-Fader (Post-FX)\n3=Pre-FX", 
+				SNMSWS_ZAP(_ct), 
+				MB_OK);		
+			cueTrackPrompt(_ct); // ouchh.. recursive call ! (re-prompt)
+		}
+	}
+}
+
+void cueTrack(COMMAND_T* _ct)
+{
+	cueTrack("Cue Bus", (int)_ct->user, SNMSWS_ZAP(_ct));
+}
+

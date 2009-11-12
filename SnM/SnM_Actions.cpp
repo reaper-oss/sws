@@ -31,7 +31,11 @@
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS/S&M: Cuetrack from track selection" }, "S&M_SENDS1", cueTrack, NULL, },
+	// be carefull! called functions may expect "SWS/S&M: " (removed from undo messages, too long)
+	{ { DEFACCEL, "SWS/S&M: Cuetrack from track selection, Pre-Fader (Post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Cuetrack from track selection, Post-Fader (Post-Pan)" }, "S&M_SENDS2", cueTrack, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Cuetrack from track selection, Pre-FX" }, "S&M_SENDS3", cueTrack, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Cuetrack from track selection (prompt)" }, "S&M_SENDS4", cueTrackPrompt, NULL, },
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Close all I/O window(s)" }, "S&M_WNCLS1", closeRoutingWindows, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Close all envelope window(s)" }, "S&M_WNCLS2", closeEnvWindows, NULL, },
@@ -54,6 +58,27 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 7 bypass for selected track(s)" }, "S&M_FXBYP7", toggleFXBypassSelectedTracks, NULL, 7},
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 8 bypass for selected track(s)" }, "S&M_FXBYP8", toggleFXBypassSelectedTracks, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Toggle last FX bypass for selected track(s)" }, "S&M_FXBYPLAST", toggleFXBypassSelectedTracks, NULL, -1},
+	
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs bypass for selected track(s)" }, "S&M_FXBYPALL", toggleAllFXsBypassSelectedTracks, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs online/offline for selected track(s)" }, "S&M_FXOFFALL", toggleAllFXsOfflineSelectedTracks, NULL, },
+
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 1) online/offline for selected track(s)" }, "S&M_FXOFFEXCPT1", toggleExceptFXOfflineSelectedTracks, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 2) online/offline for selected track(s)" }, "S&M_FXOFFEXCPT2", toggleExceptFXOfflineSelectedTracks, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 3) online/offline for selected track(s)" }, "S&M_FXOFFEXCPT3", toggleExceptFXOfflineSelectedTracks, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 4) online/offline for selected track(s)" }, "S&M_FXOFFEXCPT4", toggleExceptFXOfflineSelectedTracks, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 5) online/offline for selected track(s)" }, "S&M_FXOFFEXCPT5", toggleExceptFXOfflineSelectedTracks, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 6) online/offline for selected track(s)" }, "S&M_FXOFFEXCPT6", toggleExceptFXOfflineSelectedTracks, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 7) online/offline for selected track(s)" }, "S&M_FXOFFEXCPT7", toggleExceptFXOfflineSelectedTracks, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 8) online/offline for selected track(s)" }, "S&M_FXOFFEXCPT8", toggleExceptFXOfflineSelectedTracks, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 1) bypass for selected track(s)" }, "S&M_FXBYPEXCPT1", toggleExceptFXBypassSelectedTracks, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 2) bypass for selected track(s)" }, "S&M_FXBYPEXCPT2", toggleExceptFXBypassSelectedTracks, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 3) bypass for selected track(s)" }, "S&M_FXBYPEXCPT3", toggleExceptFXBypassSelectedTracks, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 4) bypass for selected track(s)" }, "S&M_FXBYPEXCPT4", toggleExceptFXBypassSelectedTracks, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 5) bypass for selected track(s)" }, "S&M_FXBYPEXCPT5", toggleExceptFXBypassSelectedTracks, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 6) bypass for selected track(s)" }, "S&M_FXBYPEXCPT6", toggleExceptFXBypassSelectedTracks, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 7) bypass for selected track(s)" }, "S&M_FXBYPEXCPT7", toggleExceptFXBypassSelectedTracks, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FXs (except 8) bypass for selected track(s)" }, "S&M_FXBYPEXCPT8", toggleExceptFXBypassSelectedTracks, NULL, 8},
+
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 

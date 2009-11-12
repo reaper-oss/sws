@@ -28,12 +28,20 @@
 
 #pragma once
 
+// +9 to skip "SWS/S&M: "
+#define SNMSWS_ZAP(_ct) (_ct->accel.desc + 9)
+
 int SnMActionsInit();
 
 // SnM_fx.cpp
 void toggleFXOfflineSelectedTracks(COMMAND_T* _ct);
 void toggleFXBypassSelectedTracks(COMMAND_T* _ct);
-int getSetFXOnline(int _type, MediaTrack * _tr, int _fx, int * _value);
+int getSetFXState(int _mode, MediaTrack * _tr, int _fx, int * _value);
+void toggleFXStateSelectedTracks(int _mode, int _fx, const char * _undoMsg);
+void toggleExceptFXOfflineSelectedTracks(COMMAND_T* _ct);
+void toggleExceptFXBypassSelectedTracks(COMMAND_T* _ct);
+void toggleAllFXsOfflineSelectedTracks(COMMAND_T* _ct);
+void toggleAllFXsBypassSelectedTracks(COMMAND_T* _ct);
 
 // SnM_Windows.cpp
 void closeWin(const char * _title);
@@ -43,5 +51,7 @@ void closeEnvWindows(COMMAND_T * _c);
 
 // SnM_Sends.cpp
 bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type);
+void cueTrack(char * _busName, int _type, const char * _undoMsg);
+void cueTrackPrompt(COMMAND_T* _ct);
 void cueTrack(COMMAND_T* _ct);
 

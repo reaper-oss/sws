@@ -44,10 +44,13 @@ void toggleAllFXsOfflineSelectedTracks(COMMAND_T* _ct);
 void toggleAllFXsBypassSelectedTracks(COMMAND_T* _ct);
 
 // SnM_Windows.cpp
+void toggleShowHideWin(const char * _title);
 void closeWin(const char * _title);
-void closeWindows(bool _routing, bool _env);
+void closeOrToggleWindows(bool _routing, bool _env, bool _toggle);
 void closeRoutingWindows(COMMAND_T * _c);
 void closeEnvWindows(COMMAND_T * _c);
+void toggleRoutingWindows(COMMAND_T * _c);
+void toggleEnvWindows(COMMAND_T * _c);
 
 // SnM_Sends.cpp
 bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type);

@@ -28,6 +28,15 @@
 
 #include "stdafx.h"
 
+// Jeffos' note: 
+// I know... I'm not happy with this "get window by name" solution either.
+
+void toggleShowHideWin(const char * _title)
+{
+	HWND w = FindWindow(NULL, _title);
+	if (w != NULL)
+		ShowWindow(w, IsWindowVisible(w) ? SW_HIDE : SW_SHOW);
+}
 
 void closeWin(const char * _title)
 {
@@ -36,7 +45,7 @@ void closeWin(const char * _title)
 			SendMessage(w, WM_SYSCOMMAND, SC_CLOSE, 0);
 }
 
-void closeWindows(bool _routing, bool _env)
+void closeOrToggleWindows(bool _routing, bool _env, bool _toggle)
 {
 	for (int i=1; i <= GetNumTracks(); i++)
 	{
@@ -52,8 +61,10 @@ void closeWindows(bool _routing, bool _env)
 				char routingName[128];
 				sprintf(routingName, "Routing for track %d \"%s\"", i, trName);
 
-//				MessageBox(g_parent, routingName, "dbg", MB_OK);
-				closeWin(routingName);
+				if (_toggle)
+					toggleShowHideWin(routingName);
+				else
+					closeWin(routingName);
 			}
 
 			// *** Env ***
@@ -61,20 +72,32 @@ void closeWindows(bool _routing, bool _env)
 			{
 				char envName[128];
 				sprintf(envName, "Envelopes for track %d \"%s\"", i, trName);
-				closeWin(envName);
+				if (_toggle)
+					toggleShowHideWin(envName);
+				else
+					closeWin(envName);
 			}
-
 		}
 	}
 }
 
 void closeRoutingWindows(COMMAND_T * _c)
 {
-	closeWindows(true, false);
+	closeOrToggleWindows(true, false, false);
 }
 
 void closeEnvWindows(COMMAND_T * _c)
 {
-	closeWindows(false, true);
+	closeOrToggleWindows(false, true, false);
+}
+
+void toggleRoutingWindows(COMMAND_T * _c)
+{
+	closeOrToggleWindows(true, false, true);
+}
+
+void toggleEnvWindows(COMMAND_T * _c)
+{
+	closeOrToggleWindows(false, true, true);
 }
 

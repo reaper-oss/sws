@@ -346,6 +346,7 @@ extern "C"
 		IMPAPI(Undo_OnStateChange);
 		IMPAPI(Undo_OnStateChangeEx);
 		IMPAPI(UpdateTimeline);
+		IMPAPI(GetUserInputs);
 
 		g_hInst = hInstance;
 		g_hwndParent = GetMainHwnd();

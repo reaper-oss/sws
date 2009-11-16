@@ -29,89 +29,133 @@
 #include "stdafx.h"
 #include "TrackEnvelope.h"
 
-TrackEnvelopes::TrackEnvelopes():m_bLoaded(false),m_pTr(NULL)
+SWS_TrackEnvelope::SWS_TrackEnvelope(TrackEnvelope* te):m_pTe(te), m_bLoaded(false), m_iHeightOverride(0), m_cEnv(NULL), m_bVis(false)
 {
 }
 
-TrackEnvelopes::~TrackEnvelopes()
+SWS_TrackEnvelope::~SWS_TrackEnvelope()
 {
-	m_envelopes.Empty(true);
-	m_bLoaded = false;
-	m_pTr = NULL;
+	free(m_cEnv);
 }
 
-void TrackEnvelopes::Load()
+void SWS_TrackEnvelope::Load()
 {
-	if (!GetSetObjectState || !FreeHeapPtr || !m_pTr)
+	if (!m_pTe)
 		return;
-
-	m_envelopes.Empty(true);
-
-	char* cData = GetSetObjectState(m_pTr, NULL);
-	WDL_String curLine;
-	char* pEOL = cData-1;
-	TrackEnvelope* te = NULL;
-	int iDepth = 0;
-	do
+	free(m_cEnv);
+	m_cEnv = NULL;
+	int iStrSize = 256;
+	while(true)
 	{
-		char* pLine = pEOL+1;
-		pEOL = strchr(pLine, '\n');
-		curLine.Set(pLine, (int)(pEOL ? pEOL-pLine : 0));
+		m_cEnv = (char*)realloc(m_cEnv, iStrSize);
+		m_cEnv[0] = 0;
+		bool bRet = GetSetEnvelopeState(m_pTe, m_cEnv, iStrSize);
 
-		LineParser lp(false);
-		lp.parse(curLine.Get());
-		if (lp.getnumtokens())
+		if (bRet && strlen(m_cEnv) != iStrSize-1)
+			break;
+
+		if (!bRet || iStrSize >= ENV_MAX_SIZE)
 		{
-			if (lp.gettoken_str(0)[0] == '<')
-				iDepth++;
-			else if (lp.gettoken_str(0)[0] == '>')
-				iDepth--;
+			free(m_cEnv);
+			m_cEnv = NULL;
+			return;
 		}
-		if (!te && iDepth == 2 &&
-		   (strcmp(lp.gettoken_str(0), "<VOLENV") == 0 ||
-			strcmp(lp.gettoken_str(0), "<VOLENV2") == 0 ||
-			strcmp(lp.gettoken_str(0), "<PANENV") == 0 ||
-			strcmp(lp.gettoken_str(0), "<PANENV2") == 0 ||
-			strcmp(lp.gettoken_str(0), "<MUTEENV") == 0 ||
-			strcmp(lp.gettoken_str(0), "<PARMENV") == 0))
-		{
-			te = m_envelopes.Add(new TrackEnvelope);
-		}
-		else if (te && lp.getnumtokens() == 4 && strcmp(lp.gettoken_str(0), "VIS") == 0)
-		{
-			if (lp.gettoken_int(1) == 1 && lp.gettoken_int(2) == 1)
-				te->m_dHeight = lp.gettoken_float(3);
-			else
-				te->m_dHeight = 0.0;
-			te = NULL;		
-		}
+			
+		iStrSize *= 2;
 	}
-	while (pEOL);
 
-	FreeHeapPtr(cData);
+	// Add types of wanted information here
+	char* cLaneHeight = strstr(m_cEnv, "LANEHEIGHT ");
+	if (cLaneHeight)
+		m_iHeightOverride = atol(cLaneHeight + 11);
+	else
+		m_iHeightOverride = 0;
+	char* cVis = strstr(m_cEnv, "VIS ");
+	if (cVis)
+		m_bVis = cVis[4] == '1';
+
 	m_bLoaded = true;
 }
 
-void TrackEnvelopes::Save()
+int SWS_TrackEnvelope::GetHeight(int iTrackHeight)
+{
+	if (!m_bLoaded)
+		Load();
+
+	if (!m_bVis && iTrackHeight)
+		return 0;
+	else if (m_iHeightOverride || iTrackHeight == 0)
+		return m_iHeightOverride;
+	else
+	{
+		iTrackHeight *= ENV_HEIGHT_MULTIPLIER;
+		if (iTrackHeight < MINTRACKHEIGHT)
+			iTrackHeight = MINTRACKHEIGHT;
+		return iTrackHeight;
+	}
+}
+
+void SWS_TrackEnvelope::SetHeight(int iHeight)
+{
+	if (!m_bLoaded)
+		Load();
+	if (!m_pTe || !m_cEnv || !m_bVis || m_iHeightOverride == iHeight)
+		return;
+
+	char* pLH = strstr(m_cEnv, "LANEHEIGHT");
+	if (!pLH)
+		return;
+
+	char* cOldState = m_cEnv;
+	m_cEnv = (char*)malloc(strlen(cOldState) + 10);
+	lstrcpyn(m_cEnv, cOldState, pLH-cOldState + 12);
+	sprintf(m_cEnv+strlen(m_cEnv), "%d", iHeight);
+	strcpy(m_cEnv+strlen(m_cEnv), strchr(pLH+11, ' '));
+	GetSetEnvelopeState(m_pTe, m_cEnv, strlen(m_cEnv));
+	free(cOldState);
+}
+
+bool SWS_TrackEnvelope::GetVis()
+{
+	if (!m_bLoaded)
+		Load();
+	return m_bVis;
+}
+
+void SWS_TrackEnvelope::SetVis(bool bVis)
+{
+	if (!m_bLoaded)
+		Load();
+	if (!m_pTe || !m_cEnv || m_bVis == bVis)
+		return;
+
+	char* pLH = strstr(m_cEnv, "VIS ");
+	if (!pLH)
+		return;
+
+	pLH[4] = bVis ? '1' : '0';
+	GetSetEnvelopeState(m_pTe, m_cEnv, strlen(m_cEnv));
+}
+
+SWS_TrackEnvelopes::SWS_TrackEnvelopes():m_pTr(NULL)
 {
 }
 
-int TrackEnvelopes::GetLanesHeight(int iTrackHeight)
+SWS_TrackEnvelopes::~SWS_TrackEnvelopes()
 {
-	if (GetTrackVis(m_pTr) & 2)
+}
+
+int SWS_TrackEnvelopes::GetLanesHeight(int iTrackHeight)
+{
+	int iHeight = 0;
+
+	if (m_pTr && GetTrackVis(m_pTr) & 2)
 	{
-		if (!m_bLoaded)
-			Load();
-		int iHeight = 0;
-		for (int i = 0; i < m_envelopes.GetSize(); i++)
+		for (int i = 0; i < CountTrackEnvelopes(m_pTr); i++)
 		{
-			int iLaneHeight = (int)(m_envelopes.Get(i)->m_dHeight * iTrackHeight);
-			if (m_envelopes.Get(i)->m_dHeight != 0.0 && iLaneHeight < MINTRACKHEIGHT)
-				iLaneHeight += MINTRACKHEIGHT;
-			iHeight += iLaneHeight;
+			SWS_TrackEnvelope te(GetTrackEnvelope(m_pTr, i));
+			iHeight += te.GetHeight(iTrackHeight);
 		}
-		return iHeight;
 	}
-	else
-		return 0;
+	return iHeight;
 }

@@ -28,23 +28,34 @@
 
 #pragma once
 
-class TrackEnvelope
+#define ENV_HEIGHT_MULTIPLIER 0.75
+#define ENV_MAX_SIZE 16384
+
+class SWS_TrackEnvelope
 {
 public:
-	double m_dHeight;
+	SWS_TrackEnvelope(TrackEnvelope* te);
+	~SWS_TrackEnvelope();
+	void Load();
+	int GetHeight(int iTrackHeight);
+	void SetHeight(int iHeight);
+	bool GetVis();
+	void SetVis(bool bVis);
+private:
+	TrackEnvelope* m_pTe;
+	int m_iHeightOverride;
+	bool m_bVis;
+	bool m_bLoaded;
+	char* m_cEnv;
 };
 
-class TrackEnvelopes
+class SWS_TrackEnvelopes
 {
 public:
-	TrackEnvelopes();
-	~TrackEnvelopes();
+	SWS_TrackEnvelopes();
+	~SWS_TrackEnvelopes();
 	void SetTrack(MediaTrack* tr) { m_pTr = tr; }
-	void Load();
-	void Save();
 	int GetLanesHeight(int iTrackHeight);
 private:
-	WDL_PtrList<TrackEnvelope> m_envelopes;
-	bool m_bLoaded;
 	MediaTrack* m_pTr;
 };

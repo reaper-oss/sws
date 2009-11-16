@@ -71,13 +71,16 @@ void DeleteAllMarkers()
 {
 	bool bReg;
 	int iID;
-	int x = 0;
+	int x = 0, lastx = 0;
 	while ((x = EnumProjectMarkers(x, &bReg, NULL, NULL, NULL, &iID)))
+	{
 		if (!bReg)
 		{
 			DeleteProjectMarker(NULL, iID, false);
-			x = 0;
+			x = lastx;
 		}
+		lastx = x;
+	}
 }
 
 // Command version with undo point and wnd update
@@ -93,13 +96,16 @@ void DeleteAllRegions()
 {
 	bool bReg;
 	int iID;
-	int x = 0;
+	int x = 0, lastx = 0;
 	while ((x = EnumProjectMarkers(x, &bReg, NULL, NULL, NULL, &iID)))
+	{
 		if (bReg)
 		{
 			DeleteProjectMarker(NULL, iID, true);
-			x = 0;
+			x = lastx;
 		}
+		lastx = x;
+	}
 }
 
 // Command version with undo point and wnd update

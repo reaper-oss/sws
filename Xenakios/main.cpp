@@ -288,15 +288,15 @@ void DoInsertShuffledRandomFile(COMMAND_T*)
 	
 }
 
-double g_FirstSelectedItemPos;
-double g_LastSelectedItemEnd;
-
 bool ItemTimesCompFunc(MediaItem* ita,MediaItem* itb)
 {
 	double itapos=*(double*)GetSetMediaItemInfo(ita,"D_POSITION",0);
 	double itbpos=*(double*)GetSetMediaItemInfo(itb,"D_POSITION",0);
 	return itapos<itbpos;
 }
+
+double g_FirstSelectedItemPos;
+double g_LastSelectedItemEnd;
 
 void DoSetLoopPointsToSelectedItems(bool SetTheLoop)
 {
@@ -373,75 +373,45 @@ void DoResampleTakeOneSemitoneUp(COMMAND_T*)
 
 void DoLoopAndPlaySelectedItems(COMMAND_T*)
 {
-	Main_OnCommand(1016,0); // Transport Stop
+	Main_OnCommand(1016, 0); // Transport Stop
 	DoSetLoopPointsToSelectedItems(true);
-	Main_OnCommand(40632,0); // Move cursor to start of loop
+	Main_OnCommand(40632, 0); // Move cursor to start of loop
 	GetSetRepeat(1); // set repeat on
-	Main_OnCommand(1007,0); // Transport Play	
+	Main_OnCommand(1007, 0); // Transport Play	
 }
 
-#ifdef _WIN32
-
-void CALLBACK MyTimerProc1(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+void PlayItemsOnceSlice()
 {
-	if (idEvent==8193)
+	if (g_PlayItemsOncePlaying)
 	{
-		if (GetPlayPosition2()<g_FirstSelectedItemPos)
+		if (GetPlayState() == 0 || GetPlayPosition2() < g_FirstSelectedItemPos)
+			g_PlayItemsOncePlaying = false;
+		else if (GetPlayState() & 1 && GetPlayPosition2() >= g_LastSelectedItemEnd)
 		{
-			g_PlayItemsOncePlaying=false;
-			KillTimer(g_hwndParent,8193);
-		}
-		if (GetPlayState() & 0)
-		{
-			g_PlayItemsOncePlaying=false;
-			KillTimer(g_hwndParent,8193);
-		}
-
-		if ((GetPlayState() & 1) && (GetPlayPosition2()>=g_LastSelectedItemEnd))
-		{
-			Main_OnCommand(1016,0); // Transport Stop
-		
-			g_PlayItemsOncePlaying=false;
-			KillTimer(g_hwndParent,8193);
-		}
-		if (g_PlayItemsOncePlaying==false) 
-		{
-			g_PlayItemsOncePlaying=false;
-			KillTimer(g_hwndParent,8193);
-			Main_OnCommand(1016,0); // Transport Stop
+			g_PlayItemsOncePlaying = false;
+			Main_OnCommand(1016, 0); // Transport Stop
 		}
 	}
 }
-#endif
 
 void DoPlayItemsOnce(COMMAND_T*)
 {
-#ifdef _WIN32
-	if (GetNumSelectedItems()>0)
+	if (GetNumSelectedItems() > 0)
 	{
-		if (g_PlayItemsOncePlaying==true)
+		if (g_PlayItemsOncePlaying)
 		{
-			//
-			g_PlayItemsOncePlaying=false;
-			KillTimer(g_hwndParent,8193);
-			Main_OnCommand(1016,0); // Transport Stop
+			g_PlayItemsOncePlaying = false;
+			Main_OnCommand(1016, 0); // Transport Stop
 		}
 
-		//DoInvertItemSelection(COMMAND_T*);
-		//Main_OnCommand(40175,0);
-		//DoInvertItemSelection(COMMAND_T*);
-		Main_OnCommand(40634,0); // remove loop points
+		Main_OnCommand(40634, 0); // remove loop points
 		DoSetLoopPointsToSelectedItems(false);
-		SetEditCurPos(g_FirstSelectedItemPos,false,false);
-		g_PlayItemsOncePlaying=true;
+		SetEditCurPos(g_FirstSelectedItemPos, false, false);
 		
-		Main_OnCommand(1007,0); // Transport Play
+		Main_OnCommand(1007, 0); // Transport Play
 		Sleep(100);
-		SetTimer(g_hwndParent,8193,25,(TIMERPROC)MyTimerProc1);
+		g_PlayItemsOncePlaying = true;
 	}
-#else
-	MessageBox(g_hwndParent,"Not implemented for OS-X","Sorry... :,(",MB_OK);
-#endif
 }
 
 void DoMoveCurNextTransMinusFade(COMMAND_T*)
@@ -472,144 +442,82 @@ void DoMoveCursor10pixLeft(COMMAND_T*)  { for (int i = 0; i < ALEXPIXELS; i++) M
 void DoMoveCursor10pixLeftCreateSel(COMMAND_T*)  { for (int i = 0; i < ALEXPIXELS; i++) Main_OnCommand(40102,0); }
 void DoMoveCursor10pixRightCreateSel(COMMAND_T*) { for (int i = 0; i < ALEXPIXELS; i++) Main_OnCommand(40103,0); }
 
-preview_register_t *g_ItemPreview;
-bool g_itemPreviewPlaying=false;
-PCM_source *Kaatuu=0;
-double PreviewItemPos=0.0;
-#ifdef _WIN32
-CRITICAL_SECTION g_ItemPreviewCS;
-void CALLBACK ItemPreviewTimerProc1(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+preview_register_t g_ItemPreview = { {}, 0, };
+bool g_itemPreviewPlaying = false;
+void ItemPreviewSlice()
 {
-	if (idEvent==11112)
+	if (g_itemPreviewPlaying)
 	{
-		double haju=Kaatuu->GetLength()+PreviewItemPos;
-		if (g_itemPreviewPlaying==false) KillTimer(g_hwndParent,11112);
-		if (g_itemPreviewPlaying==true && g_ItemPreview->curpos>=haju)
+#ifdef _WIN32
+		EnterCriticalSection(&g_ItemPreview.cs);
+#else
+		pthread_mutex_lock(&g_ItemPreview.mutex);
+#endif
+		// Have we reached the end?
+		if (g_ItemPreview.curpos >= g_ItemPreview.src->GetLength())
 		{
-			// preview register curpos past source length, stopping...
-			KillTimer(g_hwndParent,11112);
-			int er=StopPreview(g_ItemPreview);
-			EnterCriticalSection(&g_ItemPreviewCS);
-						delete g_ItemPreview;
-						g_ItemPreview=0;
-			LeaveCriticalSection(&g_ItemPreviewCS);
-			DeleteCriticalSection(&g_ItemPreviewCS);
-			if (Kaatuu!=0) delete Kaatuu;
-			Kaatuu=0;
-			g_itemPreviewPlaying=false;
+#ifdef _WIN32
+			LeaveCriticalSection(&g_ItemPreview.cs);
+#else
+			pthread_mutex_unlock(&g_ItemPreview.mutex);
+#endif
+			StopPreview(&g_ItemPreview);
+			g_itemPreviewPlaying = false;
+			delete g_ItemPreview.src;
 		}
+		else
+#ifdef _WIN32
+			LeaveCriticalSection(&g_ItemPreview.cs);
+#else
+			pthread_mutex_unlock(&g_ItemPreview.mutex);
+#endif
 	}
 }
-#endif
 
-void DoItemAsPcmSource(COMMAND_T*)
+void DoPreviewItem(COMMAND_T*)
 {
-#ifdef _WIN32
-	if (g_itemPreviewPlaying==true)
+	if (g_itemPreviewPlaying)
 	{
 		// preview called while preview in progress, stopping previous preview...
-		g_itemPreviewPlaying=false;
-		StopPreview(g_ItemPreview);
-		Sleep(300);
-		DeleteCriticalSection(&g_ItemPreviewCS);
-		delete g_ItemPreview;
-		g_ItemPreview=0;
-		delete Kaatuu;
-		Kaatuu=0;
-		return;
+		StopPreview(&g_ItemPreview);
+		g_itemPreviewPlaying = false;
+		delete g_ItemPreview.src;
 	}
-
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	
-	int numItems=666;
-	InitializeCriticalSection(&g_ItemPreviewCS);
-	g_ItemPreview=new preview_register_t; 
-	g_ItemPreview->m_out_chan=0;
-	g_ItemPreview->cs=g_ItemPreviewCS;
-	g_ItemPreview->volume=1.0;
-
-	//g_peaksPCM_Source->
-	g_ItemPreview->curpos=0.0;
-	g_ItemPreview->loop=false;
 			
-	bool ItemSelected=false;
-	
-	bool NewSelectedStatus=false;
-	bool FirstFound=false;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		for (j=0;j<numItems;j++)
+		MediaTrack* tr = CSurf_TrackFromID(i+1, false);
+		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
 		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected)
+			MediaItem* curItem = GetTrackMediaItem(tr, j);
+			if (*(bool*)GetSetMediaItemInfo(curItem, "B_UISEL", NULL))
 			{
-				MediaItem_Take *CurTake=GetMediaItemTake(CurItem,-1);
-				PCM_source *ItemPcmSource =((PCM_source*)CurItem);
-				//MediaItem* DupItem=(MediaItem*)((PCM_source*)CurItem)->Duplicate();
-				Kaatuu=ItemPcmSource->Duplicate();
-				
-				double piru=0.0;
-				GetSetMediaItemInfo((MediaItem*)Kaatuu,"D_POSITION",&piru);
-				//GetSetMediaItemInfo(DupItem,"D_POSITION",&piru);
-				//Kaatuu=PCM_Source_CreateFromSimple();
-				if (Kaatuu!=NULL)
+				PCM_source* src = ((PCM_source*)curItem)->Duplicate(); // Casting from MediaItem* to PCM_source works!  Who would have known?
+				if (src)
 				{
-					double len=Kaatuu->GetLength();
-					//double *parm2=new double[4]; //={0.0,len,NULL,NULL};
-					//parm2[0]=0.0;
-					//parm2[1]=len;
-					//parm2[2]=0.0;
-					//parm2[3]=1.0;
-					//int *parm1=0;
-					//int err=Kaatuu->Extended(PCM_SOURCE_EXT_TRIMITEM,(void*)parm1,(void*)parm2,NULL);
-					//if (err==0) PCM_SOURCE_EXT_TRIMITEM failed??
-					//UpdateTimeline();
-					
-					g_ItemPreview->src=Kaatuu;
-					g_ItemPreview->curpos=0.0;
-					if (g_itemPreviewPlaying==false)
+					double dZero = 0.0;
+					GetSetMediaItemInfo((MediaItem*)src, "D_POSITION", &dZero);
+
+					if (!g_ItemPreview.src) // src == 0 means need to initialize structure
 					{
-						int resu=PlayPreview(g_ItemPreview);
-						if (resu>0)
-						{
-							g_itemPreviewPlaying=true;
-							//EnterCriticalSection(&g_ItemPreviewCS);
-							//	g_ItemPreview->curpos=PreviewItemPos;
-							//LeaveCriticalSection(&g_ItemPreviewCS);
-							//g_ItemPreview->
-							//Sleep(7000);
-							//StopPreview(g_ItemPreview);
-							SetTimer(g_hwndParent,11112,200,(TIMERPROC)ItemPreviewTimerProc1);
-						} else 
-						{
-							g_itemPreviewPlaying=false;
-							DeleteCriticalSection(&g_ItemPreviewCS);
-							delete g_ItemPreview;
-							g_ItemPreview=0;
-							delete Kaatuu;
-							Kaatuu=0;
-						}
+#ifdef _WIN32
+						InitializeCriticalSection(&g_ItemPreview.cs);
+#else
+						pthread_mutex_init(&g_ItemPreview.mutex, NULL);
+#endif
+						g_ItemPreview.m_out_chan = 0;
+						g_ItemPreview.volume = 1.0;
+						g_ItemPreview.loop = false;
 					}
+					g_ItemPreview.src = src;
+					g_ItemPreview.curpos = 0.0;
+					if (PlayPreview(&g_ItemPreview))
+						g_itemPreviewPlaying = true;
 				}
-				FirstFound=true;
-				break;
+				return;
 			}
 		}
-		if (FirstFound==true) break;
 	}
-	
-	//DeleteCriticalSection(&g_ItemPreviewCS);
-	//delete g_ItemPreview;
-	//g_ItemPreview=0;
-#else
-	MessageBox(g_hwndParent,"Not implemented for OS-X","Sorry... :,(",MB_OK);	
-#endif
 }
 
 void DoDumpActionsWindow(COMMAND_T*)
@@ -690,7 +598,6 @@ void DoRenameMarkersWithAscendingNumbers(COMMAND_T*)
 	int number;
 	char newmarkname[100];
 	int j=1;
-	int i=0;
 	while ((x=EnumProjectMarkers(x,&isrgn,&pos,&rgnend,&name,&number)))
 	{
 		if (!isrgn)

@@ -229,7 +229,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor left 10 pixels" }, "XENAKIOS_MOVECUR10PIX_LEFT", DoMoveCursor10pixLeft,	"Move cursor left 12 pixels", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor left 10 pixels, creating time selection" }, "XENAKIOS_MOVECUR10PIX_LEFTCTS", DoMoveCursor10pixLeftCreateSel,	"Move cursor left 12 pixels, creating time selection", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor right 10 pixels, creating time selection" }, "XENAKIOS_MOVECUR10PIX_RIGHTCTS", DoMoveCursor10pixRightCreateSel,	"Move cursor right 12 pixels, creating time selection", },
-	{ { DEFACCEL, "Xenakios/SWS: Preview selected media item" }, "XENAKIOS_ITEMASPCM1", DoItemAsPcmSource,	"Preview selected media item", },
+	{ { DEFACCEL, "Xenakios/SWS: Preview selected media item" }, "XENAKIOS_ITEMASPCM1", DoPreviewItem,	"Preview selected media item", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor right configured pixels" }, "XENAKIOS_MOVECURRIGHTCONF", DoMoveCurConfPixRight,	"Move cursor right configured pixels", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor left configured pixels" }, "XENAKIOS_MOVECURRLEFTCONF", DoMoveCurConfPixLeft,	"Move cursor left configured pixels", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor right configured pixels, creating time selection" }, "XENAKIOS_MOVECURRIGHTCONFCTS", DoMoveCurConfPixRightCts,	"Move cursor right configured pixels,, creating time selection", },

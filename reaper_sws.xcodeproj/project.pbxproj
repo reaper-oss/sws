@@ -52,6 +52,12 @@
 		22B4C2500FE311C7009A6731 /* Prompt.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B4C24E0FE311C7009A6731 /* Prompt.h */; };
 		22B671341091DD2A00C494D0 /* swell-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B671331091DD2A00C494D0 /* swell-internal.h */; };
 		22B671381091DDC700C494D0 /* swell-misc.mm in Sources */ = {isa = PBXBuildFile; fileRef = 22B671361091DDC700C494D0 /* swell-misc.mm */; };
+		22C769EB10B0F00800774777 /* TrackFX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769E910B0F00800774777 /* TrackFX.cpp */; };
+		22C769EC10B0F00800774777 /* TrackFX.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C769EA10B0F00800774777 /* TrackFX.h */; };
+		22C769FA10B0F04D00774777 /* SnM_Actions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F510B0F04D00774777 /* SnM_Actions.cpp */; };
+		22C769FB10B0F04D00774777 /* SnM_Actions.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C769F610B0F04D00774777 /* SnM_Actions.h */; };
+		22C769FC10B0F04D00774777 /* SnM_fx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F710B0F04D00774777 /* SnM_fx.cpp */; };
+		22C769FD10B0F04D00774777 /* SnM_sends.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F810B0F04D00774777 /* SnM_sends.cpp */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
 		980764230F5B23180091104D /* wndsize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 980764220F5B23180091104D /* wndsize.cpp */; };
 		980764260F5B233C0091104D /* swell-miscdlg.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764240F5B233C0091104D /* swell-miscdlg.mm */; };
@@ -149,6 +155,13 @@
 		22B4C24E0FE311C7009A6731 /* Prompt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Prompt.h; sourceTree = "<group>"; };
 		22B671331091DD2A00C494D0 /* swell-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "swell-internal.h"; path = "../WDL/swell/swell-internal.h"; sourceTree = SOURCE_ROOT; };
 		22B671361091DDC700C494D0 /* swell-misc.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-misc.mm"; path = "../WDL/swell/swell-misc.mm"; sourceTree = SOURCE_ROOT; };
+		22C769E910B0F00800774777 /* TrackFX.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrackFX.cpp; path = ObjectState/TrackFX.cpp; sourceTree = "<group>"; };
+		22C769EA10B0F00800774777 /* TrackFX.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TrackFX.h; path = ObjectState/TrackFX.h; sourceTree = "<group>"; };
+		22C769F510B0F04D00774777 /* SnM_Actions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Actions.cpp; path = SnM/SnM_Actions.cpp; sourceTree = "<group>"; };
+		22C769F610B0F04D00774777 /* SnM_Actions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Actions.h; path = SnM/SnM_Actions.h; sourceTree = "<group>"; };
+		22C769F710B0F04D00774777 /* SnM_fx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_fx.cpp; path = SnM/SnM_fx.cpp; sourceTree = "<group>"; };
+		22C769F810B0F04D00774777 /* SnM_sends.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_sends.cpp; path = SnM/SnM_sends.cpp; sourceTree = "<group>"; };
+		22C769F910B0F04D00774777 /* SnM_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Windows.cpp; path = SnM/SnM_Windows.cpp; sourceTree = "<group>"; };
 		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		980764220F5B23180091104D /* wndsize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wndsize.cpp; path = ../WDL/wingui/wndsize.cpp; sourceTree = SOURCE_ROOT; };
 		980764240F5B233C0091104D /* swell-miscdlg.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-miscdlg.mm"; path = "../WDL/swell/swell-miscdlg.mm"; sourceTree = SOURCE_ROOT; };
@@ -230,6 +243,7 @@
 		08FB7794FE84155DC02AAC07 /* reaper_sws */ = {
 			isa = PBXGroup;
 			children = (
+				22C769F410B0F03900774777 /* SnM */,
 				22257D6D108BDC330058CF75 /* Xenakios */,
 				08FB7795FE84155DC02AAC07 /* Source */,
 				1AB674ADFE9D54B511CA2CBB /* Products */,
@@ -294,6 +308,8 @@
 				981006D50F4768010072D712 /* TimeState.h */,
 				98E89AC60FC9C05C00A56C44 /* TrackEnvelope.cpp */,
 				98E89AC70FC9C05C00A56C44 /* TrackEnvelope.h */,
+				22C769E910B0F00800774777 /* TrackFX.cpp */,
+				22C769EA10B0F00800774777 /* TrackFX.h */,
 				981006CF0F4768010072D712 /* TrackItemState.cpp */,
 				981006DA0F4768010072D712 /* TrackItemState.h */,
 				98D590460F628703003F75B4 /* Tracklist.cpp */,
@@ -348,6 +364,18 @@
 				22257D86108BDC6B0058CF75 /* XenUtils.cpp */,
 			);
 			name = Xenakios;
+			sourceTree = "<group>";
+		};
+		22C769F410B0F03900774777 /* SnM */ = {
+			isa = PBXGroup;
+			children = (
+				22C769F510B0F04D00774777 /* SnM_Actions.cpp */,
+				22C769F610B0F04D00774777 /* SnM_Actions.h */,
+				22C769F710B0F04D00774777 /* SnM_fx.cpp */,
+				22C769F810B0F04D00774777 /* SnM_sends.cpp */,
+				22C769F910B0F04D00774777 /* SnM_Windows.cpp */,
+			);
+			name = SnM;
 			sourceTree = "<group>";
 		};
 		981007040F4768020072D712 /* Products */ = {
@@ -419,6 +447,8 @@
 				229AC804108FB3BE00E4A962 /* MarkerListClass.h in Headers */,
 				229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */,
 				22B671341091DD2A00C494D0 /* swell-internal.h in Headers */,
+				22C769EC10B0F00800774777 /* TrackFX.h in Headers */,
+				22C769FB10B0F04D00774777 /* SnM_Actions.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -549,6 +579,10 @@
 				22B671381091DDC700C494D0 /* swell-misc.mm in Sources */,
 				2296249010A3A22500A1090C /* lice.cpp in Sources */,
 				2296249110A3A22500A1090C /* lice_line.cpp in Sources */,
+				22C769EB10B0F00800774777 /* TrackFX.cpp in Sources */,
+				22C769FA10B0F04D00774777 /* SnM_Actions.cpp in Sources */,
+				22C769FC10B0F04D00774777 /* SnM_fx.cpp in Sources */,
+				22C769FD10B0F04D00774777 /* SnM_sends.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

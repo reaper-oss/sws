@@ -94,7 +94,7 @@ int SWSRegisterCommand(COMMAND_T* pCommand)
 		if (!plugin_register("gaccel",&pCommand->accel))
 			return 0;
 	}
-	if (!g_iFirstCommand)
+	if (!g_iFirstCommand && g_iFirstCommand > pCommand->accel.accel.cmd)
 		g_iFirstCommand = pCommand->accel.accel.cmd;
 	g_commands.Add(pCommand);
 	return 1;
@@ -171,6 +171,8 @@ public:
 	{
 		ZoomSlice();
 		MarkerActionSlice();
+		ItemPreviewSlice();
+		PlayItemsOnceSlice();
 
 		if (m_bChanged)
 		{
@@ -245,6 +247,7 @@ extern "C"
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountSelectedMediaItems);
+		IMPAPI(CountTrackEnvelopes);
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
 		IMPAPI(CSurf_OnMuteChange);
@@ -282,6 +285,7 @@ extern "C"
 		IMPAPI(GetPlayState);
 		IMPAPI(GetProjectPath);
 		IMPAPI(GetSelectedTrackEnvelope);
+		IMPAPI(GetSetEnvelopeState);
 		IMPAPI(GetSetMediaItemInfo);
 		IMPAPI(GetSetMediaItemTakeInfo);
 		IMPAPI(GetSetMediaTrackInfo);
@@ -290,10 +294,12 @@ extern "C"
 		IMPAPI(GetSetTrackSendInfo);
 		IMPAPI(GetSet_LoopTimeRange);
 		IMPAPI(GetTrackGUID);
+		IMPAPI(GetTrackEnvelope);
 		IMPAPI(GetTrackInfo);
 		IMPAPI(GetTrackMediaItem);
 		IMPAPI(GetTrackNumMediaItems);
 		IMPAPI(GetTrackUIVolPan);
+		IMPAPI(GetUserInputs);
 		IMPAPI(get_config_var);
 		IMPAPI(get_ini_file);
 		IMPAPI(GSC_mainwnd);

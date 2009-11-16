@@ -44,7 +44,7 @@ void SetReaperWndSize(COMMAND_T* = NULL)
 	SetWindowPos(hwnd, NULL, 0, 0, x, y, SWP_NOMOVE | SWP_NOZORDER);
 }
 
-int TrackHeightFromVZoomIndex(HWND hwnd, MediaTrack* tr, int iZoom, TrackEnvelopes* pTE)
+int TrackHeightFromVZoomIndex(HWND hwnd, MediaTrack* tr, int iZoom, SWS_TrackEnvelopes* pTE)
 {
 	if (!(GetTrackVis(tr) & 2))
 		return 0;
@@ -118,6 +118,7 @@ void SetVertPos(HWND hwnd, int iTrack, bool bPixels) // 1 based track index!
 	si.fMask = SIF_ALL;
 	CoolSB_GetScrollInfo(hwnd, SB_VERT, &si);
 
+	int oldmax = si.nMax;
 	si.nMax = 0;
 	if (bPixels)
 		si.nPos = iTrack;
@@ -131,7 +132,12 @@ void SetVertPos(HWND hwnd, int iTrack, bool bPixels) // 1 based track index!
 			si.nPos += iHeight;
 		si.nMax += iHeight;
 	}
-	si.nMax += 60;
+	si.nMax += 65;
+
+	if (oldmax == si.nPage && (UINT)si.nMax > si.nPage)
+		si.nPage++;
+	else if ((UINT)si.nMax < si.nPage)
+		si.nMax = si.nPage;
 
 	CoolSB_SetScrollInfo(hwnd, SB_VERT, &si, true);
 	SendMessage(hwnd, WM_VSCROLL, si.nPos << 16 | SB_THUMBPOSITION, NULL);
@@ -144,10 +150,11 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 		return;
 
 	// Zoom in vertically
-	RECT r;
-	GetClientRect(hTrackView, &r);
+	RECT rect;
+	GetClientRect(hTrackView, &rect);
+	int iTotalHeight = rect.bottom * 0.99; // Take off a percent
 
-	TrackEnvelopes* pTES = new TrackEnvelopes[iNum];
+	SWS_TrackEnvelopes* pTES = new SWS_TrackEnvelopes[iNum];
 	for (int i = 0; i < iNum; i++)
 		pTES[i].SetTrack(CSurf_TrackFromID(i+iFirst, false));
 
@@ -156,8 +163,9 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 		*(int*)GetConfigVar("vzoom2") = 0;
 		for (int i = 1; i <= GetNumTracks(); i++)
 			GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_HEIGHTOVERRIDE", &g_i0);
-		TrackList_AdjustWindows(false);
-		UpdateTimeline();
+		Main_OnCommand(40112, 0); // Zoom out vert to minimize lanes too (calls refresh)
+		//TrackList_AdjustWindows(false);
+		//UpdateTimeline();
 
 		// Get the size of shown but not zoomed tracks
 		int iNotZoomedSize = 0;
@@ -166,20 +174,38 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i+iFirst, false);
 			if (bZoomed[i])
-			{
-				if (i != iNum-1)
-					iNotZoomedSize += pTES[i].GetLanesHeight(MINTRACKHEIGHT);
 				iZoomed++;
-			}
 			else
 				iNotZoomedSize += TrackHeightFromVZoomIndex(hTrackView, tr, 0, &pTES[i]);
 		}
-		int iHeight = (r.bottom - iNotZoomedSize) / iZoomed;
-		if (iHeight > MINTRACKHEIGHT)
+		// Pixels we have to work with will all the sel tracks and their envelopes
+		iTotalHeight -= iNotZoomedSize;
+		int iEachHeight = iTotalHeight / iZoomed;
+		while (true)
+		{
+			int iLanesHeight = 0;
+			// Calc envelope height
+			for (int i = 0; i < iNum; i++)
+				if (bZoomed[i])
+					iLanesHeight += pTES[i].GetLanesHeight(iEachHeight);
+			if (iEachHeight * iZoomed + iLanesHeight <= iTotalHeight)
+				break;
+			
+			// Guess new iEachHeight - may be wrong!
+			int iNewEachHeight = (int)(iTotalHeight / ((double)iLanesHeight / iEachHeight + iZoomed));
+			if (iNewEachHeight == iEachHeight)
+				iEachHeight--;
+			else
+				iEachHeight = iNewEachHeight;
+			if (iEachHeight <= MINTRACKHEIGHT)
+				break;
+		}
+
+		if (iEachHeight > MINTRACKHEIGHT)
 		{
 			for (int i = 0; i < iNum; i++)
 				if (bZoomed[i])
-					GetSetMediaTrackInfo(CSurf_TrackFromID(i+iFirst, false), "I_HEIGHTOVERRIDE", &iHeight);
+					GetSetMediaTrackInfo(CSurf_TrackFromID(i+iFirst, false), "I_HEIGHTOVERRIDE", &iEachHeight);
 			TrackList_AdjustWindows(false);
 			UpdateTimeline();
 		}
@@ -197,7 +223,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 				MediaTrack* tr = CSurf_TrackFromID(i+iFirst, false);
 				iHeight += TrackHeightFromVZoomIndex(hTrackView, tr, iZoom, &pTES[i]);
 			}
-		} while (iHeight > (int)r.bottom && iZoom > 0);
+		} while (iHeight > iTotalHeight && iZoom > 0);
 
 		// Reset custom track sizes
 		for (int i = 1; i <= GetNumTracks(); i++)
@@ -359,12 +385,21 @@ private:
 	int iVZoom;
 	int iXPos;
 	int iYPos;
-	WDL_TypedBuf<int> hbTrackHeights;
-	WDL_TypedBuf<int> hbTrackVis;
+	WDL_TypedBuf<int>  hbTrackHeights;
+	WDL_TypedBuf<int>  hbTrackVis;
+	WDL_TypedBuf<int>  hbEnvHeights;
+	WDL_TypedBuf<bool> hbEnvVis;
 
 public:
 	ArrangeState() { Clear(); }
-	void Clear() { dVZoom = 0.0; iXPos = 0; iYPos = 0; hbTrackHeights.Resize(0, false); hbTrackVis.Resize(0, false); }
+	void Clear()
+	{
+		dVZoom = 0.0; iXPos = 0; iYPos = 0;
+		hbTrackHeights.Resize(0, false);
+		hbTrackVis.Resize(0, false);
+		hbEnvHeights.Resize(0, false);
+		hbEnvVis.Resize(0, false);
+	}
 	void Save()
 	{
 		HWND hTrackView = GetTrackWnd();
@@ -382,11 +417,27 @@ public:
 		iVZoom = *(int*)GetConfigVar("vzoom2");
 		hbTrackHeights.Resize(GetNumTracks(), false);
 		hbTrackVis.Resize(GetNumTracks(), false);
+		hbEnvHeights.Resize(0, false);
+		hbEnvVis.Resize(0, false);
 		for (int i = 0; i < GetNumTracks(); i++)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i+1, false);
 			hbTrackHeights.Get()[i] = *(int*)GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", NULL);
 			hbTrackVis.Get()[i] = GetTrackVis(tr);
+			int iNumEnvelopes = CountTrackEnvelopes(tr);
+			if (iNumEnvelopes)
+			{
+				int iEnv = hbEnvHeights.GetSize();
+				hbEnvHeights.Resize(iEnv + iNumEnvelopes);
+				hbEnvVis.Resize(iEnv + iNumEnvelopes);
+				for (int j = 0; j < iNumEnvelopes; j++)
+				{
+					SWS_TrackEnvelope te(GetTrackEnvelope(tr, j));
+					hbEnvHeights.Get()[iEnv] = te.GetHeight(0);
+					hbEnvVis.Get()[iEnv] = te.GetVis();
+					iEnv++;
+				}
+			}
 		}
 		CoolSB_GetScrollInfo(hTrackView, SB_VERT, &si);
 		iYPos = si.nPos;
@@ -403,15 +454,31 @@ public:
 		// Vert zoom
 		*(int*)GetConfigVar("vzoom2") = iVZoom;
 		int iSaved = hbTrackHeights.GetSize();
-		for (int i = 0; i < iSaved && i < GetNumTracks(); i++)
+		int iEnvPtr = 0;
+		for (int i = 0; i < GetNumTracks(); i++)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i+1, false);
-			SetTrackVis(tr, hbTrackVis.Get()[i]);
-			GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", hbTrackHeights.Get()+i);
+			if (i < iSaved)
+			{
+				SetTrackVis(tr, hbTrackVis.Get()[i]);
+				GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", hbTrackHeights.Get()+i);
+			}
+			else
+				GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", &g_i0);
+
+			for (int j = 0; j < CountTrackEnvelopes(tr); j++)
+			{
+				SWS_TrackEnvelope te(GetTrackEnvelope(tr, j));
+				if (iEnvPtr < hbEnvHeights.GetSize())
+				{
+					te.SetVis(hbEnvVis.Get()[iEnvPtr]);
+					te.SetHeight(hbEnvHeights.Get()[iEnvPtr]);
+					iEnvPtr++;
+				}
+				else
+					te.SetHeight(0);
+			}
 		}
-		if (GetNumTracks() > iSaved)
-			for (int i = iSaved; i < GetNumTracks(); i++)
-				GetSetMediaTrackInfo(CSurf_TrackFromID(i+1, false), "I_HEIGHTOVERRIDE", &g_i0);
 
 		TrackList_AdjustWindows(false);
 		UpdateTimeline();

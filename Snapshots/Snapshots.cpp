@@ -60,8 +60,6 @@ void UpdateSnapshotsDialog()
 	g_pSSWnd->Update();
 }
 
-static int g_iCustomMask = ALL_MASK;
-static int g_iMaskOverride = 0;
 static int g_iMask = ALL_MASK;
 static bool g_bSelOnly = false;
 static int g_iSavedMask;
@@ -201,14 +199,12 @@ void SWS_SnapshotsView::GetItemTooltip(LPARAM item, char* str, int iStrMax)
 void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol)
 {
 	if (!item)
-	{
-		g_ss.Get()->m_iCurSnapshot = -1;
 		return;
-	}
+
+	g_ss.Get()->m_iCurSnapshot = -1;
 
 	Snapshot* ss = (Snapshot*)item;
 
-	g_pSSWnd->m_pLastTouched = ss;
 	bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
 	bool bCtrl  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? true : false;
 	bool bAlt   = GetAsyncKeyState(VK_MENU)    & 0x8000 ? true : false;
@@ -216,12 +212,15 @@ void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol)
 	// Recall (std click)
 	if (!bShift && !bCtrl && !bAlt)
 	{
-		if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
-			Update();
+		// Let the sel handler take care of it...
+		//g_ss.Get()->m_iCurSnapshot = ss->m_iSlot;
+		//if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
+		//	Update();
 	}
 	// Save (ctrl click)
 	else if (!bShift && bCtrl && !bAlt)
 	{
+		g_ss.Get()->m_iCurSnapshot = ss->m_iSlot;
 		g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly, ss->m_cName));
 		delete ss;
 		Update();
@@ -255,7 +254,14 @@ bool SWS_SnapshotsView::OnItemSelChange(LPARAM item, bool bSel)
 	if (bSel)
 	{
 		Snapshot* ss = (Snapshot*)item;
-		g_ss.Get()->m_iCurSnapshot = ss->m_iSlot;
+		if (g_ss.Get()->m_iCurSnapshot != ss->m_iSlot)
+		{
+			g_pSSWnd->m_pLastTouched = ss;
+			g_ss.Get()->m_iCurSnapshot = ss->m_iSlot;
+			if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
+				g_pSSWnd->Update();
+		}
+		//ss->m_iSlot = g_ss.Get()->m_iCurSnapshot;
 	}
 	return false;
 }
@@ -368,6 +374,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case LOADSEL_MSG:
 			if (m_pLastTouched)
 			{
+				g_ss.Get()->m_iCurSnapshot = m_pLastTouched->m_iSlot;
 				if (m_pLastTouched->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
 					Update();
 			}
@@ -471,6 +478,8 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
 			if (!iCmd)
 				iCmd = LOAD_MSG + i;
 			AddToMenu(contextMenu, cName, iCmd);
+			if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot == g_ss.Get()->m_iCurSnapshot)
+				SWSCheckMenuItem(contextMenu, iCmd, true);
 		}
 	}
 	AddToMenu(contextMenu, "New snapshot", SWSGetCommandID(NewSnapshot));
@@ -668,8 +677,8 @@ void GetSnapshot(int slot, int iMask, bool bSelOnly)
 		if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot == slot)
 		{
 			g_ss.Get()->m_iCurSnapshot = g_ss.Get()->m_snapshots.Get(i)->m_iSlot;
-			g_ss.Get()->m_snapshots.Get(i)->UpdateReaper(iMask, bSelOnly, g_bHideNewOnRecall);
-			g_pSSWnd->Update();
+			if (g_ss.Get()->m_snapshots.Get(i)->UpdateReaper(iMask, bSelOnly, g_bHideNewOnRecall))
+				g_pSSWnd->Update();
 			return;
 		}
 }

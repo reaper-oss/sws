@@ -662,33 +662,13 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	}
 }
 
-static void oldmenuhook(int menuid, HMENU hmenu, int flag)
-{
-	switch (menuid)
-	{
-	case MAINMENU_EXT:
-		menuhook("Main extensions", hmenu, flag);
-	case CTXMENU_TCP:
-		menuhook("Track control panel context", hmenu, flag);
-		break;
-	case CTXMENU_ITEM:
-		menuhook("Media item context", hmenu, flag);
-		break;
-	default:
-		menuhook("", hmenu, flag);
-		break;
-	}
-}
-
-
 int XenakiosInit()
 {
 	if(!plugin_register("projectconfig",&xen_reftrack_pcreg))
 		return 0;
 
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		if (!plugin_register("hookmenu", (void*)oldmenuhook))
-			return 0;
+		return 0;
 
 	ShuffledNumbers=new int[1024];
 

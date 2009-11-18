@@ -39,6 +39,7 @@
 #include "MarkerList/MarkerList.h"
 #include "TrackList/TrackListFilter.h"
 #include "TrackList/Tracklist.h"
+#include "MediaPool/MediaPool.h"
 #include "ProjectMgr.h"
 #include "SnM/SnM_Actions.h"
 
@@ -384,6 +385,8 @@ extern "C"
 			ERR_RETURN("Color init error\n")
 		if (!TrackListInit())
 			ERR_RETURN("Tracklist init error\n")
+//		if (!MediaPoolInit())
+//			ERR_RETURN("Mediapool init error\n")
 		if (!ZoomInit())
 			ERR_RETURN("Zoom init error\n")
 		if (!ProjectMgrInit())

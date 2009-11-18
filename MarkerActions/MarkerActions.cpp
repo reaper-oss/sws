@@ -158,19 +158,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 		SWSCheckMenuItem(hMenu, g_commandTable[0].accel.accel.cmd, g_bMAEnabled);
 }
 
-static void oldmenuhook(int menuid, HMENU hmenu, int flag)
-{
-	switch (menuid)
-	{
-	case MAINMENU_OPTIONS:
-		menuhook("Main options", hmenu, flag);
-		break;
-	default:
-		menuhook("", hmenu, flag);
-		break;
-	}
-}
-
 int MarkerActionsInit()
 {
 	SWSRegisterCommands(g_commandTable);
@@ -178,8 +165,7 @@ int MarkerActionsInit()
 	g_bMAEnabled = GetPrivateProfileInt("SWS", "MarkerActionsEnabled", 1, get_ini_file()) ? true : false;
 
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		if (!plugin_register("hookmenu", (void*)oldmenuhook))
-			return 0;
+		return 0;
 
 	return 1;
 }

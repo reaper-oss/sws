@@ -76,7 +76,7 @@ Snapshot* GetSS(int slot)
 			return g_ss.Get()->m_snapshots.Get(i);
 	return NULL;
 }
- 
+
 static SWS_LVColumn g_cols[] = { { 20, 0, "#" }, { 60, 1, "Name" }, { 60, 0, "Date" }, { 60, 0, "Time" } };
 
 SWS_SnapshotsView::SWS_SnapshotsView(HWND hwndList, HWND hwndEdit)
@@ -201,8 +201,6 @@ void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol)
 	if (!item)
 		return;
 
-	g_ss.Get()->m_iCurSnapshot = -1;
-
 	Snapshot* ss = (Snapshot*)item;
 
 	bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
@@ -212,10 +210,7 @@ void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol)
 	// Recall (std click)
 	if (!bShift && !bCtrl && !bAlt)
 	{
-		// Let the sel handler take care of it...
-		//g_ss.Get()->m_iCurSnapshot = ss->m_iSlot;
-		//if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
-		//	Update();
+		// Let the sel handler take care of it this case to make up/down arrows work properly
 	}
 	// Save (ctrl click)
 	else if (!bShift && bCtrl && !bAlt)
@@ -228,7 +223,11 @@ void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol)
 	// Delete (alt click)
 	else if (!bShift && !bCtrl && bAlt)
 	{
+		int iSlot = ss->m_iSlot;
 		g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
+		char undoStr[128];
+		sprintf(undoStr, "Delete snapshot %d", iSlot);
+		Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
 		Update();
 	}
 }
@@ -251,8 +250,12 @@ bool SWS_SnapshotsView::GetItemState(LPARAM item)
 
 bool SWS_SnapshotsView::OnItemSelChange(LPARAM item, bool bSel)
 {
-	if (bSel)
-	{
+	bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
+	bool bCtrl  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? true : false;
+	bool bAlt   = GetAsyncKeyState(VK_MENU)    & 0x8000 ? true : false;
+
+	if (bSel && !bCtrl && !bAlt && !bShift)
+	{	// Ignore unselect and "special click" cases
 		Snapshot* ss = (Snapshot*)item;
 		if (g_ss.Get()->m_iCurSnapshot != ss->m_iSlot)
 		{
@@ -261,7 +264,6 @@ bool SWS_SnapshotsView::OnItemSelChange(LPARAM item, bool bSel)
 			if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
 				g_pSSWnd->Update();
 		}
-		//ss->m_iSlot = g_ss.Get()->m_iCurSnapshot;
 	}
 	return false;
 }
@@ -401,8 +403,12 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case DELETE_MSG:
 			if (m_pLastTouched)
 			{
+				int iSlot = m_pLastTouched->m_iSlot;
 				g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(m_pLastTouched), true);
 				g_ss.Get()->m_iCurSnapshot = -1;
+				char undoStr[128];
+				sprintf(undoStr, "Delete snapshot %d", iSlot);
+				Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
 				Update();
 			}
 			break;
@@ -763,20 +769,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Save as snapshot 10" },							"SWSSNAPSHOT_SAVE10",	 SaveSnapshot,         NULL, 10 },
 	{ { DEFACCEL, "SWS: Save as snapshot 11" },							"SWSSNAPSHOT_SAVE11",	 SaveSnapshot,         NULL, 11 },
 	{ { DEFACCEL, "SWS: Save as snapshot 12" },							"SWSSNAPSHOT_SAVE12",	 SaveSnapshot,         NULL, 12 },
-	{ { DEFACCEL, "SWS: Recall snapshot 1" },							"SWSSNAPSHOT_GET1",		 GetSnapshot,          NULL, 1 },
-	{ { DEFACCEL, "SWS: Recall snapshot 2" },							"SWSSNAPSHOT_GET2",		 GetSnapshot,          NULL, 2 },
-	{ { DEFACCEL, "SWS: Recall snapshot 3" },							"SWSSNAPSHOT_GET3",		 GetSnapshot,          NULL, 3 },
-	{ { DEFACCEL, "SWS: Recall snapshot 4" },							"SWSSNAPSHOT_GET4",		 GetSnapshot,          NULL, 4 },
-	{ { DEFACCEL, "SWS: Recall snapshot 5" },							"SWSSNAPSHOT_GET5",		 GetSnapshot,          NULL, 5 },
-	{ { DEFACCEL, "SWS: Recall snapshot 6" },							"SWSSNAPSHOT_GET6",		 GetSnapshot,          NULL, 6 },
-	{ { DEFACCEL, "SWS: Recall snapshot 7" },							"SWSSNAPSHOT_GET7",		 GetSnapshot,          NULL, 7 },
-	{ { DEFACCEL, "SWS: Recall snapshot 8" },							"SWSSNAPSHOT_GET8",		 GetSnapshot,          NULL, 8 },
-	{ { DEFACCEL, "SWS: Recall snapshot 9" },							"SWSSNAPSHOT_GET9",		 GetSnapshot,          NULL, 9 },
-	{ { DEFACCEL, "SWS: Recall snapshot 10" },							"SWSSNAPSHOT_GET10",	 GetSnapshot,          NULL, 10 },
-	{ { DEFACCEL, "SWS: Recall snapshot 11" },							"SWSSNAPSHOT_GET11",	 GetSnapshot,          NULL, 11 },
-	{ { DEFACCEL, "SWS: Recall snapshot 12" },							"SWSSNAPSHOT_GET12",	 GetSnapshot,          NULL, 12 },
-	{ { DEFACCEL, "SWS: Toggle snapshot mute" },							"SWSSNAPSHOT_MUTE",		 ToggleMute,           NULL, },
-	{ { DEFACCEL, "SWS: Toggle snapshot solo" },							"SWSSNAPSHOT_SOLO",		 ToggleSolo,           NULL, },
+	{ { DEFACCEL, "SWS: Toggle snapshot mute" },						"SWSSNAPSHOT_MUTE",		 ToggleMute,           NULL, },
+	{ { DEFACCEL, "SWS: Toggle snapshot solo" },						"SWSSNAPSHOT_SOLO",		 ToggleSolo,           NULL, },
 	{ { DEFACCEL, "SWS: Toggle snapshot pan" },							"SWSSNAPSHOT_PAN",		 TogglePan,            NULL, },
 	{ { DEFACCEL, "SWS: Toggle snapshot vol" },							"SWSSNAPSHOT_VOL",		 ToggleVol,            NULL, },
 	{ { DEFACCEL, "SWS: Toggle snapshot sends" },						"SWSSNAPSHOT_SEND",		 ToggleSend,           NULL, },
@@ -976,22 +970,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 		SWSCheckMenuItem(hMenu, g_commandTable[0].accel.accel.cmd, g_pSSWnd->IsValidWindow());
 }
 
-static void oldmenuhook(int menuid, HMENU hmenu, int flag)
-{
-	switch (menuid)
-	{
-	case MAINMENU_VIEW:
-		menuhook("Main view", hmenu, flag);
-		break;
-	case CTXMENU_TCP:
-		menuhook("Track control panel context", hmenu, flag);
-		break;
-	default:
-		menuhook("", hmenu, flag);
-		break;
-	}
-}
-
 int SnapshotsInit()
 {
 	if (!plugin_register("projectconfig",&g_projectconfig))
@@ -1000,10 +978,12 @@ int SnapshotsInit()
 		return 0;
 
 	SWSRegisterCommands(g_commandTable);
+	// Add 12 gets by default, more are added dynamically as needed.
+	for (int i = 0; i < 12; i++)
+		Snapshot::RegisterGetCommand(i+1);
 
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		if (!plugin_register("hookmenu", (void*)oldmenuhook))
-			return 0;
+		return 0;
 
 	g_pSSWnd = new SWS_SnapshotsWnd;
 

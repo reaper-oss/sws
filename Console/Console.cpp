@@ -810,19 +810,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40075);
 }
 
-static void oldmenuhook(int menuid, HMENU hmenu, int flag)
-{
-	switch (menuid)
-	{
-	case MAINMENU_VIEW:
-		menuhook("Main view", hmenu, flag);
-		break;
-	default:
-		menuhook("", hmenu, flag);
-		break;
-	}
-}
-
 int ConsoleInit()
 {
 	if (!plugin_register("accelerator",&g_ar))
@@ -831,8 +818,7 @@ int ConsoleInit()
 	SWSRegisterCommands(g_commandTable);
 
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		if (!plugin_register("hookmenu", (void*)oldmenuhook))
-			return 0;
+		return 0;
 
 	// Add custom commands
 	char cBuf[256];

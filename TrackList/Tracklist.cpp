@@ -34,7 +34,6 @@
 #include "TracklistFilter.h"
 #include "Tracklist.h"
 
-#define DOCK_MSG		0x10004
 #define RENAME_MSG		0x10005
 #define SELPREV_MSG		0x1000B
 #define SELNEXT_MSG		0x1000C
@@ -882,19 +881,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 		SWSCheckMenuItem(hMenu, g_commandTable[0].accel.accel.cmd, g_pList->IsValidWindow());
 }
 
-static void oldmenuhook(int menuid, HMENU hmenu, int flag)
-{
-	switch (menuid)
-	{
-	case MAINMENU_VIEW:
-		menuhook("Main view", hmenu, flag);
-		break;
-	default:
-		menuhook("", hmenu, flag);
-		break;
-	}
-}
-
 int TrackListInit()
 {
 	if (!plugin_register("accelerator",&g_ar))
@@ -906,8 +892,7 @@ int TrackListInit()
 	g_pCommandTable = g_commandTable;
 
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		if (!plugin_register("hookmenu", (void*)oldmenuhook))
-			return 0;
+		return 0;
 
 	g_pList = new SWS_TrackListWnd;
 

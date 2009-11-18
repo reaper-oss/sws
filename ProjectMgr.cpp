@@ -268,19 +268,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	}
 }
 
-static void oldmenuhook(int menuid, HMENU hmenu, int flag)
-{
-	switch (menuid)
-	{
-	case MAINMENU_FILE:
-		menuhook("Main file", hmenu, flag);
-		break;
-	default:
-		menuhook("", hmenu, flag);
-		break;
-	}
-}
-
 int ProjectMgrInit()
 {
 	SWSRegisterCommands(g_commandTable);
@@ -293,8 +280,7 @@ int ProjectMgrInit()
 		return 0;
 
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		if (!plugin_register("hookmenu", (void*)oldmenuhook))
-			return 0;
+		return 0;
 
 	return 1;
 }

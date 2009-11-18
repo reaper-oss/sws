@@ -30,6 +30,7 @@
 #include "../Utility/Base64.h"
 #include "../ObjectState/TrackFX.h"
 #include "SnapshotClass.h"
+#include "Snapshots.h"
 
 FXSnapshot::FXSnapshot(MediaTrack* tr, int fx)
 {
@@ -425,6 +426,10 @@ Snapshot::Snapshot(int slot, int mask, bool bSelOnly, char* name)
 		if (!bSelOnly || *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			m_tracks.Add(new TrackSnapshot(tr, mask));
 	}
+	char undoStr[128];
+	sprintf(undoStr, "Save snapshot %d", slot);
+	Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
+	RegisterGetCommand(slot);
 }
 
 Snapshot::Snapshot(int slot, int mask, char* name, int time)
@@ -434,6 +439,7 @@ Snapshot::Snapshot(int slot, int mask, char* name, int time)
 	m_cName = NULL;
 	SetName(name);
 	m_time = time;
+	RegisterGetCommand(slot);
 }
 
 
@@ -613,4 +619,25 @@ int Snapshot::Find(MediaTrack* tr)
 		if (tr == m_tracks.Get(i)->GetTrack())
 			return i;
 	return -1;
+}
+
+void Snapshot::RegisterGetCommand(int iSlot) // Slot is 1-based index.
+{
+	static int iLastRegistered = 0;
+	if (iSlot > iLastRegistered)
+	{
+		COMMAND_T* cmd = new COMMAND_T;
+		memset(&cmd->accel.accel, 0, sizeof(cmd->accel.accel));
+		const char* desc = "SWS: Recall snapshot %d";
+		cmd->accel.desc = new char[strlen(desc) + 5];
+		sprintf((char*)cmd->accel.desc, desc, iSlot);
+		const char* id = "SWSSNAPSHOT_GET%d";
+		cmd->id = new char[strlen(id) + 5];
+		sprintf(cmd->id, id, iSlot);
+		cmd->doCommand = GetSnapshot;
+		cmd->menuText = NULL;
+		cmd->user = iSlot;
+		iLastRegistered = iSlot;
+		SWSRegisterCommand(cmd);			
+	}
 }

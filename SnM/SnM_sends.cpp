@@ -157,77 +157,39 @@ void cueTrack(char * _busName, int _type, const char * _undoMsg)
 	}
 }
 
-void cueTrackPrompt(COMMAND_T* _ct)
+// Returns true for input error, false for good
+bool cueTrackPrompt(const char* cCaption)
 {
-	char reply[128]={',','2','\0'}; // default bus name and user type
-	if (GetUserInputs && GetUserInputs(SNMSWS_ZAP(_ct), 2, "Bus name:,Send type (1 to 3. Other=help):", reply, 128))
+	char reply[128]= ",2"; // default bus name and user type
+	if (GetUserInputs && GetUserInputs(cCaption, 2, "Bus name:,Send type (1 to 3. Other=help):", reply, 128))
 	{
-		int validType = 0;
-		int userType = 2;
-		int reaType = 3;
-		char busName[128] = {'\0'};
-
-		// Swap separators ',' to ' ' and translate spaces of the bus name
-		for (unsigned int i=0; i < strlen(reply); i++)
+		char* pComma = strrchr(reply, ',');
+		if (pComma)
 		{
-			if (reply[i] == ' ') reply[i] = '§';
-			else if (reply[i] == ',') reply[i] = ' ';
-		}
-
-		// Parse user inputs
-		LineParser lp(false);
-		lp.parse(reply);
-
-		// No name entered ?
-		if (lp.getnumtokens() == 1)
-		{
-			userType = lp.gettoken_int(0, &validType);
-		}
-		// Name + type
-		else if (lp.getnumtokens() == 2)
-		{
-			userType = lp.gettoken_int(1, &validType);
-			strcpy(busName, lp.gettoken_str(0));
-		}
-
-		if (validType)
-		{
+			int userType = pComma[1] - 0x30;
+			int reaType = -1;
 			switch(userType)
 			{
-				case 1:
-					reaType=0;
-					break;
-				case 2:
-					reaType=3;
-					break;
-				case 3:
-					reaType=1;
-					break;
-				default:
-					validType = 0;
-					break;
+				case 1: reaType=0; break;
+				case 2: reaType=3; break;
+				case 3: reaType=1; break;
 			}
-		}
+			if (reaType == -1 || pComma[2])
+			{
+				MessageBox(GetMainHwnd(), "Valid send types:\n1=Post-Fader (Post-Pan)\n2=Pre-Fader (Post-FX)\n3=Pre-FX", cCaption, MB_OK);
+				return true;
+			}
 
-		// re-test (can be update avove)
-		if (validType)
-		{
-			// Restore space charracters in bus name
-			for (unsigned int i=0; i < strlen(busName); i++)
-				if (busName[i] == '§') busName[i] = ' ';
-
-			// hook
-			cueTrack(busName, reaType, SNMSWS_ZAP(_ct));
-		}
-		else
-		{
-			MessageBox(GetMainHwnd(), 
-				"Valid send types:\n1=Post-Fader (Post-Pan)\n2=Pre-Fader (Post-FX)\n3=Pre-FX", 
-				SNMSWS_ZAP(_ct), 
-				MB_OK);		
-			cueTrackPrompt(_ct); // ouchh.. recursive call ! (re-prompt)
+			pComma[0] = 0;
+			cueTrack(reply, reaType, cCaption);
 		}
 	}
+	return false;
+}
+
+void cueTrackPrompt(COMMAND_T* _ct)
+{
+	while (cueTrackPrompt(SNMSWS_ZAP(_ct)));
 }
 
 void cueTrack(COMMAND_T* _ct)

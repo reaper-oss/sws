@@ -919,30 +919,13 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 #endif
 }
 
-static void oldmenuhook(int menuid, HMENU hmenu, int flag)
-{
-	switch (menuid)
-	{
-	case CTXMENU_TCP:
-		menuhook("Track control panel context", hmenu, flag);
-		break;
-	case CTXMENU_ITEM:
-		menuhook("Media item context", hmenu, flag);
-		break;
-	default:
-		menuhook("", hmenu, flag);
-		break;
-	}
-}
-
 int ColorInit()
 {
 	SWSRegisterCommands(g_commandTable);
 	srand((UINT)time(NULL));
 
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		if (!plugin_register("hookmenu", (void*)oldmenuhook))
-			return 0;
+		return 0;
 
 	// Load color gradients from the INI file
 	// Restore state

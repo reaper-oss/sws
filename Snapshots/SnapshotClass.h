@@ -120,6 +120,7 @@ public:
 	void DelSelTracks();
 	void SelectTracks();
 	int Find(MediaTrack* tr);
+	static void RegisterGetCommand(int iSlot);
 
     char* m_cName;
     int m_iSlot;

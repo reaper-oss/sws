@@ -3,6 +3,10 @@
 // Used by sws_extension.rc
 //
 #define IDC_LICENSE                     3
+#define IDC_ADD                         3
+#define IDC_PREVIEW                     4
+#define IDC_ADD2                        5
+#define IDC_ADDGROUP                    5
 #define IDD_CONSOLE                     201
 #define IDD_SNAPS                       202
 #define IDB_UP                          203
@@ -16,6 +20,7 @@
 #define IDD_TRACKLIST                   211
 #define IDD_ABOUT                       212
 #define IDD_PROMPT                      213
+#define IDD_MEDIAPOOL                   218
 #define IDC_LIST                        1001
 #define IDC_EDIT                        1002
 #define IDC_COMBO                       1003
@@ -54,15 +59,17 @@
 #define IDC_LINK                        1034
 #define IDC_MIX                         1037
 #define IDC_CURVIS                      1038
+#define IDC_TREE                        1038
 #define IDC_CUSTOM                      1039
+#define IDC_INFO                        1039
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        218
+#define _APS_NEXT_RESOURCE_VALUE        219
 #define _APS_NEXT_COMMAND_VALUE         40009
-#define _APS_NEXT_CONTROL_VALUE         1038
+#define _APS_NEXT_CONTROL_VALUE         1040
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

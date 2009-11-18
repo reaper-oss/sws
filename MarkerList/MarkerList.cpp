@@ -593,22 +593,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 		SWSCheckMenuItem(hMenu, g_commandTable[0].accel.accel.cmd, pMarkerList->IsValidWindow());
 }
 
-static void oldmenuhook(int menuid, HMENU hmenu, int flag)
-{
-	switch (menuid)
-	{
-	case MAINMENU_VIEW:
-		menuhook("Main view", hmenu, flag);
-		break;
-	case MAINMENU_EDIT:
-		menuhook("Main edit", hmenu, flag);
-		break;
-	default:
-		menuhook("", hmenu, flag);
-		break;
-	}
-}
-
 int MarkerListInit()
 {
 	if (!plugin_register("projectconfig",&g_projectconfig))
@@ -619,8 +603,7 @@ int MarkerListInit()
 	SWSRegisterCommands(g_commandTable);
 
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		if (!plugin_register("hookmenu", (void*)oldmenuhook))
-			return 0;
+		return 0;
 
 	pMarkerList = new SWS_MarkerListWnd();
 

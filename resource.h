@@ -5,7 +5,6 @@
 #define IDC_LICENSE                     3
 #define IDC_ADD                         3
 #define IDC_PREVIEW                     4
-#define IDC_ADD2                        5
 #define IDC_ADDGROUP                    5
 #define IDD_CONSOLE                     201
 #define IDD_SNAPS                       202
@@ -59,9 +58,11 @@
 #define IDC_LINK                        1034
 #define IDC_MIX                         1037
 #define IDC_CURVIS                      1038
-#define IDC_TREE                        1038
 #define IDC_CUSTOM                      1039
 #define IDC_INFO                        1039
+#define IDC_GROUPS                      1040
+#define IDC_LIST2                       1044
+#define IDC_FILES                       1045
 
 // Next default values for new objects
 // 
@@ -69,7 +70,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        219
 #define _APS_NEXT_COMMAND_VALUE         40009
-#define _APS_NEXT_CONTROL_VALUE         1040
+#define _APS_NEXT_CONTROL_VALUE         1046
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

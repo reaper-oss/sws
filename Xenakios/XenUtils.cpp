@@ -127,8 +127,35 @@ char *BrowseForFiles(const char *text, const char *initialdir, const char *initi
 	l.lpstrInitialDir = initialdir;
 	l.Flags = OFN_DONTADDTORECENT | OFN_EXPLORER | (allowmul ? OFN_ALLOWMULTISELECT : 0) | OFN_FILEMUSTEXIST;
 
-	if (GetOpenFileName(&l)) 
+	if (GetOpenFileName(&l))
+	{
+		if (temp[strlen(temp)+1]) // Check for more than one file
+		{	// More than one file is returned in the format PATH.FILE1.FILE2..
+			// We want PATH\FILE1.PATH\FILE2.. (period means NULL here)
+			int pathLength = strlen(temp);
+			char* pFile = temp + pathLength + 1;
+			int newLength = 2;
+			while (pFile[0])
+			{
+				newLength += pathLength + strlen(pFile) + 1;
+				pFile += strlen(pFile) + 1;
+			}
+			char* fullFilenames = (char*)malloc(newLength);
+			strcpy(fullFilenames, temp);
+			pFile = temp + pathLength + 1;
+			char* pFull = fullFilenames + pathLength + 1;
+			while (pFile[0])
+			{
+				sprintf(pFull, "%s\\%s", temp, pFile);
+				pFull += strlen(pFull) + 1;
+				pFile += strlen(pFile) + 1;
+			}
+			pFull[0] = 0;
+			free(temp);
+			return fullFilenames;
+		}
 		return temp;
+	}
 
 	free(temp);
 	return NULL;

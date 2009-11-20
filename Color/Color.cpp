@@ -178,9 +178,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					char cPath[512] = { 0 };
 					const char* cExt = "SWS Color Files (*.SWSColor)\0*.SWSColor\0Color Theme Files (*.ReaperTheme)\0*.ReaperTheme\0All Files\0*.*\0";
 					GetPrivateProfileString("REAPER", "lastthemefn", "", cPath, 512, get_ini_file());
-					char* pC = strrchr(cPath, '\\');
-					if (!pC)
-						pC = strrchr(cPath, '/');
+					char* pC = strrchr(cPath, PATH_SLASH_CHAR);
 					if (pC)
 						*pC = 0;
 

@@ -78,10 +78,4 @@ typedef struct {
 
 #define NUMERIC_ARGS(a) (g_commands[(a)].iNumArgs > 0 && !(g_commands[(a)].iNumArgs & 64))
 
-CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args);
-void ParseTrackId(char* strId);
-void ProcessCommand(CONSOLE_COMMAND command, char* args);
-char* StatusString(CONSOLE_COMMAND command, char* args);
 int ConsoleInit();
-
-

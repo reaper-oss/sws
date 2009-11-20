@@ -296,7 +296,7 @@ LRESULT CALLBACK EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 {
 	static bool LeftMouseBtnDown = false;
 	static int HotNodeIndex = -1;
-	static HCURSOR hLinkCursor    = LoadCursor(NULL, MAKEINTRESOURCE(32649));;
+	static HCURSOR hLinkCursor    = LoadCursor(NULL, IDC_HAND);
 	static HCURSOR hDefaultCursor = LoadCursor(NULL, IDC_ARROW);
 	switch (Message)
 	{
@@ -305,10 +305,11 @@ LRESULT CALLBACK EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 			int mouseX=GET_X_LPARAM(lParam);
 			int mouseY=GET_Y_LPARAM(lParam);
 			if (!LeftMouseBtnDown)
-				HotNodeIndex=GetHotNodeIndex(mouseX, mouseY);
+				HotNodeIndex = GetHotNodeIndex(mouseX, mouseY);
 			else if (LeftMouseBtnDown && HotNodeIndex >= 0)
 				MoveNodeByCoords(HotNodeIndex, mouseX, mouseY);
-			else if (HotNodeIndex >= 0)
+			
+			if (HotNodeIndex >= 0)
 				SetCursor(hLinkCursor);
 			else
 				SetCursor(hDefaultCursor);

@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "../WDL/sha.h"
 
 // Globals
 int  g_i0 = 0;
@@ -344,4 +345,17 @@ HWND GetTrackWnd()
 #else
 	return GetWindow(g_hwndParent, GW_CHILD); // Not guaranteed to work?
 #endif
+}
+
+// Output string must be 41 bytes minimum.  out is returned as a convenience.
+char* GetHashString(const char* in, char* out)
+{
+	WDL_SHA1 sha;
+	sha.add(in, strlen(in));
+	char hash[20];
+	sha.result(hash);
+	for (int i = 0; i < 20; i++)
+		sprintf(out + i*2, "%02X", (unsigned char)(hash[i] & 0xFF));
+	out[40] = 0;
+	return out;
 }

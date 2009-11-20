@@ -42,6 +42,12 @@ static char g_cLastKey = 0;
 static DWORD g_dwLastKeyMsg = 0;
 #define CONSOLE_WINDOWPOS_KEY "ReaConsoleWindowPos"
 
+// Prototypes
+CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args);
+void ParseTrackId(char* strId, bool bReset = true);
+void ProcessCommand(CONSOLE_COMMAND command, char* args);
+char* StatusString(CONSOLE_COMMAND command, char* args);
+
 typedef struct CUSTOM_COMMAND
 {
 	gaccel_register_t accel;
@@ -164,7 +170,7 @@ CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args)
 }
 
 // ParseId fills in array of ints (g_selTracks.Get()) according to id string
-void ParseTrackId(char* strId)
+void ParseTrackId(char* strId, bool bReset)
 {
 	int track;
 	const char* cName;
@@ -175,8 +181,11 @@ void ParseTrackId(char* strId)
 	if (!strId || !GetNumTracks())
 		return;
 
-	g_selTracks.Resize(GetNumTracks(), false);
-	memset(g_selTracks.Get(), 0, g_selTracks.GetSize() * sizeof(int));
+	if (bReset)
+	{
+		g_selTracks.Resize(GetNumTracks(), false);
+		memset(g_selTracks.Get(), 0, g_selTracks.GetSize() * sizeof(int));
+	}
 
 	// Comma seperated list or whitespace? strip and recall
 	if (strchr(strId, ','))
@@ -187,10 +196,10 @@ void ParseTrackId(char* strId)
 		temp[127]=0; // Just in case
 		token = strtok(temp, ",");
 		if (!token)
-			ParseTrackId("");
+			ParseTrackId("", false);
 		while (token)
 		{
-			ParseTrackId(token);
+			ParseTrackId(token, false);
 			token = strtok(NULL, ",");
 		}
 		return;
@@ -767,7 +776,7 @@ void EditCustomCommands(COMMAND_T* = NULL)
 	_snprintf(cNotepad, 256, "%s\\notepad.exe", cWindir);
 	char cArg[256];
 	strncpy(cArg, get_ini_file(), 256);
-	char* pC = strrchr(cArg, '\\');
+	char* pC = strrchr(cArg, PATH_SLASH_CHAR);
 	if (!pC)
 		return;
 	strcpy(pC, "\\reaconsole_customcommands.txt");
@@ -823,11 +832,7 @@ int ConsoleInit()
 	// Add custom commands
 	char cBuf[256];
 	strncpy(cBuf, get_ini_file(), 256);
-#ifdef _WIN32
-	char* pC = strrchr(cBuf, '\\');
-#else
-	char* pC = strrchr(cBuf, '/');
-#endif
+	char* pC = strrchr(cBuf, PATH_SLASH_CHAR);
 	if (!pC)
 		return 0;
 	strcpy(pC+1, "reaconsole_customcommands.txt");

@@ -209,7 +209,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=""
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
@@ -430,6 +430,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MediaPool\MediaPool.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Freeze\MuteState.cpp"
 				>
 			</File>
@@ -613,6 +617,10 @@
 			</File>
 			<File
 				RelativePath=".\MarkerList\MarkerListClass.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MediaPool\MediaPool.h"
 				>
 			</File>
 			<File
@@ -833,6 +841,42 @@
 		<Filter
 			Name="WDL"
 			>
+			<File
+				RelativePath="..\WDL\sha.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Test|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Test|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+			</File>
 			<File
 				RelativePath="..\WDL\win32_utf8.c"
 				>

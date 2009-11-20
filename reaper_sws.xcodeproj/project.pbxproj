@@ -48,6 +48,8 @@
 		229AC804108FB3BE00E4A962 /* MarkerListClass.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006F70F4768020072D712 /* MarkerListClass.h */; };
 		229AC80C108FBFCB00E4A962 /* SectionLock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC80A108FBFCB00E4A962 /* SectionLock.cpp */; };
 		229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC80B108FBFCB00E4A962 /* SectionLock.h */; };
+		22A79CFA10B4350000A78170 /* MediaPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A79CF810B4350000A78170 /* MediaPool.cpp */; };
+		22A79CFB10B4350000A78170 /* MediaPool.h in Headers */ = {isa = PBXBuildFile; fileRef = 22A79CF910B4350000A78170 /* MediaPool.h */; };
 		22B4C24F0FE311C7009A6731 /* Prompt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22B4C24D0FE311C7009A6731 /* Prompt.cpp */; };
 		22B4C2500FE311C7009A6731 /* Prompt.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B4C24E0FE311C7009A6731 /* Prompt.h */; };
 		22B671341091DD2A00C494D0 /* swell-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B671331091DD2A00C494D0 /* swell-internal.h */; };
@@ -151,6 +153,8 @@
 		229AC7F5108F985C00E4A962 /* MarkerListActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerListActions.h; path = MarkerList/MarkerListActions.h; sourceTree = "<group>"; };
 		229AC80A108FBFCB00E4A962 /* SectionLock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SectionLock.cpp; path = Utility/SectionLock.cpp; sourceTree = "<group>"; };
 		229AC80B108FBFCB00E4A962 /* SectionLock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SectionLock.h; path = Utility/SectionLock.h; sourceTree = "<group>"; };
+		22A79CF810B4350000A78170 /* MediaPool.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MediaPool.cpp; path = MediaPool/MediaPool.cpp; sourceTree = "<group>"; };
+		22A79CF910B4350000A78170 /* MediaPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MediaPool.h; path = MediaPool/MediaPool.h; sourceTree = "<group>"; };
 		22B4C24D0FE311C7009A6731 /* Prompt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Prompt.cpp; sourceTree = "<group>"; };
 		22B4C24E0FE311C7009A6731 /* Prompt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Prompt.h; sourceTree = "<group>"; };
 		22B671331091DD2A00C494D0 /* swell-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "swell-internal.h"; path = "../WDL/swell/swell-internal.h"; sourceTree = SOURCE_ROOT; };
@@ -277,6 +281,8 @@
 				229AC7F5108F985C00E4A962 /* MarkerListActions.h */,
 				981006F60F4768020072D712 /* MarkerListClass.cpp */,
 				981006F70F4768020072D712 /* MarkerListClass.h */,
+				22A79CF810B4350000A78170 /* MediaPool.cpp */,
+				22A79CF910B4350000A78170 /* MediaPool.h */,
 				981006DB0F4768010072D712 /* MuteState.cpp */,
 				981006D30F4768010072D712 /* MuteState.h */,
 				229AC7E2108F891700E4A962 /* ProjectMgr.cpp */,
@@ -449,6 +455,7 @@
 				22B671341091DD2A00C494D0 /* swell-internal.h in Headers */,
 				22C769EC10B0F00800774777 /* TrackFX.h in Headers */,
 				22C769FB10B0F04D00774777 /* SnM_Actions.h in Headers */,
+				22A79CFB10B4350000A78170 /* MediaPool.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -583,6 +590,7 @@
 				22C769FA10B0F04D00774777 /* SnM_Actions.cpp in Sources */,
 				22C769FC10B0F04D00774777 /* SnM_fx.cpp in Sources */,
 				22C769FD10B0F04D00774777 /* SnM_sends.cpp in Sources */,
+				22A79CFA10B4350000A78170 /* MediaPool.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

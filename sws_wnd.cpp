@@ -41,7 +41,7 @@
 #define ECOFFSET_HEIGHT		2
 
 SWS_DockWnd::SWS_DockWnd(int iResource, const char* cName, int iDockOrder)
-:m_hwnd(NULL), m_bDocked(false), m_iResource(iResource), m_cName(cName), m_iDockOrder(iDockOrder), m_bUserClosed(false), m_pList(NULL)
+:m_hwnd(NULL), m_bDocked(false), m_iResource(iResource), m_cName(cName), m_iDockOrder(iDockOrder), m_bUserClosed(false)
 {
 	screenset_register((char*)m_cName, screensetCallback, this);
 
@@ -93,8 +93,9 @@ void SWS_DockWnd::Show(bool bToggle, bool bActivate)
 
 bool SWS_DockWnd::IsActive()
 {
-	if (m_pList && m_pList->IsActive())
-		return true;
+	for (int i = 0; i < m_pLists.GetSize(); i++)
+		if (m_pLists.Get(i)->IsActive())
+			return true;
 	return GetFocus() == m_hwnd;
 }
 
@@ -142,24 +143,26 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_NOTIFY:
 		{
 			NMHDR* hdr = (NMHDR*)lParam;
-			if (m_pList && hdr->hwndFrom == m_pList->GetHWND())
-				return m_pList->OnNotify(wParam, lParam);
-			else
-				return 0;
+			for (int i = 0; i < m_pLists.GetSize(); i++)
+				if (hdr->hwndFrom == m_pLists.Get(i)->GetHWND())
+					return m_pLists.Get(i)->OnNotify(wParam, lParam);
+
+			return OnNotify(wParam, lParam);
 
 			/* for future coloring	if (s->hdr.code == LVN_ITEMCHANGING)
 			{
 				SetWindowLong(hwndDlg, DWL_MSGRESULT, TRUE);
 				return TRUE;
-			} */
-			break;
+			} 
+			break;*/
 		}
 		case WM_CONTEXTMENU:
 		{
 			int x = LOWORD(lParam), y = HIWORD(lParam);
 			// Are we over the column header?
-			if (m_pList && m_pList->DoColumnMenu(x, y))
-				break;
+			for (int i = 0; i < m_pLists.GetSize(); i++)
+				if (m_pLists.Get(i)->DoColumnMenu(x, y))
+					return 0;
 
 			HMENU hMenu = OnContextMenu(x, y);
 			if (!hMenu)
@@ -213,8 +216,13 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				m_resize.onResize();
 			}
 			break;
+		case WM_DROPFILES:
+			OnDroppedFiles((HDROP)wParam);
+			break;
 		case WM_DESTROY:
 			OnDestroy();
+			for (int i = 0; i < m_pLists.GetSize(); i++)
+				m_pLists.Get(i)->OnDestroy();
 
 			if (!m_bDocked)
 				SaveWindowPos(m_hwnd, m_cWndPosKey);
@@ -228,8 +236,7 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		case WM_NCDESTROY:
 #endif
-			delete m_pList;
-			m_pList = NULL;
+			m_pLists.Empty(true);
 			m_hwnd = NULL;
 			break;
 	}
@@ -289,10 +296,15 @@ LPARAM SWS_DockWnd::screensetCallback(int action, char *id, void *param, int par
 int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 {
 	SWS_DockWnd* p = (SWS_DockWnd*)ctx->user;
-	if (p && p->m_pList)
-		return p->m_pList->KeyHandler(msg);
-	else
-		return 0;
+	if (p)
+	{
+		for (int i = 0; i < p->m_pLists.GetSize(); i++)
+			if (p->m_pLists.Get(i)->GetHWND() == msg->hwnd)
+				return p->m_pLists.Get(i)->KeyHandler(msg);
+		if (p->m_pLists.GetSize())
+			return p->m_pLists.Get(0)->KeyHandler(msg);
+	}
+	return 0;
 }
 
 SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips)
@@ -419,6 +431,10 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		else
 			m_iSortCol = iDataCol + 1;
 		Update();
+	}
+	else if (s->hdr.code == LVN_BEGINDRAG)
+	{
+		OnBeginDrag();
 	}
 /*	else if (s->hdr.code == NM_CUSTOMDRAW) // TODO for coloring of the listview
 	{

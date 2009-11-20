@@ -44,6 +44,12 @@
 #define UTF8_BOX "\xE2\x96\xA1"
 #define UTF8_BBOX "\xE2\x96\xA0"
 
+#ifdef _WIN32
+#define PATH_SLASH_CHAR '\\'
+#else
+#define PATH_SLASH_CHAR '/'
+#endif
+
 typedef struct COMMAND_T
 {
 	gaccel_register_t accel;
@@ -61,6 +67,7 @@ private:
 
 public:
 	SWSProjConfig() {}
+	~SWSProjConfig() { m_data.Empty(true); }
 	PTRTYPE* Get()
 	{
 		ReaProject* pProj = Enum_Projects(-1, NULL, 0);
@@ -144,3 +151,4 @@ void SetTrackVis(MediaTrack* tr, int vis); // &1 == mcp, &2 == tcp
 int AboutBoxInit(); // Not worth its own .h
 void* GetConfigVar(const char* cVar);
 HWND GetTrackWnd();
+char* GetHashString(const char* in, char* out);

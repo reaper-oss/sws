@@ -227,6 +227,7 @@ extern "C"
 			SnapshotsExit();
 			TrackListExit();
 			MarkerListExit();
+			MediaPoolExit();
 			ERR_RETURN("Exiting Reaper.\n")
 		}
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)
@@ -326,6 +327,7 @@ extern "C"
 		IMPAPI(PCM_Source_CreateFromType);
 		IMPAPI(PlayPreview);
 		IMPAPI(PlayTrackPreview);
+		IMPAPI(plugin_getFilterList);
 		IMPAPI(plugin_register);
 		IMPAPI(projectconfig_var_addr);
 		IMPAPI(projectconfig_var_getoffs);
@@ -353,7 +355,6 @@ extern "C"
 		IMPAPI(Undo_OnStateChange);
 		IMPAPI(Undo_OnStateChangeEx);
 		IMPAPI(UpdateTimeline);
-		IMPAPI(GetUserInputs);
 
 		g_hInst = hInstance;
 		g_hwndParent = GetMainHwnd();
@@ -385,8 +386,8 @@ extern "C"
 			ERR_RETURN("Color init error\n")
 		if (!TrackListInit())
 			ERR_RETURN("Tracklist init error\n")
-//		if (!MediaPoolInit())
-//			ERR_RETURN("Mediapool init error\n")
+		if (!MediaPoolInit())
+			ERR_RETURN("Mediapool init error\n")
 		if (!ZoomInit())
 			ERR_RETURN("Zoom init error\n")
 		if (!ProjectMgrInit())

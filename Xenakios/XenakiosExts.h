@@ -350,6 +350,7 @@ void DoOpenProjectTemplate(COMMAND_T*);
 // XenQueryDlg.cpp
 int XenSingleStringQueryDlg(HWND hParent,const char *QueryTitle,char *QueryResult,int maxchars);
 
+//===========================================================
 // XenUtils.cpp functions, globals:
 extern WDL_PtrList<char>* g_filenames;
 extern char g_CurrentScanFile[1024];

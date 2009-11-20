@@ -405,7 +405,7 @@ void DoChooseNewSourceFileForSelTakes(COMMAND_T*)
 	if (NumActiveTakes>0)
 	{
 		MediaItem_Take* CurTake;
-		char* cFileName = BrowseForFiles("Choose new source file", NULL, NULL, false, "Media Files\0*.wav;*.wv;*.ogg;*.mp3;*.aif;*.aiff;*.flac\0");
+		char* cFileName = BrowseForFiles("Choose new source file", NULL, NULL, false, plugin_getFilterList());
 		if (cFileName)
 		{
 			Main_OnCommand(40440,0); // Selected Media Offline

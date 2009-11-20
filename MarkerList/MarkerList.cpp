@@ -170,17 +170,17 @@ void SWS_MarkerListWnd::Update()
 	else if (g_curList->BuildFromReaper())
 		bChanged = true;
 
-	if (m_pList && bChanged)
+	if (m_pLists.GetSize() && bChanged)
 	{
 		SectionLock lock(g_curList->m_hLock);
-		m_pList->Update();
+		m_pLists.Get(0)->Update();
 	}
 }
 
 void SWS_MarkerListWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
-	m_pList = new SWS_MarkerListView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT));
+	m_pLists.Add(new SWS_MarkerListView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 	delete g_curList;
 	g_curList = NULL;
 	Update();
@@ -193,17 +193,17 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	switch (wParam)
 	{
 		case DELETE_MSG:
-			if (ListView_GetSelectedCount(m_pList->GetHWND()))
+			if (ListView_GetSelectedCount(m_pLists.Get(0)->GetHWND()))
 			{
 				Undo_BeginBlock();
 				LVITEM li;
 				li.mask = LVIF_STATE | LVIF_PARAM;
 				li.stateMask = LVIS_SELECTED;
 				li.iSubItem = 0;
-				for (int i = 0; i < ListView_GetItemCount(m_pList->GetHWND()); i++)
+				for (int i = 0; i < ListView_GetItemCount(m_pLists.Get(0)->GetHWND()); i++)
 				{
 					li.iItem = i;
-					ListView_GetItem(m_pList->GetHWND(), &li);
+					ListView_GetItem(m_pLists.Get(0)->GetHWND(), &li);
 					if (li.state == LVIS_SELECTED)
 					{
 						MarkerItem* item = (MarkerItem*)li.lParam;
@@ -288,13 +288,11 @@ HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y)
 void SWS_MarkerListWnd::OnDestroy()
 {
 	KillTimer(m_hwnd, 0);
-
-	m_pList->OnDestroy();
 }
 
 void SWS_MarkerListWnd::OnTimer()
 {
-	if (ListView_GetItemCount(m_pList->GetHWND()) <= 1 || !IsActive())
+	if (ListView_GetItemCount(m_pLists.Get(0)->GetHWND()) <= 1 || !IsActive())
 		Update();
 }
 

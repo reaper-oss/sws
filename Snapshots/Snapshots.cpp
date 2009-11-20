@@ -295,7 +295,7 @@ SWS_SnapshotsWnd::SWS_SnapshotsWnd()
 void SWS_SnapshotsWnd::Update()
 {
 	static bool bRecurseCheck = false;
-	if (!IsValidWindow() || bRecurseCheck || !m_pList || m_pList->UpdatesDisabled())
+	if (!IsValidWindow() || bRecurseCheck || !m_pLists.GetSize() || m_pLists.Get(0)->UpdatesDisabled())
 		return;
 	bRecurseCheck = true;
 
@@ -325,7 +325,7 @@ void SWS_SnapshotsWnd::Update()
 	EnableWindow(GetDlgItem(m_hwnd, IDC_SELECTION), m_iSelType == 2);
 	EnableWindow(GetDlgItem(m_hwnd, IDC_VISIBILITY), m_iSelType == 2);
 
-	m_pList->Update();
+	m_pLists.Get(0)->Update();
 
 	bRecurseCheck = false;
 }
@@ -338,7 +338,7 @@ void SWS_SnapshotsWnd::RenameCurrent()
 	for (i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
 		if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot == g_ss.Get()->m_iCurSnapshot)
 			break;
-	m_pList->EditListItem((LPARAM)g_ss.Get()->m_snapshots.Get(i), 1);
+	m_pLists.Get(0)->EditListItem((LPARAM)g_ss.Get()->m_snapshots.Get(i), 1);
 }
 
 void SWS_SnapshotsWnd::OnInitDlg()
@@ -364,7 +364,7 @@ void SWS_SnapshotsWnd::OnInitDlg()
 	m_resize.init_item(IDC_HIDENEW, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_OPTIONS, 1.0, 1.0, 1.0, 1.0);
 
-	m_pList = new SWS_SnapshotsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT));
+	m_pLists.Add(new SWS_SnapshotsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
 	Update();
 }
@@ -390,7 +390,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case RENAME_MSG:
 			if (m_pLastTouched)
-				m_pList->EditListItem((LPARAM)m_pLastTouched, 1);
+				m_pLists.Get(0)->EditListItem((LPARAM)m_pLastTouched, 1);
 			break;
 		case SAVE_MSG:
 			if (m_pLastTouched)
@@ -459,7 +459,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
 {
 	HMENU contextMenu = CreatePopupMenu();
-	LPARAM item = m_pList->GetHitItem(x, y, NULL);
+	LPARAM item = m_pLists.Get(0)->GetHitItem(x, y, NULL);
 
 	m_pLastTouched = (Snapshot*)item;
 
@@ -533,8 +533,6 @@ void SWS_SnapshotsWnd::OnDestroy()
 		g_bSelOnly ? 1 : 0,
 		m_iSelType);
 	WritePrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, str, get_ini_file());
-
-	m_pList->OnDestroy();
 }
 
 void SWS_SnapshotsWnd::GetOptions()

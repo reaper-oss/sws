@@ -279,7 +279,7 @@ m_trLastTouched(NULL),m_bHideFiltered(false),m_bLink(false),m_cOptionsKey("Track
 void SWS_TrackListWnd::Update()
 {
 	static bool bRecurseCheck = false;
-	if (!IsValidWindow() || bRecurseCheck || !m_pList || m_pList->UpdatesDisabled())
+	if (!IsValidWindow() || bRecurseCheck || !m_pLists.GetSize() || m_pLists.Get(0)->UpdatesDisabled())
 		return;
 	bRecurseCheck = true;
 	
@@ -295,7 +295,7 @@ void SWS_TrackListWnd::Update()
 	m_filter.Get()->GetFilteredTracks();
 	m_filter.Get()->UpdateReaper(m_bHideFiltered);
 
-	m_pList->Update();
+	m_pLists.Get(0)->Update();
 
 	bRecurseCheck = false;
 }
@@ -320,9 +320,8 @@ void SWS_TrackListWnd::OnInitDlg()
 	m_resize.init_item(IDC_HIDE, 0.0, 1.0, 0.0, 1.0);
 	m_resize.init_item(IDC_LINK, 0.0, 1.0, 0.0, 1.0);
 
-	m_pList = new SWS_TrackListView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT), this);
+	m_pLists.Add(new SWS_TrackListView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT), this));
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
-
 
 	Update();
 
@@ -354,7 +353,7 @@ void SWS_TrackListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case RENAME_MSG:
 			if (m_trLastTouched)
-				m_pList->EditListItem((LPARAM)m_trLastTouched, 1);
+				m_pLists.Get(0)->EditListItem((LPARAM)m_trLastTouched, 1);
 			break;
 		case SELPREV_MSG:
 		{
@@ -371,7 +370,7 @@ void SWS_TrackListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				if (!bShift)
 					ClearSelected();
-				GetSetMediaTrackInfo((MediaTrack*)m_pList->GetListItem(i-1), "I_SELECTED", &g_i1);
+				GetSetMediaTrackInfo((MediaTrack*)m_pLists.Get(0)->GetListItem(i-1), "I_SELECTED", &g_i1);
 			}
 			break;
 		}
@@ -390,7 +389,7 @@ void SWS_TrackListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				if (!bShift)
 					ClearSelected();
-				GetSetMediaTrackInfo((MediaTrack*)m_pList->GetListItem(i+1), "I_SELECTED", &g_i1);
+				GetSetMediaTrackInfo((MediaTrack*)m_pLists.Get(0)->GetListItem(i+1), "I_SELECTED", &g_i1);
 			}
 			break;
 		}
@@ -425,7 +424,7 @@ HMENU SWS_TrackListWnd::OnContextMenu(int x, int y)
 	AddToMenu(contextMenu, "Show all tracks", SWSGetCommandID(ShowAll));
 	AddToMenu(contextMenu, "Show SWS Snapshots", SWSGetCommandID(OpenSnapshotsDialog));
 
-	LPARAM item = m_pList->GetHitItem(x, y, NULL);
+	LPARAM item = m_pLists.Get(0)->GetHitItem(x, y, NULL);
 	if (item)
 	{
 		m_trLastTouched = (MediaTrack*)item;
@@ -461,7 +460,6 @@ void SWS_TrackListWnd::OnDestroy()
 	m_bUpdate = false;
 
 	KillTimer(m_hwnd, 0);
-	m_pList->OnDestroy();
 
 	char str[10];
 	_snprintf(str, 10, "%d %d", m_bHideFiltered ? 1 : 0, m_bLink ? 1 : 0);

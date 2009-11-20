@@ -1296,10 +1296,7 @@ void NameTrackLikeItem(COMMAND_T*)
 					if (src && src->GetFileName())
 					{
 						const char* cFilename = src->GetFileName();
-						const char* pC = strrchr(cFilename, '/');
-						if (pC)
-							cFilename = pC + 1;
-						pC = strrchr(cFilename, '\\'); // Mac/PC slashes can be different so check for both!
+						const char* pC = strrchr(cFilename, PATH_SLASH_CHAR);
 						if (pC)
 							cFilename = pC + 1;
 						GetSetMediaTrackInfo(tr, "P_NAME", (void*)cFilename);

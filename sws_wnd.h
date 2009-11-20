@@ -69,6 +69,7 @@ protected:
 	virtual void OnItemClk(LPARAM item, int iCol) {}
 	virtual void OnItemDblClk(LPARAM item, int iCol) {}
 	virtual int OnItemSort(LPARAM item1, LPARAM item2);
+	virtual void OnBeginDrag() {}
 
 	HWND m_hwndList;
 	bool m_bDisableUpdates;
@@ -107,10 +108,12 @@ protected:
 	void ToggleDocking();
 	virtual void OnInitDlg() {}
 	virtual void OnCommand(WPARAM wParam, LPARAM lParam) {}
+	virtual int OnNotify(WPARAM wParam, LPARAM lParam) { return 0; }
 	virtual HMENU OnContextMenu(int x, int y) { return NULL; }
 	virtual void OnResize() {}
 	virtual void OnDestroy() {}
 	virtual void OnTimer() {}
+	virtual void OnDroppedFiles(HDROP h) {}
 
 	const int m_iResource;
 	const char* m_cName;
@@ -122,7 +125,7 @@ protected:
 	bool m_bDocked;
 	bool m_bShowAfterInit;
 	WDL_WndSizer m_resize;
-	SWS_ListView* m_pList;
+	WDL_PtrList<SWS_ListView> m_pLists;
 
 private:
 	static INT_PTR WINAPI sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

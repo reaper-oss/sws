@@ -31,14 +31,24 @@
 class SWS_MediaPoolFile
 {
 public:
-	SWS_MediaPoolFile(const char* cFilename, int id, bool bAction);
+	SWS_MediaPoolFile(const char* cFilename, int id);
 	~SWS_MediaPoolFile();
 
 	char* GetString(char* str, int iStrMax);
+	void SetAction(bool bAction, const char* cGroup, bool bActive);
+	bool GetAction() { return m_bAction; }
+	const char* GetFilename() { return m_cFilename; }
+	int GetID() { return m_id; }
+	void SetID(int id) { m_id = id; }
+
+private:
+	void RegisterCommand(const char* cGroup);
+	void UnregisterCommand();
+
+	bool m_bAction;
+	bool m_bActive;
 	char* m_cFilename;
 	int m_id;
-	bool m_bAction;
-	bool m_bGlobal;
 };
 
 class SWS_MediaPoolGroup
@@ -48,15 +58,13 @@ public:
 	~SWS_MediaPoolGroup();
 	void AddFile(const char* cFile, int id, bool bAction);
 	void SetName(const char* cName);
-	void SetAction(int iFile, bool bAction);
-	void RegisterGlobalCommand(const char* cFile);
-	void RegisterLocalCommand(const char* cFile, int id);
-	void UnregisterGlobalCommand(const char* cFile);
-	void UnregisterLocalCommand(const char* cFile, int id);
+	void SetActive(bool bActive);
+	void PopulateFromReaper();
 
 	WDL_PtrList<SWS_MediaPoolFile> m_files;
 	char* m_cGroupname;
 	bool m_bGlobal;
+
 };
 
 class SWS_MediaPoolWnd;
@@ -65,10 +73,12 @@ class SWS_MediaPoolGroupView : public SWS_ListView
 {
 public:
 	SWS_MediaPoolGroupView(HWND hwndList, HWND hwndEdit, SWS_MediaPoolWnd* pWnd);
+	void DoDelete();
 
 protected:
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
+	void OnItemClk(LPARAM item, int iCol);
 	bool OnItemSelChange(LPARAM item, bool bSel);
 	int GetItemCount();
 	LPARAM GetItemPointer(int iItem);
@@ -82,14 +92,17 @@ class SWS_MediaPoolFileView : public SWS_ListView
 {
 public:
 	SWS_MediaPoolFileView(HWND hwndList, HWND hwndEdit, SWS_MediaPoolWnd* pWnd);
+	void DoDelete();
 
 protected:
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
+	void OnItemClk(LPARAM item, int iCol);
 	bool OnItemSelChange(LPARAM item, bool bSel);
 	void OnItemDblClk(LPARAM item, int iCol);
 	int GetItemCount();
 	LPARAM GetItemPointer(int iItem);
 	void OnBeginDrag();
+	int OnItemSort(LPARAM item1, LPARAM item2);
 
 private:
 	SWS_MediaPoolWnd* m_pWnd;
@@ -104,6 +117,7 @@ public:
 	WDL_PtrList<SWS_MediaPoolGroup> m_globalGroups;
 	SWSProjConfig<WDL_PtrList<SWS_MediaPoolGroup> > m_projGroups;
 	SWS_MediaPoolGroup* m_curGroup;
+	SWS_MediaPoolGroup m_projGroup;
 
 protected:
 	void OnInitDlg();
@@ -112,5 +126,6 @@ protected:
 	HMENU OnContextMenu(int x, int y);
 };
 
+void MediaPoolUpdate();
 int MediaPoolInit();
 void MediaPoolExit();

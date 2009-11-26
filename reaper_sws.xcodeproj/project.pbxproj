@@ -48,6 +48,7 @@
 		229AC804108FB3BE00E4A962 /* MarkerListClass.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006F70F4768020072D712 /* MarkerListClass.h */; };
 		229AC80C108FBFCB00E4A962 /* SectionLock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC80A108FBFCB00E4A962 /* SectionLock.cpp */; };
 		229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC80B108FBFCB00E4A962 /* SectionLock.h */; };
+		22A664BB10BC6FE100F0B239 /* sha.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A664BA10BC6FE100F0B239 /* sha.cpp */; };
 		22A79CFA10B4350000A78170 /* MediaPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A79CF810B4350000A78170 /* MediaPool.cpp */; };
 		22A79CFB10B4350000A78170 /* MediaPool.h in Headers */ = {isa = PBXBuildFile; fileRef = 22A79CF910B4350000A78170 /* MediaPool.h */; };
 		22B4C24F0FE311C7009A6731 /* Prompt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22B4C24D0FE311C7009A6731 /* Prompt.cpp */; };
@@ -153,6 +154,7 @@
 		229AC7F5108F985C00E4A962 /* MarkerListActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerListActions.h; path = MarkerList/MarkerListActions.h; sourceTree = "<group>"; };
 		229AC80A108FBFCB00E4A962 /* SectionLock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SectionLock.cpp; path = Utility/SectionLock.cpp; sourceTree = "<group>"; };
 		229AC80B108FBFCB00E4A962 /* SectionLock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SectionLock.h; path = Utility/SectionLock.h; sourceTree = "<group>"; };
+		22A664BA10BC6FE100F0B239 /* sha.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sha.cpp; path = ../WDL/sha.cpp; sourceTree = SOURCE_ROOT; };
 		22A79CF810B4350000A78170 /* MediaPool.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MediaPool.cpp; path = MediaPool/MediaPool.cpp; sourceTree = "<group>"; };
 		22A79CF910B4350000A78170 /* MediaPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MediaPool.h; path = MediaPool/MediaPool.h; sourceTree = "<group>"; };
 		22B4C24D0FE311C7009A6731 /* Prompt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Prompt.cpp; sourceTree = "<group>"; };
@@ -258,6 +260,7 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				22A664BA10BC6FE100F0B239 /* sha.cpp */,
 				2296248E10A3A22500A1090C /* lice.cpp */,
 				2296248F10A3A22500A1090C /* lice_line.cpp */,
 				98B408960F5B525200865A09 /* SWELL */,
@@ -591,6 +594,7 @@
 				22C769FC10B0F04D00774777 /* SnM_fx.cpp in Sources */,
 				22C769FD10B0F04D00774777 /* SnM_sends.cpp in Sources */,
 				22A79CFA10B4350000A78170 /* MediaPool.cpp in Sources */,
+				22A664BB10BC6FE100F0B239 /* sha.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

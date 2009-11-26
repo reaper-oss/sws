@@ -406,6 +406,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MediaPool\DragDrop.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Freeze\Freeze.cpp"
 				>
 			</File>
@@ -589,6 +593,10 @@
 			</File>
 			<File
 				RelativePath=".\Console\Console.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MediaPool\DragDrop.h"
 				>
 			</File>
 			<File

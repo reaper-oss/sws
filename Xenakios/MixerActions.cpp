@@ -300,7 +300,7 @@ void DoSetSymmetricalpansR2L(COMMAND_T*)
 			MediaTrack* CurTrack=CSurf_TrackFromID(i+1,false);
 			if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
 			{
-				double newpan = 1.0+((2.0/double((numselectedTracks-1)))*double(iSel++));
+				double newpan = 1.0-((2.0/double((numselectedTracks-1)))*double(iSel++));
 				GetSetMediaTrackInfo(CurTrack, "D_PAN", &newpan);
 			}
 		}

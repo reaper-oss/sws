@@ -837,6 +837,9 @@ public:
 class MediaTrack;
 class MediaItem;
 class MediaItem_Take;
+class ReaProject;
+class TrackEnvelope;
+
 
 class IReaperControlSurface
 {

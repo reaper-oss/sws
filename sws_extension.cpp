@@ -114,6 +114,23 @@ int SWSRegisterCommands(COMMAND_T* pCommands)
 	return 1;
 }
 
+// Returns the COMMAND_T entry so it can be deleted if necessary
+COMMAND_T* SWSUnregisterCommand(int id)
+{
+	for (int i = 0; i < g_commands.GetSize(); i++)
+	{
+		if (g_commands.Get(i)->accel.accel.cmd == id)
+		{
+			COMMAND_T* cmd = g_commands.Get(i);
+			plugin_register("-gaccel", &cmd->accel);
+			//plugin_register("-command_id", cmd->id); // Appears to be unnecessary
+			g_commands.Delete(i);
+			return cmd;
+		}
+	}
+	return NULL;
+}
+
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), int user, char** pMenuText)
 {
 	for (int i = 0; i < g_commands.GetSize(); i++)
@@ -181,6 +198,7 @@ public:
 			ScheduleTracklistUpdate();
 			pMarkerList->Update();
 			UpdateSnapshotsDialog();
+			MediaPoolUpdate();
 		}
 	}
 

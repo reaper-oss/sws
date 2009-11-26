@@ -41,6 +41,7 @@ public:
 	SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips);
 	virtual ~SWS_ListView();
 	LPARAM GetListItem(int iIndex);
+	bool IsSelected(int index);
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 	void OnDestroy();
 	int KeyHandler(MSG *msg);

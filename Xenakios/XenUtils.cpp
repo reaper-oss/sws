@@ -132,18 +132,17 @@ char *BrowseForFiles(const char *text, const char *initialdir, const char *initi
 		if (temp[strlen(temp)+1]) // Check for more than one file
 		{	// More than one file is returned in the format PATH.FILE1.FILE2..
 			// We want PATH\FILE1.PATH\FILE2.. (period means NULL here)
-			int pathLength = strlen(temp);
+			int pathLength = (int)strlen(temp);
 			char* pFile = temp + pathLength + 1;
-			int newLength = 2;
+			int newLength = 1; // double NULL terminate
 			while (pFile[0])
 			{
-				newLength += pathLength + strlen(pFile) + 1;
+				newLength += pathLength + (int)strlen(pFile) + 2; // 2 extra for \ + NULL
 				pFile += strlen(pFile) + 1;
 			}
 			char* fullFilenames = (char*)malloc(newLength);
-			strcpy(fullFilenames, temp);
 			pFile = temp + pathLength + 1;
-			char* pFull = fullFilenames + pathLength + 1;
+			char* pFull = fullFilenames;
 			while (pFile[0])
 			{
 				sprintf(pFull, "%s\\%s", temp, pFile);

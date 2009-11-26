@@ -77,6 +77,8 @@ public:
 		m_projects.Add(pProj);
 		return m_data.Add(new PTRTYPE);
 	}
+	PTRTYPE* Get(int iProj) { return m_data.Get(iProj); }
+	int GetSize() { return m_data.GetSize(); }
 	void Cleanup()
 	{
 		if (m_projects.GetSize())
@@ -143,6 +145,7 @@ void RestoreSelected();
 void ClearSelected();
 int SWSRegisterCommand(COMMAND_T* pCommand);   // One command
 int SWSRegisterCommands(COMMAND_T* pCommands); // Multiple commands in a table, terminated with LAST_COMMAND
+COMMAND_T* SWSUnregisterCommand(int id);
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), int user = 0, char** pMenuText = NULL);
 HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);
 int GetFolderDepth(MediaTrack* tr, int* iType, MediaTrack** nextTr);

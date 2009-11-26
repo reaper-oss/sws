@@ -385,6 +385,19 @@ LPARAM SWS_ListView::GetListItem(int index)
 	return li.lParam;
 }
 
+bool SWS_ListView::IsSelected(int index)
+{
+	if (index < 0)
+		return NULL;
+	LVITEM li;
+	li.mask = LVIF_STATE;
+	li.stateMask = LVIS_SELECTED;
+	li.iItem = index;
+	li.iSubItem = 0;
+	ListView_GetItem(m_hwndList, &li);
+	return li.state & LVIS_SELECTED ? true : false;
+}
+
 int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 {
 	NMLISTVIEW* s = (NMLISTVIEW*)lParam;

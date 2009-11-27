@@ -79,9 +79,9 @@ bool GenerateShuffledRandomTable(int *IntTable,int numItems,int badFirstNumber)
 			
 			
 			IterCount++;
-			if (IterCount>1000000) 
+			if (IterCount>10000000) 
 			{
-				MessageBox(g_hwndParent,"Shuffle Random Table Generator Failed, over 1000000 iterations!","Error",MB_OK);
+				MessageBox(g_hwndParent,"Shuffle Random Table Generator Failed, over 10000000 iterations!","Error",MB_OK);
 				break;
 			}
 		}

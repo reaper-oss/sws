@@ -37,21 +37,20 @@ void RunActionMarker(const char* cName)
 		LineParser lp(false);
 		lp.parse(&cName[1]);
 		for (int i = 0; i < lp.getnumtokens(); i++)
-			if (lp.gettoken_int(i))
+		{
+			int iCommand = lp.gettoken_int(i);
+			if (!iCommand)
+				iCommand = NamedCommandLookup(lp.gettoken_str(i));
+
+			if (iCommand)
 			{
-				int iCommand = lp.gettoken_int(i);
 				int iZero = 0;
-				bool b = kbd_RunCommandThroughHooks(NULL, &iCommand, &iZero, &iZero, &iZero, g_hwndParent);
-				if (!b)
+				if (!kbd_RunCommandThroughHooks(NULL, &iCommand, &iZero, &iZero, &iZero, g_hwndParent))
 				{
-					if (KBD_OnMainActionEx)
-					{
-						KBD_OnMainActionEx(lp.gettoken_int(i), 0, 0, 0, g_hwndParent, NULL);
-					}
-					else
-						Main_OnCommand(lp.gettoken_int(i), 0);
+					KBD_OnMainActionEx(iCommand, 0, 0, 0, g_hwndParent, NULL);
 				}
 			}
+		}
 	}
 }
 

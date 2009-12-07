@@ -38,16 +38,11 @@ public:
 protected:
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	int GetItemCount();
-	LPARAM GetItemPointer(int iItem);
+	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	bool GetItemState(LPARAM item);
-	void OnItemClk(LPARAM item, int iCol);
-#ifndef _WIN32
+	void OnItemClk(LPARAM item, int iCol, int iKeyState);
 	bool OnItemSelChange(LPARAM item, bool bSel);
-	MediaTrack* m_pClickedTrack;
-	int m_iClickedCol;
-#endif
-	int OnItemSort(LPARAM item1, LPARAM item2);
+	int  OnItemSort(LPARAM item1, LPARAM item2);
 
 private:
 	SWS_TrackListWnd* m_pTrackListWnd;
@@ -59,7 +54,7 @@ public:
 	SWS_TrackListWnd();
 	void Update();
 	void ClearFilter();
-	void ScheduleUpdate() { m_bUpdate = true; } //	if (!g_bDisableUpdates TODO??)
+	void ScheduleUpdate() { m_bUpdate = true; }
 	bool HideFiltered() { return m_bHideFiltered; }
 	bool Linked() { return m_bLink; }
 	SWSProjConfig<FilteredVisState>* GetFilter() { return &m_filter; }

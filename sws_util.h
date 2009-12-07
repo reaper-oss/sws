@@ -116,8 +116,9 @@ extern bool g_bFalse;
 #define _snprintf snprintf
 #define _stricmp stricmp
 #define _strnicmp strnicmp
-#define CF_TEXT 1
-#define CF_HDROP 15
+#define LVKF_ALT 1
+#define LVKF_CONTROL 2
+#define LVKF_SHIFT 4
 extern const GUID GUID_NULL;
 //sws_util.mm
 void GetDateString(int time, char* buf, int bufsize);

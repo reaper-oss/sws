@@ -218,7 +218,7 @@ SWS_MediaPoolGroup::~SWS_MediaPoolGroup()
 	delete [] m_cGroupname;
 }
 
-static SWS_LVColumn g_gvCols[] = { { 75, 1, "Group" }, { 25, 0, "#" }, { 44, 0, "Global" } };
+static SWS_LVColumn g_gvCols[] = { { 75, 1, "Group" }, { 25, 0, "#" }, { 44, 2, "Global" } };
 
 SWS_MediaPoolGroupView::SWS_MediaPoolGroupView(HWND hwndList, HWND hwndEdit, SWS_MediaPoolWnd* pWnd)
 :SWS_ListView(hwndList, hwndEdit, 3, g_gvCols, "MediaPool Group State", false), m_pWnd(pWnd)
@@ -276,7 +276,7 @@ void SWS_MediaPoolGroupView::GetItemText(LPARAM item, int iCol, char* str, int i
 	}
 }
 
-void SWS_MediaPoolGroupView::OnItemClk(LPARAM item, int iCol)
+void SWS_MediaPoolGroupView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 {
 	SWS_MediaPoolGroup* pGroup = (SWS_MediaPoolGroup*)item;
 	if (pGroup && pGroup != &m_pWnd->m_projGroup && iCol == 2)
@@ -324,22 +324,17 @@ bool SWS_MediaPoolGroupView::OnItemSelChange(LPARAM item, bool bSel)
 	return false;
 }
 
-int SWS_MediaPoolGroupView::GetItemCount()
+void SWS_MediaPoolGroupView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 {
-	// curproj + globals + project groups
-	return 1 + m_pWnd->m_globalGroups.GetSize() + m_pWnd->m_projGroups.Get()->GetSize();
-}
+	//     curproj + globals                          + project groups
+	pBuf->Resize(1 + m_pWnd->m_globalGroups.GetSize() + m_pWnd->m_projGroups.Get()->GetSize());
+	pBuf->Get()[0] = (LPARAM)&m_pWnd->m_projGroup;
+	int iBuf = 1;
 
-LPARAM SWS_MediaPoolGroupView::GetItemPointer(int iItem)
-{
-	if (iItem == 0)
-		return (LPARAM)&m_pWnd->m_projGroup;
-	iItem--;
-	int iSize = m_pWnd->m_globalGroups.GetSize();
-	if (iItem < iSize)
-		return (LPARAM)m_pWnd->m_globalGroups.Get(iItem);
-	else
-		return (LPARAM)m_pWnd->m_projGroups.Get()->Get(iItem - iSize);
+	for (int i = 0; i < m_pWnd->m_globalGroups.GetSize(); i++)
+		pBuf->Get()[iBuf++] = (LPARAM)m_pWnd->m_globalGroups.Get(i);
+	for (int i = 0; i < m_pWnd->m_projGroups.GetSize(); i++)
+		pBuf->Get()[iBuf++] = (LPARAM)m_pWnd->m_projGroups.Get()->Get(i);
 }
 
 bool SWS_MediaPoolGroupView::GetItemState(LPARAM item)
@@ -347,7 +342,7 @@ bool SWS_MediaPoolGroupView::GetItemState(LPARAM item)
 	return (SWS_MediaPoolGroup*)item == m_pWnd->m_curGroup;
 }
 
-static SWS_LVColumn g_fvCols[] = { { 25, 0, "#" }, { 300, 0, "Path" }, { 200, 0, "Filename" }, { 45, 0, "Action" } };
+static SWS_LVColumn g_fvCols[] = { { 25, 0, "#" }, { 300, 0, "Path" }, { 200, 0, "Filename" }, { 45, 2, "Action" } };
 
 SWS_MediaPoolFileView::SWS_MediaPoolFileView(HWND hwndList, HWND hwndEdit, SWS_MediaPoolWnd* pWnd)
 :SWS_ListView(hwndList, hwndEdit, 4, g_fvCols, "MediaPool FileList State", false), m_pWnd(pWnd)
@@ -404,7 +399,7 @@ void SWS_MediaPoolFileView::GetItemText(LPARAM item, int iCol, char* str, int iS
 	}
 }
 
-void SWS_MediaPoolFileView::OnItemClk(LPARAM item, int iCol)
+void SWS_MediaPoolFileView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 {
 	SWS_MediaPoolFile* pFile = (SWS_MediaPoolFile*)item;
 	if (pFile && iCol == 3 && m_pWnd->m_curGroup != &m_pWnd->m_projGroup)
@@ -426,22 +421,15 @@ void SWS_MediaPoolFileView::OnItemDblClk(LPARAM item, int iCol)
 	InsertMedia((char*)((SWS_MediaPoolFile*)item)->GetFilename(), 0);
 }
 
-int SWS_MediaPoolFileView::GetItemCount()
+void SWS_MediaPoolFileView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 {
-	int iCount = 0;
-	if (m_pWnd->m_curGroup)
-		iCount = m_pWnd->m_curGroup->m_files.GetSize();
-	return iCount;
+	int iSize = 0;
+	if (!m_pWnd->m_curGroup)
+		iSize = m_pWnd->m_curGroup->m_files.GetSize();
+	pBuf->Resize(iSize);
+	for (int i = 0; i < iSize; i++)
+		pBuf->Get()[i] = (LPARAM)m_pWnd->m_curGroup->m_files.Get(i);
 }
-
-LPARAM SWS_MediaPoolFileView::GetItemPointer(int iItem)
-{
-	if (m_pWnd->m_curGroup)
-		return (LPARAM)m_pWnd->m_curGroup->m_files.Get(iItem);
-		
-	return 0;
-}
-
 
 void SWS_MediaPoolFileView::OnBeginDrag()
 {

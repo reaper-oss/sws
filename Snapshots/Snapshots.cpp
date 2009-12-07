@@ -77,7 +77,7 @@ Snapshot* GetSS(int slot)
 	return NULL;
 }
 
-static SWS_LVColumn g_cols[] = { { 20, 0, "#" }, { 60, 1, "Name" }, { 60, 0, "Date" }, { 60, 0, "Time" } };
+static SWS_LVColumn g_cols[] = { { 20, 2, "#" }, { 60, 3, "Name" }, { 60, 2, "Date" }, { 60, 2, "Time" } };
 
 SWS_SnapshotsView::SWS_SnapshotsView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, 4, g_cols, "Snapshots View State", true)
@@ -196,24 +196,17 @@ void SWS_SnapshotsView::GetItemTooltip(LPARAM item, char* str, int iStrMax)
 	}
 }
 
-void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol)
+void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 {
 	if (!item)
 		return;
 
 	Snapshot* ss = (Snapshot*)item;
 
-	bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
-	bool bCtrl  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? true : false;
-	bool bAlt   = GetAsyncKeyState(VK_MENU)    & 0x8000 ? true : false;
+	// Recall (std click) is done in the sel handler to make up/down arrows work properly
 
-	// Recall (std click)
-	if (!bShift && !bCtrl && !bAlt)
-	{
-		// Let the sel handler take care of it this case to make up/down arrows work properly
-	}
 	// Save (ctrl click)
-	else if (!bShift && bCtrl && !bAlt)
+	if (!(iKeyState & LVKF_SHIFT) && (iKeyState & LVKF_CONTROL) && !(iKeyState & LVKF_ALT))
 	{
 		g_ss.Get()->m_iCurSnapshot = ss->m_iSlot;
 		g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly, ss->m_cName));
@@ -221,7 +214,7 @@ void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol)
 		Update();
 	}
 	// Delete (alt click)
-	else if (!bShift && !bCtrl && bAlt)
+	else if (!(iKeyState & LVKF_SHIFT) && !(iKeyState & LVKF_CONTROL) && (iKeyState & LVKF_ALT))
 	{
 		int iSlot = ss->m_iSlot;
 		g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
@@ -232,14 +225,11 @@ void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol)
 	}
 }
 
-int SWS_SnapshotsView::GetItemCount()
+void SWS_SnapshotsView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 {
-	return (LPARAM)g_ss.Get()->m_snapshots.GetSize();
-}
-
-LPARAM SWS_SnapshotsView::GetItemPointer(int iItem)
-{
-	return (LPARAM)g_ss.Get()->m_snapshots.Get(iItem);
+	pBuf->Resize(g_ss.Get()->m_snapshots.GetSize());
+	for (int i = 0; i < pBuf->GetSize(); i++)
+		pBuf->Get()[i] = (LPARAM)g_ss.Get()->m_snapshots.Get(i);
 }
 
 bool SWS_SnapshotsView::GetItemState(LPARAM item)
@@ -250,20 +240,31 @@ bool SWS_SnapshotsView::GetItemState(LPARAM item)
 
 bool SWS_SnapshotsView::OnItemSelChange(LPARAM item, bool bSel)
 {
+	// Ignore unselect
+	if (!bSel)
+		return false;
+	
+#ifdef _WIN32
 	bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
 	bool bCtrl  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? true : false;
 	bool bAlt   = GetAsyncKeyState(VK_MENU)    & 0x8000 ? true : false;
+#else
+	// For some crazy/odd reason in OSX GetAsyncKeyState only works after the first call, which is made in the NM_CLICK handler, so use the
+	// values that were stored there
+	bool bShift = m_iClickedKeys & LVKF_SHIFT   ? true : false;
+	bool bCtrl  = m_iClickedKeys & LVKF_CONTROL ? true : false;
+	bool bAlt   = m_iClickedKeys & LVKF_ALT     ? true : false;
+#endif
+	
+	Snapshot* ss = (Snapshot*)item;
 
-	if (bSel && !bCtrl && !bAlt && !bShift)
-	{	// Ignore unselect and "special click" cases
-		Snapshot* ss = (Snapshot*)item;
-		if (g_ss.Get()->m_iCurSnapshot != ss->m_iSlot)
-		{
-			g_pSSWnd->m_pLastTouched = ss;
-			g_ss.Get()->m_iCurSnapshot = ss->m_iSlot;
-			if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
-				g_pSSWnd->Update();
-		}
+	// Recall (std click)
+	if (!bShift && !bCtrl && !bAlt && g_ss.Get()->m_iCurSnapshot != ss->m_iSlot)
+	{
+		g_pSSWnd->m_pLastTouched = ss;
+		g_ss.Get()->m_iCurSnapshot = ss->m_iSlot;
+		if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
+			Update();
 	}
 	return false;
 }
@@ -363,6 +364,9 @@ void SWS_SnapshotsWnd::OnInitDlg()
 	m_resize.init_item(IDC_NAMEPROMPT, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_HIDENEW, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_OPTIONS, 1.0, 1.0, 1.0, 1.0);
+#ifndef _WIN32
+	SetWindowText(GetDlgItem(m_hwnd, IDC_HELPTEXT), "Del: Alt-click\nSave: Cmd-click");
+#endif
 
 	m_pLists.Add(new SWS_SnapshotsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 

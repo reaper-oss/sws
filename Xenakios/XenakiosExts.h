@@ -81,6 +81,7 @@ void DoNudgeDownTakePitchResampledB(COMMAND_T*);
 void DoNudgeItemsBeatsBased(bool UseConf,bool Positive,double theNudgeAmount);
 void DoNudgeItemsLeftBeatsAndConfBased(COMMAND_T*);
 void DoNudgeItemsRightBeatsAndConfBased(COMMAND_T*);
+void DoNudgeSamples(COMMAND_T*);
 void DoSplitItemsAtTransients(COMMAND_T*);
 void DoNudgeItemVols(bool UseConf,bool Positive,double TheNudgeAmount);
 void DoNudgeItemVolsDown(COMMAND_T*);

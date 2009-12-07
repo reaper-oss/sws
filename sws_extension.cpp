@@ -59,7 +59,7 @@ bool hookCommandProc(int command, int flag)
 	g_KeyUpUndoHandler=0;
 
 	// "Hack" to make actions will #s less than 1000 work with SendMessage (AHK)
-	if (command < 1000 && KBD_OnMainActionEx)
+	if (command < 1000)
 	{
 		bReentrancyCheck = true;	
 		KBD_OnMainActionEx(command, 0, 0, 0, g_hwndParent, NULL);
@@ -338,6 +338,7 @@ extern "C"
 		IMPAPI(Main_OnCommandEx);
 		IMPAPI(Main_openProject);
 		IMPAPI(MoveMediaItemToTrack);
+		IMPAPI(NamedCommandLookup);
 		IMPAPI(parse_timestr_pos);
 		IMPAPI(PCM_Sink_Create);
 		IMPAPI(PCM_Source_CreateFromFile);

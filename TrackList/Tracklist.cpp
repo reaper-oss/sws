@@ -64,14 +64,11 @@ void NewVisSnapshot(COMMAND_T* = NULL);
 
 enum TL_COLS { COL_NUM, COL_NAME, COL_TCP, COL_MCP, COL_ARM, COL_MUTE, COL_SOLO, /*COL_INPUT, */ NUM_COLS };
 
-static SWS_LVColumn g_cols[] = { { 25, 0, "#" }, { 250, 1, "Name" }, { 40, 0, "TCP" }, { 40, 0, "MCP" },
-	{ 40, 0, "Arm", -1 },  { 40, 0, "Mute", -1 }, { 40, 0, "Solo", -1 } /*, { 40, 0, "Input", -1 } */ };
+static SWS_LVColumn g_cols[] = { { 25, 0, "#" }, { 250, 1, "Name" }, { 40, 2, "TCP" }, { 40, 2, "MCP" },
+	{ 40, 2, "Arm", -1 },  { 40, 2, "Mute", -1 }, { 40, 2, "Solo", -1 } /*, { 40, 1, "Input", -1 } */ };
 
 SWS_TrackListView::SWS_TrackListView(HWND hwndList, HWND hwndEdit, SWS_TrackListWnd* pTrackListWnd)
 :SWS_ListView(hwndList, hwndEdit, NUM_COLS, g_cols, "TrackList View State", false), m_pTrackListWnd(pTrackListWnd)
-#ifndef _WIN32
-, m_pClickedTrack(false)
-#endif
 {
 }
 
@@ -110,47 +107,19 @@ void SWS_TrackListView::GetItemText(LPARAM item, int iCol, char* str, int iStrMa
 	}
 }
 
-void SWS_TrackListView::OnItemClk(LPARAM item, int iCol)
+void SWS_TrackListView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 {
-	bool bCtrl  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? true : false;
-	bool bAlt   = GetAsyncKeyState(VK_MENU)    & 0x8000 ? true : false;
-	bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
-
-	MediaTrack* tr = (MediaTrack*)item;
+	MediaTrack* tr = (MediaTrack*)item; // Always non-null
 	
-	if (!tr || iCol == COL_NUM || iCol == COL_NAME || !*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-	{
-		bShift = false; // override shift
-	
-#ifdef _WIN32
-		// Update the track selections
-		m_bDisableUpdates = true;
-		for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
-		{
-			int iNewState = ListView_GetItemState(m_hwndList, i, LVIS_SELECTED) ? 1 : 0;
-			MediaTrack* trSel =(MediaTrack*)GetListItem(i);
-			if (iNewState != *(int*)GetSetMediaTrackInfo(trSel, "I_SELECTED", NULL))
-				GetSetMediaTrackInfo(trSel, "I_SELECTED", &iNewState);
-		}
-		m_bDisableUpdates = false;
-#else
-		// In SWELL the updates aren't done until the mouseUp even.  So, set some variables here and wait until we get
-		// the message; handle in OnItemSelChange below.
-		m_iClickedCol = iCol;
-		m_pClickedTrack = tr;
-		return;
-#endif
-	}
-
-	if (tr && iCol == COL_TCP || iCol == COL_MCP)
+	if (iCol == COL_TCP || iCol == COL_MCP)
 	{
 		bool bClickedStar = ((iCol == COL_TCP && GetTrackVis(tr) & 2) || 
 							 (iCol == COL_MCP && GetTrackVis(tr) & 1));
 		m_bDisableUpdates = true;
 
-		if (m_pTrackListWnd->Linked() && !bShift)
+		if (m_pTrackListWnd->Linked() && !(iKeyState & LVKF_SHIFT))
 		{
-			if (bCtrl && bAlt)
+			if (iKeyState & LVKF_CONTROL && iKeyState & LVKF_ALT)
 				ShowSelOnly();
 			else if (bClickedStar)
 				HideTracks();
@@ -159,7 +128,7 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol)
 		}
 		else if (iCol == COL_TCP)
 		{
-			if (bCtrl && bAlt)
+			if (iKeyState & LVKF_CONTROL && iKeyState & LVKF_ALT)
 				ShowInTCPEx();
 			else if (bClickedStar)
 				HideFromTCP();
@@ -168,7 +137,7 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol)
 		}
 		else // iCol == COL_MCP
 		{
-			if (bCtrl && bAlt)
+			if (iKeyState & LVKF_CONTROL && iKeyState & LVKF_ALT)
 				ShowInMCPEx();
 			else if (bClickedStar)
 				HideFromMCP();
@@ -186,34 +155,13 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol)
 		Main_OnCommand(9, 0);
 }
 
-#ifndef _WIN32
-// On mac, the selection isn't updated until the mouse button is *lifted*, so handle clicks a little later
-// but only if the selection is changing
 bool SWS_TrackListView::OnItemSelChange(LPARAM item, bool bSel)
 {
-	if (m_pClickedTrack)
-	{
-		// Update the track selections
-		// Do them all right away, don't wait for all the notifies to arrive
-		m_bDisableUpdates = true;
-		for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
-		{
-			int iNewState = ListView_GetItemState(m_hwndList, i, LVIS_SELECTED) ? 1 : 0;
-			MediaTrack* trSel =(MediaTrack*)GetListItem(i);
-			if (iNewState != *(int*)GetSetMediaTrackInfo(trSel, "I_SELECTED", NULL))
-				GetSetMediaTrackInfo(trSel, "I_SELECTED", &iNewState);
-		}
-		m_bDisableUpdates = false;
-		OnItemClk((LPARAM)m_pClickedTrack, m_iClickedCol);
-		m_pClickedTrack = NULL;
-	}
-	else // if (bSel != (*(int*)GetSetMediaTrackInfo((MediaTrack*)item, "I_SELECTED", NULL) ? true : false))
-		// OK if the listview selection was updated, but the CLICK handler doesn't want the selection
-		// to change, then redraw (with the correct selections) here.
-		m_pTrackListWnd->Update();
+	MediaTrack* tr = (MediaTrack*)item;
+	if (bSel != (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) ? true : false))
+		GetSetMediaTrackInfo(tr, "I_SELECTED", bSel ? &g_i1 : &g_i0);
 	return false;
 }
-#endif
 
 int SWS_TrackListView::OnItemSort(LPARAM item1, LPARAM item2)
 {
@@ -244,14 +192,12 @@ void SWS_TrackListView::SetItemText(LPARAM item, int iCol, const char* str)
 	}
 }
 
-int SWS_TrackListView::GetItemCount()
+void SWS_TrackListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 {
-	return m_pTrackListWnd->GetFilter()->Get()->GetFilteredTracks()->GetSize();
-}
-
-LPARAM SWS_TrackListView::GetItemPointer(int iItem)
-{
-	return (LPARAM)m_pTrackListWnd->GetFilter()->Get()->GetFilteredTracks()->Get(iItem);
+	WDL_PtrList<void>* pTracks = m_pTrackListWnd->GetFilter()->Get()->GetFilteredTracks();
+	pBuf->Resize(pTracks->GetSize());
+	for (int i = 0; i < pTracks->GetSize(); i++)
+		pBuf->Get()[i] = (LPARAM)pTracks->Get(i);
 }
 
 bool SWS_TrackListView::GetItemState(LPARAM item)
@@ -326,7 +272,7 @@ void SWS_TrackListWnd::OnInitDlg()
 
 	Update();
 
-	SetTimer(m_hwnd, 0, 50, NULL);
+	SetTimer(m_hwnd, 0, 100, NULL);
 }
 
 void SWS_TrackListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -430,9 +376,6 @@ HMENU SWS_TrackListWnd::OnContextMenu(int x, int y)
 	{
 		m_trLastTouched = (MediaTrack*)item;
 		AddToMenu(contextMenu, SWS_SEPARATOR, 0);
-//#ifdef _WIN32				
-//		AddSubMenu(contextMenu, GetContextMenu(0), "Track Options");
-//#endif
 		AddToMenu(contextMenu, "Rename", RENAME_MSG);
 		AddToMenu(contextMenu, SWS_SEPARATOR, 0);
 		AddToMenu(contextMenu, "Show only in MCP", SWSGetCommandID(ShowInMCPOnly));
@@ -809,7 +752,6 @@ static COMMAND_T g_commandTable[] =
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
-// Seems damned "hacky" to me, but it works, so be it.
 static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 {
 	if (g_pList->IsActive())

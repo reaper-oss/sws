@@ -30,7 +30,7 @@
 typedef struct SWS_LVColumn
 {
 	int iWidth;
-	bool bEditable;
+	int iType; // & 1 = editable, & 2 = clickable button
 	const char* cLabel;
 	int iPos;
 } SWS_LVColumn;
@@ -62,12 +62,11 @@ protected:
 	virtual void SetItemText(LPARAM item, int iCol, const char* str) {}
 	virtual void GetItemText(LPARAM item, int iCol, char* str, int iStrMax) { str[0] = 0; }
 	virtual void GetItemTooltip(LPARAM item, char* str, int iStrMax) {}
-	virtual int GetItemCount() { return 0; }
-	virtual LPARAM GetItemPointer(int iItem) { return NULL; }
+	virtual void GetItemList(WDL_TypedBuf<LPARAM>* pBuf) { pBuf->Resize(0); }
 	virtual bool GetItemState(LPARAM item) { return false; } // Selection state
 	// These inform the derived class of user interaction
 	virtual bool OnItemSelChange(LPARAM item, bool bSel) { return false; } // Returns TRUE to prevent the change, or FALSE to allow the change
-	virtual void OnItemClk(LPARAM item, int iCol) {}
+	virtual void OnItemClk(LPARAM item, int iCol, int iKeyState) {}
 	virtual void OnItemDblClk(LPARAM item, int iCol) {}
 	virtual int OnItemSort(LPARAM item1, LPARAM item2);
 	virtual void OnBeginDrag() {}
@@ -75,6 +74,10 @@ protected:
 	HWND m_hwndList;
 	bool m_bDisableUpdates;
 	int m_iSortCol; // 1 based col index, negative for desc sort
+
+#ifndef _WIN32
+	int m_iClickedKeys;
+#endif
 
 private:
 	void EditListItemEnd(bool bSave, bool bResort = true);
@@ -84,6 +87,13 @@ private:
 	int DataToDisplayCol(int iCol);
 	static int CALLBACK sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam);
 
+#ifndef _WIN32
+	int m_iClickedCol;
+	LPARAM m_pClickedItem;
+#else
+	DWORD m_dwSavedSelTime;
+#endif
+	WDL_TypedBuf<bool> m_pSavedSel;
 	HWND m_hwndEdit;
 	HWND m_hwndTooltip;
 	int m_iEditingItem;

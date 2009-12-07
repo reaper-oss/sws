@@ -565,6 +565,72 @@ void ItemCustomColor(int iCustColor)
 void TrackCustCol(COMMAND_T* ct) { TrackCustomColor((int)ct->user); }
 void ItemCustCol(COMMAND_T* ct)  { ItemCustomColor((int)ct->user); }
 
+void RandomColorAll(COMMAND_T*)
+{
+	MediaTrack* tr = NULL;
+	// Get the first selected track
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		tr = CSurf_TrackFromID(i, false);
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			break;
+	}
+	if (tr)
+	{
+		Undo_BeginBlock();
+		Main_OnCommand(40360, 0); // Set track(s) to one random color
+		COLORREF cr = *(COLORREF*)GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", NULL);
+		for (int i = 1; i <= GetNumTracks(); i++)
+		{
+			tr = CSurf_TrackFromID(i, false);
+			for (int j = 0; j <= GetTrackNumMediaItems(tr); j++)
+			{
+				MediaItem* mi = GetTrackMediaItem(tr, j);
+				if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
+					GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &cr);
+			}
+		}
+		UpdateTimeline();
+		Undo_EndBlock("Set selected track(s)/item(s) to one random color", UNDO_STATE_ALL);
+	}
+	else
+		Main_OnCommand(40706, 0); // Set item(s) to one random color
+}
+
+void CustomColorAll(COMMAND_T*)
+{	
+	MediaTrack* tr = NULL;
+	// Get the first selected track
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		tr = CSurf_TrackFromID(i, false);
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			break;
+	}
+	if (tr)
+	{
+		Undo_BeginBlock();
+		Main_OnCommand(40357, 0); // Set track(s) to one custom color
+		// Assume the user clicked 'OK' in the color picker!
+		COLORREF cr = *(COLORREF*)GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", NULL);
+		for (int i = 1; i <= GetNumTracks(); i++)
+		{
+			tr = CSurf_TrackFromID(i, false);
+			for (int j = 0; j <= GetTrackNumMediaItems(tr); j++)
+			{
+				MediaItem* mi = GetTrackMediaItem(tr, j);
+				if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
+					GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &cr);
+			}
+		}
+		UpdateTimeline();
+		Undo_EndBlock("Set selected track(s)/item(s) to custom color", UNDO_STATE_ALL);
+	}
+	else
+		Main_OnCommand(40704, 0); // Set item(s) to one custom color
+
+}
+
 COLORREF CalcGradient(COLORREF crStart, COLORREF crEnd, double dPos)
 {
 	int r, g, b;
@@ -808,6 +874,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 14" },               "SWS_ITEMCUSTCOL14",		ItemCustCol,		"Set to custom color 14", 13 },
 	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 15" },               "SWS_ITEMCUSTCOL15",		ItemCustCol,		"Set to custom color 15", 14 },
 	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 16" },               "SWS_ITEMCUSTCOL16",		ItemCustCol,		"Set to custom color 16", 15 },
+
+	{ { DEFACCEL, "SWS: Set selected track(s)/item(s) to one random color" },     "SWS_RANDOMCOLALL",		RandomColorAll,		NULL, },
+	{ { DEFACCEL, "SWS: Set selected track(s)/item(s) to custom color..." },      "SWS_CUSTOMCOLALL",		CustomColorAll,		NULL, },
+
 	// End of menu!!
 
 	{ {}, LAST_COMMAND, NULL }, // Denote end of table

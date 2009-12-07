@@ -57,7 +57,7 @@ void ClipboardToList(COMMAND_T*)
 void ExportToClipboard(COMMAND_T*)
 {
 	char format[256];
-	GetPrivateProfileString(SWS_INI, TRACKLIST_FORMAT_KEY, TRACKLIST_FORMAT_DEFAULT, format, 256, get_ini_file());
+	GetPrivateProfileString(SWS_INI, EXPORT_FORMAT_KEY, EXPORT_FORMAT_DEFAULT, format, 256, get_ini_file());
 
 	if (!g_curList)
 		g_curList = new MarkerList("CurrentList", true);

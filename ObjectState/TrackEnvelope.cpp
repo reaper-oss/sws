@@ -111,7 +111,7 @@ void SWS_TrackEnvelope::SetHeight(int iHeight)
 	lstrcpyn(m_cEnv, cOldState, pLH-cOldState + 12);
 	sprintf(m_cEnv+strlen(m_cEnv), "%d", iHeight);
 	strcpy(m_cEnv+strlen(m_cEnv), strchr(pLH+11, ' '));
-	GetSetEnvelopeState(m_pTe, m_cEnv, strlen(m_cEnv));
+	GetSetEnvelopeState(m_pTe, m_cEnv, (int)strlen(m_cEnv));
 	free(cOldState);
 }
 
@@ -134,7 +134,7 @@ void SWS_TrackEnvelope::SetVis(bool bVis)
 		return;
 
 	pLH[4] = bVis ? '1' : '0';
-	GetSetEnvelopeState(m_pTe, m_cEnv, strlen(m_cEnv));
+	GetSetEnvelopeState(m_pTe, m_cEnv, (int)strlen(m_cEnv));
 }
 
 SWS_TrackEnvelopes::SWS_TrackEnvelopes():m_pTr(NULL)

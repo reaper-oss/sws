@@ -38,11 +38,10 @@ protected:
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void GetItemTooltip(LPARAM item, char* str, int iStrMax);
-	int GetItemCount();
-	LPARAM GetItemPointer(int iItem);
+	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	bool GetItemState(LPARAM item);
 	bool OnItemSelChange(LPARAM item, bool bSel);
-	void OnItemClk(LPARAM item, int iCol);
+	void OnItemClk(LPARAM item, int iCol, int iKeyState);
 };
 
 class SWS_SnapshotsWnd : public SWS_DockWnd

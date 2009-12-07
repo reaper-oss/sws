@@ -89,12 +89,13 @@ console_COMMAND_T g_commands[NUM_COMMANDS] =
 	{ VOLUME_TRIM,      0, 'v',  1, "Trim volume on ",       " %sdb" },
 	{ PAN_SET,          0, 'P',  1, "Set pan on  ",          " %s%" },
 	{ PAN_TRIM,         0, 'p',  1, "Trim pan on  ",         " %s%" },
-	{ NAME_SET,         0, 'n', 65, "Name ",                 " to %s" },
-	{ NAME_PREFIX,      0, 'b', 65, "Name ",                 " with prefix %s" },
-	{ NAME_SUFFIX,      0, 'z', 65, "Name ",                 " with suffix %s" },
+	{ NAME_SET,         0, 'n',  9, "Name ",                 " to %s" },
+	{ NAME_PREFIX,      0, 'b',  9, "Name ",                 " with prefix %s" },
+	{ NAME_SUFFIX,      0, 'z',  9, "Name ",                 " with suffix %s" },
 	{ CHANNELS_SET,     0, 'l',  1, "Set # channels on ",    " to %s" },
 	{ INPUT_SET,        0, 'i',  1, "Set input on ",         " to %s" },
-	{ COLOR_SET,		0, 'c', 65, "Change color on ",		 " to %s" },
+	{ COLOR_SET,		0, 'c',  9, "Change color on ",		 " to %s" },
+	{ MARKER_ADD,		0, '!', 25, "Insert action marker ", "!%s" },
 	{ HELP_CMD,         0, '?', -1, "http://www.standingwaterstudios.com/reaconsole.php", 0 },
 	{ UNKNOWN_COMMAND,  0,   0, -1, "Enter a command...", 0 },
 };
@@ -127,39 +128,47 @@ CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args)
 
     *trackid = &strCommand[index+1];
 
-	if (g_commands[command].iNumArgs <= 0)
+	if ((g_commands[command].iNumArgs & ARGS_MASK) <= 0)
 		return command;
 
-	// If there's a semicolon, treat that as the space between the tracks id and the arguments
-	// Looks at just the first semicolon
-	p = strchr(*trackid, ';');
-	if (p)
+	if (!(g_commands[command].iNumArgs & NOTRACK_ARG))
 	{
-		p[0] = 0;
-		*args = p+1;
-		return command;
-	}
+		// If there's a semicolon, treat that as the space between the tracks id and the arguments
+		// Looks at just the first semicolon
+		p = strchr(*trackid, ';');
+		if (p)
+		{
+			p[0] = 0;
+			*args = p+1;
+		}
 
-	p = strchr(*trackid, ' ');
-	if (p)
-	{
-		if (p == *trackid)
+		p = strchr(*trackid, ' ');
+		if (p)
+		{
+			if (p == *trackid)
+				*trackid = "";
+			p[0] = 0;
+			// Go to first non-space char
+			while (*(++p) == ' ');
+			*args = p;
+		}
+		else
+		{
+			// No spaces, assume it's the argument that's being typed
+			*args = *trackid;
 			*trackid = "";
-		p[0] = 0;
-		// Go to first non-space char
-		while (*(++p) == ' ');
-		*args = p;
+		}
 	}
 	else
 	{
-		// No spaces, assume it's the argument that's being typed
 		*args = *trackid;
 		*trackid = "";
+		return command;
 	}
 
 	// Make sure a numeric argument is valid
 	if (NUMERIC_ARGS(command) &&
-		(!isdigit(**args) && !((**args == '-' || **args == '+') && isdigit((*args)[1]))))
+		(!isdigit(**args) && !((**args == '-' || **args == '+' || **args == '.') && isdigit((*args)[1]))))
 	{
 		if (!**trackid)
 			*trackid = *args;
@@ -374,6 +383,22 @@ void ProcessCommand(CONSOLE_COMMAND command, char* args)
 
 	if (NUMERIC_ARGS(command))
 		dVal = atof(args);
+
+	if (g_commands[command].iNumArgs & NOTRACK_ARG)
+	{
+		switch(command)
+		{
+		case MARKER_ADD:
+			{
+				char markerStr[256];
+				_snprintf(markerStr, 64, "!%s", args);
+				AddProjectMarker(NULL, false, GetCursorPosition(), 0.0, markerStr, -1);
+				UpdateTimeline();
+				break;
+			}
+		}
+		return;
+	}
 
 	for (int track = 0; track < GetNumTracks(); track++)
 	{
@@ -599,38 +624,42 @@ char* StatusString(CONSOLE_COMMAND command, char* args)
 	if (g_commands[command].iNumArgs < 0)
 		return status;
 
-	int previous_n = n;
-	bool all = true;
-	for (int i = 0; i < GetNumTracks(); i++)
-		if (!g_selTracks.Get()[i])
-		{
-			all = false;
-			break;
-		}
-	if (all)
+	if (!(g_commands[command].iNumArgs & NOTRACK_ARG))
 	{
-		n += sprintf(status + n, "all");
-	}
-	else
-	{
+		int previous_n = n;
+		bool all = true;
 		for (int i = 0; i < GetNumTracks(); i++)
-			if (g_selTracks.Get()[i])
+			if (!g_selTracks.Get()[i])
 			{
-				const char* cName = (const char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i+1, false), "P_NAME", NULL);
-				if (strlen(cName) + n + 20 >= 512)
-					// Really grunge string overflow check.  Can't see the status string past two lines anyway.
-					return status;
-				if (cName && cName[0])
-					n += sprintf(status + n, "[%d]%s, ", i+1, cName);
-				else
-					n += sprintf(status + n, "%d, ", i+1);
+				all = false;
+				break;
 			}
-		if (n == previous_n)
-			n += sprintf(status + n, "nothing");
+		if (all)
+		{
+			n += sprintf(status + n, "all");
+		}
 		else
 		{
-			status[n-2] = 0; // take off last ", "
-			n -= 2;
+			for (int i = 0; i < GetNumTracks(); i++)
+				if (g_selTracks.Get()[i])
+				{
+					const char* cName = (const char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i+1, false), "P_NAME", NULL);
+					if (strlen(cName) + n + 20 >= 512)
+						// Really grunge string overflow check.  Can't see the status string past two lines anyway.
+						return status;
+					if (cName && cName[0])
+						n += sprintf(status + n, "[%d]%s, ", i+1, cName);
+					else
+						n += sprintf(status + n, "%d, ", i+1);
+				}
+
+			if (n == previous_n)
+				n += sprintf(status + n, "nothing");
+			else
+			{
+				status[n-2] = 0; // take off last ", "
+				n -= 2;
+			}
 		}
 	}
 
@@ -754,12 +783,14 @@ static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 		bShift = true;
 	else if (msg->message == WM_KEYUP && msg->wParam == VK_SHIFT)
 		bShift = false;
-	else if (msg->message == WM_KEYDOWN && msg->wParam >= 0x41 && msg->wParam <= 0x5A)
+	else if (msg->message == WM_KEYDOWN && msg->wParam >= '!' && msg->wParam <= 'Z')
 	{
 		g_dwLastKeyMsg = GetTickCount();
 		g_cLastKey = (char)msg->wParam;
-		if (!bShift)
+		if (!bShift && msg->wParam >= 'A')
 			g_cLastKey += 0x20;
+		else if (bShift && msg->wParam == '1')
+			g_cLastKey = '!';
 	}
 
 	return 0;
@@ -789,13 +820,13 @@ static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { { 0, 'c', 0 }, "SWS: Open console" },										"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0 },
+	{ { { 0, 'c', 0 }, "SWS: Open console" },									"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0 },
 	{ { DEFACCEL,   "SWS: Open console and copy keystroke" },					"SWSCONSOLE2",      BringKeyCommand, NULL, },
 	{ { DEFACCEL,   "SWS: Open console with 'S' to select track(s)" },			"SWSCONSOLEEXSEL",  ConsoleCommand,  NULL, 'S' },
-	{ { DEFACCEL,   "SWS: Open console with 'n' to name track(s)" },				"SWSCONSOLENAME",   ConsoleCommand,  NULL, 'n' },
-	{ { DEFACCEL,   "SWS: Open console with 'o' to solo track(s)" },				"SWSCONSOLESOLO",   ConsoleCommand,  NULL, 'o' },
+	{ { DEFACCEL,   "SWS: Open console with 'n' to name track(s)" },			"SWSCONSOLENAME",   ConsoleCommand,  NULL, 'n' },
+	{ { DEFACCEL,   "SWS: Open console with 'o' to solo track(s)" },			"SWSCONSOLESOLO",   ConsoleCommand,  NULL, 'o' },
 	{ { DEFACCEL,   "SWS: Open console with 'a' to arm track(s)" },				"SWSCONSOLEARM",    ConsoleCommand,  NULL, 'a' },
-	{ { DEFACCEL,   "SWS: Open console with 'm' to mute track(s)" },				"SWSCONSOLEMUTE",   ConsoleCommand,  NULL, 'm' },
+	{ { DEFACCEL,   "SWS: Open console with 'm' to mute track(s)" },			"SWSCONSOLEMUTE",   ConsoleCommand,  NULL, 'm' },
 	{ { DEFACCEL,   "SWS: Open console with 'f' to toggle FX enable" },			"SWSCONSOLEFX",     ConsoleCommand,  NULL, 'f' },
 	{ { DEFACCEL,   "SWS: Open console with 'i' to set track(s) input" },		"SWSCONSOLEINPUT",  ConsoleCommand,  NULL, 'i' },
 	{ { DEFACCEL,   "SWS: Open console with 'b' to prefix track(s)" },			"SWSCONSOLEPREFIX", ConsoleCommand,  NULL, 'b' },
@@ -807,6 +838,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL,   "SWS: Open console with 'v' to trim volume on track(s)" },	"SWSCONSOLEVOLT",   ConsoleCommand,  NULL, 'v' },
 	{ { DEFACCEL,   "SWS: Open console with 'p' to trim pan on track(s)" },		"SWSCONSOLEPANT",   ConsoleCommand,  NULL, 'p' },
 	{ { DEFACCEL,   "SWS: Open console with 'l' to set track(s) # channels" },	"SWSCONSOLECHAN",   ConsoleCommand,  NULL, 'l' },
+	{ { DEFACCEL,   "SWS: Open console with '!' to add action marker" },		"SWSCONSOLEMARKER", ConsoleCommand,  NULL, '!' },
 	{ { DEFACCEL,   "SWS: Edit console custom commands (restart needed after save)" }, "SWSCONSOLEEDITCUST",  EditCustomCommands,  NULL, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table

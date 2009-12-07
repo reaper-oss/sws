@@ -351,7 +351,7 @@ HWND GetTrackWnd()
 char* GetHashString(const char* in, char* out)
 {
 	WDL_SHA1 sha;
-	sha.add(in, strlen(in));
+	sha.add(in, (int)strlen(in));
 	char hash[20];
 	sha.result(hash);
 	for (int i = 0; i < 20; i++)

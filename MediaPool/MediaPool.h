@@ -78,10 +78,9 @@ public:
 protected:
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void OnItemClk(LPARAM item, int iCol);
+	void OnItemClk(LPARAM item, int iCol, int iKeyState);
 	bool OnItemSelChange(LPARAM item, bool bSel);
-	int GetItemCount();
-	LPARAM GetItemPointer(int iItem);
+	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	bool GetItemState(LPARAM item);
 
 private:
@@ -96,11 +95,10 @@ public:
 
 protected:
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void OnItemClk(LPARAM item, int iCol);
+	void OnItemClk(LPARAM item, int iCol, int iKeyState);
 	bool OnItemSelChange(LPARAM item, bool bSel);
 	void OnItemDblClk(LPARAM item, int iCol);
-	int GetItemCount();
-	LPARAM GetItemPointer(int iItem);
+	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	void OnBeginDrag();
 	int OnItemSort(LPARAM item1, LPARAM item2);
 

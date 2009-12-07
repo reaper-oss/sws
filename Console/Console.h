@@ -62,6 +62,7 @@ typedef enum {
 	CHANNELS_SET,
 	INPUT_SET,
 	COLOR_SET,
+	MARKER_ADD,
 	HELP_CMD,
 	UNKNOWN_COMMAND,
 	NUM_COMMANDS,
@@ -71,11 +72,14 @@ typedef struct {
 	CONSOLE_COMMAND	command;
 	char			cPrefix;
 	char			cKey;
-	int				iNumArgs;  // + 64 if non-numeric args, -1 for no track args either
+	int				iNumArgs;  // + 8 if non-numeric args, + 16 for no track args either
 	char*			cHelpPrefix;
 	char*			cHelpSuffix;
 } console_COMMAND_T;
 
-#define NUMERIC_ARGS(a) (g_commands[(a)].iNumArgs > 0 && !(g_commands[(a)].iNumArgs & 64))
+#define ARGS_MASK    7
+#define STRING_ARG   8
+#define NOTRACK_ARG  16
+#define NUMERIC_ARGS(a) (g_commands[(a)].iNumArgs > 0 && !(g_commands[(a)].iNumArgs & STRING_ARG))
 
 int ConsoleInit();

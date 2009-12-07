@@ -121,14 +121,11 @@ void SWS_MarkerListView::SetItemText(LPARAM item, int iCol, const char* str)
 	}
 }
 
-int SWS_MarkerListView::GetItemCount()
+void SWS_MarkerListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 {
-	return g_curList->m_items.GetSize();
-}
-
-LPARAM SWS_MarkerListView::GetItemPointer(int iItem)
-{
-	return (LPARAM)g_curList->m_items.Get(iItem);
+	pBuf->Resize(g_curList->m_items.GetSize());
+	for (int i = 0; i < pBuf->GetSize(); i++)
+		pBuf->Get()[i] = (LPARAM)g_curList->m_items.Get(i);
 }
 
 bool SWS_MarkerListView::GetItemState(LPARAM item)
@@ -279,8 +276,8 @@ HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y)
 	AddToMenu(hMenu, "Delete all markers", SWSGetCommandID(DeleteAllMarkers));
 	AddToMenu(hMenu, "Delete all regions", SWSGetCommandID(DeleteAllRegions));
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hMenu, "Export tracklist to clipboard", SWSGetCommandID(ExportToClipboard));
-	AddToMenu(hMenu, "Format tracklist...", SWSGetCommandID(ExportFormat));
+	AddToMenu(hMenu, "Export formatted marker list to clipboard", SWSGetCommandID(ExportToClipboard));
+	AddToMenu(hMenu, "Export format...", SWSGetCommandID(ExportFormat));
 	
 	return hMenu;
 }
@@ -420,10 +417,10 @@ INT_PTR WINAPI doFormatDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			HWND format = GetDlgItem(hwndDlg, IDC_EDIT);
 			HWND desc = GetDlgItem(hwndDlg, IDC_DESC);
 			char str[256];
-			GetPrivateProfileString(SWS_INI, TRACKLIST_FORMAT_KEY, TRACKLIST_FORMAT_DEFAULT, str, 256, get_ini_file());
+			GetPrivateProfileString(SWS_INI, EXPORT_FORMAT_KEY, EXPORT_FORMAT_DEFAULT, str, 256, get_ini_file());
 			SetWindowText(format, str);
 			SetWindowText(desc,
-				"Export format string:\r\n"
+				"Export marker list format string:\r\n"
 				"First char one of a/r/m\r\n"
 				"  (all / only regions / only markers)\r\n"
 				"Then, in any order, n, i, l, d, t\r\n"
@@ -444,7 +441,7 @@ INT_PTR WINAPI doFormatDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				char str[256];
 				GetWindowText(format, str, 256);
 				if (str[0] == 'a' || str[0] == 'r' || str[0] == 'm')
-					WritePrivateProfileString(SWS_INI, TRACKLIST_FORMAT_KEY, str, get_ini_file());
+					WritePrivateProfileString(SWS_INI, EXPORT_FORMAT_KEY, str, get_ini_file());
 				EndDialog(hwndDlg, 0);
 			}
 			break;
@@ -497,8 +494,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL,								"SWS: Delete all markers" },				"SWSMARKERLIST9",  DeleteAllMarkers,  "Delete all markers", },
 	{ { DEFACCEL,								"SWS: Delete all regions" },				"SWSMARKERLIST10", DeleteAllRegions,  "Delete all regions", },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
-	{ { DEFACCEL,								"SWS: Export tracklist to clipboard" },		"SWSMARKERLIST11", ExportToClipboard, "Export tracklist to clipboard", },
-	{ { DEFACCEL,								"SWS: Tracklist format" },					"SWSMARKERLIST12", ExportFormat,      "Tracklist format...", },
+	{ { DEFACCEL,								"SWS: Export formatted marker list to clipboard" },	"SWSMARKERLIST11", ExportToClipboard, "Export formatted marker list to clipboard", },
+	{ { DEFACCEL,								"SWS: Exported marker list format" },				"SWSMARKERLIST12", ExportFormat,      "Export format...", },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 

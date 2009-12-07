@@ -39,9 +39,7 @@ protected:
 	bool OnItemSelChange(LPARAM item, bool bSel);
 	void OnItemDblClk(LPARAM item, int iCol);
 	int OnItemSort(LPARAM item1, LPARAM item2);
-
-	int GetItemCount();
-	LPARAM GetItemPointer(int iItem);
+	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	bool GetItemState(LPARAM item);
 };
 
@@ -59,8 +57,8 @@ protected:
 	void OnTimer();
 };
 
-#define TRACKLIST_FORMAT_KEY "Tracklist Format"
-#define TRACKLIST_FORMAT_DEFAULT "an - d (l)"
+#define EXPORT_FORMAT_KEY "MarkerExport Format"
+#define EXPORT_FORMAT_DEFAULT "an - d (l)"
 
 int MarkerListInit();
 void MarkerListExit();

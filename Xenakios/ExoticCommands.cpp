@@ -308,6 +308,27 @@ void DoNudgeItemsRightBeatsAndConfBased(COMMAND_T*)
 	DoNudgeItemsBeatsBased(true,true,0.0);
 }
 
+void DoNudgeSamples(COMMAND_T* t)
+{
+	double dSrate = (double)(*(int*)GetConfigVar("projsrate"));
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* mi = GetTrackMediaItem(tr, j);
+			if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
+			{
+				double dPos = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
+				dPos += (double)t->user * 1.0 / dSrate;
+				GetSetMediaItemInfo(mi, "D_POSITION", &dPos);
+			}
+		}
+	}
+	UpdateTimeline();
+	Undo_OnStateChange("Nudge item position by a sample");
+}
+
 void DoSplitItemsAtTransients(COMMAND_T*)
 {
 	MediaTrack* MunRaita;
@@ -784,7 +805,7 @@ void DoShowPVocDlg(COMMAND_T*)
 
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_CSPVOC_CONF), g_hwndParent, CSPVOCItemDlgProc);
 #else
-	MessageBox(g_hwndParent, "Not supported on OSX (yet), sorry!", "Unsupported", MB_OK);
+	MessageBox(g_hwndParent, "Not supported on OSX, sorry!", "Unsupported", MB_OK);
 #endif
 }
 
@@ -1723,6 +1744,7 @@ void DoHoldKeyTest2(COMMAND_T*)
 
 void DoInsertMediaFromClipBoard(COMMAND_T*)
 {
+#ifdef _WIN32
 	if (OpenClipboard(g_hwndParent)) 
 	{
 		char clipstring[4096] = "";
@@ -1755,6 +1777,9 @@ void DoInsertMediaFromClipBoard(COMMAND_T*)
 			InsertMedia(clipstring,0);
 		CloseClipboard();
 	}
+#else
+	MessageBox(g_hwndParent, "Not supported on OSX, sorry!", "Unsupported", MB_OK);
+#endif
 }
 
 typedef struct

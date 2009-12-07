@@ -108,6 +108,8 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Nudge item positions right, time based" }, "XENAKIOS_NUDGEITEMPOS_PLUS_SECS", DoNudgeItemsRightSecsAndConfBased, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Nudge item positions left, beat based" }, "XENAKIOS_NUDGEITEMPOS_LEFT_BEATS", DoNudgeItemsLeftBeatsAndConfBased, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Nudge item positions right, beat based" }, "XENAKIOS_NUDGEITEMPOS_RIGHT_BEATS", DoNudgeItemsRightBeatsAndConfBased, NULL, },
+	{ { DEFACCEL, "SWS: Nudge item(s) position 1 sample right" }, "SWS_NUDGESAMPLERIGHT", DoNudgeSamples, NULL, 1 },
+	{ { DEFACCEL, "SWS: Nudge item(s) position 1 sample left" },  "SWS_NUDGESAMPLELEFT",  DoNudgeSamples, NULL, -1 },
 	{ { DEFACCEL, "Xenakios/SWS: Move selected items to edit cursor" }, "XENAKIOS_MOVEITEMSTOEDITCURSOR", DoMoveItemsToEditCursor,	"Move selected items to edit cursor", },
 	{ { DEFACCEL, "Xenakios/SWS: Move selected items left by item length" }, "XENAKIOS_MOVEITEMSLEFTBYLEN", DoMoveItemsLeftByItemLen,	"Move selected items left by item length", },
 	{ { DEFACCEL, "Xenakios/SWS: Trim/untrim item left edge to edit cursor" }, "XENAKIOS_TRIM_LEFTEDGETO_EDCURSOR", DoTrimLeftEdgeToEditCursor,	"Trim/Untrim item left edge to edit cursor", },

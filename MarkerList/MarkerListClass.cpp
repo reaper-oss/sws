@@ -160,6 +160,10 @@ void MarkerList::UpdateReaper()
 	UpdateTimeline();
 }
 
+#ifndef _WIN32
+int g_iClipFormat = -1;
+#endif
+
 void MarkerList::ListToClipboard()
 {
 	SectionLock lock(m_hLock);
@@ -175,15 +179,20 @@ void MarkerList::ListToClipboard()
 			iSize -= (int)strlen(str);
 		}
 	    EmptyClipboard();
-
+		
 		// Not sure what the HGLOBAL deal is but it's straight from the help on SetClipboardData
 		HGLOBAL hglbCopy; 
         hglbCopy = GlobalAlloc(GMEM_MOVEABLE, strlen(str)+1); 
 		if (hglbCopy)
 		{
 			memcpy(GlobalLock(hglbCopy), str, strlen(str)+1);	
-			GlobalUnlock(hglbCopy); 
+			GlobalUnlock(hglbCopy);
+#ifndef _WIN32
+			g_iClipFormat = RegisterClipboardFormat("Text");
+			SetClipboardData(g_iClipFormat, hglbCopy); 
+#else
 			SetClipboardData(CF_TEXT, hglbCopy); 
+#endif
 		}
 		CloseClipboard();
 		delete [] str;
@@ -198,7 +207,11 @@ void MarkerList::ClipboardToList()
 	{
 		m_items.Empty(true);
 		LineParser lp(false);
+#ifndef _WIN32
+		HGLOBAL clipBoard = GetClipboardData(g_iClipFormat);
+#else
 		HGLOBAL clipBoard = GetClipboardData(CF_TEXT);
+#endif
 		char* data = NULL;
 		if (clipBoard)
 		{
@@ -230,6 +243,7 @@ void MarkerList::ClipboardToList()
 
 void MarkerList::ExportToClipboard(const char* format)
 {
+#ifdef _WIN32
 	SectionLock lock(m_hLock);
 	char* str = new char[ApproxSize()*2];
 
@@ -316,6 +330,9 @@ void MarkerList::ExportToClipboard(const char* format)
     SetClipboardData(CF_TEXT, hglbCopy); 
 	CloseClipboard();
 	delete [] str;
+#else
+	MessageBox(g_hwndParent, "Not supported on OSX, sorry!", "Unsupported", MB_OK);
+#endif
 }
 
 int MarkerList::ApproxSize()

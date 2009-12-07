@@ -130,124 +130,46 @@ void DoToggleTraxVisMixer(COMMAND_T*)
 	UpdateTimeline();
 }
 
-void DoTraxPanLawDefault(COMMAND_T*)
+void DoTraxPanLaw(COMMAND_T* t)
 {
-	//
-	MediaTrack *CurTrack;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int TkSelected=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		if (TkSelected==1)
+		MediaTrack* tr = CSurf_TrackFromID(i+1, false);
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			//bool ShowInMixer=*(bool*)GetSetMediaTrackInfo(CurTrack,"B_SHOWINMIXER",NULL);
-			//ShowInMixer=!ShowInMixer;
-			double NewLaw=-1.0;
-			GetSetMediaTrackInfo(CurTrack,"D_PANLAW",&NewLaw);
+			double dLawGain = -1.0; // < 0 == default
+			if (t->user != 666) // Magic # for "default"
+			{
+				double dLawDb = (double)t->user / 10.0;
+				dLawGain = DB2VAL(dLawDb);
+			}
+			GetSetMediaTrackInfo(tr, "D_PANLAW", &dLawGain);
 		}
-
-
-
 	}
-	UpdateTimeline();
+	Undo_OnStateChange(strchr(t->accel.desc, ':') + 2);
 }
 
-void DoTraxPanLawZero(COMMAND_T*)
+void DoTraxRecArmed(COMMAND_T* t)
 {
-	//
-	MediaTrack *CurTrack;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int TkSelected=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		if (TkSelected==1)
-		{
-			//bool ShowInMixer=*(bool*)GetSetMediaTrackInfo(CurTrack,"B_SHOWINMIXER",NULL);
-			//ShowInMixer=!ShowInMixer;
-			double NewLaw=1.0;
-			GetSetMediaTrackInfo(CurTrack,"D_PANLAW",&NewLaw);
-		}
-
-
-
-	}
-	UpdateTimeline();
-}
-
-void DoTraxRecArmed(COMMAND_T*)
-{
-	MediaTrack *CurTrack;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
-	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int TkSelected=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		if (TkSelected==1)
-		{
-			//bool ShowInMixer=*(bool*)GetSetMediaTrackInfo(CurTrack,"B_SHOWINMIXER",NULL);
-			//ShowInMixer=!ShowInMixer;
-			int NewArm=1;
-			GetSetMediaTrackInfo(CurTrack,"I_RECARM",&NewArm);
-		}
-
-
-
+		MediaTrack* CurTrack = CSurf_TrackFromID(i+1, false);
+		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
+			GetSetMediaTrackInfo(CurTrack, "I_RECARM", &t->user);
 	}
 	UpdateTimeline();	
 }
 
-void DoTraxRecUnArmed(COMMAND_T*)
+void DoBypassFXofSelTrax(COMMAND_T* t)
 {
-	MediaTrack *CurTrack;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int TkSelected=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		if (TkSelected==1)
-		{
-			//bool ShowInMixer=*(bool*)GetSetMediaTrackInfo(CurTrack,"B_SHOWINMIXER",NULL);
-			//ShowInMixer=!ShowInMixer;
-			int NewArm=0;
-			GetSetMediaTrackInfo(CurTrack,"I_RECARM",&NewArm);
-		}
-
-
-
-	}
-	UpdateTimeline();	
-}
-
-void SetTrackFXOnOff(bool IsBypass)
-{
-	MediaTrack *CurTrack;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
-	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int IsSel=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		if (IsSel==1)
-		{
-			int FxEn=1;
-			if (IsBypass)
-				FxEn=0;
-			GetSetMediaTrackInfo(CurTrack,"I_FXEN",&FxEn);
-		}
+		MediaTrack* CurTrack = CSurf_TrackFromID(i+1, false);
+		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
+			GetSetMediaTrackInfo(CurTrack, "I_FXEN", &t->user);
 	}
 	UpdateTimeline();
 	Undo_OnStateChangeEx("Set track fx enabled/disabled",UNDO_STATE_TRACKCFG,-1);
-}
-
-void DoBypassFXofSelTrax(COMMAND_T*)
-{
-	SetTrackFXOnOff(true);
-}
-
-void DoUnBypassFXofSelTrax(COMMAND_T*)
-{
-	SetTrackFXOnOff(false);	
 }
 
 void DoResetTracksVolPan(COMMAND_T*)

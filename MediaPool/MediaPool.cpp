@@ -38,9 +38,22 @@
 static COMMAND_T* g_pCommandTable;
 static SWS_MediaPoolWnd* g_pMediaPoolWnd;
 
+void InsertFile(const char* cFile)
+{
+	if (GetPlayState())
+	{
+		double dSavedPos = GetCursorPosition();
+		SetEditCurPos(GetPlayPosition(), false, false);
+		InsertMedia((char*)cFile, 0);
+		SetEditCurPos(dSavedPos, false, false);
+	}
+	else
+		InsertMedia((char*)cFile, 0);
+}
+
 void InsertFile(COMMAND_T* t)
 {
-	InsertMedia((char*)t->user, 0);
+	InsertFile((const char*)t->user);
 }
 
 SWS_MediaPoolFile::SWS_MediaPoolFile(const char* cFilename, int id): m_id(id), m_bAction(false), m_bActive(false)
@@ -418,7 +431,7 @@ bool SWS_MediaPoolFileView::OnItemSelChange(LPARAM item, bool bSel)
 void SWS_MediaPoolFileView::OnItemDblClk(LPARAM item, int iCol)
 {
 	// Insert the file
-	InsertMedia((char*)((SWS_MediaPoolFile*)item)->GetFilename(), 0);
+	InsertFile((char*)((SWS_MediaPoolFile*)item)->GetFilename());
 }
 
 void SWS_MediaPoolFileView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)

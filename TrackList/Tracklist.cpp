@@ -42,7 +42,6 @@
 #define MAJORADJUST false
 	
 // Globals
-static COMMAND_T* g_pCommandTable;
 static SWS_TrackListWnd* g_pList;
 
 // Prototypes
@@ -158,6 +157,8 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 bool SWS_TrackListView::OnItemSelChange(LPARAM item, bool bSel)
 {
 	MediaTrack* tr = (MediaTrack*)item;
+	if (bSel)
+		g_pList->m_trLastTouched = tr;
 	if (bSel != (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) ? true : false))
 		GetSetMediaTrackInfo(tr, "I_SELECTED", bSel ? &g_i1 : &g_i0);
 	return false;
@@ -200,10 +201,17 @@ void SWS_TrackListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 		pBuf->Get()[i] = (LPARAM)pTracks->Get(i);
 }
 
-bool SWS_TrackListView::GetItemState(LPARAM item)
+int SWS_TrackListView::GetItemState(LPARAM item)
 {
 	MediaTrack* tr = (MediaTrack*)item;
-	return *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) ? true : false;
+	if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+	{
+		if (tr = g_pList->m_trLastTouched)
+			return LVIS_SELECTED | LVIS_FOCUSED;
+		else
+			return LVIS_SELECTED;
+	}
+	return 0;
 }
 
 SWS_TrackListWnd::SWS_TrackListWnd()
@@ -715,11 +723,16 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_pList->GetFilter()->Cleanup();
 }
 
+static bool TrackListWindowEnabled(COMMAND_T*)
+{
+	return g_pList->IsValidWindow();
+}
+
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
 static COMMAND_T g_commandTable[] =
 {
-	{ { DEFACCEL, "SWS: Show Tracklist" },								"SWSTL_OPEN",		OpenTrackList,		"SWS Tracklist", },
+	{ { DEFACCEL, "SWS: Show Tracklist" },								"SWSTL_OPEN",		OpenTrackList,		"SWS Tracklist", 0, TrackListWindowEnabled },
 	{ { DEFACCEL, "SWS: Show Tracklist with filter focused" },			"SWSTL_OPENFILT",	OpenTrackListFilt,	NULL, },
 
 	// Set all bits
@@ -745,7 +758,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Show selected track(s) in MCP, hide others" },	"SWSTL_SHOWMCPEX",	ShowInMCPEx,		NULL, },
 	{ { DEFACCEL, "SWS: Show selected track(s) in TCP, hide others" },	"SWSTL_SHOWTCPEX",	ShowInTCPEx,		NULL, },
 	{ { DEFACCEL, "SWS: Show selected track(s), hide others" },			"SWSTL_SHOWEX",		ShowSelOnly,		NULL, },
-	{ { DEFACCEL, "SWS: Hide unselected track(s)" },						"SWSTL_HIDEUNSEL",	HideUnSel,			NULL, },
+	{ { DEFACCEL, "SWS: Hide unselected track(s)" },					"SWSTL_HIDEUNSEL",	HideUnSel,			NULL, },
 
 	{ { DEFACCEL, "SWS: Clear tracklist filter" },                       "SWSTL_CLEARFLT",   ClearFilter,		NULL, },
 	{ { DEFACCEL, "SWS: Snapshot current track visibility" },            "SWSTL_SNAPSHOT",   NewVisSnapshot,		NULL, },
@@ -818,8 +831,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
 		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40075);
-	else if (flag == 1)
-		SWSCheckMenuItem(hMenu, g_commandTable[0].accel.accel.cmd, g_pList->IsValidWindow());
 }
 
 int TrackListInit()
@@ -830,7 +841,6 @@ int TrackListInit()
 		return 0;
 
 	SWSRegisterCommands(g_commandTable);
-	g_pCommandTable = g_commandTable;
 
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;

@@ -39,7 +39,7 @@ protected:
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	bool GetItemState(LPARAM item);
+	int  GetItemState(LPARAM item);
 	void OnItemClk(LPARAM item, int iCol, int iKeyState);
 	bool OnItemSelChange(LPARAM item, bool bSel);
 	int  OnItemSort(LPARAM item1, LPARAM item2);
@@ -58,6 +58,7 @@ public:
 	bool HideFiltered() { return m_bHideFiltered; }
 	bool Linked() { return m_bLink; }
 	SWSProjConfig<FilteredVisState>* GetFilter() { return &m_filter; }
+	MediaTrack* m_trLastTouched;
 	
 protected:
 	void OnInitDlg();
@@ -68,7 +69,6 @@ protected:
 
 private:
 	bool m_bUpdate;
-	MediaTrack* m_trLastTouched;
 	SWSProjConfig<FilteredVisState> m_filter;
 	bool m_bHideFiltered;
 	bool m_bLink;

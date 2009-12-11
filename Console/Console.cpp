@@ -885,6 +885,7 @@ int ConsoleInit()
 				ct->id = new char[25];
 				ct->doCommand = RunCommand;
 				ct->user = (int)new char[strlen(cBuf)+1];
+				ct->getEnabled = NULL;
 				sprintf(ct->id, "SWSCONSOLE_CUST%d", i++);
 				sprintf(desc, "SWS: Run console command: %s", cBuf);
 				strcpy((char*)ct->user, cBuf);

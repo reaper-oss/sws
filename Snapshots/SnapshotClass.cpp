@@ -637,6 +637,7 @@ void Snapshot::RegisterGetCommand(int iSlot) // Slot is 1-based index.
 		cmd->doCommand = GetSnapshot;
 		cmd->menuText = NULL;
 		cmd->user = iSlot;
+		cmd->getEnabled = NULL;
 		iLastRegistered = iSlot;
 		SWSRegisterCommand(cmd);			
 	}

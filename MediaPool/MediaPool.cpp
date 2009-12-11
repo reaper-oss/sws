@@ -35,7 +35,6 @@
 #define DELETE_MSG		0x10004
 	
 // Globals
-static COMMAND_T* g_pCommandTable;
 static SWS_MediaPoolWnd* g_pMediaPoolWnd;
 
 void InsertFile(const char* cFile)
@@ -119,6 +118,7 @@ void SWS_MediaPoolFile::RegisterCommand(const char* cGroup)
 	cmd->doCommand = InsertFile;
 	cmd->menuText = NULL;
 	cmd->user = (int)m_cFilename;
+	cmd->getEnabled = NULL;
 	SWSRegisterCommand(cmd);
 }
 
@@ -350,9 +350,9 @@ void SWS_MediaPoolGroupView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 		pBuf->Get()[iBuf++] = (LPARAM)m_pWnd->m_projGroups.Get()->Get(i);
 }
 
-bool SWS_MediaPoolGroupView::GetItemState(LPARAM item)
+int SWS_MediaPoolGroupView::GetItemState(LPARAM item)
 {
-	return (SWS_MediaPoolGroup*)item == m_pWnd->m_curGroup;
+	return (SWS_MediaPoolGroup*)item == m_pWnd->m_curGroup ? LVIS_SELECTED | LVIS_FOCUSED : 0;
 }
 
 static SWS_LVColumn g_fvCols[] = { { 25, 0, "#" }, { 300, 0, "Path" }, { 200, 0, "Filename" }, { 45, 2, "Action" } };
@@ -414,10 +414,16 @@ void SWS_MediaPoolFileView::GetItemText(LPARAM item, int iCol, char* str, int iS
 
 void SWS_MediaPoolFileView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 {
-	SWS_MediaPoolFile* pFile = (SWS_MediaPoolFile*)item;
-	if (pFile && iCol == 3 && m_pWnd->m_curGroup != &m_pWnd->m_projGroup)
+	if (iCol == 3 && m_pWnd->m_curGroup != &m_pWnd->m_projGroup)
 	{
-		pFile->SetAction(!pFile->GetAction(), m_pWnd->m_curGroup->m_bGlobal ? NULL : m_pWnd->m_curGroup->m_cGroupname, true);
+		SWS_MediaPoolFile* pFile = (SWS_MediaPoolFile*)item;
+		bool bNewState = !pFile->GetAction();
+		for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
+			if (IsSelected(i))
+			{
+				SWS_MediaPoolFile* pFile = (SWS_MediaPoolFile*)GetListItem(i);
+				pFile->SetAction(bNewState, m_pWnd->m_curGroup->m_bGlobal ? NULL : m_pWnd->m_curGroup->m_cGroupname, true);
+			}
 		Update();
 	}
 }
@@ -437,7 +443,7 @@ void SWS_MediaPoolFileView::OnItemDblClk(LPARAM item, int iCol)
 void SWS_MediaPoolFileView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 {
 	int iSize = 0;
-	if (!m_pWnd->m_curGroup)
+	if (m_pWnd->m_curGroup)
 		iSize = m_pWnd->m_curGroup->m_files.GetSize();
 	pBuf->Resize(iSize);
 	for (int i = 0; i < iSize; i++)
@@ -796,9 +802,14 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
+static bool MediaPoolEnabled(COMMAND_T*)
+{
+	return g_pMediaPoolWnd->IsValidWindow();
+}
+
 static COMMAND_T g_commandTable[] =
 {
-	{ { DEFACCEL, "SWS: Show media pool" }, "SWSMP_OPEN", OpenMediaPool, "SWS Media pool", },
+	{ { DEFACCEL, "SWS: Show media pool" }, "SWSMP_OPEN", OpenMediaPool, "SWS Media pool", 0, MediaPoolEnabled },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
@@ -844,8 +855,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
 		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40075);
-	else if (flag == 1)
-		SWSCheckMenuItem(hMenu, g_commandTable[0].accel.accel.cmd, g_pMediaPoolWnd->IsValidWindow());
 }
 
 int MediaPoolInit()
@@ -856,7 +865,6 @@ int MediaPoolInit()
 		return 0;
 
 	SWSRegisterCommands(g_commandTable);
-	g_pCommandTable = g_commandTable;
 
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;

@@ -728,6 +728,8 @@ void DoMaxMixFxPanHeight(COMMAND_T*)
 vector<GUID> g_MediaItemsSelected;
 bool g_EnvEditOn=false;
 
+bool IsEnvEditModeOn(COMMAND_T*) { return g_EnvEditOn; }
+
 void DoToggleEnvEditMode(COMMAND_T*)
 {
 	if (g_EnvEditOn)
@@ -1145,6 +1147,8 @@ void SetAllTrackSolos(int solomode)
 	}
 }
 
+bool IsRefTrack(COMMAND_T*) { return g_ReferenceTrackSolo; }
+
 void DoToggleReferenceTrack(COMMAND_T*)
 {
 	int isolo;
@@ -1380,6 +1384,11 @@ void SetAllMasterSendsMutes(bool muted)
 		}
 	}
 	Undo_OnStateChangeEx("Set all Master track sends muted/unmuted",UNDO_STATE_TRACKCFG,-1);
+}
+
+bool IsMasterSendMuted(COMMAND_T* t)
+{
+	return *(bool*)GetSetTrackSendInfo(CSurf_TrackFromID(0,false), 1, t->user, "B_MUTE", NULL);
 }
 
 void ToggleMasterSendMute(int indx,int mode) // mode 0==toggle, 1==set mute, 2==set unmute

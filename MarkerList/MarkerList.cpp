@@ -128,10 +128,10 @@ void SWS_MarkerListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 		pBuf->Get()[i] = (LPARAM)g_curList->m_items.Get(i);
 }
 
-bool SWS_MarkerListView::GetItemState(LPARAM item)
+int SWS_MarkerListView::GetItemState(LPARAM item)
 {
 	MarkerItem* mi = (MarkerItem*)item;
-	return GetCursorPosition() == mi->m_dPos;
+	return GetCursorPosition() == mi->m_dPos ? LVIS_SELECTED | LVIS_FOCUSED : 0;
 }
 
 SWS_MarkerListWnd::SWS_MarkerListWnd()
@@ -359,8 +359,9 @@ INT_PTR WINAPI doLoadDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				case IDOK:
 				{
 					HWND list = GetDlgItem(hwndDlg, IDC_COMBO);
-					int newList = (int)SendMessage(list, CB_GETCURSEL, 0, 0);
-					g_savedLists.Get()->Get(newList)->UpdateReaper();
+					int iList = (int)SendMessage(list, CB_GETCURSEL, 0, 0);
+					if (iList >= 0 && iList < g_savedLists.GetSize())
+						g_savedLists.Get()->Get(iList)->UpdateReaper();
 				}
 				// Fall through to cancel to save/end
 				case IDCANCEL:
@@ -394,8 +395,9 @@ INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				case IDOK:
 				{
 					HWND list = GetDlgItem(hwndDlg, IDC_COMBO);
-					int removeList = (int)SendMessage(list, CB_GETCURSEL, 0, 0);
-					g_savedLists.Get()->Delete(removeList, true);
+					int iList = (int)SendMessage(list, CB_GETCURSEL, 0, 0);
+					if (iList >= 0 && iList < g_savedLists.GetSize())
+						g_savedLists.Get()->Delete(iList, true);
 				}
 				// Fall through to cancel to save/end
 				case IDCANCEL:
@@ -456,7 +458,10 @@ void OpenMarkerList(COMMAND_T*)
 
 void LoadMarkerList(COMMAND_T*)
 {
-	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_LOAD),g_hwndParent,doLoadDialog);
+	if (!g_savedLists.GetSize())
+		MessageBox(g_hwndParent, "No marker sets available to load.", "Error", MB_OK);
+	else
+		DialogBox(g_hInst,MAKEINTRESOURCE(IDD_LOAD),g_hwndParent,doLoadDialog);
 }
 
 void SaveMarkerList(COMMAND_T*)
@@ -466,7 +471,10 @@ void SaveMarkerList(COMMAND_T*)
 
 void DeleteMarkerList(COMMAND_T*)
 {
-	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_LOAD),g_hwndParent,doDeleteDialog);
+	if (!g_savedLists.GetSize())
+		MessageBox(g_hwndParent, "No marker sets available to delete.", "Error", MB_OK);
+	else
+		DialogBox(g_hInst,MAKEINTRESOURCE(IDD_LOAD),g_hwndParent,doDeleteDialog);
 }
 
 void ExportFormat(COMMAND_T*)
@@ -474,9 +482,14 @@ void ExportFormat(COMMAND_T*)
 	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_FORMAT),g_hwndParent,doFormatDialog);
 }
 
+static bool MarkerListEnabled(COMMAND_T*)
+{
+	return pMarkerList->IsValidWindow();
+}
+
 static COMMAND_T g_commandTable[] = 
 {
-	{ { { FSHIFT   | FCONTROL | FVIRTKEY, 'M', 0 }, "SWS: Open marker list" },					"SWSMARKERLIST1",  OpenMarkerList,    "SWS MarkerList",  },
+	{ { { FSHIFT   | FCONTROL | FVIRTKEY, 'M', 0 }, "SWS: Open marker list" },					"SWSMARKERLIST1",  OpenMarkerList,    "SWS MarkerList", 0, MarkerListEnabled },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL,                                "SWS: Load marker set" },					"SWSMARKERLIST2",  LoadMarkerList,    "Load marker set...",   },
 	{ { DEFACCEL,                                "SWS: Save marker set" },					"SWSMARKERLIST3",  SaveMarkerList,    "Save marker set...",   },
@@ -584,8 +597,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40075);
 	else if (strcmp(menustr, "Main edit") == 0 && flag == 0)
 		AddSubMenu(hMenu, SWSCreateMenu(g_commandTable), "SWS Marker utilites");
-	else if (flag == 1)
-		SWSCheckMenuItem(hMenu, g_commandTable[0].accel.accel.cmd, pMarkerList->IsValidWindow());
 }
 
 int MarkerListInit()

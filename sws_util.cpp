@@ -162,16 +162,6 @@ HMENU FindMenuItem(HMENU hMenu, int iCmd, int* iPos)
 	return NULL;
 }
 
-void SWSCheckMenuItem(HMENU hMenu, int iCmd, bool bChecked)
-{
-	int iPos;
-	hMenu = FindMenuItem(hMenu, iCmd, &iPos);
-	if (hMenu)
-	{
-		CheckMenuItem(hMenu, iPos, MF_BYPOSITION | (bChecked ? MF_CHECKED : MF_UNCHECKED));
-	}
-}
-
 void SWSSetMenuText(HMENU hMenu, int iCmd, const char* cText)
 {
 	int iPos;

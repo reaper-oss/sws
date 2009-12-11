@@ -63,12 +63,12 @@ protected:
 	virtual void GetItemText(LPARAM item, int iCol, char* str, int iStrMax) { str[0] = 0; }
 	virtual void GetItemTooltip(LPARAM item, char* str, int iStrMax) {}
 	virtual void GetItemList(WDL_TypedBuf<LPARAM>* pBuf) { pBuf->Resize(0); }
-	virtual bool GetItemState(LPARAM item) { return false; } // Selection state
+	virtual int  GetItemState(LPARAM item) { return -1; } // Selection state: -1 == unchanged, 0 == false, 1 == selected
 	// These inform the derived class of user interaction
 	virtual bool OnItemSelChange(LPARAM item, bool bSel) { return false; } // Returns TRUE to prevent the change, or FALSE to allow the change
 	virtual void OnItemClk(LPARAM item, int iCol, int iKeyState) {}
 	virtual void OnItemDblClk(LPARAM item, int iCol) {}
-	virtual int OnItemSort(LPARAM item1, LPARAM item2);
+	virtual int  OnItemSort(LPARAM item1, LPARAM item2);
 	virtual void OnBeginDrag() {}
 
 	HWND m_hwndList;

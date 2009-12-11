@@ -57,6 +57,7 @@ typedef struct COMMAND_T
 	void (*doCommand)(COMMAND_T*);
 	char* menuText;
 	int user;
+	bool (*getEnabled)(COMMAND_T*);
 } COMMAND_T;
 
 template<class PTRTYPE> class SWSProjConfig
@@ -131,12 +132,19 @@ bool GetChosenColor(COLORREF* pColor);
 void HideColorChooser();
 
 #endif
-// Utility functions
+
+// Command/action handling, sws_extension.cpp
+int SWSRegisterCommand(COMMAND_T* pCommand);   // One command
+int SWSRegisterCommands(COMMAND_T* pCommands); // Multiple commands in a table, terminated with LAST_COMMAND
+COMMAND_T* SWSUnregisterCommand(int id);
+int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), int user = 0, char** pMenuText = NULL);
+HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);
+
+// Utility functions, sws_util.cpp
 BOOL IsCommCtrlVersion6();
 void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter = -1, bool bPos = false);
 void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter = -1);
 HMENU FindMenuItem(HMENU hMenu, int iCmd, int* iPos);
-void SWSCheckMenuItem(HMENU hMenu, int iCmd, bool bChecked);
 void SWSSetMenuText(HMENU hMenu, int iCmd, const char* cText);
 void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
@@ -144,11 +152,6 @@ int NumSelTracks();
 void SaveSelected();
 void RestoreSelected();
 void ClearSelected();
-int SWSRegisterCommand(COMMAND_T* pCommand);   // One command
-int SWSRegisterCommands(COMMAND_T* pCommands); // Multiple commands in a table, terminated with LAST_COMMAND
-COMMAND_T* SWSUnregisterCommand(int id);
-int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), int user = 0, char** pMenuText = NULL);
-HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);
 int GetFolderDepth(MediaTrack* tr, int* iType, MediaTrack** nextTr);
 int GetTrackVis(MediaTrack* tr); // &1 == mcp, &2 == tcp
 void SetTrackVis(MediaTrack* tr, int vis); // &1 == mcp, &2 == tcp

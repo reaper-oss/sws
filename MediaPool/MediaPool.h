@@ -81,7 +81,7 @@ protected:
 	void OnItemClk(LPARAM item, int iCol, int iKeyState);
 	bool OnItemSelChange(LPARAM item, bool bSel);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	bool GetItemState(LPARAM item);
+	int  GetItemState(LPARAM item);
 
 private:
 	SWS_MediaPoolWnd* m_pWnd;

@@ -38,9 +38,9 @@ protected:
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	bool OnItemSelChange(LPARAM item, bool bSel);
 	void OnItemDblClk(LPARAM item, int iCol);
-	int OnItemSort(LPARAM item1, LPARAM item2);
+	int  OnItemSort(LPARAM item1, LPARAM item2);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	bool GetItemState(LPARAM item);
+	int  GetItemState(LPARAM item);
 };
 
 class SWS_MarkerListWnd : public SWS_DockWnd

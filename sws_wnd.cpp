@@ -455,9 +455,15 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 #ifdef _WIN32
 			int iKeys = ((NMITEMACTIVATE*)lParam)->uKeyFlags;
 			if (GetTickCount() - m_dwSavedSelTime < 20 && m_pSavedSel.GetSize() == ListView_GetItemCount(m_hwndList) && m_pSavedSel.Get()[s->iItem])
+			{
 				// If there's a valid saved selection, and the user clicked on a selected track, the restore that selection
 				for (int i = 0; i < m_pSavedSel.GetSize(); i++)
+				{
 					OnItemSelChange(GetListItem(i), m_pSavedSel.Get()[i]);
+					ListView_SetItemState(m_hwndList, i, m_pSavedSel.Get()[i] ? LVIS_SELECTED : 0, LVIS_SELECTED);
+					// TODO store and set the FOCUSED bit as well??
+				}
+			}
 			else
 				// Ignore shift if the selection changed
 				iKeys &= ~LVKF_SHIFT;
@@ -687,13 +693,21 @@ void SWS_ListView::Update()
 				}
 			}
 
+			// Update the list, no matter what, because text may have changed
 			LVITEM item;
-			item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
+			int iNewState = GetItemState(items.Get()[i]);
+			if (iNewState >= 0)
+			{
+				item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
+				item.state = iNewState;
+				item.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
+			}
+			else
+				item.mask = LVIF_TEXT | LVIF_PARAM;
+
 			item.iItem = j;
 			item.lParam = items.Get()[i];
 			item.pszText = str;
-			item.state = GetItemState(item.lParam) ? LVIS_SELECTED | LVIS_FOCUSED : 0;
-			item.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
 			
 			int iCol = 0;
 			for (int k = 0; k < m_iCols; k++)
@@ -711,7 +725,7 @@ void SWS_ListView::Update()
 					item.mask = LVIF_TEXT;
 					iCol++;
 				}
-		}
+			}
 
 		ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
 		int iCol = abs(m_iSortCol) - 1;

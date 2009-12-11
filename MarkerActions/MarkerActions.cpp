@@ -137,9 +137,14 @@ void MarkerNudge(bool bRight)
 void MarkerNudgeLeft(COMMAND_T*)  { MarkerNudge(false); }
 void MarkerNudgeRight(COMMAND_T*) { MarkerNudge(true); }
 
+bool MarkerActionsEnabled(COMMAND_T*)
+{
+	return g_bMAEnabled;
+}
+
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS: Toggle marker actions enable" },    "SWSMA_TOGGLE",		MarkerActionsToggle,		"Enable SWS marker actions", },
+	{ { DEFACCEL, "SWS: Toggle marker actions enable" },    "SWSMA_TOGGLE",		MarkerActionsToggle,		"Enable SWS marker actions", 0, MarkerActionsEnabled },
 	{ { DEFACCEL, "SWS: Enable marker actions" },           "SWSMA_ENABLE",		MarkerActionsEnable,		NULL, },
 	{ { DEFACCEL, "SWS: Disable marker actions" },          "SWSMA_DISABLE",	MarkerActionsDisable,		NULL, },
 	{ { DEFACCEL, "SWS: Run action marker under cursor" },  "SWSMA_RUNEDIT",	MarkerActionRunUnderCursor,	NULL, },
@@ -153,8 +158,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (flag == 0 && strcmp(menustr, "Main options") == 0)
 		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40745);
-	else if (flag == 1)
-		SWSCheckMenuItem(hMenu, g_commandTable[0].accel.accel.cmd, g_bMAEnabled);
 }
 
 int MarkerActionsInit()

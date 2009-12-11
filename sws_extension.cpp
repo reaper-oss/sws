@@ -47,7 +47,11 @@
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
 static WDL_PtrList<COMMAND_T> g_commands;
+// Not strictly necessary but saves going through the whole
+// command array when asking about toggle state
+static WDL_PtrList<COMMAND_T> g_toggles;
 int g_iFirstCommand = 0;
+int g_iLastCommand = 0;
 
 bool hookCommandProc(int command, int flag)
 {
@@ -68,7 +72,7 @@ bool hookCommandProc(int command, int flag)
 	}
 
 	// Ignore commands that don't have anything to do with us from this point forward
-	if (command < g_iFirstCommand)
+	if (command < g_iFirstCommand || command > g_iLastCommand)
 		return false;
 
 	for (int i = 0; i < g_commands.GetSize(); i++)
@@ -94,9 +98,13 @@ int SWSRegisterCommand(COMMAND_T* pCommand)
 			return 0;
 		if (!plugin_register("gaccel",&pCommand->accel))
 			return 0;
+		if (pCommand->getEnabled)
+			g_toggles.Add(pCommand);
 	}
 	if (!g_iFirstCommand && g_iFirstCommand > pCommand->accel.accel.cmd)
 		g_iFirstCommand = pCommand->accel.accel.cmd;
+	if (pCommand->accel.accel.cmd > g_iLastCommand)
+		g_iLastCommand = pCommand->accel.accel.cmd;
 	g_commands.Add(pCommand);
 	return 1;
 }
@@ -117,6 +125,11 @@ int SWSRegisterCommands(COMMAND_T* pCommands)
 // Returns the COMMAND_T entry so it can be deleted if necessary
 COMMAND_T* SWSUnregisterCommand(int id)
 {
+	// First check the toggle command list
+	for (int i = 0; i < g_toggles.GetSize(); i++)
+		if (g_toggles.Get(i)->accel.accel.cmd == id)
+			g_toggles.Delete(i--);
+
 	for (int i = 0; i < g_commands.GetSize(); i++)
 	{
 		if (g_commands.Get(i)->accel.accel.cmd == id)
@@ -172,6 +185,42 @@ HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu, int* iIndex)
 	if (iIndex)
 		*iIndex = i;
 	return hMenu;
+}
+
+// returns:
+// -1 = action does not belong to this extension, or does not toggle
+//  0 = action belongs to this extension and is currently set to "off"
+//  1 = action belongs to this extension and is currently set to "on"
+int toggleActionHook(int iCmd)
+{
+	for (int i = 0; i < g_toggles.GetSize(); i++)
+		if (g_toggles.Get(i)->accel.accel.cmd == iCmd)
+			return g_toggles.Get(i)->getEnabled(g_toggles.Get(i)) ? 1 : 0;
+	return -1;
+}
+
+static void toggleMenuHook(const char* menustr, HMENU hMenu, int flag)
+{
+	// Handle checked menu items
+	if (flag == 1)
+	{
+		// Go through every menu item - see if it exists in the table, then check if necessary
+		MENUITEMINFO mi={sizeof(MENUITEMINFO),};
+		mi.fMask = MIIM_ID | MIIM_SUBMENU;
+		for (int i = 0; i < GetMenuItemCount(hMenu); i++)
+		{
+			GetMenuItemInfo(hMenu, i, true, &mi);
+			if (mi.hSubMenu)
+				toggleMenuHook(menustr, mi.hSubMenu, flag);
+			else if (mi.wID >= (UINT)g_iFirstCommand && mi.wID <= (UINT)g_iLastCommand)
+				for (int j = 0; j < g_toggles.GetSize(); j++)
+				{
+					COMMAND_T* t = g_toggles.Get(j);
+					if (t->accel.accel.cmd == mi.wID)
+						CheckMenuItem(hMenu, i, MF_BYPOSITION | (t->getEnabled(t) ? MF_CHECKED : MF_UNCHECKED));
+				}
+		}
+	}
 }
 
 // Fake control surface just to get a low priority periodic time slice from Reaper
@@ -389,6 +438,11 @@ extern "C"
 
 		if (!rec->Register("hookcommand",(void*)hookCommandProc))
 			ERR_RETURN("hook command error\n")
+		if (!rec->Register("hookcustommenu", (void*)toggleMenuHook))
+			ERR_RETURN("Menu hook error\n")
+		// TODO not returning 1???
+		int iRet = rec->Register("toggleaction", (void*)toggleActionHook);
+		//ERR_RETURN("Toggle action hook error\n")
 
 		// Call plugin specific init
 		if (!ConsoleInit())

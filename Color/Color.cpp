@@ -619,6 +619,7 @@ void CustomColorAll(COMMAND_T*)
 			}
 			UpdateTimeline();
 			Undo_EndBlock("Set selected track(s)/item(s) to custom color", UNDO_STATE_ALL);
+			return;
 		}
 	}
 	// No tracks selected so just run the item action

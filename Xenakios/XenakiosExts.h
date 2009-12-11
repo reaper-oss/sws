@@ -162,6 +162,7 @@ void DoDeleteMutedItems(COMMAND_T*);
 
 //===========================================================
 // main.cpp
+bool IsRippleOneTrack(COMMAND_T*);
 void DoToggleRippleOneTrack(COMMAND_T*);
 void DoSelectFiles(COMMAND_T*);
 void DoInsertRandom(COMMAND_T*);
@@ -195,6 +196,7 @@ void DoScrollTVPageUp(COMMAND_T*);
 void DoScrollTVHome(COMMAND_T*);
 void DoScrollTVEnd(COMMAND_T*);
 void DoRenameMarkersWithAscendingNumbers(COMMAND_T*);
+bool IsStopAtEndOfTimeSel(COMMAND_T*);
 void DoToggleSTopAtEndOfTimeSel(COMMAND_T*);
 int XenakiosInit();
 
@@ -243,6 +245,7 @@ void DoTraxLabelSuffix(COMMAND_T*);
 void DoMinMixSendPanelH(COMMAND_T*);
 void DoMinMixSendAndFxPanelH(COMMAND_T*);
 void DoMaxMixFxPanHeight(COMMAND_T*);
+bool IsEnvEditModeOn(COMMAND_T*);
 void DoToggleEnvEditMode(COMMAND_T*);
 void DoRemoveTimeSelectionLeaveLoop(COMMAND_T*);
 void DoToggleTrackHeightAB(COMMAND_T*);
@@ -257,6 +260,7 @@ void DoSetRenderSpeedToNonLim(COMMAND_T*);
 void DoStoreRenderSpeed(COMMAND_T*);
 void DoRecallRenderSpeed(COMMAND_T*);
 void DoSetSelTrackAsRefTrack(COMMAND_T*);
+bool IsRefTrack(COMMAND_T*);
 void DoToggleReferenceTrack(COMMAND_T*);
 void DoNudgeMasterVol1dbUp(COMMAND_T*);
 void DoNudgeMasterVol1dbDown(COMMAND_T*);
@@ -264,6 +268,7 @@ void DoNudgeSelTrackVolumeUp(COMMAND_T*);
 void DoNudgeSelTrackVolumeDown(COMMAND_T*);
 void DoSetMasterToZeroDb(COMMAND_T*);
 void ToggleMasterSendMute(int indx,int mode=0);
+bool IsMasterSendMuted(COMMAND_T*);
 void DoToggleMasterSendMute(COMMAND_T*);
 void DoSetMasterSendMute(COMMAND_T*);
 void DoUnSetMasterSendMute(COMMAND_T*);

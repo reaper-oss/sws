@@ -39,7 +39,7 @@ protected:
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void GetItemTooltip(LPARAM item, char* str, int iStrMax);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	bool GetItemState(LPARAM item);
+	int  GetItemState(LPARAM item);
 	bool OnItemSelChange(LPARAM item, bool bSel);
 	void OnItemClk(LPARAM item, int iCol, int iKeyState);
 };

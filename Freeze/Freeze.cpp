@@ -45,6 +45,9 @@ void XFadeOff(COMMAND_T* = NULL)     { int* p = (int*)GetConfigVar("autoxfade");
 void MEPWIXOn(COMMAND_T* = NULL)     { int* p = (int*)GetConfigVar("envattach"); if (p && !(*p)) Main_OnCommand(40070, 0); }
 void MEPWIXOff(COMMAND_T* = NULL)    { int* p = (int*)GetConfigVar("envattach"); if (p && (*p))  Main_OnCommand(40070, 0); }
 
+bool IsOnRecStopMoveCursor(COMMAND_T*)  { int* p = (int*)GetConfigVar("itemclickmovecurs"); return p && (*p & 16); }
+void TogOnRecStopMoveCursor(COMMAND_T*) { int* p = (int*)GetConfigVar("itemclickmovecurs"); if (p) *p ^= 16; }
+
 void UnselOnTracks(COMMAND_T* = NULL)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -750,16 +753,6 @@ void HideMaster(COMMAND_T* = NULL)
 #pragma message("TESTCODE Defined")
 void TestFunc(COMMAND_T* = NULL)
 {
-	/*char str[64];
-	format_timestr_pos(GetCursorPosition(), str, 64, 2);
-	_snprintf(str, 64, "%d.1.0", atoi(str)+1);
-	SetEditCurPos(parse_timestr_pos(str, 2), true, false);		*/
-
-	// Try to get cmd ID for something random:
-	int id = plugin_register("command_id", "40b7ce356d5cd54a8b0578f71f3354ad");
-	int x = 1;
-
-
 }
 #endif
 
@@ -1131,13 +1124,53 @@ void AddRightItem(COMMAND_T* = NULL)
 				mi = GetTrackMediaItem(tr, k);
 				double dLeft2  = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
 				double dRight2 = *(double*)GetSetMediaItemInfo(mi, "D_LENGTH", NULL) + dLeft2;
-				if (dLeft2 > dLeft && dRight2 > dRight && dRight < dMinRight)
+				if (dLeft2 > dLeft && dRight2 > dRight && dRight2 < dMinRight)
 				{
-					dMinRight = dRight;
+					dMinRight = dRight2;
 					rightItem = mi;
 				}
 			}
-			GetSetMediaItemInfo(rightItem, "B_UISEL", &g_i1);
+			if (rightItem)
+				GetSetMediaItemInfo(rightItem, "B_UISEL", &g_i1);
+		}
+	}
+	UpdateTimeline();
+}
+
+void AddLeftItem(COMMAND_T* = NULL)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		WDL_PtrList<void> selItems;
+		// First find selected item(s)
+		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* selItem = GetTrackMediaItem(tr, j);
+			if (*(bool*)GetSetMediaItemInfo(selItem, "B_UISEL", NULL))
+				selItems.Add(selItem);
+		}
+		
+		for (int j = 0; j < selItems.GetSize(); j++)
+		{
+			double dLeft    = *(double*)GetSetMediaItemInfo((MediaItem*)selItems.Get(j), "D_POSITION", NULL);
+			double dRight   = *(double*)GetSetMediaItemInfo((MediaItem*)selItems.Get(j), "D_LENGTH", NULL) + dLeft;
+			double dMaxLeft = -DBL_MAX;
+			MediaItem* leftItem = NULL;
+			for (int k = 0; k < GetTrackNumMediaItems(tr); k++)
+			{
+				MediaItem* mi;
+				mi = GetTrackMediaItem(tr, k);
+				double dLeft2  = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
+				double dRight2 = *(double*)GetSetMediaItemInfo(mi, "D_LENGTH", NULL) + dLeft2;
+				if (dLeft2 < dLeft && dRight2 < dRight && dLeft2 > dMaxLeft)
+				{
+					dMaxLeft = dLeft2;
+					leftItem = mi;
+				}
+			}
+			if (leftItem)
+				GetSetMediaItemInfo(leftItem, "B_UISEL", &g_i1);
 		}
 	}
 	UpdateTimeline();
@@ -1563,15 +1596,16 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Select muted items" },									 "SWS_SELMUTEDITEMS",  SelMutedItems,    NULL, },
 	{ { DEFACCEL, "SWS: Select muted items on selected track(s)" },				 "SWS_SELMUTEDITEMS2", SelMutedItemsSel, NULL, },
 	{ { DEFACCEL, "SWS: Select soloed tracks" },								 "SWS_SELSOLOEDTRACKS", SelSoloedTracks,   NULL, },
-	{ { DEFACCEL, "SWS: Select tracks with flipped phase" },					 "SWS_SELPHASETRACKS", SelPhaseTracks,   NULL, },
-	{ { DEFACCEL, "SWS: Select armed tracks" },								     "SWS_SELARMEDTRACKS", SelArmedTracks,   NULL, },
+	{ { DEFACCEL, "SWS: Select tracks with flipped phase" },					 "SWS_SELPHASETRACKS",  SelPhaseTracks,   NULL, },
+	{ { DEFACCEL, "SWS: Select armed tracks" },								     "SWS_SELARMEDTRACKS",  SelArmedTracks,   NULL, },
 	{ { DEFACCEL, "SWS: Select tracks with active routing to selected track(s)" },"SWS_SELROUTED",      SelRouted,        NULL, },
-	{ { DEFACCEL, "SWS: Select locked items" },									 "SWS_SELLOCKITEMS",   SelLockedItems,   NULL, },
-	{ { DEFACCEL, "SWS: Select locked items on selected track(s)" },				 "SWS_SELLOCKITEMS2",  SelLockedItemsSel,NULL, },
+	{ { DEFACCEL, "SWS: Select locked items" },									  "SWS_SELLOCKITEMS",   SelLockedItems,   NULL, },
+	{ { DEFACCEL, "SWS: Select locked items on selected track(s)" },			  "SWS_SELLOCKITEMS2",  SelLockedItemsSel,NULL, },
 	{ { DEFACCEL, "SWS: Add item(s) to right of selected item(s) to selection" }, "SWS_ADDRIGHTITEM",   AddRightItem,     NULL, },
+	{ { DEFACCEL, "SWS: Add item(s) to left of selected item(s) to selection" },  "SWS_ADDLEFTITEM",    AddLeftItem,      NULL, },
 
-	{ { DEFACCEL, "SWS: Save master FX enabled state" },							 "SWS_SAVEMSTFXEN",    SaveMasterFXEn,   NULL, },
-	{ { DEFACCEL, "SWS: Restore master FX enabled state" },					     "SWS_RESTMSTFXEN",    RestMasterFXEn,   NULL, },
+	{ { DEFACCEL, "SWS: Save master FX enabled state" },						  "SWS_SAVEMSTFXEN",    SaveMasterFXEn,   NULL, },
+	{ { DEFACCEL, "SWS: Restore master FX enabled state" },					      "SWS_RESTMSTFXEN",    RestMasterFXEn,   NULL, },
 	{ { DEFACCEL, "SWS: Show master track in track control panel" },              "SWS_SHOWMASTER",     ShowMaster,       NULL, },
 	{ { DEFACCEL, "SWS: Hide master track in track control panel" },              "SWS_HIDEMASTER",     HideMaster,       NULL, },
 	{ { DEFACCEL, "SWS: Enable master FX" },									  "SWS_ENMASTERFX",     EnableMasterFX,   NULL, },
@@ -1579,6 +1613,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Select master track" },									  "SWS_SELMASTER",      SelMaster,        NULL, },
 	{ { DEFACCEL, "SWS: Unselect master track" },								  "SWS_UNSELMASTER",    UnselMaster,      NULL, },
 	{ { DEFACCEL, "SWS: Toggle master track select" },							  "SWS_TOGSELMASTER",   TogSelMaster,     NULL, },
+	{ { DEFACCEL, "SWS: Toggle move cursor to end of recorded media on stop" },   "SWS_TOGRECMOVECUR",  TogOnRecStopMoveCursor, NULL, 0, IsOnRecStopMoveCursor },
 
 	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 1" },       "SWS_SAVESELITEMS1",  SaveSelTrackSelItems,	NULL, 0 },
 	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 2" },       "SWS_SAVESELITEMS2",  SaveSelTrackSelItems,	NULL, 1 },

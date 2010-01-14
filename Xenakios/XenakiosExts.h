@@ -163,7 +163,9 @@ void DoDeleteMutedItems(COMMAND_T*);
 //===========================================================
 // main.cpp
 bool IsRippleOneTrack(COMMAND_T*);
+bool IsRippleAll(COMMAND_T*);
 void DoToggleRippleOneTrack(COMMAND_T*);
+void DoToggleRippleAll(COMMAND_T*);
 void DoSelectFiles(COMMAND_T*);
 void DoInsertRandom(COMMAND_T*);
 void DoInsRndFileRndLen(COMMAND_T*);
@@ -245,8 +247,6 @@ void DoTraxLabelSuffix(COMMAND_T*);
 void DoMinMixSendPanelH(COMMAND_T*);
 void DoMinMixSendAndFxPanelH(COMMAND_T*);
 void DoMaxMixFxPanHeight(COMMAND_T*);
-bool IsEnvEditModeOn(COMMAND_T*);
-void DoToggleEnvEditMode(COMMAND_T*);
 void DoRemoveTimeSelectionLeaveLoop(COMMAND_T*);
 void DoToggleTrackHeightAB(COMMAND_T*);
 void DoFolderDepthDump(COMMAND_T*);
@@ -361,7 +361,9 @@ extern bool g_bAbortScan;
 int GetActiveTakes(WDL_PtrList<MediaItem_Take> *MediaTakes);
 int SearchDirectory(vector<string> &refvecFiles, const char* cDir, const char* cExt, bool bSubdirs = true);
 // Browse fcns to match SWELL
+#ifdef _WIN32
 bool BrowseForSaveFile(const char *text, const char *initialdir, const char *initialfile, const char *extlist, char *fn, int fnsize);
 char *BrowseForFiles(const char *text, const char *initialdir, const char *initialfile, bool allowmul, const char *extlist);
 bool BrowseForDirectory(const char *text, const char *initialdir, char *fn, int fnsize);
+#endif
 bool FileExists(const char* file);

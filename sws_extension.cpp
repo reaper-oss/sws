@@ -199,6 +199,9 @@ int toggleActionHook(int iCmd)
 	return -1;
 }
 
+// This function handles checking menu items.
+// Reaper automatically checks menu items of customized menus using toggleActionHook above,
+// but since we can't tell if a menu is customized we always check either way.
 static void toggleMenuHook(const char* menustr, HMENU hMenu, int flag)
 {
 	// Handle checked menu items
@@ -240,6 +243,7 @@ public:
 		MarkerActionSlice();
 		ItemPreviewSlice();
 		PlayItemsOnceSlice();
+		ColorSlice();
 
 		if (m_bChanged)
 		{
@@ -338,7 +342,7 @@ extern "C"
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);
 		IMPAPI(FreeHeapPtr);
-		IMPAPI(GetColorTheme);
+		IMPAPI(GetColorThemeStruct);
 		IMPAPI(GetContextMenu);
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetExePath);
@@ -353,6 +357,7 @@ extern "C"
 		IMPAPI(GetPlayPosition2);
 		IMPAPI(GetPlayState);
 		IMPAPI(GetProjectPath);
+		IMPAPI(GetSelectedMediaItem);
 		IMPAPI(GetSelectedTrackEnvelope);
 		IMPAPI(GetSetEnvelopeState);
 		IMPAPI(GetSetMediaItemInfo);
@@ -440,9 +445,8 @@ extern "C"
 			ERR_RETURN("hook command error\n")
 		if (!rec->Register("hookcustommenu", (void*)toggleMenuHook))
 			ERR_RETURN("Menu hook error\n")
-		// TODO not returning 1???
-		int iRet = rec->Register("toggleaction", (void*)toggleActionHook);
-		//ERR_RETURN("Toggle action hook error\n")
+		if (!rec->Register("toggleaction", (void*)toggleActionHook))
+			ERR_RETURN("Toggle action hook error\n")
 
 		// Call plugin specific init
 		if (!ConsoleInit())

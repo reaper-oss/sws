@@ -46,8 +46,8 @@ class ProjSnapshot
 {
 public:
 	WDL_PtrList<Snapshot> m_snapshots;
-	int m_iCurSnapshot;
-	ProjSnapshot() : m_iCurSnapshot(-1) {}
+	Snapshot* m_pCurSnapshot;
+	ProjSnapshot() : m_pCurSnapshot(NULL) {}
 	~ProjSnapshot() { m_snapshots.Empty(true); }
 };
 
@@ -68,14 +68,6 @@ static bool g_bApplyFilterOnRecall = true;
 static bool g_bHideNewOnRecall = true;
 static bool g_bPromptOnNew = false;
 static bool g_bHideOptions = false;
-
-Snapshot* GetSS(int slot)
-{
-	for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
-		if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot == slot)
-			return g_ss.Get()->m_snapshots.Get(i);
-	return NULL;
-}
 
 static SWS_LVColumn g_cols[] = { { 20, 2, "#" }, { 60, 3, "Name" }, { 60, 2, "Date" }, { 60, 2, "Time" } };
 
@@ -203,19 +195,26 @@ void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 
 	Snapshot* ss = (Snapshot*)item;
 
-	// Recall (std click) is done in the sel handler to make up/down arrows work properly
-
+	// Recall (std click)
+	if (!(iKeyState & LVKF_SHIFT) && !(iKeyState & LVKF_CONTROL) && !(iKeyState & LVKF_ALT))
+	{
+		g_ss.Get()->m_pCurSnapshot = ss;
+		if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
+			Update();
+	}
 	// Save (ctrl click)
 	if (!(iKeyState & LVKF_SHIFT) && (iKeyState & LVKF_CONTROL) && !(iKeyState & LVKF_ALT))
 	{
-		g_ss.Get()->m_iCurSnapshot = ss->m_iSlot;
-		g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly, ss->m_cName));
+		g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly, ss->m_cName));
 		delete ss;
 		Update();
 	}
 	// Delete (alt click)
 	else if (!(iKeyState & LVKF_SHIFT) && !(iKeyState & LVKF_CONTROL) && (iKeyState & LVKF_ALT))
 	{
+		if (g_ss.Get()->m_pCurSnapshot == ss)
+			g_ss.Get()->m_pCurSnapshot = NULL;
+
 		int iSlot = ss->m_iSlot;
 		g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
 		char undoStr[128];
@@ -235,42 +234,11 @@ void SWS_SnapshotsView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 int SWS_SnapshotsView::GetItemState(LPARAM item)
 {
 	Snapshot* ss = (Snapshot*)item;
-	return ss->m_iSlot == g_ss.Get()->m_iCurSnapshot ? LVIS_SELECTED | LVIS_FOCUSED : 0;
-}
-
-bool SWS_SnapshotsView::OnItemSelChange(LPARAM item, bool bSel)
-{
-	// Ignore unselect
-	if (!bSel)
-		return false;
-	
-#ifdef _WIN32
-	bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
-	bool bCtrl  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? true : false;
-	bool bAlt   = GetAsyncKeyState(VK_MENU)    & 0x8000 ? true : false;
-#else
-	// For some crazy/odd reason in OSX GetAsyncKeyState only works after the first call, which is made in the NM_CLICK handler, so use the
-	// values that were stored there
-	bool bShift = m_iClickedKeys & LVKF_SHIFT   ? true : false;
-	bool bCtrl  = m_iClickedKeys & LVKF_CONTROL ? true : false;
-	bool bAlt   = m_iClickedKeys & LVKF_ALT     ? true : false;
-#endif
-	
-	Snapshot* ss = (Snapshot*)item;
-
-	// Recall (std click)
-	if (!bShift && !bCtrl && !bAlt && g_ss.Get()->m_iCurSnapshot != ss->m_iSlot)
-	{
-		g_pSSWnd->m_pLastTouched = ss;
-		g_ss.Get()->m_iCurSnapshot = ss->m_iSlot;
-		if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
-			Update();
-	}
-	return false;
+	return ss == g_ss.Get()->m_pCurSnapshot ? LVIS_SELECTED | LVIS_FOCUSED : 0;
 }
 
 SWS_SnapshotsWnd::SWS_SnapshotsWnd()
-:SWS_DockWnd(IDD_SNAPS, "Snapshots", 30002),m_pLastTouched(NULL),m_iSelType(0)
+:SWS_DockWnd(IDD_SNAPS, "Snapshots", 30002),m_iSelType(0)
 {
 	// Restore state
 	char str[32];
@@ -337,7 +305,7 @@ void SWS_SnapshotsWnd::RenameCurrent()
 	// Find the item in the list
 	int i;
 	for (i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
-		if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot == g_ss.Get()->m_iCurSnapshot)
+		if (g_ss.Get()->m_snapshots.Get(i) == g_ss.Get()->m_pCurSnapshot)
 			break;
 	m_pLists.Get(0)->EditListItem((LPARAM)g_ss.Get()->m_snapshots.Get(i), 1);
 }
@@ -378,13 +346,16 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	switch (wParam)
 	{
 		case LOADSEL_MSG:
-			if (m_pLastTouched)
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			if (ss)
 			{
-				g_ss.Get()->m_iCurSnapshot = m_pLastTouched->m_iSlot;
-				if (m_pLastTouched->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
+				g_ss.Get()->m_pCurSnapshot = ss;
+				if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
 					Update();
 			}
 			break;
+		}
 		case IDC_SAVE:
 			NewSnapshot();
 			break;
@@ -393,47 +364,60 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			SendMessage(m_hwnd, WM_SIZE, 0, 0);
 			break;
 		case RENAME_MSG:
-			if (m_pLastTouched)
-				m_pLists.Get(0)->EditListItem((LPARAM)m_pLastTouched, 1);
+			m_pLists.Get(0)->EditListItem(m_pLists.Get(0)->GetFirstSelected(), 1);
 			break;
 		case SAVE_MSG:
-			if (m_pLastTouched)
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			if (ss)
 			{
-				g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(m_pLastTouched), new Snapshot(m_pLastTouched->m_iSlot, g_iMask, g_bSelOnly, m_pLastTouched->m_cName));
-				delete m_pLastTouched;
+				g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly, ss->m_cName));
+				delete ss;
 				Update();
 			}
 			break;
+		}
 		case DELETE_MSG:
-			if (m_pLastTouched)
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			if (ss)
 			{
-				int iSlot = m_pLastTouched->m_iSlot;
-				g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(m_pLastTouched), true);
-				g_ss.Get()->m_iCurSnapshot = -1;
 				char undoStr[128];
-				sprintf(undoStr, "Delete snapshot %d", iSlot);
+				sprintf(undoStr, "Delete snapshot %d", ss->m_iSlot);
+				g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
+				g_ss.Get()->m_pCurSnapshot = NULL;
 				Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
 				Update();
 			}
 			break;
+		}
 		case SEL_MSG:
-			if (m_pLastTouched)
-				m_pLastTouched->SelectTracks();
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			if (ss)
+				ss->SelectTracks();
 			break;
+		}
 		case ADDSEL_MSG:
-			if (m_pLastTouched)
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			if (ss)
 			{
-				m_pLastTouched->AddSelTracks();
+				ss->AddSelTracks();
 				Update();
 			}
 			break;
+		}
 		case DELSEL_MSG:
-			if (m_pLastTouched)
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			if (ss)
 			{
-				m_pLastTouched->DelSelTracks();
-				Update();						
+				ss->DelSelTracks();
+				Update();
 			}
 			break;
+		}
 		case BN_CLICKED << 16 | IDC_MIX:
 		case BN_CLICKED << 16 | IDC_CURVIS:
 		case BN_CLICKED << 16 | IDC_CUSTOM:
@@ -465,11 +449,8 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
 	HMENU contextMenu = CreatePopupMenu();
 	LPARAM item = m_pLists.Get(0)->GetHitItem(x, y, NULL);
 
-	m_pLastTouched = (Snapshot*)item;
-
 	if (item)
 	{
-		//g_ss.Get()->m_iCurSnapshot = ss->m_iSlot;
 		AddToMenu(contextMenu, "Rename", RENAME_MSG);
 		AddToMenu(contextMenu, SWS_SEPARATOR, 0);
 		AddToMenu(contextMenu, "Select tracks in snapshot", SEL_MSG);
@@ -488,7 +469,7 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
 			if (!iCmd)
 				iCmd = LOAD_MSG + i;
 			AddToMenu(contextMenu, cName, iCmd);
-			if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot == g_ss.Get()->m_iCurSnapshot)
+			if (g_ss.Get()->m_snapshots.Get(i) == g_ss.Get()->m_pCurSnapshot)
 				CheckMenuItem(contextMenu, iCmd, MF_CHECKED);
 		}
 	}
@@ -622,8 +603,8 @@ void NewSnapshot(int iMask, bool bSelOnly)
 		if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot != i+1)
 			break;
 
-	g_ss.Get()->m_iCurSnapshot = i+1;
 	Snapshot* pNewSS = g_ss.Get()->m_snapshots.Insert(i, new Snapshot(i+1, iMask, bSelOnly, NULL));
+	g_ss.Get()->m_pCurSnapshot = pNewSS;
 	if (g_bPromptOnNew)
 	{
 		char cName[256];
@@ -685,7 +666,7 @@ void GetSnapshot(int slot, int iMask, bool bSelOnly)
 	for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
 		if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot == slot)
 		{
-			g_ss.Get()->m_iCurSnapshot = g_ss.Get()->m_snapshots.Get(i)->m_iSlot;
+			g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Get(i);
 			if (g_ss.Get()->m_snapshots.Get(i)->UpdateReaper(iMask, bSelOnly, g_bHideNewOnRecall))
 				g_pSSWnd->Update();
 			return;
@@ -694,9 +675,9 @@ void GetSnapshot(int slot, int iMask, bool bSelOnly)
 
 void AddSnapshotTracks(COMMAND_T*)
 {
-	if (g_ss.Get()->m_iCurSnapshot != -1)
+	if (g_ss.Get()->m_pCurSnapshot)
 	{
-		GetSS(g_ss.Get()->m_iCurSnapshot)->AddSelTracks();
+		g_ss.Get()->m_pCurSnapshot->AddSelTracks();
 		g_pSSWnd->Update();
 	}
 }
@@ -710,9 +691,9 @@ void AddTracks(COMMAND_T*)
 
 void DelSnapshotTracks(COMMAND_T*)
 {
-	if (g_ss.Get()->m_iCurSnapshot != -1)
+	if (g_ss.Get()->m_pCurSnapshot)
 	{
-		GetSS(g_ss.Get()->m_iCurSnapshot)->DelSelTracks();
+		g_ss.Get()->m_pCurSnapshot->DelSelTracks();
 		g_pSSWnd->Update();
 	}
 }
@@ -726,13 +707,13 @@ void DelTracks(COMMAND_T*)
 
 void SelSnapshotTracks(COMMAND_T*)
 {
-	if (g_ss.Get()->m_iCurSnapshot != -1)
-		GetSS(g_ss.Get()->m_iCurSnapshot)->SelectTracks();
+	if (g_ss.Get()->m_pCurSnapshot)
+		g_ss.Get()->m_pCurSnapshot->SelectTracks();
 }
 
-void SaveCurSnapshot(COMMAND_T*) { SaveSnapshot(g_ss.Get()->m_iCurSnapshot); }
+void SaveCurSnapshot(COMMAND_T*) { SaveSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot); }
 void SaveSnapshot(COMMAND_T* ct) { SaveSnapshot((int)ct->user); }
-void GetCurSnapshot(COMMAND_T*)	 { GetSnapshot(g_ss.Get()->m_iCurSnapshot, ALL_MASK, false); }
+void GetCurSnapshot(COMMAND_T*)	 { GetSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot, ALL_MASK, false); }
 void GetSnapshot(COMMAND_T* ct)	 { GetSnapshot((int)ct->user, ALL_MASK, false); }
 void TogSnapParam(COMMAND_T* ct) { g_iMask ^= ct->user; UpdateSnapshotsDialog(); }
 bool IsSnapParamEn(COMMAND_T* ct){ return (g_iMask & ct->user) ? true : false; }
@@ -925,7 +906,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {
 	g_ss.Get()->m_snapshots.Empty(true);
-	g_ss.Get()->m_iCurSnapshot = -1;
+	g_ss.Get()->m_pCurSnapshot = NULL;
 	g_ss.Cleanup();
 	UpdateSnapshotsDialog();
 }

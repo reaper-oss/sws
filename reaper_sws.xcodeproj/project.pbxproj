@@ -30,6 +30,18 @@
 		22257D9C108BDC6B0058CF75 /* XenakiosExts.h in Headers */ = {isa = PBXBuildFile; fileRef = 22257D84108BDC6B0058CF75 /* XenakiosExts.h */; };
 		22257D9D108BDC6B0058CF75 /* XenQueryDlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D85108BDC6B0058CF75 /* XenQueryDlg.cpp */; };
 		22257D9E108BDC6B0058CF75 /* XenUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D86108BDC6B0058CF75 /* XenUtils.cpp */; };
+		2264CBC810FEC33100447317 /* swell-dlg.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98B4088D0F5B524D00865A09 /* swell-dlg.mm */; };
+		2264CBC910FEC33200447317 /* swell-dlggen.h in Headers */ = {isa = PBXBuildFile; fileRef = 9882DB870F6D961100BD2BC7 /* swell-dlggen.h */; };
+		2264CBCA10FEC33200447317 /* swell-gdi.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98B4088E0F5B524D00865A09 /* swell-gdi.mm */; };
+		2264CBCB10FEC33300447317 /* swell-ini.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B408860F5B519500865A09 /* swell-ini.cpp */; };
+		2264CBCC10FEC33300447317 /* swell-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B671331091DD2A00C494D0 /* swell-internal.h */; };
+		2264CBCD10FEC33400447317 /* swell-kb.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98B4088F0F5B524D00865A09 /* swell-kb.mm */; };
+		2264CBCE10FEC33400447317 /* swell-menu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98DDBE120F5B60F1003E9B2C /* swell-menu.mm */; };
+		2264CBCF10FEC33500447317 /* swell-misc.mm in Sources */ = {isa = PBXBuildFile; fileRef = 22B671361091DDC700C494D0 /* swell-misc.mm */; };
+		2264CBD010FEC33600447317 /* swell-miscdlg.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764240F5B233C0091104D /* swell-miscdlg.mm */; };
+		2264CBD110FEC33700447317 /* swell-wnd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764250F5B233C0091104D /* swell-wnd.mm */; };
+		2264CBD210FEC33800447317 /* swell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B408A20F5B544A00865A09 /* swell.cpp */; };
+		2264CBD310FEC33900447317 /* swell.h in Headers */ = {isa = PBXBuildFile; fileRef = 9870F77F0F5B461C0007258C /* swell.h */; };
 		2296249010A3A22500A1090C /* lice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2296248E10A3A22500A1090C /* lice.cpp */; };
 		2296249110A3A22500A1090C /* lice_line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2296248F10A3A22500A1090C /* lice_line.cpp */; };
 		229AC7DE108F880800E4A962 /* reaper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC7DD108F880800E4A962 /* reaper.cpp */; };
@@ -51,10 +63,9 @@
 		22A664BB10BC6FE100F0B239 /* sha.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A664BA10BC6FE100F0B239 /* sha.cpp */; };
 		22A79CFA10B4350000A78170 /* MediaPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A79CF810B4350000A78170 /* MediaPool.cpp */; };
 		22A79CFB10B4350000A78170 /* MediaPool.h in Headers */ = {isa = PBXBuildFile; fileRef = 22A79CF910B4350000A78170 /* MediaPool.h */; };
+		22A8751F10FEBFA10026F62F /* sws_util.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98E8A0AF0F9123F900FC657D /* sws_util.mm */; };
 		22B4C24F0FE311C7009A6731 /* Prompt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22B4C24D0FE311C7009A6731 /* Prompt.cpp */; };
 		22B4C2500FE311C7009A6731 /* Prompt.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B4C24E0FE311C7009A6731 /* Prompt.h */; };
-		22B671341091DD2A00C494D0 /* swell-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B671331091DD2A00C494D0 /* swell-internal.h */; };
-		22B671381091DDC700C494D0 /* swell-misc.mm in Sources */ = {isa = PBXBuildFile; fileRef = 22B671361091DDC700C494D0 /* swell-misc.mm */; };
 		22C769EB10B0F00800774777 /* TrackFX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769E910B0F00800774777 /* TrackFX.cpp */; };
 		22C769EC10B0F00800774777 /* TrackFX.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C769EA10B0F00800774777 /* TrackFX.h */; };
 		22C769FA10B0F04D00774777 /* SnM_Actions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F510B0F04D00774777 /* SnM_Actions.cpp */; };
@@ -63,8 +74,6 @@
 		22C769FD10B0F04D00774777 /* SnM_sends.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F810B0F04D00774777 /* SnM_sends.cpp */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
 		980764230F5B23180091104D /* wndsize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 980764220F5B23180091104D /* wndsize.cpp */; };
-		980764260F5B233C0091104D /* swell-miscdlg.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764240F5B233C0091104D /* swell-miscdlg.mm */; };
-		980764270F5B233C0091104D /* swell-wnd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764250F5B233C0091104D /* swell-wnd.mm */; };
 		980765310F5B43070091104D /* Snapshots.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006E50F4768020072D712 /* Snapshots.h */; };
 		980765320F5B43080091104D /* SnapshotClass.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006E40F4768020072D712 /* SnapshotClass.h */; };
 		980765330F5B430A0091104D /* resource.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006FF0F4768020072D712 /* resource.h */; };
@@ -85,20 +94,13 @@
 		981007300F4768020072D712 /* sws_util.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006EA0F4768020072D712 /* sws_util.h */; };
 		981007330F4768020072D712 /* MarkerActions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006F10F4768020072D712 /* MarkerActions.cpp */; };
 		981007390F4768020072D712 /* stdafx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006FA0F4768020072D712 /* stdafx.cpp */; };
-		9870F7800F5B461C0007258C /* swell.h in Headers */ = {isa = PBXBuildFile; fileRef = 9870F77F0F5B461C0007258C /* swell.h */; };
 		9879B3D90F48977C004D98EB /* reaper_plugin_functions.h in Headers */ = {isa = PBXBuildFile; fileRef = 9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */; };
 		9879B7480F489D9D004D98EB /* stdafx.h in Headers */ = {isa = PBXBuildFile; fileRef = 9879B7400F489CE7004D98EB /* stdafx.h */; };
-		9882DB880F6D961100BD2BC7 /* swell-dlggen.h in Headers */ = {isa = PBXBuildFile; fileRef = 9882DB870F6D961100BD2BC7 /* swell-dlggen.h */; };
-		98B408870F5B519500865A09 /* swell-ini.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B408860F5B519500865A09 /* swell-ini.cpp */; };
-		98B408930F5B524D00865A09 /* swell-gdi.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98B4088E0F5B524D00865A09 /* swell-gdi.mm */; };
-		98B408A50F5B544A00865A09 /* swell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B408A20F5B544A00865A09 /* swell.cpp */; };
 		98B75DAF0F48F8F900AC5A25 /* Base64.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B75DAE0F48F8F900AC5A25 /* Base64.cpp */; };
 		98D3CA9C0F871B6F009B006A /* TracklistFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98D3CA9B0F871B6F009B006A /* TracklistFilter.cpp */; };
 		98D3CA9E0F871B80009B006A /* TracklistFilter.h in Headers */ = {isa = PBXBuildFile; fileRef = 98D3CA9D0F871B80009B006A /* TracklistFilter.h */; };
 		98D590480F628703003F75B4 /* Tracklist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98D590460F628703003F75B4 /* Tracklist.cpp */; };
 		98D590490F628703003F75B4 /* Tracklist.h in Headers */ = {isa = PBXBuildFile; fileRef = 98D590470F628703003F75B4 /* Tracklist.h */; };
-		98DDBD130F5B566F003E9B2C /* swell-dlg.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98B4088D0F5B524D00865A09 /* swell-dlg.mm */; };
-		98DDBD180F5B568D003E9B2C /* swell-kb.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98B4088F0F5B524D00865A09 /* swell-kb.mm */; };
 		98DDBD290F5B56ED003E9B2C /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 98DDBD280F5B56ED003E9B2C /* Carbon.framework */; };
 		98DDBDFB0F5B5A49003E9B2C /* Console.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006DE0F4768010072D712 /* Console.h */; };
 		98DDBDFC0F5B5A4B003E9B2C /* Freeze.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006D80F4768010072D712 /* Freeze.h */; };
@@ -107,12 +109,10 @@
 		98DDBDFF0F5B5A5A003E9B2C /* TimeState.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006D50F4768010072D712 /* TimeState.h */; };
 		98DDBE000F5B5A5C003E9B2C /* TrackItemState.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006DA0F4768010072D712 /* TrackItemState.h */; };
 		98DDBE010F5B5A5E003E9B2C /* version.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006FD0F4768020072D712 /* version.h */; };
-		98DDBE130F5B60F1003E9B2C /* swell-menu.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98DDBE120F5B60F1003E9B2C /* swell-menu.mm */; };
 		98E89AC20FC9C02B00A56C44 /* Zoom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98E89AC10FC9C02B00A56C44 /* Zoom.cpp */; };
 		98E89AC40FC9C03700A56C44 /* Zoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 98E89AC30FC9C03700A56C44 /* Zoom.h */; };
 		98E89AC80FC9C05C00A56C44 /* TrackEnvelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98E89AC60FC9C05C00A56C44 /* TrackEnvelope.cpp */; };
 		98E89AC90FC9C05C00A56C44 /* TrackEnvelope.h in Headers */ = {isa = PBXBuildFile; fileRef = 98E89AC70FC9C05C00A56C44 /* TrackEnvelope.h */; };
-		98E8A0B00F9123F900FC657D /* sws_util.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98E8A0AF0F9123F900FC657D /* sws_util.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -430,7 +430,6 @@
 				980765320F5B43080091104D /* SnapshotClass.h in Headers */,
 				980765330F5B430A0091104D /* resource.h in Headers */,
 				980765340F5B430B0091104D /* reaper_plugin.h in Headers */,
-				9870F7800F5B461C0007258C /* swell.h in Headers */,
 				98DDBDFB0F5B5A49003E9B2C /* Console.h in Headers */,
 				98DDBDFC0F5B5A4B003E9B2C /* Freeze.h in Headers */,
 				98DDBDFD0F5B5A4F003E9B2C /* ItemSelState.h in Headers */,
@@ -439,7 +438,6 @@
 				98DDBE000F5B5A5C003E9B2C /* TrackItemState.h in Headers */,
 				98DDBE010F5B5A5E003E9B2C /* version.h in Headers */,
 				98D590490F628703003F75B4 /* Tracklist.h in Headers */,
-				9882DB880F6D961100BD2BC7 /* swell-dlggen.h in Headers */,
 				98D3CA9E0F871B80009B006A /* TracklistFilter.h in Headers */,
 				98E89AC40FC9C03700A56C44 /* Zoom.h in Headers */,
 				98E89AC90FC9C05C00A56C44 /* TrackEnvelope.h in Headers */,
@@ -455,10 +453,12 @@
 				229AC802108FB3B800E4A962 /* Color.h in Headers */,
 				229AC804108FB3BE00E4A962 /* MarkerListClass.h in Headers */,
 				229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */,
-				22B671341091DD2A00C494D0 /* swell-internal.h in Headers */,
 				22C769EC10B0F00800774777 /* TrackFX.h in Headers */,
 				22C769FB10B0F04D00774777 /* SnM_Actions.h in Headers */,
 				22A79CFB10B4350000A78170 /* MediaPool.h in Headers */,
+				2264CBC910FEC33200447317 /* swell-dlggen.h in Headers */,
+				2264CBCC10FEC33300447317 /* swell-internal.h in Headers */,
+				2264CBD310FEC33900447317 /* swell.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -544,17 +544,8 @@
 				981007390F4768020072D712 /* stdafx.cpp in Sources */,
 				98B75DAF0F48F8F900AC5A25 /* Base64.cpp in Sources */,
 				980764230F5B23180091104D /* wndsize.cpp in Sources */,
-				980764260F5B233C0091104D /* swell-miscdlg.mm in Sources */,
-				980764270F5B233C0091104D /* swell-wnd.mm in Sources */,
-				98B408870F5B519500865A09 /* swell-ini.cpp in Sources */,
-				98B408930F5B524D00865A09 /* swell-gdi.mm in Sources */,
-				98B408A50F5B544A00865A09 /* swell.cpp in Sources */,
-				98DDBD130F5B566F003E9B2C /* swell-dlg.mm in Sources */,
-				98DDBD180F5B568D003E9B2C /* swell-kb.mm in Sources */,
-				98DDBE130F5B60F1003E9B2C /* swell-menu.mm in Sources */,
 				98D590480F628703003F75B4 /* Tracklist.cpp in Sources */,
 				98D3CA9C0F871B6F009B006A /* TracklistFilter.cpp in Sources */,
-				98E8A0B00F9123F900FC657D /* sws_util.mm in Sources */,
 				98E89AC20FC9C02B00A56C44 /* Zoom.cpp in Sources */,
 				98E89AC80FC9C05C00A56C44 /* TrackEnvelope.cpp in Sources */,
 				22B4C24F0FE311C7009A6731 /* Prompt.cpp in Sources */,
@@ -586,7 +577,6 @@
 				229AC7FE108FB39600E4A962 /* Color.cpp in Sources */,
 				229AC803108FB3BD00E4A962 /* MarkerListClass.cpp in Sources */,
 				229AC80C108FBFCB00E4A962 /* SectionLock.cpp in Sources */,
-				22B671381091DDC700C494D0 /* swell-misc.mm in Sources */,
 				2296249010A3A22500A1090C /* lice.cpp in Sources */,
 				2296249110A3A22500A1090C /* lice_line.cpp in Sources */,
 				22C769EB10B0F00800774777 /* TrackFX.cpp in Sources */,
@@ -595,6 +585,16 @@
 				22C769FD10B0F04D00774777 /* SnM_sends.cpp in Sources */,
 				22A79CFA10B4350000A78170 /* MediaPool.cpp in Sources */,
 				22A664BB10BC6FE100F0B239 /* sha.cpp in Sources */,
+				22A8751F10FEBFA10026F62F /* sws_util.mm in Sources */,
+				2264CBC810FEC33100447317 /* swell-dlg.mm in Sources */,
+				2264CBCA10FEC33200447317 /* swell-gdi.mm in Sources */,
+				2264CBCB10FEC33300447317 /* swell-ini.cpp in Sources */,
+				2264CBCD10FEC33400447317 /* swell-kb.mm in Sources */,
+				2264CBCE10FEC33400447317 /* swell-menu.mm in Sources */,
+				2264CBCF10FEC33500447317 /* swell-misc.mm in Sources */,
+				2264CBD010FEC33600447317 /* swell-miscdlg.mm in Sources */,
+				2264CBD110FEC33700447317 /* swell-wnd.mm in Sources */,
+				2264CBD210FEC33800447317 /* swell.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -638,7 +638,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_PREPROCESSOR_DEFINITIONS = SWELL_PROVIDED_BY_SWS;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				OBJROOT = "$(SYMROOT)";
@@ -657,7 +657,7 @@
 				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/sws_osx";
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_PREPROCESSOR_DEFINITIONS = "";
+				GCC_PREPROCESSOR_DEFINITIONS = SWELL_PROVIDED_BY_SWS;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;

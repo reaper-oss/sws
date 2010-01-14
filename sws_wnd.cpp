@@ -397,6 +397,14 @@ bool SWS_ListView::IsSelected(int index)
 	return ListView_GetItemState(m_hwndList, index, LVIS_SELECTED) ? true : false;
 }
 
+LPARAM SWS_ListView::GetFirstSelected()
+{
+	for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
+		if (ListView_GetItemState(m_hwndList, i, LVIS_SELECTED))
+			return GetListItem(i);
+	return NULL;
+}
+
 int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 {
 	NMLISTVIEW* s = (NMLISTVIEW*)lParam;

@@ -94,8 +94,8 @@ void DoMoveItemsLeftByItemLen(COMMAND_T*)
 	for (int i = 0; i < (int)VecItems.size(); i++)
 	{
 		double CurPos = *(double*)GetSetMediaItemInfo(VecItems[i], "D_POSITION", NULL);
-		double ItemLen = *(double*)GetSetMediaItemInfo(VecItems[i], "D_LENGTH", NULL);
-		double NewPos = CurPos - ItemLen;
+		double dItemLen = *(double*)GetSetMediaItemInfo(VecItems[i], "D_LENGTH", NULL);
+		double NewPos = CurPos - dItemLen;
 		GetSetMediaItemInfo(VecItems[i], "D_POSITION", &NewPos);
 	}
 	UpdateTimeline();
@@ -1013,133 +1013,92 @@ void DoApplyTrackFXMonoAndResetVol(COMMAND_T*)
 	Undo_EndBlock("Apply Track FX To Items (Mono) And Reset Volume",0);
 }
 
-int AnalyzePCMSourceForPeaks(PCM_source *APCMSource,double *PeakLeft,double *PeakRight,double ItemLen,double MediaStart,double *RMSLeft,double *RMSRight)
+void AnalyzePCMSourceForPeaks(PCM_source *pSrc, double *dPeakL, double *dPeakR, double *dRMS_L, double *dRMS_R)
 {
-	//
-	int AudioBufLenFrames=1024;
-	double LenFile=APCMSource->GetLength();
-	LenFile=ItemLen;
-	int NumChans=APCMSource->GetNumChannels();
-	double SampleRate=APCMSource->GetSampleRate();
-	double *BufL=new double[AudioBufLenFrames];
-	double *BufR=new double[AudioBufLenFrames];
-	double *AudioBuffer = new double[AudioBufLenFrames*NumChans];
-	double sumSquaresL=0.0;
-	double sumSquaresR=0.0;
-	PCM_source_transfer_t TransferBlock={0,};
+	const int iFrameLen = 1024;
+	double* buf = new double[iFrameLen * pSrc->GetNumChannels()];
+	double sumSquaresL = 0.0;
+	double sumSquaresR = 0.0;
+	*dPeakL = 0.0;
+	*dPeakR = 0.0;
 	
-	TransferBlock.length=AudioBufLenFrames;
-	TransferBlock.time_s=MediaStart;
-	TransferBlock.samplerate=SampleRate;
-	TransferBlock.samples=AudioBuffer;
-	TransferBlock.nch=NumChans;
-	//APCMSource->
-	int NumFramesInFile=(int)(LenFile*SampleRate);
-	INT64 SampleCounter=0;
-	double TempMaxLeft=-666;
-	double TempMaxRight=0.0;
-	int j;
-	//for (i=0;i<NumBlocksToProcess;i++)
-	//while ((TransferBlock.time_s-MediaStart+(TransferBlock.length/(double)SampleRate))<=LenFile)
-	while (SampleCounter+TransferBlock.length<NumFramesInFile)
-	{
-		//
-		APCMSource->GetSamples(&TransferBlock);	
-		//dpos = floor(dpos*sr + bsize + 0.5)/(double)sr;
-		TransferBlock.time_s+=TransferBlock.length/(double)SampleRate;
-		int BufSamplesToProcess=AudioBufLenFrames;
-		if (TransferBlock.time_s>ItemLen+MediaStart)
-		{
-			BufSamplesToProcess=(int)((((TransferBlock.time_s-MediaStart))-(ItemLen))*SampleRate);
-			if (BufSamplesToProcess<0) BufSamplesToProcess=0;
-			if (BufSamplesToProcess>AudioBufLenFrames) BufSamplesToProcess=AudioBufLenFrames;
-		}
-		//TransferBlock.time_s+=floor(TransferBlock.time_s*SampleRate+AudioBufLenFrames+0.5)/(double)SampleRate;
-		if (NumChans==1)
-		{
-			//if (i==0) MessageBox(g_hwndParent,"it's mono","info",MB_OK);
-			for (j=0;j<BufSamplesToProcess;j++)
-			{
-				//
-				SampleCounter++;
-				double SampleValue=fabs(AudioBuffer[j]);
-				sumSquaresL+=AudioBuffer[j]*AudioBuffer[j];
-				if (SampleValue>TempMaxLeft) TempMaxLeft=SampleValue;
-			}
-		}
-		
-		  
-		if (NumChans==2)
-		{
-			//if (i==0) MessageBox(g_hwndParent,"it's stereo","info",MB_OK);
-			for (j=0;j<BufSamplesToProcess;j++)
-			{
-				//
-				SampleCounter++;
-				double SampleValue=fabs(AudioBuffer[j*2]);
-				sumSquaresL+=AudioBuffer[j*2]*AudioBuffer[j*2];
-				sumSquaresR+=AudioBuffer[j*2+1]*AudioBuffer[j*2+1];
-				if (SampleValue>TempMaxLeft) TempMaxLeft=SampleValue;
-				SampleValue=fabs(AudioBuffer[j*2+1]);
-				if (SampleValue>TempMaxRight) TempMaxRight=SampleValue;
-			}
-		}
-		
+	PCM_source_transfer_t transferBlock={0,};
+	transferBlock.length = iFrameLen;
+	transferBlock.samplerate = pSrc->GetSampleRate();
+	transferBlock.samples = buf;
+	transferBlock.nch = pSrc->GetNumChannels();
 
+	INT64 sampleCounter = 0;
+	int iFrame = 0;
+
+	do
+	{
+		pSrc->GetSamples(&transferBlock);
+		transferBlock.time_s = (double)iFrameLen * iFrame++ / pSrc->GetSampleRate();
+
+		if (pSrc->GetNumChannels() == 1)
+			for (int j = 0; j < transferBlock.samples_out; j++)
+			{
+				sampleCounter++;
+				sumSquaresL += buf[j] * buf[j];
+				if (fabs(buf[j]) > *dPeakL)
+					*dPeakL = fabs(buf[j]);
+			}
+		
+		else if (pSrc->GetNumChannels() == 2)
+			for (int j = 0; j < transferBlock.samples_out; j++)
+			{
+				sampleCounter++;
+				sumSquaresL += buf[j*2]   * buf[j*2];
+				sumSquaresR += buf[j*2+1] * buf[j*2+1];
+
+				if (fabs(buf[j*2]) > *dPeakL)
+					*dPeakL = fabs(buf[j*2]);
+				if (fabs(buf[j*2+1]) > *dPeakR)
+					*dPeakR = fabs(buf[j*2+1]);
+			}
 	}
-	*PeakLeft=TempMaxLeft;
-	*PeakRight=TempMaxRight;
-	*RMSLeft=sqrt(sumSquaresL/SampleCounter);
-	*RMSRight=sqrt(sumSquaresR/SampleCounter);
-	delete[] AudioBuffer;
-	delete[] BufL;
-	delete[] BufR;
-	return 777;
+	while (transferBlock.samples_out);
+
+	*dRMS_L = sqrt(sumSquaresL / sampleCounter);
+	*dRMS_R = sqrt(sumSquaresR / sampleCounter);
+	delete[] buf;
 }
 
 
 void DoAnalyzeAndShowPeakInItemMedia(COMMAND_T*)
 {
-	WDL_PtrList<MediaItem_Take> *TheTakes=new (WDL_PtrList<MediaItem_Take>);
-	PCM_source *ThePCMSource;
-	int NumActiveTakes=GetActiveTakes(TheTakes);
-	int i;
-	if (NumActiveTakes>0)
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
 	{
-		MediaItem_Take* CurTake;
-		MediaItem* CurItem;
-		for (i=0;i<NumActiveTakes;i++)
+		MediaItem* mi = GetSelectedMediaItem(NULL, i);
+		PCM_source* pSrc = (PCM_source*)mi;
+		if (strcmp(pSrc->GetType(), "MIDI") != 0)
 		{
-			CurTake=TheTakes->Get(i);
-			ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-			if (strcmp(ThePCMSource->GetType(),"MIDI")!=0)
+			pSrc = pSrc->Duplicate();
+			if (pSrc != NULL)
 			{
-				PCM_source *DuplPCMSource=0;
-				DuplPCMSource=ThePCMSource->Duplicate();
-				if (DuplPCMSource!=NULL)
-				{
-					double PeakLeft=69;
-					double PeakRight=69;
-					double rmsL=-666.0;
-					double rmsR=666.0;
-					CurItem=(MediaItem*)GetSetMediaItemTakeInfo(CurTake,"P_ITEM",NULL);
-					//int joops=AnalyzePCMSourceForPeaks(DuplPCMSource,&PeakLeft,&PeakRight,ItemLen,MediaOffset,&rmsL,&rmsR);
-					char MesBuf[256];
-					double PeakLeftDB=20.0*(log10(PeakLeft));
-					double PeakRightDB=20.0*(log10(PeakRight));
-					double RmsLeftDB=20.0*(log10(rmsL));
-					double RmsRightDB=20.0*(log10(rmsR));
+				double dPeakL;
+				double dPeakR;
+				double rmsL;
+				double rmsR;
 
-					if (DuplPCMSource->GetNumChannels()==1)
-						sprintf(MesBuf,"Peak level of mono item = %f dB\nRMS level of mono item= %.2f dB",PeakLeftDB,RmsLeftDB);
-					
-					if (DuplPCMSource->GetNumChannels()==2)
-						sprintf(MesBuf,"Peak levels for stereo item, Left = %.2f dB , Right = %.2f dB\nRMS levels of stereo item, Left=%.2f dB, Right =%.2f dB",PeakLeftDB,PeakRightDB,RmsLeftDB,RmsRightDB);
-					if (DuplPCMSource->GetNumChannels()>2 || DuplPCMSource->GetNumChannels()<1)
-						sprintf(MesBuf,"Non-supported channel count!");
-					MessageBox(g_hwndParent, MesBuf, "Item peak gain", MB_OK);
-				}
-				delete DuplPCMSource;
+				double dZero = 0.0;
+				GetSetMediaItemInfo((MediaItem*)pSrc, "D_POSITION", &dZero);
+				
+				// Do the work!
+				AnalyzePCMSourceForPeaks(pSrc, &dPeakL, &dPeakR, &rmsL, &rmsR);
+
+				char MesBuf[256];
+				if (pSrc->GetNumChannels() == 1)
+					sprintf(MesBuf,"Peak level of mono item = %f dB\nRMS level of mono item= %.2f dB",
+					  VAL2DB(dPeakL), VAL2DB(rmsL));
+				else if (pSrc->GetNumChannels() == 2)
+					sprintf(MesBuf,"Peak levels for stereo item, Left = %.2f dB , Right = %.2f dB\nRMS levels of stereo item, Left=%.2f dB, Right =%.2f dB",
+					  VAL2DB(dPeakL), VAL2DB(dPeakR), VAL2DB(rmsL), VAL2DB(rmsR));
+				else
+					sprintf(MesBuf, "Non-supported channel count!");
+				MessageBox(g_hwndParent, MesBuf, "Item peak gain", MB_OK);
+				delete pSrc;
 			}
 		}
 	}
@@ -1658,14 +1617,14 @@ void DoMatrixItemImplode(COMMAND_T*)
 	vector<MediaItem*> TheItems;
 	XenGetProjectItems(TheItems,true,false);
 	vector<double> OldItemPositions;
-	vector<double> OldItemLens;
+	vector<double> OlddItemLens;
 	int i;
 	for (i=0;i<(int)TheItems.size();i++)
 	{
 		double itemPos=*(double*)GetSetMediaItemInfo(TheItems[i],"D_POSITION",NULL);
 		OldItemPositions.push_back(itemPos);
-		double itemLen=*(double*)GetSetMediaItemInfo(TheItems[i],"D_LENGTH",NULL);
-		OldItemLens.push_back(itemLen);
+		double dItemLen=*(double*)GetSetMediaItemInfo(TheItems[i],"D_LENGTH",NULL);
+		OlddItemLens.push_back(dItemLen);
 	}
 	//Main_OnCommand(40289,0); // unselect all
 	Undo_BeginBlock();
@@ -1678,15 +1637,15 @@ void DoMatrixItemImplode(COMMAND_T*)
 		SetEditCurPos(OldItemPositions[i],false,false);
 		Main_OnCommand(40058,0);
 		XenGetProjectItems(TempItem,true,false); // basically a way to get the first selected item, messsyyyyy
-		double newItemLen=OldItemLens[i];
-		GetSetMediaItemInfo(TempItem[0],"D_LENGTH",&newItemLen);
+		double newdItemLen=OlddItemLens[i];
+		GetSetMediaItemInfo(TempItem[0],"D_LENGTH",&newdItemLen);
 		//PastedItems.push_back(TempItem[0]);
 	}
 	/*
 	for (i=0;i<PastedItems.size();i++)
 	{
-		double newItemLen=OldItemLens[i+1];
-		GetSetMediaItemInfo(PastedItems[i],"D_LENGTH",&newItemLen);
+		double newdItemLen=OlddItemLens[i+1];
+		GetSetMediaItemInfo(PastedItems[i],"D_LENGTH",&newdItemLen);
 	}
 	*/
 	//40058 // paste
@@ -1773,16 +1732,16 @@ void DoTimeSelAdaptDelete(COMMAND_T*)
 		for (i=0;i<(int)SelItems.size();i++)
 		{
 			double itempos=*(double*)GetSetMediaItemInfo(SelItems[i],"D_POSITION",0);
-			double itemlen=*(double*)GetSetMediaItemInfo(SelItems[i],"D_LENGTH",0);
+			double dItemLen=*(double*)GetSetMediaItemInfo(SelItems[i],"D_LENGTH",0);
 			bool itemsel=*(bool*)GetSetMediaItemInfo(SelItems[i],"B_UISEL",0);
 			if (itemsel)
 			{
 				int intersectmatches=0;
-				if (OldTimeSelLeft>=itempos && OldTimeSelRight<=itempos+itemlen)
+				if (OldTimeSelLeft>=itempos && OldTimeSelRight<=itempos+dItemLen)
 					intersectmatches++;
-				if (itempos>=OldTimeSelLeft && itempos+itemlen<=OldTimeSelRight)
+				if (itempos>=OldTimeSelLeft && itempos+dItemLen<=OldTimeSelRight)
 					intersectmatches++;
-				if (OldTimeSelLeft<=itempos+itemlen && OldTimeSelRight>=itempos+itemlen)
+				if (OldTimeSelLeft<=itempos+dItemLen && OldTimeSelRight>=itempos+dItemLen)
 					intersectmatches++;
 				if (OldTimeSelRight>=itempos && OldTimeSelLeft<itempos)
 					intersectmatches++;

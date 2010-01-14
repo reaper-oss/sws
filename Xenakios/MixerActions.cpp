@@ -725,57 +725,6 @@ void DoMaxMixFxPanHeight(COMMAND_T*)
 	}	
 }
 
-vector<GUID> g_MediaItemsSelected;
-bool g_EnvEditOn=false;
-
-bool IsEnvEditModeOn(COMMAND_T*) { return g_EnvEditOn; }
-
-void DoToggleEnvEditMode(COMMAND_T*)
-{
-	if (g_EnvEditOn)
-	{
-		g_EnvEditOn=false;
-		int i;
-		int j;
-		Main_OnCommand(40289,0); // unselect all items
-		vector<MediaItem*> TheItems;
-		XenGetProjectItems(TheItems,false,false);
-		GUID compaGUID;
-		for (i=0;i<(int)TheItems.size();i++)
-		{
-			compaGUID=*(GUID*)GetSetMediaItemInfo(TheItems[i],"GUID",0);
-			for (j=0;j<(int)g_MediaItemsSelected.size();j++)
-			{
-				if (memcmp(&compaGUID,&g_MediaItemsSelected[j],sizeof(GUID))==0)
-				{
-					bool crap=true;
-					GetSetMediaItemInfo(TheItems[i],"B_UISEL",&crap);
-					break;
-				}
-			}
-			
-		}
-		Main_OnCommand(40567,0);
-		Main_OnCommand(40570,0);
-	} else
-	{
-		g_EnvEditOn=true;
-		vector<MediaItem*> TheItems;
-		g_MediaItemsSelected.clear();
-		XenGetProjectItems(TheItems);
-		int i=0;
-		for (i=0;i<(int)TheItems.size();i++)
-		{
-			g_MediaItemsSelected.push_back(*(GUID*)GetSetMediaItemInfo(TheItems[i],"GUID",0));
-		}
-		
-		Main_OnCommand(40289,0);
-		Main_OnCommand(40567,0);
-		Main_OnCommand(40574,0);
-		Main_OnCommand(40569,0);
-	}
-}
-
 void DoRemoveTimeSelectionLeaveLoop(COMMAND_T*)
 {
 	int sz=0; int *locklooptotime = (int *)get_config_var("locklooptotime",&sz);
@@ -789,13 +738,12 @@ void DoRemoveTimeSelectionLeaveLoop(COMMAND_T*)
 	}
 	double a=0.0;
 	double b=0.0;
-	 GetSet_LoopTimeRange(false, true, &a,&b,false); // get current loop
-	 double c=0;
-	 double d=0;
-	 GetSet_LoopTimeRange(true, false, &c,&d,false); // set time sel to 0 and 0
-	 GetSet_LoopTimeRange(true, true, &a,&b,false); // restore loop
+	GetSet_LoopTimeRange(false, true, &a,&b,false); // get current loop
+	double c=0;
+	double d=0;
+	GetSet_LoopTimeRange(true, false, &c,&d,false); // set time sel to 0 and 0
+	GetSet_LoopTimeRange(true, true, &a,&b,false); // restore loop
 	*locklooptotime=OldLockLoopToTime;
-
 }
 
 int g_CurTrackHeightIdx=0;

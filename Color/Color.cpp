@@ -31,10 +31,13 @@
 
 #define COLORDLG_WINDOWPOS_KEY "ColorDlgPos"
 #define GRADIENT_COLOR_KEY "ColorGradients"
+#define RECREDRULER_KEY "RecRedRuler"
 
+// Globals
 static COLORREF g_custColors[16];
 static COLORREF g_crGradStart = 0;
 static COLORREF g_crGradEnd = 0;
+static bool g_bRecRedRuler = false;
 
 void UpdateCustomColors()
 {
@@ -626,6 +629,45 @@ void CustomColorAll(COMMAND_T*)
 	Main_OnCommand(40704, 0); // Set item(s) to one custom color
 }
 
+void RecRedRuler(COMMAND_T*)
+{
+	g_bRecRedRuler = !g_bRecRedRuler;
+	WritePrivateProfileString(SWS_INI, RECREDRULER_KEY, g_bRecRedRuler ? "1" : "0", get_ini_file());
+}
+
+bool RecRedRulerEnabled(COMMAND_T*)
+{
+	return g_bRecRedRuler;
+}
+
+void ColorSlice()
+{
+	static int iRulerLaneCol[3];
+	static bool bRecording = false;
+
+	if (!bRecording && g_bRecRedRuler && GetPlayState() & 4)
+	{
+		int iSize;
+		ColorTheme* colors = (ColorTheme*)GetColorThemeStruct(&iSize);
+		for (int i = 0; i < 3; i++)
+		{
+			iRulerLaneCol[i] = colors->ruler_lane_bgcolor[i];
+			colors->ruler_lane_bgcolor[i] = RGB(0xFF, 0, 0);
+		}
+		UpdateTimeline();
+		bRecording = true;
+	}
+	else if (bRecording && (!g_bRecRedRuler || !(GetPlayState() & 4)))
+	{
+		int iSize;
+		ColorTheme* colors = (ColorTheme*)GetColorThemeStruct(&iSize);
+		for (int i = 0; i < 3; i++)
+			colors->ruler_lane_bgcolor[i] = iRulerLaneCol[i];
+		UpdateTimeline();
+		bRecording = false;
+	}
+}
+
 COLORREF CalcGradient(COLORREF crStart, COLORREF crEnd, double dPos)
 {
 	int r, g, b;
@@ -810,6 +852,8 @@ void ItemToTrackCol(COMMAND_T* = NULL)
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Open color management window" },                          "SWSCOLORWND",			ShowColorDialog,	"Color management...", },
+	{ { DEFACCEL, "SWS: Toggle ruler red while recording" },                      "SWS_RECREDRULER",		RecRedRuler,		"Enable red ruler while recording (SWS)", 0, RecRedRulerEnabled },
+	// Position of the above two commands in this table is important for menu generation!
 
 	{ { DEFACCEL, "SWS: Set selected track(s) to color white" },	              "SWS_WHITETRACK",			WhiteTrack,			NULL, },
 	{ { DEFACCEL, "SWS: Set selected track(s) to color black" },	              "SWS_BLACKTRACK",			BlackTrack,			NULL, },
@@ -869,11 +913,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 14" },               "SWS_ITEMCUSTCOL14",		ItemCustCol,		"Set to custom color 14", 13 },
 	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 15" },               "SWS_ITEMCUSTCOL15",		ItemCustCol,		"Set to custom color 15", 14 },
 	{ { DEFACCEL, "SWS: Set selected item(s) to custom color 16" },               "SWS_ITEMCUSTCOL16",		ItemCustCol,		"Set to custom color 16", 15 },
+	// End of menu!!
 
 	{ { DEFACCEL, "SWS: Set selected track(s)/item(s) to one random color" },     "SWS_RANDOMCOLALL",		RandomColorAll,		NULL, },
 	{ { DEFACCEL, "SWS: Set selected track(s)/item(s) to custom color..." },      "SWS_CUSTOMCOLALL",		CustomColorAll,		NULL, },
-
-	// End of menu!!
 
 	{ {}, LAST_COMMAND, NULL }, // Denote end of table
 };
@@ -881,7 +924,9 @@ static COMMAND_T g_commandTable[] =
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	int menuid = -1;
-	if (strcmp(menustr, "Track control panel context") == 0)
+	if (strcmp(menustr, "Main options") == 0 && flag == 0)
+		AddToMenu(hMenu, g_commandTable[1].menuText, g_commandTable[1].accel.accel.cmd, 40745);
+	else if (strcmp(menustr, "Track control panel context") == 0)
 		menuid = 0;
 	else if (strcmp(menustr, "Media item context") == 0)
 		menuid = 1;
@@ -1000,6 +1045,7 @@ int ColorInit()
 		g_crGradStart = lp.gettoken_int(0);
 		g_crGradEnd = lp.gettoken_int(1);
 	}
+	g_bRecRedRuler = GetPrivateProfileInt(SWS_INI, RECREDRULER_KEY, g_bRecRedRuler, get_ini_file()) ? true : false;
 
 	return 1;
 }

@@ -64,7 +64,7 @@ void SetColumnArrows(HWND h, int iSortCol)
 		}
 		else
 			[v setIndicatorImage:0 inTableColumn:v->m_cols->Get(i)];
-	}			
+	}
 }
 
 int GetCustomColors(COLORREF custColors[])

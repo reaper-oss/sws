@@ -32,9 +32,14 @@
 extern BOOL (WINAPI *CoolSB_GetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi);
 extern int (WINAPI *CoolSB_SetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi, BOOL fRedraw);
 
+#define WDL_VirtualWnd_ScaledBlitBG WDL_VirtualWnd_ScaledBlitBG_fptr
+#define WDL_VirtualWnd_BGCfg WDL_VirtualWnd_BGCfg_stub
+
 #ifdef _WIN32
 #include "c:/program files/reaper/reaper_plugin_functions.h" // Point where you need to!
 #else
 #include "reaper_plugin_functions.h" // Point where you need to!
 #endif
 
+#undef WDL_VirtualWnd_BGCfg
+#undef WDL_VirtualWnd_ScaledBlitBG

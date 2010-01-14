@@ -1,7 +1,7 @@
 /***************************************
 *** REAPER Plug-in API
 **
-** Copyright (C) 2006-2008, Cockos Incorporated
+** Copyright (C) 2006-2009, Cockos Incorporated
 **
 **    This software is provided 'as-is', without any express or implied
 **    warranty.  In no event will the authors be held liable for any damages
@@ -27,8 +27,9 @@
 #define _REAPER_PLUGIN_H_
 
 
+#ifndef REASAMPLE_SIZE
 #define REASAMPLE_SIZE 8 // if we change this it will break everything!
-
+#endif
 
 #if REASAMPLE_SIZE == 4
 typedef float ReaSample;
@@ -64,10 +65,12 @@ typedef double ReaSample;
 #endif
 
 /* 
-** Endian-tools and defines (currently only __ppc__ is recognized, for OS X -- all other platforms are assumed to be LE)
+** Endian-tools and defines (currently only __ppc__ and BIG_ENDIAN is recognized, for OS X -- all other platforms are assumed to be LE)
 */
 
-#ifdef __ppc__
+#if defined(__ppc__)
+
+#define REAPER_BIG_ENDIAN
 static int REAPER_MAKELEINT(int x)
 {
   return ((((x))&0xff)<<24)|((((x))&0xff00)<<8)|((((x))&0xff0000)>>8)|((((x))&0xff000000)>>24);
@@ -141,14 +144,19 @@ typedef struct reaper_plugin_info_t
 **** interface for plugin objects to save/load state. they should use ../WDL/LineParser.h too...
 ***************************************************************************************/
 
-class ProjectStateContext
+#ifndef _WDL_PROJECTSTATECONTEXT_DEFINED_
+#define _REAPER_PLUGIN_PROJECTSTATECONTEXT_DEFINED_
+class ProjectStateContext // this is also defined in WDL, need to keep these interfaces identical
 {
 public:
   virtual ~ProjectStateContext(){};
 
   virtual void AddLine(const char *fmt, ...)=0;
   virtual int GetLine(char *buf, int buflen)=0; // returns -1 on eof
+
+  virtual INT64 GetOutputSize()=0; // output size written so far, only usable on REAPER 3.14+
 };
+#endif
 
 
 
@@ -200,11 +208,10 @@ typedef struct
   double force_bpm;
 } PCM_source_transfer_t;
 
-
 typedef struct
 {
   double start_time; // start time of block
-  double peakrate;   // end time of block
+  double peakrate;   // peaks per second (see samplerate below)
 
   int numpeak_points; // desired number of points for data
 
@@ -213,14 +220,18 @@ typedef struct
   ReaSample *peaks;  // peaks output (caller allocated)
   int peaks_out; // number of points actually output (less than desired means at end)
 
-  int output_mode; // 0=peaks, 1=waveform, 2=midi
+  enum { PEAKTRANSFER_PEAKS_MODE=0, PEAKTRANSFER_WAVEFORM_MODE=1, PEAKTRANSFER_MIDI_MODE=2 };
+  int output_mode; // see enum above
 
   double absolute_time_s;
 
   ReaSample *peaks_minvals; // can be NULL, otherwise receives minimum values
   int peaks_minvals_used;
 
-  int *exp[32]; // future use
+  double samplerate; // peakrate is peaks per second, samplerate is used only as a hint for what style of peaks to draw, OK to pass in zero
+
+  int *exp[30];
+
 } PCM_source_peaktransfer_t;
 
 
@@ -231,12 +242,15 @@ typedef struct
   double global_item_time;
   double srate;
   int length; // length in samples
-  int overwritemode; // 0=overdub, 1=replace, -1 = literal (do nothing just add)
+  int overwritemode; // 0=overdub, 1=replace, 
+                     // -1 = literal (do nothing just add)
+                     // 65536+(16 bit mask) = replace just these channels (touch-replace)
   MIDI_eventlist *events;
   double item_playrate;
 
   double latency;
 
+  unsigned int *overwrite_actives; // [16][4]; only used when overwritemode is >0
 } midi_realtime_write_struct_t;
 
 
@@ -297,6 +311,34 @@ typedef struct
   char resvd[128];  // future expansion -- should be 0
 } REAPER_slice;
 
+typedef struct
+{
+  double draw_start_time;
+  int draw_start_y; // can be >0 to treat there as extra data
+  double pixels_per_second;
+  int width, height; // width and height of view
+  int mouse_x, mouse_y; // valid only on mouse/key messages
+  void *extraParms[8]; // WM_KEYDOWN uses [0] for MSG *
+} REAPER_inline_positioninfo;
+
+#define PCM_SOURCE_EXT_INLINEEDITOR 0x100  // parm1 = (void *)(INT_PTR)message, parm2/parm3 = parms
+                                           // messages: 0 = query if editor is available/supported. returns <0 if supported but unavailable, >0 if available, 0=if not supported
+                                           //  WM_CREATE to create the editor instance, WM_DESTROY to destroy it (nonzero if success)
+                                           //  WM_ERASEBKGND / WM_PAINT / WM_NCPAINT (3 stages) for drawing, parm2 = LICE_IBitmap *, parm3 = (REAPER_inline_positioninfo*)
+                                           //  WM_LBUTTON*, WM_RBUTTON*, WM_MOUSEMOVE, WM_MOUSEWHEEL
+                                           // parm2=rsvd, parm3= REAPER_inline_positioninfo) -- 
+                                           // return REAPER_INLINE_* flags
+                                           // WM_SETCURSOR gets parm3=REAPER_inline_positioninfo*, should return HCURSOR
+                                           // WM_KEYDOWN gets parm3=REAPER_inline_positioninfo* with extraParms[0] to MSG*
+#define REAPER_INLINE_RETNOTIFY_INVALIDATE 0x1000000 // want refresh of display
+#define REAPER_INLINE_RETNOTIFY_SETCAPTURE 0x2000000 // setcapture
+#define REAPER_INLINE_RETNOTIFY_SETFOCUS   0x4000000 // set focus to item
+#define REAPER_INLINE_RETNOTIFY_NOAUTOSCROLL 0x8000000
+
+#define REAPER_INLINEFLAG_WANTOVERLAYEDCONTROLS 0x4000 // only valid as a ret for msg 0, to have fades/etc still drawn over like normal
+
+
+#define PCM_SOURCE_EXT_PROJCHANGENOTIFY 0x2000 // parm1 = nonzero if activated project, zero if deactivated project
 
 #define PCM_SOURCE_EXT_OPENEDITOR 0x10001 // parm1=hwnd, parm2=track idx, parm3=item description
 #define PCM_SOURCE_EXT_GETEDITORSTRING 0x10002 // parm1=index (0 or 1), returns desc
@@ -305,6 +347,8 @@ typedef struct
 #define PCM_SOURCE_EXT_ADDMIDIEVENTS 0x10005 // parm1=pointer to midi_realtime_write_struct_t, nch=1 for replace, =0 for overdub, parm2=midi_quantize_mode_t* (optional)
 #define PCM_SOURCE_EXT_GETASSOCIATED_RPP 0x10006 // parm1=pointer to char* that will receive a pointer to the string
 #define PCM_SOURCE_EXT_GETMETADATA 0x10007 // parm1=pointer to name string, parm2=pointer to buffer, parm3=(int)buffersizemax . returns length used. Defined strings are "DESC", "ORIG", "ORIGREF", "DATE", "TIME", "UMID", "CODINGHISTORY" (i.e. BWF)
+#define PCM_SOURCE_EXT_SETASSECONDARYSOURCE 0x10008  // parm1=optional pointer to src (same subtype as receiver), if supplied, set the receiver as secondary src for parm1's editor, if not supplied, receiver has to figure out if there is an appropriate editor open to attach to, parm2=trackidx, parm3=itemname
+#define PCM_SOURCE_EXT_SHOWMIDIPREVIEW 0x10009  // parm1=(MIDI_eventlist*), can be NULL for all-notes-off (also to check if this source supports showing preview at this moment)
 #define PCM_SOURCE_EXT_CONFIGISFILENAME 0x20000
 #define PCM_SOURCE_EXT_GETBPMANDINFO 0x40000 // parm1=pointer to double for bpm. parm2=pointer to double for snap/downbeat offset (seconds).
 #define PCM_SOURCE_EXT_GETNTRACKS 0x80000 // for midi data, returns number of tracks that would have been available
@@ -318,6 +362,13 @@ typedef struct
 // a PCM_source may be the parent of a number of beat-based slices, if so the parent should report length and nchannels only, handle ENUMSLICES, and be deleted after the slices are retrieved
 #define PCM_SOURCE_EXT_ENUMSLICES 0x90006 // parm1=(int*) index of slice to get, parm2=REAPER_slice* (pointing to caller's existing slice struct). if parm2 passed in zero, returns the number of slices. returns 0 if no slices or out of slices. 
 #define PCM_SOURCE_EXT_ENDPLAYNOTIFY 0x90007 // notify a source that it can release any pooled resources
+#define PCM_SOURCE_EXT_SETPREVIEWTEMPO 0x90008 // parm1=(double*)bpm, only meaningful for slice-based source media
+
+enum { RAWMIDI_NOTESONLY=1, RAWMIDI_UNFILTERED=2 };
+#define PCM_SOURCE_EXT_GETRAWMIDIEVENTS 0x90009 // parm1 = (PCM_source_transfer_t *), parm2 = RAWMIDI flags
+
+#define PCM_SOURCE_EXT_SETRESAMPLEMODE 0x9000A // parm1= mode to pass to resampler->Extended(RESAMPLE_EXT_SETRSMODE,mode,0,0)
+#define PCM_SOURCE_EXT_NOTIFYPREVIEWPLAYPOS 0x9000B // parm1 = ptr to double of play position, or NULL if stopped
 
 // register with Register("pcmsrc",&struct ... and unregister with "-pcmsrc"
 typedef struct {
@@ -430,7 +481,8 @@ class PCM_sink
 #define PCM_SINK_EXT_GETBITDEPTH 0x80005 // parm1 = (int*) bitdepth (return 1 if supported)
 #define PCM_SINK_EXT_ADDCUE 0x80006 // parm1=(PCM_cue*)cue
 
-typedef struct { // register using "pcmsink"
+typedef struct  // register using "pcmsink"
+{
   unsigned int (*GetFmt)(char **desc);
 
   const char *(*GetExtension)(const void *cfg, int cfg_l);
@@ -439,7 +491,20 @@ typedef struct { // register using "pcmsink"
 
 } pcmsink_register_t;
 
+typedef struct  // register using "pcmsink_ext"
+{
+  pcmsink_register_t sink; 
 
+  // for extended calls that refer to the generic type of sink, rather than a specific instance of a sink
+  int (*Extended)(int call, void* parm1, void* parm2, void* parm3); 
+
+
+  char expand[256];
+} pcmsink_register_ext_t;
+
+// supported via pcmsink_register_ext_t::Extended:
+#define PCMSINKEXT_GETFORMATDESC 0x80000 // parm1=(void*)cfg, parm2=(int)cfglen, parm3=(const char*)retstring 
+#define PCMSINKEXT_GETFORMATDATARATE 0x80001 // parm1=(void*)cfg, parm2=(int)cfglen, parm3 = int[] {channels, samplerate}
 
 /***************************************************************************************
 **** Resampler API (plug-ins can use this for SRC)
@@ -462,6 +527,7 @@ public:
   virtual int Extended(int call, void *parm1, void *parm2, void *parm3) { return 0; } // return 0 if unsupported
 };
 #define RESAMPLE_EXT_SETRSMODE 0x1000 // parm1 == (int)resamplemode, or -1 for project default
+#define RESAMPLE_EXT_SETFEEDMODE 0x1001 // parm1 = nonzero to set ResamplePrepare's out_samples to refer to request a specific number of input samples
 
 
 /***************************************************************************************
@@ -579,6 +645,47 @@ typedef struct
   const char* action_desc;
   const char* action_help;
 } action_help_t;
+
+/*
+** register("toggleaction", toggleactioncallback) lets you register a callback function
+** that is called to check if an action registered by an extension has an on/off state.
+
+callback function:
+  int toggleactioncallback(int command_id);
+
+return:
+  -1=action does not belong to this extension, or does not toggle
+  0=action belongs to this extension and is currently set to "off"
+  1=action belongs to this extension and is currently set to "on"
+*/
+
+
+/*
+** register("hookcustommenu", menuhook) lets you register a menu hook function that is called 
+** when a customizable Reaper menu is initialized or shown.
+
+hook (callback) function:
+  void menuhook(const char* menuidstr, void* menu, int flag); 
+
+flag:
+  0=default menu is being initialized
+  1=menu is about to be shown
+
+Do not retrieve or modify any Reaper menus except when your menuhook is called.
+
+Reaper calls menuhook with flag=0 when first initializing the menu, before the first time the menu
+is displayed.  You can add menu items or submenus during this call, which then become part of the 
+default menu structure (which the user can modify). Do not set any menu checked/grayed state,
+do not add menu icons, if you add submenus do not retain handles to the submenus.
+Do not modify any menus that don't call menuhook.
+
+Reaper calls menuhook with flag=1 before each time the menu is displayed.  You can do any
+dynamic menu populating, setting check/grayed states, adding icons during this call.
+
+All handling should be done relative to menu commands, not menu item positions, 
+because these menus can be customized and item order can change.
+*/
+
 
 /*
 ** editor_register_t lets you integrate editors for "open in external editor" for files directly.
@@ -714,6 +821,7 @@ typedef struct
   double volume;
 
   double peakvol[2];
+  void *preview_track; // used for track previews, but only if m_out_chan == -1
 } preview_register_t;
 
 /*
@@ -721,10 +829,11 @@ typedef struct
 */
 
 
-/*
-** ColorTheme API access, these are used with GetColorTheme() and GetIconThemePointer();
 
-// todo: document more of these:
+#ifdef REAPER_WANT_DEPRECATED_COLORTHEMESTUFF /* no longer used -- see icontheme.h and GetColorThemeStruct() */
+
+/*
+** ColorTheme API access, these are used with GetColorTheme()
 */
 
 #define COLORTHEMEIDX_TIMELINEFG 0
@@ -768,7 +877,7 @@ typedef struct
 #define COLORTHEMEIDX_MIDI_OFFSCREENNOTE 103
 #define COLORTHEMEIDX_MIDI_OFFSCREENNOTESEL 104
 
-
+#endif // colortheme stuff deprecated
 
 /*
 ** Screenset API
@@ -821,10 +930,16 @@ public:
   virtual void start()=0;
   virtual void stop()=0;
 
-  virtual void SwapBufs(unsigned int timestamp)=0;
+  virtual void SwapBufs(unsigned int timestamp)=0; // DEPRECATED call SwapBufsPrecise() instead  // timestamp=process ms
+
   virtual void RunPreNoteTracking(int isAccum) { }
 
-  virtual MIDI_eventlist *GetReadBuf()=0;
+  virtual MIDI_eventlist *GetReadBuf()=0; // note: the event list here has frame offsets that are in units of 1/1024000 of a second, NOT sample frames
+
+  virtual void SwapBufsPrecise(unsigned int coarsetimestamp, double precisetimestamp) // coarse=process ms, precise=process sec, the target will know internally which to use
+  {
+    SwapBufs(coarsetimestamp);  // default impl is for backward compatibility
+  }
 };
 
 
@@ -833,13 +948,11 @@ public:
 ** Control Surface API
 */
 
-
+class ReaProject;
 class MediaTrack;
 class MediaItem;
 class MediaItem_Take;
-class ReaProject;
 class TrackEnvelope;
-
 
 class IReaperControlSurface
 {
@@ -901,18 +1014,6 @@ typedef struct
 #define UNDO_STATE_MISCCFG 8 // loop selection, markers, regions, extensions!
 #endif
 
-// Menu hook
-#define MAINMENU_FILE 0
-#define MAINMENU_EDIT 1
-#define MAINMENU_VIEW 2
-#define MAINMENU_TRACK 3
-#define MAINMENU_OPTIONS 4
-#define MAINMENU_INSERT 5 
-#define MAINMENU_EXT 6
-#define CTXMENU_TCP 7
-#define CTXMENU_ITEM 8
-#define CTXMENU_ENV 9  
-#define CTXMENU_ENVPT 10
-#define CTXMENU_RULER 11
+
 
 #endif//_REAPER_PLUGIN_H_

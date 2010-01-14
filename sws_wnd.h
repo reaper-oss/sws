@@ -42,6 +42,7 @@ public:
 	virtual ~SWS_ListView();
 	LPARAM GetListItem(int iIndex);
 	bool IsSelected(int index);
+	LPARAM GetFirstSelected();
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 	void OnDestroy();
 	int KeyHandler(MSG *msg);

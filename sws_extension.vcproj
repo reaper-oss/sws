@@ -604,6 +604,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\reaper\icontheme.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Freeze\ItemSelState.h"
 				>
 			</File>

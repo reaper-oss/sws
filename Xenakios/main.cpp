@@ -34,24 +34,29 @@ int *ShuffledNumbers;
 int ShuffledNumbersGenerated=0;
 
 bool IsRippleOneTrack(COMMAND_T*) { return *(int*)GetConfigVar("projripedit") == 1; }
+bool IsRippleAll(COMMAND_T*)      { return *(int*)GetConfigVar("projripedit") == 2; }
 
 void DoToggleRippleOneTrack(COMMAND_T*)
 {
-	int sz=0; int *ripplemode = (int *)get_config_var("projripedit",&sz);
-    if (sz==sizeof(int) && ripplemode) 
-	{ 
-		
-		int newRippleMode=0;
-		if (*ripplemode==0)
-		{
-			Main_OnCommand(40310,0);
-			newRippleMode=1;
-		} else
-		//if (*ripplemode>=1)
-		{
-			Main_OnCommand(40309,0);
-			newRippleMode=0;
-		}
+	int* ripplemode = (int*)GetConfigVar("projripedit");
+	if (ripplemode)
+	{
+		if (*ripplemode == 1)
+			Main_OnCommand(40309, 0);
+		else
+			Main_OnCommand(40310, 0);
+	}
+}
+
+void DoToggleRippleAll(COMMAND_T*)
+{
+	int* ripplemode = (int*)GetConfigVar("projripedit");
+	if (ripplemode)
+	{
+		if (*ripplemode == 2)
+			Main_OnCommand(40309, 0);
+		else
+			Main_OnCommand(40311, 0);
 	}
 }
 

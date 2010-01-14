@@ -71,6 +71,7 @@
 #pragma warning(default : 4996)
 #pragma warning(default : 4267)
 
+#include "reaper/icontheme.h"
 #include "reaper/reaper_plugin.h"
 #include "reaper/sws_rpf_wrapper.h"
 #include "sws_util.h"

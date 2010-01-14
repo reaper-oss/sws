@@ -40,7 +40,6 @@ protected:
 	void GetItemTooltip(LPARAM item, char* str, int iStrMax);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	int  GetItemState(LPARAM item);
-	bool OnItemSelChange(LPARAM item, bool bSel);
 	void OnItemClk(LPARAM item, int iCol, int iKeyState);
 };
 
@@ -50,8 +49,6 @@ public:
 	SWS_SnapshotsWnd();
 	void Update();
 	void RenameCurrent();
-
-	Snapshot* m_pLastTouched;
 	
 protected:
 	void OnInitDlg();

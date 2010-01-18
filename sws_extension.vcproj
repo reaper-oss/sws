@@ -97,7 +97,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Building installer and copying to c:\dev\sws-deploy..."
-				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files\reaper\plugins&quot;&#x0D;&#x0A;&quot;c:\program files\nsis\makensis.exe&quot; /v2 $(SolutionName).nsi&#x0D;&#x0A;copy /y &quot;$(OutDir)\$(SolutionName).exe&quot; &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
+				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files (x86)\reaper\plugins&quot;&#x0D;&#x0A;&quot;c:\program files\nsis\makensis.exe&quot; /v2 $(SolutionName).nsi&#x0D;&#x0A;copy /y &quot;$(OutDir)\$(SolutionName).exe&quot; &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -179,7 +179,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying x64 to c:\dev\sws-deploy"
-				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\dev\sws-deploy&quot;"
+				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files\reaper (x64)\plugins&quot;&#x0D;&#x0A;copy /y $(OutDir)\$(TargetFilename) &quot;c:\dev\sws-deploy&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -262,7 +262,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying to REAPER\Plugins..."
-				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files\reaper\plugins&quot;&#x0D;&#x0A;"
+				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files (x86)\reaper\plugins&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -345,7 +345,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files\reaper (x64)\plugins&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

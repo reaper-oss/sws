@@ -36,7 +36,7 @@ extern int (WINAPI *CoolSB_SetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi
 #define WDL_VirtualWnd_BGCfg WDL_VirtualWnd_BGCfg_stub
 
 #ifdef _WIN32
-#include "c:/program files/reaper/reaper_plugin_functions.h" // Point where you need to!
+#include "C:/Program Files (x86)/REAPER/reaper_plugin_functions.h" // Point where you need to!
 #else
 #include "reaper_plugin_functions.h" // Point where you need to!
 #endif

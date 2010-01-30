@@ -1,7 +1,7 @@
 /******************************************************************************
 / Prompt.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,6 +29,7 @@
 #include "Prompt.h"
 
 #define PROMPTWND_KEY "PromptWindowPos"
+#define INFOWND_KEY "InfoWindowPos"
 
 static const char* g_cTitle;
 static char* g_cString;
@@ -64,12 +65,49 @@ INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 	return 0;
 }
 
-bool PromptUserForString(const char* cTitle, char* cString, int iMaxChars)
+INT_PTR WINAPI doInfoDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			SetWindowText(hwndDlg, g_cTitle);
+			RestoreWindowPos(hwndDlg, INFOWND_KEY);
+			HWND hEdit = GetDlgItem(hwndDlg, IDC_EDIT);
+			SetWindowLongPtr(hEdit, GWLP_USERDATA, 0xdeadf00b);
+			SetWindowText(hEdit, g_cString);
+			SetFocus(hEdit);
+			SendMessage(hEdit, EM_SETSEL, -1, 0);
+			return 0;
+		}
+		case WM_COMMAND:
+			switch (LOWORD(wParam))
+			{
+				case IDOK:
+				case IDCANCEL:
+					SaveWindowPos(hwndDlg, PROMPTWND_KEY);
+					EndDialog(hwndDlg, 0);
+					break;
+			}
+			break;
+	}
+	return 0;
+}
+
+
+bool PromptUserForString(HWND hParent, const char* cTitle, char* cString, int iMaxChars)
 {
 	g_cTitle = cTitle;
 	g_cString = cString;
 	g_iMax = iMaxChars;
 	g_bOK = false;
-	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_PROMPT), g_hwndParent, doPromptDialog);
+	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_PROMPT), hParent, doPromptDialog);
 	return g_bOK;
+}
+
+void DisplayInfoBox(HWND hParent, const char* cTitle, const char* cInfo)
+{
+	g_cTitle = cTitle;
+	g_cString = (char*)cInfo;
+	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_INFO), hParent, doInfoDialog);
 }

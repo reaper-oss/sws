@@ -1,5 +1,5 @@
 /******************************************************************************
-/ TrackFX.h
+/ ObjectState.h
 /
 / Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
@@ -25,7 +25,27 @@
 /
 ******************************************************************************/
 
+
 #pragma once
 
-void GetFXChain(MediaTrack* tr, WDL_String* str);
-void SetFXChain(MediaTrack* tr, const char* str);
+class ObjectStateCache
+{
+public:
+	ObjectStateCache();
+	~ObjectStateCache();
+	void WriteCache();
+	void EmptyCache();
+	char* GetSetObjState(void* obj, const char* str);
+private:
+	WDL_PtrList<void> m_obj;
+	WDL_PtrList<WDL_String> m_str;
+	WDL_PtrList<char> m_orig;
+};
+
+char* SWS_GetSetObjectState(void* obj, const char* str);
+void SWS_FreeHeapPtr(void* ptr);
+void SWS_CacheObjectState(bool bStart);
+
+bool GetChunkLine(const char* chunk, WDL_String* line, int* pos, bool bNewLine);
+void AppendChunkLine(WDL_String* chunk, const char* line);
+bool GetChunkFromProjectState(const char* cSection, WDL_String* chunk, const char* line, ProjectStateContext *ctx);

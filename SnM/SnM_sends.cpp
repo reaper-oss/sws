@@ -42,7 +42,7 @@ bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 	int srcId = CSurf_TrackToID(_srcTr, false); // for (usefull?) check
 	if (_srcTr && _destTr && _type >= 0 && srcId >= 0)
 	{
-		char* cData = GetSetObjectState(_destTr, NULL);
+		char* cData = SWS_GetSetObjectState(_destTr, NULL);
 		if (cData)
 		{
 			WDL_String curLine;
@@ -91,12 +91,12 @@ bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 			}
 			while (pEOL);
 
-			FreeHeapPtr(cData);
+			SWS_FreeHeapPtr(cData);
 
 			// Sets the new state
 			if (sendout.GetLength())
 			{
-				if (GetSetObjectState(_destTr, sendout.Get()) == 0)
+				if (SWS_GetSetObjectState(_destTr, sendout.Get()) == 0)
 				{
 					// I DO THAT WAY TO ALSO FORCE REFRESH IN REAPER!!!
 					GetSetTrackSendInfo(_destTr, -1, rcvId, "I_SENDMODE" , &_type);

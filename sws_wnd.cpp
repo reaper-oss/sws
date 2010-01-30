@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_wnd.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -318,7 +318,8 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 {
 
 	SetWindowLongPtr(hwndList, GWLP_USERDATA, (LONG_PTR)this);
-	SetWindowLongPtr(m_hwndEdit, GWLP_USERDATA, 0xdeadf00b);
+	if (m_hwndEdit)
+		SetWindowLongPtr(m_hwndEdit, GWLP_USERDATA, 0xdeadf00b);
 
 	// Load sort and column data
 	char cDefaults[256];
@@ -946,8 +947,8 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	char str[100];
 	GetItemText(item, iCol, str, 100);
 	SetWindowText(m_hwndEdit, str);
-	SetFocus(m_hwndEdit);
 	SendMessage(m_hwndEdit, EM_SETSEL, 0, -1);
+	SetFocus(m_hwndEdit);
 }
 
 void SWS_ListView::EditListItemEnd(bool bSave, bool bResort)

@@ -1,7 +1,7 @@
 /******************************************************************************
 / Snapshots.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,19 +27,21 @@
 
 
 #include "stdafx.h"
-#include "../ObjectState/TrackFX.h"
 #include "SnapshotClass.h"
 #include "Snapshots.h"
+#include "SnapshotMerge.h"
 #include "../Prompt.h"
 
 #define SNAP_OPTIONS_KEY "Snapshot Options"
 #define RENAME_MSG	0x10001
 #define DELETE_MSG	0x10002
 #define SAVE_MSG	0x10003
+#define COPY_MSG	0x10004
 #define LOADSEL_MSG	0x10005
 #define SEL_MSG		0x10006
 #define ADDSEL_MSG	0x10007
 #define DELSEL_MSG	0x10008
+#define DETAILS_MSG 0x10009
 #define LOAD_MSG	0x100F0 // leave space!!
 
 class ProjSnapshot
@@ -54,6 +56,8 @@ public:
 // Globals
 static SWSProjConfig<ProjSnapshot> g_ss;
 static SWS_SnapshotsWnd* g_pSSWnd;
+void PasteSnapshotToList(COMMAND_T*);
+void PasteSnapshot(COMMAND_T*);
 
 void UpdateSnapshotsDialog()
 {
@@ -68,6 +72,60 @@ static bool g_bApplyFilterOnRecall = true;
 static bool g_bHideNewOnRecall = true;
 static bool g_bPromptOnNew = false;
 static bool g_bHideOptions = false;
+
+// Clipboard operations:
+void CopySnapshotToClipboard(Snapshot* ss)
+{
+	WDL_String ssStr;
+	ss->GetChunk(&ssStr);
+	if (OpenClipboard(g_hwndParent))
+	{
+		EmptyClipboard();
+		HGLOBAL hglbCopy; 
+		hglbCopy = GlobalAlloc(GMEM_MOVEABLE, ssStr.GetLength() + 1); 
+		if (hglbCopy)
+		{
+			memcpy(GlobalLock(hglbCopy), ssStr.Get(), ssStr.GetLength() + 1);	
+			GlobalUnlock(hglbCopy);
+#ifndef _WIN32
+			g_iClipFormat = RegisterClipboardFormat("Text");
+			SetClipboardData(g_iClipFormat, hglbCopy); 
+#else
+			SetClipboardData(CF_TEXT, hglbCopy); 
+#endif
+		}
+		CloseClipboard();
+	}
+}
+
+Snapshot* GetSnapshotFromClipboard()
+{
+	Snapshot* ss = NULL;
+	if (OpenClipboard(g_hwndParent))
+	{
+#ifndef _WIN32
+		HGLOBAL clipBoard = GetClipboardData(g_iClipFormat);
+#else
+		HGLOBAL clipBoard = GetClipboardData(CF_TEXT);
+#endif
+		if (clipBoard)
+		{
+			char* clipData = (char*)GlobalLock(clipBoard);
+			if (clipData)
+			{
+				ss = new Snapshot(clipData);
+				GlobalUnlock(clipBoard);
+				if (!ss->m_tracks.GetSize())
+				{
+					delete ss;
+					ss = NULL;
+				}
+			}
+		}
+		CloseClipboard();
+	}
+	return ss;
+}
 
 static SWS_LVColumn g_cols[] = { { 20, 2, "#" }, { 60, 3, "Name" }, { 60, 2, "Date" }, { 60, 2, "Time" } };
 
@@ -139,43 +197,12 @@ void SWS_SnapshotsView::GetItemText(LPARAM item, int iCol, char* str, int iStrMa
 		else
 			str[0] = 0;
 		break;
-#ifdef _WIN32
 	case 2:
-	case 3:
-	{
-		SYSTEMTIME st, st2;
-		int t = ss->m_time;
-		struct tm pt;
-		int err = _gmtime32_s(&pt, (__time32_t*)&t);
-		if (!err)
-		{
-			st.wMilliseconds = 0;
-			st.wSecond = pt.tm_sec;
-			st.wMinute = pt.tm_min;
-			st.wHour   = pt.tm_hour;
-			st.wDay    = pt.tm_mday;
-			st.wMonth  = pt.tm_mon + 1;
-			st.wYear   = pt.tm_year + 1900;
-			st.wDayOfWeek = pt.tm_wday;
-			SystemTimeToTzSpecificLocalTime(NULL, &st, &st2);		
-			
-			if (iCol == 2)
-				GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st2, NULL, str, iStrMax);
-			else if (iCol == 3)
-				GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st2, NULL, str, iStrMax);
-		}
-		else
-			str[0] = 0;
-		break;
-	}
-#else
-	case 2:
-		GetDateString(ss->m_time, str, iStrMax);
+		ss->GetTimeString(str, iStrMax, true);
 		break;
 	case 3:
-		GetTimeString(ss->m_time, str, iStrMax);
+		ss->GetTimeString(str, iStrMax, false);
 		break;
-#endif
 	}
 }
 
@@ -272,27 +299,15 @@ void SWS_SnapshotsWnd::Update()
 	CheckDlgButton(m_hwnd, IDC_MIX,          m_iSelType == 0		? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_CURVIS,       m_iSelType == 1		? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_CUSTOM,       m_iSelType == 2		? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_VOL,          g_iMask & VOL_MASK     ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_PAN,          g_iMask & PAN_MASK     ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_MUTE,         g_iMask & MUTE_MASK    ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_SOLO,         g_iMask & SOLO_MASK    ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_FXCHAIN,      g_iMask & FXCHAIN_MASK ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_SENDS,        g_iMask & SENDS_MASK   ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_SELECTION,    g_iMask & SEL_MASK     ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_VISIBILITY,   g_iMask & VIS_MASK		? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_SELECTEDONLY, g_bSelOnly				? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_APPLYRECALL,  g_bApplyFilterOnRecall	? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_NAMEPROMPT,	 g_bPromptOnNew			? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_HIDENEW,		 g_bHideNewOnRecall		? BST_CHECKED : BST_UNCHECKED);
-
-	EnableWindow(GetDlgItem(m_hwnd, IDC_VOL), m_iSelType == 2);
-	EnableWindow(GetDlgItem(m_hwnd, IDC_PAN), m_iSelType == 2);
-	EnableWindow(GetDlgItem(m_hwnd, IDC_MUTE), m_iSelType == 2);
-	EnableWindow(GetDlgItem(m_hwnd, IDC_SOLO), m_iSelType == 2);
-	EnableWindow(GetDlgItem(m_hwnd, IDC_FXCHAIN), m_iSelType == 2);
-	EnableWindow(GetDlgItem(m_hwnd, IDC_SENDS), m_iSelType == 2);
-	EnableWindow(GetDlgItem(m_hwnd, IDC_SELECTION), m_iSelType == 2);
-	EnableWindow(GetDlgItem(m_hwnd, IDC_VISIBILITY), m_iSelType == 2);
+	for (int i = 0; i < MASK_CTRLS; i++)
+	{
+		CheckDlgButton(m_hwnd, cSSCtrls[i], g_iMask & cSSMasks[i] ? BST_CHECKED : BST_UNCHECKED);
+		EnableWindow(GetDlgItem(m_hwnd,  cSSCtrls[i]), m_iSelType == 2);
+	}
 
 	m_pLists.Get(0)->Update();
 
@@ -314,20 +329,14 @@ void SWS_SnapshotsWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_resize.init_item(IDC_FILTERGROUP, 1.0, 0.0, 1.0, 0.0);
+	for (int i = 0; i < MASK_CTRLS; i++)
+		m_resize.init_item(cSSCtrls[i], 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_MIX, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_CURVIS, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_CUSTOM, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_SAVE, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_PAN, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_MUTE, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_SOLO, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_SELECTEDONLY, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_HELPTEXT, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_VOL, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_FXCHAIN, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_SENDS, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_VISIBILITY, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_SELECTION, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_APPLYRECALL, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_NAMEPROMPT, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_HIDENEW, 1.0, 0.0, 1.0, 0.0);
@@ -377,6 +386,12 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
+		case COPY_MSG:
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			CopySnapshotToClipboard(ss);
+			break;
+		}
 		case DELETE_MSG:
 		{
 			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
@@ -418,25 +433,35 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
-		case BN_CLICKED << 16 | IDC_MIX:
-		case BN_CLICKED << 16 | IDC_CURVIS:
-		case BN_CLICKED << 16 | IDC_CUSTOM:
-		case BN_CLICKED << 16 | IDC_VOL:
-		case BN_CLICKED << 16 | IDC_PAN:
-		case BN_CLICKED << 16 | IDC_MUTE:
-		case BN_CLICKED << 16 | IDC_SOLO:
-		case BN_CLICKED << 16 | IDC_SENDS:
-		case BN_CLICKED << 16 | IDC_FXCHAIN:
-		case BN_CLICKED << 16 | IDC_SELECTEDONLY:
-		case BN_CLICKED << 16 | IDC_VISIBILITY:
-		case BN_CLICKED << 16 | IDC_SELECTION:
-		case BN_CLICKED << 16 | IDC_APPLYRECALL:
-		case BN_CLICKED << 16 | IDC_NAMEPROMPT:
-		case BN_CLICKED << 16 | IDC_HIDENEW:
+		case DETAILS_MSG:
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			WDL_String details;
+			ss->GetDetails(&details);
+			DisplayInfoBox(m_hwnd, "Snapshot Details", details.Get());
+			break;
+		}
+
+		case IDC_MIX:
+		case IDC_CURVIS:
+		case IDC_CUSTOM:
+		case IDC_SELECTEDONLY:
+		case IDC_APPLYRECALL:
+		case IDC_NAMEPROMPT:
+		case IDC_HIDENEW:
+			// Filter controls are handled in the default case
 			GetOptions();
 			Update();
 			break;
 		default:
+			for (int i = 0; i < MASK_CTRLS; i++)
+				if (wParam == cSSCtrls[i])
+				{
+					GetOptions();
+					Update();
+					break;
+				}
+
 			if (wParam >= LOAD_MSG && wParam < (WPARAM)(LOAD_MSG + g_ss.Get()->m_snapshots.GetSize()))
 				GetSnapshot((int)(wParam-LOAD_MSG), ALL_MASK, false);
 			else
@@ -453,11 +478,13 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
 	{
 		AddToMenu(contextMenu, "Rename", RENAME_MSG);
 		AddToMenu(contextMenu, SWS_SEPARATOR, 0);
+		AddToMenu(contextMenu, "Show snapshot details", DETAILS_MSG);
 		AddToMenu(contextMenu, "Select tracks in snapshot", SEL_MSG);
 		AddToMenu(contextMenu, "Add selected track(s) to snapshot", ADDSEL_MSG);
 		AddToMenu(contextMenu, "Delete selected track(s) from snapshot", DELSEL_MSG);
 		AddToMenu(contextMenu, "Overwrite snapshot", SAVE_MSG);
 		AddToMenu(contextMenu, "Delete snapshot", DELETE_MSG);
+		AddToMenu(contextMenu, "Copy snapshot", COPY_MSG);
 	}
 	else
 	{
@@ -474,6 +501,8 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
 		}
 	}
 	AddToMenu(contextMenu, "New snapshot", SWSGetCommandID(NewSnapshot));
+	AddToMenu(contextMenu, "Paste snapshot", SWSGetCommandID(PasteSnapshotToList));
+	AddToMenu(contextMenu, "Paste snapshot to project", SWSGetCommandID(PasteSnapshot));
 
 	return contextMenu;
 }
@@ -529,7 +558,7 @@ void SWS_SnapshotsWnd::GetOptions()
 	if (IsDlgButtonChecked(m_hwnd, IDC_MIX) == BST_CHECKED)
 	{
 		m_iSelType = 0;
-		g_iMask = VOL_MASK | PAN_MASK | MUTE_MASK | SOLO_MASK | FXCHAIN_MASK | SENDS_MASK;
+		g_iMask = MIX_MASK;
 	}
 	else if (IsDlgButtonChecked(m_hwnd, IDC_CURVIS) == BST_CHECKED)
 	{
@@ -540,22 +569,9 @@ void SWS_SnapshotsWnd::GetOptions()
 	{
 		g_iMask = 0;
 		m_iSelType = 2;
-		if (IsDlgButtonChecked(m_hwnd, IDC_VOL) == BST_CHECKED)
-			g_iMask |= VOL_MASK;
-		if (IsDlgButtonChecked(m_hwnd, IDC_PAN) == BST_CHECKED)
-			g_iMask |= PAN_MASK;
-		if (IsDlgButtonChecked(m_hwnd, IDC_MUTE) == BST_CHECKED)
-			g_iMask |= MUTE_MASK;
-		if (IsDlgButtonChecked(m_hwnd, IDC_SOLO) == BST_CHECKED)
-			g_iMask |= SOLO_MASK;
-		if (IsDlgButtonChecked(m_hwnd, IDC_FXCHAIN) == BST_CHECKED)
-			g_iMask |= FXCHAIN_MASK;
-		if (IsDlgButtonChecked(m_hwnd, IDC_SENDS) == BST_CHECKED)
-			g_iMask |= SENDS_MASK;
-		if (IsDlgButtonChecked(m_hwnd, IDC_VISIBILITY) == BST_CHECKED)
-			g_iMask |= VIS_MASK;
-		if (IsDlgButtonChecked(m_hwnd, IDC_SELECTION) == BST_CHECKED)
-			g_iMask |= SEL_MASK;
+		for (int i = 0; i < MASK_CTRLS; i++)
+			if (IsDlgButtonChecked(m_hwnd, cSSCtrls[i]) == BST_CHECKED)
+				g_iMask |= cSSMasks[i];
 	}
 	g_bSelOnly = IsDlgButtonChecked(m_hwnd, IDC_SELECTEDONLY) == BST_CHECKED;
 	g_bHideNewOnRecall = IsDlgButtonChecked(m_hwnd, IDC_HIDENEW) == BST_CHECKED;
@@ -565,21 +581,15 @@ void SWS_SnapshotsWnd::GetOptions()
 
 void SWS_SnapshotsWnd::ShowControls(bool bShow)
 {
+	for (int i = 0; i < MASK_CTRLS; i++)
+		ShowWindow(GetDlgItem(m_hwnd, cSSCtrls[i]), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_MIX), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_CURVIS), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_CUSTOM), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_FILTERGROUP), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_SAVE), bShow);
-	ShowWindow(GetDlgItem(m_hwnd, IDC_PAN), bShow);
-	ShowWindow(GetDlgItem(m_hwnd, IDC_MUTE), bShow);
-	ShowWindow(GetDlgItem(m_hwnd, IDC_SOLO), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_SELECTEDONLY), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_HELPTEXT), bShow);
-	ShowWindow(GetDlgItem(m_hwnd, IDC_VOL), bShow);
-	ShowWindow(GetDlgItem(m_hwnd, IDC_FXCHAIN), bShow);
-	ShowWindow(GetDlgItem(m_hwnd, IDC_SENDS), bShow);
-	ShowWindow(GetDlgItem(m_hwnd, IDC_VISIBILITY), bShow);
-	ShowWindow(GetDlgItem(m_hwnd, IDC_SELECTION), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_APPLYRECALL), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_NAMEPROMPT), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_HIDENEW), bShow);
@@ -609,7 +619,7 @@ void NewSnapshot(int iMask, bool bSelOnly)
 	{
 		char cName[256];
 		strncpy(cName, pNewSS->m_cName, 256);
-		if (PromptUserForString("Enter Snapshot Name", cName, 256) && strlen(cName))
+		if (PromptUserForString(g_hwndParent, "Enter Snapshot Name", cName, 256) && strlen(cName))
 			pNewSS->SetName(cName);
 	}
 	g_pSSWnd->Update();
@@ -729,6 +739,52 @@ static bool SnapshotsWindowEnabled(COMMAND_T*)
 	return g_pSSWnd->IsValidWindow();
 }
 
+void CopyCurSnapshot(COMMAND_T*)
+{
+	if (g_ss.Get()->m_pCurSnapshot)
+		CopySnapshotToClipboard(g_ss.Get()->m_pCurSnapshot);
+}
+
+void CopyNewSnapshot(COMMAND_T*)
+{
+	Snapshot ss(1, MIX_MASK, false, "Copied snapshot");
+	CopySnapshotToClipboard(&ss);
+}
+
+void PasteSnapshot(COMMAND_T*)
+{
+	Snapshot* ss = GetSnapshotFromClipboard();
+	if (ss)
+	{
+		MergeSnapshots(ss);
+		delete ss;
+	}
+}
+
+void PasteSnapshotToList(COMMAND_T*)
+{
+	Snapshot* ss = GetSnapshotFromClipboard();
+	if (ss)
+	{
+		// Find the "slot" -- use the saved, or the first avail
+		for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
+		{
+			if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot == ss->m_iSlot)
+			{	// Slot collision, pick the first avail
+				int j;
+				for (j = 0; j < g_ss.Get()->m_snapshots.GetSize(); j++)
+					if (g_ss.Get()->m_snapshots.Get(j)->m_iSlot != j+1)
+						break;
+				ss->m_iSlot = j + 1;
+			}
+		}
+
+		// Add the snapshot to the list
+		g_ss.Get()->m_snapshots.Add(ss);
+		g_pSSWnd->Update();
+	}
+}
+
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Open mix snapshots" },							"SWSSNAPSHOT_OPEN",	     OpenSnapshotsDialog,  NULL, 0, SnapshotsWindowEnabled },
@@ -740,6 +796,11 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Select current snapshot track(s)" },			"SWSSNAPSHOT_SEL",	     SelSnapshotTracks,	   "Select current snapshot's track(s)", },
 	{ { DEFACCEL, "SWS: Save over current snapshot" },					"SWSSNAPSHOT_SAVE",	     SaveCurSnapshot,	   "Save over current snapshot", },
 	{ { DEFACCEL, "SWS: Recall current snapshot" },						"SWSSNAPSHOT_GET",	     GetCurSnapshot,       "Recall current snapshot", },
+	{ { DEFACCEL, "SWS: Copy current snapshot" },						"SWSSNAPSHOT_COPY",	     CopyCurSnapshot,      "Copy current snapshot", },
+	{ { DEFACCEL, "SWS: Copy full mix snapshot" },						"SWSSNAPSHOT_COPYNEW",   CopyNewSnapshot,      "Copy full mix", },
+	{ { DEFACCEL, "SWS: Paste snapshot to project" },					"SWSSNAPSHOT_PASTE",	 PasteSnapshot,        "Paste snapshot", },
+	{ { DEFACCEL, "SWS: Paste snapshot to list" },						"SWSSNAPSHOT_PASTELIST", PasteSnapshotToList,  "Paste snapshot to list", },
+
 	{ { DEFACCEL, "SWS: New snapshot and edit name" },					"SWSSNAPSHOT_NEWEDIT",   NewSnapshotEdit,	   NULL, },
 	{ { DEFACCEL, "SWS: Save as snapshot 1" },							"SWSSNAPSHOT_SAVE1",	 SaveSnapshot,         NULL, 1 },
 	{ { DEFACCEL, "SWS: Save as snapshot 2" },							"SWSSNAPSHOT_SAVE2",	 SaveSnapshot,         NULL, 2 },
@@ -772,134 +833,27 @@ static COMMAND_T g_commandTable[] =
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	LineParser lp(false);
-	if (lp.parse(line) || lp.getnumtokens() < 1)
-		return false;
-	if (strcmp(lp.gettoken_str(0), "<SWSSNAPSHOT") != 0)
-		return false; // only look for <SWSSNAPSHOT lines
-
-	int time = 0;
-	if (lp.getnumtokens() == 6) // Old-style time, convert
+	WDL_String chunk;
+	if (GetChunkFromProjectState("<SWSSNAPSHOT", &chunk, line, ctx))
 	{
-#ifdef _WIN32
-		FILETIME ft;
-		SYSTEMTIME st;
-		ft.dwHighDateTime = strtoul(lp.gettoken_str(4), NULL, 10);
-		ft.dwLowDateTime  = strtoul(lp.gettoken_str(5), NULL, 10);
-		FileTimeToSystemTime(&ft, &st);
-		struct tm pt;
-		pt.tm_sec  = st.wSecond;
-		pt.tm_min  = st.wMinute;
-		pt.tm_hour = st.wHour;
-		pt.tm_mday = st.wDay;
-		pt.tm_mon  = st.wMonth - 1;
-		pt.tm_year = st.wYear - 1900;
-		pt.tm_isdst = -1;
-		time = (int)mktime(&pt);
-#endif
+		g_ss.Get()->m_snapshots.Add(new Snapshot(chunk.Get()));
+		g_pSSWnd->Update();
+		return true;
 	}
-	else
-		time = lp.gettoken_int(4);
-
-	Snapshot* s = g_ss.Get()->m_snapshots.Add(new Snapshot(lp.gettoken_int(2), lp.gettoken_int(3), lp.gettoken_str(1), time));
-
-	char linebuf[4096];
-	while(true)
-	{
-		if (!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
-		{
-			if (lp.gettoken_str(0)[0] == '>')
-				break;
-			if (strcmp("TRACK", lp.gettoken_str(0)) == 0)
-				s->m_tracks.Add(new TrackSnapshot(&lp));
-			else if (s->m_tracks.GetSize())
-			{
-				if (strcmp("SEND", lp.gettoken_str(0)) == 0)
-					s->m_tracks.Get(s->m_tracks.GetSize()-1)->m_sends.Add(new SendSnapshot(&lp));
-				else if (strcmp("FX", lp.gettoken_str(0)) == 0) // "One liner"
-					s->m_tracks.Get(s->m_tracks.GetSize()-1)->m_fx.Add(new FXSnapshot(&lp));
-				else if (strcmp("<FX", lp.gettoken_str(0)) == 0) // Multiple lines
-				{
-					FXSnapshot* fx = s->m_tracks.Get(s->m_tracks.GetSize()-1)->m_fx.Add(new FXSnapshot(&lp));
-					while(true)
-						if (!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
-						{
-							if (lp.gettoken_str(0)[0] == '>')
-								break;
-							fx->RestoreParams(lp.gettoken_str(0));
-						}
-						else
-							break;
-				}
-				else if (strcmp("<FXCHAIN", lp.gettoken_str(0)) == 0) // Multiple lines
-				{
-					TrackSnapshot* ts = s->m_tracks.Get(s->m_tracks.GetSize()-1);
-					ts->m_sFXChain.Set("");
-					ts->m_sFXChain.Append(linebuf);
-					int iDepth = 1;
-					while(iDepth)
-					{
-						if (!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
-						{
-							if (lp.gettoken_str(0)[0] == '>')
-								iDepth--;
-							else if (lp.gettoken_str(0)[0] == '<')
-								iDepth++;
-							ts->m_sFXChain.Append("\n");
-							ts->m_sFXChain.Append(linebuf);
-						}
-						else
-							break;
-					}
-				}
-			}
-		}
-		else
-			break;
-	}
-	g_pSSWnd->Update();
-	return true;
+	return false;
 }
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	char str[4096];
-
+	WDL_String chunk, line;
 	for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
 	{
 		Snapshot* ss = g_ss.Get()->m_snapshots.Get(i);
-		ctx->AddLine("<SWSSNAPSHOT \"%s\" %d %d %d", ss->m_cName, ss->m_iSlot, ss->m_iMask, ss->m_time); 
-		for (int j = 0; j < ss->m_tracks.GetSize(); j++)
-		{
-			TrackSnapshot* ts = ss->m_tracks.Get(j);
-			ctx->AddLine(ts->ItemString(str, 4096));
-			for (int k = 0; k < ts->m_sends.GetSize(); k++)
-				ctx->AddLine(ts->m_sends.Get(k)->ItemString(str, 4096));
-			for (int k = 0; k < ts->m_fx.GetSize(); k++)
-			{
-				bool bDone;
-				FXSnapshot* fx = ts->m_fx.Get(k);
-				do
-					ctx->AddLine(fx->ItemString(str, 4096, &bDone));
-				while (!bDone);
-			}
-			if (ts->m_sFXChain.GetLength())
-			{
-				const char* cFXString = ts->m_sFXChain.Get();
-				const char* cNewLine = strchr(cFXString, '\n');
-				while (cNewLine)
-				{
-					int iLineLen = cNewLine - cFXString;
-					strncpy(str, cFXString, iLineLen);
-					str[iLineLen] = 0;
-					ctx->AddLine(str);
-					cFXString = cNewLine+1;
-					cNewLine = strchr(cFXString, '\n');
-				}
-				ctx->AddLine(cFXString); // Add the remainder (this will always be a >)
-			}
-		}
-		ctx->AddLine(">");
+		ss->GetChunk(&chunk);
+		char* str = chunk.Get();
+		int iPos = 0;
+		while(GetChunkLine(chunk.Get(), &line, &iPos, false))
+			ctx->AddLine(line.Get());
 	}
 }
 

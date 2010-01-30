@@ -1,5 +1,5 @@
 /******************************************************************************
-/ TrackFX.h
+/ TrackSends.h
 /
 / Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
@@ -25,7 +25,36 @@
 /
 ******************************************************************************/
 
+
 #pragma once
 
-void GetFXChain(MediaTrack* tr, WDL_String* str);
-void SetFXChain(MediaTrack* tr, const char* str);
+class TrackSend
+{
+public:
+	TrackSend(GUID* guid, const char* str);
+	TrackSend(GUID* guid, int iMode, double dVol, double dPan, int iMute, int iMono, int iPhase, int iSrc, int iDest, int iMidi, int iAuto);
+	TrackSend(const char* str);
+	TrackSend(TrackSend& ts);
+	WDL_String* AuxRecvString(MediaTrack* srcTr, WDL_String* str);
+	void GetChunk(WDL_String* chunk);
+	const GUID* GetGuid() { return &m_destGuid; }
+
+private:
+	GUID m_destGuid;
+	WDL_String m_str;
+};
+
+class TrackSends
+{
+public:
+	TrackSends() { }
+	TrackSends(TrackSends& ts);
+	~TrackSends();
+	void Build(MediaTrack* tr);
+	void UpdateReaper(MediaTrack* tr);
+	void GetChunk(WDL_String* chunk);
+
+// TODO these should be private
+	WDL_PtrList<WDL_String> m_hwSends;
+	WDL_PtrList<TrackSend> m_sends;
+};

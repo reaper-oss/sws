@@ -1,7 +1,7 @@
 /******************************************************************************
 / Freeze.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -47,6 +47,16 @@ void MEPWIXOff(COMMAND_T* = NULL)    { int* p = (int*)GetConfigVar("envattach");
 
 bool IsOnRecStopMoveCursor(COMMAND_T*)  { int* p = (int*)GetConfigVar("itemclickmovecurs"); return p && (*p & 16); }
 void TogOnRecStopMoveCursor(COMMAND_T*) { int* p = (int*)GetConfigVar("itemclickmovecurs"); if (p) *p ^= 16; }
+
+void SwitchGridSpacing(COMMAND_T*)
+{
+	// TODO
+	const double dSpacings[] = { 0.0208331, };
+	double div = *(double*)GetConfigVar("projgriddiv");
+	char debugStr[64];
+	sprintf(debugStr, "Div is %.14f\n", div);
+	OutputDebugString(debugStr);
+}
 
 void UnselOnTracks(COMMAND_T* = NULL)
 {
@@ -1614,6 +1624,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Unselect master track" },								  "SWS_UNSELMASTER",    UnselMaster,      NULL, },
 	{ { DEFACCEL, "SWS: Toggle master track select" },							  "SWS_TOGSELMASTER",   TogSelMaster,     NULL, },
 	{ { DEFACCEL, "SWS: Toggle move cursor to end of recorded media on stop" },   "SWS_TOGRECMOVECUR",  TogOnRecStopMoveCursor, NULL, 0, IsOnRecStopMoveCursor },
+//TODO	{ { DEFACCEL, "SWS: Switch grid spacing" },                                   "SWS_GRIDSPACING",    SwitchGridSpacing, NULL },
 
 	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 1" },       "SWS_SAVESELITEMS1",  SaveSelTrackSelItems,	NULL, 0 },
 	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 2" },       "SWS_SAVESELITEMS2",  SaveSelTrackSelItems,	NULL, 1 },

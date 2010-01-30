@@ -1,7 +1,7 @@
 /******************************************************************************
 / TrackFX.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,81 +25,62 @@
 /
 ******************************************************************************/
 
-
 #include "stdafx.h"
 #include "TrackFX.h"
 
 // Functions for getting/setting track FX chains
-
-TrackFX::TrackFX(MediaTrack* tr):m_pTr(tr),m_cTrackState(NULL),m_cFXString(NULL),m_cStateSuffix(NULL)
+void GetFXChain(MediaTrack* tr, WDL_String* str)
 {
-}
+	str->Set(""); // "Empty"
+	char* chunk = SWS_GetSetObjectState(tr, NULL);
+	int pos = 0;
+	int iDepth = 0;
+	WDL_String line;
 
-TrackFX::~TrackFX()
-{
-	// Keep the buffer around, maybe we'll add functions later that ref the same string
-	FreeHeapPtr(m_cTrackState);
-}
-
-const char* TrackFX::GetFXString()
-{
-	UpdateState();
-	return m_cFXString;
-}
-
-void TrackFX::SetFXString(const char* cFX)
-{
-	UpdateState();
-	if (strcmp(cFX, m_cFXString) == 0)
-		return;
-
-	char* cNewState = new char[strlen(m_cTrackState) + strlen(cFX) + strlen(m_cStateSuffix) + 3];
-	
-	strcpy(cNewState, m_cTrackState);
-	strcat(cNewState, "\n");
-	strcat(cNewState, cFX);
-	strcat(cNewState, "\n");
-	strcat(cNewState, m_cStateSuffix);
-
-	GetSetObjectState(m_pTr, cNewState);
-	
-	delete [] cNewState;
-}
-
-void TrackFX::UpdateState()
-{
-	FreeHeapPtr(m_cTrackState);
-	m_cTrackState = GetSetObjectState(m_pTr, NULL);
-	
-	if (!m_cTrackState || !strlen(m_cTrackState))
+	while (GetChunkLine(chunk, &line, &pos, true))
 	{
-		m_cFXString = NULL;
-		m_cStateSuffix = NULL;
-		return;
+		if (strncmp(line.Get(), "<FXCHAIN", 8) == 0)
+		{
+			str->Set(line.Get());
+			iDepth = 1;
+		}
+		else if (iDepth)
+		{
+			str->Append(line.Get());
+			if (line.Get()[0] == '<')
+				iDepth++;
+			else if (line.Get()[0] == '>')
+				iDepth--;
+		}
 	}
 
-	// Parse out the string into the member vars
-	m_cFXString = strstr(m_cTrackState, "<FXCHAIN");
-	if (!m_cFXString)
-	{
-		m_cStateSuffix = strrchr(m_cTrackState, '>');
-		m_cFXString = m_cStateSuffix - 1;
-		*m_cFXString = 0;
-		return;
-	}
-	else
-		m_cFXString[-1] = 0;
+	SWS_FreeHeapPtr(chunk);
+}
 
-	int iDepth = 1;
-	char* pStr = m_cFXString + 8;
-	while (iDepth)
+void SetFXChain(MediaTrack* tr, const char* str)
+{
+	WDL_String newChunk, line;
+	char* chunk = SWS_GetSetObjectState(tr, NULL);
+	int pos = 0;
+	int iDepth = 0;
+
+	// Fill new chunk with everything except the FX chain that may or may not already exist
+	while (GetChunkLine(chunk, &line, &pos, true))
 	{
-		if (*pStr == '<')
-			iDepth++;
-		else if (*pStr == '>')
-			iDepth--;
-		pStr++;
+		if (strncmp(line.Get(), "<FXCHAIN", 8) == 0)
+			iDepth = 1;
+		else if (iDepth)
+		{
+			if (line.Get()[0] == '<')
+				iDepth++;
+			else if (line.Get()[0] == '>')
+				iDepth--;
+		}
+		else
+			newChunk.Append(line.Get());
 	}
-	pStr[0] = 0;
-	m_cStateSuffix = pStr + 1;
+	SWS_FreeHeapPtr(chunk);
+
+	AppendChunkLine(&newChunk, str);
+	SWS_GetSetObjectState(tr, newChunk.Get());
 }

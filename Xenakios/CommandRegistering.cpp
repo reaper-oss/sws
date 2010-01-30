@@ -1,7 +1,7 @@
 /******************************************************************************
 / CommandRegistering.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), original code by Xenakios
+/ Copyright (c) 2010 Tim Payne (SWS), original code by Xenakios
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -241,7 +241,9 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor left 10 pixels" }, "XENAKIOS_MOVECUR10PIX_LEFT", DoMoveCursor10pixLeft,	"Move cursor left 12 pixels", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor left 10 pixels, creating time selection" }, "XENAKIOS_MOVECUR10PIX_LEFTCTS", DoMoveCursor10pixLeftCreateSel,	"Move cursor left 12 pixels, creating time selection", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor right 10 pixels, creating time selection" }, "XENAKIOS_MOVECUR10PIX_RIGHTCTS", DoMoveCursor10pixRightCreateSel,	"Move cursor right 12 pixels, creating time selection", },
-	{ { DEFACCEL, "Xenakios/SWS: Preview selected media item" }, "XENAKIOS_ITEMASPCM1", DoPreviewItem,	"Preview selected media item", },
+	{ { DEFACCEL, "Xenakios/SWS: Preview selected media item" }, "XENAKIOS_ITEMASPCM1", DoPreviewItem,	"Preview selected media item", 0 },
+	{ { DEFACCEL, "Xenakios/SWS: Stop current media item preview" }, "SWS_STOPPREVIEW", DoPreviewItem, NULL, 1 },
+	{ { DEFACCEL, "Xenakios/SWS: Preview selected media item (toggle)" }, "SWS_PREVIEWTOGGLE", DoPreviewItem, NULL, 2 },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor right configured pixels" }, "XENAKIOS_MOVECURRIGHTCONF", DoMoveCurConfPixRight,	"Move cursor right configured pixels", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor left configured pixels" }, "XENAKIOS_MOVECURRLEFTCONF", DoMoveCurConfPixLeft,	"Move cursor left configured pixels", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor right configured pixels, creating time selection" }, "XENAKIOS_MOVECURRIGHTCONFCTS", DoMoveCurConfPixRightCts,	"Move cursor right configured pixels,, creating time selection", },

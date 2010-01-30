@@ -1,7 +1,7 @@
 /******************************************************************************
 / Version.h
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,7 +26,7 @@
 / Auto build # increment code from MS Knowledge base article 237870
 ******************************************************************************/
 
-#define FILE_VERSION			1,4,1,1
-#define PRODUCT_VERSION			1,4,1,1
-#define FILE_VERSION_STR		"1, 4, 1, 1\0"
-#define PRODUCT_VERSION_STR		"1, 4, 1, 1\0"
+#define FILE_VERSION			1,4,1,2
+#define PRODUCT_VERSION			1,4,1,2
+#define FILE_VERSION_STR		"1, 4, 1, 2\0"
+#define PRODUCT_VERSION_STR		"1, 4, 1, 2\0"

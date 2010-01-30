@@ -1,5 +1,5 @@
 /******************************************************************************
-/ TrackFX.h
+/ SnapshotMerge.h
 /
 / Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
@@ -27,5 +27,24 @@
 
 #pragma once
 
-void GetFXChain(MediaTrack* tr, WDL_String* str);
-void SetFXChain(MediaTrack* tr, const char* str);
+class SWS_SSMergeItem
+{
+public:
+	SWS_SSMergeItem(TrackSnapshot* ts, int idx, MediaTrack* tr):m_iIndex(idx),m_ts(ts),m_destTr(tr) {}
+	TrackSnapshot* m_ts;
+	MediaTrack* m_destTr;
+	int	m_iIndex;
+};
+
+class SWS_SnapshotMergeView : public SWS_ListView
+{
+public:
+	SWS_SnapshotMergeView(HWND hwndList, HWND hwndEdit);
+
+protected:
+	int OnItemSort(LPARAM lParam1, LPARAM lParam2);
+	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
+	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
+};
+
+void MergeSnapshots(Snapshot* ss);

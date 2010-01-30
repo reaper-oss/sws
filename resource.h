@@ -5,6 +5,7 @@
 #define IDC_LICENSE                     3
 #define IDC_ADD                         3
 #define IDC_PREVIEW                     4
+#define IDC_REMOVE                      4
 #define IDC_ADDGROUP                    5
 #define IDD_CONSOLE                     201
 #define IDD_SNAPS                       202
@@ -20,6 +21,8 @@
 #define IDD_ABOUT                       212
 #define IDD_PROMPT                      213
 #define IDD_MEDIAPOOL                   218
+#define IDD_SSMERGE                     219
+#define IDD_INFO                        220
 #define IDC_LIST                        1001
 #define IDC_EDIT                        1002
 #define IDC_COMBO                       1003
@@ -61,16 +64,15 @@
 #define IDC_CUSTOM                      1039
 #define IDC_INFO                        1039
 #define IDC_GROUPS                      1040
-#define IDC_LIST2                       1044
 #define IDC_FILES                       1045
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        219
+#define _APS_NEXT_RESOURCE_VALUE        221
 #define _APS_NEXT_COMMAND_VALUE         40009
-#define _APS_NEXT_CONTROL_VALUE         1046
+#define _APS_NEXT_CONTROL_VALUE         1049
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

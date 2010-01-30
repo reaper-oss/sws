@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_util.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -348,4 +348,17 @@ char* GetHashString(const char* in, char* out)
 		sprintf(out + i*2, "%02X", (unsigned char)(hash[i] & 0xFF));
 	out[40] = 0;
 	return out;
+}
+
+MediaTrack* GuidToTrack(const GUID* guid)
+{
+	if (memcmp(guid, &GUID_NULL, sizeof(GUID)) == 0)
+		return CSurf_TrackFromID(0, false);
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (memcmp(guid, (GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL), sizeof(GUID)) == 0)
+			return tr;
+	}
+	return NULL;
 }

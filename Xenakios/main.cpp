@@ -1,7 +1,7 @@
 /******************************************************************************
 / main.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), original code by Xenakios
+/ Copyright (c) 2010 Tim Payne (SWS), original code by Xenakios
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -481,7 +481,11 @@ void ItemPreviewSlice()
 	}
 }
 
-void DoPreviewItem(COMMAND_T*)
+// t->user:
+// 0: start
+// 1: stop
+// 2: toggle
+void DoPreviewItem(COMMAND_T* t)
 {
 	if (g_itemPreviewPlaying)
 	{
@@ -489,7 +493,12 @@ void DoPreviewItem(COMMAND_T*)
 		StopPreview(&g_ItemPreview);
 		g_itemPreviewPlaying = false;
 		delete g_ItemPreview.src;
+		if (t->user == 2)
+			return;
 	}
+
+	if (t->user == 1)
+		return;
 			
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
@@ -524,6 +533,17 @@ void DoPreviewItem(COMMAND_T*)
 				return;
 			}
 		}
+	}
+}
+
+void DoStopPreviewItem(COMMAND_T*)
+{
+	if (g_itemPreviewPlaying)
+	{
+		// preview called while preview in progress, stopping previous preview...
+		StopPreview(&g_ItemPreview);
+		g_itemPreviewPlaying = false;
+		delete g_ItemPreview.src;
 	}
 }
 

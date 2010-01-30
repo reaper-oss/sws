@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_extension.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,7 +30,6 @@
 #include "Console/Console.h"
 #include "Freeze/Freeze.h"
 #include "MarkerActions/MarkerActions.h"
-#include "ObjectState/TrackFX.h"
 #include "Snapshots/SnapshotClass.h"
 #include "Snapshots/Snapshots.h"
 #include "Zoom.h"
@@ -352,6 +351,7 @@ extern "C"
 		IMPAPI(GetMediaItemNumTakes);
 		IMPAPI(GetMediaItemTake);
 		IMPAPI(GetNumTracks);
+		IMPAPI(GetOutputChannelName);
 		IMPAPI(GetPeaksBitmap);
 		IMPAPI(GetPlayPosition);
 		IMPAPI(GetPlayPosition2);
@@ -366,6 +366,7 @@ extern "C"
 		IMPAPI(GetSetObjectState);
 		IMPAPI(GetSetRepeat);
 		IMPAPI(GetSetTrackSendInfo);
+		IMPAPI(GetSetTrackState);
 		IMPAPI(GetSet_LoopTimeRange);
 		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);

@@ -1,7 +1,7 @@
 /******************************************************************************
 / MarkerList.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -374,7 +374,7 @@ INT_PTR WINAPI doLoadDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 	return 0;
 }
 
-INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{

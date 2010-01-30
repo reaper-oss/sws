@@ -49,7 +49,7 @@ int getSetFXState(int _mode, MediaTrack * _tr, int _fx, int * _value)
 	{
 		WDL_String fxout;
 
-		char* cData = GetSetObjectState(_tr, NULL);
+		char* cData = SWS_GetSetObjectState(_tr, NULL);
 		if (cData)
 		{
 			WDL_String curLine;
@@ -85,7 +85,7 @@ int getSetFXState(int _mode, MediaTrack * _tr, int _fx, int * _value)
 						// Get only
 						if (!_value)
 						{
-							FreeHeapPtr(cData);
+							SWS_FreeHeapPtr(cData);
 							switch (_mode)
 							{
 								case 1:
@@ -168,12 +168,12 @@ int getSetFXState(int _mode, MediaTrack * _tr, int _fx, int * _value)
 			}
 			while (pEOL);
 
-			FreeHeapPtr(cData);
+			SWS_FreeHeapPtr(cData);
 
 			// Sets the new state
 			if (_value && fxout.GetLength())
 			{
-				GetSetObjectState(_tr, fxout.Get());
+				SWS_GetSetObjectState(_tr, fxout.Get());
 			}
 		}
 	}

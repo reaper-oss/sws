@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnapshotClass.h
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,10 +33,11 @@ class FXSnapshot
 {
 public:
     FXSnapshot(MediaTrack* tr, int fx);
+	FXSnapshot(FXSnapshot& fx);
     FXSnapshot(LineParser* lp);
     ~FXSnapshot();
 
-	char* ItemString(char* str, int maxLen, bool* bDone);
+	void GetChunk(WDL_String* chunk);
     void RestoreParams(char* str);
     int UpdateReaper(MediaTrack* tr, bool* bMatched, int num);
 	bool Exists(MediaTrack* tr);
@@ -47,40 +48,20 @@ public:
     char m_cName[256];
 };
 
-class SendSnapshot
-{
-public:
-    SendSnapshot(MediaTrack* tr, int send);
-    SendSnapshot(LineParser* lp);
-    ~SendSnapshot();
-
-    char* ItemString(char* str, int maxLen);
-    int UpdateReaper(MediaTrack* tr, bool* bMatched, int num);
-	bool Exists(MediaTrack* tr);
-
-    GUID m_dest;
-    double m_dVol;
-    double m_dPan;
-    bool m_bMute;
-    int m_iMode;
-    int m_iSrcChan;
-    int m_iDstChan;
-    int m_iMidiFlags;
-};
-
-
 class TrackSnapshot
 {
 public:
     TrackSnapshot(MediaTrack* tr, int mask);
+	TrackSnapshot(TrackSnapshot& ts);
     TrackSnapshot(LineParser* lp);
     ~TrackSnapshot();
 
-    char* ItemString(char* str, int maxLen);
-    bool UpdateReaper(int mask, int* sendErr, int* fxErr, bool bSelOnly);
+    bool UpdateReaper(int mask, int* fxErr, bool bSelOnly);
 	bool Cleanup();
-	MediaTrack* GetTrack();
+	void GetChunk(WDL_String* chunk);
+	void GetDetails(WDL_String* details, int iMask);
 
+// TODO these should be private
 	GUID m_guid;
     double m_dVol;
     double m_dPan;
@@ -89,9 +70,10 @@ public:
     int m_iFXEn;
 	int m_iVis;
 	int m_iSel;
-    WDL_PtrList<SendSnapshot> m_sends;
     WDL_PtrList<FXSnapshot> m_fx;
 	WDL_String m_sFXChain;
+	TrackSends m_sends;
+	WDL_String m_sName;
 };
 
 // Mask:
@@ -106,11 +88,18 @@ public:
 #define SEL_MASK		0x100
 #define FXCHAIN_MASK	0x200
 #define ALL_MASK        0xFFF // large enough for forward compat
+#define MIX_MASK		(VOL_MASK | PAN_MASK | MUTE_MASK | SOLO_MASK | FXCHAIN_MASK | SENDS_MASK)
+
+// Map controls to mask elements
+const int cSSMasks[] = { VOL_MASK, PAN_MASK, MUTE_MASK, SOLO_MASK, SENDS_MASK, VIS_MASK,       SEL_MASK,      FXCHAIN_MASK };
+const int cSSCtrls[] = { IDC_VOL,  IDC_PAN,  IDC_MUTE,  IDC_SOLO,  IDC_SENDS,  IDC_VISIBILITY, IDC_SELECTION, IDC_FXCHAIN }; 
+#define MASK_CTRLS 8
 
 class Snapshot
 {
 public:
     Snapshot(int slot, int mask, bool bSelOnly, char* name);   // For capture
+	Snapshot(const char* chunk); // For project load
     Snapshot(int slot, int mask, char* name, int time);        // For project load
     ~Snapshot();
     bool UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis);
@@ -121,11 +110,15 @@ public:
 	void SelectTracks();
 	int Find(MediaTrack* tr);
 	static void RegisterGetCommand(int iSlot);
+	char* GetTimeString(char* str, int iStrMax, bool bDate);
+	void GetChunk(WDL_String* chunk);
+	void GetDetails(WDL_String* details);
 
-    char* m_cName;
+// TODO these should be private
+	char* m_cName;
     int m_iSlot;
     int m_iMask;
-    int m_time;
+	int m_time;
     
     WDL_PtrList<TrackSnapshot> m_tracks;
 };

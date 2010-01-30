@@ -1,7 +1,7 @@
 /******************************************************************************
 / MediaDialog.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), original code by Xenakios
+/ Copyright (c) 2010 Tim Payne (SWS), original code by Xenakios
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -94,17 +94,19 @@ void GetAllProjectTakes(vector<t_project_take>& ATakeList)
 
 				if (strcmp(ThePCM->GetType(),"SECTION")!=0)
 				{
-					TakeBlah.FileName=ThePCM->GetFileName();
-				} else
+					if (ThePCM->GetFileName())
+						TakeBlah.FileName=ThePCM->GetFileName();
+				}
+				else
 				{
 					PCM_source *SectionFilePCM=ThePCM->GetSource();
 					TakeBlah.FileName=SectionFilePCM->GetFileName();
 				}
 				if (strcmp(ThePCM->GetType(),"MIDI")==0)
-					{
-						if (ThePCM->GetFileName()==0)
-							pureMIDItake=true;
-					}
+				{
+					if (ThePCM->GetFileName()==0)
+						pureMIDItake=true;
+				}
 				TakeBlah.TheTake=CurTake;
 				TakeBlah.FileMissing=false;
 				if (!pureMIDItake)

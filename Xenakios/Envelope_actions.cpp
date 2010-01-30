@@ -1,7 +1,7 @@
 /******************************************************************************
 / Envelope_actions.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), original code by Xenakios
+/ Copyright (c) 2010 Tim Payne (SWS), original code by Xenakios
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -96,11 +96,11 @@ public:
 			if (pcurenv)
 			{
 				char *buf;
-				buf=GetSetObjectState(pcurenv,0);
+				buf=SWS_GetSetObjectState(pcurenv,0);
 				if (buf)
 				{
 					this->ParseState(buf);
-					FreeHeapPtr(buf);
+					SWS_FreeHeapPtr(buf);
 				};
 			
 			
@@ -131,7 +131,7 @@ public:
 			void *pcurenv= GetSelectedTrackEnvelope(Enum_Projects(-1,0,0));
 			if (pcurenv)
 			{
-				GetSetObjectState(pcurenv,(char*)m_newenvstate.str().c_str());
+				SWS_GetSetObjectState(pcurenv,(char*)m_newenvstate.str().c_str());
 			}
 		}
 	}

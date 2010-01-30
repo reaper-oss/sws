@@ -97,7 +97,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Building installer and copying to c:\dev\sws-deploy..."
-				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files (x86)\reaper\plugins&quot;&#x0D;&#x0A;&quot;c:\program files\nsis\makensis.exe&quot; /v2 $(SolutionName).nsi&#x0D;&#x0A;copy /y &quot;$(OutDir)\$(SolutionName).exe&quot; &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
+				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files (x86)\reaper\plugins&quot;&#x0D;&#x0A;&quot;c:\bin\nsis\makensis.exe&quot; /v2 $(SolutionName).nsi&#x0D;&#x0A;copy /y &quot;$(OutDir)\$(SolutionName).exe&quot; &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -179,7 +179,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying x64 to c:\dev\sws-deploy"
-				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files\reaper (x64)\plugins&quot;&#x0D;&#x0A;copy /y $(OutDir)\$(TargetFilename) &quot;c:\dev\sws-deploy&quot;"
+				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files\reaper (x64)\plugins&quot;&#x0D;&#x0A;copy /y $(OutDir)\$(TargetFilename) &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -442,6 +442,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ObjectState\ObjectState.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ProjectMgr.cpp"
 				>
 			</File>
@@ -491,6 +495,10 @@
 			</File>
 			<File
 				RelativePath=".\Snapshots\SnapshotClass.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Snapshots\SnapshotMerge.cpp"
 				>
 			</File>
 			<File
@@ -574,6 +582,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ObjectState\TrackSends.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Zoom.cpp"
 				>
 			</File>
@@ -640,6 +652,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\ObjectState\ObjectState.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ProjectMgr.h"
 				>
 			</File>
@@ -652,11 +668,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Program Files\REAPER\reaper_plugin_functions.h"
+				RelativePath="..\..\Program Files (x86)\REAPER\reaper_plugin_functions.h"
 				>
 			</File>
 			<File
 				RelativePath=".\Snapshots\SnapshotClass.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Snapshots\SnapshotMerge.h"
 				>
 			</File>
 			<File
@@ -701,6 +721,10 @@
 			</File>
 			<File
 				RelativePath=".\TrackList\TracklistFilter.h"
+				>
+			</File>
+			<File
+				RelativePath=".\ObjectState\TrackSends.h"
 				>
 			</File>
 			<File

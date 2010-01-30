@@ -1,7 +1,7 @@
 /******************************************************************************
 / ProjectMgr.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,6 +32,11 @@
 // Globals
 static SWSProjConfig<WDL_PtrList<WDL_String> > g_relatedProjects;
 
+#define DELWINDOW_POS_KEY "DelRelatedProjectWindowPosition"
+
+// ****************************************************************************
+// **** Project list  *********************************************************
+// ****************************************************************************
 void SaveProjectList(COMMAND_T*)
 {
 	int i = 0;
@@ -48,7 +53,6 @@ void SaveProjectList(COMMAND_T*)
 
 	char cPath[256];
 	GetProjectPath(cPath, 256);
-//	ofn.lpstrDefExt = "RPL";
 	if (BrowseForSaveFile("Select project list", cPath, NULL, "Reaper Project List (*.RPL)\0*.RPL\0All Files\0*.*\0", filename, 256))
 	{
 		FILE* f = fopen(filename, "w");
@@ -116,23 +120,26 @@ void OpenProjectList(COMMAND_T*)
 	}
 }
 
+// ****************************************************************************
+// **** Related projects ******************************************************
+// ****************************************************************************
+
 void AddRelatedProject(COMMAND_T* = NULL)
 {
-	// TODO fix
-	if (g_relatedProjects.Get()->GetSize() >= 5)
-	{
-		MessageBox(g_hwndParent, "Too many related projects.", "SWS Add Related Project", MB_OK);
-		return;
-	}
-
 	char cPath[256];
 	GetProjectPath(cPath, 256);
 
-	char* filename = BrowseForFiles("Select related project", cPath, NULL, false, "Reaper Project (*.RPP)\0*.RPP");
-	if (filename)
+	char* filename = BrowseForFiles("Select related project(s)", cPath, NULL, false, "Reaper Project (*.RPP)\0*.RPP");
+	char* pBuf = filename;
+	while(filename[0])
 	{
 		g_relatedProjects.Get()->Add(new WDL_String(filename));
-		free(filename);
+		filename += strlen(filename) +1;
+	}
+	if (pBuf)
+	{
+		free(pBuf);
+		Undo_OnStateChangeEx("Add related project(s)", UNDO_STATE_MISCCFG, -1);
 	}
 }
 
@@ -180,6 +187,76 @@ void OpenRelatedProject(COMMAND_T* pCmd)
 	*pNewProjOpts = iNewProjOpts;
 }
 
+static int GetLoadCommandID(int iSlot, bool bCreateNew)
+{
+	static int iLastRegistered = 0;
+	if (iSlot > iLastRegistered && bCreateNew)
+	{
+		COMMAND_T* cmd = new COMMAND_T;
+		memset(&cmd->accel.accel, 0, sizeof(cmd->accel.accel));
+		const char* desc = "SWS: Open related project %d";
+		cmd->accel.desc = new char[strlen(desc) + 5];
+		sprintf((char*)cmd->accel.desc, desc, iSlot+1);
+		const char* id = "SWS_OPENRELATED%d";
+		cmd->id = new char[strlen(id) + 5];
+		sprintf(cmd->id, id, iSlot+1);
+		cmd->doCommand = OpenRelatedProject;
+		cmd->menuText = NULL;
+		cmd->user = iSlot;
+		cmd->getEnabled = NULL;
+		iLastRegistered = iSlot;
+		SWSRegisterCommand(cmd);
+		return cmd->accel.accel.cmd;
+	}
+
+	return SWSGetCommandID(OpenRelatedProject, iSlot);
+}
+
+static INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			HWND list = GetDlgItem(hwndDlg, IDC_COMBO);
+			WDL_UTF8_HookComboBox(list);
+			for (int i = 0; i < g_relatedProjects.Get()->GetSize(); i++)
+				SendMessage(list, CB_ADDSTRING, 0, (LPARAM)g_relatedProjects.Get()->Get(i)->Get());
+            SendMessage(list, CB_SETCURSEL, 0, 0);
+			SetWindowText(hwndDlg, "SWS Delete Related Project");
+			RestoreWindowPos(hwndDlg, DELWINDOW_POS_KEY);
+			return 0;
+		}
+		case WM_COMMAND:
+			switch(LOWORD(wParam))
+			{
+				case IDOK:
+				{
+					HWND list = GetDlgItem(hwndDlg, IDC_COMBO);
+					int iList = (int)SendMessage(list, CB_GETCURSEL, 0, 0);
+					if (iList >= 0 && iList < g_relatedProjects.GetSize())
+						g_relatedProjects.Get()->Delete(iList, true);
+					Undo_OnStateChangeEx("Delete related project", UNDO_STATE_MISCCFG, -1);
+				}
+				// Fall through to cancel to save/end
+				case IDCANCEL:
+					SaveWindowPos(hwndDlg, DELWINDOW_POS_KEY);
+					EndDialog(hwndDlg, 0);
+					break;
+			}
+			break;
+	}
+	return 0;
+}
+
+void DelRelatedProject(COMMAND_T*)
+{
+	if (!g_relatedProjects.Get()->GetSize())
+		MessageBox(g_hwndParent, "No related projects to delete", "SWS Delete Related Project", MB_OK);
+	else
+		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_LOAD) ,g_hwndParent, doDeleteDialog);
+}
+
 void LastProjectTab(COMMAND_T*)
 {
 	int iNumProjects = 0;
@@ -225,13 +302,10 @@ static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS: Save list of open projects" },	"SWS_PROJLISTSAVE",		SaveProjectList,		"Save list of open projects...", },
 	{ { DEFACCEL, "SWS: Open projects from list" },		"SWS_PROJLISTSOPEN",	OpenProjectList,		"Open projects from list...", },
-	{ { DEFACCEL, "SWS: Add related project" },			"SWS_ADDRELATEDPROJ",	AddRelatedProject,		"Add related project...", },
+	{ { DEFACCEL, "SWS: Add related project(s)" },		"SWS_ADDRELATEDPROJ",	AddRelatedProject,		"Add related project(s)...", },
+	{ { DEFACCEL, "SWS: Delete related project" },		"SWS_DELRELATEDPROJ",	DelRelatedProject,		"Delete related project...", },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, "SWS: Open related project 1" },		"SWS_OPENRELATED1",		OpenRelatedProject,		"(related projects list)", 0 },
-	{ { DEFACCEL, "SWS: Open related project 2" },		"SWS_OPENRELATED2",		OpenRelatedProject,		NULL, 1 },
-	{ { DEFACCEL, "SWS: Open related project 3" },		"SWS_OPENRELATED3",		OpenRelatedProject,		NULL, 2 },
-	{ { DEFACCEL, "SWS: Open related project 4" },		"SWS_OPENRELATED4",		OpenRelatedProject,		NULL, 3 },
-	{ { DEFACCEL, "SWS: Open related project 5" },		"SWS_OPENRELATED5",		OpenRelatedProject,		NULL, 4 },
 
 	{ { DEFACCEL, "SWS: Switch to last project tab" },	"SWS_LASTPROJTAB",		LastProjectTab,			NULL, },
 	{ { DEFACCEL, "SWS: Switch to first project tab" },	"SWS_FIRSTPROJTAB",		FirstProjectTab,		NULL, },
@@ -245,24 +319,43 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 		AddSubMenu(hMenu, SWSCreateMenu(g_commandTable), "SWS Project management", 40897);
 	else if (flag == 1)
 	{
-		int iPos;
-		hMenu = FindMenuItem(hMenu, g_commandTable[g_iORPCmdIndex].accel.accel.cmd, &iPos);
+		// Delete all related project entries and regenerate
+		int iFirstPos;
+		hMenu = FindMenuItem(hMenu, g_commandTable[g_iORPCmdIndex].accel.accel.cmd, &iFirstPos);
+
 		if (hMenu)
 		{
+			int iSlot = 0;
+			int iPos;
+			while (true)
+			{
+				int iCmd = GetLoadCommandID(iSlot, false);
+				if (iCmd)
+				{
+					if (FindMenuItem(hMenu, iCmd, &iPos))
+						DeleteMenu(hMenu, iPos, MF_BYPOSITION);
+					else
+						break;
+				}
+				else
+					break;
+				iSlot++;
+			}
+
 			if (!g_relatedProjects.Get()->GetSize())
 			{
 				MENUITEMINFO mi={sizeof(MENUITEMINFO),};
-				mi.fMask = MIIM_TYPE | MIIM_STATE;
+				mi.fMask = MIIM_TYPE | MIIM_STATE | MIIM_ID;
 				mi.fType = MFT_STRING;
 				mi.fState = MFS_GRAYED;
 				mi.dwTypeData = g_commandTable[g_iORPCmdIndex].menuText;
-				SetMenuItemInfo(hMenu, iPos, true, &mi);
+				mi.wID = g_commandTable[g_iORPCmdIndex].accel.accel.cmd;
+				InsertMenuItem(hMenu, iFirstPos, true, &mi);
 			}
 			else
 			{
-				for (int i = g_relatedProjects.Get()->GetSize()-1; i >= 0; i--)
-					AddToMenu(hMenu, g_relatedProjects.Get()->Get(i)->Get(), SWSGetCommandID(OpenRelatedProject, i), g_commandTable[g_iORPCmdIndex].accel.accel.cmd);
-				DeleteMenu(hMenu, iPos, MF_BYPOSITION);
+				for (int i = 0; i < g_relatedProjects.Get()->GetSize(); i++)
+					AddToMenu(hMenu, g_relatedProjects.Get()->Get(i)->Get(), GetLoadCommandID(i, true), iFirstPos++, true);
 			}
 		}
 	}

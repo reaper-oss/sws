@@ -1,7 +1,7 @@
 /******************************************************************************
 / Tracklist.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,7 +28,6 @@
 
 #include "stdafx.h"
 #include "../Freeze/Freeze.h"
-#include "../ObjectState/TrackFX.h"
 #include "../Snapshots/SnapshotClass.h"
 #include "../Snapshots/Snapshots.h"
 #include "TracklistFilter.h"

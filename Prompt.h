@@ -1,7 +1,7 @@
 /******************************************************************************
 / Prompt.h
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,5 +25,5 @@
 /
 ******************************************************************************/
 
-
-bool PromptUserForString(const char* cTitle, char* cString, int iMaxChars);
+bool PromptUserForString(HWND hParent, const char* cTitle, char* cString, int iMaxChars);
+void DisplayInfoBox(HWND hParent, const char* cTitle, const char* cInfo);

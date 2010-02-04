@@ -319,6 +319,7 @@ extern "C"
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountSelectedMediaItems);
+		IMPAPI(CountSelectedTracks);
 		IMPAPI(CountTrackEnvelopes);
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
@@ -358,6 +359,7 @@ extern "C"
 		IMPAPI(GetPlayState);
 		IMPAPI(GetProjectPath);
 		IMPAPI(GetSelectedMediaItem);
+		IMPAPI(GetSelectedTrack);
 		IMPAPI(GetSelectedTrackEnvelope);
 		IMPAPI(GetSetEnvelopeState);
 		IMPAPI(GetSetMediaItemInfo);

@@ -28,6 +28,14 @@
 
 #pragma once
 
+class TrackSendFix
+{
+public:
+	TrackSendFix(const GUID* oldGuid, const GUID* newGuid):m_oldGuid(*oldGuid),m_newGuid(*newGuid) { }
+	GUID m_oldGuid;
+	GUID m_newGuid;
+};
+
 class TrackSend
 {
 public:
@@ -38,6 +46,7 @@ public:
 	WDL_String* AuxRecvString(MediaTrack* srcTr, WDL_String* str);
 	void GetChunk(WDL_String* chunk);
 	const GUID* GetGuid() { return &m_destGuid; }
+	void SetGuid(const GUID* guid) { m_destGuid = *guid; }
 
 private:
 	GUID m_destGuid;
@@ -51,7 +60,7 @@ public:
 	TrackSends(TrackSends& ts);
 	~TrackSends();
 	void Build(MediaTrack* tr);
-	void UpdateReaper(MediaTrack* tr);
+	void UpdateReaper(MediaTrack* tr, WDL_PtrList<TrackSendFix>* pFix);
 	void GetChunk(WDL_String* chunk);
 
 // TODO these should be private

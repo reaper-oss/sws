@@ -209,7 +209,7 @@ void RestoreSelTracks(COMMAND_T* = NULL)
 		for (int j = 0; j <= GetNumTracks(); j++)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(j, false);
-			if (memcmp(g_pSelTracks.Get(i), GetSetMediaTrackInfo(tr, "GUID", NULL), sizeof(GUID)) == 0)
+			if (TrackMatchesGuid(tr, g_pSelTracks.Get(i)))
 				GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
 		}
 }

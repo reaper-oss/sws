@@ -30,10 +30,9 @@
 class SWS_SSMergeItem
 {
 public:
-	SWS_SSMergeItem(TrackSnapshot* ts, int idx, MediaTrack* tr):m_iIndex(idx),m_ts(ts),m_destTr(tr) {}
+	SWS_SSMergeItem(TrackSnapshot* ts, MediaTrack* tr):m_ts(ts),m_destTr(tr) {}
 	TrackSnapshot* m_ts;
 	MediaTrack* m_destTr;
-	int	m_iIndex;
 };
 
 class SWS_SnapshotMergeView : public SWS_ListView
@@ -47,4 +46,4 @@ protected:
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 };
 
-void MergeSnapshots(Snapshot* ss);
+bool MergeSnapshots(Snapshot* ss);

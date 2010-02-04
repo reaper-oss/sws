@@ -1,7 +1,7 @@
 /******************************************************************************
 / TrackItemState.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -78,7 +78,7 @@ MediaItem* ItemState::FindItem(MediaTrack* tr)
 	for (int i = 0; i < GetTrackNumMediaItems(tr); i++)
 	{
 		mi = GetTrackMediaItem(tr, i);
-		if (memcmp(&m_guid, GetSetMediaItemInfo(mi, "GUID", NULL), sizeof(GUID)) == 0)
+		if (GuidsEqual(&m_guid, (GUID*)GetSetMediaItemInfo(mi, "GUID", NULL)))
 			return mi;
 	}
 	return NULL;
@@ -227,7 +227,7 @@ void SaveTrack(COMMAND_T*)
 			int j;
 			for (j = 0; j < g_tracks.Get()->GetSize(); j++)
 			{
-				if (memcmp(&g_tracks.Get()->Get(j)->m_guid, GetSetMediaTrackInfo(tr, "GUID", NULL), sizeof(GUID)) == 0)
+				if (TrackMatchesGuid(tr, &g_tracks.Get()->Get(j)->m_guid))
 				{
 					TrackState* ts = g_tracks.Get()->Get(j);
 					g_tracks.Get()->Set(j, new TrackState(tr, false));
@@ -249,7 +249,7 @@ void RestoreTrack(COMMAND_T*)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			// Find the saved track
 			for (int j = 0; j < g_tracks.Get()->GetSize(); j++)
-				if (memcmp(&g_tracks.Get()->Get(j)->m_guid, GetSetMediaTrackInfo(tr, "GUID", NULL), sizeof(GUID)) == 0)
+				if (TrackMatchesGuid(tr, &g_tracks.Get()->Get(j)->m_guid))
 					g_tracks.Get()->Get(j)->Restore(tr, false);
 	}
 	UpdateTimeline();
@@ -263,7 +263,7 @@ void SelItemsWithState(COMMAND_T*)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			// Find the saved track
 			for (int j = 0; j < g_tracks.Get()->GetSize(); j++)
-				if (memcmp(&g_tracks.Get()->Get(j)->m_guid, GetSetMediaTrackInfo(tr, "GUID", NULL), sizeof(GUID)) == 0)
+				if (TrackMatchesGuid(tr, &g_tracks.Get()->Get(j)->m_guid))
 					g_tracks.Get()->Get(j)->SelectItems(tr);
 	}
 	UpdateTimeline();
@@ -279,7 +279,7 @@ void SaveSelOnTrack(COMMAND_T*)
 			// First see if this track is saved already
 			int j;
 			for (j = 0; j < g_tracks.Get()->GetSize(); j++)
-				if (memcmp(&g_tracks.Get()->Get(j)->m_guid, GetSetMediaTrackInfo(tr, "GUID", NULL), sizeof(GUID)) == 0)
+				if (TrackMatchesGuid(tr, &g_tracks.Get()->Get(j)->m_guid))
 				{
 					g_tracks.Get()->Get(j)->AddSelItems(tr);
 					break;
@@ -298,7 +298,7 @@ void RestoreSelOnTrack(COMMAND_T*)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			// Find the saved track
 			for (int j = 0; j < g_tracks.Get()->GetSize(); j++)
-				if (memcmp(&g_tracks.Get()->Get(j)->m_guid, GetSetMediaTrackInfo(tr, "GUID", NULL), sizeof(GUID)) == 0)
+				if (TrackMatchesGuid(tr, &g_tracks.Get()->Get(j)->m_guid))
 					g_tracks.Get()->Get(j)->Restore(tr, true);
 	}
 	UpdateTimeline();

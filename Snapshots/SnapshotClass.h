@@ -56,7 +56,7 @@ public:
     TrackSnapshot(LineParser* lp);
     ~TrackSnapshot();
 
-    bool UpdateReaper(int mask, int* fxErr, bool bSelOnly);
+    bool UpdateReaper(int mask, bool bSelOnly, int* fxErr, WDL_PtrList<TrackSendFix>* pFix);
 	bool Cleanup();
 	void GetChunk(WDL_String* chunk);
 	void GetDetails(WDL_String* details, int iMask);
@@ -74,6 +74,7 @@ public:
 	WDL_String m_sFXChain;
 	TrackSends m_sends;
 	WDL_String m_sName;
+	int m_iTrackNum;
 };
 
 // Mask:

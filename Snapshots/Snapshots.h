@@ -49,6 +49,8 @@ public:
 	SWS_SnapshotsWnd();
 	void Update();
 	void RenameCurrent();
+	void SetFilterType(int iType) { m_iSelType = iType; }
+	int  GetFilterType() { return m_iSelType; }
 	
 protected:
 	void OnInitDlg();

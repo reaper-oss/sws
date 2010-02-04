@@ -30,6 +30,98 @@
 
 // Functions for getting/setting track sends
 
+// Resolve missing receive tracks
+static const char* g_cErrorStr;
+static TrackSend* g_ts;
+static MediaTrack* g_send;
+static MediaTrack* g_recv;
+static int g_iResolveRet;
+#define RESOLVE_WND_POS "ResolveReceiveWndPoc"
+
+INT_PTR WINAPI doResolve(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch (uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			SetDlgItemText(hwndDlg, IDC_TEXT, g_cErrorStr);
+			CheckDlgButton(hwndDlg, IDC_APPLY, BST_CHECKED);
+			HWND hTracks = GetDlgItem(hwndDlg, IDC_TRACK);
+			WDL_UTF8_HookComboBox(hTracks);
+			if (GetNumTracks() - 2)
+				SendMessage(hTracks, CB_ADDSTRING, 0, (LPARAM)"No tracks available");
+				
+			for (int i = 1; i <= GetNumTracks(); i++)
+			{
+				MediaTrack* tr = CSurf_TrackFromID(i, false);
+				if (tr != g_send)
+				{
+					char cName[80];
+					_snprintf(cName, 80, "%d: %s", i, (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL));
+					SendMessage(hTracks, CB_ADDSTRING, 0, (LPARAM)cName);
+				}
+			}
+			SendMessage(hTracks, CB_SETCURSEL, 0, 0);
+			RestoreWindowPos(hwndDlg, RESOLVE_WND_POS, false);
+			g_iResolveRet = 0;
+			return 0;
+		}
+		case WM_COMMAND:
+			wParam = LOWORD(wParam);
+
+			if (wParam == IDC_DELETE)
+				g_iResolveRet = 1;
+			else if (wParam == IDOK)
+			{
+				char cTrack[10];
+				GetDlgItemText(hwndDlg, IDC_TRACK, cTrack, 10);
+				int id = atol(cTrack);
+				if (id)
+				{
+					g_recv = CSurf_TrackFromID(id, false);
+					g_iResolveRet = 2;
+				}
+			}
+			
+			if (wParam == IDC_DELETE || wParam == IDOK || wParam == IDCANCEL)
+			{
+				SaveWindowPos(hwndDlg, RESOLVE_WND_POS);
+				EndDialog(hwndDlg,0);
+			}
+			return 0;
+	}
+	return 0;
+}
+
+// Return TRUE on delete send
+bool ResolveMissingRecv(MediaTrack* tr, int iSend, TrackSend* ts, WDL_PtrList<TrackSendFix>* pFix)
+{
+	WDL_String str;
+	char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
+	if (cName && cName[0])
+		cName = "(unnamed)";
+	str.SetFormatted(200, "Send %d on track %d \"%s\" is missing its receive track! ", iSend+1, CSurf_TrackToID(tr, false), cName);
+
+	g_cErrorStr = str.Get();
+	g_ts = ts;
+	g_send = tr;
+	g_recv = NULL;
+
+	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_RECVMISSING), g_hwndParent, doResolve);
+
+	if (g_iResolveRet == 1)
+		return true;
+	else if (g_iResolveRet == 2)
+	{
+		GUID* newGuid = (GUID*)GetSetMediaTrackInfo(g_recv, "GUID", NULL);
+		if (pFix)
+			pFix->Add(new TrackSendFix(ts->GetGuid(), newGuid));
+		ts->SetGuid(newGuid);
+	}
+
+	return false;
+}
+
 TrackSend::TrackSend(GUID* guid, const char* str)
 {
 	m_destGuid = *guid;
@@ -116,7 +208,7 @@ void TrackSends::Build(MediaTrack* tr)
 		// Have we already parsed this particular dest track string?
 		bool bParsed = false;
 		for (int i = 0; i < m_sends.GetSize(); i++)
-			if (memcmp(m_sends.Get(i)->GetGuid(), &guid, sizeof(GUID)) == 0)
+			if (GuidsEqual(m_sends.Get(i)->GetGuid(), &guid))
 			{
 				bParsed = true;
 				break;
@@ -136,7 +228,7 @@ void TrackSends::Build(MediaTrack* tr)
 	}
 }
 
-void TrackSends::UpdateReaper(MediaTrack* tr)
+void TrackSends::UpdateReaper(MediaTrack* tr, WDL_PtrList<TrackSendFix>* pFix)
 {
 	// First replace all the hw sends with the stored
 	char* trackStr = SWS_GetSetObjectState(tr, NULL);
@@ -161,11 +253,41 @@ void TrackSends::UpdateReaper(MediaTrack* tr)
 	if (bChanged)
 		SWS_GetSetObjectState(tr, newTrackStr.Get());
 
+	// Check for destination track validity
+	for (int i = 0; i < m_sends.GetSize(); i++)
+		if (!GuidToTrack(m_sends.Get(i)->GetGuid()))
+		{
+			bool bFixed = false;
+			if (pFix)
+			{
+				for (int j = 0; j < pFix->GetSize(); j++)
+					if (GuidsEqual(&pFix->Get(j)->m_oldGuid, m_sends.Get(i)->GetGuid()))
+					{
+						m_sends.Get(i)->SetGuid(&pFix->Get(j)->m_newGuid);
+						bFixed = true;
+						break;
+					}
+			}
+			if (!bFixed)
+			{
+				GUID newGuid = GUID_NULL;
+				int iRet = ResolveMissingRecv(tr, i, m_sends.Get(i), pFix);
+				if (iRet == 1) // Success!
+					m_sends.Get(i)->SetGuid(&newGuid);
+				else if (iRet == 2) // Delete
+				{
+					m_sends.Delete(i, true);
+					i--;
+				}
+			}
+		}
+
 	// Now, delete any existing sends and add as necessary
 	// Loop through each track
 	char searchStr[20];
 	sprintf(searchStr, "AUXRECV %d", CSurf_TrackToID(tr, false) - 1);
 	WDL_String sendStr;
+	GUID* trGuid = (GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* pDest = CSurf_TrackFromID(i, false);
@@ -190,7 +312,7 @@ void TrackSends::UpdateReaper(MediaTrack* tr)
 		GUID guid = *(GUID*)GetSetMediaTrackInfo(pDest, "GUID", NULL);
 		for (int i = 0; i < m_sends.GetSize(); i++)
 		{
-			if (memcmp(&guid, m_sends.Get(i)->GetGuid(), sizeof(GUID)) == 0)
+			if (GuidsEqual(&guid, m_sends.Get(i)->GetGuid()) && !GuidsEqual(&guid, trGuid))
 			{
 				if (!trackStr)
 				{

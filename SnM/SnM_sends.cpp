@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_sends.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), JF Bédague (S&M)
+/ Copyright (c) 2010 Tim Payne (SWS), JF Bédague (S&M)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -98,8 +98,6 @@ bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 			{
 				if (SWS_GetSetObjectState(_destTr, sendout.Get()) == 0)
 				{
-					// I DO THAT WAY TO ALSO FORCE REFRESH IN REAPER!!!
-					GetSetTrackSendInfo(_destTr, -1, rcvId, "I_SENDMODE" , &_type);
 					ok = true;
 				}
 			}

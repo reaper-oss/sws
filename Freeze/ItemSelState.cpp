@@ -1,7 +1,7 @@
 /******************************************************************************
 / ItemSelState.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -58,13 +58,9 @@ void SelItems::Add(LineParser* lp)
 {
 	Base64 b64;
 	int bufSize;
-	char* g = b64.Decode(lp->gettoken_str(0), &bufSize);
+	GUID* g = (GUID*)b64.Decode(lp->gettoken_str(0), &bufSize);
 	for (unsigned int i = 0; i < bufSize / sizeof(GUID); i++)
-	{
-		GUID* newG = new GUID;
-		memcpy(newG, g + i * sizeof(GUID), sizeof(GUID));
-		m_selItems.Add(newG);
-	}
+		m_selItems.Add(&g[i]);
 }
 
 void SelItems::Add(MediaTrack* tr)
@@ -75,7 +71,7 @@ void SelItems::Add(MediaTrack* tr)
 		if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
 		{
 			GUID* g = new GUID;
-			memcpy(g, GetSetMediaItemInfo(mi, "GUID", NULL), sizeof(GUID));
+			g = (GUID*)GetSetMediaItemInfo(mi, "GUID", NULL);
 			m_selItems.Add(g);
 		}
 	}
@@ -91,7 +87,7 @@ void SelItems::Match(MediaTrack* tr, bool* bUsed)
 		GetSetMediaItemInfo(mi, "B_UISEL", &g_bFalse);
 		GUID* g = (GUID*)GetSetMediaItemInfo(mi, "GUID", NULL);
 		for (int j = 0; j < m_selItems.GetSize(); j++)
-			if (!bUsed[j] && memcmp(m_selItems.Get(j), g, sizeof(GUID)) == 0)
+			if (!bUsed[j] && GuidsEqual(m_selItems.Get(j), g))
 			{
 				bUsed[j] = true;
 				GetSetMediaItemInfo(mi, "B_UISEL", &g_bTrue);
@@ -269,7 +265,7 @@ void SaveSelTrackSelItems(int iSlot)
 			GUID* g = (GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
 			int j;
 			for (j = 0; j < g_selItemsTrack.Get()->GetSize(); j++)
-				if (memcmp(g, &g_selItemsTrack.Get()->Get(j)->m_guid, sizeof(GUID)) == 0)
+				if (GuidsEqual(g, &g_selItemsTrack.Get()->Get(j)->m_guid))
 				{
 					g_selItemsTrack.Get()->Get(j)->Save(tr, iSlot);
 					break;
@@ -295,7 +291,7 @@ void RestoreSelTrackSelItems(int iSlot)
 		{
 			GUID* g = (GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
 			for (int j = 0; j < g_selItemsTrack.Get()->GetSize(); j++)
-				if (memcmp(g, &g_selItemsTrack.Get()->Get(j)->m_guid, sizeof(GUID)) == 0)
+				if (GuidsEqual(g, &g_selItemsTrack.Get()->Get(j)->m_guid))
 				{
 					g_selItemsTrack.Get()->Get(j)->Restore(tr, iSlot);
 					break;
@@ -317,7 +313,7 @@ void RestoreLastSelItemTrack(COMMAND_T*)
 		{
 			GUID* g = (GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
 			for (int j = 0; j < g_selItemsTrack.Get()->GetSize(); j++)
-				if (memcmp(g, &g_selItemsTrack.Get()->Get(j)->m_guid, sizeof(GUID)) == 0)
+				if (GuidsEqual(g, &g_selItemsTrack.Get()->Get(j)->m_guid))
 				{
 					g_selItemsTrack.Get()->Get(j)->PreviousSelection(tr);
 					break;

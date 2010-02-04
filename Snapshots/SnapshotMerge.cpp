@@ -39,6 +39,7 @@
 static Snapshot* g_ss = NULL;
 static WDL_PtrList<SWS_SSMergeItem> g_mergeItems;
 static int g_iMask;
+static bool g_bSave = false;
 
 static SWS_LVColumn g_cols[] = { { 120, 0, "Source track" }, { 120, 0, "Destination" }, };
 
@@ -56,9 +57,9 @@ int SWS_SnapshotMergeView::OnItemSort(LPARAM lParam1, LPARAM lParam2)
 	switch (abs(m_iSortCol))
 	{
 	case 1: // Source
-		if (item1->m_iIndex > item2->m_iIndex)
+		if (item1->m_ts->m_iTrackNum > item2->m_ts->m_iTrackNum)
 			iRet = 1;
-		else if (item1->m_iIndex < item2->m_iIndex)
+		else if (item1->m_ts->m_iTrackNum < item2->m_ts->m_iTrackNum)
 			iRet = -1;
 		break;
 	case 2: // Dest
@@ -86,12 +87,12 @@ void SWS_SnapshotMergeView::GetItemText(LPARAM item, int iCol, char* str, int iS
 	switch(iCol)
 	{
 	case 0:
-		if (memcmp(&mi->m_ts->m_guid, &GUID_NULL, sizeof(GUID)) == 0)
+		if (GuidsEqual(&mi->m_ts->m_guid, &GUID_NULL))
 			lstrcpyn(str, "(master)", iStrMax);
 		else if (mi->m_ts->m_sName.GetLength())
-			_snprintf(str, iStrMax, "%d: %s", mi->m_iIndex, mi->m_ts->m_sName.Get());
+			_snprintf(str, iStrMax, "%d: %s", mi->m_ts->m_iTrackNum, mi->m_ts->m_sName.Get());
 		else
-			_snprintf(str, iStrMax, "%d", mi->m_iIndex);
+			_snprintf(str, iStrMax, "%d", mi->m_ts->m_iTrackNum);
 		break;
 	case 1:
 		{
@@ -144,6 +145,17 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				else
 					CheckDlgButton(hwndDlg, cSSCtrls[i], BST_CHECKED);
 			}
+			resize.init_item(IDC_SAVE, 1.0, 0.0, 1.0, 0.0);
+			resize.init_item(IDC_SNAME, 1.0, 0.0, 1.0, 0.0);
+			resize.init_item(IDC_NAME, 1.0, 0.0, 1.0, 0.0);
+			resize.init_item(IDC_UPDATE, 1.0, 0.0, 1.0, 0.0);
+
+			EnableWindow(GetDlgItem(hwndDlg, IDC_NAME), false);
+			EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATE), false);
+			SetDlgItemText(hwndDlg, IDC_NAME, g_ss->m_cName);
+			CheckDlgButton(hwndDlg, IDC_UPDATE, BST_CHECKED);
+			g_bSave = false;
+
 			RestoreWindowPos(hwndDlg, MERGEWND_POS_KEY);
 
 			mv = new SWS_SnapshotMergeView(GetDlgItem(hwndDlg, IDC_LIST), NULL);
@@ -175,7 +187,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					for (int i = 0; i < g_ss->m_tracks.GetSize(); i++)
 					{
 						TrackSnapshot* ts = g_ss->m_tracks.Get(i);
-						if (memcmp(&ts->m_guid, &GUID_NULL, sizeof(GUID)) == 0)
+						if (GuidsEqual(&ts->m_guid, &GUID_NULL))
 							strcpy(menuText, "(master)");
 						else if (ts->m_sName.GetLength())
 							_snprintf(menuText, 80, "%d: %s", i, ts->m_sName.Get());
@@ -190,8 +202,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					AddToMenu(contextMenu, "Select destination track", 0);
 					EnableMenuItem(contextMenu, 2, MF_BYPOSITION | MF_GRAYED);
 
-					if (memcmp(&mi->m_ts->m_guid, &GUID_NULL, sizeof(GUID)))
-						AddToMenu(contextMenu, "(create new)", 1);
+					AddToMenu(contextMenu, "(create new)", 1);
 					AddToMenu(contextMenu, "(none)", 2);
 					AddToMenu(contextMenu, "(master)", 3);
 					char menuText[80];
@@ -217,17 +228,26 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					}
 					else if (iCol == 0)
 					{
-						mi->m_ts = g_ss->m_tracks.Get(iCmd-1);
-						mi->m_iIndex = iCmd-1;
+						for (int i = 0; i < ListView_GetItemCount(mv->GetHWND()); i++)
+							if (mv->IsSelected(i))
+							{
+								mi = (SWS_SSMergeItem*)mv->GetListItem(i);
+								mi->m_ts = g_ss->m_tracks.Get(iCmd-1);
+							}
 					}
 					else // iCol == 1
 					{
-						if (iCmd == 1)
-							mi->m_destTr = CREATETRACK;
-						else if (iCmd == 2)
-							mi->m_destTr = NULL;
-						else
-							mi->m_destTr = CSurf_TrackFromID(iCmd-3, false);
+						for (int i = 0; i < ListView_GetItemCount(mv->GetHWND()); i++)
+							if (mv->IsSelected(i))
+							{
+								mi = (SWS_SSMergeItem*)mv->GetListItem(i);
+								if (iCmd == 1)
+									mi->m_destTr = CREATETRACK;
+								else if (iCmd == 2)
+									mi->m_destTr = NULL;
+								else
+									mi->m_destTr = CSurf_TrackFromID(iCmd-3, false);
+							}
 					}
 				}
 
@@ -252,14 +272,14 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					SWS_SSMergeItem* item = (SWS_SSMergeItem*)mv->GetFirstSelected();
 					if (!item && g_mergeItems.GetSize() < g_ss->m_tracks.GetSize())
 					{
-						item = g_mergeItems.Add(new SWS_SSMergeItem(g_ss->m_tracks.Get(g_mergeItems.GetSize()), g_mergeItems.GetSize(), NULL));
+						item = g_mergeItems.Add(new SWS_SSMergeItem(g_ss->m_tracks.Get(g_mergeItems.GetSize()), NULL));
 						item->m_destTr = GuidToTrack(&item->m_ts->m_guid);
 					}
 					else
 					{
 						if (!item)
 							item = g_mergeItems.Get(g_mergeItems.GetSize()-1);
-						g_mergeItems.Add(new SWS_SSMergeItem(item->m_ts, item->m_iIndex, item->m_destTr));
+						g_mergeItems.Add(new SWS_SSMergeItem(item->m_ts, item->m_destTr));
 					}
 					mv->Update();
 					break;
@@ -270,10 +290,27 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 						g_mergeItems.Delete(g_mergeItems.Find((SWS_SSMergeItem*)mv->GetListItem(i)), true);
 				mv->Update();
 				break;
+			case IDC_SAVE:
+			{
+				bool bEnable = IsDlgButtonChecked(hwndDlg, IDC_SAVE) ? true : false;
+				EnableWindow(GetDlgItem(hwndDlg, IDC_NAME), bEnable);
+				EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATE), bEnable);
+				if (bEnable)
+				{
+					SetFocus(GetDlgItem(hwndDlg, IDC_NAME));
+					SendMessage(GetDlgItem(hwndDlg, IDC_NAME), EM_SETSEL, 0, -1);
+				}
+				else
+				{
+					CheckDlgButton(hwndDlg, IDC_UPDATE, BST_CHECKED);
+				}
+				break;
+			}
 			case IDOK:
 				{
-					// See if there's duplicate destination tracks
 					for (int i = 0; i < g_mergeItems.GetSize()-1; i++)
+					{
+						// See if there's duplicate destination tracks
 						if (g_mergeItems.Get(i)->m_destTr && g_mergeItems.Get(i)->m_destTr != CREATETRACK)
 							for (int j = i+1; j < g_mergeItems.GetSize(); j++)
 								if (g_mergeItems.Get(i)->m_destTr == g_mergeItems.Get(j)->m_destTr)
@@ -281,6 +318,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 									MessageBox(hwndDlg, "Cannot have multiple sources with the same destination!", "Snapshot Recall Error", MB_OK);
 									break;
 								}
+					}
 					
 					// Update the snapshot and "recall it"
 					// 1) Save the existing snapshot's tracks
@@ -309,8 +347,39 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 						}
 					}
 
+					// Now go through and try to auto-resolve any send-track issues 
+					for (int i = 0; i < g_ss->m_tracks.GetSize(); i++)
+					{
+						WDL_PtrList<TrackSend>* pSends = &g_ss->m_tracks.Get(i)->m_sends.m_sends;
+						for (int j = 0; pSends->GetSize(); i++)
+							if (!GuidToTrack(pSends->Get(i)->GetGuid()))
+							{	// Perhaps the recv was in the snapshot and the user matched it with a different track?
+								int iMatches = 0;
+								MediaTrack* pDest = NULL;
+								for (int k = 0; k < g_mergeItems.GetSize(); k++)
+									if (GuidsEqual(&g_mergeItems.Get(k)->m_ts->m_guid, pSends->Get(i)->GetGuid()))
+									{
+										pDest = g_mergeItems.Get(k)->m_destTr;
+										iMatches++;
+									}
+								if (iMatches == 1) // Must be an exact 1:1 match
+									pSends->Get(j)->SetGuid((GUID*)GetSetMediaTrackInfo(pDest, "GUID", NULL));
+							}
+					}
+
 					oldTrackSS.Empty(true);
-					g_ss->UpdateReaper(g_iMask, false, false);				
+
+					// Check options
+					if(IsDlgButtonChecked(hwndDlg, IDC_SAVE) == BST_CHECKED)
+					{
+						char cName[80];
+						GetDlgItemText(hwndDlg, IDC_NAME, cName, 80);
+						g_ss->SetName(cName);
+
+						g_bSave = true;
+					}
+					if (IsDlgButtonChecked(hwndDlg, IDC_UPDATE) == BST_CHECKED)
+						g_ss->UpdateReaper(g_iMask, false, false);				
 					// fall through!
 				}
 			case IDCANCEL:
@@ -343,37 +412,50 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 	return 0;
 }
 
-void MergeSnapshots(Snapshot* ss)
+bool MergeSnapshots(Snapshot* ss)
 {
 	g_ss = ss;
 
 	if (!ss->m_tracks.GetSize())
-		return;
+		return false;
 
 	g_iMask = ss->m_iMask;
-	
-	// For matching of names
-	WDL_PtrList<void> projTracks;
-	for (int i = 1; i <= GetNumTracks(); i++)
-		projTracks.Add(CSurf_TrackFromID(i, false));
 
-	for (int i = 0; i < ss->m_tracks.GetSize(); i++)
+	// If the paste is occuring with matching selected tracks, use those
+	if (ss->m_tracks.GetSize() == CountSelectedTracks(NULL))
 	{
-		SWS_SSMergeItem* mi = g_mergeItems.Add(new SWS_SSMergeItem(ss->m_tracks.Get(i), i, NULL));
-		mi->m_destTr = GuidToTrack(&mi->m_ts->m_guid);
-		// First "match" is with the GUID, try the name next
-		if (!mi->m_destTr && mi->m_ts->m_sName.GetLength())
+		for (int i = 0; i < ss->m_tracks.GetSize(); i++)
 		{
-			// Try name matching
-			for (int j = 0; j < projTracks.GetSize(); j++)
-				if (strcmp((char*)GetSetMediaTrackInfo((MediaTrack*)projTracks.Get(j), "P_NAME", NULL), mi->m_ts->m_sName.Get()) == 0)
-				{
-					mi->m_destTr = (MediaTrack*)projTracks.Get(j);
-					projTracks.Delete(j);
-					break;
-				}
+			SWS_SSMergeItem* mi = g_mergeItems.Add(new SWS_SSMergeItem(ss->m_tracks.Get(i), NULL));
+			mi->m_destTr = GetSelectedTrack(NULL, i);
+		}
+	}
+	else
+	{	// Next try matching with names
+		WDL_PtrList<void> projTracks;
+		for (int i = 1; i <= GetNumTracks(); i++)
+			projTracks.Add(CSurf_TrackFromID(i, false));
+
+		for (int i = 0; i < ss->m_tracks.GetSize(); i++)
+		{
+			SWS_SSMergeItem* mi = g_mergeItems.Add(new SWS_SSMergeItem(ss->m_tracks.Get(i), NULL));
+			mi->m_destTr = GuidToTrack(&mi->m_ts->m_guid);
+			// First "match" is with the GUID, try the name next
+			if (!mi->m_destTr && mi->m_ts->m_sName.GetLength())
+			{
+				// Try name matching
+				for (int j = 0; j < projTracks.GetSize(); j++)
+					if (strcmp((char*)GetSetMediaTrackInfo((MediaTrack*)projTracks.Get(j), "P_NAME", NULL), mi->m_ts->m_sName.Get()) == 0)
+					{
+						mi->m_destTr = (MediaTrack*)projTracks.Get(j);
+						projTracks.Delete(j);
+						break;
+					}
+			}
 		}
 	}
 
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SSMERGE), g_hwndParent, mergeWndProc);
+
+	return g_bSave;
 }

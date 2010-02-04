@@ -158,7 +158,10 @@ bool FXSnapshot::Exists(MediaTrack* tr)
 
 TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 {
-	if (CSurf_TrackToID(tr, false) == 0)
+	m_iTrackNum = CSurf_TrackToID(tr, false);
+	m_sName.Set((char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL));
+
+	if (!m_iTrackNum)
 		m_guid = GUID_NULL;
 	else
 		m_guid = *(GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
@@ -170,8 +173,6 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 	m_iFXEn = *((int*)GetSetMediaTrackInfo(tr, "I_FXEN", NULL));
 	m_iVis  = GetTrackVis(tr);
 	m_iSel  = *((int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL));
-	char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-	m_sName.Set(cName ? cName : "");
 
 	// Don't bother storing the sends if it's masked
 	if (mask & SENDS_MASK)
@@ -202,6 +203,8 @@ TrackSnapshot::TrackSnapshot(TrackSnapshot& ts):m_sends(ts.m_sends)
 	for (int i = 0; i < ts.m_fx.GetSize(); i++)
 		m_fx.Add(new FXSnapshot(*ts.m_fx.Get(i)));
 	m_sFXChain.Set(ts.m_sFXChain.Get());
+	m_sName.Set(ts.m_sName.Get());
+	m_iTrackNum = ts.m_iTrackNum;
 }
 
 TrackSnapshot::TrackSnapshot(LineParser* lp)
@@ -221,6 +224,7 @@ TrackSnapshot::TrackSnapshot(LineParser* lp)
 	{
 		char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 		m_sName.Set(cName ? cName : "");
+		m_iTrackNum = CSurf_TrackToID(tr, false);
 	}		
 }
 
@@ -230,7 +234,7 @@ TrackSnapshot::~TrackSnapshot()
 }
 
 // Returns true if cannot find the track to update!
-bool TrackSnapshot::UpdateReaper(int mask, int* fxErr, bool bSelOnly)
+bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, WDL_PtrList<TrackSendFix>* pFix)
 {
 	MediaTrack* tr = GuidToTrack(&m_guid);
 	if (!tr)
@@ -280,7 +284,7 @@ bool TrackSnapshot::UpdateReaper(int mask, int* fxErr, bool bSelOnly)
 	}
 	if (mask & SENDS_MASK)
 	{
-		m_sends.UpdateReaper(tr);
+		m_sends.UpdateReaper(tr, pFix);
 	}
 	
 	return false;
@@ -308,7 +312,7 @@ void TrackSnapshot::GetChunk(WDL_String* chunk)
 	char guidStr[64];
 	guidToString(&m_guid, guidStr);
 	chunk->AppendFormatted(chunk->GetLength()+100, "<TRACK %s %.14f %.14f %d %d %d %d %d\n", guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel);
-	chunk->AppendFormatted(chunk->GetLength()+100, "NAME \"%s\"\n", m_sName.Get());
+	chunk->AppendFormatted(chunk->GetLength()+100, "NAME \"%s\" %d\n", m_sName.Get(), m_iTrackNum);
 	
 	m_sends.GetChunk(chunk);
 	for (int i = 0; i < m_fx.GetSize(); i++)
@@ -321,22 +325,20 @@ void TrackSnapshot::GetChunk(WDL_String* chunk)
 void TrackSnapshot::GetDetails(WDL_String* details, int iMask)
 {
 	MediaTrack* tr = GuidToTrack(&m_guid);
-	if (tr)
+
+	if (m_iTrackNum == 0)
+		details->Append("Master Track:\r\n");
+	else if (tr)
 	{
+		char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 		int iNum = CSurf_TrackToID(tr, false);
-		if (iNum == 0)
-			details->Append("Master Track:\r\n");
+		if (strcmp(cName, m_sName.Get()) == 0 && m_iTrackNum == iNum)
+			details->AppendFormatted(100, "Track #%d \"%s\":\r\n", iNum, cName);
 		else
-		{
-			char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-			if (strcmp(cName, m_sName.Get()) == 0)
-				details->AppendFormatted(100, "Track #%d \"%s\":\r\n", iNum, cName);
-			else
-				details->AppendFormatted(100, "Track #%d \"%s\", originally named \"%s\":\r\n", iNum, cName, m_sName.Get());
-		}
+			details->AppendFormatted(100, "Track #%d \"%s\", originally #%d \"%s\":\r\n", iNum, cName, m_iTrackNum, m_sName.Get());
 	}
 	else
-		details->AppendFormatted(100, "Track \"%s\" (not in current project!):\r\n", m_sName.Get());
+		details->AppendFormatted(100, "Track #%d \"%s\" (not in current project!):\r\n", m_iTrackNum, m_sName.Get());
 
 	if (iMask & VOL_MASK)
 		details->AppendFormatted(50, "Volume: %.2fdb\r\n", m_dVol);
@@ -493,8 +495,12 @@ Snapshot::Snapshot(const char* chunk)
 		else if (ts)
 		{
 			if (strcmp("NAME", lp.gettoken_str(0)) == 0)
+			{
 				ts->m_sName.Set(lp.gettoken_str(1));
-			if (strcmp("SEND", lp.gettoken_str(0)) == 0)
+				if (lp.getnumtokens() >= 3)
+					ts->m_iTrackNum = lp.gettoken_int(2);
+			}
+			else if (strcmp("SEND", lp.gettoken_str(0)) == 0)
 			{	// Handle deprecated stored send information
 				GUID guid;
 				stringToGuid(lp.gettoken_str(1), &guid);
@@ -560,11 +566,12 @@ bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 	char str[256];
 	//Undo_BeginBlock();
 	int trackErr = 0, fxErr = 0;
+	WDL_PtrList<TrackSendFix> sendFixes;
 
 	// Cache all ObjectState changes
 	SWS_CacheObjectState(true);
 	for (int i = 0; i < m_tracks.GetSize(); i++)
-		if (m_tracks.Get(i)->UpdateReaper(mask & m_iMask, &fxErr, bSelOnly))
+		if (m_tracks.Get(i)->UpdateReaper(mask & m_iMask, bSelOnly, &fxErr, &sendFixes))
 			trackErr++;
 	SWS_CacheObjectState(false);
 
@@ -626,7 +633,7 @@ char* Snapshot::Tooltip(char* str, int maxLen)
 	// Look to see if the master track is included in the snapshot
 	int i;
 	for (i = 0; i < m_tracks.GetSize(); i++)
-		if (memcmp(&m_tracks.Get(i)->m_guid, &GUID_NULL, sizeof(GUID)) == 0)
+		if (GuidsEqual(&m_tracks.Get(i)->m_guid, &GUID_NULL))
 			break;
 
 	if (i < m_tracks.GetSize())

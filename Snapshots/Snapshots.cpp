@@ -56,7 +56,6 @@ public:
 // Globals
 static SWSProjConfig<ProjSnapshot> g_ss;
 static SWS_SnapshotsWnd* g_pSSWnd;
-void PasteSnapshotToList(COMMAND_T*);
 void PasteSnapshot(COMMAND_T*);
 
 void UpdateSnapshotsDialog()
@@ -67,6 +66,7 @@ void UpdateSnapshotsDialog()
 static int g_iMask = ALL_MASK;
 static bool g_bSelOnly = false;
 static int g_iSavedMask;
+static int g_iSavedType;
 static bool g_bSavedSelOnly;
 static bool g_bApplyFilterOnRecall = true;
 static bool g_bHideNewOnRecall = true;
@@ -282,6 +282,7 @@ SWS_SnapshotsWnd::SWS_SnapshotsWnd()
 		m_iSelType = lp.gettoken_int(6);
 	}
 	g_iSavedMask = g_iMask;
+	g_iSavedType = m_iSelType;
 	g_bSavedSelOnly = g_bSelOnly;
 
 	if (m_bShowAfterInit)
@@ -501,8 +502,7 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
 		}
 	}
 	AddToMenu(contextMenu, "New snapshot", SWSGetCommandID(NewSnapshot));
-	AddToMenu(contextMenu, "Paste snapshot", SWSGetCommandID(PasteSnapshotToList));
-	AddToMenu(contextMenu, "Paste snapshot to project", SWSGetCommandID(PasteSnapshot));
+	AddToMenu(contextMenu, "Paste snapshot", SWSGetCommandID(PasteSnapshot));
 
 	return contextMenu;
 }
@@ -725,14 +725,15 @@ void SaveCurSnapshot(COMMAND_T*) { SaveSnapshot(g_ss.Get()->m_pCurSnapshot->m_iS
 void SaveSnapshot(COMMAND_T* ct) { SaveSnapshot((int)ct->user); }
 void GetCurSnapshot(COMMAND_T*)	 { GetSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot, ALL_MASK, false); }
 void GetSnapshot(COMMAND_T* ct)	 { GetSnapshot((int)ct->user, ALL_MASK, false); }
-void TogSnapParam(COMMAND_T* ct) { g_iMask ^= ct->user; UpdateSnapshotsDialog(); }
+void SetSnapType(COMMAND_T* ct)  { g_pSSWnd->SetFilterType(ct->user); UpdateSnapshotsDialog(); }
+void TogSnapParam(COMMAND_T* ct) { g_pSSWnd->SetFilterType(2); g_iMask ^= ct->user; UpdateSnapshotsDialog(); }
 bool IsSnapParamEn(COMMAND_T* ct){ return (g_iMask & ct->user) ? true : false; }
 
 void ToggleSelOnly(COMMAND_T*)	 { g_bSelOnly = !g_bSelOnly; UpdateSnapshotsDialog(); }
-//void ToggleAppToRec(COMMAND_T*)	{ g_bApplyFilterOnRecall = !g_bApplyFilterOnRecall; UpdateSnapshotsDialog(); }
-void ClearFilter(COMMAND_T*)	{ g_iMask = 0; g_bSelOnly = false; UpdateSnapshotsDialog(); }
-void SaveFilter(COMMAND_T*)		{ g_iSavedMask = g_iMask; g_bSavedSelOnly = g_bSelOnly; }
-void RestoreFilter(COMMAND_T*)	{ g_iMask = g_iSavedMask; g_bSelOnly = g_bSavedSelOnly; UpdateSnapshotsDialog(); }
+void ToggleAppToRec(COMMAND_T*)	 { g_bApplyFilterOnRecall = !g_bApplyFilterOnRecall; UpdateSnapshotsDialog(); }
+void ClearFilter(COMMAND_T*)	 { g_pSSWnd->SetFilterType(2); g_iMask = 0; g_bSelOnly = false; UpdateSnapshotsDialog(); }
+void SaveFilter(COMMAND_T*)		 { g_iSavedMask = g_iMask; g_bSavedSelOnly = g_bSelOnly; g_iSavedType = g_pSSWnd->GetFilterType(); }
+void RestoreFilter(COMMAND_T*)	 { g_pSSWnd->SetFilterType(g_iSavedType); g_iMask = g_iSavedMask; g_bSelOnly = g_bSavedSelOnly; UpdateSnapshotsDialog(); }
 
 static bool SnapshotsWindowEnabled(COMMAND_T*)
 {
@@ -745,9 +746,15 @@ void CopyCurSnapshot(COMMAND_T*)
 		CopySnapshotToClipboard(g_ss.Get()->m_pCurSnapshot);
 }
 
-void CopyNewSnapshot(COMMAND_T*)
+void CopySelSnapshot(COMMAND_T*)
 {
-	Snapshot ss(1, MIX_MASK, false, "Copied snapshot");
+	Snapshot ss(1, g_iMask, true, "unnamed");
+	CopySnapshotToClipboard(&ss);
+}
+
+void CopyAllSnapshot(COMMAND_T*)
+{
+	Snapshot ss(1, g_iMask, false, "unnamed");
 	CopySnapshotToClipboard(&ss);
 }
 
@@ -756,52 +763,51 @@ void PasteSnapshot(COMMAND_T*)
 	Snapshot* ss = GetSnapshotFromClipboard();
 	if (ss)
 	{
-		MergeSnapshots(ss);
-		delete ss;
-	}
-}
-
-void PasteSnapshotToList(COMMAND_T*)
-{
-	Snapshot* ss = GetSnapshotFromClipboard();
-	if (ss)
-	{
-		// Find the "slot" -- use the saved, or the first avail
-		for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
+		if (MergeSnapshots(ss))
 		{
-			if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot == ss->m_iSlot)
-			{	// Slot collision, pick the first avail
-				int j;
-				for (j = 0; j < g_ss.Get()->m_snapshots.GetSize(); j++)
-					if (g_ss.Get()->m_snapshots.Get(j)->m_iSlot != j+1)
-						break;
-				ss->m_iSlot = j + 1;
+			// Save the pasted snapshot
+			// Find the "slot" -- use the saved, or the first avail
+			for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
+			{
+				if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot == ss->m_iSlot)
+				{	// Slot collision, pick the first avail
+					int j;
+					for (j = 0; j < g_ss.Get()->m_snapshots.GetSize(); j++)
+						if (g_ss.Get()->m_snapshots.Get(j)->m_iSlot != j+1)
+							break;
+					ss->m_iSlot = j + 1;
+				}
 			}
-		}
 
-		// Add the snapshot to the list
-		g_ss.Get()->m_snapshots.Add(ss);
-		g_pSSWnd->Update();
+			// Add the snapshot to the list
+			g_ss.Get()->m_snapshots.Add(ss);
+			g_pSSWnd->Update();
+		}
+		else
+			delete ss;
 	}
 }
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS: Open mix snapshots" },							"SWSSNAPSHOT_OPEN",	     OpenSnapshotsDialog,  NULL, 0, SnapshotsWindowEnabled },
+	{ { DEFACCEL, "SWS: Open snapshots window" },						"SWSSNAPSHOT_OPEN",	     OpenSnapshotsDialog,  "Show snapshots list and settings", 0, SnapshotsWindowEnabled },
 	{ { DEFACCEL, "SWS: Add selected track(s) to current snapshot" },	"SWSSNAPSHOT_ADD",	     AddSnapshotTracks,	   "Add selected track(s) to current snapshot", },
 	{ { DEFACCEL, "SWS: Add selected track(s) to all snapshots" },		"SWSSNAPSHOTS_ADD",	     AddTracks,			   "Add selected track(s) to all snapshots", },
 	{ { DEFACCEL, "SWS: Delete selected track(s) from current snapshot" },"SWSSNAPSHOT_DEL",	 DelSnapshotTracks,	   "Delete selected track(s) from current snapshot", },
 	{ { DEFACCEL, "SWS: Delete selected track(s) from all snapshots" },	"SWSSNAPSHOTS_DEL",	     DelTracks,			   "Delete selected track(s) from all snapshots", },
-	{ { DEFACCEL, "SWS: New snapshot" },								"SWSSNAPSHOT_NEW",	     NewSnapshot,		   "New Snapshot", },
 	{ { DEFACCEL, "SWS: Select current snapshot track(s)" },			"SWSSNAPSHOT_SEL",	     SelSnapshotTracks,	   "Select current snapshot's track(s)", },
+	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
+	{ { DEFACCEL, "SWS: New snapshot (all tracks)" },					"SWSSNAPSHOT_NEWALL",    NewSnapshot,		   "New snapshot (all tracks)", 2 },
+	{ { DEFACCEL, "SWS: New snapshot (selected track(s))" },			"SWSSNAPSHOT_NEWSEL",    NewSnapshot,		   "New snapshot (selected track(s))", 3 },
 	{ { DEFACCEL, "SWS: Save over current snapshot" },					"SWSSNAPSHOT_SAVE",	     SaveCurSnapshot,	   "Save over current snapshot", },
 	{ { DEFACCEL, "SWS: Recall current snapshot" },						"SWSSNAPSHOT_GET",	     GetCurSnapshot,       "Recall current snapshot", },
 	{ { DEFACCEL, "SWS: Copy current snapshot" },						"SWSSNAPSHOT_COPY",	     CopyCurSnapshot,      "Copy current snapshot", },
-	{ { DEFACCEL, "SWS: Copy full mix snapshot" },						"SWSSNAPSHOT_COPYNEW",   CopyNewSnapshot,      "Copy full mix", },
-	{ { DEFACCEL, "SWS: Paste snapshot to project" },					"SWSSNAPSHOT_PASTE",	 PasteSnapshot,        "Paste snapshot", },
-	{ { DEFACCEL, "SWS: Paste snapshot to list" },						"SWSSNAPSHOT_PASTELIST", PasteSnapshotToList,  "Paste snapshot to list", },
+	{ { DEFACCEL, "SWS: Copy new snapshot (selected track(s))" },		"SWSSNAPSHOT_COPYSEL",   CopySelSnapshot,      "Copy new snapshot (selected track(s))", },
+	{ { DEFACCEL, "SWS: Copy new snapshot (all track(s))" },			"SWSSNAPSHOT_COPYALL",   CopyAllSnapshot,      "Copy new snapshot (all track(s))", },
+	{ { DEFACCEL, "SWS: Paste snapshot" },								"SWSSNAPSHOT_PASTE",	 PasteSnapshot,        "Paste snapshot", },
 
-	{ { DEFACCEL, "SWS: New snapshot and edit name" },					"SWSSNAPSHOT_NEWEDIT",   NewSnapshotEdit,	   NULL, },
+	{ { DEFACCEL, "SWS: New snapshot (with current settings)" },		"SWSSNAPSHOT_NEW",	     NewSnapshot,		   NULL, 0 },
+	{ { DEFACCEL, "SWS: New snapshot and edit name" },					"SWSSNAPSHOT_NEWEDIT",   NewSnapshotEdit,	   NULL, 1 },
 	{ { DEFACCEL, "SWS: Save as snapshot 1" },							"SWSSNAPSHOT_SAVE1",	 SaveSnapshot,         NULL, 1 },
 	{ { DEFACCEL, "SWS: Save as snapshot 2" },							"SWSSNAPSHOT_SAVE2",	 SaveSnapshot,         NULL, 2 },
 	{ { DEFACCEL, "SWS: Save as snapshot 3" },							"SWSSNAPSHOT_SAVE3",	 SaveSnapshot,         NULL, 3 },
@@ -815,6 +821,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Save as snapshot 11" },							"SWSSNAPSHOT_SAVE11",	 SaveSnapshot,         NULL, 11 },
 	{ { DEFACCEL, "SWS: Save as snapshot 12" },							"SWSSNAPSHOT_SAVE12",	 SaveSnapshot,         NULL, 12 },
 
+	{ { DEFACCEL, "SWS: Set snapshots to 'mix' mode" },					"SWSSNAPSHOT_MIXMODE",   SetSnapType,    NULL, 0 },
+	{ { DEFACCEL, "SWS: Set snapshots to 'visibility' mode" },			"SWSSNAPSHOT_VISMODE",   SetSnapType,    NULL, 1 },
 	{ { DEFACCEL, "SWS: Toggle snapshot mute" },						"SWSSNAPSHOT_MUTE",		 TogSnapParam,   NULL, MUTE_MASK,    IsSnapParamEn },
 	{ { DEFACCEL, "SWS: Toggle snapshot solo" },						"SWSSNAPSHOT_SOLO",		 TogSnapParam,   NULL, SOLO_MASK,    IsSnapParamEn },
 	{ { DEFACCEL, "SWS: Toggle snapshot pan" },							"SWSSNAPSHOT_PAN",		 TogSnapParam,   NULL, PAN_MASK,     IsSnapParamEn },
@@ -824,7 +832,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle snapshot visibility" },					"SWSSNAPSHOT_VIS",		 TogSnapParam,   NULL, VIS_MASK,     IsSnapParamEn },
 	{ { DEFACCEL, "SWS: Toggle snapshot selection" },					"SWSSNAPSHOT_TOGSEL",    TogSnapParam,   NULL, SEL_MASK,     IsSnapParamEn },
 	{ { DEFACCEL, "SWS: Toggle snapshot selected only" },				"SWSSNAPSHOT_SELONLY",	 ToggleSelOnly,  NULL, },
-//	{ { DEFACCEL, "SWS: Toggle snapshot apply filter to recall" },      "SWSSNAPSHOT_APPLYLOAD", ToggleAppToRec, NULL, },
+	{ { DEFACCEL, "SWS: Toggle snapshot apply filter to recall" },      "SWSSNAPSHOT_APPLYLOAD", ToggleAppToRec, NULL, },
 	{ { DEFACCEL, "SWS: Clear all snapshot filter options" },           "SWSSNAPSHOT_CLEARFILT", ClearFilter,    NULL, },
 	{ { DEFACCEL, "SWS: Save current snapshot filter options" },        "SWSSNAPSHOT_SAVEFILT",  SaveFilter,     NULL, },
 	{ { DEFACCEL, "SWS: Restore snapshot filter options" },             "SWSSNAPSHOT_RESTFILT",  RestoreFilter,  NULL, },

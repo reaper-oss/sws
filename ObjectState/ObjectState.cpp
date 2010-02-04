@@ -35,7 +35,7 @@
 //
 // See Snapshots for an example of use
 
-#define GOS_DEBUG
+//#define GOS_DEBUG
 
 ObjectStateCache::ObjectStateCache()
 {
@@ -138,7 +138,7 @@ void SWS_CacheObjectState(bool bStart)
 // Return of true means valid line, false is "end of chunk"
 bool GetChunkLine(const char* chunk, WDL_String* line, int* pos, bool bNewLine)
 {
-	int chunkLen = strlen(chunk);
+	int chunkLen = (int)strlen(chunk);
 	if (*pos >= chunkLen || *pos < 0)
 		return false;
 

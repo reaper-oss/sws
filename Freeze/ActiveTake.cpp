@@ -1,7 +1,7 @@
 /******************************************************************************
 / ActiveTake.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -52,7 +52,7 @@ bool ActiveTake::Restore(MediaItem* mi)
 {
 	int i;
 	for (i = 0; i < GetMediaItemNumTakes(mi); i++)
-		if (memcmp(&m_activeTake, GetSetMediaItemTakeInfo(GetMediaItemTake(mi, i), "GUID", NULL), sizeof(GUID)) == 0)
+		if (GuidsEqual(&m_activeTake, (GUID*)GetSetMediaItemTakeInfo(GetMediaItemTake(mi, i), "GUID", NULL)))
 		{
 			GetSetMediaItemInfo(mi, "I_CURTAKE", &i);
 			return true;
@@ -109,7 +109,7 @@ void ActiveTakeTrack::Restore(MediaTrack* tr)
 		GUID* g = (GUID*)GetSetMediaItemInfo(mi, "GUID", NULL);
 		for (int j = 0; j < m_items.GetSize(); j++)
 		{
-			if (!bUsed[j] && memcmp(g, &m_items.Get(j)->m_item, sizeof(GUID)) == 0)
+			if (!bUsed[j] && GuidsEqual(g, &m_items.Get(j)->m_item))
 			{
 				// TODO check this logic under a bunch of situs
 				if (!m_items.Get(j)->Restore(mi))
@@ -143,7 +143,7 @@ void SaveActiveTakes(COMMAND_T*)
 		{
 			// Delete if exists
 			for (int j = 0; j < g_activeTakeTracks.Get()->GetSize(); j++)
-				if (memcmp(&g_activeTakeTracks.Get()->Get(j)->m_guid, GetSetMediaTrackInfo(tr, "GUID", NULL), sizeof(GUID)) == 0)
+				if (TrackMatchesGuid(tr, &g_activeTakeTracks.Get()->Get(j)->m_guid))
 				{
 					g_activeTakeTracks.Get()->Delete(j--, true);
 					break;
@@ -161,7 +161,7 @@ void RestoreActiveTakes(COMMAND_T*)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			// Find the saved track
 			for (int j = 0; j < g_activeTakeTracks.Get()->GetSize(); j++)
-				if (memcmp(&g_activeTakeTracks.Get()->Get(j)->m_guid, GetSetMediaTrackInfo(tr, "GUID", NULL), sizeof(GUID)) == 0)
+				if (TrackMatchesGuid(tr, &g_activeTakeTracks.Get()->Get(j)->m_guid))
 					g_activeTakeTracks.Get()->Get(j)->Restore(tr);
 	}
 	UpdateTimeline();

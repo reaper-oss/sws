@@ -160,3 +160,5 @@ void* GetConfigVar(const char* cVar);
 HWND GetTrackWnd();
 char* GetHashString(const char* in, char* out);
 MediaTrack* GuidToTrack(const GUID* guid);
+bool GuidsEqual(const GUID* g1, const GUID* g2);
+bool TrackMatchesGuid(MediaTrack* tr, const GUID* g);

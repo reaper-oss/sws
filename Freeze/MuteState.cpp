@@ -1,7 +1,7 @@
 /******************************************************************************
 / MuteState.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -121,7 +121,7 @@ void MuteState::Restore(MediaTrack* tr)
 					break;
 				int iChildFolder = GetFolderDepth(trChild, &iType, &gfd);
 				for (int i = 0; i < m_children.GetSize(); i++)
-					if (memcmp(GetSetMediaTrackInfo(trChild, "GUID", NULL), &m_children.Get(i)->m_guid, sizeof(GUID)) == 0)
+					if (TrackMatchesGuid(trChild, &m_children.Get(i)->m_guid))
 						GetSetMediaTrackInfo(trChild, "B_MUTE", &m_children.Get(i)->m_bState);
 				if (iChildFolder + iType <= iFolder)
 					break;
@@ -142,7 +142,7 @@ void MuteState::Restore(MediaTrack* tr)
 			GUID* guid = (GUID*)GetSetMediaTrackInfo(trSrc, "GUID", NULL);
 			for (int j = 0; j < m_receives.GetSize(); j++)
 			{
-				if (!bUsed[j] && memcmp(guid, m_receives.Get(j), sizeof(GUID)) == 0)
+				if (!bUsed[j] && GuidsEqual(guid, &m_receives.Get(j)->m_guid))
 				{
 					bUsed[j] = true;
 					GetSetTrackSendInfo(tr, -1, i, "B_MUTE", &m_receives.Get(j)->m_bState);
@@ -211,7 +211,7 @@ void SaveMutes(COMMAND_T*)
 		{
 			// Delete GUID out of save array if it exists
 			for (int j = 0; j < g_muteStates.Get()->GetSize(); j++)
-				if (memcmp(GetSetMediaTrackInfo(tr, "GUID", NULL), &g_muteStates.Get()->Get(j)->m_guid, sizeof(GUID)) == 0)
+				if (TrackMatchesGuid(tr, &g_muteStates.Get()->Get(j)->m_guid))
 					g_muteStates.Get()->Delete(j--, true);
 			g_muteStates.Get()->Add(new MuteState(tr));
 		}
@@ -225,7 +225,7 @@ void RestoreMutes(COMMAND_T*)
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			for (int j = 0; j < g_muteStates.Get()->GetSize(); j++)
-				if (memcmp(GetSetMediaTrackInfo(tr, "GUID", NULL), &g_muteStates.Get()->Get(j)->m_guid, sizeof(GUID)) == 0)
+				if (TrackMatchesGuid(tr, &g_muteStates.Get()->Get(j)->m_guid))
 					g_muteStates.Get()->Get(j)->Restore(tr);
 	}
 }

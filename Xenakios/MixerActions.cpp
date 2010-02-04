@@ -1,7 +1,7 @@
 /******************************************************************************
 / MixerActions.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), original code by Xenakios
+/ Copyright (c) 2010 Tim Payne (SWS), original code by Xenakios
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -311,7 +311,7 @@ void DoRecallSelectedTrackHeights(COMMAND_T*)
 		{
 			GUID curGUID=*(GUID*)GetSetMediaTrackInfo(CurTrack,"GUID",NULL);
 			for (int j=0;j<(int)g_vec_trackheighs.size();j++)
-				if (memcmp(&curGUID,&g_vec_trackheighs[j].guid,sizeof(GUID))==0)
+				if (GuidsEqual(&curGUID, &g_vec_trackheighs[j].guid))
 					GetSetMediaTrackInfo(CurTrack,"I_HEIGHTOVERRIDE",&g_vec_trackheighs[j].Heigth);	
 		}
 	}
@@ -879,14 +879,10 @@ void DoRenderReceivesAsStems(COMMAND_T*)
 			for (j=0;j<GetNumTracks();j++)
 			{
 				CurTrack=CSurf_TrackFromID(j+1,false);
-				if (CurTrack)
+				if (CurTrack && TrackMatchesGuid(CurTrack,&orselTrackGUID))
 				{
-					GUID compaGUID=*(GUID*)GetSetMediaTrackInfo(CurTrack,"GUID",0);
-					if (memcmp(&compaGUID,&orselTrackGUID,sizeof(GUID))==0)
-					{
-						SourceTrack=CurTrack;
-						break;
-					}
+					SourceTrack=CurTrack;
+					break;
 				}
 			}
 			GetSetMediaTrackInfo(SourceTrack,"B_MUTE",&blah); // render stems action mutes original track, so counteract here
@@ -934,7 +930,7 @@ void DoRenderReceivesAsStems(COMMAND_T*)
 						if (CurTrack)
 						{
 							GUID compaGUID=*(GUID*)GetSetMediaTrackInfo(CurTrack,"GUID",0);
-							if (memcmp(&compaGUID,&orselTrackGUID,sizeof(GUID))==0)
+							if (GuidsEqual(&compaGUID,&orselTrackGUID))
 							{
 								meh=1;
 								blah=false;
@@ -1023,24 +1019,6 @@ double g_RefMasterVolume=1.0;
 GUID g_RefTrackGUID=GUID_NULL;
 vector<t_track_solostate> g_RefTrackSolostates;
 
-MediaTrack* GetTrackWithGUID(GUID theguid)
-{
-	if (memcmp(&theguid, &GUID_NULL, sizeof(GUID)) == 0)
-		return NULL;
-	for (int i=0; i < GetNumTracks(); i++)
-	{
-		MediaTrack* tk=CSurf_TrackFromID(i+1,false);
-		if (tk)
-		{
-			if (memcmp((GUID*)GetSetMediaTrackInfo(tk,"GUID",0), &theguid, sizeof(GUID)) == 0)
-			{
-				return tk;
-			}
-		}
-	}
-	return NULL;
-}
-
 void DoSetSelTrackAsRefTrack(COMMAND_T*)
 {
 	t_vect_of_Reaper_tracks thetracks;
@@ -1077,7 +1055,7 @@ void RecallTrackSoloStates()
 	int i;
 	for (i=0;i<(int)g_RefTrackSolostates.size();i++)
 	{
-		MediaTrack *tk=GetTrackWithGUID(g_RefTrackSolostates[i].trackGUID);
+		MediaTrack *tk=GuidToTrack(&g_RefTrackSolostates[i].trackGUID);
 		if (tk)
 			GetSetMediaTrackInfo(tk,"I_SOLO",&g_RefTrackSolostates[i].solostate);
 	}
@@ -1106,7 +1084,7 @@ void DoToggleReferenceTrack(COMMAND_T*)
 	if (!g_ReferenceTrackSolo)
 	{
 		g_ReferenceTrackSolo=true;
-		reftk=GetTrackWithGUID(g_RefTrackGUID);
+		reftk=GuidToTrack(&g_RefTrackGUID);
 		if (reftk)
 		{
 		DoStoreProjectSoloStates();
@@ -1127,7 +1105,7 @@ void DoToggleReferenceTrack(COMMAND_T*)
 		} else MessageBox(g_hwndParent,"Reference track doesn't seem to exist in this project.\nMaybe it's in another project tab?","Error",MB_OK);
 	} else
 	{
-		reftk=GetTrackWithGUID(g_RefTrackGUID);
+		reftk=GuidToTrack(&g_RefTrackGUID);
 		if (reftk)
 		{
 		RecallTrackSoloStates();
@@ -1214,7 +1192,7 @@ void Ref_track_SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct
   {
 	int mode;
 	if (g_ReferenceTrackSolo) mode=1; else mode=0;
-	MediaTrack *tk=GetTrackWithGUID(g_RefTrackGUID);
+	MediaTrack *tk=GuidToTrack(&g_RefTrackGUID);
 	if (tk)
 	{
 		ctx->AddLine("<XENAKIOSCOMMANDS");

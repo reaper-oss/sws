@@ -352,13 +352,24 @@ char* GetHashString(const char* in, char* out)
 
 MediaTrack* GuidToTrack(const GUID* guid)
 {
-	if (memcmp(guid, &GUID_NULL, sizeof(GUID)) == 0)
-		return CSurf_TrackFromID(0, false);
-	for (int i = 1; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (memcmp(guid, (GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL), sizeof(GUID)) == 0)
+		if (TrackMatchesGuid(tr, guid))
 			return tr;
 	}
 	return NULL;
+}
+
+bool GuidsEqual(const GUID* g1, const GUID* g2)
+{
+	return memcmp(g1, g2, sizeof(GUID)) == 0;
+}
+
+bool TrackMatchesGuid(MediaTrack* tr, const GUID* g)
+{
+	if (CSurf_TrackToID(tr, false) == 0)
+		return GuidsEqual(g, &GUID_NULL);
+	GUID* gTr = (GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
+	return gTr && GuidsEqual(gTr, g);
 }

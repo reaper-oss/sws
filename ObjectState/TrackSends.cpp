@@ -190,11 +190,11 @@ void TrackSends::Build(MediaTrack* tr)
 {
 	// Get the HW sends from the track object string
 	char* trackStr = SWS_GetSetObjectState(tr, NULL);
-	WDL_String line;
+	char line[4096];
 	int pos = 0;
-	while (GetChunkLine(trackStr, &line, &pos, false))
+	while (GetChunkLine(trackStr, line, 4096, &pos, false))
 	{
-		if (strncmp(line.Get(), "HWOUT", 5) == 0)
+		if (strncmp(line, "HWOUT", 5) == 0)
 			m_hwSends.Add(new WDL_String(line));
 	}
 	SWS_FreeHeapPtr(trackStr);
@@ -221,10 +221,10 @@ void TrackSends::Build(MediaTrack* tr)
 		// We haven't parsed yet!
 		trackStr = SWS_GetSetObjectState(pDest, NULL);
 		pos = 0;
-		while (GetChunkLine(trackStr, &line, &pos, false))
+		while (GetChunkLine(trackStr, line, 4096, &pos, false))
 		{
-			if (strncmp(line.Get(), searchStr, strlen(searchStr)) == 0)
-				m_sends.Add(new TrackSend(&guid, line.Get()));
+			if (strncmp(line, searchStr, strlen(searchStr)) == 0)
+				m_sends.Add(new TrackSend(&guid, line));
 		}
 		SWS_FreeHeapPtr(trackStr);
 	}
@@ -235,13 +235,13 @@ void TrackSends::UpdateReaper(MediaTrack* tr, WDL_PtrList<TrackSendFix>* pFix)
 	// First replace all the hw sends with the stored
 	char* trackStr = SWS_GetSetObjectState(tr, NULL);
 	WDL_String newTrackStr;
-	WDL_String line;
+	char line[4096];
 	int pos = 0;
 	bool bChanged = false;
-	while (GetChunkLine(trackStr, &line, &pos, true))
+	while (GetChunkLine(trackStr, line, 4096, &pos, true))
 	{
-		if (strncmp(line.Get(), "HWOUT", 5) != 0)
-			newTrackStr.Append(line.Get());
+		if (strncmp(line, "HWOUT", 5) != 0)
+			newTrackStr.Append(line);
 		else
 			bChanged = true;
 	}
@@ -303,10 +303,10 @@ void TrackSends::UpdateReaper(MediaTrack* tr, WDL_PtrList<TrackSendFix>* pFix)
 				trackStr = SWS_GetSetObjectState(pDest, NULL);
 				pos = 0;
 				// Remove existing recvs from the src track
-				while (GetChunkLine(trackStr, &line, &pos, true))
+				while (GetChunkLine(trackStr, line, 4096, &pos, true))
 				{
-					if (strncmp(line.Get(), searchStr, strlen(searchStr)) != 0)
-						newTrackStr.Append(line.Get());
+					if (strncmp(line, searchStr, strlen(searchStr)) != 0)
+						newTrackStr.Append(line);
 				}
 				break;
 			}

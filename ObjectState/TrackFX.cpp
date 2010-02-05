@@ -29,27 +29,30 @@
 #include "TrackFX.h"
 
 // Functions for getting/setting track FX chains
-void GetFXChain(MediaTrack* tr, WDL_String* str)
+void GetFXChain(MediaTrack* tr, WDL_TypedBuf<char>* buf)
 {
-	str->Set(""); // "Empty"
+	buf->Resize(0); // Empty
 	char* chunk = SWS_GetSetObjectState(tr, NULL);
 	int pos = 0;
 	int iDepth = 0;
-	WDL_String line;
+	char line[4096];
 
-	while (GetChunkLine(chunk, &line, &pos, true))
+	while (GetChunkLine(chunk, line, 4096, &pos, true))
 	{
-		if (strncmp(line.Get(), "<FXCHAIN", 8) == 0)
+		if (strncmp(line, "<FXCHAIN", 8) == 0)
 		{
-			str->Set(line.Get());
+			buf->Resize((int)strlen(line)+1);
+			strcpy(buf->Get(), line);
 			iDepth = 1;
 		}
 		else if (iDepth)
 		{
-			str->Append(line.Get());
-			if (line.Get()[0] == '<')
+			int iPos = buf->GetSize() - 1;
+			buf->Resize(iPos + (int)strlen(line) + 1);
+			strcpy(buf->Get()+iPos, line);
+			if (line[0] == '<')
 				iDepth++;
-			else if (line.Get()[0] == '>')
+			else if (line[0] == '>')
 				iDepth--;
 		}
 	}
@@ -59,28 +62,30 @@ void GetFXChain(MediaTrack* tr, WDL_String* str)
 
 void SetFXChain(MediaTrack* tr, const char* str)
 {
-	WDL_String newChunk, line;
+	WDL_String newChunk;
+	char line[4096];
 	char* chunk = SWS_GetSetObjectState(tr, NULL);
 	int pos = 0;
 	int iDepth = 0;
 
 	// Fill new chunk with everything except the FX chain that may or may not already exist
-	while (GetChunkLine(chunk, &line, &pos, true))
+	while (GetChunkLine(chunk, line, 4096, &pos, true))
 	{
-		if (strncmp(line.Get(), "<FXCHAIN", 8) == 0)
+		if (strncmp(line, "<FXCHAIN", 8) == 0)
 			iDepth = 1;
 		else if (iDepth)
 		{
-			if (line.Get()[0] == '<')
+			if (line[0] == '<')
 				iDepth++;
-			else if (line.Get()[0] == '>')
+			else if (line[0] == '>')
 				iDepth--;
 		}
 		else
-			newChunk.Append(line.Get());
+			newChunk.Append(line);
 	}
 	SWS_FreeHeapPtr(chunk);
 
-	AppendChunkLine(&newChunk, str);
+	if (str)
+		AppendChunkLine(&newChunk, str);
 	SWS_GetSetObjectState(tr, newChunk.Get());
 }

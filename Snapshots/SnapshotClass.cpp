@@ -203,7 +203,11 @@ TrackSnapshot::TrackSnapshot(TrackSnapshot& ts):m_sends(ts.m_sends)
 	m_iSel = ts.m_iSel;
 	for (int i = 0; i < ts.m_fx.GetSize(); i++)
 		m_fx.Add(new FXSnapshot(*ts.m_fx.Get(i)));
-	m_sFXChain.Set(ts.m_sFXChain.Get());
+	if (ts.m_sFXChain.GetSize())
+	{
+		m_sFXChain.Resize(ts.m_sFXChain.GetSize());
+		memcpy(m_sFXChain.Get(), ts.m_sFXChain.Get(), m_sFXChain.GetSize());
+	}
 	m_sName.Set(ts.m_sName.Get());
 	m_iTrackNum = ts.m_iTrackNum;
 }
@@ -320,7 +324,7 @@ void TrackSnapshot::GetChunk(WDL_String* chunk)
 	m_sends.GetChunk(chunk);
 	for (int i = 0; i < m_fx.GetSize(); i++)
 		m_fx.Get(i)->GetChunk(chunk);
-	if (m_sFXChain.GetLength())
+	if (m_sFXChain.GetSize())
 		chunk->Append(m_sFXChain.Get());
 	chunk->Append(">\n");
 }
@@ -372,17 +376,17 @@ void TrackSnapshot::GetDetails(WDL_String* details, int iMask)
 	if (iMask & FXCHAIN_MASK)
 	{
 		details->Append(m_iFXEn ? "FX bypass: off\r\n" : "FX bypass: on\r\n");
-		if (!m_sFXChain.GetLength())
+		if (!m_sFXChain.GetSize())
 			details->Append("Empty FX chain\r\n");
 		else
 		{
 			details->Append("FX chain:\r\n");
-			WDL_String line;
+			char line[4096];
 			int pos = 0;
 			LineParser lp(false);
-			while (GetChunkLine(m_sFXChain.Get(), &line, &pos, false))
+			while (GetChunkLine(m_sFXChain.Get(), line, 4096, &pos, false))
 			{
-				if (!lp.parse(line.Get()) && lp.getnumtokens() >= 2)
+				if (!lp.parse(line) && lp.getnumtokens() >= 2)
 				{
 					if (strncmp(lp.gettoken_str(0), "<VST", 4) == 0 || strncmp(lp.gettoken_str(0), "<DX", 3) == 0)
 						details->AppendFormatted(50, "\t%s\r\n", lp.gettoken_str(1));
@@ -452,15 +456,15 @@ Snapshot::Snapshot(int slot, int mask, bool bSelOnly, char* name)
 // Build a snapshot from an XML/RPP chunk from the clipboard/RPP/undo/etc
 Snapshot::Snapshot(const char* chunk)
 {
-	WDL_String line;
+	char line[4096];
 	int pos = 0;
 	LineParser lp(false);
 	TrackSnapshot* ts = NULL;
 	m_cName = NULL;
 
-	while(GetChunkLine(chunk, &line, &pos, false))
+	while(GetChunkLine(chunk, line, 4096, &pos, false))
 	{
-		if (lp.parse(line.Get()))
+		if (lp.parse(line))
 			break;
 
 		if (strcmp(lp.gettoken_str(0), "<SWSSNAPSHOT") == 0)
@@ -513,36 +517,41 @@ Snapshot::Snapshot(const char* chunk)
 			}
 			else if (strcmp("AUXSEND", lp.gettoken_str(0)) == 0)
 			// Same format as AUXRECV but on the send track, with second param as recv GUID
-				ts->m_sends.m_sends.Add(new TrackSend(line.Get()));
+				ts->m_sends.m_sends.Add(new TrackSend(line));
 			else if (strcmp("HWOUT", lp.gettoken_str(0)) == 0)
-				ts->m_sends.m_hwSends.Add(new WDL_String(line.Get()));
+				ts->m_sends.m_hwSends.Add(new WDL_String(line));
 			else if (strcmp("FX", lp.gettoken_str(0)) == 0) // "One liner"
 				ts->m_fx.Add(new FXSnapshot(&lp));
 			else if (strcmp("<FX", lp.gettoken_str(0)) == 0) // Multiple lines
 			{
 				FXSnapshot* fx = ts->m_fx.Add(new FXSnapshot(&lp));
-				while(GetChunkLine(chunk, &line, &pos, false))
+				while(GetChunkLine(chunk, line, 4096, &pos, false))
 				{
-					if (lp.parse(line.Get()) || lp.gettoken_str(0)[0] == '>')
+					if (lp.parse(line) || lp.gettoken_str(0)[0] == '>')
 						break;
 					fx->RestoreParams(lp.gettoken_str(0));
 				}
 			}
 			else if (strcmp("<FXCHAIN", lp.gettoken_str(0)) == 0) // Multiple lines
 			{
-				ts->m_sFXChain.Set(line.Get());
-				ts->m_sFXChain.Append("\n");
-				int iDepth = 1;
-				while(iDepth && GetChunkLine(chunk, &line, &pos, true))
-				{
-					if (lp.parse(line.Get()))
-						break;
+				int iLen = (int)strlen(line);
+				ts->m_sFXChain.Resize(iLen + 2);
+				strcpy(ts->m_sFXChain.Get(), line);
+				strcpy(ts->m_sFXChain.Get()+iLen, "\n");
+				iLen++;
 
-					if (lp.gettoken_str(0)[0] == '>')
+				int iDepth = 1;
+				while(iDepth && GetChunkLine(chunk, line, 4096, &pos, true))
+				{
+					int iNewLen = iLen + (int)strlen(line);
+					ts->m_sFXChain.Resize(iNewLen + 1);
+					strcpy(ts->m_sFXChain.Get()+iLen, line);
+					iLen = iNewLen;
+
+					if (line[0] == '>')
 						iDepth--;
-					else if (lp.gettoken_str(0)[0] == '<')
+					else if (line[0] == '<')
 						iDepth++;
-					ts->m_sFXChain.Append(line.Get());
 				}
 			}
 		}

@@ -178,8 +178,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Copying x64 to c:\dev\sws-deploy"
-				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files\reaper (x64)\plugins&quot;&#x0D;&#x0A;copy /y $(OutDir)\$(TargetFilename) &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
+				Description="Building x64 installer and copying to c:\dev\sws-deploy..."
+				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files\reaper (x64)\plugins&quot;&#x0D;&#x0A;&quot;c:\bin\nsis\makensis.exe&quot; /v2 $(SolutionName)_x64.nsi&#x0D;&#x0A;copy /y &quot;$(OutDir)\$(SolutionName)_x64.exe&quot; &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -345,6 +345,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Copying to REAPER\Plugins..."
 				CommandLine="copy /y $(OutDir)\$(TargetFilename) &quot;c:\program files\reaper (x64)\plugins&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
@@ -1104,6 +1105,10 @@
 		</File>
 		<File
 			RelativePath=".\sws_extension.nsi"
+			>
+		</File>
+		<File
+			RelativePath=".\sws_extension_x64.nsi"
 			>
 		</File>
 	</Files>

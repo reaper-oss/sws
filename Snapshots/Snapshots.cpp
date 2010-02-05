@@ -715,9 +715,14 @@ void NewSnapshotEdit(COMMAND_T* = NULL)
 	g_pSSWnd->RenameCurrent();
 }
 
-void NewSnapshot(COMMAND_T*)
+void NewSnapshot(COMMAND_T* ct)
 {
-	NewSnapshot(g_iMask, g_bSelOnly);
+	if (ct && ct->user == 1)
+		NewSnapshot(g_iMask, false);
+	else if (ct && ct->user == 2)
+		NewSnapshot(g_iMask, true);
+	else
+		NewSnapshot(g_iMask, g_bSelOnly);
 }
 
 void SaveSnapshot(int slot)
@@ -805,9 +810,9 @@ void SelSnapshotTracks(COMMAND_T*)
 		g_ss.Get()->m_pCurSnapshot->SelectTracks();
 }
 
-void SaveCurSnapshot(COMMAND_T*) { SaveSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot); }
+void SaveCurSnapshot(COMMAND_T*) { if (g_ss.Get()->m_pCurSnapshot) SaveSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot); }
 void SaveSnapshot(COMMAND_T* ct) { SaveSnapshot((int)ct->user); }
-void GetCurSnapshot(COMMAND_T*)	 { GetSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot, ALL_MASK, false); }
+void GetCurSnapshot(COMMAND_T*)	 { if (g_ss.Get()->m_pCurSnapshot) GetSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot, ALL_MASK, false); }
 void GetSnapshot(COMMAND_T* ct)	 { GetSnapshot((int)ct->user, ALL_MASK, false); }
 void SetSnapType(COMMAND_T* ct)  { g_pSSWnd->SetFilterType(ct->user); UpdateSnapshotsDialog(); }
 void TogSnapParam(COMMAND_T* ct) { g_pSSWnd->SetFilterType(2); g_iMask ^= ct->user; UpdateSnapshotsDialog(); }
@@ -887,8 +892,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Delete selected track(s) from all snapshots" },	"SWSSNAPSHOTS_DEL",	     DelTracks,			   "Delete selected track(s) from all snapshots", },
 	{ { DEFACCEL, "SWS: Select current snapshot track(s)" },			"SWSSNAPSHOT_SEL",	     SelSnapshotTracks,	   "Select current snapshot's track(s)", },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
-	{ { DEFACCEL, "SWS: New snapshot (all tracks)" },					"SWSSNAPSHOT_NEWALL",    NewSnapshot,		   "New snapshot (all tracks)", 2 },
-	{ { DEFACCEL, "SWS: New snapshot (selected track(s))" },			"SWSSNAPSHOT_NEWSEL",    NewSnapshot,		   "New snapshot (selected track(s))", 3 },
+	{ { DEFACCEL, "SWS: New snapshot (all tracks)" },					"SWSSNAPSHOT_NEWALL",    NewSnapshot,		   "New snapshot (all tracks)", 1 },
+	{ { DEFACCEL, "SWS: New snapshot (selected track(s))" },			"SWSSNAPSHOT_NEWSEL",    NewSnapshot,		   "New snapshot (selected track(s))", 2 },
 	{ { DEFACCEL, "SWS: Save over current snapshot" },					"SWSSNAPSHOT_SAVE",	     SaveCurSnapshot,	   "Save over current snapshot", },
 	{ { DEFACCEL, "SWS: Recall current snapshot" },						"SWSSNAPSHOT_GET",	     GetCurSnapshot,       "Recall current snapshot", },
 	{ { DEFACCEL, "SWS: Copy current snapshot" },						"SWSSNAPSHOT_COPY",	     CopyCurSnapshot,      "Copy current snapshot", },
@@ -931,15 +936,10 @@ static COMMAND_T g_commandTable[] =
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	WDL_String chunk;
-	if (GetChunkFromProjectState("<SWSSNAPSHOT", &chunk, line, ctx))
+	WDL_TypedBuf<char> buf;
+	if (GetChunkFromProjectState("<SWSSNAPSHOT", &buf, line, ctx))
 	{
-		Snapshot* newSS = g_ss.Get()->m_snapshots.Add(new Snapshot(chunk.Get()));
-		for (int i = 0; i < newSS->m_tracks.GetSize(); i++)
-		{
-			TrackSnapshot* ts = newSS->m_tracks.Get(i);
-			int adf = 0;
-		}
+		g_ss.Get()->m_snapshots.Add(new Snapshot(buf.Get()));
 		g_pSSWnd->Update();
 		return true;
 	}
@@ -948,14 +948,15 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	WDL_String chunk, line;
+	WDL_String chunk;
+	char line[4096];
 	for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
 	{
 		Snapshot* ss = g_ss.Get()->m_snapshots.Get(i);
 		ss->GetChunk(&chunk);
 		int iPos = 0;
-		while(GetChunkLine(chunk.Get(), &line, &iPos, false))
-			ctx->AddLine(line.Get());
+		while(GetChunkLine(chunk.Get(), line, 4096, &iPos, false))
+			ctx->AddLine(line);
 	}
 }
 

@@ -46,6 +46,6 @@ char* SWS_GetSetObjectState(void* obj, const char* str);
 void SWS_FreeHeapPtr(void* ptr);
 void SWS_CacheObjectState(bool bStart);
 
-bool GetChunkLine(const char* chunk, WDL_String* line, int* pos, bool bNewLine);
+bool GetChunkLine(const char* chunk, char* line, int iLineMax, int* pos, bool bNewLine);
 void AppendChunkLine(WDL_String* chunk, const char* line);
-bool GetChunkFromProjectState(const char* cSection, WDL_String* chunk, const char* line, ProjectStateContext *ctx);
+bool GetChunkFromProjectState(const char* cSection, WDL_TypedBuf<char>* chunk, const char* line, ProjectStateContext *ctx);

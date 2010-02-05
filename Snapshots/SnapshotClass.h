@@ -71,7 +71,7 @@ public:
 	int m_iVis;
 	int m_iSel;
     WDL_PtrList<FXSnapshot> m_fx;
-	WDL_String m_sFXChain;
+	WDL_TypedBuf<char> m_sFXChain;
 	TrackSends m_sends;
 	WDL_String m_sName;
 	int m_iTrackNum;

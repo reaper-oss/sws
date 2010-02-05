@@ -136,28 +136,36 @@ void SWS_CacheObjectState(bool bStart)
 // newlines are retained.  Caller allocates the WDL_String necessary for the output
 // pos stores the state of the line parsing, set to zero to return the first line
 // Return of true means valid line, false is "end of chunk"
-bool GetChunkLine(const char* chunk, WDL_String* line, int* pos, bool bNewLine)
+bool GetChunkLine(const char* chunk, char* line, int iLineMax, int* pos, bool bNewLine)
 {
-	int chunkLen = (int)strlen(chunk);
+	const char* cStart = (chunk + *pos);
+	line[0] = 0;
+	// Don't error check on strlen(chunk) because chunk can be *huge*
 
-	// Skip blank lines
+	// Skip blank lines at beginning
 	while (*(chunk + *pos) == '\n')
 		(*pos)++;
 
-	if (*pos >= chunkLen || *pos < 0)
+	char c = *(chunk + *pos);
+	// Check for end-of-string
+	if(!c)
 		return false;
 
-	const char* pEnd = strchr(chunk + *pos, '\n');
+	// Find newline or null terminator
+	while(c)
+	{
+		(*pos)++;
+		if (c == '\n')
+			break;
+		c = *(chunk + *pos);
+	}
 
-	int iEndPos;
-	if (!pEnd)
-		iEndPos = chunkLen;
-	else
-		iEndPos = 1 + pEnd - chunk;
-
-	if (line)
-		line->Set(chunk + *pos, iEndPos - *pos + (bNewLine ? 0 : -1));
-	*pos = iEndPos;
+	int iCount = (chunk + *pos) - cStart + (bNewLine ? 0 : -1) + 1;
+	if (iCount > iLineMax)
+		iCount = iLineMax;
+	if (iCount > 0)
+		lstrcpyn(line, cStart, iCount);
+	
 	return true;
 }
 
@@ -173,19 +181,28 @@ void AppendChunkLine(WDL_String* chunk, const char* line)
 	chunk->Insert(line, pos);
 }
 
-bool GetChunkFromProjectState(const char* cSection, WDL_String* chunk, const char* line, ProjectStateContext *ctx)
+bool GetChunkFromProjectState(const char* cSection, WDL_TypedBuf<char>* chunk, const char* firstline, ProjectStateContext *ctx)
 {
-	if (strncmp(line, cSection, strlen(cSection)) == 0)
+	if (strncmp(firstline, cSection, strlen(cSection)) == 0)
 	{
+		// Add first line
+		int iLen = (int)strlen(firstline);
+		chunk->Resize(iLen + 2);
+		strcpy(chunk->Get(), firstline);
+		strcpy(chunk->Get()+iLen, "\n");
+		iLen++;
+		
 		int iDepth = 1;
 		char linebuf[4096];
-		chunk->Set(line);
-		chunk->Append("\n");
+
 		while (iDepth)
 		{
 			ctx->GetLine(linebuf, 4096);
-			chunk->Append(linebuf);
-			chunk->Append("\n");
+			int iNewLen = iLen + (int)strlen(linebuf);
+			chunk->Resize(iNewLen + 2);
+			strcpy(chunk->Get()+iLen, linebuf);
+			strcpy(chunk->Get()+iNewLen, "\n");
+			iLen = iNewLen + 1;
 			if (linebuf[0] == '<')
 				iDepth++;
 			else if (linebuf[0] == '>')

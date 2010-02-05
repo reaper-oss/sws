@@ -27,5 +27,5 @@
 
 #pragma once
 
-void GetFXChain(MediaTrack* tr, WDL_String* str);
+void GetFXChain(MediaTrack* tr, WDL_TypedBuf<char>* buf);
 void SetFXChain(MediaTrack* tr, const char* str);

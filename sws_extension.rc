@@ -33,13 +33,14 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""afxres.h""\0"
+    "#include ""afxres.h\0"
 END
 
 3 TEXTINCLUDE 
 BEGIN
     "#include ""version.h""\r\n"
-    "#include ""version.rc2\0"
+    "#include ""version.rc2""\r\n"
+    "\r\0"
 END
 
 #endif    // APSTUDIO_INVOKED
@@ -178,7 +179,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "&Close",IDCANCEL,103,126,50,14
     PUSHBUTTON      "&License...",IDC_LICENSE,202,48,46,14
-    LTEXT           "Copyright (C) 2009 Tim Payne of Standing Water Studios\rCopyright (C) 2009 Xenakios\r\rDocumentation is available at the SWS website:",IDC_STATIC,7,47,187,35
+    LTEXT           "Copyright (C) 2010 Tim Payne of Standing Water Studios\rCopyright (C) 2009 Xenakios\r\rDocumentation is available at the SWS website:",IDC_STATIC,7,47,187,35
     LTEXT           "Version String",IDC_VERSION,7,31,241,8
     LTEXT           "SWS Extension, a REAPER plugin.\rMerged with Xenakios Command Extensions, October 2009",IDC_STATIC,7,7,241,19
     LTEXT           "Download the latest version:",IDC_STATIC,7,98,92,9
@@ -412,6 +413,8 @@ IDB_DOWN                BITMAP                  "downarrow.bmp"
 //
 #include "version.h"
 #include "version.rc2"
+
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

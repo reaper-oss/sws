@@ -1,7 +1,7 @@
 /******************************************************************************
 / XenUtils.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), original code by Xenakios
+/ Copyright (c) 2010 Tim Payne (SWS), original code by Xenakios
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -192,7 +192,7 @@ bool BrowseForSaveFile(const char *text, const char *initialdir, const char *ini
 	l.lpstrDefExt = defExt;
 	l.lpstrInitialDir = initialdir;
 	
-	l.Flags = OFN_DONTADDTORECENT | OFN_HIDEREADONLY | OFN_EXPLORER;
+	l.Flags = OFN_DONTADDTORECENT | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_OVERWRITEPROMPT;
 
 	if (GetSaveFileName(&l))
 		return true;

@@ -48,8 +48,7 @@ INT_PTR WINAPI doResolve(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			CheckDlgButton(hwndDlg, IDC_APPLY, BST_CHECKED);
 			HWND hTracks = GetDlgItem(hwndDlg, IDC_TRACK);
 			WDL_UTF8_HookComboBox(hTracks);
-			if (GetNumTracks() - 2)
-				SendMessage(hTracks, CB_ADDSTRING, 0, (LPARAM)"No tracks available");
+			SendMessage(hTracks, CB_ADDSTRING, 0, (LPARAM)"(create new track)");
 				
 			for (int i = 1; i <= GetNumTracks(); i++)
 			{
@@ -76,11 +75,14 @@ INT_PTR WINAPI doResolve(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				char cTrack[10];
 				GetDlgItemText(hwndDlg, IDC_TRACK, cTrack, 10);
 				int id = atol(cTrack);
-				if (id)
+				if (!id) // assume they chose "create new track"
 				{
-					g_recv = CSurf_TrackFromID(id, false);
-					g_iResolveRet = 2;
+					id = GetNumTracks()+1;
+					InsertTrackAtIndex(id, false);
+					TrackList_AdjustWindows(false);
 				}
+				g_recv = CSurf_TrackFromID(id, false);
+				g_iResolveRet = 2;
 			}
 			
 			if (wParam == IDC_DELETE || wParam == IDOK || wParam == IDCANCEL)
@@ -98,7 +100,7 @@ bool ResolveMissingRecv(MediaTrack* tr, int iSend, TrackSend* ts, WDL_PtrList<Tr
 {
 	WDL_String str;
 	char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-	if (cName && cName[0])
+	if (!cName || !cName[0])
 		cName = "(unnamed)";
 	str.SetFormatted(200, "Send %d on track %d \"%s\" is missing its receive track! ", iSend+1, CSurf_TrackToID(tr, false), cName);
 
@@ -134,7 +136,7 @@ TrackSend::TrackSend(GUID* guid, const char* str)
 TrackSend::TrackSend(GUID* guid, int iMode, double dVol, double dPan, int iMute, int iMono, int iPhase, int iSrc, int iDest, int iMidi, int iAuto)
 {
 	m_destGuid = *guid;
-	m_str.SetFormatted(200, "%d %.14f %.14f %d %d %d %d %d -1.0 %d %d\n",
+	m_str.SetFormatted(200, "%d %.14f %.14f %d %d %d %d %d -1.0 %d %d",
 		iMode, dVol, dPan, iMute, iMono, iPhase, iSrc, iDest, iMidi, iAuto);
 }
 

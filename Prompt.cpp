@@ -45,7 +45,7 @@ INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			SetWindowText(hwndDlg, g_cTitle);
 			HWND hEdit = GetDlgItem(hwndDlg, IDC_EDIT);
 			SetWindowText(hEdit, g_cString);
-			RestoreWindowPos(hwndDlg, PROMPTWND_KEY);
+			RestoreWindowPos(hwndDlg, PROMPTWND_KEY, false);
 			return 0;
 		}
 		case WM_COMMAND:
@@ -67,25 +67,32 @@ INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 INT_PTR WINAPI doInfoDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	static WDL_WndSizer resize;
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
 		{
+			resize.init(hwndDlg);
+			resize.init_item(IDC_EDIT);
 			SetWindowText(hwndDlg, g_cTitle);
 			RestoreWindowPos(hwndDlg, INFOWND_KEY);
 			HWND hEdit = GetDlgItem(hwndDlg, IDC_EDIT);
 			SetWindowLongPtr(hEdit, GWLP_USERDATA, 0xdeadf00b);
 			SetWindowText(hEdit, g_cString);
 			SetFocus(hEdit);
-			SendMessage(hEdit, EM_SETSEL, -1, 0);
+			SendMessage(hEdit, EM_SETSEL, (WPARAM)-1, 0);
 			return 0;
 		}
+		case WM_SIZE:
+			if (wParam != SIZE_MINIMIZED)
+				resize.onResize();
+			break;
 		case WM_COMMAND:
 			switch (LOWORD(wParam))
 			{
 				case IDOK:
 				case IDCANCEL:
-					SaveWindowPos(hwndDlg, PROMPTWND_KEY);
+					SaveWindowPos(hwndDlg, INFOWND_KEY);
 					EndDialog(hwndDlg, 0);
 					break;
 			}
@@ -101,7 +108,7 @@ bool PromptUserForString(HWND hParent, const char* cTitle, char* cString, int iM
 	g_cString = cString;
 	g_iMax = iMaxChars;
 	g_bOK = false;
-	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_PROMPT), hParent, doPromptDialog);
+	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_PROMPT), hParent, doPromptDialog);
 	return g_bOK;
 }
 

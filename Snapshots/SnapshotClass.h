@@ -101,7 +101,6 @@ class Snapshot
 public:
     Snapshot(int slot, int mask, bool bSelOnly, char* name);   // For capture
 	Snapshot(const char* chunk); // For project load
-    Snapshot(int slot, int mask, char* name, int time);        // For project load
     ~Snapshot();
     bool UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis);
     char* Tooltip(char* str, int maxLen);

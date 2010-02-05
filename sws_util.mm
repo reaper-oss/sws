@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_util.mm
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "../WDL/swell/swell-internal.h"
 
-void GetDateString(int time, char* buf, int bufsize)
+void SWS_GetDateString(int time, char* buf, int bufsize)
 {
 	NSDate* macTime = [NSDate dateWithTimeIntervalSince1970:time];
 	NSDateFormatter *macTimeFmt = [[[NSDateFormatter alloc] init] autorelease];
@@ -38,7 +38,7 @@ void GetDateString(int time, char* buf, int bufsize)
 	[s getCString:buf maxLength:bufsize];
 }
 
-void GetTimeString(int time, char* buf, int bufsize)
+void SWS_GetTimeString(int time, char* buf, int bufsize)
 {
 	NSDate* macTime = [NSDate dateWithTimeIntervalSince1970:time];
 	NSDateFormatter *macTimeFmt = [[[NSDateFormatter alloc] init] autorelease];

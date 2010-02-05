@@ -810,7 +810,7 @@ void EditCustomCommands(COMMAND_T* = NULL)
 	char* pC = strrchr(cArg, PATH_SLASH_CHAR);
 	if (!pC)
 		return;
-	strcpy(pC, "\\reaconsole_customcommands.txt");
+	strcpy(pC+1, "reaconsole_customcommands.txt");
 
 	_spawnl(_P_NOWAIT, cNotepad, cNotepad, cArg, NULL);
 #endif

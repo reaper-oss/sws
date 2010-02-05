@@ -1,7 +1,7 @@
 /******************************************************************************
 / MoreItemCommands.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), original code by Xenakios
+/ Copyright (c) 2010 Tim Payne (SWS), original code by Xenakios
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -1340,7 +1340,6 @@ void DoSlipItemContents(int timebase,double amount,bool slipalltakes)
 		double newoffset=mediaoffset+(1.0/srate);
 		if (amount<0) newoffset=mediaoffset-(1.0/srate);
 		GetSetMediaItemTakeInfo(thetakes[i],"D_STARTOFFS",&newoffset);
-		//INT64 offsetinsamples=srate*
 	}
 	UpdateTimeline();
 }

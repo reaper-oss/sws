@@ -51,11 +51,13 @@ void TogOnRecStopMoveCursor(COMMAND_T*) { int* p = (int*)GetConfigVar("itemclick
 void SwitchGridSpacing(COMMAND_T*)
 {
 	// TODO
+	/*
 	const double dSpacings[] = { 0.0208331, };
 	double div = *(double*)GetConfigVar("projgriddiv");
 	char debugStr[64];
 	sprintf(debugStr, "Div is %.14f\n", div);
 	OutputDebugString(debugStr);
+	 */
 }
 
 void UnselOnTracks(COMMAND_T* = NULL)

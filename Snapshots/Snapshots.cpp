@@ -42,6 +42,9 @@
 #define ADDSEL_MSG	0x10007
 #define DELSEL_MSG	0x10008
 #define DETAILS_MSG 0x10009
+#define MERGE_MSG	0x1000A
+#define EXPORT_MSG	0x1000B
+#define IMPORT_MSG	0x1000C
 #define LOAD_MSG	0x100F0 // leave space!!
 
 class ProjSnapshot
@@ -57,6 +60,7 @@ public:
 static SWSProjConfig<ProjSnapshot> g_ss;
 static SWS_SnapshotsWnd* g_pSSWnd;
 void PasteSnapshot(COMMAND_T*);
+void MergeSnapshot(Snapshot* ss);
 
 void UpdateSnapshotsDialog()
 {
@@ -72,6 +76,10 @@ static bool g_bApplyFilterOnRecall = true;
 static bool g_bHideNewOnRecall = true;
 static bool g_bPromptOnNew = false;
 static bool g_bHideOptions = false;
+
+#ifndef _WIN32
+static int g_iClipFormat;
+#endif
 
 // Clipboard operations:
 void CopySnapshotToClipboard(Snapshot* ss)
@@ -117,6 +125,7 @@ Snapshot* GetSnapshotFromClipboard()
 				GlobalUnlock(clipBoard);
 				if (!ss->m_tracks.GetSize())
 				{
+					MessageBox(g_hwndParent, "Clipboard does not contain a valid snapshot.", "SWS Snapshot Paste Error", MB_OK);
 					delete ss;
 					ss = NULL;
 				}
@@ -125,6 +134,61 @@ Snapshot* GetSnapshotFromClipboard()
 		CloseClipboard();
 	}
 	return ss;
+}
+
+// File operations
+void ExportSnapshot(Snapshot* ss)
+{
+	char filename[256];
+	char cPath[256];
+	GetProjectPath(cPath, 256);
+	lstrcpyn(filename, ss->m_cName, 256);
+	if (BrowseForSaveFile("Export snapshot...", cPath, filename, "SWSSnap files\0*.SWSSnap\0", filename, 256))
+	{
+		FILE* f = fopen(filename, "w");
+		if (f)
+		{
+			WDL_String chunk;
+			ss->GetChunk(&chunk);
+			fwrite(chunk.Get(), chunk.GetLength()+1, 1, f);
+			fclose(f);
+		}
+		else
+			MessageBox(g_hwndParent, "Unable to write to file.", "SWS Snaphot Export Error", MB_OK);
+	}
+
+}
+
+void ImportSnapshot()
+{
+	char str[4096];
+	GetProjectPath(str, 256);
+	char* cFile = BrowseForFiles("Import snapshot...", str, NULL, false, "SWSSnap files\0*.SWSSnap\0");
+	if (cFile)
+	{
+		FILE* f = fopen(cFile, "r");
+		WDL_String chunk;
+		if (f)
+		{
+			while(fgets(str, 4096, f))
+				chunk.Append(str);
+			fclose(f);
+
+			Snapshot* ss = new Snapshot(chunk.Get());
+			if (!ss->m_tracks.GetSize())
+			{
+				MessageBox(g_hwndParent, "File does not contain a valid snapshot.", "SWS Snapshot Import Error", MB_OK);
+				delete ss;
+				ss = NULL;
+			}
+			else
+				MergeSnapshot(ss); // Handles delete of ss if necessary			
+		}
+		else
+			MessageBox(g_hwndParent, "Unable to open file.", "SWS Snaphot Import Error", MB_OK);
+		
+		free(cFile);
+	}
 }
 
 static SWS_LVColumn g_cols[] = { { 20, 2, "#" }, { 60, 3, "Name" }, { 60, 2, "Date" }, { 60, 2, "Time" } };
@@ -366,6 +430,13 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
+		case MERGE_MSG:
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			if (MergeSnapshots(ss))
+				Update();
+			break;
+		}
 		case IDC_SAVE:
 			NewSnapshot();
 			break;
@@ -442,7 +513,17 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			DisplayInfoBox(m_hwnd, "Snapshot Details", details.Get());
 			break;
 		}
-
+		case EXPORT_MSG:
+		{
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			ExportSnapshot(ss);
+			break;
+		}
+		case IMPORT_MSG:
+		{
+			ImportSnapshot();
+			break;
+		}
 		case IDC_MIX:
 		case IDC_CURVIS:
 		case IDC_CUSTOM:
@@ -460,7 +541,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				{
 					GetOptions();
 					Update();
-					break;
+					return;
 				}
 
 			if (wParam >= LOAD_MSG && wParam < (WPARAM)(LOAD_MSG + g_ss.Get()->m_snapshots.GetSize()))
@@ -477,6 +558,7 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
 
 	if (item)
 	{
+		AddToMenu(contextMenu, "Merge into project...", MERGE_MSG);
 		AddToMenu(contextMenu, "Rename", RENAME_MSG);
 		AddToMenu(contextMenu, SWS_SEPARATOR, 0);
 		AddToMenu(contextMenu, "Show snapshot details", DETAILS_MSG);
@@ -486,6 +568,7 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
 		AddToMenu(contextMenu, "Overwrite snapshot", SAVE_MSG);
 		AddToMenu(contextMenu, "Delete snapshot", DELETE_MSG);
 		AddToMenu(contextMenu, "Copy snapshot", COPY_MSG);
+		AddToMenu(contextMenu, "Export snapshot...", EXPORT_MSG);
 	}
 	else
 	{
@@ -501,6 +584,7 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
 				CheckMenuItem(contextMenu, iCmd, MF_CHECKED);
 		}
 	}
+	AddToMenu(contextMenu, "Import snapshot...", IMPORT_MSG);
 	AddToMenu(contextMenu, "New snapshot", SWSGetCommandID(NewSnapshot));
 	AddToMenu(contextMenu, "Paste snapshot", SWSGetCommandID(PasteSnapshot));
 
@@ -758,34 +842,40 @@ void CopyAllSnapshot(COMMAND_T*)
 	CopySnapshotToClipboard(&ss);
 }
 
+// This function adds the snapshot or deletes it from memory
+void MergeSnapshot(Snapshot* ss)
+{
+	if (!ss)
+		return;
+
+	if (MergeSnapshots(ss))
+	{
+		// Save the pasted snapshot
+		// Find the "slot" -- use the saved, or the first avail
+		for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
+		{
+			if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot == ss->m_iSlot)
+			{	// Slot collision, pick the first avail
+				int j;
+				for (j = 0; j < g_ss.Get()->m_snapshots.GetSize(); j++)
+					if (g_ss.Get()->m_snapshots.Get(j)->m_iSlot != j+1)
+						break;
+				ss->m_iSlot = j + 1;
+			}
+		}
+
+		// Add the snapshot to the list
+		g_ss.Get()->m_snapshots.Add(ss);
+		g_pSSWnd->Update();
+	}
+	else
+		delete ss;
+}
+
 void PasteSnapshot(COMMAND_T*)
 {
 	Snapshot* ss = GetSnapshotFromClipboard();
-	if (ss)
-	{
-		if (MergeSnapshots(ss))
-		{
-			// Save the pasted snapshot
-			// Find the "slot" -- use the saved, or the first avail
-			for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
-			{
-				if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot == ss->m_iSlot)
-				{	// Slot collision, pick the first avail
-					int j;
-					for (j = 0; j < g_ss.Get()->m_snapshots.GetSize(); j++)
-						if (g_ss.Get()->m_snapshots.Get(j)->m_iSlot != j+1)
-							break;
-					ss->m_iSlot = j + 1;
-				}
-			}
-
-			// Add the snapshot to the list
-			g_ss.Get()->m_snapshots.Add(ss);
-			g_pSSWnd->Update();
-		}
-		else
-			delete ss;
-	}
+	MergeSnapshot(ss);
 }
 
 static COMMAND_T g_commandTable[] = 
@@ -844,7 +934,12 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	WDL_String chunk;
 	if (GetChunkFromProjectState("<SWSSNAPSHOT", &chunk, line, ctx))
 	{
-		g_ss.Get()->m_snapshots.Add(new Snapshot(chunk.Get()));
+		Snapshot* newSS = g_ss.Get()->m_snapshots.Add(new Snapshot(chunk.Get()));
+		for (int i = 0; i < newSS->m_tracks.GetSize(); i++)
+		{
+			TrackSnapshot* ts = newSS->m_tracks.Get(i);
+			int adf = 0;
+		}
 		g_pSSWnd->Update();
 		return true;
 	}
@@ -858,7 +953,6 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	{
 		Snapshot* ss = g_ss.Get()->m_snapshots.Get(i);
 		ss->GetChunk(&chunk);
-		char* str = chunk.Get();
 		int iPos = 0;
 		while(GetChunkLine(chunk.Get(), &line, &iPos, false))
 			ctx->AddLine(line.Get());

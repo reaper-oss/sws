@@ -122,8 +122,8 @@ extern bool g_bFalse;
 #define LVKF_SHIFT 4
 extern const GUID GUID_NULL;
 //sws_util.mm
-void GetDateString(int time, char* buf, int bufsize);
-void GetTimeString(int time, char* buf, int bufsize);
+void SWS_GetDateString(int time, char* buf, int bufsize);
+void SWS_GetTimeString(int time, char* buf, int bufsize);
 void SetColumnArrows(HWND h, int iSortCol);
 int GetCustomColors(COLORREF custColors[]);
 void SetCustomColors(COLORREF custColors[]);

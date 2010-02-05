@@ -139,10 +139,16 @@ void SWS_CacheObjectState(bool bStart)
 bool GetChunkLine(const char* chunk, WDL_String* line, int* pos, bool bNewLine)
 {
 	int chunkLen = (int)strlen(chunk);
+
+	// Skip blank lines
+	while (*(chunk + *pos) == '\n')
+		(*pos)++;
+
 	if (*pos >= chunkLen || *pos < 0)
 		return false;
 
 	const char* pEnd = strchr(chunk + *pos, '\n');
+
 	int iEndPos;
 	if (!pEnd)
 		iEndPos = chunkLen;

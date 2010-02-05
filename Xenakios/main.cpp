@@ -717,5 +717,43 @@ int XenakiosInit()
 	};
 
 	srand ((unsigned int)time(NULL));
+
+	// Add track template actions
+	char cPath[256];
+	strncpy(cPath, get_ini_file(), 256);
+	char* pC = strrchr(cPath, PATH_SLASH_CHAR);
+	if (pC)
+	{
+		strcpy(pC+1, "TrackTemplates");
+		vector<string> templates;
+		SearchDirectory(templates, cPath, "RTRACKTEMPLATE", true);
+		int iMaxTemplate = 0;
+		for (int i = 0; i < (int)templates.size(); i++)
+		{
+			char cNum[3];
+			const char* pFilename = strrchr(templates[i].c_str(), PATH_SLASH_CHAR);
+			if (pFilename)
+			{
+				lstrcpyn(cNum, pFilename+1, 3);
+				int iNum = atol(cNum);
+				if (iNum > iMaxTemplate)
+					iMaxTemplate = iNum;
+			}
+		}
+		for (int i = 11; i <= iMaxTemplate; i++)
+		{
+			COMMAND_T* ct = new COMMAND_T;
+			memset(ct, 0, sizeof(COMMAND_T));
+			char* desc = new char[40];
+			ct->accel.desc = desc;
+			ct->id = new char[35];
+			ct->doCommand = DoOpenTrackTemplate;
+			ct->user = i;
+			sprintf(ct->id, "XENAKIOS_LOADTRACKTEMPLATE%d", i);
+			sprintf(desc, "Xenakios/SWS: Load track template %d", i);
+			SWSRegisterCommand(ct);
+		}
+	}
+
 	return 1;
 }

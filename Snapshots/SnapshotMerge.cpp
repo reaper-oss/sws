@@ -151,8 +151,9 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			resize.init_item(IDC_UPDATE, 1.0, 0.0, 1.0, 0.0);
 
 			EnableWindow(GetDlgItem(hwndDlg, IDC_NAME), false);
-			EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATE), false);
+			SetWindowLongPtr(GetDlgItem(hwndDlg, IDC_NAME), GWLP_USERDATA, 0xdeadf00b);
 			SetDlgItemText(hwndDlg, IDC_NAME, g_ss->m_cName);
+			EnableWindow(GetDlgItem(hwndDlg, IDC_UPDATE), false);
 			CheckDlgButton(hwndDlg, IDC_UPDATE, BST_CHECKED);
 			g_bSave = false;
 
@@ -259,7 +260,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 		case WM_NOTIFY:
 		{
 			NMHDR* hdr = (NMHDR*)lParam;
-			if (hdr->hwndFrom == mv->GetHWND())
+			if (mv && hdr->hwndFrom == mv->GetHWND())
 				return mv->OnNotify(wParam, lParam);
 			break;
 		}
@@ -320,6 +321,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 								}
 					}
 					
+					// Create a new snapshot from the selection
 					// Update the snapshot and "recall it"
 					// 1) Save the existing snapshot's tracks
 					WDL_PtrList<TrackSnapshot> oldTrackSS;
@@ -351,13 +353,13 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					for (int i = 0; i < g_ss->m_tracks.GetSize(); i++)
 					{
 						WDL_PtrList<TrackSend>* pSends = &g_ss->m_tracks.Get(i)->m_sends.m_sends;
-						for (int j = 0; pSends->GetSize(); i++)
-							if (!GuidToTrack(pSends->Get(i)->GetGuid()))
+						for (int j = 0; j < pSends->GetSize(); j++)
+							if (!GuidToTrack(pSends->Get(j)->GetGuid()))
 							{	// Perhaps the recv was in the snapshot and the user matched it with a different track?
 								int iMatches = 0;
 								MediaTrack* pDest = NULL;
 								for (int k = 0; k < g_mergeItems.GetSize(); k++)
-									if (GuidsEqual(&g_mergeItems.Get(k)->m_ts->m_guid, pSends->Get(i)->GetGuid()))
+									if (GuidsEqual(&g_mergeItems.Get(k)->m_ts->m_guid, pSends->Get(j)->GetGuid()))
 									{
 										pDest = g_mergeItems.Get(k)->m_destTr;
 										iMatches++;
@@ -367,19 +369,29 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 							}
 					}
 
-					oldTrackSS.Empty(true);
-
 					// Check options
+					// Set name before update so undo str is correct
 					if(IsDlgButtonChecked(hwndDlg, IDC_SAVE) == BST_CHECKED)
 					{
 						char cName[80];
 						GetDlgItemText(hwndDlg, IDC_NAME, cName, 80);
 						g_ss->SetName(cName);
-
 						g_bSave = true;
 					}
+					// Update reaper if necessary
 					if (IsDlgButtonChecked(hwndDlg, IDC_UPDATE) == BST_CHECKED)
-						g_ss->UpdateReaper(g_iMask, false, false);				
+						g_ss->UpdateReaper(g_iMask, false, false);
+
+					// Restore snapshot's tracks if we're not saving, else delete the old
+					if (IsDlgButtonChecked(hwndDlg, IDC_SAVE) != BST_CHECKED)
+					{
+						g_ss->m_tracks.Empty(true);
+						for (int i = 0; i < oldTrackSS.GetSize(); i++)
+							g_ss->m_tracks.Add(oldTrackSS.Get(i));
+					}
+					else
+						oldTrackSS.Empty(true);
+
 					// fall through!
 				}
 			case IDCANCEL:
@@ -416,10 +428,12 @@ bool MergeSnapshots(Snapshot* ss)
 {
 	g_ss = ss;
 
-	if (!ss->m_tracks.GetSize())
+	if (!ss || !ss->m_tracks.GetSize())
 		return false;
 
 	g_iMask = ss->m_iMask;
+	
+	int iUnmatched = ss->m_tracks.GetSize();
 
 	// If the paste is occuring with matching selected tracks, use those
 	if (ss->m_tracks.GetSize() == CountSelectedTracks(NULL))
@@ -431,7 +445,7 @@ bool MergeSnapshots(Snapshot* ss)
 		}
 	}
 	else
-	{	// Next try matching with names
+	{	// Next try matching with GUIDS
 		WDL_PtrList<void> projTracks;
 		for (int i = 1; i <= GetNumTracks(); i++)
 			projTracks.Add(CSurf_TrackFromID(i, false));
@@ -443,7 +457,7 @@ bool MergeSnapshots(Snapshot* ss)
 			// First "match" is with the GUID, try the name next
 			if (!mi->m_destTr && mi->m_ts->m_sName.GetLength())
 			{
-				// Try name matching
+				// GUID didn't work, try name matching
 				for (int j = 0; j < projTracks.GetSize(); j++)
 					if (strcmp((char*)GetSetMediaTrackInfo((MediaTrack*)projTracks.Get(j), "P_NAME", NULL), mi->m_ts->m_sName.Get()) == 0)
 					{
@@ -453,6 +467,14 @@ bool MergeSnapshots(Snapshot* ss)
 					}
 			}
 		}
+
+		// Fill in blanks with whatever tracks exist
+		for (int i = 0; projTracks.GetSize() && i < g_mergeItems.GetSize(); i++)
+			if (!g_mergeItems.Get(i)->m_destTr)
+			{
+				g_mergeItems.Get(i)->m_destTr = (MediaTrack*)projTracks.Get(0);
+				projTracks.Delete(0);
+			}
 	}
 
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SSMERGE), g_hwndParent, mergeWndProc);

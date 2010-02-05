@@ -159,7 +159,8 @@ bool FXSnapshot::Exists(MediaTrack* tr)
 TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 {
 	m_iTrackNum = CSurf_TrackToID(tr, false);
-	m_sName.Set((char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL));
+	char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
+	m_sName.Set(cName ? cName : "");
 
 	if (!m_iTrackNum)
 		m_guid = GUID_NULL;
@@ -225,7 +226,9 @@ TrackSnapshot::TrackSnapshot(LineParser* lp)
 		char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 		m_sName.Set(cName ? cName : "");
 		m_iTrackNum = CSurf_TrackToID(tr, false);
-	}		
+	}
+	else
+		m_iTrackNum = -1;
 }
 
 TrackSnapshot::~TrackSnapshot()
@@ -341,7 +344,7 @@ void TrackSnapshot::GetDetails(WDL_String* details, int iMask)
 		details->AppendFormatted(100, "Track #%d \"%s\" (not in current project!):\r\n", m_iTrackNum, m_sName.Get());
 
 	if (iMask & VOL_MASK)
-		details->AppendFormatted(50, "Volume: %.2fdb\r\n", m_dVol);
+		details->AppendFormatted(50, "Volume: %.2fdb\r\n", VAL2DB(m_dVol));
 	if (iMask & PAN_MASK)
 	{
 		if (m_dPan == 0.0)
@@ -426,8 +429,8 @@ Snapshot::Snapshot(int slot, int mask, bool bSelOnly, char* name)
 {
 	m_iSlot = slot;
 	m_iMask = mask;
-	m_cName = NULL;
 	m_time = (int)time(NULL);
+	m_cName = NULL;
 	SetName(name);
 
 	SWS_CacheObjectState(true);
@@ -453,6 +456,7 @@ Snapshot::Snapshot(const char* chunk)
 	int pos = 0;
 	LineParser lp(false);
 	TrackSnapshot* ts = NULL;
+	m_cName = NULL;
 
 	while(GetChunkLine(chunk, &line, &pos, false))
 	{
@@ -544,15 +548,6 @@ Snapshot::Snapshot(const char* chunk)
 		}
 	}
 	RegisterGetCommand(m_iSlot);
-}
-
-Snapshot::Snapshot(int slot, int mask, char* name, int time)
-{
-	m_iSlot = slot;
-	m_iMask = mask;
-	m_cName = NULL;
-	SetName(name);
-	m_time = time;
 }
 
 Snapshot::~Snapshot()
@@ -665,8 +660,7 @@ char* Snapshot::Tooltip(char* str, int maxLen)
 
 void Snapshot::SetName(const char* name)
 {
-	if (m_cName)
-		delete [] m_cName;
+	delete [] m_cName;
 	if (!name)
 	{
 		char newName[20];
@@ -787,9 +781,9 @@ char* Snapshot::GetTimeString(char* str, int iStrMax, bool bDate)
 	}
 #else
 	if (bDate)
-		GetDateString(m_time, str, iStrMax);
+		SWS_GetDateString(m_time, str, iStrMax);
 	else
-		GetTimeString(m_time, str, iStrMax);
+		SWS_GetTimeString(m_time, str, iStrMax);
 #endif
 	return str;
 }

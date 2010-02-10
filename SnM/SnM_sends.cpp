@@ -79,8 +79,8 @@ bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 					strcmp(lp.gettoken_str(0), "MIDIOUT") == 0)
 				{
 					sendout.Append("AUXRECV ");
-					sendout.AppendFormatted(2, "%d ", srcId-1);
-					sendout.Append("2 1.00000000000000 0.00000000000000 0 0 0 0 0 -1.00000000000000 0 -1\n");
+					sendout.AppendFormatted(3, "%d %d", srcId-1, _type);
+					sendout.Append(" 1.00000000000000 0.00000000000000 0 0 0 0 0 -1.00000000000000 0 -1\n");
 				}
 
 				if (lp.getnumtokens())
@@ -95,18 +95,7 @@ bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 
 			// Sets the new state
 			if (sendout.GetLength())
-			{
-				if (SWS_GetSetObjectState(_destTr, sendout.Get()) == 0)
-				{
-					// Used to be a trick to force refresh in REAPER.
-					// That native bug has been fixed in v3.22 but 
-					// I re-put the following line as an urgent fix: above we
-					// set a deprecated send type, which need to be refreshed here..
-					GetSetTrackSendInfo(_destTr, -1, rcvId, "I_SENDMODE" , &_type);
-
-					ok = true;
-				}
-			}
+				ok = !SWS_GetSetObjectState(_destTr, sendout.Get());
 		}
 	}
 	return ok;

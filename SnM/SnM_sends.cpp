@@ -98,6 +98,12 @@ bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 			{
 				if (SWS_GetSetObjectState(_destTr, sendout.Get()) == 0)
 				{
+					// Used to be a trick to force refresh in REAPER.
+					// That native bug has been fixed in v3.22 but 
+					// I re-put the following line as an urgent fix: above we
+					// set a deprecated send type, which need to be refreshed here..
+					GetSetTrackSendInfo(_destTr, -1, rcvId, "I_SENDMODE" , &_type);
+
 					ok = true;
 				}
 			}

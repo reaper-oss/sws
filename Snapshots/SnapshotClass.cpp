@@ -572,10 +572,14 @@ bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 	int trackErr = 0, fxErr = 0;
 	WDL_PtrList<TrackSendFix> sendFixes;
 
-	// Cache all ObjectState changes
+	// Do "non-chunk" stuff first
+	for (int i = 0; i < m_tracks.GetSize(); i++)
+		m_tracks.Get(i)->UpdateReaper(mask & m_iMask & ~CHUNK_MASK, bSelOnly, &fxErr, &sendFixes);
+	
+	// Then cache all ObjectState changes for the chunk updating
 	SWS_CacheObjectState(true);
 	for (int i = 0; i < m_tracks.GetSize(); i++)
-		if (m_tracks.Get(i)->UpdateReaper(mask & m_iMask, bSelOnly, &fxErr, &sendFixes))
+		if (m_tracks.Get(i)->UpdateReaper(mask & m_iMask & CHUNK_MASK, bSelOnly, &fxErr, &sendFixes))
 			trackErr++;
 	SWS_CacheObjectState(false);
 

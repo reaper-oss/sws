@@ -153,6 +153,11 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 		Main_OnCommand(9, 0);
 }
 
+void SWS_TrackListView::OnItemDblClk(LPARAM item, int iCol)
+{
+	Main_OnCommand(40913, 0); // Scroll selected tracks into view
+}
+
 bool SWS_TrackListView::OnItemSelChange(LPARAM item, bool bSel)
 {
 	MediaTrack* tr = (MediaTrack*)item;

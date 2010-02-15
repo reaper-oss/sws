@@ -56,7 +56,7 @@ public:
     TrackSnapshot(LineParser* lp);
     ~TrackSnapshot();
 
-    bool UpdateReaper(int mask, bool bSelOnly, int* fxErr, WDL_PtrList<TrackSendFix>* pFix);
+	bool UpdateReaper(int mask, bool bSelOnly, int* fxErr, WDL_PtrList<TrackSendFix>* pFix);
 	bool Cleanup();
 	void GetChunk(WDL_String* chunk);
 	void GetDetails(WDL_String* details, int iMask);
@@ -89,6 +89,7 @@ public:
 #define SEL_MASK		0x100
 #define FXCHAIN_MASK	0x200
 #define ALL_MASK        0xFFF // large enough for forward compat
+#define CHUNK_MASK		(FXCHAIN_MASK | SENDS_MASK)
 #define MIX_MASK		(VOL_MASK | PAN_MASK | MUTE_MASK | SOLO_MASK | FXCHAIN_MASK | SENDS_MASK)
 
 // Map controls to mask elements

@@ -11,6 +11,7 @@ RequestExecutionLevel highest
 LicenseData license.txt
 
 Function .onInit
+  SetRegView 32
   ReadRegStr $0 HKLM Software\Reaper ""
   StrCmp $0 "" +1
   StrCpy $INSTDIR $0\Plugins

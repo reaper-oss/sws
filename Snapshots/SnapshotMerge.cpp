@@ -382,6 +382,11 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					// Update reaper if necessary
 					if (IsDlgButtonChecked(hwndDlg, IDC_UPDATE) == BST_CHECKED)
 						g_ss->UpdateReaper(g_iMask, false, false);
+					else
+					{	// In case tracks were added, update everything
+						TrackList_AdjustWindows(false);
+						UpdateTimeline();
+					}
 
 					// Restore snapshot's tracks if we're not saving, else delete the old
 					if (IsDlgButtonChecked(hwndDlg, IDC_SAVE) != BST_CHECKED)
@@ -434,8 +439,6 @@ bool MergeSnapshots(Snapshot* ss)
 
 	g_iMask = ss->m_iMask;
 	
-	int iUnmatched = ss->m_tracks.GetSize();
-
 	// If the paste is occuring with matching selected tracks, use those
 	if (ss->m_tracks.GetSize() == CountSelectedTracks(NULL))
 	{

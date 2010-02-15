@@ -1,7 +1,7 @@
 /******************************************************************************
 / MediaPool.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -541,7 +541,7 @@ SWS_MediaPoolWnd::SWS_MediaPoolWnd()
 			while (fgets(cBuf, 512, f))
 			{
 				LineParser lp(false);
-				if (!lp.parse(cBuf))
+				if (!lp.parse(cBuf) && lp.getnumtokens())
 				{
 					if (strcmp(lp.gettoken_str(0), "<GROUP") == 0)
 					{

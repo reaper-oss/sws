@@ -31,6 +31,7 @@
 #include "Snapshots.h"
 #include "SnapshotMerge.h"
 #include "../Prompt.h"
+#include "../../WDL/projectcontext.h"
 
 #define SNAP_OPTIONS_KEY "Snapshot Options"
 #define RENAME_MSG	0x10001
@@ -145,13 +146,16 @@ void ExportSnapshot(Snapshot* ss)
 	lstrcpyn(filename, ss->m_cName, 256);
 	if (BrowseForSaveFile("Export snapshot...", cPath, filename, "SWSSnap files\0*.SWSSnap\0", filename, 256))
 	{
-		FILE* f = fopen(filename, "w");
-		if (f)
+		ProjectStateContext* cfg = ProjectCreateFileWrite(filename);
+		if (cfg)
 		{
 			WDL_String chunk;
 			ss->GetChunk(&chunk);
-			fwrite(chunk.Get(), chunk.GetLength()+1, 1, f);
-			fclose(f);
+			char line[4096];
+			int pos = 0;
+			while(GetChunkLine(chunk.Get(), line, 4096, &pos, false))
+				cfg->AddLine(line);
+			delete cfg;
 		}
 		else
 			MessageBox(g_hwndParent, "Unable to write to file.", "SWS Snaphot Export Error", MB_OK);
@@ -166,13 +170,20 @@ void ImportSnapshot()
 	char* cFile = BrowseForFiles("Import snapshot...", str, NULL, false, "SWSSnap files\0*.SWSSnap\0");
 	if (cFile)
 	{
-		FILE* f = fopen(cFile, "r");
-		WDL_String chunk;
-		if (f)
+		ProjectStateContext* cfg = ProjectCreateFileRead(cFile);
+		if (cfg)
 		{
-			while(fgets(str, 4096, f))
-				chunk.Append(str);
-			fclose(f);
+			WDL_TypedBuf<char> chunk;
+			int iLen = 0;
+			while(!cfg->GetLine(str, 4096))
+			{
+				int iNewLen = iLen + strlen(str);
+				chunk.Resize(iNewLen + 2);
+				strcpy(chunk.Get()+iLen, str);
+				strcpy(chunk.Get()+iNewLen, "\n");
+				iLen = iNewLen + 1;
+			}
+			delete cfg;
 
 			Snapshot* ss = new Snapshot(chunk.Get());
 			if (!ss->m_tracks.GetSize())
@@ -751,6 +762,8 @@ void SaveSnapshot(int slot)
 	{
 		Snapshot* oldSnapshot = g_ss.Get()->m_snapshots.Get(i);
 		g_ss.Get()->m_snapshots.Set(i, new Snapshot(oldSnapshot->m_iSlot, g_iMask, g_bSelOnly, oldSnapshot->m_cName));
+		if (g_ss.Get()->m_pCurSnapshot == oldSnapshot)
+			g_ss.Get()->m_pCurSnapshot = NULL;
 		delete oldSnapshot;
 	}
 	g_pSSWnd->Update();
@@ -903,6 +916,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS: New snapshot (with current settings)" },		"SWSSNAPSHOT_NEW",	     NewSnapshot,		   NULL, 0 },
 	{ { DEFACCEL, "SWS: New snapshot and edit name" },					"SWSSNAPSHOT_NEWEDIT",   NewSnapshotEdit,	   NULL, 1 },
+	//{ { DEFACCEL, "SWS: Delete current snapshot" },						"SWSSNAPSHOT_NEWEDIT",   NewSnapshotEdit,	   NULL, 1 },
 	{ { DEFACCEL, "SWS: Save as snapshot 1" },							"SWSSNAPSHOT_SAVE1",	 SaveSnapshot,         NULL, 1 },
 	{ { DEFACCEL, "SWS: Save as snapshot 2" },							"SWSSNAPSHOT_SAVE2",	 SaveSnapshot,         NULL, 2 },
 	{ { DEFACCEL, "SWS: Save as snapshot 3" },							"SWSSNAPSHOT_SAVE3",	 SaveSnapshot,         NULL, 3 },

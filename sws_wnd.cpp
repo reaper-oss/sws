@@ -248,6 +248,7 @@ void SWS_DockWnd::ToggleDocking()
 	if (!m_bDocked)
 	{
 		m_bDocked = true;
+		SaveWindowPos(m_hwnd, m_cWndPosKey);
 		ShowWindow(m_hwnd, SW_HIDE);
 		DockWindowAdd(m_hwnd, (char*)m_cName, m_iDockOrder, false);
 		DockWindowActivate(m_hwnd);

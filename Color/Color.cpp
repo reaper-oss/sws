@@ -1,7 +1,7 @@
 /******************************************************************************
 / Color.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -266,7 +266,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-void ShowColorDialog(COMMAND_T* = NULL)
+void ShowColorDialog(COMMAND_T*)
 {
 	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_COLOR),g_hwndParent,doColorDlg);
 }

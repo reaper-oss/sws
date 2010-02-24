@@ -77,7 +77,6 @@
 #include "sws_util.h"
 #include "sws_wnd.h"
 #include "resource.h"
-#include "Xenakios/resource.h"
 #include "Xenakios/XenakiosExts.h"
 #include "ObjectState/ObjectState.h"
 #include "ObjectState/TrackFX.h"

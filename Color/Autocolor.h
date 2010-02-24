@@ -1,5 +1,5 @@
 /******************************************************************************
-/ Version.h
+/ Autocolor.h
 /
 / Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
@@ -23,10 +23,42 @@
 / FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 / OTHER DEALINGS IN THE SOFTWARE.
 /
-/ Auto build # increment code from MS Knowledge base article 237870
 ******************************************************************************/
 
-#define FILE_VERSION			1,5,0,15
-#define PRODUCT_VERSION			1,5,0,15
-#define FILE_VERSION_STR		"1, 5, 0, 15\0"
-#define PRODUCT_VERSION_STR		"1, 5, 0, 15\0"
+#pragma once
+
+class SWS_AutoColorItem
+{
+public:
+	SWS_AutoColorItem(const char* str, COLORREF col):m_str(str),m_col(col) {}
+	WDL_String m_str;
+	COLORREF m_col;
+};
+
+class SWS_AutoColorView : public SWS_ListView
+{
+public:
+	SWS_AutoColorView(HWND hwndList, HWND hwndEdit);
+
+protected:
+	void SetItemText(LPARAM item, int iCol, const char* str);
+	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
+	int  OnItemSort(LPARAM item1, LPARAM item2);
+	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
+};
+
+class SWS_AutoColorWnd : public SWS_DockWnd
+{
+public:
+	SWS_AutoColorWnd();
+	void Update();
+	
+protected:
+	void OnInitDlg();
+	void OnCommand(WPARAM wParam, LPARAM lParam);
+	HMENU OnContextMenu(int x, int y);
+};
+
+int AutoColorInit();
+void AutoColorExit();
+void OpenAutoColor(COMMAND_T* = NULL);

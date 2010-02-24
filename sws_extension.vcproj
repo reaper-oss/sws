@@ -66,6 +66,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="comctl32.lib"
 				OutputFile="$(OutDir)\reaper_sws.dll"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
@@ -148,6 +149,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="comctl32.lib"
 				OutputFile="$(OutDir)\reaper_sws64.dll"
 				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
@@ -228,6 +230,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="comctl32.lib"
 				OutputFile="$(OutDir)\reaper_sws.dll"
 				LinkIncremental="0"
 				IgnoreDefaultLibraryNames=""
@@ -312,6 +315,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="comctl32.lib"
 				OutputFile="$(OutDir)\reaper_sws64.dll"
 				LinkIncremental="0"
 				IgnoreDefaultLibraryNames=""
@@ -360,6 +364,10 @@
 			>
 			<File
 				RelativePath=".\Freeze\ActiveTake.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Color\Autocolor.cpp"
 				>
 			</File>
 			<File
@@ -598,6 +606,10 @@
 			>
 			<File
 				RelativePath=".\Freeze\ActiveTake.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Color\Autocolor.h"
 				>
 			</File>
 			<File
@@ -859,18 +871,6 @@
 				</File>
 				<File
 					RelativePath=".\Xenakios\XenakiosExts.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Resource Files"
-				>
-				<File
-					RelativePath=".\Xenakios\res.rc"
-					>
-				</File>
-				<File
-					RelativePath=".\Xenakios\resource.h"
 					>
 				</File>
 			</Filter>

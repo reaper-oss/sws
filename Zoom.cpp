@@ -492,7 +492,7 @@ static SWSProjConfig<ArrangeState> g_stdAS;
 static SWSProjConfig<ArrangeState> g_togAS;
 static bool g_bASToggled = false;
 
-// iType == 0 tracks, 1 items; iOthers == 0 nothing, 1 minimize, 2 hide from TCP
+// iType == 0 tracks, 1 items or time sel, 2 just items; iOthers == 0 nothing, 1 minimize, 2 hide from TCP
 void TogZoom(int iType, int iOthers)
 {
 	if (g_bASToggled)
@@ -514,7 +514,7 @@ void TogZoom(int iType, int iOthers)
 	{
 		double d1, d2;
 		GetSet_LoopTimeRange(false, false, &d1, &d2, false);
-		if (d1 != d2)
+		if (d1 != d2 && iType == 1)
 			Main_OnCommand(40031, 0);
 		else
 			HorizZoomSelItems();
@@ -528,6 +528,9 @@ void TogZoomTTHide(COMMAND_T* = NULL)		{ TogZoom(0, 2); }
 void TogZoomItems(COMMAND_T* = NULL)		{ TogZoom(1, 0); }
 void TogZoomItemsMin(COMMAND_T* = NULL)		{ TogZoom(1, 1); }
 void TogZoomItemsHide(COMMAND_T* = NULL)	{ TogZoom(1, 2); }
+void TogZoomItemsOnly(COMMAND_T* = NULL)	{ TogZoom(2, 0); }
+void TogZoomItemsOnlyMin(COMMAND_T* = NULL)	{ TogZoom(2, 1); }
+void TogZoomItemsOnlyHide(COMMAND_T* = NULL){ TogZoom(2, 2); }
 void SaveArngView(COMMAND_T* = NULL)		{ g_stdAS.Get()->Save(); }
 void RestoreArngView(COMMAND_T* = NULL)		{ g_stdAS.Get()->Restore(); }
 
@@ -575,9 +578,12 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel" },					"SWS_TOGZOOMTT",		TogZoomTT,			NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, minimize others" },	"SWS_TOGZOOMTTMIN",		TogZoomTTMin,		NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, hide others" },		"SWS_TOGZOOMTTHIDE",	TogZoomTTHide,		NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s)" },								"SWS_TOGZOOMI",			TogZoomItems,		NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), minimize other tracks" },		"SWS_TOGZOOMIMIN",		TogZoomItemsMin,	NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), hide other tracks" },			"SWS_TOGZOOMIHIDE",		TogZoomItemsHide,	NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s) + time sel" },						"SWS_TOGZOOMI",		TogZoomItems,		NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s) + time sel, minimize other tracks" },"SWS_TOGZOOMIMIN",	TogZoomItemsMin,	NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s) + time sel, hide other tracks" },	"SWS_TOGZOOMIHIDE",	TogZoomItemsHide,	NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s)" },								"SWS_TOGZOOMIONLY",		TogZoomItemsOnly,	NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), minimize other tracks" },		"SWS_TOGZOOMIONLYMIN",	TogZoomItemsOnlyMin,NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), hide other tracks" },			"SWS_TOGZOOMIONLYHIDE",	TogZoomItemsOnlyHide,NULL, 0, IsTogZoomed },
 	
 	{ { DEFACCEL, "SWS: Save current arrange view" },				 				"SWS_SAVEVIEW",			SaveArngView,		NULL, },
 	{ { DEFACCEL, "SWS: Restore arrange view" },				 					"SWS_RESTOREVIEW",		RestoreArngView,	NULL, },

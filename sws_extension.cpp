@@ -34,6 +34,7 @@
 #include "Snapshots/Snapshots.h"
 #include "Zoom.h"
 #include "Color/Color.h"
+//#include "Color/Autocolor.h"
 #include "MarkerList/MarkerListClass.h"
 #include "MarkerList/MarkerList.h"
 #include "TrackList/TrackListFilter.h"
@@ -298,6 +299,7 @@ extern "C"
 			TrackListExit();
 			MarkerListExit();
 			MediaPoolExit();
+			//AutoColorExit();
 			ERR_RETURN("Exiting Reaper.\n")
 		}
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)
@@ -464,6 +466,8 @@ extern "C"
 			ERR_RETURN("Marker list init error\n")
 		if (!ColorInit())
 			ERR_RETURN("Color init error\n")
+		//if (!AutoColorInit())
+		//	ERR_RETURN("Auto Color init error\n")
 		if (!TrackListInit())
 			ERR_RETURN("Tracklist init error\n")
 		if (!MediaPoolInit())
@@ -493,10 +497,8 @@ extern "C"
 #ifndef _WIN32 // MAC resources
 #include "../WDL/swell/swell-dlggen.h"
 #include "sws_extension.rc_mac_dlg"
-#include "Xenakios/res.rc_mac_dlg"
 #undef BEGIN
 #undef END
 #include "../WDL/swell/swell-menugen.h"
 #include "sws_extension.rc_mac_menu"
-#include "Xenakios/res.rc_mac_menu"
 #endif

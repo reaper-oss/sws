@@ -1,7 +1,7 @@
 /******************************************************************************
 / MarkerListClass.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -321,13 +321,25 @@ void MarkerList::ExportToClipboard(const char* format)
 	}
 
     EmptyClipboard();
+	HGLOBAL hglbCopy;
 
-	// Not sure what the HGLOBAL deal is but it's straight from the help on SetClipboardData
-	HGLOBAL hglbCopy; 
-    hglbCopy = GlobalAlloc(GMEM_MOVEABLE, strlen(str)+1); 
-    memcpy(GlobalLock(hglbCopy), str, strlen(str)+1);
-    GlobalUnlock(hglbCopy); 
-    SetClipboardData(CF_TEXT, hglbCopy); 
+	if (WDL_HasUTF8(str))
+	{
+		DWORD size;
+		WCHAR* wc = WDL_UTF8ToWC(str, false, 0, &size);
+	    hglbCopy = GlobalAlloc(GMEM_MOVEABLE, size*sizeof(WCHAR)); 
+		memcpy(GlobalLock(hglbCopy), wc, size*sizeof(WCHAR));
+		free(wc);
+		GlobalUnlock(hglbCopy);
+		SetClipboardData(CF_UNICODETEXT, hglbCopy);
+	}
+	else
+	{
+	    hglbCopy = GlobalAlloc(GMEM_MOVEABLE, strlen(str)+1); 
+		memcpy(GlobalLock(hglbCopy), str, strlen(str)+1);
+		GlobalUnlock(hglbCopy);
+		SetClipboardData(CF_TEXT, hglbCopy);
+	}
 	CloseClipboard();
 	delete [] str;
 #else

@@ -602,6 +602,30 @@ void ShowAll(COMMAND_T*)
 	Undo_OnStateChangeEx("Show all tracks", UNDO_STATE_TRACKCFG, -1);
 }
 
+void ShowAllMCP(COMMAND_T*)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		SetTrackVis(tr, GetTrackVis(tr) | 1);
+	}
+	TrackList_AdjustWindows(MAJORADJUST);
+	UpdateTimeline();
+	Undo_OnStateChangeEx("Show all tracks in MCP", UNDO_STATE_TRACKCFG, -1);
+}
+
+void ShowAllTCP(COMMAND_T*)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		SetTrackVis(tr, GetTrackVis(tr) | 2);
+	}
+	TrackList_AdjustWindows(MAJORADJUST);
+	UpdateTimeline();
+	Undo_OnStateChangeEx("Show all tracks in TCP", UNDO_STATE_TRACKCFG, -1);
+}
+
 void HideAll(COMMAND_T* = NULL)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -758,6 +782,8 @@ static COMMAND_T g_commandTable[] =
 
 	// Affect all tracks
 	{ { DEFACCEL, "SWS: Show all tracks" },								"SWSTL_SHOWALL",	ShowAll,			NULL, },
+	{ { DEFACCEL, "SWS: Show all tracks in MCP" },						"SWSTL_SHOWALLMCP",	ShowAllMCP,			NULL, },
+	{ { DEFACCEL, "SWS: Show all tracks in TCP" },						"SWSTL_SHOWALLTCP",	ShowAllTCP,			NULL, },
 	{ { DEFACCEL, "SWS: Hide all tracks" },								"SWSTL_HIDEALL",	HideAll,			NULL, },
 	{ { DEFACCEL, "SWS: Show selected track(s) in MCP, hide others" },	"SWSTL_SHOWMCPEX",	ShowInMCPEx,		NULL, },
 	{ { DEFACCEL, "SWS: Show selected track(s) in TCP, hide others" },	"SWSTL_SHOWTCPEX",	ShowInTCPEx,		NULL, },

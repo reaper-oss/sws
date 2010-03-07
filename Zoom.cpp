@@ -370,6 +370,19 @@ void PCursorTo50(COMMAND_T* = NULL)
 	SetHorizPos(GetTrackWnd(), GetPlayPosition(), 0.50);
 }
 
+void HorizScroll(COMMAND_T* ctx)
+{
+	HWND hwnd = GetTrackWnd();
+	SCROLLINFO si = { sizeof(SCROLLINFO), };
+	si.fMask = SIF_ALL;
+	CoolSB_GetScrollInfo(hwnd, SB_HORZ, &si);
+	si.nPos += (int)((double)ctx->user * si.nPage / 100.0);
+	if (si.nPos < 0) si.nPos = 0;
+	else if (si.nPos > si.nMax) si.nPos = si.nMax;
+	CoolSB_SetScrollInfo(hwnd, SB_HORZ, &si, true);
+	SendMessage(hwnd, WM_HSCROLL, SB_THUMBPOSITION, NULL);
+}
+
 void ZoomToSelItems(COMMAND_T* = NULL)		{ VertZoomSelItems(0); HorizZoomSelItems(); }
 void ZoomToSelItemsMin(COMMAND_T* = NULL)	{ VertZoomSelItems(1);  HorizZoomSelItems(); }
 void VZoomToSelItems(COMMAND_T* = NULL)		{ VertZoomSelItems(0); }
@@ -584,6 +597,11 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s)" },								"SWS_TOGZOOMIONLY",		TogZoomItemsOnly,	NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), minimize other tracks" },		"SWS_TOGZOOMIONLYMIN",	TogZoomItemsOnlyMin,NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), hide other tracks" },			"SWS_TOGZOOMIONLYHIDE",	TogZoomItemsOnlyHide,NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Scroll left 10%" },											"SWS_SCROLL_L10",		HorizScroll,		NULL, -10 },
+	{ { DEFACCEL, "SWS: Scroll right 10%" },										"SWS_SCROLL_R10",		HorizScroll,		NULL, 10 },
+	{ { DEFACCEL, "SWS: Scroll left 1%" },											"SWS_SCROLL_L1",		HorizScroll,		NULL, -1 },
+	{ { DEFACCEL, "SWS: Scroll right 1%" },											"SWS_SCROLL_R1",		HorizScroll,		NULL, 1 },
+
 	
 	{ { DEFACCEL, "SWS: Save current arrange view" },				 				"SWS_SAVEVIEW",			SaveArngView,		NULL, },
 	{ { DEFACCEL, "SWS: Restore arrange view" },				 					"SWS_RESTOREVIEW",		RestoreArngView,	NULL, },

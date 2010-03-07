@@ -177,7 +177,7 @@ void ImportSnapshot()
 			int iLen = 0;
 			while(!cfg->GetLine(str, 4096))
 			{
-				int iNewLen = iLen + strlen(str);
+				int iNewLen = iLen + (int)strlen(str);
 				chunk.Resize(iNewLen + 2);
 				strcpy(chunk.Get()+iLen, str);
 				strcpy(chunk.Get()+iNewLen, "\n");

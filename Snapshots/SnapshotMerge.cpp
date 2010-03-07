@@ -443,10 +443,13 @@ bool MergeSnapshots(Snapshot* ss)
 	if (ss->m_tracks.GetSize() == CountSelectedTracks(NULL))
 	{
 		for (int i = 0; i < ss->m_tracks.GetSize(); i++)
-		{
-			SWS_SSMergeItem* mi = g_mergeItems.Add(new SWS_SSMergeItem(ss->m_tracks.Get(i), NULL));
-			mi->m_destTr = GetSelectedTrack(NULL, i);
-		}
+			g_mergeItems.Add(new SWS_SSMergeItem(ss->m_tracks.Get(i), GetSelectedTrack(NULL, i)));
+	}
+	// If there's no tracks, by default set to "create"
+	else if (GetNumTracks() == 0)
+	{
+		for (int i = 0; i < ss->m_tracks.GetSize(); i++)
+			g_mergeItems.Add(new SWS_SSMergeItem(ss->m_tracks.Get(i), CREATETRACK));
 	}
 	else
 	{	// Next try matching with GUIDS

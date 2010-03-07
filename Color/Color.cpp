@@ -452,7 +452,7 @@ void TrackRandomCol(COMMAND_T* = NULL)
 	// All black check
 	if (AllBlack())
 		return;
-	while (!(cr = g_custColors[(int)((double)rand() * 16.0 / (RAND_MAX+1))]));
+	while (!(cr = g_custColors[rand() % 16]));
 	cr |= 0x1000000;
 	for (int i = 0; i <= GetNumTracks(); i++)
 	{
@@ -474,7 +474,7 @@ void TrackRandomCols(COMMAND_T* = NULL)
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			while (!(cr = g_custColors[(int)((double)rand() * 16.0 / (RAND_MAX+1))]));
+			while (!(cr = g_custColors[rand() % 16]));
 			cr |= 0x1000000;
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
 		}
@@ -488,7 +488,7 @@ void ItemRandomCol(COMMAND_T* = NULL)
 	// All black check
 	if (AllBlack())
 		return;
-	while (!(cr = g_custColors[(int)((double)rand() * 16.0 / (RAND_MAX+1))]));
+	while (!(cr = g_custColors[rand() % 16]));
 	cr |= 0x1000000;
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
@@ -518,7 +518,7 @@ void ItemRandomCols(COMMAND_T* = NULL)
 			MediaItem* mi = GetTrackMediaItem(tr, j);
 			if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
 			{
-				while (!(cr = g_custColors[(int)((double)rand() * 16.0 / (RAND_MAX+1))]));
+				while (!(cr = g_custColors[rand() % 16]));
 				cr |= 0x1000000;
 				GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &cr);
 			}

@@ -79,7 +79,10 @@ bool SWS_MarkerListView::OnItemSelChange(LPARAM item, bool bSel)
 	{
 		MarkerItem* mi = (MarkerItem*)item;
 		if (mi->m_dPos != GetCursorPosition())
+		{
 			SetEditCurPos(mi->m_dPos, false, false);
+			Main_OnCommand(40151, 0); // View: go to cursor
+		}
 	}
 	return false;
 }
@@ -425,7 +428,7 @@ INT_PTR WINAPI doFormatDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				"Export marker list format string:\r\n"
 				"First char one of a/r/m\r\n"
 				"  (all / only regions / only markers)\r\n"
-				"Then, in any order, n, i, l, d, t\r\n"
+				"Then, in any order, n, i, l, d, t, s\r\n"
 				"n = number (count), starts at 1\r\n"
 				"i = ID\r\n"
 				"l = Length in H:M:S\r\n"

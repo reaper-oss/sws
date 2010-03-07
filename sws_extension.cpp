@@ -350,6 +350,7 @@ extern "C"
 		IMPAPI(GetExePath);
 		IMPAPI(GetHZoomLevel);
 		IMPAPI(GetInputChannelName);
+		IMPAPI(GetLastTouchedTrack);
 		IMPAPI(GetMainHwnd);
 		IMPAPI(GetMediaItemNumTakes);
 		IMPAPI(GetMediaItemTake);

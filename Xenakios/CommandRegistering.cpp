@@ -227,6 +227,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Play selected item(s) once" }, "XENAKIOS_TIMERTEST1", DoPlayItemsOnce,	"Play selected item(s) once", },
 	{ { DEFACCEL, "Xenakios/SWS: Toggle selected item(s) selected randomly" }, "XENAKIOS_RANDOM_ITEM_SELTOGGLE", DoToggleSelectedItemsRndDlg,	"Toggle selected item(s) selected randomly", },
 	{ { DEFACCEL, "Xenakios/SWS: Display item peak gain(s)" }, "XENAKIOS_FINDITEMAUDIOPEAKS", DoAnalyzeAndShowPeakInItemMedia,	"Display item peak gain(s)", },
+	{ { DEFACCEL, "SWS: Move cursor to item peak amplitude" }, "SWS_FINDITEMPEAK", DoFindItemPeak, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Process item with csound phase vocoder" }, "XENAKIOS_CSOUNDPVOC", DoShowPVocDlg,	"Process item with Csound phase vocoder", },
 	{ { DEFACCEL, "Xenakios/SWS: Render item to new take with tail" }, "XENAKIOS_RENDERITEMNEWTAKEWITHTAIL", DoRenderItemsWithTail,	"Render item to new take with tail", },
 	{ { DEFACCEL, "Xenakios/SWS: Open associated REAPER project of item" }, "XENAKIOS_OPENASSOCIATED_RPP", DoOpenAssociatedRPP,	"Open associated REAPER project of item", },

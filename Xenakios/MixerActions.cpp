@@ -50,45 +50,27 @@ int XenGetProjectTracks(t_vect_of_Reaper_tracks &RefVecTracks,bool OnlySelected)
 
 void DoSelectTrack(int tkOffset, bool KeepCurrent)
 {
-	vector<int> OldSelectedTracks;
-	MediaTrack *CurTrack;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
+	int iTrack = 0;
+	if (CountSelectedTracks(0))
 	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int tkSel=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		if (tkSel==1)
-		{
-			int tkIndex=i;
-			OldSelectedTracks.push_back(tkIndex);
-			int newSel=0;
-			GetSetMediaTrackInfo(CurTrack,"I_SELECTED",&newSel);
-		}
+		if (tkOffset > 0)
+			iTrack = CSurf_TrackToID(GetSelectedTrack(0, CountSelectedTracks(0)-1), false);
+		else
+			iTrack = CSurf_TrackToID(GetSelectedTrack(0, 0), false);
 	}
-	vector<int> NewSelectedTracks;
-	for (i=0;i<(int)OldSelectedTracks.size();i++)
-	{
-		int NewIndex=OldSelectedTracks[i]+tkOffset;
-		if ((NewIndex>=0) && (NewIndex<GetNumTracks()))
-			NewSelectedTracks.push_back(NewIndex);
-	}
-	for (i=0;i<(int)NewSelectedTracks.size();i++)
-	{
-		CurTrack=CSurf_TrackFromID(NewSelectedTracks[i]+1,false);	
-		int newSel=1;
-		GetSetMediaTrackInfo(CurTrack,"I_SELECTED",&newSel);
-	}
-	if (KeepCurrent==true)
-	{
-		for (i=0;i<(int)OldSelectedTracks.size();i++)
-		{
-			CurTrack=CSurf_TrackFromID(OldSelectedTracks[i]+1,false);	
-			int newSel=1;
-			GetSetMediaTrackInfo(CurTrack,"I_SELECTED",&newSel);	
-		}
-	}
-}
+	else
+		iTrack = CSurf_TrackToID(GetLastTouchedTrack(), false);
 
+	iTrack += tkOffset;
+	if (!KeepCurrent)
+		ClearSelected();
+
+	if (iTrack < 1)
+		iTrack = 1;
+	else if (iTrack > GetNumTracks())
+		iTrack = GetNumTracks();
+	GetSetMediaTrackInfo(CSurf_TrackFromID(iTrack, false), "I_SELECTED", &g_i1);
+}
 
 void DoSelectNextTrack(COMMAND_T*)
 {

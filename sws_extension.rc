@@ -8,6 +8,7 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "afxres.h"
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -33,13 +34,14 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""afxres.h\0"
+    "#include ""afxres.h""\r\0"
 END
 
 3 TEXTINCLUDE 
 BEGIN
     "#include ""version.h""\r\n"
     "#include ""version.rc2""\r\n"
+    "\r\r\n"
     "\r\0"
 END
 
@@ -935,7 +937,7 @@ BEGIN
         TOPMARGIN, 3
         BOTTOMMARGIN, 182
     END
-    
+
     IDD_RANDTEMPOS, DIALOG
     BEGIN
         LEFTMARGIN, 7
@@ -1178,6 +1180,7 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog Info
@@ -1204,6 +1207,7 @@ BEGIN
     0
 END
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Bitmap
@@ -1223,6 +1227,7 @@ IDB_DOWN                BITMAP                  "downarrow.bmp"
 //
 #include "version.h"
 #include "version.rc2"
+
 
 
 /////////////////////////////////////////////////////////////////////////////

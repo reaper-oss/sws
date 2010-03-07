@@ -1144,6 +1144,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\maclicense.txt"
+			>
+		</File>
+		<File
 			RelativePath=".\sws_extension.nsi"
 			>
 		</File>

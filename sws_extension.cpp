@@ -435,6 +435,11 @@ extern "C"
 		IMPAPI(Undo_OnStateChange);
 		IMPAPI(Undo_OnStateChangeEx);
 		IMPAPI(UpdateTimeline);
+		IMPAPI(mkpanstr);
+		IMPAPI(mkvolpanstr);
+		IMPAPI(mkvolstr);
+		IMPAPI(ShowConsoleMsg);
+		IMPAPI(SplitMediaItem);
 
 		g_hInst = hInstance;
 		g_hwndParent = GetMainHwnd();

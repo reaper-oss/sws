@@ -34,7 +34,7 @@
 #include "Snapshots/Snapshots.h"
 #include "Zoom.h"
 #include "Color/Color.h"
-//#include "Color/Autocolor.h"
+#include "Color/Autocolor.h"
 #include "MarkerList/MarkerListClass.h"
 #include "MarkerList/MarkerList.h"
 #include "TrackList/TrackListFilter.h"
@@ -259,7 +259,7 @@ public:
 	void SetTrackListChange()							{ m_bChanged = true; }
 	// The rest only are applicable only to the TrackList
 	void SetSurfaceSelected(MediaTrack *tr, bool bSel)	{ ScheduleTracklistUpdate(); }
-	void SetTrackTitle(MediaTrack *tr, const char *c)	{ ScheduleTracklistUpdate(); }
+	void SetTrackTitle(MediaTrack *tr, const char *c)	{ ScheduleTracklistUpdate();  AutoColorRun(false); }
 	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); }
 	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); }
 	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); }
@@ -299,7 +299,7 @@ extern "C"
 			TrackListExit();
 			MarkerListExit();
 			MediaPoolExit();
-			//AutoColorExit();
+			AutoColorExit();
 			ERR_RETURN("Exiting Reaper.\n")
 		}
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)
@@ -410,6 +410,7 @@ extern "C"
 		IMPAPI(plugin_register);
 		IMPAPI(projectconfig_var_addr);
 		IMPAPI(projectconfig_var_getoffs);
+		IMPAPI(RefreshToolbar);
 		IMPAPI(Resampler_Create);
 		IMPAPI(screenset_register);
 		IMPAPI(SelectProjectInstance);
@@ -440,7 +441,7 @@ extern "C"
 
 		if (errcnt)
 		{
-			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have a Reaper version less than 3.13 installed. "
+			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have a Reaper version less than 3.3 installed. "
 				"Please install the latest version of Reaper from www.reaper.fm.", "Version Incompatibility", MB_OK);
 			return 0;
 		}
@@ -467,8 +468,8 @@ extern "C"
 			ERR_RETURN("Marker list init error\n")
 		if (!ColorInit())
 			ERR_RETURN("Color init error\n")
-		//if (!AutoColorInit())
-		//	ERR_RETURN("Auto Color init error\n")
+		if (!AutoColorInit())
+			ERR_RETURN("Auto Color init error\n")
 		if (!TrackListInit())
 			ERR_RETURN("Tracklist init error\n")
 		if (!MediaPoolInit())

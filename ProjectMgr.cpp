@@ -234,7 +234,7 @@ static INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 				{
 					HWND list = GetDlgItem(hwndDlg, IDC_COMBO);
 					int iList = (int)SendMessage(list, CB_GETCURSEL, 0, 0);
-					if (iList >= 0 && iList < g_relatedProjects.GetSize())
+					if (iList >= 0 && iList < g_relatedProjects.Get()->GetSize())
 						g_relatedProjects.Get()->Delete(iList, true);
 					Undo_OnStateChangeEx("Delete related project", UNDO_STATE_MISCCFG, -1);
 				}

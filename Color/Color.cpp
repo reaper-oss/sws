@@ -34,9 +34,9 @@
 #define RECREDRULER_KEY "RecRedRuler"
 
 // Globals
-static COLORREF g_custColors[16];
-static COLORREF g_crGradStart = 0;
-static COLORREF g_crGradEnd = 0;
+COLORREF g_custColors[16];
+COLORREF g_crGradStart = 0;
+COLORREF g_crGradEnd = 0;
 static bool g_bRecRedRuler = false;
 
 void UpdateCustomColors()
@@ -228,11 +228,25 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						if (cPath[0])
 						{
 							char key[32];
+							bool bFound = false;
 							for (int i = 0; i < 16; i++)
 							{
 								sprintf(key, "custcolor%d", i+1);
-								g_custColors[i] = GetPrivateProfileInt("SWS Color", key, g_custColors[i], cPath);
+								int iColor = GetPrivateProfileInt("SWS Color", key, -1, cPath);
+								if (iColor != -1)
+								{
+									g_custColors[i] = iColor;
+									bFound = true;
+								}
+
 							}
+							if (!bFound)
+							{
+								char cMsg[512];
+								_snprintf(cMsg, 512, "No SWS custom colors found in %s.", cPath);
+								MessageBox(hwndDlg, cMsg, "SWS Color Load", MB_OK);
+							}
+
 							g_crGradStart = GetPrivateProfileInt("SWS Color", "gradientStart", g_crGradStart, cPath);
 							g_crGradEnd   = GetPrivateProfileInt("SWS Color", "gradientEnd", g_crGradEnd, cPath);
 							PersistColors();

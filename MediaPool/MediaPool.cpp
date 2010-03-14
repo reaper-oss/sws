@@ -346,7 +346,7 @@ void SWS_MediaPoolGroupView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 
 	for (int i = 0; i < m_pWnd->m_globalGroups.GetSize(); i++)
 		pBuf->Get()[iBuf++] = (LPARAM)m_pWnd->m_globalGroups.Get(i);
-	for (int i = 0; i < m_pWnd->m_projGroups.GetSize(); i++)
+	for (int i = 0; i < m_pWnd->m_projGroups.Get()->GetSize(); i++)
 		pBuf->Get()[iBuf++] = (LPARAM)m_pWnd->m_projGroups.Get()->Get(i);
 }
 
@@ -578,7 +578,7 @@ void SWS_MediaPoolWnd::Update()
 	if (curProject != Enum_Projects(-1, NULL, 0))
 	{
 		curProject = Enum_Projects(-1, NULL, 0);
-		for (int i = 0; i < m_projGroups.GetSize(); i++)
+		for (int i = 0; i < m_projGroups.GetNumProj(); i++)
 			for (int j = 0; j < m_projGroups.Get(i)->GetSize(); j++)
 			{
 				m_projGroups.Get(i)->Get(j)->SetActive(false);

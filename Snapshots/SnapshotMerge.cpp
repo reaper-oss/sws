@@ -270,7 +270,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			case IDC_ADD:
 				{
 					// Add a line, using same as 1) first sel, 2) matching index in snapshot 3) last in list
-					SWS_SSMergeItem* item = (SWS_SSMergeItem*)mv->GetFirstSelected();
+					SWS_SSMergeItem* item = (SWS_SSMergeItem*)mv->EnumSelected(NULL);
 					if (!item && g_mergeItems.GetSize() < g_ss->m_tracks.GetSize())
 					{
 						item = g_mergeItems.Add(new SWS_SSMergeItem(g_ss->m_tracks.Get(g_mergeItems.GetSize()), NULL));

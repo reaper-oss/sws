@@ -30,9 +30,18 @@
 class SWS_AutoColorItem
 {
 public:
-	SWS_AutoColorItem(const char* str, COLORREF col):m_str(str),m_col(col) {}
+	SWS_AutoColorItem(const char* str, int col):m_str(str),m_col(col) {}
 	WDL_String m_str;
-	COLORREF m_col;
+	int m_col;
+};
+
+class SWS_AutoColorTrack
+{
+public:
+	SWS_AutoColorTrack(MediaTrack* tr, int col):m_pTr(tr), m_col(col), m_bColored(true) {}
+	MediaTrack* m_pTr;
+	int m_col;
+	bool m_bColored;
 };
 
 class SWS_AutoColorView : public SWS_ListView
@@ -43,8 +52,9 @@ public:
 protected:
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	int  OnItemSort(LPARAM item1, LPARAM item2);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
+	void OnItemSelChanged(LPARAM item, bool bSel);
+	int  OnItemSort(LPARAM item1, LPARAM item2);
 };
 
 class SWS_AutoColorWnd : public SWS_DockWnd
@@ -56,9 +66,16 @@ public:
 protected:
 	void OnInitDlg();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
+#ifndef _WIN32
+	bool m_bSettingColor;
+	void OnTimer();
+	void OnDestroy();
+#endif
+	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	HMENU OnContextMenu(int x, int y);
 };
 
 int AutoColorInit();
 void AutoColorExit();
 void OpenAutoColor(COMMAND_T* = NULL);
+void AutoColorRun(bool bForce);

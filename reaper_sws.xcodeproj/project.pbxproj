@@ -79,6 +79,8 @@
 		22C769FB10B0F04D00774777 /* SnM_Actions.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C769F610B0F04D00774777 /* SnM_Actions.h */; };
 		22C769FC10B0F04D00774777 /* SnM_fx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F710B0F04D00774777 /* SnM_fx.cpp */; };
 		22C769FD10B0F04D00774777 /* SnM_sends.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F810B0F04D00774777 /* SnM_sends.cpp */; };
+		22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD278114CD8310077F1CA /* Autocolor.cpp */; };
+		22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD279114CD8310077F1CA /* Autocolor.h */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
 		980764230F5B23180091104D /* wndsize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 980764220F5B23180091104D /* wndsize.cpp */; };
 		980765310F5B43070091104D /* Snapshots.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006E50F4768020072D712 /* Snapshots.h */; };
@@ -182,6 +184,8 @@
 		22C769F710B0F04D00774777 /* SnM_fx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_fx.cpp; path = SnM/SnM_fx.cpp; sourceTree = "<group>"; };
 		22C769F810B0F04D00774777 /* SnM_sends.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_sends.cpp; path = SnM/SnM_sends.cpp; sourceTree = "<group>"; };
 		22C769F910B0F04D00774777 /* SnM_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Windows.cpp; path = SnM/SnM_Windows.cpp; sourceTree = "<group>"; };
+		22FFD278114CD8310077F1CA /* Autocolor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autocolor.cpp; path = Color/Autocolor.cpp; sourceTree = "<group>"; };
+		22FFD279114CD8310077F1CA /* Autocolor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autocolor.h; path = Color/Autocolor.h; sourceTree = "<group>"; };
 		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		980764220F5B23180091104D /* wndsize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wndsize.cpp; path = ../WDL/wingui/wndsize.cpp; sourceTree = SOURCE_ROOT; };
 		980764240F5B233C0091104D /* swell-miscdlg.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-miscdlg.mm"; path = "../WDL/swell/swell-miscdlg.mm"; sourceTree = SOURCE_ROOT; };
@@ -275,6 +279,8 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				22FFD278114CD8310077F1CA /* Autocolor.cpp */,
+				22FFD279114CD8310077F1CA /* Autocolor.h */,
 				981006D10F4768010072D712 /* ActiveTake.cpp */,
 				981006D70F4768010072D712 /* ActiveTake.h */,
 				98B75DAE0F48F8F900AC5A25 /* Base64.cpp */,
@@ -491,6 +497,7 @@
 				22C54FD4111B28450024339F /* ObjectState.h in Headers */,
 				22C54FD6111B28450024339F /* TrackSends.h in Headers */,
 				22C54FE0111B29E10024339F /* SnapshotMerge.h in Headers */,
+				22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -631,6 +638,7 @@
 				22C54FD5111B28450024339F /* TrackSends.cpp in Sources */,
 				22C54FDF111B29E10024339F /* SnapshotMerge.cpp in Sources */,
 				22AC0E0F112A7DE50067BBE3 /* projectcontext.cpp in Sources */,
+				22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

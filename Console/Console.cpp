@@ -286,14 +286,7 @@ void ParseTrackId(char* strId, bool bReset)
 				// This "should" be the double wildcard case, but check anyway
 				else if (strId[0] == '*' && strId[strlen(strId)-1] == '*')
 				{
-					char temp1[128], temp2[128];
-					strncpy(temp1, strId+1, 128);
-					temp1[strlen(temp1)-1] = 0;
-					strncpy(temp2, cName, 128);
-					// Make all uppercase for case insensitivity
-					for (int i = 0; i < (int)strlen(temp1); i++) temp1[i] = toupper(temp1[i]);
-					for (int i = 0; i < (int)strlen(temp2); i++) temp2[i] = toupper(temp2[i]);
-					if (strstr(temp2, temp1))
+					if (stristr(strId+1, cName))
 						g_selTracks.Get()[track] = 1;
 				}
 			}
@@ -839,7 +832,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL,   "SWS: Open console with 'p' to trim pan on track(s)" },		"SWSCONSOLEPANT",   ConsoleCommand,  NULL, 'p' },
 	{ { DEFACCEL,   "SWS: Open console with 'l' to set track(s) # channels" },	"SWSCONSOLECHAN",   ConsoleCommand,  NULL, 'l' },
 	{ { DEFACCEL,   "SWS: Open console with '!' to add action marker" },		"SWSCONSOLEMARKER", ConsoleCommand,  NULL, '!' },
+#ifdef _WIN32
 	{ { DEFACCEL,   "SWS: Edit console custom commands (restart needed after save)" }, "SWSCONSOLEEDITCUST",  EditCustomCommands,  NULL, },
+#endif
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

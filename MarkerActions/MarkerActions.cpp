@@ -29,6 +29,7 @@
 #include "stdafx.h"
 
 static bool g_bMAEnabled = true;
+static void RefreshMAToolbar();
 
 void RunActionMarker(const char* cName)
 {
@@ -85,6 +86,7 @@ void MarkerActionsToggle(COMMAND_T* = NULL)
 {
 	g_bMAEnabled = !g_bMAEnabled;
 	WritePrivateProfileString("SWS", "MarkerActionsEnabled", g_bMAEnabled ? "1" : "0", get_ini_file());
+	RefreshMAToolbar();
 }
 
 void MarkerActionsEnable(COMMAND_T*)
@@ -153,6 +155,11 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+
+static void RefreshMAToolbar()
+{
+	RefreshToolbar(g_commandTable[0].accel.accel.cmd);
+}
 
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {

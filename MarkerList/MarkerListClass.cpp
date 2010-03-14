@@ -303,6 +303,11 @@ void MarkerList::ExportToClipboard(const char* format)
 					format_timestr_pos(m_items.Get(i)->m_dPos, s, (int)(4096-(s-str)), 4);
 					s += strlen(s);
 					break;
+				case '\\':
+					j++;
+					s[0] = format[j];
+					s++;
+					break;
 				default:
 					s[0] = format[j];
 					s[1] = 0;

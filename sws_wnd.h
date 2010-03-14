@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_wnd.h
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -40,9 +40,10 @@ class SWS_ListView
 public:
 	SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips);
 	virtual ~SWS_ListView();
+	int GetListItemCount() { return ListView_GetItemCount(m_hwndList); }
 	LPARAM GetListItem(int iIndex);
 	bool IsSelected(int index);
-	LPARAM GetFirstSelected();
+	LPARAM EnumSelected(int* i);
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 	void OnDestroy();
 	int KeyHandler(MSG *msg);
@@ -67,6 +68,7 @@ protected:
 	virtual int  GetItemState(LPARAM item) { return -1; } // Selection state: -1 == unchanged, 0 == false, 1 == selected
 	// These inform the derived class of user interaction
 	virtual bool OnItemSelChange(LPARAM item, bool bSel) { return false; } // Returns TRUE to prevent the change, or FALSE to allow the change
+	virtual void OnItemSelChanged(LPARAM item, bool bSel) { }
 	virtual void OnItemClk(LPARAM item, int iCol, int iKeyState) {}
 	virtual void OnItemDblClk(LPARAM item, int iCol) {}
 	virtual int  OnItemSort(LPARAM item1, LPARAM item2);
@@ -93,6 +95,7 @@ private:
 	LPARAM m_pClickedItem;
 #else
 	DWORD m_dwSavedSelTime;
+	bool m_bShiftSel;
 #endif
 	WDL_TypedBuf<bool> m_pSavedSel;
 	HWND m_hwndEdit;
@@ -101,6 +104,7 @@ private:
 	int m_iEditingCol;
 	const int m_iCols;
 	SWS_LVColumn* m_pCols;
+	SWS_LVColumn* m_pDefaultCols;
 	const char* m_cINIKey;
 };
 
@@ -126,6 +130,7 @@ protected:
 	virtual void OnDestroy() {}
 	virtual void OnTimer() {}
 	virtual void OnDroppedFiles(HDROP h) {}
+	virtual int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
 
 	const int m_iResource;
 	const char* m_cName;

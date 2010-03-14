@@ -432,7 +432,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	{
 		case LOADSEL_MSG:
 		{
-			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			if (ss)
 			{
 				g_ss.Get()->m_pCurSnapshot = ss;
@@ -443,7 +443,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case MERGE_MSG:
 		{
-			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			if (MergeSnapshots(ss))
 				Update();
 			break;
@@ -456,11 +456,11 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			SendMessage(m_hwnd, WM_SIZE, 0, 0);
 			break;
 		case RENAME_MSG:
-			m_pLists.Get(0)->EditListItem(m_pLists.Get(0)->GetFirstSelected(), 1);
+			m_pLists.Get(0)->EditListItem(m_pLists.Get(0)->EnumSelected(NULL), 1);
 			break;
 		case SAVE_MSG:
 		{
-			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			if (ss)
 			{
 				g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly, ss->m_cName));
@@ -471,13 +471,13 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case COPY_MSG:
 		{
-			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			CopySnapshotToClipboard(ss);
 			break;
 		}
 		case DELETE_MSG:
 		{
-			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			if (ss)
 			{
 				char undoStr[128];
@@ -491,14 +491,14 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case SEL_MSG:
 		{
-			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			if (ss)
 				ss->SelectTracks();
 			break;
 		}
 		case ADDSEL_MSG:
 		{
-			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			if (ss)
 			{
 				ss->AddSelTracks();
@@ -508,7 +508,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case DELSEL_MSG:
 		{
-			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			if (ss)
 			{
 				ss->DelSelTracks();
@@ -518,7 +518,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case DETAILS_MSG:
 		{
-			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			WDL_String details;
 			ss->GetDetails(&details);
 			DisplayInfoBox(m_hwnd, "Snapshot Details", details.Get());
@@ -526,7 +526,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case EXPORT_MSG:
 		{
-			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->GetFirstSelected();
+			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			ExportSnapshot(ss);
 			break;
 		}

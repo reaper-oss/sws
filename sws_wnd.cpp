@@ -38,8 +38,6 @@
 
 #include "stdafx.h"
 
-#define ECOFFSET_HEIGHT		2
-
 SWS_DockWnd::SWS_DockWnd(int iResource, const char* cName, int iDockOrder)
 :m_hwnd(NULL), m_bDocked(false), m_iResource(iResource), m_cName(cName), m_iDockOrder(iDockOrder), m_bUserClosed(false)
 {
@@ -239,6 +237,8 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_pLists.Empty(true);
 			m_hwnd = NULL;
 			break;
+		default:
+			return OnUnhandledMsg(uMsg, wParam, lParam);
 	}
 	return 0;
 }
@@ -310,19 +310,21 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 
 SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips)
 :m_hwndList(hwndList), m_hwndEdit(hwndEdit), m_hwndTooltip(NULL), m_iSortCol(1), m_iEditingItem(-1), m_iEditingCol(0),
-  m_iCols(iCols), m_pCols(pCols), m_bDisableUpdates(false), m_cINIKey(cINIKey),
+  m_iCols(iCols), m_pCols(NULL), m_pDefaultCols(pCols), m_bDisableUpdates(false), m_cINIKey(cINIKey),
 #ifndef _WIN32
   m_pClickedItem(NULL)
 #else
-  m_dwSavedSelTime(0)
+  m_dwSavedSelTime(0),m_bShiftSel(false)
 #endif
 {
-
 	SetWindowLongPtr(hwndList, GWLP_USERDATA, (LONG_PTR)this);
 	if (m_hwndEdit)
 		SetWindowLongPtr(m_hwndEdit, GWLP_USERDATA, 0xdeadf00b);
 
 	// Load sort and column data
+	m_pCols = new SWS_LVColumn[m_iCols];
+	memcpy(m_pCols, m_pDefaultCols, sizeof(SWS_LVColumn) * m_iCols);
+
 	char cDefaults[256];
 	sprintf(cDefaults, "%d", m_iSortCol);
 	int iPos = 0;
@@ -378,6 +380,7 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 
 SWS_ListView::~SWS_ListView()
 {
+	delete [] m_pCols;
 }
 
 LPARAM SWS_ListView::GetListItem(int index)
@@ -399,11 +402,23 @@ bool SWS_ListView::IsSelected(int index)
 	return ListView_GetItemState(m_hwndList, index, LVIS_SELECTED) ? true : false;
 }
 
-LPARAM SWS_ListView::GetFirstSelected()
+LPARAM SWS_ListView::EnumSelected(int* i)
 {
-	for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
-		if (ListView_GetItemState(m_hwndList, i, LVIS_SELECTED))
-			return GetListItem(i);
+	int temp = 0;
+	if (!i)
+		i = &temp;
+	LVITEM li;
+	li.mask = LVIF_PARAM | LVIF_STATE;
+	li.stateMask = LVIS_SELECTED;
+	li.iSubItem = 0;
+
+	while (*i < ListView_GetItemCount(m_hwndList))
+	{
+		li.iItem = (*i)++;
+		ListView_GetItem(m_hwndList, &li);
+		if (li.state)
+			return li.lParam;
+	}
 	return NULL;
 }
 
@@ -422,15 +437,18 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 			for (int i = 0; i < m_pSavedSel.GetSize(); i++)
 				m_pSavedSel.Get()[i] = IsSelected(i);
 			m_dwSavedSelTime = GetTickCount();
+			m_bShiftSel = GetAsyncKeyState(VK_SHIFT) & 0x8000 ? true : false;
 		}
 		
 		int iRet = OnItemSelChange(GetListItem(s->iItem), s->uNewState & LVIS_SELECTED ? true : false);
 		SetWindowLongPtr(GetParent(m_hwndList), DWLP_MSGRESULT, iRet);
 		return iRet;
 	}
-#else
+#endif
 	if (!m_bDisableUpdates && s->hdr.code == LVN_ITEMCHANGED && s->iItem >= 0)
 	{
+		OnItemSelChanged(GetListItem(s->iItem), s->uNewState & LVIS_SELECTED ? true : false);
+#ifndef _WIN32
 		// See OSX comments in NM_CLICK below
 
 		// Send the full compliment of OnItemSelChange messges, either from the saved array or the curent state
@@ -452,9 +470,9 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 			OnItemClk(m_pClickedItem, m_iClickedCol, m_iClickedKeys);
 			m_pClickedItem = NULL;
 		}
+#endif
 		return 0;
 	}
-#endif
 	else if (s->hdr.code == NM_CLICK)
 	{
 		EditListItemEnd(true);
@@ -464,8 +482,11 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		{	// Clicked on a "clickable" column!
 #ifdef _WIN32
 			int iKeys = ((NMITEMACTIVATE*)lParam)->uKeyFlags;
-			if (GetTickCount() - m_dwSavedSelTime < 20 && m_pSavedSel.GetSize() == ListView_GetItemCount(m_hwndList) && m_pSavedSel.Get()[s->iItem])
+			if ((GetTickCount() - m_dwSavedSelTime < 20 || (iKeys & LVKF_SHIFT)) && m_pSavedSel.GetSize() == ListView_GetItemCount(m_hwndList) && m_pSavedSel.Get()[s->iItem])
 			{
+				bool bSaveDisableUpdates = m_bDisableUpdates;
+				m_bDisableUpdates = true;
+
 				// If there's a valid saved selection, and the user clicked on a selected track, the restore that selection
 				for (int i = 0; i < m_pSavedSel.GetSize(); i++)
 				{
@@ -473,10 +494,15 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 					ListView_SetItemState(m_hwndList, i, m_pSavedSel.Get()[i] ? LVIS_SELECTED : 0, LVIS_SELECTED);
 					// TODO store and set the FOCUSED bit as well??
 				}
+
+				m_bDisableUpdates = bSaveDisableUpdates;
 			}
-			else
-				// Ignore shift if the selection changed
+			else if (m_bShiftSel)
+			{
+				// Ignore shift if the selection changed (because of a shift key hit)
 				iKeys &= ~LVKF_SHIFT;
+				m_bShiftSel = false;
+			}
 			OnItemClk(GetListItem(s->iItem), iDataCol, iKeys);
 #else
 			// In OSX NM_CLICK comes *before* the changed notification.
@@ -802,8 +828,11 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 			iCol--;
 			if (iCol == m_iCols)
 			{
+				memcpy(m_pCols, m_pDefaultCols, sizeof(SWS_LVColumn) * m_iCols);
+				int iPos = 0;
 				for (int i = 0; i < m_iCols; i++)
-					m_pCols[i].iPos = i;
+					if (m_pCols[i].iPos != -1)
+						m_pCols[i].iPos = iPos++;
 			}
 			else
 			{
@@ -914,42 +943,36 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	RECT r;
 	m_iEditingItem = iIndex;
 	m_iEditingCol = iCol;
-	ListView_GetSubItemRect(m_hwndList, iIndex, DataToDisplayCol(iCol), LVIR_LABEL, &r);
+	int iDispCol = DataToDisplayCol(iCol);
+	ListView_GetSubItemRect(m_hwndList, iIndex, iDispCol, LVIR_LABEL, &r);
+
+#ifdef _WIN32
+	RECT sr = r;
+	ClientToScreen(m_hwndList, (LPPOINT)&sr);
+	ClientToScreen(m_hwndList, ((LPPOINT)&sr)+1);
+
+	HWND hDlg = GetParent(m_hwndEdit);
+	ScreenToClient(hDlg, (LPPOINT)&sr);
+	ScreenToClient(hDlg, ((LPPOINT)&sr)+1);
 
 	// Create a new edit control to go over that rect
-#ifdef _WIN32
-	// Ridiculous code just to get the proper offsets
-	RECT rList, rDlg, rDlg2;
-	TITLEBARINFO tb = { sizeof(TITLEBARINFO), };
-	GetWindowRect(m_hwndList, &rList);
-	GetWindowRect(GetParent(m_hwndList), &rDlg);
-	GetClientRect(GetParent(m_hwndList), &rDlg2);
-	GetTitleBarInfo(GetParent(m_hwndList), &tb);
-	int lOffset, tOffset;
-	if (tb.rgstate[0] & STATE_SYSTEM_INVISIBLE)
-	{
-		lOffset = rList.left - rDlg.left + 5;
-		tOffset = rList.top  - rDlg.top + 2;
-	}
-	else
-	{
-		lOffset = rList.left - rDlg.left + 1;
-		tOffset = rList.top  - rDlg.top - (tb.rcTitleBar.bottom - tb.rcTitleBar.top) - 2;
-	}
-	if (iCol == 1 && m_pCols[0].iPos == -1)
-		lOffset -= 4; // WTF, when the first column is hidden (for whatever reason), editing is offset.  Huh.
+	int lOffset = 0;
+	if (iDispCol)
+		lOffset += GetSystemMetrics(SM_CXEDGE) * 2;
+
+	SetWindowPos(m_hwndEdit, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+	SetWindowPos(m_hwndEdit, HWND_TOP, sr.left+lOffset, sr.top, sr.right-sr.left, sr.bottom-sr.top, SWP_SHOWWINDOW | SWP_NOZORDER);
 #else
-	int lOffset = 0, tOffset = -1;
-#endif
-	SetWindowPos(m_hwndEdit, HWND_TOP, r.left+lOffset, r.top+tOffset, r.right-r.left, r.bottom-r.top+ECOFFSET_HEIGHT, 0);
+	SetWindowPos(m_hwndEdit, HWND_TOP, r.left, r.top-1, r.right-r.left, r.bottom-r.top+2, 0);
 	ShowWindow(m_hwndEdit, SW_SHOW);
+#endif
 
 	LPARAM item = GetListItem(iIndex);
 	char str[100];
 	GetItemText(item, iCol, str, 100);
 	SetWindowText(m_hwndEdit, str);
-	SendMessage(m_hwndEdit, EM_SETSEL, 0, -1);
 	SetFocus(m_hwndEdit);
+	SendMessage(m_hwndEdit, EM_SETSEL, 0, -1);
 }
 
 void SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
@@ -963,8 +986,9 @@ void SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 		GetItemText(item, m_iEditingCol, curStr, 100);
 		if (strcmp(curStr, newStr))
 		{
-			ListView_SetItemText(m_hwndList, m_iEditingItem, DataToDisplayCol(m_iEditingCol), newStr);
 			SetItemText(item, m_iEditingCol, newStr);
+			GetItemText(item, m_iEditingCol, newStr, 100);
+			ListView_SetItemText(m_hwndList, m_iEditingItem, DataToDisplayCol(m_iEditingCol), newStr);
 		}
 		if (bResort)
 			ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);

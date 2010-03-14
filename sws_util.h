@@ -79,7 +79,7 @@ public:
 		return m_data.Add(new PTRTYPE);
 	}
 	PTRTYPE* Get(int iProj) { return m_data.Get(iProj); }
-	int GetSize() { return m_data.GetSize(); }
+	int GetNumProj() { return m_data.GetSize(); }
 	void Cleanup()
 	{
 		if (m_projects.GetSize())
@@ -162,3 +162,4 @@ char* GetHashString(const char* in, char* out);
 MediaTrack* GuidToTrack(const GUID* guid);
 bool GuidsEqual(const GUID* g1, const GUID* g2);
 bool TrackMatchesGuid(MediaTrack* tr, const GUID* g);
+const char* stristr(const char* str1, const char* str2);

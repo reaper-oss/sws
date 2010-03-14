@@ -96,11 +96,23 @@ void SWS_MarkerListView::OnItemDblClk(LPARAM item, int iCol)
 
 int SWS_MarkerListView::OnItemSort(LPARAM item1, LPARAM item2)
 {
-	if (abs(m_iSortCol) == 3)
+	int iRet;
+	MarkerItem* mi1 = (MarkerItem*)item1;
+	MarkerItem* mi2 = (MarkerItem*)item2;
+
+	if (abs(m_iSortCol) == 1)
 	{
-		int iRet;
-		MarkerItem* mi1 = (MarkerItem*)item1;
-		MarkerItem* mi2 = (MarkerItem*)item2;
+		if (mi1->m_dPos > mi2->m_dPos)
+			iRet = 1;
+		else if (mi1->m_dPos < mi2->m_dPos)
+			iRet = -1;
+		if (m_iSortCol < 0)
+			return -iRet;
+		else
+			return iRet;
+	}
+	else if (abs(m_iSortCol) == 3)
+	{
 		if (mi1->m_id > mi2->m_id)
 			iRet = 1;
 		else if (mi1->m_id < mi2->m_id)
@@ -363,7 +375,7 @@ INT_PTR WINAPI doLoadDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				{
 					HWND list = GetDlgItem(hwndDlg, IDC_COMBO);
 					int iList = (int)SendMessage(list, CB_GETCURSEL, 0, 0);
-					if (iList >= 0 && iList < g_savedLists.GetSize())
+					if (iList >= 0 && iList < g_savedLists.Get()->GetSize())
 						g_savedLists.Get()->Get(iList)->UpdateReaper();
 				}
 				// Fall through to cancel to save/end
@@ -399,7 +411,7 @@ static INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 				{
 					HWND list = GetDlgItem(hwndDlg, IDC_COMBO);
 					int iList = (int)SendMessage(list, CB_GETCURSEL, 0, 0);
-					if (iList >= 0 && iList < g_savedLists.GetSize())
+					if (iList >= 0 && iList < g_savedLists.Get()->GetSize())
 						g_savedLists.Get()->Delete(iList, true);
 				}
 				// Fall through to cancel to save/end
@@ -434,7 +446,12 @@ INT_PTR WINAPI doFormatDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				"l = Length in H:M:S\r\n"
 				"d = Description\r\n"
 				"t = Absolute time in H:M:S\r\n"
-				"s = Absolute time in project samples");
+				"s = Absolute time in project samples\r\n"
+				"\r\n"
+				"You can include normal text in the format.\r\n"
+				"If you want to use one of the above\r\n"
+				"characters in normal text, preface it with \\"
+				);
 			return 0;
 		}
 		case WM_COMMAND:
@@ -461,7 +478,7 @@ void OpenMarkerList(COMMAND_T*)
 
 void LoadMarkerList(COMMAND_T*)
 {
-	if (!g_savedLists.GetSize())
+	if (!g_savedLists.Get()->GetSize())
 		MessageBox(g_hwndParent, "No marker sets available to load.", "Error", MB_OK);
 	else
 		DialogBox(g_hInst,MAKEINTRESOURCE(IDD_LOAD),g_hwndParent,doLoadDialog);
@@ -474,7 +491,7 @@ void SaveMarkerList(COMMAND_T*)
 
 void DeleteMarkerList(COMMAND_T*)
 {
-	if (!g_savedLists.GetSize())
+	if (!g_savedLists.Get()->GetSize())
 		MessageBox(g_hwndParent, "No marker sets available to delete.", "Error", MB_OK);
 	else
 		DialogBox(g_hInst,MAKEINTRESOURCE(IDD_LOAD),g_hwndParent,doDeleteDialog);
@@ -492,11 +509,11 @@ static bool MarkerListEnabled(COMMAND_T*)
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { { FSHIFT   | FCONTROL | FVIRTKEY, 'M', 0 }, "SWS: Open marker list" },					"SWSMARKERLIST1",  OpenMarkerList,    "SWS MarkerList", 0, MarkerListEnabled },
+	{ { { FSHIFT   | FCONTROL | FVIRTKEY, 'M', 0 }, "SWS: Open marker list" },				"SWSMARKERLIST1",  OpenMarkerList,    "SWS MarkerList", 0, MarkerListEnabled },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL,                                "SWS: Load marker set" },					"SWSMARKERLIST2",  LoadMarkerList,    "Load marker set...",   },
 	{ { DEFACCEL,                                "SWS: Save marker set" },					"SWSMARKERLIST3",  SaveMarkerList,    "Save marker set...",   },
-	{ { DEFACCEL,                                "SWS: Delete marker set" },					"SWSMARKERLIST4",  DeleteMarkerList,  "Delete marker set...", },
+	{ { DEFACCEL,                                "SWS: Delete marker set" },				"SWSMARKERLIST4",  DeleteMarkerList,  "Delete marker set...", },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL,                                "SWS: Copy marker set to clipboard" },		"SWSMARKERLIST5",  ListToClipboard,   "Copy marker set to clipboard", },
 	{ { DEFACCEL,                                "SWS: Copy markers in time selection to clipboard (relative to selection start)" },	"SWSML_TOCLIPTIMESEL",  ListToClipboardTimeSel, NULL /*  "Copy markers in time selection to clipboard (relative to selection start)"*/, },
@@ -511,7 +528,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL,								"SWS: Delete all regions" },				"SWSMARKERLIST10", DeleteAllRegions,  "Delete all regions", },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL,								"SWS: Export formatted marker list to clipboard" },	"SWSMARKERLIST11", ExportToClipboard, "Export formatted marker list to clipboard", },
-	{ { DEFACCEL,								"SWS: Exported marker list format" },				"SWSMARKERLIST12", ExportFormat,      "Export format...", },
+	{ { DEFACCEL,								"SWS: Exported marker list format..." },		"SWSMARKERLIST12",	ExportFormat,      "Export format...", },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 

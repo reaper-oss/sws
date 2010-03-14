@@ -193,9 +193,7 @@
 #define IDC_TRACK                       1140
 #define IDC_TEXT                        1141
 #define IDC_ENABLED                     1142
-#define IDC_COLORMGMT                   1143
-#define IDC_INITIAL                     1144
-#define IDC_SCROLLBAR1                  1146
+#define IDC_COLOR                       1147
 
 // Next default values for new objects
 // 
@@ -203,7 +201,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        146
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1147
+#define _APS_NEXT_CONTROL_VALUE         1148
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

@@ -26,6 +26,12 @@
 ******************************************************************************/
 #pragma once
 
+extern COLORREF g_custColors[16];
+extern COLORREF g_crGradStart;
+extern COLORREF g_crGradEnd;
+
+void UpdateCustomColors();
+COLORREF CalcGradient(COLORREF crStart, COLORREF crEnd, double dPos);
 int ColorInit();
 void ColorSlice();
 void ShowColorDialog(COMMAND_T* = NULL);

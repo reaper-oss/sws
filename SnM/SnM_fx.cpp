@@ -1,7 +1,7 @@
 /******************************************************************************
-/ SnM_fx.cpp
+/ SnM_FX.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), JF Bédague (S&M)
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,204 +27,23 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
+#include "SNM_ChunkParserPatcher.h"
 
-
-// Get the state of an FX -or- Set the state of one or several FX(s)
-// _mode:	1=Get or set online/offline state
-//			2=Get or set bypass state
-//			3=Toggle all online/offline states except _fx (_value ignored)
-//			4=Toggle all bypass states except _fx (_value ignored)
-//			5=Toggle online/offline state for _fx (_value ignored)
-//			6=Toggle bypass states for _fx (_value ignored)
-// _tr
-// _fx
-// _value:	NULL to get, non-NULL for toggle, value to be set otherwise
-// returns:	when getting, the value from the RPP chunk (1=bypass or offline) 
-//			or -1 if failed
-//			when setting -1 (error not yet managed)
-int getSetFXState(int _mode, MediaTrack * _tr, int _fx, int * _value)
-{
-	// Some checks (_type is checked later)
-	if (_tr && _fx >= 0)
-	{
-		WDL_String fxout;
-
-		char* cData = SWS_GetSetObjectState(_tr, NULL);
-		if (cData)
-		{
-			WDL_String curLine;
-			fxout.Set("");
-			char* pEOL = cData-1;
-			int iDepth = 0;
-			int parsedFX = 0;
-			do
-			{
-				char* pLine = pEOL+1;
-				pEOL = strchr(pLine, '\n');
-				curLine.Set(pLine, (int)(pEOL ? pEOL-pLine : 0));
-
-				LineParser lp(false);
-				lp.parse(curLine.Get());
-
-				// Get the depth
-				if (lp.getnumtokens())
-				{
-					if (lp.gettoken_str(0)[0] == '<')
-						iDepth++;
-					else if (lp.gettoken_str(0)[0] == '>')
-						iDepth--;
-				}
-
-				// Some checks for "more acsendant compatibility"
-				bool appended = false;
-				if (iDepth == 2 && lp.getnumtokens() == 3 && 
-					strcmp(lp.gettoken_str(0), "BYPASS") == 0)
-				{
-					if (parsedFX == _fx)
-					{
-						// Get only
-						if (!_value)
-						{
-							SWS_FreeHeapPtr(cData);
-							switch (_mode)
-							{
-								case 1:
-									return lp.gettoken_int(2);
-								case 2:
-									return lp.gettoken_int(1);
-								default:
-									return -1;
-							}
-						}
-						// Set
-						{
-							switch (_mode)
-							{
-								case 1: // bypass
-									fxout.Append("BYPASS ");
-									fxout.Append(lp.gettoken_str(1));
-									fxout.AppendFormatted(3, " %d\n", *_value);
-									appended = true;
-									break;
-								case 2: // offline/online
-									fxout.Append("BYPASS ");
-									fxout.AppendFormatted(2, "%d ", *_value);
-									fxout.Append(lp.gettoken_str(2));
-									fxout.Append("\n");
-									appended = true;
-									break;
-								case 5: // toggle bypass
-									fxout.Append("BYPASS ");
-									fxout.Append(lp.gettoken_str(1));
-									fxout.AppendFormatted(3, " %d\n", !lp.gettoken_int(2));
-									appended = true;
-									break;
-								case 6: // toggle offline/online
-									fxout.Append("BYPASS ");
-									fxout.AppendFormatted(2, "%d ", !lp.gettoken_int(1));
-									fxout.Append(lp.gettoken_str(2));
-									fxout.Append("\n");
-									appended = true;
-									break;
-								default:
-									break;
-							}
-						}
-					}
-					else
-					{
-						// Set 
-						if (_value)
-						{
-							switch (_mode)
-							{
-								case 3: // bypass "except"
-									fxout.Append("BYPASS ");
-									fxout.Append(lp.gettoken_str(1));
-									fxout.AppendFormatted(3, " %d\n", !lp.gettoken_int(2));
-									appended = true;
-									break;
-								case 4: // offline/online "except"
-									fxout.Append("BYPASS ");
-									fxout.AppendFormatted(2, "%d ", !lp.gettoken_int(1));
-									fxout.Append(lp.gettoken_str(2));
-									fxout.Append("\n");
-									appended = true;
-									break;
-								default:
-									break;
-							}
-						}
-					}
-
-					parsedFX++;
-				}
-
-				if (_value && !appended && lp.getnumtokens())
-				{
-					fxout.Append(curLine.Get());
-					fxout.Append("\n");
-				}
-			}
-			while (pEOL);
-
-			SWS_FreeHeapPtr(cData);
-
-			// Sets the new state
-			if (_value && fxout.GetLength())
-			{
-				SWS_GetSetObjectState(_tr, fxout.Get());
-			}
-		}
-	}
-	return -1;
-}
-
-void toggleFXStateSelectedTracks(int _mode, int _fx, const char * _undoMsg)
+void patchSelTracksFXState(int _mode, int _token, int _fx, const char* _value, const char * _undoMsg)
 {
 	bool updated = false;
-
-	// check that the mode is indeed a toggle one
-	if (_mode >= 3 && _mode <= 6)
+	for (int i = 0; i <= GetNumTracks(); i++)
 	{
-		for (int i = 0; i <= GetNumTracks(); i++)
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			MediaTrack* tr = CSurf_TrackFromID(i, false);
-			if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-			{
-				int fxId = _fx - 1;
-				if (fxId < 0)
-					fxId = TrackFX_GetCount(tr) + _fx; // Could support "second to last" action with -2, etc
-				getSetFXState(_mode, tr, fxId, &g_i0);
-				updated = true;
-			}
-		}
-	}
+			int fxId = _fx - 1;
+			if (fxId < 0)
+				fxId = TrackFX_GetCount(tr) + _fx; // Could support "second to last" action with -2, etc
 
-	// above is "toggle" use of getSetFXState(), below is a "get + set"
-	// example use of it (not used: less efficient but same result)
-	else if (_mode >= 1 && _mode <= 2)
-	{
-		for (int i = 0; i <= GetNumTracks(); i++)
-		{
-			MediaTrack* tr = CSurf_TrackFromID(i, false);
-			if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-			{
-				int fxId = _fx - 1;
-				if (fxId < 0)
-					fxId = TrackFX_GetCount(tr) + _fx; // Could support "second to last" action with -2, etc
-
-				// get
-				int toggleCurrent = getSetFXState(_mode, tr, fxId, NULL);
-				if (toggleCurrent >= 0)
-				{
-					toggleCurrent = !toggleCurrent;
-
-					// set
-					getSetFXState(_mode, tr, fxId, &toggleCurrent);
-					updated = true;
-				}
-			}
+			// get the current value
+			SNM_ChunkParserPatcher p(tr);
+			updated = (p.ParsePatch(_mode, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, (void*)_value) > 0);
 		}
 	}
 
@@ -233,36 +52,52 @@ void toggleFXStateSelectedTracks(int _mode, int _fx, const char * _undoMsg)
 		Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL/*UNDO_STATE_FX*/, -1);
 }
 
-void toggleFXOfflineSelectedTracks(COMMAND_T* _ct)
-{
-	toggleFXStateSelectedTracks(5, (int)_ct->user, SNMSWS_ZAP(_ct));
+void toggleFXOfflineSelectedTracks(COMMAND_T* _ct) { 
+	patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 2, (int)_ct->user, NULL, SNMSWS_ZAP(_ct)); 
+} 
+  
+void toggleFXBypassSelectedTracks(COMMAND_T* _ct) { 
+	patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 1, (int)_ct->user, NULL, SNMSWS_ZAP(_ct)); 
+} 
+  
+void toggleExceptFXOfflineSelectedTracks(COMMAND_T* _ct) { 
+	patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, (int)_ct->user, NULL, SNMSWS_ZAP(_ct)); 
+} 
+  
+void toggleExceptFXBypassSelectedTracks(COMMAND_T* _ct) { 
+	patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, (int)_ct->user, NULL, SNMSWS_ZAP(_ct)); 
+} 
+  
+void toggleAllFXsOfflineSelectedTracks(COMMAND_T* _ct) { 
+	// We use the "except mode" but with an unreachable fx number 
+	patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SNMSWS_ZAP(_ct)); 
+} 
+  
+void toggleAllFXsBypassSelectedTracks(COMMAND_T* _ct) { 
+	// We use the "except mode" but with an unreachable fx number 
+	patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SNMSWS_ZAP(_ct)); 
+} 
+
+void setFXOfflineSelectedTracks(COMMAND_T* _ct) { 
+	patchSelTracksFXState(SNM_SET_CHUNK_CHAR, 2, (int)_ct->user, "1", SNMSWS_ZAP(_ct)); 
+} 
+  
+void setFXBypassSelectedTracks(COMMAND_T* _ct) { 
+	patchSelTracksFXState(SNM_SET_CHUNK_CHAR, 1, (int)_ct->user, "1", SNMSWS_ZAP(_ct)); 
+} 
+
+void setFXOnlineSelectedTracks(COMMAND_T* _ct) { 
+	patchSelTracksFXState(SNM_SET_CHUNK_CHAR, 2, (int)_ct->user, "0", SNMSWS_ZAP(_ct)); 
+} 
+  
+void setFXUnbypassSelectedTracks(COMMAND_T* _ct) { 
+	patchSelTracksFXState(SNM_SET_CHUNK_CHAR, 1, (int)_ct->user, "0", SNMSWS_ZAP(_ct)); 
+} 
+
+void setAllFXsBypassSelectedTracks(COMMAND_T* _ct) {
+	char cInt[2] = "";
+	sprintf(cInt, "%d", (int)_ct->user);
+	// We use the "except mode" but with an unreachable fx number 
+	patchSelTracksFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 1, 0xFFFF, cInt, SNMSWS_ZAP(_ct)); 
 }
-
-void toggleFXBypassSelectedTracks(COMMAND_T* _ct)
-{
-	toggleFXStateSelectedTracks(6, (int)_ct->user, SNMSWS_ZAP(_ct));
-}
-
-void toggleExceptFXOfflineSelectedTracks(COMMAND_T* _ct)
-{
-	toggleFXStateSelectedTracks(3, (int)_ct->user, SNMSWS_ZAP(_ct));
-}
-
-void toggleExceptFXBypassSelectedTracks(COMMAND_T* _ct)
-{
-	toggleFXStateSelectedTracks(4, (int)_ct->user, SNMSWS_ZAP(_ct));
-}
-
-void toggleAllFXsOfflineSelectedTracks(COMMAND_T* _ct)
-{
-	// We use the "except mode" but with an unreachable fx number
-	toggleFXStateSelectedTracks(3, 0xFFFF, SNMSWS_ZAP(_ct));
-}
-
-void toggleAllFXsBypassSelectedTracks(COMMAND_T* _ct)
-{
-	// We use the "except mode" but with an unreachable fx number
-	toggleFXStateSelectedTracks(4, 0xFFFF, SNMSWS_ZAP(_ct));
-}
-
-
+ 

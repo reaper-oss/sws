@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Actions.h
 /
-/ Copyright (c) 2009 Tim Payne (SWS), JF Bédague (S&M)
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,18 +30,45 @@
 
 // +9 to skip "SWS/S&M: "
 #define SNMSWS_ZAP(_ct) (_ct->accel.desc + 9)
+#define SNM_FORMATED_INI_FILE "%s\\Plugins\\S&M.ini"
 
 int SnMActionsInit();
 
-// SnM_fx.cpp
+// SnM_FX.cpp
+void patchSelTracksFXState(int _mode, int _token, int _fx, const char* _value, const char * _undoMsg);
 void toggleFXOfflineSelectedTracks(COMMAND_T* _ct);
 void toggleFXBypassSelectedTracks(COMMAND_T* _ct);
-int getSetFXState(int _mode, MediaTrack * _tr, int _fx, int * _value);
-void toggleFXStateSelectedTracks(int _mode, int _fx, const char * _undoMsg);
 void toggleExceptFXOfflineSelectedTracks(COMMAND_T* _ct);
 void toggleExceptFXBypassSelectedTracks(COMMAND_T* _ct);
 void toggleAllFXsOfflineSelectedTracks(COMMAND_T* _ct);
 void toggleAllFXsBypassSelectedTracks(COMMAND_T* _ct);
+void setFXOfflineSelectedTracks(COMMAND_T* _ct); 
+void setFXBypassSelectedTracks(COMMAND_T* _ct);
+void setFXOnlineSelectedTracks(COMMAND_T* _ct);
+void setFXUnbypassSelectedTracks(COMMAND_T* _ct);
+void setAllFXsBypassSelectedTracks(COMMAND_T* _ct); // ..related online/offline actions natively implemented
+
+// SnM_FXChain.cpp
+void loadPasteTakeFXChain(COMMAND_T* _ct);
+void copyTakeFXChain(COMMAND_T* _ct);
+void cutTakeFXChain(COMMAND_T* _ct);
+void pasteTakeFXChain(COMMAND_T* _ct);
+void pasteAllTakesFXChain(COMMAND_T* _ct);
+void clearActiveTakeFXChain(COMMAND_T* _ct);
+void clearAllTakesFXChain(COMMAND_T* _ct);
+void setTakeFXChain(const char* _title, int _slot, bool _activeOnly, bool _clear);
+//void setActiveTakeFXChain(COMMAND_T* _ct);
+//void setAllTakesFXChain(COMMAND_T* _ct);
+
+void loadPasteTrackFXChain(COMMAND_T* _ct);
+void clearTrackFXChain(COMMAND_T* _ct);
+void setTrackFXChain(const char* _title, int _slot, bool _clear);
+
+void loadStoreFXChain(int _slot, const char* _filename);
+void browseStoreFXChain(int _slot, const char* _title);
+void loadOrBrowseFXChain(int _slot, const char* _title);
+void readIniFile(int _slot, char* _buf, int _bufSize);
+void saveIniFile(int _slot, const char* _path);
 
 // SnM_Windows.cpp
 void toggleShowHideWin(const char * _title);
@@ -58,3 +85,16 @@ void cueTrack(char * _busName, int _type, const char * _undoMsg);
 void cueTrackPrompt(COMMAND_T* _ct);
 void cueTrack(COMMAND_T* _ct);
 
+// SnM_Item.cpp
+bool selectItemsByName(const char* cUndoMsg, char* cName);
+bool selectItemsByNamePrompt(const char* cCaption, char * _reply);
+void selectItemsByNamePrompt(COMMAND_T* _ct);
+void clearTake(COMMAND_T* _ct);
+void splitMidiAudio(COMMAND_T* _ct);
+
+// SnM_Misc.cpp
+void moveTrack(int _src, int _dest); 
+void moveTest(COMMAND_T* _ct);
+
+void showFXChain(int _tr, int _fx);
+void showFXChain(COMMAND_T* _ct);

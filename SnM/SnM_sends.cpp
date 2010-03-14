@@ -1,7 +1,7 @@
 /******************************************************************************
-/ SnM_sends.cpp
+/ SnM_Sends.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS), JF Bédague (S&M)
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,9 +25,9 @@
 /
 ******************************************************************************/
 
-
 #include "stdafx.h"
 #include "SnM_Actions.h"
+#include "SNM_Chunk.h"
 
 
 // Adds a send
@@ -37,68 +37,34 @@
 //          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
 bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 {
-	bool ok = false;
-
-	int srcId = CSurf_TrackToID(_srcTr, false); // for (usefull?) check
-	if (_srcTr && _destTr && _type >= 0 && srcId >= 0)
+	bool update = false;
+	char vol[32] = "1.00000000000000";
+	char pan[32] = "0.00000000000000";
 	{
-		char* cData = SWS_GetSetObjectState(_destTr, NULL);
-		if (cData)
+		// if pre-fader, then re-copy track vol/pan
+		if (_type == 3)
 		{
-			WDL_String curLine;
-			WDL_String sendout;
-			sendout.Set("");
-			char* pEOL = cData-1;
-			int iDepth = 0;
-			int rcvId = 0;
-			do
+			//e.g VOLPAN 1.00000000000000 -0.45000000000000 -1.00000000000000
+			SNM_ChunkParserPatcher p1(_srcTr, false);
+			if (!(p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 4, 0, 1, vol) > 0 &&
+				p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 4, 0, 2, pan) > 0))
 			{
-				char* pLine = pEOL+1;
-				pEOL = strchr(pLine, '\n');
-				curLine.Set(pLine, (int)(pEOL ? pEOL-pLine : 0));
-
-				LineParser lp(false);
-				lp.parse(curLine.Get());
-
-				// Get the depth
-				if (lp.getnumtokens())
-				{
-					if (lp.gettoken_str(0)[0] == '<')
-						iDepth++;
-					else if (lp.gettoken_str(0)[0] == '>')
-						iDepth--;
-				}
-
-				// Append with some checks for "more acsendant compatibility"
-				if (iDepth == 1 && strcmp(lp.gettoken_str(0), "AUXRECV") == 0)
-				{
-					rcvId++;
-				}
-
-				if (iDepth == 1 && lp.getnumtokens() == 2 && 
-					strcmp(lp.gettoken_str(0), "MIDIOUT") == 0)
-				{
-					sendout.Append("AUXRECV ");
-					sendout.AppendFormatted(3, "%d %d", srcId-1, _type);
-					sendout.Append(" 1.00000000000000 0.00000000000000 0 0 0 0 0 -1.00000000000000 0 -1\n");
-				}
-
-				if (lp.getnumtokens())
-				{
-					sendout.Append(curLine.Get());
-					sendout.Append("\n");
-				}
+				// failed => restore default
+				strcpy(vol, "1.00000000000000");
+				strcpy(pan, "0.00000000000000");
 			}
-			while (pEOL);
-
-			SWS_FreeHeapPtr(cData);
-
-			// Sets the new state
-			if (sendout.GetLength())
-				ok = !SWS_GetSetObjectState(_destTr, sendout.Get());
 		}
-	}
-	return ok;
+		SNM_SendPatcher p2(_destTr); 
+		update = (p2.AddSend(_srcTr, _type, vol, pan) > 0); // null values managed
+	} 
+	return update;
+}
+
+
+bool removeReceives(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
+{
+	SNM_SendPatcher p(_destTr); 
+	return (p.RemoveReceives() > 0); // null values managed
 }
 
 // Adds a cuetrack from track selection
@@ -129,9 +95,7 @@ void cueTrack(char * _busName, int _type, const char * _undoMsg)
 
 			// add a send
 			if (cueTr && tr != cueTr)
-			{
-				addSend(tr, cueTr, _type); // returned error not managed yet..
-			}
+				addSend(tr, cueTr, _type); //JFB: returned error not managed yet..
 		}
 	}
 
@@ -169,7 +133,9 @@ bool cueTrackPrompt(const char* cCaption)
 			}
 			if (reaType == -1 || pComma[2])
 			{
-				MessageBox(GetMainHwnd(), "Valid send types:\n1=Post-Fader (Post-Pan)\n2=Pre-Fader (Post-FX)\n3=Pre-FX", cCaption, MB_OK);
+				MessageBox(GetMainHwnd(), 
+					"Valid send types:\n1=Post-Fader (Post-Pan)\n2=Pre-Fader (Post-FX)\n3=Pre-FX", 
+					cCaption, MB_OK);
 				return true;
 			}
 

@@ -1,7 +1,7 @@
 /******************************************************************************
-/ SnM_Actions.cpp
+/ SnM_Windows.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), JF Bédague (S&M)
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

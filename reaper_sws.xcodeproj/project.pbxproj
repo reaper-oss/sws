@@ -81,6 +81,12 @@
 		22C769FD10B0F04D00774777 /* SnM_sends.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F810B0F04D00774777 /* SnM_sends.cpp */; };
 		22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD278114CD8310077F1CA /* Autocolor.cpp */; };
 		22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD279114CD8310077F1CA /* Autocolor.h */; };
+		22FFD289114DB5F10077F1CA /* SNM_Chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD283114DB5F10077F1CA /* SNM_Chunk.cpp */; };
+		22FFD28A114DB5F10077F1CA /* SNM_Chunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD284114DB5F10077F1CA /* SNM_Chunk.h */; };
+		22FFD28B114DB5F10077F1CA /* SNM_ChunkParserPatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD285114DB5F10077F1CA /* SNM_ChunkParserPatcher.h */; };
+		22FFD28C114DB5F10077F1CA /* SnM_FXChain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD286114DB5F10077F1CA /* SnM_FXChain.cpp */; };
+		22FFD28D114DB5F10077F1CA /* SnM_Item.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD287114DB5F10077F1CA /* SnM_Item.cpp */; };
+		22FFD28E114DB5F10077F1CA /* SnM_Misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD288114DB5F10077F1CA /* SnM_Misc.cpp */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
 		980764230F5B23180091104D /* wndsize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 980764220F5B23180091104D /* wndsize.cpp */; };
 		980765310F5B43070091104D /* Snapshots.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006E50F4768020072D712 /* Snapshots.h */; };
@@ -186,6 +192,12 @@
 		22C769F910B0F04D00774777 /* SnM_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Windows.cpp; path = SnM/SnM_Windows.cpp; sourceTree = "<group>"; };
 		22FFD278114CD8310077F1CA /* Autocolor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autocolor.cpp; path = Color/Autocolor.cpp; sourceTree = "<group>"; };
 		22FFD279114CD8310077F1CA /* Autocolor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autocolor.h; path = Color/Autocolor.h; sourceTree = "<group>"; };
+		22FFD283114DB5F10077F1CA /* SNM_Chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SNM_Chunk.cpp; path = SnM/SNM_Chunk.cpp; sourceTree = "<group>"; };
+		22FFD284114DB5F10077F1CA /* SNM_Chunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SNM_Chunk.h; path = SnM/SNM_Chunk.h; sourceTree = "<group>"; };
+		22FFD285114DB5F10077F1CA /* SNM_ChunkParserPatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SNM_ChunkParserPatcher.h; path = SnM/SNM_ChunkParserPatcher.h; sourceTree = "<group>"; };
+		22FFD286114DB5F10077F1CA /* SnM_FXChain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_FXChain.cpp; path = SnM/SnM_FXChain.cpp; sourceTree = "<group>"; };
+		22FFD287114DB5F10077F1CA /* SnM_Item.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Item.cpp; path = SnM/SnM_Item.cpp; sourceTree = "<group>"; };
+		22FFD288114DB5F10077F1CA /* SnM_Misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Misc.cpp; path = SnM/SnM_Misc.cpp; sourceTree = "<group>"; };
 		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		980764220F5B23180091104D /* wndsize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wndsize.cpp; path = ../WDL/wingui/wndsize.cpp; sourceTree = SOURCE_ROOT; };
 		980764240F5B233C0091104D /* swell-miscdlg.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-miscdlg.mm"; path = "../WDL/swell/swell-miscdlg.mm"; sourceTree = SOURCE_ROOT; };
@@ -415,7 +427,13 @@
 			children = (
 				22C769F510B0F04D00774777 /* SnM_Actions.cpp */,
 				22C769F610B0F04D00774777 /* SnM_Actions.h */,
+				22FFD283114DB5F10077F1CA /* SNM_Chunk.cpp */,
+				22FFD284114DB5F10077F1CA /* SNM_Chunk.h */,
+				22FFD285114DB5F10077F1CA /* SNM_ChunkParserPatcher.h */,
 				22C769F710B0F04D00774777 /* SnM_fx.cpp */,
+				22FFD286114DB5F10077F1CA /* SnM_FXChain.cpp */,
+				22FFD287114DB5F10077F1CA /* SnM_Item.cpp */,
+				22FFD288114DB5F10077F1CA /* SnM_Misc.cpp */,
 				22C769F810B0F04D00774777 /* SnM_sends.cpp */,
 				22C769F910B0F04D00774777 /* SnM_Windows.cpp */,
 			);
@@ -498,6 +516,8 @@
 				22C54FD6111B28450024339F /* TrackSends.h in Headers */,
 				22C54FE0111B29E10024339F /* SnapshotMerge.h in Headers */,
 				22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */,
+				22FFD28A114DB5F10077F1CA /* SNM_Chunk.h in Headers */,
+				22FFD28B114DB5F10077F1CA /* SNM_ChunkParserPatcher.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -639,6 +659,10 @@
 				22C54FDF111B29E10024339F /* SnapshotMerge.cpp in Sources */,
 				22AC0E0F112A7DE50067BBE3 /* projectcontext.cpp in Sources */,
 				22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */,
+				22FFD289114DB5F10077F1CA /* SNM_Chunk.cpp in Sources */,
+				22FFD28C114DB5F10077F1CA /* SnM_FXChain.cpp in Sources */,
+				22FFD28D114DB5F10077F1CA /* SnM_Item.cpp in Sources */,
+				22FFD28E114DB5F10077F1CA /* SnM_Misc.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

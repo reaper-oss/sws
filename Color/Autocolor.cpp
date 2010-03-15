@@ -156,6 +156,7 @@ void SWS_AutoColorWnd::Update()
 	{
 		// Set the checkbox
 		CheckDlgButton(m_hwnd, IDC_ENABLED, g_bACEnabled ? BST_CHECKED : BST_UNCHECKED);
+		SetDlgItemText(m_hwnd, IDC_APPLY, g_bACEnabled ? "Force" : "Apply");
 
 		// Redraw the owner drawn button
 #ifdef _WIN32
@@ -166,6 +167,8 @@ void SWS_AutoColorWnd::Update()
 
 		if (m_pLists.GetSize())
 			m_pLists.Get(0)->Update();
+
+		AutoColorRun(false);
 	}
 }
 
@@ -475,9 +478,17 @@ void ApplyColorRule(SWS_AutoColorItem* rule)
 				int newCol = iCurColor;
 
 				if (rule->m_col == -AC_RANDOM-1)
-					newCol = RGB(rand() % 256, rand() % 256, rand() % 256) | 0x1000000;
+				{
+					// Only randomize once
+					if (!(iCurColor & 0x1000000))
+						newCol = RGB(rand() % 256, rand() % 256, rand() % 256) | 0x1000000;
+				}
 				else if (rule->m_col == -AC_CUSTOM-1)
-					newCol = g_custColors[iCount++ % 16] | 0x1000000;
+				{
+					if (!AllBlack())
+						while(!(newCol = g_custColors[iCount++ % 16]));
+					newCol |= 0x1000000;							
+				}
 				else if (rule->m_col == -AC_GRADIENT-1)
 					gradientTracks.Add(tr);
 				else if (rule->m_col == -AC_NONE-1)

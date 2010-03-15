@@ -1127,7 +1127,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnM\SNM_Chunk.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SNM_Chunk.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SNM_ChunkParserPatcher.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SnM\SnM_fx.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_FXChain.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_Item.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_Misc.cpp"
 				>
 			</File>
 			<File

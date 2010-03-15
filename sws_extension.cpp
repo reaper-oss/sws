@@ -397,6 +397,9 @@ extern "C"
 		IMPAPI(Main_OnCommand);
 		IMPAPI(Main_OnCommandEx);
 		IMPAPI(Main_openProject);
+		IMPAPI(mkpanstr);
+		IMPAPI(mkvolpanstr);
+		IMPAPI(mkvolstr);
 		IMPAPI(MoveMediaItemToTrack);
 		IMPAPI(NamedCommandLookup);
 		IMPAPI(parse_timestr_pos);
@@ -413,10 +416,12 @@ extern "C"
 		IMPAPI(RefreshToolbar);
 		IMPAPI(Resampler_Create);
 		IMPAPI(screenset_register);
+		IMPAPI(ShowConsoleMsg);
 		IMPAPI(SelectProjectInstance);
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetProjectMarker);
 		IMPAPI(SetTrackSelected);
+		IMPAPI(SplitMediaItem);
 		IMPAPI(StopPreview);
 		IMPAPI(StopTrackPreview);
 		IMPAPI(stringToGuid);
@@ -435,11 +440,6 @@ extern "C"
 		IMPAPI(Undo_OnStateChange);
 		IMPAPI(Undo_OnStateChangeEx);
 		IMPAPI(UpdateTimeline);
-		IMPAPI(mkpanstr);
-		IMPAPI(mkvolpanstr);
-		IMPAPI(mkvolstr);
-		IMPAPI(ShowConsoleMsg);
-		IMPAPI(SplitMediaItem);
 
 		g_hInst = hInstance;
 		g_hwndParent = GetMainHwnd();

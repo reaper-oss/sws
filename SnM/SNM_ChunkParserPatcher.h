@@ -116,7 +116,7 @@ int ReplaceSubChunk(const char* _keyword, int _depth, int _occurence,
 	if (_keyword && _depth > 0)
 	{
 		WDL_String startToken;
-		startToken.SetFormatted(strlen(_keyword)+1, "<%s", _keyword);
+		startToken.SetFormatted((int)strlen(_keyword)+1, "<%s", _keyword);
 		return ParsePatch(true, SNM_REPLACE_SUB_CHUNK, _depth, _keyword, startToken.Get(), -1, _occurence, -1, (void*)_newSubChunk);
 	}
 	return -1;

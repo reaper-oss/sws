@@ -90,7 +90,7 @@ int ParsePatch(
 	void* _valueExcept = NULL)
 {
 	return ParsePatch(true, _mode, _depth, _expectedParent, 
-		_keyWord, _numTokens, _occurence = -1, 
+		_keyWord, _numTokens, _occurence, 
 		_tokenPos, _value,_valueExcept);
 }
 
@@ -106,7 +106,7 @@ int Parse(
 	void* _valueExcept = NULL)
 {
 	return ParsePatch(false, _mode, _depth, _expectedParent, 
-		_keyWord, _numTokens, _occurence = -1, 
+		_keyWord, _numTokens, _occurence, 
 		_tokenPos, _value,_valueExcept);
 }
 

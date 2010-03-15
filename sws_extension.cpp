@@ -41,6 +41,7 @@
 #include "TrackList/Tracklist.h"
 #include "MediaPool/MediaPool.h"
 #include "ProjectMgr.h"
+#include "ProjectList.h"
 #include "SnM/SnM_Actions.h"
 
 // Globals
@@ -252,6 +253,7 @@ public:
 			pMarkerList->Update();
 			UpdateSnapshotsDialog();
 			MediaPoolUpdate();
+			ProjectListUpdate();
 		}
 	}
 
@@ -300,6 +302,7 @@ extern "C"
 			MarkerListExit();
 			MediaPoolExit();
 			AutoColorExit();
+			ProjectListExit();
 			ERR_RETURN("Exiting Reaper.\n")
 		}
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)
@@ -481,6 +484,8 @@ extern "C"
 			ERR_RETURN("Mediapool init error\n")
 		if (!ZoomInit())
 			ERR_RETURN("Zoom init error\n")
+		if (!ProjectListInit())
+			ERR_RETURN("Project List init error\n")
 		if (!ProjectMgrInit())
 			ERR_RETURN("Project Mgr init error\n")
 		if (!XenakiosInit())

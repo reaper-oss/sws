@@ -28,6 +28,7 @@
 
 #include "stdafx.h"
 #include "ProjectMgr.h"
+#include "ProjectList.h"
 
 // Globals
 static SWSProjConfig<WDL_PtrList<WDL_String> > g_relatedProjects;
@@ -74,7 +75,7 @@ void SaveProjectList(COMMAND_T*)
 	}
 }
 
-void OpenProjectList(COMMAND_T*)
+void OpenProjectsFromList(COMMAND_T*)
 {
 	char cPath[256];
 	GetProjectPath(cPath, 256);
@@ -298,12 +299,13 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
-static COMMAND_T g_commandTable[] = 
+COMMAND_T g_projMgrCmdTable[] = 
 {
 	{ { DEFACCEL, "SWS: Save list of open projects" },	"SWS_PROJLISTSAVE",		SaveProjectList,		"Save list of open projects...", },
-	{ { DEFACCEL, "SWS: Open projects from list" },		"SWS_PROJLISTSOPEN",	OpenProjectList,		"Open projects from list...", },
+	{ { DEFACCEL, "SWS: Open projects from list" },		"SWS_PROJLISTSOPEN",	OpenProjectsFromList,	"Open projects from list...", },
 	{ { DEFACCEL, "SWS: Add related project(s)" },		"SWS_ADDRELATEDPROJ",	AddRelatedProject,		"Add related project(s)...", },
 	{ { DEFACCEL, "SWS: Delete related project" },		"SWS_DELRELATEDPROJ",	DelRelatedProject,		"Delete related project...", },
+	{ { DEFACCEL, "SWS: Open project list" },			"SWS_PROJLIST_OPEN",	OpenProjectList,		"SWS Project List", 0, ProjectListEnabled },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, "SWS: Open related project 1" },		"SWS_OPENRELATED1",		OpenRelatedProject,		"(related projects list)", 0 },
 
@@ -316,12 +318,12 @@ static int g_iORPCmdIndex = 0;
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main file") == 0 && flag == 0)
-		AddSubMenu(hMenu, SWSCreateMenu(g_commandTable), "SWS Project management", 40897);
+		AddSubMenu(hMenu, SWSCreateMenu(g_projMgrCmdTable), "SWS Project management", 40897);
 	else if (flag == 1)
 	{
 		// Delete all related project entries and regenerate
 		int iFirstPos;
-		hMenu = FindMenuItem(hMenu, g_commandTable[g_iORPCmdIndex].accel.accel.cmd, &iFirstPos);
+		hMenu = FindMenuItem(hMenu, g_projMgrCmdTable[g_iORPCmdIndex].accel.accel.cmd, &iFirstPos);
 
 		if (hMenu)
 		{
@@ -348,8 +350,8 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 				mi.fMask = MIIM_TYPE | MIIM_STATE | MIIM_ID;
 				mi.fType = MFT_STRING;
 				mi.fState = MFS_GRAYED;
-				mi.dwTypeData = g_commandTable[g_iORPCmdIndex].menuText;
-				mi.wID = g_commandTable[g_iORPCmdIndex].accel.accel.cmd;
+				mi.dwTypeData = g_projMgrCmdTable[g_iORPCmdIndex].menuText;
+				mi.wID = g_projMgrCmdTable[g_iORPCmdIndex].accel.accel.cmd;
 				InsertMenuItem(hMenu, iFirstPos, true, &mi);
 			}
 			else
@@ -363,11 +365,11 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 
 int ProjectMgrInit()
 {
-	SWSRegisterCommands(g_commandTable);
+	SWSRegisterCommands(g_projMgrCmdTable);
 
 	// Save the index of OpenRelatedProject() for later
 	g_iORPCmdIndex = -1;
-	while (g_commandTable[++g_iORPCmdIndex].doCommand != OpenRelatedProject);
+	while (g_projMgrCmdTable[++g_iORPCmdIndex].doCommand != OpenRelatedProject);
 
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;

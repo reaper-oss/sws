@@ -48,6 +48,8 @@
 #define IDD_TOGSELRAND                  143
 #define IDD_RENAMEDLG666                144
 #define IDD_GENERICQUERY1               145
+#define IDD_MARKERLIST1                 146
+#define IDD_PROJLIST                    146
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000

@@ -503,27 +503,6 @@ void SWS_MediaPoolFileView::OnBeginDrag()
 #endif
 }
 
-int SWS_MediaPoolFileView::OnItemSort(LPARAM item1, LPARAM item2)
-{
-	if (abs(m_iSortCol) == 1)
-	{	// Sort col 1 numerically
-		int iRet = 0;
-		SWS_MediaPoolFile* pFile1 = (SWS_MediaPoolFile*)item1;
-		SWS_MediaPoolFile* pFile2 = (SWS_MediaPoolFile*)item2;
-		if (pFile1->GetID() > pFile2->GetID())
-			iRet = 1;
-		else if (pFile1->GetID() < pFile2->GetID())
-			iRet = -1;
-		
-		if (m_iSortCol < 0)
-			return -iRet;
-		else
-			return iRet;
-	}
-	return SWS_ListView::OnItemSort(item1, item2);
-}
-
-
 SWS_MediaPoolWnd::SWS_MediaPoolWnd()
 :SWS_DockWnd(IDD_MEDIAPOOL, "Media Pool", 30004), m_curGroup(NULL), m_projGroup("Project", false)
 {

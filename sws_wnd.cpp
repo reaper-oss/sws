@@ -1007,7 +1007,21 @@ int SWS_ListView::OnItemSort(LPARAM item1, LPARAM item2)
 	GetItemText(item1, abs(m_iSortCol)-1, str1, 64);
 	GetItemText(item2, abs(m_iSortCol)-1, str2, 64);
 
-	int iRet = strcmp(str1, str2);
+	// If strings are purely numbers, sort numerically
+	char* pEnd1, *pEnd2;
+	int i1 = strtol(str1, &pEnd1, 0);
+	int i2 = strtol(str2, &pEnd2, 0);
+	int iRet = 0;
+	if ((i1 || i2) && !*pEnd1 && !*pEnd2)
+	{
+		if (i1 > i2)
+			iRet = 1;
+		else if (i1 < i2)
+			iRet = -1;
+	}
+	else
+		iRet = strcmp(str1, str2);
+	
 	if (m_iSortCol < 0)
 		return -iRet;
 	else

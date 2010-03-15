@@ -100,7 +100,6 @@ protected:
 	void OnItemDblClk(LPARAM item, int iCol);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	void OnBeginDrag();
-	int OnItemSort(LPARAM item1, LPARAM item2);
 
 private:
 	SWS_MediaPoolWnd* m_pWnd;

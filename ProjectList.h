@@ -1,5 +1,5 @@
 /******************************************************************************
-/ Version.h
+/ ProjectList.h
 /
 / Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
@@ -23,10 +23,37 @@
 / FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 / OTHER DEALINGS IN THE SOFTWARE.
 /
-/ Auto build # increment code from MS Knowledge base article 237870
 ******************************************************************************/
 
-#define FILE_VERSION			1,6,1,1
-#define PRODUCT_VERSION			1,6,1,1
-#define FILE_VERSION_STR		"1, 6, 1, 1\0"
-#define PRODUCT_VERSION_STR		"1, 6, 1, 1\0"
+
+#pragma once
+
+class SWS_ProjectListView : public SWS_ListView
+{
+public:
+	SWS_ProjectListView(HWND hwndList, HWND hwndEdit);
+
+protected:
+	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
+	bool OnItemSelChange(LPARAM item, bool bSel);
+	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
+	int  GetItemState(LPARAM item);
+};
+
+class SWS_ProjectListWnd : public SWS_DockWnd
+{
+public:
+	SWS_ProjectListWnd();
+	void Update();
+	
+protected:
+	void OnInitDlg();
+	void OnCommand(WPARAM wParam, LPARAM lParam);
+	HMENU OnContextMenu(int x, int y);
+};
+
+void OpenProjectList(COMMAND_T*);
+bool ProjectListEnabled(COMMAND_T*);
+void ProjectListUpdate();
+int ProjectListInit();
+void ProjectListExit();

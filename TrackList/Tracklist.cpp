@@ -168,26 +168,6 @@ bool SWS_TrackListView::OnItemSelChange(LPARAM item, bool bSel)
 	return false;
 }
 
-int SWS_TrackListView::OnItemSort(LPARAM item1, LPARAM item2)
-{
-	if (abs(m_iSortCol) == 1)
-	{
-		int iRet = 0;
-		MediaTrack* tr1 = (MediaTrack*)item1;
-		MediaTrack* tr2 = (MediaTrack*)item2;
-		if (CSurf_TrackToID(tr1, false) > CSurf_TrackToID(tr2, false))
-			iRet = 1;
-		else if (CSurf_TrackToID(tr1, false) < CSurf_TrackToID(tr2, false))
-			iRet = -1;
-		
-		if (m_iSortCol < 0)
-			return -iRet;
-		else
-			return iRet;
-	}
-	return SWS_ListView::OnItemSort(item1, item2);
-}
-
 void SWS_TrackListView::SetItemText(LPARAM item, int iCol, const char* str)
 {
 	if (iCol == 1)

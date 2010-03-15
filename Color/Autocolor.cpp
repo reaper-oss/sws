@@ -78,7 +78,11 @@ void SWS_AutoColorView::GetItemText(LPARAM item, int iCol, char* str, int iStrMa
 		if (pItem->m_col < 0)
 			lstrcpyn(str, cColorTypes[-pItem->m_col - 1], iStrMax);
 		else
+#ifdef _WIN32
 			_snprintf(str, iStrMax, "0x%02x%02x%02x", pItem->m_col & 0xFF, (pItem->m_col >> 8) & 0xFF, (pItem->m_col >> 16) & 0xFF);
+#else
+			_snprintf(str, iStrMax, "0x%06x", pItem->m_col);
+#endif
 		break;
 	}
 }
@@ -102,11 +106,14 @@ void SWS_AutoColorView::SetItemText(LPARAM item, int iCol, const char* str)
 			pItem->m_str.Set(str);
 		break;
 	case 2: // Color
-		pItem->m_col = strtol(str, NULL, 0);
-		break;
+		{
+			int iNewCol = strtol(str, NULL, 0);
+			pItem->m_col = RGB((iNewCol >> 16) & 0xFF, (iNewCol >> 8) & 0xFF, iNewCol & 0xFF);
+			break;
+		}
 	}
 
-	Update();
+	g_pACWnd->Update();
 }
 
 void SWS_AutoColorView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
@@ -121,27 +128,8 @@ void SWS_AutoColorView::OnItemSelChanged(LPARAM item, bool bSel)
 	g_pACWnd->Update();
 }
 
-int SWS_AutoColorView::OnItemSort(LPARAM item1, LPARAM item2)
-{
-	if (abs(m_iSortCol) == 1)
-	{
-		int iRet;
-		int i1 = g_pACItems.Find((SWS_AutoColorItem*)item1);
-		int i2 = g_pACItems.Find((SWS_AutoColorItem*)item2);
-		if (i1 > i2)
-			iRet = 1;
-		else if (i1 < i2)
-			iRet = -1;
-		if (m_iSortCol < 0)
-			return -iRet;
-		else
-			return iRet;
-	}
-	return SWS_ListView::OnItemSort(item1, item2);
-}
-
 SWS_AutoColorWnd::SWS_AutoColorWnd()
-:SWS_DockWnd(IDD_AUTOCOLOR, "AutoColor", 30005)
+:SWS_DockWnd(IDD_AUTOCOLOR, "Autocolor", 30005)
 #ifndef _WIN32
 	,m_bSettingColor(false)
 #endif

@@ -54,7 +54,6 @@ protected:
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	void OnItemSelChanged(LPARAM item, bool bSel);
-	int  OnItemSort(LPARAM item1, LPARAM item2);
 };
 
 class SWS_AutoColorWnd : public SWS_DockWnd

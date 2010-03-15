@@ -28,4 +28,6 @@
 
 #pragma once
 
+extern COMMAND_T g_projMgrCmdTable[];
+
 int ProjectMgrInit();

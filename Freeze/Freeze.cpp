@@ -946,7 +946,7 @@ void UnindentTracks(COMMAND_T* = NULL)
 		Undo_OnStateChangeEx("Unindent selected tracks", UNDO_STATE_TRACKCFG, -1);
 }
 
-void SelNextItem(COMMAND_T* = NULL)
+void SelNextItem(COMMAND_T* ctx)
 {
 	// Find the last selected
 	MediaItem* nextMi = NULL;
@@ -962,7 +962,8 @@ void SelNextItem(COMMAND_T* = NULL)
 				{
 					if (nextMi)
 					{
-						Main_OnCommand(40289, 0); // Unselect all items
+						if (ctx->user == 0)
+							Main_OnCommand(40289, 0); // Unselect all items
 						GetSetMediaItemInfo(nextMi, "B_UISEL", &g_bTrue);
 						UpdateTimeline();
 						return;
@@ -974,7 +975,7 @@ void SelNextItem(COMMAND_T* = NULL)
 	}
 }
 
-void SelPrevItem(COMMAND_T* = NULL)
+void SelPrevItem(COMMAND_T* ctx)
 {
 	// Find the last selected
 	MediaItem* prevMi = NULL;
@@ -990,7 +991,8 @@ void SelPrevItem(COMMAND_T* = NULL)
 				{
 					if (prevMi)
 					{
-						Main_OnCommand(40289, 0); // Unselect all items
+						if (ctx->user == 0)
+							Main_OnCommand(40289, 0); // Unselect all items
 						GetSetMediaItemInfo(prevMi, "B_UISEL", &g_bTrue);
 						UpdateTimeline();
 						return;
@@ -1602,8 +1604,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Make folder from selected tracks" },                      "SWS_MAKEFOLDER",     MakeFolder,       NULL, },
 	{ { DEFACCEL, "SWS: Indent selected track(s)" },								 "SWS_INDENT",         IndentTracks,     "SWS Indent track(s)", },
 	{ { DEFACCEL, "SWS: Unindent selected track(s)" },							 "SWS_UNINDENT",       UnindentTracks,   "SWS Unindent track(s)", },
-	{ { DEFACCEL, "SWS: Select next item (across tracks)" },                      "SWS_SELNEXTITEM",    SelNextItem,      NULL, },
-	{ { DEFACCEL, "SWS: Select previous item (across tracks)" },                  "SWS_SELPREVITEM",    SelPrevItem,      NULL, },
+	{ { DEFACCEL, "SWS: Select next item (across tracks)" },                      "SWS_SELNEXTITEM",    SelNextItem,      NULL, 0, },
+	{ { DEFACCEL, "SWS: Select previous item (across tracks)" },                  "SWS_SELPREVITEM",    SelPrevItem,      NULL, 0, },
+	{ { DEFACCEL, "SWS: Select next item, keeping current selection (across tracks)" },     "SWS_SELNEXTITEM2", SelNextItem,      NULL, 1 },
+	{ { DEFACCEL, "SWS: Select previous item, keeping current selection (across tracks)" }, "SWS_SELPREVITEM2", SelPrevItem,      NULL, 1 },
 	{ { DEFACCEL, "SWS: Select muted tracks" },									 "SWS_SELMUTEDTRACKS", SelMutedTracks,   NULL, },
 	{ { DEFACCEL, "SWS: Select muted items" },									 "SWS_SELMUTEDITEMS",  SelMutedItems,    NULL, },
 	{ { DEFACCEL, "SWS: Select muted items on selected track(s)" },				 "SWS_SELMUTEDITEMS2", SelMutedItemsSel, NULL, },

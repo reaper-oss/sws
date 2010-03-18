@@ -78,21 +78,22 @@ void SWS_DockWnd::Show(bool bToggle, bool bActivate)
 		if (m_bDocked && bActivate)
 			DockWindowActivate(m_hwnd);
 	}
-	else if (!IsWindowVisible(m_hwnd))
+	else if (!IsWindowVisible(m_hwnd) || (bActivate && !bToggle))
 	{
 		if (m_bDocked)
 			DockWindowActivate(m_hwnd);
 		else
 			ShowWindow(m_hwnd, SW_SHOW);
+		SetFocus(m_hwnd);
 	}
 	else if (bToggle)// If already visible close the window
 		SendMessage(m_hwnd, WM_COMMAND, IDCANCEL, 0);
 }
 
-bool SWS_DockWnd::IsActive()
+bool SWS_DockWnd::IsActive(bool bWantEdit)
 {
 	for (int i = 0; i < m_pLists.GetSize(); i++)
-		if (m_pLists.Get(i)->IsActive())
+		if (m_pLists.Get(i)->IsActive(bWantEdit))
 			return true;
 	return GetFocus() == m_hwnd;
 }
@@ -297,13 +298,25 @@ LPARAM SWS_DockWnd::screensetCallback(int action, char *id, void *param, int par
 int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 {
 	SWS_DockWnd* p = (SWS_DockWnd*)ctx->user;
-	if (p)
+	if (p && p->IsActive(true))
 	{
+		// Check the listviews first to catch editing
 		for (int i = 0; i < p->m_pLists.GetSize(); i++)
-			if (p->m_pLists.Get(i)->GetHWND() == msg->hwnd)
-				return p->m_pLists.Get(i)->KeyHandler(msg);
-		if (p->m_pLists.GetSize())
-			return p->m_pLists.Get(0)->KeyHandler(msg);
+			if (p->m_pLists.Get(i)->GetHWND() == msg->hwnd || p->m_pLists.Get(i)->IsActive(true))
+			{
+				int iRet = p->m_pLists.Get(i)->KeyHandler(msg);
+				if (iRet)
+					return iRet;
+				else
+					break;
+			}
+
+		// Key wasn't handled by the listview(s), call the DockWnd
+		int iKeys = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? LVKF_CONTROL : 0;
+		iKeys    |= GetAsyncKeyState(VK_MENU)    & 0x8000 ? LVKF_ALT     : 0;
+		iKeys    |= GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? LVKF_SHIFT   : 0;
+
+		return p->OnKey(msg, iKeys);
 	}
 	return 0;
 }
@@ -383,15 +396,18 @@ SWS_ListView::~SWS_ListView()
 	delete [] m_pCols;
 }
 
-LPARAM SWS_ListView::GetListItem(int index)
+LPARAM SWS_ListView::GetListItem(int index, int* iState)
 {
 	if (index < 0)
 		return NULL;
 	LVITEM li;
-	li.mask = LVIF_PARAM;
+	li.mask = LVIF_PARAM | (iState ? LVIF_STATE : 0);
+	li.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
 	li.iItem = index;
 	li.iSubItem = 0;
 	ListView_GetItem(m_hwndList, &li);
+	if (iState)
+		*iState = li.state;
 	return li.lParam;
 }
 
@@ -462,7 +478,11 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		{
 			// Send OnItemSelChange messages for everything on the list
 			for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
-				OnItemSelChange(GetListItem(i), IsSelected(i));
+			{
+				int iState;
+				LPARAM item = GetListItem(i, &iState);
+				OnItemSelChange(item, iState & LVIS_SELECTED);
+			}
 		}
 	
 		if (m_pClickedItem)
@@ -515,14 +535,16 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 			//     Call OnClk now.  LVN_CHANGE is called later, and change the selection
 			//     back to where it should be in that handler
 			
+			int iState;
+			LPARAM item = GetListItem(s->iItem, &iState);
 			m_iClickedKeys  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? LVKF_CONTROL : 0;
 			m_iClickedKeys |= GetAsyncKeyState(VK_MENU)    & 0x8000 ? LVKF_ALT     : 0;
 			m_iClickedKeys |= GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? LVKF_SHIFT   : 0;
 			
 			// Case 1:
-			if (!IsSelected(s->iItem))
+			if (!(iState & LVIS_SELECTED))
 			{
-				m_pClickedItem = GetListItem(s->iItem);
+				m_pClickedItem = item;
 				m_iClickedCol = iDataCol;
 				m_iClickedKeys &= (LVKF_ALT | LVKF_CONTROL); // Ignore shift later
 				return 0;
@@ -530,7 +552,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		
 			if (ListView_GetSelectedCount(m_hwndList) == 1)
 			{	// Case 2:
-				OnItemClk(GetListItem(s->iItem), iDataCol, m_iClickedKeys);
+				OnItemClk(item, iDataCol, m_iClickedKeys);
 				m_pSavedSel.Resize(0, false); // Saved sel size of zero means to not reset
 			}
 			else
@@ -539,7 +561,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 				m_pSavedSel.Resize(ListView_GetItemCount(m_hwndList), false);
 				for (int i = 0; i < m_pSavedSel.GetSize(); i++)
 					m_pSavedSel.Get()[i] = IsSelected(i);
-				OnItemClk(GetListItem(s->iItem), iDataCol, m_iClickedKeys);
+				OnItemClk(item, iDataCol, m_iClickedKeys);
 			}
 #endif
 		}
@@ -630,56 +652,51 @@ void SWS_ListView::OnDestroy()
 
 int SWS_ListView::KeyHandler(MSG *msg)
 {
-	if (msg->message == WM_KEYDOWN && m_iEditingItem != -1)// TODO huh? why doesn't this work?  What message is actually sending VK_ENTER? && msg->hwnd == m_hwndEdit)
+	if (msg->message == WM_KEYDOWN)
 	{
-		bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
+		if (m_iEditingItem != -1)
+		{
+			bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
 
-		if (msg->wParam == VK_ESCAPE)
-		{
-			EditListItemEnd(false);
-			return 1;
-		}
-		else if (msg->wParam == VK_TAB)
-		{
-			int iItem = m_iEditingItem;
-			DisableUpdates(true);
-			EditListItemEnd(true, false);
-			if (!bShift)
+			if (msg->wParam == VK_ESCAPE)
 			{
-				if (++iItem >= ListView_GetItemCount(m_hwndList))
-					iItem = 0;
+				EditListItemEnd(false);
+				return 1;
 			}
-			else
+			else if (msg->wParam == VK_TAB)
 			{
-				if (--iItem < 0)
-					iItem = ListView_GetItemCount(m_hwndList) - 1;
+				int iItem = m_iEditingItem;
+				DisableUpdates(true);
+				EditListItemEnd(true, false);
+				if (!bShift)
+				{
+					if (++iItem >= ListView_GetItemCount(m_hwndList))
+						iItem = 0;
+				}
+				else
+				{
+					if (--iItem < 0)
+						iItem = ListView_GetItemCount(m_hwndList) - 1;
+				}
+				EditListItem(GetListItem(iItem), m_iEditingCol);
+				DisableUpdates(false);
+				return 1;
 			}
-			EditListItem(GetListItem(iItem), m_iEditingCol);
-			DisableUpdates(false);
-			return 1;
+			else if (msg->wParam == VK_RETURN)
+			{
+				EditListItemEnd(true);
+				return 1;
+			}
 		}
-		else if (msg->wParam == VK_RETURN)
+
+		// can override these in accelerators that are instantiated earlier, if you like!
+		// Catch a few keys that are handled natively by the list view
+		else if (msg->wParam == VK_UP || msg->wParam == VK_DOWN || msg->wParam == VK_TAB)
 		{
-			EditListItemEnd(true);
-			return 1;
+			return -1;
 		}
 	}
-	/* perhaps it's possible to move these keycommands from the derived classes here.
-	 * but there is specific things going on for each, so maybe not?  TODO.
-	else if (msg->hwnd == m_hwndList)
-	{
-		if (msg->wParam == VK_UP && !bCtrl && !bAlt)
-		{
-			SendMessage(hwnd, WM_COMMAND, SELPREV_MSG, 0);
-			return 1;
-		}
-		else if (msg->wParam == VK_DOWN && !bCtrl && !bAlt)
-		{
-			SendMessage(hwnd, WM_COMMAND, SELNEXT_MSG, 0);
-			return 1;
-		}
-	}
-	*/
+		
 	return 0;
 }
 
@@ -731,15 +748,24 @@ void SWS_ListView::Update()
 
 			// Update the list, no matter what, because text may have changed
 			LVITEM item;
+			item.mask = LVIF_TEXT | LVIF_PARAM;
 			int iNewState = GetItemState(items.Get()[i]);
 			if (iNewState >= 0)
 			{
-				item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
-				item.state = iNewState;
-				item.stateMask = LVIS_SELECTED | LVIS_FOCUSED;
+				int iCurState = ListView_GetItemState(m_hwndList, j, LVIS_SELECTED | LVIS_FOCUSED);
+				if (iNewState && !(iCurState & LVIS_SELECTED))
+				{
+					item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
+					item.state = LVIS_SELECTED;
+					item.stateMask = LVIS_SELECTED;
+				}
+				else if (!iNewState && (iCurState & LVIS_SELECTED))
+				{
+					item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
+					item.state = 0;
+					item.stateMask = LVIS_SELECTED | ((iCurState & LVIS_FOCUSED) ? LVIS_FOCUSED : 0);
+				}
 			}
-			else
-				item.mask = LVIF_TEXT | LVIF_PARAM;
 
 			item.iItem = j;
 			item.lParam = items.Get()[i];
@@ -994,9 +1020,9 @@ void SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 			ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
 		// TODO resort? Just call update?
 		// Update is likely called when SetItemText is called too...
+		m_iEditingItem = -1;
+		ShowWindow(m_hwndEdit, SW_HIDE);
 	}
-	m_iEditingItem = -1;
-	ShowWindow(m_hwndEdit, SW_HIDE);
 }
 
 int SWS_ListView::OnItemSort(LPARAM item1, LPARAM item2)

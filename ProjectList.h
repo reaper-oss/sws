@@ -35,9 +35,8 @@ public:
 
 protected:
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	bool OnItemSelChange(LPARAM item, bool bSel);
+	void OnItemDblClk(LPARAM item, int iCol);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	int  GetItemState(LPARAM item);
 };
 
 class SWS_ProjectListWnd : public SWS_DockWnd
@@ -50,6 +49,7 @@ protected:
 	void OnInitDlg();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	HMENU OnContextMenu(int x, int y);
+	int OnKey(MSG* msg, int iKeyState);
 };
 
 void OpenProjectList(COMMAND_T*);

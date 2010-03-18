@@ -58,9 +58,13 @@ void SelItems::Add(LineParser* lp)
 {
 	Base64 b64;
 	int bufSize;
-	GUID* g = (GUID*)b64.Decode(lp->gettoken_str(0), &bufSize);
+	GUID* guidBuf = (GUID*)b64.Decode(lp->gettoken_str(0), &bufSize);
 	for (unsigned int i = 0; i < bufSize / sizeof(GUID); i++)
-		m_selItems.Add(&g[i]);
+	{
+		GUID* g = new GUID;
+		*g = guidBuf[i];
+		m_selItems.Add(g);
+	}
 }
 
 void SelItems::Add(MediaTrack* tr)
@@ -71,7 +75,7 @@ void SelItems::Add(MediaTrack* tr)
 		if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
 		{
 			GUID* g = new GUID;
-			g = (GUID*)GetSetMediaItemInfo(mi, "GUID", NULL);
+			*g = *(GUID*)GetSetMediaItemInfo(mi, "GUID", NULL);
 			m_selItems.Add(g);
 		}
 	}

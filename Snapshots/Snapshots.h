@@ -58,6 +58,7 @@ protected:
 	HMENU OnContextMenu(int x, int y);
 	void OnResize();
 	void OnDestroy();
+	int OnKey(MSG* msg, int iKeyState);
 	void GetOptions();
 	void ShowControls(bool bShow);
 

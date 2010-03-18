@@ -352,7 +352,7 @@ void SWS_MediaPoolGroupView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 
 int SWS_MediaPoolGroupView::GetItemState(LPARAM item)
 {
-	return (SWS_MediaPoolGroup*)item == m_pWnd->m_curGroup ? LVIS_SELECTED | LVIS_FOCUSED : 0;
+	return (SWS_MediaPoolGroup*)item == m_pWnd->m_curGroup ? 1 : 0;
 }
 
 static SWS_LVColumn g_fvCols[] = { { 25, 0, "#" }, { 300, 0, "Path" }, { 200, 0, "Filename" }, { 45, 2, "Action" } };
@@ -652,12 +652,12 @@ void SWS_MediaPoolWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case DELETE_MSG:
 			if (m_curGroup != &m_projGroup)
 			{
-				if (m_pLists.Get(0)->IsActive())
+				if (m_pLists.Get(0)->IsActive(false))
 				{
 					SWS_MediaPoolGroupView* pGV = (SWS_MediaPoolGroupView*)m_pLists.Get(0);
 					pGV->DoDelete();
 				}
-				else if (m_pLists.Get(1)->IsActive())
+				else if (m_pLists.Get(1)->IsActive(false))
 				{
 					SWS_MediaPoolFileView* pFV = (SWS_MediaPoolFileView*)m_pLists.Get(1);
 					pFV->DoDelete();
@@ -715,6 +715,16 @@ HMENU SWS_MediaPoolWnd::OnContextMenu(int x, int y)
 	return NULL;
 	//HMENU contextMenu = CreatePopupMenu();
 	//return contextMenu;
+}
+
+int SWS_MediaPoolWnd::OnKey(MSG* msg, int iKeyState)
+{
+	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState)
+	{
+		OnCommand(DELETE_MSG, 0);
+		return 1;
+	}
+	return 0;
 }
 
 void OpenMediaPool(COMMAND_T*)
@@ -792,44 +802,6 @@ static COMMAND_T g_commandTable[] =
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
-// Seems damned "hacky" to me, but it works, so be it.
-static int translateAccel(MSG *msg, accelerator_register_t *ctx)
-{
-	if (g_pMediaPoolWnd->IsActive())
-	{
-		if (msg->message == WM_KEYDOWN)
-		{
-			bool bCtrl  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? true : false;
-			bool bAlt   = GetAsyncKeyState(VK_MENU)    & 0x8000 ? true : false;
-			bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
-			HWND hwnd = g_pMediaPoolWnd->GetHWND();
-
-#ifdef _WIN32
-			if (msg->wParam == VK_TAB && !bCtrl && !bAlt && !bShift)
-			{
-				SendMessage(hwnd, WM_NEXTDLGCTL, 0, 0);
-				return 1;
-			}
-			else if (msg->wParam == VK_TAB && !bCtrl && !bAlt && bShift)
-			{
-				SendMessage(hwnd, WM_NEXTDLGCTL, 1, 0);
-				return 1;
-			}
-			else
-#endif				
-			if (msg->wParam == VK_DELETE && !bCtrl && !bAlt && !bShift)
-			{
-				SendMessage(hwnd, WM_COMMAND, DELETE_MSG, 0);
-				return 1;
-			}
-		}
-		return -666;
-	}
-	return 0;
-}
-
-static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
-
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
@@ -838,8 +810,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 
 int MediaPoolInit()
 {
-	if (!plugin_register("accelerator",&g_ar))
-		return 0;
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
 

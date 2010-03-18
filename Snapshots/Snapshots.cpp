@@ -336,7 +336,7 @@ void SWS_SnapshotsView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 int SWS_SnapshotsView::GetItemState(LPARAM item)
 {
 	Snapshot* ss = (Snapshot*)item;
-	return ss == g_ss.Get()->m_pCurSnapshot ? LVIS_SELECTED | LVIS_FOCUSED : 0;
+	return ss == g_ss.Get()->m_pCurSnapshot ? 1 : 0;
 }
 
 SWS_SnapshotsWnd::SWS_SnapshotsWnd()
@@ -643,6 +643,26 @@ void SWS_SnapshotsWnd::OnDestroy()
 		g_bSelOnly ? 1 : 0,
 		m_iSelType);
 	WritePrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, str, get_ini_file());
+}
+
+int SWS_SnapshotsWnd::OnKey(MSG* msg, int iKeyState)
+{
+	if (msg->message == WM_KEYDOWN && !iKeyState)
+	{
+		switch(msg->wParam)
+		{
+		case VK_RETURN:
+			OnCommand(LOADSEL_MSG, 0);
+			return 1;
+		case VK_DELETE:
+			OnCommand(DELETE_MSG, 0);
+			return 1;
+		case VK_F2:
+			OnCommand(RENAME_MSG, 0);
+			return 1;
+		}
+	}
+	return 0;
 }
 
 void SWS_SnapshotsWnd::GetOptions()
@@ -984,38 +1004,6 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
-// Seems damned "hacky" to me, but it works, so be it.
-static int translateAccel(MSG *msg, accelerator_register_t *ctx)
-{
-	if (g_pSSWnd->IsActive())
-	{
-		HWND hwnd = g_pSSWnd->GetHWND();
-
-		if (msg->message == WM_KEYDOWN && msg->wParam == VK_RETURN)
-		{
-			SendMessage(hwnd, WM_COMMAND, LOADSEL_MSG, 0);
-			return 1;
-		}
-		else if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE)
-		{
-			SendMessage(hwnd, WM_COMMAND, DELETE_MSG, 0);
-			return 1;
-		}
-		else if (msg->message == WM_KEYDOWN && msg->wParam == VK_F2)
-		{
-			SendMessage(hwnd, WM_COMMAND, RENAME_MSG, 0);
-			return 1;
-		}
-		else if (msg->message == WM_KEYDOWN && (msg->wParam == VK_TAB || msg->wParam == VK_ESCAPE || msg->wParam == VK_DOWN || msg->wParam == VK_UP))
-			return -1;
-		else
-			return -666;
-	}
-	return 0;
-} 
-
-static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
-
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
@@ -1027,8 +1015,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 int SnapshotsInit()
 {
 	if (!plugin_register("projectconfig",&g_projectconfig))
-		return 0;
-	if (!plugin_register("accelerator",&g_ar))
 		return 0;
 
 	SWSRegisterCommands(g_commandTable);

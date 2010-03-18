@@ -32,10 +32,10 @@
 // Globals
 SWS_ProjectListWnd* g_pProjList = NULL;
 
-static SWS_LVColumn g_cols[] = { { 30, 0, "#" }, { 285, 0, "Name" }, };
+static SWS_LVColumn g_cols[] = { { 30, 0, "#" }, { 100, 0, "Name" }, { 185, 0, "Path", -1 }, };
 
 SWS_ProjectListView::SWS_ProjectListView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 2, g_cols, "ProjListViewState", false)
+:SWS_ListView(hwndList, hwndEdit, 3, g_cols, "ProjListViewState", false)
 {
 }
 
@@ -46,18 +46,40 @@ void SWS_ProjectListView::GetItemText(LPARAM item, int iCol, char* str, int iStr
 	char cFilename[512];
 	while (proj != EnumProjects(i, cFilename, 512))
 		i++;
-
-	if (iCol == 0)
+	
+	switch (iCol)
+	{
+	case 0: // #
 		_snprintf(str, iStrMax, "%d", i+1);
-	else if (iCol == 1)
-		lstrcpyn(str, cFilename, iStrMax);
+		break;
+	case 1: // Name
+		{
+			char* pSlash = strrchr(cFilename, PATH_SLASH_CHAR);
+			if (pSlash)
+			{
+				char* pExt = strrchr(cFilename, '.');
+				if (pExt) *pExt = 0;
+				lstrcpyn(str, pSlash+1, iStrMax);
+			}
+			else
+				lstrcpyn(str, cFilename, iStrMax);
+			break;
+		}
+	case 2: // Path
+		{
+			char* pSlash = strrchr(cFilename, PATH_SLASH_CHAR);
+			if (pSlash) *pSlash = 0;
+			lstrcpyn(str, cFilename, iStrMax);
+			break;
+		}
+		break;
+	}
 }
 
-bool SWS_ProjectListView::OnItemSelChange(LPARAM item, bool bSel)
+void SWS_ProjectListView::OnItemDblClk(LPARAM item, int iCol)
 {
-	if (bSel)
-		SelectProjectInstance((ReaProject*)item);
-	return false;
+	SelectProjectInstance((ReaProject*)item);
+	g_pProjList->Show(false, true);
 }
 
 void SWS_ProjectListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
@@ -70,13 +92,6 @@ void SWS_ProjectListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 		pBuf->Resize(i);
 		pBuf->Get()[i-1] = (LPARAM)proj;
 	}
-}
-
-int SWS_ProjectListView::GetItemState(LPARAM item)
-{
-	if ((ReaProject*)item == Enum_Projects(-1, NULL, 0))
-		return LVIS_SELECTED | LVIS_FOCUSED;
-	return 0;
 }
 
 SWS_ProjectListWnd::SWS_ProjectListWnd()
@@ -112,6 +127,31 @@ HMENU SWS_ProjectListWnd::OnContextMenu(int x, int y)
 	return hMenu;
 }
 
+int SWS_ProjectListWnd::OnKey(MSG* msg, int iKeyState)
+{
+	if (msg->message == WM_KEYDOWN && !iKeyState)
+	{
+		if (msg->wParam == VK_DELETE)
+		{
+			Main_OnCommand(40860, 0);
+			Show(false, true);
+			return 1;
+		}
+		else if (msg->wParam == VK_RETURN)
+		{
+			if (m_pLists.Get(0))
+			{
+				ReaProject* proj = (ReaProject*)m_pLists.Get(0)->EnumSelected(NULL);
+				if (proj)
+					SelectProjectInstance(proj);
+			}
+			Show(false, true);
+			return 1;
+		}
+	}
+	return 0;
+}
+
 void OpenProjectList(COMMAND_T*)
 {
 	g_pProjList->Show(true, true);
@@ -127,47 +167,8 @@ void ProjectListUpdate()
 	g_pProjList->Update();
 }
 
-static int translateAccel(MSG *msg, accelerator_register_t *ctx)
-{
-	if (g_pProjList->IsActive())
-	{
-		if (msg->message == WM_KEYDOWN)
-		{
-			bool bCtrl  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? true : false;
-			bool bAlt   = GetAsyncKeyState(VK_MENU)    & 0x8000 ? true : false;
-			bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
-
-			if (msg->wParam == VK_DELETE && !bCtrl && !bAlt && !bShift)
-			{
-				Main_OnCommand(40860, 0);
-				SetFocus(g_pProjList->GetHWND());
-				return 1;
-			}
-			else if (msg->wParam == VK_UP && !bCtrl && !bAlt && !bShift)
-			{
-				Main_OnCommand(40862, 0);
-				SetFocus(g_pProjList->GetHWND());
-				return 1;
-			}
-			else if (msg->wParam == VK_DOWN && !bCtrl && !bAlt && !bShift)
-			{
-				Main_OnCommand(40861, 0);
-				SetFocus(g_pProjList->GetHWND());
-				return 1;
-			}
-		}
-		return -666;
-	}
-	return 0;
-} 
-
-static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
-
 int ProjectListInit()
 {
-	if (!plugin_register("accelerator",&g_ar))
-		return 0;
-
 	g_pProjList = new SWS_ProjectListWnd();
 
 	return 1;

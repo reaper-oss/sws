@@ -55,6 +55,7 @@ protected:
 	HMENU OnContextMenu(int x, int y);
 	void OnDestroy();
 	void OnTimer();
+	int OnKey(MSG* msg, int iKeyState);
 };
 
 #define EXPORT_FORMAT_KEY "MarkerExport Format"

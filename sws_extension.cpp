@@ -236,7 +236,8 @@ public:
 	const char *GetConfigString() { return ""; }
 
 	bool m_bChanged;
-	SWSTimeSlice() : m_bChanged() {}
+	int m_iACIgnore;
+	SWSTimeSlice() : m_bChanged(false), m_iACIgnore(0) {}
 
 	void Run()
 	{
@@ -258,10 +259,24 @@ public:
 	}
 
 	// This is our only notification of active project tab change, so update everything
-	void SetTrackListChange()							{ m_bChanged = true; }
+	void SetTrackListChange()
+	{
+		m_bChanged = true;
+		AutoColorRun(false);
+		m_iACIgnore = GetNumTracks() + 1;
+	}
+	// For every SetTrackListChange we get NumTracks+1 SetTrackTitle calls, but we only
+	// want to call AutoColorRun once, so ignore those n+1.
+	// However, we still need to trap track name changes with no track list change.
+	void SetTrackTitle(MediaTrack *tr, const char *c)
+	{
+		ScheduleTracklistUpdate();
+		if (!(m_iACIgnore--))
+			AutoColorRun(false);
+	}
+
 	// The rest only are applicable only to the TrackList
 	void SetSurfaceSelected(MediaTrack *tr, bool bSel)	{ ScheduleTracklistUpdate(); }
-	void SetTrackTitle(MediaTrack *tr, const char *c)	{ ScheduleTracklistUpdate();  AutoColorRun(false); }
 	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); }
 	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); }
 	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); }

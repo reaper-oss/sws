@@ -121,6 +121,7 @@ protected:
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void OnDroppedFiles(HDROP h);
 	HMENU OnContextMenu(int x, int y);
+	int OnKey(MSG* msg, int iKeyState);
 };
 
 void MediaPoolUpdate();

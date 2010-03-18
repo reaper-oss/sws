@@ -31,8 +31,6 @@
 
 #define PRI_UP_MSG		0x10000
 #define PRI_DOWN_MSG	0x10001
-#define SELNEXT_MSG		0x100F1
-#define SELPREV_MSG		0x100F2
 #define TRACKTYPE_MSG	0x10100
 #define COLORTYPE_MSG	0x10110
 
@@ -41,11 +39,11 @@
 #define AC_COUNT_KEY	"AutoColorCount"
 #define AC_ITEM_KEY		"AutoColor %d"
 
-enum { AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_ANY, NUM_TRACKTYPES };
-static const char cTrackTypes[][11] = { "(unnamed)", "(folder)", "(children)", "(receive)", "(any)" };
+enum { AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_ANY, AC_MASTER, NUM_TRACKTYPES };
+static const char cTrackTypes[][11] = { "(unnamed)", "(folder)", "(children)", "(receive)", "(any)", "(master)" };
 
-enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, NUM_COLORTYPES };
-static const char cColorTypes[][9] = { "Custom", "Gradient", "Random", "None" };
+enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, NUM_COLORTYPES };
+static const char cColorTypes[][9] = { "Custom", "Gradient", "Random", "None", "Parent" };
 
 // Globals
 static SWS_AutoColorWnd* g_pACWnd = NULL;
@@ -180,7 +178,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			AutoColorRun(true);
 			break;
 		case IDC_ADD:
-			g_pACItems.Add(new SWS_AutoColorItem("(name)", 0));
+			g_pACItems.Add(new SWS_AutoColorItem("(name)", AC_NONE));
 			Update();
 			break;
 		case IDC_REMOVE:
@@ -387,6 +385,17 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y)
 	return hMenu;
 }
 
+int SWS_AutoColorWnd::OnKey(MSG* msg, int iKeyState)
+{
+	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState)
+	{
+		OnCommand(IDC_REMOVE, 0);
+		return 1;
+	}
+	return 0;
+} 
+
+
 void OpenAutoColor(COMMAND_T*)
 {
 	g_pACWnd->Show(true, true);
@@ -402,63 +411,76 @@ void ApplyColorRule(SWS_AutoColorItem* rule)
 
 	// Check all tracks for matching strings/properties
 	MediaTrack* temp;
-	for (int i = 1; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		int iCurColor = *(int*)GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", NULL);
 
 		bool bAutocolored = false;
 		bool bFound = false;
-		for (int k = 0; k < g_pACTracks.Get()->GetSize(); k++)
-			if (g_pACTracks.Get()->Get(k)->m_pTr == tr)
+		SWS_AutoColorTrack* pACTrack = NULL;
+		for (int j = 0; j < g_pACTracks.Get()->GetSize(); j++)
+		{
+			pACTrack = g_pACTracks.Get()->Get(j);
+			if (pACTrack->m_pTr == tr)
 			{
 				bFound = true;
-				if (!g_pACTracks.Get()->Get(k)->m_bColored && iCurColor == g_pACTracks.Get()->Get(k)->m_col)
+				if (!pACTrack->m_bColored && iCurColor == pACTrack->m_col)
 				{
 					bAutocolored = true;
 					break;
 				}
 			}
+		}
 		
 		// New tracks are by default autocolored
 		if (!bFound)
 			bAutocolored = true;
-
+		
 		if (bAutocolored)
 		{
 			bool bColor = false;
 
-			// Check "special" rules first
-			if (strcmp(rule->m_str.Get(), cTrackTypes[AC_FOLDER]) == 0)
+			if (!i) // ignore master for most things
 			{
-				int iType;
-				GetFolderDepth(tr, &iType, &temp);
-				if (iType == 1)
+				// Check "special" rules first:
+				if (strcmp(rule->m_str.Get(), cTrackTypes[AC_FOLDER]) == 0)
+				{
+					int iType;
+					GetFolderDepth(tr, &iType, &temp);
+					if (iType == 1)
+						bColor = true;
+				}
+				else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_CHILDREN]) == 0)
+				{
+					if (GetFolderDepth(tr, NULL, &temp) >= 1)
+						bColor = true;
+				}
+				else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_RECEIVE]) == 0)
+				{
+					if (GetSetTrackSendInfo(tr, -1, 0, "P_SRCTRACK", NULL))
+						bColor = true;
+				}
+				else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_UNNAMED]) == 0)
+				{
+					char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
+					if (!cName || !cName[0])
+						bColor = true;
+				}
+				else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_ANY]) == 0)
+				{
 					bColor = true;
+				}
+				else // Check for name match
+				{
+					char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
+					if (cName && stristr(cName, rule->m_str.Get()))
+						bColor = true;
+				}
 			}
-			else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_CHILDREN]) == 0)
-			{
-				if (GetFolderDepth(tr, NULL, &temp) >= 1)
-					bColor = true;
-			}
-			else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_RECEIVE]) == 0)
-			{
-				if (GetSetTrackSendInfo(tr, -1, 0, "P_SRCTRACK", NULL))
-					bColor = true;
-			}
-			else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_UNNAMED]) == 0)
-			{
-				char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-				if (!cName || !cName[0])
-					bColor = true;
-			}
-			else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_ANY]) == 0)
+			else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_MASTER]) == 0)
+			{	// Check master rule
 				bColor = true;
-			else
-			{
-				char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-				if (cName && stristr(cName, rule->m_str.Get()))
-					bColor = true;
 			}
 
 			if (bColor)
@@ -481,22 +503,28 @@ void ApplyColorRule(SWS_AutoColorItem* rule)
 					gradientTracks.Add(tr);
 				else if (rule->m_col == -AC_NONE-1)
 					newCol = 0;
+				else if (rule->m_col == -AC_PARENT-1)
+				{
+					MediaTrack* parent = (MediaTrack*)GetSetMediaTrackInfo(tr, "P_PARTRACK", NULL);
+					if (parent)
+					{
+						int pcol = *(int*)GetSetMediaTrackInfo(parent, "I_CUSTOMCOLOR", NULL);
+						if (pcol & 0x1000000) // Only color like parent if the parent has color (maybe not?)
+							newCol = pcol;
+					}
+				}
 				else
 					newCol = rule->m_col | 0x1000000;
 
 				if (newCol != iCurColor)
 					GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &newCol);
 
-				bool bFound = false;
-				for (int k = 0; k < g_pACTracks.Get()->GetSize(); k++)
-					if (g_pACTracks.Get()->Get(k)->m_pTr == tr)
-					{
-						g_pACTracks.Get()->Get(k)->m_col = newCol;
-						g_pACTracks.Get()->Get(k)->m_bColored = true;
-						bFound = true;
-						break;
-					}
-				if (!bFound)
+				if (bFound)
+				{
+					pACTrack->m_col = newCol;
+					pACTrack->m_bColored = true;
+				}
+				else
 					g_pACTracks.Get()->Add(new SWS_AutoColorTrack(tr, newCol));
 			}
 		}
@@ -545,7 +573,7 @@ void AutoColorRun(bool bForce)
 		ApplyColorRule(g_pACItems.Get(i));
 
 	if (bForce)
-		Undo_OnStateChangeEx("Apply SWS autocolor", UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx("Apply SWS autocolor", UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
 
 
@@ -608,13 +636,14 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		char str[128];
 		for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
 		{
-			GUID* g = (GUID*)GetSetMediaTrackInfo(g_pACTracks.Get()->Get(i)->m_pTr, "GUID", NULL);
-			if (g)
-			{
-				guidToString(g, str);
-				sprintf(str+strlen(str), " %d", g_pACTracks.Get()->Get(i)->m_col);
-				ctx->AddLine(str);
-			}
+			GUID g;
+			if (CSurf_TrackToID(g_pACTracks.Get()->Get(i)->m_pTr, false))
+				g = *(GUID*)GetSetMediaTrackInfo(g_pACTracks.Get()->Get(i)->m_pTr, "GUID", NULL);
+			else
+				g = GUID_NULL;
+			guidToString(&g, str);
+			sprintf(str+strlen(str), " %d", g_pACTracks.Get()->Get(i)->m_col);
+			ctx->AddLine(str);
 		}
 		ctx->AddLine(">");
 	}
@@ -636,39 +665,6 @@ static COMMAND_T g_commandTable[] =
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
-static int translateAccel(MSG *msg, accelerator_register_t *ctx)
-{
-	if (g_pACWnd->IsActive())
-	{
-		if (msg->message == WM_KEYDOWN)
-		{
-			bool bCtrl  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? true : false;
-			bool bAlt   = GetAsyncKeyState(VK_MENU)    & 0x8000 ? true : false;
-			bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
-
-			if (msg->wParam == VK_DELETE && !bCtrl && !bAlt && !bShift)
-			{
-				SendMessage(g_pACWnd->GetHWND(), WM_COMMAND, IDC_REMOVE, 0);
-				return 1;
-			}
-			/*else if (msg->wParam == VK_UP && !bCtrl && !bAlt && !bShift)
-			{
-				SendMessage(g_pACWnd->GetHWND(), WM_COMMAND, SELPREV_MSG, 0);
-				return 1;
-			}
-			else if (msg->wParam == VK_DOWN && !bCtrl && !bAlt && !bShift)
-			{
-				SendMessage(g_pACWnd->GetHWND(), WM_COMMAND, SELNEXT_MSG, 0);
-				return 1;
-			}*/
-		}
-		return -666;
-	}
-	return 0;
-} 
-
-static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
-
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
@@ -679,8 +675,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 
 int AutoColorInit()
 {
-	if (!plugin_register("accelerator",&g_ar))
-		return 0;
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
 

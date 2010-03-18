@@ -66,6 +66,7 @@ protected:
 	HMENU OnContextMenu(int x, int y);
 	void OnDestroy();
 	void OnTimer();
+	int OnKey(MSG* msg, int iKeyState);
 
 private:
 	bool m_bUpdate;

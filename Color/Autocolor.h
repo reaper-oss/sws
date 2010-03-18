@@ -72,6 +72,7 @@ protected:
 #endif
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	HMENU OnContextMenu(int x, int y);
+	int OnKey(MSG* msg, int iKeyState);
 };
 
 int AutoColorInit();

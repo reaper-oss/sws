@@ -195,12 +195,16 @@ void TogMuteRecvs(COMMAND_T* = NULL)
 static WDL_PtrList<GUID> g_pSelTracks;
 void SaveSelTracks(COMMAND_T* = NULL)
 {
-	g_pSelTracks.Empty(false);
+	g_pSelTracks.Empty(true);
 	for (int i = 0; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-			g_pSelTracks.Add((GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL));
+		{
+			GUID* g = new GUID;
+			*g = *(GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
+			g_pSelTracks.Add(g);
+		}
 	}
 }
 
@@ -858,7 +862,7 @@ void FolderLikePrev(COMMAND_T* = NULL)
 		prevTr = tr;
 	}
 	if (bUndo)
-		Undo_OnStateChangeEx("Set selected track(s) to same folder as previous track", UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx("Set selected track(s) to same folder as previous track", UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
 
 void MakeFolder(COMMAND_T* = NULL)
@@ -889,7 +893,7 @@ void MakeFolder(COMMAND_T* = NULL)
 		tr = nextTr;
 	}
 	if (bUndo)
-		Undo_OnStateChangeEx("Make folder from selected tracks", UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx("Make folder from selected tracks", UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
 
 void IndentTracks(COMMAND_T* = NULL)
@@ -915,7 +919,7 @@ void IndentTracks(COMMAND_T* = NULL)
 	}
 
 	if (bUndo)
-		Undo_OnStateChangeEx("Indent selected tracks", UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx("Indent selected tracks", UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
 
 void UnindentTracks(COMMAND_T* = NULL)
@@ -943,7 +947,7 @@ void UnindentTracks(COMMAND_T* = NULL)
 	}
 
 	if (bUndo)
-		Undo_OnStateChangeEx("Unindent selected tracks", UNDO_STATE_TRACKCFG, -1);
+		Undo_OnStateChangeEx("Unindent selected tracks", UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
 
 void SelNextItem(COMMAND_T* ctx)

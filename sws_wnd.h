@@ -41,7 +41,7 @@ public:
 	SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips);
 	virtual ~SWS_ListView();
 	int GetListItemCount() { return ListView_GetItemCount(m_hwndList); }
-	LPARAM GetListItem(int iIndex);
+	LPARAM GetListItem(int iIndex, int* iState = NULL);
 	bool IsSelected(int index);
 	LPARAM EnumSelected(int* i);
 	int OnNotify(WPARAM wParam, LPARAM lParam);
@@ -52,7 +52,7 @@ public:
 	LPARAM GetHitItem(int x, int y, int* iCol);
 	void EditListItem(LPARAM item, int iCol);
 	
-	bool IsActive() { return GetFocus() == m_hwndList; }
+	bool IsActive(bool bWantEdit) { return GetFocus() == m_hwndList || (bWantEdit && m_iEditingItem != -1); }
 	void DisableUpdates(bool bDisable) { m_bDisableUpdates = bDisable; }
 	bool UpdatesDisabled() { return m_bDisableUpdates; }
 	HWND GetHWND() { return m_hwndList; }
@@ -113,7 +113,7 @@ class SWS_DockWnd
 public:
 	SWS_DockWnd(int iResource, const char* cName, int iDockOrder);
 	void Show(bool bToggle, bool bActivate);
-	bool IsActive();
+	bool IsActive(bool bWantEdit = false);
 	bool IsValidWindow() { return IsWindow(m_hwnd) ? true : false; }
 	HWND GetHWND() { return m_hwnd; }
 	virtual ~SWS_DockWnd();
@@ -131,6 +131,7 @@ protected:
 	virtual void OnTimer() {}
 	virtual void OnDroppedFiles(HDROP h) {}
 	virtual int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
+	virtual int OnKey(MSG* msg, int iKeyState) { return 0; } // return 1 for "processed key"
 
 	const int m_iResource;
 	const char* m_cName;

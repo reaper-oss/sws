@@ -34,8 +34,6 @@
 #include "Tracklist.h"
 
 #define RENAME_MSG		0x10005
-#define SELPREV_MSG		0x1000B
-#define SELNEXT_MSG		0x1000C
 #define LOADSNAP_MSG	0x10100 // Keep space afterwards
 
 #define MAJORADJUST false
@@ -49,6 +47,8 @@ void ShowInMCP(COMMAND_T* = NULL);
 void ShowInTCP(COMMAND_T* = NULL);
 void HideFromMCP(COMMAND_T* = NULL);
 void HideFromTCP(COMMAND_T* = NULL);
+void TogInTCP(COMMAND_T* = NULL);
+void TogInMCP(COMMAND_T* = NULL);
 void ShowInMCPOnly(COMMAND_T* = NULL);
 void ShowInTCPOnly(COMMAND_T* = NULL);
 void ShowInMCPandTCP(COMMAND_T* = NULL);
@@ -156,6 +156,7 @@ void SWS_TrackListView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 void SWS_TrackListView::OnItemDblClk(LPARAM item, int iCol)
 {
 	Main_OnCommand(40913, 0); // Scroll selected tracks into view
+	// TODO new track on NULL?  needs mod of SWS_wnd and all other OnItemDblClk()s
 }
 
 bool SWS_TrackListView::OnItemSelChange(LPARAM item, bool bSel)
@@ -294,44 +295,6 @@ void SWS_TrackListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (m_trLastTouched)
 				m_pLists.Get(0)->EditListItem((LPARAM)m_trLastTouched, 1);
 			break;
-		case SELPREV_MSG:
-		{
-			int i;
-			bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
-			HWND hwndList = GetDlgItem(m_hwnd, IDC_LIST);
-			for (i = 0; i < ListView_GetItemCount(hwndList); i++)
-				if (ListView_GetItemState(hwndList, i, LVIS_SELECTED))
-					break;
-			if (i >= ListView_GetItemCount(hwndList))
-				i = 1;
-
-			if (i > 0)
-			{
-				if (!bShift)
-					ClearSelected();
-				GetSetMediaTrackInfo((MediaTrack*)m_pLists.Get(0)->GetListItem(i-1), "I_SELECTED", &g_i1);
-			}
-			break;
-		}
-		case SELNEXT_MSG:
-		{
-			int i;
-			bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
-			HWND hwndList = GetDlgItem(m_hwnd, IDC_LIST);
-			for (i = ListView_GetItemCount(hwndList)-1; i >= 0; i--)
-				if (ListView_GetItemState(hwndList, i, LVIS_SELECTED))
-					break;
-			if (i < 0)
-				i = ListView_GetItemCount(hwndList) - 2;
-
-			if (i < ListView_GetItemCount(hwndList) - 1)
-			{
-				if (!bShift)
-					ClearSelected();
-				GetSetMediaTrackInfo((MediaTrack*)m_pLists.Get(0)->GetListItem(i+1), "I_SELECTED", &g_i1);
-			}
-			break;
-		}
 		default:
 			if (wParam >= LOADSNAP_MSG)
 				GetSnapshot((int)(wParam - LOADSNAP_MSG), ALL_MASK, false);
@@ -409,6 +372,29 @@ void SWS_TrackListWnd::OnTimer()
 		Update();
 		m_bUpdate = false;
 	}
+}
+
+int SWS_TrackListWnd::OnKey(MSG* msg, int iKeyState)
+{
+	if (msg->message == WM_KEYDOWN && !iKeyState)
+	{
+		switch (msg->wParam)
+		{
+		case VK_LEFT:
+			TogInTCP();
+			return 1;
+		case VK_RIGHT:
+			TogInMCP();
+			return 1;
+		case VK_DELETE:
+			Main_OnCommand(40005, 0); // remove selected tracks
+			return 1;
+		case VK_F2:
+			OnCommand(RENAME_MSG, 0);
+			return 1;
+		}
+	}
+	return 0;
 }
 
 void ScheduleTracklistUpdate()
@@ -534,7 +520,7 @@ void HideFromTCP(COMMAND_T*)
 	Undo_OnStateChangeEx("Hide selected track(s) from TCP", UNDO_STATE_TRACKCFG, -1);
 }
 
-void TogInMCP(COMMAND_T* = NULL)
+void TogInMCP(COMMAND_T*)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
@@ -547,7 +533,7 @@ void TogInMCP(COMMAND_T* = NULL)
 	Undo_OnStateChangeEx("Toggle selected track(s) visible in MCP", UNDO_STATE_TRACKCFG, -1);
 }
 
-void TogInTCP(COMMAND_T* = NULL)
+void TogInTCP(COMMAND_T*)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
@@ -775,68 +761,6 @@ static COMMAND_T g_commandTable[] =
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
-static int translateAccel(MSG *msg, accelerator_register_t *ctx)
-{
-	if (g_pList->IsActive())
-	{
-		if (msg->message == WM_KEYDOWN)
-		{
-			bool bCtrl  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? true : false;
-			bool bAlt   = GetAsyncKeyState(VK_MENU)    & 0x8000 ? true : false;
-			bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
-			HWND hwnd = g_pList->GetHWND();
-
-#ifdef _WIN32
-			if (msg->wParam == VK_TAB && !bCtrl && !bAlt && !bShift)
-			{
-				SendMessage(hwnd, WM_NEXTDLGCTL, 0, 0);
-				return 1;
-			}
-			else if (msg->wParam == VK_TAB && !bCtrl && !bAlt && bShift)
-			{
-				SendMessage(hwnd, WM_NEXTDLGCTL, 1, 0);
-				return 1;
-			}
-			else
-#endif				
-			if (msg->wParam == VK_LEFT && !bCtrl && !bAlt && !bShift)
-			{
-				TogInTCP();
-				return 1;
-			}
-			else if (msg->wParam == VK_RIGHT && !bCtrl && !bAlt && !bShift)
-			{
-				TogInMCP();
-				return 1;
-			}
-			else if (msg->wParam == VK_DELETE && !bCtrl && !bAlt && !bShift)
-			{
-				Main_OnCommand(40005, 0); // remove selected tracks
-				return 1;
-			}
-			else if (msg->wParam == VK_UP && !bCtrl && !bAlt)
-			{
-				SendMessage(hwnd, WM_COMMAND, SELPREV_MSG, 0);
-				return 1;
-			}
-			else if (msg->wParam == VK_DOWN && !bCtrl && !bAlt)
-			{
-				SendMessage(hwnd, WM_COMMAND, SELNEXT_MSG, 0);
-				return 1;
-			}
-			else if (msg->wParam == VK_F2 && !bCtrl && !bAlt && !bShift)
-			{
-				SendMessage(hwnd, WM_COMMAND, RENAME_MSG, 0);
-				return 1;
-			}
-		}
-		return -666;
-	}
-	return 0;
-}
-
-static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
-
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
@@ -845,8 +769,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 
 int TrackListInit()
 {
-	if (!plugin_register("accelerator",&g_ar))
-		return 0;
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
 

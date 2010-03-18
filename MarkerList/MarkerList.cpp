@@ -34,8 +34,6 @@
 #define SAVEWINDOW_POS_KEY "Markerlist Save Window Position"
 
 #define DELETE_MSG		0x100F0
-#define SELNEXT_MSG		0x100F1
-#define SELPREV_MSG		0x100F2
 #define FIRST_LOAD_MSG	0x10100
 
 // Globals
@@ -146,7 +144,7 @@ void SWS_MarkerListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 int SWS_MarkerListView::GetItemState(LPARAM item)
 {
 	MarkerItem* mi = (MarkerItem*)item;
-	return GetCursorPosition() == mi->m_dPos ? LVIS_SELECTED | LVIS_FOCUSED : 0;
+	return GetCursorPosition() == mi->m_dPos ? 1 : 0;
 }
 
 SWS_MarkerListWnd::SWS_MarkerListWnd()
@@ -226,33 +224,6 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				Update();
 				break;
 			}
-		case SELPREV_MSG:
-		{
-			HWND hwndList = GetDlgItem(m_hwnd, IDC_LIST);
-			int iSel = ListView_GetItemCount(hwndList) - 1;
-			for (int i = 0; i < ListView_GetItemCount(hwndList); i++)
-			{
-				if (ListView_GetItemState(hwndList, i, LVIS_SELECTED) && i)
-					iSel = i - 1;
-				ListView_SetItemState(hwndList, i, 0, LVIS_SELECTED | LVIS_FOCUSED);
-			}
-			ListView_SetItemState(hwndList, iSel, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
-			break;
-		}
-		case SELNEXT_MSG:
-		{
-			HWND hwndList = GetDlgItem(m_hwnd, IDC_LIST);
-			int iSel;
-			int iCount = ListView_GetItemCount(hwndList);
-			for (int i = iCount - 1; i >= 0; i--)
-			{
-				if (ListView_GetItemState(hwndList, i, LVIS_SELECTED) && i < iCount - 1)
-					iSel = i + 1;
-				ListView_SetItemState(hwndList, i, 0, LVIS_SELECTED | LVIS_FOCUSED);
-			}
-			ListView_SetItemState(hwndList, iSel, LVIS_SELECTED | LVIS_FOCUSED, LVIS_SELECTED | LVIS_FOCUSED);
-			break;
-		}
 		default:
 			if (wParam >= FIRST_LOAD_MSG && wParam - FIRST_LOAD_MSG < (UINT)g_savedLists.Get()->GetSize())
 			{	// Load marker list
@@ -304,8 +275,18 @@ void SWS_MarkerListWnd::OnDestroy()
 
 void SWS_MarkerListWnd::OnTimer()
 {
-	if (ListView_GetItemCount(m_pLists.Get(0)->GetHWND()) <= 1 || !IsActive())
+	if (ListView_GetSelectedCount(m_pLists.Get(0)->GetHWND()) <= 1 || !IsActive())
 		Update();
+}
+
+int SWS_MarkerListWnd::OnKey(MSG* msg, int iKeyState)
+{
+	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState)
+	{
+		OnCommand(DELETE_MSG, 0);
+		return 1;
+	}
+	return 0;
 }
 
 INT_PTR WINAPI doSaveDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -577,40 +558,6 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
-// Seems damned "hacky" to me, but it works, so be it.
-static int translateAccel(MSG *msg, accelerator_register_t *ctx)
-{
-	if (pMarkerList->IsActive())
-	{
-		if (msg->message == WM_KEYDOWN)
-		{
-			bool bCtrl  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? true : false;
-			bool bAlt   = GetAsyncKeyState(VK_MENU)    & 0x8000 ? true : false;
-			bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
-
-			if (msg->wParam == VK_DELETE && !bCtrl && !bAlt && !bShift)
-			{
-				SendMessage(pMarkerList->GetHWND(), WM_COMMAND, DELETE_MSG, 0);
-				return 1;
-			}
-			else if (msg->wParam == VK_UP && !bCtrl && !bAlt && !bShift)
-			{
-				SendMessage(pMarkerList->GetHWND(), WM_COMMAND, SELPREV_MSG, 0);
-				return 1;
-			}
-			else if (msg->wParam == VK_DOWN && !bCtrl && !bAlt && !bShift)
-			{
-				SendMessage(pMarkerList->GetHWND(), WM_COMMAND, SELNEXT_MSG, 0);
-				return 1;
-			}
-		}
-		return -666;
-	}
-	return 0;
-} 
-
-static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
-
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
@@ -622,8 +569,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 int MarkerListInit()
 {
 	if (!plugin_register("projectconfig",&g_projectconfig))
-		return 0;
-	if (!plugin_register("accelerator",&g_ar))
 		return 0;
 
 	SWSRegisterCommands(g_commandTable);

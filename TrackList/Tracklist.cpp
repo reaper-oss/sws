@@ -159,14 +159,13 @@ void SWS_TrackListView::OnItemDblClk(LPARAM item, int iCol)
 	// TODO new track on NULL?  needs mod of SWS_wnd and all other OnItemDblClk()s
 }
 
-bool SWS_TrackListView::OnItemSelChange(LPARAM item, bool bSel)
+void SWS_TrackListView::OnItemSelChanged(LPARAM item, bool bSel)
 {
 	MediaTrack* tr = (MediaTrack*)item;
 	if (bSel)
 		g_pList->m_trLastTouched = tr;
 	if (bSel != (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) ? true : false))
 		GetSetMediaTrackInfo(tr, "I_SELECTED", bSel ? &g_i1 : &g_i0);
-	return false;
 }
 
 void SWS_TrackListView::SetItemText(LPARAM item, int iCol, const char* str)
@@ -189,14 +188,7 @@ void SWS_TrackListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 int SWS_TrackListView::GetItemState(LPARAM item)
 {
 	MediaTrack* tr = (MediaTrack*)item;
-	if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-	{
-		if (tr = g_pList->m_trLastTouched)
-			return LVIS_SELECTED | LVIS_FOCUSED;
-		else
-			return LVIS_SELECTED;
-	}
-	return 0;
+	return *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL);
 }
 
 SWS_TrackListWnd::SWS_TrackListWnd()

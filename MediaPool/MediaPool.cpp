@@ -321,7 +321,7 @@ void SWS_MediaPoolGroupView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 	}
 }
 
-bool SWS_MediaPoolGroupView::OnItemSelChange(LPARAM item, bool bSel)
+void SWS_MediaPoolGroupView::OnItemSelChanged(LPARAM item, bool bSel)
 {
 	SWS_MediaPoolGroup* group = (SWS_MediaPoolGroup*)item;
 	if (bSel && m_pWnd->m_curGroup != group)
@@ -334,7 +334,6 @@ bool SWS_MediaPoolGroupView::OnItemSelChange(LPARAM item, bool bSel)
 		m_pWnd->m_curGroup = NULL;
 		m_pWnd->Update();
 	}
-	return false;
 }
 
 void SWS_MediaPoolGroupView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
@@ -428,10 +427,9 @@ void SWS_MediaPoolFileView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 	}
 }
 
-bool SWS_MediaPoolFileView::OnItemSelChange(LPARAM item, bool bSel)
+void SWS_MediaPoolFileView::OnItemSelChanged(LPARAM item, bool bSel)
 {
 	// TODO update the info text
-	return false;
 }
 
 void SWS_MediaPoolFileView::OnItemDblClk(LPARAM item, int iCol)

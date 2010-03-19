@@ -42,7 +42,7 @@ protected:
 	int  GetItemState(LPARAM item);
 	void OnItemClk(LPARAM item, int iCol, int iKeyState);
 	void OnItemDblClk(LPARAM item, int iCol);
-	bool OnItemSelChange(LPARAM item, bool bSel);
+	void OnItemSelChanged(LPARAM item, bool bSel);
 
 private:
 	SWS_TrackListWnd* m_pTrackListWnd;

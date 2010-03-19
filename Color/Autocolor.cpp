@@ -178,7 +178,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			AutoColorRun(true);
 			break;
 		case IDC_ADD:
-			g_pACItems.Add(new SWS_AutoColorItem("(name)", AC_NONE));
+			g_pACItems.Add(new SWS_AutoColorItem("(name)", -AC_NONE-1));
 			Update();
 			break;
 		case IDC_REMOVE:
@@ -441,7 +441,7 @@ void ApplyColorRule(SWS_AutoColorItem* rule)
 		{
 			bool bColor = false;
 
-			if (!i) // ignore master for most things
+			if (i) // ignore master for most things
 			{
 				// Check "special" rules first:
 				if (strcmp(rule->m_str.Get(), cTrackTypes[AC_FOLDER]) == 0)

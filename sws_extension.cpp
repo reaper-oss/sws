@@ -271,8 +271,10 @@ public:
 	void SetTrackTitle(MediaTrack *tr, const char *c)
 	{
 		ScheduleTracklistUpdate();
-		if (!(m_iACIgnore--))
+		if (!m_iACIgnore)
 			AutoColorRun(false);
+		else
+			m_iACIgnore--;
 	}
 
 	// The rest only are applicable only to the TrackList

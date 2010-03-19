@@ -71,7 +71,7 @@ void SWS_MarkerListView::GetItemText(LPARAM item, int iCol, char* str, int iStrM
 	}
 }
 
-bool SWS_MarkerListView::OnItemSelChange(LPARAM item, bool bSel)
+void SWS_MarkerListView::OnItemSelChanged(LPARAM item, bool bSel)
 {
 	if (bSel)
 	{
@@ -82,7 +82,6 @@ bool SWS_MarkerListView::OnItemSelChange(LPARAM item, bool bSel)
 			Main_OnCommand(40151, 0); // View: go to cursor
 		}
 	}
-	return false;
 }
 
 void SWS_MarkerListView::OnItemDblClk(LPARAM item, int iCol)

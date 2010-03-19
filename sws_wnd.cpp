@@ -74,7 +74,7 @@ void SWS_DockWnd::Show(bool bToggle, bool bActivate)
 {
 	if (!IsWindow(m_hwnd))
 	{
-		CreateDialogParam(g_hInst,MAKEINTRESOURCE(m_iResource),g_hwndParent,SWS_DockWnd::sWndProc,(LPARAM)this);
+		CreateDialogParam(g_hInst, MAKEINTRESOURCE(m_iResource), g_hwndParent, SWS_DockWnd::sWndProc, (LPARAM)this);
 		if (m_bDocked && bActivate)
 			DockWindowActivate(m_hwnd);
 	}
@@ -456,14 +456,16 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 			m_bShiftSel = GetAsyncKeyState(VK_SHIFT) & 0x8000 ? true : false;
 		}
 		
-		int iRet = OnItemSelChange(GetListItem(s->iItem), s->uNewState & LVIS_SELECTED ? true : false);
+		int iRet = OnItemSelChanging(GetListItem(s->iItem), s->uNewState & LVIS_SELECTED ? true : false);
 		SetWindowLongPtr(GetParent(m_hwndList), DWLP_MSGRESULT, iRet);
 		return iRet;
 	}
 #endif
 	if (!m_bDisableUpdates && s->hdr.code == LVN_ITEMCHANGED && s->iItem >= 0)
 	{
-		OnItemSelChanged(GetListItem(s->iItem), s->uNewState & LVIS_SELECTED ? true : false);
+		if (s->uChanged & LVIF_STATE && (s->uNewState ^ s->uOldState) & LVIS_SELECTED)
+			OnItemSelChanged(GetListItem(s->iItem), s->uNewState & LVIS_SELECTED ? true : false);
+
 #ifndef _WIN32
 		// See OSX comments in NM_CLICK below
 
@@ -471,7 +473,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		if (m_pSavedSel.GetSize() && m_pSavedSel.GetSize() == ListView_GetItemCount(m_hwndList))
 		{	// Restore the "correct" selection
 			for (int i = 0; i < m_pSavedSel.GetSize(); i++)
-				ListView_SetItemState(m_hwndList, i, m_pSavedSel.Get()[i] ? LVIS_SELECTED : 0, LVIS_SELECTED);
+				ListView_SetItemState(m_hwndList, i, m_pSavedSel.Get()[i], LVIS_SELECTED | LVIS_FOCUSED);
 			m_pSavedSel.Resize(0, false);
 		}
 		else
@@ -481,7 +483,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 			{
 				int iState;
 				LPARAM item = GetListItem(i, &iState);
-				OnItemSelChange(item, iState & LVIS_SELECTED);
+				OnItemSelChanged(item, iState & LVIS_SELECTED);
 			}
 		}
 	
@@ -502,7 +504,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		{	// Clicked on a "clickable" column!
 #ifdef _WIN32
 			int iKeys = ((NMITEMACTIVATE*)lParam)->uKeyFlags;
-			if ((GetTickCount() - m_dwSavedSelTime < 20 || (iKeys & LVKF_SHIFT)) && m_pSavedSel.GetSize() == ListView_GetItemCount(m_hwndList) && m_pSavedSel.Get()[s->iItem])
+			if ((GetTickCount() - m_dwSavedSelTime < 20 || (iKeys & LVKF_SHIFT)) && m_pSavedSel.GetSize() == ListView_GetItemCount(m_hwndList) && m_pSavedSel.Get()[s->iItem] & LVIS_SELECTED)
 			{
 				bool bSaveDisableUpdates = m_bDisableUpdates;
 				m_bDisableUpdates = true;
@@ -510,9 +512,8 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 				// If there's a valid saved selection, and the user clicked on a selected track, the restore that selection
 				for (int i = 0; i < m_pSavedSel.GetSize(); i++)
 				{
-					OnItemSelChange(GetListItem(i), m_pSavedSel.Get()[i]);
-					ListView_SetItemState(m_hwndList, i, m_pSavedSel.Get()[i] ? LVIS_SELECTED : 0, LVIS_SELECTED);
-					// TODO store and set the FOCUSED bit as well??
+					OnItemSelChanged(GetListItem(i), m_pSavedSel.Get()[i] & LVIS_SELECTED ? true : false);
+					ListView_SetItemState(m_hwndList, i, m_pSavedSel.Get()[i], LVIS_SELECTED | LVIS_FOCUSED);
 				}
 
 				m_bDisableUpdates = bSaveDisableUpdates;
@@ -560,7 +561,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 				// Save the selections to be restored later
 				m_pSavedSel.Resize(ListView_GetItemCount(m_hwndList), false);
 				for (int i = 0; i < m_pSavedSel.GetSize(); i++)
-					m_pSavedSel.Get()[i] = IsSelected(i);
+					m_pSavedSel.Get()[i] = iState;
 				OnItemClk(item, iDataCol, m_iClickedKeys);
 			}
 #endif
@@ -748,46 +749,58 @@ void SWS_ListView::Update()
 
 			// Update the list, no matter what, because text may have changed
 			LVITEM item;
-			item.mask = LVIF_TEXT | LVIF_PARAM;
+			item.mask = 0;
 			int iNewState = GetItemState(items.Get()[i]);
 			if (iNewState >= 0)
 			{
-				int iCurState = ListView_GetItemState(m_hwndList, j, LVIS_SELECTED | LVIS_FOCUSED);
+				int iCurState = bFound ? ListView_GetItemState(m_hwndList, j, LVIS_SELECTED | LVIS_FOCUSED) : 0;
 				if (iNewState && !(iCurState & LVIS_SELECTED))
 				{
-					item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
+					item.mask |= LVIF_STATE;
 					item.state = LVIS_SELECTED;
 					item.stateMask = LVIS_SELECTED;
 				}
 				else if (!iNewState && (iCurState & LVIS_SELECTED))
 				{
-					item.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
+					item.mask |= LVIF_STATE;
 					item.state = 0;
 					item.stateMask = LVIS_SELECTED | ((iCurState & LVIS_FOCUSED) ? LVIS_FOCUSED : 0);
 				}
 			}
 
 			item.iItem = j;
-			item.lParam = items.Get()[i];
 			item.pszText = str;
-			
+
 			int iCol = 0;
 			for (int k = 0; k < m_iCols; k++)
 				if (m_pCols[k].iPos != -1)
 				{
 					item.iSubItem = iCol;
-					GetItemText(item.lParam, k, str, 256);
+					GetItemText(items.Get()[i], k, str, 256);
 					if (!iCol && !bFound)
 					{
+						item.mask |= LVIF_PARAM | LVIF_TEXT;
+						item.lParam = items.Get()[i];
 						ListView_InsertItem(m_hwndList, &item);
 						lvItemCount++;
 					}
 					else
-						ListView_SetItem(m_hwndList, &item);
-					item.mask = LVIF_TEXT;
+					{
+						char curStr[256];
+						ListView_GetItemText(m_hwndList, j, iCol, curStr, 256);
+						if (strcmp(str, curStr))
+							item.mask |= LVIF_TEXT;
+						if (item.mask)
+						{
+							// Only set if there's changes
+							// May be less efficient here, but less messages get sent for sure!
+							ListView_SetItem(m_hwndList, &item);
+						}
+					}
+					item.mask = 0;
 					iCol++;
 				}
-			}
+		}
 
 		ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
 		int iCol = abs(m_iSortCol) - 1;

@@ -46,7 +46,8 @@ public:
 	LPARAM EnumSelected(int* i);
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 	void OnDestroy();
-	int KeyHandler(MSG *msg);
+	int EditingKeyHandler(MSG *msg);
+	int LVKeyHandler(MSG *msg, int iKeyState);
 	void Update();
 	bool DoColumnMenu(int x, int y);
 	LPARAM GetHitItem(int x, int y, int* iCol);
@@ -68,7 +69,7 @@ protected:
 	virtual int  GetItemState(LPARAM item) { return -1; } // Selection state: -1 == unchanged, 0 == false, 1 == selected
 	// These inform the derived class of user interaction
 	virtual bool OnItemSelChanging(LPARAM item, bool bSel) { return false; } // Returns TRUE to prevent the change, or FALSE to allow the change
-	virtual void OnItemSelChanged(LPARAM item, bool bSel) { }
+	virtual void OnItemSelChanged(LPARAM item, int iState) { }
 	virtual void OnItemClk(LPARAM item, int iCol, int iKeyState) {}
 	virtual void OnItemDblClk(LPARAM item, int iCol) {}
 	virtual int  OnItemSort(LPARAM item1, LPARAM item2);

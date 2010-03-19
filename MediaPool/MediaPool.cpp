@@ -321,15 +321,15 @@ void SWS_MediaPoolGroupView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 	}
 }
 
-void SWS_MediaPoolGroupView::OnItemSelChanged(LPARAM item, bool bSel)
+void SWS_MediaPoolGroupView::OnItemSelChanged(LPARAM item, int iState)
 {
 	SWS_MediaPoolGroup* group = (SWS_MediaPoolGroup*)item;
-	if (bSel && m_pWnd->m_curGroup != group)
+	if (iState & LVIS_FOCUSED && m_pWnd->m_curGroup != group)
 	{
 		m_pWnd->m_curGroup = group;
 		m_pWnd->Update();
 	}
-	else if (!bSel && m_pWnd->m_curGroup == group)
+	else if (!(iState * LVIS_FOCUSED) && m_pWnd->m_curGroup == group)
 	{
 		m_pWnd->m_curGroup = NULL;
 		m_pWnd->Update();
@@ -427,7 +427,7 @@ void SWS_MediaPoolFileView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 	}
 }
 
-void SWS_MediaPoolFileView::OnItemSelChanged(LPARAM item, bool bSel)
+void SWS_MediaPoolFileView::OnItemSelChanged(LPARAM item, int iState)
 {
 	// TODO update the info text
 }

@@ -36,7 +36,7 @@ public:
 protected:
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void OnItemSelChanged(LPARAM item, bool bSel);
+	void OnItemSelChanged(LPARAM item, int iState);
 	void OnItemDblClk(LPARAM item, int iCol);
 	int  OnItemSort(LPARAM item1, LPARAM item2);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);

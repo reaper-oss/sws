@@ -300,23 +300,31 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 	SWS_DockWnd* p = (SWS_DockWnd*)ctx->user;
 	if (p && p->IsActive(true))
 	{
-		// Check the listviews first to catch editing
+		// First check for editing keys
+		SWS_ListView* pLV = NULL;
 		for (int i = 0; i < p->m_pLists.GetSize(); i++)
-			if (p->m_pLists.Get(i)->GetHWND() == msg->hwnd || p->m_pLists.Get(i)->IsActive(true))
+		{
+			pLV = p->m_pLists.Get(i);
+			if (p->GetHWND() == msg->hwnd || p->IsActive(true))
 			{
-				int iRet = p->m_pLists.Get(i)->KeyHandler(msg);
+				int iRet = pLV->EditingKeyHandler(msg);
 				if (iRet)
 					return iRet;
-				else
-					break;
+				break;
 			}
+		}
 
-		// Key wasn't handled by the listview(s), call the DockWnd
+		// Check the derived class key handler next in case they want to override anything
 		int iKeys = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? LVKF_CONTROL : 0;
 		iKeys    |= GetAsyncKeyState(VK_MENU)    & 0x8000 ? LVKF_ALT     : 0;
 		iKeys    |= GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? LVKF_SHIFT   : 0;
 
-		return p->OnKey(msg, iKeys);
+		if (p->OnKey(msg, iKeys))
+			return 1;
+
+		// Key wasn't handled by the DockWnd, check for keys to send to LV
+		if (pLV)
+			return pLV->LVKeyHandler(msg, iKeys);
 	}
 	return 0;
 }
@@ -451,7 +459,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		{
 			m_pSavedSel.Resize(ListView_GetItemCount(m_hwndList), false);
 			for (int i = 0; i < m_pSavedSel.GetSize(); i++)
-				m_pSavedSel.Get()[i] = IsSelected(i);
+				m_pSavedSel.Get()[i] = ListView_GetItemState(m_hwndList, i, LVIS_SELECTED | LVIS_FOCUSED);
 			m_dwSavedSelTime = GetTickCount();
 			m_bShiftSel = GetAsyncKeyState(VK_SHIFT) & 0x8000 ? true : false;
 		}
@@ -464,7 +472,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 	if (!m_bDisableUpdates && s->hdr.code == LVN_ITEMCHANGED && s->iItem >= 0)
 	{
 		if (s->uChanged & LVIF_STATE && (s->uNewState ^ s->uOldState) & LVIS_SELECTED)
-			OnItemSelChanged(GetListItem(s->iItem), s->uNewState & LVIS_SELECTED ? true : false);
+			OnItemSelChanged(GetListItem(s->iItem), s->uNewState);
 
 #ifndef _WIN32
 		// See OSX comments in NM_CLICK below
@@ -483,7 +491,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 			{
 				int iState;
 				LPARAM item = GetListItem(i, &iState);
-				OnItemSelChanged(item, iState & LVIS_SELECTED);
+				OnItemSelChanged(item, iState);
 			}
 		}
 	
@@ -512,7 +520,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 				// If there's a valid saved selection, and the user clicked on a selected track, the restore that selection
 				for (int i = 0; i < m_pSavedSel.GetSize(); i++)
 				{
-					OnItemSelChanged(GetListItem(i), m_pSavedSel.Get()[i] & LVIS_SELECTED ? true : false);
+					OnItemSelChanged(GetListItem(i), m_pSavedSel.Get()[i]);
 					ListView_SetItemState(m_hwndList, i, m_pSavedSel.Get()[i], LVIS_SELECTED | LVIS_FOCUSED);
 				}
 
@@ -651,53 +659,61 @@ void SWS_ListView::OnDestroy()
 	}
 }
 
-int SWS_ListView::KeyHandler(MSG *msg)
+int SWS_ListView::EditingKeyHandler(MSG *msg)
 {
-	if (msg->message == WM_KEYDOWN)
+	if (msg->message == WM_KEYDOWN && m_iEditingItem != -1)
 	{
-		if (m_iEditingItem != -1)
-		{
-			bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
+		bool bShift = GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? true : false;
 
-			if (msg->wParam == VK_ESCAPE)
-			{
-				EditListItemEnd(false);
-				return 1;
-			}
-			else if (msg->wParam == VK_TAB)
-			{
-				int iItem = m_iEditingItem;
-				DisableUpdates(true);
-				EditListItemEnd(true, false);
-				if (!bShift)
-				{
-					if (++iItem >= ListView_GetItemCount(m_hwndList))
-						iItem = 0;
-				}
-				else
-				{
-					if (--iItem < 0)
-						iItem = ListView_GetItemCount(m_hwndList) - 1;
-				}
-				EditListItem(GetListItem(iItem), m_iEditingCol);
-				DisableUpdates(false);
-				return 1;
-			}
-			else if (msg->wParam == VK_RETURN)
-			{
-				EditListItemEnd(true);
-				return 1;
-			}
+		if (msg->wParam == VK_ESCAPE)
+		{
+			EditListItemEnd(false);
+			return 1;
 		}
-
-		// can override these in accelerators that are instantiated earlier, if you like!
-		// Catch a few keys that are handled natively by the list view
-		else if (msg->wParam == VK_UP || msg->wParam == VK_DOWN || msg->wParam == VK_TAB)
+		else if (msg->wParam == VK_TAB)
 		{
-			return -1;
+			int iItem = m_iEditingItem;
+			DisableUpdates(true);
+			EditListItemEnd(true, false);
+			if (!bShift)
+			{
+				if (++iItem >= ListView_GetItemCount(m_hwndList))
+					iItem = 0;
+			}
+			else
+			{
+				if (--iItem < 0)
+					iItem = ListView_GetItemCount(m_hwndList) - 1;
+			}
+			EditListItem(GetListItem(iItem), m_iEditingCol);
+			DisableUpdates(false);
+			return 1;
+		}
+		else if (msg->wParam == VK_RETURN)
+		{
+			EditListItemEnd(true);
+			return 1;
 		}
 	}
-		
+	return 0;
+}
+
+int SWS_ListView::LVKeyHandler(MSG* msg, int iKeyState)
+{
+	// Catch a few keys that are handled natively by the list view
+	if (msg->message == WM_KEYDOWN)
+	{
+		if (msg->wParam == VK_UP || msg->wParam == VK_DOWN || msg->wParam == VK_TAB)
+			return -1;
+#ifdef _WIN32
+		else if (msg->wParam == 'A' && iKeyState == LVKF_CONTROL && !(GetWindowLongPtr(m_hwndList, GWL_STYLE) & LVS_SINGLESEL))
+		{
+			for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
+				ListView_SetItemState(m_hwndList, i, LVIS_SELECTED, LVIS_SELECTED);
+			return 1;
+		}
+#endif
+	}
 	return 0;
 }
 

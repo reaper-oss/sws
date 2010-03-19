@@ -71,9 +71,9 @@ void SWS_MarkerListView::GetItemText(LPARAM item, int iCol, char* str, int iStrM
 	}
 }
 
-void SWS_MarkerListView::OnItemSelChanged(LPARAM item, bool bSel)
+void SWS_MarkerListView::OnItemSelChanged(LPARAM item, int iState)
 {
-	if (bSel)
+	if (iState & LVIS_FOCUSED)
 	{
 		MarkerItem* mi = (MarkerItem*)item;
 		if (mi->m_dPos != GetCursorPosition())

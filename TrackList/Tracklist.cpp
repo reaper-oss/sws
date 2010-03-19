@@ -159,13 +159,13 @@ void SWS_TrackListView::OnItemDblClk(LPARAM item, int iCol)
 	// TODO new track on NULL?  needs mod of SWS_wnd and all other OnItemDblClk()s
 }
 
-void SWS_TrackListView::OnItemSelChanged(LPARAM item, bool bSel)
+void SWS_TrackListView::OnItemSelChanged(LPARAM item, int iState)
 {
 	MediaTrack* tr = (MediaTrack*)item;
-	if (bSel)
+	if (iState & LVIS_FOCUSED)
 		g_pList->m_trLastTouched = tr;
-	if (bSel != (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) ? true : false))
-		GetSetMediaTrackInfo(tr, "I_SELECTED", bSel ? &g_i1 : &g_i0);
+	if ((iState & LVIS_SELECTED ? true : false) != (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) ? true : false))
+		GetSetMediaTrackInfo(tr, "I_SELECTED", iState & LVIS_SELECTED ? &g_i1 : &g_i0);
 }
 
 void SWS_TrackListView::SetItemText(LPARAM item, int iCol, const char* str)
@@ -368,9 +368,9 @@ void SWS_TrackListWnd::OnTimer()
 
 int SWS_TrackListWnd::OnKey(MSG* msg, int iKeyState)
 {
-	if (msg->message == WM_KEYDOWN && !iKeyState)
+	if (msg->message == WM_KEYDOWN)
 	{
-		switch (msg->wParam)
+		if (!iKeyState) switch (msg->wParam)
 		{
 		case VK_LEFT:
 			TogInTCP();
@@ -383,6 +383,90 @@ int SWS_TrackListWnd::OnKey(MSG* msg, int iKeyState)
 			return 1;
 		case VK_F2:
 			OnCommand(RENAME_MSG, 0);
+			return 1;
+		}
+
+		// For some "odd" reason, shift-up and shift-down don't work on the tracklist,
+		// so we handle them here with this obtuse code.  There's perhaps a better way, but I don't
+		// know what it is.
+		if (iKeyState == LVKF_SHIFT && (msg->wParam == VK_DOWN || msg->wParam == VK_UP))
+		{
+			int iTouched = m_trLastTouched ? CSurf_TrackToID(m_trLastTouched, false) : -1;
+			if (!GetNumTracks() || (msg->wParam == VK_DOWN && iTouched == GetNumTracks()) || (msg->wParam == VK_UP && iTouched == 1))
+				return 1;
+
+			// Find the first and last selected track
+			int iFirst = 0, iLast = 0;
+			for (int i = 1; i <= GetNumTracks(); i++)
+				if (*(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_SELECTED", NULL))
+				{
+					if (!iFirst)
+						iFirst = i;
+					iLast = i;
+				}
+
+			if (iTouched == -1)
+				iTouched = msg->wParam == VK_DOWN ? iLast : iFirst;
+			else
+			{
+				// Find the focused track, and un-focus it
+				for (int i = 0; i < m_pLists.Get(0)->GetListItemCount(); i++)
+					if (m_pLists.Get(0)->GetListItem(i) == (LPARAM)m_trLastTouched)
+					{
+						ListView_SetItemState(m_pLists.Get(0)->GetHWND(), i, 0, LVIS_FOCUSED);
+						break;
+					}
+			}
+
+			m_pLists.Get(0)->DisableUpdates(true);
+
+			if (!iFirst)
+			{	// Nothing selected, so select last touched, or the first/last track
+				if (!m_trLastTouched)
+					m_trLastTouched = CSurf_TrackFromID(msg->wParam == VK_DOWN ? 1 : GetNumTracks(), false);
+				GetSetMediaTrackInfo(m_trLastTouched, "I_SELECTED", &g_i1);
+			}
+			else if (msg->wParam == VK_DOWN)
+			{
+				if (iTouched > iFirst || iFirst == iLast)
+				{
+					m_trLastTouched = CSurf_TrackFromID(iTouched+1, false);
+					GetSetMediaTrackInfo(m_trLastTouched, "I_SELECTED", &g_i1);
+				}
+				else if (iTouched == iFirst)
+				{
+					GetSetMediaTrackInfo(m_trLastTouched, "I_SELECTED", &g_i0);
+					m_trLastTouched = CSurf_TrackFromID(iFirst+1, false);
+				}
+			}
+			else // VK_UP
+			{
+				if (iTouched < iLast || iFirst == iLast)
+				{
+					m_trLastTouched = CSurf_TrackFromID(iTouched-1, false);
+					GetSetMediaTrackInfo(m_trLastTouched, "I_SELECTED", &g_i1);
+				}
+				else if (iTouched == iLast)
+				{
+					GetSetMediaTrackInfo(m_trLastTouched, "I_SELECTED", &g_i0);
+					m_trLastTouched = CSurf_TrackFromID(iLast-1, false);
+				}
+			}
+
+			m_pLists.Get(0)->DisableUpdates(false);
+			Update();
+			
+			// Update the focus
+			for (int i = 0; i < m_pLists.Get(0)->GetListItemCount(); i++)
+				if (m_pLists.Get(0)->GetListItem(i) == (LPARAM)m_trLastTouched)
+				{
+					ListView_SetItemState(m_pLists.Get(0)->GetHWND(), i, LVIS_FOCUSED, LVIS_FOCUSED);
+					break;
+				}
+			return 1;
+		}
+		else if (iKeyState == LVKF_SHIFT && msg->wParam == VK_UP)
+		{
 			return 1;
 		}
 	}

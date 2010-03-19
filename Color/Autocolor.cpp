@@ -121,7 +121,7 @@ void SWS_AutoColorView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 		pBuf->Get()[i] = (LPARAM)g_pACItems.Get(i);
 }
 
-void SWS_AutoColorView::OnItemSelChanged(LPARAM item, bool bSel)
+void SWS_AutoColorView::OnItemSelChanged(LPARAM item, int iState)
 {
 	g_pACWnd->Update();
 }

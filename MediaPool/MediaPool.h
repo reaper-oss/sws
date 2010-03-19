@@ -79,7 +79,7 @@ protected:
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void OnItemClk(LPARAM item, int iCol, int iKeyState);
-	void OnItemSelChanged(LPARAM item, bool bSel);
+	void OnItemSelChanged(LPARAM item, int iState);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	int  GetItemState(LPARAM item);
 
@@ -96,7 +96,7 @@ public:
 protected:
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void OnItemClk(LPARAM item, int iCol, int iKeyState);
-	void OnItemSelChanged(LPARAM item, bool bSel);
+	void OnItemSelChanged(LPARAM item, int iState);
 	void OnItemDblClk(LPARAM item, int iCol);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	void OnBeginDrag();

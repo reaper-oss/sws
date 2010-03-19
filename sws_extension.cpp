@@ -342,6 +342,7 @@ extern "C"
 		IMPAPI(CoolSB_SetScrollInfo);
 		IMPAPI(CountSelectedMediaItems);
 		IMPAPI(CountSelectedTracks);
+		IMPAPI(CountTakes);
 		IMPAPI(CountTrackEnvelopes);
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);

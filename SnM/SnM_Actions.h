@@ -103,6 +103,8 @@ void unfloatFX(MediaTrack* _tr, int _fx);
 void floatFX(COMMAND_T* _ct);
 void unfloatFX(COMMAND_T* _ct);
 
+void setMainWindowActive(COMMAND_T* _ct);
+
 
 // *** SnM_Sends.cpp ***
 bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, SNM_SendPatcher* _p);

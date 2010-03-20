@@ -210,3 +210,6 @@ void unfloatFX(COMMAND_T* _ct)
 	}
 }
 
+void setMainWindowActive(COMMAND_T* _ct) {
+	SetForegroundWindow(GetMainHwnd()); 
+}

@@ -40,13 +40,14 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Create cue bus track from track selection (prompt)" }, "S&M_SENDS4", cueTrackPrompt, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Remove receives for selected track(s)" }, "S&M_SENDS5", removeReceives, NULL, },
 
-#ifdef _WIN32
 	// Windows ----------------------------------------------------------------
+#ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Close all I/O window(s)" }, "S&M_WNCLS1", closeRoutingWindows, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Close all envelope window(s)" }, "S&M_WNCLS2", closeEnvWindows, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Toggle show all I/O window(s)" }, "S&M_WNTGL1", toggleRoutingWindows, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Toggle show all envelope window(s)" }, "S&M_WNTGL2", toggleEnvWindows, NULL, },
 #endif
+	{ { DEFACCEL, "SWS/S&M: Focus main window" }, "S&M_WNMAIN", setMainWindowActive, NULL, },
 
 	// Track FX selection -----------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Select previous FX (cycling) for selected track(s)" }, "S&M_SELFXPREV", selectFX, NULL, -2},

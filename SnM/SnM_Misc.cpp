@@ -54,8 +54,8 @@ void moveTrack(int _src, int _dest)
 				do
 				{
 					sendDest = (MediaTrack*)GetSetTrackSendInfo(srcTr, 0, j, "P_DESTTRACK", NULL);
-					if (sendDest)
-						addSend(destTr, sendDest, 0);
+//					if (sendDest)
+//						addSend(destTr, sendDest, 0);
 					j++;
 				}
 				while (sendDest);

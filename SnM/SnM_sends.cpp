@@ -35,7 +35,7 @@
 // _destTr: destination track
 // _type:   reaper's type
 //          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
-bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
+bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, SNM_SendPatcher* _p)
 {
 	bool update = false;
 	char vol[32] = "1.00000000000000";
@@ -54,8 +54,7 @@ bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 				strcpy(pan, "0.00000000000000");
 			}
 		}
-		SNM_SendPatcher p2(_destTr); 
-		update = (p2.AddSend(_srcTr, _type, vol, pan) > 0); // null values managed
+		update = (_p->AddSend(_srcTr, _type, vol, pan) > 0); // null values managed
 	} 
 	return update;
 }
@@ -68,13 +67,13 @@ bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 void cueTrack(char * _busName, int _type, const char * _undoMsg)
 {
 	MediaTrack * cueTr = NULL;
+	SNM_SendPatcher* p = NULL;
 	for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
-			UpdateTimeline();
 
 			// Add the cue track (if not already done)
 			if (!cueTr)
@@ -83,17 +82,20 @@ void cueTrack(char * _busName, int _type, const char * _undoMsg)
 				TrackList_AdjustWindows(false);
 				cueTr = CSurf_TrackFromID(GetNumTracks(), false);
 				GetSetMediaTrackInfo(cueTr, "P_NAME", _busName);
-				UpdateTimeline();
+				p = new SNM_SendPatcher(cueTr);
 			}
 
 			// add a send
-			if (cueTr && tr != cueTr)
-				addSend(tr, cueTr, _type); //JFB: returned error not managed yet..
+			if (cueTr && p && tr != cueTr)
+				addSend(tr, cueTr, _type, p); //JFB: returned error not managed yet..
 		}
 	}
 
-	if (cueTr)
+	if (cueTr && p)
 	{
+		p->Commit();
+		delete p;
+
 		GetSetMediaTrackInfo(cueTr, "I_SELECTED", &g_i1);
 		UpdateTimeline();
 
@@ -104,6 +106,7 @@ void cueTrack(char * _busName, int _type, const char * _undoMsg)
 		// Undo point
 		if (_undoMsg)
 			Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL, -1);
+
 	}
 }
 

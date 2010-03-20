@@ -22,7 +22,7 @@
 
 // Here are some tools to parse, patch, process.. all types of RPP chunks 
 // and sub-chunks.
-// A SNM_ChunkParserPatcher instance only gets (and sets, only if needed) 
+// A SNM_ChunkParserPatcher instance only gets and sets (if needed) 
 // the chunk once, in between, the user works on a cache (itself updated), 
 // thus preventing "long" processings.
 // If any, the updates are automatically comitted when destroying a 
@@ -219,6 +219,7 @@ bool Commit()
 	{
 // Cool point for debug!
 //		ShowConsoleMsg(m_chunk.Get());
+//		MessageBox(0,"Chunk commit","dbg",1);
 		SetChunk("", 0);
 		return true;
 	}
@@ -287,7 +288,7 @@ protected:
 	// Parsing callbacks (to be implemented for SAX-ish parsing style)
 	// ------------------------------------------------------------------------
 	// Parameters:
-	// _mode: parsing mode, see ParsePatch(), <0 for custom parsing modes
+	// _mode: parsing mode, see ParsePatchCore(), <0 for custom parsing modes
 	// _lp: the line beeing parsed as a LineParser
 	// _parsedLine: : the line beeing parsed as a SNM_String
 	// _parsedParents: the parsed line's parent (last item) and its the grand-parent 
@@ -374,14 +375,14 @@ void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch,
 //
 // Parameters: 
 // See bellow. Globaly, the method is tolerant; the less parameters 
-// provided (i.e. different from their default values) -> the more parsed 
-// lines will be notified to an inherited class (through Notifyxxx() functions), 
-// or the more parsed lines will be read/altered.
+// provided (i.e. different from their default values), the more parsed 
+// lines will be notified to inherited instances (through Notifyxxx()), 
+// or, when it's used direcly, the more parsed lines will be read/altered.
 // Examples: parse all lines, parse only lines of 2nd depth, under 
 // parent "FXCHAIN", do all the lines begining with "<SOURCE" have 
 // "MIDI" as 2nd token ? Etc..
-// Note: sometimes there's a dependency between the params to be provided,
-// most of the time with _mode. Should returns -1 it's if not respected.
+// Note: sometimes there's a dependency between the params to be provided
+// (most of the time with _mode). Should returns -1 if it's not respected.
 //
 // Return values:
 // Always return -1 on error/bad usage, or

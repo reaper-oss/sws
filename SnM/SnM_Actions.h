@@ -25,8 +25,9 @@
 /
 ******************************************************************************/
 
-
 #pragma once
+
+#include "SNM_Chunk.h"
 
 #define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
 #define SNM_FORMATED_INI_FILE "%s\\Plugins\\S&M.ini"
@@ -104,7 +105,7 @@ void unfloatFX(COMMAND_T* _ct);
 
 
 // *** SnM_Sends.cpp ***
-bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type);
+bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, SNM_SendPatcher* _p);
 void cueTrack(char * _busName, int _type, const char * _undoMsg);
 void cueTrackPrompt(COMMAND_T* _ct);
 void cueTrack(COMMAND_T* _ct);

@@ -38,32 +38,25 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode, LineParser* _lp, WDL_String* _p
 	WDL_String* _newChunk, int _updates)
 {
 	bool update = false;
-	switch(_mode)
+	// add send
+	if (_mode == -1&& m_srcId > 0)
 	{
-		// add send
-		case -1:
-			if (m_srcId > 0)
-			{
-				_newChunk->Append("AUXRECV ");
-				_newChunk->AppendFormatted(4, "%d %d ", m_srcId-1, m_sendType);
-				_newChunk->AppendFormatted(33, "%s ", m_vol ? m_vol : "1.00000000000000");
-				_newChunk->AppendFormatted(33, "%s ", m_pan ? m_pan : "0.00000000000000");
-				_newChunk->Append("0 0 0 0 0 -1.00000000000000 0 -1\n");
-
-				_newChunk->Append(_parsedLine->Get());
-				_newChunk->Append("\n");
-				update = true;
-			}
-			break;
-
-		// remove send
-		case -2:
-			update = (m_srcId == -1 || _lp->gettoken_int(1) == m_srcId);
-			// update => nothing! we do NOT re-copy this receive
-			break;
-
-		default:
-			break;
+		char bufline[512] = "";
+		int n = sprintf(bufline, 
+			"AUXRECV %d %d %s %s 0 0 0 0 0 -1.00000000000000 0 -1\n%s\n", 
+			m_srcId-1, 
+			m_sendType, 
+			m_vol ? m_vol : "1.00000000000000", 
+			m_pan ? m_pan : "0.00000000000000",
+			_parsedLine->Get());
+		_newChunk->Append(bufline,n);
+		update = true;
+	}
+	// remove send
+	else if (_mode == -2)
+	{
+		update = (m_srcId == -1 || _lp->gettoken_int(1) == m_srcId);
+		// update => nothing! we do NOT re-copy this receive
 	}
 	return update; 
 }
@@ -277,8 +270,8 @@ bool SNM_TakeParserPatcher::NotifyChunkLine(int _mode, LineParser* _lp, WDL_Stri
 	WDL_String* _newChunk, int _updates)
 {
 	if (_mode == -1 && 		
-		(!m_occurence && !strcmp(_lp->gettoken_str(0), "NAME")) ||
-		(m_occurence && !strcmp(_lp->gettoken_str(0), "TAKE"))) //no "TAKE" in chunks for 1st take!
+		(!m_occurence && !strcmp(_lp->gettoken_str(0), "NAME")) || //no "TAKE" in chunks for 1st take!
+		(m_occurence && !strcmp(_lp->gettoken_str(0), "TAKE"))) 
 	{
 		if (!m_removing && m_occurence == m_searchedTake) 
 			m_removing = true;
@@ -288,11 +281,6 @@ bool SNM_TakeParserPatcher::NotifyChunkLine(int _mode, LineParser* _lp, WDL_Stri
 		(m_occurence && !strcmp(_lp->gettoken_str(0), "TAKE")) ||
 		(!m_occurence && !strcmp(_lp->gettoken_str(0), "NAME"))) //no "TAKE" in chunks for 1st take!
 	{
-/*
-		char dbg[128] = "";
-		sprintf(dbg,"%s\n, m_occurence: %d, m_searchedTake: %d", _parsedLine->Get(), m_occurence, m_searchedTake);
-		MessageBox(0,dbg,"",1);
-*/
 		if (!m_getting && m_occurence == m_searchedTake) 
 			m_getting = true;
 		m_occurence++;

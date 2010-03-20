@@ -660,7 +660,7 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Open auto color window" },		"SWSAUTOCOLOR_OPEN",	OpenAutoColor,		"SWS Auto Color",			0, IsAutoColorOpen },
-	{ { DEFACCEL, "SWS: Enable auto coloring" },		"SWSAUTOCOLOR_ENABLE",	EnableAutoColor,	"Enable SWS auto coloring", 0, IsAutoColorEnabled },
+	{ { DEFACCEL, "SWS: Toggle auto coloring enable" },	"SWSAUTOCOLOR_ENABLE",	EnableAutoColor,	"Enable SWS auto coloring", 0, IsAutoColorEnabled },
 	{ { DEFACCEL, "SWS: Apply auto coloring" },			"SWSAUTOCOLOR_APPLY",	ApplyAutoColor,	},
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

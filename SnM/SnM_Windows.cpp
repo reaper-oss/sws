@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Windows.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÃ©dague 
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -39,6 +39,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef _WIN32
 void toggleShowHideWin(const char * _title) {
 	HWND w = FindWindow(NULL, _title);
 	if (w != NULL)
@@ -102,6 +103,7 @@ void toggleRoutingWindows(COMMAND_T * _c) {
 void toggleEnvWindows(COMMAND_T * _c) {
 	closeOrToggleWindows(false, true, true);
 }
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -163,7 +165,7 @@ void floatFX(MediaTrack* _tr, int _fx)
 		bool setPos = false;
 		if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","FLOATPOS",5,_fx,1,posx) > 0)
 			if (!strcmp(posx, "0")) // don't scratch user's pos !
-				setPos = (p.ParsePatch(SNM_REPLACE_SUBCHUNK,2,"FXCHAIN","FLOATPOS",-1,_fx,-1,"FLOAT 300 300 300 300\n") > 0);
+				setPos = (p.ParsePatch(SNM_REPLACE_SUBCHUNK,2,"FXCHAIN","FLOATPOS",-1,_fx,-1,(void*)"FLOAT 300 300 300 300\n") > 0);
 		if (!setPos)
 			p.ParsePatch(SNM_SETALL_CHUNK_CHAR_EXCEPT,2,"FXCHAIN","FLOATPOS",5,_fx,0,&nonFloating, &floating);
 	}

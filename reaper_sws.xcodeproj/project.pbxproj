@@ -67,6 +67,7 @@
 		22AC0E0F112A7DE50067BBE3 /* projectcontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22AC0E0E112A7DE50067BBE3 /* projectcontext.cpp */; };
 		22AD2679114EA1ED004ACCC7 /* ProjectList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22AD2677114EA1ED004ACCC7 /* ProjectList.cpp */; };
 		22AD267A114EA1ED004ACCC7 /* ProjectList.h in Headers */ = {isa = PBXBuildFile; fileRef = 22AD2678114EA1ED004ACCC7 /* ProjectList.h */; };
+		22AD269D11545473004ACCC7 /* SnM_Windows.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F910B0F04D00774777 /* SnM_Windows.cpp */; };
 		22B4C24F0FE311C7009A6731 /* Prompt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22B4C24D0FE311C7009A6731 /* Prompt.cpp */; };
 		22B4C2500FE311C7009A6731 /* Prompt.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B4C24E0FE311C7009A6731 /* Prompt.h */; };
 		22C54FD3111B28450024339F /* ObjectState.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C54FCF111B28450024339F /* ObjectState.cpp */; };
@@ -671,6 +672,7 @@
 				22FFD28D114DB5F10077F1CA /* SnM_Item.cpp in Sources */,
 				22FFD28E114DB5F10077F1CA /* SnM_Misc.cpp in Sources */,
 				22AD2679114EA1ED004ACCC7 /* ProjectList.cpp in Sources */,
+				22AD269D11545473004ACCC7 /* SnM_Windows.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

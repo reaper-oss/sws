@@ -60,14 +60,7 @@ bool addSend(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 	return update;
 }
 
-
-bool removeReceives(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
-{
-	SNM_SendPatcher p(_destTr); 
-	return (p.RemoveReceives() > 0); // null values managed
-}
-
-// Adds a cuetrack from track selection
+// Adds a cue bus track from track selection
 // _busName
 // _type:   reaper's type
 //          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
@@ -75,10 +68,10 @@ bool removeReceives(MediaTrack * _srcTr, MediaTrack * _destTr, int _type)
 void cueTrack(char * _busName, int _type, const char * _undoMsg)
 {
 	MediaTrack * cueTr = NULL;
-	for (int i = 1; i <= GetNumTracks(); i++)
+	for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
 			UpdateTimeline();
@@ -135,7 +128,7 @@ bool cueTrackPrompt(const char* cCaption)
 			{
 				MessageBox(GetMainHwnd(), 
 					"Valid send types:\n1=Post-Fader (Post-Pan)\n2=Pre-Fader (Post-FX)\n3=Pre-FX", 
-					cCaption, MB_OK);
+					cCaption, /*MB_ICONERROR | */MB_OK);
 				return true;
 			}
 
@@ -146,13 +139,28 @@ bool cueTrackPrompt(const char* cCaption)
 	return false;
 }
 
-void cueTrackPrompt(COMMAND_T* _ct)
-{
-	while (cueTrackPrompt(SNMSWS_ZAP(_ct)));
+void cueTrackPrompt(COMMAND_T* _ct) {
+	while (cueTrackPrompt(SNM_CMD_SHORTNAME(_ct)));
 }
 
-void cueTrack(COMMAND_T* _ct)
-{
-	cueTrack("Cue Bus", (int)_ct->user, SNMSWS_ZAP(_ct));
+void cueTrack(COMMAND_T* _ct) {
+	cueTrack("Cue Bus", (int)_ct->user, SNM_CMD_SHORTNAME(_ct));
 }
 
+void removeReceives(COMMAND_T* _ct)
+{
+	bool updated = false;
+	MediaTrack * cueTr = NULL;
+	for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			SNM_SendPatcher p(tr); 
+			updated |= (p.RemoveReceives() > 0); 
+		}
+	}
+	// Undo point
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}

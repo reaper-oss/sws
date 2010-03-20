@@ -27,19 +27,25 @@
 
 
 #include "stdafx.h"
+#include "SnM_Actions.h"
+#include "SNM_ChunkParserPatcher.h"
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Routing, env windows
+//
 // Jeffos' note: 
 // I know... I'm not happy with this "get window by name" solution either.
+//
+///////////////////////////////////////////////////////////////////////////////
 
-void toggleShowHideWin(const char * _title)
-{
+void toggleShowHideWin(const char * _title) {
 	HWND w = FindWindow(NULL, _title);
 	if (w != NULL)
 		ShowWindow(w, IsWindowVisible(w) ? SW_HIDE : SW_SHOW);
 }
 
-void closeWin(const char * _title)
-{
+void closeWin(const char * _title) {
 		HWND w = FindWindow(NULL, _title);
 		if (w != NULL)
 			SendMessage(w, WM_SYSCOMMAND, SC_CLOSE, 0);
@@ -81,23 +87,124 @@ void closeOrToggleWindows(bool _routing, bool _env, bool _toggle)
 	}
 }
 
-void closeRoutingWindows(COMMAND_T * _c)
-{
+void closeRoutingWindows(COMMAND_T * _c) {
 	closeOrToggleWindows(true, false, false);
 }
 
-void closeEnvWindows(COMMAND_T * _c)
-{
+void closeEnvWindows(COMMAND_T * _c) {
 	closeOrToggleWindows(false, true, false);
 }
 
-void toggleRoutingWindows(COMMAND_T * _c)
-{
+void toggleRoutingWindows(COMMAND_T * _c) {
 	closeOrToggleWindows(true, false, true);
 }
 
-void toggleEnvWindows(COMMAND_T * _c)
-{
+void toggleEnvWindows(COMMAND_T * _c) {
 	closeOrToggleWindows(false, true, true);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// FX chain windows
+///////////////////////////////////////////////////////////////////////////////
+
+void showFXChain(MediaTrack* _tr, int _fx)
+{
+	if (_tr && _fx >= 0)
+	{
+		char pShow[4] = ""; //4 in case there're many FXs
+		sprintf(pShow,"%d", _fx+1);
+		char pLastSel[4] = "";
+		sprintf(pLastSel,"%d", _fx);
+
+		SNM_ChunkParserPatcher p(_tr);
+		p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "LASTSEL",2,0,1,pLastSel) >= 0 &&
+		p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "SHOW",2,0,1,pShow) >= 0;
+	}
+}
+
+void showFXChain(COMMAND_T* _ct) 
+{
+	int focusedFX = (int)_ct->user; 
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false); // include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			showFXChain(tr, (focusedFX == -1 ? getSelectedFX(tr) : focusedFX));
+	}
+	// no undo
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// FX windows
+///////////////////////////////////////////////////////////////////////////////
+
+void floatFX(MediaTrack* _tr, int _fx)
+{
+	if (_tr && _fx >= 0)
+	{
+		char pShow[4] = "";
+		sprintf(pShow,"%d", _fx+1);
+		char pLastSel[4] = "";
+		sprintf(pLastSel,"%d", _fx);
+
+		SNM_ChunkParserPatcher p(_tr);
+		char floating[6] = "FLOAT";
+		char nonFloating[9] = "FLOATPOS";
+
+		// perf. remark: this would be better to do a dedicated parser/patcher 
+		// to do the job in one go (i.e. inheriting SNM_ChunkParserPatcher for SAX-ish parsing)
+		p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",2,0,1,&pLastSel); // update sel. FX
+		p.ParsePatch(SNM_SETALL_CHUNK_CHAR_EXCEPT,2,"FXCHAIN","FLOAT",5,255,0,&nonFloating); //unfloat all
+
+		// set a default pos (if needed)
+		char posx[6] = "";
+		bool setPos = false;
+		if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","FLOATPOS",5,_fx,1,posx) > 0)
+			if (!strcmp(posx, "0")) // don't scratch user's pos !
+				setPos = (p.ParsePatch(SNM_REPLACE_SUBCHUNK,2,"FXCHAIN","FLOATPOS",-1,_fx,-1,"FLOAT 300 300 300 300\n") > 0);
+		if (!setPos)
+			p.ParsePatch(SNM_SETALL_CHUNK_CHAR_EXCEPT,2,"FXCHAIN","FLOATPOS",5,_fx,0,&nonFloating, &floating);
+	}
+	// no undo
+}
+
+// not used for the moment: REAPER doesn't obey!
+void unfloatFX(MediaTrack* _tr, int _fx)
+{
+	if (_tr && _fx >= 0)
+	{
+		SNM_ChunkParserPatcher p(_tr);
+		// perf. remark: this would be better to do a dedicated parser/patcher 
+		// to do the job in one go (i.e. inheriting SNM_ChunkParserPatcher for SAX-ish parsing)
+		char tmp[6] = "";
+		char nonFloating[9] = "FLOATPOS";
+		if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","FLOAT",5,_fx,0,tmp) > 0)
+			p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","FLOAT",5,_fx,0,&nonFloating); //unfloat
+		ShowConsoleMsg(p.GetChunk()->Get());
+	}
+}
+
+void floatFX(COMMAND_T* _ct) 
+{
+	int focusedFX = (int)_ct->user; 
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			floatFX(tr, (focusedFX == -1 ? getSelectedFX(tr) : focusedFX));
+	}
+}
+
+void unfloatFX(COMMAND_T* _ct) 
+{
+	int focusedFX = (int)_ct->user; 
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			unfloatFX(tr, (focusedFX == -1 ? getSelectedFX(tr) : focusedFX));
+	}
 }
 

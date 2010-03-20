@@ -24,12 +24,14 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
+
 #include "stdafx.h" 
 #include "SNM_Chunk.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_SendPatcher
+///////////////////////////////////////////////////////////////////////////////
 
 bool SNM_SendPatcher::NotifyChunkLine(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
 	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
@@ -85,8 +87,10 @@ int SNM_SendPatcher::RemoveReceives()
 	return ParsePatch(-2, 1, "TRACK", "AUXRECV");
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_FXChainTakePatcher
+///////////////////////////////////////////////////////////////////////////////
 
 bool SNM_FXChainTakePatcher::NotifyStartElement(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
 		WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
@@ -119,7 +123,7 @@ bool SNM_FXChainTakePatcher::NotifyEndElement(int _mode, LineParser* _lp, WDL_St
 			_newChunk->Append(">\n");// ie write eof "SOURCE"
 			_newChunk->Append("<TAKEFX\n");
 			_newChunk->Append("WNDRECT 0 0 0 0\n"); //38 647 485
-			_newChunk->Append("SHOW 0\n");
+			_newChunk->Append("SHOW 0\n"); // un-float fx chain window
 			_newChunk->Append("LASTSEL 1\n");
 			_newChunk->Append("DOCKED 0\n");
 			_newChunk->Append(m_fxChain->Get());
@@ -187,8 +191,10 @@ WDL_String* SNM_FXChainTakePatcher::GetFXChain()
 	return NULL;
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_FXChainTrackPatcher
+///////////////////////////////////////////////////////////////////////////////
 
 bool SNM_FXChainTrackPatcher::NotifyStartElement(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
 		WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
@@ -208,7 +214,9 @@ bool SNM_FXChainTrackPatcher::NotifyEndElement(int _mode, LineParser* _lp, WDL_S
 	if (m_removingFxChain && _mode == -1 && !strcmp(_parsedParent, "FXCHAIN"))
 		m_removingFxChain = false; // re-enable copy
 	return update; 
-	// note: "update" is true if m_removingFxChain was initially true, i.e. recopy end of chunk ">"
+
+	// note: "update" is true if m_removingFxChain was initially true, 
+	//       i.e. do not recopy end of chunk ">"
 }
 
 bool SNM_FXChainTrackPatcher::NotifyChunkLine(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
@@ -216,29 +224,18 @@ bool SNM_FXChainTrackPatcher::NotifyChunkLine(int _mode, LineParser* _lp, WDL_St
 	WDL_String* _newChunk, int _updates)
 {
 	bool update = m_removingFxChain;
-	switch(_mode)
+	if(m_fxChain && _mode == -1 && !strcmp(_lp->gettoken_str(0), "MAINSEND"))
 	{
-		case -1:
-			if (!strcmp(_lp->gettoken_str(0), "MAINSEND"))
-			{
-				// If there's a chain to add, add it!
-				if (m_fxChain != NULL)
-				{
-					update=true;
-					_newChunk->Append(_parsedLine->Get()); // write the "MAINSEND" line
-					_newChunk->Append("\n");
-					_newChunk->Append("<FXCHAIN\n");
-//					_newChunk->Append("WNDRECT 0 0 0 0\n"); 
-					_newChunk->Append("SHOW 0\n");
-					_newChunk->Append("LASTSEL 1\n");
-					_newChunk->Append("DOCKED 0\n");
-					_newChunk->Append(m_fxChain->Get());
-					_newChunk->Append(">\n");
-				}
-			}
-			break;
-		default:
-			break;
+		update=true;
+		_newChunk->Append(_parsedLine->Get()); // write the "MAINSEND" line
+		_newChunk->Append("\n");
+		_newChunk->Append("<FXCHAIN\n");
+//			_newChunk->Append("WNDRECT 0 0 0 0\n"); 
+		_newChunk->Append("SHOW 0\n"); // un-float fx chain window
+		_newChunk->Append("LASTSEL 1\n");
+		_newChunk->Append("DOCKED 0\n");
+		_newChunk->Append(m_fxChain->Get());
+		_newChunk->Append(">\n");
 	}
 	return update; 
 }
@@ -248,5 +245,94 @@ int SNM_FXChainTrackPatcher::SetFXChain(WDL_String* _fxChain)
 	m_fxChain = _fxChain;
 	m_removingFxChain = false;
 	return ParsePatch(-1);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_TakeParserPatcher
+// important: it assumes there're at least 2 takes (item should be removed otherwise)
+///////////////////////////////////////////////////////////////////////////////
+
+bool SNM_TakeParserPatcher::NotifyEndElement(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
+		WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
+		WDL_String* _newChunk, int _updates)
+{
+	bool update = m_removing;
+	if (m_removing && _mode == -1 && !strcmp(_parsedParent, "SOURCE"))
+	{
+		m_removing = false; // re-enable copy
+	}
+	else if (m_getting && _mode == -2 && !strcmp(_parsedParent, "SOURCE"))
+	{
+		m_subchunk.Append(">\n",2);
+		m_getting = false; 
+	}
+	return update; 
+
+	// note: "update" is true if m_removing was initially true, 
+	//       i.e. do not recopy end of chunk ">"
+}
+
+bool SNM_TakeParserPatcher::NotifyChunkLine(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
+	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
+	WDL_String* _newChunk, int _updates)
+{
+	if (_mode == -1 && 		
+		(!m_occurence && !strcmp(_lp->gettoken_str(0), "NAME")) ||
+		(m_occurence && !strcmp(_lp->gettoken_str(0), "TAKE"))) //no "TAKE" in chunks for 1st take!
+	{
+		if (!m_removing && m_occurence == m_searchedTake) 
+			m_removing = true;
+		m_occurence++;
+	}
+	else if (_mode == -2 && 		
+		(m_occurence && !strcmp(_lp->gettoken_str(0), "TAKE")) ||
+		(!m_occurence && !strcmp(_lp->gettoken_str(0), "NAME"))) //no "TAKE" in chunks for 1st take!
+	{
+/*
+		char dbg[128] = "";
+		sprintf(dbg,"%s\n, m_occurence: %d, m_searchedTake: %d", _parsedLine->Get(), m_occurence, m_searchedTake);
+		MessageBox(0,dbg,"",1);
+*/
+		if (!m_getting && m_occurence == m_searchedTake) 
+			m_getting = true;
+		m_occurence++;
+	}
+
+	if (m_getting)
+	{
+		m_subchunk.Append(_parsedLine->Get());
+		m_subchunk.Append("\n");
+	}
+
+	return m_removing;
+}
+
+int SNM_TakeParserPatcher::RemoveTake(int _take)
+{
+	m_searchedTake = _take;
+	m_removing = false;
+	m_getting = false; 
+	m_occurence = 0;
+//	m_subchunk.Set("");
+
+	RemoveIds();
+	return ParsePatch(-1); 
+}
+
+int SNM_TakeParserPatcher::GetTakeChunk(int _take, WDL_String* _chunk)
+{
+	m_searchedTake = _take;
+	m_removing = false;
+	m_getting = false; 
+	m_occurence = 0;
+	m_subchunk.Set("");
+
+	RemoveIds();
+	if (_chunk && Parse(-2) >= 0)
+	{
+		_chunk->Set(m_subchunk.Get());
+		return 1;
+	}
+	return 0;
 }
 

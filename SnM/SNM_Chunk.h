@@ -25,22 +25,24 @@
 /
 ******************************************************************************/
 
-#include "SNM_ChunkParserPatcher.h"
-
 #pragma once
+#ifndef _SNM_CHUNK_H_
+#define _SNM_CHUNK_H_
+
+#include "SNM_ChunkParserPatcher.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_SendPatcher
+///////////////////////////////////////////////////////////////////////////////
 
 class SNM_SendPatcher : public SNM_ChunkParserPatcher
 {
 public:
-	SNM_SendPatcher(MediaTrack* _destTrack)	: 
-	  SNM_ChunkParserPatcher(_destTrack) 
+	SNM_SendPatcher(MediaTrack* _destTrack)	: SNM_ChunkParserPatcher(_destTrack) 
 	{
 		m_srcId = -1;
-		m_sendType = 2; // deprecated
+		m_sendType = 2; // voluntary deprecated
 		m_vol = NULL;
 		m_pan = NULL;
 	}
@@ -62,12 +64,12 @@ protected:
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_FXChainTakePatcher
+///////////////////////////////////////////////////////////////////////////////
 
 class SNM_FXChainTakePatcher : public SNM_ChunkParserPatcher
 {
 public:
-	SNM_FXChainTakePatcher(MediaItem* _item)	: 
-	  SNM_ChunkParserPatcher(_item) 
+	SNM_FXChainTakePatcher(MediaItem* _item) : SNM_ChunkParserPatcher(_item) 
 	{
 		m_fxChain = NULL;
 		m_removingTakeFx = false;
@@ -101,12 +103,12 @@ protected:
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_FXChainTrackPatcher
+///////////////////////////////////////////////////////////////////////////////
 
 class SNM_FXChainTrackPatcher : public SNM_ChunkParserPatcher
 {
 public:
-	SNM_FXChainTrackPatcher(MediaTrack* _tr)	: 
-	  SNM_ChunkParserPatcher(_tr) 
+	SNM_FXChainTrackPatcher(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) 
 	{
 		m_fxChain = NULL;
 		m_removingFxChain = false;
@@ -130,5 +132,45 @@ protected:
 
 	WDL_String* m_fxChain;
 	bool m_removingFxChain;
+	bool m_copyingFxChain;
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// SNM_TakeParserPatcher
+// important: it assumes there're at least 2 takes!
+///////////////////////////////////////////////////////////////////////////////
+
+class SNM_TakeParserPatcher : public SNM_ChunkParserPatcher
+{
+public:
+	SNM_TakeParserPatcher(MediaItem* _tr) : SNM_ChunkParserPatcher(_tr) 
+	{
+		m_searchedTake = -1;
+		m_removing = false;
+		m_occurence = 0;
+		m_removing = false;
+		m_getting = false;
+	}
+	~SNM_TakeParserPatcher() {}
+
+	int RemoveTake(int _take);
+	int GetTakeChunk(int _take, WDL_String* _chunk);
+
+protected:
+	bool NotifyEndElement(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
+		WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
+		WDL_String* _newChunk, int _updates);
+
+	bool NotifyChunkLine(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
+		WDL_String* _newChunk, int _updates);
+
+	bool m_removing;
+	bool m_getting;
+	int m_searchedTake;
+	int m_occurence;
+	WDL_String m_subchunk;
+};
+
+
+#endif

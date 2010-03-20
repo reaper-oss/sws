@@ -66,43 +66,7 @@ void moveTrack(int _src, int _dest)
 		}
 	}
 }
-void showFXChain(int _tr, int _fx)
-{
-	// to do _dest to check/clamp..
-	int show= _fx+1;
-	int lastSel=_fx;
-	MediaTrack* tr = CSurf_TrackFromID(_tr, false);
-	if (tr)
-	{
-		SNM_ChunkParserPatcher parser(tr);
-/*JFB
-		char floating[16] = "FLOAT";
-		char nonFloating[16] = "FLOATPOS";
-		parser.Parse(SET_CHUNK_INT, "FXCHAIN", 2, "LASTSEL",2,0,1,&lastSel);
-		parser.Parse(SETALL_CHUNK_CHAR_EXCEPT, "FXCHAIN", 2, "FLOAT",5,255,0,&nonFloating);
-		parser.Parse(SETALL_CHUNK_CHAR_EXCEPT, "FXCHAIN", 2, "FLOATPOS",5,_fx,0,&nonFloating, &floating);
-*/
-		char pShow[4] = "";
-		sprintf(pShow,"%d", show);
-		char pLastSel[4] = "";
-		sprintf(pLastSel,"%d", lastSel);
-		bool ok =
-			parser.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "LASTSEL",2,0,1,pLastSel) >= 0 &&
-			parser.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "FXCHAIN", "SHOW",2,0,1,pShow) >= 0;
-	}
-}
 
-void showFXChain(COMMAND_T* _ct)
-{
-	for (int i = 1; i <= GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-			showFXChain(i,(int)_ct->user);
-	}
-}
-
-void moveTest(COMMAND_T* _ct)
-{
+void moveTest(COMMAND_T* _ct) {
 	moveTrack(1,4);
 }

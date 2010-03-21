@@ -227,7 +227,7 @@ int promptForSlot(const char* _title)
 	int slot = -1;
 	while (slot == -1)
 	{
-		char reply[8]= "1"; // default slot
+		char reply[8]= ""; // empty default slot
 		if (GetUserInputs(_title, 1, FXCHAIN_SLOT_PROMPT, reply, 8))
 		{
 			slot = atoi(reply); //0 on error
@@ -267,7 +267,7 @@ void showFXChainSlots(COMMAND_T* _ct)
 	{
 		char cPath[256];
 		readIniFile(i, cPath, 256);
-		slots.AppendFormatted((int)strlen(cPath)+10, "Slot %d:\t%s\n", i+1, cPath);
+		slots.AppendFormatted(strlen(cPath)+10, "Slot %d:\t%s\n", i+1, cPath);
 	}
 
 	if (slots.GetLength())

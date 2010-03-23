@@ -153,7 +153,6 @@ void cueTrack(COMMAND_T* _ct) {
 void removeReceives(COMMAND_T* _ct)
 {
 	bool updated = false;
-	MediaTrack * cueTr = NULL;
 	for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);

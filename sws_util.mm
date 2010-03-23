@@ -127,3 +127,10 @@ void HideColorChooser()
 {
 	ShowWindow((HWND)[NSColorPanel sharedColorPanel], SW_HIDE);
 }
+
+void EnableColumnResize(HWND h)
+{
+	if (!h || ![(id)h isKindOfClass:[SWELL_ListView class]]) return;
+	SWELL_ListView *v=(SWELL_ListView *)h;
+	[v setAllowsColumnResizing:YES];
+}

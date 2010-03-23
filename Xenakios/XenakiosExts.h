@@ -35,7 +35,6 @@ void DoAutoRename(COMMAND_T*);
 
 //===========================================================
 // BroadCastWavCommands.cpp
-int GetNumSelectedItems();
 void DoRenameTakesWithBWAVDesc(COMMAND_T*);
 void DoRenameTakeDlg(COMMAND_T*);
 void DoOpenRPPofBWAVdesc(COMMAND_T*);

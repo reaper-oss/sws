@@ -243,7 +243,7 @@ void DoItemPosRemapDlg(COMMAND_T*)
 		g_itemposremap_params.Curve=1.0;
 		firstrun=false;
 	}
-	int NumSelItems=GetNumSelectedItems();
+	int NumSelItems=CountSelectedMediaItems(NULL);
 	g_itemposremap_params.StoredPositions=new double [NumSelItems];
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;

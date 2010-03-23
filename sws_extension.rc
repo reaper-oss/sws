@@ -174,21 +174,21 @@ BEGIN
     LTEXT           "Filter:",IDC_STATIC_FILTER,3,170,20,8
 END
 
-IDD_ABOUT DIALOGEX 0, 0, 255, 147
+IDD_ABOUT DIALOGEX 0, 0, 255, 158
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About SWS Extension"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "&Close",IDCANCEL,103,126,50,14
-    PUSHBUTTON      "&License...",IDC_LICENSE,202,48,46,14
-    LTEXT           "Copyright (C) 2010 Tim Payne of Standing Water Studios\rCopyright (C) 2009 Xenakios\r\rDocumentation is available at the SWS website:",IDC_STATIC,7,47,187,35
-    LTEXT           "Version String",IDC_VERSION,7,31,241,8
+    DEFPUSHBUTTON   "&Close",IDCANCEL,103,137,50,14
+    PUSHBUTTON      "&License...",IDC_LICENSE,202,55,46,14
+    LTEXT           "Copyright (C) 2010 Tim Payne of Standing Water Studios\rCopyright (C) 2010 Jeffos (S&&M)\rCopyright (C) 2009 Xenakios\r\rDocumentation is available at the SWS website:",IDC_STATIC,7,45,187,44
+    LTEXT           "Version String",IDC_VERSION,7,30,241,8
     LTEXT           "SWS Extension, a REAPER plugin.\rMerged with Xenakios Command Extensions, October 2009",IDC_STATIC,7,7,241,19
-    LTEXT           "Download the latest version:",IDC_STATIC,7,98,92,9
+    LTEXT           "Download the latest version:",IDC_STATIC,7,105,92,9
     CONTROL         "http://www.standingwaterstudios.com/reaper/",IDC_WEBSITE,
-                    "Button",BS_OWNERDRAW | WS_TABSTOP,7,83,241,11
+                    "Button",BS_OWNERDRAW | WS_TABSTOP,7,90,241,11
     CONTROL         "http://www.standingwaterstudios.com/reaper/sws_extension.exe",IDC_LATESTVER,
-                    "Button",BS_OWNERDRAW | WS_TABSTOP,7,111,241,11
+                    "Button",BS_OWNERDRAW | WS_TABSTOP,7,118,241,11
 END
 
 IDD_PROMPT DIALOGEX 0, 0, 161, 46
@@ -896,7 +896,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 248
         TOPMARGIN, 7
-        BOTTOMMARGIN, 140
+        BOTTOMMARGIN, 151
     END
 
     IDD_PROMPT, DIALOG

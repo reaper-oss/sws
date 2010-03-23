@@ -403,7 +403,7 @@ void PlayItemsOnceSlice()
 
 void DoPlayItemsOnce(COMMAND_T*)
 {
-	if (GetNumSelectedItems() > 0)
+	if (CountSelectedMediaItems(NULL) > 0)
 	{
 		if (g_PlayItemsOncePlaying)
 		{

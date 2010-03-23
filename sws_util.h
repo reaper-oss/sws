@@ -130,7 +130,7 @@ void SetCustomColors(COLORREF custColors[]);
 void ShowColorChooser(COLORREF initialCol);
 bool GetChosenColor(COLORREF* pColor);
 void HideColorChooser();
-
+void EnableColumnResize(HWND h);
 #endif
 
 // Command/action handling, sws_extension.cpp

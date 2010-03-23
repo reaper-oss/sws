@@ -71,7 +71,7 @@ BOOL WINAPI MyItemInspectorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 		case WM_TIMER:
 		{
 			ostringstream infoText;
-			int NumSelItems=GetNumSelectedItems();
+			int NumSelItems=CountSelectedMediaItems(NULL);
 			if (g_InspshowMode==0)
 			{
 				if (NumSelItems>0)

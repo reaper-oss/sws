@@ -30,28 +30,6 @@
 
 using namespace std;
 
-int GetNumSelectedItems()
-{
-	MediaTrack* CurTrack;
-	MediaItem* CurItem;
-	int ItemCount=0;
-	int trackID;
-	int itemID;
-	for (trackID=0;trackID<GetNumTracks();trackID++)
-	{
-		CurTrack=CSurf_TrackFromID(trackID+1,FALSE);
-		int numItems=GetTrackNumMediaItems(CurTrack);
-		for (itemID=0;itemID<numItems;itemID++)
-		{
-			CurItem = GetTrackMediaItem(CurTrack,itemID);
-			bool ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE) ItemCount++;
-		}
-	}
-	return ItemCount;
-			
-}
-
 void SanitizeString(char *StringToSanitize)
 {
 	//

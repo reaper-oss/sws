@@ -34,145 +34,68 @@ void DoJumpEditCursorByRandomAmount(COMMAND_T*)
 {
 	double RandomMean;
 	RandomMean=g_command_params.EditCurRndMean;
-	double RandExp=-log((1.0/RAND_MAX)*rand())*RandomMean;
-	double NewCurPos=GetCursorPosition()+RandExp;
-	SetEditCurPos(NewCurPos,false,false);
+	double RandExp=-log((1.0/RAND_MAX)*rand()) * RandomMean;
+	double NewCurPos=GetCursorPosition() + RandExp;
+	SetEditCurPos(NewCurPos, false, false);
 }
 
-void DoNudgeSelectedItemsPositions(bool UseConfig,bool Positive,double NudgeTime)
+void DoNudgeSelectedItemsPositions(bool UseConfig, bool Positive, double NudgeTime)
 {
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	
-	int numItems;
-	bool ItemSelected=false;
-	
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < CountSelectedMediaItems(0); i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		//MediaItem* **MediaItemsOnTrack = new (MediaItem*)[numItems];
-		MediaItem** MediaItemsOnTrack = new MediaItem*[numItems];
+		MediaItem* item = GetSelectedMediaItem(0, i);
+		double NewPos;
+		double OldPos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+		if (Positive)
+			NewPos = OldPos + g_command_params.ItemPosNudgeSecs;
+		else
+			NewPos = OldPos - g_command_params.ItemPosNudgeSecs;
 
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			MediaItemsOnTrack[j]=CurItem;
-		}
-		for (j=0;j<numItems;j++)
-		{
-			ItemSelected=*(bool*)GetSetMediaItemInfo(MediaItemsOnTrack[j],"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				//double SnapOffset=*(double*)GetSetMediaItemInfo(CurItem,"D_SNAPOFFSET",NULL);
-				double NewPos;
-				double OldPos=*(double*)GetSetMediaItemInfo(MediaItemsOnTrack[j],"D_POSITION",NULL);
-				if (Positive)
-					NewPos=OldPos+g_command_params.ItemPosNudgeSecs; else NewPos=OldPos-g_command_params.ItemPosNudgeSecs;
-				//if (OldPos!=NewPos)
-				//{					
-					GetSetMediaItemInfo(MediaItemsOnTrack[j],"D_POSITION",&NewPos);
-					//j=0;
-				//}
-				
-			} 
-
-
-		}
-	delete[] MediaItemsOnTrack;
-
+		GetSetMediaItemInfo(item, "D_POSITION", &NewPos);
 	}
-	Undo_OnStateChangeEx("Nudge item position(s)",4,-1);
+	Undo_OnStateChangeEx("Nudge item position(s)", UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 
 void DoSetItemFadesConfLen(COMMAND_T*)
 {
-	double NewFadeInLen;
-	double NewFadeOutLen;
-	NewFadeInLen=g_command_params.CommandFadeInA;
-	NewFadeOutLen=g_command_params.CommandFadeOutA;
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	int numItems;
-	
-	bool ItemSelected=false;
-	
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < CountSelectedMediaItems(0); i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			//propertyName="D_";
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				double ItemLen=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
-				if ((NewFadeInLen+NewFadeOutLen)>ItemLen)
-				{
-					//NewFadeInLen=0;
-					NewFadeOutLen=ItemLen-(NewFadeInLen+0.05);
-				}
+		MediaItem* item = GetSelectedMediaItem(0, i);
+		double NewFadeInLen=g_command_params.CommandFadeInA;
+		double NewFadeOutLen=g_command_params.CommandFadeOutA;
+		double ItemLen= *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
+		if ((NewFadeInLen + NewFadeOutLen) > ItemLen)
+			NewFadeInLen = NewFadeOutLen = ItemLen / 2.0;
 
-				GetSetMediaItemInfo(CurItem,"C_FADEINSHAPE",&g_command_params.CommandFadeInShapeA);
-				GetSetMediaItemInfo(CurItem,"C_FADEOUTSHAPE",&g_command_params.CommandFadeOutShapeA);
-				GetSetMediaItemInfo(CurItem,"D_FADEINLEN",&NewFadeInLen);
-				GetSetMediaItemInfo(CurItem,"D_FADEOUTLEN",&NewFadeOutLen);
-			} 
-		}
+		GetSetMediaItemInfo(item, "C_FADEINSHAPE",  &g_command_params.CommandFadeInShapeA);
+		GetSetMediaItemInfo(item, "C_FADEOUTSHAPE", &g_command_params.CommandFadeOutShapeA);
+		GetSetMediaItemInfo(item, "D_FADEINLEN",  &NewFadeInLen);
+		GetSetMediaItemInfo(item, "D_FADEOUTLEN", &NewFadeOutLen);
 	}
-	Undo_OnStateChangeEx("Set item fades to configured lenghts",4,-1);
+	Undo_OnStateChangeEx("Set item fades to configured lengths A", UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 
 void DoSetItemFadesConfLenB(COMMAND_T*)
 {
-	double NewFadeInLen;
-	double NewFadeOutLen;
-	NewFadeInLen=g_command_params.CommandFadeInB;
-	NewFadeOutLen=g_command_params.CommandFadeOutB;
-	MediaTrack* pTrack;
-	MediaItem* CurItem;
-	int numItems;
-	bool ItemSelected=false;
-	
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < CountSelectedMediaItems(0); i++)
 	{
-		pTrack = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(pTrack);
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(pTrack,j);
-			//propertyName="D_";
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				double ItemLen=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
-				if ((NewFadeInLen+NewFadeOutLen)>ItemLen)
-				{
-					//NewFadeInLen=0;
-					NewFadeOutLen=ItemLen-(NewFadeInLen+0.05);
-				}
+		MediaItem* item = GetSelectedMediaItem(0, i);
+		double NewFadeInLen=g_command_params.CommandFadeInB;
+		double NewFadeOutLen=g_command_params.CommandFadeOutB;
+		double ItemLen= *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
+		if ((NewFadeInLen + NewFadeOutLen) > ItemLen)
+			NewFadeInLen = NewFadeOutLen = ItemLen / 2.0;
 
-				GetSetMediaItemInfo(CurItem,"C_FADEINSHAPE",&g_command_params.CommandFadeInShapeB);
-				GetSetMediaItemInfo(CurItem,"C_FADEOUTSHAPE",&g_command_params.CommandFadeOutShapeB);
-				GetSetMediaItemInfo(CurItem,"D_FADEINLEN",&NewFadeInLen);
-				GetSetMediaItemInfo(CurItem,"D_FADEOUTLEN",&NewFadeOutLen);
-			} 
-		}
+		GetSetMediaItemInfo(item, "C_FADEINSHAPE",  &g_command_params.CommandFadeInShapeB);
+		GetSetMediaItemInfo(item, "C_FADEOUTSHAPE", &g_command_params.CommandFadeOutShapeB);
+		GetSetMediaItemInfo(item, "D_FADEINLEN",  &NewFadeInLen);
+		GetSetMediaItemInfo(item, "D_FADEOUTLEN", &NewFadeOutLen);
 	}
-	Undo_OnStateChangeEx("Set item fades to configured lenghts",4,-1);
+	Undo_OnStateChangeEx("Set item fades to configured lengths B", UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
-
 
 void DoNudgeItemPitches(double NudgeAmount,bool Resampled)
 {
@@ -214,47 +137,16 @@ void DoNudgeItemPitches(double NudgeAmount,bool Resampled)
 	UpdateTimeline();
 }
 
-void DoNudgeItemPitchesDown(COMMAND_T*)
-{
-	DoNudgeItemPitches(-g_command_params.ItemPitchNudgeA,false);
-}
+void DoNudgeItemPitchesDown(COMMAND_T*)  { DoNudgeItemPitches(-g_command_params.ItemPitchNudgeA, false); }
+void DoNudgeItemPitchesUp(COMMAND_T*)    { DoNudgeItemPitches(g_command_params.ItemPitchNudgeA,  false); }
+void DoNudgeItemPitchesDownB(COMMAND_T*) { DoNudgeItemPitches(-g_command_params.ItemPitchNudgeB, false); }
+void DoNudgeItemPitchesUpB(COMMAND_T*)   { DoNudgeItemPitches(g_command_params.ItemPitchNudgeB,  false); }
+void DoNudgeUpTakePitchResampledA(COMMAND_T*)   { DoNudgeItemPitches(g_command_params.ItemPitchNudgeA,  true); }
+void DoNudgeDownTakePitchResampledA(COMMAND_T*) { DoNudgeItemPitches(-g_command_params.ItemPitchNudgeA, true); }
+void DoNudgeUpTakePitchResampledB(COMMAND_T*)   { DoNudgeItemPitches(g_command_params.ItemPitchNudgeB,  true); }
+void DoNudgeDownTakePitchResampledB(COMMAND_T*) { DoNudgeItemPitches(-g_command_params.ItemPitchNudgeB, true); }
 
-void DoNudgeItemPitchesUp(COMMAND_T*)
-{
-	DoNudgeItemPitches(g_command_params.ItemPitchNudgeA,false);
-}
-
-void DoNudgeItemPitchesDownB(COMMAND_T*)
-{
-	DoNudgeItemPitches(-g_command_params.ItemPitchNudgeB,false);
-}	
-
-void DoNudgeItemPitchesUpB(COMMAND_T*)
-{
-	DoNudgeItemPitches(g_command_params.ItemPitchNudgeB,false);	
-}
-
-void DoNudgeUpTakePitchResampledA(COMMAND_T*)
-{
-	DoNudgeItemPitches(g_command_params.ItemPitchNudgeA,true);
-}
-
-void DoNudgeDownTakePitchResampledA(COMMAND_T*)
-{
-	DoNudgeItemPitches(-g_command_params.ItemPitchNudgeA,true);	
-}
-
-void DoNudgeUpTakePitchResampledB(COMMAND_T*)
-{
-	DoNudgeItemPitches(g_command_params.ItemPitchNudgeB,true);
-}
-
-void DoNudgeDownTakePitchResampledB(COMMAND_T*)
-{
-	DoNudgeItemPitches(-g_command_params.ItemPitchNudgeB,true);	
-}
-
-void DoNudgeItemsBeatsBased(bool UseConf,bool Positive, double theNudgeAmount)
+void DoNudgeItemsBeatsBased(bool UseConf, bool Positive, double theNudgeAmount)
 {
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
@@ -335,14 +227,8 @@ void DoSplitItemsAtTransients(COMMAND_T*)
 	MediaItem* CurItem;
 	bool ItemSelected=false;
 	
-	//double EditCurPos=GetCursorPosition();
-	
-	//MediaItem** MediaItemsOnTrack;
-	//double CurrentHZoom=GetHZoomLevel();
-	//adjustZoom(10, 0, false, -1);
-	// Find minimum item position from all selected
 	int ItemCounter=0;
-	int numItems=GetNumSelectedItems();
+	int numItems=CountSelectedMediaItems(NULL);
 	MediaItem** MediaItemsInProject = new MediaItem*[numItems];
 	int i;
 	int j;
@@ -406,7 +292,7 @@ void DoSplitItemsAtTransients(COMMAND_T*)
 
 
 	}
-	//MessageBox(g_hwndParent,"no joo t‰‰ll‰ ollaan","Warning!",MB_OK);
+	//MessageBox(g_hwndParent,"no joo t‚Ä∞‚Ä∞ll‚Ä∞ ollaan","Warning!",MB_OK);
 	
 	delete[] MediaItemsInProject;
 	//adjustZoom(CurrentHZoom, 0, false, -1);
@@ -502,39 +388,11 @@ void DoNudgeTakeVolsUp(COMMAND_T*)
 
 void DoResetItemVol(COMMAND_T*)
 {
-	//
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	int numItems;
-	bool ItemSelected=false;
-	
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
-	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		//MediaItem* **MediaItemsOnTrack = new (MediaItem*)[numItems];
-		
+	double NewVol=1.0;
+	for (int i = 0; i < CountSelectedMediaItems(0); i++)
+		GetSetMediaItemInfo(GetSelectedMediaItem(0, i), "D_VOL", &NewVol);
 
-		
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				double NewVol=1.0;
-				GetSetMediaItemInfo(CurItem,"D_VOL",&NewVol);
-				
-			} 
-
-
-		}
-	
-
-	}
-	Undo_OnStateChangeEx("Reset Item Volume To 0.0",4,-1);
+	Undo_OnStateChangeEx("Reset Item Volume To 0.0", UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 
@@ -1033,7 +891,7 @@ void DoScaleItemPosStaticDlg(COMMAND_T*)
 		g_last_ScaleItemPosParams.Scaling=100.0;
 		g_ScaleItemPosFirstRun=false;
 	}
-	int NumSelItems=GetNumSelectedItems();
+	int NumSelItems=CountSelectedMediaItems(NULL);
 	g_StoredPositions=new double [NumSelItems];
 	g_StoredLengths=new double[NumSelItems];
 	MediaTrack* MunRaita;
@@ -1073,7 +931,7 @@ typedef struct
 
 t_itemposrandparams g_last_RandomizeItemPosParams;
 
-bool g_RandItemPosFirstRun=true;
+bool g_RandItemPosFirstRun = true;
 
 void DoRandomizePositions2()
 {
@@ -1270,11 +1128,10 @@ bool g_autogen_firstrun=true;
 
 WDL_DLGRET GenEnvesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	//
 	switch(Message)
     {
         case WM_INITDIALOG:
-			{
+		{
 			char TextBuf[32];
 			sprintf(TextBuf,"%.2f",g_AutoGenParams.MaxValue);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
@@ -1286,44 +1143,35 @@ WDL_DLGRET GenEnvesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 			SetDlgItemText(hwnd, IDC_EDIT5, TextBuf);
 			sprintf(TextBuf,"%d",g_AutoGenParams.PointShape);
 			SetDlgItemText(hwnd, IDC_EDIT3, TextBuf);
-			//sprintf(TextBuf,"%.2f",g_last_RandomizeItemPosParams.RandRange);
-			//SetDlgItemText(hwnd, IDC_EDIT1, "440.0");
 			SetFocus(GetDlgItem(hwnd, IDC_EDIT2));
 			SendMessage(GetDlgItem(hwnd, IDC_EDIT2), EM_SETSEL, 0, -1);
 			return 0;
-			}
+		}
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
                 case IDOK:
-					{
-						char textbuf[100];
-						GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
-						g_AutoGenParams.MaxValue=atof(textbuf);
-						GetDlgItemText(hwnd,IDC_EDIT2,textbuf,100);
-						
-						g_AutoGenParams.MinValue=atof(textbuf);
-						GetDlgItemText(hwnd,IDC_EDIT4,textbuf,100);
-						g_AutoGenParams.TimeStep=1.0/atof(textbuf);
-						GetDlgItemText(hwnd,IDC_EDIT3,textbuf,100);
-						g_AutoGenParams.PointShape=atoi(textbuf);
-						GetDlgItemText(hwnd,IDC_EDIT5,textbuf,100);
-						g_AutoGenParams.TimeRand=atof(textbuf);
-						CreateAutomationData();
-						//GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
-						//g_last_RandomizeItemPosParams.RandRange=atof(textbuf);
-						//DoRandomizePositions2();
-						EndDialog(hwnd,0);
-						return 0;
-					}
+				{
+					char textbuf[100];
+					GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
+					g_AutoGenParams.MaxValue=atof(textbuf);
+					GetDlgItemText(hwnd,IDC_EDIT2,textbuf,100);
+					g_AutoGenParams.MinValue=atof(textbuf);
+					GetDlgItemText(hwnd,IDC_EDIT4,textbuf,100);
+					g_AutoGenParams.TimeStep=1.0/atof(textbuf);
+					GetDlgItemText(hwnd,IDC_EDIT3,textbuf,100);
+					g_AutoGenParams.PointShape=atoi(textbuf);
+					GetDlgItemText(hwnd,IDC_EDIT5,textbuf,100);
+					g_AutoGenParams.TimeRand=atof(textbuf);
+					CreateAutomationData();
+					EndDialog(hwnd,0);
+					return 0;
+				}
 				case IDCANCEL:
-					{
-						
-						EndDialog(hwnd,0);
-						return 0;
-					}
-				
-
+				{
+					EndDialog(hwnd,0);
+					return 0;
+				}
 			}
 	}
 	return 0;
@@ -1359,11 +1207,9 @@ typedef struct
 	HWND *g_hPanSliders;
 	HWND g_hItemVolSlider;
 	HWND *g_hNumLabels;
-	HWND *g_hMedOffsSliders;
 	double *StoredVolumes;
 	double *StoredPans;
 	double StoredItemVolume;
-	double *StoredMedOffs;
 	bool AllTakesPlay;
 } t_TakeMixerState;
 
@@ -1373,14 +1219,10 @@ MediaItem *g_TargetItem;
 
 void UpdateTakeMixerSliders()
 {
-	//
 	int SliPos;
-	int i;
-	for (i=0;i<g_TakeMixerState.NumTakes;i++)
+	for (int i = 0; i < g_TakeMixerState.NumTakes; i++)
 	{
-		//
 		SliPos=(int)(1000.0/2*g_TakeMixerState.StoredVolumes[i]);
-		//SliPos=SliPos;
 		SendMessage(g_TakeMixerState.g_hVolSliders[i],TBM_SETPOS,(WPARAM) (BOOL)true,SliPos);
 		double PanPos=g_TakeMixerState.StoredPans[i];
 		PanPos=PanPos+1.0;
@@ -1388,10 +1230,8 @@ void UpdateTakeMixerSliders()
 		SendMessage(g_TakeMixerState.g_hPanSliders[i],TBM_SETPOS,(WPARAM) (BOOL)true,SliPos);
 	}
 	SliPos=(int)(1000*g_TakeMixerState.StoredItemVolume);
-	//SliPos=100-SliPos;
 	SendMessage(g_TakeMixerState.g_hItemVolSlider,TBM_SETPOS,(WPARAM) (BOOL)true,SliPos);
 }
-
 
 void On_SliderMove(HWND theHwnd,WPARAM wParam,LPARAM lParam,HWND SliderHandle,int TheSlipos)
 {
@@ -1400,9 +1240,7 @@ void On_SliderMove(HWND theHwnd,WPARAM wParam,LPARAM lParam,HWND SliderHandle,in
 	int i;
 	for (i=0;i<g_TakeMixerState.NumTakes;i++)
 	{
-		//if ((HWND)thelParam==g_TakeMixerState.g_hVolSliders[i])
 		if (SliderHandle==g_TakeMixerState.g_hVolSliders[i])
-		
 		{
 			movedParam=0;
 			x=i;
@@ -1422,24 +1260,19 @@ void On_SliderMove(HWND theHwnd,WPARAM wParam,LPARAM lParam,HWND SliderHandle,in
 		GetSetMediaItemInfo(g_TargetItem,"I_CURTAKE",&x);
 		if (movedParam==0)
 		{
-			//double NewVol=2.0-( 2.0/100*HIWORD(thewParam));
 			double NewVol=( 2.0/1000*TheSlipos);
 			
 			GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVol);
 		}
 		if (movedParam==1)
 		{
-			//double NewPan=-1.0+(2.0/100*HIWORD(thewParam));
 			double NewPan=-1.0+(2.0/1000*TheSlipos);
 			GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
 		}
-
-			//double NewPan=1.0-(2.0/100*HIWORD(
 		UpdateTimeline();
 	}
 	if (SliderHandle==g_TakeMixerState.g_hItemVolSlider)
 	{
-		//
 		double NewVol=( 1.0/1000*TheSlipos);
 		GetSetMediaItemInfo(g_TargetItem,"D_VOL",&NewVol);
 		UpdateTimeline();
@@ -1448,12 +1281,9 @@ void On_SliderMove(HWND theHwnd,WPARAM wParam,LPARAM lParam,HWND SliderHandle,in
 
 void TakeMixerResetTakes(bool ResetVol=false,bool ResetPan=false)
 {
-	//
 	MediaItem_Take *CurTake;
-	int i;
-	for (i=0;i<GetMediaItemNumTakes(g_TargetItem);i++)
+	for (int i = 0; i < GetMediaItemNumTakes(g_TargetItem); i++)
 	{
-		//
 		CurTake=GetMediaItemTake(g_TargetItem,i);
 		double NewVolume=1.0;
 		double NewPan=0.0;
@@ -1464,11 +1294,9 @@ void TakeMixerResetTakes(bool ResetVol=false,bool ResetPan=false)
 	}
 	int SliPos;
 	
-	for (i=0;i<g_TakeMixerState.NumTakes;i++)
+	for (int i = 0; i < g_TakeMixerState.NumTakes; i++)
 	{
-		//
 		SliPos=(int)(1000.0/2*1.0);
-		//SliPos=100-SliPos;
 		if (ResetVol==true)
 			SendMessage(g_TakeMixerState.g_hVolSliders[i],TBM_SETPOS,(WPARAM) (BOOL)true,SliPos);
 		double PanPos;
@@ -1477,7 +1305,6 @@ void TakeMixerResetTakes(bool ResetVol=false,bool ResetPan=false)
 		if (ResetPan==true)	
 			SendMessage(g_TakeMixerState.g_hPanSliders[i],TBM_SETPOS,(WPARAM) (BOOL)true,SliPos);
 	}
-
 }
 
 
@@ -1499,34 +1326,31 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			GetWindowRect(GetDlgItem(hwnd,IDC_STRIPCONTAINER),&MyRect);
 			SetWindowPos(GetDlgItem(hwnd,IDC_STRIPCONTAINER) ,HWND_TOP,0,0,NewDialogWidth-20,MyRect.bottom-MyRect.top, SWP_NOMOVE);
 			char textbuf[300];
-			int i;
-			for (i=0;i<g_TakeMixerState.NumTakes;i++)
+#ifdef _WIN32
+			HFONT hFont = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
+#endif
+			for (int i=0;i<g_TakeMixerState.NumTakes;i++)
 			{
 #ifdef _WIN32				
 				sprintf(textbuf,"TAKESTATIC_%d",i+1);
-				g_TakeMixerState.g_hNumLabels[i] = CreateWindowEx(WS_EX_LEFT, "STATIC", textbuf, 
-				WS_CHILD | WS_VISIBLE, 
-				45+(1+i)*50, 170, 40, 13, hwnd, NULL, g_hInst, NULL);
+				g_TakeMixerState.g_hNumLabels[i] = CreateWindowEx(WS_EX_LEFT, WC_STATIC, textbuf, 
+				WS_CHILD | WS_VISIBLE,
+				45+(1+i)*50, 20, 40, 20, hwnd, NULL, g_hInst, NULL);
 				
 				sprintf(textbuf,"VOLSLIDER_%d",i+1);
 				g_TakeMixerState.g_hVolSliders[i] = CreateWindowEx(WS_EX_LEFT, "REAPERvfader", textbuf, 
 				WS_CHILD | WS_VISIBLE | TBS_VERT, 
-				40+(1+i)*50, 95, 30, 120, hwnd, NULL, g_hInst, NULL);
+				40+(1+i)*50, 90, 30, 120, hwnd, NULL, g_hInst, NULL);
 				
 				sprintf(textbuf,"PANSLIDER_%d",i+1);
 				g_TakeMixerState.g_hPanSliders[i] = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", textbuf,
 				WS_CHILD | WS_VISIBLE | TBS_HORZ, 
 				33+(1+i)*50, 55, 45, 25, hwnd, NULL, g_hInst, NULL);
-				
-				sprintf(textbuf,"OFFSETSLIDER_%d",i+1);
-				g_TakeMixerState.g_hMedOffsSliders[i] = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", textbuf, 
-				WS_CHILD | WS_VISIBLE | TBS_HORZ, 
-				33+(1+i)*50, 25, 45, 25, hwnd, NULL, g_hInst, NULL);
+				SendMessage(g_TakeMixerState.g_hNumLabels[i],WM_SETFONT, (WPARAM)hFont, 0);
 #else
-				g_TakeMixerState.g_hNumLabels[i]  = SWELL_MakeLabel(0, "STATIC", i*4+1, 45+(1+i)*50, 170, 40, 13, 0);
-				g_TakeMixerState.g_hVolSliders[i] = SWELL_MakeControl("DLGFADER1", i*4+2, "REAPERhfader", 0, 40+(1+i)*50, 95, 30, 120, 0);
+				g_TakeMixerState.g_hNumLabels[i]  = SWELL_MakeLabel(0, "STATIC", i*4+1, 45+(1+i)*50, 20, 40, 13, 0);
+				g_TakeMixerState.g_hVolSliders[i] = SWELL_MakeControl("DLGFADER1", i*4+2, "REAPERhfader", 0, 40+(1+i)*50, 90, 30, 120, 0);
 				g_TakeMixerState.g_hPanSliders[i] = SWELL_MakeControl("DLGFADER1", i*4+3, "REAPERhfader", 0, 33+(1+i)*50, 55, 45, 25, 0);
-				g_TakeMixerState.g_hMedOffsSliders[i] = SWELL_MakeControl("DLGFADER1", i*4+4, "REAPERhfader", 0, 33+(1+i)*50, 25, 45, 25, 0);
 #endif
 
 				sprintf(textbuf,"%d",i+1);
@@ -1537,7 +1361,7 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 #ifdef _WIN32
 			g_TakeMixerState.g_hItemVolSlider = CreateWindowEx(WS_EX_LEFT, "REAPERvfader", "ITEMVOLSLIDER", 
 			WS_CHILD | WS_VISIBLE | TBS_VERT, 
-			40, 95, 30, 120, hwnd, NULL, g_hInst, NULL);
+			40, 90, 30, 120, hwnd, NULL, g_hInst, NULL);
 #else
 			g_TakeMixerState.g_hItemVolSlider = SWELL_MakeControl("DLGFADER1", 666, "REAPERhfader", 0, 40, 95, 30, 120, 0);
 #endif
@@ -1599,7 +1423,6 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				DestroyWindow(g_TakeMixerState.g_hNumLabels[i]);
 				DestroyWindow(g_TakeMixerState.g_hVolSliders[i]);
 				DestroyWindow(g_TakeMixerState.g_hPanSliders[i]);
-				DestroyWindow(g_TakeMixerState.g_hMedOffsSliders[i]);
 			}
 			break;
 	}
@@ -1608,87 +1431,35 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
 void DoShowTakeMixerDlg(COMMAND_T*)
 {
-	//
-	g_TargetItem=NULL;
-	int numSel=GetNumSelectedItems();
+	g_TargetItem = NULL;
 	
-	if (numSel==1)
-	{
-		MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	
-	int numItems;
-	bool ItemSelected=false;
-	bool FirstItemFound=false;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
-	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				FirstItemFound=true;
-				break;
-				//NewSelectedStatus=FALSE;
-				//GetSetMediaItemInfo(CurItem,"B_UISEL",&NewSelectedStatus);
-				
-			} 
+	if (CountSelectedMediaItems(NULL) != 1)
+		MessageBox(g_hwndParent, "Please select only one item!", "Take Mixer Error", MB_OK);
 
-			
-		}
-		if (FirstItemFound==true) break;
+	g_TargetItem = GetSelectedMediaItem(0, 0);
+	g_TakeMixerState.NumTakes			= GetMediaItemNumTakes(g_TargetItem);
+	g_TakeMixerState.AllTakesPlay		= *(bool*)GetSetMediaItemInfo(g_TargetItem ,"B_ALLTAKESPLAY", NULL);
+	GetSetMediaItemInfo(g_TargetItem, "B_ALLTAKESPLAY", &g_bTrue);
+	g_TakeMixerState.StoredItemVolume	= *(double*)GetSetMediaItemInfo(g_TargetItem ,"D_VOL", NULL);
+	g_TakeMixerState.g_hVolSliders		= new HWND[g_TakeMixerState.NumTakes+1];
+	g_TakeMixerState.g_hNumLabels		= new HWND[g_TakeMixerState.NumTakes];
+	g_TakeMixerState.g_hPanSliders		= new HWND[g_TakeMixerState.NumTakes];
+	g_TakeMixerState.StoredVolumes		= new double[g_TakeMixerState.NumTakes];
+	g_TakeMixerState.StoredPans			= new double[g_TakeMixerState.NumTakes];
 
+	for (int i = 0; i < g_TakeMixerState.NumTakes; i++)
+	{
+		MediaItem_Take* CurTake = GetMediaItemTake(g_TargetItem, i);
+		g_TakeMixerState.StoredVolumes[i]= *(double*)GetSetMediaItemTakeInfo(CurTake,"D_VOL",NULL);
+		g_TakeMixerState.StoredPans[i]= *(double*)GetSetMediaItemTakeInfo(CurTake,"D_PAN",NULL);
 	}
-	g_TargetItem=CurItem;	
-	g_TakeMixerState.NumTakes=GetMediaItemNumTakes(CurItem);
-	g_TakeMixerState.AllTakesPlay=*(bool*)GetSetMediaItemInfo(CurItem,"B_ALLTAKESPLAY",NULL);
-	bool DummyBool=true;
-	GetSetMediaItemInfo(CurItem,"B_ALLTAKESPLAY",&DummyBool);
-	g_TakeMixerState.StoredItemVolume=*(double*)GetSetMediaItemInfo(CurItem,"D_VOL",NULL);
-	g_TakeMixerState.g_hVolSliders=new HWND[g_TakeMixerState.NumTakes+1];
-	g_TakeMixerState.g_hNumLabels=new HWND[g_TakeMixerState.NumTakes];
-	g_TakeMixerState.g_hPanSliders=new HWND[g_TakeMixerState.NumTakes];
-	g_TakeMixerState.g_hMedOffsSliders=new HWND[g_TakeMixerState.NumTakes];
-	g_TakeMixerState.StoredVolumes=new double[g_TakeMixerState.NumTakes];
-	g_TakeMixerState.StoredPans=new double[g_TakeMixerState.NumTakes];
-	g_TakeMixerState.StoredMedOffs=new double[g_TakeMixerState.NumTakes];
-		MediaItem_Take *CurTake;
-		for (i=0;i<g_TakeMixerState.NumTakes;i++)
-		{
-			//
-			CurTake=GetMediaItemTake(CurItem,i);
-			double TheVol=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_VOL",NULL);
-			double ThePan=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_PAN",NULL);
-			double TheOffs=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",NULL);
-			g_TakeMixerState.StoredVolumes[i]=TheVol;
-			g_TakeMixerState.StoredPans[i]=ThePan;
-			g_TakeMixerState.StoredMedOffs[i]=TheOffs;
-		}
 
-		DialogBox(g_hInst,MAKEINTRESOURCE(IDD_TAKEMIXER), g_hwndParent, TakeMixerDlgProc);
-		for (i=0;i<g_TakeMixerState.NumTakes;i++)
-		{
-			DestroyWindow(g_TakeMixerState.g_hVolSliders[i]);
-			DestroyWindow(g_TakeMixerState.g_hPanSliders[i]);
-			DestroyWindow(g_TakeMixerState.g_hNumLabels[i]);
-			DestroyWindow(g_TakeMixerState.g_hMedOffsSliders[i]);
-		}
-		DestroyWindow(g_TakeMixerState.g_hItemVolSlider);
-		delete[] g_TakeMixerState.g_hVolSliders;
-		delete[] g_TakeMixerState.g_hPanSliders;
-		delete[] g_TakeMixerState.g_hNumLabels;
-		delete[] g_TakeMixerState.g_hMedOffsSliders;
-		delete[] g_TakeMixerState.StoredPans;
-		delete[] g_TakeMixerState.StoredVolumes;
-		delete[] g_TakeMixerState.StoredMedOffs;
-	} else MessageBox(g_hwndParent,"Currently only 1 selected item supported!","Info",MB_OK);
-	
+	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_TAKEMIXER), g_hwndParent, TakeMixerDlgProc);
+	delete[] g_TakeMixerState.g_hVolSliders;
+	delete[] g_TakeMixerState.g_hPanSliders;
+	delete[] g_TakeMixerState.g_hNumLabels;
+	delete[] g_TakeMixerState.StoredPans;
+	delete[] g_TakeMixerState.StoredVolumes;
 }
 
 double g_PrevEditCursorPos=-1.0;
@@ -1720,7 +1491,6 @@ void DoSplitAndChangeLen(bool BeatBased)
 	Undo_EndBlock("Erase time from item",0);
 	GetSet_LoopTimeRange(true,false,&StoredTimeSelStart,&StoredTimeSelEnd,false);
 }
-
 
 void DoHoldKeyTest1(COMMAND_T*)
 {
@@ -1787,7 +1557,6 @@ typedef struct
 	bool MatchesCrit;
 	int MatchingTake;
 	MediaItem *ReaperItem;
-	
 	MediaItem_Take **Takes;
 } t_reaper_item;
 
@@ -1796,52 +1565,31 @@ int g_NumProjectItems=0;
 
 void ConstructItemDatabase()
 {
-	//
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	MediaItem_Take* CurTake;
-	//double EditcurPos=GetCursorPosition();
-	int NumItems=0;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
-	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		NumItems+=GetTrackNumMediaItems(MunRaita);
-	}
+	int NumItems = 0;
+	for (int i = 0; i < GetNumTracks(); i++)
+		NumItems += GetTrackNumMediaItems(CSurf_TrackFromID(i+1, false));
 	
-	g_Project_Items=new t_reaper_item[NumItems];
-	g_NumProjectItems=NumItems;
-	NumItems=0;
-	int ItemCounter=0;
-	for (i=0;i<GetNumTracks();i++)
+	g_Project_Items = new t_reaper_item[NumItems];
+	g_NumProjectItems = NumItems;
+	int ItemCounter = 0;
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		NumItems=GetTrackNumMediaItems(MunRaita);
-		int j;
-		for (j=0;j<NumItems;j++)
+		MediaTrack* MunRaita = CSurf_TrackFromID(i+1, false);
+		NumItems = GetTrackNumMediaItems(MunRaita);
+		for (int j = 0; j < NumItems; j++)
 		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			//propertyName="D_";
-			int NumTakes=GetMediaItemNumTakes(CurItem);
-			g_Project_Items[ItemCounter].ReaperItem=CurItem;
-			g_Project_Items[ItemCounter].Takes=new MediaItem_Take*[NumTakes];
-			g_Project_Items[ItemCounter].MatchesCrit=false;
-			g_Project_Items[ItemCounter].MatchingTake=-1;
-			int k;
-			for (k=0;k<NumTakes;k++)
-			{
-				CurTake=GetMediaItemTake(CurItem,k);
-				g_Project_Items[ItemCounter].Takes[k]=CurTake;
-			}
-			ItemCounter++;
-				
-				
-		} 
+			MediaItem* CurItem = GetTrackMediaItem(MunRaita, j);
+			int NumTakes = GetMediaItemNumTakes(CurItem);
+			g_Project_Items[ItemCounter].ReaperItem = CurItem;
+			g_Project_Items[ItemCounter].Takes = new MediaItem_Take*[NumTakes];
+			g_Project_Items[ItemCounter].MatchesCrit = false;
+			g_Project_Items[ItemCounter].MatchingTake = -1;
+			for (int k = 0; k < NumTakes; k++)
+				g_Project_Items[ItemCounter].Takes[k] = GetMediaItemTake(CurItem, k);
 
-		
+			ItemCounter++;
+		} 
 	}
-	
-	
 }
 
 void TokenizeString(const string& str, vector<string>& tokens, const string& delimiters)
@@ -1963,62 +1711,24 @@ WDL_DLGRET TakeFinderDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 
 void DoSearchTakesDLG(COMMAND_T*)
 {
-	//
 	ConstructItemDatabase();
 	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_TAKEFINDER), g_hwndParent, TakeFinderDlgProc);
 	delete[] g_Project_Items;
 }
 
-void DoMoveCurConfPixRight(COMMAND_T*)
-{
-	//
-	int i;
-	for (i=0;i<g_command_params.PixAmount;i++)
-	{
-		Main_OnCommand(40105,0);
-	}
-}
-
-void DoMoveCurConfPixLeft(COMMAND_T*)
-{
-	int i;
-	for (i=0;i<g_command_params.PixAmount;i++)
-	{
-		Main_OnCommand(40104,0);
-	}
-}
-
-void DoMoveCurConfPixRightCts(COMMAND_T*)
-{
-	int i;
-	for (i=0;i<g_command_params.PixAmount;i++)
-	{
-		Main_OnCommand(40103,0);
-	}
-}
-
-void DoMoveCurConfPixLeftCts(COMMAND_T*)
-{
-	int i;
-	for (i=0;i<g_command_params.PixAmount;i++)
-	{
-		Main_OnCommand(40102,0);
-	}	
-}
+void DoMoveCurConfPixRight(COMMAND_T*)		{ for (int i=0; i < g_command_params.PixAmount; i++) Main_OnCommand(40105,0); }
+void DoMoveCurConfPixLeft(COMMAND_T*)		{ for (int i=0; i < g_command_params.PixAmount; i++) Main_OnCommand(40104,0); }
+void DoMoveCurConfPixRightCts(COMMAND_T*)	{ for (int i=0; i < g_command_params.PixAmount; i++) Main_OnCommand(40103,0); }
+void DoMoveCurConfPixLeftCts(COMMAND_T*)	{ for (int i=0; i < g_command_params.PixAmount; i++) Main_OnCommand(40102,0); }	
 
 void DoMoveCurConfSecsLeft(COMMAND_T*)
 {
-	double CurPos=GetCursorPosition();
-	double NewPos=CurPos-g_command_params.CurPosSecsAmount;
-	SetEditCurPos(NewPos,false,false);
-
+	SetEditCurPos(GetCursorPosition() - g_command_params.CurPosSecsAmount, false, false);
 }
 
 void DoMoveCurConfSecsRight(COMMAND_T*)
 {
-	double CurPos=GetCursorPosition();
-	double NewPos=CurPos+g_command_params.CurPosSecsAmount;
-	SetEditCurPos(NewPos,false,false);
+	SetEditCurPos(GetCursorPosition() + g_command_params.CurPosSecsAmount,false,false);
 }
 
 double g_StoreEditCurPos=0.0;
@@ -2032,4 +1742,3 @@ void DoRecallEditCursorPosition(COMMAND_T*)
 {
 	SetEditCurPos(g_StoreEditCurPos,false,false);	
 }
-

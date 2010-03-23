@@ -267,7 +267,7 @@ void showFXChainSlots(COMMAND_T* _ct)
 	{
 		char cPath[256];
 		readIniFile(i, cPath, 256);
-		slots.AppendFormatted(strlen(cPath)+10, "Slot %d:\t%s\n", i+1, cPath);
+		slots.AppendFormatted((int)strlen(cPath)+10, "Slot %d:\t%s\n", i+1, cPath);
 	}
 
 	if (slots.GetLength())

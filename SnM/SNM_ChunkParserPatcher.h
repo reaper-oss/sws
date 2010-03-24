@@ -237,7 +237,7 @@ bool GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_String* _
 	{
 		_chunk->Set("");
 		WDL_String startToken;
-		startToken.SetFormatted((int)strlen(_keyword)+1, "<%s", _keyword);
+		startToken.SetFormatted((int)strlen(_keyword)+2, "<%s", _keyword);
 		if (Parse(SNM_GET_SUBCHUNK, _depth, _keyword, startToken.Get(), 
 			-1, _occurence, -1, (void*)_chunk) <= 0)
 		{
@@ -254,7 +254,7 @@ bool ReplaceSubChunk(const char* _keyword, int _depth, int _occurence,
 	if (_keyword && _depth > 0)
 	{
 		WDL_String startToken;
-		startToken.SetFormatted((int)strlen(_keyword)+1, "<%s", _keyword);
+		startToken.SetFormatted((int)strlen(_keyword)+2, "<%s", _keyword);
 		return (ParsePatch(SNM_REPLACE_SUBCHUNK, _depth, _keyword, startToken.Get(), -1, 
 			_occurence, -1, (void*)_newSubChunk) > 0);
 	}
@@ -535,7 +535,7 @@ int ParsePatchCore(
 							alter=true;
 							break;
 						case SNM_GET_SUBCHUNK:
-							((WDL_String*)_value)->AppendFormatted(curLineLength+1, "%s\n", curLine.Get());
+							((WDL_String*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine.Get());
 							if (*_keyWord == '<') subChunkKeyword = currentParent;
 							break;
 						case SNM_REPLACE_SUBCHUNK_EXCEPT:
@@ -587,19 +587,14 @@ int ParsePatchCore(
 			{
 				alter = (_mode == SNM_REPLACE_SUBCHUNK || SNM_REPLACE_SUBCHUNK_EXCEPT);
 				if (_mode == SNM_GET_SUBCHUNK)
-					((WDL_String*)_value)->AppendFormatted(curLineLength+1, "%s\n", curLine.Get());
+					((WDL_String*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine.Get());
 			}
 		}
 		updates += (_write && alter);
 
 		// copy current line if it wasn't altered
 		if (_write && !alter && lpNumTokens)
-#ifdef _WIN32
-			newChunk.AppendFormatted(curLineLength+1, "%s\n", curLine.Get());
-#else
 			newChunk.AppendFormatted(curLineLength+2, "%s\n", curLine.Get());
-#endif
-
 	}
 
 	// Update chunk cache (nop if empty chunk or no updates)

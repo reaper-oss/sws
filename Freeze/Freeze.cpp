@@ -1361,6 +1361,32 @@ void NameTrackLikeItem(COMMAND_T*)
 	// TODO undo?
 }
 
+void InsertFromTrackName(COMMAND_T*)
+{
+	WDL_PtrList<void> tracks;
+	for (int i = 0; i < CountSelectedTracks(0); i++)
+		tracks.Add(GetSelectedTrack(0, i));
+
+	if (!tracks.GetSize())
+		return;
+	
+	double dCurPos = GetCursorPosition();
+	for (int i = 0; i < tracks.GetSize(); i++)
+	{
+		ClearSelected();
+		MediaTrack* tr = (MediaTrack*)tracks.Get(i);
+		GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+		SetLTT();
+		char* cFilename = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
+		if (cFilename && *cFilename && FileExists(cFilename))
+			InsertMedia(cFilename, 0);
+		SetEditCurPos(dCurPos, false, false);
+	}
+	// Restore selected
+	for (int i = 0; i < tracks.GetSize(); i++)
+		GetSetMediaTrackInfo((MediaTrack*)tracks.Get(i), "I_SELECTED", &g_i1);
+}
+
 void SelectTrack(COMMAND_T* ct)
 {
 	ClearSelected();
@@ -1680,8 +1706,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Hide docker" },                                           "SWS_HIDEDOCK",       HideDock,         NULL, },
 	{ { DEFACCEL, "SWS: Move selected item(s) left edge to edit cursor" },        "SWS_ITEMLEFTTOCUR",  MoveItemLeftToCursor, NULL, },
 	{ { DEFACCEL, "SWS: Move selected item(s) right edge to edit cursor" },       "SWS_ITEMRIGHTTOCUR", MoveItemRightToCursor, NULL, },
-	{ { DEFACCEL, "SWS: Delete track(s) with children (prompt)" },		 		 "SWS_DELTRACKCHLD",   DelTracksChild,   NULL, },
-	{ { DEFACCEL, "SWS: Name selected track(s) like first sel item" },		     "SWS_NAMETKLIKEITEM", NameTrackLikeItem, NULL, },
+	{ { DEFACCEL, "SWS: Delete track(s) with children (prompt)" },		 		  "SWS_DELTRACKCHLD",   DelTracksChild,   NULL, },
+	{ { DEFACCEL, "SWS: Name selected track(s) like first sel item" },		      "SWS_NAMETKLIKEITEM", NameTrackLikeItem, NULL, },
+	{ { DEFACCEL, "SWS: Insert file matching selected track(s) name" },           "SWS_INSERTFROMTN",   InsertFromTrackName, NULL },
 
 	{ { DEFACCEL, "SWS: Select only track 1" },							 		 "SWS_SEL1",		   SelectTrack,		 NULL, 1 },
 	{ { DEFACCEL, "SWS: Select only track 2" },							 		 "SWS_SEL2",		   SelectTrack,		 NULL, 2 },

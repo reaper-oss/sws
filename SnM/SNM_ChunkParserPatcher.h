@@ -1,6 +1,6 @@
 /******************************************************************************
 ** SNM_ChunkParserPatcher.h
-** Copyright (C) 2009-2010, JF Bédague 
+** Copyright (C) 2009-2010, JF BÃ©dague 
 **
 **    This software is provided 'as-is', without any express or implied
 **    warranty.  In no event will the authors be held liable for any damages
@@ -594,7 +594,12 @@ int ParsePatchCore(
 
 		// copy current line if it wasn't altered
 		if (_write && !alter && lpNumTokens)
+#ifdef _WIN32
 			newChunk.AppendFormatted(curLineLength+1, "%s\n", curLine.Get());
+#else
+			newChunk.AppendFormatted(curLineLength+2, "%s\n", curLine.Get());
+#endif
+
 	}
 
 	// Update chunk cache (nop if empty chunk or no updates)

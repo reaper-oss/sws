@@ -451,6 +451,8 @@ void DoMoveCursor10pixRightCreateSel(COMMAND_T*) { for (int i = 0; i < ALEXPIXEL
 
 preview_register_t g_ItemPreview = { {}, 0, };
 bool g_itemPreviewPlaying = false;
+MediaItem* g_previewItem = NULL;
+bool g_bItemMuteState = false;
 void ItemPreviewSlice()
 {
 	if (g_itemPreviewPlaying)
@@ -470,6 +472,8 @@ void ItemPreviewSlice()
 #endif
 			StopPreview(&g_ItemPreview);
 			g_itemPreviewPlaying = false;
+			GetSetMediaItemInfo(g_previewItem, "B_MUTE", &g_bItemMuteState);
+			UpdateItemInProject(g_previewItem);
 			delete g_ItemPreview.src;
 		}
 		else
@@ -485,6 +489,7 @@ void ItemPreviewSlice()
 // 0: start
 // 1: stop
 // 2: toggle
+// 3: start, but use track fader trim
 void DoPreviewItem(COMMAND_T* t)
 {
 	if (g_itemPreviewPlaying)
@@ -492,6 +497,8 @@ void DoPreviewItem(COMMAND_T* t)
 		// preview called while preview in progress, stopping previous preview...
 		StopPreview(&g_ItemPreview);
 		g_itemPreviewPlaying = false;
+		GetSetMediaItemInfo(g_previewItem, "B_MUTE", &g_bItemMuteState);
+		UpdateItemInProject(g_previewItem);
 		delete g_ItemPreview.src;
 		if (t->user == 2)
 			return;
@@ -499,40 +506,43 @@ void DoPreviewItem(COMMAND_T* t)
 
 	if (t->user == 1)
 		return;
-			
-	for (int i = 0; i < GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1, false);
-		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
-		{
-			MediaItem* curItem = GetTrackMediaItem(tr, j);
-			if (*(bool*)GetSetMediaItemInfo(curItem, "B_UISEL", NULL))
-			{
-				PCM_source* src = ((PCM_source*)curItem)->Duplicate(); // Casting from MediaItem* to PCM_source works!  Who would have known?
-				if (src)
-				{
-					double dZero = 0.0;
-					GetSetMediaItemInfo((MediaItem*)src, "D_POSITION", &dZero);
 
-					if (!g_ItemPreview.src) // src == 0 means need to initialize structure
-					{
+	if (CountSelectedMediaItems(0))
+	{
+		g_previewItem = GetSelectedMediaItem(0, 0);
+		g_bItemMuteState = *(bool*)GetSetMediaItemInfo(g_previewItem, "B_MUTE", NULL);
+		GetSetMediaItemInfo(g_previewItem, "B_MUTE", &g_bFalse);
+		PCM_source* src = ((PCM_source*)g_previewItem)->Duplicate(); // Casting from MediaItem* to PCM_source works!  Who would have known?
+		if (src)
+		{
+			double dZero = 0.0;
+			GetSetMediaItemInfo((MediaItem*)src, "D_POSITION", &dZero);
+
+			if (!g_ItemPreview.src) // src == 0 means need to initialize structure
+			{
 #ifdef _WIN32
-						InitializeCriticalSection(&g_ItemPreview.cs);
+				InitializeCriticalSection(&g_ItemPreview.cs);
 #else
-						pthread_mutex_init(&g_ItemPreview.mutex, NULL);
+				pthread_mutex_init(&g_ItemPreview.mutex, NULL);
 #endif
-						g_ItemPreview.m_out_chan = 0;
-						g_ItemPreview.volume = 1.0;
-						g_ItemPreview.loop = false;
-					}
-					g_ItemPreview.src = src;
-					g_ItemPreview.curpos = 0.0;
-					if (PlayPreview(&g_ItemPreview))
-						g_itemPreviewPlaying = true;
-				}
-				return;
+				g_ItemPreview.m_out_chan = 0;
+				g_ItemPreview.loop = false;
 			}
+
+			if (t->user == 3) // Use track's fader level for volume
+			{
+				MediaTrack* tr = (MediaTrack*)GetSetMediaItemInfo(g_previewItem, "P_TRACK", NULL);
+				g_ItemPreview.volume = *(double*)GetSetMediaTrackInfo(tr, "D_VOL", NULL);
+			}
+			else						
+				g_ItemPreview.volume = 1.0;
+			g_ItemPreview.src = src;
+			g_ItemPreview.curpos = 0.0;
+			if (PlayPreview(&g_ItemPreview))
+				g_itemPreviewPlaying = true;
 		}
+		else
+			GetSetMediaItemInfo(g_previewItem, "B_MUTE", &g_bItemMuteState);
 	}
 }
 

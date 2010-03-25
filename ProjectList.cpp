@@ -165,6 +165,7 @@ bool ProjectListEnabled(COMMAND_T*)
 void ProjectListUpdate()
 {
 	g_pProjList->Update();
+	UpdateOpenProjectTabActions();
 }
 
 int ProjectListInit()

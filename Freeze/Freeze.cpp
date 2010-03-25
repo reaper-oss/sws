@@ -38,6 +38,9 @@
 
 static int g_prevautoxfade = 0;
 
+#define SAVED_DEF_FADE_LEN_KEY "deffadelen"
+static double g_dDefFadeLen = 0.01;
+
 void SaveXFade(COMMAND_T* = NULL)    { if (GetConfigVar("autoxfade")) g_prevautoxfade = *(int*)GetConfigVar("autoxfade"); }
 void RestoreXFade(COMMAND_T* = NULL) { if (GetConfigVar("autoxfade") && g_prevautoxfade != *(int*)GetConfigVar("autoxfade")) Main_OnCommand(40041, 0); }
 void XFadeOn(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("autoxfade"); if (p && !(*p)) Main_OnCommand(40041, 0); }
@@ -1194,6 +1197,70 @@ void AddLeftItem(COMMAND_T* = NULL)
 	UpdateTimeline();
 }
 
+// I rarely want to toggle the loop item section, I just want to reset it!
+// So here, check it's state, then set/reset it, and also make sure loop item is on.
+void LoopItemSection(COMMAND_T*)
+{
+	WDL_PtrList<void> items;
+	WDL_PtrList<void> sections;
+	for (int i = 0; i < CountSelectedMediaItems(0); i++)
+	{
+		MediaItem* item = GetSelectedMediaItem(0, i);
+		items.Add(item);
+		MediaItem_Take* take = GetMediaItemTake(item, -1);
+		if (take && strcmp(((PCM_source*)GetSetMediaItemTakeInfo(take, "P_SOURCE", NULL))->GetType(), "SECTION") == 0)
+			sections.Add(item);
+	}
+
+	if (sections.GetSize())
+	{	// Some items already are in "section mode", turn it off
+		Main_OnCommand(40289, 0); // Unselect all items
+		for (int i = 0; i < sections.GetSize(); i++)
+		{
+			MediaItem* item = (MediaItem*)sections.Get(i);
+			GetSetMediaItemInfo(item, "B_UISEL", &g_bTrue);
+			Main_OnCommand(40547, 0); // Toggle loop section of item source
+			GetSetMediaItemInfo(item, "B_UISEL", &g_bFalse);
+		}
+		// Restore item selection
+		for (int i = 0; i < items.GetSize(); i++)
+			GetSetMediaItemInfo((MediaItem*)items.Get(i), "B_UISEL", &g_bTrue);
+	}
+
+	// Turn on loop item source
+	for (int i = 0; i < items.GetSize(); i++)
+		GetSetMediaItemInfo((MediaItem*)items.Get(i), "B_LOOPSRC", &g_bTrue);
+
+	// Turn on loop section
+	Main_OnCommand(40547, 0);
+}
+
+void TogDefFadeZero(COMMAND_T*)
+{
+	double* pdDefFade = (double*)GetConfigVar("deffadelen");
+	if (*pdDefFade != 0.0)
+	{
+		if (*pdDefFade != g_dDefFadeLen)
+		{
+			char str[64];
+			sprintf(str, "%.8f", *pdDefFade);
+			WritePrivateProfileString(SWS_INI, SAVED_DEF_FADE_LEN_KEY, str, get_ini_file());
+			g_dDefFadeLen = *pdDefFade;
+		}
+		*pdDefFade = 0.0;
+	}
+	else
+	{
+		*pdDefFade = g_dDefFadeLen;
+	}
+}
+
+bool IsDefFadeOverriden(COMMAND_T*)
+{
+	double dDefFade = *(double*)GetConfigVar("deffadelen");
+	return g_dDefFadeLen != 0.0 && dDefFade != g_dDefFadeLen;
+}
+
 static int g_iMasterFXEn = 1;
 void SaveMasterFXEn(COMMAND_T*)  { g_iMasterFXEn = *(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(0, false), "I_FXEN", NULL); }
 void RestMasterFXEn(COMMAND_T*)  { GetSetMediaTrackInfo(CSurf_TrackFromID(0, false), "I_FXEN", &g_iMasterFXEn); }
@@ -1369,6 +1436,12 @@ void InsertFromTrackName(COMMAND_T*)
 
 	if (!tracks.GetSize())
 		return;
+
+	char cPath[256];
+	EnumProjects(-1, cPath, 256);
+	char* pSlash = strrchr(cPath, PATH_SLASH_CHAR);
+	if (pSlash)
+		pSlash[1] = 0;
 	
 	double dCurPos = GetCursorPosition();
 	for (int i = 0; i < tracks.GetSize(); i++)
@@ -1377,10 +1450,20 @@ void InsertFromTrackName(COMMAND_T*)
 		MediaTrack* tr = (MediaTrack*)tracks.Get(i);
 		GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
 		SetLTT();
-		char* cFilename = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-		if (cFilename && *cFilename && FileExists(cFilename))
-			InsertMedia(cFilename, 0);
-		SetEditCurPos(dCurPos, false, false);
+		WDL_String cFilename;
+		cFilename.Set((char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL));
+		if (cFilename.GetLength())
+		{
+			if (FileExists(cFilename.Get()))
+				InsertMedia(cFilename.Get(), 0);
+			else
+			{
+				cFilename.Insert(cPath, 0);
+				if (FileExists(cFilename.Get()))
+					InsertMedia(cFilename.Get(), 0);
+			}
+			SetEditCurPos(dCurPos, false, false);
+		}
 	}
 	// Restore selected
 	for (int i = 0; i < tracks.GetSize(); i++)
@@ -1661,6 +1744,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle master track select" },							  "SWS_TOGSELMASTER",   TogSelMaster,     NULL, },
 	{ { DEFACCEL, "SWS: Toggle move cursor to end of recorded media on stop" },   "SWS_TOGRECMOVECUR",  TogOnRecStopMoveCursor, NULL, 0, IsOnRecStopMoveCursor },
 //TODO	{ { DEFACCEL, "SWS: Switch grid spacing" },                                   "SWS_GRIDSPACING",    SwitchGridSpacing, NULL },
+	{ { DEFACCEL, "SWS: Loop section of selected item(s)" },					  "SWS_LOOPITEMSECTION", LoopItemSection, NULL, },
+	{ { DEFACCEL, "SWS: Toggle default fade time to zero" },					  "SWS_TOGDEFFADEZERO", TogDefFadeZero, NULL, 0, IsDefFadeOverriden },
 
 	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 1" },       "SWS_SAVESELITEMS1",  SaveSelTrackSelItems,	NULL, 0 },
 	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 2" },       "SWS_SAVESELITEMS2",  SaveSelTrackSelItems,	NULL, 1 },
@@ -1763,6 +1848,11 @@ int FreezeInit()
 			AddToMenu(hTrackMenu, g_commandTable[i].menuText, g_commandTable[i].accel.accel.cmd);*/
 
 	g_prevautoxfade = *(int*)GetConfigVar("autoxfade");
+	char str[64];
+	char strDef[64];
+	sprintf(strDef, "%.8f", *(double*)GetConfigVar("deffadelen"));
+	GetPrivateProfileString(SWS_INI, SAVED_DEF_FADE_LEN_KEY, strDef, str, 64, get_ini_file());
+	g_dDefFadeLen = atof(str);
 
 	return 1;
 }

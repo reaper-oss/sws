@@ -30,4 +30,6 @@
 
 extern COMMAND_T g_projMgrCmdTable[];
 
+void UpdateOpenProjectTabActions();
 int ProjectMgrInit();
+

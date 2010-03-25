@@ -265,9 +265,36 @@ void LastProjectTab(COMMAND_T*)
 	SelectProjectInstance(Enum_Projects(iNumProjects-1, NULL, 0));
 }
 
-void FirstProjectTab(COMMAND_T*)
+void OpenProjectTab(COMMAND_T* ctx)
 {
-	SelectProjectInstance(Enum_Projects(0, NULL, 0));
+	ReaProject* proj = Enum_Projects(ctx->user, NULL, 0);
+	if (proj)
+		SelectProjectInstance(proj);
+}
+
+void UpdateOpenProjectTabActions()
+{
+	// Add more actions for project tabs if > 10
+	static int iActions = 10;
+	int iProjs = iActions-1;
+	while (Enum_Projects(++iProjs, NULL, 0));
+	if (iProjs > iActions)
+		for (; iActions < iProjs; iActions++)
+		{
+			COMMAND_T* cmd = new COMMAND_T;
+			memset(&cmd->accel.accel, 0, sizeof(cmd->accel.accel));
+			const char* desc = "SWS: Switch to project tab %d";
+			cmd->accel.desc = new char[strlen(desc) + 2];
+			sprintf((char*)cmd->accel.desc, desc, iActions+1);
+			const char* id = "SWS_PROJTAB%d";
+			cmd->id = new char[strlen(id) + 2];
+			sprintf(cmd->id, id, iActions+1);
+			cmd->doCommand = OpenProjectTab;
+			cmd->menuText = NULL;
+			cmd->user = iActions;
+			cmd->getEnabled = NULL;
+			SWSRegisterCommand(cmd);
+		}
 }
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
@@ -310,7 +337,17 @@ COMMAND_T g_projMgrCmdTable[] =
 	{ { DEFACCEL, "SWS: Open related project 1" },		"SWS_OPENRELATED1",		OpenRelatedProject,		"(related projects list)", 0 },
 
 	{ { DEFACCEL, "SWS: Switch to last project tab" },	"SWS_LASTPROJTAB",		LastProjectTab,			NULL, },
-	{ { DEFACCEL, "SWS: Switch to first project tab" },	"SWS_FIRSTPROJTAB",		FirstProjectTab,		NULL, },
+	{ { DEFACCEL, "SWS: Switch to project tab 1" },		"SWS_FIRSTPROJTAB",		OpenProjectTab,			NULL, 0 },
+	{ { DEFACCEL, "SWS: Switch to project tab 2" },		"SWS_PROJTAB2",			OpenProjectTab,			NULL, 1 },
+	{ { DEFACCEL, "SWS: Switch to project tab 3" },		"SWS_PROJTAB3",			OpenProjectTab,			NULL, 2 },
+	{ { DEFACCEL, "SWS: Switch to project tab 4" },		"SWS_PROJTAB4",			OpenProjectTab,			NULL, 3 },
+	{ { DEFACCEL, "SWS: Switch to project tab 5" },		"SWS_PROJTAB5",			OpenProjectTab,			NULL, 4 },
+	{ { DEFACCEL, "SWS: Switch to project tab 6" },		"SWS_PROJTAB6",			OpenProjectTab,			NULL, 5 },
+	{ { DEFACCEL, "SWS: Switch to project tab 7" },		"SWS_PROJTAB7",			OpenProjectTab,			NULL, 6 },
+	{ { DEFACCEL, "SWS: Switch to project tab 8" },		"SWS_PROJTAB8",			OpenProjectTab,			NULL, 7 },
+	{ { DEFACCEL, "SWS: Switch to project tab 9" },		"SWS_PROJTAB9",			OpenProjectTab,			NULL, 8 },
+	{ { DEFACCEL, "SWS: Switch to project tab 10" },	"SWS_PROJTAB10",		OpenProjectTab,			NULL, 9 },
+
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 

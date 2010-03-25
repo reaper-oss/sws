@@ -367,6 +367,7 @@ extern "C"
 		IMPAPI(FreeHeapPtr);
 		IMPAPI(GetColorThemeStruct);
 		IMPAPI(GetContextMenu);
+		//IMPAPI(GetCursorContext);  TODO needs reaper 3.4, update compat message when uncommenting
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetExePath);
 		IMPAPI(GetHZoomLevel);
@@ -460,6 +461,7 @@ extern "C"
 		IMPAPI(Undo_EndBlock);
 		IMPAPI(Undo_OnStateChange);
 		IMPAPI(Undo_OnStateChangeEx);
+		IMPAPI(UpdateItemInProject);
 		IMPAPI(UpdateTimeline);
 
 		g_hInst = hInstance;

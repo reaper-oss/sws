@@ -31,6 +31,7 @@
 #ifdef _WIN32
 #include "DragDrop.h"
 #endif
+#include "../../WDL/projectcontext.h"
 
 #define DELETE_MSG		0x10004
 	
@@ -70,7 +71,7 @@ SWS_MediaPoolFile::~SWS_MediaPoolFile()
 
 char* SWS_MediaPoolFile::GetString(char* str, int iStrMax)
 {
-	_snprintf(str, iStrMax, "  \"%s\" %d %d\n", m_cFilename, m_id, m_bAction ? 1 : 0);
+	_snprintf(str, iStrMax, "\"%s\" %d %d", m_cFilename, m_id, m_bAction ? 1 : 0);
 	return str;
 }
 
@@ -511,11 +512,11 @@ SWS_MediaPoolWnd::SWS_MediaPoolWnd()
 	if (pC)
 	{
 		strcpy(pC+1, "sws_mediapool.txt");
-		FILE* f = fopen(cBuf, "r");
-		if (f)
+		ProjectStateContext* mediaPool = ProjectCreateFileRead(cBuf);
+		if (mediaPool)
 		{
 			int iGroup = -1;
-			while (fgets(cBuf, 512, f))
+			while(!mediaPool->GetLine(cBuf, 512))
 			{
 				LineParser lp(false);
 				if (!lp.parse(cBuf) && lp.getnumtokens())
@@ -531,7 +532,7 @@ SWS_MediaPoolWnd::SWS_MediaPoolWnd()
 					}
 				}
 			}
-			fclose(f);
+			delete mediaPool;
 		}
 	}
 
@@ -751,7 +752,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		{
 			if (strcmp(lp.gettoken_str(0), "<GROUP") == 0)
 				pGroups->Add(new SWS_MediaPoolGroup(lp.gettoken_str(1), false));
-			else if (lp.gettoken_str(0)[0] != '>')
+			else if (lp.gettoken_str(0)[0] == '>')
 				break;
 			else
 				pGroups->Get(pGroups->GetSize()-1)->AddFile(lp.gettoken_str(0), lp.gettoken_int(1), lp.gettoken_int(2) ? true : false);
@@ -831,20 +832,19 @@ void MediaPoolExit()
 	if (pC)
 	{
 		strcpy(pC+1, "sws_mediapool.txt");
-		FILE* f = fopen(cBuf, "w");
-		if (f)
+		ProjectStateContext* mediaPool = ProjectCreateFileWrite(cBuf);
+		if (mediaPool)
 		{
 			char cLine[512];
 			WDL_PtrList<SWS_MediaPoolGroup>* pGroups = &g_pMediaPoolWnd->m_globalGroups;
 			for (int i = 0; i < pGroups->GetSize(); i++)
 			{
-				sprintf(cLine, "<GROUP \"%s\"\n", pGroups->Get(i)->m_cGroupname);
-				fputs(cLine, f);
+				mediaPool->AddLine("<GROUP \"%s\"", pGroups->Get(i)->m_cGroupname);
 				for (int j = 0; j < pGroups->Get(i)->m_files.GetSize(); j++)
-					fputs(pGroups->Get(i)->m_files.Get(j)->GetString(cLine, 512), f);
-				fputs(">\n", f);
+					mediaPool->AddLine(pGroups->Get(i)->m_files.Get(j)->GetString(cLine, 512));
+				mediaPool->AddLine(">");
 			}
-			fclose(f);
+			delete mediaPool;
 		}
 	}
 

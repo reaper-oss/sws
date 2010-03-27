@@ -59,6 +59,15 @@
 
 #pragma warning(disable : 4996) // POSIX deprecation warnings
 #pragma warning(disable : 4267) // size_t to int warnings
+#include "../WDL/wdltypes.h"
+// Temporary fix for out-of-date WDL
+#ifndef WDL_FIXALIGN
+#ifdef _WIN32
+#define WDL_FIXALIGN 
+#else
+#define WDL_FIXALIGN  __attribute__ ((aligned (8)))
+#endif
+#endif
 #include "../WDL/ptrlist.h"
 #include "../WDL/wdlstring.h"
 #include "../WDL/heapbuf.h"

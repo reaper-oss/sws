@@ -389,15 +389,14 @@ void DoOpenRPPofBWAVdesc(COMMAND_T*)
 class section_source_data
 {
 public:
-  virtual void foo()=0;
-  double m_length;
-  double m_startpos;
-  double m_edgeoverlap_time;
-  PCM_source *m_srcs[2];
- 
-  void *m_itemptr, *m_takeptr;
-  int m_mode; // &1 = no-section, &2=reverse
- 
+	virtual void foo()=0;
+	double m_length WDL_FIXALIGN;
+	double m_startpos;
+	double m_edgeoverlap_time;
+	PCM_source *m_srcs[2];
+	void *m_itemptr;
+	void *m_takeptr;
+	int m_mode; // &1 = no-section, &2=reverse
 };
 
 void PerformSectionLoopNudge(int paramToNudge,double nudgeAmount)

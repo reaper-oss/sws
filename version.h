@@ -26,7 +26,5 @@
 / Auto build # increment code from MS Knowledge base article 237870
 ******************************************************************************/
 
-#define FILE_VERSION			1,6,2,8
-#define PRODUCT_VERSION			1,6,2,8
-#define FILE_VERSION_STR		"1, 6, 2, 8\0"
-#define PRODUCT_VERSION_STR		"1, 6, 2, 8\0"
+#define SWS_VERSION			1,6,2,9
+#define SWS_VERSION_STR		"1, 6, 2, 9\0"

@@ -35,7 +35,7 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	if (uMsg == WM_INITDIALOG)
 	{
 		char cVersion[256];
-		sprintf(cVersion, "Version %d.%d.%d Build #%d, built on %s", PRODUCT_VERSION, __DATE__);
+		sprintf(cVersion, "Version %d.%d.%d Build #%d, built on %s", SWS_VERSION, __DATE__);
 		SetWindowText(GetDlgItem(hwndDlg, IDC_VERSION), cVersion);
 #ifdef _WIN64
 		SetDlgItemText(hwndDlg, IDC_LATESTVER, "http://www.standingwaterstudios.com/reaper/sws_extension_x64.exe");

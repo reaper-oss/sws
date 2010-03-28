@@ -40,8 +40,8 @@
 #include "TrackList/TrackListFilter.h"
 #include "TrackList/Tracklist.h"
 #include "MediaPool/MediaPool.h"
-#include "ProjectMgr.h"
-#include "ProjectList.h"
+#include "Projects/ProjectMgr.h"
+#include "Projects/ProjectList.h"
 #include "SnM/SnM_Actions.h"
 
 // Globals
@@ -367,7 +367,7 @@ extern "C"
 		IMPAPI(FreeHeapPtr);
 		IMPAPI(GetColorThemeStruct);
 		IMPAPI(GetContextMenu);
-		//IMPAPI(GetCursorContext);  TODO needs reaper 3.4, update compat message when uncommenting
+		IMPAPI(GetCursorContext);
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetExePath);
 		IMPAPI(GetHZoomLevel);

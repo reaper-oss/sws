@@ -1470,6 +1470,46 @@ void InsertFromTrackName(COMMAND_T*)
 		GetSetMediaTrackInfo((MediaTrack*)tracks.Get(i), "I_SELECTED", &g_i1);
 }
 
+void SmartCopy(COMMAND_T*)
+{
+	double t1, t2;
+	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
+	if (GetCursorContext() == 1 && t1 != t2) // items & time sel
+		Main_OnCommand(40060, 0); // Copy sel area of items
+	else
+		Main_OnCommand(40057, 0); // Std copy
+}
+
+void SmartCut(COMMAND_T*)
+{
+	double t1, t2;
+	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
+	if (GetCursorContext() == 1 && t1 != t2) // items & time sel
+		Main_OnCommand(40307, 0); // Cut sel area of items
+	else
+		Main_OnCommand(40059, 0); // Std cut
+}
+
+void SmartRemove(COMMAND_T*)
+{
+	double t1, t2;
+	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
+	if (GetCursorContext() == 1 && t1 != t2) // items & time sel
+		Main_OnCommand(40312, 0); // Remove sel area of items
+	else
+		Main_OnCommand(40697, 0); // Std remove (w/ prompt)
+}
+
+void SmartSplit(COMMAND_T*)
+{
+	double t1, t2;
+	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
+	if (t1 != t2) // time sel
+		Main_OnCommand(40061, 0); // Split at time sel
+	else
+		Main_OnCommand(40012, 0); // Std split at cursor
+}
+
 void SelectTrack(COMMAND_T* ct)
 {
 	ClearSelected();
@@ -1794,6 +1834,11 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Delete track(s) with children (prompt)" },		 		  "SWS_DELTRACKCHLD",   DelTracksChild,   NULL, },
 	{ { DEFACCEL, "SWS: Name selected track(s) like first sel item" },		      "SWS_NAMETKLIKEITEM", NameTrackLikeItem, NULL, },
 	{ { DEFACCEL, "SWS: Insert file matching selected track(s) name" },           "SWS_INSERTFROMTN",   InsertFromTrackName, NULL },
+
+	{ { DEFACCEL, "SWS: Copy items/tracks/env, obeying time sel" },				  "SWS_SMARTCOPY",      SmartCopy, NULL, },
+	{ { DEFACCEL, "SWS: Cut items/tracks/env, obeying time sel" },				  "SWS_SMARTCUT",       SmartCut, NULL, },
+	{ { DEFACCEL, "SWS: Remove items/tracks/env, obeying time sel" },			  "SWS_SMARTREMOVE",    SmartRemove, NULL, },
+	{ { DEFACCEL, "SWS: Split items at time sel (if exists), else at cursor" },   "SWS_SMARTSPLIT",     SmartSplit, NULL, },
 
 	{ { DEFACCEL, "SWS: Select only track 1" },							 		 "SWS_SEL1",		   SelectTrack,		 NULL, 1 },
 	{ { DEFACCEL, "SWS: Select only track 2" },							 		 "SWS_SEL2",		   SelectTrack,		 NULL, 2 },

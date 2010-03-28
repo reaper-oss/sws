@@ -455,11 +455,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ProjectList.cpp"
+				RelativePath=".\Projects\ProjectList.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\ProjectMgr.cpp"
+				RelativePath=".\Projects\ProjectMgr.cpp"
 				>
 			</File>
 			<File
@@ -673,11 +673,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ProjectList.h"
+				RelativePath=".\Projects\ProjectList.h"
 				>
 			</File>
 			<File
-				RelativePath=".\ProjectMgr.h"
+				RelativePath=".\Projects\ProjectMgr.h"
 				>
 			</File>
 			<File

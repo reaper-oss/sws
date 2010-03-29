@@ -1,7 +1,7 @@
 /******************************************************************************
 / padreMidiItemProcBase.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague, P. Bourdon
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÃˆdague, P. Bourdon
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -167,7 +167,7 @@ bool MidiItemProcessor::getMidiEventsList(MediaItem_Take* take, MIDI_eventlist* 
 	transferBlock.absolute_time_s				= 0.0;
 	transferBlock.force_bpm						= 0.0;
 
-	int res = source->Extended(PCM_SOURCE_EXT_GETRAWMIDIEVENTS, &transferBlock, NULL, NULL);
+	source->Extended(PCM_SOURCE_EXT_GETRAWMIDIEVENTS, &transferBlock, NULL, NULL);
 	//source->GetSamples(&transferBlock);
 
 	return true;
@@ -212,7 +212,6 @@ MidiItemProcessor::MidiItemType MidiItemProcessor::getMidiItemType(MediaItem* it
 	bool bIsFile = false;
 	int tmpi[4];
 	double tmpd[4];
-	double dIgnTempoBpm = 0.0;
 
 	char* token = strtok(state, "\n");
 	while(token != NULL)
@@ -292,7 +291,7 @@ void MidiItemProcessor::getSelectedMidiNotes(MediaItem* item, MIDI_eventlist* ev
 			iCurrentTick += tmpi[0];
 			int status = tmpi[1];
 			int midiData1 = tmpi[2];
-			int midiData2 = tmpi[3];
+			//int midiData2 = tmpi[3];
 
 //			ShowConsoleMsgEx("Token = %s\n", token);
 			double dCurrentQuarterNote = (double)iCurrentTick/(double)iTicksPerQuarterNote;
@@ -420,14 +419,14 @@ void MidiItemProcessor::processSelectedMidiTakes(bool bActiveOnly)
 			case MIDI_ITEM_IGNTEMPO :
 			{
 				HWND hMainHwnd = GetMainHwnd();
-				MessageBox(hMainHwnd, "Cannot process items with 'ignore project tempo information' option", "Midi Processor error", MB_OK|MB_ICONERROR);
+				MessageBox(hMainHwnd, "Cannot process items with 'ignore project tempo information' option", "Midi Processor error", MB_OK);
 				continue;
 			}
 			break;
 			case MIDI_ITEM_FILE :
 			{
 				HWND hMainHwnd = GetMainHwnd();
-				MessageBox(hMainHwnd, "Cannot process external MIDI files", "Midi Processor error", MB_OK|MB_ICONERROR);
+				MessageBox(hMainHwnd, "Cannot process external MIDI files", "Midi Processor error", MB_OK);
 				continue;
 			}
 			break;

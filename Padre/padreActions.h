@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include "resource.h"
+#include "../resource.h"
 #include "padreEnvelopeProcessor.h"
 
 //! \todo Change 'Padre' module name/file prefix + merge into other files after Tim has taken a look ("LfoGenerator" module?)
@@ -43,6 +43,7 @@
 #define PADRE_FORMATED_INI_FILE "%s\\Plugins\\PADRE.ini"
 
 int PadreInit();
+void PadreExit();
 
 WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 void EnvelopeLfo(COMMAND_T* _ct);

@@ -444,7 +444,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	char* cNewState = new char[newState.size()];
 	strcpy(cNewState, newState.c_str());
 
-	if(!GetSetEnvelopeState(envelope, cNewState, newState.size()))
+	if(!GetSetEnvelopeState(envelope, cNewState, (int)newState.size()))
 		return eERRORCODE_UNKNOWN;
 
 //! \bug I can't/don't have to delete cNewState ???

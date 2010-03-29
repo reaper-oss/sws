@@ -321,6 +321,7 @@ extern "C"
 			MediaPoolExit();
 			AutoColorExit();
 			ProjectListExit();
+			PadreExit();
 			ERR_RETURN("Exiting Reaper.\n")
 		}
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)

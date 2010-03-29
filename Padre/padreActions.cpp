@@ -1,7 +1,7 @@
 /******************************************************************************
 / padreActions.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague, P. Bourdon
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÃˆdague, P. Bourdon
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,7 +30,6 @@
 
 static COMMAND_T g_commandTable[] = 
 {
-	// Sends, receives & cue bus ----------------------------------------------
 	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Track Envelope (in Time Selection)" }, "PADRE_TRACKENVLFO", EnvelopeLfo, NULL, 0},
 	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Active Takes (Audio)" }, "PADRE_TAKEENVLFO", EnvelopeLfo, NULL, 1},
 	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Active Takes (MIDI)" }, "PADRE_MIDILFO", EnvelopeLfo, NULL, 2},
@@ -42,10 +41,6 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -2048 samples" }, "PADRE_SHRINK_2048", ShrinkSelItems, NULL, 2048},
 
 	{ { DEFACCEL, "SWS/PADRE: Randomize MIDI Note Positions" }, "PADRE_RANDMIDINOTEPOS", RandomizeMidiNotePos, NULL, },
-
-	// Windows ----------------------------------------------------------------
-#ifdef _WIN32
-#endif
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
@@ -59,6 +54,11 @@ int PadreInit()
 //midiNoteRandomizer->addFilter(new MidiFilterShortenEndEvents());
 
 	return SWSRegisterCommands(g_commandTable);
+}
+
+void PadreExit()
+{
+	delete midiNoteRandomizer;
 }
 
 WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -212,16 +212,16 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 					switch(res)
 					{
 						case EnvelopeProcessor::eERRORCODE_NOENVELOPE:
-							MessageBox(hwnd, "No envelope selected!", "Error", MB_ICONERROR | MB_OK);
+							MessageBox(hwnd, "No envelope selected!", "Error", MB_OK);
 						break;
 						case EnvelopeProcessor::eERRORCODE_NULLTIMESELECTION:
-							MessageBox(hwnd, "No time selection!", "Error", MB_ICONERROR | MB_OK);
+							MessageBox(hwnd, "No time selection!", "Error", MB_OK);
 						break;
 						case EnvelopeProcessor::eERRORCODE_NOOBJSTATE:
-							MessageBox(hwnd, "Could not retrieve envelope object state!", "Error", MB_ICONERROR | MB_OK);
+							MessageBox(hwnd, "Could not retrieve envelope object state!", "Error", MB_OK);
 						break;
 						case EnvelopeProcessor::eERRORCODE_UNKNOWN:
-							MessageBox(hwnd, "Could not generate envelope! (Unknown Error)", "Error", MB_ICONERROR | MB_OK);
+							MessageBox(hwnd, "Could not generate envelope! (Unknown Error)", "Error", MB_OK);
 						break;
 						default:
 						break;

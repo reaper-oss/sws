@@ -48,8 +48,9 @@
 #define IDD_TOGSELRAND                  143
 #define IDD_RENAMEDLG666                144
 #define IDD_GENERICQUERY1               145
-#define IDD_MARKERLIST1                 146
 #define IDD_PROJLIST                    146
+#define IDD_PADRELFO_GENERATOR	        147
+
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -196,25 +197,23 @@
 #define IDC_TEXT                        1141
 #define IDC_ENABLED                     1142
 #define IDC_COLOR                       1147
-
-#define IDD_PADRELFO_GENERATOR	         150
-#define IDC_PADRELFO_SYNCFREQUENCY      1151
-#define IDC_PADRELFO_FREQUENCY          1152
-#define IDC_PADRELFO_DELAY              1153
-#define IDC_PADRELFO_SYNCDELAY          1154
-#define IDC_PADRELFO_STRENGTH           1155
-#define IDC_PADRELFO_OFFSET             1156
-#define IDC_PADRELFO_LFOSHAPE           1157
-#define IDC_PADRELFO_TAKEENV            1158
-#define IDC_PADRELFO_MIDICC             1159
+#define IDC_PADRELFO_SYNCFREQUENCY      1148
+#define IDC_PADRELFO_FREQUENCY          1149
+#define IDC_PADRELFO_DELAY              1150
+#define IDC_PADRELFO_SYNCDELAY          1151
+#define IDC_PADRELFO_STRENGTH           1152
+#define IDC_PADRELFO_OFFSET             1153
+#define IDC_PADRELFO_LFOSHAPE           1154
+#define IDC_PADRELFO_TAKEENV            1155
+#define IDC_PADRELFO_MIDICC             1156
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        146
+#define _APS_NEXT_RESOURCE_VALUE        148
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1148
+#define _APS_NEXT_CONTROL_VALUE         1157
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

@@ -1470,11 +1470,28 @@ void InsertFromTrackName(COMMAND_T*)
 		GetSetMediaTrackInfo((MediaTrack*)tracks.Get(i), "I_SELECTED", &g_i1);
 }
 
-void SmartCopy(COMMAND_T*)
+bool SelItemsInTimeSel()
 {
 	double t1, t2;
 	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
-	if (GetCursorContext() == 1 && t1 != t2) // items & time sel
+	if (t1 != t2)
+	{
+		// see if sel items are in the time selection
+		for (int i = 0; i < CountSelectedMediaItems(0); i++)
+		{
+			MediaItem* item = GetSelectedMediaItem(0, i);
+			double dItemPos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+			double dItemLen = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
+			if ((dItemPos >= t1 && dItemPos < t2) || (dItemPos < t1 && dItemLen > t1 - dItemPos))
+				return true;
+		}
+	}
+	return false;
+}
+
+void SmartCopy(COMMAND_T*)
+{
+	if (GetCursorContext() == 1 && SelItemsInTimeSel())
 		Main_OnCommand(40060, 0); // Copy sel area of items
 	else
 		Main_OnCommand(40057, 0); // Std copy
@@ -1482,9 +1499,7 @@ void SmartCopy(COMMAND_T*)
 
 void SmartCut(COMMAND_T*)
 {
-	double t1, t2;
-	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
-	if (GetCursorContext() == 1 && t1 != t2) // items & time sel
+	if (GetCursorContext() == 1 && SelItemsInTimeSel())
 		Main_OnCommand(40307, 0); // Cut sel area of items
 	else
 		Main_OnCommand(40059, 0); // Std cut
@@ -1492,9 +1507,7 @@ void SmartCut(COMMAND_T*)
 
 void SmartRemove(COMMAND_T*)
 {
-	double t1, t2;
-	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
-	if (GetCursorContext() == 1 && t1 != t2) // items & time sel
+	if (GetCursorContext() == 1 && SelItemsInTimeSel())
 		Main_OnCommand(40312, 0); // Remove sel area of items
 	else
 		Main_OnCommand(40697, 0); // Std remove (w/ prompt)
@@ -1504,10 +1517,33 @@ void SmartSplit(COMMAND_T*)
 {
 	double t1, t2;
 	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
-	if (t1 != t2) // time sel
+	if (SelItemsInTimeSel() || (t1 != t2 && !CountSelectedMediaItems(0)))
 		Main_OnCommand(40061, 0); // Split at time sel
 	else
 		Main_OnCommand(40012, 0); // Std split at cursor
+}
+
+void SmartUnsel(COMMAND_T*)
+{
+	switch(GetCursorContext())
+	{
+	case 0: //Tracks
+		Main_OnCommand(40297, 0);
+		break;
+	case 1: //Items
+		Main_OnCommand(40289, 0);
+		break;
+	case 2: //Envelopes
+		Main_OnCommand(40331, 0);
+		break;
+	}
+}
+
+void UnselAll(COMMAND_T*)
+{
+	Main_OnCommand(40297, 0);
+	Main_OnCommand(40289, 0);
+	Main_OnCommand(40331, 0);
 }
 
 void SelectTrack(COMMAND_T* ct)
@@ -1839,6 +1875,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Cut items/tracks/env, obeying time sel" },				  "SWS_SMARTCUT",       SmartCut, NULL, },
 	{ { DEFACCEL, "SWS: Remove items/tracks/env, obeying time sel" },			  "SWS_SMARTREMOVE",    SmartRemove, NULL, },
 	{ { DEFACCEL, "SWS: Split items at time sel (if exists), else at cursor" },   "SWS_SMARTSPLIT",     SmartSplit, NULL, },
+	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points (depending on focus)" }, "SWS_SMARTUNSEL",  SmartUnsel, NULL, },
+	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points" },				  "SWS_UNSELALL",		UnselAll, NULL, },
 
 	{ { DEFACCEL, "SWS: Select only track 1" },							 		 "SWS_SEL1",		   SelectTrack,		 NULL, 1 },
 	{ { DEFACCEL, "SWS: Select only track 2" },							 		 "SWS_SEL2",		   SelectTrack,		 NULL, 2 },

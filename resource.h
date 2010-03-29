@@ -197,6 +197,17 @@
 #define IDC_ENABLED                     1142
 #define IDC_COLOR                       1147
 
+#define IDD_PADRELFO_GENERATOR	         150
+#define IDC_PADRELFO_SYNCFREQUENCY      1151
+#define IDC_PADRELFO_FREQUENCY          1152
+#define IDC_PADRELFO_DELAY              1153
+#define IDC_PADRELFO_SYNCDELAY          1154
+#define IDC_PADRELFO_STRENGTH           1155
+#define IDC_PADRELFO_OFFSET             1156
+#define IDC_PADRELFO_LFOSHAPE           1157
+#define IDC_PADRELFO_TAKEENV            1158
+#define IDC_PADRELFO_MIDICC             1159
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

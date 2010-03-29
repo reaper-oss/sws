@@ -43,6 +43,7 @@
 #include "Projects/ProjectMgr.h"
 #include "Projects/ProjectList.h"
 #include "SnM/SnM_Actions.h"
+#include "Padre/padreActions.h"
 
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
@@ -365,10 +366,12 @@ extern "C"
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);
 		IMPAPI(FreeHeapPtr);
+		IMPAPI(GetActiveTake)
 		IMPAPI(GetColorThemeStruct);
 		IMPAPI(GetContextMenu);
 		IMPAPI(GetCursorContext);
 		IMPAPI(GetCursorPosition);
+		IMPAPI(GetCursorPositionEx);
 		IMPAPI(GetExePath);
 		IMPAPI(GetHZoomLevel);
 		IMPAPI(GetInputChannelName);
@@ -376,6 +379,9 @@ extern "C"
 		IMPAPI(GetMainHwnd);
 		IMPAPI(GetMediaItemNumTakes);
 		IMPAPI(GetMediaItemTake);
+		IMPAPI(GetMediaItemTake_Item);
+		IMPAPI(GetMediaItemTake_Source);
+		IMPAPI(GetMediaItemTake_Track);
 		IMPAPI(GetNumTracks);
 		IMPAPI(GetOutputChannelName);
 		IMPAPI(GetPeaksBitmap);
@@ -383,18 +389,22 @@ extern "C"
 		IMPAPI(GetPlayPosition2);
 		IMPAPI(GetPlayState);
 		IMPAPI(GetProjectPath);
+		IMPAPI(GetProjectTimeSignature2);
 		IMPAPI(GetSelectedMediaItem);
 		IMPAPI(GetSelectedTrack);
 		IMPAPI(GetSelectedTrackEnvelope);
+		IMPAPI(GetSet_ArrangeView2);
 		IMPAPI(GetSetEnvelopeState);
 		IMPAPI(GetSetMediaItemInfo);
 		IMPAPI(GetSetMediaItemTakeInfo);
 		IMPAPI(GetSetMediaTrackInfo);
 		IMPAPI(GetSetObjectState);
 		IMPAPI(GetSetRepeat);
+		IMPAPI(GetTakeEnvelopeByName);
 		IMPAPI(GetSetTrackSendInfo);
 		IMPAPI(GetSetTrackState);
 		IMPAPI(GetSet_LoopTimeRange);
+		IMPAPI(GetTake);
 		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);
 		IMPAPI(GetTrackInfo);
@@ -419,9 +429,12 @@ extern "C"
 		IMPAPI(Main_OnCommand);
 		IMPAPI(Main_OnCommandEx);
 		IMPAPI(Main_openProject);
+		IMPAPI(MIDI_eventlist_Create);
+		IMPAPI(MIDI_eventlist_Destroy);
 		IMPAPI(mkpanstr);
 		IMPAPI(mkvolpanstr);
 		IMPAPI(mkvolstr);
+		IMPAPI(MoveEditCursor);
 		IMPAPI(MoveMediaItemToTrack);
 		IMPAPI(NamedCommandLookup);
 		IMPAPI(parse_timestr_pos);
@@ -441,6 +454,7 @@ extern "C"
 		IMPAPI(ShowConsoleMsg);
 		IMPAPI(SelectProjectInstance);
 		IMPAPI(SetEditCurPos);
+		IMPAPI(SetEditCurPos2);
 		IMPAPI(SetProjectMarker);
 		IMPAPI(SetTrackSelected);
 		IMPAPI(SplitMediaItem);
@@ -450,6 +464,7 @@ extern "C"
 		IMPAPI(TimeMap_GetDividedBpmAtTime);
 		IMPAPI(TimeMap_QNToTime);
 		IMPAPI(TimeMap_timeToQN);
+		IMPAPI(TimeMap2_QNToTime);
 		IMPAPI(TrackFX_GetCount);
 		IMPAPI(TrackFX_GetFXName);
 		IMPAPI(TrackFX_GetNumParams);
@@ -458,8 +473,12 @@ extern "C"
 		IMPAPI(TrackFX_SetParam);
 		IMPAPI(TrackList_AdjustWindows);
 		IMPAPI(Undo_BeginBlock);
+		IMPAPI(Undo_BeginBlock2);
 		IMPAPI(Undo_EndBlock);
+		IMPAPI(Undo_EndBlock2);
 		IMPAPI(Undo_OnStateChange);
+		IMPAPI(Undo_OnStateChange_Item);
+		IMPAPI(Undo_OnStateChange2);
 		IMPAPI(Undo_OnStateChangeEx);
 		IMPAPI(UpdateItemInProject);
 		IMPAPI(UpdateTimeline);
@@ -514,6 +533,8 @@ extern "C"
 			ERR_RETURN("SnM init error\n")
 		if (!AboutBoxInit())
 			ERR_RETURN("About box init error\n")
+		if (!PadreInit())
+			ERR_RETURN("Padre init error\n")
 
 		SWSTimeSlice* ts = new SWSTimeSlice();
 		if (!rec->Register("csurf_inst", ts))

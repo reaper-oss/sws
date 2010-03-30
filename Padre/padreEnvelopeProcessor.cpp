@@ -280,13 +280,6 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* 
 	if (dTimeSelStartPosition==dTimeSelEndPosition)
 		return eERRORCODE_NULLTIMESELECTION;
 
-//! \note Reaper action "remove envelope points in time selection" won't remove last point at timesel end (not necessary a bug)
-Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_RIGHTEDGE_RIGHT, 0, 0);
-Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_LEFTEDGE_LEFT, 0, 0);
-Main_OnCommandEx(ID_ENVELOPE_DELETE_ALL_POINTS_TIMESEL, 0, 0);
-Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_RIGHTEDGE_LEFT, 0, 0);
-Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_LEFTEDGE_RIGHT, 0, 0);
-
 	char* envState = GetSetObjectState(envelope, "");
 	if(!envState)
 		return eERRORCODE_NOOBJSTATE;
@@ -350,6 +343,7 @@ Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_LEFTEDGE_RIGHT, 0, 0);
 	if(GetSetObjectState(envelope, newState.c_str()))
 		return eERRORCODE_UNKNOWN;
 
+	Undo_OnStateChangeEx("Generate Track LFO", UNDO_STATE_ALL, -1);
 	return eERRORCODE_OK;
 }
 
@@ -373,8 +367,24 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackEnvLfo()
 {
 	double dFreq, dDelay;
 	getFreqDelay(_parameters, dFreq, dDelay);
+
+	Undo_BeginBlock2(0);
+
+	Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_LEFTEDGE_LEFT, 0, 0);
+	Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_RIGHTEDGE_RIGHT, 0, 0);
+	Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
+	Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+	Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
+	Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+	Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_LEFTEDGE_RIGHT, 0, 0);
+	Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_RIGHTEDGE_LEFT, 0, 0);
+	Main_OnCommandEx(ID_ENVELOPE_DELETE_ALL_POINTS_TIMESEL, 0, 0);
+
 	TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
-	return generateTrackLfo(envelope, dFreq, _parameters.strength, _parameters.offset, dDelay, _parameters.waveShape, _parameters.precision);
+	ErrorCode res = generateTrackLfo(envelope, dFreq, _parameters.strength, _parameters.offset, dDelay, _parameters.waveShape, _parameters.precision);
+
+	Undo_EndBlock2(0, "Track Envelope LFO", 0);
+	return res;
 }
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* take, TakeEnvType tEnvType, double dFreq, double dStrength, double dOffset, double dDelay, WaveShape tWaveShape, double dPrecision)

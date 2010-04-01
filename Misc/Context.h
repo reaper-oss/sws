@@ -1,7 +1,7 @@
 /******************************************************************************
-/ MarkerList.h
+/ Context.h
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,50 +25,7 @@
 /
 ******************************************************************************/
 
-
 #pragma once
 
-class SWS_MarkerListView : public SWS_ListView
-{
-public:
-	SWS_MarkerListView(HWND hwndList, HWND hwndEdit);
+int ContextInit();
 
-protected:
-	void SetItemText(LPARAM item, int iCol, const char* str);
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void OnItemSelChanged(LPARAM item, int iState);
-	void OnItemDblClk(LPARAM item, int iCol);
-	int  OnItemSort(LPARAM item1, LPARAM item2);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	int  GetItemState(LPARAM item);
-};
-
-class SWS_MarkerListWnd : public SWS_DockWnd
-{
-public:
-	SWS_MarkerListWnd();
-	void Update();
-	double m_dCurPos;
-	
-protected:
-	void OnInitDlg();
-	void OnCommand(WPARAM wParam, LPARAM lParam);
-	HMENU OnContextMenu(int x, int y);
-	void OnDestroy();
-	void OnTimer();
-	int OnKey(MSG* msg, int iKeyState);
-};
-
-#define EXPORT_FORMAT_KEY "MarkerExport Format"
-#define EXPORT_FORMAT_DEFAULT "an - d (l)"
-
-int MarkerListInit();
-void MarkerListExit();
-extern MarkerList* g_curList;
-extern SWS_MarkerListWnd* g_pMarkerList;
-
-// Functions to show dialog boxes
-void SaveMarkerList(COMMAND_T* = NULL);
-void DeleteMarkerList(COMMAND_T* = NULL);
-void ExportFormat(COMMAND_T* = NULL);
-void OpenMarkerList(COMMAND_T* = NULL);

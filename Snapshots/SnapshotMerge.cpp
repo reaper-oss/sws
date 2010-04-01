@@ -29,7 +29,7 @@
 #include "stdafx.h"
 #include "SnapshotClass.h"
 #include "SnapshotMerge.h"
-#include "../Prompt.h"
+#include "../Misc/Prompt.h"
 
 #define MERGE_STATE_KEY		"MergeState"
 #define MERGEWND_POS_KEY	"MergeWndPos"

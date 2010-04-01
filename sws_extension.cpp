@@ -32,7 +32,8 @@
 #include "MarkerActions/MarkerActions.h"
 #include "Snapshots/SnapshotClass.h"
 #include "Snapshots/Snapshots.h"
-#include "Zoom.h"
+#include "Misc/Zoom.h"
+#include "Misc/Misc.h"
 #include "Color/Color.h"
 #include "Color/Autocolor.h"
 #include "MarkerList/MarkerListClass.h"
@@ -252,7 +253,7 @@ public:
 		{
 			m_bChanged = false;
 			ScheduleTracklistUpdate();
-			pMarkerList->Update();
+			g_pMarkerList->Update();
 			UpdateSnapshotsDialog();
 			MediaPoolUpdate();
 			ProjectListUpdate();
@@ -522,8 +523,8 @@ extern "C"
 			ERR_RETURN("Tracklist init error\n")
 		if (!MediaPoolInit())
 			ERR_RETURN("Mediapool init error\n")
-		if (!ZoomInit())
-			ERR_RETURN("Zoom init error\n")
+		if (!MiscInit())
+			ERR_RETURN("Misc init error\n")
 		if (!ProjectListInit())
 			ERR_RETURN("Project List init error\n")
 		if (!ProjectMgrInit())

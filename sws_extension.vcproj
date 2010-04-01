@@ -415,11 +415,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Misc\Context.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\MediaPool\DragDrop.cpp"
 				>
 			</File>
 			<File
+				RelativePath=".\Misc\FolderActions.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Freeze\Freeze.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\ItemParams.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\ItemSel.cpp"
 				>
 			</File>
 			<File
@@ -447,6 +463,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Misc\Misc.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Freeze\MuteState.cpp"
 				>
 			</File>
@@ -463,7 +483,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Prompt.cpp"
+				RelativePath=".\Misc\ProjPrefs.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\Prompt.cpp"
 				>
 			</File>
 			<File
@@ -595,11 +619,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Misc\TrackParams.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\TrackSel.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ObjectState\TrackSends.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Zoom.cpp"
+				RelativePath=".\Misc\Zoom.cpp"
 				>
 			</File>
 		</Filter>
@@ -625,7 +657,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Misc\Context.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MediaPool\DragDrop.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\FolderActions.h"
 				>
 			</File>
 			<File
@@ -634,6 +674,14 @@
 			</File>
 			<File
 				RelativePath=".\reaper\icontheme.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\ItemParams.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\ItemSel.h"
 				>
 			</File>
 			<File
@@ -665,6 +713,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Misc\Misc.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Freeze\MuteState.h"
 				>
 			</File>
@@ -681,7 +733,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Prompt.h"
+				RelativePath=".\Misc\ProjPrefs.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\Prompt.h"
 				>
 			</File>
 			<File
@@ -745,6 +801,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Misc\TrackParams.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\TrackSel.h"
+				>
+			</File>
+			<File
 				RelativePath=".\ObjectState\TrackSends.h"
 				>
 			</File>
@@ -753,7 +817,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Zoom.h"
+				RelativePath=".\Misc\Zoom.h"
 				>
 			</File>
 		</Filter>

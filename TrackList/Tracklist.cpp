@@ -27,7 +27,7 @@
 
 
 #include "stdafx.h"
-#include "../Freeze/Freeze.h"
+#include "../Misc/TrackSel.h"
 #include "../Snapshots/SnapshotClass.h"
 #include "../Snapshots/Snapshots.h"
 #include "TracklistFilter.h"

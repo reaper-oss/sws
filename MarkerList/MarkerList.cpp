@@ -39,7 +39,7 @@
 // Globals
 static SWSProjConfig<WDL_PtrList<MarkerList> > g_savedLists;
 MarkerList* g_curList = NULL;
-SWS_MarkerListWnd* pMarkerList = NULL;
+SWS_MarkerListWnd* g_pMarkerList = NULL;
 
 static SWS_LVColumn g_cols[] = { { 75, 0, "Time" }, { 45, 0, "Type" }, { 30, 0, "ID" }, { 170, 1, "Description" } };
 
@@ -79,6 +79,7 @@ void SWS_MarkerListView::OnItemSelChanged(LPARAM item, int iState)
 		if (mi->m_dPos != GetCursorPosition())
 		{
 			SetEditCurPos(mi->m_dPos, false, false);
+			g_pMarkerList->m_dCurPos = mi->m_dPos; // Save pos
 			Main_OnCommand(40151, 0); // View: go to cursor
 		}
 	}
@@ -147,7 +148,7 @@ int SWS_MarkerListView::GetItemState(LPARAM item)
 }
 
 SWS_MarkerListWnd::SWS_MarkerListWnd()
-:SWS_DockWnd(IDD_MARKERLIST, "Marker List", 30001)
+:SWS_DockWnd(IDD_MARKERLIST, "Marker List", 30001), m_dCurPos(DBL_MAX)
 {
 	if (m_bShowAfterInit)
 		Show(false, false);
@@ -164,10 +165,10 @@ void SWS_MarkerListWnd::Update()
 		bChanged = true;
 	}
 
-	static double dCurPos = DBL_MAX;
-	if (GetCursorPosition() != dCurPos)
+	double dCurPos = GetCursorPosition();
+	if (dCurPos != m_dCurPos)
 	{
-		dCurPos = GetCursorPosition();
+		m_dCurPos = dCurPos;
 		bChanged = true;
 	}
 
@@ -298,7 +299,7 @@ INT_PTR WINAPI doSaveDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			WDL_UTF8_HookComboBox(list);
 			for (int i = 0; i < g_savedLists.Get()->GetSize(); i++)
 				SendMessage(list, CB_ADDSTRING, 0, (LPARAM)g_savedLists.Get()->Get(i)->m_name);
-			RestoreWindowPos(hwndDlg, SAVEWINDOW_POS_KEY);
+			RestoreWindowPos(hwndDlg, SAVEWINDOW_POS_KEY, false);
 			return 0;
 		}
 		case WM_COMMAND:
@@ -345,7 +346,7 @@ INT_PTR WINAPI doLoadDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				SendMessage(list, CB_ADDSTRING, 0, (LPARAM)g_savedLists.Get()->Get(i)->m_name);
             SendMessage(list, CB_SETCURSEL, 0, 0);
 			SetWindowText(hwndDlg, "Load Marker Set");
-			RestoreWindowPos(hwndDlg, SAVEWINDOW_POS_KEY);
+			RestoreWindowPos(hwndDlg, SAVEWINDOW_POS_KEY, false);
 			return 0;
 		}
 		case WM_COMMAND:
@@ -381,7 +382,7 @@ static INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 				SendMessage(list, CB_ADDSTRING, 0, (LPARAM)g_savedLists.Get()->Get(i)->m_name);
             SendMessage(list, CB_SETCURSEL, 0, 0);
 			SetWindowText(hwndDlg, "Delete Marker Set");
-			RestoreWindowPos(hwndDlg, SAVEWINDOW_POS_KEY);
+			RestoreWindowPos(hwndDlg, SAVEWINDOW_POS_KEY, false);
 			return 0;
 		}
 		case WM_COMMAND:
@@ -453,7 +454,7 @@ INT_PTR WINAPI doFormatDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 
 void OpenMarkerList(COMMAND_T*)
 {
-	pMarkerList->Show(true, true);
+	g_pMarkerList->Show(true, true);
 }
 
 void LoadMarkerList(COMMAND_T*)
@@ -484,7 +485,7 @@ void ExportFormat(COMMAND_T*)
 
 static bool MarkerListEnabled(COMMAND_T*)
 {
-	return pMarkerList->IsValidWindow();
+	return g_pMarkerList->IsValidWindow();
 }
 
 static COMMAND_T g_commandTable[] = 
@@ -552,7 +553,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 {
 	g_savedLists.Get()->Empty(true);
 	g_savedLists.Cleanup();
-	pMarkerList->Update();
+	g_pMarkerList->Update();
 }
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
@@ -575,12 +576,12 @@ int MarkerListInit()
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
 
-	pMarkerList = new SWS_MarkerListWnd();
+	g_pMarkerList = new SWS_MarkerListWnd();
 
 	return 1;
 }
 
 void MarkerListExit()
 {
-	delete pMarkerList;
+	delete g_pMarkerList;
 }

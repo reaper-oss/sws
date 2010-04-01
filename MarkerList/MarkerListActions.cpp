@@ -51,7 +51,7 @@ void ClipboardToList(COMMAND_T*)
 {
 	MarkerList list("Clipboard", false);
 	list.ClipboardToList();
-	pMarkerList->Update();
+	g_pMarkerList->Update();
 }
 
 void ExportToClipboard(COMMAND_T*)
@@ -89,7 +89,7 @@ void DeleteAllMarkers(COMMAND_T*)
 	Undo_BeginBlock();
 	DeleteAllMarkers();
 	Undo_EndBlock("Delete all markers", UNDO_STATE_MISCCFG);
-	pMarkerList->Update();
+	g_pMarkerList->Update();
 }
 
 void DeleteAllRegions()
@@ -114,7 +114,7 @@ void DeleteAllRegions(COMMAND_T*)
 	Undo_BeginBlock();
 	DeleteAllRegions();
 	Undo_EndBlock("Delete all regions", UNDO_STATE_MISCCFG);
-	pMarkerList->Update();
+	g_pMarkerList->Update();
 }
 
 void RenumberIds(COMMAND_T*)
@@ -128,7 +128,7 @@ void RenumberIds(COMMAND_T*)
 		if (!mi->m_bReg)
 			AddProjectMarker(NULL, false, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), iID++);
 	}
-	pMarkerList->Update();
+	g_pMarkerList->Update();
 	UpdateTimeline();
 }
 
@@ -143,7 +143,7 @@ void RenumberRegions(COMMAND_T*)
 		if (mi->m_bReg)
 			AddProjectMarker(NULL, true, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), iID++);
 	}
-	pMarkerList->Update();
+	g_pMarkerList->Update();
 	UpdateTimeline();
 }
 

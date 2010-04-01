@@ -30,7 +30,7 @@
 #include "SnapshotClass.h"
 #include "Snapshots.h"
 #include "SnapshotMerge.h"
-#include "../Prompt.h"
+#include "../Misc/Prompt.h"
 #include "../../WDL/projectcontext.h"
 
 #define SNAP_OPTIONS_KEY "Snapshot Options"

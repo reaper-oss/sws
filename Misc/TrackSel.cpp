@@ -1,0 +1,512 @@
+/******************************************************************************
+/ TrackSel.cpp
+/
+/ Copyright (c) 2010 Tim Payne (SWS)
+/ http://www.standingwaterstudios.com/reaper
+/
+/ Permission is hereby granted, free of charge, to any person obtaining a copy
+/ of this software and associated documentation files (the "Software"), to deal
+/ in the Software without restriction, including without limitation the rights to
+/ use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+/ of the Software, and to permit persons to whom the Software is furnished to
+/ do so, subject to the following conditions:
+/ 
+/ The above copyright notice and this permission notice shall be included in all
+/ copies or substantial portions of the Software.
+/ 
+/ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+/ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+/ OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+/ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+/ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+/ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+/ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+/ OTHER DEALINGS IN THE SOFTWARE.
+/
+******************************************************************************/
+
+
+
+#include "stdafx.h"
+#include "TrackSel.h"
+
+static WDL_PtrList<GUID> g_pSelTracks;
+void SaveSelTracks(COMMAND_T* = NULL)
+{
+	g_pSelTracks.Empty(true);
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			GUID* g = new GUID;
+			*g = *(GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
+			g_pSelTracks.Add(g);
+		}
+	}
+}
+
+void RestoreSelTracks(COMMAND_T* = NULL)
+{
+	ClearSelected();
+	for (int i = 0; i < g_pSelTracks.GetSize(); i++)
+		for (int j = 0; j <= GetNumTracks(); j++)
+		{
+			MediaTrack* tr = CSurf_TrackFromID(j, false);
+			if (TrackMatchesGuid(tr, g_pSelTracks.Get(i)))
+				GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+		}
+}
+
+void GetSelFolderTracks(WDL_PtrList<void>* pParents, WDL_PtrList<void>* pChildren)
+{
+	MediaTrack* tr;
+	WDL_PtrList<void> parentStack;
+	int iParentDepth;
+	bool bSelected = false;
+	MediaTrack* gfd = NULL;
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		tr = CSurf_TrackFromID(i, false);
+		int iType;
+		int iFolder = GetFolderDepth(tr, &iType, &gfd);
+
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			if (pParents && parentStack.GetSize())
+			{
+				void* p = parentStack.Get(parentStack.GetSize()-1);
+				if (pParents->Find(p) == -1)
+					pParents->Add(p);
+			}
+		}
+
+		if (bSelected && pChildren && pChildren->Find(tr) == -1)
+			pChildren->Add(tr);
+
+		if (iType == 1)
+		{
+			if (!bSelected && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			{
+				iParentDepth = iFolder;
+				bSelected = true;
+			}
+			parentStack.Add(tr);
+		}
+
+		if (iType < 0)
+		{
+			for (int j = iType; j < 0; j++)
+				parentStack.Delete(parentStack.GetSize()-1);
+
+			if (iType + iFolder <= iParentDepth)
+				bSelected = false;
+		}
+	}
+}
+
+void SelectFolderTracks(int iSelParent, int iSelChildren, bool bUnsel) // -1 == ignore, 0 == unsel, 1 == sel
+{
+	WDL_PtrList<void> parents;
+	WDL_PtrList<void> children;
+	GetSelFolderTracks(&parents, &children);
+	if (bUnsel)
+		ClearSelected();
+	if (iSelParent >= 0)
+		for (int i = 0; i < parents.GetSize(); i++)
+			GetSetMediaTrackInfo((MediaTrack*)parents.Get(i), "I_SELECTED", iSelParent ? &g_i1 : &g_i0);
+	if (iSelChildren >= 0)
+		for (int i = 0; i < children.GetSize(); i++)
+			GetSetMediaTrackInfo((MediaTrack*)children.Get(i), "I_SELECTED", iSelChildren ? &g_i1 : &g_i0);
+}
+
+void SelChildren(COMMAND_T*)			{ SelectFolderTracks(-1, 1, false); }
+void SelChildrenOnly(COMMAND_T* = NULL)	{ SelectFolderTracks(-1, 1, true); }
+void SelParents(COMMAND_T* = NULL)		{ SelectFolderTracks(1, -1, false); }
+void SelParentsOnly(COMMAND_T* = NULL)	{ SelectFolderTracks(1, -1, true); }
+void UnselParents(COMMAND_T* = NULL)	{ SelectFolderTracks(0, -1, false); }
+void UnselChildren(COMMAND_T* = NULL)	{ SelectFolderTracks(-1, 0, false); }
+
+void TogTrackSel(COMMAND_T*)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		GetSetMediaTrackInfo(tr, "I_SELECTED", *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) ? &g_i0 : &g_i1);
+	}
+}
+
+void SelTracksWItems(COMMAND_T* = NULL)
+{
+	ClearSelected();
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
+			if (*(bool*)GetSetMediaItemInfo(GetTrackMediaItem(tr, j), "B_UISEL", NULL))
+			{
+				GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+				break;
+			}
+	}
+}
+
+void SelAllParents(COMMAND_T* = NULL)
+{
+	MediaTrack* gfd = NULL;
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		int iType;
+		int iFolder = GetFolderDepth(tr, &iType, &gfd);
+		if (iFolder == 0 && iType == 1)
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+		else
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
+	}
+}
+
+void SelFolderStarts(COMMAND_T* = NULL)
+{
+	MediaTrack* gfd = NULL;
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		int iType;
+		GetFolderDepth(tr, &iType, &gfd);
+		if (iType == 1)
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+		else
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
+	}
+}
+
+void SelNotFolder(COMMAND_T* = NULL)
+{
+	MediaTrack* gfd = NULL;
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		int iType;
+		if (GetFolderDepth(tr, &iType, &gfd) == 0 && iType == 0)
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+		else
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
+	}
+}
+
+void SetLTT(COMMAND_T*)
+{
+	SaveSelected();
+	int iFirst;
+	for (iFirst = 1; iFirst <= GetNumTracks(); iFirst++)
+		if (*(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(iFirst, false), "I_SELECTED", NULL))
+			break;
+	if (iFirst > GetNumTracks())
+		return;
+
+	// 40505 to sel LTT
+	// 40285 go to next
+	// 40286 go to prev
+	Main_OnCommand(40505, 0);
+	int iLTT;
+	for (iLTT = 1; iLTT <= GetNumTracks(); iLTT++)
+		if (*(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(iLTT, false), "I_SELECTED", NULL))
+			break;
+
+	while (iLTT != iFirst)
+	{
+		if (iLTT > iFirst)
+		{
+			iLTT--;
+			Main_OnCommand(40286, 0);
+		}
+		else
+		{
+			iLTT++;
+			Main_OnCommand(40285, 0);
+		}
+	}
+
+	RestoreSelected();
+}
+
+void SelArmed(COMMAND_T* = NULL)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL))
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+		else
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
+	}
+}
+
+void UnselArmed(COMMAND_T* = NULL)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL))
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
+	}
+}
+
+void SelNextFolder(COMMAND_T* = NULL)
+{
+	int iDepth = -1;
+	int iType;
+	int iFolder;
+	MediaTrack* gfd;
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (iDepth != -1)
+		{
+			if ((iFolder = GetFolderDepth(tr, &iType, &gfd)) == iDepth && iType == 1)
+			{
+				ClearSelected();
+				GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+				return;
+			}
+			else if (iType + iFolder < iDepth)
+				iDepth = -1;
+		}		
+		else if (iDepth == -1 && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			iFolder = GetFolderDepth(tr, &iType, &gfd);
+			if (iType == 1)
+				iDepth = iFolder;
+		}
+	}
+}
+
+void SelPrevFolder(COMMAND_T* = NULL)
+{
+	int iDepth = -1;
+	int iType;
+	int iFolder;
+	MediaTrack* gfd;
+	for (int i = GetNumTracks(); i > 0; i--)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (iDepth != -1)
+		{
+			if ((iFolder = GetFolderDepth(tr, &iType, &gfd)) == iDepth && iType == 1)
+			{
+				ClearSelected();
+				GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+				return;
+			}
+			else if (iFolder < iDepth)
+				iDepth = -1;
+		}		
+		else if (iDepth == -1 && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			iFolder = GetFolderDepth(tr, &iType, &gfd);
+			if (iType == 1)
+				iDepth = iFolder;
+		}
+	}
+}
+
+void SelMutedTracks(COMMAND_T* = NULL)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		int iSel = *(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL) ? 1 : 0;
+		GetSetMediaTrackInfo(tr, "I_SELECTED", &iSel);
+	}
+	TrackList_AdjustWindows(false);
+}
+
+void SelSoloedTracks(COMMAND_T* = NULL)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		int iSel = *(int*)GetSetMediaTrackInfo(tr, "I_SOLO", NULL) ? 1 : 0;
+		GetSetMediaTrackInfo(tr, "I_SELECTED", &iSel);
+	}
+	TrackList_AdjustWindows(false);
+}
+
+void SelPhaseTracks(COMMAND_T* = NULL)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		int iSel = *(bool*)GetSetMediaTrackInfo(tr, "B_PHASE", NULL) ? 1 : 0;
+		GetSetMediaTrackInfo(tr, "I_SELECTED", &iSel);
+	}
+	TrackList_AdjustWindows(false);
+}
+
+void SelArmedTracks(COMMAND_T* = NULL)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		int iSel = *(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL) ? 1 : 0;
+		GetSetMediaTrackInfo(tr, "I_SELECTED", &iSel);
+	}
+	TrackList_AdjustWindows(false);
+}
+
+void SelMaster(COMMAND_T*)       { GetSetMediaTrackInfo(CSurf_TrackFromID(0, false), "I_SELECTED", &g_i1); }
+void UnselMaster(COMMAND_T*)     { GetSetMediaTrackInfo(CSurf_TrackFromID(0, false), "I_SELECTED", &g_i0); }
+
+void TogSelMaster(COMMAND_T*)
+{
+	MediaTrack* tr = CSurf_TrackFromID(0, false);
+	int iSel = *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) ? 0 : 1;
+	GetSetMediaTrackInfo(tr, "I_SELECTED", &iSel);
+}
+
+int RoutedTracks(MediaTrack* tr, WDL_PtrList<void>* pTracks)
+{
+	int iStartSize = pTracks->GetSize();
+
+	// First, check receives
+	for (int i = 0; GetSetTrackSendInfo(tr, -1, i, "P_SRCTRACK", NULL); i++)
+		if (!*(bool*)GetSetTrackSendInfo(tr, -1, i, "B_MUTE", NULL))
+		{
+			MediaTrack* pRec = (MediaTrack*)GetSetTrackSendInfo(tr, -1, i, "P_SRCTRACK", NULL);
+			if (!*(bool*)GetSetMediaTrackInfo(pRec, "B_MUTE", NULL))
+				pTracks->Add(pRec);
+		}
+
+	// Then check folders
+	int iType;
+	MediaTrack* pNext = NULL;
+	int iDepth = GetFolderDepth(tr, &iType, &pNext);
+	if (iType == 1)
+	{
+		int iChild = CSurf_TrackToID(tr, false)+1;
+		while(true)
+		{
+			MediaTrack* pChild = CSurf_TrackFromID(iChild, false);
+			if (!pChild)
+				break;
+			int iChildDepth = GetFolderDepth(pChild, NULL, &pNext);
+			if (iChildDepth == iDepth + 1 &&
+				*(bool*)GetSetMediaTrackInfo(pChild, "B_MAINSEND", NULL) &&
+				!*(bool*)GetSetMediaTrackInfo(pChild, "B_MUTE", NULL))
+				pTracks->Add(pChild);
+			if (iChildDepth <= iDepth)
+				break;
+			iChild++;
+		}
+	}
+
+	int iEndSize = pTracks->GetSize();
+	for (int i = iStartSize; i < iEndSize; i++)
+		RoutedTracks((MediaTrack*)pTracks->Get(i), pTracks);
+
+	return iEndSize - iStartSize;
+}
+
+void SelRouted(COMMAND_T*)
+{
+	// First build a list of the initially selected tracks
+	WDL_PtrList<void> pSelTracks = NULL;
+	for (int i = 0; i <= GetNumTracks(); i++)
+		if (*(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_SELECTED", NULL))
+			pSelTracks.Add(CSurf_TrackFromID(i, false));
+
+	for (int i = 0; i < pSelTracks.GetSize(); i++)
+	{
+		WDL_PtrList<void> pRoutedTracks;
+		RoutedTracks((MediaTrack*)pSelTracks.Get(i), &pRoutedTracks);
+		for (int j = 0; j < pRoutedTracks.GetSize(); j++)
+			GetSetMediaTrackInfo((MediaTrack*)pRoutedTracks.Get(j), "I_SELECTED", &g_i1);
+	}
+}
+
+void SelectTrack(COMMAND_T* ct)
+{
+	ClearSelected();
+	MediaTrack* tr = CSurf_TrackFromID((int)ct->user, false);
+	if (tr)
+		GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+}
+
+static COMMAND_T g_commandTable[] = 
+{
+	{ { DEFACCEL, "SWS: Save current track selection" },						"SWS_SAVESEL",			SaveSelTracks,		},
+	{ { DEFACCEL, "SWS: Restore saved track selection" },						"SWS_RESTORESEL",		RestoreSelTracks,	},
+	{ { DEFACCEL, "SWS: Toggle (invert) track selection" },						"SWS_TOGTRACKSEL",		TogTrackSel,		},
+	{ { DEFACCEL, "SWS: Select only track(s) with selected item(s)" },			"SWS_SELTRKWITEM",		SelTracksWItems,	},
+	{ { DEFACCEL, "SWS: Set last touched track to match track selection" },		"SWS_SETLTT",			SetLTT,				},
+	
+	// Folder/parent/child selection
+	{ { DEFACCEL, "SWS: Select only children of selected folders" },			"SWS_SELCHILDREN",		SelChildrenOnly,	},
+	{ { DEFACCEL, "SWS: Select children of selected folder track(s)" },			"SWS_SELCHILDREN2",		SelChildren,		},
+	{ { DEFACCEL, "SWS: Select only parent(s) of selected folder track(s)" },	"SWS_SELPARENTS",		SelParentsOnly,		},
+	{ { DEFACCEL, "SWS: Select parent(s) of selected folder track(s)" },		"SWS_SELPARENTS2",		SelParents,			},
+	{ { DEFACCEL, "SWS: Unselect parent(s) of selected folder track(s)" },		"SWS_UNSELPARENTS",		UnselParents,		},
+	{ { DEFACCEL, "SWS: Unselect children of selected folder track(s)" },		"SWS_UNSELCHILDREN",	UnselChildren,		},
+	{ { DEFACCEL, "SWS: Select all folders (parents only)" },					"SWS_SELALLPARENTS",	SelAllParents,		},
+	{ { DEFACCEL, "SWS: Select all folder start tracks" },						"SWS_SELFOLDSTARTS",	SelFolderStarts,	},
+	{ { DEFACCEL, "SWS: Select all non-folders" },								"SWS_SELNOTFOLDER",		SelNotFolder,		},
+	{ { DEFACCEL, "SWS: Select next folder" },									"SWS_SELNEXTFOLDER",	SelNextFolder,		},
+	{ { DEFACCEL, "SWS: Select previous folder" },								"SWS_SELPREVFOLDER",	SelPrevFolder,		},
+	
+	// Sel based on states
+	{ { DEFACCEL, "SWS: Select muted tracks" },										"SWS_SELMUTEDTRACKS",	SelMutedTracks,		},
+	{ { DEFACCEL, "SWS: Select soloed tracks" },									"SWS_SELSOLOEDTRACKS",	SelSoloedTracks,	},
+	{ { DEFACCEL, "SWS: Select tracks with flipped phase" },						"SWS_SELPHASETRACKS",	SelPhaseTracks,		},
+	{ { DEFACCEL, "SWS: Select armed tracks" },										"SWS_SELARMEDTRACKS",	SelArmedTracks,		},
+	{ { DEFACCEL, "SWS: Select tracks with active routing to selected track(s)" },	"SWS_SELROUTED",		SelRouted,			},
+	{ { DEFACCEL, "SWS: Select only rec armed track(s)" },							"SWS_SELRECARM",		SelArmed,			},
+	{ { DEFACCEL, "SWS: Unselect rec armed track(s)" },								"SWS_UNSELRECARM",		UnselArmed,			},
+
+	// Master track
+	{ { DEFACCEL, "SWS: Select master track" },									"SWS_SELMASTER",		SelMaster,			},
+	{ { DEFACCEL, "SWS: Unselect master track" },								"SWS_UNSELMASTER",		UnselMaster,		},
+	{ { DEFACCEL, "SWS: Toggle master track select" },							"SWS_TOGSELMASTER",		TogSelMaster,		},
+
+	// Raw selection
+	{ { DEFACCEL, "SWS: Select only track 1" },		"SWS_SEL1",		SelectTrack,	NULL, 1, },
+	{ { DEFACCEL, "SWS: Select only track 2" },		"SWS_SEL2",		SelectTrack,	NULL, 2, },
+	{ { DEFACCEL, "SWS: Select only track 3" },		"SWS_SEL3",		SelectTrack,	NULL, 3, },
+	{ { DEFACCEL, "SWS: Select only track 4" },		"SWS_SEL4",		SelectTrack,	NULL, 4, },
+	{ { DEFACCEL, "SWS: Select only track 5" },		"SWS_SEL5",		SelectTrack,	NULL, 5, },
+	{ { DEFACCEL, "SWS: Select only track 6" },		"SWS_SEL6",		SelectTrack,	NULL, 6, },
+	{ { DEFACCEL, "SWS: Select only track 7" },		"SWS_SEL7",		SelectTrack,	NULL, 7, },
+	{ { DEFACCEL, "SWS: Select only track 8" },		"SWS_SEL8",		SelectTrack,	NULL, 8, },
+	{ { DEFACCEL, "SWS: Select only track 9" },		"SWS_SEL9",		SelectTrack,	NULL, 9, },
+	{ { DEFACCEL, "SWS: Select only track 10" },	"SWS_SEL10",	SelectTrack,	NULL, 10, },
+	{ { DEFACCEL, "SWS: Select only track 11" },	"SWS_SEL11",	SelectTrack,	NULL, 11, },
+	{ { DEFACCEL, "SWS: Select only track 12" },	"SWS_SEL12",	SelectTrack,	NULL, 12, },
+	{ { DEFACCEL, "SWS: Select only track 13" },	"SWS_SEL13",	SelectTrack,	NULL, 13, },
+	{ { DEFACCEL, "SWS: Select only track 14" },	"SWS_SEL14",	SelectTrack,	NULL, 14, },
+	{ { DEFACCEL, "SWS: Select only track 15" },	"SWS_SEL15",	SelectTrack,	NULL, 15, },
+	{ { DEFACCEL, "SWS: Select only track 16" },	"SWS_SEL16",	SelectTrack,	NULL, 16, },
+	{ { DEFACCEL, "SWS: Select only track 17" },	"SWS_SEL17",	SelectTrack,	NULL, 17, },
+	{ { DEFACCEL, "SWS: Select only track 18" },	"SWS_SEL18",	SelectTrack,	NULL, 18, },
+	{ { DEFACCEL, "SWS: Select only track 19" },	"SWS_SEL19",	SelectTrack,	NULL, 19, },
+	{ { DEFACCEL, "SWS: Select only track 20" },	"SWS_SEL20",	SelectTrack,	NULL, 20, },
+	{ { DEFACCEL, "SWS: Select only track 21" },	"SWS_SEL21",	SelectTrack,	NULL, 21, },
+	{ { DEFACCEL, "SWS: Select only track 22" },	"SWS_SEL22",	SelectTrack,	NULL, 22, },
+	{ { DEFACCEL, "SWS: Select only track 23" },	"SWS_SEL23",	SelectTrack,	NULL, 23, },
+	{ { DEFACCEL, "SWS: Select only track 24" },	"SWS_SEL24",	SelectTrack,	NULL, 24, },
+	{ { DEFACCEL, "SWS: Select only track 25" },	"SWS_SEL25",	SelectTrack,	NULL, 25, },
+	{ { DEFACCEL, "SWS: Select only track 26" },	"SWS_SEL26",	SelectTrack,	NULL, 26, },
+	{ { DEFACCEL, "SWS: Select only track 27" },	"SWS_SEL27",	SelectTrack,	NULL, 27, },
+	{ { DEFACCEL, "SWS: Select only track 28" },	"SWS_SEL28",	SelectTrack,	NULL, 28, },
+	{ { DEFACCEL, "SWS: Select only track 29" },	"SWS_SEL29",	SelectTrack,	NULL, 29, },
+	{ { DEFACCEL, "SWS: Select only track 30" },	"SWS_SEL30",	SelectTrack,	NULL, 30, },
+	{ { DEFACCEL, "SWS: Select only track 31" },	"SWS_SEL31",	SelectTrack,	NULL, 31, },
+	{ { DEFACCEL, "SWS: Select only track 32" },	"SWS_SEL32",	SelectTrack,	NULL, 32, },
+
+	{ {}, LAST_COMMAND, }, // Denote end of table
+};
+
+int TrackSelInit()
+{
+	SWSRegisterCommands(g_commandTable);
+	return 1;
+}

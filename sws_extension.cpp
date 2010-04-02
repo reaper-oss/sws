@@ -32,7 +32,7 @@
 #include "MarkerActions/MarkerActions.h"
 #include "Snapshots/SnapshotClass.h"
 #include "Snapshots/Snapshots.h"
-#include "Misc/Zoom.h"
+#include "Zoom.h"
 #include "Misc/Misc.h"
 #include "Color/Color.h"
 #include "Color/Autocolor.h"

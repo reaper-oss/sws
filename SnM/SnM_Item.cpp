@@ -30,8 +30,8 @@
 #include "SnM_Actions.h"
 #include "SNM_ChunkParserPatcher.h"
 #include "SNM_Chunk.h"
-#include "..\Padre\padreUtils.h"
-#include "..\Padre\padreMidiItemProcBase.h"
+#include "../Padre/padreUtils.h"
+#include "../Padre/padreMidiItemProcBase.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////

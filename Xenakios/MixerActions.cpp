@@ -48,29 +48,43 @@ int XenGetProjectTracks(t_vect_of_Reaper_tracks &RefVecTracks,bool OnlySelected)
 	return (int)RefVecTracks.size();
 }
 
-void DoSelectTrack(int tkOffset, bool KeepCurrent)
+void DoSelectTrack(int tkOffset, bool keepCurrent)
 {
-	int iTrack = 0;
-	if (CountSelectedTracks(0))
+	vector<int> oldSelectedTracks;
+	WDL_TypedBuf<int> selTracks;
+	selTracks.Resize(GetNumTracks());
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		if (tkOffset > 0)
-			iTrack = CSurf_TrackToID(GetSelectedTrack(0, CountSelectedTracks(0)-1), false);
-		else
-			iTrack = CSurf_TrackToID(GetSelectedTrack(0, 0), false);
+		selTracks.Get()[i] = 0;
+		if (*(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i+1, false), "I_SELECTED", NULL))
+			oldSelectedTracks.push_back(i);
 	}
-	else
-		iTrack = CSurf_TrackToID(GetLastTouchedTrack(), false);
-
-	iTrack += tkOffset;
-	if (!KeepCurrent)
-		ClearSelected();
-
-	if (iTrack < 1)
-		iTrack = 1;
-	else if (iTrack > GetNumTracks())
-		iTrack = GetNumTracks();
-	GetSetMediaTrackInfo(CSurf_TrackFromID(iTrack, false), "I_SELECTED", &g_i1);
+	
+	int iNewSel = 0;
+	for (int i = 0; i < (int)oldSelectedTracks.size(); i++)
+	{
+		int newIndex= oldSelectedTracks[i] + tkOffset;
+		if (newIndex >= 0 && newIndex < GetNumTracks())
+		{
+			iNewSel++;
+			selTracks.Get()[newIndex] = 1;
+		}
+	}
+	
+	if (keepCurrent)
+		for (int i = 0; i < (int)oldSelectedTracks.size(); i++)
+			selTracks.Get()[oldSelectedTracks[i]] = 1;
+	else if (iNewSel == 0) // Don't remove everything!
+		return;		
+	
+	for (int i = 0; i < GetNumTracks(); i++)
+	{	// Only change the sel at the end
+		MediaTrack* tr = CSurf_TrackFromID(i+1, false);
+		if (selTracks.Get()[i] != *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &(selTracks.Get()[i]));
+	}
 }
+	
 
 void DoSelectNextTrack(COMMAND_T*)
 {

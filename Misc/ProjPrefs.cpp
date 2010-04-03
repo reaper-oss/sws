@@ -123,6 +123,18 @@ bool IsDefFadeOverriden(COMMAND_T*)
 	return g_dDefFadeLen != 0.0 && dDefFade != g_dDefFadeLen;
 }
 
+void MetronomeOn(COMMAND_T*)
+{
+	if (!(*(int*)GetConfigVar("projmetroen") & 1))
+		Main_OnCommand(40364, 0);
+}
+
+void MetronomeOff(COMMAND_T*)
+{
+	if (*(int*)GetConfigVar("projmetroen") & 1)
+		Main_OnCommand(40364, 0);
+}
+
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Save auto crossfade state" },								"SWS_SAVEXFD",			SaveXFade,			},
@@ -143,6 +155,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Show master track in track control panel" },				"SWS_SHOWMASTER",		ShowMaster,			},
 	{ { DEFACCEL, "SWS: Hide master track in track control panel" },				"SWS_HIDEMASTER",		HideMaster,			},
 	{ { DEFACCEL, "SWS: Toggle default fade time to zero" },						"SWS_TOGDEFFADEZERO",	TogDefFadeZero,		NULL, 0, IsDefFadeOverriden },
+	{ { DEFACCEL, "SWS: Metronome enable" },										"SWS_METROON",			MetronomeOn,		},
+	{ { DEFACCEL, "SWS: Metronome disable" },										"SWS_METROOFF",			MetronomeOff,		},
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

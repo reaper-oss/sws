@@ -56,6 +56,22 @@
 		2264CBD310FEC33900447317 /* swell.h in Headers */ = {isa = PBXBuildFile; fileRef = 9870F77F0F5B461C0007258C /* swell.h */; };
 		2296249010A3A22500A1090C /* lice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2296248E10A3A22500A1090C /* lice.cpp */; };
 		2296249110A3A22500A1090C /* lice_line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2296248F10A3A22500A1090C /* lice_line.cpp */; };
+		229A7E8C1165744400325BC2 /* Context.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229A7E7C1165744400325BC2 /* Context.cpp */; };
+		229A7E8D1165744400325BC2 /* Context.h in Headers */ = {isa = PBXBuildFile; fileRef = 229A7E7D1165744400325BC2 /* Context.h */; };
+		229A7E8E1165744400325BC2 /* FolderActions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229A7E7E1165744400325BC2 /* FolderActions.cpp */; };
+		229A7E8F1165744400325BC2 /* FolderActions.h in Headers */ = {isa = PBXBuildFile; fileRef = 229A7E7F1165744400325BC2 /* FolderActions.h */; };
+		229A7E901165744400325BC2 /* ItemParams.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229A7E801165744400325BC2 /* ItemParams.cpp */; };
+		229A7E911165744400325BC2 /* ItemParams.h in Headers */ = {isa = PBXBuildFile; fileRef = 229A7E811165744400325BC2 /* ItemParams.h */; };
+		229A7E921165744400325BC2 /* ItemSel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229A7E821165744400325BC2 /* ItemSel.cpp */; };
+		229A7E931165744400325BC2 /* ItemSel.h in Headers */ = {isa = PBXBuildFile; fileRef = 229A7E831165744400325BC2 /* ItemSel.h */; };
+		229A7E941165744400325BC2 /* Misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229A7E841165744400325BC2 /* Misc.cpp */; };
+		229A7E951165744400325BC2 /* Misc.h in Headers */ = {isa = PBXBuildFile; fileRef = 229A7E851165744400325BC2 /* Misc.h */; };
+		229A7E961165744400325BC2 /* ProjPrefs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229A7E861165744400325BC2 /* ProjPrefs.cpp */; };
+		229A7E971165744400325BC2 /* ProjPrefs.h in Headers */ = {isa = PBXBuildFile; fileRef = 229A7E871165744400325BC2 /* ProjPrefs.h */; };
+		229A7E981165744400325BC2 /* TrackParams.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229A7E881165744400325BC2 /* TrackParams.cpp */; };
+		229A7E991165744400325BC2 /* TrackParams.h in Headers */ = {isa = PBXBuildFile; fileRef = 229A7E891165744400325BC2 /* TrackParams.h */; };
+		229A7E9A1165744400325BC2 /* TrackSel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229A7E8A1165744400325BC2 /* TrackSel.cpp */; };
+		229A7E9B1165744400325BC2 /* TrackSel.h in Headers */ = {isa = PBXBuildFile; fileRef = 229A7E8B1165744400325BC2 /* TrackSel.h */; };
 		229AC7DE108F880800E4A962 /* reaper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC7DD108F880800E4A962 /* reaper.cpp */; };
 		229AC7E8108F891700E4A962 /* sws_wnd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC7E4108F891700E4A962 /* sws_wnd.cpp */; };
 		229AC7E9108F891700E4A962 /* sws_wnd.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC7E5108F891700E4A962 /* sws_wnd.h */; };
@@ -183,6 +199,22 @@
 		225130BE116101670028F26A /* padreUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreUtils.h; path = Padre/padreUtils.h; sourceTree = "<group>"; };
 		2296248E10A3A22500A1090C /* lice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice.cpp; path = ../WDL/lice/lice.cpp; sourceTree = SOURCE_ROOT; };
 		2296248F10A3A22500A1090C /* lice_line.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice_line.cpp; path = ../WDL/lice/lice_line.cpp; sourceTree = SOURCE_ROOT; };
+		229A7E7C1165744400325BC2 /* Context.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Context.cpp; path = Misc/Context.cpp; sourceTree = "<group>"; };
+		229A7E7D1165744400325BC2 /* Context.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Context.h; path = Misc/Context.h; sourceTree = "<group>"; };
+		229A7E7E1165744400325BC2 /* FolderActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FolderActions.cpp; path = Misc/FolderActions.cpp; sourceTree = "<group>"; };
+		229A7E7F1165744400325BC2 /* FolderActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FolderActions.h; path = Misc/FolderActions.h; sourceTree = "<group>"; };
+		229A7E801165744400325BC2 /* ItemParams.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ItemParams.cpp; path = Misc/ItemParams.cpp; sourceTree = "<group>"; };
+		229A7E811165744400325BC2 /* ItemParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ItemParams.h; path = Misc/ItemParams.h; sourceTree = "<group>"; };
+		229A7E821165744400325BC2 /* ItemSel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ItemSel.cpp; path = Misc/ItemSel.cpp; sourceTree = "<group>"; };
+		229A7E831165744400325BC2 /* ItemSel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ItemSel.h; path = Misc/ItemSel.h; sourceTree = "<group>"; };
+		229A7E841165744400325BC2 /* Misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Misc.cpp; path = Misc/Misc.cpp; sourceTree = "<group>"; };
+		229A7E851165744400325BC2 /* Misc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Misc.h; path = Misc/Misc.h; sourceTree = "<group>"; };
+		229A7E861165744400325BC2 /* ProjPrefs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ProjPrefs.cpp; path = Misc/ProjPrefs.cpp; sourceTree = "<group>"; };
+		229A7E871165744400325BC2 /* ProjPrefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ProjPrefs.h; path = Misc/ProjPrefs.h; sourceTree = "<group>"; };
+		229A7E881165744400325BC2 /* TrackParams.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrackParams.cpp; path = Misc/TrackParams.cpp; sourceTree = "<group>"; };
+		229A7E891165744400325BC2 /* TrackParams.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TrackParams.h; path = Misc/TrackParams.h; sourceTree = "<group>"; };
+		229A7E8A1165744400325BC2 /* TrackSel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrackSel.cpp; path = Misc/TrackSel.cpp; sourceTree = "<group>"; };
+		229A7E8B1165744400325BC2 /* TrackSel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TrackSel.h; path = Misc/TrackSel.h; sourceTree = "<group>"; };
 		229AC7DD108F880800E4A962 /* reaper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = reaper.cpp; path = reaper/reaper.cpp; sourceTree = "<group>"; };
 		229AC7E4108F891700E4A962 /* sws_wnd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sws_wnd.cpp; sourceTree = "<group>"; };
 		229AC7E5108F891700E4A962 /* sws_wnd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sws_wnd.h; sourceTree = "<group>"; };
@@ -319,6 +351,7 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				229A7E7B1165742C00325BC2 /* Misc */,
 				22FFD278114CD8310077F1CA /* Autocolor.cpp */,
 				22FFD279114CD8310077F1CA /* Autocolor.h */,
 				981006D10F4768010072D712 /* ActiveTake.cpp */,
@@ -456,6 +489,29 @@
 			name = Padre;
 			sourceTree = "<group>";
 		};
+		229A7E7B1165742C00325BC2 /* Misc */ = {
+			isa = PBXGroup;
+			children = (
+				229A7E7C1165744400325BC2 /* Context.cpp */,
+				229A7E7D1165744400325BC2 /* Context.h */,
+				229A7E7E1165744400325BC2 /* FolderActions.cpp */,
+				229A7E7F1165744400325BC2 /* FolderActions.h */,
+				229A7E801165744400325BC2 /* ItemParams.cpp */,
+				229A7E811165744400325BC2 /* ItemParams.h */,
+				229A7E821165744400325BC2 /* ItemSel.cpp */,
+				229A7E831165744400325BC2 /* ItemSel.h */,
+				229A7E841165744400325BC2 /* Misc.cpp */,
+				229A7E851165744400325BC2 /* Misc.h */,
+				229A7E861165744400325BC2 /* ProjPrefs.cpp */,
+				229A7E871165744400325BC2 /* ProjPrefs.h */,
+				229A7E881165744400325BC2 /* TrackParams.cpp */,
+				229A7E891165744400325BC2 /* TrackParams.h */,
+				229A7E8A1165744400325BC2 /* TrackSel.cpp */,
+				229A7E8B1165744400325BC2 /* TrackSel.h */,
+			);
+			name = Misc;
+			sourceTree = "<group>";
+		};
 		22AC0E0D112A7DAC0067BBE3 /* WDL */ = {
 			isa = PBXGroup;
 			children = (
@@ -572,6 +628,14 @@
 				225130C7116101670028F26A /* padreMidiItemGenerators.h in Headers */,
 				225130C9116101670028F26A /* padreMidiItemProcBase.h in Headers */,
 				225130CB116101670028F26A /* padreUtils.h in Headers */,
+				229A7E8D1165744400325BC2 /* Context.h in Headers */,
+				229A7E8F1165744400325BC2 /* FolderActions.h in Headers */,
+				229A7E911165744400325BC2 /* ItemParams.h in Headers */,
+				229A7E931165744400325BC2 /* ItemSel.h in Headers */,
+				229A7E951165744400325BC2 /* Misc.h in Headers */,
+				229A7E971165744400325BC2 /* ProjPrefs.h in Headers */,
+				229A7E991165744400325BC2 /* TrackParams.h in Headers */,
+				229A7E9B1165744400325BC2 /* TrackSel.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -743,6 +807,14 @@
 				225130C6116101670028F26A /* padreMidiItemGenerators.cpp in Sources */,
 				225130C8116101670028F26A /* padreMidiItemProcBase.cpp in Sources */,
 				225130CA116101670028F26A /* padreUtils.cpp in Sources */,
+				229A7E8C1165744400325BC2 /* Context.cpp in Sources */,
+				229A7E8E1165744400325BC2 /* FolderActions.cpp in Sources */,
+				229A7E901165744400325BC2 /* ItemParams.cpp in Sources */,
+				229A7E921165744400325BC2 /* ItemSel.cpp in Sources */,
+				229A7E941165744400325BC2 /* Misc.cpp in Sources */,
+				229A7E961165744400325BC2 /* ProjPrefs.cpp in Sources */,
+				229A7E981165744400325BC2 /* TrackParams.cpp in Sources */,
+				229A7E9A1165744400325BC2 /* TrackSel.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -30,6 +30,8 @@
 #include "SnM_Actions.h"
 #include "SNM_ChunkParserPatcher.h"
 #include "SNM_Chunk.h"
+#include "..\Padre\padreUtils.h"
+#include "..\Padre\padreMidiItemProcBase.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -88,8 +90,330 @@ void selectItemsByNamePrompt(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Split MIDI/Audio
+///////////////////////////////////////////////////////////////////////////////
+
+void splitMidiAudio(COMMAND_T* _ct)
+{
+	bool updated = false;
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
+			{
+				double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
+				double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
+				bool toBeSplitted = (GetCursorPosition() > pos && GetCursorPosition() < end);
+
+				if (!updated && toBeSplitted)
+					Undo_BeginBlock();
+
+				updated |= toBeSplitted;
+
+				if (toBeSplitted)
+				{
+					int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
+					SNM_ChunkParserPatcher p(item);
+					char readSource[32] = "";
+					bool split=false;
+					if (p.Parse(SNM_GET_CHUNK_CHAR,2,"SOURCE","<SOURCE",-1,activeTake,1,readSource) > 0)
+					{
+						if (!strcmp(readSource,"MIDI") || !strcmp(readSource,"EMPTY"))
+						{
+							SplitMediaItem(item, GetCursorPosition());
+							split = true;
+						}
+					}
+					
+					// "split prior zero crossing" in all other cases
+					// Btw, includes all sources: "WAVE", "VORBIS", "SECTION",..
+					if (!split)
+						Main_OnCommand(40792,0);
+				}
+			}
+		}
+	}
+
+	// Undo point
+	if (updated)
+	{
+		UpdateTimeline();
+		Undo_EndBlock(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Take lanes: clear take, build lanes, ...
 ///////////////////////////////////////////////////////////////////////////////
+
+bool isEmptyMidi(MediaItem_Take* _take)
+{
+	bool emptyMidi = false;
+	MidiItemProcessor p("S&M");
+	if (_take && p.isMidiTake(_take))
+	{
+		MIDI_eventlist* evts = MIDI_eventlist_Create();
+		if(p.getMidiEventsList(_take, evts))
+		{
+			int pos=0;
+			emptyMidi = !evts->EnumItems(&pos);
+			MIDI_eventlist_Destroy(evts);
+		}
+	}
+	return emptyMidi;
+}
+
+void setEmptyTakeChunk(WDL_String* _chunk)
+{
+	_chunk->Set("TAKE\n");
+    _chunk->Append("NAME \"\"\n");
+    _chunk->Append("VOLPAN 1.000000 0.000000 1.000000 -1.000000\n");
+    _chunk->Append("SOFFS 0.00000000000000\n");
+    _chunk->Append("PLAYRATE 1.00000000000000 1 0.00000000000000 -1\n");
+    _chunk->Append("CHANMODE 0\n");
+    _chunk->Append("<SOURCE EMPTY\n");
+    _chunk->Append(">\n");
+}
+
+bool addEmptyTake(MediaItem* _item) {
+	return (AddTakeToMediaItem(_item) != NULL);
+}
+
+int findFirstTakeByFilename(
+	MediaItem* _item, const char* _takeName, bool* _alreadyFound)
+{
+	if (_item && _takeName)
+	{
+		for (int j = 0; j < GetMediaItemNumTakes(_item); j++)
+		{
+			PCM_source* src = 
+				(PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(_item, j), "P_SOURCE", NULL);
+			if (!_alreadyFound[j] && src && 
+				((!src->GetFileName() && !strlen(_takeName)) || 
+				  (src->GetFileName() && !strcmp(src->GetFileName(), _takeName))))
+			{
+				_alreadyFound[j] = true;
+				return j;
+			}
+		}			
+	}
+	return -1;
+}
+
+int countTakesByFilename(
+	MediaItem* _item, const char* _takeName)
+{
+	int count = 0;
+	if (_item && _takeName)
+	{
+		for (int j = 0; j < GetMediaItemNumTakes(_item); j++)
+		{
+			PCM_source* src = 
+				(PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(_item, j), "P_SOURCE", NULL);
+			if (src && src->GetFileName() && !strcmp(src->GetFileName(), _takeName))
+				count++;
+		}			
+	}
+	return count;
+}
+
+// !_undoTitle: no undo
+int buildLanes(const char* _undoTitle) 
+{
+	int updates = removeEmptyTakes((const char*)NULL, true, false, true);
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			// sore selected items and store the item with max. takes
+			WDL_PtrList<MediaItem> items; 
+			WDL_PtrList<WDL_String> filenames;
+			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+			{
+				MediaItem* item = GetTrackMediaItem(tr,j);
+				if (item) 
+				{
+					items.Add(item);
+
+					// Get the src filenames 
+					int nbTakes = GetMediaItemNumTakes(item);
+					WDL_String lastLoop;
+					for (int k=0; k < nbTakes; k++)
+					{
+						PCM_source* src = 
+							(PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(item, k), "P_SOURCE", NULL);
+						// prefered order for takes with source file: begining of lane
+						if (src && src->GetFileName() && strlen(src->GetFileName()))
+						{
+							if (!strcmp(lastLoop.Get(), src->GetFileName())) 
+							{
+//								filenames.Insert(0,new WDL_String(src->GetFileName()));
+								filenames.Add(new WDL_String(src->GetFileName()));
+							}
+							else
+							{
+								int presentCount = 0;
+								for (int l=0; l < filenames.GetSize(); l++)
+									if(!strcmp(filenames.Get(l)->Get(), src->GetFileName()))
+										presentCount++;
+								if (!presentCount || 
+									(presentCount && countTakesByFilename(item, src->GetFileName()) > presentCount))
+								{
+//									filenames.Insert(0,new WDL_String(src->GetFileName()));
+									filenames.Add(new WDL_String(src->GetFileName()));
+									lastLoop.Set(src->GetFileName());
+								}
+							}							
+						}
+						// prefered order for empty takes: end of lane
+						else
+						{
+							filenames.Add(new WDL_String());
+							lastLoop.Set("");
+						}
+					}	
+				}
+			}
+
+			int nbLanes = filenames.GetSize();
+			WDL_PtrList<SNM_TakeParserPatcher> ps;
+			for (int j = 0; j < items.GetSize(); j++)
+			{
+				MediaItem* item = items.Get(j);
+				WDL_PtrList<WDL_String> chunks;
+				SNM_TakeParserPatcher* p = new SNM_TakeParserPatcher(item);
+				ps.Add(p);
+
+				// init (max. 128 takes should be enough)
+				bool found[128]; 
+				for (int k=0; k < nbLanes; k++)	{
+					chunks.Add(new WDL_String());
+					found[k] = false;
+				}
+
+				for (int k=0; k < nbLanes; k++)	{
+					int first = findFirstTakeByFilename(item, filenames.Get(k)->Get(), found); 
+					bool patched = false;
+					if (first >= 0)
+						patched = p->GetTakeChunk(first, chunks.Get(k));
+					if (!patched)
+						setEmptyTakeChunk(chunks.Get(k));
+				}
+
+				// insert correct takes 
+				// so that there're (current nb of takes + maxTakes) lanes
+				for (int k=0; k < nbLanes; k++)
+					updates += p->InsertTake(k, chunks.Get(k));
+				chunks.Empty(true);
+
+				// remove the last (intial nb of takes) lanes
+				// so that it remains (maxTakes + additionnal) lanes
+				while (p->CountTakes() > nbLanes)
+					updates += p->RemoveTake(p->CountTakes()-1);
+			}
+
+			// Remove "empty lanes" if needed
+			int lane = 0;
+			int emptyTakes = items.GetSize();
+			while (emptyTakes == items.GetSize() || lane < nbLanes)
+			{
+				emptyTakes = 0;
+				for (int j = 0; j < items.GetSize(); j++)
+				{
+					if (ps.Get(j)->IsEmpty(lane))
+						emptyTakes++;
+					else break;
+				}
+				if (emptyTakes == items.GetSize())
+				{
+					nbLanes--;
+					for (int j = 0; j < items.GetSize(); j++)
+						updates += ps.Get(j)->RemoveTake(lane);
+				}
+				else lane++;
+			}
+			filenames.Empty(true);
+			ps.Empty(true); // + auto commit!
+		}
+	}
+
+	// Undo point + UpdateTimeline
+	if (updates > 0)
+	{
+		UpdateTimeline();
+		if (_undoTitle)
+			Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
+	}
+	return updates;
+}
+
+// no undo point if !_undoTitle
+bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel)
+{
+	bool updated = false;
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		{
+			if (!_trSel || (_trSel && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
+			{
+				MediaItem* item = GetTrackMediaItem(tr,j);
+				if (item && (_trSel || (!_trSel && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))))
+				{					
+					SNM_TakeParserPatcher p(item);
+					int k=0, kOriginal=0;
+					while (k < p.CountTakes() && p.CountTakes() > 1) // p.CountTakes() is a getter
+					{
+						if ((_empty && p.IsEmpty(k)) ||
+							(_midiEmpty && isEmptyMidi(GetTake(item, kOriginal))))
+						{
+							bool removed = p.RemoveTake(k);
+							if (removed) k--; //++ below!
+							updated |= removed;
+						}							
+						k++;
+						kOriginal++;
+					}
+					
+					// Removes the item if needed
+					if (p.CountTakes() == 1)
+					{
+						if ((_empty && p.IsEmpty(0)) ||
+							(_midiEmpty && isEmptyMidi(GetTake(item, 0))))
+						{
+							// prevent a useless SNM_ChunkParserPatcher commit
+							p.CancelUpdates();
+
+							bool removed = DeleteTrackMediaItem(tr, item);
+							if (removed) j--; //++ below!
+							updated |= removed;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Undo point + UpdateTimeline
+	if (updated)
+	{
+		UpdateTimeline();
+		if (_undoTitle)
+			Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
+	}
+	return updated;
+}
+
+
+/***********/
+// Commands
+/***********/
 
 void clearTake(COMMAND_T* _ct)
 {
@@ -116,57 +440,10 @@ void clearTake(COMMAND_T* _ct)
 	}
 }
 
-bool addEmptyTake(MediaItem* _item)
-{
-	return (AddTakeToMediaItem(_item) != NULL);
-}
-
-bool addTake(MediaItem* _item, WDL_String* _chunk)
+void moveTakes(COMMAND_T* _ct)
 {
 	bool updated = false;
-	int length = _chunk->GetLength();
-	if (_item && _chunk && length)
-	{
-		SNM_ChunkParserPatcher p(_item);
-		WDL_String* chunk = p.GetChunk();
-		chunk->Insert(_chunk->Get(), chunk->GetLength()-2, length); //-2: before ">\n"
-		p.SetUpdates(1);// force commit as we're directly working on the cached chunk
-		updated = true;
-	}
-	return updated;
-}
-
-// optionnal SNM_ChunkParserPatcher (for optimization)
-// important: it assumes there're at least 2 takes 
-//            => DeleteTrackMediaItem() should be used otherwise
-bool removeTake(MediaItem* _item, int _take)
-{
-	bool updated = false;
-	if (_item && _take >= 0)
-	{
-		if (CountTakes(_item) > 1)
-		{
-			SNM_TakeParserPatcher p(_item); // no pb: chunk not getted yet
-			updated |= (p.RemoveTake(_take) > 0);
-			// remove the 1st "TAKE" if needed
-			if (updated && !_take)
-				updated |= (p.ParsePatch(SNM_REPLACE_LINE, 1,"ITEM","TAKE",-1,0,-1,(void*)"") > 0);
-		}
-	}
-	return updated;
-}
-
-bool removeTakeOrItem(MediaTrack* _tr, MediaItem* _item, int _take)
-{
-	bool updated = removeTake(_item, _take);
-	if (!_take && CountTakes(_item) == 1)
-		updated |= DeleteTrackMediaItem(_tr, _item);
-	return updated;
-}
-
-void moveTake(COMMAND_T* _ct)
-{
-	bool updated = false;
+	int dir = (int)_ct->user;
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
@@ -175,48 +452,32 @@ void moveTake(COMMAND_T* _ct)
 			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 			{
 				MediaItem* item = GetTrackMediaItem(tr,j);
+				int newActive = 0;
 				if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 				{		
-					// temp..
-					int ntimes = 1;
-					if (((int)_ct->user) == 1)
-						ntimes = CountTakes(item)-1;
-
-					for (int k=0; k < ntimes; k++)
+					SNM_TakeParserPatcher p(item);
+					int active = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
+					int nbTakes = CountTakes(item);
+					if (dir == 1)
 					{
-						// Remove 1st take and re-add it as last one
-						SNM_TakeParserPatcher p(item);
+						newActive = (active == (nbTakes-1) ? 0 : (active+1));
+						// Remove last take and re-add it as 1st one
 						WDL_String chunk;
-						if (p.GetTakeChunk(0, &chunk) > 0)
-						{
-							if (chunk.GetLength() && removeTake(item, 0))
-							{
-								updated = true;
-								p.Commit();
-								chunk.Insert("TAKE\n", 0, 5);
-								updated |= addTake(item, &chunk);						
-							}
-						}
+						updated = p.RemoveTake(nbTakes-1, &chunk);
+						if (updated)
+							p.InsertTake(0, &chunk);						
 					}
-/*TODO (see "temp.." workaround above)
-					// Remove last take and re-add it as 1st one
-					else if (((int)_ct->user) == 1)
+					else if (dir == -1)
 					{
-						SNM_TakeRemover p(item);
-						int lastPos = CountTakes(item)-1;
-						if (p.GetTakeChunk(lastPos, &chunk) > 0)
-						{
-							if (chunk.GetLength() && removeTake(item, lastPos))
-							{
-								updated = true;
-								p.Commit();
-								chunk.Insert("TAKE\n", 0, 5);
-								updated |= addTake(item, &chunk, 0); //ok, too lazy to do this one..
-							}
-						}
+						newActive = (!active ? (nbTakes-1) : (active-1));
+						// Remove 1st take and re-add it as last one
+						WDL_String chunk;
+						updated = p.RemoveTake(0, &chunk);
+						if (updated)
+							p.AddLastTake(&chunk);						
 					}
-*/
 				}
+				GetSetMediaItemInfo(item, "I_CURTAKE", &newActive);
 			}
 		}
 	}
@@ -229,51 +490,60 @@ void moveTake(COMMAND_T* _ct)
 	}
 }
 
-int makeTakeLanesSelectedTracks(const char* _undoTitle) //null: no undo
+void moveActiveTake(COMMAND_T* _ct)
 {
-	int updates = 0;
+	bool updated = false;
+	int dir = (int)_ct->user;
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			int maxTakes = 0;
-			WDL_PtrList<MediaItem> items; // avoids 2 loops on tracks
 			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 			{
 				MediaItem* item = GetTrackMediaItem(tr,j);
-				if (item)
+				int active = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
+				if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 				{
-					maxTakes = max(maxTakes, CountTakes(item));
-					items.Add(item);
-				}
-			}
+					int initialNbbTakes = CountTakes(item);
 
-			for (int j = 0; maxTakes && j < items.GetSize(); j++)
-			{
-				MediaItem* item = items.Get(j);
-				int nbTakes = CountTakes(item);
-				for (int k=nbTakes; k < maxTakes; k++)
-					updates += addEmptyTake(item);
+					// cycle (last<->first) ?
+					bool swapFirstLast = 
+						((dir == 1 && active == (initialNbbTakes-1)) ||
+						(dir == -1 && !active));
+
+					WDL_String removedChunk;
+					SNM_TakeParserPatcher p(item);
+					if (swapFirstLast) {
+						updated |= p.RemoveTake(dir == -1 ? 0 : (initialNbbTakes-1), &removedChunk);
+						updated |= p.InsertTake(dir == -1 ? initialNbbTakes : 0, &removedChunk);
+						active = (dir == 1 ? 0 : (dir == -1 ? (initialNbbTakes-1) : 0));
+					}
+					else {
+						updated |= p.RemoveTake(active, &removedChunk);
+						updated |= p.InsertTake(active+dir, &removedChunk);
+						active += dir;
+					}
+				}
+				GetSetMediaItemInfo(item, "I_CURTAKE", &active);
 			}
 		}
 	}
-	// Undo point + UpdateTimeline
-	if (_undoTitle && updates > 0)
+	// Undo point
+	if (updated)
 	{
 		UpdateTimeline();
-		Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
-	return updates;
 }
 
-void makeTakeLanesSelectedTracks(COMMAND_T* _ct) {
-	makeTakeLanesSelectedTracks(SNM_CMD_SHORTNAME(_ct));
+void buildLanes(COMMAND_T* _ct) {
+	buildLanes(SNM_CMD_SHORTNAME(_ct));
 }
 
 void selectTakeLane(COMMAND_T* _ct)
 {
-	bool updated = (makeTakeLanesSelectedTracks((const char *)NULL) > 0);
+	bool updated = false;
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
@@ -297,6 +567,7 @@ void selectTakeLane(COMMAND_T* _ct)
 				for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
 				{
 					MediaItem* item = GetTrackMediaItem(tr,j);
+					// "active" validity check relies on GetSetMediaItemInfo()
 					if (item && (*(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL)) != active)
 					{
 						GetSetMediaItemInfo(item,"I_CURTAKE",&active);
@@ -315,110 +586,15 @@ void selectTakeLane(COMMAND_T* _ct)
 	}
 }
 
-//TODO: optimization..
-void removeEmptyTakes(COMMAND_T* _ct)
-{
-	bool updated = false;
-	for (int i = 0; i < GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
-		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
-		{
-			MediaItem* item = GetTrackMediaItem(tr,j);
-			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
-			{					
-				int k=0;
-				char readSource[32] = "";
-				while (k < CountTakes(item) && CountTakes(item) > 1)
-				{
-					SNM_ChunkParserPatcher p(item);
-					if (p.Parse(SNM_GET_CHUNK_CHAR,2,"SOURCE","<SOURCE",-1,k,1,readSource) > 0)
-					{
-						if (!strcmp(readSource,"EMPTY"))
-						{
-							bool removed = removeTake(item, k);
-							if (removed) k--; //++ below!
-							updated |= removed;
-						}
-					}							
-					k++;
-				}
-				
-				// Removes the item if needed
-				SNM_ChunkParserPatcher p(item);
-				if (CountTakes(item) == 1 && 
-					(p.Parse(SNM_GET_CHUNK_CHAR,2,"SOURCE","<SOURCE",-1,0,1,readSource) > 0))
-				{
-					if (!strcmp(readSource,"EMPTY"))
-					{
-						updated |= DeleteTrackMediaItem(tr, item);
-						if (updated) j--;
-					}
-				}
-			}
-		}
-	}
-
-	// Undo point + UpdateTimeline
-	if (updated)
-	{
-		UpdateTimeline();
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-	}
+void removeEmptyTakes(COMMAND_T* _ct) {
+	removeEmptyTakes(SNM_CMD_SHORTNAME(_ct), true, false);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Split MIDI/Audio
-///////////////////////////////////////////////////////////////////////////////
-
-void splitMidiAudio(COMMAND_T* _ct)
-{
-	bool updated = false;
-	for (int i = 0; i < GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
-		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
-		{
-			MediaItem* item = GetTrackMediaItem(tr,j);
-			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
-			{
-				double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
-				double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
-
-				// to be splitted ?
-				bool toBeSplitted = (GetCursorPosition() > pos && GetCursorPosition() < end);
-
-				if (!updated && toBeSplitted)
-					Undo_BeginBlock();
-				updated |= toBeSplitted;
-
-				if (toBeSplitted)
-				{
-					int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
-					SNM_ChunkParserPatcher p(item);
-					char readSource[32] = "";
-					bool split=false;
-					if (p.Parse(SNM_GET_CHUNK_CHAR,2,"SOURCE","<SOURCE",-1,activeTake,1,readSource) > 0)
-					{
-						if (!strcmp(readSource,"MIDI") || !strcmp(readSource,"EMPTY"))
-						{
-							SplitMediaItem(item, GetCursorPosition());
-							split = true;
-						}
-					}
-					
-					// split prior zero crossing
-					if (!split)
-						Main_OnCommand(40792,0);
-				}
-			}
-		}
-	}
-
-	// Undo point
-	if (updated)
-	{
-		UpdateTimeline();
-		Undo_EndBlock(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
-	}
+void removeEmptyMidiTakes(COMMAND_T* _ct) {
+	removeEmptyTakes(SNM_CMD_SHORTNAME(_ct), false, true);
 }
+
+void removeAllEmptyTakes(COMMAND_T* _ct) {
+	removeEmptyTakes(SNM_CMD_SHORTNAME(_ct), true, true);
+}
+

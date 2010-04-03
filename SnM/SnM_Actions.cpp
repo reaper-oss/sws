@@ -42,10 +42,13 @@ static COMMAND_T g_commandTable[] =
 
 	// Windows ----------------------------------------------------------------
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Close all I/O window(s)" }, "S&M_WNCLS1", closeRoutingWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Close all routing window(s)" }, "S&M_WNCLS1", closeRoutingWindows, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Close all envelope window(s)" }, "S&M_WNCLS2", closeEnvWindows, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Toggle show all I/O window(s)" }, "S&M_WNTGL1", toggleRoutingWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Close all floating FX window(s)" }, "S&M_WNCLS3", closeFloatingFXWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Close all FX chain window(s)" }, "S&M_WNCLS4", closeFXChainsWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Toggle show all routing window(s)" }, "S&M_WNTGL1", toggleRoutingWindows, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Toggle show all envelope window(s)" }, "S&M_WNTGL2", toggleEnvWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Toggle show FX chain window(s) for selected track(s)" }, "S&M_WNTGL3", toggleFXChainsWindows, NULL, },	
 #endif
 	{ { DEFACCEL, "SWS/S&M: Focus main window" }, "S&M_WNMAIN", setMainWindowActive, NULL, },
 
@@ -227,12 +230,16 @@ static COMMAND_T g_commandTable[] =
 	
 	
 	// Takes ------------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Comping - Clear active take(s)" }, "S&M_CLRTAKE1", clearTake, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Comping - Build lane(s) for selected track(s)" }, "S&M_LANETAKE1", makeTakeLanesSelectedTracks, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Comping - Select lane from selected item" }, "S&M_LANETAKE2", selectTakeLane, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Comping - Remove empty take(s) in selected item(s)" }, "S&M_DELEMPTYTAKE", removeEmptyTakes, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Comping - Move takes up (cycling)" }, "S&M_MOVETAKE1", moveTake, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Comping - Move takes down (cycling)" }, "S&M_MOVETAKE2", moveTake, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Takes - Clear active take(s)/item(s)" }, "S&M_CLRTAKE1", clearTake, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Takes - Build lane(s) for selected track(s)" }, "S&M_LANETAKE1", buildLanes, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Takes - Select lane from selected item" }, "S&M_LANETAKE2", selectTakeLane, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Takes - Remove empty source take/item(s) among selected item(s)" }, "S&M_DELEMPTYTAKE", removeEmptyTakes, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Takes - Remove empty MIDI take/item(s) among selected item(s)" }, "S&M_DELEMPTYTAKE2", removeEmptyMidiTakes, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Takes - Remove ALL empty take/item(s) among selected item(s)" }, "S&M_DELEMPTYTAKE3", removeAllEmptyTakes, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Takes - Move all up (cycling) in selected item(s)" }, "S&M_MOVETAKE1", moveTakes, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Takes - Move all down (cycling) in selected item(s)" }, "S&M_MOVETAKE2", moveTakes, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Takes - Move active up (cycling) in selected item(s)" }, "S&M_MOVETAKE3", moveActiveTake, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Takes - Move active down (cycling) in selected item(s)" }, "S&M_MOVETAKE4", moveActiveTake, NULL, 1},
 
 	{ { DEFACCEL, "SWS/S&M: Split MIDI or Audio at prior zero crossing" }, "S&M_SPLIT1", splitMidiAudio, NULL, },
 

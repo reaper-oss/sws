@@ -147,14 +147,19 @@ public:
 	{
 		m_searchedTake = -1;
 		m_removing = false;
-		m_occurence = 0;
+		m_lastTakeCount = -1;
 		m_removing = false;
 		m_getting = false;
 	}
 	~SNM_TakeParserPatcher() {}
 
-	int RemoveTake(int _take);
-	int GetTakeChunk(int _take, WDL_String* _chunk);
+	bool GetTakeChunk(int _take, WDL_String* _gettedChunk);
+	int CountTakes();
+	void SetCountTakes(int _count) {m_lastTakeCount = _count;}
+	bool IsEmpty(int _take);
+	bool AddLastTake(WDL_String* _chunk);
+	bool InsertTake(int _takePos, WDL_String* _chunk);
+	bool RemoveTake(int _take, WDL_String* _removedChunk = NULL);
 
 protected:
 	bool NotifyEndElement(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
@@ -168,7 +173,7 @@ protected:
 	bool m_removing;
 	bool m_getting;
 	int m_searchedTake;
-	int m_occurence;
+	int m_lastTakeCount;
 	WDL_String m_subchunk;
 };
 

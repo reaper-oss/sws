@@ -70,3 +70,36 @@ void moveTrack(int _src, int _dest)
 void moveTest(COMMAND_T* _ct) {
 	moveTrack(1,4);
 }
+
+bool isLoopOrInProjectTakes(MediaItem* _item, int _take)
+{
+	if (_item)
+	{
+		PCM_source* srcTake = 
+			(PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(_item, _take), "P_SOURCE", NULL);
+
+		// in-project ?
+		if (srcTake && !srcTake->GetFileName())
+			return true;
+
+		// look to -1, +1 rather than looking to all takes
+		// => manage the case a mess has been introduced between looped takes
+		if (_take > 0)
+		{
+			PCM_source* src = 
+				(PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(_item, _take-1), "P_SOURCE", NULL);
+			if (src && src->GetFileName() && 
+				!strcmp(src->GetFileName(), srcTake->GetFileName()))
+				return true;
+		}
+		if (_take < (CountTakes(_item)-1))
+		{
+			PCM_source* src = 
+				(PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(_item, _take+1), "P_SOURCE", NULL);
+			if (src && src->GetFileName() && 
+				!strcmp(src->GetFileName(), srcTake->GetFileName()))
+				return true;
+		}
+	}
+	return false;
+}

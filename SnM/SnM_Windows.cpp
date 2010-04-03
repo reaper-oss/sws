@@ -40,69 +40,158 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef _WIN32
-void toggleShowHideWin(const char * _title) {
+bool toggleShowHideWin(const char * _title) {
 	HWND w = FindWindow(NULL, _title);
 	if (w != NULL)
+	{
 		ShowWindow(w, IsWindowVisible(w) ? SW_HIDE : SW_SHOW);
+		return true;
+	}
+	return false;
 }
 
-void closeWin(const char * _title) {
-		HWND w = FindWindow(NULL, _title);
-		if (w != NULL)
-			SendMessage(w, WM_SYSCOMMAND, SC_CLOSE, 0);
+bool closeWin(const char * _title) {
+	HWND w = FindWindow(NULL, _title);
+	if (w != NULL)
+	{
+		SendMessage(w, WM_SYSCOMMAND, SC_CLOSE, 0);
+		return true;
+	}
+	return false;
 }
 
-void closeOrToggleWindows(bool _routing, bool _env, bool _toggle)
+void closeOrToggleWindows(bool _chain, bool _fx, bool _routing, bool _env, bool _toggle)
 {
-	for (int i=1; i <= GetNumTracks(); i++)
+	for (int i=0; i <= GetNumTracks(); i++)
 	{
 		MediaTrack *tr = CSurf_TrackFromID(i, false);
 		if (tr)
 		{
 			char trName[128];
-			sprintf(trName, "%s", GetTrackInfo((int)tr, NULL));
+			strcpy(trName, GetTrackInfo((int)tr, NULL));
 
 			//  *** Routing ***
 			if (_routing)
 			{
 				char routingName[128];
-				sprintf(routingName, "Routing for track %d \"%s\"", i, trName);
+				if (!i) strcpy(routingName, "Outputs for Master Track");
+				else sprintf(routingName, "Routing for track %d \"%s\"", i, trName);
 
-				if (_toggle)
-					toggleShowHideWin(routingName);
-				else
-					closeWin(routingName);
+				if (_toggle) toggleShowHideWin(routingName);
+				else closeWin(routingName);
 			}
 
 			// *** Env ***
 			if (_env)
 			{
 				char envName[128];
-				sprintf(envName, "Envelopes for track %d \"%s\"", i, trName);
-				if (_toggle)
-					toggleShowHideWin(envName);
-				else
-					closeWin(envName);
+				if (!i) strcpy(envName, "Envelopes for Master Track");
+				else sprintf(envName, "Envelopes for track %d \"%s\"", i, trName);
+
+				if (_toggle) toggleShowHideWin(envName);
+				else closeWin(envName);
+			}
+
+			// *** FX chain & add FX ***
+			if (_chain)
+			{
+				char fxChainName[128];
+				char addFXName[128];
+				if (strlen(trName) == 0)
+				{
+					if (!i) strcpy(fxChainName, "FX: Master Track");
+					else sprintf(fxChainName, "FX: track %d", i);
+
+					if (!i) strcpy(addFXName, "Add FX to: Master Track");
+					else sprintf(addFXName, "Add FX to: track %d ", i); // " " !
+				}
+				else 
+				{
+					sprintf(fxChainName, "FX: track %d \"%s\"", i, trName);
+					sprintf(addFXName, "Add FX to: track %d \"%s\"", i, trName);
+				}
+//dbg				MessageBox(0, fxChainName, "dbg", MB_OK);
+
+				if (_toggle &&  *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) 
+				{
+					if (!toggleShowHideWin(fxChainName))
+						showFXChain(tr,0);
+					toggleShowHideWin(addFXName);
+				}
+				else 
+				{
+					closeWin(fxChainName);
+					closeWin(addFXName);
+				}
+			}
+
+			// *** floating FXs ***
+			if (_fx)
+			{
+				int nbFx = TrackFX_GetCount(tr);
+				for (int j=0; j < nbFx; j++)
+				{
+					char fxName[128];
+					TrackFX_GetFXName(tr, j, fxName, 128);
+
+					char fxDlgName[128];
+					if (strlen(trName) == 0)
+					{
+						if (!i) sprintf(fxDlgName, "%s - Master Track", fxName);
+						else sprintf(fxDlgName, "%s - track %d", fxName, i); 
+					}
+					else sprintf(fxDlgName, "%s - track %d \"%s\"", fxName, i, trName);
+
+					if (!closeWin(fxDlgName))
+					{
+						char fxDlgName2[128];
+						sprintf(fxDlgName2, "BYPASSED - %s", fxDlgName);
+						if (!closeWin(fxDlgName2))
+						{
+							char fxDlgName3[128];
+							sprintf(fxDlgName3, "%s [BYPASSED]", fxDlgName);
+							if (!closeWin(fxDlgName3))
+							{
+								char fxDlgName4[128];
+								sprintf(fxDlgName4, "BYPASSED - %s [BYPASSED]", fxDlgName);
+								closeWin(fxDlgName4);
+							}
+						}
+					}
+				}
 			}
 		}
 	}
 }
 
 void closeRoutingWindows(COMMAND_T * _c) {
-	closeOrToggleWindows(true, false, false);
+	closeOrToggleWindows(false, false, true, false, false);
 }
 
 void closeEnvWindows(COMMAND_T * _c) {
-	closeOrToggleWindows(false, true, false);
+	closeOrToggleWindows(false, false, false, true, false);
+}
+
+void closeFloatingFXWindows(COMMAND_T * _c) {
+	closeOrToggleWindows(false, true, false, false, false);
+}
+
+void closeFXChainsWindows(COMMAND_T * _c) {
+	closeOrToggleWindows(true, false, false, false, false);
 }
 
 void toggleRoutingWindows(COMMAND_T * _c) {
-	closeOrToggleWindows(true, false, true);
+	closeOrToggleWindows(false, false, true, false, true);
 }
 
 void toggleEnvWindows(COMMAND_T * _c) {
-	closeOrToggleWindows(false, true, true);
+	closeOrToggleWindows(false, false, false, true, true);
 }
+
+void toggleFXChainsWindows(COMMAND_T * _c) {
+	closeOrToggleWindows(true, false, false, false, true);
+}
+
 #endif
 
 

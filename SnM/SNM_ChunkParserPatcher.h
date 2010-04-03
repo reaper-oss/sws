@@ -1,6 +1,6 @@
 /******************************************************************************
 ** SNM_ChunkParserPatcher.h
-** Copyright (C) 2009-2010, JF BÃ©dague 
+** Copyright (C) 2009-2010, JF Bédague 
 **
 **    This software is provided 'as-is', without any express or implied
 **    warranty.  In no event will the authors be held liable for any damages
@@ -58,7 +58,6 @@
 #define SNM_REPLACE_SUBCHUNK			12
 #define SNM_REPLACE_SUBCHUNK_EXCEPT		13
 #define SNM_GET_SUBCHUNK				14
-#define SNM_REPLACE_LINE				15
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -202,6 +201,10 @@ void SetChunk(char* _newChunk, int _updates) {
 	m_chunk.Set(_newChunk ? _newChunk : "");
 }
 
+int GetUpdates() {
+	return m_updates;
+}
+
 void SetUpdates(int _updates) {
 	m_updates = _updates;
 }
@@ -210,9 +213,9 @@ void SetUpdates(int _updates) {
 // note: in REAPER v3.35 it's safer *not* to patch while recording,
 //       see http://forum.cockos.com/showthread.php?t=52002 so there's
 //       a global protection here (temporary, I hope).
-bool Commit()
+bool Commit(bool _force = false)
 {
-	if (m_object && m_updates && 
+	if (m_object && (m_updates || _force) && 
 		!(GetPlayState() & 4) && // prevent patches while recording
 		m_chunk.GetLength() && 
 		!GetSetObjectState(m_object, m_chunk.Get()))
@@ -230,6 +233,10 @@ bool Commit()
 //**********************
 // Facility methods
 //**********************
+
+void CancelUpdates() {
+	SetChunk("", 0);
+}
 
 bool GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_String* _chunk) 
 {
@@ -284,6 +291,7 @@ int RemoveIds()
 ///////////////////////////////////////////////////////////////////////////////
 protected:
 	void* m_object;
+	int m_updates;
 
 	// Parsing callbacks (to be implemented for SAX-ish parsing style)
 	// ------------------------------------------------------------------------
@@ -320,7 +328,6 @@ protected:
 ///////////////////////////////////////////////////////////////////////////////
 private:
 	WDL_String m_chunk;
-	int m_updates;
 	bool m_autoCommit;
 
 bool WriteChunkLine(WDL_String* _chunkLine, const char* _value, int _tokenPos, LineParser* _lp)
@@ -409,7 +416,7 @@ int ParsePatchCore(
 
 	// sub-cunk processing: depth must be provided 
 	if ((!_value || _depth <= 0) &&
-		(_mode == SNM_GET_SUBCHUNK || _mode == SNM_REPLACE_LINE ||
+		(_mode == SNM_GET_SUBCHUNK || 
 		 _mode == SNM_REPLACE_SUBCHUNK || _mode == SNM_REPLACE_SUBCHUNK_EXCEPT))
 		return -1;
 
@@ -465,7 +472,7 @@ int ParsePatchCore(
 					if (_mode == SNM_GET_SUBCHUNK)
 					{
 						((WDL_String*)_value)->Append(">\n",2);
-						return 1; // TODO: return position instead
+						return 1; 
 					}
 				}
 
@@ -495,8 +502,6 @@ int ParsePatchCore(
 			}
 			else if (strictMatch && _mode >= 0)
 			{
-				char bufConversion[16] = ""; // Can't put it in the switch! 
-
 				// This occurence match
 				// note: _occurence == -1 is a valid parameter, processed as "except"
 				if (_occurence == occurence)
@@ -504,8 +509,12 @@ int ParsePatchCore(
 					switch (_mode)
 					{
 						case SNM_GET_CHUNK_CHAR:
+						{
 							strcpy((char*)_value, lp.gettoken_str(_tokenPos));
-							return 1; // TODO: return position instead
+							char* p = strstr(pLine, _keyWord);
+							// returns the *KEYWORD* position + 1 ('cause 0 reserved for "not found")
+							return (p ? ((int)(p-cData+1)) : -1); 
+						}
 						case SNM_SET_CHUNK_CHAR:
 							alter |= WriteChunkLine(&newChunk, (char*)_value, _tokenPos, &lp); 
 							break;
@@ -522,13 +531,12 @@ int ParsePatchCore(
 								&parents, currentParent->Get(), &newChunk, updates);
 							break;
 						case SNM_TOGGLE_CHUNK_INT:
+						{
+							char bufConversion[16] = "";
 							sprintf(bufConversion, "%d", !lp.gettoken_int(_tokenPos));
 							alter |= WriteChunkLine(&newChunk, bufConversion, _tokenPos, &lp); 
-                            break; 
-						case SNM_REPLACE_LINE:
-							newChunk.Append((char*)_value);
-							alter=true;
-							break;
+						}
+						break; 
 						case SNM_REPLACE_SUBCHUNK:
 							newChunk.Append((char*)_value);
 							if (*_keyWord == '<') subChunkKeyword = currentParent;
@@ -568,9 +576,12 @@ int ParsePatchCore(
 								&parents, currentParent->Get(), &newChunk, updates); 
 							break;
 						case SNM_TOGGLE_CHUNK_INT_EXCEPT:
+						{
+							char bufConversion[16] = "";
 							sprintf(bufConversion, "%d", !lp.gettoken_int(_tokenPos));
 							alter |= WriteChunkLine(&newChunk, bufConversion, _tokenPos, &lp); 
-                            break; 
+						}
+                        break; 
 						case SNM_REPLACE_SUBCHUNK_EXCEPT:
 							newChunk.Append((char*)_value);
 							if (*_keyWord == '<') subChunkKeyword = currentParent;
@@ -625,7 +636,6 @@ int ParsePatchCore(
 		case SNM_TOGGLE_CHUNK_INT_EXCEPT:
 		case SNM_REPLACE_SUBCHUNK:
 		case SNM_REPLACE_SUBCHUNK_EXCEPT:
-		case SNM_REPLACE_LINE:
 		default: // for custom _mode (e.g. <0)
 			return updates;
 	}

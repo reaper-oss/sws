@@ -36,7 +36,6 @@
 int SnMActionsInit();
 void SNM_ShowConsoleMsg(const char* _title, const char* _msg); 
 
-
 // *** SnM_FX.cpp ***
 void patchSelTracksFXState(int _mode, int _token, int _fx, const char* _value, const char * _undoMsg);
 void toggleFXOfflineSelectedTracks(COMMAND_T* _ct);
@@ -88,13 +87,17 @@ void saveIniFile(int _slot, const char* _path);
 
 
 // *** SnM_Windows.cpp ***
-void toggleShowHideWin(const char * _title);
-void closeWin(const char * _title);
-void closeOrToggleWindows(bool _routing, bool _env, bool _toggle);
+bool toggleShowHideWin(const char * _title);
+bool closeWin(const char * _title);
+void closeOrToggleWindows(bool _chain, bool _fx, bool _routing, bool _env, bool _toggle);
 void closeRoutingWindows(COMMAND_T * _c);
 void closeEnvWindows(COMMAND_T * _c);
+void closeFloatingFXWindows(COMMAND_T * _c);
+void closeFXChainsWindows(COMMAND_T * _c);
+
 void toggleRoutingWindows(COMMAND_T * _c);
 void toggleEnvWindows(COMMAND_T * _c);
+void toggleFXChainsWindows(COMMAND_T * _c);
 
 void showFXChain(MediaTrack* _tr, int _fx);
 void showFXChain(COMMAND_T* _ct);
@@ -118,20 +121,27 @@ void removeReceives(COMMAND_T* _ct);
 bool selectItemsByName(const char* cUndoMsg, char* cName);
 bool selectItemsByNamePrompt(const char* cCaption, char * _reply);
 void selectItemsByNamePrompt(COMMAND_T* _ct);
-void clearTake(COMMAND_T* _ct);
-bool addEmptyTake(MediaItem* _item);
-bool addTake(MediaItem* _item, WDL_String* _chunk);
-bool removeTake(MediaItem* _item, int _take);
-bool removeTakeOrItem(MediaTrack* _tr, MediaItem* _item, int _take);
-void moveTake(COMMAND_T* _ct);
-int makeTakeLanesSelectedTracks(const char* _undoTitle);
-void selectTakeLane(COMMAND_T* _ct);
-void makeTakeLanesSelectedTracks(COMMAND_T* _ct);
-void removeEmptyTakes(COMMAND_T* _ct);
+
 void splitMidiAudio(COMMAND_T* _ct);
+
+bool isEmptyMidi(MediaItem_Take* _take);
+void setEmptyTakeChunk(WDL_String* _chunk);
+bool addEmptyTake(MediaItem* _item);
+int findFirstTakeByFilename(MediaItem* _item, const char* _takeName, bool* _alreadyFound);
+int buildLanes(const char* _undoTitle);
+bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel = false);
+void clearTake(COMMAND_T* _ct);
+void moveTakes(COMMAND_T* _ct);
+void moveActiveTake(COMMAND_T* _ct);
+void selectTakeLane(COMMAND_T* _ct);
+void buildLanes(COMMAND_T* _ct);
+void removeEmptyTakes(COMMAND_T* _ct);
+void removeEmptyMidiTakes(COMMAND_T* _ct);
+void removeAllEmptyTakes(COMMAND_T* _ct);
 
 
 // *** SnM_Misc.cpp ***
 void moveTrack(int _src, int _dest); 
 void moveTest(COMMAND_T* _ct);
+bool isLoopOrInProjectTakes(MediaItem* _item, int _take);
 

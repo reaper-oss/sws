@@ -40,14 +40,6 @@ WDL_String g_storedFXChain[MAX_FXCHAIN_SLOTS+1]; //+1 for clipboard
 // Take FX chain
 ///////////////////////////////////////////////////////////////////////////////
 
-void loadPasteTakeFXChain(COMMAND_T* _ct){
-	loadPasteTakeFXChain(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true);
-}
-
-void loadPasteAllTakesFXChain(COMMAND_T* _ct){
-	loadPasteTakeFXChain(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false);
-}
-
 void loadPasteTakeFXChain(const char* _title, int _slot, bool _activeOnly)
 {
 	if (CountSelectedMediaItems(0))
@@ -61,6 +53,36 @@ void loadPasteTakeFXChain(const char* _title, int _slot, bool _activeOnly)
 		if (g_storedFXChain[_slot].GetLength())
 			setTakeFXChain(_title, _slot, _activeOnly, false);
 	}
+}
+
+// could be <0 (e.g. clear, ..)
+void setTakeFXChain(const char* _title, int _slot, bool _activeOnly, bool _clear)
+{
+	bool updated = false;
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
+			{
+				SNM_FXChainTakePatcher p(item);
+				updated |= (p.SetFXChain(_clear ? NULL : &g_storedFXChain[_slot], _activeOnly) > 0);
+			}
+		}
+	}
+	// Undo point
+	if (updated)
+		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
+}
+
+void loadPasteTakeFXChain(COMMAND_T* _ct){
+	loadPasteTakeFXChain(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true);
+}
+
+void loadPasteAllTakesFXChain(COMMAND_T* _ct){
+	loadPasteTakeFXChain(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false);
 }
 
 void copyTakeFXChain(COMMAND_T* _ct)
@@ -107,28 +129,6 @@ void clearAllTakesFXChain(COMMAND_T* _ct) {
 	setTakeFXChain(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
 }
 
-// could be <0 (e.g. clear, ..)
-void setTakeFXChain(const char* _title, int _slot, bool _activeOnly, bool _clear)
-{
-	bool updated = false;
-	for (int i = 0; i < GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
-		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
-		{
-			MediaItem* item = GetTrackMediaItem(tr,j);
-			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
-			{
-				SNM_FXChainTakePatcher p(item);
-				updated |= (p.SetFXChain(_clear ? NULL : &g_storedFXChain[_slot], _activeOnly) > 0);
-			}
-		}
-	}
-	// Undo point
-	if (updated)
-		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
-}
-
 /*JFB
 void setActiveTakeFXChain(COMMAND_T* _ct) {
 	setTakeFXChain((int)_ct->user, true, false);
@@ -143,6 +143,23 @@ void setAllTakesFXChain(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 // Track FX chain
 ///////////////////////////////////////////////////////////////////////////////
+
+void setTrackFXChain(const char* _title, int _slot, bool _clear)
+{
+	bool updated = false;
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i,false); // include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			SNM_FXChainTrackPatcher p(tr);
+			updated |= (p.SetFXChain(_clear ? NULL : &g_storedFXChain[_slot]) > 0);
+		}
+	}
+	// Undo point
+	if (updated)
+		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
+}
 
 void loadPasteTrackFXChain(COMMAND_T* _ct)
 {
@@ -197,23 +214,6 @@ void cutTrackFXChain(COMMAND_T* _ct) {
 
 void pasteTrackFXChain(COMMAND_T* _ct) {
 	setTrackFXChain(SNM_CMD_SHORTNAME(_ct), MAX_FXCHAIN_SLOTS, false);
-}
-
-void setTrackFXChain(const char* _title, int _slot, bool _clear)
-{
-	bool updated = false;
-	for (int i = 0; i <= GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i,false); // include master
-		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-		{
-			SNM_FXChainTrackPatcher p(tr);
-			updated |= (p.SetFXChain(_clear ? NULL : &g_storedFXChain[_slot]) > 0);
-		}
-	}
-	// Undo point
-	if (updated)
-		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
 }
 
 

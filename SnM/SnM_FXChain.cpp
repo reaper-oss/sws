@@ -163,7 +163,9 @@ void setTrackFXChain(const char* _title, int _slot, bool _clear)
 
 void loadPasteTrackFXChain(COMMAND_T* _ct)
 {
-	if (CountSelectedTracks(0))
+	if (CountSelectedTracks(0) ||
+		// also check master
+	    *(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(0,false), "I_SELECTED", NULL))
 	{
 		int slot = (int)_ct->user;
 

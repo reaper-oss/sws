@@ -116,7 +116,7 @@ void closeOrToggleWindows(bool _chain, bool _fx, bool _routing, bool _env, bool 
 				{
 					if (!toggleShowHideWin(fxChainName))
 						showFXChain(tr,0);
-					toggleShowHideWin(addFXName);
+//					toggleShowHideWin(addFXName);
 				}
 				else 
 				{

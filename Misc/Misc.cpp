@@ -34,6 +34,7 @@
 // misc module.
 
 #include "stdafx.h"
+#include "Context.h"
 #include "ItemParams.h"
 #include "ItemSel.h"
 #include "FolderActions.h"
@@ -46,11 +47,13 @@
 int MiscInit()
 {
 	// Call sub-init routines
+	if (!ContextInit())
+		return 0;
+	if (!FolderActionsInit())
+		return 0;
 	if (!ItemParamsInit())
 		return 0;
 	if (!ItemSelInit())
-		return 0;
-	if (!FolderActionsInit())
 		return 0;
 	if (!ProjPrefsInit())
 		return 0;

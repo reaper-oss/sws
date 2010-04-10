@@ -35,7 +35,7 @@
 // http://code.google.com/p/sws-extension/source/browse/trunk#trunk/SnM
 //
 // Important: 
-// - MORE PERF. IMPROVMENT TO COME (replacing WDL_String)
+// - MORE PERF. IMPROVMENT TO COME : WDL -> SNM_String, no chunk recopy in ParsePatchCore()
 // - the code assumes getted/setted RPP chunks are consistent
 // - chunks may be HUGE!
 
@@ -67,7 +67,7 @@
 
 // Removes lines from a chunk in one-go and without chunk recopy
 // Note: we parse rather than use a strchr() solution 'cause searched keywords
-// may be present at "unexpected places" (e.g. set by the user). Will re-work that..
+// may be present at "unexpected places" (e.g. set by the user).
 static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<char>* _removedKeywords)
 {
 	int updates = 0;
@@ -397,21 +397,21 @@ void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch,
 // (most of the time with _mode). Should returns -1 if it's not respected.
 //
 // Return values:
-// Always return -1 on error/bad usage, or
-// returns the number of updates done when altering (i.e. 0 nothing done), or
-// returns 1 (found) or 0 (not found) when getting
+// Always return -1 on error/bad usage
+// or returns the number of updates done when altering (i.e. 0 nothing done), or
+// or returns the first found position in the chunk or 0 if not found when getting
 //
 int ParsePatchCore(
 	bool _write, // optimization flag (if false: no re-copy)
 	int _mode, // can be <0 for custom modes (usefull for inheritance)
-	int _depth, // 1-based
+	int _depth, // 1-based!
 	const char* _expectedParent, 
 	const char* _keyWord, 
-	int _numTokens, // 0-based
-	int _occurence, // 0-based
-	int _tokenPos, // 0-based
+	int _numTokens, // 0-based (-1: ignored)
+	int _occurence, // 0-based (-1: ignored, all occurences notified)
+	int _tokenPos, // 0-based (-1: ignored, may be mandatory depending on _mode 
 	void* _value, // value to get/set
-	void* _valueExcept)
+	void* _valueExcept) // value to get/set for the "except case"
 {
 	// check params (not to do it in the parsing loop/switch-cases)
 	if ((!_value || _tokenPos < 0) && 
@@ -558,7 +558,7 @@ int ParsePatchCore(
 								alter=true;
 							}
 							break;
- 						default:
+ 						default: // for custom _mode (e.g. <0)
 							break;
 					}
 				}
@@ -592,7 +592,7 @@ int ParsePatchCore(
 							if (*_keyWord == '<') subChunkKeyword = currentParent;
 							alter=true;
 							break;
-						default:
+						default: // for custom _mode (e.g. <0)
 							break;
 					}
 				}
@@ -608,6 +608,7 @@ int ParsePatchCore(
 		}
 		updates += (_write && alter);
 
+		// TODO: no recopy
 		// copy current line if it wasn't altered
 		if (_write && !alter && lpNumTokens)
 			newChunk.AppendFormatted(curLineLength+2, "%s\n", curLine.Get());

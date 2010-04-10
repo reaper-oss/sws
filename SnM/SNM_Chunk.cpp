@@ -44,7 +44,6 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode, LineParser* _lp, WDL_String* _p
 		char bufline[512] = "";
 		int n = sprintf(bufline, 
 			"AUXRECV %d %d %s %s 0 0 0 0 0 -1.00000000000000 0 -1\n%s\n", 
-//			"AUXRECV %d %d %s %s mute mono phase audioSrc audioDest PANLAW midi automation\n%s\n", 
 			m_srcId-1, m_sendType, 
 			m_vol, m_pan,
 			_parsedLine->Get());

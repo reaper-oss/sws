@@ -162,8 +162,8 @@ void cueTrack(COMMAND_T* _ct) {
 // Copy/paste with sends
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_PtrList<t_SendRcv> g_sendClipboard[64];
-WDL_PtrList<t_SendRcv> g_receiveClipboard[64];
+WDL_PtrList<t_SendRcv> g_sendClipboard[MAX_COPY_PASTE_SND_RCV];
+WDL_PtrList<t_SendRcv> g_receiveClipboard[MAX_COPY_PASTE_SND_RCV];
 
 MediaTrack* SNM_GuidToTrack(const char* _guid)
 {

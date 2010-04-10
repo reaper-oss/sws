@@ -38,37 +38,70 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode, LineParser* _lp, WDL_String* _p
 	WDL_String* _newChunk, int _updates)
 {
 	bool update = false;
-	// add send
-	if (_mode == -1&& m_srcId > 0)
+	// add rcv
+	if (_mode == -1 && m_srcId > 0)
 	{
 		char bufline[512] = "";
 		int n = sprintf(bufline, 
 			"AUXRECV %d %d %s %s 0 0 0 0 0 -1.00000000000000 0 -1\n%s\n", 
-			m_srcId-1, 
-			m_sendType, 
-			m_vol ? m_vol : "1.00000000000000", 
-			m_pan ? m_pan : "0.00000000000000",
+//			"AUXRECV %d %d %s %s mute mono phase audioSrc audioDest PANLAW midi automation\n%s\n", 
+			m_srcId-1, m_sendType, 
+			m_vol, m_pan,
 			_parsedLine->Get());
 		_newChunk->Append(bufline,n);
 		update = true;
 	}
-	// remove send
+	// remove rcv
 	else if (_mode == -2)
 	{
 		update = (m_srcId == -1 || _lp->gettoken_int(1) == m_srcId);
 		// update => nothing! we do NOT re-copy this receive
 	}
+	// add "detailed" receive
+	else if (_mode == -3  && m_srcId > 0 && m_sndRcv)
+	{
+		char bufline[512] = "";
+		int n = sprintf(bufline, 
+			"AUXRECV %d %d %.14f %.14f %d %d %d %d %d %.14f %d %d\n%s\n", 
+			m_srcId-1, 
+			m_sendType, 
+			m_sndRcv->vol, 
+			m_sndRcv->pan,
+			m_sndRcv->mute,
+			m_sndRcv->mono,
+			m_sndRcv->phase,
+			m_sndRcv->srcChan,
+			m_sndRcv->destChan,
+			m_sndRcv->panl,
+			m_sndRcv->midi,
+			-1, // can't get -send/rcv- automation!
+			_parsedLine->Get());
+		_newChunk->Append(bufline,n);
+		update = true;
+	}
 	return update; 
 }
 
-int SNM_SendPatcher::AddSend(
+int SNM_SendPatcher::AddReceive(
 	MediaTrack* _srcTr, int _sendType, char* _vol, char* _pan) 
 {
 	m_srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
 	m_sendType = _sendType;
 	m_vol = _vol;
 	m_pan = _pan;
+	m_sndRcv = NULL;
 	return ParsePatch(-1, 1, "TRACK", "MIDIOUT");
+}
+
+int SNM_SendPatcher::AddReceive(
+	MediaTrack* _srcTr, t_SendRcv* _io) 
+{
+	m_srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
+	m_sendType = _io->mode;
+	m_vol = NULL;
+	m_pan = NULL;
+	m_sndRcv = _io;
+	return ParsePatch(-3, 1, "TRACK", "MIDIOUT");
 }
 
 int SNM_SendPatcher::RemoveReceives() 
@@ -77,6 +110,7 @@ int SNM_SendPatcher::RemoveReceives()
 	m_sendType = 2; // deprecated
 	m_vol = NULL;
 	m_pan = NULL;
+	m_sndRcv = NULL;
 	return ParsePatch(-2, 1, "TRACK", "AUXRECV");
 }
 

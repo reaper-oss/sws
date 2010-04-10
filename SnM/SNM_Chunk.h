@@ -36,6 +36,24 @@
 // SNM_SendPatcher
 ///////////////////////////////////////////////////////////////////////////////
 
+typedef struct
+{
+	char srcGUID[64];
+	char destGUID[64];
+//	GUID* srcGUID;
+//	GUID* destGUID;
+	bool mute;
+	int phase;
+	int mono;
+	double vol;
+	double pan;
+	double panl;
+	int mode;
+	int srcChan;
+	int destChan;
+	int midi;
+} t_SendRcv;
+
 class SNM_SendPatcher : public SNM_ChunkParserPatcher
 {
 public:
@@ -45,9 +63,11 @@ public:
 		m_sendType = 2; // voluntary deprecated
 		m_vol = NULL;
 		m_pan = NULL;
+		m_sndRcv = NULL;
 	}
 	~SNM_SendPatcher() {}
-	int AddSend(MediaTrack* _srcTr, int _sendType, char* _vol=NULL, char* _pan=NULL);
+	int AddReceive(MediaTrack* _srcTr, int _sendType, char* _vol="1.00000000000000", char* _pan="0.00000000000000");
+	int AddReceive(MediaTrack* _srcTr, t_SendRcv* _io);
 	int RemoveReceives();
 
 protected:
@@ -59,6 +79,7 @@ protected:
 	int m_sendType;
 	char* m_vol;
 	char* m_pan;
+	t_SendRcv* m_sndRcv;
 };
 
 

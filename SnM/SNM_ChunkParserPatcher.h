@@ -64,6 +64,7 @@
 // Static utility functions
 ///////////////////////////////////////////////////////////////////////////////
 
+
 // Removes lines from a chunk in one-go and without chunk recopy
 // Note: we parse rather than use a strchr() solution 'cause searched keywords
 // may be present at "unexpected places" (e.g. set by the user). Will re-work that..
@@ -165,6 +166,10 @@ int Parse(
 	return ParsePatchCore(false, _mode, _depth, _expectedParent, 
 		_keyWord, _numTokens, _occurence, 
 		_tokenPos, _value,_valueExcept);
+}
+
+void* GetObject() {
+	return m_object;
 }
 
 // Get and cache the RPP chunk

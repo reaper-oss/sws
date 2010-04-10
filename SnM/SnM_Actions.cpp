@@ -40,6 +40,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Create cue bus track from track selection (prompt)" }, "S&M_SENDS4", cueTrackPrompt, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Remove receives for selected track(s)" }, "S&M_SENDS5", removeReceives, NULL, },
 
+	{ { DEFACCEL, "SWS/S&M: Copy items/tracks/env points (depending on focus)" }, "S&M_COPYSNDRCV1", copyWithIOs, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Paste items/tracks" }, "S&M_PASTSNDRCV1", pasteWithIOs, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Cut items/tracks/env points (depending on focus)" }, "S&M_CUTSNDRCV1", cutWithIOs, NULL, },
+
 	// Windows ----------------------------------------------------------------
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Close all routing window(s)" }, "S&M_WNCLS1", closeRoutingWindows, NULL, },

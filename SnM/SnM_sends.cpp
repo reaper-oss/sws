@@ -285,16 +285,14 @@ void storeSendsReceives()
 
 void copyWithIOs(COMMAND_T* _ct)
 {
-	if (!GetCursorContext())
-		storeSendsReceives();
-	Main_OnCommand(40057, 0);
+	storeSendsReceives();
+	Main_OnCommand(40210, 0); // Copy sel tracks
 }
 
 void cutWithIOs(COMMAND_T* _ct)
 {
-	if (!GetCursorContext())
-		storeSendsReceives();
-	Main_OnCommand(40059, 0);
+	storeSendsReceives();
+	Main_OnCommand(40337, 0); // Cut sel tracks
 }
 
 // we do not track updates here 'cause we use an undo block
@@ -302,10 +300,12 @@ void pasteWithIOs(COMMAND_T* _ct)
 {
 	Undo_BeginBlock();
 
+	int iTracks = GetNumTracks();
+
 	// native paste (depends on context)
 	Main_OnCommand(40058, 0);
 
-	if (!GetCursorContext())
+	if (iTracks != GetNumTracks()) // See if tracks were pasted
 	{
 		// As a same track can be multi-patched
 		// => we'll patch tracks in one go thanks to this list

@@ -402,102 +402,120 @@ private:
 	WDL_TypedBuf<int>  hbTrackVis;
 	WDL_TypedBuf<int>  hbEnvHeights;
 	WDL_TypedBuf<bool> hbEnvVis;
+	bool m_bHoriz;
+	bool m_bVert;
 
 public:
 	ArrangeState() { Clear(); }
 	void Clear()
 	{
-		dVZoom = 0.0; iXPos = 0; iYPos = 0;
+		dVZoom = 0.0; iXPos = 0; iYPos = 0; m_bHoriz = false; m_bVert = false;
 		hbTrackHeights.Resize(0, false);
 		hbTrackVis.Resize(0, false);
 		hbEnvHeights.Resize(0, false);
 		hbEnvVis.Resize(0, false);
 	}
-	void Save()
+	void Save(bool bSaveHoriz, bool bSaveVert)
 	{
 		HWND hTrackView = GetTrackWnd();
 		if (!hTrackView)
 			return;
 
-		// Horiz
-		dVZoom = GetHZoomLevel();
+		m_bHoriz = bSaveHoriz;
+		m_bVert  = bSaveVert;
 		SCROLLINFO si = { sizeof(SCROLLINFO), };
-		si.fMask = SIF_ALL;
-		CoolSB_GetScrollInfo(hTrackView, SB_HORZ, &si);
-		iXPos = si.nPos;
+
+		// Horiz
+		if (m_bHoriz)
+		{
+			dVZoom = GetHZoomLevel();
+			si.fMask = SIF_ALL;
+			CoolSB_GetScrollInfo(hTrackView, SB_HORZ, &si);
+			iXPos = si.nPos;
+		}
 
 		// Vert
-		iVZoom = *(int*)GetConfigVar("vzoom2");
-		hbTrackHeights.Resize(GetNumTracks(), false);
-		hbTrackVis.Resize(GetNumTracks(), false);
-		hbEnvHeights.Resize(0, false);
-		hbEnvVis.Resize(0, false);
-		for (int i = 0; i < GetNumTracks(); i++)
+		if (m_bVert)
 		{
-			MediaTrack* tr = CSurf_TrackFromID(i+1, false);
-			hbTrackHeights.Get()[i] = *(int*)GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", NULL);
-			hbTrackVis.Get()[i] = GetTrackVis(tr);
-			int iNumEnvelopes = CountTrackEnvelopes(tr);
-			if (iNumEnvelopes)
+			iVZoom = *(int*)GetConfigVar("vzoom2");
+			hbTrackHeights.Resize(GetNumTracks(), false);
+			hbTrackVis.Resize(GetNumTracks(), false);
+			hbEnvHeights.Resize(0, false);
+			hbEnvVis.Resize(0, false);
+			for (int i = 0; i < GetNumTracks(); i++)
 			{
-				int iEnv = hbEnvHeights.GetSize();
-				hbEnvHeights.Resize(iEnv + iNumEnvelopes);
-				hbEnvVis.Resize(iEnv + iNumEnvelopes);
-				for (int j = 0; j < iNumEnvelopes; j++)
+				MediaTrack* tr = CSurf_TrackFromID(i+1, false);
+				hbTrackHeights.Get()[i] = *(int*)GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", NULL);
+				hbTrackVis.Get()[i] = GetTrackVis(tr);
+				int iNumEnvelopes = CountTrackEnvelopes(tr);
+				if (iNumEnvelopes)
 				{
-					SWS_TrackEnvelope te(GetTrackEnvelope(tr, j));
-					hbEnvHeights.Get()[iEnv] = te.GetHeight(0);
-					hbEnvVis.Get()[iEnv] = te.GetVis();
-					iEnv++;
+					int iEnv = hbEnvHeights.GetSize();
+					hbEnvHeights.Resize(iEnv + iNumEnvelopes);
+					hbEnvVis.Resize(iEnv + iNumEnvelopes);
+					for (int j = 0; j < iNumEnvelopes; j++)
+					{
+						SWS_TrackEnvelope te(GetTrackEnvelope(tr, j));
+						hbEnvHeights.Get()[iEnv] = te.GetHeight(0);
+						hbEnvVis.Get()[iEnv] = te.GetVis();
+						iEnv++;
+					}
 				}
 			}
+			CoolSB_GetScrollInfo(hTrackView, SB_VERT, &si);
+			iYPos = si.nPos;
 		}
-		CoolSB_GetScrollInfo(hTrackView, SB_VERT, &si);
-		iYPos = si.nPos;
 	}
 
 	void Restore()
 	{
 		HWND hTrackView = GetTrackWnd();
-		if (!hTrackView || dVZoom == 0.0 || hbTrackHeights.GetSize() == 0)
+		if (!hTrackView || !(m_bHoriz || m_bVert))
 			return;
 
 		// Horiz zoom
-		adjustZoom(dVZoom, 1, false, -1);
-		// Vert zoom
-		*(int*)GetConfigVar("vzoom2") = iVZoom;
-		int iSaved = hbTrackHeights.GetSize();
-		int iEnvPtr = 0;
-		for (int i = 0; i < GetNumTracks(); i++)
-		{
-			MediaTrack* tr = CSurf_TrackFromID(i+1, false);
-			if (i < iSaved)
-			{
-				SetTrackVis(tr, hbTrackVis.Get()[i]);
-				GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", hbTrackHeights.Get()+i);
-			}
-			else
-				GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", &g_i0);
+		if (m_bHoriz)
+			adjustZoom(dVZoom, 1, false, -1);
 
-			for (int j = 0; j < CountTrackEnvelopes(tr); j++)
+		// Vert zoom
+		if (m_bVert)
+		{
+			*(int*)GetConfigVar("vzoom2") = iVZoom;
+			int iSaved = hbTrackHeights.GetSize();
+			int iEnvPtr = 0;
+			for (int i = 0; i < GetNumTracks(); i++)
 			{
-				SWS_TrackEnvelope te(GetTrackEnvelope(tr, j));
-				if (iEnvPtr < hbEnvHeights.GetSize())
+				MediaTrack* tr = CSurf_TrackFromID(i+1, false);
+				if (i < iSaved)
 				{
-					te.SetVis(hbEnvVis.Get()[iEnvPtr]);
-					te.SetHeight(hbEnvHeights.Get()[iEnvPtr]);
-					iEnvPtr++;
+					SetTrackVis(tr, hbTrackVis.Get()[i]);
+					GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", hbTrackHeights.Get()+i);
 				}
 				else
-					te.SetHeight(0);
+					GetSetMediaTrackInfo(tr, "I_HEIGHTOVERRIDE", &g_i0);
+
+				for (int j = 0; j < CountTrackEnvelopes(tr); j++)
+				{
+					SWS_TrackEnvelope te(GetTrackEnvelope(tr, j));
+					if (iEnvPtr < hbEnvHeights.GetSize())
+					{
+						te.SetVis(hbEnvVis.Get()[iEnvPtr]);
+						te.SetHeight(hbEnvHeights.Get()[iEnvPtr]);
+						iEnvPtr++;
+					}
+					else
+						te.SetHeight(0);
+				}
 			}
+
+			TrackList_AdjustWindows(false);
+			UpdateTimeline();
+
+			SetVertPos(hTrackView, iYPos, true);
 		}
 
-		TrackList_AdjustWindows(false);
-		UpdateTimeline();
-
-		SetVertPos(hTrackView, iYPos, true);
-		SetHorizPos(hTrackView, (double)iXPos / dVZoom);
+		if (m_bHoriz)
+			SetHorizPos(hTrackView, (double)iXPos / dVZoom);
 	}
 };
 
@@ -505,7 +523,7 @@ static SWSProjConfig<ArrangeState> g_stdAS;
 static SWSProjConfig<ArrangeState> g_togAS;
 static bool g_bASToggled = false;
 
-// iType == 0 tracks, 1 items or time sel, 2 just items; iOthers == 0 nothing, 1 minimize, 2 hide from TCP
+// iType == 0 tracks, 1 items or time sel, 2 just items, 3 just horiz; iOthers == 0 nothing, 1 minimize, 2 hide from TCP
 void TogZoom(int iType, int iOthers)
 {
 	if (g_bASToggled)
@@ -516,7 +534,7 @@ void TogZoom(int iType, int iOthers)
 	}
 
 	g_bASToggled = true;
-	g_togAS.Get()->Save();
+	g_togAS.Get()->Save(true, iType != 3);
 
 	if (iType == 0)
 	{
@@ -527,11 +545,12 @@ void TogZoom(int iType, int iOthers)
 	{
 		double d1, d2;
 		GetSet_LoopTimeRange(false, false, &d1, &d2, false);
-		if (d1 != d2 && iType == 1)
+		if (d1 != d2 && (iType == 1 || iType == 3))
 			Main_OnCommand(40031, 0);
 		else
 			HorizZoomSelItems();
-		VertZoomSelItems(iOthers);
+		if (iType != 3)
+			VertZoomSelItems(iOthers);
 	}
 }
 
@@ -544,7 +563,8 @@ void TogZoomItemsHide(COMMAND_T* = NULL)	{ TogZoom(1, 2); }
 void TogZoomItemsOnly(COMMAND_T* = NULL)	{ TogZoom(2, 0); }
 void TogZoomItemsOnlyMin(COMMAND_T* = NULL)	{ TogZoom(2, 1); }
 void TogZoomItemsOnlyHide(COMMAND_T* = NULL){ TogZoom(2, 2); }
-void SaveArngView(COMMAND_T* = NULL)		{ g_stdAS.Get()->Save(); }
+void TogZoomHoriz(COMMAND_T* = NULL)		{ TogZoom(3, 0); }
+void SaveArngView(COMMAND_T* = NULL)		{ g_stdAS.Get()->Save(true, true); }
 void RestoreArngView(COMMAND_T* = NULL)		{ g_stdAS.Get()->Restore(); }
 
 bool g_bSmoothScroll = false;
@@ -591,12 +611,14 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel" },					"SWS_TOGZOOMTT",		TogZoomTT,			NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, minimize others" },	"SWS_TOGZOOMTTMIN",		TogZoomTTMin,		NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, hide others" },		"SWS_TOGZOOMTTHIDE",	TogZoomTTHide,		NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s) + time sel" },						"SWS_TOGZOOMI",		TogZoomItems,		NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s) + time sel, minimize other tracks" },"SWS_TOGZOOMIMIN",	TogZoomItemsMin,	NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s) + time sel, hide other tracks" },	"SWS_TOGZOOMIHIDE",	TogZoomItemsHide,	NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s) or time sel" },					"SWS_TOGZOOMI",			TogZoomItems,		NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s) or time sel, minimize other tracks" },"SWS_TOGZOOMIMIN",TogZoomItemsMin,	NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s) or time sel, hide other tracks" },	"SWS_TOGZOOMIHIDE",	TogZoomItemsHide,	NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s)" },								"SWS_TOGZOOMIONLY",		TogZoomItemsOnly,	NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), minimize other tracks" },		"SWS_TOGZOOMIONLYMIN",	TogZoomItemsOnlyMin,NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), hide other tracks" },			"SWS_TOGZOOMIONLYHIDE",	TogZoomItemsOnlyHide,NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle horizontal zoom to sel items(s) or time sel" },		"SWS_TOGZOOMHORIZ",		TogZoomHoriz,		NULL, 0, IsTogZoomed },
+
 	{ { DEFACCEL, "SWS: Scroll left 10%" },											"SWS_SCROLL_L10",		HorizScroll,		NULL, -10 },
 	{ { DEFACCEL, "SWS: Scroll right 10%" },										"SWS_SCROLL_R10",		HorizScroll,		NULL, 10 },
 	{ { DEFACCEL, "SWS: Scroll left 1%" },											"SWS_SCROLL_L1",		HorizScroll,		NULL, -1 },

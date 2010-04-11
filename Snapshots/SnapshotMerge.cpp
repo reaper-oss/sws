@@ -317,7 +317,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 								if (g_mergeItems.Get(i)->m_destTr == g_mergeItems.Get(j)->m_destTr)
 								{
 									MessageBox(hwndDlg, "Cannot have multiple sources with the same destination!", "Snapshot Recall Error", MB_OK);
-									break;
+									return 0;
 								}
 					}
 					
@@ -381,9 +381,9 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					}
 					// Update reaper if necessary
 					if (IsDlgButtonChecked(hwndDlg, IDC_UPDATE) == BST_CHECKED)
+					{
 						g_ss->UpdateReaper(g_iMask, false, false);
-					else
-					{	// In case tracks were added, update everything
+						// In case tracks were added, update everything
 						TrackList_AdjustWindows(false);
 						UpdateTimeline();
 					}
@@ -438,7 +438,7 @@ bool MergeSnapshots(Snapshot* ss)
 		return false;
 
 	g_iMask = ss->m_iMask;
-	
+
 	// If the paste is occuring with matching selected tracks, use those
 	if (ss->m_tracks.GetSize() == CountSelectedTracks(NULL))
 	{
@@ -457,14 +457,30 @@ bool MergeSnapshots(Snapshot* ss)
 		for (int i = 1; i <= GetNumTracks(); i++)
 			projTracks.Add(CSurf_TrackFromID(i, false));
 
+		// First try to "match" with the GUID  (and fill g_mergeItems)
 		for (int i = 0; i < ss->m_tracks.GetSize(); i++)
 		{
 			SWS_SSMergeItem* mi = g_mergeItems.Add(new SWS_SSMergeItem(ss->m_tracks.Get(i), NULL));
-			mi->m_destTr = GuidToTrack(&mi->m_ts->m_guid);
-			// First "match" is with the GUID, try the name next
-			if (!mi->m_destTr && mi->m_ts->m_sName.GetLength())
+			// check for master first
+			if (GuidsEqual(&mi->m_ts->m_guid, &GUID_NULL))
+				mi->m_destTr = CSurf_TrackFromID(0, false);
+			else for (int j = 0; j < projTracks.GetSize(); j++)
 			{
-				// GUID didn't work, try name matching
+				if (TrackMatchesGuid((MediaTrack*)projTracks.Get(j), &mi->m_ts->m_guid))
+				{
+					mi->m_destTr = (MediaTrack*)projTracks.Get(j);
+					projTracks.Delete(j);
+					break;
+				}
+			}
+		}
+
+		// Next do name matching
+		for (int i = 0; i < g_mergeItems.GetSize(); i++)
+		{
+			SWS_SSMergeItem* mi = g_mergeItems.Get(i);
+			if (!mi->m_destTr)
+			{
 				for (int j = 0; j < projTracks.GetSize(); j++)
 					if (strcmp((char*)GetSetMediaTrackInfo((MediaTrack*)projTracks.Get(j), "P_NAME", NULL), mi->m_ts->m_sName.Get()) == 0)
 					{

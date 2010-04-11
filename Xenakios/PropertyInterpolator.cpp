@@ -1,7 +1,7 @@
 /******************************************************************************
 / PropertyInterpolator.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), original code by Xenakios
+/ Copyright (c) 2010 Tim Payne (SWS), original code by Xenakios
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -663,7 +663,7 @@ BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 				item.mask = LVIF_TEXT;
 				item.iItem = i;
 				item.iSubItem = 0;
-				item.pszText = (char*)(g_IIproperties[i].enabled ? UTF8_BULLET : UTF8_CIRCLE);
+				item.pszText = (char*)(g_IIproperties[i].enabled ? UTF8_BULLET : "");
 				ListView_InsertItem(GetDlgItem(hwnd,IDC_IIACTPARLIST),&item);
 				item.iSubItem = 1;
 				item.pszText=(g_IIproperties[i].Name);
@@ -779,7 +779,7 @@ BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 				else if (nm->hdr.code == NM_CLICK && nm->iItem >=0 && nm->iSubItem == 0)
 				{
 					g_IIproperties[nm->iItem].enabled = !g_IIproperties[nm->iItem].enabled;
-					ListView_SetItemText(GetDlgItem(g_hIIdlg, IDC_IIACTPARLIST), nm->iItem, 0, g_IIproperties[nm->iItem].enabled ? UTF8_BULLET : UTF8_CIRCLE);
+					ListView_SetItemText(GetDlgItem(g_hIIdlg, IDC_IIACTPARLIST), nm->iItem, 0, g_IIproperties[nm->iItem].enabled ? UTF8_BULLET : "");
 				}
 			}
 			break;

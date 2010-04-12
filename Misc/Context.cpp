@@ -29,6 +29,7 @@
 
 #include "stdafx.h"
 #include "Context.h"
+#include "../SnM/SnM_Actions.h"
 
 bool AreThereSelItemsInTimeSel()
 {
@@ -53,6 +54,8 @@ void SmartCopy(COMMAND_T*)
 {
 	if (GetCursorContext() == 1 && AreThereSelItemsInTimeSel())
 		Main_OnCommand(40060, 0); // Copy sel area of items
+	else if (GetCursorContext() == 0)
+		copyWithIOs(NULL);
 	else
 		Main_OnCommand(40057, 0); // Std copy
 }
@@ -61,6 +64,8 @@ void SmartCut(COMMAND_T*)
 {
 	if (GetCursorContext() == 1 && AreThereSelItemsInTimeSel())
 		Main_OnCommand(40307, 0); // Cut sel area of items
+	else if (GetCursorContext() == 0)
+		cutWithIOs(NULL);
 	else
 		Main_OnCommand(40059, 0); // Std cut
 }

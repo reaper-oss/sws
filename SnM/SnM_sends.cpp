@@ -229,23 +229,20 @@ bool FillIOFromReaper(t_SendRcv* send, MediaTrack* src, MediaTrack* dest, int ca
 
 void storeSendsReceives()
 {
-	bool reset = false;
-	int sendTrIdx = 0, rcvTrIdx = 0;
-	for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
+	// Clear the "clipboard"
+	for (int j=0; j < MAX_COPY_PASTE_SND_RCV; j++)
+	{
+		g_sendClipboard[j].Empty(true, free);
+		g_receiveClipboard[j].Empty(true, free);
+	}
+
+	int selTrackIdx = 0;
+	for (int i = 1; i <= GetNumTracks() && //doesn't include master
+		selTrackIdx < MAX_COPY_PASTE_SND_RCV; i++) 
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			if (!reset)
-			{
-				reset = true;
-				for (int j=0; j < MAX_COPY_PASTE_SND_RCV; j++)
-				{
-					g_sendClipboard[j].Empty(true, free);
-					g_receiveClipboard[j].Empty(true, free);
-				}
-			}
-
 			// *** Copy sends ***
 			int idx=0;
 			MediaTrack* dest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, idx, "P_DESTTRACK", NULL);
@@ -253,48 +250,43 @@ void storeSendsReceives()
 			{
 				// We do not copy cross-copy/pasted tracks' sends 
 				// (not to duplicate with the following receives re-copy)
-				if (!(*(int*)GetSetMediaTrackInfo(dest, "I_SELECTED", NULL))) //not sel!
+//				if (!(*(int*)GetSetMediaTrackInfo(dest, "I_SELECTED", NULL))) //not sel!
 				{
 					t_SendRcv* send = (t_SendRcv*)malloc(sizeof(t_SendRcv));
 					if (FillIOFromReaper(send, tr, dest, 0, idx))
-						g_sendClipboard[sendTrIdx].Add(send);
+						g_sendClipboard[selTrackIdx].Add(send);
 				}
 				idx++;
 				dest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, idx, "P_DESTTRACK", NULL);
 			}
-			sendTrIdx++;
 
 			// *** Copy receives ***
 			idx=0;
 			MediaTrack* src = (MediaTrack*)GetSetTrackSendInfo(tr, -1, idx, "P_SRCTRACK", NULL);
 			while (src)
 			{
-//				if (!(*(int*)GetSetMediaTrackInfo(src, "I_SELECTED", NULL))) //not sel!
-				{
-					t_SendRcv* rcv = (t_SendRcv*)malloc(sizeof(t_SendRcv));
-					if (FillIOFromReaper(rcv, src, tr, -1, idx))
-						g_receiveClipboard[rcvTrIdx].Add(rcv);
-				}
+				t_SendRcv* rcv = (t_SendRcv*)malloc(sizeof(t_SendRcv));
+				if (FillIOFromReaper(rcv, src, tr, -1, idx))
+					g_receiveClipboard[selTrackIdx].Add(rcv);
 				idx++;
 				src = (MediaTrack*)GetSetTrackSendInfo(tr, -1, idx, "P_SRCTRACK", NULL);
 			}
-			rcvTrIdx++;
+
+			selTrackIdx++;
 		}
 	}
 }
 
 void copyWithIOs(COMMAND_T* _ct)
 {
-	if (!GetCursorContext())
-		storeSendsReceives();
-	Main_OnCommand(40057, 0);
+	storeSendsReceives();
+	Main_OnCommand(40210, 0); // Copy sel tracks
 }
 
 void cutWithIOs(COMMAND_T* _ct)
 {
-	if (!GetCursorContext())
-		storeSendsReceives();
-	Main_OnCommand(40059, 0);
+	storeSendsReceives();
+	Main_OnCommand(40337, 0); // Cut sel tracks
 }
 
 // we do not track updates here 'cause we use an undo block
@@ -302,10 +294,12 @@ void pasteWithIOs(COMMAND_T* _ct)
 {
 	Undo_BeginBlock();
 
+	int iTracks = GetNumTracks();
+
 	// native paste (depends on context)
 	Main_OnCommand(40058, 0);
 
-	if (!GetCursorContext())
+	if (iTracks != GetNumTracks()) // See if tracks were pasted
 	{
 		// As a same track can be multi-patched
 		// => we'll patch tracks in one go thanks to this list
@@ -313,19 +307,23 @@ void pasteWithIOs(COMMAND_T* _ct)
 
 		// 1st loop not to remove the receives (can't be done in the 
 		// 2nd one: could remove those we're currently adding)
-		for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
+		int selTrackIdx = 0;
+		for (int i = 1; i <= GetNumTracks() &&  //doesn't include master
+			selTrackIdx < MAX_COPY_PASTE_SND_RCV; i++)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			{
 				SNM_SendPatcher* p = new SNM_SendPatcher(tr); 
 				ps.Add(p);
-				p->RemoveReceives(); 
+				p->RemoveReceives();
+				selTrackIdx++;
 			}
 		}
 
-		int selTrackIdx = 0;
-		for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
+		selTrackIdx = 0;
+		for (int i = 1; i <= GetNumTracks() &&  //doesn't include master
+			selTrackIdx < MAX_COPY_PASTE_SND_RCV; i++)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))

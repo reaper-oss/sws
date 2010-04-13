@@ -227,7 +227,7 @@ bool FillIOFromReaper(t_SendRcv* send, MediaTrack* src, MediaTrack* dest, int ca
 	return false;
 }
 
-void storeSendsReceives()
+void storeSendsReceives(bool _cut)
 {
 	// Clear the "clipboard"
 	for (int j=0; j < MAX_COPY_PASTE_SND_RCV; j++)
@@ -250,7 +250,8 @@ void storeSendsReceives()
 			{
 				// We do not copy cross-copy/pasted tracks' sends 
 				// (not to duplicate with the following receives re-copy)
-//				if (!(*(int*)GetSetMediaTrackInfo(dest, "I_SELECTED", NULL))) //not sel!
+				if (!_cut ||
+					(_cut && !(*(int*)GetSetMediaTrackInfo(dest, "I_SELECTED", NULL))))
 				{
 					t_SendRcv* send = (t_SendRcv*)malloc(sizeof(t_SendRcv));
 					if (FillIOFromReaper(send, tr, dest, 0, idx))
@@ -279,13 +280,13 @@ void storeSendsReceives()
 
 void copyWithIOs(COMMAND_T* _ct)
 {
-	storeSendsReceives();
+	storeSendsReceives(false);
 	Main_OnCommand(40210, 0); // Copy sel tracks
 }
 
 void cutWithIOs(COMMAND_T* _ct)
 {
-	storeSendsReceives();
+	storeSendsReceives(true);
 	Main_OnCommand(40337, 0); // Cut sel tracks
 }
 

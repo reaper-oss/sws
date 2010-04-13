@@ -30,9 +30,9 @@
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Track Envelope (in Time Selection)" }, "PADRE_TRACKENVLFO", EnvelopeLfo, NULL, 0},
-	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Active Takes (Audio)" }, "PADRE_TAKEENVLFO", EnvelopeLfo, NULL, 1},
-	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Active Takes (MIDI)" }, "PADRE_MIDILFO", EnvelopeLfo, NULL, 2},
+	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Track Envelope" }, "PADRE_TRACKENVLFO", EnvelopeLfo, NULL, 0},
+	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Active Take(s)" }, "PADRE_TAKEENVLFO", EnvelopeLfo, NULL, 1},
+	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Active Take(s) (MIDI)" }, "PADRE_MIDILFO", EnvelopeLfo, NULL, 2},
 
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -128 samples" }, "PADRE_SHRINK_128", ShrinkSelItems, NULL, 128},
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -256 samples" }, "PADRE_SHRINK_256", ShrinkSelItems, NULL, 256},
@@ -69,6 +69,18 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 		{
 			const char* args = (const char*)lParam;
 			EnvelopeProcessor::getInstance()->_parameters.envType = (EnvType)atoi(args);
+
+			for(int i=eTIMESEGMENT_TIMESEL; i<eTIMESEGMENT_LAST; i++)
+			{
+				if( (EnvelopeProcessor::getInstance()->_parameters.envType == eENVTYPE_TRACK) && (i == eTIMESEGMENT_SELITEM) )
+					continue;
+				if( (EnvelopeProcessor::getInstance()->_parameters.envType == eENVTYPE_TAKE) && (i == eTIMESEGMENT_PROJECT) )
+					continue;
+				int x = SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_ADDSTRING,0,(LPARAM)GetTimeSegmentStr((TimeSegment)i));
+					SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_SETITEMDATA,x,i);
+				if(i == EnvelopeProcessor::getInstance()->_parameters.timeSegment)
+					SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_SETCURSEL,x,0);
+			}
 
 			int iLastShape = eWAVSHAPE_SAWDOWN_BEZIER;
 			if(EnvelopeProcessor::getInstance()->_parameters.envType == eENVTYPE_MIDICC)
@@ -158,7 +170,11 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
             {
                 case IDOK:
 				{
-					int combo = SendDlgItemMessage(hwnd,IDC_PADRELFO_LFOSHAPE,CB_GETCURSEL,0,0);
+					int combo = SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_GETCURSEL,0,0);
+					if(combo != CB_ERR)
+						EnvelopeProcessor::getInstance()->_parameters.timeSegment = (TimeSegment)(SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_GETITEMDATA,combo,0));
+
+					combo = SendDlgItemMessage(hwnd,IDC_PADRELFO_LFOSHAPE,CB_GETCURSEL,0,0);
 					if(combo != CB_ERR)
 						EnvelopeProcessor::getInstance()->_parameters.waveShape = (WaveShape)(SendDlgItemMessage(hwnd,IDC_PADRELFO_LFOSHAPE,CB_GETITEMDATA,combo,0));
 
@@ -197,7 +213,8 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 						break;
 
 						case eENVTYPE_TAKE :
-							res = EnvelopeProcessor::getInstance()->generateSelectedTakesLfo(EnvelopeProcessor::getInstance()->_parameters.takeEnvType, true);
+							//res = EnvelopeProcessor::getInstance()->generateSelectedTakesLfo(EnvelopeProcessor::getInstance()->_parameters.takeEnvType, true);
+res = EnvelopeProcessor::getInstance()->generateSelectedTakesLfo(true);
 						break;
 
 						case eENVTYPE_MIDICC :
@@ -216,6 +233,9 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 						break;
 						case EnvelopeProcessor::eERRORCODE_NULLTIMESELECTION:
 							MessageBox(hwnd, "No time selection!", "Error", MB_OK);
+						break;
+						case EnvelopeProcessor::eERRORCODE_NOITEMSELECTED:
+							MessageBox(hwnd, "No item selected!", "Error", MB_OK);
 						break;
 						case EnvelopeProcessor::eERRORCODE_NOOBJSTATE:
 							MessageBox(hwnd, "Could not retrieve envelope object state!", "Error", MB_OK);

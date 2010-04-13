@@ -240,3 +240,56 @@ void ShowConsoleMsgEx(const char* format, ...)
 	ShowConsoleMsg(buffer);
 	va_end(args);
 }
+
+void GetTimeSegmentPositions(TimeSegment timeSegment, double &dStartPos, double &dEndPos)
+{
+	switch(timeSegment)
+	{
+		case eTIMESEGMENT_TIMESEL:
+			Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
+			dEndPos = GetCursorPositionEx(0);
+			Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
+			dStartPos = GetCursorPositionEx(0);
+		break;
+		case eTIMESEGMENT_SELITEM:
+			Main_OnCommandEx(ID_GOTO_SELITEM_END, 0, 0);
+			dEndPos = GetCursorPositionEx(0);
+			Main_OnCommandEx(ID_GOTO_SELITEM_START, 0, 0);
+			dStartPos = GetCursorPositionEx(0);
+		break;
+		case eTIMESEGMENT_LOOP:
+			Main_OnCommandEx(ID_GOTO_LOOP_END, 0, 0);
+			dEndPos = GetCursorPositionEx(0);
+			Main_OnCommandEx(ID_GOTO_LOOP_START, 0, 0);
+			dStartPos = GetCursorPositionEx(0);
+		break;
+		case eTIMESEGMENT_PROJECT:
+			Main_OnCommandEx(ID_GOTO_PROJECT_END, 0, 0);
+			dEndPos = GetCursorPositionEx(0);
+			Main_OnCommandEx(ID_GOTO_PROJECT_START, 0, 0);
+			dStartPos = GetCursorPositionEx(0);
+		break;
+		//case eTIMESEGMENT_CURRENTMEASURE:
+		//	Main_OnCommandEx(ID_GOTO_CURMEASURE_START, 0, 0);
+		//	dStartPos = GetCursorPositionEx(0);
+		//	Main_OnCommandEx(ID_GOTO_NEXTMEASURE_START, 0, 0);
+		//	dEndPos = GetCursorPositionEx(0);
+		//break;
+		default:
+		break;
+	}
+}
+
+const char* GetTimeSegmentStr(TimeSegment timeSegment)
+{
+	switch(timeSegment)
+	{
+		case eTIMESEGMENT_TIMESEL			: return "Time selection";		break;
+		case eTIMESEGMENT_PROJECT			: return "Project";				break;
+		case eTIMESEGMENT_SELITEM			: return "Selected item";		break;
+		case eTIMESEGMENT_LOOP				: return "Loop";				break;
+		//case eTIMESEGMENT_CURRENTMEASURE	: return "Current measure";		break;
+		default								: return "???";					break;
+	}
+}
+

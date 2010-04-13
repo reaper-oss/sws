@@ -49,8 +49,7 @@
 #define IDD_RENAMEDLG666                144
 #define IDD_GENERICQUERY1               145
 #define IDD_PROJLIST                    146
-#define IDD_PADRELFO_GENERATOR	        147
-
+#define IDD_PADRELFO_GENERATOR          147
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -206,6 +205,8 @@
 #define IDC_PADRELFO_LFOSHAPE           1154
 #define IDC_PADRELFO_TAKEENV            1155
 #define IDC_PADRELFO_MIDICC             1156
+#define IDC_PADRELFO_LFOSHAPE2          1157
+#define IDC_PADRELFO_TIMESEGMENT        1157
 
 // Next default values for new objects
 // 

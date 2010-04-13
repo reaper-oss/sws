@@ -211,3 +211,133 @@ void MidiFilterShortenEndEvents::process(MIDI_event_t* evt, MIDI_eventlist* evts
 	//{
 	//}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+MidiMessage::MidiMessage()
+{
+}
+
+MidiMessage::MidiMessage(unsigned char status, unsigned char data)
+: m_status(status), m_data(data)
+{
+}
+
+int MidiMessage::getChannel()
+{
+	return m_status&0xf;
+}
+
+int MidiMessage::getType()
+{
+	return m_status&0xf0;
+}
+
+bool MidiMessage::isEqual(MidiMessage &msg, bool bSameChannel, bool bSameData, bool bSameValue)
+{
+	bool bIsEqual = true;
+	if(bSameChannel && (getChannel() != msg.getChannel()))
+		return false;
+	if(getType() != msg.getType())
+		return false;
+	switch(getType())
+	{
+		case MIDI_CMD_NONE:
+		break;
+		case MIDI_CMD_NOTE_ON:
+		case MIDI_CMD_NOTE_OFF:
+		case MIDI_CMD_PROGRAM_CHANGE:
+		//	if(bSameValue && (m_data != msg.m_data))
+		//		return false;
+		//break;
+		case MIDI_CMD_CONTROL_CHANGE:
+			if(bSameData && (m_data != msg.m_data))
+				return false;
+			if(bSameValue && (m_value != msg.m_value))
+				return false;
+		break;
+		case MIDI_CMD_NOTE_PRESSURE:
+		case MIDI_CMD_CHANNEL_PRESSURE:
+		case MIDI_CMD_PITCHBEND:
+		default:
+			//! \todo handle other messages
+			return false;
+		break;
+	}
+
+	return true;
+}
+
+//MidiMessageRemover::MidiMessageRemover()
+//: MidiFilterBase()
+//{
+//}
+//
+//void MidiMessageRemover::addMsg(MidiMessage* msg)
+//{
+//	_msgList.insert(msg);
+//}
+//
+//void MidiMessageRemover::removeMsg(MidiMessage* msg)
+//{
+//	_msgList.erase(msg);
+//}
+//
+//void MidiMessageRemover::process(MIDI_event_t* evt, MIDI_eventlist* evts, int &curPos, int &nextPos, int itemLengthSamples)
+//{
+//	int statusByte = evt->midi_message[0] & 0xf0;
+//	//int midiChannel = evt->midi_message[0] & 0x0f;
+//
+//	switch(statusByte)
+//	{
+//		case MIDI_CMD_CONTROL_CHANGE :
+//		{
+//			if(_ccList.empty())
+//			{
+//				evts->DeleteItem(curPos);
+//				nextPos = curPos;
+//			}
+//
+//			else
+//			{
+//				for(set<int>::iterator cc = _ccList.begin(); cc != _ccList.end(); cc++)
+//				{
+//					if(evt->midi_message[1] == *cc)
+//					{
+//						evts->DeleteItem(curPos);
+//						nextPos = curPos;
+//					}
+//				}
+//			}
+//		}
+//		break;
+//
+//		default :
+//		break;
+//	}
+//}

@@ -48,6 +48,7 @@ struct LfoParameters
 	int midiCc;
 	TakeEnvType takeEnvType;
 	EnvType envType;
+	TimeSegment timeSegment;
 
 	LfoParameters();
 	LfoParameters& operator=(const LfoParameters &parameters);
@@ -82,7 +83,7 @@ class EnvelopeProcessor
 		};
 
 	public:
-		enum ErrorCode { eERRORCODE_OK = 0, eERRORCODE_NOENVELOPE, eERRORCODE_NULLTIMESELECTION, eERRORCODE_NOOBJSTATE, eERRORCODE_UNKNOWN };
+		enum ErrorCode { eERRORCODE_OK = 0, eERRORCODE_NOENVELOPE, eERRORCODE_NULLTIMESELECTION, eERRORCODE_NOOBJSTATE, eERRORCODE_NOITEMSELECTED, eERRORCODE_UNKNOWN };
 
 		static EnvelopeProcessor* getInstance();
 
@@ -94,18 +95,21 @@ class EnvelopeProcessor
 
 		static void getFreqDelay(LfoParameters &parameters, double &dFreq, double &dDelay);
 		ErrorCode generateSelectedTrackEnvLfo();
-		ErrorCode generateSelectedTakesLfo(TakeEnvType tEnvType, bool bActiveOnly);
+		//ErrorCode generateSelectedTakesLfo(TakeEnvType tEnvType, bool bActiveOnly);
+ErrorCode generateSelectedTakesLfo(bool bActiveOnly);
 		static ErrorCode generateSelectedMidiTakeLfo(bool bActiveOnly);
-		static ErrorCode generateSelectedTrackFade(bool bFadeIn = true);
+static ErrorCode generateSelectedTrackFade(bool bFadeIn = true);
 
 	protected:
 		static void writeLfoPoints(string &envState, double dStartTime, double dEndTime, double dValMin, double dValMax, double dFreq, double dStrength = 1.0, double dOffset = 0.0, double dDelay = 0.0, WaveShape tWaveShape = eWAVSHAPE_SINE, double dPrecision = 0.1);
 
-		static ErrorCode generateTrackLfo(TrackEnvelope* envelope, double dFreq, double dStrength = 1.0, double dOffset = 0.0, double dDelay = 0.0, WaveShape tWaveShape = eWAVSHAPE_SINE, double dPrecision = 0.1);
+		static ErrorCode generateTrackLfo(TrackEnvelope* envelope, double dStartPos, double dEndPos, double dFreq, double dStrength = 1.0, double dOffset = 0.0, double dDelay = 0.0, WaveShape tWaveShape = eWAVSHAPE_SINE, double dPrecision = 0.1);
 
-		static ErrorCode generateTakeLfo(MediaItem_Take* take, TakeEnvType tEnvType, double dFreq, double dStrength = 1.0, double dOffset = 0.0, double dDelay = 0.0, WaveShape tWaveShape = eWAVSHAPE_SINE, double dPrecision = 0.1);
-		ErrorCode generateSelectedTakeLfo(MediaItem_Take* take, TakeEnvType tEnvType);
+		static ErrorCode generateTakeLfo(MediaItem_Take* take, double dStartPos, double dEndPos, TakeEnvType tTakeEnvType, double dFreq, double dStrength = 1.0, double dOffset = 0.0, double dDelay = 0.0, WaveShape tWaveShape = eWAVSHAPE_SINE, double dPrecision = 0.1);
+		ErrorCode generateTakeLfo(MediaItem_Take* take);
 
 static ErrorCode generateFade(TrackEnvelope* envelope, bool bFadeIn = true);
+
+
 };
 

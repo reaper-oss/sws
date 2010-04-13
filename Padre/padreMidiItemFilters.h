@@ -79,3 +79,34 @@ class MidiFilterShortenEndEvents : public MidiFilterBase
 		virtual void process(MIDI_event_t* evt, MIDI_eventlist* evts, int &curPos, int &nextPos, int itemLengthSamples);
 };
 
+
+
+class MidiMessage
+{
+	private:
+		unsigned char m_status;
+		unsigned char m_data;
+		unsigned char m_value;
+
+		MidiMessage();
+		bool isEqual(MidiMessage &msg, bool bSameChannel = true, bool bSameData = true, bool bSameValue = true);
+
+	public:
+		MidiMessage(unsigned char status, unsigned char m_data = 0x00);
+
+		int getChannel();
+		int getType();
+};
+
+//class MidiMessageRemover : public MidiFilterBase
+//{
+//	private:
+//		set<MidiMessage*> _msgList;
+//
+//	public:
+//		MidiMessageRemover();
+//
+//		void addMsg(MidiMessage* msg);
+//		void removeMsg(MidiMessage* msg);
+//		virtual void process(MIDI_event_t* evt, MIDI_eventlist* evts, int &curPos, int &nextPos, int itemLengthSamples);
+//};

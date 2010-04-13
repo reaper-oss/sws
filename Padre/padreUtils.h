@@ -52,12 +52,21 @@ using namespace std;
 #define ID_ENVELOPE_INSERT_4POINTS_TIMESEL		40726
 #define ID_ENVELOPE_DEFAULT_SHAPE_LINEAR		40187
 #define ID_MOVE_CURSOR_GRID_DIVISION_LEFT		40646
-#define ID_MOVE_CURSOR_GRID_DIVISION_RIGHT		40105
+#define ID_MOVE_CURSOR_GRID_DIVISION_RIGHT		40647
+#define ID_MOVE_CURSOR_LEFT						40104
+#define ID_MOVE_CURSOR_RIGHT					40105
+
 #define ID_ENVELOPE_DELETE_ALL_POINTS_TIMESEL	40089
 #define ID_GOTO_TIMESEL_START					40630
 #define ID_GOTO_TIMESEL_END						40631
 #define ID_GOTO_SELITEM_START					41173
 #define ID_GOTO_SELITEM_END						41174
+#define ID_GOTO_CURMEASURE_START				41041
+#define ID_GOTO_NEXTMEASURE_START				41040
+#define ID_GOTO_LOOP_START						40632
+#define ID_GOTO_LOOP_END						40633
+#define ID_GOTO_PROJECT_START					40042
+#define ID_GOTO_PROJECT_END						40043
 
 #define ID_MOVE_TIMESEL_NUDGE_LEFTEDGE_LEFT		40320
 #define ID_MOVE_TIMESEL_NUDGE_LEFTEDGE_RIGHT	40321
@@ -78,6 +87,9 @@ enum GridDivision {	eGRID_OFF = 0, eGRID_4_1, eGRID_4T_1, eGRID_2_1, eGRID_2T_1,
 
 enum EnvShape {eENVSHAPE_LINEAR = 0, eENVSHAPE_SQUARE = 1, eENVSHAPE_SLOW = 2, eENVSHAPE_FASTSTART = 3, eENVSHAPE_FASTEND = 4, eENVSHAPE_BEZIER = 5};
 
+//enum TimeSegment {eTIMESEGMENT_TIMESEL, eTIMESEGMENT_PROJECT, eTIMESEGMENT_SELITEM, eTIMESEGMENT_LOOP, eTIMESEGMENT_CURRENTMEASURE, eTIMESEGMENT_LAST };
+enum TimeSegment {eTIMESEGMENT_TIMESEL, eTIMESEGMENT_PROJECT, eTIMESEGMENT_SELITEM, eTIMESEGMENT_LOOP, eTIMESEGMENT_LAST };
+
 const char* GetWaveShapeStr(WaveShape shape);
 const char* GetGridDivisionStr(GridDivision grid);
 double GetGridDivisionFactor(GridDivision grid);
@@ -96,4 +108,7 @@ double WaveformGeneratorRandom(double t, double dFreq, double dDelay);
 char* PadresGetEnvelopeState(TrackEnvelope* envelope);
 
 void ShowConsoleMsgEx(const char* format, ...);
+
+void GetTimeSegmentPositions(TimeSegment timeSegment, double &dStartPos, double &dEndPos);
+const char* GetTimeSegmentStr(TimeSegment timeSegment);
 

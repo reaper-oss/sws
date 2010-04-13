@@ -37,6 +37,7 @@
 //! \todo MIDI LFO new options: channel, pitch
 //! \todo Use S&M ObjectState access
 //! \todo cleanup EnvProcessor class: MIDI out, restrain to TrackEnvelope objects, replace singleton by global vars init by PadreInit()
+//! \todo item lfo for time selection only
 //! \note I usually keep beta stuff/tests undented
 
 #define PADRE_CMD_SHORTNAME(_ct) (_ct->accel.desc + 11) // +11 to skip "SWS/PADRE: "

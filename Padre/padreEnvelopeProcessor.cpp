@@ -30,7 +30,7 @@
 
 LfoParameters::LfoParameters()
 : waveShape(eWAVSHAPE_SINE), freqBeat(eGRID_1_1), freqHz(0.0), delayBeat(eGRID_OFF), delayMsec(0.0), strength(1.0), offset(0.0), precision(0.05)
-, midiCc(7), takeEnvType(eTAKEENV_VOLUME), envType(eENVTYPE_TRACK)
+, midiCc(7), takeEnvType(eTAKEENV_VOLUME), envType(eENVTYPE_TRACK), timeSegment(eTIMESEGMENT_TIMESEL)
 {
 }
 
@@ -47,6 +47,7 @@ LfoParameters& LfoParameters::operator=(const LfoParameters &parameters)
 	this->midiCc = parameters.midiCc;
 	this->envType = parameters.envType;
 	this->takeEnvType = parameters.takeEnvType;
+	this->timeSegment = parameters.timeSegment;
 	return *this;
 }
 
@@ -115,7 +116,7 @@ void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, doub
 	double dCarrierStart, dCarrierEnd;
 	bool bFlipFlop;
 	double dFlipFlop;
-double dLength = dEndTime - dStartTime;
+	double dLength = dEndTime - dStartTime;
 
 	switch(tWaveShape)
 	{
@@ -266,18 +267,21 @@ double dLength = dEndTime - dStartTime;
 	envState.append(buffer);
 }
 
-EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* envelope, double dFreq, double dStrength, double dOffset, double dDelay, WaveShape tWaveShape, double dPrecision)
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* envelope, double dStartPos, double dEndPos, double dFreq, double dStrength, double dOffset, double dDelay, WaveShape tWaveShape, double dPrecision)
 {
 	//TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
 	if(!envelope)
 		return eERRORCODE_NOENVELOPE;
 
-	Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
-	double dTimeSelEndPosition = GetCursorPositionEx(0);
-	Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
-	double dTimeSelStartPosition = GetCursorPositionEx(0);
+//double dTimeSelStartPosition, dTimeSelEndPosition;
+//GetTimeSegmentPositions(timeSegment, dTimeSelStartPosition, dTimeSelEndPosition);
 
-	if (dTimeSelStartPosition==dTimeSelEndPosition)
+	//Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
+	//double dTimeSelEndPosition = GetCursorPositionEx(0);
+	//Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
+	//double dTimeSelStartPosition = GetCursorPositionEx(0);
+
+	if(dStartPos==dEndPos)
 		return eERRORCODE_NULLTIMESELECTION;
 
 	char* envState = GetSetObjectState(envelope, "");
@@ -309,8 +313,13 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* 
 		// Position, value, shape
 		if(sscanf(token, "PT %lf %lf %d\n", &dTmp[0], &dTmp[1], &iTmp) == 3)
 		{
-			if(dTmp[0]>dTimeSelStartPosition)
+			if(dTmp[0]>=dEndPos)
 				break;
+			if(dTmp[0]>dStartPos)
+			{
+				token = strtok(NULL, "\n");
+				continue;
+			}
 		}
 
 		if(!strcmp(token, ">"))
@@ -324,7 +333,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* 
 	//ShowConsoleMsgEx("MIN = %lf, MAX = %lf\n", dValMin, dValMax);
 	//ShowConsoleMsg(newState);
 
-	writeLfoPoints(newState, dTimeSelStartPosition, dTimeSelEndPosition, dValMin, dValMax, dFreq, dStrength, dOffset, dDelay, tWaveShape, dPrecision);
+	writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, dFreq, dStrength, dOffset, dDelay, tWaveShape, dPrecision);
 
 	newState.append(token);
 	newState.append("\n");
@@ -370,29 +379,96 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackEnvLfo()
 
 	Undo_BeginBlock2(0);
 
-	Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_LEFTEDGE_LEFT, 0, 0);
-	Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_RIGHTEDGE_RIGHT, 0, 0);
-	Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
-	Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-	Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
-	Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-	Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_LEFTEDGE_RIGHT, 0, 0);
-	Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_RIGHTEDGE_LEFT, 0, 0);
-	Main_OnCommandEx(ID_ENVELOPE_DELETE_ALL_POINTS_TIMESEL, 0, 0);
-
 	TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
-	ErrorCode res = generateTrackLfo(envelope, dFreq, _parameters.strength, _parameters.offset, dDelay, _parameters.waveShape, _parameters.precision);
+	if(!envelope)
+		return eERRORCODE_NOENVELOPE;
+
+	//! \todo: use insert/goto actions AFTER error returns
+	double dStartPos, dEndPos;
+	switch(_parameters.timeSegment)
+	{
+		case eTIMESEGMENT_TIMESEL:
+			Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
+			dEndPos = GetCursorPositionEx(0);
+			Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
+			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+			Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
+			dStartPos = GetCursorPositionEx(0);
+			Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
+			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+		break;
+		case eTIMESEGMENT_SELITEM:
+			Main_OnCommandEx(ID_GOTO_SELITEM_END, 0, 0);
+			dEndPos = GetCursorPositionEx(0);
+			Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
+			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+			Main_OnCommandEx(ID_GOTO_SELITEM_START, 0, 0);
+			dStartPos = GetCursorPositionEx(0);
+			Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
+			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+		break;
+		case eTIMESEGMENT_LOOP:
+			Main_OnCommandEx(ID_GOTO_LOOP_END, 0, 0);
+			dEndPos = GetCursorPositionEx(0);
+			Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
+			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+			Main_OnCommandEx(ID_GOTO_LOOP_START, 0, 0);
+			dStartPos = GetCursorPositionEx(0);
+			Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
+			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+		break;
+		case eTIMESEGMENT_PROJECT:
+			Main_OnCommandEx(ID_GOTO_PROJECT_END, 0, 0);
+			dEndPos = GetCursorPositionEx(0);
+			Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
+			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+			Main_OnCommandEx(ID_GOTO_PROJECT_START, 0, 0);
+			dStartPos = GetCursorPositionEx(0);
+			Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
+			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+		break;
+		//case eTIMESEGMENT_CURRENTMEASURE:
+		//	Main_OnCommandEx(ID_GOTO_NEXTMEASURE_START, 0, 0);
+		//	dEndPos = GetCursorPositionEx(0);
+		//	Main_OnCommandEx(ID_GOTO_CURMEASURE_START, 0, 0);
+		//	dStartPos = GetCursorPositionEx(0);
+		//	Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
+		//	Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+		//	Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
+		//	Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
+		//	Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+		//break;
+		default:
+			return eERRORCODE_UNKNOWN;
+		break;
+	}
+
+	if(dStartPos==dEndPos)
+		return eERRORCODE_NULLTIMESELECTION;
+
+	//Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_LEFTEDGE_LEFT, 0, 0);
+	//Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_RIGHTEDGE_RIGHT, 0, 0);
+	//Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
+	//Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+	//Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
+	//Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+	//Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_LEFTEDGE_RIGHT, 0, 0);
+	//Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_RIGHTEDGE_LEFT, 0, 0);
+	//Main_OnCommandEx(ID_ENVELOPE_DELETE_ALL_POINTS_TIMESEL, 0, 0);
+
+	//TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
+	ErrorCode res = generateTrackLfo(envelope, dStartPos, dEndPos, dFreq, _parameters.strength, _parameters.offset, dDelay, _parameters.waveShape, _parameters.precision);
 
 	Undo_EndBlock2(0, "Track Envelope LFO", 0);
 	return res;
 }
 
-EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* take, TakeEnvType tEnvType, double dFreq, double dStrength, double dOffset, double dDelay, WaveShape tWaveShape, double dPrecision)
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* take, double dStartPos, double dEndPos, TakeEnvType tTakeEnvType, double dFreq, double dStrength, double dOffset, double dDelay, WaveShape tWaveShape, double dPrecision)
 {
-	TrackEnvelope* envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tEnvType));
+	TrackEnvelope* envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
 	double dValMin = 0.0;
 	double dValMax = 1.0;
-	switch(tEnvType)
+	switch(tTakeEnvType)
 	{
 		case eTAKEENV_VOLUME :
 			dValMax = 2.0;
@@ -412,16 +488,60 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 		break;
 	}
 
-	envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tEnvType));
+	envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
 	if(!envelope)
 		return eERRORCODE_NOENVELOPE;
 
-//	char* envState = PadresGetEnvelopeState(envelope);
-//	if(!envState)
-//		return eERRORCODE_NOOBJSTATE;
+	if (dStartPos==dEndPos)
+		return eERRORCODE_NULLTIMESELECTION;
+
+	string newState;
+	char* envState = PadresGetEnvelopeState(envelope);
+	if(!envState)
+		return eERRORCODE_NOOBJSTATE;
+	double dTmp[2];
+	int iTmp;
+	char* token = strtok(envState, "\n");
+	while(token != NULL)
+	{
+		// Position, value, shape
+		if(sscanf(token, "PT %lf %lf %d\n", &dTmp[0], &dTmp[1], &iTmp) == 3)
+		{
+			if(dTmp[0]>=dEndPos)
+				break;
+			if(dTmp[0]>dStartPos)
+			{
+				token = strtok(NULL, "\n");
+				continue;
+			}
+		}
+
+		if(!strcmp(token, ">"))
+			break;
+
+		newState.append(token);
+		newState.append("\n");
+		token = strtok(NULL, "\n");
+	}
+
+	writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, dFreq, dStrength, dOffset, dDelay, tWaveShape, dPrecision);
+
+	newState.append(token);
+	newState.append("\n");
+	token = strtok(NULL, "\n");
+	while(token != NULL)
+	{
+		newState.append(token);
+		newState.append("\n");
+		token = strtok(NULL, "\n");
+	}
+
+
+
 //
 //ShowConsoleMsg(envState);
 
+/*
 //double dCursorPos = GetCursorPositionEx(0);
 	Main_OnCommandEx(ID_GOTO_SELITEM_END, 0, 0);
 	double dEndTime = GetCursorPositionEx(0);
@@ -433,6 +553,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 		return eERRORCODE_NULLTIMESELECTION;
 
 	double dLength = dEndTime - dStartTime;
+*/
 
 // Doesn't work when item is looped
 //PCM_source* source = GetMediaItemTake_Source(take);
@@ -440,6 +561,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 //if(dLength <= 0.0)
 //	return eERRORCODE_NULLTIMESELECTION;
 
+/*
 	string newState;
 	newState.append("<TRACK_ENVELOPE_UNKNOWN\n");
 	newState.append("ACT 1\n");
@@ -447,8 +569,10 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	newState.append("LANEHEIGHT 0 0\n");
 	newState.append("ARM 1\n");
 	newState.append("DEFSHAPE 0\n");
-	writeLfoPoints(newState, 0.0, dLength, dValMin, dValMax, dFreq, dStrength, dOffset, dDelay, tWaveShape, dPrecision);
+	//writeLfoPoints(newState, 0.0, dLength, dValMin, dValMax, dFreq, dStrength, dOffset, dDelay, tWaveShape, dPrecision);
+writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, dFreq, dStrength, dOffset, dDelay, tWaveShape, dPrecision);
 	newState.append(">\n");
+*/
 
 	//ShowConsoleMsg(newState.c_str());
 	char* cNewState = new char[newState.size()];
@@ -464,17 +588,82 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	return eERRORCODE_OK;
 }
 
-EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakeLfo(MediaItem_Take* take, TakeEnvType tEnvType)
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* take)
 {
 	double dFreq, dDelay;
 	getFreqDelay(_parameters, dFreq, dDelay);
-	return generateTakeLfo(take, tEnvType, dFreq, _parameters.strength, _parameters.offset, dDelay, _parameters.waveShape, _parameters.precision);
+
+	Main_OnCommandEx(ID_GOTO_SELITEM_END, 0, 0);
+	double dItemEndPos = GetCursorPositionEx(0);
+	Main_OnCommandEx(ID_GOTO_SELITEM_START, 0, 0);
+	double dItemStartPos = GetCursorPositionEx(0);
+
+	double dStartPos, dEndPos;
+	switch(_parameters.timeSegment)
+	{
+		case eTIMESEGMENT_TIMESEL:
+			Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
+			dEndPos = GetCursorPositionEx(0);
+			if(dEndPos>dItemEndPos)
+				dEndPos = dItemEndPos;
+
+			Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
+			dStartPos = GetCursorPositionEx(0);
+			if(dStartPos<dItemStartPos)
+				dStartPos = dItemStartPos;
+
+			dStartPos -= dItemStartPos;
+			dEndPos -= dItemStartPos;
+
+			//Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
+			//Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+			//Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
+			//dStartPos = GetCursorPositionEx(0);
+			//Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
+			//Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+		break;
+		case eTIMESEGMENT_SELITEM:
+			dStartPos = 0.0;
+			dEndPos = dItemEndPos - dItemStartPos;
+		break;
+		case eTIMESEGMENT_LOOP:
+			Main_OnCommandEx(ID_GOTO_LOOP_END, 0, 0);
+			dEndPos = GetCursorPositionEx(0);
+			if(dEndPos>dItemEndPos)
+				dEndPos = dItemEndPos;
+
+			Main_OnCommandEx(ID_GOTO_LOOP_START, 0, 0);
+			dStartPos = GetCursorPositionEx(0);
+			if(dStartPos<dItemStartPos)
+				dStartPos = dItemStartPos;
+
+			dStartPos -= dItemStartPos;
+			dEndPos -= dItemStartPos;
+
+			//Main_OnCommandEx(ID_GOTO_LOOP_END, 0, 0);
+			//dEndPos = GetCursorPositionEx(0);
+			//Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
+			//Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+			//Main_OnCommandEx(ID_GOTO_LOOP_START, 0, 0);
+			//dStartPos = GetCursorPositionEx(0);
+			//Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
+			//Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+		break;
+		default:
+			return eERRORCODE_UNKNOWN;
+		break;
+	}
+
+	return generateTakeLfo(take, dStartPos, dEndPos, _parameters.takeEnvType, dFreq, _parameters.strength, _parameters.offset, dDelay, _parameters.waveShape, _parameters.precision);
 }
 
-EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo(TakeEnvType tEnvType, bool bActiveOnly)
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo(bool bActiveOnly)
 {
 	list<MediaItem*> items;
 	MidiItemProcessor::getSelectedMediaItems(items);
+
+	if(items.empty())
+		return eERRORCODE_NOITEMSELECTED;
 
 	for(list<MediaItem*>::iterator item = items.begin(); item != items.end(); item++)
 	{
@@ -497,12 +686,14 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo(TakeEnv
 			}
 		}
 
+		if(takes.empty())
+			return eERRORCODE_NOITEMSELECTED;
+
 		for(list<MediaItem_Take*>::iterator take = takes.begin(); take != takes.end(); take++)
 		{
-			ErrorCode res = generateSelectedTakeLfo(*take, tEnvType);
+			ErrorCode res = generateTakeLfo(*take);
 			if(res != eERRORCODE_OK)
 				return res;
-			//generateTakeEnvLfo(*take, tEnvType);
 		}
 
 		UpdateItemInProject(*item);

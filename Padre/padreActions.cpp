@@ -34,6 +34,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Active Take(s)" }, "PADRE_TAKEENVLFO", EnvelopeLfo, NULL, 1},
 	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Active Take(s) (MIDI)" }, "PADRE_MIDILFO", EnvelopeLfo, NULL, 2},
 
+	//{ { DEFACCEL, "SWS/PADRE: Envelope Fader" }, "PADRE_FADE", EnvelopeFader, NULL, 0},
+
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -128 samples" }, "PADRE_SHRINK_128", ShrinkSelItems, NULL, 128},
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -256 samples" }, "PADRE_SHRINK_256", ShrinkSelItems, NULL, 256},
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -512 samples" }, "PADRE_SHRINK_512", ShrinkSelItems, NULL, 512},
@@ -213,8 +215,7 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 						break;
 
 						case eENVTYPE_TAKE :
-							//res = EnvelopeProcessor::getInstance()->generateSelectedTakesLfo(EnvelopeProcessor::getInstance()->_parameters.takeEnvType, true);
-res = EnvelopeProcessor::getInstance()->generateSelectedTakesLfo(true);
+							res = EnvelopeProcessor::getInstance()->generateSelectedTakesLfo(true);
 						break;
 
 						case eENVTYPE_MIDICC :
@@ -299,3 +300,7 @@ void RandomizeMidiNotePos(COMMAND_T* _ct)
 	midiNoteRandomizer->processSelectedMidiTakes(true);
 }
 
+void EnvelopeFader(COMMAND_T* _ct)
+{
+	EnvelopeProcessor::generateSelectedTrackFade();
+}

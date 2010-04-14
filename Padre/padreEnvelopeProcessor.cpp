@@ -468,6 +468,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	TrackEnvelope* envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
 	double dValMin = 0.0;
 	double dValMax = 1.0;
+	//! \todo Force "show item vol/pan/mute envelope" (toggle trick doesn't work with existing/hidden envelopes)
 	switch(tTakeEnvType)
 	{
 		case eTAKEENV_VOLUME :
@@ -593,10 +594,9 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	double dFreq, dDelay;
 	getFreqDelay(_parameters, dFreq, dDelay);
 
-	Main_OnCommandEx(ID_GOTO_SELITEM_END, 0, 0);
-	double dItemEndPos = GetCursorPositionEx(0);
-	Main_OnCommandEx(ID_GOTO_SELITEM_START, 0, 0);
-	double dItemStartPos = GetCursorPositionEx(0);
+	MediaItem* parentItem = GetMediaItemTake_Item(take);
+	double dItemStartPos = GetMediaItemInfo_Value(parentItem, "D_POSITION");
+	double dItemEndPos = dItemStartPos + GetMediaItemInfo_Value(parentItem, "D_LENGTH");
 
 	double dStartPos, dEndPos;
 	switch(_parameters.timeSegment)
@@ -669,6 +669,10 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo(bool bA
 	{
 		list<MediaItem_Take*> takes;
 
+//! \todo Ask Cockos for SetCursorPosition()
+//double dItemStartPos = GetMediaItemInfo_Value(*item, "D_POSITION");
+//double dItemEndPos = dItemStartPos + GetMediaItemInfo_Value(*item, "D_LENGTH");
+
 		if(bActiveOnly)
 		{
 			MediaItem_Take* take = GetActiveTake(*item);
@@ -699,7 +703,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo(bool bA
 		UpdateItemInProject(*item);
 	}
 
-	Undo_OnStateChangeEx("Generate Item LFO", UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx("Item Envelope LFO", UNDO_STATE_ALL, -1);
 //	UpdateTimeline();
 
 	return eERRORCODE_OK;
@@ -820,6 +824,8 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedMidiTakeLfo(bool
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackFade(bool bFadeIn)
 {
 	TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
+	if(!envelope)
+		return eERRORCODE_NOENVELOPE;
 	return generateFade(envelope, bFadeIn);
 }
 
@@ -843,36 +849,102 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateFade(TrackEnvelope* enve
 		return eERRORCODE_NOOBJSTATE;
 
 	string newState;
-	double dPosition, dValue;
-	int iShape;
+	//double dPosition, dValue;
+	//int iShape;
 	char buffer[BUFFER_SIZE];
-	char endOfLine[BUFFER_SIZE];
+	//char endOfLine[BUFFER_SIZE];
+	//char cValue[128];
 
+	double position, value;
+	int iTmp;
 	char* token = strtok(envState, "\n");
+
 	while(token != NULL)
 	{
 		// Position, value, shape
-		if(sscanf(token, "PT %lf %lf %d %s", &dPosition, &dValue, &iShape, &endOfLine) == 4)
+		if(sscanf(token, "PT %lf %lf %d\n", &position, &value, &iTmp) == 3)
 		{
-			if( (dPosition>=dTimeSelStartPosition) && (dPosition<=dTimeSelEndPosition) )
-			{
-				if(bFadeIn)
-					dValue *= dScale*(dPosition-dTimeSelStartPosition);
-				else
-					dValue *= 1.0 - dScale*(dPosition-dTimeSelStartPosition);
-				sprintf(buffer, "PT %lf %lf %d %s\n", dPosition, dValue, iShape, endOfLine);
-				newState.append(buffer);
+			if(position>=dTimeSelEndPosition)
 				break;
+			if(position>dTimeSelStartPosition)
+			{
+				string newLine;
+				strcpy(buffer, token);
+				istream& getline( istream& is, string& s, char delimiter = '\n' );
+
+				char* lineToken = strtok(buffer, " ");
+				//int linePos = 0;
+				//while(lineToken != NULL)
+				//{
+				//	if(linePos == 2)
+				//	{
+				//		value *= 0.5;
+				//		sprintf(cValue, "%lf", value);
+				//		newLine.append(cValue);
+				//		newLine.append(" ");
+				//	}
+
+				//	else
+				//	{
+				//		newLine.append(lineToken);
+				//		newLine.append(" ");
+				//	}
+
+				//	linePos++;
+				//	lineToken = strtok(NULL, " \n");
+				//}
+
+				//newState.append(newLine);
+				//newState.append("\n");
+				token = strtok(NULL, "\n");
+				continue;
 			}
 		}
 
-		//if(!strcmp(token, ">"))
-		//	break;
+		if(!strcmp(token, ">"))
+			break;
 
 		newState.append(token);
 		newState.append("\n");
 		token = strtok(NULL, "\n");
 	}
+
+	newState.append(token);
+	newState.append("\n");
+	token = strtok(NULL, "\n");
+	while(token != NULL)
+	{
+		newState.append(token);
+		newState.append("\n");
+		token = strtok(NULL, "\n");
+	}
+
+
+	//char* token = strtok(envState, "\n");
+	//while(token != NULL)
+	//{
+	//	// Position, value, shape
+	//	if(sscanf(token, "PT %lf %lf %d %s", &dPosition, &dValue, &iShape, &endOfLine) == 4)
+	//	{
+	//		if( (dPosition>=dTimeSelStartPosition) && (dPosition<=dTimeSelEndPosition) )
+	//		{
+	//			if(bFadeIn)
+	//				dValue *= dScale*(dPosition-dTimeSelStartPosition);
+	//			else
+	//				dValue *= 1.0 - dScale*(dPosition-dTimeSelStartPosition);
+	//			sprintf(buffer, "PT %lf %lf %d %s\n", dPosition, dValue, iShape, endOfLine);
+	//			newState.append(buffer);
+	//			break;
+	//		}
+	//	}
+
+	//	//if(!strcmp(token, ">"))
+	//	//	break;
+
+	//	newState.append(token);
+	//	newState.append("\n");
+	//	token = strtok(NULL, "\n");
+	//}
 
 	FreeHeapPtr(envState);
 

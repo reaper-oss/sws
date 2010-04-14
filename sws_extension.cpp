@@ -379,6 +379,7 @@ extern "C"
 		IMPAPI(GetInputChannelName);
 		IMPAPI(GetLastTouchedTrack);
 		IMPAPI(GetMainHwnd);
+		IMPAPI(GetMediaItemInfo_Value);
 		IMPAPI(GetMediaItemNumTakes);
 		IMPAPI(GetMediaItemTake);
 		IMPAPI(GetMediaItemTake_Item);

@@ -55,3 +55,4 @@ void ShrinkSelItems(COMMAND_T* _ct);
 
 void RandomizeMidiNotePos(COMMAND_T* _ct);
 
+void EnvelopeFader(COMMAND_T* _ct);

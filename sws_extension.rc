@@ -7,8 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
-
+#include "winres.h"
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -34,15 +33,13 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
-    "#include ""afxres.h""\r\0"
+    "#include ""winres.h""\0"
 END
 
 3 TEXTINCLUDE 
 BEGIN
     "#include ""version.h""\r\n"
-    "#include ""version.rc2""\r\n"
-    "\r\r\n"
-    "\r\0"
+    "#include ""version.rc2""\r\0"
 END
 
 #endif    // APSTUDIO_INVOKED
@@ -858,6 +855,7 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,118,75,50,14
 END
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // DESIGNINFO
@@ -1273,7 +1271,7 @@ BEGIN
     IDC_COMBO1, 0x403, 3, 0
 0x3432, "\000" 
     IDC_COMBO1, 0x403, 3, 0
-0x3233, "\000"
+0x3233, "\000" 
     IDC_COMBO1, 0x403, 3, 0
 0x3436, "\000" 
     IDC_COMBO2, 0x403, 6, 0
@@ -1307,9 +1305,6 @@ IDB_DOWN                BITMAP                  "downarrow.bmp"
 //
 #include "version.h"
 #include "version.rc2"
-
-
-
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED

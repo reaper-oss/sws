@@ -1025,6 +1025,22 @@ void DoSetFadeToAutofade(COMMAND_T*)
 	UpdateTimeline();
 	Undo_OnStateChangeEx("Set item fades to item autofades",4,-1);
 }
+/* added by FNG */
+void DoItemModifyPlayrate(COMMAND_T *cmd)
+{
+	int selectedCount = CountSelectedMediaItems(NULL);
+	for(int i = 0; i < selectedCount; i++) {
+		MediaItem *item = GetSelectedMediaItem(NULL, i);
+		MediaItem_Take *take = GetActiveTake(item);
+		double rate = *(double *)GetSetMediaItemTakeInfo(take,"D_PLAYRATE",NULL);
+		rate +=  rate * 0.01f * static_cast<double>(cmd->user);
+		double length = *(double *)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
+		length += length * 1/(0.01f * static_cast<double>(cmd->user));
+		GetSetMediaItemTakeInfo(take,"D_PLAYRATE",&rate);
+	}
+	UpdateTimeline();
+	Undo_OnStateChange2(NULL, cmd->accel.desc);
+}
 
 void DoItemPitch2Playrate(COMMAND_T*)
 {

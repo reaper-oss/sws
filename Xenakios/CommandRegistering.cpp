@@ -143,7 +143,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Reset active take volume to 0.0" }, "XENAKIOS_RESETTAKEVOL", DoResetTakeVol, NULL, },
 	
 	{ { DEFACCEL, "Xenakios/SWS: Set item rate to 1.0 and pitch to 0.0" }, "XENAKIOS_RESETITEMPITCHANDRATE", DoResetItemRateAndPitch, NULL, },
-	
+
 	{ { DEFACCEL, "Xenakios/SWS: Set volume and pan of selected takes..." }, "XENAKIOS_SETPANVOLSELTAKES", DoShowVolPanDialog, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Set volume of selected item(s)..." }, "XENAKIOS_SETVOLSELITEMS", DoShowItemVolumeDialog, NULL, },
 	
@@ -154,6 +154,11 @@ COMMAND_T g_XenCommandTable[] =
 	
 	{ { DEFACCEL, "Xenakios/SWS: Pan takes of item symmetrically" }, "XENAKIOS_PANTAKESOFITEMSYM", DoPanTakesSymmetricallyWithUndo, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Implode items to takes and pan symmetrically" }, "XENAKIOS_IMPLODEITEMSPANSYMMETRICALLY", DoImplodeTakesSetPlaySetSymPans, NULL, },
+
+	{ { DEFACCEL, "FNG/SWS: Nudge selected take(s) rate up, preserving length" }, "FNG_NUDGERATEUP", DoItemModifyPlayrate, NULL, 1 },
+	{ { DEFACCEL, "FNG/SWS: Nudge selected take(s) rate down, preserving length" }, "FNG_NUDGERATEDOWN", DoItemModifyPlayrate, NULL, -1 },
+	{ { DEFACCEL, "FNG/SWS: Increase selected take(s) rate, preserving length" }, "FNG_INCREASERATE", DoItemModifyPlayrate, NULL, 10 },
+	{ { DEFACCEL, "FNG/SWS: Decrease selected take(s) rate, preserving length" }, "FNG_DECREASERATE", DoItemModifyPlayrate, NULL, -10 },
 
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, "Xenakios/SWS: Split items at transients" }, "XENAKIOS_SPLIT_ITEMSATRANSIENTS", DoSplitItemsAtTransients, NULL, },

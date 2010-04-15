@@ -159,6 +159,7 @@ void DoMatrixItemImplode(COMMAND_T*);
 void DoSwingItemPositions(COMMAND_T*);
 void DoTimeSelAdaptDelete(COMMAND_T*);
 void DoDeleteMutedItems(COMMAND_T*);
+void DoItemModifyPlayrate(COMMAND_T*);
 
 //===========================================================
 // main.cpp

@@ -155,10 +155,10 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Pan takes of item symmetrically" }, "XENAKIOS_PANTAKESOFITEMSYM", DoPanTakesSymmetricallyWithUndo, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Implode items to takes and pan symmetrically" }, "XENAKIOS_IMPLODEITEMSPANSYMMETRICALLY", DoImplodeTakesSetPlaySetSymPans, NULL, },
 
-	{ { DEFACCEL, "FNG/SWS: Nudge selected take(s) rate up, preserving length" }, "FNG_NUDGERATEUP", DoItemModifyPlayrate, NULL, 1 },
-	{ { DEFACCEL, "FNG/SWS: Nudge selected take(s) rate down, preserving length" }, "FNG_NUDGERATEDOWN", DoItemModifyPlayrate, NULL, -1 },
-	{ { DEFACCEL, "FNG/SWS: Increase selected take(s) rate, preserving length" }, "FNG_INCREASERATE", DoItemModifyPlayrate, NULL, 10 },
-	{ { DEFACCEL, "FNG/SWS: Decrease selected take(s) rate, preserving length" }, "FNG_DECREASERATE", DoItemModifyPlayrate, NULL, -10 },
+	{ { DEFACCEL, "FNG/SWS: Increase item rate by ~0.6% (10 cents) preserving length, clear 'preserve pitch'" }, "FNG_NUDGERATEUP", DoItemModifyPlayrate, NULL, 10 },
+	{ { DEFACCEL, "FNG/SWS: Decrease item rate by ~0.6% (10 cents) preserving length, clear 'preserve pitch'" }, "FNG_NUDGERATEDOWN", DoItemModifyPlayrate, NULL, -10 },
+	{ { DEFACCEL, "FNG/SWS: Increase item rate by ~6% (one semitone) preserving length, clear 'preserve pitch'" }, "FNG_INCREASERATE", DoItemModifyPlayrate, NULL, 1 },
+	{ { DEFACCEL, "FNG/SWS: Decrease item rate by ~6% (one semitone) preserving length, clear 'preserve pitch'"}, "FNG_DECREASERATE", DoItemModifyPlayrate, NULL, -1 },
 
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, "Xenakios/SWS: Split items at transients" }, "XENAKIOS_SPLIT_ITEMSATRANSIENTS", DoSplitItemsAtTransients, NULL, },

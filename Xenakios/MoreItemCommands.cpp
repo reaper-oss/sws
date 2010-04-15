@@ -1033,10 +1033,10 @@ void DoItemModifyPlayrate(COMMAND_T *cmd)
 		MediaItem *item = GetSelectedMediaItem(NULL, i);
 		MediaItem_Take *take = GetActiveTake(item);
 		double rate = *(double *)GetSetMediaItemTakeInfo(take,"D_PLAYRATE",NULL);
-		rate +=  rate * 0.01f * static_cast<double>(cmd->user);
-		double length = *(double *)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
-		length += length * 1/(0.01f * static_cast<double>(cmd->user));
+		rate *= pow(2, 1.0f/12.0f / static_cast<double>(cmd->user));
 		GetSetMediaItemTakeInfo(take,"D_PLAYRATE",&rate);
+		bool pitch = false;
+		GetSetMediaItemTakeInfo(take,"B_PPITCH",&pitch);
 	}
 	UpdateTimeline();
 	Undo_OnStateChange2(NULL, cmd->accel.desc);

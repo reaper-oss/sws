@@ -33,9 +33,18 @@
 
 #include "padreUtils.h"
 
-enum EnvType {eENVTYPE_TRACK=0, eENVTYPE_TAKE=1, eENVTYPE_MIDICC=2 };
+#include <sstream>
+#include <string>
+#include <vector>
+#include <iostream>
+using namespace std;
 
-struct LfoParameters
+enum EnvType { eENVTYPE_TRACK=0, eENVTYPE_TAKE=1, eENVTYPE_MIDICC=2 };
+enum EnvModType { eENVMOD_FADEIN, eENVMOD_FADEOUT, eENVMOD_AMPLIFY, eENVMOD_LAST };
+
+const char* GetEnvModTypeStr(EnvModType type);
+
+struct EnvLfoParams
 {
 	WaveShape waveShape;
 	GridDivision freqBeat;
@@ -50,14 +59,25 @@ struct LfoParameters
 	EnvType envType;
 	TimeSegment timeSegment;
 
-	LfoParameters();
-	LfoParameters& operator=(const LfoParameters &parameters);
+	EnvLfoParams();
+	EnvLfoParams& operator=(const EnvLfoParams &parameters);
+};
+
+struct EnvModParams
+{
+	EnvModType type;
+	double offset;
+	double strength;
+
+	EnvModParams();
+	EnvModParams& operator=(const EnvModParams &params);
 };
 
 class EnvelopeProcessor
 {
 	private:
 		static EnvelopeProcessor* _pInstance;
+
 		EnvelopeProcessor();
 		~EnvelopeProcessor();
 
@@ -74,41 +94,50 @@ class EnvelopeProcessor
 		class MidiCcLfo : public MidiGeneratorBase
 		{
 			private:
-				LfoParameters* _pParameters;
+				EnvLfoParams* _pParameters;
 
 			public:
-				MidiCcLfo(LfoParameters* pParameters);
+				MidiCcLfo(EnvLfoParams* pParameters);
 
 				void process(MIDI_eventlist* evts, int itemLengthSamples);
 		};
 
 	public:
-		enum ErrorCode { eERRORCODE_OK = 0, eERRORCODE_NOENVELOPE, eERRORCODE_NULLTIMESELECTION, eERRORCODE_NOOBJSTATE, eERRORCODE_NOITEMSELECTED, eERRORCODE_UNKNOWN };
-
 		static EnvelopeProcessor* getInstance();
 
-		LfoParameters _parameters;
+		enum ErrorCode { eERRORCODE_OK = 0, eERRORCODE_NOENVELOPE, eERRORCODE_NULLTIMESELECTION, eERRORCODE_NOOBJSTATE, eERRORCODE_NOITEMSELECTED, eERRORCODE_UNKNOWN };
+		static void errorHandlerDlg(HWND hwnd, ErrorCode err);
+
+		EnvLfoParams _parameters;
+		EnvModParams _envModParams;
 		MidiItemProcessor* _midiProcessor;
 
 		void createMidiProcessor();
 		void destroyMidiProcessor();
 
-		static void getFreqDelay(LfoParameters &parameters, double &dFreq, double &dDelay);
 		ErrorCode generateSelectedTrackEnvLfo();
-		//ErrorCode generateSelectedTakesLfo(TakeEnvType tEnvType, bool bActiveOnly);
-ErrorCode generateSelectedTakesLfo(bool bActiveOnly);
+		ErrorCode generateSelectedTakesLfo(bool bActiveOnly);
+ErrorCode processSelectedTrackEnv();
+
 		static ErrorCode generateSelectedMidiTakeLfo(bool bActiveOnly);
-static ErrorCode generateSelectedTrackFade(bool bFadeIn = true);
+
+
 
 	protected:
+		static void getFreqDelay(EnvLfoParams &lfoParams, double &dFreq, double &dDelay);
+		static ErrorCode getEnvelopeMinMax(TrackEnvelope* envelope, double &dEnvMinVal, double &dEnvMaxVal);
 		static void writeLfoPoints(string &envState, double dStartTime, double dEndTime, double dValMin, double dValMax, double dFreq, double dStrength = 1.0, double dOffset = 0.0, double dDelay = 0.0, WaveShape tWaveShape = eWAVSHAPE_SINE, double dPrecision = 0.1);
+		static ErrorCode processPoints(TrackEnvelope* envelope, double dStartPos, double dEndPos, EnvModType envModType, double dStrength = 1.0, double dOffset = 0.0);
 
 		static ErrorCode generateTrackLfo(TrackEnvelope* envelope, double dStartPos, double dEndPos, double dFreq, double dStrength = 1.0, double dOffset = 0.0, double dDelay = 0.0, WaveShape tWaveShape = eWAVSHAPE_SINE, double dPrecision = 0.1);
-
 		static ErrorCode generateTakeLfo(MediaItem_Take* take, double dStartPos, double dEndPos, TakeEnvType tTakeEnvType, double dFreq, double dStrength = 1.0, double dOffset = 0.0, double dDelay = 0.0, WaveShape tWaveShape = eWAVSHAPE_SINE, double dPrecision = 0.1);
+
 		ErrorCode generateTakeLfo(MediaItem_Take* take);
 
-static ErrorCode generateFade(TrackEnvelope* envelope, bool bFadeIn = true);
+
+
+
+
 
 
 };

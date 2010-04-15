@@ -200,6 +200,14 @@ double WaveformGeneratorRandom(double t, double dFreq, double dDelay)
 	return 2.0*(double)rand()/(double)(RAND_MAX) - 1.0;
 }
 
+double EnvSignalProcessorFade(double dPos, double dLength, double dStrength, bool bFadeIn)
+{
+	if(bFadeIn)
+		return pow((dPos/dLength), dStrength);
+	else
+		return pow(((dLength - dPos)/dLength), dStrength);
+}
+
 char* PadresGetEnvelopeState(TrackEnvelope* envelope)
 {
 	//! \note GetSetObjectState() does not work for take envelopes
@@ -293,3 +301,46 @@ const char* GetTimeSegmentStr(TimeSegment timeSegment)
 	}
 }
 
+void GetSelectedMediaItems(list<MediaItem*> &items)
+{
+	items.clear();
+	int itemIdx = 0;
+	while(MediaItem* item = GetSelectedMediaItem(0, itemIdx))
+	{
+		items.push_back(item);
+		itemIdx++;
+	}
+}
+
+void GetMediaItemTakes(MediaItem* item, list<MediaItem_Take*> &takes, bool bActiveOnly)
+{
+	takes.clear();
+
+	if(bActiveOnly)
+	{
+		MediaItem_Take* take = GetActiveTake(item);
+		if(take)
+			takes.push_back(take);
+	}
+
+	else
+	{
+		int takeIdx = 0;
+		while(MediaItem_Take* take = GetTake(item, takeIdx))
+		{
+			if(take)
+				takes.push_back(take);
+			takeIdx++;
+		}
+	}
+}
+
+void GetSelectedMediaTakes(list<MediaItem_Take*> &takes, bool bActiveOnly)
+{
+	takes.clear();
+	list<MediaItem*> items;
+	GetSelectedMediaItems(items);
+
+	for(list<MediaItem*>::iterator item = items.begin(); item != items.end(); item++)
+		GetMediaItemTakes(*item, takes, bActiveOnly);
+}

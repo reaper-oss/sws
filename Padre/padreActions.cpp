@@ -30,11 +30,11 @@
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Track Envelope" }, "PADRE_TRACKENVLFO", EnvelopeLfo, NULL, 0},
-	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Active Take(s)" }, "PADRE_TAKEENVLFO", EnvelopeLfo, NULL, 1},
-	{ { DEFACCEL, "SWS/PADRE: LFO Generator: Selected Active Take(s) (MIDI)" }, "PADRE_MIDILFO", EnvelopeLfo, NULL, 2},
+	{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator: Selected Track" }, "PADRE_TRACKENVLFO", EnvelopeLfo, NULL, 0},
+	{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator: Selected Active Take(s)" }, "PADRE_TAKEENVLFO", EnvelopeLfo, NULL, 1},
+	{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator: Selected Active Take(s) (MIDI)" }, "PADRE_MIDILFO", EnvelopeLfo, NULL, 2},
 
-	//{ { DEFACCEL, "SWS/PADRE: Envelope Fader" }, "PADRE_FADE", EnvelopeFader, NULL, 0},
+	{ { DEFACCEL, "SWS/PADRE: Envelope Processor: Selected Track" }, "PADRE_TRACKENVPROC", EnvelopeProcessor, NULL, 0},
 
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -128 samples" }, "PADRE_SHRINK_128", ShrinkSelItems, NULL, 128},
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -256 samples" }, "PADRE_SHRINK_256", ShrinkSelItems, NULL, 256},
@@ -300,7 +300,74 @@ void RandomizeMidiNotePos(COMMAND_T* _ct)
 	midiNoteRandomizer->processSelectedMidiTakes(true);
 }
 
-void EnvelopeFader(COMMAND_T* _ct)
+//void EnvelopeFader(COMMAND_T* _ct)
+//{
+//	EnvelopeProcessor::getInstance()->generateSelectedTrackFade();
+//}
+
+void EnvelopeProcessor(COMMAND_T* _ct)
 {
-	EnvelopeProcessor::generateSelectedTrackFade();
+	HWND hwndParent = GetMainHwnd();
+	DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_PADRE_ENVPROCESSOR), hwndParent, EnvelopeProcessorDlgProc, (LPARAM)"");
+}
+
+WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+	switch(Message)
+	{
+        case WM_INITDIALOG :
+		{
+			for(int i=eENVMOD_FADEIN; i<eENVMOD_LAST; i++)
+			{
+				int x = SendDlgItemMessage(hwnd,IDD_PADRE_ENVPROCESSOR_TYPE,CB_ADDSTRING,0,(LPARAM)GetEnvModTypeStr((EnvModType)i));
+					SendDlgItemMessage(hwnd,IDD_PADRE_ENVPROCESSOR_TYPE,CB_SETITEMDATA,x,i);
+				if(i == EnvelopeProcessor::getInstance()->_envModParams.type)
+					SendDlgItemMessage(hwnd,IDD_PADRE_ENVPROCESSOR_TYPE,CB_SETCURSEL,x,0);
+			}
+
+			char buffer[BUFFER_SIZE];
+			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_envModParams.strength);
+			SetDlgItemText(hwnd, IDD_PADRE_ENVPROCESSOR_STRENGTH, buffer);
+			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_envModParams.offset);
+			SetDlgItemText(hwnd, IDD_PADRE_ENVPROCESSOR_OFFSET, buffer);
+
+#ifdef _WIN32
+				SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDD_PADRELFO_GENERATOR), TRUE);
+#endif
+
+			return 0;
+		}
+
+		case WM_COMMAND :
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+				{
+					int combo = SendDlgItemMessage(hwnd,IDD_PADRE_ENVPROCESSOR_TYPE,CB_GETCURSEL,0,0);
+					if(combo != CB_ERR)
+						EnvelopeProcessor::getInstance()->_envModParams.type = (EnvModType)(SendDlgItemMessage(hwnd,IDD_PADRE_ENVPROCESSOR_TYPE,CB_GETITEMDATA,combo,0));
+
+					char buffer[BUFFER_SIZE];
+					GetDlgItemText(hwnd,IDD_PADRE_ENVPROCESSOR_STRENGTH,buffer,BUFFER_SIZE);
+					EnvelopeProcessor::getInstance()->_envModParams.strength = atof(buffer)/100.0;
+					GetDlgItemText(hwnd,IDD_PADRE_ENVPROCESSOR_OFFSET,buffer,BUFFER_SIZE);
+					EnvelopeProcessor::getInstance()->_envModParams.offset = atof(buffer)/100.0;
+
+					EnvelopeProcessor::ErrorCode res = EnvelopeProcessor::eERRORCODE_UNKNOWN;
+					res = EnvelopeProcessor::getInstance()->processSelectedTrackEnv();
+					EnvelopeProcessor::errorHandlerDlg(hwnd, res);
+
+					EndDialog(hwnd,0);
+					return 0;
+				}
+
+				case IDCANCEL:
+				{
+					EndDialog(hwnd,0);
+					return 0;
+				}
+			}
+	}
+
+	return 0;
 }

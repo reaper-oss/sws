@@ -28,13 +28,24 @@
 #include "stdafx.h"
 #include "padreEnvelopeProcessor.h"
 
-LfoParameters::LfoParameters()
+const char* GetEnvModTypeStr(EnvModType type)
+{
+	switch(type)
+	{
+		case eENVMOD_FADEIN			: return "Fade In";		break;
+		case eENVMOD_FADEOUT		: return "Fade Out";	break;
+		case eENVMOD_AMPLIFY		: return "Amplify";		break;
+		default						: return NULL;			break;
+	}
+}
+
+EnvLfoParams::EnvLfoParams()
 : waveShape(eWAVSHAPE_SINE), freqBeat(eGRID_1_1), freqHz(0.0), delayBeat(eGRID_OFF), delayMsec(0.0), strength(1.0), offset(0.0), precision(0.05)
 , midiCc(7), takeEnvType(eTAKEENV_VOLUME), envType(eENVTYPE_TRACK), timeSegment(eTIMESEGMENT_TIMESEL)
 {
 }
 
-LfoParameters& LfoParameters::operator=(const LfoParameters &parameters)
+EnvLfoParams& EnvLfoParams::operator=(const EnvLfoParams &parameters)
 {
 	this->waveShape = parameters.waveShape;
 	this->freqBeat = parameters.freqBeat;
@@ -51,6 +62,19 @@ LfoParameters& LfoParameters::operator=(const LfoParameters &parameters)
 	return *this;
 }
 
+EnvModParams::EnvModParams()
+: type(eENVMOD_FADEIN), offset(0.0), strength(1.0)
+{
+}
+
+EnvModParams& EnvModParams::operator=(const EnvModParams &params)
+{
+	this->type = params.type;
+	this->offset = params.offset;
+	this->strength = params.strength;
+	return *this;
+}
+
 EnvelopeProcessor* EnvelopeProcessor::_pInstance = NULL;
 
 EnvelopeProcessor* EnvelopeProcessor::getInstance()
@@ -61,6 +85,7 @@ EnvelopeProcessor* EnvelopeProcessor::getInstance()
 }
 
 EnvelopeProcessor::EnvelopeProcessor()
+: _parameters(), _envModParams()
 {
 	_midiProcessor = new MidiItemProcessor("MIDI Item LFO Generator");
 _midiProcessor->addFilter(new MidiCcRemover(&_parameters.midiCc));
@@ -70,6 +95,96 @@ _midiProcessor->addFilter(new MidiCcRemover(&_parameters.midiCc));
 EnvelopeProcessor::~EnvelopeProcessor()
 {
 	delete _midiProcessor;
+}
+
+void EnvelopeProcessor::errorHandlerDlg(HWND hwnd, ErrorCode err)
+{
+	switch(err)
+	{
+		case EnvelopeProcessor::eERRORCODE_NOENVELOPE:
+			MessageBox(hwnd, "No envelope selected!", "Error", MB_OK);
+		break;
+		case EnvelopeProcessor::eERRORCODE_NULLTIMESELECTION:
+			MessageBox(hwnd, "No time selection!", "Error", MB_OK);
+		break;
+		case EnvelopeProcessor::eERRORCODE_NOITEMSELECTED:
+			MessageBox(hwnd, "No item selected!", "Error", MB_OK);
+		break;
+		case EnvelopeProcessor::eERRORCODE_NOOBJSTATE:
+			MessageBox(hwnd, "Could not retrieve envelope object state!", "Error", MB_OK);
+		break;
+		case EnvelopeProcessor::eERRORCODE_UNKNOWN:
+			MessageBox(hwnd, "Could not generate envelope! (Unknown Error)", "Error", MB_OK);
+		break;
+		default:
+		break;
+	}
+}
+
+
+void EnvelopeProcessor::getFreqDelay(EnvLfoParams &lfoParams, double &dFreq, double &dDelay)
+{
+	double tempoBpm, tempoBpi;
+	GetProjectTimeSignature2(0, &tempoBpm, &tempoBpi);
+
+	if(lfoParams.freqBeat != eGRID_OFF)
+		dFreq = GetGridDivisionFactor(lfoParams.freqBeat)*tempoBpm/60.0;
+	else
+		dFreq = lfoParams.freqHz;
+
+	if(lfoParams.delayBeat != eGRID_OFF)
+		dDelay = 1000.0*60.0/tempoBpm/GetGridDivisionFactor(lfoParams.delayBeat);
+	else
+		dDelay = lfoParams.delayMsec;
+}
+
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::getEnvelopeMinMax(TrackEnvelope* envelope, double &dEnvMinVal, double &dEnvMaxVal)
+{
+	if(!envelope)
+		return eERRORCODE_NOENVELOPE;
+
+	char* envState = GetSetObjectState(envelope, "");
+	if(!envState)
+		return eERRORCODE_NOOBJSTATE;
+
+	dEnvMinVal = 0.0;
+	dEnvMaxVal = 1.0;
+	double dTmp[2];
+	int iTmp;
+
+	stringstream envStateStream;
+	envStateStream << envState;
+	std::vector<string> tokens;
+	while(!envStateStream.eof())
+	{
+		string str;
+		getline(envStateStream, str, '\n');
+		tokens.push_back(str);
+	}
+
+	for(vector<string>::const_iterator it = tokens.begin(); it !=tokens.end(); ++it)
+	{
+		// Track envelope: Volume
+		if(!strcmp(it->c_str(), "<VOLENV") || !strcmp(it->c_str(), "<VOLENV2"))
+			dEnvMaxVal = 2.0;
+
+		// Track envelope: Pan
+		if(!strcmp(it->c_str(), "<PANENV") || !strcmp(it->c_str(), "<PANENV2"))
+			dEnvMinVal = -1.0;
+
+		// Track envelope: Param (VST index, min value, max value)
+		if(sscanf(it->c_str(), "<PARMENV %d %lf %lf", &iTmp, &dTmp[0], &dTmp[1]) == 3)
+		{
+			dEnvMinVal = dTmp[0];
+			dEnvMaxVal = dTmp[1];
+		}
+
+		if(!strcmp(it->c_str(), ">"))
+			break;
+	}
+
+	FreeHeapPtr(envState);
+	return eERRORCODE_OK;
 }
 
 void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, double dEndTime, double dValMin, double dValMax, double dFreq, double dStrength, double dOffset, double dDelay, WaveShape tWaveShape, double dPrecision)
@@ -267,6 +382,134 @@ void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, doub
 	envState.append(buffer);
 }
 
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::processPoints(TrackEnvelope* envelope, double dStartPos, double dEndPos, EnvModType envModType, double dStrength, double dOffset)
+{
+	if(!envelope)
+		return eERRORCODE_NOENVELOPE;
+
+	if(dStartPos==dEndPos)
+		return eERRORCODE_NULLTIMESELECTION;
+	double dLength = dEndPos-dStartPos;
+
+	double dEnvMin, dEnvMax;
+	ErrorCode res = getEnvelopeMinMax(envelope, dEnvMin, dEnvMax);
+	if(res != eERRORCODE_OK)
+		return res;
+	double dEnvOffset = 0.5*(dEnvMin+dEnvMax);
+	double dEnvMagnitude = 0.5*(dEnvMax-dEnvMin);
+
+	char* envState = GetSetObjectState(envelope, "");
+	if(!envState)
+		return eERRORCODE_NOOBJSTATE;
+
+	string newState;
+	char cPtValue[128];
+
+	double position, value;
+	int iTmp;
+	char* token = strtok(envState, "\n");
+
+	while(token != NULL)
+	{
+		// Position, value, shape
+		if(sscanf(token, "PT %lf %lf %d\n", &position, &value, &iTmp) == 3)
+		{
+			if(position>=dEndPos)
+				break;
+			if(position>dStartPos)
+			{
+				stringstream currentLine;
+				currentLine << token;
+				std::vector<string> lineTokens;
+				while(!currentLine.eof())
+				{
+					string str;
+					getline(currentLine, str, ' ');
+					lineTokens.push_back(str);
+				}
+
+				string newLine;
+				int linePos = 0;
+				for(vector<string>::const_iterator it = lineTokens.begin(); it !=lineTokens.end(); ++it)
+				{
+					if(linePos == 2)
+					{
+						double dEnvNormValue = (value-dEnvOffset)/dEnvMagnitude;
+						double dCarrier = 1.0;
+						switch(envModType)
+						{
+							case eENVMOD_FADEIN :
+								dCarrier = (position-dStartPos)/dLength;
+								dCarrier = pow(dCarrier, dStrength);
+								//dCarrier = EnvSignalProcessorFade((position-dStartPos), (dEndPos-dStartPos), true);
+								dEnvNormValue = dCarrier*(dEnvNormValue - dOffset) + dOffset;
+							break;
+							case eENVMOD_FADEOUT :
+								dCarrier = (dEndPos-position)/dLength;
+								dCarrier = pow(dCarrier, dStrength);
+								//dCarrier = EnvSignalProcessorFade((position-dStartPos), (dEndPos-dStartPos), false);
+								dEnvNormValue = dCarrier*(dEnvNormValue - dOffset) + dOffset;
+							break;
+							case eENVMOD_AMPLIFY :
+								dEnvNormValue = dStrength*(dEnvNormValue + dOffset);
+							break;
+						}
+
+						value = dEnvMagnitude*dEnvNormValue + dEnvOffset;
+						if(value < dEnvMin)
+							value = dEnvMin;
+						if(value > dEnvMax)
+							value = dEnvMax;
+
+						sprintf(cPtValue, "%lf", value);
+						newLine.append(cPtValue);
+					}
+
+					else
+						newLine.append(*it);
+
+					newLine.append(" ");
+					linePos++;
+				}
+				newState.append(newLine);
+				newState.append("\n");
+
+				token = strtok(NULL, "\n");
+				continue;
+			}
+		}
+
+		if(!strcmp(token, ">"))
+			break;
+
+		newState.append(token);
+		newState.append("\n");
+		token = strtok(NULL, "\n");
+	}
+
+	newState.append(token);
+	newState.append("\n");
+	token = strtok(NULL, "\n");
+	while(token != NULL)
+	{
+		newState.append(token);
+		newState.append("\n");
+		token = strtok(NULL, "\n");
+	}
+
+	FreeHeapPtr(envState);
+
+	if(GetSetObjectState(envelope, newState.c_str()))
+		return eERRORCODE_UNKNOWN;
+
+Undo_OnStateChangeEx("Padre's Envelope Processor", UNDO_STATE_ALL, -1);
+
+	return eERRORCODE_OK;
+}
+
+
+
+
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* envelope, double dStartPos, double dEndPos, double dFreq, double dStrength, double dOffset, double dDelay, WaveShape tWaveShape, double dPrecision)
 {
 	//TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
@@ -354,22 +597,6 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* 
 
 	Undo_OnStateChangeEx("Generate Track LFO", UNDO_STATE_ALL, -1);
 	return eERRORCODE_OK;
-}
-
-void EnvelopeProcessor::getFreqDelay(LfoParameters &parameters, double &dFreq, double &dDelay)
-{
-	double tempoBpm, tempoBpi;
-	GetProjectTimeSignature2(0, &tempoBpm, &tempoBpi);
-
-	if(parameters.freqBeat != eGRID_OFF)
-		dFreq = GetGridDivisionFactor(parameters.freqBeat)*tempoBpm/60.0;
-	else
-		dFreq = parameters.freqHz;
-
-	if(parameters.delayBeat != eGRID_OFF)
-		dDelay = 1000.0*60.0/tempoBpm/GetGridDivisionFactor(parameters.delayBeat);
-	else
-		dDelay = parameters.delayMsec;
 }
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackEnvLfo()
@@ -493,8 +720,8 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	if(!envelope)
 		return eERRORCODE_NOENVELOPE;
 
-	if (dStartPos==dEndPos)
-		return eERRORCODE_NULLTIMESELECTION;
+	//if(dStartPos==dEndPos)
+	//	return eERRORCODE_NULLTIMESELECTION;
 
 	string newState;
 	char* envState = PadresGetEnvelopeState(envelope);
@@ -598,6 +825,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	double dItemStartPos = GetMediaItemInfo_Value(parentItem, "D_POSITION");
 	double dItemEndPos = dItemStartPos + GetMediaItemInfo_Value(parentItem, "D_LENGTH");
 
+//! \todo Ask Cockos for SetCursorPosition()
 	double dStartPos, dEndPos;
 	switch(_parameters.timeSegment)
 	{
@@ -660,47 +888,24 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo(bool bActiveOnly)
 {
 	list<MediaItem*> items;
-	MidiItemProcessor::getSelectedMediaItems(items);
-
+	GetSelectedMediaItems(items);
 	if(items.empty())
 		return eERRORCODE_NOITEMSELECTED;
 
 	for(list<MediaItem*>::iterator item = items.begin(); item != items.end(); item++)
 	{
 		list<MediaItem_Take*> takes;
-
-//! \todo Ask Cockos for SetCursorPosition()
-//double dItemStartPos = GetMediaItemInfo_Value(*item, "D_POSITION");
-//double dItemEndPos = dItemStartPos + GetMediaItemInfo_Value(*item, "D_LENGTH");
-
-		if(bActiveOnly)
-		{
-			MediaItem_Take* take = GetActiveTake(*item);
-			if(take)
-				takes.push_back(take);
-		}
-
-		else
-		{
-			int takeIdx = 0;
-			while(MediaItem_Take* take = GetTake(*item, takeIdx))
-			{
-				takes.push_back(take);
-				takeIdx++;
-			}
-		}
-
-		if(takes.empty())
-			return eERRORCODE_NOITEMSELECTED;
+		GetMediaItemTakes(*item, takes, bActiveOnly);
+		//if(takes.empty())
+		//	return eERRORCODE_NOITEMSELECTED;
 
 		for(list<MediaItem_Take*>::iterator take = takes.begin(); take != takes.end(); take++)
 		{
 			ErrorCode res = generateTakeLfo(*take);
+			UpdateItemInProject(*item);
 			if(res != eERRORCODE_OK)
 				return res;
 		}
-
-		UpdateItemInProject(*item);
 	}
 
 	Undo_OnStateChangeEx("Item Envelope LFO", UNDO_STATE_ALL, -1);
@@ -736,7 +941,7 @@ void EnvelopeProcessor::MidiCcRemover::process(MIDI_event_t* evt, MIDI_eventlist
 	}
 }
 
-EnvelopeProcessor::MidiCcLfo::MidiCcLfo(LfoParameters* pParameters)
+EnvelopeProcessor::MidiCcLfo::MidiCcLfo(EnvLfoParams* pParameters)
 : MidiGeneratorBase(), _pParameters(pParameters)
 {
 }
@@ -821,135 +1026,22 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedMidiTakeLfo(bool
 	return eERRORCODE_OK;
 }
 
-EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackFade(bool bFadeIn)
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::processSelectedTrackEnv()
 {
-	TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
-	if(!envelope)
-		return eERRORCODE_NOENVELOPE;
-	return generateFade(envelope, bFadeIn);
-}
+	Undo_BeginBlock2(0);
 
-EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateFade(TrackEnvelope* envelope, bool bFadeIn)
-{
+	TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
 	if(!envelope)
 		return eERRORCODE_NOENVELOPE;
 
 	Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
-	double dTimeSelEndPosition = GetCursorPositionEx(0);
+	double dEndPos = GetCursorPositionEx(0);
 	Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
-	double dTimeSelStartPosition = GetCursorPositionEx(0);
+	double dStartPos = GetCursorPositionEx(0);
 
-	if (dTimeSelStartPosition==dTimeSelEndPosition)
-		return eERRORCODE_NULLTIMESELECTION;
+	Undo_EndBlock2(0, "Padre's Envelope Processor", 0);
 
-	double dScale = 1.0/(dTimeSelEndPosition-dTimeSelStartPosition);
-
-	char* envState = GetSetObjectState(envelope, "");
-	if(!envState)
-		return eERRORCODE_NOOBJSTATE;
-
-	string newState;
-	//double dPosition, dValue;
-	//int iShape;
-	char buffer[BUFFER_SIZE];
-	//char endOfLine[BUFFER_SIZE];
-	//char cValue[128];
-
-	double position, value;
-	int iTmp;
-	char* token = strtok(envState, "\n");
-
-	while(token != NULL)
-	{
-		// Position, value, shape
-		if(sscanf(token, "PT %lf %lf %d\n", &position, &value, &iTmp) == 3)
-		{
-			if(position>=dTimeSelEndPosition)
-				break;
-			if(position>dTimeSelStartPosition)
-			{
-				string newLine;
-				strcpy(buffer, token);
-				istream& getline( istream& is, string& s, char delimiter = '\n' );
-
-				char* lineToken = strtok(buffer, " ");
-				//int linePos = 0;
-				//while(lineToken != NULL)
-				//{
-				//	if(linePos == 2)
-				//	{
-				//		value *= 0.5;
-				//		sprintf(cValue, "%lf", value);
-				//		newLine.append(cValue);
-				//		newLine.append(" ");
-				//	}
-
-				//	else
-				//	{
-				//		newLine.append(lineToken);
-				//		newLine.append(" ");
-				//	}
-
-				//	linePos++;
-				//	lineToken = strtok(NULL, " \n");
-				//}
-
-				//newState.append(newLine);
-				//newState.append("\n");
-				token = strtok(NULL, "\n");
-				continue;
-			}
-		}
-
-		if(!strcmp(token, ">"))
-			break;
-
-		newState.append(token);
-		newState.append("\n");
-		token = strtok(NULL, "\n");
-	}
-
-	newState.append(token);
-	newState.append("\n");
-	token = strtok(NULL, "\n");
-	while(token != NULL)
-	{
-		newState.append(token);
-		newState.append("\n");
-		token = strtok(NULL, "\n");
-	}
-
-
-	//char* token = strtok(envState, "\n");
-	//while(token != NULL)
-	//{
-	//	// Position, value, shape
-	//	if(sscanf(token, "PT %lf %lf %d %s", &dPosition, &dValue, &iShape, &endOfLine) == 4)
-	//	{
-	//		if( (dPosition>=dTimeSelStartPosition) && (dPosition<=dTimeSelEndPosition) )
-	//		{
-	//			if(bFadeIn)
-	//				dValue *= dScale*(dPosition-dTimeSelStartPosition);
-	//			else
-	//				dValue *= 1.0 - dScale*(dPosition-dTimeSelStartPosition);
-	//			sprintf(buffer, "PT %lf %lf %d %s\n", dPosition, dValue, iShape, endOfLine);
-	//			newState.append(buffer);
-	//			break;
-	//		}
-	//	}
-
-	//	//if(!strcmp(token, ">"))
-	//	//	break;
-
-	//	newState.append(token);
-	//	newState.append("\n");
-	//	token = strtok(NULL, "\n");
-	//}
-
-	FreeHeapPtr(envState);
-
-	if(GetSetObjectState(envelope, newState.c_str()))
-		return eERRORCODE_UNKNOWN;
-
-	return eERRORCODE_OK;
+	return processPoints(envelope, dStartPos, dEndPos, _envModParams.type, _envModParams.strength, _envModParams.offset);
 }
+
+

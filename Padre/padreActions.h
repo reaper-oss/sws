@@ -37,8 +37,10 @@
 //! \todo MIDI LFO new options: channel, pitch
 //! \todo Use S&M ObjectState access
 //! \todo cleanup EnvProcessor class: MIDI out, restrain to TrackEnvelope objects, replace singleton by global vars init by PadreInit()
-//! \todo item lfo for time selection only
 //! \note I usually keep beta stuff/tests undented
+//! \todo Dynamic menu: grey out float delay/freq on sync mode, etc
+//! \todo LFO generator: one single action with track/sel item/sel item (MIDI) combo box
+//! \todo RME Fireface Mixer actions
 
 #define PADRE_CMD_SHORTNAME(_ct) (_ct->accel.desc + 11) // +11 to skip "SWS/PADRE: "
 #define PADRE_FORMATED_INI_FILE "%s\\Plugins\\PADRE.ini"
@@ -55,4 +57,7 @@ void ShrinkSelItems(COMMAND_T* _ct);
 
 void RandomizeMidiNotePos(COMMAND_T* _ct);
 
-void EnvelopeFader(COMMAND_T* _ct);
+//void EnvelopeFader(COMMAND_T* _ct);
+void EnvelopeProcessor(COMMAND_T* _ct);
+
+WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);

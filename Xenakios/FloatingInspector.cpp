@@ -63,7 +63,7 @@ BOOL WINAPI MyItemInspectorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 		case WM_COMMAND:
 			if (LOWORD(wParam)==IDCANCEL)
 			{
-				KillTimer(g_hItemInspector,0);
+				KillTimer(g_hItemInspector, 1);
 				ShowWindow(g_hItemInspector, SW_HIDE);
 				g_ItemInspectorVisible=false;	
 			}
@@ -143,13 +143,13 @@ void DoTglFltItemInspector(COMMAND_T*)
 	if (g_ItemInspectorVisible)
 	{
 		g_ItemInspectorVisible = false;
-		KillTimer(g_hItemInspector, 0);
+		KillTimer(g_hItemInspector, 1);
 		ShowWindow(g_hItemInspector, SW_HIDE);
 	}
 	else
 	{
 		g_ItemInspectorVisible = true;
-		SetTimer(g_hItemInspector, 0, 200, NULL);
+		SetTimer(g_hItemInspector, 1, 200, NULL);
 		ShowWindow(g_hItemInspector, SW_SHOW);
 	}
 }

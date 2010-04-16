@@ -118,7 +118,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				PersistColors();
 				InvalidateRect(hwndDlg, NULL, 0);
-				KillTimer(hwndDlg, 0);
+				KillTimer(hwndDlg, 1);
 				iSettingColor = -1;
 			}
 			break;
@@ -170,7 +170,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						case IDC_COLOR2:  iSettingColor = 1; ShowColorChooser(g_crGradEnd);   break;
 						case IDC_SETCUST: iSettingColor = 2; ShowColorChooser(g_custColors[0]); break;
 					}
-					SetTimer(hwndDlg, 0, 50, NULL);
+					SetTimer(hwndDlg, 1, 50, NULL);
 #endif
 					break;
 				}
@@ -267,7 +267,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					if (iSettingColor != -1)
 					{
 						HideColorChooser();
-						KillTimer(hwndDlg, 0);
+						KillTimer(hwndDlg, 1);
 					}
 #endif
 					SaveWindowPos(hwndDlg, COLORDLG_WINDOWPOS_KEY);

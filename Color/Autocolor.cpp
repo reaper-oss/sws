@@ -223,7 +223,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 #else
 				m_bSettingColor = true;
 				ShowColorChooser(item->m_col);
-				SetTimer(m_hwnd, 0, 50, NULL);
+				SetTimer(m_hwnd, 1, 50, NULL);
 #endif
 			}
 			break;
@@ -303,7 +303,7 @@ void SWS_AutoColorWnd::OnTimer()
 		while ((item = (SWS_AutoColorItem*)m_pLists.Get(0)->EnumSelected(&x)))
 			item->m_col = cr;
 
-		KillTimer(m_hwnd, 0);
+		KillTimer(m_hwnd, 1);
 		Update();
 	}
 }
@@ -313,7 +313,7 @@ void SWS_AutoColorWnd::OnDestroy()
 	if (m_bSettingColor)
 	{
 		HideColorChooser();
-		KillTimer(m_hwnd, 0);
+		KillTimer(m_hwnd, 1);
 	}
 }
 #endif

@@ -257,7 +257,7 @@ void SWS_TrackListWnd::OnInitDlg()
 
 	Update();
 
-	SetTimer(m_hwnd, 0, 100, NULL);
+	SetTimer(m_hwnd, 1, 100, NULL);
 }
 
 void SWS_TrackListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -350,7 +350,7 @@ void SWS_TrackListWnd::OnDestroy()
 {
 	m_bUpdate = false;
 
-	KillTimer(m_hwnd, 0);
+	KillTimer(m_hwnd, 1);
 
 	char str[10];
 	_snprintf(str, 10, "%d %d", m_bHideFiltered ? 1 : 0, m_bLink ? 1 : 0);

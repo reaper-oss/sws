@@ -195,7 +195,7 @@ void SWS_MarkerListWnd::OnInitDlg()
 	g_curList = NULL;
 	Update();
 
-	SetTimer(m_hwnd, 0, 500, NULL);
+	SetTimer(m_hwnd, 1, 500, NULL);
 }
 
 void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -270,7 +270,7 @@ HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y)
 
 void SWS_MarkerListWnd::OnDestroy()
 {
-	KillTimer(m_hwnd, 0);
+	KillTimer(m_hwnd, 1);
 }
 
 void SWS_MarkerListWnd::OnTimer()

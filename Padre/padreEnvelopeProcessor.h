@@ -42,6 +42,7 @@ using namespace std;
 enum EnvType { eENVTYPE_TRACK=0, eENVTYPE_TAKE=1, eENVTYPE_MIDICC=2 };
 enum EnvModType { eENVMOD_FADEIN, eENVMOD_FADEOUT, eENVMOD_AMPLIFY, eENVMOD_LAST };
 
+const char* GetEnvTypeStr(EnvType type);
 const char* GetEnvModTypeStr(EnvModType type);
 
 struct EnvLfoParams
@@ -58,6 +59,7 @@ struct EnvLfoParams
 	TakeEnvType takeEnvType;
 	EnvType envType;
 	TimeSegment timeSegment;
+	bool activeTakeOnly;
 
 	EnvLfoParams();
 	EnvLfoParams& operator=(const EnvLfoParams &parameters);
@@ -116,10 +118,10 @@ class EnvelopeProcessor
 		void destroyMidiProcessor();
 
 		ErrorCode generateSelectedTrackEnvLfo();
-		ErrorCode generateSelectedTakesLfo(bool bActiveOnly);
+		ErrorCode generateSelectedTakesLfo();
 ErrorCode processSelectedTrackEnv();
 
-		static ErrorCode generateSelectedMidiTakeLfo(bool bActiveOnly);
+		ErrorCode generateSelectedMidiTakeLfo();
 
 
 

@@ -36,11 +36,10 @@
 //! \todo Update with sws/wdl API functions (ObjState access, etc)
 //! \todo MIDI LFO new options: channel, pitch
 //! \todo Use S&M ObjectState access
-//! \todo cleanup EnvProcessor class: MIDI out, restrain to TrackEnvelope objects, replace singleton by global vars init by PadreInit()
-//! \note I usually keep beta stuff/tests undented
-//! \todo Dynamic menu: grey out float delay/freq on sync mode, etc
-//! \todo LFO generator: one single action with track/sel item/sel item (MIDI) combo box
 //! \todo RME Fireface Mixer actions
+//! \todo Ask Cockos for GetPos() functions + SetCursorPos() + Insert Env Point bug in step mode + int positions (precision vs double)
+
+//! \note I usually keep beta stuff/tests undented
 
 #define PADRE_CMD_SHORTNAME(_ct) (_ct->accel.desc + 11) // +11 to skip "SWS/PADRE: "
 #define PADRE_FORMATED_INI_FILE "%s\\Plugins\\PADRE.ini"

@@ -28,6 +28,17 @@
 #include "stdafx.h"
 #include "padreEnvelopeProcessor.h"
 
+const char* GetEnvTypeStr(EnvType type)
+{
+	switch(type)
+	{
+		case eENVTYPE_TRACK			: return "Selected Track Envelope";		break;
+		case eENVTYPE_TAKE			: return "Selected Take(s)";			break;
+		case eENVTYPE_MIDICC		: return "Selected Take(s) (MIDI)";		break;
+		default						: return NULL;							break;
+	}
+}
+
 const char* GetEnvModTypeStr(EnvModType type)
 {
 	switch(type)
@@ -41,7 +52,7 @@ const char* GetEnvModTypeStr(EnvModType type)
 
 EnvLfoParams::EnvLfoParams()
 : waveShape(eWAVSHAPE_SINE), freqBeat(eGRID_1_1), freqHz(0.0), delayBeat(eGRID_OFF), delayMsec(0.0), strength(1.0), offset(0.0), precision(0.05)
-, midiCc(7), takeEnvType(eTAKEENV_VOLUME), envType(eENVTYPE_TRACK), timeSegment(eTIMESEGMENT_TIMESEL)
+, midiCc(7), takeEnvType(eTAKEENV_VOLUME), envType(eENVTYPE_TRACK), timeSegment(eTIMESEGMENT_TIMESEL), activeTakeOnly(true)
 {
 }
 
@@ -59,7 +70,8 @@ EnvLfoParams& EnvLfoParams::operator=(const EnvLfoParams &parameters)
 	this->envType = parameters.envType;
 	this->takeEnvType = parameters.takeEnvType;
 	this->timeSegment = parameters.timeSegment;
-	return *this;
+	this->activeTakeOnly = parameters.activeTakeOnly;
+		return *this;
 }
 
 EnvModParams::EnvModParams()
@@ -885,7 +897,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	return generateTakeLfo(take, dStartPos, dEndPos, _parameters.takeEnvType, dFreq, _parameters.strength, _parameters.offset, dDelay, _parameters.waveShape, _parameters.precision);
 }
 
-EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo(bool bActiveOnly)
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo()
 {
 	list<MediaItem*> items;
 	GetSelectedMediaItems(items);
@@ -895,7 +907,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo(bool bA
 	for(list<MediaItem*>::iterator item = items.begin(); item != items.end(); item++)
 	{
 		list<MediaItem_Take*> takes;
-		GetMediaItemTakes(*item, takes, bActiveOnly);
+		GetMediaItemTakes(*item, takes, _parameters.activeTakeOnly);
 		//if(takes.empty())
 		//	return eERRORCODE_NOITEMSELECTED;
 
@@ -1020,9 +1032,9 @@ iValue = (int)(127.0*dValue);
 	}
 }
 
-EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedMidiTakeLfo(bool bActiveOnly)
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedMidiTakeLfo()
 {
-	getInstance()->_midiProcessor->processSelectedMidiTakes(true);
+	_midiProcessor->processSelectedMidiTakes(_parameters.activeTakeOnly);
 	return eERRORCODE_OK;
 }
 

@@ -30,9 +30,10 @@
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator: Selected Track" }, "PADRE_TRACKENVLFO", EnvelopeLfo, NULL, 0},
-	{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator: Selected Active Take(s)" }, "PADRE_TAKEENVLFO", EnvelopeLfo, NULL, 1},
-	{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator: Selected Active Take(s) (MIDI)" }, "PADRE_MIDILFO", EnvelopeLfo, NULL, 2},
+	{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator" }, "PADRE_ENVLFO", EnvelopeLfo, NULL, 0},
+	//{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator: Selected Track" }, "PADRE_TRACKENVLFO", EnvelopeLfo, NULL, 0},
+	//{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator: Selected Active Take(s)" }, "PADRE_TAKEENVLFO", EnvelopeLfo, NULL, 1},
+	//{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator: Selected Active Take(s) (MIDI)" }, "PADRE_MIDILFO", EnvelopeLfo, NULL, 2},
 
 	{ { DEFACCEL, "SWS/PADRE: Envelope Processor: Selected Track" }, "PADRE_TRACKENVPROC", EnvelopeProcessor, NULL, 0},
 
@@ -69,20 +70,34 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 	{
         case WM_INITDIALOG :
 		{
-			const char* args = (const char*)lParam;
-			EnvelopeProcessor::getInstance()->_parameters.envType = (EnvType)atoi(args);
+			//const char* args = (const char*)lParam;
+			//EnvelopeProcessor::getInstance()->_parameters.envType = (EnvType)atoi(args);
 
-			for(int i=eTIMESEGMENT_TIMESEL; i<eTIMESEGMENT_LAST; i++)
+			for(int i=eENVTYPE_TRACK; i<=eENVTYPE_MIDICC; i++)
 			{
-				if( (EnvelopeProcessor::getInstance()->_parameters.envType == eENVTYPE_TRACK) && (i == eTIMESEGMENT_SELITEM) )
-					continue;
-				if( (EnvelopeProcessor::getInstance()->_parameters.envType == eENVTYPE_TAKE) && (i == eTIMESEGMENT_PROJECT) )
-					continue;
-				int x = SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_ADDSTRING,0,(LPARAM)GetTimeSegmentStr((TimeSegment)i));
-					SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_SETITEMDATA,x,i);
-				if(i == EnvelopeProcessor::getInstance()->_parameters.timeSegment)
-					SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_SETCURSEL,x,0);
+				int x = SendDlgItemMessage(hwnd,IDC_PADRELFO_TARGET,CB_ADDSTRING,0,(LPARAM)GetEnvTypeStr((EnvType)i));
+				SendDlgItemMessage(hwnd,IDC_PADRELFO_TARGET,CB_SETITEMDATA,x,i);
+				if(i == EnvelopeProcessor::getInstance()->_parameters.envType)
+					SendDlgItemMessage(hwnd,IDC_PADRELFO_TARGET,CB_SETCURSEL,x,0);
 			}
+			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADRELFO_TARGET, CBN_SELCHANGE), NULL);
+
+			if(EnvelopeProcessor::getInstance()->_parameters.activeTakeOnly)
+				CheckDlgButton(hwnd, IDC_PADRELFO_ACTIVETAKES, TRUE);
+			else
+				CheckDlgButton(hwnd, IDC_PADRELFO_ACTIVETAKES, FALSE);
+
+			//for(int i=eTIMESEGMENT_TIMESEL; i<eTIMESEGMENT_LAST; i++)
+			//{
+			//	if( (EnvelopeProcessor::getInstance()->_parameters.envType == eENVTYPE_TRACK) && (i == eTIMESEGMENT_SELITEM) )
+			//		continue;
+			//	if( (EnvelopeProcessor::getInstance()->_parameters.envType == eENVTYPE_TAKE) && (i == eTIMESEGMENT_PROJECT) )
+			//		continue;
+			//	int x = SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_ADDSTRING,0,(LPARAM)GetTimeSegmentStr((TimeSegment)i));
+			//		SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_SETITEMDATA,x,i);
+			//	if(i == EnvelopeProcessor::getInstance()->_parameters.timeSegment)
+			//		SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_SETCURSEL,x,0);
+			//}
 
 			int iLastShape = eWAVSHAPE_SAWDOWN_BEZIER;
 			if(EnvelopeProcessor::getInstance()->_parameters.envType == eENVTYPE_MIDICC)
@@ -103,6 +118,7 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 				if(i == EnvelopeProcessor::getInstance()->_parameters.freqBeat)
 					SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCFREQUENCY,CB_SETCURSEL,x,0);
 			}
+			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADRELFO_SYNCFREQUENCY, CBN_SELCHANGE), NULL);
 
 			for(int i=eGRID_OFF; i<eGRID_LAST; i++)
 			{
@@ -111,12 +127,24 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 				if(i == EnvelopeProcessor::getInstance()->_parameters.delayBeat)
 					SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCDELAY,CB_SETCURSEL,x,0);
 			}
+			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADRELFO_SYNCDELAY, CBN_SELCHANGE), NULL);
 
 			char buffer[BUFFER_SIZE];
-			sprintf(buffer, "%lf", EnvelopeProcessor::getInstance()->_parameters.freqHz);
+
+			sprintf(buffer, "%.3lf", EnvelopeProcessor::getInstance()->_parameters.freqHz);
 			SetDlgItemText(hwnd, IDC_PADRELFO_FREQUENCY, buffer);
-			sprintf(buffer, "%lf", EnvelopeProcessor::getInstance()->_parameters.delayMsec);
+			//if(EnvelopeProcessor::getInstance()->_parameters.freqBeat == eGRID_OFF)
+			//	EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_FREQUENCY), TRUE);
+			//else
+			//	EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_FREQUENCY), FALSE);
+
+			sprintf(buffer, "%.3lf", EnvelopeProcessor::getInstance()->_parameters.delayMsec);
 			SetDlgItemText(hwnd, IDC_PADRELFO_DELAY, buffer);
+			//if(EnvelopeProcessor::getInstance()->_parameters.delayBeat == eGRID_OFF)
+			//	EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_DELAY), TRUE);
+			//else
+			//	EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_DELAY), FALSE);
+
 			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_parameters.strength);
 			SetDlgItemText(hwnd, IDC_PADRELFO_STRENGTH, buffer);
 			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_parameters.offset);
@@ -139,26 +167,26 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 					SendDlgItemMessage(hwnd,IDC_PADRELFO_MIDICC,CB_SETCURSEL,x,0);
 			}
 
-			switch(EnvelopeProcessor::getInstance()->_parameters.envType)
-			{
-				case eENVTYPE_TRACK :
-					EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_TAKEENV), FALSE);
-					EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_MIDICC), FALSE);
-				break;
+			//switch(EnvelopeProcessor::getInstance()->_parameters.envType)
+			//{
+			//	case eENVTYPE_TRACK :
+			//		EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_TAKEENV), FALSE);
+			//		EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_MIDICC), FALSE);
+			//	break;
 
-				case eENVTYPE_TAKE :
-					EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_TAKEENV), TRUE);
-					EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_MIDICC), FALSE);
-				break;
+			//	case eENVTYPE_TAKE :
+			//		EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_TAKEENV), TRUE);
+			//		EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_MIDICC), FALSE);
+			//	break;
 
-				case eENVTYPE_MIDICC :
-					EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_TAKEENV), FALSE);
-					EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_MIDICC), TRUE);
-				break;
+			//	case eENVTYPE_MIDICC :
+			//		EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_TAKEENV), FALSE);
+			//		EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_MIDICC), TRUE);
+			//	break;
 
-				default:
-				break;
-			}
+			//	default:
+			//	break;
+			//}
 
 #ifdef _WIN32
 				SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDD_PADRELFO_GENERATOR), TRUE);
@@ -172,7 +200,13 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
             {
                 case IDOK:
 				{
-					int combo = SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_GETCURSEL,0,0);
+					int combo = SendDlgItemMessage(hwnd,IDC_PADRELFO_TARGET,CB_GETCURSEL,0,0);
+					if(combo != CB_ERR)
+						EnvelopeProcessor::getInstance()->_parameters.envType = (EnvType)(SendDlgItemMessage(hwnd,IDC_PADRELFO_TARGET,CB_GETITEMDATA,combo,0));
+
+					EnvelopeProcessor::getInstance()->_parameters.activeTakeOnly = (IsDlgButtonChecked(hwnd, IDC_PADRELFO_ACTIVETAKES) != 0);
+
+					combo = SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_GETCURSEL,0,0);
 					if(combo != CB_ERR)
 						EnvelopeProcessor::getInstance()->_parameters.timeSegment = (TimeSegment)(SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_GETITEMDATA,combo,0));
 
@@ -192,7 +226,6 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 					GetDlgItemText(hwnd,IDC_PADRELFO_FREQUENCY,buffer,BUFFER_SIZE);
 					EnvelopeProcessor::getInstance()->_parameters.freqHz = atof(buffer);
 					GetDlgItemText(hwnd,IDC_PADRELFO_DELAY,buffer,BUFFER_SIZE);
-					//EnvelopeProcessor::_parameters.delayMsec = fabs(atof(buffer));
 					EnvelopeProcessor::getInstance()->_parameters.delayMsec = atof(buffer);
 					GetDlgItemText(hwnd,IDC_PADRELFO_STRENGTH,buffer,BUFFER_SIZE);
 					EnvelopeProcessor::getInstance()->_parameters.strength = atof(buffer)/100.0;
@@ -215,48 +248,134 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 						break;
 
 						case eENVTYPE_TAKE :
-							res = EnvelopeProcessor::getInstance()->generateSelectedTakesLfo(true);
+							res = EnvelopeProcessor::getInstance()->generateSelectedTakesLfo();
 						break;
 
 						case eENVTYPE_MIDICC :
-							res = EnvelopeProcessor::generateSelectedMidiTakeLfo(true);
+							res = EnvelopeProcessor::getInstance()->generateSelectedMidiTakeLfo();
 						break;
 
 						default:
 						break;
 					}
 
-					//EnvelopeProcessor::ErrorCode res = EnvelopeProcessor::generateLfo();
-					switch(res)
-					{
-						case EnvelopeProcessor::eERRORCODE_NOENVELOPE:
-							MessageBox(hwnd, "No envelope selected!", "Error", MB_OK);
-						break;
-						case EnvelopeProcessor::eERRORCODE_NULLTIMESELECTION:
-							MessageBox(hwnd, "No time selection!", "Error", MB_OK);
-						break;
-						case EnvelopeProcessor::eERRORCODE_NOITEMSELECTED:
-							MessageBox(hwnd, "No item selected!", "Error", MB_OK);
-						break;
-						case EnvelopeProcessor::eERRORCODE_NOOBJSTATE:
-							MessageBox(hwnd, "Could not retrieve envelope object state!", "Error", MB_OK);
-						break;
-						case EnvelopeProcessor::eERRORCODE_UNKNOWN:
-							MessageBox(hwnd, "Could not generate envelope! (Unknown Error)", "Error", MB_OK);
-						break;
-						default:
-						break;
-					}
+					EnvelopeProcessor::errorHandlerDlg(hwnd, res);
+
+					//switch(res)
+					//{
+					//	case EnvelopeProcessor::eERRORCODE_NOENVELOPE:
+					//		MessageBox(hwnd, "No envelope selected!", "Error", MB_OK);
+					//	break;
+					//	case EnvelopeProcessor::eERRORCODE_NULLTIMESELECTION:
+					//		MessageBox(hwnd, "No time selection!", "Error", MB_OK);
+					//	break;
+					//	case EnvelopeProcessor::eERRORCODE_NOITEMSELECTED:
+					//		MessageBox(hwnd, "No item selected!", "Error", MB_OK);
+					//	break;
+					//	case EnvelopeProcessor::eERRORCODE_NOOBJSTATE:
+					//		MessageBox(hwnd, "Could not retrieve envelope object state!", "Error", MB_OK);
+					//	break;
+					//	case EnvelopeProcessor::eERRORCODE_UNKNOWN:
+					//		MessageBox(hwnd, "Could not generate envelope! (Unknown Error)", "Error", MB_OK);
+					//	break;
+					//	default:
+					//	break;
+					//}
 
 					EndDialog(hwnd,0);
 					return 0;
 				}
+				break;
 
 				case IDCANCEL:
 				{
 					EndDialog(hwnd,0);
 					return 0;
 				}
+				break;
+
+				case IDC_PADRELFO_TARGET:
+				{
+					if(HIWORD(wParam) == CBN_SELCHANGE)
+					{
+						int combo = SendDlgItemMessage(hwnd,IDC_PADRELFO_TARGET,CB_GETCURSEL,0,0);
+						if(combo != CB_ERR)
+						{
+							EnvType envType = (EnvType)(SendDlgItemMessage(hwnd,IDC_PADRELFO_TARGET,CB_GETITEMDATA,combo,0));
+							switch(envType)
+							{
+								case eENVTYPE_TRACK:
+									EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_ACTIVETAKES), FALSE);
+									EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_TAKEENV), FALSE);
+									EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_MIDICC), FALSE);
+								break;
+								case eENVTYPE_TAKE:
+									EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_ACTIVETAKES), TRUE);
+									EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_TAKEENV), TRUE);
+									EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_MIDICC), FALSE);
+								break;
+								case eENVTYPE_MIDICC:
+									EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_ACTIVETAKES), TRUE);
+									EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_TAKEENV), FALSE);
+									EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_MIDICC), TRUE);
+								break;
+								default:
+								break;
+							}
+
+							SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_RESETCONTENT,0,NULL);
+							for(int i=eTIMESEGMENT_TIMESEL; i<eTIMESEGMENT_LAST; i++)
+							{
+								if( (envType == eENVTYPE_TRACK) && (i == eTIMESEGMENT_SELITEM) )
+									continue;
+								if( (envType == eENVTYPE_TAKE) && (i == eTIMESEGMENT_PROJECT) )
+									continue;
+								int x = SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_ADDSTRING,0,(LPARAM)GetTimeSegmentStr((TimeSegment)i));
+									SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_SETITEMDATA,x,i);
+								if(i == EnvelopeProcessor::getInstance()->_parameters.timeSegment)
+									SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_SETCURSEL,x,0);
+							}
+						}
+					}
+					return 0;
+				}
+				break;
+
+				case IDC_PADRELFO_SYNCFREQUENCY:
+				{
+					if(HIWORD(wParam) == CBN_SELCHANGE)
+					{
+						int combo = SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCFREQUENCY,CB_GETCURSEL,0,0);
+						if(combo != CB_ERR)
+						{
+							GridDivision freqBeat  = (GridDivision)(SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCFREQUENCY,CB_GETITEMDATA,combo,0));
+							if(freqBeat == eGRID_OFF)
+								EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_FREQUENCY), TRUE);
+							else
+								EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_FREQUENCY), FALSE);
+						}
+					}
+					return 0;
+				}
+				break;
+
+				case IDC_PADRELFO_SYNCDELAY:
+				{
+					if(HIWORD(wParam) == CBN_SELCHANGE)
+					{
+						int combo = SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCDELAY,CB_GETCURSEL,0,0);
+						if(combo != CB_ERR)
+						{
+							GridDivision delayBeat  = (GridDivision)(SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCDELAY,CB_GETITEMDATA,combo,0));
+							if(delayBeat == eGRID_OFF)
+								EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_DELAY), TRUE);
+							else
+								EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_DELAY), FALSE);
+						}
+					}
+					return 0;
+				}
+				break;
 			}
 	}
 
@@ -319,38 +438,40 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 		{
 			for(int i=eENVMOD_FADEIN; i<eENVMOD_LAST; i++)
 			{
-				int x = SendDlgItemMessage(hwnd,IDD_PADRE_ENVPROCESSOR_TYPE,CB_ADDSTRING,0,(LPARAM)GetEnvModTypeStr((EnvModType)i));
-					SendDlgItemMessage(hwnd,IDD_PADRE_ENVPROCESSOR_TYPE,CB_SETITEMDATA,x,i);
+				int x = SendDlgItemMessage(hwnd,IDC_PADRE_ENVPROCESSOR_TYPE,CB_ADDSTRING,0,(LPARAM)GetEnvModTypeStr((EnvModType)i));
+					SendDlgItemMessage(hwnd,IDC_PADRE_ENVPROCESSOR_TYPE,CB_SETITEMDATA,x,i);
 				if(i == EnvelopeProcessor::getInstance()->_envModParams.type)
-					SendDlgItemMessage(hwnd,IDD_PADRE_ENVPROCESSOR_TYPE,CB_SETCURSEL,x,0);
+					SendDlgItemMessage(hwnd,IDC_PADRE_ENVPROCESSOR_TYPE,CB_SETCURSEL,x,0);
 			}
 
 			char buffer[BUFFER_SIZE];
 			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_envModParams.strength);
-			SetDlgItemText(hwnd, IDD_PADRE_ENVPROCESSOR_STRENGTH, buffer);
+			SetDlgItemText(hwnd, IDC_PADRE_ENVPROCESSOR_STRENGTH, buffer);
 			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_envModParams.offset);
-			SetDlgItemText(hwnd, IDD_PADRE_ENVPROCESSOR_OFFSET, buffer);
+			SetDlgItemText(hwnd, IDC_PADRE_ENVPROCESSOR_OFFSET, buffer);
 
 #ifdef _WIN32
-				SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDD_PADRELFO_GENERATOR), TRUE);
+			SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDD_PADRELFO_GENERATOR), TRUE);
 #endif
 
 			return 0;
 		}
+		break;
 
 		case WM_COMMAND :
+		{
             switch(LOWORD(wParam))
             {
                 case IDOK:
 				{
-					int combo = SendDlgItemMessage(hwnd,IDD_PADRE_ENVPROCESSOR_TYPE,CB_GETCURSEL,0,0);
+					int combo = SendDlgItemMessage(hwnd,IDC_PADRE_ENVPROCESSOR_TYPE,CB_GETCURSEL,0,0);
 					if(combo != CB_ERR)
-						EnvelopeProcessor::getInstance()->_envModParams.type = (EnvModType)(SendDlgItemMessage(hwnd,IDD_PADRE_ENVPROCESSOR_TYPE,CB_GETITEMDATA,combo,0));
+						EnvelopeProcessor::getInstance()->_envModParams.type = (EnvModType)(SendDlgItemMessage(hwnd,IDC_PADRE_ENVPROCESSOR_TYPE,CB_GETITEMDATA,combo,0));
 
 					char buffer[BUFFER_SIZE];
-					GetDlgItemText(hwnd,IDD_PADRE_ENVPROCESSOR_STRENGTH,buffer,BUFFER_SIZE);
+					GetDlgItemText(hwnd,IDC_PADRE_ENVPROCESSOR_STRENGTH,buffer,BUFFER_SIZE);
 					EnvelopeProcessor::getInstance()->_envModParams.strength = atof(buffer)/100.0;
-					GetDlgItemText(hwnd,IDD_PADRE_ENVPROCESSOR_OFFSET,buffer,BUFFER_SIZE);
+					GetDlgItemText(hwnd,IDC_PADRE_ENVPROCESSOR_OFFSET,buffer,BUFFER_SIZE);
 					EnvelopeProcessor::getInstance()->_envModParams.offset = atof(buffer)/100.0;
 
 					EnvelopeProcessor::ErrorCode res = EnvelopeProcessor::eERRORCODE_UNKNOWN;
@@ -360,13 +481,26 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 					EndDialog(hwnd,0);
 					return 0;
 				}
+				break;
 
 				case IDCANCEL:
 				{
 					EndDialog(hwnd,0);
 					return 0;
 				}
+				break;
+
+				case IDC_PADRE_ENVPROCESSOR_TYPE:
+				{
+					if(HIWORD(wParam) == CBN_SELCHANGE)
+					{
+						int toto = 2;
+					}
+					return 0;
+				}
+				break;
 			}
+		}
 	}
 
 	return 0;

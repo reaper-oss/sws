@@ -510,11 +510,10 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processPoints(TrackEnvelope* env
 	}
 
 	FreeHeapPtr(envState);
-
+	
 	if(GetSetObjectState(envelope, newState.c_str()))
 		return eERRORCODE_UNKNOWN;
-
-Undo_OnStateChangeEx("Padre's Envelope Processor", UNDO_STATE_ALL, -1);
+	
 
 	return eERRORCODE_OK;
 }

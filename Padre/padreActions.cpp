@@ -72,6 +72,8 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 		{
 			//const char* args = (const char*)lParam;
 			//EnvelopeProcessor::getInstance()->_parameters.envType = (EnvType)atoi(args);
+			/* FNG: Should change the resource file but I have to modify mine to build. */
+			SendDlgItemMessage(hwnd, IDCANCEL, WM_SETTEXT, 0, (LPARAM)"Close");
 
 			for(int i=eENVTYPE_TRACK; i<=eENVTYPE_MIDICC; i++)
 			{
@@ -282,14 +284,14 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 					//	break;
 					//}
 
-					EndDialog(hwnd,0);
+					//EndDialog(hwnd,0);
 					return 0;
 				}
 				break;
 
 				case IDCANCEL:
 				{
-					EndDialog(hwnd,0);
+					ShowWindow(hwnd,SW_HIDE);
 					return 0;
 				}
 				break;
@@ -387,7 +389,8 @@ void EnvelopeLfo(COMMAND_T* _ct)
 	HWND hwndParent = GetMainHwnd();
 	WDL_String args;
 	args.SetFormatted(128, "%d\n", _ct->user);
-	DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_PADRELFO_GENERATOR), hwndParent, EnvelopeLfoDlgProc, (LPARAM)args.Get());
+	static HWND hwndEnvLfo = CreateDialogParam(g_hInst, MAKEINTRESOURCE(IDD_PADRELFO_GENERATOR), hwndParent, EnvelopeLfoDlgProc, (LPARAM)args.Get());
+	ShowWindow(hwndEnvLfo, SW_SHOW);
 }
 
 void ShrinkSelectedTakes(int nbSamples, bool bActiveOnly)
@@ -427,7 +430,8 @@ void RandomizeMidiNotePos(COMMAND_T* _ct)
 void EnvelopeProcessor(COMMAND_T* _ct)
 {
 	HWND hwndParent = GetMainHwnd();
-	DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_PADRE_ENVPROCESSOR), hwndParent, EnvelopeProcessorDlgProc, (LPARAM)"");
+	static HWND hwndEnvProcessor = CreateDialogParam(g_hInst, MAKEINTRESOURCE(IDD_PADRE_ENVPROCESSOR), hwndParent, EnvelopeProcessorDlgProc, (LPARAM)"");
+	ShowWindow(hwndEnvProcessor, SW_SHOW);
 }
 
 WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -436,6 +440,9 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 	{
         case WM_INITDIALOG :
 		{
+			/* FNG: Should change the resource file but I have to modify mine to build. */
+			SendDlgItemMessage(hwnd, IDCANCEL, WM_SETTEXT, 0, (LPARAM)"Close");
+
 			for(int i=eENVMOD_FADEIN; i<eENVMOD_LAST; i++)
 			{
 				int x = SendDlgItemMessage(hwnd,IDC_PADRE_ENVPROCESSOR_TYPE,CB_ADDSTRING,0,(LPARAM)GetEnvModTypeStr((EnvModType)i));
@@ -478,14 +485,13 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 					res = EnvelopeProcessor::getInstance()->processSelectedTrackEnv();
 					EnvelopeProcessor::errorHandlerDlg(hwnd, res);
 
-					EndDialog(hwnd,0);
 					return 0;
 				}
 				break;
 
 				case IDCANCEL:
 				{
-					EndDialog(hwnd,0);
+					ShowWindow(hwnd,SW_HIDE);
 					return 0;
 				}
 				break;

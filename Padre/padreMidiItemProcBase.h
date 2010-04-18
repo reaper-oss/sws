@@ -27,34 +27,6 @@
 
 #pragma once
 
-#include "padreUtils.h"
-
-//#include <stdio.h>
-//#include <math.h>
-//
-//#include <vector>
-//#include <set>
-//#include <list>
-//#include <map>
-//using namespace std;
-//
-//class ReaProject;
-//class TrackEnvelope;
-//#include "reaper_plugin.h"
-//#include "reaper_plugin_functions.h"
-//
-//#include <stdarg.h>
-//void ShowConsoleMsgEx(const char* format, ...);
-//
-//#include "midi.h"
-//
-//#define BUFFER_SIZE		2048
-//
-//#define		MIDIITEMPROC_DEFAULT_SAMPLERATE		48000.0
-//#define		MIDIITEMPROC_DEFAULT_NBCHANNELS		2
-
-//static map<MIDI_event_t*, bool> selectedNotes;
-
 struct MidiNoteKey
 {
 	int _frameOffset;

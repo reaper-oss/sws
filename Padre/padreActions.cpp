@@ -27,15 +27,13 @@
 
 #include "stdafx.h"
 #include "padreActions.h"
+#include "padreEnvelopeProcessor.h"
+#include "padreMidiItemFilters.h"
 
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator" }, "PADRE_ENVLFO", EnvelopeLfo, NULL, 0},
-	//{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator: Selected Track" }, "PADRE_TRACKENVLFO", EnvelopeLfo, NULL, 0},
-	//{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator: Selected Active Take(s)" }, "PADRE_TAKEENVLFO", EnvelopeLfo, NULL, 1},
-	//{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator: Selected Active Take(s) (MIDI)" }, "PADRE_MIDILFO", EnvelopeLfo, NULL, 2},
-
-	{ { DEFACCEL, "SWS/PADRE: Envelope Processor: Selected Track" }, "PADRE_TRACKENVPROC", EnvelopeProcessor, NULL, 0},
+	{ { DEFACCEL, "SWS/PADRE: Envelope Processor: Selected Track" }, "PADRE_TRACKENVPROC", DoEnvelopeProcessor, NULL, 0},
 
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -128 samples" }, "PADRE_SHRINK_128", ShrinkSelItems, NULL, 128},
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -256 samples" }, "PADRE_SHRINK_256", ShrinkSelItems, NULL, 256},
@@ -66,14 +64,13 @@ void PadreExit()
 
 WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	const char cWndPosKey[] = "LFO Window Pos";
 	switch(Message)
 	{
         case WM_INITDIALOG :
 		{
 			//const char* args = (const char*)lParam;
 			//EnvelopeProcessor::getInstance()->_parameters.envType = (EnvType)atoi(args);
-			/* FNG: Should change the resource file but I have to modify mine to build. */
-			SendDlgItemMessage(hwnd, IDCANCEL, WM_SETTEXT, 0, (LPARAM)"Close");
 
 			for(int i=eENVTYPE_TRACK; i<=eENVTYPE_MIDICC; i++)
 			{
@@ -190,9 +187,8 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 			//	break;
 			//}
 
-#ifdef _WIN32
-				SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDD_PADRELFO_GENERATOR), TRUE);
-#endif
+			RestoreWindowPos(hwnd, cWndPosKey, false);
+			SetFocus(GetDlgItem(hwnd, IDC_PADRELFO_TARGET));
 
 			return 0;
 		}
@@ -291,7 +287,8 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 
 				case IDCANCEL:
 				{
-					ShowWindow(hwnd,SW_HIDE);
+					SaveWindowPos(hwnd, cWndPosKey);
+					DestroyWindow(hwnd);
 					return 0;
 				}
 				break;
@@ -386,11 +383,12 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 
 void EnvelopeLfo(COMMAND_T* _ct)
 {
-	HWND hwndParent = GetMainHwnd();
-	WDL_String args;
-	args.SetFormatted(128, "%d\n", _ct->user);
-	static HWND hwndEnvLfo = CreateDialogParam(g_hInst, MAKEINTRESOURCE(IDD_PADRELFO_GENERATOR), hwndParent, EnvelopeLfoDlgProc, (LPARAM)args.Get());
-	ShowWindow(hwndEnvLfo, SW_SHOW);
+	static HWND hwnd = NULL;
+
+	if (!IsWindow(hwnd))
+		CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_PADRELFO_GENERATOR), g_hwndParent, EnvelopeLfoDlgProc);
+	else
+		ShowWindow(hwnd, SW_SHOW);
 }
 
 void ShrinkSelectedTakes(int nbSamples, bool bActiveOnly)
@@ -407,7 +405,7 @@ void ShrinkSelectedTakes(int nbSamples, bool bActiveOnly)
 
 		UpdateItemInProject(*item);
 	}
-	Undo_OnStateChangeEx("Item Processor: shrink", UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx("Item Processor: shrink", UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 
@@ -427,22 +425,24 @@ void RandomizeMidiNotePos(COMMAND_T* _ct)
 //	EnvelopeProcessor::getInstance()->generateSelectedTrackFade();
 //}
 
-void EnvelopeProcessor(COMMAND_T* _ct)
+void DoEnvelopeProcessor(COMMAND_T* _ct)
 {
-	HWND hwndParent = GetMainHwnd();
-	static HWND hwndEnvProcessor = CreateDialogParam(g_hInst, MAKEINTRESOURCE(IDD_PADRE_ENVPROCESSOR), hwndParent, EnvelopeProcessorDlgProc, (LPARAM)"");
-	ShowWindow(hwndEnvProcessor, SW_SHOW);
+	static HWND hwnd = NULL;
+
+	if (!IsWindow(hwnd))
+		hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_PADRE_ENVPROCESSOR), g_hwndParent, EnvelopeProcessorDlgProc);
+	else
+		ShowWindow(hwnd, SW_SHOW);
 }
 
 WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
+	const char cWndPosKey[] = "EnvProc Window Pos";
+
 	switch(Message)
 	{
         case WM_INITDIALOG :
 		{
-			/* FNG: Should change the resource file but I have to modify mine to build. */
-			SendDlgItemMessage(hwnd, IDCANCEL, WM_SETTEXT, 0, (LPARAM)"Close");
-
 			for(int i=eENVMOD_FADEIN; i<eENVMOD_LAST; i++)
 			{
 				int x = SendDlgItemMessage(hwnd,IDC_PADRE_ENVPROCESSOR_TYPE,CB_ADDSTRING,0,(LPARAM)GetEnvModTypeStr((EnvModType)i));
@@ -457,9 +457,8 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_envModParams.offset);
 			SetDlgItemText(hwnd, IDC_PADRE_ENVPROCESSOR_OFFSET, buffer);
 
-#ifdef _WIN32
-			SendMessage(hwnd, WM_NEXTDLGCTL, (WPARAM)GetDlgItem(hwnd, IDD_PADRELFO_GENERATOR), TRUE);
-#endif
+			RestoreWindowPos(hwnd, cWndPosKey, false);
+			SetFocus(GetDlgItem(hwnd, IDC_PADRE_ENVPROCESSOR_TYPE));
 
 			return 0;
 		}
@@ -491,20 +490,21 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 
 				case IDCANCEL:
 				{
-					ShowWindow(hwnd,SW_HIDE);
+					SaveWindowPos(hwnd, cWndPosKey);
+					DestroyWindow(hwnd);
 					return 0;
 				}
 				break;
 
-				case IDC_PADRE_ENVPROCESSOR_TYPE:
-				{
-					if(HIWORD(wParam) == CBN_SELCHANGE)
-					{
-						int toto = 2;
-					}
-					return 0;
-				}
-				break;
+//				case IDC_PADRE_ENVPROCESSOR_TYPE:
+//				{
+//					if(HIWORD(wParam) == CBN_SELCHANGE)
+//					{
+//						int toto = 2;
+//					}
+//					return 0;
+//				}
+//				break;
 			}
 		}
 	}

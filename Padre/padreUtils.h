@@ -27,17 +27,7 @@
 
 #pragma once
 
-#include <stdio.h>
-#include <math.h>
-#include <stdarg.h>
-
-#include <vector>
-#include <set>
-#include <list>
-#include <map>
 using namespace std;
-
-#include "padreMidi.h"
 
 #define BUFFER_SIZE		2048
 

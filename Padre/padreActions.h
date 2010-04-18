@@ -27,9 +27,6 @@
 
 #pragma once
 
-#include "../resource.h"
-#include "padreEnvelopeProcessor.h"
-
 //! \todo Change 'Padre' module name/file prefix + merge into other files after Tim has taken a look ("LfoGenerator" module?)
 //! \todo Actions for my own use (e.g. 'shrink item' bugfix): #define-based bypass to skip in release mode? 
 //! \todo code cleanup/guidelines: m_/g_ prefixes
@@ -57,6 +54,6 @@ void ShrinkSelItems(COMMAND_T* _ct);
 void RandomizeMidiNotePos(COMMAND_T* _ct);
 
 //void EnvelopeFader(COMMAND_T* _ct);
-void EnvelopeProcessor(COMMAND_T* _ct);
+void DoEnvelopeProcessor(COMMAND_T* _ct);
 
 WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);

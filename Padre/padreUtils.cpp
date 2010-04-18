@@ -26,7 +26,6 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "padreUtils.h"
 
 const char* GetWaveShapeStr(WaveShape shape)
 {
@@ -238,13 +237,12 @@ char* PadresGetEnvelopeState(TrackEnvelope* envelope)
 	return envState;
 }
 
-//! \bug Not safe: limited to 2048 chars
 void ShowConsoleMsgEx(const char* format, ...)
 {
 	va_list args;
 	va_start(args, format);
 	char buffer[2048];
-	vsprintf(buffer, format, args);
+	vsnprintf(buffer, 2048, format, args);
 	ShowConsoleMsg(buffer);
 	va_end(args);
 }

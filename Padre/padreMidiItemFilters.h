@@ -27,8 +27,6 @@
 
 #pragma once
 
-#include "padreMidiItemProcBase.h"
-
 class MidiFilterDeleteNotes : public MidiFilterBase
 {
 	public:

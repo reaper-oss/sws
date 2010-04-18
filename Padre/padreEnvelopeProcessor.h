@@ -27,16 +27,6 @@
 
 #pragma once
 
-#include "padreMidiItemProcBase.h"
-#include "padreMidiItemGenerators.h"
-#include "padreMidiItemFilters.h"
-
-#include "padreUtils.h"
-
-#include <sstream>
-#include <string>
-#include <vector>
-#include <iostream>
 using namespace std;
 
 enum EnvType { eENVTYPE_TRACK=0, eENVTYPE_TAKE=1, eENVTYPE_MIDICC=2 };

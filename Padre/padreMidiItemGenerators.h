@@ -27,9 +27,6 @@
 
 #pragma once
 
-#include "padreMidiItemProcBase.h"
-#include "padreEnvelopeProcessor.h"
-
 struct LfoParameters;
 
 class MidiGenControlChangeLfo : public MidiGeneratorBase

@@ -56,6 +56,9 @@
 #include <bitset>
 #include <iomanip>
 #include <string>
+#include <list>
+#include <map>
+#include <set>
 
 #pragma warning(disable : 4996) // POSIX deprecation warnings
 #pragma warning(disable : 4267) // size_t to int warnings
@@ -83,3 +86,8 @@
 #include "ObjectState/ObjectState.h"
 #include "ObjectState/TrackFX.h"
 #include "ObjectState/TrackSends.h"
+
+// Padre
+#include "Padre/padreUtils.h"
+#include "Padre/padreMidi.h"
+#include "Padre/padreMidiItemProcBase.h"

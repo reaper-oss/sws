@@ -287,7 +287,7 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 
 				case IDCANCEL:
 				{
-					DestroyWindow(hwnd);
+					ShowWindow(hwnd, SW_HIDE);
 					return 0;
 				}
 				break;
@@ -385,12 +385,8 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 
 void EnvelopeLfo(COMMAND_T* _ct)
 {
-	static HWND hwnd = NULL;
-
-	if (!IsWindow(hwnd))
-		hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_PADRELFO_GENERATOR), g_hwndParent, EnvelopeLfoDlgProc);
-	else
-		SetFocus(hwnd);
+	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_PADRELFO_GENERATOR), g_hwndParent, EnvelopeLfoDlgProc);
+	ShowWindow(hwnd, SW_SHOW);
 }
 
 void ShrinkSelectedTakes(int nbSamples, bool bActiveOnly)
@@ -429,12 +425,8 @@ void RandomizeMidiNotePos(COMMAND_T* _ct)
 
 void DoEnvelopeProcessor(COMMAND_T* _ct)
 {
-	static HWND hwnd = NULL;
-
-	if (!IsWindow(hwnd))
-		hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_PADRE_ENVPROCESSOR), g_hwndParent, EnvelopeProcessorDlgProc);
-	else
-		SetFocus(hwnd);
+	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_PADRE_ENVPROCESSOR), g_hwndParent, EnvelopeProcessorDlgProc);
+	ShowWindow(hwnd, SW_SHOW);
 }
 
 WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -492,7 +484,7 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 
 				case IDCANCEL:
 				{
-					DestroyWindow(hwnd);
+					ShowWindow(hwnd, SW_HIDE);
 					return 0;
 				}
 				break;

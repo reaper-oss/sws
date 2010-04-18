@@ -386,7 +386,7 @@ void EnvelopeLfo(COMMAND_T* _ct)
 	static HWND hwnd = NULL;
 
 	if (!IsWindow(hwnd))
-		CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_PADRELFO_GENERATOR), g_hwndParent, EnvelopeLfoDlgProc);
+		hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_PADRELFO_GENERATOR), g_hwndParent, EnvelopeLfoDlgProc);
 	else
 		ShowWindow(hwnd, SW_SHOW);
 }

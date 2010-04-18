@@ -1,0 +1,4 @@
+--== SWS extension What's New? ==--
+v1.7.1
+April 18 2010 - FNG - Updated "Trim/untrim item left edge" action to handle play rates and when edit cursor is before/after item (Issue 121)
+April 18 2010 - FNG - Fixed Undo on "Trim/untrim item right edge" action

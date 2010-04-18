@@ -801,24 +801,36 @@ void DoRemoveItemFades(COMMAND_T*)
 void DoTrimLeftEdgeToEditCursor(COMMAND_T*)
 {
 	double NewLeftEdge = GetCursorPosition();
+	bool modified = false;
 	for (int i = 0; i < CountSelectedMediaItems(0); i++)
 	{
 		MediaItem* CurItem = GetSelectedMediaItem(0, i);
 		double OldLeftEdge = *(double*)GetSetMediaItemInfo(CurItem, "D_POSITION", NULL);
 		double OldLength   = *(double*)GetSetMediaItemInfo(CurItem, "D_LENGTH", NULL);
-		double NewLength   = OldLength + (OldLeftEdge - NewLeftEdge);
+		/* nothing to do if edit cursor is past item right edge */
+		if(NewLeftEdge > OldLength + OldLeftEdge)
+			continue;
+		modified = true;
+		double NewLength  = OldLength + (OldLeftEdge - NewLeftEdge);
 		for (int k = 0; k < GetMediaItemNumTakes(CurItem); k++)
 		{
 			MediaItem_Take* CurTake = GetMediaItemTake(CurItem, k);
 			double OldMediaOffset = *(double*)GetSetMediaItemTakeInfo(CurTake, "D_STARTOFFS", NULL);
-			double NewMediaOffset = OldMediaOffset - (OldLeftEdge - NewLeftEdge);
+			double playRate = *(double*)GetSetMediaItemTakeInfo(CurTake, "D_PLAYRATE", NULL);
+			/* media offsets needs to be scaled by playRate */
+			double NewMediaOffset = (OldMediaOffset / playRate - (OldLeftEdge - NewLeftEdge)) * playRate;
+			if(NewMediaOffset < 0) {
+				double shiftAmount = -NewMediaOffset / playRate;
+				NewLeftEdge += shiftAmount; 
+				NewLength -= shiftAmount;
+				NewMediaOffset = 0.0f;
+			}
 			GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",&NewMediaOffset);
 		}
-
 		GetSetMediaItemInfo(CurItem, "D_POSITION", &NewLeftEdge);
 		GetSetMediaItemInfo(CurItem, "D_LENGTH", &NewLength);
 	}
-	if (CountSelectedMediaItems(0))
+	if (modified)
 	{
 		Undo_OnStateChangeEx("Trim/Untrim Item Left Edge", UNDO_STATE_ITEMS, -1);
 		UpdateTimeline();
@@ -828,18 +840,20 @@ void DoTrimLeftEdgeToEditCursor(COMMAND_T*)
 void DoTrimRightEdgeToEditCursor(COMMAND_T*)
 {
 	double dRightEdge = GetCursorPosition();
+	bool modified = false;
 	for (int i = 0; i < CountSelectedMediaItems(0); i++)
 	{
+		modified = true;
 		MediaItem* CurItem = GetSelectedMediaItem(0, i);
 		double LeftEdge  = *(double*)GetSetMediaItemInfo(CurItem, "D_POSITION", NULL);
 		double NewLength = dRightEdge - LeftEdge;
 		GetSetMediaItemInfo(CurItem, "D_LENGTH", &NewLength);
 	}
-	//if (CountSelectedMediaItems(0))
-	//{
-	//	Undo_OnStateChangeEx("Trim/Untrim Item Right Edge", UNDO_STATE_ITEMS, -1);
-	//	UpdateTimeline();
-	//}
+	if (modified)
+	{
+		Undo_OnStateChangeEx("Trim/Untrim Item Right Edge", UNDO_STATE_ITEMS, -1);
+		UpdateTimeline();
+	}
 }
 
 void DoResetItemRateAndPitch(COMMAND_T*)

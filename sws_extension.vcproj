@@ -1311,6 +1311,10 @@
 			RelativePath=".\sws_extension_x64.nsi"
 			>
 		</File>
+		<File
+			RelativePath=".\whatsnew.txt"
+			>
+		</File>
 	</Files>
 	<Globals>
 		<Global

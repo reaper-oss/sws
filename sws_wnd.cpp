@@ -231,8 +231,14 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_SIZE:
 			if (wParam != SIZE_MINIMIZED)
 			{
-				OnResize();
-				m_resize.onResize();
+				static bool bRecurseCheck = false;
+				if (!bRecurseCheck)
+				{
+					bRecurseCheck = true;
+					OnResize();
+					m_resize.onResize();
+					bRecurseCheck = false;
+				}
 			}
 			break;
 		case WM_DROPFILES:

@@ -606,7 +606,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* 
 	if(GetSetObjectState(envelope, newState.c_str()))
 		return eERRORCODE_UNKNOWN;
 
-	Undo_OnStateChangeEx("Generate Track LFO", UNDO_STATE_ALL, -1);
+	//Undo_OnStateChangeEx("Generate Track LFO", UNDO_STATE_ALL, -1);
 	return eERRORCODE_OK;
 }
 
@@ -615,74 +615,25 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackEnvLfo()
 	double dFreq, dDelay;
 	getFreqDelay(_parameters, dFreq, dDelay);
 
-	Undo_BeginBlock2(0);
-
 	TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
 	if(!envelope)
 		return eERRORCODE_NOENVELOPE;
 
+	Undo_BeginBlock2(0);
+
 	//! \todo: use insert/goto actions AFTER error returns
 	double dStartPos, dEndPos;
-	switch(_parameters.timeSegment)
-	{
-		case eTIMESEGMENT_TIMESEL:
-			Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
-			dEndPos = GetCursorPositionEx(0);
-			Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
-			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-			Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
-			dStartPos = GetCursorPositionEx(0);
-			Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
-			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-		break;
-		case eTIMESEGMENT_SELITEM:
-			Main_OnCommandEx(ID_GOTO_SELITEM_END, 0, 0);
-			dEndPos = GetCursorPositionEx(0);
-			Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
-			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-			Main_OnCommandEx(ID_GOTO_SELITEM_START, 0, 0);
-			dStartPos = GetCursorPositionEx(0);
-			Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
-			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-		break;
-		case eTIMESEGMENT_LOOP:
-			Main_OnCommandEx(ID_GOTO_LOOP_END, 0, 0);
-			dEndPos = GetCursorPositionEx(0);
-			Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
-			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-			Main_OnCommandEx(ID_GOTO_LOOP_START, 0, 0);
-			dStartPos = GetCursorPositionEx(0);
-			Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
-			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-		break;
-		case eTIMESEGMENT_PROJECT:
-			Main_OnCommandEx(ID_GOTO_PROJECT_END, 0, 0);
-			dEndPos = GetCursorPositionEx(0);
-			Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
-			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-			Main_OnCommandEx(ID_GOTO_PROJECT_START, 0, 0);
-			dStartPos = GetCursorPositionEx(0);
-			Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
-			Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-		break;
-		//case eTIMESEGMENT_CURRENTMEASURE:
-		//	Main_OnCommandEx(ID_GOTO_NEXTMEASURE_START, 0, 0);
-		//	dEndPos = GetCursorPositionEx(0);
-		//	Main_OnCommandEx(ID_GOTO_CURMEASURE_START, 0, 0);
-		//	dStartPos = GetCursorPositionEx(0);
-		//	Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
-		//	Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-		//	Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
-		//	Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
-		//	Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-		//break;
-		default:
-			return eERRORCODE_UNKNOWN;
-		break;
-	}
+	GetTimeSegmentPositions(_parameters.timeSegment, dStartPos, dEndPos);
 
 	if(dStartPos==dEndPos)
 		return eERRORCODE_NULLTIMESELECTION;
+
+	double dOrgCursorPos = GetCursorPositionEx(0);
+	SetEditCurPos2(0, dStartPos-EPSILON_TIME, false, false);
+	Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+	SetEditCurPos2(0, dEndPos+EPSILON_TIME, false, false);
+	Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
+	SetEditCurPos2(0, dOrgCursorPos, false, false);
 
 	//Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_LEFTEDGE_LEFT, 0, 0);
 	//Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_RIGHTEDGE_RIGHT, 0, 0);
@@ -694,8 +645,8 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackEnvLfo()
 	//Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_RIGHTEDGE_LEFT, 0, 0);
 	//Main_OnCommandEx(ID_ENVELOPE_DELETE_ALL_POINTS_TIMESEL, 0, 0);
 
-	//TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
 	ErrorCode res = generateTrackLfo(envelope, dStartPos, dEndPos, dFreq, _parameters.strength, _parameters.offset, dDelay, _parameters.waveShape, _parameters.precision);
+//UpdateTimeline();
 
 	Undo_EndBlock2(0, "Track Envelope LFO", 0);
 	return res;
@@ -836,62 +787,17 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	double dItemStartPos = GetMediaItemInfo_Value(parentItem, "D_POSITION");
 	double dItemEndPos = dItemStartPos + GetMediaItemInfo_Value(parentItem, "D_LENGTH");
 
-//! \todo Ask Cockos for SetCursorPosition()
 	double dStartPos, dEndPos;
-	switch(_parameters.timeSegment)
-	{
-		case eTIMESEGMENT_TIMESEL:
-			Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
-			dEndPos = GetCursorPositionEx(0);
-			if(dEndPos>dItemEndPos)
-				dEndPos = dItemEndPos;
+	GetTimeSegmentPositions(_parameters.timeSegment, dStartPos, dEndPos, parentItem);
 
-			Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
-			dStartPos = GetCursorPositionEx(0);
-			if(dStartPos<dItemStartPos)
-				dStartPos = dItemStartPos;
+	if(dEndPos>dItemEndPos)
+		dEndPos = dItemEndPos;
 
-			dStartPos -= dItemStartPos;
-			dEndPos -= dItemStartPos;
+	if(dStartPos<dItemStartPos)
+		dStartPos = dItemStartPos;
 
-			//Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
-			//Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-			//Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
-			//dStartPos = GetCursorPositionEx(0);
-			//Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
-			//Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-		break;
-		case eTIMESEGMENT_SELITEM:
-			dStartPos = 0.0;
-			dEndPos = dItemEndPos - dItemStartPos;
-		break;
-		case eTIMESEGMENT_LOOP:
-			Main_OnCommandEx(ID_GOTO_LOOP_END, 0, 0);
-			dEndPos = GetCursorPositionEx(0);
-			if(dEndPos>dItemEndPos)
-				dEndPos = dItemEndPos;
-
-			Main_OnCommandEx(ID_GOTO_LOOP_START, 0, 0);
-			dStartPos = GetCursorPositionEx(0);
-			if(dStartPos<dItemStartPos)
-				dStartPos = dItemStartPos;
-
-			dStartPos -= dItemStartPos;
-			dEndPos -= dItemStartPos;
-
-			//Main_OnCommandEx(ID_GOTO_LOOP_END, 0, 0);
-			//dEndPos = GetCursorPositionEx(0);
-			//Main_OnCommandEx(ID_MOVE_CURSOR_RIGHT, 0, 0);
-			//Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-			//Main_OnCommandEx(ID_GOTO_LOOP_START, 0, 0);
-			//dStartPos = GetCursorPositionEx(0);
-			//Main_OnCommandEx(ID_MOVE_CURSOR_LEFT, 0, 0);
-			//Main_OnCommandEx(ID_ENVELOPE_INSERT_POINT, 0, 0);
-		break;
-		default:
-			return eERRORCODE_UNKNOWN;
-		break;
-	}
+	dStartPos -= dItemStartPos;
+	dEndPos -= dItemStartPos;
 
 	return generateTakeLfo(take, dStartPos, dEndPos, _parameters.takeEnvType, dFreq, _parameters.strength, _parameters.offset, dDelay, _parameters.waveShape, _parameters.precision);
 }
@@ -902,6 +808,8 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo()
 	GetSelectedMediaItems(items);
 	if(items.empty())
 		return eERRORCODE_NOITEMSELECTED;
+
+	Undo_BeginBlock2(0);
 
 	for(list<MediaItem*>::iterator item = items.begin(); item != items.end(); item++)
 	{
@@ -919,8 +827,9 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo()
 		}
 	}
 
-	Undo_OnStateChangeEx("Item Envelope LFO", UNDO_STATE_ALL, -1);
+	//Undo_OnStateChangeEx("Item Envelope LFO", UNDO_STATE_ALL, -1);
 //	UpdateTimeline();
+	Undo_EndBlock2(0, "Take Envelope LFO", 0);
 
 	return eERRORCODE_OK;
 }

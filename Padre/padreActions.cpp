@@ -41,7 +41,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -1024 samples" }, "PADRE_SHRINK_1024", ShrinkSelItems, NULL, 1024},
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -2048 samples" }, "PADRE_SHRINK_2048", ShrinkSelItems, NULL, 2048},
 
-	{ { DEFACCEL, "SWS/PADRE: Randomize MIDI Note Positions" }, "PADRE_RANDMIDINOTEPOS", RandomizeMidiNotePos, NULL, },
+	//{ { DEFACCEL, "SWS/PADRE: Randomize MIDI Note Positions" }, "PADRE_RANDMIDINOTEPOS", RandomizeMidiNotePos, NULL, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
@@ -86,18 +86,6 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 			else
 				CheckDlgButton(hwnd, IDC_PADRELFO_ACTIVETAKES, FALSE);
 
-			//for(int i=eTIMESEGMENT_TIMESEL; i<eTIMESEGMENT_LAST; i++)
-			//{
-			//	if( (EnvelopeProcessor::getInstance()->_parameters.envType == eENVTYPE_TRACK) && (i == eTIMESEGMENT_SELITEM) )
-			//		continue;
-			//	if( (EnvelopeProcessor::getInstance()->_parameters.envType == eENVTYPE_TAKE) && (i == eTIMESEGMENT_PROJECT) )
-			//		continue;
-			//	int x = SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_ADDSTRING,0,(LPARAM)GetTimeSegmentStr((TimeSegment)i));
-			//		SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_SETITEMDATA,x,i);
-			//	if(i == EnvelopeProcessor::getInstance()->_parameters.timeSegment)
-			//		SendDlgItemMessage(hwnd,IDC_PADRELFO_TIMESEGMENT,CB_SETCURSEL,x,0);
-			//}
-
 			int iLastShape = eWAVSHAPE_SAWDOWN_BEZIER;
 			if(EnvelopeProcessor::getInstance()->_parameters.envType == eENVTYPE_MIDICC)
 				iLastShape = eWAVSHAPE_SAWDOWN;
@@ -132,18 +120,8 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 
 			sprintf(buffer, "%.3lf", EnvelopeProcessor::getInstance()->_parameters.freqHz);
 			SetDlgItemText(hwnd, IDC_PADRELFO_FREQUENCY, buffer);
-			//if(EnvelopeProcessor::getInstance()->_parameters.freqBeat == eGRID_OFF)
-			//	EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_FREQUENCY), TRUE);
-			//else
-			//	EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_FREQUENCY), FALSE);
-
 			sprintf(buffer, "%.3lf", EnvelopeProcessor::getInstance()->_parameters.delayMsec);
 			SetDlgItemText(hwnd, IDC_PADRELFO_DELAY, buffer);
-			//if(EnvelopeProcessor::getInstance()->_parameters.delayBeat == eGRID_OFF)
-			//	EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_DELAY), TRUE);
-			//else
-			//	EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_DELAY), FALSE);
-
 			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_parameters.strength);
 			SetDlgItemText(hwnd, IDC_PADRELFO_STRENGTH, buffer);
 			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_parameters.offset);
@@ -165,27 +143,6 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 				if(i == EnvelopeProcessor::getInstance()->_parameters.midiCc)
 					SendDlgItemMessage(hwnd,IDC_PADRELFO_MIDICC,CB_SETCURSEL,x,0);
 			}
-
-			//switch(EnvelopeProcessor::getInstance()->_parameters.envType)
-			//{
-			//	case eENVTYPE_TRACK :
-			//		EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_TAKEENV), FALSE);
-			//		EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_MIDICC), FALSE);
-			//	break;
-
-			//	case eENVTYPE_TAKE :
-			//		EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_TAKEENV), TRUE);
-			//		EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_MIDICC), FALSE);
-			//	break;
-
-			//	case eENVTYPE_MIDICC :
-			//		EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_TAKEENV), FALSE);
-			//		EnableWindow(GetDlgItem(hwnd,IDC_PADRELFO_MIDICC), TRUE);
-			//	break;
-
-			//	default:
-			//	break;
-			//}
 
 			RestoreWindowPos(hwnd, cWndPosKey, false);
 			SetFocus(GetDlgItem(hwnd, IDC_PADRELFO_TARGET));
@@ -258,27 +215,6 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 					}
 
 					EnvelopeProcessor::errorHandlerDlg(hwnd, res);
-
-					//switch(res)
-					//{
-					//	case EnvelopeProcessor::eERRORCODE_NOENVELOPE:
-					//		MessageBox(hwnd, "No envelope selected!", "Error", MB_OK);
-					//	break;
-					//	case EnvelopeProcessor::eERRORCODE_NULLTIMESELECTION:
-					//		MessageBox(hwnd, "No time selection!", "Error", MB_OK);
-					//	break;
-					//	case EnvelopeProcessor::eERRORCODE_NOITEMSELECTED:
-					//		MessageBox(hwnd, "No item selected!", "Error", MB_OK);
-					//	break;
-					//	case EnvelopeProcessor::eERRORCODE_NOOBJSTATE:
-					//		MessageBox(hwnd, "Could not retrieve envelope object state!", "Error", MB_OK);
-					//	break;
-					//	case EnvelopeProcessor::eERRORCODE_UNKNOWN:
-					//		MessageBox(hwnd, "Could not generate envelope! (Unknown Error)", "Error", MB_OK);
-					//	break;
-					//	default:
-					//	break;
-					//}
 
 					//EndDialog(hwnd,0);
 					return 0;

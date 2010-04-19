@@ -52,6 +52,10 @@ const char* GetGridDivisionStr(GridDivision grid)
 	switch(grid)
 	{
 		case eGRID_OFF		: return "<sync off>";	break;
+		case eGRID_16_1		: return "16/1";		break;
+		case eGRID_16T_1	: return "16T/1";		break;
+		case eGRID_8_1		: return "8/1";			break;
+		case eGRID_8T_1		: return "8T/1";		break;
 		case eGRID_4_1		: return "4/1";			break;
 		case eGRID_4T_1		: return "4T/1";		break;
 		case eGRID_2_1		: return "2/1";			break;
@@ -80,12 +84,16 @@ double GetGridDivisionFactor(GridDivision grid)
 {
 	switch(grid)
 	{
+		case eGRID_16_1		: return 0.0625;		break;
+		case eGRID_16T_1	: return 3.0/32.0;		break;
+		case eGRID_8_1		: return 0.125;			break;
+		case eGRID_8T_1		: return 3.0/16.0;		break;
 		case eGRID_4_1		: return 0.25;			break;
-		case eGRID_4T_1		: return 1.0/3.0;		break;
+		case eGRID_4T_1		: return 3.0/8.0;		break;
 		case eGRID_2_1		: return 0.5;			break;
-		case eGRID_2T_1		: return 2.0/3.0;		break;
+		case eGRID_2T_1		: return 3.0/4.0;		break;
 		case eGRID_1_1		: return 1.0;			break;
-		case eGRID_1T_1		: return 4.0/3.0;		break;
+		case eGRID_1T_1		: return 3.0/2.0;		break;
 		case eGRID_1_2		: return 2.0;			break;
 		case eGRID_1_2T		: return 3.0;			break;
 		case eGRID_1_4		: return 4.0;			break;
@@ -247,33 +255,49 @@ void ShowConsoleMsgEx(const char* format, ...)
 	va_end(args);
 }
 
-void GetTimeSegmentPositions(TimeSegment timeSegment, double &dStartPos, double &dEndPos)
+void GetTimeSegmentPositions(TimeSegment timeSegment, double &dStartPos, double &dEndPos, MediaItem* item)
 {
+	double dOrgCursorPos = GetCursorPositionEx(0);
+	bool bRefreshCurPos = false;
+
 	switch(timeSegment)
 	{
 		case eTIMESEGMENT_TIMESEL:
-			Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
-			dEndPos = GetCursorPositionEx(0);
-			Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
-			dStartPos = GetCursorPositionEx(0);
+			//Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
+			//dEndPos = GetCursorPositionEx(0);
+			//Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
+			//dStartPos = GetCursorPositionEx(0);
+			GetSet_LoopTimeRange2(0, false, false, &dStartPos, &dEndPos, false);
 		break;
 		case eTIMESEGMENT_SELITEM:
-			Main_OnCommandEx(ID_GOTO_SELITEM_END, 0, 0);
-			dEndPos = GetCursorPositionEx(0);
-			Main_OnCommandEx(ID_GOTO_SELITEM_START, 0, 0);
-			dStartPos = GetCursorPositionEx(0);
+			if(item != NULL)
+			{
+				dStartPos = GetMediaItemInfo_Value(item, "D_POSITION");
+				dEndPos = dStartPos + GetMediaItemInfo_Value(item, "D_LENGTH");
+			}
+			else
+			{
+				Main_OnCommandEx(ID_GOTO_SELITEM_END, 0, 0);
+				dEndPos = GetCursorPositionEx(0);
+				Main_OnCommandEx(ID_GOTO_SELITEM_START, 0, 0);
+				dStartPos = GetCursorPositionEx(0);
+				bRefreshCurPos = true;
+			}
 		break;
 		case eTIMESEGMENT_LOOP:
-			Main_OnCommandEx(ID_GOTO_LOOP_END, 0, 0);
-			dEndPos = GetCursorPositionEx(0);
-			Main_OnCommandEx(ID_GOTO_LOOP_START, 0, 0);
-			dStartPos = GetCursorPositionEx(0);
+			//Main_OnCommandEx(ID_GOTO_LOOP_END, 0, 0);
+			//dEndPos = GetCursorPositionEx(0);
+			//Main_OnCommandEx(ID_GOTO_LOOP_START, 0, 0);
+			//dStartPos = GetCursorPositionEx(0);
+			GetSet_LoopTimeRange2(0, false, true, &dStartPos, &dEndPos, false);
 		break;
 		case eTIMESEGMENT_PROJECT:
 			Main_OnCommandEx(ID_GOTO_PROJECT_END, 0, 0);
 			dEndPos = GetCursorPositionEx(0);
-			Main_OnCommandEx(ID_GOTO_PROJECT_START, 0, 0);
-			dStartPos = GetCursorPositionEx(0);
+			//Main_OnCommandEx(ID_GOTO_PROJECT_START, 0, 0);
+			//dStartPos = GetCursorPositionEx(0);
+			dStartPos = *(int*)GetConfigVar("projtimeoffs");
+			bRefreshCurPos = true;
 		break;
 		//case eTIMESEGMENT_CURRENTMEASURE:
 		//	Main_OnCommandEx(ID_GOTO_CURMEASURE_START, 0, 0);
@@ -284,6 +308,9 @@ void GetTimeSegmentPositions(TimeSegment timeSegment, double &dStartPos, double 
 		default:
 		break;
 	}
+
+	if(bRefreshCurPos)
+		SetEditCurPos2(0, dOrgCursorPos, true, false);
 }
 
 const char* GetTimeSegmentStr(TimeSegment timeSegment)

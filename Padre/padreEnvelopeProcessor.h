@@ -29,6 +29,8 @@
 
 using namespace std;
 
+#define	EPSILON_TIME	0.01
+
 enum EnvType { eENVTYPE_TRACK=0, eENVTYPE_TAKE=1, eENVTYPE_MIDICC=2 };
 enum EnvModType { eENVMOD_FADEIN, eENVMOD_FADEOUT, eENVMOD_AMPLIFY, eENVMOD_LAST };
 

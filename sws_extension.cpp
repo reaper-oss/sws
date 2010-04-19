@@ -407,6 +407,7 @@ extern "C"
 		IMPAPI(GetSetTrackSendInfo);
 		IMPAPI(GetSetTrackState);
 		IMPAPI(GetSet_LoopTimeRange);
+		IMPAPI(GetSet_LoopTimeRange2);
 		IMPAPI(GetTake);
 		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);

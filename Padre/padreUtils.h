@@ -72,12 +72,11 @@ enum WaveShape {eWAVSHAPE_SINE = 0, eWAVSHAPE_TRIANGLE, eWAVSHAPE_SQUARE, eWAVSH
 
 enum TakeEnvType {eTAKEENV_VOLUME, eTAKEENV_PAN, eTAKEENV_MUTE };
 
-enum GridDivision {	eGRID_OFF = 0, eGRID_4_1, eGRID_4T_1, eGRID_2_1, eGRID_2T_1, eGRID_1_1, eGRID_1T_1, eGRID_1_2, eGRID_1_2T, eGRID_1_4, eGRID_1_4T, eGRID_1_8, eGRID_1_8T, eGRID_1_16, eGRID_1_16T,
+enum GridDivision {	eGRID_OFF = 0, eGRID_16_1, eGRID_16T_1, eGRID_8_1, eGRID_8T_1, eGRID_4_1, eGRID_4T_1, eGRID_2_1, eGRID_2T_1, eGRID_1_1, eGRID_1T_1, eGRID_1_2, eGRID_1_2T, eGRID_1_4, eGRID_1_4T, eGRID_1_8, eGRID_1_8T, eGRID_1_16, eGRID_1_16T,
 					eGRID_1_32, eGRID_1_32T, eGRID_1_64, eGRID_1_64T, eGRID_1_128, eGRID_1_128T, eGRID_LAST };
 
 enum EnvShape {eENVSHAPE_LINEAR = 0, eENVSHAPE_SQUARE = 1, eENVSHAPE_SLOW = 2, eENVSHAPE_FASTSTART = 3, eENVSHAPE_FASTEND = 4, eENVSHAPE_BEZIER = 5};
 
-//enum TimeSegment {eTIMESEGMENT_TIMESEL, eTIMESEGMENT_PROJECT, eTIMESEGMENT_SELITEM, eTIMESEGMENT_LOOP, eTIMESEGMENT_CURRENTMEASURE, eTIMESEGMENT_LAST };
 enum TimeSegment {eTIMESEGMENT_TIMESEL, eTIMESEGMENT_PROJECT, eTIMESEGMENT_SELITEM, eTIMESEGMENT_LOOP, eTIMESEGMENT_LAST };
 
 const char* GetWaveShapeStr(WaveShape shape);
@@ -101,7 +100,7 @@ char* PadresGetEnvelopeState(TrackEnvelope* envelope);
 
 void ShowConsoleMsgEx(const char* format, ...);
 
-void GetTimeSegmentPositions(TimeSegment timeSegment, double &dStartPos, double &dEndPos);
+void GetTimeSegmentPositions(TimeSegment timeSegment, double &dStartPos, double &dEndPos, MediaItem* item = NULL);
 const char* GetTimeSegmentStr(TimeSegment timeSegment);
 
 void GetSelectedMediaItems(list<MediaItem*> &items);

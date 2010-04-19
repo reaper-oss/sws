@@ -27,14 +27,13 @@
 
 #pragma once
 
-//! \todo Change 'Padre' module name/file prefix + merge into other files after Tim has taken a look ("LfoGenerator" module?)
-//! \todo Actions for my own use (e.g. 'shrink item' bugfix): #define-based bypass to skip in release mode? 
-//! \todo code cleanup/guidelines: m_/g_ prefixes
+//! \todo Code cleanup /guidelines: m_/g_ prefixes, etc.
 //! \todo Update with sws/wdl API functions (ObjState access, etc)
+//! \todo General code cleanup, renaming
+//! \todo Actions for my own use (e.g. 'shrink item' bugfix): #define-based bypass to skip in release mode? 
 //! \todo MIDI LFO new options: channel, pitch
-//! \todo Use S&M ObjectState access
-//! \todo RME Fireface Mixer actions
-//! \todo Ask Cockos for GetPos() functions + SetCursorPos() + Insert Env Point bug in step mode + int positions (precision vs double)
+//! \todo RME Fireface Mixer actions: separate .dll
+//! \todo FR Cockos: Insert Env Point should preserve envelope form (use next Pt shape instead of default?)
 
 //! \note I usually keep beta stuff/tests undented
 
@@ -51,9 +50,9 @@ void EnvelopeLfo(COMMAND_T* _ct);
 void ShrinkSelectedTakes(int nbSamples = 512, bool bActiveOnly = true);
 void ShrinkSelItems(COMMAND_T* _ct);
 
+//! \note Proof of concept action. Deprecated (Cockos' Humanize is better)
 void RandomizeMidiNotePos(COMMAND_T* _ct);
 
-//void EnvelopeFader(COMMAND_T* _ct);
 void DoEnvelopeProcessor(COMMAND_T* _ct);
 
 WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);

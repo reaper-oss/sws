@@ -37,15 +37,24 @@ enum EnvModType { eENVMOD_FADEIN, eENVMOD_FADEOUT, eENVMOD_AMPLIFY, eENVMOD_LAST
 const char* GetEnvTypeStr(EnvType type);
 const char* GetEnvModTypeStr(EnvModType type);
 
-struct EnvLfoParams
+struct LfoWaveParams
 {
-	WaveShape waveShape;
+	WaveShape shape;
 	GridDivision freqBeat;
 	double freqHz;
 	GridDivision delayBeat;
 	double delayMsec;
 	double strength;
 	double offset;
+
+	LfoWaveParams();
+	LfoWaveParams& operator=(const LfoWaveParams &params);
+};
+
+struct EnvLfoParams
+{
+	LfoWaveParams waveParams;
+
 	double precision;
 	int midiCc;
 	TakeEnvType takeEnvType;

@@ -50,28 +50,38 @@ const char* GetEnvModTypeStr(EnvModType type)
 	}
 }
 
+LfoWaveParams::LfoWaveParams()
+: shape(eWAVSHAPE_SINE), freqBeat(eGRID_1_1), freqHz(0.0), delayBeat(eGRID_OFF), delayMsec(0.0), strength(1.0), offset(0.0)
+{
+}
+
+LfoWaveParams& LfoWaveParams::operator=(const LfoWaveParams &params)
+{
+	this->shape = params.shape;
+	this->freqBeat = params.freqBeat;
+	this->freqHz = params.freqHz;
+	this->delayBeat = params.delayBeat;
+	this->delayMsec = params.delayMsec;
+	this->strength = params.strength;
+	this->offset = params.offset;
+	return *this;
+}
+
 EnvLfoParams::EnvLfoParams()
-: waveShape(eWAVSHAPE_SINE), freqBeat(eGRID_1_1), freqHz(0.0), delayBeat(eGRID_OFF), delayMsec(0.0), strength(1.0), offset(0.0), precision(0.05)
-, midiCc(7), takeEnvType(eTAKEENV_VOLUME), envType(eENVTYPE_TRACK), timeSegment(eTIMESEGMENT_TIMESEL), activeTakeOnly(true)
+: waveParams(), precision(0.05), midiCc(7), takeEnvType(eTAKEENV_VOLUME), envType(eENVTYPE_TRACK), timeSegment(eTIMESEGMENT_TIMESEL), activeTakeOnly(true)
 {
 }
 
 EnvLfoParams& EnvLfoParams::operator=(const EnvLfoParams &parameters)
 {
-	this->waveShape = parameters.waveShape;
-	this->freqBeat = parameters.freqBeat;
-	this->freqHz = parameters.freqHz;
-	this->delayBeat = parameters.delayBeat;
-	this->delayMsec = parameters.delayMsec;
-	this->strength = parameters.strength;
-	this->offset = parameters.offset;
+	this->waveParams = parameters.waveParams;
 	this->precision = parameters.precision;
 	this->midiCc = parameters.midiCc;
 	this->envType = parameters.envType;
 	this->takeEnvType = parameters.takeEnvType;
 	this->timeSegment = parameters.timeSegment;
 	this->activeTakeOnly = parameters.activeTakeOnly;
-		return *this;
+	return *this;
 }
 
 EnvModParams::EnvModParams()
@@ -139,15 +149,15 @@ void EnvelopeProcessor::getFreqDelay(EnvLfoParams &lfoParams, double &dFreq, dou
 	double tempoBpm, tempoBpi;
 	GetProjectTimeSignature2(0, &tempoBpm, &tempoBpi);
 
-	if(lfoParams.freqBeat != eGRID_OFF)
-		dFreq = GetGridDivisionFactor(lfoParams.freqBeat)*tempoBpm/60.0;
+	if(lfoParams.waveParams.freqBeat != eGRID_OFF)
+		dFreq = GetGridDivisionFactor(lfoParams.waveParams.freqBeat)*tempoBpm/60.0;
 	else
-		dFreq = lfoParams.freqHz;
+		dFreq = lfoParams.waveParams.freqHz;
 
-	if(lfoParams.delayBeat != eGRID_OFF)
-		dDelay = 1000.0*60.0/tempoBpm/GetGridDivisionFactor(lfoParams.delayBeat);
+	if(lfoParams.waveParams.delayBeat != eGRID_OFF)
+		dDelay = 1000.0*60.0/tempoBpm/GetGridDivisionFactor(lfoParams.waveParams.delayBeat);
 	else
-		dDelay = lfoParams.delayMsec;
+		dDelay = lfoParams.waveParams.delayMsec;
 }
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::getEnvelopeMinMax(TrackEnvelope* envelope, double &dEnvMinVal, double &dEnvMaxVal)
@@ -645,7 +655,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackEnvLfo()
 	//Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_RIGHTEDGE_LEFT, 0, 0);
 	//Main_OnCommandEx(ID_ENVELOPE_DELETE_ALL_POINTS_TIMESEL, 0, 0);
 
-	ErrorCode res = generateTrackLfo(envelope, dStartPos, dEndPos, dFreq, _parameters.strength, _parameters.offset, dDelay, _parameters.waveShape, _parameters.precision);
+	ErrorCode res = generateTrackLfo(envelope, dStartPos, dEndPos, dFreq, _parameters.waveParams.strength, _parameters.waveParams.offset, dDelay, _parameters.waveParams.shape, _parameters.precision);
 //UpdateTimeline();
 
 	Undo_EndBlock2(0, "Track Envelope LFO", 0);
@@ -799,7 +809,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	dStartPos -= dItemStartPos;
 	dEndPos -= dItemStartPos;
 
-	return generateTakeLfo(take, dStartPos, dEndPos, _parameters.takeEnvType, dFreq, _parameters.strength, _parameters.offset, dDelay, _parameters.waveShape, _parameters.precision);
+	return generateTakeLfo(take, dStartPos, dEndPos, _parameters.takeEnvType, dFreq, _parameters.waveParams.strength, _parameters.waveParams.offset, dDelay, _parameters.waveParams.shape, _parameters.precision);
 }
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo()
@@ -875,7 +885,7 @@ void EnvelopeProcessor::MidiCcLfo::process(MIDI_eventlist* evts, int itemLengthS
 
 double dValMin = 0.0;
 double dValMax = 1.0;
-double dMagnitude = _pParameters->strength * (1.0 - fabs(_pParameters->offset));
+double dMagnitude = _pParameters->waveParams.strength * (1.0 - fabs(_pParameters->waveParams.offset));
 double dOff = 0.5*(dValMax+dValMin);
 double dScale = dValMax - dOff;
 double dFreq, dDelay;
@@ -883,7 +893,7 @@ EnvelopeProcessor::getFreqDelay(*_pParameters, dFreq, dDelay);
 
 	double (*WaveformGenerator)(double t, double dFreq, double dDelay);
 	int iPrecision;
-	switch(_pParameters->waveShape)
+	switch(_pParameters->waveParams.shape)
 	{
 		case eWAVSHAPE_SINE :
 			WaveformGenerator = &WaveformGeneratorSin;
@@ -924,7 +934,7 @@ EnvelopeProcessor::getFreqDelay(*_pParameters, dFreq, dDelay);
 		t = (double)pos/MIDIITEMPROC_DEFAULT_SAMPLERATE;
 
 //dValue = _pParameters->offset + dMagnitude*WaveformGeneratorSin(t, dFreq, 0.001*dDelay);
-dValue = _pParameters->offset + dMagnitude*WaveformGenerator(t, dFreq, 0.001*dDelay);
+dValue = _pParameters->waveParams.offset + dMagnitude*WaveformGenerator(t, dFreq, 0.001*dDelay);
 dValue = dScale*dValue + dOff;
 iValue = (int)(127.0*dValue);
 

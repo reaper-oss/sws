@@ -52,6 +52,12 @@ const char* GetGridDivisionStr(GridDivision grid)
 	switch(grid)
 	{
 		case eGRID_OFF		: return "<sync off>";	break;
+		case eGRID_128_1	: return "128/1";		break;
+		case eGRID_128T_1	: return "128T/1";		break;
+		case eGRID_64_1		: return "64/1";		break;
+		case eGRID_64T_1	: return "64T/1";		break;
+		case eGRID_32_1		: return "32/1";		break;
+		case eGRID_32T_1	: return "32T/1";		break;
 		case eGRID_16_1		: return "16/1";		break;
 		case eGRID_16T_1	: return "16T/1";		break;
 		case eGRID_8_1		: return "8/1";			break;
@@ -84,6 +90,12 @@ double GetGridDivisionFactor(GridDivision grid)
 {
 	switch(grid)
 	{
+		case eGRID_128_1	: return 0.0078125;		break;
+		case eGRID_128T_1	: return 3.0/256.0;		break;
+		case eGRID_64_1		: return 0.015625;		break;
+		case eGRID_64T_1	: return 3.0/128.0;		break;
+		case eGRID_32_1		: return 0.03125;		break;
+		case eGRID_32T_1	: return 3.0/64.0;		break;
 		case eGRID_16_1		: return 0.0625;		break;
 		case eGRID_16T_1	: return 3.0/32.0;		break;
 		case eGRID_8_1		: return 0.125;			break;

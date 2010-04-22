@@ -94,7 +94,7 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 			{
 				int x = SendDlgItemMessage(hwnd,IDC_PADRELFO_LFOSHAPE,CB_ADDSTRING,0,(LPARAM)GetWaveShapeStr((WaveShape)i));
 				SendDlgItemMessage(hwnd,IDC_PADRELFO_LFOSHAPE,CB_SETITEMDATA,x,i);
-				if(i == EnvelopeProcessor::getInstance()->_parameters.waveShape)
+				if(i == EnvelopeProcessor::getInstance()->_parameters.waveParams.shape)
 					SendDlgItemMessage(hwnd,IDC_PADRELFO_LFOSHAPE,CB_SETCURSEL,x,0);
 			}
 
@@ -102,7 +102,7 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 			{
 				int x = SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCFREQUENCY,CB_ADDSTRING,0,(LPARAM)GetGridDivisionStr((GridDivision)i));
 				SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCFREQUENCY,CB_SETITEMDATA,x,i);
-				if(i == EnvelopeProcessor::getInstance()->_parameters.freqBeat)
+				if(i == EnvelopeProcessor::getInstance()->_parameters.waveParams.freqBeat)
 					SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCFREQUENCY,CB_SETCURSEL,x,0);
 			}
 			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADRELFO_SYNCFREQUENCY, CBN_SELCHANGE), NULL);
@@ -111,20 +111,20 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 			{
 				int x = SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCDELAY,CB_ADDSTRING,0,(LPARAM)GetGridDivisionStr((GridDivision)i));
 				SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCDELAY,CB_SETITEMDATA,x,i);
-				if(i == EnvelopeProcessor::getInstance()->_parameters.delayBeat)
+				if(i == EnvelopeProcessor::getInstance()->_parameters.waveParams.delayBeat)
 					SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCDELAY,CB_SETCURSEL,x,0);
 			}
 			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADRELFO_SYNCDELAY, CBN_SELCHANGE), NULL);
 
 			char buffer[BUFFER_SIZE];
 
-			sprintf(buffer, "%.3lf", EnvelopeProcessor::getInstance()->_parameters.freqHz);
+			sprintf(buffer, "%.3lf", EnvelopeProcessor::getInstance()->_parameters.waveParams.freqHz);
 			SetDlgItemText(hwnd, IDC_PADRELFO_FREQUENCY, buffer);
-			sprintf(buffer, "%.3lf", EnvelopeProcessor::getInstance()->_parameters.delayMsec);
+			sprintf(buffer, "%.3lf", EnvelopeProcessor::getInstance()->_parameters.waveParams.delayMsec);
 			SetDlgItemText(hwnd, IDC_PADRELFO_DELAY, buffer);
-			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_parameters.strength);
+			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_parameters.waveParams.strength);
 			SetDlgItemText(hwnd, IDC_PADRELFO_STRENGTH, buffer);
-			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_parameters.offset);
+			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_parameters.waveParams.offset);
 			SetDlgItemText(hwnd, IDC_PADRELFO_OFFSET, buffer);
 
 			for(int i=eTAKEENV_VOLUME; i<=eTAKEENV_MUTE; i++)
@@ -167,25 +167,25 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 
 					combo = SendDlgItemMessage(hwnd,IDC_PADRELFO_LFOSHAPE,CB_GETCURSEL,0,0);
 					if(combo != CB_ERR)
-						EnvelopeProcessor::getInstance()->_parameters.waveShape = (WaveShape)(SendDlgItemMessage(hwnd,IDC_PADRELFO_LFOSHAPE,CB_GETITEMDATA,combo,0));
+						EnvelopeProcessor::getInstance()->_parameters.waveParams.shape = (WaveShape)(SendDlgItemMessage(hwnd,IDC_PADRELFO_LFOSHAPE,CB_GETITEMDATA,combo,0));
 
 					combo = SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCFREQUENCY,CB_GETCURSEL,0,0);
 					if(combo != CB_ERR)
-						EnvelopeProcessor::getInstance()->_parameters.freqBeat = (GridDivision)(SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCFREQUENCY,CB_GETITEMDATA,combo,0));
+						EnvelopeProcessor::getInstance()->_parameters.waveParams.freqBeat = (GridDivision)(SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCFREQUENCY,CB_GETITEMDATA,combo,0));
 
 					combo = SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCDELAY,CB_GETCURSEL,0,0);
 					if(combo != CB_ERR)
-						EnvelopeProcessor::getInstance()->_parameters.delayBeat = (GridDivision)(SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCDELAY,CB_GETITEMDATA,combo,0));
+						EnvelopeProcessor::getInstance()->_parameters.waveParams.delayBeat = (GridDivision)(SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCDELAY,CB_GETITEMDATA,combo,0));
 
 					char buffer[BUFFER_SIZE];
 					GetDlgItemText(hwnd,IDC_PADRELFO_FREQUENCY,buffer,BUFFER_SIZE);
-					EnvelopeProcessor::getInstance()->_parameters.freqHz = atof(buffer);
+					EnvelopeProcessor::getInstance()->_parameters.waveParams.freqHz = atof(buffer);
 					GetDlgItemText(hwnd,IDC_PADRELFO_DELAY,buffer,BUFFER_SIZE);
-					EnvelopeProcessor::getInstance()->_parameters.delayMsec = atof(buffer);
+					EnvelopeProcessor::getInstance()->_parameters.waveParams.delayMsec = atof(buffer);
 					GetDlgItemText(hwnd,IDC_PADRELFO_STRENGTH,buffer,BUFFER_SIZE);
-					EnvelopeProcessor::getInstance()->_parameters.strength = atof(buffer)/100.0;
+					EnvelopeProcessor::getInstance()->_parameters.waveParams.strength = atof(buffer)/100.0;
 					GetDlgItemText(hwnd,IDC_PADRELFO_OFFSET,buffer,BUFFER_SIZE);
-					EnvelopeProcessor::getInstance()->_parameters.offset = atof(buffer)/100.0;
+					EnvelopeProcessor::getInstance()->_parameters.waveParams.offset = atof(buffer)/100.0;
 
 					combo = SendDlgItemMessage(hwnd,IDC_PADRELFO_TAKEENV,CB_GETCURSEL,0,0);
 					if(combo != CB_ERR)

@@ -69,18 +69,20 @@ LfoWaveParams& LfoWaveParams::operator=(const LfoWaveParams &params)
 
 EnvLfoParams::EnvLfoParams()
 : waveParams(), precision(0.05), midiCc(7), takeEnvType(eTAKEENV_VOLUME), envType(eENVTYPE_TRACK), timeSegment(eTIMESEGMENT_TIMESEL), activeTakeOnly(true)
+, freqModulator()
 {
 }
 
-EnvLfoParams& EnvLfoParams::operator=(const EnvLfoParams &parameters)
+EnvLfoParams& EnvLfoParams::operator=(const EnvLfoParams &params)
 {
-	this->waveParams = parameters.waveParams;
-	this->precision = parameters.precision;
-	this->midiCc = parameters.midiCc;
-	this->envType = parameters.envType;
-	this->takeEnvType = parameters.takeEnvType;
-	this->timeSegment = parameters.timeSegment;
-	this->activeTakeOnly = parameters.activeTakeOnly;
+	this->waveParams = params.waveParams;
+	this->precision = params.precision;
+	this->midiCc = params.midiCc;
+	this->envType = params.envType;
+	this->takeEnvType = params.takeEnvType;
+	this->timeSegment = params.timeSegment;
+	this->activeTakeOnly = params.activeTakeOnly;
+this->freqModulator = params.freqModulator;
 	return *this;
 }
 
@@ -144,20 +146,20 @@ void EnvelopeProcessor::errorHandlerDlg(HWND hwnd, ErrorCode err)
 }
 
 
-void EnvelopeProcessor::getFreqDelay(EnvLfoParams &lfoParams, double &dFreq, double &dDelay)
+void EnvelopeProcessor::getFreqDelay(LfoWaveParams &waveParams, double &dFreq, double &dDelay)
 {
 	double tempoBpm, tempoBpi;
 	GetProjectTimeSignature2(0, &tempoBpm, &tempoBpi);
 
-	if(lfoParams.waveParams.freqBeat != eGRID_OFF)
-		dFreq = GetGridDivisionFactor(lfoParams.waveParams.freqBeat)*tempoBpm/60.0;
+	if(waveParams.freqBeat != eGRID_OFF)
+		dFreq = GetGridDivisionFactor(waveParams.freqBeat)*tempoBpm/60.0;
 	else
-		dFreq = lfoParams.waveParams.freqHz;
+		dFreq = waveParams.freqHz;
 
-	if(lfoParams.waveParams.delayBeat != eGRID_OFF)
-		dDelay = 1000.0*60.0/tempoBpm/GetGridDivisionFactor(lfoParams.waveParams.delayBeat);
+	if(waveParams.delayBeat != eGRID_OFF)
+		dDelay = 1000.0*60.0/tempoBpm/GetGridDivisionFactor(waveParams.delayBeat);
 	else
-		dDelay = lfoParams.waveParams.delayMsec;
+		dDelay = waveParams.delayMsec;
 }
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::getEnvelopeMinMax(TrackEnvelope* envelope, double &dEnvMinVal, double &dEnvMaxVal)
@@ -209,9 +211,12 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::getEnvelopeMinMax(TrackEnvelope*
 	return eERRORCODE_OK;
 }
 
-void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, double dEndTime, double dValMin, double dValMax, double dFreq, double dStrength, double dOffset, double dDelay, WaveShape tWaveShape, double dPrecision)
+void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, double dEndTime, double dValMin, double dValMax, LfoWaveParams &waveParams, double dPrecision, LfoWaveParams* freqModulator)
 {
-	double dMagnitude = dStrength * (1.0 - fabs(dOffset));
+	double dFreq, dDelay;
+	getFreqDelay(waveParams, dFreq, dDelay);
+
+	double dMagnitude = waveParams.strength * (1.0 - fabs(waveParams.offset));
 	double dOff = 0.5*(dValMax+dValMin);
 	double dScale = dValMax - dOff;
 	double dSamplerate;
@@ -219,7 +224,7 @@ void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, doub
 	char buffer[BUFFER_SIZE];
 
 	EnvShape tEnvShape = eENVSHAPE_LINEAR;
-	switch(tWaveShape)
+	switch(waveParams.shape)
 	{
 		case eWAVSHAPE_TRIANGLE :
 		case eWAVSHAPE_SAWUP :
@@ -255,9 +260,16 @@ void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, doub
 	double dFlipFlop;
 	double dLength = dEndTime - dStartTime;
 
-	switch(tWaveShape)
+	switch(waveParams.shape)
 	{
 		case eWAVSHAPE_SINE :
+if(freqModulator)
+{
+	double dFreqCarrier = WaveformGeneratorSin(0.0, freqModulator->freqHz, 1000.0*freqModulator->delayMsec);
+	//double dFreqCarrierMagnitude = freqModulator->strength * (1.0 - fabs(freqModulator->offset));
+	//dFreqCarrier = freqModulator->offset + dMagnitude*dFreqCarrier;
+	//dValueStart = dScale*dValueStart + dOff;
+}
 			dSamplerate = dPrecision/dFreq;
 			dCarrierStart = WaveformGeneratorSin(0.0, dFreq, dDelaySec);
 			dCarrierEnd = WaveformGeneratorSin(dLength, dFreq, dDelaySec);
@@ -306,15 +318,15 @@ void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, doub
 		break;
 	}
 
-	double dValueStart = dOffset + dMagnitude*dCarrierStart;
+	double dValueStart = waveParams.offset + dMagnitude*dCarrierStart;
 	dValueStart = dScale*dValueStart + dOff;
-	double dValueEnd = dOffset + dMagnitude*dCarrierEnd;
+	double dValueEnd = waveParams.offset + dMagnitude*dCarrierEnd;
 	dValueEnd = dScale*dValueEnd + dOff;
 
 	sprintf(buffer, "PT %lf %lf %d\n", dStartTime, dValueStart, tEnvShape);
 	envState.append(buffer);
 
-	switch(tWaveShape)
+	switch(waveParams.shape)
 	{
 		case eWAVSHAPE_SINE :
 		{
@@ -322,7 +334,7 @@ void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, doub
 			{
 				if(t>0.0)
 				{
-					dValue = dOffset + dMagnitude*WaveformGeneratorSin(t, dFreq, dDelaySec);
+					dValue = waveParams.offset + dMagnitude*WaveformGeneratorSin(t, dFreq, dDelaySec);
 					dValue = dScale*dValue + dOff;
 					sprintf(buffer, "PT %lf %lf %d\n", t+dStartTime, dValue, tEnvShape);
 					envState.append(buffer);
@@ -342,7 +354,7 @@ void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, doub
 					//continue;
 				if(t>0.0)
 				{
-					dValue = dOffset + dMagnitude*dFlipFlop;
+					dValue = waveParams.offset + dMagnitude*dFlipFlop;
 					dValue = dScale*dValue + dOff;
 					sprintf(buffer, "PT %lf %lf %d\n", t+dStartTime, dValue, tEnvShape);
 					envState.append(buffer);
@@ -363,7 +375,7 @@ void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, doub
 				{
 					for(int i=0; i<2; i++)
 					{
-						dValue = dOffset + dMagnitude*dFlipFlop;
+						dValue = waveParams.offset + dMagnitude*dFlipFlop;
 						dValue = dScale*dValue + dOff;
 						sprintf(buffer, "PT %lf %lf %d\n", t+dStartTime, dValue, tEnvShape);
 						envState.append(buffer);
@@ -374,7 +386,7 @@ void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, doub
 
 			if(fabs(dCarrierEnd) > 0.99)
 			{
-				dValue = dOffset + dMagnitude*dFlipFlop;
+				dValue = waveParams.offset + dMagnitude*dFlipFlop;
 				dValueEnd = dScale*dValue + dOff;
 			}
 		}
@@ -387,7 +399,7 @@ void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, doub
 			{
 				if(t>0.0)
 				{
-					dValue = dOffset + dMagnitude*WaveformGeneratorRandom(t, dFreq, dDelaySec);
+					dValue = waveParams.offset + dMagnitude*WaveformGeneratorRandom(t, dFreq, dDelaySec);
 					dValue = dScale*dValue + dOff;
 					sprintf(buffer, "PT %lf %lf %d\n", t+dStartTime, dValue, tEnvShape);
 					envState.append(buffer);
@@ -528,10 +540,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processPoints(TrackEnvelope* env
 	return eERRORCODE_OK;
 }
 
-
-
-
-EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* envelope, double dStartPos, double dEndPos, double dFreq, double dStrength, double dOffset, double dDelay, WaveShape tWaveShape, double dPrecision)
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* envelope, double dStartPos, double dEndPos, LfoWaveParams &waveParams, double dPrecision)
 {
 	//TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
 	if(!envelope)
@@ -597,7 +606,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* 
 	//ShowConsoleMsgEx("MIN = %lf, MAX = %lf\n", dValMin, dValMax);
 	//ShowConsoleMsg(newState);
 
-	writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, dFreq, dStrength, dOffset, dDelay, tWaveShape, dPrecision);
+	writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, waveParams, dPrecision);
 
 	newState.append(token);
 	newState.append("\n");
@@ -622,9 +631,6 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* 
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackEnvLfo()
 {
-	double dFreq, dDelay;
-	getFreqDelay(_parameters, dFreq, dDelay);
-
 	TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
 	if(!envelope)
 		return eERRORCODE_NOENVELOPE;
@@ -655,14 +661,14 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackEnvLfo()
 	//Main_OnCommandEx(ID_MOVE_TIMESEL_NUDGE_RIGHTEDGE_LEFT, 0, 0);
 	//Main_OnCommandEx(ID_ENVELOPE_DELETE_ALL_POINTS_TIMESEL, 0, 0);
 
-	ErrorCode res = generateTrackLfo(envelope, dStartPos, dEndPos, dFreq, _parameters.waveParams.strength, _parameters.waveParams.offset, dDelay, _parameters.waveParams.shape, _parameters.precision);
+	ErrorCode res = generateTrackLfo(envelope, dStartPos, dEndPos, _parameters.waveParams, _parameters.precision);
 //UpdateTimeline();
 
 	Undo_EndBlock2(0, "Track Envelope LFO", 0);
 	return res;
 }
 
-EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* take, double dStartPos, double dEndPos, TakeEnvType tTakeEnvType, double dFreq, double dStrength, double dOffset, double dDelay, WaveShape tWaveShape, double dPrecision)
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* take, double dStartPos, double dEndPos, TakeEnvType tTakeEnvType, LfoWaveParams &waveParams, double dPrecision)
 {
 	TrackEnvelope* envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
 	double dValMin = 0.0;
@@ -724,7 +730,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 		token = strtok(NULL, "\n");
 	}
 
-	writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, dFreq, dStrength, dOffset, dDelay, tWaveShape, dPrecision);
+	writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, waveParams, dPrecision);
 
 	newState.append(token);
 	newState.append("\n");
@@ -790,9 +796,6 @@ writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, dFreq, dStrength,
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* take)
 {
-	double dFreq, dDelay;
-	getFreqDelay(_parameters, dFreq, dDelay);
-
 	MediaItem* parentItem = GetMediaItemTake_Item(take);
 	double dItemStartPos = GetMediaItemInfo_Value(parentItem, "D_POSITION");
 	double dItemEndPos = dItemStartPos + GetMediaItemInfo_Value(parentItem, "D_LENGTH");
@@ -809,7 +812,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	dStartPos -= dItemStartPos;
 	dEndPos -= dItemStartPos;
 
-	return generateTakeLfo(take, dStartPos, dEndPos, _parameters.takeEnvType, dFreq, _parameters.waveParams.strength, _parameters.waveParams.offset, dDelay, _parameters.waveParams.shape, _parameters.precision);
+	return generateTakeLfo(take, dStartPos, dEndPos, _parameters.takeEnvType, _parameters.waveParams, _parameters.precision);
 }
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo()
@@ -889,7 +892,7 @@ double dMagnitude = _pParameters->waveParams.strength * (1.0 - fabs(_pParameters
 double dOff = 0.5*(dValMax+dValMin);
 double dScale = dValMax - dOff;
 double dFreq, dDelay;
-EnvelopeProcessor::getFreqDelay(*_pParameters, dFreq, dDelay);
+EnvelopeProcessor::getFreqDelay(_pParameters->waveParams, dFreq, dDelay);
 
 	double (*WaveformGenerator)(double t, double dFreq, double dDelay);
 	int iPrecision;

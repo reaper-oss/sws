@@ -30,8 +30,11 @@
 //! \todo Code cleanup /guidelines: m_/g_ prefixes, etc.
 //! \todo Update with sws/wdl API functions (ObjState access, etc)
 //! \todo General code cleanup, renaming
+//! \todo LFO frequency modulator
+//! \todo Env processor: track/take/take (MIDI) combo box
 //! \todo Actions for my own use (e.g. 'shrink item' bugfix): #define-based bypass to skip in release mode? 
 //! \todo MIDI LFO new options: channel, pitch
+//! \bug Env processor: process 1st point
 //! \todo RME Fireface Mixer actions: separate .dll
 //! \todo FR Cockos: Insert Env Point should preserve envelope form (use next Pt shape instead of default?)
 

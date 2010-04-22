@@ -109,6 +109,8 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 
 			for(int i=eGRID_OFF; i<eGRID_LAST; i++)
 			{
+				if( (i>eGRID_OFF) && (i<=eGRID_1_1) )
+					continue;
 				int x = SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCDELAY,CB_ADDSTRING,0,(LPARAM)GetGridDivisionStr((GridDivision)i));
 				SendDlgItemMessage(hwnd,IDC_PADRELFO_SYNCDELAY,CB_SETITEMDATA,x,i);
 				if(i == EnvelopeProcessor::getInstance()->_parameters.waveParams.delayBeat)

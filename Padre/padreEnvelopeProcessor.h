@@ -54,6 +54,7 @@ struct LfoWaveParams
 struct EnvLfoParams
 {
 	LfoWaveParams waveParams;
+LfoWaveParams freqModulator;
 
 	double precision;
 	int midiCc;
@@ -63,7 +64,7 @@ struct EnvLfoParams
 	bool activeTakeOnly;
 
 	EnvLfoParams();
-	EnvLfoParams& operator=(const EnvLfoParams &parameters);
+	EnvLfoParams& operator=(const EnvLfoParams &params);
 };
 
 struct EnvModParams
@@ -124,24 +125,16 @@ ErrorCode processSelectedTrackEnv();
 
 		ErrorCode generateSelectedMidiTakeLfo();
 
-
-
 	protected:
-		static void getFreqDelay(EnvLfoParams &lfoParams, double &dFreq, double &dDelay);
+		static void getFreqDelay(LfoWaveParams &waveParams, double &dFreq, double &dDelay);
 		static ErrorCode getEnvelopeMinMax(TrackEnvelope* envelope, double &dEnvMinVal, double &dEnvMaxVal);
-		static void writeLfoPoints(string &envState, double dStartTime, double dEndTime, double dValMin, double dValMax, double dFreq, double dStrength = 1.0, double dOffset = 0.0, double dDelay = 0.0, WaveShape tWaveShape = eWAVSHAPE_SINE, double dPrecision = 0.1);
+		static void writeLfoPoints(string &envState, double dStartTime, double dEndTime, double dValMin, double dValMax, LfoWaveParams &waveParams, double dPrecision = 0.1, LfoWaveParams* freqModulator = NULL);
+
 		static ErrorCode processPoints(TrackEnvelope* envelope, double dStartPos, double dEndPos, EnvModType envModType, double dStrength = 1.0, double dOffset = 0.0);
 
-		static ErrorCode generateTrackLfo(TrackEnvelope* envelope, double dStartPos, double dEndPos, double dFreq, double dStrength = 1.0, double dOffset = 0.0, double dDelay = 0.0, WaveShape tWaveShape = eWAVSHAPE_SINE, double dPrecision = 0.1);
-		static ErrorCode generateTakeLfo(MediaItem_Take* take, double dStartPos, double dEndPos, TakeEnvType tTakeEnvType, double dFreq, double dStrength = 1.0, double dOffset = 0.0, double dDelay = 0.0, WaveShape tWaveShape = eWAVSHAPE_SINE, double dPrecision = 0.1);
+		static ErrorCode generateTrackLfo(TrackEnvelope* envelope, double dStartPos, double dEndPos, LfoWaveParams &waveParams, double dPrecision = 0.1);
+		static ErrorCode generateTakeLfo(MediaItem_Take* take, double dStartPos, double dEndPos, TakeEnvType tTakeEnvType, LfoWaveParams &waveParams, double dPrecision = 0.1);
 
 		ErrorCode generateTakeLfo(MediaItem_Take* take);
-
-
-
-
-
-
-
 };
 

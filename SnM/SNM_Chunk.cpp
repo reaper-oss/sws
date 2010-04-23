@@ -38,53 +38,65 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode, LineParser* _lp, WDL_String* _p
 	WDL_String* _newChunk, int _updates)
 {
 	bool update = false;
-	// add rcv
-	if (_mode == -1 && m_srcId > 0)
+	switch(_mode)
 	{
-		char bufline[512] = "";
-		int n = sprintf(bufline, 
-			"AUXRECV %d %d %s %s 0 0 0 0 0 -1.00000000000000 0 -1\n%s\n", 
-			m_srcId-1, m_sendType, 
-			m_vol, m_pan,
-			_parsedLine->Get());
-		_newChunk->Append(bufline,n);
-		update = true;
-	}
-	// remove rcv
-	else if (_mode == -2)
-	{
-		update = (m_srcId == -1 || _lp->gettoken_int(1) == m_srcId);
-		// update => nothing! we do NOT re-copy this receive
-	}
-	// add "detailed" receive
-	else if (_mode == -3  && m_srcId > 0 && m_sndRcv)
-	{
-		char bufline[512] = "";
-		int n = sprintf(bufline, 
-			"AUXRECV %d %d %.14f %.14f %d %d %d %d %d %.14f %d %d\n%s\n", 
-			m_srcId-1, 
-			m_sendType, 
-			m_sndRcv->vol, 
-			m_sndRcv->pan,
-			m_sndRcv->mute,
-			m_sndRcv->mono,
-			m_sndRcv->phase,
-			m_sndRcv->srcChan,
-			m_sndRcv->destChan,
-			m_sndRcv->panl,
-			m_sndRcv->midi,
-			-1, // can't get -send/rcv- automation!
-			_parsedLine->Get());
-		_newChunk->Append(bufline,n);
-		update = true;
+		// add rcv
+		case -1:
+		{
+			char bufline[512] = "";
+			int n = sprintf(bufline, 
+				"AUXRECV %d %d %s %s 0 0 0 0 0 -1.00000000000000 0 -1\n%s\n", 
+				m_srcId-1, m_sendType, 
+				m_vol, m_pan,
+				_parsedLine->Get());
+			_newChunk->Append(bufline,n);
+			update = true;
+		}
+		break;
+
+		// remove rcv
+		case -2:
+		{
+			update = (m_srcId == -1 || _lp->gettoken_int(1) == (m_srcId - 1));
+			// update => nothing! we do NOT re-copy this receive
+		}
+		break;
+
+		// add "detailed" receive
+		case -3:
+		{
+			char bufline[512] = "";
+			int n = sprintf(bufline, 
+				"AUXRECV %d %d %.14f %.14f %d %d %d %d %d %.14f %d %d\n%s\n", 
+				m_srcId-1, 
+				m_sendType, 
+				m_sndRcv->vol, 
+				m_sndRcv->pan,
+				m_sndRcv->mute,
+				m_sndRcv->mono,
+				m_sndRcv->phase,
+				m_sndRcv->srcChan,
+				m_sndRcv->destChan,
+				m_sndRcv->panl,
+				m_sndRcv->midi,
+				-1, // TODO: can't get -send/rcv- automation!
+				_parsedLine->Get());
+			_newChunk->Append(bufline,n);
+			update = true;
+		}
+		break;
+
+		default:
+			break;
 	}
 	return update; 
 }
 
-int SNM_SendPatcher::AddReceive(
-	MediaTrack* _srcTr, int _sendType, char* _vol, char* _pan) 
+int SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, int _sendType, char* _vol, char* _pan) 
 {
 	m_srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
+	if (m_srcId == -1)
+		return 0; 
 	m_sendType = _sendType;
 	m_vol = _vol;
 	m_pan = _pan;
@@ -92,10 +104,11 @@ int SNM_SendPatcher::AddReceive(
 	return ParsePatch(-1, 1, "TRACK", "MIDIOUT");
 }
 
-int SNM_SendPatcher::AddReceive(
-	MediaTrack* _srcTr, t_SendRcv* _io) 
+int SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, t_SendRcv* _io) 
 {
 	m_srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
+	if (!_io || m_srcId == -1)
+		return 0; 
 	m_sendType = _io->mode;
 	m_vol = NULL;
 	m_pan = NULL;
@@ -105,12 +118,40 @@ int SNM_SendPatcher::AddReceive(
 
 int SNM_SendPatcher::RemoveReceives() 
 {
-	m_srcId = -1;
+	m_srcId = -1; // -1 to remove all receives
 	m_sendType = 2; // deprecated
 	m_vol = NULL;
 	m_pan = NULL;
 	m_sndRcv = NULL;
 	return ParsePatch(-2, 1, "TRACK", "AUXRECV");
+}
+
+int SNM_SendPatcher::RemoveFirstReceive(MediaTrack* _srcTr) 
+{
+	m_srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
+	if (m_srcId == -1)
+		return 0; // 'cause what follow would remove all receives!
+	m_sendType = 2; // deprecated
+	m_vol = NULL;
+	m_pan = NULL;
+	m_sndRcv = NULL;
+	return ParsePatch(-2, 1, "TRACK", "AUXRECV");
+}
+
+// facility method
+int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr) 
+{
+	int updates = 0, lastUpdate = 0;
+	if (_srcTr)
+	{
+		updates = lastUpdate = RemoveFirstReceive(_srcTr);
+		while (lastUpdate > 0)
+		{
+			lastUpdate = RemoveFirstReceive(_srcTr);
+			updates += lastUpdate;
+		}
+	}
+	return updates;
 }
 
 
@@ -394,7 +435,7 @@ bool SNM_TakeParserPatcher::InsertTake(int _takePos, WDL_String* _chunk)
 		// other pos
 		else 
 		{
-			char tmp[32] = "";
+			char tmp[64] = "";
 			int pos = Parse(SNM_GET_CHUNK_CHAR, 1, "ITEM", 
 				!_takePos ? "NAME" : "TAKE",
 				-1, // 'cause variable nb of tokens

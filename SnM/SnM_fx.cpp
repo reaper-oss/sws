@@ -143,6 +143,13 @@ int getSelectedFX(MediaTrack* _tr)
 {
 	if (_tr)
 	{
+/*Later
+		// Avoid a useless parsing (hum.. but what does TrackFX_GetChainVisible ?)
+		// TrackFX_GetChainVisible: returns index of effect visible in chain, or -1 for chain hidden, or -2 for chain visible but no effect selected
+		int currentFX = TrackFX_GetChainVisible(_tr);
+		if (currentFX >= 0)
+			return currentFX;
+*/
 		SNM_ChunkParserPatcher p(_tr);
 		char pLastSel[4] = ""; // 4 if there're many FXs
 		p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",2,0,1,&pLastSel); 

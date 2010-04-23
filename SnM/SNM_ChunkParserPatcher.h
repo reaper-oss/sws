@@ -20,22 +20,23 @@
 **
 ******************************************************************************/
 
-// Here are some tools to parse, patch, process.. all types of RPP chunks 
-// and sub-chunks.
-// A SNM_ChunkParserPatcher instance only gets and sets (if needed) 
+// Here are some tools to parse, patch, process.. all RPP chunks and sub-chunks. 
+// SNM_ChunkParserPatcher is a class that can be used either as a 
+// SAX-ish parser (inheritance) or as a direct getter or alering tool, 
+// see ParsePatch() and Parse().
+// In both cases, it can also be associated to a WDL_String* (simple chunk 
+// parser/patcher) OR to a reaThing* (MediaTrack*, MediaItem*, ..). In this 
+// case, a SNM_ChunkParserPatcher instance only gets and sets (if needed) 
 // the chunk once, in between, the user works on a cache (itself updated), 
 // thus preventing "long" processings.
 // If any, the updates are automatically comitted when destroying a 
 // SNM_ChunkParserPatcher instance (can be done manually, see m_autoCommit).
 //
-// This class can be used either as a SAX-ish parser (inheritance) or as 
-// a direct getter or alering tool, see ParsePatch() and Parse().
-//
 // See use-cases here: 
 // http://code.google.com/p/sws-extension/source/browse/trunk#trunk/SnM
 //
 // Important: 
-// - MORE PERF. IMPROVMENT TO COME : WDL -> SNM_String, no chunk recopy in ParsePatchCore()
+// - MORE PERF. IMPROVMENT TO COME
 // - the code assumes getted/setted RPP chunks are consistent
 // - chunks may be HUGE!
 
@@ -57,7 +58,7 @@
 #define SNM_TOGGLE_CHUNK_INT_EXCEPT		11
 #define SNM_REPLACE_SUBCHUNK			12
 #define SNM_REPLACE_SUBCHUNK_EXCEPT		13
-#define SNM_GET_SUBCHUNK				14
+#define SNM_GET_SUBCHUNK_OR_LINE		14
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -127,6 +128,15 @@ SNM_ChunkParserPatcher(void* _object, bool _autoCommit = true)
 	m_updates = 0;
 	m_autoCommit = _autoCommit;
 }
+
+SNM_ChunkParserPatcher(WDL_String* _chunk)
+{
+	m_chunk.Set(_chunk->Get());
+	m_object = NULL;
+	m_updates = 0;
+	m_autoCommit = false;
+}
+
 
 virtual ~SNM_ChunkParserPatcher() 
 {
@@ -210,8 +220,9 @@ int GetUpdates() {
 	return m_updates;
 }
 
-void SetUpdates(int _updates) {
+int SetUpdates(int _updates) {
 	m_updates = _updates;
+	return m_updates; // for facility
 }
 
 // Commit (if needed)
@@ -250,7 +261,7 @@ bool GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_String* _
 		_chunk->Set("");
 		WDL_String startToken;
 		startToken.SetFormatted((int)strlen(_keyword)+2, "<%s", _keyword);
-		if (Parse(SNM_GET_SUBCHUNK, _depth, _keyword, startToken.Get(), 
+		if (Parse(SNM_GET_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), 
 			-1, _occurence, -1, (void*)_chunk) <= 0)
 		{
 			_chunk->Set("");
@@ -260,6 +271,7 @@ bool GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_String* _
 	return false;
 }
 
+// this will automatically add "\n"
 bool ReplaceSubChunk(const char* _keyword, int _depth, int _occurence, 
 	const char* _newSubChunk = "")
 {
@@ -268,7 +280,19 @@ bool ReplaceSubChunk(const char* _keyword, int _depth, int _occurence,
 		WDL_String startToken;
 		startToken.SetFormatted((int)strlen(_keyword)+2, "<%s", _keyword);
 		return (ParsePatch(SNM_REPLACE_SUBCHUNK, _depth, _keyword, startToken.Get(), -1, 
-			_occurence, -1, (void*)_newSubChunk) > 0);
+			_occurence, 0, (void*)_newSubChunk) > 0);
+	}
+	return false;
+}
+
+// this will automatically add "\n"
+bool ReplaceLine(const char* _parent, const char* _keyword, int _depth, int _occurence, 
+	const char* _newSubChunk = "")
+{
+	if (_keyword && _depth > 0)
+	{
+		return (ParsePatch(SNM_REPLACE_SUBCHUNK, _depth, _parent, _keyword, -1, 
+			_occurence, 0, (void*)_newSubChunk) > 0);
 	}
 	return false;
 }
@@ -421,7 +445,7 @@ int ParsePatchCore(
 
 	// sub-cunk processing: depth must be provided 
 	if ((!_value || _depth <= 0) &&
-		(_mode == SNM_GET_SUBCHUNK || 
+		(_mode == SNM_GET_SUBCHUNK_OR_LINE || 
 		 _mode == SNM_REPLACE_SUBCHUNK || _mode == SNM_REPLACE_SUBCHUNK_EXCEPT))
 		return -1;
 
@@ -474,7 +498,7 @@ int ParsePatchCore(
 					// don't recopy '>' depending on the modes..
 					alter = (_mode == SNM_REPLACE_SUBCHUNK || SNM_REPLACE_SUBCHUNK_EXCEPT);
 					// .. but recopy it for some
-					if (_mode == SNM_GET_SUBCHUNK)
+					if (_mode == SNM_GET_SUBCHUNK_OR_LINE)
 					{
 						((WDL_String*)_value)->Append(">\n",2);
 						return 1; 
@@ -547,9 +571,10 @@ int ParsePatchCore(
 							if (*_keyWord == '<') subChunkKeyword = currentParent;
 							alter=true;
 							break;
-						case SNM_GET_SUBCHUNK:
+						case SNM_GET_SUBCHUNK_OR_LINE:
 							((WDL_String*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine.Get());
 							if (*_keyWord == '<') subChunkKeyword = currentParent;
+							else return 1;
 							break;
 						case SNM_REPLACE_SUBCHUNK_EXCEPT:
 							if (_valueExcept) {
@@ -602,7 +627,7 @@ int ParsePatchCore(
 			else if (subChunkKeyword) 
 			{
 				alter = (_mode == SNM_REPLACE_SUBCHUNK || SNM_REPLACE_SUBCHUNK_EXCEPT);
-				if (_mode == SNM_GET_SUBCHUNK)
+				if (_mode == SNM_GET_SUBCHUNK_OR_LINE)
 					((WDL_String*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine.Get());
 			}
 		}
@@ -625,7 +650,7 @@ int ParsePatchCore(
 	{
 		// *** READ ONLY ***
 		case SNM_GET_CHUNK_CHAR:
-		case SNM_GET_SUBCHUNK:
+		case SNM_GET_SUBCHUNK_OR_LINE:
 			return 0; // if we're here: not found
 		case SNM_GETALL_CHUNK_CHAR_EXCEPT:
 			return 1; // if we're here: found (returns 0 on 1st unmatching)

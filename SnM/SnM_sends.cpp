@@ -29,7 +29,6 @@
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
 
-#define MAX_COPY_PASTE_SND_RCV 64
 
 ///////////////////////////////////////////////////////////////////////////////
 // Cue bus 
@@ -40,7 +39,7 @@
 // _destTr: destination track
 // _type:   reaper's type
 //          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
-bool addReceive(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, SNM_SendPatcher* _p)
+bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, SNM_SendPatcher* _p)
 {
 	bool update = false;
 	// if pre-fader, then re-copy track vol/pan
@@ -68,7 +67,10 @@ bool addReceive(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, SNM_SendPa
 // _type:   reaper's type
 //          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
 // _undoMsg NULL=no undo
-void cueTrack(char * _busName, int _type, const char * _undoMsg)
+bool cueTrack(char * _busName, int _type, const char * _undoMsg, 
+			  bool _showRouting, int _soloGrp, 
+			  WDL_String* _chunk, 
+			  bool _sendToMaster, int* _hwOuts) //optional prms
 {
 	bool updated = false;
 	MediaTrack * cueTr = NULL;
@@ -88,17 +90,62 @@ void cueTrack(char * _busName, int _type, const char * _undoMsg)
 				cueTr = CSurf_TrackFromID(GetNumTracks(), false);
 				GetSetMediaTrackInfo(cueTr, "P_NAME", _busName);
 				p = new SNM_SendPatcher(cueTr);
+				if (_chunk)
+				{
+					p->SetChunk(_chunk, 1);
+					p->RemoveIds(); // *HOT*
+				}
 				updated = true;
 			}
 
 			// add a send
 			if (cueTr && p && tr != cueTr)
-				updated |= addReceive(tr, cueTr, _type, p); 
+			{
+				int z = addReceiveWithVolPan(tr, cueTr, _type, p); 
+				SNM_ChunkParserPatcher pSrc(tr);
+				updated |= (addSoloToGroup(cueTr, _soloGrp, true, &pSrc) > 0); // nop if invalid prms
+			}
 		}
 	}
 
 	if (cueTr && p)
 	{
+		// add slave solo to track grouping
+		updated |= (addSoloToGroup(cueTr, _soloGrp, false, p) > 0); // nop if invalid prms
+
+		// send to master/parent init
+		if (!_chunk)
+		{
+			WDL_String mainSend("MAINSEND 1");
+			if (!_sendToMaster)
+				 mainSend.Set("MAINSEND 0");
+
+			// adds HW outputs
+			if (_hwOuts)
+			{
+				int monoHWCount=0; 
+				while (GetOutputChannelName(monoHWCount)) monoHWCount++;
+
+				bool cr = false;			
+				for(int i=0; i<SNM_MAX_HW_OUTS; i++)
+				{
+					if (_hwOuts[i])
+					{
+						if (!cr) {mainSend.Append("\n"); cr = true;};
+						if (_hwOuts[i] >= (monoHWCount)) 
+							mainSend.AppendFormatted(32, "HWOUT %d ", (_hwOuts[i]-monoHWCount) | 1024);
+						else
+							mainSend.AppendFormatted(32, "HWOUT %d ", _hwOuts[i]-1);
+						mainSend.Append("0 1.00000000000000 0.00000000000000 0 0 0 -1.00000000000000 -1\n");
+					}
+				}
+				if (!cr) mainSend.Append("\n"); // hot
+			}
+
+			// patch both together
+			updated |= p->ReplaceLine("TRACK", "MAINSEND", 1, 0, mainSend.Get());
+		}
+
 		p->Commit();
 		delete p;
 
@@ -106,51 +153,21 @@ void cueTrack(char * _busName, int _type, const char * _undoMsg)
 		{
 			GetSetMediaTrackInfo(cueTr, "I_SELECTED", &g_i1);
 			UpdateTimeline();
-
-			// View I/O window for cue track
-			Main_OnCommand(40293, 0);
+//			TrackList_AdjustWindows(false); // for io buttons, etc (but KO right now..)
+			if (_showRouting) Main_OnCommand(40293, 0);
 
 			// Undo point
 			if (_undoMsg)
 				Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL, -1);
 		}
 	}
-}
-
-// Returns true for input error, false for good
-bool cueTrackPrompt(const char* cCaption)
-{
-	char reply[128]= ",2"; // default bus name and user type
-	if (GetUserInputs && GetUserInputs(cCaption, 2, "Bus name:,Send type (1 to 3. Other=help):", reply, 128))
-	{
-		char* pComma = strrchr(reply, ',');
-		if (pComma)
-		{
-			int userType = pComma[1] - 0x30;
-			int reaType = -1;
-			switch(userType)
-			{
-				case 1: reaType=0; break;
-				case 2: reaType=3; break;
-				case 3: reaType=1; break;
-			}
-			if (reaType == -1 || pComma[2])
-			{
-				MessageBox(GetMainHwnd(), 
-					"Valid send types:\n1=Post-Fader (Post-Pan)\n2=Pre-Fader (Post-FX)\n3=Pre-FX", 
-					cCaption, /*MB_ICONERROR | */MB_OK);
-				return true;
-			}
-
-			pComma[0] = 0;
-			cueTrack(reply, reaType, cCaption);
-		}
-	}
-	return false;
+	return updated;
 }
 
 void cueTrackPrompt(COMMAND_T* _ct) {
-	while (cueTrackPrompt(SNM_CMD_SHORTNAME(_ct)));
+	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUS), g_hwndParent, CueBusDlgProc);
+	ShowWindow(hwnd, SW_SHOW);
+	SetFocus(hwnd);
 }
 
 void cueTrack(COMMAND_T* _ct) {
@@ -159,11 +176,13 @@ void cueTrack(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Copy/paste with sends
+// Cut/Copy/Paste: track with sends, routings
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_PtrList<t_SendRcv> g_sendClipboard[MAX_COPY_PASTE_SND_RCV];
-WDL_PtrList<t_SendRcv> g_receiveClipboard[MAX_COPY_PASTE_SND_RCV];
+WDL_PtrList<WDL_PtrList<t_SendRcv>> g_sndTrackClipboard; 
+WDL_PtrList<WDL_PtrList<t_SendRcv>> g_rcvTrackClipboard; 
+WDL_PtrList<WDL_PtrList<t_SendRcv>> g_sndClipboard;
+WDL_PtrList<WDL_PtrList<t_SendRcv>> g_rcvClipboard;
 
 MediaTrack* SNM_GuidToTrack(const char* _guid)
 {
@@ -227,112 +246,110 @@ bool FillIOFromReaper(t_SendRcv* send, MediaTrack* src, MediaTrack* dest, int ca
 	return false;
 }
 
-void storeSendsReceives(bool _cut)
+void copySendsReceives(bool _cut, 
+		WDL_PtrList<WDL_PtrList<t_SendRcv>>* _sends, 
+		WDL_PtrList<WDL_PtrList<t_SendRcv>>* _rcvs)
 {
-	// Clear the "clipboard"
-	for (int j=0; j < MAX_COPY_PASTE_SND_RCV; j++)
-	{
-		g_sendClipboard[j].Empty(true, free);
-		g_receiveClipboard[j].Empty(true, free);
+	// Clear the "clipboards"
+	if (_sends)	{
+		for (int j=0; j < _sends->GetSize(); j++)
+			_sends->Get(j)->Empty(true, free);
+		_sends->Empty(true);
+	}
+
+	if (_rcvs) {
+		for (int j=0; j < _rcvs->GetSize(); j++)
+			_rcvs->Get(j)->Empty(true, free);
+		_rcvs->Empty(true);
 	}
 
 	int selTrackIdx = 0;
-	for (int i = 1; i <= GetNumTracks() && //doesn't include master
-		selTrackIdx < MAX_COPY_PASTE_SND_RCV; i++) 
+	for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			// *** Copy sends ***
-			int idx=0;
-			MediaTrack* dest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, idx, "P_DESTTRACK", NULL);
-			while (dest)
+			if (_sends)
 			{
-				// We do not copy cross-copy/pasted tracks' sends 
-				// (not to duplicate with the following receives re-copy)
-				if (!_cut ||
-					(_cut && !(*(int*)GetSetMediaTrackInfo(dest, "I_SELECTED", NULL))))
+				_sends->Add(new WDL_PtrList<t_SendRcv>());
+
+				int idx=0;
+				MediaTrack* dest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, idx, "P_DESTTRACK", NULL);
+				while (dest)
 				{
-					t_SendRcv* send = (t_SendRcv*)malloc(sizeof(t_SendRcv));
-					if (FillIOFromReaper(send, tr, dest, 0, idx))
-						g_sendClipboard[selTrackIdx].Add(send);
+					// We do not store cross-cut/pasted tracks' sends ('cause they'll keep the same track id after paste)
+					// not to duplicate with the following receives re-copy
+					if (!_cut ||
+						(_cut && !(*(int*)GetSetMediaTrackInfo(dest, "I_SELECTED", NULL))))
+					{
+						t_SendRcv* send = (t_SendRcv*)malloc(sizeof(t_SendRcv));
+						if (FillIOFromReaper(send, tr, dest, 0, idx))
+							_sends->Get(selTrackIdx)->Add(send);
+					}
+					dest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, ++idx, "P_DESTTRACK", NULL);
 				}
-				idx++;
-				dest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, idx, "P_DESTTRACK", NULL);
 			}
 
 			// *** Copy receives ***
-			idx=0;
-			MediaTrack* src = (MediaTrack*)GetSetTrackSendInfo(tr, -1, idx, "P_SRCTRACK", NULL);
-			while (src)
+			if (_rcvs)
 			{
-				t_SendRcv* rcv = (t_SendRcv*)malloc(sizeof(t_SendRcv));
-				if (FillIOFromReaper(rcv, src, tr, -1, idx))
-					g_receiveClipboard[selTrackIdx].Add(rcv);
-				idx++;
-				src = (MediaTrack*)GetSetTrackSendInfo(tr, -1, idx, "P_SRCTRACK", NULL);
-			}
+				_rcvs->Add(new WDL_PtrList<t_SendRcv>());
 
+				int idx=0;
+				MediaTrack* src = (MediaTrack*)GetSetTrackSendInfo(tr, -1, idx, "P_SRCTRACK", NULL);
+				while (src)
+				{
+					t_SendRcv* rcv = (t_SendRcv*)malloc(sizeof(t_SendRcv));
+					if (FillIOFromReaper(rcv, src, tr, -1, idx))
+						_rcvs->Get(selTrackIdx)->Add(rcv);
+					src = (MediaTrack*)GetSetTrackSendInfo(tr, -1, ++idx, "P_SRCTRACK", NULL);
+				}
+			}
 			selTrackIdx++;
 		}
 	}
 }
 
-void copyWithIOs(COMMAND_T* _ct)
+// Paste stored sends and/or receives to the selected tracks
+bool pasteSendsReceives(WDL_PtrList<WDL_PtrList<t_SendRcv>>* _sends, 
+		WDL_PtrList<WDL_PtrList<t_SendRcv>>* _rcvs,
+		bool _rcvReset)
 {
-	storeSendsReceives(false);
-	Main_OnCommand(40210, 0); // Copy sel tracks
-}
+	bool updated = false;
 
-void cutWithIOs(COMMAND_T* _ct)
-{
-	storeSendsReceives(true);
-	Main_OnCommand(40337, 0); // Cut sel tracks
-}
+	// As a same track can be multi-patched
+	// => we'll patch all tracks in one go thanks to this list
+	WDL_PtrList<SNM_ChunkParserPatcher> ps;
 
-// we do not track updates here 'cause we use an undo block
-void pasteWithIOs(COMMAND_T* _ct)
-{
-	Undo_BeginBlock();
-
-	int iTracks = GetNumTracks();
-
-	// native paste (depends on context)
-	Main_OnCommand(40058, 0);
-
-	if (iTracks != GetNumTracks()) // See if tracks were pasted
+	// 1st loop not to remove the receives (can't be done in the 
+	// 2nd one: could remove those we're currently adding)
+	int selTrackIdx = 0;
+	for (int i = 1; i <= GetNumTracks(); i++)  //doesn't include master
 	{
-		// As a same track can be multi-patched
-		// => we'll patch tracks in one go thanks to this list
-		WDL_PtrList<SNM_ChunkParserPatcher> ps;
-
-		// 1st loop not to remove the receives (can't be done in the 
-		// 2nd one: could remove those we're currently adding)
-		int selTrackIdx = 0;
-		for (int i = 1; i <= GetNumTracks() &&  //doesn't include master
-			selTrackIdx < MAX_COPY_PASTE_SND_RCV; i++)
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			MediaTrack* tr = CSurf_TrackFromID(i, false);
-			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-			{
-				SNM_SendPatcher* p = new SNM_SendPatcher(tr); 
-				ps.Add(p);
-				p->RemoveReceives();
-				selTrackIdx++;
-			}
+			SNM_SendPatcher* p = new SNM_SendPatcher(tr); 
+			ps.Add(p);
+			if (_rcvReset)
+				updated |= (p->RemoveReceives() > 0);
+			selTrackIdx++;
 		}
+	}
 
-		selTrackIdx = 0;
-		for (int i = 1; i <= GetNumTracks() &&  //doesn't include master
-			selTrackIdx < MAX_COPY_PASTE_SND_RCV; i++)
+	selTrackIdx = 0;
+	for (int i = 1; i <= GetNumTracks(); i++)  //doesn't include master
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			MediaTrack* tr = CSurf_TrackFromID(i, false);
-			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			// *** Paste sends ***
+			if (_sends)
 			{
-				// *** Paste sends ***
-				for (int j=0; j < g_sendClipboard[selTrackIdx].GetSize(); j++)
+				for (int j=0; selTrackIdx < _sends->GetSize() && j < _sends->Get(selTrackIdx)->GetSize(); j++)
 				{
-					t_SendRcv* send = g_sendClipboard[selTrackIdx].Get(j);
+					t_SendRcv* send = _sends->Get(selTrackIdx)->Get(j);
 					MediaTrack* sendDest = SNM_GuidToTrack(send->destGUID);
 					if (sendDest) 
 					{
@@ -342,31 +359,163 @@ void pasteWithIOs(COMMAND_T* _ct)
 							pRcv = new SNM_SendPatcher(sendDest); 
 							ps.Add(pRcv);
 						}
-						pRcv->AddReceive(tr, send);
+						updated |= (pRcv->AddReceive(tr, send) > 0);
 					}
 				}
+			}
 
-				// *** Paste receives ***
-				for (int j=0; j < g_receiveClipboard[selTrackIdx].GetSize(); j++)
+			// *** Paste receives ***
+			if (_rcvs)
+			{
+				for (int j=0; selTrackIdx < _rcvs->GetSize() && j < _rcvs->Get(selTrackIdx)->GetSize(); j++)
 				{
-					t_SendRcv* rcv = g_receiveClipboard[selTrackIdx].Get(j);
+					t_SendRcv* rcv = _rcvs->Get(selTrackIdx)->Get(j);
 					MediaTrack* rcvSrc = SNM_GuidToTrack(rcv->srcGUID);
 					if (rcvSrc) 
-						((SNM_SendPatcher*)ps.Get(selTrackIdx))->AddReceive(rcvSrc, rcv);
+						updated |= (((SNM_SendPatcher*)ps.Get(selTrackIdx))->AddReceive(rcvSrc, rcv) > 0);
 				}
-
-				selTrackIdx++;
 			}
+
+			selTrackIdx++;
 		}
-		ps.Empty(true); // + auto commit all chunks!
 	}
+	ps.Empty(true); // + auto commit all chunks (if something to commit) !
+	return updated;
+}
+
+void copyWithIOs(COMMAND_T* _ct) {
+	copySendsReceives(false, &g_sndTrackClipboard, &g_rcvTrackClipboard);
+	Main_OnCommand(40210, 0); // Copy sel tracks
+}
+
+void cutWithIOs(COMMAND_T* _ct) {
+	copySendsReceives(true, &g_sndTrackClipboard, &g_rcvTrackClipboard);
+	Main_OnCommand(40337, 0); // Cut sel tracks
+}
+
+void pasteWithIOs(COMMAND_T* _ct) {
+	Undo_BeginBlock();
+	int iTracks = GetNumTracks();	
+	Main_OnCommand(40058, 0); // native track paste
+	if (iTracks != GetNumTracks()) // See if tracks were pasted
+		pasteSendsReceives(&g_sndTrackClipboard, &g_rcvTrackClipboard, true);
+	// for io buttons, etc (but KO right now..)
+//	TrackList_AdjustWindows(false); 
 	Undo_EndBlock(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
+}
+
+// ** routing cut copy/paste **
+void copyRoutings(COMMAND_T* _ct) {
+	copySendsReceives(false, &g_sndClipboard, &g_rcvClipboard);
+}
+
+void cutRoutings(COMMAND_T* _ct) {
+	copySendsReceives(false, &g_sndClipboard, &g_rcvClipboard);
+	removeSends(NULL);
+	removeReceives(NULL);
+	// for io buttons, etc (but KO right now..)
+//	TrackList_AdjustWindows(false);
+	// nop if nothing done
+	Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); 
+}
+
+void pasteRoutings(COMMAND_T* _ct) {
+	if (pasteSendsReceives(&g_sndClipboard, &g_rcvClipboard, false))
+	{
+		// for io buttons, etc (but KO right now..)
+//		TrackList_AdjustWindows(false);
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+	}
+}
+
+// ** sends cut copy/paste **
+void copySends(COMMAND_T* _ct) {
+	copySendsReceives(false, &g_sndClipboard, NULL);
+}
+
+void cutSends(COMMAND_T* _ct) {
+	copySendsReceives(false, &g_sndClipboard, NULL);
+	removeSends(NULL);
+	// for io buttons, etc (but KO right now..)
+//	TrackList_AdjustWindows(false);
+	// nop if nothing done
+	Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+void pasteSends(COMMAND_T* _ct) {
+	if (pasteSendsReceives(&g_sndClipboard, NULL, false))
+	{
+		// for io buttons, etc (but KO right now..)
+//		TrackList_AdjustWindows(false);
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+	}
+}
+
+// ** receives cut copy/paste **
+void copyReceives(COMMAND_T* _ct) {
+	copySendsReceives(false, NULL, &g_rcvClipboard);
+}
+
+void cutReceives(COMMAND_T* _ct) {
+	copySendsReceives(false, NULL, &g_rcvClipboard);
+	removeReceives(NULL);
+	// for io buttons, etc (but KO right now..)
+//	TrackList_AdjustWindows(false);
+	// nop if nothing done
+	Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+void pasteReceives(COMMAND_T* _ct) {
+	if (pasteSendsReceives(NULL, &g_rcvClipboard, false))
+	{
+		// for io buttons, etc (but KO right now..)
+//		TrackList_AdjustWindows(false);
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+	}
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Common
 ///////////////////////////////////////////////////////////////////////////////
+
+
+const char* GetSendTypeStr(int _type) 
+{
+	switch(_type)
+	{
+		case 1: return "Post-Fader (Post-Pan)";
+		case 2: return "Pre-Fader (Post-FX)";
+		case 3: return "Pre-FX";
+		default: return NULL;
+	}
+}
+
+void removeSends(COMMAND_T* _ct)
+{
+	bool updated = false;
+	for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
+	{
+		MediaTrack* trDest = CSurf_TrackFromID(i, false);
+		if (trDest)
+		{
+			SNM_SendPatcher p(trDest); // nothing done yet
+			for (int j = 1; j <= GetNumTracks(); j++) 
+			{
+				MediaTrack* trSrc = CSurf_TrackFromID(j, false);
+				if (trSrc && *(int*)GetSetMediaTrackInfo(trSrc, "I_SELECTED", NULL))
+					updated |= (p.RemoveReceivesFrom(trSrc) > 0);
+			}
+		}
+	}
+	// Undo point
+	if (_ct && updated)
+	{
+		// for io buttons, etc (but KO right now..)
+//		TrackList_AdjustWindows(false);
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+	}
+}
 
 void removeReceives(COMMAND_T* _ct)
 {
@@ -381,6 +530,22 @@ void removeReceives(COMMAND_T* _ct)
 		}
 	}
 	// Undo point
-	if (updated)
+	if (_ct && updated)
+	{
+		// for io buttons, etc (but KO right now..)
+//		TrackList_AdjustWindows(false);
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+	}
 }
+
+void removeRouting(COMMAND_T* _ct)
+{
+	// TODO: optimization (a same track can be multi-patched here..)
+	removeSends(NULL);
+	removeReceives(NULL);
+	// for io buttons, etc (but KO right now..)
+//	TrackList_AdjustWindows(false);
+	// nop if nothing done
+	Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); 
+}
+

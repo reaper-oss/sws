@@ -32,10 +32,13 @@
 #define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
 #define SNM_FORMATED_INI_FILE "%s\\Plugins\\S&M.ini"
 
+#define SNM_MAX_HW_OUTS 8
+#define SNM_MAX_TRACK_GROUPS 32
 
 // *** SnM_Actions.cpp ***
 int SnMActionsInit();
 void SNM_ShowConsoleMsg(const char* _title, const char* _msg); 
+
 
 // *** SnM_FX.cpp ***
 void patchSelTracksFXState(int _mode, int _token, int _fx, const char* _value, const char * _undoMsg);
@@ -88,31 +91,59 @@ void saveIniFile(int _slot, const char* _path);
 
 
 // *** SnM_Windows.cpp ***
+bool toggleShowHideWin(const char * _title); 
+bool closeWin(const char * _title); 
+void closeOrToggleWindows(bool _chain, bool _fx, bool _routing, bool _env, bool _toggle); 
+void closeRoutingWindows(COMMAND_T * _c); 
+void closeEnvWindows(COMMAND_T * _c); 
+void closeFloatingFXWindows(COMMAND_T * _c); 
+void closeFXChainsWindows(COMMAND_T * _c); 
+ 
+void toggleRoutingWindows(COMMAND_T * _c); 
+void toggleEnvWindows(COMMAND_T * _c); 
+void toggleFXChainsWindows(COMMAND_T * _c); 
+  
+void showFXChain(MediaTrack* _tr, int _fx); 
+void showFXChain(COMMAND_T* _ct); 
+void floatFX(MediaTrack* _tr, int _fx); 
+void unfloatFX(MediaTrack* _tr, int _fx); 
+void floatFX(COMMAND_T* _ct); 
+void unfloatFX(COMMAND_T* _ct); 
+  
+void setMainWindowActive(COMMAND_T* _ct); 
+
+ /* Later..
+#ifdef _WIN32
 bool toggleShowHideWin(const char * _title);
 bool closeWin(const char * _title);
-void closeOrToggleWindows(bool _chain, bool _fx, bool _routing, bool _env, bool _toggle);
-void closeRoutingWindows(COMMAND_T * _c);
-void closeEnvWindows(COMMAND_T * _c);
-void closeFloatingFXWindows(COMMAND_T * _c);
-void closeFXChainsWindows(COMMAND_T * _c);
+void closeOrToggleAllWindows(bool _routing, bool _env, bool _toggle);
+void closeAllRoutingWindows(COMMAND_T * _c);
+void closeAllEnvWindows(COMMAND_T * _c);
+void toggleAllRoutingWindows(COMMAND_T * _c);
+void toggleAllEnvWindows(COMMAND_T * _c);
+#endif
 
-void toggleRoutingWindows(COMMAND_T * _c);
-void toggleEnvWindows(COMMAND_T * _c);
-void toggleFXChainsWindows(COMMAND_T * _c);
-
-void showFXChain(MediaTrack* _tr, int _fx);
 void showFXChain(COMMAND_T* _ct);
-void floatFX(MediaTrack* _tr, int _fx);
-void unfloatFX(MediaTrack* _tr, int _fx);
+void hideFXChain(COMMAND_T* _ct);
+void toggleFXChain(COMMAND_T* _ct);
+void showAllFXChainsWindows(COMMAND_T* _ct);
+void closeAllFXChainsWindows(COMMAND_T * _c);
+void toggleAllFXChainsWindows(COMMAND_T * _c);
+
+void toggleFloatFX(MediaTrack* _tr, int _fx);
+void floatUnfloatFXs(bool _all, int _showFlag, int _fx = -1);
 void floatFX(COMMAND_T* _ct);
 void unfloatFX(COMMAND_T* _ct);
+void toggleFloatFX(COMMAND_T* _ct);
+void showAllFloatingFXWindows(COMMAND_T * _c);
+void closeAllFloatingFXWindows(COMMAND_T * _c);
+void toggleAllFloatingFXWindows(COMMAND_T * _c);
 
 void setMainWindowActive(COMMAND_T* _ct);
-
+*/
 
 // *** SnM_Sends.cpp ***
-bool addReceive(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, SNM_SendPatcher* _p);
-void cueTrack(char * _busName, int _type, const char * _undoMsg);
+bool cueTrack(char * _busName, int _type, const char * _undoMsg, bool _showRouting = true, int _soloGrp = 0, WDL_String* _chunk = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
 void cueTrackPrompt(COMMAND_T* _ct);
 void cueTrack(COMMAND_T* _ct);
 
@@ -120,14 +151,25 @@ void copyWithIOs(COMMAND_T* _ct);
 void cutWithIOs(COMMAND_T* _ct);
 void pasteWithIOs(COMMAND_T* _ct);
 
+void copyRoutings(COMMAND_T* _ct);
+void cutRoutings(COMMAND_T* _ct);
+void pasteRoutings(COMMAND_T* _ct);
+
+void copySends(COMMAND_T* _ct);
+void cutSends(COMMAND_T* _ct);
+void pasteSends(COMMAND_T* _ct);
+
+void copyReceives(COMMAND_T* _ct);
+void cutReceives(COMMAND_T* _ct);
+void pasteReceives(COMMAND_T* _ct);
+
+const char* GetSendTypeStr(int _type);
+void removeSends(COMMAND_T* _ct);
 void removeReceives(COMMAND_T* _ct);
+void removeRouting(COMMAND_T* _ct);
 
 
 // *** SnM_Item.cpp ***
-bool selectItemsByName(const char* cUndoMsg, char* cName);
-bool selectItemsByNamePrompt(const char* cCaption, char * _reply);
-void selectItemsByNamePrompt(COMMAND_T* _ct);
-
 void splitMidiAudio(COMMAND_T* _ct);
 
 bool isEmptyMidi(MediaItem_Take* _take);
@@ -145,9 +187,24 @@ void removeEmptyTakes(COMMAND_T* _ct);
 void removeEmptyMidiTakes(COMMAND_T* _ct);
 void removeAllEmptyTakes(COMMAND_T* _ct);
 
+void showHideTakeVolEnvelope(COMMAND_T* _ct); 
+void showHideTakePanEnvelope(COMMAND_T* _ct);
+void showHideTakeMuteEnvelope(COMMAND_T* _ct);
+
 
 // *** SnM_Misc.cpp ***
 void moveTrack(int _src, int _dest); 
 void moveTest(COMMAND_T* _ct);
 bool isLoopOrInProjectTakes(MediaItem* _item, int _take);
+bool selectItemsByName(const char* cUndoMsg, char* cName);
+bool selectItemsByNamePrompt(const char* cCaption, char * _reply);
+void selectItemsByNamePrompt(COMMAND_T* _ct);
 
+
+// *** SnM_Track.cpp ***
+int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPatcher* _cpp);
+bool loadTrackTemplate(char* _filename, WDL_String* _chunk);
+
+
+// *** GUIs ***
+WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);

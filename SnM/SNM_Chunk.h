@@ -69,6 +69,8 @@ public:
 	int AddReceive(MediaTrack* _srcTr, int _sendType, char* _vol="1.00000000000000", char* _pan="0.00000000000000");
 	int AddReceive(MediaTrack* _srcTr, t_SendRcv* _io);
 	int RemoveReceives();
+	int RemoveFirstReceive(MediaTrack* _srcTr); 
+	int RemoveReceivesFrom(MediaTrack* _srcTr);
 
 protected:
 	bool NotifyChunkLine(int _mode, LineParser* _lp, WDL_String* _parsedLine,  

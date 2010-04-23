@@ -103,3 +103,58 @@ bool isLoopOrInProjectTakes(MediaItem* _item, int _take)
 	}
 	return false;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// Select item by name
+///////////////////////////////////////////////////////////////////////////////
+bool selectItemsByName(const char* _undoMsg, char* _name)
+{
+	bool update = false;
+	if (CountMediaItems && GetMediaItem && _name && strlen(_name) > 0)
+	{
+		for (int i=0; i < CountMediaItems(0); i++)
+		{
+			MediaItem* item = GetMediaItem(0, i);
+			if (item)
+			{
+				for (int j=0; j < GetMediaItemNumTakes(item); j++)
+				{
+					MediaItem_Take* t = GetMediaItemTake(item, j);
+					if (t)
+					{
+						update = true;
+						char* takeName =
+							(char*)GetSetMediaItemTakeInfo(t, "P_NAME", NULL);
+						bool sel = takeName && (strstr(takeName, _name) != NULL);
+						GetSetMediaItemInfo(item, "B_UISEL", &sel);
+						break;
+					}
+				}
+			}
+		}
+	}
+	if (update)
+	{
+		UpdateTimeline();
+
+		// Undo point
+		if (_undoMsg)
+			Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL, -1);
+	}
+	return update;
+}
+
+// display a search dlg until the user press cancel (ok=search)
+bool selectItemsByNamePrompt(const char* _caption, char * _reply)
+{
+	if (GetUserInputs && GetUserInputs(_caption, 1, "Take name (case sensitive):", _reply, 128))
+		return selectItemsByName(_caption, _reply);
+	return false;
+}
+
+void selectItemsByNamePrompt(COMMAND_T* _ct)
+{
+	char reply[128] = ""; // initial default search string
+	while (selectItemsByNamePrompt(SNM_CMD_SHORTNAME(_ct), reply));
+}
+

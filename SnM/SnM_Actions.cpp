@@ -38,23 +38,118 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Create cue bus track from track selection, Post-Fader (Post-Pan)" }, "S&M_SENDS2", cueTrack, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Create cue bus track from track selection, Pre-FX" }, "S&M_SENDS3", cueTrack, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Create cue bus track from track selection (prompt)" }, "S&M_SENDS4", cueTrackPrompt, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Remove receives for selected track(s)" }, "S&M_SENDS5", removeReceives, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open cue bus window" }, "S&M_CUEBUSWND", cueTrackPrompt, NULL, },
+
+	{ { DEFACCEL, "SWS/S&M: Remove receives from selected track(s)" }, "S&M_SENDS5", removeReceives, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Remove sends from selected track(s)" }, "S&M_SENDS6", removeSends, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Remove routing from selected track(s)" }, "S&M_SENDS7", removeRouting, NULL, },
 
 	{ { DEFACCEL, "SWS/S&M: Copy tracks (with routing)" }, "S&M_COPYSNDRCV1", copyWithIOs, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Paste items or tracks with routing" }, "S&M_PASTSNDRCV1", pasteWithIOs, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Cut tracks (with routing)" }, "S&M_CUTSNDRCV1", cutWithIOs, NULL, },
 
+	{ { DEFACCEL, "SWS/S&M: Copy selected track(s) routings" }, "S&M_COPYSNDRCV2", copyRoutings, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Paste routings to selected track(s)" }, "S&M_PASTSNDRCV2", pasteRoutings, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Cut selected track(s) routings" }, "S&M_CUTSNDRCV2", cutRoutings, NULL, },
+
+	{ { DEFACCEL, "SWS/S&M: Copy selected track(s) sends" }, "S&M_COPYSNDRCV3", copySends, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Paste sends to selected track(s)" }, "S&M_PASTSNDRCV3", pasteSends, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Cut selected track(s) sends" }, "S&M_CUTSNDRCV3", cutSends, NULL, },
+
+	{ { DEFACCEL, "SWS/S&M: Copy selected track(s) receives" }, "S&M_COPYSNDRCV4", copyReceives, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Paste receives to selected track(s)" }, "S&M_PASTSNDRCV4", pasteReceives, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Cut selected track(s) receives" }, "S&M_CUTSNDRCV4", cutReceives, NULL, },
+
+
 	// Windows ----------------------------------------------------------------
+#ifdef _WIN32 
+         { { DEFACCEL, "SWS/S&M: Close all routing window(s)" }, "S&M_WNCLS1", closeRoutingWindows, NULL, }, 
+         { { DEFACCEL, "SWS/S&M: Close all envelope window(s)" }, "S&M_WNCLS2", closeEnvWindows, NULL, }, 
+         { { DEFACCEL, "SWS/S&M: Close all floating FX window(s)" }, "S&M_WNCLS3", closeFloatingFXWindows, NULL, }, 
+         { { DEFACCEL, "SWS/S&M: Close all FX chain window(s)" }, "S&M_WNCLS4", closeFXChainsWindows, NULL, }, 
+         { { DEFACCEL, "SWS/S&M: Toggle show all routing window(s)" }, "S&M_WNTGL1", toggleRoutingWindows, NULL, }, 
+         { { DEFACCEL, "SWS/S&M: Toggle show all envelope window(s)" }, "S&M_WNTGL2", toggleEnvWindows, NULL, }, 
+         { { DEFACCEL, "SWS/S&M: Toggle show FX chain window(s) for selected track(s)" }, "S&M_WNTGL3", toggleFXChainsWindows, NULL, },   
+#endif 
+        { { DEFACCEL, "SWS/S&M: Focus main window" }, "S&M_WNMAIN", setMainWindowActive, NULL, }, 
+		{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 1) for selected track(s)" }, "S&M_SHOWFXCHAIN1", showFXChain, NULL, 0}, 
+        { { DEFACCEL, "SWS/S&M: Show FX chain (FX 2) for selected track(s)" }, "S&M_SHOWFXCHAIN2", showFXChain, NULL, 1}, 
+        { { DEFACCEL, "SWS/S&M: Show FX chain (FX 3) for selected track(s)" }, "S&M_SHOWFXCHAIN3", showFXChain, NULL, 2}, 
+        { { DEFACCEL, "SWS/S&M: Show FX chain (FX 4) for selected track(s)" }, "S&M_SHOWFXCHAIN4", showFXChain, NULL, 3}, 
+        { { DEFACCEL, "SWS/S&M: Show FX chain (FX 5) for selected track(s)" }, "S&M_SHOWFXCHAIN5", showFXChain, NULL, 4}, 
+        { { DEFACCEL, "SWS/S&M: Show FX chain (FX 6) for selected track(s)" }, "S&M_SHOWFXCHAIN6", showFXChain, NULL, 5}, 
+        { { DEFACCEL, "SWS/S&M: Show FX chain (FX 7) for selected track(s)" }, "S&M_SHOWFXCHAIN7", showFXChain, NULL, 6}, 
+        { { DEFACCEL, "SWS/S&M: Show FX chain (FX 8) for selected track(s)" }, "S&M_SHOWFXCHAIN8", showFXChain, NULL, 7}, 
+        { { DEFACCEL, "SWS/S&M: Show FX chain (selected FX) for selected track(s)" }, "S&M_SHOWFXCHAINSEL", showFXChain, NULL, -1}, 
+  
+        { { DEFACCEL, "SWS/S&M: Float FX 1 window for selected track(s)" }, "S&M_FLOATFX1", floatFX, NULL, 0}, 
+        { { DEFACCEL, "SWS/S&M: Float FX 2 window for selected track(s)" }, "S&M_FLOATFX2", floatFX, NULL, 1}, 
+        { { DEFACCEL, "SWS/S&M: Float FX 3 window for selected track(s)" }, "S&M_FLOATFX3", floatFX, NULL, 2}, 
+        { { DEFACCEL, "SWS/S&M: Float FX 4 window for selected track(s)" }, "S&M_FLOATFX4", floatFX, NULL, 3}, 
+        { { DEFACCEL, "SWS/S&M: Float FX 5 window for selected track(s)" }, "S&M_FLOATFX5", floatFX, NULL, 4}, 
+        { { DEFACCEL, "SWS/S&M: Float FX 6 window for selected track(s)" }, "S&M_FLOATFX6", floatFX, NULL, 5}, 
+        { { DEFACCEL, "SWS/S&M: Float FX 7 window for selected track(s)" }, "S&M_FLOATFX7", floatFX, NULL, 6}, 
+        { { DEFACCEL, "SWS/S&M: Float FX 8 window for selected track(s)" }, "S&M_FLOATFX8", floatFX, NULL, 7}, 
+        { { DEFACCEL, "SWS/S&M: Float selected FX window for selected track(s)" }, "S&M_FLOATFXSEL", floatFX, NULL, -1}, 
+  
+/* Later..
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Close all routing window(s)" }, "S&M_WNCLS1", closeRoutingWindows, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Close all envelope window(s)" }, "S&M_WNCLS2", closeEnvWindows, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Close all floating FX window(s)" }, "S&M_WNCLS3", closeFloatingFXWindows, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Close all FX chain window(s)" }, "S&M_WNCLS4", closeFXChainsWindows, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Toggle show all routing window(s)" }, "S&M_WNTGL1", toggleRoutingWindows, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Toggle show all envelope window(s)" }, "S&M_WNTGL2", toggleEnvWindows, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Toggle show FX chain window(s) for selected track(s)" }, "S&M_WNTGL3", toggleFXChainsWindows, NULL, },	
+	{ { DEFACCEL, "SWS/S&M: Close all routing window(s)" }, "S&M_WNCLS1", closeAllRoutingWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Close all envelope window(s)" }, "S&M_WNCLS2", closeAllEnvWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Toggle show all routing window(s)" }, "S&M_WNTGL1", toggleAllRoutingWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Toggle show all envelope window(s)" }, "S&M_WNTGL2", toggleAllEnvWindows, NULL, },
 #endif
+	{ { DEFACCEL, "SWS/S&M: Close all floating FX windows" }, "S&M_WNCLS3", closeAllFloatingFXWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Close all FX chain windows" }, "S&M_WNCLS4", closeAllFXChainsWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Show all floating FX windows (!)" }, "S&M_WNTSHW1", showAllFloatingFXWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Show all FX chain windows (!)" }, "S&M_WNTSHW2", showAllFXChainsWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Toggle show all floating FX windows" }, "S&M_WNTGL3", toggleAllFloatingFXWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Toggle show all FX chain windows" }, "S&M_WNTGL4", toggleAllFXChainsWindows, NULL, },	
 	{ { DEFACCEL, "SWS/S&M: Focus main window" }, "S&M_WNMAIN", setMainWindowActive, NULL, },
+
+	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 1) for selected track(s)" }, "S&M_SHOWFXCHAIN1", showFXChain, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 2) for selected track(s)" }, "S&M_SHOWFXCHAIN2", showFXChain, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 3) for selected track(s)" }, "S&M_SHOWFXCHAIN3", showFXChain, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 4) for selected track(s)" }, "S&M_SHOWFXCHAIN4", showFXChain, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 5) for selected track(s)" }, "S&M_SHOWFXCHAIN5", showFXChain, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 6) for selected track(s)" }, "S&M_SHOWFXCHAIN6", showFXChain, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 7) for selected track(s)" }, "S&M_SHOWFXCHAIN7", showFXChain, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 8) for selected track(s)" }, "S&M_SHOWFXCHAIN8", showFXChain, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Show FX chain (selected FX) for selected track(s)" }, "S&M_SHOWFXCHAINSEL", showFXChain, NULL, -1},
+
+	{ { DEFACCEL, "SWS/S&M: Hide FX chain for selected track(s)" }, "S&M_HIDEFXCHAIN", hideFXChain, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Toggle show FX chain for selected track(s)" }, "S&M_TOGLFXCHAIN", toggleFXChain, NULL, },
+
+	{ { DEFACCEL, "SWS/S&M: Float FX 1 window for selected track(s)" }, "S&M_FLOATFX1", floatFX, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Float FX 2 window for selected track(s)" }, "S&M_FLOATFX2", floatFX, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Float FX 3 window for selected track(s)" }, "S&M_FLOATFX3", floatFX, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Float FX 4 window for selected track(s)" }, "S&M_FLOATFX4", floatFX, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Float FX 5 window for selected track(s)" }, "S&M_FLOATFX5", floatFX, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Float FX 6 window for selected track(s)" }, "S&M_FLOATFX6", floatFX, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Float FX 7 window for selected track(s)" }, "S&M_FLOATFX7", floatFX, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Float FX 8 window for selected track(s)" }, "S&M_FLOATFX8", floatFX, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Float selected FX window for selected track(s)" }, "S&M_FLOATFXSEL", floatFX, NULL, -1},
+
+	{ { DEFACCEL, "SWS/S&M: Un-float FX 1 window for selected track(s)" }, "S&M_UNFLOATFX1", unfloatFX, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Un-float FX 2 window for selected track(s)" }, "S&M_UNFLOATFX2", unfloatFX, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Un-float FX 3 window for selected track(s)" }, "S&M_UNFLOATFX3", unfloatFX, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Un-float FX 4 window for selected track(s)" }, "S&M_UNFLOATFX4", unfloatFX, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Un-float FX 5 window for selected track(s)" }, "S&M_UNFLOATFX5", unfloatFX, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Un-float FX 6 window for selected track(s)" }, "S&M_UNFLOATFX6", unfloatFX, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Un-float FX 7 window for selected track(s)" }, "S&M_UNFLOATFX7", unfloatFX, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Un-float FX 8 window for selected track(s)" }, "S&M_UNFLOATFX8", unfloatFX, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Un-float selected FX window for selected track(s)" }, "S&M_UNFLOATFXSEL", unfloatFX, NULL, -1},
+
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 1 window for selected track(s)" }, "S&M_TOGLFLOATFX1", toggleFloatFX, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 2 window for selected track(s)" }, "S&M_TOGLFLOATFX2", toggleFloatFX, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 3 window for selected track(s)" }, "S&M_TOGLFLOATFX3", toggleFloatFX, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 4 window for selected track(s)" }, "S&M_TOGLFLOATFX4", toggleFloatFX, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 5 window for selected track(s)" }, "S&M_TOGLFLOATFX5", toggleFloatFX, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 6 window for selected track(s)" }, "S&M_TOGLFLOATFX6", toggleFloatFX, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 7 window for selected track(s)" }, "S&M_TOGLFLOATFX7", toggleFloatFX, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 8 window for selected track(s)" }, "S&M_TOGLFLOATFX8", toggleFloatFX, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Toggle float selected FX window for selected track(s)" }, "S&M_TOGLFLOATFXSEL", toggleFloatFX, NULL, -1},
+*/
 
 	// Track FX selection -----------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Select previous FX (cycling) for selected track(s)" }, "S&M_SELFXPREV", selectFX, NULL, -2},
@@ -67,6 +162,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Select FX 6 for selected track(s)" }, "S&M_SELFX6", selectFX, NULL, 5},
 	{ { DEFACCEL, "SWS/S&M: Select FX 7 for selected track(s)" }, "S&M_SELFX7", selectFX, NULL, 6},
 	{ { DEFACCEL, "SWS/S&M: Select FX 8 for selected track(s)" }, "S&M_SELFX8", selectFX, NULL, 7},
+
 
 	// Track FX online/offline & bypass/unbypass ------------------------------
 	{ { DEFACCEL, "SWS/S&M: Toggle FX 1 online/offline for selected track(s)" }, "S&M_FXOFF1", toggleFXOfflineSelectedTracks, NULL, 1},
@@ -165,37 +261,6 @@ static COMMAND_T g_commandTable[] =
 
 
 	// FX Chains (items & tracks) ---------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 1) for selected track(s)" }, "S&M_SHOWFXCHAIN1", showFXChain, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 2) for selected track(s)" }, "S&M_SHOWFXCHAIN2", showFXChain, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 3) for selected track(s)" }, "S&M_SHOWFXCHAIN3", showFXChain, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 4) for selected track(s)" }, "S&M_SHOWFXCHAIN4", showFXChain, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 5) for selected track(s)" }, "S&M_SHOWFXCHAIN5", showFXChain, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 6) for selected track(s)" }, "S&M_SHOWFXCHAIN6", showFXChain, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 7) for selected track(s)" }, "S&M_SHOWFXCHAIN7", showFXChain, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 8) for selected track(s)" }, "S&M_SHOWFXCHAIN8", showFXChain, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Show FX chain (selected FX) for selected track(s)" }, "S&M_SHOWFXCHAINSEL", showFXChain, NULL, -1},
-
-	{ { DEFACCEL, "SWS/S&M: Float FX 1 window for selected track(s)" }, "S&M_FLOATFX1", floatFX, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Float FX 2 window for selected track(s)" }, "S&M_FLOATFX2", floatFX, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Float FX 3 window for selected track(s)" }, "S&M_FLOATFX3", floatFX, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Float FX 4 window for selected track(s)" }, "S&M_FLOATFX4", floatFX, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Float FX 5 window for selected track(s)" }, "S&M_FLOATFX5", floatFX, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Float FX 6 window for selected track(s)" }, "S&M_FLOATFX6", floatFX, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Float FX 7 window for selected track(s)" }, "S&M_FLOATFX7", floatFX, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Float FX 8 window for selected track(s)" }, "S&M_FLOATFX8", floatFX, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Float selected FX window for selected track(s)" }, "S&M_FLOATFXSEL", floatFX, NULL, -1},
-
-/* Commented for the moment: REAPER doesn't obey..
-	{ { DEFACCEL, "SWS/S&M: Un-float FX 1 window for selected track(s)" }, "S&M_UNFLOATFX1", unfloatFX, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Un-float FX 2 window for selected track(s)" }, "S&M_UNFLOATFX2", unfloatFX, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Un-float FX 3 window for selected track(s)" }, "S&M_UNFLOATFX3", unfloatFX, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Un-float FX 4 window for selected track(s)" }, "S&M_UNFLOATFX4", unfloatFX, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Un-float FX 5 window for selected track(s)" }, "S&M_UNFLOATFX5", unfloatFX, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Un-float FX 6 window for selected track(s)" }, "S&M_UNFLOATFX6", unfloatFX, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Un-float FX 7 window for selected track(s)" }, "S&M_UNFLOATFX7", unfloatFX, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Un-float FX 8 window for selected track(s)" }, "S&M_UNFLOATFX8", unfloatFX, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Un-float selected FX window for selected track(s)" }, "S&M_UNFLOATFXSEL", unfloatFX, NULL, -1},
-*/
 	{ { DEFACCEL, "SWS/S&M: Load/Paste FX chain to selected item(s), slot 1" }, "S&M_TAKEFXCHAIN1", loadPasteTakeFXChain, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Load/Paste FX chain to selected item(s), slot 2" }, "S&M_TAKEFXCHAIN2", loadPasteTakeFXChain, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Load/Paste FX chain to selected item(s), slot 3" }, "S&M_TAKEFXCHAIN3", loadPasteTakeFXChain, NULL, 2},
@@ -247,6 +312,16 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Split MIDI or Audio at prior zero crossing" }, "S&M_SPLIT1", splitMidiAudio, NULL, },
 
+	{ { DEFACCEL, "SWS/S&M: Show take volume enveloppe" }, "S&M_TAKEENV1", showHideTakeVolEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Show take pan enveloppe" }, "S&M_TAKEENV2", showHideTakePanEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Show take mute enveloppe" }, "S&M_TAKEENV3", showHideTakeMuteEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Hide take volume enveloppe" }, "S&M_TAKEENV4", showHideTakeVolEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Hide take pan enveloppe" }, "S&M_TAKEENV5", showHideTakePanEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Hide take mute enveloppe" }, "S&M_TAKEENV6", showHideTakeMuteEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Toggle show take volume enveloppe" }, "S&M_TAKEENV7", showHideTakeVolEnvelope, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Toggle show take pan enveloppe" }, "S&M_TAKEENV8", showHideTakePanEnvelope, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Toggle show take mute enveloppe" }, "S&M_TAKEENV9", showHideTakeMuteEnvelope, NULL, -1},
+
 	// Experimental, misc., deprecated, etc.. ---------------------------------
 //	{ { DEFACCEL, "SWS/S&M: Move track (1 -> 4)" }, "S&M_TMP1", moveTest, NULL, },
 //	{ { DEFACCEL, "SWS/S&M: Select items by name" }, "S&M_ITM1", selectItemsByNamePrompt, NULL, },
@@ -259,7 +334,12 @@ int SnMActionsInit()
 	return SWSRegisterCommands(g_commandTable);
 }
 
-// GUI for lazy guys
+
+///////////////////////////////////////////////////////////////////////////////
+// GUIs
+///////////////////////////////////////////////////////////////////////////////
+
+// one for lazy guys
 void SNM_ShowConsoleMsg(const char* _title, const char* _msg) 
 {
 		ShowConsoleMsg(""); //clear
@@ -270,4 +350,281 @@ void SNM_ShowConsoleMsg(const char* _title, const char* _msg)
 		if (w != NULL)
 			SetWindowTextA(w, _title);
 #endif
+}
+
+void fillHWoutDropDown(HWND _hwnd, int _idc)
+{
+	int x=0, x0=0;
+	char buffer[BUFFER_SIZE] = "<None>";
+	x0 = SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)buffer);
+	SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,x0,0);
+	
+	// get mono outputs
+	WDL_PtrList<WDL_String> monos;
+	int monoIdx=0;
+	while (GetOutputChannelName(monoIdx))
+	{
+		monos.Add(new WDL_String(GetOutputChannelName(monoIdx)));
+		monoIdx++;
+	}
+
+	// add stereo outputs
+	WDL_PtrList<WDL_String> stereos;
+	if (monoIdx)
+	{
+		for(int i=0; i < (monoIdx-1); i++)
+		{
+			WDL_String* hw = new WDL_String();
+			hw->SetFormatted(256, "%s / %s", monos.Get(i)->Get(), monos.Get(i+1)->Get());
+			stereos.Add(hw);
+		}
+	}
+
+	// fill dropdown
+	for(int i=0; i < stereos.GetSize(); i++)
+	{
+		x = SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)stereos.Get(i)->Get());
+		SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,x,i+1); // +1 for <none>
+	}
+	for(int i=0; i < monos.GetSize(); i++)
+	{
+		x = SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)monos.Get(i)->Get());
+		SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,x,i+1); // +1 for <none>
+	}
+
+//	SendDlgItemMessage(_hwnd,_idc,CB_SETCURSEL,x0,0);
+	monos.Empty(true);
+	stereos.Empty(true);
+}
+
+void readCueBusIniFile(char* _busName, int* _type, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloGrp, bool* _sendToMaster, int* _hwOuts)
+{
+	if (_busName)
+	{
+		char iniFilePath[BUFFER_SIZE] = "";
+		sprintf(iniFilePath,SNM_FORMATED_INI_FILE,GetExePath());
+
+		GetPrivateProfileString("LAST_CUEBUS","NAME","",_busName,BUFFER_SIZE,iniFilePath);
+
+		char type[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","TYPE","3",type,16,iniFilePath);
+		*_type = atoi(type); // 0 if failed 
+
+		char trTemplate[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED","0",trTemplate,16,iniFilePath);
+		*_trTemplate = (atoi(trTemplate) == 1); // 0 if failed 
+
+		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH","",_trTemplatePath,BUFFER_SIZE,iniFilePath);
+
+		char showRouting[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","SHOW_ROUTING","1",showRouting,16,iniFilePath);
+		*_showRouting = (atoi(showRouting) == 1); // 0 if failed 
+
+		char sendToMaster[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT","0",sendToMaster,16,iniFilePath);
+		*_sendToMaster = (atoi(sendToMaster) == 1); // 0 if failed 
+
+		char soloGrp[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","SOLO_TRACK_GRP","32",soloGrp,16,iniFilePath);
+		*_soloGrp = atoi(soloGrp); // 0 if failed 
+
+		for (int i=0; i<SNM_MAX_HW_OUTS; i++)
+		{
+			char slot[16] = "";
+			sprintf(slot,"HWOUT%d",i+1);
+
+			char hwOut[16] = "";
+			GetPrivateProfileString("LAST_CUEBUS",slot,"0",hwOut,BUFFER_SIZE,iniFilePath);
+			_hwOuts[i] = atoi(hwOut); // 0 if failed 
+		}
+	}
+}
+
+void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTemplatePath, bool _showRouting, int _soloGrp, bool _sendToMaster, int* _hwOuts)
+{
+	if (_busName)
+	{
+		char iniFilePath[BUFFER_SIZE] = "";
+		sprintf(iniFilePath,SNM_FORMATED_INI_FILE,GetExePath());
+		WritePrivateProfileString("LAST_CUEBUS","NAME",_busName,iniFilePath);
+		char type[16] = "";
+		sprintf(type,"%d",_type);
+		WritePrivateProfileString("LAST_CUEBUS","TYPE",type,iniFilePath);
+		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED",_trTemplate ? "1" : "0",iniFilePath);
+		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH",_trTemplatePath,iniFilePath);
+		WritePrivateProfileString("LAST_CUEBUS","SHOW_ROUTING",_showRouting ? "1" : "0",iniFilePath);
+		WritePrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT",_sendToMaster ? "1" : "0",iniFilePath);
+		char soloGrp[16] = "";
+		sprintf(soloGrp,"%d",_soloGrp);
+		WritePrivateProfileString("LAST_CUEBUS","SOLO_TRACK_GRP",soloGrp,iniFilePath);
+
+		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
+		{
+			char slot[16] = "";
+			sprintf(slot,"HWOUT%d",i+1);
+
+			char hwOut[16] = "";
+			sprintf(hwOut,"%d",_hwOuts[i]);
+			WritePrivateProfileString("LAST_CUEBUS",slot,hwOut,iniFilePath);
+		}
+	}
+}
+
+WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+	const char cWndPosKey[] = "CueBus Window Pos";
+
+	switch(Message)
+	{
+        case WM_INITDIALOG :
+		{
+			char busName[BUFFER_SIZE] = "";
+			char trTemplatePath[BUFFER_SIZE] = "";
+			int type, soloGrp, hwOuts[8];
+			bool trTemplate,showRouting, sendToMaster;
+			readCueBusIniFile(busName, &type, &trTemplate, trTemplatePath, &showRouting, &soloGrp, &sendToMaster, hwOuts);
+
+			SetDlgItemText(hwnd,IDC_SNM_CUEBUS_NAME,busName);
+
+			int x=0;
+			for(int i=1; i<4; i++)
+			{
+				x = SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_ADDSTRING,0,(LPARAM)GetSendTypeStr(i));
+				SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_SETITEMDATA,x,i);
+//JFB				if (i==userType) SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_SETCURSEL,x,0);
+			}
+			SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_SETCURSEL,type,0);
+
+			for(int i=0; i<SNM_MAX_TRACK_GROUPS+1; i++) 
+			{
+				char buffer[BUFFER_SIZE] = "<None>";
+				if (i) sprintf(buffer, "%d", i);
+				x = SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_SOLOGRP,CB_ADDSTRING,0,(LPARAM)buffer);
+				SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_SOLOGRP,CB_SETITEMDATA,x,i);
+				if (i==soloGrp) SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_SOLOGRP,CB_SETCURSEL,x,0);
+			}
+
+			CheckDlgButton(hwnd, IDC_CHECK3, trTemplate);
+			SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,trTemplatePath);
+
+			CheckDlgButton(hwnd, IDC_CHECK1, sendToMaster);
+			CheckDlgButton(hwnd, IDC_CHECK2, showRouting);
+
+			for(int i=0; i<SNM_MAX_HW_OUTS; i++) 
+			{
+				fillHWoutDropDown(hwnd,IDC_SNM_CUEBUS_HWOUT1+i);
+				SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_HWOUT1+i,CB_SETCURSEL,hwOuts[i],0);
+			}
+
+			RestoreWindowPos(hwnd, cWndPosKey, false);
+			SetFocus(GetDlgItem(hwnd, IDC_SNM_CUEBUS_NAME));
+			PostMessage(hwnd, WM_COMMAND, IDC_CHECK3, 0); // enable//disable state
+			return 0;
+		}
+		break;
+
+		case WM_COMMAND :
+		{
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+				{
+					char cueBusName[BUFFER_SIZE];
+					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_NAME,cueBusName,BUFFER_SIZE);
+
+					int reaType;
+					int typeComboIdx = SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_GETCURSEL,0,0);
+					if(typeComboIdx == CB_ERR) typeComboIdx = 0;
+					switch(typeComboIdx+1)
+					{
+						case 1: reaType=0; break;
+						case 2: reaType=3; break;
+						case 3: reaType=1; break;
+						default: reaType=3; break;
+					}
+
+					int soloGrp = SNM_MAX_TRACK_GROUPS; // => last group (1-based)
+					int combo = SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_SOLOGRP,CB_GETCURSEL,0,0);
+					if(combo != CB_ERR) soloGrp = combo;
+					
+					int sendToMaster = IsDlgButtonChecked(hwnd, IDC_CHECK1);
+					int showRouting = IsDlgButtonChecked(hwnd, IDC_CHECK2);
+					int trTemplate = IsDlgButtonChecked(hwnd, IDC_CHECK3);
+
+					char trTemplatePath[BUFFER_SIZE];
+					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,trTemplatePath,BUFFER_SIZE);
+
+					int hwOuts[SNM_MAX_HW_OUTS];
+					for (int i=0; i<SNM_MAX_HW_OUTS; i++)
+					{
+						hwOuts[i] = SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_HWOUT1+i,CB_GETCURSEL,0,0);
+						if(hwOuts[i] == CB_ERR)	hwOuts[i] = 0;
+					}
+
+					// *** Create cue bus ***
+					WDL_String chunk;
+					if (trTemplate && !loadTrackTemplate(trTemplatePath, &chunk))
+					{
+						MessageBox(GetMainHwnd(),"Cue bus not created:\nInvalid track template file!", "Error", MB_OK);
+						return 0;
+					}
+
+					if (cueTrack(cueBusName, reaType, "S&M - Create cue bus from track selection", 
+						(showRouting == 1), soloGrp, trTemplate ? &chunk : NULL, 
+						(sendToMaster == 1), hwOuts))
+					{
+						saveCueBusIniFile(cueBusName, typeComboIdx, (trTemplate == 1), trTemplatePath, (showRouting == 1), soloGrp, (sendToMaster == 1), hwOuts);
+					}
+					return 0;
+				}
+				break;
+
+				case IDCANCEL:
+				{
+					ShowWindow(hwnd, SW_HIDE);
+					return 0;
+				}
+				break;
+
+				case IDC_FILES:
+				{
+					char currentPath[BUFFER_SIZE];
+					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,currentPath,BUFFER_SIZE);
+					char* filename = BrowseForFiles("Load track template", currentPath, NULL, false, "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0");
+					if (filename)
+					{
+						SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,filename);
+						free(filename);
+					}
+				}
+				break;
+
+				case IDC_CHECK3:
+				{
+					bool templateEnable = (IsDlgButtonChecked(hwnd, IDC_CHECK3) == 1);
+					EnableWindow(GetDlgItem(hwnd, IDC_SNM_CUEBUS_TEMPLATE), templateEnable);
+					EnableWindow(GetDlgItem(hwnd, IDC_FILES), templateEnable);
+					EnableWindow(GetDlgItem(hwnd, IDC_SNM_CUEBUS_NAME), !templateEnable);
+					for(int k=0; k < SNM_MAX_HW_OUTS ; k++) 
+						EnableWindow(GetDlgItem(hwnd, IDC_SNM_CUEBUS_HWOUT1+k), !templateEnable);
+					EnableWindow(GetDlgItem(hwnd, IDC_CHECK1), !templateEnable);
+					SetFocus(GetDlgItem(hwnd, templateEnable ? IDC_SNM_CUEBUS_TEMPLATE : IDC_SNM_CUEBUS_NAME));
+				}
+				break;
+				
+				default:
+					break;
+			}
+		}
+		break;
+
+		case WM_DESTROY:
+			SaveWindowPos(hwnd, cWndPosKey);
+			break; 
+
+		default:
+			break;
+	}
+
+	return 0;
 }

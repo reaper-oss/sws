@@ -298,10 +298,7 @@ void loadStoreFXChain(int _slot, const char* _filename)
 
 void browseStoreFXChain(int _slot, const char* _title)
 {
-	char cPath[256];
-	GetProjectPath(cPath, 256);
-	char* filename = 
-		BrowseForFiles(_title, cPath, NULL, false, "REAPER FX Chain (*.RfxChain)\0*.RfxChain\0");
+	char* filename = BrowseForFiles(_title, "", NULL, false, "REAPER FX Chain (*.RfxChain)\0*.RfxChain\0");
 	if (filename)
 	{
 		loadStoreFXChain(_slot, filename);		
@@ -314,8 +311,8 @@ void loadOrBrowseFXChain(int _slot, const char* _title)
 	if (!g_storedFXChain[_slot].GetLength())
 	{
 		// try to read the path from the ini file, or browse if path not found
-		char cPath[256];
-		readIniFile(_slot, cPath, 256);
+		char cPath[BUFFER_SIZE];
+		readIniFile(_slot, cPath, BUFFER_SIZE);
 		if (*cPath)
 			loadStoreFXChain(_slot, cPath);
 		else
@@ -327,7 +324,7 @@ void readIniFile(int _slot, char* _buf, int _bufSize)
 {
 	if (_slot >= 0 && _slot < MAX_FXCHAIN_SLOTS)
 	{
-		char iniFilePath[256];
+		char iniFilePath[BUFFER_SIZE] = "";
 		sprintf(iniFilePath,SNM_FORMATED_INI_FILE,GetExePath());
 		char slot[16] = "";
 		sprintf(slot,"SLOT%d",_slot+1);
@@ -339,7 +336,7 @@ void saveIniFile(int _slot, const char* _path)
 {
 	if (_path && _slot >= 0 && _slot < MAX_FXCHAIN_SLOTS)
 	{
-		char iniFilePath[256];
+		char iniFilePath[BUFFER_SIZE] = "";
 		sprintf(iniFilePath,SNM_FORMATED_INI_FILE,GetExePath());
 		char cSlot[16] = "";
 		sprintf(cSlot,"SLOT%d",_slot+1);

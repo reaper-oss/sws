@@ -33,61 +33,6 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Select item by name
-///////////////////////////////////////////////////////////////////////////////
-bool selectItemsByName(const char* _undoMsg, char* _name)
-{
-	bool update = false;
-	if (CountMediaItems && GetMediaItem && _name && strlen(_name) > 0)
-	{
-		for (int i=0; i < CountMediaItems(0); i++)
-		{
-			MediaItem* item = GetMediaItem(0, i);
-			if (item)
-			{
-				for (int j=0; j < GetMediaItemNumTakes(item); j++)
-				{
-					MediaItem_Take* t = GetMediaItemTake(item, j);
-					if (t)
-					{
-						update = true;
-						char* takeName =
-							(char*)GetSetMediaItemTakeInfo(t, "P_NAME", NULL);
-						bool sel = takeName && (strstr(takeName, _name) != NULL);
-						GetSetMediaItemInfo(item, "B_UISEL", &sel);
-						break;
-					}
-				}
-			}
-		}
-	}
-	if (update)
-	{
-		UpdateTimeline();
-
-		// Undo point
-		if (_undoMsg)
-			Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL, -1);
-	}
-	return update;
-}
-
-// display a search dlg until the user press cancel (ok=search)
-bool selectItemsByNamePrompt(const char* _caption, char * _reply)
-{
-	if (GetUserInputs && GetUserInputs(_caption, 1, "Take name (case sensitive):", _reply, 128))
-		return selectItemsByName(_caption, _reply);
-	return false;
-}
-
-void selectItemsByNamePrompt(COMMAND_T* _ct)
-{
-	char reply[128] = ""; // initial default search string
-	while (selectItemsByNamePrompt(SNM_CMD_SHORTNAME(_ct), reply));
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // Split MIDI/Audio
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -596,3 +541,118 @@ void removeAllEmptyTakes(COMMAND_T* _ct) {
 	removeEmptyTakes(SNM_CMD_SHORTNAME(_ct), true, true);
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Take envs: Show/hide take vol/pan/mute envs
+///////////////////////////////////////////////////////////////////////////////
+
+void patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint) 
+{
+	bool updated = false;
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
+			{					
+				int active = *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL);
+				SNM_TakeParserPatcher p(item);
+				WDL_String takeChunk;
+				if (p.GetTakeChunk(active, &takeChunk))
+				{
+					SNM_ChunkParserPatcher ptk(&takeChunk);
+					bool takeUpdate = false;
+					char vis[2]; strcpy(vis, _vis2);
+
+					// env. already exists
+					if (strstr(takeChunk.Get(), _envKeyword))
+					{
+						// toggle ?
+						if (!strlen(vis))
+						{
+							char currentVis[32];
+							if (ptk.Parse(SNM_GET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)currentVis) > 0)
+							{
+								if (!strcmp(currentVis, "1")) strcpy(vis, "0");
+								else if (!strcmp(currentVis, "0")) strcpy(vis, "1");
+							}
+							// just in case..
+							if (!strlen(vis)) break;
+						}
+
+						// prepare the new visibility
+						if (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "ACT", -1, 0, 1, (void*)vis) > 0)
+							if (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)vis) > 0)
+								takeUpdate |= (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "ARM", -1, 0, 1, (void*)vis) > 0);
+
+						takeChunk.Set(ptk.GetChunk()->Get());
+					}
+					// env. doesn't already exists => build a default one (if needed)
+					else
+					{						
+						if (!strlen(vis)) strcpy(vis, "1"); // toggle ?
+						if (!strcmp(vis, "1"))
+						{
+							// TODO: AppendFormatted with SNM_String
+							// (skipped for OSX for now..)
+							takeChunk.Append("<");
+							takeChunk.Append(_envKeyword);
+							takeChunk.Append("\nACT ");
+							takeChunk.Append(vis);
+							takeChunk.Append("\nVIS ");
+							takeChunk.Append(vis);
+							takeChunk.Append(" 1 1.000000\n");
+							takeChunk.Append("LANEHEIGHT 0 0\n");
+							takeChunk.Append("ARM ");
+							takeChunk.Append(vis);
+							takeChunk.Append("\nDEFSHAPE 0\n");
+							takeChunk.Append(_defaultPoint->Get());
+							takeChunk.Append("\n>\n");
+							takeUpdate = true;
+						}
+					}
+					
+					// Patch new visibility as a new take, removed the previous one
+					if (takeUpdate && p.InsertTake(active, &takeChunk))
+						updated |= p.RemoveTake(active+1);
+				}
+			}
+		}
+	}
+
+	if (updated)
+	{
+		UpdateTimeline();
+		if (_undoTitle)
+			Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
+	}
+}
+
+void showHideTakeVolEnvelope(COMMAND_T* _ct) 
+{
+	char cVis[2] = ""; //empty means toggle
+	if (_ct->user >= 0)
+		sprintf(cVis, "%d", _ct->user);
+	WDL_String defaultPoint("PT 0.000000 1.000000 0");
+	patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint);
+}
+
+void showHideTakePanEnvelope(COMMAND_T* _ct) 
+{
+	char cVis[2] = ""; //empty means toggle
+	if (_ct->user >= 0)
+		sprintf(cVis, "%d", _ct->user);
+	WDL_String defaultPoint("PT 0.000000 0.000000 0");
+	patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint);
+}
+
+void showHideTakeMuteEnvelope(COMMAND_T* _ct) 
+{
+	char cVis[2] = ""; //empty means toggle
+	if (_ct->user >= 0)
+		sprintf(cVis, "%d", _ct->user);
+	WDL_String defaultPoint("PT 0.000000 1.000000 1");
+	patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint);
+}

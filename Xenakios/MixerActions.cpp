@@ -958,7 +958,7 @@ void DoSetRenderSpeedToRealtime2(COMMAND_T*)
 	int sz=0; int *renderspeedmode = (int *)get_config_var("workrender",&sz);
     if (sz==sizeof(int) && renderspeedmode) 
 	{ 
-		bitset<32> blah((ULONG)*renderspeedmode);	
+		bitset<32> blah(*renderspeedmode);	
 		blah.set(3);
 		*renderspeedmode=blah.to_ulong();
 	}
@@ -971,7 +971,7 @@ void DoSetRenderSpeedToNonLim(COMMAND_T*)
 	int sz=0; int *renderspeedmode = (int *)get_config_var("workrender",&sz);
     if (sz==sizeof(int) && renderspeedmode) 
 	{ 
-		bitset<32> blah((ULONG)*renderspeedmode);	
+		bitset<32> blah(*renderspeedmode);	
 		blah.reset(3);
 		*renderspeedmode=blah.to_ulong();
 	}

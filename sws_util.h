@@ -134,8 +134,11 @@ void EnableColumnResize(HWND h);
 #endif
 
 // Command/action handling, sws_extension.cpp
-int SWSRegisterCommand(COMMAND_T* pCommand);   // One command
-int SWSRegisterCommands(COMMAND_T* pCommands); // Multiple commands in a table, terminated with LAST_COMMAND
+#define SWSRegisterCommand(c) SWSRegisterCommand2(c, __FILE__)
+#define SWSRegisterCommands(c) SWSRegisterCommands2(c, __FILE__)
+int SWSRegisterCommand2(COMMAND_T* pCommand, const char* cFile);   // One command
+int SWSRegisterCommands2(COMMAND_T* pCommands, const char* cFile); // Multiple commands in a table, terminated with LAST_COMMAND
+void ActionsList(COMMAND_T*);
 COMMAND_T* SWSUnregisterCommand(int id);
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), int user = 0, char** pMenuText = NULL);
 HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);

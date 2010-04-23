@@ -1235,6 +1235,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnM\SnM_Track.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SnM\SnM_Windows.cpp"
 				>
 			</File>

@@ -50,6 +50,7 @@
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
 static WDL_PtrList<COMMAND_T> g_commands;
+static WDL_PtrList<WDL_String> g_cmdFile;
 // Not strictly necessary but saves going through the whole
 // command array when asking about toggle state
 static WDL_PtrList<COMMAND_T> g_toggles;
@@ -93,7 +94,7 @@ bool hookCommandProc(int command, int flag)
 
 // 1) Get command ID from Reaper
 // 2) Add keyboard accelerator and add to the "action" list
-int SWSRegisterCommand(COMMAND_T* pCommand)
+int SWSRegisterCommand2(COMMAND_T* pCommand, const char* cFile)
 {
 	if (pCommand->doCommand)
 	{
@@ -103,23 +104,24 @@ int SWSRegisterCommand(COMMAND_T* pCommand)
 			return 0;
 		if (pCommand->getEnabled)
 			g_toggles.Add(pCommand);
+		if (!g_iFirstCommand && g_iFirstCommand > pCommand->accel.accel.cmd)
+			g_iFirstCommand = pCommand->accel.accel.cmd;
+		if (pCommand->accel.accel.cmd > g_iLastCommand)
+			g_iLastCommand = pCommand->accel.accel.cmd;
+		g_commands.Add(pCommand);
+		g_cmdFile.Add(new WDL_String(cFile));
 	}
-	if (!g_iFirstCommand && g_iFirstCommand > pCommand->accel.accel.cmd)
-		g_iFirstCommand = pCommand->accel.accel.cmd;
-	if (pCommand->accel.accel.cmd > g_iLastCommand)
-		g_iLastCommand = pCommand->accel.accel.cmd;
-	g_commands.Add(pCommand);
 	return 1;
 }
 
 // For each item in table call SWSRegisterCommand
-int SWSRegisterCommands(COMMAND_T* pCommands)
+int SWSRegisterCommands2(COMMAND_T* pCommands, const char* cFile)
 {
 	// Register our commands from table
 	int i = 0;
 	while(pCommands[i].id != LAST_COMMAND)
 	{
-		SWSRegisterCommand(&pCommands[i]);
+		SWSRegisterCommand2(&pCommands[i], cFile);
 		i++;
 	}
 	return 1;
@@ -141,10 +143,35 @@ COMMAND_T* SWSUnregisterCommand(int id)
 			plugin_register("-gaccel", &cmd->accel);
 			//plugin_register("-command_id", cmd->id); // Appears to be unnecessary
 			g_commands.Delete(i);
+			g_cmdFile.Delete(i);
 			return cmd;
 		}
 	}
 	return NULL;
+}
+
+void ActionsList(COMMAND_T*)
+{
+	// Load files from the "database"
+	char cBuf[512];
+	strncpy(cBuf, get_ini_file(), 256);
+	char* pC = strrchr(cBuf, PATH_SLASH_CHAR);
+	if (pC)
+	{
+		strcpy(pC+1, "sws_actions.csv");
+		FILE* f = fopen(cBuf, "w");
+		fputs("Action,File,CmdID,CmdStr\n", f);
+		if (f)
+		{
+			for (int i = 0; i < g_commands.GetSize(); i++)
+			{
+				COMMAND_T* cmd = g_commands.Get(i);
+				sprintf(cBuf, "\"%s\",%s,%d,%s\n", cmd->accel.desc, g_cmdFile.Get(i)->Get(), cmd->accel.accel.cmd, cmd->id);
+				fputs(cBuf, f);
+			}
+			fclose(f);
+		}
+	}
 }
 
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), int user, char** pMenuText)

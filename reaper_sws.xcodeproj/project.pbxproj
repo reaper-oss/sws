@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		221CEFAA118212A0009245C9 /* SnM_Track.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 221CEFA9118212A0009245C9 /* SnM_Track.cpp */; };
 		22257D87108BDC6B0058CF75 /* AutoRename.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D6F108BDC6B0058CF75 /* AutoRename.cpp */; };
 		22257D88108BDC6B0058CF75 /* BroadCastWavCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D70108BDC6B0058CF75 /* BroadCastWavCommands.cpp */; };
 		22257D89108BDC6B0058CF75 /* CommandRegistering.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D71108BDC6B0058CF75 /* CommandRegistering.cpp */; };
@@ -162,6 +163,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		221CEFA9118212A0009245C9 /* SnM_Track.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Track.cpp; path = SnM/SnM_Track.cpp; sourceTree = "<group>"; };
 		22257D6F108BDC6B0058CF75 /* AutoRename.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AutoRename.cpp; path = Xenakios/AutoRename.cpp; sourceTree = "<group>"; };
 		22257D70108BDC6B0058CF75 /* BroadCastWavCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BroadCastWavCommands.cpp; path = Xenakios/BroadCastWavCommands.cpp; sourceTree = "<group>"; };
 		22257D71108BDC6B0058CF75 /* CommandRegistering.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommandRegistering.cpp; path = Xenakios/CommandRegistering.cpp; sourceTree = "<group>"; };
@@ -533,11 +535,12 @@
 				22FFD283114DB5F10077F1CA /* SNM_Chunk.cpp */,
 				22FFD284114DB5F10077F1CA /* SNM_Chunk.h */,
 				22FFD285114DB5F10077F1CA /* SNM_ChunkParserPatcher.h */,
+				22FFD287114DB5F10077F1CA /* SnM_Item.cpp */,
 				22C769F710B0F04D00774777 /* SnM_fx.cpp */,
 				22FFD286114DB5F10077F1CA /* SnM_FXChain.cpp */,
-				22FFD287114DB5F10077F1CA /* SnM_Item.cpp */,
 				22FFD288114DB5F10077F1CA /* SnM_Misc.cpp */,
 				22C769F810B0F04D00774777 /* SnM_sends.cpp */,
+				221CEFA9118212A0009245C9 /* SnM_Track.cpp */,
 				22C769F910B0F04D00774777 /* SnM_Windows.cpp */,
 			);
 			name = SnM;
@@ -815,6 +818,7 @@
 				229A7E961165744400325BC2 /* ProjPrefs.cpp in Sources */,
 				229A7E981165744400325BC2 /* TrackParams.cpp in Sources */,
 				229A7E9A1165744400325BC2 /* TrackSel.cpp in Sources */,
+				221CEFAA118212A0009245C9 /* SnM_Track.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

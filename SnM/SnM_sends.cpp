@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Sends.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÃˆdague
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -101,7 +101,7 @@ bool cueTrack(char * _busName, int _type, const char * _undoMsg,
 			// add a send
 			if (cueTr && p && tr != cueTr)
 			{
-				int z = addReceiveWithVolPan(tr, cueTr, _type, p); 
+				addReceiveWithVolPan(tr, cueTr, _type, p); 
 				SNM_ChunkParserPatcher pSrc(tr);
 				updated |= (addSoloToGroup(cueTr, _soloGrp, true, &pSrc) > 0); // nop if invalid prms
 			}
@@ -179,10 +179,10 @@ void cueTrack(COMMAND_T* _ct) {
 // Cut/Copy/Paste: track with sends, routings
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_PtrList<WDL_PtrList<t_SendRcv>> g_sndTrackClipboard; 
-WDL_PtrList<WDL_PtrList<t_SendRcv>> g_rcvTrackClipboard; 
-WDL_PtrList<WDL_PtrList<t_SendRcv>> g_sndClipboard;
-WDL_PtrList<WDL_PtrList<t_SendRcv>> g_rcvClipboard;
+WDL_PtrList<WDL_PtrList<t_SendRcv> > g_sndTrackClipboard; 
+WDL_PtrList<WDL_PtrList<t_SendRcv> > g_rcvTrackClipboard; 
+WDL_PtrList<WDL_PtrList<t_SendRcv> > g_sndClipboard;
+WDL_PtrList<WDL_PtrList<t_SendRcv> > g_rcvClipboard;
 
 MediaTrack* SNM_GuidToTrack(const char* _guid)
 {
@@ -208,7 +208,7 @@ SNM_ChunkParserPatcher* FindTrackCPPbyGUID(
 	{
 		for (int i=0; i < _list->GetSize(); i++)
 		{
-			MediaTrack* tr = (MediaTrack*)_list->Get(i)->GetObject();
+			//MediaTrack* tr = (MediaTrack*)_list->Get(i)->GetObject();
 			char guid[64] = "";
 			if (_list->Get(i)->Parse(SNM_GET_CHUNK_CHAR,1,"TRACK","TRACKID",-1,0,1,guid) > 0)
 				if (!strcmp(_guid, guid))
@@ -247,8 +247,8 @@ bool FillIOFromReaper(t_SendRcv* send, MediaTrack* src, MediaTrack* dest, int ca
 }
 
 void copySendsReceives(bool _cut, 
-		WDL_PtrList<WDL_PtrList<t_SendRcv>>* _sends, 
-		WDL_PtrList<WDL_PtrList<t_SendRcv>>* _rcvs)
+		WDL_PtrList<WDL_PtrList<t_SendRcv> >* _sends, 
+		WDL_PtrList<WDL_PtrList<t_SendRcv> >* _rcvs)
 {
 	// Clear the "clipboards"
 	if (_sends)	{
@@ -312,8 +312,8 @@ void copySendsReceives(bool _cut,
 }
 
 // Paste stored sends and/or receives to the selected tracks
-bool pasteSendsReceives(WDL_PtrList<WDL_PtrList<t_SendRcv>>* _sends, 
-		WDL_PtrList<WDL_PtrList<t_SendRcv>>* _rcvs,
+bool pasteSendsReceives(WDL_PtrList<WDL_PtrList<t_SendRcv> >* _sends, 
+		WDL_PtrList<WDL_PtrList<t_SendRcv> >* _rcvs,
 		bool _rcvReset)
 {
 	bool updated = false;

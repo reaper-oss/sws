@@ -51,6 +51,7 @@
 #define IDD_PROJLIST                    146
 #define IDD_PADRELFO_GENERATOR          147
 #define IDD_PADRE_ENVPROCESSOR          148
+#define IDD_SNM_CUEBUS					149
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -212,6 +213,18 @@
 #define IDC_PADRE_ENVPROCESSOR_TYPE     1160
 #define IDC_PADRE_ENVPROCESSOR_OFFSET   1161
 #define IDC_PADRE_ENVPROCESSOR_STRENGTH 1162
+#define IDC_SNM_CUEBUS_NAME				1300
+#define IDC_SNM_CUEBUS_TYPE				1301
+#define IDC_SNM_CUEBUS_SOLOGRP			1302
+#define IDC_SNM_CUEBUS_HWOUT1			1303
+#define IDC_SNM_CUEBUS_HWOUT2			1304
+#define IDC_SNM_CUEBUS_HWOUT3			1305
+#define IDC_SNM_CUEBUS_HWOUT4			1306
+#define IDC_SNM_CUEBUS_HWOUT5			1307
+#define IDC_SNM_CUEBUS_HWOUT6			1308
+#define IDC_SNM_CUEBUS_HWOUT7			1309
+#define IDC_SNM_CUEBUS_HWOUT8			1310
+#define IDC_SNM_CUEBUS_TEMPLATE			1311
 
 // Next default values for new objects
 // 

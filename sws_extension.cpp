@@ -469,12 +469,15 @@ extern "C"
 		IMPAPI(TimeMap_QNToTime);
 		IMPAPI(TimeMap_timeToQN);
 		IMPAPI(TimeMap2_QNToTime);
+//		IMPAPI(TrackFX_GetChainVisible);
+//		IMPAPI(TrackFX_GetFloatingWindow);
 		IMPAPI(TrackFX_GetCount);
 		IMPAPI(TrackFX_GetFXName);
 		IMPAPI(TrackFX_GetNumParams);
 		IMPAPI(TrackFX_GetParam);
 		IMPAPI(TrackFX_GetParamName);
 		IMPAPI(TrackFX_SetParam);
+//		IMPAPI(TrackFX_Show);
 		IMPAPI(TrackList_AdjustWindows);
 		IMPAPI(Undo_BeginBlock);
 		IMPAPI(Undo_BeginBlock2);

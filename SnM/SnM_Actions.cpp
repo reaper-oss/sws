@@ -68,7 +68,7 @@ static COMMAND_T g_commandTable[] =
          { { DEFACCEL, "SWS/S&M: Close all floating FX window(s)" }, "S&M_WNCLS3", closeFloatingFXWindows, NULL, }, 
          { { DEFACCEL, "SWS/S&M: Close all FX chain window(s)" }, "S&M_WNCLS4", closeFXChainsWindows, NULL, }, 
          { { DEFACCEL, "SWS/S&M: Toggle show all routing window(s)" }, "S&M_WNTGL1", toggleRoutingWindows, NULL, }, 
-         { { DEFACCEL, "SWS/S&M: Toggle show all envelope window(s)" }, "S&M_WNTGL2", toggleEnvWindows, NULL, }, 
+         { { DEFACCEL, "SWS/S&M: Toggle show all envelope window(s)" }, "S&M_WNTGL2", toggleEnvWindows, NULL, },
          { { DEFACCEL, "SWS/S&M: Toggle show FX chain window(s) for selected track(s)" }, "S&M_WNTGL3", toggleFXChainsWindows, NULL, },   
 #endif 
         { { DEFACCEL, "SWS/S&M: Focus main window" }, "S&M_WNMAIN", setMainWindowActive, NULL, }, 
@@ -318,9 +318,11 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Hide take volume enveloppe" }, "S&M_TAKEENV4", showHideTakeVolEnvelope, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Hide take pan enveloppe" }, "S&M_TAKEENV5", showHideTakePanEnvelope, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Hide take mute enveloppe" }, "S&M_TAKEENV6", showHideTakeMuteEnvelope, NULL, 0},
+/*exist natively
 	{ { DEFACCEL, "SWS/S&M: Toggle show take volume enveloppe" }, "S&M_TAKEENV7", showHideTakeVolEnvelope, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Toggle show take pan enveloppe" }, "S&M_TAKEENV8", showHideTakePanEnvelope, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Toggle show take mute enveloppe" }, "S&M_TAKEENV9", showHideTakeMuteEnvelope, NULL, -1},
+*/
 
 	// Experimental, misc., deprecated, etc.. ---------------------------------
 //	{ { DEFACCEL, "SWS/S&M: Move track (1 -> 4)" }, "S&M_TMP1", moveTest, NULL, },

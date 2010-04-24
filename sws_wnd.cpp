@@ -525,7 +525,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 	
 		if (m_pClickedItem)
 		{
-			OnItemClk(m_pClickedItem, m_iClickedCol, m_iClickedKeys);
+			OnItemBtnClk(m_pClickedItem, m_iClickedCol, m_iClickedKeys);
 			m_pClickedItem = NULL;
 		}
 #endif
@@ -535,11 +535,20 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 	{
 		EditListItemEnd(true);
 		int iDataCol = DisplayToDataCol(s->iSubItem);
-
-		if (s->iItem >= 0 && m_pCols[iDataCol].iType & 2)
-		{	// Clicked on a "clickable" column!
+		// Call the std click handler
 #ifdef _WIN32
-			int iKeys = ((NMITEMACTIVATE*)lParam)->uKeyFlags;
+		int iKeys = ((NMITEMACTIVATE*)lParam)->uKeyFlags;
+#else
+		int iKeys = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? LVKF_CONTROL : 0;
+		iKeys    |= GetAsyncKeyState(VK_MENU)    & 0x8000 ? LVKF_ALT     : 0;
+		iKeys    |= GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? LVKF_SHIFT   : 0;
+#endif
+		OnItemClk(GetListItem(s->iItem), iDataCol, iKeys);
+
+		// Then do some extra work for the item button click handler
+		if (s->iItem >= 0 && m_pCols[iDataCol].iType & 2)
+		{	// Clicked on an item "button"
+#ifdef _WIN32
 			if ((GetTickCount() - m_dwSavedSelTime < 20 || (iKeys & LVKF_SHIFT)) && m_pSavedSel.GetSize() == ListView_GetItemCount(m_hwndList) && m_pSavedSel.Get()[s->iItem] & LVIS_SELECTED)
 			{
 				bool bSaveDisableUpdates = m_bDisableUpdates;
@@ -560,23 +569,21 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 				iKeys &= ~LVKF_SHIFT;
 				m_bShiftSel = false;
 			}
-			OnItemClk(GetListItem(s->iItem), iDataCol, iKeys);
+			OnItemBtnClk(GetListItem(s->iItem), iDataCol, iKeys);
 #else
 			// In OSX NM_CLICK comes *before* the changed notification.
 			// Cases:
 			// 1 - the user clicked on a non-selected item
-			//     Call OnClk later, in the LVN_CHANGE handler!
+			//     Call OnBtnClk later, in the LVN_CHANGE handler
 			// 2 - one item is selected, and the user clicked on that.
-			//     Call OnClk now, because no change will be sent later
+			//     Call OnBtnClk now, because no change will be sent later
 			// 3 - more than one item is selected, user clicked a selected one
-			//     Call OnClk now.  LVN_CHANGE is called later, and change the selection
+			//     Call OnBtnClk now.  LVN_CHANGE is called later, and change the selection
 			//     back to where it should be in that handler
 			
 			int iState;
 			LPARAM item = GetListItem(s->iItem, &iState);
-			m_iClickedKeys  = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? LVKF_CONTROL : 0;
-			m_iClickedKeys |= GetAsyncKeyState(VK_MENU)    & 0x8000 ? LVKF_ALT     : 0;
-			m_iClickedKeys |= GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? LVKF_SHIFT   : 0;
+			m_iClickedKeys = iKeys;
 			
 			// Case 1:
 			if (!(iState & LVIS_SELECTED))
@@ -589,7 +596,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		
 			if (ListView_GetSelectedCount(m_hwndList) == 1)
 			{	// Case 2:
-				OnItemClk(item, iDataCol, m_iClickedKeys);
+				OnItemBtnClk(item, iDataCol, m_iClickedKeys);
 				m_pSavedSel.Resize(0, false); // Saved sel size of zero means to not reset
 			}
 			else
@@ -598,7 +605,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 				m_pSavedSel.Resize(ListView_GetItemCount(m_hwndList), false);
 				for (int i = 0; i < m_pSavedSel.GetSize(); i++)
 					m_pSavedSel.Get()[i] = iState;
-				OnItemClk(item, iDataCol, m_iClickedKeys);
+				OnItemBtnClk(item, iDataCol, m_iClickedKeys);
 			}
 #endif
 		}

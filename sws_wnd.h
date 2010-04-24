@@ -71,6 +71,7 @@ protected:
 	virtual bool OnItemSelChanging(LPARAM item, bool bSel) { return false; } // Returns TRUE to prevent the change, or FALSE to allow the change
 	virtual void OnItemSelChanged(LPARAM item, int iState) { }
 	virtual void OnItemClk(LPARAM item, int iCol, int iKeyState) {}
+	virtual void OnItemBtnClk(LPARAM item, int iCol, int iKeyState) {}
 	virtual void OnItemDblClk(LPARAM item, int iCol) {}
 	virtual int  OnItemSort(LPARAM item1, LPARAM item2);
 	virtual void OnBeginDrag() {}

@@ -51,7 +51,7 @@
 #define IDD_PROJLIST                    146
 #define IDD_PADRELFO_GENERATOR          147
 #define IDD_PADRE_ENVPROCESSOR          148
-#define IDD_SNM_CUEBUS					149
+#define IDD_SNM_CUEBUS                  149
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -213,18 +213,21 @@
 #define IDC_PADRE_ENVPROCESSOR_TYPE     1160
 #define IDC_PADRE_ENVPROCESSOR_OFFSET   1161
 #define IDC_PADRE_ENVPROCESSOR_STRENGTH 1162
-#define IDC_SNM_CUEBUS_NAME				1163
-#define IDC_SNM_CUEBUS_TYPE				1164
-#define IDC_SNM_CUEBUS_SOLOGRP			1165
-#define IDC_SNM_CUEBUS_HWOUT1			1166
-#define IDC_SNM_CUEBUS_HWOUT2			1167
-#define IDC_SNM_CUEBUS_HWOUT3			1168
-#define IDC_SNM_CUEBUS_HWOUT4			1169
-#define IDC_SNM_CUEBUS_HWOUT5			1170
-#define IDC_SNM_CUEBUS_HWOUT6			1171
-#define IDC_SNM_CUEBUS_HWOUT7			1172
-#define IDC_SNM_CUEBUS_HWOUT8			1173
-#define IDC_SNM_CUEBUS_TEMPLATE			1174
+#define IDC_SNM_CUEBUS_NAME             1163
+#define IDC_SNM_CUEBUS_TYPE             1164
+#define IDC_SNM_CUEBUS_SOLOGRP          1165
+#define IDC_SNM_CUEBUS_HWOUT1           1166
+#define IDC_SNM_CUEBUS_HWOUT2           1167
+#define IDC_SNM_CUEBUS_HWOUT3           1168
+#define IDC_SNM_CUEBUS_HWOUT4           1169
+#define IDC_SNM_CUEBUS_HWOUT5           1170
+#define IDC_SNM_CUEBUS_HWOUT6           1171
+#define IDC_SNM_CUEBUS_HWOUT7           1172
+#define IDC_SNM_CUEBUS_HWOUT8           1173
+#define IDC_SNM_CUEBUS_TEMPLATE         1174
+#define IDC_PLAY                        1175
+#define IDC_PLAY2                       1176
+#define IDC_SCROLL                      1176
 
 // Next default values for new objects
 // 
@@ -232,7 +235,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        149
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1175
+#define _APS_NEXT_CONTROL_VALUE         1176
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

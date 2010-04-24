@@ -105,7 +105,7 @@ void SWS_TrackListView::GetItemText(LPARAM item, int iCol, char* str, int iStrMa
 	}
 }
 
-void SWS_TrackListView::OnItemClk(LPARAM item, int iCol, int iKeyState)
+void SWS_TrackListView::OnItemBtnClk(LPARAM item, int iCol, int iKeyState)
 {
 	MediaTrack* tr = (MediaTrack*)item; // Always non-null
 	

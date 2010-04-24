@@ -354,7 +354,7 @@ void UnselNotStem(COMMAND_T* = NULL)
 			for (int k = 0; k < GetMediaItemNumTakes(mi); k++)
 			{
 				PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(mi, k), "P_SOURCE", NULL);
-				if (src && !strstr(src->GetFileName(), "stems"))
+				if (src && src->GetFileName() && !strstr(src->GetFileName(), "stems"))
 					GetSetMediaItemInfo(mi, "B_UISEL", &g_bFalse);
 			}
 		}
@@ -373,7 +373,7 @@ void UnselNotRender(COMMAND_T* = NULL)
 			if (GetMediaItemNumTakes(mi))
 			{
 				PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(mi, -1), "P_SOURCE", NULL);
-				if (src && !strstr(src->GetFileName(), "render"))
+				if (src && src->GetFileName() && !strstr(src->GetFileName(), "render"))
 					GetSetMediaItemInfo(mi, "B_UISEL", &g_bFalse);
 			}
 		}

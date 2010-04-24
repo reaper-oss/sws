@@ -290,7 +290,7 @@ void SWS_MediaPoolGroupView::GetItemText(LPARAM item, int iCol, char* str, int i
 	}
 }
 
-void SWS_MediaPoolGroupView::OnItemClk(LPARAM item, int iCol, int iKeyState)
+void SWS_MediaPoolGroupView::OnItemBtnClk(LPARAM item, int iCol, int iKeyState)
 {
 	SWS_MediaPoolGroup* pGroup = (SWS_MediaPoolGroup*)item;
 	if (pGroup && pGroup != &m_pWnd->m_projGroup && iCol == 2)
@@ -412,7 +412,7 @@ void SWS_MediaPoolFileView::GetItemText(LPARAM item, int iCol, char* str, int iS
 	}
 }
 
-void SWS_MediaPoolFileView::OnItemClk(LPARAM item, int iCol, int iKeyState)
+void SWS_MediaPoolFileView::OnItemBtnClk(LPARAM item, int iCol, int iKeyState)
 {
 	if (iCol == 3 && m_pWnd->m_curGroup != &m_pWnd->m_projGroup)
 	{

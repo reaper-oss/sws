@@ -183,7 +183,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Building x64 installer and copying to c:\dev\sws-deploy..."
-				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2 $(SolutionName)_x64.nsi&#x0D;&#x0A;if exist &quot;$(OutDir)\$(SolutionName)_x64.exe&quot; copy /y &quot;$(OutDir)\$(SolutionName)_x64.exe&quot; &quot;c:\dev\sws-deploy&quot;"
+				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2 $(SolutionName)_x64.nsi&#x0D;&#x0A;if exist &quot;$(OutDir)\$(SolutionName)_x64.exe&quot; copy /y &quot;$(OutDir)\$(SolutionName)_x64.exe&quot; &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration

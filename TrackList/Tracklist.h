@@ -40,7 +40,7 @@ protected:
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	int  GetItemState(LPARAM item);
-	void OnItemClk(LPARAM item, int iCol, int iKeyState);
+	void OnItemBtnClk(LPARAM item, int iCol, int iKeyState);
 	void OnItemDblClk(LPARAM item, int iCol);
 	void OnItemSelChanged(LPARAM item, int iState);
 

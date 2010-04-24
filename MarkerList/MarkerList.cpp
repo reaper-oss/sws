@@ -32,6 +32,7 @@
 #include "MarkerListActions.h"
 
 #define SAVEWINDOW_POS_KEY "Markerlist Save Window Position"
+#define ML_OPTIONS_KEY "MarkerlistOptions"
 
 #define DELETE_MSG		0x100F0
 #define FIRST_LOAD_MSG	0x10100
@@ -43,8 +44,8 @@ SWS_MarkerListWnd* g_pMarkerList = NULL;
 
 static SWS_LVColumn g_cols[] = { { 75, 0, "Time" }, { 45, 0, "Type" }, { 30, 0, "ID" }, { 170, 1, "Description" } };
 
-SWS_MarkerListView::SWS_MarkerListView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "MarkerList View State", false)
+SWS_MarkerListView::SWS_MarkerListView(HWND hwndList, HWND hwndEdit, SWS_MarkerListWnd* pList)
+:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "MarkerList View State", false), m_pMarkerList(pList)
 {
 }
 
@@ -78,18 +79,24 @@ void SWS_MarkerListView::OnItemSelChanged(LPARAM item, int iState)
 		MarkerItem* mi = (MarkerItem*)item;
 		if (mi->m_dPos != GetCursorPosition())
 		{
-			SetEditCurPos(mi->m_dPos, false, false);
-			g_pMarkerList->m_dCurPos = mi->m_dPos; // Save pos
-			Main_OnCommand(40151, 0); // View: go to cursor
+			SetEditCurPos(mi->m_dPos, m_pMarkerList->m_bScroll, false); // Never play here, do it from the clk handler
+			m_pMarkerList->m_dCurPos = mi->m_dPos; // Save pos
 		}
 	}
+}
+
+void SWS_MarkerListView::OnItemClk(LPARAM item, int iCol, int iKeyState)
+{
+	MarkerItem* mi = (MarkerItem*)item;
+	if (mi) // Doubled-up calls to SetEditCurPos - oh well!
+		SetEditCurPos(mi->m_dPos, m_pMarkerList->m_bScroll, m_pMarkerList->m_bPlayOnSel);
 }
 
 void SWS_MarkerListView::OnItemDblClk(LPARAM item, int iCol)
 {
 	MarkerItem* mi = (MarkerItem*)item;
 	if (mi->m_bReg)
-		GetSet_LoopTimeRange(true, true, &mi->m_dPos, &mi->m_dRegEnd, false);
+		GetSet_LoopTimeRange(true, true, &mi->m_dPos, &mi->m_dRegEnd, m_pMarkerList->m_bPlayOnSel);
 }
 
 int SWS_MarkerListView::OnItemSort(LPARAM item1, LPARAM item2)
@@ -136,9 +143,22 @@ void SWS_MarkerListView::SetItemText(LPARAM item, int iCol, const char* str)
 
 void SWS_MarkerListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 {
-	pBuf->Resize(g_curList->m_items.GetSize());
-	for (int i = 0; i < pBuf->GetSize(); i++)
-		pBuf->Get()[i] = (LPARAM)g_curList->m_items.Get(i);
+	if (m_pMarkerList->m_filter.GetLength())
+	{
+		int iCount = 0;
+		for (int i = 0; i < g_curList->m_items.GetSize(); i++)
+			if (stristr(g_curList->m_items.Get(i)->GetName(), m_pMarkerList->m_filter.Get()))
+			{
+				pBuf->Resize(++iCount);
+				pBuf->Get()[iCount-1] = (LPARAM)g_curList->m_items.Get(i);
+			}
+	}
+	else
+	{
+		pBuf->Resize(g_curList->m_items.GetSize(), false);
+		for (int i = 0; i < pBuf->GetSize(); i++)
+			pBuf->Get()[i] = (LPARAM)g_curList->m_items.Get(i);
+	}
 }
 
 int SWS_MarkerListView::GetItemState(LPARAM item)
@@ -154,11 +174,14 @@ SWS_MarkerListWnd::SWS_MarkerListWnd()
 		Show(false, false);
 }
 
-void SWS_MarkerListWnd::Update()
+void SWS_MarkerListWnd::Update(bool bForce)
 {
+	CheckDlgButton(m_hwnd, IDC_PLAY, m_bPlayOnSel ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_SCROLL, m_bScroll  ? BST_CHECKED : BST_UNCHECKED);
+	
 	// Change the time string if the project time mode changes
 	static int prevTimeMode = -1;
-	bool bChanged = false;
+	bool bChanged = bForce;
 	if (*(int*)GetConfigVar("projtimemode") != prevTimeMode)
 	{
 		prevTimeMode = *(int*)GetConfigVar("projtimemode");
@@ -190,9 +213,22 @@ void SWS_MarkerListWnd::Update()
 void SWS_MarkerListWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
-	m_pLists.Add(new SWS_MarkerListView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+	m_resize.init_item(IDC_STATIC_FILTER, 0.0, 1.0, 0.0, 1.0);
+	m_resize.init_item(IDC_FILTER, 0.0, 1.0, 0.0, 1.0);
+	m_resize.init_item(IDC_CLEAR, 0.0, 1.0, 0.0, 1.0);
+	m_resize.init_item(IDC_PLAY, 0.0, 1.0, 0.0, 1.0);
+	m_resize.init_item(IDC_SCROLL, 0.0, 1.0, 0.0, 1.0);
+	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
+
+	m_pLists.Add(new SWS_MarkerListView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT), this));
 	delete g_curList;
 	g_curList = NULL;
+
+	char cOptions[10];
+	GetPrivateProfileString(SWS_INI, ML_OPTIONS_KEY, "1 1", cOptions, 10, get_ini_file());
+	bool m_bPlayOnDblClk = cOptions[0] == '1';
+	bool m_bScroll = cOptions[2] == '1';
+
 	Update();
 
 	SetTimer(m_hwnd, 1, 500, NULL);
@@ -202,6 +238,25 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	switch (wParam)
 	{
+		case IDC_FILTER | (EN_CHANGE << 16):
+		{
+			char cFilter[100];
+			GetWindowText(GetDlgItem(m_hwnd, IDC_FILTER), cFilter, 100);
+			m_filter.Set(cFilter);
+			Update(true);
+			break;
+		}
+		case IDC_CLEAR:
+			SetDlgItemText(m_hwnd, IDC_FILTER, "");
+			break;
+		case IDC_PLAY:
+			m_bPlayOnSel = !m_bPlayOnSel;
+			Update();
+			break;
+		case IDC_SCROLL:
+			m_bScroll = !m_bScroll;
+			Update();
+			break;
 		case DELETE_MSG:
 			if (ListView_GetSelectedCount(m_pLists.Get(0)->GetHWND()))
 			{
@@ -271,6 +326,9 @@ HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y)
 void SWS_MarkerListWnd::OnDestroy()
 {
 	KillTimer(m_hwnd, 1);
+	char cOptions[4];
+	sprintf(cOptions, "%c %c", m_bPlayOnSel ? '1' : '0', m_bScroll ? '1' : '0');
+	WritePrivateProfileString(SWS_INI, ML_OPTIONS_KEY, cOptions, get_ini_file());
 }
 
 void SWS_MarkerListWnd::OnTimer()
@@ -281,10 +339,20 @@ void SWS_MarkerListWnd::OnTimer()
 
 int SWS_MarkerListWnd::OnKey(MSG* msg, int iKeyState)
 {
-	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState)
+	if (msg->message == WM_KEYDOWN && !iKeyState)
 	{
-		OnCommand(DELETE_MSG, 0);
-		return 1;
+		if (msg->wParam == VK_DELETE)
+		{
+			OnCommand(DELETE_MSG, 0);
+			return 1;
+		}
+		else if (msg->wParam == VK_RETURN)
+		{
+			MarkerItem* mi = (MarkerItem*)m_pLists.Get(0)->EnumSelected(NULL);
+			if (mi)
+				SetEditCurPos(mi->m_dPos, m_bScroll, m_bPlayOnSel);
+			return 1;
+		}
 	}
 	return 0;
 }

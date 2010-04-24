@@ -28,27 +28,37 @@
 
 #pragma once
 
+class SWS_MarkerListWnd;
+
 class SWS_MarkerListView : public SWS_ListView
 {
 public:
-	SWS_MarkerListView(HWND hwndList, HWND hwndEdit);
+	SWS_MarkerListView(HWND hwndList, HWND hwndEdit, SWS_MarkerListWnd* pList);
 
 protected:
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void OnItemSelChanged(LPARAM item, int iState);
+	void OnItemClk(LPARAM item, int iCol, int iKeyState);
 	void OnItemDblClk(LPARAM item, int iCol);
 	int  OnItemSort(LPARAM item1, LPARAM item2);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	int  GetItemState(LPARAM item);
+
+private:
+	SWS_MarkerListWnd* m_pMarkerList;
 };
 
 class SWS_MarkerListWnd : public SWS_DockWnd
 {
 public:
 	SWS_MarkerListWnd();
-	void Update();
+	void Update(bool bForce = false);
 	double m_dCurPos;
+
+	WDL_String m_filter;
+	bool m_bPlayOnSel;
+	bool m_bScroll;
 	
 protected:
 	void OnInitDlg();

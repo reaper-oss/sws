@@ -202,7 +202,7 @@ void ImportSnapshot()
 	}
 }
 
-static SWS_LVColumn g_cols[] = { { 20, 2, "#" }, { 60, 3, "Name" }, { 60, 2, "Date" }, { 60, 2, "Time" } };
+static SWS_LVColumn g_cols[] = { { 20, 0, "#" }, { 60, 1, "Name" }, { 60, 0, "Date" }, { 60, 0, "Time" } };
 
 SWS_SnapshotsView::SWS_SnapshotsView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, 4, g_cols, "Snapshots View State", true)

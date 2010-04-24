@@ -1,3 +1,9 @@
+!v1.7.2 #2 (April 24, 2010)
+Markerlist updates:
++New filter box to select markers by description
++Options to scroll to and/or play from clicked marker (Issue 64)
+Fixes for crashes on some actions run with empty takes (Issue 129)
+
 !v1.7.2 #1 (April 23, 2010)
 Updated "Trim/untrim item left edge" action to handle play rates and when edit cursor is before/after item (Issue 121)
 Fixed Undo on "Trim/untrim item right edge" action

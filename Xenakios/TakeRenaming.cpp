@@ -115,7 +115,7 @@ void DoRenameSourceFileDialog666(COMMAND_T*)
 	for (int i=0;i<(int)thetakes.size();i++)
 	{
 		PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
-		if (strcmp(thesrc->GetType(),"SECTION")!=0 && thesrc->GetFileName() && thesrc->GetFileName()[0])
+		if (thesrc && strcmp(thesrc->GetType(),"SECTION")!=0 && thesrc->GetFileName() && thesrc->GetFileName()[0])
 		{
 			g_renameparams.curTakeInx=i+1;
 			string oldname;
@@ -141,16 +141,18 @@ void DoRenameSourceFileDialog666(COMMAND_T*)
 				for (j=0;j<(int)alltakes.size();j++)
 				{
 					PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",0);
-					if (thesrc->GetFileName() && strcmp(thesrc->GetType(),"SECTION")!=0)
+					if (thesrc && thesrc->GetFileName() && strcmp(thesrc->GetType(),"SECTION")!=0)
 					{
 						string fname;
 						fname.assign(thesrc->GetFileName());
 						if (oldname.compare(fname)==0)
 						{
 							PCM_source *newsrc=PCM_Source_CreateFromFile(newfilename.c_str());
-							GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",newsrc);
-							
-							delete thesrc;
+							if (newsrc)
+							{
+								GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",newsrc);
+								delete thesrc;
+							}
 						}
 					}
 				}
@@ -178,7 +180,7 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T*)
 	for (int i=0;i<(int)thetakes.size();i++)
 	{
 		PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
-		if (strcmp(thesrc->GetType(),"SECTION")!=0)
+		if (thesrc && strcmp(thesrc->GetType(),"SECTION")!=0)
 		{
 			char *oldtakename=(char*)GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",0);
 			g_renameparams.OldName.assign(oldtakename);
@@ -206,16 +208,19 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T*)
 					for (int j=0;j<(int)alltakes.size();j++)
 					{
 						PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",0);
-						if (thesrc->GetFileName() && strcmp(thesrc->GetType(),"SECTION")!=0)
+						if (thesrc && thesrc->GetFileName() && strcmp(thesrc->GetType(),"SECTION")!=0)
 						{
 							string fname;
 							fname.assign(thesrc->GetFileName());
 							if (oldname.compare(fname)==0)
 							{
 								PCM_source *newsrc=PCM_Source_CreateFromFile(newfilename.c_str());
-								GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",newsrc);
-								GetSetMediaItemTakeInfo(alltakes[j],"P_NAME",(char*)g_renameparams.NewName.c_str());
-								delete thesrc;
+								if (newsrc)
+								{
+									GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",newsrc);
+									GetSetMediaItemTakeInfo(alltakes[j],"P_NAME",(char*)g_renameparams.NewName.c_str());
+									delete thesrc;
+								}
 							}
 						}
 					}

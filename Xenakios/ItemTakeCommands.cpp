@@ -413,24 +413,29 @@ void DoChooseNewSourceFileForSelTakes(COMMAND_T*)
 			{
 				CurTake=TheTakes->Get(i);
 				ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-			
-				if (strcmp(ThePCMSource->GetType(), "SECTION") != 0)
+				if (ThePCMSource)
 				{
-					PCM_source *NewPCMSource = PCM_Source_CreateFromFile(cFileName);
-					if (NewPCMSource!=0)
+					if (strcmp(ThePCMSource->GetType(), "SECTION") != 0)
 					{
-						GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NewPCMSource);
-						delete ThePCMSource;
+						PCM_source *NewPCMSource = PCM_Source_CreateFromFile(cFileName);
+						if (NewPCMSource!=0)
+						{
+							GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NewPCMSource);
+							delete ThePCMSource;
+						}
 					}
-				}
-				else
-				{
-					PCM_source *TheOtherPCM=ThePCMSource->GetSource();
-					if (TheOtherPCM!=0)
+					else
 					{
-						PCM_source *NewPCMSource=PCM_Source_CreateFromFile(cFileName);
-						ThePCMSource->SetSource(NewPCMSource);
-						delete TheOtherPCM;
+						PCM_source *TheOtherPCM=ThePCMSource->GetSource();
+						if (TheOtherPCM!=0)
+						{
+							PCM_source *NewPCMSource=PCM_Source_CreateFromFile(cFileName);
+							if (NewPCMSource)
+							{
+								ThePCMSource->SetSource(NewPCMSource);
+								delete TheOtherPCM;
+							}
+						}
 					}
 				}
 			}
@@ -969,7 +974,7 @@ void DoAnalyzeAndShowPeakInItemMedia(COMMAND_T*)
 	{
 		MediaItem* mi = GetSelectedMediaItem(NULL, i);
 		PCM_source* pSrc = (PCM_source*)mi;
-		if (strcmp(pSrc->GetType(), "MIDI") != 0)
+		if (pSrc && strcmp(pSrc->GetType(), "MIDI") != 0)
 		{
 			pSrc = pSrc->Duplicate();
 			if (pSrc != NULL)
@@ -1008,7 +1013,7 @@ void DoFindItemPeak(COMMAND_T*)
 	{
 		MediaItem* mi = GetSelectedMediaItem(NULL, 0);
 		PCM_source* pSrc = (PCM_source*)mi;
-		if (strcmp(pSrc->GetType(), "MIDI") != 0)
+		if (pSrc && strcmp(pSrc->GetType(), "MIDI") != 0)
 		{
 			pSrc = pSrc->Duplicate();
 			if (pSrc)
@@ -1324,7 +1329,7 @@ void DoOpenAssociatedRPP(COMMAND_T*)
 		CurTake=TheTakes->Get(0); // we will only support first selected item for now
 		ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
 
-		if (ThePCMSource->GetFileName())
+		if (ThePCMSource && ThePCMSource->GetFileName())
 		{
 			char RPPFileNameBuf[1024];
 			sprintf(RPPFileNameBuf,"%s\\reaper.exe \"%s.RPP\"",GetExePath(), ThePCMSource->GetFileName());

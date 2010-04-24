@@ -138,6 +138,9 @@ void DoInsRndFileEx(bool RndLen,bool RndOffset,bool UseTimeSel)
 		if (TheTracks.size()>0)
 		{
 		PCM_source *NewPCM=PCM_Source_CreateFromFile(g_filenames->Get(filenameindex));
+		if (!NewPCM)
+			return;
+
 		MediaItem *NewItem=AddMediaItemToTrack(TheTracks[0]);
 		MediaItem_Take *NewTake=AddTakeToMediaItem(NewItem);
 		double TimeSelStart=0.0;

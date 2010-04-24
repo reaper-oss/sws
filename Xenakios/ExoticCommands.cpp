@@ -585,14 +585,17 @@ void DoCSoundPvoc()
 				//
 					MediaItem_Take *NewMediaTake=AddTakeToMediaItem(CurItem);
 				PCM_source *NewPCMSource=PCM_Source_CreateFromFile(ProjectPath);
-				NewPCMSource->Peaks_Clear(true);
-				GetSetMediaItemTakeInfo(NewMediaTake,"P_SOURCE",NewPCMSource);
-				GetSetMediaItemInfo(CurItem,"I_CURTAKE",&LastTake);
-				GetSetMediaItemInfo(CurItem,"D_LENGTH",&OutDur);
-				char BetterTakeName[512];
-				char *OldTakeName=(char*)GetSetMediaItemTakeInfo(OldTake,"P_NAME",NULL);
-				sprintf(BetterTakeName,"%s_PVOC_win%d_%.2fx_%.2fsemitones",OldTakeName,g_last_PVOC_Params.fftSize, StretchFact,g_last_PVOC_Params.Transpose);
-				GetSetMediaItemTakeInfo(NewMediaTake,"P_NAME",BetterTakeName);
+				if (NewPCMSource)
+				{
+					NewPCMSource->Peaks_Clear(true);
+					GetSetMediaItemTakeInfo(NewMediaTake,"P_SOURCE",NewPCMSource);
+					GetSetMediaItemInfo(CurItem,"I_CURTAKE",&LastTake);
+					GetSetMediaItemInfo(CurItem,"D_LENGTH",&OutDur);
+					char BetterTakeName[512];
+					char *OldTakeName=(char*)GetSetMediaItemTakeInfo(OldTake,"P_NAME",NULL);
+					sprintf(BetterTakeName,"%s_PVOC_win%d_%.2fx_%.2fsemitones",OldTakeName,g_last_PVOC_Params.fftSize, StretchFact,g_last_PVOC_Params.Transpose);
+					GetSetMediaItemTakeInfo(NewMediaTake,"P_NAME",BetterTakeName);
+				}
 				Main_OnCommand(40047,0); // build any missing peaks
 				SetForegroundWindow(g_hwndParent);
 				Undo_OnStateChangeEx("Phase Vocode Item As New Take",4,-1);

@@ -344,7 +344,7 @@ void DoRubberBandProcessing()
 					FirstSelFound=true;				
 					
 					ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					if (! ThePCMSource->GetFileName())
+					if (!ThePCMSource || !ThePCMSource->GetFileName())
 						break;
 
 					char ProjectPath[1024];
@@ -523,7 +523,7 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 				REAPER_cue *CurCue;
 				int cueIndx=0;
 				bool morecues=true;
-				while (morecues==true)
+				while (TakeSource && morecues)
 				{
 					int rc=TakeSource->Extended(PCM_SOURCE_EXT_ENUMCUES,(void *)(INT_PTR)cueIndx,&CurCue,NULL);
 					if (rc==0) break;
@@ -748,7 +748,7 @@ void DoDeleteItemAndMedia(COMMAND_T*)
 					CurTake=GetMediaItemTake(CurItem,k);
 					PCM_source *CurPCM;
 					CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					if (CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
+					if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
 					{
 						char buf[2000];
 						sprintf(buf,"Do you really want to immediately delete file (NO UNDO) %s?",CurPCM->GetFileName());
@@ -816,7 +816,7 @@ void DoDelSelItemAndSendActiveTakeMediaToRecycler(COMMAND_T*)
 				{
 					CurTake=GetMediaItemTake(CurItem,k);
 					PCM_source* CurPCM = (PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					if (CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
+					if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
 					{
 						SendFileToRecycleBin(CurPCM->GetFileName());
 						char fileName[512];
@@ -853,7 +853,7 @@ void DoNukeTakeAndSourceMedia(COMMAND_T*)
 				CurTake=GetMediaItemTake(CurItem,-1);
 				PCM_source *CurPCM;
 				CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-				if (CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
+				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
 				{
 					char buf[2000];
 					sprintf(buf,"Do you really want to immediately delete file (NO UNDO) %s?",CurPCM->GetFileName());
@@ -896,7 +896,7 @@ void DoDeleteActiveTakeAndRecycleSourceMedia(COMMAND_T*)
 				CurTake=GetMediaItemTake(CurItem,-1);
 				PCM_source *CurPCM;
 				CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-				if (CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
+				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
 				{
 					SendFileToRecycleBin(CurPCM->GetFileName());	
 					char fileName[512];
@@ -1383,7 +1383,7 @@ void ReplaceItemSourceFileFromFolder(bool askforFolder,int mode,int param,bool o
 	for (i=0;i<(int)thetakes.size();i++)
 	{
 		PCM_source* src=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
-		if (!src->GetFileName())
+		if (!src || !src->GetFileName())
 			break;
 
 		string newsrcfn;

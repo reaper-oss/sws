@@ -83,6 +83,9 @@ void DoRenameTakesWithBWAVDesc(COMMAND_T*)
 						sz=8192;
 						CurTake=GetMediaItemTake(CurItem,takeInd);
 						ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
+						if (!ThePCMSource) 
+							break;
+
 						sz=ThePCMSource->Extended(PCM_SOURCE_EXT_GETMETADATA,(void*)"DESC",Buf,(void *)sz);
 						if (sz>0)
 						{

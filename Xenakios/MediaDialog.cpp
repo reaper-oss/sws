@@ -89,6 +89,8 @@ void GetAllProjectTakes(vector<t_project_take>& ATakeList)
 			{
 				CurTake=GetMediaItemTake(CurItem,k);
 				PCM_source *ThePCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
+				if (!ThePCM)
+					break;
 				t_project_take TakeBlah;
 				bool pureMIDItake=false;
 
@@ -293,15 +295,13 @@ int ReplaceTakeSourceFile(MediaItem_Take *TheTake,string TheNewFile)
 		if (strcmp(ThePCM->GetType(),"SECTION")!=0)
 		{
 			ThePCM->SetFileName(TheNewFile.c_str());
-		} else
+		}
+		else
 		{
 			//MessageBox(g_hMediaDlg,"it's a section!","jep",MB_OK);
 			PCM_source *TheOtherPCM=ThePCM->GetSource();
 			if (TheOtherPCM!=0)
-			{
-				
 				TheOtherPCM->SetFileName(TheNewFile.c_str());
-			}
 		}
 		return 0;
 	}
@@ -563,7 +563,8 @@ int NumTimesFileUsedInProject(string &fn, vector<MediaItem_Take*>& thetakes)
 			if (strcmp(src->GetType(),"SECTION")==0)
 			{
 				PCM_source *src2=src->GetSource();
-				cmpfn.assign(src2->GetFileName() ? src2->GetFileName() : "");
+				if (src2)
+					cmpfn.assign(src2->GetFileName() ? src2->GetFileName() : "");
 			}
 			if (fn.compare(cmpfn)==0)
 				matches++;

@@ -547,10 +547,13 @@ void PerformPropertyChanges()
 			if (strcmp(g_IIproperties[j].APIAccessID,"D_STARTOFFS")==0 && g_IIproperties[j].enabled)
 			{
 				PCM_source *source=(PCM_source*)GetSetMediaItemTakeInfo(g_IItakes[i],"P_SOURCE",0);
-				double takesourceLen=source->GetLength();
-				newItemPropValue=0.0+(takesourceLen*interpValue);
-				//newItemPropValue=pow(2.0,newItemPropValue/12.0);
-				GetSetMediaItemTakeInfo(g_IItakes[i],"D_STARTOFFS",&newItemPropValue);
+				if (source)
+				{
+					double takesourceLen=source->GetLength();
+					newItemPropValue=0.0+(takesourceLen*interpValue);
+					//newItemPropValue=pow(2.0,newItemPropValue/12.0);
+					GetSetMediaItemTakeInfo(g_IItakes[i],"D_STARTOFFS",&newItemPropValue);
+				}
 			}
 			if (strcmp(g_IIproperties[j].Name,"Take pitch (resampled)")==0 && g_IIproperties[j].enabled)
 			{

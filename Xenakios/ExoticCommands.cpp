@@ -489,8 +489,8 @@ void DoCSoundPvoc()
 				if (GetMediaItemNumTakes(CurItem)>0)
 				{
 					CurTake=GetMediaItemTake(CurItem,-1);
-					FirstSelFound=true;				
 					ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
+					FirstSelFound = (ThePCMSource && ThePCMSource->GetFileName());				
 				}
 				
 			} 
@@ -526,7 +526,7 @@ void DoCSoundPvoc()
 	MediaItem_Take *OldTake=CurTake;
 	//MessageBox(g_hwndParent,g_last_PVOC_Params.fftSize,"info",MB_OK);
 	int FFTSize=g_last_PVOC_Params.fftSize;
-	//
+	//JFB ThePCMSource->GetFileName() validity checked above..
 	sprintf(CsCMDline,"csound -d -U pvanal -n%d -b%f -d%f \"%s\" \"%s\"",FFTSize, MediaOffset,ItemLen,ThePCMSource->GetFileName(), CsAnalFilePath);
 	bool CsoundSuccesfull=false;
 	//MessageBox(g_hwndParent,CsCMDline,"info",MB_OK);

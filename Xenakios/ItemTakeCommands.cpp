@@ -1323,11 +1323,14 @@ void DoOpenAssociatedRPP(COMMAND_T*)
 	{
 		CurTake=TheTakes->Get(0); // we will only support first selected item for now
 		ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-		char RPPFileNameBuf[1024];
 
-		sprintf(RPPFileNameBuf,"%s\\reaper.exe \"%s.RPP\"",GetExePath(), ThePCMSource->GetFileName());
-		if (!DoLaunchExternalTool(RPPFileNameBuf))
-			MessageBox(g_hwndParent,"Could not launch REAPER.","Error",MB_OK);
+		if (ThePCMSource->GetFileName())
+		{
+			char RPPFileNameBuf[1024];
+			sprintf(RPPFileNameBuf,"%s\\reaper.exe \"%s.RPP\"",GetExePath(), ThePCMSource->GetFileName());
+			if (!DoLaunchExternalTool(RPPFileNameBuf))
+				MessageBox(g_hwndParent,"Could not launch REAPER.","Error",MB_OK);
+		}
 	}
 	else
 		MessageBox(g_hwndParent,"None or more than 1 item selected","Error",MB_OK);
@@ -1527,13 +1530,15 @@ int OpenInExtEditor(int editorIdx)
 		//int curTakeIndex=*(int*)GetSetMediaItemInfo(CurItem,"I_CURTAKE",NULL);
 		MediaItem_Take *CopyTake=GetMediaItemTake(CurItem,-1);
 		PCM_source *ThePCM=(PCM_source*)GetSetMediaItemTakeInfo(CopyTake,"P_SOURCE",NULL);
-		char ExeString[2048];
-		if (editorIdx==0 && g_external_app_paths.PathToAudioEditor1)
-			sprintf(ExeString,"\"%s\" \"%s\"",g_external_app_paths.PathToAudioEditor1,ThePCM->GetFileName());
-		else if (editorIdx==1 && g_external_app_paths.PathToAudioEditor2)
-			sprintf(ExeString,"\"%s\" \"%s\"",g_external_app_paths.PathToAudioEditor2,ThePCM->GetFileName());
-		
-		DoLaunchExternalTool(ExeString);
+		if (ThePCM && ThePCM->GetFileName())
+		{
+			char ExeString[2048];
+			if (editorIdx==0 && g_external_app_paths.PathToAudioEditor1)
+				sprintf(ExeString,"\"%s\" \"%s\"",g_external_app_paths.PathToAudioEditor1,ThePCM->GetFileName());
+			else if (editorIdx==1 && g_external_app_paths.PathToAudioEditor2)
+				sprintf(ExeString,"\"%s\" \"%s\"",g_external_app_paths.PathToAudioEditor2,ThePCM->GetFileName());
+			DoLaunchExternalTool(ExeString);
+		}
 	}
 
 	return -666;	

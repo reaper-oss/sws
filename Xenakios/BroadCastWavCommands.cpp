@@ -134,22 +134,22 @@ WDL_DLGRET NewRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				SetDlgItemText(hwnd,IDC_TAKENAME_EDIT,TxtBuf);
 				PCM_source *ThePCM=0;
 				ThePCM=(PCM_source*)GetSetMediaItemTakeInfo(g_takerenameParams.TakeToRename,"P_SOURCE",NULL);
-				if (ThePCM!=0)
+				if (ThePCM!=0 && ThePCM->GetFileName())
 				{
 					if (strcmp(ThePCM->GetType(),"SECTION")!=0)
 					{
-						SetDlgItemText(hwnd,IDC_FULLFILENAME,ThePCM->GetFileName());
-				
-						strcpy(FullFileName,ThePCM->GetFileName());
+						SetDlgItemText(hwnd,IDC_FULLFILENAME, ThePCM->GetFileName());
+						strcpy(FullFileName, ThePCM->GetFileName());
 						ExtractFileNameEx(FullFileName,ShortFileName,true);
 						SetDlgItemText(hwnd,IDC_FILENAME_EDIT,ShortFileName);
-					} else
+					} 
+					else
 					{
 						PCM_source *TheOtherPCM=0;
 						TheOtherPCM= ThePCM->GetSource();
-						if (TheOtherPCM!=0)
+						if (TheOtherPCM!=0 && TheOtherPCM->GetFileName())
 						{
-							SetDlgItemText(hwnd,IDC_FULLFILENAME,TheOtherPCM->GetFileName());
+							SetDlgItemText(hwnd,IDC_FULLFILENAME, TheOtherPCM->GetFileName());
 							strcpy(FullFileName,TheOtherPCM->GetFileName());
 							ExtractFileNameEx(FullFileName,ShortFileName,true);
 							SetDlgItemText(hwnd,IDC_FILENAME_EDIT,ShortFileName);
@@ -263,7 +263,7 @@ int ReplaceProjectMedia(char *OldFileName,char *NewFileName)
 				CurTake=GetMediaItemTake(CurItem,k);
 				PCM_source *ThePCM=0;
 				ThePCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-				if (ThePCM!=0)
+				if (ThePCM!=0 && ThePCM->GetFileName())
 				{
 					if (strcmp(ThePCM->GetType(),"SECTION")!=0)
 					{

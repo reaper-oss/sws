@@ -100,7 +100,7 @@ void GetAllProjectTakes(vector<t_project_take>& ATakeList)
 				else
 				{
 					PCM_source *SectionFilePCM=ThePCM->GetSource();
-					TakeBlah.FileName=SectionFilePCM->GetFileName();
+					TakeBlah.FileName=(SectionFilePCM->GetFileName() ? SectionFilePCM->GetFileName() : ""); //JFB: dunno what it is behind (but safer I think..)
 				}
 				if (strcmp(ThePCM->GetType(),"MIDI")==0)
 				{
@@ -149,7 +149,7 @@ void GetProjectFileList(vector<t_mediafile_status>& AMediaList)
 						{
 							if (strcmp(ThePCM->GetType(),"SECTION")!=0)
 							{
-								if (strcmp(ThePCM->GetType(),"MIDI")==0 && strcmp(ThePCM->GetFileName(),"")==0)
+								if (strcmp(ThePCM->GetType(),"MIDI")==0 && ThePCM->GetFileName() && strcmp(ThePCM->GetFileName(),"")==0)
 									ispurelyMIDI=true;
 
 								if (ThePCM->GetFileName())
@@ -160,7 +160,7 @@ void GetProjectFileList(vector<t_mediafile_status>& AMediaList)
 							else
 							{
 								PCM_source *TheOtherPCM=ThePCM->GetSource();
-								if (TheOtherPCM!=0)
+								if (TheOtherPCM!=0 && TheOtherPCM->GetFileName())
 									FName.assign(TheOtherPCM->GetFileName());
 								else
 									FName.assign("no file...");
@@ -563,7 +563,7 @@ int NumTimesFileUsedInProject(string &fn, vector<MediaItem_Take*>& thetakes)
 			if (strcmp(src->GetType(),"SECTION")==0)
 			{
 				PCM_source *src2=src->GetSource();
-				cmpfn.assign(src2->GetFileName());
+				cmpfn.assign(src2->GetFileName() ? src2->GetFileName() : "");
 			}
 			if (fn.compare(cmpfn)==0)
 				matches++;

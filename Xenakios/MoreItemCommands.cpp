@@ -344,6 +344,9 @@ void DoRubberBandProcessing()
 					FirstSelFound=true;				
 					
 					ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
+					if (! ThePCMSource->GetFileName())
+						break;
+
 					char ProjectPath[1024];
 					char RenderOutName[1024];
 					GetProjectPath(ProjectPath,1024);
@@ -745,7 +748,7 @@ void DoDeleteItemAndMedia(COMMAND_T*)
 					CurTake=GetMediaItemTake(CurItem,k);
 					PCM_source *CurPCM;
 					CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					if (FileExists(CurPCM->GetFileName()))
+					if (CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
 					{
 						char buf[2000];
 						sprintf(buf,"Do you really want to immediately delete file (NO UNDO) %s?",CurPCM->GetFileName());
@@ -850,7 +853,7 @@ void DoNukeTakeAndSourceMedia(COMMAND_T*)
 				CurTake=GetMediaItemTake(CurItem,-1);
 				PCM_source *CurPCM;
 				CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-				if (FileExists(CurPCM->GetFileName()))
+				if (CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
 				{
 					char buf[2000];
 					sprintf(buf,"Do you really want to immediately delete file (NO UNDO) %s?",CurPCM->GetFileName());
@@ -1380,6 +1383,9 @@ void ReplaceItemSourceFileFromFolder(bool askforFolder,int mode,int param,bool o
 	for (i=0;i<(int)thetakes.size();i++)
 	{
 		PCM_source* src=(PCM_source*)GetSetMediaItemTakeInfo(thetakes[i],"P_SOURCE",0);
+		if (!src->GetFileName())
+			break;
+
 		string newsrcfn;
 		// get source file's directory, find it's media files...
 		string srcfn(src->GetFileName());
@@ -1634,7 +1640,7 @@ void DoSaveItemAsFile1(COMMAND_T*)
 		{
 			MediaItem_Take* ptake=GetMediaItemTake(theitems[i],-1);
 			PCM_source *src=(PCM_source*)GetSetMediaItemTakeInfo(ptake,"P_SOURCE",0);
-			if (src)
+			if (src && src->GetFileName())
 			{
 				_snprintf(savedlgtitle, 2048, "Save item \"%s\" as", (char*)GetSetMediaItemTakeInfo(ptake, "P_NAME", 0));
 				if (BrowseForSaveFile(savedlgtitle, ppath, NULL, "WAV files\0*.wav\0", newfilename, 512))

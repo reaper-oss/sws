@@ -141,7 +141,7 @@ void DoRenameSourceFileDialog666(COMMAND_T*)
 				for (j=0;j<(int)alltakes.size();j++)
 				{
 					PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",0);
-					if (strcmp(thesrc->GetType(),"SECTION")!=0)
+					if (thesrc->GetFileName() && strcmp(thesrc->GetType(),"SECTION")!=0)
 					{
 						string fname;
 						fname.assign(thesrc->GetFileName());
@@ -206,7 +206,7 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T*)
 					for (int j=0;j<(int)alltakes.size();j++)
 					{
 						PCM_source *thesrc=(PCM_source*)GetSetMediaItemTakeInfo(alltakes[j],"P_SOURCE",0);
-						if (strcmp(thesrc->GetType(),"SECTION")!=0)
+						if (thesrc->GetFileName() && strcmp(thesrc->GetType(),"SECTION")!=0)
 						{
 							string fname;
 							fname.assign(thesrc->GetFileName());

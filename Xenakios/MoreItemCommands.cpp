@@ -813,7 +813,7 @@ void DoDelSelItemAndSendActiveTakeMediaToRecycler(COMMAND_T*)
 				{
 					CurTake=GetMediaItemTake(CurItem,k);
 					PCM_source* CurPCM = (PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-					if (FileExists(CurPCM->GetFileName()))
+					if (CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
 					{
 						SendFileToRecycleBin(CurPCM->GetFileName());
 						char fileName[512];
@@ -893,7 +893,7 @@ void DoDeleteActiveTakeAndRecycleSourceMedia(COMMAND_T*)
 				CurTake=GetMediaItemTake(CurItem,-1);
 				PCM_source *CurPCM;
 				CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-				if (FileExists(CurPCM->GetFileName()))
+				if (CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
 				{
 					SendFileToRecycleBin(CurPCM->GetFileName());	
 					char fileName[512];

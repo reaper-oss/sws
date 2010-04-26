@@ -350,7 +350,12 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 
 		// Key wasn't handled by the DockWnd, check for keys to send to LV
 		if (pLV)
-			return pLV->LVKeyHandler(msg, iKeys);
+		{
+			int iRet = pLV->LVKeyHandler(msg, iKeys);
+			if (iRet)
+				return iRet;
+			return -666; // We don't want the key, so force it to main reaper wnd
+		}
 	}
 	return 0;
 }

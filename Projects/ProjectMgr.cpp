@@ -93,10 +93,18 @@ void OpenProjectsFromList(COMMAND_T*)
 			*pNewProjOpts = 0;
 			int i = 0;
 
-			if (MessageBox(g_hwndParent, "Close active tabs first?", "SWS Project List Open", MB_YESNO) == IDYES)
-				Main_OnCommand(40886, 0);
-			else
-				i = 1;
+			int iProjects = -1;
+			while (Enum_Projects(++iProjects, NULL, 0)); // Count projects
+			char cName[10];
+			Enum_Projects(-1, cName, 10);
+
+			if (iProjects != 1 || cName[0] != 0 || GetNumTracks() != 0)
+			{
+				if (MessageBox(g_hwndParent, "Close active tabs first?", "SWS Project List Open", MB_YESNO) == IDYES)
+					Main_OnCommand(40886, 0);
+				else
+					i = 1;
+			}
 
 			while(fgets(filename, 256, f))
 			{

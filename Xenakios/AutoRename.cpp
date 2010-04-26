@@ -381,7 +381,7 @@ void DoAutoRename(COMMAND_T*)
 					NewTakeName.assign("");
 					CurItem=(MediaItem*)GetSetMediaItemTakeInfo(g_VecTakesToRename[i],"P_ITEM",NULL);
 					CurTrack=(MediaTrack*)GetSetMediaItemInfo(CurItem,"P_TRACK",NULL);
-					if (PrevTrack && CurTrack!=PrevTrack) 
+					if (CurTrack!=PrevTrack) 
 					{
 						TrackItemCounter=0;
 						PrevTrack=CurTrack;

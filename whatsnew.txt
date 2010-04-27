@@ -1,6 +1,10 @@
+!v1.7.2 #4 (April 26, 2010)
+New action "Go to end of project, including markers/regions"
+Fixed crash when cancelling Add Related Project
+
 !v1.7.2 #3 (April 26, 2010)
 Don't ask to close tabs on project list load if there's no project open
-Fixed issue 95: Take autorenaming broken
+Fixed issue 95: Take autorenaming fixed
 Fixed issue 133: Unhandled keystrokes in dialogs now pass through to Reaper
 
 !v1.7.2 #2 (April 24, 2010)

@@ -207,3 +207,22 @@ void SelPrevRegion(COMMAND_T*)
 	else if (bRegions)
 		GetSet_LoopTimeRange(true, true, &d1, &d2, false);
 }
+
+// Goto the end of the project, *including* perhaps marker ends
+void GotoEndInclMarkers(COMMAND_T*)
+{
+	Main_OnCommand(40043, 0);
+	int x = 0;
+	double dRegStart, dRegEnd;
+	bool bReg;
+	double dMarkerEnd = -DBL_MAX;
+	while ((x = EnumProjectMarkers(x, &bReg, &dRegStart, &dRegEnd, NULL, NULL)))
+	{
+		if (bReg && dRegEnd > dMarkerEnd)
+			dMarkerEnd = dRegEnd;
+		else if (!bReg && dRegStart > dMarkerEnd)
+			dMarkerEnd = dRegStart;
+	}
+	if (dMarkerEnd > GetCursorPosition())
+		SetEditCurPos(dMarkerEnd, true, true);
+}

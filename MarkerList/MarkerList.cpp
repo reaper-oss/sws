@@ -558,7 +558,7 @@ static bool MarkerListEnabled(COMMAND_T*)
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { { FSHIFT   | FCONTROL | FVIRTKEY, 'M', 0 }, "SWS: Open marker list" },				"SWSMARKERLIST1",  OpenMarkerList,    "SWS MarkerList", 0, MarkerListEnabled },
+	{ { { FSHIFT | FCONTROL | FVIRTKEY, 'M', 0 }, "SWS: Open marker list" },				"SWSMARKERLIST1",  OpenMarkerList,    "SWS MarkerList", 0, MarkerListEnabled },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL,                                "SWS: Load marker set" },					"SWSMARKERLIST2",  LoadMarkerList,    "Load marker set...",   },
 	{ { DEFACCEL,                                "SWS: Save marker set" },					"SWSMARKERLIST3",  SaveMarkerList,    "Save marker set...",   },
@@ -578,6 +578,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL,								"SWS: Export formatted marker list to clipboard" },	"SWSMARKERLIST11", ExportToClipboard, "Export formatted marker list to clipboard", },
 	{ { DEFACCEL,								"SWS: Exported marker list format..." },		"SWSMARKERLIST12",	ExportFormat,      "Export format...", },
+
+	// no menu
+	{ { DEFACCEL, "SWS: Go to end of project, including markers/regions" },					"SWS_PROJEND",		GotoEndInclMarkers, },
+
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 

@@ -140,13 +140,14 @@ void AddRelatedProject(COMMAND_T* = NULL)
 
 	char* filename = BrowseForFiles("Select related project(s)", cPath, NULL, false, "Reaper Project (*.RPP)\0*.RPP");
 	char* pBuf = filename;
-	while(filename[0])
-	{
-		g_relatedProjects.Get()->Add(new WDL_String(filename));
-		filename += strlen(filename) +1;
-	}
 	if (pBuf)
 	{
+		while(filename[0])
+		{
+			g_relatedProjects.Get()->Add(new WDL_String(filename));
+			filename += strlen(filename) +1;
+		}
+
 		free(pBuf);
 		Undo_OnStateChangeEx("Add related project(s)", UNDO_STATE_MISCCFG, -1);
 	}

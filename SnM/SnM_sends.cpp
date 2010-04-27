@@ -29,9 +29,14 @@
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
 
+WDL_PtrList<WDL_PtrList<t_SendRcv> > g_sndTrackClipboard; 
+WDL_PtrList<WDL_PtrList<t_SendRcv> > g_rcvTrackClipboard; 
+WDL_PtrList<WDL_PtrList<t_SendRcv> > g_sndClipboard;
+WDL_PtrList<WDL_PtrList<t_SendRcv> > g_rcvClipboard;
+
 
 ///////////////////////////////////////////////////////////////////////////////
-// Cue bus 
+// Cue buss 
 ///////////////////////////////////////////////////////////////////////////////
 
 // Adds a receive (with vol & pan from source track for pre-fader)
@@ -62,17 +67,27 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 	return update;
 }
 
-// Adds a cue bus track from track selection
+// Adds a cue buss track from track selection
 // _busName
 // _type:   reaper's type
 //          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
 // _undoMsg NULL=no undo
-bool cueTrack(char * _busName, int _type, const char * _undoMsg, 
+bool cueTrack(const char* _busName, int _type, const char* _undoMsg, 
 			  bool _showRouting, int _soloGrp, 
-			  WDL_String* _chunk, 
+			  char* _trTemplatePath, 
 			  bool _sendToMaster, int* _hwOuts) //optional prms
 {
 	bool updated = false;
+
+	WDL_String chunk;
+	if (_trTemplatePath && !loadTrackTemplate(_trTemplatePath, &chunk))
+	{
+		char err[512] = "";
+		sprintf(err, "Cue buss not created!\nInvalid track template file: %s", _trTemplatePath);
+		MessageBox(GetMainHwnd(), err, "Error", MB_OK);
+		return false;
+	}
+
 	MediaTrack * cueTr = NULL;
 	SNM_SendPatcher* p = NULL;
 	for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
@@ -88,11 +103,11 @@ bool cueTrack(char * _busName, int _type, const char * _undoMsg,
 				InsertTrackAtIndex(GetNumTracks(), false);
 				TrackList_AdjustWindows(false);
 				cueTr = CSurf_TrackFromID(GetNumTracks(), false);
-				GetSetMediaTrackInfo(cueTr, "P_NAME", _busName);
+				GetSetMediaTrackInfo(cueTr, "P_NAME", (void*)_busName);
 				p = new SNM_SendPatcher(cueTr);
-				if (_chunk)
+				if (chunk.GetLength())
 				{
-					p->SetChunk(_chunk, 1);
+					p->SetChunk(&chunk, 1);
 					p->RemoveIds(); // *HOT*
 				}
 				updated = true;
@@ -114,7 +129,7 @@ bool cueTrack(char * _busName, int _type, const char * _undoMsg,
 		updated |= (addSoloToGroup(cueTr, _soloGrp, false, p) > 0); // nop if invalid prms
 
 		// send to master/parent init
-		if (!_chunk)
+		if (!chunk.GetLength())
 		{
 			WDL_String mainSend("MAINSEND 1");
 			if (!_sendToMaster)
@@ -170,19 +185,29 @@ void cueTrackPrompt(COMMAND_T* _ct) {
 	SetFocus(hwnd);
 }
 
-void cueTrack(COMMAND_T* _ct) {
-	cueTrack("Cue Bus", (int)_ct->user, SNM_CMD_SHORTNAME(_ct));
+void cueTrack(COMMAND_T* _ct) 
+{
+	char busName[BUFFER_SIZE] = "";
+	char trTemplatePath[BUFFER_SIZE] = "";
+	int reaType, soloGrp, hwOuts[8];
+	bool trTemplate,showRouting,sendToMaster;
+	readCueBusIniFile(busName, &reaType, &trTemplate, trTemplatePath, &showRouting, &soloGrp, &sendToMaster, hwOuts);
+
+	cueTrack(
+		busName, 
+		(_ct->user < 0 ? reaType : _ct->user), 
+		SNM_CMD_SHORTNAME(_ct), 
+		showRouting, 
+		soloGrp, 
+		trTemplate ? trTemplatePath : NULL, 
+		sendToMaster, 
+		hwOuts);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Cut/Copy/Paste: track with sends, routings
 ///////////////////////////////////////////////////////////////////////////////
-
-WDL_PtrList<WDL_PtrList<t_SendRcv> > g_sndTrackClipboard; 
-WDL_PtrList<WDL_PtrList<t_SendRcv> > g_rcvTrackClipboard; 
-WDL_PtrList<WDL_PtrList<t_SendRcv> > g_sndClipboard;
-WDL_PtrList<WDL_PtrList<t_SendRcv> > g_rcvClipboard;
 
 MediaTrack* SNM_GuidToTrack(const char* _guid)
 {
@@ -232,8 +257,8 @@ bool FillIOFromReaper(t_SendRcv* send, MediaTrack* src, MediaTrack* dest, int ca
 //		send->srcGUID = GetTrackGUID(src);
 //		send->destGUID = GetTrackGUID(dest);
 		send->mute = *(bool*)GetSetTrackSendInfo(tr, categ, idx, "B_MUTE", NULL);
-		send->phase = *(int*)GetSetTrackSendInfo(tr, categ, idx, "B_PHASE", NULL);
-		send->mono = *(int*)GetSetTrackSendInfo(tr, categ, idx, "B_MONO", NULL);
+		send->phase = *(bool*)GetSetTrackSendInfo(tr, categ, idx, "B_PHASE", NULL);
+		send->mono = *(bool*)GetSetTrackSendInfo(tr, categ, idx, "B_MONO", NULL);
 		send->vol = *(double*)GetSetTrackSendInfo(tr, categ, idx, "D_VOL", NULL);
 		send->pan = *(double*)GetSetTrackSendInfo(tr, categ, idx, "D_PAN", NULL);
 		send->panl = *(double*)GetSetTrackSendInfo(tr, categ, idx, "D_PANLAW", NULL);
@@ -479,6 +504,17 @@ void pasteReceives(COMMAND_T* _ct) {
 // Common
 ///////////////////////////////////////////////////////////////////////////////
 
+int GetComboSendIdxType(int _reaType) 
+{
+	switch(_reaType)
+	{
+		case 0: return 1;
+		case 3: return 2; 
+		case 1: return 3; 
+		default: return 1;
+	}
+	return 1; // in case _reaType comes from mars
+}
 
 const char* GetSendTypeStr(int _type) 
 {
@@ -549,3 +585,75 @@ void removeRouting(COMMAND_T* _ct)
 	Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); 
 }
 
+void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloGrp, bool* _sendToMaster, int* _hwOuts)
+{
+	if (_busName && _reaType && _trTemplate && _trTemplatePath && _showRouting && _soloGrp && _sendToMaster && _hwOuts)
+	{
+		char iniFilePath[BUFFER_SIZE] = "";
+		sprintf(iniFilePath,SNM_FORMATED_INI_FILE,GetExePath());
+
+		GetPrivateProfileString("LAST_CUEBUS","NAME","",_busName,BUFFER_SIZE,iniFilePath);
+
+		char reaType[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","REATYPE","3",reaType,16,iniFilePath);
+		*_reaType = atoi(reaType); // 0 if failed 
+
+		char trTemplate[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED","0",trTemplate,16,iniFilePath);
+		*_trTemplate = (atoi(trTemplate) == 1); // 0 if failed 
+
+		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH","",_trTemplatePath,BUFFER_SIZE,iniFilePath);
+
+		char showRouting[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","SHOW_ROUTING","1",showRouting,16,iniFilePath);
+		*_showRouting = (atoi(showRouting) == 1); // 0 if failed 
+
+		char sendToMaster[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT","0",sendToMaster,16,iniFilePath);
+		*_sendToMaster = (atoi(sendToMaster) == 1); // 0 if failed 
+
+		char soloGrp[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","SOLO_TRACK_GRP","32",soloGrp,16,iniFilePath);
+		*_soloGrp = atoi(soloGrp); // 0 if failed 
+
+		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
+		{
+			char slot[16] = "";
+			sprintf(slot,"HWOUT%d",i+1);
+
+			char hwOut[16] = "";
+			GetPrivateProfileString("LAST_CUEBUS",slot,"0",hwOut,BUFFER_SIZE,iniFilePath);
+			_hwOuts[i] = atoi(hwOut); // 0 if failed 
+		}
+	}
+}
+
+void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTemplatePath, bool _showRouting, int _soloGrp, bool _sendToMaster, int* _hwOuts)
+{
+	if (_busName && _trTemplatePath && _hwOuts)
+	{
+		char iniFilePath[BUFFER_SIZE] = "";
+		sprintf(iniFilePath,SNM_FORMATED_INI_FILE,GetExePath());
+		WritePrivateProfileString("LAST_CUEBUS","NAME",_busName,iniFilePath);
+		char type[16] = "";
+		sprintf(type,"%d",_type);
+		WritePrivateProfileString("LAST_CUEBUS","REATYPE",type,iniFilePath);
+		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED",_trTemplate ? "1" : "0",iniFilePath);
+		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH",_trTemplatePath,iniFilePath);
+		WritePrivateProfileString("LAST_CUEBUS","SHOW_ROUTING",_showRouting ? "1" : "0",iniFilePath);
+		WritePrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT",_sendToMaster ? "1" : "0",iniFilePath);
+		char soloGrp[16] = "";
+		sprintf(soloGrp,"%d",_soloGrp);
+		WritePrivateProfileString("LAST_CUEBUS","SOLO_TRACK_GRP",soloGrp,iniFilePath);
+
+		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
+		{
+			char slot[16] = "";
+			sprintf(slot,"HWOUT%d",i+1);
+
+			char hwOut[16] = "";
+			sprintf(hwOut,"%d",_hwOuts[i]);
+			WritePrivateProfileString("LAST_CUEBUS",slot,hwOut,iniFilePath);
+		}
+	}
+}

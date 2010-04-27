@@ -1,3 +1,41 @@
+FX chain actions:
++ Added http://stash.reaper.fm/5001/FXChainWnd.jpg|dockable view| for FX Chains (and related actions)
++ renamed all "Load/Paste FX chain.." actions into "Load/Apply FX chain..." (for the moment FX chains are replaced)
+
+Updated/Renamed "Create cue buss..." actions to use the last parameters saved in the cue buss window:
+- SWS/S&M: Create cue buss track from track selection, Pre-Fader (Post-FX)
+- SWS/S&M: Create cue buss track from track selection, Post-Fader (Post-Pan)
+- SWS/S&M: Create cue buss track from track selection, Pre-FX
+Added:
++ SWS/S&M: Create cue buss track from track selection, details http://forum.cockos.com/showpost.php?p=497192&postcount=21|here|.
++ save properties button in the cue buss window
+
+Updated all existing floating FX and FX chain window actions with new APIs
+=> OSX support
+=> Requires REAPER v3.45!
+
+Added floating FX and FX chain windows actions:
+notes: "(!)"  when the action can open a bunch of stuff..
++ SWS/S&M: Show all FX chain windows (!)
++ SWS/S&M: Toggle show all floating FX windows (!)
++ SWS/S&M: Show all floating FX windows (!)
++ SWS/S&M: Show all floating FX windows for selected track(s)
++ SWS/S&M: Close all floating FX windows, except focused one
++ SWS/S&M: Close all floating FX windows for selected track(s)
++ SWS/S&M: Toggle show all floating FX windows for selected track(s)
+
+For Alt-tabish switch between opened or focused FX windows:
++ SWS/S&M: Show previous floating FX window (and close others) for selected track(s)
++ SWS/S&M: Show next floating FX window (and close others) for selected track(s)
++ SWS/S&M: Focus previous floating FX window for selected track(s)
++ SWS/S&M: Focus next floating FX window for selected track(s)
++ SWS/S&M: Focus previous floating FX window
++ SWS/S&M: Focus next floating FX window
+ 
+Misc. & fixes:
++ Added action: SWS/S&M: Takes - Build lane(s) for selected items(s)
++ fixes: issue 130 & issue 131
+
 !v1.7.2 #4 (April 26, 2010)
 New action "Go to end of project, including markers/regions"
 Fixed crash when cancelling Add Related Project

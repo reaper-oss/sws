@@ -165,13 +165,14 @@ int countTakesByFilename(
 }
 
 // !_undoTitle: no undo
-int buildLanes(const char* _undoTitle) 
+// _mode: 0=for selected tracks, 1=for selected items
+int buildLanes(const char* _undoTitle, int _mode) 
 {
-	int updates = removeEmptyTakes((const char*)NULL, true, false, true);
+	int updates = removeEmptyTakes((const char*)NULL, true, false, (_mode==0), (_mode==1));
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
-		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		if (tr && _mode || (!_mode && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
 		{
 			// sore selected items and store the item with max. takes
 			WDL_PtrList<MediaItem> items; 
@@ -179,7 +180,7 @@ int buildLanes(const char* _undoTitle)
 			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 			{
 				MediaItem* item = GetTrackMediaItem(tr,j);
-				if (item) 
+				if (item && !_mode || (_mode && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))) 
 				{
 					items.Add(item);
 
@@ -263,7 +264,7 @@ int buildLanes(const char* _undoTitle)
 			// Remove "empty lanes" if needed
 			int lane = 0;
 			int emptyTakes = items.GetSize();
-			while (emptyTakes == items.GetSize() || lane < nbLanes)
+			while (items.GetSize() && (emptyTakes == items.GetSize() || lane < nbLanes))
 			{
 				emptyTakes = 0;
 				for (int j = 0; j < items.GetSize(); j++)
@@ -296,7 +297,7 @@ int buildLanes(const char* _undoTitle)
 }
 
 // no undo point if !_undoTitle
-bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel)
+bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel)
 {
 	bool updated = false;
 	for (int i = 0; i < GetNumTracks(); i++)
@@ -307,7 +308,7 @@ bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool
 			if (!_trSel || (_trSel && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
 			{
 				MediaItem* item = GetTrackMediaItem(tr,j);
-				if (item && (_trSel || (!_trSel && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))))
+				if (item && (!_itemSel || (_itemSel && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))))
 				{					
 					SNM_TakeParserPatcher p(item);
 					int k=0, kOriginal=0;
@@ -334,7 +335,7 @@ bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool
 							p.CancelUpdates();
 
 							bool removed = DeleteTrackMediaItem(tr, item);
-							if (removed) j--; //++ below!
+							if (removed) j--; 
 							updated |= removed;
 						}
 					}
@@ -481,7 +482,7 @@ void moveActiveTake(COMMAND_T* _ct)
 }
 
 void buildLanes(COMMAND_T* _ct) {
-	buildLanes(SNM_CMD_SHORTNAME(_ct));
+	buildLanes(SNM_CMD_SHORTNAME(_ct), _ct->user);
 }
 
 void selectTakeLane(COMMAND_T* _ct)

@@ -32,8 +32,13 @@
 #define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
 #define SNM_FORMATED_INI_FILE "%s\\Plugins\\S&M.ini"
 
+#define MAX_FXCHAIN_SLOTS 32 
+#define MAX_TRACK_GROUPS 32 
 #define SNM_MAX_HW_OUTS 8
-#define SNM_MAX_TRACK_GROUPS 32
+
+// Global vars
+extern WDL_String g_fxChainList[MAX_FXCHAIN_SLOTS]; 
+
 
 // *** SnM_Actions.cpp ***
 int SnMActionsInit();
@@ -73,77 +78,64 @@ void setTakeFXChain(const char* _title, int _slot, bool _activeOnly, bool _clear
 //void setActiveTakeFXChain(COMMAND_T* _ct);
 //void setAllTakesFXChain(COMMAND_T* _ct);
 
+void loadPasteTrackFXChain(const char* _title, int _slot);
+void setTrackFXChain(const char* _title, int _slot, bool _clear);
 void loadPasteTrackFXChain(COMMAND_T* _ct);
 void clearTrackFXChain(COMMAND_T* _ct);
-void setTrackFXChain(const char* _title, int _slot, bool _clear);
 void copyTrackFXChain(COMMAND_T* _ct);
 void cutTrackFXChain(COMMAND_T* _ct);
 void pasteTrackFXChain(COMMAND_T* _ct);
 
 int promptForSlot(const char* _title);
-void clearFXChainSlot(COMMAND_T* _ct);
-void showFXChainSlots(COMMAND_T* _ct);
-void loadStoreFXChain(int _slot, const char* _filename);
-void browseStoreFXChain(int _slot, const char* _title);
-void loadOrBrowseFXChain(int _slot, const char* _title);
-void readIniFile(int _slot, char* _buf, int _bufSize);
-void saveIniFile(int _slot, const char* _path);
+void clearFXChainSlotPrompt(COMMAND_T* _ct);
+void clearFXChainSlot(int _slot);
+bool loadStoreFXChain(int _slot, const char* _filename);
+bool browseStoreFXChain(int _slot);
+bool loadOrBrowseFXChain(int _slot);
+void readFXChainSlotIniFile(int _slot, char* _buf, int _bufSize);
+void saveFXChainSlotIniFile(int _slot, const char* _path);
+void copySlotToClipBoard(int _slot);
+void displayFXChain(int _slot);
 
 
 // *** SnM_Windows.cpp ***
-bool toggleShowHideWin(const char * _title); 
-bool closeWin(const char * _title); 
-void closeOrToggleWindows(bool _chain, bool _fx, bool _routing, bool _env, bool _toggle); 
-void closeRoutingWindows(COMMAND_T * _c); 
-void closeEnvWindows(COMMAND_T * _c); 
-void closeFloatingFXWindows(COMMAND_T * _c); 
-void closeFXChainsWindows(COMMAND_T * _c); 
- 
-void toggleRoutingWindows(COMMAND_T * _c); 
-void toggleEnvWindows(COMMAND_T * _c); 
-void toggleFXChainsWindows(COMMAND_T * _c); 
-  
-void showFXChain(MediaTrack* _tr, int _fx); 
-void showFXChain(COMMAND_T* _ct); 
-void floatFX(MediaTrack* _tr, int _fx); 
-void unfloatFX(MediaTrack* _tr, int _fx); 
-void floatFX(COMMAND_T* _ct); 
-void unfloatFX(COMMAND_T* _ct); 
-  
-void setMainWindowActive(COMMAND_T* _ct); 
-
- /* Later..
-#ifdef _WIN32
+//#ifdef _WIN32
 bool toggleShowHideWin(const char * _title);
 bool closeWin(const char * _title);
 void closeOrToggleAllWindows(bool _routing, bool _env, bool _toggle);
-void closeAllRoutingWindows(COMMAND_T * _c);
-void closeAllEnvWindows(COMMAND_T * _c);
-void toggleAllRoutingWindows(COMMAND_T * _c);
-void toggleAllEnvWindows(COMMAND_T * _c);
-#endif
+void closeAllRoutingWindows(COMMAND_T * _ct);
+void closeAllEnvWindows(COMMAND_T * _ct);
+void toggleAllRoutingWindows(COMMAND_T * _ct);
+void toggleAllEnvWindows(COMMAND_T * _ct);
+//#endif
 
 void showFXChain(COMMAND_T* _ct);
 void hideFXChain(COMMAND_T* _ct);
 void toggleFXChain(COMMAND_T* _ct);
 void showAllFXChainsWindows(COMMAND_T* _ct);
-void closeAllFXChainsWindows(COMMAND_T * _c);
-void toggleAllFXChainsWindows(COMMAND_T * _c);
+void closeAllFXChainsWindows(COMMAND_T * _ct);
+void toggleAllFXChainsWindows(COMMAND_T * _ct);
 
 void toggleFloatFX(MediaTrack* _tr, int _fx);
-void floatUnfloatFXs(bool _all, int _showFlag, int _fx = -1);
+void floatUnfloatTrackFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _selTracks);
+void floatUnfloatFXs(bool _all, int _showFlag, int _fx, bool _selTracks);
 void floatFX(COMMAND_T* _ct);
 void unfloatFX(COMMAND_T* _ct);
 void toggleFloatFX(COMMAND_T* _ct);
-void showAllFloatingFXWindows(COMMAND_T * _c);
-void closeAllFloatingFXWindows(COMMAND_T * _c);
-void toggleAllFloatingFXWindows(COMMAND_T * _c);
-
+void showAllFXWindows(COMMAND_T * _ct);
+void closeAllFXWindows(COMMAND_T * _ct);
+void closeAllFXWindowsExceptFocused(COMMAND_T * _ct);
+void toggleAllFXWindows(COMMAND_T * _ct);
+void floatOnlyFXWnd(COMMAND_T * _ct);
+int getFocusedFX(MediaTrack* _tr, int* _firstFound = NULL);
+int focusNextPreviousTrackFXWnd(MediaTrack* _tr, int _dir, bool _forceCycle);
+void focusNextPreviousSelTracksFXWnd(COMMAND_T * _ct);
+void focusNextPreviousAllTracksFXWnd(COMMAND_T * _ct);
 void setMainWindowActive(COMMAND_T* _ct);
-*/
+
 
 // *** SnM_Sends.cpp ***
-bool cueTrack(char * _busName, int _type, const char * _undoMsg, bool _showRouting = true, int _soloGrp = 0, WDL_String* _chunk = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
+bool cueTrack(const char* _busName, int _type, const char* _undoMsg, bool _showRouting = true, int _soloGrp = 0, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
 void cueTrackPrompt(COMMAND_T* _ct);
 void cueTrack(COMMAND_T* _ct);
 
@@ -163,10 +155,14 @@ void copyReceives(COMMAND_T* _ct);
 void cutReceives(COMMAND_T* _ct);
 void pasteReceives(COMMAND_T* _ct);
 
+int GetComboSendIdxType(int _reaType) ;
 const char* GetSendTypeStr(int _type);
 void removeSends(COMMAND_T* _ct);
 void removeReceives(COMMAND_T* _ct);
 void removeRouting(COMMAND_T* _ct);
+
+void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloGrp, bool* _sendToMaster, int* _hwOuts);
+void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTemplatePath, bool _showRouting, int _soloGrp, bool _sendToMaster, int* _hwOuts);
 
 
 // *** SnM_Item.cpp ***
@@ -176,8 +172,8 @@ bool isEmptyMidi(MediaItem_Take* _take);
 void setEmptyTakeChunk(WDL_String* _chunk);
 bool addEmptyTake(MediaItem* _item);
 int findFirstTakeByFilename(MediaItem* _item, const char* _takeName, bool* _alreadyFound);
-int buildLanes(const char* _undoTitle);
-bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel = false);
+int buildLanes(const char* _undoTitle, int _mode);
+bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel = false, bool _itemSel = true);
 void clearTake(COMMAND_T* _ct);
 void moveTakes(COMMAND_T* _ct);
 void moveActiveTake(COMMAND_T* _ct);
@@ -204,6 +200,13 @@ void selectItemsByNamePrompt(COMMAND_T* _ct);
 // *** SnM_Track.cpp ***
 int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPatcher* _cpp);
 bool loadTrackTemplate(char* _filename, WDL_String* _chunk);
+
+
+// *** SnM_FXChainView.cpp ***
+int FXChainListInit();
+int FXChainListInit();
+void FXChainListExit();
+void OpenFXChainList(COMMAND_T*);
 
 
 // *** GUIs ***

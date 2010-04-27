@@ -1,5 +1,6 @@
 FX chain actions:
 + Added http://stash.reaper.fm/5001/FXChainWnd.jpg|dockable view| for FX Chains (and related actions)
++ Added action "SWS/S&M: Open fx chains window" action
 + renamed all "Load/Paste FX chain.." actions into "Load/Apply FX chain..." (for the moment FX chains are replaced)
 
 Updated/Renamed "Create cue buss..." actions to use the last parameters saved in the cue buss window:

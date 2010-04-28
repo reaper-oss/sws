@@ -186,6 +186,9 @@ void removeAllEmptyTakes(COMMAND_T* _ct);
 void showHideTakeVolEnvelope(COMMAND_T* _ct); 
 void showHideTakePanEnvelope(COMMAND_T* _ct);
 void showHideTakeMuteEnvelope(COMMAND_T* _ct);
+bool ShowTakeEnvVol(MediaItem_Take* _take);
+bool ShowTakeEnvPan(MediaItem_Take* _take);
+bool ShowTakeEnvMute(MediaItem_Take* _take);
 
 
 // *** SnM_Misc.cpp ***
@@ -195,6 +198,7 @@ bool isLoopOrInProjectTakes(MediaItem* _item, int _take);
 bool selectItemsByName(const char* cUndoMsg, char* cName);
 bool selectItemsByNamePrompt(const char* cCaption, char * _reply);
 void selectItemsByNamePrompt(COMMAND_T* _ct);
+void ShowTakeEnvPadreTest(COMMAND_T* _ct);
 
 
 // *** SnM_Track.cpp ***

@@ -547,6 +547,89 @@ void removeAllEmptyTakes(COMMAND_T* _ct) {
 // Take envs: Show/hide take vol/pan/mute envs
 ///////////////////////////////////////////////////////////////////////////////
 
+// returns -1 if not found
+int getTakeIndex(MediaItem* _item, MediaItem_Take* _take)
+{
+	int i = 0, idx = -1;
+	MediaItem_Take* tk = (_item ? GetTake(_item, i) : NULL);
+	while (tk) {
+		if (tk && tk == _take) return i;
+		else tk = GetTake(_item, ++i);
+	}
+	return idx;
+}
+
+// if returns true: callers must use UpdateTimeline() at some point
+bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint)
+{
+	bool updated = false;
+	if (_item)
+	{					
+		SNM_TakeParserPatcher p(_item);
+		WDL_String takeChunk;
+		if (p.GetTakeChunk(_takeIdx, &takeChunk))
+		{
+			SNM_ChunkParserPatcher ptk(&takeChunk);
+			bool takeUpdate = false;
+			char vis[2]; strcpy(vis, _vis2);
+
+			// env. already exists
+			if (strstr(takeChunk.Get(), _envKeyword))
+			{
+				// toggle ?
+				if (!strlen(vis))
+				{
+					char currentVis[32];
+					if (ptk.Parse(SNM_GET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)currentVis) > 0)
+					{
+						if (!strcmp(currentVis, "1")) strcpy(vis, "0");
+						else if (!strcmp(currentVis, "0")) strcpy(vis, "1");
+					}
+					// just in case..
+					if (!strlen(vis)) 
+						return false;
+				}
+
+				// prepare the new visibility
+				if (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "ACT", -1, 0, 1, (void*)vis) > 0)
+					if (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)vis) > 0)
+						takeUpdate |= (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "ARM", -1, 0, 1, (void*)vis) > 0);
+
+				takeChunk.Set(ptk.GetChunk()->Get());
+			}
+			// env. doesn't already exists => build a default one (if needed)
+			else
+			{						
+				if (!strlen(vis)) strcpy(vis, "1"); // toggle ?
+				if (!strcmp(vis, "1"))
+				{
+					// TODO: AppendFormatted with SNM_String
+					// (skipped for OSX for now..)
+					takeChunk.Append("<");
+					takeChunk.Append(_envKeyword);
+					takeChunk.Append("\nACT ");
+					takeChunk.Append(vis);
+					takeChunk.Append("\nVIS ");
+					takeChunk.Append(vis);
+					takeChunk.Append(" 1 1.000000\n");
+					takeChunk.Append("LANEHEIGHT 0 0\n");
+					takeChunk.Append("ARM ");
+					takeChunk.Append(vis);
+					takeChunk.Append("\nDEFSHAPE 0\n");
+					takeChunk.Append(_defaultPoint->Get());
+					takeChunk.Append("\n>\n");
+					takeUpdate = true;
+				}
+			}
+			
+			// Patch new visibility as a new take, removed the previous one
+			if (takeUpdate && p.InsertTake(_takeIdx, &takeChunk))
+				updated |= p.RemoveTake(_takeIdx+1);
+		}
+	}
+	return updated;
+}
+
 void patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint) 
 {
 	bool updated = false;
@@ -557,69 +640,7 @@ void patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char*
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
-			{					
-				int active = *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL);
-				SNM_TakeParserPatcher p(item);
-				WDL_String takeChunk;
-				if (p.GetTakeChunk(active, &takeChunk))
-				{
-					SNM_ChunkParserPatcher ptk(&takeChunk);
-					bool takeUpdate = false;
-					char vis[2]; strcpy(vis, _vis2);
-
-					// env. already exists
-					if (strstr(takeChunk.Get(), _envKeyword))
-					{
-						// toggle ?
-						if (!strlen(vis))
-						{
-							char currentVis[32];
-							if (ptk.Parse(SNM_GET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)currentVis) > 0)
-							{
-								if (!strcmp(currentVis, "1")) strcpy(vis, "0");
-								else if (!strcmp(currentVis, "0")) strcpy(vis, "1");
-							}
-							// just in case..
-							if (!strlen(vis)) break;
-						}
-
-						// prepare the new visibility
-						if (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "ACT", -1, 0, 1, (void*)vis) > 0)
-							if (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)vis) > 0)
-								takeUpdate |= (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "ARM", -1, 0, 1, (void*)vis) > 0);
-
-						takeChunk.Set(ptk.GetChunk()->Get());
-					}
-					// env. doesn't already exists => build a default one (if needed)
-					else
-					{						
-						if (!strlen(vis)) strcpy(vis, "1"); // toggle ?
-						if (!strcmp(vis, "1"))
-						{
-							// TODO: AppendFormatted with SNM_String
-							// (skipped for OSX for now..)
-							takeChunk.Append("<");
-							takeChunk.Append(_envKeyword);
-							takeChunk.Append("\nACT ");
-							takeChunk.Append(vis);
-							takeChunk.Append("\nVIS ");
-							takeChunk.Append(vis);
-							takeChunk.Append(" 1 1.000000\n");
-							takeChunk.Append("LANEHEIGHT 0 0\n");
-							takeChunk.Append("ARM ");
-							takeChunk.Append(vis);
-							takeChunk.Append("\nDEFSHAPE 0\n");
-							takeChunk.Append(_defaultPoint->Get());
-							takeChunk.Append("\n>\n");
-							takeUpdate = true;
-						}
-					}
-					
-					// Patch new visibility as a new take, removed the previous one
-					if (takeUpdate && p.InsertTake(active, &takeChunk))
-						updated |= p.RemoveTake(active+1);
-				}
-			}
+				updated |= patchTakeEnvelopeVis(item, *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL), _envKeyword, _vis2, _defaultPoint);
 		}
 	}
 
@@ -657,3 +678,34 @@ void showHideTakeMuteEnvelope(COMMAND_T* _ct)
 	WDL_String defaultPoint("PT 0.000000 1.000000 1");
 	patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint);
 }
+
+
+// *** some wrappers for Padre ***
+bool ShowTakeEnv(MediaItem_Take* _take, const char* _envKeyword, WDL_String* _defaultPoint)
+{
+	bool shown = false;
+	MediaItem* item = (_take ? GetMediaItemTake_Item(_take) : NULL);
+	if (item) 
+	{
+		int idx = getTakeIndex(item, _take);
+		if (idx >= 0) 
+			shown = patchTakeEnvelopeVis(item, idx, _envKeyword , "1", _defaultPoint);
+	}
+	return shown;
+}
+
+bool ShowTakeEnvVol(MediaItem_Take* _take) {
+	WDL_String defaultPoint("PT 0.000000 1.000000 0");
+	return ShowTakeEnv(_take, "VOLENV", &defaultPoint);
+}
+
+bool ShowTakeEnvPan(MediaItem_Take* _take) {
+	WDL_String defaultPoint("PT 0.000000 0.000000 0");
+	return ShowTakeEnv(_take, "PANENV", &defaultPoint);
+}
+
+bool ShowTakeEnvMute(MediaItem_Take* _take) {
+	WDL_String defaultPoint("PT 0.000000 1.000000 1");
+	return ShowTakeEnv(_take, "MUTEENV", &defaultPoint);;
+}
+

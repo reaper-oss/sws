@@ -158,3 +158,34 @@ void selectItemsByNamePrompt(COMMAND_T* _ct)
 	while (selectItemsByNamePrompt(SNM_CMD_SHORTNAME(_ct), reply));
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// tests..
+///////////////////////////////////////////////////////////////////////////////
+
+void ShowTakeEnvPadreTest(COMMAND_T* _ct)
+{
+	bool updated = false;
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
+			{
+				switch(_ct->user)
+				{
+					case 1: updated |= ShowTakeEnvPan(GetActiveTake(item)); break;
+					case 2: updated |= ShowTakeEnvMute(GetActiveTake(item)); break;
+					case 0: default: updated |= ShowTakeEnvVol(GetActiveTake(item)); break;
+				}
+			}
+		}
+	}
+	if (updated)
+	{
+		UpdateTimeline();
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+	}
+}

@@ -309,6 +309,9 @@ static COMMAND_T g_commandTable[] =
 	// Experimental, misc., deprecated, etc.. ---------------------------------
 //	{ { DEFACCEL, "SWS/S&M: Move track (1 -> 4)" }, "S&M_TMP1", moveTest, NULL, },
 //	{ { DEFACCEL, "SWS/S&M: Select items by name" }, "S&M_ITM1", selectItemsByNamePrompt, NULL, },
+//	{ { DEFACCEL, "SWS/S&M: test -> Padre show take volume enveloppe" }, "S&M_TMP1", ShowTakeEnvPadreTest, NULL, 0},
+//	{ { DEFACCEL, "SWS/S&M: test -> Padre show take pan enveloppe" }, "S&M_TMP2", ShowTakeEnvPadreTest, NULL, 1},
+//	{ { DEFACCEL, "SWS/S&M: test -> Padre show take mute enveloppe" }, "S&M_TMP3", ShowTakeEnvPadreTest, NULL, 2},
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

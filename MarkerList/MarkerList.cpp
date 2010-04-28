@@ -146,12 +146,16 @@ void SWS_MarkerListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 	if (m_pMarkerList->m_filter.GetLength())
 	{
 		int iCount = 0;
+		LineParser lp(false);
+		lp.parse(m_pMarkerList->m_filter.Get());
 		for (int i = 0; i < g_curList->m_items.GetSize(); i++)
-			if (stristr(g_curList->m_items.Get(i)->GetName(), m_pMarkerList->m_filter.Get()))
-			{
-				pBuf->Resize(++iCount);
-				pBuf->Get()[iCount-1] = (LPARAM)g_curList->m_items.Get(i);
-			}
+			for (int j = 0; j < lp.getnumtokens(); j++)
+				if (stristr(g_curList->m_items.Get(i)->GetName(), lp.gettoken_str(j)))
+				{
+					pBuf->Resize(++iCount);
+					pBuf->Get()[iCount-1] = (LPARAM)g_curList->m_items.Get(i);
+					break;
+				}
 	}
 	else
 	{

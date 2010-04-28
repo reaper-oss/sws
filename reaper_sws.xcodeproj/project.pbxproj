@@ -30,6 +30,8 @@
 		22257D9C108BDC6B0058CF75 /* XenakiosExts.h in Headers */ = {isa = PBXBuildFile; fileRef = 22257D84108BDC6B0058CF75 /* XenakiosExts.h */; };
 		22257D9D108BDC6B0058CF75 /* XenQueryDlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D85108BDC6B0058CF75 /* XenQueryDlg.cpp */; };
 		22257D9E108BDC6B0058CF75 /* XenUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D86108BDC6B0058CF75 /* XenUtils.cpp */; };
+		2233C7861187B4A400BB4BCB /* SnM_FXChainView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2233C7841187B4A400BB4BCB /* SnM_FXChainView.cpp */; };
+		2233C7871187B4A400BB4BCB /* SnM_FXChainView.h in Headers */ = {isa = PBXBuildFile; fileRef = 2233C7851187B4A400BB4BCB /* SnM_FXChainView.h */; };
 		225130BF116101670028F26A /* padreActions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225130B2116101670028F26A /* padreActions.cpp */; };
 		225130C0116101670028F26A /* padreActions.h in Headers */ = {isa = PBXBuildFile; fileRef = 225130B3116101670028F26A /* padreActions.h */; };
 		225130C1116101670028F26A /* padreEnvelopeProcessor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225130B4116101670028F26A /* padreEnvelopeProcessor.cpp */; };
@@ -186,6 +188,8 @@
 		22257D84108BDC6B0058CF75 /* XenakiosExts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XenakiosExts.h; path = Xenakios/XenakiosExts.h; sourceTree = "<group>"; };
 		22257D85108BDC6B0058CF75 /* XenQueryDlg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XenQueryDlg.cpp; path = Xenakios/XenQueryDlg.cpp; sourceTree = "<group>"; };
 		22257D86108BDC6B0058CF75 /* XenUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XenUtils.cpp; path = Xenakios/XenUtils.cpp; sourceTree = "<group>"; };
+		2233C7841187B4A400BB4BCB /* SnM_FXChainView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_FXChainView.cpp; path = SnM/SnM_FXChainView.cpp; sourceTree = "<group>"; };
+		2233C7851187B4A400BB4BCB /* SnM_FXChainView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_FXChainView.h; path = SnM/SnM_FXChainView.h; sourceTree = "<group>"; };
 		225130B2116101670028F26A /* padreActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreActions.cpp; path = Padre/padreActions.cpp; sourceTree = "<group>"; };
 		225130B3116101670028F26A /* padreActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreActions.h; path = Padre/padreActions.h; sourceTree = "<group>"; };
 		225130B4116101670028F26A /* padreEnvelopeProcessor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreEnvelopeProcessor.cpp; path = Padre/padreEnvelopeProcessor.cpp; sourceTree = "<group>"; };
@@ -538,6 +542,8 @@
 				22FFD287114DB5F10077F1CA /* SnM_Item.cpp */,
 				22C769F710B0F04D00774777 /* SnM_fx.cpp */,
 				22FFD286114DB5F10077F1CA /* SnM_FXChain.cpp */,
+				2233C7841187B4A400BB4BCB /* SnM_FXChainView.cpp */,
+				2233C7851187B4A400BB4BCB /* SnM_FXChainView.h */,
 				22FFD288114DB5F10077F1CA /* SnM_Misc.cpp */,
 				22C769F810B0F04D00774777 /* SnM_sends.cpp */,
 				221CEFA9118212A0009245C9 /* SnM_Track.cpp */,
@@ -639,6 +645,7 @@
 				229A7E971165744400325BC2 /* ProjPrefs.h in Headers */,
 				229A7E991165744400325BC2 /* TrackParams.h in Headers */,
 				229A7E9B1165744400325BC2 /* TrackSel.h in Headers */,
+				2233C7871187B4A400BB4BCB /* SnM_FXChainView.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -819,6 +826,7 @@
 				229A7E981165744400325BC2 /* TrackParams.cpp in Sources */,
 				229A7E9A1165744400325BC2 /* TrackSel.cpp in Sources */,
 				221CEFAA118212A0009245C9 /* SnM_Track.cpp in Sources */,
+				2233C7861187B4A400BB4BCB /* SnM_FXChainView.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

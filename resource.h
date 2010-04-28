@@ -52,7 +52,7 @@
 #define IDD_PADRELFO_GENERATOR          147
 #define IDD_PADRE_ENVPROCESSOR          148
 #define IDD_SNM_CUEBUS                  149
-#define IDD_SNM_FXCHAINLIST				150
+#define IDD_SNM_FXCHAINLIST             150
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000
@@ -234,7 +234,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        149
+#define _APS_NEXT_RESOURCE_VALUE        151
 #define _APS_NEXT_COMMAND_VALUE         40000
 #define _APS_NEXT_CONTROL_VALUE         1176
 #define _APS_NEXT_SYMED_VALUE           100

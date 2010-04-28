@@ -1223,6 +1223,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnM\SnM_FXChainView.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_FXChainView.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SnM\SnM_Item.cpp"
 				>
 			</File>

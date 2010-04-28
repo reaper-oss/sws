@@ -43,6 +43,9 @@ void MEPWIXOff(COMMAND_T* = NULL)    { int* p = (int*)GetConfigVar("envattach");
 bool IsOnRecStopMoveCursor(COMMAND_T*)  { int* p = (int*)GetConfigVar("itemclickmovecurs"); return p && (*p & 16); }
 void TogOnRecStopMoveCursor(COMMAND_T*) { int* p = (int*)GetConfigVar("itemclickmovecurs"); if (p) *p ^= 16; }
 
+void TogSeekMode(COMMAND_T* ct)	{ int* p = (int*)GetConfigVar("seekmode"); if (p) *p ^= ct->user; }
+bool IsSeekMode(COMMAND_T* ct)	{ int* p = (int*)GetConfigVar("seekmode"); return p && (*p & ct->user); }
+
 void SwitchGridSpacing(COMMAND_T*)
 {
 	// TODO
@@ -144,6 +147,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Set move envelope points with items on" },					"SWS_MVPWIDON",			MEPWIXOn,			},
 	{ { DEFACCEL, "SWS: Set move envelope points with items off" },					"SWS_MVPWIDOFF",		MEPWIXOff,			},
 	{ { DEFACCEL, "SWS: Toggle move cursor to end of recorded media on stop" },		"SWS_TOGRECMOVECUR",	TogOnRecStopMoveCursor, NULL, 0, IsOnRecStopMoveCursor },
+	{ { DEFACCEL, "SWS: Toggle seek playback on item move/size" },					"SWS_TOGSEEKMODE1",		TogSeekMode, NULL, 65536, IsSeekMode },
+	{ { DEFACCEL, "SWS: Toggle seek playback on loop point change" },				"SWS_TOGSEEKMODE2",		TogSeekMode, NULL, 8, IsSeekMode },
+
 	{ { DEFACCEL, "SWS: Switch grid spacing" },										"SWS_GRIDSPACING",		SwitchGridSpacing,	},
 	{ { DEFACCEL, "SWS: Transport: Record/stop" },									"SWS_RECTOGGLE",		RecToggle,			},
 	{ { DEFACCEL, "SWS: Save transport repeat state" },								"SWS_SAVEREPEAT",		SaveRepeat,			},

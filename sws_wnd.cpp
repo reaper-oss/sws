@@ -157,7 +157,7 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		case WM_CONTEXTMENU:
 		{
-			int x = LOWORD(lParam), y = HIWORD(lParam);
+			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 			// Are we over the column header?
 			for (int i = 0; i < m_pLists.GetSize(); i++)
 				if (m_pLists.Get(i)->DoColumnMenu(x, y))
@@ -198,17 +198,16 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				CheckMenuItem(hMenu, DOCK_MSG, MF_BYCOMMAND | MF_CHECKED);
 			AddToMenu(hMenu, "Close Window", IDCANCEL);
 
-			int xPos = (short)LOWORD(lParam), yPos = (short)HIWORD(lParam);
-			if (xPos == -1 || yPos == -1)
+			if (x == -1 || y == -1)
 			{
 				RECT r;
 				GetWindowRect(m_hwnd, &r);
-				xPos = r.left;
-				yPos = r.top;
+				x = r.left;
+				y = r.top;
 			}
 
 			kbd_reprocessMenu(hMenu, NULL);
-			TrackPopupMenu(hMenu, 0, xPos, yPos, 0, m_hwnd, NULL);
+			TrackPopupMenu(hMenu, 0, x, y, 0, m_hwnd, NULL);
 			DestroyMenu(hMenu);
 
 			break;

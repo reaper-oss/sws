@@ -43,8 +43,8 @@ void MEPWIXOff(COMMAND_T* = NULL)    { int* p = (int*)GetConfigVar("envattach");
 bool IsOnRecStopMoveCursor(COMMAND_T*)  { int* p = (int*)GetConfigVar("itemclickmovecurs"); return p && (*p & 16); }
 void TogOnRecStopMoveCursor(COMMAND_T*) { int* p = (int*)GetConfigVar("itemclickmovecurs"); if (p) *p ^= 16; }
 
-void TogSeekMode(COMMAND_T* ct)	{ int* p = (int*)GetConfigVar("seekmode"); if (p) *p ^= ct->user; }
-bool IsSeekMode(COMMAND_T* ct)	{ int* p = (int*)GetConfigVar("seekmode"); return p && (*p & ct->user); }
+void TogSeekMode(COMMAND_T* ct)	{ int* p = (int*)GetConfigVar("seekmodes"); if (p) *p ^= ct->user; }
+bool IsSeekMode(COMMAND_T* ct)	{ int* p = (int*)GetConfigVar("seekmodes"); return p && (*p & ct->user); }
 
 void SwitchGridSpacing(COMMAND_T*)
 {

@@ -548,7 +548,9 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 	return 0;
 }
 
-void RmeTotalmixProc(COMMAND_T* _ct)
+#ifdef _WIN32
+void RmeProc(COMMAND_T* _ct)
 {
 	RmeTotalmix((RmeTotalmixCmd)_ct->user);
 }
+#endif

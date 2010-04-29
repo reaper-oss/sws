@@ -29,11 +29,12 @@
 #include "padreActions.h"
 #include "padreEnvelopeProcessor.h"
 #include "padreMidiItemFilters.h"
+#include "padreRmeTotalmix.h"
 
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator" }, "PADRE_ENVLFO", EnvelopeLfo, NULL, 0},
-	{ { DEFACCEL, "SWS/PADRE: Envelope Processor: Selected Track" }, "PADRE_TRACKENVPROC", DoEnvelopeProcessor, NULL, 0},
+	{ { DEFACCEL, "SWS/PADRE: Envelope Processor" }, "PADRE_ENVPROC", DoEnvelopeProcessor, NULL, 0},
 
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -128 samples" }, "PADRE_SHRINK_128", ShrinkSelItems, NULL, 128},
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -256 samples" }, "PADRE_SHRINK_256", ShrinkSelItems, NULL, 256},
@@ -42,6 +43,28 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -2048 samples" }, "PADRE_SHRINK_2048", ShrinkSelItems, NULL, 2048},
 
 	//{ { DEFACCEL, "SWS/PADRE: Randomize MIDI Note Positions" }, "PADRE_RANDMIDINOTEPOS", RandomizeMidiNotePos, NULL, },
+
+	////! \todo Add as separate .dll ? (hardware-specific actions)
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load User Preset 1" }, "PADRE_TOTALMIX_LOADUSER1", RmeTotalmixProc, NULL, eTOTALMIX_LOADUSER1},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load User Preset 2" }, "PADRE_TOTALMIX_LOADUSER2", RmeTotalmixProc, NULL, eTOTALMIX_LOADUSER2},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load User Preset 3" }, "PADRE_TOTALMIX_LOADUSER3", RmeTotalmixProc, NULL, eTOTALMIX_LOADUSER3},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load User Preset 4" }, "PADRE_TOTALMIX_LOADUSER4", RmeTotalmixProc, NULL, eTOTALMIX_LOADUSER4},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load User Preset 5" }, "PADRE_TOTALMIX_LOADUSER5", RmeTotalmixProc, NULL, eTOTALMIX_LOADUSER5},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load User Preset 6" }, "PADRE_TOTALMIX_LOADUSER6", RmeTotalmixProc, NULL, eTOTALMIX_LOADUSER6},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load User Preset 7" }, "PADRE_TOTALMIX_LOADUSER7", RmeTotalmixProc, NULL, eTOTALMIX_LOADUSER7},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load User Preset 8" }, "PADRE_TOTALMIX_LOADUSER8", RmeTotalmixProc, NULL, eTOTALMIX_LOADUSER8},
+
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Toggle Master Mute" }, "PADRE_TOTALMIX_MASTERMUTE", RmeTotalmixProc, NULL, eTOTALMIX_MASTERMUTE},
+
+	////! \bug These won't work (VK_CONTROL problem)
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load Factory Preset 1" }, "PADRE_TOTALMIX_LOADFACT1", RmeTotalmixProc, NULL, eTOTALMIX_LOADFACT1},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load Factory Preset 2" }, "PADRE_TOTALMIX_LOADFACT2", RmeTotalmixProc, NULL, eTOTALMIX_LOADFACT2},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load Factory Preset 3" }, "PADRE_TOTALMIX_LOADFACT3", RmeTotalmixProc, NULL, eTOTALMIX_LOADFACT3},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load Factory Preset 4" }, "PADRE_TOTALMIX_LOADFACT4", RmeTotalmixProc, NULL, eTOTALMIX_LOADFACT4},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load Factory Preset 5" }, "PADRE_TOTALMIX_LOADFACT5", RmeTotalmixProc, NULL, eTOTALMIX_LOADFACT5},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load Factory Preset 6" }, "PADRE_TOTALMIX_LOADFACT6", RmeTotalmixProc, NULL, eTOTALMIX_LOADFACT6},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load Factory Preset 7" }, "PADRE_TOTALMIX_LOADFACT7", RmeTotalmixProc, NULL, eTOTALMIX_LOADFACT7},
+	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load Factory Preset 8" }, "PADRE_TOTALMIX_LOADFACT8", RmeTotalmixProc, NULL, eTOTALMIX_LOADFACT8},
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
@@ -375,22 +398,44 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 	{
         case WM_INITDIALOG :
 		{
+			for(int i=eENVTYPE_TRACK; i<eENVTYPE_MIDICC; i++)
+			{
+				int x = SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TARGET,CB_ADDSTRING,0,(LPARAM)GetEnvTypeStr((EnvType)i));
+				SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TARGET,CB_SETITEMDATA,x,i);
+				if(i == EnvelopeProcessor::getInstance()->_envModParams.envType)
+					SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TARGET,CB_SETCURSEL,x,0);
+			}
+			SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PADREENVPROC_TARGET, CBN_SELCHANGE), NULL);
+
+			if(EnvelopeProcessor::getInstance()->_envModParams.activeTakeOnly)
+				CheckDlgButton(hwnd, IDC_PADREENVPROC_ACTIVETAKES, TRUE);
+			else
+				CheckDlgButton(hwnd, IDC_PADREENVPROC_ACTIVETAKES, FALSE);
+
 			for(int i=eENVMOD_FADEIN; i<eENVMOD_LAST; i++)
 			{
-				int x = SendDlgItemMessage(hwnd,IDC_PADRE_ENVPROCESSOR_TYPE,CB_ADDSTRING,0,(LPARAM)GetEnvModTypeStr((EnvModType)i));
-					SendDlgItemMessage(hwnd,IDC_PADRE_ENVPROCESSOR_TYPE,CB_SETITEMDATA,x,i);
+				int x = SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TYPE,CB_ADDSTRING,0,(LPARAM)GetEnvModTypeStr((EnvModType)i));
+				SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TYPE,CB_SETITEMDATA,x,i);
 				if(i == EnvelopeProcessor::getInstance()->_envModParams.type)
-					SendDlgItemMessage(hwnd,IDC_PADRE_ENVPROCESSOR_TYPE,CB_SETCURSEL,x,0);
+					SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TYPE,CB_SETCURSEL,x,0);
 			}
 
 			char buffer[BUFFER_SIZE];
 			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_envModParams.strength);
-			SetDlgItemText(hwnd, IDC_PADRE_ENVPROCESSOR_STRENGTH, buffer);
+			SetDlgItemText(hwnd, IDC_PADREENVPROC_STRENGTH, buffer);
 			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_envModParams.offset);
-			SetDlgItemText(hwnd, IDC_PADRE_ENVPROCESSOR_OFFSET, buffer);
+			SetDlgItemText(hwnd, IDC_PADREENVPROC_OFFSET, buffer);
+
+			for(int i=eTAKEENV_VOLUME; i<=eTAKEENV_MUTE; i++)
+			{
+				int x = SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TAKEENV,CB_ADDSTRING,0,(LPARAM)GetTakeEnvelopeStr((TakeEnvType)i));
+				SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TAKEENV,CB_SETITEMDATA,x,i);
+				if(i == EnvelopeProcessor::getInstance()->_envModParams.takeEnvType)
+					SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TAKEENV,CB_SETCURSEL,x,0);
+			}
 
 			RestoreWindowPos(hwnd, cWndPosKey, false);
-			SetFocus(GetDlgItem(hwnd, IDC_PADRE_ENVPROCESSOR_TYPE));
+			SetFocus(GetDlgItem(hwnd, IDC_PADREENVPROC_TYPE));
 
 			return 0;
 		}
@@ -402,18 +447,45 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
             {
                 case IDOK:
 				{
-					int combo = SendDlgItemMessage(hwnd,IDC_PADRE_ENVPROCESSOR_TYPE,CB_GETCURSEL,0,0);
+					int combo = SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TARGET,CB_GETCURSEL,0,0);
 					if(combo != CB_ERR)
-						EnvelopeProcessor::getInstance()->_envModParams.type = (EnvModType)(SendDlgItemMessage(hwnd,IDC_PADRE_ENVPROCESSOR_TYPE,CB_GETITEMDATA,combo,0));
+						EnvelopeProcessor::getInstance()->_envModParams.envType = (EnvType)(SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TARGET,CB_GETITEMDATA,combo,0));
+
+					EnvelopeProcessor::getInstance()->_envModParams.activeTakeOnly = (IsDlgButtonChecked(hwnd, IDC_PADREENVPROC_ACTIVETAKES) != 0);
+
+					combo = SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TIMESEGMENT,CB_GETCURSEL,0,0);
+					if(combo != CB_ERR)
+						EnvelopeProcessor::getInstance()->_envModParams.timeSegment = (TimeSegment)(SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TIMESEGMENT,CB_GETITEMDATA,combo,0));
+
+					combo = SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TYPE,CB_GETCURSEL,0,0);
+					if(combo != CB_ERR)
+						EnvelopeProcessor::getInstance()->_envModParams.type = (EnvModType)(SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TYPE,CB_GETITEMDATA,combo,0));
 
 					char buffer[BUFFER_SIZE];
-					GetDlgItemText(hwnd,IDC_PADRE_ENVPROCESSOR_STRENGTH,buffer,BUFFER_SIZE);
+					GetDlgItemText(hwnd,IDC_PADREENVPROC_STRENGTH,buffer,BUFFER_SIZE);
 					EnvelopeProcessor::getInstance()->_envModParams.strength = atof(buffer)/100.0;
-					GetDlgItemText(hwnd,IDC_PADRE_ENVPROCESSOR_OFFSET,buffer,BUFFER_SIZE);
+					GetDlgItemText(hwnd,IDC_PADREENVPROC_OFFSET,buffer,BUFFER_SIZE);
 					EnvelopeProcessor::getInstance()->_envModParams.offset = atof(buffer)/100.0;
 
+					combo = SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TAKEENV,CB_GETCURSEL,0,0);
+					if(combo != CB_ERR)
+						EnvelopeProcessor::getInstance()->_envModParams.takeEnvType = (TakeEnvType)(SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TAKEENV,CB_GETITEMDATA,combo,0));
+
 					EnvelopeProcessor::ErrorCode res = EnvelopeProcessor::eERRORCODE_UNKNOWN;
-					res = EnvelopeProcessor::getInstance()->processSelectedTrackEnv();
+					switch(EnvelopeProcessor::getInstance()->_envModParams.envType)
+					{
+						case eENVTYPE_TRACK :
+							res = EnvelopeProcessor::getInstance()->processSelectedTrackEnv();
+						break;
+
+						case eENVTYPE_TAKE :
+							res = EnvelopeProcessor::getInstance()->processSelectedTakes();
+						break;
+
+						default:
+						break;
+					}
+
 					EnvelopeProcessor::errorHandlerDlg(hwnd, res);
 
 					return 0;
@@ -427,15 +499,45 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 				}
 				break;
 
-//				case IDC_PADRE_ENVPROCESSOR_TYPE:
-//				{
-//					if(HIWORD(wParam) == CBN_SELCHANGE)
-//					{
-//						int toto = 2;
-//					}
-//					return 0;
-//				}
-//				break;
+				case IDC_PADREENVPROC_TARGET:
+				{
+					if(HIWORD(wParam) == CBN_SELCHANGE)
+					{
+						int combo = SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TARGET,CB_GETCURSEL,0,0);
+						if(combo != CB_ERR)
+						{
+							EnvType envType = (EnvType)(SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TARGET,CB_GETITEMDATA,combo,0));
+							switch(envType)
+							{
+								case eENVTYPE_TRACK:
+									EnableWindow(GetDlgItem(hwnd,IDC_PADREENVPROC_ACTIVETAKES), FALSE);
+									EnableWindow(GetDlgItem(hwnd,IDC_PADREENVPROC_TAKEENV), FALSE);
+								break;
+								case eENVTYPE_TAKE:
+									EnableWindow(GetDlgItem(hwnd,IDC_PADREENVPROC_ACTIVETAKES), TRUE);
+									EnableWindow(GetDlgItem(hwnd,IDC_PADREENVPROC_TAKEENV), TRUE);
+								break;
+								default:
+								break;
+							}
+
+							SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TIMESEGMENT,CB_RESETCONTENT,0,NULL);
+							for(int i=eTIMESEGMENT_TIMESEL; i<eTIMESEGMENT_LAST; i++)
+							{
+								if( (envType == eENVTYPE_TRACK) && (i == eTIMESEGMENT_SELITEM) )
+									continue;
+								if( (envType == eENVTYPE_TAKE) && (i == eTIMESEGMENT_PROJECT) )
+									continue;
+								int x = SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TIMESEGMENT,CB_ADDSTRING,0,(LPARAM)GetTimeSegmentStr((TimeSegment)i));
+								SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TIMESEGMENT,CB_SETITEMDATA,x,i);
+								if(i == EnvelopeProcessor::getInstance()->_envModParams.timeSegment)
+									SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TIMESEGMENT,CB_SETCURSEL,x,0);
+							}
+						}
+					}
+					return 0;
+				}
+				break;
 			}
 		}
 		case WM_DESTROY:
@@ -444,4 +546,9 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 	}
 
 	return 0;
+}
+
+void RmeTotalmixProc(COMMAND_T* _ct)
+{
+	RmeTotalmix((RmeTotalmixCmd)_ct->user);
 }

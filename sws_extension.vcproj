@@ -1299,6 +1299,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Padre\padreRmeTotalmix.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Padre\padreRmeTotalmix.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Padre\padreUtils.cpp"
 				>
 			</File>

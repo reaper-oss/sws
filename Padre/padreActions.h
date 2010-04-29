@@ -59,3 +59,5 @@ void RandomizeMidiNotePos(COMMAND_T* _ct);
 void DoEnvelopeProcessor(COMMAND_T* _ct);
 
 WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+
+void RmeTotalmixProc(COMMAND_T* _ct);

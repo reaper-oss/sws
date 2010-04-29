@@ -1,3 +1,6 @@
+Padre LFO: bugfixes (take env show/hide + undo)
+Padre Env Processor: similar bugfixes + now fully working (tracks, takes, time segments, etc.)
+
 !v1.7.2 #5 (April 27, 2010)
 <b>Requires REAPER v3.45!</b>
 

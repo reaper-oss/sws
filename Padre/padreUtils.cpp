@@ -214,6 +214,7 @@ double WaveformGeneratorSawDown(double t, double dFreq, double dDelay)
 	return -2.0*dPhase + 1.0;
 }
 
+//! \todo Make true Freq-dependent generator using clock_t
 double WaveformGeneratorRandom(double t, double dFreq, double dDelay)
 {
 	return 2.0*(double)rand()/(double)(RAND_MAX) - 1.0;

@@ -211,9 +211,9 @@
 #define IDC_PADRELFO_TIMESEGMENT        1157
 #define IDC_PADRELFO_TARGET             1158
 #define IDC_PADRELFO_ACTIVETAKES        1159
-#define IDC_PADRE_ENVPROCESSOR_TYPE     1160
-#define IDC_PADRE_ENVPROCESSOR_OFFSET   1161
-#define IDC_PADRE_ENVPROCESSOR_STRENGTH 1162
+#define IDC_PADREENVPROC_TYPE           1160
+#define IDC_PADREENVPROC_OFFSET         1161
+#define IDC_PADREENVPROC_STRENGTH       1162
 #define IDC_SNM_CUEBUS_NAME             1163
 #define IDC_SNM_CUEBUS_TYPE             1164
 #define IDC_SNM_CUEBUS_SOLOGRP          1165
@@ -228,7 +228,11 @@
 #define IDC_SNM_CUEBUS_TEMPLATE         1174
 #define IDC_PLAY                        1175
 #define IDC_PLAY2                       1176
-#define IDC_SCROLL                      1176
+#define IDC_SCROLL                      1177
+#define IDC_PADREENVPROC_TARGET         1178
+#define IDC_PADREENVPROC_ACTIVETAKES    1179
+#define IDC_PADREENVPROC_TIMESEGMENT    1180
+#define IDC_PADREENVPROC_TAKEENV        1181
 
 // Next default values for new objects
 // 
@@ -236,7 +240,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        151
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1176
+#define _APS_NEXT_CONTROL_VALUE         1180
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

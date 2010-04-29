@@ -26,7 +26,9 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+
 #include "padreEnvelopeProcessor.h"
+#include "../SnM/SnM_Actions.h"
 
 const char* GetEnvTypeStr(EnvType type)
 {
@@ -87,7 +89,8 @@ this->freqModulator = params.freqModulator;
 }
 
 EnvModParams::EnvModParams()
-: type(eENVMOD_FADEIN), offset(0.0), strength(1.0)
+: envType(eENVTYPE_TRACK), timeSegment(eTIMESEGMENT_TIMESEL), activeTakeOnly(true), takeEnvType(eTAKEENV_VOLUME)
+, type(eENVMOD_FADEIN), offset(0.0), strength(1.0)
 {
 }
 
@@ -162,7 +165,7 @@ void EnvelopeProcessor::getFreqDelay(LfoWaveParams &waveParams, double &dFreq, d
 		dDelay = waveParams.delayMsec;
 }
 
-EnvelopeProcessor::ErrorCode EnvelopeProcessor::getEnvelopeMinMax(TrackEnvelope* envelope, double &dEnvMinVal, double &dEnvMaxVal)
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::getTrackEnvelopeMinMax(TrackEnvelope* envelope, double &dEnvMinVal, double &dEnvMaxVal)
 {
 	if(!envelope)
 		return eERRORCODE_NOENVELOPE;
@@ -190,17 +193,24 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::getEnvelopeMinMax(TrackEnvelope*
 	{
 		// Track envelope: Volume
 		if(!strcmp(it->c_str(), "<VOLENV") || !strcmp(it->c_str(), "<VOLENV2"))
+		{
 			dEnvMaxVal = 2.0;
+			break;
+		}
 
 		// Track envelope: Pan
 		if(!strcmp(it->c_str(), "<PANENV") || !strcmp(it->c_str(), "<PANENV2"))
+		{
 			dEnvMinVal = -1.0;
+			break;
+		}
 
 		// Track envelope: Param (VST index, min value, max value)
 		if(sscanf(it->c_str(), "<PARMENV %d %lf %lf", &iTmp, &dTmp[0], &dTmp[1]) == 3)
 		{
 			dEnvMinVal = dTmp[0];
 			dEnvMaxVal = dTmp[1];
+			break;
 		}
 
 		if(!strcmp(it->c_str(), ">"))
@@ -263,13 +273,6 @@ void EnvelopeProcessor::writeLfoPoints(string &envState, double dStartTime, doub
 	switch(waveParams.shape)
 	{
 		case eWAVSHAPE_SINE :
-if(freqModulator)
-{
-	double dFreqCarrier = WaveformGeneratorSin(0.0, freqModulator->freqHz, 1000.0*freqModulator->delayMsec);
-	//double dFreqCarrierMagnitude = freqModulator->strength * (1.0 - fabs(freqModulator->offset));
-	//dFreqCarrier = freqModulator->offset + dMagnitude*dFreqCarrier;
-	//dValueStart = dScale*dValueStart + dOff;
-}
 			dSamplerate = dPrecision/dFreq;
 			dCarrierStart = WaveformGeneratorSin(0.0, dFreq, dDelaySec);
 			dCarrierEnd = WaveformGeneratorSin(dLength, dFreq, dDelaySec);
@@ -326,6 +329,11 @@ if(freqModulator)
 	sprintf(buffer, "PT %lf %lf %d\n", dStartTime, dValueStart, tEnvShape);
 	envState.append(buffer);
 
+//double dFreqMod = dFreq;
+//freqModulator = new LfoWaveParams();
+//freqModulator->freqHz = dFreq/100.0;
+//freqModulator->strength = 0.6;
+
 	switch(waveParams.shape)
 	{
 		case eWAVSHAPE_SINE :
@@ -334,7 +342,17 @@ if(freqModulator)
 			{
 				if(t>0.0)
 				{
+//if(freqModulator)
+//{
+//	double dFreqCarrier = WaveformGeneratorSawUp(t, freqModulator->freqHz, 1000.0*freqModulator->delayMsec);
+//	dFreqMod = dFreq*(1.0 + freqModulator->strength * dFreqCarrier);
+//	// Watch out for NaNs !!!
+////	dSamplerate = dPrecision/dFreqMod;
+//	dSamplerate = 0.01;
+//}
+
 					dValue = waveParams.offset + dMagnitude*WaveformGeneratorSin(t, dFreq, dDelaySec);
+//dValue = waveParams.offset + dMagnitude*WaveformGeneratorSin(t, dFreqMod, dDelaySec);
 					dValue = dScale*dValue + dOff;
 					sprintf(buffer, "PT %lf %lf %d\n", t+dStartTime, dValue, tEnvShape);
 					envState.append(buffer);
@@ -416,27 +434,24 @@ if(freqModulator)
 	envState.append(buffer);
 }
 
-EnvelopeProcessor::ErrorCode EnvelopeProcessor::processPoints(TrackEnvelope* envelope, double dStartPos, double dEndPos, EnvModType envModType, double dStrength, double dOffset)
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::processPoints(char* envState, string &newState, double dStartPos, double dEndPos, double dValMin, double dValMax, EnvModType envModType, double dStrength, double dOffset)
 {
-	if(!envelope)
-		return eERRORCODE_NOENVELOPE;
+	//if(!envelope)
+	//	return eERRORCODE_NOENVELOPE;
 
 	if(dStartPos==dEndPos)
 		return eERRORCODE_NULLTIMESELECTION;
 	double dLength = dEndPos-dStartPos;
 
-	double dEnvMin, dEnvMax;
-	ErrorCode res = getEnvelopeMinMax(envelope, dEnvMin, dEnvMax);
-	if(res != eERRORCODE_OK)
-		return res;
-	double dEnvOffset = 0.5*(dEnvMin+dEnvMax);
-	double dEnvMagnitude = 0.5*(dEnvMax-dEnvMin);
+	double dEnvOffset = 0.5*(dValMin+dValMax);
+	double dEnvMagnitude = 0.5*(dValMax-dValMin);
 
-	char* envState = GetSetObjectState(envelope, "");
+	//char* envState = GetSetObjectState(envelope, "");
 	if(!envState)
 		return eERRORCODE_NOOBJSTATE;
 
-	string newState;
+	//string newState;
+newState.clear();
 	char cPtValue[128];
 
 	double position, value;
@@ -490,10 +505,10 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processPoints(TrackEnvelope* env
 						}
 
 						value = dEnvMagnitude*dEnvNormValue + dEnvOffset;
-						if(value < dEnvMin)
-							value = dEnvMin;
-						if(value > dEnvMax)
-							value = dEnvMax;
+						if(value < dValMin)
+							value = dValMin;
+						if(value > dValMax)
+							value = dValMax;
 
 						sprintf(cPtValue, "%lf", value);
 						newLine.append(cPtValue);
@@ -531,28 +546,19 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processPoints(TrackEnvelope* env
 		token = strtok(NULL, "\n");
 	}
 
-	FreeHeapPtr(envState);
-	
-	if(GetSetObjectState(envelope, newState.c_str()))
-		return eERRORCODE_UNKNOWN;
-	
+//	FreeHeapPtr(envState);
+//	
+//	if(GetSetObjectState(envelope, newState.c_str()))
+//		return eERRORCODE_UNKNOWN;
+//Undo_OnStateChangeEx("Envelope Processor", UNDO_STATE_ALL, -1);
 
 	return eERRORCODE_OK;
 }
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* envelope, double dStartPos, double dEndPos, LfoWaveParams &waveParams, double dPrecision)
 {
-	//TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
 	if(!envelope)
 		return eERRORCODE_NOENVELOPE;
-
-//double dTimeSelStartPosition, dTimeSelEndPosition;
-//GetTimeSegmentPositions(timeSegment, dTimeSelStartPosition, dTimeSelEndPosition);
-
-	//Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
-	//double dTimeSelEndPosition = GetCursorPositionEx(0);
-	//Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
-	//double dTimeSelStartPosition = GetCursorPositionEx(0);
 
 	if(dStartPos==dEndPos)
 		return eERRORCODE_NULLTIMESELECTION;
@@ -567,6 +573,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* 
 	double dTmp[2];
 	int iTmp;
 
+	//! \todo Use with GetMinMax()
 	char* token = strtok(envState, "\n");
 	while(token != NULL)
 	{
@@ -603,9 +610,6 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* 
 		token = strtok(NULL, "\n");
 	}
 
-	//ShowConsoleMsgEx("MIN = %lf, MAX = %lf\n", dValMin, dValMax);
-	//ShowConsoleMsg(newState);
-
 	writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, waveParams, dPrecision);
 
 	newState.append(token);
@@ -618,14 +622,12 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* 
 		token = strtok(NULL, "\n");
 	}
 
-//	ShowConsoleMsg(newState);
-
 	FreeHeapPtr(envState);
 
 	if(GetSetObjectState(envelope, newState.c_str()))
 		return eERRORCODE_UNKNOWN;
 
-	//Undo_OnStateChangeEx("Generate Track LFO", UNDO_STATE_ALL, -1);
+Undo_OnStateChangeEx("Track Envelope LFO", UNDO_STATE_ALL, -1);
 	return eERRORCODE_OK;
 }
 
@@ -670,31 +672,39 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackEnvLfo()
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* take, double dStartPos, double dEndPos, TakeEnvType tTakeEnvType, LfoWaveParams &waveParams, double dPrecision)
 {
-	TrackEnvelope* envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
+	//TrackEnvelope* envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
 	double dValMin = 0.0;
 	double dValMax = 1.0;
 	//! \todo Force "show item vol/pan/mute envelope" (toggle trick doesn't work with existing/hidden envelopes)
+	bool bNeedUpdate = false;
 	switch(tTakeEnvType)
 	{
 		case eTAKEENV_VOLUME :
 			dValMax = 2.0;
-			if(!envelope)
-				Main_OnCommandEx(ID_TAKEENV_VOLUME_TOGGLE, 0, 0);
+bNeedUpdate = ShowTakeEnvVol(take);
+			//if(!envelope)
+			//	Main_OnCommandEx(ID_TAKEENV_VOLUME_TOGGLE, 0, 0);
 		break;
 		case eTAKEENV_PAN :
 			dValMin = -1.0;
-			if(!envelope)
-				Main_OnCommandEx(ID_TAKEENV_PAN_TOGGLE, 0, 0);
+bNeedUpdate = ShowTakeEnvPan(take);
+			//if(!envelope)
+			//	Main_OnCommandEx(ID_TAKEENV_PAN_TOGGLE, 0, 0);
 		break;
 		case eTAKEENV_MUTE :
-			if(!envelope)
-				Main_OnCommandEx(ID_TAKEENV_MUTE_TOGGLE, 0, 0);
+bNeedUpdate = ShowTakeEnvMute(take);
+			//if(!envelope)
+			//	Main_OnCommandEx(ID_TAKEENV_MUTE_TOGGLE, 0, 0);
 		break;
 		default:
 		break;
 	}
 
-	envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
+if(bNeedUpdate)
+	UpdateTimeline();
+
+TrackEnvelope* envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
+	//envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
 	if(!envelope)
 		return eERRORCODE_NOENVELOPE;
 
@@ -790,6 +800,7 @@ writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, dFreq, dStrength,
 //! \bug I can't/don't have to delete cNewState ???
 //delete[] cNewState;
 //FreeHeapPtr(cNewState);
+Undo_OnStateChangeEx("Take Envelope LFO", UNDO_STATE_ALL, -1);
 
 	return eERRORCODE_OK;
 }
@@ -936,13 +947,10 @@ EnvelopeProcessor::getFreqDelay(_pParameters->waveParams, dFreq, dDelay);
 	{
 		t = (double)pos/MIDIITEMPROC_DEFAULT_SAMPLERATE;
 
-//dValue = _pParameters->offset + dMagnitude*WaveformGeneratorSin(t, dFreq, 0.001*dDelay);
-dValue = _pParameters->waveParams.offset + dMagnitude*WaveformGenerator(t, dFreq, 0.001*dDelay);
-dValue = dScale*dValue + dOff;
-iValue = (int)(127.0*dValue);
+		dValue = _pParameters->waveParams.offset + dMagnitude*WaveformGenerator(t, dFreq, 0.001*dDelay);
+		dValue = dScale*dValue + dOff;
+		iValue = (int)(127.0*dValue);
 
-		//double dValue = dOffset + dMagnitude*sin(2.0*3.14*_freq*t);
-		//int iValue = (int)(127.0 * 0.5*(dValue + 1.0));
 		MIDI_event_t evt;
 		evt.frame_offset = pos;
 		evt.size = 3;
@@ -961,20 +969,130 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedMidiTakeLfo()
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::processSelectedTrackEnv()
 {
-	Undo_BeginBlock2(0);
-
 	TrackEnvelope* envelope = GetSelectedTrackEnvelope(0);
 	if(!envelope)
 		return eERRORCODE_NOENVELOPE;
 
-	Main_OnCommandEx(ID_GOTO_TIMESEL_END, 0, 0);
-	double dEndPos = GetCursorPositionEx(0);
-	Main_OnCommandEx(ID_GOTO_TIMESEL_START, 0, 0);
-	double dStartPos = GetCursorPositionEx(0);
+	Undo_BeginBlock2(0);
 
-	Undo_EndBlock2(0, "Padre's Envelope Processor", 0);
+	double dStartPos, dEndPos;
+	GetTimeSegmentPositions(_envModParams.timeSegment, dStartPos, dEndPos);
 
-	return processPoints(envelope, dStartPos, dEndPos, _envModParams.type, _envModParams.strength, _envModParams.offset);
+	if(dStartPos==dEndPos)
+		return eERRORCODE_NULLTIMESELECTION;
+
+	double dValMin, dValMax;
+	ErrorCode res = getTrackEnvelopeMinMax(envelope, dValMin, dValMax);
+	if(res != eERRORCODE_OK)
+		return res;
+
+	char* envState = GetSetObjectState(envelope, "");
+	string newState;
+	res = processPoints(envState, newState, dStartPos, dEndPos, dValMin, dValMax, _envModParams.type, _envModParams.strength, _envModParams.offset);
+	if(GetSetObjectState(envelope, newState.c_str()))
+		res = eERRORCODE_UNKNOWN;
+	else
+		FreeHeapPtr(envState);
+
+//UpdateTimeline();
+	Undo_OnStateChangeEx("Envelope Processor", UNDO_STATE_ALL, -1);
+
+	Undo_EndBlock2(0, "Track Envelope Processor", 0);
+	return res;
 }
 
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::processSelectedTakes()
+{
+	list<MediaItem*> items;
+	GetSelectedMediaItems(items);
+	if(items.empty())
+		return eERRORCODE_NOITEMSELECTED;
 
+	Undo_BeginBlock2(0);
+
+	for(list<MediaItem*>::iterator item = items.begin(); item != items.end(); item++)
+	{
+		list<MediaItem_Take*> takes;
+		GetMediaItemTakes(*item, takes, _envModParams.activeTakeOnly);
+		//if(takes.empty())
+		//	return eERRORCODE_NOITEMSELECTED;
+
+		for(list<MediaItem_Take*>::iterator take = takes.begin(); take != takes.end(); take++)
+		{
+			ErrorCode res = processTakeEnv(*take);
+			UpdateItemInProject(*item);
+			if(res != eERRORCODE_OK)
+				return res;
+		}
+	}
+
+	//Undo_OnStateChangeEx("Item Envelope LFO", UNDO_STATE_ALL, -1);
+//	UpdateTimeline();
+	Undo_EndBlock2(0, "Take Envelope Processor", 0);
+
+	return eERRORCODE_OK;
+}
+
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::processTakeEnv(MediaItem_Take* take)
+{
+	MediaItem* parentItem = GetMediaItemTake_Item(take);
+	double dItemStartPos = GetMediaItemInfo_Value(parentItem, "D_POSITION");
+	double dItemEndPos = dItemStartPos + GetMediaItemInfo_Value(parentItem, "D_LENGTH");
+
+	double dStartPos, dEndPos;
+	GetTimeSegmentPositions(_envModParams.timeSegment, dStartPos, dEndPos, parentItem);
+
+	if(dEndPos>dItemEndPos)
+		dEndPos = dItemEndPos;
+
+	if(dStartPos<dItemStartPos)
+		dStartPos = dItemStartPos;
+
+	dStartPos -= dItemStartPos;
+	dEndPos -= dItemStartPos;
+
+	return processTakeEnv(take, dStartPos, dEndPos, _envModParams.takeEnvType, _envModParams.type, _envModParams.strength, _envModParams.offset);
+}
+
+EnvelopeProcessor::ErrorCode EnvelopeProcessor::processTakeEnv(MediaItem_Take* take, double dStartPos, double dEndPos, TakeEnvType tTakeEnvType, EnvModType envModType, double dStrength, double dOffset)
+{
+	double dValMin = 0.0;
+	double dValMax = 1.0;
+	bool bNeedUpdate = false;
+	switch(tTakeEnvType)
+	{
+		case eTAKEENV_VOLUME :
+			dValMax = 2.0;
+			bNeedUpdate = ShowTakeEnvVol(take);
+		break;
+		case eTAKEENV_PAN :
+			dValMin = -1.0;
+			bNeedUpdate = ShowTakeEnvPan(take);
+		break;
+		case eTAKEENV_MUTE :
+			bNeedUpdate = ShowTakeEnvMute(take);
+		break;
+		default:
+		break;
+	}
+
+	if(bNeedUpdate)
+		UpdateTimeline();
+
+	TrackEnvelope* envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
+	if(!envelope)
+		return eERRORCODE_NOENVELOPE;
+
+	char* envState = PadresGetEnvelopeState(envelope);
+	string newState;
+	ErrorCode res = processPoints(envState, newState, dStartPos, dEndPos, dValMin, dValMax, envModType, dStrength, dOffset);
+
+	char* cNewState = new char[newState.size()];
+	strcpy(cNewState, newState.c_str());
+	if(!GetSetEnvelopeState(envelope, cNewState, (int)newState.size()))
+		res = eERRORCODE_UNKNOWN;
+
+	Undo_OnStateChangeEx("Take Envelope LFO", UNDO_STATE_ALL, -1);
+
+	return res;
+}

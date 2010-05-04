@@ -1436,8 +1436,10 @@ void DoShowTakeMixerDlg(COMMAND_T*)
 {
 	g_TargetItem = NULL;
 	
-	if (CountSelectedMediaItems(NULL) != 1)
-		MessageBox(g_hwndParent, "Please select only one item!", "Take Mixer Error", MB_OK);
+	if (CountSelectedMediaItems(NULL) != 1) {
+		MessageBox(g_hwndParent, "Please select only one item", "Take Mixer Error", MB_OK);
+		return;
+	}
 
 	g_TargetItem = GetSelectedMediaItem(0, 0);
 	g_TakeMixerState.NumTakes			= GetMediaItemNumTakes(g_TargetItem);

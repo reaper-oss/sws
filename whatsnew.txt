@@ -1,3 +1,7 @@
+Fingers' updates
+Fixed bug in Takes mixer (issue #145)
+Added 'FX' submenu to SWS Tracklist using SnM actions
+
 !v1.7.2 #6 (April 29, 2010)
 Padre LFO: bugfixes (take env show/hide + undo)
 Padre Env Processor: similar bugfixes + now fully working (tracks, takes, time segments, etc.)

@@ -32,6 +32,8 @@
 #include "../Snapshots/Snapshots.h"
 #include "TracklistFilter.h"
 #include "Tracklist.h"
+/* Use SnM_Actions for show FX window from Tracklist submenu */
+#include "../SnM/SnM_Actions.h"
 
 #define RENAME_MSG		0x10005
 #define LOADSNAP_MSG	0x10100 // Keep space afterwards
@@ -59,6 +61,8 @@ void ShowInMCPEx(COMMAND_T* = NULL);
 void HideUnSel(COMMAND_T* = NULL);
 void ShowAll(COMMAND_T* = NULL);
 void NewVisSnapshot(COMMAND_T* = NULL);
+
+static bool AddFXSubMenu(HMENU *submenu, MediaTrack *track);
 
 enum TL_COLS { COL_NUM, COL_NAME, COL_TCP, COL_MCP, COL_ARM, COL_MUTE, COL_SOLO, /*COL_INPUT, */ NUM_COLS };
 
@@ -332,6 +336,13 @@ HMENU SWS_TrackListWnd::OnContextMenu(int x, int y)
 		AddToMenu(contextMenu, SWS_SEPARATOR, 0);
 		AddToMenu(contextMenu, "Invert selection", SWSGetCommandID(TogTrackSel));
 		AddToMenu(contextMenu, "Hide unselected", SWSGetCommandID(HideUnSel));
+
+		HMENU fxSubMenu;
+		if(AddFXSubMenu(&fxSubMenu, m_trLastTouched))
+		{
+			AddToMenu(contextMenu, SWS_SEPARATOR, 0);
+			AddSubMenu(contextMenu, fxSubMenu, "FX");
+		}
 
 		// Check current state
 		switch(GetTrackVis(m_trLastTouched))
@@ -861,4 +872,21 @@ int TrackListInit()
 void TrackListExit()
 {
 	delete g_pList;
+}
+
+static bool AddFXSubMenu(HMENU *submenu, MediaTrack *track)
+{
+	/* Add access to FX from track list. If any fx are on current track. */
+	int fxCount = TrackFX_GetCount(track);
+	if(fxCount == 0)
+		return false;
+
+	fxCount = min(fxCount, 8); // 8 is the max for the SnM showFXChain commands
+	*submenu = CreatePopupMenu();
+	char fxName[512];
+	for(int i = 0; i < fxCount; i++) {
+		if(TrackFX_GetFXName(track, i, fxName, 512))
+			AddToMenu(*submenu, fxName, SWSGetCommandID(showFXChain, i));
+	}
+	return true;
 }

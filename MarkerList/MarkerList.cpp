@@ -172,7 +172,7 @@ int SWS_MarkerListView::GetItemState(LPARAM item)
 }
 
 SWS_MarkerListWnd::SWS_MarkerListWnd()
-:SWS_DockWnd(IDD_MARKERLIST, "Marker List", 30001), m_dCurPos(DBL_MAX)
+:SWS_DockWnd(IDD_MARKERLIST, "Marker List", 30001, SWSGetCommandID(OpenMarkerList)), m_dCurPos(DBL_MAX)
 {
 	if (m_bShowAfterInit)
 		Show(false, false);
@@ -180,9 +180,6 @@ SWS_MarkerListWnd::SWS_MarkerListWnd()
 
 void SWS_MarkerListWnd::Update(bool bForce)
 {
-	CheckDlgButton(m_hwnd, IDC_PLAY, m_bPlayOnSel ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_SCROLL, m_bScroll  ? BST_CHECKED : BST_UNCHECKED);
-	
 	// Change the time string if the project time mode changes
 	static int prevTimeMode = -1;
 	bool bChanged = bForce;
@@ -233,6 +230,9 @@ void SWS_MarkerListWnd::OnInitDlg()
 	bool m_bPlayOnDblClk = cOptions[0] == '1';
 	bool m_bScroll = cOptions[2] == '1';
 
+	CheckDlgButton(m_hwnd, IDC_PLAY, m_bPlayOnSel ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_SCROLL, m_bScroll  ? BST_CHECKED : BST_UNCHECKED);
+	
 	Update();
 
 	SetTimer(m_hwnd, 1, 500, NULL);
@@ -254,12 +254,10 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			SetDlgItemText(m_hwnd, IDC_FILTER, "");
 			break;
 		case IDC_PLAY:
-			m_bPlayOnSel = !m_bPlayOnSel;
-			Update();
+			m_bPlayOnSel = IsDlgButtonChecked(m_hwnd, IDC_PLAY) == BST_CHECKED;
 			break;
 		case IDC_SCROLL:
-			m_bScroll = !m_bScroll;
-			Update();
+			m_bScroll = IsDlgButtonChecked(m_hwnd, IDC_SCROLL) == BST_CHECKED;
 			break;
 		case DELETE_MSG:
 			if (ListView_GetSelectedCount(m_pLists.Get(0)->GetHWND()))

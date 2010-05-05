@@ -113,7 +113,7 @@ private:
 class SWS_DockWnd
 {
 public:
-	SWS_DockWnd(int iResource, const char* cName, int iDockOrder);
+	SWS_DockWnd(int iResource, const char* cName, int iDockOrder, int iCmdID);
 	void Show(bool bToggle, bool bActivate);
 	bool IsActive(bool bWantEdit = false);
 	bool IsValidWindow() { return IsWindow(m_hwnd) ? true : false; }
@@ -152,5 +152,6 @@ private:
 	int wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static LPARAM screensetCallback(int action, char *id, void *param, int param2);
 	static int keyHandler(MSG *msg, accelerator_register_t *ctx);
+	int m_iCmdID;
 	accelerator_register_t m_ar;
 };

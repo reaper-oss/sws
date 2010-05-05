@@ -91,7 +91,7 @@ void SNM_FXChainView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 }
 
 SNM_FXChainWnd::SNM_FXChainWnd()
-:SWS_DockWnd(IDD_SNM_FXCHAINLIST, "FX Chains", 30002/*JFB ?*/)
+:SWS_DockWnd(IDD_SNM_FXCHAINLIST, "FX Chains", 30006, SWSGetCommandID(OpenFXChainList))
 {
 	if (m_bShowAfterInit)
 		Show(false, false);

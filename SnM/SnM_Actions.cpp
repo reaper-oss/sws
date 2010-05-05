@@ -294,24 +294,24 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Split MIDI or Audio at prior zero crossing" }, "S&M_SPLIT1", splitMidiAudio, NULL, },
 
-	{ { DEFACCEL, "SWS/S&M: Show take volume enveloppe" }, "S&M_TAKEENV1", showHideTakeVolEnvelope, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Show take pan enveloppe" }, "S&M_TAKEENV2", showHideTakePanEnvelope, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Show take mute enveloppe" }, "S&M_TAKEENV3", showHideTakeMuteEnvelope, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Hide take volume enveloppe" }, "S&M_TAKEENV4", showHideTakeVolEnvelope, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Hide take pan enveloppe" }, "S&M_TAKEENV5", showHideTakePanEnvelope, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Hide take mute enveloppe" }, "S&M_TAKEENV6", showHideTakeMuteEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Show take volume envelope" }, "S&M_TAKEENV1", showHideTakeVolEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Show take pan envelope" }, "S&M_TAKEENV2", showHideTakePanEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Show take mute envelope" }, "S&M_TAKEENV3", showHideTakeMuteEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Hide take volume envelope" }, "S&M_TAKEENV4", showHideTakeVolEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Hide take pan envelope" }, "S&M_TAKEENV5", showHideTakePanEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Hide take mute envelope" }, "S&M_TAKEENV6", showHideTakeMuteEnvelope, NULL, 0},
 /*exist natively
-	{ { DEFACCEL, "SWS/S&M: Toggle show take volume enveloppe" }, "S&M_TAKEENV7", showHideTakeVolEnvelope, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Toggle show take pan enveloppe" }, "S&M_TAKEENV8", showHideTakePanEnvelope, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Toggle show take mute enveloppe" }, "S&M_TAKEENV9", showHideTakeMuteEnvelope, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Toggle show take volume envelope" }, "S&M_TAKEENV7", showHideTakeVolEnvelope, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Toggle show take pan envelope" }, "S&M_TAKEENV8", showHideTakePanEnvelope, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Toggle show take mute envelope" }, "S&M_TAKEENV9", showHideTakeMuteEnvelope, NULL, -1},
 */
 
 	// Experimental, misc., deprecated, etc.. ---------------------------------
 //	{ { DEFACCEL, "SWS/S&M: Move track (1 -> 4)" }, "S&M_TMP1", moveTest, NULL, },
 //	{ { DEFACCEL, "SWS/S&M: Select items by name" }, "S&M_ITM1", selectItemsByNamePrompt, NULL, },
-//	{ { DEFACCEL, "SWS/S&M: test -> Padre show take volume enveloppe" }, "S&M_TMP1", ShowTakeEnvPadreTest, NULL, 0},
-//	{ { DEFACCEL, "SWS/S&M: test -> Padre show take pan enveloppe" }, "S&M_TMP2", ShowTakeEnvPadreTest, NULL, 1},
-//	{ { DEFACCEL, "SWS/S&M: test -> Padre show take mute enveloppe" }, "S&M_TMP3", ShowTakeEnvPadreTest, NULL, 2},
+//	{ { DEFACCEL, "SWS/S&M: test -> Padre show take volume envelope" }, "S&M_TMP1", ShowTakeEnvPadreTest, NULL, 0},
+//	{ { DEFACCEL, "SWS/S&M: test -> Padre show take pan envelope" }, "S&M_TMP2", ShowTakeEnvPadreTest, NULL, 1},
+//	{ { DEFACCEL, "SWS/S&M: test -> Padre show take mute envelope" }, "S&M_TMP3", ShowTakeEnvPadreTest, NULL, 2},
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

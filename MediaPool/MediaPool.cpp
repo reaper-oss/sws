@@ -503,7 +503,7 @@ void SWS_MediaPoolFileView::OnBeginDrag()
 }
 
 SWS_MediaPoolWnd::SWS_MediaPoolWnd()
-:SWS_DockWnd(IDD_MEDIAPOOL, "Media Pool", 30004), m_curGroup(NULL), m_projGroup("Project", false)
+:SWS_DockWnd(IDD_MEDIAPOOL, "Media Pool", 30004, SWSGetCommandID(OpenMediaPool)), m_curGroup(NULL), m_projGroup("Project", false)
 {
 	// Load files from the "database"
 	char cBuf[512];

@@ -127,7 +127,7 @@ void SWS_AutoColorView::OnItemSelChanged(LPARAM item, int iState)
 }
 
 SWS_AutoColorWnd::SWS_AutoColorWnd()
-:SWS_DockWnd(IDD_AUTOCOLOR, "Autocolor", 30005)
+:SWS_DockWnd(IDD_AUTOCOLOR, "Autocolor", 30005, SWSGetCommandID(OpenAutoColor))
 #ifndef _WIN32
 	,m_bSettingColor(false)
 #endif

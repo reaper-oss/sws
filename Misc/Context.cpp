@@ -111,6 +111,14 @@ void UnselAll(COMMAND_T*)
 	Main_OnCommand(40331, 0);
 }
 
+void SafeTiemSel(COMMAND_T*)
+{
+	double t1, t2;
+	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
+	if (t1 == t2)
+		Main_OnCommand(40290, 0);
+}
+
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Copy items/tracks/env, obeying time sel" },				  "SWS_SMARTCOPY",      SmartCopy, NULL, },
@@ -119,7 +127,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Split items at time sel (if exists), else at edit cursor" },  "SWS_SMARTSPLIT", SmartSplit, NULL, },
 	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points (depending on focus)" }, "SWS_SMARTUNSEL", SmartUnsel, NULL, },
 	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points" },				  "SWS_UNSELALL",		UnselAll, NULL, },
-
+	{ { DEFACCEL, "SWS: Set time sel to sel item(s) if no current time sel" },	  "SWS_SAFETIMESEL",    SafeTiemSel, NULL, },
+	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 

@@ -38,8 +38,8 @@
 
 #include "stdafx.h"
 
-SWS_DockWnd::SWS_DockWnd(int iResource, const char* cName, int iDockOrder)
-:m_hwnd(NULL), m_bDocked(false), m_iResource(iResource), m_cName(cName), m_iDockOrder(iDockOrder), m_bUserClosed(false)
+SWS_DockWnd::SWS_DockWnd(int iResource, const char* cName, int iDockOrder, int iCmdID)
+:m_hwnd(NULL), m_bDocked(false), m_iResource(iResource), m_cName(cName), m_iDockOrder(iDockOrder), m_bUserClosed(false), m_iCmdID(iCmdID)
 {
 	screenset_register((char*)m_cName, screensetCallback, this);
 
@@ -262,6 +262,7 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 			m_pLists.Empty(true);
 			m_hwnd = NULL;
+			RefreshToolbar(m_iCmdID);
 			break;
 		default:
 			return OnUnhandledMsg(uMsg, wParam, lParam);

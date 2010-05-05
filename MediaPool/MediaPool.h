@@ -124,6 +124,7 @@ protected:
 	int OnKey(MSG* msg, int iKeyState);
 };
 
+void OpenMediaPool(COMMAND_T*);
 void MediaPoolUpdate();
 int MediaPoolInit();
 void MediaPoolExit();

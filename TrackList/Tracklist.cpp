@@ -196,7 +196,7 @@ int SWS_TrackListView::GetItemState(LPARAM item)
 }
 
 SWS_TrackListWnd::SWS_TrackListWnd()
-:SWS_DockWnd(IDD_TRACKLIST, "Track List", 30003),m_bUpdate(false),
+:SWS_DockWnd(IDD_TRACKLIST, "Track List", 30003, SWSGetCommandID(OpenTrackList)),m_bUpdate(false),
 m_trLastTouched(NULL),m_bHideFiltered(false),m_bLink(false),m_cOptionsKey("Track List Options")
 {
 	// Restore state

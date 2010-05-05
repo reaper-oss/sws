@@ -1,5 +1,11 @@
-Fingers' updates
-Fixed bug in Takes mixer (issue #145)
+!v1.7.2 #7 (May 4, 2010)
+Issue 140: (Hopefully) fixed markerlist option saving
+Issue 144: Added action "SWS: Set time sel to sel item(s) if no current time sel"
+Issue 146: Fixed envelope misspelling
+Toolbar states are updated properly when SWS_DockWnd is closed with titlebar 'X'
+
+Fingers' updates:
+Fixed bug in Takes mixer (issue 145)
 Added 'FX' submenu to SWS Tracklist using SnM actions
 
 !v1.7.2 #6 (April 29, 2010)
@@ -91,12 +97,12 @@ Added routing actions:
 +SWS/S&M: Paste receives to selected track(s)
 
 Added take env. actions:
-+SWS/S&M: Show take volume enveloppe
-+SWS/S&M: Show take pan enveloppe
-+SWS/S&M: Show take mute enveloppe
-+SWS/S&M: Hide take volume enveloppe
-+SWS/S&M: Hide take pan enveloppe
-+SWS/S&M: Hide take mute enveloppe
++SWS/S&M: Show take volume envelope
++SWS/S&M: Show take pan envelope
++SWS/S&M: Show take mute envelope
++SWS/S&M: Hide take volume envelope
++SWS/S&M: Hide take pan envelope
++SWS/S&M: Hide take mute envelope
 
 !v1.7.1 #17 (April 18, 2010)
 +SWS/PADRE: Envelope processor: selected track (for long fade ins/outs, scaling)

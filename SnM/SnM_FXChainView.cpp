@@ -27,7 +27,7 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
-#include "../Utility/SectionLock.h"
+//JFB #include "../Utility/SectionLock.h"
 #include "SnM_FXChainView.h"
 
 #define SAVEWINDOW_POS_KEY "S&M - FX Chain List Save Window Position"
@@ -44,8 +44,14 @@
 // Globals
 SNM_FXChainWnd* g_pFXChainsWnd = NULL;
 int g_fxChainSlots[MAX_FXCHAIN_SLOTS]; // Awesome model (just to store some int*)
-HANDLE g_fxChainSlotsMutex;
 static SWS_LVColumn g_fxChainListCols[] = { {50,2,"Slot"}, {100,2,"Name"}, {250,2,"Path"} };
+int g_FXChainViewDblClickType = IDC_RADIO1; 
+//JFB HANDLE g_fxChainSlotsMutex;
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_FXChainView
+///////////////////////////////////////////////////////////////////////////////
 
 SNM_FXChainView::SNM_FXChainView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, 3, g_fxChainListCols, "S&M - FX Chain View State", false) 
@@ -80,15 +86,37 @@ void SNM_FXChainView::OnItemDblClk(LPARAM item, int iCol)
 	int* slot = (int*)item;
 	if (g_pFXChainsWnd && !g_fxChainList[*slot].GetLength())
 		g_pFXChainsWnd->OnCommand(LOAD_MSG, item);
+	else
+	{
+		switch(g_FXChainViewDblClickType)
+		{
+			case IDC_RADIO1:
+				loadPasteTrackFXChain("Load/Apply FX Chain to selected tracks(s)", *slot);
+				break;
+			case IDC_RADIO2:
+				loadPasteTakeFXChain("Load/Apply FX Chain to selected item(s)", *slot, true);
+				break;
+			case IDC_RADIO3:
+				loadPasteTakeFXChain("Load/Apply FX Chain to selected item(s), all takes", *slot, false);
+				break;
+			default:
+				break;
+		}
+	}
 }
 
 void SNM_FXChainView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 {
-	SectionLock lock(g_fxChainSlotsMutex);
+//JFB	SectionLock lock(g_fxChainSlotsMutex);
 	pBuf->Resize(MAX_FXCHAIN_SLOTS);
 	for (int i = 0; i < pBuf->GetSize(); i++)
 		pBuf->Get()[i] = (LPARAM)&g_fxChainSlots[i];
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_FXChainWnd
+///////////////////////////////////////////////////////////////////////////////
 
 SNM_FXChainWnd::SNM_FXChainWnd()
 :SWS_DockWnd(IDD_SNM_FXCHAINLIST, "FX Chains", 30006, SWSGetCommandID(OpenFXChainList))
@@ -101,7 +129,7 @@ void SNM_FXChainWnd::Update()
 {
 	if (m_pLists.GetSize())
 	{
-		SectionLock lock(g_fxChainSlotsMutex); 
+//JFB		SectionLock lock(g_fxChainSlotsMutex); 
 		m_pLists.Get(0)->Update();
 	}
 }
@@ -109,14 +137,23 @@ void SNM_FXChainWnd::Update()
 void SNM_FXChainWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
+	m_resize.init_item(IDC_RADIO1, 0.0, 1.0, 0.0, 1.0);
+	m_resize.init_item(IDC_RADIO2, 0.0, 1.0, 0.0, 1.0);
+	m_resize.init_item(IDC_RADIO3, 0.0, 1.0, 0.0, 1.0);
+	m_resize.init_item(IDC_STATIC1, 0.0, 1.0, 0.0, 1.0);
 	m_pLists.Add(new SNM_FXChainView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+	CheckDlgButton(m_hwnd, IDC_RADIO1, true);
 	Update();
 //	SetTimer(m_hwnd, 1, 1000, NULL);
 }
 
 void SNM_FXChainWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-	if (wParam >= CLEAR_MSG && wParam <= DISPLAY_MSG)
+	if (wParam >= IDC_RADIO1 && wParam <= IDC_RADIO3)
+	{
+		g_FXChainViewDblClickType = wParam;
+	}
+	else if (wParam >= CLEAR_MSG && wParam <= DISPLAY_MSG)
 	{
 		if (ListView_GetSelectedCount(m_pLists.Get(0)->GetHWND()))
 		{
@@ -206,17 +243,21 @@ int SNM_FXChainWnd::OnKey(MSG* msg, int iKeyState) {
 	return 0;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Init, commands
+///////////////////////////////////////////////////////////////////////////////
+
 int FXChainListInit()
 {
 	for (int i=0; i < MAX_FXCHAIN_SLOTS; i++)
 	{
-		SectionLock lock(g_fxChainSlotsMutex);
+//JFB		SectionLock lock(g_fxChainSlotsMutex);
 		char path[BUFFER_SIZE] = "";
 		readFXChainSlotIniFile(i, path, BUFFER_SIZE);
 		g_fxChainList[i].Set(path);
 		g_fxChainSlots[i] = i;
 	}
-
 	g_pFXChainsWnd = new SNM_FXChainWnd();
 	return 1;
 }

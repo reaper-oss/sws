@@ -1,3 +1,11 @@
+S&M updates:
++Updated cue buss actions and http://stash.reaper.fm/4983/CueBusWnd.jpg|cue buss window| 
+added solo defeat option (the v3.5 native one, ie no more track grouping option)
++FX chain view enhancement (customizable double-click behavior)
++Better behavior for all cycle FX window actions (focus prev/next & float prev/next and close others actions) when multi track selection occurs:
++Better default paths for FX chains, track templates
++fixes: issue 149, issue 109
+
 !v1.7.2 #7 (May 4, 2010)
 Issue 140: (Hopefully) fixed markerlist option saving
 Issue 144: Added action "SWS: Set time sel to sel item(s) if no current time sel"

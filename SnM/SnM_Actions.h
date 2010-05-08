@@ -126,16 +126,17 @@ void showAllFXWindows(COMMAND_T * _ct);
 void closeAllFXWindows(COMMAND_T * _ct);
 void closeAllFXWindowsExceptFocused(COMMAND_T * _ct);
 void toggleAllFXWindows(COMMAND_T * _ct);
-void floatOnlyFXWnd(COMMAND_T * _ct);
 int getFocusedFX(MediaTrack* _tr, int* _firstFound = NULL);
-int focusNextPreviousTrackFXWnd(MediaTrack* _tr, int _dir, bool _forceCycle);
-void focusNextPreviousSelTracksFXWnd(COMMAND_T * _ct);
-void focusNextPreviousAllTracksFXWnd(COMMAND_T * _ct);
+//int focusNextPreviousTrackFXWnd(MediaTrack* _tr, int _dir, bool _forceCycle);
+bool cycleFocusFXWnd(int _dir, bool _selectedTracks);
+void cycleFocusFXWndSelTracks(COMMAND_T * _ct);
+void cycleFocusFXWndAllTracks(COMMAND_T * _ct);
+void cycleFloatFXWndSelTracks(COMMAND_T * _ct);
 void setMainWindowActive(COMMAND_T* _ct);
 
 
 // *** SnM_Sends.cpp ***
-bool cueTrack(const char* _busName, int _type, const char* _undoMsg, bool _showRouting = true, int _soloGrp = 0, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
+bool cueTrack(const char* _busName, int _type, const char* _undoMsg, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
 void cueTrackPrompt(COMMAND_T* _ct);
 void cueTrack(COMMAND_T* _ct);
 
@@ -161,8 +162,8 @@ void removeSends(COMMAND_T* _ct);
 void removeReceives(COMMAND_T* _ct);
 void removeRouting(COMMAND_T* _ct);
 
-void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloGrp, bool* _sendToMaster, int* _hwOuts);
-void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTemplatePath, bool _showRouting, int _soloGrp, bool _sendToMaster, int* _hwOuts);
+void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
+void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
 
 
 // *** SnM_Item.cpp ***
@@ -213,5 +214,6 @@ void FXChainListExit();
 void OpenFXChainList(COMMAND_T*);
 
 
-// *** GUIs ***
+// *** SnM_Dlg.cpp ***
+void fillHWoutDropDown(HWND _hwnd, int _idc);
 WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);

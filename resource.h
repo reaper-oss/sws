@@ -233,6 +233,7 @@
 #define IDC_PADREENVPROC_ACTIVETAKES    1179
 #define IDC_PADREENVPROC_TIMESEGMENT    1180
 #define IDC_PADREENVPROC_TAKEENV        1181
+#define IDC_CHECK4						1182
 
 // Next default values for new objects
 // 

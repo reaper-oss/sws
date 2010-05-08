@@ -73,7 +73,7 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 //          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
 // _undoMsg NULL=no undo
 bool cueTrack(const char* _busName, int _type, const char* _undoMsg, 
-			  bool _showRouting, int _soloGrp, 
+			  bool _showRouting, int _soloDefeat, 
 			  char* _trTemplatePath, 
 			  bool _sendToMaster, int* _hwOuts) //optional prms
 {
@@ -117,20 +117,31 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 			if (cueTr && p && tr != cueTr)
 			{
 				addReceiveWithVolPan(tr, cueTr, _type, p); 
+#ifdef _SNM_TRACK_GROUP_EX
 				SNM_ChunkParserPatcher pSrc(tr);
 				updated |= (addSoloToGroup(cueTr, _soloGrp, true, &pSrc) > 0); // nop if invalid prms
+#endif
 			}
 		}
 	}
 
 	if (cueTr && p)
 	{
+#ifdef _SNM_TRACK_GROUP_EX
 		// add slave solo to track grouping
 		updated |= (addSoloToGroup(cueTr, _soloGrp, false, p) > 0); // nop if invalid prms
-
+#endif
 		// send to master/parent init
 		if (!chunk.GetLength())
 		{
+			// solo defeat
+			if (_soloDefeat)
+			{
+				char c1[2] = "1";
+				updated |= (p->ParsePatch(SNM_SET_CHUNK_CHAR, 1, "TRACK", "MUTESOLO", -1, 0, 3, c1) > 0);
+			}
+			
+			// master/parend send
 			WDL_String mainSend("MAINSEND 1");
 			if (!_sendToMaster)
 				 mainSend.Set("MAINSEND 0");
@@ -585,9 +596,9 @@ void removeRouting(COMMAND_T* _ct)
 	Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); 
 }
 
-void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloGrp, bool* _sendToMaster, int* _hwOuts)
+void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts)
 {
-	if (_busName && _reaType && _trTemplate && _trTemplatePath && _showRouting && _soloGrp && _sendToMaster && _hwOuts)
+	if (_busName && _reaType && _trTemplate && _trTemplatePath && _showRouting && _soloDefeat && _sendToMaster && _hwOuts)
 	{
 		char iniFilePath[BUFFER_SIZE] = "";
 		sprintf(iniFilePath,SNM_FORMATED_INI_FILE,GetExePath());
@@ -612,9 +623,9 @@ void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _
 		GetPrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT","0",sendToMaster,16,iniFilePath);
 		*_sendToMaster = (atoi(sendToMaster) == 1); // 0 if failed 
 
-		char soloGrp[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","SOLO_TRACK_GRP","32",soloGrp,16,iniFilePath);
-		*_soloGrp = atoi(soloGrp); // 0 if failed 
+		char soloDefeat[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT","1",soloDefeat,16,iniFilePath);
+		*_soloDefeat = atoi(soloDefeat); // 0 if failed 
 
 		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
 		{
@@ -628,7 +639,7 @@ void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _
 	}
 }
 
-void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTemplatePath, bool _showRouting, int _soloGrp, bool _sendToMaster, int* _hwOuts)
+void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts)
 {
 	if (_busName && _trTemplatePath && _hwOuts)
 	{
@@ -642,9 +653,10 @@ void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTem
 		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH",_trTemplatePath,iniFilePath);
 		WritePrivateProfileString("LAST_CUEBUS","SHOW_ROUTING",_showRouting ? "1" : "0",iniFilePath);
 		WritePrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT",_sendToMaster ? "1" : "0",iniFilePath);
-		char soloGrp[16] = "";
-		sprintf(soloGrp,"%d",_soloGrp);
-		WritePrivateProfileString("LAST_CUEBUS","SOLO_TRACK_GRP",soloGrp,iniFilePath);
+
+		char soloDefeat[16] = "";
+		sprintf(soloDefeat,"%d",_soloDefeat);
+		WritePrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT",soloDefeat,iniFilePath);
 
 		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
 		{

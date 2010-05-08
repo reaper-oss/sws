@@ -26,50 +26,13 @@
 ******************************************************************************/
 
 
+
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_ChunkParserPatcher.h"
 
-void moveTrack(int _src, int _dest)
-{
-	// to do _dest to check/clamp..
-	InsertTrackAtIndex(_dest, false);
-	TrackList_AdjustWindows(true);
-	MediaTrack* destTr = CSurf_TrackFromID(_dest+1, false);
-	MediaTrack* srcTr = CSurf_TrackFromID(_src, false);
-	if (destTr && srcTr)
-	{
-		SNM_ChunkParserPatcher parser(srcTr);
-		if (parser.RemoveIds() >= 0)
-		{
-			// Get the chunk without ids *but* with receives
-			WDL_String updatedChunk(parser.GetChunk()->Get());
 
-			// applies it to the dest. track
-			if (updatedChunk.GetLength() && !GetSetObjectState(destTr, updatedChunk.Get()))
-			{
-				//copy sends
-				int j=0;
-				MediaTrack* sendDest = NULL;
-				do
-				{
-					sendDest = (MediaTrack*)GetSetTrackSendInfo(srcTr, 0, j, "P_DESTTRACK", NULL);
-//					if (sendDest)
-//						addSend(destTr, sendDest, 0);
-					j++;
-				}
-				while (sendDest);
-
-				// remove the source track
-				DeleteTrack(srcTr);
-			}
-		}
-	}
-}
-
-void moveTest(COMMAND_T* _ct) {
-	moveTrack(1,4);
-}
+#ifdef _SNM_MISC
 
 bool isLoopOrInProjectTakes(MediaItem* _item, int _take)
 {
@@ -189,3 +152,5 @@ void ShowTakeEnvPadreTest(COMMAND_T* _ct)
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
+
+#endif

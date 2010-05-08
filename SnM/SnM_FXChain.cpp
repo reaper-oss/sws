@@ -168,6 +168,7 @@ void setTrackFXChain(const char* _title, int _slot, bool _clear)
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			SNM_FXChainTrackPatcher p(tr);
+			p.RemoveIds();
 			updated |= (p.SetFXChain(_clear ? NULL : &g_storedFXChain[_slot]) > 0);
 		}
 	}
@@ -296,7 +297,14 @@ bool browseStoreFXChain(int _slot)
 	bool ok = false;
 	char title[64] = "";
 	sprintf(title, "S&M - Load FX Chain (slot %d)", _slot);
-	char* filename = BrowseForFiles(title, "", NULL, false, "REAPER FX Chain (*.RfxChain)\0*.RfxChain\0");
+
+	char defaultPath[BUFFER_SIZE] = "";
+	strncpy(defaultPath, get_ini_file(), BUFFER_SIZE);
+	char* defFXChainPath = strrchr(defaultPath, PATH_SLASH_CHAR);
+	if (defFXChainPath)
+		strcpy((char*)defFXChainPath+1, "FXChains");
+
+	char* filename = BrowseForFiles(title, defaultPath, NULL, false, "REAPER FX Chain (*.RfxChain)\0*.RfxChain\0");
 	if (filename)
 	{
 		ok = loadStoreFXChain(_slot, filename);		

@@ -2,7 +2,12 @@ S&M updates:
 +Updated cue buss actions and http://stash.reaper.fm/4983/CueBusWnd.jpg|cue buss window| 
 added solo defeat option (the v3.5 native one, ie no more track grouping option)
 +FX chain view enhancement (customizable double-click behavior)
-+Better behavior for all cycle FX window actions (focus prev/next & float prev/next and close others actions) when multi track selection occurs:
++Better behavior for cycle FX window actions.
+When a mutli selection occurs, now the following actions will cycle between FXs *and* tracks:
+- SWS/S&M: Float previous FX (and close others) for selected track(s)
+- SWS/S&M: Float next FX (and close others) for selected track(s)
+- SWS/S&M: Focus previous floating FX window for selected track(s)
+- SWS/S&M: Focus next floating FX window for selected track(s)
 +Better default paths for FX chains, track templates
 +fixes: issue 149, issue 109
 

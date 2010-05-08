@@ -219,7 +219,7 @@ COMMAND_T g_XenCommandTable[] =
 	
 	{ { DEFACCEL, "Xenakios/SWS: Rename selected track(s)..." }, "XENAKIOS_RENAMETRAXDLG", DoRenameTracksDlg,	"Rename selected track(s)...", },
 	{ { DEFACCEL, "Xenakios/SWS: Minimize selected track(s) send panel height in mixer" }, "XENAKIOS_MINIZMIXSENDHEIGHT", DoMinMixSendPanelH, NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Minimize selected track(s) send & fx panel height in mixer" }, "XENAKIOS_MINIZMIXSENDFXHEIGHT", DoMinMixSendAndFxPanelH, NULL, },
+	{ { DEFACCEL, "Xenakios/SWS: Minimize selected track(s) send and fx panel height in mixer" }, "XENAKIOS_MINIZMIXSENDFXHEIGHT", DoMinMixSendAndFxPanelH, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Maximize selected track(s) fx panel height in mixer" }, "XENAKIOS_MAXMIXFXPANHEIGHT", DoMaxMixFxPanHeight, NULL, },
 	{ {}, SWS_ENDSUBMENU, },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },

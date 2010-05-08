@@ -296,7 +296,7 @@ bool browseStoreFXChain(int _slot)
 {
 	bool ok = false;
 	char title[64] = "";
-	sprintf(title, "S&M - Load FX Chain (slot %d)", _slot);
+	sprintf(title, "S&M - Load FX Chain (slot %d)", _slot+1);
 
 	char defaultPath[BUFFER_SIZE] = "";
 	strncpy(defaultPath, get_ini_file(), BUFFER_SIZE);

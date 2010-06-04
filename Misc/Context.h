@@ -28,4 +28,5 @@
 #pragma once
 
 int ContextInit();
+bool AreThereSelItemsInTimeSel();
 

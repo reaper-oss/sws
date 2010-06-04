@@ -1,5 +1,5 @@
 /******************************************************************************
-** SNM_ChunkParserPatcher.h
+** SNM_ChunkParserPatcher.h - v0.9
 ** Copyright (C) 2009-2010, JF Bédague 
 **
 **    This software is provided 'as-is', without any express or implied
@@ -21,16 +21,16 @@
 ******************************************************************************/
 
 // Here are some tools to parse, patch, process.. all RPP chunks and sub-chunks. 
-// SNM_ChunkParserPatcher is a class that can be used either as a 
-// SAX-ish parser (inheritance) or as a direct getter or alering tool, 
-// see ParsePatch() and Parse().
-// In both cases, it can also be associated to a WDL_String* (simple chunk 
-// parser/patcher) OR to a reaThing* (MediaTrack*, MediaItem*, ..). In this 
-// case, a SNM_ChunkParserPatcher instance only gets and sets (if needed) 
-// the chunk once, in between, the user works on a cache (itself updated), 
-// thus preventing "long" processings.
-// If any, the updates are automatically comitted when destroying a 
-// SNM_ChunkParserPatcher instance (can be done manually, see m_autoCommit).
+// SNM_ChunkParserPatcher is a class that can be used either as a SAX-ish 
+// parser (inheritance) or as a direct getter or alering tool, see ParsePatch() 
+// and Parse().
+//
+// In both cases, it's also either attached to a WDL_String* (simple/abstract 
+// chunk parser/patcher) -OR- to a reaThing* (MediaTrack*, MediaItem*, ..). 
+// In the latter case, a SNM_ChunkParserPatcher instance only gets (and sets, 
+// if needed) the chunk once, in between, the user works on a cache. If any, 
+// the updates are automatically comitted when destroying a SNM_ChunkParserPatcher 
+// instance (can also be forced/done manually, see m_autoCommit & Commit()).
 //
 // See use-cases here: 
 // http://code.google.com/p/sws-extension/source/browse/trunk#trunk/SnM
@@ -39,6 +39,7 @@
 // - MORE PERF. IMPROVMENT TO COME
 // - the code assumes getted/setted RPP chunks are consistent
 // - chunks may be HUGE!
+//
 
 #pragma once
 #ifndef _SNM_CHUNKPARSERPATCHER_H_
@@ -64,7 +65,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Static utility functions
 ///////////////////////////////////////////////////////////////////////////////
-
 
 // Removes lines from a chunk in one-go and without chunk recopy
 // Note: we parse rather than use a strchr() solution 'cause searched keywords
@@ -121,6 +121,7 @@ class SNM_ChunkParserPatcher
 {
 public:
 
+// Attached to a reaThing* (MediaTrack*, MediaItem*, ..)
 SNM_ChunkParserPatcher(void* _object, bool _autoCommit = true)
 {
 	m_chunk.Set("");
@@ -129,6 +130,7 @@ SNM_ChunkParserPatcher(void* _object, bool _autoCommit = true)
 	m_autoCommit = _autoCommit;
 }
 
+// Simple/abstract chunk parser/patcher
 SNM_ChunkParserPatcher(WDL_String* _chunk)
 {
 	m_chunk.Set(_chunk->Get());
@@ -146,13 +148,13 @@ virtual ~SNM_ChunkParserPatcher()
 
 // See ParsePatchCore() comments
 int ParsePatch(
-	int _mode = SNM_PARSE_AND_PATCH, // can be <0 for custom modes (inheritance)
-	int _depth = -1, // 1-based
+	int _mode = SNM_PARSE_AND_PATCH, 
+	int _depth = -1,
 	const char* _expectedParent = NULL, 
 	const char* _keyWord = NULL, 
-	int _numTokens = -1, // 0-based
-	int _occurence = -1, // 0-based
-	int _tokenPos = -1, // 0-based
+	int _numTokens = -1, 
+	int _occurence = -1, 
+	int _tokenPos = -1, 
 	void* _value = NULL,
 	void* _valueExcept = NULL)
 {
@@ -163,13 +165,13 @@ int ParsePatch(
 
 // See ParsePatchCore() comments
 int Parse(
-	int _mode = SNM_PARSE, // can be <0 for custom modes (inheritance)
-	int _depth = -1, // 1-based
+	int _mode = SNM_PARSE, 
+	int _depth = -1, 
 	const char* _expectedParent = NULL, 
 	const char* _keyWord = NULL, 
-	int _numTokens = -1, // 0-based
-	int _occurence = -1, // 0-based
-	int _tokenPos = -1, // 0-based
+	int _numTokens = -1, 
+	int _occurence = -1, 
+	int _tokenPos = -1, 
 	void* _value = NULL,
 	void* _valueExcept = NULL)
 {
@@ -328,9 +330,9 @@ protected:
 	// _mode: parsing mode, see ParsePatchCore(), <0 for custom parsing modes
 	// _lp: the line beeing parsed as a LineParser
 	// _parsedLine: : the line beeing parsed as a SNM_String
-	// _parsedParents: the parsed line's parent (last item) and its the grand-parent 
-	//                 and so one to the root. The number of items is also the parsed 
-	//                 depth (so it's 1-based)
+	// _parsedParents: the parsed line's parent (last item), grand-parent, etc..
+	//                 up to the root. The number of items is also the parsed 
+	//                 depth (so 1-based)
 	// _parsedParent: the parsed line's parent (for facility)
 	// _newChunk: the chunk beeing built (while parsing)
 	// _updates: number of updates in comparison with the original chunk
@@ -339,7 +341,10 @@ protected:
 	// _parsedParent: can be retrieved from _parsedParents
 	//
 	// Return values: 
-	// true if chunk has been altered
+	// - true if the chunk has been altered 
+	//   => THE LINE BEEN PARSED IS REPLACED WITH _newChunk
+	// - false otherwise
+	//   => THE LINE BEEN PARSED REMAINS AS IT IS
 	//
 	virtual void NotifyStartChunk(int _mode) {}
 	virtual void NotifyEndChunk(int _mode) {}
@@ -409,32 +414,32 @@ void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch,
 
 // *** ParsePatchCore() ***
 //
-// Parameters: 
-// See bellow. Globaly, the method is tolerant; the less parameters 
-// provided (i.e. different from their default values), the more parsed 
-// lines will be notified to inherited instances (through Notifyxxx()), 
-// or, when it's used direcly, the more parsed lines will be read/altered.
-// Examples: parse all lines, parse only lines of 2nd depth, under 
-// parent "FXCHAIN", do all the lines begining with "<SOURCE" have 
-// "MIDI" as 2nd token ? Etc..
+// Parameters: see below. 
+// Globaly, the method is tolerant; the less parameters provided (i.e. 
+// different from their default values), the more parsed lines will be 
+// notified to inherited instances (through Notifyxxx()) or, when it's 
+// used direcly, the more lines will be read/altered.
+// Examples: 
+// parse all lines, parse only lines of 2nd depth under parent "FXCHAIN", 
+// do all the lines begining with "<SOURCE" have "MIDI" as 2nd token ? Etc..
 // Note: sometimes there's a dependency between the params to be provided
 // (most of the time with _mode). Should returns -1 if it's not respected.
 //
 // Return values:
-// Always return -1 on error/bad usage
-// or returns the number of updates done when altering (i.e. 0 nothing done), or
-// or returns the first found position in the chunk or 0 if not found when getting
+// Always return -1 on error/bad usage,
+// or returns the number of updates done when altering (0 nothing done), 
+// or returns the first found position +1 in the chunk (0 reserved for "not found")
 //
 int ParsePatchCore(
-	bool _write, // optimization flag (if false: no re-copy)
-	int _mode, // can be <0 for custom modes (usefull for inheritance)
-	int _depth, // 1-based!
+	bool _write,        // optimization flag (if false: no re-copy)
+	int _mode,          // can be <0 for custom modes (usefull for inheritance)
+	int _depth,         // 1-based!
 	const char* _expectedParent, 
 	const char* _keyWord, 
-	int _numTokens, // 0-based (-1: ignored)
-	int _occurence, // 0-based (-1: ignored, all occurences notified)
-	int _tokenPos, // 0-based (-1: ignored, may be mandatory depending on _mode 
-	void* _value, // value to get/set
+	int _numTokens,     // 0-based (-1: ignored)
+	int _occurence,     // 0-based (-1: ignored, all occurences notified)
+	int _tokenPos,      // 0-based (-1: ignored, may be mandatory depending on _mode 
+	void* _value,       // value to get/set
 	void* _valueExcept) // value to get/set for the "except case"
 {
 	// check params (not to do it in the parsing loop/switch-cases)
@@ -457,7 +462,7 @@ int ParsePatchCore(
 	// Start of chunk parsing
 	NotifyStartChunk(_mode);
 
-	int updates = 0, occurence = 0;
+	int updates = 0, occurence = 0, posSub = -1;
 	WDL_String newChunk("");
 	WDL_String* subChunkKeyword = NULL;
 	WDL_PtrList<WDL_String> parents;
@@ -501,7 +506,10 @@ int ParsePatchCore(
 					if (_mode == SNM_GET_SUBCHUNK_OR_LINE)
 					{
 						((WDL_String*)_value)->Append(">\n",2);
-						return 1; 
+
+						// returns 1st *KEYWORD* position of the sub-chunk + 1 
+						// ('cause 0 reserved for "not found")
+						return posSub;
 					}
 				}
 
@@ -572,10 +580,15 @@ int ParsePatchCore(
 							alter=true;
 							break;
 						case SNM_GET_SUBCHUNK_OR_LINE:
+						{
 							((WDL_String*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine.Get());
+							char* pSub = strstr(pLine, _keyWord);
+							// *KEYWORD* position + 1 ('cause 0 reserved for "not found")
+							posSub = (pSub ? ((int)(pSub-cData+1)) : -1);
 							if (*_keyWord == '<') subChunkKeyword = currentParent;
-							else return 1;
-							break;
+							else return posSub; 
+						}
+						break;
 						case SNM_REPLACE_SUBCHUNK_EXCEPT:
 							if (_valueExcept) {
 								newChunk.Append((char*)_valueExcept);
@@ -602,8 +615,7 @@ int ParsePatchCore(
 							break;
 						case SNM_PARSE_AND_PATCH_EXCEPT:
 						case SNM_PARSE_EXCEPT:
-							alter |= NotifyChunkLine(_mode, &lp, &curLine, occurence, 
-								&parents, currentParent->Get(), &newChunk, updates); 
+							alter |= NotifyChunkLine(_mode, &lp, &curLine, occurence, &parents, currentParent->Get(), &newChunk, updates); 
 							break;
 						case SNM_TOGGLE_CHUNK_INT_EXCEPT:
 						{

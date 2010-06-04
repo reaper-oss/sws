@@ -30,6 +30,7 @@
 #include "SnM_Actions.h"
 #include "SNM_ChunkParserPatcher.h"
 #include "SNM_Chunk.h"
+#include "../Misc/Context.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -62,6 +63,8 @@ void splitMidiAudio(COMMAND_T* _ct)
 					SNM_ChunkParserPatcher p(item);
 					char readSource[32] = "";
 					bool split=false;
+
+					//TODO: use PCM_Source (?)
 					if (p.Parse(SNM_GET_CHUNK_CHAR,2,"SOURCE","<SOURCE",-1,activeTake,1,readSource) > 0)
 					{
 						if (!strcmp(readSource,"MIDI") || !strcmp(readSource,"EMPTY"))
@@ -88,6 +91,15 @@ void splitMidiAudio(COMMAND_T* _ct)
 	}
 }
 
+void smartSplitMidiAudio(COMMAND_T* _ct)
+{
+	double t1, t2;
+	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
+	if (AreThereSelItemsInTimeSel() || (t1 != t2 && !CountSelectedMediaItems(0)))
+		Main_OnCommand(40061, 0); // Split at time sel
+	else
+		splitMidiAudio(_ct);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Take lanes: clear take, build lanes, ...

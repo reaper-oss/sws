@@ -54,7 +54,6 @@ void loadPasteTakeFXChain(const char* _title, int _slot, bool _activeOnly)
 	}
 }
 
-// could be <0 (e.g. clear, ..)
 void setTakeFXChain(const char* _title, int _slot, bool _activeOnly, bool _clear)
 {
 	bool updated = false;
@@ -127,16 +126,6 @@ void clearActiveTakeFXChain(COMMAND_T* _ct) {
 void clearAllTakesFXChain(COMMAND_T* _ct) {
 	setTakeFXChain(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
 }
-
-/*JFB
-void setActiveTakeFXChain(COMMAND_T* _ct) {
-	setTakeFXChain((int)_ct->user, true, false);
-}
-
-void setAllTakesFXChain(COMMAND_T* _ct) {
-	setTakeFXChain((int)_ct->user, false, false);
-}
-*/
 
 
 ///////////////////////////////////////////////////////////////////////////////

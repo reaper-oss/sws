@@ -1,4 +1,16 @@
 S&M updates:
++Added actions:
+SWS/S&M: Focus previous floating FX for selected tracks (+ main window on cycle)
+SWS/S&M: Focus next floating FX for selected tracks (+ main window on cycle)
+SWS/S&M: Focus previous floating FX (+ main window on cycle)
+SWS/S&M: Focus next floating FX (+ main window on cycle)
+Reminder: for "alt-tabish" switch between FX, these actions need to be bind with special modifiers in order to pass-thru the main window (example: focus next/previous = Ctrl Shift +/-)
+SWS/S&M: Split items at time selection (if exists), else at cursor (MIDI) or at prior zero crossing (audio)
++Action list clean-up (wording updates as proposed in issue 119)
++Fixed possible crash of "Xenakios/SWS: Toggle mute Master send n"
+
+!v1.7.2 #8 (May 8, 2010)
+S&M updates:
 +Updated cue buss actions and http://stash.reaper.fm/4983/CueBusWnd.jpg|cue buss window| 
 added solo defeat option (the v3.5 native one, ie no more track grouping option)
 +FX chain view enhancement (customizable double-click behavior)

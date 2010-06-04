@@ -44,6 +44,7 @@ WDL_PtrList<WDL_PtrList<t_SendRcv> > g_rcvClipboard;
 // _destTr: destination track
 // _type:   reaper's type
 //          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
+// _p:      for multi-patch optimization, current destination track's SNM_SendPatcher
 bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, SNM_SendPatcher* _p)
 {
 	bool update = false;
@@ -68,14 +69,13 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 }
 
 // Adds a cue buss track from track selection
-// _busName
 // _type:   reaper's type
 //          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
 // _undoMsg NULL=no undo
 bool cueTrack(const char* _busName, int _type, const char* _undoMsg, 
 			  bool _showRouting, int _soloDefeat, 
 			  char* _trTemplatePath, 
-			  bool _sendToMaster, int* _hwOuts) //optional prms
+			  bool _sendToMaster, int* _hwOuts) 
 {
 	bool updated = false;
 
@@ -358,8 +358,7 @@ bool pasteSendsReceives(WDL_PtrList<WDL_PtrList<t_SendRcv> >* _sends,
 	// => we'll patch all tracks in one go thanks to this list
 	WDL_PtrList<SNM_ChunkParserPatcher> ps;
 
-	// 1st loop not to remove the receives (can't be done in the 
-	// 2nd one: could remove those we're currently adding)
+	// 1st loop to remove the native receives 
 	int selTrackIdx = 0;
 	for (int i = 1; i <= GetNumTracks(); i++)  //doesn't include master
 	{
@@ -374,8 +373,9 @@ bool pasteSendsReceives(WDL_PtrList<WDL_PtrList<t_SendRcv> >* _sends,
 		}
 	}
 
+	// 2nd one: to add ours
 	selTrackIdx = 0;
-	for (int i = 1; i <= GetNumTracks(); i++)  //doesn't include master
+	for (int i = 1; i <= GetNumTracks(); i++) // doesn't include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -433,7 +433,7 @@ void pasteWithIOs(COMMAND_T* _ct) {
 	Undo_BeginBlock();
 	int iTracks = GetNumTracks();	
 	Main_OnCommand(40058, 0); // native track paste
-	if (iTracks != GetNumTracks()) // See if tracks were pasted
+	if (iTracks != GetNumTracks()) // see if tracks were pasted
 		pasteSendsReceives(&g_sndTrackClipboard, &g_rcvTrackClipboard, true);
 	// for io buttons, etc (but KO right now..)
 //	TrackList_AdjustWindows(false); 

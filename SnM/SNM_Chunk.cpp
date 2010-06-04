@@ -316,7 +316,6 @@ int SNM_FXChainTrackPatcher::SetFXChain(WDL_String* _fxChain)
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_TakeParserPatcher
-// important: it assumes there're at least 2 takes (item should be removed otherwise)
 ///////////////////////////////////////////////////////////////////////////////
 
 bool SNM_TakeParserPatcher::NotifyEndElement(int _mode, LineParser* _lp, WDL_String* _parsedLine,  

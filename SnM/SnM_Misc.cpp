@@ -26,7 +26,6 @@
 ******************************************************************************/
 
 
-
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_ChunkParserPatcher.h"
@@ -154,3 +153,4 @@ void ShowTakeEnvPadreTest(COMMAND_T* _ct)
 }
 
 #endif
+

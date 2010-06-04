@@ -75,8 +75,6 @@ void pasteAllTakesFXChain(COMMAND_T* _ct);
 void clearActiveTakeFXChain(COMMAND_T* _ct);
 void clearAllTakesFXChain(COMMAND_T* _ct);
 void setTakeFXChain(const char* _title, int _slot, bool _activeOnly, bool _clear);
-//void setActiveTakeFXChain(COMMAND_T* _ct);
-//void setAllTakesFXChain(COMMAND_T* _ct);
 
 void loadPasteTrackFXChain(const char* _title, int _slot);
 void setTrackFXChain(const char* _title, int _slot, bool _clear);
@@ -126,12 +124,13 @@ void showAllFXWindows(COMMAND_T * _ct);
 void closeAllFXWindows(COMMAND_T * _ct);
 void closeAllFXWindowsExceptFocused(COMMAND_T * _ct);
 void toggleAllFXWindows(COMMAND_T * _ct);
-int getFocusedFX(MediaTrack* _tr, int* _firstFound = NULL);
-//int focusNextPreviousTrackFXWnd(MediaTrack* _tr, int _dir, bool _forceCycle);
+int getFocusedFX(MediaTrack* _tr, int _dir, int* _firstFound = NULL);
 bool cycleFocusFXWnd(int _dir, bool _selectedTracks);
 void cycleFocusFXWndSelTracks(COMMAND_T * _ct);
 void cycleFocusFXWndAllTracks(COMMAND_T * _ct);
 void cycleFloatFXWndSelTracks(COMMAND_T * _ct);
+void cycleFocusFXAndMainWndAllTracks(COMMAND_T * _ct);
+void cycleFocusFXMainWndSelTracks(COMMAND_T * _ct);
 void setMainWindowActive(COMMAND_T* _ct);
 
 
@@ -168,6 +167,7 @@ void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTem
 
 // *** SnM_Item.cpp ***
 void splitMidiAudio(COMMAND_T* _ct);
+void smartSplitMidiAudio(COMMAND_T* _ct);
 
 bool isEmptyMidi(MediaItem_Take* _take);
 void setEmptyTakeChunk(WDL_String* _chunk);
@@ -192,16 +192,6 @@ bool ShowTakeEnvPan(MediaItem_Take* _take);
 bool ShowTakeEnvMute(MediaItem_Take* _take);
 
 
-// *** SnM_Misc.cpp ***
-void moveTrack(int _src, int _dest); 
-void moveTest(COMMAND_T* _ct);
-bool isLoopOrInProjectTakes(MediaItem* _item, int _take);
-bool selectItemsByName(const char* cUndoMsg, char* cName);
-bool selectItemsByNamePrompt(const char* cCaption, char * _reply);
-void selectItemsByNamePrompt(COMMAND_T* _ct);
-void ShowTakeEnvPadreTest(COMMAND_T* _ct);
-
-
 // *** SnM_Track.cpp ***
 int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPatcher* _cpp);
 bool loadTrackTemplate(char* _filename, WDL_String* _chunk);
@@ -217,3 +207,12 @@ void OpenFXChainList(COMMAND_T*);
 // *** SnM_Dlg.cpp ***
 void fillHWoutDropDown(HWND _hwnd, int _idc);
 WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+
+// *** SnM_Misc.cpp ***
+bool isLoopOrInProjectTakes(MediaItem* _item, int _take);
+bool selectItemsByName(const char* cUndoMsg, char* cName);
+bool selectItemsByNamePrompt(const char* cCaption, char * _reply);
+void selectItemsByNamePrompt(COMMAND_T* _ct);
+void ShowTakeEnvPadreTest(COMMAND_T* _ct);
+
+

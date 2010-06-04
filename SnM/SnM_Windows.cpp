@@ -267,7 +267,7 @@ void closeAllFXWindowsExceptFocused(COMMAND_T * _ct)
 }
 
 // returns -1 if none
-int getFocusedFX(MediaTrack* _tr, int* _firstFound)
+int getFocusedFX(MediaTrack* _tr, int _dir, int* _firstFound)
 {
 	int focused = -1;
 	if (_firstFound) *_firstFound = -1;
@@ -275,7 +275,7 @@ int getFocusedFX(MediaTrack* _tr, int* _firstFound)
 	if (_tr && IsWindow(w))
 	{
 		int fxCount = TrackFX_GetCount(_tr);
-		for (int j = 0; j < fxCount; j++)
+		for (int j = (_dir > 0 ? 0 : (fxCount-1)); (_dir > 0 ? (j < fxCount) : (j>=0)); j+=_dir)
 		{
 			HWND w2 = TrackFX_GetFloatingWindow(_tr,j);
 			if (IsWindow(w2))
@@ -293,14 +293,22 @@ int getFocusedFX(MediaTrack* _tr, int* _firstFound)
 }
 
 bool cycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTracks,
-     bool (*job)(MediaTrack*,int,bool)) // see 2 "jobs" bellow..
+     bool (*job)(MediaTrack*,int,bool), bool* _cycled) // see 2 "jobs" below..
 {
 	int cpt1 = 0;
 	int i = _trStart;
 	while (cpt1 <= GetNumTracks())
 	{
-		if (i > GetNumTracks()) i = 0;
-		else if (i < 0) i = GetNumTracks();
+		if (i > GetNumTracks()) 
+		{
+			i = 0;
+			*_cycled = (cpt1 > 0); // ie not the first loop
+		}
+		else if (i < 0) 
+		{
+			i = GetNumTracks();
+			*_cycled = (cpt1 > 0); // ie not the first loop
+		}
 
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && TrackFX_GetCount(tr) && 
@@ -315,6 +323,7 @@ bool cycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTrack
 				if ((!_selectedTracks && GetNumTracks() == 1) ||
 					(_selectedTracks && CountSelectedTracks(0) == 1))
 				{
+					*_cycled = (cpt2 > 0); // ie not the first loop
 					if (j >= TrackFX_GetCount(tr)) j = 0;
 					else if (j < 0) j = TrackFX_GetCount(tr)-1;
 				}
@@ -365,7 +374,7 @@ bool floatOnlyJob(MediaTrack* _tr, int _fx, bool _selectedTracks)
 	return true;
 }
 
-bool cycleFocusFXWnd(int _dir, bool _selectedTracks)
+bool cycleFocusFXWnd(int _dir, bool _selectedTracks, bool* _cycled)
 {
 	if (!_selectedTracks || (_selectedTracks && CountSelectedTracks(0)))
 	{
@@ -379,9 +388,9 @@ bool cycleFocusFXWnd(int _dir, bool _selectedTracks)
 			if (tr && TrackFX_GetCount(tr) && 
 				(!_selectedTracks || (_selectedTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
 			{
-				int focusedPrevious = getFocusedFX(tr, (firstFXFound < 0 ? &firstFXFound : NULL));
+				int focusedPrevious = getFocusedFX(tr, _dir, (firstFXFound < 0 ? &firstFXFound : NULL));
 				if (!firstTrFound && firstFXFound >= 0) firstTrFound = tr;
-				if (focusedPrevious >= 0 && cycleTracksAndFXs(i, focusedPrevious, _dir, _selectedTracks, focusJob))
+				if (focusedPrevious >= 0 && cycleTracksAndFXs(i, focusedPrevious, _dir, _selectedTracks, focusJob, _cycled))
 					return true;
 			}
 			i += _dir; // +1, -1
@@ -390,17 +399,32 @@ bool cycleFocusFXWnd(int _dir, bool _selectedTracks)
 		// there was no already focused window if we're here..
 		// => focus the 1st found one
 		if (firstTrFound) 
-			focusJob(firstTrFound, firstFXFound, _selectedTracks);
+			return focusJob(firstTrFound, firstFXFound, _selectedTracks);
 	}
 	return false;
 }
 
+void cycleFocusFXMainWnd(int _dir, bool _selectedTracks, bool _showmain) 
+{
+	bool cycled = false;
+	if (cycleFocusFXWnd(_dir, _selectedTracks, &cycled))
+		if (_showmain && cycled)
+			SetForegroundWindow(GetMainHwnd()); 
+}
 void cycleFocusFXWndAllTracks(COMMAND_T * _ct) {
-	cycleFocusFXWnd(_ct->user, false);
+	cycleFocusFXMainWnd(_ct->user, false, false);
 }
 
 void cycleFocusFXWndSelTracks(COMMAND_T * _ct) {
-	cycleFocusFXWnd(_ct->user, true);
+	cycleFocusFXMainWnd(_ct->user, true, false);
+}
+
+void cycleFocusFXAndMainWndAllTracks(COMMAND_T * _ct) {
+	cycleFocusFXMainWnd(_ct->user, false, true);
+}
+
+void cycleFocusFXMainWndSelTracks(COMMAND_T * _ct) {
+	cycleFocusFXMainWnd(_ct->user, true, true);
 }
 
 void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
@@ -410,6 +434,7 @@ void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 	{
 		MediaTrack* firstTrFound = NULL;
 		int firstFXFound = -1;
+		bool cycled = false; // not used yet..
 
 		int i = (dir < 0 ? GetNumTracks() : 0);
 		while ((dir < 0 ? i >= 0 : i <= GetNumTracks()))
@@ -423,8 +448,8 @@ void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 					firstFXFound = (dir < 0 ? (fxCount-1) : 0);
 				}
 
-				int focusedPrevious = getFocusedFX(tr);
-				if (focusedPrevious >= 0 && cycleTracksAndFXs(i, focusedPrevious, dir, true, floatOnlyJob))
+				int focusedPrevious = getFocusedFX(tr, dir);
+				if (focusedPrevious >= 0 && cycleTracksAndFXs(i, focusedPrevious, dir, true, floatOnlyJob, &cycled))
 					return;
 			}
 			i += dir; // +1, -1

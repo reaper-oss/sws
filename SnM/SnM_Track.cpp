@@ -34,8 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef _SNM_TRACK_GROUP_EX
-// Just did what I need for now..
-// Deprecated (native solo defeat v3.5) but working: see related ifdef'd code _SNM_TRACK_GROUP_EX
+// Track grouping example code (just did what I need for now..)
+// Deprecated (since native solo defeat added in REAPER v3.5) but working: see related ifdef'd code 
 int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPatcher* _cpp)
 {
 	int updates = 0;

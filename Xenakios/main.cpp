@@ -510,14 +510,16 @@ void DoPreviewItem(COMMAND_T* t)
 	if (t->user == 1)
 		return;
 
-	if (CountSelectedMediaItems(0))
+	if (CountSelectedMediaItems(0) && CountTakes(GetSelectedMediaItem(0, 0)))
 	{
 		g_previewItem = GetSelectedMediaItem(0, 0);
-		g_bItemMuteState = *(bool*)GetSetMediaItemInfo(g_previewItem, "B_MUTE", NULL);
-		GetSetMediaItemInfo(g_previewItem, "B_MUTE", &g_bFalse);
+
 		PCM_source* src = ((PCM_source*)g_previewItem)->Duplicate(); // Casting from MediaItem* to PCM_source works!  Who would have known?
 		if (src)
 		{
+			g_bItemMuteState = *(bool*)GetSetMediaItemInfo(g_previewItem, "B_MUTE", NULL);
+			GetSetMediaItemInfo(g_previewItem, "B_MUTE", &g_bFalse);
+
 			double dZero = 0.0;
 			GetSetMediaItemInfo((MediaItem*)src, "D_POSITION", &dZero);
 
@@ -544,8 +546,6 @@ void DoPreviewItem(COMMAND_T* t)
 			if (PlayPreview(&g_ItemPreview))
 				g_itemPreviewPlaying = true;
 		}
-		else
-			GetSetMediaItemInfo(g_previewItem, "B_MUTE", &g_bItemMuteState);
 	}
 }
 

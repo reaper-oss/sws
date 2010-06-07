@@ -1,3 +1,4 @@
+!v1.7.2 #9 (June 6, 2010)
 S&M updates:
 +Added actions:
 SWS/S&M: Focus previous floating FX for selected tracks (+ main window on cycle)
@@ -15,7 +16,7 @@ S&M updates:
 added solo defeat option (the v3.5 native one, ie no more track grouping option)
 +FX chain view enhancement (customizable double-click behavior)
 +Better behavior for cycle FX window actions.
-When a mutli selection occurs, now the following actions will cycle between FXs *and* tracks:
++When a mutli selection occurs, now the following actions will cycle between FXs *and* tracks:
 - SWS/S&M: Float previous FX (and close others) for selected track(s)
 - SWS/S&M: Float next FX (and close others) for selected track(s)
 - SWS/S&M: Focus previous floating FX window for selected track(s)

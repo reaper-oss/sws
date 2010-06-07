@@ -1215,6 +1215,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnM\SnM_Dlg.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SnM\SnM_fx.cpp"
 				>
 			</File>

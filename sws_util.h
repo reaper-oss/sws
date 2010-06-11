@@ -151,6 +151,7 @@ HMENU FindMenuItem(HMENU hMenu, int iCmd, int* iPos);
 void SWSSetMenuText(HMENU hMenu, int iCmd, const char* cText);
 void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
+MediaTrack* GetFirstSelectedTrack();
 int NumSelTracks();
 void SaveSelected();
 void RestoreSelected();

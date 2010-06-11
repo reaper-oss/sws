@@ -350,6 +350,7 @@ extern "C"
 			AutoColorExit();
 			ProjectListExit();
 			PadreExit();
+			SnMExit();
 			ERR_RETURN("Exiting Reaper.\n")
 		}
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)
@@ -401,6 +402,7 @@ extern "C"
 		IMPAPI(GetCursorContext);
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetCursorPositionEx);
+		IMPAPI(GetEnvelopeName);
 		IMPAPI(GetExePath);
 		IMPAPI(GetHZoomLevel);
 		IMPAPI(GetInputChannelName);
@@ -451,6 +453,7 @@ extern "C"
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
 		IMPAPI(kbd_enumerateActions);
+		IMPAPI(kbd_formatKeyName); 
 		IMPAPI(kbd_getCommandName);
 		IMPAPI(kbd_getTextFromCmd);
 		IMPAPI(KBD_OnMainActionEx);
@@ -516,6 +519,7 @@ extern "C"
 		IMPAPI(Undo_OnStateChangeEx);
 		IMPAPI(UpdateItemInProject);
 		IMPAPI(UpdateTimeline);
+
 
 		g_hInst = hInstance;
 		g_hwndParent = GetMainHwnd();

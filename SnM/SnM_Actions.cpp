@@ -28,6 +28,8 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 
+bool g_fakeToggleStates[MAX_ACTION_COUNT+1]; // +1 for no-op, 1-based..
+
 static COMMAND_T g_commandTable[] = 
 {
 	// be carefull!!!! 
@@ -37,7 +39,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-fader (post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, post-fader (post-pan)" }, "S&M_SENDS2", cueTrack, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-FX" }, "S&M_SENDS3", cueTrack, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Open cue buss window" }, "S&M_SENDS4", cueTrackPrompt, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open cue buss window..." }, "S&M_SENDS4", cueTrackPrompt, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection" }, "S&M_CUEBUS", cueTrack, NULL, -1},
 
 	{ { DEFACCEL, "SWS/S&M: Remove receives from selected tracks" }, "S&M_SENDS5", removeReceives, NULL, },
@@ -65,8 +67,8 @@ static COMMAND_T g_commandTable[] =
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Close all routing windows" }, "S&M_WNCLS1", closeAllRoutingWindows, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Close all envelope windows" }, "S&M_WNCLS2", closeAllEnvWindows, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Toggle show all routing windows" }, "S&M_WNTGL1", toggleAllRoutingWindows, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Toggle show all envelope windows" }, "S&M_WNTGL2", toggleAllEnvWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Toggle show all routing windows" }, "S&M_WNTGL1", toggleAllRoutingWindows, NULL, -666, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle show all envelope windows" }, "S&M_WNTGL2", toggleAllEnvWindows, NULL, -666, fakeIsToggledAction},
 #endif
 	{ { DEFACCEL, "SWS/S&M: Close all floating FX windows" }, "S&M_WNCLS3", closeAllFXWindows, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Close all FX chain windows" }, "S&M_WNCLS4", closeAllFXChainsWindows, NULL, },
@@ -75,9 +77,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Show all floating FX windows (!)" }, "S&M_WNTSHW1", showAllFXWindows, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Show all FX chain windows (!)" }, "S&M_WNTSHW2", showAllFXChainsWindows, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Show all floating FX windows for selected tracks" }, "S&M_WNTSHW3", showAllFXWindows, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Toggle show all floating FX windows (!)" }, "S&M_WNTGL3", toggleAllFXWindows, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Toggle show all FX chain windows (!)" }, "S&M_WNTGL4", toggleAllFXChainsWindows, NULL, },	
-	{ { DEFACCEL, "SWS/S&M: Toggle show all floating FX windows for selected tracks" }, "S&M_WNTGL5", toggleAllFXWindows, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Toggle show all floating FX (!)" }, "S&M_WNTGL3", toggleAllFXWindows, NULL, 0, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle show all FX chain (!)" }, "S&M_WNTGL4", toggleAllFXChainsWindows, NULL, -666, fakeIsToggledAction},	
+	{ { DEFACCEL, "SWS/S&M: Toggle show all floating FX for selected tracks" }, "S&M_WNTGL5", toggleAllFXWindows, NULL, 1, fakeIsToggledAction},
 
 	{ { DEFACCEL, "SWS/S&M: Float previous FX (and close others) for selected tracks" }, "S&M_WNONLY1", cycleFloatFXWndSelTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Float next FX (and close others) for selected tracks" }, "S&M_WNONLY2", cycleFloatFXWndSelTracks, NULL, 1},
@@ -104,7 +106,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Show FX chain (selected FX) for selected tracks" }, "S&M_SHOWFXCHAINSEL", showFXChain, NULL, -1},
 
 	{ { DEFACCEL, "SWS/S&M: Hide FX chain for selected tracks" }, "S&M_HIDEFXCHAIN", hideFXChain, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Toggle show FX chain for selected tracks" }, "S&M_TOGLFXCHAIN", toggleFXChain, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Toggle show FX chain for selected tracks" }, "S&M_TOGLFXCHAIN", toggleFXChain, NULL, -666, isToggleFXChain},
 
 	{ { DEFACCEL, "SWS/S&M: Float FX 1 for selected tracks" }, "S&M_FLOATFX1", floatFX, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Float FX 2 for selected tracks" }, "S&M_FLOATFX2", floatFX, NULL, 1},
@@ -126,15 +128,15 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Unfloat FX 8 for selected tracks" }, "S&M_UNFLOATFX8", unfloatFX, NULL, 7},
 	{ { DEFACCEL, "SWS/S&M: Unfloat selected FX for selected tracks" }, "S&M_UNFLOATFXEL", unfloatFX, NULL, -1},
 
-	{ { DEFACCEL, "SWS/S&M: Toggle float FX 1 for selected tracks" }, "S&M_TOGLFLOATFX1", toggleFloatFX, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Toggle float FX 2 for selected tracks" }, "S&M_TOGLFLOATFX2", toggleFloatFX, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Toggle float FX 3 for selected tracks" }, "S&M_TOGLFLOATFX3", toggleFloatFX, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Toggle float FX 4 for selected tracks" }, "S&M_TOGLFLOATFX4", toggleFloatFX, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Toggle float FX 5 for selected tracks" }, "S&M_TOGLFLOATFX5", toggleFloatFX, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Toggle float FX 6 for selected tracks" }, "S&M_TOGLFLOATFX6", toggleFloatFX, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Toggle float FX 7 for selected tracks" }, "S&M_TOGLFLOATFX7", toggleFloatFX, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Toggle float FX 8 for selected tracks" }, "S&M_TOGLFLOATFX8", toggleFloatFX, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Toggle float selected FX for selected tracks" }, "S&M_TOGLFLOATFXEL", toggleFloatFX, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 1 for selected tracks" }, "S&M_TOGLFLOATFX1", toggleFloatFX, NULL, 0, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 2 for selected tracks" }, "S&M_TOGLFLOATFX2", toggleFloatFX, NULL, 1, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 3 for selected tracks" }, "S&M_TOGLFLOATFX3", toggleFloatFX, NULL, 2, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 4 for selected tracks" }, "S&M_TOGLFLOATFX4", toggleFloatFX, NULL, 3, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 5 for selected tracks" }, "S&M_TOGLFLOATFX5", toggleFloatFX, NULL, 4, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 6 for selected tracks" }, "S&M_TOGLFLOATFX6", toggleFloatFX, NULL, 5, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 7 for selected tracks" }, "S&M_TOGLFLOATFX7", toggleFloatFX, NULL, 6, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX 8 for selected tracks" }, "S&M_TOGLFLOATFX8", toggleFloatFX, NULL, 7, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle float selected FX for selected tracks" }, "S&M_TOGLFLOATFXEL", toggleFloatFX, NULL, -1, fakeIsToggledAction},
 
 
 	// Track FX selection -----------------------------------------------------
@@ -151,16 +153,16 @@ static COMMAND_T g_commandTable[] =
 
 
 	// Track FX online/offline & bypass/unbypass ------------------------------
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 1 online/offline for selected tracks" }, "S&M_FXOFF1", toggleFXOfflineSelectedTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 2 online/offline for selected tracks" }, "S&M_FXOFF2", toggleFXOfflineSelectedTracks, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 3 online/offline for selected tracks" }, "S&M_FXOFF3", toggleFXOfflineSelectedTracks, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 4 online/offline for selected tracks" }, "S&M_FXOFF4", toggleFXOfflineSelectedTracks, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 5 online/offline for selected tracks" }, "S&M_FXOFF5", toggleFXOfflineSelectedTracks, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 6 online/offline for selected tracks" }, "S&M_FXOFF6", toggleFXOfflineSelectedTracks, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 7 online/offline for selected tracks" }, "S&M_FXOFF7", toggleFXOfflineSelectedTracks, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 8 online/offline for selected tracks" }, "S&M_FXOFF8", toggleFXOfflineSelectedTracks, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Toggle last FX online/offline for selected tracks" }, "S&M_FXOFFLAST", toggleFXOfflineSelectedTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Toggle selected FX online/offline for selected tracks" }, "S&M_FXOFFSEL", toggleFXOfflineSelectedTracks, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 1 offline for selected tracks" }, "S&M_FXOFF1", toggleFXOfflineSelectedTracks, NULL, 1, isFXOfflineSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 2 offline for selected tracks" }, "S&M_FXOFF2", toggleFXOfflineSelectedTracks, NULL, 2, isFXOfflineSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 3 offline for selected tracks" }, "S&M_FXOFF3", toggleFXOfflineSelectedTracks, NULL, 3, isFXOfflineSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 4 offline for selected tracks" }, "S&M_FXOFF4", toggleFXOfflineSelectedTracks, NULL, 4, isFXOfflineSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 5 offline for selected tracks" }, "S&M_FXOFF5", toggleFXOfflineSelectedTracks, NULL, 5, isFXOfflineSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 6 offline for selected tracks" }, "S&M_FXOFF6", toggleFXOfflineSelectedTracks, NULL, 6, isFXOfflineSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 7 offline for selected tracks" }, "S&M_FXOFF7", toggleFXOfflineSelectedTracks, NULL, 7, isFXOfflineSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 8 offline for selected tracks" }, "S&M_FXOFF8", toggleFXOfflineSelectedTracks, NULL, 8, isFXOfflineSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle last FX offline for selected tracks" }, "S&M_FXOFFLAST", toggleFXOfflineSelectedTracks, NULL, -1, isFXOfflineSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle selected FX offline for selected tracks" }, "S&M_FXOFFSEL", toggleFXOfflineSelectedTracks, NULL, 0, isFXOfflineSelectedTracks},
 
 	{ { DEFACCEL, "SWS/S&M: Set FX 1 online for selected tracks" }, "S&M_FXOFF_SETON1", setFXOnlineSelectedTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Set FX 2 online for selected tracks" }, "S&M_FXOFF_SETON2", setFXOnlineSelectedTracks, NULL, 2},
@@ -184,18 +186,18 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Set last FX offline for selected tracks" }, "S&M_FXOFF_SETOFFLAST", setFXOfflineSelectedTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Set selected FX offline for selected tracks" }, "S&M_FXOFF_SETOFFSEL", setFXOfflineSelectedTracks, NULL, 0},
 
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX online/offline for selected tracks" }, "S&M_FXOFFALL", toggleAllFXsOfflineSelectedTracks, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX online/offline for selected tracks" }, "S&M_FXOFFALL", toggleAllFXsOfflineSelectedTracks, NULL, -666, fakeIsToggledAction},
 
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 1 bypass for selected tracks" }, "S&M_FXBYP1", toggleFXBypassSelectedTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 2 bypass for selected tracks" }, "S&M_FXBYP2", toggleFXBypassSelectedTracks, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 3 bypass for selected tracks" }, "S&M_FXBYP3", toggleFXBypassSelectedTracks, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 4 bypass for selected tracks" }, "S&M_FXBYP4", toggleFXBypassSelectedTracks, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 5 bypass for selected tracks" }, "S&M_FXBYP5", toggleFXBypassSelectedTracks, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 6 bypass for selected tracks" }, "S&M_FXBYP6", toggleFXBypassSelectedTracks, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 7 bypass for selected tracks" }, "S&M_FXBYP7", toggleFXBypassSelectedTracks, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 8 bypass for selected tracks" }, "S&M_FXBYP8", toggleFXBypassSelectedTracks, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Toggle last FX bypass for selected tracks" }, "S&M_FXBYPLAST", toggleFXBypassSelectedTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Toggle selected FX bypass for selected tracks" }, "S&M_FXBYPSEL", toggleFXBypassSelectedTracks, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 1 bypass for selected tracks" }, "S&M_FXBYP1", toggleFXBypassSelectedTracks, NULL, 1, isFXBypassedSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 2 bypass for selected tracks" }, "S&M_FXBYP2", toggleFXBypassSelectedTracks, NULL, 2, isFXBypassedSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 3 bypass for selected tracks" }, "S&M_FXBYP3", toggleFXBypassSelectedTracks, NULL, 3, isFXBypassedSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 4 bypass for selected tracks" }, "S&M_FXBYP4", toggleFXBypassSelectedTracks, NULL, 4, isFXBypassedSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 5 bypass for selected tracks" }, "S&M_FXBYP5", toggleFXBypassSelectedTracks, NULL, 5, isFXBypassedSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 6 bypass for selected tracks" }, "S&M_FXBYP6", toggleFXBypassSelectedTracks, NULL, 6, isFXBypassedSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 7 bypass for selected tracks" }, "S&M_FXBYP7", toggleFXBypassSelectedTracks, NULL, 7, isFXBypassedSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX 8 bypass for selected tracks" }, "S&M_FXBYP8", toggleFXBypassSelectedTracks, NULL, 8, isFXBypassedSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle last FX bypass for selected tracks" }, "S&M_FXBYPLAST", toggleFXBypassSelectedTracks, NULL, -1, isFXBypassedSelectedTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle selected FX bypass for selected tracks" }, "S&M_FXBYPSEL", toggleFXBypassSelectedTracks, NULL, 0, isFXBypassedSelectedTracks},
 	
 	{ { DEFACCEL, "SWS/S&M: Bypass FX 1 for selected tracks" }, "S&M_FXBYP_SETON1", setFXBypassSelectedTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Bypass FX 2 for selected tracks" }, "S&M_FXBYP_SETON2", setFXBypassSelectedTracks, NULL, 2},
@@ -219,37 +221,37 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Unbypass last FX for selected tracks" }, "S&M_FXBYP_SETOFFLAST", setFXUnbypassSelectedTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Unbypass selected FX for selected tracks" }, "S&M_FXBYP_SETOFFSEL", setFXUnbypassSelectedTracks, NULL, 0},
 	
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX bypass for selected tracks" }, "S&M_FXBYPALL", toggleAllFXsBypassSelectedTracks, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX bypass for selected tracks" }, "S&M_FXBYPALL", toggleAllFXsBypassSelectedTracks, NULL, -666, fakeIsToggledAction},
 
 	{ { DEFACCEL, "SWS/S&M: Bypass all FX for selected tracks" }, "S&M_FXBYPALL2", setAllFXsBypassSelectedTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Unbypass all FX for selected tracks" }, "S&M_FXBYPALL3", setAllFXsBypassSelectedTracks, NULL, 0},
 	// ..related online/offline actions natively implemented
 
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) online/offline for selected tracks" }, "S&M_FXOFFEXCPTSEL", toggleExceptFXOfflineSelectedTracks, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) bypass for selected tracks" }, "S&M_FXBYPEXCPTSEL", toggleExceptFXBypassSelectedTracks, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) offline for selected tracks" }, "S&M_FXOFFEXCPTSEL", toggleExceptFXOfflineSelectedTracks, NULL, 0, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) bypass for selected tracks" }, "S&M_FXBYPEXCPTSEL", toggleExceptFXBypassSelectedTracks, NULL, 0, fakeIsToggledAction},
 #ifdef _SNM_MISC
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 1) online/offline for selected tracks" }, "S&M_FXOFFEXCPT1", toggleExceptFXOfflineSelectedTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 2) online/offline for selected tracks" }, "S&M_FXOFFEXCPT2", toggleExceptFXOfflineSelectedTracks, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 3) online/offline for selected tracks" }, "S&M_FXOFFEXCPT3", toggleExceptFXOfflineSelectedTracks, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 4) online/offline for selected tracks" }, "S&M_FXOFFEXCPT4", toggleExceptFXOfflineSelectedTracks, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 5) online/offline for selected tracks" }, "S&M_FXOFFEXCPT5", toggleExceptFXOfflineSelectedTracks, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 6) online/offline for selected tracks" }, "S&M_FXOFFEXCPT6", toggleExceptFXOfflineSelectedTracks, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 7) online/offline for selected tracks" }, "S&M_FXOFFEXCPT7", toggleExceptFXOfflineSelectedTracks, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 8) online/offline for selected tracks" }, "S&M_FXOFFEXCPT8", toggleExceptFXOfflineSelectedTracks, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 1) online/offline for selected tracks" }, "S&M_FXOFFEXCPT1", toggleExceptFXOfflineSelectedTracks, NULL, 1, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 2) online/offline for selected tracks" }, "S&M_FXOFFEXCPT2", toggleExceptFXOfflineSelectedTracks, NULL, 2, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 3) online/offline for selected tracks" }, "S&M_FXOFFEXCPT3", toggleExceptFXOfflineSelectedTracks, NULL, 3, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 4) online/offline for selected tracks" }, "S&M_FXOFFEXCPT4", toggleExceptFXOfflineSelectedTracks, NULL, 4, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 5) online/offline for selected tracks" }, "S&M_FXOFFEXCPT5", toggleExceptFXOfflineSelectedTracks, NULL, 5, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 6) online/offline for selected tracks" }, "S&M_FXOFFEXCPT6", toggleExceptFXOfflineSelectedTracks, NULL, 6, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 7) online/offline for selected tracks" }, "S&M_FXOFFEXCPT7", toggleExceptFXOfflineSelectedTracks, NULL, 7, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 8) online/offline for selected tracks" }, "S&M_FXOFFEXCPT8", toggleExceptFXOfflineSelectedTracks, NULL, 8, fakeIsToggledAction},
 
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 1) bypass for selected tracks" }, "S&M_FXBYPEXCPT1", toggleExceptFXBypassSelectedTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 2) bypass for selected tracks" }, "S&M_FXBYPEXCPT2", toggleExceptFXBypassSelectedTracks, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 3) bypass for selected tracks" }, "S&M_FXBYPEXCPT3", toggleExceptFXBypassSelectedTracks, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 4) bypass for selected tracks" }, "S&M_FXBYPEXCPT4", toggleExceptFXBypassSelectedTracks, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 5) bypass for selected tracks" }, "S&M_FXBYPEXCPT5", toggleExceptFXBypassSelectedTracks, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 6) bypass for selected tracks" }, "S&M_FXBYPEXCPT6", toggleExceptFXBypassSelectedTracks, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 7) bypass for selected tracks" }, "S&M_FXBYPEXCPT7", toggleExceptFXBypassSelectedTracks, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 8) bypass for selected tracks" }, "S&M_FXBYPEXCPT8", toggleExceptFXBypassSelectedTracks, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 1) bypass for selected tracks" }, "S&M_FXBYPEXCPT1", toggleExceptFXBypassSelectedTracks, NULL, 1, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 2) bypass for selected tracks" }, "S&M_FXBYPEXCPT2", toggleExceptFXBypassSelectedTracks, NULL, 2, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 3) bypass for selected tracks" }, "S&M_FXBYPEXCPT3", toggleExceptFXBypassSelectedTracks, NULL, 3, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 4) bypass for selected tracks" }, "S&M_FXBYPEXCPT4", toggleExceptFXBypassSelectedTracks, NULL, 4, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 5) bypass for selected tracks" }, "S&M_FXBYPEXCPT5", toggleExceptFXBypassSelectedTracks, NULL, 5, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 6) bypass for selected tracks" }, "S&M_FXBYPEXCPT6", toggleExceptFXBypassSelectedTracks, NULL, 6, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 7) bypass for selected tracks" }, "S&M_FXBYPEXCPT7", toggleExceptFXBypassSelectedTracks, NULL, 7, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 8) bypass for selected tracks" }, "S&M_FXBYPEXCPT8", toggleExceptFXBypassSelectedTracks, NULL, 8, fakeIsToggledAction},
 #endif
 
 
 	// FX Chains (items & tracks) ---------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open FX chains window" }, "S&M_SHOWFXCHAINSLOTS", OpenFXChainList, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open FX chains window..." }, "S&M_SHOWFXCHAINSLOTS", OpenFXChainList, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", clearFXChainSlotPrompt, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, slot 1" }, "S&M_TAKEFXCHAIN1", loadPasteTakeFXChain, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, slot 2" }, "S&M_TAKEFXCHAIN2", loadPasteTakeFXChain, NULL, 1},
@@ -298,8 +300,16 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Takes - Move active up (cycling) in selected items" }, "S&M_MOVETAKE3", moveActiveTake, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Takes - Move active down (cycling) in selected items" }, "S&M_MOVETAKE4", moveActiveTake, NULL, 1},
 
-	{ { DEFACCEL, "SWS/S&M: Split at cursor (MIDI) or at prior zero crossing (audio)" }, "S&M_SPLIT1", splitMidiAudio, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Split items at time selection (if exists), else at cursor (MIDI) or at prior zero crossing (audio)" }, "S&M_SPLIT2", smartSplitMidiAudio, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Split selected items at cursor (MIDI) or at prior zero crossing (audio)" }, "S&M_SPLIT1", splitMidiAudio, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Split selected items at time selection (if exists), else at cursor (MIDI) or at prior zero crossing (audio)" }, "S&M_SPLIT2", smartSplitMidiAudio, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Split selected items at play cursor" }, "S&M_SPLIT3", splitSelectedItems, NULL, 40196},
+	{ { DEFACCEL, "SWS/S&M: Split selected items at time selection" }, "S&M_SPLIT4", splitSelectedItems, NULL, 40061},
+	{ { DEFACCEL, "SWS/S&M: Split selected items at edit cursor (no change selection)" }, "S&M_SPLIT5", splitSelectedItems, NULL, 40757},
+	{ { DEFACCEL, "SWS/S&M: Split selected items at time selection (select left)" }, "S&M_SPLIT6", splitSelectedItems, NULL, 40758},
+	{ { DEFACCEL, "SWS/S&M: Split selected items at time selection (select right)" }, "S&M_SPLIT7", splitSelectedItems, NULL, 40759},
+	{ { DEFACCEL, "SWS/S&M: Split selected items at edit or play cursor" }, "S&M_SPLIT8", splitSelectedItems, NULL, 40012},
+	{ { DEFACCEL, "SWS/S&M: Split selected items at edit or play cursor (ignoring grouping)" }, "S&M_SPLIT9", splitSelectedItems, NULL, 40186},
+	{ { DEFACCEL, "SWS/gofer: Split selected items at the mouse cursor's position in time (snapping)" }, "S&M_SPLIT10", goferSplitSelectedItems, NULL, },
 
 	{ { DEFACCEL, "SWS/S&M: Show take volume envelope" }, "S&M_TAKEENV1", showHideTakeVolEnvelope, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Show take pan envelope" }, "S&M_TAKEENV2", showHideTakePanEnvelope, NULL, 1},
@@ -308,9 +318,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Hide take pan envelope" }, "S&M_TAKEENV5", showHideTakePanEnvelope, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Hide take mute envelope" }, "S&M_TAKEENV6", showHideTakeMuteEnvelope, NULL, 0},
 /*exist natively
-	{ { DEFACCEL, "SWS/S&M: Toggle show take volume envelope" }, "S&M_TAKEENV7", showHideTakeVolEnvelope, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Toggle show take pan envelope" }, "S&M_TAKEENV8", showHideTakePanEnvelope, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Toggle show take mute envelope" }, "S&M_TAKEENV9", showHideTakeMuteEnvelope, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Toggle show take volume envelope" }, "S&M_TAKEENV7", showHideTakeVolEnvelope, NULL, -1, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle show take pan envelope" }, "S&M_TAKEENV8", showHideTakePanEnvelope, NULL, -1, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle show take mute envelope" }, "S&M_TAKEENV9", showHideTakeMuteEnvelope, NULL, -1, fakeIsToggledAction},
 */
 
 #ifdef _SNM_MISC
@@ -320,13 +330,35 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take pan envelope" }, "S&M_TMP2", ShowTakeEnvPadreTest, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take mute envelope" }, "S&M_TMP3", ShowTakeEnvPadreTest, NULL, 2},
 #endif	
+
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
 int SnMActionsInit()
 {
 	FXChainListInit();
+
+	// for possible future persistance of fake toggle states..
+	for (int i=0; i <= MAX_ACTION_COUNT; i++)
+		g_fakeToggleStates[i] = false;
 	return SWSRegisterCommands(g_commandTable);
+}
+
+void SnMExit()
+{
+	FXChainListExit();
+	flushAllRoutingClipboards();
+}
+
+
+// *** Action toggle states ***
+bool fakeIsToggledAction(COMMAND_T* _ct) {
+	return ((_ct && _ct->accel.accel.cmd) ? g_fakeToggleStates[_ct->accel.accel.cmd] : false);
+}
+
+void fakeToggleAction(COMMAND_T* _ct) {
+	if (_ct && _ct->accel.accel.cmd)
+		g_fakeToggleStates[_ct->accel.accel.cmd] = !g_fakeToggleStates[_ct->accel.accel.cmd];
 }
 
 

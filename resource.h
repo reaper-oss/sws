@@ -53,6 +53,7 @@
 #define IDD_PADRE_ENVPROCESSOR          148
 #define IDD_SNM_CUEBUS                  149
 #define IDD_SNM_FXCHAINLIST             150
+#define IDD_SNM_STUFF					151
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000

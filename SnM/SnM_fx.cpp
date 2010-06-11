@@ -34,7 +34,53 @@
 // FX online/offline, bypass/unbypass
 ///////////////////////////////////////////////////////////////////////////////
 
-void patchSelTracksFXState(int _mode, int _token, int _fx, const char* _value, const char * _undoMsg)
+int getFXIdFromCommand(MediaTrack* _tr, int _fxCmdId)
+{
+	int fxId = -1;
+	if (_tr)
+	{
+		fxId = _fxCmdId - 1;
+		if (fxId == -1) // selected fx
+		{
+			fxId = getSelectedFX(_tr); //-1 on error
+			if (fxId < 0) return -1;
+		}
+		if (fxId < 0)
+			// Could support "second to last" action with -2, etc
+			fxId = TrackFX_GetCount(_tr) + _fxCmdId; 
+	}
+	return fxId;
+}
+
+// Gets a toggle state
+// _token: 1=bypass, 2=offline 
+// note: if the user has a single track selection that changes, REAPER refreshes 
+// refreshes the menu ticks, toolbar tooltips ("on"/"off") but not the button themselves..
+bool isFXOfflineOrBypassedSelectedTracks(COMMAND_T * _ct, int _token) 
+{
+	int selTrCount = NumSelTracks();
+	// single track selection: we can return a toggle state
+	if (selTrCount == 1)
+	{
+		MediaTrack* tr = GetFirstSelectedTrack();
+		int fxId = getFXIdFromCommand(tr, _ct->user);
+		if (tr && fxId >= 0)
+		{
+			char state[2];
+			SNM_ChunkParserPatcher p(tr);
+			if (p.ParsePatch(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, state) > 0)
+				return !strcmp(state,"1");
+		}
+	}
+	// several tracks selected: possible mix of different state 
+	// => return a fake toggle state (best effort)
+	else if (selTrCount)
+		return fakeIsToggledAction(_ct);
+	return false;
+}
+
+// *** CORE FUNC ***
+bool patchSelTracksFXState(int _mode, int _token, int _fxCmdId, const char* _value, const char * _undoMsg)
 {
 	bool updated = false;
 	for (int i = 0; i <= GetNumTracks(); i++)
@@ -42,13 +88,7 @@ void patchSelTracksFXState(int _mode, int _token, int _fx, const char* _value, c
 		MediaTrack* tr = CSurf_TrackFromID(i, false); //include master
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			int fxId = _fx - 1;
-			if (fxId == -1) // selected fx
-				fxId = getSelectedFX(tr); //-1 on error
-			if (fxId < 0)
-				// Could support "second to last" action with -2, etc
-				fxId = TrackFX_GetCount(tr) + _fx; 
-
+			int fxId = getFXIdFromCommand(tr, _fxCmdId);
 			if (fxId >= 0)
 			{
 				SNM_ChunkParserPatcher p(tr);
@@ -60,32 +100,65 @@ void patchSelTracksFXState(int _mode, int _token, int _fx, const char* _value, c
 	// Undo point
 	if (updated && _undoMsg)
 		Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL/*UNDO_STATE_FX*/, -1);
+	return updated;
 }
 
 void toggleFXOfflineSelectedTracks(COMMAND_T* _ct) { 
-	patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 2, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)); 
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 2, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) && 
+		NumSelTracks() > 1)
+	{
+		fakeToggleAction(_ct);
+	}
 } 
-  
+
+bool isFXOfflineSelectedTracks(COMMAND_T * _ct) {
+	return isFXOfflineOrBypassedSelectedTracks(_ct, 2);
+}
+
 void toggleFXBypassSelectedTracks(COMMAND_T* _ct) { 
-	patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 1, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)); 
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 1, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) &&
+		NumSelTracks() > 1)
+	{
+		fakeToggleAction(_ct);
+	}
 } 
-  
+
+bool isFXBypassedSelectedTracks(COMMAND_T * _ct) {
+	return isFXOfflineOrBypassedSelectedTracks(_ct, 1);
+}
+
 void toggleExceptFXOfflineSelectedTracks(COMMAND_T* _ct) { 
-	patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)); 
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) &&
+		NumSelTracks() > 1)
+	{
+		fakeToggleAction(_ct);
+	}
 } 
   
 void toggleExceptFXBypassSelectedTracks(COMMAND_T* _ct) { 
-	patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)); 
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) &&
+		NumSelTracks() > 1)
+	{
+		fakeToggleAction(_ct);
+	}
 } 
   
 void toggleAllFXsOfflineSelectedTracks(COMMAND_T* _ct) { 
 	// We use the "except mode" but with an unreachable fx number 
-	patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)); 
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)) &&
+		NumSelTracks() > 1)
+	{
+		fakeToggleAction(_ct);
+	}
 } 
   
 void toggleAllFXsBypassSelectedTracks(COMMAND_T* _ct) { 
 	// We use the "except mode" but with an unreachable fx number 
-	patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)); 
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)) && 
+		NumSelTracks() > 1)
+	{
+		fakeToggleAction(_ct);
+	}
 } 
 
 void setFXOfflineSelectedTracks(COMMAND_T* _ct) { 

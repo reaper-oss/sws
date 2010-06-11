@@ -134,9 +134,7 @@ void clearAllTakesFXChain(COMMAND_T* _ct) {
 
 void loadPasteTrackFXChain(const char* _title, int _slot)
 {
-	if (CountSelectedTracks(0) ||
-		// also check master
-	    *(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(0,false), "I_SELECTED", NULL))
+	if (NumSelTracks())
 	{
 		// Prompt for slot if needed
 		if (_slot == -1) _slot = promptForSlot(_title); //loops on err

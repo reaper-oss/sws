@@ -31,7 +31,7 @@
 
 #define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
 #define SNM_FORMATED_INI_FILE "%s\\Plugins\\S&M.ini"
-
+#define MAX_ACTION_COUNT 0xFFFF
 #define MAX_FXCHAIN_SLOTS 32 
 #define MAX_TRACK_GROUPS 32 
 #define SNM_MAX_HW_OUTS 8
@@ -39,16 +39,19 @@
 // Global vars
 extern WDL_String g_fxChainList[MAX_FXCHAIN_SLOTS]; 
 
-
 // *** SnM_Actions.cpp ***
 int SnMActionsInit();
+void SnMExit();
 void SNM_ShowConsoleMsg(const char* _title, const char* _msg); 
-
+void fakeToggleAction(COMMAND_T* _ct);
+bool fakeIsToggledAction(COMMAND_T* _ct);
 
 // *** SnM_FX.cpp ***
-void patchSelTracksFXState(int _mode, int _token, int _fx, const char* _value, const char * _undoMsg);
+bool patchSelTracksFXState(int _mode, int _token, int _fx, const char* _value, const char * _undoMsg);
 void toggleFXOfflineSelectedTracks(COMMAND_T* _ct);
+bool isFXOfflineSelectedTracks(COMMAND_T* _ct);
 void toggleFXBypassSelectedTracks(COMMAND_T* _ct);
+bool isFXBypassedSelectedTracks(COMMAND_T * _ct);
 void toggleExceptFXOfflineSelectedTracks(COMMAND_T* _ct);
 void toggleExceptFXBypassSelectedTracks(COMMAND_T* _ct);
 void toggleAllFXsOfflineSelectedTracks(COMMAND_T* _ct);
@@ -110,6 +113,8 @@ void toggleAllEnvWindows(COMMAND_T * _ct);
 void showFXChain(COMMAND_T* _ct);
 void hideFXChain(COMMAND_T* _ct);
 void toggleFXChain(COMMAND_T* _ct);
+bool isToggleFXChain(COMMAND_T * _ct);
+
 void showAllFXChainsWindows(COMMAND_T* _ct);
 void closeAllFXChainsWindows(COMMAND_T * _ct);
 void toggleAllFXChainsWindows(COMMAND_T * _ct);
@@ -138,6 +143,8 @@ void setMainWindowActive(COMMAND_T* _ct);
 bool cueTrack(const char* _busName, int _type, const char* _undoMsg, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
 void cueTrackPrompt(COMMAND_T* _ct);
 void cueTrack(COMMAND_T* _ct);
+
+void flushAllRoutingClipboards();
 
 void copyWithIOs(COMMAND_T* _ct);
 void cutWithIOs(COMMAND_T* _ct);
@@ -168,6 +175,8 @@ void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTem
 // *** SnM_Item.cpp ***
 void splitMidiAudio(COMMAND_T* _ct);
 void smartSplitMidiAudio(COMMAND_T* _ct);
+void splitSelectedItems(COMMAND_T* _ct);
+void goferSplitSelectedItems(COMMAND_T* _ct);
 
 bool isEmptyMidi(MediaItem_Take* _take);
 void setEmptyTakeChunk(WDL_String* _chunk);

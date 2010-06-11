@@ -87,10 +87,13 @@ void splitMidiAudio(COMMAND_T* _ct)
 	if (updated)
 	{
 		UpdateTimeline();
-		Undo_EndBlock(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
+		// Undo wording hard coded: action name too long + almost consistent 
+		// with the unique native wording (whatever is the split action)
+		Undo_EndBlock("Split selected items", UNDO_STATE_ALL);
 	}
 }
 
+// more than credits to Tim ;)
 void smartSplitMidiAudio(COMMAND_T* _ct)
 {
 	double t1, t2;
@@ -99,6 +102,19 @@ void smartSplitMidiAudio(COMMAND_T* _ct)
 		Main_OnCommand(40061, 0); // Split at time sel
 	else
 		splitMidiAudio(_ct);
+}
+
+void splitSelectedItems(COMMAND_T* _ct) {
+	if (CountSelectedMediaItems(0))
+		Main_OnCommand(_ct->user, 0);
+}
+
+void goferSplitSelectedItems(COMMAND_T* _ct) {
+	if (CountSelectedMediaItems(0))
+	{
+		Main_OnCommand(40513, 0);
+		Main_OnCommand(40757, 0);
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -642,7 +658,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 	return updated;
 }
 
-void patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint) 
+bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint) 
 {
 	bool updated = false;
 	for (int i = 0; i < GetNumTracks(); i++)
@@ -662,6 +678,7 @@ void patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char*
 		if (_undoTitle)
 			Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
 	}
+	return updated;
 }
 
 void showHideTakeVolEnvelope(COMMAND_T* _ct) 
@@ -670,7 +687,11 @@ void showHideTakeVolEnvelope(COMMAND_T* _ct)
 	if (_ct->user >= 0)
 		sprintf(cVis, "%d", _ct->user);
 	WDL_String defaultPoint("PT 0.000000 1.000000 0");
-	patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint);
+	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint) && 
+		_ct->user < 0) // toggle
+	{
+		fakeToggleAction(_ct);
+	}
 }
 
 void showHideTakePanEnvelope(COMMAND_T* _ct) 
@@ -679,7 +700,11 @@ void showHideTakePanEnvelope(COMMAND_T* _ct)
 	if (_ct->user >= 0)
 		sprintf(cVis, "%d", _ct->user);
 	WDL_String defaultPoint("PT 0.000000 0.000000 0");
-	patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint);
+	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint) &&
+		_ct->user < 0) // toggle
+	{
+		fakeToggleAction(_ct);
+	}
 }
 
 void showHideTakeMuteEnvelope(COMMAND_T* _ct) 
@@ -688,7 +713,11 @@ void showHideTakeMuteEnvelope(COMMAND_T* _ct)
 	if (_ct->user >= 0)
 		sprintf(cVis, "%d", _ct->user);
 	WDL_String defaultPoint("PT 0.000000 1.000000 1");
-	patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint);
+	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint) &&
+		_ct->user < 0) // toggle
+	{
+		fakeToggleAction(_ct);
+	}
 }
 
 

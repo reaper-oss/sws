@@ -1,10 +1,27 @@
+S&M updates:
++ All S&M toggle actions now report their toggle states to toolbar buttons and menus
+Notes: with a mix of different toggle states (e.g. toggle something for several tracks), the state will be a "best effort" one.
++Added actions: alternative to native actions, they split -only- and all selected items, see details http://forum.cockos.com/showthread.php?t=51547|here| :
+SWS/S&M: Split selected items at play cursor
+SWS/S&M: Split selected items at time selection
+SWS/S&M: Split selected items at edit cursor (no change selection)
+SWS/S&M: Split selected items at time selection (select left)
+SWS/S&M: Split selected items at time selection (select right)
+SWS/S&M: Split selected items at edit or play cursor
+SWS/S&M: Split selected items at edit or play cursor (ignoring grouping)
+SWS/gofer: Split selected items at the mouse cursor's position in time (snapping)
+Note: this one is a from gofer (REAPER forum member), it was just traduced from Python. Usefull with an armed toolbar button
++Fixes:
+All cycle FX focus/float-only actions (corner case issues with the master track)
+Some float, unfloat FX actions with multiple track selection
+
 !v1.7.2 #9 (June 6, 2010)
 S&M updates:
 +Added actions:
-SWS/S&M: Focus previous floating FX for selected tracks (+ main window on cycle)
-SWS/S&M: Focus next floating FX for selected tracks (+ main window on cycle)
-SWS/S&M: Focus previous floating FX (+ main window on cycle)
-SWS/S&M: Focus next floating FX (+ main window on cycle)
+SWS/S&M: Focus previous floating FX for selected tracks (& main window on cycle)
+SWS/S&M: Focus next floating FX for selected tracks (& main window on cycle)
+SWS/S&M: Focus previous floating FX (& main window on cycle)
+SWS/S&M: Focus next floating FX (& main window on cycle)
 Reminder: for "alt-tabish" switch between FX, these actions need to be bind with special modifiers in order to pass-thru the main window (example: focus next/previous = Ctrl Shift +/-)
 SWS/S&M: Split items at time selection (if exists), else at cursor (MIDI) or at prior zero crossing (audio)
 +Action list clean-up (wording updates as proposed in issue 119)

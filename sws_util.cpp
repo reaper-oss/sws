@@ -206,6 +206,18 @@ void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize)
 	}
 }
 
+MediaTrack* GetFirstSelectedTrack()
+{
+	for (int j = 0; j <= GetNumTracks(); j++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(j, false);
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			return tr;
+	}
+	return NULL;
+}
+
+// NumSelTracks takes the master track into account (contrary to CountSelectedTracks())
 int NumSelTracks()
 {
 	int iCount = 0;

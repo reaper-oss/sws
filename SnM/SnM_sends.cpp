@@ -220,6 +220,23 @@ void cueTrack(COMMAND_T* _ct)
 // Cut/Copy/Paste: track with sends, routings
 ///////////////////////////////////////////////////////////////////////////////
 
+void flushClipboard(WDL_PtrList<WDL_PtrList<t_SendRcv> >* _clipboard)
+{
+	if (_clipboard)	{
+		for (int j=0; j < _clipboard->GetSize(); j++)
+			_clipboard->Get(j)->Empty(true, free);
+		_clipboard->Empty(true);
+	}
+}
+
+void flushAllRoutingClipboards()
+{
+	flushClipboard(&g_sndTrackClipboard); 
+	flushClipboard(&g_rcvTrackClipboard); 
+	flushClipboard(&g_sndClipboard); 
+	flushClipboard(&g_rcvClipboard); 
+}
+
 MediaTrack* SNM_GuidToTrack(const char* _guid)
 {
 	if (_guid)
@@ -286,18 +303,9 @@ void copySendsReceives(bool _cut,
 		WDL_PtrList<WDL_PtrList<t_SendRcv> >* _sends, 
 		WDL_PtrList<WDL_PtrList<t_SendRcv> >* _rcvs)
 {
-	// Clear the "clipboards"
-	if (_sends)	{
-		for (int j=0; j < _sends->GetSize(); j++)
-			_sends->Get(j)->Empty(true, free);
-		_sends->Empty(true);
-	}
-
-	if (_rcvs) {
-		for (int j=0; j < _rcvs->GetSize(); j++)
-			_rcvs->Get(j)->Empty(true, free);
-		_rcvs->Empty(true);
-	}
+	// Clear the "clipboards" if needed
+	flushClipboard(_sends);
+	flushClipboard(_rcvs);
 
 	int selTrackIdx = 0;
 	for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master

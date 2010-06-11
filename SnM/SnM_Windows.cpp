@@ -107,10 +107,12 @@ void closeAllEnvWindows(COMMAND_T * _ct) {
 
 void toggleAllRoutingWindows(COMMAND_T * _ct) {
 	closeOrToggleAllWindows(true, false, true);
+	fakeToggleAction(_ct);
 }
 
 void toggleAllEnvWindows(COMMAND_T * _ct) {
 	closeOrToggleAllWindows(false, true, true);
+	fakeToggleAction(_ct);
 }
 
 #endif
@@ -162,6 +164,24 @@ void toggleFXChain(COMMAND_T* _ct)
 		}
 	}
 	// no undo
+
+	// fake toggle state update
+	if (NumSelTracks() > 1)
+		fakeToggleAction(_ct);
+}
+
+// for toggle state
+bool isToggleFXChain(COMMAND_T * _ct) 
+{
+	int selTrCount = NumSelTracks();
+	// single track selection: we can return a toggle state
+	if (selTrCount == 1)
+		return (TrackFX_GetChainVisible(GetFirstSelectedTrack()) != -1);
+	// several tracks selected: possible mix of different state 
+	// => return a fake toggle state (best effort)
+	else if (selTrCount)
+		return fakeIsToggledAction(_ct);
+	return false;
 }
 
 void showAllFXChainsWindows(COMMAND_T* _ct) {
@@ -172,6 +192,7 @@ void closeAllFXChainsWindows(COMMAND_T * _ct) {
 }
 void toggleAllFXChainsWindows(COMMAND_T * _ct) {
 	toggleFXChain(NULL);
+	fakeToggleAction(_ct);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -224,7 +245,11 @@ void floatUnfloatTrackFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bo
 void floatUnfloatFXs(bool _all, int _showFlag, int _fx, bool _selTracks) 
 {
 	for (int i = 0; i <= GetNumTracks(); i++)
-		floatUnfloatTrackFXs(CSurf_TrackFromID(i, false), _all, _showFlag, _fx, _selTracks) ;
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (tr && (_all || !_selTracks || (_selTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
+			floatUnfloatTrackFXs(tr, _all, _showFlag, _fx, _selTracks);
+	}
 }
 
 void floatFX(COMMAND_T* _ct) {
@@ -235,6 +260,7 @@ void unfloatFX(COMMAND_T* _ct) {
 }
 void toggleFloatFX(COMMAND_T* _ct) {
 	floatUnfloatFXs(false, 0, _ct->user, true);
+	fakeToggleAction(_ct);
 }
 
 void showAllFXWindows(COMMAND_T * _ct) {
@@ -245,6 +271,7 @@ void closeAllFXWindows(COMMAND_T * _ct) {
 }
 void toggleAllFXWindows(COMMAND_T * _ct) {
 	floatUnfloatFXs(true, 0, -1, (_ct->user == 1));
+	fakeToggleAction(_ct);
 }
 
 void closeAllFXWindowsExceptFocused(COMMAND_T * _ct)
@@ -321,7 +348,7 @@ bool cycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTrack
 				// ** check max / min **
 				// Single track => fx cycle
 				if ((!_selectedTracks && GetNumTracks() == 1) ||
-					(_selectedTracks && CountSelectedTracks(0) == 1))
+					(_selectedTracks && NumSelTracks() == 1))
 				{
 					*_cycled = (cpt2 > 0); // ie not the first loop
 					if (j >= TrackFX_GetCount(tr)) j = 0;
@@ -376,7 +403,7 @@ bool floatOnlyJob(MediaTrack* _tr, int _fx, bool _selectedTracks)
 
 bool cycleFocusFXWnd(int _dir, bool _selectedTracks, bool* _cycled)
 {
-	if (!_selectedTracks || (_selectedTracks && CountSelectedTracks(0)))
+	if (!_selectedTracks || (_selectedTracks && NumSelTracks()))
 	{
 		MediaTrack* firstTrFound = NULL;
 		int firstFXFound = -1;
@@ -430,7 +457,7 @@ void cycleFocusFXMainWndSelTracks(COMMAND_T * _ct) {
 void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 {
 	int dir = _ct->user;
-	if (CountSelectedTracks(0))
+	if (NumSelTracks())
 	{
 		MediaTrack* firstTrFound = NULL;
 		int firstFXFound = -1;

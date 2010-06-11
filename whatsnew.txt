@@ -10,7 +10,7 @@ SWS/S&M: Split selected items at time selection (select right)
 SWS/S&M: Split selected items at edit or play cursor
 SWS/S&M: Split selected items at edit or play cursor (ignoring grouping)
 SWS/gofer: Split selected items at the mouse cursor's position in time (snapping)
-Note: this one is a from gofer (REAPER forum member), it was just traduced from Python. Usefull with an armed toolbar button
+Note: this one is from gofer (REAPER forum member), it was just traduced from Python. Usefull with an armed toolbar button.
 +Fixes:
 All cycle FX focus/float-only actions (corner case issues with the master track)
 Some float, unfloat FX actions with multiple track selection

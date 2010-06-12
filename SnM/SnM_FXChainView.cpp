@@ -263,7 +263,8 @@ int FXChainListInit()
 }
 
 void FXChainListExit() {
-	delete g_pFXChainsWnd;
+	if (g_pFXChainsWnd)
+		delete g_pFXChainsWnd;
 }
 
 void OpenFXChainList(COMMAND_T*) {

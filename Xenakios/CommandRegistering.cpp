@@ -272,7 +272,9 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Set item fades to autofade lengths" }, "XENAKIOS_AUTOFADETOFADE", DoSetFadeToAutofade,	"Set item fades to autofade lengths", },
 	{ { DEFACCEL, "Xenakios/SWS: Set item playrate based on item pitch (and reset pitch)" }, "XENAKIOS_ITEMPITCH2PLAYRATE", DoItemPitch2Playrate,	"Set item playrate based on item pitch", },
 	{ { DEFACCEL, "Xenakios/SWS: Set item pitch based on item playrate" }, "XENAKIOS_ITEMPLAYRATE2PITCH", DoItemPlayrate2Pitch,	"Set item pitch based on item playrate", },
+#ifdef _WIN32
 	{ { DEFACCEL, "Xenakios/SWS: Project media..." }, "XENAKIOS_MANAGEMEDIA", DoShowProjectMediaDlg,	"Show project media...", },
+#endif
 	{ { DEFACCEL, "Xenakios/SWS: Find missing media for project's takes" }, "XENAKIOS_FINDMISSINGMEDIA", DoFindMissingMedia,	"Find missing media for project's takes",    true },
 	{ { DEFACCEL, "Xenakios/SWS: Save current contents of actions list to file" }, "XENAKIOS_DODUMPACTIONS", DoDumpActionsWindow,	"Save current contents of actions list to file", },
 	{ { DEFACCEL, "Xenakios/SWS: Show/hide floating item/track info" }, "XENAKIOS_SHOWHIDE_ITEMINSPECTOR", DoTglFltItemInspector,	"Show/hide floating item/track info",    true },

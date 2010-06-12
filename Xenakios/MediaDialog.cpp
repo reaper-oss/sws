@@ -718,12 +718,14 @@ BOOL WINAPI ProjMediaDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 					break;
 				case IDC_SHOWUNUS:
 					UpdateProjFolderList(GetDlgItem(hwnd, IDC_PROJFOLMEDLIST), IsDlgButtonChecked(hwnd, IDC_SHOWUNUS) == BST_CHECKED);
+					break;
 				case IDC_FINDMISSING:
 					FindMissingFiles();
 					break;
 				case IDC_HIDEPATHS:
 					UpdateProjFolderList(GetDlgItem(hwnd, IDC_PROJFOLMEDLIST), IsDlgButtonChecked(hwnd, IDC_SHOWUNUS) == BST_CHECKED);
 					PopulateProjectUsedList(IsDlgButtonChecked(hwnd, IDC_HIDEPATHS) == BST_CHECKED);
+					break;
 				case IDC_DELFILESBUT:
 					MessageBox(hwnd,"Delete files!","debug",MB_OK);
 					break;

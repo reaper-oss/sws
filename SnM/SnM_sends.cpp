@@ -328,7 +328,7 @@ void copySendsReceives(bool _cut,
 						(_cut && !(*(int*)GetSetMediaTrackInfo(dest, "I_SELECTED", NULL))))
 					{
 						t_SendRcv* send = (t_SendRcv*)malloc(sizeof(t_SendRcv));
-						if (FillIOFromReaper(send, tr, dest, 0, idx))
+						if (send && FillIOFromReaper(send, tr, dest, 0, idx))
 							_sends->Get(selTrackIdx)->Add(send);
 					}
 					dest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, ++idx, "P_DESTTRACK", NULL);
@@ -345,7 +345,7 @@ void copySendsReceives(bool _cut,
 				while (src)
 				{
 					t_SendRcv* rcv = (t_SendRcv*)malloc(sizeof(t_SendRcv));
-					if (FillIOFromReaper(rcv, src, tr, -1, idx))
+					if (rcv && FillIOFromReaper(rcv, src, tr, -1, idx))
 						_rcvs->Get(selTrackIdx)->Add(rcv);
 					src = (MediaTrack*)GetSetTrackSendInfo(tr, -1, ++idx, "P_SRCTRACK", NULL);
 				}

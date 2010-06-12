@@ -1,6 +1,11 @@
 S&M updates:
 + All S&M toggle actions now report their toggle states to toolbar buttons and menus
-Notes: with a mix of different toggle states (e.g. toggle something for several tracks), the state will be a "best effort" one.
+Notes: with a mix of different toggle states (e.g. toggle something for several tracks), the state will be a "best effort" one. Also, native "limitation": button states aren't always refreshed (contray to their tooltips..)
++Updated following actions so that floating FX are hidden when the main window gets the focus
+SWS/S&M: Focus previous floating FX for selected tracks (& main window on cycle)
+SWS/S&M: Focus next floating FX for selected tracks (& main window on cycle)
+SWS/S&M: Focus previous floating FX (& main window on cycle)
+SWS/S&M: Focus next floating FX (& main window on cycle)
 +Added actions: alternative to native actions, they split -only- and all selected items, see details http://forum.cockos.com/showthread.php?t=51547|here| :
 SWS/S&M: Split selected items at play cursor
 SWS/S&M: Split selected items at time selection
@@ -9,7 +14,7 @@ SWS/S&M: Split selected items at time selection (select left)
 SWS/S&M: Split selected items at time selection (select right)
 SWS/S&M: Split selected items at edit or play cursor
 SWS/S&M: Split selected items at edit or play cursor (ignoring grouping)
-SWS/gofer: Split selected items at the mouse cursor's position in time (snapping)
+SWS/gofer: Split selected items at mouse cursor (obey snapping)
 Note: this one is from gofer (REAPER forum member), it was just traduced from Python. Usefull with an armed toolbar button.
 +Fixes:
 All cycle FX focus/float-only actions (corner case issues with the master track)

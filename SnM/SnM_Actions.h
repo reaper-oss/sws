@@ -120,7 +120,7 @@ void closeAllFXChainsWindows(COMMAND_T * _ct);
 void toggleAllFXChainsWindows(COMMAND_T * _ct);
 
 void toggleFloatFX(MediaTrack* _tr, int _fx);
-void floatUnfloatTrackFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _selTracks);
+void floatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _selTracks);
 void floatUnfloatFXs(bool _all, int _showFlag, int _fx, bool _selTracks);
 void floatFX(COMMAND_T* _ct);
 void unfloatFX(COMMAND_T* _ct);
@@ -129,6 +129,7 @@ void showAllFXWindows(COMMAND_T * _ct);
 void closeAllFXWindows(COMMAND_T * _ct);
 void closeAllFXWindowsExceptFocused(COMMAND_T * _ct);
 void toggleAllFXWindows(COMMAND_T * _ct);
+void flushHiddenFXWindows();
 int getFocusedFX(MediaTrack* _tr, int _dir, int* _firstFound = NULL);
 bool cycleFocusFXWnd(int _dir, bool _selectedTracks);
 void cycleFocusFXWndSelTracks(COMMAND_T * _ct);

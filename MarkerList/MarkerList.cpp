@@ -227,8 +227,8 @@ void SWS_MarkerListWnd::OnInitDlg()
 
 	char cOptions[10];
 	GetPrivateProfileString(SWS_INI, ML_OPTIONS_KEY, "1 1", cOptions, 10, get_ini_file());
-	bool m_bPlayOnDblClk = cOptions[0] == '1';
-	bool m_bScroll = cOptions[2] == '1';
+	m_bPlayOnSel = (cOptions[0] == '1');
+	m_bScroll = (cOptions[2] == '1');
 
 	CheckDlgButton(m_hwnd, IDC_PLAY, m_bPlayOnSel ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(m_hwnd, IDC_SCROLL, m_bScroll  ? BST_CHECKED : BST_UNCHECKED);

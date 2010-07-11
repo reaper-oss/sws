@@ -1,5 +1,22 @@
+<b>Requires REAPER v3.64!</b>
+
 S&M updates:
-+ All S&M toggle actions now report their toggle states to toolbar buttons and menus
++Added actions:
+- SWS/S&M: Active ME - Hide all CC lanes
+- SWS/S&M: Active ME - Create CC lane
+- SWS/S&M: Active ME - Save displayed CC lanes, slot <i>n</i> (n: 1..4)
+- SWS/S&M: Active ME - Set displayed CC lanes, slot <i>n</i> (n: 1..4)
+Note: those actions apply to the active MIDI Editor but only belong to the main section of the action list, for the moment. Displayed CC lanes are saved in <my_reaper_dir>/Plugins/S&M.ini
+- SWS/S&M: Cycle focused window (win only)
+This actions need to be bind with a special modifier in order to pass-thru the main window (example: focus next/previous = Ctrl Shift a/b).
+Also, few windows eat keystrokes, it will not work for them (e.g. action list which text filter is focused by default).
+- SWS/S&M: Let breath REAPER
+This action only makes sense for corner cases macros (see MIDI Editor example http://forum.cockos.com/showthread.php?t=60657|here|)
++Fixes: issue 140, part of issue 161
+
+!v1.7.2 #10 (June 14, 2010)
+S&M updates:
++All S&M toggle actions now report their toggle states to toolbar buttons and menus
 Notes: with a mix of different toggle states (e.g. toggle something for several tracks), the state will be a "best effort" one. Also, native "limitation": button states aren't always refreshed (contray to their tooltips..)
 +Updated following actions so that floating FX are hidden when the main window gets the focus
 SWS/S&M: Focus previous floating FX for selected tracks (& main window on cycle)
@@ -27,7 +44,7 @@ SWS/S&M: Focus previous floating FX for selected tracks (& main window on cycle)
 SWS/S&M: Focus next floating FX for selected tracks (& main window on cycle)
 SWS/S&M: Focus previous floating FX (& main window on cycle)
 SWS/S&M: Focus next floating FX (& main window on cycle)
-Reminder: for "alt-tabish" switch between FX, these actions need to be bind with special modifiers in order to pass-thru the main window (example: focus next/previous = Ctrl Shift +/-)
+Reminder: for "alt-tabish" switch between FX, these actions need to be bind with special modifiers in order to pass-thru the main window (example: focus next/previous = Ctrl Shift a/b)
 SWS/S&M: Split items at time selection (if exists), else at cursor (MIDI) or at prior zero crossing (audio)
 +Action list clean-up (wording updates as proposed in issue 119)
 +Fixed possible crash of "Xenakios/SWS: Toggle mute Master send n"
@@ -264,7 +281,7 @@ rmk: the FX chain "clipboard" is shared with items, so it's possible to copy/pas
 +Load/Paste FX chain to selected item(s), all takes, prompt for slot
 +List FX chain slots...
 +Clear FX chain slot...
-I added those 2 last actions just as a facility (better than opening <my_reaper_dir>PluginsS&M.ini a text editor)
+I added those 2 last actions just as a facility (better than opening <my_reaper_dir>/Plugins/S&M.ini a text editor)
 
 Take actions:
 +Comping - Clear active take(s)

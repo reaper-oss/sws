@@ -30,16 +30,6 @@
 //JFB #include "../Utility/SectionLock.h"
 #include "SnM_FXChainView.h"
 
-#define SAVEWINDOW_POS_KEY "S&M - FX Chain List Save Window Position"
-
-#define CLEAR_MSG					0x10001
-#define LOAD_MSG					0x10002
-#define LOAD_APPLY_TRACK_MSG		0x10103
-#define LOAD_APPLY_TAKE_MSG			0x10104
-#define LOAD_APPLY_ALL_TAKES_MSG	0x10105
-#define COPY_MSG					0x10106
-#define DISPLAY_MSG					0x10107
-
 
 // Globals
 SNM_FXChainWnd* g_pFXChainsWnd = NULL;
@@ -119,7 +109,7 @@ void SNM_FXChainView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_FXChainWnd::SNM_FXChainWnd()
-:SWS_DockWnd(IDD_SNM_FXCHAINLIST, "FX Chains", 30006, SWSGetCommandID(OpenFXChainList))
+:SWS_DockWnd(IDD_SNM_FXCHAINLIST, "FX Chains", 30006, SWSGetCommandID(OpenFXChainView))
 {
 	if (m_bShowAfterInit)
 		Show(false, false);
@@ -245,10 +235,8 @@ int SNM_FXChainWnd::OnKey(MSG* msg, int iKeyState) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Init, commands
-///////////////////////////////////////////////////////////////////////////////
 
-int FXChainListInit()
+int FXChainViewInit()
 {
 	for (int i=0; i < MAX_FXCHAIN_SLOTS; i++)
 	{
@@ -262,12 +250,12 @@ int FXChainListInit()
 	return 1;
 }
 
-void FXChainListExit() {
+void FXChainViewExit() {
 	if (g_pFXChainsWnd)
 		delete g_pFXChainsWnd;
 }
 
-void OpenFXChainList(COMMAND_T*) {
+void OpenFXChainView(COMMAND_T*) {
 	g_pFXChainsWnd->Show(true, true);
 }
 

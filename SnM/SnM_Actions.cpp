@@ -92,7 +92,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (+ main window on cycle)" }, "S&M_WNFOCUS6", cycleFocusFXMainWndSelTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (+ main window on cycle)" }, "S&M_WNFOCUS7", cycleFocusFXAndMainWndAllTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Focus next floating FX (+ main window on cycle)" }, "S&M_WNFOCUS8", cycleFocusFXAndMainWndAllTracks, NULL, 1},
-
+#ifdef _WIN32 //ok on OSX? temporary?
+	{ { DEFACCEL, "SWS/S&M: Cycle focused window" }, "S&M_WNFOCUS9", cycleFocusWnd, NULL, -1},
+#endif
+	{ { DEFACCEL, "SWS/S&M: Let breath REAPER" }, "S&M_LETBREATH", letREAPERBreath, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Focus main window" }, "S&M_WNMAIN", setMainWindowActive, NULL, },
 
 	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 1) for selected tracks" }, "S&M_SHOWFXCHAIN1", showFXChain, NULL, 0},
@@ -251,7 +254,7 @@ static COMMAND_T g_commandTable[] =
 
 
 	// FX Chains (items & tracks) ---------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open FX chains window..." }, "S&M_SHOWFXCHAINSLOTS", OpenFXChainList, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open FX chains window..." }, "S&M_SHOWFXCHAINSLOTS", OpenFXChainView, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", clearFXChainSlotPrompt, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, slot 1" }, "S&M_TAKEFXCHAIN1", loadPasteTakeFXChain, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, slot 2" }, "S&M_TAKEFXCHAIN2", loadPasteTakeFXChain, NULL, 1},
@@ -291,7 +294,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Takes - Clear active takes/items" }, "S&M_CLRTAKE1", clearTake, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Takes - Build lanes for selected tracks" }, "S&M_LANETAKE1", buildLanes, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Takes - Select lane from selected item" }, "S&M_LANETAKE2", selectTakeLane, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Takes - Build lanes for selected itemss" }, "S&M_LANETAKE3", buildLanes, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Takes - Build lanes for selected items" }, "S&M_LANETAKE3", buildLanes, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Takes - Remove empty source take/items among selected items" }, "S&M_DELEMPTYTAKE", removeEmptyTakes, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Takes - Remove empty MIDI take/items among selected items" }, "S&M_DELEMPTYTAKE2", removeEmptyMidiTakes, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Takes - Remove all empty takes/items among selected items" }, "S&M_DELEMPTYTAKE3", removeAllEmptyTakes, NULL, },
@@ -300,6 +303,14 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Takes - Move active up (cycling) in selected items" }, "S&M_MOVETAKE3", moveActiveTake, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Takes - Move active down (cycling) in selected items" }, "S&M_MOVETAKE4", moveActiveTake, NULL, 1},
 
+
+	// Notes/help -------------------------------------------------------------
+#ifdef _SNM_MISC
+	{ { DEFACCEL, "SWS/S&M: Open Notes/help window..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
+#endif
+
+	// Split ------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Split selected items at cursor (MIDI) or at prior zero crossing (audio)" }, "S&M_SPLIT1", splitMidiAudio, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Split selected items at time selection (if exists), else at cursor (MIDI) or at prior zero crossing (audio)" }, "S&M_SPLIT2", smartSplitMidiAudio, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Split selected items at play cursor" }, "S&M_SPLIT3", splitSelectedItems, NULL, 40196},
@@ -311,6 +322,19 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/S&M: Split selected items at edit or play cursor (ignoring grouping)" }, "S&M_SPLIT9", splitSelectedItems, NULL, 40186},
 	{ { DEFACCEL, "SWS/gofer: Split selected items at mouse cursor (obey snapping)" }, "S&M_SPLIT10", goferSplitSelectedItems, NULL, },
 
+	// ME ---------------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Active ME - Hide all CC lanes" }, "S&M_MEHIDECCLANES", MEHideCCLanes, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Active ME - Create CC lane" }, "S&M_MECREATECCLANE", MECreateCCLane, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Active ME - Set displayed CC lanes, slot 1" }, "S&M_MESETCCLANES1", MESetCCLanes, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Active ME - Set displayed CC lanes, slot 2" }, "S&M_MESETCCLANES2", MESetCCLanes, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Active ME - Set displayed CC lanes, slot 3" }, "S&M_MESETCCLANES3", MESetCCLanes, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Active ME - Set displayed CC lanes, slot 4" }, "S&M_MESETCCLANES4", MESetCCLanes, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot 1" }, "S&M_MESAVECCLANES1", MESaveCCLanes, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot 2" }, "S&M_MESAVECCLANES2", MESaveCCLanes, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot 3" }, "S&M_MESAVECCLANES3", MESaveCCLanes, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot 4" }, "S&M_MESAVECCLANES4", MESaveCCLanes, NULL, 3},
+	
+	// Other ------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Show take volume envelope" }, "S&M_TAKEENV1", showHideTakeVolEnvelope, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Show take pan envelope" }, "S&M_TAKEENV2", showHideTakePanEnvelope, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Show take mute envelope" }, "S&M_TAKEENV3", showHideTakeMuteEnvelope, NULL, 1},
@@ -325,10 +349,10 @@ static COMMAND_T g_commandTable[] =
 
 #ifdef _SNM_MISC
 	// Experimental, misc., deprecated, etc.. ---------------------------------
-	{ { DEFACCEL, "SWS/S&M: Select items by name" }, "S&M_ITM1", selectItemsByNamePrompt, NULL, },
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take volume envelope" }, "S&M_TMP1", ShowTakeEnvPadreTest, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take pan envelope" }, "S&M_TMP2", ShowTakeEnvPadreTest, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take mute envelope" }, "S&M_TMP3", ShowTakeEnvPadreTest, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: stuff..." }, "S&M_TMP4", openStuff, NULL, },
 #endif	
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
@@ -336,7 +360,8 @@ static COMMAND_T g_commandTable[] =
 
 int SnMActionsInit()
 {
-	FXChainListInit();
+	FXChainViewInit();
+	NotesHelpViewInit();
 
 	// for possible future persistance of fake toggle states..
 	for (int i=0; i <= MAX_ACTION_COUNT; i++)
@@ -346,19 +371,26 @@ int SnMActionsInit()
 
 void SnMExit()
 {
-	FXChainListExit();
+	FXChainViewExit();
+	NotesHelpViewExit();
+
 	flushAllRoutingClipboards();
 	flushHiddenFXWindows();
+}
+
+void SnMSlice()
+{
 }
 
 
 // *** Action toggle states ***
 bool fakeIsToggledAction(COMMAND_T* _ct) {
-	return ((_ct && _ct->accel.accel.cmd) ? g_fakeToggleStates[_ct->accel.accel.cmd] : false);
+	return ((_ct && _ct->accel.accel.cmd && _ct->accel.accel.cmd < MAX_ACTION_COUNT) ? 
+		g_fakeToggleStates[_ct->accel.accel.cmd] : false);
 }
 
 void fakeToggleAction(COMMAND_T* _ct) {
-	if (_ct && _ct->accel.accel.cmd)
+	if (_ct && _ct->accel.accel.cmd && _ct->accel.accel.cmd < MAX_ACTION_COUNT)
 		g_fakeToggleStates[_ct->accel.accel.cmd] = !g_fakeToggleStates[_ct->accel.accel.cmd];
 }
 

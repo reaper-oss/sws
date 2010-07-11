@@ -1,5 +1,5 @@
 /******************************************************************************
-/ SnM_FXChainView.h
+/ SnM_NotesHelpView.h
 /
 / Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
 / http://www.standingwaterstudios.com/reaper
@@ -28,40 +28,36 @@
 
 #pragma once
 
-#define SAVEWINDOW_POS_KEY "S&M - FX Chain List Save Window Position"
-
-#define CLEAR_MSG					0x10001
-#define LOAD_MSG					0x10002
-#define LOAD_APPLY_TRACK_MSG		0x10103
-#define LOAD_APPLY_TAKE_MSG			0x10104
-#define LOAD_APPLY_ALL_TAKES_MSG	0x10105
-#define COPY_MSG					0x10106
-#define DISPLAY_MSG					0x10107
+#define MAX_HELP_LENGTH 0xFFFF // i.e. limitation of WritePrivateProfileSection 
+#define SAVEWINDOW_POS_KEY			"S&M - Notes/help Save Window Position"
+#define SET_ACTION_HELP_FILE_MSG	0x10001
 
 
-class SNM_FXChainView : public SWS_ListView
+class SNM_NotesHelpWnd : public SWS_DockWnd
 {
 public:
-	SNM_FXChainView(HWND hwndList, HWND hwndEdit);
-protected:
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void OnItemDblClk(LPARAM item, int iCol);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-};
-
-class SNM_FXChainWnd : public SWS_DockWnd
-{
-public:
-	SNM_FXChainWnd();
+	SNM_NotesHelpWnd();
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	
+	bool IsActive(bool bWantEdit = false);
+	char* getActionHelpFilename();
+	void setActionHelpFilename(const char* _filename);
+	void readActionHelpFilenameIniFile(char* _buf, int _bufSize);
+	void saveActionHelpFilenameIniFile();
+
 protected:
 	void OnInitDlg();
 	HMENU OnContextMenu(int x, int y);
 	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState);
+	void OnTimer();
+	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	bool updateItemNotes();
+	bool updateActionHelp();
+	void loadHelp(char* _cmdName, char* _buf, int _bufSize);
+	void saveHelp(char* _cmdName, const char* _help);
+
+	char m_actionHelpFilename[BUFFER_SIZE];
 };
 
-extern SNM_FXChainWnd* g_pFXChainsWnd;
 

@@ -45,6 +45,7 @@
 #ifndef _SNM_CHUNKPARSERPATCHER_H_
 #define _SNM_CHUNKPARSERPATCHER_H_
 
+#define SNM_MAX_CHUNK_KEYWORD_LENGTH 64
 
 // The differents modes for ParsePatch() and Parse()
 #define SNM_PARSE_AND_PATCH				0
@@ -318,6 +319,35 @@ int RemoveIds()
 	return updates;
 }
 
+int GetNextLinePos(const char* _parent, const char* _keyword, int _depth, int _occurence)
+{
+	char buf[SNM_MAX_CHUNK_KEYWORD_LENGTH] = "";
+	int pos = Parse(SNM_GET_CHUNK_CHAR, _depth, _parent, _keyword, -1, _occurence, 0, buf);
+	if (pos > 0)
+	{
+		pos--;
+		char* pChunk = m_chunk.Get();
+		while (pChunk[pos] && pChunk[pos] != '\n') pos++;
+		if (pChunk[pos] && pChunk[pos+1])
+			return pos+1;
+	}
+	return -1;
+}
+
+int InsertAfter(const char* _str, const char* _parent, const char* _keyword, int _depth, int _occurence)
+{
+	if (_str && *_str)
+	{
+		int pos = GetNextLinePos(_parent, _keyword, _depth, _occurence);
+		if (pos >= 0)
+		{
+			m_chunk.Insert(_str, pos);
+			m_updates++;
+			return 1;
+		}
+	}
+	return -1;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 protected:

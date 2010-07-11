@@ -320,10 +320,10 @@ void readFXChainSlotIniFile(int _slot, char* _buf, int _bufSize)
 	if (_slot >= 0 && _slot < MAX_FXCHAIN_SLOTS)
 	{
 		char iniFilePath[BUFFER_SIZE] = "";
-		sprintf(iniFilePath,SNM_FORMATED_INI_FILE,GetExePath());
+		sprintf(iniFilePath, SNM_FORMATED_INI_FILE, GetExePath());
 		char slot[16] = "";
-		sprintf(slot,"SLOT%d",_slot+1);
-		GetPrivateProfileString("FXCHAIN",slot,"",_buf,_bufSize,iniFilePath);
+		sprintf(slot, "SLOT%d", _slot+1);
+		GetPrivateProfileString("FXCHAIN", slot, "", _buf, _bufSize, iniFilePath);
 	}
 }
 
@@ -334,10 +334,10 @@ void saveFXChainSlotIniFile(int _slot, const char* _path)
 		g_fxChainList[_slot].Set(_path);
 
 		char iniFilePath[BUFFER_SIZE] = "";
-		sprintf(iniFilePath,SNM_FORMATED_INI_FILE,GetExePath());
+		sprintf(iniFilePath, SNM_FORMATED_INI_FILE, GetExePath());
 		char cSlot[16] = "";
-		sprintf(cSlot,"SLOT%d",_slot+1);
-		WritePrivateProfileString("FXCHAIN",cSlot,_path,iniFilePath);
+		sprintf(cSlot, "SLOT%d", _slot+1);
+		WritePrivateProfileString("FXCHAIN", cSlot,_path, iniFilePath);
 	}
 }
 

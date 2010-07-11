@@ -31,6 +31,8 @@
 
 #define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
 #define SNM_FORMATED_INI_FILE "%s\\Plugins\\S&M.ini"
+#define SNM_ACTION_HELP_INI_FILE "%s\\Plugins\\Action_help_en.ini"
+
 #define MAX_ACTION_COUNT 0xFFFF
 #define MAX_FXCHAIN_SLOTS 32 
 #define MAX_TRACK_GROUPS 32 
@@ -42,6 +44,7 @@ extern WDL_String g_fxChainList[MAX_FXCHAIN_SLOTS];
 // *** SnM_Actions.cpp ***
 int SnMActionsInit();
 void SnMExit();
+void SnMSlice();
 void SNM_ShowConsoleMsg(const char* _title, const char* _msg); 
 void fakeToggleAction(COMMAND_T* _ct);
 bool fakeIsToggledAction(COMMAND_T* _ct);
@@ -137,6 +140,7 @@ void cycleFocusFXWndAllTracks(COMMAND_T * _ct);
 void cycleFloatFXWndSelTracks(COMMAND_T * _ct);
 void cycleFocusFXAndMainWndAllTracks(COMMAND_T * _ct);
 void cycleFocusFXMainWndSelTracks(COMMAND_T * _ct);
+void cycleFocusWnd(COMMAND_T * _ct);
 void setMainWindowActive(COMMAND_T* _ct);
 
 
@@ -182,7 +186,6 @@ void goferSplitSelectedItems(COMMAND_T* _ct);
 bool isEmptyMidi(MediaItem_Take* _take);
 void setEmptyTakeChunk(WDL_String* _chunk);
 bool addEmptyTake(MediaItem* _item);
-int findFirstTakeByFilename(MediaItem* _item, const char* _takeName, bool* _alreadyFound);
 int buildLanes(const char* _undoTitle, int _mode);
 bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel = false, bool _itemSel = true);
 void clearTake(COMMAND_T* _ct);
@@ -193,6 +196,8 @@ void buildLanes(COMMAND_T* _ct);
 void removeEmptyTakes(COMMAND_T* _ct);
 void removeEmptyMidiTakes(COMMAND_T* _ct);
 void removeAllEmptyTakes(COMMAND_T* _ct);
+
+int getTakeIndex(MediaItem* _item, MediaItem_Take* _take);
 
 void showHideTakeVolEnvelope(COMMAND_T* _ct); 
 void showHideTakePanEnvelope(COMMAND_T* _ct);
@@ -208,21 +213,34 @@ bool loadTrackTemplate(char* _filename, WDL_String* _chunk);
 
 
 // *** SnM_FXChainView.cpp ***
-int FXChainListInit();
-int FXChainListInit();
-void FXChainListExit();
-void OpenFXChainList(COMMAND_T*);
+int FXChainViewInit();
+void FXChainViewExit();
+void OpenFXChainView(COMMAND_T*);
+
+
+// *** SnM_NotesHelpView.cpp ***
+int NotesHelpViewInit();
+void NotesHelpViewExit();
+void OpenNotesHelpView(COMMAND_T*);
+void SetActionHelpFilename(COMMAND_T*);
 
 
 // *** SnM_Dlg.cpp ***
 void fillHWoutDropDown(HWND _hwnd, int _idc);
 WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+WDL_DLGRET WaitDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+
+
+// *** SnM_ME.cpp ***
+void MECreateCCLane(COMMAND_T* _ct);
+void MEHideCCLanes(COMMAND_T* _ct);
+void MESetCCLanes(COMMAND_T* _ct);
+void MESaveCCLanes(COMMAND_T* _ct);
+
 
 // *** SnM_Misc.cpp ***
-bool isLoopOrInProjectTakes(MediaItem* _item, int _take);
-bool selectItemsByName(const char* cUndoMsg, char* cName);
-bool selectItemsByNamePrompt(const char* cCaption, char * _reply);
-void selectItemsByNamePrompt(COMMAND_T* _ct);
+void letREAPERBreath(COMMAND_T* _ct);
+#ifdef _SNM_MISC
 void ShowTakeEnvPadreTest(COMMAND_T* _ct);
-
-
+void openStuff(COMMAND_T* _ct);
+#endif

@@ -54,6 +54,8 @@
 #define IDD_SNM_CUEBUS                  149
 #define IDD_SNM_FXCHAINLIST             150
 #define IDD_SNM_STUFF					151
+#define IDD_SNM_NOTES_HELP				152
+#define IDD_SNM_WAIT					153
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDC_BUTTON1                     1000

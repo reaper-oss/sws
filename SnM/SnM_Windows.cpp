@@ -563,6 +563,26 @@ void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 // Misc. window actions
 ///////////////////////////////////////////////////////////////////////////////
 
+void cycleFocusWnd(COMMAND_T * _ct) 
+{
+	if (GetMainHwnd())
+	{
+		HWND focusedWnd = GetForegroundWindow();
+		HWND w = GetWindow(GetMainHwnd(), GW_HWNDLAST);
+		while (w)
+		{ 
+			if (IsWindowVisible(w) && 
+				GetWindow(w, GW_OWNER) == GetMainHwnd() &&
+				focusedWnd != w)
+			{
+				SetForegroundWindow(w);
+				return;
+			}
+			w = GetWindow(w, GW_HWNDPREV);
+		}
+	}
+}
+
 void setMainWindowActive(COMMAND_T* _ct) {
 	SetForegroundWindow(GetMainHwnd()); 
 }

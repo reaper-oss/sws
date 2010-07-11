@@ -275,6 +275,7 @@ public:
 		ItemPreviewSlice();
 		PlayItemsOnceSlice();
 		ColorSlice();
+		SnMSlice();
 
 		if (m_bChanged)
 		{
@@ -389,6 +390,7 @@ extern "C"
 		IMPAPI(DeleteTrackMediaItem);
 		IMPAPI(DockWindowActivate);
 		IMPAPI(DockWindowAdd);
+		IMPAPI(DockWindowRefresh);
 		IMPAPI(DockWindowRemove);
 		IMPAPI(EnsureNotCompletelyOffscreen);
 		IMPAPI(EnumProjectMarkers);
@@ -402,6 +404,7 @@ extern "C"
 		IMPAPI(GetCursorContext);
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetCursorPositionEx);
+		IMPAPI(GetItemEditingTime2);
 		IMPAPI(GetEnvelopeName);
 		IMPAPI(GetExePath);
 		IMPAPI(GetHZoomLevel);
@@ -463,6 +466,10 @@ extern "C"
 		IMPAPI(Main_OnCommand);
 		IMPAPI(Main_OnCommandEx);
 		IMPAPI(Main_openProject);
+		IMPAPI(MIDIEditor_GetActive);
+		IMPAPI(MIDIEditor_GetMode);
+		IMPAPI(MIDIEditor_GetTake);
+		IMPAPI(MIDIEditor_OnCommand);
 		IMPAPI(MIDI_eventlist_Create);
 		IMPAPI(MIDI_eventlist_Destroy);
 		IMPAPI(mkpanstr);
@@ -491,6 +498,7 @@ extern "C"
 		IMPAPI(SetEditCurPos2);
 		IMPAPI(SetProjectMarker);
 		IMPAPI(SetTrackSelected);
+		IMPAPI(ShowActionList);
 		IMPAPI(SplitMediaItem);
 		IMPAPI(StopPreview);
 		IMPAPI(StopTrackPreview);

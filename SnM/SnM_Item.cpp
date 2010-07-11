@@ -578,13 +578,13 @@ void removeAllEmptyTakes(COMMAND_T* _ct) {
 // returns -1 if not found
 int getTakeIndex(MediaItem* _item, MediaItem_Take* _take)
 {
-	int i = 0, idx = -1;
+	int i=0;
 	MediaItem_Take* tk = (_item ? GetTake(_item, i) : NULL);
 	while (tk) {
 		if (tk && tk == _take) return i;
 		else tk = GetTake(_item, ++i);
 	}
-	return idx;
+	return -1;
 }
 
 // if returns true: callers must use UpdateTimeline() at some point

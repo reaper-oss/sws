@@ -115,7 +115,7 @@ class SWS_DockWnd
 public:
 	SWS_DockWnd(int iResource, const char* cName, int iDockOrder, int iCmdID);
 	void Show(bool bToggle, bool bActivate);
-	bool IsActive(bool bWantEdit = false);
+	virtual bool IsActive(bool bWantEdit = false);
 	bool IsValidWindow() { return IsWindow(m_hwnd) ? true : false; }
 	HWND GetHWND() { return m_hwnd; }
 	virtual ~SWS_DockWnd();

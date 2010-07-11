@@ -229,3 +229,41 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 	return 0;
 }
+
+#define LET_BREATH_MS 10
+int g_waitDlgProcCount = 0;
+WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	switch(msg)
+	{
+		case WM_INITDIALOG:
+			SetTimer(hwnd, 1, 1, NULL);
+			break;
+/*
+		case WM_COMMAND:
+			if ((LOWORD(wParam)==IDOK || LOWORD(wParam)==IDCANCEL))
+			{
+				EndDialog(hwnd,0);
+				g_waitDlgProcCount = 0;
+			}
+			break;
+*/
+		case WM_TIMER:
+			{
+				SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETRANGE, 0, MAKELPARAM(0, LET_BREATH_MS));
+				int i=0;
+				if (g_waitDlgProcCount < LET_BREATH_MS)
+				{
+					SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETPOS, (WPARAM) g_waitDlgProcCount, 0);
+					g_waitDlgProcCount++;
+				}
+				else
+				{
+					EndDialog(hwnd,0);
+					g_waitDlgProcCount = 0;
+				}
+			}
+			break;
+	}
+	return 0;
+}

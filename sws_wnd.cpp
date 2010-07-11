@@ -345,13 +345,14 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 		iKeys    |= GetAsyncKeyState(VK_MENU)    & 0x8000 ? LVKF_ALT     : 0;
 		iKeys    |= GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? LVKF_SHIFT   : 0;
 
-		if (p->OnKey(msg, iKeys))
-			return 1;
+		int iRet = p->OnKey(msg, iKeys);
+		if (iRet)
+			return iRet;
 
 		// Key wasn't handled by the DockWnd, check for keys to send to LV
 		if (pLV)
 		{
-			int iRet = pLV->LVKeyHandler(msg, iKeys);
+			iRet = pLV->LVKeyHandler(msg, iKeys);
 			if (iRet)
 				return iRet;
 			return -666; // We don't want the key, so force it to main reaper wnd

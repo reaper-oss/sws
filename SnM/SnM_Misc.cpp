@@ -31,95 +31,14 @@
 #include "SNM_ChunkParserPatcher.h"
 
 
+// see http://forum.cockos.com/showthread.php?t=60657
+void letREAPERBreath(COMMAND_T* _ct)
+{
+    InitCommonControls(); 
+	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SNM_WAIT), GetForegroundWindow(), WaitDlgProc);
+}
+
 #ifdef _SNM_MISC
-
-bool isLoopOrInProjectTakes(MediaItem* _item, int _take)
-{
-	if (_item)
-	{
-		PCM_source* srcTake = 
-			(PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(_item, _take), "P_SOURCE", NULL);
-
-		// in-project ?
-		if (srcTake && !srcTake->GetFileName())
-			return true;
-
-		// look to -1, +1 rather than looking to all takes
-		// => manage the case a mess has been introduced between looped takes
-		if (_take > 0)
-		{
-			PCM_source* src = 
-				(PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(_item, _take-1), "P_SOURCE", NULL);
-			if (src && src->GetFileName() && 
-				!strcmp(src->GetFileName(), srcTake->GetFileName()))
-				return true;
-		}
-		if (_take < (CountTakes(_item)-1))
-		{
-			PCM_source* src = 
-				(PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(_item, _take+1), "P_SOURCE", NULL);
-			if (src && src->GetFileName() && 
-				!strcmp(src->GetFileName(), srcTake->GetFileName()))
-				return true;
-		}
-	}
-	return false;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Select item by name
-///////////////////////////////////////////////////////////////////////////////
-bool selectItemsByName(const char* _undoMsg, char* _name)
-{
-	bool update = false;
-	if (CountMediaItems && GetMediaItem && _name && strlen(_name) > 0)
-	{
-		for (int i=0; i < CountMediaItems(0); i++)
-		{
-			MediaItem* item = GetMediaItem(0, i);
-			if (item)
-			{
-				for (int j=0; j < GetMediaItemNumTakes(item); j++)
-				{
-					MediaItem_Take* t = GetMediaItemTake(item, j);
-					if (t)
-					{
-						update = true;
-						char* takeName =
-							(char*)GetSetMediaItemTakeInfo(t, "P_NAME", NULL);
-						bool sel = takeName && (strstr(takeName, _name) != NULL);
-						GetSetMediaItemInfo(item, "B_UISEL", &sel);
-						break;
-					}
-				}
-			}
-		}
-	}
-	if (update)
-	{
-		UpdateTimeline();
-
-		// Undo point
-		if (_undoMsg)
-			Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL, -1);
-	}
-	return update;
-}
-
-// display a search dlg until the user press cancel (ok=search)
-bool selectItemsByNamePrompt(const char* _caption, char * _reply)
-{
-	if (GetUserInputs && GetUserInputs(_caption, 1, "Take name (case sensitive):", _reply, 128))
-		return selectItemsByName(_caption, _reply);
-	return false;
-}
-
-void selectItemsByNamePrompt(COMMAND_T* _ct)
-{
-	char reply[128] = ""; // initial default search string
-	while (selectItemsByNamePrompt(SNM_CMD_SHORTNAME(_ct), reply));
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // tests..
@@ -150,6 +69,10 @@ void ShowTakeEnvPadreTest(COMMAND_T* _ct)
 		UpdateTimeline();
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
+}
+
+void openStuff(COMMAND_T* _ct)
+{
 }
 
 #endif

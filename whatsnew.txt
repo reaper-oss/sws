@@ -8,7 +8,7 @@ S&M updates:
 - SWS/S&M: Active ME - Set displayed CC lanes, slot <i>n</i> (n: 1..4)
 Note: those actions apply to the active MIDI Editor but only belong to the main section of the action list, for the moment. Displayed CC lanes are saved in <my_reaper_dir>/Plugins/S&M.ini
 - SWS/S&M: Cycle focused window (win only)
-This actions need to be bind with a special modifier in order to pass-thru the main window (example: focus next/previous = Ctrl Shift a/b).
+This actions need to be bind with a special modifier in order to pass-thru the main window (example: Ctrl Shift a).
 Also, few windows eat keystrokes, it will not work for them (e.g. action list which text filter is focused by default).
 - SWS/S&M: Let breath REAPER
 This action only makes sense for corner cases macros (see MIDI Editor example http://forum.cockos.com/showthread.php?t=60657|here|)

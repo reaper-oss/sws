@@ -12,7 +12,9 @@ This actions need to be bind with a special modifier in order to pass-thru the m
 Also, few windows eat keystrokes, it will not work for them (e.g. action list which text filter is focused by default).
 - SWS/S&M: Let breath REAPER
 This action only makes sense for corner cases macros (see MIDI Editor example http://forum.cockos.com/showthread.php?t=60657|here|)
-+Fixes: issue 140, part of issue 161
++Fixes:
+- issue 140, part of issue 161
+- FX Chain view: fixed "Clear slot" actions
 
 !v1.7.2 #10 (June 14, 2010)
 S&M updates:

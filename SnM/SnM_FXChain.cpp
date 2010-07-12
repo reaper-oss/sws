@@ -252,7 +252,10 @@ void clearFXChainSlot(int _slot)
 			char toBeCleared[256] = "";
 			sprintf(toBeCleared, "Are you sure you want to clear the FX chain slot %d?\n(%s)", _slot+1, cPath); 
 			if (MessageBox(GetMainHwnd(), toBeCleared, "S&M - Clear FX Chain slot", /*MB_ICONQUESTION | */MB_OKCANCEL) == 1)
+			{
 				saveFXChainSlotIniFile(_slot, "");
+				g_storedFXChain[_slot].Set("");
+			}
 		}
 	}
 }

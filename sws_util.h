@@ -34,9 +34,9 @@
 
 #define SWS_INI "SWS"
 #define SWS_SEPARATOR "SEPARATOR"
-#define LAST_COMMAND ((char*)-1)
-#define SWS_STARTSUBMENU ((char*)-2)
-#define SWS_ENDSUBMENU ((char*)-3)
+#define LAST_COMMAND ((char*)(INT_PTR)-1)
+#define SWS_STARTSUBMENU ((char*)(INT_PTR)-2)
+#define SWS_ENDSUBMENU ((char*)(INT_PTR)-3)
 #define MINTRACKHEIGHT 24
 #define DEFACCEL { 0, 0, 0 }
 #define UTF8_BULLET "\xE2\x80\xA2"
@@ -56,7 +56,7 @@ typedef struct COMMAND_T
 	char* id;
 	void (*doCommand)(COMMAND_T*);
 	char* menuText;
-	int user;
+	INT_PTR user;
 	bool (*getEnabled)(COMMAND_T*);
 } COMMAND_T;
 
@@ -140,7 +140,7 @@ int SWSRegisterCommand2(COMMAND_T* pCommand, const char* cFile);   // One comman
 int SWSRegisterCommands2(COMMAND_T* pCommands, const char* cFile); // Multiple commands in a table, terminated with LAST_COMMAND
 void ActionsList(COMMAND_T*);
 COMMAND_T* SWSUnregisterCommand(int id);
-int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), int user = 0, char** pMenuText = NULL);
+int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, char** pMenuText = NULL);
 HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);
 
 // Utility functions, sws_util.cpp

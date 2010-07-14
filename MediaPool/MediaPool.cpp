@@ -118,14 +118,14 @@ void SWS_MediaPoolFile::RegisterCommand(const char* cGroup)
 
 	cmd->doCommand = InsertFile;
 	cmd->menuText = NULL;
-	cmd->user = (int)m_cFilename;
+	cmd->user = (LPARAM)m_cFilename;
 	cmd->getEnabled = NULL;
 	SWSRegisterCommand(cmd);
 }
 
 void SWS_MediaPoolFile::UnregisterCommand()
 {
-	int id = SWSGetCommandID(InsertFile, (int)m_cFilename);
+	int id = SWSGetCommandID(InsertFile, (INT_PTR)m_cFilename);
 	if (id)
 	{
 		COMMAND_T* cmd = SWSUnregisterCommand(id);

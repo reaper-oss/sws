@@ -34,7 +34,10 @@
 // see http://forum.cockos.com/showthread.php?t=60657
 void letREAPERBreath(COMMAND_T* _ct)
 {
-    InitCommonControls(); 
+#ifdef _WIN32
+  static bool hasinit;
+  if (!hasinit) { hasinit=true; InitCommonControls();  }
+#endif
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SNM_WAIT), GetForegroundWindow(), WaitDlgProc);
 }
 

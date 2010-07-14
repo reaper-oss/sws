@@ -294,9 +294,9 @@ LPARAM SWS_DockWnd::screensetCallback(int action, char *id, void *param, int par
 	switch(action)
 	{
 	case SCREENSET_ACTION_GETHWND:
-		return (int)pObj->m_hwnd;
+		return (LPARAM)pObj->m_hwnd;
 	case SCREENSET_ACTION_IS_DOCKED:
-		return (int)pObj->m_bDocked;
+		return (LPARAM)pObj->m_bDocked;
 	case SCREENSET_ACTION_SHOW:
 		if (IsWindow(pObj->m_hwnd))
 			DestroyWindow(pObj->m_hwnd);

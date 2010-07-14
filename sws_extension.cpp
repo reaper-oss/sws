@@ -174,7 +174,7 @@ void ActionsList(COMMAND_T*)
 	}
 }
 
-int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), int user, char** pMenuText)
+int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, char** pMenuText)
 {
 	for (int i = 0; i < g_commands.GetSize(); i++)
 	{

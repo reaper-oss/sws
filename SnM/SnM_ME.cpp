@@ -110,7 +110,7 @@ bool replaceCCLanes(const char* _newCClanes)
 					pos--; // see SNM_ChunkParserPatcher
 
 					// Remove all lanes for this take
-					WDL_PtrList<char> removedKeywords;
+					WDL_PtrList<const char> removedKeywords;
 					removedKeywords.Add("VELLANE");
 					if (ptk.RemoveLines(&removedKeywords))
 					{

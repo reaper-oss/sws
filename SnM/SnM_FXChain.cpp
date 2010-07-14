@@ -184,7 +184,7 @@ void copyTrackFXChain(COMMAND_T* _ct)
 			{
 				// remove last ">\n" (ok 'cause built by GetSubChunk())
 				g_storedFXChain[MAX_FXCHAIN_SLOTS].DeleteSub(g_storedFXChain[MAX_FXCHAIN_SLOTS].GetLength()-3,2);
-				WDL_PtrList<char> removedKeywords;
+				WDL_PtrList<const char> removedKeywords;
 				removedKeywords.Add("<FXCHAIN");
 				removedKeywords.Add("WNDRECT");
 				removedKeywords.Add("SHOW");

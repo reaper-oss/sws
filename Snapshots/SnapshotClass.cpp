@@ -429,7 +429,7 @@ void TrackSnapshot::GetDetails(WDL_String* details, int iMask)
 	}
 }
 
-Snapshot::Snapshot(int slot, int mask, bool bSelOnly, char* name)
+Snapshot::Snapshot(int slot, int mask, bool bSelOnly, const char* name)
 {
 	m_iSlot = slot;
 	m_iMask = mask;

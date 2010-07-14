@@ -74,9 +74,9 @@ vector<t_interpolator_item_state> g_ii_storeditemstates;
 typedef struct t_interpolator_item_property
 {
 	bool enabled;
-	char *Name;
+	const char *Name;
 	bool IsTakeProperty;
-	char *APIAccessID;
+	const char *APIAccessID;
 	double MinValue;
 	double MaxValue;
 	double NeutralValue;
@@ -669,7 +669,7 @@ BOOL WINAPI ItemInterpDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 				item.pszText = (char*)(g_IIproperties[i].enabled ? UTF8_BULLET : "");
 				ListView_InsertItem(GetDlgItem(hwnd,IDC_IIACTPARLIST),&item);
 				item.iSubItem = 1;
-				item.pszText=(g_IIproperties[i].Name);
+				item.pszText=(char*)(g_IIproperties[i].Name);
 				ListView_SetItem(GetDlgItem(hwnd,IDC_IIACTPARLIST),&item);
 			}
 			

@@ -51,9 +51,9 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args);
 typedef struct CUSTOM_COMMAND
 {
 	gaccel_register_t accel;
-	char* id;
+	const char* id;
 	void (*doCommand)(void);
-	char* menuText;
+	const char* menuText;
 	bool isSubMenu;
 } CUSTOM_COMMAND;
 

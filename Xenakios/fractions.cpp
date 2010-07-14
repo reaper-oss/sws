@@ -29,7 +29,7 @@
 
 typedef struct t_Notevalue_struct
 {
-	char *NotevalueStr;
+	const char *NotevalueStr;
 	double NotevalueBeats;
 } t_Notevalue_struct;
 

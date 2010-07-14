@@ -396,7 +396,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 				mi.fMask = MIIM_TYPE | MIIM_STATE | MIIM_ID;
 				mi.fType = MFT_STRING;
 				mi.fState = MFS_GRAYED;
-				mi.dwTypeData = g_projMgrCmdTable[g_iORPCmdIndex].menuText;
+				mi.dwTypeData = (char *)g_projMgrCmdTable[g_iORPCmdIndex].menuText;
 				mi.wID = g_projMgrCmdTable[g_iORPCmdIndex].accel.accel.cmd;
 				InsertMenuItem(hMenu, iFirstPos, true, &mi);
 			}

@@ -174,7 +174,7 @@ void ActionsList(COMMAND_T*)
 	}
 }
 
-int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, char** pMenuText)
+int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMenuText)
 {
 	for (int i = 0; i < g_commands.GetSize(); i++)
 	{
@@ -201,7 +201,7 @@ HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu, int* iIndex)
 	{
 		if (pCommands[i].id == SWS_STARTSUBMENU)
 		{
-			char* subMenuName = pCommands[i].menuText;
+			const char* subMenuName = pCommands[i].menuText;
 			i++;
 			HMENU hSubMenu = SWSCreateMenu(pCommands, NULL, &i);
 			AddSubMenu(hMenu, hSubMenu, subMenuName);

@@ -55,7 +55,7 @@ typedef struct COMMAND_T
 	gaccel_register_t accel;
 	char* id;
 	void (*doCommand)(COMMAND_T*);
-	char* menuText;
+	const char* menuText;
 	INT_PTR user;
 	bool (*getEnabled)(COMMAND_T*);
 } COMMAND_T;
@@ -140,7 +140,7 @@ int SWSRegisterCommand2(COMMAND_T* pCommand, const char* cFile);   // One comman
 int SWSRegisterCommands2(COMMAND_T* pCommands, const char* cFile); // Multiple commands in a table, terminated with LAST_COMMAND
 void ActionsList(COMMAND_T*);
 COMMAND_T* SWSUnregisterCommand(int id);
-int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, char** pMenuText = NULL);
+int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, const char** pMenuText = NULL);
 HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);
 
 // Utility functions, sws_util.cpp

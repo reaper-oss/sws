@@ -97,7 +97,7 @@ void ReadINIfile()
 	delete [] g_external_app_paths.PathToAudioEditor1; g_external_app_paths.PathToAudioEditor1 = NULL;
 	delete [] g_external_app_paths.PathToAudioEditor2; g_external_app_paths.PathToAudioEditor2 = NULL;
 
-	char* cMenuText;
+	const char* cMenuText;
 	SWSGetCommandID(DoLaunchExtTool, 1, &cMenuText);
 	GetPrivateProfileString("XENAKIOSCOMMANDS","EXTERNALTOOL1PATH","",resultString,512,INIFileName);
 	if (resultString[0])
@@ -403,7 +403,7 @@ WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 						g_external_app_paths.PathToTool1 = new char[strlen(cFile)+1];
 						strcpy(g_external_app_paths.PathToTool1, cFile);
 
-						char* cMenuText;
+						const char* cMenuText;
 						SWSGetCommandID(DoLaunchExtTool, 1, &cMenuText);
 						char cExeName[100];
 						ExtractFileNameEx(cFile, cExeName, false);
@@ -422,7 +422,7 @@ WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 						g_external_app_paths.PathToTool2 = new char[strlen(cFile)+1];
 						strcpy(g_external_app_paths.PathToTool2, cFile);
 
-						char* cMenuText;
+						const char* cMenuText;
 						SWSGetCommandID(DoLaunchExtTool, 2, &cMenuText);
 						char cExeName[100];
 						ExtractFileNameEx(cFile, cExeName, false);

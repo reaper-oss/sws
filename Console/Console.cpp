@@ -43,10 +43,10 @@ static DWORD g_dwLastKeyMsg = 0;
 #define CONSOLE_WINDOWPOS_KEY "ReaConsoleWindowPos"
 
 // Prototypes
-CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args);
-void ParseTrackId(char* strId, bool bReset = true);
-void ProcessCommand(CONSOLE_COMMAND command, char* args);
-char* StatusString(CONSOLE_COMMAND command, char* args);
+CONSOLE_COMMAND Tokenize(char* strCommand, const char** trackid, const char** args);
+void ParseTrackId(const char* strId, bool bReset = true);
+void ProcessCommand(CONSOLE_COMMAND command, const char* args);
+const char* StatusString(CONSOLE_COMMAND command, const char* args);
 
 typedef struct CUSTOM_COMMAND
 {
@@ -102,7 +102,7 @@ console_COMMAND_T g_commands[NUM_COMMANDS] =
 
 // Split into various categories, independent of actually having a correct and/or finished command string
 // Basically just a fancy tokenizer
-CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args)
+CONSOLE_COMMAND Tokenize(char* strCommand, const char** trackid, const char** args)
 {
 	*trackid = *args = "";
 	char* p;
@@ -179,7 +179,7 @@ CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args)
 }
 
 // ParseId fills in array of ints (g_selTracks.Get()) according to id string
-void ParseTrackId(char* strId, bool bReset)
+void ParseTrackId(const char* strId, bool bReset)
 {
 	int track;
 	const char* cName;
@@ -229,8 +229,9 @@ void ParseTrackId(char* strId, bool bReset)
 	// If the first char is a ! invert selection
 	if (strId[0] == '!')
 	{
-		for (int i = 0; strId[i]; i++)
-			strId[i] = strId[i+1];
+    strId++;
+//		for (int i = 0; strId[i]; i++)
+	//		strId[i] = strId[i+1];
 		bInvert = true;
 	}
 
@@ -363,7 +364,7 @@ void ParseTrackId(char* strId, bool bReset)
 }
 
 // Here's where we actually do the command from the user
-void ProcessCommand(CONSOLE_COMMAND command, char* args)
+void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 {
 	int i;
 	bool b;
@@ -485,7 +486,7 @@ void ProcessCommand(CONSOLE_COMMAND command, char* args)
 				GetSetMediaTrackInfo(pMt, "D_PAN", &d);
 				break;
 			case NAME_SET:
-				GetSetMediaTrackInfo(pMt, "P_NAME", args);
+				GetSetMediaTrackInfo(pMt, "P_NAME", (char*)args);
 				break;
 			case NAME_PREFIX:
 			{
@@ -606,7 +607,7 @@ void ProcessCommand(CONSOLE_COMMAND command, char* args)
 }
 
 // Provide a human readable string of what's up:
-char* StatusString(CONSOLE_COMMAND command, char* args)
+const char* StatusString(CONSOLE_COMMAND command, const char* args)
 {
 	static char status[512];
 	if (command >= NUM_COMMANDS)
@@ -665,8 +666,8 @@ char* StatusString(CONSOLE_COMMAND command, char* args)
 INT_PTR WINAPI doConsole(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static char strCommand[100] = "";
-	static char* pTrackId = strCommand;
-	static char* pArgs = strCommand;
+	static const char* pTrackId = strCommand;
+	static const char* pArgs = strCommand;
 	static CONSOLE_COMMAND command = UNKNOWN_COMMAND;
 
 	switch (uMsg)
@@ -756,8 +757,8 @@ void RunCommand(COMMAND_T* ct)
 
 	char strCommand[100] = "";
 	strncpy(strCommand, (char*)ct->user, 100);
-	char* pTrackId = strCommand;
-	char* pArgs = strCommand;
+	const char* pTrackId = strCommand;
+	const char* pArgs = strCommand;
 	CONSOLE_COMMAND command = Tokenize(strCommand, &pTrackId, &pArgs);
 	ParseTrackId(pTrackId);
 	ProcessCommand(command, pArgs);

@@ -105,7 +105,7 @@ void FXSnapshot::GetChunk(WDL_String *chunk)
 	chunk->Append(">\n");
 }
 
-void FXSnapshot::RestoreParams(char* str)
+void FXSnapshot::RestoreParams(const char* str)
 {
 	Base64 b64;
 	int iLen;

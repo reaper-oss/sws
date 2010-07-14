@@ -38,7 +38,7 @@ public:
     ~FXSnapshot();
 
 	void GetChunk(WDL_String* chunk);
-    void RestoreParams(char* str);
+    void RestoreParams(const char* str);
     int UpdateReaper(MediaTrack* tr, bool* bMatched, int num);
 	bool Exists(MediaTrack* tr);
 

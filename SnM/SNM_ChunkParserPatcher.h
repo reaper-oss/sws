@@ -89,7 +89,7 @@ static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<const char>* _remove
 		lp.parse(curLine.Get());
 		if (lp.getnumtokens() > 0) 
 		{
-			char* keyword = lp.gettoken_str(0);
+			const char* keyword = lp.gettoken_str(0);
 			bool match = false;
 			for (int i=0; !match && i < _removedKeywords->GetSize(); i++)
 				match = !strcmp(keyword, _removedKeywords->Get(i));
@@ -507,7 +507,7 @@ int ParsePatchCore(
 			break;
 
 		bool alter = false;
-		char* keyword = NULL;
+		const char* keyword = NULL;
 		int curLineLength = (int)(pEOL-pLine); // will avoid many strlen() calls..
 		WDL_String curLine(pLine, curLineLength);
 		LineParser lp(false);

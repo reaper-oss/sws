@@ -100,7 +100,7 @@ const int cSSCtrls[] = { IDC_VOL,  IDC_PAN,  IDC_MUTE,  IDC_SOLO,  IDC_SENDS,  I
 class Snapshot
 {
 public:
-    Snapshot(int slot, int mask, bool bSelOnly, char* name);   // For capture
+    Snapshot(int slot, int mask, bool bSelOnly, const char* name);   // For capture
 	Snapshot(const char* chunk); // For project load
     ~Snapshot();
     bool UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis);

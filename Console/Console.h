@@ -73,8 +73,8 @@ typedef struct {
 	char			cPrefix;
 	char			cKey;
 	int				iNumArgs;  // + 8 if non-numeric args, + 16 for no track args either
-	char*			cHelpPrefix;
-	char*			cHelpSuffix;
+	const char*			cHelpPrefix;
+	const char*			cHelpSuffix;
 } console_COMMAND_T;
 
 #define ARGS_MASK    7

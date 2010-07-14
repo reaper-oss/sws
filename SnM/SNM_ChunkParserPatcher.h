@@ -70,7 +70,7 @@
 // Removes lines from a chunk in one-go and without chunk recopy
 // Note: we parse rather than use a strchr() solution 'cause searched keywords
 // may be present at "unexpected places" (e.g. set by the user).
-static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<char>* _removedKeywords)
+static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<const char>* _removedKeywords)
 {
 	int updates = 0;
 	char* cData = _chunk ? _chunk->Get() : NULL;
@@ -105,7 +105,7 @@ static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<char>* _removedKeywo
 	return updates;
 }
 
-static void AddChunkIds(WDL_PtrList<char>* _removedKeywords)
+static void AddChunkIds(WDL_PtrList<const char>* _removedKeywords)
 {
 	_removedKeywords->Add("IGUID");
 	_removedKeywords->Add("GUID");
@@ -214,7 +214,7 @@ void UpdateChunk(WDL_String* _newChunk, int _updates) {
 }
 
 // clearing the cache is allowed
-void SetChunk(char* _newChunk, int _updates) {
+void SetChunk(const char* _newChunk, int _updates) {
 	m_updates = _updates;
 	m_chunk.Set(_newChunk ? _newChunk : "");
 }
@@ -300,7 +300,7 @@ bool ReplaceLine(const char* _parent, const char* _keyword, int _depth, int _occ
 	return false;
 }
 
-int RemoveLines(WDL_PtrList<char>* _removedKeywords) 
+int RemoveLines(WDL_PtrList<const char>* _removedKeywords) 
 {
 	WDL_String newChunk;
 	int updates = RemoveChunkLines(GetChunk(),_removedKeywords);
@@ -310,7 +310,7 @@ int RemoveLines(WDL_PtrList<char>* _removedKeywords)
 
 int RemoveIds() 
 {
-	WDL_PtrList<char> removedKeywords;
+	WDL_PtrList<const char> removedKeywords;
 	AddChunkIds(&removedKeywords);
 
 	WDL_String newChunk;

@@ -98,7 +98,7 @@ int SWSRegisterCommand2(COMMAND_T* pCommand, const char* cFile)
 {
 	if (pCommand->doCommand)
 	{
-		if (!(pCommand->accel.accel.cmd = plugin_register("command_id", pCommand->id)))
+		if (!(pCommand->accel.accel.cmd = plugin_register("command_id", (void*)pCommand->id)))
 			return 0;
 		if (!plugin_register("gaccel",&pCommand->accel))
 			return 0;

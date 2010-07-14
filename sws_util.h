@@ -53,7 +53,7 @@
 typedef struct COMMAND_T
 {
 	gaccel_register_t accel;
-	char* id;
+	const char* id;
 	void (*doCommand)(COMMAND_T*);
 	const char* menuText;
 	INT_PTR user;

@@ -755,8 +755,9 @@ void Snapshot::RegisterGetCommand(int iSlot) // Slot is 1-based index.
 		cmd->accel.desc = new char[strlen(desc) + 5];
 		sprintf((char*)cmd->accel.desc, desc, iSlot);
 		const char* id = "SWSSNAPSHOT_GET%d";
-		cmd->id = new char[strlen(id) + 5];
-		sprintf(cmd->id, id, iSlot);
+    char *tbuf;
+		cmd->id = tbuf = new char[strlen(id) + 32];
+		sprintf(tbuf, id, iSlot);
 		cmd->doCommand = GetSnapshot;
 		cmd->menuText = NULL;
 		cmd->user = iSlot;

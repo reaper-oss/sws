@@ -101,8 +101,9 @@ void SWS_MediaPoolFile::RegisterCommand(const char* cGroup)
 		sprintf((char*)cmd->accel.desc, desc, m_id + 1, cGroup, m_cFilename);
 
 		const char* idStr = "SWSMP_INSERT%s%d";
-		cmd->id = new char[strlen(idStr) + strlen(cGroup) +  5];
-		sprintf(cmd->id, idStr, cGroup, m_id);
+    char *tbuf;
+		cmd->id = tbuf = new char[strlen(idStr) + strlen(cGroup) +  5];
+		sprintf(tbuf, idStr, cGroup, m_id);
 	}
 	else
 	{
@@ -111,9 +112,11 @@ void SWS_MediaPoolFile::RegisterCommand(const char* cGroup)
 		sprintf((char*)cmd->accel.desc, desc, m_cFilename);
 
 		const char* id = "SWSMP_";
-		cmd->id = new char[strlen(id) + 41];
-		strcpy(cmd->id, id);
-		GetHashString(m_cFilename, cmd->id + strlen(id));
+    
+    char *tbuf;
+		cmd->id = tbuf = new char[strlen(id) + 41];
+		strcpy(tbuf, id);
+		GetHashString(m_cFilename,tbuf + strlen(id));
 	}
 
 	cmd->doCommand = InsertFile;
@@ -132,7 +135,7 @@ void SWS_MediaPoolFile::UnregisterCommand()
 		if (cmd)
 		{
 			delete [] cmd->accel.desc;
-			delete [] cmd->id;
+			delete [] (char*)cmd->id;
 			delete cmd;
 		}
 	}

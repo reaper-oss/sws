@@ -878,11 +878,12 @@ int ConsoleInit()
 				memset(ct, 0, sizeof(COMMAND_T));
 				char* desc = new char[strlen(cBuf)+30];
 				ct->accel.desc = desc;
-				ct->id = new char[25];
+        char *tbuf;
+				ct->id = tbuf = new char[32];
 				ct->doCommand = RunCommand;
 				ct->user = (INT_PTR)new char[strlen(cBuf)+1];
 				ct->getEnabled = NULL;
-				sprintf(ct->id, "SWSCONSOLE_CUST%d", i++);
+				sprintf(tbuf, "SWSCONSOLE_CUST%d", i++);
 				sprintf(desc, "SWS: Run console command: %s", cBuf);
 				strcpy((char*)ct->user, cBuf);
 				SWSRegisterCommand(ct);

@@ -759,10 +759,11 @@ int XenakiosInit()
 			memset(ct, 0, sizeof(COMMAND_T));
 			char* desc = new char[40];
 			ct->accel.desc = desc;
-			ct->id = new char[35];
+      char *tbuf;
+			ct->id = tbuf = new char[64];
 			ct->doCommand = DoOpenTrackTemplate;
 			ct->user = i;
-			sprintf(ct->id, "XENAKIOS_LOADTRACKTEMPLATE%d", i);
+			sprintf(tbuf, "XENAKIOS_LOADTRACKTEMPLATE%d", i);
 			sprintf(desc, "Xenakios/SWS: Load track template %d", i);
 			SWSRegisterCommand(ct);
 		}

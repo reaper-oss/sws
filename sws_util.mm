@@ -67,6 +67,18 @@ void SetColumnArrows(HWND h, int iSortCol)
 	}
 }
 
+static int RGBfromNSColor(NSColor *col)
+{
+  int r = (int) ([col redComponent] * 255.0 + 0.5) ;
+  int g = (int) ([col greenComponent] * 255.0 + 0.5) ;
+  int b = (int) ([col blueComponent] * 255.0 + 0.5) ;
+  if (r<0)r=0; else if (r>255) r=255;
+  if (g<0)g=0; else if (g>255) g=255;
+  if (b<0)b=0; else if (b>255) b=255;
+
+  return (r << 16) | (g << 8) | b;
+}
+
 int GetCustomColors(COLORREF custColors[])
 {
 	NSColorPanel* cp = [NSColorPanel sharedColorPanel];
@@ -79,7 +91,7 @@ int GetCustomColors(COLORREF custColors[])
 		NSColor* col = [colors objectAtIndex:i*10];
 		col = [col colorUsingColorSpaceName:@"NSCalibratedRGBColorSpace"];
 		
-		custColors[i] = ((int)([col redComponent] * 255) << 16) | ((int)([col greenComponent] * 255) << 8) | (int)([col blueComponent] * 255);
+		custColors[i] = RGBfromNSColor(col);
 	}
 		
 	return 0;
@@ -116,7 +128,7 @@ bool GetChosenColor(COLORREF* pColor)
 		{
 			NSColor* col = [[NSColorPanel sharedColorPanel] color];
 			col = [col colorUsingColorSpaceName:@"NSCalibratedRGBColorSpace"];
-			*pColor = ((int)([col redComponent] * 255) << 16) | ((int)([col greenComponent] * 255) << 8) | (int)([col blueComponent] * 255);
+			*pColor = RGBfromNSColor(col);
 		}
 		return true;
 	}

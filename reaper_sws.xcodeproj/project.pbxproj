@@ -906,6 +906,7 @@
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = SWELL_PROVIDED_BY_SWS;
+				GCC_VERSION = 4.0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
@@ -958,6 +959,41 @@
 			};
 			name = "Release UB64";
 		};
+		33E88C7611EF64F700B0F4BE /* Release x86_64 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/sws_osx64";
+				GCC_C_LANGUAGE_STANDARD = c99;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = SWELL_PROVIDED_BY_SWS;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = NO;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OBJROOT = "$(SYMROOT)";
+				ONLY_ACTIVE_ARCH = NO;
+				PREBINDING = NO;
+				SDKROOT = macosx10.5;
+				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";
+				SYMROOT = "~/Dev/sws-extension64";
+			};
+			name = "Release x86_64";
+		};
+		33E88C7711EF64F700B0F4BE /* Release x86_64 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				EXECUTABLE_PREFIX = "";
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /Applications/REAPER/REAPER.app/Contents/Plugins;
+				OBJROOT = "$(SYMROOT)";
+				PRODUCT_NAME = reaper_sws;
+				SYMROOT = build;
+			};
+			name = "Release x86_64";
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -967,6 +1003,7 @@
 				1DEB914B08733D8E0010E9CD /* Debug */,
 				1DEB914C08733D8E0010E9CD /* Release */,
 				33E88A7111EDFCAB00B0F4BE /* Release UB64 */,
+				33E88C7711EF64F700B0F4BE /* Release x86_64 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -977,6 +1014,7 @@
 				1DEB914F08733D8E0010E9CD /* Debug */,
 				1DEB915008733D8E0010E9CD /* Release */,
 				33E88A7011EDFCAB00B0F4BE /* Release UB64 */,
+				33E88C7611EF64F700B0F4BE /* Release x86_64 */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

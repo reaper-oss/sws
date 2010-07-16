@@ -1239,7 +1239,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnM\SnM_ME.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SnM\SnM_Misc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_NotesHelpView.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_NotesHelpView.h"
 				>
 			</File>
 			<File

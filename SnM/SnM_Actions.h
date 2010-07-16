@@ -239,7 +239,7 @@ void MESaveCCLanes(COMMAND_T* _ct);
 
 
 // *** SnM_Misc.cpp ***
-void letREAPERBreath(COMMAND_T* _ct);
+void letREAPERBreathe(COMMAND_T* _ct);
 #ifdef _SNM_MISC
 void ShowTakeEnvPadreTest(COMMAND_T* _ct);
 void openStuff(COMMAND_T* _ct);

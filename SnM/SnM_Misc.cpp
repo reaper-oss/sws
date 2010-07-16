@@ -32,7 +32,7 @@
 
 
 // see http://forum.cockos.com/showthread.php?t=60657
-void letREAPERBreath(COMMAND_T* _ct)
+void letREAPERBreathe(COMMAND_T* _ct)
 {
 #ifdef _WIN32
   static bool hasinit;

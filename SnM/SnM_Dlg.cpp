@@ -230,7 +230,7 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-#define LET_BREATH_MS 10
+#define LET_BREATHE_MS 10
 int g_waitDlgProcCount = 0;
 WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -250,9 +250,9 @@ WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 */
 		case WM_TIMER:
 			{
-				SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETRANGE, 0, MAKELPARAM(0, LET_BREATH_MS));
+				SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETRANGE, 0, MAKELPARAM(0, LET_BREATHE_MS));
 				int i=0;
-				if (g_waitDlgProcCount < LET_BREATH_MS)
+				if (g_waitDlgProcCount < LET_BREATHE_MS)
 				{
 					SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETPOS, (WPARAM) g_waitDlgProcCount, 0);
 					g_waitDlgProcCount++;

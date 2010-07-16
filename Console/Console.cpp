@@ -44,7 +44,7 @@ static DWORD g_dwLastKeyMsg = 0;
 
 // Prototypes
 CONSOLE_COMMAND Tokenize(char* strCommand, const char** trackid, const char** args);
-void ParseTrackId(const char* strId, bool bReset = true);
+void ParseTrackId(char* strId, bool bReset = true);
 void ProcessCommand(CONSOLE_COMMAND command, const char* args);
 const char* StatusString(CONSOLE_COMMAND command, const char* args);
 
@@ -102,7 +102,7 @@ console_COMMAND_T g_commands[NUM_COMMANDS] =
 
 // Split into various categories, independent of actually having a correct and/or finished command string
 // Basically just a fancy tokenizer
-CONSOLE_COMMAND Tokenize(char* strCommand, const char** trackid, const char** args)
+CONSOLE_COMMAND Tokenize(char* strCommand, char** trackid, char** args)
 {
 	*trackid = *args = "";
 	char* p;
@@ -179,7 +179,7 @@ CONSOLE_COMMAND Tokenize(char* strCommand, const char** trackid, const char** ar
 }
 
 // ParseId fills in array of ints (g_selTracks.Get()) according to id string
-void ParseTrackId(const char* strId, bool bReset)
+void ParseTrackId(char* strId, bool bReset)
 {
 	int track;
 	const char* cName;
@@ -666,8 +666,8 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args)
 INT_PTR WINAPI doConsole(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static char strCommand[100] = "";
-	static const char* pTrackId = strCommand;
-	static const char* pArgs = strCommand;
+	static char* pTrackId = strCommand;
+	static char* pArgs = strCommand;
 	static CONSOLE_COMMAND command = UNKNOWN_COMMAND;
 
 	switch (uMsg)
@@ -757,8 +757,8 @@ void RunCommand(COMMAND_T* ct)
 
 	char strCommand[100] = "";
 	strncpy(strCommand, (char*)ct->user, 100);
-	const char* pTrackId = strCommand;
-	const char* pArgs = strCommand;
+	char* pTrackId = strCommand;
+	char* pArgs = strCommand;
 	CONSOLE_COMMAND command = Tokenize(strCommand, &pTrackId, &pArgs);
 	ParseTrackId(pTrackId);
 	ProcessCommand(command, pArgs);

@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Actions.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÃˆdague
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -95,7 +95,7 @@ static COMMAND_T g_commandTable[] =
 #ifdef _WIN32 //ok on OSX? temporary?
 	{ { DEFACCEL, "SWS/S&M: Cycle focused window" }, "S&M_WNFOCUS9", cycleFocusWnd, NULL, -1},
 #endif
-	{ { DEFACCEL, "SWS/S&M: Let breath REAPER" }, "S&M_LETBREATH", letREAPERBreath, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Let REAPER breathe" }, "S&M_LETBREATHE", letREAPERBreathe, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Focus main window" }, "S&M_WNMAIN", setMainWindowActive, NULL, },
 
 	{ { DEFACCEL, "SWS/S&M: Show FX chain (FX 1) for selected tracks" }, "S&M_SHOWFXCHAIN1", showFXChain, NULL, 0},

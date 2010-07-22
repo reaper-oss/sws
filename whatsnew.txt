@@ -1,3 +1,6 @@
+!v1.7.3 #2 (July 21, 2010)
+Issue 164: Fixed Reaconsole wildcard handling
+
 !v1.7.3 #1 (July 15, 2010)
 <b>Requires REAPER v3.651!</b>
 

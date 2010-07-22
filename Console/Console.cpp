@@ -275,6 +275,7 @@ void ParseTrackId(char* strId, bool bReset)
 	// If a wildcard is in the string, use loose matches
 	else if ((p = strchr(strId, '*')) != NULL)
 	{
+		char* strMatch = NULL;
 		for (track = 0; track < GetNumTracks(); track++)
 		{
 			cName = (const char*)GetSetMediaTrackInfo(CSurf_TrackFromID(track+1, false), "P_NAME", NULL);
@@ -285,13 +286,19 @@ void ParseTrackId(char* strId, bool bReset)
 				else if (p-strId == strlen(strId) - 1 && _strnicmp(strId, cName, strlen(strId)-1) == 0)
 					g_selTracks.Get()[track] = 1;
 				// This "should" be the double wildcard case, but check anyway
-				else if (strId[0] == '*' && strId[strlen(strId)-1] == '*')
+				else if (strId[0] == '*' && strlen(strId) > 2 && strId[strlen(strId)-1] == '*')
 				{
-					if (stristr(strId+1, cName))
+					if (!strMatch)
+					{
+						char* strMatch = new char[strlen(strId)-1];
+						lstrcpyn(strMatch, strId+1, strlen(strId)-1);
+					}
+					if (stristr(cName, strMatch))
 						g_selTracks.Get()[track] = 1;
 				}
 			}
 		}
+		delete [] strMatch;
 	}
 	// Check for exact numeric
 	else if ((track = atol(strId)) > 0 && track <= GetNumTracks())

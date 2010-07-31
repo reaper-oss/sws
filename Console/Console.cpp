@@ -290,7 +290,7 @@ void ParseTrackId(char* strId, bool bReset)
 				{
 					if (!strMatch)
 					{
-						char* strMatch = new char[strlen(strId)-1];
+						strMatch = new char[strlen(strId)-1];
 						lstrcpyn(strMatch, strId+1, strlen(strId)-1);
 					}
 					if (stristr(cName, strMatch))

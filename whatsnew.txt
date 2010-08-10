@@ -1,3 +1,6 @@
+!v1.7.3 #3 (August 9, 2010)
+Issue 164: Fixed Reaconsole wildcard handling, for real this time.
+
 !v1.7.3 #2 (July 21, 2010)
 Issue 164: Fixed Reaconsole wildcard handling
 

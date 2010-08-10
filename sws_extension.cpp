@@ -534,7 +534,7 @@ extern "C"
 
 		if (errcnt)
 		{
-			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have a Reaper version less than 3.4 installed. "
+			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have a Reaper version less than 3.651 installed. "
 				"Please install the latest version of Reaper from www.reaper.fm.", "Version Incompatibility", MB_OK);
 			return 0;
 		}

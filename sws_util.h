@@ -145,8 +145,8 @@ HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NUL
 
 // Utility functions, sws_util.cpp
 BOOL IsCommCtrlVersion6();
-void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter = -1, bool bPos = false);
-void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter = -1);
+void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter = -1, bool bPos = false, UINT uiSate = MFS_UNCHECKED);
+void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter = -1, UINT uiSate = MFS_UNCHECKED);
 HMENU FindMenuItem(HMENU hMenu, int iCmd, int* iPos);
 void SWSSetMenuText(HMENU hMenu, int iCmd, const char* cText);
 void SaveWindowPos(HWND hwnd, const char* cKey);

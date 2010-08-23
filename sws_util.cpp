@@ -73,7 +73,7 @@ BOOL IsCommCtrlVersion6()
 #endif
 }
 
-void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPos)
+void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPos, UINT uiSate)
 {
 	if (!text)
 		return;
@@ -105,7 +105,8 @@ void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPo
 	}
 	else
 	{
-		mi.fMask = MIIM_TYPE | MIIM_ID;
+		mi.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
+		mi.fState = uiSate;
 		mi.fType = MFT_STRING;
 		mi.dwTypeData = (char*)text;
 		mi.wID = id;
@@ -113,7 +114,7 @@ void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPo
 	}
 }
 
-void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter)
+void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, UINT uiSate)
 {
 	int iPos = GetMenuItemCount(hMenu);
 	if (iInsertAfter < 0)
@@ -133,7 +134,8 @@ void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter)
 	}
 
 	MENUITEMINFO mi={sizeof(MENUITEMINFO),};
-	mi.fMask = MIIM_SUBMENU | MIIM_TYPE;
+	mi.fMask = MIIM_SUBMENU | MIIM_TYPE | MIIM_STATE;
+	mi.fState = uiSate;
 	mi.fType = MFT_STRING;
 	mi.hSubMenu = subMenu;
 	mi.dwTypeData = (LPSTR)text;

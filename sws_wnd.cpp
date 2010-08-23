@@ -983,6 +983,7 @@ LPARAM SWS_ListView::GetHitItem(int x, int y, int* iCol)
 	ht.flags = LVHT_ONITEM;
 	ScreenToClient(m_hwndList, &ht.pt);
 	int iItem = ListView_SubItemHitTest(m_hwndList, &ht);
+
 #ifdef _WIN32
 	RECT r;
 	HWND header = ListView_GetHeader(m_hwndList);
@@ -996,7 +997,11 @@ LPARAM SWS_ListView::GetHitItem(int x, int y, int* iCol)
 			*iCol = ht.iSubItem != -1 ? ht.iSubItem : 0; // iCol != -1 means "header", set 0 for "unknown column"
 		return NULL;
 	}
-	else if (iItem >= 0)
+	else if (iItem >= 0 
+#ifdef _WIN32 //JFB added: other "no mans land" but ListView_IsItemVisible() is not part of SWELL!
+		&& ListView_IsItemVisible(m_hwndList, iItem)
+#endif
+		)
 	{
 		if (iCol)
 			*iCol = ht.iSubItem;

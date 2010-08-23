@@ -56,8 +56,11 @@
 #define IDD_SNM_STUFF					151
 #define IDD_SNM_NOTES_HELP				152
 #define IDD_SNM_WAIT					153
+#define IDD_SNM_FIND					154
+#define IDD_SNM_MIDI_LIVE				155
 #define IDB_UP                          500
 #define IDB_DOWN                        501
+#define IDB_SNM							502
 #define IDC_BUTTON1                     1000
 #define IDC_EDIT1                       1001
 #define IDC_BUTTON2                     1002
@@ -237,6 +240,8 @@
 #define IDC_PADREENVPROC_TIMESEGMENT    1180
 #define IDC_PADREENVPROC_TAKEENV        1181
 #define IDC_CHECK4						1182
+#define IDC_RADIO4						1183
+#define IDC_RADIO5						1184
 
 // Next default values for new objects
 // 

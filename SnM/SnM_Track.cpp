@@ -96,7 +96,7 @@ bool loadTrackTemplate(char* _filename, WDL_String* _chunk)
 {
 	if (_filename && *_filename)
 	{
-		FILE* f = fopen(_filename, "r");
+		FILE* f = fopenUTF8(_filename, "r");
 		if (f)
 		{
 			_chunk->Set("");

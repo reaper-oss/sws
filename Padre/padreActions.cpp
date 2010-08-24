@@ -33,14 +33,14 @@
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS/PADRE: Envelope LFO Generator" }, "PADRE_ENVLFO", EnvelopeLfo, NULL, 0},
-	{ { DEFACCEL, "SWS/PADRE: Envelope Processor" }, "PADRE_ENVPROC", DoEnvelopeProcessor, NULL, 0},
+	{ { DEFACCEL, "SWS/PADRE: Envelope LFO generator" }, "PADRE_ENVLFO", EnvelopeLfo, NULL, 0},
+	{ { DEFACCEL, "SWS/PADRE: Envelope processor" }, "PADRE_ENVPROC", DoEnvelopeProcessor, NULL, 0},
 
-	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -128 samples" }, "PADRE_SHRINK_128", ShrinkSelItems, NULL, 128},
-	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -256 samples" }, "PADRE_SHRINK_256", ShrinkSelItems, NULL, 256},
-	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -512 samples" }, "PADRE_SHRINK_512", ShrinkSelItems, NULL, 512},
-	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -1024 samples" }, "PADRE_SHRINK_1024", ShrinkSelItems, NULL, 1024},
-	{ { DEFACCEL, "SWS/PADRE: Shrink Selected Items: -2048 samples" }, "PADRE_SHRINK_2048", ShrinkSelItems, NULL, 2048},
+	{ { DEFACCEL, "SWS/PADRE: Shrink selected items: -128 samples" }, "PADRE_SHRINK_128", ShrinkSelItems, NULL, 128},
+	{ { DEFACCEL, "SWS/PADRE: Shrink selected items: -256 samples" }, "PADRE_SHRINK_256", ShrinkSelItems, NULL, 256},
+	{ { DEFACCEL, "SWS/PADRE: Shrink selected items: -512 samples" }, "PADRE_SHRINK_512", ShrinkSelItems, NULL, 512},
+	{ { DEFACCEL, "SWS/PADRE: Shrink selected items: -1024 samples" }, "PADRE_SHRINK_1024", ShrinkSelItems, NULL, 1024},
+	{ { DEFACCEL, "SWS/PADRE: Shrink selected items: -2048 samples" }, "PADRE_SHRINK_2048", ShrinkSelItems, NULL, 2048},
 
 	//{ { DEFACCEL, "SWS/PADRE: Randomize MIDI Note Positions" }, "PADRE_RANDMIDINOTEPOS", RandomizeMidiNotePos, NULL, },
 

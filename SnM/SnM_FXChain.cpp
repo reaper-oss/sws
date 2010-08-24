@@ -264,7 +264,7 @@ bool loadStoreFXChain(int _slot, const char* _filename)
 {
 	if (_filename && *_filename)
 	{
-		FILE* f = fopen(_filename, "r");
+		FILE* f = fopenUTF8(_filename, "r");
 		if (f)
 		{
 			g_storedFXChain[_slot].Set("");

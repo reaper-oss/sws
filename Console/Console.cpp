@@ -85,8 +85,8 @@ console_COMMAND_T g_commands[NUM_COMMANDS] =
 	{ FX_DISABLE,     '-', 'f',  0, "Disable FX on ",        0 },
 	{ FX_TOGGLE,        0, 'f',  0, "Toggle FX enable on ",  0 },
 	{ FX_EXCLUSIVE,     0, 'F',  0, "Enable FX on only ",    0 },
-	{ VOLUME_SET,       0, 'V',  1, "Set volume on ",        " %sdb" },
-	{ VOLUME_TRIM,      0, 'v',  1, "Trim volume on ",       " %sdb" },
+	{ VOLUME_SET,       0, 'V',  1, "Set volume on ",        " %s dB" },
+	{ VOLUME_TRIM,      0, 'v',  1, "Trim volume on ",       " %s dB" },
 	{ PAN_SET,          0, 'P',  1, "Set pan on  ",          " %s%" },
 	{ PAN_TRIM,         0, 'p',  1, "Trim pan on  ",         " %s%" },
 	{ NAME_SET,         0, 'n',  9, "Name ",                 " to %s" },
@@ -871,7 +871,7 @@ int ConsoleInit()
 	if (!pC)
 		return 0;
 	strcpy(pC+1, "reaconsole_customcommands.txt");
-	FILE* f = fopen(cBuf, "r");
+	FILE* f = fopenUTF8(cBuf, "r");
 	if (f)
 	{
 		int i = 1;

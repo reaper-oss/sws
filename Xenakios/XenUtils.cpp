@@ -230,11 +230,10 @@ bool BrowseForDirectory(const char *text, const char *initialdir, char *fn, int 
 
 bool FileExists(const char* file)
 {
-#ifdef _WIN32
-	struct _stat s;
-	return _stat(file, &s) == 0;
-#else
 	struct stat s;
+#ifdef _WIN32
+	return statUTF8(file, &s) == 0;
+#else
 	return stat(file, &s) == 0;
 #endif
 }

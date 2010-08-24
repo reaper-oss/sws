@@ -957,7 +957,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle snapshot pan" },							"SWSSNAPSHOT_PAN",		 TogSnapParam,   NULL, PAN_MASK,     IsSnapParamEn },
 	{ { DEFACCEL, "SWS: Toggle snapshot vol" },							"SWSSNAPSHOT_VOL",		 TogSnapParam,   NULL, VOL_MASK,     IsSnapParamEn },
 	{ { DEFACCEL, "SWS: Toggle snapshot sends" },						"SWSSNAPSHOT_SEND",		 TogSnapParam,   NULL, SENDS_MASK,   IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot fx" },							"SWSSNAPSHOT_FX",		 TogSnapParam,   NULL, FXCHAIN_MASK, IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot FX" },							"SWSSNAPSHOT_FX",		 TogSnapParam,   NULL, FXCHAIN_MASK, IsSnapParamEn },
 	{ { DEFACCEL, "SWS: Toggle snapshot visibility" },					"SWSSNAPSHOT_VIS",		 TogSnapParam,   NULL, VIS_MASK,     IsSnapParamEn },
 	{ { DEFACCEL, "SWS: Toggle snapshot selection" },					"SWSSNAPSHOT_TOGSEL",    TogSnapParam,   NULL, SEL_MASK,     IsSnapParamEn },
 	{ { DEFACCEL, "SWS: Toggle snapshot selected only" },				"SWSSNAPSHOT_SELONLY",	 ToggleSelOnly,  NULL, },

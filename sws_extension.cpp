@@ -159,7 +159,7 @@ void ActionsList(COMMAND_T*)
 	if (pC)
 	{
 		strcpy(pC+1, "sws_actions.csv");
-		FILE* f = fopen(cBuf, "w");
+		FILE* f = fopenUTF8(cBuf, "w");
 		fputs("Action,File,CmdID,CmdStr\n", f);
 		if (f)
 		{

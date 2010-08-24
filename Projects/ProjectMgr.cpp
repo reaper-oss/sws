@@ -56,7 +56,7 @@ void SaveProjectList(COMMAND_T*)
 	GetProjectPath(cPath, 256);
 	if (BrowseForSaveFile("Select project list", cPath, NULL, "Reaper Project List (*.RPL)\0*.RPL\0All Files\0*.*\0", filename, 256))
 	{
-		FILE* f = fopen(filename, "w");
+		FILE* f = fopenUTF8(filename, "w");
 		if (f)
 		{
 			i = 0;
@@ -82,7 +82,7 @@ void OpenProjectsFromList(COMMAND_T*)
 	char* filename = BrowseForFiles("Select project list", cPath, NULL, false, "Reaper Project List (*.RPL)\0*.RPL\0All Files\0*.*\0");
 	if (filename)
 	{
-		FILE* f = fopen(filename, "r");
+		FILE* f = fopenUTF8(filename, "r");
 		if (f)
 		{
 			// Save "prompt on new project" variable

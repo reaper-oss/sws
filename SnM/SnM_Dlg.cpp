@@ -37,7 +37,7 @@ void fillHWoutDropDown(HWND _hwnd, int _idc)
 {
 	int x=0, x0=0;
 	char buffer[BUFFER_SIZE] = "<None>";
-	x0 = SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)buffer);
+	x0 = (int)SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)buffer);
 	SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,x0,0);
 	
 	// get mono outputs
@@ -64,12 +64,12 @@ void fillHWoutDropDown(HWND _hwnd, int _idc)
 	// fill dropdown
 	for(int i=0; i < stereos.GetSize(); i++)
 	{
-		x = SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)stereos.Get(i)->Get());
+		x = (int)SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)stereos.Get(i)->Get());
 		SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,x,i+1); // +1 for <none>
 	}
 	for(int i=0; i < monos.GetSize(); i++)
 	{
-		x = SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)monos.Get(i)->Get());
+		x = (int)SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)monos.Get(i)->Get());
 		SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,x,i+1); // +1 for <none>
 	}
 
@@ -97,7 +97,7 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			int x=0;
 			for(int i=1; i<4; i++)
 			{
-				x = SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_ADDSTRING,0,(LPARAM)GetSendTypeStr(i));
+				x = (int)SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_ADDSTRING,0,(LPARAM)GetSendTypeStr(i));
 				SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_SETITEMDATA,x,i);
 				if (i==userType) SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_SETCURSEL,x,0);
 			}
@@ -132,7 +132,7 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_NAME,cueBusName,BUFFER_SIZE);
 
 					int userType = 2, reaType;
-					int combo = SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_GETCURSEL,0,0);
+					int combo = (int)SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_GETCURSEL,0,0);
 					if(combo != CB_ERR)
 						userType = combo+1;
 					switch(userType)
@@ -154,7 +154,7 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					int hwOuts[SNM_MAX_HW_OUTS];
 					for (int i=0; i<SNM_MAX_HW_OUTS; i++)
 					{
-						hwOuts[i] = SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_HWOUT1+i,CB_GETCURSEL,0,0);
+						hwOuts[i] = (int)SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_HWOUT1+i,CB_GETCURSEL,0,0);
 						if(hwOuts[i] == CB_ERR)	hwOuts[i] = 0;
 					}
 

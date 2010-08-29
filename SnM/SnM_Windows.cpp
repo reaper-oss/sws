@@ -260,24 +260,24 @@ void floatUnfloatFXs(bool _all, int _showFlag, int _fx, bool _selTracks)
 }
 
 void floatFX(COMMAND_T* _ct) {
-	floatUnfloatFXs(false, 3, _ct->user, true);
+	floatUnfloatFXs(false, 3, (int)_ct->user, true);
 }
 void unfloatFX(COMMAND_T* _ct) {
-	floatUnfloatFXs(false, 2, _ct->user, true);
+	floatUnfloatFXs(false, 2, (int)_ct->user, true);
 }
 void toggleFloatFX(COMMAND_T* _ct) {
-	floatUnfloatFXs(false, 0, _ct->user, true);
+	floatUnfloatFXs(false, 0, (int)_ct->user, true);
 	fakeToggleAction(_ct);
 }
 
 void showAllFXWindows(COMMAND_T * _ct) {
-	floatUnfloatFXs(true, 3, -1, (_ct->user == 1));
+	floatUnfloatFXs(true, 3, -1, (int)(_ct->user == 1));
 }
 void closeAllFXWindows(COMMAND_T * _ct) {
-	floatUnfloatFXs(true, 2, -1, (_ct->user == 1));
+	floatUnfloatFXs(true, 2, -1, (int)(_ct->user == 1));
 }
 void toggleAllFXWindows(COMMAND_T * _ct) {
-	floatUnfloatFXs(true, 0, -1, (_ct->user == 1));
+	floatUnfloatFXs(true, 0, -1, (int)(_ct->user == 1));
 	fakeToggleAction(_ct);
 }
 
@@ -508,24 +508,24 @@ void cycleFocusFXAndMainWnd(int _dir, bool _selectedTracks, bool _showmain)
 }
 
 void cycleFocusFXWndAllTracks(COMMAND_T * _ct) {
-	cycleFocusFXAndMainWnd(_ct->user, false, false);
+	cycleFocusFXAndMainWnd((int)_ct->user, false, false);
 }
 
 void cycleFocusFXWndSelTracks(COMMAND_T * _ct) {
-	cycleFocusFXAndMainWnd(_ct->user, true, false);
+	cycleFocusFXAndMainWnd((int)_ct->user, true, false);
 }
 
 void cycleFocusFXAndMainWndAllTracks(COMMAND_T * _ct) {
-	cycleFocusFXAndMainWnd(_ct->user, false, true);
+	cycleFocusFXAndMainWnd((int)_ct->user, false, true);
 }
 
 void cycleFocusFXMainWndSelTracks(COMMAND_T * _ct) {
-	cycleFocusFXAndMainWnd(_ct->user, true, true);
+	cycleFocusFXAndMainWnd((int)_ct->user, true, true);
 }
 
 void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 {
-	int dir = _ct->user;
+	int dir = (int)_ct->user;
 	if (NumSelTracks())
 	{
 		MediaTrack* firstTrFound = NULL;

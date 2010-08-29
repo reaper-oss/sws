@@ -59,19 +59,22 @@ void DoNudgeSelectedItemsPositions(bool UseConfig, bool Positive, double NudgeTi
 
 void DoSetItemFadesConfLen(COMMAND_T*)
 {
+	double dNewFadeInLen  = g_command_params.CommandFadeInA;
+	double dNewFadeOutLen = g_command_params.CommandFadeOutA;
+	double dZero = 0.0;
 	for (int i = 0; i < CountSelectedMediaItems(0); i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(0, i);
-		double NewFadeInLen=g_command_params.CommandFadeInA;
-		double NewFadeOutLen=g_command_params.CommandFadeOutA;
-		double ItemLen= *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
-		if ((NewFadeInLen + NewFadeOutLen) > ItemLen)
-			NewFadeInLen = NewFadeOutLen = ItemLen / 2.0;
+		double ItemLen= *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
+		if ((dNewFadeInLen + dNewFadeOutLen) > ItemLen)
+			dNewFadeInLen = dNewFadeOutLen = ItemLen / 2.0;
 
 		GetSetMediaItemInfo(item, "C_FADEINSHAPE",  &g_command_params.CommandFadeInShapeA);
 		GetSetMediaItemInfo(item, "C_FADEOUTSHAPE", &g_command_params.CommandFadeOutShapeA);
-		GetSetMediaItemInfo(item, "D_FADEINLEN",  &NewFadeInLen);
-		GetSetMediaItemInfo(item, "D_FADEOUTLEN", &NewFadeOutLen);
+		GetSetMediaItemInfo(item, "D_FADEINLEN",  &dNewFadeInLen);
+		GetSetMediaItemInfo(item, "D_FADEOUTLEN", &dNewFadeOutLen);
+		GetSetMediaItemInfo(item, "D_FADEINLEN_AUTO",  &dZero);
+		GetSetMediaItemInfo(item, "D_FADEOUTLEN_AUTO", &dZero);
 	}
 	Undo_OnStateChangeEx("Set item fades to configured lengths A", UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
@@ -79,19 +82,22 @@ void DoSetItemFadesConfLen(COMMAND_T*)
 
 void DoSetItemFadesConfLenB(COMMAND_T*)
 {
+	double dNewFadeInLen  = g_command_params.CommandFadeInB;
+	double dNewFadeOutLen = g_command_params.CommandFadeOutB;
+	double dZero = 0.0;
 	for (int i = 0; i < CountSelectedMediaItems(0); i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(0, i);
-		double NewFadeInLen=g_command_params.CommandFadeInB;
-		double NewFadeOutLen=g_command_params.CommandFadeOutB;
 		double ItemLen= *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
-		if ((NewFadeInLen + NewFadeOutLen) > ItemLen)
-			NewFadeInLen = NewFadeOutLen = ItemLen / 2.0;
+		if ((dNewFadeInLen + dNewFadeOutLen) > ItemLen)
+			dNewFadeInLen = dNewFadeOutLen = ItemLen / 2.0;
 
 		GetSetMediaItemInfo(item, "C_FADEINSHAPE",  &g_command_params.CommandFadeInShapeB);
 		GetSetMediaItemInfo(item, "C_FADEOUTSHAPE", &g_command_params.CommandFadeOutShapeB);
-		GetSetMediaItemInfo(item, "D_FADEINLEN",  &NewFadeInLen);
-		GetSetMediaItemInfo(item, "D_FADEOUTLEN", &NewFadeOutLen);
+		GetSetMediaItemInfo(item, "D_FADEINLEN",  &dNewFadeInLen);
+		GetSetMediaItemInfo(item, "D_FADEOUTLEN", &dNewFadeOutLen);
+		GetSetMediaItemInfo(item, "D_FADEINLEN_AUTO",  &dZero);
+		GetSetMediaItemInfo(item, "D_FADEOUTLEN_AUTO", &dZero);
 	}
 	Undo_OnStateChangeEx("Set item fades to configured lengths B", UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();

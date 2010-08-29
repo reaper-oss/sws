@@ -847,7 +847,7 @@ void SaveCurSnapshot(COMMAND_T*) { if (g_ss.Get()->m_pCurSnapshot) SaveSnapshot(
 void SaveSnapshot(COMMAND_T* ct) { SaveSnapshot((int)ct->user); }
 void GetCurSnapshot(COMMAND_T*)	 { if (g_ss.Get()->m_pCurSnapshot) GetSnapshot(g_ss.Get()->m_pCurSnapshot->m_iSlot, ALL_MASK, false); }
 void GetSnapshot(COMMAND_T* ct)	 { GetSnapshot((int)ct->user, ALL_MASK, false); }
-void SetSnapType(COMMAND_T* ct)  { g_pSSWnd->SetFilterType(ct->user); UpdateSnapshotsDialog(); }
+void SetSnapType(COMMAND_T* ct)  { g_pSSWnd->SetFilterType((int)ct->user); UpdateSnapshotsDialog(); }
 void TogSnapParam(COMMAND_T* ct) { g_pSSWnd->SetFilterType(2); g_iMask ^= ct->user; UpdateSnapshotsDialog(); }
 bool IsSnapParamEn(COMMAND_T* ct){ return (g_iMask & ct->user) ? true : false; }
 

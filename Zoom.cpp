@@ -152,7 +152,7 @@ void VertZoomRange(int iFirst, int iNum, bool* bZoomed, bool bMinimizeOthers)
 	// Zoom in vertically
 	RECT rect;
 	GetClientRect(hTrackView, &rect);
-	int iTotalHeight = rect.bottom * 0.99; // Take off a percent
+	int iTotalHeight = (int)(rect.bottom * 0.99); // Take off a percent
 
 	SWS_TrackEnvelopes* pTES = new SWS_TrackEnvelopes[iNum];
 	for (int i = 0; i < iNum; i++)

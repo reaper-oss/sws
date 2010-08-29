@@ -291,7 +291,7 @@ void ParseTrackId(char* strId, bool bReset)
 					if (!strMatch)
 					{
 						strMatch = new char[strlen(strId)-1];
-						lstrcpyn(strMatch, strId+1, strlen(strId)-1);
+						lstrcpyn(strMatch, strId+1, (int)strlen(strId)-1);
 					}
 					if (stristr(cName, strMatch))
 						g_selTracks.Get()[track] = 1;

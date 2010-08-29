@@ -34,10 +34,10 @@ void UpdateDialogControls(HWND hwnd)
 	// IDC_STATIC7
 	int combosel=0;
 	char buf[50];
-	combosel=SendMessage(GetDlgItem(hwnd,IDC_COMBO2), CB_GETCURSEL, 0, 0);
+	combosel=(int)SendMessage(GetDlgItem(hwnd,IDC_COMBO2), CB_GETCURSEL, 0, 0);
 	SendMessage(GetDlgItem(hwnd,IDC_COMBO2), CB_GETLBTEXT, combosel, (LPARAM)buf);
 	int samplerate=atoi(buf);
-	combosel=SendMessage(GetDlgItem(hwnd,IDC_COMBO1), CB_GETCURSEL, 0, 0);
+	combosel=(int)SendMessage(GetDlgItem(hwnd,IDC_COMBO1), CB_GETCURSEL, 0, 0);
 	SendMessage(GetDlgItem(hwnd,IDC_COMBO1), CB_GETLBTEXT, combosel, (LPARAM)buf);
 	int bits=atoi(buf);
 	int bytemultip=bits/8;

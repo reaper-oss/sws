@@ -282,7 +282,7 @@ WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 				if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==IDC_AUTONAMEPRESETS)
 				{
 					string *formattingString;
-					int comboIndex=SendMessage(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS), CB_GETCURSEL, 0, 0);
+					int comboIndex=(int)SendMessage(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS), CB_GETCURSEL, 0, 0);
 					if (comboIndex>=0 && comboIndex<(int)g_AutoNamePresets.size())
 					{
 						formattingString=(string*)SendMessage(GetDlgItem(hwnd,IDC_AUTONAMEPRESETS),CB_GETITEMDATA, comboIndex, 0);

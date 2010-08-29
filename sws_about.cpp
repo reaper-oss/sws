@@ -62,7 +62,7 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (wParam == IDC_WEBSITE || wParam == IDC_LATESTVER)
 		{
 			char cLink[512];
-			GetDlgItemText(hwndDlg, wParam, cLink, 512);
+			GetDlgItemText(hwndDlg, (int)wParam, cLink, 512);
 			ShellExecute(hwndDlg, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
 		}
 		else if (wParam == IDC_LICENSE)

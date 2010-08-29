@@ -106,7 +106,7 @@ void smartSplitMidiAudio(COMMAND_T* _ct)
 
 void splitSelectedItems(COMMAND_T* _ct) {
 	if (CountSelectedMediaItems(0))
-		Main_OnCommand(_ct->user, 0);
+		Main_OnCommand((int)_ct->user, 0);
 }
 
 void goferSplitSelectedItems(COMMAND_T* _ct) {
@@ -510,7 +510,7 @@ void moveActiveTake(COMMAND_T* _ct)
 }
 
 void buildLanes(COMMAND_T* _ct) {
-	buildLanes(SNM_CMD_SHORTNAME(_ct), _ct->user);
+	buildLanes(SNM_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 
 void selectTakeLane(COMMAND_T* _ct)

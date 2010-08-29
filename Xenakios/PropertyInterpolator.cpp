@@ -124,7 +124,6 @@ double RealValToNormzdVal(int propIDX,double theValue)
 
 void DrawEnvelope()
 {
-	int i;
 	RECT r;
 	GetClientRect(GetDlgItem(g_hIIdlg,IDC_IIENVAREA), &r);
 	int NodeSize=3;
@@ -133,51 +132,40 @@ void DrawEnvelope()
 	{
 		double pitchGridSpacing=2.0;
 		double parRange=g_IIproperties[g_activePropertyEnvelope].MaxValue-g_IIproperties[g_activePropertyEnvelope].MinValue;
-		int numVertlines=1+(parRange/pitchGridSpacing);
+		int numVertlines=1+(int)(parRange/pitchGridSpacing);
 		double ycorScaler=r.bottom/parRange;
-		for (i=0;i<numVertlines;i++)
+		for (int i = 0; i < numVertlines; i++)
 		{
-			double ycor=ycorScaler*i*pitchGridSpacing;
+			int ycor = (int)(ycorScaler * i * pitchGridSpacing);
 			LICE_Line(g_framebuffer,0,ycor,r.right,ycor,LICE_RGBA(90,90,90,255));	
 		}
 	}
-	for (i=0;i<(int)g_ii_storeditemstates.size();i++)
+	for (int i = 0; i < (int)g_ii_storeditemstates.size(); i++)
 	{
-		//MediaItem *CurItem=(MediaItem*)GetSetMediaItemTakeInfo(g_IItakes[i],"P_ITEM",0);
-		if (2==2)
+		double itemPos=g_ii_storeditemstates[i].position;
+		itemPos-=g_MinItemTime;
+		int xcor=(int)((r.right/itemTimeRange)*itemPos);
+		LICE_Line(g_framebuffer,xcor,0,xcor,r.bottom,LICE_RGBA(128,128,128,255));
+		if (strcmp(g_IIproperties[g_activePropertyEnvelope].Name,"Item position")==0)
 		{
-			//double itemPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",0);
-			double itemPos=g_ii_storeditemstates[i].position;
-			itemPos-=g_MinItemTime;
-			double xcor=(r.right/itemTimeRange)*itemPos;
-			LICE_Line(g_framebuffer,xcor,0,xcor,r.bottom,LICE_RGBA(128,128,128,255));
-			if (strcmp(g_IIproperties[g_activePropertyEnvelope].Name,"Item position")==0)
-			{
-				double ycor=r.bottom-(r.bottom/(g_MaxItemTime-g_MinItemTime))*itemPos;
-				LICE_Line(g_framebuffer,xcor-3,ycor,xcor+3,ycor,LICE_RGBA(128,128,128,255));
-			
-			}
+			int ycor=r.bottom-(int)((r.bottom/(g_MaxItemTime-g_MinItemTime))*itemPos);
+			LICE_Line(g_framebuffer,xcor-3,ycor,xcor+3,ycor,LICE_RGBA(128,128,128,255));
+		
 		}
-		//
 	}
 	t_interpolator_envelope *pActiveEnvelope=g_IIproperties[g_activePropertyEnvelope].Envelope;
 	LICE_pixel thecolor=LICE_RGBA(0,255,0,255);
 	
-	for (i=0;i<(int)pActiveEnvelope->size();i++)
+	for (int i = 0; i < (int)pActiveEnvelope->size(); i++)
 	{
-		double Xcor1;
-		Xcor1=r.right*pActiveEnvelope->at(i).Time; // [i].Time;
-		double Ycor1;
-		Ycor1=r.bottom*(1.0-pActiveEnvelope->at(i).Value); // [i].Value);
-		double Xcor2;
-		
-		double Ycor2;
+		int Xcor1, Ycor1, Xcor2, Ycor2;
+		Xcor1 = (int)(r.right*pActiveEnvelope->at(i).Time); // [i].Time;
+		Ycor1 = (int)(r.bottom*(1.0-pActiveEnvelope->at(i).Value)); // [i].Value);
 		if (i<(int)pActiveEnvelope->size()-1)
 		{
-			Xcor2=r.right*pActiveEnvelope->at(i+1).Time; // [i+1].Time;
-			Ycor2=r.bottom*(1.0-pActiveEnvelope->at(i+1).Value); // [i+1].Value);
+			Xcor2 = (int)(r.right*pActiveEnvelope->at(i+1).Time); // [i+1].Time;
+			Ycor2 = (int)(r.bottom*(1.0-pActiveEnvelope->at(i+1).Value)); // [i+1].Value);
 			LICE_Line(g_framebuffer, Xcor1, Ycor1, Xcor2, Ycor2, LICE_RGBA(255,255,255,255));
-			
 		}
 		LICE_Line(g_framebuffer, Xcor1-NodeSize, Ycor1-NodeSize, Xcor1+NodeSize, Ycor1-NodeSize, thecolor);
 		LICE_Line(g_framebuffer, Xcor1+NodeSize, Ycor1-NodeSize, Xcor1+NodeSize, Ycor1+NodeSize, thecolor);
@@ -189,12 +177,10 @@ void DrawEnvelope()
 			LICE_Line(g_framebuffer,Xcor1,Ycor1,r.right,Ycor1,LICE_RGBA(255,255,255,255));
 
 	}
-
 }
 
 int GetHotNodeIndex(int xcor,int ycor)
 {
-	int i;
 	RECT r;
 	GetWindowRect(GetDlgItem(g_hIIdlg,IDC_IIENVAREA),&r);
 	int detectRange=6;
@@ -206,20 +192,17 @@ int GetHotNodeIndex(int xcor,int ycor)
 	RECT compareRECT;
 	t_interpolator_envelope *TargetEnvelope=g_IIproperties[g_activePropertyEnvelope].Envelope;
 	
-	for (i=0;i<(int)TargetEnvelope->size();i++)
+	for (int i = 0; i < (int)TargetEnvelope->size(); i++)
 	{
-		compareRECT.left=(GraphWidth*TargetEnvelope->at(i).Time)-detectRange+r.left;
-		compareRECT.right=(GraphWidth*TargetEnvelope->at(i).Time)+detectRange+r.left;
-		compareRECT.top=(GraphHeight*(1.0-TargetEnvelope->at(i).Value))-detectRange+r.top;
-		compareRECT.bottom=(GraphHeight*(1.0-TargetEnvelope->at(i).Value))+detectRange+r.top;
+		compareRECT.left   = (LONG)(GraphWidth*TargetEnvelope->at(i).Time)-detectRange+r.left;
+		compareRECT.right  = (LONG)(GraphWidth*TargetEnvelope->at(i).Time)+detectRange+r.left;
+		compareRECT.top    = (LONG)(GraphHeight*(1.0-TargetEnvelope->at(i).Value))-detectRange+r.top;
+		compareRECT.bottom = (LONG)(GraphHeight*(1.0-TargetEnvelope->at(i).Value))+detectRange+r.top;
 		POINT pt;
-		pt.x=xcor+r.left;
-		pt.y=ycor+r.top;
+		pt.x = xcor+r.left;
+		pt.y = ycor+r.top;
 		if (PtInRect(&compareRECT,pt)>0)
-		{
 			return i;
-		}
-
 	}
 	return -1;
 }
@@ -505,7 +488,7 @@ void PerformPropertyChanges()
 			}
 			if (strcmp(g_IIproperties[j].APIAccessID,"F_FREEMODE_Y")==0 && g_IIproperties[j].enabled)
 			{
-				float newItemPropValueF=MinValue+((MaxValue-MinValue)*interpValue);	
+				float newItemPropValueF = (float)(MinValue+((MaxValue-MinValue)*interpValue));
 				GetSetMediaItemInfo((MediaItem*)GetSetMediaItemTakeInfo(g_IItakes[i],"P_ITEM",0),"F_FREEMODE_Y",&newItemPropValueF);
 			}
 			if (strcmp(g_IIproperties[j].APIAccessID,"D_LENGTH")==0 && g_IIproperties[j].enabled)

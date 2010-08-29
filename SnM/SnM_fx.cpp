@@ -63,7 +63,7 @@ bool isFXOfflineOrBypassedSelectedTracks(COMMAND_T * _ct, int _token)
 	if (selTrCount == 1)
 	{
 		MediaTrack* tr = GetFirstSelectedTrack();
-		int fxId = getFXIdFromCommand(tr, _ct->user);
+		int fxId = getFXIdFromCommand(tr, (int)_ct->user);
 		if (tr && fxId >= 0)
 		{
 			char state[2];

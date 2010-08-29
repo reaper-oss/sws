@@ -1,24 +1,37 @@
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SWS_Extension", "sws_extension.vcproj", "{FB45A787-C2B0-4784-A418-3429C0FBC42D}"
-	ProjectSection(ProjectDependencies) = postProject
-		{32B96F1E-3FE1-434B-9F50-C27F5902678E} = {32B96F1E-3FE1-434B-9F50-C27F5902678E}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SWS_VersionInc", "sws_versioninc.vcproj", "{32B96F1E-3FE1-434B-9F50-C27F5902678E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SWS_Extension", "sws_extension.vcproj", "{FB45A787-C2B0-4784-A418-3429C0FBC42D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release|All = Release|All
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
 		Test|All = Test|All
+		Test|Win32 = Test|Win32
+		Test|x64 = Test|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Release|All.ActiveCfg = Release|Win32
-		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Release|All.Build.0 = Release|Win32
-		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Test|All.ActiveCfg = Test|Win32
-		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Test|All.Build.0 = Test|Win32
 		{32B96F1E-3FE1-434B-9F50-C27F5902678E}.Release|All.ActiveCfg = Release|Win32
+		{32B96F1E-3FE1-434B-9F50-C27F5902678E}.Release|Win32.ActiveCfg = Release|Win32
+		{32B96F1E-3FE1-434B-9F50-C27F5902678E}.Release|Win32.Build.0 = Release|Win32
+		{32B96F1E-3FE1-434B-9F50-C27F5902678E}.Release|x64.ActiveCfg = Release|Win32
 		{32B96F1E-3FE1-434B-9F50-C27F5902678E}.Test|All.ActiveCfg = Release|Win32
+		{32B96F1E-3FE1-434B-9F50-C27F5902678E}.Test|Win32.ActiveCfg = Release|Win32
+		{32B96F1E-3FE1-434B-9F50-C27F5902678E}.Test|Win32.Build.0 = Release|Win32
+		{32B96F1E-3FE1-434B-9F50-C27F5902678E}.Test|x64.ActiveCfg = Release|Win32
+		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Release|All.ActiveCfg = Release|x64
+		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Release|Win32.ActiveCfg = Release|Win32
+		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Release|Win32.Build.0 = Release|Win32
+		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Release|x64.ActiveCfg = Release|x64
+		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Release|x64.Build.0 = Release|x64
+		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Test|All.ActiveCfg = Test|x64
+		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Test|Win32.ActiveCfg = Test|Win32
+		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Test|Win32.Build.0 = Test|Win32
+		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Test|x64.ActiveCfg = Test|x64
+		{FB45A787-C2B0-4784-A418-3429C0FBC42D}.Test|x64.Build.0 = Test|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

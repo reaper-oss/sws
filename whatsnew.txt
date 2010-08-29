@@ -1,3 +1,8 @@
+!v1.7.3 #4 (August 29, 2010)
+Fixed item fade actions:
+- Added new action "SWS: Set item fades to default length"
+- The old "autofade" action is renamed to "SWS: Set item fades to crossfade lengths" (more accurate)
+
 !v1.7.3 #3 (August 9, 2010)
 Issue 164: Fixed Reaconsole wildcard handling, for real this time.
 

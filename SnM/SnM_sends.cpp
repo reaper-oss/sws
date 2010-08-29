@@ -206,7 +206,7 @@ void cueTrack(COMMAND_T* _ct)
 
 	cueTrack(
 		busName, 
-		(_ct->user < 0 ? reaType : _ct->user), 
+		(_ct->user < 0 ? reaType : (int)_ct->user), 
 		SNM_CMD_SHORTNAME(_ct), 
 		showRouting, 
 		soloGrp, 

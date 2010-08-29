@@ -269,7 +269,8 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Set previous fade in shape for items" }, "XENAKIOS_PREVFADEINSHAPE", DoSetPrevFadeInShape,	"Set previous fade in shape for items", },
 	{ { DEFACCEL, "Xenakios/SWS: Set next fade out shape for items" }, "XENAKIOS_NEXTFADEOUTSHAPE", DoSetNextFadeOutShape,	"Set next fade out shape for items", },
 	{ { DEFACCEL, "Xenakios/SWS: Set previous fade out shape for items" }, "XENAKIOS_PREVFADEOUTSHAPE", DoSetPrevFadeOutShape,	"Set previous fade out shape for items", },
-	{ { DEFACCEL, "Xenakios/SWS: Set item fades to autofade lengths" }, "XENAKIOS_AUTOFADETOFADE", DoSetFadeToAutofade,	"Set item fades to autofade lengths", },
+	{ { DEFACCEL, "SWS: Set item fades to crossfade lengths" }, "XENAKIOS_AUTOFADETOFADE", DoSetFadeToCrossfade,	"Set item fades to autofade lengths", },
+	{ { DEFACCEL, "SWS: Set item fades to default length" }, "SWS_DEFAULTFADES", DoSetFadeToDefaultFade, },
 	{ { DEFACCEL, "Xenakios/SWS: Set item playrate based on item pitch (and reset pitch)" }, "XENAKIOS_ITEMPITCH2PLAYRATE", DoItemPitch2Playrate,	"Set item playrate based on item pitch", },
 	{ { DEFACCEL, "Xenakios/SWS: Set item pitch based on item playrate" }, "XENAKIOS_ITEMPLAYRATE2PITCH", DoItemPlayrate2Pitch,	"Set item pitch based on item playrate", },
 #ifdef _WIN32

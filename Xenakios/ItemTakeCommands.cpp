@@ -797,6 +797,8 @@ void DoRemoveItemFades(COMMAND_T*)
 		MediaItem* item = GetSelectedMediaItem(0, i);
 		GetSetMediaItemInfo(item, "D_FADEINLEN",  &dFade);
 		GetSetMediaItemInfo(item, "D_FADEOUTLEN", &dFade);
+		GetSetMediaItemInfo(item, "D_FADEINLEN_AUTO",  &dFade);
+		GetSetMediaItemInfo(item, "D_FADEOUTLEN_AUTO", &dFade);
 	}
 	Undo_OnStateChangeEx("Set Item Fades To 0", UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();

@@ -277,7 +277,7 @@ void LastProjectTab(COMMAND_T*)
 
 void OpenProjectTab(COMMAND_T* ctx)
 {
-	ReaProject* proj = Enum_Projects(ctx->user, NULL, 0);
+	ReaProject* proj = Enum_Projects((int)ctx->user, NULL, 0);
 	if (proj)
 		SelectProjectInstance(proj);
 }

@@ -68,7 +68,7 @@ HRESULT STDMETHODCALLTYPE SWS_IDataObject::GetData(FORMATETC *pformatetcIn, STGM
 	pMedium->pUnkForRelease = 0;
 	if (m_pFormatEtc->tymed != TYMED_HGLOBAL)
 		return DV_E_FORMATETC;
-	DWORD len    = GlobalSize(m_pStgMedium->hGlobal);
+	DWORD len    = (DWORD)GlobalSize(m_pStgMedium->hGlobal);
 	PVOID source = GlobalLock(m_pStgMedium->hGlobal);
 	PVOID dest   = GlobalAlloc(GMEM_FIXED, len);
 	memcpy(dest, source, len);

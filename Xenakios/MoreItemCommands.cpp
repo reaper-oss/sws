@@ -1002,32 +1002,36 @@ void DoSetPrevFadeOutShape(COMMAND_T*)
 	CycleItemsFadeShape(1,false);
 }
 
-void DoSetFadeToAutofade(COMMAND_T*)
+void DoSetFadeToCrossfade(COMMAND_T*)
 {
-	MediaItem *CurItem;
-	MediaTrack *CurTrack;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
 	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		for (j=0;j<GetTrackNumMediaItems(CurTrack);j++)
-		{
-			CurItem=GetTrackMediaItem(CurTrack,j);
-			bool isSel=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (isSel)
-			{
-				double AutoFadeIn=*(double*)GetSetMediaItemInfo(CurItem,"D_FADEINLEN_AUTO",NULL);
-				double AutoFadeOut=*(double*)GetSetMediaItemInfo(CurItem,"D_FADEOUTLEN_AUTO",NULL);
-				GetSetMediaItemInfo(CurItem,"D_FADEINLEN",&AutoFadeIn);
-				GetSetMediaItemInfo(CurItem,"D_FADEOUTLEN",&AutoFadeOut);
-
-			}
-		}
+		MediaItem* item = GetSelectedMediaItem(0, i);
+		double AutoFadeIn  = *(double*)GetSetMediaItemInfo(item, "D_FADEINLEN_AUTO",  NULL);
+		double AutoFadeOut = *(double*)GetSetMediaItemInfo(item ,"D_FADEOUTLEN_AUTO", NULL);
+		GetSetMediaItemInfo(item, "D_FADEINLEN",  &AutoFadeIn);
+		GetSetMediaItemInfo(item, "D_FADEOUTLEN", &AutoFadeOut);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Set item fades to item autofades",4,-1);
+	Undo_OnStateChangeEx("Set item fades to crossfade lengths",4,-1);
 }
+
+void DoSetFadeToDefaultFade(COMMAND_T*)
+{
+	double* pdDefFade = (double*)GetConfigVar("deffadelen");
+	double dZero = 0.0;
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	{
+		MediaItem* item = GetSelectedMediaItem(0, i);
+		GetSetMediaItemInfo(item, "D_FADEINLEN_AUTO",  &dZero);
+		GetSetMediaItemInfo(item, "D_FADEOUTLEN_AUTO", &dZero);
+		GetSetMediaItemInfo(item, "D_FADEINLEN",  pdDefFade);
+		GetSetMediaItemInfo(item, "D_FADEOUTLEN", pdDefFade);
+	}
+	UpdateTimeline();
+	Undo_OnStateChangeEx("Set item fades to default length",4,-1);
+}
+
 /* added by FNG */
 void DoItemModifyPlayrate(COMMAND_T *cmd)
 {
@@ -1741,24 +1745,26 @@ void DoResetItemsOffsetAndLength(COMMAND_T*)
 void SetSelItemsFadesToConf(const char *confID)
 {
 	vector<MediaItem*> selitems;
-	XenGetProjectItems(selitems,true,false);
+	XenGetProjectItems(selitems, true, false);
 	char INIFileName[1024];
 	sprintf(INIFileName,"%s\\Plugins\\Xenakios_Commands.ini",GetExePath());
 	char resultString[512];
 	GetPrivateProfileString("XENAKIOSCOMMANDS",confID,"0.005 1 0.005 1",resultString,512,INIFileName);
 	LineParser lp(false);
 	lp.parse(resultString);
-	double fadeinlen=lp.gettoken_float(0);
-	char fadeinshape=lp.gettoken_int(1);
-	double fadeoutlen=lp.gettoken_float(2);
-	char fadeoutshape=lp.gettoken_int(3);
-	int i;
-	for (i=0;i<(int)selitems.size();i++)
+	double fadeinlen    = lp.gettoken_float(0);
+	char   fadeinshape  = lp.gettoken_int(1);
+	double fadeoutlen   = lp.gettoken_float(2);
+	char   fadeoutshape = lp.gettoken_int(3);
+	double dZero = 0.0;
+	for (int i = 0; i < (int)selitems.size(); i++)
 	{
-		GetSetMediaItemInfo(selitems[i],"D_FADEINLEN",&fadeinlen);
-		GetSetMediaItemInfo(selitems[i],"D_FADEOUTLEN",&fadeoutlen);
-		GetSetMediaItemInfo(selitems[i],"C_FADEINSHAPE",&fadeinshape);
-		GetSetMediaItemInfo(selitems[i],"C_FADEOUTSHAPE",&fadeoutshape);
+		GetSetMediaItemInfo(selitems[i], "D_FADEINLEN",  &fadeinlen);
+		GetSetMediaItemInfo(selitems[i], "D_FADEOUTLEN", &fadeoutlen);
+		GetSetMediaItemInfo(selitems[i], "D_FADEINLEN_AUTO",  &dZero);
+		GetSetMediaItemInfo(selitems[i], "D_FADEOUTLEN_AUTO", &dZero);
+		GetSetMediaItemInfo(selitems[i], "C_FADEINSHAPE",  &fadeinshape);
+		GetSetMediaItemInfo(selitems[i], "C_FADEOUTSHAPE", &fadeoutshape);
 	}
 	UpdateTimeline();
 	Undo_OnStateChangeEx("Change item fades",4,-1);

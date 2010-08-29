@@ -141,7 +141,7 @@ void SNM_FXChainWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	if (wParam >= IDC_RADIO1 && wParam <= IDC_RADIO3)
 	{
-		g_FXChainViewDblClickType = wParam;
+		g_FXChainViewDblClickType = (int)wParam;
 	}
 	else if (wParam >= CLEAR_MSG && wParam <= DISPLAY_MSG)
 	{

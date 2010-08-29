@@ -1310,7 +1310,7 @@ void SetAllMasterSendsMutes(bool muted)
 
 bool IsMasterSendMuted(COMMAND_T* t)
 {
-	void* muted = GetSetTrackSendInfo(CSurf_TrackFromID(0,false), 1, t->user, "B_MUTE", NULL);
+	void* muted = GetSetTrackSendInfo(CSurf_TrackFromID(0,false), 1, (int)t->user, "B_MUTE", NULL);
 	if (muted) return *(bool*)muted;
 	return false;
 }
@@ -1337,8 +1337,8 @@ void ToggleMasterSendMute(int indx,int mode) // mode 0==toggle, 1==set mute, 2==
 	}
 }
 
-void DoToggleMasterSendMute(COMMAND_T* t)		{ ToggleMasterSendMute(t->user,0); }
-void DoSetMasterSendMute(COMMAND_T* t)			{ ToggleMasterSendMute(t->user,1); }
-void DoUnSetMasterSendMute(COMMAND_T* t)		{ ToggleMasterSendMute(t->user,2); }
+void DoToggleMasterSendMute(COMMAND_T* t)		{ ToggleMasterSendMute((int)t->user,0); }
+void DoSetMasterSendMute(COMMAND_T* t)			{ ToggleMasterSendMute((int)t->user,1); }
+void DoUnSetMasterSendMute(COMMAND_T* t)		{ ToggleMasterSendMute((int)t->user,2); }
 void DoSetAllMastersSendsMuted(COMMAND_T*)		{ SetAllMasterSendsMutes(true);  }
 void DoSetAllMastersSendsUnMuted(COMMAND_T*)	{ SetAllMasterSendsMutes(false); }

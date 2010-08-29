@@ -165,7 +165,7 @@ void setTrackFXChain(const char* _title, int _slot, bool _clear)
 }
 
 void loadPasteTrackFXChain(COMMAND_T* _ct) {
-	loadPasteTrackFXChain(SNM_CMD_SHORTNAME(_ct), _ct->user);
+	loadPasteTrackFXChain(SNM_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 
 void clearTrackFXChain(COMMAND_T* _ct) {

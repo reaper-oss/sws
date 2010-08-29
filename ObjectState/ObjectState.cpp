@@ -160,7 +160,7 @@ bool GetChunkLine(const char* chunk, char* line, int iLineMax, int* pos, bool bN
 		c = *(chunk + *pos);
 	}
 
-	int iCount = (chunk + *pos) - cStart + (bNewLine ? 0 : -1) + 1;
+	int iCount = (int)((chunk + *pos) - cStart + (bNewLine ? 0 : -1) + 1);
 	if (iCount > iLineMax)
 		iCount = iLineMax;
 	if (iCount > 0)
@@ -175,7 +175,7 @@ void AppendChunkLine(WDL_String* chunk, const char* line)
 	char* pIns = strrchr(chunk->Get(), '>');
 	if (!pIns)
 		return;
-	int pos = pIns - chunk->Get();
+	int pos = (int)(pIns - chunk->Get());
 	if (line[strlen(line)-1] != '\n')
 		chunk->Insert("\n", pos);
 	chunk->Insert(line, pos);

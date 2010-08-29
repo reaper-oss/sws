@@ -88,7 +88,7 @@ int SWS_TrackEnvelope::GetHeight(int iTrackHeight)
 		return m_iHeightOverride;
 	else
 	{
-		iTrackHeight *= ENV_HEIGHT_MULTIPLIER;
+		iTrackHeight = (int)(iTrackHeight * ENV_HEIGHT_MULTIPLIER);
 		if (iTrackHeight < MINTRACKHEIGHT)
 			iTrackHeight = MINTRACKHEIGHT;
 		return iTrackHeight;
@@ -108,7 +108,7 @@ void SWS_TrackEnvelope::SetHeight(int iHeight)
 
 	char* cOldState = m_cEnv;
 	m_cEnv = (char*)malloc(strlen(cOldState) + 10);
-	lstrcpyn(m_cEnv, cOldState, pLH-cOldState + 12);
+	lstrcpyn(m_cEnv, cOldState, (int)(pLH-cOldState + 12));
 	sprintf(m_cEnv+strlen(m_cEnv), "%d", iHeight);
 	strcpy(m_cEnv+strlen(m_cEnv), strchr(pLH+11, ' '));
 	GetSetEnvelopeState(m_pTe, m_cEnv, (int)strlen(m_cEnv));

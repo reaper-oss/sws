@@ -267,7 +267,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				SWS_AutoColorItem* item = (SWS_AutoColorItem*)m_pLists.Get(0)->EnumSelected(NULL);
 				if (item)
 				{
-					int iType = wParam - TRACKTYPE_MSG;
+					int iType = (int)wParam - TRACKTYPE_MSG;
 					for (int i = 0; i < g_pACItems.GetSize(); i++)
 						if (strcmp(g_pACItems.Get(i)->m_str.Get(), cTrackTypes[iType]) == 0)
 						{
@@ -284,7 +284,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				int x = 0;
 				SWS_AutoColorItem* item;
 				while ((item = (SWS_AutoColorItem*)m_pLists.Get(0)->EnumSelected(&x)))
-					item->m_col = -1 - (wParam - COLORTYPE_MSG);
+					item->m_col = -1 - ((int)wParam - COLORTYPE_MSG);
 				Update();
 			}
 			else

@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
+#include "SNM_Chunk.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -34,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef _SNM_TRACK_GROUP_EX
-// Track grouping example code (just did what I need for now..)
+// Track grouping example code (just did what I needed..)
 // Deprecated (since native solo defeat added in REAPER v3.5) but working: see related ifdef'd code 
 int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPatcher* _cpp)
 {
@@ -47,8 +48,7 @@ int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPa
 		// no track grouping yet ?
 		if (!_cpp->Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "GROUP_FLAGS", -1 , 0, 0, &grpLine))
 		{
-			char tmp[64] = "";
-			int patchPos = _cpp->Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", -1, 0, 0, tmp);
+			int patchPos = _cpp->Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", -1, 0, 0);
 			if (patchPos > 0)
 			{
 				patchPos--; // see SNM_ChunkParserPatcher..
@@ -92,20 +92,183 @@ int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPa
 }
 #endif
 
-bool loadTrackTemplate(char* _filename, WDL_String* _chunk)
+
+///////////////////////////////////////////////////////////////////////////////
+// Track folders
+///////////////////////////////////////////////////////////////////////////////
+
+class TrackFolder
 {
-	if (_filename && *_filename)
+public:
+	TrackFolder(MediaTrack* _tr, int _state) {
+		m_tr = _tr;
+		m_state = _state;
+	}
+	MediaTrack* m_tr;
+	int m_state;
+};
+
+WDL_PtrList_DeleteOnDestroy<TrackFolder> g_trackFolderStates;
+WDL_PtrList_DeleteOnDestroy<TrackFolder> g_trackFolderCompactStates;
+
+void saveTracksFolderStates(COMMAND_T* _ct)
+{
+	const char* strState = !_ct->user ? "I_FOLDERDEPTH" : "I_FOLDERCOMPACT";
+	WDL_PtrList_DeleteOnDestroy<TrackFolder>* saveList = !_ct->user ? &g_trackFolderStates : &g_trackFolderCompactStates;
+	saveList->Empty(true);
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		FILE* f = fopenUTF8(_filename, "r");
-		if (f)
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			saveList->Add(new TrackFolder(tr, *(int*)GetSetMediaTrackInfo(tr, strState, NULL)));
+	}
+}
+
+void restoreTracksFolderStates(COMMAND_T* _ct)
+{
+	bool updated = false;
+	const char* strState = !_ct->user ? "I_FOLDERDEPTH" : "I_FOLDERCOMPACT";
+	WDL_PtrList_DeleteOnDestroy<TrackFolder>* saveList = !_ct->user ? &g_trackFolderStates : &g_trackFolderCompactStates;
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			_chunk->Set("");
-			char str[4096];
-			while(fgets(str, 4096, f))
-				_chunk->Append(str);
-			fclose(f);
-			return true;
+			for(int j=0; j < saveList->GetSize(); j++)
+			{
+				TrackFolder* savedTF = saveList->Get(j);
+				int current = *(int*)GetSetMediaTrackInfo(tr, strState, NULL);
+				if (savedTF->m_tr == tr && 
+					(!_ct->user && savedTF->m_state != current) ||
+					(_ct->user && *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL) == 1 && savedTF->m_state != current))
+				{
+					GetSetMediaTrackInfo(tr, strState, &(savedTF->m_state));
+					updated = true;
+					break;
+				}
+			}
 		}
 	}
-	return false;
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+void setTracksFolderState(COMMAND_T* _ct)
+{
+	bool updated = false;
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) &&
+			_ct->user != *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL))
+		{
+			GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", &(_ct->user));
+			updated = true;
+		}
+	}
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Env. arming
+///////////////////////////////////////////////////////////////////////////////
+
+void toggleArmTrackEnv(COMMAND_T* _ct)
+{
+	bool updated = false;
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i,false); 
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			SNM_ArmEnvParserPatcher p(tr);
+			switch(_ct->user)
+			{
+				// ALL envs
+				case 0:
+					p.SetNewValue(-1);//toggle
+					updated = (p.ParsePatch(-1) > 0);
+					break;
+				case 1:
+					p.SetNewValue(1);//arm
+					updated = (p.ParsePatch(-1) > 0); 
+					break;
+				case 2:
+					p.SetNewValue(0); //disarn
+					updated = (p.ParsePatch(-1) > 0);
+					break;
+				// track vol/pan/mute envs
+				case 3:
+					updated = (p.ParsePatch(SNM_TOGGLE_CHUNK_INT, 2, "VOLENV2", "ARM", 2, 0, 1) > 0);
+					break;
+				case 4:
+					updated = (p.ParsePatch(SNM_TOGGLE_CHUNK_INT, 2, "PANENV2", "ARM", 2, 0, 1) > 0);
+					break;
+				case 5:
+					updated = (p.ParsePatch(SNM_TOGGLE_CHUNK_INT, 2, "MUTEENV", "ARM", 2, 0, 1) > 0);
+					break;
+				// receive envs
+				case 6:
+					p.SetNewValue(-1); //toggle
+					updated = (p.ParsePatch(-2) > 0);
+					break;
+				case 7:
+					p.SetNewValue(-1); //toggle
+					updated = (p.ParsePatch(-3) > 0);
+					break;
+				case 8:
+					p.SetNewValue(-1); //toggle
+					updated = (p.ParsePatch(-4) > 0);
+					break;
+				//plugin envs
+				case 9:
+					p.SetNewValue(-1); //toggle
+					updated = (p.ParsePatch(-5) > 0);
+					break;
+
+				default:
+					break;
+			}
+		}
+	}
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Track selection (all with ReaProject*)
+///////////////////////////////////////////////////////////////////////////////
+
+int CountSelectedTracksWithMaster(ReaProject* _proj)
+{
+	int selCnt = CountSelectedTracks(_proj);
+	MediaTrack* mtr = GetMasterTrack(_proj);
+	if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL))
+		selCnt++;
+	return selCnt;
+}
+
+// Takes the master track into account
+// => to be used with CountSelectedTracksWithMaster() and not the API's CountSelectedTracks()
+// If selected, the master will be returnd with the _idx = 0
+MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx)
+{
+	MediaTrack* mtr = GetMasterTrack(_proj);
+	if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL)) 
+	{
+		if (!_idx)
+			return mtr;
+		else
+			return GetSelectedTrack(_proj, _idx-1);
+	}
+	else 
+		return GetSelectedTrack(_proj, _idx);
+	return NULL;
+}
+
+MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj) {
+	return GetSelectedTrackWithMaster(_proj, 0);
 }

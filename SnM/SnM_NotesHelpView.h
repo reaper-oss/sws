@@ -28,21 +28,33 @@
 
 #pragma once
 
-#define MAX_HELP_LENGTH 0xFFFF // i.e. limitation of WritePrivateProfileSection 
-#define SAVEWINDOW_POS_KEY			"S&M - Notes/help Save Window Position"
-#define SET_ACTION_HELP_FILE_MSG	0x10001
-
+bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufMaxSize);
+bool GetStringFromNotes(WDL_String* _notes, char* _buf, int _bufMaxSize);
+bool GetNotesFromString(const char* _buf, WDL_String* _notes, const char* _startLine = NULL);
 
 class SNM_NotesHelpWnd : public SWS_DockWnd
 {
 public:
 	SNM_NotesHelpWnd();
-	void Update();
+	int GetType();
+	void SetType(int _type);
+	void SetText(const char* _str);
+	void RefreshGUI(bool _emtpyNotes = false);
+	void CSurfSetTrackTitle();
+	void CSurfSetTrackListChange();
+	void Update(bool _force=false);
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	bool IsActive(bool bWantEdit = false);
-	char* getActionHelpFilename();
+
+	void saveCurrentText(int _type);
+	void saveCurrentPrjNotes();
+	void saveCurrentHelp();
+	void saveCurrentItemNotes();
+	void saveCurrentTrackNotes();
+
+	const char* getActionHelpFilename();
 	void setActionHelpFilename(const char* _filename);
-	void readActionHelpFilenameIniFile(char* _buf, int _bufSize);
+	void readActionHelpFilenameIniFile();
 	void saveActionHelpFilenameIniFile();
 
 protected:
@@ -52,12 +64,29 @@ protected:
 	int OnKey(MSG* msg, int iKeyState);
 	void OnTimer();
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
-	bool updateItemNotes();
-	bool updateActionHelp();
-	void loadHelp(char* _cmdName, char* _buf, int _bufSize);
-	void saveHelp(char* _cmdName, const char* _help);
 
-	char m_actionHelpFilename[BUFFER_SIZE];
+	int updateItemNotes(bool _savePrevious = true);
+	int updateTrackNotes(bool _savePrevious = true);
+	int updateActionHelp(bool _savePrevious = true);
+
+	void loadHelp(const char* _cmdName, char* _buf, int _bufSize);
+	void saveHelp(const char* _cmdName, const char* _help);
+
+	// WDL UI
+	WDL_VWnd_Painter m_vwnd_painter;
+	WDL_VWnd m_parentVwnd; // owns all children windows
+	SNM_VirtualComboBox m_cbType;
+	WDL_VirtualIconButton m_btnLock;
+
+	WDL_String m_actionHelpFilename;
+	int m_type, m_previousType;
+	bool m_internalTLChange;
 };
 
 
+class SNM_NoteHlp_TLChangeSchedJob : public SNM_ScheduledJob
+{
+public:
+	SNM_NoteHlp_TLChangeSchedJob() : SNM_ScheduledJob(SNM_SCHEDJOB_NOTEHLP_TLCHANGE, 150) {}
+	void Perform();
+};

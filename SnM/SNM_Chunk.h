@@ -26,33 +26,17 @@
 ******************************************************************************/
 
 #pragma once
+
 #ifndef _SNM_CHUNK_H_
 #define _SNM_CHUNK_H_
 
+#include "SnM_Actions.h"
 #include "SNM_ChunkParserPatcher.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_SendPatcher
 ///////////////////////////////////////////////////////////////////////////////
-
-typedef struct
-{
-	char srcGUID[64];
-	char destGUID[64];
-//	GUID* srcGUID;
-//	GUID* destGUID;
-	bool mute;
-	int phase;
-	int mono;
-	double vol;
-	double pan;
-	double panl;
-	int mode;
-	int srcChan;
-	int destChan;
-	int midi;
-} t_SendRcv;
 
 class SNM_SendPatcher : public SNM_ChunkParserPatcher
 {
@@ -67,21 +51,22 @@ public:
 	}
 	~SNM_SendPatcher() {}
 	int AddReceive(MediaTrack* _srcTr, int _sendType, char* _vol="1.00000000000000", char* _pan="0.00000000000000");
-	int AddReceive(MediaTrack* _srcTr, t_SendRcv* _io);
+	bool AddReceive(MediaTrack* _srcTr, SNM_SndRcv* _io);
 	int RemoveReceives();
 	int RemoveFirstReceive(MediaTrack* _srcTr); 
 	int RemoveReceivesFrom(MediaTrack* _srcTr);
 
 protected:
-	bool NotifyChunkLine(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
+	bool NotifyChunkLine(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos, 
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
 		WDL_String* _newChunk, int _updates);
 
 	int m_srcId;
 	int m_sendType;
 	char* m_vol;
 	char* m_pan;
-	t_SendRcv* m_sndRcv;
+	SNM_SndRcv* m_sndRcv;
 };
 
 
@@ -100,20 +85,28 @@ public:
 	}
 	~SNM_FXChainTakePatcher() {}
 
-	int SetFXChain(WDL_String* _fxChain, bool _activeTakeOnly);
+	bool SetFXChain(WDL_String* _fxChain, bool _activeTakeOnly);
 	WDL_String* GetFXChain();
 
 protected:
-	bool NotifyStartElement(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
-		WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
+	bool NotifyStartElement(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos, 
+		WDL_PtrList<WDL_String>* _parsedParents, 
 		WDL_String* _newChunk, int _updates);
 
-	bool NotifyEndElement(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
-		WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
+	bool NotifyEndElement(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		WDL_PtrList<WDL_String>* _parsedParents, 
 		WDL_String* _newChunk, int _updates);
 
-	bool NotifyChunkLine(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
+	bool NotifyChunkLine(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
+		WDL_String* _newChunk, int _updates);
+
+	bool NotifySkippedSubChunk(int _mode, 
+		const char* _subChunk, int _subChunkLength, int _subChunkPos,
+		WDL_PtrList<WDL_String>* _parsedParents, 
 		WDL_String* _newChunk, int _updates);
 
 	WDL_String* m_fxChain;
@@ -138,19 +131,27 @@ public:
 	}
 	~SNM_FXChainTrackPatcher() {}
 
-	int SetFXChain(WDL_String* _fxChain);
+	bool SetFXChain(WDL_String* _fxChain);
 
 protected:
-	bool NotifyStartElement(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
-		WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
+	bool NotifyStartElement(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos, 
+		WDL_PtrList<WDL_String>* _parsedParents, 
 		WDL_String* _newChunk, int _updates);
 
-	bool NotifyEndElement(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
-		WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
+	bool NotifyEndElement(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		WDL_PtrList<WDL_String>* _parsedParents, 
 		WDL_String* _newChunk, int _updates);
 
-	bool NotifyChunkLine(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
+	bool NotifyChunkLine(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos, 
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
+		WDL_String* _newChunk, int _updates);
+
+	bool SNM_FXChainTrackPatcher::NotifySkippedSubChunk(int _mode, 
+		const char* _subChunk, int _subChunkLength, int _subChunkPos,
+		WDL_PtrList<WDL_String>* _parsedParents, 
 		WDL_String* _newChunk, int _updates);
 
 	WDL_String* m_fxChain;
@@ -166,39 +167,188 @@ protected:
 class SNM_TakeParserPatcher : public SNM_ChunkParserPatcher
 {
 public:
-	SNM_TakeParserPatcher(MediaItem* _tr) : SNM_ChunkParserPatcher(_tr) 
+	SNM_TakeParserPatcher(MediaItem* _item, int _countTakes) : SNM_ChunkParserPatcher(_item) 
 	{
 		m_searchedTake = -1;
 		m_removing = false;
-		m_lastTakeCount = -1;
+		m_takeCounter = -1;
+		m_lastTakeCount = _countTakes; // -1 would force a get, initialized with REAPER's Countakes() for optimization
 		m_removing = false;
-		m_getting = false;
+		m_getting = false; 
+		m_foundPos = -1;
 	}
 	~SNM_TakeParserPatcher() {}
 
-	bool GetTakeChunk(int _take, WDL_String* _gettedChunk);
+	bool GetTakeChunk(int _takeIdx, WDL_String* _gettedChunk, int* _pos=NULL, int* _originalLength=NULL);
 	int CountTakes();
-	void SetCountTakes(int _count) {m_lastTakeCount = _count;}
-	bool IsEmpty(int _take);
-	bool AddLastTake(WDL_String* _chunk);
-	bool InsertTake(int _takePos, WDL_String* _chunk);
-	bool RemoveTake(int _take, WDL_String* _removedChunk = NULL);
+	bool IsEmpty(int _takeIdx);
+	int AddLastTake(WDL_String* _chunk);
+	int InsertTake(int _takeIdx, WDL_String* _chunk, int _pos = -1);
+	bool RemoveTake(int _takeIdx, WDL_String* _removedChunk = NULL, int* _removedStartPos=NULL);
+	bool ReplaceTake(int _takeIdx, int _startTakePos, int _takeLength, WDL_String* _newTakeChunk);
 
 protected:
-	bool NotifyEndElement(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
-		WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
+	bool NotifyEndElement(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos, 
+		WDL_PtrList<WDL_String>* _parsedParents, 
 		WDL_String* _newChunk, int _updates);
 
-	bool NotifyChunkLine(int _mode, LineParser* _lp, WDL_String* _parsedLine,  
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, const char* _parsedParent, 
+	bool NotifyChunkLine(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos, 
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
+		WDL_String* _newChunk, int _updates);
+
+	bool NotifySkippedSubChunk(int _mode, 
+		const char* _subChunk, int _subChunkLength, int _subChunkPos, 
+		WDL_PtrList<WDL_String>* _parsedParents, 
 		WDL_String* _newChunk, int _updates);
 
 	bool m_removing;
 	bool m_getting;
 	int m_searchedTake;
-	int m_lastTakeCount;
+	int m_foundPos;
 	WDL_String m_subchunk;
+	int m_lastTakeCount; // Avoids many parsings: should *always* reflect the nb of takes in the *chunk*
+						 // (may be different than REAPER's ones)
+
+private:
+	int m_takeCounter;	
 };
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_RecPassParser
+///////////////////////////////////////////////////////////////////////////////
+
+class SNM_RecPassParser : public SNM_ChunkParserPatcher
+{
+public:
+	SNM_RecPassParser(MediaItem* _item) : SNM_ChunkParserPatcher(_item) 
+	{
+		m_maxRecPass = -1;
+		m_takeCounter = 0;
+	}
+	~SNM_RecPassParser() {}
+	int GetMaxRecPass(int* _recPasses=NULL, int* _takeColors=NULL);
+
+protected:
+	bool NotifyChunkLine(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
+		WDL_String* _newChunk, int _updates);
+
+	int m_maxRecPass;
+	int m_recPasses[SNM_MAX_TAKES];
+	int m_takeColors[SNM_MAX_TAKES];
+
+private:
+	int m_takeCounter;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_ArmEnvParserPatcher
+///////////////////////////////////////////////////////////////////////////////
+
+class SNM_ArmEnvParserPatcher : public SNM_ChunkParserPatcher
+{
+public:
+	SNM_ArmEnvParserPatcher(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) {
+		m_newValue = -1; // i.e. toggle
+	}
+	~SNM_ArmEnvParserPatcher() {}
+	void SetNewValue(int _newValue) {m_newValue = _newValue;}
+
+protected:
+	bool NotifyChunkLine(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
+		WDL_String* _newChunk, int _updates);
+	bool IsParentEnv(const char* _parent);
+private:
+	int m_newValue;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_FXSummaryParser
+///////////////////////////////////////////////////////////////////////////////
+
+class SNM_FXSummaryParser : public SNM_ChunkParserPatcher
+{
+public:
+	SNM_FXSummaryParser(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) {}
+	~SNM_FXSummaryParser() {}
+	WDL_PtrList<SNM_FXSummary>* GetSummaries();
+
+protected:
+	bool NotifyStartElement(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		WDL_PtrList<WDL_String>* _parsedParents, 
+		WDL_String* _newChunk, int _updates);
+	bool NotifyEndElement(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		WDL_PtrList<WDL_String>* _parsedParents, 
+		WDL_String* _newChunk, int _updates);
+
+	WDL_PtrList_DeleteOnDestroy<SNM_FXSummary> m_summaries;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_FXPresetParserPatcher
+//
+// SetPresets(): e.g. "1.4 2.2" => FX1 preset4, FX2 preset2 
+// "1.0 2.0" could clear FX1 and FX2 presets, not yet managed though..
+//
+///////////////////////////////////////////////////////////////////////////////
+
+class SNM_FXPresetParserPatcher : public SNM_ChunkParserPatcher
+{
+public:
+	SNM_FXPresetParserPatcher(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) {
+		m_presetFound = false;
+		m_fx = 0;
+	}
+	~SNM_FXPresetParserPatcher() {}
+	bool SetPresets(WDL_String* _presetConf);
+
+protected:
+	bool NotifyEndElement(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		WDL_PtrList<WDL_String>* _parsedParents, 
+		WDL_String* _newChunk, int _updates);
+	bool NotifyChunkLine(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
+		WDL_String* _newChunk, int _updates);
+private:
+	WDL_String* m_presetConf;
+	bool m_presetFound;
+	int m_fx;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_TakeEnvParserPatcher
+///////////////////////////////////////////////////////////////////////////////
+
+class SNM_TakeEnvParserPatcher : public SNM_ChunkParserPatcher
+{
+public:
+	SNM_TakeEnvParserPatcher(WDL_String* _tkChunk) : SNM_ChunkParserPatcher(_tkChunk) {m_vis = -1;}
+	~SNM_TakeEnvParserPatcher() {}
+	bool SetVis(const char* _envKeyWord, int _vis);
+
+protected:
+	bool NotifyChunkLine(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
+		WDL_String* _newChunk, int _updates);
+private:
+	int m_vis;
+};
+
 
 
 #endif

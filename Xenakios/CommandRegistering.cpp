@@ -242,7 +242,7 @@ COMMAND_T g_XenCommandTable[] =
 	
 	{ { DEFACCEL, "Xenakios/SWS: Erase from item (time based)" }, "XENAKIOS_HOLDKEYTEST1", DoHoldKeyTest1,	"Erase from item (time based)", },
 	{ { DEFACCEL, "Xenakios/SWS: Erase from item (beat based)" }, "XENAKIOS_HOLDKEYTEST2", DoHoldKeyTest2,	"Erase from item (beat based)", },
-	{ { DEFACCEL, "Xenakios/SWS: Search takes..." }, "XENAKIOS_SEARCH_TAKES", DoSearchTakesDLG,	"Search takes...", },
+	{ { DEFACCEL, "Xenakios/SWS: [Deprecated] Search takes..." }, "XENAKIOS_SEARCH_TAKES", DoSearchTakesDLG,	"Search takes...", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor right 10 pixels" }, "XENAKIOS_MOVECUR10PIX_RIGHT", DoMoveCursor10pixRight,	"Move cursor right 12 pixels", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor left 10 pixels" }, "XENAKIOS_MOVECUR10PIX_LEFT", DoMoveCursor10pixLeft,	"Move cursor left 12 pixels", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor left 10 pixels, creating time selection" }, "XENAKIOS_MOVECUR10PIX_LEFTCTS", DoMoveCursor10pixLeftCreateSel,	"Move cursor left 12 pixels, creating time selection", },
@@ -260,10 +260,10 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor right configured seconds" }, "XENAKIOS_MOVECURRRIGHTCONFSECS", DoMoveCurConfSecsRight,	"Move cursor right configured seconds", },
 	{ { DEFACCEL, "Xenakios/SWS: Store edit cursor position" }, "XENAKIOS_DOSTORECURPOS", DoStoreEditCursorPosition,	"Store edit cursor position", },
 	{ { DEFACCEL, "Xenakios/SWS: Recall edit cursor position" }, "XENAKIOS_DORECALLCURPOS", DoRecallEditCursorPosition,	"Recall edit cursor position", },
-	{ { DEFACCEL, "Xenakios/SWS: Delete selected item and source media (immediately!)" }, "XENAKIOS_DELETEITEMANDTAKEMEDIA", DoDeleteItemAndMedia,	"Delete selected item and active take's source media (immediately!)", },
-	{ { DEFACCEL, "Xenakios/SWS: Delete selected item and send active take's source media to recycle bin"  }, "XENAKIOS_DELETEITEMANDTAKEMEDIARBIN", DoDelSelItemAndSendActiveTakeMediaToRecycler,	"Delete selected item and send active take's source media to recycle bin", },
-	{ { DEFACCEL, "Xenakios/SWS: Delete active take of item and take source media (immediately!)"  }, "XENAKIOS_DELETETAKEANDSOURCEMEDIA", DoNukeTakeAndSourceMedia,	"Delete active take of item and take source media (immediately!)", },
-	{ { DEFACCEL, "Xenakios/SWS: Delete active take of item and send source media to recycle bin"  }, "XENAKIOS_DELETETAKEANDRECYCLESOURCEMEDIA", DoDeleteActiveTakeAndRecycleSourceMedia,	"Delete active take of item and send source media to recycle bin", },
+	{ { DEFACCEL, "Xenakios/SWS: [Deprecated] Delete selected item and source media (immediately!)" }, "XENAKIOS_DELETEITEMANDTAKEMEDIA", DoDeleteItemAndMedia,	"Delete selected item and active take's source media (immediately!)", },
+	{ { DEFACCEL, "Xenakios/SWS: [Deprecated] Delete selected item and send active take's source media to recycle bin"  }, "XENAKIOS_DELETEITEMANDTAKEMEDIARBIN", DoDelSelItemAndSendActiveTakeMediaToRecycler,	"Delete selected item and send active take's source media to recycle bin", },
+	{ { DEFACCEL, "Xenakios/SWS: [Deprecated] Delete active take of item and take source media (immediately!)"  }, "XENAKIOS_DELETETAKEANDSOURCEMEDIA", DoNukeTakeAndSourceMedia,	"Delete active take of item and take source media (immediately!)", },
+	{ { DEFACCEL, "Xenakios/SWS: [Deprecated] Delete active take of item and send source media to recycle bin"  }, "XENAKIOS_DELETETAKEANDRECYCLESOURCEMEDIA", DoDeleteActiveTakeAndRecycleSourceMedia,	"Delete active take of item and send source media to recycle bin", },
 	
 	{ { DEFACCEL, "Xenakios/SWS: Set next fade in shape for items" }, "XENAKIOS_NEXTFADEINSHAPE", DoSetNextFadeInShape,	"Set next fade in shape for items", },
 	{ { DEFACCEL, "Xenakios/SWS: Set previous fade in shape for items" }, "XENAKIOS_PREVFADEINSHAPE", DoSetPrevFadeInShape,	"Set previous fade in shape for items", },

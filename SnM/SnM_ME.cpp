@@ -29,6 +29,7 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_ChunkParserPatcher.h"
+#include "SNM_Chunk.h"
 
 #define MAX_CC_LANE_ID 133
 #define MAX_CC_LANES_SLOT 4096
@@ -45,9 +46,10 @@ void MECreateCCLane(COMMAND_T* _ct)
 		int tkIdx = getTakeIndex(item, tk); // NULL item managed
 		if (tkIdx >= 0)
 		{
-			SNM_TakeParserPatcher p(item);
+			SNM_TakeParserPatcher p(item, CountTakes(item));
 			WDL_String takeChunk;
-			if (p.GetTakeChunk(tkIdx, &takeChunk)) // also remove ids
+			int tkPos, tkOriginalLength;
+			if (p.GetTakeChunk(tkIdx, &takeChunk, &tkPos, &tkOriginalLength))
 			{
 				SNM_ChunkParserPatcher ptk(&takeChunk);
 
@@ -55,29 +57,26 @@ void MECreateCCLane(COMMAND_T* _ct)
 				bool lanes[MAX_CC_LANE_ID+1];
 				int i=0; while(i <= MAX_CC_LANE_ID) lanes[i++]=false;
 				char lastLaneId[4] = ""; //max in v3.6: "133"
-				int firstPos = 0, laneCpt = 0;
+				int tkFirstPos = 0, laneCpt = 0;
 				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", -1, laneCpt, 1, lastLaneId);
 				while (pos > 0) 
 				{
-					if (!firstPos) firstPos = pos;
+					if (!tkFirstPos) tkFirstPos = pos;
 					lanes[atoi(lastLaneId)] = true; // atoi: 0 on failure, lane 0 won't be used anyway..
 					pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", -1, ++laneCpt, 1, lastLaneId);
 				}
 
-				if (firstPos > 0)
+				if (tkFirstPos > 0)
 				{
-					firstPos--; // see SNM_ChunkParserPatcher
+					tkFirstPos--; // see SNM_ChunkParserPatcher
 					// find the first unused index
 					i=1; while(lanes[i] && i <= MAX_CC_LANE_ID) i++;
 					char newLane[BUFFER_SIZE] = "";
 					sprintf(newLane, "VELLANE %d 50 0\n", i);
-					ptk.GetChunk()->Insert(newLane, firstPos);
+					ptk.GetChunk()->Insert(newLane, tkFirstPos);
 
-					// "Update" take
-					if (p.InsertTake(tkIdx, ptk.GetChunk())) {
-						updated = true;
-						p.RemoveTake(tkIdx+1); // also remove ids
-					}
+					// "Update" take (invalid tkIdx is managed)
+					updated = p.ReplaceTake(tkIdx, tkPos, tkOriginalLength, ptk.GetChunk());
 				}
 			}
 		}
@@ -97,14 +96,14 @@ bool replaceCCLanes(const char* _newCClanes)
 		int tkIdx = getTakeIndex(item, tk); // NULL item managed
 		if (tkIdx >= 0)
 		{
-			SNM_TakeParserPatcher p(item);
+			SNM_TakeParserPatcher p(item, CountTakes(item));
 			WDL_String takeChunk;
-			if (p.GetTakeChunk(tkIdx, &takeChunk)) // also remove ids
+
+			int tkPos, tkOriginalLength;
+			if (p.GetTakeChunk(tkIdx, &takeChunk, &tkPos, &tkOriginalLength))
 			{
 				SNM_ChunkParserPatcher ptk(&takeChunk);
-
-				char keyword[SNM_MAX_CHUNK_KEYWORD_LENGTH] = "";
-				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", -1, 0, 0, keyword);
+				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", 4, 0, 0);
 				if (pos > 0)
 				{
 					pos--; // see SNM_ChunkParserPatcher
@@ -116,12 +115,8 @@ bool replaceCCLanes(const char* _newCClanes)
 					{
 						// default lane (min sized)
 						ptk.GetChunk()->Insert(_newCClanes, pos);
-
-						// "Update" take
-						if (p.InsertTake(tkIdx, ptk.GetChunk())) {
-							updated = true;
-							p.RemoveTake(tkIdx+1); // also remove ids
-						}
+						// "Update" take (invalid tkIdx is managed)
+						updated = p.ReplaceTake(tkIdx, tkPos, tkOriginalLength, ptk.GetChunk());
 					}
 				}
 			}
@@ -144,12 +139,9 @@ void MESetCCLanes(COMMAND_T* _ct)
 	if (tk)
 	{
 		// Read stored lanes
-		char laneSlot[MAX_CC_LANES_SLOT] = ""; 
-		char iniFilePath[BUFFER_SIZE] = "";
-		sprintf(iniFilePath, SNM_FORMATED_INI_FILE, GetExePath());
-		char slot[20] = "";
+		char laneSlot[MAX_CC_LANES_SLOT], slot[20] = "";
 		sprintf(slot, "CC_LANES_SLOT%d", _ct->user + 1);
-		GetPrivateProfileString("MIDI_EDITOR", slot, "", laneSlot, MAX_CC_LANES_SLOT, iniFilePath);
+		GetPrivateProfileString("MIDI_EDITOR", slot, "", laneSlot, MAX_CC_LANES_SLOT, g_SNMiniFilename.Get());
 
 		int i=0; 
 		while (laneSlot[i] && i < (MAX_CC_LANES_SLOT-2)) // -2: see string termination
@@ -175,21 +167,20 @@ void MESaveCCLanes(COMMAND_T* _ct)
 		int tkIdx = getTakeIndex(item, tk); // NULL item managed
 		if (tkIdx >= 0)
 		{
-			SNM_TakeParserPatcher p(item);
+			SNM_TakeParserPatcher p(item, CountTakes(item));
 			WDL_String takeChunk;
-			if (p.GetTakeChunk(tkIdx, &takeChunk)) // also remove ids
+			if (p.GetTakeChunk(tkIdx, &takeChunk))
 			{
 				SNM_ChunkParserPatcher ptk(&takeChunk);
 
 				// Check start/end position of lanes in the chunk
-				char keyword[SNM_MAX_CHUNK_KEYWORD_LENGTH] = "";
 				int firstPos = 0, lastPos = 0, laneCpt = 0;
-				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", -1, laneCpt, 0, keyword);
+				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", -1, laneCpt, 0);
 				while (pos > 0) 
 				{
 					lastPos = pos;
 					if (!firstPos) firstPos = pos;
-					pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", -1, ++laneCpt, 0, keyword);
+					pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", -1, ++laneCpt, 0);
 				}
 
 				if (firstPos > 0)
@@ -210,11 +201,9 @@ void MESaveCCLanes(COMMAND_T* _ct)
 					laneSlot[j] = 0;
 
 					// Store the lanes
-					char iniFilePath[BUFFER_SIZE] = "";
-					sprintf(iniFilePath, SNM_FORMATED_INI_FILE, GetExePath());
-					char slot[20] = "";
+					char slot[20];
 					sprintf(slot, "CC_LANES_SLOT%d", _ct->user + 1);
-					WritePrivateProfileString("MIDI_EDITOR", slot, laneSlot, iniFilePath);
+					WritePrivateProfileString("MIDI_EDITOR", slot, laneSlot, g_SNMiniFilename.Get());
 				}
 			}
 		}

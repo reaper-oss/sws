@@ -36,9 +36,8 @@ typedef struct
 	int fx;
 } t_TrackFXIds;
 
-WDL_PtrList<t_TrackFXIds> g_hiddenFloatingWindows;
+WDL_PtrList_DeleteOnDestroy<t_TrackFXIds> g_hiddenFloatingWindows(free);
 
-#ifdef _WIN32
 
 ///////////////////////////////////////////////////////////////////////////////
 // Routing, env windows - WIN ONLY!
@@ -49,8 +48,10 @@ WDL_PtrList<t_TrackFXIds> g_hiddenFloatingWindows;
 // dedicated APIs since REAPER v3.41, thanks Cockos!)
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef _WIN32
+
 bool toggleShowHideWin(const char * _title) {
-	HWND w = FindWindow(NULL, _title);
+	HWND w = SearchWindow(_title);
 	if (w != NULL)
 	{
 		ShowWindow(w, IsWindowVisible(w) ? SW_HIDE : SW_SHOW);
@@ -60,7 +61,7 @@ bool toggleShowHideWin(const char * _title) {
 }
 
 bool closeWin(const char * _title) {
-	HWND w = FindWindow(NULL, _title);
+	HWND w = SearchWindow(_title);
 	if (w != NULL)
 	{
 		SendMessage(w, WM_SYSCOMMAND, SC_CLOSE, 0);
@@ -172,17 +173,17 @@ void toggleFXChain(COMMAND_T* _ct)
 	// no undo
 
 	// fake toggle state update
-	if (NumSelTracks() > 1)
+	if (CountSelectedTracksWithMaster(NULL) > 1)
 		fakeToggleAction(_ct);
 }
 
 // for toggle state
 bool isToggleFXChain(COMMAND_T * _ct) 
 {
-	int selTrCount = NumSelTracks();
+	int selTrCount = CountSelectedTracksWithMaster(NULL);
 	// single track selection: we can return a toggle state
 	if (selTrCount == 1)
-		return (TrackFX_GetChainVisible(GetFirstSelectedTrack()) != -1);
+		return (TrackFX_GetChainVisible(GetFirstSelectedTrackWithMaster(NULL)) != -1);
 	// several tracks selected: possible mix of different state 
 	// => return a fake toggle state (best effort)
 	else if (selTrCount)
@@ -271,13 +272,13 @@ void toggleFloatFX(COMMAND_T* _ct) {
 }
 
 void showAllFXWindows(COMMAND_T * _ct) {
-	floatUnfloatFXs(true, 3, -1, (int)(_ct->user == 1));
+	floatUnfloatFXs(true, 3, -1, ((int)_ct->user == 1));
 }
 void closeAllFXWindows(COMMAND_T * _ct) {
-	floatUnfloatFXs(true, 2, -1, (int)(_ct->user == 1));
+	floatUnfloatFXs(true, 2, -1, ((int)_ct->user == 1));
 }
 void toggleAllFXWindows(COMMAND_T * _ct) {
-	floatUnfloatFXs(true, 0, -1, (int)(_ct->user == 1));
+	floatUnfloatFXs(true, 0, -1, ((int)_ct->user == 1));
 	fakeToggleAction(_ct);
 }
 
@@ -331,10 +332,6 @@ int getFocusedFX(MediaTrack* _tr, int _dir, int* _firstFound)
 // Floating FX windows: cycle focus
 ///////////////////////////////////////////////////////////////////////////////
 
-void flushHiddenFXWindows() {
-	g_hiddenFloatingWindows.Empty(true, free);
-}
-
 bool cycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTracks,
      bool (*job)(MediaTrack*,int,bool), bool* _cycled) // see 2 "jobs" below..
 {
@@ -365,7 +362,7 @@ bool cycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTrack
 				// ** check max / min **
 				// Single track => fx cycle
 				if ((!_selectedTracks && GetNumTracks() == 1) ||
-					(_selectedTracks && NumSelTracks() == 1))
+					(_selectedTracks && CountSelectedTracksWithMaster(NULL) == 1))
 				{
 					*_cycled = (cpt2 > 0); // ie not the first loop
 					if (j >= fxCount) j = 0;
@@ -420,7 +417,7 @@ bool floatOnlyJob(MediaTrack* _tr, int _fx, bool _selectedTracks)
 
 bool cycleFocusFXWnd(int _dir, bool _selectedTracks, bool* _cycled)
 {
-	if (!_selectedTracks || (_selectedTracks && NumSelTracks()))
+	if (!_selectedTracks || (_selectedTracks && CountSelectedTracksWithMaster(NULL)))
 	{
 		MediaTrack* firstTrFound = NULL;
 		int firstFXFound = -1;
@@ -466,7 +463,7 @@ void cycleFocusFXAndMainWnd(int _dir, bool _selectedTracks, bool _showmain)
 		}
 		// .. the focus indirectly restored with last floatUnfloatFXs() call
 
-		flushHiddenFXWindows();
+		g_hiddenFloatingWindows.Empty(true, free);
 		return;
 	}
 
@@ -526,7 +523,7 @@ void cycleFocusFXMainWndSelTracks(COMMAND_T * _ct) {
 void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 {
 	int dir = (int)_ct->user;
-	if (NumSelTracks())
+	if (CountSelectedTracksWithMaster(NULL))
 	{
 		MediaTrack* firstTrFound = NULL;
 		int firstFXFound = -1;
@@ -563,6 +560,7 @@ void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 // Misc. window actions
 ///////////////////////////////////////////////////////////////////////////////
 
+//JFB TODO: OSX (related action ifdef'd out but perharps it works?)
 void cycleFocusWnd(COMMAND_T * _ct) 
 {
 	if (GetMainHwnd())

@@ -275,7 +275,8 @@ public:
 		ItemPreviewSlice();
 		PlayItemsOnceSlice();
 		ColorSlice();
-		SnMSlice();
+
+		SnMCSurfRun();
 
 		if (m_bChanged)
 		{
@@ -293,6 +294,7 @@ public:
 	{
 		m_bChanged = true;
 		AutoColorRun(false);
+		SnMCSurfSetTrackListChange();
 		m_iACIgnore = GetNumTracks() + 1;
 	}
 	// For every SetTrackListChange we get NumTracks+1 SetTrackTitle calls, but we only
@@ -302,7 +304,10 @@ public:
 	{
 		ScheduleTracklistUpdate();
 		if (!m_iACIgnore)
+		{
 			AutoColorRun(false);
+			SnMCSurfSetTrackTitle();
+		}
 		else
 			m_iACIgnore--;
 	}
@@ -317,6 +322,9 @@ public:
 // WDL Stuff
 bool WDL_STYLE_GetBackgroundGradient(double *gradstart, double *gradslope) { return false; }
 int WDL_STYLE_GetSysColor(int i) { if (GSC_mainwnd) return GSC_mainwnd(i); else return GetSysColor(i); }
+int WDL_STYLE_WantGlobalButtonBorders() { return 0; }
+bool WDL_STYLE_WantGlobalButtonBackground(int *col) { return false; }
+void WDL_STYLE_ScaleImageCoords(int *x, int *y) { }
 
 // Hook Reaper's WNDPROC?
 /*WNDPROC g_ReaperWndproc = NULL;
@@ -375,6 +383,7 @@ extern "C"
 		IMPAPI(CountSelectedMediaItems);
 		IMPAPI(CountSelectedTracks);
 		IMPAPI(CountTakes);
+		IMPAPI(CountTracks);
 		IMPAPI(CountTrackEnvelopes);
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
@@ -404,6 +413,7 @@ extern "C"
 		IMPAPI(GetCursorContext);
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetCursorPositionEx);
+		IMPAPI(GetIconThemeStruct);
 		IMPAPI(GetItemEditingTime2);
 		IMPAPI(GetEnvelopeName);
 		IMPAPI(GetExePath);
@@ -411,6 +421,8 @@ extern "C"
 		IMPAPI(GetInputChannelName);
 		IMPAPI(GetLastTouchedTrack);
 		IMPAPI(GetMainHwnd);
+		IMPAPI(GetMasterTrack);
+		IMPAPI(GetMediaItem_Track);
 		IMPAPI(GetMediaItemInfo_Value);
 		IMPAPI(GetMediaItemNumTakes);
 		IMPAPI(GetMediaItemTake);
@@ -425,6 +437,7 @@ extern "C"
 		IMPAPI(GetPlayState);
 		IMPAPI(GetProjectPath);
 		IMPAPI(GetProjectTimeSignature2);
+		IMPAPI(GetResourcePath);
 		IMPAPI(GetSelectedMediaItem);
 		IMPAPI(GetSelectedTrack);
 		IMPAPI(GetSelectedTrackEnvelope);
@@ -452,6 +465,7 @@ extern "C"
 		IMPAPI(get_ini_file);
 		IMPAPI(GSC_mainwnd);
 		IMPAPI(guidToString);
+//		IMPAPI(Help_Set);
 		IMPAPI(InsertMedia);
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
@@ -507,6 +521,7 @@ extern "C"
 		IMPAPI(TimeMap_QNToTime);
 		IMPAPI(TimeMap_timeToQN);
 		IMPAPI(TimeMap2_QNToTime);
+		IMPAPI(TrackFX_FormatParamValue);
 		IMPAPI(TrackFX_GetChainVisible);
 		IMPAPI(TrackFX_GetFloatingWindow);
 		IMPAPI(TrackFX_GetCount);
@@ -527,6 +542,7 @@ extern "C"
 		IMPAPI(Undo_OnStateChangeEx);
 		IMPAPI(UpdateItemInProject);
 		IMPAPI(UpdateTimeline);
+		IMPAPI(ValidatePtr);
 
 
 		g_hInst = hInstance;
@@ -534,7 +550,7 @@ extern "C"
 
 		if (errcnt)
 		{
-			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have a Reaper version less than 3.651 installed. "
+			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have a Reaper version less than 3.66 installed. "
 				"Please install the latest version of Reaper from www.reaper.fm.", "Version Incompatibility", MB_OK);
 			return 0;
 		}
@@ -575,7 +591,7 @@ extern "C"
 			ERR_RETURN("Project Mgr init error\n")
 		if (!XenakiosInit())
 			ERR_RETURN("Xenakios init error\n")
-		if (!SnMActionsInit())
+		if (!SnMInit(rec))
 			ERR_RETURN("SnM init error\n")
 		if (!AboutBoxInit())
 			ERR_RETURN("About box init error\n")

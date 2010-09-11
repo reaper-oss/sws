@@ -1,5 +1,5 @@
 /******************************************************************************
-/ SnM_FXChainView.h
+/ SnM_FindView.h
 /
 / Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
 / http://www.standingwaterstudios.com/reaper
@@ -28,47 +28,34 @@
 
 #pragma once
 
-class SNM_FXChainView : public SWS_ListView
+class SNM_FindWnd : public SWS_DockWnd
 {
 public:
-	SNM_FXChainView(HWND hwndList, HWND hwndEdit);
-
-protected:
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void SetItemText(LPARAM item, int iCol, const char* str);
-	void OnItemDblClk(LPARAM item, int iCol);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	void OnBeginDrag();
-};
-
-class SNM_FXChainWnd : public SWS_DockWnd
-{
-public:
-	SNM_FXChainWnd();
-	void Update();
+	SNM_FindWnd();
+	int GetType();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	void SelectBySlot(int _slot);
 
-	WDL_String m_filter;
+	bool Find(int _mode);
+	MediaItem* FindPrevNextItem(int _dir, MediaItem* _item);
+	bool FindMediaItem(int _dir, bool _allTakes, bool (*job)(MediaItem_Take*,const char*));
+	bool FindTrack(int _dir, bool (*job)(MediaTrack*,const char*));
+	bool FindMarkerRegion(int _dir);
+	void DisplayNotFoundMsg(const char* _searchStr);
 
 protected:
 	void OnInitDlg();
-	HMENU OnContextMenu(int x, int y);
 	void OnDestroy();
-	int OnKey(MSG* msg, int iKeyState);
-	void OnDroppedFiles(HDROP h);
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-	void AddSlot(bool _update);
-	void InsertAtSelectedSlot(bool _update);
-	void DeleteSelectedSlot(bool _update);
 
 	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
-	SNM_VirtualComboBox m_cbDblClickType;
-	SNM_VirtualComboBox m_cbDblClickTo;
+	SNM_VirtualComboBox m_cbType;
+	WDL_VirtualIconButton m_btnFind;
+	WDL_VirtualIconButton m_btnPrev;
+	WDL_VirtualIconButton m_btnNext;
+
+	int m_type;
 };
 
-extern SNM_FXChainWnd* g_pFXChainsWnd;
 

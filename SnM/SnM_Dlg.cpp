@@ -30,6 +30,67 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Custom WDL UIs
+///////////////////////////////////////////////////////////////////////////////
+
+void SNM_VirtualComboBox::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
+{
+	if (GetFont()) GetFont()->SetBkMode(TRANSPARENT);
+
+	RECT r;
+	GetPosition(&r);
+	r.left+=origin_x;
+	r.right+=origin_x;
+	r.top+=origin_y;
+	r.bottom+=origin_y;
+
+	int col = LICE_RGBA(255,255,255,50); 
+	LICE_FillRect(drawbm,r.left,r.top,r.right-r.left,r.bottom-r.top,col,0.02f,LICE_BLIT_MODE_COPY);
+
+	{
+	  RECT tr=r;
+	  tr.left=tr.right-(tr.bottom-tr.top);
+	  LICE_FillRect(drawbm,tr.left,tr.top,tr.right-tr.left,tr.bottom-tr.top,col,0.02f,LICE_BLIT_MODE_COPY);
+	}   
+
+	if (GetFont() && GetItem(GetCurSel()) && GetItem(GetCurSel())[0])
+	{
+	  RECT tr=r;
+	  tr.left+=2;
+	  tr.right-=16;
+	  GetFont()->DrawText(drawbm,GetItem(GetCurSel()),-1,&tr,DT_SINGLELINE|DT_VCENTER|DT_LEFT|DT_NOPREFIX);
+	}
+
+	int pencol = GetFont() ? GetFont()->GetTextColor() : WDL_STYLE_GetSysColor(COLOR_3DSHADOW);
+	pencol = LICE_RGBA_FROMNATIVE(pencol,255);
+	int pencol2 = GetFont() ? GetFont()->GetTextColor() : WDL_STYLE_GetSysColor(COLOR_3DHILIGHT);
+	pencol2 = LICE_RGBA_FROMNATIVE(pencol2,255);
+
+	// draw the down arrow button
+	{
+	  int bs=(r.bottom-r.top);
+	  int l=r.right-bs;
+	  int a=(bs/4)&~1;
+
+	  LICE_Line(drawbm,l-1,r.top,l-1,r.bottom-1,pencol2,0.10f,LICE_BLIT_MODE_COPY,false);
+
+	  int tcol = GetFont() ? GetFont()->GetTextColor() : WDL_STYLE_GetSysColor(COLOR_BTNTEXT);
+	  tcol=LICE_RGBA_FROMNATIVE(tcol,255);
+
+	  LICE_Line(drawbm,l+bs/2-a,r.top+bs/2-a/2,
+					   l+bs/2,r.top+bs/2+a/2,tcol,0.50f,LICE_BLIT_MODE_COPY,true);
+	  LICE_Line(drawbm,l+bs/2,r.top+bs/2+a/2,
+					   l+bs/2+a,r.top+bs/2-a/2,tcol,0.50f,LICE_BLIT_MODE_COPY,true);
+	}  
+
+	// draw the border
+	LICE_Line(drawbm,r.left,r.bottom-1,r.left,r.top,pencol,0.10f,0,false);
+	LICE_Line(drawbm,r.left,r.top,r.right-1,r.top,pencol,0.10f,0,false);
+	LICE_Line(drawbm,r.right-1,r.top,r.right-1,r.bottom-1,pencol2,0.10f,0,false);
+	LICE_Line(drawbm,r.left,r.bottom-1,r.right-1,r.bottom-1,pencol2,0.10f,0,false);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Cue buss dialog box
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -183,16 +244,9 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					char currentPath[BUFFER_SIZE];
 					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,currentPath,BUFFER_SIZE);
 					if (!strlen(currentPath))
-					{
-						strncpy(currentPath, get_ini_file(), BUFFER_SIZE);
-						char* defTTPath = strrchr(currentPath, PATH_SLASH_CHAR);
-						if (defTTPath)
-							strcpy((char*)defTTPath+1, "TrackTemplates");
-					}
-
+						_snprintf(currentPath, BUFFER_SIZE, "%s%c%TrackTemplates", GetResourcePath(), PATH_SLASH_CHAR);
 					char* filename = BrowseForFiles("Load track template", currentPath, NULL, false, "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0");
-					if (filename)
-					{
+					if (filename) {
 						SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,filename);
 						free(filename);
 					}

@@ -31,6 +31,7 @@
 #include "SNM_ChunkParserPatcher.h"
 #include "SNM_Chunk.h"
 #include "../Misc/Context.h"
+#include "../Freeze/ItemSelState.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,25 +60,25 @@ void splitMidiAudio(COMMAND_T* _ct)
 
 				if (toBeSplitted)
 				{
-					int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
-					SNM_ChunkParserPatcher p(item);
-					char readSource[32] = "";
 					bool split=false;
-
-					//TODO: use PCM_Source (?)
-					if (p.Parse(SNM_GET_CHUNK_CHAR,2,"SOURCE","<SOURCE",-1,activeTake,1,readSource) > 0)
+					MediaItem_Take* tk = GetActiveTake(item);
+					PCM_source* pcm = tk ? (PCM_source*)GetSetMediaItemTakeInfo(tk,"P_SOURCE",NULL) : NULL;
+					if (pcm)
 					{
-						if (!strcmp(readSource,"MIDI") || !strcmp(readSource,"EMPTY"))
-						{
-							SplitMediaItem(item, GetCursorPosition());
+						// valid take rmk: "" for in-project
+						if (pcm->GetFileName()) 
+							split = (strcmp(pcm->GetType(), "MIDI") == 0);
+						// empty take
+						else
 							split = true;
-						}
+
+						// "split prior zero crossing" in all other cases
+						// Btw, includes all sources: "WAVE", "VORBIS", "SECTION",..
+						if (!split)
+							Main_OnCommand(40792,0);
+						else
+							SplitMediaItem(item, GetCursorPosition());
 					}
-					
-					// "split prior zero crossing" in all other cases
-					// Btw, includes all sources: "WAVE", "VORBIS", "SECTION",..
-					if (!split)
-						Main_OnCommand(40792,0);
 				}
 			}
 		}
@@ -98,19 +99,19 @@ void smartSplitMidiAudio(COMMAND_T* _ct)
 {
 	double t1, t2;
 	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
-	if (AreThereSelItemsInTimeSel() || (t1 != t2 && !CountSelectedMediaItems(0)))
+	if (AreThereSelItemsInTimeSel() || (t1 != t2 && !CountSelectedMediaItems(NULL)))
 		Main_OnCommand(40061, 0); // Split at time sel
 	else
 		splitMidiAudio(_ct);
 }
 
 void splitSelectedItems(COMMAND_T* _ct) {
-	if (CountSelectedMediaItems(0))
+	if (CountSelectedMediaItems(NULL))
 		Main_OnCommand((int)_ct->user, 0);
 }
 
 void goferSplitSelectedItems(COMMAND_T* _ct) {
-	if (CountSelectedMediaItems(0))
+	if (CountSelectedMediaItems(NULL))
 	{
 		Main_OnCommand(40513, 0);
 		Main_OnCommand(40757, 0);
@@ -138,7 +139,7 @@ bool isEmptyMidi(MediaItem_Take* _take)
 	return emptyMidi;
 }
 
-void setEmptyTakeChunk(WDL_String* _chunk)
+void setEmptyTakeChunk(WDL_String* _chunk, int _recPass, int _color)
 {
 	_chunk->Set("TAKE\n");
     _chunk->Append("NAME \"\"\n");
@@ -146,6 +147,10 @@ void setEmptyTakeChunk(WDL_String* _chunk)
     _chunk->Append("SOFFS 0.00000000000000\n");
     _chunk->Append("PLAYRATE 1.00000000000000 1 0.00000000000000 -1\n");
     _chunk->Append("CHANMODE 0\n");
+	if (_color > 0)
+	    _chunk->AppendFormatted(32, "TAKECOLOR %d\n", _color);
+	if (_recPass > 0)
+	    _chunk->AppendFormatted(16, "RECPASS %d\n", _recPass);
     _chunk->Append("<SOURCE EMPTY\n");
     _chunk->Append(">\n");
 }
@@ -154,174 +159,166 @@ bool addEmptyTake(MediaItem* _item) {
 	return (AddTakeToMediaItem(_item) != NULL);
 }
 
-int findFirstTakeByFilename(
-	MediaItem* _item, const char* _takeName, bool* _alreadyFound)
-{
-	if (_item && _takeName)
-	{
-		for (int j = 0; j < GetMediaItemNumTakes(_item); j++)
-		{
-			PCM_source* src = 
-				(PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(_item, j), "P_SOURCE", NULL);
-			if (!_alreadyFound[j] && src && 
-				((!src->GetFileName() && !strlen(_takeName)) || 
-				  (src->GetFileName() && !strcmp(src->GetFileName(), _takeName))))
-			{
-				_alreadyFound[j] = true;
-				return j;
-			}
-		}			
-	}
-	return -1;
-}
-
-int countTakesByFilename(
-	MediaItem* _item, const char* _takeName)
-{
-	int count = 0;
-	if (_item && _takeName)
-	{
-		for (int j = 0; j < GetMediaItemNumTakes(_item); j++)
-		{
-			PCM_source* src = 
-				(PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(_item, j), "P_SOURCE", NULL);
-			if (src && src->GetFileName() && !strcmp(src->GetFileName(), _takeName))
-				count++;
-		}			
-	}
-	return count;
-}
-
 // !_undoTitle: no undo
 // _mode: 0=for selected tracks, 1=for selected items
 int buildLanes(const char* _undoTitle, int _mode) 
 {
 	int updates = removeEmptyTakes((const char*)NULL, true, false, (_mode==0), (_mode==1));
+	bool badRecPass = false;
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
 		if (tr && _mode || (!_mode && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
 		{
-			// sore selected items and store the item with max. takes
-			WDL_PtrList<MediaItem> items; 
-			WDL_PtrList<WDL_String> filenames;
+			WDL_PtrList<void> items;
+			WDL_IntKeyedArray<int> recPassColors; 
+			WDL_PtrList_DeleteOnDestroy<int> itemRecPasses(free);
+			int maxRecPass = -1;
+
+			// Get items, record pass ids & take colors in one go
 			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 			{
 				MediaItem* item = GetTrackMediaItem(tr,j);
 				if (item && !_mode || (_mode && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))) 
 				{
-					items.Add(item);
+					int* recPasses = new int[SNM_MAX_TAKES];
+					int takeColors[SNM_MAX_TAKES];
 
-					// Get the src filenames 
-					int nbTakes = GetMediaItemNumTakes(item);
-					WDL_String lastLoop;
-					for (int k=0; k < nbTakes; k++)
+					SNM_RecPassParser p(item);
+					int itemMaxRecPass = p.GetMaxRecPass(recPasses, takeColors); 
+					maxRecPass = max(itemMaxRecPass, maxRecPass);
+
+					// 1st loop to check rec pass ids
+					bool badRecPassItem = false;
+					for (int k=0; !badRecPassItem && k < CountTakes(item); k++)
+						badRecPassItem = (recPasses[k] == 0);
+
+					badRecPass |= badRecPassItem;
+					if (!badRecPassItem)
 					{
-						PCM_source* src = 
-							(PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(item, k), "P_SOURCE", NULL);
-						// prefered order for takes with source file: begining of lane
-						if (src && src->GetFileName() && strlen(src->GetFileName()))
-						{
-							if (!strcmp(lastLoop.Get(), src->GetFileName())) 
-							{
-//								filenames.Insert(0,new WDL_String(src->GetFileName()));
-								filenames.Add(new WDL_String(src->GetFileName()));
-							}
-							else
-							{
-								int presentCount = 0;
-								for (int l=0; l < filenames.GetSize(); l++)
-									if(!strcmp(filenames.Get(l)->Get(), src->GetFileName()))
-										presentCount++;
-								if (!presentCount || 
-									(presentCount && countTakesByFilename(item, src->GetFileName()) > presentCount))
-								{
-//									filenames.Insert(0,new WDL_String(src->GetFileName()));
-									filenames.Add(new WDL_String(src->GetFileName()));
-									lastLoop.Set(src->GetFileName());
-								}
-							}							
-						}
-						// prefered order for empty takes: end of lane
-						else
-						{
-							filenames.Add(new WDL_String());
-							lastLoop.Set("");
-						}
-					}	
+						items.Add(item);
+						itemRecPasses.Add(recPasses);
+						// 2nd loop to *update* colors by rec pass id
+						for (int k=0; k < CountTakes(item); k++)
+								recPassColors.Insert(recPasses[k], takeColors[k]);
+					}
 				}
 			}
 
-			int nbLanes = filenames.GetSize();
-			WDL_PtrList<SNM_TakeParserPatcher> ps;
+			WDL_PtrList_DeleteOnDestroy<SNM_TakeParserPatcher> ps; // + auto commit on destroy!
 			for (int j = 0; j < items.GetSize(); j++)
 			{
-				MediaItem* item = items.Get(j);
-				WDL_PtrList<WDL_String> chunks;
-				SNM_TakeParserPatcher* p = new SNM_TakeParserPatcher(item);
+				MediaItem* item = (MediaItem*)items.Get(j);
+				SNM_TakeParserPatcher* p = new SNM_TakeParserPatcher(item, CountTakes(item));
 				ps.Add(p);
 
-				// init (max. 128 takes should be enough)
-				bool found[128]; 
-				for (int k=0; k < nbLanes; k++)	{
+				WDL_PtrList_DeleteOnDestroy<WDL_String> chunks;
+				for (int k=0; k < maxRecPass; k++)
 					chunks.Add(new WDL_String());
-					found[k] = false;
+
+				// Optimz: use a cache for take chunks
+				WDL_IntKeyedArray<char*> oldChunks(freecharptr);
+				int tkIdx = 0;					
+				while (tkIdx < CountTakes(item)) {
+					WDL_String c;
+					oldChunks.Insert(tkIdx, _strdup(p->GetTakeChunk(tkIdx, &c) ? c.Get() : ""));
+					tkIdx++;
 				}
 
-				for (int k=0; k < nbLanes; k++)	{
-					int first = findFirstTakeByFilename(item, filenames.Get(k)->Get(), found); 
-					bool patched = false;
-					if (first >= 0)
-						patched = p->GetTakeChunk(first, chunks.Get(k));
-					if (!patched)
-						setEmptyTakeChunk(chunks.Get(k));
-				}
-
-				// insert correct takes 
-				// so that there're (current nb of takes + maxTakes) lanes
-				for (int k=0; k < nbLanes; k++)
-					updates += p->InsertTake(k, chunks.Get(k));
-				chunks.Empty(true);
-
-				// remove the last (intial nb of takes) lanes
-				// so that it remains (maxTakes + additionnal) lanes
-				while (p->CountTakes() > nbLanes)
-					updates += p->RemoveTake(p->CountTakes()-1);
-			}
-
-			// Remove "empty lanes" if needed
-			int lane = 0;
-			int emptyTakes = items.GetSize();
-			while (items.GetSize() && (emptyTakes == items.GetSize() || lane < nbLanes))
-			{
-				emptyTakes = 0;
-				for (int j = 0; j < items.GetSize(); j++)
+				// Create 'maxRecPass' take chunks (ordered, stuffing with empty takes)
+				int* recPasses = itemRecPasses.Get(j);
+				for (int k=1; k <= maxRecPass; k++)
 				{
-					if (ps.Get(j)->IsEmpty(lane))
-						emptyTakes++;
-					else break;
+					tkIdx = 0;					
+					bool found = false;
+					while (tkIdx < CountTakes(item)) 
+					{
+						if (recPasses[tkIdx] == k) {
+							chunks.Get(k-1)->Set(oldChunks.Get(tkIdx));
+							found = true;
+							break;
+						}
+						tkIdx++;
+					}
+
+					if (!found)
+						setEmptyTakeChunk(chunks.Get(k-1), k, recPassColors.Get(k));
 				}
-				if (emptyTakes == items.GetSize())
-				{
-					nbLanes--;
-					for (int j = 0; j < items.GetSize(); j++)
-						updates += ps.Get(j)->RemoveTake(lane);
+
+				// insert re-ordered takes..
+				int insertPos=-1, k2=0;
+				for (int k=0; k < chunks.GetSize(); k++) 
+				{					
+					if (recPassColors.Get(k+1, -1) != -1) //.. but skip empty lanes
+					{
+						insertPos = p->InsertTake(k2, chunks.Get(k), insertPos);
+						if (insertPos > 0)	{
+							updates++;
+							k2++;
+						}
+					}
 				}
-				else lane++;
+
+				// remove old takes
+				if (updates)
+					p->GetChunk()->DeleteSub(insertPos, strlen((char*)ps.Get(j)->GetChunk()->Get()+insertPos) - 2); //-2 for >\n
 			}
-			filenames.Empty(true);
-			ps.Empty(true); // + auto commit!
 		}
 	}
 
-	// Undo point + UpdateTimeline
 	if (updates > 0)
 	{
 		UpdateTimeline();
 		if (_undoTitle)
 			Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
 	}
-	return updates;
+	return (badRecPass ? -1 : updates);
+}
+
+// primitive (no undo)
+bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel)
+{
+	bool updated = false;
+	for (int j = 0; _tr && j < GetTrackNumMediaItems(_tr); j++)
+	{
+		if (!_trSel || (_trSel && *(int*)GetSetMediaTrackInfo(_tr, "I_SELECTED", NULL)))
+		{
+			MediaItem* item = GetTrackMediaItem(_tr,j);
+			if (item && (!_itemSel || (_itemSel && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))))
+			{					
+				SNM_TakeParserPatcher p(item, CountTakes(item));
+				int k=0, kOriginal=0;
+				while (k < p.CountTakes() && p.CountTakes() > 1) // p.CountTakes() is a getter
+				{
+					if ((_empty && p.IsEmpty(k)) ||
+						(_midiEmpty && isEmptyMidi(GetTake(item, kOriginal))))
+					{
+						bool removed = p.RemoveTake(k);
+						if (removed) k--; //++ below!
+						updated |= removed;
+					}							
+					k++;
+					kOriginal++;
+				}
+				
+				// Removes the item if needed
+				if (p.CountTakes() == 1)
+				{
+					if ((_empty && p.IsEmpty(0)) ||
+						(_midiEmpty && isEmptyMidi(GetTake(item, 0))))
+					{
+						// prevent a useless SNM_ChunkParserPatcher commit
+						p.CancelUpdates();
+
+						bool removed = DeleteTrackMediaItem(_tr, item);
+						if (removed) j--; 
+						updated |= removed;
+					}
+				}
+			}
+		}
+	}
+	return updated;
 }
 
 // no undo point if !_undoTitle
@@ -329,48 +326,7 @@ bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool
 {
 	bool updated = false;
 	for (int i = 0; i < GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
-		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
-		{
-			if (!_trSel || (_trSel && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
-			{
-				MediaItem* item = GetTrackMediaItem(tr,j);
-				if (item && (!_itemSel || (_itemSel && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))))
-				{					
-					SNM_TakeParserPatcher p(item);
-					int k=0, kOriginal=0;
-					while (k < p.CountTakes() && p.CountTakes() > 1) // p.CountTakes() is a getter
-					{
-						if ((_empty && p.IsEmpty(k)) ||
-							(_midiEmpty && isEmptyMidi(GetTake(item, kOriginal))))
-						{
-							bool removed = p.RemoveTake(k);
-							if (removed) k--; //++ below!
-							updated |= removed;
-						}							
-						k++;
-						kOriginal++;
-					}
-					
-					// Removes the item if needed
-					if (p.CountTakes() == 1)
-					{
-						if ((_empty && p.IsEmpty(0)) ||
-							(_midiEmpty && isEmptyMidi(GetTake(item, 0))))
-						{
-							// prevent a useless SNM_ChunkParserPatcher commit
-							p.CancelUpdates();
-
-							bool removed = DeleteTrackMediaItem(tr, item);
-							if (removed) j--; 
-							updated |= removed;
-						}
-					}
-				}
-			}
-		}
-	}
+		updated |= removeEmptyTakes(CSurf_TrackFromID(i+1,false), _empty, _midiEmpty, _trSel, _itemSel);
 
 	// Undo point + UpdateTimeline
 	if (updated)
@@ -427,7 +383,7 @@ void moveTakes(COMMAND_T* _ct)
 				int newActive = 0;
 				if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 				{		
-					SNM_TakeParserPatcher p(item);
+					SNM_TakeParserPatcher p(item, CountTakes(item));
 					int active = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
 					int nbTakes = CountTakes(item);
 					if (dir == 1)
@@ -485,15 +441,15 @@ void moveActiveTake(COMMAND_T* _ct)
 						(dir == -1 && !active));
 
 					WDL_String removedChunk;
-					SNM_TakeParserPatcher p(item);
+					SNM_TakeParserPatcher p(item, CountTakes(item));
 					if (swapFirstLast) {
 						updated |= p.RemoveTake(dir == -1 ? 0 : (initialNbbTakes-1), &removedChunk);
-						updated |= p.InsertTake(dir == -1 ? initialNbbTakes : 0, &removedChunk);
+						updated |= (p.InsertTake(dir == -1 ? initialNbbTakes : 0, &removedChunk) > 0);
 						active = (dir == 1 ? 0 : (dir == -1 ? (initialNbbTakes-1) : 0));
 					}
 					else {
 						updated |= p.RemoveTake(active, &removedChunk);
-						updated |= p.InsertTake(active+dir, &removedChunk);
+						updated |= (p.InsertTake(active+dir, &removedChunk) > 0);
 						active += dir;
 					}
 				}
@@ -510,10 +466,11 @@ void moveActiveTake(COMMAND_T* _ct)
 }
 
 void buildLanes(COMMAND_T* _ct) {
-	buildLanes(SNM_CMD_SHORTNAME(_ct), (int)_ct->user);
+	if (buildLanes(SNM_CMD_SHORTNAME(_ct), (int)_ct->user) < 0)
+		MessageBox(g_hwndParent, "Some items were ignored, probable causes:\n- Items not recorded or recorded before REAPER v3.66 (no record pass id)\n- Imploded takes with duplicated record pass ids", "S&M - Build lanes - Warning", MB_OK);
 }
 
-void selectTakeLane(COMMAND_T* _ct)
+void activateLaneFromSelItem(COMMAND_T* _ct)
 {
 	bool updated = false;
 	for (int i = 0; i < GetNumTracks(); i++)
@@ -540,7 +497,7 @@ void selectTakeLane(COMMAND_T* _ct)
 				{
 					MediaItem* item = GetTrackMediaItem(tr,j);
 					// "active" validity check relies on GetSetMediaItemInfo()
-					if (item && (*(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL)) != active)
+					if (item && active < CountTakes(item) && (*(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL)) != active)
 					{
 						GetSetMediaItemInfo(item,"I_CURTAKE",&active);
 						updated = true;
@@ -551,11 +508,25 @@ void selectTakeLane(COMMAND_T* _ct)
 	}
 
 	// Undo point + UpdateTimeline
-	if (updated)
+	if (_ct && updated)
 	{
 		UpdateTimeline();
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
+}
+
+//JFB undo point even if nothing updated here.. minor
+void activateLaneUnderMouse(COMMAND_T* _ct)
+{
+	Undo_BeginBlock();
+	SelItems items;
+	items.Save(NULL);
+	Main_OnCommand(40528,0); // select item under mouse cursor
+	Main_OnCommand(41342,0); // activate take under mouse cursor
+	activateLaneFromSelItem(NULL);
+	items.Restore(NULL);
+	UpdateTimeline();
+	Undo_EndBlock(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
 }
 
 void removeEmptyTakes(COMMAND_T* _ct) {
@@ -570,6 +541,111 @@ void removeAllEmptyTakes(COMMAND_T* _ct) {
 	removeEmptyTakes(SNM_CMD_SHORTNAME(_ct), true, true);
 }
 
+//NO UNDO (due to file deletion) !
+bool deleteTakeAndMedia(int _mode)
+{
+	bool deleteFileOK = true;
+	WDL_StringKeyedArray<int> removeFiles;
+	for (int i=0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false);
+		WDL_PtrList<void> removedItems; 
+		bool cancel = false;
+		for (int j=0; !cancel && tr && j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
+			{
+				int originalTkIdx = 0, nbRemainingTakes = GetMediaItemNumTakes(item);
+				for (int k = 0; k < GetMediaItemNumTakes(item); k++) // nb of takes changes!
+				{
+					MediaItem_Take* tk = GetMediaItemTake(item,k);
+					if (tk && (_mode == 1 || _mode == 2 || // all takes
+						((_mode == 3 || _mode == 4) && GetActiveTake(item) == tk))) // active take only
+					{
+						PCM_source* pcm = (PCM_source*)GetSetMediaItemTakeInfo(tk,"P_SOURCE",NULL);
+						if (pcm)
+						{
+							char tkDisplayName[BUFFER_SIZE] = "[empty]";
+							if (pcm->GetFileName() && *(pcm->GetFileName()))
+								strncpy(tkDisplayName, pcm->GetFileName(), BUFFER_SIZE);
+							else if (pcm->GetFileName() && !strlen(pcm->GetFileName()))
+								strncpy(tkDisplayName, (char*)GetSetMediaItemTakeInfo(tk,"P_NAME",NULL), BUFFER_SIZE);
+
+							int rc = removeFiles.Get(tkDisplayName, -1);
+							if (rc == -1)
+							{							
+								if (_mode == 1 || _mode == 3)
+								{
+									char buf[BUFFER_SIZE*2];
+
+									if (pcm->GetFileName() && strlen(pcm->GetFileName())) 
+										sprintf(buf,"[Track %d, item %d] Do you want to delete take %d and its media file:\n%s ?", i+1, j+1, originalTkIdx+1, tkDisplayName);
+									else if (pcm->GetFileName() && !strlen(pcm->GetFileName())) 
+										sprintf(buf,"[Track %d, item %d] Do you want to delete take %d (in-project):\n%s ?", i+1, j+1, originalTkIdx+1, tkDisplayName);
+									else 
+										sprintf(buf,"[Track %d, item %d] Do you want to delete take %d (empty take) ?", i+1, j+1, originalTkIdx+1);
+
+									rc = MessageBox(g_hwndParent,buf,"S&M - Delete take and source files (NO UNDO!)", MB_YESNOCANCEL);
+									if (rc == IDCANCEL) {
+										cancel = true;
+										break;
+									}
+								}
+								else
+									rc = IDYES;
+								removeFiles.Insert(tkDisplayName, rc);
+							}
+
+							if (rc==IDYES)
+							{
+								nbRemainingTakes--;
+								if (pcm->GetFileName() && strlen(pcm->GetFileName()) && FileExists(pcm->GetFileName()))
+								{
+									// set all media offline (yeah, EACH TIME!)
+									Main_OnCommand(40100,0); 
+									deleteFileOK &= SNM_DeleteFile(pcm->GetFileName());
+									char fileName[BUFFER_SIZE];
+									strcpy(fileName, pcm->GetFileName());
+									char* pEnd = fileName + strlen(fileName);
+
+									// no check with deleteFileOK (files not necessary there)
+									strcpy(pEnd, ".reapeaks"); SNM_DeleteFile(fileName);
+									strcpy(pEnd, ".reapindex"); SNM_DeleteFile(fileName);
+								}
+
+								// Removes the take
+								// (we cannot factorize the chunk updates here..)
+								int cntTakes = CountTakes(item);
+								SNM_TakeParserPatcher p(item, cntTakes);
+								if (cntTakes > 1 && p.RemoveTake(k)) k--; // see RemoveTake(), item removed otherwise
+							}
+						}
+					}
+					originalTkIdx++;
+				}
+
+				if (!nbRemainingTakes) // CountTakes() <on't work here
+					removedItems.Add(item);
+			}
+		}
+		
+		// if needed, delete items for this track
+		for (int j=0;j<removedItems.GetSize();j++)
+			DeleteTrackMediaItem(tr, (MediaItem*)removedItems.Get(j));
+
+		removedItems.Empty(false);
+	}
+	removeFiles.DeleteAll();
+	Main_OnCommand(40101,0); // set all media online
+	return deleteFileOK;
+}
+
+void deleteTakeAndMedia(COMMAND_T* _ct) {
+	if (!deleteTakeAndMedia((int)_ct->user))
+		MessageBox(g_hwndParent, "Warning: at least one file couldn't be deleted.\nTips: are you an administrator? used by another process than REAPER?", "S&M - Delete take and source files", MB_OK);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Take envs: Show/hide take vol/pan/mute envs
@@ -580,9 +656,12 @@ int getTakeIndex(MediaItem* _item, MediaItem_Take* _take)
 {
 	int i=0;
 	MediaItem_Take* tk = (_item ? GetTake(_item, i) : NULL);
-	while (tk) {
-		if (tk && tk == _take) return i;
-		else tk = GetTake(_item, ++i);
+	while (tk) 
+	{
+		if (tk && tk == _take) 
+			return i;
+		else 
+			tk = GetTake(_item, ++i);
 	}
 	return -1;
 }
@@ -593,9 +672,11 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 	bool updated = false;
 	if (_item)
 	{					
-		SNM_TakeParserPatcher p(_item);
+		SNM_TakeParserPatcher p(_item, CountTakes(_item));
+
 		WDL_String takeChunk;
-		if (p.GetTakeChunk(_takeIdx, &takeChunk))
+		int tkPos, tkOriginalLength;
+		if (p.GetTakeChunk(_takeIdx, &takeChunk, &tkPos, &tkOriginalLength))
 		{
 			SNM_ChunkParserPatcher ptk(&takeChunk);
 			bool takeUpdate = false;
@@ -618,21 +699,28 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 						return false;
 				}
 
-				// prepare the new visibility
+				// prepare the new visibility (in one go)
+				SNM_TakeEnvParserPatcher pEnv(ptk.GetChunk());
+				if (pEnv.SetVis(_envKeyword, atoi(vis))) {
+					takeUpdate = true;
+					takeChunk.Set(pEnv.GetChunk()->Get());
+				}
+
+/*JFB old code: 3 parser passes!
 				if (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "ACT", -1, 0, 1, (void*)vis) > 0)
 					if (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)vis) > 0)
 						takeUpdate |= (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "ARM", -1, 0, 1, (void*)vis) > 0);
-
 				takeChunk.Set(ptk.GetChunk()->Get());
+*/
 			}
 			// env. doesn't already exists => build a default one (if needed)
 			else
 			{						
-				if (!strlen(vis)) strcpy(vis, "1"); // toggle ?
+				if (!strlen(vis)) 
+					strcpy(vis, "1"); // toggle ?
 				if (!strcmp(vis, "1"))
 				{
-					// TODO: AppendFormatted with SNM_String
-					// (skipped for OSX for now..)
+					//JFB TODO: AppendFormatted (but OSX!)
 					takeChunk.Append("<");
 					takeChunk.Append(_envKeyword);
 					takeChunk.Append("\nACT ");
@@ -649,10 +737,10 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 					takeUpdate = true;
 				}
 			}
-			
-			// Patch new visibility as a new take, removed the previous one
-			if (takeUpdate && p.InsertTake(_takeIdx, &takeChunk))
-				updated |= p.RemoveTake(_takeIdx+1);
+
+			// Update take (with new visibility)
+			if (takeUpdate)
+				updated = p.ReplaceTake(_takeIdx, tkPos, tkOriginalLength, &takeChunk);
 		}
 	}
 	return updated;
@@ -684,40 +772,34 @@ bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char*
 void showHideTakeVolEnvelope(COMMAND_T* _ct) 
 {
 	char cVis[2] = ""; //empty means toggle
-	if (_ct->user >= 0)
-		sprintf(cVis, "%d", _ct->user);
+	int value = (int)_ct->user;
+	if (value >= 0)
+		sprintf(cVis, "%d", value);
 	WDL_String defaultPoint("PT 0.000000 1.000000 0");
-	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint) && 
-		_ct->user < 0) // toggle
-	{
+	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint) && value < 0) // toggle
 		fakeToggleAction(_ct);
-	}
 }
 
 void showHideTakePanEnvelope(COMMAND_T* _ct) 
 {
 	char cVis[2] = ""; //empty means toggle
-	if (_ct->user >= 0)
-		sprintf(cVis, "%d", _ct->user);
+	int value = (int)_ct->user;
+	if (value >= 0)
+		sprintf(cVis, "%d", value);
 	WDL_String defaultPoint("PT 0.000000 0.000000 0");
-	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint) &&
-		_ct->user < 0) // toggle
-	{
+	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint) && value < 0) // toggle
 		fakeToggleAction(_ct);
-	}
 }
 
 void showHideTakeMuteEnvelope(COMMAND_T* _ct) 
 {
 	char cVis[2] = ""; //empty means toggle
-	if (_ct->user >= 0)
-		sprintf(cVis, "%d", _ct->user);
+	int value = (int)_ct->user;
+	if (value >= 0)
+		sprintf(cVis, "%d", value);
 	WDL_String defaultPoint("PT 0.000000 1.000000 1");
-	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint) &&
-		_ct->user < 0) // toggle
-	{
+	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint) && value < 0) // toggle
 		fakeToggleAction(_ct);
-	}
 }
 
 

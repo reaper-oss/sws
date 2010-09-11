@@ -68,7 +68,7 @@ private:
 
 public:
 	SWSProjConfig() {}
-	~SWSProjConfig() { m_data.Empty(true); }
+	~SWSProjConfig() { Empty(); }
 	PTRTYPE* Get()
 	{
 		ReaProject* pProj = Enum_Projects(-1, NULL, 0);
@@ -80,6 +80,11 @@ public:
 	}
 	PTRTYPE* Get(int iProj) { return m_data.Get(iProj); }
 	int GetNumProj() { return m_data.GetSize(); }
+	void Empty()
+	{
+		m_projects.Empty(false);
+		m_data.Empty(true); 
+	}
 	void Cleanup()
 	{
 		if (m_projects.GetSize())

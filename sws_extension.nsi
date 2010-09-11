@@ -34,6 +34,7 @@ Section ""
   Delete "$INSTDIR\reaper_markerlist.dll"
   Delete "$INSTDIR\reaper_snapshot.dll"
   Delete "$INSTDIR\reaper_xenakios_commands.dll"
+  Delete "$INSTDIR\reaper_SnMExtension.dll"
   File Release\reaper_sws.dll
   Abort:
 SectionEnd

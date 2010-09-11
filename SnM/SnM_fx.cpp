@@ -58,11 +58,11 @@ int getFXIdFromCommand(MediaTrack* _tr, int _fxCmdId)
 // refreshes the menu ticks, toolbar tooltips ("on"/"off") but not the button themselves..
 bool isFXOfflineOrBypassedSelectedTracks(COMMAND_T * _ct, int _token) 
 {
-	int selTrCount = NumSelTracks();
+	int selTrCount = CountSelectedTracksWithMaster(NULL);
 	// single track selection: we can return a toggle state
 	if (selTrCount == 1)
 	{
-		MediaTrack* tr = GetFirstSelectedTrack();
+		MediaTrack* tr = GetFirstSelectedTrackWithMaster(NULL);
 		int fxId = getFXIdFromCommand(tr, (int)_ct->user);
 		if (tr && fxId >= 0)
 		{
@@ -105,7 +105,7 @@ bool patchSelTracksFXState(int _mode, int _token, int _fxCmdId, const char* _val
 
 void toggleFXOfflineSelectedTracks(COMMAND_T* _ct) { 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 2, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) && 
-		NumSelTracks() > 1)
+		CountSelectedTracksWithMaster(NULL) > 1)
 	{
 		fakeToggleAction(_ct);
 	}
@@ -117,7 +117,7 @@ bool isFXOfflineSelectedTracks(COMMAND_T * _ct) {
 
 void toggleFXBypassSelectedTracks(COMMAND_T* _ct) { 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 1, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) &&
-		NumSelTracks() > 1)
+		CountSelectedTracksWithMaster(NULL) > 1)
 	{
 		fakeToggleAction(_ct);
 	}
@@ -129,7 +129,7 @@ bool isFXBypassedSelectedTracks(COMMAND_T * _ct) {
 
 void toggleExceptFXOfflineSelectedTracks(COMMAND_T* _ct) { 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) &&
-		NumSelTracks() > 1)
+		CountSelectedTracksWithMaster(NULL) > 1)
 	{
 		fakeToggleAction(_ct);
 	}
@@ -137,7 +137,7 @@ void toggleExceptFXOfflineSelectedTracks(COMMAND_T* _ct) {
   
 void toggleExceptFXBypassSelectedTracks(COMMAND_T* _ct) { 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) &&
-		NumSelTracks() > 1)
+		CountSelectedTracksWithMaster(NULL) > 1)
 	{
 		fakeToggleAction(_ct);
 	}
@@ -146,7 +146,7 @@ void toggleExceptFXBypassSelectedTracks(COMMAND_T* _ct) {
 void toggleAllFXsOfflineSelectedTracks(COMMAND_T* _ct) { 
 	// We use the "except mode" but with an unreachable fx number 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)) &&
-		NumSelTracks() > 1)
+		CountSelectedTracksWithMaster(NULL) > 1)
 	{
 		fakeToggleAction(_ct);
 	}
@@ -155,7 +155,7 @@ void toggleAllFXsOfflineSelectedTracks(COMMAND_T* _ct) {
 void toggleAllFXsBypassSelectedTracks(COMMAND_T* _ct) { 
 	// We use the "except mode" but with an unreachable fx number 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)) && 
-		NumSelTracks() > 1)
+		CountSelectedTracksWithMaster(NULL) > 1)
 	{
 		fakeToggleAction(_ct);
 	}
@@ -271,5 +271,145 @@ void selectFX(COMMAND_T* _ct)
 	// Undo point
 	if (updated)
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// FX preset
+///////////////////////////////////////////////////////////////////////////////
+
+//JFB TODO: cache?
+int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_String>* _names)
+{
+	int nbPresets = 0;
+	if (_fxType && _fxName && _names)
+	{
+		char iniFilename[BUFFER_SIZE], buf[256];
+
+		// *** Get ini filename *** //
+
+		// Process FX name
+		strncpy(buf, _fxName, 256);
+
+		// remove ".dll"
+		//JFB!! OSX: to check
+		if (!_stricmp(_fxType, "VST"))
+		{
+			const char* p = stristr(buf,".dll");
+			if (p) buf[(int)(p-buf)] = '\0';
+		}
+
+		// replace special chars
+		int i=0;
+		while (buf[i])
+		{
+			if (buf[i] == '.' || buf[i] == '/')
+				buf[i] = '_';
+			i++;
+		}
+
+		char* fxType = _strdup(_fxType);
+		for (i = 0; i < (int)strlen(fxType); i++)
+			fxType[i] = tolower(fxType[i]);
+		_snprintf(iniFilename, BUFFER_SIZE, "%s%cpresets%c%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, PATH_SLASH_CHAR, fxType, buf);
+		if (!FileExists(iniFilename))
+			_snprintf(iniFilename, BUFFER_SIZE, "%s%cpresets-%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, fxType, buf);
+		free(fxType);
+
+		// *** Get presets *** //
+
+		if (FileExists(iniFilename))
+		{
+			char key[32];
+			GetPrivateProfileString("General", "NbPresets", "0", buf, 5, iniFilename);
+			nbPresets = atoi(buf);
+			for (int i=0; i < nbPresets; i++)
+			{
+				_snprintf(key, 32, "Preset%d", i);
+				GetPrivateProfileString(key, "Name", "", buf, 256, iniFilename);
+				_names->Add(new WDL_String(buf));
+			}
+		}
+	}
+	return nbPresets;
+}
+
+int GetPresetFromConfToken(const char* _preset)
+{
+	const char* p = strchr(_preset, '.');
+	if (p)
+		return atoi(p+1);
+	return 0;
+}
+
+// _fx: 1-based, _preset: 1-based with 0=remove
+// _presetConf (in & out param): stored as "fx.preset" both 1-based
+void UpdatePresetConf(int _fx, int _preset, WDL_String* _presetConf)
+{
+	WDL_String newConf;
+	LineParser lp(false);
+	if (_presetConf && !lp.parse(_presetConf->Get()))
+	{
+		bool found = false;
+		for (int i=0; i < lp.getnumtokens(); i++)
+		{
+			int fx = (int)floor(lp.gettoken_float(i));
+			if (_fx == fx)
+			{
+				// Set the new preset (if not removed)
+				if (_preset) {
+					found = true;
+					if (newConf.GetLength()) newConf.Append(" ");
+					newConf.AppendFormatted(256, "%d.%d", _fx, _preset);
+				}
+			}
+			else {
+				if (newConf.GetLength()) newConf.Append(" ");
+				newConf.Append(lp.gettoken_str(i));
+			}
+		}
+
+		if (!found && _preset) {
+			if (newConf.GetLength()) newConf.Append(" ");
+			newConf.AppendFormatted(256, "%d.%d", _fx, _preset);
+		}
+
+		_presetConf->Set(newConf.Get());
+	}
+}
+
+// _fx: 0-based, _presetConf: stored as "fx.preset", both 1-based
+// _presetCount: for optionnal check
+int GetSelPresetFromConf(int _fx, WDL_String* _curPresetConf, int _presetCount)
+{
+	LineParser lp(false);
+	if (_curPresetConf && !lp.parse(_curPresetConf->Get()))
+	{
+		for (int i=0; i < lp.getnumtokens(); i++)
+		{
+			int fx = (int)floor(lp.gettoken_float(i));
+			int preset = GetPresetFromConfToken(lp.gettoken_str(i));
+			if (_fx == (fx-1))
+				return (preset > _presetCount) ? 0 : preset;
+		}
+	}
+	return 0;
+}
+
+// _fx: 1-based, _preset: 1-based with 0=remove
+// _presetConf: in param, _renderConf: out param
+void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf)
+{
+	LineParser lp(false);
+	if (_presetConf && _renderConf && !lp.parse(_presetConf->Get()))
+	{
+		for (int i=0; i < lp.getnumtokens(); i++)
+		{
+			int fx = (int)floor(lp.gettoken_float(i));
+			int preset = GetPresetFromConfToken(lp.gettoken_str(i));
+			if (_renderConf->GetLength()) _renderConf->Append(", ");
+			_renderConf->AppendFormatted(256, "FX%d: %d", fx, preset);
+		}	
+	}
 }
 

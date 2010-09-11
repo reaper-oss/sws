@@ -29,10 +29,11 @@
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
 
-WDL_PtrList<WDL_PtrList<t_SendRcv> > g_sndTrackClipboard; 
-WDL_PtrList<WDL_PtrList<t_SendRcv> > g_rcvTrackClipboard; 
-WDL_PtrList<WDL_PtrList<t_SendRcv> > g_sndClipboard;
-WDL_PtrList<WDL_PtrList<t_SendRcv> > g_rcvClipboard;
+
+WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndTrackClipboard; 
+WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvTrackClipboard; 
+WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndClipboard;
+WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvClipboard;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -80,7 +81,7 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 	bool updated = false;
 
 	WDL_String chunk;
-	if (_trTemplatePath && !loadTrackTemplate(_trTemplatePath, &chunk))
+	if (_trTemplatePath && !LoadChunk(_trTemplatePath, &chunk))
 	{
 		char err[512] = "";
 		sprintf(err, "Cue buss not created!\nInvalid track template file: %s", _trTemplatePath);
@@ -106,10 +107,7 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 				GetSetMediaTrackInfo(cueTr, "P_NAME", (void*)_busName);
 				p = new SNM_SendPatcher(cueTr);
 				if (chunk.GetLength())
-				{
 					p->SetChunk(&chunk, 1);
-					p->RemoveIds(); // *HOT*
-				}
 				updated = true;
 			}
 
@@ -206,7 +204,7 @@ void cueTrack(COMMAND_T* _ct)
 
 	cueTrack(
 		busName, 
-		(_ct->user < 0 ? reaType : (int)_ct->user), 
+		((int)_ct->user < 0 ? reaType : (int)_ct->user), 
 		SNM_CMD_SHORTNAME(_ct), 
 		showRouting, 
 		soloGrp, 
@@ -220,88 +218,36 @@ void cueTrack(COMMAND_T* _ct)
 // Cut/Copy/Paste: track with sends, routings
 ///////////////////////////////////////////////////////////////////////////////
 
-void flushClipboard(WDL_PtrList<WDL_PtrList<t_SendRcv> >* _clipboard)
-{
-	if (_clipboard)	{
-		for (int j=0; j < _clipboard->GetSize(); j++)
-			_clipboard->Get(j)->Empty(true, free);
+void flushClipboard(WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _clipboard) {
+	if (_clipboard)
 		_clipboard->Empty(true);
-	}
 }
 
-void flushAllRoutingClipboards()
+bool FillIOFromReaper(SNM_SndRcv* _send, MediaTrack* _src, MediaTrack* _dest, int _categ, int _idx)
 {
-	flushClipboard(&g_sndTrackClipboard); 
-	flushClipboard(&g_rcvTrackClipboard); 
-	flushClipboard(&g_sndClipboard); 
-	flushClipboard(&g_rcvClipboard); 
-}
-
-MediaTrack* SNM_GuidToTrack(const char* _guid)
-{
-	if (_guid)
+	if (_send && _src && _dest)
 	{
-		for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
-		{
-			MediaTrack* tr = CSurf_TrackFromID(i, false);
-			char guid[64] = "";
-			SNM_ChunkParserPatcher p(tr, false);
-			if (p.Parse(SNM_GET_CHUNK_CHAR,1,"TRACK","TRACKID",-1,0,1,guid) > 0)
-				if (!strcmp(_guid, guid))
-					return tr;
-		}
-	}
-	return NULL;
-}
-
-SNM_ChunkParserPatcher* FindTrackCPPbyGUID(
-	WDL_PtrList<SNM_ChunkParserPatcher>* _list, const char* _guid)
-{
-	if (_list && _guid)
-	{
-		for (int i=0; i < _list->GetSize(); i++)
-		{
-			//MediaTrack* tr = (MediaTrack*)_list->Get(i)->GetObject();
-			char guid[64] = "";
-			if (_list->Get(i)->Parse(SNM_GET_CHUNK_CHAR,1,"TRACK","TRACKID",-1,0,1,guid) > 0)
-				if (!strcmp(_guid, guid))
-					return _list->Get(i);
-//			if (GuidsEqual(GetTrackGUID((MediaTrack*)_list->Get(i)->GetObject()), _guid))
-//				return _list->Get(i);
-		}
-	}
-	return NULL;
-}
-
-bool FillIOFromReaper(t_SendRcv* send, MediaTrack* src, MediaTrack* dest, int categ, int idx)
-{
-	if (send && src && dest)
-	{
-		MediaTrack* tr = (categ == -1 ? dest : src);
-		SNM_ChunkParserPatcher p1(src, false);
-		p1.Parse(SNM_GET_CHUNK_CHAR,1,"TRACK","TRACKID",-1,0,1,send->srcGUID);
-		SNM_ChunkParserPatcher p2(dest, false);
-		p2.Parse(SNM_GET_CHUNK_CHAR,1,"TRACK","TRACKID",-1,0,1,send->destGUID);
-//		send->srcGUID = GetTrackGUID(src);
-//		send->destGUID = GetTrackGUID(dest);
-		send->mute = *(bool*)GetSetTrackSendInfo(tr, categ, idx, "B_MUTE", NULL);
-		send->phase = *(bool*)GetSetTrackSendInfo(tr, categ, idx, "B_PHASE", NULL);
-		send->mono = *(bool*)GetSetTrackSendInfo(tr, categ, idx, "B_MONO", NULL);
-		send->vol = *(double*)GetSetTrackSendInfo(tr, categ, idx, "D_VOL", NULL);
-		send->pan = *(double*)GetSetTrackSendInfo(tr, categ, idx, "D_PAN", NULL);
-		send->panl = *(double*)GetSetTrackSendInfo(tr, categ, idx, "D_PANLAW", NULL);
-		send->mode = *(int*)GetSetTrackSendInfo(tr, categ, idx, "I_SENDMODE", NULL);
-		send->srcChan = *(int*)GetSetTrackSendInfo(tr, categ, idx, "I_SRCCHAN", NULL);
-		send->destChan = *(int*)GetSetTrackSendInfo(tr, categ, idx, "I_DSTCHAN", NULL);
-		send->midi = *(int*)GetSetTrackSendInfo(tr, categ, idx, "I_MIDIFLAGS", NULL);
+		MediaTrack* tr = (_categ == -1 ? _dest : _src);
+		_send->m_src = _src;
+		_send->m_dest = _dest;
+		_send->m_mute = *(bool*)GetSetTrackSendInfo(tr, _categ, _idx, "B_MUTE", NULL);
+		_send->m_phase = *(bool*)GetSetTrackSendInfo(tr, _categ, _idx, "B_PHASE", NULL);
+		_send->m_mono = *(bool*)GetSetTrackSendInfo(tr, _categ, _idx, "B_MONO", NULL);
+		_send->m_vol = *(double*)GetSetTrackSendInfo(tr, _categ, _idx, "D_VOL", NULL);
+		_send->m_pan = *(double*)GetSetTrackSendInfo(tr, _categ, _idx, "D_PAN", NULL);
+		_send->m_panl = *(double*)GetSetTrackSendInfo(tr, _categ, _idx, "D_PANLAW", NULL);
+		_send->m_mode = *(int*)GetSetTrackSendInfo(tr, _categ, _idx, "I_SENDMODE", NULL);
+		_send->m_srcChan = *(int*)GetSetTrackSendInfo(tr, _categ, _idx, "I_SRCCHAN", NULL);
+		_send->m_destChan = *(int*)GetSetTrackSendInfo(tr, _categ, _idx, "I_DSTCHAN", NULL);
+		_send->m_midi = *(int*)GetSetTrackSendInfo(tr, _categ, _idx, "I_MIDIFLAGS", NULL);
 		return true;
 	}
 	return false;
 }
 
 void copySendsReceives(bool _cut, 
-		WDL_PtrList<WDL_PtrList<t_SendRcv> >* _sends, 
-		WDL_PtrList<WDL_PtrList<t_SendRcv> >* _rcvs)
+		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends, 
+		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs)
 {
 	// Clear the "clipboards" if needed
 	flushClipboard(_sends);
@@ -316,7 +262,7 @@ void copySendsReceives(bool _cut,
 			// *** Copy sends ***
 			if (_sends)
 			{
-				_sends->Add(new WDL_PtrList<t_SendRcv>());
+				_sends->Add(new WDL_PtrList_DeleteOnDestroy<SNM_SndRcv>());
 
 				int idx=0;
 				MediaTrack* dest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, idx, "P_DESTTRACK", NULL);
@@ -327,7 +273,7 @@ void copySendsReceives(bool _cut,
 					if (!_cut ||
 						(_cut && !(*(int*)GetSetMediaTrackInfo(dest, "I_SELECTED", NULL))))
 					{
-						t_SendRcv* send = (t_SendRcv*)malloc(sizeof(t_SendRcv));
+						SNM_SndRcv* send = new SNM_SndRcv();
 						if (send && FillIOFromReaper(send, tr, dest, 0, idx))
 							_sends->Get(selTrackIdx)->Add(send);
 					}
@@ -338,13 +284,13 @@ void copySendsReceives(bool _cut,
 			// *** Copy receives ***
 			if (_rcvs)
 			{
-				_rcvs->Add(new WDL_PtrList<t_SendRcv>());
+				_rcvs->Add(new WDL_PtrList_DeleteOnDestroy<SNM_SndRcv>());
 
 				int idx=0;
 				MediaTrack* src = (MediaTrack*)GetSetTrackSendInfo(tr, -1, idx, "P_SRCTRACK", NULL);
 				while (src)
 				{
-					t_SendRcv* rcv = (t_SendRcv*)malloc(sizeof(t_SendRcv));
+					SNM_SndRcv* rcv = new SNM_SndRcv();
 					if (rcv && FillIOFromReaper(rcv, src, tr, -1, idx))
 						_rcvs->Get(selTrackIdx)->Add(rcv);
 					src = (MediaTrack*)GetSetTrackSendInfo(tr, -1, ++idx, "P_SRCTRACK", NULL);
@@ -356,9 +302,8 @@ void copySendsReceives(bool _cut,
 }
 
 // Paste stored sends and/or receives to the selected tracks
-bool pasteSendsReceives(WDL_PtrList<WDL_PtrList<t_SendRcv> >* _sends, 
-		WDL_PtrList<WDL_PtrList<t_SendRcv> >* _rcvs,
-		bool _rcvReset)
+bool pasteSendsReceives(WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends, 
+		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs, bool _rcvReset)
 {
 	bool updated = false;
 
@@ -367,7 +312,6 @@ bool pasteSendsReceives(WDL_PtrList<WDL_PtrList<t_SendRcv> >* _sends,
 	WDL_PtrList<SNM_ChunkParserPatcher> ps;
 
 	// 1st loop to remove the native receives 
-	int selTrackIdx = 0;
 	for (int i = 1; i <= GetNumTracks(); i++)  //doesn't include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -377,12 +321,11 @@ bool pasteSendsReceives(WDL_PtrList<WDL_PtrList<t_SendRcv> >* _sends,
 			ps.Add(p);
 			if (_rcvReset)
 				updated |= (p->RemoveReceives() > 0);
-			selTrackIdx++;
 		}
 	}
 
 	// 2nd one: to add ours
-	selTrackIdx = 0;
+	int selTrackIdx = 0;
 	for (int i = 1; i <= GetNumTracks(); i++) // doesn't include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -391,19 +334,21 @@ bool pasteSendsReceives(WDL_PtrList<WDL_PtrList<t_SendRcv> >* _sends,
 			// *** Paste sends ***
 			if (_sends)
 			{
-				for (int j=0; selTrackIdx < _sends->GetSize() && j < _sends->Get(selTrackIdx)->GetSize(); j++)
+				for (int k=0; k < _sends->GetSize(); k++)
 				{
-					t_SendRcv* send = _sends->Get(selTrackIdx)->Get(j);
-					MediaTrack* sendDest = SNM_GuidToTrack(send->destGUID);
-					if (sendDest) 
+					for (int j=0; j < _sends->Get(k)->GetSize(); j++)
 					{
-						SNM_SendPatcher* pRcv = (SNM_SendPatcher*)FindTrackCPPbyGUID(&ps, send->destGUID);
-						if (!pRcv)
+						SNM_SndRcv* send = _sends->Get(k)->Get(j);
+						MediaTrack* sendDest = send->m_dest;
+						if (sendDest) 
 						{
-							pRcv = new SNM_SendPatcher(sendDest); 
-							ps.Add(pRcv);
+							SNM_SendPatcher* pRcv = (SNM_SendPatcher*)FindChunkParserPatcherByObject(&ps, send->m_dest);
+							if (!pRcv) {
+								pRcv = new SNM_SendPatcher(sendDest); 
+								ps.Add(pRcv);
+							}
+							updated |= pRcv->AddReceive(tr, send);
 						}
-						updated |= (pRcv->AddReceive(tr, send) > 0);
 					}
 				}
 			}
@@ -411,15 +356,17 @@ bool pasteSendsReceives(WDL_PtrList<WDL_PtrList<t_SendRcv> >* _sends,
 			// *** Paste receives ***
 			if (_rcvs)
 			{
-				for (int j=0; selTrackIdx < _rcvs->GetSize() && j < _rcvs->Get(selTrackIdx)->GetSize(); j++)
+				for (int k=0; k < _rcvs->GetSize(); k++)
 				{
-					t_SendRcv* rcv = _rcvs->Get(selTrackIdx)->Get(j);
-					MediaTrack* rcvSrc = SNM_GuidToTrack(rcv->srcGUID);
-					if (rcvSrc) 
-						updated |= (((SNM_SendPatcher*)ps.Get(selTrackIdx))->AddReceive(rcvSrc, rcv) > 0);
+					for (int j=0; j < _rcvs->Get(k)->GetSize(); j++)
+					{
+						SNM_SndRcv* rcv = _rcvs->Get(k)->Get(j);
+						MediaTrack* rcvSrc = rcv->m_src;
+						if (rcvSrc) 
+							updated |= ((SNM_SendPatcher*)ps.Get(selTrackIdx))->AddReceive(rcvSrc, rcv);
+					}
 				}
 			}
-
 			selTrackIdx++;
 		}
 	}
@@ -608,31 +555,28 @@ void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _
 {
 	if (_busName && _reaType && _trTemplate && _trTemplatePath && _showRouting && _soloDefeat && _sendToMaster && _hwOuts)
 	{
-		char iniFilePath[BUFFER_SIZE] = "";
-		sprintf(iniFilePath,SNM_FORMATED_INI_FILE,GetExePath());
-
-		GetPrivateProfileString("LAST_CUEBUS","NAME","",_busName,BUFFER_SIZE,iniFilePath);
+		GetPrivateProfileString("LAST_CUEBUS","NAME","",_busName,BUFFER_SIZE,g_SNMiniFilename.Get());
 
 		char reaType[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","REATYPE","3",reaType,16,iniFilePath);
+		GetPrivateProfileString("LAST_CUEBUS","REATYPE","3",reaType,16,g_SNMiniFilename.Get());
 		*_reaType = atoi(reaType); // 0 if failed 
 
 		char trTemplate[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED","0",trTemplate,16,iniFilePath);
+		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED","0",trTemplate,16,g_SNMiniFilename.Get());
 		*_trTemplate = (atoi(trTemplate) == 1); // 0 if failed 
 
-		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH","",_trTemplatePath,BUFFER_SIZE,iniFilePath);
+		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH","",_trTemplatePath,BUFFER_SIZE,g_SNMiniFilename.Get());
 
 		char showRouting[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","SHOW_ROUTING","1",showRouting,16,iniFilePath);
+		GetPrivateProfileString("LAST_CUEBUS","SHOW_ROUTING","1",showRouting,16,g_SNMiniFilename.Get());
 		*_showRouting = (atoi(showRouting) == 1); // 0 if failed 
 
 		char sendToMaster[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT","0",sendToMaster,16,iniFilePath);
+		GetPrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT","0",sendToMaster,16,g_SNMiniFilename.Get());
 		*_sendToMaster = (atoi(sendToMaster) == 1); // 0 if failed 
 
 		char soloDefeat[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT","1",soloDefeat,16,iniFilePath);
+		GetPrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT","1",soloDefeat,16,g_SNMiniFilename.Get());
 		*_soloDefeat = atoi(soloDefeat); // 0 if failed 
 
 		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
@@ -641,7 +585,7 @@ void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _
 			sprintf(slot,"HWOUT%d",i+1);
 
 			char hwOut[16] = "";
-			GetPrivateProfileString("LAST_CUEBUS",slot,"0",hwOut,BUFFER_SIZE,iniFilePath);
+			GetPrivateProfileString("LAST_CUEBUS",slot,"0",hwOut,BUFFER_SIZE,g_SNMiniFilename.Get());
 			_hwOuts[i] = atoi(hwOut); // 0 if failed 
 		}
 	}
@@ -651,20 +595,18 @@ void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTem
 {
 	if (_busName && _trTemplatePath && _hwOuts)
 	{
-		char iniFilePath[BUFFER_SIZE] = "";
-		sprintf(iniFilePath,SNM_FORMATED_INI_FILE,GetExePath());
-		WritePrivateProfileString("LAST_CUEBUS","NAME",_busName,iniFilePath);
+		WritePrivateProfileString("LAST_CUEBUS","NAME",_busName,g_SNMiniFilename.Get());
 		char type[16] = "";
 		sprintf(type,"%d",_type);
-		WritePrivateProfileString("LAST_CUEBUS","REATYPE",type,iniFilePath);
-		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED",_trTemplate ? "1" : "0",iniFilePath);
-		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH",_trTemplatePath,iniFilePath);
-		WritePrivateProfileString("LAST_CUEBUS","SHOW_ROUTING",_showRouting ? "1" : "0",iniFilePath);
-		WritePrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT",_sendToMaster ? "1" : "0",iniFilePath);
+		WritePrivateProfileString("LAST_CUEBUS","REATYPE",type,g_SNMiniFilename.Get());
+		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED",_trTemplate ? "1" : "0",g_SNMiniFilename.Get());
+		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH",_trTemplatePath,g_SNMiniFilename.Get());
+		WritePrivateProfileString("LAST_CUEBUS","SHOW_ROUTING",_showRouting ? "1" : "0",g_SNMiniFilename.Get());
+		WritePrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT",_sendToMaster ? "1" : "0",g_SNMiniFilename.Get());
 
 		char soloDefeat[16] = "";
 		sprintf(soloDefeat,"%d",_soloDefeat);
-		WritePrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT",soloDefeat,iniFilePath);
+		WritePrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT",soloDefeat,g_SNMiniFilename.Get());
 
 		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
 		{
@@ -673,7 +615,7 @@ void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTem
 
 			char hwOut[16] = "";
 			sprintf(hwOut,"%d",_hwOuts[i]);
-			WritePrivateProfileString("LAST_CUEBUS",slot,hwOut,iniFilePath);
+			WritePrivateProfileString("LAST_CUEBUS",slot,hwOut,g_SNMiniFilename.Get());
 		}
 	}
 }

@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../SnM/SNM_ChunkParserPatcher.h"
 
 // GetSetObjectState can take a very long time to read and/or write, especially with some FX.
 // To mitigate these issues when dealing with operations that require many reads/writes,
@@ -51,7 +52,10 @@ void ObjectStateCache::WriteCache()
 	for (int i = 0; i < m_obj.GetSize(); i++)
 	{
 		if (m_str.Get(i)->GetLength() && m_orig.Get(i) && strcmp(m_str.Get(i)->Get(), m_orig.Get(i)))
+		{
+			RemoveAllIds(m_str.Get(i));
 			GetSetObjectState(m_obj.Get(i), m_str.Get(i)->Get());
+		}
 	}
 
 	EmptyCache();
@@ -99,7 +103,21 @@ char* SWS_GetSetObjectState(void* obj, const char* str)
 	if (g_objStateCache)
 		ret = g_objStateCache->GetSetObjState(obj, str);
 	else
+	{
+		if (str)
+		{
+			char* tmp = _strdup(str); // unfortunately str is const char*
+			if (tmp)
+			{
+				RemoveAllIds(tmp);
+				ret = GetSetObjectState(obj, tmp);
+				free(tmp);
+			}
+			else
+				ret = GetSetObjectState(obj, str);
+		}
 		ret = GetSetObjectState(obj, str);
+	}
 
 #ifdef GOS_DEBUG
 	char debugStr[4096];

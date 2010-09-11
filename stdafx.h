@@ -71,6 +71,11 @@
 #include "../WDL/wingui/wndsize.h"
 #include "../WDL/lice/lice.h"
 #include "../WDL/dirscan.h"
+#include "../WDL/wingui/virtwnd.h"
+#include "../WDL/wingui/virtwnd-controls.h"
+#include "../WDL/assocarray.h"
+
+
 #include "../WDL/win32_utf8.h"
 #include "../WDL/lineparse.h"
 #pragma warning(default : 4996)

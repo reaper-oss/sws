@@ -257,7 +257,9 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFilename, cha
 {
 	if (_shortFilename && _filename) 
 	{
-		if (FileExists(_shortFilename))
+		if (*_shortFilename == '\0')
+			*_filename = '\0';
+		else if (FileExists(_shortFilename))
 			strncpy(_filename, _shortFilename, _maxFilename);
 		else
 			_snprintf(_filename, _maxFilename, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFilename);

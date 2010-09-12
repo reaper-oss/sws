@@ -1,17 +1,21 @@
 S&M updates:
 +Many S&M actions (if not all) run faster
-+Added new dockable view "S&M Live Configs" and MIDI CC related actions
-This is for live performance: this view allows you configuring up to 8 MIDI CC only actions "Apply live config n (MIDI CC only)".
-These actions belong to a new section "S&M Extension". See details http://forum.cockos.com/showthread.php?t=63775|here|.
-Demo http://reaper.mj-s.com/LiveConfig.gif|here|.
++Added new dockable view "S&M Live Configs" and 8 actions "Apply live config n (MIDI CC only)" where n is [1;8].
+These actions belong to a new section "S&M Extension", you can configure them in the "S&M Live Configs" window.
+This is for live performance: optimize CPU/RAM use, get rid of the 16 MIDI channel limit, etc..
+Typical workflow example: route your armed input track to the tracks you have configured in the "Live Configs" view.
+Then, while playing, you send CC messages (previoulsy learnt ) to automatically switch between those tracks/configurations 
+you have defined: mute all tracks except the active one, mute all receives from the input track except for the active one, 
+load track templates, load FX Chains and/or run custom actions when activating/deactivating a config.
+- See details http://forum.cockos.com/showthread.php?t=63775|here|.
+- Demo http://reaper.mj-s.com/LiveConfig.gif|here|.
+- Added action "SWS/S&M: Open Live Configs window..." (in the main section)
 +Build lane actions updated (REQUIRES REAPER v3.66)
-- Now, the lanes order ALWAYS match the recording order.
-- Now, these actions work with ALL media types (including MIDI in-project ones)
+- Now, the lanes order always match the recording order.
+- Now, these actions work with all media types (including MIDI in-project ones)
 - Demo http://reaper.mj-s.com/buildlanes.gif|here|.
-Limitation: for the moment, "building lanes" on *imploded* isn't supported, details http://forum.cockos.com/showpost.php?p=577538&postcount=68|here|
-Other updates related to takes:
-- Added action "SWS/S&M: Takes - Activate lane under mouse cursor"
-- v3.66's take colors are now handled
+Limitation: for the moment, "building lanes" on *imploded* takes isn't supported, details http://forum.cockos.com/showpost.php?p=577538&postcount=68|here|
+- Added related action "SWS/S&M: Takes - Activate lane under mouse cursor"
 +FX Chain view improvments
 - Paste of FX Chains in now possible (only FX Chain replacement was possible until now)
 => added actions:
@@ -31,32 +35,34 @@ SWS/S&M: Paste (replace) FX chain to selected tracks
 - Added a column "Description", double-click to enter some text. Note: it's volountary not used when filtering.
 - Safer cut/copy/paste actions
 - Tweaks
-+Added new dockable view "S&M Notes/help" for item notes, track notes and, on Win, custom/online action help (for the action being selected in the "Action" dialog box).
-Online help (link to the http://www.cockos.com/wiki/index.php/Action_List_Reference|Action List Reference|): click on the action name.
-When enabled, the lock button just allows key stroke to pass through the main window.
-S&M Notes/help & S&M Find demo: http://reaper.mj-s.com/notes_and_find.gif|here|.
++Added new dockable view "S&M Notes/help" for item notes, track notes and, on Win, custom/online action help
+(for the action being selected in the "Action" dialog box).
+- Online help (link to the http://www.cockos.com/wiki/index.php/Action_List_Reference|Action List Reference|):
+click on the action name.
+- When enabled, the lock button just allows key stroke to pass through the main window.
+- S&M Notes/help & S&M Find demo: http://reaper.mj-s.com/notes_and_find.gif|here|.
 Added related actions:
 - SWS/S&M: Open Notes/help window...
+- SWS/S&M: Notes/help - Set action help file...
+This action defines the filename where your custom notes about actions will be saved. By default this file is
+set for you, it's S&M_Action_help_en.ini (in REAPER's default resource directory, with other ini files).
+It's where *action* notes are saved, other notes (item, track and project) are saved in RPP files.
 - SWS/S&M: Notes/help - Switch to action help - WIN ONLY
 - SWS/S&M: Notes/help - Switch to item notes
 - SWS/S&M: Notes/help - Switch to track notes
 - SWS/S&M: Notes/help - Switch to project notes (disable auto updates)
-Rmk: due to an API limitation, this is *not* REAPER's project notes though these ones are also saved in RPP files.
-- SWS/S&M: Notes/help - Set action help file...
-This action sets the filename where your custom notes about actions will be saved (so that you can have different ones, 
-e.g. multi-language). By default this file is set for you, it's S&M_Action_help_en.ini (in REAPER's default resource 
-directory, with other ini files). It's where *action* notes are saved, other notes (item, track and project) are saved 
-in RPP files.
+Rmk: this is not REAPER's project notes
 - SWS/S&M: Notes/help - Toggle lock
 +Added new dockable view "S&M Find" (bound to Ctrl-F) with find all, previous & next buttons.
 Simple: when something matches, it's selected. The available search scopes are: item names, item names (all takes),
 media filenames, media filenames (all takes), item notes, track notes, track names (in case you're drunk) and marker/region names.
+- Added acion "SWS/S&M Find..."
 +Updated SWS Autocolor view: now also features auto track icon
-Added a column "Icon" in the view (right-click in this column or double-click it to set an icon filename) and a tick box "Enable auto icon".
-Also added action "SWS/S&M Toggle auto icon enable". BTW, the view has been renamed into "SWS Auto color/icon".
-Demo http://reaper.mj-s.com/autoicon.gif|here|.
-Rmk: your current color configurations will be preserved when upgrading..
-+Added action "Select project (MIDI CC only)", 
+- Added a column "Icon" in the view (right-click in this column or double-click it to set an icon filename) and a tick box "Enable auto icon".
+- Added action "SWS/S&M Toggle auto icon enable".
+- Demo http://reaper.mj-s.com/autoicon.gif|here|.
+- Current color configurations will be preserved when upgrading
++Added action "Select project (MIDI CC only)",
 Remarks: this action belong to the "S&M section". Learn: absolute CC only. Only the last "stable" CC is processed (i.e. doesn't stuck REAPER).
 +Track folders actions
 - SWS/S&M: Save selected tracks folder states
@@ -89,11 +95,11 @@ See details http://forum.cockos.com/showthread.php?t=61929|here|. ALR: http://ww
 +Implemented FRs: 68, 166, 170, part of 19, most part of 105
 +Fixes:
 Issue 182: fixed strange S&M.ini location on OSX
-Issue 172: fixed slow S&M actions with certain plugins and/or massive in-project items. Background effort started a long time ago..
+Issue 172: fixed slow S&M actions with certain plugins and/or massive in-project items.
 Issue 164: fixed possible crash in reaConsole
 Isuue 163: SWS snapshots crash, fix still TBC
 Issue 174: S&M paste routing/sends/receives actions only paste to the 1st selected track
-Issue 169: deprecated Xen's actions "Delete selected item and source media (immediately!)" (and similar ones)
+Issue 169: deprecated Xen's actions "Delete selected item and source media (immediately!)" and similar ones
 => added actions:
 - SWS/S&M: Delete selected items' takes and source files (prompt, no undo)
 - SWS/S&M: Delete selected items' takes and source files (no undo)
@@ -101,11 +107,9 @@ Issue 169: deprecated Xen's actions "Delete selected item and source media (imme
 - SWS/S&M: Delete active take and source file in selected items (no undo)
 On Win, source files are moved to the recycle bin.
 +Misc updates:
-- Better management of the "S&M" ini file
-=> The S&M.ini file is now located in REAPER's default resource path (i.e. with other ini files), it was "<REAPER_install_dir>/Plugins/" before
-=> This file is moved automatically, your current configurations are kept
-- Slight action renaming (mispelling, better display order)
-- Tagged some Xen's action as "Deprecated": replaced or overexceeded.
+- Better management of the "S&M" ini file: it's now located in REAPER's default resource path (i.e. with
+other ini files) rather than "<REAPER_install_dir>/Plugins/"
+- Many tweaks
 
 !v1.7.3 #4 (August 29, 2010)
 Fixed item fade actions:

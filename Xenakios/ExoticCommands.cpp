@@ -944,38 +944,17 @@ bool g_RandItemPosFirstRun = true;
 
 void DoRandomizePositions2()
 {
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	int numItems;
-	bool ItemSelected=false;
-	double ItemPosition=-666;
-	double NewPosition=0.0;
-	double RandomSpread=0.5;
-	RandomSpread=g_last_RandomizeItemPosParams.RandRange;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	double dSpread = g_last_RandomizeItemPosParams.RandRange;
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				ItemPosition=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
-				double PositionDelta=-(RandomSpread)+(1.0/RAND_MAX)*rand()*(2.0*RandomSpread);
-				NewPosition=ItemPosition+PositionDelta;
-				if (NewPosition<0.0) NewPosition=0.0;
-				GetSetMediaItemInfo(CurItem,"D_POSITION",&NewPosition);
-			}
-
-		}
+		MediaItem* mi = GetSelectedMediaItem(NULL, i);
+		double dItemPos = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
+		dItemPos += -dSpread + (2.0/RAND_MAX)*rand()*dSpread;
+		GetSetMediaItemInfo(mi, "D_POSITION", &dItemPos);
 	}
-	Undo_OnStateChangeEx("Randomize Item Positions",4,-1);
+
 	UpdateTimeline();
+	Undo_OnStateChangeEx("Randomize Item Positions",4,-1);
 }
 
 WDL_DLGRET RandomizeItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)

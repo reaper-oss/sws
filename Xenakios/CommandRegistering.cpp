@@ -251,6 +251,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Stop current media item preview" }, "SWS_STOPPREVIEW", DoPreviewItem, NULL, 1 },
 	{ { DEFACCEL, "Xenakios/SWS: Preview selected media item (toggle)" }, "SWS_PREVIEWTOGGLE", DoPreviewItem, NULL, 2 },
 	{ { DEFACCEL, "Xenakios/SWS: Preview selected media item at track fader volume" }, "SWS_PREVIEWFADER", DoPreviewItem, NULL, 3 },
+	{ { DEFACCEL, "Xenakios/SWS: Preview selected media item at track fader volume (toggle)" }, "SWS_PREVIEWFADERTOG", DoPreviewItem, NULL, 4 },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor right configured pixels" }, "XENAKIOS_MOVECURRIGHTCONF", DoMoveCurConfPixRight,	"Move cursor right configured pixels", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor left configured pixels" }, "XENAKIOS_MOVECURRLEFTCONF", DoMoveCurConfPixLeft,	"Move cursor left configured pixels", },
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor right configured pixels, creating time selection" }, "XENAKIOS_MOVECURRIGHTCONFCTS", DoMoveCurConfPixRightCts,	"Move cursor right configured pixels,, creating time selection", },

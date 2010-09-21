@@ -493,6 +493,7 @@ void ItemPreviewSlice()
 // 1: stop
 // 2: toggle
 // 3: start, but use track fader trim
+// 4: toggle, but use track fader trim
 void DoPreviewItem(COMMAND_T* t)
 {
 	if (g_itemPreviewPlaying)
@@ -503,7 +504,7 @@ void DoPreviewItem(COMMAND_T* t)
 		GetSetMediaItemInfo(g_previewItem, "B_MUTE", &g_bItemMuteState);
 		UpdateItemInProject(g_previewItem);
 		delete g_ItemPreview.src;
-		if (t->user == 2)
+		if (t->user == 2 || t->user == 4)
 			return;
 	}
 
@@ -534,7 +535,7 @@ void DoPreviewItem(COMMAND_T* t)
 				g_ItemPreview.loop = false;
 			}
 
-			if (t->user == 3) // Use track's fader level for volume
+			if (t->user == 3 || t->user == 4) // Use track's fader level for volume
 			{
 				MediaTrack* tr = (MediaTrack*)GetSetMediaItemInfo(g_previewItem, "P_TRACK", NULL);
 				g_ItemPreview.volume = *(double*)GetSetMediaTrackInfo(tr, "D_VOL", NULL);
@@ -562,12 +563,12 @@ void DoStopPreviewItem(COMMAND_T*)
 
 void DoDumpActionsWindow(COMMAND_T*)
 {
-#ifdef _WIN32
-	std::ofstream os("C:/ReaperActionlist.txt");
-#else
-	std::ofstream os("ReaperActionlist.txt");
+#ifndef _WIN32
+	MessageBox(g_hwndParent, "Not implemented for OSX.", "Action Unavailable", MB_OK);
+	return;
 #endif
-	
+
+	std::ofstream os("C:/ReaperActionlist.txt");
 	os << "Shortcut\t\t\tDescription" << "\n";
 	HWND hActionsWindow= FindWindowEx(NULL,NULL,"#32770","Actions");
 	if (hActionsWindow!=0)

@@ -269,7 +269,7 @@ END
 IDD_AUTOCOLOR DIALOGEX 0, 0, 229, 169
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_TOOLWINDOW
-CAPTION "SWS Auto color/icon"
+CAPTION "SWS Auto Color"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,3,3,223,125
@@ -277,7 +277,6 @@ BEGIN
     PUSHBUTTON      "&Remove",IDC_REMOVE,33,132,42,14
     CONTROL         "Color",IDC_COLOR,"Button",BS_OWNERDRAW | WS_TABSTOP,79,132,16,14,WS_EX_STATICEDGE
     CONTROL         "Enable auto coloring",IDC_ENABLED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,156,81,10
-    CONTROL         "Enable auto icon",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,90,156,81,10
     PUSHBUTTON      "&Apply",IDC_APPLY,188,152,38,14
     EDITTEXT        IDC_EDIT,109,30,59,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | NOT WS_BORDER
 END
@@ -1412,8 +1411,7 @@ IDB_SNM                 PNG                     "SnM.png"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
-
+#include "version.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

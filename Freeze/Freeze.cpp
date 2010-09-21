@@ -35,10 +35,80 @@
 //#define TESTCODE
 
 #ifdef TESTCODE
+#include "Prompt.h"
 #pragma message("TESTCODE Defined")
 void TestFunc(COMMAND_T* = NULL)
 {
 }
+
+void PrintGuids(COMMAND_T* = NULL)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		char debugStr[256];
+		char guidStr[64];
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		guidToString((GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL), guidStr);
+		sprintf(debugStr, "Track %d %s GUID %s\n", i, (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), guidStr);
+#ifdef _WIN32
+		OutputDebugString(debugStr);
+#else
+		printf(debugStr);
+#endif
+	}
+}
+
+void PrintSubMenu(HMENU subMenu)
+{
+	static int iDepth = 0;
+	char debugStr[256];
+	char menuStr[64];
+	MENUITEMINFO mi={sizeof(MENUITEMINFO),};
+	mi.fMask = MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_FTYPE | MIIM_STRING;
+	mi.dwTypeData = menuStr;
+
+	for (int i = 0; i < GetMenuItemCount(subMenu); i++)
+	{
+		mi.cch = 64;
+		GetMenuItemInfo(subMenu, i, true, &mi);
+
+		for (int j = 0; j < iDepth; j++)
+			OutputDebugString("  ");
+		if (mi.fType & MFT_SEPARATOR)
+			OutputDebugString("---------------------\n");
+		else if (mi.hSubMenu)
+		{
+			sprintf(debugStr, "%s\n", mi.dwTypeData ? mi.dwTypeData : "<null>");
+			OutputDebugString(debugStr);
+			iDepth++;
+			PrintSubMenu(mi.hSubMenu);
+			iDepth--;
+		}
+		else
+		{
+			sprintf(debugStr, "%5d %s %s\n", mi.wID, mi.fState == MFS_CHECKED ? "*" : (mi.fState == MFS_DISABLED ? "-" : " "), mi.dwTypeData ? mi.dwTypeData : "<null>");
+			OutputDebugString(debugStr);
+		}
+	}
+}
+
+// TODO: replace g_hwndParent with GetMainHwnd()
+void PrintMenu(COMMAND_T* = NULL)
+{
+	PrintSubMenu(GetMenu(g_hwndParent));
+}
+
+void RunAction(COMMAND_T* = NULL)
+{
+	static char resp[10] = "";
+	if (PromptUserForString(GetMainHwnd(), "Enter action #", resp, 10))
+	{
+		int iAction = atoi(resp);
+		if (iAction > 0)
+			Main_OnCommand(iAction, 0);
+	}
+}
+
 #endif
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
@@ -264,7 +334,11 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Select item(s) with saved state on selected track(s)" },	"SWS_SELWITHSTATE",		SelItemsWithState,	},
 
 #ifdef TESTCODE
-	{ { DEFACCEL, "SWS: Test" }, "SWS_TEST",  TestFunc, NULL, },
+	{ { DEFACCEL, "SWS: Test" }, "SWS_TEST",  TestFunc, },
+	{ { DEFACCEL, "SWS: Print track GUIDs" }, "SWS_PRINTGUIDS",  PrintGuids, },
+	{ { DEFACCEL, "SWS: Print menu tree" }, "SWS_PRINTMENU",  PrintMenu, },
+	{ { DEFACCEL, "SWS: Run action..." }, "SWS_RUNACTION",  RunAction, },
+
 #endif
 
 	{ {}, LAST_COMMAND, }, // Denote end of table

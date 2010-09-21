@@ -1,115 +1,107 @@
-S&M updates:
-+Many S&M actions (if not all) run faster
-+Added new dockable view "S&M Live Configs" and 8 actions "Apply live config n (MIDI CC only)" where n is [1;8].
-These actions belong to a new section "S&M Extension", you can configure them in the "S&M Live Configs" window.
-This is for live performance: optimize CPU/RAM use, get rid of the 16 MIDI channel limit, etc..
-Typical workflow example: route your armed input track to the tracks you have configured in the "Live Configs" view.
-Then, while playing, you send CC messages (previoulsy learnt ) to automatically switch between those tracks/configurations 
-you have defined: mute all tracks except the active one, mute all receives from the input track except for the active one, 
-load track templates, load FX Chains and/or run custom actions when activating/deactivating a config.
-- See details http://forum.cockos.com/showthread.php?t=63775|here|.
-- Demo http://reaper.mj-s.com/LiveConfig.gif|here|.
-- Added action "SWS/S&M: Open Live Configs window..." (in the main section)
-+Build lane actions updated (REQUIRES REAPER v3.66)
-- Now, the lanes order always match the recording order.
-- Now, these actions work with all media types (including MIDI in-project ones)
-- Demo http://reaper.mj-s.com/buildlanes.gif|here|.
-Limitation: for the moment, "building lanes" on *imploded* takes isn't supported, details http://forum.cockos.com/showpost.php?p=577538&postcount=68|here|
-- Added related action "SWS/S&M: Takes - Activate lane under mouse cursor"
-+FX Chain view improvments
-- Paste of FX Chains in now possible (only FX Chain replacement was possible until now)
-=> added actions:
+!v1.8.0 #1 (September 20, 2010)
+<b>REQUIRES REAPER v3.66 - These are the released changes from Beta #6! - Mostly S&M updates:</b>
+
+Added new dockable view "S&M Live Configs" and 8 actions "Apply live config n (MIDI CC only)" where n is [1,8].
+This is for live performance: optimize CPU/RAM use, get rid of the 16 MIDI channel limit, etc.
+Typical workflow example: route your armed input track to the tracks you have configured in the "Live Configs" view.  Then, while playing, you send CC messages (previoulsy learnt) to automatically switch between those tracks/configurations you have defined: mute all tracks except the active one, mute all receives from the input track except for the active one, load track templates, load FX Chains and/or run custom actions when activating/deactivating a config.
+These actions belong to a new section "S&M Extension". See details http://forum.cockos.com/showthread.php?t=63775|here|.  Demo http://reaper.mj-s.com/LiveConfig.gif|here|.
+Added action "SWS/S&M: Open Live Configs window..." (in the main section)
+
+Build lane actions updated:
++Now, the lanes order always match the recording order and work with all media types (including MIDI in-project ones).
++Demo http://reaper.mj-s.com/buildlanes.gif|here|.
++Limitation: for the moment, "building lanes" on *imploded* isn't supported, details http://forum.cockos.com/showpost.php?p=577538&postcount=68|here|.
++Added action "SWS/S&M: Takes - Activate lane under mouse cursor"
+
+S&M FX Chain view improvments:
++Paste of FX Chains in now possible (only FX Chain replacement was possible until now)
++External drag'n'drop of FX Chains (e.g. drag from an external explorer, drop into the view)
++Internal drag'n'drop of FX Chains (drag from the view, drop in a track) - WIN ONLY
++Added actions:
 SWS/S&M: Paste FX chain to selected items
 SWS/S&M: Paste FX chain to selected items, all takes
 SWS/S&M: Paste FX chain to selected tracks
-=> renamed actions, added "(replace)" to make things clear:
++Renamed actions, added "(replace)" to make things clear:
 SWS/S&M: Paste (replace) FX chain to selected items
 SWS/S&M: Paste (replace) FX chain to selected items, all takes
 SWS/S&M: Paste (replace) FX chain to selected tracks
-- External drag'n'drop of FX Chains (e.g. drag from an external explorer, drop into the view)
-- Internal drag'n'drop of FX Chains (drag from the view, drop in a track) - WIN ONLY
-- Unlimited number of slots
-=> added popup items "Add slot", "Insert slot" and "Delete slots"
-- Text filter added, demo http://stash.reaper.fm/6083/FXChainFiltering.gif|here|
-- Simplified display in the "Path" column (when using REAPER's FX Chains default path)
-- Added a column "Description", double-click to enter some text. Note: it's volountary not used when filtering.
-- Safer cut/copy/paste actions
-- Tweaks
-+Added new dockable view "S&M Notes/help" for item notes, track notes and, on Win, custom/online action help
-(for the action being selected in the "Action" dialog box).
-- Online help (link to the http://www.cockos.com/wiki/index.php/Action_List_Reference|Action List Reference|):
-click on the action name.
-- When enabled, the lock button just allows key stroke to pass through the main window.
-- S&M Notes/help & S&M Find demo: http://reaper.mj-s.com/notes_and_find.gif|here|.
-Added related actions:
-- SWS/S&M: Open Notes/help window...
-- SWS/S&M: Notes/help - Set action help file...
-This action defines the filename where your custom notes about actions will be saved. By default this file is
-set for you, it's S&M_Action_help_en.ini (in REAPER's default resource directory, with other ini files).
-It's where *action* notes are saved, other notes (item, track and project) are saved in RPP files.
-- SWS/S&M: Notes/help - Switch to action help - WIN ONLY
-- SWS/S&M: Notes/help - Switch to item notes
-- SWS/S&M: Notes/help - Switch to track notes
-- SWS/S&M: Notes/help - Switch to project notes (disable auto updates)
-Rmk: this is not REAPER's project notes
-- SWS/S&M: Notes/help - Toggle lock
-+Added new dockable view "S&M Find" (bound to Ctrl-F) with find all, previous & next buttons.
-Simple: when something matches, it's selected. The available search scopes are: item names, item names (all takes),
-media filenames, media filenames (all takes), item notes, track notes, track names (in case you're drunk) and marker/region names.
-- Added acion "SWS/S&M Find..."
-+Updated SWS Autocolor view: now also features auto track icon
-- Added a column "Icon" in the view (right-click in this column or double-click it to set an icon filename) and a tick box "Enable auto icon".
-- Added action "SWS/S&M Toggle auto icon enable".
-- Demo http://reaper.mj-s.com/autoicon.gif|here|.
-- Current color configurations will be preserved when upgrading
-+Added action "Select project (MIDI CC only)",
-Remarks: this action belong to the "S&M section". Learn: absolute CC only. Only the last "stable" CC is processed (i.e. doesn't stuck REAPER).
-+Track folders actions
-- SWS/S&M: Save selected tracks folder states
-- SWS/S&M: Restore selected tracks folder states
-- SWS/S&M: Set selected tracks folder states to on
-- SWS/S&M: Set selected tracks folder states to off
-note: the 2 previous ones are different from native action "Cycle track folder state"
-- SWS/S&M: Save selected tracks folder compact states
-- SWS/S&M: Restore selected tracks folder compact states
-+Arming envelopes actions
-- SWS/S&M: Toggle arming of all active envelopes for selected tracks
-- SWS/S&M: Arm all active envelopes for selected tracks
-- SWS/S&M: Disarm all active envelopes for selected tracks
-- SWS/S&M: Toggle arming of volume envelope for selected tracks
-- SWS/S&M: Toggle arming of pan envelope for selected tracks
-- SWS/S&M: Toggle arming of mute envelope for selected tracks
-- SWS/S&M: Toggle arming of all receive volume envelopes for selected tracks
-- SWS/S&M: Toggle arming of all receive pan envelopes for selected tracks
-- SWS/S&M: Toggle arming of all receive mute envelopes for selected tracks
-- SWS/S&M: Toggle arming of all plugin envelopes for selected tracks
-Remarks:
-- these actions only apply for ACTIVE envelopes (i.e. these actions don't create envelopes)
-- send envelopes are not (yet) managed, use receive envelopes instead
-- as these toggle actions act on several tracks, the reported toggle state is a "best effort" one
-+Action List Reference summaries auto generation (Wiki copy/pastable) - Win only
-See details http://forum.cockos.com/showthread.php?t=61929|here|. ALR: http://www.cockos.com/wiki/index.php/Action_List_Reference|here|.
-- SWS/S&M: Save ALR Wiki summary (w/o extensions)
-- SWS/S&M: Save ALR Wiki summary (SWS/Xenakios/S&M extensions only)
-- SWS/S&M: Save ALR Wiki summary (FNG extensions only)
-+Implemented FRs: 68, 166, 170, part of 19, most part of 105
-+Fixes:
-Issue 182: fixed strange S&M.ini location on OSX
-Issue 172: fixed slow S&M actions with certain plugins and/or massive in-project items.
-Issue 164: fixed possible crash in reaConsole
-Isuue 163: SWS snapshots crash, fix still TBC
-Issue 174: S&M paste routing/sends/receives actions only paste to the 1st selected track
-Issue 169: deprecated Xen's actions "Delete selected item and source media (immediately!)" and similar ones
-=> added actions:
-- SWS/S&M: Delete selected items' takes and source files (prompt, no undo)
-- SWS/S&M: Delete selected items' takes and source files (no undo)
-- SWS/S&M: Delete active take and source file in selected items (prompt, no undo)
-- SWS/S&M: Delete active take and source file in selected items (no undo)
-On Win, source files are moved to the recycle bin.
-+Misc updates:
-- Better management of the "S&M" ini file: it's now located in REAPER's default resource path (i.e. with
-other ini files) rather than "<REAPER_install_dir>/Plugins/"
-- Many tweaks
++Added popup items "Add slot", "Insert slot" and "Delete slots"
++Text filter added, demo http://stash.reaper.fm/6083/FXChainFiltering.gif|here|
++Simplified display in the "Path" column (when using REAPER's FX Chains default path)
++Added a column "Description", double-click to enter some text. Note: it's volountary not used when filtering.
++Safer cut/copy/paste actions
+
+Added new dockable view "S&M Notes/help" for item notes, track notes and, on Win, custom/online action help:
++Online help (link to the http://www.cockos.com/wiki/index.php/Action_List_Reference|Action List Reference|): click on the action name.
++When enabled, the lock button just allows key stroke to pass through the main window.
++S&M Notes/help & S&M Find demo: http://reaper.mj-s.com/notes_and_find.gif|here|.
++Added related actions:
+SWS/S&M: Open Notes/help window...
+SWS/S&M: Notes/help - Switch to action help - WIN ONLY
+SWS/S&M: Notes/help - Switch to item notes
+SWS/S&M: Notes/help - Switch to track notes
+SWS/S&M: Notes/help - Switch to project notes (disable auto updates)  (<i>Note this is *not* REAPER's project notes.</i>)
+SWS/S&M: Notes/help - Set action help file...
+<i>This action sets the filename where your custom notes about actions will be saved (so that you can have different ones, e.g. multi-language). By default this file is set for you, it's S&M_Action_help_en.ini (in REAPER's default resource directory, with other ini files). It's where *action* notes are saved, other notes (item, track and project) are saved in RPP files.</i>
+SWS/S&M: Notes/help - Toggle lock
+
+Added new dockable view "S&M Find" (bound to Ctrl-F) with find all, previous & next buttons.
+Simple: when something matches, it's selected.
+The available search scopes are: item names, item names (all takes), media filenames, media filenames (all takes), item notes, track notes, track names (in case you're drunk) and marker/region names.
+
+Track folders actions:
++SWS/S&M: Save selected tracks folder states
++SWS/S&M: Restore selected tracks folder states
++SWS/S&M: Set selected tracks folder states to on
++SWS/S&M: Set selected tracks folder states to off <i>note: the 2 previous ones are different from native action "Cycle track folder state"</i>
++SWS/S&M: Save selected tracks folder compact states
++SWS/S&M: Restore selected tracks folder compact states
+
+Arming envelopes actions
++SWS/S&M: Toggle arming of all active envelopes for selected tracks
++SWS/S&M: Arm all active envelopes for selected tracks
++SWS/S&M: Disarm all active envelopes for selected tracks
++SWS/S&M: Toggle arming of volume envelope for selected tracks
++SWS/S&M: Toggle arming of pan envelope for selected tracks
++SWS/S&M: Toggle arming of mute envelope for selected tracks
++SWS/S&M: Toggle arming of all receive volume envelopes for selected tracks
++SWS/S&M: Toggle arming of all receive pan envelopes for selected tracks
++SWS/S&M: Toggle arming of all receive mute envelopes for selected tracks
++SWS/S&M: Toggle arming of all plugin envelopes for selected tracks
++Remarks:
+These actions only apply for ACTIVE envelopes (i.e. these actions don't create envelopes)
+Send envelopes are not (yet) managed, use receive envelopes instead
+As these toggle actions act on several tracks, the reported toggle state is a "best effort" one
+
+Action List Reference summaries auto generation (Wiki copy/pastable) - Win only
++See details http://forum.cockos.com/showthread.php?t=61929|here|. ALR: http://www.cockos.com/wiki/index.php/Action_List_Reference|here|.
++SWS/S&M: Save ALR Wiki summary (w/o extensions)
++SWS/S&M: Save ALR Wiki summary (SWS/Xenakios/S&M extensions only)
++SWS/S&M: Save ALR Wiki summary (FNG extensions only)
+
+Implemented FRs: Issue 166, Issue 170, part of Issue 19, most part of Issue 105
+
+Fixes:
++ Issue 163: SWS snapshots crash
++ Issue 164: fixed possible crash in reaConsole
++ Issue 169: deprecated Xen's actions "Delete selected item and source media (immediately!)" and similar ones
++ Issue 172: fixed slow S&M actions with certain plugins and/or massive in-project items
++ Issue 174: S&M paste routing/sends/receives actions only paste to the 1st selected track
++ Issue 182: fixed strange S&M.ini location on OSX
+
+Added actions:
++"Select project (MIDI CC only)" <i>Remarks: this action belong to the "S&M section". Learn: absolute CC only. Only the last "stable" CC is processed (i.e. doesn't stuck REAPER).</i>
++SWS/S&M: Delete selected items' takes and source files (prompt, no undo)
++SWS/S&M: Delete selected items' takes and source files (no undo)
++SWS/S&M: Delete active take and source file in selected items (prompt, no undo)
++SWS/S&M: Delete active take and source file in selected items (no undo) (<i>On Win, source files are moved to the recycle bin.</i>)
++Preview selected media item at track fader volume (toggle)
+
+Misc updates:
++Better management of the "S&M" ini file: it's now located in REAPER's default resource path (i.e. with other ini files) rather than "<REAPER_install_dir>/Plugins/"
++Slight action renaming (mispelling, better display order)
++Auto-icon from betas is turned off due to too many issues.
++Fixed action "Randomize item positions"
 
 !v1.7.3 #4 (August 29, 2010)
 Fixed item fade actions:

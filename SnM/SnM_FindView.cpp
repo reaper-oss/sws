@@ -367,7 +367,7 @@ bool SNM_FindWnd::FindMarkerRegion(int _dir)
 
 		int id, x = 0;
 		bool bR;
-		double dPos, dRend, dMinMaxPos = _dir < 0 ? -1.0 : 0xFFFFFFFFFF;
+		double dPos, dRend, dMinMaxPos = _dir < 0 ? -DBL_MAX : DBL_MAX;
 		char *cName;
 		while ((x=EnumProjectMarkers(x, &bR, &dPos, &dRend, &cName, &id)))
 		{

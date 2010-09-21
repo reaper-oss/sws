@@ -514,7 +514,14 @@ INT_PTR WINAPI doFormatDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 				char str[256];
 				GetWindowText(format, str, 256);
 				if (str[0] == 'a' || str[0] == 'r' || str[0] == 'm')
-					WritePrivateProfileString(SWS_INI, EXPORT_FORMAT_KEY, str, get_ini_file());
+				{
+					// SWS - Note that if the user decides to start and end the format string with
+					// double quotes (very unlikely) GetPrivateProfileString later will strip them out :(
+					// So, add our own just in case.
+					char str2[258];
+					sprintf(str2, "\"%s\"", str);
+					WritePrivateProfileString(SWS_INI, EXPORT_FORMAT_KEY, str2, get_ini_file());
+				}
 				EndDialog(hwndDlg, 0);
 			}
 			break;

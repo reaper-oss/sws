@@ -30,10 +30,9 @@
 class SWS_AutoColorItem
 {
 public:
-	SWS_AutoColorItem(const char* str, int col, const char* icon):m_str(str),m_col(col),m_icon(icon) {}
+	SWS_AutoColorItem(const char* str, int col):m_str(str),m_col(col) {}
 	WDL_String m_str;
 	int m_col;
-	WDL_String m_icon;
 };
 
 class SWS_AutoColorTrack
@@ -54,7 +53,6 @@ protected:
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	void OnItemDblClk(LPARAM item, int iCol);
 	void OnItemSelChanged(LPARAM item, int iState);
 };
 
@@ -63,10 +61,10 @@ class SWS_AutoColorWnd : public SWS_DockWnd
 public:
 	SWS_AutoColorWnd();
 	void Update();
-	void OnCommand(WPARAM wParam, LPARAM lParam);
 	
 protected:
 	void OnInitDlg();
+	void OnCommand(WPARAM wParam, LPARAM lParam);
 #ifndef _WIN32
 	bool m_bSettingColor;
 	void OnTimer();

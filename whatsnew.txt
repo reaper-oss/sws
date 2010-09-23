@@ -1,4 +1,4 @@
-!v1.8.0 #2 (September 22, 2010)
+!v1.8.0 #3 (September 22, 2010)
 Issue 90: Add "SWS: Split items at time sel, edit cursor, or mouse cursor"
 Issue 176: Add "SWS: Wait for bar/beat" actions for macros
 S&M Notes window: Disallow adding text if there's no selection

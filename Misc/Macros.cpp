@@ -50,7 +50,12 @@ void WaitAction(COMMAND_T* t)
 		double dStop = TimeMap2_beatsToTime(NULL, dBeat, &iMeasure) + dOffset;
 		
 		while(GetPlayPosition2() < dStop && GetPlayState())
+		{
+			MSG msg;
+			while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+				DispatchMessage(&msg);
 			Sleep(1);
+		}
 	}
 }
 

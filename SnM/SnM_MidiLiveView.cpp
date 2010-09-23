@@ -1132,7 +1132,7 @@ void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HW
 		// with HW knobs, faders, ..) but just process the last "stable" one
 		// => we do this thanks to SNM_ScheduledJob
 		SNM_MidiLiveScheduledJob* job = 
-			new SNM_MidiLiveScheduledJob(_ct->user, 250, _ct->user, _val, _valhw, _relmode, _hwnd);
+			new SNM_MidiLiveScheduledJob((int)_ct->user, 250, (int)_ct->user, _val, _valhw, _relmode, _hwnd);
 		AddOrReplaceScheduledJob(job);
 	}
 }

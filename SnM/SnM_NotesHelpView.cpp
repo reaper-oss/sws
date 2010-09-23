@@ -1088,7 +1088,7 @@ bool IsNotesHelpViewEnabled(COMMAND_T*){
 }
 
 void SwitchNotesHelpType(COMMAND_T* _ct){
-	g_pNotesHelpWnd->SetType(_ct->user);
+	g_pNotesHelpWnd->SetType((int)_ct->user);
 }
 
 void ToggleNotesHelpLock(COMMAND_T*) {

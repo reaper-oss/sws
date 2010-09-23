@@ -58,6 +58,8 @@
 #ifndef _SNM_CHUNKPARSERPATCHER_H_
 #define _SNM_CHUNKPARSERPATCHER_H_
 
+#pragma warning(disable : 4267) // size_t to int warnings in x64
+
 //#define _SNM_DEBUG
 
 

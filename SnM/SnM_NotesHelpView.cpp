@@ -692,6 +692,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			{
 				//JFB would be nice to display the project name here, alas..
 				strcpy(str, "");
+				bNoSelection = false;
 			}
 			break;
 			default:
@@ -867,8 +868,7 @@ void SetActionHelpFilename(COMMAND_T*)
 	//JFB BrowseForSaveFile() always asks for overwrite: painful!
 	char filename[BUFFER_SIZE] = "";
 	if (g_pNotesHelpWnd && BrowseForSaveFile("Set action help file",
-			g_pNotesHelpWnd->getActionHelpFilename(), "", 
-			"INI files\0*.ini\0", filename, BUFFER_SIZE))
+			g_pNotesHelpWnd->getActionHelpFilename(), "", "INI files\0*.ini\0", filename, BUFFER_SIZE))
 	{
 		g_pNotesHelpWnd->setActionHelpFilename(filename);
 	}

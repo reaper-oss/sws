@@ -36,24 +36,38 @@ void WaitAction(COMMAND_T* t)
 	if (iPlayState && !(iPlayState & 2)) // playing/recording, not paused
 	{
 		int iMeasure;
-		double dBeat = TimeMap2_timeToBeats(NULL, GetPlayPosition(), &iMeasure, NULL, NULL, NULL);
-		if (t->user == 0)
-		{	// Bar
+		double dStart = GetPlayPosition();
+		double dBeat = TimeMap2_timeToBeats(NULL, dStart, &iMeasure, NULL, NULL, NULL);
+		double dStop;
+		switch (t->user)
+		{
+		case 0: // Bar
 			iMeasure++;
 			dBeat = 0.0;
-		}	// Beat
-		else
+			dStop = TimeMap2_beatsToTime(NULL, dBeat, &iMeasure);
+			break;
+		case 1:
 			dBeat = (double)((int)dBeat + 1);
+			dStop = TimeMap2_beatsToTime(NULL, dBeat, &iMeasure);
+			break;
+		case 2:
+			double t1, t2;
+			GetSet_LoopTimeRange(false, true, &t1, &t2, false);
+			if (t1 == t2)
+				return;
+			dStop = t2;
+			break;
+		}
 
-		// GetPlayPosition doesn't work in this loop, unlike GetPlayPosition2
-		double dOffset = GetPlayPosition2() - GetPlayPosition();
-		double dStop = TimeMap2_beatsToTime(NULL, dBeat, &iMeasure) + dOffset;
-		
-		while(GetPlayPosition2() < dStop && GetPlayState())
+		// Check for cursor going past stop, user stopping, and looping around
+		while(GetPlayPosition() < dStop && GetPlayState() && GetPlayPosition() >= dStart)
 		{
+#ifdef _WIN32
+ 			// Keep the UI updating
 			MSG msg;
 			while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
 				DispatchMessage(&msg);
+#endif
 			Sleep(1);
 		}
 	}
@@ -61,8 +75,9 @@ void WaitAction(COMMAND_T* t)
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS: Wait for next bar (if playing)" },			  "SWS_BARWAIT",		WaitAction, NULL, 0 },
-	{ { DEFACCEL, "SWS: Wait for next beat (if playing)" },			  "SWS_BEATWAIT",		WaitAction, NULL, 1 },
+	{ { DEFACCEL, "SWS: Wait for next bar (if playing)" },			"SWS_BARWAIT",		WaitAction, NULL, 0 },
+	{ { DEFACCEL, "SWS: Wait for next beat (if playing)" },			"SWS_BEATWAIT",		WaitAction, NULL, 1 },
+	{ { DEFACCEL, "SWS: Wait until end of loop (if playing)" },		"SWS_LOOPWAIT",		WaitAction, NULL, 2 },
 	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

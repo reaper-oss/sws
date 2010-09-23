@@ -448,6 +448,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Misc\Macros.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\MarkerActions\MarkerActions.cpp"
 				>
 			</File>
@@ -695,6 +699,10 @@
 			</File>
 			<File
 				RelativePath=".\license.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\Macros.h"
 				>
 			</File>
 			<File

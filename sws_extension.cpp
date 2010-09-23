@@ -380,6 +380,7 @@ extern "C"
 		IMPAPI(Audio_RegHardwareHook);
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
+		IMPAPI(CountMediaItems);
 		IMPAPI(CountSelectedMediaItems);
 		IMPAPI(CountSelectedTracks);
 		IMPAPI(CountTakes);
@@ -422,6 +423,7 @@ extern "C"
 		IMPAPI(GetLastTouchedTrack);
 		IMPAPI(GetMainHwnd);
 		IMPAPI(GetMasterTrack);
+		IMPAPI(GetMediaItem);
 		IMPAPI(GetMediaItem_Track);
 		IMPAPI(GetMediaItemInfo_Value);
 		IMPAPI(GetMediaItemNumTakes);
@@ -434,6 +436,8 @@ extern "C"
 		IMPAPI(GetPeaksBitmap);
 		IMPAPI(GetPlayPosition);
 		IMPAPI(GetPlayPosition2);
+		IMPAPI(GetPlayPositionEx);
+		IMPAPI(GetPlayPosition2Ex);
 		IMPAPI(GetPlayState);
 		IMPAPI(GetProjectPath);
 		IMPAPI(GetProjectTimeSignature2);
@@ -520,7 +524,9 @@ extern "C"
 		IMPAPI(TimeMap_GetDividedBpmAtTime);
 		IMPAPI(TimeMap_QNToTime);
 		IMPAPI(TimeMap_timeToQN);
+		IMPAPI(TimeMap2_beatsToTime);
 		IMPAPI(TimeMap2_QNToTime);
+		IMPAPI(TimeMap2_timeToBeats);
 		IMPAPI(TrackFX_FormatParamValue);
 		IMPAPI(TrackFX_GetChainVisible);
 		IMPAPI(TrackFX_GetFloatingWindow);

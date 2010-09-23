@@ -50,6 +50,20 @@ bool AreThereSelItemsInTimeSel()
 	return false;
 }
 
+bool AreThereItemsUnderCursor(bool bSel)
+{
+	double dCursor = GetCursorPosition();
+	for (int i = 0; i < (bSel ? CountSelectedMediaItems(0) : CountMediaItems(0)); i++)
+	{
+		MediaItem* item = bSel ? GetSelectedMediaItem(0, i) : GetMediaItem(0, i);
+		double dItemStart = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+		double dItemEnd   = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL) + dItemStart;
+		if (dItemStart < dCursor && dItemEnd > dCursor)
+				return true;
+	}
+	return false;
+}
+
 void SmartCopy(COMMAND_T*)
 {
 	if (GetCursorContext() == 1 && AreThereSelItemsInTimeSel())
@@ -88,6 +102,16 @@ void SmartSplit(COMMAND_T*)
 		Main_OnCommand(40012, 0); // Std split at cursor
 }
 
+void TripleSplit(COMMAND_T*)
+{
+	if (AreThereSelItemsInTimeSel())
+		Main_OnCommand(40061, 0); // Split at time sel
+	else if (AreThereItemsUnderCursor(false))
+		Main_OnCommand(40012, 0); // Std split at cursor
+	else
+		Main_OnCommand(40746, 0); // Split at mouse cursor
+}
+
 void SmartUnsel(COMMAND_T*)
 {
 	switch(GetCursorContext())
@@ -121,13 +145,14 @@ void SafeTiemSel(COMMAND_T*)
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS: Copy items/tracks/env, obeying time sel" },				  "SWS_SMARTCOPY",      SmartCopy, NULL, },
-	{ { DEFACCEL, "SWS: Cut items/tracks/env, obeying time sel" },				  "SWS_SMARTCUT",       SmartCut, NULL, },
-	{ { DEFACCEL, "SWS: Remove items/tracks/env, obeying time sel" },			  "SWS_SMARTREMOVE",    SmartRemove, NULL, },
-	{ { DEFACCEL, "SWS: Split items at time sel (if exists), else at edit cursor" },  "SWS_SMARTSPLIT", SmartSplit, NULL, },
-	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points (depending on focus)" }, "SWS_SMARTUNSEL", SmartUnsel, NULL, },
-	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points" },				  "SWS_UNSELALL",		UnselAll, NULL, },
-	{ { DEFACCEL, "SWS: Set time sel to sel item(s) if no current time sel" },	  "SWS_SAFETIMESEL",    SafeTiemSel, NULL, },
+	{ { DEFACCEL, "SWS: Copy items/tracks/env, obeying time sel" },						"SWS_SMARTCOPY",	SmartCopy, NULL, },
+	{ { DEFACCEL, "SWS: Cut items/tracks/env, obeying time sel" },						"SWS_SMARTCUT",		SmartCut, NULL, },
+	{ { DEFACCEL, "SWS: Remove items/tracks/env, obeying time sel" },					"SWS_SMARTREMOVE",	SmartRemove, NULL, },
+	{ { DEFACCEL, "SWS: Split items at time sel (if exists), else at edit cursor" },	"SWS_SMARTSPLIT",	SmartSplit, NULL, },
+	{ { DEFACCEL, "SWS: Split items at time sel, edit cursor, or mouse cursor" },		"SWS_TRIPLESPLIT",	TripleSplit, NULL, },
+	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points (depending on focus)" },	"SWS_SMARTUNSEL",	SmartUnsel, NULL, },
+	{ { DEFACCEL, "SWS: Unselect all items/tracks/env points" },						"SWS_UNSELALL",		UnselAll, NULL, },
+	{ { DEFACCEL, "SWS: Set time sel to sel item(s) if no current time sel" },			"SWS_SAFETIMESEL",	SafeTiemSel, NULL, },
 	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		221CEFAA118212A0009245C9 /* SnM_Track.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 221CEFA9118212A0009245C9 /* SnM_Track.cpp */; };
+		22219AFD124AF1CE006CBC5D /* Macros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22219AFB124AF1CE006CBC5D /* Macros.cpp */; };
+		22219AFE124AF1CE006CBC5D /* Macros.h in Headers */ = {isa = PBXBuildFile; fileRef = 22219AFC124AF1CE006CBC5D /* Macros.h */; };
 		22257D87108BDC6B0058CF75 /* AutoRename.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D6F108BDC6B0058CF75 /* AutoRename.cpp */; };
 		22257D88108BDC6B0058CF75 /* BroadCastWavCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D70108BDC6B0058CF75 /* BroadCastWavCommands.cpp */; };
 		22257D89108BDC6B0058CF75 /* CommandRegistering.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D71108BDC6B0058CF75 /* CommandRegistering.cpp */; };
@@ -227,6 +229,8 @@
 
 /* Begin PBXFileReference section */
 		221CEFA9118212A0009245C9 /* SnM_Track.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Track.cpp; path = SnM/SnM_Track.cpp; sourceTree = "<group>"; };
+		22219AFB124AF1CE006CBC5D /* Macros.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Macros.cpp; path = Misc/Macros.cpp; sourceTree = "<group>"; };
+		22219AFC124AF1CE006CBC5D /* Macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Macros.h; path = Misc/Macros.h; sourceTree = "<group>"; };
 		22257D6F108BDC6B0058CF75 /* AutoRename.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AutoRename.cpp; path = Xenakios/AutoRename.cpp; sourceTree = "<group>"; };
 		22257D70108BDC6B0058CF75 /* BroadCastWavCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BroadCastWavCommands.cpp; path = Xenakios/BroadCastWavCommands.cpp; sourceTree = "<group>"; };
 		22257D71108BDC6B0058CF75 /* CommandRegistering.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommandRegistering.cpp; path = Xenakios/CommandRegistering.cpp; sourceTree = "<group>"; };
@@ -626,6 +630,8 @@
 				229A7E811165744400325BC2 /* ItemParams.h */,
 				229A7E821165744400325BC2 /* ItemSel.cpp */,
 				229A7E831165744400325BC2 /* ItemSel.h */,
+				22219AFB124AF1CE006CBC5D /* Macros.cpp */,
+				22219AFC124AF1CE006CBC5D /* Macros.h */,
 				229A7E841165744400325BC2 /* Misc.cpp */,
 				229A7E851165744400325BC2 /* Misc.h */,
 				229A7E861165744400325BC2 /* ProjPrefs.cpp */,
@@ -881,6 +887,7 @@
 				22AF6E8C12308C810017808F /* zconf.in.h in Headers */,
 				22AF6E8D12308C810017808F /* zlib.h in Headers */,
 				22AF6E8F12308C810017808F /* zutil.h in Headers */,
+				22219AFE124AF1CE006CBC5D /* Macros.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1101,6 +1108,7 @@
 				22AF6E8612308C810017808F /* trees.c in Sources */,
 				22AF6E8812308C810017808F /* uncompr.c in Sources */,
 				22AF6E8E12308C810017808F /* zutil.c in Sources */,
+				22219AFD124AF1CE006CBC5D /* Macros.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

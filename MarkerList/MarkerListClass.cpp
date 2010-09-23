@@ -245,7 +245,8 @@ void MarkerList::ExportToClipboard(const char* format)
 {
 #ifdef _WIN32
 	SectionLock lock(m_hLock);
-	char* str = new char[ApproxSize()*2];
+	int iLen = ApproxSize()*2;
+	char* str = new char[iLen];
 
 	// Get end of project
 	double dSavedCur = GetCursorPosition();
@@ -286,7 +287,7 @@ void MarkerList::ExportToClipboard(const char* format)
 					double len = m_items.Get(i)->m_dRegEnd-m_items.Get(i)->m_dPos;
 					if (len < 0.0)
 						len = 0.0;
-					format_timestr_pos(len, s, (int)(4096-(s-str)), 5);
+					format_timestr_pos(len, s, (int)(iLen-(s-str)), 5);
 					s += strlen(s)-3;
 					s[0] = 0;
 					break;
@@ -295,12 +296,16 @@ void MarkerList::ExportToClipboard(const char* format)
 					s += sprintf(s, "%s", m_items.Get(i)->GetName());
 					break;
 				case 't':
-					format_timestr_pos(m_items.Get(i)->m_dPos, s, (int)(4096-(s-str)), 5);
+					format_timestr_pos(m_items.Get(i)->m_dPos, s, (int)(iLen-(s-str)), 5);
 					s += strlen(s)-3;
 					s[0] = 0;
 					break;
 				case 's':
-					format_timestr_pos(m_items.Get(i)->m_dPos, s, (int)(4096-(s-str)), 4);
+					format_timestr_pos(m_items.Get(i)->m_dPos, s, (int)(iLen-(s-str)), 4);
+					s += strlen(s);
+					break;
+				case 'p':
+					format_timestr_pos(m_items.Get(i)->m_dPos, s, (int)(iLen-(s-str)), -1);
 					s += strlen(s);
 					break;
 				case '\\':

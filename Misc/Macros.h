@@ -1,5 +1,5 @@
 /******************************************************************************
-/ Context.h
+/ Macros.h
 /
 / Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
@@ -27,6 +27,4 @@
 
 #pragma once
 
-int ContextInit();
-bool AreThereSelItemsInTimeSel();
-
+int MacrosInit();

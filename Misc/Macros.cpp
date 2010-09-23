@@ -1,5 +1,5 @@
 /******************************************************************************
-/ Misc.cpp
+/ Macros.cpp
 /
 / Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
@@ -25,47 +25,46 @@
 /
 ******************************************************************************/
 
-// "Misc" is a container for actions that don't belong in any of the other
-// major subgroups of the SWS extension.  For the most part, these are just
-// actions that change to state of Reaper in some fashion.
-//
-// All the actions are contained in separate .cpp files in the Misc directory.
-// This file, misc.cpp, is just serves as a place to initialize each individual
-// misc module.
+// Actions to help with macro writing
 
 #include "stdafx.h"
-#include "Context.h"
-#include "ItemParams.h"
-#include "ItemSel.h"
-#include "FolderActions.h"
 #include "Macros.h"
-#include "ProjPrefs.h"
-#include "TrackParams.h"
-#include "TrackSel.h"
-#include "Zoom.h"
-#include "Misc.h"
 
-int MiscInit()
+void WaitAction(COMMAND_T* t)
 {
-	// Call sub-init routines
-	if (!ContextInit())
-		return 0;
-	if (!FolderActionsInit())
-		return 0;
-	if (!ItemParamsInit())
-		return 0;
-	if (!ItemSelInit())
-		return 0;
-	if (!MacrosInit())
-		return 0;
-	if (!ProjPrefsInit())
-		return 0;
-	if (!TrackParamsInit())
-		return 0;
-	if (!TrackSelInit())
-		return 0;
-	if (!ZoomInit())
-		return 0;
+	int iPlayState = GetPlayState();
+	if (iPlayState && !(iPlayState & 2)) // playing/recording, not paused
+	{
+		int iMeasure;
+		double dBeat = TimeMap2_timeToBeats(NULL, GetPlayPosition(), &iMeasure, NULL, NULL, NULL);
+		if (t->user == 0)
+		{	// Bar
+			iMeasure++;
+			dBeat = 0.0;
+		}	// Beat
+		else
+			dBeat = (double)((int)dBeat + 1);
+
+		// GetPlayPosition doesn't work in this loop, unlike GetPlayPosition2
+		double dOffset = GetPlayPosition2() - GetPlayPosition();
+		double dStop = TimeMap2_beatsToTime(NULL, dBeat, &iMeasure) + dOffset;
+		
+		while(GetPlayPosition2() < dStop && GetPlayState())
+			Sleep(1);
+	}
+}
+
+static COMMAND_T g_commandTable[] = 
+{
+	{ { DEFACCEL, "SWS: Wait for next bar (if playing)" },			  "SWS_BARWAIT",		WaitAction, NULL, 0 },
+	{ { DEFACCEL, "SWS: Wait for next beat (if playing)" },			  "SWS_BEATWAIT",		WaitAction, NULL, 1 },
+	
+	{ {}, LAST_COMMAND, }, // Denote end of table
+};
+
+int MacrosInit()
+{
+	SWSRegisterCommands(g_commandTable);
 
 	return 1;
 }

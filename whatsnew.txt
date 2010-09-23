@@ -1,3 +1,9 @@
+!v1.8.0 #2 (September 22, 2010)
+Issue 90: Add "SWS: Split items at time sel, edit cursor, or mouse cursor"
+Issue 176: Add "SWS: Wait for bar/beat" actions for macros
+S&M Notes window: Disallow adding text if there's no selection
+Export formatted markers: Added ability to export marker time in project format
+
 !v1.8.0 #1 (September 20, 2010)
 <b>REQUIRES REAPER v3.66 - These are the released changes from Beta #6! - Mostly S&M updates:</b>
 

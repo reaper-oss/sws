@@ -649,12 +649,16 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		RECT tr={x0,y0,_r.right-(logo?logo->getWidth():0)-8-8,y0+h};
 //		RECT tr={x0,y0,min(400, _r.right-logo->getWidth()-8-8),y0+h};
 		x0+=tr.right;
+		bool bNoSelection = true;
 		char str[512] = "No selection!";
 		switch(g_pNotesHelpWnd->GetType())
 		{
 			case ACTION_HELP:
 				if (*g_lastActionDesc && *g_lastActionListSection)
+				{
 					_snprintf(str, 512, " [%s]  %s", g_lastActionListSection, g_lastActionDesc);
+					bNoSelection = false;
+				}
 /*JFB TODO: use that when we'll be able to access all sections
 				if (g_lastActionListCmd > 0)
 					strncpy(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
@@ -667,6 +671,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 					MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
 					char* tkName= tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
 					strncpy(str, tkName ? tkName : "",512);
+					bNoSelection = false;
 				}
 			}
 			break;
@@ -679,6 +684,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 						_snprintf(str, 512, " [%d]  %s", id, (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL));
 					else
 						strcpy(str, "[MASTER]");
+					bNoSelection = false;
 				}
 			}
 			break;
@@ -692,6 +698,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 				break;
 		}
 		tmpfont.DrawText(bm, str, -1, &tr, DT_LEFT | DT_VCENTER);
+		EnableWindow(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT), !bNoSelection);
 
 //		if ((_r.right - _r.left) > (x0+logo->getWidth()))
 		if (logo && (_r.right - _r.left) > 300)

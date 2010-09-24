@@ -126,6 +126,54 @@ void SWS_AutoColorView::OnItemSelChanged(LPARAM item, int iState)
 	g_pACWnd->Update();
 }
 
+void SWS_AutoColorView::OnBeginDrag(LPARAM item)
+{
+	if (abs(m_iSortCol) == 1)
+		SetCapture(GetParent(m_hwndList));
+}
+
+void SWS_AutoColorView::OnDrag()
+{
+	POINT p;
+	GetCursorPos(&p);
+	SWS_AutoColorItem* hitItem = (SWS_AutoColorItem*)GetHitItem(p.x, p.y, NULL);
+	if (hitItem)
+	{
+		int iNewPriority = g_pACItems.Find(hitItem);
+		int iSelPriority;
+
+		WDL_PtrList<SWS_AutoColorItem> draggedItems;
+		int x = 0;
+		SWS_AutoColorItem* selItem;
+		while((selItem = (SWS_AutoColorItem*)EnumSelected(&x)))
+		{
+			iSelPriority = g_pACItems.Find(selItem);
+			if (iNewPriority == iSelPriority)
+				return;
+			draggedItems.Add(selItem);
+		}
+
+		// Remove the dragged items and then readd them
+		// Switch order of add based on direction of drag & sort order
+		bool bDir = iNewPriority > iSelPriority;
+		if (m_iSortCol < 0)
+			bDir = !bDir;
+		for (int i = bDir ? 0 : draggedItems.GetSize()-1; bDir ? i < draggedItems.GetSize() : i >= 0; bDir ? i++ : i--)
+		{
+			int index = g_pACItems.Find(draggedItems.Get(i));
+			g_pACItems.Delete(index);
+			g_pACItems.Insert(iNewPriority, draggedItems.Get(i));
+		}
+
+		g_pACWnd->Update();
+	}
+}
+
+void SWS_AutoColorView::OnEndDrag()
+{
+	ReleaseCapture();
+}
+
 SWS_AutoColorWnd::SWS_AutoColorWnd()
 :SWS_DockWnd(IDD_AUTOCOLOR, "Autocolor", 30005, SWSGetCommandID(OpenAutoColor))
 #ifndef _WIN32
@@ -166,7 +214,8 @@ void SWS_AutoColorWnd::OnInitDlg()
 	m_resize.init_item(IDC_COLOR,     0.0, 1.0, 0.0, 1.0);
 	m_resize.init_item(IDC_ENABLED,   0.0, 1.0, 0.0, 1.0);
 	m_resize.init_item(IDC_APPLY,     1.0, 1.0, 1.0, 1.0);
-	m_pLists.Add(new SWS_AutoColorView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+	m_pView = new SWS_AutoColorView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT));
+	m_pLists.Add(m_pView);
 	Update();
 }
 
@@ -350,6 +399,16 @@ int SWS_AutoColorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			DeleteObject(hb);
 			return 1;
 		}
+	}
+	else if (uMsg == WM_MOUSEMOVE && GetCapture() == m_hwnd)
+	{
+		m_pView->OnDrag();
+		return 1;
+	}
+	else if (uMsg == WM_LBUTTONUP && GetCapture() == m_hwnd)
+	{
+		m_pView->OnEndDrag();
+		return 1;
 	}
 
 	return 0;

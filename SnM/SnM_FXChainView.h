@@ -38,7 +38,7 @@ protected:
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void OnItemDblClk(LPARAM item, int iCol);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	void OnBeginDrag();
+	void OnBeginDrag(LPARAM item);
 };
 
 class SNM_FXChainWnd : public SWS_DockWnd

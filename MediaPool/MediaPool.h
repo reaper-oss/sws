@@ -99,7 +99,7 @@ protected:
 	void OnItemSelChanged(LPARAM item, int iState);
 	void OnItemDblClk(LPARAM item, int iCol);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	void OnBeginDrag();
+	void OnBeginDrag(LPARAM item);
 
 private:
 	SWS_MediaPoolWnd* m_pWnd;

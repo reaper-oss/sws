@@ -74,7 +74,7 @@ protected:
 	virtual void OnItemBtnClk(LPARAM item, int iCol, int iKeyState) {}
 	virtual void OnItemDblClk(LPARAM item, int iCol) {}
 	virtual int  OnItemSort(LPARAM item1, LPARAM item2);
-	virtual void OnBeginDrag() {}
+	virtual void OnBeginDrag(LPARAM item) {}
 
 	HWND m_hwndList;
 	bool m_bDisableUpdates;

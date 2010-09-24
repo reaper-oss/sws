@@ -48,12 +48,15 @@ class SWS_AutoColorView : public SWS_ListView
 {
 public:
 	SWS_AutoColorView(HWND hwndList, HWND hwndEdit);
+	void OnDrag();
+	void OnEndDrag();
 
 protected:
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	void OnItemSelChanged(LPARAM item, int iState);
+	void OnBeginDrag(LPARAM item);
 };
 
 class SWS_AutoColorWnd : public SWS_DockWnd
@@ -73,6 +76,7 @@ protected:
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	HMENU OnContextMenu(int x, int y);
 	int OnKey(MSG* msg, int iKeyState);
+	SWS_AutoColorView* m_pView;
 };
 
 int AutoColorInit();

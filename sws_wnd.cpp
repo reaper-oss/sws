@@ -635,7 +635,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 	}
 	else if (s->hdr.code == LVN_BEGINDRAG)
 	{
-		OnBeginDrag();
+		OnBeginDrag(GetListItem(s->iItem));
 	}
 /*	else if (s->hdr.code == NM_CUSTOMDRAW) // TODO for coloring of the listview
 	{

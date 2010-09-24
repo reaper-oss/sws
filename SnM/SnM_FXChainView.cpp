@@ -176,7 +176,7 @@ void SNM_FXChainView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 }
 
 //JFB more than "shared" with Tim's MediaPool => factorize ?
-void SNM_FXChainView::OnBeginDrag()
+void SNM_FXChainView::OnBeginDrag(LPARAM item)
 {
 #ifdef _WIN32
 	LVITEM li;

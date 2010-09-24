@@ -452,7 +452,7 @@ void SWS_MediaPoolFileView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 		pBuf->Get()[i] = (LPARAM)m_pWnd->m_curGroup->m_files.Get(i);
 }
 
-void SWS_MediaPoolFileView::OnBeginDrag()
+void SWS_MediaPoolFileView::OnBeginDrag(LPARAM item)
 {
 #ifdef _WIN32
 	LVITEM li;

@@ -1,3 +1,6 @@
+!v1.8.0 #5 (September 24, 2010)
+Issue 92 / Issue 153: Autocolor reprioritizing via mouse drag (only works when sorted by priority)
+
 !v1.8.0 #4 (September 23, 2010)
 Issue 176: Add "SWS: Wait for next loop end" action
 Fix S&M project notes bug introduced in v1.8.0 #3.

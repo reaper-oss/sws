@@ -315,11 +315,11 @@ bool ReplaceLine(const char* _parent, const char* _keyword, int _depth, int _occ
 // This will insert _str at the *after* or *before* _searchedKeyword (i.e. next/previous line)
 // or replace the existing line if needed.
 // _str may be "" (i.e. remove line, that's why _keywordInsert should be provided)
-// _dir: -1 previous line, +1 next line
+// _dir: -1 previous line, 0 current line, +1 next line
 // _breakingKeyword: for optimization, optionnal. If specified, the parser won't go further when this keyword is encountred, be carefull with that!
 bool InsertOrReplaceLine(int _dir, const char* _parent, int _depth, int _occurence, const char* _searchedKeyword, const char* _keywordInsert, const char* _str = "", const char* _breakingKeyword = NULL)
 {
-	if (_str && _keywordInsert && _searchedKeyword && _dir) // _dir: +1 or -1 but not 0
+	if (_str && _keywordInsert && _searchedKeyword)
 	{
 		int pos = GetLinePos(_dir, _parent, _searchedKeyword, _depth, _occurence, _breakingKeyword);
 		if (pos >= 0) 

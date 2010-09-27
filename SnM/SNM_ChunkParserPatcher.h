@@ -247,7 +247,6 @@ bool Commit(bool _force = false)
 			fclose(f);
 		}
 #endif
-		// Cool point for debug!
 		if (!GetSetObjectState(m_object, m_chunk->Get())) {
 			SetChunk("", 0);
 			return true;
@@ -303,7 +302,26 @@ bool ReplaceSubChunk(const char* _keyword, int _depth, int _occurence,
 	return false;
 }
 
-// This will replace the line begining with _keyword
+bool ReplaceLine(int _pos, const char* _str = NULL)
+{
+	if (_pos >=0 && GetChunk()->GetLength() > _pos) // + indirectly cache chunk if needed
+	{
+		int pos = _pos;
+		char* pChunk = m_chunk->Get();
+		while (pChunk[pos] && pChunk[pos] != '\n') pos++;
+		if (pChunk[pos] == '\n')
+		{
+			m_chunk->DeleteSub(_pos, (pos+1) - _pos);
+			if (_str && *_str)
+				m_chunk->Insert(_str, _pos);
+			m_updates++;
+			return true;
+		}
+	}
+	return false;
+}
+
+// This will replace the line(s) begining with _keyword
 bool ReplaceLine(const char* _parent, const char* _keyword, int _depth, int _occurence, 
 	const char* _newSubChunk = "", const char* _breakingKeyword = NULL)
 {
@@ -312,40 +330,12 @@ bool ReplaceLine(const char* _parent, const char* _keyword, int _depth, int _occ
 	return false;
 }
 
-// This will insert _str at the *after* or *before* _searchedKeyword (i.e. next/previous line)
-// or replace the existing line if needed.
-// _str may be "" (i.e. remove line, that's why _keywordInsert should be provided)
-// _dir: -1 previous line, 0 current line, +1 next line
-// _breakingKeyword: for optimization, optionnal. If specified, the parser won't go further when this keyword is encountred, be carefull with that!
-bool InsertOrReplaceLine(int _dir, const char* _parent, int _depth, int _occurence, const char* _searchedKeyword, const char* _keywordInsert, const char* _str = "", const char* _breakingKeyword = NULL)
-{
-	if (_str && _keywordInsert && _searchedKeyword)
-	{
-		int pos = GetLinePos(_dir, _parent, _searchedKeyword, _depth, _occurence, _breakingKeyword);
-		if (pos >= 0) 
-		{
-			// same keyword ?
-			if (!strncmp((char*)(m_chunk->Get()+pos), _keywordInsert, strlen(_keywordInsert)))
-			{
-				const char* sep = strchr((char*)(m_chunk->Get()+pos), '\n');
-				if (sep)
-					m_chunk->DeleteSub(pos, (int)(sep-(char*)(m_chunk->Get()+pos) + 1)); //+1 for '\n'
-			}
-			m_chunk->Insert(_str, pos);
-			m_updates++;
-			return true;
-		}
-	}
-	return false;
-}
-
-// This will insert _str at the *after* or *before* the searched _keyword (i.e. next/previous line)
-// Note: this will not replace anything, use InsertOrReplaceLine() for that. 
-// _dir: -1 previous line, +1 next line
-// _breakingKeyword: for optimization, optionnal. If specified, the parser won't go further when this keyword is encountred, be carefull with that!
+// This will insert _str at the after (_dir=1) or before (_dir=0) _keyword (i.e. at next/previous start of line)
+// _breakingKeyword: for optimization, optionnal.
 bool InsertAfterBefore(int _dir, const char* _str, const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _breakingKeyword = NULL)
 {
-	if (_str && *_str && _dir) {
+	if (_str && *_str && _keyword && GetChunk()) // cache if needed
+	{
 		int pos = GetLinePos(_dir, _parent, _keyword, _depth, _occurence, _breakingKeyword);
 		if (pos >= 0) {
 			m_chunk->Insert(_str, pos);
@@ -376,7 +366,7 @@ int RemoveIds()
 	return updates;
 }
 
-// This will return the current, next or previous line start position for the searched _keyword
+// This will return the start of the current, next or previous line position for the searched _keyword
 // _dir: -1 previous line, 0 current line, +1 next line
 // _breakingKeyword: for optimization, optionnal. If specified, the parser won't go further when this keyword is encountred, be carefull with that!
 int GetLinePos(int _dir, const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _breakingKeyword)
@@ -398,18 +388,6 @@ int GetLinePos(int _dir, const char* _parent, const char* _keyword, int _depth, 
 			return pos;
 	}
 	return -1;
-}
-
-// Sometimes some chunks aren't begining/ending with < >
-// => use AddLtGt() to make them "SNM_ChunkParsable"
-void AddLtGt() {
-	m_chunk->Insert("<",0,1);
-	m_chunk->Append(">\n");
-}
-
-void RemoveLtGt() {
-	m_chunk->DeleteSub(m_chunk->GetLength()-2,2);
-	m_chunk->DeleteSub(0,1);
 }
 
 const char* GetParent(WDL_PtrList<WDL_String>* _parents, int _ancestor=1) {

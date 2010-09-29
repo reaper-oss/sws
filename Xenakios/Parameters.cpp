@@ -54,42 +54,40 @@ void DoLaunchExtTool(COMMAND_T* t)
 
 void ReadINIfile()
 {
-	char INIFileName[512];
-	sprintf(INIFileName,"%s\\Plugins\\Xenakios_Commands.ini",GetExePath());
 	char resultString[512];
-	GetPrivateProfileString("XENAKIOSCOMMANDS","ITEMPOSNUDGESECS","1.0",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","ITEMPOSNUDGESECS","1.0",resultString,512,g_XenIniFilename.Get());
 	g_command_params.ItemPosNudgeSecs=atof(resultString);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","ITEMPOSNUDGEBEATS","1.0",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","ITEMPOSNUDGEBEATS","1.0",resultString,512,g_XenIniFilename.Get());
 	g_command_params.ItemPosNudgeBeats=atof(resultString);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEINTIMEA","0.001",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEINTIMEA","0.001",resultString,512,g_XenIniFilename.Get());
 	g_command_params.CommandFadeInA=atof(resultString);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEINTIMEB","0.001",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEINTIMEB","0.001",resultString,512,g_XenIniFilename.Get());
 	g_command_params.CommandFadeInB=atof(resultString);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEOUTTIMEA","0.001",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEOUTTIMEA","0.001",resultString,512,g_XenIniFilename.Get());
 	g_command_params.CommandFadeOutA=atof(resultString);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEOUTTIMEB","0.001",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEOUTTIMEB","0.001",resultString,512,g_XenIniFilename.Get());
 	g_command_params.CommandFadeOutB=atof(resultString);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEINSHAPEA","0",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEINSHAPEA","0",resultString,512,g_XenIniFilename.Get());
 	g_command_params.CommandFadeInShapeA=atoi(resultString);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEINSHAPEB","0",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEINSHAPEB","0",resultString,512,g_XenIniFilename.Get());
 	g_command_params.CommandFadeInShapeB=atoi(resultString);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEOUTSHAPEA","0",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEOUTSHAPEA","0",resultString,512,g_XenIniFilename.Get());
 	g_command_params.CommandFadeOutShapeA=atoi(resultString);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEOUTSHAPEB","0",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","FADEOUTSHAPEB","0",resultString,512,g_XenIniFilename.Get());
 	g_command_params.CommandFadeOutShapeB=atoi(resultString);
 	
-	GetPrivateProfileString("XENAKIOSCOMMANDS","EDITCURRNDMEAN","1.0",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","EDITCURRNDMEAN","1.0",resultString,512,g_XenIniFilename.Get());
 	g_command_params.EditCurRndMean=atof(resultString);
 
-	GetPrivateProfileString("XENAKIOSCOMMANDS","ITEMVOLUMENUDGE","1.0",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","ITEMVOLUMENUDGE","1.0",resultString,512,g_XenIniFilename.Get());
 	g_command_params.ItemVolumeNudge=atof(resultString);
 
-	GetPrivateProfileString("XENAKIOSCOMMANDS","ITEMPITCHNUDGE","1.0",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","ITEMPITCHNUDGE","1.0",resultString,512,g_XenIniFilename.Get());
 	g_command_params.ItemPitchNudgeA=atof(resultString);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","ITEMPITCHNUDGEB","1.0",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","ITEMPITCHNUDGEB","1.0",resultString,512,g_XenIniFilename.Get());
 	g_command_params.ItemPitchNudgeB=atof(resultString);
 
-	GetPrivateProfileString("XENAKIOSCOMMANDS","RNDITEMSELPROB","50.0",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","RNDITEMSELPROB","50.0",resultString,512,g_XenIniFilename.Get());
 	g_command_params.RndItemSelProb=atof(resultString);
 
 	delete [] g_external_app_paths.PathToTool1; g_external_app_paths.PathToTool1 = NULL;
@@ -99,7 +97,7 @@ void ReadINIfile()
 
 	const char* cMenuText;
 	SWSGetCommandID(DoLaunchExtTool, 1, &cMenuText);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","EXTERNALTOOL1PATH","",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","EXTERNALTOOL1PATH","",resultString,512,g_XenIniFilename.Get());
 	if (resultString[0])
 	{
 		g_external_app_paths.PathToTool1=new char[strlen(resultString)+sizeof(char)];
@@ -113,7 +111,7 @@ void ReadINIfile()
 
 
 	SWSGetCommandID(DoLaunchExtTool, 2, &cMenuText);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","EXTERNALTOOL2PATH","",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","EXTERNALTOOL2PATH","",resultString,512,g_XenIniFilename.Get());
 	if (resultString[0])
 	{
 		g_external_app_paths.PathToTool2=new char[strlen(resultString)+sizeof(char)];
@@ -125,120 +123,114 @@ void ReadINIfile()
 	else
 		lstrcpyn(g_external_app_paths.Tool2MenuText, cMenuText, 100);
 
-	GetPrivateProfileString("XENAKIOSCOMMANDS","EXTERNALEDITOR1PATH","",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","EXTERNALEDITOR1PATH","",resultString,512,g_XenIniFilename.Get());
 	if (resultString[0])
 	{
 		g_external_app_paths.PathToAudioEditor1=new char[strlen(resultString)+sizeof(char)];
 		strcpy(g_external_app_paths.PathToAudioEditor1, resultString);
 	}
 
-	GetPrivateProfileString("XENAKIOSCOMMANDS","EXTERNALEDITOR2PATH","",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","EXTERNALEDITOR2PATH","",resultString,512,g_XenIniFilename.Get());
 	if (resultString[0])
 	{
 		g_external_app_paths.PathToAudioEditor2=new char[strlen(resultString)+sizeof(char)];
 		strcpy(g_external_app_paths.PathToAudioEditor2, resultString);
 	}
 
-	GetPrivateProfileString("XENAKIOSCOMMANDS","PIXELAMOUNT","12",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","PIXELAMOUNT","12",resultString,512,g_XenIniFilename.Get());
 	g_command_params.PixAmount=atoi(resultString);
 
-	GetPrivateProfileString("XENAKIOSCOMMANDS","SECTLOOPNUDGESECS","0.1",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","SECTLOOPNUDGESECS","0.1",resultString,512,g_XenIniFilename.Get());
 	g_command_params.SectionLoopNudgeSecs=atof(resultString);
 
 	//CURPOSSECSAMOUNT
 
-	GetPrivateProfileString("XENAKIOSCOMMANDS","CURPOSSECSAMOUNT","0.005",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","CURPOSSECSAMOUNT","0.005",resultString,512,g_XenIniFilename.Get());
 	g_command_params.CurPosSecsAmount=atof(resultString);
 
-	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKHEIGHTA","50",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKHEIGHTA","50",resultString,512,g_XenIniFilename.Get());
 	g_command_params.TrackHeightA=atoi(resultString);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKHEIGHTB","50",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKHEIGHTB","50",resultString,512,g_XenIniFilename.Get());
 	g_command_params.TrackHeightB=atoi(resultString);
 	
-	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELDEFAULT","Audio",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELDEFAULT","Audio",resultString,512,g_XenIniFilename.Get());
 	g_command_params.DefaultTrackLabel.assign(resultString);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELPREFIX","",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELPREFIX","",resultString,512,g_XenIniFilename.Get());
 	g_command_params.TrackLabelPrefix.assign(resultString);
-	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELSUFFIX","",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELSUFFIX","",resultString,512,g_XenIniFilename.Get());
 	g_command_params.TrackLabelSuffix.assign(resultString);
 
-	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKVOLNUDGEDB","1.0",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","TRACKVOLNUDGEDB","1.0",resultString,512,g_XenIniFilename.Get());
 	g_command_params.TrackVolumeNudge=atof(resultString);
 }
 
 
 void UpdateINIfile()
 {
-	char INIFileName[512];
-	sprintf(INIFileName,"%s\\Plugins\\Xenakios_Commands.ini",GetExePath());
 	char TextBuf[512];
 	sprintf(TextBuf,"%f",g_command_params.TrackVolumeNudge);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKVOLNUDGEDB",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKVOLNUDGEDB",TextBuf,g_XenIniFilename.Get());
 	sprintf(TextBuf,"%f",g_command_params.ItemPosNudgeSecs);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","ITEMPOSNUDGESECS",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","ITEMPOSNUDGESECS",TextBuf,g_XenIniFilename.Get());
 	sprintf(TextBuf,"%f",g_command_params.ItemPosNudgeBeats);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","ITEMPOSNUDGEBEATS",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","ITEMPOSNUDGEBEATS",TextBuf,g_XenIniFilename.Get());
 	sprintf(TextBuf,"%f",g_command_params.CommandFadeInA);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEINTIMEA",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEINTIMEA",TextBuf,g_XenIniFilename.Get());
 	sprintf(TextBuf,"%f",g_command_params.CommandFadeInB);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEINTIMEB",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEINTIMEB",TextBuf,g_XenIniFilename.Get());
 	sprintf(TextBuf,"%f",g_command_params.CommandFadeOutA);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEOUTTIMEA",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEOUTTIMEA",TextBuf,g_XenIniFilename.Get());
 	sprintf(TextBuf,"%f",g_command_params.CommandFadeOutB);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEOUTTIMEB",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEOUTTIMEB",TextBuf,g_XenIniFilename.Get());
 	sprintf(TextBuf,"%d",g_command_params.CommandFadeInShapeA);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEINSHAPEA",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEINSHAPEA",TextBuf,g_XenIniFilename.Get());
 	sprintf(TextBuf,"%d",g_command_params.CommandFadeInShapeB);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEINSHAPEB",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEINSHAPEB",TextBuf,g_XenIniFilename.Get());
 	sprintf(TextBuf,"%d",g_command_params.CommandFadeOutShapeA);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEOUTSHAPEA",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEOUTSHAPEA",TextBuf,g_XenIniFilename.Get());
 	sprintf(TextBuf,"%d",g_command_params.CommandFadeOutShapeB);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEOUTSHAPEB",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","FADEOUTSHAPEB",TextBuf,g_XenIniFilename.Get());
 	
 	sprintf(TextBuf,"%f",g_command_params.EditCurRndMean);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","EDITCURRNDMEAN",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","EDITCURRNDMEAN",TextBuf,g_XenIniFilename.Get());
 	
 	sprintf(TextBuf,"%f",g_command_params.ItemVolumeNudge);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","ITEMVOLUMENUDGE",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","ITEMVOLUMENUDGE",TextBuf,g_XenIniFilename.Get());
 	
 	sprintf(TextBuf,"%f",g_command_params.ItemPitchNudgeA);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","ITEMPITCHNUDGE",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","ITEMPITCHNUDGE",TextBuf,g_XenIniFilename.Get());
 	sprintf(TextBuf,"%f",g_command_params.ItemPitchNudgeB);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","ITEMPITCHNUDGEB",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","ITEMPITCHNUDGEB",TextBuf,g_XenIniFilename.Get());
 	
 	sprintf(TextBuf,"%f",g_command_params.RndItemSelProb);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","RNDITEMSELPROB",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","RNDITEMSELPROB",TextBuf,g_XenIniFilename.Get());
 	if (g_external_app_paths.PathToTool1)
-		WritePrivateProfileString("XENAKIOSCOMMANDS","EXTERNALTOOL1PATH",g_external_app_paths.PathToTool1,INIFileName);
+		WritePrivateProfileString("XENAKIOSCOMMANDS","EXTERNALTOOL1PATH",g_external_app_paths.PathToTool1,g_XenIniFilename.Get());
 	if (g_external_app_paths.PathToTool2)
-		WritePrivateProfileString("XENAKIOSCOMMANDS","EXTERNALTOOL2PATH",g_external_app_paths.PathToTool2,INIFileName);
+		WritePrivateProfileString("XENAKIOSCOMMANDS","EXTERNALTOOL2PATH",g_external_app_paths.PathToTool2,g_XenIniFilename.Get());
 	if (g_external_app_paths.PathToAudioEditor1)
-		WritePrivateProfileString("XENAKIOSCOMMANDS","EXTERNALEDITOR1PATH",g_external_app_paths.PathToAudioEditor1,INIFileName);
+		WritePrivateProfileString("XENAKIOSCOMMANDS","EXTERNALEDITOR1PATH",g_external_app_paths.PathToAudioEditor1,g_XenIniFilename.Get());
 	if (g_external_app_paths.PathToAudioEditor2)
-		WritePrivateProfileString("XENAKIOSCOMMANDS","EXTERNALEDITOR2PATH",g_external_app_paths.PathToAudioEditor2,INIFileName);
+		WritePrivateProfileString("XENAKIOSCOMMANDS","EXTERNALEDITOR2PATH",g_external_app_paths.PathToAudioEditor2,g_XenIniFilename.Get());
 
 	sprintf(TextBuf,"%d",g_command_params.PixAmount);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","PIXELAMOUNT",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","PIXELAMOUNT",TextBuf,g_XenIniFilename.Get());
 
 	sprintf(TextBuf,"%f",g_command_params.CurPosSecsAmount);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","CURPOSSECSAMOUNT",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","CURPOSSECSAMOUNT",TextBuf,g_XenIniFilename.Get());
 	
 	sprintf(TextBuf,"%d",g_command_params.TrackHeightA);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKHEIGHTA",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKHEIGHTA",TextBuf,g_XenIniFilename.Get());
 	sprintf(TextBuf,"%d",g_command_params.TrackHeightB);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKHEIGHTB",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKHEIGHTB",TextBuf,g_XenIniFilename.Get());
 
 	sprintf(TextBuf,"%f",g_command_params.SectionLoopNudgeSecs);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","SECTLOOPNUDGESECS",TextBuf,INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","SECTLOOPNUDGESECS",TextBuf,g_XenIniFilename.Get());
 
-	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELDEFAULT",g_command_params.DefaultTrackLabel.c_str(),INIFileName);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELPREFIX",g_command_params.TrackLabelPrefix.c_str(),INIFileName);
-	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELSUFFIX",g_command_params.TrackLabelSuffix.c_str(),INIFileName);
+	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELDEFAULT",g_command_params.DefaultTrackLabel.c_str(),g_XenIniFilename.Get());
+	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELPREFIX",g_command_params.TrackLabelPrefix.c_str(),g_XenIniFilename.Get());
+	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELSUFFIX",g_command_params.TrackLabelSuffix.c_str(),g_XenIniFilename.Get());
 }
-
-
-
-
 
 WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {

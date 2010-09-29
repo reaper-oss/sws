@@ -99,11 +99,9 @@ BOOL WINAPI CreateTxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			}
 		}
 		Undo_EndBlock("Create new tracks",0);
-		char INIFileName[1024];
-		sprintf(INIFileName,"%s\\Plugins\\Xenakios_Commands.ini",GetExePath());
 		sprintf(buf,"%d",g_newtrackparams.numtracks);
-		WritePrivateProfileString("XENAKIOSCOMMANDS","NTDLG_NUMNEWTRACKS",buf,INIFileName);
-		WritePrivateProfileString("XENAKIOSCOMMANDS","NTDLG_BASENAME",g_newtrackparams.basename.c_str(),INIFileName);
+		WritePrivateProfileString("XENAKIOSCOMMANDS","NTDLG_NUMNEWTRACKS",buf,g_XenIniFilename.Get());
+		WritePrivateProfileString("XENAKIOSCOMMANDS","NTDLG_BASENAME",g_newtrackparams.basename.c_str(),g_XenIniFilename.Get());
 		EndDialog(hwnd,0);
 		return 0;
 	}
@@ -118,13 +116,11 @@ BOOL WINAPI CreateTxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 void DoCreateTraxDlg(COMMAND_T*)
 {
 	char buf[512];
-	char INIFileName[1024];
-	sprintf(INIFileName,"%s\\Plugins\\Xenakios_Commands.ini",GetExePath());
-	GetPrivateProfileString("XENAKIOSCOMMANDS","NTDLG_NUMNEWTRACKS","1",buf,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","NTDLG_NUMNEWTRACKS","1",buf,512,g_XenIniFilename.Get());
 	g_newtrackparams.numtracks=atoi(buf);
 	if (g_newtrackparams.numtracks<1) g_newtrackparams.numtracks=1;
 	if (g_newtrackparams.numtracks>256) g_newtrackparams.numtracks=256;
-	GetPrivateProfileString("XENAKIOSCOMMANDS","NTDLG_BASENAME","New Track",buf,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS","NTDLG_BASENAME","New Track",buf,512,g_XenIniFilename.Get());
 	g_newtrackparams.basename.assign(buf);
 	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_CRTNEWTX), g_hwndParent,(DLGPROC)CreateTxDlgProc);
 }

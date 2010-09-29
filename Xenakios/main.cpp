@@ -705,6 +705,16 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	}
 }
 
+WDL_String g_XenIniFilename;
+
+#ifdef _WIN32
+#define XEN_INIFILE_OLD "%s\\Plugins\\Xenakios_Commands.ini"
+#define XEN_INIFILE_NEW "%s\\Xenakios_Commands.ini"
+#else
+#define XEN_INIFILE_OLD "%s/Plugins/Xenakios_Commands.ini"
+#define XEN_INIFILE_NEW "%s/Xenakios_Commands.ini"
+#endif
+
 int XenakiosInit()
 {
 	if(!plugin_register("projectconfig",&xen_reftrack_pcreg))
@@ -712,6 +722,14 @@ int XenakiosInit()
 
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
+
+	// Move Xenakios_commands.ini to a new location
+	char oldIniFilename[512], iniFilename[512];
+	_snprintf(oldIniFilename, 512, XEN_INIFILE_OLD, GetExePath()); // old location
+	_snprintf(iniFilename, 512, XEN_INIFILE_NEW, GetResourcePath());
+	if (FileExists(oldIniFilename))
+		MoveFile(oldIniFilename, iniFilename);
+	g_XenIniFilename.Set(iniFilename);
 
 	ShuffledNumbers=new int[1024];
 
@@ -725,10 +743,8 @@ int XenakiosInit()
     
 	InitUndoKeyUpHandler01();
 	g_hItemInspector = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_ITEM_INSPECTOR), g_hwndParent, (DLGPROC)MyItemInspectorDlgProc);
-	if (g_hItemInspector!=NULL) 
-	{
+	if (g_hItemInspector != NULL) 
 		ShowWindow(g_hItemInspector, SW_HIDE);
-	};
 
 	srand ((unsigned int)time(NULL));
 

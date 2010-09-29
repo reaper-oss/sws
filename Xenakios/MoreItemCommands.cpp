@@ -1746,10 +1746,8 @@ void SetSelItemsFadesToConf(const char *confID)
 {
 	vector<MediaItem*> selitems;
 	XenGetProjectItems(selitems, true, false);
-	char INIFileName[1024];
-	sprintf(INIFileName,"%s\\Plugins\\Xenakios_Commands.ini",GetExePath());
 	char resultString[512];
-	GetPrivateProfileString("XENAKIOSCOMMANDS",confID,"0.005 1 0.005 1",resultString,512,INIFileName);
+	GetPrivateProfileString("XENAKIOSCOMMANDS",confID,"0.005 1 0.005 1",resultString,512,g_XenIniFilename.Get());
 	LineParser lp(false);
 	lp.parse(resultString);
 	double fadeinlen    = lp.gettoken_float(0);

@@ -66,6 +66,7 @@ void dumpWikiActions2(COMMAND_T* _ct)
 		}
 
 		char filename[BUFFER_SIZE];
+		// TODO: I'd like to remove use of GetExePath() here.  Ok, Jeffos? -SWS
 		sprintf(filename, "%s%c%s%s.txt", GetExePath(), PATH_SLASH_CHAR, sectionURL, _ct->user == 2 ? "_SWS" : _ct->user == 3 ? "_FNG" : "");
 
 		//flush

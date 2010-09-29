@@ -109,6 +109,20 @@ void RunAction(COMMAND_T* = NULL)
 	}
 }
 
+void DumpItems(COMMAND_T* = NULL)
+{
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	{
+		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		MediaTrack* tr = (MediaTrack*)GetSetMediaItemInfo(item, "P_TRACK", NULL);
+		double dStart = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+		double dEnd   = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL) + dStart;
+		char str[256];
+		sprintf(str, "%2d %.14f %.14f\n", CSurf_TrackToID(tr, false), dStart, dEnd);
+		OutputDebugString(str);
+	}
+}
+
 #endif
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
@@ -338,6 +352,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Print track GUIDs" }, "SWS_PRINTGUIDS",  PrintGuids, },
 	{ { DEFACCEL, "SWS: Print menu tree" }, "SWS_PRINTMENU",  PrintMenu, },
 	{ { DEFACCEL, "SWS: Run action..." }, "SWS_RUNACTION",  RunAction, },
+	{ { DEFACCEL, "SWS: Print sel items' times" }, "SWS_DUMPITEMS",  DumpItems, },
 
 #endif
 

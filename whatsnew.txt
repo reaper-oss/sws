@@ -1,3 +1,11 @@
+!v1.8.0 #6 (September 29, 2010)
+Issue 134: Take autorename update/overhaul!
++Last entered format string is remembered
++User can add their own presets by editing SWS-RenamePresets.txt in the resource directory.
++Format string is a little easier to understand - % symbols are not required anymore
+
+Note Xenakios_Commands.ini is now moved to the resource directory.
+
 !v1.8.0 #5 (September 24, 2010)
 Issue 92 / Issue 153: Autocolor reprioritizing via mouse drag (only works when sorted by priority)
 

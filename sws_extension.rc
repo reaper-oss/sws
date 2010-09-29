@@ -661,20 +661,20 @@ BEGIN
     PUSHBUTTON      "Preview",IDC_BUTTON1,5,120,50,14,NOT WS_VISIBLE | WS_DISABLED
 END
 
-IDD_AUTORENAMETAKES DIALOGEX 0, 0, 382, 301
+IDD_AUTORENAMETAKES DIALOGEX 0, 0, 342, 301
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Auto-rename takes"
+CAPTION "Auto-rename Takes"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,5,280,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,60,280,50,14
-    LTEXT           "Formatting string : ",IDC_STATIC,5,25,58,8
-    EDITTEXT        IDC_EDIT1,65,20,160,14,ES_AUTOHSCROLL
-    CONTROL         "List1",IDC_AUTONAMEOUTPUT,"SysListView32",LVS_REPORT | WS_BORDER | WS_TABSTOP,5,85,365,185
-    LTEXT           "Will result in :",IDC_STATIC,5,70,42,8
-    LTEXT           "Static",IDC_SAMPLEOUT,55,70,125,8
-    COMBOBOX        IDC_AUTONAMEPRESETS,65,5,160,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Valid replace tokens to use : [trackname] [foldername] [takename] [tracknum]\n [GUID] [inctrackorder] [inctimeorder] [NOEXT]",IDC_STATIC,5,40,260,25
+    LTEXT           "Preset:",IDC_STATIC,7,9,23,8
+    COMBOBOX        IDC_AUTONAMEPRESETS,40,7,195,71,CBS_DROPDOWNLIST | WS_VSCROLL
+    LTEXT           "Customize presets in SWS-RenamePresets.txt",IDC_STATIC,246,7,89,18
+    LTEXT           "Format:",IDC_STATIC,7,25,24,8
+    EDITTEXT        IDC_EDIT1,40,23,195,14,ES_AUTOHSCROLL
+    LTEXT           "Valid replace tokens to use:\r\n[trackname] [foldername] [takename] [takenamenoext] [tracknum] [GUID] [inctrackorder] [inctimeorder]",IDC_STATIC,7,45,328,20
+    CONTROL         "List1",IDC_AUTONAMEOUTPUT,"SysListView32",LVS_REPORT | WS_BORDER,7,86,328,189
+    DEFPUSHBUTTON   "OK",IDOK,7,280,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,68,280,50,14
 END
 
 IDD_SCANPROGR DIALOGEX 0, 0, 382, 39
@@ -1255,7 +1255,7 @@ BEGIN
     IDD_AUTORENAMETAKES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 375
+        RIGHTMARGIN, 335
         TOPMARGIN, 7
         BOTTOMMARGIN, 294
     END

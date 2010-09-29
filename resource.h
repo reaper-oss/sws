@@ -126,7 +126,6 @@
 #define IDC_FULLFILENAME                1063
 #define IDC_RENAMEMEDIA                 1064
 #define IDC_AUTONAMEOUTPUT              1065
-#define IDC_SAMPLEOUT                   1066
 #define IDC_AUTONAMEPRESETS             1067
 #define IDC_HIDEPATHS                   1068
 #define IDC_SCANFILE                    1069
@@ -232,7 +231,6 @@
 #define IDC_SNM_CUEBUS_HWOUT8           1173
 #define IDC_SNM_CUEBUS_TEMPLATE         1174
 #define IDC_PLAY                        1175
-#define IDC_PLAY2                       1176
 #define IDC_SCROLL                      1177
 #define IDC_PADREENVPROC_TARGET         1178
 #define IDC_PADREENVPROC_ACTIVETAKES    1179

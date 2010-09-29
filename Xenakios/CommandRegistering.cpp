@@ -117,7 +117,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Scale item positions/lengths by static percentage..." }, "XENAKIOS_SCALEITEMPOS_STATIC", DoScaleItemPosStaticDlg,	"Scale item positions/lengths by static percentage...", },
 	{ { DEFACCEL, "Xenakios/SWS: Reposition selected items..." }, "XENAKIOS_REPOSITION_ITEMS", DoReposItemsDlg,	"Reposition selected items...", },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
-	{ { DEFACCEL, "Xenakios/SWS: Rename selected takes (old version)..." }, "XENAKIOS_RENAMEMULTIPLETAKES", DoRenameTakeDlg,	"Rename selected takes...", },
+	{ { DEFACCEL, "Xenakios/SWS: Rename selected takes (deprecated)..." }, "XENAKIOS_RENAMEMULTIPLETAKES", DoRenameTakeDlg,	"Rename selected takes...", },
 	{ { DEFACCEL, "Xenakios/SWS: Auto-rename selected takes..." }, "XENAKIOS_AUTORENAMETAKES", DoAutoRename,	"Auto-rename selected takes...", },
 	{ { DEFACCEL, "Xenakios/SWS: Rename selected takes with BWAV description" }, "XENAKIOS_BROADCAST_TAKERENAME", DoRenameTakesWithBWAVDesc,	"Rename selected takes with BWAV description", },
 	{ { DEFACCEL, "Xenakios/SWS: Choose new source file for selected takes..." }, "XENAKIOS_CHANGESOURCEFILE", DoChooseNewSourceFileForSelTakes,	"Choose new source file for selected Takes...", },

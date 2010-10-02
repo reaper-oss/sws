@@ -337,7 +337,7 @@ void NudgePlayrate(COMMAND_T *t)
 
 void CrossfadeSelItems(COMMAND_T* t)
 {
-	double dFadeLen = *(double*)GetConfigVar("deffadelen");
+	double dFadeLen = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
 	double dEdgeAdj = dFadeLen / 2.0;
 	bool bChanges = false;
 

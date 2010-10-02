@@ -181,6 +181,72 @@ void InsertFromTrackName(COMMAND_T*)
 		GetSetMediaTrackInfo((MediaTrack*)tracks.Get(i), "I_SELECTED", &g_i1);
 }
 
+double QuantizeTime(double dTime, double dGrid, double dMin, double dMax)
+{
+	double dBeatPos = TimeMap_timeToQN(dTime);
+	dBeatPos += dGrid / 2.0;
+	dBeatPos -= fmod(dBeatPos, dGrid);
+	double dNewTime = TimeMap_QNToTime(dBeatPos);
+	while (dNewTime <= dMin)
+	{
+		dBeatPos += dGrid;
+		dNewTime = TimeMap_QNToTime(dBeatPos);
+	}
+	while (dNewTime >= dMax)
+	{
+		dBeatPos -= dGrid;
+		dNewTime = TimeMap_QNToTime(dBeatPos);
+	}
+	return dNewTime;
+}
+
+// 1: Quant start, keep len
+// 2: Quant start, keep end
+// 3: Quant end, keep len
+// 4: Quant end, keep start
+// 5: Quant both
+void QuantizeItemEdges(COMMAND_T* t)
+{
+	// Eventually a dialog?  for now quantize to grid
+	double div = *(double*)GetConfigVar("projgriddiv");
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	{
+		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		double dStart = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+		double dLen   = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
+		double dEnd   = dStart + dLen;
+
+		switch(t->user)
+		{
+		case 1:
+			dStart = QuantizeTime(dStart, div, -DBL_MAX, dEnd);
+			break;
+		case 2:
+			dStart = QuantizeTime(dStart, div, -DBL_MAX, dEnd);
+			dLen   = dEnd - dStart;
+			break;
+		case 3:
+			dEnd = QuantizeTime(dEnd, div, dStart, DBL_MAX);
+			dStart = dEnd - dLen;
+			break;
+		case 4:
+			dEnd = QuantizeTime(dEnd, div, dStart, DBL_MAX);
+			dLen = dEnd - dStart;
+			break;
+		case 5:
+			dStart = QuantizeTime(dStart, div, -DBL_MAX, dEnd);
+			dEnd = QuantizeTime(dEnd, div, dStart, DBL_MAX);
+			dLen = dEnd - dStart;
+			break;
+		}
+		GetSetMediaItemInfo(item, "D_POSITION", &dStart);
+		GetSetMediaItemInfo(item, "D_LENGTH",	&dLen);
+	}
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+
+
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Toggle mute of items on selected track(s)" },			"SWS_TOGITEMMUTE",		TogItemMute,			},
@@ -189,6 +255,11 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Move selected item(s) left edge to edit cursor" },		"SWS_ITEMLEFTTOCUR",	MoveItemLeftToCursor,	},
 	{ { DEFACCEL, "SWS: Move selected item(s) right edge to edit cursor" },		"SWS_ITEMRIGHTTOCUR",	MoveItemRightToCursor,	},
 	{ { DEFACCEL, "SWS: Insert file matching selected track(s) name" },			"SWS_INSERTFROMTN",		InsertFromTrackName,	},
+	{ { DEFACCEL, "SWS: Quantize item's start to grid (keep length)" },			"SWS_QUANTITESTART2",	QuantizeItemEdges, NULL, 1 },
+	{ { DEFACCEL, "SWS: Quantize item's start to grid (change length)" },		"SWS_QUANTITESTART1",	QuantizeItemEdges, NULL, 2 },
+	{ { DEFACCEL, "SWS: Quantize item's end to grid (keep length)" },			"SWS_QUANTITEEND2",		QuantizeItemEdges, NULL, 3 },
+	{ { DEFACCEL, "SWS: Quantize item's end to grid (change length)" },			"SWS_QUANTITEEND1",		QuantizeItemEdges, NULL, 4 },
+	{ { DEFACCEL, "SWS: Quantize item's edges to grid (change length)" },		"SWS_QUANTITEEDGES",	QuantizeItemEdges, NULL, 5 },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

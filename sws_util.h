@@ -43,6 +43,7 @@
 #define UTF8_CIRCLE "\xE2\x97\xA6"
 #define UTF8_BOX "\xE2\x96\xA1"
 #define UTF8_BBOX "\xE2\x96\xA0"
+#define SWS_CMD_SHORTNAME(_ct) (_ct->accel.desc + 5) // +5 to skip "SWS: "
 
 #ifdef _WIN32
 #define PATH_SLASH_CHAR '\\'

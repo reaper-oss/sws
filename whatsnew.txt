@@ -1,3 +1,12 @@
+!v1.8.0 #7 (October 1, 2010)
+Added "Quantize items to grid" actions.  These mode the selected item's left/right edge to the user-defined project grid spacing, and don't timestretch, unlike the built-in quantize action.
+They come in the following variations:
++SWS: Quantize item's start to grid (keep length)
++SWS: Quantize item's start to grid (change length)
++SWS: Quantize item's end to grid (keep length)
++SWS: Quantize item's end to grid (change length)
++SWS: Quantize item's edges to grid (change length) <i>(Quantizes both edges)</i>
+
 !v1.8.0 #6 (September 29, 2010)
 Issue 134: Take autorename update/overhaul!
 +Last entered format string is remembered

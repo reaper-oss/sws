@@ -117,8 +117,10 @@ void DumpItems(COMMAND_T* = NULL)
 		MediaTrack* tr = (MediaTrack*)GetSetMediaItemInfo(item, "P_TRACK", NULL);
 		double dStart = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
 		double dEnd   = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL) + dStart;
+		double dBStart = TimeMap_timeToQN(dStart);
+		double dBEnd   = TimeMap_timeToQN(dEnd);
 		char str[256];
-		sprintf(str, "%2d %.14f %.14f\n", CSurf_TrackToID(tr, false), dStart, dEnd);
+		sprintf(str, "%2d %.14f/%.14f %.14f/%.14f\n", CSurf_TrackToID(tr, false), dStart, dBStart, dEnd, dBEnd);
 		OutputDebugString(str);
 	}
 }

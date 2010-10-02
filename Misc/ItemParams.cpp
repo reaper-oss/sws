@@ -213,8 +213,13 @@ void QuantizeItemEdges(COMMAND_T* t)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		double dStart = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+		double dOffset = *(double*)GetSetMediaItemInfo(item, "D_SNAPOFFSET", NULL);
 		double dLen   = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
 		double dEnd   = dStart + dLen;
+
+		// Correct for snap offset
+		dStart += dOffset;
+		dLen -= dOffset;
 
 		switch(t->user)
 		{
@@ -239,6 +244,11 @@ void QuantizeItemEdges(COMMAND_T* t)
 			dLen = dEnd - dStart;
 			break;
 		}
+
+		// Uncorrect for the snap offset
+		dStart -= dOffset;
+		dLen += dOffset;
+
 		GetSetMediaItemInfo(item, "D_POSITION", &dStart);
 		GetSetMediaItemInfo(item, "D_LENGTH",	&dLen);
 	}
@@ -246,6 +256,166 @@ void QuantizeItemEdges(COMMAND_T* t)
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
+void SetChanModeAllTakes(COMMAND_T* t)
+{
+	int mode = (int)t->user;
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	{
+		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		for (int j = 0; j < CountTakes(item); j++)
+			GetSetMediaItemTakeInfo(GetTake(item, j), "I_CHANMODE", &mode);
+	}
+
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+
+void SetPreservePitch(COMMAND_T* t)
+{
+	bool bPP = t->user ? true : false;
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	{
+		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		for (int j = 0; j < CountTakes(item); j++)
+			GetSetMediaItemTakeInfo(GetTake(item, j), "B_PPITCH", &bPP);
+	}
+
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+
+void SetPitch(COMMAND_T* t)
+{
+	double dPitch = (double)t->user / 100.0;
+	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	{
+		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		for (int j = 0; j < CountTakes(item); j++)
+		{
+			if (dPitch != 0.0)
+				dPitch += *(double*)GetSetMediaItemTakeInfo(GetTake(item, j), "D_PITCH", NULL);
+			GetSetMediaItemTakeInfo(GetTake(item, j), "D_PITCH", &dPitch);
+		}
+	}
+
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+
+// Original code by FNG/fingers
+// Modified by SWS to change the rate of all takes and to use snap offset
+void NudgePlayrate(COMMAND_T *t)
+{
+	for(int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	{
+		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		double snapOffset = *(double*)GetSetMediaItemInfo(item, "D_SNAPOFFSET", NULL);
+		for (int j = 0; j < CountTakes(item); j++)
+		{
+			MediaItem_Take* take = GetActiveTake(item);
+			double rate  = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
+			double newRate = rate * pow(2.0, 1.0/12.0 / (double)t->user);
+			GetSetMediaItemTakeInfo(take, "D_PLAYRATE", &newRate);
+			GetSetMediaItemTakeInfo(take, "B_PPITCH", &g_bFalse);
+			
+			// Take into account the snap offset
+			if (snapOffset != 0.0)
+			{
+				// Rate can be clipped by Reaper, re-read it here
+				newRate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
+				double offset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
+				offset += (1.0 - newRate / rate) * snapOffset * rate;
+				if (offset < 0.0)
+					offset = 0.0;
+				GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &offset);
+			}
+		}
+	}
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+
+void CrossfadeSelItems(COMMAND_T* t)
+{
+	double dFadeLen = *(double*)GetConfigVar("deffadelen");
+	double dEdgeAdj = dFadeLen / 2.0;
+	bool bChanges = false;
+
+	for (int iTrack = 1; iTrack <= GetNumTracks(); iTrack++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(iTrack, false);
+		for (int iItem1 = 0; iItem1 < GetTrackNumMediaItems(tr); iItem1++)
+		{
+			MediaItem* item1 = GetTrackMediaItem(tr, iItem1);
+			if (*(bool*)GetSetMediaItemInfo(item1, "B_UISEL", NULL))
+			{
+				double dStart1 = *(double*)GetSetMediaItemInfo(item1, "D_POSITION", NULL);
+				double dEnd1   = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL) + dStart1;
+
+				// Try to match up the end with the start of the other selected media items
+				for (int iItem2 = 0; iItem2 < GetTrackNumMediaItems(tr); iItem2++)
+				{
+					MediaItem* item2 = GetTrackMediaItem(tr, iItem2);
+					if (item1 != item2 && *(bool*)GetSetMediaItemInfo(item2, "B_UISEL", NULL))
+					{
+						double dStart2 = *(double*)GetSetMediaItemInfo(item2, "D_POSITION", NULL);
+						double dTest = fabs(dEnd1 - dStart2);
+
+						// Need a tolerance for "items are adjacent".
+						// Found one case of items after split having diff edges 2.0e-14 apart, hopefully 1.0e-13 is enough (but not too much)
+						if (fabs(dEnd1 - dStart2) < 1.0e-13)
+						{	// Found a matching item
+							// Need to ensure that there's "room" to move the start of the second item back
+							// Check all of the takes' start offset before doing any "work"
+							int iTake;
+							for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
+								if (dEdgeAdj > *(double*)GetSetMediaItemTakeInfo(GetMediaItemTake(item2, iTake), "D_STARTOFFS", NULL))
+									break;
+							if (iTake < GetMediaItemNumTakes(item2))
+								continue;	// Keep looking
+
+							// We're all good, move the edges around and set the crossfades
+							double dLen1 = dEnd1 - dStart1 + dEdgeAdj;
+							GetSetMediaItemInfo(item1, "D_LENGTH", &dLen1);
+							GetSetMediaItemInfo(item1, "D_FADEOUTLEN_AUTO", &dFadeLen);
+
+							double dLen2 = *(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL);
+							dStart2 -= dEdgeAdj;
+							dLen2   += dEdgeAdj;
+							GetSetMediaItemInfo(item2, "D_POSITION", &dStart2);
+							GetSetMediaItemInfo(item2, "D_LENGTH", &dLen2);
+							GetSetMediaItemInfo(item2, "D_FADEINLEN_AUTO", &dFadeLen);
+							double dSnapOffset2 = *(double*)GetSetMediaItemInfo(item2, "D_SNAPOFFSET", NULL);
+							if (dSnapOffset2)
+							{	// Only adjust the snap offset if it's non-zero
+								dSnapOffset2 += dEdgeAdj;
+								GetSetMediaItemInfo(item2, "D_SNAPOFFSET", &dSnapOffset2);
+							}
+
+							for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
+							{
+								MediaItem_Take* take = GetMediaItemTake(item2, iTake);
+								if (take)
+								{
+									double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
+									dOffset -= dEdgeAdj;
+									GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+								}
+							}
+							bChanges = true;
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	if (bChanges)
+	{
+		UpdateTimeline();
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	}
+}
 
 static COMMAND_T g_commandTable[] = 
 {
@@ -260,6 +430,26 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Quantize item's end to grid (keep length)" },			"SWS_QUANTITEEND2",		QuantizeItemEdges, NULL, 3 },
 	{ { DEFACCEL, "SWS: Quantize item's end to grid (change length)" },			"SWS_QUANTITEEND1",		QuantizeItemEdges, NULL, 4 },
 	{ { DEFACCEL, "SWS: Quantize item's edges to grid (change length)" },		"SWS_QUANTITEEDGES",	QuantizeItemEdges, NULL, 5 },
+	{ { DEFACCEL, "SWS: Set all takes channel mode to normal" },				"SWS_TAKESCHANMODE0",	SetChanModeAllTakes, NULL, 0 },
+	{ { DEFACCEL, "SWS: Set all takes channel mode to reverse stereo" },		"SWS_TAKESCHANMODE1",	SetChanModeAllTakes, NULL, 1 },
+	{ { DEFACCEL, "SWS: Set all takes channel mode to mono (downmix)" },		"SWS_TAKESCHANMODE2",	SetChanModeAllTakes, NULL, 2 },
+	{ { DEFACCEL, "SWS: Set all takes channel mode to mono (left)" },			"SWS_TAKESCHANMODE3",	SetChanModeAllTakes, NULL, 3 },
+	{ { DEFACCEL, "SWS: Set all takes channel mode to mono (right)" },			"SWS_TAKESCHANMODE4",	SetChanModeAllTakes, NULL, 4 },
+	{ { DEFACCEL, "SWS: Clear all takes preserve pitch" },						"SWS_TAKESSPREVPITCH",	SetPreservePitch, NULL, 0 },
+	{ { DEFACCEL, "SWS: Set all takes preserve pitch" },						"SWS_TAKESSPREVPITCH",	SetPreservePitch, NULL, 1 },
+	{ { DEFACCEL, "SWS: Reset all takes' pitch" },								"SWS_TAKESPITCHRESET",	SetPitch, NULL, 0 },
+	{ { DEFACCEL, "SWS: Pitch all takes up one cent" },							"SWS_TAKESPITCH_1C",	SetPitch, NULL, 1 },
+	{ { DEFACCEL, "SWS: Pitch all takes up one semitone" },						"SWS_TAKESPITCH_1S",	SetPitch, NULL, 100 },
+	{ { DEFACCEL, "SWS: Pitch all takes up one octave" },						"SWS_TAKESPITCH_1O",	SetPitch, NULL, 1200 },
+	{ { DEFACCEL, "SWS: Pitch all takes down one cent" },						"SWS_TAKESPITCH-1C",	SetPitch, NULL, -1 },
+	{ { DEFACCEL, "SWS: Pitch all takes down one semitone" },					"SWS_TAKESPITCH-1S",	SetPitch, NULL, -100 },
+	{ { DEFACCEL, "SWS: Pitch all takes down one octave" },						"SWS_TAKESPITCH-1O",	SetPitch, NULL, -1200 },
+	{ { DEFACCEL, "SWS: Crossfade adjacent selected items" },					"SWS_CROSSFADE",		CrossfadeSelItems, },
+
+	{ { DEFACCEL, "SWS: Increase item rate by ~0.6% (10 cents) preserving length, clear 'preserve pitch'" },	"FNG_NUDGERATEUP",		NudgePlayrate, NULL, 10 },
+	{ { DEFACCEL, "SWS: Decrease item rate by ~0.6% (10 cents) preserving length, clear 'preserve pitch'" },	"FNG_NUDGERATEDOWN",	NudgePlayrate, NULL, -10 },
+	{ { DEFACCEL, "SWS: Increase item rate by ~6% (one semitone) preserving length, clear 'preserve pitch'" },	"FNG_INCREASERATE",		NudgePlayrate, NULL, 1 },
+	{ { DEFACCEL, "SWS: Decrease item rate by ~6% (one semitone) preserving length, clear 'preserve pitch'"},	"FNG_DECREASERATE",		NudgePlayrate, NULL, -1 },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

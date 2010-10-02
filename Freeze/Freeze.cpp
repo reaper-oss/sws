@@ -120,7 +120,12 @@ void DumpItems(COMMAND_T* = NULL)
 		double dBStart = TimeMap_timeToQN(dStart);
 		double dBEnd   = TimeMap_timeToQN(dEnd);
 		char str[256];
-		sprintf(str, "%2d %.14f/%.14f %.14f/%.14f\n", CSurf_TrackToID(tr, false), dStart, dBStart, dEnd, dBEnd);
+		double dSnapOffset = *(double*)GetSetMediaItemInfo(item, "D_SNAPOFFSET", NULL);
+		double dSourceOffset = 0.0;
+		MediaItem_Take* take = GetMediaItemTake(item, -1);
+		if (take)
+			dSourceOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
+		sprintf(str, "%2d %.14f/%.14f %.14f/%.14f P=%.4f S=%.4f\n", CSurf_TrackToID(tr, false), dStart, dBStart, dEnd, dBEnd, dSnapOffset, dSourceOffset);
 		OutputDebugString(str);
 	}
 }

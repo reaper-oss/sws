@@ -1,3 +1,27 @@
+!v1.8.0 #8 (October 2, 2010)
+Added new actions:
++SWS: Crossfade adjacent selected items (Issue 152)
++SWS: Set all takes channel mode to normal
++SWS: Set all takes channel mode to reverse stereo
++SWS: Set all takes channel mode to mono (downmix)
++SWS: Set all takes channel mode to mono (left)
++SWS: Set all takes channel mode to mono (right)
++SWS: Clear all takes preserve pitch
++SWS: Set all takes preserve pitch
++SWS: Reset all takes' pitch
++SWS: Pitch all takes up one cent
++SWS: Pitch all takes up one semitone
++SWS: Pitch all takes up one octave
++SWS: Pitch all takes down one cent
++SWS: Pitch all takes down one semitone
++SWS: Pitch all takes down one octave
+
+Fixed the following actions to work on all takes and with snap offset:
++SWS: Increase item rate by ~0.6% (10 cents) preserving length, clear 'preserve pitch'
++SWS: Decrease item rate by ~0.6% (10 cents) preserving length, clear 'preserve pitch'
++SWS: Increase item rate by ~6% (one semitone) preserving length, clear 'preserve pitch'
++SWS: Decrease item rate by ~6% (one semitone) preserving length, clear 'preserve pitch'
+
 !v1.8.0 #7 (October 1, 2010)
 Added "Quantize items to grid" actions.  These mode the selected item's left/right edge to the user-defined project grid spacing, and don't timestretch, unlike the built-in quantize action.
 They come in the following variations:

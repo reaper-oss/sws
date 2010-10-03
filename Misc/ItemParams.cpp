@@ -286,12 +286,12 @@ void SetPreservePitch(COMMAND_T* t)
 
 void SetPitch(COMMAND_T* t)
 {
-	double dPitch = (double)t->user / 100.0;
 	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
 	{
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		for (int j = 0; j < CountTakes(item); j++)
 		{
+			double dPitch = (double)t->user / 100.0;
 			if (dPitch != 0.0)
 				dPitch += *(double*)GetSetMediaItemTakeInfo(GetTake(item, j), "D_PITCH", NULL);
 			GetSetMediaItemTakeInfo(GetTake(item, j), "D_PITCH", &dPitch);

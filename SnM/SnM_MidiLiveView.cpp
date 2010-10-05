@@ -903,9 +903,11 @@ int SnM_MidiLiveWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 void SNM_LiveCfg_TLChangeSchedJob::Perform()
 {
 	// Check or model consistency against the track list update
-	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++) 
+	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++) 
 	{
-		for (int j = 0; j < NB_CC_VALUES; j++)
+		// SWS Oct 4 10 - Crash here when changing projects, sometimes.
+		// Need to call InitModel at some point, but not sure where.
+		for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++)
 			if (CSurf_TrackToID(g_liveCCConfigs.Get()->Get(i)->Get(j)->m_track, false) <= 0)
 				g_liveCCConfigs.Get()->Get(i)->Get(j)->Clear();
 

@@ -1,3 +1,6 @@
+!v1.8.0 #10 (October 5, 2010)
+Fixed crash on project switch/close
+
 !v1.8.0 #9 (October 3, 2010)
 Fixed bug in new "Pitch all takes" actions
 

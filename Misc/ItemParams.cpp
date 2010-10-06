@@ -314,7 +314,9 @@ void NudgePlayrate(COMMAND_T *t)
 		{
 			MediaItem_Take* take = GetActiveTake(item);
 			double rate  = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
-			double newRate = rate * pow(2.0, 1.0/12.0 / (double)t->user);
+			double newRate = 1.0;
+			if (t->user != 0)
+				double newRate = rate * pow(2.0, 1.0/12.0 / (double)t->user);
 			GetSetMediaItemTakeInfo(take, "D_PLAYRATE", &newRate);
 			GetSetMediaItemTakeInfo(take, "B_PPITCH", &g_bFalse);
 			
@@ -450,6 +452,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Decrease item rate by ~0.6% (10 cents) preserving length, clear 'preserve pitch'" },	"FNG_NUDGERATEDOWN",	NudgePlayrate, NULL, -10 },
 	{ { DEFACCEL, "SWS: Increase item rate by ~6% (one semitone) preserving length, clear 'preserve pitch'" },	"FNG_INCREASERATE",		NudgePlayrate, NULL, 1 },
 	{ { DEFACCEL, "SWS: Decrease item rate by ~6% (one semitone) preserving length, clear 'preserve pitch'"},	"FNG_DECREASERATE",		NudgePlayrate, NULL, -1 },
+	{ { DEFACCEL, "SWS: Reset item rate, preserving length, clear 'preserve pitch'"},							"SWS_RESETRATE",		NudgePlayrate, NULL, 0 },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

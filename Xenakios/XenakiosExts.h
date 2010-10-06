@@ -67,7 +67,6 @@ void DoShiftEnvelopeEarlier(COMMAND_T*);
 void DoJumpEditCursorByRandomAmount(COMMAND_T*);
 void DoNudgeSelectedItemsPositions(bool UseConfig,bool Positive,double NudgeTime);
 void DoSetItemFadesConfLen(COMMAND_T*);
-void DoSetItemFadesConfLenB(COMMAND_T*);
 void DoNudgeItemPitches(double NudgeAmount,bool Resampled);
 void DoNudgeItemPitchesDown(COMMAND_T*);
 void DoNudgeItemPitchesUp(COMMAND_T*);

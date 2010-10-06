@@ -57,49 +57,35 @@ void DoNudgeSelectedItemsPositions(bool UseConfig, bool Positive, double NudgeTi
 	UpdateTimeline();
 }
 
-void DoSetItemFadesConfLen(COMMAND_T*)
+void DoSetItemFadesConfLen(COMMAND_T* t)
 {
-	double dNewFadeInLen  = g_command_params.CommandFadeInA;
-	double dNewFadeOutLen = g_command_params.CommandFadeOutA;
+	double dFadeInLen  = t->user == 0 ? g_command_params.CommandFadeInA  : g_command_params.CommandFadeInB;
+	double dFadeOutLen = t->user == 0 ? g_command_params.CommandFadeOutA : g_command_params.CommandFadeOutB;
 	double dZero = 0.0;
-	for (int i = 0; i < CountSelectedMediaItems(0); i++)
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	for (int i = 0; i < items.GetSize(); i++)
 	{
-		MediaItem* item = GetSelectedMediaItem(0, i);
-		double ItemLen= *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
-		if ((dNewFadeInLen + dNewFadeOutLen) > ItemLen)
-			dNewFadeInLen = dNewFadeOutLen = ItemLen / 2.0;
+		double dItemLen= *(double*)GetSetMediaItemInfo(items.Get()[i], "D_LENGTH", NULL);
+		double dNewFadeInLen = dFadeInLen;
+		double dNewFadeOutLen = dFadeOutLen;
+		double dNoFadeTime = 0.01; // 10 ms - makes fade handles actually grabable
+		if ((dNewFadeInLen + dNewFadeOutLen + dNoFadeTime) > dItemLen)
+		{
+			if (dNoFadeTime > dItemLen / 2.0) // Don't let the no-fade-time be more than 50% of the item
+				dNoFadeTime = dItemLen / 2.0;
+			dNewFadeInLen  = (dItemLen - dNoFadeTime) * dFadeInLen  / (dFadeInLen + dFadeOutLen);
+			dNewFadeOutLen = (dItemLen - dNoFadeTime) * dFadeOutLen / (dFadeInLen + dFadeOutLen);
+		}
 
-		GetSetMediaItemInfo(item, "C_FADEINSHAPE",  &g_command_params.CommandFadeInShapeA);
-		GetSetMediaItemInfo(item, "C_FADEOUTSHAPE", &g_command_params.CommandFadeOutShapeA);
-		GetSetMediaItemInfo(item, "D_FADEINLEN",  &dNewFadeInLen);
-		GetSetMediaItemInfo(item, "D_FADEOUTLEN", &dNewFadeOutLen);
-		GetSetMediaItemInfo(item, "D_FADEINLEN_AUTO",  &dZero);
-		GetSetMediaItemInfo(item, "D_FADEOUTLEN_AUTO", &dZero);
+		GetSetMediaItemInfo(items.Get()[i], "C_FADEINSHAPE",  &g_command_params.CommandFadeInShapeA);
+		GetSetMediaItemInfo(items.Get()[i], "C_FADEOUTSHAPE", &g_command_params.CommandFadeOutShapeA);
+		GetSetMediaItemInfo(items.Get()[i], "D_FADEINLEN",  &dNewFadeInLen);
+		GetSetMediaItemInfo(items.Get()[i], "D_FADEOUTLEN", &dNewFadeOutLen);
+		GetSetMediaItemInfo(items.Get()[i], "D_FADEINLEN_AUTO",  &dZero);
+		GetSetMediaItemInfo(items.Get()[i], "D_FADEOUTLEN_AUTO", &dZero);
 	}
-	Undo_OnStateChangeEx("Set item fades to configured lengths A", UNDO_STATE_ITEMS, -1);
-	UpdateTimeline();
-}
-
-void DoSetItemFadesConfLenB(COMMAND_T*)
-{
-	double dNewFadeInLen  = g_command_params.CommandFadeInB;
-	double dNewFadeOutLen = g_command_params.CommandFadeOutB;
-	double dZero = 0.0;
-	for (int i = 0; i < CountSelectedMediaItems(0); i++)
-	{
-		MediaItem* item = GetSelectedMediaItem(0, i);
-		double ItemLen= *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
-		if ((dNewFadeInLen + dNewFadeOutLen) > ItemLen)
-			dNewFadeInLen = dNewFadeOutLen = ItemLen / 2.0;
-
-		GetSetMediaItemInfo(item, "C_FADEINSHAPE",  &g_command_params.CommandFadeInShapeB);
-		GetSetMediaItemInfo(item, "C_FADEOUTSHAPE", &g_command_params.CommandFadeOutShapeB);
-		GetSetMediaItemInfo(item, "D_FADEINLEN",  &dNewFadeInLen);
-		GetSetMediaItemInfo(item, "D_FADEOUTLEN", &dNewFadeOutLen);
-		GetSetMediaItemInfo(item, "D_FADEINLEN_AUTO",  &dZero);
-		GetSetMediaItemInfo(item, "D_FADEOUTLEN_AUTO", &dZero);
-	}
-	Undo_OnStateChangeEx("Set item fades to configured lengths B", UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx("Set item fades to configured lengths", UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 

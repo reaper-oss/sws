@@ -149,8 +149,8 @@ COMMAND_T g_XenCommandTable[] =
 	
 	{ { DEFACCEL, "Xenakios/SWS: Toggle selected takes normalized/unity gain" }, "XENAKIOS_TOGGLETAKENORMALIZE", DoToggleTakesNormalize, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Set fades of selected items to 0.0" }, "XENAKIOS_REMOVEITEMFADES", DoRemoveItemFades, NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Set fades of selected items to configuration A" }, "XENAKIOS_SETITEMFADES", DoSetItemFadesConfLen, NULL, },
-	{ { DEFACCEL, "Xenakios/SWS: Set fades of selected items to configuration B" }, "XENAKIOS_SETITEMFADESB", DoSetItemFadesConfLenB, NULL, },
+	{ { DEFACCEL, "Xenakios/SWS: Set fades of selected items to configuration A" }, "XENAKIOS_SETITEMFADES", DoSetItemFadesConfLen, NULL, 0 },
+	{ { DEFACCEL, "Xenakios/SWS: Set fades of selected items to configuration B" }, "XENAKIOS_SETITEMFADESB", DoSetItemFadesConfLen, NULL, 1 },
 	
 	{ { DEFACCEL, "Xenakios/SWS: Pan takes of item symmetrically" }, "XENAKIOS_PANTAKESOFITEMSYM", DoPanTakesSymmetricallyWithUndo, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Implode items to takes and pan symmetrically" }, "XENAKIOS_IMPLODEITEMSPANSYMMETRICALLY", DoImplodeTakesSetPlaySetSymPans, NULL, },

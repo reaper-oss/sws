@@ -1,7 +1,7 @@
 /******************************************************************************
-/ Version.h
+/ Adam.h
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2010 Adam Wathan
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,8 +23,9 @@
 / FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 / OTHER DEALINGS IN THE SOFTWARE.
 /
-/ Auto build # increment code from MS Knowledge base article 237870
 ******************************************************************************/
 
-#define SWS_VERSION			1,8,1,1
-#define SWS_VERSION_STR		"1, 8, 1, 1\0"
+#pragma once
+
+int AdamInit();
+

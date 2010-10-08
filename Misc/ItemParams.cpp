@@ -316,7 +316,7 @@ void NudgePlayrate(COMMAND_T *t)
 			double rate  = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
 			double newRate = 1.0;
 			if (t->user != 0)
-				double newRate = rate * pow(2.0, 1.0/12.0 / (double)t->user);
+				newRate = rate * pow(2.0, 1.0/12.0 / (double)t->user);
 			GetSetMediaItemTakeInfo(take, "D_PLAYRATE", &newRate);
 			GetSetMediaItemTakeInfo(take, "B_PPITCH", &g_bFalse);
 			

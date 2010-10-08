@@ -1,3 +1,13 @@
+!v1.8.1 #1 (October 8, 2010)
+SWS welcomes Adam Wathan to the project!
+He's working on "beat detective" like functionality.
+More details are on the http://forum.cockos.com/showthread.php?t=66434|Reaper forum|.
+
+He's added the following actions:
++SWS/AdamWathan: Fill gaps between selected items (advanced)
++SWS/AdamWathan: Fill gaps between selected items (quick, no crossfade)
++SWS/AdamWathan: Fill gaps between selected items (quick, crossfade using default fade length)
+
 !v1.8.0 #11 (October 6, 2010)
 Fix "Set fades to configuration A/B" actions when selecting multiple items (and at least one short one)
 Add action "SWS: Reset item rate, preserving length, clear 'preserve pitch'"

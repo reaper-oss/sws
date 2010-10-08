@@ -654,6 +654,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Misc\Adam.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\Adam.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Color\Autocolor.h"
 				>
 			</File>

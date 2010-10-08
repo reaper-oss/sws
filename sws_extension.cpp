@@ -385,6 +385,7 @@ extern "C"
 		IMPAPI(CountSelectedTracks);
 		IMPAPI(CountTakes);
 		IMPAPI(CountTracks);
+		IMPAPI(CountTrackMediaItems);
 		IMPAPI(CountTrackEnvelopes);
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
@@ -431,6 +432,7 @@ extern "C"
 		IMPAPI(GetMediaItemTake_Item);
 		IMPAPI(GetMediaItemTake_Source);
 		IMPAPI(GetMediaItemTake_Track);
+		IMPAPI(GetMediaItemTakeInfo_Value);
 		IMPAPI(GetNumTracks);
 		IMPAPI(GetOutputChannelName);
 		IMPAPI(GetPeaksBitmap);
@@ -458,6 +460,7 @@ extern "C"
 		IMPAPI(GetSet_LoopTimeRange);
 		IMPAPI(GetSet_LoopTimeRange2);
 		IMPAPI(GetTake);
+		IMPAPI(GetTrack);
 		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);
 		IMPAPI(GetTrackInfo);
@@ -514,6 +517,8 @@ extern "C"
 		IMPAPI(SelectProjectInstance);
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
+		IMPAPI(SetMediaItemInfo_Value);
+		IMPAPI(SetMediaItemTakeInfo_Value);
 		IMPAPI(SetProjectMarker);
 		IMPAPI(SetTrackSelected);
 		IMPAPI(ShowActionList);

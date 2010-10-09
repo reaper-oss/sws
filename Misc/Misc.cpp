@@ -44,6 +44,7 @@
 #include "TrackSel.h"
 #include "Zoom.h"
 #include "Misc.h"
+#include "Adam.h"
 
 int MiscInit()
 {
@@ -66,6 +67,8 @@ int MiscInit()
 		return 0;
 	if (!ZoomInit())
 		return 0;
-
+	if (!AdamInit())
+		return 0;
+	
 	return 1;
 }

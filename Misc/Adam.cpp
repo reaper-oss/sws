@@ -31,22 +31,27 @@
 
 void AWFillGapsAdv(COMMAND_T* t)
 {
-
 	// Set up dialog info
 	const char names[] = "Trigger Pad (ms),Crossfade Length (ms),Maximum Gap (ms),Maximum Stretch (0.5 is double),Preserve Transient (ms),Transient Crossfade Length (ms)";
-	char defaultValues[100] = "5,5,25,0.85,35,5";
+	static char defaultValues[100] = "5,5,15,0.5,35,5";
+	char retVals[100];
 	int maxReturnLen = 100;
 	int nitems = 6;
 	
-	// Call dialog
-	bool userInput = GetUserInputs("AutoPocket - Smoothing",nitems,names,defaultValues,maxReturnLen);
+	// Copy defaultValues into returnedValues (retains values in case user hits cancel)
+	strcpy(retVals, defaultValues);
+	
+	// Call dialog, use retVals so defaultValues doesn't get miffed up
+	bool userInput = GetUserInputs("Advanced Item Smoothing",nitems,names,retVals,maxReturnLen);
 	
 	// If user hit okay, get the parameters they entered
 	if (userInput)	
 	{
+		// If user didn't hit cancel, copy the returned values back into the default values before ruining retVals with evil strtok
+		strcpy(defaultValues, retVals);
 		
 		// Divided by 1000 to convert to milliseconds except maxStretch
-		double triggerPad = (atof(strtok(defaultValues, ",")))/1000;
+		double triggerPad = (atof(strtok(retVals, ",")))/1000;
 		double fadeLength = (atof(strtok(NULL, ",")))/1000;
 		double maxGap = (atof(strtok(NULL, ",")))/1000;
 		double maxStretch = atof(strtok(NULL, ","));

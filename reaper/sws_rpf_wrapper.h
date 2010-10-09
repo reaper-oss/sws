@@ -35,7 +35,7 @@ extern int (WINAPI *CoolSB_SetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi
 #define WDL_VirtualWnd_ScaledBlitBG WDL_VirtualWnd_ScaledBlitBG_fptr
 #define WDL_VirtualWnd_BGCfg WDL_VirtualWnd_BGCfg_stub
 
-#include <reaper_plugin_functions.h>
+#include "reaper_plugin_functions.h"
 
 #undef WDL_VirtualWnd_BGCfg
 #undef WDL_VirtualWnd_ScaledBlitBG

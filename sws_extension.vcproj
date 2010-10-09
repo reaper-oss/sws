@@ -372,6 +372,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Misc\Adam.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Color\Autocolor.cpp"
 				>
 			</File>
@@ -651,10 +655,6 @@
 			>
 			<File
 				RelativePath=".\Freeze\ActiveTake.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Misc\Adam.cpp"
 				>
 			</File>
 			<File

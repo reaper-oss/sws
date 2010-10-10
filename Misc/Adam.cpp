@@ -126,8 +126,24 @@ void AWFillGapsAdv(COMMAND_T* t)
 								// (don't need take loop to adjust all start offsets)
 								double splitPoint = item1TransPos + presTrans - transFade;
 								
+								// Check for default item fades
+								double defItemFades = *(double*)(GetConfigVar("deffadelen"));
+								bool fadeFlag = 0;
+								
+								if (defItemFades > 0)
+								{
+									fadeFlag = 1;
+									Main_OnCommand(41194,0);
+								}
+								
 								// Split item1 at the split point
 								MediaItem* item1B = SplitMediaItem(item1, splitPoint);
+								
+								// Revert item fades
+								if (fadeFlag)
+								{
+									Main_OnCommand(41194,0);
+								}
 								
 								// Get new item1 length after split
 								item1Length = GetMediaItemInfo_Value(item1, "D_LENGTH") + transFade;

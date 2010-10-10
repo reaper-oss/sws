@@ -265,7 +265,7 @@ void AWFillGapsAdv(COMMAND_T* t)
 	
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
 
@@ -378,7 +378,7 @@ void AWFillGapsQuick(COMMAND_T* t)
 	
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
 void AWFillGapsQuickXFade(COMMAND_T* t)
@@ -494,7 +494,7 @@ void AWFillGapsQuickXFade(COMMAND_T* t)
 	
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
 
@@ -509,7 +509,7 @@ void AWSplitWithLeftSideCrossfade(COMMAND_T* t)
 	
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 */
 

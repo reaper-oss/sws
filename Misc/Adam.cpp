@@ -32,11 +32,11 @@
 void AWFillGapsAdv(COMMAND_T* t)
 {
 	// Set up dialog info
-	const char names[] = "Trigger Pad (ms),Crossfade Length (ms),Maximum Gap (ms),Maximum Stretch (0.5 is double),Preserve Transient (ms),Transient Crossfade Length (ms)";
-	static char defaultValues[100] = "5,5,15,0.5,35,5";
+	const char names[] = "Trigger Pad (ms),Crossfade Length (ms),Maximum Gap (ms),Maximum Stretch (0.5 is double),Preserve Transient (ms),Transient Crossfade Length (ms),Fade Shape (0 = linear)";
+	static char defaultValues[100] = "5,5,15,0.5,35,5,0";
 	char retVals[100];
 	int maxReturnLen = 100;
-	int nitems = 6;
+	int nitems = 7;
 	
 	// Copy defaultValues into returnedValues (retains values in case user hits cancel)
 	strcpy(retVals, defaultValues);
@@ -57,7 +57,7 @@ void AWFillGapsAdv(COMMAND_T* t)
 		double maxStretch = atof(strtok(NULL, ","));
 		double presTrans = (atof(strtok(NULL, ",")))/1000;
 		double transFade = (atof(strtok(NULL, ",")))/1000;
-		
+		int fadeShape = atoi(strtok(NULL, ","));
 	
 		// Run loop for every track in project
 		for (int trackIndex = 0; trackIndex < GetNumTracks(); trackIndex++)
@@ -127,6 +127,10 @@ void AWFillGapsAdv(COMMAND_T* t)
 								// Crossfade the overlap
 								SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", transFade);
 								SetMediaItemInfo_Value(item1B, "D_FADEINLEN_AUTO", transFade);
+								
+								// Set Fade Shapes
+								SetMediaItemInfo_Value(item1, "C_FADEOUTSHAPE", fadeShape);
+								SetMediaItemInfo_Value(item1B, "C_FADEINSHAPE", fadeShape);
 								
 								// Set the stretched half to be item 1 so loop continues properly
 								item1 = item1B;
@@ -245,6 +249,10 @@ void AWFillGapsAdv(COMMAND_T* t)
 						// Crossfade the overlap between the two items
 						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", fadeLength);
 						SetMediaItemInfo_Value(item2, "D_FADEINLEN_AUTO", fadeLength);
+						
+						// Set Fade Shapes
+						SetMediaItemInfo_Value(item1, "C_FADEOUTSHAPE", fadeShape);
+						SetMediaItemInfo_Value(item2, "C_FADEINSHAPE", fadeShape);
 					}
 				}
 				
@@ -488,6 +496,23 @@ void AWFillGapsQuickXFade(COMMAND_T* t)
 	UpdateTimeline();
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
+
+
+/*
+void AWSplitWithLeftSideCrossfade(COMMAND_T* t)
+{
+	double fadeLength = fabs(*(double*)GetConfigVar("deffadelen"));
+	
+	double splitPosition = GetCursorPosition() - fadeLength;
+	
+	for (int iItem = 0; iItem < 
+	
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+*/
+
 
 static COMMAND_T g_commandTable[] = 
 {

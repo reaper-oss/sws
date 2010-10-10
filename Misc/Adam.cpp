@@ -35,11 +35,13 @@ void AWFillGapsAdv(COMMAND_T* t)
 	const char names[] = "Trigger Pad (ms),Crossfade Length (ms),Maximum Gap (ms),Maximum Stretch (0.5 is double),Preserve Transient (ms),Transient Crossfade Length (ms),Fade Shape (0 = linear)";
 	static char defaultValues[100] = "5,5,15,0.5,35,5,0";
 	char retVals[100];
+	char defValsBackup[100];
 	int maxReturnLen = 100;
 	int nitems = 7;
 	
 	// Copy defaultValues into returnedValues (retains values in case user hits cancel)
 	strcpy(retVals, defaultValues);
+	strcpy(defValsBackup, defaultValues);
 	
 	// Call dialog, use retVals so defaultValues doesn't get miffed up
 	bool userInput = GetUserInputs("Advanced Item Smoothing",nitems,names,retVals,maxReturnLen);
@@ -59,6 +61,15 @@ void AWFillGapsAdv(COMMAND_T* t)
 		double transFade = (atof(strtok(NULL, ",")))/1000;
 		int fadeShape = atoi(strtok(NULL, ","));
 	
+		if ((triggerPad < 0) || (fadeLength < 0) || (maxGap < 0) || (maxStretch < 0) || (maxStretch > 1) || (presTrans < 0) || (transFade < 0) || (fadeShape < 0) || (fadeShape > 5))
+		{
+			strcpy(defaultValues, defValsBackup);
+			
+			//ShowMessageBox("Don't use such stupid values, try again.","Invalid Input",0);
+			MessageBox(g_hwndParent, "All values must be non-negative, Maximum Stretch must be a value from 0 to 1 and Fade Shape must be a value from 0 to 5.", "Item Smoothing Input Error", MB_OK);
+			return;
+		}
+		
 		// Run loop for every track in project
 		for (int trackIndex = 0; trackIndex < GetNumTracks(); trackIndex++)
 		{

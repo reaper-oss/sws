@@ -312,7 +312,7 @@ void NudgePlayrate(COMMAND_T *t)
 		double snapOffset = *(double*)GetSetMediaItemInfo(item, "D_SNAPOFFSET", NULL);
 		for (int j = 0; j < CountTakes(item); j++)
 		{
-			MediaItem_Take* take = GetActiveTake(item);
+			MediaItem_Take* take = GetTake(item, j);
 			double rate  = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
 			double newRate = 1.0;
 			if (t->user != 0)

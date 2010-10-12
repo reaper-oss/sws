@@ -992,6 +992,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						WarningLevel="2"
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
@@ -1010,6 +1011,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="0"
+						WarningLevel="2"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1035,6 +1037,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="0"
+						WarningLevel="2"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1052,6 +1055,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="0"
+						WarningLevel="2"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1073,6 +1077,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="0"
+						WarningLevel="2"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1090,6 +1095,7 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						UsePrecompiledHeader="0"
+						WarningLevel="2"
 					/>
 				</FileConfiguration>
 			</File>
@@ -1119,6 +1125,7 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
+							WarningLevel="2"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1137,6 +1144,7 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
+							WarningLevel="2"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1163,6 +1171,7 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
+							WarningLevel="2"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1181,6 +1190,7 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
+							WarningLevel="2"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1203,6 +1213,7 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
+							WarningLevel="2"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1221,6 +1232,7 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
+							WarningLevel="2"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1243,6 +1255,7 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
+							WarningLevel="2"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1261,6 +1274,7 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
+							WarningLevel="2"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1287,6 +1301,7 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
+							WarningLevel="2"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -1305,6 +1320,7 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
+							WarningLevel="2"
 						/>
 					</FileConfiguration>
 				</File>
@@ -1330,6 +1346,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1348,6 +1365,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1378,6 +1396,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1396,6 +1415,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1418,6 +1438,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1436,6 +1457,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1458,6 +1480,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1476,6 +1499,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1498,6 +1522,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1516,6 +1541,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1538,6 +1564,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1556,6 +1583,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1578,6 +1606,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1596,6 +1625,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1618,6 +1648,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1636,6 +1667,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1658,6 +1690,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1676,6 +1709,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1698,6 +1732,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1716,6 +1751,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1738,6 +1774,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1756,6 +1793,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1778,6 +1816,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1796,6 +1835,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1818,6 +1858,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1836,6 +1877,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1858,6 +1900,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1876,6 +1919,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1898,6 +1942,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1916,6 +1961,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1938,6 +1984,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1956,6 +2003,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -1978,6 +2026,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -1996,6 +2045,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -2021,6 +2071,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -2038,6 +2089,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -2059,6 +2111,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -2076,6 +2129,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -2097,6 +2151,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -2114,6 +2169,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -2139,6 +2195,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -2156,6 +2213,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -2181,6 +2239,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -2198,6 +2257,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -2219,6 +2279,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -2236,6 +2297,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -2265,6 +2327,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -2282,6 +2345,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -2307,6 +2371,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -2324,6 +2389,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -2349,6 +2415,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -2366,6 +2433,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -2391,6 +2459,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -2408,6 +2477,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -2441,6 +2511,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -2458,6 +2529,7 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
+								WarningLevel="2"
 							/>
 						</FileConfiguration>
 					</File>
@@ -2620,6 +2692,7 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
+							WarningLevel="2"
 						/>
 					</FileConfiguration>
 					<FileConfiguration
@@ -2637,6 +2710,7 @@
 						<Tool
 							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
+							WarningLevel="2"
 						/>
 					</FileConfiguration>
 				</File>

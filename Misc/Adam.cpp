@@ -200,8 +200,9 @@ void AWFillGapsAdv(COMMAND_T* t)
 			
 				// BEGIN FIX OVERLAP CODE --------------------------------------------------------------
 				
-				// If either item are selected, run this loop
-				if ((GetMediaItemInfo_Value(item1, "B_UISEL")) || (GetMediaItemInfo_Value(item2, "B_UISEL")))
+				// If first item is selected selected, run this loop
+				// if (GetMediaItemInfo_Value(item1, "B_UISEL"))
+				if (GetMediaItemInfo_Value(item1, "B_UISEL"))
 				{
 					// Get various pieces of info for the 2 items
 					double item1Start = GetMediaItemInfo_Value(item1, "D_POSITION");
@@ -320,8 +321,8 @@ void AWFillGapsQuick(COMMAND_T* t)
 		
 			// BEGIN FIX OVERLAP CODE --------------------------------------------------------------
 			
-			// If either item are selected, run this loop
-			if ((GetMediaItemInfo_Value(item1, "B_UISEL")) || (GetMediaItemInfo_Value(item2, "B_UISEL")))
+			// If first item is selected, run this loop
+			if (GetMediaItemInfo_Value(item1, "B_UISEL"))
 			{
 				// Get various pieces of info for the 2 items
 				double item1Start = GetMediaItemInfo_Value(item1, "D_POSITION");
@@ -432,8 +433,8 @@ void AWFillGapsQuickXFade(COMMAND_T* t)
 			
 			// BEGIN FIX OVERLAP CODE --------------------------------------------------------------
 			
-			// If either item are selected, run this loop
-			if ((GetMediaItemInfo_Value(item1, "B_UISEL")) || (GetMediaItemInfo_Value(item2, "B_UISEL")))
+			// If first item is selected, run this loop
+			if (GetMediaItemInfo_Value(item1, "B_UISEL"))
 			{
 				// Get various pieces of info for the 2 items
 				double item1Start = GetMediaItemInfo_Value(item1, "D_POSITION");
@@ -525,6 +526,77 @@ void AWFillGapsQuickXFade(COMMAND_T* t)
 }
 
 
+void AWFixOverlaps(COMMAND_T* t)
+{
+	
+	// Run loop for every track in project
+	for (int trackIndex = 0; trackIndex < GetNumTracks(); trackIndex++)
+	{
+		
+		// Gets current track in loop
+		MediaTrack* track = GetTrack(0, trackIndex);
+		
+		// Run loop for every item on track
+		
+		int itemCount = GetTrackNumMediaItems(track);
+		
+		for (int itemIndex = 0; itemIndex < (itemCount - 1); itemIndex++)
+		{
+			
+			MediaItem* item1 = GetTrackMediaItem(track, itemIndex);
+			MediaItem* item2 = GetTrackMediaItem(track, itemIndex + 1);
+			
+			
+			// BEGIN FIX OVERLAP CODE --------------------------------------------------------------
+			
+			// If first item is selected, run this loop
+			if (GetMediaItemInfo_Value(item1, "B_UISEL"))
+			{
+				// Get various pieces of info for the 2 items
+				double item1Start = GetMediaItemInfo_Value(item1, "D_POSITION");
+				double item1Length = GetMediaItemInfo_Value(item1, "D_LENGTH");
+				double item1End = item1Start + item1Length;
+				
+				double item2Start = GetMediaItemInfo_Value(item2, "D_POSITION");
+				
+				// If the first item overlaps the second item, trim the first item
+				if (item1End > (item2Start))
+				{
+					
+					// If both items selected, account for trigger pad, if not, just trim to item 2 start
+					if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
+					{
+						item1Length = item2Start - item1Start;
+					}
+					else
+					{
+						item1Length = item2Start - item1Start;
+					}
+					
+					SetMediaItemInfo_Value(item1, "D_LENGTH", item1Length);
+				}
+				
+				if (item1End <= (item2Start))
+				{
+					// If both items selected, account for trigger pad, if not, do nothing
+					if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
+					{
+						item1Length = item2Start - item1Start;
+					}
+				}
+			}
+			
+			// END FIX OVERLAP CODE ----------------------------------------------------------------
+		}
+		
+	}
+	
+	
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+
 /*
 void AWSplitWithLeftSideCrossfade(COMMAND_T* t)
 {
@@ -547,6 +619,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (advanced)" },					"SWS_AWFILLGAPSADV",		AWFillGapsAdv, },
 	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, no crossfade)" },					"SWS_AWFILLGAPSQUICK",		AWFillGapsQuick, },
 	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, crossfade using default fade length)" },					"SWS_AWFILLGAPSQUICKXFADE",		AWFillGapsQuickXFade, },
+	{ { DEFACCEL, "SWS/AdamWathan: Remove overlaps in selected items preserving item starts" },					"SWS_AWFIXOVERLAPS",		AWFixOverlaps, },
 	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

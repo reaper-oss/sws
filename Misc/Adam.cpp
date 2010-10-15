@@ -38,16 +38,25 @@ void AWFillGapsAdv(COMMAND_T* t)
 	char defValsBackup[100];
 	int maxReturnLen = 100;
 	int nitems = 7;
+	bool runScript = 0;
 	
 	// Copy defaultValues into returnedValues (retains values in case user hits cancel)
 	strcpy(retVals, defaultValues);
 	strcpy(defValsBackup, defaultValues);
 	
-	// Call dialog, use retVals so defaultValues doesn't get miffed up
-	bool userInput = GetUserInputs("Advanced Item Smoothing",nitems,names,retVals,maxReturnLen);
+	// If 0 is passed, call dialog and get values, if 1 is passed, just use last settings
+	if (t->user == 0)
+	{
+		// Call dialog, use retVals so defaultValues doesn't get miffed up
+		runScript = GetUserInputs("Advanced Item Smoothing",nitems,names,retVals,maxReturnLen);
+	}
+	else if (t->user == 1)
+	{
+		runScript = 1;
+	}
 	
 	// If user hit okay, get the parameters they entered
-	if (userInput)	
+	if (runScript)	
 	{
 		// If user didn't hit cancel, copy the returned values back into the default values before ruining retVals with evil strtok
 		strcpy(defaultValues, retVals);
@@ -334,28 +343,11 @@ void AWFillGapsQuick(COMMAND_T* t)
 				// If the first item overlaps the second item, trim the first item
 				if (item1End > (item2Start))
 				{
-					
-					// If both items selected, account for trigger pad, if not, just trim to item 2 start
-					if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
-					{
-						item1Length = item2Start - item1Start;
-					}
-					else
-					{
-						item1Length = item2Start - item1Start;
-					}
-					
+					item1Length = item2Start - item1Start;
+										
 					SetMediaItemInfo_Value(item1, "D_LENGTH", item1Length);
 				}
 				
-				if (item1End <= (item2Start))
-				{
-					// If both items selected, account for trigger pad, if not, do nothing
-					if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
-					{
-						item1Length = item2Start - item1Start;
-					}
-				}
 			}
 			
 			// END FIX OVERLAP CODE ----------------------------------------------------------------
@@ -447,26 +439,9 @@ void AWFillGapsQuickXFade(COMMAND_T* t)
 				if (item1End > (item2Start))
 				{
 					
-					// If both items selected, account for trigger pad, if not, just trim to item 2 start
-					if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
-					{
-						item1Length = item2Start - item1Start;
-					}
-					else
-					{
-						item1Length = item2Start - item1Start;
-					}
-					
+					item1Length = item2Start - item1Start;
+										
 					SetMediaItemInfo_Value(item1, "D_LENGTH", item1Length);
-				}
-				
-				if (item1End <= (item2Start))
-				{
-					// If both items selected, account for trigger pad, if not, do nothing
-					if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
-					{
-						item1Length = item2Start - item1Start;
-					}
 				}
 			}
 			
@@ -563,27 +538,11 @@ void AWFixOverlaps(COMMAND_T* t)
 				if (item1End > (item2Start))
 				{
 					
-					// If both items selected, account for trigger pad, if not, just trim to item 2 start
-					if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
-					{
-						item1Length = item2Start - item1Start;
-					}
-					else
-					{
-						item1Length = item2Start - item1Start;
-					}
-					
+					item1Length = item2Start - item1Start;
+										
 					SetMediaItemInfo_Value(item1, "D_LENGTH", item1Length);
 				}
-				
-				if (item1End <= (item2Start))
-				{
-					// If both items selected, account for trigger pad, if not, do nothing
-					if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
-					{
-						item1Length = item2Start - item1Start;
-					}
-				}
+			
 			}
 			
 			// END FIX OVERLAP CODE ----------------------------------------------------------------
@@ -597,29 +556,15 @@ void AWFixOverlaps(COMMAND_T* t)
 	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
-/*
-void AWSplitWithLeftSideCrossfade(COMMAND_T* t)
-{
-	double fadeLength = fabs(*(double*)GetConfigVar("deffadelen"));
-	
-	double splitPosition = GetCursorPosition() - fadeLength;
-	
-	for (int iItem = 0; iItem < 
-	
-	
-	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
-}
-*/
-
 
 static COMMAND_T g_commandTable[] = 
 {
-	// Add commands here (copy paste an example from ItemParams.cpp or similar
-	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (advanced)" },					"SWS_AWFILLGAPSADV",		AWFillGapsAdv, },
-	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, no crossfade)" },					"SWS_AWFILLGAPSQUICK",		AWFillGapsQuick, },
-	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, crossfade using default fade length)" },					"SWS_AWFILLGAPSQUICKXFADE",		AWFillGapsQuickXFade, },
-	{ { DEFACCEL, "SWS/AdamWathan: Remove overlaps in selected items preserving item starts" },					"SWS_AWFIXOVERLAPS",		AWFixOverlaps, },
+	// Add commands here (copy paste an example from ItemParams.cpp or similar	
+	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (advanced)" },										"SWS_AWFILLGAPSADV",				AWFillGapsAdv, NULL, 0 },
+	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (advanced, use last settings)" },					"SWS_AWFILLGAPSADVLASTSETTINGS",	AWFillGapsAdv, NULL, 1 },
+	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, no crossfade)" },							"SWS_AWFILLGAPSQUICK",				AWFillGapsQuick, },
+	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, crossfade using default fade length)" },	"SWS_AWFILLGAPSQUICKXFADE",			AWFillGapsQuickXFade, },
+	{ { DEFACCEL, "SWS/AdamWathan: Remove overlaps in selected items preserving item starts" },							"SWS_AWFIXOVERLAPS",				AWFixOverlaps, },
 	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

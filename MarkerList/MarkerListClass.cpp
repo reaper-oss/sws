@@ -171,12 +171,14 @@ void MarkerList::ListToClipboard()
 	{
 		int iSize = ApproxSize()*2;
 		char* str = new char[iSize];
+		char* pStr = str;
 		str[0] = 0;
 		for (int i = 0; i < m_items.GetSize(); i++)
 		{
-			m_items.Get(i)->ItemString(str+strlen(str), iSize);
-			strcpy(str+strlen(str), "\r\n");
-			iSize -= (int)strlen(str);
+			m_items.Get(i)->ItemString(pStr, iSize-(int)(pStr-str));
+			pStr += strlen(pStr);
+			lstrcpyn(pStr, "\r\n", iSize-(int)(pStr-str));
+			pStr += 2;
 		}
 	    EmptyClipboard();
 		

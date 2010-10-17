@@ -1,3 +1,13 @@
+!v1.8.1 #7 (October 17, 2010)
+New undo zoom functionality, as requested http://forum.cockos.com/showthread.php?t=64281|on the forum|. A separate arrange view undo history is remembered by the SWS extension, separate from the usual undo history.  The applicable actions are:
++SWS: Undo Zoom
++SWS: Redo Zoom
+
+Also new in this version:
++SWS: Zoom to sel item(s) or time sel
++SWS: Zoom to sel item(s) or time sel, minimize others
++Fixed copy marker set to clipboard bug reported by Marah Mag
+
 !v1.8.1 #6 (October 12, 2010)
 Added action "SWS/AdamWathan: Remove overlaps in selected items preserving item
 starts"

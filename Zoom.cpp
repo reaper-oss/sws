@@ -112,7 +112,7 @@ void SetHorizPos(HWND hwnd, double dPos, double dOffset = 0.0)
 	SendMessage(hwnd, WM_HSCROLL, SB_THUMBPOSITION, NULL);
 }
 
-void SetVertPos(HWND hwnd, int iTrack, bool bPixels) // 1 based track index!
+void SetVertPos(HWND hwnd, int iTrack, bool bPixels, int iExtra = 0) // 1 based track index!
 {
 	SCROLLINFO si = { sizeof(SCROLLINFO), };
 	si.fMask = SIF_ALL;
@@ -123,7 +123,7 @@ void SetVertPos(HWND hwnd, int iTrack, bool bPixels) // 1 based track index!
 	if (bPixels)
 		si.nPos = iTrack;
 	else
-		si.nPos = 0;
+		si.nPos = iExtra;
 
 	for (int i = 0; i <= GetNumTracks(); i++)
 	{
@@ -318,7 +318,7 @@ void VertZoomSelItems(int iOthers)
 	VertZoomRange(y1, 1+y2-y1, hbVisOnTrack.Get()+y1-1, iOthers == 1);
 }
 
-void HorizZoomSelItems()
+void HorizZoomSelItems(bool bTimeSel = false)
 {
 	HWND hTrackView = GetTrackWnd();
 	if (!hTrackView)
@@ -327,29 +327,34 @@ void HorizZoomSelItems()
 	RECT r;
 	GetClientRect(hTrackView, &r);
 
-	// Find the coordinates of the first and last selected item
-	double x1 = 1.0e300, x2 = -1.0e300;
-	for (int i = 1; i <= GetNumTracks(); i++)
+	double x1, x2;
+	GetSet_LoopTimeRange(false, false, &x1, &x2, false);
+	if (!bTimeSel || x1 == x2)
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (GetTrackVis(tr) & 2)
-			for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
-			{
-				MediaItem* mi = GetTrackMediaItem(tr, j);
-				if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
+		// Find the coordinates of the first and last selected item
+		x1 = 0.0; x2 = 0.0;
+		for (int i = 1; i <= GetNumTracks(); i++)
+		{
+			MediaTrack* tr = CSurf_TrackFromID(i, false);
+			if (GetTrackVis(tr) & 2)
+				for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
 				{
-					double d = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
-					if (d < x1)
-						x1 = d;
-					d += *(double*)GetSetMediaItemInfo(mi, "D_LENGTH", NULL);
-					if (d > x2)
-						x2 = d;
+					MediaItem* mi = GetTrackMediaItem(tr, j);
+					if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
+					{
+						double d = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
+						if (d < x1)
+							x1 = d;
+						d += *(double*)GetSetMediaItemInfo(mi, "D_LENGTH", NULL);
+						if (d > x2)
+							x2 = d;
+					}
 				}
-			}
-	}
+		}
 
-	if (x1 >= 1.0e300)
-		return;
+		if (x1 == x2)
+			return;
+	}
 
 	adjustZoom(0.94 * r.right / (x2 - x1), 1, false, -1);
 	SetHorizPos(hTrackView, x1, 0.03);
@@ -388,13 +393,15 @@ void ZoomToSelItemsMin(COMMAND_T* = NULL)	{ VertZoomSelItems(1);  HorizZoomSelIt
 void VZoomToSelItems(COMMAND_T* = NULL)		{ VertZoomSelItems(0); }
 void VZoomToSelItemsMin(COMMAND_T* = NULL)	{ VertZoomSelItems(1); }
 void HZoomToSelItems(COMMAND_T* = NULL)		{ HorizZoomSelItems(); }
+void ZoomToSIT(COMMAND_T* = NULL)			{ VertZoomSelItems(0); HorizZoomSelItems(true); }
+void ZoomToSITMin(COMMAND_T* = NULL)		{ VertZoomSelItems(1); HorizZoomSelItems(true); }
 void FitSelTracks(COMMAND_T* = NULL)		{ VertZoomSelTracks(0); }
 void FitSelTracksMin(COMMAND_T* = NULL)		{ VertZoomSelTracks(1); }
 
 class ArrangeState
 {
 private:
-	double dVZoom;
+	double dHZoom;
 	int iVZoom;
 	int iXPos;
 	int iYPos;
@@ -409,7 +416,7 @@ public:
 	ArrangeState() { Clear(); }
 	void Clear()
 	{
-		dVZoom = 0.0; iXPos = 0; iYPos = 0; m_bHoriz = false; m_bVert = false;
+		dHZoom = 0.0; iXPos = 0; iYPos = 0; m_bHoriz = false; m_bVert = false;
 		hbTrackHeights.Resize(0, false);
 		hbTrackVis.Resize(0, false);
 		hbEnvHeights.Resize(0, false);
@@ -428,7 +435,7 @@ public:
 		// Horiz
 		if (m_bHoriz)
 		{
-			dVZoom = GetHZoomLevel();
+			dHZoom = GetHZoomLevel();
 			si.fMask = SIF_ALL;
 			CoolSB_GetScrollInfo(hTrackView, SB_HORZ, &si);
 			iXPos = si.nPos;
@@ -475,7 +482,7 @@ public:
 
 		// Horiz zoom
 		if (m_bHoriz)
-			adjustZoom(dVZoom, 1, false, -1);
+			adjustZoom(dHZoom, 1, false, -1);
 
 		// Vert zoom
 		if (m_bVert)
@@ -515,7 +522,7 @@ public:
 		}
 
 		if (m_bHoriz)
-			SetHorizPos(hTrackView, (double)iXPos / dVZoom);
+			SetHorizPos(hTrackView, (double)iXPos / dHZoom);
 	}
 };
 
@@ -571,6 +578,156 @@ bool g_bSmoothScroll = false;
 void TogSmoothScroll(COMMAND_T*)	{ g_bSmoothScroll = !g_bSmoothScroll; }
 bool IsSmoothScroll(COMMAND_T*)		{ return g_bSmoothScroll; }
 
+class ZoomState
+{
+private:
+	// Zoom
+	WDL_TypedBuf<int> m_iTrackHeights;
+	double m_dHZoom;
+	int m_iVZoom;
+
+	// Pos
+	MediaTrack* m_trVPos;
+	int m_iVPos, m_iHPos;
+
+public:
+	ZoomState():m_dHZoom(0.0),m_iVZoom(0),m_iVPos(0),m_iHPos(0),m_trVPos(NULL) {}
+	void SaveZoom()
+	{
+		// Save the track heights
+		m_iTrackHeights.Resize(0, false);
+		int* pHeights = m_iTrackHeights.Resize(GetNumTracks()+1); // +1 for master
+		for (int i = 0; i <= GetNumTracks(); i++)
+			pHeights[i] = *(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_HEIGHTOVERRIDE", NULL);
+
+		m_dHZoom = GetHZoomLevel();
+		m_iVZoom = *(int*)GetConfigVar("vzoom2");
+	}
+	void SavePos()
+	{
+		HWND hTrackView = GetTrackWnd();
+		if (!hTrackView)
+			return;
+
+		SCROLLINFO si = { sizeof(SCROLLINFO), };
+		si.fMask = SIF_ALL;
+		CoolSB_GetScrollInfo(hTrackView, SB_VERT, &si);
+		int iVPos = 0;
+		int iTrack = 0;
+		
+		// Find the current track #  Save by track # and pixel offset in case of track add/delete/rearrange/hide/etc
+		while (iTrack <= GetNumTracks())
+		{
+			int iTrackH = *(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(iTrack, false), "I_WNDH", NULL);
+			if (iVPos + iTrackH > si.nPos)
+				break;
+			iVPos += iTrackH;
+			iTrack++;
+		}
+
+		if (iTrack <= GetNumTracks())
+			m_trVPos = CSurf_TrackFromID(iTrack, false);
+		m_iVPos = si.nPos - iVPos;
+
+		CoolSB_GetScrollInfo(hTrackView, SB_HORZ, &si);
+		m_iHPos = si.nPos;
+	}
+
+	void Restore()
+	{
+		HWND hTrackView = GetTrackWnd();
+		if (!hTrackView || m_dHZoom == 0.0 && m_iVZoom == 0)
+			return;
+
+		adjustZoom(m_dHZoom, 1, false, -1);
+		*(int*)GetConfigVar("vzoom2") = m_iVZoom;
+
+		// Restore track heights, ignoring the fact that tracks could have been added/removed
+		for (int i = 0; i < m_iTrackHeights.GetSize() && i <= GetNumTracks(); i++)
+			GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_HEIGHTOVERRIDE", &(m_iTrackHeights.Get()[i]));
+
+		TrackList_AdjustWindows(false);
+		UpdateTimeline();
+
+		// Restore positions
+		int iTrack = CSurf_TrackToID(m_trVPos, false);
+		if (iTrack > 0)
+			SetVertPos(hTrackView, iTrack, false, m_iVPos);
+		SetHorizPos(hTrackView, (double)m_iHPos / m_dHZoom);
+
+	}
+
+	bool IsZoomEqual(ZoomState* zs)
+	{	// Ignores the horiz/vert positions!
+		if (zs->m_dHZoom != m_dHZoom || zs->m_iVZoom != m_iVZoom)
+			return false;
+		if (zs->m_iTrackHeights.GetSize() != m_iTrackHeights.GetSize())
+			return false;
+		for (int i = 0; i < m_iTrackHeights.GetSize(); i++)
+			if (zs->m_iTrackHeights.Get()[i] != m_iTrackHeights.Get()[i])
+				return false;
+		
+		return true;
+	}
+};
+
+static SWSProjConfig<WDL_PtrList<ZoomState> > g_zoomStack;
+static SWSProjConfig<int> g_zoomLevel;
+
+// Save the current zoom state, called from the slice
+void SaveZoomSlice()
+{
+	static ZoomState* zs = NULL;
+	
+	if (!zs)
+		zs = new ZoomState;
+
+	zs->SaveZoom();
+
+	if (g_zoomStack.Get()->GetSize() == 0 || !g_zoomStack.Get()->Get(*g_zoomLevel.Get())->IsZoomEqual(zs))
+	{
+		int i = *g_zoomLevel.Get();
+		ZoomState* head = g_zoomStack.Get()->Get(i);
+		// Do the initialization of g_zoomLevel here
+		if (g_zoomStack.Get()->GetSize() == 0)
+			*g_zoomLevel.Get() = 0;
+		else while (*g_zoomLevel.Get())
+		{
+			g_zoomStack.Get()->Delete(0, true);
+			*g_zoomLevel.Get() -= 1;
+		}
+
+		// Trim the bottom of the stack if it's huge.
+		if (g_zoomStack.Get()->GetSize() == 50)
+			g_zoomStack.Get()->Delete(49, true);
+
+		g_zoomStack.Get()->Insert(0, zs);
+		zs = NULL;
+	}
+	
+	// Save the position if at the top of the stack, for every call
+	if (*g_zoomLevel.Get() == 0)
+		g_zoomStack.Get()->Get(0)->SavePos();
+}
+
+void UndoZoom(COMMAND_T*)
+{
+	if (*g_zoomLevel.Get() + 1 < g_zoomStack.Get()->GetSize())
+	{
+		*g_zoomLevel.Get() += 1;
+		g_zoomStack.Get()->Get(*g_zoomLevel.Get())->Restore();
+	}
+}
+
+void RedoZoom(COMMAND_T*)
+{
+	if (*g_zoomLevel.Get() > 0)
+	{
+		*g_zoomLevel.Get() -= 1;
+		g_zoomStack.Get()->Get(*g_zoomLevel.Get())->Restore();
+	}
+}
+
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
 	return false;
@@ -586,6 +743,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_togAS.Get()->Clear();
 	g_togAS.Cleanup();
 	g_bASToggled = false;
+	g_zoomStack.Cleanup();
 }
 
 bool IsTogZoomed(COMMAND_T*)
@@ -608,6 +766,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Horizontal zoom to selected items(s)" },	 				"SWS_HZOOMITEMS",		HZoomToSelItems,	NULL, },
 	{ { DEFACCEL, "SWS: Zoom to selected item(s)" },				 				"SWS_ITEMZOOM",			ZoomToSelItems,		NULL, },
 	{ { DEFACCEL, "SWS: Zoom to selected item(s), minimize others" },				"SWS_ITEMZOOMMIN",		ZoomToSelItemsMin,	NULL, },
+	{ { DEFACCEL, "SWS: Zoom to sel item(s) or time sel" },				 			"SWS_ZOOMSIT",			ZoomToSIT,			NULL, },
+	{ { DEFACCEL, "SWS: Zoom to sel item(s) or time sel, minimize others" },		"SWS_ZOOMSITMIN",		ZoomToSITMin,		NULL, },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel" },					"SWS_TOGZOOMTT",		TogZoomTT,			NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, minimize others" },	"SWS_TOGZOOMTTMIN",		TogZoomTTMin,		NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, hide others" },		"SWS_TOGZOOMTTHIDE",	TogZoomTTHide,		NULL, 0, IsTogZoomed },
@@ -624,11 +784,13 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Scroll left 1%" },											"SWS_SCROLL_L1",		HorizScroll,		NULL, -1 },
 	{ { DEFACCEL, "SWS: Scroll right 1%" },											"SWS_SCROLL_R1",		HorizScroll,		NULL, 1 },
 
-	
 	{ { DEFACCEL, "SWS: Save current arrange view" },				 				"SWS_SAVEVIEW",			SaveArngView,		NULL, },
 	{ { DEFACCEL, "SWS: Restore arrange view" },				 					"SWS_RESTOREVIEW",		RestoreArngView,	NULL, },
 
 	{ { DEFACCEL, "SWS: Toggle experimental smooth scroll" },						"SWS_SMOOTHSCROLL",		TogSmoothScroll,	NULL, 0, IsSmoothScroll },
+
+	{ { DEFACCEL, "SWS: Undo zoom" },												"SWS_UNDOZOOM",			UndoZoom,			NULL, },
+	{ { DEFACCEL, "SWS: Redo zoom" },												"SWS_REDOZOOM",			RedoZoom,			NULL, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
@@ -637,6 +799,7 @@ void ZoomSlice()
 {
 	if (g_bSmoothScroll && GetPlayState() & 1)
 		PCursorTo50();
+	SaveZoomSlice();
 }
 
 int ZoomInit()

@@ -326,21 +326,6 @@ int WDL_STYLE_WantGlobalButtonBorders() { return 0; }
 bool WDL_STYLE_WantGlobalButtonBackground(int *col) { return false; }
 void WDL_STYLE_ScaleImageCoords(int *x, int *y) { }
 
-// Hook Reaper's WNDPROC?
-/*WNDPROC g_ReaperWndproc = NULL;
-
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	if (uMsg == WM_MOUSEWHEEL)
-	{
-		// Do a mousewheel thingy.
-		int i = 0;
-	}
-	if (g_ReaperWndproc)
-		return g_ReaperWndproc(hwnd, uMsg, wParam, lParam);
-	return 0;
-}*/
-
 // Main DLL entry point
 #define ERR_RETURN(a) { return 0; }
 #define OK_RETURN(a)  { return 1; }
@@ -565,8 +550,6 @@ extern "C"
 				"Please install the latest version of Reaper from www.reaper.fm.", "Version Incompatibility", MB_OK);
 			return 0;
 		}
-
-		//g_ReaperWndproc = (WNDPROC)SetWindowLongPtr(g_hwndParent, GWLP_WNDPROC, (LONG)WindowProc);
 
 		if (!rec->Register("hookcommand",(void*)hookCommandProc))
 			ERR_RETURN("hook command error\n")

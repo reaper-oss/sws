@@ -771,13 +771,22 @@ static WNDPROC g_ReaperTrackWndProc = NULL;
 static bool g_bZooming = false;
 LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	static bool bMBDown = false;
+	static bool bInit = false;
 	if (g_bZooming)
 	{
 		static LICE_SysBitmap* bm = NULL;
 		static POINT pStart;
 		static RECT rDraw;
 		static RECT rZoom;
+		static bool bMBDown = false;
+
+		if (!bInit)
+		{
+			bInit = true;
+			bMBDown = false;
+			if (GetCapture() != hwnd) // Fixes toolbar click "stealing" capture
+				SetCapture(hwnd);
+		}
 
 		if (uMsg == WM_LBUTTONDOWN)
 		{
@@ -869,13 +878,11 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			else
 				UpdateTimeline();
-
-			bMBDown = false;
 		}
 		return 0;
 	}
 	else
-		bMBDown = false;
+		bInit = false;
 
 	if (g_ReaperTrackWndProc)
 		return g_ReaperTrackWndProc(hwnd, uMsg, wParam, lParam);
@@ -913,6 +920,7 @@ void ZoomTool(COMMAND_T*)
 		ReleaseCapture();
 		g_bZooming = false;
 	}
+	RefreshToolbar(SWSGetCommandID(ZoomTool));
 }
 
 bool IsZoomMode(COMMAND_T*)

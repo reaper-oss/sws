@@ -1,3 +1,6 @@
+!v1.8.2 #2 (October 19, 2010)
+Zoom tool now workss from toolbar button.
+
 !v1.8.2 #1 (October 19, 2010)
 New "SWS: Zoom tool (marquee)" for drag-zooming.  See the http://www.standingwaterstudios.com/shup/zoomTool.gif|demo video|.  (Magnifying glass appears when running the action, then click + drag.)  Use "SWS: Undo zoom" to undo.  Sorry, this feature is unavailable on OSX.
 Fixed send duplicating in snapshots.  Reported http://forum.cockos.com/showthread.php?t=67127|here|.

@@ -173,6 +173,11 @@ MediaTrack* GuidToTrack(const GUID* guid);
 bool GuidsEqual(const GUID* g1, const GUID* g2);
 bool TrackMatchesGuid(MediaTrack* tr, const GUID* g);
 const char* stristr(const char* str1, const char* str2);
+#ifdef _WIN32
+void dprintf(const char* format, ...);
+#else
+#define dprintf printf
+#endif
 void SWS_GetSelectedTracks(WDL_TypedBuf<MediaTrack*>* buf, bool bMaster = false);
 void SWS_GetSelectedMediaItems(WDL_TypedBuf<MediaItem*>* buf);
 void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack* tr);

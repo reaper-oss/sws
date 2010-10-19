@@ -1,7 +1,14 @@
+!v1.8.2 #1 (October 19, 2010)
+New "SWS: Zoom tool (marquee)" for drag-zooming.  See the http://www.standingwaterstudios.com/shup/zoomTool.gif|demo video|.  (Magnifying glass appears when running the action, then click + drag.)  Use "SWS: Undo zoom" to undo.  Sorry, this feature is unavailable on OSX.
+Fixed send duplicating in snapshots.  Reported http://forum.cockos.com/showthread.php?t=67127|here|.
+
+!v1.8.1 #8 (October 17, 2010)
+Zoom to selected item(s) bugfix.
+
 !v1.8.1 #7 (October 17, 2010)
 New undo zoom functionality, as requested http://forum.cockos.com/showthread.php?t=64281|on the forum|. A separate arrange view undo history is remembered by the SWS extension, separate from the usual undo history.  The applicable actions are:
-+SWS: Undo Zoom
-+SWS: Redo Zoom
++SWS: Undo zoom
++SWS: Redo zoom
 
 Also new in this version:
 +SWS: Zoom to sel item(s) or time sel

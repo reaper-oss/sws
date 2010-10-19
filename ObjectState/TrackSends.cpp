@@ -203,7 +203,7 @@ void TrackSends::Build(MediaTrack* tr)
 	MediaTrack* pDest;
 	int idx = 0;
 	char searchStr[20];
-	sprintf(searchStr, "AUXRECV %d", CSurf_TrackToID(tr, false) - 1);
+	sprintf(searchStr, "AUXRECV %d ", CSurf_TrackToID(tr, false) - 1);
 	while ((pDest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, idx++, "P_DESTTRACK", NULL)))
 	{
 		GUID guid = *(GUID*)GetSetMediaTrackInfo(pDest, "GUID", NULL);

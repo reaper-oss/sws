@@ -214,6 +214,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(REAPER_DIR)&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="0"
@@ -871,6 +872,10 @@
 				RelativePath=".\version.rc2"
 				>
 			</File>
+			<File
+				RelativePath=".\zoom.cur"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Xenakios"
@@ -992,8 +997,8 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						WarningLevel="2"
 						UsePrecompiledHeader="0"
+						WarningLevel="2"
 					/>
 				</FileConfiguration>
 				<FileConfiguration

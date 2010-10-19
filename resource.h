@@ -7,6 +7,7 @@
 #define IDD_MARKERLIST                  102
 #define IDD_SAVE                        103
 #define IDD_LOAD                        104
+#define IDC_ZOOM                        104
 #define IDD_FORMAT                      105
 #define IDD_MACRODEBUG                  106
 #define IDD_COLOR                       107

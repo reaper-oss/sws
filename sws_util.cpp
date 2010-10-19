@@ -416,6 +416,19 @@ const char* stristr(const char* str1, const char* str2)
 	return NULL;
 }
 
+#ifdef _WIN32
+void dprintf(const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    int len = _vscprintf(format, args) + 1;
+    char* buffer = new char[len];
+	vsprintf_s(buffer, len, format, args); // C4996
+    OutputDebugString(buffer);
+	delete[] buffer;
+}
+#endif
+
 void SWS_GetSelectedTracks(WDL_TypedBuf<MediaTrack*>* buf, bool bMaster)
 {
 	buf->Resize(0);

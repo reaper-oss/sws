@@ -627,7 +627,9 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* 
 	if(GetSetObjectState(envelope, newState.c_str()))
 		return eERRORCODE_UNKNOWN;
 
+/* JFB leads to "recursive" undo point, enabled at top level
 Undo_OnStateChangeEx("Track Envelope LFO", UNDO_STATE_ALL, -1);
+*/
 	return eERRORCODE_OK;
 }
 
@@ -666,7 +668,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackEnvLfo()
 	ErrorCode res = generateTrackLfo(envelope, dStartPos, dEndPos, _parameters.waveParams, _parameters.precision);
 //UpdateTimeline();
 
-	Undo_EndBlock2(0, "Track Envelope LFO", 0);
+	Undo_EndBlock2(NULL, "Track Envelope LFO", UNDO_STATE_ALL);
 	return res;
 }
 
@@ -789,19 +791,13 @@ TrackEnvelope* envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEn
 writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, dFreq, dStrength, dOffset, dDelay, tWaveShape, dPrecision);
 	newState.append(">\n");
 */
-
-	//ShowConsoleMsg(newState.c_str());
-	char* cNewState = new char[newState.size()];
-	strcpy(cNewState, newState.c_str());
-
-	if(!GetSetEnvelopeState(envelope, cNewState, (int)newState.size()))
+	free(envState);
+	if(!newState.size() || !GetSetEnvelopeState(envelope, (char*)newState.c_str(), (int)newState.size()))
 		return eERRORCODE_UNKNOWN;
 
-//! \bug I can't/don't have to delete cNewState ???
-//delete[] cNewState;
-//FreeHeapPtr(cNewState);
-Undo_OnStateChangeEx("Take Envelope LFO", UNDO_STATE_ALL, -1);
-
+/* JFB "recursive" undo point, enabled at top level
+	Undo_OnStateChangeEx("Take Envelope LFO", UNDO_STATE_ALL, -1);
+*/
 	return eERRORCODE_OK;
 }
 
@@ -853,7 +849,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo()
 
 	//Undo_OnStateChangeEx("Item Envelope LFO", UNDO_STATE_ALL, -1);
 //	UpdateTimeline();
-	Undo_EndBlock2(0, "Take Envelope LFO", 0);
+	Undo_EndBlock2(NULL, "Take Envelope LFO", UNDO_STATE_ALL);
 
 	return eERRORCODE_OK;
 }
@@ -995,14 +991,16 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processSelectedTrackEnv()
 		FreeHeapPtr(envState);
 
 //UpdateTimeline();
+/* JFB "recursive" undo point, enabled at top level
 	Undo_OnStateChangeEx("Envelope Processor", UNDO_STATE_ALL, -1);
-
-	Undo_EndBlock2(0, "Track Envelope Processor", 0);
+*/
+	Undo_EndBlock2(NULL, "Track Envelope Processor", UNDO_STATE_ALL);
 	return res;
 }
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::processSelectedTakes()
 {
+    ErrorCode res =	eERRORCODE_OK;
 	list<MediaItem*> items;
 	GetSelectedMediaItems(items);
 	if(items.empty())
@@ -1010,7 +1008,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processSelectedTakes()
 
 	Undo_BeginBlock2(0);
 
-	for(list<MediaItem*>::iterator item = items.begin(); item != items.end(); item++)
+	for(list<MediaItem*>::iterator item = items.begin(); res == eERRORCODE_OK && item != items.end(); item++)
 	{
 		list<MediaItem_Take*> takes;
 		GetMediaItemTakes(*item, takes, _envModParams.activeTakeOnly);
@@ -1019,16 +1017,16 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processSelectedTakes()
 
 		for(list<MediaItem_Take*>::iterator take = takes.begin(); take != takes.end(); take++)
 		{
-			ErrorCode res = processTakeEnv(*take);
+			res = processTakeEnv(*take);
 			UpdateItemInProject(*item);
-			if(res != eERRORCODE_OK)
-				return res;
+			if (res != eERRORCODE_OK)
+				break;
 		}
 	}
 
 	//Undo_OnStateChangeEx("Item Envelope LFO", UNDO_STATE_ALL, -1);
 //	UpdateTimeline();
-	Undo_EndBlock2(0, "Take Envelope Processor", 0);
+	Undo_EndBlock2(NULL, "Take Envelope Processor", UNDO_STATE_ALL);
 
 	return eERRORCODE_OK;
 }
@@ -1086,13 +1084,13 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processTakeEnv(MediaItem_Take* t
 	char* envState = PadresGetEnvelopeState(envelope);
 	string newState;
 	ErrorCode res = processPoints(envState, newState, dStartPos, dEndPos, dValMin, dValMax, envModType, dStrength, dOffset);
+    free(envState);
 
-	char* cNewState = new char[newState.size()];
-	strcpy(cNewState, newState.c_str());
-	if(!GetSetEnvelopeState(envelope, cNewState, (int)newState.size()))
+	if(!newState.size() || !GetSetEnvelopeState(envelope, (char*)newState.c_str(), (int)newState.size()))
 		res = eERRORCODE_UNKNOWN;
 
+/*JFB
 	Undo_OnStateChangeEx("Take Envelope LFO", UNDO_STATE_ALL, -1);
-
+*/
 	return res;
 }

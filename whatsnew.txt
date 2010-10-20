@@ -1,3 +1,6 @@
+!v1.8.2 #4 (October 20, 2010)
+Zoom tool for OSX!
+
 !v1.8.2 #3 (October 20, 2010)
 Zoom tool drawing improvements
 Fix for "SWS: Crossfade adjacent selected items" (thanks Adam)

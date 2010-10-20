@@ -755,12 +755,6 @@ void RedoZoom(COMMAND_T*)
 	}
 }
 
-static bool g_bZooming = false;
-#ifdef _WIN32
-static WNDPROC g_ReaperTrackWndProc = NULL;
-static HCURSOR g_hZoomCur = NULL;
-static HCURSOR g_hOldCur = NULL;
-
 void CreateZoomRect(HWND h, RECT* newR, POINT* p1, POINT* p2)
 {
 	RECT r;
@@ -773,23 +767,67 @@ void CreateZoomRect(HWND h, RECT* newR, POINT* p1, POINT* p2)
 	IntersectRect(newR, &r, &clientR);
 }
 
+// Zoom into a given rectangle on Reaper's track view 
+void ZoomToRect(HWND hTrackView, RECT* rZoom)
+{
+	// Convert the rect left/right points to pixels, where 0 is the start of the project.
+	// These are same units as the scroll bar.
+	int iX1, iX2;
+	RECT r;
+	GetClientRect(hTrackView, &r); // Need for width of view wnd
+	SCROLLINFO si = { sizeof(SCROLLINFO), };
+	si.fMask = SIF_ALL;
+	CoolSB_GetScrollInfo(hTrackView, SB_HORZ, &si); // Get the current scroll pos
+	iX1 = rZoom->left + si.nPos;
+	double dX1 = (double)iX1 / GetHZoomLevel();
+	iX2 = rZoom->right + si.nPos; 
+	adjustZoom(GetHZoomLevel() * r.right / (iX2 - iX1), 1, false, -1);
+	SetHorizPos(hTrackView, dX1);
+
+	// Now, find the track(s) at the rect top/bottom and zoom in
+	MediaTrack* tr = TrackAtPoint(hTrackView, rZoom->top, NULL, NULL, NULL);
+	if (tr)
+	{	// If no track returned, user zoomed over the "dead" area at the bottom
+		int iFirst = CSurf_TrackToID(tr, false);
+		int iNum;
+		tr = TrackAtPoint(hTrackView, rZoom->bottom-1, NULL, NULL, NULL);
+		if (tr)
+			iNum = CSurf_TrackToID(tr, false) - iFirst + 1;
+		else
+			iNum = GetNumTracks() - iFirst + 1;
+		VertZoomRange(iFirst, iNum, NULL, false);
+	}
+}
+
+static bool g_bZooming = false;
+static WNDPROC g_ReaperTrackWndProc = NULL;
+static HCURSOR g_hZoomCur = NULL;
+static HCURSOR g_hOldCur = NULL;
+
 LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (g_bZooming)
 	{
+#ifdef _WIN32
 		static LICE_SysBitmap* bmStd = NULL;
+		static RECT rDraw;
+#else
+		static void* pFocusRect = NULL;
+#endif
+
 		static POINT pStart;
-		static RECT rDraw, rZoom;
+		static RECT rZoom;
 		static bool bMBDown = false;
 
-		if (uMsg == WM_NCLBUTTONDOWN || uMsg == WM_LBUTTONDOWN)
+		if (uMsg == WM_LBUTTONDOWN)
 		{
 			GetCursorPos(&pStart);
 			ScreenToClient(hwnd, &pStart);
 			SetCapture(hwnd);
-			if (GetCursor() != g_hZoomCur && g_hZoomCur)
-				SetCursor(g_hZoomCur);
 			rZoom.left = 0; rZoom.top = 0; rZoom.right = 0; rZoom.bottom = 0;
+#ifdef _WIN32
+			rDraw.left = 0; rDraw.top = 0; rDraw.right = 0; rDraw.bottom = 0;
+#endif
 			bMBDown = true;
 			return 0;
 		}
@@ -799,6 +837,7 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				SetCursor(g_hZoomCur);
 			return 1;
 		}
+#ifdef _WIN32
 		else if (uMsg == WM_PAINT)
 		{
 			// If there's a paint request then let std wnd handle, then get the data
@@ -868,6 +907,16 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ReleaseDC(hwnd, dc);
 			return 0;
 		}
+#else
+		else if (uMsg == WM_MOUSEMOVE && bMBDown)
+		{
+			POINT p;
+			GetCursorPos(&p);
+			ScreenToClient(hwnd, &p);
+			CreateZoomRect(hwnd, &rZoom, &pStart, &p);
+			SWELL_DrawFocusRect(hwnd, &rZoom, &pFocusRect);
+		}
+#endif
 		// Done with the zoom
 		else if (uMsg == WM_LBUTTONUP || uMsg == WM_RBUTTONUP || uMsg == WM_CANCEL_ZOOM)
 		{
@@ -877,40 +926,17 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (g_hOldCur)
 				SetCursor(g_hOldCur);
 
+#ifdef _WIN32
 			delete bmStd;
 			bmStd = NULL;
+#else
+			SWELL_DrawFocusRect(hwnd, NULL, &pFocusRect);
+#endif
 			g_bZooming = false;
 			RefreshToolbar(SWSGetCommandID(ZoomTool));
 
-			if (uMsg == WM_LBUTTONUP && bMBDown && rZoom.right - rZoom.left > 1 && rZoom.bottom - rZoom.top > 1)
-			{
-				int iX1, iX2;
-				RECT r;
-				GetClientRect(hwnd, &r);
-				
-				SCROLLINFO si = { sizeof(SCROLLINFO), };
-				si.fMask = SIF_ALL;
-				CoolSB_GetScrollInfo(hwnd, SB_HORZ, &si);
-				iX1 = rZoom.left + si.nPos;
-				double dX1 = (double)iX1 / GetHZoomLevel();
-				iX2 = rZoom.right + si.nPos; 
-				adjustZoom(GetHZoomLevel() * r.right / (iX2 - iX1), 1, false, -1);
-				SetHorizPos(hwnd, dX1);
-
-				// Just zoom into the sel tracks
-				MediaTrack* tr = TrackAtPoint(hwnd, rZoom.top, NULL, NULL, NULL);
-				if (tr)
-				{
-					int iFirst = CSurf_TrackToID(tr, false);
-					int iNum;
-					tr = TrackAtPoint(hwnd, rZoom.bottom-1, NULL, NULL, NULL);
-					if (tr)
-						iNum = CSurf_TrackToID(tr, false) - iFirst + 1;
-					else
-						iNum = GetNumTracks() - iFirst + 1;
-					VertZoomRange(iFirst, iNum, NULL, false);
-				}
-			}
+			if ((uMsg == WM_LBUTTONUP || uMsg == WM_NCLBUTTONUP) && bMBDown && rZoom.right - rZoom.left > 1 && rZoom.bottom - rZoom.top > 1)
+				ZoomToRect(hwnd, &rZoom);
 			else
 				UpdateTimeline();
 
@@ -933,7 +959,11 @@ void ZoomTool(COMMAND_T*)
 
 	if (!g_bZooming)
 	{
+#ifdef _WIN32
 		g_hZoomCur = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOM));
+#else
+		g_hZoomCur = LoadCursor(g_hInst, IDC_ARROW);
+#endif
 		g_hOldCur  = GetCursor();
 
 		POINT p;
@@ -954,7 +984,6 @@ bool IsZoomMode(COMMAND_T*)
 {
 	return g_bZooming;
 }
-#endif // #ifdef _WIN32
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
@@ -1019,9 +1048,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS: Undo zoom" },												"SWS_UNDOZOOM",			UndoZoom,			NULL, },
 	{ { DEFACCEL, "SWS: Redo zoom" },												"SWS_REDOZOOM",			RedoZoom,			NULL, },
-#ifdef _WIN32 // sorry osx :(
 	{ { DEFACCEL, "SWS: Zoom tool (marquee)" },										"SWS_ZOOM",				ZoomTool,			NULL, 0, IsZoomMode },
-#endif
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

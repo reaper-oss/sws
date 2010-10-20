@@ -755,7 +755,12 @@ void RedoZoom(COMMAND_T*)
 	}
 }
 
+static bool g_bZooming = false;
 #ifdef _WIN32
+static WNDPROC g_ReaperTrackWndProc = NULL;
+static HCURSOR g_hZoomCur = NULL;
+static HCURSOR g_hOldCur = NULL;
+
 void CreateZoomRect(HWND h, RECT* newR, POINT* p1, POINT* p2)
 {
 	RECT r;
@@ -767,11 +772,6 @@ void CreateZoomRect(HWND h, RECT* newR, POINT* p1, POINT* p2)
 	GetClientRect(h, &clientR);
 	IntersectRect(newR, &r, &clientR);
 }
-
-static WNDPROC g_ReaperTrackWndProc = NULL;
-static bool g_bZooming = false;
-static HCURSOR g_hZoomCur = NULL;
-static HCURSOR g_hOldCur = NULL;
 
 LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1043,6 +1043,7 @@ static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 	}
 	return 0;
 }
+
 static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
 int ZoomInit()

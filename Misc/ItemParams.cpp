@@ -361,11 +361,11 @@ void CrossfadeSelItems(COMMAND_T* t)
 					if (item1 != item2 && *(bool*)GetSetMediaItemInfo(item2, "B_UISEL", NULL))
 					{
 						double dStart2 = *(double*)GetSetMediaItemInfo(item2, "D_POSITION", NULL);
-						double dTest = fabs(dEnd1 - dStart2);
+						//double dTest = fabs(dEnd1 - dStart2);
 
 						// Need a tolerance for "items are adjacent".
-						// Found one case of items after split having diff edges 2.0e-14 apart, hopefully 1.0e-13 is enough (but not too much)
-						if (fabs(dEnd1 - dStart2) < 1.0e-13)
+						// Found one case of items after split having diff edges 1.13e-13 apart, hopefully 2.0e-13 is enough (but not too much)
+						if (fabs(dEnd1 - dStart2) < 2.0e-13)
 						{	// Found a matching item
 							// Need to ensure that there's "room" to move the start of the second item back
 							// Check all of the takes' start offset before doing any "work"

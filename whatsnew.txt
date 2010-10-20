@@ -1,3 +1,8 @@
+!v1.8.2 #3 (October 20, 2010)
+Zoom tool drawing improvements
+Fix for "SWS: Crossfade adjacent selected items" (thanks Adam)
+Fixed some undo bugs in Padre's LFO generator 
+
 !v1.8.2 #2 (October 19, 2010)
 Zoom tool now workss from toolbar button.
 

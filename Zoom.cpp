@@ -37,6 +37,7 @@
 #define VMAX_OFFSET 60
 
 void ZoomTool(COMMAND_T* = NULL);
+#define WM_CANCEL_ZOOM WM_USER
 
 void SetReaperWndSize(COMMAND_T* = NULL)
 {
@@ -769,46 +770,72 @@ void CreateZoomRect(HWND h, RECT* newR, POINT* p1, POINT* p2)
 
 static WNDPROC g_ReaperTrackWndProc = NULL;
 static bool g_bZooming = false;
+static HCURSOR g_hZoomCur = NULL;
+static HCURSOR g_hOldCur = NULL;
+
 LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	static bool bInit = false;
 	if (g_bZooming)
 	{
-		static LICE_SysBitmap* bm = NULL;
+		static LICE_SysBitmap* bmStd = NULL;
 		static POINT pStart;
-		static RECT rDraw;
-		static RECT rZoom;
+		static RECT rDraw, rZoom;
 		static bool bMBDown = false;
 
-		if (!bInit)
-		{
-			bInit = true;
-			bMBDown = false;
-			if (GetCapture() != hwnd) // Fixes toolbar click "stealing" capture
-				SetCapture(hwnd);
-		}
-
-		if (uMsg == WM_LBUTTONDOWN)
+		if (uMsg == WM_NCLBUTTONDOWN || uMsg == WM_LBUTTONDOWN)
 		{
 			GetCursorPos(&pStart);
 			ScreenToClient(hwnd, &pStart);
+			SetCapture(hwnd);
+			if (GetCursor() != g_hZoomCur && g_hZoomCur)
+				SetCursor(g_hZoomCur);
 			rZoom.left = 0; rZoom.top = 0; rZoom.right = 0; rZoom.bottom = 0;
 			bMBDown = true;
+			return 0;
 		}
-
+		else if (uMsg == WM_SETCURSOR)
+		{
+			if (GetCursor() != g_hZoomCur && g_hZoomCur)
+				SetCursor(g_hZoomCur);
+			return 1;
+		}
+		else if (uMsg == WM_PAINT)
+		{
+			// If there's a paint request then let std wnd handle, then get the data
+			g_ReaperTrackWndProc(hwnd, uMsg, wParam, lParam);
+			delete bmStd;
+			PAINTSTRUCT ps;
+			HDC dc = BeginPaint(hwnd, &ps);
+			RECT r;
+			GetClientRect(hwnd, &r);
+			bmStd = new LICE_SysBitmap(r.right - r.left, r.bottom - r.top);
+			BitBlt(bmStd->getDC(), 0, 0, bmStd->getWidth(), bmStd->getHeight(), dc, 0, 0, SRCCOPY);
+			EndPaint(hwnd, &ps);
+		}
 		else if (uMsg == WM_MOUSEMOVE && bMBDown)
 		{
 			HDC dc = GetDC(hwnd);
 			if (!dc)
 				return 0;
 
-			if (bm)
+			// Get the entire screen
+			if (!bmStd)
 			{
-				// Erase the box
-				BitBlt(dc, rDraw.left, rDraw.top, bm->getWidth(), bm->getHeight(), bm->getDC(), 0, 0, SRCCOPY);
-				delete bm;
-				bm = NULL;
+				RECT r;
+				GetClientRect(hwnd, &r);
+				bmStd = new LICE_SysBitmap(r.right - r.left, r.bottom - r.top);
+				BitBlt(bmStd->getDC(), 0, 0, bmStd->getWidth(), bmStd->getHeight(), dc, 0, 0, SRCCOPY);
 			}
+
+			// There's a lot of rects here:
+			// rBox - the draw rect
+			// rZoom - the shaded rect, also the area you're zooming into
+			// rDraw - a union of rBox and rZoom to get the full draw area.
+			//         The union takes care of outside of track area case.
+			// rLastDraw - previous mouse move draw area
+			// finally r, rDraw U rLastDraw, to erase the old and add some new
+
+			RECT rLastDraw = rDraw;
 
 			POINT p;
 			GetCursorPos(&p);
@@ -823,31 +850,39 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			TrackAtPoint(hwnd, rZoom.bottom, NULL, NULL, &y);
 			rZoom.bottom = y;
 			UnionRect(&rDraw, &rBox, &rZoom);
+
+			RECT r;
+			UnionRect(&r, &rDraw, &rLastDraw);
 			
 			// Draw a new box
-			if (rDraw.right - rDraw.left > 1 && rDraw.bottom - rDraw.top > 1)
+			if (r.right - r.left > 0 && r.bottom - r.top > 0)
 			{
-				bm = new LICE_SysBitmap(rDraw.right - rDraw.left + 1, rDraw.bottom - rDraw.top + 1);
-				BitBlt(bm->getDC(), 0, 0, bm->getWidth(), bm->getHeight(), dc, rDraw.left, rDraw.top, SRCCOPY);
+				LICE_SysBitmap bm(r.right - r.left + 1, r.bottom - r.top + 1);
+				LICE_Blit(&bm, bmStd, 0, 0, r.left, r.top, bm.getWidth(), bm.getHeight(), 1.0, LICE_BLIT_MODE_COPY);
 				
-				LICE_SysBitmap bDraw(rDraw.right - rDraw.left + 1, rDraw.bottom - rDraw.top + 1);
-				LICE_Copy(&bDraw, bm);
-				LICE_FillRect(&bDraw, 0, rZoom.top - rDraw.top, bDraw.getWidth(), rZoom.bottom - rZoom.top, LICE_RGBA(128, 128, 110, 150), 1.0, LICE_BLIT_MODE_HSVADJ); 
-				LICE_DrawRect(&bDraw, 0, rBox.top - rDraw.top, bDraw.getWidth() - 1, rBox.bottom - rBox.top, LICE_RGBA(255, 255, 255, 150), 1.0, LICE_BLIT_MODE_COPY);
-				BitBlt(dc, rDraw.left, rDraw.top, bDraw.getWidth(), bDraw.getHeight(), bDraw.getDC(), 0, 0, SRCCOPY);
+				LICE_FillRect(&bm, rZoom.left - r.left, rZoom.top - r.top, rZoom.right - rZoom.left, rZoom.bottom - rZoom.top, LICE_RGBA(128, 128, 110, 150), 1.0, LICE_BLIT_MODE_HSVADJ); 
+				LICE_DrawRect(&bm, rBox.left  - r.left, rBox.top  - r.top, rBox.right - rBox.left - 1, rBox.bottom - rBox.top - 1, LICE_RGBA(255, 255, 255, 150), 1.0, LICE_BLIT_MODE_COPY);
+				BitBlt(dc, r.left, r.top, bm.getWidth(), bm.getHeight(), bm.getDC(), 0, 0, SRCCOPY);
 			}
 		
-			ReleaseDC(hwnd, dc); 
+			ReleaseDC(hwnd, dc);
+			return 0;
 		}
 		// Done with the zoom
-		else if (uMsg == WM_LBUTTONUP || (uMsg == WM_KEYDOWN && wParam == VK_ESCAPE) || uMsg == WM_RBUTTONUP)
+		else if (uMsg == WM_LBUTTONUP || uMsg == WM_RBUTTONUP || uMsg == WM_CANCEL_ZOOM)
 		{
-			ZoomTool();
-			delete bm;
-			bm = NULL;
+			if (GetCapture() == hwnd)
+				ReleaseCapture();
 
-			if (uMsg == WM_LBUTTONUP && bMBDown &&
-				rZoom.right - rZoom.left > 1 && rZoom.bottom - rZoom.top > 1)
+			if (g_hOldCur)
+				SetCursor(g_hOldCur);
+
+			delete bmStd;
+			bmStd = NULL;
+			g_bZooming = false;
+			RefreshToolbar(SWSGetCommandID(ZoomTool));
+
+			if (uMsg == WM_LBUTTONUP && bMBDown && rZoom.right - rZoom.left > 1 && rZoom.bottom - rZoom.top > 1)
 			{
 				int iX1, iX2;
 				RECT r;
@@ -878,15 +913,13 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 			else
 				UpdateTimeline();
-		}
-		return 0;
-	}
-	else
-		bInit = false;
 
-	if (g_ReaperTrackWndProc)
-		return g_ReaperTrackWndProc(hwnd, uMsg, wParam, lParam);
-	return 0;
+			bMBDown = false;
+			return 0;
+		}
+	}
+
+	return g_ReaperTrackWndProc(hwnd, uMsg, wParam, lParam);
 }
 
 void ZoomTool(COMMAND_T*)
@@ -898,29 +931,23 @@ void ZoomTool(COMMAND_T*)
 	if (!g_ReaperTrackWndProc)
 		g_ReaperTrackWndProc = (WNDPROC)SetWindowLongPtr(hTrackView, GWLP_WNDPROC, (LONG)ZoomWndProc);
 
-	static HCURSOR hOldCur = NULL;
 	if (!g_bZooming)
 	{
-		SetCapture(hTrackView);
-		HCURSOR hZoomCur = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOM));
-		if (hZoomCur)
-		{
-			hOldCur = GetCursor();
-			SetCursor(hZoomCur);
-		}
+		g_hZoomCur = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOM));
+		g_hOldCur  = GetCursor();
+
+		POINT p;
+		RECT r;
+		GetCursorPos(&p);
+		GetWindowRect(hTrackView, &r);
+		if (PtInRect(&r, p) && g_hZoomCur)
+			SetCursor(g_hZoomCur);
 		g_bZooming = true;
+		RefreshToolbar(SWSGetCommandID(ZoomTool));
 	}
 	else
-	{
-		if (hOldCur)
-		{
-			SetCursor(hOldCur);
-			hOldCur = NULL;
-		}
-		ReleaseCapture();
-		g_bZooming = false;
-	}
-	RefreshToolbar(SWSGetCommandID(ZoomTool));
+		// Handle cancel from the wnd proc
+		SendMessage(hTrackView, WM_CANCEL_ZOOM, 0, 0);
 }
 
 bool IsZoomMode(COMMAND_T*)
@@ -1006,8 +1033,22 @@ void ZoomSlice()
 	SaveZoomSlice();
 }
 
+static int translateAccel(MSG *msg, accelerator_register_t *ctx)
+{
+	// Catch the ESC key when zooming to cancel
+	if (g_bZooming && msg->message == WM_KEYDOWN && msg->wParam == VK_ESCAPE)
+	{
+		SendMessage(GetTrackWnd(), WM_CANCEL_ZOOM, 0, 0);
+		return 1;
+	}
+	return 0;
+}
+static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
+
 int ZoomInit()
 {
+	if (!plugin_register("accelerator",&g_ar))
+		return 0;
 	SWSRegisterCommands(g_commandTable);
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;

@@ -607,6 +607,7 @@ bool SNM_TakeParserPatcher::ReplaceTake(int _takeIdx, int _startTakePos, int _ta
 		GetChunk()->DeleteSub(_startTakePos, _takeLength);
 		if (prevLgth > GetChunk()->GetLength()) // see WDL_String.DeleteSub()
 		{
+			//JFB3 +5 => search for '\n'
 			GetChunk()->Insert(!_takeIdx ? _newTakeChunk->Get()+5 : _newTakeChunk->Get(), _startTakePos, _newTakeChunk->GetLength()); // +5 for "TAKE\n"
 			SetUpdates(1); // as we're directly working on the cached chunk..
 			updated = true;
@@ -871,3 +872,50 @@ bool SNM_TakeEnvParserPatcher::SetVis(const char* _envKeyWord, int _vis) {
 }
 
 
+///////////////////////////////////////////////////////////////////////////////
+// SNM_FXKnobParser
+///////////////////////////////////////////////////////////////////////////////
+
+bool SNM_FXKnobParser::NotifyEndElement(int _mode, 
+	LineParser* _lp, const char* _parsedLine, int _linePos,
+	WDL_PtrList<WDL_String>* _parsedParents, 
+	WDL_String* _newChunk, int _updates)
+{
+	if (_mode == -1 && !strcmp(GetParent(_parsedParents), "FXCHAIN"))
+		m_breakParsePatch = true; // optmization
+	return false; 
+}
+
+bool SNM_FXKnobParser::NotifyChunkLine(int _mode, 
+	LineParser* _lp, const char* _parsedLine, int _linePos,
+	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
+	WDL_String* _newChunk, int _updates)
+{
+	bool updated = false;
+	if (_mode == -1)
+	{
+		if (_lp->getnumtokens() == 2 && !strcmp(_lp->gettoken_str(0), "FXID"))
+		{
+			m_knobs->Add(new WDL_IntKeyedArray<int>());
+			m_fx++;
+		}
+		if (_lp->getnumtokens() >= 2 && !strcmp(_lp->gettoken_str(0), "PARM_TCP"))
+		{
+			for (int i=1; i < _lp->getnumtokens(); i++)
+				m_knobs->Get(m_fx)->Insert(i-1, _lp->gettoken_int(i));
+		}
+	}
+	return updated;
+}
+
+bool SNM_FXKnobParser::GetKnobs(WDL_PtrList<WDL_IntKeyedArray<int> >* _knobs)
+{
+	m_fx = -1;
+	if (_knobs)
+	{
+		m_knobs = _knobs;
+		m_knobs->Empty(true);
+		return (ParsePatch(-1,2,"FXCHAIN") >= 0);
+	}
+	return false;
+}

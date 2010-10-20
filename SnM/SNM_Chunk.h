@@ -350,5 +350,32 @@ private:
 };
 
 
+///////////////////////////////////////////////////////////////////////////////
+// SNM_FXKnobParser
+///////////////////////////////////////////////////////////////////////////////
+
+class SNM_FXKnobParser : public SNM_ChunkParserPatcher
+{
+public:
+	SNM_FXKnobParser(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) {m_fx = -1;}
+	~SNM_FXKnobParser() {}
+	bool SNM_FXKnobParser::GetKnobs(WDL_PtrList<WDL_IntKeyedArray<int> >* _knobs);
+
+protected:
+	bool SNM_FXKnobParser::NotifyEndElement(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		WDL_PtrList<WDL_String>* _parsedParents, 
+		WDL_String* _newChunk, int _updates);
+
+	bool NotifyChunkLine(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
+		WDL_String* _newChunk, int _updates);
+
+private:
+	int m_fx;
+	WDL_PtrList<WDL_IntKeyedArray<int> >* m_knobs;
+};
+
 
 #endif

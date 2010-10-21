@@ -32,12 +32,12 @@
 void AWFillGapsAdv(COMMAND_T* t)
 {
 	// Set up dialog info
-	const char names[] = "Trigger Pad (ms),Crossfade Length (ms),Maximum Gap (ms),Maximum Stretch (0.5 is double),Preserve Transient (ms),Transient Crossfade Length (ms),Fade Shape (0 = linear)";
-	static char defaultValues[100] = "5,5,15,0.5,35,5,0";
+	const char names[] = "Trigger Pad (ms),Crossfade Length (ms),Maximum Gap (ms),Maximum Stretch (0.5 is double),Preserve Transient (ms),Transient Crossfade Length (ms),Fade Shape (0 = linear),Mark possible artifacts? (0/1)";
+	static char defaultValues[100] = "5,5,15,0.5,35,5,0,1";
 	char retVals[100];
 	char defValsBackup[100];
 	int maxReturnLen = 100;
-	int nitems = 7;
+	int nitems = 8;
 	bool runScript = 0;
 	
 	// Copy defaultValues into returnedValues (retains values in case user hits cancel)
@@ -69,6 +69,7 @@ void AWFillGapsAdv(COMMAND_T* t)
 		double presTrans = (atof(strtok(NULL, ",")))/1000;
 		double transFade = (atof(strtok(NULL, ",")))/1000;
 		int fadeShape = atoi(strtok(NULL, ","));
+		int markErrors = atoi(strtok(NULL, ","));
 	
 		if ((triggerPad < 0) || (fadeLength < 0) || (maxGap < 0) || (maxStretch < 0) || (maxStretch > 1) || (presTrans < 0) || (transFade < 0) || (fadeShape < 0) || (fadeShape > 5))
 		{
@@ -78,6 +79,8 @@ void AWFillGapsAdv(COMMAND_T* t)
 			MessageBox(g_hwndParent, "All values must be non-negative, Maximum Stretch must be a value from 0 to 1 and Fade Shape must be a value from 0 to 5.", "Item Smoothing Input Error", MB_OK);
 			return;
 		}
+		
+		
 		
 		// Run loop for every track in project
 		for (int trackIndex = 0; trackIndex < GetNumTracks(); trackIndex++)
@@ -95,6 +98,7 @@ void AWFillGapsAdv(COMMAND_T* t)
 				
 				MediaItem* item1 = GetTrackMediaItem(track, itemIndex);
 				MediaItem* item2 = GetTrackMediaItem(track, itemIndex + 1);
+				// errorFlag = 0;
 				
 				// BEGIN TIMESTRETCH CODE---------------------------------------------------------------
 				
@@ -190,6 +194,7 @@ void AWFillGapsAdv(COMMAND_T* t)
 							if (stretchPercent < maxStretch)
 							{
 								stretchPercent = maxStretch;
+								
 							}
 							
 							item1Length *= (1/stretchPercent);
@@ -262,12 +267,29 @@ void AWFillGapsAdv(COMMAND_T* t)
 					double item2Start = GetMediaItemInfo_Value(item2, "D_POSITION");
 					double item2Length = GetMediaItemInfo_Value(item2, "D_LENGTH");
 					double item2SnapOffset = GetMediaItemInfo_Value(item2, "D_SNAPOFFSET");
+					
+					
 			
 					// If there is a gap, fill it and also add an overlap to the left that is "fadeLength" long
 					if (item2Start >= item1End)
 					{
 						double item2StartDiff = item2Start - item1End + fadeLength;
 						item2Length += item2StartDiff;
+						
+						// Calculate gap between items
+						double gap = item2Start - item1End;
+						
+						// Check to see if gap is bigger than maxGap, even after time stretching
+						if (gap > maxGap)
+						{
+							// If gap is big and mark errors is enabled, add a marker
+							if (markErrors == 1)
+							{
+							AddProjectMarker(NULL, false, item1End, NULL, "Possible Artifact", NULL);
+							}
+							
+						}
+							
 						
 						// Adjust start offset for all takes in item2 to account for fill
 						for (int takeIndex = 0; takeIndex < GetMediaItemNumTakes(item2); takeIndex++)
@@ -302,7 +324,7 @@ void AWFillGapsAdv(COMMAND_T* t)
 	
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
 }
 
 

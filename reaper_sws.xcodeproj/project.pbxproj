@@ -771,8 +771,8 @@
 				33E88A7F11EDFD6700B0F4BE /* SnM_NotesHelpView.cpp */,
 				33E88A8011EDFD6700B0F4BE /* SnM_NotesHelpView.h */,
 				22C769F810B0F04D00774777 /* SnM_sends.cpp */,
-				221CEFA9118212A0009245C9 /* SnM_Track.cpp */,
 				22C769F910B0F04D00774777 /* SnM_Windows.cpp */,
+				221CEFA9118212A0009245C9 /* SnM_Track.cpp */,
 			);
 			name = SnM;
 			sourceTree = "<group>";

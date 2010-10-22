@@ -581,14 +581,45 @@ void AWFixOverlaps(COMMAND_T* t)
 }
 
 
+
+
+
+
+
+
+void AWRecordConditional(COMMAND_T* t)
+{
+	double t1, t2;
+	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
+	
+	if (t1 != t2)
+	{
+		Main_OnCommand(40076, 0); //Set record mode to time selection auto punch
+	}
+	
+	else 
+	{
+		Main_OnCommand(40252, 0); //Set record mode to time selection auto punch
+	}
+	
+	Main_OnCommand(1013,0); // Transport: Record
+}
+
+
+
+
+
+
 static COMMAND_T g_commandTable[] = 
 {
 	// Add commands here (copy paste an example from ItemParams.cpp or similar	
-	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (advanced)" },										"SWS_AWFILLGAPSADV",				AWFillGapsAdv, NULL, 0 },
-	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (advanced, use last settings)" },					"SWS_AWFILLGAPSADVLASTSETTINGS",	AWFillGapsAdv, NULL, 1 },
-	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, no crossfade)" },							"SWS_AWFILLGAPSQUICK",				AWFillGapsQuick, },
-	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, crossfade using default fade length)" },	"SWS_AWFILLGAPSQUICKXFADE",			AWFillGapsQuickXFade, },
-	{ { DEFACCEL, "SWS/AdamWathan: Remove overlaps in selected items preserving item starts" },							"SWS_AWFIXOVERLAPS",				AWFixOverlaps, },
+	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (advanced)" },												"SWS_AWFILLGAPSADV",				AWFillGapsAdv, NULL, 0 },
+	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (advanced, use last settings)" },							"SWS_AWFILLGAPSADVLASTSETTINGS",	AWFillGapsAdv, NULL, 1 },
+	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, no crossfade)" },									"SWS_AWFILLGAPSQUICK",				AWFillGapsQuick, },
+	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, crossfade using default fade length)" },			"SWS_AWFILLGAPSQUICKXFADE",			AWFillGapsQuickXFade, },
+	{ { DEFACCEL, "SWS/AdamWathan: Remove overlaps in selected items preserving item starts" },									"SWS_AWFIXOVERLAPS",				AWFixOverlaps, },
+	{ { DEFACCEL, "SWS/AdamWathan: Record (conditional, normal record mode unless time sel exists, then autopunch)" },			"SWS_AWRECORDCOND",					AWRecordConditional, },
+	
 	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

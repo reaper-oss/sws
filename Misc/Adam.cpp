@@ -247,7 +247,8 @@ void AWFillGapsAdv(COMMAND_T* t)
 						// If both items selected, account for trigger pad, if not, do nothing
 						if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
 						{
-							item1Length = item2Start - item1Start - triggerPad;
+							item1Length -= triggerPad;
+							SetMediaItemInfo_Value(item1, "D_LENGTH", item1Length);
 						}
 					}
 				}

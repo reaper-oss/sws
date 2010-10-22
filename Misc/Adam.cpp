@@ -281,7 +281,8 @@ void AWFillGapsAdv(COMMAND_T* t)
 						double gap = item2Start - item1End;
 						
 						// Check to see if gap is bigger than maxGap, even after time stretching
-						if (gap > maxGap)
+						// Make sure to account for triggerPad since it is subtracted before this point and shouldn't count towards the gap
+						if (gap > (maxGap + triggerPad))
 						{
 							// If gap is big and mark errors is enabled, add a marker
 							if (markErrors == 1)

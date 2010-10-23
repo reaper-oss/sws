@@ -1,3 +1,6 @@
+!v1.8.2 #6 (October 23, 2010)
+Added middle mouse button modifiers to the zoom preferences dialog.
+
 !v1.8.2 #5 (October 22, 2010)
 There's a few new zoom tool features!  http://www.standingwaterstudios.com/shup/zoomTool4.gif|Here's a demo|.
 To access the new features, use the SWS Zoom preferences dialog.  You can find it in the Extensions menu.
@@ -8,11 +11,11 @@ The available options are:
 <i>Clicking without dragging in zoom mode on an item zooms to that item</i>
 +No-drag click to undo zoom
 <i>Clicking goes to the previous zoom level/position.  If you have item zoom mode on (above option), then undo zoom works when you're clicking on empty space.</i>
-+Unzoom mode when dragging up
++Unzoom mode when dragging up (Windows only)
 <i>When in zoom mode, drag the box in the up direction to get a little representation of the current view, and the box around it will be the "new view".  Try it!</i>
 
-I consider this an interim release, the above options will be added to and refined more soon.
-Also fixed zoom bugs when the master track is visible in the TCP
+I consider this an interim release, the above options will be added to and refined soon.
+Also fixed zoom bugs when the master track is visible in the TCP.
 
 !v1.8.2 #4 (October 20, 2010)
 Zoom tool for OSX!

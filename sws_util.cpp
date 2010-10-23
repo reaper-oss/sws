@@ -491,3 +491,23 @@ void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack*
 		}
 	}
 }
+
+int SWS_GetModifiers()
+{
+	int iKeys = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? SWS_CTRL  : 0;
+	iKeys    |= GetAsyncKeyState(VK_MENU)    & 0x8000 ? SWS_ALT   : 0;
+	iKeys    |= GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? SWS_SHIFT : 0;
+	return iKeys;
+}
+
+MODIFIER g_modifiers[NUM_MODIFIERS] =
+{
+	{ 0, "None" },
+	{ 2, "Ctrl" },
+	{ 1, "Alt" },
+	{ 4, "Shift" },
+	{ 3, "Ctrl + Alt" },
+	{ 6, "Ctrl + Shift" },
+	{ 5, "Alt + Shift" },
+	{ 7, "Ctrl + Alt + Shift" }
+};

@@ -82,7 +82,6 @@
 #define IDC_VOLEDIT                     1016
 #define IDC_UNDOZOOM                    1016
 #define IDC_NUMREPEDIT                  1017
-#define IDC_CHECK7                      1017
 #define IDC_UNZOOMMODE                  1017
 #define IDC_NOTEVALUECOMBO              1018
 #define IDC_EDIT2                       1019
@@ -243,6 +242,7 @@
 #define IDC_PADREENVPROC_TIMESEGMENT    1180
 #define IDC_MMZOOM                      1180
 #define IDC_PADREENVPROC_TAKEENV        1181
+#define IDC_MMMODIFIER                  1181
 #define IDC_CHECK4                      1182
 
 // Next default values for new objects
@@ -251,7 +251,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        152
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1181
+#define _APS_NEXT_CONTROL_VALUE         1182
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

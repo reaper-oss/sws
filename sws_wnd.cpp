@@ -341,10 +341,7 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 		}
 
 		// Check the derived class key handler next in case they want to override anything
-		int iKeys = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? LVKF_CONTROL : 0;
-		iKeys    |= GetAsyncKeyState(VK_MENU)    & 0x8000 ? LVKF_ALT     : 0;
-		iKeys    |= GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? LVKF_SHIFT   : 0;
-
+		int iKeys = SWS_GetModifiers();
 		int iRet = p->OnKey(msg, iKeys);
 		if (iRet)
 			return iRet;
@@ -545,9 +542,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 #ifdef _WIN32
 		int iKeys = ((NMITEMACTIVATE*)lParam)->uKeyFlags;
 #else
-		int iKeys = GetAsyncKeyState(VK_CONTROL) & 0x8000 ? LVKF_CONTROL : 0;
-		iKeys    |= GetAsyncKeyState(VK_MENU)    & 0x8000 ? LVKF_ALT     : 0;
-		iKeys    |= GetAsyncKeyState(VK_SHIFT)   & 0x8000 ? LVKF_SHIFT   : 0;
+		int iKeys = SWS_GetModifiers();
 #endif
 		OnItemClk(GetListItem(s->iItem), iDataCol, iKeys);
 

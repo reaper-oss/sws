@@ -51,6 +51,18 @@
 #define PATH_SLASH_CHAR '/'
 #endif
 
+// Aliases to keys
+#define SWS_ALT		LVKF_ALT		// 1
+#define SWS_CTRL	LVKF_CONTROL	// 2
+#define SWS_SHIFT	LVKF_SHIFT		// 4
+typedef struct MODIFIER
+{
+	int iModifier;
+	const char* cDesc;
+} MODIFIER;
+#define NUM_MODIFIERS 8
+extern MODIFIER g_modifiers[]; // sws_util.h
+
 typedef struct COMMAND_T
 {
 	gaccel_register_t accel;
@@ -181,3 +193,4 @@ void dprintf(const char* format, ...);
 void SWS_GetSelectedTracks(WDL_TypedBuf<MediaTrack*>* buf, bool bMaster = false);
 void SWS_GetSelectedMediaItems(WDL_TypedBuf<MediaItem*>* buf);
 void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack* tr);
+int SWS_GetModifiers();

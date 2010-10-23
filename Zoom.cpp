@@ -869,6 +869,7 @@ static HCURSOR g_hZoomCur = NULL;
 // Zoom tool Prefs
 // (defaults are actually set in ZoomInit)
 static bool g_bMidMouseButton = false;
+static int  g_iMidMouseModifier = 0;
 static bool g_bItemZoom = false;
 static bool g_bUndoZoom = false;
 static bool g_bUnzoomMode = false;
@@ -881,7 +882,7 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	static RECT rZoom;
 	static MediaItem* itemZoom;
 
-	if (uMsg == WM_START_ZOOM || (g_bMidMouseButton && uMsg == WM_MBUTTONDOWN))
+	if (uMsg == WM_START_ZOOM || (g_bMidMouseButton && uMsg == WM_MBUTTONDOWN && SWS_GetModifiers() == g_iMidMouseModifier))
 	{
 		POINT p;
 		RECT r;
@@ -907,7 +908,7 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		static POINT pStart;
 		static bool bMBDown = false;
 
-		if (uMsg == WM_LBUTTONDOWN || (g_bMidMouseButton && uMsg == WM_MBUTTONDOWN))
+		if (uMsg == WM_LBUTTONDOWN || (g_bMidMouseButton && uMsg == WM_MBUTTONDOWN && SWS_GetModifiers() == g_iMidMouseModifier))
 		{
 			GetCursorPos(&pStart);
 			ScreenToClient(hwnd, &pStart);
@@ -936,7 +937,7 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			return 0;
 		}
 #endif
-		if (uMsg == WM_MOUSEMOVE || uMsg == WM_LBUTTONDOWN || (g_bMidMouseButton && uMsg == WM_MBUTTONDOWN) || uMsg == WM_START_ZOOM)
+		if (uMsg == WM_MOUSEMOVE || uMsg == WM_LBUTTONDOWN || (g_bMidMouseButton && uMsg == WM_MBUTTONDOWN && SWS_GetModifiers() == g_iMidMouseModifier) || uMsg == WM_START_ZOOM)
 		{
 			// There's a lot of rects here:
 			// rBox - the drawn rectangle (win only)
@@ -1121,6 +1122,15 @@ static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 #else
 			ShowWindow(GetDlgItem(hwndDlg, IDC_UNZOOMMODE), SW_HIDE);
 #endif
+			for (int i = 0; i < NUM_MODIFIERS; i++)
+				SendMessage(GetDlgItem(hwndDlg, IDC_MMMODIFIER), CB_ADDSTRING, 0, (LPARAM)g_modifiers[i].cDesc);
+			for (int i = 0; i < NUM_MODIFIERS; i++)
+				if (g_iMidMouseModifier == g_modifiers[i].iModifier)
+				{
+					SendMessage(GetDlgItem(hwndDlg, IDC_MMMODIFIER), CB_SETCURSEL, (WPARAM)i, 0);
+					break;
+				}
+
 			RestoreWindowPos(hwndDlg, ZOOMPREFS_WNDPOS_KEY, false);
 			return 0;
 		}
@@ -1135,6 +1145,7 @@ static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 #ifdef _WIN32
 					g_bUnzoomMode     = IsDlgButtonChecked(hwndDlg, IDC_UNZOOMMODE) == BST_CHECKED;
 #endif
+					g_iMidMouseModifier = g_modifiers[SendMessage(GetDlgItem(hwndDlg, IDC_MMMODIFIER), CB_GETCURSEL, 0, 0)].iModifier;
 				}
 				// Fall through to cancel to save/end
 				case IDCANCEL:
@@ -1281,6 +1292,7 @@ int ZoomInit()
 	g_bItemZoom = !!(iPrefs & 2);
 	g_bUndoZoom = !!(iPrefs & 4);
 	g_bUnzoomMode = !!(iPrefs & 8);
+	g_iMidMouseModifier = iPrefs >> 8;
 
 	return 1;
 }
@@ -1289,6 +1301,6 @@ void ZoomExit()
 {
 	// Write the zoom prefs
 	char str[32];
-	sprintf(str, "%d", (g_bMidMouseButton ? 1 : 0) + (g_bItemZoom ? 2 : 0) + (g_bUndoZoom ? 4 : 0) + (g_bUnzoomMode ? 8 : 0));
+	sprintf(str, "%d", (g_bMidMouseButton ? 1 : 0) + (g_bItemZoom ? 2 : 0) + (g_bUndoZoom ? 4 : 0) + (g_bUnzoomMode ? 8 : 0) + (g_iMidMouseModifier << 8));
 	WritePrivateProfileString(SWS_INI, ZOOMPREFS_KEY, str, get_ini_file());
 }

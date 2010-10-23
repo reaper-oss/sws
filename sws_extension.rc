@@ -955,6 +955,21 @@ BEGIN
     CONTROL         "",IDC_EDIT,"msctls_progress32",0x0,11,9,164,11
 END
 
+IDD_ZOOMPREFS DIALOGEX 0, 0, 210, 91
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "SWS Zoom Prefs"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,99,70,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,153,70,50,14
+    CONTROL         "Zoom with middle mouse button (overrides Reaper prefs)",IDC_MMZOOM,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,7,196,10
+    CONTROL         "No-drag click zooms to item under cursor",IDC_ITEMZOOM,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,20,196,10
+    CONTROL         "No-drag click to undo zoom",IDC_UNDOZOOM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,34,196,10
+    CONTROL         "Unzoom mode when dragging up",IDC_UNZOOMMODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,48,196,10
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -1354,6 +1369,14 @@ BEGIN
         RIGHTMARGIN, 218
         TOPMARGIN, 4
         BOTTOMMARGIN, 160
+    END
+
+    IDD_ZOOMPREFS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 84
     END
 END
 #endif    // APSTUDIO_INVOKED

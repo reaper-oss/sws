@@ -343,6 +343,7 @@ extern "C"
 			MediaPoolExit();
 			AutoColorExit();
 			ProjectListExit();
+			MiscExit();
 			PadreExit();
 			SnMExit();
 			ERR_RETURN("Exiting Reaper.\n")
@@ -577,14 +578,14 @@ extern "C"
 			ERR_RETURN("Tracklist init error\n")
 		if (!MediaPoolInit())
 			ERR_RETURN("Mediapool init error\n")
-		if (!MiscInit())
-			ERR_RETURN("Misc init error\n")
 		if (!ProjectListInit())
 			ERR_RETURN("Project List init error\n")
 		if (!ProjectMgrInit())
 			ERR_RETURN("Project Mgr init error\n")
 		if (!XenakiosInit())
 			ERR_RETURN("Xenakios init error\n")
+		if (!MiscInit())
+			ERR_RETURN("Misc init error\n")
 		if (!SnMInit(rec))
 			ERR_RETURN("SnM init error\n")
 		if (!AboutBoxInit())

@@ -54,6 +54,7 @@
 #define IDD_PADRE_ENVPROCESSOR          148
 #define IDD_SNM_CUEBUS                  149
 #define IDD_SNM_FXCHAINLIST             150
+#define IDD_ZOOMPREFS                   151
 #define IDD_SNM_NOTES_HELP              152
 #define IDD_SNM_WAIT                    153
 #define IDD_SNM_FIND                    154
@@ -77,8 +78,12 @@
 #define ID_TAKEANDSOURCE                1013
 #define IDC_CHECK1                      1014
 #define IDC_PANEDIT                     1015
+#define IDC_ITEMZOOM                    1015
 #define IDC_VOLEDIT                     1016
+#define IDC_UNDOZOOM                    1016
 #define IDC_NUMREPEDIT                  1017
+#define IDC_CHECK7                      1017
+#define IDC_UNZOOMMODE                  1017
 #define IDC_NOTEVALUECOMBO              1018
 #define IDC_EDIT2                       1019
 #define IDC_EDIT3                       1020
@@ -236,6 +241,7 @@
 #define IDC_PADREENVPROC_TARGET         1178
 #define IDC_PADREENVPROC_ACTIVETAKES    1179
 #define IDC_PADREENVPROC_TIMESEGMENT    1180
+#define IDC_MMZOOM                      1180
 #define IDC_PADREENVPROC_TAKEENV        1181
 #define IDC_CHECK4                      1182
 
@@ -243,9 +249,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        151
+#define _APS_NEXT_RESOURCE_VALUE        152
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1180
+#define _APS_NEXT_CONTROL_VALUE         1181
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

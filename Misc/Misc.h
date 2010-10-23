@@ -28,3 +28,4 @@
 #pragma once
 
 int MiscInit();
+void MiscExit();

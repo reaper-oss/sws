@@ -315,7 +315,10 @@ int GetFolderDepth(MediaTrack* tr, int* iType, MediaTrack** nextTr) // iType: 0=
 
 int GetTrackVis(MediaTrack* tr) // &1 == mcp, &2 == tcp
 {
-	if (CSurf_TrackToID(tr, false) <= 0)
+	int iTrack = CSurf_TrackToID(tr, false);
+	if (iTrack == 0)
+		return *(int*)GetConfigVar("showmaintrack") ? 3 : 1; // For now, always return master vis in MCP
+	else if (iTrack < 0)
 		return 0;
 
 	int iVis = *(bool*)GetSetMediaTrackInfo(tr, "B_SHOWINMIXER", NULL) ? 1 : 0;
@@ -325,11 +328,20 @@ int GetTrackVis(MediaTrack* tr) // &1 == mcp, &2 == tcp
 
 void SetTrackVis(MediaTrack* tr, int vis) // &1 == mcp, &2 == tcp
 {
-	if (CSurf_TrackToID(tr, false) <= 0 || vis == GetTrackVis(tr))
-		return;
-
-	GetSetMediaTrackInfo(tr, "B_SHOWINTCP", vis & 2 ? &g_bTrue : &g_bFalse);
-	GetSetMediaTrackInfo(tr, "B_SHOWINMIXER", vis & 1 ? &g_bTrue : &g_bFalse);
+	int iTrack = CSurf_TrackToID(tr, false);
+	if (iTrack == 0)
+	{	// TODO - obey master in mcp
+		if ((vis & 2) != (*(int*)GetConfigVar("showmaintrack") ? 2 : 0))
+			Main_OnCommand(40075, 0);
+	}
+	else if (iTrack > 0)
+	{
+		if (vis != GetTrackVis(tr))
+		{
+			GetSetMediaTrackInfo(tr, "B_SHOWINTCP",   vis & 2 ? &g_bTrue : &g_bFalse);
+			GetSetMediaTrackInfo(tr, "B_SHOWINMIXER", vis & 1 ? &g_bTrue : &g_bFalse);
+		}
+	}
 }
 
 void* GetConfigVar(const char* cVar)

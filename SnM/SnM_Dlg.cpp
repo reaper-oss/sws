@@ -305,7 +305,6 @@ WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_TIMER:
 			{
 				SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETRANGE, 0, MAKELPARAM(0, LET_BREATHE_MS));
-				int i=0;
 				if (g_waitDlgProcCount < LET_BREATHE_MS)
 				{
 					SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETPOS, (WPARAM) g_waitDlgProcCount, 0);

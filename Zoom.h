@@ -29,3 +29,4 @@
 
 void ZoomSlice();
 int ZoomInit();
+void ZoomExit();

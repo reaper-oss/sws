@@ -72,3 +72,8 @@ int MiscInit()
 	
 	return 1;
 }
+
+void MiscExit()
+{
+	ZoomExit();
+}

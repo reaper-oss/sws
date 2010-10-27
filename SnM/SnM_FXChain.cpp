@@ -138,9 +138,19 @@ void setTakeFXChain(const char* _title, int _slot, bool _activeOnly, bool _clear
 	// Get the source chain
 	WDL_String* chain = NULL;
 	WDL_String slotFxChain;
-	if (_slot == -2) chain = &g_fXChainClipboard;
-	else if (LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &slotFxChain)) chain = &slotFxChain;
-	else return;
+	switch(_slot)
+	{
+		case -1: 
+			break;
+		case -2: 
+			if (LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &slotFxChain)) 
+				chain = &slotFxChain;
+			else
+				return;
+			break;
+		default: 
+			break;
+	}
 
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
@@ -304,9 +314,19 @@ void setTrackFXChain(const char* _title, int _slot, bool _clear)
 	// Get the source chain
 	WDL_String* chain = NULL;
 	WDL_String slotFxChain;
-	if (_slot == -2) chain = &g_fXChainClipboard;
-	else if (LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &slotFxChain)) chain = &slotFxChain;
-	else return;
+	switch(_slot)
+	{
+		case -1: 
+			break;
+		case -2: 
+			if (LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &slotFxChain)) 
+				chain = &slotFxChain;
+			else
+				return;
+			break;
+		default: 
+			break;
+	}
 
 	for (int i = 0; i <= GetNumTracks(); i++)
 	{

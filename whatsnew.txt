@@ -1,3 +1,5 @@
+Fixed all "SWS/S&M Clear FX chain" actions (broken in v1.8.0)
+
 !v1.8.2 #6 (October 23, 2010)
 Added middle mouse button modifiers to the zoom preferences dialog.
 

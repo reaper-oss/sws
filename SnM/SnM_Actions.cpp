@@ -214,8 +214,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Bypass FX 6 for selected tracks" }, "S&M_FXBYP_SETON6", setFXBypassSelectedTracks, NULL, 6},
 	{ { DEFACCEL, "SWS/S&M: Bypass FX 7 for selected tracks" }, "S&M_FXBYP_SETON7", setFXBypassSelectedTracks, NULL, 7},
 	{ { DEFACCEL, "SWS/S&M: Bypass FX 8 for selected tracks" }, "S&M_FXBYP_SETON8", setFXBypassSelectedTracks, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Bypass last FX bypass for selected tracks" }, "S&M_FXBYP_SETONLAST", setFXBypassSelectedTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Bypass selected FX bypass for selected tracks" }, "S&M_FXBYP_SETONSEL", setFXBypassSelectedTracks, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Bypass last FX for selected tracks" }, "S&M_FXBYP_SETONLAST", setFXBypassSelectedTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Bypass selected FX for selected tracks" }, "S&M_FXBYP_SETONSEL", setFXBypassSelectedTracks, NULL, 0},
 	
 	{ { DEFACCEL, "SWS/S&M: Unbypass FX 1 for selected tracks" }, "S&M_FXBYP_SETOFF1", setFXUnbypassSelectedTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Unbypass FX 2 for selected tracks" }, "S&M_FXBYP_SETOFF2", setFXUnbypassSelectedTracks, NULL, 2},
@@ -284,7 +284,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected items" },  "S&M_CLRFXCHAIN1", clearActiveTakeFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected items, all takes" },  "S&M_CLRFXCHAIN2", clearAllTakesFXChain, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected tracks" }, "S&M_CLRFXCHAIN3", clearTrackFXChain, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected tracks" }, "S&M_CLRFXCHAIN3", clearTrackFXChain, NULL, -1},
 
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected tracks, slot 1" }, "S&M_TRACKFXCHAIN1", loadSetTrackFXChain, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected tracks, slot 2" }, "S&M_TRACKFXCHAIN2", loadSetTrackFXChain, NULL, 1},
@@ -315,7 +315,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Delete selected items' takes and source files (no undo)" }, "S&M_DELTAKEANDFILE2", deleteTakeAndMedia, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Delete active take and source file in selected items (prompt, no undo)" }, "S&M_DELTAKEANDFILE3", deleteTakeAndMedia, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Delete active take and source file in selected items (no undo)" }, "S&M_DELTAKEANDFILE4", deleteTakeAndMedia, NULL, 4},
-
 
 	// Notes/help -------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Notes/help window..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, NULL, IsNotesHelpViewEnabled},
@@ -445,15 +444,15 @@ int g_SNMSection_maxCmdId = 0;
 // S&M actions (in "S&M Extension" section) 
 static MIDI_COMMAND_T g_SNMSection_cmdTable[] = 
 {
-	{ { DEFACCEL, "Apply live config 1 (MIDI CC only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
-	{ { DEFACCEL, "Apply live config 2 (MIDI CC only)" }, "S&M_LIVECONFIG2", ApplyLiveConfig, NULL, 1},
-	{ { DEFACCEL, "Apply live config 3 (MIDI CC only)" }, "S&M_LIVECONFIG3", ApplyLiveConfig, NULL, 2},
-	{ { DEFACCEL, "Apply live config 4 (MIDI CC only)" }, "S&M_LIVECONFIG4", ApplyLiveConfig, NULL, 3},
-	{ { DEFACCEL, "Apply live config 5 (MIDI CC only)" }, "S&M_LIVECONFIG5", ApplyLiveConfig, NULL, 4},
-	{ { DEFACCEL, "Apply live config 6 (MIDI CC only)" }, "S&M_LIVECONFIG6", ApplyLiveConfig, NULL, 5},
-	{ { DEFACCEL, "Apply live config 7 (MIDI CC only)" }, "S&M_LIVECONFIG7", ApplyLiveConfig, NULL, 6},
-	{ { DEFACCEL, "Apply live config 8 (MIDI CC only)" }, "S&M_LIVECONFIG8", ApplyLiveConfig, NULL, 7},
-	{ { DEFACCEL, "Select project (MIDI CC only)" }, "S&M_SELECT_PROJECT", SelectProject, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 1 (MIDI CC only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 2 (MIDI CC only)" }, "S&M_LIVECONFIG2", ApplyLiveConfig, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 3 (MIDI CC only)" }, "S&M_LIVECONFIG3", ApplyLiveConfig, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 4 (MIDI CC only)" }, "S&M_LIVECONFIG4", ApplyLiveConfig, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 5 (MIDI CC only)" }, "S&M_LIVECONFIG5", ApplyLiveConfig, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 6 (MIDI CC only)" }, "S&M_LIVECONFIG6", ApplyLiveConfig, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 7 (MIDI CC only)" }, "S&M_LIVECONFIG7", ApplyLiveConfig, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 8 (MIDI CC only)" }, "S&M_LIVECONFIG8", ApplyLiveConfig, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Select project (MIDI CC only)" }, "S&M_SELECT_PROJECT", SelectProject, NULL, 7},
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 

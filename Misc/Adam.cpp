@@ -757,9 +757,7 @@ void AWFadeSelection(COMMAND_T* t)
 						//double dTest = fabs(dEnd1 - dStart2);
 						
 						// Need a tolerance for "items are adjacent". Also check to see if split is inside time selection
-						// Found one case of items after split having diff edges 1.13e-13 apart, hopefully 2.0e-13 is enough (but not too much)
-						
-						if ((fabs(dEnd1 - dStart2) < 2.0e-13))
+						if ((fabs(dEnd1 - dStart2) < SWS_ADJACENT_ITEM_THRESHOLD))
 						{	// Found a matching item
 								
 							// If split is within selection and selection is within total item selection
@@ -877,7 +875,7 @@ void AWFadeSelection(COMMAND_T* t)
 						// If items are adjacent in opposite direction, turn flag on. Actual fades handled when situation is found
 						// in reverse, but still need to flag it here
 						
-						else if ((fabs(dEnd2 - dStart1) < 2.0e-13))
+						else if ((fabs(dEnd2 - dStart1) < SWS_ADJACENT_ITEM_THRESHOLD))
 						{
 							leftFlag=true;
 						}

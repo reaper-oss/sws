@@ -1,10 +1,11 @@
-!v1.8.2 #7 (October 28, 2010)
+!v1.8.2 #8 (October 29, 2010)
 Zoom undo action updates - Check out the new options in the SWS zoom preferences dialog:
 +Only undo SWS zoom actions/zoom tool
 +Last undo step always zooms out to the project level (please test)
 
 New actions from Adam:
 +SWS/AdamWathan: Fade in/out/crossfade selected area of selected items
+(http://www.adamwathan.com/reaper/AWintellifade.swf|Watch the demo|)
 +SWS/AdamWathan: Play/Stop (automatically group simultaneously recorded items)
 +SWS/AdamWathan: Select from cursor to end of project (items and time selection)
 

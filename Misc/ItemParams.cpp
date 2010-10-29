@@ -364,8 +364,7 @@ void CrossfadeSelItems(COMMAND_T* t)
 						//double dTest = fabs(dEnd1 - dStart2);
 
 						// Need a tolerance for "items are adjacent".
-						// Found one case of items after split having diff edges 1.13e-13 apart, hopefully 2.0e-13 is enough (but not too much)
-						if (fabs(dEnd1 - dStart2) < 2.0e-13)
+						if (fabs(dEnd1 - dStart2) < SWS_ADJACENT_ITEM_THRESHOLD)
 						{	// Found a matching item
 							// Need to ensure that there's "room" to move the start of the second item back
 							// Check all of the takes' start offset before doing any "work"

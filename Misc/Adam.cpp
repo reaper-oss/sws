@@ -606,6 +606,560 @@ void AWRecordConditional(COMMAND_T* t)
 }
 
 
+void AWPlayStopAutoGroup(COMMAND_T* t)
+{
+	if (GetPlayState() & 4)
+	{
+		Main_OnCommand(1016, 0); //If recording, Stop
+		int numItems = CountSelectedMediaItems(0);
+	
+		if (numItems > 1)
+		{
+			Main_OnCommand(40032, 0); //Group selected items
+		}
+	}
+	else
+	{
+		Main_OnCommand(40044, 0); //If Transport is playing or stopped, Play/Stop
+	}
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+
+void AWSelectToEnd(COMMAND_T* t)
+{
+	double projEnd = 0;
+	
+	// Find end position of last item in project
+	
+	for (int trackIndex = 0; trackIndex < GetNumTracks(); trackIndex++)
+	{
+		MediaTrack* track = GetTrack(0, trackIndex);
+		
+		int itemNum = GetTrackNumMediaItems(track) - 1;
+		
+		MediaItem* item = GetTrackMediaItem(track, itemNum);	
+		
+		double itemEnd = GetMediaItemInfo_Value(item, "D_POSITION") + GetMediaItemInfo_Value(item, "D_LENGTH");
+		
+		if (itemEnd > projEnd)
+		{
+			projEnd = itemEnd;
+		}
+	}
+	
+	double selStart = GetCursorPosition();
+	
+	GetSet_LoopTimeRange2(0, 1, 0, &selStart, &projEnd, 0);
+	
+	Main_OnCommand(40718, 0); // Select all items in time selection on selected tracks
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
+}
+
+
+
+
+
+
+/* Sorry this is experimental and sucks right now
+
+void AWRecordQuickPunch(COMMAND_T* t)
+{
+	if (GetPlayState() & 4)
+	{
+		double selStart;
+		double selEnd;
+		double playPos;
+		
+		GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
+		
+		playPos = GetPlayPosition();
+		
+		if (selStart > playPos)
+		{
+			GetSet_LoopTimeRange2(0, 1, 0, &playPos, &selEnd, 0);
+		}
+		else if (selStart < playPos)
+		{
+			GetSet_LoopTimeRange2(0, 1, 0, &selStart, &playPos, 0);
+		}
+			
+	}
+	else if (GetPlayState() == 0)
+	{
+		Main_OnCommand(40076, 0); //Set to time selection punch mode
+		
+		double selStart = 6000;
+		double selEnd = 6001;
+		
+		GetSet_LoopTimeRange2(0, 1, 0, &selStart, &selEnd, 0);
+		
+		Main_OnCommand(1013, 0);
+	}
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
+}
+*/
+
+
+
+
+
+
+
+void AWFadeSelection(COMMAND_T* t)
+{
+	double dFadeLen; 
+	double dEdgeAdj;
+	double dEdgeAdj1;
+	double dEdgeAdj2;
+	bool leftFlag=false;
+	bool rightFlag=false;
+	
+	double selStart;
+	double selEnd;
+	
+	GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
+	
+	
+	
+	for (int iTrack = 1; iTrack <= GetNumTracks(); iTrack++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(iTrack, false);
+		for (int iItem1 = 0; iItem1 < GetTrackNumMediaItems(tr); iItem1++)
+		{
+			MediaItem* item1 = GetTrackMediaItem(tr, iItem1);
+			if (*(bool*)GetSetMediaItemInfo(item1, "B_UISEL", NULL))
+			{
+				double dStart1 = *(double*)GetSetMediaItemInfo(item1, "D_POSITION", NULL);
+				double dEnd1   = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL) + dStart1;
+				
+				leftFlag = false;
+				rightFlag = false;
+				
+				
+				
+				// Try to match up the end with the start of the other selected media items
+				for (int iItem2 = 0; iItem2 < GetTrackNumMediaItems(tr); iItem2++)
+				{
+
+					MediaItem* item2 = GetTrackMediaItem(tr, iItem2);
+
+					if (item1 != item2 && *(bool*)GetSetMediaItemInfo(item2, "B_UISEL", NULL))
+					{
+					
+						double dStart2 = *(double*)GetSetMediaItemInfo(item2, "D_POSITION", NULL);
+						double dEnd2   = *(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL) + dStart2;
+						//double dTest = fabs(dEnd1 - dStart2);
+						
+						// Need a tolerance for "items are adjacent". Also check to see if split is inside time selection
+						// Found one case of items after split having diff edges 1.13e-13 apart, hopefully 2.0e-13 is enough (but not too much)
+						
+						if ((fabs(dEnd1 - dStart2) < 2.0e-13))
+						{	// Found a matching item
+								
+							// If split is within selection and selection is within total item selection
+							if ((selStart > dStart1) && (selEnd < dEnd2) && (selStart < dStart2) && (selEnd > dEnd1))
+							{
+								dFadeLen = selEnd - selStart;
+								dEdgeAdj1 = selEnd - dEnd1;
+								
+								dEdgeAdj2 = dStart2 - selStart;
+								
+								if (dEdgeAdj2 > *(double*)GetSetMediaItemTakeInfo(GetActiveTake(item2), "D_STARTOFFS", NULL))
+								{	
+									
+									dFadeLen -= dEdgeAdj2;
+									
+									dEdgeAdj2 = *(double*)GetSetMediaItemTakeInfo(GetActiveTake(item2), "D_STARTOFFS", NULL);
+									
+									dFadeLen += dEdgeAdj2;
+								}
+								
+								
+								// Move the edges around and set the crossfades
+								double dLen1 = dEnd1 - dStart1 + dEdgeAdj1;
+								*(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL) = dLen1;
+								GetSetMediaItemInfo(item1, "D_FADEOUTLEN_AUTO", &dFadeLen);
+								
+								double dLen2 = *(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL);
+								dStart2 -= dEdgeAdj2;
+								dLen2   += dEdgeAdj2;
+								*(double*)GetSetMediaItemInfo(item2, "D_POSITION", NULL) = dStart2;
+								*(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL) = dLen2;
+								GetSetMediaItemInfo(item2, "D_FADEINLEN_AUTO", &dFadeLen);
+								double dSnapOffset2 = *(double*)GetSetMediaItemInfo(item2, "D_SNAPOFFSET", NULL);
+								if (dSnapOffset2)
+								{	// Only adjust the snap offset if it's non-zero
+									dSnapOffset2 += dEdgeAdj2;
+									GetSetMediaItemInfo(item2, "D_SNAPOFFSET", &dSnapOffset2);
+								}
+								
+								for (int iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
+								{
+									MediaItem_Take* take = GetMediaItemTake(item2, iTake);
+									if (take)
+									{
+										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
+										dOffset -= dEdgeAdj2;
+										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+									}
+								}
+								rightFlag=true;
+								break;
+								
+							}
+							// If selection does not surround split or does not exist
+							
+							
+							else
+							{
+								dFadeLen = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
+								dEdgeAdj1 = dFadeLen / 2.0;
+								
+								dEdgeAdj2 = dFadeLen / 2.0;
+								
+								// Need to ensure that there's "room" to move the start of the second item back
+								// Check all of the takes' start offset before doing any "work"
+								
+								if (dEdgeAdj2 > *(double*)GetSetMediaItemTakeInfo(GetActiveTake(item2), "D_STARTOFFS", NULL))
+								{	//break;
+									
+									dEdgeAdj2 = *(double*)GetSetMediaItemTakeInfo(GetActiveTake(item2), "D_STARTOFFS", NULL);
+									
+									dEdgeAdj1 = dFadeLen - dEdgeAdj2;
+								}
+							
+							
+								
+								
+								// We're all good, move the edges around and set the crossfades
+								double dLen1 = dEnd1 - dStart1 + dEdgeAdj1;
+								*(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL) = dLen1;
+								GetSetMediaItemInfo(item1, "D_FADEOUTLEN_AUTO", &dFadeLen);
+								
+								double dLen2 = *(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL);
+								dStart2 -= dEdgeAdj2;
+								dLen2   += dEdgeAdj2;
+								*(double*)GetSetMediaItemInfo(item2, "D_POSITION", NULL) = dStart2;
+								*(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL) = dLen2;
+								GetSetMediaItemInfo(item2, "D_FADEINLEN_AUTO", &dFadeLen);
+								double dSnapOffset2 = *(double*)GetSetMediaItemInfo(item2, "D_SNAPOFFSET", NULL);
+								if (dSnapOffset2)
+								{	// Only adjust the snap offset if it's non-zero
+									dSnapOffset2 += dEdgeAdj2;
+									GetSetMediaItemInfo(item2, "D_SNAPOFFSET", &dSnapOffset2);
+								}
+								
+								for (int iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
+								{
+									MediaItem_Take* take = GetMediaItemTake(item2, iTake);
+									if (take)
+									{
+										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
+										dOffset -= dEdgeAdj2;
+										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+									}
+								}
+								rightFlag=true;
+								break;
+							}
+							
+							
+							
+						}
+						
+						
+						// If items are adjacent in opposite direction, turn flag on. Actual fades handled when situation is found
+						// in reverse, but still need to flag it here
+						
+						else if ((fabs(dEnd2 - dStart1) < 2.0e-13))
+						{
+							leftFlag=true;
+						}
+						
+						
+						// if items already overlap (item 1 on left and item 2 on right)
+						
+						else if ((dStart2 < dEnd1) && (dEnd1 < dEnd2) && (dStart1 < dStart2)) 
+						{
+							
+							
+							
+							// If split is within selection and selection is within total item selection
+							if ((selStart > dStart1) && (selEnd < dEnd2) && (selEnd > dStart2))
+							{
+								dFadeLen = selEnd - selStart;
+								dEdgeAdj1 = selEnd - dEnd1;
+								
+								dEdgeAdj2 = dStart2 - selStart;
+								
+								
+								// Need to ensure that there's "room" to move the start of the second item back
+								// Check all of the takes' start offset before doing any "work"								
+							
+								if (dEdgeAdj2 > *(double*)GetSetMediaItemTakeInfo(GetActiveTake(item2), "D_STARTOFFS", NULL))
+								{
+									
+									dFadeLen -= dEdgeAdj2;
+									
+									dEdgeAdj2 = *(double*)GetSetMediaItemTakeInfo(GetActiveTake(item2), "D_STARTOFFS", NULL);
+									
+									dFadeLen += dEdgeAdj2;
+									
+									
+								}
+						
+							
+								// We're all good, move the edges around and set the crossfades
+								double dLen1 = dEnd1 - dStart1 + dEdgeAdj1;
+								*(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL) = dLen1;
+								GetSetMediaItemInfo(item1, "D_FADEOUTLEN_AUTO", &dFadeLen);
+								
+								double dLen2 = *(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL);
+								dStart2 -= dEdgeAdj2;
+								dLen2   += dEdgeAdj2;
+								*(double*)GetSetMediaItemInfo(item2, "D_POSITION", NULL) = dStart2;
+								*(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL) = dLen2;
+								GetSetMediaItemInfo(item2, "D_FADEINLEN_AUTO", &dFadeLen);
+								double dSnapOffset2 = *(double*)GetSetMediaItemInfo(item2, "D_SNAPOFFSET", NULL);
+								if (dSnapOffset2)
+								{	// Only adjust the snap offset if it's non-zero
+									dSnapOffset2 += dEdgeAdj2;
+									GetSetMediaItemInfo(item2, "D_SNAPOFFSET", &dSnapOffset2);
+								}
+								
+								for (int iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
+								{
+									MediaItem_Take* take = GetMediaItemTake(item2, iTake);
+									if (take)
+									{
+										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
+										dOffset -= dEdgeAdj2;
+										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+									}
+								}
+								rightFlag=true;
+								break;
+								
+							}
+							
+							
+							// If selection does not surround split or does not exist
+							else
+							{
+								dFadeLen = dEnd1 - dStart2;
+								dEdgeAdj = 0;
+								
+								// Need to ensure that there's "room" to move the start of the second item back
+								// Check all of the takes' start offset before doing any "work"
+								int iTake;
+								for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
+									if (dEdgeAdj > *(double*)GetSetMediaItemTakeInfo(GetMediaItemTake(item2, iTake), "D_STARTOFFS", NULL))
+										break;
+								if (iTake < GetMediaItemNumTakes(item2))
+									continue;	// Keep looking
+								
+								// We're all good, move the edges around and set the crossfades
+								double dLen1 = dEnd1 - dStart1 + dEdgeAdj;
+								*(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL) = dLen1;
+								GetSetMediaItemInfo(item1, "D_FADEOUTLEN_AUTO", &dFadeLen);
+								
+								double dLen2 = *(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL);
+								dStart2 -= dEdgeAdj;
+								dLen2   += dEdgeAdj;
+								*(double*)GetSetMediaItemInfo(item2, "D_POSITION", NULL) = dStart2;
+								*(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL) = dLen2;
+								GetSetMediaItemInfo(item2, "D_FADEINLEN_AUTO", &dFadeLen);
+								double dSnapOffset2 = *(double*)GetSetMediaItemInfo(item2, "D_SNAPOFFSET", NULL);
+								if (dSnapOffset2)
+								{	// Only adjust the snap offset if it's non-zero
+									dSnapOffset2 += dEdgeAdj;
+									GetSetMediaItemInfo(item2, "D_SNAPOFFSET", &dSnapOffset2);
+								}
+								
+								for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
+								{
+									MediaItem_Take* take = GetMediaItemTake(item2, iTake);
+									if (take)
+									{
+										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
+										dOffset -= dEdgeAdj;
+										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+									}
+								}
+								rightFlag=true;
+								break;
+							}
+							
+							
+
+						}
+						
+						
+						
+						// If the items overlap backwards ie item 2 is before item 1, turn on leftFlag
+						// Actual fade calculations and stuff will be handled when the overlap gets discovered the opposite way
+						// but this prevents other weird behavior
+						
+						
+						else if ((dStart1 < dEnd2) && (dStart2 < dStart1) && (dEnd1 > dEnd2)) 
+						{
+							leftFlag=true;
+						}
+						
+						
+						
+						// If there's a gap between two adjacent items, item 1 before item 2
+						else if ((dEnd1 < dStart2))
+						{
+							
+							// If selection starts inside item1, crosses gap and ends inside item 2
+							if ((selStart > dStart1) && (selStart < dEnd1) && (selEnd > dStart2) && (selEnd < dEnd2))
+							{
+								dFadeLen = selEnd - selStart;
+								dEdgeAdj1 = selEnd - dEnd1;
+								dEdgeAdj2 = dStart2 - selStart;
+								
+								
+								// Need to ensure that there's "room" to move the start of the second item back
+								// Check all of the takes' start offset before doing any "work"
+								int iTake;
+								
+								
+								for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
+									if (dEdgeAdj2 > *(double*)GetSetMediaItemTakeInfo(GetMediaItemTake(item2, iTake), "D_STARTOFFS", NULL))
+									{
+										dFadeLen -= dEdgeAdj2;
+										
+										dEdgeAdj2 = *(double*)GetSetMediaItemTakeInfo(GetMediaItemTake(item2, iTake), "D_STARTOFFS", NULL);
+										
+										dFadeLen += dEdgeAdj2;
+									}
+								if (iTake < GetMediaItemNumTakes(item2))
+									continue;	// Keep looking
+								
+								
+								
+								// We're all good, move the edges around and set the crossfades
+								double dLen1 = dEnd1 - dStart1 + dEdgeAdj1;
+								*(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL) = dLen1;
+								GetSetMediaItemInfo(item1, "D_FADEOUTLEN_AUTO", &dFadeLen);
+								
+								double dLen2 = *(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL);
+								dStart2 -= dEdgeAdj2;
+								dLen2   += dEdgeAdj2;
+								
+								*(double*)GetSetMediaItemInfo(item2, "D_POSITION", NULL) = dStart2;
+								*(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL) = dLen2;
+								GetSetMediaItemInfo(item2, "D_FADEINLEN_AUTO", &dFadeLen);
+								double dSnapOffset2 = *(double*)GetSetMediaItemInfo(item2, "D_SNAPOFFSET", NULL);
+								if (dSnapOffset2)
+								{	// Only adjust the snap offset if it's non-zero
+									dSnapOffset2 += dEdgeAdj2;
+									GetSetMediaItemInfo(item2, "D_SNAPOFFSET", &dSnapOffset2);
+								}
+								
+								for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
+								{
+									MediaItem_Take* take = GetMediaItemTake(item2, iTake);
+									if (take)
+									{
+										double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
+										dOffset -= dEdgeAdj2;
+										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+									}
+								}
+								rightFlag=true;
+								break;
+								
+							}
+						}
+						
+						// Else if there's a gap but the items are in reverse order, set the opposite flag but let the fades
+						// get taken care of when it finds them "item 1 (gap) item 2"
+						
+						else if ((dEnd2 < dStart1))
+						{
+							if ((selStart > dStart2) && (selStart < dEnd2) && (selEnd > dStart1) && (selEnd < dEnd1))
+							{
+								leftFlag=true;
+								
+								//Check for selected items in between item 1 and 2
+								
+								for (int iItem3 = 0; iItem3 < GetTrackNumMediaItems(tr); iItem3++)
+								{
+									
+									MediaItem* item3 = GetTrackMediaItem(tr, iItem3);
+									
+									if (item1 != item2 && item2 != item3 && *(bool*)GetSetMediaItemInfo(item3, "B_UISEL", NULL))
+									{
+										
+										double dStart3 = *(double*)GetSetMediaItemInfo(item3, "D_POSITION", NULL);
+										double dEnd3   = *(double*)GetSetMediaItemInfo(item3, "D_LENGTH", NULL) + dStart3;
+										
+										// If end of item 3 is between end of item 2 and start of item 1, reset the flag
+										
+										if (dEnd3 > dEnd2 && dEnd3 <= dStart1)
+										{
+											leftFlag = false;
+										}
+									
+									}
+								}
+							}
+						}
+					}
+				}
+
+				if (!(leftFlag))
+				{
+					double fadeLength;
+					
+					if ((selStart <= dStart1) && (selEnd > dStart1) && (selEnd < dEnd1) && (!(rightFlag)))
+					{			
+						fadeLength = selEnd - dStart1;
+						SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", fadeLength);
+					}
+					
+					else if (selStart <= dStart1 && selEnd >= dEnd1)
+					{
+						double fadeLength = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
+						SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", fadeLength);
+
+					}
+
+					
+				}
+				
+				if (!(rightFlag))
+				{
+					double fadeLength;
+					
+					if ((selStart > dStart1) && (selEnd >= dEnd1) && (selStart < dEnd1) && (!(leftFlag)))
+					{			
+						fadeLength = dEnd1 - selStart;
+						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", fadeLength);
+					}
+					else if (selStart <= dStart1 && selEnd >= dEnd1)
+					{
+						double fadeLength = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
+						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", fadeLength);
+					}
+				}		
+			}
+		}
+	}
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	
+}
+
 
 
 
@@ -619,6 +1173,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, crossfade using default fade length)" },			"SWS_AWFILLGAPSQUICKXFADE",			AWFillGapsQuickXFade, },
 	{ { DEFACCEL, "SWS/AdamWathan: Remove overlaps in selected items preserving item starts" },									"SWS_AWFIXOVERLAPS",				AWFixOverlaps, },
 	{ { DEFACCEL, "SWS/AdamWathan: Record (conditional, normal record mode unless time sel exists, then autopunch)" },			"SWS_AWRECORDCOND",					AWRecordConditional, },
+	{ { DEFACCEL, "SWS/AdamWathan: Play/Stop (automatically group simultaneously recorded items)" },			"SWS_AWPLAYSTOPGRP",					AWPlayStopAutoGroup, },
+	{ { DEFACCEL, "SWS/AdamWathan: Select from cursor to end of project (items and time selection)" },			"SWS_AWSELTOEND",					AWSelectToEnd, },
+	//{ { DEFACCEL, "SWS/AdamWathan: Quick Punch Record" },			"SWS_AWQUICKPUNCH",					AWRecordQuickPunch, },
+	{ { DEFACCEL, "SWS/AdamWathan: Fade in/out/crossfade selected area of selected items" },			"SWS_AWFADESEL",					AWFadeSelection, },
 	
 	
 	{ {}, LAST_COMMAND, }, // Denote end of table

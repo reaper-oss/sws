@@ -1192,13 +1192,14 @@ void AWFadeSelection(COMMAND_T* t)
 					if ((selStart <= dStart1) && (selEnd > dStart1) && (selEnd < dEnd1) && (!(rightFlag)))
 					{			
 						fadeLength = selEnd - dStart1;
-						SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", fadeLength);
+						SetMediaItemInfo_Value(item1, "D_FADEINLEN", fadeLength);
+						SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", 0.0);
 					}
 					
 					else if (selStart <= dStart1 && selEnd >= dEnd1)
 					{
 						fadeLength = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
-						SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", fadeLength);
+						SetMediaItemInfo_Value(item1, "D_FADEINLEN", fadeLength);
 
 					}
 					
@@ -1207,11 +1208,12 @@ void AWFadeSelection(COMMAND_T* t)
 						double dFadeIn = selStart - dStart1;
 						//double dFadeOut = dEnd1 - selEnd;
 						
-						SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", dFadeIn);
+						SetMediaItemInfo_Value(item1, "D_FADEINLEN", dFadeIn);
+						SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", 0.0);
 						//SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", dFadeOut);
 					}
 					
-					///*
+					///* Might break shit, replaces D and G in PT
 					else if ((selStart < dStart1 && selEnd < dStart1) || (selStart > dEnd1 && selEnd > dEnd1))
 					{
 						double cursorPos = GetCursorPosition();
@@ -1221,7 +1223,8 @@ void AWFadeSelection(COMMAND_T* t)
 						if (cursorPos > dStart1 && cursorPos < (dStart1 + (0.5 * dLength1)))
 						{
 							fadeLength = cursorPos - dStart1;
-							SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", fadeLength);
+							SetMediaItemInfo_Value(item1, "D_FADEINLEN", fadeLength);
+							SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", 0.0);
 						}
 					
 					}
@@ -1235,12 +1238,13 @@ void AWFadeSelection(COMMAND_T* t)
 					if ((selStart > dStart1) && (selEnd >= dEnd1) && (selStart < dEnd1) && (!(leftFlag)))
 					{			
 						fadeLength = dEnd1 - selStart;
-						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", fadeLength);
+						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN", fadeLength);
+						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", 0.0);
 					}
 					else if (selStart <= dStart1 && selEnd >= dEnd1)
 					{
 						fadeLength = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
-						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", fadeLength);
+						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN", fadeLength);
 					}
 					
 					else if (selStart > dStart1 && selEnd < dEnd1)
@@ -1249,9 +1253,12 @@ void AWFadeSelection(COMMAND_T* t)
 						double dFadeOut = dEnd1 - selEnd;
 						
 						//SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", dFadeIn);
-						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", dFadeOut);
+						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN", dFadeOut);
+						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", 0.0);
 					}
 					
+					
+					///* Might break shit, replaces D and G in PT
 					else if ((selStart < dStart1 && selEnd < dStart1) || (selStart > dEnd1 && selEnd > dEnd1))
 					{
 						double cursorPos = GetCursorPosition();
@@ -1261,11 +1268,12 @@ void AWFadeSelection(COMMAND_T* t)
 						if (cursorPos > (dStart1 + (0.5 * dLength1)) && cursorPos < dEnd1)
 						{
 							fadeLength = dEnd1 - cursorPos;
-							SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", fadeLength);
+							SetMediaItemInfo_Value(item1, "D_FADEOUTLEN", fadeLength);
+							SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", 0.0);
 						}
 						
 					}
-					
+					//*/
 				}		
 			}
 		}

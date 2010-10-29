@@ -751,7 +751,7 @@ public:
 
 		// Restore positions
 		int iTrack = CSurf_TrackToID(m_trVPos, false);
-		if (iTrack > 0)
+		if (iTrack >= 0)
 			SetVertPos(hTrackView, iTrack, false, m_iVPos);
 		SetHorizPos(hTrackView, (double)m_iHPos / m_dHZoom);
 		SaveZoomSlice(true);
@@ -786,8 +786,6 @@ static bool g_bLastUndoProj = false;
 // Save the current zoom state, called from the slice
 void SaveZoomSlice(bool bSWS)
 {
-	bool bNewZoom = false;
-
 	// Do the initialization of g_zoomLevel, as project changes can result in new PtrLists
 	if (g_zoomStack.Get()->GetSize() == 0)
 		*g_zoomLevel.Get() = 0;

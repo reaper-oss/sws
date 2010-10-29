@@ -1,3 +1,9 @@
+!v1.8.2 #9 (October 29, 2010)
+Fixed last step of undo zoom sometimes going "nowhere".
+"SWS/AdamWathan: Fade in/out/crossfade selected area of selected items" now fades in/out to edit cursor if the edit cursor is inside the item and there is no time selection touching the item. It also "crops" the fade in/out to the time selection of a selected item if the selection is completely contained within the item.
+"SWS/AdamWathan: Record Conditional (normal record mode unless time sel exists, then autopunch)" now doesn't change modes if the current mode is "Auto Punch Selected Items".
+Added "SWS/AdamWathan: Record (automatically group simultaneously recorded items)" which will automatically group simultaneously recorded items if you are toggling in and out of record during playback. Also added the "conditional" version of the same thing for anyone using the conditional action in place of the native action.
+
 !v1.8.2 #8 (October 29, 2010)
 Zoom undo action updates - Check out the new options in the SWS zoom preferences dialog:
 +Only undo SWS zoom actions/zoom tool

@@ -592,17 +592,82 @@ void AWRecordConditional(COMMAND_T* t)
 	double t1, t2;
 	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
 	
-	if (t1 != t2)
-	{
-		Main_OnCommand(40076, 0); //Set record mode to time selection auto punch
-	}
-	
-	else 
-	{
-		Main_OnCommand(40252, 0); //Set record mode to time selection auto punch
+	if (*(int*)GetConfigVar("projrecmode") != 0) // 0 is item punch mode
+	{	
+		if (t1 != t2)
+		{
+			Main_OnCommand(40076, 0); //Set record mode to time selection auto punch
+		}
+		
+		else 
+		{
+			Main_OnCommand(40252, 0); //Set record mode to time selection auto punch
+		}
 	}
 	
 	Main_OnCommand(1013,0); // Transport: Record
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+
+
+void AWRecordAutoGroup(COMMAND_T* t)
+{
+	if (GetPlayState() & 4)
+	{
+		Main_OnCommand(1013, 0); //If recording, toggle recording and group items
+		int numItems = CountSelectedMediaItems(0);
+		
+		if (numItems > 1)
+		{
+			Main_OnCommand(40032, 0); //Group selected items
+		}
+	}
+	else
+	{
+		Main_OnCommand(1013, 0); //If Transport is playing or stopped, Record
+	}
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+
+void AWRecordConditionalAutoGroup(COMMAND_T* t)
+{
+	double t1, t2;
+	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
+	
+	if (*(int*)GetConfigVar("projrecmode") != 0) // 0 is item punch mode
+	{	
+		if (t1 != t2)
+		{
+			Main_OnCommand(40076, 0); //Set record mode to time selection auto punch
+		}
+		
+		else 
+		{
+			Main_OnCommand(40252, 0); //Set record mode to time selection auto punch
+		}
+	}
+	
+	if (GetPlayState() & 4)
+	{
+		Main_OnCommand(1013, 0); //If recording, toggle recording and group items
+		int numItems = CountSelectedMediaItems(0);
+		
+		if (numItems > 1)
+		{
+			Main_OnCommand(40032, 0); //Group selected items
+		}
+	}
+	else
+	{
+		Main_OnCommand(1013, 0); //If Transport is playing or stopped, Record
+	}
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
 
@@ -889,7 +954,7 @@ void AWFadeSelection(COMMAND_T* t)
 							
 							
 							// If split is within selection and selection is within total item selection
-							if ((selStart > dStart1) && (selEnd < dEnd2) && (selEnd > dStart2))
+							if ((selStart > dStart1) && (selEnd < dEnd2) && (selEnd > dStart2) && (selStart < dEnd1))
 							{
 								dFadeLen = selEnd - selStart;
 								dEdgeAdj1 = selEnd - dEnd1;
@@ -941,6 +1006,12 @@ void AWFadeSelection(COMMAND_T* t)
 										GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
 									}
 								}
+								
+								// Set both flags, prevents bad behavior with "trim" fade when selection only overlaps left side of crossfade
+								// Normally the leftFlag wouldn't get set so the trim fade code creates a fade in
+								// No harm in leftFlag here because it has been verified that the selection does not extend past the left
+								// edge anyways.
+								leftFlag=true;
 								rightFlag=true;
 								break;
 								
@@ -1126,12 +1197,35 @@ void AWFadeSelection(COMMAND_T* t)
 					
 					else if (selStart <= dStart1 && selEnd >= dEnd1)
 					{
-						double fadeLength = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
+						fadeLength = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
 						SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", fadeLength);
 
 					}
-
 					
+					else if (selStart > dStart1 && selEnd < dEnd1)
+					{
+						double dFadeIn = selStart - dStart1;
+						//double dFadeOut = dEnd1 - selEnd;
+						
+						SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", dFadeIn);
+						//SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", dFadeOut);
+					}
+					
+					///*
+					else if ((selStart < dStart1 && selEnd < dStart1) || (selStart > dEnd1 && selEnd > dEnd1))
+					{
+						double cursorPos = GetCursorPosition();
+						double dLength1 = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL);
+						
+						
+						if (cursorPos > dStart1 && cursorPos < (dStart1 + (0.5 * dLength1)))
+						{
+							fadeLength = cursorPos - dStart1;
+							SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", fadeLength);
+						}
+					
+					}
+					//*/
 				}
 				
 				if (!(rightFlag))
@@ -1145,9 +1239,33 @@ void AWFadeSelection(COMMAND_T* t)
 					}
 					else if (selStart <= dStart1 && selEnd >= dEnd1)
 					{
-						double fadeLength = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
+						fadeLength = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
 						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", fadeLength);
 					}
+					
+					else if (selStart > dStart1 && selEnd < dEnd1)
+					{
+						//double dFadeIn = selStart - dStart1;
+						double dFadeOut = dEnd1 - selEnd;
+						
+						//SetMediaItemInfo_Value(item1, "D_FADEINLEN_AUTO", dFadeIn);
+						SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", dFadeOut);
+					}
+					
+					else if ((selStart < dStart1 && selEnd < dStart1) || (selStart > dEnd1 && selEnd > dEnd1))
+					{
+						double cursorPos = GetCursorPosition();
+						double dLength1 = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL);
+						
+						
+						if (cursorPos > (dStart1 + (0.5 * dLength1)) && cursorPos < dEnd1)
+						{
+							fadeLength = dEnd1 - cursorPos;
+							SetMediaItemInfo_Value(item1, "D_FADEOUTLEN_AUTO", fadeLength);
+						}
+						
+					}
+					
 				}		
 			}
 		}
@@ -1165,15 +1283,23 @@ void AWFadeSelection(COMMAND_T* t)
 static COMMAND_T g_commandTable[] = 
 {
 	// Add commands here (copy paste an example from ItemParams.cpp or similar	
+	
+	// Fill Gaps Actions
 	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (advanced)" },												"SWS_AWFILLGAPSADV",				AWFillGapsAdv, NULL, 0 },
 	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (advanced, use last settings)" },							"SWS_AWFILLGAPSADVLASTSETTINGS",	AWFillGapsAdv, NULL, 1 },
 	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, no crossfade)" },									"SWS_AWFILLGAPSQUICK",				AWFillGapsQuick, },
 	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, crossfade using default fade length)" },			"SWS_AWFILLGAPSQUICKXFADE",			AWFillGapsQuickXFade, },
 	{ { DEFACCEL, "SWS/AdamWathan: Remove overlaps in selected items preserving item starts" },									"SWS_AWFIXOVERLAPS",				AWFixOverlaps, },
-	{ { DEFACCEL, "SWS/AdamWathan: Record (conditional, normal record mode unless time sel exists, then autopunch)" },			"SWS_AWRECORDCOND",					AWRecordConditional, },
+	
+	// Transport Actions
+	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal record mode unless time sel exists, then autopunch)" },			"SWS_AWRECORDCOND",					AWRecordConditional, },
+	{ { DEFACCEL, "SWS/AdamWathan: Record (automatically group simultaneously recorded items)" },			"SWS_AWRECORDGROUP",					AWRecordAutoGroup, },
+	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP",					AWRecordConditionalAutoGroup, },
 	{ { DEFACCEL, "SWS/AdamWathan: Play/Stop (automatically group simultaneously recorded items)" },			"SWS_AWPLAYSTOPGRP",					AWPlayStopAutoGroup, },
-	{ { DEFACCEL, "SWS/AdamWathan: Select from cursor to end of project (items and time selection)" },			"SWS_AWSELTOEND",					AWSelectToEnd, },
 	//{ { DEFACCEL, "SWS/AdamWathan: Quick Punch Record" },			"SWS_AWQUICKPUNCH",					AWRecordQuickPunch, },
+
+	// Misc Item Actions
+	{ { DEFACCEL, "SWS/AdamWathan: Select from cursor to end of project (items and time selection)" },			"SWS_AWSELTOEND",					AWSelectToEnd, },
 	{ { DEFACCEL, "SWS/AdamWathan: Fade in/out/crossfade selected area of selected items" },			"SWS_AWFADESEL",					AWFadeSelection, },
 	
 	

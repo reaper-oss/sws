@@ -1,3 +1,13 @@
+!v1.8.2 #7 (October 28, 2010)
+Zoom undo action updates - Check out the new options in the SWS zoom preferences dialog:
++Only undo SWS zoom actions/zoom tool
++Last undo step always zooms out to the project level (please test)
+
+New actions from Adam:
++SWS/AdamWathan: Fade in/out/crossfade selected area of selected items
++SWS/AdamWathan: Play/Stop (automatically group simultaneously recorded items)
++SWS/AdamWathan: Select from cursor to end of project (items and time selection)
+
 Fixed all "SWS/S&M Clear FX chain" actions (broken in v1.8.0)
 
 !v1.8.2 #6 (October 23, 2010)
@@ -18,6 +28,10 @@ The available options are:
 
 I consider this an interim release, the above options will be added to and refined soon.
 Also fixed zoom bugs when the master track is visible in the TCP.
+
+Adam's updates:
++Added action SWS/AdamWathan: Record (conditional, normal record mode unless time sel exists, then autopunch)
++Updated AdamWathan Fill Gaps function, now gives option to automatically add markers marking potential artifacts after filling gaps
 
 !v1.8.2 #4 (October 20, 2010)
 Zoom tool for OSX!

@@ -84,7 +84,9 @@
 #define IDC_NUMREPEDIT                  1017
 #define IDC_UNZOOMMODE                  1017
 #define IDC_NOTEVALUECOMBO              1018
+#define IDC_UNDOSWSONLY                 1018
 #define IDC_EDIT2                       1019
+#define IDC_LASTUNDOPROJ                1019
 #define IDC_EDIT3                       1020
 #define IDC_EDIT4                       1021
 #define IDC_IVOL_NUDGE                  1022

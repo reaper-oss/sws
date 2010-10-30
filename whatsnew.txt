@@ -1,4 +1,7 @@
-!v1.8.2 #9 (October 29, 2010)
+!v1.8.2 #11 (October 30, 2010)
+Fixed bug with FX chain view/actions: double click, apply actions, etc.
+
+!v1.8.2 #10 (October 29, 2010)
 Fixed last step of undo zoom sometimes going "nowhere".
 "SWS/AdamWathan: Fade in/out/crossfade selected area of selected items" now fades in/out to edit cursor if the edit cursor is inside the item and there is no time selection touching the item. It also "crops" the fade in/out to the time selection of a selected item if the selection is completely contained within the item.
 "SWS/AdamWathan: Record Conditional (normal record mode unless time sel exists, then autopunch)" now doesn't change modes if the current mode is "Auto Punch Selected Items".

@@ -1,5 +1,5 @@
 /******************************************************************************
-** SNM_ChunkParserPatcher.h - v1.0
+** SNM_ChunkParserPatcher.h - v1.1
 ** Copyright (C) 2009-2010, JF Bédague 
 **
 **    This software is provided 'as-is', without any express or implied
@@ -48,10 +48,15 @@
 //   marked as such as required by Cockos' licensing)
 //
 // Changelog:
+// v1.1
+// - Use SWS_GetSetObjectState, if _SWS_EXTENSION is defined. This offers a 
+//   2nd level of cache. Note: SWS_GetSetObjectState() is the native GetSetObjectState() 
+//   if it isn't surrounded with SWS_CacheObjectState(true)/(false)
+//   See http://code.google.com/p/sws-extension/source/browse/trunk/ObjectState/ObjectState.cpp
 // v1.0 
 // - Licensing update, see header
-// - Performance improvments
-// - Safer commit of chunk updates 
+// - Performance improvments, more to come..
+// - Safer commit of chunk updates (auto ids removal)
 
 #pragma once
 
@@ -61,6 +66,13 @@
 #pragma warning(disable : 4267) // size_t to int warnings in x64
 
 //#define _SNM_DEBUG
+#define _SWS_EXTENSION
+
+#ifdef _SWS_EXTENSION
+#define SNM_FreeHeapPtr			SWS_FreeHeapPtr
+#else
+#define SNM_FreeHeapPtr			FreeHeapPtr
+#endif
 
 
 // The differents modes for ParsePatch() and Parse()
@@ -182,11 +194,11 @@ WDL_String* GetChunk()
 	WDL_String* chunk = NULL;
 	if (!m_chunk->GetLength())
 	{
-		char* cData = m_object ? SWS_GetSetObjectState(m_object, NULL) : NULL;
+		char* cData = m_object ? SNM_GetSetObjectState(m_object, NULL) : NULL;
 		if (cData)
 		{
 			m_chunk->Set(cData);
-			SWS_FreeHeapPtr(cData);
+			SNM_FreeHeapPtr(cData);
 			chunk = m_chunk;
 		}
 	}
@@ -236,8 +248,6 @@ bool Commit(bool _force = false)
 		!(GetPlayState() & 4) && // prevent patches while recording
 		m_chunk->GetLength())
 	{
-		RemoveIds();
-
 #ifdef _SNM_DEBUG
 		char filename[BUFFER_SIZE] = "";
 		sprintf(filename, "%s%cSNM_ChunkParserPatcher_lastCommit.txt", GetExePath(), PATH_SLASH_CHAR);
@@ -247,7 +257,7 @@ bool Commit(bool _force = false)
 			fclose(f);
 		}
 #endif
-		if (!SWS_GetSetObjectState(m_object, m_chunk->Get())) {
+		if (!SNM_GetSetObjectState(m_object, m_chunk->Get())) {
 			SetChunk("", 0);
 			return true;
 		}
@@ -256,7 +266,7 @@ bool Commit(bool _force = false)
 }
 
 const char* GetInfo() {
-	return "SNM_ChunkParserPatcher - v1.0";
+	return "SNM_ChunkParserPatcher - v1.1";
 }
 
 void SetProcessBase64(bool _enable) {
@@ -467,6 +477,17 @@ protected:
 private:
 	WDL_String* m_chunk;
 	bool m_autoCommit;
+
+char* SNM_GetSetObjectState(void* _obj, const char* _str)
+{
+#ifdef _SWS_EXTENSION
+	if (SWS_GetCache())
+		return SWS_GetSetObjectState(_obj, _str);
+#endif
+	if (_str)
+		RemoveIds();
+	return GetSetObjectState(_obj, _str);
+}
 
 bool WriteChunkLine(WDL_String* _chunkLine, const char* _value, int _tokenPos, LineParser* _lp)
 {

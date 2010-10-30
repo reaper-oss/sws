@@ -116,7 +116,8 @@ char* SWS_GetSetObjectState(void* obj, const char* str)
 			else
 				ret = GetSetObjectState(obj, str);
 		}
-		ret = GetSetObjectState(obj, str);
+		else
+			ret = GetSetObjectState(obj, str);
 	}
 
 #ifdef GOS_DEBUG
@@ -150,6 +151,11 @@ void SWS_CacheObjectState(bool bStart)
 		delete g_objStateCache;
 		g_objStateCache = NULL;
 	}
+}
+
+ObjectStateCache* SWS_GetCache()
+{
+	return g_objStateCache;
 }
 
 // Helper function for parsing object "chunks" into more useful lines

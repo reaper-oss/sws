@@ -143,12 +143,13 @@ void setTakeFXChain(const char* _title, int _slot, bool _activeOnly, bool _clear
 		case -1: 
 			break;
 		case -2: 
+			chain = &g_fXChainClipboard;
+			break;
+		default: 
 			if (LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &slotFxChain)) 
 				chain = &slotFxChain;
 			else
 				return;
-			break;
-		default: 
 			break;
 	}
 
@@ -319,12 +320,13 @@ void setTrackFXChain(const char* _title, int _slot, bool _clear)
 		case -1: 
 			break;
 		case -2: 
+			chain = &g_fXChainClipboard;
+			break;
+		default: 
 			if (LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &slotFxChain)) 
 				chain = &slotFxChain;
 			else
 				return;
-			break;
-		default: 
 			break;
 	}
 

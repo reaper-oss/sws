@@ -38,7 +38,7 @@
 
 //#define GOS_DEBUG
 
-ObjectStateCache::ObjectStateCache()
+ObjectStateCache::ObjectStateCache():m_iUseCount(1)
 {
 }
 
@@ -139,10 +139,12 @@ void SWS_CacheObjectState(bool bStart)
 {
 	if (bStart)
 	{
-		delete g_objStateCache;
-		g_objStateCache = new ObjectStateCache;
+		if (g_objStateCache)
+			g_objStateCache->m_iUseCount++;
+		else
+			g_objStateCache = new ObjectStateCache;
 	}
-	else if (g_objStateCache)
+	else if (g_objStateCache && --g_objStateCache->m_iUseCount == 0)
 	{
 		g_objStateCache->WriteCache();
 		delete g_objStateCache;

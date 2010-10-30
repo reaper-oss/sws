@@ -182,11 +182,11 @@ WDL_String* GetChunk()
 	WDL_String* chunk = NULL;
 	if (!m_chunk->GetLength())
 	{
-		char* cData = m_object ? GetSetObjectState(m_object, NULL) : NULL;
+		char* cData = m_object ? SWS_GetSetObjectState(m_object, NULL) : NULL;
 		if (cData)
 		{
 			m_chunk->Set(cData);
-			FreeHeapPtr(cData);
+			SWS_FreeHeapPtr(cData);
 			chunk = m_chunk;
 		}
 	}
@@ -247,7 +247,7 @@ bool Commit(bool _force = false)
 			fclose(f);
 		}
 #endif
-		if (!GetSetObjectState(m_object, m_chunk->Get())) {
+		if (!SWS_GetSetObjectState(m_object, m_chunk->Get())) {
 			SetChunk("", 0);
 			return true;
 		}

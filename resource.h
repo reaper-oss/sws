@@ -208,7 +208,8 @@
 #define IDC_SNAME                       1139
 #define IDC_TRACK                       1140
 #define IDC_TEXT                        1141
-#define IDC_ENABLED                     1142
+#define IDC_AUTOCOLOR                   1142
+#define IDC_AUTOICON                    1143
 #define IDC_COLOR                       1147
 #define IDC_PADRELFO_SYNCFREQUENCY      1148
 #define IDC_PADRELFO_FREQUENCY          1149

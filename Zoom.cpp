@@ -677,9 +677,10 @@ MediaItem* ItemAtPoint(HWND hTrackView, POINT p, RECT* rExtents, MediaTrack** pT
 
 // Class for saving/restoring the zoom state.  This is a lighter-weight version
 // of the arrange state class above.
-// To be perfect you need to GetSetObjectState (for envelope info) which is extremely costly with some plugs
+// To be perfect you need to GetSetEnvelopeState (for envelope info)
 // This class ignores envelope stuffs and other things at the risk of the restore being "off" if tracks
 // are added, deleted, or if envs are added, deleted, sizes changed, etc.  It does support track height however.
+// This should be fixed! TRP
 class ZoomState
 {
 private:

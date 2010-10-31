@@ -914,10 +914,29 @@ void InitModel()
 
 void SNM_LiveCfg_TLChangeSchedJob::Perform()
 {
-	if (g_pMidiLiveWnd && g_liveCCConfigs.IsValid(Enum_Projects(-1, NULL, 0)))
+	if (g_liveCCConfigs.IsValid(Enum_Projects(-1, NULL, 0)))
 	{
-		g_pMidiLiveWnd->FillComboInputTrack();
-		g_pMidiLiveWnd->Update();
+		// Check or model consistency against the track list update
+		for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++) 
+		{
+			for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++)
+			{
+				MidiLiveItem* item = g_liveCCConfigs.Get()->Get(i)->Get(j);
+				if (item && item->m_track && CSurf_TrackToID(item->m_track, false) <= 0)
+					item->Clear();
+			}
+			if (g_liveConfigs.Get()->m_inputTr[i] && CSurf_TrackToID(g_liveConfigs.Get()->m_inputTr[i], false) <= 0)
+				g_liveConfigs.Get()->m_inputTr[i] = NULL;
+
+//			g_lastPerformedMIDIVal[i] = -1;
+//			g_lastDeactivateCmd[i][0] = -1;
+		}
+
+		if (g_pMidiLiveWnd)
+		{
+			g_pMidiLiveWnd->FillComboInputTrack();
+			g_pMidiLiveWnd->Update();
+		}
 	}
 	else
 	{

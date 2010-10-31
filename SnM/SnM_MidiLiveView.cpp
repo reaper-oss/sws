@@ -900,37 +900,9 @@ int SnM_MidiLiveWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SNM_LiveCfg_TLChangeSchedJob::Perform()
-{
-	// Check or model consistency against the track list update
-	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++) 
-	{
-		// SWS Oct 4 10 - Crash here when changing projects, sometimes.
-		// Need to call InitModel at some point, but not sure where.
-		for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++)
-			if (CSurf_TrackToID(g_liveCCConfigs.Get()->Get(i)->Get(j)->m_track, false) <= 0)
-				g_liveCCConfigs.Get()->Get(i)->Get(j)->Clear();
-
-		if (CSurf_TrackToID(g_liveConfigs.Get()->m_inputTr[i], false) <= 0)
-			g_liveConfigs.Get()->m_inputTr[i] = NULL;
-
-//		g_lastPerformedMIDIVal[i] = -1;
-//		g_lastDeactivateCmd[i][0] = -1;
-	}
-
-	if (g_pMidiLiveWnd)
-	{
-		g_pMidiLiveWnd->FillComboInputTrack();
-		g_pMidiLiveWnd->Update();
-	}
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-
 void InitModel()
 {
-	g_liveConfigs.Empty(); // then lazy init
+	g_liveConfigs.Get()->Clear(); // then lazy init
 	g_liveCCConfigs.Get()->Empty(true);
 	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++) 
 	{
@@ -939,6 +911,22 @@ void InitModel()
 			g_liveCCConfigs.Get()->Get(i)->Add(new MidiLiveItem(j, "", NULL, "", "", "", "", ""));
 	}
 }
+
+void SNM_LiveCfg_TLChangeSchedJob::Perform()
+{
+	if (g_pMidiLiveWnd && g_liveCCConfigs.IsValid(Enum_Projects(-1, NULL, 0)))
+	{
+		g_pMidiLiveWnd->FillComboInputTrack();
+		g_pMidiLiveWnd->Update();
+	}
+	else
+	{
+		// PiPs go here..
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
@@ -1003,13 +991,16 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
+	if (!g_liveCCConfigs.IsValid(Enum_Projects(-1, NULL, 0)))
+		return; 
+
 	char curLine[SNM_MAX_CHUNK_LINE_LENGTH] = "", strId[128] = "";
 	GUID g; 
 	bool firstCfg = true;
-	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++) 
+	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++) 
 	{
-		for (int j = 0; j < NB_CC_VALUES; j++)
-		{
+	  for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++)
+	  {
 			MidiLiveItem* item = g_liveCCConfigs.Get()->Get(i)->Get(j);
 			if (item && !item->IsDefault()) // avoid a bunch of useless data in RPP files!
 			{
@@ -1062,15 +1053,14 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {
-	g_liveConfigs.Empty(); // then lazy init
+	g_liveConfigs.Cleanup();
 	g_liveCCConfigs.Cleanup();
-
 	if (!g_liveCCConfigs.Get()->GetSize())
+	{
+		g_liveConfigs.Get()->Clear();
+		g_liveCCConfigs.Get()->Empty(true);
 		InitModel();
-
-	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++) 
-		for (int j = 0; j < NB_CC_VALUES; j++)
-			g_liveCCConfigs.Get()->Get(i)->Get(j)->Clear();
+	}
 }
 
 static project_config_extension_t g_projectconfig = {

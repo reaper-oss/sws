@@ -76,7 +76,8 @@ public:
 class MidiLiveConfig
 {
 public:
-	MidiLiveConfig() 
+	MidiLiveConfig() {Clear();}
+	void Clear() 
 	{
 		for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++) 
 		{
@@ -89,6 +90,7 @@ public:
 			m_lastDeactivateCmd[i][0] = -1;
 		}
 	}
+
 	int m_enable[SNM_LIVECFG_NB_CONFIGS];
 	int m_autoRcv[SNM_LIVECFG_NB_CONFIGS];
 	int m_muteOthers[SNM_LIVECFG_NB_CONFIGS];

@@ -599,11 +599,43 @@ void AWRecordConditional(COMMAND_T* t)
 			Main_OnCommand(40076, 0); //Set record mode to time selection auto punch
 		}
 		
+		
+		
 		else 
 		{
-			Main_OnCommand(40252, 0); //Set record mode to time selection auto punch
+			Main_OnCommand(40252, 0); //Set record mode to normal
 		}
 	}
+	
+	Main_OnCommand(1013,0); // Transport: Record
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+
+
+
+void AWRecordConditional2(COMMAND_T* t)
+{
+	double t1, t2;
+	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
+	
+		
+	if (t1 != t2)
+	{
+		Main_OnCommand(40076, 0); //Set record mode to time selection auto punch
+	}
+	
+	else if (CountSelectedMediaItems(0) != 0)
+	{
+		Main_OnCommand(40253, 0); //Set record mode to time selection auto punch
+	}
+	
+	else 
+	{
+		Main_OnCommand(40252, 0); //Set record mode to normal
+	}
+
 	
 	Main_OnCommand(1013,0); // Transport: Record
 	
@@ -632,6 +664,50 @@ void AWRecordAutoGroup(COMMAND_T* t)
 	UpdateTimeline();
 	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
+
+void AWRecordConditionalAutoGroup2(COMMAND_T* t)
+{
+	double t1, t2;
+	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
+	
+
+	if (t1 != t2)
+	{
+		Main_OnCommand(40076, 0); //Set record mode to time selection auto punch
+	}
+	
+	else if (CountSelectedMediaItems(0) != 0)
+	{
+		Main_OnCommand(40253, 0); //Set record mode to time selection auto punch
+	}
+	
+	else 
+	{
+		Main_OnCommand(40252, 0); //Set record mode to time selection auto punch
+	}
+
+	
+	if (GetPlayState() & 4)
+	{
+		Main_OnCommand(1013, 0); //If recording, toggle recording and group items
+		int numItems = CountSelectedMediaItems(0);
+		
+		if (numItems > 1)
+		{
+			Main_OnCommand(40032, 0); //Group selected items
+		}
+	}
+	else
+	{
+		Main_OnCommand(1013, 0); //If Transport is playing or stopped, Record
+	}
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+
+
+
 
 void AWRecordConditionalAutoGroup(COMMAND_T* t)
 {
@@ -669,7 +745,6 @@ void AWRecordConditionalAutoGroup(COMMAND_T* t)
 	UpdateTimeline();
 	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
-
 
 void AWPlayStopAutoGroup(COMMAND_T* t)
 {
@@ -1214,7 +1289,7 @@ void AWFadeSelection(COMMAND_T* t)
 					}
 					
 					///* Might break shit, replaces D and G in PT
-					else if ((selStart < dStart1 && selEnd < dStart1) || (selStart > dEnd1 && selEnd > dEnd1))
+					else if ((selStart < dStart1 && selEnd < dStart1) || (selStart > dEnd1 && selEnd > dEnd1) || (selStart == selEnd))
 					{
 						double cursorPos = GetCursorPosition();
 						double dLength1 = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL);
@@ -1259,7 +1334,7 @@ void AWFadeSelection(COMMAND_T* t)
 					
 					
 					///* Might break shit, replaces D and G in PT
-					else if ((selStart < dStart1 && selEnd < dStart1) || (selStart > dEnd1 && selEnd > dEnd1))
+					else if ((selStart < dStart1 && selEnd < dStart1) || (selStart > dEnd1 && selEnd > dEnd1) || (selStart == selEnd))
 					{
 						double cursorPos = GetCursorPosition();
 						double dLength1 = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL);
@@ -1280,9 +1355,269 @@ void AWFadeSelection(COMMAND_T* t)
 	}
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 	
 }
+
+
+
+
+
+void AWTrimCrop(COMMAND_T* t)
+{
+
+	double selStart;
+	double selEnd;
+	
+	GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
+	
+	if (selStart != selEnd)
+	{
+		Main_OnCommand(40508, 0); // If there's a time selection, just run native Trim action because I am lazy
+	}
+	else // Otherwise trim to cursor
+	{
+		double cursorPos = GetCursorPosition();
+		
+		for (int iTrack = 1; iTrack <= GetNumTracks(); iTrack++)
+		{
+			MediaTrack* tr = CSurf_TrackFromID(iTrack, false);
+			for (int iItem1 = 0; iItem1 < GetTrackNumMediaItems(tr); iItem1++)
+			{
+				MediaItem* item1 = GetTrackMediaItem(tr, iItem1);
+				if (*(bool*)GetSetMediaItemInfo(item1, "B_UISEL", NULL))
+				{
+					double dStart1 = *(double*)GetSetMediaItemInfo(item1, "D_POSITION", NULL);
+					double dLen1 = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL);
+					
+					if (cursorPos > dStart1 && cursorPos < (dStart1 + (0.5 * dLen1)))
+					{
+						Main_OnCommand(40511, 0);
+					}
+					else if (cursorPos < (dStart1 + dLen1) && cursorPos > (dStart1 + (0.5 * dLen1)))
+					{
+						Main_OnCommand(40512, 0);
+					}
+			
+				}
+			}
+		}
+	}
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+
+}
+
+
+
+
+
+
+
+// In Progress
+
+
+
+void AWTrimFill(COMMAND_T* t)
+{
+	
+	double selStart;
+	double selEnd;
+	bool leftFlag = false;
+	bool rightFlag = false;
+	
+	GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
+	
+	if (selStart != selEnd) // If the time selection exists
+	{
+		for (int iTrack = 1; iTrack <= GetNumTracks(); iTrack++)
+		{
+			MediaTrack* tr = CSurf_TrackFromID(iTrack, false);
+			for (int iItem1 = 0; iItem1 < GetTrackNumMediaItems(tr); iItem1++)
+			{
+				MediaItem* item1 = GetTrackMediaItem(tr, iItem1);
+				if (*(bool*)GetSetMediaItemInfo(item1, "B_UISEL", NULL))
+				{
+					double dStart1 = *(double*)GetSetMediaItemInfo(item1, "D_POSITION", NULL);
+					double dEnd1 = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL) + dStart1;
+					
+					// Reset flags
+					leftFlag = false;
+					rightFlag = false;
+					
+					// If the item is selected the the time selection crosses either of it's edges
+					if ((selStart < dEnd1 && selEnd > dEnd1) || (selStart < dStart1 && selEnd > dStart1))
+					{
+						
+						// Check for other items that are also crossed by time selection that may be earlier  or later
+						for (int iItem2 = 0; iItem2 < GetTrackNumMediaItems(tr); iItem2++)
+						{
+							
+							MediaItem* item2 = GetTrackMediaItem(tr, iItem2);
+							
+							if (item1 != item2 && *(bool*)GetSetMediaItemInfo(item2, "B_UISEL", NULL))
+							{
+								
+								double dStart2 = *(double*)GetSetMediaItemInfo(item2, "D_POSITION", NULL);
+								double dEnd2   = *(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL) + dStart2;
+								
+								// If selection crosses right edge
+								if (selStart < dEnd1 && selEnd >= dEnd1)
+								{
+									// If selection ends after item 2 starts
+									if (selEnd >= dStart2)
+									{
+										// Set right flag if item 2 ends after item 1 ends
+										if (dEnd2 > dEnd1)
+											rightFlag = true;
+									}
+								}
+								
+								
+								// If selection crosses left edge
+								if (selStart <= dStart1 && selEnd > dStart1)
+								{
+									// If selection starts before item 2 ends
+									if  (selStart <= dEnd2)
+									{
+										// Set left flag if item 2 starts before item 1
+										if (dStart2 < dStart1)
+											leftFlag = true;
+									}
+								}
+							}
+							
+							
+						}	
+						
+						if (selEnd < dEnd1)
+							rightFlag = true;
+						
+						if (selStart > dStart1)
+							leftFlag = true;
+						
+						if (!(leftFlag))
+						{
+							
+							double dLen1 = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL);
+							double edgeAdj = dStart1 - selStart;
+							
+							dLen1 += edgeAdj;
+							
+							//*(double*)GetSetMediaItemInfo(item1, "D_POSITION", NULL) = selStart;
+							//*(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL) = dLen1;
+							GetSetMediaItemInfo(item1, "D_POSITION", &selStart);
+							GetSetMediaItemInfo(item1, "D_LENGTH", &dLen1);
+							
+							for (int iTake = 0; iTake < GetMediaItemNumTakes(item1); iTake++)
+							{
+								MediaItem_Take* take = GetMediaItemTake(item1, iTake);
+								if (take)
+								{
+									double dOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
+									dOffset -= edgeAdj;
+									GetSetMediaItemTakeInfo(take, "D_STARTOFFS", &dOffset);
+								}
+							}
+							
+							
+						}
+						
+						if (!(rightFlag))
+						{
+							
+							double dLen1 = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL);
+							double edgeAdj = selEnd - dEnd1;
+							
+							dLen1 += edgeAdj;
+							
+							//*(double*)GetSetMediaItemInfo(item1, "D_POSITION", NULL) = selStart;
+							//*(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL) = dLen1;
+							GetSetMediaItemInfo(item1, "D_LENGTH", &dLen1);							
+						}
+						
+					}
+				}
+			}
+		}
+	}
+	/*
+	else // Otherwise trim to cursor
+	{
+		double cursorPos = GetCursorPosition();
+		
+		for (int iTrack = 1; iTrack <= GetNumTracks(); iTrack++)
+		{
+			MediaTrack* tr = CSurf_TrackFromID(iTrack, false);
+			for (int iItem1 = 0; iItem1 < GetTrackNumMediaItems(tr); iItem1++)
+			{
+				MediaItem* item1 = GetTrackMediaItem(tr, iItem1);
+				if (*(bool*)GetSetMediaItemInfo(item1, "B_UISEL", NULL))
+				{
+					double dStart1 = *(double*)GetSetMediaItemInfo(item1, "D_POSITION", NULL);
+					double dLen1 = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL);
+					
+					if (cursorPos > dStart1 && cursorPos < (dStart1 + (0.5 * dLen1)))
+					{
+						Main_OnCommand(40511, 0);
+					}
+					else if (cursorPos < (dStart1 + dLen1) && cursorPos > (dStart1 + (0.5 * dLen1)))
+					{
+						Main_OnCommand(40512, 0);
+					}
+					
+				}
+			}
+		}
+	 }
+	 */
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	
+}
+
+
+
+/* Piece of crap and doesn't work because I have no idea what to do to consolidate the OnCommands into one undo step. Fuuuuuu
+
+void AWPaste(COMMAND_T* t)
+{
+	
+	if (GetCursorContext() == 1)
+	{
+		int* pCursorMode = (int*)GetConfigVar("itemclickmovecurs");
+		int savedMode = *pCursorMode;
+		*pCursorMode &= ~8;
+		
+		Main_OnCommand(40625, 0); // Set time selection start point
+		Main_OnCommand(40058, 0); // item paste items tracks	
+		Main_OnCommand(40626, 0); // time selection set end point
+		Main_OnCommand((plugin_register("command_id", (void*)"_SWS_SELTRKWITEM")),0);  // sws select only track selected item	
+		Main_OnCommand(40718, 0); // item select all item on selected track in time selection
+		Main_OnCommand(40312, 0); // item remove selected area of item	
+		Main_OnCommand(40630, 0); // go to start of time selection		
+		Main_OnCommand((plugin_register("command_id", (void*)"_XENAKIOS_SELFIRSTOFSELTRAX")),0); //	 xenakios select first of selected tracks
+		Main_OnCommand(40058, 0); // paste items tracks	
+		Main_OnCommand(40630, 0); // go to start of time selection
+		
+		
+		
+		
+		
+		*pCursorMode = savedMode;
+	}
+	
+	else
+		Main_OnCommand(40058, 0); // Std paste
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	
+}
+
+*/
 
 
 
@@ -1300,15 +1635,24 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AdamWathan: Remove overlaps in selected items preserving item starts" },									"SWS_AWFIXOVERLAPS",				AWFixOverlaps, },
 	
 	// Transport Actions
-	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal record mode unless time sel exists, then autopunch)" },			"SWS_AWRECORDCOND",					AWRecordConditional, },
+	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal or time sel only)" },			"SWS_AWRECORDCOND",					AWRecordConditional, },
+	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal, time sel or item sel)" },			"SWS_AWRECORDCOND2",					AWRecordConditional2, },
+
 	{ { DEFACCEL, "SWS/AdamWathan: Record (automatically group simultaneously recorded items)" },			"SWS_AWRECORDGROUP",					AWRecordAutoGroup, },
-	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP",					AWRecordConditionalAutoGroup, },
+	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal or time sel only, automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP",					AWRecordConditionalAutoGroup, },
+	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal/time sel/item sel, automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP2",					AWRecordConditionalAutoGroup2, },
+
+	
 	{ { DEFACCEL, "SWS/AdamWathan: Play/Stop (automatically group simultaneously recorded items)" },			"SWS_AWPLAYSTOPGRP",					AWPlayStopAutoGroup, },
 	//{ { DEFACCEL, "SWS/AdamWathan: Quick Punch Record" },			"SWS_AWQUICKPUNCH",					AWRecordQuickPunch, },
 
 	// Misc Item Actions
 	{ { DEFACCEL, "SWS/AdamWathan: Select from cursor to end of project (items and time selection)" },			"SWS_AWSELTOEND",					AWSelectToEnd, },
 	{ { DEFACCEL, "SWS/AdamWathan: Fade in/out/crossfade selected area of selected items" },			"SWS_AWFADESEL",					AWFadeSelection, },
+	{ { DEFACCEL, "SWS/AdamWathan: Trim Crop" },			"SWS_AWTRIMCROP",					AWTrimCrop, },
+	{ { DEFACCEL, "SWS/AdamWathan: Trim Fill" },			"SWS_AWTRIMFILL",					AWTrimFill, },
+	//{ { DEFACCEL, "SWS/AdamWathan: Paste" },			"SWS_AWPASTE",					AWPaste, },
+
 	
 	
 	{ {}, LAST_COMMAND, }, // Denote end of table

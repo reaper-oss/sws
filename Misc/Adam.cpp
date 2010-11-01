@@ -1829,7 +1829,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AdamWathan: Select from cursor to end of project (items and time selection)" },			"SWS_AWSELTOEND",					AWSelectToEnd, },
 	{ { DEFACCEL, "SWS/AdamWathan: Fade in/out/crossfade selected area of selected items" },			"SWS_AWFADESEL",					AWFadeSelection, },
 	{ { DEFACCEL, "SWS/AdamWathan: Trim selected items to selection or cursor (crop)" },			"SWS_AWTRIMCROP",					AWTrimCrop, },
-	{ { DEFACCEL, "SWS/AdamWathan: Trim to selected items to fill selection" },			"SWS_AWTRIMFILL",					AWTrimFill, },
+	{ { DEFACCEL, "SWS/AdamWathan: Trim selected items to fill selection" },			"SWS_AWTRIMFILL",					AWTrimFill, },
 	{ { DEFACCEL, "SWS/AdamWathan: Stretch selected items to fill selection" },			"SWS_AWSTRETCHFILL",					AWStretchFill, },
 
 	

@@ -1580,6 +1580,185 @@ void AWTrimFill(COMMAND_T* t)
 
 
 
+
+
+
+void AWStretchFill(COMMAND_T* t)
+{
+	
+	double selStart;
+	double selEnd;
+	bool leftFlag = false;
+	bool rightFlag = false;
+	
+	GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
+	
+	if (selStart != selEnd) // If the time selection exists
+	{
+		for (int iTrack = 1; iTrack <= GetNumTracks(); iTrack++)
+		{
+			MediaTrack* tr = CSurf_TrackFromID(iTrack, false);
+			for (int iItem1 = 0; iItem1 < GetTrackNumMediaItems(tr); iItem1++)
+			{
+				MediaItem* item1 = GetTrackMediaItem(tr, iItem1);
+				if (*(bool*)GetSetMediaItemInfo(item1, "B_UISEL", NULL))
+				{
+					double dStart1 = *(double*)GetSetMediaItemInfo(item1, "D_POSITION", NULL);
+					double dEnd1 = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL) + dStart1;
+					
+					// Reset flags
+					leftFlag = false;
+					rightFlag = false;
+					
+					// If the item is selected the the time selection crosses either of it's edges
+					if ((selStart < dEnd1 && selEnd > dEnd1) || (selStart < dStart1 && selEnd > dStart1))
+					{
+						
+						// Check for other items that are also crossed by time selection that may be earlier  or later
+						for (int iItem2 = 0; iItem2 < GetTrackNumMediaItems(tr); iItem2++)
+						{
+							
+							MediaItem* item2 = GetTrackMediaItem(tr, iItem2);
+							
+							if (item1 != item2 && *(bool*)GetSetMediaItemInfo(item2, "B_UISEL", NULL))
+							{
+								
+								double dStart2 = *(double*)GetSetMediaItemInfo(item2, "D_POSITION", NULL);
+								double dEnd2   = *(double*)GetSetMediaItemInfo(item2, "D_LENGTH", NULL) + dStart2;
+								
+								// If selection crosses right edge
+								if (selStart < dEnd1 && selEnd >= dEnd1)
+								{
+									// If selection ends after item 2 starts
+									if (selEnd >= dStart2)
+									{
+										// Set right flag if item 2 ends after item 1 ends
+										if (dEnd2 > dEnd1)
+											rightFlag = true;
+									}
+								}
+								
+								
+								// If selection crosses left edge
+								if (selStart <= dStart1 && selEnd > dStart1)
+								{
+									// If selection starts before item 2 ends
+									if  (selStart <= dEnd2)
+									{
+										// Set left flag if item 2 starts before item 1
+										if (dStart2 < dStart1)
+											leftFlag = true;
+									}
+								}
+							}
+							
+							
+						}	
+						
+						if (selEnd < dEnd1)
+							rightFlag = true;
+						
+						if (selStart > dStart1)
+							leftFlag = true;
+						
+						if (!(leftFlag))
+						{
+							
+							double dLen1 = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL);
+							double edgeAdj = dStart1 - selStart;
+							
+							double dNewLen1 = dLen1 + edgeAdj;
+							
+							//*(double*)GetSetMediaItemInfo(item1, "D_POSITION", NULL) = selStart;
+							//*(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL) = dLen1;
+							
+							GetSetMediaItemInfo(item1, "D_POSITION", &selStart);
+							GetSetMediaItemInfo(item1, "D_LENGTH", &dNewLen1);
+							
+							
+							for (int iTake = 0; iTake < GetMediaItemNumTakes(item1); iTake++)
+							{
+								MediaItem_Take* take = GetMediaItemTake(item1, iTake);
+								if (take)
+								{
+									double dRate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
+									dRate *= (dLen1/dNewLen1);
+									GetSetMediaItemTakeInfo(take, "D_PLAYRATE", &dRate);
+								}
+							}
+							
+							
+						}
+						
+						if (!(rightFlag))
+						{
+							
+							double dLen1 = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL);
+							double edgeAdj = selEnd - dEnd1;
+							
+							double dNewLen1 = dLen1 + edgeAdj;
+							
+							//*(double*)GetSetMediaItemInfo(item1, "D_POSITION", NULL) = selStart;
+							//*(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL) = dLen1;
+							GetSetMediaItemInfo(item1, "D_LENGTH", &dNewLen1);			
+							
+							for (int iTake = 0; iTake < GetMediaItemNumTakes(item1); iTake++)
+							{
+								MediaItem_Take* take = GetMediaItemTake(item1, iTake);
+								if (take)
+								{
+									double dRate = *(double*)GetSetMediaItemTakeInfo(take, "D_PLAYRATE", NULL);
+									dRate *= (dLen1/dNewLen1);
+									GetSetMediaItemTakeInfo(take, "D_PLAYRATE", &dRate);
+								}
+							}
+							
+							
+						}
+						
+					}
+				}
+			}
+		}
+	}
+	/*
+	 else // Otherwise trim to cursor
+	 {
+	 double cursorPos = GetCursorPosition();
+	 
+	 for (int iTrack = 1; iTrack <= GetNumTracks(); iTrack++)
+	 {
+	 MediaTrack* tr = CSurf_TrackFromID(iTrack, false);
+	 for (int iItem1 = 0; iItem1 < GetTrackNumMediaItems(tr); iItem1++)
+	 {
+	 MediaItem* item1 = GetTrackMediaItem(tr, iItem1);
+	 if (*(bool*)GetSetMediaItemInfo(item1, "B_UISEL", NULL))
+	 {
+	 double dStart1 = *(double*)GetSetMediaItemInfo(item1, "D_POSITION", NULL);
+	 double dLen1 = *(double*)GetSetMediaItemInfo(item1, "D_LENGTH", NULL);
+	 
+	 if (cursorPos > dStart1 && cursorPos < (dStart1 + (0.5 * dLen1)))
+	 {
+	 Main_OnCommand(40511, 0);
+	 }
+	 else if (cursorPos < (dStart1 + dLen1) && cursorPos > (dStart1 + (0.5 * dLen1)))
+	 {
+	 Main_OnCommand(40512, 0);
+	 }
+	 
+	 }
+	 }
+	 }
+	 }
+	 */
+	
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	
+}
+
+
+
 /* Piece of crap and doesn't work because I have no idea what to do to consolidate the OnCommands into one undo step. Fuuuuuu
 
 void AWPaste(COMMAND_T* t)
@@ -1649,8 +1828,11 @@ static COMMAND_T g_commandTable[] =
 	// Misc Item Actions
 	{ { DEFACCEL, "SWS/AdamWathan: Select from cursor to end of project (items and time selection)" },			"SWS_AWSELTOEND",					AWSelectToEnd, },
 	{ { DEFACCEL, "SWS/AdamWathan: Fade in/out/crossfade selected area of selected items" },			"SWS_AWFADESEL",					AWFadeSelection, },
-	{ { DEFACCEL, "SWS/AdamWathan: Trim Crop" },			"SWS_AWTRIMCROP",					AWTrimCrop, },
-	{ { DEFACCEL, "SWS/AdamWathan: Trim Fill" },			"SWS_AWTRIMFILL",					AWTrimFill, },
+	{ { DEFACCEL, "SWS/AdamWathan: Trim selected items to selection or cursor (crop)" },			"SWS_AWTRIMCROP",					AWTrimCrop, },
+	{ { DEFACCEL, "SWS/AdamWathan: Trim to selected items to fill selection" },			"SWS_AWTRIMFILL",					AWTrimFill, },
+	{ { DEFACCEL, "SWS/AdamWathan: Stretch selected items to fill selection" },			"SWS_AWSTRETCHFILL",					AWStretchFill, },
+
+	
 	//{ { DEFACCEL, "SWS/AdamWathan: Paste" },			"SWS_AWPASTE",					AWPaste, },
 
 	

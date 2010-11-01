@@ -1915,7 +1915,7 @@ void AWStretchFill(COMMAND_T* t)
 
 
 
-///* Experimental cut, copy and paste that will let you use relative paste since JCS are mean
+// Experimental cut, copy and paste that will let you use relative paste since JCS are mean
 
 void AWCopy(COMMAND_T* t)
 {
@@ -2038,33 +2038,24 @@ void AWPaste(COMMAND_T* t)
 	
 }
 
-//*/
 
 
 
 
 // Metronome actions
 
-void AWMetrPlayOn(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("projmetroen"); *p |= 2;}
-
-void AWMetrPlayOff(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("projmetroen"); *p &= ~2;}
-
-void AWMetrRecOn(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("projmetroen"); *p |= 4;}
-
-void AWMetrRecOff(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("projmetroen"); *p &= ~4;}
-
-void AWCountPlayOn(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("projmetroen"); *p |= 8;}
-
+void AWMetrPlayOn(COMMAND_T* = NULL)		{ int* p = (int*)GetConfigVar("projmetroen"); *p |= 2;}
+void AWMetrPlayOff(COMMAND_T* = NULL)		{ int* p = (int*)GetConfigVar("projmetroen"); *p &= ~2;}
+void AWMetrRecOn(COMMAND_T* = NULL)			{ int* p = (int*)GetConfigVar("projmetroen"); *p |= 4;}
+void AWMetrRecOff(COMMAND_T* = NULL)		{ int* p = (int*)GetConfigVar("projmetroen"); *p &= ~4;}
+void AWCountPlayOn(COMMAND_T* = NULL)		{ int* p = (int*)GetConfigVar("projmetroen"); *p |= 8;}
 void AWCountPlayOff(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("projmetroen"); *p &= ~8;}
-
-void AWCountRecOn(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("projmetroen"); *p |= 16;}
-
-void AWCountRecOff(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("projmetroen"); *p &= ~16;}
-
-void AWMetrPlayToggle(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("projmetroen"); *p ^= 2;}
-void AWMetrRecToggle(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("projmetroen"); *p ^= 4;}
-void AWCountPlayToggle(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("projmetroen"); *p ^= 8;}
-void AWCountRecToggle(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("projmetroen"); *p ^= 16;}
+void AWCountRecOn(COMMAND_T* = NULL)		{ int* p = (int*)GetConfigVar("projmetroen"); *p |= 16;}
+void AWCountRecOff(COMMAND_T* = NULL)		{ int* p = (int*)GetConfigVar("projmetroen"); *p &= ~16;}
+void AWMetrPlayToggle(COMMAND_T* = NULL)    { int* p = (int*)GetConfigVar("projmetroen"); *p ^= 2;}
+void AWMetrRecToggle(COMMAND_T* = NULL)     { int* p = (int*)GetConfigVar("projmetroen"); *p ^= 4;}
+void AWCountPlayToggle(COMMAND_T* = NULL)   { int* p = (int*)GetConfigVar("projmetroen"); *p ^= 8;}
+void AWCountRecToggle(COMMAND_T* = NULL)    { int* p = (int*)GetConfigVar("projmetroen"); *p ^= 16;}
 
 
 
@@ -2083,42 +2074,39 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AdamWathan: Remove overlaps in selected items preserving item starts" },									"SWS_AWFIXOVERLAPS",				AWFixOverlaps, },
 	
 	// Transport Actions
-	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal or time sel only)" },			"SWS_AWRECORDCOND",					AWRecordConditional, },
-	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal, time sel or item sel)" },			"SWS_AWRECORDCOND2",					AWRecordConditional2, },
-
-	{ { DEFACCEL, "SWS/AdamWathan: Record (automatically group simultaneously recorded items)" },			"SWS_AWRECORDGROUP",					AWRecordAutoGroup, },
-	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal or time sel only, automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP",					AWRecordConditionalAutoGroup, },
-	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal/time sel/item sel, automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP2",					AWRecordConditionalAutoGroup2, },
-
-	
-	{ { DEFACCEL, "SWS/AdamWathan: Play/Stop (automatically group simultaneously recorded items)" },			"SWS_AWPLAYSTOPGRP",					AWPlayStopAutoGroup, },
+	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal or time sel only)" },																"SWS_AWRECORDCOND",					AWRecordConditional, },
+	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal, time sel or item sel)" },														"SWS_AWRECORDCOND2",				AWRecordConditional2, },
+	{ { DEFACCEL, "SWS/AdamWathan: Record (automatically group simultaneously recorded items)" },												"SWS_AWRECORDGROUP",				AWRecordAutoGroup, },
+	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal or time sel only, automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP",			AWRecordConditionalAutoGroup, },
+	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal/time sel/item sel, automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP2",			AWRecordConditionalAutoGroup2, },
+	{ { DEFACCEL, "SWS/AdamWathan: Play/Stop (automatically group simultaneously recorded items)" },											"SWS_AWPLAYSTOPGRP",				AWPlayStopAutoGroup, },
 
 	// Misc Item Actions
 	{ { DEFACCEL, "SWS/AdamWathan: Select from cursor to end of project (items and time selection)" },			"SWS_AWSELTOEND",					AWSelectToEnd, },
-	{ { DEFACCEL, "SWS/AdamWathan: Fade in/out/crossfade selected area of selected items" },			"SWS_AWFADESEL",					AWFadeSelection, },
-	{ { DEFACCEL, "SWS/AdamWathan: Trim selected items to selection or cursor (crop)" },			"SWS_AWTRIMCROP",					AWTrimCrop, },
-	{ { DEFACCEL, "SWS/AdamWathan: Trim selected items to fill selection" },			"SWS_AWTRIMFILL",					AWTrimFill, },
-	{ { DEFACCEL, "SWS/AdamWathan: Stretch selected items to fill selection" },			"SWS_AWSTRETCHFILL",					AWStretchFill, },
+	{ { DEFACCEL, "SWS/AdamWathan: Fade in/out/crossfade selected area of selected items" },					"SWS_AWFADESEL",					AWFadeSelection, },
+	{ { DEFACCEL, "SWS/AdamWathan: Trim selected items to selection or cursor (crop)" },						"SWS_AWTRIMCROP",					AWTrimCrop, },
+	{ { DEFACCEL, "SWS/AdamWathan: Trim selected items to fill selection" },									"SWS_AWTRIMFILL",					AWTrimFill, },
+	{ { DEFACCEL, "SWS/AdamWathan: Stretch selected items to fill selection" },									"SWS_AWSTRETCHFILL",				AWStretchFill, },
 
 	
 	// Metronome Actions
 	{ { DEFACCEL, "SWS/AdamWathan: Enable metronome during playback" },			"SWS_AWMPLAYON",					AWMetrPlayOn, },
-	{ { DEFACCEL, "SWS/AdamWathan: Disable metronome during playback" },			"SWS_AWMPLAYOFF",					AWMetrPlayOff, },
+	{ { DEFACCEL, "SWS/AdamWathan: Disable metronome during playback" },		"SWS_AWMPLAYOFF",					AWMetrPlayOff, },
 	{ { DEFACCEL, "SWS/AdamWathan: Toggle metronome during playback" },			"SWS_AWMPLAYTOG",					AWMetrPlayToggle, },
 
-	{ { DEFACCEL, "SWS/AdamWathan: Enable metronome during recording" },			"SWS_AWMRECON",					AWMetrRecOn, },
-	{ { DEFACCEL, "SWS/AdamWathan: Disable metronome during recording" },			"SWS_AWMRECOFF",					AWMetrRecOff, },
-	{ { DEFACCEL, "SWS/AdamWathan: Toggle metronome during recording" },			"SWS_AWMRECTOG",					AWMetrRecToggle, },
+	{ { DEFACCEL, "SWS/AdamWathan: Enable metronome during recording" },		"SWS_AWMRECON",						AWMetrRecOn, },
+	{ { DEFACCEL, "SWS/AdamWathan: Disable metronome during recording" },		"SWS_AWMRECOFF",					AWMetrRecOff, },
+	{ { DEFACCEL, "SWS/AdamWathan: Toggle metronome during recording" },		"SWS_AWMRECTOG",					AWMetrRecToggle, },
 
 	
-	{ { DEFACCEL, "SWS/AdamWathan: Enable count-in before playback" },			"SWS_AWCOUNTPLAYON",					AWCountPlayOn, },
-	{ { DEFACCEL, "SWS/AdamWathan: Disable count-in before playback" },			"SWS_AWCOUNTPLAYOFF",					AWCountPlayOff, },
-	{ { DEFACCEL, "SWS/AdamWathan: Toggle count-in before playback" },			"SWS_AWCOUNTPLAYTOG",					AWCountPlayToggle, },
+	{ { DEFACCEL, "SWS/AdamWathan: Enable count-in before playback" },			"SWS_AWCOUNTPLAYON",				AWCountPlayOn, },
+	{ { DEFACCEL, "SWS/AdamWathan: Disable count-in before playback" },			"SWS_AWCOUNTPLAYOFF",				AWCountPlayOff, },
+	{ { DEFACCEL, "SWS/AdamWathan: Toggle count-in before playback" },			"SWS_AWCOUNTPLAYTOG",				AWCountPlayToggle, },
 
 	
 	{ { DEFACCEL, "SWS/AdamWathan: Enable count-in before recording" },			"SWS_AWCOUNTRECON",					AWCountRecOn, },
-	{ { DEFACCEL, "SWS/AdamWathan: Disable count-in before recording" },			"SWS_AWCOUNTRECOFF",					AWCountRecOff, },
-	{ { DEFACCEL, "SWS/AdamWathan: Toggle count-in before recording" },			"SWS_AWCOUNTRECTOG",					AWCountRecToggle, },
+	{ { DEFACCEL, "SWS/AdamWathan: Disable count-in before recording" },		"SWS_AWCOUNTRECOFF",				AWCountRecOff, },
+	{ { DEFACCEL, "SWS/AdamWathan: Toggle count-in before recording" },			"SWS_AWCOUNTRECTOG",				AWCountRecToggle, },
 
 
 	

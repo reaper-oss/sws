@@ -2044,20 +2044,22 @@ void AWPaste(COMMAND_T* t)
 
 // Metronome actions
 
-void AWMetrPlayOn(COMMAND_T* = NULL)		{ int* p = (int*)GetConfigVar("projmetroen"); *p |= 2;}
-void AWMetrPlayOff(COMMAND_T* = NULL)		{ int* p = (int*)GetConfigVar("projmetroen"); *p &= ~2;}
-void AWMetrRecOn(COMMAND_T* = NULL)			{ int* p = (int*)GetConfigVar("projmetroen"); *p |= 4;}
-void AWMetrRecOff(COMMAND_T* = NULL)		{ int* p = (int*)GetConfigVar("projmetroen"); *p &= ~4;}
-void AWCountPlayOn(COMMAND_T* = NULL)		{ int* p = (int*)GetConfigVar("projmetroen"); *p |= 8;}
-void AWCountPlayOff(COMMAND_T* = NULL)      { int* p = (int*)GetConfigVar("projmetroen"); *p &= ~8;}
-void AWCountRecOn(COMMAND_T* = NULL)		{ int* p = (int*)GetConfigVar("projmetroen"); *p |= 16;}
-void AWCountRecOff(COMMAND_T* = NULL)		{ int* p = (int*)GetConfigVar("projmetroen"); *p &= ~16;}
-void AWMetrPlayToggle(COMMAND_T* = NULL)    { int* p = (int*)GetConfigVar("projmetroen"); *p ^= 2;}
-void AWMetrRecToggle(COMMAND_T* = NULL)     { int* p = (int*)GetConfigVar("projmetroen"); *p ^= 4;}
-void AWCountPlayToggle(COMMAND_T* = NULL)   { int* p = (int*)GetConfigVar("projmetroen"); *p ^= 8;}
-void AWCountRecToggle(COMMAND_T* = NULL)    { int* p = (int*)GetConfigVar("projmetroen"); *p ^= 16;}
-
-
+void AWMetrPlayOn(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("projmetroen") |= 2;}
+void AWMetrPlayOff(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("projmetroen") &= ~2;}
+void AWMetrRecOn(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("projmetroen") |= 4;}
+void AWMetrRecOff(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("projmetroen") &= ~4;}
+void AWCountPlayOn(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("projmetroen") |= 8;}
+void AWCountPlayOff(COMMAND_T* = NULL)      { *(int*)GetConfigVar("projmetroen") &= ~8;}
+void AWCountRecOn(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("projmetroen") |= 16;}
+void AWCountRecOff(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("projmetroen") &= ~16;}
+void AWMetrPlayToggle(COMMAND_T* = NULL)    { *(int*)GetConfigVar("projmetroen") ^= 2;}
+void AWMetrRecToggle(COMMAND_T* = NULL)     { *(int*)GetConfigVar("projmetroen") ^= 4;}
+void AWCountPlayToggle(COMMAND_T* = NULL)   { *(int*)GetConfigVar("projmetroen") ^= 8;}
+void AWCountRecToggle(COMMAND_T* = NULL)    { *(int*)GetConfigVar("projmetroen") ^= 16;}
+bool IsMetrPlayOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroen") & 2)  != 0; }
+bool IsMetrRecOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("projmetroen") & 4)  != 0; }
+bool IsCountPlayOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroen") & 8)  != 0; }
+bool IsCountRecOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroen") & 16) != 0; }
 
 
 
@@ -2092,21 +2094,21 @@ static COMMAND_T g_commandTable[] =
 	// Metronome Actions
 	{ { DEFACCEL, "SWS/AdamWathan: Enable metronome during playback" },			"SWS_AWMPLAYON",					AWMetrPlayOn, },
 	{ { DEFACCEL, "SWS/AdamWathan: Disable metronome during playback" },		"SWS_AWMPLAYOFF",					AWMetrPlayOff, },
-	{ { DEFACCEL, "SWS/AdamWathan: Toggle metronome during playback" },			"SWS_AWMPLAYTOG",					AWMetrPlayToggle, },
+	{ { DEFACCEL, "SWS/AdamWathan: Toggle metronome during playback" },			"SWS_AWMPLAYTOG",					AWMetrPlayToggle, NULL, 0, IsMetrPlayOn },
 
 	{ { DEFACCEL, "SWS/AdamWathan: Enable metronome during recording" },		"SWS_AWMRECON",						AWMetrRecOn, },
 	{ { DEFACCEL, "SWS/AdamWathan: Disable metronome during recording" },		"SWS_AWMRECOFF",					AWMetrRecOff, },
-	{ { DEFACCEL, "SWS/AdamWathan: Toggle metronome during recording" },		"SWS_AWMRECTOG",					AWMetrRecToggle, },
+	{ { DEFACCEL, "SWS/AdamWathan: Toggle metronome during recording" },		"SWS_AWMRECTOG",					AWMetrRecToggle, NULL, 0, IsMetrRecOn },
 
 	
 	{ { DEFACCEL, "SWS/AdamWathan: Enable count-in before playback" },			"SWS_AWCOUNTPLAYON",				AWCountPlayOn, },
 	{ { DEFACCEL, "SWS/AdamWathan: Disable count-in before playback" },			"SWS_AWCOUNTPLAYOFF",				AWCountPlayOff, },
-	{ { DEFACCEL, "SWS/AdamWathan: Toggle count-in before playback" },			"SWS_AWCOUNTPLAYTOG",				AWCountPlayToggle, },
+	{ { DEFACCEL, "SWS/AdamWathan: Toggle count-in before playback" },			"SWS_AWCOUNTPLAYTOG",				AWCountPlayToggle, NULL, 0, IsCountPlayOn },
 
 	
 	{ { DEFACCEL, "SWS/AdamWathan: Enable count-in before recording" },			"SWS_AWCOUNTRECON",					AWCountRecOn, },
 	{ { DEFACCEL, "SWS/AdamWathan: Disable count-in before recording" },		"SWS_AWCOUNTRECOFF",				AWCountRecOff, },
-	{ { DEFACCEL, "SWS/AdamWathan: Toggle count-in before recording" },			"SWS_AWCOUNTRECTOG",				AWCountRecToggle, },
+	{ { DEFACCEL, "SWS/AdamWathan: Toggle count-in before recording" },			"SWS_AWCOUNTRECTOG",				AWCountRecToggle, NULL, 0, IsCountRecOn },
 
 
 	

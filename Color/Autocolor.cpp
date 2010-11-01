@@ -48,7 +48,7 @@ static const char cColorTypes[][9] = { "Custom", "Gradient", "Random", "None", "
 // Globals
 static SWS_AutoColorWnd* g_pACWnd = NULL;
 static WDL_PtrList<SWS_AutoColorItem> g_pACItems;
-static SWSProjConfig<WDL_PtrList<SWS_AutoColorTrack> > g_pACTracks;
+static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SWS_AutoColorTrack> > g_pACTracks;
 static bool g_bACEnabled = false;
 
 static SWS_LVColumn g_cols[] = { {25, 0, "#" }, { 185, 1, "Filter" }, { 70, 1, "Color" }, };

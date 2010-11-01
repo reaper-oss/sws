@@ -34,6 +34,7 @@ class SelItems
 {
 public:
 	SelItems() {};
+	~SelItems() { Empty(); }
 	void Save(MediaTrack* tr);
 	void Add(LineParser* lp);
 	void Restore(MediaTrack* tr);
@@ -65,7 +66,7 @@ public:
 	GUID m_guid;
 };
 
-extern SWSProjConfig<WDL_PtrList<SelItemsTrack> > g_selItemsTrack;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SelItemsTrack> > g_selItemsTrack;
 extern SWSProjConfig<SelItems> g_selItems;
 
 // "Exported" functions

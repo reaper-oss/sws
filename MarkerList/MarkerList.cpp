@@ -38,7 +38,7 @@
 #define FIRST_LOAD_MSG	0x10100
 
 // Globals
-static SWSProjConfig<WDL_PtrList<MarkerList> > g_savedLists;
+static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<MarkerList> > g_savedLists;
 MarkerList* g_curList = NULL;
 SWS_MarkerListWnd* g_pMarkerList = NULL;
 

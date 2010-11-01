@@ -31,7 +31,7 @@
 
 //*****************************************************
 // Globals
-SWSProjConfig<WDL_PtrList<TrackState> > g_tracks;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<TrackState> > g_tracks;
 
 //*****************************************************
 // ItemState Class

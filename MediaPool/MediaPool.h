@@ -112,7 +112,7 @@ public:
 	void Update();
 
 	WDL_PtrList<SWS_MediaPoolGroup> m_globalGroups;
-	SWSProjConfig<WDL_PtrList<SWS_MediaPoolGroup> > m_projGroups;
+	SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SWS_MediaPoolGroup> > m_projGroups;
 	SWS_MediaPoolGroup* m_curGroup;
 	SWS_MediaPoolGroup m_projGroup;
 

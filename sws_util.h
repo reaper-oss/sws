@@ -85,7 +85,6 @@ private:
 public:
 	SWSProjConfig() {}
 	~SWSProjConfig() { Empty(); }
-	int IsValid(ReaProject* pProj) {return (m_projects.Find(pProj) >= 0);}
 	PTRTYPE* Get()
 	{
 		ReaProject* pProj = Enum_Projects(-1, NULL, 0);

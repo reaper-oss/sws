@@ -914,33 +914,26 @@ void InitModel()
 
 void SNM_LiveCfg_TLChangeSchedJob::Perform()
 {
-	if (g_liveCCConfigs.IsValid(Enum_Projects(-1, NULL, 0)))
+	// Check or model consistency against the track list update
+	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++) 
 	{
-		// Check or model consistency against the track list update
-		for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++) 
+		for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++)
 		{
-			for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++)
-			{
-				MidiLiveItem* item = g_liveCCConfigs.Get()->Get(i)->Get(j);
-				if (item && item->m_track && CSurf_TrackToID(item->m_track, false) <= 0)
-					item->Clear();
-			}
-			if (g_liveConfigs.Get()->m_inputTr[i] && CSurf_TrackToID(g_liveConfigs.Get()->m_inputTr[i], false) <= 0)
-				g_liveConfigs.Get()->m_inputTr[i] = NULL;
+			MidiLiveItem* item = g_liveCCConfigs.Get()->Get(i)->Get(j);
+			if (item && item->m_track && CSurf_TrackToID(item->m_track, false) <= 0)
+				item->Clear();
+		}
+		if (g_liveConfigs.Get()->m_inputTr[i] && CSurf_TrackToID(g_liveConfigs.Get()->m_inputTr[i], false) <= 0)
+			g_liveConfigs.Get()->m_inputTr[i] = NULL;
 
 //			g_lastPerformedMIDIVal[i] = -1;
 //			g_lastDeactivateCmd[i][0] = -1;
-		}
-
-		if (g_pMidiLiveWnd)
-		{
-			g_pMidiLiveWnd->FillComboInputTrack();
-			g_pMidiLiveWnd->Update();
-		}
 	}
-	else
+
+	if (g_pMidiLiveWnd)
 	{
-		// PiPs go here..
+		g_pMidiLiveWnd->FillComboInputTrack();
+		g_pMidiLiveWnd->Update();
 	}
 }
 
@@ -1010,16 +1003,16 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	if (!g_liveCCConfigs.IsValid(Enum_Projects(-1, NULL, 0)))
-		return; 
-
+	// TRP - To fix a REAPER bug where BeginLoadProjectState is NOT called for PiPs!
+	if (!g_liveCCConfigs.Get()->GetSize())
+		InitModel();
 	char curLine[SNM_MAX_CHUNK_LINE_LENGTH] = "", strId[128] = "";
 	GUID g; 
 	bool firstCfg = true;
-	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++) 
+	for (int i = 0; i < g_liveCCConfigs.Get()->GetSize(); i++) 
 	{
-	  for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++)
-	  {
+		for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++)
+		{
 			MidiLiveItem* item = g_liveCCConfigs.Get()->Get(i)->Get(j);
 			if (item && !item->IsDefault()) // avoid a bunch of useless data in RPP files!
 			{

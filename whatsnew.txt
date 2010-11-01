@@ -1,3 +1,15 @@
+!v1.8.3 #1 (October 31, 2010)
+New actions:
++SWS/AdamWathan: Stretch selected items to fill selection
++SWS/AdamWathan: Record Conditional (normal, time sel or item sel)
++SWS/AdamWathan: Record Conditional (normal/time sel/item sel, automatically group simultaneously recorded items)
++SWS/AdamWathan: Trim selected items to selection or cursor (crop)
++SWS/AdamWathan: Trim to selected items to fill selection
+
+Fixed bug in "SWS/AdamWathan: Fade in/out/crossfade…" where fade wouldn't be created if item was at 0.0 on the timeline
+Fixed some (small) memory leaks when closing projects
+
+!v1.8.2 #12 (October 31, 2010)
 Fix for issue 203: crashes with PiP vs Live Configs.
 Fixed Live Configs not updated when switching project tabs
 Snapshots: faster

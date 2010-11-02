@@ -161,6 +161,12 @@ public:
 	WDL_String m_shortPath;
 };
 
+template<class PTRTYPE> class SNM_ProjConfig : public SWSProjConfig<PTRTYPE> {
+public:
+	SNM_ProjConfig() : SWSProjConfig() {}
+	~SNM_ProjConfig() {}
+	int Find(ReaProject* _pProj) { return m_projects.Find(_pProj); }
+};
 
 // Custom WDL UIs (SnM_Dlg.cpp)
 
@@ -180,7 +186,7 @@ class SNM_VirtualComboBox : public WDL_VirtualComboBox
 //extern COMMAND_T g_SNM_cmdTable[];									// SnM_Actions.cpp
 extern WDL_String g_SNMiniFilename;									// SnM_Actions.cpp
 extern WDL_PtrList_DeleteOnDestroy<FXChainSlotItem> g_fxChainFiles;	// SnM_FXChain.cpp
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;	// SnM_NotesHelpView.cpp
+extern SNM_ProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;	// SnM_NotesHelpView.cpp
 
 
 ///////////////////////////////////////////////////////////////////////////////

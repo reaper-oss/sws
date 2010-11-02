@@ -64,8 +64,8 @@ enum {
 
 // Globals
 SNM_NotesHelpWnd* g_pNotesHelpWnd = NULL;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
-SWSProjConfig<WDL_String> g_prjNotes;
+SNM_ProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
+SNM_ProjConfig<WDL_String> g_prjNotes;
 
 //JFB TODO: clean-up with member attributes..
 int g_bDocked = -1, g_bLastDocked = 0; 
@@ -680,9 +680,9 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 				if (g_trNote)
 				{
 					int id = CSurf_TrackToID(g_trNote, false);
-					if (id)
+					if (id > 0)
 						_snprintf(str, 512, " [%d]  %s", id, (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL));
-					else
+					else if(id == 0)
 						strcpy(str, "[MASTER]");
 					bNoSelection = false;
 				}

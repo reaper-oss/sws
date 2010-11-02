@@ -777,7 +777,7 @@ public:
 	//}
 };
 
-static SWSProjConfig<WDL_PtrList<ZoomState> > g_zoomStack;
+static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<ZoomState> > g_zoomStack;
 static SWSProjConfig<int> g_zoomLevel;
 
 // Undo zoom prefs
@@ -914,7 +914,13 @@ void ZoomToRect(HWND hTrackView, RECT* rZoom, double dX1, double dX2)
 
 static bool g_bZooming = false;
 static WNDPROC g_ReaperTrackWndProc = NULL;
+#ifdef _WIN32
+static HCURSOR g_hZoomInCur = NULL;
+static HCURSOR g_hZoomOutCur = NULL;
+static HCURSOR g_hZoomUndoCur = NULL;
+#else
 static HCURSOR g_hZoomCur = NULL;
+#endif
 
 // Zoom tool Prefs
 // (defaults are actually set in ZoomInit)
@@ -923,6 +929,25 @@ static int  g_iMidMouseModifier = 0;
 static bool g_bItemZoom = false;
 static bool g_bUndoZoom = false;
 static bool g_bUnzoomMode = false;
+static bool g_bDragUpUndo = false;
+
+void SetZoomCursor(HWND hwnd, POINT pStart)
+{
+	HCURSOR newCur = NULL;
+	POINT p;
+	GetCursorPos(&p);
+	ScreenToClient(hwnd, &p);
+
+	if (g_bUnzoomMode && pStart.y - p.y > 2)
+		newCur = g_hZoomOutCur;
+	else if ((g_bDragUpUndo && pStart.y - p.y > 2) || (g_bUndoZoom && abs(p.x - pStart.x) <= 2 && abs(p.y - pStart.y) <= 2 && !ItemAtPoint(hwnd, p, NULL, NULL)))
+		newCur = g_hZoomUndoCur;
+	else
+		newCur = g_hZoomInCur;
+
+	if (GetCursor() != newCur && newCur)
+		SetCursor(newCur);
+}
 
 LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -931,6 +956,8 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 	static RECT rZoom;
 	static MediaItem* itemZoom;
+	static bool bUndoZoom;
+	static POINT pStart;
 
 	if (uMsg == WM_START_ZOOM || (g_bMidMouseButton && uMsg == WM_MBUTTONDOWN && SWS_GetModifiers() == g_iMidMouseModifier))
 	{
@@ -938,14 +965,19 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		RECT r;
 		GetCursorPos(&p);
 		GetWindowRect(hwnd, &r);
-		if (PtInRect(&r, p) && g_hZoomCur)
-			SetCursor(g_hZoomCur);
+		if (PtInRect(&r, p))
+		{
+			ScreenToClient(hwnd, &p);
+			SetZoomCursor(hwnd, p);
+		}
 		g_bZooming = true;
 		RefreshToolbar(SWSGetCommandID(ZoomTool));
 		itemZoom = NULL;
-		rZoom.left = 0; rZoom.top = 0; rZoom.right = 0; rZoom.bottom = 0;
+		bUndoZoom = false;
+		pStart.x = pStart.y = 0;
+		rZoom.left = rZoom.top = rZoom.right = rZoom.bottom = 0;
 #ifdef _WIN32
-		rDraw.left = 0; rDraw.top = 0; rDraw.right = 0; rDraw.bottom = 0;
+		rDraw.left = rDraw.top = rDraw.right = rDraw.bottom = 0;
 #endif
 	}
 	if (g_bZooming)
@@ -955,7 +987,6 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #else
 		static void* pFocusRect = NULL;
 #endif
-		static POINT pStart;
 		static bool bMBDown = false;
 
 		if (uMsg == WM_LBUTTONDOWN || (g_bMidMouseButton && uMsg == WM_MBUTTONDOWN && SWS_GetModifiers() == g_iMidMouseModifier))
@@ -967,8 +998,7 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		else if (uMsg == WM_SETCURSOR)
 		{
-			if (GetCursor() != g_hZoomCur && g_hZoomCur)
-				SetCursor(g_hZoomCur);
+			SetZoomCursor(hwnd, pStart);
 			return 1;
 		}
 #ifdef _WIN32
@@ -998,6 +1028,9 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// rLastDraw - previous mouse move draw area
 			// finally r, rDraw U rLastDraw, to erase the old and add some new
 
+			if (pStart.x != 0 && pStart.y != 0)
+				SetZoomCursor(hwnd, pStart);
+
 			static RECT rBox;
 			POINT p;
 			GetCursorPos(&p);
@@ -1008,6 +1041,7 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			rZoom = rBox; // Zoom area starts as the drawn box
 			itemZoom = NULL;
+			bUndoZoom = false;
 			
 			// Check for really small move, and do item zoom mode if so
 			if (rBox.right - rBox.left <= 2 && rBox.bottom - rBox.top <= 2)
@@ -1023,6 +1057,13 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					else
 						rZoom.top = rZoom.bottom;
 				}
+			}
+			else if (g_bDragUpUndo && pStart.y - p.y > 2)
+			{
+				bUndoZoom = true;
+				rZoom.top = rZoom.bottom;
+				rZoom.left = rZoom.right;
+				rBox.top = rBox.bottom;
 			}
 			else
 			{
@@ -1135,7 +1176,7 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				else if (rZoom.right - rZoom.left > 1 || rZoom.bottom - rZoom.top > 1)
 					ZoomToRect(hwnd, &rZoom, 0.0, 0.0);
-				else if (g_bUndoZoom)
+				else if (g_bUndoZoom || bUndoZoom)
 					UndoZoom();
 				else
 					UpdateTimeline();
@@ -1180,10 +1221,16 @@ static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 			CheckDlgButton(hwndDlg, IDC_ITEMZOOM, g_bItemZoom);
 			CheckDlgButton(hwndDlg, IDC_UNDOZOOM, g_bUndoZoom);
 #ifdef _WIN32
-			CheckDlgButton(hwndDlg, IDC_UNZOOMMODE, g_bUnzoomMode);
+			if (g_bUnzoomMode)
+				CheckDlgButton(hwndDlg, IDC_DRAGUP_UNZOOM, BST_CHECKED);
+			else
 #else
 			ShowWindow(GetDlgItem(hwndDlg, IDC_UNZOOMMODE), SW_HIDE);
 #endif
+			if (g_bDragUpUndo)
+				CheckDlgButton(hwndDlg, IDC_DRAGUP_UNDO, BST_CHECKED);
+			else
+				CheckDlgButton(hwndDlg, IDC_DRAGUP_ZOOM, BST_CHECKED);
 			CheckDlgButton(hwndDlg, IDC_UNDOSWSONLY, g_bUndoSWSOnly);
 			CheckDlgButton(hwndDlg, IDC_LASTUNDOPROJ, g_bLastUndoProj);
 			for (int i = 0; i < NUM_MODIFIERS; i++)
@@ -1212,8 +1259,9 @@ static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 					g_bItemZoom       = IsDlgButtonChecked(hwndDlg, IDC_ITEMZOOM) == BST_CHECKED;
 					g_bUndoZoom       = IsDlgButtonChecked(hwndDlg, IDC_UNDOZOOM) == BST_CHECKED;
 #ifdef _WIN32
-					g_bUnzoomMode     = IsDlgButtonChecked(hwndDlg, IDC_UNZOOMMODE) == BST_CHECKED;
+					g_bUnzoomMode     = IsDlgButtonChecked(hwndDlg, IDC_DRAGUP_UNZOOM) == BST_CHECKED;
 #endif
+					g_bDragUpUndo     = IsDlgButtonChecked(hwndDlg, IDC_DRAGUP_UNDO) == BST_CHECKED;
 					g_bUndoSWSOnly    = IsDlgButtonChecked(hwndDlg, IDC_UNDOSWSONLY) == BST_CHECKED;
 					g_bLastUndoProj   = IsDlgButtonChecked(hwndDlg, IDC_LASTUNDOPROJ) == BST_CHECKED;
 					g_iMidMouseModifier = g_modifiers[SendMessage(GetDlgItem(hwndDlg, IDC_MMMODIFIER), CB_GETCURSEL, 0, 0)].iModifier;
@@ -1352,7 +1400,9 @@ int ZoomInit()
 		g_ReaperTrackWndProc = (WNDPROC)SetWindowLongPtr(hTrackView, GWLP_WNDPROC, (LONG_PTR)ZoomWndProc);
 
 #ifdef _WIN32
-	g_hZoomCur = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOM));
+	g_hZoomInCur   = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMIN));
+	g_hZoomOutCur  = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMOUT));
+	g_hZoomUndoCur = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMUNDO));
 #else
 	g_hZoomCur = LoadCursor(g_hInst, IDC_ARROW);
 #endif
@@ -1365,6 +1415,7 @@ int ZoomInit()
 	g_bUnzoomMode = !!(iPrefs & 8);
 	g_bUndoSWSOnly = !!(iPrefs & 16);
 	g_bLastUndoProj = !!(iPrefs & 32);
+	g_bDragUpUndo = !!(iPrefs & 64);
 	g_iMidMouseModifier = iPrefs >> 8;
 
 	return 1;
@@ -1375,6 +1426,7 @@ void ZoomExit()
 	// Write the zoom prefs
 	char str[32];
 	sprintf(str, "%d", (g_bMidMouseButton ? 1 : 0) + (g_bItemZoom ? 2 : 0) + (g_bUndoZoom ? 4 : 0) +
-		(g_bUnzoomMode ? 8 : 0) + (g_bUndoSWSOnly ? 16 : 0) + (g_bLastUndoProj ? 32 : 0) + (g_iMidMouseModifier << 8));
+		(g_bUnzoomMode ? 8 : 0) + (g_bUndoSWSOnly ? 16 : 0) + (g_bLastUndoProj ? 32 : 0) +
+		(g_bDragUpUndo ? 64 : 0) + (g_iMidMouseModifier << 8));
 	WritePrivateProfileString(SWS_INI, ZOOMPREFS_KEY, str, get_ini_file());
 }

@@ -7,7 +7,7 @@
 #define IDD_MARKERLIST                  102
 #define IDD_SAVE                        103
 #define IDD_LOAD                        104
-#define IDC_ZOOM                        104
+#define IDC_ZOOMIN                      104
 #define IDD_FORMAT                      105
 #define IDD_MACRODEBUG                  106
 #define IDD_COLOR                       107
@@ -56,7 +56,9 @@
 #define IDD_SNM_FXCHAINLIST             150
 #define IDD_ZOOMPREFS                   151
 #define IDD_SNM_NOTES_HELP              152
+#define IDC_ZOOMOUT                     152
 #define IDD_SNM_WAIT                    153
+#define IDC_ZOOMUNDO                    153
 #define IDD_SNM_FIND                    154
 #define IDD_SNM_MIDI_LIVE               155
 #define IDB_UP                          500
@@ -82,7 +84,6 @@
 #define IDC_VOLEDIT                     1016
 #define IDC_UNDOZOOM                    1016
 #define IDC_NUMREPEDIT                  1017
-#define IDC_UNZOOMMODE                  1017
 #define IDC_NOTEVALUECOMBO              1018
 #define IDC_UNDOSWSONLY                 1018
 #define IDC_EDIT2                       1019
@@ -247,14 +248,17 @@
 #define IDC_PADREENVPROC_TAKEENV        1181
 #define IDC_MMMODIFIER                  1181
 #define IDC_CHECK4                      1182
+#define IDC_DRAGUP_ZOOM                 1182
+#define IDC_DRAGUP_UNZOOM               1183
+#define IDC_DRAGUP_UNDO                 1184
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        152
+#define _APS_NEXT_RESOURCE_VALUE        154
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1182
+#define _APS_NEXT_CONTROL_VALUE         1185
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

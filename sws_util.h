@@ -78,12 +78,13 @@ typedef struct COMMAND_T
 
 template<class PTRTYPE> class SWSProjConfig
 {
-private:
+protected:
 	WDL_PtrList<void> m_projects;
 	WDL_PtrList<PTRTYPE> m_data;
 
 public:
 	SWSProjConfig() {}
+	virtual ~SWSProjConfig() { Empty(); }
 	~SWSProjConfig() { Empty(); }
 	PTRTYPE* Get()
 	{
@@ -109,8 +110,8 @@ public:
 			{
 				int j = 0;
 				ReaProject* pProj;
-				while ((pProj = Enum_Projects(j, NULL, 0)))
-					if (m_projects.Get(j++) == pProj)
+				while ((pProj = Enum_Projects(j++, NULL, 0)))
+					if (m_projects.Get(i) == pProj)
 						break;
 				if (!pProj)
 				{

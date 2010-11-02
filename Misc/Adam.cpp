@@ -2061,7 +2061,21 @@ bool IsMetrRecOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("projmetroen
 bool IsCountPlayOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroen") & 8)  != 0; }
 bool IsCountRecOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroen") & 16) != 0; }
 
+// Editing Preferences
+void AWRelEdgeOn(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("relativeedges") |= 1;}
+void AWRelEdgeOff(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("relativeedges") &= ~1;}
+void AWRelEdgeToggle(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("relativeedges") ^= 1;}
+bool IsRelEdgeOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("relativeedges") & 1)  != 0; }
 
+void AWClrTimeSelClkOn(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemclickmovecurs") |= 64;}
+void AWClrTimeSelClkOff(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemclickmovecurs") &= ~64;}
+void AWClrTimeSelClkToggle(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("itemclickmovecurs") ^= 64;}
+bool IsClrTimeSelClkOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("itemclickmovecurs") & 64)  != 0; }
+
+void AWClrLoopClkOn(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemclickmovecurs") |= 32;}
+void AWClrLoopClkOff(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemclickmovecurs") &= ~32;}
+void AWClrLoopClkToggle(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("itemclickmovecurs") ^= 32;}
+bool IsClrLoopClkOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("itemclickmovecurs") & 32)  != 0; }
 
 
 static COMMAND_T g_commandTable[] = 
@@ -2069,57 +2083,73 @@ static COMMAND_T g_commandTable[] =
 	// Add commands here (copy paste an example from ItemParams.cpp or similar	
 	
 	// Fill Gaps Actions
-	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (advanced)" },												"SWS_AWFILLGAPSADV",				AWFillGapsAdv, NULL, 0 },
-	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (advanced, use last settings)" },							"SWS_AWFILLGAPSADVLASTSETTINGS",	AWFillGapsAdv, NULL, 1 },
-	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, no crossfade)" },									"SWS_AWFILLGAPSQUICK",				AWFillGapsQuick, },
-	{ { DEFACCEL, "SWS/AdamWathan: Fill gaps between selected items (quick, crossfade using default fade length)" },			"SWS_AWFILLGAPSQUICKXFADE",			AWFillGapsQuickXFade, },
-	{ { DEFACCEL, "SWS/AdamWathan: Remove overlaps in selected items preserving item starts" },									"SWS_AWFIXOVERLAPS",				AWFixOverlaps, },
+	{ { DEFACCEL, "SWS/AW: Fill gaps between selected items (advanced)" },												"SWS_AWFILLGAPSADV",				AWFillGapsAdv, NULL, 0 },
+	{ { DEFACCEL, "SWS/AW: Fill gaps between selected items (advanced, use last settings)" },							"SWS_AWFILLGAPSADVLASTSETTINGS",	AWFillGapsAdv, NULL, 1 },
+	{ { DEFACCEL, "SWS/AW: Fill gaps between selected items (quick, no crossfade)" },									"SWS_AWFILLGAPSQUICK",				AWFillGapsQuick, },
+	{ { DEFACCEL, "SWS/AW: Fill gaps between selected items (quick, crossfade using default fade length)" },			"SWS_AWFILLGAPSQUICKXFADE",			AWFillGapsQuickXFade, },
+	{ { DEFACCEL, "SWS/AW: Remove overlaps in selected items preserving item starts" },									"SWS_AWFIXOVERLAPS",				AWFixOverlaps, },
 	
 	// Transport Actions
-	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal or time sel only)" },																"SWS_AWRECORDCOND",					AWRecordConditional, },
-	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal, time sel or item sel)" },														"SWS_AWRECORDCOND2",				AWRecordConditional2, },
-	{ { DEFACCEL, "SWS/AdamWathan: Record (automatically group simultaneously recorded items)" },												"SWS_AWRECORDGROUP",				AWRecordAutoGroup, },
-	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal or time sel only, automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP",			AWRecordConditionalAutoGroup, },
-	{ { DEFACCEL, "SWS/AdamWathan: Record Conditional (normal/time sel/item sel, automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP2",			AWRecordConditionalAutoGroup2, },
-	{ { DEFACCEL, "SWS/AdamWathan: Play/Stop (automatically group simultaneously recorded items)" },											"SWS_AWPLAYSTOPGRP",				AWPlayStopAutoGroup, },
+	{ { DEFACCEL, "SWS/AW: Record Conditional (normal or time sel only)" },																"SWS_AWRECORDCOND",					AWRecordConditional, },
+	{ { DEFACCEL, "SWS/AW: Record Conditional (normal, time sel or item sel)" },														"SWS_AWRECORDCOND2",				AWRecordConditional2, },
+	{ { DEFACCEL, "SWS/AW: Record (automatically group simultaneously recorded items)" },												"SWS_AWRECORDGROUP",				AWRecordAutoGroup, },
+	{ { DEFACCEL, "SWS/AW: Record Conditional (normal or time sel only, automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP",			AWRecordConditionalAutoGroup, },
+	{ { DEFACCEL, "SWS/AW: Record Conditional (normal/time sel/item sel, automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP2",			AWRecordConditionalAutoGroup2, },
+	{ { DEFACCEL, "SWS/AW: Play/Stop (automatically group simultaneously recorded items)" },											"SWS_AWPLAYSTOPGRP",				AWPlayStopAutoGroup, },
 
 	// Misc Item Actions
-	{ { DEFACCEL, "SWS/AdamWathan: Select from cursor to end of project (items and time selection)" },			"SWS_AWSELTOEND",					AWSelectToEnd, },
-	{ { DEFACCEL, "SWS/AdamWathan: Fade in/out/crossfade selected area of selected items" },					"SWS_AWFADESEL",					AWFadeSelection, },
-	{ { DEFACCEL, "SWS/AdamWathan: Trim selected items to selection or cursor (crop)" },						"SWS_AWTRIMCROP",					AWTrimCrop, },
-	{ { DEFACCEL, "SWS/AdamWathan: Trim selected items to fill selection" },									"SWS_AWTRIMFILL",					AWTrimFill, },
-	{ { DEFACCEL, "SWS/AdamWathan: Stretch selected items to fill selection" },									"SWS_AWSTRETCHFILL",				AWStretchFill, },
+	{ { DEFACCEL, "SWS/AW: Select from cursor to end of project (items and time selection)" },			"SWS_AWSELTOEND",					AWSelectToEnd, },
+	{ { DEFACCEL, "SWS/AW: Fade in/out/crossfade selected area of selected items" },					"SWS_AWFADESEL",					AWFadeSelection, },
+	{ { DEFACCEL, "SWS/AW: Trim selected items to selection or cursor (crop)" },						"SWS_AWTRIMCROP",					AWTrimCrop, },
+	{ { DEFACCEL, "SWS/AW: Trim selected items to fill selection" },									"SWS_AWTRIMFILL",					AWTrimFill, },
+	{ { DEFACCEL, "SWS/AW: Stretch selected items to fill selection" },									"SWS_AWSTRETCHFILL",				AWStretchFill, },
 
+	
+	// Toggle Actions 
 	
 	// Metronome Actions
-	{ { DEFACCEL, "SWS/AdamWathan: Enable metronome during playback" },			"SWS_AWMPLAYON",					AWMetrPlayOn, },
-	{ { DEFACCEL, "SWS/AdamWathan: Disable metronome during playback" },		"SWS_AWMPLAYOFF",					AWMetrPlayOff, },
-	{ { DEFACCEL, "SWS/AdamWathan: Toggle metronome during playback" },			"SWS_AWMPLAYTOG",					AWMetrPlayToggle, NULL, 0, IsMetrPlayOn },
+	{ { DEFACCEL, "SWS/AW: Enable metronome during playback" },			"SWS_AWMPLAYON",					AWMetrPlayOn, },
+	{ { DEFACCEL, "SWS/AW: Disable metronome during playback" },		"SWS_AWMPLAYOFF",					AWMetrPlayOff, },
+	{ { DEFACCEL, "SWS/AW: Toggle metronome during playback" },			"SWS_AWMPLAYTOG",					AWMetrPlayToggle, NULL, 0, IsMetrPlayOn },
 
-	{ { DEFACCEL, "SWS/AdamWathan: Enable metronome during recording" },		"SWS_AWMRECON",						AWMetrRecOn, },
-	{ { DEFACCEL, "SWS/AdamWathan: Disable metronome during recording" },		"SWS_AWMRECOFF",					AWMetrRecOff, },
-	{ { DEFACCEL, "SWS/AdamWathan: Toggle metronome during recording" },		"SWS_AWMRECTOG",					AWMetrRecToggle, NULL, 0, IsMetrRecOn },
-
-	
-	{ { DEFACCEL, "SWS/AdamWathan: Enable count-in before playback" },			"SWS_AWCOUNTPLAYON",				AWCountPlayOn, },
-	{ { DEFACCEL, "SWS/AdamWathan: Disable count-in before playback" },			"SWS_AWCOUNTPLAYOFF",				AWCountPlayOff, },
-	{ { DEFACCEL, "SWS/AdamWathan: Toggle count-in before playback" },			"SWS_AWCOUNTPLAYTOG",				AWCountPlayToggle, NULL, 0, IsCountPlayOn },
+	{ { DEFACCEL, "SWS/AW: Enable metronome during recording" },		"SWS_AWMRECON",						AWMetrRecOn, },
+	{ { DEFACCEL, "SWS/AW: Disable metronome during recording" },		"SWS_AWMRECOFF",					AWMetrRecOff, },
+	{ { DEFACCEL, "SWS/AW: Toggle metronome during recording" },		"SWS_AWMRECTOG",					AWMetrRecToggle, NULL, 0, IsMetrRecOn },
 
 	
-	{ { DEFACCEL, "SWS/AdamWathan: Enable count-in before recording" },			"SWS_AWCOUNTRECON",					AWCountRecOn, },
-	{ { DEFACCEL, "SWS/AdamWathan: Disable count-in before recording" },		"SWS_AWCOUNTRECOFF",				AWCountRecOff, },
-	{ { DEFACCEL, "SWS/AdamWathan: Toggle count-in before recording" },			"SWS_AWCOUNTRECTOG",				AWCountRecToggle, NULL, 0, IsCountRecOn },
+	{ { DEFACCEL, "SWS/AW: Enable count-in before playback" },			"SWS_AWCOUNTPLAYON",				AWCountPlayOn, },
+	{ { DEFACCEL, "SWS/AW: Disable count-in before playback" },			"SWS_AWCOUNTPLAYOFF",				AWCountPlayOff, },
+	{ { DEFACCEL, "SWS/AW: Toggle count-in before playback" },			"SWS_AWCOUNTPLAYTOG",				AWCountPlayToggle, NULL, 0, IsCountPlayOn },
 
+	
+	{ { DEFACCEL, "SWS/AW: Enable count-in before recording" },			"SWS_AWCOUNTRECON",					AWCountRecOn, },
+	{ { DEFACCEL, "SWS/AW: Disable count-in before recording" },		"SWS_AWCOUNTRECOFF",				AWCountRecOff, },
+	{ { DEFACCEL, "SWS/AW: Toggle count-in before recording" },			"SWS_AWCOUNTRECTOG",				AWCountRecToggle, NULL, 0, IsCountRecOn },
+	
+	// Editing Preferences
+	{ { DEFACCEL, "SWS/AW: Enable relative editing when resizing item edges" },			"SWS_AWRELEDGEON",				AWRelEdgeOn, },
+	{ { DEFACCEL, "SWS/AW: Disable relative editing when resizing item edges" },		"SWS_AWRELEDGEOFF",				AWRelEdgeOff, },
+	{ { DEFACCEL, "SWS/AW: Toggle relative editing when resizing item edges" },			"SWS_AWRELEDGETOG",				AWRelEdgeToggle, NULL, 0, IsRelEdgeOn },
+	
+	
+	{ { DEFACCEL, "SWS/AW: Enable clear time selection on click in arrange" },			"SWS_AWCLRTIMESELCLKON",		AWClrTimeSelClkOn, },
+	{ { DEFACCEL, "SWS/AW: Disable clear time selection on click in arrange" },			"SWS_AWCLRTIMESELCLKOFF",		AWClrTimeSelClkOff, },
+	{ { DEFACCEL, "SWS/AW: Toggle clear time selection on click in arrange" },			"SWS_AWCLRTIMESELCLKTOG",		AWClrTimeSelClkToggle, NULL, 0, IsClrTimeSelClkOn },
+	
+	{ { DEFACCEL, "SWS/AW: Enable clear loop points on click in ruler" },			"SWS_AWCLRLOOPCLKON",				AWClrLoopClkOn, },
+	{ { DEFACCEL, "SWS/AW: Disable clear loop points on click in ruler" },			"SWS_AWCLRLOOPCLKOFF",				AWClrLoopClkOff, },
+	{ { DEFACCEL, "SWS/AW: Toggle clear loop points on click in ruler" },			"SWS_AWCLRLOOPCLKTOG",				AWClrLoopClkToggle, NULL, 0, IsClrLoopClkOn },
+	
 
 	
 	
 	
 	// Stuff that sort of sucks that I might make decent enough to release
-	//{ { DEFACCEL, "SWS/AdamWathan: Copy" },			"SWS_AWCOPY",					AWCopy, },
-	//{ { DEFACCEL, "SWS/AdamWathan: Cut" },			"SWS_AWCUT",					AWCut, },
-	//{ { DEFACCEL, "SWS/AdamWathan: Paste" },			"SWS_AWPASTE",					AWPaste, },
+	//{ { DEFACCEL, "SWS/AW: Copy" },			"SWS_AWCOPY",					AWCopy, },
+	//{ { DEFACCEL, "SWS/AW: Cut" },			"SWS_AWCUT",					AWCut, },
+	//{ { DEFACCEL, "SWS/AW: Paste" },			"SWS_AWPASTE",					AWPaste, },
 
-	//{ { DEFACCEL, "SWS/AdamWathan: Quick Punch Record" },			"SWS_AWQUICKPUNCH",					AWRecordQuickPunch, },
+	//{ { DEFACCEL, "SWS/AW: Quick Punch Record" },			"SWS_AWQUICKPUNCH",					AWRecordQuickPunch, },
 
 	
 	

@@ -27,7 +27,6 @@
 
 #pragma once
 
-#define SWSAW_CMD_SHORTNAME(_ct) (_ct->accel.desc + 16) // +16 to skip "SWS/AdamWathan: "
+#define SWSAW_CMD_SHORTNAME(_ct) (_ct->accel.desc + 8) // +8 to skip "SWS/AW: "
 
 int AdamInit();
-

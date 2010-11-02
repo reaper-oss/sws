@@ -1,3 +1,12 @@
+!v1.8.4 #1 (November 1, 2010)
+New actions:
++SWS/AdamWathan: Enable/Disable/Toggle metronome during playback
++SWS/AdamWathan: Enable/Disable/Toggle metronome during recording
++SWS/AdamWathan: Enable/Disable/Toggle count-in before playback
++SWS/AdamWathan: Enable/Disable/Toggle count-in before recording
+
+Also, "SWS/AdamWathan: Trim selected items to fill selection or fill to cursor" and "SWS/AdamWathan: Stretch selected items to fill selection or fill to cursor" now fill to the cursor in addition to the time selection
+
 !v1.8.3 #1 (October 31, 2010)
 New actions:
 +SWS/AdamWathan: Stretch selected items to fill selection

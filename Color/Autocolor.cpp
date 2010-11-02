@@ -54,7 +54,7 @@ static const char cColorTypes[][9] = { "Custom", "Gradient", "Random", "None", "
 // Globals
 static SWS_AutoColorWnd* g_pACWnd = NULL;
 static WDL_PtrList<SWS_RuleItem> g_pACItems;
-static SWSProjConfig<WDL_PtrList<SWS_RuleTrack> > g_pTracks;
+static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SWS_RuleTrack> > g_pTracks;
 static bool g_bACEnabled = false;
 static bool g_bAIEnabled = false;
 

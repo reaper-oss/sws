@@ -1,4 +1,32 @@
-!v1.8.2 #9 (October 29, 2010)
+!v1.8.4 #1 (November 1, 2010)
+New actions:
++SWS/AdamWathan: Enable/Disable/Toggle metronome during playback
++SWS/AdamWathan: Enable/Disable/Toggle metronome during recording
++SWS/AdamWathan: Enable/Disable/Toggle count-in before playback
++SWS/AdamWathan: Enable/Disable/Toggle count-in before recording
+
+Also, "SWS/AdamWathan: Trim selected items to fill selection or fill to cursor" and "SWS/AdamWathan: Stretch selected items to fill selection or fill to cursor" now fill to the cursor in addition to the time selection
+
+!v1.8.3 #1 (October 31, 2010)
+New actions:
++SWS/AdamWathan: Stretch selected items to fill selection
++SWS/AdamWathan: Record Conditional (normal, time sel or item sel)
++SWS/AdamWathan: Record Conditional (normal/time sel/item sel, automatically group simultaneously recorded items)
++SWS/AdamWathan: Trim selected items to selection or cursor (crop)
++SWS/AdamWathan: Trim to selected items to fill selection
+
+Fixed bug in "SWS/AdamWathan: Fade in/out/crossfade…" where fade wouldn't be created if item was at 0.0 on the timeline
+Fixed some (small) memory leaks when closing projects
+
+!v1.8.2 #12 (October 31, 2010)
+Fix for issue 203: crashes with PiP vs Live Configs.
+Fixed Live Configs not updated when switching project tabs
+Snapshots: faster
+
+!v1.8.2 #11 (October 30, 2010)
+Fixed bug with FX chain view/actions: double click, apply actions, etc.
+
+!v1.8.2 #10 (October 29, 2010)
 Fixed last step of undo zoom sometimes going "nowhere".
 "SWS/AdamWathan: Fade in/out/crossfade selected area of selected items" now fades in/out to edit cursor if the edit cursor is inside the item and there is no time selection touching the item. It also "crops" the fade in/out to the time selection of a selected item if the selection is completely contained within the item.
 "SWS/AdamWathan: Record Conditional (normal record mode unless time sel exists, then autopunch)" now doesn't change modes if the current mode is "Auto Punch Selected Items".

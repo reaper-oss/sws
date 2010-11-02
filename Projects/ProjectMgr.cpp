@@ -31,7 +31,7 @@
 #include "ProjectList.h"
 
 // Globals
-static SWSProjConfig<WDL_PtrList<WDL_String> > g_relatedProjects;
+static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<WDL_String> > g_relatedProjects;
 
 #define DELWINDOW_POS_KEY "DelRelatedProjectWindowPosition"
 

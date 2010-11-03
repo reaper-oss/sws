@@ -151,7 +151,7 @@ int ParsePatch(
 {
 	return ParsePatchCore(true, _mode, _depth, _expectedParent, 
 		_keyWord, _numTokens, _occurence, 
-		_tokenPos, _value,_valueExcept);
+		_tokenPos, _value, _valueExcept, _breakingKeyword);
 }
 
 // See ParsePatchCore() comments
@@ -169,7 +169,7 @@ int Parse(
 {
 	return ParsePatchCore(false, _mode, _depth, _expectedParent, 
 		_keyWord, _numTokens, _occurence, 
-		_tokenPos, _value,_valueExcept);
+		_tokenPos, _value, _valueExcept, _breakingKeyword);
 }
 
 void* GetObject() {
@@ -804,7 +804,7 @@ int ParsePatchCore(
 				}
 				occurence++;
 			}
-			else if (!subChunkKeyword && _keyWord && _breakingKeyword && !strcmp(_keyWord, _breakingKeyword))
+			else if (!subChunkKeyword && _keyWord && _breakingKeyword && !strcmp(keyword, _breakingKeyword))
 			{
 				m_breakParsePatch = true;
 			}

@@ -1,3 +1,7 @@
+New action
++SWS/S&M: Simulate left mouse click at cursor position (Win only)
+Some S&M actions run faster
+
 !v1.8.5 #4 (November 3, 2010)
 Issue 206: Fixed action "Xenakios/SWS: Set fades of selected items to configuration B"
 

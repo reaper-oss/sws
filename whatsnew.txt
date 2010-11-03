@@ -1,4 +1,4 @@
-!v1.8.5 #3 (November 3, 2010)
+!v1.8.5 #4 (November 3, 2010)
 Issue 206: Fixed action "Xenakios/SWS: Set fades of selected items to configuration B"
 
 !v1.8.5 #2 (November 2, 2010)

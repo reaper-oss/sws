@@ -541,6 +541,7 @@
 				981007170F4768020072D712 /* sws_extension.rc_mac_menu */,
 				981006E90F4768020072D712 /* sws_util.cpp */,
 				981006EA0F4768020072D712 /* sws_util.h */,
+				98E8A0AF0F9123F900FC657D /* sws_util.mm */,
 				229AC7E4108F891700E4A962 /* sws_wnd.cpp */,
 				229AC7E5108F891700E4A962 /* sws_wnd.h */,
 				981006D00F4768010072D712 /* TimeState.cpp */,
@@ -789,7 +790,6 @@
 			children = (
 				22B671361091DDC700C494D0 /* swell-misc.mm */,
 				22B671331091DD2A00C494D0 /* swell-internal.h */,
-				98E8A0AF0F9123F900FC657D /* sws_util.mm */,
 				9882DB870F6D961100BD2BC7 /* swell-dlggen.h */,
 				98DDBE120F5B60F1003E9B2C /* swell-menu.mm */,
 				98B408A20F5B544A00865A09 /* swell.cpp */,
@@ -927,7 +927,6 @@
 			isa = PBXProject;
 			buildConfigurationList = 1DEB914E08733D8E0010E9CD /* Build configuration list for PBXProject "reaper_sws" */;
 			compatibilityVersion = "Xcode 3.1";
-			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				English,

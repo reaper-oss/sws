@@ -131,7 +131,9 @@ public:
 			void *pcurenv= GetSelectedTrackEnvelope(Enum_Projects(-1,0,0));
 			if (pcurenv)
 			{
-				SWS_GetSetObjectState(pcurenv,(char*)m_newenvstate.str().c_str());
+				WDL_String str; // Prob should convert m_newenvstate to use WDL_String
+				str.Set(m_newenvstate.str().c_str());
+				SWS_GetSetObjectState(pcurenv, &str);
 			}
 		}
 	}

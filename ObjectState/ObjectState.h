@@ -43,10 +43,9 @@ private:
 	WDL_PtrList<char> m_orig;
 };
 
-char* SWS_GetSetObjectState(void* obj, const char* str);
+char* SWS_GetSetObjectState(void* obj, WDL_String* str);
 void SWS_FreeHeapPtr(void* ptr);
 void SWS_CacheObjectState(bool bStart);
-ObjectStateCache* SWS_GetCache();
 
 bool GetChunkLine(const char* chunk, char* line, int iLineMax, int* pos, bool bNewLine);
 void AppendChunkLine(WDL_String* chunk, const char* line);

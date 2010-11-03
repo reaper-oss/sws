@@ -914,13 +914,9 @@ void ZoomToRect(HWND hTrackView, RECT* rZoom, double dX1, double dX2)
 
 static bool g_bZooming = false;
 static WNDPROC g_ReaperTrackWndProc = NULL;
-#ifdef _WIN32
 static HCURSOR g_hZoomInCur = NULL;
 static HCURSOR g_hZoomOutCur = NULL;
 static HCURSOR g_hZoomUndoCur = NULL;
-#else
-static HCURSOR g_hZoomCur = NULL;
-#endif
 
 // Zoom tool Prefs
 // (defaults are actually set in ZoomInit)
@@ -1225,7 +1221,7 @@ static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 				CheckDlgButton(hwndDlg, IDC_DRAGUP_UNZOOM, BST_CHECKED);
 			else
 #else
-			ShowWindow(GetDlgItem(hwndDlg, IDC_UNZOOMMODE), SW_HIDE);
+			ShowWindow(GetDlgItem(hwndDlg, IDC_DRAGUP_UNZOOM), SW_HIDE);
 #endif
 			if (g_bDragUpUndo)
 				CheckDlgButton(hwndDlg, IDC_DRAGUP_UNDO, BST_CHECKED);
@@ -1404,7 +1400,9 @@ int ZoomInit()
 	g_hZoomOutCur  = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMOUT));
 	g_hZoomUndoCur = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMUNDO));
 #else
-	g_hZoomCur = LoadCursor(g_hInst, IDC_ARROW);
+	g_hZoomInCur   = SWS_LoadCursor(IDC_ZOOMIN);
+	g_hZoomOutCur  = SWS_LoadCursor(IDC_ZOOMOUT);
+	g_hZoomUndoCur = SWS_LoadCursor(IDC_ZOOMUNDO);
 #endif
 
 	// Restore prefs

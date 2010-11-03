@@ -95,39 +95,28 @@ char* ObjectStateCache::GetSetObjState(void* obj, const char* str)
 
 ObjectStateCache* g_objStateCache = NULL;
 
-
-char* SWS_GetSetObjectState(void* obj, const char* str)
+char* SWS_GetSetObjectState(void* obj, WDL_String* str)
 {
 	char* ret;
-
+	
 	if (g_objStateCache)
-		ret = g_objStateCache->GetSetObjState(obj, str);
+		ret = g_objStateCache->GetSetObjState(obj, str ? str->Get() : NULL);
 	else
 	{
 		if (str)
-		{
-			char* tmp = _strdup(str); // unfortunately str is const char*
-			if (tmp)
-			{
-				RemoveAllIds(tmp);
-				ret = GetSetObjectState(obj, tmp);
-				free(tmp);
-			}
-			else
-				ret = GetSetObjectState(obj, str);
-		}
-		else
-			ret = GetSetObjectState(obj, str);
+			RemoveAllIds(str);
+		ret = GetSetObjectState(obj, str ? str->Get() : NULL);
 	}
 
 #ifdef GOS_DEBUG
 	char debugStr[4096];
-	_snprintf(debugStr, 4096, "GetSetObjectState call, obj %08X, IN:\n%s\n\nOUT:\n%s\n\n", obj, str ? str : "NULL", ret ? ret : "NULL");
+	_snprintf(debugStr, 4096, "GetSetObjectState call, obj %08X, IN:\n%s\n\nOUT:\n%s\n\n", obj, str ? str->Get() : "NULL", ret ? ret : "NULL");
 	OutputDebugString(debugStr);
 #endif
 
 	return ret;
 }
+
 
 void SWS_FreeHeapPtr(void* ptr)
 {
@@ -151,11 +140,6 @@ void SWS_CacheObjectState(bool bStart)
 		delete g_objStateCache;
 		g_objStateCache = NULL;
 	}
-}
-
-ObjectStateCache* SWS_GetCache()
-{
-	return g_objStateCache;
 }
 
 // Helper function for parsing object "chunks" into more useful lines

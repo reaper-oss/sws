@@ -152,6 +152,7 @@ void ShowColorChooser(COLORREF initialCol);
 bool GetChosenColor(COLORREF* pColor);
 void HideColorChooser();
 void EnableColumnResize(HWND h);
+HCURSOR SWS_LoadCursor(int id);
 #endif
 
 // Command/action handling, sws_extension.cpp

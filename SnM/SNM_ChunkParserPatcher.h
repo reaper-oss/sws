@@ -257,7 +257,7 @@ bool Commit(bool _force = false)
 			fclose(f);
 		}
 #endif
-		if (!SNM_GetSetObjectState(m_object, m_chunk->Get())) {
+		if (!SNM_GetSetObjectState(m_object, m_chunk)) {
 			SetChunk("", 0);
 			return true;
 		}
@@ -478,15 +478,15 @@ private:
 	WDL_String* m_chunk;
 	bool m_autoCommit;
 
-char* SNM_GetSetObjectState(void* _obj, const char* _str)
+char* SNM_GetSetObjectState(void* _obj, WDL_String* _str)
 {
 #ifdef _SWS_EXTENSION
-	if (SWS_GetCache())
-		return SWS_GetSetObjectState(_obj, _str);
-#endif
+	return SWS_GetSetObjectState(_obj, _str);
+#else
 	if (_str)
 		RemoveIds();
-	return GetSetObjectState(_obj, _str);
+	return GetSetObjectState(_obj, _str->Get());
+#endif
 }
 
 bool WriteChunkLine(WDL_String* _chunkLine, const char* _value, int _tokenPos, LineParser* _lp)

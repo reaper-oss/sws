@@ -253,7 +253,7 @@ void TrackSends::UpdateReaper(MediaTrack* tr, WDL_PtrList<TrackSendFix>* pFix)
 
 	SWS_FreeHeapPtr(trackStr);
 	if (bChanged)
-		SWS_GetSetObjectState(tr, newTrackStr.Get());
+		SWS_GetSetObjectState(tr, &newTrackStr);
 
 	// Check for destination track validity
 	for (int i = 0; i < m_sends.GetSize(); i++)
@@ -327,7 +327,7 @@ void TrackSends::UpdateReaper(MediaTrack* tr, WDL_PtrList<TrackSendFix>* pFix)
 
 		if (trackStr)
 		{
-			SWS_GetSetObjectState(pDest, newTrackStr.Get());
+			SWS_GetSetObjectState(pDest, &newTrackStr);
 			SWS_FreeHeapPtr(trackStr);
 		}
 	}

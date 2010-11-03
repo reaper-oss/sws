@@ -524,7 +524,7 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon)
 		UpdateCustomColors();
 
 	// Check all tracks for matching strings/properties
-	MediaTrack* temp;
+	MediaTrack* temp = NULL;
 	for (int i = 0; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);

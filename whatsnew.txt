@@ -1,3 +1,20 @@
+!v1.8.5 #3 (November 3, 2010)
+Issue 206: Fixed action "Xenakios/SWS: Set fades of selected items to configuration B"
+
+!v1.8.5 #2 (November 2, 2010)
+Fixed some rare PiP crashes.
+Fixed some more small memory leakes when closing projets.
+Thanks Jeffos!
+
+!v1.8.5 #1 (November 2, 2010)
+New actions:
++SWS/AW: Enable/Disable/Toggle relative editing when resizing item edges
++SWS/AW: Enable/Disable/Toggle clear time selection on click in arrange
++SWS/AW: Enable/Disable/Toggle clear loop points on click in ruler
+
+Also renamed all actions to "SWS/AW" to make them easier to read in actions list
+window.
+
 !v1.8.4 #1 (November 1, 2010)
 New actions:
 +SWS/AdamWathan: Enable/Disable/Toggle metronome during playback

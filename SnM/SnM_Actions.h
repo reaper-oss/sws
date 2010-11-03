@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Actions.h
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÃ©dague 
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -163,9 +163,9 @@ public:
 
 template<class PTRTYPE> class SNM_ProjConfig : public SWSProjConfig<PTRTYPE> {
 public:
-	SNM_ProjConfig() : SWSProjConfig() {}
+	SNM_ProjConfig() : SWSProjConfig<PTRTYPE>() {}
 	~SNM_ProjConfig() {}
-	int Find(ReaProject* _pProj) { return m_projects.Find(_pProj); }
+	int Find(ReaProject* _pProj) { return SWSProjConfig<PTRTYPE>::m_projects.Find(_pProj); }
 };
 
 // Custom WDL UIs (SnM_Dlg.cpp)

@@ -85,7 +85,6 @@ protected:
 public:
 	SWSProjConfig() {}
 	virtual ~SWSProjConfig() { Empty(); }
-	~SWSProjConfig() { Empty(); }
 	PTRTYPE* Get()
 	{
 		ReaProject* pProj = Enum_Projects(-1, NULL, 0);

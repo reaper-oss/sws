@@ -380,7 +380,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// Other ------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Let REAPER breathe" }, "S&M_LETBREATHE", letREAPERBreathe, NULL, },
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Simulate left mouse click at cursor position" }, "S&M_MOUSE_L_CLICK", simulateMouseClick, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: [Beta] Simulate left mouse click at cursor position" }, "S&M_MOUSE_L_CLICK", simulateMouseClick, NULL, 0},
 /*
 	{ { DEFACCEL, "SWS/S&M: Simulate left mouse-down at cursor position" }, "S&M_MOUSE_LD_CLICK", simulateMouseClick, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Simulate left mouse-up at cursor position" }, "S&M_MOUSE_LU_CLICK", simulateMouseClick, NULL, 2},

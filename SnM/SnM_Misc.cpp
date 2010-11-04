@@ -48,8 +48,21 @@ void letREAPERBreathe(COMMAND_T* _ct)
 void simulateMouseClick(COMMAND_T* _ct)
 {
 #ifdef _WIN32
+
 	POINT p; // not sure setting the pos is really needed..
 	GetCursorPos(&p);
+	mouse_event(MOUSEEVENTF_LEFTDOWN, p.x, p.y, 0, 0);
+	mouse_event(MOUSEEVENTF_LEFTUP, p.x, p.y, 0, 0);
+			
+	bool waitUp = true;
+	while (waitUp)
+	{
+		MSG msg;
+		if (PeekMessage(&msg, 0, WM_LBUTTONDOWN, WM_LBUTTONDOWN, PM_REMOVE))
+		  waitUp = false;
+		DispatchMessage(&msg);
+	}
+/*
 	switch((int)_ct->user)
 	{
 		// L down/up
@@ -80,6 +93,7 @@ void simulateMouseClick(COMMAND_T* _ct)
 			mouse_event(MOUSEEVENTF_RIGHTUP, p.x, p.y, 0, 0);
 			break;
 	}
+*/
 #endif
 }
 

@@ -1,3 +1,4 @@
+!v1.8.5 #5 (November 3, 2010)
 New action
 +SWS/S&M: Simulate left mouse click at cursor position (Win only)
 Some S&M actions run faster

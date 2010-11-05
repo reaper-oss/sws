@@ -36,6 +36,7 @@ public:
 	void WriteCache();
 	void EmptyCache();
 	char* GetSetObjState(void* obj, const char* str);
+	int m_iUseCount;
 private:
 	WDL_PtrList<void> m_obj;
 	WDL_PtrList<WDL_String> m_str;

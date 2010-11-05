@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "../SnM/SNM_ChunkParserPatcher.h"
+#include "../Utility/SectionLock.h"
 
 // GetSetObjectState can take a very long time to read and/or write, especially with some FX.
 // To mitigate these issues when dealing with operations that require many reads/writes,
@@ -38,7 +39,7 @@
 
 //#define GOS_DEBUG
 
-ObjectStateCache::ObjectStateCache()
+ObjectStateCache::ObjectStateCache():m_iUseCount(1)
 {
 }
 
@@ -138,16 +139,28 @@ void SWS_FreeHeapPtr(void* ptr)
 
 void SWS_CacheObjectState(bool bStart)
 {
+	static HANDLE mutex;
 	if (bStart)
 	{
-		delete g_objStateCache;
-		g_objStateCache = new ObjectStateCache;
+		SectionLock lock(mutex);
+		if (g_objStateCache)
+			g_objStateCache->m_iUseCount++;
+		else
+			g_objStateCache = new ObjectStateCache;
 	}
 	else if (g_objStateCache)
 	{
-		g_objStateCache->WriteCache();
-		delete g_objStateCache;
-		g_objStateCache = NULL;
+		SectionLock lock(mutex);
+		if (g_objStateCache->m_iUseCount <= 1)
+		{
+			ObjectStateCache* cache = g_objStateCache;
+			g_objStateCache = NULL;
+			lock.Unlock(); // Don't maintain the lock when writing the cache
+			cache->WriteCache();
+			delete cache;
+		}
+		else
+			g_objStateCache->m_iUseCount--;
 	}
 }
 

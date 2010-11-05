@@ -1,3 +1,5 @@
+!v1.8.5 #7 (November 5, 2010)
+Issue 189: Hopefully solved Snapshot crashes with Kontakt and others!
 Simulate left mouse click at cursor position (again!): safer, fixed re-triggering issue.
 
 !v1.8.5 #6 (November 4, 2010)

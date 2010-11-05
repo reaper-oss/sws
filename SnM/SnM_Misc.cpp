@@ -47,13 +47,12 @@ void letREAPERBreathe(COMMAND_T* _ct)
 
 void simulateMouseClick(COMMAND_T* _ct)
 {
-#ifdef _WIN32
-
 	POINT p; // not sure setting the pos is really needed..
 	GetCursorPos(&p);
 	mouse_event(MOUSEEVENTF_LEFTDOWN, p.x, p.y, 0, 0);
 	mouse_event(MOUSEEVENTF_LEFTUP, p.x, p.y, 0, 0);
 			
+#ifdef _WIN32
 	bool waitUp = true;
 	while (waitUp)
 	{
@@ -62,6 +61,7 @@ void simulateMouseClick(COMMAND_T* _ct)
 		  waitUp = false;
 		DispatchMessage(&msg);
 	}
+#endif
 /*
 	switch((int)_ct->user)
 	{
@@ -94,7 +94,6 @@ void simulateMouseClick(COMMAND_T* _ct)
 			break;
 	}
 */
-#endif
 }
 
 // Create the Wiki ALR summary for the current section displayed in the "Action" dlg 

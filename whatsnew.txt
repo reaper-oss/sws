@@ -1,8 +1,9 @@
+!v1.8.5 #6 (November 4, 2010)
 Fixed issue 208
+Simulate left mouse click at cursor position for OSX, but still beta
 
 !v1.8.5 #5 (November 3, 2010)
-New action
-+SWS/S&M: Simulate left mouse click at cursor position (Win only)
+New action "SWS/S&M: Simulate left mouse click at cursor position (Win only)"
 Some S&M actions run faster
 
 !v1.8.5 #4 (November 3, 2010)

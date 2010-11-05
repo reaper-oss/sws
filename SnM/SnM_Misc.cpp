@@ -30,6 +30,10 @@
 #include "SnM_Actions.h"
 #include "SNM_ChunkParserPatcher.h"
 
+#ifdef _WIN32
+#pragma comment (lib, "winmm.lib")
+#endif
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Misc	actions
@@ -45,55 +49,37 @@ void letREAPERBreathe(COMMAND_T* _ct)
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SNM_WAIT), GetForegroundWindow(), WaitDlgProc);
 }
 
+void winWaitForEvent(DWORD _event, DWORD _timeOut, DWORD _minReTrigger)
+{
+#ifdef _WIN32
+	static DWORD waitTime = 0;
+//	if ((timeGetTime() - waitTime) > _minReTrigger)
+	{
+		waitTime = timeGetTime();
+		while((timeGetTime() - waitTime) < _timeOut) // for safety
+		{
+			MSG msg;
+			if(PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE))
+			{
+				// new message to be processed
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+				if(msg.message == _event)
+					break;
+			}
+		}
+	}
+#endif
+}
+
+// http://forum.cockos.com/showthread.php?p=612065
 void simulateMouseClick(COMMAND_T* _ct)
 {
 	POINT p; // not sure setting the pos is really needed..
 	GetCursorPos(&p);
 	mouse_event(MOUSEEVENTF_LEFTDOWN, p.x, p.y, 0, 0);
 	mouse_event(MOUSEEVENTF_LEFTUP, p.x, p.y, 0, 0);
-			
-#ifdef _WIN32
-	bool waitUp = true;
-	while (waitUp)
-	{
-		MSG msg;
-		if (PeekMessage(&msg, 0, WM_LBUTTONDOWN, WM_LBUTTONDOWN, PM_REMOVE))
-		  waitUp = false;
-		DispatchMessage(&msg);
-	}
-#endif
-/*
-	switch((int)_ct->user)
-	{
-		// L down/up
-		case 0:
-			mouse_event(MOUSEEVENTF_LEFTDOWN, p.x, p.y, 0, 0);
-			mouse_event(MOUSEEVENTF_LEFTUP, p.x, p.y, 0, 0); 
-			break;
-		// L down
-		case 1:
-			mouse_event(MOUSEEVENTF_LEFTDOWN, p.x, p.y, 0, 0);
-			break;
-		// L up
-		case 2:
-			mouse_event(MOUSEEVENTF_LEFTUP, p.x, p.y, 0, 0);
-			break;
-
-		// R down/up
-		case 3:
-			mouse_event(MOUSEEVENTF_RIGHTDOWN, p.x, p.y, 0, 0);
-			mouse_event(MOUSEEVENTF_RIGHTUP, p.x, p.y, 0, 0); 
-			break;
-		// R down
-		case 4:
-			mouse_event(MOUSEEVENTF_RIGHTDOWN, p.x, p.y, 0, 0);
-			break;
-		// R up
-		case 5:
-			mouse_event(MOUSEEVENTF_RIGHTUP, p.x, p.y, 0, 0);
-			break;
-	}
-*/
+	winWaitForEvent(WM_LBUTTONUP);
 }
 
 // Create the Wiki ALR summary for the current section displayed in the "Action" dlg 

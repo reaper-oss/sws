@@ -405,6 +405,7 @@ void MESaveCCLanes(COMMAND_T* _ct);
 
 // *** SnM_Misc.cpp ***
 void letREAPERBreathe(COMMAND_T* _ct);
+void winWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
 void simulateMouseClick(COMMAND_T* _ct);
 void dumpWikiActions2(COMMAND_T* _ct);
 void SNM_ShowConsoleMsg(const char* _msg, const char* _title="", bool _clear=true); 

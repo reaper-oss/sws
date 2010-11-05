@@ -295,4 +295,5 @@ void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwEx
 		CGEventPost(kCGHIDEventTap, e);
 		CFRelease(e);
 	}
+}
 

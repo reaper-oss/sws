@@ -87,7 +87,9 @@ public:
 	virtual ~SWSProjConfig() { Empty(); }
 	PTRTYPE* Get()
 	{
-		ReaProject* pProj = Enum_Projects(-1, NULL, 0);
+		ReaProject* pProj = (ReaProject*)GetCurrentProjectInLoadSave();
+		if (!pProj) // If not in a project load/save context, above returns NULL
+			pProj = Enum_Projects(-1, NULL, 0);
 		int i = m_projects.Find(pProj);
 		if (i >= 0)
 			return m_data.Get(i);

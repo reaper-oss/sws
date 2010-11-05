@@ -78,8 +78,8 @@ void DoSetItemFadesConfLen(COMMAND_T* t)
 			dNewFadeOutLen = (dItemLen - dNoFadeTime) * dFadeOutLen / (dFadeInLen + dFadeOutLen);
 		}
 
-		GetSetMediaItemInfo(items.Get()[i], "C_FADEINSHAPE",  &g_command_params.CommandFadeInShapeA);
-		GetSetMediaItemInfo(items.Get()[i], "C_FADEOUTSHAPE", &g_command_params.CommandFadeOutShapeA);
+		GetSetMediaItemInfo(items.Get()[i], "C_FADEINSHAPE",  &(t->user == 0 ? g_command_params.CommandFadeInShapeA  : g_command_params.CommandFadeInShapeB));
+		GetSetMediaItemInfo(items.Get()[i], "C_FADEOUTSHAPE", &(t->user == 0 ? g_command_params.CommandFadeOutShapeA : g_command_params.CommandFadeOutShapeB));
 		GetSetMediaItemInfo(items.Get()[i], "D_FADEINLEN",  &dNewFadeInLen);
 		GetSetMediaItemInfo(items.Get()[i], "D_FADEOUTLEN", &dNewFadeOutLen);
 		GetSetMediaItemInfo(items.Get()[i], "D_FADEINLEN_AUTO",  &dZero);

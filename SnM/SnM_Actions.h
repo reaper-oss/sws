@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Actions.h
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÃ©dague 
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -161,6 +161,12 @@ public:
 	WDL_String m_shortPath;
 };
 
+template<class PTRTYPE> class SNM_ProjConfig : public SWSProjConfig<PTRTYPE> {
+public:
+	SNM_ProjConfig() : SWSProjConfig<PTRTYPE>() {}
+	~SNM_ProjConfig() {}
+	int Find(ReaProject* _pProj) { return SWSProjConfig<PTRTYPE>::m_projects.Find(_pProj); }
+};
 
 // Custom WDL UIs (SnM_Dlg.cpp)
 
@@ -180,7 +186,7 @@ class SNM_VirtualComboBox : public WDL_VirtualComboBox
 //extern COMMAND_T g_SNM_cmdTable[];									// SnM_Actions.cpp
 extern WDL_String g_SNMiniFilename;									// SnM_Actions.cpp
 extern WDL_PtrList_DeleteOnDestroy<FXChainSlotItem> g_fxChainFiles;	// SnM_FXChain.cpp
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;	// SnM_NotesHelpView.cpp
+extern SNM_ProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;	// SnM_NotesHelpView.cpp
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -399,6 +405,7 @@ void MESaveCCLanes(COMMAND_T* _ct);
 
 // *** SnM_Misc.cpp ***
 void letREAPERBreathe(COMMAND_T* _ct);
+void simulateMouseClick(COMMAND_T* _ct);
 void dumpWikiActions2(COMMAND_T* _ct);
 void SNM_ShowConsoleMsg(const char* _msg, const char* _title="", bool _clear=true); 
 bool SNM_DeleteFile(const char* _filename);

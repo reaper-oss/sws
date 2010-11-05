@@ -322,7 +322,7 @@ bool SNM_FXChainTrackPatcher::NotifyChunkLine(int _mode,
 	WDL_String* _newChunk, int _updates)
 {
 	bool update = m_removingFxChain;
-	if(m_fxChain && _mode == -1 && !strcmp(_lp->gettoken_str(0), "MAINSEND"))
+	if(_mode == -1 && !strcmp(_lp->gettoken_str(0), "MAINSEND"))
 	{
 		update=true;
 		_newChunk->Append(_parsedLine); // write the "MAINSEND" line
@@ -332,7 +332,8 @@ bool SNM_FXChainTrackPatcher::NotifyChunkLine(int _mode,
 		_newChunk->Append("SHOW 0\n"); // un-float fx chain window
 		_newChunk->Append("LASTSEL 1\n");
 		_newChunk->Append("DOCKED 0\n");
-		_newChunk->Append(m_fxChain->Get());
+		if (m_fxChain)
+			_newChunk->Append(m_fxChain->Get());
 		_newChunk->Append(">\n");
 	}
 	return update; 

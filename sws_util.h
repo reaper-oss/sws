@@ -78,13 +78,13 @@ typedef struct COMMAND_T
 
 template<class PTRTYPE> class SWSProjConfig
 {
-private:
+protected:
 	WDL_PtrList<void> m_projects;
 	WDL_PtrList<PTRTYPE> m_data;
 
 public:
 	SWSProjConfig() {}
-	~SWSProjConfig() { Empty(); }
+	virtual ~SWSProjConfig() { Empty(); }
 	PTRTYPE* Get()
 	{
 		ReaProject* pProj = Enum_Projects(-1, NULL, 0);
@@ -109,8 +109,8 @@ public:
 			{
 				int j = 0;
 				ReaProject* pProj;
-				while ((pProj = Enum_Projects(j, NULL, 0)))
-					if (m_projects.Get(j++) == pProj)
+				while ((pProj = Enum_Projects(j++, NULL, 0)))
+					if (m_projects.Get(i) == pProj)
 						break;
 				if (!pProj)
 				{
@@ -153,6 +153,11 @@ bool GetChosenColor(COLORREF* pColor);
 void HideColorChooser();
 void EnableColumnResize(HWND h);
 HCURSOR SWS_LoadCursor(int id);
+#define MOUSEEVENTF_LEFTDOWN    0x0002 /* left button down */
+#define MOUSEEVENTF_LEFTUP      0x0004 /* left button up */
+#define MOUSEEVENTF_RIGHTDOWN   0x0008 /* right button down */
+#define MOUSEEVENTF_RIGHTUP     0x0010 /* right button up */
+void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwExtraInfo);
 #endif
 
 // Command/action handling, sws_extension.cpp

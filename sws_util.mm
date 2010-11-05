@@ -277,3 +277,22 @@ HCURSOR SWS_LoadCursor(int id)
   return (HCURSOR)*pc;
 }
 
+void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwExtraInfo)
+{
+	CGEventRef e = NULL;
+	int h = CGDisplayPixelsHigh(CGMainDisplayID());
+	
+	switch(dwFlags)
+	{
+		case MOUSEEVENTF_LEFTDOWN:  e = CGEventCreateMouseEvent(NULL, kCGEventLeftMouseDown,  CGPointMake(dx, h-dy), kCGMouseButtonLeft);  break;
+		case MOUSEEVENTF_LEFTUP:    e = CGEventCreateMouseEvent(NULL, kCGEventLeftMouseUp,    CGPointMake(dx, h-dy), kCGMouseButtonLeft);  break;
+		case MOUSEEVENTF_RIGHTDOWN: e = CGEventCreateMouseEvent(NULL, kCGEventRightMouseDown, CGPointMake(dx, h-dy), kCGMouseButtonRight); break;
+		case MOUSEEVENTF_RIGHTUP:   e = CGEventCreateMouseEvent(NULL, kCGEventRightMouseUp,   CGPointMake(dx, h-dy), kCGMouseButtonRight); break;
+	}
+		
+	if (e)
+	{
+		CGEventPost(kCGHIDEventTap, e);
+		CFRelease(e);
+	}
+

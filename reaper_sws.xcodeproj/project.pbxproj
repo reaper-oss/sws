@@ -89,7 +89,6 @@
 		229AC802108FB3B800E4A962 /* Color.h in Headers */ = {isa = PBXBuildFile; fileRef = 981007020F4768020072D712 /* Color.h */; };
 		229AC803108FB3BD00E4A962 /* MarkerListClass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006F60F4768020072D712 /* MarkerListClass.cpp */; };
 		229AC804108FB3BE00E4A962 /* MarkerListClass.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006F70F4768020072D712 /* MarkerListClass.h */; };
-		229AC80C108FBFCB00E4A962 /* SectionLock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC80A108FBFCB00E4A962 /* SectionLock.cpp */; };
 		229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC80B108FBFCB00E4A962 /* SectionLock.h */; };
 		22A664BB10BC6FE100F0B239 /* sha.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A664BA10BC6FE100F0B239 /* sha.cpp */; };
 		22A79CFA10B4350000A78170 /* MediaPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A79CF810B4350000A78170 /* MediaPool.cpp */; };
@@ -295,7 +294,6 @@
 		229AC7F3108F985C00E4A962 /* MarkerList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerList.h; path = MarkerList/MarkerList.h; sourceTree = "<group>"; };
 		229AC7F4108F985C00E4A962 /* MarkerListActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MarkerListActions.cpp; path = MarkerList/MarkerListActions.cpp; sourceTree = "<group>"; };
 		229AC7F5108F985C00E4A962 /* MarkerListActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerListActions.h; path = MarkerList/MarkerListActions.h; sourceTree = "<group>"; };
-		229AC80A108FBFCB00E4A962 /* SectionLock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SectionLock.cpp; path = Utility/SectionLock.cpp; sourceTree = "<group>"; };
 		229AC80B108FBFCB00E4A962 /* SectionLock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SectionLock.h; path = Utility/SectionLock.h; sourceTree = "<group>"; };
 		22A664BA10BC6FE100F0B239 /* sha.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sha.cpp; path = ../WDL/sha.cpp; sourceTree = SOURCE_ROOT; };
 		22A79CF810B4350000A78170 /* MediaPool.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MediaPool.cpp; path = MediaPool/MediaPool.cpp; sourceTree = "<group>"; };
@@ -525,7 +523,6 @@
 				9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */,
 				981007030F4768020072D712 /* reaper_sws.xcodeproj */,
 				981006FF0F4768020072D712 /* resource.h */,
-				229AC80A108FBFCB00E4A962 /* SectionLock.cpp */,
 				229AC80B108FBFCB00E4A962 /* SectionLock.h */,
 				981006E30F4768020072D712 /* Snapshots.cpp */,
 				981006E50F4768020072D712 /* Snapshots.h */,
@@ -1035,7 +1032,6 @@
 				229AC7F8108F985C00E4A962 /* MarkerListActions.cpp in Sources */,
 				229AC7FE108FB39600E4A962 /* Color.cpp in Sources */,
 				229AC803108FB3BD00E4A962 /* MarkerListClass.cpp in Sources */,
-				229AC80C108FBFCB00E4A962 /* SectionLock.cpp in Sources */,
 				2296249010A3A22500A1090C /* lice.cpp in Sources */,
 				2296249110A3A22500A1090C /* lice_line.cpp in Sources */,
 				22C769EB10B0F00800774777 /* TrackFX.cpp in Sources */,

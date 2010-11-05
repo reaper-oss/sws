@@ -127,18 +127,28 @@ void SWS_FreeHeapPtr(void* ptr)
 
 void SWS_CacheObjectState(bool bStart)
 {
+	static SWS_Mutex mutex;
 	if (bStart)
 	{
+		SWS_SectionLock lock(&mutex);
 		if (g_objStateCache)
 			g_objStateCache->m_iUseCount++;
 		else
 			g_objStateCache = new ObjectStateCache;
 	}
-	else if (g_objStateCache && --g_objStateCache->m_iUseCount == 0)
+	else if (g_objStateCache)
 	{
-		g_objStateCache->WriteCache();
-		delete g_objStateCache;
-		g_objStateCache = NULL;
+		SWS_SectionLock lock(&mutex);
+		if (g_objStateCache->m_iUseCount <= 1)
+		{
+			ObjectStateCache* cache = g_objStateCache;
+			g_objStateCache = NULL;
+			lock.Unlock(); // Don't maintain the lock when writing the cache
+			cache->WriteCache();
+			delete cache;
+		}
+		else
+			g_objStateCache->m_iUseCount--;
 	}
 }
 

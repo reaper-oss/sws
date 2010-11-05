@@ -90,7 +90,6 @@ MarkerList::MarkerList(const char* name, bool bGetCurList)
 	else
 		m_name = NULL;
 	m_items = NULL;
-	m_hLock = NULL;
 
 	if (bGetCurList)
 		BuildFromReaper();
@@ -98,7 +97,7 @@ MarkerList::MarkerList(const char* name, bool bGetCurList)
 
 MarkerList::~MarkerList()
 {
-	SectionLock lock(m_hLock);
+	SWS_SectionLock lock(&m_mutex);
 	m_items.Empty(true);
 	delete[] m_name;
 }
@@ -106,7 +105,7 @@ MarkerList::~MarkerList()
 // return true if something has changed!
 bool MarkerList::BuildFromReaper()
 {
-	SectionLock lock(m_hLock);
+	SWS_SectionLock lock(&m_mutex);
 
 	// Instead of emptying and starting over, try to just add or delete for simple cases (added/deleted marker)
 	// markers moved in time are reallocated
@@ -150,7 +149,7 @@ void MarkerList::UpdateReaper()
 	while (EnumProjectMarkers(0, &bReg, NULL, NULL, NULL, &iID))
 		DeleteProjectMarker(NULL, iID, bReg);
 
-	SectionLock lock(m_hLock);
+	SWS_SectionLock lock(&m_mutex);
 
 	for (int i = 0; i < m_items.GetSize(); i++)
 	{
@@ -166,7 +165,7 @@ int g_iClipFormat = -1;
 
 void MarkerList::ListToClipboard()
 {
-	SectionLock lock(m_hLock);
+	SWS_SectionLock lock(&m_mutex);
 	if (OpenClipboard(g_hwndParent))
 	{
 		int iSize = ApproxSize()*2;
@@ -203,7 +202,7 @@ void MarkerList::ListToClipboard()
 
 void MarkerList::ClipboardToList()
 {
-	SectionLock lock(m_hLock);
+	SWS_SectionLock lock(&m_mutex);
 	//if (IsClipboardFormatAvailable(CF_TEXT) && OpenClipboard(g_hwndParent))
 	if (OpenClipboard(g_hwndParent))
 	{
@@ -246,7 +245,7 @@ void MarkerList::ClipboardToList()
 void MarkerList::ExportToClipboard(const char* format)
 {
 #ifdef _WIN32
-	SectionLock lock(m_hLock);
+	SWS_SectionLock lock(&m_mutex);
 	int iLen = ApproxSize()*2;
 	char* str = new char[iLen];
 

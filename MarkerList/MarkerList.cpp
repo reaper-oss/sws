@@ -26,7 +26,6 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../Utility/SectionLock.h"
 #include "MarkerListClass.h"
 #include "MarkerList.h"
 #include "MarkerListActions.h"
@@ -206,7 +205,7 @@ void SWS_MarkerListWnd::Update(bool bForce)
 
 	if (m_pLists.GetSize() && bChanged)
 	{
-		SectionLock lock(g_curList->m_hLock);
+		SWS_SectionLock lock(&g_curList->m_mutex);
 		m_pLists.Get(0)->Update();
 	}
 }

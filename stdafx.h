@@ -84,6 +84,7 @@
 #include "reaper/icontheme.h"
 #include "reaper/reaper_plugin.h"
 #include "reaper/sws_rpf_wrapper.h"
+#include "Utility/SectionLock.h"
 #include "sws_util.h"
 #include "sws_wnd.h"
 #include "resource.h"

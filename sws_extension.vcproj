@@ -541,10 +541,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\Utility\SectionLock.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Snapshots\SnapshotClass.cpp"
 				>
 			</File>

@@ -62,5 +62,5 @@ public:
 
 	char* m_name;
 	WDL_PtrList<MarkerItem> m_items;
-	HANDLE m_hLock;
+	SWS_Mutex m_mutex;
 };

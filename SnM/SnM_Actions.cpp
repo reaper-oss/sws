@@ -29,7 +29,6 @@
 #include "SnM_Actions.h"
 #include "SNM_NotesHelpView.h"
 #include "SNM_MidiLiveView.h"
-#include "../Utility/SectionLock.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -600,14 +599,14 @@ void SnMExit()
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_jobs;
-HANDLE g_jobsLock;
+SWS_Mutex g_jobsLock;
 
 void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job) 
 {
 	if (!_job)
 		return;
 
-	SectionLock lock(g_jobsLock);
+	SWS_SectionLock lock(&g_jobsLock);
 	bool found = false;
 	for (int i=0; i<g_jobs.GetSize(); i++)
 	{
@@ -627,7 +626,7 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job)
 
 void DeleteScheduledJob(int _id) 
 {
-	SectionLock lock(g_jobsLock);
+	SWS_SectionLock lock(&g_jobsLock);
 	for (int i=0; i<g_jobs.GetSize(); i++)
 	{
 		SNM_ScheduledJob* job = g_jobs.Get(i);
@@ -648,7 +647,7 @@ extern SnM_MidiLiveWnd* g_pMidiLiveWnd;
 
 void SnMCSurfRun()
 {
-	SectionLock lock(g_jobsLock);
+	SWS_SectionLock lock(&g_jobsLock);
 	if (g_jobs.GetSize())
 	{
 		for (int i=g_jobs.GetSize()-1; i >=0; i--)

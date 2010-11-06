@@ -77,11 +77,14 @@ FileSlotList g_trTemplateFiles(SNM_SLOT_TYPE_TR_TEMPLATES, "TrackTemplates", "tr
 
 WDL_PtrList<FileSlotList> g_filesLists;
 
+//JFB TODO -> member attributes
 int g_type = SNM_SLOT_TYPE_FX_CHAINS;
 int g_dblClickType[SNM_SLOT_TYPE_COUNT];
 int g_dblClickTo = 0; // for fx chains only
 
 FileSlotList* GetCurList() {return g_filesLists.Get(g_type);}
+
+WDL_PtrList<PathSlotItem> g_dragPathSlotItems; 
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -209,7 +212,9 @@ void SNM_ResourceView::OnBeginDrag(LPARAM item)
 	li.stateMask = LVIS_SELECTED;
 	li.iSubItem = 0;
 	
-	// Get the amount of memory needed for the file list
+	// Sore dragged items (for internal d'n'd) 
+	// +g et the amount of memory needed for the file list
+	g_dragPathSlotItems.Empty(false);
 	int iMemNeeded = 0;
 	for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
 	{
@@ -218,7 +223,11 @@ void SNM_ResourceView::OnBeginDrag(LPARAM item)
 		if (li.state & LVIS_SELECTED)
 		{
 			PathSlotItem* pItem = (PathSlotItem*)li.lParam;
-			iMemNeeded += (int)(pItem->m_fullPath.GetLength() + 1);
+			if (pItem)
+			{
+				iMemNeeded += (int)(pItem->m_fullPath.GetLength() + 1);
+				g_dragPathSlotItems.Add(pItem);
+			}
 		}
 	}
 	if (!iMemNeeded)
@@ -227,7 +236,14 @@ void SNM_ResourceView::OnBeginDrag(LPARAM item)
 	iMemNeeded += sizeof(DROPFILES) + 1;
 
 	HGLOBAL hgDrop = GlobalAlloc (GHND | GMEM_SHARE, iMemNeeded);
-	DROPFILES* pDrop = (DROPFILES*)GlobalLock(hgDrop); // 'spose should do some error checking...
+	DROPFILES* pDrop = NULL;
+	if (hgDrop)
+		pDrop = (DROPFILES*)GlobalLock(hgDrop); // 'spose should do some error checking...
+	
+	// for safety..
+	if (!hgDrop || !pDrop)
+		return;
+
 	pDrop->pFiles = sizeof(DROPFILES);
 	pDrop->fWide = false;
 	char* pBuf = (char*)pDrop + pDrop->pFiles;
@@ -390,7 +406,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			InsertAtSelectedSlot(true);
 			break;
 		case DEL_SLOT_MSG:
-			DeleteSelectedSlot(true);
+			DeleteSelectedSlots(true);
 			break;
 
 		case LOAD_MSG:
@@ -555,7 +571,7 @@ int SNM_ResourceWnd::OnKey(MSG* msg, int iKeyState)
 {
 	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState)
 	{
-		DeleteSelectedSlot(true);
+		DeleteSelectedSlots(true);
 		return 1;
 	}
 	return 0;
@@ -564,6 +580,8 @@ int SNM_ResourceWnd::OnKey(MSG* msg, int iKeyState)
 //JFB more than "shared" with Tim's MediaPool => factorize ?
 void SNM_ResourceWnd::OnDroppedFiles(HDROP h)
 {
+	int dropped = 0; //nb of successfully dropped files
+
 	// Check to see if we dropped on a group
 	POINT pt;
 	DragQueryPoint(h, &pt);
@@ -574,6 +592,7 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP h)
 	pt.y += r.top;
 
 	PathSlotItem* pItem = (PathSlotItem*)m_pLists.Get(0)->GetHitItem(pt.x, pt.y, NULL);
+	int dropSlot = pItem ? pItem->m_slot : -1; // JFB!! buggy: should follow slot updates!
 	if (pItem)
 	{
 		int slot = pItem->m_slot;
@@ -593,15 +612,34 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP h)
 			slot = pItem->m_slot;
 			DragQueryFile(h, i, cFile, BUFFER_SIZE);
 			char* pExt = strrchr(cFile, '.');
+//JFB5			if (*cFile == '\0' || (pExt && !_stricmp(pExt+1, "rfxchain")))
 			if (pExt && !_stricmp(pExt+1, GetCurList()->m_ext.Get()))
 			{
-				GetCurList()->CheckAndStoreSlot(slot, cFile);
-				pItem = GetCurList()->Get(slot+1); 
+				if (GetCurList()->CheckAndStoreSlot(slot, cFile, false, true)) //JFB5!!!! allow empty slot!?
+				{
+					dropped++;
+					pItem = GetCurList()->Get(slot+1); 
+				}
 			}
 		}
-		Update();
+//JFB5
+		if (dropped)
+		{
+			// internal drag'n'drop: move (=> delete previous slots)
+			for (int i=0; i < g_dragPathSlotItems.GetSize(); i++)
+				for (int j=GetCurList()->GetSize()-1; j >= 0; j--)
+					if (GetCurList()->Get(j) == g_dragPathSlotItems.Get(i))
+						GetCurList()->DeleteSlot(j, false);
+
+			Update();
+
+			// Select item at drop point (n+1 otherwise)
+			if (dropSlot > 0)
+				SelectBySlot(dropSlot);
+		}
 	}
 	DragFinish(h);
+	g_dragPathSlotItems.Empty(false);//JFB5
 }
 
 static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentVwnd)
@@ -795,7 +833,7 @@ void SNM_ResourceWnd::InsertAtSelectedSlot(bool _update)
 
 }
 
-void SNM_ResourceWnd::DeleteSelectedSlot(bool _update)
+void SNM_ResourceWnd::DeleteSelectedSlots(bool _update)
 {
 	bool updt = false;
 	int x=0;
@@ -877,14 +915,14 @@ void ResourceViewExit()
 				saveSlotIniFile(list->m_resDir.Get(), j, list->Get(j)->m_shortPath.Get(), list->Get(j)->m_desc.Get());
 		}
 	}
-
 	delete g_pResourcesWnd;
 }
 
-void OpenResourceView(COMMAND_T* _ct) {
+void OpenResourceView(COMMAND_T* _ct) 
+{
 	if (g_pResourcesWnd)
 	{
-		g_pResourcesWnd->Show((g_type == (int)_ct->user) /*i.e. toggle "if"..*/, true);
+		g_pResourcesWnd->Show((g_type == (int)_ct->user) /* i.e toggle */, true);
 		g_pResourcesWnd->SetType((int)_ct->user);
 	}
 }
@@ -951,15 +989,17 @@ void FileSlotList::ClearSlot(int _slot, bool _guiUpdate)
 	}
 }
 
-bool FileSlotList::CheckAndStoreSlot(int _slot, const char* _filename, bool _errMsg)
+bool FileSlotList::CheckAndStoreSlot(int _slot, const char* _filename, bool _errMsg, bool _acceptEmpty)
 {
-	if (_filename)
+	if (_filename && _slot >= 0 && _slot < g_fxChainFiles.GetSize())
 	{
-		if (FileExists(_filename)) {
-			Get(_slot)->SetFullPath(_filename);
+		if (FileExists(_filename) || (_acceptEmpty && *_filename == '\0')) 
+		{
+			GetCurList()->Get(_slot)->SetFullPath(_filename);
 			return true;
 		}
-		else if (_errMsg) {
+		else if (_errMsg && *_filename) //JFB!!! *_filename usefull ? TO CHECK
+		{
 			char buf[BUFFER_SIZE];
 			_snprintf(buf, BUFFER_SIZE, "File not found:\n%s", _filename);
 			MessageBox(g_hwndParent, buf, "S&M - Error", MB_OK);

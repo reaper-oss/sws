@@ -279,7 +279,11 @@ MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj) {
 // Track template slots
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB4!!! undo todo
+/*JFB4!!! TODO:
+- patch: preserve items
+- undo
+- mouse pointer => wait
+*/
 void loadSetOrAddTrackTemplate(const char* _title, bool _add, int _slot, bool _errMsg)
 {
 	bool updated = false;

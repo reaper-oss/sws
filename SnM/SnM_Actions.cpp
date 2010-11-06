@@ -348,7 +348,11 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 
 	// Notes/help -------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, NULL, IsNotesHelpViewEnabled},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (project notes)..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, 0, IsNotesHelpViewEnabled},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (item notes)..." }, "S&M_SHOW_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewEnabled},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (track notes )..." }, "S&M_SHOW_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewEnabled},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (action help)..." }, "S&M_SHOW_ACTION_HELP", OpenNotesHelpView, NULL, 3, IsNotesHelpViewEnabled},
+
 	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to project notes (disables auto updates)" }, "S&M_DISABLENOTESHELP", SwitchNotesHelpType, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to item notes" }, "S&M_ITEMNOTES", SwitchNotesHelpType, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to track notes" }, "S&M_TRACKNOTES", SwitchNotesHelpType, NULL, 2},

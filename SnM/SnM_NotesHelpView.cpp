@@ -92,6 +92,8 @@ MediaTrack* g_trNote = NULL;
 SNM_NotesHelpWnd::SNM_NotesHelpWnd()
 :SWS_DockWnd(IDD_SNM_NOTES_HELP, "Notes & help", 30007, SWSGetCommandID(OpenNotesHelpView))
 {
+	m_type = m_previousType = NOTES_HELP_DISABLED;
+
 	// Get the action help file
 	readActionHelpFilenameIniFile();
 	m_internalTLChange = false;
@@ -1116,13 +1118,20 @@ void NotesHelpViewExit() {
 	delete g_pNotesHelpWnd;
 }
 
-void OpenNotesHelpView(COMMAND_T*) {
+void OpenNotesHelpView(COMMAND_T* _ct) 
+{
 	if (g_pNotesHelpWnd)
-		g_pNotesHelpWnd->Show(true, true);
+	{
+		g_pNotesHelpWnd->Show(g_pNotesHelpWnd->GetType() == (int)_ct->user /* i.e toggle */, true);
+		g_pNotesHelpWnd->SetType((int)_ct->user);
+	}
 }
 
-bool IsNotesHelpViewEnabled(COMMAND_T*){
-	return g_pNotesHelpWnd->IsValidWindow();
+bool IsNotesHelpViewEnabled(COMMAND_T* _ct)
+{
+	if (g_pNotesHelpWnd)
+		return ((g_pNotesHelpWnd->GetType() == (int)_ct->user) && g_pNotesHelpWnd->IsValidWindow());
+	return false;
 }
 
 void SwitchNotesHelpType(COMMAND_T* _ct){

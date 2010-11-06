@@ -379,6 +379,7 @@ void copyTrackFXChain(COMMAND_T* _ct)
 				removedKeywords.Add("LASTSEL");
 				removedKeywords.Add("DOCKED");
 				RemoveChunkLines(&g_fXChainClipboard, &removedKeywords, true);
+//JFB TODO: stop at first ?
 			}
 		}
 	}

@@ -375,7 +375,7 @@ HWND SearchWindow(const char* _title);
 HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
 bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMaxSize);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _filename, int _maxFilename, bool _fullPath = false);
-void GetShortResourcePath(const char* _resSubDir, const char* _longFilename, char* _filename, int _maxFilename);
+bool GetShortResourcePath(const char* _resSubDir, const char* _longFilename, char* _filename, int _maxFilename);
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFilename, char* _filename, int _maxFilename);
 bool LoadChunk(const char* _filename, WDL_String* _chunk);
 void StringToExtensionConfig(char* _str, ProjectStateContext* _ctx);

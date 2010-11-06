@@ -69,7 +69,7 @@ protected:
 	void FillDblClickTypeCombo();
 	void AddSlot(bool _update);
 	void InsertAtSelectedSlot(bool _update);
-	void DeleteSelectedSlot(bool _update);
+	void DeleteSelectedSlots(bool _update);
 
 	int m_previousType;
 
@@ -96,13 +96,21 @@ public:
 	}
 	bool IsDefault(){return (!m_fullPath.GetLength());}
 	void Clear() {m_fullPath.Set(""); m_name.Set(""); m_shortPath.Set(""); m_desc.Set("");}
-	void SetFullPath(const char* _fullPath) {
-		m_fullPath.Set(_fullPath);
-		char buf[BUFFER_SIZE];	
-		ExtractFileNameEx(_fullPath, buf, true);
-		m_name.Set(buf);
-		GetShortResourcePath(m_resDir.Get(), _fullPath, buf, BUFFER_SIZE);
-		m_shortPath.Set(buf);
+	void SetFullPath(const char* _fullPath) 
+	{
+		if (_fullPath && *_fullPath)
+		{
+			m_fullPath.Set(_fullPath);
+			char buf[BUFFER_SIZE];	
+			ExtractFileNameEx(_fullPath, buf, true); //JFB TODO: Xen code a revoir
+			m_name.Set(buf);
+			if (GetShortResourcePath(m_resDir.Get(), _fullPath, buf, BUFFER_SIZE)) 
+			{
+				m_shortPath.Set(buf);
+				return; // <--- !
+			}
+		}
+		m_fullPath.Set(""); m_name.Set(""); m_shortPath.Set("");
 	}
 	int m_slot; // in case, we want discontinuous slots at some point..
 	WDL_String m_resDir, m_fullPath, m_desc, m_name, m_shortPath; // The 2 last ones are deduced from m_fullPath, added for perf. reasons
@@ -118,7 +126,7 @@ class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 	}
 	int PromptForSlot(const char* _title);
 	void ClearSlot(int _slot, bool _guiUpdate=true);
-	bool CheckAndStoreSlot(int _slot, const char* _filename, bool _errMsg=false);
+	bool CheckAndStoreSlot(int _slot, const char* _filename, bool _errMsg=false, bool _acceptEmpty=false);
 	bool BrowseStoreSlot(int _slot);
 	const char* GetDesc() {return m_desc.Get();}
 	bool LoadOrBrowseSlot(int _slot, bool _errMsg=false);

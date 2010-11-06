@@ -270,7 +270,7 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 	return ok;
 }
 
-void GetShortResourcePath(const char* _resSubDir, const char* _longFilename, char* _filename, int _maxFilename)
+bool GetShortResourcePath(const char* _resSubDir, const char* _longFilename, char* _filename, int _maxFilename)
 {
 	if (_resSubDir && *_resSubDir && _longFilename && *_longFilename)
 	{
@@ -280,9 +280,11 @@ void GetShortResourcePath(const char* _resSubDir, const char* _longFilename, cha
 			strncpy(_filename, (char*)(_longFilename+strlen(defaultPath)+1), _maxFilename);
 		else
 			strncpy(_filename, _longFilename, _maxFilename);
+		return true;
 	}
 	else
 		*_filename = '\0';
+	return false;
 }
 
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFilename, char* _filename, int _maxFilename)

@@ -414,7 +414,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Other ------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Let REAPER breathe" }, "S&M_LETBREATHE", letREAPERBreathe, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Simulate left mouse click at cursor position (no modifier!)" }, "S&M_MOUSE_L_CLICK", simulateMouseClick, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (no modifier!)" }, "S&M_MOUSE_L_CLICK", simulateMouseClick, NULL, 0},
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (w/o extensions)" }, "S&M_ALRSUMMARY1", dumpWikiActions2, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (SWS/Xenakios/S&M extensions only)" }, "S&M_ALRSUMMARY2", dumpWikiActions2, NULL, 2},

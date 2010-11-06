@@ -75,8 +75,6 @@ void winWaitForEvent(DWORD _event, DWORD _timeOut, DWORD _minReTrigger)
 // http://forum.cockos.com/showthread.php?p=612065
 void simulateMouseClick(COMMAND_T* _ct)
 {
-	SNM_ShowConsoleMsg("Go:\n", "", false);
-
 	POINT p; // not sure setting the pos is really needed..
 	GetCursorPos(&p);
 	mouse_event(MOUSEEVENTF_LEFTDOWN, p.x, p.y, 0, 0);

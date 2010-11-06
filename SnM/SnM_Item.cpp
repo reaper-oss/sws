@@ -832,3 +832,63 @@ bool ShowTakeEnvMute(MediaItem_Take* _take) {
 	return ShowTakeEnv(_take, "MUTEENV", &defaultPoint);;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Item/take template slots
+///////////////////////////////////////////////////////////////////////////////
+
+void saveItemTakeTemplate(COMMAND_T* _ct)
+{
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
+			{
+				char filename[BUFFER_SIZE] = "", defaultPath[BUFFER_SIZE];
+				//JFB3 TODO: ItemTakeTemplates -> const
+				_snprintf(defaultPath, BUFFER_SIZE, "%s%cItemTakeTemplates", GetResourcePath(), PATH_SLASH_CHAR);
+				if (BrowseForSaveFile("Save item/take template", defaultPath, "", "REAPER item/take template (*.RItemTakeTemplate)\0*.RItemTakeTemplate\0", filename, BUFFER_SIZE))
+				{
+					FILE* f = fopenUTF8(filename, "w"); 
+					// Item/take template: keep the active take
+					if (f)
+					{
+						int activeTk = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
+						if (activeTk >= 0)
+						{
+							SNM_TakeParserPatcher p(item, CountTakes(item));
+							char* pFirstTk = strstr(p.GetChunk()->Get(), "NAME ");
+							if (pFirstTk)
+							{
+								int firstTkPos = (int)(pFirstTk - p.GetChunk()->Get());
+								WDL_String tkActive;
+								p.GetTakeChunk(activeTk, &tkActive);
+								char* pActiveTk = tkActive.Get();
+
+								// zap "TAKE blabla..." if needed
+								if (activeTk) {
+									while (*pActiveTk && *pActiveTk != '\n') pActiveTk++;
+									if (*pActiveTk) 
+										pActiveTk++;
+								}
+
+								p.GetChunk()->DeleteSub(firstTkPos, (p.GetChunk()->GetLength()-2) - firstTkPos); // -2 for ">\n"
+								p.GetChunk()->Insert(pActiveTk, firstTkPos);
+								p.RemoveIds();
+
+								fputs(p.GetChunk()->Get(), f);
+								fclose(f);
+								p.CancelUpdates();
+							}
+						}
+					}
+					return;
+				}
+			}
+		}
+	}
+}
+

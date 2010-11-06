@@ -259,6 +259,7 @@ bool SNM_FXChainTakePatcher::NotifySkippedSubChunk(int _mode,
 	return m_removingTakeFx; 
 }
 
+// _fxChain == NULL clears current FX chain(s)
 bool SNM_FXChainTakePatcher::SetFXChain(WDL_String* _fxChain, bool _activeTakeOnly)
 {
 	m_fxChain = _fxChain;
@@ -347,6 +348,7 @@ bool SNM_FXChainTrackPatcher::NotifySkippedSubChunk(int _mode,
 	return m_removingFxChain;
 }
 
+// _fxChain == NULL clears current FX chain(s)
 bool SNM_FXChainTrackPatcher::SetFXChain(WDL_String* _fxChain)
 {
 	m_fxChain = _fxChain;
@@ -608,7 +610,7 @@ bool SNM_TakeParserPatcher::ReplaceTake(int _takeIdx, int _startTakePos, int _ta
 		GetChunk()->DeleteSub(_startTakePos, _takeLength);
 		if (prevLgth > GetChunk()->GetLength()) // see WDL_String.DeleteSub()
 		{
-			//JFB3 +5 => search for '\n'
+			//JFB TODO: search for '\n' rather than +5 (safer)
 			GetChunk()->Insert(!_takeIdx ? _newTakeChunk->Get()+5 : _newTakeChunk->Get(), _startTakePos, _newTakeChunk->GetLength()); // +5 for "TAKE\n"
 			SetUpdates(1); // as we're directly working on the cached chunk..
 			updated = true;

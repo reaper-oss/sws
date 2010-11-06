@@ -77,6 +77,7 @@ protected:
 	WDL_VWnd m_parentVwnd; // owns all children windows
 	SNM_VirtualComboBox m_cbType;
 	WDL_VirtualIconButton m_btnLock;
+	WDL_VirtualStaticText m_txtLabel;
 
 	WDL_String m_actionHelpFilename;
 	int m_type, m_previousType;

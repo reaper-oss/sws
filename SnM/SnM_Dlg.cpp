@@ -56,7 +56,7 @@ void SNM_VirtualComboBox::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin
 	if (GetFont() && GetItem(GetCurSel()) && GetItem(GetCurSel())[0])
 	{
 	  RECT tr=r;
-	  tr.left+=2;
+	  tr.left+=4;
 	  tr.right-=16;
 	  GetFont()->DrawText(drawbm,GetItem(GetCurSel()),-1,&tr,DT_SINGLELINE|DT_VCENTER|DT_LEFT|DT_NOPREFIX);
 	}

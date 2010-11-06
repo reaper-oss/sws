@@ -28,8 +28,8 @@
 //JFB TODO:
 // - action_help_t (even if not used yet ?)
 // - drag'n'drop text
-// - undo on *each* key stroke? => fills undo history (+ can't restore caret pos.)
-//   but it fixes:
+// - undo on *each* key stroke.. hum.. see "JFB2" tags
+//   => fills undo history (+ can't restore caret pos.) but it fixes:
 //   * SaveExtensionConfig() not called if no proj mods but notes may have been added..
 //   * project switches
 
@@ -38,7 +38,7 @@
 #include "SNM_NotesHelpView.h"
 #include "SNM_ChunkParserPatcher.h"
 
-#define MAX_HELP_LENGTH				4096 // definitive limitation of WritePrivateProfileSection = 0xFFFF
+#define MAX_HELP_LENGTH				4096 // MAX_INI_SECTION;
 #define SAVEWINDOW_POS_KEY			"S&M - Notes/help Save Window Position"
 
 // Msgs
@@ -46,7 +46,8 @@
 
 enum {
   BUTTONID_LOCK=1000,
-  COMBOID_TYPE
+  COMBOID_TYPE,
+  TXTID_LABEL
 };
 
 enum {
@@ -64,8 +65,8 @@ enum {
 
 // Globals
 SNM_NotesHelpWnd* g_pNotesHelpWnd = NULL;
-SNM_ProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
-SNM_ProjConfig<WDL_String> g_prjNotes;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
+SWSProjConfig<WDL_String> g_prjNotes;
 
 //JFB TODO: clean-up with member attributes..
 int g_bDocked = -1, g_bLastDocked = 0; 
@@ -130,10 +131,34 @@ void SNM_NotesHelpWnd::SetText(const char* _str)
 	}
 }
 
-void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes) {
+void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes) 
+{
 	if (_emtpyNotes)
 		SetText("");
-	m_parentVwnd.RequestRedraw(NULL); // title refresh
+
+	bool bHide = true;
+	switch(GetType())
+	{
+		case ACTION_HELP:
+			if (g_lastActionId && *g_lastActionId)
+				bHide = false; // for copy/paste even if "Custom: ..."
+			break;
+		case ITEM_NOTES:
+			if (g_mediaItemNote)
+				bHide = false;
+			break;
+		case TRACK_NOTES:
+			if (g_trNote)
+				bHide = false;
+			break;
+		case NOTES_HELP_DISABLED:
+			bHide = false;
+			break;
+		default:
+			break;
+	}
+	ShowWindow(GetDlgItem(GetHWND(), IDC_EDIT), bHide ? SW_HIDE : SW_SHOW);
+	m_parentVwnd.RequestRedraw(NULL); // WDL refresh
 }
 
 void SNM_NotesHelpWnd::CSurfSetTrackTitle() {
@@ -253,7 +278,7 @@ void SNM_NotesHelpWnd::saveCurrentText(int _type)
 	{
 		switch(_type) {
 			case ITEM_NOTES: 
-				m_internalTLChange = true; // item note updates lead to SetTrackListChange() CSurf notif (!??!!)
+				m_internalTLChange = true; // item note updates lead to SetTrackListChange() CSurf notif !
 				saveCurrentItemNotes(); 
 				break;
 			case TRACK_NOTES: saveCurrentTrackNotes(); break;
@@ -279,11 +304,14 @@ void SNM_NotesHelpWnd::saveCurrentHelp()
 {
 	if (*g_lastActionId)
 	{
-		char buf[MAX_HELP_LENGTH] = "";
-		memset(buf, 0, sizeof(buf));
-		GetDlgItemText(GetHWND(), IDC_EDIT, buf, MAX_HELP_LENGTH);
-		if (strncmp(g_lastText, buf, MAX_HELP_LENGTH))
-			saveHelp(g_lastActionId, buf);
+		if (g_lastActionDesc && *g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
+		{
+			char buf[MAX_HELP_LENGTH] = "";
+			memset(buf, 0, sizeof(buf));
+			GetDlgItemText(GetHWND(), IDC_EDIT, buf, MAX_HELP_LENGTH);
+			if (strncmp(g_lastText, buf, MAX_HELP_LENGTH))
+				saveHelp(g_lastActionId, buf);
+		}
 	}
 }
 
@@ -345,17 +373,17 @@ void SNM_NotesHelpWnd::saveCurrentTrackNotes()
 int SNM_NotesHelpWnd::updateActionHelp(bool _savePrevious)
 {
 	int refreshType = REQUEST_REFRESH_EMPTY;
-	HWND h_list = GetActionListBox(g_lastActionListSection, 64);
-	if (h_list && ListView_GetSelectedCount(h_list))
+	HWND hList = GetActionListBox(g_lastActionListSection, 64);
+	if (hList && ListView_GetSelectedCount(hList))
 	{
 		LVITEM li;
 		li.mask = LVIF_STATE | LVIF_PARAM;
 		li.stateMask = LVIS_SELECTED;
 		li.iSubItem = 0;
-		for (int i = 0; i < ListView_GetItemCount(h_list); i++)
+		for (int i = 0; i < ListView_GetItemCount(hList); i++)
 		{
 			li.iItem = i;
-			ListView_GetItem(h_list, &li);
+			ListView_GetItem(hList, &li);
 			if (li.state == LVIS_SELECTED)
 			{
 				if (i != g_lastActionListSel)
@@ -368,31 +396,25 @@ int SNM_NotesHelpWnd::updateActionHelp(bool _savePrevious)
 					int cmdId = (int)li.lParam;
 					g_lastActionListCmd = cmdId; 
 
-					LVITEM li0, li1;
+					//JFB TODO: cleanup when we'll be able to access all sections & custom ids
+					ListView_GetItemText(hList,i,1,g_lastActionDesc,128);
+					ListView_GetItemText(hList,i,3,g_lastActionId,64);
 
-					//JFB TODO: cleanup when we'll be able to access all sections
-					li0.mask = LVIF_TEXT;
-					li0.iItem = i;
-					li0.iSubItem = 1;
-					li0.pszText = g_lastActionDesc;
-					li0.cchTextMax = 128;
-					ListView_GetItem(h_list, &li0);
-
-					//JFB TODO: cleanup when we'll be able to access custom ids
-					li1.mask = LVIF_TEXT;
-					li1.iItem = i;
-					li1.iSubItem = 3;
-					li1.pszText = g_lastActionId;
-					li1.cchTextMax = 64;
-					ListView_GetItem(h_list, &li1);
-					if (!*g_lastActionId)
+					if (g_lastActionId && !*g_lastActionId)
 						sprintf(g_lastActionId, "%d", cmdId);					
-					if (*g_lastActionId)
+					if (g_lastActionId && *g_lastActionId && g_lastActionDesc && *g_lastActionDesc )
 					{
-						char buf[MAX_HELP_LENGTH] = "";
-						loadHelp(g_lastActionId, buf, MAX_HELP_LENGTH);
-						SetText(buf);
-//JFB							Help_Set(buf, false);
+						if (!_strnicmp(g_lastActionDesc, "Custom:", 7))
+						{
+							SetText(g_lastActionId);
+						}
+						else
+						{
+							char buf[MAX_HELP_LENGTH] = "";
+							loadHelp(g_lastActionId, buf, MAX_HELP_LENGTH);
+							SetText(buf);
+						}
+//JFB						Help_Set(buf, false);
 						refreshType = REQUEST_REFRESH;
 					}
 				}
@@ -495,6 +517,10 @@ void SNM_NotesHelpWnd::OnInitDlg()
 #endif
 	m_cbType.SetCurSel(min(m_cbType.GetCount(), m_type));
 	m_parentVwnd.AddChild(&m_cbType);
+
+	m_txtLabel.SetID(TXTID_LABEL);
+	m_txtLabel.SetRealParent(m_hwnd);
+	m_parentVwnd.AddChild(&m_txtLabel);
 	
 	m_previousType = -1; // will force refresh
 	Update();
@@ -642,64 +668,57 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			cbVwnd->SetFont(&tmpfont);
 		}
 
-	    _painter->PaintVirtWnd(_parentVwnd);
-
-		// labels
-		x0+=5;
-		RECT tr={x0,y0,_r.right-(logo?logo->getWidth():0)-8-8,y0+h};
-//		RECT tr={x0,y0,min(400, _r.right-logo->getWidth()-8-8),y0+h};
-		x0+=tr.right;
-		bool bNoSelection = true;
-		char str[512] = "No selection!";
-		switch(g_pNotesHelpWnd->GetType())
+		// Label
+		WDL_VirtualStaticText* txtVwnd = (WDL_VirtualStaticText*)_parentVwnd->GetChildByID(TXTID_LABEL);
+		if (txtVwnd)
 		{
-			case ACTION_HELP:
-				if (*g_lastActionDesc && *g_lastActionListSection)
-				{
-					_snprintf(str, 512, " [%s]  %s", g_lastActionListSection, g_lastActionDesc);
-					bNoSelection = false;
-				}
-/*JFB TODO: use that when we'll be able to access all sections
-				if (g_lastActionListCmd > 0)
-					strncpy(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
+			char str[512] = "No selection!";
+			switch(g_pNotesHelpWnd->GetType())
+			{
+				case ACTION_HELP:
+					if (g_lastActionDesc && *g_lastActionDesc && g_lastActionListSection && *g_lastActionListSection)
+						_snprintf(str, 512, " [%s]  %s", g_lastActionListSection, g_lastActionDesc);
+/*JFB TODO: use smthg like that when we'll be able to access all sections
+					if (g_lastActionListCmd > 0)
+						strncpy(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
 */
-				break;
-			case ITEM_NOTES:
-			{
-				if (g_mediaItemNote)
-				{
-					MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
-					char* tkName= tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
-					strncpy(str, tkName ? tkName : "",512);
-					bNoSelection = false;
-				}
+					break;
+				case ITEM_NOTES:
+					if (g_mediaItemNote)
+					{
+						MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
+						char* tkName= tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
+						strncpy(str, tkName ? tkName : "",512);
+					}
+					break;
+				case TRACK_NOTES:
+					if (g_trNote)
+					{
+						int id = CSurf_TrackToID(g_trNote, false);
+						if (id > 0)
+							_snprintf(str, 512, " [%d]  %s", id, (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL));
+						else if (id == 0)
+							strcpy(str, "[MASTER]");
+					}
+					break;
+				case NOTES_HELP_DISABLED:
+					//JFB would be nice to display the project name here, alas..
+					*str = '\0';
+					break;
+				default:
+					break;
 			}
-			break;
-			case TRACK_NOTES:
-			{
-				if (g_trNote)
-				{
-					int id = CSurf_TrackToID(g_trNote, false);
-					if (id > 0)
-						_snprintf(str, 512, " [%d]  %s", id, (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL));
-					else if(id == 0)
-						strcpy(str, "[MASTER]");
-					bNoSelection = false;
-				}
-			}
-			break;
-			case NOTES_HELP_DISABLED:
-			{
-				//JFB would be nice to display the project name here, alas..
-				strcpy(str, "");
-				bNoSelection = false;
-			}
-			break;
-			default:
-				break;
+			txtVwnd->SetText(str);
+
+
+			x0 += 5;
+			RECT tr2={x0,y0,_r.right-(logo?logo->getWidth():0)-8-8,y0+h};
+			x0 = tr2.right+5;
+			txtVwnd->SetPosition(&tr2);
+			txtVwnd->SetFont(&tmpfont);
 		}
-		tmpfont.DrawText(bm, str, -1, &tr, DT_LEFT | DT_VCENTER);
-		EnableWindow(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT), !bNoSelection);
+
+	    _painter->PaintVirtWnd(_parentVwnd);
 
 //		if ((_r.right - _r.left) > (x0+logo->getWidth()))
 		if (logo && (_r.right - _r.left) > 300)
@@ -733,25 +752,34 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
 			if (w) 
 			{
-				if (w == &m_btnLock)
+				switch(w->GetID())
 				{
-					g_locked = !g_locked;
-					if (!g_locked)
-						SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
-					RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
+					case BUTTONID_LOCK:
+					{
+						g_locked = !g_locked;
+						if (!g_locked)
+							SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
+						RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
+					}
+					break;
+					case TXTID_LABEL:
+					{
+						if (GetType() == ACTION_HELP)
+						{
+							char cLink[512] = "";
+							char sectionURL[64] = "";
+							if (g_lastActionId && *g_lastActionId && 
+								g_lastActionDesc && *g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7) && 
+								g_lastActionListSection && GetALRStartOfURL(g_lastActionListSection, sectionURL, 64))
+							{					
+								sprintf(cLink, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
+								ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
+							}
+						}
+					}
+					break;
 				}
 				w->OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-			}
-			//JFB online help TEMP implementation (sizing hard coded)
-			else if (GetType() == ACTION_HELP && x > (10+25+5+5+138) && y > 5 && y < 25)
-			{
-				char cLink[512] = "";
-				char sectionURL[64] = "";
-				if (g_lastActionId && GetALRStartOfURL(g_lastActionListSection, sectionURL, 64))
-				{					
-					sprintf(cLink, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
-					ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
-				}
 			}
 		}
 		break;
@@ -770,7 +798,17 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			int x = GET_X_LPARAM(lParam);
 			int y = GET_Y_LPARAM(lParam);
 			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w) w->OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			if (w) 
+			{
+				w->OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+				if (w->GetID() == TXTID_LABEL && GetType() == ACTION_HELP &&
+					g_lastActionId && *g_lastActionId && g_lastActionDesc && 
+					*g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
+				{
+					static HCURSOR cur = LoadCursor(NULL, IDC_HAND);
+					SetCursor(cur);
+				}
+			}
 		}
 		break;
 

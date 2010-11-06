@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
+#include "SnM_FXChainView.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -271,4 +272,63 @@ MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx)
 
 MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj) {
 	return GetSelectedTrackWithMaster(_proj, 0);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Track template slots
+///////////////////////////////////////////////////////////////////////////////
+
+//JFB4!!! undo todo
+void loadSetOrAddTrackTemplate(const char* _title, bool _add, int _slot, bool _errMsg)
+{
+	bool updated = false;
+	if (CountSelectedTracksWithMaster(NULL))
+	{
+		// Prompt for slot if needed
+		if (_slot == -1) _slot = g_trTemplateFiles.PromptForSlot(_title); //loops on err
+		if (_slot == -1) return; // user has cancelled
+
+		// main job
+		if (g_trTemplateFiles.LoadOrBrowseSlot(_slot, _errMsg) && g_trTemplateFiles.Get(_slot)->m_fullPath.GetLength())
+		{
+			WDL_String chunk;
+			// add as new track
+			if (_add)
+			{
+				Main_openProject(g_trTemplateFiles.Get(_slot)->m_fullPath.Get());
+				updated = true;
+			}
+			// patch selected tracks
+			else if (LoadChunk(g_trTemplateFiles.Get(_slot)->m_fullPath.Get(), &chunk) && chunk.GetLength())
+			{
+				for (int i = 0; i <= GetNumTracks(); i++)
+				{
+					MediaTrack* tr = CSurf_TrackFromID(i,false); 
+					if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+					{
+						SNM_ChunkParserPatcher p(tr);
+						p.SetChunk(&chunk, 1);
+						updated |= true;
+					}
+				}
+			}
+		}
+	}
+}
+
+void loadSetTrackTemplate(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	loadSetOrAddTrackTemplate(SNM_CMD_SHORTNAME(_ct), false, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
+}
+
+void loadAddTrackTemplate(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	loadSetOrAddTrackTemplate(SNM_CMD_SHORTNAME(_ct), true, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
+}
+
+void clearTrackTemplateSlotPrompt(COMMAND_T* _ct) {
+	int slot = g_trTemplateFiles.PromptForSlot(SNM_CMD_SHORTNAME(_ct)); //loops on err
+	if (slot == -1) return; // user has cancelled
+	else g_trTemplateFiles.ClearSlot(slot);
 }

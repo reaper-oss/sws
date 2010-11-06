@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Actions.h
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÃ©dague 
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -49,12 +49,23 @@
 #define SNM_MAX_HW_OUTS		8
 #define SNM_MAX_TAKES		128
 #define SNM_MAX_FX			128
+#define MAX_INI_SECTION		0xFFFF // definitive limit for WritePrivateProfileSection
+
 #define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
 
 // Scheduled job ids
 #define SNM_SCHEDJOB_LIVECFG_TLCHANGE	8
 #define SNM_SCHEDJOB_NOTEHLP_TLCHANGE	9
 #define SNM_SCHEDJOB_LIVECFG_SELPRJ		10
+
+#define SNM_SCHEDJOB_DEFAULT_DELAY		250
+
+enum
+{
+  SNM_SLOT_TYPE_FX_CHAINS=0,
+  SNM_SLOT_TYPE_TR_TEMPLATES,
+  SNM_SLOT_TYPE_COUNT
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -77,7 +88,7 @@ class SNM_TrackNotes
 public:
 	SNM_TrackNotes(MediaTrack* _tr, const char* _notes) 
 		: m_tr(_tr) {m_notes.Set(_notes ? _notes : "");}
-	MediaTrack* m_tr;WDL_String m_notes;
+	MediaTrack* m_tr; WDL_String m_notes;
 };
 
 
@@ -105,7 +116,6 @@ public:
 	int m_id, m_tick;
 };
 
-
 class SNM_SndRcv 
 {
 public:
@@ -115,58 +125,12 @@ public:
 		: m_src(_src),m_dest(_dest),m_mute(_mute),m_phase(_phase),m_mono(_mono),
 		m_vol(_vol),m_pan(_pan),m_panl(_panl),m_mode(_mode),m_srcChan(_srcChan),m_destChan(_destChan),m_midi(_midi) {}
 	virtual ~SNM_SndRcv() {}
-	MediaTrack* m_src;
-	MediaTrack* m_dest;
+	MediaTrack* m_src; MediaTrack* m_dest;
 	bool m_mute;
-	int m_phase;
-	int m_mono;
-	double m_vol;
-	double m_pan;
-	double m_panl;
-	int m_mode;
-	int m_srcChan;
-	int m_destChan;
-	int m_midi;
+	int m_phase, m_mono, m_mode, m_srcChan, m_destChan, m_midi;
+	double m_vol, m_pan, m_panl;
 };
 
-
-// extern: defined below..
-extern void GetShortResourcePath(const char* _resSubDir, const char* _longFilename, char* _filename, int _maxFilename);
-
-class FXChainSlotItem
-{
-public:
-	FXChainSlotItem(int _slot, const char* _fullPath, const char* _desc)
-	{
-		m_slot = _slot;
-		SetFullPath(_fullPath);
-		m_desc.Set(_desc);
-	}
-	bool IsDefault(){return (!m_fullPath.GetLength());}
-	void Clear() {m_fullPath.Set(""); m_name.Set(""); m_shortPath.Set(""); m_desc.Set("");}
-	void SetFullPath(const char* _fullPath)
-	{
-		m_fullPath.Set(_fullPath);
-		char buf[BUFFER_SIZE];	
-		ExtractFileNameEx(_fullPath, buf, true);
-		m_name.Set(buf);
-		GetShortResourcePath("FXChains", _fullPath, buf, BUFFER_SIZE);
-		m_shortPath.Set(buf);
-	}
-	int m_slot; // in case, we want discontinuous slots at some point..
-	WDL_String m_fullPath;
-	WDL_String m_desc;
-	// Those 2 are deduced from m_fullPath, added for perf. reasons
-	WDL_String m_name;
-	WDL_String m_shortPath;
-};
-
-template<class PTRTYPE> class SNM_ProjConfig : public SWSProjConfig<PTRTYPE> {
-public:
-	SNM_ProjConfig() : SWSProjConfig<PTRTYPE>() {}
-	~SNM_ProjConfig() {}
-	int Find(ReaProject* _pProj) { return SWSProjConfig<PTRTYPE>::m_projects.Find(_pProj); }
-};
 
 // Custom WDL UIs (SnM_Dlg.cpp)
 
@@ -183,10 +147,8 @@ class SNM_VirtualComboBox : public WDL_VirtualComboBox
 // Global vars
 ///////////////////////////////////////////////////////////////////////////////
 
-//extern COMMAND_T g_SNM_cmdTable[];									// SnM_Actions.cpp
-extern WDL_String g_SNMiniFilename;									// SnM_Actions.cpp
-extern WDL_PtrList_DeleteOnDestroy<FXChainSlotItem> g_fxChainFiles;	// SnM_FXChain.cpp
-extern SNM_ProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;	// SnM_NotesHelpView.cpp
+extern WDL_String g_SNMiniFilename;	// SnM_Actions.cpp
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;	// SnM_NotesHelpView.cpp
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -251,16 +213,10 @@ void cutTrackFXChain(COMMAND_T* _ct);
 void pasteTrackFXChain(COMMAND_T* _ct);
 void setTrackFXChain(COMMAND_T* _ct);
 void makeChunkTakeFX(WDL_String* _outTakeFX, WDL_String* _inRfxChain);
-int promptForSlot(const char* _title);
 void clearFXChainSlotPrompt(COMMAND_T* _ct);
-void clearFXChainSlot(int _slot, bool _guiUpdate=true);
-bool checkAndStoreFXChain(int _slot, const char* _filename, bool _errMsg=false);
-bool browseStoreFXChain(int _slot);
-bool loadOrBrowseFXChain(int _slot, bool _errMsg=false);
-void readFXChainSlotIniFile(int _slot, char* _path, int _pathSize, char* _desc, int _descSize);
-void saveFXChainSlotIniFile(int _slot, const char* _path, const char* _desc);
 void copySlotToClipBoard(int _slot);
-void displayFXChain(int _slot);
+void readSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, char* _desc, int _descSize);
+void saveSlotIniFile(const char* _key, int _slot, const char* _path, const char* _desc);
 
 // *** SnM_Windows.cpp ***
 bool toggleShowHideWin(const char * _title);
@@ -349,6 +305,7 @@ void showHideTakeMuteEnvelope(COMMAND_T* _ct);
 bool ShowTakeEnvVol(MediaItem_Take* _take);
 bool ShowTakeEnvPan(MediaItem_Take* _take);
 bool ShowTakeEnvMute(MediaItem_Take* _take);
+void saveItemTakeTemplate(COMMAND_T* _ct);
 
 // *** SnM_Track.cpp ***
 #ifdef _SNM_TRACK_GROUP_EX
@@ -361,12 +318,16 @@ void toggleArmTrackEnv(COMMAND_T* _ct);
 int CountSelectedTracksWithMaster(ReaProject* _proj);
 MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx);
 MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj);
+void loadSetOrAddTrackTemplate(const char* _title, bool _add, int _slot, bool _errMsg);
+void loadSetTrackTemplate(COMMAND_T* _ct);
+void loadAddTrackTemplate(COMMAND_T* _ct);
+void clearTrackTemplateSlotPrompt(COMMAND_T* _ct);
 
-// *** SnM_FXChainView.cpp ***
-int FXChainViewInit();
-void FXChainViewExit();
-void OpenFXChainView(COMMAND_T*);
-bool IsFXChainViewEnabled(COMMAND_T*);
+// *** SNM_ResourceView.cpp ***
+int ResourceViewInit();
+void ResourceViewExit();
+void OpenResourceView(COMMAND_T*);
+bool IsResourceViewEnabled(COMMAND_T*);
 
 // *** SnM_NotesHelpView.cpp ***
 int NotesHelpViewInit();
@@ -405,6 +366,7 @@ void MESaveCCLanes(COMMAND_T* _ct);
 
 // *** SnM_Misc.cpp ***
 void letREAPERBreathe(COMMAND_T* _ct);
+void winWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
 void simulateMouseClick(COMMAND_T* _ct);
 void dumpWikiActions2(COMMAND_T* _ct);
 void SNM_ShowConsoleMsg(const char* _msg, const char* _title="", bool _clear=true); 

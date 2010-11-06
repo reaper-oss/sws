@@ -28,12 +28,11 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
-#include "SnM_FXChainView.h"
+#include "SNM_FXChainView.h"
 
 
-WDL_PtrList_DeleteOnDestroy<FXChainSlotItem> g_fxChainFiles;
 WDL_String g_fXChainClipboard;
-extern SNM_FXChainWnd* g_pFXChainsWnd; // SnM_FXChainView.cpp
+extern SNM_ResourceWnd* g_pResourcesWnd; // SNM_ResourceView.cpp
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,11 +45,11 @@ void loadSetPasteTakeFXChain(const char* _title, int _slot, bool _activeOnly, bo
 	if (CountSelectedMediaItems(NULL))
 	{
 		// Prompt for slot if needed
-		if (_slot == -1) _slot = promptForSlot(_title); //loops on err
+		if (_slot == -1) _slot = g_fxChainFiles.PromptForSlot(_title); //loops on err
 		if (_slot == -1) return; // user has cancelled
 
 		// main job
-		if (loadOrBrowseFXChain(_slot, _errMsg))
+		if (g_fxChainFiles.LoadOrBrowseSlot(_slot, _errMsg))
 		{
 			if (_set) 
 				setTakeFXChain(_title, _slot, _activeOnly, false);
@@ -255,11 +254,11 @@ void loadSetPasteTrackFXChain(const char* _title, int _slot, bool _set, bool _er
 	if (CountSelectedTracksWithMaster(NULL))
 	{
 		// Prompt for slot if needed
-		if (_slot == -1) _slot = promptForSlot(_title); //loops on err
+		if (_slot == -1) _slot = g_fxChainFiles.PromptForSlot(_title); //loops on err
 		if (_slot == -1) return; // user has cancelled
 
 		// main job
-		if (loadOrBrowseFXChain(_slot, _errMsg))
+		if (g_fxChainFiles.LoadOrBrowseSlot(_slot, _errMsg))
 		{
 			if (_set) 
 				setTrackFXChain(_title, _slot, false);
@@ -308,6 +307,7 @@ void pasteTrackFXChain(const char* _title, int _slot)
 		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
 }
 
+//JFB3 chain plutot en param ??
 void setTrackFXChain(const char* _title, int _slot, bool _clear)
 {
 	bool updated = false;
@@ -417,116 +417,11 @@ void makeChunkTakeFX(WDL_String* _outTakeFX, WDL_String* _inRfxChain)
 	}
 }
 
-//returns -1 on cancel
-int promptForSlot(const char* _title)
-{
-	int slot = -1;
-	while (slot == -1)
-	{
-		char promptMsg[64]; 
-		_snprintf(promptMsg, 64, "Slot (1-%d):", g_fxChainFiles.GetSize());
-
-		char reply[8]= ""; // empty default slot
-		if (GetUserInputs(_title, 1, promptMsg, reply, 8))
-		{
-			slot = atoi(reply); //0 on error
-			if (slot > 0 && slot <= g_fxChainFiles.GetSize()) {
-				return (slot-1);
-			}
-			else 
-			{
-				slot = -1;
-				char errMsg[128];
-				_snprintf(errMsg, 128, "Invalid FX chain slot!\nPlease enter a value in [1; %d].", g_fxChainFiles.GetSize());
-				MessageBox(GetMainHwnd(), errMsg, "S&M - FX Chains - Error", /*MB_ICONERROR | */MB_OK);
-			}
-		}
-		else return -1; // user has cancelled
-	}
-	return -1; //in case the slot comes from mars
-}
-
 void clearFXChainSlotPrompt(COMMAND_T* _ct)
 {
-	int slot = promptForSlot(SNM_CMD_SHORTNAME(_ct)); //loops on err
+	int slot = g_fxChainFiles.PromptForSlot(SNM_CMD_SHORTNAME(_ct)); //loops on err
 	if (slot == -1) return; // user has cancelled
-	else clearFXChainSlot(slot);
-}
-
-void clearFXChainSlot(int _slot, bool _guiUpdate)
-{
-	if (_slot >=0 && _slot < g_fxChainFiles.GetSize())
-	{
-//JFB commented: otherwise it leads to multiple confirmation msg with multiple selection in the FX chain view..
-//		char cPath[BUFFER_SIZE];
-//		readFXChainSlotIniFile(_slot, cPath, BUFFER_SIZE);
-//		if (strlen(cPath))
-		{
-//			char toBeCleared[256] = "";
-//			sprintf(toBeCleared, "Are you sure you want to clear the FX chain slot %d?\n(%s)", _slot+1, cPath); 
-//			if (MessageBox(GetMainHwnd(), toBeCleared, "S&M - Clear FX Chain slot", /*MB_ICONQUESTION | */MB_OKCANCEL) == 1)
-			{
-				g_fxChainFiles.Get(_slot)->Clear();
-				if (_guiUpdate && g_pFXChainsWnd)
-					g_pFXChainsWnd->Update();
-			}
-		}
-	}
-}
-
-bool checkAndStoreFXChain(int _slot, const char* _filename, bool _errMsg)
-{
-	if (_filename)
-	{
-		if (FileExists(_filename)) {
-			g_fxChainFiles.Get(_slot)->SetFullPath(_filename);
-			return true;
-		}
-		else if (_errMsg) {
-			char buf[BUFFER_SIZE];
-			_snprintf(buf, BUFFER_SIZE, "File not found:\n%s", _filename);
-			MessageBox(g_hwndParent, buf, "S&M - FX Chains - Error", MB_OK);
-		}
-	}
-	return false;
-}
-
-// Returns false if cancelled
-bool browseStoreFXChain(int _slot)
-{
-	bool ok = false;
-	char title[64] = "", filename[BUFFER_SIZE] = "";
-	_snprintf(title, 64, "S&M - Load FX Chain (slot %d)", _slot+1);
-	if (BrowseResourcePath(title, "FXChains", "REAPER FX Chain (*.RfxChain)\0*.RfxChain\0", filename, BUFFER_SIZE, true))
-		ok = checkAndStoreFXChain(_slot, filename);		
-	return ok;
-}
-
-bool loadOrBrowseFXChain(int _slot, bool _errMsg)
-{
-	// browse if file not found
-	if (!g_fxChainFiles.Get(_slot)->IsDefault())
-		return checkAndStoreFXChain(_slot, g_fxChainFiles.Get(_slot)->m_fullPath.Get(), _errMsg);
-	else 
-		return browseStoreFXChain(_slot);
-}
-
-void readFXChainSlotIniFile(int _slot, char* _path, int _pathSize, char* _desc, int _descSize)
-{
-	char buf[32];
-	_snprintf(buf, 32, "SLOT%d", _slot+1);
-	GetPrivateProfileString("FXCHAIN", buf, "", _path, _pathSize, g_SNMiniFilename.Get());
-	_snprintf(buf, 32, "DESC%d", _slot+1);
-	GetPrivateProfileString("FXCHAIN", buf, "", _desc, _descSize, g_SNMiniFilename.Get());
-}
-
-void saveFXChainSlotIniFile(int _slot, const char* _path, const char* _desc)
-{
-	char buf[32] = "";
-	_snprintf(buf, 32, "SLOT%d", _slot+1);
-	WritePrivateProfileString("FXCHAIN", buf, (_path && *_path) ? _path : NULL, g_SNMiniFilename.Get());
-	_snprintf(buf, 32, "DESC%d", _slot+1);
-	WritePrivateProfileString("FXCHAIN", buf, (_desc && *_desc) ? _desc : NULL, g_SNMiniFilename.Get());	
+	else g_fxChainFiles.ClearSlot(slot);
 }
 
 void copySlotToClipBoard(int _slot)
@@ -535,16 +430,20 @@ void copySlotToClipBoard(int _slot)
 		LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &g_fXChainClipboard);
 }
 
-void displayFXChain(int _slot)
+void readSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, char* _desc, int _descSize)
 {
-	if (_slot >= 0 && _slot < g_fxChainFiles.GetSize())
-	{
-		WDL_String chain;
-		if (LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &chain))
-		{
-			char title[64] = "";
-			_snprintf(title, 64, "S&M - FX Chain (slot %d)", _slot+1);
-			SNM_ShowConsoleMsg(chain.Get(), title);
-		}
-	}
+	char buf[32];
+	_snprintf(buf, 32, "SLOT%d", _slot+1);
+	GetPrivateProfileString(_key, buf, "", _path, _pathSize, g_SNMiniFilename.Get());
+	_snprintf(buf, 32, "DESC%d", _slot+1);
+	GetPrivateProfileString(_key, buf, "", _desc, _descSize, g_SNMiniFilename.Get());
+}
+
+void saveSlotIniFile(const char* _key, int _slot, const char* _path, const char* _desc)
+{
+	char buf[32] = "";
+	_snprintf(buf, 32, "SLOT%d", _slot+1);
+	WritePrivateProfileString(_key, buf, (_path && *_path) ? _path : NULL, g_SNMiniFilename.Get());
+	_snprintf(buf, 32, "DESC%d", _slot+1);
+	WritePrivateProfileString(_key, buf, (_desc && *_desc) ? _desc : NULL, g_SNMiniFilename.Get());	
 }

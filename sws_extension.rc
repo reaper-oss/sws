@@ -912,12 +912,12 @@ END
 IDD_SNM_FXCHAINLIST DIALOGEX 0, 0, 281, 137
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_TOOLWINDOW
-CAPTION "S&M - FX Chains"
+CAPTION "S&M - Resources"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | WS_BORDER,6,22,268,108
     EDITTEXT        IDC_EDIT,110,40,59,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | NOT WS_BORDER
-    EDITTEXT        IDC_FILTER,30,5,80,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_FILTER,125,5,80,12,ES_AUTOHSCROLL
 END
 
 IDD_SNM_NOTES_HELP DIALOGEX 0, 0, 281, 125
@@ -1454,7 +1454,8 @@ IDC_ZOOMUNDO            CURSOR                  "zoomundo.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

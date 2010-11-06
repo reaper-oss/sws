@@ -30,6 +30,7 @@
 #include "SnM_Actions.h"
 #include "SNM_ChunkParserPatcher.h"
 
+//JFB TODO: class
 typedef struct
 {
 	MediaTrack* tr;

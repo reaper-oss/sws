@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_MidiLiveView.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÈdague 
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -45,15 +45,17 @@ enum
   BUTTONID_ENABLE,
   BUTTONID_AUTO_RCV,
   BUTTONID_MUTE_OTHERS,
+  BUTTONID_AUTO_SELECT,
   COMBOID_INPUT_TRACK
 };
 
 // Globals
 /*JFB static*/ SnM_MidiLiveWnd* g_pMidiLiveWnd = NULL;
-SNM_ProjConfig<WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<MidiLiveItem> > > g_liveCCConfigs;
-SNM_ProjConfig<MidiLiveConfig> g_liveConfigs;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<MidiLiveItem> > > g_liveCCConfigs;
+SWSProjConfig<MidiLiveConfig> g_liveConfigs;
 
 int g_configId = 0; // the current *displayed* config id
+int g_approxDelayMsCC = 250;
 static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Desc."}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, /*presets {150,2,"FX Presets"},*/ {150,1,"Activate action"}, {150,1,"Deactivate action"}};
 
 
@@ -217,10 +219,8 @@ void SnM_MidiLiveView::OnItemDblClk(LPARAM item, int iCol)
 		switch(iCol)
 		{
 			case 0:
-			{
 				g_pMidiLiveWnd->OnCommand(SNM_LIVECFG_PERFORM_MSG, item);
 				break;
-			}
 			case 3:
 				if (pItem->m_track)
 					g_pMidiLiveWnd->OnCommand(SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG, item);
@@ -287,6 +287,7 @@ void SnM_MidiLiveWnd::SelectByCCValue(int _configId, int _cc)
 					ListView_SetItemState(hList, -1, 0, LVIS_SELECTED);
 					ListView_SetItemState(hList, i, LVIS_SELECTED, LVIS_SELECTED); 
 					ListView_EnsureVisible(hList, i, true);
+//JFB4 added but useful?? to test..					Update();
 					break;
 				}
 			}
@@ -305,6 +306,9 @@ void SnM_MidiLiveWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_pLists.Add(new SnM_MidiLiveView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+
+	// Load prefs 
+	g_approxDelayMsCC = GetPrivateProfileInt("LIVE_CONFIGS", "CC_DELAY", 250, g_SNMiniFilename.Get());
 
 	// WDL GUI init
 	m_parentVwnd.SetRealParent(m_hwnd);
@@ -331,6 +335,10 @@ void SnM_MidiLiveWnd::OnInitDlg()
 	m_btnMuteOthers.SetID(BUTTONID_MUTE_OTHERS);
 	m_btnMuteOthers.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnMuteOthers);
+
+	m_btnAutoSelect.SetID(BUTTONID_AUTO_SELECT);
+	m_btnAutoSelect.SetRealParent(m_hwnd);
+	m_parentVwnd.AddChild(&m_btnAutoSelect);
 
 	m_cbInputTr.SetID(COMBOID_INPUT_TRACK);
 	m_cbInputTr.SetRealParent(m_hwnd);
@@ -576,6 +584,7 @@ void SnM_MidiLiveWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				else
 					g_liveConfigs.Get()->m_inputTr[g_configId] = CSurf_TrackFromID(m_cbInputTr.GetCurSel(), false);
 				m_parentVwnd.RequestRedraw(NULL);
+				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 			}
 			else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_CONFIG)
 			{
@@ -688,6 +697,11 @@ HMENU SnM_MidiLiveWnd::OnContextMenu(int x, int y)
 
 void SnM_MidiLiveWnd::OnDestroy() 
 {
+	// save prefs
+	char cDelay[16];
+	sprintf(cDelay, "%d", g_approxDelayMsCC);
+	WritePrivateProfileString("LIVE_CONFIGS", "CC_DELAY", cDelay, g_SNMiniFilename.Get()); 
+
 	m_cbConfig.Empty();
 	m_cbInputTr.Empty();
 	m_parentVwnd.RemoveAllChildren(false);
@@ -706,7 +720,7 @@ int SnM_MidiLiveWnd::OnKey(MSG* msg, int iKeyState)
 static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentVwnd)
 {
 	if (!g_pMidiLiveWnd) // SWS Can't draw before wnd initialized - why isn't this a member func??
-		return;			  // JFB TODO yes, I was planing a kind of SNM_Wnd at some point..
+		return;			  // JFB TODO planing a kind of SNM_Wnd at some point..
 	
 	int xo=0, yo=0, sz;
     LICE_IBitmap *bm = _painter->GetBuffer(&xo,&yo);
@@ -765,8 +779,8 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		WDL_VirtualIconButton* btn = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_ENABLE);
 		if (btn)
 		{
-			x0 += 5;
-			RECT tr={x0,y0+5,x0+15,y0+20};
+			x0 += 10;
+			RECT tr={x0,y0+4,x0+16,y0+20};
 			x0 = tr.right+5;
 			btn->SetPosition(&tr);
 			btn->SetCheckState(g_liveConfigs.Get()->m_enable[g_configId]);
@@ -780,7 +794,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		if (btn)
 		{
 			x0 += 5;
-			RECT tr={x0,y0+5,x0+15,y0+20};
+			RECT tr={x0,y0+4,x0+16,y0+20};
 			x0 = tr.right+5;
 			btn->SetPosition(&tr);
 			btn->SetCheckState(g_pMidiLiveWnd->m_autoRcv[g_configId]);
@@ -790,25 +804,12 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			x0 = tr2.right+5;
 		}
 */
-		btn = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_MUTE_OTHERS);
-		if (btn)
-		{
-			x0 += 5;
-			RECT tr={x0,y0+5,x0+15,y0+20};
-			x0 = tr.right+5;
-			btn->SetPosition(&tr);
-			btn->SetCheckState(g_liveConfigs.Get()->m_muteOthers[g_configId]);
-
-			RECT tr2={x0,y0,x0+120,y0+25};
-			tmpfont.DrawText(bm, "Mute all but active track", -1, &tr2, DT_LEFT | DT_VCENTER);
-			x0 = tr2.right+5;
-		}
 
 		cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_INPUT_TRACK);
 		if (cbVwnd)
 		{
 			x0 += 5;
-			RECT tr={x0,y0,x0+55,y0+25};
+			RECT tr={x0,y0,x0+60,y0+25};
 			tmpfont.DrawText(bm, "Input track:", -1, &tr, DT_LEFT | DT_VCENTER);
 			x0 = tr.right+5;
 
@@ -824,6 +825,36 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 				}
 			}
 			cbVwnd->SetCurSel(sel);
+		}
+
+		btn = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_MUTE_OTHERS);
+		if (btn)
+		{
+			x0 += 10;
+			RECT tr={x0,y0+4,x0+16,y0+20};
+
+			x0 = tr.right+5;
+			btn->SetPosition(&tr);
+			btn->SetCheckState(g_liveConfigs.Get()->m_muteOthers[g_configId]);
+
+			RECT tr2={x0,y0,x0+120,y0+25};
+			tmpfont.DrawText(bm, "Mute all but active track", -1, &tr2, DT_LEFT | DT_VCENTER);
+			x0 = tr2.right+5;
+		}
+
+		btn = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_AUTO_SELECT);
+		if (btn)
+		{
+			x0 += 10;
+			RECT tr={x0,y0+4,x0+16,y0+20};
+
+			x0 = tr.right+5;
+			btn->SetPosition(&tr);
+			btn->SetCheckState(g_liveConfigs.Get()->m_autoSelect[g_configId]);
+
+			RECT tr2={x0,y0,x0+100,y0+25};
+			tmpfont.DrawText(bm, "Auto track selection", -1, &tr2, DT_LEFT | DT_VCENTER);
+			x0 = tr2.right+5;
 		}
 
 		_painter->PaintVirtWnd(_parentVwnd, 0);
@@ -858,19 +889,32 @@ int SnM_MidiLiveWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			MidiLiveConfig* lc = g_liveConfigs.Get();
 			if (w && lc) 
 			{
-				if (w == &m_btnEnable) {
-					lc->m_enable[g_configId] = !(lc->m_enable[g_configId]);
-					lc->m_lastDeactivateCmd[g_configId][0] = -1;
-					if (lc->m_lastMIDIVal[g_configId] != -1) {
-						lc->m_lastMIDIVal[g_configId] = -1;
-						Update();
+				switch(w->GetID())
+				{
+					case BUTTONID_ENABLE:
+					{
+						lc->m_enable[g_configId] = !(lc->m_enable[g_configId]);
+						lc->m_lastDeactivateCmd[g_configId][0] = -1;
+						if (lc->m_lastMIDIVal[g_configId] != -1) {
+							lc->m_lastMIDIVal[g_configId] = -1;
+							Update();
+							Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+						}
 					}
+					break;
+					case BUTTONID_AUTO_RCV:
+						lc->m_autoRcv[g_configId] = !(lc->m_autoRcv[g_configId]);
+						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+						break;
+					case BUTTONID_MUTE_OTHERS:
+						lc->m_muteOthers[g_configId] = !(lc->m_muteOthers[g_configId]);
+						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+						break;
+					case BUTTONID_AUTO_SELECT:
+						lc->m_autoSelect[g_configId] = !(lc->m_autoSelect[g_configId]);
+						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+						break;
 				}
-				else if (w == &m_btnAutoRcv)
-					lc->m_autoRcv[g_configId] = !(lc->m_autoRcv[g_configId]);
-				else if (w == &m_btnMuteOthers)
-					lc->m_muteOthers[g_configId] = !(lc->m_muteOthers[g_configId]);
-
 				w->OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			}
 		}
@@ -914,34 +958,26 @@ void InitModel()
 
 void SNM_LiveCfg_TLChangeSchedJob::Perform()
 {
-	//JFB!! Prevents a mess with PiPs (temporary, I hope)
-	if (g_liveCCConfigs.Find(Enum_Projects(-1, NULL, 0)) >= 0)
+	// Check or model consistency against the track list update
+	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++) // for "safety" (size MUST be SNM_LIVECFG_NB_CONFIGS)
 	{
-		// Check or model consistency against the track list update
-		for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++) // for "safety" (max MUST be SNM_LIVECFG_NB_CONFIGS)
+		for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++) // for "safety" (size MUST be NB_CC_VALUES)
 		{
-			for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++) // for "safety" (max MUST be NB_CC_VALUES)
-			{
-				MidiLiveItem* item = g_liveCCConfigs.Get()->Get(i)->Get(j);
-				if (item && item->m_track && CSurf_TrackToID(item->m_track, false) <= 0)
-					item->m_track = NULL;
-			}
-			if (g_liveConfigs.Get()->m_inputTr[i] && CSurf_TrackToID(g_liveConfigs.Get()->m_inputTr[i], false) <= 0)
-				g_liveConfigs.Get()->m_inputTr[i] = NULL;
+			MidiLiveItem* item = g_liveCCConfigs.Get()->Get(i)->Get(j);
+			if (item && item->m_track && CSurf_TrackToID(item->m_track, false) <= 0) // bad or master
+				item->m_track = NULL;
+		}
+		if (g_liveConfigs.Get()->m_inputTr[i] && CSurf_TrackToID(g_liveConfigs.Get()->m_inputTr[i], false) <= 0)
+			g_liveConfigs.Get()->m_inputTr[i] = NULL;
 
 //			g_lastPerformedMIDIVal[i] = -1;
 //			g_lastDeactivateCmd[i][0] = -1;
-		}
-
-		if (g_pMidiLiveWnd)
-		{
-			g_pMidiLiveWnd->FillComboInputTrack();
-			g_pMidiLiveWnd->Update();
-		}
 	}
-	else
+
+	if (g_pMidiLiveWnd)
 	{
-		// PiPs go here..
+		g_pMidiLiveWnd->FillComboInputTrack();
+		g_pMidiLiveWnd->Update();
 	}
 }
 
@@ -962,11 +998,15 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 		if (lc)
 		{
+			int success;
 			lc->m_enable[configId] = lp.gettoken_int(2);
 			lc->m_autoRcv[configId] = lp.gettoken_int(3);
 			lc->m_muteOthers[configId] = lp.gettoken_int(4);
 			stringToGuid(lp.gettoken_str(5), &g);
 			lc->m_inputTr[configId] = GuidToTrack(&g);
+			lc->m_autoSelect[configId] = lp.gettoken_int(6, &success);
+			if (!success)
+				lc->m_autoSelect[configId] = 1;
 		}
 
 		WDL_PtrList<MidiLiveItem>* ccConfigs = g_liveCCConfigs.Get()->Get(configId);
@@ -1011,15 +1051,12 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	if (g_liveCCConfigs.Find(Enum_Projects(-1, NULL, 0)) < 0)
-		return; 
-
 	char curLine[SNM_MAX_CHUNK_LINE_LENGTH] = "", strId[128] = "";
 	GUID g; 
 	bool firstCfg = true;
-	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++) // for "safety" (max MUST be SNM_LIVECFG_NB_CONFIGS)
+	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++) // for "safety" (size MUST be SNM_LIVECFG_NB_CONFIGS)
 	{
-	  for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++) // for "safety" (max MUST be NB_CC_VALUES)
+	  for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++) // for "safety" (size MUST be NB_CC_VALUES)
 	  {
 			MidiLiveItem* item = g_liveCCConfigs.Get()->Get(i)->Get(j);
 			if (item && !item->IsDefault()) // avoid a bunch of useless data in RPP files!
@@ -1030,23 +1067,24 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 					MidiLiveConfig* lc = g_liveConfigs.Get();
 					if (lc)
 					{
-						if (lc->m_inputTr[i] && CSurf_TrackToID(lc->m_inputTr[i], false)) 
+						if (lc->m_inputTr[i] && CSurf_TrackToID(lc->m_inputTr[i], false) > 0) 
 							g = *(GUID*)GetSetMediaTrackInfo(lc->m_inputTr[i], "GUID", NULL);
 						else 
 							g = GUID_NULL;
 						guidToString(&g, strId);
 
-						_snprintf(curLine, SNM_MAX_CHUNK_LINE_LENGTH, "<S&M_MIDI_LIVE %d %d %d %d \"%s\"", 
+						_snprintf(curLine, SNM_MAX_CHUNK_LINE_LENGTH, "<S&M_MIDI_LIVE %d %d %d %d \"%s\" %d", 
 							i+1,
 							lc->m_enable[i],
 							lc->m_autoRcv[i],
 							lc->m_muteOthers[i],
-							strId);
+							strId,
+							lc->m_autoSelect[i]);
 						ctx->AddLine(curLine);
 					}
 				}
 
-				if (item->m_track && CSurf_TrackToID(item->m_track, false)) 
+				if (item->m_track && CSurf_TrackToID(item->m_track, false) > 0) 
 					g = *(GUID*)GetSetMediaTrackInfo(item->m_track, "GUID", NULL);
 				else 
 					g = GUID_NULL;
@@ -1140,12 +1178,20 @@ void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HW
 	// Absolute CC only
 	if (!_relmode && _valhw < 0)
 	{
-		// Avoid to stuck REPAER when a bunch of CCs are received (which is the standard case 
-		// with HW knobs, faders, ..) but just process the last "stable" one
-		// => we do this thanks to SNM_ScheduledJob
 		SNM_MidiLiveScheduledJob* job = 
-			new SNM_MidiLiveScheduledJob((int)_ct->user, 250, (int)_ct->user, _val, _valhw, _relmode, _hwnd);
-		AddOrReplaceScheduledJob(job);
+			new SNM_MidiLiveScheduledJob((int)_ct->user, g_approxDelayMsCC, (int)_ct->user, _val, _valhw, _relmode, _hwnd);
+
+		// delay:
+		// avoid to stuck REPAER when a bunch of CCs are received (which is the standard case 
+		// with HW knobs, faders, ..) but just process the last "stable" one
+		if (g_approxDelayMsCC) {
+			AddOrReplaceScheduledJob(job);
+		}
+		// immediate
+		else {
+			job->Perform();
+			delete job;
+		}
 	}
 }
 
@@ -1156,133 +1202,134 @@ void SNM_MidiLiveScheduledJob::Perform()
 	if (!lc || m_val == lc->m_lastMIDIVal[m_cfgId]) 
 		return;
 
-	if (lc->m_enable[m_cfgId])
+	MidiLiveItem* cfg = g_liveCCConfigs.Get()->Get(m_cfgId)->Get(m_val);
+	if (cfg && !cfg->IsDefault())
 	{
-		// refresh last executed CC value conf.
-		lc->m_lastMIDIVal[m_cfgId] = m_val;
-
-		// Run desactivate action of previous CC
-		// if one, the previous CC's track still selected
-		if (lc->m_lastDeactivateCmd[m_cfgId][0] > 0)
+		if (lc->m_enable[m_cfgId])
 		{
-			if (!KBD_OnMainActionEx(lc->m_lastDeactivateCmd[m_cfgId][0], lc->m_lastDeactivateCmd[m_cfgId][1], lc->m_lastDeactivateCmd[m_cfgId][2], lc->m_lastDeactivateCmd[m_cfgId][3], g_hwndParent, NULL))
-				Main_OnCommand(lc->m_lastDeactivateCmd[m_cfgId][0],0);
-			lc->m_lastDeactivateCmd[m_cfgId][0] = -1;
-		}
+			// refresh last executed CC value conf.
+			lc->m_lastMIDIVal[m_cfgId] = m_val;
 
-		MidiLiveItem* cfg = g_liveCCConfigs.Get()->Get(m_cfgId)->Get(m_val);
-		if (cfg && cfg->m_track)
-		{
-			// Mute/unselect all but this
-			WDL_PtrList<MediaTrack> cfgTracks;
-			for (int i=0; i < g_liveCCConfigs.Get()->Get(m_cfgId)->GetSize(); i++)
+			// Run desactivate action of previous CC
+			// if one, the previous CC's track still selected
+			if (lc->m_lastDeactivateCmd[m_cfgId][0] > 0)
 			{
-				MidiLiveItem* cfgOther = g_liveCCConfigs.Get()->Get(m_cfgId)->Get(i);
-				if (/*i != m_val && */cfgOther && cfgOther->m_track && cfgTracks.Find(cfgOther->m_track) == -1)
+				if (!KBD_OnMainActionEx(lc->m_lastDeactivateCmd[m_cfgId][0], lc->m_lastDeactivateCmd[m_cfgId][1], lc->m_lastDeactivateCmd[m_cfgId][2], lc->m_lastDeactivateCmd[m_cfgId][3], g_hwndParent, NULL))
+					Main_OnCommand(lc->m_lastDeactivateCmd[m_cfgId][0],0);
+				lc->m_lastDeactivateCmd[m_cfgId][0] = -1;
+			}
+
+			if (cfg->m_track)
+			{
+				// Mute/unselect all but this
+				WDL_PtrList<MediaTrack> cfgTracks;
+				for (int i=0; i < g_liveCCConfigs.Get()->Get(m_cfgId)->GetSize(); i++)
 				{
-					cfgTracks.Add(cfgOther->m_track);
-					if (cfgOther->m_track != cfg->m_track)
-						GetSetMediaTrackInfo(cfgOther->m_track, "I_SELECTED", &g_i0);	
-
-					if (lc->m_muteOthers[m_cfgId])
+					MidiLiveItem* cfgOther = g_liveCCConfigs.Get()->Get(m_cfgId)->Get(i);
+					if (/*i != m_val && */cfgOther && cfgOther->m_track && cfgTracks.Find(cfgOther->m_track) == -1)
 					{
-						if (cfgOther->m_track != cfg->m_track)
-							GetSetMediaTrackInfo(cfgOther->m_track, "B_MUTE", &g_bTrue);
+						cfgTracks.Add(cfgOther->m_track);
+						if (lc->m_autoSelect[m_cfgId] && cfgOther->m_track != cfg->m_track)
+							GetSetMediaTrackInfo(cfgOther->m_track, "I_SELECTED", &g_i0);	
 
-						// mute receives from the input track if needed
-						if (lc->m_inputTr[m_cfgId] && 
-							lc->m_inputTr[m_cfgId] != cfgOther->m_track)
+						if (lc->m_muteOthers[m_cfgId])
 						{
-							int rcvIdx=0;
-							MediaTrack* rcvTr = (MediaTrack*)GetSetTrackSendInfo(cfgOther->m_track, -1, rcvIdx, "P_SRCTRACK", NULL);
-							while(rcvTr)
+							if (cfgOther->m_track != cfg->m_track)
+								GetSetMediaTrackInfo(cfgOther->m_track, "B_MUTE", &g_bTrue);
+
+							// mute receives from the input track if needed
+							if (lc->m_inputTr[m_cfgId] && 
+								lc->m_inputTr[m_cfgId] != cfgOther->m_track)
 							{
-								if (rcvTr == lc->m_inputTr[m_cfgId])
+								int rcvIdx=0;
+								MediaTrack* rcvTr = (MediaTrack*)GetSetTrackSendInfo(cfgOther->m_track, -1, rcvIdx, "P_SRCTRACK", NULL);
+								while(rcvTr)
 								{
-									bool b = (cfgOther->m_track != cfg->m_track);
-									GetSetTrackSendInfo(cfgOther->m_track, -1, rcvIdx, "B_MUTE", &b);
+									if (rcvTr == lc->m_inputTr[m_cfgId])
+									{
+										bool b = (cfgOther->m_track != cfg->m_track);
+										GetSetTrackSendInfo(cfgOther->m_track, -1, rcvIdx, "B_MUTE", &b);
+									}
+									rcvTr = (MediaTrack*)GetSetTrackSendInfo(cfgOther->m_track, -1, ++rcvIdx, "P_SRCTRACK", NULL);
 								}
-								rcvTr = (MediaTrack*)GetSetTrackSendInfo(cfgOther->m_track, -1, ++rcvIdx, "P_SRCTRACK", NULL);
 							}
 						}
 					}
 				}
-			}
 
-			// Avoid glitches AFAP: we'll unmute the focused track later (after processing)
-			GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &g_bTrue);
+				// Avoid glitches AFAP: we'll unmute the focused track later (after processing)
+				GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &g_bTrue);
 
-			SNM_ChunkParserPatcher* p = NULL;
-			if (cfg->m_trTemplate.GetLength())
-			{
-				p = new SNM_ChunkParserPatcher(cfg->m_track);
-				WDL_String chunk;
-				char filename[BUFFER_SIZE];
-				GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), filename, BUFFER_SIZE);
-				if (LoadChunk(filename, &chunk) && chunk.GetLength())
-					p->SetChunk(&chunk, 1);
-			}
-			else if (cfg->m_fxChain.GetLength())
-			{
-				p = new SNM_FXChainTrackPatcher(cfg->m_track);
-				WDL_String chunk;
-				char filename[BUFFER_SIZE];
-				GetFullResourcePath("FXChains", cfg->m_fxChain.Get(), filename, BUFFER_SIZE);
-				if (LoadChunk(filename, &chunk) && chunk.GetLength())
-					((SNM_FXChainTrackPatcher*)p)->SetFXChain(&chunk);
-			}
+				SNM_ChunkParserPatcher* p = NULL;
+				if (cfg->m_trTemplate.GetLength())
+				{
+					p = new SNM_ChunkParserPatcher(cfg->m_track);
+					WDL_String chunk;
+					char filename[BUFFER_SIZE];
+					GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), filename, BUFFER_SIZE);
+					if (LoadChunk(filename, &chunk) && chunk.GetLength())
+						p->SetChunk(&chunk, 1);
+				}
+				else if (cfg->m_fxChain.GetLength())
+				{
+					p = new SNM_FXChainTrackPatcher(cfg->m_track);
+					WDL_String chunk;
+					char filename[BUFFER_SIZE];
+					GetFullResourcePath("FXChains", cfg->m_fxChain.Get(), filename, BUFFER_SIZE);
+					if (LoadChunk(filename, &chunk) && chunk.GetLength())
+						((SNM_FXChainTrackPatcher*)p)->SetFXChain(&chunk);
+				}
 /*Preset
-			else if (cfg->m_presets.GetLength())
-			{
-				p = new SNM_FXPresetParserPatcher(cfg->m_track);
-				((SNM_FXPresetParserPatcher*)p)->SetPresets(&(cfg->m_presets));
-			}
+				else if (cfg->m_presets.GetLength())
+				{
+					p = new SNM_FXPresetParserPatcher(cfg->m_track);
+					((SNM_FXPresetParserPatcher*)p)->SetPresets(&(cfg->m_presets));
+				}
 */
 /*JFB not released
-			if (g_pMidiLiveWnd->m_autoRcv[m_cfgId] && g_pMidiLiveWnd->m_inputTr[m_cfgId]) {			
-			}
+				if (g_pMidiLiveWnd->m_autoRcv[m_cfgId] && g_pMidiLiveWnd->m_inputTr[m_cfgId]) 
+				{			
+				}
 */			
-			delete p; // + auto commit!!
+				delete p; // + auto commit!!
 
-			// unmute/select
-			GetSetMediaTrackInfo(cfg->m_track, "I_SELECTED", &g_i1);
-			GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &g_bFalse);
+				// unmute/select
+				if (lc->m_autoSelect[m_cfgId])
+					GetSetMediaTrackInfo(cfg->m_track, "I_SELECTED", &g_i1);
+				GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &g_bFalse);
 
-		} // end of track processing
+			} // end of track processing
 
-		// Perform activate action
-		if (cfg->m_onAction.GetLength())
-		{
-			int cmd = NamedCommandLookup(cfg->m_onAction.Get());
-			if (cmd > 0)
-				if (!KBD_OnMainActionEx(cmd, m_val, m_valhw, m_relmode, g_hwndParent, NULL))
-					Main_OnCommand(cmd,0);
-		}
-
-		// (just) prepare desactivate action
-		if (cfg->m_offAction.GetLength())
-		{
-			int cmd = NamedCommandLookup(cfg->m_offAction.Get());
-			if (cmd > 0)
+			// Perform activate action
+			if (cfg->m_onAction.GetLength())
 			{
-				lc->m_lastDeactivateCmd[m_cfgId][0] = cmd;
-				lc->m_lastDeactivateCmd[m_cfgId][1] = m_val;
-				lc->m_lastDeactivateCmd[m_cfgId][2] = m_valhw;
-				lc->m_lastDeactivateCmd[m_cfgId][3] = m_relmode;
+				int cmd = NamedCommandLookup(cfg->m_onAction.Get());
+				if (cmd > 0)
+					if (!KBD_OnMainActionEx(cmd, m_val, m_valhw, m_relmode, g_hwndParent, NULL))
+						Main_OnCommand(cmd,0);
 			}
-		}
-		else
-			lc->m_lastDeactivateCmd[m_cfgId][0] = -1;
 
-		// auto selection
-		if (g_pMidiLiveWnd)
-		{
-			g_pMidiLiveWnd->SelectByCCValue(m_cfgId, m_val);
-			g_pMidiLiveWnd->Update();
-		}
-	}
-	else
-		lc->m_lastDeactivateCmd[m_cfgId][0] = -1;
+			// (just) prepare desactivate action
+			if (cfg->m_offAction.GetLength())
+			{
+				int cmd = NamedCommandLookup(cfg->m_offAction.Get());
+				if (cmd > 0)
+				{
+					lc->m_lastDeactivateCmd[m_cfgId][0] = cmd;
+					lc->m_lastDeactivateCmd[m_cfgId][1] = m_val;
+					lc->m_lastDeactivateCmd[m_cfgId][2] = m_valhw;
+					lc->m_lastDeactivateCmd[m_cfgId][3] = m_relmode;
+				}
+			}
+			else
+				lc->m_lastDeactivateCmd[m_cfgId][0] = -1;
+
+			if (g_pMidiLiveWnd)
+				g_pMidiLiveWnd->SelectByCCValue(m_cfgId, m_val);
+
+		} // if (lc->m_enable[m_cfgId])
+
+	} // if (cfg && !cfg->IsDefault())
 }
 
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) 
@@ -1294,7 +1341,7 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 		// with HW knobs, faders, ..) but just process the last "stable" one
 		// => we do this thanks to SNM_ScheduledJob
 		SNM_SelectProjectScheduledJob* job = 
-			new SNM_SelectProjectScheduledJob(250, _val, _valhw, _relmode, _hwnd);
+			new SNM_SelectProjectScheduledJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd);
 		AddOrReplaceScheduledJob(job);
 	}
 }

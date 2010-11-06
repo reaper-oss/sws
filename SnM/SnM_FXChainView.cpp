@@ -1,7 +1,8 @@
 /******************************************************************************
 / SnM_FXChainView.cpp
+/ JFB TODO: now, a better name would be "SnM_ResourceView.cpp"
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÈdague 
+/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,15 +26,18 @@
 /
 ******************************************************************************/
 
+
 #include "stdafx.h"
 #include "SnM_Actions.h"
-#include "SnM_FXChainView.h"
+#include "SNM_FXChainView.h"
 #ifdef _WIN32
 #include "../MediaPool/DragDrop.h" //JFB: move to the trunk?
 #endif
 
-#define SAVEWINDOW_POS_KEY "S&M - FX Chain List Save Window Position"
+#define SAVEWINDOW_POS_KEY "S&M - FX Chain List Save Window Position" // JFB TODO? now, a better key name would be "Resources view Save Window Position
 
+
+// FX chain consts
 #define CLEAR_MSG					0x110001
 #define LOAD_MSG					0x110002
 #define LOAD_APPLY_TRACK_MSG		0x110103
@@ -55,29 +59,42 @@
 #define LOAD_PASTE_TAKE_STR			"Load/paste FX chain to selected items"
 #define LOAD_PASTE_ALL_TAKES_STR	"Load/paste FX chain to selected items, all takes"
 
+//JFB3 TODO: better names
 enum
 {
   COMBOID_TYPE=1000,
-  COMBOID_TO
+  COMBOID_DBLCLICK_TYPE,
+  COMBOID_DBLCLICK_TO
 };
 
 // Globals
-/*JFB static*/ SNM_FXChainWnd* g_pFXChainsWnd = NULL;
+/*JFB static*/ SNM_ResourceWnd* g_pResourcesWnd = NULL;
 static SWS_LVColumn g_fxChainListCols[] = { {50,2,"Slot"}, {100,2,"Name"}, {250,2,"Path"}, {200,1,"Description"} };
-int g_dblClickType = 0, g_dblClickTo = 0; 
+
+//JFB TODO: consts for resSubdir, filters...
+FileSlotList g_fxChainFiles(SNM_SLOT_TYPE_FX_CHAINS, "FXChains", "FX chain", "RfxChain");
+FileSlotList g_trTemplateFiles(SNM_SLOT_TYPE_TR_TEMPLATES, "TrackTemplates", "track template", "RTrackTemplate");
+
+WDL_PtrList<FileSlotList> g_filesLists;
+
+int g_type = SNM_SLOT_TYPE_FX_CHAINS;
+int g_dblClickType[SNM_SLOT_TYPE_COUNT];
+int g_dblClickTo = 0; // for fx chains only
+
+FileSlotList* GetCurList() {return g_filesLists.Get(g_type);}
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_FXChainView
+// SNM_ResourceView
 ///////////////////////////////////////////////////////////////////////////////
 
-SNM_FXChainView::SNM_FXChainView(HWND hwndList, HWND hwndEdit)
+SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, 4, g_fxChainListCols, "S&M - FX Chain View State", false) 
 {}
 
-void SNM_FXChainView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
+void SNM_ResourceView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
 {
-	FXChainSlotItem* pItem = (FXChainSlotItem*)item;
+	PathSlotItem* pItem = (PathSlotItem*)item;
 	if (pItem)
 	{
 		switch (iCol)
@@ -100,9 +117,9 @@ void SNM_FXChainView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
 	}
 }
 
-void SNM_FXChainView::SetItemText(LPARAM item, int iCol, const char* str)
+void SNM_ResourceView::SetItemText(LPARAM item, int iCol, const char* str)
 {
-	FXChainSlotItem* pItem = (FXChainSlotItem*)item;
+	PathSlotItem* pItem = (PathSlotItem*)item;
 	if (pItem)
 	{
 		if (iCol==3)
@@ -116,67 +133,75 @@ void SNM_FXChainView::SetItemText(LPARAM item, int iCol, const char* str)
 }
 
 
-void SNM_FXChainView::OnItemDblClk(LPARAM item, int iCol)
+void SNM_ResourceView::OnItemDblClk(LPARAM item, int iCol)
 {
-	FXChainSlotItem* pItem = (FXChainSlotItem*)item;
+	PathSlotItem* pItem = (PathSlotItem*)item;
 	if (pItem)
 	{
 		if (pItem->IsDefault())
 		{
-			if (g_pFXChainsWnd)
-				g_pFXChainsWnd->OnCommand(LOAD_MSG, item);
+			if (g_pResourcesWnd)
+				g_pResourcesWnd->OnCommand(LOAD_MSG, item);
 		}
 		else
 		{
-			switch(g_dblClickTo)
+			switch(g_type)
 			{
-				case 0:
-					loadSetPasteTrackFXChain(LOAD_APPLY_TRACK_STR, pItem->m_slot, !g_dblClickType, true);
+				case SNM_SLOT_TYPE_FX_CHAINS:
+					switch(g_dblClickTo)
+					{
+						case 0:
+							loadSetPasteTrackFXChain(LOAD_APPLY_TRACK_STR, pItem->m_slot, !g_dblClickType, true);
+							break;
+						case 1:
+							loadSetPasteTakeFXChain(LOAD_APPLY_TAKE_STR, pItem->m_slot, true, !g_dblClickType, true);
+							break;
+						case 2:
+							loadSetPasteTakeFXChain(LOAD_APPLY_ALL_TAKES_STR, pItem->m_slot, false, !g_dblClickType, true);
+							break;
+					}
 					break;
-				case 1:
-					loadSetPasteTakeFXChain(LOAD_APPLY_TAKE_STR, pItem->m_slot, true, !g_dblClickType, true);
-					break;
-				case 2:
-					loadSetPasteTakeFXChain(LOAD_APPLY_ALL_TAKES_STR, pItem->m_slot, false, !g_dblClickType, true);
-					break;
-				default:
+
+				case SNM_SLOT_TYPE_TR_TEMPLATES:
+					loadSetOrAddTrackTemplate("Apply track template", (g_dblClickType[g_type]==1), pItem->m_slot, true);//JFB3 "Apply.." en dur + g_dblClickType
 					break;
 			}
 		}
 	}
 }
 
-void SNM_FXChainView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
+void SNM_ResourceView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 {
-	if (g_pFXChainsWnd && g_pFXChainsWnd->m_filter.GetLength())
+	if (g_pResourcesWnd && g_pResourcesWnd->m_filter.GetLength())
 	{
 		int iCount = 0;
 		LineParser lp(false);
-		lp.parse(g_pFXChainsWnd->m_filter.Get());
-		for (int i = 0; i < g_fxChainFiles.GetSize(); i++)
+		lp.parse(g_pResourcesWnd->m_filter.Get());
+		for (int i = 0; i < GetCurList()->GetSize(); i++)
 		{
-			if (!g_fxChainFiles.Get(i)->IsDefault())
+			PathSlotItem* item = GetCurList()->Get(i);
+			if (item && !item->IsDefault())
 			{
 				bool match = true;
 				for (int j = 0; match && j < lp.getnumtokens(); j++)
-					match &= (stristr(g_fxChainFiles.Get(i)->m_shortPath.Get(), lp.gettoken_str(j)) != NULL);
+					match &= (stristr(item->m_shortPath.Get(), lp.gettoken_str(j)) != NULL);
 				if (match) {
 					pBuf->Resize(++iCount);
-					pBuf->Get()[iCount-1] = (LPARAM)g_fxChainFiles.Get(i);
+					pBuf->Get()[iCount-1] = (LPARAM)item;
 				}
 			}
 		}
 	}
 	else
 	{
-		pBuf->Resize(g_fxChainFiles.GetSize());
+		pBuf->Resize(GetCurList()->GetSize());
 		for (int i = 0; i < pBuf->GetSize(); i++)
-			pBuf->Get()[i] = (LPARAM)g_fxChainFiles.Get(i);
+			pBuf->Get()[i] = (LPARAM)GetCurList()->Get(i);
 	}
 }
 
 //JFB more than "shared" with Tim's MediaPool => factorize ?
-void SNM_FXChainView::OnBeginDrag(LPARAM item)
+void SNM_ResourceView::OnBeginDrag(LPARAM item)
 {
 #ifdef _WIN32
 	LVITEM li;
@@ -192,7 +217,7 @@ void SNM_FXChainView::OnBeginDrag(LPARAM item)
 		ListView_GetItem(m_hwndList, &li);
 		if (li.state & LVIS_SELECTED)
 		{
-			FXChainSlotItem* pItem = (FXChainSlotItem*)li.lParam;
+			PathSlotItem* pItem = (PathSlotItem*)li.lParam;
 			iMemNeeded += (int)(pItem->m_fullPath.GetLength() + 1);
 		}
 	}
@@ -214,7 +239,7 @@ void SNM_FXChainView::OnBeginDrag(LPARAM item)
 		ListView_GetItem(m_hwndList, &li);
 		if (li.state & LVIS_SELECTED)
 		{
-			FXChainSlotItem* pItem = (FXChainSlotItem*)li.lParam;
+			PathSlotItem* pItem = (PathSlotItem*)li.lParam;
 			strcpy(pBuf, pItem->m_fullPath.Get());
 			pBuf += strlen(pBuf) + 1;
 		}
@@ -236,17 +261,27 @@ void SNM_FXChainView::OnBeginDrag(LPARAM item)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_FXChainWnd
+// SNM_ResourceWnd
 ///////////////////////////////////////////////////////////////////////////////
 
-SNM_FXChainWnd::SNM_FXChainWnd()
-:SWS_DockWnd(IDD_SNM_FXCHAINLIST, "FX Chains", 30006, SWSGetCommandID(OpenFXChainView))
+SNM_ResourceWnd::SNM_ResourceWnd()
+:SWS_DockWnd(IDD_SNM_FXCHAINLIST, "Resources", 30006, SWSGetCommandID(OpenResourceView))
 {
+	m_previousType = g_type;
 	if (m_bShowAfterInit)
 		Show(false, false);
 }
 
-void SNM_FXChainWnd::SelectBySlot(int _slot)
+void SNM_ResourceWnd::SetType(int _type)
+{
+	m_previousType = g_type;
+	g_type = _type;
+	m_cbType.SetCurSel(_type);
+	if (m_previousType != g_type)
+		Update();
+}
+
+void SNM_ResourceWnd::SelectBySlot(int _slot)
 {
 	SWS_ListView* lv = m_pLists.Get(0);
 	HWND hList = lv ? lv->GetHWND() : NULL;
@@ -254,7 +289,7 @@ void SNM_FXChainWnd::SelectBySlot(int _slot)
 	{
 		for (int i = 0; i < lv->GetListItemCount(); i++)
 		{
-			FXChainSlotItem* item = (FXChainSlotItem*)lv->GetListItem(i);
+			PathSlotItem* item = (PathSlotItem*)lv->GetListItem(i);
 			if (item && item->m_slot == _slot) 
 			{
 				ListView_SetItemState(hList, -1, 0, LVIS_SELECTED);
@@ -266,33 +301,60 @@ void SNM_FXChainWnd::SelectBySlot(int _slot)
 	}
 }
 
-void SNM_FXChainWnd::Update()
+void SNM_ResourceWnd::Update()
 {
 	if (m_pLists.GetSize())
 		m_pLists.Get(0)->Update();
+	m_parentVwnd.RequestRedraw(NULL); //JFB3!!! should be like this in all views!!!!
 }
 
-void SNM_FXChainWnd::OnInitDlg()
+void SNM_ResourceWnd::FillDblClickTypeCombo()
+{
+	m_cbDblClickType.Empty();
+	if (g_type == SNM_SLOT_TYPE_FX_CHAINS)
+	{
+		m_cbDblClickType.AddItem("Apply");
+		m_cbDblClickType.AddItem("Paste");
+	}
+	// include tr templates..
+	else
+	{
+		m_cbDblClickType.AddItem("Apply to selected tracks");
+		m_cbDblClickType.AddItem("Add as new track");
+	}
+}
+
+void SNM_ResourceWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
 
-	m_pLists.Add(new SNM_FXChainView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
 	// Load prefs 
-	g_dblClickType = GetPrivateProfileInt("FXCHAIN_VIEW", "DBLCLICK_TYPE", 0, g_SNMiniFilename.Get());
-	g_dblClickTo = GetPrivateProfileInt("FXCHAIN_VIEW", "DBLCLICK_TO", 0, g_SNMiniFilename.Get());
+	g_type = GetPrivateProfileInt("RESOURCE_VIEW", "TYPE", 0, g_SNMiniFilename.Get());
+	g_dblClickType[SNM_SLOT_TYPE_FX_CHAINS] = GetPrivateProfileInt("RESOURCE_VIEW", "DBLCLICK_TYPE", 0, g_SNMiniFilename.Get());
+	g_dblClickType[SNM_SLOT_TYPE_TR_TEMPLATES] = GetPrivateProfileInt("RESOURCE_VIEW", "DBLCLICK_TYPE_TR_TEMPLATE", 0, g_SNMiniFilename.Get());
+	g_dblClickTo = GetPrivateProfileInt("RESOURCE_VIEW", "DBLCLICK_TO", 0, g_SNMiniFilename.Get());
 
 	// WDL GUI init
 	m_parentVwnd.SetRealParent(m_hwnd);
-	m_cbDblClickType.SetID(COMBOID_TYPE);
+
+	m_cbType.SetID(COMBOID_TYPE);
+	m_cbType.SetRealParent(m_hwnd);
+	m_cbType.AddItem("FX chains");
+	m_cbType.AddItem("Track templates");
+	m_cbType.SetCurSel(g_type);
+	m_parentVwnd.AddChild(&m_cbType);
+
+	m_cbDblClickType.SetID(COMBOID_DBLCLICK_TYPE);
 	m_cbDblClickType.SetRealParent(m_hwnd);
-	m_cbDblClickType.AddItem("Apply");
-	m_cbDblClickType.AddItem("Paste");
-	m_cbDblClickType.SetCurSel(g_dblClickType);
+	FillDblClickTypeCombo();
+
+	m_cbDblClickType.SetCurSel(g_dblClickType[g_type]);
 	m_parentVwnd.AddChild(&m_cbDblClickType);
 
-	m_cbDblClickTo.SetID(COMBOID_TO);
+	m_cbDblClickTo.SetID(COMBOID_DBLCLICK_TO);
 	m_cbDblClickTo.SetRealParent(m_hwnd);
 	m_cbDblClickTo.AddItem("Tracks");
 	m_cbDblClickTo.AddItem("Items");
@@ -306,10 +368,10 @@ void SNM_FXChainWnd::OnInitDlg()
 	Update();
 }
 
-void SNM_FXChainWnd::OnCommand(WPARAM wParam, LPARAM lParam)
+void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	int x=0;
-	FXChainSlotItem* item = (FXChainSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
+	PathSlotItem* item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
 	switch(wParam)
 	{
 		case (IDC_FILTER | (EN_CHANGE << 16)):
@@ -332,16 +394,16 @@ void SNM_FXChainWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 
 		case LOAD_MSG:
-			if (item && browseStoreFXChain(item->m_slot))
+			if (item && GetCurList()->BrowseStoreSlot(item->m_slot)) //JFB3 TODO GetCurList!?
 				Update();
 			break;
 		case CLEAR_MSG: 
 		{
 			bool updt = false;
 			while(item) {
-				clearFXChainSlot(item->m_slot, false);
+				GetCurList()->ClearSlot(item->m_slot, false);
 				updt = true;
-				item = (FXChainSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
+				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
 			}
 			if (updt) Update();
 			break;
@@ -352,7 +414,7 @@ void SNM_FXChainWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case DISPLAY_MSG:
 			if (item)
-				displayFXChain(item->m_slot);
+				GetCurList()->DisplaySlot(item->m_slot);
 			break;
 
 		// Apply
@@ -399,9 +461,19 @@ void SNM_FXChainWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		{
 			// WDL GUI
 			if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE)
-				g_dblClickType = m_cbDblClickType.GetCurSel();
-
-			else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TO)
+			{
+				int previousType = g_type;
+				g_type = m_cbType.GetCurSel();
+				if (g_type != previousType)
+				{
+					FillDblClickTypeCombo();
+					Update();
+					//JFB!! TODO focus filter!
+				}
+			}
+			else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_DBLCLICK_TYPE)
+				g_dblClickType[g_type] = m_cbDblClickType.GetCurSel();
+			else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_DBLCLICK_TO)
 				g_dblClickTo = m_cbDblClickTo.GetCurSel();
 
 			// default
@@ -413,12 +485,12 @@ void SNM_FXChainWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-HMENU SNM_FXChainWnd::OnContextMenu(int x, int y)
+HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 {
 	HMENU hMenu = NULL;
 	int iCol;
 	LPARAM item = m_pLists.Get(0)->GetHitItem(x, y, &iCol);
-	FXChainSlotItem* pItem = (FXChainSlotItem*)item;
+	PathSlotItem* pItem = (PathSlotItem*)item;
 	if (pItem && iCol >= 0)
 	{
 		UINT enabled = pItem->m_fullPath.GetLength() ? MF_ENABLED : MF_DISABLED;
@@ -431,18 +503,28 @@ HMENU SNM_FXChainWnd::OnContextMenu(int x, int y)
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		AddToMenu(hMenu, "Load slot...", LOAD_MSG);
 		AddToMenu(hMenu, "Clear slots", CLEAR_MSG, -1, false, enabled);
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
-		AddToMenu(hMenu, "Copy", COPY_MSG, -1, false, enabled);
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
-		AddToMenu(hMenu, LOAD_APPLY_TRACK_STR, LOAD_APPLY_TRACK_MSG);
-		AddToMenu(hMenu, LOAD_PASTE_TRACK_STR, LOAD_PASTE_TRACK_MSG);
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
-		AddToMenu(hMenu, LOAD_APPLY_TAKE_STR,		LOAD_APPLY_TAKE_MSG);
-		AddToMenu(hMenu, LOAD_APPLY_ALL_TAKES_STR,	LOAD_APPLY_ALL_TAKES_MSG);
-		AddToMenu(hMenu, LOAD_PASTE_TAKE_STR,		LOAD_PASTE_TAKE_MSG);
-		AddToMenu(hMenu, LOAD_PASTE_ALL_TAKES_STR,	LOAD_PASTE_ALL_TAKES_MSG);
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
-		AddToMenu(hMenu, "Display FX chain...", DISPLAY_MSG, -1, false, enabled);
+		switch(g_type)
+		{
+			case SNM_SLOT_TYPE_FX_CHAINS:
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hMenu, "Copy", COPY_MSG, -1, false, enabled);
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hMenu, LOAD_APPLY_TRACK_STR, LOAD_APPLY_TRACK_MSG);
+				AddToMenu(hMenu, LOAD_PASTE_TRACK_STR, LOAD_PASTE_TRACK_MSG);
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hMenu, LOAD_APPLY_TAKE_STR,		LOAD_APPLY_TAKE_MSG);
+				AddToMenu(hMenu, LOAD_APPLY_ALL_TAKES_STR,	LOAD_APPLY_ALL_TAKES_MSG);
+				AddToMenu(hMenu, LOAD_PASTE_TAKE_STR,		LOAD_PASTE_TAKE_MSG);
+				AddToMenu(hMenu, LOAD_PASTE_ALL_TAKES_STR,	LOAD_PASTE_ALL_TAKES_MSG);
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hMenu, "Display FX chain...", DISPLAY_MSG, -1, false, enabled);
+				break;
+			//JFB3 TODO
+			case SNM_SLOT_TYPE_TR_TEMPLATES:
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hMenu, "Display track template...", DISPLAY_MSG, -1, false, enabled);
+				break;
+		}
 	}
 	else 
 	{
@@ -452,21 +534,24 @@ HMENU SNM_FXChainWnd::OnContextMenu(int x, int y)
 	return hMenu;
 }
 
-void SNM_FXChainWnd::OnDestroy() 
+void SNM_ResourceWnd::OnDestroy() 
 {
 	// save prefs
-	char cType[2], cTo[2];
-	sprintf(cType, "%d", m_cbDblClickType.GetCurSel());
-	sprintf(cTo, "%d", m_cbDblClickTo.GetCurSel());
-	WritePrivateProfileString("FXCHAIN_VIEW", "DBLCLICK_TYPE", cType, g_SNMiniFilename.Get()); 
-	WritePrivateProfileString("FXCHAIN_VIEW", "DBLCLICK_TO", cTo, g_SNMiniFilename.Get()); 
+	char cTmp[2];
+	sprintf(cTmp, "%d", m_cbType.GetCurSel());
+	WritePrivateProfileString("RESOURCE_VIEW", "TYPE", cTmp, g_SNMiniFilename.Get()); 
+	sprintf(cTmp, "%d", m_cbDblClickType.GetCurSel());
+	WritePrivateProfileString("RESOURCE_VIEW", "DBLCLICK_TYPE", cTmp, g_SNMiniFilename.Get()); 
+	sprintf(cTmp, "%d", m_cbDblClickTo.GetCurSel());
+	WritePrivateProfileString("RESOURCE_VIEW", "DBLCLICK_TO", cTmp, g_SNMiniFilename.Get()); 
 
+	m_cbType.Empty();
 	m_cbDblClickType.Empty();
 	m_cbDblClickTo.Empty();
 	m_parentVwnd.RemoveAllChildren(false);
 }
 
-int SNM_FXChainWnd::OnKey(MSG* msg, int iKeyState) 
+int SNM_ResourceWnd::OnKey(MSG* msg, int iKeyState) 
 {
 	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState)
 	{
@@ -477,7 +562,7 @@ int SNM_FXChainWnd::OnKey(MSG* msg, int iKeyState)
 }
 
 //JFB more than "shared" with Tim's MediaPool => factorize ?
-void SNM_FXChainWnd::OnDroppedFiles(HDROP h)
+void SNM_ResourceWnd::OnDroppedFiles(HDROP h)
 {
 	// Check to see if we dropped on a group
 	POINT pt;
@@ -488,7 +573,7 @@ void SNM_FXChainWnd::OnDroppedFiles(HDROP h)
 	pt.x += r.left;
 	pt.y += r.top;
 
-	FXChainSlotItem* pItem = (FXChainSlotItem*)m_pLists.Get(0)->GetHitItem(pt.x, pt.y, NULL);
+	PathSlotItem* pItem = (PathSlotItem*)m_pLists.Get(0)->GetHitItem(pt.x, pt.y, NULL);
 	if (pItem)
 	{
 		int slot = pItem->m_slot;
@@ -496,20 +581,22 @@ void SNM_FXChainWnd::OnDroppedFiles(HDROP h)
 
 		char cFile[BUFFER_SIZE];
 		int iFiles = DragQueryFile(h, 0xFFFFFFFF, NULL, 0);
+
+		//JFB3 TODO: insert slots even if not the correct extension (eg .RfxChain) !!!!!
 		for (int i = 0; i < iFiles; i++)
 			InsertAtSelectedSlot(false);
 
 		// re-sync pItem (has been moved down)
-		pItem = g_fxChainFiles.Get(slot); 
+		pItem = GetCurList()->Get(slot); 
 		for (int i = 0; pItem && i < iFiles; i++)
 		{
 			slot = pItem->m_slot;
 			DragQueryFile(h, i, cFile, BUFFER_SIZE);
 			char* pExt = strrchr(cFile, '.');
-			if (pExt && !_stricmp(pExt+1, "rfxchain"))
+			if (pExt && !_stricmp(pExt+1, GetCurList()->m_ext.Get()))
 			{
-				checkAndStoreFXChain(slot, cFile);
-				pItem = g_fxChainFiles.Get(slot+1); 
+				GetCurList()->CheckAndStoreSlot(slot, cFile);
+				pItem = GetCurList()->Get(slot+1); 
 			}
 		}
 		Update();
@@ -519,6 +606,9 @@ void SNM_FXChainWnd::OnDroppedFiles(HDROP h)
 
 static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentVwnd)
 {
+	if (!g_pResourcesWnd)
+		return;
+
 	int xo=0, yo=0, sz;
     LICE_IBitmap *bm = _painter->GetBuffer(&xo,&yo);
 	if (bm)
@@ -557,45 +647,63 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		else tmpfont.SetTextColor(LICE_RGBA(255,255,255,255));
 
 		int x0=_r.left+10, y0=_r.top+5, h=25;
+		WDL_VirtualComboBox* cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_TYPE);
+		if (cbVwnd)
+		{
+			RECT tr2={x0,y0+3,x0+128,y0+h-2};
+			x0 = tr2.right+5;
+			cbVwnd->SetPosition(&tr2);
+			cbVwnd->SetFont(&tmpfont);
+		}
 
 		// "Filter:"
 		{
+			x0 += 10;
 			RECT tr={x0,y0,x0+40,y0+h};
 			tmpfont.DrawText(bm, "Filter:", -1, &tr, DT_LEFT | DT_VCENTER);
 			x0 = tr.right+5;
 		}
 
 #ifdef _WIN32
-		x0=_r.left+180, y0=_r.top+5, h=25;
+		x0 += 125; // i.e. width of the filter edit box
 #else
-		x0=_r.left+200, y0=_r.top+5, h=25;
+		x0 += 145;
 #endif
-		// Dropdowns
-		WDL_VirtualComboBox* cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_TYPE);
+
+		// FX chains additionnal controls
+		cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_DBLCLICK_TYPE);
 		if (cbVwnd)
 		{
-			RECT tr={x0,y0,x0+48,y0+h};
-			tmpfont.DrawText(bm, "Dbl-click:", -1, &tr, DT_LEFT | DT_VCENTER);
-			x0 = tr.right+5;
+			if (g_type == SNM_SLOT_TYPE_FX_CHAINS || g_type == SNM_SLOT_TYPE_TR_TEMPLATES)
+			{
+				RECT tr={x0,y0,x0+48,y0+h};
+				tmpfont.DrawText(bm, "Dbl-click:", -1, &tr, DT_LEFT | DT_VCENTER);
+				x0 = tr.right+5;
 
-			RECT tr2={x0,y0+3,x0+60,y0+h-2};
-			x0 = tr2.right+5;
-			cbVwnd->SetPosition(&tr2);
-			cbVwnd->SetFont(&tmpfont);
+				RECT tr2={x0, y0+3, g_type == SNM_SLOT_TYPE_FX_CHAINS ? x0+60 : x0+148, y0+h-2};
+				x0 = tr2.right+5;
+				cbVwnd->SetPosition(&tr2);
+				cbVwnd->SetFont(&tmpfont);
+			}
+			cbVwnd->SetVisible(g_type == SNM_SLOT_TYPE_FX_CHAINS || g_type == SNM_SLOT_TYPE_TR_TEMPLATES);
 		}
 
-		cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_TO);
+		cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_DBLCLICK_TO);
 		if (cbVwnd)
 		{
-			x0+=5;
-			RECT tr={x0,y0,x0+60,y0+h};
-			tmpfont.DrawText(bm, "To selected:", -1, &tr, DT_LEFT | DT_VCENTER);
-			x0 = tr.right+5;
+			if (g_type == SNM_SLOT_TYPE_FX_CHAINS)
+			{
+				x0+=10;
+				RECT tr={x0,y0,x0+60,y0+h};
+				tmpfont.DrawText(bm, "To selected:", -1, &tr, DT_LEFT | DT_VCENTER);
+				x0 = tr.right+5;
 
-			RECT tr2={x0,y0+3,x0+105,y0+h-2};
-			x0 = tr2.right+5;
-			cbVwnd->SetPosition(&tr2);
-			cbVwnd->SetFont(&tmpfont);
+				RECT tr2={x0,y0+3,x0+105,y0+h-2};
+				x0 = tr2.right+5;
+				cbVwnd->SetPosition(&tr2);
+				cbVwnd->SetFont(&tmpfont);
+			}
+			cbVwnd->SetVisible(g_type == SNM_SLOT_TYPE_FX_CHAINS);
 		}
 
 		_painter->PaintVirtWnd(_parentVwnd, 0);
@@ -605,7 +713,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 	}
 }
 
-int SNM_FXChainWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
@@ -623,45 +731,60 @@ int SNM_FXChainWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 
-    case WM_LBUTTONDOWN:
-		SetFocus(g_pFXChainsWnd->GetHWND());
-		WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		if (w) w->OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+		case WM_LBUTTONDOWN:
+		{
+			SetFocus(g_pResourcesWnd->GetHWND());
+			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			if (w) 
+				w->OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+		}
+		break;
+
+		case WM_LBUTTONUP:
+		{
+			int x = GET_X_LPARAM(lParam);
+			int y = GET_Y_LPARAM(lParam);
+			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
+			if (w) w->OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+		}
+		break;
+
+		case WM_MOUSEMOVE:
+		{
+			int x = GET_X_LPARAM(lParam);
+			int y = GET_Y_LPARAM(lParam);
+			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
+			if (w) w->OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+		}
 		break;
 	}
 	return 0;
 }
 
 
-void SNM_FXChainWnd::AddSlot(bool _update)
+void SNM_ResourceWnd::AddSlot(bool _update)
 {
-	int idx = g_fxChainFiles.GetSize();
-	g_fxChainFiles.Add(new FXChainSlotItem(idx, "", ""));
-
-	if (_update) {
+	int idx = GetCurList()->GetSize();
+	if (GetCurList()->AddEmptySlot() && _update) {
 		Update();
 		SelectBySlot(idx);
 	}
 }
 
-void SNM_FXChainWnd::InsertAtSelectedSlot(bool _update)
+void SNM_ResourceWnd::InsertAtSelectedSlot(bool _update)
 {
-	if (g_fxChainFiles.GetSize())
+	if (GetCurList()->GetSize())
 	{
 		bool updt = false;
-		FXChainSlotItem* item = (FXChainSlotItem*)m_pLists.Get(0)->EnumSelected(NULL);
+		PathSlotItem* item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(NULL);
 		if (item)
 		{
-			int idx = g_fxChainFiles.Find(item);
-			if (idx >= 0) {
-				updt = true;
-				g_fxChainFiles.Insert(idx, new FXChainSlotItem(idx, "", ""));
-				for (int i=idx+1; i < g_fxChainFiles.GetSize(); i++)
-					g_fxChainFiles.Get(i)->m_slot++;
-			}
+			int slot = GetCurList()->Find(item);
+			if (slot >= 0)
+				updt = (GetCurList()->InsertEmptySlot(slot) != NULL);
 			if (_update && updt) {
 				Update();
-				SelectBySlot(idx);
+				SelectBySlot(slot);
 			}
 		}
 		else
@@ -672,20 +795,17 @@ void SNM_FXChainWnd::InsertAtSelectedSlot(bool _update)
 
 }
 
-void SNM_FXChainWnd::DeleteSelectedSlot(bool _update)
+void SNM_ResourceWnd::DeleteSelectedSlot(bool _update)
 {
 	bool updt = false;
 	int x=0;
-	FXChainSlotItem* item;
-	while((item = (FXChainSlotItem*)m_pLists.Get(0)->EnumSelected(&x)))
+	PathSlotItem* item;
+	while((item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x)))
 	{
-		int idx = g_fxChainFiles.Find(item);
-		if (idx >= 0)
-		{
+		int slot = GetCurList()->Find(item);
+		if (slot >= 0) {
 			updt = true;
-			g_fxChainFiles.Delete(idx, true);
-			for (int i=idx; i < g_fxChainFiles.GetSize(); i++)
-				g_fxChainFiles.Get(i)->m_slot--;
+			GetCurList()->DeleteSlot(slot, true);
 		}
 	}
 	if (_update && updt)
@@ -703,49 +823,185 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 		if (cmd > 0)
 		{
 			int afterCmd = NamedCommandLookup("_SWSCONSOLE");
-			AddToMenu(hMenu, "S&&M FX Chains", cmd, afterCmd > 0 ? afterCmd : 40075);
+			AddToMenu(hMenu, "S&&M Resources", cmd, afterCmd > 0 ? afterCmd : 40075);
 		}
 	}
 }
 
-int FXChainViewInit()
+int ResourceViewInit()
 {
+	// Init the lists of files (ordered by g_type)
+	g_filesLists.Empty();
+	g_filesLists.Add(&g_fxChainFiles);
+	g_filesLists.Add(&g_trTemplateFiles);
+
 	char shortPath[BUFFER_SIZE], fullPath[BUFFER_SIZE], desc[128], maxSlotCount[16];
 
-	// Default: 128 slots for "seamless upgrade" (nb of slots was fixed previously)
-	GetPrivateProfileString("FXCHAIN", "MAX_SLOT", "128", maxSlotCount, 16, g_SNMiniFilename.Get()); 
-
-	g_fxChainFiles.Empty(true);
-	int fxChainSlotCount = atoi(maxSlotCount); 
-	for (int i=0; i < fxChainSlotCount; i++) {
-		readFXChainSlotIniFile(i, shortPath, BUFFER_SIZE, desc, 128);
-		GetFullResourcePath("FXChains", shortPath, fullPath, BUFFER_SIZE);
-		g_fxChainFiles.Add(new FXChainSlotItem(i, fullPath, desc));
+	for (int i=0; i < g_filesLists.GetSize(); i++)
+	{
+		FileSlotList* list = g_filesLists.Get(i);
+		if (list)
+		{
+			// FX chains: 128 slots for "seamless upgrade" (nb of slots was fixed previously)
+			GetPrivateProfileString(list->m_resDir.Get(), "MAX_SLOT", "128", maxSlotCount, 16, g_SNMiniFilename.Get()); 
+			list->Empty(true);
+			int slotCount = atoi(maxSlotCount);
+			for (int j=0; j < slotCount; j++) 
+			{
+				readSlotIniFile(list->m_resDir.Get(), j, shortPath, BUFFER_SIZE, desc, 128);
+				GetFullResourcePath(list->m_resDir.Get(), shortPath, fullPath, BUFFER_SIZE);
+				list->Add(list->NewSlotItem(j, fullPath, desc)); //JFB3!!!!! naze! => list->AddSlotItem()
+			}
+		}
 	}
 
-	g_pFXChainsWnd = new SNM_FXChainWnd();
+	g_pResourcesWnd = new SNM_ResourceWnd();
 
-	if (!g_pFXChainsWnd || !plugin_register("hookcustommenu", (void*)menuhook))
+	if (!g_pResourcesWnd || !plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
 
 	return 1;
 }
 
-void FXChainViewExit() 
+void ResourceViewExit()
 {
 	char slotCount[16];
-	_snprintf(slotCount, 16, "%d", g_fxChainFiles.GetSize());
-	WritePrivateProfileString("FXCHAIN", "MAX_SLOT", slotCount, g_SNMiniFilename.Get()); 
-	for (int i=0; i < g_fxChainFiles.GetSize(); i++)
-		saveFXChainSlotIniFile(i, g_fxChainFiles.Get(i)->m_shortPath.Get(), g_fxChainFiles.Get(i)->m_desc.Get());
+	for (int i=0; i < g_filesLists.GetSize(); i++)
+	{
+		FileSlotList* list = g_filesLists.Get(i);
+		if (list)
+		{
+			_snprintf(slotCount, 16, "%d", list->GetSize());
+			WritePrivateProfileString(list->m_resDir.Get(), "MAX_SLOT", slotCount, g_SNMiniFilename.Get()); 
+			for (int j=0; j < list->GetSize(); j++)
+				saveSlotIniFile(list->m_resDir.Get(), j, list->Get(j)->m_shortPath.Get(), list->Get(j)->m_desc.Get());
+		}
+	}
 
-	delete g_pFXChainsWnd;
+	delete g_pResourcesWnd;
 }
 
-void OpenFXChainView(COMMAND_T*) {
-	g_pFXChainsWnd->Show(true, true);
+void OpenResourceView(COMMAND_T* _ct) {
+	if (g_pResourcesWnd)
+	{
+		g_pResourcesWnd->Show((g_type == (int)_ct->user) /*i.e. toggle "if"..*/, true);
+		g_pResourcesWnd->SetType((int)_ct->user);
+	}
 }
 
-bool IsFXChainViewEnabled(COMMAND_T*){
-	return g_pFXChainsWnd->IsValidWindow();
+bool IsResourceViewEnabled(COMMAND_T* _ct)
+{
+	if (g_pResourcesWnd)
+		return ((g_type == (int)_ct->user) && g_pResourcesWnd->IsValidWindow());
+	return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// FileSlotList
+///////////////////////////////////////////////////////////////////////////////
+
+//returns -1 on cancel
+int FileSlotList::PromptForSlot(const char* _title)
+{
+	int slot = -1;
+	while (slot == -1)
+	{
+		char promptMsg[64]; 
+		_snprintf(promptMsg, 64, "Slot (1-%d):", GetSize());
+
+		char reply[8]= ""; // empty default slot
+		if (GetUserInputs(_title, 1, promptMsg, reply, 8))
+		{
+			slot = atoi(reply); //0 on error
+			if (slot > 0 && slot <= GetSize()) {
+				return (slot-1);
+			}
+			else 
+			{
+				slot = -1;
+				char errMsg[128];
+				_snprintf(errMsg, 128, "Invalid %s slot!\nPlease enter a value in [1; %d].", m_desc.Get(), GetSize());
+				MessageBox(GetMainHwnd(), errMsg, "S&M - Error", /*MB_ICONERROR | */MB_OK);
+			}
+		}
+		else return -1; // user has cancelled
+	}
+	return -1; //in case the slot comes from mars
+}
+
+void FileSlotList::ClearSlot(int _slot, bool _guiUpdate)
+{
+	if (_slot >=0 && _slot < GetSize())
+	{
+//JFB commented: otherwise it leads to multiple confirmation msg with multiple selection in the FX chain view..
+//		char cPath[BUFFER_SIZE];
+//		readFXChainSlotIniFile(_slot, cPath, BUFFER_SIZE);
+//		if (strlen(cPath))
+		{
+//			char toBeCleared[256] = "";
+//			sprintf(toBeCleared, "Are you sure you want to clear the FX chain slot %d?\n(%s)", _slot+1, cPath); 
+//			if (MessageBox(GetMainHwnd(), toBeCleared, "S&M - Clear FX Chain slot", /*MB_ICONQUESTION | */MB_OKCANCEL) == 1)
+			{
+				Get(_slot)->Clear();
+				if (_guiUpdate && g_pResourcesWnd)
+					g_pResourcesWnd->Update();
+			}
+		}
+	}
+}
+
+bool FileSlotList::CheckAndStoreSlot(int _slot, const char* _filename, bool _errMsg)
+{
+	if (_filename)
+	{
+		if (FileExists(_filename)) {
+			Get(_slot)->SetFullPath(_filename);
+			return true;
+		}
+		else if (_errMsg) {
+			char buf[BUFFER_SIZE];
+			_snprintf(buf, BUFFER_SIZE, "File not found:\n%s", _filename);
+			MessageBox(g_hwndParent, buf, "S&M - Error", MB_OK);
+		}
+	}
+	return false;
+}
+
+// Returns false if cancelled
+bool FileSlotList::BrowseStoreSlot(int _slot)
+{
+	bool ok = false;
+	if (GetSize())
+	{
+		char title[128]="", filename[BUFFER_SIZE]="", fileFilter[256]="";
+		_snprintf(title, 128, "S&M - Load %s (slot %d)", m_desc.Get(), _slot+1);
+		GetFileFilter(fileFilter, 256);
+		if (BrowseResourcePath(title, m_resDir.Get(), fileFilter, filename, BUFFER_SIZE, true))
+			ok = CheckAndStoreSlot(_slot, filename);
+	}
+	return ok;
+}
+
+bool FileSlotList::LoadOrBrowseSlot(int _slot, bool _errMsg)
+{
+	// browse if file not found
+	if (!Get(_slot)->IsDefault())
+		return CheckAndStoreSlot(_slot, Get(_slot)->m_fullPath.Get(), _errMsg);
+	else 
+		return BrowseStoreSlot(_slot);
+}
+
+void FileSlotList::DisplaySlot(int _slot)
+{
+	if (_slot >= 0 && _slot < GetSize())
+	{
+		WDL_String chain;
+		if (LoadChunk(Get(_slot)->m_fullPath.Get(), &chain))
+		{
+			char title[64] = "";
+			_snprintf(title, 64, "S&M - %s (slot %d)", m_desc.Get(), _slot+1);
+			SNM_ShowConsoleMsg(chain.Get(), title);
+		}
+	}
 }

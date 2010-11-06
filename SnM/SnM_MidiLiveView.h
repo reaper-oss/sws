@@ -84,6 +84,7 @@ public:
 			m_enable[i] = 1;
 			m_autoRcv[i] = 0; //JFB not released
 			m_muteOthers[i] = 1;
+			m_autoSelect[i] = 1;
 			m_inputTr[i] = NULL;
 
 			m_lastMIDIVal[i] = -1;
@@ -94,6 +95,7 @@ public:
 	int m_enable[SNM_LIVECFG_NB_CONFIGS];
 	int m_autoRcv[SNM_LIVECFG_NB_CONFIGS];
 	int m_muteOthers[SNM_LIVECFG_NB_CONFIGS];
+	int m_autoSelect[SNM_LIVECFG_NB_CONFIGS];
 	MediaTrack* m_inputTr[SNM_LIVECFG_NB_CONFIGS];
 
 	int m_lastMIDIVal[SNM_LIVECFG_NB_CONFIGS];
@@ -138,6 +140,7 @@ protected:
 	WDL_VirtualIconButton m_btnEnable;
 	WDL_VirtualIconButton m_btnAutoRcv;
 	WDL_VirtualIconButton m_btnMuteOthers;
+	WDL_VirtualIconButton m_btnAutoSelect;
 	SNM_VirtualComboBox m_cbInputTr;
 };
 

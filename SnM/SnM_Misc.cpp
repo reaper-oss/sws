@@ -30,6 +30,10 @@
 #include "SnM_Actions.h"
 #include "SNM_ChunkParserPatcher.h"
 
+#ifdef _WIN32
+#pragma comment (lib, "winmm.lib")
+#endif
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Misc	actions
@@ -45,55 +49,39 @@ void letREAPERBreathe(COMMAND_T* _ct)
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SNM_WAIT), GetForegroundWindow(), WaitDlgProc);
 }
 
+void winWaitForEvent(DWORD _event, DWORD _timeOut, DWORD _minReTrigger)
+{
+#ifdef _WIN32
+	static DWORD waitTime = 0;
+//	if ((timeGetTime() - waitTime) > _minReTrigger)
+	{
+		waitTime = timeGetTime();
+		while((timeGetTime() - waitTime) < _timeOut) // for safety
+		{
+			MSG msg;
+			if(PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE))
+			{
+				// new message to be processed
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+				if(msg.message == _event)
+					break;
+			}
+		}
+	}
+#endif
+}
+
+// http://forum.cockos.com/showthread.php?p=612065
 void simulateMouseClick(COMMAND_T* _ct)
 {
+	SNM_ShowConsoleMsg("Go:\n", "", false);
+
 	POINT p; // not sure setting the pos is really needed..
 	GetCursorPos(&p);
 	mouse_event(MOUSEEVENTF_LEFTDOWN, p.x, p.y, 0, 0);
 	mouse_event(MOUSEEVENTF_LEFTUP, p.x, p.y, 0, 0);
-			
-#ifdef _WIN32
-	bool waitUp = true;
-	while (waitUp)
-	{
-		MSG msg;
-		if (PeekMessage(&msg, 0, WM_LBUTTONDOWN, WM_LBUTTONDOWN, PM_REMOVE))
-		  waitUp = false;
-		DispatchMessage(&msg);
-	}
-#endif
-/*
-	switch((int)_ct->user)
-	{
-		// L down/up
-		case 0:
-			mouse_event(MOUSEEVENTF_LEFTDOWN, p.x, p.y, 0, 0);
-			mouse_event(MOUSEEVENTF_LEFTUP, p.x, p.y, 0, 0); 
-			break;
-		// L down
-		case 1:
-			mouse_event(MOUSEEVENTF_LEFTDOWN, p.x, p.y, 0, 0);
-			break;
-		// L up
-		case 2:
-			mouse_event(MOUSEEVENTF_LEFTUP, p.x, p.y, 0, 0);
-			break;
-
-		// R down/up
-		case 3:
-			mouse_event(MOUSEEVENTF_RIGHTDOWN, p.x, p.y, 0, 0);
-			mouse_event(MOUSEEVENTF_RIGHTUP, p.x, p.y, 0, 0); 
-			break;
-		// R down
-		case 4:
-			mouse_event(MOUSEEVENTF_RIGHTDOWN, p.x, p.y, 0, 0);
-			break;
-		// R up
-		case 5:
-			mouse_event(MOUSEEVENTF_RIGHTUP, p.x, p.y, 0, 0);
-			break;
-	}
-*/
+	winWaitForEvent(WM_LBUTTONUP);
 }
 
 // Create the Wiki ALR summary for the current section displayed in the "Action" dlg 
@@ -105,8 +93,8 @@ void simulateMouseClick(COMMAND_T* _ct)
 void dumpWikiActions2(COMMAND_T* _ct)
 {
 	char currentSection[64] = "";
-	HWND h_list = GetActionListBox(currentSection, 64);
-	if (h_list && currentSection)
+	HWND hList = GetActionListBox(currentSection, 64);
+	if (hList && currentSection)
 	{
 		char sectionURL[64]= ""; 
 		if (!GetALRStartOfURL(currentSection, sectionURL, 64))
@@ -115,9 +103,10 @@ void dumpWikiActions2(COMMAND_T* _ct)
 			return;
 		}
 
-		char filename[BUFFER_SIZE];
-		// TODO: I'd like to remove use of GetExePath() here.  Ok, Jeffos? -SWS
-		sprintf(filename, "%s%c%s%s.txt", GetExePath(), PATH_SLASH_CHAR, sectionURL, _ct->user == 2 ? "_SWS" : _ct->user == 3 ? "_FNG" : "");
+		char fn[128]; char filename[BUFFER_SIZE];
+		sprintf(fn, "%s%s.txt", sectionURL, _ct->user == 2 ? "_SWS" : _ct->user == 3 ? "_FNG" : "");
+		if (!BrowseForSaveFile(TITLE_SAVE_ALR_WIKI, GetResourcePath(), fn, "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0", filename, BUFFER_SIZE))
+			return;
 
 		//flush
 		FILE* f = fopenUTF8(filename, "w"); 
@@ -136,30 +125,16 @@ void dumpWikiActions2(COMMAND_T* _ct)
 			LVITEM li;
 			li.mask = LVIF_STATE | LVIF_PARAM;
 			li.iSubItem = 0;
-			for (int i = 0; i < ListView_GetItemCount(h_list); i++)
+			for (int i = 0; i < ListView_GetItemCount(hList); i++)
 			{
 				li.iItem = i;
-				ListView_GetItem(h_list, &li);
-
+				ListView_GetItem(hList, &li);
 				int cmdId = (int)li.lParam;
+
 				char customId[64] = "";
 				char cmdName[256] = "";
-
-				LVITEM li1;
-				li1.mask = LVIF_TEXT;
-				li1.iItem = i;
-				li1.iSubItem = 3;
-				li1.pszText = customId;
-				li1.cchTextMax = 64;
-				ListView_GetItem(h_list, &li1);
-
-				LVITEM li2;
-				li2.mask = LVIF_TEXT;
-				li2.iItem = i;
-				li2.iSubItem = 1;
-				li2.pszText = cmdName;
-				li2.cchTextMax = 256;
-				ListView_GetItem(h_list, &li2);
+				ListView_GetItemText(hList,i,1,cmdName,256);
+				ListView_GetItemText(hList,i,3,customId,64);
 
 				if (!strstr(cmdName,"Custom:") &&
 					//native only
@@ -279,6 +254,9 @@ bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMa
 bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _filename, int _maxFilename, bool _fullPath)
 {
 	bool ok = false;
+
+	//JFB3 more checks ?
+
 	char defaultPath[BUFFER_SIZE] = "";
 	sprintf(defaultPath, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
 	char* filename = BrowseForFiles(_title, defaultPath, NULL, false, _fileFilters);
@@ -296,12 +274,17 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 
 void GetShortResourcePath(const char* _resSubDir, const char* _longFilename, char* _filename, int _maxFilename)
 {
-	char defaultPath[BUFFER_SIZE] = "";
-	sprintf(defaultPath, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
-	if(stristr(_longFilename, defaultPath)) //JFB ignore case on OSX ?
-		strncpy(_filename, (char*)(_longFilename+strlen(defaultPath)+1), _maxFilename);
+	if (_resSubDir && *_resSubDir && _longFilename && *_longFilename)
+	{
+		char defaultPath[BUFFER_SIZE] = "";
+		sprintf(defaultPath, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
+		if(stristr(_longFilename, defaultPath)) //JFB ignore case on OSX ?
+			strncpy(_filename, (char*)(_longFilename+strlen(defaultPath)+1), _maxFilename);
+		else
+			strncpy(_filename, _longFilename, _maxFilename);
+	}
 	else
-		strncpy(_filename, _longFilename, _maxFilename);
+		*_filename = '\0';
 }
 
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFilename, char* _filename, int _maxFilename)
@@ -315,6 +298,9 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFilename, cha
 		else
 			_snprintf(_filename, _maxFilename, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFilename);
 	}
+
+	if (_filename && *_filename && !FileExists(_filename)) //just in case
+		*_filename = '\0';
 }
 
 bool LoadChunk(const char* _filename, WDL_String* _chunk)

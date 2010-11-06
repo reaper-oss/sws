@@ -35,23 +35,23 @@
 // See many use-cases here: 
 // http://code.google.com/p/sws-extension/source/browse/trunk#trunk/SnM
 //
-// This code uses/is tied to Cockos' WDL library, see http://cockos.com/wdl
+// This code uses/is tied to Cockos' WDL library, http://cockos.com/wdl
 // Thank you Cockos!
 // 
 // Important: 
-// - The code assumes getted/setted RPP chunks are consistent
 // - Chunks may be HUGE!
+// - The code assumes getted/setted RPP chunks are consistent
 // - For best performances, the SAX-ish way is prefered (also see 'advanced' 
 //   optionnal flags: m_stopRecopy & m_breakParsePatch).
 // - For additional performance improvments, this WDL_String mod can be used:
-//   http://reaper.mj-s.com/WDL_String.h (see details there: mods are plainly 
-//   marked as such as required by Cockos' licensing)
+//   http://code.google.com/p/sws-extension/source/browse/trunk/SnM/wdlstring.h 
+//   see details there: mods are plainly marked as such as required by the licensing
 //
 // Changelog:
 // v1.1
-// - Use SWS_GetSetObjectState, if _SWS_EXTENSION is defined. This offers a 
-//   2nd level of cache. Note: SWS_GetSetObjectState() is the native GetSetObjectState() 
-//   if it isn't surrounded with SWS_CacheObjectState(true)/(false)
+// - Use SWS_GetSetObjectState, if _SWS_EXTENSION is defined. 
+//   This offers a 2nd level of cache. Note: SWS_GetSetObjectState() == native 
+//   GetSetObjectState() if it isn't surrounded with SWS_CacheObjectState(true)/(false)
 //   See http://code.google.com/p/sws-extension/source/browse/trunk/ObjectState/ObjectState.cpp
 // v1.0 
 // - Licensing update, see header

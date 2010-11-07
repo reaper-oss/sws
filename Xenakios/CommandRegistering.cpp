@@ -95,7 +95,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Store current selected takes" },						"XENAKIOS_STORECURSELECTEDTAKES",	DoStoreSelectedTakes,			"Store current selected takes", },
 	{ { DEFACCEL, "Xenakios/SWS: Recall selected takes" },								"XENAKIOS_RECALLSELECTEDTAKES",		DoRecallSelectedTakes,			"Recall selected takes", },
 	{ {}, SWS_ENDSUBMENU, },
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
+//	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { { 0, 0, 2 }, NULL }, SWS_STARTSUBMENU, NULL, "Item/Take manipulation", },
 	{ { DEFACCEL, "Xenakios/SWS: Repeat paste..." },					"XENAKIOS_REPEATPASTE", DoRepeatPaste,	"Repeat Paste...", },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
@@ -164,7 +164,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Process item with Rubberband..." }, "XENAKIOS_PROCESSRUBBERBAND", DoShowRubberbandDlg, NULL, },
 	
 	{ {}, SWS_ENDSUBMENU, },
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
+//	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { { 0, 0, 3 }, NULL }, SWS_STARTSUBMENU, NULL, "Track/Mixer/Envelopes", },
 	{ { DEFACCEL, "Xenakios/SWS: Reset volume and pan of selected tracks" }, "XENAKIOS_RESETTRACKVOLANDPAN1", DoResetTracksVolPan,	"Reset volume and pan of selected tracks", },
 	{ { DEFACCEL, "Xenakios/SWS: Set volume of selected tracks to 0.0 dB" }, "XENAKIOS_RESETTRACKVOL1", DoSetTrackVolumeToZero,	"Set volume of selected tracks to 0.0 dB", },
@@ -217,7 +217,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Minimize selected tracks send and FX panel height in mixer" }, "XENAKIOS_MINIZMIXSENDFXHEIGHT", DoMinMixSendAndFxPanelH, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Maximize selected tracks FX panel height in mixer" }, "XENAKIOS_MAXMIXFXPANHEIGHT", DoMaxMixFxPanHeight, NULL, },
 	{ {}, SWS_ENDSUBMENU, },
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
+//	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, NULL }, SWS_STARTSUBMENU, NULL, "Misc/Experimental", },
 	{ { DEFACCEL, "Xenakios/SWS: Save project markers as text..." }, "XENAKIOS_SAVE_MARKERS_AS_TEXT", DoSaveMarkersAsTextFile,	"Save project markers as text...", },
 	{ { DEFACCEL, "Xenakios/SWS: Launch external tool 1" }, "XENAKIOS_LAUNCHEXTTOOL", DoLaunchExtTool,	"Launch external tool 1", 1 },
@@ -399,9 +399,10 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Move edit cursor 64th note left" }, "XEN_MOVE_EDCUR64THLEFT", DoMoveEditCursor64thLeft, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Move edit cursor 64th note right" }, "XEN_MOVE_EDCUR64THRIGHT", DoMoveEditCursor64thRight, NULL, },
 	{ {}, SWS_ENDSUBMENU, },
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
-	{ { DEFACCEL, "Xenakios/SWS: Command parameters..." }, "XENAKIOS_SHOW_COMMANDPARAMS", DoShowCommandParameters,	"Command parameters...", },
+//	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, "Xenakios/SWS: Disk space calculator..." }, "XENAKIOS_DISKSPACECALC", DoShowDiskspaceCalc,	"Disk space calculator...", },
+	{ { DEFACCEL, "Xenakios/SWS: Command parameters..." }, "XENAKIOS_SHOW_COMMANDPARAMS", DoShowCommandParameters,	"Command parameters...", },
+	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	
 	{ {}, LAST_COMMAND, } // Denote end of table
 };

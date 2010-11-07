@@ -43,7 +43,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-fader (post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, post-fader (post-pan)" }, "S&M_SENDS2", cueTrack, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-FX" }, "S&M_SENDS3", cueTrack, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Open Cue Buss window..." }, "S&M_SENDS4", cueTrackPrompt, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open Cue Buss window..." }, "S&M_SENDS4", cueTrackPrompt, "S&&M Cue Buss window...", },
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection" }, "S&M_CUEBUS", cueTrack, NULL, -1},
 
 	{ { DEFACCEL, "SWS/S&M: Remove receives from selected tracks" }, "S&M_SENDS5", removeReceives, NULL, },
@@ -350,7 +350,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// Notes/help -------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (project notes)..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, 0, IsNotesHelpViewEnabled},
 	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (item notes)..." }, "S&M_SHOW_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewEnabled},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (track notes )..." }, "S&M_SHOW_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewEnabled},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (track notes)..." }, "S&M_SHOW_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewEnabled},
 	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (action help)..." }, "S&M_SHOW_ACTION_HELP", OpenNotesHelpView, NULL, 3, IsNotesHelpViewEnabled},
 
 	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to project notes (disables auto updates)" }, "S&M_DISABLENOTESHELP", SwitchNotesHelpType, NULL, 0},
@@ -412,8 +412,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 
 	// Other views ------------------------------------------------------------
-	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find..." }, "S&M_SHOWFIND", OpenFindView, NULL, NULL, IsFindViewEnabled},
-	{ { DEFACCEL, "SWS/S&M: Open Live Configs window..." }, "S&M_SHOWMIDILIVE", OpenMidiLiveView, NULL, NULL, IsMidiLiveViewEnabled},
+	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find..." }, "S&M_SHOWFIND", OpenFindView, "S&&M Find...", NULL, IsFindViewEnabled},
+	{ { DEFACCEL, "SWS/S&M: Open Live Configs window..." }, "S&M_SHOWMIDILIVE", OpenMidiLiveView, "S&&M Live Configs...", NULL, IsMidiLiveViewEnabled},
 
 
 	// Other ------------------------------------------------------------------
@@ -444,6 +444,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: stuff..." }, "S&M_TMP4", openStuff, NULL, },
 #endif	
 
+	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, }, // for main "Extensions" menu
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
@@ -585,6 +586,21 @@ int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec)
 
 WDL_String g_SNMiniFilename;
 
+static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
+{
+	if (!strcmp(_menustr, "Main extensions") && !_flag) {
+		SWSCreateMenu(g_SNM_cmdTable, _hMenu);
+	}
+/*
+	else if (!strcmp(_menustr, "Media item context") && !_flag) {
+	}
+	else if (!strcmp(_menustr, "Track control panel context") && !_flag) {
+	}
+	else if (_flag == 1) {
+	}
+*/
+}
+
 void IniFileInit()
 {
 	// Init S&M.ini file
@@ -614,6 +630,9 @@ void IniFileInit()
 
 int SnMInit(reaper_plugin_info_t* _rec)
 {
+	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
+		return 0;
+
 	// for probable future persistance of fake toggle states..
 	for (int i=0; i <= MAX_ACTION_COUNT; i++)
 		g_fakeToggleStates[i] = false;

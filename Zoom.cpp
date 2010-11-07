@@ -1345,6 +1345,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Zoom tool (marquee)" },										"SWS_ZOOM",				ZoomTool,			NULL, 0, IsZoomMode },
 	{ { DEFACCEL, "SWS: Zoom preferences" },										"SWS_ZOOMPREFS",		ZoomPrefs,			"SWS Zoom preferences...", },
 
+	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, }, // for main "Extensions" menu
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 

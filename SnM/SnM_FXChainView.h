@@ -29,9 +29,8 @@
 
 #pragma once
 
-#ifndef _SNM_ResourceView_H_
-#define _SNM_ResourceView_H_
-
+#ifndef _SNM_RESVIEW_H_
+#define _SNM_RESVIEW_H_
 
 class SNM_ResourceView : public SWS_ListView
 {
@@ -98,6 +97,13 @@ public:
 	void Clear() {m_fullPath.Set(""); m_name.Set(""); m_shortPath.Set(""); m_desc.Set("");}
 	void SetFullPath(const char* _fullPath) 
 	{
+/*JFB3!!! TO CHECK, old code was:
+		m_fullPath.Set(_fullPath);
+		char buf[BUFFER_SIZE];	
+		ExtractFileNameEx(_fullPath, buf, true);
+		m_name.Set(buf);
+		GetShortResourcePath(m_resDir.Get(), _fullPath, buf, BUFFER_SIZE);
+*/
 		if (_fullPath && *_fullPath)
 		{
 			m_fullPath.Set(_fullPath);

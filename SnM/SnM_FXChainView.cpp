@@ -774,7 +774,9 @@ int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SetFocus(g_pResourcesWnd->GetHWND());
 			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			if (w) 
+			{
 				w->OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			}
 		}
 		break;
 
@@ -991,6 +993,23 @@ void FileSlotList::ClearSlot(int _slot, bool _guiUpdate)
 
 bool FileSlotList::CheckAndStoreSlot(int _slot, const char* _filename, bool _errMsg, bool _acceptEmpty)
 {
+/*JFB3!!! TO CHECK!! old code was:
+	if (_filename)
+	{
+		if (FileExists(_filename)) {
+			Get(_slot)->SetFullPath(_filename);
+			return true;
+		}
+		else if (_errMsg) {
+			char buf[BUFFER_SIZE];
+			_snprintf(buf, BUFFER_SIZE, "File not found:\n%s", _filename);
+			MessageBox(g_hwndParent, buf, "S&M - Error", MB_OK);
+		}
+	}
+	return false;
+*/
+
+
 	if (_filename && _slot >= 0 && _slot < g_fxChainFiles.GetSize())
 	{
 		if (FileExists(_filename) || (_acceptEmpty && *_filename == '\0')) 
@@ -1036,6 +1055,9 @@ void FileSlotList::DisplaySlot(int _slot)
 {
 	if (_slot >= 0 && _slot < GetSize())
 	{
+#ifdef _WIN32
+		WinSpawnNotepad(Get(_slot)->m_fullPath.Get());
+#else
 		WDL_String chain;
 		if (LoadChunk(Get(_slot)->m_fullPath.Get(), &chain))
 		{
@@ -1043,5 +1065,6 @@ void FileSlotList::DisplaySlot(int _slot)
 			_snprintf(title, 64, "S&M - %s (slot %d)", m_desc.Get(), _slot+1);
 			SNM_ShowConsoleMsg(chain.Get(), title);
 		}
+#endif
 	}
 }

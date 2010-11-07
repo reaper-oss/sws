@@ -515,15 +515,14 @@ MODIFIER g_modifiers[NUM_MODIFIERS] =
 void WinSpawnNotepad(const char* pFilename)
 {
 #ifdef _WIN32
-	if (pFilename && FileExists(pFilename))
+	if (pFilename)
 	{
 		char cNotepad[256];
 		char* cWindir = getenv("windir");
 		if (!cWindir)
 			return;
 		_snprintf(cNotepad, 256, "%s\\notepad.exe", cWindir);
-		if (FileExists(cNotepad))
-			_spawnl(_P_NOWAIT, cNotepad, cNotepad, pFilename, NULL);
+		_spawnl(_P_NOWAIT, cNotepad, cNotepad, pFilename, NULL);
 	}
 #endif
 }

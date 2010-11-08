@@ -68,7 +68,7 @@
 #define SNM_SCHEDJOB_LIVECFG_SELPRJ		10
 
 
-#define _SNM_ITT
+//#define _SNM_ITT
 
 enum
 {

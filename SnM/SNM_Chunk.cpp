@@ -1,7 +1,7 @@
 /******************************************************************************
 / SNM_Chunk.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), JF Bédague
+/ Copyright (c) 2009 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,11 +29,11 @@
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
 
-/*JFB TODO: 
-- more m_breakParsePatch/_breakingKeyword
+/*JFB TODO additionnal optimizations: 
+- check for more m_breakParsePatch /_breakingKeyword
 - check _mode < 0
 - return &m_wdlStrings (rather than copies)
-- use m_isParsingSource
+- use m_isParsingSource possible?
 - Parse(-1) > 0
 */
 

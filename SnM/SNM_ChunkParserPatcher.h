@@ -1,6 +1,6 @@
 /******************************************************************************
 ** SNM_ChunkParserPatcher.h - v1.1
-** Copyright (C) 2009-2010, JF Bédague 
+** Copyright (C) 2009-2010, Jeffos
 **
 **    This software is provided 'as-is', without any express or implied
 **    warranty.  In no event will the authors be held liable for any damages

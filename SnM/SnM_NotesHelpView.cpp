@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_NotesHelpView.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÈdague 
+/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos 
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -517,7 +517,7 @@ void SNM_NotesHelpWnd::OnInitDlg()
 #ifdef _WIN32
 	m_cbType.AddItem("Action help");
 #endif
-	m_cbType.SetCurSel(min(m_cbType.GetCount(), m_type));
+	m_cbType.SetCurSel(min(m_cbType.GetCount(), m_type)); // safety for SWS beta <-> SWS official
 	m_parentVwnd.AddChild(&m_cbType);
 
 	m_txtLabel.SetID(TXTID_LABEL);
@@ -537,8 +537,12 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		saveCurrentText(m_type); // + undos
 	else if (wParam == SET_ACTION_HELP_FILE_MSG)
 		SetActionHelpFilename(NULL);
-	else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE)
+	else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE)	
+	{
 		SetType(m_cbType.GetCurSel());
+		if (!g_locked)
+			SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
+	}
 	else 
 		Main_OnCommand((int)wParam, (int)lParam);
 }
@@ -1101,14 +1105,12 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	}
 }
 
-int NotesHelpViewInit()
-{
+int NotesHelpViewInit() {
 	g_pNotesHelpWnd = new SNM_NotesHelpWnd();
 	if (!g_pNotesHelpWnd || 
 		!plugin_register("hookcustommenu", (void*)menuhook) ||
 		!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
-
 	return 1;
 }
 
@@ -1116,19 +1118,19 @@ void NotesHelpViewExit() {
 	if (g_pNotesHelpWnd)
 		g_pNotesHelpWnd->saveActionHelpFilenameIniFile();
 	delete g_pNotesHelpWnd;
+	g_pNotesHelpWnd = NULL;
 }
 
-void OpenNotesHelpView(COMMAND_T* _ct) 
-{
-	if (g_pNotesHelpWnd)
-	{
+void OpenNotesHelpView(COMMAND_T* _ct) {
+	if (g_pNotesHelpWnd) {
 		g_pNotesHelpWnd->Show(g_pNotesHelpWnd->GetType() == (int)_ct->user /* i.e toggle */, true);
 		g_pNotesHelpWnd->SetType((int)_ct->user);
+		if (!g_locked)
+			SetFocus(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT));
 	}
 }
 
-bool IsNotesHelpViewEnabled(COMMAND_T* _ct)
-{
+bool IsNotesHelpViewDisplayed(COMMAND_T* _ct) {
 	if (g_pNotesHelpWnd)
 		return ((g_pNotesHelpWnd->GetType() == (int)_ct->user) && g_pNotesHelpWnd->IsValidWindow());
 	return false;
@@ -1136,6 +1138,8 @@ bool IsNotesHelpViewEnabled(COMMAND_T* _ct)
 
 void SwitchNotesHelpType(COMMAND_T* _ct){
 	g_pNotesHelpWnd->SetType((int)_ct->user);
+	if (!g_locked)
+		SetFocus(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT));
 }
 
 void ToggleNotesHelpLock(COMMAND_T*) {
@@ -1143,9 +1147,9 @@ void ToggleNotesHelpLock(COMMAND_T*) {
 	g_locked = !g_locked;
 	if (g_pNotesHelpWnd)
 	{
+		g_pNotesHelpWnd->RefreshGUI();
 		if (!g_locked)
 			SetFocus(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT));
-		g_pNotesHelpWnd->RefreshGUI();
 	}
 }
 

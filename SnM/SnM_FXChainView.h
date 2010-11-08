@@ -2,7 +2,7 @@
 / SnM_FXChainView.h
 / JFB TODO: now, a better name would be "SnM_ResourceView.h"
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
+/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,6 +31,10 @@
 
 #ifndef _SNM_RESVIEW_H_
 #define _SNM_RESVIEW_H_
+
+#ifdef _SNM_ITT
+#define SNM_FILESLOT_MAX_ITEMTK_PROPS	12
+#endif
 
 class SNM_ResourceView : public SWS_ListView
 {
@@ -62,7 +66,8 @@ protected:
 	HMENU OnContextMenu(int x, int y);
 	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState);
-	void OnDroppedFiles(HDROP h);
+	int GetValidDroppedFilesCount(HDROP _h);
+	void OnDroppedFiles(HDROP _h);
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	void FillDblClickTypeCombo();
@@ -75,35 +80,30 @@ protected:
 	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
-	SNM_VirtualComboBox m_cbType;
-
-	// FX chains
-	SNM_VirtualComboBox m_cbDblClickType;
-	SNM_VirtualComboBox m_cbDblClickTo;
+	SNM_VirtualComboBox m_cbType; // common to all 
+	SNM_VirtualComboBox m_cbDblClickType; // FX chains & Track templates
+	SNM_VirtualComboBox m_cbDblClickTo; // FX chains only
+#ifdef _SNM_ITT
+	WDL_VirtualIconButton m_btnItemTakeDetails;
+	WDL_VirtualIconButton m_btnItemTakeProp[SNM_FILESLOT_MAX_ITEMTK_PROPS];
+#endif
 };
 
 
 class PathSlotItem
 {
 public:
-	PathSlotItem(const char* _resDir, int _slot, const char* _fullPath, const char* _desc)
+	PathSlotItem(const char* _resDir, const char* _fullPath, const char* _desc)
 	{
 		m_resDir.Set(_resDir);
-		m_slot = _slot;
 		m_desc.Set(_desc);
 		SetFullPath(_fullPath);
 	}
-	bool IsDefault(){return (!m_fullPath.GetLength());}
+	bool IsDefault() {return (!m_fullPath.GetLength());}
 	void Clear() {m_fullPath.Set(""); m_name.Set(""); m_shortPath.Set(""); m_desc.Set("");}
 	void SetFullPath(const char* _fullPath) 
 	{
-/*JFB3!!! TO CHECK, old code was:
-		m_fullPath.Set(_fullPath);
-		char buf[BUFFER_SIZE];	
-		ExtractFileNameEx(_fullPath, buf, true);
-		m_name.Set(buf);
-		GetShortResourcePath(m_resDir.Get(), _fullPath, buf, BUFFER_SIZE);
-*/
+//JFB3!!! TO CHECK
 		if (_fullPath && *_fullPath)
 		{
 			m_fullPath.Set(_fullPath);
@@ -118,7 +118,6 @@ public:
 		}
 		m_fullPath.Set(""); m_name.Set(""); m_shortPath.Set("");
 	}
-	int m_slot; // in case, we want discontinuous slots at some point..
 	WDL_String m_resDir, m_fullPath, m_desc, m_name, m_shortPath; // The 2 last ones are deduced from m_fullPath, added for perf. reasons
 };
 
@@ -130,31 +129,29 @@ class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 	void GetFileFilter(char* _filter, int _maxFilterLength) {
 		if (_filter) _snprintf(_filter, _maxFilterLength, "REAPER %s (*.%s)\0*.%s\0", m_desc.Get(), m_ext.Get(), m_ext.Get());
 	}
-	int PromptForSlot(const char* _title);
-	void ClearSlot(int _slot, bool _guiUpdate=true);
-	bool CheckAndStoreSlot(int _slot, const char* _filename, bool _errMsg=false, bool _acceptEmpty=false);
-	bool BrowseStoreSlot(int _slot);
-	const char* GetDesc() {return m_desc.Get();}
-	bool LoadOrBrowseSlot(int _slot, bool _errMsg=false);
-	void DisplaySlot(int _slot);
-	PathSlotItem* NewSlotItem(int _slot, const char* _fullPath, const char* _desc) {return new PathSlotItem(m_resDir.Get(), _slot, _fullPath, _desc);}
-	PathSlotItem* AddEmptySlot() {return Add(NewSlotItem(GetSize(), "", ""));}
+	PathSlotItem* CreateSlot(const char* _fullPath="", const char* _desc="") {
+		return new PathSlotItem(m_resDir.Get(), _fullPath, _desc);
+	}
+	PathSlotItem* AddSlot(const char* _fullPath="", const char* _desc="") {
+		return Add(CreateSlot(_fullPath, _desc));
+	}
 	PathSlotItem* InsertEmptySlot(int _slot) {
 		PathSlotItem* item = NULL;
 		if (_slot >=0 && _slot < GetSize()) {
-			item = Insert(_slot, NewSlotItem(_slot, "", ""));
-			for (int i=_slot+1; i < GetSize(); i++)
-				Get(i)->m_slot++;
+			item = Insert(_slot, CreateSlot());
 		} 
-		else if (_slot == GetSize()) 
-			AddEmptySlot();
+		else if (_slot >= GetSize()) 
+			item = AddSlot();
 		return item;
 	}
-	void DeleteSlot(int _slot, bool _wantDelete=true) {
-		Delete(_slot, _wantDelete);
-		for (int i=_slot; i < GetSize(); i++)
-			Get(i)->m_slot--;
-	}
+	int PromptForSlot(const char* _title);
+	bool LoadOrBrowseSlot(int _slot, bool _errMsg=false);
+	bool CheckAndStoreSlot(int _slot, const char* _filename, bool _errMsg=false);
+	bool BrowseStoreSlot(int _slot);
+	void DisplaySlot(int _slot);
+	void ClearSlot(int _slot, bool _guiUpdate=true);
+	const char* GetDesc() {return m_desc.Get();}
+
 	int m_type;
 	WDL_String m_resDir; // Resource sub-directory name *AND* S&M.ini section
 	WDL_String m_desc; // used in user messages
@@ -164,5 +161,8 @@ class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 //JFB!!!
 extern FileSlotList g_fxChainFiles;
 extern FileSlotList g_trTemplateFiles;
+#ifdef _SNM_ITT
+extern FileSlotList g_itemTemplateFiles;
+#endif
 
 #endif

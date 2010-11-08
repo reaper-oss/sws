@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Misc.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
+/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -287,7 +287,7 @@ bool GetShortResourcePath(const char* _resSubDir, const char* _longFilename, cha
 	return false;
 }
 
-void GetFullResourcePath(const char* _resSubDir, const char* _shortFilename, char* _filename, int _maxFilename)
+bool GetFullResourcePath(const char* _resSubDir, const char* _shortFilename, char* _filename, int _maxFilename)
 {
 	if (_shortFilename && _filename) 
 	{
@@ -299,8 +299,12 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFilename, cha
 			_snprintf(_filename, _maxFilename, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFilename);
 	}
 
-	if (_filename && *_filename && !FileExists(_filename)) //just in case
+//JFB3!!!!!! FileExists() bonne idee??? cf history..
+	if (_filename && *_filename && !FileExists(_filename)) {
 		*_filename = '\0';
+		return false;
+	}
+	return true;
 }
 
 bool LoadChunk(const char* _filename, WDL_String* _chunk)

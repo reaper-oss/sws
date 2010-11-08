@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Actions.h
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
+/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -44,26 +44,39 @@
 #define SNM_ACTION_HELP_INI_FILE "%s/S&M_Action_help_en.ini"
 #endif
 
+#define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
+
 #define MAX_ACTION_COUNT	0xFFFF
 #define MAX_TRACK_GROUPS	32 
 #define SNM_MAX_HW_OUTS		8
 #define SNM_MAX_TAKES		128
 #define SNM_MAX_FX			128
 #define MAX_INI_SECTION		0xFFFF // definitive limit for WritePrivateProfileSection
+#define LET_BREATHE_MS		10
 
-#define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_ScheduledJob 
+///////////////////////////////////////////////////////////////////////////////
+
+#define SNM_SCHEDJOB_DEFAULT_DELAY		250
 
 // Scheduled job ids
+// note: [0..7] reserved for Live Configs MIDI CC only actions
 #define SNM_SCHEDJOB_LIVECFG_TLCHANGE	8
 #define SNM_SCHEDJOB_NOTEHLP_TLCHANGE	9
 #define SNM_SCHEDJOB_LIVECFG_SELPRJ		10
 
-#define SNM_SCHEDJOB_DEFAULT_DELAY		250
+
+#define _SNM_ITT
 
 enum
 {
   SNM_SLOT_TYPE_FX_CHAINS=0,
   SNM_SLOT_TYPE_TR_TEMPLATES,
+#ifdef _SNM_ITT
+  SNM_SLOT_TYPE_ITEM_TEMPLATES,
+#endif
   SNM_SLOT_TYPE_COUNT
 };
 
@@ -105,11 +118,9 @@ public:
 class SNM_ScheduledJob 
 {
 public:
-	SNM_ScheduledJob(int _id, int _approxDelayMs)
-	{
+	SNM_ScheduledJob(int _id, int _approxDelayMs) {
 		m_id = _id;
-		// 1 tick = 27ms or so (average monitored)
-		m_tick = (int)floor((_approxDelayMs/27) + 0.5);
+		m_tick = (int)floor((_approxDelayMs/27) + 0.5); // 1 tick = 27ms or so (average monitored)
 	}
 	virtual ~SNM_ScheduledJob() {}
 	virtual void Perform() {}
@@ -166,7 +177,7 @@ void SnMCSurfRun();
 void SnMCSurfSetTrackTitle();
 void SnMCSurfSetTrackListChange();
 
-// *** SnM_FX.cpp ***
+// *** SnM_fx.cpp ***
 bool patchSelTracksFXState(int _mode, int _token, int _fx, const char* _value, const char * _undoMsg);
 void toggleFXOfflineSelectedTracks(COMMAND_T* _ct);
 bool isFXOfflineSelectedTracks(COMMAND_T* _ct);
@@ -214,7 +225,7 @@ void pasteTrackFXChain(COMMAND_T* _ct);
 void setTrackFXChain(COMMAND_T* _ct);
 void makeChunkTakeFX(WDL_String* _outTakeFX, WDL_String* _inRfxChain);
 void clearFXChainSlotPrompt(COMMAND_T* _ct);
-void copySlotToClipBoard(int _slot);
+void copyFXChainSlotToClipBoard(int _slot);
 void readSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, char* _desc, int _descSize);
 void saveSlotIniFile(const char* _key, int _slot, const char* _path, const char* _desc);
 
@@ -255,7 +266,8 @@ void setMainWindowActive(COMMAND_T* _ct);
 
 // *** SnM_Sends.cpp ***
 bool cueTrack(const char* _busName, int _type, const char* _undoMsg, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
-void cueTrackPrompt(COMMAND_T* _ct);
+void openCueBussWnd(COMMAND_T* _ct);
+bool isCueBussWndDisplayed(COMMAND_T* _ct);
 void cueTrack(COMMAND_T* _ct);
 void copyWithIOs(COMMAND_T* _ct);
 void cutWithIOs(COMMAND_T* _ct);
@@ -323,18 +335,18 @@ void loadSetTrackTemplate(COMMAND_T* _ct);
 void loadAddTrackTemplate(COMMAND_T* _ct);
 void clearTrackTemplateSlotPrompt(COMMAND_T* _ct);
 
-// *** SNM_ResourceView.cpp ***
+// *** SnM_ResourceView.cpp ***
 int ResourceViewInit();
 void ResourceViewExit();
 void OpenResourceView(COMMAND_T*);
-bool IsResourceViewEnabled(COMMAND_T*);
+bool IsResourceViewDisplayed(COMMAND_T*);
 
 // *** SnM_NotesHelpView.cpp ***
+void SetActionHelpFilename(COMMAND_T*);
 int NotesHelpViewInit();
 void NotesHelpViewExit();
 void OpenNotesHelpView(COMMAND_T*);
-void SetActionHelpFilename(COMMAND_T*);
-bool IsNotesHelpViewEnabled(COMMAND_T*);
+bool IsNotesHelpViewDisplayed(COMMAND_T*);
 void SwitchNotesHelpType(COMMAND_T* _ct);
 void ToggleNotesHelpLock(COMMAND_T*);
 bool IsNotesHelpLocked(COMMAND_T*);
@@ -343,14 +355,16 @@ bool IsNotesHelpLocked(COMMAND_T*);
 int FindViewInit();
 void FindViewExit();
 void OpenFindView(COMMAND_T*);
-bool IsFindViewEnabled(COMMAND_T*);
+bool IsFindViewDisplayed(COMMAND_T*);
 
-// *** SnM_MidiLiveView.cpp ***
-int MidiLiveViewInit();
-void MidiLiveViewExit();
-void OpenMidiLiveView(COMMAND_T*);
-bool IsMidiLiveViewEnabled(COMMAND_T*);
+// *** SnM_LiveConfigsView.cpp ***
+int LiveConfigViewInit();
+void LiveConfigViewExit();
+void OpenLiveConfigView(COMMAND_T*);
+bool IsLiveConfigViewDisplayed(COMMAND_T*);
 void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
+void ToggleEnableLiveConfig(COMMAND_T* _ct);
+bool IsLiveConfigEnabled(COMMAND_T* _ct);
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
 // *** SnM_Dlg.cpp ***
@@ -376,7 +390,7 @@ HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
 bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMaxSize);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _filename, int _maxFilename, bool _fullPath = false);
 bool GetShortResourcePath(const char* _resSubDir, const char* _longFilename, char* _filename, int _maxFilename);
-void GetFullResourcePath(const char* _resSubDir, const char* _shortFilename, char* _filename, int _maxFilename);
+bool GetFullResourcePath(const char* _resSubDir, const char* _shortFilename, char* _filename, int _maxFilename);
 bool LoadChunk(const char* _filename, WDL_String* _chunk);
 void StringToExtensionConfig(char* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx);

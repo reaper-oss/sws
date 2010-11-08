@@ -1,7 +1,8 @@
 /******************************************************************************
 / SnM_MidiLiveView.h
+/ JFB TODO: now, SnM_LiveConfigsView.h would be a better name..
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
+/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -102,10 +103,10 @@ public:
 	int m_lastDeactivateCmd[SNM_LIVECFG_NB_CONFIGS][4];
 };
 
-class SnM_MidiLiveView : public SWS_ListView
+class SNM_LiveConfigsView : public SWS_ListView
 {
 public:
-	SnM_MidiLiveView(HWND hwndList, HWND hwndEdit);
+	SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit);
 protected:
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void SetItemText(LPARAM item, int iCol, const char* str);
@@ -113,10 +114,10 @@ protected:
 	void OnItemDblClk(LPARAM item, int iCol);
 };
 
-class SnM_MidiLiveWnd : public SWS_DockWnd
+class SNM_LiveConfigsWnd : public SWS_DockWnd
 {
 public:
-	SnM_MidiLiveWnd();
+	SNM_LiveConfigsWnd();
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void CSurfSetTrackTitle();

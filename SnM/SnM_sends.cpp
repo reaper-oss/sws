@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Sends.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÈdague
+/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -34,6 +34,8 @@ WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndTrack
 WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvTrackClipboard; 
 WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndClipboard;
 WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvClipboard;
+
+HWND g_cueBussHwnd = NULL;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -188,10 +190,23 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 	return updated;
 }
 
-void cueTrackPrompt(COMMAND_T* _ct) {
+void openCueBussWnd(COMMAND_T* _ct) {
 	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUS), g_hwndParent, CueBusDlgProc);
-	ShowWindow(hwnd, SW_SHOW);
-	SetFocus(hwnd);
+
+	// Toggle
+	if (g_cueBussHwnd) {
+		g_cueBussHwnd = NULL;
+		ShowWindow(hwnd, SW_HIDE);
+	}
+	else {
+		g_cueBussHwnd = hwnd;
+		ShowWindow(hwnd, SW_SHOW);
+		SetFocus(hwnd);
+	}
+}
+
+bool isCueBussWndDisplayed(COMMAND_T* _ct) {
+	return (g_cueBussHwnd && IsWindow(g_cueBussHwnd) ? true : false);
 }
 
 void cueTrack(COMMAND_T* _ct) 

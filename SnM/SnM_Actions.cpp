@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Actions.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
+/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,8 +27,8 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
-#include "SNM_NotesHelpView.h"
-#include "SNM_MidiLiveView.h"
+#include "SnM_NotesHelpView.h"
+#include "SnM_MidiLiveView.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -43,7 +43,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-fader (post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, post-fader (post-pan)" }, "S&M_SENDS2", cueTrack, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-FX" }, "S&M_SENDS3", cueTrack, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Open Cue Buss window..." }, "S&M_SENDS4", cueTrackPrompt, "S&&M Cue Buss window...", },
+	{ { DEFACCEL, "SWS/S&M: Open Cue Buss window..." }, "S&M_SENDS4", openCueBussWnd, "S&&M Cue Buss window...", NULL, isCueBussWndDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection" }, "S&M_CUEBUS", cueTrack, NULL, -1},
 
 	{ { DEFACCEL, "SWS/S&M: Remove receives from selected tracks" }, "S&M_SENDS5", removeReceives, NULL, },
@@ -256,7 +256,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 #endif
 
 	// FX Chains (items & tracks) ---------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Resources window (FX chains)..." }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, NULL, 0, IsResourceViewEnabled},
+	{ { DEFACCEL, "SWS/S&M: Open Resources window (FX chains)..." }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, NULL, 0, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", clearFXChainSlotPrompt, NULL, },
 
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, slot 1" }, "S&M_TAKEFXCHAIN1", loadSetTakeFXChain, NULL, 0},
@@ -297,7 +297,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	
 	
 	// Track templates --------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Resources window (track templates)..." }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResourceView, NULL, 1, IsResourceViewEnabled},
+	{ { DEFACCEL, "SWS/S&M: Open Resources window (track templates)..." }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResourceView, NULL, 1, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear track template slot..." }, "S&M_CLR_TRTEMPLATE_SLOT", clearTrackTemplateSlotPrompt, NULL, },
 
 	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 01" }, "S&M_APPLY_TRTEMPLATE1", loadSetTrackTemplate, NULL, 0},
@@ -348,11 +348,12 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 
 	// Notes/help -------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (project notes)..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, 0, IsNotesHelpViewEnabled},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (item notes)..." }, "S&M_SHOW_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewEnabled},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (track notes)..." }, "S&M_SHOW_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewEnabled},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (action help)..." }, "S&M_SHOW_ACTION_HELP", OpenNotesHelpView, NULL, 3, IsNotesHelpViewEnabled},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (project notes)..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, 0, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (item notes)..." }, "S&M_SHOW_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (track notes)..." }, "S&M_SHOW_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (action help)..." }, "S&M_SHOW_ACTION_HELP", OpenNotesHelpView, NULL, 3, IsNotesHelpViewDisplayed},
 
+	//JFB TODO?: remove those "Switch to.." ?
 	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to project notes (disables auto updates)" }, "S&M_DISABLENOTESHELP", SwitchNotesHelpType, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to item notes" }, "S&M_ITEMNOTES", SwitchNotesHelpType, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to track notes" }, "S&M_TRACKNOTES", SwitchNotesHelpType, NULL, 2},
@@ -411,15 +412,26 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle arming of all plugin envelopes for selected tracks" }, "S&M_TGLARMPLUGENV", toggleArmTrackEnv, NULL, 9, fakeIsToggledAction},
 
 
-	// Other views ------------------------------------------------------------
-	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find..." }, "S&M_SHOWFIND", OpenFindView, "S&&M Find...", NULL, IsFindViewEnabled},
-	{ { DEFACCEL, "SWS/S&M: Open Live Configs window..." }, "S&M_SHOWMIDILIVE", OpenMidiLiveView, "S&&M Live Configs...", NULL, IsMidiLiveViewEnabled},
+	// Find -------------------------------------------------------------------
+	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find..." }, "S&M_SHOWFIND", OpenFindView, "S&&M Find...", NULL, IsFindViewDisplayed},
+
+
+	// Live Configs -----------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Open Live Configs window..." }, "S&M_SHOWMIDILIVE", OpenLiveConfigView, "S&&M Live Configs...", NULL, IsLiveConfigViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 1" }, "S&M_TOGGLE_LIVE_CFG1", ToggleEnableLiveConfig, NULL, 0, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 2" }, "S&M_TOGGLE_LIVE_CFG2", ToggleEnableLiveConfig, NULL, 1, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 3" }, "S&M_TOGGLE_LIVE_CFG3", ToggleEnableLiveConfig, NULL, 2, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 4" }, "S&M_TOGGLE_LIVE_CFG4", ToggleEnableLiveConfig, NULL, 3, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 5" }, "S&M_TOGGLE_LIVE_CFG5", ToggleEnableLiveConfig, NULL, 4, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 6" }, "S&M_TOGGLE_LIVE_CFG6", ToggleEnableLiveConfig, NULL, 5, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 7" }, "S&M_TOGGLE_LIVE_CFG7", ToggleEnableLiveConfig, NULL, 6, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 8" }, "S&M_TOGGLE_LIVE_CFG8", ToggleEnableLiveConfig, NULL, 7, IsLiveConfigEnabled},
 
 
 	// Other ------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Let REAPER breathe" }, "S&M_LETBREATHE", letREAPERBreathe, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (no modifier!)" }, "S&M_MOUSE_L_CLICK", simulateMouseClick, NULL, 0},
 #ifdef _WIN32
+	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (use w/o modifier)" }, "S&M_MOUSE_L_CLICK", simulateMouseClick, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (w/o extensions)" }, "S&M_ALRSUMMARY1", dumpWikiActions2, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (SWS/Xenakios/S&M extensions only)" }, "S&M_ALRSUMMARY2", dumpWikiActions2, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (FNG extensions only)" }, "S&M_ALRSUMMARY3", dumpWikiActions2, NULL, 3},
@@ -646,7 +658,7 @@ int SnMInit(reaper_plugin_info_t* _rec)
 	IniFileInit();
 
 	// Init S&M views
-	MidiLiveViewInit();
+	LiveConfigViewInit();
 	NotesHelpViewInit();
 	ResourceViewInit();
 	FindViewInit();
@@ -655,7 +667,7 @@ int SnMInit(reaper_plugin_info_t* _rec)
 
 void SnMExit()
 {
-	MidiLiveViewExit();
+	LiveConfigViewExit();
 	ResourceViewExit();
 	NotesHelpViewExit();
 	FindViewExit();
@@ -664,11 +676,6 @@ void SnMExit()
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_ScheduledJob (performed in SnMCSurfRun())
-//
-// List of reserved ids:
-// - 0 to 7: Apply live config n (MIDI CC only), with n in [1;8]
-// - 8:		SNM_TrackListChangeScheduledJob   //JFB!!! that is to say?
-//
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_jobs;
@@ -716,7 +723,7 @@ void DeleteScheduledJob(int _id)
 ///////////////////////////////////////////////////////////////////////////////
 
 extern SNM_NotesHelpWnd* g_pNotesHelpWnd;
-extern SnM_MidiLiveWnd* g_pMidiLiveWnd;
+extern SNM_LiveConfigsWnd* g_pLiveConfigsWnd;
 
 void SnMCSurfRun()
 {
@@ -739,13 +746,13 @@ void SnMCSurfRun()
 void SnMCSurfSetTrackTitle() {
 	if (g_pNotesHelpWnd)
 		g_pNotesHelpWnd->CSurfSetTrackTitle();
-	if (g_pMidiLiveWnd)
-		g_pMidiLiveWnd->CSurfSetTrackTitle();
+	if (g_pLiveConfigsWnd)
+		g_pLiveConfigsWnd->CSurfSetTrackTitle();
 }
 
 void SnMCSurfSetTrackListChange() {
 	if (g_pNotesHelpWnd)
 		g_pNotesHelpWnd->CSurfSetTrackListChange();
-	if (g_pMidiLiveWnd)
-		g_pMidiLiveWnd->CSurfSetTrackListChange();
+	if (g_pLiveConfigsWnd)
+		g_pLiveConfigsWnd->CSurfSetTrackListChange();
 }

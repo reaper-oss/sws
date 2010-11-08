@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Dlg.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
+/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,6 +27,9 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
+
+
+int g_waitDlgProcCount = 0;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -90,6 +93,7 @@ void SNM_VirtualComboBox::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin
 	LICE_Line(drawbm,r.left,r.bottom-1,r.right-1,r.bottom-1,pencol2,0.10f,0,false);
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // Cue buss dialog box
 ///////////////////////////////////////////////////////////////////////////////
@@ -141,8 +145,7 @@ void fillHWoutDropDown(HWND _hwnd, int _idc)
 
 WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	const char cWndPosKey[] = "CueBus Window Pos";
-
+	const char cWndPosKey[] = "CueBus Window Pos"; //JFB hum.. but kept not to mess REPAER.ini
 	switch(Message)
 	{
         case WM_INITDIALOG :
@@ -284,8 +287,11 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-#define LET_BREATHE_MS 10
-int g_waitDlgProcCount = 0;
+
+///////////////////////////////////////////////////////////////////////////////
+// WaitDlgProc
+///////////////////////////////////////////////////////////////////////////////
+
 WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch(msg)

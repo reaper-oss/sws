@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_FindView.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÈdague 
+/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos 
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -401,15 +401,6 @@ bool SNM_FindWnd::FindMarkerRegion(int _dir)
 
 void SNM_FindWnd::DisplayNotFoundMsg(const char* _searchStr)
 {
-/*JFB
-	char msg[MAX_SEARCH_STR_LEN*2] = "";
-	sprintf(msg, "Search string '%s' not found.", _searchStr);
-	MessageBox(m_hwnd, msg, "S&M - Find", MB_OK);
-	// avoid stuck btns!
-	m_btnFind.OnMouseUp(0,0);
-	m_btnPrev.OnMouseUp(0,0);
-	m_btnNext.OnMouseUp(0,0);
-*/
 	g_notFound = true;
 	m_parentVwnd.RequestRedraw(NULL);
 }
@@ -708,6 +699,7 @@ int FindViewInit()
 
 void FindViewExit() {
 	delete g_pFindWnd;
+	g_pFindWnd = NULL;
 }
 
 void OpenFindView(COMMAND_T*) {
@@ -715,6 +707,8 @@ void OpenFindView(COMMAND_T*) {
 		g_pFindWnd->Show(true, true);
 }
 
-bool IsFindViewEnabled(COMMAND_T*){
-	return g_pFindWnd->IsValidWindow();
+bool IsFindViewDisplayed(COMMAND_T*){
+	if (g_pFindWnd)
+		return g_pFindWnd->IsValidWindow();
+	return false;
 }

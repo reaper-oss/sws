@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Track.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
+/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -243,8 +243,7 @@ void toggleArmTrackEnv(COMMAND_T* _ct)
 // Track selection (all with ReaProject*)
 ///////////////////////////////////////////////////////////////////////////////
 
-int CountSelectedTracksWithMaster(ReaProject* _proj)
-{
+int CountSelectedTracksWithMaster(ReaProject* _proj) {
 	int selCnt = CountSelectedTracks(_proj);
 	MediaTrack* mtr = GetMasterTrack(_proj);
 	if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL))
@@ -255,15 +254,11 @@ int CountSelectedTracksWithMaster(ReaProject* _proj)
 // Takes the master track into account
 // => to be used with CountSelectedTracksWithMaster() and not the API's CountSelectedTracks()
 // If selected, the master will be returnd with the _idx = 0
-MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx)
-{
+MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx) {
 	MediaTrack* mtr = GetMasterTrack(_proj);
-	if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL)) 
-	{
-		if (!_idx)
-			return mtr;
-		else
-			return GetSelectedTrack(_proj, _idx-1);
+	if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL)) {
+		if (!_idx) return mtr;
+		else return GetSelectedTrack(_proj, _idx-1);
 	}
 	else 
 		return GetSelectedTrack(_proj, _idx);
@@ -279,11 +274,7 @@ MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj) {
 // Track template slots
 ///////////////////////////////////////////////////////////////////////////////
 
-/*JFB4!!! TODO:
-- patch: preserve items
-- undo
-- mouse pointer => wait
-*/
+//JFB TODO?: mouse pointer => wait (? might confuse REAPER?)
 void loadSetOrAddTrackTemplate(const char* _title, bool _add, int _slot, bool _errMsg)
 {
 	bool updated = false;
@@ -296,29 +287,54 @@ void loadSetOrAddTrackTemplate(const char* _title, bool _add, int _slot, bool _e
 		// main job
 		if (g_trTemplateFiles.LoadOrBrowseSlot(_slot, _errMsg) && g_trTemplateFiles.Get(_slot)->m_fullPath.GetLength())
 		{
-			WDL_String chunk;
+			WDL_String trTmpltChunk;
+
 			// add as new track
 			if (_add)
 			{
+				//JFB!! native bug! needs at least 1 track to work
 				Main_openProject(g_trTemplateFiles.Get(_slot)->m_fullPath.Get());
+				/* commented: Main_openProject() includes undo point 
 				updated = true;
+				*/
 			}
-			// patch selected tracks
-			else if (LoadChunk(g_trTemplateFiles.Get(_slot)->m_fullPath.Get(), &chunk) && chunk.GetLength())
+			// patch selected tracks (preserve items)
+			else if (LoadChunk(g_trTemplateFiles.Get(_slot)->m_fullPath.Get(), &trTmpltChunk) && trTmpltChunk.GetLength())
 			{
-				for (int i = 0; i <= GetNumTracks(); i++)
+				char* pStart = strstr(trTmpltChunk.Get(), "<TRACK");
+				if (pStart) 
 				{
-					MediaTrack* tr = CSurf_TrackFromID(i,false); 
-					if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+					// several tracks in the template => truncate
+					pStart = strstr(pStart+6, "<TRACK");
+					if (pStart) 
+						trTmpltChunk.SetLen((int)(pStart-trTmpltChunk.Get()));
+
+					bool trTmpltHasItems = (strstr(trTmpltChunk.Get(), "<ITEM") != NULL);
+					for (int i = 0; i <= GetNumTracks(); i++)
 					{
-						SNM_ChunkParserPatcher p(tr);
-						p.SetChunk(&chunk, 1);
-						updated |= true;
+						MediaTrack* tr = CSurf_TrackFromID(i,false); 
+						if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+						{
+							SNM_ChunkParserPatcher p(tr);
+							if (!trTmpltHasItems) 
+							{
+								WDL_String tmpChunk(trTmpltChunk.Get());
+								char* pItems = strstr(p.GetChunk()->Get(), "<ITEM");
+								if (pItems)
+									tmpChunk.Insert(pItems, tmpChunk.GetLength()-2, strlen(pItems) - 2); // -2: ">\n"
+								p.SetChunk(&tmpChunk, 1);
+							}
+							else
+								p.SetChunk(&trTmpltChunk, 1);
+							updated |= true;
+						}
 					}
 				}
 			}
 		}
 	}
+	if (updated && _title)
+		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
 }
 
 void loadSetTrackTemplate(COMMAND_T* _ct) {

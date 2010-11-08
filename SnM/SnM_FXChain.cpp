@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_FXChain.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
+/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -379,7 +379,7 @@ void copyTrackFXChain(COMMAND_T* _ct)
 				removedKeywords.Add("LASTSEL");
 				removedKeywords.Add("DOCKED");
 				RemoveChunkLines(&g_fXChainClipboard, &removedKeywords, true);
-//JFB TODO: stop at first ?
+//JFB stop at first ?
 			}
 		}
 	}
@@ -425,7 +425,7 @@ void clearFXChainSlotPrompt(COMMAND_T* _ct)
 	else g_fxChainFiles.ClearSlot(slot);
 }
 
-void copySlotToClipBoard(int _slot)
+void copyFXChainSlotToClipBoard(int _slot)
 {
 	if (_slot >= 0 && _slot < g_fxChainFiles.GetSize())
 		LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &g_fXChainClipboard);

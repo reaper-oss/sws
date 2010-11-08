@@ -1,3 +1,7 @@
+!v1.8.5 #8 (November 8, 2010)
+Issue 190: Disabled FX chain drag-drop to prevent crashing.  Full fix coming in future release.
+Issue 199: Fix for media loss on undo with "Insert track above selected tracks" action.
+
 !v1.8.5 #7 (November 5, 2010)
 Issue 189: Hopefully solved Snapshot crashes with Kontakt and others!
 Simulate left mouse click at cursor position (again!): safer, fixed re-triggering issue.

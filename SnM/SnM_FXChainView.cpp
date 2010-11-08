@@ -176,9 +176,13 @@ void SNM_FXChainView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 }
 
 //JFB more than "shared" with Tim's MediaPool => factorize ?
+
+WDL_PtrList<FXChainSlotItem> g_dragItems;// TEMP prevent internal drag'n'drop (fixed in beta brach..)
 void SNM_FXChainView::OnBeginDrag(LPARAM item)
 {
 #ifdef _WIN32
+	g_dragItems.Empty();
+
 	LVITEM li;
 	li.mask = LVIF_STATE | LVIF_PARAM;
 	li.stateMask = LVIS_SELECTED;
@@ -194,6 +198,7 @@ void SNM_FXChainView::OnBeginDrag(LPARAM item)
 		{
 			FXChainSlotItem* pItem = (FXChainSlotItem*)li.lParam;
 			iMemNeeded += (int)(pItem->m_fullPath.GetLength() + 1);
+			g_dragItems.Add(pItem);// TEMP prevent internal drag'n'drop (fixed in beta brach..)
 		}
 	}
 	if (!iMemNeeded)
@@ -479,6 +484,14 @@ int SNM_FXChainWnd::OnKey(MSG* msg, int iKeyState)
 //JFB more than "shared" with Tim's MediaPool => factorize ?
 void SNM_FXChainWnd::OnDroppedFiles(HDROP h)
 {
+	// TEMP prevent internal drag'n'drop (fixed in beta brach..)
+	if (g_dragItems.GetSize())
+	{
+		g_dragItems.Empty();
+		DragFinish(h);
+		return;
+	}
+
 	// Check to see if we dropped on a group
 	POINT pt;
 	DragQueryPoint(h, &pt);

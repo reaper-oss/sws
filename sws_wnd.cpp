@@ -77,6 +77,9 @@ void SWS_DockWnd::Show(bool bToggle, bool bActivate)
 		CreateDialogParam(g_hInst, MAKEINTRESOURCE(m_iResource), g_hwndParent, SWS_DockWnd::sWndProc, (LPARAM)this);
 		if (m_bDocked && bActivate)
 			DockWindowActivate(m_hwnd);
+#ifndef _WIN32
+		InvalidateRect(m_hwnd, NULL, TRUE);
+#endif
 	}
 	else if (!IsWindowVisible(m_hwnd) || (bActivate && !bToggle))
 	{

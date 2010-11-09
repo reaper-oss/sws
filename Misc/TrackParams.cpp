@@ -219,7 +219,7 @@ void InsertTrkAbove(COMMAND_T* = NULL)
 			TrackList_AdjustWindows(false);
 			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
 			UpdateTimeline();
-			Undo_OnStateChangeEx("Insert track above selected track", UNDO_STATE_TRACKCFG, -1);
+			Undo_OnStateChangeEx("Insert track above selected track", UNDO_STATE_ALL, -1);
 			return;
 		}
 	}

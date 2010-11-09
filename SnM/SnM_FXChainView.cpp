@@ -369,6 +369,15 @@ void SNM_ResourceWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
+#ifndef _WIN32
+	// Realign the filter box on OSX
+	HWND hFilter = GetDlgItem(m_hwnd, IDC_FILTER);
+	RECT rFilter;
+	GetWindowRect(hFilter, &rFilter);
+    ScreenToClient(m_hwnd,(LPPOINT)&rFilter);
+    ScreenToClient(m_hwnd,((LPPOINT)&rFilter)+1);
+	SetWindowPos(hFilter, NULL, rFilter.left - 25, rFilter.top - 1, abs(rFilter.right - rFilter.left) - 10, abs(rFilter.bottom - rFilter.top), SWP_NOACTIVATE | SWP_NOZORDER);
+#endif
 
 	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
@@ -771,13 +780,8 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		if (!tmpfont.GetHFont())
 		{
 			LOGFONT lf = {
-			  14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-				OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,
-			  #ifdef _WIN32
-			  "MS Shell Dlg"
-			  #else
-			  "Arial"
-			  #endif
+				14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,
+				CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
 			};
 			if (ct) 
 				lf = ct->mediaitem_font;
@@ -805,11 +809,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			x0 = tr.right+5;
 		}
 
-#ifdef _WIN32
 		x0 += 125; // i.e. width of the filter edit box
-#else
-		x0 += 145;
-#endif
 
 		// FX chains additionnal controls
 		cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_DBLCLICK_TYPE);

@@ -27,6 +27,12 @@
 
 #pragma once
 
+#ifdef _WIN32
+#define SWSDLG_TYPEFACE "MS Shell Dlg"
+#else
+#define SWSDLG_TYPEFACE "Arial"
+#endif
+
 typedef struct SWS_LVColumn
 {
 	int iWidth;

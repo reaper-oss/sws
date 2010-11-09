@@ -744,13 +744,8 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		if (!tmpfont.GetHFont())
 		{
 			LOGFONT lf = {
-			  14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-				OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,
-			  #ifdef _WIN32
-			  "MS Shell Dlg"
-			  #else
-			  "Arial"
-			  #endif
+				14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,
+				CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
 			};
 			if (ct) 
 				lf = ct->mediaitem_font;

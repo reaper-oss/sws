@@ -433,7 +433,7 @@
 		981007170F4768020072D712 /* sws_extension.rc_mac_menu */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc_mac_menu; sourceTree = "<group>"; };
 		981007180F4768020072D712 /* sws_extension.rc_mac_dlg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc_mac_dlg; sourceTree = "<group>"; };
 		9870F77F0F5B461C0007258C /* swell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = swell.h; path = ../WDL/swell/swell.h; sourceTree = SOURCE_ROOT; };
-		9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reaper_plugin_functions.h; path = /Applications/reaper_plugin_functions.h; sourceTree = "<absolute>"; };
+		9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reaper_plugin_functions.h; path = reaper/reaper_plugin_functions.h; sourceTree = "<group>"; };
 		9879B7340F489BE4004D98EB /* reaper_plugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reaper_plugin.h; path = reaper/reaper_plugin.h; sourceTree = "<group>"; };
 		9879B7400F489CE7004D98EB /* stdafx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = stdafx.h; sourceTree = "<group>"; };
 		9882DB870F6D961100BD2BC7 /* swell-dlggen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "swell-dlggen.h"; path = "../WDL/swell/swell-dlggen.h"; sourceTree = SOURCE_ROOT; };

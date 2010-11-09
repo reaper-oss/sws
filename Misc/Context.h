@@ -31,5 +31,6 @@ int ContextInit();
 bool AreThereSelItemsInTimeSel();
 void SmartCopy(COMMAND_T*);
 void SmartCut(COMMAND_T*);
+void SmartRemove(COMMAND_T*);
 
 

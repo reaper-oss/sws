@@ -29,9 +29,17 @@
 #include "stdafx.h"
 #include "Adam.h"
 #include "Context.h"
+#include "TrackSel.h"
+#include "XenakiosExts.h"
 
 
 //#include "Context.cpp"
+
+// Globals for copy and paste
+
+static bool g_AWCopyFlag;
+static double g_AWCopySelLen;
+
 
 void AWFillGapsAdv(COMMAND_T* t)
 {
@@ -103,6 +111,38 @@ void AWFillGapsAdv(COMMAND_T* t)
 				MediaItem* item1 = GetTrackMediaItem(track, itemIndex);
 				MediaItem* item2 = GetTrackMediaItem(track, itemIndex + 1);
 				// errorFlag = 0;
+				
+				
+				// BEGIN FIX OVERLAP CODE --------------------------------------------------------------
+				
+				// If first item is selected selected, run this loop
+				if (GetMediaItemInfo_Value(item1, "B_UISEL"))
+				{
+					// Get various pieces of info for the 2 items
+					double item1Start = GetMediaItemInfo_Value(item1, "D_POSITION");
+					double item1Length = GetMediaItemInfo_Value(item1, "D_LENGTH");
+					double item1End = item1Start + item1Length;
+					
+					double item2Start = GetMediaItemInfo_Value(item2, "D_POSITION");
+					
+					
+					// If the first item overlaps the second item
+					if (item1End > item2Start)
+					{
+						item1Length = item2Start - item1Start;
+					}
+					
+					// If the second item is also selected, trim the trigger pad off of item 1
+					if (GetMediaItemInfo_Value(item2, "B_UISEL"))
+					{
+						item1Length -= triggerPad;
+					}
+					
+					SetMediaItemInfo_Value(item1, "D_LENGTH", item1Length);					
+				}
+				
+				// END FIX OVERLAP CODE ----------------------------------------------------------------
+				
 				
 				// BEGIN TIMESTRETCH CODE---------------------------------------------------------------
 				
@@ -216,48 +256,6 @@ void AWFillGapsAdv(COMMAND_T* t)
 				
 				// END TIME STRETCH CODE ---------------------------------------------------------------
 			
-				// BEGIN FIX OVERLAP CODE --------------------------------------------------------------
-				
-				// If first item is selected selected, run this loop
-				// if (GetMediaItemInfo_Value(item1, "B_UISEL"))
-				if (GetMediaItemInfo_Value(item1, "B_UISEL"))
-				{
-					// Get various pieces of info for the 2 items
-					double item1Start = GetMediaItemInfo_Value(item1, "D_POSITION");
-					double item1Length = GetMediaItemInfo_Value(item1, "D_LENGTH");
-					double item1End = item1Start + item1Length;
-				
-					double item2Start = GetMediaItemInfo_Value(item2, "D_POSITION");
-				
-					// If the first item overlaps the second item, trim the first item
-					if (item1End > (item2Start - triggerPad))
-					{
-						
-						// If both items selected, account for trigger pad, if not, just trim to item 2 start
-						if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
-						{
-							item1Length = item2Start - item1Start - triggerPad;
-						}
-						else
-						{
-							item1Length = item2Start - item1Start;
-						}
-						
-						SetMediaItemInfo_Value(item1, "D_LENGTH", item1Length);
-					}
-					
-					if (item1End <= (item2Start - triggerPad))
-					{
-						// If both items selected, account for trigger pad, if not, do nothing
-						if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
-						{
-							item1Length -= triggerPad;
-							SetMediaItemInfo_Value(item1, "D_LENGTH", item1Length);
-						}
-					}
-				}
-				
-				// END FIX OVERLAP CODE ----------------------------------------------------------------
 				
 				// BEGIN FILL GAPS CODE ----------------------------------------------------------------
 				
@@ -632,7 +630,7 @@ void AWRecordConditional2(COMMAND_T* t)
 	
 	else if (CountSelectedMediaItems(0) != 0)
 	{
-		Main_OnCommand(40253, 0); //Set record mode to time selection auto punch
+		Main_OnCommand(40253, 0); //Set record mode to auto punch selected items
 	}
 	
 	else 
@@ -1921,16 +1919,35 @@ void AWCopy(COMMAND_T* t)
 {
 	Undo_BeginBlock();
 	
+	g_AWCopyFlag = 0;
+	
+	double selStart;
+	double selEnd;
+	
+	GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
+	
+	
 	// If items have focus
 	if (GetCursorContext() == 1)
 	{
+		
+		if (selStart != selEnd)
+		{
+			g_AWCopySelLen = selEnd - selStart;
+			g_AWCopyFlag = 1;
+		}
+		
 		// Create array of selected media items
 		WDL_TypedBuf<MediaItem*> items;
 		SWS_GetSelectedMediaItems(&items);
 		
+		
 		// If there are selected items
+		
 		if (items.GetSize() > 0)
 		{
+			g_AWCopyFlag = 0;
+			
 			// Create array to store item timebases
 			char* cItemsTimebase = new char[items.GetSize()];
 			
@@ -1957,6 +1974,7 @@ void AWCopy(COMMAND_T* t)
 			delete [] cItemsTimebase;
 		}
 		
+		
 	}
 	
 	// Otherwise just do whatever, I don't want anything to do with it
@@ -1970,6 +1988,9 @@ void AWCopy(COMMAND_T* t)
 void AWCut(COMMAND_T* t)
 {
 	Undo_BeginBlock();
+	
+	g_AWCopyFlag = 0;
+
 	
 	// If items have focus
 	if (GetCursorContext() == 1)
@@ -1992,13 +2013,33 @@ void AWPaste(COMMAND_T* t)
 {
 	Undo_BeginBlock();
  
-	if (GetCursorContext() == 1)
+	int* pTrimMode = (int*)GetConfigVar("autoxfade");
+	
+	if (g_AWCopyFlag)
+	{
+		// Code to paste empty time selection goes here
+		
+		
+		double t1 = GetCursorPosition();
+		double t2 = t1 + g_AWCopySelLen;
+		
+		GetSet_LoopTimeRange(true, false, &t1, &t2, false);
+		
+		if (*pTrimMode & 2)
+		{
+			Main_OnCommand(40718, 0); // item select all item on selected track in time selection
+			Main_OnCommand(40312, 0); // item remove selected area of item	
+		}
+	}
+	
+	else if (GetCursorContext() == 1)
 	{
 		int* pCursorMode = (int*)GetConfigVar("itemclickmovecurs");
 		int savedMode = *pCursorMode;
-		*pCursorMode &= ~8;
+		*pCursorMode &= ~8;	// Enable "move edit cursor on paste" so that the time selection can be set properly
 		
-		int* pTrimMode = (int*)GetConfigVar("autoxfade");
+		
+		
 		
 		if (*pTrimMode & 2)
 		{
@@ -2007,14 +2048,19 @@ void AWPaste(COMMAND_T* t)
 			Main_OnCommand(40625, 0); // Set time selection start point
 			Main_OnCommand(40058, 0); // item paste items tracks	
 			Main_OnCommand(40626, 0); // time selection set end point
-			Main_OnCommand((plugin_register("command_id", (void*)"_SWS_SELTRKWITEM")),0);  // sws select only track selected item	
+			
+			// Select only tracks with selected items	
+			
+			SelTracksWItems();
+			
 			Main_OnCommand(40718, 0); // item select all item on selected track in time selection
 			Main_OnCommand(40312, 0); // item remove selected area of item	
 			
 			// Go to beginning of selection, this is smoother than using actual action and easier
 			SetEditCurPos(cursorPos, 0, 0);
 			
-			Main_OnCommand((plugin_register("command_id", (void*)"_XENAKIOS_SELFIRSTOFSELTRAX")),0); //	 xenakios select first of selected tracks
+			
+			DoSelectFirstOfSelectedTracks(NULL);
 			
 			*pCursorMode = savedMode;
 			
@@ -2038,6 +2084,79 @@ void AWPaste(COMMAND_T* t)
 	
 }
 
+
+void AWDelete(COMMAND_T*)
+{
+	double selStart;
+	double selEnd;
+	
+	GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
+	
+	if (GetCursorContext() == 2 && (selStart != selEnd))
+		Main_OnCommand(40089, 0); // Remove env points in time selection
+	else
+		SmartRemove(NULL);
+}
+
+
+
+
+
+
+
+
+void AWConsolidateSelection(COMMAND_T* t)
+{
+	Undo_BeginBlock();
+	
+	// Set time sel to sel items if no time sel
+	double t1, t2;
+	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
+	if (t1 == t2)
+		Main_OnCommand(40290, 0);
+	
+	
+	int trackOn = 1;
+	
+	// Save trim mode state
+	int* pTrimMode = (int*)GetConfigVar("autoxfade");
+	int savedMode = *pTrimMode;
+	
+	// Turn trim mode off
+	*pTrimMode &= ~2;
+	 
+	SelTracksWItems();
+	
+	SaveSelTracks();
+	
+	
+	for (int iTrack = 1; iTrack <= GetNumTracks(); iTrack++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(iTrack, false);
+		
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			ClearSelected();
+			
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &trackOn); // Select current track
+			
+			Main_OnCommand(40142, 0); // Insert empty item
+			Main_OnCommand(40718, 0); // Select all items on track in time selection
+			Main_OnCommand(40919, 0); // Set per item mix behavior to always mix
+			Main_OnCommand(40362, 0); // Glue items	
+			
+			RestoreSelTracks();
+			
+		}
+	}
+	
+	*pTrimMode = savedMode;
+	
+	RestoreSelTracks();
+	
+	Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
+	
+}
 
 
 
@@ -2103,6 +2222,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Trim selected items to selection or cursor (crop)" },						"SWS_AWTRIMCROP",					AWTrimCrop, },
 	{ { DEFACCEL, "SWS/AW: Trim selected items to fill selection" },									"SWS_AWTRIMFILL",					AWTrimFill, },
 	{ { DEFACCEL, "SWS/AW: Stretch selected items to fill selection" },									"SWS_AWSTRETCHFILL",				AWStretchFill, },
+	{ { DEFACCEL, "SWS/AW: Consolidate Selection" },													"SWS_AWCONSOLSEL",					AWConsolidateSelection, },
 
 	
 	// Toggle Actions 
@@ -2147,7 +2267,8 @@ static COMMAND_T g_commandTable[] =
 	// Stuff that sort of sucks that I might make decent enough to release
 	//{ { DEFACCEL, "SWS/AW: Copy" },			"SWS_AWCOPY",					AWCopy, },
 	//{ { DEFACCEL, "SWS/AW: Cut" },			"SWS_AWCUT",					AWCut, },
-	//{ { DEFACCEL, "SWS/AW: Paste" },			"SWS_AWPASTE",					AWPaste, },
+	//{ { DEFACCEL, "SWS/AW: Paste" },		"SWS_AWPASTE",					AWPaste, },
+	//{ { DEFACCEL, "SWS/AW: Delete" },		"SWS_AWDELETE",					AWDelete, NULL, },
 
 	//{ { DEFACCEL, "SWS/AW: Quick Punch Record" },			"SWS_AWQUICKPUNCH",					AWRecordQuickPunch, },
 

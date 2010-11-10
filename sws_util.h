@@ -152,6 +152,7 @@ void ShowColorChooser(COLORREF initialCol);
 bool GetChosenColor(COLORREF* pColor);
 void HideColorChooser();
 void EnableColumnResize(HWND h);
+HCURSOR SWS_LoadCursor(int id);
 #define MOUSEEVENTF_LEFTDOWN    0x0002 /* left button down */
 #define MOUSEEVENTF_LEFTUP      0x0004 /* left button up */
 #define MOUSEEVENTF_RIGHTDOWN   0x0008 /* right button down */

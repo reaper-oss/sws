@@ -30,7 +30,7 @@
 #include "Adam.h"
 #include "Context.h"
 #include "TrackSel.h"
-#include "XenakiosExts.h"
+#include "../Xenakios/XenakiosExts.h"
 
 
 //#include "Context.cpp"
@@ -2127,7 +2127,7 @@ void AWConsolidateSelection(COMMAND_T* t)
 	 
 	SelTracksWItems();
 	
-	SaveSelTracks();
+	SaveSelected();
 	
 	
 	for (int iTrack = 1; iTrack <= GetNumTracks(); iTrack++)
@@ -2145,14 +2145,14 @@ void AWConsolidateSelection(COMMAND_T* t)
 			Main_OnCommand(40919, 0); // Set per item mix behavior to always mix
 			Main_OnCommand(40362, 0); // Glue items	
 			
-			RestoreSelTracks();
+			RestoreSelected();
 			
 		}
 	}
 	
 	*pTrimMode = savedMode;
 	
-	RestoreSelTracks();
+	RestoreSelected();
 	
 	Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
 	

@@ -873,7 +873,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\zoom.cur"
+				RelativePath=".\zoomin.cur"
+				>
+			</File>
+			<File
+				RelativePath=".\zoomout.cur"
+				>
+			</File>
+			<File
+				RelativePath=".\zoomundo.cur"
 				>
 			</File>
 		</Filter>

@@ -1,3 +1,12 @@
+!v1.8.6 #1 (November 10, 2010)
+Zoom tool updates:
++New zoom preference to undo zoom when dragging up
++Zoom cursor now reflects zoom state: +/-/U (undo)
++OSX now has zoom cursors - note OSX support isn't perfect and cursor disappears while dragging
+
+Issue 210: Fixed duplicate action ID SWS_TAKESSPREVPITCH
+Fixed S&M windows not getting drawn properly on OSX Reaper startup
+
 !v1.8.5 #8 (November 8, 2010)
 Issue 190: Disabled FX chain drag-drop to prevent crashing.  Full fix coming in future release.
 Issue 199: Fix for media loss on undo with "Insert track above selected tracks" action.

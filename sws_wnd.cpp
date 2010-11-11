@@ -195,10 +195,7 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// Add std menu items
 			char str[100];
 			sprintf(str, "Dock %s in Docker", m_cName);
-			AddToMenu(hMenu, str, DOCK_MSG);
-			// Check dock state
-			if (m_bDocked)
-				CheckMenuItem(hMenu, DOCK_MSG, MF_BYCOMMAND | MF_CHECKED);
+			AddToMenu(hMenu, str, DOCK_MSG, -1, false, m_bDocked ? MF_CHECKED : 0);
 			AddToMenu(hMenu, "Close Window", IDCANCEL);
 
 			if (x == -1 || y == -1)
@@ -902,15 +899,10 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 	if (!item && iCol != -1)
 	{
 		HMENU hMenu = CreatePopupMenu();
-		AddToMenu(hMenu, "Visible columns", 0);
-		EnableMenuItem(hMenu, 0, MF_BYPOSITION | MF_GRAYED);
+		AddToMenu(hMenu, "Visible columns", 0, -1, false, MF_GRAYED);
 
 		for (int i = 0; i < m_iCols; i++)
-		{
-			AddToMenu(hMenu, m_pCols[i].cLabel, i + 1);
-			if (m_pCols[i].iPos != -1)
-				CheckMenuItem(hMenu, i+1, MF_BYPOSITION | MF_CHECKED);
-		}
+			AddToMenu(hMenu, m_pCols[i].cLabel, i + 1, -1, false, m_pCols[i].iPos != -1 ? MF_CHECKED : 0);
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		AddToMenu(hMenu, "Reset", m_iCols + 1);
 

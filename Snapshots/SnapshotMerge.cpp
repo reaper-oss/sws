@@ -181,8 +181,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 				if (iCol == 0)
 				{
-					AddToMenu(contextMenu, "Select source track", 0);
-					EnableMenuItem(contextMenu, 2, MF_BYPOSITION | MF_GRAYED);
+					AddToMenu(contextMenu, "Select source track", 0, -1, false, MF_GRAYED);
 
 					char menuText[80];
 					for (int i = 0; i < g_ss->m_tracks.GetSize(); i++)
@@ -200,9 +199,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 				else // iCol == 1
 				{
-					AddToMenu(contextMenu, "Select destination track", 0);
-					EnableMenuItem(contextMenu, 2, MF_BYPOSITION | MF_GRAYED);
-
+					AddToMenu(contextMenu, "Select destination track", 0, -1, false, MF_GRAYED);
 					AddToMenu(contextMenu, "(create new)", 1);
 					AddToMenu(contextMenu, "(none)", 2);
 					AddToMenu(contextMenu, "(master)", 3);

@@ -53,13 +53,13 @@ public:
 			return true;
 
 		// Couldn't unlock immediately, so go into the wait loop
-		time_t t = time(NULL);
+		DWORD t = GetTickCount();
 		do
 		{
 			Sleep(1);
 			bLocked = pthread_mutex_trylock(&m_mutex) == 0;
 		}
-		while (!bLocked && time(NULL) - t < dwTimeoutMs);
+		while (!bLocked && GetTickCount(NULL) - t < dwTimeoutMs);
 		return bLocked;
 	}
 	bool Unlock() { return pthread_mutex_unlock(&m_mutex) == 0; }

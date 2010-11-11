@@ -590,9 +590,7 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
 			_snprintf(cName, 50, "Recall %s", g_ss.Get()->m_snapshots.Get(i)->m_cName);
 			if (!iCmd)
 				iCmd = LOAD_MSG + i;
-			AddToMenu(contextMenu, cName, iCmd);
-			if (g_ss.Get()->m_snapshots.Get(i) == g_ss.Get()->m_pCurSnapshot)
-				CheckMenuItem(contextMenu, iCmd, MF_CHECKED);
+			AddToMenu(contextMenu, cName, iCmd, -1, false, g_ss.Get()->m_snapshots.Get(i) == g_ss.Get()->m_pCurSnapshot ? MF_CHECKED : 0);
 		}
 	}
 	AddToMenu(contextMenu, "Import snapshot...", IMPORT_MSG);

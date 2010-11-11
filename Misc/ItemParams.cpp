@@ -436,7 +436,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Set all takes channel mode to mono (downmix)" },		"SWS_TAKESCHANMODE2",	SetChanModeAllTakes, NULL, 2 },
 	{ { DEFACCEL, "SWS: Set all takes channel mode to mono (left)" },			"SWS_TAKESCHANMODE3",	SetChanModeAllTakes, NULL, 3 },
 	{ { DEFACCEL, "SWS: Set all takes channel mode to mono (right)" },			"SWS_TAKESCHANMODE4",	SetChanModeAllTakes, NULL, 4 },
-	{ { DEFACCEL, "SWS: Clear all takes preserve pitch" },						"SWS_TAKESSPREVPITCH",	SetPreservePitch, NULL, 0 },
+	{ { DEFACCEL, "SWS: Clear all takes preserve pitch" },						"SWS_TAKESCPREVPITCH",	SetPreservePitch, NULL, 0 },
 	{ { DEFACCEL, "SWS: Set all takes preserve pitch" },						"SWS_TAKESSPREVPITCH",	SetPreservePitch, NULL, 1 },
 	{ { DEFACCEL, "SWS: Reset all takes' pitch" },								"SWS_TAKESPITCHRESET",	SetPitch, NULL, 0 },
 	{ { DEFACCEL, "SWS: Pitch all takes up one cent" },							"SWS_TAKESPITCH_1C",	SetPitch, NULL, 1 },

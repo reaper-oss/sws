@@ -1,6 +1,6 @@
 /******************************************************************************
 / SnM_MidiLiveView.cpp
-/ JFB TODO: now, SnM_LiveConfigsView.cpp would be a better name..
+/ JFB TODO: now, SnM_LiveConfigs.cpp/.h would be better names..
 /
 / Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
@@ -37,8 +37,8 @@
 #include "SNM_ChunkParserPatcher.h"
 #include "SnM_Chunk.h"
 
-#define SAVEWINDOW_POS_KEY "S&M - Live Configs List Save Window Position"
-#define NB_CC_VALUES				128
+#define SAVEWINDOW_POS_KEY		"S&M - Live Configs List Save Window Position"
+#define NB_CC_VALUES			128
 
 enum
 {
@@ -67,7 +67,7 @@ bool AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_String* _curPresetConf)
 
 	int fxCount = TrackFX_GetCount(_tr);
 	if(!fxCount) {
-		AddToMenu(*_menu, "(No FX on track)", 0, -1, false, MF_DISABLED);
+		AddToMenu(*_menu, "(No FX on track)", 0, -1, false, MF_GRAYED);
 		return false;
 	}
 	
@@ -99,7 +99,7 @@ bool AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_String* _curPresetConf)
 					}
 				}
 
-				AddSubMenu(*_menu, fxSubMenu, fxName, -1, presetCount ? MFS_ENABLED : MF_DISABLED);
+				AddSubMenu(*_menu, fxSubMenu, fxName, -1, presetCount ? MFS_ENABLED : MF_GRAYED);
 			}
 		}
 	}
@@ -642,7 +642,7 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
 					AddToMenu(hMenu, "Clear", SNM_LIVECFG_CLEAR_TRACK_TEMPLATE_MSG);
 					AddToMenu(hMenu, "Load track template...", SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG);
 				}
-				else AddToMenu(hMenu, "(No track)", 0, -1, false, MF_DISABLED);
+				else AddToMenu(hMenu, "(No track)", 0, -1, false, MF_GRAYED);
 				break;
 			}
 			case 4:
@@ -653,9 +653,9 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
 						AddToMenu(hMenu, "Clear", SNM_LIVECFG_CLEAR_FXCHAIN_MSG);
 						AddToMenu(hMenu, "Load FX Chain...", SNM_LIVECFG_LOAD_FXCHAIN_MSG);
 					}
-					else AddToMenu(hMenu, "(Track template overrides)", 0, -1, false, MF_DISABLED);
+					else AddToMenu(hMenu, "(Track template overrides)", 0, -1, false, MF_GRAYED);
 				}
-				else AddToMenu(hMenu, "(No track)", 0, -1, false, MF_DISABLED);
+				else AddToMenu(hMenu, "(No track)", 0, -1, false, MF_GRAYED);
 				break;
 			}
 /*Preset
@@ -890,6 +890,7 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					case BUTTONID_ENABLE:
 					{
 						lc->m_enable[g_configId] = !(lc->m_enable[g_configId]);
+/*JFB3!!! old code 
 						lc->m_lastDeactivateCmd[g_configId][0] = -1;
 						if (lc->m_lastMIDIVal[g_configId] != -1) 
 						{
@@ -897,10 +898,12 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 							Update();
 							Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1); //JFB?????
 						}
+*/
 						// Retreive the related toggle action and refresh toolbars
 						char customCmdId[128];
 						_snprintf(customCmdId, 128, "%s%d", "_S&M_TOGGLE_LIVE_CFG", g_configId+1);
 						RefreshToolbar(NamedCommandLookup(customCmdId));
+						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 					}
 					break;
 					case BUTTONID_AUTO_RCV:
@@ -1159,9 +1162,7 @@ void OpenLiveConfigView(COMMAND_T*) {
 }
 
 bool IsLiveConfigViewDisplayed(COMMAND_T*) {
-	if (g_pLiveConfigsWnd)
-		return g_pLiveConfigsWnd->IsValidWindow();
-	return false;
+	return (g_pLiveConfigsWnd && g_pLiveConfigsWnd->IsValidWindow());
 }
 
 
@@ -1266,18 +1267,18 @@ void SNM_MidiLiveScheduledJob::Perform()
 					p = new SNM_ChunkParserPatcher(cfg->m_track);
 					WDL_String chunk;
 					char filename[BUFFER_SIZE];
-					if (GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), filename, BUFFER_SIZE))
-						if (LoadChunk(filename, &chunk) && chunk.GetLength())
-							p->SetChunk(&chunk, 1);
+					GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), filename, BUFFER_SIZE);
+					if (LoadChunk(filename, &chunk) && chunk.GetLength())
+						p->SetChunk(&chunk, 1);
 				}
 				else if (cfg->m_fxChain.GetLength())
 				{
 					p = new SNM_FXChainTrackPatcher(cfg->m_track);
 					WDL_String chunk;
 					char filename[BUFFER_SIZE];
-					if (GetFullResourcePath("FXChains", cfg->m_fxChain.Get(), filename, BUFFER_SIZE))
-						if (LoadChunk(filename, &chunk) && chunk.GetLength())
-							((SNM_FXChainTrackPatcher*)p)->SetFXChain(&chunk);
+					GetFullResourcePath("FXChains", cfg->m_fxChain.Get(), filename, BUFFER_SIZE);
+					if (LoadChunk(filename, &chunk) && chunk.GetLength())
+						((SNM_FXChainTrackPatcher*)p)->SetFXChain(&chunk);
 				}
 /*Preset
 				else if (cfg->m_presets.GetLength())

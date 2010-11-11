@@ -42,14 +42,13 @@ extern SNM_ResourceWnd* g_pResourcesWnd; // SNM_ResourceView.cpp
 // _set=false: paste, _set=true: set
 void loadSetPasteTakeFXChain(const char* _title, int _slot, bool _activeOnly, bool _set, bool _errMsg)
 {
-	if (CountSelectedMediaItems(NULL))
-	{
-		// Prompt for slot if needed
-		if (_slot == -1) _slot = g_fxChainFiles.PromptForSlot(_title); //loops on err
-		if (_slot == -1) return; // user has cancelled
+	// Prompt for slot if needed
+	if (_slot == -1) _slot = g_fxChainFiles.PromptForSlot(_title); //loops on err
+	if (_slot == -1) return; // user has cancelled
 
-		// main job
-		if (g_fxChainFiles.LoadOrBrowseSlot(_slot, _errMsg))
+	if (g_fxChainFiles.LoadOrBrowseSlot(_slot, _errMsg))
+	{
+		if (CountSelectedMediaItems(NULL))
 		{
 			if (_set) 
 				setTakeFXChain(_title, _slot, _activeOnly, false);
@@ -71,7 +70,7 @@ void pasteTakeFXChain(const char* _title, int _slot, bool _activeOnly)
 	WDL_String* chain = NULL;
 	WDL_String slotFxChain;
 	if (_slot == -2) chain = &g_fXChainClipboard;
-	else if (LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &slotFxChain)) chain = &slotFxChain;
+	else if (LoadChunk(g_fxChainFiles.GetFullPath(_slot), &slotFxChain)) chain = &slotFxChain;
 	else return;
 
 	for (int i = 0; i < GetNumTracks(); i++)
@@ -145,7 +144,7 @@ void setTakeFXChain(const char* _title, int _slot, bool _activeOnly, bool _clear
 			chain = &g_fXChainClipboard;
 			break;
 		default: 
-			if (LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &slotFxChain)) 
+			if (LoadChunk(g_fxChainFiles.GetFullPath(_slot), &slotFxChain)) 
 				chain = &slotFxChain;
 			else
 				return;
@@ -251,14 +250,13 @@ void clearAllTakesFXChain(COMMAND_T* _ct) {
 // _set=false: paste, _set=true: set
 void loadSetPasteTrackFXChain(const char* _title, int _slot, bool _set, bool _errMsg)
 {
-	if (CountSelectedTracksWithMaster(NULL))
-	{
-		// Prompt for slot if needed
-		if (_slot == -1) _slot = g_fxChainFiles.PromptForSlot(_title); //loops on err
-		if (_slot == -1) return; // user has cancelled
+	// Prompt for slot if needed
+	if (_slot == -1) _slot = g_fxChainFiles.PromptForSlot(_title); //loops on err
+	if (_slot == -1) return; // user has cancelled
 
-		// main job
-		if (g_fxChainFiles.LoadOrBrowseSlot(_slot, _errMsg))
+	if (g_fxChainFiles.LoadOrBrowseSlot(_slot, _errMsg))
+	{
+		if (CountSelectedTracksWithMaster(NULL))
 		{
 			if (_set) 
 				setTrackFXChain(_title, _slot, false);
@@ -280,7 +278,7 @@ void pasteTrackFXChain(const char* _title, int _slot)
 	WDL_String* chain = NULL;
 	WDL_String slotFxChain;
 	if (_slot == -2) chain = &g_fXChainClipboard;
-	else if (LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &slotFxChain)) chain = &slotFxChain;
+	else if (LoadChunk(g_fxChainFiles.GetFullPath(_slot), &slotFxChain)) chain = &slotFxChain;
 	else return;
 
 	for (int i = 0; i <= GetNumTracks(); i++)
@@ -323,7 +321,7 @@ void setTrackFXChain(const char* _title, int _slot, bool _clear)
 			chain = &g_fXChainClipboard;
 			break;
 		default: 
-			if (LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &slotFxChain)) 
+			if (LoadChunk(g_fxChainFiles.GetFullPath(_slot), &slotFxChain)) 
 				chain = &slotFxChain;
 			else
 				return;
@@ -428,7 +426,7 @@ void clearFXChainSlotPrompt(COMMAND_T* _ct)
 void copyFXChainSlotToClipBoard(int _slot)
 {
 	if (_slot >= 0 && _slot < g_fxChainFiles.GetSize())
-		LoadChunk(g_fxChainFiles.Get(_slot)->m_fullPath.Get(), &g_fXChainClipboard);
+		LoadChunk(g_fxChainFiles.GetFullPath(_slot), &g_fXChainClipboard);
 }
 
 void readSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, char* _desc, int _descSize)

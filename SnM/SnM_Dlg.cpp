@@ -145,7 +145,7 @@ void fillHWoutDropDown(HWND _hwnd, int _idc)
 
 WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	const char cWndPosKey[] = "CueBus Window Pos"; //JFB hum.. but kept not to mess REPAER.ini
+	const char cWndPosKey[] = "CueBus Window Pos"; 
 	switch(Message)
 	{
         case WM_INITDIALOG :
@@ -269,9 +269,6 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					SetFocus(GetDlgItem(hwnd, templateEnable ? IDC_SNM_CUEBUS_TEMPLATE : IDC_SNM_CUEBUS_NAME));
 				}
 				break;
-
-				default:
-					break;
 			}
 		}
 		break;
@@ -279,9 +276,6 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		case WM_DESTROY:
 			SaveWindowPos(hwnd, cWndPosKey);
 			break; 
-
-		default:
-			break;
 	}
 
 	return 0;
@@ -326,3 +320,4 @@ WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 }
+

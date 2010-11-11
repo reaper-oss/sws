@@ -1126,9 +1126,7 @@ void OpenNotesHelpView(COMMAND_T* _ct) {
 }
 
 bool IsNotesHelpViewDisplayed(COMMAND_T* _ct) {
-	if (g_pNotesHelpWnd)
-		return ((g_pNotesHelpWnd->GetType() == (int)_ct->user) && g_pNotesHelpWnd->IsValidWindow());
-	return false;
+	return (g_pNotesHelpWnd && g_pNotesHelpWnd->IsValidWindow());
 }
 
 void SwitchNotesHelpType(COMMAND_T* _ct){

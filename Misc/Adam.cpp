@@ -66,7 +66,7 @@ void ReadFillGapsIniFile(char* cmdString,
 		*stretch = atoi(tmp); 
 
 	GetPrivateProfileString("SWS","FillGapsMaxStretch","0.5",tmp,128,get_ini_file());
-	cmd.AppendFormatted(128, "%s,", tmp);
+	cmd.AppendFormatted(128, "%s,", !stretch ? "1.0" : tmp);
 	if (maxStretch)
 		strncpy(maxStretch, tmp, 128);
 
@@ -75,7 +75,7 @@ void ReadFillGapsIniFile(char* cmdString,
 		*trans = atoi(tmp); 
 
 	GetPrivateProfileString("SWS","FillGapsPresTrans","35",tmp,128,get_ini_file());
-	cmd.AppendFormatted(128, "%s,", tmp);
+	cmd.AppendFormatted(128, "%s,", (!stretch || !trans) ? "0" : tmp);
 	if (presTrans)
 		strncpy(presTrans, tmp, 128);
 
@@ -195,7 +195,7 @@ WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					{
 						char prms[128];
 						_snprintf(prms, 128, "%s,%s,%s,%s,%s,%s,%d,%d", 
-							triggerPad, fadeLength, maxGap, maxStretch, presTrans, 
+							triggerPad, fadeLength, maxGap, !stretch ? "1.0" : maxStretch, (!stretch || !trans) ? "0" : presTrans, 
 							transFade, fadeShape, markErrors);
 						AWFillGapsAdv("Fill gaps between selected items", prms);
 					}

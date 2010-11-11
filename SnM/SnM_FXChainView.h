@@ -90,36 +90,14 @@ protected:
 };
 
 
-class PathSlotItem
-{
+class PathSlotItem {
 public:
-	PathSlotItem(const char* _resDir, const char* _fullPath, const char* _desc)
-	{
-		m_resDir.Set(_resDir);
-		m_desc.Set(_desc);
-		SetFullPath(_fullPath);
-	}
-	bool IsDefault() {return (!m_fullPath.GetLength());}
-	void Clear() {m_fullPath.Set(""); m_name.Set(""); m_shortPath.Set(""); m_desc.Set("");}
-	void SetFullPath(const char* _fullPath) 
-	{
-//JFB3!!! TO CHECK
-		if (_fullPath && *_fullPath)
-		{
-			m_fullPath.Set(_fullPath);
-			char buf[BUFFER_SIZE];	
-			ExtractFileNameEx(_fullPath, buf, true); //JFB TODO: Xen code a revoir
-			m_name.Set(buf);
-			if (GetShortResourcePath(m_resDir.Get(), _fullPath, buf, BUFFER_SIZE)) 
-			{
-				m_shortPath.Set(buf);
-				return; // <--- !
-			}
-		}
-		m_fullPath.Set(""); m_name.Set(""); m_shortPath.Set("");
-	}
-	WDL_String m_resDir, m_fullPath, m_desc, m_name, m_shortPath; // The 2 last ones are deduced from m_fullPath, added for perf. reasons
+	PathSlotItem(const char* _shortPath, const char* _desc) : m_shortPath(_shortPath), m_desc(_desc) {}
+	bool IsDefault() {return (!m_shortPath.GetLength());}
+	void Clear() {m_shortPath.Set(""); m_desc.Set("");}
+	WDL_String m_shortPath, m_desc; 
 };
+
 
 class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 {
@@ -129,24 +107,57 @@ class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 	void GetFileFilter(char* _filter, int _maxFilterLength) {
 		if (_filter) _snprintf(_filter, _maxFilterLength, "REAPER %s (*.%s)\0*.%s\0", m_desc.Get(), m_ext.Get(), m_ext.Get());
 	}
-	PathSlotItem* CreateSlot(const char* _fullPath="", const char* _desc="") {
-		return new PathSlotItem(m_resDir.Get(), _fullPath, _desc);
+	// _path: short resource path or full path
+	PathSlotItem* AddSlot(const char* _path="", const char* _desc="") {
+		char shortPath[BUFFER_SIZE] = "";
+		GetShortResourcePath(m_resDir.Get(), _path, shortPath, BUFFER_SIZE, true);
+		return Add(new PathSlotItem(shortPath, _desc));
 	}
-	PathSlotItem* AddSlot(const char* _fullPath="", const char* _desc="") {
-		return Add(CreateSlot(_fullPath, _desc));
-	}
-	PathSlotItem* InsertEmptySlot(int _slot) {
+	// _path: short resource path or full path
+	PathSlotItem* InsertSlot(int _slot, const char* _path="", const char* _desc="") {
 		PathSlotItem* item = NULL;
+		char shortPath[BUFFER_SIZE] = "";
+		GetShortResourcePath(m_resDir.Get(), _path, shortPath, BUFFER_SIZE, true);
 		if (_slot >=0 && _slot < GetSize()) {
-			item = Insert(_slot, CreateSlot());
+			item = Insert(_slot, new PathSlotItem(shortPath, _desc));
 		} 
-		else if (_slot >= GetSize()) 
-			item = AddSlot();
+		else
+			item = AddSlot(shortPath, _desc);
 		return item;
 	}
+	int FindByFullPath(const char* _fullPath) {
+		int slot = -1;
+		if (_fullPath)
+			for (int i=0; slot < 0 && i < GetSize(); i++)
+			{
+				char* fullPath = GetFullPath(i);
+				if (fullPath && !_stricmp(fullPath, _fullPath))
+					slot = i;
+			}
+		return slot;
+	}
+	// *always* returns a full path ("" if an error occured)
+	char* GetFullPath(int _slot) //JFB2000 !!!! bof bof
+	{
+		m_tmp.Set("");
+		PathSlotItem* item = Get(_slot);
+		if (item) {
+			char fullPath[BUFFER_SIZE] = "";
+			GetFullResourcePath(m_resDir.Get(), item->m_shortPath.Get(), fullPath, BUFFER_SIZE);
+			m_tmp.Set(fullPath);
+		}
+		return m_tmp.Get();
+	};
+	void SetFromFullPath(int _slot, const char* _fullPath)	{
+		PathSlotItem* item = Get(_slot);
+		if (item) {
+			char shortPath[BUFFER_SIZE] = "";
+			GetShortResourcePath(m_resDir.Get(), _fullPath, shortPath, BUFFER_SIZE, true);
+			item->m_shortPath.Set(shortPath);
+		}
+	};
 	int PromptForSlot(const char* _title);
 	bool LoadOrBrowseSlot(int _slot, bool _errMsg=false);
-	bool CheckAndStoreSlot(int _slot, const char* _filename, bool _errMsg=false);
 	bool BrowseStoreSlot(int _slot);
 	void DisplaySlot(int _slot);
 	void ClearSlot(int _slot, bool _guiUpdate=true);
@@ -156,6 +167,7 @@ class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 	WDL_String m_resDir; // Resource sub-directory name *AND* S&M.ini section
 	WDL_String m_desc; // used in user messages
 	WDL_String m_ext; // e.g. "rfxchain"
+	WDL_String m_tmp;  //JFB2000 !!!! bof bof
 };
 
 //JFB!!!

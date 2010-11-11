@@ -312,17 +312,17 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 10" }, "S&M_APPLY_TRTEMPLATE10", loadSetTrackTemplate, NULL, 9},
 	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, prompt for slot" }, "S&M_APPLY_TRTEMPLATEp", loadSetTrackTemplate, NULL, -1},
 
-	{ { DEFACCEL, "SWS/S&M: Load/add track from track template, slot 01" }, "S&M_ADD_TRTEMPLATE1", loadAddTrackTemplate, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Load/add track from track template, slot 02" }, "S&M_ADD_TRTEMPLATE2", loadAddTrackTemplate, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Load/add track from track template, slot 03" }, "S&M_ADD_TRTEMPLATE3", loadAddTrackTemplate, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Load/add track from track template, slot 04" }, "S&M_ADD_TRTEMPLATE4", loadAddTrackTemplate, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Load/add track from track template, slot 05" }, "S&M_ADD_TRTEMPLATE5", loadAddTrackTemplate, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Load/add track from track template, slot 06" }, "S&M_ADD_TRTEMPLATE6", loadAddTrackTemplate, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Load/add track from track template, slot 07" }, "S&M_ADD_TRTEMPLATE7", loadAddTrackTemplate, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Load/add track from track template, slot 08" }, "S&M_ADD_TRTEMPLATE8", loadAddTrackTemplate, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Load/add track from track template, slot 09" }, "S&M_ADD_TRTEMPLATE9", loadAddTrackTemplate, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Load/add track from track template, slot 10" }, "S&M_ADD_TRTEMPLATE10", loadAddTrackTemplate, NULL, 9},
-	{ { DEFACCEL, "SWS/S&M: Load/add track from track template, prompt for slot" }, "S&M_ADD_TRTEMPLATEp", loadAddTrackTemplate, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 01" }, "S&M_ADD_TRTEMPLATE1", loadAddTrackTemplate, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 02" }, "S&M_ADD_TRTEMPLATE2", loadAddTrackTemplate, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 03" }, "S&M_ADD_TRTEMPLATE3", loadAddTrackTemplate, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 04" }, "S&M_ADD_TRTEMPLATE4", loadAddTrackTemplate, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 05" }, "S&M_ADD_TRTEMPLATE5", loadAddTrackTemplate, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 06" }, "S&M_ADD_TRTEMPLATE6", loadAddTrackTemplate, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 07" }, "S&M_ADD_TRTEMPLATE7", loadAddTrackTemplate, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 08" }, "S&M_ADD_TRTEMPLATE8", loadAddTrackTemplate, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 09" }, "S&M_ADD_TRTEMPLATE9", loadAddTrackTemplate, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 10" }, "S&M_ADD_TRTEMPLATE10", loadAddTrackTemplate, NULL, 9},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, prompt for slot" }, "S&M_ADD_TRTEMPLATEp", loadAddTrackTemplate, NULL, -1},
 
 
 	// Takes ------------------------------------------------------------------

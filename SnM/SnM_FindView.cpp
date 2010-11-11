@@ -703,7 +703,5 @@ void OpenFindView(COMMAND_T*) {
 }
 
 bool IsFindViewDisplayed(COMMAND_T*){
-	if (g_pFindWnd)
-		return g_pFindWnd->IsValidWindow();
-	return false;
+	return (g_pFindWnd && g_pFindWnd->IsValidWindow());
 }

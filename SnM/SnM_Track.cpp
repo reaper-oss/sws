@@ -278,28 +278,28 @@ MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj) {
 void loadSetOrAddTrackTemplate(const char* _title, bool _add, int _slot, bool _errMsg)
 {
 	bool updated = false;
-	if (CountSelectedTracksWithMaster(NULL))
-	{
-		// Prompt for slot if needed
-		if (_slot == -1) _slot = g_trTemplateFiles.PromptForSlot(_title); //loops on err
-		if (_slot == -1) return; // user has cancelled
 
-		// main job
-		if (g_trTemplateFiles.LoadOrBrowseSlot(_slot, _errMsg) && g_trTemplateFiles.Get(_slot)->m_fullPath.GetLength())
+	// Prompt for slot if needed
+	if (_slot == -1) _slot = g_trTemplateFiles.PromptForSlot(_title); //loops on err
+	if (_slot == -1) return; // user has cancelled
+
+	if (g_trTemplateFiles.LoadOrBrowseSlot(_slot, _errMsg)) 
+	{
+		if (CountSelectedTracksWithMaster(NULL))
 		{
 			WDL_String trTmpltChunk;
 
 			// add as new track
 			if (_add)
 			{
-				//JFB!! native bug! needs at least 1 track to work
-				Main_openProject(g_trTemplateFiles.Get(_slot)->m_fullPath.Get());
-				/* commented: Main_openProject() includes undo point 
+				//JFB!! native bug! needs at least 1 and 1 *selected* track to work
+				Main_openProject(g_trTemplateFiles.GetFullPath(_slot));
+				/*JFB commented: Main_openProject() includes undo point 
 				updated = true;
 				*/
 			}
 			// patch selected tracks (preserve items)
-			else if (LoadChunk(g_trTemplateFiles.Get(_slot)->m_fullPath.Get(), &trTmpltChunk) && trTmpltChunk.GetLength())
+			else if (LoadChunk(g_trTemplateFiles.GetFullPath(_slot), &trTmpltChunk) && trTmpltChunk.GetLength())
 			{
 				char* pStart = strstr(trTmpltChunk.Get(), "<TRACK");
 				if (pStart) 

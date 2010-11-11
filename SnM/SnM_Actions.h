@@ -38,10 +38,12 @@
 #define SNM_FORMATED_INI_FILE "%s\\S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE "%s\\Plugins\\S&M.ini"
 #define SNM_ACTION_HELP_INI_FILE "%s\\S&M_Action_help_en.ini"
+#define SNM_SHORT_RESOURCE_PATH_PREFIX ".\\"
 #else
 #define SNM_FORMATED_INI_FILE "%s/S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE "%s/Plugins/S&M.ini"
 #define SNM_ACTION_HELP_INI_FILE "%s/S&M_Action_help_en.ini"
+#define SNM_SHORT_RESOURCE_PATH_PREFIX "./"
 #endif
 
 #define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
@@ -61,32 +63,18 @@
 
 #define SNM_SCHEDJOB_DEFAULT_DELAY		250
 
-// Scheduled job ids
-// note: [0..7] reserved for Live Configs MIDI CC only actions
+// Scheduled job *RESERVED* ids
+// note: [0..7] are reserved for Live Configs MIDI CC actions
 #define SNM_SCHEDJOB_LIVECFG_TLCHANGE	8
 #define SNM_SCHEDJOB_NOTEHLP_TLCHANGE	9
 #define SNM_SCHEDJOB_LIVECFG_SELPRJ		10
-
-
-//#define _SNM_ITT
-
-enum
-{
-  SNM_SLOT_TYPE_FX_CHAINS=0,
-  SNM_SLOT_TYPE_TR_TEMPLATES,
-#ifdef _SNM_ITT
-  SNM_SLOT_TYPE_ITEM_TEMPLATES,
-#endif
-  SNM_SLOT_TYPE_COUNT
-};
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Global types & classes
 ///////////////////////////////////////////////////////////////////////////////
 
-typedef struct MIDI_COMMAND_T
-{
+typedef struct MIDI_COMMAND_T {
 	gaccel_register_t accel;
 	const char* id;
 	void (*doCommand)(MIDI_COMMAND_T*,int,int,int,HWND);
@@ -96,8 +84,7 @@ typedef struct MIDI_COMMAND_T
 } MIDI_COMMAND_T;
 
 
-class SNM_TrackNotes 
-{
+class SNM_TrackNotes {
 public:
 	SNM_TrackNotes(MediaTrack* _tr, const char* _notes) 
 		: m_tr(_tr) {m_notes.Set(_notes ? _notes : "");}
@@ -105,8 +92,7 @@ public:
 };
 
 
-class SNM_FXSummary 
-{
+class SNM_FXSummary {
 public:
 	SNM_FXSummary(const char* _type, const char* _realName)
 		: m_type(_type),m_realName(_realName){}
@@ -115,8 +101,7 @@ public:
 };
 
 
-class SNM_ScheduledJob 
-{
+class SNM_ScheduledJob {
 public:
 	SNM_ScheduledJob(int _id, int _approxDelayMs) {
 		m_id = _id;
@@ -127,8 +112,7 @@ public:
 	int m_id, m_tick;
 };
 
-class SNM_SndRcv 
-{
+class SNM_SndRcv {
 public:
 	SNM_SndRcv() {}
 	SNM_SndRcv(MediaTrack* _src, MediaTrack* _dest, bool _mute, int _phase, int _mono,
@@ -145,8 +129,7 @@ public:
 
 // Custom WDL UIs (SnM_Dlg.cpp)
 
-class SNM_VirtualComboBox : public WDL_VirtualComboBox
-{
+class SNM_VirtualComboBox : public WDL_VirtualComboBox {
   public:
 	SNM_VirtualComboBox() : WDL_VirtualComboBox() {}
 	~SNM_VirtualComboBox() {}
@@ -384,13 +367,14 @@ void winWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
 void simulateMouseClick(COMMAND_T* _ct);
 void dumpWikiActions2(COMMAND_T* _ct);
 void SNM_ShowConsoleMsg(const char* _msg, const char* _title="", bool _clear=true); 
+void SNM_ShowConsoleDbg(bool _clear, const char* format, ...);
 bool SNM_DeleteFile(const char* _filename);
 HWND SearchWindow(const char* _title);
 HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
 bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMaxSize);
-bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _filename, int _maxFilename, bool _fullPath = false);
-bool GetShortResourcePath(const char* _resSubDir, const char* _longFilename, char* _filename, int _maxFilename);
-bool GetFullResourcePath(const char* _resSubDir, const char* _shortFilename, char* _filename, int _maxFilename);
+bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath = false, bool _wantShortFnPrefix=false);
+void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn, bool _wantShortFnPrefix); //JFB2000!! remove prefix: no choice
+void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _maxFn);
 bool LoadChunk(const char* _filename, WDL_String* _chunk);
 void StringToExtensionConfig(char* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx);

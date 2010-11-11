@@ -39,7 +39,7 @@
 // Misc	actions
 ///////////////////////////////////////////////////////////////////////////////
 
-// see http://forum.cockos.com/showthread.php?t=60657
+// http://forum.cockos.com/showthread.php?t=60657
 void letREAPERBreathe(COMMAND_T* _ct)
 {
 #ifdef _WIN32
@@ -179,6 +179,23 @@ void SNM_ShowConsoleMsg(const char* _msg, const char* _title, bool _clear)
 	}
 }
 
+// http://forum.cockos.com/showthread.php?t=48793
+void SNM_ShowConsoleDbg(bool _clear, const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    int bufsize = 2048;
+    char* buffer = (char*)malloc(bufsize);
+    while(buffer && _vsnprintf(buffer, bufsize, format, args) < 0) {
+        bufsize *= 2;
+        buffer = (char*)realloc(buffer, bufsize);
+    }
+    if (buffer)
+		SNM_ShowConsoleMsg(buffer, "Debug", _clear);
+    va_end(args);
+    free(buffer);
+}
+
 bool SNM_DeleteFile(const char* _filename)
 {
 #ifdef _WIN32
@@ -246,22 +263,18 @@ bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMa
 	return true;
 }
 
-// Browse a given directory in the default resource path and return shorten filename (if possible)
-// If a file is chosen in this directory, just copy the filename relative to this path into _filename, full path otherwise (or if _fullPath is true)
+// Browse + return short resource filename (if possible and if _wantFullPath == false)
 // Returns false if cancelled
-bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _filename, int _maxFilename, bool _fullPath)
+bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath, bool _wantShortFnPrefix)
 {
 	bool ok = false;
-
-	//JFB3 more checks ?
-
 	char defaultPath[BUFFER_SIZE] = "";
 	sprintf(defaultPath, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
 	char* filename = BrowseForFiles(_title, defaultPath, NULL, false, _fileFilters);
 	if (filename) 
 	{
-		if(!_fullPath && stristr(filename, defaultPath)) //JFB ignore case on OSX ?
-			strncpy(_filename, (char*)(filename+strlen(defaultPath)+1), _maxFilename);
+		if(!_wantFullPath)
+			GetShortResourcePath(_resSubDir, filename, _filename, _maxFilename, _wantShortFnPrefix);
 		else
 			strncpy(_filename, filename, _maxFilename);
 		free(filename);
@@ -270,46 +283,53 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 	return ok;
 }
 
-bool GetShortResourcePath(const char* _resSubDir, const char* _longFilename, char* _filename, int _maxFilename)
+// Get a short filename from a full resource path
+// ex: C:\Documents and Settings\<user>\Application Data\REAPER\FXChains\EQ\JS\test.RfxChain 
+//     -> EQ\JS\test.RfxChain (_wantShortFnPrefix == false)
+//  or -> .\EQ\JS\test.RfxChain (_wantShortFnPrefix == true)
+// Notes: 
+// - *must* work with non existing file paths (i.e. just some string processing here)
+// - *must* be nop for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
+// - *must* be nop for short resource paths 
+void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn, bool _wantShortFnPrefix)
 {
-	if (_resSubDir && *_resSubDir && _longFilename && *_longFilename)
+	if (_resSubDir && *_resSubDir && _fullFn && *_fullFn)
 	{
 		char defaultPath[BUFFER_SIZE] = "";
-		sprintf(defaultPath, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
-		if(stristr(_longFilename, defaultPath)) //JFB ignore case on OSX ?
-			strncpy(_filename, (char*)(_longFilename+strlen(defaultPath)+1), _maxFilename);
+		_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
+		if(stristr(_fullFn, defaultPath) == _fullFn) // check that it's really a long filename
+			_snprintf(_shortFn, _maxFn, "%s%s", _wantShortFnPrefix ? SNM_SHORT_RESOURCE_PATH_PREFIX : "", (char*)(_fullFn + strlen(defaultPath) + 1));
 		else
-			strncpy(_filename, _longFilename, _maxFilename);
-		return true;
+			strncpy(_shortFn, _fullFn, _maxFn);
 	}
-	else
-		*_filename = '\0';
-	return false;
+	else if (_shortFn)
+		*_shortFn = '\0';
 }
 
-bool GetFullResourcePath(const char* _resSubDir, const char* _shortFilename, char* _filename, int _maxFilename)
+// Get a full resource path from a short filename
+// ex: .\EQ\JS\test.RfxChain -> C:\Documents and Settings\<user>\Application Data\REAPER\FXChains\EQ\JS\test.RfxChain
+// Notes: 
+// - *must* work with non existing file paths (i.e. just some string processing here)
+// - *must* be nop for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
+// - *must* be nop for full resource paths 
+void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _maxFn)
 {
-	if (_shortFilename && _filename) 
+	if (_shortFn && _fullFn) 
 	{
-		if (*_shortFilename == '\0')
-			*_filename = '\0';
-		else if (FileExists(_shortFilename))
-			strncpy(_filename, _shortFilename, _maxFilename);
+		if (*_shortFn == '\0')
+			*_fullFn = '\0';
+		else if (strstr(_shortFn, SNM_SHORT_RESOURCE_PATH_PREFIX) == _shortFn && !stristr(_shortFn, GetResourcePath())) // check that it's really a short filename
+			_snprintf(_fullFn, _maxFn, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFn + 2);
 		else
-			_snprintf(_filename, _maxFilename, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFilename);
+			strncpy(_fullFn, _shortFn, _maxFn);
 	}
-
-//JFB3!!!!!! FileExists() bonne idee??? cf history..
-	if (_filename && *_filename && !FileExists(_filename)) {
-		*_filename = '\0';
-		return false;
-	}
-	return true;
+	else if (_fullFn)
+		*_fullFn = '\0';
 }
 
 bool LoadChunk(const char* _filename, WDL_String* _chunk)
 {
-	if (_filename && *_filename && _chunk)
+	if (_filename && *_filename && _chunk && _filename)
 	{
 		FILE* f = fopenUTF8(_filename, "r");
 		if (f)

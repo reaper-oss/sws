@@ -572,36 +572,30 @@ void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _
 	{
 		GetPrivateProfileString("LAST_CUEBUS","NAME","",_busName,BUFFER_SIZE,g_SNMiniFilename.Get());
 
-		char reaType[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","REATYPE","3",reaType,16,g_SNMiniFilename.Get());
-		*_reaType = atoi(reaType); // 0 if failed 
+		char tmp[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","REATYPE","3",tmp,16,g_SNMiniFilename.Get());
+		*_reaType = atoi(tmp); // 0 if failed 
 
-		char trTemplate[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED","0",trTemplate,16,g_SNMiniFilename.Get());
-		*_trTemplate = (atoi(trTemplate) == 1); // 0 if failed 
+		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED","0",tmp,16,g_SNMiniFilename.Get());
+		*_trTemplate = (atoi(tmp) == 1); // 0 if failed 
 
 		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH","",_trTemplatePath,BUFFER_SIZE,g_SNMiniFilename.Get());
 
-		char showRouting[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","SHOW_ROUTING","1",showRouting,16,g_SNMiniFilename.Get());
-		*_showRouting = (atoi(showRouting) == 1); // 0 if failed 
+		GetPrivateProfileString("LAST_CUEBUS","SHOW_ROUTING","1",tmp,16,g_SNMiniFilename.Get());
+		*_showRouting = (atoi(tmp) == 1); // 0 if failed 
 
-		char sendToMaster[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT","0",sendToMaster,16,g_SNMiniFilename.Get());
-		*_sendToMaster = (atoi(sendToMaster) == 1); // 0 if failed 
+		GetPrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT","0",tmp,16,g_SNMiniFilename.Get());
+		*_sendToMaster = (atoi(tmp) == 1); // 0 if failed 
 
-		char soloDefeat[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT","1",soloDefeat,16,g_SNMiniFilename.Get());
-		*_soloDefeat = atoi(soloDefeat); // 0 if failed 
+		GetPrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT","1",tmp,16,g_SNMiniFilename.Get());
+		*_soloDefeat = atoi(tmp); // 0 if failed 
 
+		char slot[16] = "";
 		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
 		{
-			char slot[16] = "";
 			sprintf(slot,"HWOUT%d",i+1);
-
-			char hwOut[16] = "";
-			GetPrivateProfileString("LAST_CUEBUS",slot,"0",hwOut,BUFFER_SIZE,g_SNMiniFilename.Get());
-			_hwOuts[i] = atoi(hwOut); // 0 if failed 
+			GetPrivateProfileString("LAST_CUEBUS",slot,"0",tmp,BUFFER_SIZE,g_SNMiniFilename.Get());
+			_hwOuts[i] = atoi(tmp); // 0 if failed 
 		}
 	}
 }
@@ -611,26 +605,23 @@ void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTem
 	if (_busName && _trTemplatePath && _hwOuts)
 	{
 		WritePrivateProfileString("LAST_CUEBUS","NAME",_busName,g_SNMiniFilename.Get());
-		char type[16] = "";
-		sprintf(type,"%d",_type);
-		WritePrivateProfileString("LAST_CUEBUS","REATYPE",type,g_SNMiniFilename.Get());
+		char tmp[16] = "";
+		sprintf(tmp,"%d",_type);
+		WritePrivateProfileString("LAST_CUEBUS","REATYPE",tmp,g_SNMiniFilename.Get());
 		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED",_trTemplate ? "1" : "0",g_SNMiniFilename.Get());
 		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH",_trTemplatePath,g_SNMiniFilename.Get());
 		WritePrivateProfileString("LAST_CUEBUS","SHOW_ROUTING",_showRouting ? "1" : "0",g_SNMiniFilename.Get());
 		WritePrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT",_sendToMaster ? "1" : "0",g_SNMiniFilename.Get());
 
-		char soloDefeat[16] = "";
-		sprintf(soloDefeat,"%d",_soloDefeat);
-		WritePrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT",soloDefeat,g_SNMiniFilename.Get());
+		sprintf(tmp,"%d",_soloDefeat);
+		WritePrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT",tmp,g_SNMiniFilename.Get());
 
+		char slot[16] = "";
 		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
 		{
-			char slot[16] = "";
 			sprintf(slot,"HWOUT%d",i+1);
-
-			char hwOut[16] = "";
-			sprintf(hwOut,"%d",_hwOuts[i]);
-			WritePrivateProfileString("LAST_CUEBUS",slot,hwOut,g_SNMiniFilename.Get());
+			sprintf(tmp,"%d",_hwOuts[i]);
+			WritePrivateProfileString("LAST_CUEBUS",slot,tmp,g_SNMiniFilename.Get());
 		}
 	}
 }

@@ -457,7 +457,7 @@ void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	{
 		case (IDC_EDIT | (EN_CHANGE << 16)):
 		{
-			GetDlgItemText(GetHWND(), IDC_EDIT, g_searchStr, MAX_SEARCH_STR_LEN);
+			GetDlgItemText(m_hwnd, IDC_EDIT, g_searchStr, MAX_SEARCH_STR_LEN);
 			g_notFound = false;
 			m_parentVwnd.RequestRedraw(NULL); // buttons grayed for some types
 			break;
@@ -469,6 +469,7 @@ void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				m_type = m_cbType.GetCurSel();
 				g_notFound = false;
 				m_parentVwnd.RequestRedraw(NULL); // buttons grayed for some types
+				SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 			}
 			else 
 				Main_OnCommand((int)wParam, (int)lParam);
@@ -630,18 +631,16 @@ int SNM_FindWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			int x = GET_X_LPARAM(lParam);
 			int y = GET_Y_LPARAM(lParam);
 			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w) 
+			if (w)
 			{
 				g_notFound = false;
-				m_parentVwnd.RequestRedraw(NULL);
-
+				m_parentVwnd.RequestRedraw(NULL); // clears "not found!"
 				w->OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-				if (w == &m_btnFind)
-					Find(0);
-				else if (w == &m_btnPrev) 
-					Find(-1);
-				else if (w == &m_btnNext) 
-					Find(1);
+				switch(w->GetID()){
+					case BUTTONID_FIND: Find(0); break;
+					case BUTTONID_PREV: Find(-1); break;
+					case BUTTONID_NEXT: Find(1); break;
+				}
 			}
 		}
 		break;
@@ -698,8 +697,10 @@ void FindViewExit() {
 }
 
 void OpenFindView(COMMAND_T*) {
-	if (g_pFindWnd)
+	if (g_pFindWnd) {
 		g_pFindWnd->Show(true, true);
+		SetFocus(GetDlgItem(g_pFindWnd->GetHWND(), IDC_EDIT));
+	}
 }
 
 bool IsFindViewDisplayed(COMMAND_T*){

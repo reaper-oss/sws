@@ -1204,7 +1204,7 @@ bool FileSlotList::BrowseStoreSlot(int _slot)
 		char title[128]="", filename[BUFFER_SIZE]="", fileFilter[256]="";
 		_snprintf(title, 128, "S&M - Load %s (slot %d)", m_desc.Get(), _slot+1);
 		GetFileFilter(fileFilter, 256);
-		if (BrowseResourcePath(title, m_resDir.Get(), fileFilter, filename, BUFFER_SIZE, false, true)) {
+		if (BrowseResourcePath(title, m_resDir.Get(), fileFilter, filename, BUFFER_SIZE, false)) {
 			Get(_slot)->m_shortPath.Set(filename);
 			ok = true;
 		}

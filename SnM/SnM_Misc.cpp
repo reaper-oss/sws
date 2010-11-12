@@ -265,7 +265,7 @@ bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMa
 
 // Browse + return short resource filename (if possible and if _wantFullPath == false)
 // Returns false if cancelled
-bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath, bool _wantShortFnPrefix)
+bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath)
 {
 	bool ok = false;
 	char defaultPath[BUFFER_SIZE] = "";
@@ -274,7 +274,7 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 	if (filename) 
 	{
 		if(!_wantFullPath)
-			GetShortResourcePath(_resSubDir, filename, _filename, _maxFilename, _wantShortFnPrefix);
+			GetShortResourcePath(_resSubDir, filename, _filename, _maxFilename);
 		else
 			strncpy(_filename, filename, _maxFilename);
 		free(filename);
@@ -291,14 +291,15 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 // - *must* work with non existing file paths (i.e. just some string processing here)
 // - *must* be nop for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
 // - *must* be nop for short resource paths 
-void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn, bool _wantShortFnPrefix)
+void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn)
 {
 	if (_resSubDir && *_resSubDir && _fullFn && *_fullFn)
 	{
 		char defaultPath[BUFFER_SIZE] = "";
 		_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
-		if(stristr(_fullFn, defaultPath) == _fullFn) // check that it's really a long filename
-			_snprintf(_shortFn, _maxFn, "%s%s", _wantShortFnPrefix ? SNM_SHORT_RESOURCE_PATH_PREFIX : "", (char*)(_fullFn + strlen(defaultPath) + 1));
+		// check if it's a long filename
+		if(stristr(_fullFn, defaultPath) == _fullFn) 
+			strncpy(_shortFn, (char*)(_fullFn + strlen(defaultPath) + 1), _maxFn);
 		else
 			strncpy(_shortFn, _fullFn, _maxFn);
 	}
@@ -316,12 +317,23 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 {
 	if (_shortFn && _fullFn) 
 	{
-		if (*_shortFn == '\0')
+		if (*_shortFn == '\0') {
 			*_fullFn = '\0';
-		else if (strstr(_shortFn, SNM_SHORT_RESOURCE_PATH_PREFIX) == _shortFn && !stristr(_shortFn, GetResourcePath())) // check that it's really a short filename
-			_snprintf(_fullFn, _maxFn, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFn + 2);
-		else
-			strncpy(_fullFn, _shortFn, _maxFn);
+			return;
+		}
+		if (!stristr(_shortFn, GetResourcePath())) {
+
+			char resFn[BUFFER_SIZE], resDir[BUFFER_SIZE];
+			_snprintf(resFn, BUFFER_SIZE, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFn); //JFB +2);
+			strcpy(resDir, resFn);
+			char* p = strrchr(resDir, PATH_SLASH_CHAR);
+			if (p) *p = '\0';
+			if (FileExists(resDir)) {
+				strncpy(_fullFn, resFn, _maxFn);
+				return;
+			}
+		}
+		strncpy(_fullFn, _shortFn, _maxFn);
 	}
 	else if (_fullFn)
 		*_fullFn = '\0';
@@ -329,7 +341,7 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 
 bool LoadChunk(const char* _filename, WDL_String* _chunk)
 {
-	if (_filename && *_filename && _chunk && _filename)
+	if (_filename && *_filename && _chunk)
 	{
 		FILE* f = fopenUTF8(_filename, "r");
 		if (f)

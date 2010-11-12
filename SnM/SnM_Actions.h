@@ -38,12 +38,10 @@
 #define SNM_FORMATED_INI_FILE "%s\\S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE "%s\\Plugins\\S&M.ini"
 #define SNM_ACTION_HELP_INI_FILE "%s\\S&M_Action_help_en.ini"
-#define SNM_SHORT_RESOURCE_PATH_PREFIX ".\\"
 #else
 #define SNM_FORMATED_INI_FILE "%s/S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE "%s/Plugins/S&M.ini"
 #define SNM_ACTION_HELP_INI_FILE "%s/S&M_Action_help_en.ini"
-#define SNM_SHORT_RESOURCE_PATH_PREFIX "./"
 #endif
 
 #define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
@@ -372,8 +370,8 @@ bool SNM_DeleteFile(const char* _filename);
 HWND SearchWindow(const char* _title);
 HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
 bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMaxSize);
-bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath = false, bool _wantShortFnPrefix=false);
-void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn, bool _wantShortFnPrefix); //JFB2000!! remove prefix: no choice
+bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath = false);
+void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn);
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _maxFn);
 bool LoadChunk(const char* _filename, WDL_String* _chunk);
 void StringToExtensionConfig(char* _str, ProjectStateContext* _ctx);

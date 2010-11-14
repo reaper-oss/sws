@@ -58,6 +58,7 @@ public:
 	bool DoColumnMenu(int x, int y);
 	LPARAM GetHitItem(int x, int y, int* iCol);
 	void EditListItem(LPARAM item, int iCol);
+	int GetEditingItem() { return m_iEditingItem; }
 	
 	bool IsActive(bool bWantEdit) { return GetFocus() == m_hwndList || (bWantEdit && m_iEditingItem != -1); }
 	void DisableUpdates(bool bDisable) { m_bDisableUpdates = bDisable; }

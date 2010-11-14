@@ -25,7 +25,7 @@
 /
 ******************************************************************************/
 
-//JFB TODO:
+//JFB TODO?
 // - action_help_t (even if not used yet ?)
 // - drag'n'drop text
 // - undo on *each* key stroke.. hum.. see "JFB2" tags
@@ -68,7 +68,7 @@ SNM_NotesHelpWnd* g_pNotesHelpWnd = NULL;
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
 SWSProjConfig<WDL_String> g_prjNotes;
 
-//JFB TODO: clean-up with member attributes..
+//JFB member attributes?
 int g_bDocked = -1, g_bLastDocked = 0; 
 char g_locked = 1;
 char g_lastText[MAX_HELP_LENGTH];
@@ -113,13 +113,16 @@ int SNM_NotesHelpWnd::GetType(){
 
 void SNM_NotesHelpWnd::SetType(int _type)
 {
-	m_previousType = m_type;
+	int prev = m_previousType = m_type;
 	m_type = _type;
 	m_cbType.SetCurSel(_type);
-	if (m_previousType == NOTES_HELP_DISABLED && m_previousType != m_type)
+
+	// force an initial refresh (when IDC_EDIT has the focus, re-enabling the timer 
+	// isn't enough: Update() is skipped, see OnTimer() & IsActive()
+	Update(); 
+
+	if (prev == NOTES_HELP_DISABLED && prev != _type)
 		SetTimer(m_hwnd, 1, 125, NULL);
-	else
-		Update();
 }
 
 void SNM_NotesHelpWnd::SetText(const char* _str) 
@@ -168,7 +171,7 @@ void SNM_NotesHelpWnd::CSurfSetTrackTitle() {
 		RefreshGUI();
 }
 
-//JFB TODO: replace "timer-ish track sel change tracking" with this notif..
+//JFB TODO? replace "timer-ish track sel change tracking" with this notif..
 void SNM_NotesHelpWnd::CSurfSetTrackListChange() 
 {
 	// This is our only notification of active project tab change, so update everything
@@ -260,7 +263,6 @@ void SNM_NotesHelpWnd::Update(bool _force)
 			case NOTES_HELP_DISABLED:
 				KillTimer(m_hwnd, 1);
 				SetText(g_prjNotes.Get()->Get());
-//JFB				Help_Set(buf, false);
 				refreshType = REQUEST_REFRESH;
 				break;
 
@@ -416,7 +418,6 @@ int SNM_NotesHelpWnd::updateActionHelp(bool _savePrevious)
 							loadHelp(g_lastActionId, buf, MAX_HELP_LENGTH);
 							SetText(buf);
 						}
-//JFB						Help_Set(buf, false);
 						refreshType = REQUEST_REFRESH;
 					}
 				}
@@ -448,7 +449,6 @@ int SNM_NotesHelpWnd::updateItemNotes(bool _savePrevious)
 			if (p.GetSubChunk("NOTES", 2, 0, &notes))
 				GetStringFromNotes(&notes, buf, MAX_HELP_LENGTH);
 			SetText(buf);
-//JFB				Help_Set(buf, false);
 			refreshType = REQUEST_REFRESH;
 		} 
 		else
@@ -484,7 +484,6 @@ int SNM_NotesHelpWnd::updateTrackNotes(bool _savePrevious)
 				notes = &(tn->m_notes);
 			}
 			SetText(notes->Get());
-//JFB			Help_Set(buf, false);
 			refreshType = REQUEST_REFRESH;
 		} 
 		else
@@ -537,6 +536,24 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		saveCurrentText(m_type); // + undos
 	else if (wParam == SET_ACTION_HELP_FILE_MSG)
 		SetActionHelpFilename(NULL);
+	else if (HIWORD(wParam)==0)	
+	{
+		switch(LOWORD(wParam))
+		{
+			case BUTTONID_LOCK:
+			{
+				g_locked = !g_locked;
+				if (!g_locked)
+					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
+				else
+					SetFocus(GetMainHwnd());
+				RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
+			}
+			break;
+			case TXTID_LABEL:
+			break;
+		}
+	}
 	else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE)	
 	{
 		SetType(m_cbType.GetCurSel());
@@ -604,43 +621,16 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 	if (!g_pNotesHelpWnd) // SWS Can't draw before wnd initialized - why isn't this a member func??
 		return;			  // JFB TODO yes, I was planing a kind of SNM_Wnd at some point..
 	
-	int xo=0, yo=0, sz;
+	int xo=0, yo=0;
     LICE_IBitmap *bm = _painter->GetBuffer(&xo,&yo);
 	if (bm)
 	{
-		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
-
-		static LICE_IBitmap *logo=  NULL;
-		if (!logo)
-		{
-#ifdef _WIN32
-			logo = LICE_LoadPNGFromResource(g_hInst,IDB_SNM,NULL);
-#else
-			// SWS doesn't work, sorry. :( logo =  LICE_LoadPNGFromNamedResource("SnM.png",NULL);
-			logo = NULL;
-#endif
-		}
-
-		static LICE_CachedFont tmpfont;
-		if (!tmpfont.GetHFont())
-		{
-			LOGFONT lf = {
-				14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,
-				CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
-			};
-			if (ct) 
-				lf = ct->mediaitem_font;
-			tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
-		}
-		tmpfont.SetBkMode(TRANSPARENT);
-		if (ct)	tmpfont.SetTextColor(LICE_RGBA_FROMNATIVE(ct->main_text,255));
-		else tmpfont.SetTextColor(LICE_RGBA(255,255,255,255));
-
+		LICE_CachedFont* font = SNM_GetThemeFont();
 		int x0=_r.left+10; int y0=_r.top+5;
 		int w=25, h=25; //default width/height
-		IconTheme* it = (IconTheme*)GetIconThemeStruct(&sz);// returns the whole icon theme (icontheme.h) and the size
 
 		// Lock button
+		IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);// returns the whole icon theme (icontheme.h) and the size
 		WDL_VirtualIconButton* btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_LOCK);
 		if (btnVwnd)
 		{
@@ -648,14 +638,20 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			img = it ? &(it->toolbar_lock[!g_locked]) : NULL;
 			if (img) {
 				btnVwnd->SetIcon(img);
-/*JFB commented: too big!
 				w = img->image->getWidth() / 3;
 				h = img->image->getHeight();
-*/
 			}
-			RECT tr2={x0,y0,x0+w,y0+h};
+			else {
+				btnVwnd->SetTextLabel("Lock", 0, font);
+				btnVwnd->SetForceBorder(true);
+				w = 50;
+			}
+
+//JFB			RECT tr2={x0,y0,x0+w,y0+h};
+			RECT tr2={x0, y0 - (img ? 2:-3), x0 + w, y0 - (img ? 2:1) + h};
 			btnVwnd->SetPosition(&tr2);
 			x0 += 5+w;
+			w=25, h=25; // restore default width/height
 		}
 
 		// Dropdown
@@ -666,7 +662,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			RECT tr2={x0,y0+3,x0+138,y0+h-2};
 			x0 = tr2.right+5;
 			cbVwnd->SetPosition(&tr2);
-			cbVwnd->SetFont(&tmpfont);
+			cbVwnd->SetFont(font);
 		}
 
 		// Label
@@ -680,7 +676,6 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 					if (g_lastActionDesc && *g_lastActionDesc && g_lastActionListSection && *g_lastActionListSection)
 						_snprintf(str, 512, " [%s]  %s", g_lastActionListSection, g_lastActionDesc);
 /*JFB TODO: use smthg like that when we'll be able to access all sections
-					if (g_lastActionListCmd > 0)
 						strncpy(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
 */
 					break;
@@ -711,19 +706,18 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			}
 			txtVwnd->SetText(str);
 
-
 			x0 += 5;
-			RECT tr2={x0,y0,_r.right-(logo?logo->getWidth():0)-8-8,y0+h};
+			RECT tr2={x0,y0,_r.right-(g_snmLogo?g_snmLogo->getWidth():0)-8-8,y0+h};
 			x0 = tr2.right+5;
 			txtVwnd->SetPosition(&tr2);
-			txtVwnd->SetFont(&tmpfont);
+			txtVwnd->SetFont(font);
 		}
 
 	    _painter->PaintVirtWnd(_parentVwnd);
 
-//		if ((_r.right - _r.left) > (x0+logo->getWidth()))
-		if (logo && (_r.right - _r.left) > 300)
-			LICE_Blit(bm,logo,_r.right-logo->getWidth()-8,y0+3,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+//		if ((_r.right - _r.left) > (x0+g_snmLogo->getWidth()))
+		if (g_snmLogo && (_r.right - _r.left) > 300)
+			LICE_Blit(bm,g_snmLogo,_r.right-g_snmLogo->getWidth()-8,y0+3,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
 	}
 }
 
@@ -750,71 +744,58 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SetFocus(g_pNotesHelpWnd->GetHWND());
 			int x = GET_X_LPARAM(lParam);
 			int y = GET_Y_LPARAM(lParam);
-			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w) 
+			if (m_parentVwnd.OnMouseDown(x, y))
+				SetCapture(g_pNotesHelpWnd->GetHWND());
+			else 
 			{
-				switch(w->GetID())
-				{
-					case BUTTONID_LOCK:
-					{
-						g_locked = !g_locked;
-						if (!g_locked)
-							SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
-						RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
-					}
-					break;
-					case TXTID_LABEL:
-					{
-						if (GetType() == ACTION_HELP)
-						{
-							char cLink[512] = "";
-							char sectionURL[64] = "";
-							if (g_lastActionId && *g_lastActionId && 
-								g_lastActionDesc && *g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7) && 
-								g_lastActionListSection && GetALRStartOfURL(g_lastActionListSection, sectionURL, 64))
-							{					
-								sprintf(cLink, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
-								ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
-							}
-						}
-					}
-					break;
-				}
-				w->OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+				WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
+				if (w && w->GetID() == TXTID_LABEL && GetType() == ACTION_HELP)
+					SetCapture(g_pNotesHelpWnd->GetHWND());
 			}
 		}
 		break;
 
 		case WM_LBUTTONUP:
-		{
-			int x = GET_X_LPARAM(lParam);
-			int y = GET_Y_LPARAM(lParam);
-			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w) w->OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		}
-		break;
+			if (GetCapture()==g_pNotesHelpWnd->GetHWND()) 
+			{
+				int x = GET_X_LPARAM(lParam);
+				int y = GET_Y_LPARAM(lParam);
+				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+
+				WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
+				if (w && w->GetID() == TXTID_LABEL && GetType() == ACTION_HELP &&
+					g_lastActionId && *g_lastActionId && g_lastActionDesc && 
+					*g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
+				{
+					char cLink[512] = "";
+					char sectionURL[64] = "";
+					if (GetALRStartOfURL(g_lastActionListSection, sectionURL, 64))
+					{					
+						_snprintf(cLink, 512, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
+						ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
+					}
+				}
+				ReleaseCapture();
+			}
+			break;
 
 		case WM_MOUSEMOVE:
 		{
 			int x = GET_X_LPARAM(lParam);
 			int y = GET_Y_LPARAM(lParam);
+//			if (GetCapture()==g_pNotesHelpWnd->GetHWND())
+				m_parentVwnd.OnMouseMove(x, y);
+
 			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w) 
+			if (w && w->GetID() == TXTID_LABEL && GetType() == ACTION_HELP &&
+				g_lastActionId && *g_lastActionId && g_lastActionDesc && 
+				*g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
 			{
-				w->OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-				if (w->GetID() == TXTID_LABEL && GetType() == ACTION_HELP &&
-					g_lastActionId && *g_lastActionId && g_lastActionDesc && 
-					*g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
-				{
-					static HCURSOR cur = LoadCursor(NULL, IDC_HAND);
-					SetCursor(cur);
-				}
+				static HCURSOR cur = LoadCursor(NULL, IDC_HAND);
+				SetCursor(cur);
 			}
 		}
 		break;
-
-		default:
-			break;
 	}
 	return 0;
 }

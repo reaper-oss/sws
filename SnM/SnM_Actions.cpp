@@ -257,7 +257,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// FX Chains (items & tracks) ---------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (FX chains)..." }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, NULL, 0, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", clearFXChainSlotPrompt, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ClearSlotPrompt, NULL, 0},
 
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, slot 1" }, "S&M_TAKEFXCHAIN1", loadSetTakeFXChain, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, slot 2" }, "S&M_TAKEFXCHAIN2", loadSetTakeFXChain, NULL, 1},
@@ -281,9 +281,9 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, all takes" }, "S&M_COPYFXCHAIN9", pasteAllTakesFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks" }, "S&M_COPYFXCHAIN10", pasteTrackFXChain, NULL, }, 
 
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected items" },  "S&M_CLRFXCHAIN1", clearActiveTakeFXChain, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected items, all takes" },  "S&M_CLRFXCHAIN2", clearAllTakesFXChain, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected tracks" }, "S&M_CLRFXCHAIN3", clearTrackFXChain, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected items" },  "S&M_CLRFXCHAIN1", clearActiveTakeFXChain, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected items, all takes" },  "S&M_CLRFXCHAIN2", clearAllTakesFXChain, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected tracks" }, "S&M_CLRFXCHAIN3", clearTrackFXChain, NULL, },
 
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected tracks, slot 1" }, "S&M_TRACKFXCHAIN1", loadSetTrackFXChain, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected tracks, slot 2" }, "S&M_TRACKFXCHAIN2", loadSetTrackFXChain, NULL, 1},
@@ -298,7 +298,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	
 	// Track templates --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (track templates)..." }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResourceView, NULL, 1, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear track template slot..." }, "S&M_CLR_TRTEMPLATE_SLOT", clearTrackTemplateSlotPrompt, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Clear track template slot..." }, "S&M_CLR_TRTEMPLATE_SLOT", ClearSlotPrompt, NULL, 1},
 
 	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 01" }, "S&M_APPLY_TRTEMPLATE1", loadSetTrackTemplate, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 02" }, "S&M_APPLY_TRTEMPLATE2", loadSetTrackTemplate, NULL, 1},
@@ -312,17 +312,17 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 10" }, "S&M_APPLY_TRTEMPLATE10", loadSetTrackTemplate, NULL, 9},
 	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, prompt for slot" }, "S&M_APPLY_TRTEMPLATEp", loadSetTrackTemplate, NULL, -1},
 
-	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 01" }, "S&M_ADD_TRTEMPLATE1", loadAddTrackTemplate, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 02" }, "S&M_ADD_TRTEMPLATE2", loadAddTrackTemplate, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 03" }, "S&M_ADD_TRTEMPLATE3", loadAddTrackTemplate, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 04" }, "S&M_ADD_TRTEMPLATE4", loadAddTrackTemplate, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 05" }, "S&M_ADD_TRTEMPLATE5", loadAddTrackTemplate, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 06" }, "S&M_ADD_TRTEMPLATE6", loadAddTrackTemplate, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 07" }, "S&M_ADD_TRTEMPLATE7", loadAddTrackTemplate, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 08" }, "S&M_ADD_TRTEMPLATE8", loadAddTrackTemplate, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 09" }, "S&M_ADD_TRTEMPLATE9", loadAddTrackTemplate, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 10" }, "S&M_ADD_TRTEMPLATE10", loadAddTrackTemplate, NULL, 9},
-	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, prompt for slot" }, "S&M_ADD_TRTEMPLATEp", loadAddTrackTemplate, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 01" }, "S&M_ADD_TRTEMPLATE1", loadImportTrackTemplate, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 02" }, "S&M_ADD_TRTEMPLATE2", loadImportTrackTemplate, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 03" }, "S&M_ADD_TRTEMPLATE3", loadImportTrackTemplate, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 04" }, "S&M_ADD_TRTEMPLATE4", loadImportTrackTemplate, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 05" }, "S&M_ADD_TRTEMPLATE5", loadImportTrackTemplate, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 06" }, "S&M_ADD_TRTEMPLATE6", loadImportTrackTemplate, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 07" }, "S&M_ADD_TRTEMPLATE7", loadImportTrackTemplate, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 08" }, "S&M_ADD_TRTEMPLATE8", loadImportTrackTemplate, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 09" }, "S&M_ADD_TRTEMPLATE9", loadImportTrackTemplate, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 10" }, "S&M_ADD_TRTEMPLATE10", loadImportTrackTemplate, NULL, 9},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, prompt for slot" }, "S&M_ADD_TRTEMPLATEp", loadImportTrackTemplate, NULL, -1},
 
 
 	// Takes ------------------------------------------------------------------
@@ -349,16 +349,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Notes/help -------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (project notes)..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, 0, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (item notes)..." }, "S&M_SHOW_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (track notes)..." }, "S&M_SHOW_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (action help)..." }, "S&M_SHOW_ACTION_HELP", OpenNotesHelpView, NULL, 3, IsNotesHelpViewDisplayed},
-
-	//JFB TODO?: remove those "Switch to.." ?
-	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to project notes (disables auto updates)" }, "S&M_DISABLENOTESHELP", SwitchNotesHelpType, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to item notes" }, "S&M_ITEMNOTES", SwitchNotesHelpType, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to track notes" }, "S&M_TRACKNOTES", SwitchNotesHelpType, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (item notes)..." }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (track notes)..." }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewDisplayed},
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to action help" }, "S&M_ACTIONHELP", SwitchNotesHelpType, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (action help)..." }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, 3, IsNotesHelpViewDisplayed},
 #endif
 	{ { DEFACCEL, "SWS/S&M: Notes/help - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesHelpLock, NULL, NULL, IsNotesHelpLocked},
 	{ { DEFACCEL, "SWS/S&M: Notes/help - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
@@ -593,10 +587,8 @@ int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Entry points
+// Entry point
 ///////////////////////////////////////////////////////////////////////////////
-
-WDL_String g_SNMiniFilename;
 
 static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
 {
@@ -613,6 +605,7 @@ static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
 */
 }
 
+WDL_String g_SNMiniFilename;
 void IniFileInit()
 {
 	// Init S&M.ini file
@@ -640,6 +633,20 @@ void IniFileInit()
 		WritePrivateProfileSection("RESOURCE_VIEW", buf, iniFilename);
 }
 
+LICE_IBitmap* g_snmLogo = NULL;
+void UIInit()
+{
+		if (!g_snmLogo)
+		{
+#ifdef _WIN32
+			g_snmLogo = LICE_LoadPNGFromResource(g_hInst,IDB_SNM,NULL);
+#else
+			// SWS doesn't work, sorry. :( logo =  LICE_LoadPNGFromNamedResource("SnM.png",NULL);
+			g_snmLogo = NULL;
+#endif
+		}
+}
+
 int SnMInit(reaper_plugin_info_t* _rec)
 {
 	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
@@ -656,8 +663,7 @@ int SnMInit(reaper_plugin_info_t* _rec)
 		return 0;
 
 	IniFileInit();
-
-	// Init S&M views
+    UIInit();
 	LiveConfigViewInit();
 	NotesHelpViewInit();
 	ResourceViewInit();
@@ -722,9 +728,6 @@ void DeleteScheduledJob(int _id)
 // IReaperControlSurface callbacks
 ///////////////////////////////////////////////////////////////////////////////
 
-extern SNM_NotesHelpWnd* g_pNotesHelpWnd;
-extern SNM_LiveConfigsWnd* g_pLiveConfigsWnd;
-
 void SnMCSurfRun()
 {
 	SWS_SectionLock lock(&g_jobsLock);
@@ -742,6 +745,9 @@ void SnMCSurfRun()
 		}
 	}
 }
+
+extern SNM_NotesHelpWnd* g_pNotesHelpWnd;
+extern SNM_LiveConfigsWnd* g_pLiveConfigsWnd;
 
 void SnMCSurfSetTrackTitle() {
 	if (g_pNotesHelpWnd)

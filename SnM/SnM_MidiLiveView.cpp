@@ -1,6 +1,6 @@
 /******************************************************************************
 / SnM_MidiLiveView.cpp
-/ JFB TODO: now, SnM_LiveConfigs.cpp/.h would be better names..
+/ JFB TODO? now, SnM_LiveConfigs.cpp/.h would be better names..
 /
 / Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
@@ -26,7 +26,7 @@
 /
 ******************************************************************************/
 
-// JFB TODO?:
+// JFB TODO?
 // max nb of tracks & presets to check
 // FX chains: + S&M's FX chain view slots
 // full release?
@@ -157,7 +157,7 @@ void SNM_LiveConfigsView::GetItemText(LPARAM item, int iCol, char* str, int iStr
 				break;
 			}
 */
-			//JFB TODO? kbd_getTextFromCmd, tooltip?
+			//JFB TODO? actions: kbd_getTextFromCmd, tooltip?
 			case 5:
 				lstrcpyn(str, pItem->m_onAction.Get(), iStrMax);
 				break;
@@ -538,7 +538,36 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		default:
 		{
-			if (wParam >= SNM_LIVECFG_SET_TRACK_MSG && wParam < SNM_LIVECFG_CLEAR_TRACK_MSG) 
+			if (HIWORD(wParam) == 0) 
+			{
+				MidiLiveConfig* lc = g_liveConfigs.Get();
+				switch(LOWORD(wParam))
+				{
+					case BUTTONID_ENABLE:
+					{
+						lc->m_enable[g_configId] = !(lc->m_enable[g_configId]);
+						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+						// Retreive the related toggle action and refresh toolbars
+						char customCmdId[128];
+						_snprintf(customCmdId, 128, "%s%d", "_S&M_TOGGLE_LIVE_CFG", g_configId+1);
+						RefreshToolbar(NamedCommandLookup(customCmdId));
+					}
+					break;
+					case BUTTONID_AUTO_RCV:
+						lc->m_autoRcv[g_configId] = !(lc->m_autoRcv[g_configId]);
+						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+						break;
+					case BUTTONID_MUTE_OTHERS:
+						lc->m_muteOthers[g_configId] = !(lc->m_muteOthers[g_configId]);
+						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+						break;
+					case BUTTONID_AUTO_SELECT:
+						lc->m_autoSelect[g_configId] = !(lc->m_autoSelect[g_configId]);
+						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+						break;
+				}
+			}
+			else if (wParam >= SNM_LIVECFG_SET_TRACK_MSG && wParam < SNM_LIVECFG_CLEAR_TRACK_MSG) 
 			{
 				bool updt = false;
 				while(item)
@@ -710,7 +739,9 @@ void SNM_LiveConfigsWnd::OnDestroy()
 
 int SNM_LiveConfigsWnd::OnKey(MSG* msg, int iKeyState) 
 {
-	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState) {
+	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState &&
+		m_pLists.Get(0)->GetEditingItem() == -1)
+	{
 		OnCommand(SNM_LIVECFG_CLEAR_CC_ROW_MSG, 0);
 		return 1;
 	}
@@ -721,40 +752,13 @@ int SNM_LiveConfigsWnd::OnKey(MSG* msg, int iKeyState)
 static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentVwnd)
 {
 	if (!g_pLiveConfigsWnd) // SWS Can't draw before wnd initialized - why isn't this a member func??
-		return;			  // JFB TODO planing a kind of SNM_Wnd at some point..
+		return;			  //JFB TODO planing a kind of SNM_Wnd at some point..
 	
-	int xo=0, yo=0, sz;
+	int xo=0, yo=0;
     LICE_IBitmap *bm = _painter->GetBuffer(&xo,&yo);
 	if (bm)
 	{
-		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
-
-		static LICE_IBitmap *logo=  NULL;
-		if (!logo)
-		{
-#ifdef _WIN32
-			logo = LICE_LoadPNGFromResource(g_hInst,IDB_SNM,NULL);
-#else
-			// SWS doesn't work, sorry. :( logo =  LICE_LoadPNGFromNamedResource("SnM.png",NULL);
-			logo = NULL;
-#endif
-		}
-
-		static LICE_CachedFont tmpfont;
-		if (!tmpfont.GetHFont())
-		{
-			LOGFONT lf = {
-				14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,
-				CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
-			};
-			if (ct) 
-				lf = ct->mediaitem_font;
-			tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
-		}
-		tmpfont.SetBkMode(TRANSPARENT);
-		if (ct)	tmpfont.SetTextColor(LICE_RGBA_FROMNATIVE(ct->main_text,255));
-		else tmpfont.SetTextColor(LICE_RGBA(255,255,255,255));
-
+		LICE_CachedFont* font = SNM_GetThemeFont();
 		int x0=_r.left+10, y0=_r.top+5;
 
 		// Dropdowns
@@ -762,13 +766,13 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		if (cbVwnd)
 		{
 			RECT tr={x0,y0,x0+40,y0+25};
-			tmpfont.DrawText(bm, "Config:", -1, &tr, DT_LEFT | DT_VCENTER);
+			font->DrawText(bm, "Config:", -1, &tr, DT_LEFT | DT_VCENTER);
 			x0 = tr.right+5;
 
 			RECT tr2={x0,y0+3,x0+37,y0+25-2};
 			x0 = tr2.right+5;
 			cbVwnd->SetPosition(&tr2);
-			cbVwnd->SetFont(&tmpfont);
+			cbVwnd->SetFont(font);
 			cbVwnd->SetCurSel(g_configId);
 		}
 
@@ -782,7 +786,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			btn->SetCheckState(g_liveConfigs.Get()->m_enable[g_configId]);
 
 			RECT tr2={x0,y0,x0+40,y0+25};
-			tmpfont.DrawText(bm, "Enable", -1, &tr2, DT_LEFT | DT_VCENTER);
+			font->DrawText(bm, "Enable", -1, &tr2, DT_LEFT | DT_VCENTER);
 			x0 = tr2.right+5;
 		}
 /*JFB not released
@@ -806,13 +810,13 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		{
 			x0 += 5;
 			RECT tr={x0,y0,x0+60,y0+25};
-			tmpfont.DrawText(bm, "Input track:", -1, &tr, DT_LEFT | DT_VCENTER);
+			font->DrawText(bm, "Input track:", -1, &tr, DT_LEFT | DT_VCENTER);
 			x0 = tr.right+5;
 
 			RECT tr2={x0,y0+3,x0+125,y0+25-2};
 			x0 = tr2.right+5;
 			cbVwnd->SetPosition(&tr2);
-			cbVwnd->SetFont(&tmpfont);
+			cbVwnd->SetFont(font);
 			int sel=0;
 			for (int i=1; i <= GetNumTracks(); i++) {
 				if (g_liveConfigs.Get()->m_inputTr[g_configId] == CSurf_TrackFromID(i,false)) {
@@ -834,7 +838,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			btn->SetCheckState(g_liveConfigs.Get()->m_muteOthers[g_configId]);
 
 			RECT tr2={x0,y0,x0+120,y0+25};
-			tmpfont.DrawText(bm, "Mute all but active track", -1, &tr2, DT_LEFT | DT_VCENTER);
+			font->DrawText(bm, "Mute all but active track", -1, &tr2, DT_LEFT | DT_VCENTER);
 			x0 = tr2.right+5;
 		}
 
@@ -849,14 +853,14 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			btn->SetCheckState(g_liveConfigs.Get()->m_autoSelect[g_configId]);
 
 			RECT tr2={x0,y0,x0+100,y0+25};
-			tmpfont.DrawText(bm, "Auto track selection", -1, &tr2, DT_LEFT | DT_VCENTER);
+			font->DrawText(bm, "Auto track selection", -1, &tr2, DT_LEFT | DT_VCENTER);
 			x0 = tr2.right+5;
 		}
 
 		_painter->PaintVirtWnd(_parentVwnd, 0);
 
-		if (logo && (_r.right - _r.left) > (x0+logo->getWidth()))
-			LICE_Blit(bm,logo,_r.right-logo->getWidth()-8,y0+3,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+		if (g_snmLogo && (_r.right - _r.left) > (x0+g_snmLogo->getWidth()))
+			LICE_Blit(bm,g_snmLogo,_r.right-g_snmLogo->getWidth()-8,y0+3,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
 	}
 }
 
@@ -877,70 +881,21 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_vwnd_painter.PaintEnd();
 		}
 		break;
-
 		case WM_LBUTTONDOWN:
-		{
 			SetFocus(g_pLiveConfigsWnd->GetHWND());
-			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-			MidiLiveConfig* lc = g_liveConfigs.Get();
-			if (w && lc) 
-			{
-				switch(w->GetID())
-				{
-					case BUTTONID_ENABLE:
-					{
-						lc->m_enable[g_configId] = !(lc->m_enable[g_configId]);
-/*JFB3!!! old code 
-						lc->m_lastDeactivateCmd[g_configId][0] = -1;
-						if (lc->m_lastMIDIVal[g_configId] != -1) 
-						{
-							lc->m_lastMIDIVal[g_configId] = -1;
-							Update();
-							Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1); //JFB?????
-						}
-*/
-						// Retreive the related toggle action and refresh toolbars
-						char customCmdId[128];
-						_snprintf(customCmdId, 128, "%s%d", "_S&M_TOGGLE_LIVE_CFG", g_configId+1);
-						RefreshToolbar(NamedCommandLookup(customCmdId));
-						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
-					}
-					break;
-					case BUTTONID_AUTO_RCV:
-						lc->m_autoRcv[g_configId] = !(lc->m_autoRcv[g_configId]);
-						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
-						break;
-					case BUTTONID_MUTE_OTHERS:
-						lc->m_muteOthers[g_configId] = !(lc->m_muteOthers[g_configId]);
-						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
-						break;
-					case BUTTONID_AUTO_SELECT:
-						lc->m_autoSelect[g_configId] = !(lc->m_autoSelect[g_configId]);
-						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
-						break;
-				}
-				w->OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-			}
-		}
-		break;
-
+			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)))
+				SetCapture(g_pLiveConfigsWnd->GetHWND());
+			break;
 		case WM_LBUTTONUP:
-		{
-			int x = GET_X_LPARAM(lParam);
-			int y = GET_Y_LPARAM(lParam);
-			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w) w->OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		}
-		break;
-
+			if (GetCapture()==g_pLiveConfigsWnd->GetHWND()) {
+				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+				ReleaseCapture();
+			}
+			break;
 		case WM_MOUSEMOVE:
-		{
-			int x = GET_X_LPARAM(lParam);
-			int y = GET_Y_LPARAM(lParam);
-			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w) w->OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		}
-		break;
+//			if (GetCapture()==g_pLiveConfigsWnd->GetHWND())
+				m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			break;
 	}
 	return 0;
 }

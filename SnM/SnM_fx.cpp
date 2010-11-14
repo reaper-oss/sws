@@ -278,7 +278,7 @@ void selectFX(COMMAND_T* _ct)
 // FX preset
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB TODO: cache?
+//JFB cache?
 int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_String>* _names)
 {
 	int nbPresets = 0;
@@ -292,7 +292,7 @@ int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_Str
 		strncpy(buf, _fxName, 256);
 
 		// remove ".dll"
-		//JFB!! OSX: to check
+		//JFB OSX: to check
 		if (!_stricmp(_fxType, "VST"))
 		{
 			const char* p = stristr(buf,".dll");

@@ -561,7 +561,7 @@ void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 // Misc. window actions
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB TODO: OSX (related action ifdef'd out but perharps it works?)
+//JFB OSX (related action ifdef'd out)
 void cycleFocusWnd(COMMAND_T * _ct) 
 {
 	if (GetMainHwnd())

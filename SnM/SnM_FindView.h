@@ -40,7 +40,7 @@ public:
 	bool FindMediaItem(int _dir, bool _allTakes, bool (*job)(MediaItem_Take*,const char*));
 	bool FindTrack(int _dir, bool (*job)(MediaTrack*,const char*));
 	bool FindMarkerRegion(int _dir);
-	void DisplayNotFoundMsg(const char* _searchStr);
+	void UpdateNotFoundMsg(bool _found);
 
 protected:
 	void OnInitDlg();

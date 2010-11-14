@@ -705,13 +705,6 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 					takeUpdate = true;
 					takeChunk.Set(pEnv.GetChunk()->Get());
 				}
-
-/*JFB old code: 3 parser passes!
-				if (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "ACT", -1, 0, 1, (void*)vis) > 0)
-					if (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)vis) > 0)
-						takeUpdate |= (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "ARM", -1, 0, 1, (void*)vis) > 0);
-				takeChunk.Set(ptk.GetChunk()->Get());
-*/
 			}
 			// env. doesn't already exists => build a default one (if needed)
 			else

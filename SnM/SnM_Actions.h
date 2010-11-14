@@ -34,25 +34,24 @@
 // Definitions
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef _WIN32
-#define SNM_FORMATED_INI_FILE "%s\\S&M.ini"
-#define SNM_OLD_FORMATED_INI_FILE "%s\\Plugins\\S&M.ini"
-#define SNM_ACTION_HELP_INI_FILE "%s\\S&M_Action_help_en.ini"
-#else
-#define SNM_FORMATED_INI_FILE "%s/S&M.ini"
-#define SNM_OLD_FORMATED_INI_FILE "%s/Plugins/S&M.ini"
-#define SNM_ACTION_HELP_INI_FILE "%s/S&M_Action_help_en.ini"
-#endif
-
 #define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
 
-#define MAX_ACTION_COUNT	0xFFFF
-#define MAX_TRACK_GROUPS	32 
-#define SNM_MAX_HW_OUTS		8
-#define SNM_MAX_TAKES		128
-#define SNM_MAX_FX			128
-#define MAX_INI_SECTION		0xFFFF // definitive limit for WritePrivateProfileSection
-#define LET_BREATHE_MS		10
+#ifdef _WIN32
+#define SNM_FORMATED_INI_FILE		"%s\\S&M.ini"
+#define SNM_OLD_FORMATED_INI_FILE	"%s\\Plugins\\S&M.ini"
+#define SNM_ACTION_HELP_INI_FILE	"%s\\S&M_Action_help_en.ini"
+#else
+#define SNM_FORMATED_INI_FILE		"%s/S&M.ini"
+#define SNM_OLD_FORMATED_INI_FILE	"%s/Plugins/S&M.ini"
+#define SNM_ACTION_HELP_INI_FILE	"%s/S&M_Action_help_en.ini"
+#endif
+#define MAX_ACTION_COUNT			0xFFFF
+#define MAX_TRACK_GROUPS			32 
+#define SNM_MAX_HW_OUTS				8
+#define SNM_MAX_TAKES				128
+#define SNM_MAX_FX					128
+#define MAX_INI_SECTION				0xFFFF // definitive limit for WritePrivateProfileSection
+#define LET_BREATHE_MS				10
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -136,18 +135,13 @@ class SNM_VirtualComboBox : public WDL_VirtualComboBox {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Global vars
-///////////////////////////////////////////////////////////////////////////////
-
-extern WDL_String g_SNMiniFilename;	// SnM_Actions.cpp
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;	// SnM_NotesHelpView.cpp
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Includes
+// Includes & global vars
 ///////////////////////////////////////////////////////////////////////////////
 
 // *** SnM_Actions.cpp ***
+extern WDL_String g_SNMiniFilename;	
+extern LICE_IBitmap* g_snmLogo;
+
 void fakeToggleAction(COMMAND_T* _ct);
 bool fakeIsToggledAction(COMMAND_T* _ct);
 int SnMInit(reaper_plugin_info_t* _rec);
@@ -184,7 +178,7 @@ void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf);
 // *** SnM_FXChain.cpp ***
 void loadSetTakeFXChain(COMMAND_T* _ct);
 void loadSetAllTakesFXChain(COMMAND_T* _ct);
-void loadSetPasteTakeFXChain(const char* _title, int _slot, bool _activeOnly, bool _set, bool _errMsg=false);
+void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool _set, bool _errMsg=false);
 void copyTakeFXChain(COMMAND_T* _ct);
 void cutTakeFXChain(COMMAND_T* _ct);
 void pasteTakeFXChain(COMMAND_T* _ct);
@@ -193,19 +187,22 @@ void pasteAllTakesFXChain(COMMAND_T* _ct);
 void setAllTakesFXChain(COMMAND_T* _ct);
 void clearActiveTakeFXChain(COMMAND_T* _ct);
 void clearAllTakesFXChain(COMMAND_T* _ct);
-void pasteTakeFXChain(const char* _title, int _slot, bool _activeOnly);
-void setTakeFXChain(const char* _title, int _slot, bool _activeOnly, bool _clear);
-void loadSetPasteTrackFXChain(const char* _title, int _slot, bool _set, bool _errMsg=false);
-void pasteTrackFXChain(const char* _title, int _slot);
-void setTrackFXChain(const char* _title, int _slot, bool _clear);
+void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
+void setTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
+void makeChunkTakeFX(WDL_String* _outTakeFX, WDL_String* _inRfxChain);
+
+void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _errMsg=false);
+void pasteTrackFXChain(const char* _title, WDL_String* _chain);
+void setTrackFXChain(const char* _title, WDL_String* _chain);
 void loadSetTrackFXChain(COMMAND_T* _ct);
 void clearTrackFXChain(COMMAND_T* _ct);
 void copyTrackFXChain(COMMAND_T* _ct);
+int copyTrackFXChain(WDL_String* _fxChain, int _startTr=0);
 void cutTrackFXChain(COMMAND_T* _ct);
 void pasteTrackFXChain(COMMAND_T* _ct);
 void setTrackFXChain(COMMAND_T* _ct);
-void makeChunkTakeFX(WDL_String* _outTakeFX, WDL_String* _inRfxChain);
-void clearFXChainSlotPrompt(COMMAND_T* _ct);
+bool autoSaveTrackFXChainSlots(int _slot, const char* _dirPath);
+
 void copyFXChainSlotToClipBoard(int _slot);
 void readSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, char* _desc, int _descSize);
 void saveSlotIniFile(const char* _key, int _slot, const char* _path, const char* _desc);
@@ -311,18 +308,21 @@ void toggleArmTrackEnv(COMMAND_T* _ct);
 int CountSelectedTracksWithMaster(ReaProject* _proj);
 MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx);
 MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj);
-void loadSetOrAddTrackTemplate(const char* _title, bool _add, int _slot, bool _errMsg);
+void applyOrImportTrackTemplate(const char* _title, bool _add, int _slot, bool _errMsg);
 void loadSetTrackTemplate(COMMAND_T* _ct);
-void loadAddTrackTemplate(COMMAND_T* _ct);
-void clearTrackTemplateSlotPrompt(COMMAND_T* _ct);
+void loadImportTrackTemplate(COMMAND_T* _ct);
+bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath);
 
 // *** SnM_ResourceView.cpp ***
 int ResourceViewInit();
 void ResourceViewExit();
 void OpenResourceView(COMMAND_T*);
 bool IsResourceViewDisplayed(COMMAND_T*);
+void ClearSlotPrompt(COMMAND_T* _ct);
 
 // *** SnM_NotesHelpView.cpp ***
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
+
 void SetActionHelpFilename(COMMAND_T*);
 int NotesHelpViewInit();
 void NotesHelpViewExit();
@@ -349,6 +349,7 @@ bool IsLiveConfigEnabled(COMMAND_T* _ct);
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
 // *** SnM_Dlg.cpp ***
+LICE_CachedFont* SNM_GetThemeFont();
 void fillHWoutDropDown(HWND _hwnd, int _idc);
 WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 WDL_DLGRET WaitDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
@@ -367,15 +368,18 @@ void dumpWikiActions2(COMMAND_T* _ct);
 void SNM_ShowConsoleMsg(const char* _msg, const char* _title="", bool _clear=true); 
 void SNM_ShowConsoleDbg(bool _clear, const char* format, ...);
 bool SNM_DeleteFile(const char* _filename);
-HWND SearchWindow(const char* _title);
-HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
-bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMaxSize);
+bool FileExistsErrMsg(const char* _fn, bool _errMsg=true);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath = false);
 void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn);
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _maxFn);
-bool LoadChunk(const char* _filename, WDL_String* _chunk);
+bool LoadChunk(const char* _fn, WDL_String* _chunk);
+bool SaveChunk(const char* _fn, WDL_String* _chunk);
+void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
 void StringToExtensionConfig(char* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx);
+HWND SearchWindow(const char* _title);
+HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
+bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMaxSize);
 #ifdef _SNM_MISC
 void ShowTakeEnvPadreTest(COMMAND_T* _ct);
 void setPresetTest(COMMAND_T* _ct);

@@ -1,6 +1,6 @@
 /******************************************************************************
 / SnM_FXChainView.h
-/ JFB TODO: now, a better name would be "SnM_ResourceView.h"
+/ JFB TODO? now, a better name would be "SnM_ResourceView.h"
 /
 / Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
@@ -54,7 +54,6 @@ class SNM_ResourceWnd : public SWS_DockWnd
 public:
 	SNM_ResourceWnd();
 	void SetType(int _type);
-
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void SelectBySlot(int _slot);
@@ -73,7 +72,8 @@ protected:
 	void FillDblClickTypeCombo();
 	void AddSlot(bool _update);
 	void InsertAtSelectedSlot(bool _update);
-	void DeleteSelectedSlots(bool _update);
+	void DeleteSelectedSlots(bool _update, bool _delFiles=false);
+	void AutoSaveSlots(int _slotPos);
 
 	int m_previousType;
 
@@ -83,6 +83,7 @@ protected:
 	SNM_VirtualComboBox m_cbType; // common to all 
 	SNM_VirtualComboBox m_cbDblClickType; // FX chains & Track templates
 	SNM_VirtualComboBox m_cbDblClickTo; // FX chains only
+	WDL_VirtualIconButton m_btnAutoInsert; // FX chains & Track templates
 #ifdef _SNM_ITT
 	WDL_VirtualIconButton m_btnItemTakeDetails;
 	WDL_VirtualIconButton m_btnItemTakeProp[SNM_FILESLOT_MAX_ITEMTK_PROPS];
@@ -95,7 +96,7 @@ public:
 	PathSlotItem(const char* _shortPath, const char* _desc) : m_shortPath(_shortPath), m_desc(_desc) {}
 	bool IsDefault() {return (!m_shortPath.GetLength());}
 	void Clear() {m_shortPath.Set(""); m_desc.Set("");}
-	WDL_String m_shortPath, m_desc; 
+	WDL_String m_shortPath, m_desc;
 };
 
 
@@ -105,7 +106,12 @@ class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 	FileSlotList(int _type, const char* _resDir, const char* _desc, const char* _ext) 
 		: m_type(_type), m_resDir(_resDir),m_desc(_desc),m_ext(_ext),WDL_PtrList_DeleteOnDestroy<PathSlotItem>() {}
 	void GetFileFilter(char* _filter, int _maxFilterLength) {
-		if (_filter) _snprintf(_filter, _maxFilterLength, "REAPER %s (*.%s)\0*.%s\0", m_desc.Get(), m_ext.Get(), m_ext.Get());
+		if (_filter) {
+			_snprintf(_filter, _maxFilterLength, "REAPER %s (*.%s)X*.%s", m_desc.Get(), m_ext.Get(), m_ext.Get());
+			// special code for multiple null terminated strings ('X' -> '\0')
+			char* p = strchr(_filter, ')');
+			if (p) *(p+1) = '\0';
+		}
 	}
 	// _path: short resource path or full path
 	PathSlotItem* AddSlot(const char* _path="", const char* _desc="") {
@@ -118,35 +124,25 @@ class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 		PathSlotItem* item = NULL;
 		char shortPath[BUFFER_SIZE] = "";
 		GetShortResourcePath(m_resDir.Get(), _path, shortPath, BUFFER_SIZE);
-		if (_slot >=0 && _slot < GetSize()) {
-			item = Insert(_slot, new PathSlotItem(shortPath, _desc));
-		} 
-		else
-			item = AddSlot(shortPath, _desc);
+		if (_slot >=0 && _slot < GetSize()) item = Insert(_slot, new PathSlotItem(shortPath, _desc));
+		else item = AddSlot(shortPath, _desc);
 		return item;
 	}
 	int FindByFullPath(const char* _fullPath) {
 		int slot = -1;
 		if (_fullPath)
-			for (int i=0; slot < 0 && i < GetSize(); i++)
-			{
-				char* fullPath = GetFullPath(i);
-				if (fullPath && !_stricmp(fullPath, _fullPath))
+			for (int i=0; slot < 0 && i < GetSize(); i++) {
+				char fullPath[BUFFER_SIZE] = "";
+				GetFullPath(i, fullPath, BUFFER_SIZE);
+				if (!_stricmp(fullPath, _fullPath))
 					slot = i;
 			}
 		return slot;
 	}
-	// *always* returns a full path ("" if an error occured)
-	char* GetFullPath(int _slot) //JFB2000 !!!! bof bof
-	{
-		m_tmp.Set("");
+	void GetFullPath(int _slot, char* _fullFn, int _fullFnSz) {
 		PathSlotItem* item = Get(_slot);
-		if (item) {
-			char fullPath[BUFFER_SIZE] = "";
-			GetFullResourcePath(m_resDir.Get(), item->m_shortPath.Get(), fullPath, BUFFER_SIZE);
-			m_tmp.Set(fullPath);
-		}
-		return m_tmp.Get();
+		if (item) 
+			GetFullResourcePath(m_resDir.Get(), item->m_shortPath.Get(), _fullFn, _fullFnSz);
 	};
 	void SetFromFullPath(int _slot, const char* _fullPath)	{
 		PathSlotItem* item = Get(_slot);
@@ -157,20 +153,23 @@ class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 		}
 	};
 	int PromptForSlot(const char* _title);
-	bool LoadOrBrowseSlot(int _slot, bool _errMsg=false);
-	bool BrowseStoreSlot(int _slot);
-	void DisplaySlot(int _slot);
+	bool GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg=false);
+	bool BrowseSlot(int _slot, char* _fn=NULL, int _fnSz=0);
+	void EditSlot(int _slot);
 	void ClearSlot(int _slot, bool _guiUpdate=true);
+	void ClearSlotPrompt(COMMAND_T* _ct);
 	const char* GetDesc() {return m_desc.Get();}
+	const char* GetFileExt() {return m_ext.Get();}
+	const char* GetResourceDir() {return m_resDir.Get();}
 
+private:
 	int m_type;
 	WDL_String m_resDir; // Resource sub-directory name *AND* S&M.ini section
 	WDL_String m_desc; // used in user messages
-	WDL_String m_ext; // e.g. "rfxchain"
-	WDL_String m_tmp;  //JFB2000 !!!! bof bof
+	WDL_String m_ext; // file extension w/o '.' (ex: "rfxchain")
 };
 
-//JFB!!!
+//JFB
 extern FileSlotList g_fxChainFiles;
 extern FileSlotList g_trTemplateFiles;
 #ifdef _SNM_ITT

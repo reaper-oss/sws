@@ -274,8 +274,8 @@ MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj) {
 // Track template slots
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB TODO?: mouse pointer => wait (? might confuse REAPER?)
-void loadSetOrAddTrackTemplate(const char* _title, bool _add, int _slot, bool _errMsg)
+//JFB TODO? mouse pointer => wait ? (not done 'cause might confuse REAPER)
+void applyOrImportTrackTemplate(const char* _title, bool _add, int _slot, bool _errMsg)
 {
 	bool updated = false;
 
@@ -283,51 +283,49 @@ void loadSetOrAddTrackTemplate(const char* _title, bool _add, int _slot, bool _e
 	if (_slot == -1) _slot = g_trTemplateFiles.PromptForSlot(_title); //loops on err
 	if (_slot == -1) return; // user has cancelled
 
-	if (g_trTemplateFiles.LoadOrBrowseSlot(_slot, _errMsg)) 
+	char fn[BUFFER_SIZE]="";
+	if (g_trTemplateFiles.GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg)) 
 	{
-		if (CountSelectedTracksWithMaster(NULL))
+		WDL_String trTmpltChunk;
+
+		// add as new track
+		if (_add)
 		{
-			WDL_String trTmpltChunk;
-
-			// add as new track
-			if (_add)
+			Main_openProject(fn);
+/* commented: Main_openProject() includes undo point 
+			updated = true;
+*/
+		}
+		// patch selected tracks (preserve items)
+		else if (CountSelectedTracksWithMaster(NULL) && 
+			LoadChunk(fn, &trTmpltChunk) && trTmpltChunk.GetLength())
+		{
+			char* pStart = strstr(trTmpltChunk.Get(), "<TRACK");
+			if (pStart) 
 			{
-				//JFB!! native bug! needs at least 1 and 1 *selected* track to work
-				Main_openProject(g_trTemplateFiles.GetFullPath(_slot));
-				/*JFB commented: Main_openProject() includes undo point 
-				updated = true;
-				*/
-			}
-			// patch selected tracks (preserve items)
-			else if (LoadChunk(g_trTemplateFiles.GetFullPath(_slot), &trTmpltChunk) && trTmpltChunk.GetLength())
-			{
-				char* pStart = strstr(trTmpltChunk.Get(), "<TRACK");
+				// several tracks in the template => truncate
+				pStart = strstr(pStart+6, "<TRACK");
 				if (pStart) 
-				{
-					// several tracks in the template => truncate
-					pStart = strstr(pStart+6, "<TRACK");
-					if (pStart) 
-						trTmpltChunk.SetLen((int)(pStart-trTmpltChunk.Get()));
+					trTmpltChunk.SetLen((int)(pStart-trTmpltChunk.Get()));
 
-					bool trTmpltHasItems = (strstr(trTmpltChunk.Get(), "<ITEM") != NULL);
-					for (int i = 0; i <= GetNumTracks(); i++)
+				bool trTmpltHasItems = (strstr(trTmpltChunk.Get(), "<ITEM") != NULL);
+				for (int i = 0; i <= GetNumTracks(); i++)
+				{
+					MediaTrack* tr = CSurf_TrackFromID(i,false); 
+					if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 					{
-						MediaTrack* tr = CSurf_TrackFromID(i,false); 
-						if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+						SNM_ChunkParserPatcher p(tr);
+						if (!trTmpltHasItems) 
 						{
-							SNM_ChunkParserPatcher p(tr);
-							if (!trTmpltHasItems) 
-							{
-								WDL_String tmpChunk(trTmpltChunk.Get());
-								char* pItems = strstr(p.GetChunk()->Get(), "<ITEM");
-								if (pItems)
-									tmpChunk.Insert(pItems, tmpChunk.GetLength()-2, strlen(pItems) - 2); // -2: ">\n"
-								p.SetChunk(&tmpChunk, 1);
-							}
-							else
-								p.SetChunk(&trTmpltChunk, 1);
-							updated |= true;
+							WDL_String tmpChunk(trTmpltChunk.Get());
+							char* pItems = strstr(p.GetChunk()->Get(), "<ITEM");
+							if (pItems)
+								tmpChunk.Insert(pItems, tmpChunk.GetLength()-2, strlen(pItems) - 2); // -2: ">\n"
+							p.SetChunk(&tmpChunk, 1);
 						}
+						else
+							p.SetChunk(&trTmpltChunk, 1);
+						updated |= true;
 					}
 				}
 			}
@@ -339,16 +337,33 @@ void loadSetOrAddTrackTemplate(const char* _title, bool _add, int _slot, bool _e
 
 void loadSetTrackTemplate(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
-	loadSetOrAddTrackTemplate(SNM_CMD_SHORTNAME(_ct), false, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
+	applyOrImportTrackTemplate(SNM_CMD_SHORTNAME(_ct), false, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
 }
 
-void loadAddTrackTemplate(COMMAND_T* _ct) {
+void loadImportTrackTemplate(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
-	loadSetOrAddTrackTemplate(SNM_CMD_SHORTNAME(_ct), true, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
+	applyOrImportTrackTemplate(SNM_CMD_SHORTNAME(_ct), true, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
 }
 
-void clearTrackTemplateSlotPrompt(COMMAND_T* _ct) {
-	int slot = g_trTemplateFiles.PromptForSlot(SNM_CMD_SHORTNAME(_ct)); //loops on err
-	if (slot == -1) return; // user has cancelled
-	else g_trTemplateFiles.ClearSlot(slot);
+bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath)
+{
+	bool slotUpdate = false;
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i,false); 
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			SNM_ChunkParserPatcher p(tr);
+			char* pItems = strstr(p.GetChunk()->Get(), "<ITEM");
+			if (pItems)
+				p.GetChunk()->DeleteSub((int)(pItems-p.GetChunk()->Get()), strlen(pItems)-2); // -2: ">\n"
+
+			char fn[BUFFER_SIZE];
+			char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
+			GenerateFilename(_dirPath, (!trName || *trName == '\0') ? "Untitled" : trName, g_trTemplateFiles.GetFileExt(), fn, BUFFER_SIZE);
+			slotUpdate |= (SaveChunk(fn, p.GetChunk()) && g_trTemplateFiles.InsertSlot(_slot, fn));
+			p.CancelUpdates();
+		}
+	}
+	return slotUpdate;
 }

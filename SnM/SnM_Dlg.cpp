@@ -33,8 +33,31 @@ int g_waitDlgProcCount = 0;
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Custom WDL UIs
+// WDL UI 
 ///////////////////////////////////////////////////////////////////////////////
+
+LICE_CachedFont* SNM_GetThemeFont()
+{
+	static LICE_CachedFont themeFont;
+	int sz;
+	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
+	if (!themeFont.GetHFont())
+	{
+		LOGFONT lf = {
+			14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,
+			CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
+		};
+		if (ct) 
+			lf = ct->mediaitem_font;
+		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
+	}
+	themeFont.SetBkMode(TRANSPARENT);
+	if (ct)	
+		themeFont.SetTextColor(LICE_RGBA_FROMNATIVE(ct->main_text,255));
+	else 
+		themeFont.SetTextColor(LICE_RGBA(255,255,255,255));
+	return &themeFont;
+}
 
 void SNM_VirtualComboBox::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
 {

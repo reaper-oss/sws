@@ -34,22 +34,32 @@
 // misc module.
 
 #include "stdafx.h"
+#include "Adam.h"
 #include "Context.h"
+#include "EditCursor.h"
+#include "FolderActions.h"
 #include "ItemParams.h"
 #include "ItemSel.h"
-#include "FolderActions.h"
 #include "Macros.h"
 #include "ProjPrefs.h"
 #include "TrackParams.h"
 #include "TrackSel.h"
 #include "Zoom.h"
 #include "Misc.h"
-#include "Adam.h"
+
+void MiscSlice()
+{
+	EditCursorSlice();
+}
 
 int MiscInit()
 {
 	// Call sub-init routines
+	if (!AdamInit())
+		return 0;
 	if (!ContextInit())
+		return 0;
+	if (!EditCursorInit())
 		return 0;
 	if (!FolderActionsInit())
 		return 0;
@@ -66,8 +76,6 @@ int MiscInit()
 	if (!TrackSelInit())
 		return 0;
 	if (!ZoomInit())
-		return 0;
-	if (!AdamInit())
 		return 0;
 	
 	return 1;

@@ -27,5 +27,6 @@
 
 #pragma once
 
+void MiscSlice();
 int MiscInit();
 void MiscExit();

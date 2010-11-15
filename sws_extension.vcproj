@@ -433,6 +433,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Misc\EditCursor.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Misc\FolderActions.cpp"
 				>
 			</File>
@@ -680,6 +684,10 @@
 			</File>
 			<File
 				RelativePath=".\MediaPool\DragDrop.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\EditCursor.h"
 				>
 			</File>
 			<File

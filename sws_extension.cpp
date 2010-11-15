@@ -275,6 +275,7 @@ public:
 		ItemPreviewSlice();
 		PlayItemsOnceSlice();
 		ColorSlice();
+		MiscSlice();
 
 		SnMCSurfRun();
 

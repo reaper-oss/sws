@@ -1,5 +1,5 @@
 /******************************************************************************
-/ Version.h
+/ EditCursor.h
 /
 / Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
@@ -23,8 +23,9 @@
 / FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 / OTHER DEALINGS IN THE SOFTWARE.
 /
-/ Auto build # increment code from MS Knowledge base article 237870
 ******************************************************************************/
 
-#define SWS_VERSION			1,8,6,2
-#define SWS_VERSION_STR		"1, 8, 6, 2\0"
+#pragma once
+
+void EditCursorSlice();
+int EditCursorInit();

@@ -59,6 +59,8 @@
 		2264CBD110FEC33700447317 /* swell-wnd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764250F5B233C0091104D /* swell-wnd.mm */; };
 		2264CBD210FEC33800447317 /* swell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B408A20F5B544A00865A09 /* swell.cpp */; };
 		2264CBD310FEC33900447317 /* swell.h in Headers */ = {isa = PBXBuildFile; fileRef = 9870F77F0F5B461C0007258C /* swell.h */; };
+		2273566712910ABF001A1570 /* EditCursor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2273566512910ABF001A1570 /* EditCursor.cpp */; };
+		2273566812910ABF001A1570 /* EditCursor.h in Headers */ = {isa = PBXBuildFile; fileRef = 2273566612910ABF001A1570 /* EditCursor.h */; };
 		2296249010A3A22500A1090C /* lice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2296248E10A3A22500A1090C /* lice.cpp */; };
 		2296249110A3A22500A1090C /* lice_line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2296248F10A3A22500A1090C /* lice_line.cpp */; };
 		229A7E8C1165744400325BC2 /* Context.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229A7E7C1165744400325BC2 /* Context.cpp */; };
@@ -270,6 +272,8 @@
 		225130BC116101670028F26A /* padreMidiItemProcBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreMidiItemProcBase.h; path = Padre/padreMidiItemProcBase.h; sourceTree = "<group>"; };
 		225130BD116101670028F26A /* padreUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreUtils.cpp; path = Padre/padreUtils.cpp; sourceTree = "<group>"; };
 		225130BE116101670028F26A /* padreUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreUtils.h; path = Padre/padreUtils.h; sourceTree = "<group>"; };
+		2273566512910ABF001A1570 /* EditCursor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EditCursor.cpp; path = Misc/EditCursor.cpp; sourceTree = "<group>"; };
+		2273566612910ABF001A1570 /* EditCursor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EditCursor.h; path = Misc/EditCursor.h; sourceTree = "<group>"; };
 		2296248E10A3A22500A1090C /* lice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice.cpp; path = ../WDL/lice/lice.cpp; sourceTree = SOURCE_ROOT; };
 		2296248F10A3A22500A1090C /* lice_line.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice_line.cpp; path = ../WDL/lice/lice_line.cpp; sourceTree = SOURCE_ROOT; };
 		229A7E7C1165744400325BC2 /* Context.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Context.cpp; path = Misc/Context.cpp; sourceTree = "<group>"; };
@@ -630,6 +634,8 @@
 				22C31F22125EF71A0072434F /* Adam.h */,
 				229A7E7C1165744400325BC2 /* Context.cpp */,
 				229A7E7D1165744400325BC2 /* Context.h */,
+				2273566512910ABF001A1570 /* EditCursor.cpp */,
+				2273566612910ABF001A1570 /* EditCursor.h */,
 				229A7E7E1165744400325BC2 /* FolderActions.cpp */,
 				229A7E7F1165744400325BC2 /* FolderActions.h */,
 				229A7E801165744400325BC2 /* ItemParams.cpp */,
@@ -895,6 +901,7 @@
 				22AF6E8F12308C810017808F /* zutil.h in Headers */,
 				22219AFE124AF1CE006CBC5D /* Macros.h in Headers */,
 				22C31F24125EF71A0072434F /* Adam.h in Headers */,
+				2273566812910ABF001A1570 /* EditCursor.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1123,6 +1130,7 @@
 				22AF6E8E12308C810017808F /* zutil.c in Sources */,
 				22219AFD124AF1CE006CBC5D /* Macros.cpp in Sources */,
 				22C31F23125EF71A0072434F /* Adam.cpp in Sources */,
+				2273566712910ABF001A1570 /* EditCursor.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

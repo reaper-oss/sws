@@ -1,3 +1,7 @@
+!v1.8.6 #2 (November 15, 2010)
+Issue 198: Edit cursor position undo/redo.  Added actions "SWS: Undo edit cursor move" and "SWS: Redo edit cursor move"
+Issue 212: Fixed zoom tool slowness with high zoom levels and zoom-to-item enabled
+
 !v1.8.6 #1 (November 10, 2010)
 Zoom tool updates:
 +New zoom preference to undo zoom when dragging up

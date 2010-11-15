@@ -272,6 +272,8 @@ void AWFillGapsAdv(const char* title, char* retVals)
 	
 	
 	
+
+	
 	// Run loop for every track in project
 	for (int trackIndex = 0; trackIndex < GetNumTracks(); trackIndex++)
 	{
@@ -290,12 +292,44 @@ void AWFillGapsAdv(const char* title, char* retVals)
 			MediaItem* item2 = GetTrackMediaItem(track, itemIndex + 1);
 			// errorFlag = 0;
 			
+			
+			// BEGIN FIX OVERLAP CODE --------------------------------------------------------------
+			
+			// If first item is selected selected, run this loop
+			if (GetMediaItemInfo_Value(item1, "B_UISEL"))
+			{
+				// Get various pieces of info for the 2 items
+				double item1Start = GetMediaItemInfo_Value(item1, "D_POSITION");
+				double item1Length = GetMediaItemInfo_Value(item1, "D_LENGTH");
+				double item1End = item1Start + item1Length;
+				
+				double item2Start = GetMediaItemInfo_Value(item2, "D_POSITION");
+				
+				
+				// If the first item overlaps the second item
+				if (item1End > item2Start)
+				{
+					item1Length = item2Start - item1Start;
+				}
+				
+				// If the second item is also selected, trim the trigger pad off of item 1
+				if (GetMediaItemInfo_Value(item2, "B_UISEL"))
+				{
+					item1Length -= triggerPad;
+				}
+				
+				SetMediaItemInfo_Value(item1, "D_LENGTH", item1Length);					
+			}
+			
+			// END FIX OVERLAP CODE ----------------------------------------------------------------
+			
+			
 			// BEGIN TIMESTRETCH CODE---------------------------------------------------------------
 			
 			// If stretching is enabled
 			if (maxStretch < 1)
 			{
-			
+				
 				// Only stretch if both items are selected, avoids stretching unselected items or the last selected item
 				if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
 				{
@@ -304,9 +338,9 @@ void AWFillGapsAdv(const char* title, char* retVals)
 					double item1Start = GetMediaItemInfo_Value(item1, "D_POSITION");
 					double item1Length = GetMediaItemInfo_Value(item1, "D_LENGTH");
 					double item1End = item1Start + item1Length;
-			
+					
 					double item2Start = GetMediaItemInfo_Value(item2, "D_POSITION");
-			
+					
 					// Calculate gap between items
 					double gap = item2Start - item1End;
 					
@@ -317,7 +351,7 @@ void AWFillGapsAdv(const char* title, char* retVals)
 						// If preserve transient is enabled, split item at preserve point
 						if (presTrans > 0)
 						{
-						
+							
 							// Get snap offset for item1
 							double item1SnapOffset = GetMediaItemInfo_Value(item1, "D_SNAPOFFSET");
 							
@@ -401,66 +435,24 @@ void AWFillGapsAdv(const char* title, char* retVals)
 			}
 			
 			// END TIME STRETCH CODE ---------------------------------------------------------------
-		
-			// BEGIN FIX OVERLAP CODE --------------------------------------------------------------
 			
-			// If first item is selected selected, run this loop
-			// if (GetMediaItemInfo_Value(item1, "B_UISEL"))
-			if (GetMediaItemInfo_Value(item1, "B_UISEL"))
-			{
-				// Get various pieces of info for the 2 items
-				double item1Start = GetMediaItemInfo_Value(item1, "D_POSITION");
-				double item1Length = GetMediaItemInfo_Value(item1, "D_LENGTH");
-				double item1End = item1Start + item1Length;
-			
-				double item2Start = GetMediaItemInfo_Value(item2, "D_POSITION");
-			
-				// If the first item overlaps the second item, trim the first item
-				if (item1End > (item2Start - triggerPad))
-				{
-					
-					// If both items selected, account for trigger pad, if not, just trim to item 2 start
-					if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
-					{
-						item1Length = item2Start - item1Start - triggerPad;
-					}
-					else
-					{
-						item1Length = item2Start - item1Start;
-					}
-					
-					SetMediaItemInfo_Value(item1, "D_LENGTH", item1Length);
-				}
-				
-				if (item1End <= (item2Start - triggerPad))
-				{
-					// If both items selected, account for trigger pad, if not, do nothing
-					if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
-					{
-						item1Length -= triggerPad;
-						SetMediaItemInfo_Value(item1, "D_LENGTH", item1Length);
-					}
-				}
-			}
-			
-			// END FIX OVERLAP CODE ----------------------------------------------------------------
 			
 			// BEGIN FILL GAPS CODE ----------------------------------------------------------------
 			
 			// If both items selected, run this loop
 			if (GetMediaItemInfo_Value(item1, "B_UISEL") && GetMediaItemInfo_Value(item2, "B_UISEL"))
 			{ 
-			
+				
 				double item1Start = GetMediaItemInfo_Value(item1, "D_POSITION");
 				double item1Length = GetMediaItemInfo_Value(item1, "D_LENGTH");
 				double item1End = item1Start + item1Length;
-			
+				
 				double item2Start = GetMediaItemInfo_Value(item2, "D_POSITION");
 				double item2Length = GetMediaItemInfo_Value(item2, "D_LENGTH");
 				double item2SnapOffset = GetMediaItemInfo_Value(item2, "D_SNAPOFFSET");
 				
 				
-		
+				
 				// If there is a gap, fill it and also add an overlap to the left that is "fadeLength" long
 				if (item2Start >= item1End)
 				{
@@ -477,21 +469,21 @@ void AWFillGapsAdv(const char* title, char* retVals)
 						// If gap is big and mark errors is enabled, add a marker
 						if (markErrors == 1)
 						{
-						AddProjectMarker(NULL, false, item1End, NULL, "Possible Artifact", NULL);
+							AddProjectMarker(NULL, false, item1End, NULL, "Possible Artifact", NULL);
 						}
 						
 					}
-						
+					
 					
 					// Adjust start offset for all takes in item2 to account for fill
 					for (int takeIndex = 0; takeIndex < GetMediaItemNumTakes(item2); takeIndex++)
-						{
-							MediaItem_Take* currentTake = GetMediaItemTake(item2, takeIndex);
-							double startOffset = GetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS");
-							startOffset -= item2StartDiff;
-							SetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS", startOffset);
-						}
-						
+					{
+						MediaItem_Take* currentTake = GetMediaItemTake(item2, takeIndex);
+						double startOffset = GetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS");
+						startOffset -= item2StartDiff;
+						SetMediaItemTakeInfo_Value(currentTake, "D_STARTOFFS", startOffset);
+					}
+					
 					// Finally trim the item to fill the gap and adjust the snap offset
 					SetMediaItemInfo_Value(item2, "D_POSITION", (item1End - fadeLength));
 					SetMediaItemInfo_Value(item2, "D_LENGTH", item2Length);
@@ -510,7 +502,7 @@ void AWFillGapsAdv(const char* title, char* retVals)
 			// END FILL GAPS CODE ------------------------------------------------------------------
 			
 		}
-		
+			
 	}
 	
 	

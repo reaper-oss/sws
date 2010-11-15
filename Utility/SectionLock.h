@@ -59,7 +59,7 @@ public:
 			Sleep(1);
 			bLocked = pthread_mutex_trylock(&m_mutex) == 0;
 		}
-		while (!bLocked && GetTickCount(NULL) - t < dwTimeoutMs);
+		while (!bLocked && GetTickCount() - t < dwTimeoutMs);
 		return bLocked;
 	}
 	bool Unlock() { return pthread_mutex_unlock(&m_mutex) == 0; }

@@ -186,7 +186,11 @@ void SNM_ShowConsoleDbg(bool _clear, const char* format, ...)
     va_start(args, format);
     int bufsize = 2048;
     char* buffer = (char*)malloc(bufsize);
+#ifdef _WIN32
     while(buffer && _vsnprintf(buffer, bufsize, format, args) < 0) {
+#else
+	while(buffer && vsnprintf(buffer, bufsize, format, args) < 0) {
+#endif
         bufsize *= 2;
         buffer = (char*)realloc(buffer, bufsize);
     }

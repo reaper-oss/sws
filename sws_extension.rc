@@ -1010,6 +1010,7 @@ BEGIN
     PUSHBUTTON      "OK",IDOK,6,98,34,14
     PUSHBUTTON      "Save",IDC_SAVE,45,98,34,14
     PUSHBUTTON      "Close",IDCANCEL,221,98,34,14
+    CONTROL         "",IDC_SLIDER1,"msctls_trackbar32",TBS_NOTICKS | NOT WS_VISIBLE | WS_TABSTOP,137,19,93,13
 END
 
 
@@ -1523,7 +1524,8 @@ IDC_ZOOMUNDO            CURSOR                  "zoomundo.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

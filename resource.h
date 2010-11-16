@@ -56,17 +56,15 @@
 #define IDD_SNM_FXCHAINLIST             150
 #define IDD_ZOOMPREFS                   151
 #define IDD_SNM_NOTES_HELP              152
+#define IDC_ZOOMOUT                     152
 #define IDD_SNM_WAIT                    153
+#define IDC_ZOOMUNDO                    153
 #define IDD_SNM_FIND                    154
 #define IDD_SNM_MIDI_LIVE               155
-#define IDD_AW_ITEM_SMOOTHING			156
-
+#define IDD_AW_ITEM_SMOOTHING           156
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
-
-#define IDC_ZOOMOUT                     152
-#define IDC_ZOOMUNDO                    153
 #define IDC_BUTTON1                     1000
 #define IDC_EDIT1                       1001
 #define IDC_BUTTON2                     1002
@@ -254,13 +252,13 @@
 #define IDC_DRAGUP_ZOOM                 1182
 #define IDC_DRAGUP_UNZOOM               1183
 #define IDC_DRAGUP_UNDO                 1184
-#define IDC_TRIG_PAD					1185
-#define IDC_XFADE_LEN1					1186
-#define IDC_MAX_GAP						1187
-#define IDC_STRTCH_LIMIT				1188
-#define IDC_TRANS_LEN					1189
-#define IDC_XFADE_LEN2					1190
-
+#define IDC_TRIG_PAD                    1185
+#define IDC_XFADE_LEN1                  1186
+#define IDC_MAX_GAP                     1187
+#define IDC_STRTCH_LIMIT                1188
+#define IDC_TRANS_LEN                   1189
+#define IDC_XFADE_LEN2                  1190
+#define IDC_SLIDER1                     1191
 
 // Next default values for new objects
 // 
@@ -268,7 +266,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        154
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1185
+#define _APS_NEXT_CONTROL_VALUE         1192
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

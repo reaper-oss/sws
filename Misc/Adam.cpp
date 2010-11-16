@@ -142,11 +142,16 @@ WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			CheckDlgButton(hwnd, IDC_CHECK3, !!trans);
 
 #ifdef _WIN32
+			RECT r;
+			GetWindowRect(GetDlgItem(hwnd, IDC_SLIDER1), &r);
+			ScreenToClient(hwnd, (LPPOINT)&r);
+			ScreenToClient(hwnd, ((LPPOINT)&r)+1);
 			g_strtchHFader = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER1",
 				WS_CHILD | WS_VISIBLE | TBS_VERT,
-				205, 30, 140, 20, hwnd, NULL, g_hInst, NULL);
+				r.left, r.top, r.right-r.left, r.bottom-r.top, hwnd, NULL, g_hInst, NULL);
 #else
-			g_strtchHFader = SWELL_MakeControl("DLGFADER1", 666, "REAPERhfader", 0, 205, 30, 140, 20, 0);
+			g_strtchHFader = GetDlgItem(hwnd, IDC_SLIDER1);
+			ShowWindow(g_strtchHFader, SW_SHOW);
 #endif
 			SendMessage(g_strtchHFader,TBM_SETTIC,0,500);
 			SendMessage(g_strtchHFader,TBM_SETPOS,1,(LPARAM)(atof(maxStretch)*1000));

@@ -1,3 +1,6 @@
+!v1.8.6 #3 (November 16, 2010)
+Issue 167: Fixed OSX take mixer, as well as other Xenakios dialogs with sliders (some Win fixes too)
+
 !v1.8.6 #2 (November 15, 2010)
 Issue 198: Edit cursor position undo/redo.  Added actions "SWS: Undo edit cursor move" and "SWS: Redo edit cursor move"
 Issue 212: Fixed zoom tool slowness with high zoom levels and zoom-to-item enabled

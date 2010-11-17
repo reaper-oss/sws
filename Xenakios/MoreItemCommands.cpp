@@ -33,134 +33,46 @@ void(*g_KeyUpUndoHandler)()=0;
 
 typedef struct
 {
-	double Curve;
-	double *StoredPositions;
+	double dCurve;
+	double *dStoredPositions;
 } t_itemposremap_params;
 
 t_itemposremap_params g_itemposremap_params;
 
-void DoRemapItemPositions(bool RestorePos)
+void DoRemapItemPositions(bool bRestorePos)
 {
-	//
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	int numItems;
-	
-	//double PositionScalingFactor=TheScaling/100.0;
-	//if (PositionScalingFactor<0.0001) PositionScalingFactor=0.0001;
-	//if (PositionScalingFactor>1) PositionScalingFactor=1.0;
-	bool ItemSelected=false;
-
 	// Find minimum and maximum item positions from all selected
-	double MinTime;
-	double MaxTime;
-	double CurrentPos;
-	int ItemCounter=0;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	double dMinTime = DBL_MAX;
+	double dMaxTime = -DBL_MAX;
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	for (int i = 0; i < items.GetSize(); i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		//MediaItem* **MediaItemsOnTrack = new (MediaItem*)[numItems];
-		
-		
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				
-				CurrentPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
-				if (ItemCounter==0) { MinTime=CurrentPos; MaxTime=CurrentPos;}
-				if (ItemCounter>0 && CurrentPos<MinTime) MinTime=CurrentPos;
-				if (ItemCounter>0 && CurrentPos>MaxTime) MaxTime=CurrentPos;
-				ItemCounter++;
-			}
-			
-			
-		}
-	}
-	//MessageBox(g_hwndParent,"min search complete","info",MB_OK);
-	//double yyy;
-	ItemCounter=0;
-	
-	for (i=0;i<GetNumTracks();i++)
-	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		//MediaItem* **MediaItemsOnTrack = new (MediaItem*)[numItems];
-		MediaItem** MediaItemsOnTrack = new MediaItem*[numItems];
-		
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			MediaItemsOnTrack[j]=CurItem;
-		}
-		for (j=0;j<numItems;j++)
-		{
-			ItemSelected=*(bool*)GetSetMediaItemInfo(MediaItemsOnTrack[j],"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				//double SnapOffset=*(double*)GetSetMediaItemInfo(CurItem,"D_SNAPOFFSET",NULL);
-				
-				double TimeX;
-				double NewPos;
-				//double OldPos=*(double*)GetSetMediaItemInfo(MediaItemsOnTrack[j],"D_POSITION",NULL);
-				double OldPos=g_itemposremap_params.StoredPositions[ItemCounter];
-				double ItemPos=OldPos;
-				//double ItemPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
-					double NormalizedTime=(1.0/(MaxTime-MinTime))*(OldPos-MinTime);
-					ItemPos=ItemPos-MinTime;
-					double ShapedVal;
-					double ValueRange=1.0; // EndValue-StartValue;
-					double InterpolationDuration=MaxTime-MinTime;
-					double StartValue=0.0;
-					double EndValue=1.0;
-					double NewPropertyValue=StartValue+((EndValue-StartValue)/InterpolationDuration)*ItemPos;
-					double NormalizedValue;
-					double Booh;
-					if (g_itemposremap_params.Curve>=1.0)
-						Booh=pow(NormalizedTime,g_itemposremap_params.Curve);
-					else Booh=1.0-pow(NormalizedTime,1.0/g_itemposremap_params.Curve); 
-					//if (EndValue>StartValue)
-						NormalizedValue=(1.0/(EndValue-StartValue))*NewPropertyValue;
-					//else	NormalizedValue=1.0+((1.0/(EndValue-StartValue))*NewPropertyValue);	 
-					//double ShapedVal=pow(NormalizedValue,g_itemposremap_params.Curve);
-					//if (EndValue>StartValue)
-					//	ShapedVal=StartValue+((EndValue-StartValue)*ShapedVal);
-					//else ShapedVal=StartValue+((EndValue-StartValue)*ShapedVal);
-					ShapedVal=StartValue+(ValueRange*Booh);
-
-				if (RestorePos==false)
-				{
-					//NewPos=ShapedVal;
-					TimeX=OldPos-MinTime;
-					//NewPos=TimeX*ShapedVal;
-					NewPos=ShapedVal*InterpolationDuration;
-					NewPos=NewPos+MinTime;
-				} else NewPos=OldPos;
-					ItemCounter++;
-				//if (Positive)
-					//NewPos=OldPos+NudgeAmount; else NewPos=OldPos-NudgeAmount;
-				//NewPos=MinTime+( (PositionScalingFactor)*(OldPos));
-								
-				GetSetMediaItemInfo(MediaItemsOnTrack[j],"D_POSITION",&NewPos);
-				
-				
-				
-			} 
-
-
-		}
-	delete[] MediaItemsOnTrack;
-
+		double dPos = *(double*)GetSetMediaItemInfo(items.Get()[i], "D_POSITION", NULL);
+		if (dPos < dMinTime)
+			dMinTime = dPos;
+		if (dPos > dMaxTime)
+			dMaxTime = dPos;
 	}
 	
+	for (int i = 0; i < items.GetSize(); i++)
+	{
+		double dNormalizedTime = (1.0 / (dMaxTime - dMinTime)) * (g_itemposremap_params.dStoredPositions[i] - dMinTime);
+		double dShapedVal;
+		if (g_itemposremap_params.dCurve >= 1.0)
+			dShapedVal = pow(dNormalizedTime, g_itemposremap_params.dCurve);
+		else
+			dShapedVal = 1.0 - pow(dNormalizedTime, 1.0 / g_itemposremap_params.dCurve); 
+		
+		double dNewPos;
+		if (!bRestorePos)
+			dNewPos = dShapedVal * (dMaxTime - dMinTime) + dMinTime;
+		else
+			dNewPos = g_itemposremap_params.dStoredPositions[i];
+						
+		GetSetMediaItemInfo(items.Get()[i], "D_POSITION", &dNewPos);
+	}
 }
-
-
 
 WDL_DLGRET ItemPosRemapDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
@@ -171,14 +83,19 @@ WDL_DLGRET ItemPosRemapDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
         case WM_INITDIALOG:
 		{
 			char labtxt[256];
-			sprintf(labtxt,"%.2f",g_itemposremap_params.Curve);
+			sprintf(labtxt,"%.2f",g_itemposremap_params.dCurve);
 			SetDlgItemText(hwnd,IDC_IPRCURVE,labtxt);
 #ifdef _WIN32
-			hCurveSlider = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER1", 
-				WS_CHILD | WS_VISIBLE | TBS_VERT, 
-				45, 5, 150, 25, hwnd, NULL, g_hInst, NULL);
+			RECT r;
+			GetWindowRect(GetDlgItem(hwnd, IDC_SLIDER1), &r);
+			ScreenToClient(hwnd, (LPPOINT)&r);
+			ScreenToClient(hwnd, ((LPPOINT)&r)+1);
+			hCurveSlider = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER1",
+				WS_CHILD | WS_VISIBLE | TBS_HORZ,
+				r.left, r.top, r.right-r.left, r.bottom-r.top, hwnd, NULL, g_hInst, NULL);
 #else
-			hCurveSlider = SWELL_MakeControl("DLGFADER1", 666, "REAPERhfader", 0, 45, 5, 150, 25, 0);
+			hCurveSlider = GetDlgItem(hwnd, IDC_SLIDER1);
+			ShowWindow(hCurveSlider, SW_SHOW);
 #endif
 			SetFocus(GetDlgItem(hwnd, IDC_IPRCURVE));
 			SendMessage(GetDlgItem(hwnd, IDC_IPRCURVE), EM_SETSEL, 0, -1);
@@ -197,34 +114,38 @@ WDL_DLGRET ItemPosRemapDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 		{
 			switch(LOWORD(wParam))
 			{
+				case IDC_IPRCURVE:
+					if (HIWORD(wParam) == EN_CHANGE)
+					{
+						char txtbuf[256];
+						GetDlgItemText(hwnd, IDC_IPRCURVE, txtbuf, 256);
+						g_itemposremap_params.dCurve = atof(txtbuf);
+						SendMessage(hCurveSlider, TBM_SETPOS, 1, (int)(1000.0*(g_itemposremap_params.dCurve-0.1)/1.9));
+					}
+					break;
 				case IDC_APPLY:
 				{
-					char txtbuf[256];
-					GetDlgItemText(hwnd,IDC_IPRCURVE,txtbuf,256);
-					g_itemposremap_params.Curve=atof(txtbuf);
 					DoRemapItemPositions(false);
 					UpdateTimeline();
 					break;
 				}
 				case IDOK:
 				{
-					char txtbuf[256];
-					GetDlgItemText(hwnd,IDC_IPRCURVE,txtbuf,256);
-					g_itemposremap_params.Curve=atof(txtbuf);
 					DoRemapItemPositions(false);
 					UpdateTimeline();
-					Undo_OnStateChangeEx("Remap Item Positions",4,-1);
-					EndDialog(hwnd,0);
+					Undo_OnStateChangeEx("Remap Item Positions", 4, -1);
+					EndDialog(hwnd, 0);
 					break;
 				}
 				case IDCANCEL:
 				{
 					DoRemapItemPositions(true);
 					UpdateTimeline();
-					EndDialog(hwnd,0);
+					EndDialog(hwnd, 0);
 					break;
 				}
 			}
+			break;
 		}
 		case WM_DESTROY:
 			DestroyWindow(hCurveSlider);
@@ -233,43 +154,24 @@ WDL_DLGRET ItemPosRemapDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 	return 0;
 }
 
-
 void DoItemPosRemapDlg(COMMAND_T*)
 {
-	//
-	static bool firstrun=true;
-	if (firstrun==true)
+	static bool bFirstRun = true;
+	if (bFirstRun)
 	{
-		g_itemposremap_params.Curve=1.0;
-		firstrun=false;
+		g_itemposremap_params.dCurve = 1.0;
+		bFirstRun = false;
 	}
-	int NumSelItems=CountSelectedMediaItems(NULL);
-	g_itemposremap_params.StoredPositions=new double [NumSelItems];
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	int numItems;
-	bool ItemSelected=false;
-	int ItemCounter=0;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
-	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			//propertyName="D_";
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				g_itemposremap_params.StoredPositions[ItemCounter]=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
-				ItemCounter++;
-			}
-		}
-	}
-	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_ITEMPOSREMAP), g_hwndParent, ItemPosRemapDlgProc);
-	delete[] g_itemposremap_params.StoredPositions;
+
+	// Save the item positions
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	g_itemposremap_params.dStoredPositions = new double[items.GetSize()];
+	for (int i = 0; i < items.GetSize(); i++)
+		g_itemposremap_params.dStoredPositions[i] = *(double*)GetSetMediaItemInfo(items.Get()[i], "D_POSITION", NULL);
+
+	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_ITEMPOSREMAP), g_hwndParent, ItemPosRemapDlgProc);
+	delete [] g_itemposremap_params.dStoredPositions;
 }
 
 void ExtractFileNameEx(const char *FullFileName,char *Filename,bool StripExtension)
@@ -421,44 +323,39 @@ WDL_DLGRET RubberBandDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	switch(Message)
     {
         case WM_INITDIALOG:
-			{
-				char txt[200];
-				sprintf(txt,"%f",g_RubberBandParams.StretchFactor);
-				SetDlgItemText(hwnd,IDC_RBPEDIT2,txt);
-				sprintf(txt,"%f",g_RubberBandParams.PitchSemis);
-				SetDlgItemText(hwnd,IDC_RBPEDIT3,txt);
-				sprintf(txt,"%d",g_RubberBandParams.Mode);
-				SetDlgItemText(hwnd,IDC_RBPEDIT1,txt);
-				SetFocus(GetDlgItem(hwnd, IDC_RBPEDIT2));
-				SendMessage(GetDlgItem(hwnd, IDC_RBPEDIT2), EM_SETSEL, 0, -1);
-			}
+		{
+			char txt[200];
+			sprintf(txt,"%f",g_RubberBandParams.StretchFactor);
+			SetDlgItemText(hwnd,IDC_RBPEDIT2,txt);
+			sprintf(txt,"%f",g_RubberBandParams.PitchSemis);
+			SetDlgItemText(hwnd,IDC_RBPEDIT3,txt);
+			sprintf(txt,"%d",g_RubberBandParams.Mode);
+			SetDlgItemText(hwnd,IDC_RBPEDIT1,txt);
+			SetFocus(GetDlgItem(hwnd, IDC_RBPEDIT2));
+			SendMessage(GetDlgItem(hwnd, IDC_RBPEDIT2), EM_SETSEL, 0, -1);
+		}
 		case WM_COMMAND:
+			switch(LOWORD(wParam))
 			{
-				switch(LOWORD(wParam))
+				case IDCANCEL:
+					EndDialog(hwnd,0);
+					return 0;
+				case IDOK:
 				{
-					case IDCANCEL:
-						{
-							EndDialog(hwnd,0);
-							return 0;
-						}
-					case IDOK:
-						{
-							char txt[200];
-							GetDlgItemText(hwnd,IDC_RBPEDIT2,txt,200);
-							g_RubberBandParams.StretchFactor=atof(txt);
-							GetDlgItemText(hwnd,IDC_RBPEDIT3,txt,200);
-							g_RubberBandParams.PitchSemis=atof(txt);
-							GetDlgItemText(hwnd,IDC_RBPEDIT1,txt,200);
-							g_RubberBandParams.Mode=atoi(txt);
+					char txt[200];
+					GetDlgItemText(hwnd,IDC_RBPEDIT2,txt,200);
+					g_RubberBandParams.StretchFactor=atof(txt);
+					GetDlgItemText(hwnd,IDC_RBPEDIT3,txt,200);
+					g_RubberBandParams.PitchSemis=atof(txt);
+					GetDlgItemText(hwnd,IDC_RBPEDIT1,txt,200);
+					g_RubberBandParams.Mode=atoi(txt);
 
-							DoRubberBandProcessing();
-							EndDialog(hwnd,0);
-							return 0;
-						}
-
+					DoRubberBandProcessing();
+					EndDialog(hwnd,0);
+					return 0;
 				}
 			}
-
+			break;
 	}		
 	return 0;
 }
@@ -1179,39 +1076,33 @@ WDL_DLGRET ItemSpreadDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	switch(Message)
     {
         case WM_INITDIALOG:
-			{
-				SetDlgItemText(hwnd,IDC_EDIT1,"4");
-				SetDlgItemText(hwnd,IDC_EDIT2,"1");
-				return 0;
-			}
-		
+			SetDlgItemText(hwnd,IDC_EDIT1,"4");
+			SetDlgItemText(hwnd,IDC_EDIT2,"1");
+			return 0;
 		case WM_COMMAND:
+			switch(LOWORD(wParam))
 			{
-				switch(LOWORD(wParam))
-				{
 				case IDCANCEL:
-					{
-						EndDialog(hwnd,0);
-						return 0;
-					}
+					EndDialog(hwnd,0);
+					return 0;
 				case IDOK:
-					{
-						char buf[50];
-						GetDlgItemText(hwnd,IDC_EDIT1,buf,49);
-						int NumTracks=atoi(buf);
-						GetDlgItemText(hwnd,IDC_EDIT2,buf,49);
-						int StartTrack=atoi(buf);
-						if (StartTrack<1) StartTrack=1;
-						if (StartTrack>NumTracks) StartTrack=NumTracks;
-						int butstat= IsDlgButtonChecked(hwnd,IDC_CHECK1);
-						if (butstat==BST_CHECKED)
-							DoSpreadItemsOverTracks(NumTracks,StartTrack-1,1);
-						else DoSpreadItemsOverTracks(NumTracks,StartTrack-1,0);
-						EndDialog(hwnd,0);
-						return 0;
-					}
+				{
+					char buf[50];
+					GetDlgItemText(hwnd,IDC_EDIT1,buf,49);
+					int NumTracks=atoi(buf);
+					GetDlgItemText(hwnd,IDC_EDIT2,buf,49);
+					int StartTrack=atoi(buf);
+					if (StartTrack<1) StartTrack=1;
+					if (StartTrack>NumTracks) StartTrack=NumTracks;
+					int butstat= IsDlgButtonChecked(hwnd,IDC_CHECK1);
+					if (butstat==BST_CHECKED)
+						DoSpreadItemsOverTracks(NumTracks,StartTrack-1,1);
+					else DoSpreadItemsOverTracks(NumTracks,StartTrack-1,0);
+					EndDialog(hwnd,0);
+					return 0;
 				}
 			}
+			break;
 	}
 	return 0;
 }

@@ -109,5 +109,7 @@ void EditCursorSlice()
 int EditCursorInit()
 {
 	SWSRegisterCommands(g_commandTable);
+	if (!plugin_register("projectconfig",&g_projectconfig))
+		return 0;
 	return 1;
 }

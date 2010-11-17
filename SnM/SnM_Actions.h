@@ -270,7 +270,9 @@ void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTem
 // *** SnM_Item.cpp ***
 void splitMidiAudio(COMMAND_T* _ct);
 void smartSplitMidiAudio(COMMAND_T* _ct);
+#ifdef _SNM_MISC // Deprecated (v3.67)
 void splitSelectedItems(COMMAND_T* _ct);
+#endif
 void goferSplitSelectedItems(COMMAND_T* _ct);
 bool isEmptyMidi(MediaItem_Take* _take);
 void setEmptyTakeChunk(WDL_String* _chunk, int _recPass = -1, int _color = -1);
@@ -279,7 +281,9 @@ int buildLanes(const char* _undoTitle, int _mode);
 bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel);
 bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel = false, bool _itemSel = true);
 void clearTake(COMMAND_T* _ct);
+#ifdef _SNM_MISC // Deprecated (v3.67)
 void moveTakes(COMMAND_T* _ct);
+#endif
 void moveActiveTake(COMMAND_T* _ct);
 void activateLaneFromSelItem(COMMAND_T* _ct);
 void activateLaneUnderMouse(COMMAND_T* _ct);

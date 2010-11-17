@@ -105,16 +105,23 @@ void smartSplitMidiAudio(COMMAND_T* _ct)
 		splitMidiAudio(_ct);
 }
 
+#ifdef _SNM_MISC 
+//  Deprecated: contrary to their native versions, the following code was spliting selected items *and only them*, 
+//  see http://forum.cockos.com/showthread.php?t=51547.
+//  Due to REAPER v3.67's new native pref "If no items are selected, some split/trim/delete actions affect all items at the edit cursor", 
+//  those actions are less useful: they would still split only selected items, even if that native pref is ticked. 
+//  Also removed because of the spam in the action list (many split actions).
 void splitSelectedItems(COMMAND_T* _ct) {
 	if (CountSelectedMediaItems(NULL))
 		Main_OnCommand((int)_ct->user, 0);
 }
+#endif
 
 void goferSplitSelectedItems(COMMAND_T* _ct) {
 	if (CountSelectedMediaItems(NULL))
 	{
-		Main_OnCommand(40513, 0);
-		Main_OnCommand(40757, 0);
+		Main_OnCommand(40513, 0); // move edit cursor to mouse cursor (obey snapping)
+		Main_OnCommand(40757, 0); // split at edit cursor (no selection change)
 	}
 }
 
@@ -368,6 +375,8 @@ void clearTake(COMMAND_T* _ct)
 	}
 }
 
+#ifdef _SNM_MISC 
+// Deprecated: native actions "Rotate take lanes forward/backward" added in REAPER v3.67
 void moveTakes(COMMAND_T* _ct)
 {
 	bool updated = false;
@@ -417,6 +426,7 @@ void moveTakes(COMMAND_T* _ct)
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
+#endif
 
 void moveActiveTake(COMMAND_T* _ct)
 {
@@ -541,7 +551,7 @@ void removeAllEmptyTakes(COMMAND_T* _ct) {
 	removeEmptyTakes(SNM_CMD_SHORTNAME(_ct), true, true);
 }
 
-//NO UNDO (due to file deletion) !
+//note: no undo due to file deletion
 bool deleteTakeAndMedia(int _mode)
 {
 	bool deleteFileOK = true;

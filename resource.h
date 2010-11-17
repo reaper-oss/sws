@@ -259,6 +259,7 @@
 #define IDC_TRANS_LEN                   1189
 #define IDC_XFADE_LEN2                  1190
 #define IDC_SLIDER1                     1191
+#define IDC_FADE_SHAPE                  1192
 
 // Next default values for new objects
 // 

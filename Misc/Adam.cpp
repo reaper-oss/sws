@@ -45,6 +45,7 @@ void ReadFillGapsIniFile(char* cmdString,
 {
 	char tmp[128] = "";
 	WDL_String cmd;
+	int s,t;
 
 	GetPrivateProfileString("SWS","FillGapsTriggerPad","5",tmp,128,get_ini_file());
 	cmd.AppendFormatted(128, "%s,", tmp);
@@ -62,20 +63,22 @@ void ReadFillGapsIniFile(char* cmdString,
 		strncpy(maxGap, tmp, 128);
 
 	GetPrivateProfileString("SWS","FillGapsStretch","1",tmp,128,get_ini_file());
+	s = atoi(tmp);
 	if (stretch)
-		*stretch = atoi(tmp); 
+		*stretch = s; 
 
 	GetPrivateProfileString("SWS","FillGapsMaxStretch","0.5",tmp,128,get_ini_file());
-	cmd.AppendFormatted(128, "%s,", !stretch ? "1.0" : tmp);
+	cmd.AppendFormatted(128, "%s,", !s ? "1.0" : tmp);
 	if (maxStretch)
 		strncpy(maxStretch, tmp, 128);
 
 	GetPrivateProfileString("SWS","FillGapsTrans","1",tmp,128,get_ini_file());
+	t = atoi(tmp);
 	if (trans)
-		*trans = atoi(tmp); 
+		*trans = t;
 
 	GetPrivateProfileString("SWS","FillGapsPresTrans","35",tmp,128,get_ini_file());
-	cmd.AppendFormatted(128, "%s,", (!stretch || !trans) ? "0" : tmp);
+	cmd.AppendFormatted(128, "%s,", (!s || !t) ? "0" : tmp);
 	if (presTrans)
 		strncpy(presTrans, tmp, 128);
 
@@ -129,7 +132,7 @@ WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         case WM_INITDIALOG :
 		{		
 			char triggerPad[128], fadeLength[128], maxGap[128], maxStretch[128], presTrans[128], transFade[128];
-			int fadeShape=0 /* <-- TODO !!*/, markErrors, stretch, trans;
+			int fadeShape, markErrors, stretch, trans;
 			ReadFillGapsIniFile(NULL, triggerPad, fadeLength, maxGap, maxStretch, presTrans, transFade, &fadeShape, &markErrors, &stretch, &trans);
 
 			SetDlgItemText(hwnd,IDC_TRIG_PAD,triggerPad);
@@ -153,21 +156,30 @@ WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			g_strtchHFader = GetDlgItem(hwnd, IDC_SLIDER1);
 			ShowWindow(g_strtchHFader, SW_SHOW);
 #endif
-			SendMessage(g_strtchHFader,TBM_SETTIC,0,500);
-			SendMessage(g_strtchHFader,TBM_SETPOS,1,(LPARAM)(atof(maxStretch)*1000));
+			if (g_strtchHFader) {
+				SendMessage(g_strtchHFader,TBM_SETTIC,0,500);
+				SendMessage(g_strtchHFader,TBM_SETPOS,1,(LPARAM)(atof(maxStretch)*1000));
+			}
+
+			int x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)"Equal Gain");
+			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,0);
+			x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)"Equal Power");
+			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,1);
+			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETCURSEL,fadeShape,0);
 
 			RestoreWindowPos(hwnd, cWndPosKey, false);
 			SetFocus(GetDlgItem(hwnd, IDC_TRIG_PAD));
-			PostMessage(hwnd, WM_HSCROLL, 0, (LPARAM)g_strtchHFader); // indirectly refreshes stretch %
-			PostMessage(hwnd, WM_COMMAND, IDC_CHECK3, 0); // indirectly refreshes gray states
-			PostMessage(hwnd, WM_COMMAND, IDC_CHECK2, 0); 
+			if (g_strtchHFader)
+				PostMessage(hwnd, WM_HSCROLL, 0, (LPARAM)g_strtchHFader); // indirectly refreshes stretch fader %
+			PostMessage(hwnd, WM_COMMAND, IDC_CHECK2, 0); // indirectly refreshes grayed states
+			PostMessage(hwnd, WM_COMMAND, IDC_CHECK3, 0); 
 			return 0;
 		}
 		break;
         case WM_HSCROLL:
 		{
 			int pos=(int)SendMessage((HWND)lParam,TBM_GETPOS,0,0);
-			if ((HWND)lParam==g_strtchHFader) {
+			if (g_strtchHFader && (HWND)lParam==g_strtchHFader) {
 				char txt[128];
 				sprintf(txt,"%d%%", (int)floor(pos/10 + 0.5));
 				SetDlgItemText(hwnd, IDC_STRTCH_LIMIT, txt);
@@ -183,16 +195,18 @@ WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				case IDC_SAVE:
 				{
 					char triggerPad[128], fadeLength[128], maxGap[128], maxStretch[128], presTrans[128], transFade[128];
-					int fadeShape=0 /* <-- TODO !!*/, markErrors, stretch, trans;
+					int fadeShape, markErrors, stretch, trans;
 					GetDlgItemText(hwnd,IDC_TRIG_PAD,triggerPad,128);
 					GetDlgItemText(hwnd,IDC_XFADE_LEN1,fadeLength,128);
 					GetDlgItemText(hwnd,IDC_MAX_GAP,maxGap,128);
 					GetDlgItemText(hwnd,IDC_TRANS_LEN,presTrans,128);
 					GetDlgItemText(hwnd,IDC_XFADE_LEN2,transFade,128);
-					sprintf(maxStretch, "%.2f", g_strtchHFaderValue);
+					if (g_strtchHFader)
+						sprintf(maxStretch, "%.2f", g_strtchHFaderValue);
 					markErrors = IsDlgButtonChecked(hwnd, IDC_CHECK1);
 					stretch = IsDlgButtonChecked(hwnd, IDC_CHECK2);
 					trans = IsDlgButtonChecked(hwnd, IDC_CHECK3);
+					fadeShape = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_GETCURSEL,0,0);
 
 					SaveFillGapsIniFile(triggerPad, fadeLength, maxGap, maxStretch, presTrans, transFade, fadeShape, markErrors, stretch, trans);
 
@@ -216,17 +230,19 @@ WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				case IDC_CHECK2:
 				{
 					bool strtchEnable = (IsDlgButtonChecked(hwnd, IDC_CHECK2) == 1);
-					EnableWindow(g_strtchHFader, strtchEnable);
+					bool transEnable = (IsDlgButtonChecked(hwnd, IDC_CHECK3) == 1);
+					if (g_strtchHFader)
+						EnableWindow(g_strtchHFader, strtchEnable);
 					EnableWindow(GetDlgItem(hwnd, IDC_CHECK3), strtchEnable);
-					EnableWindow(GetDlgItem(hwnd, IDC_TRANS_LEN), strtchEnable);
-					EnableWindow(GetDlgItem(hwnd, IDC_XFADE_LEN2), strtchEnable);
+					EnableWindow(GetDlgItem(hwnd, IDC_TRANS_LEN), strtchEnable && transEnable);
+					EnableWindow(GetDlgItem(hwnd, IDC_XFADE_LEN2), strtchEnable && transEnable);
 				}
 				break;
 				case IDC_CHECK3:
 				{
-					bool strtchEnable = (IsDlgButtonChecked(hwnd, IDC_CHECK3) == 1);
-					EnableWindow(GetDlgItem(hwnd, IDC_TRANS_LEN), strtchEnable);
-					EnableWindow(GetDlgItem(hwnd, IDC_XFADE_LEN2), strtchEnable);
+					bool transEnable = (IsDlgButtonChecked(hwnd, IDC_CHECK3) == 1);
+					EnableWindow(GetDlgItem(hwnd, IDC_TRANS_LEN), transEnable);
+					EnableWindow(GetDlgItem(hwnd, IDC_XFADE_LEN2), transEnable);
 				}
 				break;
 			}

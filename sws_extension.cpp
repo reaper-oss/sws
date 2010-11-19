@@ -538,6 +538,7 @@ extern "C"
 		IMPAPI(Undo_OnStateChange_Item);
 		IMPAPI(Undo_OnStateChange2);
 		IMPAPI(Undo_OnStateChangeEx);
+		IMPAPI(UpdateArrange);
 		IMPAPI(UpdateItemInProject);
 		IMPAPI(UpdateTimeline);
 		IMPAPI(ValidatePtr);

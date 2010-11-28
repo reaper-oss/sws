@@ -1,3 +1,6 @@
+!v1.8.6 #4 (November 28, 2010)
+Issue 214: Fixed OSX crash when opening a project list file
+
 !v1.8.6 #3 (November 16, 2010)
 Issue 167: Fixed OSX take mixer, as well as other Xenakios dialogs with sliders (some Win fixes too)
 

@@ -257,10 +257,9 @@
 #define IDC_STRTCH_LIMIT                1188
 #define IDC_TRANS_LEN                   1189
 #define IDC_XFADE_LEN2                  1190
-#define IDC_SLIDER1                     1191
-#define IDC_FADE_SHAPE                  1192
-#define IDC_SLIDER1                     1193
-#define IDC_SLIDER2                     1194
+#define IDC_FADE_SHAPE                  1191
+#define IDC_SLIDER1                     1192
+#define IDC_SLIDER2                     1193
 
 // Next default values for new objects
 // 
@@ -268,7 +267,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        156
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1186
+#define _APS_NEXT_CONTROL_VALUE         1194
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

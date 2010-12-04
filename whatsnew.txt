@@ -1,3 +1,5 @@
+Issue 215: fixed crash when copying FX chain on tracks without FX
+
 !v1.8.6 #4 (November 28, 2010)
 Issue 214: Fixed OSX crash when opening a project list file
 

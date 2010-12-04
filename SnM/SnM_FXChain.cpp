@@ -365,21 +365,26 @@ void copyTrackFXChain(COMMAND_T* _ct)
 		MediaTrack* tr = CSurf_TrackFromID(i,false); // include master
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			SNM_ChunkParserPatcher p(tr);
-			if (p.GetSubChunk("FXCHAIN", 2, 0, &g_fXChainClipboard))
+			g_fXChainClipboard.Set("");
+			if (TrackFX_GetCount(tr))
 			{
-				// remove last ">\n" 
-				g_fXChainClipboard.DeleteSub(g_fXChainClipboard.GetLength()-3,2);
+				SNM_ChunkParserPatcher p(tr);
+				if (p.GetSubChunk("FXCHAIN", 2, 0, &g_fXChainClipboard))
+				{
+					WDL_PtrList<const char> removedKeywords;
+					removedKeywords.Add("<FXCHAIN");
+					removedKeywords.Add("WNDRECT");
+					removedKeywords.Add("SHOW");
+					removedKeywords.Add("FLOATPOS");
+					removedKeywords.Add("LASTSEL");
+					removedKeywords.Add("DOCKED");
 
-				WDL_PtrList<const char> removedKeywords;
-				removedKeywords.Add("<FXCHAIN");
-				removedKeywords.Add("WNDRECT");
-				removedKeywords.Add("SHOW");
-				removedKeywords.Add("FLOATPOS");
-				removedKeywords.Add("LASTSEL");
-				removedKeywords.Add("DOCKED");
-				RemoveChunkLines(&g_fXChainClipboard, &removedKeywords, true);
+					// remove last ">\n" 
+					RemoveChunkLines(&g_fXChainClipboard, &removedKeywords, true);
+					g_fXChainClipboard.DeleteSub(g_fXChainClipboard.GetLength()-2,2);
+				}
 			}
+			break;
 		}
 	}
 }

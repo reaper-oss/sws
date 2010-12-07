@@ -1092,10 +1092,8 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	if (!strcmp(menustr, "Main view") && !flag)
 	{
 		int cmd = NamedCommandLookup("_S&M_SHOWMIDILIVE");
-		if (cmd > 0) {
-			int afterCmd = NamedCommandLookup("_SWSCONSOLE");
-			AddToMenu(hMenu, "S&&M Live Configs", cmd, afterCmd > 0 ? afterCmd : 40075);
-		}
+		if (cmd > 0)
+			AddToMenu(hMenu, "S&&M Live Configs", cmd);
 	}
 }
 

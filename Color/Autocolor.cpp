@@ -727,7 +727,10 @@ static COMMAND_T g_commandTable[] =
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
-		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40075);
+	{
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
+	}
 	else if (flag == 0 && strcmp(menustr, "Main options") == 0)
 		AddToMenu(hMenu, g_commandTable[1].menuText, g_commandTable[1].accel.accel.cmd, 40745);
 }

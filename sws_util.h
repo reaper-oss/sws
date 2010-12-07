@@ -169,6 +169,7 @@ void ActionsList(COMMAND_T*);
 COMMAND_T* SWSUnregisterCommand(int id);
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, const char** pMenuText = NULL);
 HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);
+int SWSGetMenuPosFromID(HMENU hMenu, UINT id);
 
 // Utility functions, sws_util.cpp
 BOOL IsCommCtrlVersion6();

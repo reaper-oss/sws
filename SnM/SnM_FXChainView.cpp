@@ -714,10 +714,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	{
 		int cmd = NamedCommandLookup("_S&M_SHOWFXCHAINSLOTS");
 		if (cmd > 0)
-		{
-			int afterCmd = NamedCommandLookup("_SWSCONSOLE");
-			AddToMenu(hMenu, "S&&M FX Chains", cmd, afterCmd > 0 ? afterCmd : 40075);
-		}
+			AddToMenu(hMenu, "S&&M FX Chains", cmd);
 	}
 }
 

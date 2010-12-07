@@ -1054,10 +1054,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	{
 		int cmd = NamedCommandLookup("_S&M_SHOWNOTESHELP");
 		if (cmd > 0)
-		{
-			int afterCmd = NamedCommandLookup("_SWSCONSOLE");
-			AddToMenu(hMenu, "S&&M Notes/help", cmd, afterCmd > 0 ? afterCmd : 40075);
-		}
+			AddToMenu(hMenu, "S&&M Notes/help", cmd);
 	}
 }
 

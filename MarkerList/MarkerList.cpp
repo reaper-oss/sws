@@ -643,7 +643,7 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
-		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40075);
+		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
 	else if (strcmp(menustr, "Main edit") == 0 && flag == 0)
 		AddSubMenu(hMenu, SWSCreateMenu(g_commandTable), "SWS Marker utilites");
 }

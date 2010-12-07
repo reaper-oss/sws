@@ -568,8 +568,8 @@ int SnMInit(reaper_plugin_info_t* _rec)
 
 	// Init S&M views
 	MidiLiveViewInit();
-	NotesHelpViewInit();
 	FXChainViewInit();
+	NotesHelpViewInit();
 	FindViewInit();
 	return 1;
 }

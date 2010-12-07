@@ -217,6 +217,19 @@ HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu, int* iIndex)
 	return hMenu;
 }
 
+int SWSGetMenuPosFromID(HMENU hMenu, UINT id)
+{	// Replacement for deprecated windows func GetMenuPosFromID
+	MENUITEMINFO mi={sizeof(MENUITEMINFO),};
+	mi.fMask = MIIM_ID;
+	for (int i = 0; i < GetMenuItemCount(hMenu); i++)
+	{
+		GetMenuItemInfo(hMenu, i, true, &mi);
+		if (mi.wID == id)
+			return i;
+	}
+	return -1;
+}
+
 // returns:
 // -1 = action does not belong to this extension, or does not toggle
 //  0 = action belongs to this extension and is currently set to "off"
@@ -450,6 +463,7 @@ extern "C"
 		IMPAPI(GetTrack);
 		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);
+		IMPAPI(GetTrackEnvelopeByName);
 		IMPAPI(GetTrackInfo);
 		IMPAPI(GetTrackMediaItem);
 		IMPAPI(GetTrackNumMediaItems);
@@ -562,24 +576,24 @@ extern "C"
 			ERR_RETURN("Toggle action hook error\n")
 
 		// Call plugin specific init
+		if (!AutoColorInit())
+			ERR_RETURN("Auto Color init error\n")
+		if (!ColorInit())
+			ERR_RETURN("Color init error\n")
+		if (!MarkerListInit())
+			ERR_RETURN("Marker list init error\n")
+		if (!MarkerActionsInit())
+			ERR_RETURN("Marker action init error\n")
+		if (!MediaPoolInit())
+			ERR_RETURN("Mediapool init error\n")
 		if (!ConsoleInit())
 			ERR_RETURN("ReaConsole init error\n")
 		if (!FreezeInit())
 			ERR_RETURN("Freeze init error\n")
-		if (!MarkerActionsInit())
-			ERR_RETURN("Marker action init error\n")
 		if (!SnapshotsInit())
 			ERR_RETURN("Snapshots init error\n")
-		if (!MarkerListInit())
-			ERR_RETURN("Marker list init error\n")
-		if (!ColorInit())
-			ERR_RETURN("Color init error\n")
-		if (!AutoColorInit())
-			ERR_RETURN("Auto Color init error\n")
 		if (!TrackListInit())
 			ERR_RETURN("Tracklist init error\n")
-		if (!MediaPoolInit())
-			ERR_RETURN("Mediapool init error\n")
 		if (!ProjectListInit())
 			ERR_RETURN("Project List init error\n")
 		if (!ProjectMgrInit())

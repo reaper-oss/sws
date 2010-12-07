@@ -1,4 +1,6 @@
+!v1.8.6 #5 (December 6, 2010)
 Issue 215: fixed crash when copying FX chain on tracks without FX
+Changed View menu for REAPER v4 compatibility.
 
 !v1.8.6 #4 (November 28, 2010)
 Issue 214: Fixed OSX crash when opening a project list file

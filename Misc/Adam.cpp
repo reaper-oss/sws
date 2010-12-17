@@ -1116,19 +1116,15 @@ void AWFadeSelection(COMMAND_T* t)
 							{
 								dFadeLen = selEnd - selStart;
 								dEdgeAdj1 = selEnd - dEnd1;
-								
 								dEdgeAdj2 = dStart2 - selStart;
-								
-								if (dEdgeAdj2 > *(double*)GetSetMediaItemTakeInfo(GetActiveTake(item2), "D_STARTOFFS", NULL))
+
+								MediaItem_Take* activeTake = GetActiveTake(item2);
+								if (activeTake && dEdgeAdj2 > *(double*)GetSetMediaItemTakeInfo(activeTake, "D_STARTOFFS", NULL))
 								{	
-									
 									dFadeLen -= dEdgeAdj2;
-									
-									dEdgeAdj2 = *(double*)GetSetMediaItemTakeInfo(GetActiveTake(item2), "D_STARTOFFS", NULL);
-									
+									dEdgeAdj2 = *(double*)GetSetMediaItemTakeInfo(activeTake, "D_STARTOFFS", NULL);
 									dFadeLen += dEdgeAdj2;
 								}
-								
 								
 								// Move the edges around and set the crossfades
 								double dLen1 = dEnd1 - dStart1 + dEdgeAdj1;
@@ -1174,16 +1170,12 @@ void AWFadeSelection(COMMAND_T* t)
 								
 								// Need to ensure that there's "room" to move the start of the second item back
 								// Check all of the takes' start offset before doing any "work"
-								
-								if (dEdgeAdj2 > *(double*)GetSetMediaItemTakeInfo(GetActiveTake(item2), "D_STARTOFFS", NULL))
-								{	//break;
-									
-									dEdgeAdj2 = *(double*)GetSetMediaItemTakeInfo(GetActiveTake(item2), "D_STARTOFFS", NULL);
-									
+								MediaItem_Take* activeTake = GetActiveTake(item2);								
+								if (activeTake && dEdgeAdj2 > *(double*)GetSetMediaItemTakeInfo(activeTake, "D_STARTOFFS", NULL))
+								{
+									dEdgeAdj2 = *(double*)GetSetMediaItemTakeInfo(activeTake, "D_STARTOFFS", NULL);
 									dEdgeAdj1 = dFadeLen - dEdgeAdj2;
 								}
-								
-								
 								
 								
 								// We're all good, move the edges around and set the crossfades
@@ -1249,18 +1241,13 @@ void AWFadeSelection(COMMAND_T* t)
 								
 								
 								// Need to ensure that there's "room" to move the start of the second item back
-								// Check all of the takes' start offset before doing any "work"								
-								
-								if (dEdgeAdj2 > *(double*)GetSetMediaItemTakeInfo(GetActiveTake(item2), "D_STARTOFFS", NULL))
+								// Check all of the takes' start offset before doing any "work"
+								MediaItem_Take* activeTake = GetActiveTake(item2);								
+								if (activeTake && dEdgeAdj2 > *(double*)GetSetMediaItemTakeInfo(activeTake, "D_STARTOFFS", NULL))
 								{
-									
 									dFadeLen -= dEdgeAdj2;
-									
-									dEdgeAdj2 = *(double*)GetSetMediaItemTakeInfo(GetActiveTake(item2), "D_STARTOFFS", NULL);
-									
+									dEdgeAdj2 = *(double*)GetSetMediaItemTakeInfo(activeTake, "D_STARTOFFS", NULL);
 									dFadeLen += dEdgeAdj2;
-									
-									
 								}
 								
 								

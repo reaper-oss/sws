@@ -1,3 +1,6 @@
+!v1.8.6 #6 (December 17, 2010)
+Issue 217: Fixed crash of "SWS/AW: Fade in/out/crossfade selected area of selected items" when run over empty items 
+
 !v1.8.6 #5 (December 6, 2010)
 Issue 215: fixed crash when copying FX chain on tracks without FX
 Changed View menu for REAPER v4 compatibility.

@@ -89,7 +89,7 @@ MediaTrack* g_trNote = NULL;
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_NotesHelpWnd::SNM_NotesHelpWnd()
-:SWS_DockWnd(IDD_SNM_NOTES_HELP, "Notes & help", 30007, SWSGetCommandID(OpenNotesHelpView))
+:SWS_DockWnd(IDD_SNM_NOTES_HELP, "Notes/Help", 30007, SWSGetCommandID(OpenNotesHelpView))
 {
 	// Get the action help file
 	readActionHelpFilenameIniFile();

@@ -1,3 +1,6 @@
+!v1.8.6 #7 (January 3, 2011)
+Issue 222: (and others + forum) Fixed v4 crash/issues with S&M Notes/Help window docked
+
 !v1.8.6 #6 (December 17, 2010)
 Issue 217: Fixed crash of "SWS/AW: Fade in/out/crossfade selected area of selected items" when run over empty items 
 

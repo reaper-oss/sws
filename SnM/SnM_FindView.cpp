@@ -112,7 +112,7 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr) {
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_FindWnd::SNM_FindWnd()
-:SWS_DockWnd(IDD_SNM_FIND, "Find", 30008, SWSGetCommandID(OpenFindView))
+:SWS_DockWnd(IDD_SNM_FIND, "Find", "SnMFind", 30008, SWSGetCommandID(OpenFindView))
 {
 	// GUI inits
 	if (m_bShowAfterInit)

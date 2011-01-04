@@ -172,7 +172,7 @@ int SWS_MarkerListView::GetItemState(LPARAM item)
 }
 
 SWS_MarkerListWnd::SWS_MarkerListWnd()
-:SWS_DockWnd(IDD_MARKERLIST, "Marker List", 30001, SWSGetCommandID(OpenMarkerList)), m_dCurPos(DBL_MAX)
+:SWS_DockWnd(IDD_MARKERLIST, "Marker List", "SWSMarkerList", 30001, SWSGetCommandID(OpenMarkerList)), m_dCurPos(DBL_MAX)
 {
 	if (m_bShowAfterInit)
 		Show(false, false);

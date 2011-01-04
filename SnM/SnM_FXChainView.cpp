@@ -245,7 +245,7 @@ void SNM_FXChainView::OnBeginDrag(LPARAM item)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_FXChainWnd::SNM_FXChainWnd()
-:SWS_DockWnd(IDD_SNM_FXCHAINLIST, "FX Chains", 30006, SWSGetCommandID(OpenFXChainView))
+:SWS_DockWnd(IDD_SNM_FXCHAINLIST, "FX Chains", "SnMFxChains", 30006, SWSGetCommandID(OpenFXChainView))
 {
 	if (m_bShowAfterInit)
 		Show(false, false);

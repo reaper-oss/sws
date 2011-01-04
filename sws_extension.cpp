@@ -401,6 +401,8 @@ extern "C"
 		IMPAPI(DeleteTrackMediaItem);
 		IMPAPI(DockWindowActivate);
 		IMPAPI(DockWindowAdd);
+		// v4 TODO
+		*(void**)&DockWindowAddEx = rec->GetFunc("DockWindowAddEx");
 		IMPAPI(DockWindowRefresh);
 		IMPAPI(DockWindowRemove);
 		IMPAPI(EnsureNotCompletelyOffscreen);

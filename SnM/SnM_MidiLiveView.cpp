@@ -241,7 +241,7 @@ void SnM_MidiLiveView::OnItemDblClk(LPARAM item, int iCol)
 ///////////////////////////////////////////////////////////////////////////////
 
 SnM_MidiLiveWnd::SnM_MidiLiveWnd()
-:SWS_DockWnd(IDD_SNM_MIDI_LIVE, "Live Configs", 30009, SWSGetCommandID(OpenMidiLiveView))
+:SWS_DockWnd(IDD_SNM_MIDI_LIVE, "Live Configs", "SnMLiveConfigs", 30009, SWSGetCommandID(OpenMidiLiveView))
 {
 	if (m_bShowAfterInit)
 		Show(false, false);

@@ -340,7 +340,7 @@ int SWS_SnapshotsView::GetItemState(LPARAM item)
 }
 
 SWS_SnapshotsWnd::SWS_SnapshotsWnd()
-:SWS_DockWnd(IDD_SNAPS, "Snapshots", 30002, SWSGetCommandID(OpenSnapshotsDialog)),m_iSelType(0)
+:SWS_DockWnd(IDD_SNAPS, "Snapshots", "SWSSnapshots", 30002, SWSGetCommandID(OpenSnapshotsDialog)),m_iSelType(0)
 {
 	// Restore state
 	char str[32];

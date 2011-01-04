@@ -95,7 +95,7 @@ void SWS_ProjectListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 }
 
 SWS_ProjectListWnd::SWS_ProjectListWnd()
-:SWS_DockWnd(IDD_PROJLIST, "Project List", 30006, SWSGetCommandID(OpenProjectList))
+:SWS_DockWnd(IDD_PROJLIST, "Project List", "SWSProjectList", 30006, SWSGetCommandID(OpenProjectList))
 {
 	if (m_bShowAfterInit)
 		Show(false, false);

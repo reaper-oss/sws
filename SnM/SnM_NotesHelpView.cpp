@@ -89,7 +89,7 @@ MediaTrack* g_trNote = NULL;
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_NotesHelpWnd::SNM_NotesHelpWnd()
-:SWS_DockWnd(IDD_SNM_NOTES_HELP, "Notes/Help", 30007, SWSGetCommandID(OpenNotesHelpView))
+:SWS_DockWnd(IDD_SNM_NOTES_HELP, "Notes/Help", "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
 {
 	// Get the action help file
 	readActionHelpFilenameIniFile();
@@ -1054,7 +1054,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	{
 		int cmd = NamedCommandLookup("_S&M_SHOWNOTESHELP");
 		if (cmd > 0)
-			AddToMenu(hMenu, "S&&M Notes/help", cmd);
+			AddToMenu(hMenu, "S&&M Notes/Help", cmd);
 	}
 }
 

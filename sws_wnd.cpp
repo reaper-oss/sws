@@ -38,8 +38,8 @@
 
 #include "stdafx.h"
 
-SWS_DockWnd::SWS_DockWnd(int iResource, const char* cName, int iDockOrder, int iCmdID)
-:m_hwnd(NULL), m_bDocked(false), m_iResource(iResource), m_cName(cName), m_iDockOrder(iDockOrder), m_bUserClosed(false), m_iCmdID(iCmdID)
+SWS_DockWnd::SWS_DockWnd(int iResource, const char* cName, const char* cId, int iDockOrder, int iCmdID)
+:m_hwnd(NULL), m_bDocked(false), m_iResource(iResource), m_cName(cName), m_cId(cId), m_iDockOrder(iDockOrder), m_bUserClosed(false), m_iCmdID(iCmdID)
 {
 	screenset_register((char*)m_cName, screensetCallback, this);
 
@@ -129,7 +129,10 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			if (m_bDocked)
 			{
-				DockWindowAdd(m_hwnd, (char*)m_cName, m_iDockOrder, true);
+				if (DockWindowAddEx)
+					DockWindowAddEx(m_hwnd, (char*)m_cName, (char*)m_cId, true);
+				else
+					DockWindowAdd(m_hwnd, (char*)m_cName, m_iDockOrder, true); 
 			}
 			else
 			{
@@ -280,7 +283,10 @@ void SWS_DockWnd::ToggleDocking()
 		m_bDocked = true;
 		SaveWindowPos(m_hwnd, m_cWndPosKey);
 		ShowWindow(m_hwnd, SW_HIDE);
-		DockWindowAdd(m_hwnd, (char*)m_cName, m_iDockOrder, false);
+		if (DockWindowAddEx)
+			DockWindowAddEx(m_hwnd, (char*)m_cName, (char*)m_cId, false);
+		else
+			DockWindowAdd(m_hwnd, (char*)m_cName, m_iDockOrder, false); // v4 TODO delete me
 		DockWindowActivate(m_hwnd);
 	}
 	else

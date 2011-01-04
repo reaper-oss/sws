@@ -317,15 +317,15 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Delete active take and source file in selected items (no undo)" }, "S&M_DELTAKEANDFILE4", deleteTakeAndMedia, NULL, 4},
 
 	// Notes/help -------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, NULL, IsNotesHelpViewEnabled},
-	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to project notes (disables auto updates)" }, "S&M_DISABLENOTESHELP", SwitchNotesHelpType, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to item notes" }, "S&M_ITEMNOTES", SwitchNotesHelpType, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to track notes" }, "S&M_TRACKNOTES", SwitchNotesHelpType, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, NULL, IsNotesHelpViewEnabled},
+	{ { DEFACCEL, "SWS/S&M: Notes/Help - Switch to project notes (disables auto updates)" }, "S&M_DISABLENOTESHELP", SwitchNotesHelpType, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Notes/Help - Switch to item notes" }, "S&M_ITEMNOTES", SwitchNotesHelpType, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Notes/Help - Switch to track notes" }, "S&M_TRACKNOTES", SwitchNotesHelpType, NULL, 2},
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Notes/help - Switch to action help" }, "S&M_ACTIONHELP", SwitchNotesHelpType, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Notes/Help - Switch to action help" }, "S&M_ACTIONHELP", SwitchNotesHelpType, NULL, 3},
 #endif
-	{ { DEFACCEL, "SWS/S&M: Notes/help - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesHelpLock, NULL, NULL, IsNotesHelpLocked},
-	{ { DEFACCEL, "SWS/S&M: Notes/help - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Notes/Help - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesHelpLock, NULL, NULL, IsNotesHelpLocked},
+	{ { DEFACCEL, "SWS/S&M: Notes/Help - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
 
 
 	// Split ------------------------------------------------------------------

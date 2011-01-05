@@ -495,6 +495,7 @@ void SNM_FindWnd::OnDestroy()
 
 	m_cbType.Empty();
 	m_parentVwnd.RemoveAllChildren(false);
+	m_parentVwnd.SetRealParent(NULL);
 
 	g_notFound = false;
 	*g_searchStr = 0;

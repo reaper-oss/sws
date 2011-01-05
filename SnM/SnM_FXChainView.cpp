@@ -469,6 +469,7 @@ void SNM_FXChainWnd::OnDestroy()
 	m_cbDblClickType.Empty();
 	m_cbDblClickTo.Empty();
 	m_parentVwnd.RemoveAllChildren(false);
+	m_parentVwnd.SetRealParent(NULL);
 }
 
 int SNM_FXChainWnd::OnKey(MSG* msg, int iKeyState) 

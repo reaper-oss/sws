@@ -543,6 +543,7 @@ void SNM_NotesHelpWnd::OnDestroy()
 	m_previousType = -1;
 	m_cbType.Empty();
 	m_parentVwnd.RemoveAllChildren(false);
+	m_parentVwnd.SetRealParent(NULL);
 }
 
 // we don't check iKeyState in order to catch (almost) everything

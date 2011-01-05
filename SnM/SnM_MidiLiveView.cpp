@@ -691,6 +691,7 @@ void SnM_MidiLiveWnd::OnDestroy()
 	m_cbConfig.Empty();
 	m_cbInputTr.Empty();
 	m_parentVwnd.RemoveAllChildren(false);
+	m_parentVwnd.SetRealParent(NULL);
 }
 
 int SnM_MidiLiveWnd::OnKey(MSG* msg, int iKeyState) 

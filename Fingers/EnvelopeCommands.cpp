@@ -128,7 +128,7 @@ void BoundsOfSelectedPoints(EnvPoints &points, double *min, double *max)
 		if( i->IsSelected()) {
 			if( i->GetValue() > *max)
 				*max = i->GetValue();
-			if( i->.GetValue() < *min)
+			if( i->GetValue() < *min)
 				*min = i->GetValue();
 		}
 	}

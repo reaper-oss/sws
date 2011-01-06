@@ -100,10 +100,10 @@ void LinearShiftAmplitude::DoCommand(int flag)
 
 	double amt = (Cenv.GetMax() - Cenv.GetMin()) / 100 * m_dAmount;
 
-	double p0 = (*it).GetTime();
+	double p0 = it->GetTime();
 	std::vector<CEnvelopePoint>::reverse_iterator rit;
 	rit = std::find_if(points.rbegin(), points.rend(), isSelected);
-	double pN = (*rit).GetTime();
+	double pN = rit->GetTime();
 	if (p0 == pN)
 		return; // same point in time
 
@@ -125,11 +125,11 @@ void LinearShiftAmplitude::DoCommand(int flag)
 void BoundsOfSelectedPoints(EnvPoints &points, double *min, double *max)
 {
 	for(std::vector<CEnvelopePoint>::iterator i = points.begin(); i != points.end(); i++) {
-		if( (*i).IsSelected()) {
-			if( (*i).GetValue() > *max)
-				*max = (*i).GetValue();
-			if( (*i).GetValue() < *min)
-				*min = (*i).GetValue();
+		if( i->IsSelected()) {
+			if( i->GetValue() > *max)
+				*max = i->GetValue();
+			if( i->.GetValue() < *min)
+				*min = i->GetValue();
 		}
 	}
 }
@@ -151,26 +151,26 @@ void CompressExpandPoints::DoCommand(int flag)
 	BoundsOfSelectedPoints(points, &minVal, &maxVal);
 	double midPoint = (maxVal + minVal) / 2;
 
-	double p0 = (*it).GetTime();
+	double p0 = it->GetTime();
 	std::vector<CEnvelopePoint>::reverse_iterator rit;
 	rit = std::find_if(points.rbegin(), points.rend(), isSelected);
-	double pN = (*rit).GetTime();
+	double pN = rit->GetTime();
 	if(p0 == pN)
 		return;
 
 	double m = m_dGradientFactor * (m_dAmount - 1) * (pN - p0);
 
 	for(std::vector<CEnvelopePoint>::iterator i = points.begin(); i != points.end(); i++) {
-		if( (*i).IsSelected()) {
-			if( (*i).GetValue() == midPoint)
+		if( i->IsSelected()) {
+			if( i->GetValue() == midPoint)
 				continue;
 			double extremePoint;
-			if( (*i).GetValue() > midPoint)
+			if( i->GetValue() > midPoint)
 				extremePoint = maxVal;
 			else
 				extremePoint = minVal;
 			
-			double normalized = ((*i).GetValue() - midPoint) / (extremePoint - midPoint);
+			double normalized = (i->GetValue() - midPoint) / (extremePoint - midPoint);
 			normalized *= m * (i->GetTime() - p0) + m_dAmount;
 			(*i).SetValue(normalized * ( extremePoint - midPoint) + midPoint);
 		}

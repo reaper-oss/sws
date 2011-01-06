@@ -283,11 +283,8 @@ void GrooveDialog::OnGrooveFolderButton(WORD wParam, LPARAM lParam)
 void GrooveDialog::RefreshGrooveList()
 {
 	SendDlgItemMessage(getHwnd(), IDC_GROOVELIST, LB_RESETCONTENT, 0, 0);
-	SendDlgItemMessage(getHwnd(), IDC_GROOVELIST, LB_ADDSTRING, 0, (LPARAM)L"** User Groove **");
+	SendDlgItemMessage(getHwnd(), IDC_GROOVELIST, LB_ADDSTRING, 0, (LPARAM)"** User Groove **");
 	std::wstring textOut;
-	//textOut = L"Path: ";
-	//textOut += currentDir;
-	//SendDlgItemMessage(getHwnd(), IDC_PATH, WM_SETTEXT, 0, (LPARAM)textOut.c_str());
 	std::string searchString = currentDir;
 	searchString += "\\*.rgt";
 	WIN32_FIND_DATA findData;

@@ -85,7 +85,7 @@ bool RprTake::isMIDI()
 {
 	PCM_source *source = getSource();
 	std::string takeType(source->GetType());
-	return takeType == "MIDI";
+	return takeType == "MIDI" || takeType == "MIDIPOOL";
 }
 
 void RprTake::setName(const char *name)

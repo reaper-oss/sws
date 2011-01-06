@@ -20,27 +20,27 @@ void MidiLaneCommands::Init()
 {
 	static CReaperCmdReg CommandTable[] = {
 		CReaperCmdReg(
-			"FNG MIDI: cycle through CC lanes", "FNG_CYCLE_CC_LANE",
+			"SWS/FNG MIDI: cycle through CC lanes", "FNG_CYCLE_CC_LANE",
 			(CReaperCommand *)new CReaperCommand(&CycleThroughMidiLanes, 0),
 			UNDO_STATE_ITEMS
 			),
 		CReaperCmdReg(
-			"FNG MIDI: cycle through CC lanes (keep lane heights constant)", "FNG_CYCLE_CC_LANE_KEEP_HEIGHT",
+			"SWS/FNG MIDI: cycle through CC lanes (keep lane heights constant)", "FNG_CYCLE_CC_LANE_KEEP_HEIGHT",
 			(CReaperCommand *)new CReaperCommand(&CycleThroughMidiLanes,1),
 			UNDO_STATE_ITEMS
 			),
 		CReaperCmdReg(
-			"FNG MIDI: show only used CC lanes", "FNG_SHOW_USED_CC_LANES",
+			"SWS/FNG MIDI: show only used CC lanes", "FNG_SHOW_USED_CC_LANES",
 			(CReaperCommand *)new CReaperCommand(&ShowUsedCCLanes),
 			UNDO_STATE_ITEMS
 			),
 		CReaperCmdReg(
-			"FNG MIDI: hide unused CC lanes", "FNG_HIDE_UNUSED_CC_LANES",
+			"SWS/FNG MIDI: hide unused CC lanes", "FNG_HIDE_UNUSED_CC_LANES",
 			(CReaperCommand *)new CReaperCommand(&HideUnusedCCLanes),
 			UNDO_STATE_ITEMS
 			),
 		CReaperCmdReg(
-			"FNG MIDI: show only top CC lane", "FNG_TOP_CC_LANE",
+			"SWS/FNG MIDI: show only top CC lane", "FNG_TOP_CC_LANE",
 			(CReaperCommand *)new CReaperCommand(&ShowOnlyTopCCLane),
 			UNDO_STATE_ITEMS
 			),

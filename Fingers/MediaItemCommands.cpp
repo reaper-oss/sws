@@ -37,180 +37,180 @@ void MediaItemCommands::Init()
 	static CReaperCmdReg CommandTable[] =
 	{
 	  CReaperCmdReg(
-		"FNG: expand selected media items", "FNG_EXPAND",
+		"SWS/FNG: expand selected media items", "FNG_EXPAND",
 		new CmdExpandItems(0.005),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: contract selected media items", "FNG_CONTRACT",
+		"SWS/FNG: contract selected media items", "FNG_CONTRACT",
 		new CmdExpandItems(-0.005),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: expand selected media items (fine)", "FNG_EXPAND_F",
+		"SWS/FNG: expand selected media items (fine)", "FNG_EXPAND_F",
 		new CmdExpandItems(0.0001),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: contract selected media items (fine)", "FNG_CONTRACT_F",
+		"SWS/FNG: contract selected media items (fine)", "FNG_CONTRACT_F",
 		new CmdExpandItems(-0.0001),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: expand/contract selected media items to bar", "FNG_EXPAND_BAR1",
+		"SWS/FNG: expand/contract selected media items to bar", "FNG_EXPAND_BAR1",
 		new CmdExpandItemsToBar(1),
 		UNDO_STATE_ITEMS),
 
 	  CReaperCmdReg(
-		"FNG: expand selected media items by 2", "FNG_EXPAND_BY2",
+		"SWS/FNG: expand selected media items by 2", "FNG_EXPAND_BY2",
 		new CmdExpandItems(1.0),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: contract selected media items by 1/2", "FNG_CONTRACT_BY_HALF",
+		"SWS/FNG: contract selected media items by 1/2", "FNG_CONTRACT_BY_HALF",
 		new CmdExpandItems(-0.5),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: clean selected overlapping media items on same track", "FNG_CLEAN_OVERLAP", 
+		"SWS/FNG: clean selected overlapping media items on same track", "FNG_CLEAN_OVERLAP", 
 		new CReaperCommand(&CmdCleanItemLengths),
 		UNDO_STATE_ITEMS
 		),
 
 	   CReaperCmdReg(
-		"FNG: legato selected media items on same track", "FNG_LEGATO_LENGTH", 
+		"SWS/FNG: legato selected media items on same track", "FNG_LEGATO_LENGTH", 
 		new CReaperCommand(&CmdLegatoItemLengths, 0),
 		UNDO_STATE_ITEMS
 		),
 
 	   CReaperCmdReg(
-		"FNG: legato selected media items on same track (change rate)", "FNG_LEGATO_RATE", 
+		"SWS/FNG: legato selected media items on same track (change rate)", "FNG_LEGATO_RATE", 
 		new CReaperCommand(&CmdLegatoItemLengths, 1),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: rotate selected media items positions", "FNG_ROTATE_POS",
+		"SWS/FNG: rotate selected media items positions", "FNG_ROTATE_POS",
 		new CmdRotateItems(false, false),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: rotate selected media items positions and lengths", "FNG_ROTATE_POSLEN",
+		"SWS/FNG: rotate selected media items positions and lengths", "FNG_ROTATE_POSLEN",
 		new CmdRotateItems(true, false),
 		UNDO_STATE_ITEMS
 		),
 
 		CReaperCmdReg(
-		"FNG: rotate selected media items positions (reverse)", "FNG_ROTATE_POS_REV",
+		"SWS/FNG: rotate selected media items positions (reverse)", "FNG_ROTATE_POS_REV",
 		new CmdRotateItems(false, true),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: rotate selected media items positions and lengths (reverse)", "FNG_ROTATE_POSLEN_REV",
+		"SWS/FNG: rotate selected media items positions and lengths (reverse)", "FNG_ROTATE_POSLEN_REV",
 		new CmdRotateItems(true, true),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: insert MIDI item with note C4 of size 32nd", "FNG_MIDI_BASIC",
+		"SWS/FNG: insert MIDI item with note C4 of size 32nd", "FNG_MIDI_BASIC",
 		new CmdInsertMidiNote(),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: transpose selected MIDI items up a semitone", "FNG_MIDI_UP_SEMI",
+		"SWS/FNG: transpose selected MIDI items up a semitone", "FNG_MIDI_UP_SEMI",
 		new CmdPitchUpMidi(1),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: transpose selected MIDI items down a semitone", "FNG_MIDI_DN_SEMI",
+		"SWS/FNG: transpose selected MIDI items down a semitone", "FNG_MIDI_DN_SEMI",
 		new CmdPitchUpMidi(-1),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: transpose selected MIDI items up an octave", "FNG_MIDI_UP_OCT",
+		"SWS/FNG: transpose selected MIDI items up an octave", "FNG_MIDI_UP_OCT",
 		new CmdPitchUpMidi(12),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: transpose selected MIDI items down an octave", "FNG_MIDI_DN_OCT",
+		"SWS/FNG: transpose selected MIDI items down an octave", "FNG_MIDI_DN_OCT",
 		new CmdPitchUpMidi(-12),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: set selected MIDI items name to first note", "FNG_MIDI_NAME",
+		"SWS/FNG: set selected MIDI items name to first note", "FNG_MIDI_NAME",
 		new CmdSetItemNameMidi(true),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: increase selected MIDI items velocity by 1", "FNG_MIDI_UP_VEL1",
+		"SWS/FNG: increase selected MIDI items velocity by 1", "FNG_MIDI_UP_VEL1",
 		new CmdVelChangeMidi(1),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: decrease selected MIDI items velocity by 1", "FNG_MIDI_UP_VELM1",
+		"SWS/FNG: decrease selected MIDI items velocity by 1", "FNG_MIDI_UP_VELM1",
 		new CmdVelChangeMidi(-1),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: increase selected MIDI items velocity by 10", "FNG_MIDI_UP_VEL10",
+		"SWS/FNG: increase selected MIDI items velocity by 10", "FNG_MIDI_UP_VEL10",
 		new CmdVelChangeMidi(10),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: decrease selected MIDI items velocity by 10", "FNG_MIDI_UP_VELM10",
+		"SWS/FNG: decrease selected MIDI items velocity by 10", "FNG_MIDI_UP_VELM10",
 		new CmdVelChangeMidi(-10),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: time stretch selected items by 2", "FNG_RATE_1_2",
+		"SWS/FNG: time stretch selected items by 2", "FNG_RATE_1_2",
 		new CmdIncreaseItemRate(1.0 / 2.0),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: time compress selected items by 1/2", "FNG_RATE_2",
+		"SWS/FNG: time compress selected items by 1/2", "FNG_RATE_2",
 		new CmdIncreaseItemRate(2.0),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: time stretch selected items (fine)", "FNG_RATE_1_101",
+		"SWS/FNG: time stretch selected items (fine)", "FNG_RATE_1_101",
 		new CmdIncreaseItemRate(1.0/ 1.01),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: time compress selected items (fine)", "FNG_RATE_101",
+		"SWS/FNG: time compress selected items (fine)", "FNG_RATE_101",
 		new CmdIncreaseItemRate(1.01),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: move selected items to edit cursor", "FNG_MOVE_TO_EDIT",
+		"SWS/FNG: move selected items to edit cursor", "FNG_MOVE_TO_EDIT",
 		new CReaperCommand(&CmdMoveItemsToEditCursor),
 		UNDO_STATE_ITEMS
 		),
 
 	  CReaperCmdReg(
-		"FNG: unselect items that do not start in time selection", "FNG_TIME_SEL_NOT_START",
+		"SWS/FNG: unselect items that do not start in time selection", "FNG_TIME_SEL_NOT_START",
 		new CReaperCommand(&CmdDeselectIfNotStartInTimeSelection),
 		UNDO_STATE_ITEMS
 		),

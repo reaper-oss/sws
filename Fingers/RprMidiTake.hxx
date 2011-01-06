@@ -135,6 +135,7 @@ private:
 	std::vector<RprMidiCC *> mCCs[128];
 	std::vector<RprMidiBase *> mOtherEvents;
 	RprMidiContext *mContext;
+	int mMidiEventsOffset;
 };
 
 #endif

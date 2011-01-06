@@ -334,38 +334,53 @@ static void finalizeMidiEvents(std::vector< RprMidiBase *> &midiEvents)
 	}
 }
 
-static void midiEventsToMidiNode(std::vector< RprMidiBase *> &midiEvents, RprNode *midiNode)
+static bool isMidiEvent(const std::string &eventStr) {
+	std::string eventSubStr = eventStr.substr(0, 2);
+	if(eventSubStr == "e ")
+		return true;
+	if(eventSubStr == "E ")
+		return true;
+	if(eventSubStr == "x ")
+		return true;
+	if(eventSubStr == "X ")
+		return true;
+	return false;
+}
+
+static int clearMidiEventsFromMidiNode(RprNode *parent)
 {
-	int index = 1;
+	int i = 0;
+	for(; i < parent->childCount(); ++i)
+		if(isMidiEvent(parent->getChild(i)->getValue()))
+			break;
+	int offset = i;
+
+	while (isMidiEvent(parent->getChild(i)->getValue())){
+		parent->removeChild(i);
+	}
+	return offset;
+}
+
+static void midiEventsToMidiNode(std::vector< RprMidiBase *> &midiEvents, RprNode *midiNode, int offset)
+{
+	int index = offset;
 	for(std::vector<RprMidiBase *>::iterator i = midiEvents.begin(); i != midiEvents.end(); i++) {
 		RprMidiBase *current = *i;
 		midiNode->addChild(current->toReaper(), index++);	
 	}
 }
 
-static void clearMidiEventsFromMidiNode(RprNode *parent)
-{
-	while (parent->getChild(1)->getValue().find_first_of("GUID") == std::string::npos){
-		parent->removeChild(1);
-	};
-}
-
 static void getMidiEvents(RprNode *midiNode, std::vector<RprMidiBase *> &midiEvents)
 {
 	int offset = 0;
-	try {
-		for(int i = 1; i < midiNode->childCount(); i++) {
-				RprMidiEventCreator creator(midiNode->getChild(i));
-				RprMidiBase *baseEvent = creator.getBaseEvent();
-				offset += baseEvent->getDelta();
-				baseEvent->setOffset(offset);
-				midiEvents.push_back(creator.getBaseEvent());
-		}
-	} 
-	catch(RprMidiBase::RprMidiException &e)
-	{
-		(void)e;
-		return;
+	for(int i = 1; i < midiNode->childCount(); i++) {
+		if(!isMidiEvent(midiNode->getChild(i)->getValue()))
+			continue;
+		RprMidiEventCreator creator(midiNode->getChild(i));
+		RprMidiBase *baseEvent = creator.getBaseEvent();
+		offset += baseEvent->getDelta();
+		baseEvent->setOffset(offset);
+		midiEvents.push_back(creator.getBaseEvent());
 	}
 }
 
@@ -585,7 +600,7 @@ RprMidiTake::RprMidiTake(const RprTake &take, bool readOnly) : RprMidiTemplate(t
 	
 	mOtherEvents.resize(midiEvents.size());
 	std::copy(midiEvents.begin(), midiEvents.end(), mOtherEvents.begin());
-	clearMidiEventsFromMidiNode(sourceNode);
+	mMidiEventsOffset = clearMidiEventsFromMidiNode(sourceNode);
 }
 
 template
@@ -618,7 +633,7 @@ RprMidiTake::~RprMidiTake()
 	for(std::vector<RprMidiBase *>::const_iterator i = mOtherEvents.begin(); i != mOtherEvents.end(); ++i)
 		midiEvents.push_back(*i);
 	finalizeMidiEvents(midiEvents);
-	midiEventsToMidiNode(midiEvents, RprMidiTemplate::getMidiSourceNode());
+	midiEventsToMidiNode(midiEvents, RprMidiTemplate::getMidiSourceNode(), mMidiEventsOffset);
 
 	if(mContext)
 		delete mContext;

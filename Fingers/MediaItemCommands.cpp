@@ -18,8 +18,6 @@
 
 #include "FileUtil.hxx"
 
-#include "FNG_STL_algorithm.hxx"
-
 #include "RprItem.hxx"
 #include "RprTake.hxx"
 #include "RprTrack.hxx"

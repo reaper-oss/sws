@@ -2953,10 +2953,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Fingers\FNG_STL_algorithm.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\Fingers\GrooveCommands.cxx"
 				>
 			</File>

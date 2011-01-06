@@ -62,9 +62,11 @@
 #define IDD_SNM_FIND                    154
 #define IDD_SNM_MIDI_LIVE               155
 #define IDD_AW_ITEM_SMOOTHING           156
+#define IDC_GROOVEDIALOG                157
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
+#define IDR_GROOVEMENU                  503
 #define IDC_BUTTON1                     1000
 #define IDC_EDIT1                       1001
 #define IDC_BUTTON2                     1002
@@ -260,14 +262,34 @@
 #define IDC_FADE_SHAPE                  1191
 #define IDC_SLIDER1                     1192
 #define IDC_SLIDER2                     1193
+#define IDC_APPLYGROOVE                 1194
+#define IDC_GROOVELIST                  1195
+#define IDC_SENS_4TH                    1196
+#define IDC_SENS_8TH                    1197
+#define IDC_SENS_16TH                   1198
+#define IDC_SENS_32ND                   1199
+#define IDC_STRENGTH                    1200
+#define IDC_STRENGTH_SPIN               1201
+#define IDC_SENS_GROUP                  1202
+#define IDC_TARG_GROUP                  1203
+#define IDC_TARG_ITEMS                  1204
+#define IDC_TARG_NOTES                  1205
+#define IDC_STORE                       1206
+#define IDM__OPEN_FOLDER___1            40000
+#define IDM_E_XIT1                      40001
+#define IDM__SAVE_GROOVE1               40002
+#define IDM__STAY_ON_TOP1               40003
+#define IDM__REFRESH1                   40004
+#define IDM__SHOW_ACTION_LIST1          40005
+
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        156
-#define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1194
+#define _APS_NEXT_RESOURCE_VALUE        158
+#define _APS_NEXT_COMMAND_VALUE         40006
+#define _APS_NEXT_CONTROL_VALUE         1207
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

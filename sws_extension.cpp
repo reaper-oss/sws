@@ -45,6 +45,10 @@
 #include "Projects/ProjectList.h"
 #include "SnM/SnM_Actions.h"
 #include "Padre/padreActions.h"
+#include "Fingers/FNG_client.h"
+
+/* uncomment to active FNG commands */
+#define FNG_ACTIVATE
 
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
@@ -535,6 +539,7 @@ extern "C"
 		IMPAPI(TimeMap2_beatsToTime);
 		IMPAPI(TimeMap2_QNToTime);
 		IMPAPI(TimeMap2_timeToBeats);
+		IMPAPI(TimeMap2_GetDividedBpmAtTime);
 		IMPAPI(TrackFX_FormatParamValue);
 		IMPAPI(TrackFX_GetChainVisible);
 		IMPAPI(TrackFX_GetFloatingWindow);
@@ -610,6 +615,12 @@ extern "C"
 			ERR_RETURN("About box init error\n")
 		if (!PadreInit())
 			ERR_RETURN("Padre init error\n")
+#ifdef FNG_ACTIVATE
+		if(!FNGExtensionInit(hInstance, rec)) {
+			ERR_RETURN("Fingers init error\n")
+		}
+#endif
+
 
 		SWSTimeSlice* ts = new SWSTimeSlice();
 		if (!rec->Register("csurf_inst", ts))

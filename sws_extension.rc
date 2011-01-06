@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include <commctrl.h>
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -1020,6 +1021,30 @@ BEGIN
     PUSHBUTTON      "Close",IDCANCEL,84,98,34,14
     CONTROL         "",IDC_SLIDER1,"msctls_trackbar32",TBS_NOTICKS | NOT WS_VISIBLE | WS_TABSTOP,137,19,93,13
 END
+
+IDC_GROOVEDIALOG DIALOG 0, 0, 220, 127
+STYLE DS_3DLOOK | DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_POPUP | WS_SYSMENU
+EXSTYLE WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW
+CAPTION "Groove tool"
+MENU IDR_GROOVEMENU
+FONT 8, "Ms Shell Dlg 2"
+{
+    LISTBOX         IDC_GROOVELIST, 1, 1, 141, 125, WS_TABSTOP | WS_VSCROLL | LBS_NOINTEGRALHEIGHT | LBS_SORT | LBS_NOTIFY
+    GROUPBOX        "Sensitivity", IDC_SENS_GROUP, 145, 1, 74, 32
+    RADIOBUTTON     "4th", IDC_SENS_4TH, 151, 11, 27, 8, WS_GROUP
+    RADIOBUTTON     "8th", IDC_SENS_8TH, 182, 11, 27, 8, WS_GROUP
+    RADIOBUTTON     "16th", IDC_SENS_16TH, 151, 21, 28, 10, WS_GROUP
+    RADIOBUTTON     "32nd", IDC_SENS_32ND, 182, 21, 32, 10, WS_TABSTOP
+    GROUPBOX        "Target", IDC_TARG_GROUP, 145, 51, 74, 75
+    RADIOBUTTON     "Selected items", IDC_TARG_ITEMS, 150, 62, 62, 8, WS_GROUP
+    RADIOBUTTON     "Selected notes", IDC_TARG_NOTES, 150, 74, 63, 8, WS_TABSTOP
+    LTEXT           "Strength:", IDC_STATIC, 146, 39, 32, 8, SS_LEFT
+    EDITTEXT        IDC_STRENGTH, 179, 37, 32, 12, ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "", IDC_STRENGTH_SPIN, UPDOWN_CLASS, UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY | UDS_SETBUDDYINT, 200, 37, 11, 12
+    LTEXT           "%", IDC_STATIC, 212, 39, 8, 8, SS_LEFT
+    PUSHBUTTON      "Get user groove", IDC_STORE, 150, 108, 65, 14
+    PUSHBUTTON      "Apply groove", IDC_APPLYGROOVE, 150, 87, 65, 14
+}
 
 /////////////////////////////////////////////////////////////////////////////
 //

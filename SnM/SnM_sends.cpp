@@ -35,8 +35,6 @@ WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvTrack
 WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndClipboard;
 WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvClipboard;
 
-HWND g_cueBussHwnd = NULL;
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Cue buss 
@@ -87,7 +85,7 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 	{
 		char err[512] = "";
 		sprintf(err, "Cue buss not created!\nInvalid track template file: %s", _trTemplatePath);
-		MessageBox(GetMainHwnd(), err, "Error", MB_OK);
+		MessageBox(GetMainHwnd(), err, "S&M - Error", MB_OK);
 		return false;
 	}
 
@@ -180,7 +178,12 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 			GetSetMediaTrackInfo(cueTr, "I_SELECTED", &g_i1);
 			UpdateTimeline();
 //			TrackList_AdjustWindows(false); // for io buttons, etc (but KO right now..)
-			if (_showRouting) Main_OnCommand(40293, 0);
+
+			// scroll to selected tracks
+			Main_OnCommand(40913,0); 
+
+			if (_showRouting) 
+				Main_OnCommand(40293, 0);
 
 			// Undo point
 			if (_undoMsg)
@@ -188,25 +191,6 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 		}
 	}
 	return updated;
-}
-
-void openCueBussWnd(COMMAND_T* _ct) {
-	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUS), g_hwndParent, CueBusDlgProc);
-
-	// Toggle
-	if (g_cueBussHwnd) {
-		g_cueBussHwnd = NULL;
-		ShowWindow(hwnd, SW_HIDE);
-	}
-	else {
-		g_cueBussHwnd = hwnd;
-		ShowWindow(hwnd, SW_SHOW);
-		SetFocus(hwnd);
-	}
-}
-
-bool isCueBussWndDisplayed(COMMAND_T* _ct) {
-	return (g_cueBussHwnd && IsWindow(g_cueBussHwnd) ? true : false);
 }
 
 void cueTrack(COMMAND_T* _ct) 

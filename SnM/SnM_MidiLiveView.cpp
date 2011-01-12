@@ -242,7 +242,7 @@ void SNM_LiveConfigsView::OnItemDblClk(LPARAM item, int iCol)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_LiveConfigsWnd::SNM_LiveConfigsWnd()
-:SWS_DockWnd(IDD_SNM_MIDI_LIVE, "Live Configs", 30009, SWSGetCommandID(OpenLiveConfigView))
+:SWS_DockWnd(IDD_SNM_MIDI_LIVE, "Live Configs", "SnMLiveConfigs", 30009, SWSGetCommandID(OpenLiveConfigView))
 {
 	if (m_bShowAfterInit)
 		Show(false, false);
@@ -735,6 +735,7 @@ void SNM_LiveConfigsWnd::OnDestroy()
 	m_cbConfig.Empty();
 	m_cbInputTr.Empty();
 	m_parentVwnd.RemoveAllChildren(false);
+	m_parentVwnd.SetRealParent(NULL);
 }
 
 int SNM_LiveConfigsWnd::OnKey(MSG* msg, int iKeyState) 
@@ -1089,10 +1090,8 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	if (!strcmp(menustr, "Main view") && !flag)
 	{
 		int cmd = NamedCommandLookup("_S&M_SHOWMIDILIVE");
-		if (cmd > 0) {
-			int afterCmd = NamedCommandLookup("_SWSCONSOLE");
-			AddToMenu(hMenu, "S&&M Live Configs", cmd, afterCmd > 0 ? afterCmd : 40075);
-		}
+		if (cmd > 0)
+			AddToMenu(hMenu, "S&&M Live Configs", cmd);
 	}
 }
 

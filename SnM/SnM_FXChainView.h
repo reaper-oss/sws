@@ -80,9 +80,9 @@ protected:
 	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
-	SNM_VirtualComboBox m_cbType; // common to all 
-	SNM_VirtualComboBox m_cbDblClickType; // FX chains & Track templates
-	SNM_VirtualComboBox m_cbDblClickTo; // FX chains only
+	WDL_VirtualComboBox m_cbType; // common to all 
+	WDL_VirtualComboBox m_cbDblClickType; // FX chains & Track templates
+	WDL_VirtualComboBox m_cbDblClickTo; // FX chains only
 	WDL_VirtualIconButton m_btnAutoInsert; // FX chains & Track templates
 #ifdef _SNM_ITT
 	WDL_VirtualIconButton m_btnItemTakeDetails;

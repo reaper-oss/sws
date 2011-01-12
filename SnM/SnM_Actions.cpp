@@ -351,17 +351,17 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Save selected item as item/take template..." }, "S&M_SAVEITEMTAKETEMPLATE", saveItemTakeTemplate, NULL, },
 
 
-	// Notes/help -------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (project notes)..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, 0, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (item notes)..." }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (track notes)..." }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewDisplayed},
+	// Notes/Help -------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (project notes)..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, 0, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (item notes)..." }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (track notes)..." }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewDisplayed},
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Open Notes/help window (action help)..." }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, 3, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (action help)..." }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, 3, IsNotesHelpViewDisplayed},
 #endif
 	//JFB!! TODO: someting better to do here.. note for myself
-	{ { DEFACCEL, "SWS/S&M: Notes/help - Disables auto updates" }, "S&M_DISABLENOTESHELP", SwitchNotesHelpType, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Notes/help - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesHelpLock, NULL, NULL, IsNotesHelpLocked},
-	{ { DEFACCEL, "SWS/S&M: Notes/help - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Notes/Help - Disables auto updates" }, "S&M_DISABLENOTESHELP", SwitchNotesHelpType, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Notes/Help - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesHelpLock, NULL, NULL, IsNotesHelpLocked},
+	{ { DEFACCEL, "SWS/S&M: Notes/Help - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
 
 
 	// Split ------------------------------------------------------------------
@@ -469,15 +469,15 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 // *** Action toggle states ***
 
-bool g_fakeToggleStates[MAX_ACTION_COUNT+1]; // +1 for no-op, 1-based..
+bool g_fakeToggleStates[SNM_MAX_ACTION_COUNT+1]; // +1 for no-op, 1-based..
 
 bool fakeIsToggledAction(COMMAND_T* _ct) {
-	return ((_ct && _ct->accel.accel.cmd && _ct->accel.accel.cmd < MAX_ACTION_COUNT) ? 
+	return ((_ct && _ct->accel.accel.cmd && _ct->accel.accel.cmd < SNM_MAX_ACTION_COUNT) ? 
 		g_fakeToggleStates[_ct->accel.accel.cmd] : false);
 }
 
 void fakeToggleAction(COMMAND_T* _ct) {
-	if (_ct && _ct->accel.accel.cmd && _ct->accel.accel.cmd < MAX_ACTION_COUNT)
+	if (_ct && _ct->accel.accel.cmd && _ct->accel.accel.cmd < SNM_MAX_ACTION_COUNT)
 		g_fakeToggleStates[_ct->accel.accel.cmd] = !g_fakeToggleStates[_ct->accel.accel.cmd];
 }
 
@@ -631,15 +631,15 @@ void IniFileInit()
 
 	// S&M.ini cleanup & "auto upgrade"
 	// [FXCHAIN] -> [FXChains]
-	char buf[MAX_INI_SECTION] = "";
-	int sectionSz = GetPrivateProfileSection("FXCHAIN", buf, MAX_INI_SECTION, iniFilename);
+	char buf[SNM_MAX_INI_SECTION] = "";
+	int sectionSz = GetPrivateProfileSection("FXCHAIN", buf, SNM_MAX_INI_SECTION, iniFilename);
 	WritePrivateProfileStruct("FXCHAIN", NULL, NULL, 0, iniFilename); //flush section
 	if (sectionSz)
 		WritePrivateProfileSection("FXChains", buf, iniFilename);
 
 	// [FXCHAIN_VIEW] -> [RESOURCE_VIEW]
 	*buf = '\0';
-	sectionSz = GetPrivateProfileSection("FXCHAIN_VIEW", buf, MAX_INI_SECTION, iniFilename);
+	sectionSz = GetPrivateProfileSection("FXCHAIN_VIEW", buf, SNM_MAX_INI_SECTION, iniFilename);
 	WritePrivateProfileStruct("FXCHAIN_VIEW", NULL, NULL, 0, iniFilename); //flush section
 	if (sectionSz)
 		WritePrivateProfileSection("RESOURCE_VIEW", buf, iniFilename);
@@ -665,7 +665,7 @@ int SnMInit(reaper_plugin_info_t* _rec)
 		return 0;
 
 	// for probable future persistance of fake toggle states..
-	for (int i=0; i <= MAX_ACTION_COUNT; i++)
+	for (int i=0; i <= SNM_MAX_ACTION_COUNT; i++)
 		g_fakeToggleStates[i] = false;
 
 	// Actions should be registered before views
@@ -677,8 +677,8 @@ int SnMInit(reaper_plugin_info_t* _rec)
 	IniFileInit();
     UIInit();
 	LiveConfigViewInit();
-	NotesHelpViewInit();
 	ResourceViewInit();
+	NotesHelpViewInit();
 	FindViewInit();
 	return 1;
 }

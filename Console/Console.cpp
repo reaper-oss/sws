@@ -845,7 +845,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
 		// Add reaconsole menu item
-		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40075);
+		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
 }
 
 int ConsoleInit()
@@ -879,7 +879,7 @@ int ConsoleInit()
 				memset(ct, 0, sizeof(COMMAND_T));
 				char* desc = new char[strlen(cBuf)+30];
 				ct->accel.desc = desc;
-        char *tbuf;
+				char *tbuf;
 				ct->id = tbuf = new char[32];
 				ct->doCommand = RunCommand;
 				ct->user = (INT_PTR)new char[strlen(cBuf)+1];

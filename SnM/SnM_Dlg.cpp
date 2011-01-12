@@ -30,6 +30,7 @@
 
 
 int g_waitDlgProcCount = 0;
+HWND g_cueBussHwnd = NULL;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,63 +58,6 @@ LICE_CachedFont* SNM_GetThemeFont()
 	else 
 		themeFont.SetTextColor(LICE_RGBA(255,255,255,255));
 	return &themeFont;
-}
-
-void SNM_VirtualComboBox::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
-{
-	if (GetFont()) GetFont()->SetBkMode(TRANSPARENT);
-
-	RECT r;
-	GetPosition(&r);
-	r.left+=origin_x;
-	r.right+=origin_x;
-	r.top+=origin_y;
-	r.bottom+=origin_y;
-
-	int col = LICE_RGBA(255,255,255,50); 
-	LICE_FillRect(drawbm,r.left,r.top,r.right-r.left,r.bottom-r.top,col,0.02f,LICE_BLIT_MODE_COPY);
-
-	{
-	  RECT tr=r;
-	  tr.left=tr.right-(tr.bottom-tr.top);
-	  LICE_FillRect(drawbm,tr.left,tr.top,tr.right-tr.left,tr.bottom-tr.top,col,0.02f,LICE_BLIT_MODE_COPY);
-	}   
-
-	if (GetFont() && GetItem(GetCurSel()) && GetItem(GetCurSel())[0])
-	{
-	  RECT tr=r;
-	  tr.left+=4;
-	  tr.right-=16;
-	  GetFont()->DrawText(drawbm,GetItem(GetCurSel()),-1,&tr,DT_SINGLELINE|DT_VCENTER|DT_LEFT|DT_NOPREFIX);
-	}
-
-	int pencol = GetFont() ? GetFont()->GetTextColor() : WDL_STYLE_GetSysColor(COLOR_3DSHADOW);
-	pencol = LICE_RGBA_FROMNATIVE(pencol,255);
-	int pencol2 = GetFont() ? GetFont()->GetTextColor() : WDL_STYLE_GetSysColor(COLOR_3DHILIGHT);
-	pencol2 = LICE_RGBA_FROMNATIVE(pencol2,255);
-
-	// draw the down arrow button
-	{
-	  int bs=(r.bottom-r.top);
-	  int l=r.right-bs;
-	  int a=(bs/4)&~1;
-
-	  LICE_Line(drawbm,l-1,r.top,l-1,r.bottom-1,pencol2,0.10f,LICE_BLIT_MODE_COPY,false);
-
-	  int tcol = GetFont() ? GetFont()->GetTextColor() : WDL_STYLE_GetSysColor(COLOR_BTNTEXT);
-	  tcol=LICE_RGBA_FROMNATIVE(tcol,255);
-
-	  LICE_Line(drawbm,l+bs/2-a,r.top+bs/2-a/2,
-					   l+bs/2,r.top+bs/2+a/2,tcol,0.50f,LICE_BLIT_MODE_COPY,true);
-	  LICE_Line(drawbm,l+bs/2,r.top+bs/2+a/2,
-					   l+bs/2+a,r.top+bs/2-a/2,tcol,0.50f,LICE_BLIT_MODE_COPY,true);
-	}  
-
-	// draw the border
-	LICE_Line(drawbm,r.left,r.bottom-1,r.left,r.top,pencol,0.10f,0,false);
-	LICE_Line(drawbm,r.left,r.top,r.right-1,r.top,pencol,0.10f,0,false);
-	LICE_Line(drawbm,r.right-1,r.top,r.right-1,r.bottom-1,pencol2,0.10f,0,false);
-	LICE_Line(drawbm,r.left,r.bottom-1,r.right-1,r.bottom-1,pencol2,0.10f,0,false);
 }
 
 
@@ -207,6 +151,10 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			return 0;
 		}
 		break;
+
+		case WM_CLOSE :
+			g_cueBussHwnd = NULL; // for proper toggle state report, see openCueBussWnd()
+			break;
 
 		case WM_COMMAND :
 		{
@@ -304,6 +252,25 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+void openCueBussWnd(COMMAND_T* _ct) {
+	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUS), g_hwndParent, CueBusDlgProc);
+
+	// Toggle
+	if (g_cueBussHwnd) {
+		g_cueBussHwnd = NULL;
+		ShowWindow(hwnd, SW_HIDE);
+	}
+	else {
+		g_cueBussHwnd = hwnd;
+		ShowWindow(hwnd, SW_SHOW);
+		SetFocus(hwnd);
+	}
+}
+
+bool isCueBussWndDisplayed(COMMAND_T* _ct) {
+	return (g_cueBussHwnd && IsWindow(g_cueBussHwnd) && IsWindowVisible(g_cueBussHwnd) ? true : false);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // WaitDlgProc
@@ -327,8 +294,8 @@ WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 */
 		case WM_TIMER:
 			{
-				SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETRANGE, 0, MAKELPARAM(0, LET_BREATHE_MS));
-				if (g_waitDlgProcCount < LET_BREATHE_MS)
+				SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETRANGE, 0, MAKELPARAM(0, SNM_LET_BREATHE_MS));
+				if (g_waitDlgProcCount < SNM_LET_BREATHE_MS)
 				{
 					SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETPOS, (WPARAM) g_waitDlgProcCount, 0);
 					g_waitDlgProcCount++;

@@ -32,3 +32,4 @@ void GetSelFolderTracks(WDL_PtrList<void>* pParents, WDL_PtrList<void>* pChildre
 void TogTrackSel(COMMAND_T* = NULL);
 void SelChildren(COMMAND_T* = NULL);
 void SetLTT(COMMAND_T* = NULL);
+void SelTracksWItems(COMMAND_T* = NULL);

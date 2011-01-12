@@ -59,6 +59,8 @@
 		2264CBD110FEC33700447317 /* swell-wnd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764250F5B233C0091104D /* swell-wnd.mm */; };
 		2264CBD210FEC33800447317 /* swell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B408A20F5B544A00865A09 /* swell.cpp */; };
 		2264CBD310FEC33900447317 /* swell.h in Headers */ = {isa = PBXBuildFile; fileRef = 9870F77F0F5B461C0007258C /* swell.h */; };
+		2273566712910ABF001A1570 /* EditCursor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2273566512910ABF001A1570 /* EditCursor.cpp */; };
+		2273566812910ABF001A1570 /* EditCursor.h in Headers */ = {isa = PBXBuildFile; fileRef = 2273566612910ABF001A1570 /* EditCursor.h */; };
 		2296249010A3A22500A1090C /* lice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2296248E10A3A22500A1090C /* lice.cpp */; };
 		2296249110A3A22500A1090C /* lice_line.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2296248F10A3A22500A1090C /* lice_line.cpp */; };
 		229A7E8C1165744400325BC2 /* Context.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229A7E7C1165744400325BC2 /* Context.cpp */; };
@@ -89,6 +91,7 @@
 		229AC802108FB3B800E4A962 /* Color.h in Headers */ = {isa = PBXBuildFile; fileRef = 981007020F4768020072D712 /* Color.h */; };
 		229AC803108FB3BD00E4A962 /* MarkerListClass.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 981006F60F4768020072D712 /* MarkerListClass.cpp */; };
 		229AC804108FB3BE00E4A962 /* MarkerListClass.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006F70F4768020072D712 /* MarkerListClass.h */; };
+		229AC80C108FBFCB00E4A962 /* SectionLock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 229AC80A108FBFCB00E4A962 /* SectionLock.cpp */; };
 		229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC80B108FBFCB00E4A962 /* SectionLock.h */; };
 		22A664BB10BC6FE100F0B239 /* sha.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A664BA10BC6FE100F0B239 /* sha.cpp */; };
 		22A79CFA10B4350000A78170 /* MediaPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A79CF810B4350000A78170 /* MediaPool.cpp */; };
@@ -269,6 +272,8 @@
 		225130BC116101670028F26A /* padreMidiItemProcBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreMidiItemProcBase.h; path = Padre/padreMidiItemProcBase.h; sourceTree = "<group>"; };
 		225130BD116101670028F26A /* padreUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreUtils.cpp; path = Padre/padreUtils.cpp; sourceTree = "<group>"; };
 		225130BE116101670028F26A /* padreUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreUtils.h; path = Padre/padreUtils.h; sourceTree = "<group>"; };
+		2273566512910ABF001A1570 /* EditCursor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EditCursor.cpp; path = Misc/EditCursor.cpp; sourceTree = "<group>"; };
+		2273566612910ABF001A1570 /* EditCursor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EditCursor.h; path = Misc/EditCursor.h; sourceTree = "<group>"; };
 		2296248E10A3A22500A1090C /* lice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice.cpp; path = ../WDL/lice/lice.cpp; sourceTree = SOURCE_ROOT; };
 		2296248F10A3A22500A1090C /* lice_line.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice_line.cpp; path = ../WDL/lice/lice_line.cpp; sourceTree = SOURCE_ROOT; };
 		229A7E7C1165744400325BC2 /* Context.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Context.cpp; path = Misc/Context.cpp; sourceTree = "<group>"; };
@@ -294,6 +299,7 @@
 		229AC7F3108F985C00E4A962 /* MarkerList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerList.h; path = MarkerList/MarkerList.h; sourceTree = "<group>"; };
 		229AC7F4108F985C00E4A962 /* MarkerListActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MarkerListActions.cpp; path = MarkerList/MarkerListActions.cpp; sourceTree = "<group>"; };
 		229AC7F5108F985C00E4A962 /* MarkerListActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerListActions.h; path = MarkerList/MarkerListActions.h; sourceTree = "<group>"; };
+		229AC80A108FBFCB00E4A962 /* SectionLock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SectionLock.cpp; path = Utility/SectionLock.cpp; sourceTree = "<group>"; };
 		229AC80B108FBFCB00E4A962 /* SectionLock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SectionLock.h; path = Utility/SectionLock.h; sourceTree = "<group>"; };
 		22A664BA10BC6FE100F0B239 /* sha.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sha.cpp; path = ../WDL/sha.cpp; sourceTree = SOURCE_ROOT; };
 		22A79CF810B4350000A78170 /* MediaPool.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MediaPool.cpp; path = MediaPool/MediaPool.cpp; sourceTree = "<group>"; };
@@ -392,6 +398,7 @@
 		33E88A7E11EDFD6700B0F4BE /* SnM_ME.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_ME.cpp; path = SnM/SnM_ME.cpp; sourceTree = "<group>"; };
 		33E88A7F11EDFD6700B0F4BE /* SnM_NotesHelpView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_NotesHelpView.cpp; path = SnM/SnM_NotesHelpView.cpp; sourceTree = "<group>"; };
 		33E88A8011EDFD6700B0F4BE /* SnM_NotesHelpView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_NotesHelpView.h; path = SnM/SnM_NotesHelpView.h; sourceTree = "<group>"; };
+		5A2C98F412973A41005ACC49 /* sws_extension.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc; sourceTree = "<group>"; };
 		980764220F5B23180091104D /* wndsize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = wndsize.cpp; path = ../WDL/wingui/wndsize.cpp; sourceTree = SOURCE_ROOT; };
 		980764240F5B233C0091104D /* swell-miscdlg.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-miscdlg.mm"; path = "../WDL/swell/swell-miscdlg.mm"; sourceTree = SOURCE_ROOT; };
 		980764250F5B233C0091104D /* swell-wnd.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = "swell-wnd.mm"; path = "../WDL/swell/swell-wnd.mm"; sourceTree = SOURCE_ROOT; };
@@ -523,6 +530,7 @@
 				9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */,
 				981007030F4768020072D712 /* reaper_sws.xcodeproj */,
 				981006FF0F4768020072D712 /* resource.h */,
+				229AC80A108FBFCB00E4A962 /* SectionLock.cpp */,
 				229AC80B108FBFCB00E4A962 /* SectionLock.h */,
 				981006E30F4768020072D712 /* Snapshots.cpp */,
 				981006E50F4768020072D712 /* Snapshots.h */,
@@ -534,11 +542,11 @@
 				9879B7400F489CE7004D98EB /* stdafx.h */,
 				981006E70F4768020072D712 /* sws_about.cpp */,
 				981006E60F4768020072D712 /* sws_extension.cpp */,
+				5A2C98F412973A41005ACC49 /* sws_extension.rc */,
 				981007180F4768020072D712 /* sws_extension.rc_mac_dlg */,
 				981007170F4768020072D712 /* sws_extension.rc_mac_menu */,
 				981006E90F4768020072D712 /* sws_util.cpp */,
 				981006EA0F4768020072D712 /* sws_util.h */,
-				98E8A0AF0F9123F900FC657D /* sws_util.mm */,
 				229AC7E4108F891700E4A962 /* sws_wnd.cpp */,
 				229AC7E5108F891700E4A962 /* sws_wnd.h */,
 				981006D00F4768010072D712 /* TimeState.cpp */,
@@ -628,6 +636,8 @@
 				22C31F22125EF71A0072434F /* Adam.h */,
 				229A7E7C1165744400325BC2 /* Context.cpp */,
 				229A7E7D1165744400325BC2 /* Context.h */,
+				2273566512910ABF001A1570 /* EditCursor.cpp */,
+				2273566612910ABF001A1570 /* EditCursor.h */,
 				229A7E7E1165744400325BC2 /* FolderActions.cpp */,
 				229A7E7F1165744400325BC2 /* FolderActions.h */,
 				229A7E801165744400325BC2 /* ItemParams.cpp */,
@@ -787,6 +797,7 @@
 			children = (
 				22B671361091DDC700C494D0 /* swell-misc.mm */,
 				22B671331091DD2A00C494D0 /* swell-internal.h */,
+				98E8A0AF0F9123F900FC657D /* sws_util.mm */,
 				9882DB870F6D961100BD2BC7 /* swell-dlggen.h */,
 				98DDBE120F5B60F1003E9B2C /* swell-menu.mm */,
 				98B408A20F5B544A00865A09 /* swell.cpp */,
@@ -892,6 +903,7 @@
 				22AF6E8F12308C810017808F /* zutil.h in Headers */,
 				22219AFE124AF1CE006CBC5D /* Macros.h in Headers */,
 				22C31F24125EF71A0072434F /* Adam.h in Headers */,
+				2273566812910ABF001A1570 /* EditCursor.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -924,6 +936,7 @@
 			isa = PBXProject;
 			buildConfigurationList = 1DEB914E08733D8E0010E9CD /* Build configuration list for PBXProject "reaper_sws" */;
 			compatibilityVersion = "Xcode 3.1";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				English,
@@ -1032,6 +1045,7 @@
 				229AC7F8108F985C00E4A962 /* MarkerListActions.cpp in Sources */,
 				229AC7FE108FB39600E4A962 /* Color.cpp in Sources */,
 				229AC803108FB3BD00E4A962 /* MarkerListClass.cpp in Sources */,
+				229AC80C108FBFCB00E4A962 /* SectionLock.cpp in Sources */,
 				2296249010A3A22500A1090C /* lice.cpp in Sources */,
 				2296249110A3A22500A1090C /* lice_line.cpp in Sources */,
 				22C769EB10B0F00800774777 /* TrackFX.cpp in Sources */,
@@ -1119,6 +1133,7 @@
 				22AF6E8E12308C810017808F /* zutil.c in Sources */,
 				22219AFD124AF1CE006CBC5D /* Macros.cpp in Sources */,
 				22C31F23125EF71A0072434F /* Adam.cpp in Sources */,
+				2273566712910ABF001A1570 /* EditCursor.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

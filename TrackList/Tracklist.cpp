@@ -196,7 +196,7 @@ int SWS_TrackListView::GetItemState(LPARAM item)
 }
 
 SWS_TrackListWnd::SWS_TrackListWnd()
-:SWS_DockWnd(IDD_TRACKLIST, "Track List", 30003, SWSGetCommandID(OpenTrackList)),m_bUpdate(false),
+:SWS_DockWnd(IDD_TRACKLIST, "Track List", "SWSTrackList", 30003, SWSGetCommandID(OpenTrackList)),m_bUpdate(false),
 m_trLastTouched(NULL),m_bHideFiltered(false),m_bLink(false),m_cOptionsKey("Track List Options")
 {
 	// Restore state
@@ -851,7 +851,7 @@ static COMMAND_T g_commandTable[] =
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
-		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40075);
+		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
 }
 
 int TrackListInit()

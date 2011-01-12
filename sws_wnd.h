@@ -120,7 +120,7 @@ private:
 class SWS_DockWnd
 {
 public:
-	SWS_DockWnd(int iResource, const char* cName, int iDockOrder, int iCmdID);
+	SWS_DockWnd(int iResource, const char* cName, const char* cId, int iDockOrder, int iCmdID);
 	void Show(bool bToggle, bool bActivate);
 	virtual bool IsActive(bool bWantEdit = false);
 	bool IsValidWindow() { return IsWindow(m_hwnd) ? true : false; }
@@ -146,7 +146,8 @@ protected:
 	const char* m_cName;
 	char* m_cWndPosKey;
 	char* m_cWndStateKey;
-	const int m_iDockOrder;
+	const int m_iDockOrder; // v4 TODO delete me
+	const char* m_cId;
 	HWND m_hwnd;
 	bool m_bUserClosed;
 	bool m_bDocked;

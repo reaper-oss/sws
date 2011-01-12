@@ -30,7 +30,7 @@
 #include "SnM_Actions.h"
 #include "SNM_FindView.h"
 #include "SNM_ChunkParserPatcher.h"
-#include "../Freeze/ItemSelState.h"
+//#include "../Freeze/ItemSelState.h"
 
 
 #define SAVEWINDOW_POS_KEY		"S&M - Find Save Window Position"
@@ -82,7 +82,7 @@ bool ItemNotesMatch(MediaItem_Take* _tk, const char* _searchStr) {
 		SNM_ChunkParserPatcher p(item);
 		WDL_String notes;
 		if (p.GetSubChunk("NOTES", 2, 0, &notes))
-			//JFB note here, we compare a formated string with normal one, oh well..
+			//JFB we compare a formated string with a normal one here, oh well..
 			match = (stristr(notes.Get(), _searchStr) != NULL);
 	}
 	return match;
@@ -113,7 +113,7 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr) {
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_FindWnd::SNM_FindWnd()
-:SWS_DockWnd(IDD_SNM_FIND, "Find", 30008, SWSGetCommandID(OpenFindView))
+:SWS_DockWnd(IDD_SNM_FIND, "Find", "SnMFind", 30008, SWSGetCommandID(OpenFindView))
 {
 	// GUI inits
 	if (m_bShowAfterInit)
@@ -493,6 +493,7 @@ void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				m_type = m_cbType.GetCurSel();
 				UpdateNotFoundMsg(true);
+//focus				
 				SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 			}
 			else 
@@ -511,6 +512,7 @@ void SNM_FindWnd::OnDestroy()
 
 	m_cbType.Empty();
 	m_parentVwnd.RemoveAllChildren(false);
+	m_parentVwnd.SetRealParent(NULL);
 
 	g_notFound = false;
 	*g_searchStr = 0;
@@ -622,20 +624,20 @@ int SNM_FindWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 
 		case WM_LBUTTONDOWN:
-			SetFocus(g_pFindWnd->GetHWND());
+			SetFocus(m_hwnd); 
 			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)))
-				SetCapture(g_pFindWnd->GetHWND());
+				SetCapture(m_hwnd);
 			break;
-
 		case WM_LBUTTONUP:
-			if (GetCapture()==g_pFindWnd->GetHWND()) {
+			if (GetCapture() == m_hwnd)
+			{
 				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 				ReleaseCapture();
 			}
 			break;
 
 		case WM_MOUSEMOVE:
-//			if (GetCapture()==g_pFindWnd->GetHWND())
+//			if (GetCapture() == m_hwnd)
 				m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
 	}

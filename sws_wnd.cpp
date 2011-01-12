@@ -38,8 +38,8 @@
 
 #include "stdafx.h"
 
-SWS_DockWnd::SWS_DockWnd(int iResource, const char* cName, int iDockOrder, int iCmdID)
-:m_hwnd(NULL), m_bDocked(false), m_iResource(iResource), m_cName(cName), m_iDockOrder(iDockOrder), m_bUserClosed(false), m_iCmdID(iCmdID)
+SWS_DockWnd::SWS_DockWnd(int iResource, const char* cName, const char* cId, int iDockOrder, int iCmdID)
+:m_hwnd(NULL), m_bDocked(false), m_iResource(iResource), m_cName(cName), m_cId(cId), m_iDockOrder(iDockOrder), m_bUserClosed(false), m_iCmdID(iCmdID)
 {
 	screenset_register((char*)m_cName, screensetCallback, this);
 
@@ -129,7 +129,10 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			if (m_bDocked)
 			{
-				DockWindowAdd(m_hwnd, (char*)m_cName, m_iDockOrder, true);
+				if (DockWindowAddEx)
+					DockWindowAddEx(m_hwnd, (char*)m_cName, (char*)m_cId, true);
+				else
+					DockWindowAdd(m_hwnd, (char*)m_cName, m_iDockOrder, true); 
 			}
 			else
 			{
@@ -195,7 +198,10 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// Add std menu items
 			char str[100];
 			sprintf(str, "Dock %s in Docker", m_cName);
-			AddToMenu(hMenu, str, DOCK_MSG, -1, false, m_bDocked ? MF_CHECKED : 0);
+			AddToMenu(hMenu, str, DOCK_MSG);
+			// Check dock state
+			if (m_bDocked)
+				CheckMenuItem(hMenu, DOCK_MSG, MF_BYCOMMAND | MF_CHECKED);
 			AddToMenu(hMenu, "Close Window", IDCANCEL);
 
 			if (x == -1 || y == -1)
@@ -277,7 +283,10 @@ void SWS_DockWnd::ToggleDocking()
 		m_bDocked = true;
 		SaveWindowPos(m_hwnd, m_cWndPosKey);
 		ShowWindow(m_hwnd, SW_HIDE);
-		DockWindowAdd(m_hwnd, (char*)m_cName, m_iDockOrder, false);
+		if (DockWindowAddEx)
+			DockWindowAddEx(m_hwnd, (char*)m_cName, (char*)m_cId, false);
+		else
+			DockWindowAdd(m_hwnd, (char*)m_cName, m_iDockOrder, false); // v4 TODO delete me
 		DockWindowActivate(m_hwnd);
 	}
 	else
@@ -899,10 +908,15 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 	if (!item && iCol != -1)
 	{
 		HMENU hMenu = CreatePopupMenu();
-		AddToMenu(hMenu, "Visible columns", 0, -1, false, MF_GRAYED);
+		AddToMenu(hMenu, "Visible columns", 0);
+		EnableMenuItem(hMenu, 0, MF_BYPOSITION | MF_GRAYED);
 
 		for (int i = 0; i < m_iCols; i++)
-			AddToMenu(hMenu, m_pCols[i].cLabel, i + 1, -1, false, m_pCols[i].iPos != -1 ? MF_CHECKED : 0);
+		{
+			AddToMenu(hMenu, m_pCols[i].cLabel, i + 1);
+			if (m_pCols[i].iPos != -1)
+				CheckMenuItem(hMenu, i+1, MF_BYPOSITION | MF_CHECKED);
+		}
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		AddToMenu(hMenu, "Reset", m_iCols + 1);
 

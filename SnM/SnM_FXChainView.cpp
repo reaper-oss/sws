@@ -346,7 +346,7 @@ void SNM_ResourceView::OnBeginDrag(LPARAM _item)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_ResourceWnd::SNM_ResourceWnd()
-:SWS_DockWnd(IDD_SNM_FXCHAINLIST, "Resources", 30006, SWSGetCommandID(OpenResourceView))
+:SWS_DockWnd(IDD_SNM_FXCHAINLIST, "FX Chains", "SnMFxChains", 30006, SWSGetCommandID(OpenResourceView))
 {
 	m_previousType = g_type;
 	if (m_bShowAfterInit)
@@ -660,8 +660,9 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if (g_type != previousType)
 				{
 					FillDblClickTypeCombo();
-					m_cbDblClickType.SetCurSel(g_dblClickType[g_type]); // ok: no recursive call..
+//					m_cbDblClickType.SetCurSel(g_dblClickType[g_type]); // ok: no recursive call..
 					Update();
+//focus					
 					SetFocus(GetDlgItem(m_hwnd, IDC_FILTER));
 				}
 			}
@@ -690,7 +691,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 		UINT enabled = !pItem->IsDefault() ? MF_ENABLED : MF_GRAYED;
 		hMenu = CreatePopupMenu();
 
-		AddToMenu(hMenu, "Auto insert (from resource path)", AUTO_INSERT_SLOTS);
+		AddToMenu(hMenu, "Auto fill (from resource path)", AUTO_INSERT_SLOTS);
 		switch(g_type)
 		{
 			case SNM_SLOT_TYPE_FX_CHAINS:
@@ -741,7 +742,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 	else 
 	{
 		hMenu = CreatePopupMenu();
-		AddToMenu(hMenu, "Auto insert (from resource path)", AUTO_INSERT_SLOTS);
+		AddToMenu(hMenu, "Auto fill (from resource path)", AUTO_INSERT_SLOTS);
 		AddToMenu(hMenu, "Add slot", ADD_SLOT_MSG, -1, false, !m_filter.GetLength() ? MF_ENABLED : MF_GRAYED);
 	}
 	return hMenu;
@@ -764,6 +765,7 @@ void SNM_ResourceWnd::OnDestroy()
 	m_cbDblClickType.Empty();
 	m_cbDblClickTo.Empty();
 	m_parentVwnd.RemoveAllChildren(false);
+	m_parentVwnd.SetRealParent(NULL);
 }
 
 int SNM_ResourceWnd::OnKey(MSG* msg, int iKeyState) 
@@ -1183,10 +1185,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	{
 		int cmd = NamedCommandLookup("_S&M_SHOWFXCHAINSLOTS");
 		if (cmd > 0)
-		{
-			int afterCmd = NamedCommandLookup("_SWSCONSOLE");
-			AddToMenu(hMenu, "S&&M Resources", cmd, afterCmd > 0 ? afterCmd : 40075);
-		}
+			AddToMenu(hMenu, "S&&M Resources", cmd);
 	}
 }
 
@@ -1257,6 +1256,7 @@ void OpenResourceView(COMMAND_T* _ct)
 	if (g_pResourcesWnd) {
 		g_pResourcesWnd->Show((g_type == (int)_ct->user) /* i.e toggle */, true);
 		g_pResourcesWnd->SetType((int)_ct->user);
+//focus		
 		SetFocus(GetDlgItem(g_pResourcesWnd->GetHWND(), IDC_FILTER));
 	}
 }

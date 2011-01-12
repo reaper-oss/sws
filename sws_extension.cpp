@@ -217,6 +217,19 @@ HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu, int* iIndex)
 	return hMenu;
 }
 
+int SWSGetMenuPosFromID(HMENU hMenu, UINT id)
+{	// Replacement for deprecated windows func GetMenuPosFromID
+	MENUITEMINFO mi={sizeof(MENUITEMINFO),};
+	mi.fMask = MIIM_ID;
+	for (int i = 0; i < GetMenuItemCount(hMenu); i++)
+	{
+		GetMenuItemInfo(hMenu, i, true, &mi);
+		if (mi.wID == id)
+			return i;
+	}
+	return -1;
+}
+
 // returns:
 // -1 = action does not belong to this extension, or does not toggle
 //  0 = action belongs to this extension and is currently set to "off"
@@ -275,6 +288,7 @@ public:
 		ItemPreviewSlice();
 		PlayItemsOnceSlice();
 		ColorSlice();
+		MiscSlice();
 
 		SnMCSurfRun();
 
@@ -321,7 +335,41 @@ public:
 
 // WDL Stuff
 bool WDL_STYLE_GetBackgroundGradient(double *gradstart, double *gradslope) { return false; }
-int WDL_STYLE_GetSysColor(int i) { if (GSC_mainwnd) return GSC_mainwnd(i); else return GetSysColor(i); }
+int WDL_STYLE_GetSysColor(int i) 
+{
+	int col;
+	if (GSC_mainwnd) 
+		col = GSC_mainwnd(i); 
+	else 
+		col = GetSysColor(i); 
+
+	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
+	if (ct && (i == COLOR_3DSHADOW || i == COLOR_3DLIGHT || i == COLOR_3DHILIGHT))	
+	{
+		int col3ds,col3dl,bgcol = LICE_RGBA_FROMNATIVE(ct->tracklistbg_color, 255);
+		if (GSC_mainwnd) {
+			col3ds =  GSC_mainwnd(COLOR_3DSHADOW);
+			col3dl =  GSC_mainwnd(COLOR_3DHILIGHT);
+		}
+		else {
+			col3ds =  GetSysColor(COLOR_3DSHADOW);
+			col3dl =  GetSysColor(COLOR_3DHILIGHT);
+		}
+		col3ds =  LICE_RGBA_FROMNATIVE(col3ds, 255);
+		col3dl =  LICE_RGBA_FROMNATIVE(col3dl, 255);
+
+		// usable/distinct 3D colors ? 
+		if (col3ds == col3dl || col3ds == bgcol || col3dl == bgcol)
+		{
+			int colDelta = SNM_3D_COLORS_DELTA * (i == COLOR_3DSHADOW ? -1 : 1);
+		    col = RGB(
+				SNM_MinMax(LICE_GETR(bgcol) + colDelta, 0, 0xFF),
+				SNM_MinMax(LICE_GETG(bgcol) + colDelta, 0, 0xFF),
+				SNM_MinMax(LICE_GETB(bgcol) + colDelta, 0, 0xFF));
+		}
+	}
+	return col;
+}
 int WDL_STYLE_WantGlobalButtonBorders() { return 0; }
 bool WDL_STYLE_WantGlobalButtonBackground(int *col) { return false; }
 void WDL_STYLE_ScaleImageCoords(int *x, int *y) { }
@@ -387,6 +435,8 @@ extern "C"
 		IMPAPI(DeleteTrackMediaItem);
 		IMPAPI(DockWindowActivate);
 		IMPAPI(DockWindowAdd);
+		// v4 TODO
+		*(void**)&DockWindowAddEx = rec->GetFunc("DockWindowAddEx");
 		IMPAPI(DockWindowRefresh);
 		IMPAPI(DockWindowRemove);
 		IMPAPI(EnsureNotCompletelyOffscreen);
@@ -450,6 +500,7 @@ extern "C"
 		IMPAPI(GetTrack);
 		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);
+		IMPAPI(GetTrackEnvelopeByName);
 		IMPAPI(GetTrackInfo);
 		IMPAPI(GetTrackMediaItem);
 		IMPAPI(GetTrackNumMediaItems);
@@ -459,7 +510,7 @@ extern "C"
 		IMPAPI(get_ini_file);
 		IMPAPI(GSC_mainwnd);
 		IMPAPI(guidToString);
-//		IMPAPI(Help_Set);
+		IMPAPI(Help_Set);
 		IMPAPI(InsertMedia);
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
@@ -538,6 +589,7 @@ extern "C"
 		IMPAPI(Undo_OnStateChange_Item);
 		IMPAPI(Undo_OnStateChange2);
 		IMPAPI(Undo_OnStateChangeEx);
+		IMPAPI(UpdateArrange);
 		IMPAPI(UpdateItemInProject);
 		IMPAPI(UpdateTimeline);
 		IMPAPI(ValidatePtr);
@@ -548,7 +600,7 @@ extern "C"
 
 		if (errcnt)
 		{
-			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have a Reaper version less than 3.73 installed. "
+			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have a Reaper version less than 3.74 installed. "
 				"Please install the latest version of Reaper from www.reaper.fm.", "Version Incompatibility", MB_OK);
 			return 0;
 		}
@@ -561,24 +613,24 @@ extern "C"
 			ERR_RETURN("Toggle action hook error\n")
 
 		// Call plugin specific init
+		if (!AutoColorInit())
+			ERR_RETURN("Auto Color init error\n")
+		if (!ColorInit())
+			ERR_RETURN("Color init error\n")
+		if (!MarkerListInit())
+			ERR_RETURN("Marker list init error\n")
+		if (!MarkerActionsInit())
+			ERR_RETURN("Marker action init error\n")
+		if (!MediaPoolInit())
+			ERR_RETURN("Mediapool init error\n")
 		if (!ConsoleInit())
 			ERR_RETURN("ReaConsole init error\n")
 		if (!FreezeInit())
 			ERR_RETURN("Freeze init error\n")
-		if (!MarkerActionsInit())
-			ERR_RETURN("Marker action init error\n")
 		if (!SnapshotsInit())
 			ERR_RETURN("Snapshots init error\n")
-		if (!MarkerListInit())
-			ERR_RETURN("Marker list init error\n")
-		if (!ColorInit())
-			ERR_RETURN("Color init error\n")
-		if (!AutoColorInit())
-			ERR_RETURN("Auto Color init error\n")
 		if (!TrackListInit())
 			ERR_RETURN("Tracklist init error\n")
-		if (!MediaPoolInit())
-			ERR_RETURN("Mediapool init error\n")
 		if (!ProjectListInit())
 			ERR_RETURN("Project List init error\n")
 		if (!ProjectMgrInit())

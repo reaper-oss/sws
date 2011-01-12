@@ -54,7 +54,7 @@ static const char cColorTypes[][9] = { "Custom", "Gradient", "Random", "None", "
 // Globals
 static SWS_AutoColorWnd* g_pACWnd = NULL;
 static WDL_PtrList<SWS_RuleItem> g_pACItems;
-static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SWS_RuleTrack> > g_pTracks;
+static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SWS_RuleTrack> > g_pACTracks;
 static bool g_bACEnabled = false;
 static bool g_bAIEnabled = false;
 
@@ -192,7 +192,7 @@ void SWS_AutoColorView::OnEndDrag()
 }
 
 SWS_AutoColorWnd::SWS_AutoColorWnd()
-:SWS_DockWnd(IDD_AUTOCOLOR, "Auto color/icon", 30005, SWSGetCommandID(OpenAutoColor))
+:SWS_DockWnd(IDD_AUTOCOLOR, "Auto Color/Icon", "SWSAutoColor", 30005, SWSGetCommandID(OpenAutoColor))
 #ifndef _WIN32
 	,m_bSettingColor(false)
 #endif
@@ -532,20 +532,20 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon)
 
 		bool bAutocolored = false;
 		bool bFound = false;
-		SWS_RuleTrack* pTrack = NULL;
-		for (int j = 0; j < g_pTracks.Get()->GetSize(); j++)
+		SWS_RuleTrack* pACTrack = NULL;
+		for (int j = 0; j < g_pACTracks.Get()->GetSize(); j++)
 		{
-			pTrack = g_pTracks.Get()->Get(j);
-			if (pTrack->m_pTr == tr)
+			pACTrack = g_pACTracks.Get()->Get(j);
+			if (pACTrack->m_pTr == tr)
 			{
 				bFound = true;
-				if (!pTrack->m_bColored && iCurColor == pTrack->m_col)
+				if (!pACTrack->m_bColored && iCurColor == pACTrack->m_col)
 				{
 					bAutocolored = true;
 					break;
 				}
 			}
-		}	
+		}
 		
 		// New tracks are by default autocolored
 		if (!bFound)
@@ -638,11 +638,11 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon)
 
 					if (bFound)
 					{
-						pTrack->m_col = newCol;
-						pTrack->m_bColored = true;
+						pACTrack->m_col = newCol;
+						pACTrack->m_bColored = true;
 					}
 					else
-						g_pTracks.Get()->Add(new SWS_RuleTrack(tr, newCol));
+						g_pACTracks.Get()->Add(new SWS_RuleTrack(tr, newCol));
 				}
 				if (bIcon && rule->m_icon.GetLength())
 				{
@@ -672,10 +672,10 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon)
 		int newCol = g_crGradStart | 0x1000000;
 		if (i && gradientTracks.GetSize() > 1)
 			newCol = CalcGradient(g_crGradStart, g_crGradEnd, (double)i / (gradientTracks.GetSize()-1)) | 0x1000000;
-		for (int j = 0; j < g_pTracks.Get()->GetSize(); j++)
-			if (g_pTracks.Get()->Get(j)->m_pTr == (MediaTrack*)gradientTracks.Get(i))
+		for (int j = 0; j < g_pACTracks.Get()->GetSize(); j++)
+			if (g_pACTracks.Get()->Get(j)->m_pTr == (MediaTrack*)gradientTracks.Get(i))
 			{
-				g_pTracks.Get()->Get(j)->m_col = newCol;
+				g_pACTracks.Get()->Get(j)->m_col = newCol;
 				break;
 			}
 		GetSetMediaTrackInfo((MediaTrack*)gradientTracks.Get(i), "I_CUSTOMCOLOR", &newCol);
@@ -692,19 +692,19 @@ void AutoColorRun(bool bForce)
 
 	// If forcing, start over with the saved track list
 	if (bForce)
-		g_pTracks.Get()->Empty(true);
+		g_pACTracks.Get()->Empty(true);
 	else
 		// Remove non-existant tracks from the autocolortracklist
-		for (int i = 0; i < g_pTracks.Get()->GetSize(); i++)
-			if (CSurf_TrackToID(g_pTracks.Get()->Get(i)->m_pTr, false) < 0)
+		for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
+			if (CSurf_TrackToID(g_pACTracks.Get()->Get(i)->m_pTr, false) < 0)
 			{
-				g_pTracks.Get()->Delete(i, true);
+				g_pACTracks.Get()->Delete(i, true);
 				i--;
 			}
 
 	// Clear the "colored" bit
-	for (int i = 0; i < g_pTracks.Get()->GetSize(); i++)
-		g_pTracks.Get()->Get(i)->m_bColored = false;
+	for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
+		g_pACTracks.Get()->Get(i)->m_bColored = false;
 
 	// Apply the rules
 	SWS_CacheObjectState(true);
@@ -758,7 +758,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 				stringToGuid(lp.gettoken_str(0), &g);
 				MediaTrack* tr = GuidToTrack(&g);
 				if (tr)
-					g_pTracks.Get()->Add(new SWS_RuleTrack(tr, lp.gettoken_int(1)));
+					g_pACTracks.Get()->Add(new SWS_RuleTrack(tr, lp.gettoken_int(1)));
 			}
 			else
 				break;
@@ -771,26 +771,26 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
 	// first delete unused tracks
-	for (int i = 0; i < g_pTracks.Get()->GetSize(); i++)
-		if (CSurf_TrackToID(g_pTracks.Get()->Get(i)->m_pTr, false) < 0)
+	for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
+		if (CSurf_TrackToID(g_pACTracks.Get()->Get(i)->m_pTr, false) < 0)
 		{
-			g_pTracks.Get()->Delete(i, true);
+			g_pACTracks.Get()->Delete(i, true);
 			i--;
 		}
 
-	if (g_pTracks.Get()->GetSize())
+	if (g_pACTracks.Get()->GetSize())
 	{
 		ctx->AddLine("<SWSAUTOCOLOR");
 		char str[128];
-		for (int i = 0; i < g_pTracks.Get()->GetSize(); i++)
+		for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
 		{
 			GUID g;
-			if (CSurf_TrackToID(g_pTracks.Get()->Get(i)->m_pTr, false))
-				g = *(GUID*)GetSetMediaTrackInfo(g_pTracks.Get()->Get(i)->m_pTr, "GUID", NULL);
+			if (CSurf_TrackToID(g_pACTracks.Get()->Get(i)->m_pTr, false))
+				g = *(GUID*)GetSetMediaTrackInfo(g_pACTracks.Get()->Get(i)->m_pTr, "GUID", NULL);
 			else
 				g = GUID_NULL;
 			guidToString(&g, str);
-			sprintf(str+strlen(str), " %d", g_pTracks.Get()->Get(i)->m_col);
+			sprintf(str+strlen(str), " %d", g_pACTracks.Get()->Get(i)->m_col);
 			ctx->AddLine(str);
 		}
 		ctx->AddLine(">");
@@ -799,8 +799,8 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {
-	g_pTracks.Cleanup();
-	g_pTracks.Get()->Empty(true);
+	g_pACTracks.Cleanup();
+	g_pACTracks.Get()->Empty(true);
 }
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
@@ -817,7 +817,10 @@ static COMMAND_T g_commandTable[] =
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
-		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40075);
+	{
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
+	}
 	else if (flag == 0 && strcmp(menustr, "Main options") == 0)
 		AddToMenu(hMenu, g_commandTable[1].menuText, g_commandTable[1].accel.accel.cmd, 40745);
 }

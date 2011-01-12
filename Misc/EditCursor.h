@@ -1,5 +1,5 @@
 /******************************************************************************
-/ Context.h
+/ EditCursor.h
 /
 / Copyright (c) 2010 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
@@ -27,10 +27,5 @@
 
 #pragma once
 
-int ContextInit();
-bool AreThereSelItemsInTimeSel();
-void SmartCopy(COMMAND_T*);
-void SmartCut(COMMAND_T*);
-void SmartRemove(COMMAND_T*);
-
-
+void EditCursorSlice();
+int EditCursorInit();

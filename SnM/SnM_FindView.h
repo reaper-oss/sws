@@ -50,7 +50,7 @@ protected:
 	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
-	SNM_VirtualComboBox m_cbType;
+	WDL_VirtualComboBox m_cbType;
 	WDL_VirtualIconButton m_btnFind;
 	WDL_VirtualIconButton m_btnPrev;
 	WDL_VirtualIconButton m_btnNext;

@@ -1120,6 +1120,10 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			else
 			{
 				RECT rLastDraw = rDraw;
+				// Trim rZoom left/right as it might be large from item zoom (or others)
+				if (rZoom.left < 0) rZoom.left = 0;
+				if (rZoom.right > bmStd->getWidth()) rZoom.right = bmStd->getWidth();
+
 				UnionRect(&rDraw, &rBox, &rZoom);
 				UnionRect(&rDraw, &rDraw, &rLastDraw);
 				
@@ -1295,6 +1299,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_togAS.Cleanup();
 	g_bASToggled = false;
 	g_zoomStack.Cleanup();
+	g_zoomLevel.Cleanup();
 }
 
 bool IsTogZoomed(COMMAND_T*)

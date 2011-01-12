@@ -137,12 +137,12 @@ protected:
 	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
-	SNM_VirtualComboBox m_cbConfig;
+	WDL_VirtualComboBox m_cbConfig;
 	WDL_VirtualIconButton m_btnEnable;
 	WDL_VirtualIconButton m_btnAutoRcv;
 	WDL_VirtualIconButton m_btnMuteOthers;
 	WDL_VirtualIconButton m_btnAutoSelect;
-	SNM_VirtualComboBox m_cbInputTr;
+	WDL_VirtualComboBox m_cbInputTr;
 };
 
 class SNM_MidiLiveScheduledJob : public SNM_ScheduledJob

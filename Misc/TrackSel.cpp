@@ -31,7 +31,7 @@
 #include "TrackSel.h"
 
 static WDL_PtrList<GUID> g_pSelTracks;
-void SaveSelTracks(COMMAND_T* = NULL)
+void SaveSelTracks(COMMAND_T*)
 {
 	g_pSelTracks.Empty(true);
 	for (int i = 0; i <= GetNumTracks(); i++)
@@ -46,7 +46,7 @@ void SaveSelTracks(COMMAND_T* = NULL)
 	}
 }
 
-void RestoreSelTracks(COMMAND_T* = NULL)
+void RestoreSelTracks(COMMAND_T*)
 {
 	ClearSelected();
 	for (int i = 0; i < g_pSelTracks.GetSize(); i++)
@@ -136,7 +136,7 @@ void TogTrackSel(COMMAND_T*)
 	}
 }
 
-void SelTracksWItems(COMMAND_T* = NULL)
+void SelTracksWItems(COMMAND_T*)
 {
 	ClearSelected();
 	for (int i = 1; i <= GetNumTracks(); i++)

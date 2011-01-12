@@ -1,3 +1,167 @@
+
+<b>BETA: CAUTION !</b>
+Due to a change in the way S&M.ini file is managed, you may face some issues when switching between SWS official <-> SWS beta.
+A clean "upgrade" is automatically managed when SWS official -> SWS beta, but you'll probably loose your FX Chains setup when switching back to SWS beta -> SWS official.
+So a backup of the 'official' S&M.ini might be a good idea (or sticking with the beta: the new S&M.ini format won't change)
+
+
+<b>Short changelog:</b>
+
++PiP support
++Updated SWS Autocolor view: now also features auto track icon. Demo http://reaper.mj-s.com/autoicon.gif|here|.
++Many S&M updates (including new http://reaper.mj-s.com/resourceview.jpg|"Resources" view|: FX chains + Track templates + goodies). See details below.
++house cleaning, fixes
+
+
+<b>Changelog details:</b>
+
+Added S&M http://reaper.mj-s.com/resourceview.jpg|Resources view|
++The "FX chains" view turned into a "Resources" view: FX chains + Track templates + goodies
+Abstract:
+The same feature that exist for FX chains are now available for track templates too. A cool thing now is that we can patch existing tracks with track templates (and not only  "add track template as new track"). Well, some other sort of snapshots..
+Also, saving track templates and FX chains is eased a lot (thanks to the "auto-save" feature, see below). A new feature "Auto-fill" also allows creating slots automatically.
++Auto-save feature:
+An "Auto-save" button has been added: it automatically saves the selected tracks' FX chains (or track templates) and insert the related files/slots in the resource list.
+One "click feature", i.e. no file browser is displayed: filenames are automatically generated from track names and saved in REAPER's default FX chains (or track templates) resource path.
+This "auto save" directory can be customized (new "Set auto save directory" popup menu items) and auto generated file names can be renamed ("Name" column is now editable).
++Auto-fill feature:
+If not already present, all FX chain (or track template) files found in the related resource path and its sub-folders are automatically inserted at the selected slot.
++Applying track templates preserves items:
+- if there's no item present in an applied track template file, the current ones are preserved
+- if some items are present in an applied track template file, those ones are used instead
+- if several tracks are present in a track template file, only the first one is used (when *applying* - when adding, all tracks present in the file are indeed added)
++New actions:
+SWS/S&M: Open Resources window (FX chains)... - just renamed (replaces "Open FX chains view...")
+SWS/S&M: Open Resources window (track templates)...
+SWS/S&M: Load/apply track template to selected tracks, slot n - where n is [1;10]
+SWS/S&M: Load/apply track template to selected tracks, prompt for slot
+SWS/S&M: Load/import tracks from track template, slot n - where n is [1;10]
+SWS/S&M: Load/import tracks from track template, prompt for slot
+SWS/S&M: Clear track template slot...
++New popup menu items:
+- For FX chains and track templates: added "Auto fill (from resource path)"
+- Load/apply track template to selected tracks
+- Load/import tracks from track template
+- Set FX chain auto save directory...
+- Set track template auto save directory...
+- Auto save/insert FX chains (from track selection)
+- Auto save/insert track templates (from track selection)
+-> those 2 last menu items do the same things than the auto-save button, files are inserted at the selected slot
+- Delete slots & files
+-> on Win, files are sent to the recycle bin
+- Explorer/Finder...
++Drag'n'drop improvments:
+- More 'natural'
+- Internal drag'n'drop of slots (i.e. now moves slots rather than copying them)
+- Fixed shortcomings: internal d'n'd, d'n'd of empty slots, selection after d'n'd, d'n'd when the list is empty, etc..
++On Win, "Display track template/FX chain" (resource view > popup menu) now launches notepad
++Column "Name" is now editable (file renaming from the view)
++Paths pointing to unexisting files aren't reseted anymore
++Tagged "Xenakios/SWS: Load track template n" actions as deprecated
+
++Updated SWS Autocolor view: now also features auto track icon
+Added a column "Icon" in the view (right-click in this column or double-click it to set an icon filename) and a tick box "Enable auto icon".
+Also added action "SWS/S&M Toggle auto icon enable". BTW, the view has been renamed into "SWS Auto color/icon".
+Demo http://reaper.mj-s.com/autoicon.gif|here|.
+Rmk: current color configurations will be preserved when upgrading..
+
+S&M Notes/help view updates:
++Action help: now, when selecting custom macros, the related (veeeery long!) custom id is displayed (i.e. custom notes about macros are no more saved but that seriously eases the copy/paste of custom ids)
++Action/online help: made more clear links to the http://wiki.cockos.com/wiki/index.php/Action_List_Reference|Action List Reference wiki (i.e. added http://reaper.mj-s.com/alrButton.jpg|"ALR" button|)
++Added actions in order to make things clear:
+- SWS/S&M: Open Notes/help window (project notes)...
+- SWS/S&M: Open Notes/help window (item notes)...
+- SWS/S&M: Open Notes/help window (track notes )...
+- SWS/S&M: Open Notes/help window (action help)...
+Remark: here's an http://reaper.mj-s.com/OnlineHelp.gif|anim| showing how to use notes, action help & online help
+
+S&M Live Configs updates:
++Added "Auto track selection" option/tick box
++Fixed activate/deactivate actions not obeying the config's "Enable" parameter
++Added actions (in the main section) "SWS/S&M: Toggle enable live config n" where n is in [1;8]
++Added advanced parameter "CC_DELAY" in S&M.ini (in REAPER's resource directory) - to be tweaked manually!
+If this parameter is set to 0, MIDI CC events will trigger their related "Apply live config" action ASAP but, in this case, when moving a fader on a large scale for example, all actions in between will also be performed (i.e. can stuck REAPER). With a delay (e.g. 250ms, the default value) only the last stable CC value will be taken into account.
++Undo points for all controls
+
+S&M Cue buss:
++"Open Cue Buss window" is now a toggle action (+ reports a toggle state)
++When creating a cue buss, auto scroll to created the track
+
+S&M house cleaning:
++Cleaned the main "Extensions" menu a bit + added following menu items:
+S&M Cue Buss...
+S&M Find...
+S&M Live Configs...
++Removed the folowing split actions:
+Contrary to their related native versions, the following ones were spliting selected items *and only them*, see http://forum.cockos.com/showthread.php?t=51547|this related thread|.
+Due to REAPER v3.67's new native pref "If no items are selected, some split/trim/delete actions affect all items at the edit cursor", those actions are less useful (they would still split only selected items, even if that native pref is ticked). Also removed because of the spam in the action list (many split actions).
+SWS/S&M: Split selected items at play cursor
+SWS/S&M: Split selected items at time selection
+SWS/S&M: Split selected items at edit cursor (no change selection)
+SWS/S&M: Split selected items at time selection (select left)
+SWS/S&M: Split selected items at time selection (select right)
+SWS/S&M: Split selected items at edit or play cursor
+SWS/S&M: Split selected items at edit or play cursor
++Removed the following take actions:
+Due to native actions "Rotate take lanes forward/backward" added in REAPER v3.67 (move active take up/down actions still there, of course).
+SWS/S&M: Takes - Move all up (cycling) in selected items"
+SWS/S&M: Takes - Move all down (cycling) in selected items"
+
+Other S&M updates/fixes:
++Added action: SWS/S&M: Left mouse click at cursor position (use w/o modifier)
++Themable GUIs:
+- hover, pressed,.. states for buttons
+- actions are now performed on mouse up events
+- un-stretched PNGs
+- default focus tweaks
+- tick boxes look better
+- use theme 3D colors for dropdows (if defined)
+- etc..
++Fixed Notes/help and Resources views toggle states
++Fixed Adam's Fills Gaps actions
++Fixed disabled some popup items not being grayed
++Fixed UI refresh issues for "Find" and "Notes/help" views
+
+!v1.8.6 #8 (January 5, 2011)
+Issue 219: Fixed intermittent OSX crash with S&M Notes/Help window
+
+!v1.8.6 #7 (January 3, 2011)
+Issue 222: (and others + forum) Fixed v4 crash/issues with S&M Notes/Help window docked
+
+!v1.8.6 #6 (December 17, 2010)
+Issue 217: Fixed crash of "SWS/AW: Fade in/out/crossfade selected area of selected items" when run over empty items
+
+!v1.8.6 #5 (December 6, 2010)
+Issue 215: fixed crash when copying FX chain on tracks without FX
+Changed View menu for REAPER v4 compatibility.
+
+!v1.8.6 #4 (November 28, 2010)
+Issue 214: Fixed OSX crash when opening a project list file
+
+!v1.8.6 #3 (November 16, 2010)
+Issue 167: Fixed OSX take mixer, as well as other Xenakios dialogs with sliders (some Win fixes too)
+
+!v1.8.6 #2 (November 15, 2010)
+Issue 198: Edit cursor position undo/redo.  Added actions "SWS: Undo edit cursor move" and "SWS: Redo edit cursor move"
+Issue 212: Fixed zoom tool slowness with high zoom levels and zoom-to-item enabled
+
+!v1.8.6 #1 (November 10, 2010)
+Zoom tool updates:
++New zoom preference to undo zoom when dragging up
++Zoom cursor now reflects zoom state: +/-/U (undo)
++OSX now has zoom cursors - note OSX support isn't perfect and cursor disappears while dragging
+
+Issue 210: Fixed duplicate action ID SWS_TAKESSPREVPITCH
+Fixed S&M windows not getting drawn properly on OSX Reaper startup
+
+!v1.8.5 #8 (November 8, 2010)
+Issue 190: Disabled FX chain drag-drop to prevent crashing.  Full fix coming in future release.
+Issue 199: Fix for media loss on undo with "Insert track above selected tracks" action.
+
+!v1.8.5 #7 (November 5, 2010)
+Issue 189: Hopefully solved Snapshot crashes with Kontakt and others!
+Simulate left mouse click at cursor position (again!): safer, fixed re-triggering issue.
+
 !v1.8.5 #6 (November 4, 2010)
 Fixed issue 208
 Simulate left mouse click at cursor position for OSX, but still beta
@@ -99,7 +263,7 @@ Zoom tool for OSX!
 !v1.8.2 #3 (October 20, 2010)
 Zoom tool drawing improvements
 Fix for "SWS: Crossfade adjacent selected items" (thanks Adam)
-Fixed some undo bugs in Padre's LFO generator 
+Fixed some undo bugs in Padre's LFO generator
 
 !v1.8.2 #2 (October 19, 2010)
 Zoom tool now workss from toolbar button.

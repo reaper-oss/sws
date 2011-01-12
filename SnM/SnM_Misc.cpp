@@ -166,6 +166,10 @@ void dumpWikiActions2(COMMAND_T* _ct)
 // S&M Util
 ///////////////////////////////////////////////////////////////////////////////
 
+int SNM_MinMax(int _val, int _min, int _max) {
+	return min(_max, max(_min, _val));
+}
+
 // GUI for lazy guys
 void SNM_ShowConsoleMsg(const char* _msg, const char* _title, bool _clear)
 {

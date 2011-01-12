@@ -106,16 +106,16 @@ void OpenProjectsFromList(COMMAND_T*)
 					i = 1;
 			}
 
-			while(fgets(filename, 256, f))
+			while(fgets(cPath, 256, f))
 			{
 				char* pC;
-				while((pC = strchr(filename, '\r'))) *pC = 0; // Strip newlines no matter the format
-				while((pC = strchr(filename, '\n'))) *pC = 0;
-				if (filename[0])
+				while((pC = strchr(cPath, '\r'))) *pC = 0; // Strip newlines no matter the format
+				while((pC = strchr(cPath, '\n'))) *pC = 0;
+				if (cPath[0])
 				{
 					if (i++)
 						Main_OnCommand(40859, 0); // 40859: New project tab
-					Main_openProject(filename);
+					Main_openProject(cPath);
 				}
 			}
 			fclose(f);

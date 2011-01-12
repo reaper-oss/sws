@@ -340,7 +340,7 @@ int SWS_SnapshotsView::GetItemState(LPARAM item)
 }
 
 SWS_SnapshotsWnd::SWS_SnapshotsWnd()
-:SWS_DockWnd(IDD_SNAPS, "Snapshots", 30002, SWSGetCommandID(OpenSnapshotsDialog)),m_iSelType(0)
+:SWS_DockWnd(IDD_SNAPS, "Snapshots", "SWSSnapshots", 30002, SWSGetCommandID(OpenSnapshotsDialog)),m_iSelType(0)
 {
 	// Restore state
 	char str[32];
@@ -590,7 +590,9 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
 			_snprintf(cName, 50, "Recall %s", g_ss.Get()->m_snapshots.Get(i)->m_cName);
 			if (!iCmd)
 				iCmd = LOAD_MSG + i;
-			AddToMenu(contextMenu, cName, iCmd, -1, false, g_ss.Get()->m_snapshots.Get(i) == g_ss.Get()->m_pCurSnapshot ? MF_CHECKED : 0);
+			AddToMenu(contextMenu, cName, iCmd);
+			if (g_ss.Get()->m_snapshots.Get(i) == g_ss.Get()->m_pCurSnapshot)
+				CheckMenuItem(contextMenu, iCmd, MF_CHECKED);
 		}
 	}
 	AddToMenu(contextMenu, "Import snapshot...", IMPORT_MSG);
@@ -1005,7 +1007,7 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
-		AddToMenu(hMenu, "SWS Snapshots", g_commandTable[0].accel.accel.cmd, 40075);
+		AddToMenu(hMenu, "SWS Snapshots", g_commandTable[0].accel.accel.cmd);
 	else if (strcmp(menustr, "Track control panel context") == 0 && flag == 0)
 		AddSubMenu(hMenu, SWSCreateMenu(g_commandTable), "SWS Snapshots");
 }

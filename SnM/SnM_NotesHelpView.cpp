@@ -47,7 +47,8 @@
 enum {
   BUTTONID_LOCK=1000,
   COMBOID_TYPE,
-  TXTID_LABEL
+  TXTID_LABEL,
+  BUTTONID_ALR
 };
 
 enum {
@@ -90,7 +91,7 @@ MediaTrack* g_trNote = NULL;
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_NotesHelpWnd::SNM_NotesHelpWnd()
-:SWS_DockWnd(IDD_SNM_NOTES_HELP, "Notes & help", 30007, SWSGetCommandID(OpenNotesHelpView))
+:SWS_DockWnd(IDD_SNM_NOTES_HELP, "Notes/Help", "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
 {
 	m_type = m_previousType = NOTES_HELP_DISABLED;
 
@@ -401,11 +402,29 @@ int SNM_NotesHelpWnd::updateActionHelp(bool _savePrevious)
 					g_lastActionListCmd = cmdId; 
 
 					//JFB TODO: cleanup when we'll be able to access all sections & custom ids
+/*JFB!!!
+					LVITEM li0, li1;
+
+					li0.mask = LVIF_TEXT;
+					li0.iItem = i;
+					li0.iSubItem = 1;
+					li0.pszText = g_lastActionDesc;
+					li0.cchTextMax = 128;
+					ListView_GetItem(hList, &li0);
+
+					li1.mask = LVIF_TEXT;
+					li1.iItem = i;
+					li1.iSubItem = 3;
+					li1.pszText = g_lastActionId;
+					li1.cchTextMax = 64;
+					ListView_GetItem(hList, &li1);
+*/
 					ListView_GetItemText(hList,i,1,g_lastActionDesc,128);
 					ListView_GetItemText(hList,i,3,g_lastActionId,64);
 
 					if (g_lastActionId && !*g_lastActionId)
-						sprintf(g_lastActionId, "%d", cmdId);					
+						sprintf(g_lastActionId, "%d", cmdId);
+					
 					if (g_lastActionId && *g_lastActionId && g_lastActionDesc && *g_lastActionDesc )
 					{
 						if (!_strnicmp(g_lastActionDesc, "Custom:", 7))
@@ -423,6 +442,7 @@ int SNM_NotesHelpWnd::updateActionHelp(bool _savePrevious)
 				}
 				else
 					refreshType = NO_REFRESH;
+				break;
 			}
 		}
 	}
@@ -508,6 +528,10 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	m_btnLock.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnLock);
 
+	m_btnAlr.SetID(BUTTONID_ALR);
+	m_btnAlr.SetRealParent(m_hwnd);
+	m_parentVwnd.AddChild(&m_btnAlr);
+
 	m_cbType.SetID(COMBOID_TYPE);
 	m_cbType.SetRealParent(m_hwnd);
 	m_cbType.AddItem("Disable (project notes)");
@@ -543,22 +567,41 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			case BUTTONID_LOCK:
 			{
 				g_locked = !g_locked;
+//*focus
 				if (!g_locked)
 					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 				else
 					SetFocus(GetMainHwnd());
+//*/
 				RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
 			}
 			break;
-			case TXTID_LABEL:
+			case BUTTONID_ALR:
+			{
+				if (g_lastActionId && *g_lastActionId && g_lastActionDesc && 
+					*g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
+				{
+					char cLink[512] = "";
+					char sectionURL[64] = "";
+					if (GetALRStartOfURL(g_lastActionListSection, sectionURL, 64))
+					{					
+						_snprintf(cLink, 512, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
+						ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
+					}
+				}
+				else
+					ShellExecute(m_hwnd, "open", "http://wiki.cockos.com/wiki/index.php/Action_List_Reference" , NULL, NULL, SW_SHOWNORMAL);
+			}
 			break;
 		}
 	}
 	else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE)	
 	{
 		SetType(m_cbType.GetCurSel());
+//*focus
 		if (!g_locked)
 			SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
+//*/
 	}
 	else 
 		Main_OnCommand((int)wParam, (int)lParam);
@@ -592,6 +635,7 @@ void SNM_NotesHelpWnd::OnDestroy()
 	m_previousType = -1;
 	m_cbType.Empty();
 	m_parentVwnd.RemoveAllChildren(false);
+	m_parentVwnd.SetRealParent(NULL);
 }
 
 // we don't check iKeyState in order to catch (almost) everything
@@ -665,6 +709,22 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			cbVwnd->SetFont(font);
 		}
 
+		// online help
+		btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_ALR);
+		if (btnVwnd)
+		{
+			if (g_pNotesHelpWnd->GetType() == ACTION_HELP)
+			{
+				x0 += 5;
+				RECT tr2={x0,y0+3,x0+30,y0+h-1};
+				x0 = tr2.right+5;
+				btnVwnd->SetPosition(&tr2);
+				btnVwnd->SetTextLabel("ALR", 0, font);
+				btnVwnd->SetForceBorder(true);
+			}
+			btnVwnd->SetVisible(g_pNotesHelpWnd->GetType() == ACTION_HELP);
+		}
+
 		// Label
 		WDL_VirtualStaticText* txtVwnd = (WDL_VirtualStaticText*)_parentVwnd->GetChildByID(TXTID_LABEL);
 		if (txtVwnd)
@@ -727,11 +787,11 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_PAINT:
 		{
-			RECT r; int sz;
+			RECT r;
 			GetClientRect(m_hwnd,&r);		
 	        m_parentVwnd.SetPosition(&r);
 
-			ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
+			ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
 			if (ct)	m_vwnd_painter.PaintBegin(m_hwnd, ct->tracklistbg_color);
 			else m_vwnd_painter.PaintBegin(m_hwnd, LICE_RGBA(0,0,0,255));
 			DrawControls(&m_vwnd_painter, r, &m_parentVwnd);
@@ -761,20 +821,6 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				int x = GET_X_LPARAM(lParam);
 				int y = GET_Y_LPARAM(lParam);
 				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-
-				WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-				if (w && w->GetID() == TXTID_LABEL && GetType() == ACTION_HELP &&
-					g_lastActionId && *g_lastActionId && g_lastActionDesc && 
-					*g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
-				{
-					char cLink[512] = "";
-					char sectionURL[64] = "";
-					if (GetALRStartOfURL(g_lastActionListSection, sectionURL, 64))
-					{					
-						_snprintf(cLink, 512, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
-						ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
-					}
-				}
 				ReleaseCapture();
 			}
 			break;
@@ -785,15 +831,6 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			int y = GET_Y_LPARAM(lParam);
 //			if (GetCapture()==g_pNotesHelpWnd->GetHWND())
 				m_parentVwnd.OnMouseMove(x, y);
-
-			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w && w->GetID() == TXTID_LABEL && GetType() == ACTION_HELP &&
-				g_lastActionId && *g_lastActionId && g_lastActionDesc && 
-				*g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
-			{
-				static HCURSOR cur = LoadCursor(NULL, IDC_HAND);
-				SetCursor(cur);
-			}
 		}
 		break;
 	}
@@ -1074,10 +1111,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	{
 		int cmd = NamedCommandLookup("_S&M_SHOWNOTESHELP");
 		if (cmd > 0)
-		{
-			int afterCmd = NamedCommandLookup("_SWSCONSOLE");
-			AddToMenu(hMenu, "S&&M Notes/help", cmd, afterCmd > 0 ? afterCmd : 40075);
-		}
+			AddToMenu(hMenu, "S&&M Notes/Help", cmd);
 	}
 }
 

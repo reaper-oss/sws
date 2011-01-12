@@ -506,7 +506,7 @@ void SWS_MediaPoolFileView::OnBeginDrag(LPARAM item)
 }
 
 SWS_MediaPoolWnd::SWS_MediaPoolWnd()
-:SWS_DockWnd(IDD_MEDIAPOOL, "Media Pool", 30004, SWSGetCommandID(OpenMediaPool)), m_curGroup(NULL), m_projGroup("Project", false)
+:SWS_DockWnd(IDD_MEDIAPOOL, "Media Pool", "SWSMediaPool", 30004, SWSGetCommandID(OpenMediaPool)), m_curGroup(NULL), m_projGroup("Project", false)
 {
 	// Load files from the "database"
 	char cBuf[512];
@@ -807,7 +807,7 @@ static COMMAND_T g_commandTable[] =
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
-		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40075);
+		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
 }
 
 int MediaPoolInit()

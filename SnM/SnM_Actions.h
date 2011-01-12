@@ -45,13 +45,14 @@
 #define SNM_OLD_FORMATED_INI_FILE	"%s/Plugins/S&M.ini"
 #define SNM_ACTION_HELP_INI_FILE	"%s/S&M_Action_help_en.ini"
 #endif
-#define MAX_ACTION_COUNT			0xFFFF
-#define MAX_TRACK_GROUPS			32 
+#define SNM_MAX_ACTION_COUNT		0xFFFF
+#define SNM_MAX_TRACK_GROUPS		32 
 #define SNM_MAX_HW_OUTS				8
 #define SNM_MAX_TAKES				128
 #define SNM_MAX_FX					128
-#define MAX_INI_SECTION				0xFFFF // definitive limit for WritePrivateProfileSection
-#define LET_BREATHE_MS				10
+#define SNM_MAX_INI_SECTION			0xFFFF // definitive limit for WritePrivateProfileSection
+#define SNM_LET_BREATHE_MS			10
+#define SNM_3D_COLORS_DELTA			28
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -121,16 +122,6 @@ public:
 	bool m_mute;
 	int m_phase, m_mono, m_mode, m_srcChan, m_destChan, m_midi;
 	double m_vol, m_pan, m_panl;
-};
-
-
-// Custom WDL UIs (SnM_Dlg.cpp)
-
-class SNM_VirtualComboBox : public WDL_VirtualComboBox {
-  public:
-	SNM_VirtualComboBox() : WDL_VirtualComboBox() {}
-	~SNM_VirtualComboBox() {}
-    void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
 };
 
 
@@ -244,8 +235,6 @@ void setMainWindowActive(COMMAND_T* _ct);
 
 // *** SnM_Sends.cpp ***
 bool cueTrack(const char* _busName, int _type, const char* _undoMsg, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
-void openCueBussWnd(COMMAND_T* _ct);
-bool isCueBussWndDisplayed(COMMAND_T* _ct);
 void cueTrack(COMMAND_T* _ct);
 void copyWithIOs(COMMAND_T* _ct);
 void cutWithIOs(COMMAND_T* _ct);
@@ -356,6 +345,8 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 LICE_CachedFont* SNM_GetThemeFont();
 void fillHWoutDropDown(HWND _hwnd, int _idc);
 WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+void openCueBussWnd(COMMAND_T* _ct);
+bool isCueBussWndDisplayed(COMMAND_T* _ct);
 WDL_DLGRET WaitDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 
 // *** SnM_ME.cpp ***
@@ -369,6 +360,7 @@ void letREAPERBreathe(COMMAND_T* _ct);
 void winWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
 void simulateMouseClick(COMMAND_T* _ct);
 void dumpWikiActions2(COMMAND_T* _ct);
+int SNM_MinMax(int _val, int _min, int _max);
 void SNM_ShowConsoleMsg(const char* _msg, const char* _title="", bool _clear=true); 
 void SNM_ShowConsoleDbg(bool _clear, const char* format, ...);
 bool SNM_DeleteFile(const char* _filename);

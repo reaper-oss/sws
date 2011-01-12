@@ -639,6 +639,7 @@ WDL_DLGRET CSPVOCItemDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 					EndDialog(hwnd,0);
 					break;
 			}
+			break;
 	}
 	return 0;
 }
@@ -664,215 +665,176 @@ void DoShowPVocDlg(COMMAND_T*)
 
 typedef struct 
 {
-	double Scaling;
-	double LengthScaling;
+	double dScaling;
+	double dLengthScaling;
 } t_ScaleItemPosParams;
 
 t_ScaleItemPosParams g_last_ScaleItemPosParams;
 
-double *g_StoredPositions;
-double *g_StoredLengths;
+static double *g_StoredPositions;
+static double *g_StoredLengths;
 
-void DoScaleItemPosStatic2(double TheScaling,double TheLengthScaling,bool RestorePos)
+void DoScaleItemPosStatic2(double dTheScaling, double dTheLengthScaling, bool bRestorePos)
 {
-	//
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	
-	int numItems=666;
-	
-	double PositionScalingFactor=TheScaling/100.0;
-	double LenScalingFactor=TheLengthScaling/100.0;
-	if (PositionScalingFactor<0.0001) PositionScalingFactor=0.0001;
-	//if (PositionScalingFactor>1) PositionScalingFactor=1.0;
+	double dPositionScalingFactor = dTheScaling / 100.0;
+	double dLenScalingFactor = dTheLengthScaling / 100.0;
+	if (dPositionScalingFactor < 0.0001)
+		dPositionScalingFactor = 0.0001;
 
-	
-	bool ItemSelected=false;
-	//double EditCurPos=GetCursorPosition();
-	
-	//MediaItem** MediaItemsOnTrack;
-	
 	// Find minimum item position from all selected
-	double MinTime;
-	double CurrentPos;
-	int ItemCounter=0;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	double dMinTime = DBL_MAX;
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		//MediaItem* **MediaItemsOnTrack = new (MediaItem*)[numItems];
-		
-		
-		for (j=0;j<numItems;j++)
+		WDL_TypedBuf<MediaItem*> items;
+		SWS_GetSelectedMediaItemsOnTrack(&items, CSurf_TrackFromID(i+1, false));
+		for (int j = 0; j < items.GetSize(); j++)
 		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
+			double dPos = *(double*)GetSetMediaItemInfo(items.Get()[j], "D_POSITION", NULL);
+			if (dPos < dMinTime)
+				dMinTime = dPos;
+		}
+	}
+
+	int iItem = 0;
+
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		WDL_TypedBuf<MediaItem*> items;
+		SWS_GetSelectedMediaItemsOnTrack(&items, CSurf_TrackFromID(i+1, false));
+		for (int j = 0; j < items.GetSize(); j++)
+		{
+			double dNewPos;
+			double dNewLen;
+			if (!bRestorePos)
 			{
-				
-				CurrentPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
-				if (ItemCounter==0) MinTime=CurrentPos;
-				if (ItemCounter>0 && CurrentPos<MinTime) MinTime=CurrentPos;
-				ItemCounter++;
+				dNewPos = (g_StoredPositions[iItem] - dMinTime) * dPositionScalingFactor + dMinTime;
+				dNewLen = g_StoredLengths[iItem] * dLenScalingFactor;
 			}
-			
-			
-		}
+			else 
+			{ 
+				dNewPos = g_StoredPositions[iItem];
+				dNewLen = g_StoredLengths[iItem];
+			}
+			iItem++;
+						
+			GetSetMediaItemInfo(items.Get()[j], "D_POSITION", &dNewPos);
+			GetSetMediaItemInfo(items.Get()[j], "D_LENGTH",   &dNewLen);
+		} 
 	}
-	//MessageBox(g_hwndParent,"min search complete","info",MB_OK);
-	//double yyy;
-	ItemCounter=0;
-	
-
-	for (i=0;i<GetNumTracks();i++)
-	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		//MediaItem* **MediaItemsOnTrack = new (MediaItem*)[numItems];
-		MediaItem** MediaItemsOnTrack = new MediaItem*[numItems];
-		
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			MediaItemsOnTrack[j]=CurItem;
-		}
-		for (j=0;j<numItems;j++)
-		{
-			ItemSelected=*(bool*)GetSetMediaItemInfo(MediaItemsOnTrack[j],"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				//double SnapOffset=*(double*)GetSetMediaItemInfo(CurItem,"D_SNAPOFFSET",NULL);
-				
-				double TimeX;
-				double NewPos;
-				double NewLen;
-				//double OldPos=*(double*)GetSetMediaItemInfo(MediaItemsOnTrack[j],"D_POSITION",NULL);
-				double OldPos=g_StoredPositions[ItemCounter];
-				double OldLen=g_StoredLengths[ItemCounter];
-				if (RestorePos==false)
-				{
-					TimeX=OldPos-MinTime;
-					NewPos=TimeX*PositionScalingFactor;
-					NewPos=NewPos+MinTime;
-					NewLen=OldLen*LenScalingFactor;
-				} else 
-				{ 
-					NewPos=OldPos;
-					NewLen=OldLen;
-				}
-					ItemCounter++;
-				//if (Positive)
-					//NewPos=OldPos+NudgeAmount; else NewPos=OldPos-NudgeAmount;
-				//NewPos=MinTime+( (PositionScalingFactor)*(OldPos));
-								
-				GetSetMediaItemInfo(MediaItemsOnTrack[j],"D_POSITION",&NewPos);
-				GetSetMediaItemInfo(MediaItemsOnTrack[j],"D_LENGTH",&NewLen);
-				//GetSetMediaItemInfo(
-				
-				
-			} 
-
-
-		}
-	delete[] MediaItemsOnTrack;
-
-	}
-	
 }
-
-HWND hPosScaler=0;
-HWND hLenScaler=0;
 
 WDL_DLGRET ScaleItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	//
+	static HWND hPosScaler = NULL;
+	static HWND hLenScaler = NULL;
+
 	switch(Message)
     {
         case WM_INITDIALOG:
 		{
 #ifdef _WIN32
-			hPosScaler = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER1", 
-				WS_CHILD | WS_VISIBLE | TBS_VERT, 
-				175, 5, 175, 25, hwnd, NULL, g_hInst, NULL);
-			hLenScaler = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER2", 
-				WS_CHILD | WS_VISIBLE | TBS_VERT, 
-				175, 40, 175, 25, hwnd, NULL, g_hInst, NULL);
+			RECT r;
+			GetWindowRect(GetDlgItem(hwnd, IDC_SLIDER1), &r);
+			ScreenToClient(hwnd, (LPPOINT)&r);
+			ScreenToClient(hwnd, ((LPPOINT)&r)+1);
+			hPosScaler = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER1",
+				WS_CHILD | WS_VISIBLE | TBS_VERT,
+				r.left, r.top, r.right-r.left, r.bottom-r.top, hwnd, NULL, g_hInst, NULL);
+			GetWindowRect(hPosScaler, &r);
+			ScreenToClient(hwnd, (LPPOINT)&r);
+			ScreenToClient(hwnd, ((LPPOINT)&r)+1);
+
+			GetWindowRect(GetDlgItem(hwnd, IDC_SLIDER2), &r);
+			ScreenToClient(hwnd, (LPPOINT)&r);
+			ScreenToClient(hwnd, ((LPPOINT)&r)+1);
+			hLenScaler = CreateWindowEx(WS_EX_LEFT, "REAPERhfader", "DLGFADER2",
+				WS_CHILD | WS_VISIBLE | TBS_HORZ,
+				r.left, r.top, r.right-r.left, r.bottom-r.top, hwnd, NULL, g_hInst, NULL);
 #else
-			hPosScaler = SWELL_MakeControl("DLGFADER1", 666, "REAPERhfader", 0, 175,  5, 175, 25, 0);
-			hLenScaler = SWELL_MakeControl("DLGFADER2", 667, "REAPERhfader", 0, 175, 40, 175, 25, 0);
+			hPosScaler = GetDlgItem(hwnd, IDC_SLIDER1);
+			hLenScaler = GetDlgItem(hwnd, IDC_SLIDER2);
+			ShowWindow(hPosScaler, SW_SHOW);
+			ShowWindow(hLenScaler, SW_SHOW);
 #endif
-			SendMessage(hPosScaler,TBM_SETTIC,0,500);
-			SendMessage(hLenScaler,TBM_SETTIC,0,500);
+			SendMessage(hPosScaler,TBM_SETTIC,0,473);
+			SendMessage(hLenScaler,TBM_SETTIC,0,473);
 			char TextBuf[32];
-			sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.Scaling);
+			sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.dScaling);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
-			sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.LengthScaling);
+			sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.dLengthScaling);
 			SetDlgItemText(hwnd, IDC_EDIT5, TextBuf);
 			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
 			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
-			break;
+			return 0;
 		}
         case WM_HSCROLL:
 		{
 			char TextBuf[128];
-			int SliderPos=(int)SendMessage((HWND)lParam,TBM_GETPOS,0,0);
-			double PosScalFact=10+((190.0/1000)*SliderPos);
-			if ((HWND)lParam==hPosScaler)
+			int SliderPos = (int)SendMessage((HWND)lParam, TBM_GETPOS, 0, 0);
+			double dPosScalFact = 10+((190.0/1000)*SliderPos);
+			if ((HWND)lParam == hPosScaler)
 			{
-				g_last_ScaleItemPosParams.Scaling=PosScalFact;
-				sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.Scaling);
+				g_last_ScaleItemPosParams.dScaling = dPosScalFact;
+				sprintf(TextBuf, "%.2f", g_last_ScaleItemPosParams.dScaling);
 				SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
 			}
 			if ((HWND)lParam==hLenScaler)
 			{
-				g_last_ScaleItemPosParams.LengthScaling=PosScalFact;
-				sprintf(TextBuf,"%.2f",g_last_ScaleItemPosParams.LengthScaling);
+				g_last_ScaleItemPosParams.dLengthScaling = dPosScalFact;
+				sprintf(TextBuf, "%.2f", g_last_ScaleItemPosParams.dLengthScaling);
 				SetDlgItemText(hwnd, IDC_EDIT5, TextBuf);
 			}
-			DoScaleItemPosStatic2(g_last_ScaleItemPosParams.Scaling,g_last_ScaleItemPosParams.LengthScaling, false);
+			DoScaleItemPosStatic2(g_last_ScaleItemPosParams.dScaling, g_last_ScaleItemPosParams.dLengthScaling, false);
 			UpdateTimeline();
 			break;
 		}
 
 		case WM_COMMAND:
+		{
             switch(LOWORD(wParam))
             {
+				case IDC_EDIT1:
+					if (HIWORD(wParam) == EN_CHANGE)
+					{
+						char textbuf[100];
+						GetDlgItemText(hwnd, IDC_EDIT1, textbuf, 100);
+						g_last_ScaleItemPosParams.dScaling = atof(textbuf);
+						SendMessage(hPosScaler, TBM_SETPOS, 1, (int)(1000.0*(g_last_ScaleItemPosParams.dScaling-10.0)/190));
+					}
+					break;
+				case IDC_EDIT5:
+					if (HIWORD(wParam) == EN_CHANGE)
+					{
+						char textbuf[100];
+						GetDlgItemText(hwnd, IDC_EDIT5, textbuf, 100);
+						g_last_ScaleItemPosParams.dLengthScaling = atof(textbuf);
+						SendMessage(hLenScaler, TBM_SETPOS, 1, (int)(1000.0 * (g_last_ScaleItemPosParams.dLengthScaling-10.0) / 190));
+					}
+					break;
 				case IDC_APPLY:
-				{
-					char textbuf[100];
-					GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
-					g_last_ScaleItemPosParams.Scaling=atof(textbuf);
-					GetDlgItemText(hwnd,IDC_EDIT5,textbuf,100);
-					g_last_ScaleItemPosParams.LengthScaling=atof(textbuf);
-					DoScaleItemPosStatic2(g_last_ScaleItemPosParams.Scaling,g_last_ScaleItemPosParams.LengthScaling, false);
+					DoScaleItemPosStatic2(g_last_ScaleItemPosParams.dScaling, g_last_ScaleItemPosParams.dLengthScaling, false);
 					UpdateTimeline();
 					break;
-				}
 				case IDOK:
-				{
-					char textbuf[100];
-					GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
-					g_last_ScaleItemPosParams.Scaling=atof(textbuf);
-					GetDlgItemText(hwnd,IDC_EDIT5,textbuf,100);
-					g_last_ScaleItemPosParams.LengthScaling=atof(textbuf);
-					DoScaleItemPosStatic2(g_last_ScaleItemPosParams.Scaling,g_last_ScaleItemPosParams.LengthScaling, false);
-					Undo_OnStateChangeEx("Scale Item Positions By Static Percentage",4,-1);
+					DoScaleItemPosStatic2(g_last_ScaleItemPosParams.dScaling, g_last_ScaleItemPosParams.dLengthScaling, false);
+					Undo_OnStateChangeEx("Scale Item Positions By Static Percentage", 4, -1);
 					UpdateTimeline();
-					EndDialog(hwnd,0);
+					EndDialog(hwnd, 0);
 					break;
-				}
 				case IDCANCEL:
-					DoScaleItemPosStatic2(g_last_ScaleItemPosParams.Scaling,g_last_ScaleItemPosParams.LengthScaling,true);
+					DoScaleItemPosStatic2(g_last_ScaleItemPosParams.dScaling, g_last_ScaleItemPosParams.dLengthScaling, true);
 					UpdateTimeline();
-					EndDialog(hwnd,0);
+					EndDialog(hwnd, 0);
 					break;
 			}
+			break;
+		}
 		case WM_DESTROY:
+		{
 			DestroyWindow(hPosScaler);
 			DestroyWindow(hLenScaler);
 			break;
+		}
 	}
 	return 0;
 }
@@ -880,39 +842,21 @@ WDL_DLGRET ScaleItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 
 void DoScaleItemPosStaticDlg(COMMAND_T*)
 {
-	static bool g_ScaleItemPosFirstRun = true;
-	if (g_ScaleItemPosFirstRun)
+	static bool bScaleItemPosFirstRun = true;
+	if (bScaleItemPosFirstRun)
 	{
-		g_last_ScaleItemPosParams.Scaling=100.0;
-		g_ScaleItemPosFirstRun=false;
+		g_last_ScaleItemPosParams.dScaling = 100.0;
+		g_last_ScaleItemPosParams.dLengthScaling = 100.0;
+		bScaleItemPosFirstRun = false;
 	}
-	int NumSelItems=CountSelectedMediaItems(NULL);
-	g_StoredPositions=new double [NumSelItems];
-	g_StoredLengths=new double[NumSelItems];
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	
-	int numItems;
-	bool ItemSelected=false;
-	int ItemCounter=0;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	g_StoredPositions = new double[items.GetSize()];
+	g_StoredLengths = new double[items.GetSize()];
+	for (int i = 0; i < items.GetSize(); i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			//propertyName="D_";
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				g_StoredPositions[ItemCounter]=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
-				g_StoredLengths[ItemCounter]=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
-				ItemCounter++;
-			}
-		}
+		g_StoredPositions[i] = *(double*)GetSetMediaItemInfo(items.Get()[i], "D_POSITION", NULL);
+		g_StoredLengths[i]   = *(double*)GetSetMediaItemInfo(items.Get()[i], "D_LENGTH", NULL);
 	}
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SCALEITEMPOS), g_hwndParent, ScaleItemPosDlgProc);
 	delete[] g_StoredPositions;
@@ -973,6 +917,7 @@ WDL_DLGRET RandomizeItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 					EndDialog(hwnd,0);
 					break;
 			}
+			break;
 	}
 	return 0;
 }
@@ -1147,6 +1092,7 @@ WDL_DLGRET GenEnvesDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 					return 0;
 				}
 			}
+			break;
 	}
 	return 0;
 }
@@ -1322,9 +1268,9 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				33+(1+i)*50, 55, 45, 25, hwnd, NULL, g_hInst, NULL);
 				SendMessage(g_TakeMixerState.g_hNumLabels[i],WM_SETFONT, (WPARAM)hFont, 0);
 #else
-				g_TakeMixerState.g_hNumLabels[i]  = SWELL_MakeLabel(0, "STATIC", i*4+1, 45+(1+i)*50, 20, 40, 13, 0);
-				g_TakeMixerState.g_hVolSliders[i] = SWELL_MakeControl("DLGFADER1", i*4+2, "REAPERhfader", 0, 40+(1+i)*50, 90, 30, 120, 0);
-				g_TakeMixerState.g_hPanSliders[i] = SWELL_MakeControl("DLGFADER1", i*4+3, "REAPERhfader", 0, 33+(1+i)*50, 55, 45, 25, 0);
+				g_TakeMixerState.g_hNumLabels[i]  = SWELL_MakeLabel(0, "STATIC", i*4+1, 12+(1+i)*32, 14, 27, 9, 0);
+				g_TakeMixerState.g_hVolSliders[i] = SWELL_MakeControl("DLGFADER1", i*4+2, "REAPERhfader", 0, 15+(1+i)*32, 50, 20, 80, 0);
+				g_TakeMixerState.g_hPanSliders[i] = SWELL_MakeControl("DLGFADER1", i*4+3, "REAPERhfader", 0, 10+(1+i)*32, 27, 30, 17, 0);
 #endif
 
 				sprintf(textbuf,"%d",i+1);
@@ -1337,7 +1283,7 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			WS_CHILD | WS_VISIBLE | TBS_VERT, 
 			40, 90, 30, 120, hwnd, NULL, g_hInst, NULL);
 #else
-			g_TakeMixerState.g_hItemVolSlider = SWELL_MakeControl("DLGFADER1", 666, "REAPERhfader", 0, 40, 95, 30, 120, 0);
+			g_TakeMixerState.g_hItemVolSlider = SWELL_MakeControl("DLGFADER1", 666, "REAPERhfader", 0, 12, 50, 20, 80, 0);
 #endif
 			SendMessage(g_TakeMixerState.g_hItemVolSlider,TBM_SETTIC,0,500);
 			UpdateTakeMixerSliders();
@@ -1378,6 +1324,7 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 					break;
 				}
 			}
+			break;
 		case WM_VSCROLL:
 		{
 			int ThePos=(int)SendMessage((HWND)lParam,TBM_GETPOS,0,0);
@@ -1680,6 +1627,7 @@ WDL_DLGRET TakeFinderDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 					EndDialog(hwnd,0);
 					break;
 			}
+			break;
 	}
 	return 0;
 }

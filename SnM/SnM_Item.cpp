@@ -62,23 +62,29 @@ void splitMidiAudio(COMMAND_T* _ct)
 				{
 					bool split=false;
 					MediaItem_Take* tk = GetActiveTake(item);
-					PCM_source* pcm = tk ? (PCM_source*)GetSetMediaItemTakeInfo(tk,"P_SOURCE",NULL) : NULL;
-					if (pcm)
+					if (tk)
 					{
-						// valid take rmk: "" for in-project
-						if (pcm->GetFileName()) 
-							split = (strcmp(pcm->GetType(), "MIDI") == 0);
-						// empty take
-						else
-							split = true;
+						PCM_source* pcm = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL);
+						if (pcm)
+						{
+							// valid src ? (rmk: "" for in-project)
+							if (pcm->GetFileName()) 
+								split = (!strcmp(pcm->GetType(), "MIDI") || !strcmp(pcm->GetType(), "MIDIPOOL"));
+							// empty take
+							else
+								split = true;
 
-						// "split prior zero crossing" in all other cases
-						// Btw, includes all sources: "WAVE", "VORBIS", "SECTION",..
-						if (!split)
-							Main_OnCommand(40792,0);
-						else
-							SplitMediaItem(item, GetCursorPosition());
+							// "split prior zero crossing" in all other cases
+							// Btw, includes all sources: "WAVE", "VORBIS", "SECTION",..
+							if (!split)
+								Main_OnCommand(40792,0);
+							else
+								SplitMediaItem(item, GetCursorPosition());
+						}
 					}
+					// v4 empty takes are null
+					else
+						SplitMediaItem(item, GetCursorPosition());
 				}
 			}
 		}

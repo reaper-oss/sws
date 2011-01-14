@@ -883,18 +883,19 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 		case WM_LBUTTONDOWN:
-			SetFocus(g_pLiveConfigsWnd->GetHWND());
+			SetFocus(m_hwnd);
 			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)))
 				SetCapture(g_pLiveConfigsWnd->GetHWND());
 			break;
 		case WM_LBUTTONUP:
-			if (GetCapture()==g_pLiveConfigsWnd->GetHWND()) {
+			if (GetCapture() == m_hwnd)
+			{
 				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 				ReleaseCapture();
 			}
 			break;
 		case WM_MOUSEMOVE:
-//			if (GetCapture()==g_pLiveConfigsWnd->GetHWND())
+//			if (GetCapture() == m_hwnd)
 				m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
 	}

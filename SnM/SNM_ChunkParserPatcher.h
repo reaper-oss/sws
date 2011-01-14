@@ -919,7 +919,8 @@ static int RemoveChunkLines(char* _chunk, const char* _searchStr, bool _checkBOL
 		{
 			updates++; eol++; 
 			if (bol != _chunk) bol++;
-			memmove(bol, eol, len - ((int)(eol-_chunk))); // avoids strlen(eol) 
+			// we avoid a bunch of strlen(eol) here
+			memmove(bol, eol, len - ((int)(eol-_chunk)) + 1); // +1 for ending '\0'
 			len -= (int)(eol-bol);
 			idStr = strstr(bol, _searchStr);
 		}

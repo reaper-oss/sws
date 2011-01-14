@@ -43,7 +43,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-fader (post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, post-fader (post-pan)" }, "S&M_SENDS2", cueTrack, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-FX" }, "S&M_SENDS3", cueTrack, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Open Cue Buss window..." }, "S&M_SENDS4", openCueBussWnd, "S&&M Cue Buss window...", NULL, isCueBussWndDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Cue Buss window..." }, "S&M_SENDS4", openCueBussWnd, "S&&M Cue Buss...", NULL, isCueBussWndDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection" }, "S&M_CUEBUS", cueTrack, NULL, -1},
 
 	{ { DEFACCEL, "SWS/S&M: Remove receives from selected tracks" }, "S&M_SENDS5", removeReceives, NULL, },
@@ -270,6 +270,17 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, prompt for slot" }, "S&M_TAKEFXCHAINp1", loadSetTakeFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, all takes, prompt for slot" }, "S&M_TAKEFXCHAINp2", loadSetAllTakesFXChain, NULL, -1},
 
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 1" }, "S&M_PASTE_TAKEFXCHAIN1", loadPasteTakeFXChain, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 2" }, "S&M_PASTE_TAKEFXCHAIN2", loadPasteTakeFXChain, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 3" }, "S&M_PASTE_TAKEFXCHAIN3", loadPasteTakeFXChain, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 4" }, "S&M_PASTE_TAKEFXCHAIN4", loadPasteTakeFXChain, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 5" }, "S&M_PASTE_TAKEFXCHAIN5", loadPasteTakeFXChain, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 6" }, "S&M_PASTE_TAKEFXCHAIN6", loadPasteTakeFXChain, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 7" }, "S&M_PASTE_TAKEFXCHAIN7", loadPasteTakeFXChain, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 8" }, "S&M_PASTE_TAKEFXCHAIN8", loadPasteTakeFXChain, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp1", loadPasteTakeFXChain, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, all takes, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp2", loadPasteAllTakesFXChain, NULL, -1},
+
 	{ { DEFACCEL, "SWS/S&M: Copy FX chain from selected item" }, "S&M_COPYFXCHAIN1", copyTakeFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Cut FX chain from selected items" }, "S&M_COPYFXCHAIN2", cutTakeFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items" }, "S&M_COPYFXCHAIN3", setTakeFXChain, NULL, }, 
@@ -295,6 +306,15 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected tracks, slot 8" }, "S&M_TRACKFXCHAIN8", loadSetTrackFXChain, NULL, 7},
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected tracks, prompt for slot" }, "S&M_TRACKFXCHAINp1", loadSetTrackFXChain, NULL, -1},
 	
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 1" }, "S&M_PASTE_TRACKFXCHAIN1", loadPasteTrackFXChain, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 2" }, "S&M_PASTE_TRACKFXCHAIN2", loadPasteTrackFXChain, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 3" }, "S&M_PASTE_TRACKFXCHAIN3", loadPasteTrackFXChain, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 4" }, "S&M_PASTE_TRACKFXCHAIN4", loadPasteTrackFXChain, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 5" }, "S&M_PASTE_TRACKFXCHAIN5", loadPasteTrackFXChain, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 6" }, "S&M_PASTE_TRACKFXCHAIN6", loadPasteTrackFXChain, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 7" }, "S&M_PASTE_TRACKFXCHAIN7", loadPasteTrackFXChain, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 8" }, "S&M_PASTE_TRACKFXCHAIN8", loadPasteTrackFXChain, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, prompt for slot" }, "S&M_PASTE_TRACKFXCHAINp1", loadPasteTrackFXChain, NULL, -1},
 	
 	// Track templates --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (track templates)..." }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResourceView, NULL, 1, IsResourceViewDisplayed},

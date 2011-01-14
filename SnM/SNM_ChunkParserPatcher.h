@@ -49,6 +49,7 @@
 //
 // Changelog:
 // v1.1
+// - Fixes
 // - Use SWS_GetSetObjectState, if _SWS_EXTENSION is defined. 
 //   This offers a 2nd level of cache. Note: SWS_GetSetObjectState() == native 
 //   GetSetObjectState() if it isn't surrounded with SWS_CacheObjectState(true)/(false)
@@ -96,6 +97,7 @@
 #define SNM_MAX_CHUNK_KEYWORD_LENGTH	64
 #define SNM_HEAPBUF_GRANUL				4096
 
+
 // Defined at eof
 static int RemoveChunkLines(char* _chunk, const char* _searchStr, 
 							bool _checkBOL = false, int _checkEOLChar = 0, int* _len = NULL);
@@ -105,6 +107,15 @@ static int RemoveChunkLines(WDL_String* _chunk, const char* _searchStr,
 							bool _checkBOL = false, int _checkEOLChar = 0, int* _len = NULL);
 static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<const char>* _searchStrs,
 							bool _checkBOL = false, int _checkEOLChar = 0, int* _len = NULL);
+
+static int RemoveAllIds(char* _chunk, int* _len = NULL){
+	return RemoveChunkLines(_chunk, "ID {", false, '}', _len);
+}
+
+static int RemoveAllIds(WDL_String* _chunk, int* _len = NULL){
+	//JFB v4: POOLEDEVTS GUIDs will remain...
+	return RemoveChunkLines(_chunk, "ID {", false, '}', _len);
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -248,15 +259,6 @@ bool Commit(bool _force = false)
 		!(GetPlayState() & 4) && // prevent patches while recording
 		m_chunk->GetLength())
 	{
-#ifdef _SNM_DEBUG
-		char filename[BUFFER_SIZE] = "";
-		sprintf(filename, "%s%cSNM_ChunkParserPatcher_lastCommit.txt", GetExePath(), PATH_SLASH_CHAR);
-		FILE* f = fopen(filename, "w"); 
-		if (f) {
-			fputs(m_chunk->Get(), f);
-			fclose(f);
-		}
-#endif
 		if (!SNM_GetSetObjectState(m_object, m_chunk)) {
 			SetChunk("", 0);
 			return true;
@@ -484,8 +486,19 @@ char* SNM_GetSetObjectState(void* _obj, WDL_String* _str)
 	return SWS_GetSetObjectState(_obj, _str);
 #else
 	if (_str)
-		RemoveIds();
-	return GetSetObjectState(_obj, _str->Get());
+	{
+		RemoveAllIds(_str);
+#ifdef _SNM_DEBUG
+		char filename[BUFFER_SIZE] = "";
+		sprintf(filename, "%s%cSNM_ChunkParserPatcher_lastCommit.txt", GetExePath(), PATH_SLASH_CHAR);
+		FILE* f = fopen(filename, "w"); 
+		if (f) {
+			fputs(_str->Get(), f);
+			fclose(f);
+		}
+#endif
+	}
+	return GetSetObjectState(_obj, _str ? _str->Get() : NULL);
 #endif
 }
 
@@ -940,7 +953,8 @@ static int RemoveChunkLines(char* _chunk, const char* _searchStr, bool _checkBOL
 		{
 			updates++; eol++; 
 			if (bol != _chunk) bol++;
-			memmove(bol, eol, len - ((int)(eol-_chunk))); // avoids strlen(eol) 
+			// we avoid a bunch of strlen(eol) here
+			memmove(bol, eol, len - ((int)(eol-_chunk)) + 1); // +1 for ending '\0'
 			len -= (int)(eol-bol);
 			idStr = strstr(bol, _searchStr);
 		}
@@ -992,14 +1006,6 @@ static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<const char>* _search
 		_chunk->SetLen(len, true); // in case my WDL_String mod is used..
 	if (_len) *_len = len;
 	return updates;
-}
-
-static int RemoveAllIds(char* _chunk, int* _len = NULL){
-	return RemoveChunkLines(_chunk, "ID {", false, '}', _len);
-}
-
-static int RemoveAllIds(WDL_String* _chunk, int* _len = NULL){
-	return RemoveChunkLines(_chunk, "ID {", false, '}', _len);
 }
 
 #endif

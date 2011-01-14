@@ -69,7 +69,7 @@ SNM_NotesHelpWnd* g_pNotesHelpWnd = NULL;
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
 SWSProjConfig<WDL_String> g_prjNotes;
 
-//JFB member attributes?
+//JFB TODO? member attributes?
 int g_bDocked = -1, g_bLastDocked = 0; 
 char g_locked = 1;
 char g_lastText[MAX_HELP_LENGTH];
@@ -124,6 +124,10 @@ void SNM_NotesHelpWnd::SetType(int _type)
 
 	if (prev == NOTES_HELP_DISABLED && prev != _type)
 		SetTimer(m_hwnd, 1, 125, NULL);
+/*JFB!!! used to be
+	else
+		Update();
+*/
 }
 
 void SNM_NotesHelpWnd::SetText(const char* _str) 
@@ -307,16 +311,15 @@ void SNM_NotesHelpWnd::saveCurrentPrjNotes()
 
 void SNM_NotesHelpWnd::saveCurrentHelp()
 {
-	if (*g_lastActionId)
+	// skip custom cmds
+	if (*g_lastActionId && g_lastActionDesc && 
+	    *g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
 	{
-		if (g_lastActionDesc && *g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
-		{
-			char buf[MAX_HELP_LENGTH] = "";
-			memset(buf, 0, sizeof(buf));
-			GetDlgItemText(GetHWND(), IDC_EDIT, buf, MAX_HELP_LENGTH);
-			if (strncmp(g_lastText, buf, MAX_HELP_LENGTH))
-				saveHelp(g_lastActionId, buf);
-		}
+		char buf[MAX_HELP_LENGTH] = "";
+		memset(buf, 0, sizeof(buf));
+		GetDlgItemText(GetHWND(), IDC_EDIT, buf, MAX_HELP_LENGTH);
+		if (strncmp(g_lastText, buf, MAX_HELP_LENGTH))
+			saveHelp(g_lastActionId, buf);
 	}
 }
 
@@ -427,6 +430,7 @@ int SNM_NotesHelpWnd::updateActionHelp(bool _savePrevious)
 					
 					if (g_lastActionId && *g_lastActionId && g_lastActionDesc && *g_lastActionDesc )
 					{
+						// skip custom cmds
 						if (!_strnicmp(g_lastActionDesc, "Custom:", 7))
 						{
 							SetText(g_lastActionId);
@@ -801,25 +805,23 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case WM_LBUTTONDOWN:
 		{
-			SetFocus(g_pNotesHelpWnd->GetHWND());
-			int x = GET_X_LPARAM(lParam);
-			int y = GET_Y_LPARAM(lParam);
-			if (m_parentVwnd.OnMouseDown(x, y))
-				SetCapture(g_pNotesHelpWnd->GetHWND());
+			SetFocus(m_hwnd);
+			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))
+				SetCapture(m_hwnd);
+/*JFB!!! vvvv sert à rien !!(?)  humm... appeler qd click à l'exterieur
 			else 
 			{
-				WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
+				WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 				if (w && w->GetID() == TXTID_LABEL && GetType() == ACTION_HELP)
 					SetCapture(g_pNotesHelpWnd->GetHWND());
 			}
+*/
 		}
 		break;
 
 		case WM_LBUTTONUP:
-			if (GetCapture()==g_pNotesHelpWnd->GetHWND()) 
+			if (GetCapture() == m_hwnd) 
 			{
-				int x = GET_X_LPARAM(lParam);
-				int y = GET_Y_LPARAM(lParam);
 				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 				ReleaseCapture();
 			}
@@ -827,10 +829,8 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case WM_MOUSEMOVE:
 		{
-			int x = GET_X_LPARAM(lParam);
-			int y = GET_Y_LPARAM(lParam);
-//			if (GetCapture()==g_pNotesHelpWnd->GetHWND())
-				m_parentVwnd.OnMouseMove(x, y);
+//			if (GetCapture() == m_hwnd)
+				m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 		}
 		break;
 	}

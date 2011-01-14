@@ -184,11 +184,12 @@ void MidiItemProcessor::getSelectedMediaItems(list<MediaItem*> &items)
 
 bool MidiItemProcessor::isMidiTake(MediaItem_Take* take)
 {
-	PCM_source* source = GetMediaItemTake_Source(take);
-
-	if(source && (strcmp(source->GetType(),"MIDI") == 0))
-		return true;
-
+	if (take)
+	{
+		PCM_source* source = GetMediaItemTake_Source(take);
+		if (source && (!strcmp(source->GetType(), "MIDI") || !strcmp(source->GetType(), "MIDIPOOL")))
+			return true;
+	}
 	return false;
 }
 

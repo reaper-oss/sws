@@ -110,9 +110,9 @@ const char* g_itemProps[] = {"Volume", "Fade in", "Fade out", "Loop source", "No
 const char* g_takeProps[] = {"Name", "Volume", "Take pan", "FX", "MIDI properties", "Reverse"};
 #endif
 
-int g_type = SNM_SLOT_TYPE_FX_CHAINS;
+int g_type = -1;
 
-//JFB member attributes?
+//JFB TODO? member attributes
 int g_dblClickType[SNM_SLOT_TYPE_COUNT];
 int g_dblClickTo = 0; // for fx chains only
 WDL_PtrList<PathSlotItem> g_dragPathSlotItems; 
@@ -346,7 +346,7 @@ void SNM_ResourceView::OnBeginDrag(LPARAM _item)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_ResourceWnd::SNM_ResourceWnd()
-:SWS_DockWnd(IDD_SNM_FXCHAINLIST, "FX Chains", "SnMFxChains", 30006, SWSGetCommandID(OpenResourceView))
+:SWS_DockWnd(IDD_SNM_FXCHAINLIST, "Resources", "SnMResources", 30006, SWSGetCommandID(OpenResourceView))
 {
 	m_previousType = g_type;
 	if (m_bShowAfterInit)
@@ -359,7 +359,10 @@ void SNM_ResourceWnd::SetType(int _type)
 	g_type = _type;
 	m_cbType.SetCurSel(_type);
 	if (m_previousType != g_type)
+	{
+		FillDblClickTypeCombo();
 		Update();
+	}
 }
 
 void SNM_ResourceWnd::Update()
@@ -402,7 +405,8 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
 	// Load prefs 
-	g_type = GetPrivateProfileInt("RESOURCE_VIEW", "TYPE", 0, g_SNMiniFilename.Get());
+	//JFB!!! pb qd very first init (no .ini) ! pour l'instant ok car overridé par OpenResourceView() via son appel à SetType()!!!!
+	g_type = GetPrivateProfileInt("RESOURCE_VIEW", "TYPE", SNM_SLOT_TYPE_FX_CHAINS, g_SNMiniFilename.Get());
 	g_dblClickType[SNM_SLOT_TYPE_FX_CHAINS] = GetPrivateProfileInt("RESOURCE_VIEW", "DBLCLICK_TYPE", 0, g_SNMiniFilename.Get());
 	g_dblClickType[SNM_SLOT_TYPE_TR_TEMPLATES] = GetPrivateProfileInt("RESOURCE_VIEW", "DBLCLICK_TYPE_TR_TEMPLATE", 0, g_SNMiniFilename.Get());
 #ifdef _SNM_ITT
@@ -426,7 +430,7 @@ void SNM_ResourceWnd::OnInitDlg()
 
 	m_cbDblClickType.SetID(COMBOID_DBLCLICK_TYPE);
 	m_cbDblClickType.SetRealParent(m_hwnd);
-	FillDblClickTypeCombo();
+	FillDblClickTypeCombo(); //JFB!!! SetType() instead !???
 	m_cbDblClickType.SetCurSel(g_dblClickType[g_type]);
 	m_parentVwnd.AddChild(&m_cbDblClickType);
 
@@ -695,7 +699,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 		switch(g_type)
 		{
 			case SNM_SLOT_TYPE_FX_CHAINS:
-				AddToMenu(hMenu, "Auto save/insert FX chains (from track selection)", FXC_AUTO_INSERT_FROM_TRACK_SEL);
+				AddToMenu(hMenu, "Auto save FX chains and insert slots (from track selection)", FXC_AUTO_INSERT_FROM_TRACK_SEL);
 //JFB TODO?				AddToMenu(hMenu, "Auto save/insert FX chains (from item selection)", FXC_AUTO_INSERT_FROM_ITEM_SEL);
 				AddToMenu(hMenu, "Set FX chains auto save directory...", FXC_AUTO_SAVE_DIR);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
@@ -711,7 +715,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 				break;
 
 			case SNM_SLOT_TYPE_TR_TEMPLATES:
-				AddToMenu(hMenu, "Auto save/insert track templates (from track selection)", TRT_AUTO_INSERT_FROM_TRACK_SEL);
+				AddToMenu(hMenu, "Auto save track templates and insert slots (from track selection)", TRT_AUTO_INSERT_FROM_TRACK_SEL);
 				AddToMenu(hMenu, "Set track templates auto save directory...", TRT_AUTO_SAVE_DIR);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				AddToMenu(hMenu, TRT_LOAD_APPLY_STR, TRT_LOAD_APPLY_MSG);
@@ -737,7 +741,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 #else
 		AddToMenu(hMenu, "Display...", EDIT_MSG, -1, false, enabled);
 #endif
-		AddToMenu(hMenu, "Explorer/finder...", EXPLORE_MSG, -1, false, enabled);
+		AddToMenu(hMenu, "Show path in Explorer/Finder...", EXPLORE_MSG, -1, false, enabled);
 	}
 	else 
 	{
@@ -1062,18 +1066,19 @@ int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 		case WM_LBUTTONDOWN:
-			SetFocus(g_pResourcesWnd->GetHWND());
+			SetFocus(m_hwnd);
 			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)))
-				SetCapture(g_pResourcesWnd->GetHWND());
+				SetCapture(m_hwnd);
 			break;
 		case WM_LBUTTONUP:
-			if (GetCapture()==g_pResourcesWnd->GetHWND()) {
+			if (GetCapture() == m_hwnd) 
+			{
 				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 				ReleaseCapture();
 			}
 			break;
 		case WM_MOUSEMOVE:
-//			if (GetCapture()==g_pResourcesWnd->GetHWND())
+//			if (GetCapture() == m_hwnd)
 				m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
 	}
@@ -1253,8 +1258,12 @@ void ResourceViewExit()
 
 void OpenResourceView(COMMAND_T* _ct) 
 {
-	if (g_pResourcesWnd) {
-		g_pResourcesWnd->Show((g_type == (int)_ct->user) /* i.e toggle */, true);
+	if (g_pResourcesWnd) 
+	{
+		int prevType = g_type;
+		if (g_type < 0)
+			g_type = (int)_ct->user;
+		g_pResourcesWnd->Show((prevType == (int)_ct->user) /* i.e toggle */, true);
 		g_pResourcesWnd->SetType((int)_ct->user);
 //focus		
 		SetFocus(GetDlgItem(g_pResourcesWnd->GetHWND(), IDC_FILTER));

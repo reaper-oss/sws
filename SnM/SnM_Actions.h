@@ -168,7 +168,9 @@ void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf);
 
 // *** SnM_FXChain.cpp ***
 void loadSetTakeFXChain(COMMAND_T* _ct);
+void loadPasteTakeFXChain(COMMAND_T* _ct);
 void loadSetAllTakesFXChain(COMMAND_T* _ct);
+void loadPasteAllTakesFXChain(COMMAND_T* _ct);
 void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool _set, bool _errMsg=false);
 void copyTakeFXChain(COMMAND_T* _ct);
 void cutTakeFXChain(COMMAND_T* _ct);
@@ -186,6 +188,7 @@ void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _errM
 void pasteTrackFXChain(const char* _title, WDL_String* _chain);
 void setTrackFXChain(const char* _title, WDL_String* _chain);
 void loadSetTrackFXChain(COMMAND_T* _ct);
+void loadPasteTrackFXChain(COMMAND_T* _ct);
 void clearTrackFXChain(COMMAND_T* _ct);
 void copyTrackFXChain(COMMAND_T* _ct);
 int copyTrackFXChain(WDL_String* _fxChain, int _startTr=0);

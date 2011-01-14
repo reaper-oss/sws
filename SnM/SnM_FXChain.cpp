@@ -162,9 +162,19 @@ void loadSetTakeFXChain(COMMAND_T* _ct){
 	applyTakesFXChainSlot(SNM_CMD_SHORTNAME(_ct), slot, true, true, slot < 0 || !g_fxChainFiles.Get(slot)->IsDefault());
 }
 
+void loadPasteTakeFXChain(COMMAND_T* _ct){
+	int slot = (int)_ct->user;
+	applyTakesFXChainSlot(SNM_CMD_SHORTNAME(_ct), slot, true, false, slot < 0 || !g_fxChainFiles.Get(slot)->IsDefault());
+}
+
 void loadSetAllTakesFXChain(COMMAND_T* _ct){
 	int slot = (int)_ct->user;
 	applyTakesFXChainSlot(SNM_CMD_SHORTNAME(_ct), slot, false, true, slot < 0 || !g_fxChainFiles.Get(slot)->IsDefault());
+}
+
+void loadPasteAllTakesFXChain(COMMAND_T* _ct){
+	int slot = (int)_ct->user;
+	applyTakesFXChainSlot(SNM_CMD_SHORTNAME(_ct), slot, false, false, slot < 0 || !g_fxChainFiles.Get(slot)->IsDefault());
 }
 
 void copyTakeFXChain(COMMAND_T* _ct)
@@ -310,8 +320,6 @@ int copyTrackFXChain(WDL_String* _fxChain, int _startTr)
 			SNM_ChunkParserPatcher p(tr);
 			if (p.GetSubChunk("FXCHAIN", 2, 0, _fxChain))
 			{
-				char* dbg = _fxChain->Get();
-
 				WDL_PtrList<const char> removedKeywords;
 				removedKeywords.Add("<FXCHAIN");
 				removedKeywords.Add("WNDRECT");
@@ -359,6 +367,11 @@ bool autoSaveTrackFXChainSlots(int _slot, const char* _dirPath)
 void loadSetTrackFXChain(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
 	applyTracksFXChainSlot(SNM_CMD_SHORTNAME(_ct), slot, true, slot < 0 || !g_fxChainFiles.Get(slot)->IsDefault());
+}
+
+void loadPasteTrackFXChain(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	applyTracksFXChainSlot(SNM_CMD_SHORTNAME(_ct), slot, false, slot < 0 || !g_fxChainFiles.Get(slot)->IsDefault());
 }
 
 void clearTrackFXChain(COMMAND_T* _ct) {

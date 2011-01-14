@@ -104,7 +104,7 @@ void GetAllProjectTakes(vector<t_project_take>& ATakeList)
 					PCM_source *SectionFilePCM=ThePCM->GetSource();
 					TakeBlah.FileName=(SectionFilePCM->GetFileName() ? SectionFilePCM->GetFileName() : ""); //JFB: dunno what it is behind (but safer I think..)
 				}
-				if (strcmp(ThePCM->GetType(),"MIDI")==0)
+				if (!strcmp(ThePCM->GetType(), "MIDI") || !strcmp(ThePCM->GetType(), "MIDIPOOL"))
 				{
 					if (ThePCM->GetFileName()==0)
 						pureMIDItake=true;
@@ -147,11 +147,11 @@ void GetProjectFileList(vector<t_mediafile_status>& AMediaList)
 						PCM_source *ThePCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
 						string FName;
 						bool ispurelyMIDI=false;
-						if (ThePCM!=0)
+						if (ThePCM)
 						{
 							if (strcmp(ThePCM->GetType(),"SECTION")!=0)
 							{
-								if (strcmp(ThePCM->GetType(),"MIDI")==0 && ThePCM->GetFileName() && strcmp(ThePCM->GetFileName(),"")==0)
+								if (ThePCM->GetFileName() && !strcmp(ThePCM->GetFileName(),"") && (!strcmp(ThePCM->GetType(), "MIDI") || !strcmp(ThePCM->GetType(), "MIDIPOOL")))
 									ispurelyMIDI=true;
 
 								if (ThePCM->GetFileName())

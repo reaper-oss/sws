@@ -38,8 +38,7 @@
 #include "SNM_NotesHelpView.h"
 #include "SNM_ChunkParserPatcher.h"
 
-#define MAX_HELP_LENGTH				4096 // MAX_INI_SECTION;
-#define SAVEWINDOW_POS_KEY			"S&M - Notes/help Save Window Position"
+#define MAX_HELP_LENGTH				4096 //JFB MAX_INI_SECTION too big
 
 // Msgs
 #define SET_ACTION_HELP_FILE_MSG	0x110001
@@ -225,8 +224,9 @@ void SNM_NotesHelpWnd::Update(bool _force)
 //JFB2					saveCurrentItemNotes();
 					g_mediaItemNote = NULL;
 				}
+
 				// Concurent item note update ?
-/*JFB kludge..
+/*JFB commented: kludge..
 #ifdef _WIN32
 				else if (refreshType == NO_REFRESH)
 				{
@@ -347,7 +347,6 @@ void SNM_NotesHelpWnd::saveCurrentItemNotes()
 				UpdateItemInProject(g_mediaItemNote);
 				UpdateTimeline();
 				Undo_OnStateChangeEx("Edit item notes", UNDO_STATE_ALL, -1);
-//JFB weird..				Undo_OnStateChange_Item(NULL, "Edit item notes", g_mediaItemNote);
 			}
 		}
 	}
@@ -405,23 +404,6 @@ int SNM_NotesHelpWnd::updateActionHelp(bool _savePrevious)
 					g_lastActionListCmd = cmdId; 
 
 					//JFB TODO: cleanup when we'll be able to access all sections & custom ids
-/*JFB!!!
-					LVITEM li0, li1;
-
-					li0.mask = LVIF_TEXT;
-					li0.iItem = i;
-					li0.iSubItem = 1;
-					li0.pszText = g_lastActionDesc;
-					li0.cchTextMax = 128;
-					ListView_GetItem(hList, &li0);
-
-					li1.mask = LVIF_TEXT;
-					li1.iItem = i;
-					li1.iSubItem = 3;
-					li1.pszText = g_lastActionId;
-					li1.cchTextMax = 64;
-					ListView_GetItem(hList, &li1);
-*/
 					ListView_GetItemText(hList,i,1,g_lastActionDesc,128);
 					ListView_GetItemText(hList,i,3,g_lastActionId,64);
 
@@ -571,12 +553,10 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			case BUTTONID_LOCK:
 			{
 				g_locked = !g_locked;
-//*focus
 				if (!g_locked)
 					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 				else
 					SetFocus(GetMainHwnd());
-//*/
 				RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
 			}
 			break;
@@ -602,10 +582,8 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE)	
 	{
 		SetType(m_cbType.GetCurSel());
-//*focus
 		if (!g_locked)
 			SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
-//*/
 	}
 	else 
 		Main_OnCommand((int)wParam, (int)lParam);
@@ -802,37 +780,20 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_vwnd_painter.PaintEnd();
 		}
 		break;
-
 		case WM_LBUTTONDOWN:
-		{
 			SetFocus(m_hwnd);
-			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))
+			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)) > 0)
 				SetCapture(m_hwnd);
-/*JFB!!! vvvv sert à rien !!(?)  humm... appeler qd click à l'exterieur
-			else 
-			{
-				WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-				if (w && w->GetID() == TXTID_LABEL && GetType() == ACTION_HELP)
-					SetCapture(g_pNotesHelpWnd->GetHWND());
-			}
-*/
-		}
-		break;
-
+			break;
 		case WM_LBUTTONUP:
-			if (GetCapture() == m_hwnd) 
-			{
+			if (GetCapture() == m_hwnd) {
 				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 				ReleaseCapture();
 			}
 			break;
-
 		case WM_MOUSEMOVE:
-		{
-//			if (GetCapture() == m_hwnd)
-				m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		}
-		break;
+			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			break;
 	}
 	return 0;
 }

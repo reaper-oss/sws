@@ -36,9 +36,6 @@
 
 //#define _SNM_ITT // Item/take templates
 
-// JFB TODO? now, a better key name would be "S&M - Resources.."
-#define SAVEWINDOW_POS_KEY "S&M - FX Chain List Save Window Position" 
-
 // Commands
 #define AUTO_INSERT_SLOTS				0x110000 // common cmds
 #define CLEAR_MSG						0x110001
@@ -100,7 +97,7 @@ enum
 
 // Globals
 static SNM_ResourceWnd* g_pResourcesWnd = NULL;
-static SWS_LVColumn g_fxChainListCols[] = { {50,2,"Slot"}, {100,1,"Name"}, {250,2,"Path"}, {200,1,"Description"} };
+static SWS_LVColumn g_fxChainListCols[] = { {65,2,"Slot"}, {100,1,"Name"}, {250,2,"Path"}, {200,1,"Description"} };
 
 FileSlotList g_fxChainFiles(SNM_SLOT_TYPE_FX_CHAINS, "FXChains", "FX chain", "RfxChain");
 FileSlotList g_trTemplateFiles(SNM_SLOT_TYPE_TR_TEMPLATES, "TrackTemplates", "track template", "RTrackTemplate");
@@ -127,7 +124,7 @@ WDL_String* GetCurAutoSaveDir() {return g_autoSaveDirs.Get(g_type);}
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 4, g_fxChainListCols, "S&M - FX Chain View State", false) 
+:SWS_ListView(hwndList, hwndEdit, 4, g_fxChainListCols, "Resources View State", false) 
 {}
 
 void SNM_ResourceView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
@@ -405,7 +402,8 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
 	// Load prefs 
-	//JFB!!! pb qd very first init (no .ini) ! pour l'instant ok car overridé par OpenResourceView() via son appel à SetType()!!!!
+	//JFB!!! pb qd 1ere init (no .ini).
+	// Ok pour l'instant car override par OpenResourceView() via son appel à SetType()
 	g_type = GetPrivateProfileInt("RESOURCE_VIEW", "TYPE", SNM_SLOT_TYPE_FX_CHAINS, g_SNMiniFilename.Get());
 	g_dblClickType[SNM_SLOT_TYPE_FX_CHAINS] = GetPrivateProfileInt("RESOURCE_VIEW", "DBLCLICK_TYPE", 0, g_SNMiniFilename.Get());
 	g_dblClickType[SNM_SLOT_TYPE_TR_TEMPLATES] = GetPrivateProfileInt("RESOURCE_VIEW", "DBLCLICK_TYPE_TR_TEMPLATE", 0, g_SNMiniFilename.Get());
@@ -430,7 +428,7 @@ void SNM_ResourceWnd::OnInitDlg()
 
 	m_cbDblClickType.SetID(COMBOID_DBLCLICK_TYPE);
 	m_cbDblClickType.SetRealParent(m_hwnd);
-	FillDblClickTypeCombo(); //JFB!!! SetType() instead !???
+	FillDblClickTypeCombo(); //JFB!!! signgle call to SetType() instead !???
 	m_cbDblClickType.SetCurSel(g_dblClickType[g_type]);
 	m_parentVwnd.AddChild(&m_cbDblClickType);
 
@@ -664,9 +662,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if (g_type != previousType)
 				{
 					FillDblClickTypeCombo();
-//					m_cbDblClickType.SetCurSel(g_dblClickType[g_type]); // ok: no recursive call..
 					Update();
-//focus					
 					SetFocus(GetDlgItem(m_hwnd, IDC_FILTER));
 				}
 			}
@@ -743,10 +739,27 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 #endif
 		AddToMenu(hMenu, "Show path in Explorer/Finder...", EXPLORE_MSG, -1, false, enabled);
 	}
+	// Empty list
 	else 
 	{
 		hMenu = CreatePopupMenu();
 		AddToMenu(hMenu, "Auto fill (from resource path)", AUTO_INSERT_SLOTS);
+		switch(g_type)
+		{
+			case SNM_SLOT_TYPE_FX_CHAINS:
+				AddToMenu(hMenu, "Auto save FX chains and insert slots (from track selection)", FXC_AUTO_INSERT_FROM_TRACK_SEL);
+				AddToMenu(hMenu, "Set FX chains auto save directory...", FXC_AUTO_SAVE_DIR);
+				break;
+			case SNM_SLOT_TYPE_TR_TEMPLATES:
+				AddToMenu(hMenu, "Auto save track templates and insert slots (from track selection)", TRT_AUTO_INSERT_FROM_TRACK_SEL);
+				AddToMenu(hMenu, "Set track templates auto save directory...", TRT_AUTO_SAVE_DIR);
+				break;
+#ifdef _SNM_ITT
+			case SNM_SLOT_TYPE_ITEM_TEMPLATES:
+				break;
+#endif
+		}
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		AddToMenu(hMenu, "Add slot", ADD_SLOT_MSG, -1, false, !m_filter.GetLength() ? MF_ENABLED : MF_GRAYED);
 	}
 	return hMenu;
@@ -908,10 +921,11 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		LICE_CachedFont* font = SNM_GetThemeFont();
 		int x0=_r.left+10, y0=_r.top+5, h=25;
 		int w=25; //default width
+
 		WDL_VirtualComboBox* cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_TYPE);
 		if (cbVwnd)
 		{
-			RECT tr2={x0,y0+3,x0+128,y0+h-2};
+			RECT tr2={x0,y0+3,x0+110,y0+h-2};
 			x0 = tr2.right+5;
 			cbVwnd->SetPosition(&tr2);
 			cbVwnd->SetFont(font);
@@ -1067,19 +1081,17 @@ int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 		case WM_LBUTTONDOWN:
 			SetFocus(m_hwnd);
-			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)))
+			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0)
 				SetCapture(m_hwnd);
 			break;
 		case WM_LBUTTONUP:
-			if (GetCapture() == m_hwnd) 
-			{
+			if (GetCapture() == m_hwnd) {
 				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 				ReleaseCapture();
 			}
 			break;
 		case WM_MOUSEMOVE:
-//			if (GetCapture() == m_hwnd)
-				m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
 	}
 	return 0;
@@ -1164,24 +1176,46 @@ void SNM_ResourceWnd::DeleteSelectedSlots(bool _update, bool _delFiles)
 // _slotPos: insert at this slot, or add if < 0
 void SNM_ResourceWnd::AutoSaveSlots(int _slotPos)
 {
+	//JFB Ok on OSX !?
+	if (!FileExists(GetCurAutoSaveDir()->Get()))
+	{
+		char msg[BUFFER_SIZE];
+		_snprintf(msg, BUFFER_SIZE, "Auto save directory not found:\n%s", GetCurAutoSaveDir()->Get());
+		MessageBox(g_hwndParent, msg, "S&M - Error", MB_OK);
+		return;
+	}
+
 	bool updt = false;
-	switch(g_type) {
+	char fn[BUFFER_SIZE];
+	switch(g_type) 
+	{
 		case SNM_SLOT_TYPE_FX_CHAINS:
-			updt = autoSaveTrackFXChainSlots(_slotPos, GetCurAutoSaveDir()->Get());
+			updt = autoSaveTrackFXChainSlots(_slotPos, GetCurAutoSaveDir()->Get(), fn);
 			break;
 		case SNM_SLOT_TYPE_TR_TEMPLATES:
-			updt = autoSaveTrackTemplateSlots(_slotPos, GetCurAutoSaveDir()->Get());
+			updt = autoSaveTrackTemplateSlots(_slotPos, GetCurAutoSaveDir()->Get(), fn);
 			break;
 #ifdef _SNM_ITT
 		case SNM_SLOT_TYPE_ITEM_TEMPLATES:
 			break;
 #endif
 	}
-	if (updt) {
+
+	if (updt) 
+	{
 		Update();
 		SelectBySlot(_slotPos < 0 ? GetCurList()->GetSize() - 1 : _slotPos);
 	}
+	else
+	{
+		char msg[BUFFER_SIZE];
+		_snprintf(msg, BUFFER_SIZE, "Auto save failed: %s\n(cannot write file, invalid filename, etc..)", fn);
+		MessageBox(g_hwndParent, msg, "S&M - Error", MB_OK);
+		return;
+	}
 }
+
+
 ///////////////////////////////////////////////////////////////////////////////
 
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
@@ -1265,7 +1299,6 @@ void OpenResourceView(COMMAND_T* _ct)
 			g_type = (int)_ct->user;
 		g_pResourcesWnd->Show((prevType == (int)_ct->user) /* i.e toggle */, true);
 		g_pResourcesWnd->SetType((int)_ct->user);
-//focus		
 		SetFocus(GetDlgItem(g_pResourcesWnd->GetHWND(), IDC_FILTER));
 	}
 }

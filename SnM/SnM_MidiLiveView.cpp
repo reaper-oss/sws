@@ -111,7 +111,7 @@ bool AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_String* _curPresetConf)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_LiveConfigsView::SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 7, g_midiLiveCols, "S&M - Live Configs View State", false)
+:SWS_ListView(hwndList, hwndEdit, 7, g_midiLiveCols, "Live Configs View State", false)
 {}
 
 void SNM_LiveConfigsView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
@@ -884,19 +884,17 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 		case WM_LBUTTONDOWN:
 			SetFocus(m_hwnd);
-			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)))
-				SetCapture(g_pLiveConfigsWnd->GetHWND());
+			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0)
+				SetCapture(m_hwnd);
 			break;
 		case WM_LBUTTONUP:
-			if (GetCapture() == m_hwnd)
-			{
+			if (GetCapture() == m_hwnd)	{
 				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 				ReleaseCapture();
 			}
 			break;
 		case WM_MOUSEMOVE:
-//			if (GetCapture() == m_hwnd)
-				m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
 	}
 	return 0;

@@ -338,7 +338,7 @@ int copyTrackFXChain(WDL_String* _fxChain, int _startTr)
 	return -1;
 }
 
-bool autoSaveTrackFXChainSlots(int _slot, const char* _dirPath)
+bool autoSaveTrackFXChainSlots(int _slot, const char* _dirPath, char* _fn)
 {
 	bool slotUpdate = false;
 	for (int i = 0; i <= GetNumTracks(); i++)
@@ -350,10 +350,14 @@ bool autoSaveTrackFXChainSlots(int _slot, const char* _dirPath)
 			if (copyTrackFXChain(&fxChain, i) == i)
 			{
 				RemoveAllIds(&fxChain);
-				char fn[BUFFER_SIZE];
 				char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-				GenerateFilename(_dirPath, (!trName || *trName == '\0') ? "Untitled" : trName, g_fxChainFiles.GetFileExt(), fn, BUFFER_SIZE);
-				slotUpdate |= (SaveChunk(fn, &fxChain) && g_fxChainFiles.InsertSlot(_slot, fn));
+				GenerateFilename(_dirPath, (!trName || *trName == '\0') ? "Untitled" : trName, g_fxChainFiles.GetFileExt(), _fn, BUFFER_SIZE);
+				slotUpdate |= (SaveChunk(_fn, &fxChain) && g_fxChainFiles.InsertSlot(_slot, _fn));
+			}
+			else if (!fxChain.GetLength())
+			{
+				// for displayed err. msg
+				strncpy(_fn, "<Empty FX chain>", BUFFER_SIZE);
 			}
 		}
 	}

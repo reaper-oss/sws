@@ -345,7 +345,7 @@ void loadImportTrackTemplate(COMMAND_T* _ct) {
 	applyOrImportTrackTemplate(SNM_CMD_SHORTNAME(_ct), true, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
 }
 
-bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath)
+bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath, char* _fn)
 {
 	bool slotUpdate = false;
 	for (int i = 0; i <= GetNumTracks(); i++)
@@ -358,10 +358,9 @@ bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath)
 			if (pItems)
 				p.GetChunk()->DeleteSub((int)(pItems-p.GetChunk()->Get()), strlen(pItems)-2); // -2: ">\n"
 
-			char fn[BUFFER_SIZE];
 			char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-			GenerateFilename(_dirPath, (!trName || *trName == '\0') ? "Untitled" : trName, g_trTemplateFiles.GetFileExt(), fn, BUFFER_SIZE);
-			slotUpdate |= (SaveChunk(fn, p.GetChunk()) && g_trTemplateFiles.InsertSlot(_slot, fn));
+			GenerateFilename(_dirPath, (!trName || *trName == '\0') ? "Untitled" : trName, g_trTemplateFiles.GetFileExt(), _fn, BUFFER_SIZE);
+			slotUpdate |= (SaveChunk(_fn, p.GetChunk()) && g_trTemplateFiles.InsertSlot(_slot, _fn));
 			p.CancelUpdates();
 		}
 	}

@@ -195,7 +195,7 @@ int copyTrackFXChain(WDL_String* _fxChain, int _startTr=0);
 void cutTrackFXChain(COMMAND_T* _ct);
 void pasteTrackFXChain(COMMAND_T* _ct);
 void setTrackFXChain(COMMAND_T* _ct);
-bool autoSaveTrackFXChainSlots(int _slot, const char* _dirPath);
+bool autoSaveTrackFXChainSlots(int _slot, const char* _dirPath, char* _fn);
 
 void copyFXChainSlotToClipBoard(int _slot);
 void readSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, char* _desc, int _descSize);
@@ -307,7 +307,7 @@ MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj);
 void applyOrImportTrackTemplate(const char* _title, bool _add, int _slot, bool _errMsg);
 void loadSetTrackTemplate(COMMAND_T* _ct);
 void loadImportTrackTemplate(COMMAND_T* _ct);
-bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath);
+bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath, char* _fn);
 
 // *** SnM_ResourceView.cpp ***
 int ResourceViewInit();

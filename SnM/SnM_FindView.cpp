@@ -32,8 +32,6 @@
 #include "SNM_ChunkParserPatcher.h"
 //#include "../Freeze/ItemSelState.h"
 
-
-#define SAVEWINDOW_POS_KEY		"S&M - Find Save Window Position"
 #define MAX_SEARCH_STR_LEN		128
 
 enum {
@@ -493,7 +491,6 @@ void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				m_type = m_cbType.GetCurSel();
 				UpdateNotFoundMsg(true);
-//focus				
 				SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 			}
 			else 
@@ -622,23 +619,21 @@ int SNM_FindWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_vwnd_painter.PaintEnd();
 		}
 		break;
-
 		case WM_LBUTTONDOWN:
+/* commented: selects find text otherwise
 			SetFocus(m_hwnd); 
-			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)))
+*/
+			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0)
 				SetCapture(m_hwnd);
 			break;
 		case WM_LBUTTONUP:
-			if (GetCapture() == m_hwnd)
-			{
+			if (GetCapture() == m_hwnd)	{
 				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 				ReleaseCapture();
 			}
 			break;
-
 		case WM_MOUSEMOVE:
-//			if (GetCapture() == m_hwnd)
-				m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
 	}
 	return 0;

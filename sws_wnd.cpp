@@ -451,7 +451,7 @@ int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 		iLen += SaveView(cStateBuf + iLen, iMaxLen - iLen);
 
 		for (int i = 0; i < iLen / (int)sizeof(int); i++)
-			REAPER_MAKELEINTMEM(((int*)cStateBuf)[i]);
+			REAPER_MAKELEINTMEM(&(((int*)cStateBuf)[i]));
 	}
 	else
 		iLen += SaveView(NULL, 0);

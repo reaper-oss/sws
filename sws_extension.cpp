@@ -345,7 +345,11 @@ int WDL_STYLE_GetSysColor(int i)
 		col = GetSysColor(i); 
 
 	// check & "fix" 3D colors that aren't distinguished in many themes..
+#ifdef _WIN32
 	if (i == COLOR_3DSHADOW || i == COLOR_3DLIGHT || i == COLOR_3DHILIGHT)	
+#else
+	if (i == COLOR_3DSHADOW || i == COLOR_3DHILIGHT)	
+#endif
 	{
 		int col3ds,col3dl,bgcol;
 		if (GSC_mainwnd)

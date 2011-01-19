@@ -167,12 +167,12 @@ void UnindentTracks(COMMAND_T* = NULL)
 void CollapseFolder(COMMAND_T* ct)
 {
 	MediaTrack* gfd = NULL;
-	int iCompact = ct->user;
+	int iCompact = (int)ct->user;
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		int iType;
-		int iFolder = GetFolderDepth(tr, &iType, &gfd);
+		GetFolderDepth(tr, &iType, &gfd);
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) && iType == 1)
 			GetSetMediaTrackInfo(tr, "I_FOLDERCOMPACT", &iCompact);
 	}

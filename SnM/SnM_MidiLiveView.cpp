@@ -2,7 +2,7 @@
 / SnM_MidiLiveView.cpp
 / JFB TODO? now, SnM_LiveConfigs.cpp/.h would be better names..
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -244,8 +244,8 @@ void SNM_LiveConfigsView::OnItemDblClk(LPARAM item, int iCol)
 SNM_LiveConfigsWnd::SNM_LiveConfigsWnd()
 :SWS_DockWnd(IDD_SNM_MIDI_LIVE, "Live Configs", "SnMLiveConfigs", 30009, SWSGetCommandID(OpenLiveConfigView))
 {
-	if (m_bShowAfterInit)
-		Show(false, false);
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
 }
 
 void SNM_LiveConfigsWnd::CSurfSetTrackListChange() {

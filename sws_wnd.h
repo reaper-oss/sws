@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_wnd.h
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -117,10 +117,19 @@ private:
 	const char* m_cINIKey;
 };
 
+#pragma pack(push, 4)
+typedef struct SWS_DockWnd_State // Coverted to little endian on store
+{
+	RECT r;
+	int state;
+	int whichdock;
+} SWS_DockWnd_State;
+#pragma pack(pop)
+
 class SWS_DockWnd
 {
 public:
-	SWS_DockWnd(int iResource, const char* cName, const char* cId, int iDockOrder, int iCmdID);
+	SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iDockOrder, int iCmdID);
 	void Show(bool bToggle, bool bActivate);
 	virtual bool IsActive(bool bWantEdit = false);
 	bool IsValidWindow() { return IsWindow(m_hwnd) ? true : false; }
@@ -130,6 +139,8 @@ public:
 	static const int DOCK_MSG = 0xFF0000;
 
 protected:
+	void Init(); // call from derived constructor!!
+	bool IsDocked() { return (m_state.state & 2) == 2; }
 	void ToggleDocking();
 	virtual void OnInitDlg() {}
 	virtual void OnCommand(WPARAM wParam, LPARAM lParam) {}
@@ -141,25 +152,29 @@ protected:
 	virtual void OnDroppedFiles(HDROP h) {}
 	virtual int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
 	virtual int OnKey(MSG* msg, int iKeyState) { return 0; } // return 1 for "processed key"
+	
+	// Functions for derived classes to load/save some view information (for startup/screensets)
+	virtual int SaveView(char* cViewBuf, int iLen) { return 0; } // return num of chars in state (if cViewBuf == NULL, ret # of bytes needed)
+	virtual void LoadView(const char* cViewBuf, int iLen) {}
 
-	const int m_iResource;
-	const char* m_cName;
-	char* m_cWndPosKey;
-	char* m_cWndStateKey;
-	const int m_iDockOrder; // v4 TODO delete me
-	const char* m_cId;
 	HWND m_hwnd;
 	bool m_bUserClosed;
-	bool m_bDocked;
-	bool m_bShowAfterInit;
 	WDL_WndSizer m_resize;
 	WDL_PtrList<SWS_ListView> m_pLists;
 
 private:
 	static INT_PTR WINAPI sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	int wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
-	static LPARAM screensetCallback(int action, char *id, void *param, int param2);
+	static LRESULT screensetCallbackOld(int action, char *id, void *param, int param2);
+	static LRESULT screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize);
 	static int keyHandler(MSG *msg, accelerator_register_t *ctx);
+	int SaveState(char* cStateBuf, int iMaxLen);
+	void LoadState(const char* cStateBuf, int iLen);
 	int m_iCmdID;
+	const int m_iResource;
+	const char* m_cWndTitle;
+	const char* m_cId;
+	const int m_iDockOrder; // v4 TODO delete me
 	accelerator_register_t m_ar;
+	SWS_DockWnd_State m_state;
 };

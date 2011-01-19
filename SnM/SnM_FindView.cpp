@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_FindView.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos 
+/ Copyright (c) 2011 Tim Payne (SWS), Jeffos 
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -113,13 +113,8 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr) {
 SNM_FindWnd::SNM_FindWnd()
 :SWS_DockWnd(IDD_SNM_FIND, "Find", "SnMFind", 30008, SWSGetCommandID(OpenFindView))
 {
-	// GUI inits
-	if (m_bShowAfterInit)
-		Show(false, false);
-
-	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
-	if (GetDlgItem(m_hwnd, IDC_EDIT))
-		SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
 }
 
 int SNM_FindWnd::GetType(){

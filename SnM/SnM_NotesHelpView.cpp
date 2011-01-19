@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_NotesHelpView.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos 
+/ Copyright (c) 2011 Tim Payne (SWS), Jeffos 
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -98,13 +98,8 @@ SNM_NotesHelpWnd::SNM_NotesHelpWnd()
 	readActionHelpFilenameIniFile();
 	m_internalTLChange = false;
 
-	// GUI inits
-	if (m_bShowAfterInit)
-		Show(false, false);
-
-	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
-	if (GetDlgItem(m_hwnd, IDC_EDIT))
-		SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
 }
 
 int SNM_NotesHelpWnd::GetType(){
@@ -627,7 +622,7 @@ int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState)
 	// Ensure the return key is catched when docked
 	if (GetDlgItem(m_hwnd, IDC_EDIT) == msg->hwnd)
 	{
-		if (m_bDocked && (msg->message == WM_KEYDOWN || msg->message == WM_CHAR) &&
+		if (IsDocked() && (msg->message == WM_KEYDOWN || msg->message == WM_CHAR) &&
 			msg->wParam == VK_RETURN)
 		{
 			return (g_locked ? 1 : -1);

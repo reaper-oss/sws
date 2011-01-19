@@ -1,7 +1,7 @@
 /******************************************************************************
 / Autocolor.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS) / JF Bédague (S&M)
+/ Copyright (c) 2011 Tim Payne (SWS) / JF Bédague (S&M)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -197,8 +197,8 @@ SWS_AutoColorWnd::SWS_AutoColorWnd()
 	,m_bSettingColor(false)
 #endif
 {
-	if (m_bShowAfterInit)
-		Show(false, false);
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
 }
 
 void SWS_AutoColorWnd::Update()

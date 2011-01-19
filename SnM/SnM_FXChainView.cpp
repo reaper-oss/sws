@@ -2,7 +2,7 @@
 / SnM_FXChainView.cpp
 / JFB TODO? now, SnM_Resources.cpp/.h would be better names..
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -346,8 +346,9 @@ SNM_ResourceWnd::SNM_ResourceWnd()
 :SWS_DockWnd(IDD_SNM_FXCHAINLIST, "Resources", "SnMResources", 30006, SWSGetCommandID(OpenResourceView))
 {
 	m_previousType = g_type;
-	if (m_bShowAfterInit)
-		Show(false, false);
+
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
 }
 
 void SNM_ResourceWnd::SetType(int _type)

@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_extension.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -412,6 +412,8 @@ extern "C"
 		IMPAPI(AddProjectMarker);
 		IMPAPI(AddTakeToMediaItem);
 		IMPAPI(adjustZoom);
+		*(void**)&AttachWindowTopmostButton = rec->GetFunc("AttachWindowTopmostButton"); // v4 only
+		*(void**)&AttachWindowResizeGrip    = rec->GetFunc("AttachWindowResizeGrip");    // v4 only
 		IMPAPI(Audio_RegHardwareHook);
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
@@ -434,6 +436,8 @@ extern "C"
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteTrack);
 		IMPAPI(DeleteTrackMediaItem);
+		*(void**)&Dock_UpdateDockID = rec->GetFunc("Dock_UpdateDockID"); // v4 only
+		*(void**)&DockIsChildOfDock = rec->GetFunc("DockIsChildOfDock"); // v4 only
 		IMPAPI(DockWindowActivate);
 		IMPAPI(DockWindowAdd);
 		*(void**)&DockWindowAddEx = rec->GetFunc("DockWindowAddEx"); // v4 only
@@ -551,6 +555,7 @@ extern "C"
 		IMPAPI(RefreshToolbar);
 		IMPAPI(Resampler_Create);
 		IMPAPI(screenset_register);
+		*(void**)&screenset_registerNew = rec->GetFunc("screenset_registerNew"); // v4 only
 		IMPAPI(ShowConsoleMsg);
 		IMPAPI(SelectProjectInstance);
 		IMPAPI(SetEditCurPos);

@@ -174,8 +174,8 @@ int SWS_MarkerListView::GetItemState(LPARAM item)
 SWS_MarkerListWnd::SWS_MarkerListWnd()
 :SWS_DockWnd(IDD_MARKERLIST, "Marker List", "SWSMarkerList", 30001, SWSGetCommandID(OpenMarkerList)), m_dCurPos(DBL_MAX)
 {
-	if (m_bShowAfterInit)
-		Show(false, false);
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
 }
 
 void SWS_MarkerListWnd::Update(bool bForce)

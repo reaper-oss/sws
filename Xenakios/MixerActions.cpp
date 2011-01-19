@@ -147,22 +147,24 @@ void DoTraxPanLaw(COMMAND_T* t)
 
 void DoTraxRecArmed(COMMAND_T* t)
 {
+	int iRecArm = t->user;
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* CurTrack = CSurf_TrackFromID(i+1, false);
 		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
-			GetSetMediaTrackInfo(CurTrack, "I_RECARM", &t->user);
+			GetSetMediaTrackInfo(CurTrack, "I_RECARM", &iRecArm);
 	}
 	UpdateTimeline();	
 }
 
 void DoBypassFXofSelTrax(COMMAND_T* t)
 {
+	int iBypass = t->user;
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* CurTrack = CSurf_TrackFromID(i+1, false);
 		if (*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL))
-			GetSetMediaTrackInfo(CurTrack, "I_FXEN", &t->user);
+			GetSetMediaTrackInfo(CurTrack, "I_FXEN", &iBypass);
 	}
 	UpdateTimeline();
 	Undo_OnStateChangeEx("Set track fx enabled/disabled",UNDO_STATE_TRACKCFG,-1);

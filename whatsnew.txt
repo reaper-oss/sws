@@ -1,4 +1,3 @@
-
 <b>BETA: CAUTION !</b>
 Due to a change in the way S&M.ini file is managed, you may face some issues when switching between SWS official <-> SWS beta.
 Well, a clean upgrade is automatically managed when SWS official -> SWS beta, but you'll probably loose your FX Chains setup when switching back to SWS beta -> SWS official.
@@ -122,6 +121,12 @@ Other S&M updates/fixes:
 +Fixed disabled some popup items not being grayed
 +Fixed UI refresh issues for "Find" and "Notes/help" views
 
+!v1.8.6 #9 (January 18, 2011)
+Issue 220: Fixed marker/clipboard actions when there's quotes in the name
+Issue 231: Fixed high CPU on Select only track N actions
+Issue 232: Fixed folder collapse/uncollaspse/small actions
+Issue 233: Fixed ReaConsole and v4 setting MIDI inputs
+	
 !v1.8.6 #8 (January 5, 2011)
 Issue 219: Fixed intermittent OSX crash with S&M Notes/Help window
 

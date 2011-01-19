@@ -131,6 +131,7 @@ extern int g_i1;
 extern int g_i2;
 extern bool g_bTrue;
 extern bool g_bFalse;
+extern bool g_bv4;
 
 // Stuff to do in swell someday
 #ifndef _WIN32

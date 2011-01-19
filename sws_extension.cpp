@@ -56,6 +56,7 @@ static WDL_PtrList<WDL_String> g_cmdFile;
 static WDL_PtrList<COMMAND_T> g_toggles;
 int g_iFirstCommand = 0;
 int g_iLastCommand = 0;
+bool g_bv4 = false;
 
 bool hookCommandProc(int command, int flag)
 {
@@ -435,8 +436,7 @@ extern "C"
 		IMPAPI(DeleteTrackMediaItem);
 		IMPAPI(DockWindowActivate);
 		IMPAPI(DockWindowAdd);
-		// v4 TODO
-		*(void**)&DockWindowAddEx = rec->GetFunc("DockWindowAddEx");
+		*(void**)&DockWindowAddEx = rec->GetFunc("DockWindowAddEx"); // v4 only
 		IMPAPI(DockWindowRefresh);
 		IMPAPI(DockWindowRemove);
 		IMPAPI(EnsureNotCompletelyOffscreen);
@@ -597,6 +597,9 @@ extern "C"
 
 		g_hInst = hInstance;
 		g_hwndParent = GetMainHwnd();
+
+		// TODO remove when v4 only:
+		g_bv4 = DockWindowAddEx != NULL;
 
 		if (errcnt)
 		{

@@ -344,22 +344,27 @@ int WDL_STYLE_GetSysColor(int i)
 	else 
 		col = GetSysColor(i); 
 
-	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
-	if (ct && (i == COLOR_3DSHADOW || i == COLOR_3DLIGHT || i == COLOR_3DHILIGHT))	
+	// check & "fix" 3D colors that aren't distinguished in many themes..
+	if (i == COLOR_3DSHADOW || i == COLOR_3DLIGHT || i == COLOR_3DHILIGHT)	
 	{
-		int col3ds,col3dl,bgcol = LICE_RGBA_FROMNATIVE(ct->tracklistbg_color, 255);
-		if (GSC_mainwnd) {
-			col3ds =  GSC_mainwnd(COLOR_3DSHADOW);
-			col3dl =  GSC_mainwnd(COLOR_3DHILIGHT);
+		int col3ds,col3dl,bgcol;
+		if (GSC_mainwnd)
+		{
+			col3ds = GSC_mainwnd(COLOR_3DSHADOW);
+			col3dl = GSC_mainwnd(COLOR_3DHILIGHT);
+			bgcol = GSC_mainwnd(COLOR_WINDOW);
 		}
-		else {
-			col3ds =  GetSysColor(COLOR_3DSHADOW);
-			col3dl =  GetSysColor(COLOR_3DHILIGHT);
+		else
+		{
+			col3ds = GetSysColor(COLOR_3DSHADOW);
+			col3dl = GetSysColor(COLOR_3DHILIGHT);
+			bgcol = GetSysColor(COLOR_WINDOW);
 		}
+/*JFB
 		col3ds =  LICE_RGBA_FROMNATIVE(col3ds, 255);
 		col3dl =  LICE_RGBA_FROMNATIVE(col3dl, 255);
-
-		// usable/distinct 3D colors ? 
+		bgcol =  LICE_RGBA_FROMNATIVE(bgcol, 255);
+*/
 		if (col3ds == col3dl || col3ds == bgcol || col3dl == bgcol)
 		{
 			int colDelta = SNM_3D_COLORS_DELTA * (i == COLOR_3DSHADOW ? -1 : 1);

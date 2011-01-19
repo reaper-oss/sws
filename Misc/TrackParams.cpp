@@ -129,6 +129,7 @@ void BypassFX(COMMAND_T* = NULL)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			GetSetMediaTrackInfo(tr, "I_FXEN", &g_i0);
 	}
+	//JFB no undo point?
 }
 
 void UnbypassFX(COMMAND_T* = NULL)
@@ -139,6 +140,7 @@ void UnbypassFX(COMMAND_T* = NULL)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			GetSetMediaTrackInfo(tr, "I_FXEN", &g_i1);
 	}
+	//JFB no undo point?
 }
 
 static int g_iMasterFXEn = 1;

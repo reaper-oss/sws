@@ -538,7 +538,8 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		default:
 		{
-			if (HIWORD(wParam) == 0) 
+			WORD hiwParam = HIWORD(wParam);
+			if (!hiwParam || hiwParam == 600) // 600 for large tick box
 			{
 				MidiLiveConfig* lc = g_liveConfigs.Get();
 				switch(LOWORD(wParam))
@@ -752,8 +753,8 @@ int SNM_LiveConfigsWnd::OnKey(MSG* msg, int iKeyState)
 
 static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentVwnd)
 {
-	if (!g_pLiveConfigsWnd) // SWS Can't draw before wnd initialized - why isn't this a member func??
-		return;			  //JFB TODO planing a kind of SNM_Wnd at some point..
+	if (!g_pLiveConfigsWnd) //SWS Can't draw before wnd initialized - why isn't this a member func??
+		return;				//JFB TODO planing a kind of SNM_Wnd at some point..
 	
 	int xo=0, yo=0;
     LICE_IBitmap *bm = _painter->GetBuffer(&xo,&yo);
@@ -768,7 +769,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		{
 			RECT tr={x0,y0,x0+40,y0+25};
 			font->DrawText(bm, "Config:", -1, &tr, DT_LEFT | DT_VCENTER);
-			x0 = tr.right+5;
+			x0 = tr.right;
 
 			RECT tr2={x0,y0+3,x0+37,y0+25-2};
 			x0 = tr2.right+5;
@@ -781,38 +782,32 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		if (btn)
 		{
 			x0 += 10;
-			RECT tr={x0,y0+4,x0+16,y0+20};
-			x0 = tr.right+5;
+			RECT tr={x0,y0+5,x0+60,y0+21};
 			btn->SetPosition(&tr);
 			btn->SetCheckState(g_liveConfigs.Get()->m_enable[g_configId]);
-
-			RECT tr2={x0,y0,x0+40,y0+25};
-			font->DrawText(bm, "Enable", -1, &tr2, DT_LEFT | DT_VCENTER);
-			x0 = tr2.right+5;
+			btn->SetTextLabel("Enable", -1, font);
+			x0 = tr.right+5;
 		}
+
 /*JFB not released
 		btn = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_AUTO_RCV);
 		if (btn)
 		{
 			x0 += 5;
-			RECT tr={x0,y0+4,x0+16,y0+20};
-			x0 = tr.right+5;
+			RECT tr={x0,y0+5,x0+140,y0+21};
 			btn->SetPosition(&tr);
 			btn->SetCheckState(g_pLiveConfigsWnd->m_autoRcv[g_configId]);
-
-			RECT tr2={x0,y0,x0+120,y0+25};
-			int h = tmpfont.DrawText(bm, "Auto receive input track", -1, &tr2, DT_LEFT | DT_VCENTER);
-			x0 = tr2.right+5;
+			btn->SetTextLabel("Auto receive input track", -1, font);
+			x0 = tr.right+5;
 		}
 */
 
 		cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_INPUT_TRACK);
 		if (cbVwnd)
 		{
-			x0 += 5;
 			RECT tr={x0,y0,x0+60,y0+25};
 			font->DrawText(bm, "Input track:", -1, &tr, DT_LEFT | DT_VCENTER);
-			x0 = tr.right+5;
+			x0 = tr.right;
 
 			RECT tr2={x0,y0+3,x0+125,y0+25-2};
 			x0 = tr2.right+5;
@@ -832,30 +827,21 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		if (btn)
 		{
 			x0 += 10;
-			RECT tr={x0,y0+4,x0+16,y0+20};
-
-			x0 = tr.right+5;
+			RECT tr={x0,y0+5,x0+140,y0+21};
 			btn->SetPosition(&tr);
 			btn->SetCheckState(g_liveConfigs.Get()->m_muteOthers[g_configId]);
-
-			RECT tr2={x0,y0,x0+120,y0+25};
-			font->DrawText(bm, "Mute all but active track", -1, &tr2, DT_LEFT | DT_VCENTER);
-			x0 = tr2.right+5;
+			btn->SetTextLabel("Mute all but active track", -1, font);
+			x0 = tr.right;
 		}
 
 		btn = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_AUTO_SELECT);
 		if (btn)
 		{
 			x0 += 10;
-			RECT tr={x0,y0+4,x0+16,y0+20};
-
-			x0 = tr.right+5;
+			RECT tr={x0,y0+5,x0+120,y0+21};
 			btn->SetPosition(&tr);
 			btn->SetCheckState(g_liveConfigs.Get()->m_autoSelect[g_configId]);
-
-			RECT tr2={x0,y0,x0+100,y0+25};
-			font->DrawText(bm, "Auto track selection", -1, &tr2, DT_LEFT | DT_VCENTER);
-			x0 = tr2.right+5;
+			btn->SetTextLabel("Auto track selection", -1, font);
 		}
 
 		_painter->PaintVirtWnd(_parentVwnd, 0);
@@ -871,14 +857,11 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_PAINT:
 		{
-			RECT r; int sz;
+			RECT r;
 			GetClientRect(m_hwnd,&r);	
 			m_parentVwnd.SetPosition(&r);
-
-			ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
-			if (ct)	m_vwnd_painter.PaintBegin(m_hwnd, ct->tracklistbg_color);
-			else m_vwnd_painter.PaintBegin(m_hwnd, LICE_RGBA(0,0,0,255));
-			DrawControls(&m_vwnd_painter,r, &m_parentVwnd);
+			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
+			DrawControls(&m_vwnd_painter, r, &m_parentVwnd);
 			m_vwnd_painter.PaintEnd();
 		}
 		break;

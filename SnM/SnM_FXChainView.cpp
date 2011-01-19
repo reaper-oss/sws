@@ -1069,14 +1069,11 @@ int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_PAINT:
 		{
-			RECT r; int sz;
+			RECT r;
 			GetClientRect(m_hwnd,&r);	
 			m_parentVwnd.SetPosition(&r);
-
-			ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
-			if (ct)	m_vwnd_painter.PaintBegin(m_hwnd, ct->tracklistbg_color);
-			else m_vwnd_painter.PaintBegin(m_hwnd, LICE_RGBA(0,0,0,255));
-			DrawControls(&m_vwnd_painter,r, &m_parentVwnd);
+			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
+			DrawControls(&m_vwnd_painter, r, &m_parentVwnd);
 			m_vwnd_painter.PaintEnd();
 		}
 		break;

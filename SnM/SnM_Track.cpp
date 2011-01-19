@@ -345,6 +345,7 @@ void loadImportTrackTemplate(COMMAND_T* _ct) {
 	applyOrImportTrackTemplate(SNM_CMD_SHORTNAME(_ct), true, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
 }
 
+// assumes _fn has a length of BUFFER_SIZE
 bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath, char* _fn)
 {
 	bool slotUpdate = false;

@@ -338,6 +338,7 @@ int copyTrackFXChain(WDL_String* _fxChain, int _startTr)
 	return -1;
 }
 
+// assumes _fn has a length of BUFFER_SIZE
 bool autoSaveTrackFXChainSlots(int _slot, const char* _dirPath, char* _fn)
 {
 	bool slotUpdate = false;

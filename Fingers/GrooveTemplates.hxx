@@ -6,10 +6,25 @@
 #include "reaper_plugin_functions.h"
 #include "GrooveDialog.hxx"
 
+
+
+struct GrooveItem {
+	double position;
+	double amplitude;
+
+	GrooveItem operator-(const GrooveItem &lhs)
+	{ 
+		GrooveItem newItem;
+		newItem.position = position - lhs.position;
+		newItem.amplitude = amplitude;
+		return newItem;
+	}
+};
+
 class GrooveTemplateMemento {
 public:
 	int nBeatsInGroove;
-	std::vector<double> grooveInBeats;
+	std::vector<GrooveItem> grooveInBeats;
 };
 
 class GrooveTemplateHandler
@@ -44,13 +59,14 @@ public:
 	int GetGrooveTolerance();
 	void SetGrooveTolerance(int);
 
+	void resetAmplitudes();
+
 	int GetGrooveStrength();
 	void SetGrooveStrength(int);
 
 	int GetGrooveTarget();
 	void SetGrooveTarget(int);
 
-	
 
 	void showGrooveDialog();
 	void toggleGrooveDialog();
@@ -77,7 +93,7 @@ private:
 
 	static GrooveTemplateHandler *instance;
 	int nBeatsInGroove;
-	std::vector<double> grooveInBeats;
+	std::vector<GrooveItem> grooveInBeats;
 
 	std::vector<GrooveMarker> grooveMarkers;
 	GrooveMarkerStart grooveMarkerStart;

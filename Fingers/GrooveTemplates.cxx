@@ -47,24 +47,28 @@ void GrooveTemplateHandler::ClearGroove()
 	me->grooveInBeats.clear();
 }
 
-static double GetGrooveBeatPosition(double currentBeatPosition, double maxBeatDistance, double strength, std::vector<double> *grooveInBeats)
+static bool GetGrooveBeatPosition(double currentBeatPosition, double maxBeatDistance, double strength, std::vector<GrooveItem> *grooveInBeats, GrooveItem &newGroove)
 {
 	/* get max distance position */
 	double minDistance = maxBeatDistance;
 	bool positive = true;
-	for(std::vector<double>::iterator it = grooveInBeats->begin(); it != grooveInBeats->end(); it++)
+	for(std::vector<GrooveItem>::iterator it = grooveInBeats->begin(); it != grooveInBeats->end(); it++)
 	{
-		double distance = currentBeatPosition - *it;
+		double distance = currentBeatPosition - it->position;
 		if( abs(distance) < minDistance) {
 			positive = distance > 0 ? true : false;
 			minDistance = abs(distance);
+			newGroove = *it;
 		}
 	}
-	if(minDistance >= maxBeatDistance)
-		return currentBeatPosition;
+	if(minDistance >= maxBeatDistance) {
+		return false;
+	}
 
 	double distance = minDistance * (positive ? 1.0 : -1.0);
-	return currentBeatPosition - distance * strength;
+	newGroove.position = currentBeatPosition - distance * strength;
+	newGroove.amplitude *= strength;
+	return true;
 }
 
 void GrooveTemplateHandler::Init()
@@ -170,7 +174,7 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 	return true;
 }
 
-static void applyGrooveToMidiTake(RprMidiTake &midiTake, double beatDivider, double strength, std::vector<double> &grooveBeats, bool selectedOnly)
+static void applyGrooveToMidiTake(RprMidiTake &midiTake, double beatDivider, double strength, std::vector<GrooveItem> &grooveBeats, bool selectedOnly)
 {
 	RprItem rprItem = *midiTake.getParent();
 	int i = 0;
@@ -179,11 +183,17 @@ static void applyGrooveToMidiTake(RprMidiTake &midiTake, double beatDivider, dou
 		if(selectedOnly && !note->isSelected())
 			continue;
 		double noteBeat = TimeToBeat(note->getPosition());
-		noteBeat = GetGrooveBeatPosition(noteBeat, BeatsInMeasure(BeatToMeasure(noteBeat)) / beatDivider, strength, &grooveBeats);
+		GrooveItem grooveItem;
+		if(!GetGrooveBeatPosition(noteBeat, BeatsInMeasure(BeatToMeasure(noteBeat)) / beatDivider, strength, &grooveBeats, grooveItem))
+			continue;
+
 		double itemFirstBeat = TimeToBeat(rprItem.getPosition());
 		double itemLastBeat = TimeToBeat(rprItem.getPosition() + rprItem.getLength());
-		if(noteBeat >= itemFirstBeat && noteBeat < itemLastBeat)
-			note->setPosition(BeatToTime(noteBeat));
+		if(grooveItem.position >= itemFirstBeat && grooveItem.position < itemLastBeat) {
+			note->setPosition(BeatToTime(grooveItem.position));
+			if(grooveItem.amplitude >= 0.0)
+				note->setVelocity((unsigned int)(grooveItem.amplitude * 127.5));
+		}
 	}
 }
 
@@ -209,7 +219,7 @@ static double getRightEdgeOfMidiTake(RprMidiTakePtr &take)
 	return rightEdge;
 }
 
-static void createGrooveVector(double leftEdge, double rightEdge, std::vector<double> &inputGrooveBeats, int nBeatsInGroove, std::vector<double> &outputGrooveBeats)
+static void createGrooveVector(double leftEdge, double rightEdge, std::vector<GrooveItem> &inputGrooveBeats, int nBeatsInGroove, std::vector<GrooveItem> &outputGrooveBeats)
 {
 	/* create vector of positions which is longer then the total length of the items */
 	int beatCount = (int)ceil(TimeToBeat(rightEdge) - TimeToBeat(leftEdge));
@@ -217,10 +227,13 @@ static void createGrooveVector(double leftEdge, double rightEdge, std::vector<do
 	double beatsTillFirstMeasure = BeatsTillMeasure(firstMeasure);
 	
 	for(int i = -nBeatsInGroove; i < beatCount + nBeatsInGroove; i += nBeatsInGroove) {
-		for(std::vector<double>::iterator j = inputGrooveBeats.begin(); j != inputGrooveBeats.end(); j++) {
-			double grooveBeatPosition = *j + i + beatsTillFirstMeasure;
-			if(grooveBeatPosition >= 0.0f)
-				outputGrooveBeats.push_back(grooveBeatPosition);
+		for(std::vector<GrooveItem>::iterator j = inputGrooveBeats.begin(); j != inputGrooveBeats.end(); j++) {
+			double grooveBeatPosition = j->position + i + beatsTillFirstMeasure;
+			if(grooveBeatPosition >= 0.0f) {
+				GrooveItem grooveItem = *j;
+				grooveItem.position = grooveBeatPosition;
+				outputGrooveBeats.push_back(grooveItem);
+			}
 		}
 	}
 }
@@ -232,11 +245,16 @@ bool treatAsMidiTake(RprMidiTake &midiTake)
 	return false;
 }
 
-void applyGrooveToItem(RprItem &rprItem, double beatDivider, double strength, std::vector<double> &grooveBeats)
+void applyGrooveToItem(RprItem &rprItem, double beatDivider, double strength, std::vector<GrooveItem> &grooveBeats)
 {
 	double beatPosition = TimeToBeat(rprItem.getPosition() + rprItem.getSnapOffset());
-	beatPosition = GetGrooveBeatPosition(beatPosition, BeatsInMeasure(BeatToMeasure(beatPosition)) / beatDivider, strength, &grooveBeats);
-	double timePosition = BeatToTime(beatPosition) - rprItem.getSnapOffset();
+	GrooveItem grooveItem;
+	if(!GetGrooveBeatPosition(beatPosition, BeatsInMeasure(BeatToMeasure(beatPosition)) / beatDivider, strength, &grooveBeats, grooveItem))
+		return;
+
+	double timePosition = BeatToTime(grooveItem.position) - rprItem.getSnapOffset();
+	/* Change amplitude for items?? Maybe in the future...*/
+	/* How does velocity map to item volumes and vice versa... */
 	if(timePosition >= 0.0f)
 		rprItem.setPosition(timePosition);
 }
@@ -251,7 +269,7 @@ void GrooveTemplateHandler::ApplyGrooveToMidiEditor(int beatDivider, double stre
 	if(me->grooveInBeats.size() == 0)
 		return;
 
-	std::vector<double> grooveBeats;
+	std::vector<GrooveItem> grooveBeats;
 	createGrooveVector(takePtr->getNoteAt(0)->getPosition(),
 					   getRightEdgeOfMidiTake(takePtr),
 					   me->grooveInBeats,
@@ -278,7 +296,7 @@ void GrooveTemplateHandler::ApplyGroove(int beatDivider, double strength)
 		return;
 
 	ctr->sort();
-	std::vector<double> grooveBeats;
+	std::vector<GrooveItem> grooveBeats;
 	
 	createGrooveVector(ctr->first().getPosition() + ctr->first().getSnapOffset(),
 					   getRightEdgeOfContainer(ctr),
@@ -309,9 +327,9 @@ std::string GrooveTemplateHandler::GetGrooveString(int index)
 	std::ostringstream oss;
 	oss.setf(0,std::ios::floatfield);
 	oss.precision(10);
-	std::vector<double>::iterator it = grooveInBeats.begin() + index;
+	std::vector<GrooveItem>::iterator it = grooveInBeats.begin() + index;
 	if(it != grooveInBeats.end())
-		oss << (*it);
+		oss << it->position;
 	return oss.str();
 }
 
@@ -332,7 +350,7 @@ std::string GrooveTemplateHandler::GetGrooveMarkerString(int index)
 	return "";
 }
 
-static int GetMidiBeatPositions(RprMidiTake &midiTake, const RprItem &parent, std::vector<double> &vPositions, bool selectedOnly)
+static int GetMidiBeatPositions(RprMidiTake &midiTake, const RprItem &parent, std::vector<GrooveItem> &vPositions, bool selectedOnly)
 {
 	double endLen = parent.getPosition() + parent.getLength();
 	for(int i = 0; i < midiTake.countNotes(); i++) {
@@ -340,27 +358,47 @@ static int GetMidiBeatPositions(RprMidiTake &midiTake, const RprItem &parent, st
 		if(selectedOnly && !note->isSelected())
 			continue;
 		double notePosition = note->getPosition();
-		if (notePosition < endLen)
-			vPositions.push_back(TimeToBeat(notePosition));
+		double noteVelocityNorm = (double)note->getVelocity() / 127.0;
+		if (notePosition < endLen) {
+			GrooveItem grooveItem;
+			grooveItem.amplitude = noteVelocityNorm;
+			grooveItem.position = TimeToBeat(notePosition);
+			vPositions.push_back(grooveItem);
+		}
 	}
 	return vPositions.size();
 }
 
-static void finalizeGroove(int &beatsInGroove, std::vector<double> &grooveInBeats)
+static bool sortGrooveItems(const GrooveItem &lhs, const GrooveItem &rhs)
 {
-	std::sort(grooveInBeats.begin(), grooveInBeats.end());
+	return lhs.position < rhs.position;
+}
+
+static bool isGrooveItemUnique(const GrooveItem &lhs, const GrooveItem &rhs)
+{
+	return lhs.position == rhs.position;
+}
+
+static void finalizeGroove(int &beatsInGroove, std::vector<GrooveItem> &grooveInBeats)
+{
+	std::sort(grooveInBeats.begin(), grooveInBeats.end(), sortGrooveItems);
 
 	/* subtract number of beats up till first measure and work out number of beats in groove, and remove redundant beats */
-	double beatsTillStartOfGrooveMeasure = BeatsTillMeasure(BeatToMeasure(*grooveInBeats.begin()));
+	std::vector<GrooveItem>::const_iterator i = grooveInBeats.begin();
+	double beatsTillStartOfGrooveMeasure = BeatsTillMeasure(BeatToMeasure(i->position));
 
-	double beatsTillOneAfterEndOfGrooveMeasure = BeatsTillMeasure(BeatToMeasure(*(grooveInBeats.end() - 1)) + 1);
+	i = grooveInBeats.end() - 1;
+	double beatsTillOneAfterEndOfGrooveMeasure = BeatsTillMeasure(BeatToMeasure(i->position) + 1);
 
 	double dBeatsInGroove = beatsTillOneAfterEndOfGrooveMeasure - beatsTillStartOfGrooveMeasure;
 
 	beatsInGroove = (int)std::floor(dBeatsInGroove + 0.5);
 
-	std::transform(grooveInBeats.begin(), grooveInBeats.end(), grooveInBeats.begin(), subtract<double>(beatsTillStartOfGrooveMeasure));
-	grooveInBeats = std::vector<double>( grooveInBeats.begin(), std::unique(grooveInBeats.begin(), grooveInBeats.end()));
+	for(std::vector<GrooveItem>::iterator j = grooveInBeats.begin(); j != grooveInBeats.end(); ++j) {
+		j->position -= beatsTillStartOfGrooveMeasure;
+	}
+
+	grooveInBeats = std::vector<GrooveItem>( grooveInBeats.begin(), std::unique(grooveInBeats.begin(), grooveInBeats.end(), isGrooveItemUnique));
 
 }
 
@@ -374,6 +412,14 @@ void GrooveTemplateHandler::StoreGrooveFromMidiEditor()
 
 	GetMidiBeatPositions(*takePtr.get(), *takePtr->getParent(), me->grooveInBeats, true);
 	finalizeGroove(me->nBeatsInGroove, me->grooveInBeats);
+}
+
+GrooveItem createGrooveItemFromItem(const RprItem &rprItem)
+{
+	GrooveItem grooveItem;
+	grooveItem.amplitude = 1.0;
+	grooveItem.position = TimeToBeat(rprItem.getPosition() + rprItem.getSnapOffset());
+	return grooveItem;
 }
 
 void GrooveTemplateHandler::StoreGroove()
@@ -393,11 +439,12 @@ void GrooveTemplateHandler::StoreGroove()
 		if (rprItem.getActiveTake().isMIDI()) {
 			RprMidiTake midiTake(rprItem.getActiveTake(),true);
 			/* add item position if no notes in midi item */
-			if(GetMidiBeatPositions(midiTake, rprItem, me->grooveInBeats, false) == 0)
-				me->grooveInBeats.push_back( TimeToBeat(rprItem.getPosition() + rprItem.getSnapOffset()));
+			if(GetMidiBeatPositions(midiTake, rprItem, me->grooveInBeats, false) == 0) {
+				me->grooveInBeats.push_back(createGrooveItemFromItem(rprItem));
+			}
 		}
 		else {
-			me->grooveInBeats.push_back(TimeToBeat(rprItem.getPosition() + rprItem.getSnapOffset()));
+			me->grooveInBeats.push_back(createGrooveItemFromItem(rprItem));
 		}
 	}
 	finalizeGroove(me->nBeatsInGroove, me->grooveInBeats);
@@ -406,7 +453,7 @@ void GrooveTemplateHandler::StoreGroove()
 
 bool GrooveTemplateHandler::LoadGroove(std::string &fileName, std::string &errorMessage)
 {
-	std::vector<double> newGroove;
+	std::vector<GrooveItem> newGroove;
 	int beatsInGroove;
 
 	std::ifstream f;
@@ -427,8 +474,8 @@ bool GrooveTemplateHandler::LoadGroove(std::string &fileName, std::string &error
 			errorMessage = "Error loading groove from file";
 			return false;
 		}
-		
-		if(nGrooveVersion == 0)
+
+		if(nGrooveVersion == 0 || nGrooveVersion == 1)
 		{
 			std::getline(f, szLine);
 			if(sscanf(szLine.c_str(), "Number of beats in groove: %d", &beatsInGroove)<= 0)
@@ -446,9 +493,15 @@ bool GrooveTemplateHandler::LoadGroove(std::string &fileName, std::string &error
 			int i = 0;
 			while(!f.eof() && i++ < nPosCount)
 			{
-				double GroovePosition;
-				f >> GroovePosition;
-				newGroove.push_back(GroovePosition);
+				GrooveItem grooveItem;
+				f >> grooveItem.position;
+				
+				if(nGrooveVersion == 0) {
+					grooveItem.amplitude = -1.0;
+				} else {
+					f >> grooveItem.amplitude;
+				}
+				newGroove.push_back(grooveItem);
 			}
 		}
 		else
@@ -524,16 +577,16 @@ void GrooveTemplateHandler::MarkGroove(int multiple)
 		double pos = GetCursorPosition();
 		dOffset = TimeToBeat(pos);
 		/* remove position of first beat so the first beat starts at the edit cursor */
-		dOffset -= *me->grooveInBeats.begin();
+		dOffset -= me->grooveInBeats.begin()->position;
 	}
 
 	int num = 0;
 	for(int i = 0; i < multiple; i++)
 	{
-		for(std::vector<double>::iterator it = me->grooveInBeats.begin(); it != me->grooveInBeats.end(); it++)
+		for(std::vector<GrooveItem>::iterator it = me->grooveInBeats.begin(); it != me->grooveInBeats.end(); it++)
 		{
 			std::stringstream oss;
-			double beat = dOffset + (*it);
+			double beat = dOffset + it->position;
 			double pos = BeatToTime(beat);
 			oss << "GRV_" << num;
 			GrooveMarker mark;
@@ -558,15 +611,15 @@ std::string GrooveTemplateHandler::GrooveToString()
 {
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 	std::stringstream oss;
-	/* Groove version is 0. Just in case I want to change it but
-	 * still allow old groove styles.
-	 */
-	oss << "Version: " << 0 << "\n";
+	/* Groove version is 1. Just in case I want to change it but
+	 * still allow old groove styles. Old version is 0 which didn't have 
+	 * velocity */
+	oss << "Version: " << 1 << "\n";
 	oss << "Number of beats in groove: " << me->nBeatsInGroove << "\n";
 	oss << "Groove: " << me->grooveInBeats.size() << " positions\n";
-	std::vector<double>::iterator it;
+	std::vector<GrooveItem>::iterator it;
 	for(it = me->grooveInBeats.begin(); it != me->grooveInBeats.end(); it++)
-		oss << (*it) << "\n";
+		oss << it->position << " " << it->amplitude << "\n";
 	return oss.str();
 }
 
@@ -648,4 +701,12 @@ void GrooveTemplateHandler::SetMemento(GrooveTemplateMemento &memento)
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 	me->grooveInBeats = memento.grooveInBeats;
 	me->nBeatsInGroove = memento.nBeatsInGroove;
+}
+
+void GrooveTemplateHandler::resetAmplitudes()
+{
+	for(std::vector<GrooveItem>::iterator i = grooveInBeats.begin(); i != grooveInBeats.end(); ++i) {
+		i->amplitude = -1.0;
+	}
+	
 }

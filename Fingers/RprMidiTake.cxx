@@ -106,10 +106,17 @@ double RprMidiNote::getPosition() const
 
 void RprMidiNote::setPosition(double position)
 {
+	int unQuantizedNoteOn = mNoteOn->getOffset() + mNoteOn->getUnquantizedOffset();
+	int unQuantizedNoteOff = mNoteOff->getOffset() + mNoteOff->getUnquantizedOffset();
+
 	int noteOnOffset = getMidiOffsetPosition(mContext, position);
 	int noteOffOffset = noteOnOffset + mNoteOff->getOffset() - mNoteOn->getOffset();
+
 	mNoteOn->setOffset(noteOnOffset);
 	mNoteOff->setOffset(noteOffOffset);
+
+	mNoteOn->setUnquantizedOffset(unQuantizedNoteOn - noteOnOffset);
+	mNoteOff->setUnquantizedOffset(unQuantizedNoteOff - noteOffOffset);
 }
 
 bool RprMidiNote::isSelected() const
@@ -141,8 +148,15 @@ int RprMidiNote::getItemPosition() const
 void RprMidiNote::setItemPosition(int position)
 {
 	int len = getItemLength();
+
+	int unquantizedNoteOn = mNoteOn->getOffset() + mNoteOn->getUnquantizedOffset();
+	int unquantizedNoteOff = mNoteOff->getOffset() + mNoteOff->getUnquantizedOffset();
+
 	mNoteOn->setOffset(position);
 	mNoteOff->setOffset(position + len);
+
+	mNoteOn->setUnquantizedOffset(unquantizedNoteOn - position);
+	mNoteOff->setUnquantizedOffset( unquantizedNoteOff - (position + len));
 }
 
 int RprMidiNote::getChannel() const
@@ -177,8 +191,10 @@ int RprMidiNote::getItemLength() const
 void RprMidiNote::setItemLength(int len)
 {
 	int offset = mNoteOn->getOffset();
+	int unquantizedOffset = offset + mNoteOff->getUnquantizedOffset();
 	offset += len;
 	mNoteOff->setOffset(offset);
+	mNoteOff->setUnquantizedOffset(unquantizedOffset - offset);
 }
 
 void RprMidiNote::setPitch(int pitch)

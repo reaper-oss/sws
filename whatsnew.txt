@@ -1,3 +1,6 @@
+Issue 238: Groove quantize now supports velocity
+Issue 234: Added support for unquantize for MIDI for any FNG action modifying MIDI data
+
 !v1.8.6 #8 (January 5, 2011)
 Issue 219: Fixed intermittent OSX crash with S&M Notes/Help window
 

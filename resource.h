@@ -281,6 +281,7 @@
 #define IDM__STAY_ON_TOP1               40003
 #define IDM__REFRESH1                   40004
 #define IDM__SHOW_ACTION_LIST1          40005
+#define IDM__IGNORE_VEL                 40006
 
 
 // Next default values for new objects

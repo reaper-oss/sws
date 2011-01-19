@@ -1031,6 +1031,10 @@ IDR_GROOVEMENU MENU
         MENUITEM SEPARATOR
         MENUITEM "&Close", IDM_E_XIT1
     }
+	POPUP "&Preferences"
+    {
+        MENUITEM "&Ingore Velocity", IDM__IGNORE_VEL
+    }
     POPUP "&View"
     {
         MENUITEM "&Refresh", IDM__REFRESH1

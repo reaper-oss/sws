@@ -55,6 +55,12 @@ unsigned char RprMidiBase::getValue2() const
 void RprMidiBase::setValue2(unsigned char)
 { throw RprMidiBase::RprMidiException("Bad API call");}
 
+int RprMidiBase::getUnquantizedOffset() const
+{ throw RprMidiBase::RprMidiException("Bad API call");}
+
+void RprMidiBase::setUnquantizedOffset(int offset)
+{ throw RprMidiBase::RprMidiException("Bad API call");}
+
 RprMidiBase::MessageType RprMidiBase::getMessageType() const
 {return Unknown; }
 void RprMidiBase::setMessageType(RprMidiBase::MessageType messageType)
@@ -114,6 +120,7 @@ RprNode *RprExtendedMidiEvent::toReaper()
 RprMidiEvent::RprMidiEvent() : RprMidiBase()
 {
 	mMidiMessage.resize(3);
+	mQuantizeOffset = 0;
 }
 
 void RprMidiEvent::setMidiMessage(const std::vector<unsigned char> message)
@@ -135,29 +142,32 @@ void RprMidiEvent::setValue1(unsigned char value)
 	mMidiMessage[1] = value;
 }
 
-
+static RprMidiBase::MessageType getMessageType(unsigned char message)
+{
+	message = (message & 0xF0) >> 4;
+	switch(message) {
+		case 8:
+			return RprMidiBase::NoteOff;
+		case 9:
+			return RprMidiBase::NoteOn;
+		case 0xA:
+			return RprMidiBase::KeyPressure;
+		case 0xB:
+			return RprMidiBase::CC;
+		case 0xC:
+			return RprMidiBase::ProgramChange;
+		case 0xD:
+			return RprMidiBase::ChannelPressure;
+		case 0xE:
+			return RprMidiBase::PitchBend;
+		default:
+			return RprMidiBase::Unknown;
+	}
+}
 
 RprMidiBase::MessageType RprMidiEvent::getMessageType() const
 {
-	unsigned char message = (mMidiMessage[0] & 0xF0) >> 4;
-	switch(message) {
-		case 8:
-			return NoteOff;
-		case 9:
-			return NoteOn;
-		case 0xA:
-			return KeyPressure;
-		case 0xB:
-			return CC;
-		case 0xC:
-			return ProgramChange;
-		case 0xD:
-			return ChannelPressure;
-		case 0xE:
-			return PitchBend;
-		default:
-			return Unknown;
-	}
+	return ::getMessageType(mMidiMessage[0]);
 }
 
 void RprMidiEvent::setMessageType(RprMidiBase::MessageType messageType)
@@ -194,6 +204,16 @@ void RprMidiEvent::setValue2(unsigned char value)
 	mMidiMessage[2] = value;
 }
 
+int RprMidiEvent::getUnquantizedOffset() const
+{
+	return mQuantizeOffset;
+}
+
+void RprMidiEvent::setUnquantizedOffset(int offset)
+{
+	mQuantizeOffset = offset;
+}
+
 unsigned char RprMidiEvent::getChannel() const
 { return (mMidiMessage[0] & 0x0F);}
 
@@ -217,6 +237,12 @@ RprNode *RprMidiEvent::toReaper()
 	oss << getDelta();
 	for(std::vector<unsigned char>::iterator i = mMidiMessage.begin(); i != mMidiMessage.end(); i++)
 		oss << " " << toHex(*i);
+
+	if(getMessageType() == NoteOn || getMessageType() == NoteOff) {
+		if(mQuantizeOffset != 0) {
+			oss << " " << mQuantizeOffset;
+		}
+	}
 	RprNode *node = new RprPropertyNode(oss.str());
 	return node;
 }
@@ -273,6 +299,17 @@ static std::string toHex(unsigned char hex)
 	return oss.str();
 }
 
+static bool isNote(std::vector<unsigned char> &midiMessage)
+{
+	if(midiMessage.empty())
+		return false;
+	if(getMessageType(midiMessage[0]) == RprMidiBase::NoteOn)
+		return true;
+	if(getMessageType(midiMessage[0]) == RprMidiBase::NoteOff)
+		return true;
+	return false;
+}
+
 RprMidiEventCreator::RprMidiEventCreator(RprNode *node)
 {
 	mXEvent = NULL;
@@ -300,8 +337,13 @@ RprMidiEventCreator::RprMidiEventCreator(RprNode *node)
 	mEvent->setMuted(muted);
 	mEvent->setDelta(delta);
 	std::vector<unsigned char> midiMessage;
-	for(unsigned int i = 2; i < tokens->size(); i++)
-		midiMessage.push_back(fromHex(tokens->at(i)));
+	for(unsigned int i = 2; i < tokens->size(); i++) {
+		if(i == 5 && isNote(midiMessage)) {
+			mEvent->setUnquantizedOffset(::atoi(tokens->at(i).c_str()));
+		} else {
+			midiMessage.push_back(fromHex(tokens->at(i)));
+		}
+	}
 	mEvent->setMidiMessage(midiMessage);
 }
 

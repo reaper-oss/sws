@@ -35,6 +35,9 @@ public:
 	virtual unsigned char getValue2() const;
 	virtual void setValue2(unsigned char value);
 
+	virtual int getUnquantizedOffset() const;
+	virtual void setUnquantizedOffset(int offset);
+
 	const std::string& getExtendedData() const;
 
 	virtual RprNode *toReaper() = 0;
@@ -82,6 +85,9 @@ public:
 	unsigned char getValue2() const;
 	void setValue2(unsigned char value);
 
+	int getUnquantizedOffset() const;
+	void setUnquantizedOffset(int offset);
+
 	unsigned char getChannel() const;
 	void setChannel(unsigned char channel);
 
@@ -89,6 +95,7 @@ public:
 
 private:
 	std::vector<unsigned char> mMidiMessage;
+	int mQuantizeOffset;
 };
 
 class RprMidiEventCreator {

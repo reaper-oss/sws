@@ -77,6 +77,7 @@ GrooveDialog::GrooveDialog(HINSTANCE hInstance, HWND parent) : CBaseDialog(hInst
 	mKbdSection->uniqueID = 0x10000000 | 0x0666;
 	CReaperCommandHandler::registerKbdSection(mKbdSection, this);
 	mPassToMain = false;
+	mIgnoreVelocity = false;
 }
 
 bool GrooveDialog::OnRprCommand(int cmd)
@@ -161,6 +162,20 @@ void GrooveDialog::OnCommand(WPARAM wParam, LPARAM lParam)
 	case IDM__REFRESH1:
 		RefreshGrooveList();
 		break;
+	case IDM__IGNORE_VEL:
+	{
+		HMENU sysMenu = GetMenu(getHwnd());
+		if(GetMenuState(sysMenu, IDM__IGNORE_VEL, MF_BYCOMMAND) & MF_CHECKED) {
+			mIgnoreVelocity = false;
+			CheckMenuItem(sysMenu, IDM__IGNORE_VEL, MF_UNCHECKED | MF_BYCOMMAND);
+			setReaperProperty("grooveWnd_ignorevel", 0);
+		}
+		else {
+			mIgnoreVelocity = true;
+			CheckMenuItem(sysMenu, IDM__IGNORE_VEL, MF_CHECKED | MF_BYCOMMAND);
+			setReaperProperty("grooveWnd_ignorevel", 1);
+		}
+	}
 	case IDC_STRENGTH:
 		OnStrengthChange(HIWORD(wParam), lParam);
 		break;
@@ -322,9 +337,14 @@ void GrooveDialog::ApplySelectedGroove()
 			MessageBoxA(GetMainHwnd(), errMessage.c_str(), "Error", 0);
 	}
 	if(index >= 0) {
-
+		
 		GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 		int beatDivider = me->GetGrooveTolerance();
+
+		/* set all amplitudes to < 0.0 so they are not used */
+		if(mIgnoreVelocity) {
+			me->resetAmplitudes();
+		}
 		
 		bool midiEditorTarget = SendDlgItemMessage(getHwnd(), IDC_TARG_NOTES, BM_GETCHECK, 0, 0) == BST_CHECKED;
 		
@@ -368,6 +388,13 @@ void GrooveDialog::Setup()
 		SetWindowPos(getHwnd(), HWND_TOPMOST, 0,0,0,0, SWP_NOMOVE | SWP_NOSIZE);
 	} else {
 		mStayOnTop = false;
+	}
+
+	if(getReaperProperty("grooveWnd_ignorevel") == "1") {
+		mIgnoreVelocity = true;
+		CheckMenuItem(sysMenu, IDM__IGNORE_VEL, MF_CHECKED | MF_BYCOMMAND);
+	} else {
+		mIgnoreVelocity = false;
 	}
 		
 	setSensitivity(getHwnd(), me->GetGrooveTolerance());

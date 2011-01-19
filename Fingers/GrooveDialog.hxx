@@ -33,6 +33,7 @@ private:
 	std::vector<KbdKeyBindingInfo> mKbdBindings;
 	bool mPassToMain;
 	bool mStayOnTop;
+	bool mIgnoreVelocity;
 	
 };
 

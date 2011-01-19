@@ -897,10 +897,15 @@ enum
   SCREENSET_ACTION_SWITCH_DOCK = 4, //dock if undocked and vice-versa
   SCREENSET_ACTION_NOMOVE = 5, //return 1 if no move desired
   SCREENSET_ACTION_GETHASH = 6, //return hash string
+  // v4 actions
+  SCREENSET_ACTION_LOAD_STATE = 0x100, // load state from actionParm (of actionParmSize). if both are NULL, hide.
+  SCREENSET_ACTION_SAVE_STATE,  // save state to actionParm, max length actionParmSize (will usually be 4k or greater), return length
 };
 typedef LRESULT (*screensetCallbackFunc)(int action, char *id, void *param, int param2);
+typedef LRESULT (*screensetNewCallbackFunc)(int action, char *id, void *param, void *actionParm, int actionParmSize);
 
 // This are managed using screenset_register() etc
+// Use screenset_registerNew for screensetNewCallbackFunc, v4 only!
 
 
 /*

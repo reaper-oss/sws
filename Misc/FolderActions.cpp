@@ -1,7 +1,7 @@
 /******************************************************************************
 / FolderActions.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -164,49 +164,21 @@ void UnindentTracks(COMMAND_T* = NULL)
 		Undo_OnStateChangeEx("Unindent selected tracks", UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
 
-void CollapseFolders(COMMAND_T* = NULL)
+void CollapseFolder(COMMAND_T* ct)
 {
 	MediaTrack* gfd = NULL;
+	int iCompact = ct->user;
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		int iType;
 		int iFolder = GetFolderDepth(tr, &iType, &gfd);
-		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) && iFolder == 0 && iType == 1)
-			GetSetMediaTrackInfo(tr, "I_FOLDERCOMPACT", &g_i2);
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) && iType == 1)
+			GetSetMediaTrackInfo(tr, "I_FOLDERCOMPACT", &iCompact);
 	}
 	UpdateTimeline();
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
-
-void UncollFolders(COMMAND_T* = NULL)
-{
-	MediaTrack* gfd = NULL;
-	for (int i = 1; i <= GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		int iType;
-		int iFolder = GetFolderDepth(tr, &iType, &gfd);
-		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) && iFolder == 0 && iType == 1)
-			GetSetMediaTrackInfo(tr, "I_FOLDERCOMPACT", &g_i0);
-	}
-	UpdateTimeline();
-}
-
-void SmallFolders(COMMAND_T* = NULL)
-{
-	MediaTrack* gfd = NULL;
-	for (int i = 1; i <= GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		int iType;
-		int iFolder = GetFolderDepth(tr, &iType, &gfd);
-		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) && iFolder == 0 && iType == 1)
-			GetSetMediaTrackInfo(tr, "I_FOLDERCOMPACT", &g_i1);
-	}
-	UpdateTimeline();
-}
-
-
 
 static COMMAND_T g_commandTable[] = 
 {
@@ -217,9 +189,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Make folder from selected tracks" },						"SWS_MAKEFOLDER",		MakeFolder,       },
 	{ { DEFACCEL, "SWS: Indent selected track(s)" },								"SWS_INDENT",			IndentTracks,     "SWS Indent track(s)", },
 	{ { DEFACCEL, "SWS: Unindent selected track(s)" },								"SWS_UNINDENT",			UnindentTracks,   "SWS Unindent track(s)", },
-	{ { DEFACCEL, "SWS: Set selected folder(s) collapsed" },						"SWS_COLLAPSE",			CollapseFolders,  },
-	{ { DEFACCEL, "SWS: Set selected folder(s) uncollapsed" },						"SWS_UNCOLLAPSE",		UncollFolders,    },
-	{ { DEFACCEL, "SWS: Set selected folder(s) small" },							"SWS_FOLDSMALL",		SmallFolders,     },
+	{ { DEFACCEL, "SWS: Set selected folder(s) collapsed" },						"SWS_COLLAPSE",			CollapseFolder, NULL, 2, },
+	{ { DEFACCEL, "SWS: Set selected folder(s) uncollapsed" },						"SWS_UNCOLLAPSE",		CollapseFolder, NULL, 0, },
+	{ { DEFACCEL, "SWS: Set selected folder(s) small" },							"SWS_FOLDSMALL",		CollapseFolder, NULL, 1, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

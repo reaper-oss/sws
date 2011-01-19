@@ -68,7 +68,7 @@ void SplitFileNameComponents(string FullFileName,vector<string>& FNComponents)
 void DoOpenTrackTemplate(COMMAND_T* t)
 {
 	char templateFNbeginswith[10];
-	sprintf(templateFNbeginswith, "%02d", t->user);
+	sprintf(templateFNbeginswith, "%02d", (int)t->user);
 	vector<string> blah;
 	string IniFileLoc;
 	IniFileLoc.assign(get_ini_file());
@@ -99,7 +99,7 @@ void DoOpenTrackTemplate(COMMAND_T* t)
 void DoOpenProjectTemplate(COMMAND_T* t)
 {
 	char templateFNbeginswith[10];
-	sprintf(templateFNbeginswith, "%02d", t->user);
+	sprintf(templateFNbeginswith, "%02d", (int)t->user);
 	vector<string> blah;
 	string IniFileLoc;
 	IniFileLoc.assign(get_ini_file());

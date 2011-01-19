@@ -1,7 +1,7 @@
 /******************************************************************************
 / TrackSel.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -427,10 +427,8 @@ void SelRouted(COMMAND_T*)
 
 void SelectTrack(COMMAND_T* ct)
 {
-	ClearSelected();
-	MediaTrack* tr = CSurf_TrackFromID((int)ct->user, false);
-	if (tr)
-		GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+	for (int i = 0; i <= GetNumTracks(); i++)
+		GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_SELECTED", (int)ct->user == i ? &g_i1 : &g_i0);
 }
 
 static COMMAND_T g_commandTable[] = 

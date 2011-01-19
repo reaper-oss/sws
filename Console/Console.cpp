@@ -1,7 +1,7 @@
 /******************************************************************************
 / Console.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -523,7 +523,12 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 				if (strchr(args, 'r'))
 					i |= 512;
 				else if (strchr(args, 'm'))
-					i += 4096 | (31 << 5) + 1;
+				{
+					if (g_bv4)
+						i += 4096 | (63 << 5) + 1;
+					else
+						i += 4096 | (31 << 5) + 1;
+				}
 				GetSetMediaTrackInfo(pMt, "I_RECINPUT", &i);
 				break;
 			case COLOR_SET:

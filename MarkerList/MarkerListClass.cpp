@@ -1,7 +1,7 @@
 /******************************************************************************
 / MarkerListClass.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,6 +28,7 @@
 
 #include "stdafx.h"
 #include "../Utility/SectionLock.h"
+#include "../../WDL/projectcontext.h"
 #include "MarkerListClass.h"
 #include "MarkerListActions.h"
 
@@ -56,7 +57,9 @@ MarkerItem::~MarkerItem()
 
 char* MarkerItem::ItemString(char* str, int iSize)
 {
-	_snprintf(str, iSize, "%d %.14f \"%s\" %d %.14f", m_id, m_dPos, GetName(), m_bReg ? 1 : 0, m_dRegEnd);
+	WDL_String name;
+	makeEscapedConfigString(GetName(), &name);
+	_snprintf(str, iSize, "%d %.14f %s %d %.14f", m_id, m_dPos, name.Get(), m_bReg ? 1 : 0, m_dRegEnd);
 	return str;
 }
 void MarkerItem::SetName(const char* newname)

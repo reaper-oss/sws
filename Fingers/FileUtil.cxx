@@ -1,58 +1,9 @@
 #include "stdafx.h"
 
 #include "FileUtil.hxx"
-#include "windows.h"
-#include "commdlg.h"
 #include <sstream>
 #include "reaper_plugin_functions.h"
 
-bool GetSaveFile(char *title, const char *extensions, const char *defaultExtension, std::string &fileName, const char *defaultFileName)
-{
-	OPENFILENAMEA ofn;
-    char szFileName[MAX_PATH] = "";
-	if (defaultFileName)
-		strcpy(szFileName, defaultFileName);
-
-    ZeroMemory(&ofn, sizeof(ofn));
-
-	ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = GetMainHwnd();
-	ofn.lpstrTitle = title;
-    ofn.lpstrFilter = extensions;
-    ofn.lpstrFile = szFileName;
-    ofn.nMaxFile = MAX_PATH;
-	ofn.lpstrDefExt = defaultExtension;
-    ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
-
-	if(GetSaveFileNameA(&ofn)) {
-		fileName = ofn.lpstrFile;
-		return true;
-	}
-	return false;
-}
-
-bool GetOpenFile(char *title, const char *extensions, const char *defaultExtension, std::string &fileName)
-{
-	OPENFILENAMEA ofn;
-    char szFileName[MAX_PATH] = "";
-
-    ZeroMemory(&ofn, sizeof(ofn));
-
-    ofn.lStructSize = sizeof(ofn); 
-    ofn.hwndOwner = GetMainHwnd();
-	ofn.lpstrTitle = title;
-    ofn.lpstrFilter = extensions;
-    ofn.lpstrFile = szFileName;
-	ofn.lpstrDefExt = defaultExtension;
-    ofn.nMaxFile = MAX_PATH;
-    ofn.Flags = OFN_EXPLORER | OFN_HIDEREADONLY;
-
-	if(GetOpenFileNameA(&ofn)) {
-		fileName = ofn.lpstrFile;
-		return true;
-	}
-	return false;
-}
 
 static std::string GetBeforeToken(std::string &str, std::string &token)
 {

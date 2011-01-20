@@ -58,8 +58,9 @@ void CBaseDialog::Copy(CBaseDialog &rhs)
 void CBaseDialog::Quit()
 {
 	if(GetParent(theHwnd) == NULL) {
-		PostQuitMessage (0);
-		CloseWindow(theHwnd);
+		// sws : not applicable to reaper ext
+		//PostQuitMessage (0);
+		//CloseWindow(theHwnd);
 	}
 	Hide();
 	

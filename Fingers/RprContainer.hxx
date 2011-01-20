@@ -21,8 +21,7 @@ public:
 
 	void remove(const T &item)
 	{
-		for(std::vector<RprItem>::iterator i = mItems.begin();
-		i != mItems.end(); i++) {
+		for(typename std::vector<T>::iterator i = mItems.begin(); i != mItems.end(); i++) {
 			if(i->toReaper() == item.toReaper()) {
 				mItems.erase(i);
 				return;

@@ -1,8 +1,6 @@
 #ifndef _BASE_DIALOG_H_
 #define _BASE_DIALOG_H_
 
-#include "windows.h"
-
 class CBaseDialog {
 public:
 	CBaseDialog(HINSTANCE hInstance, HWND parent, int dialogTemplate);

@@ -7,11 +7,6 @@
 #include <sstream>
 #include <algorithm>
 
-static bool ComparePointPos(CEnvelopePoint &left, CEnvelopePoint &right)
-{
-	return left.GetTime() < right.GetTime();
-}
-
 std::string CEnvelopePoint::ToString()
 {
 	std::ostringstream oss;
@@ -136,10 +131,10 @@ nParamIndex(0)
 
 void CEnvelope::Write()
 {
-	std::sort(vPoints.begin(), vPoints.end(), ComparePointPos);
+	std::sort(vPoints.begin(), vPoints.end(), CEnvelopePoint::ComparePointPos);
 
 	std::stringstream oss;
-	oss.setf(0,std::ios::floatfield);
+	oss.unsetf(std::ios::floatfield);
 	oss.precision(10);
 	if( m_szTitle == "PARAMENV")
 	{

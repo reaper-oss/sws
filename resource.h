@@ -62,7 +62,7 @@
 #define IDD_SNM_FIND                    154
 #define IDD_SNM_MIDI_LIVE               155
 #define IDD_AW_ITEM_SMOOTHING           156
-#define IDC_GROOVEDIALOG                157
+#define IDD_GROOVEDIALOG                157
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
@@ -275,14 +275,13 @@
 #define IDC_TARG_ITEMS                  1204
 #define IDC_TARG_NOTES                  1205
 #define IDC_STORE                       1206
-#define IDM__OPEN_FOLDER___1            40000
-#define IDM_E_XIT1                      40001
-#define IDM__SAVE_GROOVE1               40002
-#define IDM__STAY_ON_TOP1               40003
-#define IDM__REFRESH1                   40004
-#define IDM__SHOW_ACTION_LIST1          40005
+#define IDM_OPEN_FOLDER                40000
+#define IDM_EXIT                       40001
+#define IDM_SAVE_GROOVE                40002
+#define IDM_STAY_ON_TOP                40003
+#define IDM_REFRESH                    40004
+#define IDM_SHOW_ACTION_LIST           40005
 #define IDM__IGNORE_VEL                 40006
-
 
 // Next default values for new objects
 // 

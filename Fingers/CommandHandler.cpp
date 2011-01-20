@@ -35,11 +35,10 @@ bool CReaperCommand::Run(int command, int flag)
 		DoCommand(flag);
 	} catch(RprLibException &e) {
 		if(e.notify()) {
-			MessageBoxA(GetMainHwnd(), e.what(), "Error", 0);
+			MessageBox(GetMainHwnd(), e.what(), "Error", 0);
 		}
 	}
 	PostCommand();
-	double endCursorPos = GetCursorPosition();
 
 	if(!LeaveEditCursorAlone())
 		SetEditCurPos(startCursorPos, false, false);

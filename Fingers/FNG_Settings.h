@@ -10,19 +10,19 @@ __inline void setReaperProperty(const std::string &key, const T& value)
 {
 	std::ostringstream oss;
 	oss << value;
-	WritePrivateProfileStringA("fingers", key.c_str(), oss.str().c_str(), get_ini_file());
+	WritePrivateProfileString("fingers", key.c_str(), oss.str().c_str(), get_ini_file());
 }
 
 template <>
 __inline void setReaperProperty<std::string>(const std::string &key, const std::string &value)
 {
-	WritePrivateProfileStringA("fingers", key.c_str(), value.c_str(), get_ini_file());
+	WritePrivateProfileString("fingers", key.c_str(), value.c_str(), get_ini_file());
 }
 
 __inline std::string getReaperProperty(const std::string &key)
 {
 	char value[512];
-	GetPrivateProfileStringA("fingers", key.c_str(), NULL, value, 512, get_ini_file());
+	GetPrivateProfileString("fingers", key.c_str(), NULL, value, 512, get_ini_file());
 	return std::string(value);
 }
 

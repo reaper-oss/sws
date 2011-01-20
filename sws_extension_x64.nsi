@@ -28,6 +28,7 @@ Section ""
   StrCmp $R0 "1" "" ReaperClosed
   MessageBox MB_OKCANCEL "Please close all instances of REAPER before continuing installation." IDOK CheckReaper IDCANCEL Abort  
   ReaperClosed:
+  Delete "$INSTDIR\reaper_FNG_Extension.dll"
   File x64\Release\reaper_sws64.dll
   Abort:
 SectionEnd

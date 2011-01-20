@@ -74,7 +74,11 @@ public:
 	CmdPlaySelectedMediaItem(bool onTrack, bool fromCursor, bool tillNextTransient) : 
 	  m_OnTrack(onTrack), m_FromCursor(fromCursor), m_TillNextTrans(tillNextTransient), m_OnSelectedTrack(false)
 	{
+#ifdef _WIN32
 		InitializeCriticalSection(&m_PlayItem.cs); 
+#else
+		pthread_mutex_init(&m_PlayItem.mutex, NULL);
+#endif
 		m_PlayItem.src = 0;
 		m_PlayItem.loop = false;
 		m_PlayItem.curpos = 0.0;

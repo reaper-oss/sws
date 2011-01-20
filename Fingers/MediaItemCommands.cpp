@@ -27,7 +27,6 @@ void CmdCleanItemLengths(int flag, void *data);
 void CmdLegatoItemLengths(int flag, void *data);
 void CmdMoveItemsToEditCursor(int flag, void *data);
 void CmdDeselectIfNotStartInTimeSelection(int flag, void *data);
-void CmdSaveActiveTakeAs(int flag, void *data);
 static void CreateMidiItem();
 
 void MediaItemCommands::Init()
@@ -212,19 +211,6 @@ void MediaItemCommands::Init()
 		new CReaperCommand(&CmdDeselectIfNotStartInTimeSelection),
 		UNDO_STATE_ITEMS
 		),
-
-	 //  CReaperCmdReg(
-		//"FNG: save selected active takes as...", "FNG_SAVE_TAKES",
-		//new CReaperCommand(&CmdSaveActiveTakeAs, 0),
-		//0
-		//),
-
-		//CReaperCmdReg(
-		//"FNG: save selected active takes as... (replace take)", "FNG_SAVE_TAKES_REPLACE",
-		//new CReaperCommand(&CmdSaveActiveTakeAs, 1),
-		//0
-		//),
-
 	};
 
 	CReaperCommandHandler *handler = CReaperCommandHandler::Instance();
@@ -392,10 +378,12 @@ void CmdCleanItemLengths(int flag, void *data)
 	
 	for(int i = 0; i < ctr->size() - 1; i++)
 	{
+		RprTrack track1 = ctr->getAt(i).getTrack();
 		double len = ctr->getAt(i).getLength();
 		double lhsPosition = ctr->getAt(i).getPosition();
 		for(int j = i + 1; j < ctr->size(); j++) {
-			if(ctr->getAt(i).getTrack() == ctr->getAt(j).getTrack()) {
+			RprTrack track2 = ctr->getAt(j).getTrack();
+			if(track1 == track2) {
 				double rhsPosition = ctr->getAt(j).getPosition();
 				if(lhsPosition + len > rhsPosition) {
 					len = rhsPosition - lhsPosition;
@@ -419,10 +407,12 @@ void CmdLegatoItemLengths(int flag, void *data)
 
 	for(int i = 0; i < ctr->size() - 1; i++)
 	{
+		RprTrack track1 = ctr->getAt(i).getTrack();
 		double len = ctr->getAt(i).getLength();
 		double lhsPosition = ctr->getAt(i).getPosition();
 		for(int j = i + 1; j < ctr->size(); j++) {
-			if(ctr->getAt(i).getTrack() == ctr->getAt(j).getTrack()) {
+			RprTrack track2 = ctr->getAt(j).getTrack();
+			if(track1 == track2) {
 				double rhsPosition = ctr->getAt(j).getPosition();
 				if(lhsPosition + len < rhsPosition) {
 					len = rhsPosition - lhsPosition;
@@ -489,7 +479,7 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 		}
 	}
 	if(hasMidiFile) {
-		if(MessageBoxA(GetMainHwnd(),
+		if(MessageBox(GetMainHwnd(),
 			"Current selection has takes with MIDI files.\r\nTo apply this action these takes to be converted to in-project takes.\r\nDo you want to continue?",
 			"Warning", MB_YESNO) == IDNO) {
 			return false;
@@ -600,57 +590,4 @@ void CmdDeselectIfNotStartInTimeSelection(int flag, void *data)
 		if( ctr->getAt(i).getPosition() < startLoop || ctr->getAt(i).getPosition() > endLoop)
 			ctr->getAt(i).setSelected(false);
 	}
-}
-
-int AddExtension(char *list, const char *extension)
-{
-	int size = strlen(extension);
-	strcpy(list, extension);
-	list[size + 1] = 0;
-	return size + 1;
-}
-
-void CmdSaveActiveTakeAs(int flag, void *bReplaceTakeSource)
-{
-	int replace = *(int *)bReplaceTakeSource;
-	RprItemCtrPtr ctr = RprItemCollec::getSelected();
-
-	if(ctr->size() == 0)
-		return;
-
-	for(int i = 0; i < ctr->size(); i++) {
-		RprTake take = ctr->getAt(i).getActiveTake();
-		PCM_source *source = take.getSource();
-		const char *fileName = source->GetFileName();
-		std::string szFileName(fileName);
-		std::string::size_type ext_index = szFileName.find_last_of(".");
-		std::string ext = szFileName.substr(ext_index + 1);
-		std::transform(ext.begin(), ext.end(), ext.begin(), std::tolower);
-		char extensionBuffer[512];
-
-		std::string extensionList = ext + " files (*." + ext + ")";
-		int offset = AddExtension(extensionBuffer, extensionList.c_str());
-		extensionList = "*." + ext;
-		offset += AddExtension(&extensionBuffer[offset], extensionList.c_str());
-		extensionList = "All Files (*.*)";
-		offset += AddExtension(&extensionBuffer[offset], extensionList.c_str());
-		extensionList = "*.*";
-		offset += AddExtension(&extensionBuffer[offset], extensionList.c_str());
-
-		std::string newFileName;
-		if(fileName && GetSaveFile("Save active take as...", extensionBuffer, ext.c_str(), newFileName, fileName)) {
-			CopyFileA(fileName, newFileName.c_str(), FALSE);
-			if(replace == 1) {
-				take.setSource(RprTake::createSource(newFileName.c_str()));
-				std::string::size_type index = newFileName.find_last_of("\\");
-				if(index != std::string::npos) {
-					std::string name = newFileName.substr(index + 1);
-					take.setName(name.c_str());
-				}
-				UpdateTimeline();
-			}
-		}
-		
-	}
-
 }

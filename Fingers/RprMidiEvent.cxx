@@ -315,7 +315,7 @@ RprMidiEventCreator::RprMidiEventCreator(RprNode *node)
 	mXEvent = NULL;
 	mEvent = NULL;
 
-	std::auto_ptr<std::vector<std::string>> tokens(stringTokenize(node->getValue()));
+	std::auto_ptr<std::vector<std::string> > tokens(stringTokenize(node->getValue()));
 	if(tokens->empty())
 		throw RprMidiBase::RprMidiException("Error parsing MIDI data");
 

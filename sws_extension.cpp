@@ -47,9 +47,6 @@
 #include "Padre/padreActions.h"
 #include "Fingers/FNG_client.h"
 
-/* uncomment to active FNG commands */
-#define FNG_ACTIVATE
-
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
@@ -616,12 +613,8 @@ extern "C"
 			ERR_RETURN("About box init error\n")
 		if (!PadreInit())
 			ERR_RETURN("Padre init error\n")
-#ifdef FNG_ACTIVATE
-		if(!FNGExtensionInit(hInstance, rec)) {
+		if(!FNGExtensionInit(hInstance, rec))
 			ERR_RETURN("Fingers init error\n")
-		}
-#endif
-
 
 		SWSTimeSlice* ts = new SWSTimeSlice();
 		if (!rec->Register("csurf_inst", ts))

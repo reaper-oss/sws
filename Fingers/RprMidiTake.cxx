@@ -474,7 +474,7 @@ class duplicateRemoval {
 public:
 	bool operator() (T *item)
 	{
-		std::list<T *>::iterator i = std::find(toDelete.begin(), toDelete.end(), item);
+		typename std::list<T *>::iterator i = std::find(toDelete.begin(), toDelete.end(), item);
 		if(i != toDelete.end()) {
 			delete *i;
 			toDelete.erase(i);
@@ -623,7 +623,7 @@ template
 <typename T>
 void cleanUpPointers(std::vector<T *> &pointers)
 {
-	for(std::vector<T *>::iterator i = pointers.begin(); i != pointers.end(); i++)
+	for(typename std::vector<T *>::iterator i = pointers.begin(); i != pointers.end(); i++)
 		delete *i;
 	pointers.clear();
 }
@@ -682,7 +682,7 @@ RprMidiTakePtr RprMidiTake::createFromMidiEditor(bool readOnly)
 		throw RprLibException("No active MIDI editor", true);
 	RprTake take(MIDIEditor_GetTake(midiEditor));
 	const char *sourceFilename = take.getSource()->GetFileName();
-	if( strnlen(sourceFilename, 1) == 0) {
+	if(!*sourceFilename) {
 		RprMidiTakePtr takePtr(new RprMidiTake(take, readOnly));
 		return takePtr;
 	}

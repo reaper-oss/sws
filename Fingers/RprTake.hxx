@@ -1,8 +1,6 @@
 #ifndef __RPR_TAKE_HXX
 #define __RPR_TAKE_HXX
 
-#include "windows.h"
-
 class RprItem;
 class MediaItem_Take;
 class PCM_source;

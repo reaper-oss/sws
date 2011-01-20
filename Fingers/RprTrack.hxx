@@ -1,8 +1,6 @@
 #ifndef __RPR_TRACK_HXX
 #define __RPR_TRACK_HXX
 
-#include "windows.h"
-
 #include "RprContainer.hxx"
 
 class MediaTrack;

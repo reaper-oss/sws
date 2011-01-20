@@ -1,6 +1,8 @@
 #include "stdafx.h"
 
+#include "RprItem.hxx"
 #include "RprTrack.hxx"
+#include "sws_util.h"
 
 class ReaProject;
 
@@ -87,7 +89,7 @@ bool RprTrack::operator==(RprTrack &rhs)
 	GUID *lhsGuid = getGUID();
 	GUID *rhsGuid = rhs.getGUID();
 
-	return IsEqualGUID(*lhsGuid,*rhsGuid) > 0;
+	return GuidsEqual(lhsGuid,rhsGuid);
 }
 
 int RprTrack::getTrackIndex()

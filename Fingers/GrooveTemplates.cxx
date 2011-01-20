@@ -164,7 +164,7 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 		}
 	}
 	if(hasMidiFile) {
-		if(MessageBoxA(GetMainHwnd(),
+		if(MessageBox(GetMainHwnd(),
 			"Current selection has takes with midi files.\r\nTo apply this action these takes to be converted to in-project takes.\r\nDo you want to continue?",
 			"Warning", MB_YESNO) == IDNO) {
 			return false;
@@ -177,7 +177,6 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 static void applyGrooveToMidiTake(RprMidiTake &midiTake, double beatDivider, double strength, std::vector<GrooveItem> &grooveBeats, bool selectedOnly)
 {
 	RprItem rprItem = *midiTake.getParent();
-	int i = 0;
 	for(int i = 0; i < midiTake.countNotes(); i++) {
 		RprMidiNote *note = midiTake.getNoteAt(i);
 		if(selectedOnly && !note->isSelected())
@@ -325,7 +324,7 @@ void GrooveTemplateHandler::ApplyGroove(int beatDivider, double strength)
 std::string GrooveTemplateHandler::GetGrooveString(int index)
 {
 	std::ostringstream oss;
-	oss.setf(0,std::ios::floatfield);
+	oss.unsetf(std::ios::floatfield);
 	oss.precision(10);
 	std::vector<GrooveItem>::iterator it = grooveInBeats.begin() + index;
 	if(it != grooveInBeats.end())
@@ -340,7 +339,7 @@ std::string GrooveTemplateHandler::GetGrooveMarkerString(int index)
 
 	if( i != grooveMarkers.end()) {
 		std::ostringstream oss;
-		oss.setf(0,std::ios::floatfield);
+		oss.unsetf(std::ios::floatfield);
 		oss.precision(10);
 		oss << (*i).name << " "
 			<< (*i).index << " "
@@ -429,7 +428,7 @@ void GrooveTemplateHandler::StoreGroove()
 
 	if(ctr->size() == 0)
 	{
-		MessageBoxA(GetMainHwnd(), "No items selected", "Error", 0);
+		MessageBox(GetMainHwnd(), "No items selected", "Error", 0);
 		return;
 	}
 	GrooveTemplateHandler::ClearGroove();
@@ -562,7 +561,7 @@ void GrooveTemplateHandler::MarkGroove(int multiple)
 	}
 	if(me->grooveInBeats.size() == 0)
 	{
-		MessageBoxA(GetMainHwnd(), "No groove stored", "Error",0);
+		MessageBox(GetMainHwnd(), "No groove stored", "Error",0);
 		return;
 	}
 	
@@ -671,7 +670,6 @@ void GrooveTemplateHandler::SaveGrooveMarkers(ProjectStateContext *ctx, bool isU
 	if(!isUndo) {
 		GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 		int i = 0;
-		int j = 0;
 		std::string markerdata = me->GetGrooveMarkerString(i++);
 		if(markerdata.empty())
 			return;

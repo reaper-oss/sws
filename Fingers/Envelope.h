@@ -22,6 +22,7 @@ public:
 	  {}
 
 	void SetTime(double time) { dTime = time; }
+	static bool ComparePointPos(const CEnvelopePoint &left, const CEnvelopePoint &right) { return left.dTime < right.dTime; }
 	double GetTime() { return dTime; }
 
 	void SetValue(double value);

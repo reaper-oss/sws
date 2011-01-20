@@ -50,7 +50,7 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 		}
 	}
 	if(hasMidiFile) {
-		if(MessageBoxA(GetMainHwnd(),
+		if(MessageBox(GetMainHwnd(),
 			"Current selection has takes with MIDI files.\r\nTo apply this action these takes to be converted to in-project takes.\r\nDo you want to continue?",
 			"Warning", MB_YESNO) == IDNO) {
 			return false;
@@ -127,7 +127,6 @@ static bool RunMidiCommand(int commandId)
 
 static RprMidiNote *getFirstSelected(RprMidiTakePtr &midiTake)
 {
-	RprMidiNote *note = NULL;
 	for(int i = 0; i < midiTake->countNotes(); i++) {
 		if (midiTake->getNoteAt(i)->isSelected()) {
 			return midiTake->getNoteAt(i);
@@ -375,7 +374,10 @@ static void QuantizeAllToGrid(int flag, void *data)
 		if(take.isMIDI())
 			QuanitzeMidi(take, gridSize);
 		else
-			QuanitzeAudio(itemCtr->getAt(i), gridSize);
+		{
+			RprItem item = itemCtr->getAt(i); 
+			QuanitzeAudio(item, gridSize);
+		}
 	 }
 
 }

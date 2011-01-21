@@ -384,7 +384,15 @@ void GrooveDialog::Setup()
 	
 	setWindowPosition(getHwnd());
 
+#ifdef _WIN32
 	HMENU sysMenu = GetMenu(getHwnd());
+#else
+	HMENU sysMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_GROOVEMENU));
+	if (sysMenu)
+		SetMenu(getHwnd(), sysMenu);
+	else
+		swsMenu = GetMenu(getHWND());
+#endif 
 	if(getReaperProperty("grooveWnd_topmost") == "1") {
 		mStayOnTop = true;
 		CheckMenuItem(sysMenu, IDM_STAY_ON_TOP, MF_CHECKED | MF_BYCOMMAND);

@@ -1,8 +1,17 @@
+!v2.0.0 #2 (January 21, 2011)
+Fix to close our windows on initial screenset load (thanks Bevosss)
+Auto color/icon updates:
++Icons are removed if a track changes name to something not recognized
++Auto-icon won't overwrite custom icons
++Added "Ignore" field to the color, so you can auto-icon without changing color of that track too
++Proper priority order icon setting
++Performance enhancements
+
+!v2.0.0 #1 (January 19, 2011)
 <b>BETA: CAUTION !</b>
 Due to a change in the way S&M.ini file is managed, you may face some issues when switching between SWS official <-> SWS beta.
 Well, a clean upgrade is automatically managed when SWS official -> SWS beta, but you'll probably loose your FX Chains setup when switching back to SWS beta -> SWS official.
 So a backup of the "official" S&M.ini might be a good idea (or sticking with the beta as the new S&M.ini format won't change).
-
 
 <b>Short changelog:</b>
 
@@ -11,7 +20,6 @@ So a backup of the "official" S&M.ini might be a good idea (or sticking with the
 +Updated SWS Autocolor view: now also features auto track icon. Demo http://reaper.mj-s.com/autoicon.gif|here|.
 +Preliminary V4 updates (S&M, Padre, Xenakios)
 +House cleaning, fixes
-
 
 <b>Changelog details:</b>
 

@@ -39,10 +39,12 @@ public:
 class SWS_RuleTrack
 {
 public:
-	SWS_RuleTrack(MediaTrack* tr, int col):m_pTr(tr), m_col(col), m_bColored(true) {}
+	SWS_RuleTrack(MediaTrack* tr):m_pTr(tr), m_col(-1), m_bColored(false), m_bIconed(false) {}
 	MediaTrack* m_pTr;
 	int m_col;
 	bool m_bColored;
+	WDL_String m_icon;
+	bool m_bIconed;
 };
 
 class SWS_AutoColorView : public SWS_ListView

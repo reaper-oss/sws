@@ -338,55 +338,6 @@ LRESULT SWS_DockWnd::screensetCallback(int action, char *id, void *param, void *
 		break;
 	case SCREENSET_ACTION_SAVE_STATE:
 		return pObj->SaveState((char*)actionParm, actionParmSize);
-
-	/*case SCREENSET_ACTION_LOAD_STATE:
-		{
-			LoadState((char*)actionParm, actionParmSize);
-
-			SWS_DockWnd_State state;
-			memset(&state, 0, sizeof(SWS_DockWnd_State));
-			if (actionParm && actionParmSize == sizeof(SWS_DockWnd_State))
-			{
-				for (int i = 0; i < 6; i++) // h
-					((int*)&state)[i] = REAPER_MAKELEINT(((int*)actionParm)[i]);
-			}
-
-			Dock_UpdateDockID(id, state.whichdock);
-			if (state.state & 1)
-			{
-				if (IsWindow(pObj->m_hwnd) && (pObj->(m_state.state & 2) != ((state.state & 2) == 2) ||
-					pObj->(m_state.state & 2) && DockIsChildOfDock(pObj->m_hwnd, NULL) != state.whichdock))
-					// If the window's already open, but the dock state or docker # has changed,
-					// destroy and reopen.
-					DestroyWindow(pObj->m_hwnd);
-
-				pObj->(m_state.state & 2) = (state.state & 2) == 2;
-				pObj->Show(false, false);
-				if (!pObj->(m_state.state & 2))
-					SetWindowPos(pObj->m_hwnd, NULL, state.r.left, state.r.top, abs(state.r.right-state.r.left), abs(state.r.bottom-state.r.top), SWP_NOZORDER);
-			}
-			else if (IsWindow(pObj->m_hwnd))
-				DestroyWindow(pObj->m_hwnd);
-			return 0;
-		}
-	case SCREENSET_ACTION_SAVE_STATE:
-		if (actionParm && actionParmSize >= sizeof(SWS_DockWnd_State))
-		{
-			if (IsWindow(pObj->m_hwnd))
-			{
-				SWS_DockWnd_State* pState = (SWS_DockWnd_State*)actionParm;
-				memset(pState, 0, sizeof(SWS_DockWnd_State));
-				GetWindowRect(pObj->m_hwnd, &pState->r);
-				pState->state = 1; // Probably not necessary to store that we're open?
-				pState->whichdock = DockIsChildOfDock(pObj->m_hwnd, NULL);
-				pState->state |= pObj->(m_state.state & 2) ? 2 : 0;
-				for (int i = 0; i < 6; i++) // h
-					REAPER_MAKELEINTMEM(((int*)actionParm)[i]);
-				return sizeof(SWS_DockWnd_State);
-			}
-		}
-		return 0;
-		*/
 	}
 	return 0;
 }
@@ -469,6 +420,8 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 		for (int i = 0; i < sizeof(SWS_DockWnd_State) / (int)sizeof(int); i++)
 			((int*)&m_state)[i] = REAPER_MAKELEINT(*((int*)cStateBuf+i));
 	}
+	else
+		m_state.state = 0;
 
 	// TODO - ignore whichdock on start and use Reaper's hint, but on ss load need to check??
 	//if (Dock_UpdateDockID) // v4 only!

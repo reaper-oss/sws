@@ -48,8 +48,8 @@
 enum { AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_ANY, AC_MASTER, NUM_TRACKTYPES };
 static const char cTrackTypes[][11] = { "(unnamed)", "(folder)", "(children)", "(receive)", "(any)", "(master)" };
 
-enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, NUM_COLORTYPES };
-static const char cColorTypes[][9] = { "Custom", "Gradient", "Random", "None", "Parent" };
+enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, AC_IGNORE, NUM_COLORTYPES };
+static const char cColorTypes[][9] = { "Custom", "Gradient", "Random", "None", "Parent", "Ignore" };
 
 // Globals
 static SWS_AutoColorWnd* g_pACWnd = NULL;
@@ -512,7 +512,7 @@ void OpenAutoColor(COMMAND_T*)
 	g_pACWnd->Show(true, true);
 }
 
-void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon)
+void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon, bool bForce)
 {
 	if (!bColor && !bIcon)
 		return;
@@ -530,7 +530,6 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon)
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		int iCurColor = *(int*)GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", NULL);
 
-		bool bAutocolored = false;
 		bool bFound = false;
 		SWS_RuleTrack* pACTrack = NULL;
 		for (int j = 0; j < g_pACTracks.Get()->GetSize(); j++)
@@ -539,19 +538,24 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon)
 			if (pACTrack->m_pTr == tr)
 			{
 				bFound = true;
-				if (!pACTrack->m_bColored && iCurColor == pACTrack->m_col)
-				{
-					bAutocolored = true;
-					break;
-				}
+				break;
 			}
 		}
 		
-		// New tracks are by default autocolored
-		if (!bFound)
-			bAutocolored = true;
+		if (bFound)
+		{
+			// If already colored by a different rule, or ignoring the color, or the user changed the color manually, ignore this track
+			if (pACTrack->m_bColored || rule->m_col == -AC_IGNORE-1 || (!bForce && pACTrack->m_col != -1 && iCurColor != pACTrack->m_col))
+				bColor = false;
+			// If already iconed by a different rule, or the icon field is blank (ignore), or the icon is already set, ignore
+			if (pACTrack->m_bIconed || !rule->m_icon.Get()[0] || (!bForce && strcmp(pACTrack->m_icon.Get(), rule->m_icon.Get()) == 0))
+				bIcon = false;
+		}
+		else
+			pACTrack = g_pACTracks.Get()->Add(new SWS_RuleTrack(tr));
 		
-		if (bAutocolored || bIcon) // Always look at all tracks when in icon mode
+		// Do the track rule matching
+		if (bColor || bIcon)
 		{
 			bool bMatch = false;
 
@@ -600,7 +604,8 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon)
 
 			if (bMatch)
 			{
-				if (bAutocolored && bColor)
+				// Set the color
+				if (bColor || bForce)
 				{
 					int newCol = iCurColor;
 
@@ -636,15 +641,11 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon)
 					if (newCol != iCurColor)
 						GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &newCol);
 
-					if (bFound)
-					{
-						pACTrack->m_col = newCol;
-						pACTrack->m_bColored = true;
-					}
-					else
-						g_pACTracks.Get()->Add(new SWS_RuleTrack(tr, newCol));
+					pACTrack->m_col = newCol;
+					pACTrack->m_bColored = true;
 				}
-				if (bIcon && rule->m_icon.GetLength())
+
+				if (bIcon)
 				{
 					SNM_ChunkParserPatcher p(tr); // nothing done yet
 					char pIconLine[BUFFER_SIZE] = "";
@@ -661,6 +662,8 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon)
 						else 
 							p.InsertAfterBefore(0, pIconLine, "TRACK", "FX", 1, 0, "TRACKID");
 					}
+					pACTrack->m_bIconed = true;
+					pACTrack->m_icon.Set(rule->m_icon.Get());
 				}
 			}
 		}
@@ -702,18 +705,37 @@ void AutoColorRun(bool bForce)
 				i--;
 			}
 
-	// Clear the "colored" bit
+	// Clear the "colored" bit and "iconed" bit
 	for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
+	{
 		g_pACTracks.Get()->Get(i)->m_bColored = false;
+		g_pACTracks.Get()->Get(i)->m_bIconed = false;
+	}
 
 	// Apply the rules
 	SWS_CacheObjectState(true);
 	for (int i = 0; i < g_pACItems.GetSize(); i++)
-		ApplyColorRule(g_pACItems.Get(i), bForce || g_bACEnabled, bForce || g_bAIEnabled);
+		ApplyColorRule(g_pACItems.Get(i), g_bACEnabled, g_bAIEnabled, bForce);
+
+	if (g_bAIEnabled || bForce)
+	{	// Now, remove icons if necessary
+		for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
+		{
+			SWS_RuleTrack* pACTrack = g_pACTracks.Get()->Get(i);
+			if (!pACTrack->m_bIconed && pACTrack->m_icon.Get()[0])
+			{	// There's an icon set, but there shouldn't be!
+				pACTrack->m_icon.Set("");
+				SNM_ChunkParserPatcher p(pACTrack->m_pTr); // Yay for the patcher
+				WDL_PtrList<const char> remove;
+				remove.Add("TRACKIMGFN");
+				p.RemoveLines(&remove);
+			}
+		}
+	}
 	SWS_CacheObjectState(false);
 
 	if (bForce)
-		Undo_OnStateChangeEx("Apply SWS autocolor", UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx("Apply SWS auto color/icon", UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 	bRecurse = false;
 }
 
@@ -758,7 +780,11 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 				stringToGuid(lp.gettoken_str(0), &g);
 				MediaTrack* tr = GuidToTrack(&g);
 				if (tr)
-					g_pACTracks.Get()->Add(new SWS_RuleTrack(tr, lp.gettoken_int(1)));
+				{
+					SWS_RuleTrack* rt = g_pACTracks.Get()->Add(new SWS_RuleTrack(tr));
+					rt->m_col = lp.gettoken_int(1);
+					rt->m_icon.Set(lp.gettoken_str(2));
+				}
 			}
 			else
 				break;
@@ -784,13 +810,12 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		char str[128];
 		for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
 		{
-			GUID g;
-			if (CSurf_TrackToID(g_pACTracks.Get()->Get(i)->m_pTr, false))
-				g = *(GUID*)GetSetMediaTrackInfo(g_pACTracks.Get()->Get(i)->m_pTr, "GUID", NULL);
-			else
-				g = GUID_NULL;
+			SWS_RuleTrack* rt = g_pACTracks.Get()->Get(i);
+			GUID g = GUID_NULL;
+			if (CSurf_TrackToID(rt->m_pTr, false))
+				g = *(GUID*)GetSetMediaTrackInfo(rt->m_pTr, "GUID", NULL);
 			guidToString(&g, str);
-			sprintf(str+strlen(str), " %d", g_pACTracks.Get()->Get(i)->m_col);
+			sprintf(str+strlen(str), " %d \"%s\"", rt->m_col, rt->m_icon.Get());
 			ctx->AddLine(str);
 		}
 		ctx->AddLine(">");
@@ -807,7 +832,7 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS: Open auto color/icon window" },		"SWSAUTOCOLOR_OPEN",	OpenAutoColor,	"SWS Auto color/icon",		0, IsAutoColorOpen },
+	{ { DEFACCEL, "SWS: Open auto color/icon window" },	"SWSAUTOCOLOR_OPEN",	OpenAutoColor,		"SWS Auto color/icon",		0, IsAutoColorOpen },
 	{ { DEFACCEL, "SWS: Toggle auto coloring enable" },	"SWSAUTOCOLOR_ENABLE",	EnableAutoColor,	"Enable SWS auto coloring", 0, IsAutoColorEnabled },
 	{ { DEFACCEL, "SWS/S&M: Toggle auto icon enable" },	"S&MAUTOICON_ENABLE",	EnableAutoIcon,		"Enable SWS auto icon",		0, IsAutoIconEnabled },
 	{ { DEFACCEL, "SWS: Apply auto coloring" },			"SWSAUTOCOLOR_APPLY",	ApplyAutoColor,	},

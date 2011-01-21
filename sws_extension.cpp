@@ -45,6 +45,7 @@
 #include "Projects/ProjectList.h"
 #include "SnM/SnM_Actions.h"
 #include "Padre/padreActions.h"
+#include "Autorender/Autorender.h"
 
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
@@ -613,6 +614,8 @@ extern "C"
 			ERR_RETURN("About box init error\n")
 		if (!PadreInit())
 			ERR_RETURN("Padre init error\n")
+		if (!AutorenderInit())
+			ERR_RETURN("Autorender init error\n")
 
 		SWSTimeSlice* ts = new SWSTimeSlice();
 		if (!rec->Register("csurf_inst", ts))

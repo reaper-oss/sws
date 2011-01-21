@@ -103,90 +103,6 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|x64"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			CharacterSet="0"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-				Description="Checking for REAPER_DIR environment variable..."
-				CommandLine="if &quot;$(REAPER_DIR)&quot;==&quot;&quot; exit 1"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(REAPER_DIR)&quot;"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
-				StringPooling="true"
-				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="2"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="comctl32.lib"
-				OutputFile="$(OutDir)\reaper_sws64.dll"
-				IgnoreDefaultLibraryNames=""
-				GenerateDebugInformation="true"
-				GenerateMapFile="true"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				Description="Building x64 installer and copying to c:\dev\sws-deploy..."
-				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2 $(SolutionName)_x64.nsi&#x0D;&#x0A;if exist &quot;$(OutDir)\$(SolutionName)_x64.exe&quot; copy /y &quot;$(OutDir)\$(SolutionName)_x64.exe&quot; &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
-			/>
-		</Configuration>
-		<Configuration
 			Name="Test|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
@@ -271,6 +187,90 @@
 				Name="VCPostBuildEventTool"
 				Description="Copying to REAPER\Plugins..."
 				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&#x0D;&quot;"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="2"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
+			CharacterSet="0"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+				Description="Checking for REAPER_DIR environment variable..."
+				CommandLine="if &quot;$(REAPER_DIR)&quot;==&quot;&quot; exit 1"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(REAPER_DIR)&quot;"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
+				StringPooling="true"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="2"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="comctl32.lib"
+				OutputFile="$(OutDir)\reaper_sws64.dll"
+				IgnoreDefaultLibraryNames=""
+				GenerateDebugInformation="true"
+				GenerateMapFile="true"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				Description="Building x64 installer and copying to c:\dev\sws-deploy..."
+				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2 $(SolutionName)_x64.nsi&#x0D;&#x0A;if exist &quot;$(OutDir)\$(SolutionName)_x64.exe&quot; copy /y &quot;$(OutDir)\$(SolutionName)_x64.exe&quot; &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -392,7 +392,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Test|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -400,7 +400,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Test|Win32"
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -520,7 +520,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Test|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -528,7 +528,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Test|Win32"
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -572,7 +572,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Test|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -580,7 +580,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Test|Win32"
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1009,7 +1009,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Test|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1018,7 +1018,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Test|Win32"
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1053,7 +1053,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Test|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1062,7 +1062,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Test|Win32"
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1093,7 +1093,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Test|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1102,7 +1102,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Test|Win32"
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1141,20 +1141,20 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|x64"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-							WarningLevel="2"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Test|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+							UsePrecompiledHeader="0"
+							WarningLevel="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -1187,20 +1187,20 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|x64"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-							WarningLevel="2"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Test|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+							UsePrecompiledHeader="0"
+							WarningLevel="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -1229,20 +1229,20 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|x64"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-							WarningLevel="2"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Test|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+							UsePrecompiledHeader="0"
+							WarningLevel="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -1271,20 +1271,20 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|x64"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-							WarningLevel="2"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Test|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+							UsePrecompiledHeader="0"
+							WarningLevel="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -1317,20 +1317,20 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|x64"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							UsePrecompiledHeader="0"
-							WarningLevel="2"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
 						Name="Test|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
 							PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+							UsePrecompiledHeader="0"
+							WarningLevel="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -1362,20 +1362,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1412,20 +1412,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1454,20 +1454,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1496,20 +1496,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1538,20 +1538,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1580,20 +1580,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1622,20 +1622,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1664,20 +1664,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1706,20 +1706,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1748,20 +1748,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1790,20 +1790,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1832,20 +1832,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1874,20 +1874,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1916,20 +1916,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1958,20 +1958,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -2000,20 +2000,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -2042,20 +2042,20 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
 							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
 								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								UsePrecompiledHeader="0"
+								WarningLevel="2"
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Release|x64"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -2087,7 +2087,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
+							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2096,7 +2096,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Test|Win32"
+							Name="Release|x64"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2127,7 +2127,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
+							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2136,7 +2136,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Test|Win32"
+							Name="Release|x64"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2167,7 +2167,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
+							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2176,7 +2176,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Test|Win32"
+							Name="Release|x64"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2211,7 +2211,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
+							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2220,7 +2220,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Test|Win32"
+							Name="Release|x64"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2255,7 +2255,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
+							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2264,7 +2264,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Test|Win32"
+							Name="Release|x64"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2295,7 +2295,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
+							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2304,7 +2304,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Test|Win32"
+							Name="Release|x64"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2343,7 +2343,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
+							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2352,7 +2352,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Test|Win32"
+							Name="Release|x64"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2387,7 +2387,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
+							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2396,7 +2396,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Test|Win32"
+							Name="Release|x64"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2431,7 +2431,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
+							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2440,7 +2440,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Test|Win32"
+							Name="Release|x64"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2475,7 +2475,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
+							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2484,7 +2484,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Test|Win32"
+							Name="Release|x64"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2527,7 +2527,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Release|x64"
+							Name="Test|Win32"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2536,7 +2536,7 @@
 							/>
 						</FileConfiguration>
 						<FileConfiguration
-							Name="Test|Win32"
+							Name="Release|x64"
 							>
 							<Tool
 								Name="VCCLCompilerTool"
@@ -2580,7 +2580,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|x64"
+						Name="Test|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2589,7 +2589,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Test|Win32"
+						Name="Release|x64"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2620,7 +2620,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|x64"
+						Name="Test|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2629,7 +2629,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Test|Win32"
+						Name="Release|x64"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2664,7 +2664,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|x64"
+						Name="Test|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2673,7 +2673,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Test|Win32"
+						Name="Release|x64"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2708,7 +2708,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Release|x64"
+						Name="Test|Win32"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2717,7 +2717,7 @@
 						/>
 					</FileConfiguration>
 					<FileConfiguration
-						Name="Test|Win32"
+						Name="Release|x64"
 						>
 						<Tool
 							Name="VCCLCompilerTool"
@@ -2894,6 +2894,18 @@
 			</File>
 			<File
 				RelativePath=".\Padre\padreUtils.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Autorender"
+			>
+			<File
+				RelativePath=".\Autorender\Autorender.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Autorender\Autorender.h"
 				>
 			</File>
 		</Filter>

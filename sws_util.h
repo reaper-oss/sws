@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_util.h
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -44,6 +44,7 @@
 #define UTF8_BOX "\xE2\x96\xA1"
 #define UTF8_BBOX "\xE2\x96\xA0"
 #define SWS_CMD_SHORTNAME(_ct) (_ct->accel.desc + 5) // +5 to skip "SWS: "
+#define __ARRAY_SIZE(x) sizeof(x) / sizeof(x[0])
 // For checking to see if items are adjacent
 // Found one case of items after split having diff edges 5e-11 apart, 1e-9 (still much greater than one sample)
 #define SWS_ADJACENT_ITEM_THRESHOLD 1.0e-9

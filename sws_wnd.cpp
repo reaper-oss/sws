@@ -87,7 +87,7 @@ void SWS_DockWnd::Show(bool bToggle, bool bActivate)
 		InvalidateRect(m_hwnd, NULL, TRUE);
 #endif
 	}
-	else if (bActivate && !bToggle)// (!IsWindowVisible(m_hwnd) || (bActivate && !bToggle))
+	else if (!IsWindowVisible(m_hwnd) || (bActivate && !bToggle))
 	{
 		if ((m_state.state & 2))
 			DockWindowActivate(m_hwnd);

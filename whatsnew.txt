@@ -1,3 +1,5 @@
+Issue 225: Fixed selected text in Notes/help view when switching between docker tabs
+
 !v1.8.6 #9 (January 18, 2011)
 Issue 220: Fixed marker/clipboard actions when there's quotes in the name
 Issue 231: Fixed high CPU on Select only track N actions

@@ -9,7 +9,7 @@ public:
 
 	int size()
 	{
-		return mItems.size();
+		return (int)mItems.size();
 	}
 	
 	void add(const T &item)

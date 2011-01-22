@@ -75,7 +75,7 @@ void RprParentNode::addChild(RprNode *node, int index)
 
 int RprParentNode::childCount()
 {
-	return mChildren.size();
+	return (int)mChildren.size();
 }
 
 void RprParentNode::removeChild(int index)

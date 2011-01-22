@@ -22,7 +22,7 @@ static void EraseBeforeToken(std::string &str, std::string &token, bool inclusiv
 
 static int CountCharInString(std::string &str, char c)
 {
-	int len = str.length();
+	int len = (int)str.length();
 	int count = 0;
 	int i = 0;
 	while(i < len) {
@@ -35,7 +35,7 @@ static int CountCharInString(std::string &str, char c)
 
 static void RemoveCommonFromLeft(std::string &str1, std::string &str2)
 {
-	int len = max(str1.length(), str2.length());
+	int len = (int)max(str1.length(), str2.length());
 	int i = 0;
 	while(str1[i] == str2[i] && i < len) i++;
 	str1 = str1.substr(i);	

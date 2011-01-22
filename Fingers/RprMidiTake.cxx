@@ -565,7 +565,7 @@ RprMidiNote *RprMidiTake::addNoteAt(int index)
 
 int RprMidiTake::countNotes() const
 {
-	return mNotes.size();
+	return (int)mNotes.size();
 }
 
 void RprMidiTake::removeNoteAt(int index)
@@ -710,7 +710,7 @@ double RprMidiTake::getNoteDivision()
 
 int RprMidiTake::countCCs(int controller) const
 {
-	return mCCs[controller].size();
+	return (int)mCCs[controller].size();
 }
 
 static bool hasEvent(std::vector<RprMidiBase *> &midiEvents, RprMidiBase::MessageType messageType)

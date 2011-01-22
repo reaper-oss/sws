@@ -43,7 +43,7 @@ GrooveDialog::GrooveDialog()
 
 	mKbdSection->name = "FNG: groove tool";
 	mKbdSection->action_list = &mKbdCommands[0];
-	mKbdSection->action_list_cnt = mKbdCommands.size();
+	mKbdSection->action_list_cnt = (int)mKbdCommands.size();
 	mKbdSection->def_keys = NULL;
 	mKbdSection->def_keys_cnt = 0;
 	mKbdSection->uniqueID = 0x10000000 | 0x0666;
@@ -266,7 +266,7 @@ void GrooveDialog::RefreshGrooveList()
 
 void GrooveDialog::ApplySelectedGroove()
 {
-	int index = SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_GETCURSEL, 0, 0);
+	int index = (int)SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_GETCURSEL, 0, 0);
 	std::string szGroove = "** User Groove **";
 	GrooveTemplateMemento memento = GrooveTemplateHandler::GetMemento();
 	

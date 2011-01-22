@@ -349,7 +349,7 @@ static int GetMidiBeatPositions(RprMidiTake &midiTake, const RprItem &parent, st
 			vPositions.push_back(grooveItem);
 		}
 	}
-	return vPositions.size();
+	return (int)vPositions.size();
 }
 
 static bool sortGrooveItems(const GrooveItem &lhs, const GrooveItem &rhs)

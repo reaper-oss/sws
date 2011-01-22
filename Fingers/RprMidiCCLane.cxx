@@ -59,7 +59,7 @@ bool RprMidiCCLane::isShown(int id) const
 
 int RprMidiCCLane::countShown() const
 {
-	return mMidiLanes.size();
+	return (int)mMidiLanes.size();
 }
 
 int RprMidiCCLane::getIdAt(int index) const

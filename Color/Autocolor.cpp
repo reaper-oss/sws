@@ -954,7 +954,7 @@ void AutoColorSaveState()
 		WDL_String str1, str2;
 		makeEscapedConfigString(g_pACItems.Get(i)->m_str.Get(), &str1);
 		makeEscapedConfigString(g_pACItems.Get(i)->m_icon.Get(), &str2);
-		_snprintf(str, BUFFER_SIZE, "%s %d %s", str1.Get(), g_pACItems.Get(i)->m_col, str2.Get());
+		_snprintf(str, BUFFER_SIZE, "\"%s %d %s\"", str1.Get(), g_pACItems.Get(i)->m_col, str2.Get());
 		WritePrivateProfileString(SWS_INI, key, str, g_ACIni.Get());
 	}	
 }

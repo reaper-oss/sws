@@ -29,8 +29,7 @@
 #include "Color.h"
 #include "Autocolor.h"
 #include "../SnM/SnM_Actions.h"
-//#include "../SnM/SNM_ChunkParserPatcher.h"
-
+#include "../../WDL/projectcontext.h"
 
 #define PRI_UP_MSG		0x10000
 #define PRI_DOWN_MSG	0x10001
@@ -57,8 +56,11 @@ static WDL_PtrList<SWS_RuleItem> g_pACItems;
 static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SWS_RuleTrack> > g_pACTracks;
 static bool g_bACEnabled = false;
 static bool g_bAIEnabled = false;
-
+static WDL_String g_ACIni;
 static SWS_LVColumn g_cols[] = { {25, 0, "#" }, { 185, 1, "Filter" }, { 70, 1, "Color" }, { 200, 2, "Icon" }};
+
+// Prototypes
+void AutoColorSaveState();
 
 SWS_AutoColorView::SWS_AutoColorView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, 4, g_cols, "AutoColorViewState", false)
@@ -220,6 +222,7 @@ void SWS_AutoColorWnd::Update()
 		if (m_pLists.GetSize())
 			m_pLists.Get(0)->Update();
 
+		AutoColorSaveState();
 		AutoColorRun(false);
 	}
 }
@@ -474,6 +477,8 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y)
 	}
 	else if (item && iCol == 2)
 	{
+		AddToMenu(hMenu, "Set color...", IDC_COLOR);
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		for (int i = 0; i < NUM_COLORTYPES; i++)
 			AddToMenu(hMenu, cColorTypes[i], COLORTYPE_MSG + i);
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
@@ -512,9 +517,9 @@ void OpenAutoColor(COMMAND_T*)
 	g_pACWnd->Show(true, true);
 }
 
-void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon, bool bForce)
+void ApplyColorRule(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bool bForce)
 {
-	if (!bColor && !bIcon)
+	if (!bDoColors && !bDoIcons)
 		return;
 
 	int iCount = 0;
@@ -528,7 +533,8 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon, bool bForce)
 	for (int i = 0; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		int iCurColor = *(int*)GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", NULL);
+		bool bColor = bDoColors;
+		bool bIcon  = bDoIcons;
 
 		bool bFound = false;
 		SWS_RuleTrack* pACTrack = NULL;
@@ -544,11 +550,11 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon, bool bForce)
 		
 		if (bFound)
 		{
-			// If already colored by a different rule, or ignoring the color, or the user changed the color manually, ignore this track
-			if (pACTrack->m_bColored || rule->m_col == -AC_IGNORE-1 || (!bForce && pACTrack->m_col != -1 && iCurColor != pACTrack->m_col))
+			// If already colored by a different rule, or ignoring the color ignore this track
+			if (pACTrack->m_bColored || rule->m_col == -AC_IGNORE-1)
 				bColor = false;
-			// If already iconed by a different rule, or the icon field is blank (ignore), or the icon is already set, ignore
-			if (pACTrack->m_bIconed || !rule->m_icon.Get()[0] || (!bForce && strcmp(pACTrack->m_icon.Get(), rule->m_icon.Get()) == 0))
+			// If already iconed by a different rule, or the icon field is blank (ignore), ignore
+			if (pACTrack->m_bIconed || !rule->m_icon.Get()[0])
 				bIcon = false;
 		}
 		else
@@ -605,8 +611,11 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon, bool bForce)
 			if (bMatch)
 			{
 				// Set the color
-				if (bColor || bForce)
+				if (bColor)
 				{
+					int iCurColor = *(int*)GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", NULL);
+					if (!(iCurColor | 0x1000000))
+						iCurColor = 0;
 					int newCol = iCurColor;
 
 					if (rule->m_col == -AC_RANDOM-1)
@@ -638,7 +647,8 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon, bool bForce)
 					else
 						newCol = rule->m_col | 0x1000000;
 
-					if (newCol != iCurColor)
+					// Only set the color if the user hasn't changed the color manually (but record it as being changed)
+					if ((bForce || iCurColor == pACTrack->m_col) && newCol != iCurColor)
 						GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &newCol);
 
 					pACTrack->m_col = newCol;
@@ -647,23 +657,30 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bColor, bool bIcon, bool bForce)
 
 				if (bIcon)
 				{
-					SNM_ChunkParserPatcher p(tr); // nothing done yet
-					char pIconLine[BUFFER_SIZE] = "";
-					int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 2, 0, 1, pIconLine, NULL, "TRACKID");
-					if (strcmp(pIconLine, rule->m_icon.Get()))
+					if (strcmp(rule->m_icon.Get(), pACTrack->m_icon.Get()))
 					{
-						if (rule->m_icon.GetLength())
-							sprintf(pIconLine, "TRACKIMGFN \"%s\"\n", rule->m_icon.Get());	
-						else
-							*pIconLine = 0;
+						SNM_ChunkParserPatcher p(tr); // nothing done yet
+						char pIconLine[BUFFER_SIZE] = "";
+						int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 2, 0, 1, pIconLine, NULL, "TRACKID");
+						if (strcmp(pIconLine, rule->m_icon.Get()))
+						{
+							// Only overwrite the icon if there's no icon, or we're forcing, or we set it ourselves earlier
+							if (bForce || iconChunkPos == 0 || strcmp(pIconLine, pACTrack->m_icon.Get()) == 0)
+							{
+								if (rule->m_icon.GetLength())
+									sprintf(pIconLine, "TRACKIMGFN \"%s\"\n", rule->m_icon.Get());	
+								else // The code as written will never hit this case, as empty m_icon means "ignore"
+									*pIconLine = 0;
 
-						if (iconChunkPos > 0)
-							p.ReplaceLine(--iconChunkPos, pIconLine);
-						else 
-							p.InsertAfterBefore(0, pIconLine, "TRACK", "FX", 1, 0, "TRACKID");
+								if (iconChunkPos > 0)
+									p.ReplaceLine(--iconChunkPos, pIconLine);
+								else 
+									p.InsertAfterBefore(0, pIconLine, "TRACK", "FX", 1, 0, "TRACKID");
+							}
+						}
+						pACTrack->m_icon.Set(rule->m_icon.Get());
 					}
 					pACTrack->m_bIconed = true;
-					pACTrack->m_icon.Set(rule->m_icon.Get());
 				}
 			}
 		}
@@ -714,22 +731,38 @@ void AutoColorRun(bool bForce)
 
 	// Apply the rules
 	SWS_CacheObjectState(true);
+	bool bDoColors = g_bACEnabled || bForce;
+	bool bDoIcons  = g_bAIEnabled || bForce;
 	for (int i = 0; i < g_pACItems.GetSize(); i++)
-		ApplyColorRule(g_pACItems.Get(i), g_bACEnabled, g_bAIEnabled, bForce);
+		ApplyColorRule(g_pACItems.Get(i), bDoColors, bDoIcons, bForce);
 
-	if (g_bAIEnabled || bForce)
-	{	// Now, remove icons if necessary
-		for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
+	// Remove colors/icons if necessary
+	for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
+	{
+		SWS_RuleTrack* pACTrack = g_pACTracks.Get()->Get(i);
+		if (bDoColors && !pACTrack->m_bColored && pACTrack->m_col)
 		{
-			SWS_RuleTrack* pACTrack = g_pACTracks.Get()->Get(i);
-			if (!pACTrack->m_bIconed && pACTrack->m_icon.Get()[0])
-			{	// There's an icon set, but there shouldn't be!
-				pACTrack->m_icon.Set("");
-				SNM_ChunkParserPatcher p(pACTrack->m_pTr); // Yay for the patcher
-				WDL_PtrList<const char> remove;
-				remove.Add("TRACKIMGFN");
-				p.RemoveLines(&remove);
-			}
+			int iCurColor = *(int*)GetSetMediaTrackInfo(pACTrack->m_pTr, "I_CUSTOMCOLOR", NULL);
+			if (!(iCurColor | 0x1000000))
+				iCurColor = 0;
+
+			// Only remove color on tracks that we colored ourselves
+			if (pACTrack->m_col == iCurColor)
+				GetSetMediaTrackInfo(pACTrack->m_pTr, "I_CUSTOMCOLOR", &g_i0);
+			pACTrack->m_col = 0;
+		}
+		
+		if (bDoIcons && !pACTrack->m_bIconed && *pACTrack->m_icon.Get())
+		{	// There's an icon set, but there shouldn't be!
+			SNM_ChunkParserPatcher p(pACTrack->m_pTr); // Yay for the patcher
+
+			// Only remove the icon on the track if we set it ourselves
+			char pIconLine[BUFFER_SIZE] = "";
+			int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 2, 0, 1, pIconLine, NULL, "TRACKID");
+			if (iconChunkPos && strcmp(pACTrack->m_icon.Get(), pIconLine) == 0)
+				p.ReplaceLine(--iconChunkPos, "");
+
+			pACTrack->m_icon.Set("");
 		}
 	}
 	SWS_CacheObjectState(false);
@@ -860,44 +893,74 @@ int AutoColorInit()
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
 
+	g_ACIni.SetFormatted(MAX_PATH, "%s%csws-autocoloricon.ini", GetResourcePath(), PATH_SLASH_CHAR);
+
+	// "Upgrade" to the new ini file for just the auto color stuff if necessary
+	WDL_String ini(g_ACIni);
+	bool bUpgrade = false;
+	int iCount = GetPrivateProfileInt(SWS_INI, AC_COUNT_KEY, 0, get_ini_file());
+	if (iCount)
+	{
+		bUpgrade = true;
+		ini.Set(get_ini_file());
+	}
+	else
+		iCount = GetPrivateProfileInt(SWS_INI, AC_COUNT_KEY, 0, ini.Get());
+
 	// Restore state
 	char str[BUFFER_SIZE];
-	g_bACEnabled = GetPrivateProfileInt(SWS_INI, AC_ENABLE_KEY, 0, get_ini_file()) ? true : false;
-	g_bAIEnabled = GetPrivateProfileInt(SWS_INI, AI_ENABLE_KEY, 0, get_ini_file()) ? true : false;
+	g_bACEnabled = GetPrivateProfileInt(SWS_INI, AC_ENABLE_KEY, 0, ini.Get()) ? true : false;
+	g_bAIEnabled = GetPrivateProfileInt(SWS_INI, AI_ENABLE_KEY, 0, ini.Get()) ? true : false;
 
-	int iCount = GetPrivateProfileInt(SWS_INI, AC_COUNT_KEY, 0, get_ini_file());
 	for (int i = 0; i < iCount; i++)
 	{
 		char key[32];
 		_snprintf(key, 32, AC_ITEM_KEY, i+1);
-		GetPrivateProfileString(SWS_INI, key, "\"\" 0 \'\'", str, BUFFER_SIZE, get_ini_file());
+		GetPrivateProfileString(SWS_INI, key, "\"\" 0 \"\"", str, BUFFER_SIZE, ini.Get());
+		if (bUpgrade) // Remove old lines
+			WritePrivateProfileString(SWS_INI, key, NULL, get_ini_file());
 		LineParser lp(false);
 		if (!lp.parse(str))
 			g_pACItems.Add(new SWS_RuleItem(lp.gettoken_str(0), lp.gettoken_int(1), lp.gettoken_str(2)));
 	}	
+
+	if (bUpgrade)
+	{	// Remove old stuff
+		WritePrivateProfileString(SWS_INI, AC_ENABLE_KEY, NULL, get_ini_file());
+		WritePrivateProfileString(SWS_INI, AI_ENABLE_KEY, NULL, get_ini_file());
+		WritePrivateProfileString(SWS_INI, AC_COUNT_KEY, NULL, get_ini_file());
+		AutoColorSaveState();
+	}
 
 	g_pACWnd = new SWS_AutoColorWnd();
 
 	return 1;
 }
 
-void AutoColorExit()
+void AutoColorSaveState()
 {
 	// Save state
 	char str[BUFFER_SIZE];
 	sprintf(str, "%d", g_bACEnabled ? 1 : 0);
-	WritePrivateProfileString(SWS_INI, AC_ENABLE_KEY, str, get_ini_file());
+	WritePrivateProfileString(SWS_INI, AC_ENABLE_KEY, str, g_ACIni.Get());
 	sprintf(str, "%d", g_bAIEnabled ? 1 : 0);
-	WritePrivateProfileString(SWS_INI, AI_ENABLE_KEY, str, get_ini_file());
+	WritePrivateProfileString(SWS_INI, AI_ENABLE_KEY, str, g_ACIni.Get());
 	sprintf(str, "%d", g_pACItems.GetSize());
-	WritePrivateProfileString(SWS_INI, AC_COUNT_KEY, str, get_ini_file());
+	WritePrivateProfileString(SWS_INI, AC_COUNT_KEY, str, g_ACIni.Get());
 	for (int i = 0; i < g_pACItems.GetSize(); i++)
 	{
 		char key[32];
 		_snprintf(key, 32, AC_ITEM_KEY, i+1);
-		_snprintf(str, BUFFER_SIZE, "\"%s\" %d \'%s\'", g_pACItems.Get(i)->m_str.Get(), g_pACItems.Get(i)->m_col, g_pACItems.Get(i)->m_icon.Get());
-		WritePrivateProfileString(SWS_INI, key, str, get_ini_file());
+		WDL_String str1, str2;
+		makeEscapedConfigString(g_pACItems.Get(i)->m_str.Get(), &str1);
+		makeEscapedConfigString(g_pACItems.Get(i)->m_icon.Get(), &str2);
+		_snprintf(str, BUFFER_SIZE, "%s %d %s", str1.Get(), g_pACItems.Get(i)->m_col, str2.Get());
+		WritePrivateProfileString(SWS_INI, key, str, g_ACIni.Get());
 	}	
+}
 
+void AutoColorExit()
+{
+	AutoColorSaveState();
 	delete g_pACWnd;
 }

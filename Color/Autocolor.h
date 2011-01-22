@@ -39,7 +39,7 @@ public:
 class SWS_RuleTrack
 {
 public:
-	SWS_RuleTrack(MediaTrack* tr):m_pTr(tr), m_col(-1), m_bColored(false), m_bIconed(false) {}
+	SWS_RuleTrack(MediaTrack* tr):m_pTr(tr), m_col(0), m_bColored(false), m_bIconed(false) {}
 	MediaTrack* m_pTr;
 	int m_col;
 	bool m_bColored;

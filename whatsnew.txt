@@ -1,3 +1,5 @@
+Auto color/icon fixes from really broken build #2.
+Auto color/icon information is stored in a new file sws-autocoloricon.ini for easy sharing (auto upgrade)
 Issue 225: Fixed selected text in Notes/help view when switching between docker tabs
 Fix for toggle actions to focus SWS views when docked
 

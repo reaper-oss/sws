@@ -1,9 +1,6 @@
 #ifndef RPRNODE_HXX
 #define RPRNODE_HXX
 
-#include <string>
-#include <vector>
-
 class RprNode {
 public:
 	const std::string &getValue();

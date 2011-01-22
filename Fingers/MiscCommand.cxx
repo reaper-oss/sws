@@ -4,11 +4,7 @@
 #include <cmath>
 
 #include "MiscCommands.hxx"
-#include "reaper_plugin_functions.h"
 #include "CommandHandler.h"
-#include "reaper_helper.h"
-#include <algorithm>
-#include "version.h"
 #include "RprItem.hxx"
 #include "RprTake.hxx"
 #include "RprMidiTake.hxx"
@@ -107,11 +103,6 @@ void MiscCommands::Init()
 	CReaperCommandHandler *Handler = CReaperCommandHandler::Instance();
 	Handler->AddCommands(CommandTable, __ARRAY_SIZE(CommandTable));
 }
-
-extern void* (*MIDIEditor_GetActive)();
-extern bool (*MIDIEditor_OnCommand)(void* midieditor, int command_id);
-extern double (*GetCursorPosition)();;
-
 
 static void SelectMutedMidiNotes(int flag, void *data)
 {

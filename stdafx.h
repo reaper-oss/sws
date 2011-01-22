@@ -51,6 +51,8 @@
 #include <fstream>
 #include <iostream>
 #include <cctype>
+#include <cstdlib>
+#include <cmath>
 #include <vector>
 #include <algorithm>
 #include <bitset>
@@ -59,11 +61,12 @@
 #include <list>
 #include <map>
 #include <set>
+#include <numeric>
+#include <ctime>
 
 #pragma warning(disable : 4996) // POSIX deprecation warnings
 #pragma warning(disable : 4267) // size_t to int warnings
 #include "../WDL/wdltypes.h"
-// Temporary fix for out-of-date WDL
 #include "../WDL/ptrlist.h"
 #include "../WDL/wdlstring.h"
 #include "../WDL/heapbuf.h"
@@ -74,8 +77,6 @@
 #include "../WDL/wingui/virtwnd.h"
 #include "../WDL/wingui/virtwnd-controls.h"
 #include "../WDL/assocarray.h"
-
-
 #include "../WDL/win32_utf8.h"
 #include "../WDL/lineparse.h"
 #pragma warning(default : 4996)

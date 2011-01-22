@@ -2,7 +2,6 @@
 
 #include "MidiLaneCommands.hxx"
 #include "CommandHandler.h"
-#include "reaper_helper.h"
 #include "RprItem.hxx"
 #include "RprTake.hxx"
 #include "RprMidiCCLane.hxx"

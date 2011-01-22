@@ -1,8 +1,5 @@
 #ifndef _FNG_SETTINGS_H_
 #define _FNG_SETTINGS_H_
-#include "reaper_plugin_functions.h"
-#include <sstream>
-#include <string>
 
 template
 <typename T>

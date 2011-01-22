@@ -2,20 +2,12 @@
 
 #include "GrooveDialog.hxx"
 #include "GrooveTemplates.hxx"
-#include "resource.h"
-#include "reaper_helper.h"
-#include "reaper_plugin_functions.h"
 #include "CommandHandler.h"
 #include "FNG_Settings.h"
 #include "RprException.hxx"
 #include "../../WDL/dirscan.h"
 
-extern int (*kbd_translateAccelerator)(HWND hwnd, MSG* msg, KbdSectionInfo* section);
-extern bool (*kbd_RunCommandThroughHooks)(KbdSectionInfo* section, int* actionCommandID, int* val, int* valhw, int* relmode, HWND hwnd);
-extern void (*ShowActionList)(KbdSectionInfo* caller, HWND callerWnd);
-
-static
-int translateAccel(MSG *msg, accelerator_register_t *ctx)
+static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 {
 	GrooveDialog *dlg = (GrooveDialog *)ctx->user;
 	return dlg->OnKeyCommand(msg);
@@ -379,8 +371,7 @@ void GrooveDialog::Setup()
 	currentDir = me->GetGrooveDir();
 	
 	SetWindowText(getHwnd(), "Groove tool");
-	//SendDlgItemMessage(getHwnd(), IDC_STRENGTH_SPIN,UDM_SETRANGE, 0, 100);
-	//SendDlgItemMessage(getHwnd(), IDC_STRENGTH_SPIN,UDM_SETPOS, 0, me->GetGrooveStrength());
+	SetDlgItemInt(getHwnd(), IDC_STRENGTH, me->GetGrooveStrength(), true);
 	
 	setWindowPosition(getHwnd());
 
@@ -392,6 +383,8 @@ void GrooveDialog::Setup()
 		SetMenu(getHwnd(), sysMenu);
 	else
 		swsMenu = GetMenu(getHWND());
+	// TODO - should probably include the "REAPER" generic first menu item that OSX should have
+	// code will be something like SWELL_GetDefaultMenu, SWELL_DuplicateMenu, etc
 #endif 
 	if(getReaperProperty("grooveWnd_topmost") == "1") {
 		mStayOnTop = true;

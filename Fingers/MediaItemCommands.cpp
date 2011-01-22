@@ -1,23 +1,10 @@
 #include "stdafx.h"
 
-#include <string>
-#include <list>
-#include <algorithm>
-#include <functional>
-#include <cctype>
-#include <cmath>
-#include <ctime>
-#include <sstream>
-
-#include "reaper_plugin_functions.h"
-
 #include "MediaItemCommands.h"
 #include "CommandHandler.h"
 #include "TimeMap.h"
-#include "reaper_helper.h"
 
 #include "FileUtil.hxx"
-
 #include "RprItem.hxx"
 #include "RprTake.hxx"
 #include "RprTrack.hxx"

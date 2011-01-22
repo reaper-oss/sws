@@ -1,12 +1,6 @@
 #ifndef __RPRMIDITAKE_H
 #define __RPRMIDITAKE_H
 
-#include <exception>
-#include <string>
-#include <memory>
-#include <list>
-#include <vector>
-
 #include "RprMidiEvent.hxx"
 #include "RprMidiTemplate.hxx"
 

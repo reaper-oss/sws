@@ -3001,10 +3001,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Fingers\reaper_helper.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Fingers\RprContainer.hxx"
 				>
 			</File>

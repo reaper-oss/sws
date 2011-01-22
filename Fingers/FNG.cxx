@@ -1,9 +1,6 @@
 #include "stdafx.h"
 
-#include <ctime>
-
 #include "FNG_client.h"
-#include "reaper_helper.h"
 #include "CommandHandler.h"
 #include "EnvelopeCommands.h"
 #include "MediaItemCommands.h"

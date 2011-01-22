@@ -1,11 +1,6 @@
 #include "stdafx.h"
 
 #include "Envelope.h"
-#include "reaper_helper.h"
-#include <string>
-#include <string.h>
-#include <sstream>
-#include <algorithm>
 
 std::string CEnvelopePoint::ToString()
 {

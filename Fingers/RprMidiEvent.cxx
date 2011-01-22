@@ -1,8 +1,5 @@
 #include "stdafx.h"
 
-#include <sstream>
-#include <iostream>
-#include <iomanip>
 
 #include "RprMidiEvent.hxx"
 #include "RprNode.hxx"

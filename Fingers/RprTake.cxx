@@ -1,34 +1,10 @@
 #include "stdafx.h"
 
-#include <string>
-
 #include "RprTake.hxx"
 #include "RprItem.hxx"
 #include "RprTrack.hxx"
 #include "RprException.hxx"
 
-#ifndef NULL
-#define NULL 0
-#endif
-
-// P_TRACK : pointer to MediaTrack (read-only)
-// P_ITEM : pointer to MediaItem (read-only)
-// P_SOURCE : PCM_source *. Note that if setting this, you should first retrieve the old source, set the new, THEN delete the old.
-// GUID : GUID * : 16-byte GUID, can query or update
-// P_NAME : char * to take name
-// D_STARTOFFS : double *, start offset in take of item
-// D_VOL : double *, take volume
-// D_PAN : double *, take pan
-// D_PANLAW : double *, take pan law (-1.0=default, 0.5=-6dB, 1.0=+0dB, etc)
-// D_PLAYRATE : double *, take playrate (1.0=normal, 2.0=doublespeed, etc)
-// D_PITCH : double *, take pitch adjust (in semitones, 0.0=normal, +12 = one octave up, etc)
-// B_PPITCH, bool *, preserve pitch when changing rate
-// I_CHANMODE, int *, channel mode (0=normal, 1=revstereo, 2=downmix, 3=l, 4=r)
-// I_PITCHMODE, int *, pitch shifter mode, -1=proj default, otherwise high word=shifter low word = parameter
-extern void* (*GetSetMediaItemTakeInfo)(MediaItem_Take* tk, const char* parmname, void* setNewValue);
-extern PCM_source* (*PCM_Source_CreateFromFile)(const char* filename);
-extern void* (*MIDIEditor_GetActive)();
-extern MediaItem_Take* (*MIDIEditor_GetTake)(void* midieditor);
 
 RprTake::RprTake(MediaItem_Take *take)
 {

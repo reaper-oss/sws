@@ -2,8 +2,6 @@
 
 #include "RprStateChunk.hxx"
 
-extern void (*FreeHeapPtr)(void* ptr);
-
 RprStateChunk::RprStateChunk(const char *stateChunk)
 {
 	mChunk = stateChunk;

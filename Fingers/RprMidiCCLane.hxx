@@ -3,8 +3,6 @@
 
 #include "RprMidiTemplate.hxx"
 
-#include <vector>
-
 class RprNode;
 class RprItem;
 class RprMidiCCLane;

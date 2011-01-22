@@ -1,7 +1,5 @@
 #include "stdafx.h"
 
-#include <sstream>
-
 #include "RprMidiCCLane.hxx"
 
 #include "RprNode.hxx"
@@ -10,8 +8,6 @@
 #include "RprException.hxx"
 #include "StringUtil.hxx"
 
-extern MediaItem_Take* (*MIDIEditor_GetTake)(void* midieditor);
-extern void* (*MIDIEditor_GetActive)();
 
 RprMidiCCLane::RprMidiCCLane(RprTake &midiTake, bool readOnly) : RprMidiTemplate(midiTake, readOnly)
 {

@@ -1,8 +1,5 @@
 #include "stdafx.h"
 
-#include <vector>
-#include <string>
-
 #include "StringUtil.hxx"
 
 std::vector<std::string>* stringTokenize(const std::string &inStr)

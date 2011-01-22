@@ -1,13 +1,6 @@
 #ifndef _ENVELOPE_H_
 #define _ENVELOPE_H_
 
-#include "reaper_plugin_functions.h"
-//#include "reaper_plugin.h"
-#include <string>
-#include <vector>
-#include <algorithm>
-#include "reaper_helper.h"
-
 class CEnvelope;
 
 class CEnvelopePoint

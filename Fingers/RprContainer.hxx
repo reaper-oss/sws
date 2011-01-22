@@ -1,8 +1,6 @@
 #ifndef __RPR_CONTAINER_HXX
 #define __RPR_CONTAINER_HXX
 
-#include <vector>
-
 template
 <typename T>
 class RprContainer {

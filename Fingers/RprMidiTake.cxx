@@ -1,11 +1,5 @@
 #include "stdafx.h"
 
-#include <string>
-#include <list>
-#include <vector>
-#include <sstream>
-#include <algorithm>
-
 #include "RprMidiTake.hxx"
 #include "RprStateChunk.hxx"
 #include "RprNode.hxx"
@@ -15,10 +9,6 @@
 #include "RprItem.hxx"
 #include "TimeMap.h"
 #include "RprException.hxx"
-
-extern void (*Main_OnCommandEx)(int command, int flag, void* proj);
-extern MediaItem_Take* (*MIDIEditor_GetTake)(void* midieditor);
-extern void* (*MIDIEditor_GetActive)();
 
 class RprMidiContext {
 	

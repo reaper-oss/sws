@@ -1,9 +1,6 @@
 #ifndef __RPR_EXCEPTION_HXX
 #define __RPR_EXCEPTION_HXX
 
-#include <exception>
-#include <string>
-
 class RprLibException : public std::exception {
 	public:
 		RprLibException(std::string message, bool notifyUser = false);

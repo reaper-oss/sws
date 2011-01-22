@@ -1,8 +1,5 @@
 #include "stdafx.h"
 
-#include <string>
-#include <sstream>
-
 #include "RprNode.hxx"
 
 int RprPropertyNode::childCount()

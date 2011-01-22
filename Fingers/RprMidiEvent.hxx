@@ -1,8 +1,5 @@
 #ifndef __RPRMIDIEVENT_HXX
 #define __RPRMIDIEVENT_HXX
-#include <vector>
-#include <string>
-#include <exception>
 
 class RprNode;
 

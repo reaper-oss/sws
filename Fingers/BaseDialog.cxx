@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "BaseDialog.hxx"
-#include "resource.h"
 
 
 INT_PTR CALLBACK CBaseDialog::DialogProc( HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)

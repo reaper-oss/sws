@@ -1,11 +1,7 @@
 #include "stdafx.h"
 
 #include "CommandHandler.h"
-#include "reaper_plugin_functions.h"
-#include <algorithm>
-#include "reaper_helper.h"
 #include "BaseDialog.hxx"
-
 #include "RprException.hxx"
 
 CReaperCommandHandler *CReaperCommandHandler::_instance = NULL;

@@ -1,11 +1,6 @@
 #ifndef _REAPER_COMMAND_HANDLER_H_
 #define _REAPER_COMMAND_HANDLER_H_
 
-#include <vector>
-#include <string>
-//#include "reaper_plugin.h"
-
-
 #ifndef NO_UNDO
 #define NO_UNDO 0
 #endif

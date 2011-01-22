@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "TimeMap.h"
-#include "reaper_plugin_functions.h"
 
 double TimeToBeat(double time)
 {

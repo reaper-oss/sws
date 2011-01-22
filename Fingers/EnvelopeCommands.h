@@ -1,9 +1,7 @@
 #ifndef _ENVELOPE_COMMANDS_H_
 #define _ENVELOPE_COMMANDS_H_
-#include "reaper_plugin_functions.h"
-//#include "reaper_plugin.h"
+
 #include "CommandHandler.h"
-//#include "MGButton.hxx"
 
 namespace EnvelopeCommands {
 	void Init();

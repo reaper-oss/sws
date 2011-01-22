@@ -4,7 +4,6 @@
 #include "GrooveTemplates.hxx"
 #include "GrooveCommands.hxx"
 #include "GrooveDialog.hxx"
-#include "reaper_helper.h"
 #include "FNG_Settings.h"
 #include "../Xenakios/XenakiosExts.h"
 

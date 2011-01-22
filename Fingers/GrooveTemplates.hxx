@@ -1,11 +1,7 @@
 #ifndef _GROOVE_TEMPLATES_H_
 #define _GROOVE_TEMPLATES_H_
 
-#include <string>
-#include <vector>
-#include "reaper_plugin_functions.h"
 #include "GrooveDialog.hxx"
-
 
 
 struct GrooveItem {

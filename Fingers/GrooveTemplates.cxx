@@ -1,20 +1,10 @@
 #include "stdafx.h"
 
-#include <algorithm>
-#include <functional>
-#include <vector>
-#include <fstream>
-#include <exception>
-#include <cmath>
-
 #include "GrooveTemplates.hxx"
 
 #include "CommandHandler.h"
 #include "FNG_Settings.h"
 #include "FileUtil.hxx"
-
-#include "reaper_plugin_functions.h"
-#include "reaper_helper.h"
 #include "TimeMap.h"
 
 #include "RprItem.hxx"

@@ -6,9 +6,6 @@
 #include "RprTake.hxx"
 #include "RprStateChunk.hxx"
 
-extern char* (*GetSetObjectState)(void* obj, const char* str);
-extern void (*guidToString)(GUID* g, char* dest);
-
 static RprNode *findTakeSource(RprNode *parent, const std::string &takeGUID )
 {
 	std::string guidString = "GUID " + takeGUID;

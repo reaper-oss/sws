@@ -1,8 +1,6 @@
 #include "stdafx.h"
 
 #include "FileUtil.hxx"
-#include <sstream>
-#include "reaper_plugin_functions.h"
 
 
 static std::string GetBeforeToken(std::string &str, std::string &token)

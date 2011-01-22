@@ -3,11 +3,7 @@
 #include "Envelope.h"
 #include "EnvelopeCommands.h"
 #include "CommandHandler.h"
-#include "reaper_plugin_functions.h"
-#include "reaper_helper.h"
 
-#include <numeric>
-#include <math.h>
 
 void EnvelopeCommands::Init()
 {

@@ -1,3 +1,6 @@
+Issue 225: Fixed selected text in Notes/help view when switching between docker tabs
+Fix for toggle actions to focus SWS views when docked
+
 !v2.0.0 #2 (January 21, 2011)
 Fix to close our windows on initial screenset load (thanks Bevosss)
 Auto color/icon updates:

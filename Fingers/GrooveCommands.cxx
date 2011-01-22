@@ -93,19 +93,11 @@ static void MarkGrooveStart(int flags, void *data)
 	me->SetMarkerStart((GrooveTemplateHandler::GrooveMarkerStart)*start);
 }
 
-static void ShowGrooveDialog(int flags, void *data)
+void ShowGrooveDialog(int flags, void *data)
 {
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 	me->showGrooveDialog();	
 }
-
-static void ToggleGrooveDialog(int flags, void *data)
-{
-	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
-	me->toggleGrooveDialog();	
-}
-
-
 
 void GrooveCommands::Init()
 {
@@ -203,11 +195,6 @@ void GrooveCommands::Init()
 	  CReaperCmdReg(
 		"SWS/FNG: Show groove tool...", "FNG_GROOVE_TOOL",
 		(CReaperCommand *)new CReaperCommand(&ShowGrooveDialog),
-		NO_UNDO
-		),
-	  CReaperCmdReg(
-		"SWS/FNG: Toggle groove tool...", "FNG_TOGGLE_GROOVE_TOOL",
-		(CReaperCommand *)new CReaperCommand(&ToggleGrooveDialog),
 		NO_UNDO
 		),
 	};

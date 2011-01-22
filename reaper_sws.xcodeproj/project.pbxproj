@@ -176,8 +176,6 @@
 		22C769FB10B0F04D00774777 /* SnM_Actions.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C769F610B0F04D00774777 /* SnM_Actions.h */; };
 		22C769FC10B0F04D00774777 /* SnM_fx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F710B0F04D00774777 /* SnM_fx.cpp */; };
 		22C769FD10B0F04D00774777 /* SnM_sends.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F810B0F04D00774777 /* SnM_sends.cpp */; };
-		22C77E9F12D62F2E002F68D5 /* BaseDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E6912D62F2E002F68D5 /* BaseDialog.cxx */; };
-		22C77EA012D62F2E002F68D5 /* BaseDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E6A12D62F2E002F68D5 /* BaseDialog.hxx */; };
 		22C77EA112D62F2E002F68D5 /* CommandHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E6B12D62F2E002F68D5 /* CommandHandler.cpp */; };
 		22C77EA212D62F2E002F68D5 /* CommandHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E6C12D62F2E002F68D5 /* CommandHandler.h */; };
 		22C77EA312D62F2E002F68D5 /* Envelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E6D12D62F2E002F68D5 /* Envelope.cpp */; };
@@ -202,7 +200,6 @@
 		22C77EB812D62F2E002F68D5 /* MiscCommand.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E8212D62F2E002F68D5 /* MiscCommand.cxx */; };
 		22C77EB912D62F2E002F68D5 /* MiscCommands.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E8312D62F2E002F68D5 /* MiscCommands.hxx */; };
 		22C77EBA12D62F2E002F68D5 /* reaper_helper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E8412D62F2E002F68D5 /* reaper_helper.cpp */; };
-		22C77EBB12D62F2E002F68D5 /* reaper_helper.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E8512D62F2E002F68D5 /* reaper_helper.h */; };
 		22C77EBC12D62F2E002F68D5 /* RprContainer.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E8612D62F2E002F68D5 /* RprContainer.hxx */; };
 		22C77EBD12D62F2E002F68D5 /* RprException.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E8712D62F2E002F68D5 /* RprException.cxx */; };
 		22C77EBE12D62F2E002F68D5 /* RprException.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E8812D62F2E002F68D5 /* RprException.hxx */; };
@@ -436,8 +433,6 @@
 		22C769F710B0F04D00774777 /* SnM_fx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_fx.cpp; path = SnM/SnM_fx.cpp; sourceTree = "<group>"; };
 		22C769F810B0F04D00774777 /* SnM_sends.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_sends.cpp; path = SnM/SnM_sends.cpp; sourceTree = "<group>"; };
 		22C769F910B0F04D00774777 /* SnM_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Windows.cpp; path = SnM/SnM_Windows.cpp; sourceTree = "<group>"; };
-		22C77E6912D62F2E002F68D5 /* BaseDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BaseDialog.cxx; path = Fingers/BaseDialog.cxx; sourceTree = "<group>"; };
-		22C77E6A12D62F2E002F68D5 /* BaseDialog.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = BaseDialog.hxx; path = Fingers/BaseDialog.hxx; sourceTree = "<group>"; };
 		22C77E6B12D62F2E002F68D5 /* CommandHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommandHandler.cpp; path = Fingers/CommandHandler.cpp; sourceTree = "<group>"; };
 		22C77E6C12D62F2E002F68D5 /* CommandHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandHandler.h; path = Fingers/CommandHandler.h; sourceTree = "<group>"; };
 		22C77E6D12D62F2E002F68D5 /* Envelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Envelope.cpp; path = Fingers/Envelope.cpp; sourceTree = "<group>"; };
@@ -462,7 +457,6 @@
 		22C77E8212D62F2E002F68D5 /* MiscCommand.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MiscCommand.cxx; path = Fingers/MiscCommand.cxx; sourceTree = "<group>"; };
 		22C77E8312D62F2E002F68D5 /* MiscCommands.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = MiscCommands.hxx; path = Fingers/MiscCommands.hxx; sourceTree = "<group>"; };
 		22C77E8412D62F2E002F68D5 /* reaper_helper.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = reaper_helper.cpp; path = Fingers/reaper_helper.cpp; sourceTree = "<group>"; };
-		22C77E8512D62F2E002F68D5 /* reaper_helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reaper_helper.h; path = Fingers/reaper_helper.h; sourceTree = "<group>"; };
 		22C77E8612D62F2E002F68D5 /* RprContainer.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprContainer.hxx; path = Fingers/RprContainer.hxx; sourceTree = "<group>"; };
 		22C77E8712D62F2E002F68D5 /* RprException.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprException.cxx; path = Fingers/RprException.cxx; sourceTree = "<group>"; };
 		22C77E8812D62F2E002F68D5 /* RprException.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprException.hxx; path = Fingers/RprException.hxx; sourceTree = "<group>"; };
@@ -890,8 +884,6 @@
 		22C77E6612D62EE3002F68D5 /* Fingers */ = {
 			isa = PBXGroup;
 			children = (
-				22C77E6912D62F2E002F68D5 /* BaseDialog.cxx */,
-				22C77E6A12D62F2E002F68D5 /* BaseDialog.hxx */,
 				22C77E6B12D62F2E002F68D5 /* CommandHandler.cpp */,
 				22C77E6C12D62F2E002F68D5 /* CommandHandler.h */,
 				22C77E6D12D62F2E002F68D5 /* Envelope.cpp */,
@@ -916,7 +908,6 @@
 				22C77E8212D62F2E002F68D5 /* MiscCommand.cxx */,
 				22C77E8312D62F2E002F68D5 /* MiscCommands.hxx */,
 				22C77E8412D62F2E002F68D5 /* reaper_helper.cpp */,
-				22C77E8512D62F2E002F68D5 /* reaper_helper.h */,
 				22C77E8612D62F2E002F68D5 /* RprContainer.hxx */,
 				22C77E8712D62F2E002F68D5 /* RprException.cxx */,
 				22C77E8812D62F2E002F68D5 /* RprException.hxx */,
@@ -1065,7 +1056,6 @@
 				22219AFE124AF1CE006CBC5D /* Macros.h in Headers */,
 				22C31F24125EF71A0072434F /* Adam.h in Headers */,
 				2273566812910ABF001A1570 /* EditCursor.h in Headers */,
-				22C77EA012D62F2E002F68D5 /* BaseDialog.hxx in Headers */,
 				22C77EA212D62F2E002F68D5 /* CommandHandler.h in Headers */,
 				22C77EA412D62F2E002F68D5 /* Envelope.h in Headers */,
 				22C77EA612D62F2E002F68D5 /* EnvelopeCommands.h in Headers */,
@@ -1078,7 +1068,6 @@
 				22C77EB512D62F2E002F68D5 /* MediaItemCommands.h in Headers */,
 				22C77EB712D62F2E002F68D5 /* MidiLaneCommands.hxx in Headers */,
 				22C77EB912D62F2E002F68D5 /* MiscCommands.hxx in Headers */,
-				22C77EBB12D62F2E002F68D5 /* reaper_helper.h in Headers */,
 				22C77EBC12D62F2E002F68D5 /* RprContainer.hxx in Headers */,
 				22C77EBE12D62F2E002F68D5 /* RprException.hxx in Headers */,
 				22C77EC012D62F2E002F68D5 /* RprItem.hxx in Headers */,
@@ -1320,7 +1309,6 @@
 				22219AFD124AF1CE006CBC5D /* Macros.cpp in Sources */,
 				22C31F23125EF71A0072434F /* Adam.cpp in Sources */,
 				2273566712910ABF001A1570 /* EditCursor.cpp in Sources */,
-				22C77E9F12D62F2E002F68D5 /* BaseDialog.cxx in Sources */,
 				22C77EA112D62F2E002F68D5 /* CommandHandler.cpp in Sources */,
 				22C77EA312D62F2E002F68D5 /* Envelope.cpp in Sources */,
 				22C77EA512D62F2E002F68D5 /* EnvelopeCommands.cpp in Sources */,

@@ -65,7 +65,6 @@ public:
 
 
 	void showGrooveDialog();
-	void toggleGrooveDialog();
 
 	static void Init();
 

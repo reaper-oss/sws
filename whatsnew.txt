@@ -1,9 +1,12 @@
-<b>Fingers/FNG extension merge!</b>
+!v2.0.0 #3 (January 22, 2011)
+<b>Fingers/FNG extension update/merge!</b>
 +Issue 238: Groove quantize now supports velocity
 +Issue 234: Added support for unquantize for MIDI for any FNG action modifying MIDI data
++Update dialog to use SWS-style dockable windows
++NOTE grooves are not part of the installer, yet.  Download FingersExtras.zip from the beta download area.
 
 Auto color/icon fixes from really broken build #2.
-Auto color/icon information is stored in a new file sws-autocoloricon.ini for easy sharing (auto upgrade)
+Auto color/icon information is stored in a new file sws-autocoloricon.ini for easy sharing (old settings copied for you)
 Issue 225: Fixed selected text in Notes/help view when switching between docker tabs
 Fix for toggle actions to focus SWS views when docked
 

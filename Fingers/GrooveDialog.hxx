@@ -1,30 +1,23 @@
 #ifndef _GROOVE_DIALOG_H_
 #define _GROOVE_DIALOG_H_
 
-#include "BaseDialog.hxx"
-#include <string>
-#include <vector>
-
-class GrooveDialog : public CBaseDialog
+class GrooveDialog : public SWS_DockWnd
 {
 public:
-	GrooveDialog(HINSTANCE hInstance, HWND parent);
-	void Setup();
-	int OnKeyCommand(MSG *msg);
+	GrooveDialog();
 	virtual ~GrooveDialog();
 private:
+	// SWS_DockWnd overrides
+	void OnInitDlg();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	bool OnRprCommand(int cmd);
+	int OnKey(MSG *msg, int iKeyState);
+
 	void OnGrooveList(WORD wParam, LPARAM lParam);
 	void OnGrooveFolderButton(WORD wParam, LPARAM lParam);
 	void OnStrengthChange(WORD wParam, LPARAM lParam);
 	void OnStrengthSpinChange(WORD wParam, LPARAM lParam);
-	
-	void onHide();
-	void OnCreate(HWND hWnd);
 	void RefreshGrooveList();
 	void ApplySelectedGroove();
-	void OnActivate(bool activated);
 
 	std::string currentDir;
 	accelerator_register_t *mAccel;
@@ -32,9 +25,7 @@ private:
 	std::vector<KbdCmd> mKbdCommands;
 	std::vector<KbdKeyBindingInfo> mKbdBindings;
 	bool mPassToMain;
-	bool mStayOnTop;
 	bool mIgnoreVelocity;
-	
 };
 
 #endif /* _GROOVE_DIALOG_H_ */

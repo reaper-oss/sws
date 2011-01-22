@@ -70,19 +70,13 @@ void GrooveTemplateHandler::Init()
 	me->grooveMarkersHelper.SaveExtensionConfig = GrooveTemplateHandler::SaveGrooveMarkers;
 	CReaperCommandHandler::AddProjectConfig(&me->grooveMarkersHelper);
 	CReaperCommandHandler *rprHandler = CReaperCommandHandler::Instance();
-	me->mGrooveDialog = new GrooveDialog(rprHandler->GetModuleInstance(), GetMainHwnd());
+	me->mGrooveDialog = new GrooveDialog();
 }
 
 void GrooveTemplateHandler::showGrooveDialog()
 {
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
-	me->mGrooveDialog->Show();
-}
-
-void GrooveTemplateHandler::toggleGrooveDialog()
-{
-	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
-	me->mGrooveDialog->Toggle();
+	me->mGrooveDialog->Show(true, true);
 }
 
 std::string GrooveTemplateHandler::GetGrooveDir()

@@ -6,7 +6,6 @@
 #endif
 
 class CReaperCommandHandler;
-class CBaseDialog;
 class CReaperCommand
 {
 public:
@@ -23,6 +22,7 @@ public:
 	void SetId(const char *id){ m_szId = id; }
 	void SetDescription(const char *description) { m_szDescription = description; }
 	void SetUndoFlags(int flags) { m_UndoFlags = flags; }
+	bool IsCommand(void (*command)(int, void *)) { return command == theCommand; }
 
 	int GetCommandId() { return m_nCommandId; }
 	const char *GetDescription() { return m_szDescription.c_str(); }
@@ -70,13 +70,14 @@ public:
 	static void AddCommand(CReaperCmdReg &);
 	static void AddCommands(CReaperCmdReg *, int size);
 	static void AddProjectConfig(project_config_extension_t *cfg);
+	static int GetID(void (*command)(int, void *));
 	static bool hookCommand(int command, int flag);
 	static bool onAction(int cmd, int val, int valhw, int relmode, HWND hwnd);
 	static void Init(reaper_plugin_info_t *, REAPER_PLUGIN_HINSTANCE);
 	static REAPER_PLUGIN_HINSTANCE GetModuleInstance();
 	static reaper_plugin_info_t* GetPluginInfo();
 	static void registerAccelerator(accelerator_register_t *accelerator);
-	static void registerKbdSection(KbdSectionInfo *kbdSection, CBaseDialog *dialog);
+	static void registerKbdSection(KbdSectionInfo *kbdSection, SWS_DockWnd *dialog);
 	static void RegisterObserver(CReaperCommandObserver *observer);
 	~CReaperCommandHandler();
 private:
@@ -95,7 +96,7 @@ private:
 	static CReaperCommandHandler *_instance;
 	std::vector<CReaperCommand *> m_commands;
 	std::vector<CReaperCommandObserver *> m_observers;
-	std::vector<CBaseDialog *> mKbdSectionDialogs;
+	std::vector<SWS_DockWnd *> mKbdSectionDialogs;
 	reaper_plugin_info_t *m_rec;
 	REAPER_PLUGIN_HINSTANCE m_hInstance;
 	

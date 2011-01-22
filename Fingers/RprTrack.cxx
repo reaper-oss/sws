@@ -49,7 +49,7 @@ bool RprTrack::operator==(RprTrack &rhs)
 
 int RprTrack::getTrackIndex()
 {
-	return (int)GetSetMediaTrackInfo(mTrack, "IP_TRACKNUMBER", NULL);
+	return CSurf_TrackToID(mTrack, false);
 }
 
 const char *RprTrack::getName()

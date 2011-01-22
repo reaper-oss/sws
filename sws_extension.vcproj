@@ -2897,14 +2897,6 @@
 			Name="Fingers"
 			>
 			<File
-				RelativePath=".\Fingers\BaseDialog.cxx"
-				>
-			</File>
-			<File
-				RelativePath=".\Fingers\BaseDialog.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\Fingers\CommandHandler.cpp"
 				>
 			</File>

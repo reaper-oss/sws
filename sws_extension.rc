@@ -1020,8 +1020,8 @@ BEGIN
 END
 
 IDD_GROOVEDIALOG DIALOGEX 0, 0, 225, 142
-STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-EXSTYLE WS_EX_TOOLWINDOW | WS_EX_WINDOWEDGE
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Groove tool"
 MENU IDR_GROOVEMENU
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -1059,13 +1059,11 @@ BEGIN
     END
     POPUP "&Preferences"
     BEGIN
-        MENUITEM "&Ingore velocity",            IDM__IGNORE_VEL
+        MENUITEM "&Ingore velocity",            IDM_IGNORE_VEL
     END
     POPUP "&View"
     BEGIN
         MENUITEM "&Refresh",                    IDM_REFRESH
-        MENUITEM SEPARATOR
-        MENUITEM "&Stay on top",                IDM_STAY_ON_TOP
     END
     POPUP "&Actions"
     BEGIN
@@ -1554,8 +1552,7 @@ IDC_ZOOMUNDO            CURSOR                  "zoomundo.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
-
+#include "version.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

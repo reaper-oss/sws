@@ -7,24 +7,6 @@
 #include "RprException.hxx"
 #include "../../WDL/dirscan.h"
 
-static int translateAccel(MSG *msg, accelerator_register_t *ctx)
-{
-	GrooveDialog *dlg = (GrooveDialog *)ctx->user;
-	return dlg->OnKeyCommand(msg);
-}
-
-static void setWindowPosition(HWND grooveWnd)
-{
-	std::string sBottom, sTop, sLeft, sRight;
-	sLeft = getReaperProperty("grooveWnd_left");
-	sTop = getReaperProperty("grooveWnd_top");
-	if(sLeft.empty() || sTop.empty())
-		return;
-	int x = ::atoi(sLeft.c_str());
-	int y = ::atoi(sTop.c_str());
-	SetWindowPos(grooveWnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
-}
-
 static void addDefaultBinding(std::vector<KbdKeyBindingInfo> &bindings, int cmd, int key, int flags = 0)
 {
 	KbdKeyBindingInfo binding;
@@ -42,21 +24,19 @@ static void addCommand(std::vector<KbdCmd> &cmds, int cmd, const char *name)
 	cmds.push_back(keycmd);
 }
 
-GrooveDialog::GrooveDialog(HINSTANCE hInstance, HWND parent) : CBaseDialog(hInstance, parent, IDD_GROOVEDIALOG)
+static const int FNG_PASSTHROUGH = 1;
+
+void ShowGrooveDialog(int flags, void *data);
+
+GrooveDialog::GrooveDialog()
+:SWS_DockWnd(IDD_GROOVEDIALOG, "Groove", "FNGGroove", 30010, CReaperCommandHandler::GetID(ShowGrooveDialog))
 {
 #ifdef _WIN32
 	CoInitializeEx(NULL, 0);
 #endif
 
-	mAccel = NULL;
-	mAccel = new accelerator_register_t;
-	mAccel->translateAccel = &translateAccel;
-	mAccel->user = this;
-	mAccel->isLocal = TRUE;
-	CReaperCommandHandler::registerAccelerator(mAccel);
-
 	/* set up commands and key bindings*/
-	addCommand(mKbdCommands, 1, "Pass through to the main window");
+	addCommand(mKbdCommands, FNG_PASSTHROUGH, "Pass through to the main window");
 
 	mKbdSection = new KbdSectionInfo;
 	std::memset(mKbdSection, 0, sizeof(KbdSectionInfo));
@@ -70,26 +50,19 @@ GrooveDialog::GrooveDialog(HINSTANCE hInstance, HWND parent) : CBaseDialog(hInst
 	CReaperCommandHandler::registerKbdSection(mKbdSection, this);
 	mPassToMain = false;
 	mIgnoreVelocity = false;
+
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
 }
 
-bool GrooveDialog::OnRprCommand(int cmd)
+int GrooveDialog::OnKey(MSG *msg, int iKeyState)
 {
-	if(cmd == 1) {
-		mPassToMain = true;
-		return true;
-	}
-	else
-		return false;
-}
-
-int GrooveDialog::OnKeyCommand(MSG *msg)
-{
-	if(msg->hwnd == getHwnd() || IsChild(getHwnd(), msg->hwnd) == TRUE) {
+	if(msg->hwnd == m_hwnd || IsChild(m_hwnd, msg->hwnd) == TRUE) {
 		if(msg->wParam == VK_ESCAPE) {
-			Hide();
+			DestroyWindow(m_hwnd);
 			return 1;
 		}
-		if(kbd_translateAccelerator(getHwnd(), msg, mKbdSection) == 1) {
+		if(kbd_translateAccelerator(m_hwnd, msg, mKbdSection) == 1) {
 			if(mPassToMain) {
 				mPassToMain = false;
 				return -666;
@@ -159,20 +132,20 @@ void GrooveDialog::OnCommand(WPARAM wParam, LPARAM lParam)
 	case IDM_REFRESH:
 		RefreshGrooveList();
 		break;
-	case IDM__IGNORE_VEL:
+	case IDM_IGNORE_VEL:
 	{
-		HMENU sysMenu = GetMenu(getHwnd());
+		HMENU sysMenu = GetMenu(m_hwnd);
 		MENUITEMINFO mi= {sizeof(MENUITEMINFO),};
 		mi.fMask = MIIM_STATE;
-		GetMenuItemInfo(sysMenu, IDM__IGNORE_VEL, false, &mi);
+		GetMenuItemInfo(sysMenu, IDM_IGNORE_VEL, false, &mi);
 		if(mi.fState & MF_CHECKED) {
 			mIgnoreVelocity = false;
-			CheckMenuItem(sysMenu, IDM__IGNORE_VEL, MF_UNCHECKED | MF_BYCOMMAND);
+			CheckMenuItem(sysMenu, IDM_IGNORE_VEL, MF_UNCHECKED | MF_BYCOMMAND);
 			setReaperProperty("grooveWnd_ignorevel", 0);
 		}
 		else {
 			mIgnoreVelocity = true;
-			CheckMenuItem(sysMenu, IDM__IGNORE_VEL, MF_CHECKED | MF_BYCOMMAND);
+			CheckMenuItem(sysMenu, IDM_IGNORE_VEL, MF_CHECKED | MF_BYCOMMAND);
 			setReaperProperty("grooveWnd_ignorevel", 1);
 		}
 	}
@@ -180,27 +153,27 @@ void GrooveDialog::OnCommand(WPARAM wParam, LPARAM lParam)
 		OnStrengthChange(HIWORD(wParam), lParam);
 		break;
 	case IDC_SENS_32ND:
-		setSensitivity(getHwnd(), 32);
+		setSensitivity(m_hwnd, 32);
 		setGrooveTolerance(32);
 		break;
 	case IDC_SENS_16TH:
-		setSensitivity(getHwnd(), 16);
+		setSensitivity(m_hwnd, 16);
 		setGrooveTolerance(16);
 		break;
 	case IDC_SENS_4TH:
-		setSensitivity(getHwnd(), 4);
+		setSensitivity(m_hwnd, 4);
 		setGrooveTolerance(4);
 		break;
 	case IDC_SENS_8TH:
-		setSensitivity(getHwnd(), 8);
+		setSensitivity(m_hwnd, 8);
 		setGrooveTolerance(8);
 		break;
 	case IDC_TARG_ITEMS:
-		setTarget(getHwnd(), true);
+		setTarget(m_hwnd, true);
 		setGrooveTarget(TARGET_ITEMS);
 		break;
 	case IDC_TARG_NOTES:
-		setTarget(getHwnd(), false);
+		setTarget(m_hwnd, false);
 		setGrooveTarget(TARGET_NOTES);
 		break;
 	case IDM_SAVE_GROOVE:
@@ -211,41 +184,22 @@ void GrooveDialog::OnCommand(WPARAM wParam, LPARAM lParam)
 		ApplySelectedGroove();
 		break;
 	case IDC_STORE:
-		if(IsDlgButtonChecked(getHwnd(), IDC_TARG_ITEMS) == BST_CHECKED)
+		if(IsDlgButtonChecked(m_hwnd, IDC_TARG_ITEMS) == BST_CHECKED)
 			Main_OnCommandEx(NamedCommandLookup("_FNG_GET_GROOVE"), 0, 0);
 		else
 			Main_OnCommandEx(NamedCommandLookup("_FNG_GET_GROOVE_MIDI"), 0, 0);
-		SendDlgItemMessage(getHwnd(), IDC_GROOVELIST, LB_SETCURSEL, 0, 0);
+		SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_SETCURSEL, 0, 0);
 		break;
-	case IDM_STAY_ON_TOP:
-	{
-		HMENU sysMenu = GetMenu(getHwnd());
-		MENUITEMINFO mi= {sizeof(MENUITEMINFO),};
-		mi.fMask = MIIM_STATE;
-		GetMenuItemInfo(sysMenu, IDM_STAY_ON_TOP, false, &mi);
-		
-		if(mi.fState & MF_CHECKED) {
-			mStayOnTop = false;
-			CheckMenuItem(sysMenu, IDM_STAY_ON_TOP, MF_UNCHECKED | MF_BYCOMMAND);
-			SetWindowPos(getHwnd(), HWND_NOTOPMOST, 0,0,0,0, SWP_NOMOVE | SWP_NOSIZE);
-			setReaperProperty("grooveWnd_topmost", 0);
-		}
-		else {
-			mStayOnTop = true;
-			CheckMenuItem(sysMenu, IDM_STAY_ON_TOP, MF_CHECKED | MF_BYCOMMAND);
-			SetWindowPos(getHwnd(), HWND_TOPMOST, 0,0,0,0, SWP_NOMOVE | SWP_NOSIZE);
-			setReaperProperty("grooveWnd_topmost", 1);
-		}
-	}
-	break;
 	case IDM_EXIT:
-		Hide();
+		DestroyWindow(m_hwnd);
 		break;
 	case IDM_SHOW_ACTION_LIST:
-		ShowActionList(mKbdSection, getHwnd());
+		ShowActionList(mKbdSection, m_hwnd);
+		break;
+	case FNG_PASSTHROUGH:
+		mPassToMain = true;
 		break;
 	}
-	
 }
 
 void GrooveDialog::OnGrooveList(WORD wParam, LPARAM lParam)
@@ -260,7 +214,7 @@ void GrooveDialog::OnGrooveList(WORD wParam, LPARAM lParam)
 
 void GrooveDialog::OnStrengthChange(WORD wParam, LPARAM lParam)
 {
-	HWND strengthControl = GetDlgItem(getHwnd(), IDC_STRENGTH);
+	HWND strengthControl = GetDlgItem(m_hwnd, IDC_STRENGTH);
 	char percentage[16];
 	GetWindowText(strengthControl, percentage, 16);
 	int nPerc = atoi(percentage);
@@ -292,8 +246,8 @@ void GrooveDialog::OnGrooveFolderButton(WORD wParam, LPARAM lParam)
 
 void GrooveDialog::RefreshGrooveList()
 {
-	SendDlgItemMessage(getHwnd(), IDC_GROOVELIST, LB_RESETCONTENT, 0, 0);
-	SendDlgItemMessage(getHwnd(), IDC_GROOVELIST, LB_ADDSTRING, 0, (LPARAM)"** User Groove **");
+	SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_RESETCONTENT, 0, 0);
+	SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_ADDSTRING, 0, (LPARAM)"** User Groove **");
 	WDL_DirScan dirScan;
 	WDL_String searchStr;
 	searchStr = currentDir.c_str();
@@ -306,20 +260,20 @@ void GrooveDialog::RefreshGrooveList()
 #endif
 	if (iFind == 0)
 		do
-			SendDlgItemMessage(getHwnd(), IDC_GROOVELIST, LB_ADDSTRING, 0, (LPARAM)dirScan.GetCurrentFN());
+			SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_ADDSTRING, 0, (LPARAM)dirScan.GetCurrentFN());
 		while(!dirScan.Next());
 }
 
 void GrooveDialog::ApplySelectedGroove()
 {
-	int index = SendDlgItemMessage(getHwnd(), IDC_GROOVELIST, LB_GETCURSEL, 0, 0);
+	int index = SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_GETCURSEL, 0, 0);
 	std::string szGroove = "** User Groove **";
 	GrooveTemplateMemento memento = GrooveTemplateHandler::GetMemento();
 	
 	if(index > 0) {
 		std::string itemLocation;
 		char *itemText = new char[MAX_PATH];
-		SendDlgItemMessage(getHwnd(), IDC_GROOVELIST, LB_GETTEXT, index, (LPARAM)itemText);
+		SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_GETTEXT, index, (LPARAM)itemText);
 		itemLocation = currentDir;
 		itemLocation += "\\";
 		itemLocation += itemText;
@@ -342,9 +296,9 @@ void GrooveDialog::ApplySelectedGroove()
 			me->resetAmplitudes();
 		}
 		
-		bool midiEditorTarget = SendDlgItemMessage(getHwnd(), IDC_TARG_NOTES, BM_GETCHECK, 0, 0) == BST_CHECKED;
+		bool midiEditorTarget = SendDlgItemMessage(m_hwnd, IDC_TARG_NOTES, BM_GETCHECK, 0, 0) == BST_CHECKED;
 		
-		HWND editControl = GetDlgItem(getHwnd(), IDC_STRENGTH);
+		HWND editControl = GetDlgItem(m_hwnd, IDC_STRENGTH);
 		char percentage[16];
 		GetWindowText(editControl, percentage, 16);
 		double strength = atoi(percentage) / 100.0f;
@@ -365,64 +319,37 @@ void GrooveDialog::ApplySelectedGroove()
 	GrooveTemplateHandler::SetMemento(memento);
 }
 
-void GrooveDialog::Setup()
+void GrooveDialog::OnInitDlg()
 {
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 	currentDir = me->GetGrooveDir();
 	
-	SetWindowText(getHwnd(), "Groove tool");
-	SetDlgItemInt(getHwnd(), IDC_STRENGTH, me->GetGrooveStrength(), true);
+	SetWindowText(m_hwnd, "Groove tool");
+	SetDlgItemInt(m_hwnd, IDC_STRENGTH, me->GetGrooveStrength(), true);
 	
-	setWindowPosition(getHwnd());
-
 #ifdef _WIN32
-	HMENU sysMenu = GetMenu(getHwnd());
+	HMENU sysMenu = GetMenu(m_hwnd);
 #else
 	HMENU sysMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_GROOVEMENU));
 	if (sysMenu)
-		SetMenu(getHwnd(), sysMenu);
+		SetMenu(m_hwnd, sysMenu);
 	else
-		swsMenu = GetMenu(getHWND());
+		sysMenu = GetMenu(m_hwnd);
 	// TODO - should probably include the "REAPER" generic first menu item that OSX should have
 	// code will be something like SWELL_GetDefaultMenu, SWELL_DuplicateMenu, etc
 #endif 
-	if(getReaperProperty("grooveWnd_topmost") == "1") {
-		mStayOnTop = true;
-		CheckMenuItem(sysMenu, IDM_STAY_ON_TOP, MF_CHECKED | MF_BYCOMMAND);
-		SetWindowPos(getHwnd(), HWND_TOPMOST, 0,0,0,0, SWP_NOMOVE | SWP_NOSIZE);
-	} else {
-		mStayOnTop = false;
-	}
 
 	if(getReaperProperty("grooveWnd_ignorevel") == "1") {
 		mIgnoreVelocity = true;
-		CheckMenuItem(sysMenu, IDM__IGNORE_VEL, MF_CHECKED | MF_BYCOMMAND);
+		CheckMenuItem(sysMenu, IDM_IGNORE_VEL, MF_CHECKED | MF_BYCOMMAND);
 	} else {
 		mIgnoreVelocity = false;
 	}
 		
-	setSensitivity(getHwnd(), me->GetGrooveTolerance());
-	setTarget(getHwnd(), me->GetGrooveTarget() == TARGET_ITEMS);
+	setSensitivity(m_hwnd, me->GetGrooveTolerance());
+	setTarget(m_hwnd, me->GetGrooveTarget() == TARGET_ITEMS);
+
+	m_resize.init_item(IDC_GROOVELIST, 0.0, 0.0, 0.0, 1.0);
 	
 	RefreshGrooveList();
-}
-
-void GrooveDialog::onHide()
-{
-	RECT rect;
-	GetWindowRect(getHwnd(), &rect);
-	setReaperProperty("grooveWnd_left", rect.left);
-	setReaperProperty("grooveWnd_top", rect.top);
-}
-
-void GrooveDialog::OnCreate(HWND hWnd)
-{
-	
-}
-
-void GrooveDialog::OnActivate(bool activated)
-{
-	if(activated && mStayOnTop) {
-		SetWindowPos(getHwnd(), HWND_TOPMOST, 0,0,0,0, SWP_NOMOVE | SWP_NOSIZE);
-	}
 }

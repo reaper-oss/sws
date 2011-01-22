@@ -130,11 +130,13 @@ class SWS_DockWnd
 {
 public:
 	SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iDockOrder, int iCmdID);
+	virtual ~SWS_DockWnd();
+
 	void Show(bool bToggle, bool bActivate);
 	virtual bool IsActive(bool bWantEdit = false);
 	bool IsValidWindow() { return IsWindow(m_hwnd) ? true : false; }
 	HWND GetHWND() { return m_hwnd; }
-	virtual ~SWS_DockWnd();
+	virtual void OnCommand(WPARAM wParam, LPARAM lParam) {}
 
 	static const int DOCK_MSG = 0xFF0000;
 
@@ -143,7 +145,6 @@ protected:
 	bool IsDocked() { return (m_state.state & 2) == 2; }
 	void ToggleDocking();
 	virtual void OnInitDlg() {}
-	virtual void OnCommand(WPARAM wParam, LPARAM lParam) {}
 	virtual int OnNotify(WPARAM wParam, LPARAM lParam) { return 0; }
 	virtual HMENU OnContextMenu(int x, int y) { return NULL; }
 	virtual void OnResize() {}

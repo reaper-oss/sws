@@ -214,7 +214,6 @@
 #define IDC_TEXT                        1141
 #define IDC_AUTOCOLOR                   1142
 #define IDC_AUTOICON                    1143
-#define IDC_ENABLED                     1144
 #define IDC_COLOR                       1147
 #define IDC_PADRELFO_SYNCFREQUENCY      1148
 #define IDC_PADRELFO_FREQUENCY          1149
@@ -271,27 +270,25 @@
 #define IDC_SENS_16TH                   1198
 #define IDC_SENS_32ND                   1199
 #define IDC_STRENGTH                    1200
-#define IDC_STRENGTH_SPIN               1201
-#define IDC_SENS_GROUP                  1202
-#define IDC_TARG_GROUP                  1203
-#define IDC_TARG_ITEMS                  1204
-#define IDC_TARG_NOTES                  1205
-#define IDC_STORE                       1206
+#define IDC_SENS_GROUP                  1201
+#define IDC_TARG_GROUP                  1202
+#define IDC_TARG_ITEMS                  1203
+#define IDC_TARG_NOTES                  1204
+#define IDC_STORE                       1205
 #define IDM_OPEN_FOLDER                 40000
 #define IDM_EXIT                        40001
 #define IDM_SAVE_GROOVE                 40002
-#define IDM_STAY_ON_TOP                 40003
-#define IDM_REFRESH                     40004
-#define IDM_SHOW_ACTION_LIST            40005
-#define IDM__IGNORE_VEL                 40006
+#define IDM_REFRESH                     40003
+#define IDM_SHOW_ACTION_LIST            40004
+#define IDM_IGNORE_VEL                  40005
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        158
-#define _APS_NEXT_COMMAND_VALUE         40007
-#define _APS_NEXT_CONTROL_VALUE         1207
+#define _APS_NEXT_COMMAND_VALUE         40006
+#define _APS_NEXT_CONTROL_VALUE         1206
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "CommandHandler.h"
-#include "BaseDialog.hxx"
 #include "RprException.hxx"
 
 CReaperCommandHandler *CReaperCommandHandler::_instance = NULL;
@@ -146,6 +145,19 @@ bool CReaperCommandHandler::hookCommand(int command, int flag)
 	return false;
 }
 
+int CReaperCommandHandler::GetID(void (*command)(int, void *))
+{
+	CReaperCommandHandler *me = CReaperCommandHandler::Instance();
+	std::vector<CReaperCommand *>::iterator it;
+	for( it = me->m_commands.begin(); it != me->m_commands.end(); it++)
+	{
+		CReaperCommand *cmd = (*it);
+		if (cmd->IsCommand(command))
+			return cmd->GetCommandId();
+	}
+	return 0;
+}
+
 void CReaperCommandHandler::registerAccelerator(accelerator_register_t *accelerator)
 {
 	CReaperCommandHandler *me = CReaperCommandHandler::Instance();
@@ -155,19 +167,22 @@ void CReaperCommandHandler::registerAccelerator(accelerator_register_t *accelera
 bool CReaperCommandHandler::onAction(int cmd, int val, int valhw, int relmode, HWND hwnd)
 {
 	CReaperCommandHandler *me = CReaperCommandHandler::Instance();
-	for(std::vector<CBaseDialog *>::iterator i = me->mKbdSectionDialogs.begin(); i != me->mKbdSectionDialogs.end(); i++) {
-		CBaseDialog *dialog = *i;
-		if(dialog->getHwnd() == hwnd)
-			return dialog->OnRprCommand(cmd);
+	for(std::vector<SWS_DockWnd*>::iterator i = me->mKbdSectionDialogs.begin(); i != me->mKbdSectionDialogs.end(); i++) {
+		SWS_DockWnd *dialog = *i;
+		if(dialog->GetHWND() == hwnd)
+		{
+			dialog->OnCommand((WPARAM)cmd, 0);
+			return true;
+		}
 	}
 	return false;
 }
 
-void CReaperCommandHandler::registerKbdSection(KbdSectionInfo *kbdSection, CBaseDialog *dialog)
+void CReaperCommandHandler::registerKbdSection(KbdSectionInfo *kbdSection, SWS_DockWnd *dialog)
 {
 	CReaperCommandHandler *me = CReaperCommandHandler::Instance();
 	kbdSection->onAction = CReaperCommandHandler::onAction;
-	me->m_rec->Register("accel_section", (void *)kbdSection);
+	me->m_rec->Register("accel_section", kbdSection);
 	me->mKbdSectionDialogs.push_back(dialog);
 }
 

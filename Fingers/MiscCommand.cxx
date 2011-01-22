@@ -95,7 +95,7 @@ void MiscCommands::Init()
 			
 		CReaperCmdReg(
 			"SWS/FNG MIDI: select notes nearest edit cursor", "FNG_SELECT_NOTES_NEAR_EDIT_CURSOR",
-			(CReaperCommand *)new CReaperCommand(&SelectAllNearestEditCursor, NULL),
+			(CReaperCommand *)new CReaperCommand(&SelectAllNearestEditCursor),
 			UNDO_STATE_ITEMS
 			),
 	};

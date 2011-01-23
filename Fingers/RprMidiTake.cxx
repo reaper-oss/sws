@@ -341,15 +341,34 @@ static void finalizeMidiEvents(std::vector< RprMidiBase *> &midiEvents)
 }
 
 static bool isMidiEvent(const std::string &eventStr) {
-	std::string eventSubStr = eventStr.substr(0, 2);
-	if(eventSubStr == "e ")
-		return true;
-	if(eventSubStr == "E ")
-		return true;
-	if(eventSubStr == "x ")
-		return true;
-	if(eventSubStr == "X ")
-		return true;
+	
+	if(eventStr.size() <= 3)
+		return false;
+
+	switch(eventStr[0]) {
+		case 'e':
+		case 'x':
+		case 'X':
+		case 'E':
+			break;
+		default:
+			return false;
+	}
+	switch(eventStr[1]) {
+		case ' ':
+			return true;
+		case 'm':
+			break;
+		default:
+			return false;
+	}
+
+	switch(eventStr[2]) {
+		case ' ':
+			return true;
+		default:
+			return false;
+	}
 	return false;
 }
 

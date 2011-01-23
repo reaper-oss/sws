@@ -1,3 +1,7 @@
+Fixed typo in Groove Tool menu
+Fixed pass through to main window for Groove Tool
+Fixed muted midi events bug introduced in v2.0.0 #3
+Modified Undo handling for items
 Fixed auto color needing to be forced in some situations
 Fixed some screenset loading issues
 

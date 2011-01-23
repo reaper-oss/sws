@@ -22,7 +22,7 @@ bool CReaperCommand::Run(int command, int flag)
 {
 	if (m_nCommandId && command != m_nCommandId)
 		return false;
-	if(m_UndoFlags != 0)
+	if(m_UndoFlags != 0 && m_UndoFlags != UNDO_STATE_ITEMS)
 		Undo_BeginBlock();
 	PreCommand();
 	double startCursorPos = GetCursorPosition();
@@ -38,9 +38,11 @@ bool CReaperCommand::Run(int command, int flag)
 	if(!LeaveEditCursorAlone())
 		SetEditCurPos(startCursorPos, false, false);
 	
-	if(m_UndoFlags != 0) {
+	if(m_UndoFlags != 0 && m_UndoFlags != UNDO_STATE_ITEMS) {
 		Undo_EndBlock(m_szDescription.c_str(), m_UndoFlags);
 	}
+	if(m_UndoFlags == UNDO_STATE_ITEMS)
+		Undo_OnStateChange(m_szDescription.c_str());
 	
 	return true;
 }

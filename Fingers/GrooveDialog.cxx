@@ -55,6 +55,14 @@ GrooveDialog::GrooveDialog()
 	Init();
 }
 
+bool GrooveDialog::IsActive(bool bWantEdit)
+{
+	/* Base SWS_DockWnd uses GetFocus() == m_hwnd but GetFocus 
+	 * can return a HWND of a child control of the dialog so use
+	 * GetForegroundWindow(). */
+	return m_hwnd == GetForegroundWindow();
+}
+
 int GrooveDialog::OnKey(MSG *msg, int iKeyState)
 {
 	if(msg->hwnd == m_hwnd || IsChild(m_hwnd, msg->hwnd) == TRUE) {

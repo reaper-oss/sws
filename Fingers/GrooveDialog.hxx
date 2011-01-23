@@ -5,12 +5,14 @@ class GrooveDialog : public SWS_DockWnd
 {
 public:
 	GrooveDialog();
+	bool IsActive(bool bWantEdit);
 	virtual ~GrooveDialog();
 private:
 	// SWS_DockWnd overrides
 	void OnInitDlg();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	int OnKey(MSG *msg, int iKeyState);
+	
 
 	void OnGrooveList(WORD wParam, LPARAM lParam);
 	void OnGrooveFolderButton(WORD wParam, LPARAM lParam);

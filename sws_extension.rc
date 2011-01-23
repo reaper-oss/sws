@@ -1059,7 +1059,7 @@ BEGIN
     END
     POPUP "&Preferences"
     BEGIN
-        MENUITEM "&Ingore velocity",            IDM_IGNORE_VEL
+        MENUITEM "&Ignore velocity",            IDM_IGNORE_VEL
     END
     POPUP "&View"
     BEGIN

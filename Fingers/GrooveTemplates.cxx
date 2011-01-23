@@ -400,7 +400,7 @@ void GrooveTemplateHandler::StoreGrooveFromMidiEditor()
 GrooveItem createGrooveItemFromItem(const RprItem &rprItem)
 {
 	GrooveItem grooveItem;
-	grooveItem.amplitude = 1.0;
+	grooveItem.amplitude = -1.0;
 	grooveItem.position = TimeToBeat(rprItem.getPosition() + rprItem.getSnapOffset());
 	return grooveItem;
 }

@@ -1,3 +1,6 @@
+Fixed auto color needing to be forced in some situations
+Fixed some screenset loading issues
+
 !v2.0.0 #3 (January 22, 2011)
 <b>Fingers/FNG extension update/merge!</b>
 +Issue 238: Groove quantize now supports velocity

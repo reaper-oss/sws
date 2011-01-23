@@ -160,6 +160,7 @@ protected:
 
 	HWND m_hwnd;
 	bool m_bUserClosed;
+	bool m_bLoadingState;
 	WDL_WndSizer m_resize;
 	WDL_PtrList<SWS_ListView> m_pLists;
 

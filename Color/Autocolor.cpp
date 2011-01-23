@@ -614,7 +614,7 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bool bFor
 				if (bColor)
 				{
 					int iCurColor = *(int*)GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", NULL);
-					if (!(iCurColor | 0x1000000))
+					if (!(iCurColor & 0x1000000))
 						iCurColor = 0;
 					int newCol = iCurColor;
 
@@ -743,7 +743,7 @@ void AutoColorRun(bool bForce)
 		if (bDoColors && !pACTrack->m_bColored && pACTrack->m_col)
 		{
 			int iCurColor = *(int*)GetSetMediaTrackInfo(pACTrack->m_pTr, "I_CUSTOMCOLOR", NULL);
-			if (!(iCurColor | 0x1000000))
+			if (!(iCurColor & 0x1000000))
 				iCurColor = 0;
 
 			// Only remove color on tracks that we colored ourselves

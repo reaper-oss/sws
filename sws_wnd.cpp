@@ -39,7 +39,7 @@
 #include "stdafx.h"
 
 SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iDockOrder, int iCmdID)
-:m_hwnd(NULL), m_iResource(iResource), m_cWndTitle(cWndTitle), m_cId(cId), m_iDockOrder(iDockOrder), m_bUserClosed(false), m_iCmdID(iCmdID)
+:m_hwnd(NULL), m_iResource(iResource), m_cWndTitle(cWndTitle), m_cId(cId), m_iDockOrder(iDockOrder), m_bUserClosed(false), m_iCmdID(iCmdID), m_bLoadingState(false)
 {
 	if (screenset_registerNew) // v4
 		screenset_registerNew((char*)cId, screensetCallback, this);
@@ -383,6 +383,9 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 // as well as any derived class view information from the function SaveView
 int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 {
+	if (m_bLoadingState)
+		return 0;
+
 	int iLen = sizeof(SWS_DockWnd_State);
 	if (IsWindow(m_hwnd))
 	{
@@ -414,6 +417,8 @@ int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 // Also calls the derived class method LoadView.
 void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 {
+	m_bLoadingState = true;
+
 	bool bDocked = IsDocked();
 	if (cStateBuf && iLen >= sizeof(SWS_DockWnd_State))
 	{
@@ -423,9 +428,8 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 	else
 		m_state.state = 0;
 
-	// TODO - ignore whichdock on start and use Reaper's hint, but on ss load need to check??
-	//if (Dock_UpdateDockID) // v4 only!
-	//	Dock_UpdateDockID((char*)m_cId, m_state.whichdock);
+	if (Dock_UpdateDockID) // v4 only!
+		Dock_UpdateDockID((char*)m_cId, m_state.whichdock);
 
 	if (m_state.state & 1)
 	{
@@ -436,8 +440,6 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 			DestroyWindow(m_hwnd);
 
 		Show(false, false);
-		if (!IsDocked())
-			SetWindowPos(m_hwnd, NULL, m_state.r.left, m_state.r.top, abs(m_state.r.right-m_state.r.left), abs(m_state.r.bottom-m_state.r.top), SWP_NOZORDER);
 	}
 	else if (IsWindow(m_hwnd))
 		DestroyWindow(m_hwnd);
@@ -449,6 +451,7 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 		memcpy(cTemp, cStateBuf + sizeof(SWS_DockWnd_State), iViewLen);
 		LoadView(cTemp, iViewLen);
 	}
+	m_bLoadingState = false;
 }
 
 SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips)

@@ -26,8 +26,10 @@
 
 #include "stdafx.h"
 #include <time.h>
-#include "../../WDL/projectcontext.h"
 
+#include "RenderTrack.h"
+
+#include "../../WDL/projectcontext.h"
 
 #define TAGLIB_STATIC
 #define TAGLIB_NO_CONFIG
@@ -86,37 +88,12 @@ int GetCurrentYear(){
 	return curYear;
 }
 
-string ZeroPadNumber(int num, int digits ){
-    std::ostringstream ss;
-    ss << setw( digits ) << setfill( '0' ) << num;
-    return ss.str();
-}
+
 
 string ParseFileExtension( string path ){
     if( path.find_last_of(".") != string::npos )
         return path.substr( path.find_last_of(".") + 1 );
     return "";
-}
-
-class RenderTrack {
-	public:
-		int trackNumber;
-		//double trackStartTime, trackEndTime;
-		string trackName;
-		string getFileName( string );
-		string getPaddedTrackNumber();
-};
-
-string RenderTrack::getPaddedTrackNumber(){
-	return ZeroPadNumber( trackNumber, 2 );
-}
-
-string RenderTrack::getFileName( string ext = "" ){
-	string fileName = getPaddedTrackNumber() + " " + trackName;
-	if( !ext.empty() ){
-		fileName += "." + ext;
-	}
-	return fileName;
 }
 
 WDL_String* GetProjectString(){
@@ -250,6 +227,32 @@ string GetCurrentRenderExtension( WDL_String *prjStr ){
 	return ParseFileExtension( GetProjectParameterValueStr( prjStr, "RENDER_FILE" ) );
 }
 
+void SanitizeFilename( string *fn ){
+
+#ifdef _WIN32
+	//Windows illegal chars
+	const char *illegalChars = "\\/<>|\":?*";
+#else
+	// TODO: Mac illegal chars
+	const char *illegalChars = ":";
+	// First char can't be a dot
+	// Don't need now because track number is always a prefix, but might if
+	// we allow an option to omit them
+	//if( fn->substr(0,1) == "." ) fn->replace(0,1,"_");
+#endif
+	
+	const char *fnChar = fn->c_str();
+
+	for( int i = 0; i < strlen( fnChar ); i++ ){
+		for( int j = 0; j < strlen( illegalChars ); j++ ){
+			if( fnChar[i] == illegalChars[j] ){
+				fn->replace( i, 1, "_");
+				break;
+			}
+		}
+	}
+}
+
 void ShowAutorenderHelp(COMMAND_T*) {
 	string helpText = "Preliminary Autorender Usage:\n\n";
 	helpText += "Regions are rendered to seperate audio files.\n";
@@ -271,6 +274,8 @@ void ShowAutorenderHelp(COMMAND_T*) {
 }
 
 void AutorenderRegions(COMMAND_T*) {
+	Main_OnCommand( 40026, 0 ); //Save current project
+
 	//Get the project config as a WDL_String
 	WDL_String* prjStr = GetProjectString();	
 
@@ -318,11 +323,15 @@ void AutorenderRegions(COMMAND_T*) {
 	double pos, rgnend;
 	char* track_name;
 	vector<RenderTrack> renderTracks;
+	map<int,bool> foundIdx;
 
 	//Loop through regions, build render rpps, build RenderTrack vector
 	while( EnumProjectMarkers( marker_index++, &isrgn, &pos, &rgnend, &track_name, &idx) > 0 ){
-		if( isrgn == true && idx > track_index ){
-			track_index = idx;
+		//if( isrgn == true && idx > track_index ){
+		if( isrgn == true && foundIdx.find( idx ) == foundIdx.end() ){
+			foundIdx[ idx ] = true;
+
+			track_index++;
 			WDL_String trackPrjStr = prjStr->Get();
 
 			RenderTrack renderTrack;
@@ -335,7 +344,9 @@ void AutorenderRegions(COMMAND_T*) {
 				trackName << "Track " << renderTrack.getPaddedTrackNumber();
 			}
 			renderTrack.trackName = trackName.str();
-
+			renderTrack.sanitizedTrackName = trackName.str();
+			SanitizeFilename( &renderTrack.sanitizedTrackName );
+			
 			string outRenderProjectPath = outRenderProjectPrefix + renderTrack.getFileName("rpp");
 			string renderFilePath = renderPath + renderTrack.getFileName( renderFileExtension );						
 			SetProjectParameter( &trackPrjStr, "RENDER_FILE", "\"" + renderFilePath + "\"" );	

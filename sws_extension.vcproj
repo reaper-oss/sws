@@ -2909,6 +2909,14 @@
 				RelativePath=".\Autorender\Autorender.h"
 				>
 			</File>
+			<File
+				RelativePath=".\Autorender\RenderTrack.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Autorender\RenderTrack.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\license.txt"

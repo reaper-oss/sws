@@ -1,8 +1,7 @@
 /******************************************************************************
-/ Color.h
+/ RenderTrack.h
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
-/ http://www.standingwaterstudios.com/reaper
+/ Copyright (c) 2011 Shane StClair
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -26,13 +25,14 @@
 ******************************************************************************/
 #pragma once
 
-extern COLORREF g_custColors[16];
-extern COLORREF g_crGradStart;
-extern COLORREF g_crGradEnd;
-
-void UpdateCustomColors();
-bool AllBlack();
-COLORREF CalcGradient(COLORREF crStart, COLORREF crEnd, double dPos);
-int ColorInit();
-void ColorSlice();
-void ShowColorDialog(COMMAND_T* = NULL);
+class RenderTrack {
+	public:
+		int trackNumber;
+		//double trackStartTime, trackEndTime;
+		string trackName;
+		string sanitizedTrackName;
+		string getFileName( string );
+		string getPaddedTrackNumber();
+	private:
+		string zeroPadNumber( int, int );
+};

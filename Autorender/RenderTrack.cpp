@@ -1,8 +1,7 @@
 /******************************************************************************
-/ Color.h
+/ RenderTrack.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
-/ http://www.standingwaterstudios.com/reaper
+/ Copyright (c) 2011 Shane StClair
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -24,15 +23,24 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
-#pragma once
 
-extern COLORREF g_custColors[16];
-extern COLORREF g_crGradStart;
-extern COLORREF g_crGradEnd;
+#include "stdafx.h"
+#include "RenderTrack.h"
 
-void UpdateCustomColors();
-bool AllBlack();
-COLORREF CalcGradient(COLORREF crStart, COLORREF crEnd, double dPos);
-int ColorInit();
-void ColorSlice();
-void ShowColorDialog(COMMAND_T* = NULL);
+string RenderTrack::zeroPadNumber(int num, int digits ){
+    std::ostringstream ss;
+    ss << setw( digits ) << setfill( '0' ) << num;
+    return ss.str();
+}
+
+string RenderTrack::getPaddedTrackNumber(){
+	return zeroPadNumber( trackNumber, 2 );
+}
+
+string RenderTrack::getFileName( string ext = "" ){
+	string fileName = getPaddedTrackNumber() + " " + sanitizedTrackName;
+	if( !ext.empty() ){
+		fileName += "." + ext;
+	}
+	return fileName;
+}

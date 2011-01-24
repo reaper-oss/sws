@@ -25,26 +25,39 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include <time.h>
+#include "../../WDL/projectcontext.h"
+
+#define TAGLIB_STATIC
 #define TAGLIB_NO_CONFIG
+#include "../../taglib/include/tag.h"
+#include "../../taglib/include/fileref.h"
 
-#include "../TagLib/tag.h"
+#define TESTCODE
 
-/*
-#include "TrackItemState.h"
-#include "ItemSelState.h"
-#include "MuteState.h"
-#include "ActiveTake.h"
-#include "TimeState.h"
-*/
-//#define TESTCODE
-/*
+// START OF TEST CODE
+
 #ifdef TESTCODE
 #include "Prompt.h"
 #pragma message("TESTCODE Defined")
-void TestFunc(COMMAND_T* = NULL)
+
+void PrintDebugString( string debugStr )
 {
+	if( strcmp( debugStr.substr( debugStr.length() ).c_str(), "\n") != 0 ){
+		debugStr += "\n";
+	}
+
+	#ifdef _WIN32
+		OutputDebugString( debugStr.c_str() );
+	#else
+		printf( debugStr.c_str() );
+	#endif
 }
 
+void TestFunc(COMMAND_T* = NULL)
+{
+	PrintDebugString("Yeah, debug printing works.");
+}
 
 void PrintGuids(COMMAND_T* = NULL)
 {
@@ -63,335 +76,290 @@ void PrintGuids(COMMAND_T* = NULL)
 	}
 }
 
-void PrintSubMenu(HMENU subMenu)
-{
-	static int iDepth = 0;
-	char debugStr[256];
-	char menuStr[64];
-	MENUITEMINFO mi={sizeof(MENUITEMINFO),};
-	mi.fMask = MIIM_STATE | MIIM_ID | MIIM_SUBMENU | MIIM_FTYPE | MIIM_STRING;
-	mi.dwTypeData = menuStr;
-
-	for (int i = 0; i < GetMenuItemCount(subMenu); i++)
-	{
-		mi.cch = 64;
-		GetMenuItemInfo(subMenu, i, true, &mi);
-
-		for (int j = 0; j < iDepth; j++)
-			OutputDebugString("  ");
-		if (mi.fType & MFT_SEPARATOR)
-			OutputDebugString("---------------------\n");
-		else if (mi.hSubMenu)
-		{
-			sprintf(debugStr, "%s\n", mi.dwTypeData ? mi.dwTypeData : "<null>");
-			OutputDebugString(debugStr);
-			iDepth++;
-			PrintSubMenu(mi.hSubMenu);
-			iDepth--;
-		}
-		else
-		{
-			sprintf(debugStr, "%5d %s %s\n", mi.wID, mi.fState == MFS_CHECKED ? "*" : (mi.fState == MFS_DISABLED ? "-" : " "), mi.dwTypeData ? mi.dwTypeData : "<null>");
-			OutputDebugString(debugStr);
-		}
-	}
-}
-
-// TODO: replace g_hwndParent with GetMainHwnd()
-void PrintMenu(COMMAND_T* = NULL)
-{
-	PrintSubMenu(GetMenu(g_hwndParent));
-}
-
-void RunAction(COMMAND_T* = NULL)
-{
-	static char resp[10] = "";
-	if (PromptUserForString(GetMainHwnd(), "Enter action #", resp, 10))
-	{
-		int iAction = atoi(resp);
-		if (iAction > 0)
-			Main_OnCommand(iAction, 0);
-	}
-}
-
-void DumpItems(COMMAND_T* = NULL)
-{
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
-	{
-		MediaItem* item = GetSelectedMediaItem(NULL, i);
-		MediaTrack* tr = (MediaTrack*)GetSetMediaItemInfo(item, "P_TRACK", NULL);
-		double dStart = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
-		double dEnd   = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL) + dStart;
-		double dBStart = TimeMap_timeToQN(dStart);
-		double dBEnd   = TimeMap_timeToQN(dEnd);
-		char str[256];
-		double dSnapOffset = *(double*)GetSetMediaItemInfo(item, "D_SNAPOFFSET", NULL);
-		double dSourceOffset = 0.0;
-		MediaItem_Take* take = GetMediaItemTake(item, -1);
-		if (take)
-			dSourceOffset = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
-		sprintf(str, "%2d %.14f/%.14f %.14f/%.14f P=%.4f S=%.4f\n", CSurf_TrackToID(tr, false), dStart, dBStart, dEnd, dBEnd, dSnapOffset, dSourceOffset);
-		OutputDebugString(str);
-	}
-}
-
 #endif
 
-static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
-{
-	LineParser lp(false);
-	if (lp.parse(line) || lp.getnumtokens() < 1)
-		return false;
-	if (strcmp(lp.gettoken_str(0), "<TRACKSTATE") == 0)
-	{
-		TrackState* ts = g_tracks.Get()->Add(new TrackState(&lp));
+// END OF TEST CODE
 
-		char linebuf[4096];
-		while(!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
-		{
-			if (lp.gettoken_str(0)[0] == '>')
-				break;
-			else if (strcmp("ITEMSTATE", lp.gettoken_str(0)) == 0)
-				ts->m_items.Add(new ItemState(&lp));
-		}
-		return true;
-	}
-	else if (strcmp(lp.gettoken_str(0), "<MUTESTATE") == 0)
-	{
-		MuteState* ms = g_muteStates.Get()->Add(new MuteState(&lp));
-
-		char linebuf[4096];
-		while(!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
-		{
-			if (lp.gettoken_str(0)[0] == '>')
-				break;
-			else if (strcmp("CHILD", lp.gettoken_str(0)) == 0)
-				ms->m_children.Add(new MuteItem(&lp));
-			else if (strcmp("RECEIVE", lp.gettoken_str(0)) == 0)
-				ms->m_receives.Add(new MuteItem(&lp));
-		}
-		return true;
-	}
-	else if (strcmp(lp.gettoken_str(0), "<SELTRACKITEMSELSTATE") == 0)
-	{
-		SelItemsTrack* sit = g_selItemsTrack.Get()->Add(new SelItemsTrack(&lp));
-		char linebuf[4096];
-		while(!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
-		{
-			if (lp.gettoken_str(0)[0] == '>')
-				break;
-			else if (strcmp(lp.gettoken_str(0), "<SLOT") == 0)
-			{
-				int iSlot = lp.gettoken_int(1) - 1;
-				while(!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
-				{
-					sit->Add(&lp, iSlot); // Add even a single '>' to ensure "empty" slots are restored properly
-					if (lp.gettoken_str(0)[0] == '>')
-						break;
-				}
-			}
-		}
-		return true;
-	}
-	else if (strcmp(lp.gettoken_str(0), "<ITEMSELSTATE") == 0)
-	{
-		char linebuf[4096];
-		// Ignore old-style take-as-item-GUID
-		if (lp.getnumtokens() == 2 && strlen(lp.gettoken_str(1)) != 38)
-		{
-			g_selItems.Get()->Empty();
-			while(!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
-			{
-				if (lp.gettoken_str(0)[0] == '>')
-					break;
-				g_selItems.Get()->Add(&lp);
-			}
-		}
-		else
-		{
-			int iDepth = 0;
-			while(!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
-			{
-				if (lp.gettoken_str(0)[0] == '<')
-					++iDepth;
-				else if (lp.gettoken_str(0)[0] == '>')
-					--iDepth;
-				if (iDepth < 0)
-					break;
-			}
-		}
-		return true;
-	}
-	else if (strcmp(lp.gettoken_str(0), "<ACTIVETAKESTRACK") == 0)
-	{
-		ActiveTakeTrack* att = g_activeTakeTracks.Get()->Add(new ActiveTakeTrack(&lp));
-		char linebuf[4096];
-		while(!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
-		{
-			if (lp.gettoken_str(0)[0] == '>')
-				break;
-			else if (strcmp(lp.gettoken_str(0), "ITEM") == 0)
-				att->m_items.Add(new ActiveTake(&lp));
-		}
-		return true;
-	}
-	else if (strcmp(lp.gettoken_str(0), "TIMESEL") == 0)
-	{
-		g_timeSel.Get()->Add(new TimeSelection(&lp));
-		return true;
-	}
-	return false;
+int GetCurrentYear(){
+	time_t t = 0;
+	struct tm *lt = NULL;  
+	t = time(NULL);
+	lt = localtime( &t );
+	int curYear = lt->tm_year;
+	curYear = curYear + 1900;
+	return curYear;
 }
 
-static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
-{
-	char str[4096];
-
-	for (int i = 0; i < g_tracks.Get()->GetSize(); i++)
-	{
-		ctx->AddLine(g_tracks.Get()->Get(i)->ItemString(str, 4096)); 
-		for (int j = 0; j < g_tracks.Get()->Get(i)->m_items.GetSize(); j++)
-			ctx->AddLine(g_tracks.Get()->Get(i)->m_items.Get(j)->ItemString(str, 4096));
-		ctx->AddLine(">");
-	}
-	bool bDone;
-	for (int i = 0; i < g_muteStates.Get()->GetSize(); i++)
-	{
-		do
-			ctx->AddLine(g_muteStates.Get()->Get(i)->ItemString(str, 4096, &bDone));
-		while (!bDone);
-	}
-	for (int i = 0; i < g_selItemsTrack.Get()->GetSize(); i++)
-	{
-		do
-			ctx->AddLine(g_selItemsTrack.Get()->Get(i)->ItemString(str, 4096, &bDone));
-		while (!bDone);
-	}
-	if (g_selItems.Get()->NumItems())
-	{
-		ctx->AddLine("<ITEMSELSTATE 1");
-		do
-			ctx->AddLine(g_selItems.Get()->ItemString(str, 4096, &bDone));
-		while (!bDone);
-	}
-	for (int i = 0; i < g_activeTakeTracks.Get()->GetSize(); i++)
-	{
-		ctx->AddLine(g_activeTakeTracks.Get()->Get(i)->ItemString(str, 4096)); 
-		for (int j = 0; j < g_activeTakeTracks.Get()->Get(i)->m_items.GetSize(); j++)
-			ctx->AddLine(g_activeTakeTracks.Get()->Get(i)->m_items.Get(j)->ItemString(str, 4096));
-		ctx->AddLine(">");
-	}
-	for (int i = 0; i < g_timeSel.Get()->GetSize(); i++)
-		ctx->AddLine(g_timeSel.Get()->Get(i)->ItemString(str, 4096));
+string ZeroPadNumber(int num, int digits ){
+    std::ostringstream ss;
+    ss << setw( digits ) << setfill( '0' ) << num;
+    return ss.str();
 }
 
-static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
-{
-	g_tracks.Get()->Empty(true);
-	g_tracks.Cleanup();
-	g_muteStates.Get()->Empty(true);
-	g_muteStates.Cleanup();
-	g_selItemsTrack.Get()->Empty(true);
-	g_selItemsTrack.Cleanup();
-	g_selItems.Get()->Empty();
-	g_selItems.Cleanup();
-	g_activeTakeTracks.Get()->Empty(true);
-	g_activeTakeTracks.Cleanup();
-	g_timeSel.Get()->Empty(true);
-	g_timeSel.Cleanup();
+string ParseFileExtension( string path ){
+    if( path.find_last_of(".") != string::npos )
+        return path.substr( path.find_last_of(".") + 1 );
+    return "";
 }
 
-static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
-
-static COMMAND_T g_commandTable[] = 
-{
-	// ActiveTake.cpp
-	{ { DEFACCEL, "SWS: Save active takes on selected track(s)" },					"SWS_SAVEACTTAKES",		SaveActiveTakes,			},
-	{ { DEFACCEL, "SWS: Restore active takes on selected track(s)" },				"SWS_RESTACTTAKES",		RestoreActiveTakes,			},
-
-	// ItemSelState.cpp
-	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 1" },			"SWS_SAVESELITEMS1",	SaveSelTrackSelItems,		NULL, 0 },
-	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 2" },			"SWS_SAVESELITEMS2",	SaveSelTrackSelItems,		NULL, 1 },
-	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 3" },			"SWS_SAVESELITEMS3",	SaveSelTrackSelItems,		NULL, 2 },
-	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 4" },			"SWS_SAVESELITEMS4",	SaveSelTrackSelItems,		NULL, 3 },
-	{ { DEFACCEL, "SWS: Save selected track(s) selected item(s), slot 5" },			"SWS_SAVESELITEMS5",	SaveSelTrackSelItems,		NULL, 4 },
-	{ { DEFACCEL, "SWS: Restore selected track(s) selected item(s), slot 1" },		"SWS_RESTSELITEMS1",	RestoreSelTrackSelItems,	NULL, 0 },
-	{ { DEFACCEL, "SWS: Restore selected track(s) selected item(s), slot 2" },		"SWS_RESTSELITEMS2",	RestoreSelTrackSelItems,	NULL, 1 },
-	{ { DEFACCEL, "SWS: Restore selected track(s) selected item(s), slot 3" },		"SWS_RESTSELITEMS3",	RestoreSelTrackSelItems,	NULL, 2 },
-	{ { DEFACCEL, "SWS: Restore selected track(s) selected item(s), slot 4" },		"SWS_RESTSELITEMS4",	RestoreSelTrackSelItems,	NULL, 3 },
-	{ { DEFACCEL, "SWS: Restore selected track(s) selected item(s), slot 5" },		"SWS_RESTSELITEMS5",	RestoreSelTrackSelItems,	NULL, 4 },
-	{ { DEFACCEL, "SWS: Restore last item selection on selected track(s)" },		"SWS_RESTLASTSEL",		RestoreLastSelItemTrack,	NULL, },
-	{ { DEFACCEL, "SWS: Save selected item(s)" },									"SWS_SAVEALLSELITEMS1",	SaveSelItems,				NULL, 0 }, // Slots aren't supported here (yet?)
-	{ { DEFACCEL, "SWS: Restore saved selected item(s)" },							"SWS_RESTALLSELITEMS1",	RestoreSelItems,			NULL, 0 },
-
-	// MuteState.cpp
-	{ { DEFACCEL, "SWS: Save selected track(s) mutes (+receives, children)" },		"SWS_SAVEMUTES",		SaveMutes,					},
-	{ { DEFACCEL, "SWS: Restore selected track(s) mutes (+receives, children)" },	"SWS_RESTRMUTES",		RestoreMutes,				},
-
-	// TimeState.cpp
-	{ { DEFACCEL, "SWS: Save time selection, slot 1" },								"SWS_SAVETIME1",		SaveTimeSel,	NULL, 1 },
-	{ { DEFACCEL, "SWS: Save time selection, slot 2" },								"SWS_SAVETIME2",		SaveTimeSel,	NULL, 2 },
-	{ { DEFACCEL, "SWS: Save time selection, slot 3" },								"SWS_SAVETIME3",		SaveTimeSel,	NULL, 3 },
-	{ { DEFACCEL, "SWS: Save time selection, slot 4" },								"SWS_SAVETIME4",		SaveTimeSel,	NULL, 4 },
-	{ { DEFACCEL, "SWS: Save time selection, slot 5" },								"SWS_SAVETIME5",		SaveTimeSel,	NULL, 5 },
-	{ { DEFACCEL, "SWS: Save loop selection, slot 1" },								"SWS_SAVELOOP1",		SaveLoopSel,	NULL, 1 },
-	{ { DEFACCEL, "SWS: Save loop selection, slot 2" },								"SWS_SAVELOOP2",		SaveLoopSel,	NULL, 2 },
-	{ { DEFACCEL, "SWS: Save loop selection, slot 3" },								"SWS_SAVELOOP3",		SaveLoopSel,	NULL, 3 },
-	{ { DEFACCEL, "SWS: Save loop selection, slot 4" },								"SWS_SAVELOOP4",		SaveLoopSel,	NULL, 4 },
-	{ { DEFACCEL, "SWS: Save loop selection, slot 5" },								"SWS_SAVELOOP5",		SaveLoopSel,	NULL, 5 },
-	{ { DEFACCEL, "SWS: Restore time selection, slot 1" },							"SWS_RESTTIME1",		RestoreTimeSel,	NULL, 1 },
-	{ { DEFACCEL, "SWS: Restore time selection, slot 2" },							"SWS_RESTTIME2",		RestoreTimeSel,	NULL, 2 },
-	{ { DEFACCEL, "SWS: Restore time selection, slot 3" },							"SWS_RESTTIME3",		RestoreTimeSel,	NULL, 3 },
-	{ { DEFACCEL, "SWS: Restore time selection, slot 4" },							"SWS_RESTTIME4",		RestoreTimeSel,	NULL, 4 },
-	{ { DEFACCEL, "SWS: Restore time selection, slot 5" },							"SWS_RESTTIME5",		RestoreTimeSel,	NULL, 5 },
-	{ { DEFACCEL, "SWS: Restore loop selection, slot 1" },							"SWS_RESTLOOP1",		RestoreLoopSel,	NULL, 1 },
-	{ { DEFACCEL, "SWS: Restore loop selection, slot 2" },							"SWS_RESTLOOP2",		RestoreLoopSel,	NULL, 2 },
-	{ { DEFACCEL, "SWS: Restore loop selection, slot 3" },							"SWS_RESTLOOP3",		RestoreLoopSel,	NULL, 3 },
-	{ { DEFACCEL, "SWS: Restore loop selection, slot 4" },							"SWS_RESTLOOP4",		RestoreLoopSel,	NULL, 4 },
-	{ { DEFACCEL, "SWS: Restore loop selection, slot 5" },							"SWS_RESTLOOP5",		RestoreLoopSel,	NULL, 5 },
-	{ { DEFACCEL, "SWS: Restore time selection, next slot" },						"SWS_RESTTIMENEXT",		RestoreTimeNext, },
-	{ { DEFACCEL, "SWS: Restore loop selection, next slot" },						"SWS_RESTLOOPNEXT",		RestoreLoopNext, },
-
-	// TrackItemState.cpp	
-	{ { DEFACCEL, "SWS: Save selected track(s) items' states" },					"SWS_SAVETRACK",		SaveTrack,			},
-	{ { DEFACCEL, "SWS: Restore selected track(s) items' states" },					"SWS_RESTORETRACK",		RestoreTrack,		},
-	{ { DEFACCEL, "SWS: Save selected track(s) selected items' states" },			"SWS_SAVESELONTRACK",	SaveSelOnTrack,		},
-	{ { DEFACCEL, "SWS: Restore selected track(s) selected items' states" },		"SWS_RESTSELONTRACK",	RestoreSelOnTrack,	},
-	{ { DEFACCEL, "SWS: Select item(s) with saved state on selected track(s)" },	"SWS_SELWITHSTATE",		SelItemsWithState,	},
-
-#ifdef TESTCODE
-	{ { DEFACCEL, "SWS: Test" }, "SWS_TEST",  TestFunc, },
-	{ { DEFACCEL, "SWS: Print track GUIDs" }, "SWS_PRINTGUIDS",  PrintGuids, },
-	{ { DEFACCEL, "SWS: Print menu tree" }, "SWS_PRINTMENU",  PrintMenu, },
-	{ { DEFACCEL, "SWS: Run action..." }, "SWS_RUNACTION",  RunAction, },
-	{ { DEFACCEL, "SWS: Print sel items' times" }, "SWS_DUMPITEMS",  DumpItems, },
-
-#endif
-
-	{ {}, LAST_COMMAND, }, // Denote end of table
+class RenderTrack {
+	public:
+		int trackNumber;
+		//double trackStartTime, trackEndTime;
+		string trackName;
+		string getFileName( string );
+		string getPaddedTrackNumber();
 };
-*/
 
-void AutorenderTest(COMMAND_T*)
-{
-	int ok = 0;
+string RenderTrack::getPaddedTrackNumber(){
+	return ZeroPadNumber( trackNumber, 2 );
 }
 
-//static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
+string RenderTrack::getFileName( string ext = "" ){
+	string fileName = getPaddedTrackNumber() + " " + trackName;
+	if( !ext.empty() ){
+		fileName += "." + ext;
+	}
+	return fileName;
+}
+
+WDL_String* GetProjectString(){
+    WDL_String* prjStr = new WDL_String("");
+
+	char str[4096];
+	EnumProjects(-1, str, 256);	
+
+	ProjectStateContext* prj;
+	prj = ProjectCreateFileRead( str );
+
+	if( !prj ){
+		//TODO: Throw error
+		return prjStr;
+	}
+
+    int iLen = 0;
+    while( !prj->GetLine( str, 4096 ) ){
+		prjStr->Append( str, prjStr->GetLength() + 4098 );
+		prjStr->Append( "\n", prjStr->GetLength() + 2 );
+    }
+    delete prj;
+
+	return prjStr;
+}
+
+void WriteProjectFile( string filename, WDL_String* prjStr ){
+
+	ProjectStateContext* outProject = ProjectCreateFileWrite( filename.c_str() );	
+	char line[4096];
+	int pos = 0;	
+	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
+		outProject->AddLine( line );
+	}
+    delete outProject;
+}
+
+WDL_HeapBuf GetHeapBufFromChar( const char *str ){
+	WDL_HeapBuf m_hb;
+
+    int s = strlen( str );
+    char *newbuf = ( char* ) m_hb.Resize( s + 1, false );
+    if (newbuf){
+		memcpy( newbuf, str, s);
+		newbuf[s] = 0;
+    }
+
+	return m_hb;
+}
+
+void SetProjectParameter( WDL_String *prjStr, string param, string paramValue ){
+	char line[4096];
+	int pos = 0;
+	LineParser lp(false);
+
+	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
+		if( !lp.parse( line ) && lp.getnumtokens() ) {		
+			if ( strcmp( lp.gettoken_str(0), param.c_str() ) == 0) {
+				
+				int lineLen = strlen( line ) + 1; //Add 1 for the omitted newline
+				int startPos = pos - lineLen;
+
+				string replacementStr = param + string( " " ) + paramValue + string( "\n" );
+				WDL_String replacement = replacementStr.c_str();
+	
+				prjStr->DeleteSub( startPos, lineLen );
+				prjStr->Insert( replacement.Get(), startPos );
+
+				break;
+			}
+		}
+	}	
+}
+
+string GetProjectParameterValueStr( WDL_String *prjStr, string param, int token = 1 ){
+	char line[4096];
+	int pos = 0;
+	LineParser lp(false);
+
+	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
+		if( !lp.parse( line ) && lp.getnumtokens() ) {		
+			if ( strcmp( lp.gettoken_str(0), param.c_str() ) == 0) {
+				return lp.gettoken_str( token );
+			}
+		}
+	}
+
+	return "";
+}
+
+string GetProjectNotesParameter( WDL_String *prjStr, string param ){
+	char line[4096];
+	int pos = 0;
+	LineParser lp(false);
+	param = "|" + param; //Project note lines have a | prefix
+
+	bool inProjectNotes = false;
+
+	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
+		if( !lp.parse( line ) && lp.getnumtokens() ) {	
+			if( inProjectNotes ){
+				if ( strcmp( lp.gettoken_str(0), ">" ) == 0) {
+					//end of project notes
+					return "";
+				} else if ( strcmp( lp.gettoken_str(0), param.c_str() ) == 0 ){
+					string paramVal = "";
+					for( int i = 1; i <= lp.getnumtokens(); i++ ){
+						if( i > 1 ) paramVal += " ";
+						paramVal += lp.gettoken_str( i );
+					}
+
+					return paramVal;
+				}				
+			} else if ( strcmp( lp.gettoken_str(0), "<NOTES" ) == 0) {
+				inProjectNotes = true;
+				continue;
+			}
+		}
+	}
+
+	return "";
+}
+
+string GetQueuedRendersDir(){
+	ostringstream qrStream;
+	qrStream << GetResourcePath() << PATH_SLASH_CHAR << "QueuedRenders";
+	return qrStream.str();
+}
+
+string GetCurrentRenderExtension( WDL_String *prjStr ){
+	return ParseFileExtension( GetProjectParameterValueStr( prjStr, "RENDER_FILE" ) );
+}
+
+void AutorenderTest(COMMAND_T*) {
+	int project_index = 0, marker_index = 0, track_index = 0, idx;
+	bool isrgn;
+	double pos, rgnend;
+	char* track_name;
+
+
+	WDL_String* prjStr = GetProjectString();	
+	
+	string tag_artist = GetProjectNotesParameter( prjStr, "TAG_ARTIST" );
+	string tag_album = GetProjectNotesParameter( prjStr, "TAG_ALBUM" );
+	string tag_genre = GetProjectNotesParameter( prjStr, "TAG_GENRE" );
+	string tag_year_str = GetProjectNotesParameter( prjStr, "TAG_YEAR" );
+	string tag_comment = GetProjectNotesParameter( prjStr, "TAG_COMMENT" );
+
+	unsigned int tag_year = 0;
+	if( tag_year_str.empty() ){
+		tag_year = GetCurrentYear();
+	} else {
+		tag_year = atoi( tag_year_str.c_str() );
+	}
+
+	string queuedRendersDir = GetQueuedRendersDir();
+	string renderFileExtension = GetCurrentRenderExtension( prjStr );
+	string renderPath = "C:\\test\\";
+
+	ostringstream outRenderProjectPrefixStream;
+	outRenderProjectPrefixStream << queuedRendersDir << PATH_SLASH_CHAR << "render_Autorender";
+	string outRenderProjectPrefix = outRenderProjectPrefixStream.str();
+
+	vector<RenderTrack> renderTracks;
+
+	while( EnumProjectMarkers( marker_index++, &isrgn, &pos, &rgnend, &track_name, &idx) > 0 ){
+		if( isrgn == true && idx > track_index ){
+			track_index = idx;
+			WDL_String trackPrjStr = prjStr->Get();
+
+			RenderTrack renderTrack;
+			renderTrack.trackNumber = track_index;
+
+			ostringstream trackName;
+			if( strlen( track_name ) > 0 ){
+				trackName << track_name;
+			} else {
+				trackName << "Track " << renderTrack.getPaddedTrackNumber();
+			}
+			renderTrack.trackName = trackName.str();
+
+			string outRenderProjectPath = outRenderProjectPrefix + renderTrack.getFileName("rpp");
+			string renderFilePath = renderPath + renderTrack.getFileName( renderFileExtension );						
+			SetProjectParameter( &trackPrjStr, "RENDER_FILE", "\"" + renderFilePath + "\"" );	
+
+			ostringstream renderRange;
+			renderRange << "0 " << pos << " " << rgnend;
+			SetProjectParameter( &trackPrjStr, "RENDER_RANGE", renderRange.str() );	
+			
+			WriteProjectFile( outRenderProjectPath, &trackPrjStr );
+			renderTracks.push_back( renderTrack );
+		}
+	}
+	
+	Main_OnCommand( 41207, 0 ); //Render all queued renders
+
+	// Tag!
+	for( unsigned int i = 0; i < renderTracks.size(); i++){		
+
+		TagLib::FileRef f( renderedFilePath.c_str() );
+		
+		if( !tag_artist.empty() ) f.tag()->setArtist( tag_artist );
+		if( !tag_album.empty() ) f.tag()->setAlbum( tag_album );
+		if( !tag_genre.empty() ) f.tag()->setGenre( tag_genre );
+		if( tag_year > 0 ) f.tag()->setYear( tag_year );
+		if( !tag_comment.empty() ) f.tag()->setComment( tag_comment );
+		
+		f.tag()->setTrack( i + 1 );
+		f.tag()->setTitle( renderTracks[i].trackName );
+		f.save();
+	}
+
+	system( ( "explorer " + renderPath ).c_str() );
+}
 
 static project_config_extension_t g_projectconfig = { NULL };
 
 static COMMAND_T g_commandTable[] = 
 {
-	// ActiveTake.cpp
 	{ { DEFACCEL, "Autorender: Test" },	"AUTORENDER_TEST", AutorenderTest, "Autorender: Run Test" },
+#ifdef TESTCODE
+	{ { DEFACCEL, "Autorender: TestCode" }, "AUTORENDER_TESTCODE",  TestFunc, "Autorender: TestCode" },
+	{ { DEFACCEL, "SWS: Print track GUIDs" }, "SWS_PRINTGUIDS",  PrintGuids, "Autorender: Print Guids" },
+#endif
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
-        if (strcmp(menustr, "Main extensions") == 0 && flag == 0)
-                AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
+	if ( strcmp(menustr, "Main extensions") == 0 && flag == 0 ){
+		int len = 1;
+#ifdef TESTCODE
+		len = len + 2;
+#endif
+	
+		for( int i = 0; i < len; i++ ){
+			AddToMenu(hMenu, g_commandTable[i].menuText, g_commandTable[i].accel.accel.cmd);
+		}
+	}
 }
 
 int AutorenderInit()

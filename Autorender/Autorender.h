@@ -27,4 +27,3 @@
 #pragma once
 
 int AutorenderInit();
-void AutorenderTest(COMMAND_T* = NULL);

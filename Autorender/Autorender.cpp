@@ -415,8 +415,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 
 }
 
-int AutorenderInit()
-{
+int AutorenderInit(){
 	SWSRegisterCommands(g_commandTable);
 
 	if (!plugin_register("projectconfig",&g_projectconfig))

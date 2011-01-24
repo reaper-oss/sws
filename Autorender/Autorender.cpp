@@ -28,12 +28,14 @@
 #include <time.h>
 #include "../../WDL/projectcontext.h"
 
+
 #define TAGLIB_STATIC
 #define TAGLIB_NO_CONFIG
 #include "../../taglib/include/tag.h"
 #include "../../taglib/include/fileref.h"
+#include <io.h>
 
-#define TESTCODE
+//#define TESTCODE
 
 // START OF TEST CODE
 
@@ -41,8 +43,7 @@
 #include "Prompt.h"
 #pragma message("TESTCODE Defined")
 
-void PrintDebugString( string debugStr )
-{
+void PrintDebugString( string debugStr ){
 	if( strcmp( debugStr.substr( debugStr.length() ).c_str(), "\n") != 0 ){
 		debugStr += "\n";
 	}
@@ -54,26 +55,8 @@ void PrintDebugString( string debugStr )
 	#endif
 }
 
-void TestFunc(COMMAND_T* = NULL)
-{
+void TestFunction(COMMAND_T* = NULL){
 	PrintDebugString("Yeah, debug printing works.");
-}
-
-void PrintGuids(COMMAND_T* = NULL)
-{
-	for (int i = 1; i <= GetNumTracks(); i++)
-	{
-		char debugStr[256];
-		char guidStr[64];
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		guidToString((GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL), guidStr);
-		sprintf(debugStr, "Track %d %s GUID %s\n", i, (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), guidStr);
-#ifdef _WIN32
-		OutputDebugString(debugStr);
-#else
-		printf(debugStr);
-#endif
-	}
 }
 
 #endif
@@ -267,15 +250,31 @@ string GetCurrentRenderExtension( WDL_String *prjStr ){
 	return ParseFileExtension( GetProjectParameterValueStr( prjStr, "RENDER_FILE" ) );
 }
 
-void AutorenderTest(COMMAND_T*) {
-	int project_index = 0, marker_index = 0, track_index = 0, idx;
-	bool isrgn;
-	double pos, rgnend;
-	char* track_name;
+void ShowAutorenderHelp(COMMAND_T*) {
+	string helpText = "Preliminary Autorender Usage:\n\n";
+	helpText += "Regions are rendered to seperate audio files.\n";
+	helpText += "Region names are used for track names when tagging.\n\n";
+	helpText += "To set other tagging parameters, put the following in\n";
+	helpText += "the project notes on their own lines like so:\n\n";
+	helpText += "TAG_ARTIST Captain Beefheart\n";
+	helpText += "TAG_ALBUM Trout Mask Replica\n";
+	helpText += "TAG_YEAR 1969\n";
+	helpText += "TAG_GENRE WTF\n";
+	helpText += "TAG_COMMENT Again, WTF\n\n";
+	helpText += "You can also specify the output directory:\n";
+	helpText += "RENDER_PATH C:\\Renders\n";
+	helpText += "(Mac users may have to do this, I dunno).\n\n";
+	helpText += "Also note that Autorender uses your last used render settings,\n";
+	helpText += "so make sure that your last manual render used the settings you want.\n\n";
+	helpText += "Sorry for the crudeness, will get better, thx.\n";
+	MessageBox( GetMainHwnd(), helpText.c_str(), "Basic Autorender Usage", MB_OK );
+}
 
-
+void AutorenderRegions(COMMAND_T*) {
+	//Get the project config as a WDL_String
 	WDL_String* prjStr = GetProjectString();	
 
+	//Get params in the project notes
 	string renderPath = GetProjectNotesParameter( prjStr, "RENDER_PATH" );
 	string tag_artist = GetProjectNotesParameter( prjStr, "TAG_ARTIST" );
 	string tag_album = GetProjectNotesParameter( prjStr, "TAG_ALBUM" );
@@ -290,23 +289,37 @@ void AutorenderTest(COMMAND_T*) {
 		tag_year = atoi( tag_year_str.c_str() );
 	}
 
-	if( renderPath.empty() ){
-		char *renderPathChar = "";
-		BrowseForDirectory( "Select render output directory", NULL, renderPathChar, 256 );
+	if( renderPath.empty() ){		
+		char renderPathChar[1024] = "";		
+		//Prob windows only, what to do? Couldn't figure out how to use WDL_ChooseDirectory (got linker errors), maybe not xplatform anyway
+		BrowseForDirectory( "Select render output directory", NULL, renderPathChar, 1024 );
+		if( strlen( renderPathChar ) == 0 ){
+			//Show error
+			return;
+		}
 		renderPath = renderPathChar;
 	}
 
 	renderPath += PATH_SLASH_CHAR;
 
 	string queuedRendersDir = GetQueuedRendersDir();
+	// Would be good to delete all files in the render queue directory here and at the end, 
+	// but apparently deleting files is not easy...
+
 	string renderFileExtension = GetCurrentRenderExtension( prjStr );
 
 	ostringstream outRenderProjectPrefixStream;
 	outRenderProjectPrefixStream << queuedRendersDir << PATH_SLASH_CHAR << "render_Autorender";
 	string outRenderProjectPrefix = outRenderProjectPrefixStream.str();
-
+	
+	//init the stuff we need for the region loop
+	int project_index = 0, marker_index = 0, track_index = 0, idx;
+	bool isrgn;
+	double pos, rgnend;
+	char* track_name;
 	vector<RenderTrack> renderTracks;
 
+	//Loop through regions, build render rpps, build RenderTrack vector
 	while( EnumProjectMarkers( marker_index++, &isrgn, &pos, &rgnend, &track_name, &idx) > 0 ){
 		if( isrgn == true && idx > track_index ){
 			track_index = idx;
@@ -336,6 +349,16 @@ void AutorenderTest(COMMAND_T*) {
 		}
 	}
 	
+	if( renderTracks.size() == 0 ){
+		//error, or prompt user for entire project rendering with tagging
+#ifdef _WIN32
+	MessageBox( GetMainHwnd(), "No regions found", "Autorender Error", MB_OK );
+#else
+	//Mac message?
+#endif
+		return;
+	}
+
 	Main_OnCommand( 41207, 0 ); //Render all queued renders
 
 	// Tag!
@@ -358,33 +381,38 @@ void AutorenderTest(COMMAND_T*) {
 		}
 	}
 
+#ifdef _WIN32
 	system( ( "explorer " + renderPath ).c_str() );
+#else
+	//Mac open render directory?
+#endif
+
 }
 
 static project_config_extension_t g_projectconfig = { NULL };
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "Autorender: Test" },	"AUTORENDER_TEST", AutorenderTest, "Autorender: Run Test" },
+	{ { DEFACCEL, "Autorender: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
+	{ { DEFACCEL, "Autorender: Show Instructions" },	"AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
 #ifdef TESTCODE
-	{ { DEFACCEL, "Autorender: TestCode" }, "AUTORENDER_TESTCODE",  TestFunc, "Autorender: TestCode" },
-	{ { DEFACCEL, "SWS: Print track GUIDs" }, "SWS_PRINTGUIDS",  PrintGuids, "Autorender: Print Guids" },
+	{ { DEFACCEL, "Autorender: TestCode" }, "AUTORENDER_TESTCODE",  TestFunction, "Autorender: TestCode" },
 #endif
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
-	if ( strcmp(menustr, "Main extensions") == 0 && flag == 0 ){
-		int len = 1;
-#ifdef TESTCODE
-		len = len + 2;
-#endif
-	
+	if (strcmp(menustr, "Main file") == 0 && flag == 0){
+		//Get ID for Show Render Queue so we don't move around as the menu changes?
+		AddSubMenu(hMenu, SWSCreateMenu( g_commandTable), "Autorender", -8 );
+	}
+/*	
 		for( int i = 0; i < len; i++ ){
 			AddToMenu(hMenu, g_commandTable[i].menuText, g_commandTable[i].accel.accel.cmd);
 		}
-	}
+	*/
+
 }
 
 int AutorenderInit()

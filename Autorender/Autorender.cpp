@@ -80,6 +80,19 @@ void PrintGuids(COMMAND_T* = NULL)
 
 // END OF TEST CODE
 
+void TrimString( string &str ){
+    // Trim Both leading and trailing spaces
+    size_t startpos = str.find_first_not_of(" \t"); // Find the first character position after excluding leading blank spaces
+    size_t endpos = str.find_last_not_of(" \t"); // Find the first character position from reverse af
+ 
+    // if all spaces or empty return an empty string
+    if(( string::npos == startpos ) || ( string::npos == endpos)){
+        str = "";
+    } else {
+        str = str.substr( startpos, endpos-startpos+1 );
+	}
+}
+
 int GetCurrentYear(){
 	time_t t = 0;
 	struct tm *lt = NULL;  
@@ -231,7 +244,7 @@ string GetProjectNotesParameter( WDL_String *prjStr, string param ){
 						if( i > 1 ) paramVal += " ";
 						paramVal += lp.gettoken_str( i );
 					}
-
+					TrimString( paramVal );
 					return paramVal;
 				}				
 			} else if ( strcmp( lp.gettoken_str(0), "<NOTES" ) == 0) {
@@ -262,7 +275,8 @@ void AutorenderTest(COMMAND_T*) {
 
 
 	WDL_String* prjStr = GetProjectString();	
-	
+
+	string renderPath = GetProjectNotesParameter( prjStr, "RENDER_PATH" );
 	string tag_artist = GetProjectNotesParameter( prjStr, "TAG_ARTIST" );
 	string tag_album = GetProjectNotesParameter( prjStr, "TAG_ALBUM" );
 	string tag_genre = GetProjectNotesParameter( prjStr, "TAG_GENRE" );
@@ -276,9 +290,16 @@ void AutorenderTest(COMMAND_T*) {
 		tag_year = atoi( tag_year_str.c_str() );
 	}
 
+	if( renderPath.empty() ){
+		char *renderPathChar = "";
+		BrowseForDirectory( "Select render output directory", NULL, renderPathChar, 256 );
+		renderPath = renderPathChar;
+	}
+
+	renderPath += PATH_SLASH_CHAR;
+
 	string queuedRendersDir = GetQueuedRendersDir();
 	string renderFileExtension = GetCurrentRenderExtension( prjStr );
-	string renderPath = "C:\\test\\";
 
 	ostringstream outRenderProjectPrefixStream;
 	outRenderProjectPrefixStream << queuedRendersDir << PATH_SLASH_CHAR << "render_Autorender";
@@ -319,18 +340,22 @@ void AutorenderTest(COMMAND_T*) {
 
 	// Tag!
 	for( unsigned int i = 0; i < renderTracks.size(); i++){		
-
+		string renderedFilePath = renderPath + renderTracks[i].getFileName( renderFileExtension );						
+		
 		TagLib::FileRef f( renderedFilePath.c_str() );
-		
-		if( !tag_artist.empty() ) f.tag()->setArtist( tag_artist );
-		if( !tag_album.empty() ) f.tag()->setAlbum( tag_album );
-		if( !tag_genre.empty() ) f.tag()->setGenre( tag_genre );
-		if( tag_year > 0 ) f.tag()->setYear( tag_year );
-		if( !tag_comment.empty() ) f.tag()->setComment( tag_comment );
-		
-		f.tag()->setTrack( i + 1 );
-		f.tag()->setTitle( renderTracks[i].trackName );
-		f.save();
+		if( !f.isNull() ){
+			if( !tag_artist.empty() ) f.tag()->setArtist( tag_artist );
+			if( !tag_album.empty() ) f.tag()->setAlbum( tag_album );
+			if( !tag_genre.empty() ) f.tag()->setGenre( tag_genre );
+			if( tag_year > 0 ) f.tag()->setYear( tag_year );
+			if( !tag_comment.empty() ) f.tag()->setComment( tag_comment );
+			
+			f.tag()->setTrack( i + 1 );
+			f.tag()->setTitle( renderTracks[i].trackName );
+			f.save();
+		} else {
+			//throw error
+		}
 	}
 
 	system( ( "explorer " + renderPath ).c_str() );

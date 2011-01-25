@@ -416,7 +416,7 @@ void AutorenderRegions(COMMAND_T*) {
 			f.tag()->setTitle( renderTracks[i].trackName );
 			f.save();
 		} else {
-			//throw error
+			//throw error?
 		}
 	}
 
@@ -430,28 +430,19 @@ void AutorenderRegions(COMMAND_T*) {
 
 static project_config_extension_t g_projectconfig = { NULL };
 
-static COMMAND_T g_commandTable[] = 
-{
-	{ { DEFACCEL, "Autorender: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
-	{ { DEFACCEL, "Autorender: Show Instructions" },	"AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
+static COMMAND_T g_commandTable[] = {
+	{ { {FCONTROL|FALT|FSHIFT|FVIRTKEY,'R',0}, "Autorender: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
+	{ { DEFACCEL, "Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
 #ifdef TESTCODE
 	{ { DEFACCEL, "Autorender: TestCode" }, "AUTORENDER_TESTCODE",  TestFunction, "Autorender: TestCode" },
 #endif
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
-static void menuhook(const char* menustr, HMENU hMenu, int flag)
-{
+static void menuhook(const char* menustr, HMENU hMenu, int flag){
 	if (strcmp(menustr, "Main file") == 0 && flag == 0){
-		//Get ID for Show Render Queue so we don't move around as the menu changes?
-		AddSubMenu(hMenu, SWSCreateMenu( g_commandTable), "Autorender", -8 );
+		AddSubMenu(hMenu, SWSCreateMenu( g_commandTable), "Autorender", 40929 );
 	}
-/*	
-		for( int i = 0; i < len; i++ ){
-			AddToMenu(hMenu, g_commandTable[i].menuText, g_commandTable[i].accel.accel.cmd);
-		}
-	*/
-
 }
 
 int AutorenderInit(){

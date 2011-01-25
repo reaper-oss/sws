@@ -273,11 +273,30 @@ void ShowAutorenderHelp(COMMAND_T*) {
 	MessageBox( GetMainHwnd(), helpText.c_str(), "Basic Autorender Usage", MB_OK );
 }
 
+void EnsureStrEndsWith( string &str, const char endChar ){
+	if( str.c_str()[ str.length() - 1 ] != endChar ){
+		str += endChar;
+	}
+}
+
+void EnsureStrDoesntEndWith( string &str, const char endChar ){
+	while( str.c_str()[ str.length() - 1 ] == endChar ){
+		str.erase( str.length() - 1 );
+	}
+}
+
 void AutorenderRegions(COMMAND_T*) {
 	Main_OnCommand( 40026, 0 ); //Save current project
 
 	//Get the project config as a WDL_String
 	WDL_String* prjStr = GetProjectString();	
+
+	string renderFileExtension = GetCurrentRenderExtension( prjStr );
+	if( renderFileExtension.empty() ){
+		//have to have a renderFileExtension, show error and exit
+		MessageBox( GetMainHwnd(), "Couldn't get render extension. Manually render a dummy file with the desired settings and run again.", "Autorender: Render Extension Error", MB_OK );
+		return;
+	}
 
 	//Get params in the project notes
 	string renderPath = GetProjectNotesParameter( prjStr, "RENDER_PATH" );
@@ -294,7 +313,17 @@ void AutorenderRegions(COMMAND_T*) {
 		tag_year = atoi( tag_year_str.c_str() );
 	}
 
-	if( renderPath.empty() ){		
+	// remove PATH_SLASH_CHAR from end of string if it exists
+	EnsureStrDoesntEndWith( renderPath, PATH_SLASH_CHAR );
+
+	// render path was specified and doesn't exist
+	if( !renderPath.empty() && !FileExists( renderPath.c_str() ) ){
+		string message = "Render path " + renderPath + " doesn't exist!";
+		renderPath.clear();
+		MessageBox( GetMainHwnd(), message.c_str(), "Autorender: Bad Render Path", MB_OK );
+	}
+
+	while( !FileExists( renderPath.c_str() ) ){
 		char renderPathChar[1024] = "";		
 		//Prob windows only, what to do? Couldn't figure out how to use WDL_ChooseDirectory (got linker errors), maybe not xplatform anyway
 		BrowseForDirectory( "Select render output directory", NULL, renderPathChar, 1024 );
@@ -305,13 +334,12 @@ void AutorenderRegions(COMMAND_T*) {
 		renderPath = renderPathChar;
 	}
 
-	renderPath += PATH_SLASH_CHAR;
+	// append PATH_SLASH_CHAR from end of string if it doens't exist
+	EnsureStrEndsWith( renderPath, PATH_SLASH_CHAR );
 
 	string queuedRendersDir = GetQueuedRendersDir();
 	// Would be good to delete all files in the render queue directory here and at the end, 
-	// but apparently deleting files is not easy...
-
-	string renderFileExtension = GetCurrentRenderExtension( prjStr );
+	// but apparently deleting files is not so easy...
 
 	ostringstream outRenderProjectPrefixStream;
 	outRenderProjectPrefixStream << queuedRendersDir << PATH_SLASH_CHAR << "render_Autorender";

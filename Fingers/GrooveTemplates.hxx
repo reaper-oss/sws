@@ -33,8 +33,8 @@ public:
 	static void ClearGroove();
 	static void StoreGroove();
 	static void StoreGrooveFromMidiEditor();
-	static void ApplyGroove(int beatDivider, double strength);
-	static void ApplyGrooveToMidiEditor(int beatDivider, double strength);
+	static void ApplyGroove(int beatDivider, double posStrength, double velStrength);
+	static void ApplyGrooveToMidiEditor(int beatDivider, double posStrength, double velStrength);
 
 	static bool isGrooveEmpty();
 
@@ -59,6 +59,9 @@ public:
 
 	int GetGrooveStrength();
 	void SetGrooveStrength(int);
+
+	int GetGrooveVelStrength();
+	void SetGrooveVelStrength(int);
 
 	int GetGrooveTarget();
 	void SetGrooveTarget(int);

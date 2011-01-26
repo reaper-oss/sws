@@ -275,20 +275,21 @@
 #define IDC_TARG_ITEMS                  1203
 #define IDC_TARG_NOTES                  1204
 #define IDC_STORE                       1205
+#define IDC_VELSTRENGTH                 1206
+#define IDC_STRENGTH_GROUP              1207
 #define IDM_OPEN_FOLDER                 40000
 #define IDM_EXIT                        40001
 #define IDM_SAVE_GROOVE                 40002
 #define IDM_REFRESH                     40003
 #define IDM_SHOW_ACTION_LIST            40004
-#define IDM_IGNORE_VEL                  40005
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        158
-#define _APS_NEXT_COMMAND_VALUE         40006
-#define _APS_NEXT_CONTROL_VALUE         1206
+#define _APS_NEXT_COMMAND_VALUE         40005
+#define _APS_NEXT_CONTROL_VALUE         1208
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

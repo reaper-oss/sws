@@ -35,6 +35,7 @@ GrooveDialog::GrooveDialog()
 	CoInitializeEx(NULL, 0);
 #endif
 
+	mHorizontalView = false;
 	/* set up commands and key bindings*/
 	addCommand(mKbdCommands, FNG_PASSTHROUGH, "Pass through to the main window");
 
@@ -140,25 +141,11 @@ void GrooveDialog::OnCommand(WPARAM wParam, LPARAM lParam)
 	case IDM_REFRESH:
 		RefreshGrooveList();
 		break;
-	case IDM_IGNORE_VEL:
-	{
-		HMENU sysMenu = GetMenu(m_hwnd);
-		MENUITEMINFO mi= {sizeof(MENUITEMINFO),};
-		mi.fMask = MIIM_STATE;
-		GetMenuItemInfo(sysMenu, IDM_IGNORE_VEL, false, &mi);
-		if(mi.fState & MF_CHECKED) {
-			mIgnoreVelocity = false;
-			CheckMenuItem(sysMenu, IDM_IGNORE_VEL, MF_UNCHECKED | MF_BYCOMMAND);
-			setReaperProperty("grooveWnd_ignorevel", 0);
-		}
-		else {
-			mIgnoreVelocity = true;
-			CheckMenuItem(sysMenu, IDM_IGNORE_VEL, MF_CHECKED | MF_BYCOMMAND);
-			setReaperProperty("grooveWnd_ignorevel", 1);
-		}
-	}
 	case IDC_STRENGTH:
 		OnStrengthChange(HIWORD(wParam), lParam);
+		break;
+	case IDC_VELSTRENGTH:
+		OnVelStrengthChange(HIWORD(wParam), lParam);
 		break;
 	case IDC_SENS_32ND:
 		setSensitivity(m_hwnd, 32);
@@ -219,15 +206,12 @@ void GrooveDialog::OnGrooveList(WORD wParam, LPARAM lParam)
 		break;
 	}
 }
-
-void GrooveDialog::OnStrengthChange(WORD wParam, LPARAM lParam)
+static int getStrengthValue(HWND parent, int control)
 {
-	HWND strengthControl = GetDlgItem(m_hwnd, IDC_STRENGTH);
+	HWND strengthControl = GetDlgItem(parent, control);
 	char percentage[16];
 	GetWindowText(strengthControl, percentage, 16);
 	int nPerc = atoi(percentage);
-	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
-	me->SetGrooveStrength(nPerc);
 	if(nPerc > 100) {
 		nPerc = 100;
 		SetWindowText(strengthControl, "100");
@@ -236,6 +220,19 @@ void GrooveDialog::OnStrengthChange(WORD wParam, LPARAM lParam)
 		nPerc = 0;
 		SetWindowText(strengthControl, "100");
 	}
+	return nPerc;
+}
+
+void GrooveDialog::OnVelStrengthChange(WORD wParam, LPARAM lParam)
+{
+	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
+	me->SetGrooveVelStrength(getStrengthValue(m_hwnd, IDC_VELSTRENGTH));
+}
+
+void GrooveDialog::OnStrengthChange(WORD wParam, LPARAM lParam)
+{
+	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
+	me->SetGrooveStrength(getStrengthValue(m_hwnd, IDC_STRENGTH));
 }
 
 void GrooveDialog::OnGrooveFolderButton(WORD wParam, LPARAM lParam)
@@ -246,8 +243,8 @@ void GrooveDialog::OnGrooveFolderButton(WORD wParam, LPARAM lParam)
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 	if (BrowseForDirectory("Select folder containing grooves", me->GetGrooveDir().c_str(), cDir, 256))
 	{
-		std::string sDir = cDir;
-		me->SetGrooveDir(sDir);
+		currentDir = cDir;
+		me->SetGrooveDir(currentDir);
 		RefreshGrooveList();
 	}
 }
@@ -260,33 +257,38 @@ void GrooveDialog::RefreshGrooveList()
 	WDL_String searchStr;
 	searchStr = currentDir.c_str();
 	searchStr.Append("\\*.rgt", MAX_PATH);
-	int iFind = dirScan.First(searchStr.Get()
+
 #ifdef _WIN32
-		, true);
+	int iFind = dirScan.First(searchStr.Get(), true);
 #else
-	);
+	int iFind = dirScan.First(searchStr.Get());
 #endif
-	if (iFind == 0)
-		do
-			SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_ADDSTRING, 0, (LPARAM)dirScan.GetCurrentFN());
-		while(!dirScan.Next());
+
+	if (iFind == 0) {
+		do {
+			std::string fileHead = dirScan.GetCurrentFN();
+			fileHead = fileHead.substr(0, fileHead.size() - 4);
+			SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_ADDSTRING, 0, (LPARAM)fileHead.c_str());
+		} while(!dirScan.Next());
+	}
 }
 
 void GrooveDialog::ApplySelectedGroove()
 {
 	int index = (int)SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_GETCURSEL, 0, 0);
-	std::string szGroove = "** User Groove **";
+	std::string grooveName = "** User Groove **";
 	GrooveTemplateMemento memento = GrooveTemplateHandler::GetMemento();
 	
 	if(index > 0) {
 		std::string itemLocation;
-		char *itemText = new char[MAX_PATH];
+		char itemText[MAX_PATH];
 		SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_GETTEXT, index, (LPARAM)itemText);
+		grooveName = itemText;
 		itemLocation = currentDir;
 		itemLocation += "\\";
-		itemLocation += itemText;
-		szGroove = itemText;
-		delete[] itemText;
+		itemLocation += grooveName;
+		itemLocation += ".rgt";
+		
 
 		GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 		
@@ -309,14 +311,17 @@ void GrooveDialog::ApplySelectedGroove()
 		HWND editControl = GetDlgItem(m_hwnd, IDC_STRENGTH);
 		char percentage[16];
 		GetWindowText(editControl, percentage, 16);
-		double strength = atoi(percentage) / 100.0f;
-		std::string undoMessage = "FNG: load and apply groove - " + szGroove;
+		double posStrength = atoi(percentage) / 100.0f;
+		editControl = GetDlgItem(m_hwnd, IDC_VELSTRENGTH);
+		GetWindowText(editControl, percentage, 16);
+		double velStrength = atoi(percentage) / 100.0f;
+		std::string undoMessage = "FNG: load and apply groove - " + grooveName;
 		
 		try {
 			if(midiEditorTarget)
-				me->ApplyGrooveToMidiEditor(beatDivider, strength);
+				me->ApplyGrooveToMidiEditor(beatDivider, posStrength, velStrength);
 			else
-				me->ApplyGroove(beatDivider, strength);
+				me->ApplyGroove(beatDivider, posStrength, velStrength);
 			Undo_OnStateChange2(0, undoMessage.c_str());
 		} catch(RprLibException &e) {
 			if(e.notify()) {
@@ -334,6 +339,7 @@ void GrooveDialog::OnInitDlg()
 	
 	SetWindowText(m_hwnd, "Groove tool");
 	SetDlgItemInt(m_hwnd, IDC_STRENGTH, me->GetGrooveStrength(), true);
+	SetDlgItemInt(m_hwnd, IDC_VELSTRENGTH, me->GetGrooveVelStrength(), true);
 	
 #ifdef _WIN32
 	HMENU sysMenu = GetMenu(m_hwnd);
@@ -347,13 +353,6 @@ void GrooveDialog::OnInitDlg()
 	// code will be something like SWELL_GetDefaultMenu, SWELL_DuplicateMenu, etc
 #endif 
 
-	if(getReaperProperty("grooveWnd_ignorevel") == "1") {
-		mIgnoreVelocity = true;
-		CheckMenuItem(sysMenu, IDM_IGNORE_VEL, MF_CHECKED | MF_BYCOMMAND);
-	} else {
-		mIgnoreVelocity = false;
-	}
-		
 	setSensitivity(m_hwnd, me->GetGrooveTolerance());
 	setTarget(m_hwnd, me->GetGrooveTarget() == TARGET_ITEMS);
 

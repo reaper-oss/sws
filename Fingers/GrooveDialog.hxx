@@ -12,11 +12,11 @@ private:
 	void OnInitDlg();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	int OnKey(MSG *msg, int iKeyState);
-	
 
 	void OnGrooveList(WORD wParam, LPARAM lParam);
 	void OnGrooveFolderButton(WORD wParam, LPARAM lParam);
 	void OnStrengthChange(WORD wParam, LPARAM lParam);
+	void OnVelStrengthChange(WORD wParam, LPARAM lParam);
 	void OnStrengthSpinChange(WORD wParam, LPARAM lParam);
 	void RefreshGrooveList();
 	void ApplySelectedGroove();
@@ -28,6 +28,7 @@ private:
 	std::vector<KbdKeyBindingInfo> mKbdBindings;
 	bool mPassToMain;
 	bool mIgnoreVelocity;
+	bool mHorizontalView;
 };
 
 #endif /* _GROOVE_DIALOG_H_ */

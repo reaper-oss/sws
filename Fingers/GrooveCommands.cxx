@@ -11,14 +11,14 @@ static void ApplyGroove(int flags, void *data)
 {
 	int *beatDivider = (int *)data;
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
-	me->ApplyGroove(*beatDivider, 1.0);
+	me->ApplyGroove(*beatDivider, 1.0, 1.0);
 }
 
 static void ApplyGrooveInMidiEditor(int flags, void *data)
 {
 	int *beatDivider = (int *)data;
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
-	me->ApplyGrooveToMidiEditor(*beatDivider, 1.0);
+	me->ApplyGrooveToMidiEditor(*beatDivider, 1.0, 1.0);
 }
 
 static void StoreGroove(int flags, void *data)

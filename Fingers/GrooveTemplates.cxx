@@ -57,7 +57,6 @@ static bool GetGrooveBeatPosition(double currentBeatPosition, double maxBeatDist
 
 	double distance = minDistance * (positive ? 1.0 : -1.0);
 	newGroove.position = currentBeatPosition - distance * strength;
-	newGroove.amplitude *= strength;
 	return true;
 }
 
@@ -86,10 +85,22 @@ std::string GrooveTemplateHandler::GetGrooveDir()
 
 int GrooveTemplateHandler::GetGrooveStrength()
 {
-	std::string strength =  getReaperProperty("groove_strength");
+	std::string strength = getReaperProperty("groove_strength");
 	if (strength.empty())
 		return 100;
 	return ::atoi(strength.c_str());
+}
+
+int GrooveTemplateHandler::GetGrooveVelStrength()
+{
+	std::string strength = getReaperProperty("groove_velstrength");
+	if (strength.empty())
+		return 100;
+	return ::atoi(strength.c_str());
+}
+void GrooveTemplateHandler::SetGrooveVelStrength(int val)
+{
+	setReaperProperty("groove_velstrength", val);
 }
 
 void GrooveTemplateHandler::SetGrooveStrength(int val)
@@ -109,7 +120,6 @@ void GrooveTemplateHandler::SetGrooveTarget(int val)
 {
 	setReaperProperty("groove_target", val);
 }
-
 
 int GrooveTemplateHandler::GetGrooveTolerance()
 {
@@ -158,7 +168,8 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 	return true;
 }
 
-static void applyGrooveToMidiTake(RprMidiTake &midiTake, double beatDivider, double strength, std::vector<GrooveItem> &grooveBeats, bool selectedOnly)
+static void applyGrooveToMidiTake(RprMidiTake &midiTake, double beatDivider, double positionStrength, double velocityStrength, 
+								  std::vector<GrooveItem> &grooveBeats, bool selectedOnly)
 {
 	RprItem rprItem = *midiTake.getParent();
 	for(int i = 0; i < midiTake.countNotes(); i++) {
@@ -167,15 +178,20 @@ static void applyGrooveToMidiTake(RprMidiTake &midiTake, double beatDivider, dou
 			continue;
 		double noteBeat = TimeToBeat(note->getPosition());
 		GrooveItem grooveItem;
-		if(!GetGrooveBeatPosition(noteBeat, BeatsInMeasure(BeatToMeasure(noteBeat)) / beatDivider, strength, &grooveBeats, grooveItem))
+		if(!GetGrooveBeatPosition(noteBeat, BeatsInMeasure(BeatToMeasure(noteBeat)) / beatDivider, positionStrength, &grooveBeats, grooveItem))
 			continue;
 
 		double itemFirstBeat = TimeToBeat(rprItem.getPosition());
 		double itemLastBeat = TimeToBeat(rprItem.getPosition() + rprItem.getLength());
 		if(grooveItem.position >= itemFirstBeat && grooveItem.position < itemLastBeat) {
 			note->setPosition(BeatToTime(grooveItem.position));
-			if(grooveItem.amplitude >= 0.0)
-				note->setVelocity((unsigned int)(grooveItem.amplitude * 127.5));
+			if(grooveItem.amplitude >= 0.0) {
+				int newVelocity = (int)(grooveItem.amplitude * 127.5);
+				int difference = newVelocity - note->getVelocity();
+				difference = (int)( (velocityStrength * (double)difference) + 0.5);
+				newVelocity = note->getVelocity() + difference;
+				note->setVelocity(newVelocity);
+			}
 		}
 	}
 }
@@ -242,7 +258,7 @@ void applyGrooveToItem(RprItem &rprItem, double beatDivider, double strength, st
 		rprItem.setPosition(timePosition);
 }
 
-void GrooveTemplateHandler::ApplyGrooveToMidiEditor(int beatDivider, double strength)
+void GrooveTemplateHandler::ApplyGrooveToMidiEditor(int beatDivider, double posStrength, double velStrength)
 {
 	RprMidiTakePtr takePtr = RprMidiTake::createFromMidiEditor(false);
 	if(takePtr->countNotes() == 0)
@@ -258,11 +274,11 @@ void GrooveTemplateHandler::ApplyGrooveToMidiEditor(int beatDivider, double stre
 					   me->grooveInBeats,
 					   me->nBeatsInGroove,
 					   grooveBeats);
-	applyGrooveToMidiTake(*takePtr.get(), (double)beatDivider, strength, grooveBeats, true);
+	applyGrooveToMidiTake(*takePtr.get(), (double)beatDivider, posStrength, velStrength, grooveBeats, true);
 }
 
 
-void GrooveTemplateHandler::ApplyGroove(int beatDivider, double strength)
+void GrooveTemplateHandler::ApplyGroove(int beatDivider, double posStrength, double velStrength)
 {
 	RprItemCtrPtr ctr = RprItemCollec::getSelected();
 
@@ -291,15 +307,15 @@ void GrooveTemplateHandler::ApplyGroove(int beatDivider, double strength)
 	for(int i = 0; i < ctr->size(); i++) {
 		RprItem rprItem = ctr->getAt(i);
 		if(!rprItem.getActiveTake().isMIDI()) {
-			applyGrooveToItem(rprItem, (double)beatDivider, strength, grooveBeats);
+			applyGrooveToItem(rprItem, (double)beatDivider, posStrength, grooveBeats);
 			continue;
 		}
 
 		RprMidiTake midiTake(rprItem.getActiveTake());
 		if(treatAsMidiTake(midiTake))
-			applyGrooveToMidiTake(midiTake, (double)beatDivider, strength, grooveBeats, false);
+			applyGrooveToMidiTake(midiTake, (double)beatDivider, posStrength, velStrength, grooveBeats, false);
 		else
-			applyGrooveToItem(rprItem, (double)beatDivider, strength, grooveBeats);
+			applyGrooveToItem(rprItem, (double)beatDivider, posStrength, grooveBeats);
 			
 	}
 	UpdateTimeline();

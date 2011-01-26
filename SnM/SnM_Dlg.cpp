@@ -34,7 +34,7 @@ HWND g_cueBussHwnd = NULL;
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// WDL UI 
+// WDL UIs
 ///////////////////////////////////////////////////////////////////////////////
 
 LICE_CachedFont* SNM_GetThemeFont()
@@ -58,6 +58,185 @@ LICE_CachedFont* SNM_GetThemeFont()
 	else 
 		themeFont.SetTextColor(LICE_RGBA(255,255,255,255));
 	return &themeFont;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_FastListView
+// "Brutal force" update to make list views' updates run much faster, but 
+// subbtle thing like selection restorations aren't managed anymore..
+///////////////////////////////////////////////////////////////////////////////
+
+void SNM_FastListView::Update()
+{
+	// Fill in the data by pulling it from the derived class
+	if (m_iEditingItem == -1 && !m_bDisableUpdates)
+	{
+		m_bDisableUpdates = true;
+		char str[256];
+
+		WDL_TypedBuf<LPARAM> items;
+		GetItemList(&items);
+
+/*JFB original code
+		// Check for deletions - items in the lstwnd are quite likely out of order so gotta do a full O(n^2) search
+		int lvItemCount = ListView_GetItemCount(m_hwndList);
+		for (int i = 0; i < lvItemCount; i++)
+		{
+			LPARAM item = GetListItem(i);
+			bool bFound = false;
+			for (int j = 0; j < items.GetSize(); j++)
+				if (items.Get()[j] == item)
+				{
+					bFound = true;
+					break;
+				}
+
+			if (!bFound)
+			{
+				ListView_DeleteItem(m_hwndList, i--);
+				lvItemCount--;
+			}
+		}
+
+		// Check for additions
+		lvItemCount = ListView_GetItemCount(m_hwndList);
+		for (int i = 0; i < items.GetSize(); i++)
+		{
+			bool bFound = false;
+			int j;
+			for (j = 0; j < lvItemCount; j++)
+			{
+				if (items.Get()[i] == GetListItem(j))
+				{
+					bFound = true;
+					break;
+				}
+			}
+
+			// Update the list, no matter what, because text may have changed
+			LVITEM item;
+			item.mask = 0;
+			int iNewState = GetItemState(items.Get()[i]);
+			if (iNewState >= 0)
+			{
+				int iCurState = bFound ? ListView_GetItemState(m_hwndList, j, LVIS_SELECTED | LVIS_FOCUSED) : 0;
+				if (iNewState && !(iCurState & LVIS_SELECTED))
+				{
+					item.mask |= LVIF_STATE;
+					item.state = LVIS_SELECTED;
+					item.stateMask = LVIS_SELECTED;
+				}
+				else if (!iNewState && (iCurState & LVIS_SELECTED))
+				{
+					item.mask |= LVIF_STATE;
+					item.state = 0;
+					item.stateMask = LVIS_SELECTED | ((iCurState & LVIS_FOCUSED) ? LVIS_FOCUSED : 0);
+				}
+			}
+
+			item.iItem = j;
+			item.pszText = str;
+
+			int iCol = 0;
+			for (int k = 0; k < m_iCols; k++)
+				if (m_pCols[k].iPos != -1)
+				{
+					item.iSubItem = iCol;
+					GetItemText(items.Get()[i], k, str, 256);
+					if (!iCol && !bFound)
+					{
+						item.mask |= LVIF_PARAM | LVIF_TEXT;
+						item.lParam = items.Get()[i];
+						ListView_InsertItem(m_hwndList, &item);
+						lvItemCount++;
+					}
+					else
+					{
+						char curStr[256];
+						ListView_GetItemText(m_hwndList, j, iCol, curStr, 256);
+						if (strcmp(str, curStr))
+							item.mask |= LVIF_TEXT;
+						if (item.mask)
+						{
+							// Only set if there's changes
+							// May be less efficient here, but less messages get sent for sure!
+							ListView_SetItem(m_hwndList, &item);
+						}
+					}
+					item.mask = 0;
+					iCol++;
+				}
+		}
+*/
+
+//JFB mod -------------------------------------------------------------------->
+		ListView_DeleteAllItems(m_hwndList);
+		for (int i = 0; i < items.GetSize(); i++)
+		{
+			LVITEM item;
+			item.mask = 0;
+			item.iItem = i;
+			item.pszText = str;
+
+			int iCol = 0;
+			for (int k = 0; k < m_iCols; k++)
+				if (m_pCols[k].iPos != -1)
+				{
+					item.iSubItem = iCol;
+					GetItemText(items.Get()[i], k, str, 256);
+					if (!iCol)
+					{
+						item.mask |= LVIF_PARAM | LVIF_TEXT;
+						item.lParam = items.Get()[i];
+						ListView_InsertItem(m_hwndList, &item);
+					}
+					else
+					{
+						item.mask |= LVIF_TEXT;
+						ListView_SetItem(m_hwndList, &item);
+					}
+					item.mask = 0;
+					iCol++;
+				}
+		}
+//JFB mod <--------------------------------------------------------------------
+
+		ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
+		int iCol = abs(m_iSortCol) - 1;
+		iCol = DataToDisplayCol(iCol) + 1;
+		if (m_iSortCol < 0)
+			iCol = -iCol;
+		SetListviewColumnArrows(iCol);
+
+#ifdef _WIN32
+		if (m_hwndTooltip)
+		{
+			TOOLINFO ti = { sizeof(TOOLINFO), };
+			ti.lpszText = str;
+			ti.hwnd = m_hwndList;
+			ti.uFlags = TTF_SUBCLASS;
+			ti.hinst  = g_hInst;
+
+			// Delete all existing tools
+			while (SendMessage(m_hwndTooltip, TTM_ENUMTOOLS, 0, (LPARAM)&ti))
+				SendMessage(m_hwndTooltip, TTM_DELTOOL, 0, (LPARAM)&ti);
+
+			RECT r;
+			// Add tooltips after sort
+			for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
+			{
+				// Get the rect of the line
+				ListView_GetItemRect(m_hwndList, i, &r, LVIR_BOUNDS);
+				memcpy(&ti.rect, &r, sizeof(RECT));
+				ti.uId = i;
+				GetItemTooltip(GetListItem(i), str, 100);
+				SendMessage(m_hwndTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+			}
+		}
+#endif
+		m_bDisableUpdates = false;
+	}
 }
 
 

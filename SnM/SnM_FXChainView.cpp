@@ -788,8 +788,7 @@ void SNM_ResourceWnd::OnDestroy()
 
 int SNM_ResourceWnd::OnKey(MSG* msg, int iKeyState) 
 {
-	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState &&
-		m_pLists.Get(0)->GetEditingItem() == -1)
+	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState)
 	{
 		DeleteSelectedSlots(true);
 		return 1;

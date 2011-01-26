@@ -66,7 +66,6 @@
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
-#define IDR_GROOVEMENU                  503
 #define IDC_BUTTON1                     1000
 #define IDC_EDIT1                       1001
 #define IDC_BUTTON2                     1002
@@ -277,18 +276,13 @@
 #define IDC_STORE                       1205
 #define IDC_VELSTRENGTH                 1206
 #define IDC_STRENGTH_GROUP              1207
-#define IDM_OPEN_FOLDER                 40000
-#define IDM_EXIT                        40001
-#define IDM_SAVE_GROOVE                 40002
-#define IDM_REFRESH                     40003
-#define IDM_SHOW_ACTION_LIST            40004
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        158
-#define _APS_NEXT_COMMAND_VALUE         40005
+#define _APS_NEXT_COMMAND_VALUE         40000
 #define _APS_NEXT_CONTROL_VALUE         1208
 #define _APS_NEXT_SYMED_VALUE           100
 #endif

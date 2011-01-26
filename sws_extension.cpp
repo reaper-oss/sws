@@ -659,14 +659,14 @@ extern "C"
 			ERR_RETURN("Xenakios init error\n")
 		if (!MiscInit())
 			ERR_RETURN("Misc init error\n")
+		if(!FNGExtensionInit(hInstance, rec))
+			ERR_RETURN("Fingers init error\n")
 		if (!SnMInit(rec))
 			ERR_RETURN("SnM init error\n")
 		if (!AboutBoxInit())
 			ERR_RETURN("About box init error\n")
 		if (!PadreInit())
 			ERR_RETURN("Padre init error\n")
-		if(!FNGExtensionInit(hInstance, rec))
-			ERR_RETURN("Fingers init error\n")
 
 		SWSTimeSlice* ts = new SWSTimeSlice();
 		if (!rec->Register("csurf_inst", ts))

@@ -1,17 +1,23 @@
-
+Groove Tool Updates:
 +Fixed applying strength to velocity groove quantize
-+Added separate velocity strength control to Groove Tool
++Added separate velocity strength control to Groove Tool (set to zero to disable either)
 +Fixed refresh of groove list in Groove Tool when changing folders
 +Remove zero length notes when modifying MIDI take state (bad things happen otherwise)
 +Code cleanup and performance improvements for MIDI take state reading and writing
++Added "FNG: Groove Tool..." to the Extensions menu
++Removed menu bar and moved applicable items to the context menu
++Removed "passthrough" action/keyboard section workaround
 
+Fixed bug that "silently" deleted items in SWS lists while renaming (Thanks, Bevosss)
 
-+Fixed typo in Groove Tool menu
-+Fixed pass through to main window for Groove Tool
+!v2.0.0 #4 (January 23, 2011)
+Groove Tool fixes:
++Fixed pass through to main window
 +Fixed muted midi events bug introduced in v2.0.0 #3
 +Modified Undo handling for items
-+Fixed auto color needing to be forced in some situations
-+Fixed some screenset loading issues
+
+Fixed auto color needing to be forced in some situations
+Fixed some screenset loading issues
 
 !v2.0.0 #3 (January 22, 2011)
 <b>Fingers/FNG extension update/merge!</b>

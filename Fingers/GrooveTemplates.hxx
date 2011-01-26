@@ -68,6 +68,7 @@ public:
 
 
 	void showGrooveDialog();
+	GrooveDialog* GetGrooveDialog() { return mGrooveDialog; }
 
 	static void Init();
 

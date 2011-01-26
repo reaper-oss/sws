@@ -22,11 +22,11 @@ public:
 	void SetId(const char *id){ m_szId = id; }
 	void SetDescription(const char *description) { m_szDescription = description; }
 	void SetUndoFlags(int flags) { m_UndoFlags = flags; }
+	void SetMenuText(const char* menuText) { if (menuText) m_szMenuText = menuText; }
 	bool IsCommand(void (*command)(int, void *)) { return command == theCommand; }
-
 	int GetCommandId() { return m_nCommandId; }
 	const char *GetDescription() { return m_szDescription.c_str(); }
-
+	const char *GetMenuText() { if (m_szMenuText.length()) return m_szMenuText.c_str(); return NULL; }
 	const char *GetId() { return m_szId.c_str(); }
 	virtual void Init() {}
 	virtual bool LeaveEditCursorAlone() {return false;}
@@ -41,16 +41,28 @@ private:
 	int m_nCommandId;
 	std::string m_szDescription;
 	std::string m_szId;
+	std::string m_szMenuText;
 	int m_UndoFlags;
+};
+
+class CReaperCmdToggle {
+public:
+	CReaperCmdToggle(int cmdID, bool (*toggleStateFunc)()):m_cmdID(cmdID),m_toggleStateFunc(toggleStateFunc) {}
+	int GetToggleState() { if (m_toggleStateFunc) return m_toggleStateFunc() ? 1 : 0; return -1; }
+	int GetCommandId() { return m_cmdID; }
+private:
+	bool (*m_toggleStateFunc)();
+	int m_cmdID;
 };
 
 class CReaperCmdReg {
 
 public:
-	CReaperCmdReg(char *szDescription, char *szID, CReaperCommand *cmd, int undoFlags = UNDO_STATE_ALL, ACCEL *accel = NULL);
+	CReaperCmdReg(const char *szDescription, const char *szID, CReaperCommand *cmd, int undoFlags = UNDO_STATE_ALL, ACCEL *accel = NULL, bool (*toggleStateFunc)() = NULL, const char* cMenuText = NULL);
 	void SetDescription(const char *szDescription) {if (m_cmd) m_cmd->SetDescription(szDescription);}
 	const char *GetDescription() {if(m_cmd) return m_cmd->GetDescription(); return 0;}
 	const char *GetId() {if(m_cmd) return m_cmd->GetId(); return 0;}
+	bool (*m_toggleStateFunc)(); 
 private:
 	friend class CReaperCommandHandler;
 	ACCEL m_accel;
@@ -73,6 +85,8 @@ public:
 	static int GetID(void (*command)(int, void *));
 	static bool hookCommand(int command, int flag);
 	static bool onAction(int cmd, int val, int valhw, int relmode, HWND hwnd);
+	static void menuhook(const char* menustr, HMENU hMenu, int flag);
+	static int toggleActionHook(int iCmd);
 	static void Init(reaper_plugin_info_t *, REAPER_PLUGIN_HINSTANCE);
 	static REAPER_PLUGIN_HINSTANCE GetModuleInstance();
 	static reaper_plugin_info_t* GetPluginInfo();
@@ -95,6 +109,7 @@ private:
 	CReaperCommandHandler() : m_rec(NULL) {}
 	static CReaperCommandHandler *_instance;
 	std::vector<CReaperCommand *> m_commands;
+	std::vector<CReaperCmdToggle *> m_commandToggles;
 	std::vector<CReaperCommandObserver *> m_observers;
 	std::vector<SWS_DockWnd *> mKbdSectionDialogs;
 	reaper_plugin_info_t *m_rec;

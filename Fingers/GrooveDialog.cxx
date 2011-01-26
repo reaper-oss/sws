@@ -24,7 +24,8 @@ static void addCommand(std::vector<KbdCmd> &cmds, int cmd, const char *name)
 	cmds.push_back(keycmd);
 }
 
-static const int FNG_PASSTHROUGH = 1;
+static const int FNG_OPEN_FOLDER = 0xFF00;
+static const int FNG_REFRESH     = 0xFF01;
 
 void ShowGrooveDialog(int flags, void *data);
 
@@ -35,22 +36,7 @@ GrooveDialog::GrooveDialog()
 	CoInitializeEx(NULL, 0);
 #endif
 
-	mHorizontalView = false;
-	/* set up commands and key bindings*/
-	addCommand(mKbdCommands, FNG_PASSTHROUGH, "Pass through to the main window");
-
-	mKbdSection = new KbdSectionInfo;
-	std::memset(mKbdSection, 0, sizeof(KbdSectionInfo));
-
-	mKbdSection->name = "FNG: groove tool";
-	mKbdSection->action_list = &mKbdCommands[0];
-	mKbdSection->action_list_cnt = (int)mKbdCommands.size();
-	mKbdSection->def_keys = NULL;
-	mKbdSection->def_keys_cnt = 0;
-	mKbdSection->uniqueID = 0x10000000 | 0x0666;
-	CReaperCommandHandler::registerKbdSection(mKbdSection, this);
-	mPassToMain = false;
-	mIgnoreVelocity = false;
+	mHorizontalView = false; // Unused now; maybe later?
 
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -61,33 +47,20 @@ bool GrooveDialog::IsActive(bool bWantEdit)
 	/* Base SWS_DockWnd uses GetFocus() == m_hwnd but GetFocus 
 	 * can return a HWND of a child control of the dialog so use
 	 * GetForegroundWindow(). */
-	return m_hwnd == GetForegroundWindow();
+	return  m_hwnd == GetForegroundWindow();
 }
 
-int GrooveDialog::OnKey(MSG *msg, int iKeyState)
+HMENU GrooveDialog::OnContextMenu(int x, int y)
 {
-	if(msg->hwnd == m_hwnd || IsChild(m_hwnd, msg->hwnd) == TRUE) {
-		if(msg->wParam == VK_ESCAPE) {
-			DestroyWindow(m_hwnd);
-			return 1;
-		}
-		if(kbd_translateAccelerator(m_hwnd, msg, mKbdSection) == 1) {
-			if(mPassToMain) {
-				mPassToMain = false;
-				return -666;
-			}
-			return -1;
-		}
-	}
-	return 0;
+	HMENU contextMenu = CreatePopupMenu();
+	AddToMenu(contextMenu, "Select groove folder...", FNG_OPEN_FOLDER);
+	AddToMenu(contextMenu, "Save groove...", NamedCommandLookup("_FNG_SAVE_GROOVE"));
+	AddToMenu(contextMenu, "Refresh", FNG_REFRESH);
+	return contextMenu;
 }
 
 GrooveDialog::~GrooveDialog()
 {
-	if(mAccel)
-		delete mAccel;
-	if(mKbdSection)
-		delete mKbdSection;
 #ifdef _WIN32
 	CoUninitialize();
 #endif
@@ -129,17 +102,16 @@ static void setTarget(HWND mainHwnd, bool items)
 
 void GrooveDialog::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-	
 	switch(LOWORD(wParam))
 	{
-	case IDM_OPEN_FOLDER:
+	case FNG_OPEN_FOLDER:
 		OnGrooveFolderButton(HIWORD(wParam), lParam);
+		break;
+	case FNG_REFRESH:
+		RefreshGrooveList();
 		break;
 	case IDC_GROOVELIST:
 		OnGrooveList(HIWORD(wParam), lParam);
-		break;
-	case IDM_REFRESH:
-		RefreshGrooveList();
 		break;
 	case IDC_STRENGTH:
 		OnStrengthChange(HIWORD(wParam), lParam);
@@ -171,10 +143,6 @@ void GrooveDialog::OnCommand(WPARAM wParam, LPARAM lParam)
 		setTarget(m_hwnd, false);
 		setGrooveTarget(TARGET_NOTES);
 		break;
-	case IDM_SAVE_GROOVE:
-		Main_OnCommandEx(NamedCommandLookup("_FNG_SAVE_GROOVE"), 0, 0);
-		RefreshGrooveList();
-		break;
 	case IDC_APPLYGROOVE:
 		ApplySelectedGroove();
 		break;
@@ -185,15 +153,8 @@ void GrooveDialog::OnCommand(WPARAM wParam, LPARAM lParam)
 			Main_OnCommandEx(NamedCommandLookup("_FNG_GET_GROOVE_MIDI"), 0, 0);
 		SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_SETCURSEL, 0, 0);
 		break;
-	case IDM_EXIT:
-		DestroyWindow(m_hwnd);
-		break;
-	case IDM_SHOW_ACTION_LIST:
-		ShowActionList(mKbdSection, m_hwnd);
-		break;
-	case FNG_PASSTHROUGH:
-		mPassToMain = true;
-		break;
+	default:
+		Main_OnCommand((int)wParam, (int)lParam); // Required when you have reaper commands in the context menu
 	}
 }
 
@@ -301,20 +262,15 @@ void GrooveDialog::ApplySelectedGroove()
 		GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 		int beatDivider = me->GetGrooveTolerance();
 
-		/* set all amplitudes to < 0.0 so they are not used */
-		if(mIgnoreVelocity) {
-			me->resetAmplitudes();
-		}
-		
 		bool midiEditorTarget = SendDlgItemMessage(m_hwnd, IDC_TARG_NOTES, BM_GETCHECK, 0, 0) == BST_CHECKED;
 		
 		HWND editControl = GetDlgItem(m_hwnd, IDC_STRENGTH);
 		char percentage[16];
 		GetWindowText(editControl, percentage, 16);
-		double posStrength = atoi(percentage) / 100.0f;
+		double posStrength = (double)atoi(percentage) / 100.0;
 		editControl = GetDlgItem(m_hwnd, IDC_VELSTRENGTH);
 		GetWindowText(editControl, percentage, 16);
-		double velStrength = atoi(percentage) / 100.0f;
+		double velStrength = (double)atoi(percentage) / 100.0;
 		std::string undoMessage = "FNG: load and apply groove - " + grooveName;
 		
 		try {
@@ -341,22 +297,13 @@ void GrooveDialog::OnInitDlg()
 	SetDlgItemInt(m_hwnd, IDC_STRENGTH, me->GetGrooveStrength(), true);
 	SetDlgItemInt(m_hwnd, IDC_VELSTRENGTH, me->GetGrooveVelStrength(), true);
 	
-#ifdef _WIN32
-	HMENU sysMenu = GetMenu(m_hwnd);
-#else
-	HMENU sysMenu = LoadMenu(g_hInst, MAKEINTRESOURCE(IDR_GROOVEMENU));
-	if (sysMenu)
-		SetMenu(m_hwnd, sysMenu);
-	else
-		sysMenu = GetMenu(m_hwnd);
-	// TODO - should probably include the "REAPER" generic first menu item that OSX should have
-	// code will be something like SWELL_GetDefaultMenu, SWELL_DuplicateMenu, etc
-#endif 
-
 	setSensitivity(m_hwnd, me->GetGrooveTolerance());
 	setTarget(m_hwnd, me->GetGrooveTarget() == TARGET_ITEMS);
 
 	m_resize.init_item(IDC_GROOVELIST, 0.0, 0.0, 0.0, 1.0);
+
+	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_STRENGTH), GWLP_USERDATA, 0xdeadf00b);
+	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_VELSTRENGTH), GWLP_USERDATA, 0xdeadf00b);
 	
 	RefreshGrooveList();
 }

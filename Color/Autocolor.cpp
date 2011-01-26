@@ -947,16 +947,20 @@ void AutoColorSaveState()
 	WritePrivateProfileString(SWS_INI, AI_ENABLE_KEY, str, g_ACIni.Get());
 	sprintf(str, "%d", g_pACItems.GetSize());
 	WritePrivateProfileString(SWS_INI, AC_COUNT_KEY, str, g_ACIni.Get());
+
+	char key[32];
 	for (int i = 0; i < g_pACItems.GetSize(); i++)
 	{
-		char key[32];
 		_snprintf(key, 32, AC_ITEM_KEY, i+1);
 		WDL_String str1, str2;
 		makeEscapedConfigString(g_pACItems.Get(i)->m_str.Get(), &str1);
 		makeEscapedConfigString(g_pACItems.Get(i)->m_icon.Get(), &str2);
 		_snprintf(str, BUFFER_SIZE, "\"%s %d %s\"", str1.Get(), g_pACItems.Get(i)->m_col, str2.Get());
 		WritePrivateProfileString(SWS_INI, key, str, g_ACIni.Get());
-	}	
+	}
+	// Erase the n+1 entry to avoid confusing files
+	_snprintf(key, 32, AC_ITEM_KEY, g_pACItems.GetSize());
+	WritePrivateProfileString(SWS_INI, key, NULL, g_ACIni.Get());
 }
 
 void AutoColorExit()

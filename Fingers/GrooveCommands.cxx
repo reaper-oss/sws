@@ -38,7 +38,7 @@ static void SaveGrooveToFile(int flags, void *data)
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 	if(me->isGrooveEmpty())
 	{
-		MessageBox(GetMainHwnd(), "No groove stored", "Error",0);
+		MessageBox(GetMainHwnd(), "No groove loaded.", "Error", 0);
 		return;
 	}
 	
@@ -50,6 +50,8 @@ static void SaveGrooveToFile(int flags, void *data)
 		std::string fName = cFilename;
 		if(!me->SaveGroove(fName, errMessage))
 			MessageBox(GetMainHwnd(), errMessage.c_str(), "Error", 0);
+		else
+			me->GetGrooveDialog()->Refresh();
 	}
 }
 
@@ -73,7 +75,7 @@ static void ShowGroove(int flags, void *data)
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 	if(me->isGrooveEmpty())
 	{
-		MessageBox(GetMainHwnd(), "No groove stored", "Error",0);
+		MessageBox(GetMainHwnd(), "No groove loaded.", "Error",0);
 		return;
 	}
 	MessageBox(GetMainHwnd(),me->GrooveToString().c_str(), "Groove",0);
@@ -97,6 +99,12 @@ void ShowGrooveDialog(int flags, void *data)
 {
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 	me->showGrooveDialog();	
+}
+
+bool IsGrooveDialogOpen()
+{
+	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
+	return me->GetGrooveDialog()->IsValidWindow();
 }
 
 void GrooveCommands::Init()
@@ -195,7 +203,7 @@ void GrooveCommands::Init()
 	  CReaperCmdReg(
 		"SWS/FNG: Show groove tool...", "FNG_GROOVE_TOOL",
 		(CReaperCommand *)new CReaperCommand(&ShowGrooveDialog),
-		NO_UNDO
+		NO_UNDO, NULL, IsGrooveDialogOpen, "FNG: Groove tool..."
 		),
 	};
 	

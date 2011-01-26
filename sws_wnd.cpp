@@ -826,6 +826,10 @@ int SWS_ListView::EditingKeyHandler(MSG *msg)
 			EditListItemEnd(true);
 			return 1;
 		}
+		
+		// All other keystrokes when editing should go to the control, not to SWS_DockWnd or Reaper
+		// Fixes bug where the delete key when editing would delete the line, but it would still exist temporarily
+		return -1;
 	}
 	return 0;
 }

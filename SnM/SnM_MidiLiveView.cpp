@@ -741,8 +741,7 @@ void SNM_LiveConfigsWnd::OnDestroy()
 
 int SNM_LiveConfigsWnd::OnKey(MSG* msg, int iKeyState) 
 {
-	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState &&
-		m_pLists.Get(0)->GetEditingItem() == -1)
+	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState)
 	{
 		OnCommand(SNM_LIVECFG_CLEAR_CC_ROW_MSG, 0);
 		return 1;

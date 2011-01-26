@@ -36,7 +36,7 @@
 #define SNM_FILESLOT_MAX_ITEMTK_PROPS	12
 #endif
 
-class SNM_ResourceView : public SWS_ListView
+class SNM_ResourceView : public SNM_FastListView
 {
 public:
 	SNM_ResourceView(HWND hwndList, HWND hwndEdit);
@@ -93,7 +93,7 @@ protected:
 
 class PathSlotItem {
 public:
-	PathSlotItem(const char* _shortPath, const char* _desc) : m_shortPath(_shortPath), m_desc(_desc) {}
+	PathSlotItem(const char* _shortPath="", const char* _desc="") : m_shortPath(_shortPath), m_desc(_desc) {}
 	bool IsDefault() {return (!m_shortPath.GetLength());}
 	void Clear() {m_shortPath.Set(""); m_desc.Set("");}
 	WDL_String m_shortPath, m_desc;
@@ -114,30 +114,26 @@ class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 		}
 	}
 	// _path: short resource path or full path
-	PathSlotItem* AddSlot(const char* _path="", const char* _desc="") {
-		char shortPath[BUFFER_SIZE] = "";
-		GetShortResourcePath(m_resDir.Get(), _path, shortPath, BUFFER_SIZE);
-		return Add(new PathSlotItem(shortPath, _desc));
-	}
-	// _path: short resource path or full path
 	PathSlotItem* InsertSlot(int _slot, const char* _path="", const char* _desc="") {
 		PathSlotItem* item = NULL;
 		char shortPath[BUFFER_SIZE] = "";
 		GetShortResourcePath(m_resDir.Get(), _path, shortPath, BUFFER_SIZE);
-		if (_slot >=0 && _slot < GetSize()) item = Insert(_slot, new PathSlotItem(shortPath, _desc));
-		else item = AddSlot(shortPath, _desc);
+		if (_slot >=0 && _slot < GetSize()) 
+			item = Insert(_slot, new PathSlotItem(shortPath, _desc));
+		else 
+			item = Add(new PathSlotItem(shortPath, _desc));
 		return item;
 	}
-	int FindByFullPath(const char* _fullPath) {
-		int slot = -1;
-		if (_fullPath)
-			for (int i=0; slot < 0 && i < GetSize(); i++) {
-				char fullPath[BUFFER_SIZE] = "";
-				GetFullPath(i, fullPath, BUFFER_SIZE);
-				if (!_stricmp(fullPath, _fullPath))
-					slot = i;
+	int FindByResFulltPath(const char* _resFullPath) {
+		if (_resFullPath) {
+			PathSlotItem* item;
+			for (int i=0; i < GetSize(); i++) {
+				item = Get(i);
+				if (item && item->m_shortPath.GetLength() && stristr(_resFullPath, item->m_shortPath.Get()))
+					return i;
 			}
-		return slot;
+		}
+		return -1;
 	}
 	void GetFullPath(int _slot, char* _fullFn, int _fullFnSz) {
 		PathSlotItem* item = Get(_slot);

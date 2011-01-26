@@ -345,8 +345,56 @@ void loadImportTrackTemplate(COMMAND_T* _ct) {
 	applyOrImportTrackTemplate(SNM_CMD_SHORTNAME(_ct), true, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
 }
 
+void replaceOrPasteItemsFromsTrackTemplate(const char* _title, bool _paste, int _slot, bool _errMsg)
+{
+	bool updated = false;
+
+	// Prompt for slot if needed
+	if (_slot == -1) _slot = g_trTemplateFiles.PromptForSlot(_title); //loops on err
+	if (_slot == -1) return; // user has cancelled
+
+	char fn[BUFFER_SIZE]="";
+	if (g_trTemplateFiles.GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg)) 
+	{
+		WDL_String trTmpltChunk;
+
+		if (CountSelectedTracksWithMaster(NULL) && 
+			LoadChunk(fn, &trTmpltChunk) && trTmpltChunk.GetLength())
+		{
+			char* pItems = strstr(trTmpltChunk.Get(), "<ITEM");
+			if (pItems)
+			{
+				WDL_String itemsChunk(pItems);
+				itemsChunk.SetLen(strlen(pItems)-2, true); // remove ">\n"
+				for (int i = 0; i <= GetNumTracks(); i++)
+				{
+					MediaTrack* tr = CSurf_TrackFromID(i,false); 
+					if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+					{
+						SNM_ChunkParserPatcher p(tr);
+
+						// Delete items
+						if (!_paste)
+						{
+							char* pItems2 = strstr(p.GetChunk()->Get(), "<ITEM");
+							if (pItems2)
+								p.GetChunk()->DeleteSub((int)(pItems2-p.GetChunk()->Get()), strlen(pItems2)-2); // -2: ">\n"
+						}
+
+						p.GetChunk()->Insert(itemsChunk.Get(), p.GetChunk()->GetLength()-2); // -2: before ">\n"
+						p.SetUpdates(1); // as we directly work on the chunk
+						updated |= true;
+					}
+				}
+			}
+		}
+	}
+	if (updated && _title)
+		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
+}
+
 // assumes _fn has a length of BUFFER_SIZE
-bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath, char* _fn)
+bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath, char* _fn, bool _delItems)
 {
 	bool slotUpdate = false;
 	for (int i = 0; i <= GetNumTracks(); i++)
@@ -355,9 +403,14 @@ bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath, char* _fn)
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			SNM_ChunkParserPatcher p(tr);
-			char* pItems = strstr(p.GetChunk()->Get(), "<ITEM");
-			if (pItems)
-				p.GetChunk()->DeleteSub((int)(pItems-p.GetChunk()->Get()), strlen(pItems)-2); // -2: ">\n"
+
+			// Delete items (temp: won't be committed!)
+			if (_delItems)
+			{
+				char* pItems = strstr(p.GetChunk()->Get(), "<ITEM");
+				if (pItems)
+					p.GetChunk()->DeleteSub((int)(pItems-p.GetChunk()->Get()), strlen(pItems)-2); // -2: ">\n"
+			}
 
 			char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 			GenerateFilename(_dirPath, (!trName || *trName == '\0') ? "Untitled" : trName, g_trTemplateFiles.GetFileExt(), _fn, BUFFER_SIZE);

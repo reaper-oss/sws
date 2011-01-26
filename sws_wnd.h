@@ -54,7 +54,7 @@ public:
 	void OnDestroy();
 	int EditingKeyHandler(MSG *msg);
 	int LVKeyHandler(MSG *msg, int iKeyState);
-	void Update();
+	virtual void Update();
 	bool DoColumnMenu(int x, int y);
 	LPARAM GetHitItem(int x, int y, int* iCol);
 	void EditListItem(LPARAM item, int iCol);
@@ -82,10 +82,17 @@ protected:
 	virtual void OnItemDblClk(LPARAM item, int iCol) {}
 	virtual int  OnItemSort(LPARAM item1, LPARAM item2);
 	virtual void OnBeginDrag(LPARAM item) {}
+	int DataToDisplayCol(int iCol);
+	void SetListviewColumnArrows(int iSortCol);
+	static int CALLBACK sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam);
 
 	HWND m_hwndList;
+	HWND m_hwndTooltip;
 	bool m_bDisableUpdates;
 	int m_iSortCol; // 1 based col index, negative for desc sort
+	int m_iEditingItem;
+	const int m_iCols;
+	SWS_LVColumn* m_pCols;
 
 #ifndef _WIN32
 	int m_iClickedKeys;
@@ -94,10 +101,7 @@ protected:
 private:
 	void EditListItemEnd(bool bSave, bool bResort = true);
 	void ShowColumns();
-	void SetListviewColumnArrows(int iSortCol);
 	int DisplayToDataCol(int iCol);
-	int DataToDisplayCol(int iCol);
-	static int CALLBACK sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam);
 
 #ifndef _WIN32
 	int m_iClickedCol;
@@ -108,11 +112,7 @@ private:
 #endif
 	WDL_TypedBuf<int> m_pSavedSel;
 	HWND m_hwndEdit;
-	HWND m_hwndTooltip;
-	int m_iEditingItem;
 	int m_iEditingCol;
-	const int m_iCols;
-	SWS_LVColumn* m_pCols;
 	SWS_LVColumn* m_pDefaultCols;
 	const char* m_cINIKey;
 };

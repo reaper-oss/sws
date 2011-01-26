@@ -65,9 +65,9 @@ protected:
 	void OnTimer();
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	int updateItemNotes(bool _savePrevious = true);
-	int updateTrackNotes(bool _savePrevious = true);
-	int updateActionHelp(bool _savePrevious = true);
+	int updateItemNotes();
+	int updateTrackNotes();
+	int updateActionHelp();
 
 	void loadHelp(const char* _cmdName, char* _buf, int _bufSize);
 	void saveHelp(const char* _cmdName, const char* _help);

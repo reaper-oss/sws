@@ -28,17 +28,19 @@
 //JFB TODO?
 // - action_help_t (even if not used yet ?)
 // - drag'n'drop text
-// - undo on *each* key stroke.. hum.. see "JFB2" tags
+// - undo on *each* key stroke.. hum.. 
 //   => fills undo history (+ can't restore caret pos.) but it fixes:
 //   * SaveExtensionConfig() not called if no proj mods but notes may have been added..
 //   * project switches
+// - take changed => title not updated
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_NotesHelpView.h"
 #include "SNM_ChunkParserPatcher.h"
+#include "../../WDL/projectcontext.h"
 
-#define MAX_HELP_LENGTH				4096 //JFB MAX_INI_SECTION too big
+#define MAX_HELP_LENGTH				4096 //JFB 4096 rather than MAX_INI_SECTION (too big)
 
 // Msgs
 #define SET_ACTION_HELP_FILE_MSG	0x110001
@@ -54,7 +56,7 @@ enum {
   NOTES_HELP_DISABLED=0,
   ITEM_NOTES,
   TRACK_NOTES,
-  ACTION_HELP // last item: no OSX support yet 
+  ACTION_HELP // must remain the last item: no OSX support yet 
 };
 
 enum {
@@ -192,12 +194,8 @@ void SNM_NotesHelpWnd::Update(bool _force)
 		updateReentrance = true; 
 
 		// force refresh if needed (dock state changed, ..)
-		bool saveCurrent = false; //JFB2 true;
 		if (_force || g_bLastDocked != g_bDocked || m_type != m_previousType)
 		{
-/*JFB2			saveCurrentText(m_previousType);
-			saveCurrent = false;
-*/
 			g_bLastDocked = g_bDocked;
 			m_previousType = m_type;
 			g_lastActionListSel = -1;
@@ -214,11 +212,9 @@ void SNM_NotesHelpWnd::Update(bool _force)
 		switch(m_type)
 		{
 			case ITEM_NOTES:
-				refreshType = updateItemNotes(saveCurrent);
-				if (refreshType == REQUEST_REFRESH_EMPTY) {
-//JFB2					saveCurrentItemNotes();
+				refreshType = updateItemNotes();
+				if (refreshType == REQUEST_REFRESH_EMPTY)
 					g_mediaItemNote = NULL;
-				}
 
 				// Concurent item note update ?
 /*JFB commented: kludge..
@@ -241,17 +237,14 @@ void SNM_NotesHelpWnd::Update(bool _force)
 				break;
 
 			case TRACK_NOTES:
-				refreshType = updateTrackNotes(saveCurrent);
-				if (refreshType == REQUEST_REFRESH_EMPTY) {
-//JFB2					saveCurrentTrackNotes();
+				refreshType = updateTrackNotes();
+				if (refreshType == REQUEST_REFRESH_EMPTY)
 					g_trNote = NULL;
-				}
 				break;
 
 			case ACTION_HELP:
-				refreshType = updateActionHelp(saveCurrent);
+				refreshType = updateActionHelp();
 				if (refreshType == REQUEST_REFRESH_EMPTY) {
-//JFB2					saveCurrentHelp();
 					g_lastActionListSel = -1;
 					*g_lastActionId = 0;
 					*g_lastActionDesc = 0;
@@ -282,7 +275,8 @@ void SNM_NotesHelpWnd::saveCurrentText(int _type)
 	{
 		switch(_type) {
 			case ITEM_NOTES: 
-				m_internalTLChange = true; // item note updates lead to SetTrackListChange() CSurf notif !
+				m_internalTLChange = true;	// item note updates lead to SetTrackListChange() CSurf notif (reentrance)
+											//JFB TODO .. but check if it can be used for concurent item note updates ?
 				saveCurrentItemNotes(); 
 				break;
 			case TRACK_NOTES: saveCurrentTrackNotes(); break;
@@ -300,7 +294,7 @@ void SNM_NotesHelpWnd::saveCurrentPrjNotes()
 	GetDlgItemText(GetHWND(), IDC_EDIT, buf, MAX_HELP_LENGTH);
 	if (strncmp(g_lastText, buf, MAX_HELP_LENGTH)) {
 		g_prjNotes.Get()->Set(buf);
-		Undo_OnStateChangeEx("Edit project notes", UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx("Edit project notes", UNDO_STATE_MISCCFG, -1);//JFB TODO? -1 to remplace?
 	}
 }
 
@@ -341,7 +335,7 @@ void SNM_NotesHelpWnd::saveCurrentItemNotes()
 			{
 				UpdateItemInProject(g_mediaItemNote);
 				UpdateTimeline();
-				Undo_OnStateChangeEx("Edit item notes", UNDO_STATE_ALL, -1);
+				Undo_OnStateChangeEx("Edit item notes", UNDO_STATE_ALL, -1); //JFB TODO? -1 to remplace?
 			}
 		}
 	}
@@ -367,12 +361,12 @@ void SNM_NotesHelpWnd::saveCurrentTrackNotes()
 			}
 			if (!found)
 				g_pTracksNotes.Get()->Add(new SNM_TrackNotes(g_trNote, buf));
-			Undo_OnStateChangeEx("Edit track notes", UNDO_STATE_MISCCFG, -1);
+			Undo_OnStateChangeEx("Edit track notes", UNDO_STATE_MISCCFG, -1); //JFB TODO? -1 to remplace?
 		}
 	}
 }
 
-int SNM_NotesHelpWnd::updateActionHelp(bool _savePrevious)
+int SNM_NotesHelpWnd::updateActionHelp()
 {
 	int refreshType = REQUEST_REFRESH_EMPTY;
 	HWND hList = GetActionListBox(g_lastActionListSection, 64);
@@ -391,10 +385,6 @@ int SNM_NotesHelpWnd::updateActionHelp(bool _savePrevious)
 				if (i != g_lastActionListSel)
 				{
 					g_lastActionListSel = i;
-/*JFB2
-					if (*g_lastActionId && _savePrevious)
-						saveCurrentHelp();
-*/
 					int cmdId = (int)li.lParam;
 					g_lastActionListCmd = cmdId; 
 
@@ -430,7 +420,7 @@ int SNM_NotesHelpWnd::updateActionHelp(bool _savePrevious)
 	return refreshType;
 }
 
-int SNM_NotesHelpWnd::updateItemNotes(bool _savePrevious)
+int SNM_NotesHelpWnd::updateItemNotes()
 {
 	int refreshType = REQUEST_REFRESH_EMPTY;
 	if (CountSelectedMediaItems(NULL))
@@ -438,10 +428,6 @@ int SNM_NotesHelpWnd::updateItemNotes(bool _savePrevious)
 		MediaItem* selItem = GetSelectedMediaItem(0, 0);
 		if (selItem != g_mediaItemNote)
 		{
-/*JFB2
-			if (_savePrevious)
-				saveCurrentItemNotes();
-*/
 			g_mediaItemNote = selItem;
 
 			SNM_ChunkParserPatcher p(g_mediaItemNote);
@@ -458,7 +444,7 @@ int SNM_NotesHelpWnd::updateItemNotes(bool _savePrevious)
 	return refreshType;
 }
 
-int SNM_NotesHelpWnd::updateTrackNotes(bool _savePrevious)
+int SNM_NotesHelpWnd::updateTrackNotes()
 {
 	int refreshType = REQUEST_REFRESH_EMPTY;
 	if (CountSelectedTracksWithMaster(NULL))
@@ -466,10 +452,6 @@ int SNM_NotesHelpWnd::updateTrackNotes(bool _savePrevious)
 		MediaTrack* selTr = GetSelectedTrackWithMaster(NULL, 0);
 		if (selTr != g_trNote)
 		{
-/*JFB2
-			if (_savePrevious)
-				saveCurrentTrackNotes();
-*/
 			g_trNote = selTr;
 
 			WDL_String* notes = NULL;
@@ -598,9 +580,6 @@ HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y)
 void SNM_NotesHelpWnd::OnDestroy() 
 {
 	KillTimer(m_hwnd, 1);
-
-	// when docking/undocking for e.g. (text lost otherwise)
-//JFB2	saveCurrentText(m_type);
 
 	// save prefs
 	char cType[2], cLock[2];
@@ -735,8 +714,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 					}
 					break;
 				case NOTES_HELP_DISABLED:
-					//JFB would be nice to display the project name here, alas..
-					*str = '\0';
+					EnumProjects(-1, str, 512);
 					break;
 				default:
 					break;
@@ -1048,8 +1026,37 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {
+	// Init S&M project notes with REAPER's ones
 	g_prjNotes.Cleanup();
 	g_prjNotes.Get()->Set("");
+
+	// Load REAPER project notes from RPP file
+	WDL_String notes;
+	char cBuf[BUFFER_SIZE];
+	EnumProjects(-1, cBuf, BUFFER_SIZE);
+	ProjectStateContext* prjCtx = ProjectCreateFileRead(cBuf);
+	if (prjCtx)
+	{
+		while(!prjCtx->GetLine(cBuf, 512))
+		{
+			LineParser lp(false);
+			if (!lp.parse(cBuf) && lp.getnumtokens())
+			{
+				notes.Append(cBuf);
+				notes.Append("\n");
+				if (lp.gettoken_str(0)[0] == '>')
+					break;
+			}
+		}
+		delete prjCtx;
+	}
+	// "translate notes"
+	char bufNotes[MAX_HELP_LENGTH] = "";
+	char* dbg = notes.Get();
+	GetStringFromNotes(&notes, bufNotes, MAX_HELP_LENGTH);
+	g_prjNotes.Get()->Set(bufNotes);
+
+	// Init track notes
 	g_pTracksNotes.Cleanup();
 	g_pTracksNotes.Get()->Empty(true);
 }

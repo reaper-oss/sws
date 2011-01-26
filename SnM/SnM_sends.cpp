@@ -64,7 +64,11 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 
 	// default (or failure case: retry)
 	if (!update)
-		update = (_p->AddReceive(_srcTr, _type) > 0);
+	{
+		char vol[32] = "1.00000000000000";
+		char pan[32] = "0.00000000000000";
+		update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
+	}
 
 	return update;
 }

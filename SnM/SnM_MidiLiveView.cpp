@@ -841,6 +841,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			btn->SetPosition(&tr);
 			btn->SetCheckState(g_liveConfigs.Get()->m_autoSelect[g_configId]);
 			btn->SetTextLabel("Auto track selection", -1, font);
+			x0 = tr.right+5;
 		}
 
 		_painter->PaintVirtWnd(_parentVwnd, 0);

@@ -55,7 +55,7 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 		case -1:
 		{
 			char bufline[512] = "";
-			int n = sprintf(bufline, 
+			int n = _snprintf(bufline, 512,
 				"AUXRECV %d %d %s %s 0 0 0 0 0 -1.00000000000000 0 -1\n%s\n", 
 				m_srcId-1, m_sendType, 
 				m_vol, m_pan,
@@ -67,19 +67,11 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 		}
 		break;
 
-		// remove rcv
-		case -2:
-		{
-			update = (m_srcId == -1 || _lp->gettoken_int(1) == (m_srcId - 1));
-			// update => nothing! we do NOT re-copy this receive
-		}
-		break;
-
 		// add "detailed" receive
 		case -3:
 		{
 			char bufline[512] = "";
-			int n = sprintf(bufline, 
+			int n = _snprintf(bufline, 512,
 				"AUXRECV %d %d %.14f %.14f %d %d %d %d %d %.14f %d %d\n%s\n", 
 				m_srcId-1, 
 				m_sendType, 
@@ -131,43 +123,19 @@ bool SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, SNM_SndRcv* _io)
 	return (ParsePatch(-3, 1, "TRACK", "MIDIOUT") > 0);
 }
 
-int SNM_SendPatcher::RemoveReceives() 
-{
-	m_srcId = -1; // -1 to remove all receives
-	m_sendType = 2; // deprecated
-	m_vol = NULL;
-	m_pan = NULL;
-	m_sndRcv = NULL;
-	return ParsePatch(-2, 1, "TRACK", "AUXRECV");
+int SNM_SendPatcher::RemoveReceives() {
+	return SetUpdates(RemoveChunkLines(GetChunk(), "AUXRECV", true));
 }
 
-int SNM_SendPatcher::RemoveFirstReceive(MediaTrack* _srcTr) 
-{
-	m_srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
-	if (m_srcId == -1)
-		return 0; // 'cause what follow would remove all receives!
-	m_sendType = 2; // deprecated
-	m_vol = NULL;
-	m_pan = NULL;
-	m_sndRcv = NULL;
-	return ParsePatch(-2, 1, "TRACK", "AUXRECV");
-}
-
-//JFB TODO: in one go
-// facility method
 int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr) 
 {
-	int updates = 0, lastUpdate = 0;
-	if (_srcTr)
-	{
-		updates = lastUpdate = RemoveFirstReceive(_srcTr);
-		while (lastUpdate > 0)
-		{
-			lastUpdate = RemoveFirstReceive(_srcTr);
-			updates += lastUpdate;
-		}
-	}
-	return updates;
+	int srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
+	if (srcId <= 0)
+		return 0;
+
+	char buf[32];
+	_snprintf(buf, 32, "AUXRECV %d", srcId-1);
+	return SetUpdates(RemoveChunkLines(GetChunk(), buf, true));
 }
 
 
@@ -232,9 +200,9 @@ bool SNM_FXChainTakePatcher::NotifyChunkLine(int _mode,
 {
 	bool update = m_removingTakeFx;
 
-	// "tag" the active take (m_activeTake must be initialized with CountTake == 1!)
+	// "tag" the active take (m_activeTake must be initialized to true if the 1st take is active)
 	if((_mode == -2 || _mode == -3) && !strcmp(_lp->gettoken_str(0), "TAKE"))
-		m_activeTake = (_lp->getnumtokens() > 1 && !strcmp(_lp->gettoken_str(1), "SEL"));
+		m_activeTake = (_lp->getnumtokens() > 1 && !strcmp(_lp->gettoken_str(1), "SEL")); //JFB v4: gettoken_str(1) indirectly excludes TAKE NULL SEL
 
 	// copy active FX chain
 	if (_mode == -3 && m_copyingTakeFx)
@@ -416,7 +384,6 @@ bool SNM_TakeParserPatcher::NotifyChunkLine(int _mode,
 	return m_removing;
 }
 
-
 bool SNM_TakeParserPatcher::NotifySkippedSubChunk(int _mode, 
 	const char* _subChunk, int _subChunkLength, int _subChunkPos,
 	WDL_PtrList<WDL_String>* _parsedParents, 
@@ -461,19 +428,19 @@ bool SNM_TakeParserPatcher::GetTakeChunk(int _takeIdx, WDL_String* _gettedChunk,
 
 // Different from the API's CountTakes(MediaItem*), this ones
 // applies on the chunk (which perharps not yet commited !)
-int SNM_TakeParserPatcher::CountTakes() 
+int SNM_TakeParserPatcher::CountTakes() //JFB!!! v4
 {
 	if (m_lastTakeCount < 0) { 
 		m_takeCounter = 0; // not really necessary..
 		m_lastTakeCount = 0;
-		Parse(-3, 1, "ITEM"); // we just look for "TAKE" (or "NAME") here) 
+		Parse(-3, 1, "ITEM"); // we just look for "TAKE" (or "NAME") here 
 	}
 	return m_lastTakeCount;
 }
 
 // different from checking the PCM source: this one can 
 // apply on a chunk that's not committed yet
-bool SNM_TakeParserPatcher::IsEmpty(int _takeIdx)
+bool SNM_TakeParserPatcher::IsEmpty(int _takeIdx) //JFB!!! v4
 {
 	char readSource[128];
 	if (_takeIdx >=0 && _takeIdx < CountTakes() && 
@@ -484,17 +451,15 @@ bool SNM_TakeParserPatcher::IsEmpty(int _takeIdx)
 	return false;
 }
 
-// assumes the takes begins with "TAKE" and that ids have been removed
-// in the provided chunk
+// assumes that _tkChunk begins with "TAKE" and that the updated chunk already has at least 1 take
 // returns the end position after insertion (or -1 if failed)
-int SNM_TakeParserPatcher::AddLastTake(WDL_String* _chunk)
+int SNM_TakeParserPatcher::AddLastTake(WDL_String* _tkChunk)
 {
 	int afterPos = -1;
-	int length = _chunk->GetLength();
-	if (_chunk && length)
+	if (_tkChunk && _tkChunk->GetLength())
 	{
 		WDL_String* chunk = GetChunk();
-		chunk->Insert(_chunk->Get(), chunk->GetLength()-2, length); //-2: before ">\n"
+		chunk->Insert(_tkChunk->Get(), chunk->GetLength()-2, _tkChunk->GetLength()); //-2: before ">\n"
 		afterPos = chunk->GetLength()-2;
 
 		// as we're directly working on the cached chunk..
@@ -505,7 +470,6 @@ int SNM_TakeParserPatcher::AddLastTake(WDL_String* _chunk)
 }
 
 // assumes _chunk always begins with "TAKE" (removed if needed, i.e. inserted as 1st take)
-// and that ids have been removed in the provided chunk
 // _pos: start pos of the take if known, for optimization (-1 if unknown)
 // returns the end position after insertion (or -1 if failed)
 int SNM_TakeParserPatcher::InsertTake(int _takeIdx, WDL_String* _chunk, int _pos)

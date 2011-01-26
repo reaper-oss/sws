@@ -1,4 +1,4 @@
-Groove Tool Updates:
+FNG Groove Tool Updates:
 +Fixed applying strength to velocity groove quantize
 +Added separate velocity strength control to Groove Tool (set to zero to disable either)
 +Fixed refresh of groove list in Groove Tool when changing folders
@@ -7,6 +7,20 @@ Groove Tool Updates:
 +Added "FNG: Groove Tool..." to the Extensions menu
 +Removed menu bar and moved applicable items to the context menu
 +Removed "passthrough" action/keyboard section workaround
+
+S&M updates:
++Resources view:
+- Performance improvments: REAPER start-up & shutdown, show/hide, auto fill, all editions features, filtering, etc.
+- Track templates: added "Paste items to sel. tracks" and "Replace items of sel. tracks" as customizable double-click behaviours
+- Track templates: added toggle popup menu item "Save track templates with items" (so that track templates can be auto-saved w/ or w/o items)
++Notes/help view:
+- Project notes: now displays the related RPP filename
+- Project notes: initialize S&M project notes with REAPER's ones when possible (i.e. when S&M ones don't exist but REAPER's ones exist)
+Reminder: due to an API limitation, for the moment the "project notes" displayed in the Notes/help view are different from REAPER's one
++Other:
+- Performance improvments for all cue buss & routing actions
+- Fixed corner case Cue buss crash
+- GUI tweaks
 
 Fixed bug that "silently" deleted items in SWS lists while renaming (Thanks, Bevosss)
 

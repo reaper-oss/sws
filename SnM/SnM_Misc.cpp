@@ -264,7 +264,7 @@ void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _sh
 	if (_resSubDir && *_resSubDir && _fullFn && *_fullFn)
 	{
 		char defaultPath[BUFFER_SIZE] = "";
-		_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
+		_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir); //JFB could be skipped.. sometimes..
 		if(stristr(_fullFn, defaultPath) == _fullFn) 
 			strncpy(_shortFn, (char*)(_fullFn + strlen(defaultPath) + 1), _maxFn);
 		else

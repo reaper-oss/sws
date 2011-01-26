@@ -176,9 +176,7 @@ void DoItemPosRemapDlg(COMMAND_T*)
 
 void ExtractFileNameEx(const char *FullFileName,char *Filename,bool StripExtension)
 {
-	const char* pFile = strrchr(FullFileName, '\\');
-	if (!pFile)
-		pFile = strrchr(FullFileName, '/');
+	const char* pFile = strrchr(FullFileName, PATH_SLASH_CHAR);
 	if (!pFile)
 		pFile = FullFileName;
 	else

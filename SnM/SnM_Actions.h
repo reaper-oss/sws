@@ -1,5 +1,6 @@
 /******************************************************************************
 / SnM_Actions.h
+/ JFB TODO? now, a better name would be "SnM.h"
 /
 / Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
@@ -52,7 +53,7 @@
 #define SNM_MAX_FX					128
 #define SNM_MAX_INI_SECTION			0xFFFF // definitive limit for WritePrivateProfileSection
 #define SNM_LET_BREATHE_MS			10
-#define SNM_3D_COLORS_DELTA			28
+#define SNM_3D_COLORS_DELTA			25
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -122,6 +123,19 @@ public:
 	bool m_mute;
 	int m_phase, m_mono, m_mode, m_srcChan, m_destChan, m_midi;
 	double m_vol, m_pan, m_panl;
+};
+
+
+// SNM_FastListView
+// Defined in SnM_Dlg.cpp
+class SNM_FastListView : public SWS_ListView
+{
+public:
+	SNM_FastListView(HWND _hwndList, HWND _hwndEdit, int _iCols, SWS_LVColumn* _pCols, const char* _cINIKey, bool _bTooltips)
+	: SWS_ListView(_hwndList, _hwndEdit, _iCols, _pCols, _cINIKey, _bTooltips) {}
+public:
+	~SNM_FastListView() {}
+	virtual void Update();
 };
 
 
@@ -305,9 +319,10 @@ int CountSelectedTracksWithMaster(ReaProject* _proj);
 MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx);
 MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj);
 void applyOrImportTrackTemplate(const char* _title, bool _add, int _slot, bool _errMsg);
+void replaceOrPasteItemsFromsTrackTemplate(const char* _title, bool _paste, int _slot, bool _errMsg);
 void loadSetTrackTemplate(COMMAND_T* _ct);
 void loadImportTrackTemplate(COMMAND_T* _ct);
-bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath, char* _fn);
+bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath, char* _fn, bool _delItems);
 
 // *** SnM_ResourceView.cpp ***
 int ResourceViewInit();

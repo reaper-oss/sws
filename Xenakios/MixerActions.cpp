@@ -157,6 +157,7 @@ void DoTraxRecArmed(COMMAND_T* t)
 	UpdateTimeline();	
 }
 
+//JFB dup with SWS 
 void DoBypassFXofSelTrax(COMMAND_T* t)
 {
 	int iBypass = (int)t->user;

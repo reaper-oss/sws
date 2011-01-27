@@ -11,6 +11,7 @@ private:
 	// SWS_DockWnd overrides
 	void OnInitDlg();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
+	int  OnKey(MSG* msg, int iKeyState);
 	HMENU OnContextMenu(int x, int y);
 
 	void OnGrooveList(WORD wParam, LPARAM lParam);

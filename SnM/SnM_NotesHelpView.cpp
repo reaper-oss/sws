@@ -594,15 +594,12 @@ void SNM_NotesHelpWnd::OnDestroy()
 // some key masks won't pass here though (e.g. Ctrl+Shift)
 int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState) 
 {
-	// Ensure the return key is catched when docked
 	if (GetDlgItem(m_hwnd, IDC_EDIT) == msg->hwnd)
 	{
-		if (IsDocked() && (msg->message == WM_KEYDOWN || msg->message == WM_CHAR) &&
-			msg->wParam == VK_RETURN)
-		{
-			return (g_locked ? 1 : -1);
-		}
-		return (g_locked ? 1 : 0); //eat keystroke if locked
+		if (g_locked)
+			return 1; //eat keystroke if locked
+		else if ((msg->message == WM_KEYDOWN || msg->message == WM_CHAR) && msg->wParam == VK_RETURN)
+			return -1; // Catch the return and send to edit control for multi-line
 	}
 	return 0; 
 }

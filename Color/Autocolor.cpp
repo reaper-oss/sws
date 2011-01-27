@@ -959,7 +959,7 @@ void AutoColorSaveState()
 		WritePrivateProfileString(SWS_INI, key, str, g_ACIni.Get());
 	}
 	// Erase the n+1 entry to avoid confusing files
-	_snprintf(key, 32, AC_ITEM_KEY, g_pACItems.GetSize());
+	_snprintf(key, 32, AC_ITEM_KEY, g_pACItems.GetSize() + 1);
 	WritePrivateProfileString(SWS_INI, key, NULL, g_ACIni.Get());
 }
 

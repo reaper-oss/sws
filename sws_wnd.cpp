@@ -101,10 +101,14 @@ void SWS_DockWnd::Show(bool bToggle, bool bActivate)
 
 bool SWS_DockWnd::IsActive(bool bWantEdit)
 {
+	if (!IsValidWindow())
+		return false;
+
 	for (int i = 0; i < m_pLists.GetSize(); i++)
 		if (m_pLists.Get(i)->IsActive(bWantEdit))
 			return true;
-	return GetForegroundWindow() == m_hwnd;
+
+	return GetFocus() == m_hwnd || IsChild(m_hwnd, GetFocus());
 }
 
 INT_PTR WINAPI SWS_DockWnd::sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -352,7 +356,7 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 		for (int i = 0; i < p->m_pLists.GetSize(); i++)
 		{
 			pLV = p->m_pLists.Get(i);
-			if (p->GetHWND() == msg->hwnd || p->IsActive(true))
+			if (pLV->IsActive(true))
 			{
 				int iRet = pLV->EditingKeyHandler(msg);
 				if (iRet)
@@ -1154,7 +1158,7 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	ScreenToClient(hDlg, ((LPPOINT)&sr)+1);
 
 	// Create a new edit control to go over that rect
-	int lOffset = 0;
+	int lOffset = -1;
 	if (iDispCol)
 		lOffset += GetSystemMetrics(SM_CXEDGE) * 2;
 

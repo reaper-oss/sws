@@ -51,6 +51,22 @@ HMENU GrooveDialog::OnContextMenu(int x, int y)
 	return contextMenu;
 }
 
+int GrooveDialog::OnKey(MSG* msg, int iKeyState)
+{
+	if (GetDlgItem(m_hwnd, IDC_GROOVELIST) == msg->hwnd && msg->message == WM_KEYDOWN && !iKeyState)
+	{
+		// Pass arrows on to the list
+		if (msg->wParam == VK_UP || msg->wParam == VK_DOWN)
+			return -1;
+		else if (msg->wParam == VK_RETURN)
+		{
+			ApplySelectedGroove();
+			return 1;
+		}
+	}
+	return 0;
+}
+
 GrooveDialog::~GrooveDialog()
 {
 #ifdef _WIN32

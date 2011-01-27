@@ -566,10 +566,6 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		Main_OnCommand((int)wParam, (int)lParam);
 }
 
-bool SNM_NotesHelpWnd::IsActive(bool bWantEdit) { 
-	return (bWantEdit || GetForegroundWindow() == m_hwnd || GetFocus() == GetDlgItem(m_hwnd, IDC_EDIT)); 
-}
-
 HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y)
 {
 	HMENU hMenu = CreatePopupMenu();

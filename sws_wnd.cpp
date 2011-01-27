@@ -104,7 +104,7 @@ bool SWS_DockWnd::IsActive(bool bWantEdit)
 	for (int i = 0; i < m_pLists.GetSize(); i++)
 		if (m_pLists.Get(i)->IsActive(bWantEdit))
 			return true;
-	return GetFocus() == m_hwnd;
+	return GetForegroundWindow() == m_hwnd;
 }
 
 INT_PTR WINAPI SWS_DockWnd::sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -373,8 +373,10 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 			iRet = pLV->LVKeyHandler(msg, iKeys);
 			if (iRet)
 				return iRet;
-			return -666; // We don't want the key, so force it to main reaper wnd
 		}
+		// We don't want the key, but this window has the focus.
+		// Therefore, force it to main reaper wnd (passthrough) so that main wnd actions work!
+		return -666;
 	}
 	return 0;
 }
@@ -1173,23 +1175,26 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 
 void SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 {
-	if (m_iEditingItem != -1 && bSave && IsWindow(m_hwndList) && IsWindow(m_hwndEdit))
+	if (m_iEditingItem != -1 && IsWindow(m_hwndList) && IsWindow(m_hwndEdit))
 	{
-		char newStr[100];
-		char curStr[100];
-		GetWindowText(m_hwndEdit, newStr, 100);
-		LPARAM item = GetListItem(m_iEditingItem);
-		GetItemText(item, m_iEditingCol, curStr, 100);
-		if (strcmp(curStr, newStr))
+		if (bSave)
 		{
-			SetItemText(item, m_iEditingCol, newStr);
-			GetItemText(item, m_iEditingCol, newStr, 100);
-			ListView_SetItemText(m_hwndList, m_iEditingItem, DataToDisplayCol(m_iEditingCol), newStr);
+			char newStr[100];
+			char curStr[100];
+			GetWindowText(m_hwndEdit, newStr, 100);
+			LPARAM item = GetListItem(m_iEditingItem);
+			GetItemText(item, m_iEditingCol, curStr, 100);
+			if (strcmp(curStr, newStr))
+			{
+				SetItemText(item, m_iEditingCol, newStr);
+				GetItemText(item, m_iEditingCol, newStr, 100);
+				ListView_SetItemText(m_hwndList, m_iEditingItem, DataToDisplayCol(m_iEditingCol), newStr);
+			}
+			if (bResort)
+				ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
+			// TODO resort? Just call update?
+			// Update is likely called when SetItemText is called too...
 		}
-		if (bResort)
-			ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
-		// TODO resort? Just call update?
-		// Update is likely called when SetItemText is called too...
 		m_iEditingItem = -1;
 		ShowWindow(m_hwndEdit, SW_HIDE);
 	}

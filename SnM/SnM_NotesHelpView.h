@@ -44,7 +44,6 @@ public:
 	void CSurfSetTrackListChange();
 	void Update(bool _force=false);
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	bool IsActive(bool bWantEdit = false);
 
 	void saveCurrentText(int _type);
 	void saveCurrentPrjNotes();

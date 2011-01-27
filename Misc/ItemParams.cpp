@@ -341,32 +341,60 @@ void SetItemChannels(COMMAND_T* t)
 {
 	WDL_TypedBuf<MediaItem*> items;
 	SWS_GetSelectedMediaItems(&items);
+	bool bStereo = abs((int)t->user) == 2;
 	for (int i = 0; i < items.GetSize(); i++)
 	{
 		MediaItem* item = items.Get()[i];
 		MediaItem_Take* take = GetActiveTake(item);
+		bool bWasStereo = false;
+		// Ignore empty takes
 		if (take)
-		{
-			int iChan = *(int*)GetSetMediaItemTakeInfo(take, "I_CHANMODE", NULL);
-			if (iChan < 3)
-				iChan = 3;
+		{	
+			// Find max # of channels in all takes
+			int iMaxNumChannels = 2;
+			for (int j = 0; j < GetMediaItemNumTakes(item); j++)
+			{
+				PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(item, j), "P_SOURCE", NULL);
+				if (src && src->GetNumChannels() > iMaxNumChannels)
+					iMaxNumChannels = src->GetNumChannels();
+			}
+			if (bStereo) // Stereo mode requires max channel of the first
+				iMaxNumChannels--;
 
-			if (abs((int)t->user) == 1 && iChan >= 67)
+			int iChan = *(int*)GetSetMediaItemTakeInfo(take, "I_CHANMODE", NULL) - 2; // Subtract the normal/rev/down modes
+			if (iChan > 64) // Convert to mono
+			{
+				bWasStereo = true;
 				iChan -= 64;
-			else if (abs((int)t->user) == 2 && iChan < 67)
-				iChan += 64;
-			else if (t->user == 2 && iChan == 129)
-				iChan = 67;
-			else if (t->user == -2 && iChan == 67)
-				iChan = 129;
-			else if (t->user == 1 && iChan == 66)
-				iChan = 3;
-			else if (t->user == -1 && iChan == 3)
-				iChan = 66;
-			else if (t->user > 0)
+			}
+
+			if (bWasStereo == bStereo)
+			{
+				if (iChan < 0)
+					iChan = 0;
+
+				if (t->user > 0)
+					iChan++;
+				else
+					iChan--;
+			}
+			else if (iChan < 0 && t->user > 0) // Corner case of next stereo when in a special mode
+				iChan = 1;
+			else if (t->user > 0 && !bStereo)
 				iChan++;
-			else
+			else if (t->user < 0 && bStereo)
 				iChan--;
+
+			// Limit to 1-max
+			if (iChan < 1)
+				iChan = iMaxNumChannels;
+			else if (iChan > iMaxNumChannels)
+				iChan = 1;
+
+			iChan += 2; // Convert back into proper form to set
+			if (bStereo)
+				iChan += 64;
+
 
 			for (int j = 0; j < GetMediaItemNumTakes(item); j++)
 				GetSetMediaItemTakeInfo(GetMediaItemTake(item, j), "I_CHANMODE", &iChan);

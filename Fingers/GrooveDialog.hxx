@@ -5,7 +5,6 @@ class GrooveDialog : public SWS_DockWnd
 {
 public:
 	GrooveDialog();
-	bool IsActive(bool bWantEdit);
 	void Refresh() { if (IsValidWindow()) RefreshGrooveList(); }
 	virtual ~GrooveDialog();
 private:

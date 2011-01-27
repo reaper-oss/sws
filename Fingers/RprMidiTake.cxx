@@ -457,9 +457,10 @@ static bool getMidiNotes(RprMidiEvents &midiEvents, std::vector<RprMidiNote *> &
 	}
 	
 	/* match note-ons and note-offs, removing zero length notes */
-	RprMidiEventsCIter i = noteOns.begin();
+	// SWS Jan 26 2011 - GCC doesn't like the const_iterators here for the .erase() calls, but MSVC does.  I don't think it's too important.
+	RprMidiEventsIter i = noteOns.begin();
 	while(i != noteOns.end()) {
-		RprMidiEventsCIter j = noteOffs.begin();
+		RprMidiEventsIter j = noteOffs.begin();
 		while(j != noteOffs.end() && !noteEventsMatch(*i, *j)) {
 			++j;
 		}
@@ -512,14 +513,14 @@ public:
 		if(toDelete.empty())
 			return;
 
-		for(std::list<T *>::iterator i = toDelete.begin(); i != toDelete.end(); ++i) {
-			std::vector<T *>::iterator j = std::find(mSourceVector->begin(), mSourceVector->end(), *i);
+		for(typename std::list<T *>::iterator i = toDelete.begin(); i != toDelete.end(); ++i) {
+			typename std::vector<T *>::iterator j = std::find(mSourceVector->begin(), mSourceVector->end(), *i);
 			if(j != mSourceVector->end())
 				mSourceVector->erase(j);
 		}
 
 		while(!toDelete.empty()) {
-			std::list<T *>::iterator i = toDelete.begin();
+			typename std::list<T *>::iterator i = toDelete.begin();
 			delete *i;
 			toDelete.erase(i);
 		}

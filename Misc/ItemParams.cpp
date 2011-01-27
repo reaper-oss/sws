@@ -337,6 +337,45 @@ void NudgePlayrate(COMMAND_T *t)
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
+void SetItemChannels(COMMAND_T* t)
+{
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	for (int i = 0; i < items.GetSize(); i++)
+	{
+		MediaItem* item = items.Get()[i];
+		MediaItem_Take* take = GetActiveTake(item);
+		if (take)
+		{
+			int iChan = *(int*)GetSetMediaItemTakeInfo(take, "I_CHANMODE", NULL);
+			if (iChan < 3)
+				iChan = 3;
+
+			if (abs((int)t->user) == 1 && iChan >= 67)
+				iChan -= 64;
+			else if (abs((int)t->user) == 2 && iChan < 67)
+				iChan += 64;
+			else if (t->user == 2 && iChan == 129)
+				iChan = 67;
+			else if (t->user == -2 && iChan == 67)
+				iChan = 129;
+			else if (t->user == 1 && iChan == 66)
+				iChan = 3;
+			else if (t->user == -1 && iChan == 3)
+				iChan = 66;
+			else if (t->user > 0)
+				iChan++;
+			else
+				iChan--;
+
+			for (int j = 0; j < GetMediaItemNumTakes(item); j++)
+				GetSetMediaItemTakeInfo(GetMediaItemTake(item, j), "I_CHANMODE", &iChan);
+		}
+	}
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+
 void CrossfadeSelItems(COMMAND_T* t)
 {
 	double dFadeLen = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
@@ -452,6 +491,12 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Increase item rate by ~6% (one semitone) preserving length, clear 'preserve pitch'" },	"FNG_INCREASERATE",		NudgePlayrate, NULL, 1 },
 	{ { DEFACCEL, "SWS: Decrease item rate by ~6% (one semitone) preserving length, clear 'preserve pitch'"},	"FNG_DECREASERATE",		NudgePlayrate, NULL, -1 },
 	{ { DEFACCEL, "SWS: Reset item rate, preserving length, clear 'preserve pitch'"},							"SWS_RESETRATE",		NudgePlayrate, NULL, 0 },
+
+	{ { DEFACCEL, "SWS: Set all takes to next mono channel mode"},				"SWS_ITEMCHANMONONEXT",		SetItemChannels, NULL, 1 },
+	{ { DEFACCEL, "SWS: Set all takes to prev mono channel mode"},				"SWS_ITEMCHANMONOPREV",		SetItemChannels, NULL, -1 },
+	{ { DEFACCEL, "SWS: Set all takes to next stereo channel mode"},			"SWS_ITEMCHANSTEREONEXT",	SetItemChannels, NULL, 2 },
+	{ { DEFACCEL, "SWS: Set all takes to prev stereo channel mode"},			"SWS_ITEMCHANSTEREOPREV",	SetItemChannels, NULL, -2 },
+
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

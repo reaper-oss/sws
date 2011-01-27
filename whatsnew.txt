@@ -1,3 +1,4 @@
+!v2.0.0 #5 (January 26, 2011)
 FNG Groove Tool Updates:
 +Fixed applying strength to velocity groove quantize
 +Added separate velocity strength control to Groove Tool (set to zero to disable either)
@@ -23,6 +24,7 @@ Reminder: due to an API limitation, for the moment the "project notes" displayed
 - GUI tweaks
 
 Fixed bug that "silently" deleted items in SWS lists while renaming (Thanks, Bevosss)
+4 new actions: "SWS: Set all takes to next/prev mono/stereo channel mode"
 
 !v2.0.0 #4 (January 23, 2011)
 Groove Tool fixes:

@@ -895,9 +895,9 @@ bool GetStringFromNotes(WDL_String* _notes, char* _buf, int _bufMaxSize)
 	char* pNotes = _notes->Get();
 
 	// find 1st '|'
-	int i=0, j;	while (*pNotes && pNotes[i] != '|') i++;
+	int i=0, j;	while (*pNotes && pNotes[i] && pNotes[i] != '|') i++;
 
-	if (*pNotes) j = i+1;
+	if (*pNotes && pNotes[i]) j = i+1;
 	else return true;
 
 	int bufIdx = 0;

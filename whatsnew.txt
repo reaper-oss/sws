@@ -1,13 +1,16 @@
-+Added actions:
-SWS/S&M: Show take pitch envelope - v4 only (visible but no-op in v3)
-SWS/S&M: Hide take pitch envelope - v4 only (visible but no-op in v3)
-SWS/S&M: Copy selected track gouping
-SWS/S&M: Cut selected tracks grouping
-SWS/S&M: Paste grouping to selected tracks
+!v2.0.0 #7 (January 29, 2011)
+NEW: Preliminary version of "Autorender."  Thanks, Shane!  For more information, run Autorender: show instructions from the File->Autorender menu (or actions).
 
-+Notes/help view fixes:
-- pass keystrokes to the main window when locked (i.e. lock button)
-- properly init S&M project notes with REAPER ones when possible
+Added actions:
++SWS/S&M: Show take pitch envelope - v4 only (visible but no-op in v3)
++SWS/S&M: Hide take pitch envelope - v4 only (visible but no-op in v3)
++SWS/S&M: Copy selected track gouping
++SWS/S&M: Cut selected tracks grouping
++SWS/S&M: Paste grouping to selected tracks
+
+Notes/help view fixes:
++Pass keystrokes to the main window when locked (i.e. lock button)
++Properly init S&M project notes with REAPER ones when possible
 
 !v2.0.0 #6 (January 27, 2011)
 Fixed corruption of last item in auto color list

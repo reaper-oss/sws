@@ -1164,13 +1164,13 @@
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/sws_osx/reaper_sws.dylib",
+				"$(TARGET_BUILD_DIR)/reaper_sws.dylib",
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cp sws_osx/reaper_sws.dylib ~/Library/Application\\ Support/REAPER/UserPlugins/\n";
+			shellScript = "if [ $CONFIGURATION == \"Debug\" ]\nthen\n  cp $TARGET_BUILD_DIR/reaper_sws.dylib ~/Library/Application\\ Support/REAPER/UserPlugins/\nfi";
 		};
 		22C126E6115FE57000663F0C /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1453,7 +1453,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/lib";
 				OBJROOT = "$(SYMROOT)";
-				ONLY_ACTIVE_ARCH = YES;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = "-ltag";
 				PREBINDING = NO;
 				SDKROOT = macosx10.5;

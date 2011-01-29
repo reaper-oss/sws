@@ -33,9 +33,8 @@
 
 #define TAGLIB_STATIC
 #define TAGLIB_NO_CONFIG
-#include "../../taglib/include/tag.h"
-#include "../../taglib/include/fileref.h"
-#include <io.h>
+#include "../taglib/tag.h"
+#include "../taglib/fileref.h"
 
 //#define TESTCODE
 
@@ -110,7 +109,6 @@ WDL_String* GetProjectString(){
 		return prjStr;
 	}
 
-    int iLen = 0;
     while( !prj->GetLine( str, 4096 ) ){
 		prjStr->Append( str, prjStr->GetLength() + 4098 );
 		prjStr->Append( "\n", prjStr->GetLength() + 2 );
@@ -157,7 +155,8 @@ void SetProjectParameter( WDL_String *prjStr, string param, string paramValue ){
 				int startPos = pos - lineLen;
 
 				string replacementStr = param + string( " " ) + paramValue + string( "\n" );
-				WDL_String replacement = replacementStr.c_str();
+				WDL_String replacement;
+				replacement.Set(replacementStr.c_str());
 	
 				prjStr->DeleteSub( startPos, lineLen );
 				prjStr->Insert( replacement.Get(), startPos );
@@ -243,8 +242,8 @@ void SanitizeFilename( string *fn ){
 	
 	const char *fnChar = fn->c_str();
 
-	for( int i = 0; i < strlen( fnChar ); i++ ){
-		for( int j = 0; j < strlen( illegalChars ); j++ ){
+	for( int i = 0; i < (int)strlen( fnChar ); i++ ){
+		for( int j = 0; j < (int)strlen( illegalChars ); j++ ){
 			if( fnChar[i] == illegalChars[j] ){
 				fn->replace( i, 1, "_");
 				break;
@@ -346,7 +345,7 @@ void AutorenderRegions(COMMAND_T*) {
 	string outRenderProjectPrefix = outRenderProjectPrefixStream.str();
 	
 	//init the stuff we need for the region loop
-	int project_index = 0, marker_index = 0, track_index = 0, idx;
+	int marker_index = 0, track_index = 0, idx;
 	bool isrgn;
 	double pos, rgnend;
 	char* track_name;
@@ -360,7 +359,7 @@ void AutorenderRegions(COMMAND_T*) {
 			foundIdx[ idx ] = true;
 
 			track_index++;
-			WDL_String trackPrjStr = prjStr->Get();
+			WDL_String trackPrjStr(prjStr);
 
 			RenderTrack renderTrack;
 			renderTrack.trackNumber = track_index;

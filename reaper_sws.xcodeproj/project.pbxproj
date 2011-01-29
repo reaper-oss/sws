@@ -34,6 +34,10 @@
 		22257D9E108BDC6B0058CF75 /* XenUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D86108BDC6B0058CF75 /* XenUtils.cpp */; };
 		2233C7861187B4A400BB4BCB /* SnM_FXChainView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2233C7841187B4A400BB4BCB /* SnM_FXChainView.cpp */; };
 		2233C7871187B4A400BB4BCB /* SnM_FXChainView.h in Headers */ = {isa = PBXBuildFile; fileRef = 2233C7851187B4A400BB4BCB /* SnM_FXChainView.h */; };
+		2246D05D12F1622400EEDBD5 /* Autorender.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2246D05912F1622400EEDBD5 /* Autorender.cpp */; };
+		2246D05E12F1622400EEDBD5 /* Autorender.h in Headers */ = {isa = PBXBuildFile; fileRef = 2246D05A12F1622400EEDBD5 /* Autorender.h */; };
+		2246D05F12F1622400EEDBD5 /* RenderTrack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2246D05B12F1622400EEDBD5 /* RenderTrack.cpp */; };
+		2246D06012F1622400EEDBD5 /* RenderTrack.h in Headers */ = {isa = PBXBuildFile; fileRef = 2246D05C12F1622400EEDBD5 /* RenderTrack.h */; };
 		225130BF116101670028F26A /* padreActions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225130B2116101670028F26A /* padreActions.cpp */; };
 		225130C0116101670028F26A /* padreActions.h in Headers */ = {isa = PBXBuildFile; fileRef = 225130B3116101670028F26A /* padreActions.h */; };
 		225130C1116101670028F26A /* padreEnvelopeProcessor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225130B4116101670028F26A /* padreEnvelopeProcessor.cpp */; };
@@ -259,6 +263,10 @@
 		22257D86108BDC6B0058CF75 /* XenUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XenUtils.cpp; path = Xenakios/XenUtils.cpp; sourceTree = "<group>"; };
 		2233C7841187B4A400BB4BCB /* SnM_FXChainView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_FXChainView.cpp; path = SnM/SnM_FXChainView.cpp; sourceTree = "<group>"; };
 		2233C7851187B4A400BB4BCB /* SnM_FXChainView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_FXChainView.h; path = SnM/SnM_FXChainView.h; sourceTree = "<group>"; };
+		2246D05912F1622400EEDBD5 /* Autorender.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autorender.cpp; path = Autorender/Autorender.cpp; sourceTree = "<group>"; };
+		2246D05A12F1622400EEDBD5 /* Autorender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autorender.h; path = Autorender/Autorender.h; sourceTree = "<group>"; };
+		2246D05B12F1622400EEDBD5 /* RenderTrack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RenderTrack.cpp; path = Autorender/RenderTrack.cpp; sourceTree = "<group>"; };
+		2246D05C12F1622400EEDBD5 /* RenderTrack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RenderTrack.h; path = Autorender/RenderTrack.h; sourceTree = "<group>"; };
 		225130B2116101670028F26A /* padreActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreActions.cpp; path = Padre/padreActions.cpp; sourceTree = "<group>"; };
 		225130B3116101670028F26A /* padreActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreActions.h; path = Padre/padreActions.h; sourceTree = "<group>"; };
 		225130B4116101670028F26A /* padreEnvelopeProcessor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreEnvelopeProcessor.cpp; path = Padre/padreEnvelopeProcessor.cpp; sourceTree = "<group>"; };
@@ -491,6 +499,7 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				2246D06112F1622800EEDBD5 /* Autorender */,
 				229A7E7B1165742C00325BC2 /* Misc */,
 				22FFD278114CD8310077F1CA /* Autocolor.cpp */,
 				22FFD279114CD8310077F1CA /* Autocolor.h */,
@@ -607,6 +616,17 @@
 				22257D86108BDC6B0058CF75 /* XenUtils.cpp */,
 			);
 			name = Xenakios;
+			sourceTree = "<group>";
+		};
+		2246D06112F1622800EEDBD5 /* Autorender */ = {
+			isa = PBXGroup;
+			children = (
+				2246D05912F1622400EEDBD5 /* Autorender.cpp */,
+				2246D05A12F1622400EEDBD5 /* Autorender.h */,
+				2246D05B12F1622400EEDBD5 /* RenderTrack.cpp */,
+				2246D05C12F1622400EEDBD5 /* RenderTrack.h */,
+			);
+			name = Autorender;
 			sourceTree = "<group>";
 		};
 		225130B11161013E0028F26A /* Padre */ = {
@@ -904,6 +924,8 @@
 				22219AFE124AF1CE006CBC5D /* Macros.h in Headers */,
 				22C31F24125EF71A0072434F /* Adam.h in Headers */,
 				2273566812910ABF001A1570 /* EditCursor.h in Headers */,
+				2246D05E12F1622400EEDBD5 /* Autorender.h in Headers */,
+				2246D06012F1622400EEDBD5 /* RenderTrack.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -936,7 +958,6 @@
 			isa = PBXProject;
 			buildConfigurationList = 1DEB914E08733D8E0010E9CD /* Build configuration list for PBXProject "reaper_sws" */;
 			compatibilityVersion = "Xcode 3.1";
-			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
 				English,
@@ -1134,6 +1155,8 @@
 				22219AFD124AF1CE006CBC5D /* Macros.cpp in Sources */,
 				22C31F23125EF71A0072434F /* Adam.cpp in Sources */,
 				2273566712910ABF001A1570 /* EditCursor.cpp in Sources */,
+				2246D05D12F1622400EEDBD5 /* Autorender.cpp in Sources */,
+				2246D05F12F1622400EEDBD5 /* RenderTrack.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1181,8 +1204,10 @@
 				GCC_VERSION = 4.0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/lib";
 				OBJROOT = "$(SYMROOT)";
 				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ltag";
 				PREBINDING = NO;
 				SDKROOT = macosx10.4;
 				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";
@@ -1203,8 +1228,10 @@
 				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/lib";
 				OBJROOT = "$(SYMROOT)";
 				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ltag";
 				PREBINDING = NO;
 				SDKROOT = macosx10.4;
 				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";
@@ -1224,8 +1251,10 @@
 				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = NO;
 				GCC_WARN_UNUSED_FUNCTION = NO;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/lib";
 				OBJROOT = "$(SYMROOT)";
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "-ltag";
 				PREBINDING = NO;
 				SDKROOT = macosx10.5;
 				SHARED_PRECOMPS_DIR = "~/Dev/sws-extension/build/PrecompiledHeaders";

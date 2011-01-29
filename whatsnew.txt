@@ -1,3 +1,14 @@
++Added actions:
+SWS/S&M: Show take pitch envelope - v4 only (visible but no-op in v3)
+SWS/S&M: Hide take pitch envelope - v4 only (visible but no-op in v3)
+SWS/S&M: Copy selected track gouping
+SWS/S&M: Cut selected tracks grouping
+SWS/S&M: Paste grouping to selected tracks
+
++Notes/help view fixes:
+- pass keystrokes to the main window when locked (i.e. lock button)
+- properly init S&M project notes with REAPER ones when possible
+
 !v2.0.0 #6 (January 27, 2011)
 Fixed corruption of last item in auto color list
 Fixed keyboard focus issues

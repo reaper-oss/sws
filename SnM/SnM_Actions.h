@@ -2,7 +2,7 @@
 / SnM_Actions.h
 / JFB TODO? now, a better name would be "SnM.h"
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -302,6 +302,7 @@ int getTakeIndex(MediaItem* _item, MediaItem_Take* _take);
 void showHideTakeVolEnvelope(COMMAND_T* _ct); 
 void showHideTakePanEnvelope(COMMAND_T* _ct);
 void showHideTakeMuteEnvelope(COMMAND_T* _ct);
+void showHideTakePitchEnvelope(COMMAND_T* _ct);
 bool ShowTakeEnvVol(MediaItem_Take* _take);
 bool ShowTakeEnvPan(MediaItem_Take* _take);
 bool ShowTakeEnvMute(MediaItem_Take* _take);
@@ -311,6 +312,8 @@ void saveItemTakeTemplate(COMMAND_T* _ct);
 #ifdef _SNM_TRACK_GROUP_EX
 int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPatcher* _cpp);
 #endif
+void copyCutTrackGrouping(COMMAND_T* _ct);
+void pasteTrackGrouping(COMMAND_T* _ct);
 void saveTracksFolderStates(COMMAND_T* _ct);
 void restoreTracksFolderStates(COMMAND_T* _ct);
 void setTracksFolderState(COMMAND_T* _ct);

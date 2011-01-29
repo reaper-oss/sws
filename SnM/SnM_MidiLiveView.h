@@ -2,7 +2,7 @@
 / SnM_MidiLiveView.h
 / JFB TODO? now, SnM_LiveConfigsView.h would be a better name..
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2010-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Item.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -152,6 +152,7 @@ bool isEmptyMidi(MediaItem_Take* _take)
 	return emptyMidi;
 }
 
+//JFB!!! v4
 void setEmptyTakeChunk(WDL_String* _chunk, int _recPass, int _color)
 {
 	_chunk->Set("TAKE\n");
@@ -288,6 +289,7 @@ int buildLanes(const char* _undoTitle, int _mode)
 	return (badRecPass ? -1 : updates);
 }
 
+//JFB!!! v4
 // primitive (no undo)
 bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel)
 {
@@ -811,6 +813,19 @@ void showHideTakeMuteEnvelope(COMMAND_T* _ct)
 		fakeToggleAction(_ct);
 }
 
+void showHideTakePitchEnvelope(COMMAND_T* _ct) 
+{
+	if (DockWindowAddEx) //JFB!!! v4 only
+	{
+		char cVis[2] = ""; //empty means toggle
+		int value = (int)_ct->user;
+		if (value >= 0)
+			sprintf(cVis, "%d", value);
+		WDL_String defaultPoint("PT 0.000000 0.000000 0");
+		if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint) && value < 0) // toggle
+			fakeToggleAction(_ct);
+	}
+}
 
 // *** some wrappers for Padre ***
 bool ShowTakeEnv(MediaItem_Take* _take, const char* _envKeyword, WDL_String* _defaultPoint)

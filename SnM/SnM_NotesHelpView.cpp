@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_NotesHelpView.cpp
 /
-/ Copyright (c) 2011 Tim Payne (SWS), Jeffos 
+/ Copyright (c) 2010-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -235,13 +235,11 @@ void SNM_NotesHelpWnd::Update(bool _force)
 #endif
 */
 				break;
-
 			case TRACK_NOTES:
 				refreshType = updateTrackNotes();
 				if (refreshType == REQUEST_REFRESH_EMPTY)
 					g_trNote = NULL;
 				break;
-
 			case ACTION_HELP:
 				refreshType = updateActionHelp();
 				if (refreshType == REQUEST_REFRESH_EMPTY) {
@@ -252,14 +250,10 @@ void SNM_NotesHelpWnd::Update(bool _force)
 					*g_lastActionListSection = 0;
 				}
 				break;
-
 			case NOTES_HELP_DISABLED:
 				KillTimer(m_hwnd, 1);
 				SetText(g_prjNotes.Get()->Get());
 				refreshType = REQUEST_REFRESH;
-				break;
-
-			default:
 				break;
 		}
 		
@@ -273,7 +267,8 @@ void SNM_NotesHelpWnd::saveCurrentText(int _type)
 {
 	if (g_pNotesHelpWnd)
 	{
-		switch(_type) {
+		switch(_type) 
+		{
 			case ITEM_NOTES: 
 				m_internalTLChange = true;	// item note updates lead to SetTrackListChange() CSurf notif (reentrance)
 											//JFB TODO .. but check if it can be used for concurent item note updates ?
@@ -282,7 +277,6 @@ void SNM_NotesHelpWnd::saveCurrentText(int _type)
 			case TRACK_NOTES: saveCurrentTrackNotes(); break;
 			case ACTION_HELP: saveCurrentHelp(); break;
 			case NOTES_HELP_DISABLED: saveCurrentPrjNotes(); break;
-			default:break;
 		}
 	}
 }
@@ -323,7 +317,7 @@ void SNM_NotesHelpWnd::saveCurrentItemNotes()
 		{
 			bool update = false;
 			WDL_String newNotes;
-			if (!*buf || GetNotesFromString(buf, &newNotes))
+			if (!*buf || GetNotesChunkFromString(buf, &newNotes))
 			{
 				SNM_ChunkParserPatcher p(g_mediaItemNote);
 				bool update = p.ReplaceSubChunk("NOTES", 2, 0, newNotes.Get()); // can be "", ie remove notes
@@ -434,7 +428,7 @@ int SNM_NotesHelpWnd::updateItemNotes()
 			WDL_String notes;
 			char buf[MAX_HELP_LENGTH] = "";
 			if (p.GetSubChunk("NOTES", 2, 0, &notes))
-				GetStringFromNotes(&notes, buf, MAX_HELP_LENGTH);
+				GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH);
 			SetText(buf);
 			refreshType = REQUEST_REFRESH;
 		} 
@@ -532,8 +526,6 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				g_locked = !g_locked;
 				if (!g_locked)
 					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
-				else
-					SetFocus(GetMainHwnd());
 				RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
 			}
 			break;
@@ -566,6 +558,12 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		Main_OnCommand((int)wParam, (int)lParam);
 }
 
+/*JFB!!! r376
+bool SNM_NotesHelpWnd::IsActive(bool bWantEdit) {
+	return (bWantEdit || GetForegroundWindow() == m_hwnd || GetFocus() == GetDlgItem(m_hwnd, IDC_EDIT));
+}
+*/
+
 HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y)
 {
 	HMENU hMenu = CreatePopupMenu();
@@ -592,12 +590,18 @@ void SNM_NotesHelpWnd::OnDestroy()
 
 // we don't check iKeyState in order to catch (almost) everything
 // some key masks won't pass here though (e.g. Ctrl+Shift)
+// returns:
+// -1 -> catch and send to the control
+//  0 -> pass-thru to main window (then -666 in SWS_DockWnd::keyHandler())
+//  1 -> eat
 int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState) 
 {
 	if (GetDlgItem(m_hwnd, IDC_EDIT) == msg->hwnd)
 	{
-		if (g_locked)
-			return 1; //eat keystroke if locked
+		if (g_locked) {
+			msg->hwnd = m_hwnd; // redirect to main window
+			return 0; // pass-thru to main window
+		}
 		else if ((msg->message == WM_KEYDOWN || msg->message == WM_CHAR) && msg->wParam == VK_RETURN)
 			return -1; // Catch the return and send to edit control for multi-line
 	}
@@ -708,8 +712,6 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 					break;
 				case NOTES_HELP_DISABLED:
 					EnumProjects(-1, str, 512);
-					break;
-				default:
 					break;
 			}
 			txtVwnd->SetText(str);
@@ -879,16 +881,23 @@ bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufMaxSize)
 	return true;
 }
 
-bool GetStringFromNotes(WDL_String* _notes, char* _buf, int _bufMaxSize)
+bool GetStringFromNotesChunk(WDL_String* _notes, char* _buf, int _bufMaxSize)
 {
 	if (!_buf || !_notes)
 		return false;
 
 	memset(_buf, 0, sizeof(_buf));
+
+/* No! ProcessExtensionLine() provides partial chunks..
+	// Test note chunk validity
+	if (_strnicmp(_notes->Get(), "<NOTES", 6) || _strnicmp((char*)(_notes->Get()+_notes->GetLength()-3), "\n>\n", 3))
+		return (_notes->GetLength() == 0); // empty _notes is a valid case
+*/
 	char* pNotes = _notes->Get();
 
 	// find 1st '|'
-	int i=0, j;	while (*pNotes && pNotes[i] && pNotes[i] != '|') i++;
+	int i=0, j;
+	while (*pNotes && pNotes[i] && pNotes[i] != '|') i++;
 
 	if (*pNotes && pNotes[i]) j = i+1;
 	else return true;
@@ -904,7 +913,7 @@ bool GetStringFromNotes(WDL_String* _notes, char* _buf, int _bufMaxSize)
 	return true;
 }
 
-bool GetNotesFromString(const char* _buf, WDL_String* _notes, const char* _startLine)
+bool GetNotesChunkFromString(const char* _buf, WDL_String* _notes, const char* _startLine)
 {
 	if (_notes && _buf)
 	{
@@ -952,7 +961,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		ExtensionConfigToString(&notes, ctx);
 
 		char buf[MAX_HELP_LENGTH] = "";
-		GetStringFromNotes(&notes, buf, MAX_HELP_LENGTH);
+		GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH);
 		g_prjNotes.Get()->Set(buf);
 		if (g_pNotesHelpWnd && g_pNotesHelpWnd->GetType() == NOTES_HELP_DISABLED)
 			g_pNotesHelpWnd->Update();
@@ -971,7 +980,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 			ExtensionConfigToString(&notes, ctx);
 
 			char buf[MAX_HELP_LENGTH] = "";
-			if (GetStringFromNotes(&notes, buf, MAX_HELP_LENGTH))
+			if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
 				g_pTracksNotes.Get()->Add(new SNM_TrackNotes(tr, buf));
 
 			return true;
@@ -994,7 +1003,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	if (g_prjNotes.Get()->GetLength())
 	{
 		strcpy(startLine, "<S&M_PROJNOTES\n|");
-		if (GetNotesFromString(g_prjNotes.Get()->Get(), &formatedNotes, startLine))
+		if (GetNotesChunkFromString(g_prjNotes.Get()->Get(), &formatedNotes, startLine))
 			StringToExtensionConfig(formatedNotes.Get(), ctx);
 	}
 
@@ -1011,7 +1020,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			guidToString(&g, strId);
 			sprintf(startLine, "<S&M_TRACKNOTES %s\n|", strId);
 
-			if (GetNotesFromString(g_pTracksNotes.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
+			if (GetNotesChunkFromString(g_pTracksNotes.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
 				StringToExtensionConfig(formatedNotes.Get(), ctx);
 		}
 	}
@@ -1024,30 +1033,28 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_prjNotes.Get()->Set("");
 
 	// Load REAPER project notes from RPP file
-	WDL_String notes;
 	char cBuf[BUFFER_SIZE];
 	EnumProjects(-1, cBuf, BUFFER_SIZE);
 	ProjectStateContext* prjCtx = ProjectCreateFileRead(cBuf);
 	if (prjCtx)
 	{
-		while(!prjCtx->GetLine(cBuf, 512))
-		{
-			LineParser lp(false);
-			if (!lp.parse(cBuf) && lp.getnumtokens())
-			{
-				notes.Append(cBuf);
-				notes.Append("\n");
-				if (lp.gettoken_str(0)[0] == '>')
-					break;
-			}
+		WDL_String rpp;
+		while(!prjCtx->GetLine(cBuf, BUFFER_SIZE)) {
+			rpp.Append(cBuf);
+			rpp.Append("\n");
 		}
 		delete prjCtx;
+
+		// "translate notes"
+		SNM_ChunkParserPatcher p(&rpp);
+		WDL_String notes;
+		if (p.GetSubChunk("NOTES", 2, 0, &notes))
+		{
+			char bufNotes[MAX_HELP_LENGTH] = "";
+			if (GetStringFromNotesChunk(&notes, bufNotes, MAX_HELP_LENGTH))
+				g_prjNotes.Get()->Set(bufNotes);
+		}
 	}
-	// "translate notes"
-	char bufNotes[MAX_HELP_LENGTH] = "";
-	char* dbg = notes.Get();
-	GetStringFromNotes(&notes, bufNotes, MAX_HELP_LENGTH);
-	g_prjNotes.Get()->Set(bufNotes);
 
 	// Init track notes
 	g_pTracksNotes.Cleanup();

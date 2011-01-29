@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_NotesHelpView.h
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2010-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,8 +29,8 @@
 #pragma once
 
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufMaxSize);
-bool GetStringFromNotes(WDL_String* _notes, char* _buf, int _bufMaxSize);
-bool GetNotesFromString(const char* _buf, WDL_String* _notes, const char* _startLine = NULL);
+bool GetStringFromNotesChunk(WDL_String* _notes, char* _buf, int _bufMaxSize);
+bool GetNotesChunkFromString(const char* _buf, WDL_String* _notes, const char* _startLine = NULL);
 
 class SNM_NotesHelpWnd : public SWS_DockWnd
 {
@@ -58,6 +58,9 @@ public:
 
 protected:
 	void OnInitDlg();
+/*JFB!!! r376	
+	bool IsActive(bool bWantEdit = false);
+*/
 	HMENU OnContextMenu(int x, int y);
 	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState);

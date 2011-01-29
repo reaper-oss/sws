@@ -1,6 +1,6 @@
 /******************************************************************************
 ** SNM_ChunkParserPatcher.h - v1.1
-** Copyright (C) 2009-2010, Jeffos
+** Copyright (C) 2008-2011, Jeffos
 **
 **    This software is provided 'as-is', without any express or implied
 **    warranty.  In no event will the authors be held liable for any damages
@@ -28,32 +28,29 @@
 // In both cases, it's also either attached to a WDL_String* (simple text 
 // chunk parser/patcher) -OR- to a reaThing* (MediaTrack*, MediaItem*, ..). 
 // In the latter case, a SNM_ChunkParserPatcher instance only gets (and sets, 
-// if needed) the chunk once, in between, the user works on a cache. *If any*, 
+// if needed) the chunk once, in between, the user works on a cache. *If any* 
 // the updates are automatically comitted when destroying a SNM_ChunkParserPatcher 
 // instance (can also be forced/done manually, see m_autoCommit & Commit()).
 //
 // See many use-cases here: 
 // http://code.google.com/p/sws-extension/source/browse/trunk#trunk/SnM
 //
-// This code uses/is tied to Cockos' WDL library, http://cockos.com/wdl
+// This code uses/is tied to Cockos' WDL library: http://cockos.com/wdl
 // Thank you Cockos!
 // 
 // Important: 
 // - Chunks may be HUGE!
 // - The code assumes getted/setted RPP chunks are consistent
-// - For best performances, the SAX-ish way is prefered (also see 'advanced' 
-//   optionnal flags: m_stopRecopy & m_breakParsePatch).
 // - For additional performance improvments, this WDL_String mod can be used:
 //   http://code.google.com/p/sws-extension/source/browse/trunk/SnM/wdlstring.h 
-//   see details there: mods are plainly marked as such as required by the licensing
+//   (see details there, mods are plainly marked as required by the licensing)
 //
 // Changelog:
 // v1.1
 // - Fixes
-// - Use SWS_GetSetObjectState, if _SWS_EXTENSION is defined. 
-//   This offers a 2nd level of cache. Note: SWS_GetSetObjectState() == native 
-//   GetSetObjectState() if it isn't surrounded with SWS_CacheObjectState(true)/(false)
-//   See http://code.google.com/p/sws-extension/source/browse/trunk/ObjectState/ObjectState.cpp
+// - Use SWS_GetSetObjectState if _SWS_EXTENSION is defined. This offers another level of cache.
+//   Note: SWS_GetSetObjectState == native GetSetObjectState if it is not surrounded with 
+//   SWS_CacheObjectState(true)/(false). See http://code.google.com/p/sws-extension/source/browse/trunk/ObjectState/ObjectState.cpp
 // v1.0 
 // - Licensing update, see header
 // - Performance improvments, more to come..
@@ -112,8 +109,8 @@ static int RemoveAllIds(char* _chunk, int* _len = NULL){
 	return RemoveChunkLines(_chunk, "ID {", false, '}', _len);
 }
 
+// Rmk: preserves POOLEDEVTS ids
 static int RemoveAllIds(WDL_String* _chunk, int* _len = NULL){
-	//JFB v4: POOLEDEVTS GUIDs will remain...
 	return RemoveChunkLines(_chunk, "ID {", false, '}', _len);
 }
 
@@ -281,7 +278,7 @@ void SetProcessInProjectMIDI(bool _enable) {
 
 
 //**********************
-// Facility methods
+// Helper methods
 //**********************
 
 void CancelUpdates() {
@@ -358,24 +355,19 @@ bool InsertAfterBefore(int _dir, const char* _str, const char* _parent, const ch
 	return false;
 }
 
-int RemoveLines(WDL_PtrList<const char>* _removedKeywords) 
-{
-	int updates = 0;
-	if (GetChunk()) // cache if needed
-	{
-		updates = RemoveChunkLines(m_chunk, _removedKeywords, true);
-		m_updates += updates;
-	}
-	return updates;
+int RemoveLines(const char* _removedKeyword, bool _checkBOL = true, int _checkEOLChar = 0) {
+	return SetUpdates(RemoveChunkLines(GetChunk(), _removedKeyword, _checkBOL, _checkEOLChar));
 }
 
-int RemoveIds() 
-{
-	// rmk: m_updates is volontary ignored, not considered as an user update (internal)
-	int updates = 0;
-	if (GetChunk()) // cache if needed
-		updates = RemoveChunkLines(m_chunk, "ID {", false, '}');
-	return updates;
+int RemoveLines(WDL_PtrList<const char>* _removedKeywords, bool _checkBOL = true, int _checkEOLChar = 0) {
+	return SetUpdates(RemoveChunkLines(GetChunk(), _removedKeywords, _checkBOL, _checkEOLChar));
+}
+
+// Notes:
+// - m_updates is volontary ignored here, not considered as an user update (internal)
+// - preserves POOLEDEVTS ids
+int RemoveIds() {
+	return RemoveChunkLines(GetChunk(), "ID {", false, '}');
 }
 
 // This will return the start of the current, next or previous line position for the searched _keyword
@@ -559,7 +551,6 @@ void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch,
 
 // *** ParsePatchCore() ***
 //
-// Parameters: see below. 
 // Globaly, the method is tolerant; the less parameters provided, the more 
 // parsed lines will be notified to inherited instances (through NotifyChunkLine())
 // or, when it's used direcly, the more lines will be read/altered.
@@ -567,6 +558,8 @@ void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch,
 // parse all lines, is the nth FX bypassed (under parent 'FXCHAIN')?, etc..
 // Note: sometimes there's a dependency between the params to be provided
 // (most of the time with _mode), must return -1 if it's not respected.
+//
+// Parameters: see below. 
 //
 // Return values:
 // Always return -1 on error/bad usage,
@@ -581,13 +574,13 @@ int ParsePatchCore(
 	const char* _keyWord, 
 	int _numTokens,     // 0-based (-1: ignored)
 	int _occurence,     // 0-based (-1: ignored, all occurences notified)
-	int _tokenPos,      // 0-based (-1: ignored, may be mandatory depending on _mode 
+	int _tokenPos,      // 0-based (-1: ignored, may be mandatory depending on _mode)
 	void* _value,       // value to get/set
 	void* _valueExcept, // value to get/set for the "except case"
 	const char* _breakingKeyword = NULL) // // for optimization, optionnal. If specified, the parser won't go further when this keyword is encountred, be carefull with that!
 {
-	// check params
 #ifdef _SNM_DEBUG 
+	// check params
 	if ((!_value || _tokenPos < 0) && 
 			(_mode == SNM_SET_CHUNK_CHAR || _mode == SNM_SETALL_CHUNK_CHAR_EXCEPT || _mode == SNM_GETALL_CHUNK_CHAR_EXCEPT))
 		return -1;

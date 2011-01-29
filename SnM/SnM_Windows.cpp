@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Windows.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -40,16 +40,15 @@ typedef struct
 WDL_PtrList_DeleteOnDestroy<t_TrackFXIds> g_hiddenFloatingWindows(free);
 
 
+#ifdef _WIN32
+
 ///////////////////////////////////////////////////////////////////////////////
 // Routing, env windows - WIN ONLY!
 //
-// Jeffos' note: 
 // I know... I'm not happy with this "get window by name" solution either.
-// Though, floating FX and FX chain windows action are now "clean" (new 
-// dedicated APIs since REAPER v3.41, thanks Cockos!)
+// Though, floating FX and FX chain window actions are now okay (new dedicated 
+// APIs since REAPER v3.41, thanks Cockos!)
 ///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _WIN32
 
 bool toggleShowHideWin(const char * _title) {
 	HWND w = SearchWindow(_title);

@@ -1,7 +1,7 @@
 /******************************************************************************
 / SNM_Chunk.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -124,7 +124,7 @@ bool SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, SNM_SndRcv* _io)
 }
 
 int SNM_SendPatcher::RemoveReceives() {
-	return SetUpdates(RemoveChunkLines(GetChunk(), "AUXRECV", true));
+	return RemoveLines("AUXRECV");
 }
 
 int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr) 
@@ -135,7 +135,7 @@ int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr)
 
 	char buf[32];
 	_snprintf(buf, 32, "AUXRECV %d", srcId-1);
-	return SetUpdates(RemoveChunkLines(GetChunk(), buf, true));
+	return RemoveLines(buf);
 }
 
 
@@ -252,6 +252,9 @@ WDL_String* SNM_FXChainTakePatcher::GetFXChain()
 	return NULL;
 }
 
+
+
+// JFB!!! v4 !
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_FXChainTrackPatcher

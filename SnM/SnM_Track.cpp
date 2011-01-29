@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Track.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -58,9 +58,7 @@ int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPa
 				s.AppendFormatted(128, _master ? " %d 0 " : " 0 %d ", (int)grpMask);
 				s.Append("0 0 0 0 0 0 0 0 0\n");
 				_cpp->GetChunk()->Insert(s.Get(), patchPos);				
-
-				// as we're directly working on the cached chunk..
-				updates = _cpp->SetUpdates(1);
+				updates = _cpp->SetUpdates(1); // as we're directly working on the cached chunk..
 			}
 		}
 		// track grouping already exist => patch only what's needed
@@ -93,6 +91,56 @@ int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPa
 }
 #endif
 
+WDL_String g_trackGrpClipboard;
+
+void copyCutTrackGrouping(COMMAND_T* _ct)
+{
+	int updates = 0;
+	bool copyDone = false;
+	g_trackGrpClipboard.Set(""); // reset clipboard
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			SNM_ChunkParserPatcher p(tr);
+			if (!copyDone)
+				copyDone = (p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "GROUP_FLAGS", -1 , 0, 0, &g_trackGrpClipboard) > 0);
+
+			// cut (for all selected tracks)
+			if ((int)_ct->user)
+				updates += p.RemoveLines("GROUP_FLAGS");
+			// single copy: the 1st found track grouping
+			else if (copyDone)
+				break;
+		}
+	}
+	if (updates)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+void pasteTrackGrouping(COMMAND_T* _ct)
+{
+	int updates = 0;
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			SNM_ChunkParserPatcher p(tr);
+			updates += p.RemoveLines("GROUP_FLAGS");
+			int patchPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", -1, 0, 0); //JFB strstr!?
+			if (patchPos > 0)
+			{
+				p.GetChunk()->Insert(g_trackGrpClipboard.Get(), --patchPos);				
+				p.SetUpdates(1);  // as we're directly working on the cached chunk..
+				updates++;
+			}
+		}
+	}
+	if (updates)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Track folders

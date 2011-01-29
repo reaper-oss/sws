@@ -2,7 +2,7 @@
 / SnM_FXChainView.cpp
 / JFB TODO? now, SnM_Resources.cpp/.h would be better names..
 /
-/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -34,7 +34,7 @@
 #include "../MediaPool/DragDrop.h" //JFB: move to the trunk?
 #endif
 
-//#define _SNM_ITT // Item/take templates
+//#define _SNM_ITT // WIP: Item/take templates
 
 // Commands
 #define AUTO_INSERT_SLOTS				0x110000 // common cmds

@@ -878,6 +878,8 @@ int ConsoleInit()
 		{
 			if ((pC = strchr(cBuf, '\n')) != NULL)
 				*pC = 0;
+			if ((pC = strchr(cBuf, '\r')) != NULL) // SWS Jan30 2011 - Fix files that were copied from PC to mac
+				*pC = 0;
 			if (strlen(cBuf) && cBuf[0] != '[' && cBuf[0] != '/')
 			{
 				COMMAND_T* ct = new COMMAND_T;

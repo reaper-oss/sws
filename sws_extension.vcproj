@@ -546,6 +546,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\Misc\RecCheck.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Snapshots\SnapshotClass.cpp"
 				>
 			</File>
@@ -773,6 +777,10 @@
 			</File>
 			<File
 				RelativePath="..\..\Program Files (x86)\REAPER\reaper_plugin_functions.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\RecCheck.h"
 				>
 			</File>
 			<File

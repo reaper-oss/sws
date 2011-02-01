@@ -1,7 +1,7 @@
 /******************************************************************************
 / Color.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -579,8 +579,34 @@ void ItemCustomColor(int iCustColor)
 	UpdateTimeline();
 }
 
+void TakeCustomColor(int iCustColor)
+{
+	COLORREF cr;
+	UpdateCustomColors();
+	cr = g_custColors[iCustColor] | 0x1000000;
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* mi = GetTrackMediaItem(tr, j);
+			if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
+			{
+				MediaItem_Take* take = GetActiveTake(mi);
+				if (take)
+					GetSetMediaItemTakeInfo(take, "I_CUSTOMCOLOR", &cr);
+			}
+		}
+	}
+	char cUndoText[100];
+	sprintf(cUndoText, "Set take(s) to custom color %d", iCustColor+1);
+	Undo_OnStateChange(cUndoText);
+	UpdateTimeline();
+}
+
 void TrackCustCol(COMMAND_T* ct) { TrackCustomColor((int)ct->user); }
 void ItemCustCol(COMMAND_T* ct)  { ItemCustomColor((int)ct->user); }
+void TakeCustCol(COMMAND_T* ct)  { TakeCustomColor((int)ct->user); }
 
 void RandomColorAll(COMMAND_T*)
 {
@@ -931,6 +957,23 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS: Set selected track(s)/item(s) to one random color" },     "SWS_RANDOMCOLALL",		RandomColorAll,		NULL, },
 	{ { DEFACCEL, "SWS: Set selected track(s)/item(s) to custom color..." },      "SWS_CUSTOMCOLALL",		CustomColorAll,		NULL, },
+
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 1" },                "SWS_TAKECUSTCOL1",		TakeCustCol,		NULL, 0 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 2" },                "SWS_TAKECUSTCOL2",		TakeCustCol,		NULL, 1 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 3" },                "SWS_TAKECUSTCOL3",		TakeCustCol,		NULL, 2 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 4" },                "SWS_TAKECUSTCOL4",		TakeCustCol,		NULL, 3 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 5" },                "SWS_TAKECUSTCOL5",		TakeCustCol,		NULL, 4 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 6" },                "SWS_tAKECUSTCOL6",		TakeCustCol,		NULL, 5 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 7" },                "SWS_TAKECUSTCOL7",		TakeCustCol,		NULL, 6 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 8" },                "SWS_TAKECUSTCOL8",		TakeCustCol,		NULL, 7 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 9" },                "SWS_TAKECUSTCOL9",		TakeCustCol,		NULL, 8 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 10" },               "SWS_TAKECUSTCOL10",		TakeCustCol,		NULL, 9 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 11" },               "SWS_TAKECUSTCOL11",		TakeCustCol,		NULL, 10 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 12" },               "SWS_TAKECUSTCOL12",		TakeCustCol,		NULL, 11 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 13" },               "SWS_TAKECUSTCOL13",		TakeCustCol,		NULL, 12 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 14" },               "SWS_TAKECUSTCOL14",		TakeCustCol,		NULL, 13 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 15" },               "SWS_TAKECUSTCOL15",		TakeCustCol,		NULL, 14 },
+	{ { DEFACCEL, "SWS: Set selected take(s) to custom color 16" },               "SWS_TAKECUSTCOL16",		TakeCustCol,		NULL, 15 },
 
 	{ {}, LAST_COMMAND, NULL }, // Denote end of table
 };

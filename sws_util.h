@@ -77,6 +77,9 @@ typedef struct COMMAND_T
 	bool (*getEnabled)(COMMAND_T*);
 } COMMAND_T;
 
+typedef void (*SWS_COMMANDFUNC)(COMMAND_T*);
+#define SWS_NOOP ((SWS_COMMANDFUNC)-1)
+
 template<class PTRTYPE> class SWSProjConfig
 {
 protected:

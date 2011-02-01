@@ -54,7 +54,7 @@ string g_tag_genre;
 int g_tag_year = GetCurrentYear();
 string g_tag_comment;
 
-#define CONSOLE_WINDOWPOS_KEY "ReaConsoleWindowPos"
+#define METADATA_WINDOWPOS_KEY "AutorenderWindowPos"
 
 //#define TESTCODE
 
@@ -104,18 +104,15 @@ string ParseFileExtension( string path ){
     return "";
 }
 
-WDL_String* GetProjectString(){
-    WDL_String* prjStr = new WDL_String("");
-
+void GetProjectString(WDL_String* prjStr){
 	char str[4096];
 	EnumProjects(-1, str, 256);	
 
-	ProjectStateContext* prj;
-	prj = ProjectCreateFileRead( str );
+	ProjectStateContext* prj = ProjectCreateFileRead( str );
 
 	if( !prj ){
 		//TODO: Throw error
-		return prjStr;
+		return;
 	}
 
     while( !prj->GetLine( str, 4096 ) ){
@@ -123,8 +120,6 @@ WDL_String* GetProjectString(){
 		prjStr->Append( "\n", prjStr->GetLength() + 2 );
     }
     delete prj;
-
-	return prjStr;
 }
 
 void WriteProjectFile( string filename, WDL_String* prjStr ){
@@ -137,18 +132,11 @@ void WriteProjectFile( string filename, WDL_String* prjStr ){
 	}
     delete outProject;
 }
+
 /*
-WDL_HeapBuf GetHeapBufFromChar( const char *str ){
-	WDL_HeapBuf m_hb;
-
-    int s = (int)strlen( str );
-    char *newbuf = ( char* ) m_hb.Resize( s + 1, false );
-    if (newbuf){
-		memcpy( newbuf, str, s);
-		newbuf[s] = 0;
-    }
-
-	return m_hb;
+ void GetHeapBufFromChar(WDL_HeapBuf* buf, const char *str)
+{
+	strcpy((char*)buf->Resize(strlen(str)+1), str);
 }
 */
 
@@ -300,6 +288,7 @@ bool BrowseForRenderPath( char *renderPathChar ){
 	return result;
 }
 
+#ifdef _WIN32
 wchar_t* WideCharPlz( const char* inChar ){		
 	DWORD dwNum = MultiByteToWideChar(CP_UTF8, 0, inChar, -1, NULL, 0);
 	wchar_t *wChar;
@@ -307,14 +296,16 @@ wchar_t* WideCharPlz( const char* inChar ){
 	MultiByteToWideChar(CP_UTF8, 0, inChar, -1, wChar, dwNum );
 	return wChar;
 }
+#endif
 
 void AutorenderRegions(COMMAND_T*) {
 	Main_OnCommand( 40026, 0 ); //Save current project
 
 	//Get the project config as a WDL_String
-	WDL_String* prjStr = GetProjectString();	
+	WDL_String prjStr;
+	GetProjectString(&prjStr);
 
-	string renderFileExtension = GetCurrentRenderExtension( prjStr );
+	string renderFileExtension = GetCurrentRenderExtension( &prjStr );
 	if( renderFileExtension.empty() ){
 		//have to have a renderFileExtension, show error and exit
 		MessageBox( GetMainHwnd(), "Couldn't get render extension. Manually render a dummy file with the desired settings and run again.", "Autorender: Render Extension Error", MB_OK );
@@ -409,11 +400,15 @@ void AutorenderRegions(COMMAND_T*) {
 
 	// Tag!
 	for( unsigned int i = 0; i < renderTracks.size(); i++){		
-		string renderedFilePath = g_render_path + renderTracks[i].getFileName( renderFileExtension );						
+		string renderedFilePath = g_render_path + renderTracks[i].getFileName( renderFileExtension );
+#ifdef _WIN32
 		wchar_t* w_rendered_path = WideCharPlz( renderedFilePath.c_str() );
-
 		TagLib::FileRef f( w_rendered_path );
-		if( !f.isNull() ){			
+#else
+		TagLib::FileRef f( renderedFilePath.c_str() );
+#endif
+		if( !f.isNull() ){
+#ifdef _WIN32
 			wchar_t* w_tag_artist = WideCharPlz( g_tag_artist.c_str() );
 			wchar_t* w_tag_album = WideCharPlz( g_tag_album.c_str() );
 			wchar_t* w_tag_genre = WideCharPlz( g_tag_genre.c_str() );
@@ -423,16 +418,31 @@ void AutorenderRegions(COMMAND_T*) {
 			if( wcslen( w_tag_artist ) ) f.tag()->setArtist( w_tag_artist );
 			if( wcslen( w_tag_album ) ) f.tag()->setAlbum( w_tag_album );
 			if( wcslen( w_tag_genre ) ) f.tag()->setGenre( w_tag_genre );
-			if( g_tag_year > 0 ) f.tag()->setYear( g_tag_year );
 			if( wcslen( w_tag_comment ) ) f.tag()->setComment( w_tag_comment );
 
-			f.tag()->setTrack( i + 1 );
 			f.tag()->setTitle( w_track_title );
 			
+			delete [] w_tag_artist;
+			delete [] w_tag_album;
+			delete [] w_tag_genre;
+			delete [] w_tag_comment;
+			delete [] w_track_title;
+#else
+			if( !g_tag_artist.empty() ) f.tag()->setArtist( g_tag_artist.c_str() );
+			if( !g_tag_album.empty() ) f.tag()->setAlbum( g_tag_album.c_str() );
+			if( !g_tag_genre.empty() ) f.tag()->setGenre( g_tag_genre.c_str() );
+			if( !g_tag_comment.empty() ) f.tag()->setComment( g_tag_comment.c_str() );
+			f.tag()->setTitle( renderTracks[i].trackName.c_str() );
+#endif			
+			if( g_tag_year > 0 ) f.tag()->setYear( g_tag_year );
+			f.tag()->setTrack( i + 1 );
 			f.save();
 		} else {
 			//throw error?
 		}
+#ifdef _WIN32
+		delete [] w_rendered_path;
+#endif
 	}
 
 #ifdef _WIN32
@@ -469,7 +479,7 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 
     switch (uMsg){
             case WM_INITDIALOG:
-				RestoreWindowPos(hwndDlg, CONSOLE_WINDOWPOS_KEY, false);
+				RestoreWindowPos(hwndDlg, METADATA_WINDOWPOS_KEY, false);
 				SetDlgItemText(hwndDlg, IDC_ARTIST, g_tag_artist.c_str() );
 				SetDlgItemText(hwndDlg, IDC_ALBUM, g_tag_album.c_str() );
 				SetDlgItemText(hwndDlg, IDC_GENRE, g_tag_genre.c_str() );
@@ -480,7 +490,7 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 				return 0;
             case WM_COMMAND:
 				switch (LOWORD(wParam)){
-					case IDBROWSE:
+					case IDC_BROWSE:
 						char renderPathChar[1024];
 						bool browseResult;
 						browseResult = BrowseForRenderPath(renderPathChar);
@@ -502,7 +512,7 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 						}
                         // fall through!								
                     case IDCANCEL:							
-                        SaveWindowPos(hwndDlg, CONSOLE_WINDOWPOS_KEY);
+                        SaveWindowPos(hwndDlg, METADATA_WINDOWPOS_KEY);
                         EndDialog(hwndDlg,0);
                         break;
 				}
@@ -556,49 +566,66 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 void writeAutorenderSettingInt( ProjectStateContext *ctx, const char* settingName, int setting ){
 	char str[512];
-	sprintf( str, "%s", settingName);	
-	sprintf( str + strlen( str ), " %i", setting );	
+	sprintf( str, "%s %i", settingName, setting);
 	ctx->AddLine(str);
 }
 
 void writeAutorenderSettingString( ProjectStateContext *ctx, const char* settingName, string setting ){
-	char str[512];	
-	sprintf( str, "%s", settingName);	
-	sprintf( str + strlen( str ), " \"%s\"", setting.c_str() );	
-	ctx->AddLine(str);
+	// Need to use makeEscapedConfigString to make sure that if the user enters "'` etc into the
+	// metadata that the RPP isn't corrupted
+	WDL_String sanitizedStr;
+	makeEscapedConfigString(setting.c_str(), &sanitizedStr);
+	WDL_String str(settingName);
+	str.Append(" ");
+	str.Append(sanitizedStr.Get());
+	ctx->AddLine(str.Get());
 }
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg){
-	ctx->AddLine("<AUTORENDER");
+	// Don't save if the data's blank.  Otherwise every project file will have the AUTORENDER section
+	// In itself this is fine, but then if the user uninstalls the SWS extension
+	// then there will be a warning with every project file about unknown ext data
+	// If only the year is set, don't write anything either.
+	if (!g_tag_artist.empty() || !g_tag_album.empty() || !g_tag_genre.empty() ||
+		!g_tag_comment.empty() || !g_render_path.empty())
+	{
+		ctx->AddLine("<AUTORENDER");
 	
-	if( !g_tag_artist.empty() ){
-		writeAutorenderSettingString( ctx, "ARTIST", g_tag_artist );
-	}
+		if( !g_tag_artist.empty() ){
+			writeAutorenderSettingString( ctx, "ARTIST", g_tag_artist );
+		}
 	
-	if( !g_tag_album.empty() ){
-		writeAutorenderSettingString( ctx, "ALBUM", g_tag_album );
-	}
+		if( !g_tag_album.empty() ){
+			writeAutorenderSettingString( ctx, "ALBUM", g_tag_album );
+		}
 
-	if( !g_tag_genre.empty() ){
-		writeAutorenderSettingString( ctx, "GENRE", g_tag_genre );
-	}
+		if( !g_tag_genre.empty() ){
+			writeAutorenderSettingString( ctx, "GENRE", g_tag_genre );
+		}
 
-	if( g_tag_year > 0 ){
-		writeAutorenderSettingInt( ctx, "YEAR", g_tag_year );
-	}
+		if( g_tag_year > 0 ){
+			writeAutorenderSettingInt( ctx, "YEAR", g_tag_year );
+		}
 
-	if( !g_tag_comment.empty() ){
-		writeAutorenderSettingString( ctx, "COMMENT", g_tag_comment );
-	}
+		if( !g_tag_comment.empty() ){
+			writeAutorenderSettingString( ctx, "COMMENT", g_tag_comment );
+		}
 
-	if( !g_render_path.empty() ){
-		writeAutorenderSettingString( ctx, "RENDER_PATH", g_render_path );
-	}
+		if( !g_render_path.empty() ){
+			writeAutorenderSettingString( ctx, "RENDER_PATH", g_render_path );
+		}
 
-	ctx->AddLine(">");
+		ctx->AddLine(">");
+	}
 }
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg){
+	g_tag_artist.clear();
+	g_tag_album.clear();
+	g_tag_genre.clear();
+	g_tag_year = GetCurrentYear();
+	g_tag_comment.clear();
+	g_render_path.clear();	
 }
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };

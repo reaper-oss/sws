@@ -1,7 +1,7 @@
 /******************************************************************************
 / MarkerActions.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -89,6 +89,11 @@ void MarkerActionsToggle(COMMAND_T* = NULL)
 	RefreshMAToolbar();
 }
 
+bool MarkerActionsEnabled(COMMAND_T*)
+{
+	return g_bMAEnabled;
+}
+
 void MarkerActionsEnable(COMMAND_T*)
 {
 	if (!g_bMAEnabled)
@@ -139,9 +144,29 @@ void MarkerNudge(bool bRight)
 void MarkerNudgeLeft(COMMAND_T*)  { MarkerNudge(false); }
 void MarkerNudgeRight(COMMAND_T*) { MarkerNudge(true); }
 
-bool MarkerActionsEnabled(COMMAND_T*)
+void RegionsFromItems(COMMAND_T* ct)
 {
-	return g_bMAEnabled;
+	// Ignore the fact that the user may have items selected with the exact same times.  Just blindly create regions!
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	bool bUndo = false;
+	for (int i = 0; i < items.GetSize(); i++)
+	{
+		MediaItem_Take* take = GetActiveTake(items.Get()[i]);
+		if (take)
+		{
+			char* cName = (char*)GetSetMediaItemTakeInfo(take, "P_NAME", NULL);
+			double dStart = *(double*)GetSetMediaItemInfo(items.Get()[i], "D_POSITION", NULL);
+			double dEnd = *(double*)GetSetMediaItemInfo(items.Get()[i], "D_LENGTH", NULL) + dStart;
+			AddProjectMarker(NULL, true, dStart, dEnd, cName, -1);
+			bUndo = true;
+		}
+	}
+	if (bUndo)
+	{
+		UpdateTimeline();
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
+	}
 }
 
 static COMMAND_T g_commandTable[] = 
@@ -150,8 +175,11 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Enable marker actions" },           "SWSMA_ENABLE",		MarkerActionsEnable,		NULL, },
 	{ { DEFACCEL, "SWS: Disable marker actions" },          "SWSMA_DISABLE",	MarkerActionsDisable,		NULL, },
 	{ { DEFACCEL, "SWS: Run action marker under cursor" },  "SWSMA_RUNEDIT",	MarkerActionRunUnderCursor,	NULL, },
+	
+	// Not sure if these should be in MarkerActions.cpp or MarkerListActions.cpp.  Eh, doesn't matter.
 	{ { DEFACCEL, "SWS: Nudge marker under cursor left" },  "SWS_MNUDGEL",		MarkerNudgeLeft,			NULL, },
 	{ { DEFACCEL, "SWS: Nudge marker under cursor right" }, "SWS_MNUDGER",		MarkerNudgeRight,			NULL, },
+	{ { DEFACCEL, "SWS: Create regions from sel item(s) named with take" }, "SWS_REGIONSFROMITEMS",	RegionsFromItems, NULL, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

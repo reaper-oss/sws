@@ -1,3 +1,13 @@
+Autorender updates:
++No need to enter data into the project notes field, now use "Autorender: Edit project metadata"
++Unicode character support (Windows only? Testing needed)
+
+Issue 50:  SWS: Create regions from sel item(s) named with take
+Issue 126: Warn about recording same inputs on multiple tracks: http://www.standingwaterstudios.com/shup/RecInputCheck.png Also added actions "SWS: Enable/Disable checking for duplicate inputs when recording." 
+Issue 244: Added "SWS: Set selected take(s) to custom color X" actions
+Issue 246: Added toolbar-status only action "SWS: Are any tracks soloed? [no-op, for toolbar]"
+Fixed using Windows generated reaconsole_customcommands.txt files on OSX.
+
 !v2.0.0 #7 (January 29, 2011)
 NEW: Preliminary version of "Autorender."  Thanks, Shane!  For more information, run Autorender: show instructions from the File->Autorender menu (or actions).
 

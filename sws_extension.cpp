@@ -34,6 +34,7 @@
 #include "Snapshots/Snapshots.h"
 #include "Zoom.h"
 #include "Misc/Misc.h"
+#include "Misc/RecCheck.h"
 #include "Color/Color.h"
 #include "Color/Autocolor.h"
 #include "MarkerList/MarkerListClass.h"
@@ -78,16 +79,21 @@ bool hookCommandProc(int command, int flag)
 		return true;
 	}
 
+	// Special case for checking recording
+	if (command == 1013 && !RecordInputCheck())
+		return true;
+
 	// Ignore commands that don't have anything to do with us from this point forward
 	if (command < g_iFirstCommand || command > g_iLastCommand)
 		return false;
 
 	for (int i = 0; i < g_commands.GetSize(); i++)
 	{
-		if (g_commands.Get(i)->accel.accel.cmd && command == g_commands.Get(i)->accel.accel.cmd)
+		COMMAND_T* cmd = g_commands.Get(i);
+		if (cmd->accel.accel.cmd && command == cmd->accel.accel.cmd && cmd->doCommand != SWS_NOOP)
 		{
 			bReentrancyCheck = true;
-			g_commands.Get(i)->doCommand(g_commands.Get(i));
+			cmd->doCommand(cmd);
 			bReentrancyCheck = false;
 			return true;
 		}
@@ -332,7 +338,7 @@ public:
 	// The rest only are applicable only to the TrackList
 	void SetSurfaceSelected(MediaTrack *tr, bool bSel)	{ ScheduleTracklistUpdate(); }
 	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); }
-	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); }
+	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); UpdateTrackSolo(); }
 	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); }
 };
 

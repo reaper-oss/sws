@@ -63,6 +63,8 @@
 		2264CBD110FEC33700447317 /* swell-wnd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764250F5B233C0091104D /* swell-wnd.mm */; };
 		2264CBD210FEC33800447317 /* swell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B408A20F5B544A00865A09 /* swell.cpp */; };
 		2264CBD310FEC33900447317 /* swell.h in Headers */ = {isa = PBXBuildFile; fileRef = 9870F77F0F5B461C0007258C /* swell.h */; };
+		2270FC7112F8551400703F85 /* RecCheck.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2270FC6F12F8551400703F85 /* RecCheck.cpp */; };
+		2270FC7212F8551400703F85 /* RecCheck.h in Headers */ = {isa = PBXBuildFile; fileRef = 2270FC7012F8551400703F85 /* RecCheck.h */; };
 		2273566712910ABF001A1570 /* EditCursor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2273566512910ABF001A1570 /* EditCursor.cpp */; };
 		2273566812910ABF001A1570 /* EditCursor.h in Headers */ = {isa = PBXBuildFile; fileRef = 2273566612910ABF001A1570 /* EditCursor.h */; };
 		2296249010A3A22500A1090C /* lice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2296248E10A3A22500A1090C /* lice.cpp */; };
@@ -328,6 +330,8 @@
 		225130BC116101670028F26A /* padreMidiItemProcBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreMidiItemProcBase.h; path = Padre/padreMidiItemProcBase.h; sourceTree = "<group>"; };
 		225130BD116101670028F26A /* padreUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreUtils.cpp; path = Padre/padreUtils.cpp; sourceTree = "<group>"; };
 		225130BE116101670028F26A /* padreUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreUtils.h; path = Padre/padreUtils.h; sourceTree = "<group>"; };
+		2270FC6F12F8551400703F85 /* RecCheck.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RecCheck.cpp; path = Misc/RecCheck.cpp; sourceTree = "<group>"; };
+		2270FC7012F8551400703F85 /* RecCheck.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RecCheck.h; path = Misc/RecCheck.h; sourceTree = "<group>"; };
 		2273566512910ABF001A1570 /* EditCursor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EditCursor.cpp; path = Misc/EditCursor.cpp; sourceTree = "<group>"; };
 		2273566612910ABF001A1570 /* EditCursor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EditCursor.h; path = Misc/EditCursor.h; sourceTree = "<group>"; };
 		2296248E10A3A22500A1090C /* lice.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice.cpp; path = ../WDL/lice/lice.cpp; sourceTree = SOURCE_ROOT; };
@@ -748,6 +752,8 @@
 		229A7E7B1165742C00325BC2 /* Misc */ = {
 			isa = PBXGroup;
 			children = (
+				2270FC6F12F8551400703F85 /* RecCheck.cpp */,
+				2270FC7012F8551400703F85 /* RecCheck.h */,
 				22C31F21125EF71A0072434F /* Adam.cpp */,
 				22C31F22125EF71A0072434F /* Adam.h */,
 				229A7E7C1165744400325BC2 /* Context.cpp */,
@@ -1103,6 +1109,7 @@
 				22C77ED012D62F2E002F68D5 /* RprTrack.hxx in Headers */,
 				22C77ED212D62F2E002F68D5 /* StringUtil.hxx in Headers */,
 				22C77ED412D62F2E002F68D5 /* TimeMap.h in Headers */,
+				2270FC7212F8551400703F85 /* RecCheck.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1357,6 +1364,7 @@
 				22C77ECF12D62F2E002F68D5 /* RprTrack.cxx in Sources */,
 				22C77ED112D62F2E002F68D5 /* StringUtil.cxx in Sources */,
 				22C77ED312D62F2E002F68D5 /* TimeMap.cpp in Sources */,
+				2270FC7112F8551400703F85 /* RecCheck.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1406,7 +1414,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/lib";
 				OBJROOT = "$(SYMROOT)";
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "-ltag";
 				PREBINDING = NO;
 				SDKROOT = macosx10.4;

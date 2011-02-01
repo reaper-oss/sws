@@ -286,6 +286,24 @@ void NameTrackLikeItem(COMMAND_T*)
 	// TODO undo?
 }
 
+void UpdateTrackSolo()
+{
+	static int cmdID = 0;
+	if (!cmdID)
+		cmdID = NamedCommandLookup("_SWS_NOOPSOLO");
+	RefreshToolbar(cmdID);
+}
+
+bool AreTracksSoloed(COMMAND_T* ct)
+{
+	int iNumTracks = GetNumTracks();
+	for (int i = 1; i <= iNumTracks; i++)
+		if (*(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_SOLO", NULL))
+			return true;
+	return false;
+}
+
+
 static COMMAND_T g_commandTable[] = 
 {
 	// Master/parent send
@@ -323,6 +341,9 @@ static COMMAND_T g_commandTable[] =
 
 	// Name
 	{ { DEFACCEL, "SWS: Name selected track(s) like first sel item" },			"SWS_NAMETKLIKEITEM", NameTrackLikeItem,	},
+
+	// Solo
+	{ { DEFACCEL, "SWS: Are any tracks soloed? [no-op, for toolbar]" },			"SWS_NOOPSOLO", SWS_NOOP, NULL, 0, AreTracksSoloed,	},
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

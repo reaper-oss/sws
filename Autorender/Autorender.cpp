@@ -36,6 +36,26 @@
 #include "../taglib/tag.h"
 #include "../taglib/fileref.h"
 
+int GetCurrentYear(){
+	time_t t = 0;
+	struct tm *lt = NULL;  
+	t = time(NULL);
+	lt = localtime( &t );
+	int curYear = lt->tm_year;
+	curYear = curYear + 1900;
+	return curYear;
+}
+
+// Globals
+string g_render_path;
+string g_tag_artist;
+string g_tag_album;
+string g_tag_genre;
+int g_tag_year = GetCurrentYear();
+string g_tag_comment;
+
+#define CONSOLE_WINDOWPOS_KEY "ReaConsoleWindowPos"
+
 //#define TESTCODE
 
 // START OF TEST CODE
@@ -76,17 +96,6 @@ void TrimString( string &str ){
         str = str.substr( startpos, endpos-startpos+1 );
 	}
 }
-
-int GetCurrentYear(){
-	time_t t = 0;
-	struct tm *lt = NULL;  
-	t = time(NULL);
-	lt = localtime( &t );
-	int curYear = lt->tm_year;
-	curYear = curYear + 1900;
-	return curYear;
-}
-
 
 
 string ParseFileExtension( string path ){
@@ -142,6 +151,7 @@ WDL_HeapBuf GetHeapBufFromChar( const char *str ){
 	return m_hb;
 }
 
+
 void SetProjectParameter( WDL_String *prjStr, string param, string paramValue ){
 	char line[4096];
 	int pos = 0;
@@ -183,6 +193,7 @@ string GetProjectParameterValueStr( WDL_String *prjStr, string param, int token 
 	return "";
 }
 
+/*
 string GetProjectNotesParameter( WDL_String *prjStr, string param ){
 	char line[4096];
 	int pos = 0;
@@ -215,6 +226,7 @@ string GetProjectNotesParameter( WDL_String *prjStr, string param ){
 
 	return "";
 }
+*/
 
 string GetQueuedRendersDir(){
 	ostringstream qrStream;
@@ -224,6 +236,24 @@ string GetQueuedRendersDir(){
 
 string GetCurrentRenderExtension( WDL_String *prjStr ){
 	return ParseFileExtension( GetProjectParameterValueStr( prjStr, "RENDER_FILE" ) );
+}
+
+void ReplaceChars( string *str, const char *illegalChars, const char *replaceChar = "" ){
+	const char *strChar = str->c_str();
+
+	for( int i = 0; i < (int)strlen( strChar ); i++ ){
+		for( int j = 0; j < (int)strlen( illegalChars ); j++ ){
+			if( strChar[i] == illegalChars[j] ){
+				str->replace( i, 1, replaceChar);
+				break;
+			}
+		}
+	}
+}
+
+void RemoveQuotes( string *str ){
+	const char *stripChar = "\"";
+	ReplaceChars( str, stripChar );
 }
 
 void SanitizeFilename( string *fn ){
@@ -239,38 +269,18 @@ void SanitizeFilename( string *fn ){
 	// we allow an option to omit them
 	//if( fn->substr(0,1) == "." ) fn->replace(0,1,"_");
 #endif
-	
-	const char *fnChar = fn->c_str();
 
-	for( int i = 0; i < (int)strlen( fnChar ); i++ ){
-		for( int j = 0; j < (int)strlen( illegalChars ); j++ ){
-			if( fnChar[i] == illegalChars[j] ){
-				fn->replace( i, 1, "_");
-				break;
-			}
-		}
-	}
+	ReplaceChars( fn, illegalChars, "_" );
 }
 
+
+/*
 void ShowAutorenderHelp(COMMAND_T*) {
-	string helpText = "Preliminary Autorender Usage:\n\n";
-	helpText += "Regions are rendered to seperate audio files.\n";
-	helpText += "Region names are used for track names when tagging.\n\n";
-	helpText += "To set other tagging parameters, put the following in\n";
-	helpText += "the project notes on their own lines like so:\n\n";
-	helpText += "TAG_ARTIST Captain Beefheart\n";
-	helpText += "TAG_ALBUM Trout Mask Replica\n";
-	helpText += "TAG_YEAR 1969\n";
-	helpText += "TAG_GENRE WTF\n";
-	helpText += "TAG_COMMENT Again, WTF\n\n";
-	helpText += "You can also specify the output directory:\n";
-	helpText += "RENDER_PATH C:\\Renders\n";
-	helpText += "(Mac users may have to do this, I dunno).\n\n";
-	helpText += "Also note that Autorender uses your last used render settings,\n";
-	helpText += "so make sure that your last manual render used the settings you want.\n\n";
-	helpText += "Sorry for the crudeness, will get better, thx.\n";
-	MessageBox( GetMainHwnd(), helpText.c_str(), "Basic Autorender Usage", MB_OK );
+	string helpText = "No need for instructions right now\n\n";
+	helpText += "Maybe later.\n";
+	MessageBox( GetMainHwnd(), helpText.c_str(), "Autorender Usage", MB_OK );
 }
+*/
 
 void EnsureStrEndsWith( string &str, const char endChar ){
 	if( str.c_str()[ str.length() - 1 ] != endChar ){
@@ -282,6 +292,12 @@ void EnsureStrDoesntEndWith( string &str, const char endChar ){
 	while( str.c_str()[ str.length() - 1 ] == endChar ){
 		str.erase( str.length() - 1 );
 	}
+}
+
+bool BrowseForRenderPath( char *renderPathChar ){
+	bool result;
+	result = BrowseForDirectory( "Select render output directory", NULL, renderPathChar, 1024 );
+	return result;
 }
 
 void AutorenderRegions(COMMAND_T*) {
@@ -297,44 +313,28 @@ void AutorenderRegions(COMMAND_T*) {
 		return;
 	}
 
-	//Get params in the project notes
-	string renderPath = GetProjectNotesParameter( prjStr, "RENDER_PATH" );
-	string tag_artist = GetProjectNotesParameter( prjStr, "TAG_ARTIST" );
-	string tag_album = GetProjectNotesParameter( prjStr, "TAG_ALBUM" );
-	string tag_genre = GetProjectNotesParameter( prjStr, "TAG_GENRE" );
-	string tag_year_str = GetProjectNotesParameter( prjStr, "TAG_YEAR" );
-	string tag_comment = GetProjectNotesParameter( prjStr, "TAG_COMMENT" );
-
-	unsigned int tag_year = 0;
-	if( tag_year_str.empty() ){
-		tag_year = GetCurrentYear();
-	} else {
-		tag_year = atoi( tag_year_str.c_str() );
-	}
-
 	// remove PATH_SLASH_CHAR from end of string if it exists
-	EnsureStrDoesntEndWith( renderPath, PATH_SLASH_CHAR );
+	EnsureStrDoesntEndWith( g_render_path, PATH_SLASH_CHAR );
 
 	// render path was specified and doesn't exist
-	if( !renderPath.empty() && !FileExists( renderPath.c_str() ) ){
-		string message = "Render path " + renderPath + " doesn't exist!";
-		renderPath.clear();
+	if( !g_render_path.empty() && !FileExists( g_render_path.c_str() ) ){
+		string message = "Render path " + g_render_path + " doesn't exist!";
+		g_render_path.clear();
 		MessageBox( GetMainHwnd(), message.c_str(), "Autorender: Bad Render Path", MB_OK );
 	}
 
-	while( !FileExists( renderPath.c_str() ) ){
-		char renderPathChar[1024] = "";		
-		//Prob windows only, what to do? Couldn't figure out how to use WDL_ChooseDirectory (got linker errors), maybe not xplatform anyway
-		BrowseForDirectory( "Select render output directory", NULL, renderPathChar, 1024 );
-		if( strlen( renderPathChar ) == 0 ){
-			//Show error
+	while( !FileExists( g_render_path.c_str() ) ){
+		char renderPathChar[1024];
+		bool browseResult;
+		browseResult = BrowseForRenderPath(renderPathChar);
+		if( !browseResult ){
 			return;
 		}
-		renderPath = renderPathChar;
+		g_render_path = renderPathChar;
 	}
 
 	// append PATH_SLASH_CHAR from end of string if it doens't exist
-	EnsureStrEndsWith( renderPath, PATH_SLASH_CHAR );
+	EnsureStrEndsWith( g_render_path, PATH_SLASH_CHAR );
 
 	string queuedRendersDir = GetQueuedRendersDir();
 	// Would be good to delete all files in the render queue directory here and at the end, 
@@ -375,7 +375,7 @@ void AutorenderRegions(COMMAND_T*) {
 			SanitizeFilename( &renderTrack.sanitizedTrackName );
 			
 			string outRenderProjectPath = outRenderProjectPrefix + renderTrack.getFileName("rpp");
-			string renderFilePath = renderPath + renderTrack.getFileName( renderFileExtension );						
+			string renderFilePath = g_render_path + renderTrack.getFileName( renderFileExtension );						
 			SetProjectParameter( &trackPrjStr, "RENDER_FILE", "\"" + renderFilePath + "\"" );	
 
 			ostringstream renderRange;
@@ -401,15 +401,15 @@ void AutorenderRegions(COMMAND_T*) {
 
 	// Tag!
 	for( unsigned int i = 0; i < renderTracks.size(); i++){		
-		string renderedFilePath = renderPath + renderTracks[i].getFileName( renderFileExtension );						
+		string renderedFilePath = g_render_path + renderTracks[i].getFileName( renderFileExtension );						
 		
 		TagLib::FileRef f( renderedFilePath.c_str() );
 		if( !f.isNull() ){
-			if( !tag_artist.empty() ) f.tag()->setArtist( tag_artist );
-			if( !tag_album.empty() ) f.tag()->setAlbum( tag_album );
-			if( !tag_genre.empty() ) f.tag()->setGenre( tag_genre );
-			if( tag_year > 0 ) f.tag()->setYear( tag_year );
-			if( !tag_comment.empty() ) f.tag()->setComment( tag_comment );
+			if( !g_tag_artist.empty() ) f.tag()->setArtist( g_tag_artist );
+			if( !g_tag_album.empty() ) f.tag()->setAlbum( g_tag_album );
+			if( !g_tag_genre.empty() ) f.tag()->setGenre( g_tag_genre );
+			if( g_tag_year > 0 ) f.tag()->setYear( g_tag_year );
+			if( !g_tag_comment.empty() ) f.tag()->setComment( g_tag_comment );
 			
 			f.tag()->setTrack( i + 1 );
 			f.tag()->setTitle( renderTracks[i].trackName );
@@ -420,18 +420,177 @@ void AutorenderRegions(COMMAND_T*) {
 	}
 
 #ifdef _WIN32
-	system( ( "explorer " + renderPath ).c_str() );
+	system( ( "explorer " + g_render_path ).c_str() );
 #else
 	//Mac open render directory?
 #endif
 
 }
 
-static project_config_extension_t g_projectconfig = { NULL };
+
+void processDialogFieldStr( HWND hwndDlg, WPARAM wParam, string &target, bool &hasChanged ){
+	char dlg_field[512];
+	GetDlgItemText(hwndDlg, (int)wParam, dlg_field, 512);
+	string dlg_field_str = dlg_field;
+	RemoveQuotes( &dlg_field_str );
+	if( dlg_field_str.compare( target ) ){
+		target = dlg_field_str;
+		hasChanged = true;
+	}
+}
+
+void processDialogFieldInt( HWND hwndDlg, WPARAM wParam, int &target, bool &hasChanged ){
+	int dlg_field;
+	dlg_field = GetDlgItemInt(hwndDlg, (int)wParam, NULL, false);
+	if( dlg_field != target ){
+		target = dlg_field;
+		hasChanged = true;
+	}
+}
+
+INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam){
+	bool hasChanged = false;
+
+    switch (uMsg){
+            case WM_INITDIALOG:
+				RestoreWindowPos(hwndDlg, CONSOLE_WINDOWPOS_KEY, false);
+				SetDlgItemText(hwndDlg, IDC_ARTIST, g_tag_artist.c_str() );
+				SetDlgItemText(hwndDlg, IDC_ALBUM, g_tag_album.c_str() );
+				SetDlgItemText(hwndDlg, IDC_GENRE, g_tag_genre.c_str() );
+				SetDlgItemInt(hwndDlg, IDC_YEAR, g_tag_year, false );
+				SetDlgItemText(hwndDlg, IDC_COMMENT, g_tag_comment.c_str() );
+				SetDlgItemText(hwndDlg, IDC_RENDER_PATH, g_render_path.c_str() );
+
+				return 0;
+            case WM_COMMAND:
+				switch (LOWORD(wParam)){
+					case IDBROWSE:
+						char renderPathChar[1024];
+						bool browseResult;
+						browseResult = BrowseForRenderPath(renderPathChar);
+						if( browseResult ){
+							SetDlgItemText(hwndDlg, IDC_RENDER_PATH, renderPathChar );
+						}
+						break;
+                    case IDOK:
+						processDialogFieldStr( hwndDlg, IDC_ARTIST, g_tag_artist, hasChanged );
+						processDialogFieldStr( hwndDlg, IDC_ALBUM, g_tag_album, hasChanged );
+						processDialogFieldStr( hwndDlg, IDC_GENRE, g_tag_genre, hasChanged );
+						processDialogFieldInt( hwndDlg, IDC_YEAR, g_tag_year, hasChanged );
+						processDialogFieldStr( hwndDlg, IDC_COMMENT, g_tag_comment, hasChanged );
+						processDialogFieldStr( hwndDlg, IDC_RENDER_PATH, g_render_path, hasChanged );
+						EnsureStrEndsWith( g_render_path, PATH_SLASH_CHAR );
+
+						if( hasChanged ){
+							Undo_OnStateChangeEx("Set autorender metadata", UNDO_STATE_MISCCFG, -1);
+						}
+                        // fall through!								
+                    case IDCANCEL:							
+                        SaveWindowPos(hwndDlg, CONSOLE_WINDOWPOS_KEY);
+                        EndDialog(hwndDlg,0);
+                        break;
+				}
+				return 0;
+            case WM_DESTROY:
+                // We're done
+                return 0;
+    }
+    return 0;
+}
+
+void ShowAutorenderMetadata(COMMAND_T*){
+	DialogBox( g_hInst, MAKEINTRESOURCE(IDD_AUTORENDER_METADATA), g_hwndParent, doAutorenderMetadata );
+}
+
+
+static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg){
+    LineParser lp(false);
+    if (lp.parse(line) || lp.getnumtokens() < 1)
+		return false;
+    if (strcmp(lp.gettoken_str(0), "<AUTORENDER") == 0){
+        char linebuf[4096];
+        while(true){
+            if (!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf)){
+				if (lp.gettoken_str(0)[0] == '>'){
+					break;
+				}
+				
+				if( !strcmp(lp.gettoken_str(0), "ARTIST") ){
+					g_tag_artist = lp.gettoken_str(1);
+				} else if ( !strcmp(lp.gettoken_str(0), "ALBUM") ){
+					g_tag_album = lp.gettoken_str(1);
+				} else if ( !strcmp(lp.gettoken_str(0), "GENRE") ){
+					g_tag_genre = lp.gettoken_str(1);
+				} else if ( !strcmp(lp.gettoken_str(0), "YEAR") ){
+					g_tag_year = lp.gettoken_int(1);
+				} else if ( !strcmp(lp.gettoken_str(0), "COMMENT") ){
+					g_tag_comment = lp.gettoken_str(1);
+				} else if ( !strcmp(lp.gettoken_str(0), "RENDER_PATH") ){
+					g_render_path = lp.gettoken_str(1);
+				}
+
+			} else {
+				break;
+			}
+        }
+        return true;
+    }
+    return false;
+}
+
+void writeAutorenderSettingInt( ProjectStateContext *ctx, const char* settingName, int setting ){
+	char str[512];
+	sprintf( str, "%s", settingName);	
+	sprintf( str + strlen( str ), " %i", setting );	
+	ctx->AddLine(str);
+}
+
+void writeAutorenderSettingString( ProjectStateContext *ctx, const char* settingName, string setting ){
+	char str[512];	
+	sprintf( str, "%s", settingName);	
+	sprintf( str + strlen( str ), " \"%s\"", setting.c_str() );	
+	ctx->AddLine(str);
+}
+
+static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg){
+	ctx->AddLine("<AUTORENDER");
+	
+	if( !g_tag_artist.empty() ){
+		writeAutorenderSettingString( ctx, "ARTIST", g_tag_artist );
+	}
+	
+	if( !g_tag_album.empty() ){
+		writeAutorenderSettingString( ctx, "ALBUM", g_tag_album );
+	}
+
+	if( !g_tag_genre.empty() ){
+		writeAutorenderSettingString( ctx, "GENRE", g_tag_genre );
+	}
+
+	if( g_tag_year > 0 ){
+		writeAutorenderSettingInt( ctx, "YEAR", g_tag_year );
+	}
+
+	if( !g_tag_comment.empty() ){
+		writeAutorenderSettingString( ctx, "COMMENT", g_tag_comment );
+	}
+
+	if( !g_render_path.empty() ){
+		writeAutorenderSettingString( ctx, "RENDER_PATH", g_render_path );
+	}
+
+	ctx->AddLine(">");
+}
+
+static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg){
+}
+
+static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
 static COMMAND_T g_commandTable[] = {
 	{ { {FCONTROL|FALT|FSHIFT|FVIRTKEY,'R',0}, "Autorender: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
-	{ { DEFACCEL, "Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
+	{ { DEFACCEL, "Autorender: Edit Project Metadata" }, "AUTORENDER_METADATA", ShowAutorenderMetadata, "Edit Project Metadata" },
+//	{ { DEFACCEL, "Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
 #ifdef TESTCODE
 	{ { DEFACCEL, "Autorender: TestCode" }, "AUTORENDER_TESTCODE",  TestFunction, "Autorender: TestCode" },
 #endif

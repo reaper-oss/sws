@@ -2,6 +2,8 @@
 // Microsoft Visual C++ generated include file.
 // Used by sws_extension.rc
 //
+#define IDOK2                           3
+#define IDBROWSE                        3
 #define IDD_CONSOLE                     100
 #define IDD_SNAPS                       101
 #define IDD_MARKERLIST                  102
@@ -63,6 +65,7 @@
 #define IDD_SNM_MIDI_LIVE               155
 #define IDD_AW_ITEM_SMOOTHING           156
 #define IDD_GROOVEDIALOG                157
+#define IDD_AUTORENDER_METADATA         158
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
@@ -276,6 +279,12 @@
 #define IDC_STORE                       1205
 #define IDC_VELSTRENGTH                 1206
 #define IDC_STRENGTH_GROUP              1207
+#define IDC_ARTIST                      1210
+#define IDC_ALBUM                       1211
+#define IDC_GENRE                       1212
+#define IDC_YEAR                        1214
+#define IDC_COMMENT                     1215
+#define IDC_RENDER_PATH                 1216
 
 // Next default values for new objects
 // 
@@ -283,7 +292,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        158
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1208
+#define _APS_NEXT_CONTROL_VALUE         1211
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

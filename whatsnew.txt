@@ -2,6 +2,26 @@ Autorender updates:
 +No need to enter data into the project notes field, now use "Autorender: Edit project metadata"
 +Unicode character support (Windows only? Testing needed)
 
+Support for v4 empty take lanes (more to come):
+Example: with items starting with a v4 empty take, some actions were broken or had no effect..
++"Fixed" all S&M actions relate to takes
++"Fixed" take envelope processing in Padre's Envelope LFO Generator and Envelope Processor
+
+Added pitch take envelope support for Padre's Envelope LFO Generator and Envelope Processor (v4 only)
+
+Added actions:
++SWS/S&M: Copy active take
++SWS/S&M: Cut active take
++SWS/S&M: Paste take
++SWS/S&M: Paste take (after active take)
+
+House cleaning (more to come):
++Main "Extensions" menu: added Padre's Envelope LFO Generator and Envelope Processor
++Main "Extensions" menu: removed Xenakios' "Misc/Experimental" sub-menu (actions remain available in the action list)
++Media item context menu: removed Xenakios' "Item/Take selection" and "Item/Take manipulation" sub-menus (actions remain available in the action list and in the main "Extensions" menu)
++TCP context menu: removed Xenakios' "Track/Mixer/Envelopes" sub-menu (actions remain available in the action list and in the main "Extensions" menu)
++Tagged action "Xenakios/SWS: Project media..." as deprecated
+
 Issue 50:  SWS: Create regions from sel item(s) named with take
 Issue 126: Warn about recording same inputs on multiple tracks: http://www.standingwaterstudios.com/shup/RecInputCheck.png Also added actions "SWS: Enable/Disable checking for duplicate inputs when recording." 
 Issue 244: Added "SWS: Set selected take(s) to custom color X" actions

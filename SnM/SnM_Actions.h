@@ -280,6 +280,8 @@ void smartSplitMidiAudio(COMMAND_T* _ct);
 void splitSelectedItems(COMMAND_T* _ct);
 #endif
 void goferSplitSelectedItems(COMMAND_T* _ct);
+void copyCutTake(COMMAND_T* _ct);
+void pasteTake(COMMAND_T* _ct);
 bool isEmptyMidi(MediaItem_Take* _take);
 void setEmptyTakeChunk(WDL_String* _chunk, int _recPass = -1, int _color = -1);
 bool addEmptyTake(MediaItem* _item);
@@ -306,6 +308,7 @@ void showHideTakePitchEnvelope(COMMAND_T* _ct);
 bool ShowTakeEnvVol(MediaItem_Take* _take);
 bool ShowTakeEnvPan(MediaItem_Take* _take);
 bool ShowTakeEnvMute(MediaItem_Take* _take);
+bool ShowTakeEnvPitch(MediaItem_Take* _take);
 void saveItemTakeTemplate(COMMAND_T* _ct);
 
 // *** SnM_Track.cpp ***

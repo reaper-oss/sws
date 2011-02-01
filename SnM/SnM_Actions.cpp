@@ -346,6 +346,11 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 
 	// Takes ------------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Copy active take" }, "S&M_COPY_TAKE", copyCutTake, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Cut active take" }, "S&M_CUT_TAKE", copyCutTake, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Paste take" }, "S&M_PASTE_TAKE", pasteTake, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Paste take (after active take)" }, "S&M_PASTE_TAKE_AFTER", pasteTake, NULL, 1},
+
 	{ { DEFACCEL, "SWS/S&M: Takes - Clear active takes/items" }, "S&M_CLRTAKE1", clearTake, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Takes - Build lanes for selected tracks" }, "S&M_LANETAKE1", buildLanes, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Takes - Activate lane from selected item" }, "S&M_LANETAKE2", activateLaneFromSelItem, NULL, },
@@ -402,6 +407,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Split selected items at edit or play cursor (ignoring grouping)" }, "S&M_SPLIT9", splitSelectedItems, NULL, 40186},
 #endif
 	{ { DEFACCEL, "SWS/gofer: Split selected items at mouse cursor (obey snapping)" }, "S&M_SPLIT10", goferSplitSelectedItems, NULL, },
+
 
 	// ME ---------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Active ME - Hide all CC lanes" }, "S&M_MEHIDECCLANES", MEHideCCLanes, NULL, },

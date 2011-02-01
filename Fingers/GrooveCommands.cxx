@@ -203,7 +203,7 @@ void GrooveCommands::Init()
 	  CReaperCmdReg(
 		"SWS/FNG: Show groove tool...", "FNG_GROOVE_TOOL",
 		(CReaperCommand *)new CReaperCommand(&ShowGrooveDialog),
-		NO_UNDO, NULL, IsGrooveDialogOpen, "FNG: Groove tool..."
+		NO_UNDO, NULL, IsGrooveDialogOpen, "FNG Groove tool..."
 		),
 	};
 	

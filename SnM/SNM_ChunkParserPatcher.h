@@ -1,5 +1,5 @@
 /******************************************************************************
-** SNM_ChunkParserPatcher.h - v1.1
+** SNM_ChunkParserPatcher.h - v1.2
 ** Copyright (C) 2008-2011, Jeffos
 **
 **    This software is provided 'as-is', without any express or implied
@@ -46,6 +46,8 @@
 //   (see details there, mods are plainly marked as required by the licensing)
 //
 // Changelog:
+// v1.2
+// - New helper methods, inheritance updates
 // v1.1
 // - Fixes
 // - Use SWS_GetSetObjectState if _SWS_EXTENSION is defined. This offers another level of cache.
@@ -153,7 +155,12 @@ virtual ~SNM_ChunkParserPatcher()
 {
 	if (m_autoCommit)
 		Commit(); // nop if chunk not updated (or no valid m_object)
-	delete m_chunk;
+
+	if (m_chunk)
+	{
+		delete m_chunk;
+		m_chunk = NULL;
+	}
 }
 
 // See ParsePatchCore() comments
@@ -197,7 +204,8 @@ void* GetObject() {
 }
 
 // Get and cache the RPP chunk
-WDL_String* GetChunk() 
+//JFB!!! NEVER NULL + RECHERCHER LES APPELS
+virtual WDL_String* GetChunk() 
 {
 	WDL_String* chunk = NULL;
 	if (!m_chunk->GetLength())
@@ -250,7 +258,7 @@ int SetUpdates(int _updates) {
 // note: global protections here (temporary, I hope). In REAPER v3.66, 
 //       it's safer *not* to patch while recording and to remove all ids
 //       before patching, see http://forum.cockos.com/showthread.php?t=52002 
-bool Commit(bool _force = false)
+virtual bool Commit(bool _force = false)
 {
 	if (m_object && (m_updates || _force) && 
 		!(GetPlayState() & 4) && // prevent patches while recording
@@ -265,7 +273,7 @@ bool Commit(bool _force = false)
 }
 
 const char* GetInfo() {
-	return "SNM_ChunkParserPatcher - v1.1";
+	return "SNM_ChunkParserPatcher - v1.2";
 }
 
 void SetProcessBase64(bool _enable) {
@@ -404,12 +412,14 @@ const char* GetParent(WDL_PtrList<WDL_String>* _parents, int _ancestor=1) {
 
 ///////////////////////////////////////////////////////////////////////////////
 protected:
+	WDL_String* m_chunk; // never NULL, never!
+	bool m_autoCommit;
 	void* m_object;
 	int m_updates;
 
 	// 'Advanced' optionnal optimization flags 
 	// ------------------------------------------------------------------------
-	bool m_breakParsePatch; // this one can be enabled to break parsing (SAX-ish inheritance)
+	bool m_breakParsePatch; // this one can be enabled to break parsing (and patching: bulk recopy)
 
 	// Base64 sub-chunks and in-project MIDI data are skipped by default (can be HUGE,
 	// i.e. several Mo). You can enable these attributes to force their processing
@@ -418,6 +428,28 @@ protected:
 
 	bool m_isParsingSource; // this one is READ-ONLY (automatically set when parsing)
 
+
+char* SNM_GetSetObjectState(void* _obj, WDL_String* _str)
+{
+#ifdef _SWS_EXTENSION
+	return SWS_GetSetObjectState(_obj, _str);
+#else
+	if (_str)
+	{
+		RemoveAllIds(_str);
+#ifdef _SNM_DEBUG
+		char filename[BUFFER_SIZE] = "";
+		sprintf(filename, "%s%cSNM_ChunkParserPatcher_lastCommit.txt", GetExePath(), PATH_SLASH_CHAR);
+		FILE* f = fopen(filename, "w"); 
+		if (f) {
+			fputs(_str->Get(), f);
+			fclose(f);
+		}
+#endif
+	}
+	return GetSetObjectState(_obj, _str ? _str->Get() : NULL);
+#endif
+}
 
 	// Parsing callbacks (to be implemented for SAX-ish parsing style)
 	// ------------------------------------------------------------------------
@@ -469,30 +501,6 @@ protected:
 
 ///////////////////////////////////////////////////////////////////////////////
 private:
-	WDL_String* m_chunk;
-	bool m_autoCommit;
-
-char* SNM_GetSetObjectState(void* _obj, WDL_String* _str)
-{
-#ifdef _SWS_EXTENSION
-	return SWS_GetSetObjectState(_obj, _str);
-#else
-	if (_str)
-	{
-		RemoveAllIds(_str);
-#ifdef _SNM_DEBUG
-		char filename[BUFFER_SIZE] = "";
-		sprintf(filename, "%s%cSNM_ChunkParserPatcher_lastCommit.txt", GetExePath(), PATH_SLASH_CHAR);
-		FILE* f = fopen(filename, "w"); 
-		if (f) {
-			fputs(_str->Get(), f);
-			fclose(f);
-		}
-#endif
-	}
-	return GetSetObjectState(_obj, _str ? _str->Get() : NULL);
-#endif
-}
 
 bool WriteChunkLine(WDL_String* _chunkLine, const char* _value, int _tokenPos, LineParser* _lp)
 {

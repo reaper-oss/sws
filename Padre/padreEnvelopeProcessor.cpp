@@ -677,26 +677,24 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 	//TrackEnvelope* envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
 	double dValMin = 0.0;
 	double dValMax = 1.0;
-	//! \todo Force "show item vol/pan/mute envelope" (toggle trick doesn't work with existing/hidden envelopes)
 	bool bNeedUpdate = false;
 	switch(tTakeEnvType)
 	{
 		case eTAKEENV_VOLUME :
 			dValMax = 2.0;
-bNeedUpdate = ShowTakeEnvVol(take);
-			//if(!envelope)
-			//	Main_OnCommandEx(ID_TAKEENV_VOLUME_TOGGLE, 0, 0);
+			bNeedUpdate = ShowTakeEnvVol(take);
 		break;
 		case eTAKEENV_PAN :
 			dValMin = -1.0;
-bNeedUpdate = ShowTakeEnvPan(take);
-			//if(!envelope)
-			//	Main_OnCommandEx(ID_TAKEENV_PAN_TOGGLE, 0, 0);
+			bNeedUpdate = ShowTakeEnvPan(take);
 		break;
 		case eTAKEENV_MUTE :
-bNeedUpdate = ShowTakeEnvMute(take);
-			//if(!envelope)
-			//	Main_OnCommandEx(ID_TAKEENV_MUTE_TOGGLE, 0, 0);
+			bNeedUpdate = ShowTakeEnvMute(take);
+		break;
+		case eTAKEENV_PITCH:
+			dValMax = 3.0;
+			dValMin = -3.0;
+			bNeedUpdate = ShowTakeEnvPitch(take);
 		break;
 		default:
 		break;
@@ -829,7 +827,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo()
 	if(items.empty())
 		return eERRORCODE_NOITEMSELECTED;
 
-	Undo_BeginBlock2(0);
+	Undo_BeginBlock2(NULL);
 
 	for(list<MediaItem*>::iterator item = items.begin(); item != items.end(); item++)
 	{
@@ -1069,6 +1067,11 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processTakeEnv(MediaItem_Take* t
 		break;
 		case eTAKEENV_MUTE :
 			bNeedUpdate = ShowTakeEnvMute(take);
+		break;
+		case eTAKEENV_PITCH :
+			dValMax = 3.0;
+			dValMin = -3.0;
+			bNeedUpdate = ShowTakeEnvPitch(take);
 		break;
 		default:
 		break;

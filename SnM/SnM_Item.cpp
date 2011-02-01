@@ -131,6 +131,52 @@ void goferSplitSelectedItems(COMMAND_T* _ct) {
 	}
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Takes
+///////////////////////////////////////////////////////////////////////////////
+
+WDL_String g_takeClipoard;
+
+void copyCutTake(COMMAND_T* _ct)
+{
+	bool updated = false;
+	g_takeClipoard.Set("");
+	MediaItem* item = GetSelectedMediaItem(NULL, 0);
+	if (item)
+	{
+		int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
+		SNM_TakeParserPatcher p(item, CountTakes(item));
+		if (p.GetTakeChunk(activeTake, &g_takeClipoard))
+			if ((int)_ct->user) // Cut take?
+				updated = p.RemoveTake(activeTake);
+	}
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+void pasteTake(COMMAND_T* _ct)
+{
+	bool updated = false;
+	for (int i = 0; g_takeClipoard.GetLength() && i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
+			{
+				SNM_TakeParserPatcher p(item, CountTakes(item));
+				int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL) + (int)_ct->user;
+				updated |= 	(p.InsertTake(activeTake, &g_takeClipoard) >= 0);
+			}
+		}
+	}
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // Take lanes: clear take, build lanes, ...
 ///////////////////////////////////////////////////////////////////////////////
@@ -145,6 +191,7 @@ bool isEmptyMidi(MediaItem_Take* _take)
 		if(p.getMidiEventsList(_take, evts))
 		{
 			int pos=0;
+//JFB!!! v4: tests KO!???
 			emptyMidi = !evts->EnumItems(&pos);
 			MIDI_eventlist_Destroy(evts);
 		}
@@ -670,17 +717,11 @@ void deleteTakeAndMedia(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 
 // returns -1 if not found
-int getTakeIndex(MediaItem* _item, MediaItem_Take* _take)
-{
-	int i=0;
-	MediaItem_Take* tk = (_item ? GetTake(_item, i) : NULL);
-	while (tk) 
-	{
-		if (tk && tk == _take) 
-			return i;
-		else 
-			tk = GetTake(_item, ++i);
-	}
+int getTakeIndex(MediaItem* _item, MediaItem_Take* _take) {
+	if (_item)
+		for (int i=0; i < CountTakes(_item); i++)
+			if (_take == GetTake(_item, i)) // note: NULL take is an empty take (since v4) 
+				return i;
 	return -1;
 }
 
@@ -709,6 +750,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 					char currentVis[32];
 					if (ptk.Parse(SNM_GET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)currentVis) > 0)
 					{
+						// skip if visibility is different from 0 or 1
 						if (!strcmp(currentVis, "1")) strcpy(vis, "0");
 						else if (!strcmp(currentVis, "0")) strcpy(vis, "1");
 					}
@@ -853,7 +895,16 @@ bool ShowTakeEnvPan(MediaItem_Take* _take) {
 
 bool ShowTakeEnvMute(MediaItem_Take* _take) {
 	WDL_String defaultPoint("PT 0.000000 1.000000 1");
-	return ShowTakeEnv(_take, "MUTEENV", &defaultPoint);;
+	return ShowTakeEnv(_take, "MUTEENV", &defaultPoint);
+}
+
+bool ShowTakeEnvPitch(MediaItem_Take* _take) {
+	if (DockWindowAddEx) //JFB!!! v4 only
+	{
+		WDL_String defaultPoint("PT 0.000000 0.000000 0");
+		return ShowTakeEnv(_take, "PITCHENV", &defaultPoint);
+	}
+	return false;
 }
 
 

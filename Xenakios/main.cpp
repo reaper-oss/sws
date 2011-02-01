@@ -683,6 +683,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	{
 		SWSCreateMenu(g_XenCommandTable, hMenu);
 	}
+/*JFB Clean-up REAPER's menu
 	else if (strcmp(menustr, "Media item context") == 0 && flag == 0)
 	{
 		int i = 0;
@@ -698,11 +699,13 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 		while (g_XenCommandTable[i++].accel.accel.cmd != 3);
 		AddSubMenu(hMenu, SWSCreateMenu(&g_XenCommandTable[i]), "Extensions : Track/Mixer/Envelopes");
 	}
+	//JFB !??? can't make what follows work + g_external_app_paths.Tool1MenuText looks bad + OSX?
 	else if (flag == 1)
 	{
 		SWSSetMenuText(hMenu, SWSGetCommandID(DoLaunchExtTool, 1), g_external_app_paths.Tool1MenuText);
 		SWSSetMenuText(hMenu, SWSGetCommandID(DoLaunchExtTool, 2), g_external_app_paths.Tool2MenuText);
 	}
+*/
 }
 
 WDL_String g_XenIniFilename;

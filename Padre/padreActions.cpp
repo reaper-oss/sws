@@ -33,8 +33,8 @@
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS/PADRE: Envelope LFO generator" }, "PADRE_ENVLFO", EnvelopeLfo, NULL, 0},
-	{ { DEFACCEL, "SWS/PADRE: Envelope processor" }, "PADRE_ENVPROC", DoEnvelopeProcessor, NULL, 0},
+	{ { DEFACCEL, "SWS/PADRE: Envelope LFO generator" }, "PADRE_ENVLFO", EnvelopeLfo, "Padre Envelope LFO Generator...", 0},
+	{ { DEFACCEL, "SWS/PADRE: Envelope processor" }, "PADRE_ENVPROC", DoEnvelopeProcessor, "Padre Envelope Processor...", 0},
 
 	{ { DEFACCEL, "SWS/PADRE: Shrink selected items: -128 samples" }, "PADRE_SHRINK_128", ShrinkSelItems, NULL, 128},
 	{ { DEFACCEL, "SWS/PADRE: Shrink selected items: -256 samples" }, "PADRE_SHRINK_256", ShrinkSelItems, NULL, 256},
@@ -66,13 +66,23 @@ static COMMAND_T g_commandTable[] =
 	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load Factory Preset 7" }, "PADRE_TOTALMIX_LOADFACT7", RmeTotalmixProc, NULL, eTOTALMIX_LOADFACT7},
 	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load Factory Preset 8" }, "PADRE_TOTALMIX_LOADFACT8", RmeTotalmixProc, NULL, eTOTALMIX_LOADFACT8},
 
+	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, }, // for main "Extensions" menu
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
 static MidiItemProcessor* midiNoteRandomizer = NULL;
 
+static void Padre_Menuhook(const char* _menustr, HMENU _hMenu, int _flag) {
+	if (!strcmp(_menustr, "Main extensions") && !_flag) {
+		SWSCreateMenu(g_commandTable, _hMenu);
+	}
+}
+
 int PadreInit()
 {
+	if (!plugin_register("hookcustommenu", (void*)Padre_Menuhook))
+		return 0;
+
 	midiNoteRandomizer = new MidiItemProcessor("MIDI Note Position Randomize");
 	midiNoteRandomizer->addFilter(new MidiFilterRandomNotePos());
 //midiNoteRandomizer->addFilter(new MidiFilterShortenEndEvents());
@@ -152,7 +162,7 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_parameters.waveParams.offset);
 			SetDlgItemText(hwnd, IDC_PADRELFO_OFFSET, buffer);
 
-			for(int i=eTAKEENV_VOLUME; i<=eTAKEENV_MUTE; i++)
+			for(int i=eTAKEENV_VOLUME; i<=eTAKEENV_PITCH; i++)
 			{
 				int x = (int)SendDlgItemMessage(hwnd,IDC_PADRELFO_TAKEENV,CB_ADDSTRING,0,(LPARAM)GetTakeEnvelopeStr((TakeEnvType)i));
 				SendDlgItemMessage(hwnd,IDC_PADRELFO_TAKEENV,CB_SETITEMDATA,x,i);
@@ -426,7 +436,7 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 			sprintf(buffer, "%.0lf", 100.0*EnvelopeProcessor::getInstance()->_envModParams.offset);
 			SetDlgItemText(hwnd, IDC_PADREENVPROC_OFFSET, buffer);
 
-			for(int i=eTAKEENV_VOLUME; i<=eTAKEENV_MUTE; i++)
+			for(int i=eTAKEENV_VOLUME; i<=eTAKEENV_PITCH; i++)
 			{
 				int x = (int)SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TAKEENV,CB_ADDSTRING,0,(LPARAM)GetTakeEnvelopeStr((TakeEnvType)i));
 				SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TAKEENV,CB_SETITEMDATA,x,i);

@@ -160,60 +160,47 @@ protected:
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_TakeParserPatcher
-// important: it assumes there're at least 2 takes!
+// important: it assumes there're at least 2 takes! //JFB!!! not true anymore
+//JFB!!! m_activeTakeIdx
 ///////////////////////////////////////////////////////////////////////////////
 
 class SNM_TakeParserPatcher : public SNM_ChunkParserPatcher
 {
 public:
-	SNM_TakeParserPatcher(MediaItem* _item, int _countTakes) : SNM_ChunkParserPatcher(_item) 
+	SNM_TakeParserPatcher(MediaItem* _item, int _countTakes = -1) : SNM_ChunkParserPatcher(_item) 
 	{
-		m_searchedTake = -1;
-		m_removing = false;
-		m_takeCounter = -1;
-		m_lastTakeCount = _countTakes; // -1 would force a get, initialized with REAPER's Countakes() for optimization
-		m_removing = false;
-		m_getting = false; 
-		m_foundPos = -1;
+		m_currentTakeCount = _countTakes; //initialized with REAPER's CountTakes() for optimization
+		m_fakeTake = false;
 	}
-	~SNM_TakeParserPatcher() {}
 
+	//JFB!!! Chelou!!!!
+	~SNM_TakeParserPatcher()
+	{
+		if (m_autoCommit)
+			Commit(); // nop if chunk not updated (or no valid m_object)
+		if (m_chunk)
+		{
+			delete m_chunk;
+			m_chunk = NULL;
+		}
+	}
+
+	WDL_String* GetChunk();
+	bool Commit(bool _force = false);
+	bool GetTakeChunkPos(int _takeIdx, int* _pos, int* _len=NULL);
 	bool GetTakeChunk(int _takeIdx, WDL_String* _gettedChunk, int* _pos=NULL, int* _originalLength=NULL);
 	int CountTakes();
 	bool IsEmpty(int _takeIdx);
-	int AddLastTake(WDL_String* _chunk);
+	int AddLastTake(WDL_String* _tkChunk);
 	int InsertTake(int _takeIdx, WDL_String* _chunk, int _pos = -1);
 	bool RemoveTake(int _takeIdx, WDL_String* _removedChunk = NULL, int* _removedStartPos=NULL);
 	bool ReplaceTake(int _takeIdx, int _startTakePos, int _takeLength, WDL_String* _newTakeChunk);
 
 protected:
-	bool NotifyEndElement(int _mode, 
-		LineParser* _lp, const char* _parsedLine, int _linePos, 
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
-
-	bool NotifyChunkLine(int _mode, 
-		LineParser* _lp, const char* _parsedLine, int _linePos, 
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
-
-	bool NotifySkippedSubChunk(int _mode, 
-		const char* _subChunk, int _subChunkLength, int _subChunkPos, 
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
-
-	bool m_removing;
-	bool m_getting;
-	int m_searchedTake;
-	int m_foundPos;
-	WDL_String m_subchunk;
-	int m_lastTakeCount; // Avoids many parsings: should *always* reflect the nb of takes in the *chunk*
-						 // (may be different than REAPER's ones)
-
+	int m_currentTakeCount; // reflects the nb of takes in the *chunk* (may be different than REAPER's ones)
 private:
-	int m_takeCounter;	
+	bool m_fakeTake;
 };
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_RecPassParser

@@ -131,6 +131,7 @@ const char* GetTakeEnvelopeStr(TakeEnvType type)
 		case eTAKEENV_VOLUME	: return "Volume";	break;
 		case eTAKEENV_PAN		: return "Pan";		break;
 		case eTAKEENV_MUTE		: return "Mute";	break;
+		case eTAKEENV_PITCH		: return "Pitch";	break;
 		default					: return NULL;		break;
 	}
 }

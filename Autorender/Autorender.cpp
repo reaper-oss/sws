@@ -137,7 +137,7 @@ void WriteProjectFile( string filename, WDL_String* prjStr ){
 	}
     delete outProject;
 }
-
+/*
 WDL_HeapBuf GetHeapBufFromChar( const char *str ){
 	WDL_HeapBuf m_hb;
 
@@ -150,7 +150,7 @@ WDL_HeapBuf GetHeapBufFromChar( const char *str ){
 
 	return m_hb;
 }
-
+*/
 
 void SetProjectParameter( WDL_String *prjStr, string param, string paramValue ){
 	char line[4096];

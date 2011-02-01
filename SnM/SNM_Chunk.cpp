@@ -333,13 +333,16 @@ bool SNM_FXChainTrackPatcher::SetFXChain(WDL_String* _fxChain)
 
 // _pos: if valid, it'll be set to the start position of the _gettedChunk (if found, -1 otherwise)
 // return false if _takeIdx not found (e.g. empty *item*)
-//JFB!!! _originalLength: utile???
-bool SNM_TakeParserPatcher::GetTakeChunk(int _takeIdx, WDL_String* _gettedChunk, int* _pos, int* _originalLength)
+bool SNM_TakeParserPatcher::GetTakeChunk(int _takeIdx, WDL_String* _gettedChunk, int* _pos, int* _len)
 {
 	int pos, len;
 	bool found = GetTakeChunkPos(_takeIdx, &pos, &len); // indirect call to GetChunk() (+ add fake 1st take if needed)
 	if (found && _gettedChunk)
+	{
 		_gettedChunk->Set((char*)(m_chunk->Get()+pos), len);
+		if (_pos) *_pos = pos;
+		if (_len) *_len = len;
+	}
 	return found;
 }
 
@@ -556,9 +559,9 @@ bool SNM_TakeParserPatcher::GetTakeChunkPos(int _takeIdx, int* _pos, int* _len)
 				*_pos = (int)(p+1 - m_chunk->Get()); 
 				if (_len)
 				{
-					if (p2 && !strncmp(p2, "\nTAKE", 5)) // length until next take
+					if (p2 && !strncmp(p2, "\nTAKE", 5))
 						*_len = (int)(p2-p);
-					else // length until end of item
+					else // last take
 						*_len = strlen(p+1)-2; // -2 for final ">\n"
 				}
 				return true;

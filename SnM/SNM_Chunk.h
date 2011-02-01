@@ -187,13 +187,13 @@ public:
 
 	WDL_String* GetChunk();
 	bool Commit(bool _force = false);
-	bool GetTakeChunkPos(int _takeIdx, int* _pos, int* _len=NULL);
-	bool GetTakeChunk(int _takeIdx, WDL_String* _gettedChunk, int* _pos=NULL, int* _originalLength=NULL);
+	bool GetTakeChunkPos(int _takeIdx, int* _pos, int* _len = NULL);
+	bool GetTakeChunk(int _takeIdx, WDL_String* _gettedChunk, int* _pos = NULL, int* _len = NULL);
 	int CountTakes();
 	bool IsEmpty(int _takeIdx);
 	int AddLastTake(WDL_String* _tkChunk);
 	int InsertTake(int _takeIdx, WDL_String* _chunk, int _pos = -1);
-	bool RemoveTake(int _takeIdx, WDL_String* _removedChunk = NULL, int* _removedStartPos=NULL);
+	bool RemoveTake(int _takeIdx, WDL_String* _removedChunk = NULL, int* _removedStartPos = NULL);
 	bool ReplaceTake(int _takeIdx, int _startTakePos, int _takeLength, WDL_String* _newTakeChunk);
 
 protected:

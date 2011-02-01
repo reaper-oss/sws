@@ -300,6 +300,14 @@ bool BrowseForRenderPath( char *renderPathChar ){
 	return result;
 }
 
+wchar_t* WideCharPlz( const char* inChar ){		
+	DWORD dwNum = MultiByteToWideChar(CP_UTF8, 0, inChar, -1, NULL, 0);
+	wchar_t *wChar;
+	wChar = new wchar_t[ dwNum ];
+	MultiByteToWideChar(CP_UTF8, 0, inChar, -1, wChar, dwNum );
+	return wChar;
+}
+
 void AutorenderRegions(COMMAND_T*) {
 	Main_OnCommand( 40026, 0 ); //Save current project
 
@@ -402,17 +410,25 @@ void AutorenderRegions(COMMAND_T*) {
 	// Tag!
 	for( unsigned int i = 0; i < renderTracks.size(); i++){		
 		string renderedFilePath = g_render_path + renderTracks[i].getFileName( renderFileExtension );						
-		
-		TagLib::FileRef f( renderedFilePath.c_str() );
-		if( !f.isNull() ){
-			if( !g_tag_artist.empty() ) f.tag()->setArtist( g_tag_artist );
-			if( !g_tag_album.empty() ) f.tag()->setAlbum( g_tag_album );
-			if( !g_tag_genre.empty() ) f.tag()->setGenre( g_tag_genre );
+		wchar_t* w_rendered_path = WideCharPlz( renderedFilePath.c_str() );
+
+		TagLib::FileRef f( w_rendered_path );
+		if( !f.isNull() ){			
+			wchar_t* w_tag_artist = WideCharPlz( g_tag_artist.c_str() );
+			wchar_t* w_tag_album = WideCharPlz( g_tag_album.c_str() );
+			wchar_t* w_tag_genre = WideCharPlz( g_tag_genre.c_str() );
+			wchar_t* w_tag_comment = WideCharPlz( g_tag_comment.c_str() );
+			wchar_t* w_track_title = WideCharPlz( renderTracks[i].trackName.c_str() );
+
+			if( wcslen( w_tag_artist ) ) f.tag()->setArtist( w_tag_artist );
+			if( wcslen( w_tag_album ) ) f.tag()->setAlbum( w_tag_album );
+			if( wcslen( w_tag_genre ) ) f.tag()->setGenre( w_tag_genre );
 			if( g_tag_year > 0 ) f.tag()->setYear( g_tag_year );
-			if( !g_tag_comment.empty() ) f.tag()->setComment( g_tag_comment );
-			
+			if( wcslen( w_tag_comment ) ) f.tag()->setComment( w_tag_comment );
+
 			f.tag()->setTrack( i + 1 );
-			f.tag()->setTitle( renderTracks[i].trackName );
+			f.tag()->setTitle( w_track_title );
+			
 			f.save();
 		} else {
 			//throw error?

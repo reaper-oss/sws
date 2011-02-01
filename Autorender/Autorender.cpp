@@ -289,6 +289,44 @@ bool BrowseForRenderPath( char *renderPathChar ){
 }
 
 #ifdef _WIN32
+void ExecuteWindowsProcess( char* cmd ){
+	STARTUPINFO info={sizeof(info)};
+	PROCESS_INFORMATION processInfo;
+	if (CreateProcess(NULL, cmd, NULL, NULL, TRUE, 0, NULL, NULL, &info, &processInfo)){
+		::WaitForSingleObject(processInfo.hProcess, INFINITE);
+		CloseHandle(processInfo.hProcess);
+		CloseHandle(processInfo.hThread);
+	}
+}
+#endif
+
+void OpenPathInFindplorer( const char* path ){
+	if( strlen( path ) ){
+		char cmd[512];
+#ifdef _WIN32
+		strcpy( cmd, "explorer \"");
+		strcpy( cmd + strlen( cmd ), path );
+		strcpy( cmd + strlen( cmd ), "\"" );
+		ExecuteWindowsProcess( cmd );
+#else
+		strcpy( cmd, "open \"");
+		strcpy( cmd + strlen( cmd ), path );
+		strcpy( cmd + strlen( cmd ), "\"" );
+		system( cmd );
+#endif
+	}
+}
+
+
+void OpenRenderPath(COMMAND_T *){
+	if( !g_render_path.empty() ){
+		OpenPathInFindplorer( g_render_path.c_str() );
+	} else {
+		MessageBox( GetMainHwnd(), "Render path not set. Set render path in Autorender metadata.", "Render Path Not Set", MB_OK );
+	}
+}
+
+#ifdef _WIN32
 wchar_t* WideCharPlz( const char* inChar ){		
 	DWORD dwNum = MultiByteToWideChar(CP_UTF8, 0, inChar, -1, NULL, 0);
 	wchar_t *wChar;
@@ -445,12 +483,7 @@ void AutorenderRegions(COMMAND_T*) {
 #endif
 	}
 
-#ifdef _WIN32
-	system( ( "explorer " + g_render_path ).c_str() );
-#else
-	//Mac open render directory?
-#endif
-
+	OpenRenderPath( NULL );
 }
 
 
@@ -633,6 +666,7 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 static COMMAND_T g_commandTable[] = {
 	{ { {FCONTROL|FALT|FSHIFT|FVIRTKEY,'R',0}, "Autorender: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
 	{ { DEFACCEL, "Autorender: Edit Project Metadata" }, "AUTORENDER_METADATA", ShowAutorenderMetadata, "Edit Project Metadata" },
+	{ { DEFACCEL, "Autorender: Open Render Path" }, "AUTORENDER_OPEN_RENDER_PATH", OpenRenderPath, "Open Render Path" },	
 //	{ { DEFACCEL, "Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
 #ifdef TESTCODE
 	{ { DEFACCEL, "Autorender: TestCode" }, "AUTORENDER_TESTCODE",  TestFunction, "Autorender: TestCode" },
@@ -644,6 +678,8 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag){
 	if (strcmp(menustr, "Main file") == 0 && flag == 0){
 		AddSubMenu(hMenu, SWSCreateMenu( g_commandTable), "Autorender", 40929 );
 	}
+
+	
 }
 
 int AutorenderInit(){

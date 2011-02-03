@@ -717,19 +717,19 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
 static COMMAND_T g_commandTable[] = {
-	{ { {FCONTROL|FALT|FSHIFT|FVIRTKEY,'R',0}, "Autorender: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
-	{ { DEFACCEL, "Autorender: Edit Project Metadata" }, "AUTORENDER_METADATA", ShowAutorenderMetadata, "Edit Project Metadata" },
-	{ { DEFACCEL, "Autorender: Open Render Path" }, "AUTORENDER_OPEN_RENDER_PATH", OpenRenderPath, "Open Render Path" },	
-	{ { DEFACCEL, "Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
+	{ { {FCONTROL|FALT|FSHIFT|FVIRTKEY,'R',0}, "SWS Autorender: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
+	{ { DEFACCEL, "SWS Autorender: Edit Project Metadata" }, "AUTORENDER_METADATA", ShowAutorenderMetadata, "Edit Project Metadata" },
+	{ { DEFACCEL, "SWS Autorender: Open Render Path" }, "AUTORENDER_OPEN_RENDER_PATH", OpenRenderPath, "Open Render Path" },	
+	{ { DEFACCEL, "SWS Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
 #ifdef TESTCODE
-	{ { DEFACCEL, "Autorender: TestCode" }, "AUTORENDER_TESTCODE",  TestFunction, "Autorender: TestCode" },
+	{ { DEFACCEL, "SWS Autorender: TestCode" }, "AUTORENDER_TESTCODE",  TestFunction, "Autorender: TestCode" },
 #endif
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
 static void menuhook(const char* menustr, HMENU hMenu, int flag){
 	if (strcmp(menustr, "Main file") == 0 && flag == 0){
-		AddSubMenu(hMenu, SWSCreateMenu( g_commandTable), "Autorender", 40929 );
+		AddSubMenu(hMenu, SWSCreateMenu( g_commandTable), "SWS Autorender", 40929 );
 	}
 
 	

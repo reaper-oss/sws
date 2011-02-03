@@ -53,6 +53,7 @@ string g_tag_album;
 string g_tag_genre;
 int g_tag_year = GetCurrentYear();
 string g_tag_comment;
+bool g_doing_render = false;
 
 #define METADATA_WINDOWPOS_KEY "AutorenderWindowPos"
 
@@ -102,6 +103,19 @@ string ParseFileExtension( string path ){
     if( path.find_last_of(".") != string::npos )
         return path.substr( path.find_last_of(".") + 1 );
     return "";
+}
+
+string GetProjectName(){
+	char prjPath[256];
+	string prjPathStr = "";
+	EnumProjects(-1, prjPath, 256);
+	if( strlen( prjPath ) == 0 ) return prjPathStr;
+	prjPathStr = prjPath;
+    if( prjPathStr.find_last_of( PATH_SLASH_CHAR ) == string::npos ) return prjPathStr;
+	prjPathStr = prjPathStr.substr( prjPathStr.find_last_of( PATH_SLASH_CHAR ) + 1 );
+	if( prjPathStr.find_last_of( ".rpp" ) == string::npos ) return prjPathStr;
+	prjPathStr = prjPathStr.substr( 0, prjPathStr.find_last_of( ".rpp" ) );
+	return prjPathStr;
 }
 
 void GetProjectString(WDL_String* prjStr){
@@ -262,13 +276,21 @@ void SanitizeFilename( string *fn ){
 }
 
 
-/*
 void ShowAutorenderHelp(COMMAND_T*) {
-	string helpText = "No need for instructions right now\n\n";
-	helpText += "Maybe later.\n";
+	string helpText = "This is how it's done:\n\n";
+	helpText.append("1. Create and name regions to be rendered and tagged.\n");
+	helpText.append("2. [Optional] Select Autorender/Edit Project Metadata and set tag\n");
+	helpText.append("    metadata and render path.\n");
+	helpText.append("3. Autorender/Batch Render Regions!\n\n\n");
+	helpText.append("Notes:\n\n");
+	helpText.append("Autorender uses the last used render settings. If you need to set\n");
+	helpText.append("your render format, run a dummy render the normal way before \n");
+	helpText.append("batch rendering.\n\n");
+	helpText.append("If no regions are present, the entire project will be rendered and tagged.\n\n");
+
 	MessageBox( GetMainHwnd(), helpText.c_str(), "Autorender Usage", MB_OK );
 }
-*/
+
 
 void EnsureStrEndsWith( string &str, const char endChar ){
 	if( str.c_str()[ str.length() - 1 ] != endChar ){
@@ -276,10 +298,17 @@ void EnsureStrEndsWith( string &str, const char endChar ){
 	}
 }
 
-void EnsureStrDoesntEndWith( string &str, const char endChar ){
+bool EnsureStrDoesntEndWith( string &str, const char endChar ){
+	bool removedChars = false;
 	while( str.c_str()[ str.length() - 1 ] == endChar ){
 		str.erase( str.length() - 1 );
+		removedChars = true;
 	}
+	return removedChars;
+}
+
+void FixPath( string &path ){
+	EnsureStrEndsWith( path, PATH_SLASH_CHAR );
 }
 
 bool BrowseForRenderPath( char *renderPathChar ){
@@ -319,10 +348,10 @@ void OpenPathInFindplorer( const char* path ){
 
 
 void OpenRenderPath(COMMAND_T *){
-	if( !g_render_path.empty() ){
+	if( !g_render_path.empty() && FileExists( g_render_path.c_str() ) ){
 		OpenPathInFindplorer( g_render_path.c_str() );
 	} else {
-		MessageBox( GetMainHwnd(), "Render path not set. Set render path in Autorender metadata.", "Render Path Not Set", MB_OK );
+		MessageBox( GetMainHwnd(), "Render path not set or invalid. Set render path in Autorender metadata.", "Render Path Not Set", MB_OK );
 	}
 }
 
@@ -336,22 +365,25 @@ wchar_t* WideCharPlz( const char* inChar ){
 }
 #endif
 
-void AutorenderRegions(COMMAND_T*) {
+void ForceSaveAndLoad( WDL_String *str ){
+	Undo_OnStateChangeEx("Autorender: Load project data", UNDO_STATE_MISCCFG, -1);
 	Main_OnCommand( 40026, 0 ); //Save current project
+	GetProjectString( str );
+}
+
+
+void AutorenderRegions(COMMAND_T*) {
+	g_doing_render = true;
 
 	//Get the project config as a WDL_String
 	WDL_String prjStr;
-	GetProjectString(&prjStr);
-
-	string renderFileExtension = GetCurrentRenderExtension( &prjStr );
-	if( renderFileExtension.empty() ){
-		//have to have a renderFileExtension, show error and exit
-		MessageBox( GetMainHwnd(), "Couldn't get render extension. Manually render a dummy file with the desired settings and run again.", "Autorender: Render Extension Error", MB_OK );
-		return;
-	}
+	ForceSaveAndLoad( &prjStr );
 
 	// remove PATH_SLASH_CHAR from end of string if it exists
-	EnsureStrDoesntEndWith( g_render_path, PATH_SLASH_CHAR );
+	bool removedChars = EnsureStrDoesntEndWith( g_render_path, PATH_SLASH_CHAR );
+	if( removedChars ){
+		ForceSaveAndLoad( &prjStr );
+	}
 
 	// render path was specified and doesn't exist
 	if( !g_render_path.empty() && !FileExists( g_render_path.c_str() ) ){
@@ -365,13 +397,24 @@ void AutorenderRegions(COMMAND_T*) {
 		bool browseResult;
 		browseResult = BrowseForRenderPath(renderPathChar);
 		if( !browseResult ){
+			g_doing_render = false;
 			return;
 		}
-		g_render_path = renderPathChar;
+		g_render_path = renderPathChar;		
+		ForceSaveAndLoad( &prjStr );
 	}
 
-	// append PATH_SLASH_CHAR from end of string if it doens't exist
-	EnsureStrEndsWith( g_render_path, PATH_SLASH_CHAR );
+	string renderFileExtension = GetCurrentRenderExtension( &prjStr );
+	if( renderFileExtension.empty() ){
+		//have to have a renderFileExtension, show error and exit
+		MessageBox( GetMainHwnd(), "Couldn't get render extension. Manually render a dummy file with the desired settings and run again.", "Autorender: Render Extension Error", MB_OK );
+		g_doing_render = false;
+		return;
+	}
+
+	//Project tweaks - only do after render path check! (Don't want to overwrite users settings in the original file)
+	SetProjectParameter( &prjStr, "RENDER_ADDTOPROJ", "0" );	
+	SetProjectParameter( &prjStr, "RENDER_STEMS", "0" );
 
 	string queuedRendersDir = GetQueuedRendersDir();
 	// Would be good to delete all files in the render queue directory here and at the end, 
@@ -412,7 +455,7 @@ void AutorenderRegions(COMMAND_T*) {
 			SanitizeFilename( &renderTrack.sanitizedTrackName );
 			
 			string outRenderProjectPath = outRenderProjectPrefix + renderTrack.getFileName("rpp");
-			string renderFilePath = g_render_path + renderTrack.getFileName( renderFileExtension );						
+			string renderFilePath = g_render_path + PATH_SLASH_CHAR + renderTrack.getFileName( renderFileExtension );						
 			SetProjectParameter( &trackPrjStr, "RENDER_FILE", "\"" + renderFilePath + "\"" );	
 
 			ostringstream renderRange;
@@ -425,20 +468,27 @@ void AutorenderRegions(COMMAND_T*) {
 	}
 	
 	if( renderTracks.size() == 0 ){
-		//error, or prompt user for entire project rendering with tagging
-#ifdef _WIN32
-	MessageBox( GetMainHwnd(), "No regions found", "Autorender Error", MB_OK );
-#else
-	//Mac message?
-#endif
-		return;
+		//Render entire project with tagging
+		string prjNameStr = GetProjectName();
+		WDL_String trackPrjStr(prjStr);
+		RenderTrack renderTrack;
+		renderTrack.trackNumber = 1;
+		renderTrack.trackName = prjNameStr;
+		renderTrack.sanitizedTrackName = prjNameStr;
+		SanitizeFilename( &renderTrack.sanitizedTrackName );
+		string outRenderProjectPath = outRenderProjectPrefix + renderTrack.getFileName("rpp");
+		string renderFilePath = g_render_path + PATH_SLASH_CHAR + renderTrack.getFileName( renderFileExtension );						
+		SetProjectParameter( &trackPrjStr, "RENDER_FILE", "\"" + renderFilePath + "\"" );	
+		SetProjectParameter( &trackPrjStr, "RENDER_RANGE", "1 0 0" ); //Render entire project
+		WriteProjectFile( outRenderProjectPath, &trackPrjStr );
+		renderTracks.push_back( renderTrack );
 	}
 
 	Main_OnCommand( 41207, 0 ); //Render all queued renders
 
 	// Tag!
 	for( unsigned int i = 0; i < renderTracks.size(); i++){		
-		string renderedFilePath = g_render_path + renderTracks[i].getFileName( renderFileExtension );
+		string renderedFilePath = g_render_path + PATH_SLASH_CHAR + renderTracks[i].getFileName( renderFileExtension );
 #ifdef _WIN32
 		wchar_t* w_rendered_path = WideCharPlz( renderedFilePath.c_str() );
 		TagLib::FileRef f( w_rendered_path );
@@ -484,6 +534,7 @@ void AutorenderRegions(COMMAND_T*) {
 	}
 
 	OpenRenderPath( NULL );
+	g_doing_render = false;
 }
 
 
@@ -538,7 +589,6 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 						processDialogFieldInt( hwndDlg, IDC_YEAR, g_tag_year, hasChanged );
 						processDialogFieldStr( hwndDlg, IDC_COMMENT, g_tag_comment, hasChanged );
 						processDialogFieldStr( hwndDlg, IDC_RENDER_PATH, g_render_path, hasChanged );
-						EnsureStrEndsWith( g_render_path, PATH_SLASH_CHAR );
 
 						if( hasChanged ){
 							Undo_OnStateChangeEx("Set autorender metadata", UNDO_STATE_MISCCFG, -1);
@@ -563,6 +613,8 @@ void ShowAutorenderMetadata(COMMAND_T*){
 
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg){
+	if( g_doing_render ) return false;
+
     LineParser lp(false);
     if (lp.parse(line) || lp.getnumtokens() < 1)
 		return false;
@@ -653,6 +705,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 }
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg){
+	if( g_doing_render ) return;
 	g_tag_artist.clear();
 	g_tag_album.clear();
 	g_tag_genre.clear();
@@ -667,7 +720,7 @@ static COMMAND_T g_commandTable[] = {
 	{ { {FCONTROL|FALT|FSHIFT|FVIRTKEY,'R',0}, "Autorender: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
 	{ { DEFACCEL, "Autorender: Edit Project Metadata" }, "AUTORENDER_METADATA", ShowAutorenderMetadata, "Edit Project Metadata" },
 	{ { DEFACCEL, "Autorender: Open Render Path" }, "AUTORENDER_OPEN_RENDER_PATH", OpenRenderPath, "Open Render Path" },	
-//	{ { DEFACCEL, "Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
+	{ { DEFACCEL, "Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
 #ifdef TESTCODE
 	{ { DEFACCEL, "Autorender: TestCode" }, "AUTORENDER_TESTCODE",  TestFunction, "Autorender: TestCode" },
 #endif

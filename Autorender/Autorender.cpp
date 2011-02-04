@@ -814,9 +814,9 @@ int AutorenderInit(){
 
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
-
+#ifdef _SWS_MENU
     if (!plugin_register("hookcustommenu", (void*)menuhook))
         return 0;
-
+#endif
 	return 1;
 }

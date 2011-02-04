@@ -55,7 +55,15 @@ int g_tag_year = GetCurrentYear();
 string g_tag_comment;
 bool g_doing_render = false;
 
+//Pref globals
+bool g_pref_allow_stems = false;
+bool g_pref_allow_addtoproj = false;
+string g_pref_default_render_path;
+
 #define METADATA_WINDOWPOS_KEY "AutorenderWindowPos"
+#define PREFS_WINDOWPOS_KEY "AutorenderPrefsWindowPos"
+#define ALLOW_STEMS_KEY "AutorenderAllowStemRender"
+#define DEFAULT_RENDER_PATH_KEY "AutorenderDefaultRenderPath"
 
 //#define TESTCODE
 
@@ -379,6 +387,11 @@ void AutorenderRegions(COMMAND_T*) {
 	WDL_String prjStr;
 	ForceSaveAndLoad( &prjStr );
 
+	//use default path if no render path specified
+	if( g_render_path.empty() && !g_pref_default_render_path.empty() ){
+		g_render_path = g_pref_default_render_path;
+	}
+
 	// remove PATH_SLASH_CHAR from end of string if it exists
 	bool removedChars = EnsureStrDoesntEndWith( g_render_path, PATH_SLASH_CHAR );
 	if( removedChars ){
@@ -414,7 +427,7 @@ void AutorenderRegions(COMMAND_T*) {
 
 	//Project tweaks - only do after render path check! (Don't want to overwrite users settings in the original file)
 	SetProjectParameter( &prjStr, "RENDER_ADDTOPROJ", "0" );	
-	SetProjectParameter( &prjStr, "RENDER_STEMS", "0" );
+	if( !g_pref_allow_stems ) SetProjectParameter( &prjStr, "RENDER_STEMS", "0" );
 
 	string queuedRendersDir = GetQueuedRendersDir();
 	// Would be good to delete all files in the render queue directory here and at the end, 
@@ -558,13 +571,22 @@ void processDialogFieldInt( HWND hwndDlg, WPARAM wParam, int &target, bool &hasC
 	}
 }
 
+
+void loadPrefs(){
+	g_pref_allow_stems = GetPrivateProfileInt( SWS_INI, ALLOW_STEMS_KEY, 0, get_ini_file() ) != 0;
+	char def_render_path[256];
+	GetPrivateProfileString( SWS_INI, DEFAULT_RENDER_PATH_KEY, "", def_render_path, 256, get_ini_file() );
+	g_pref_default_render_path = def_render_path;
+}
+
+
 INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam){
 	bool hasChanged = false;
 
-    switch (uMsg){
+	switch (uMsg){
             case WM_INITDIALOG:
-				RestoreWindowPos(hwndDlg, METADATA_WINDOWPOS_KEY, false);
-				SetDlgItemText(hwndDlg, IDC_ARTIST, g_tag_artist.c_str() );
+				RestoreWindowPos(hwndDlg, PREFS_WINDOWPOS_KEY, false);
+				SetDlgItemText(hwndDlg, IDC_ALLOW_STEMS, g_tag_artist.c_str() );
 				SetDlgItemText(hwndDlg, IDC_ALBUM, g_tag_album.c_str() );
 				SetDlgItemText(hwndDlg, IDC_GENRE, g_tag_genre.c_str() );
 				SetDlgItemInt(hwndDlg, IDC_YEAR, g_tag_year, false );
@@ -595,6 +617,50 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 						}
                         // fall through!								
                     case IDCANCEL:							
+                        SaveWindowPos(hwndDlg, PREFS_WINDOWPOS_KEY);
+                        EndDialog(hwndDlg,0);
+                        break;
+				}
+				return 0;
+            case WM_DESTROY:
+                // We're done
+                return 0;
+    }
+    return 0;
+}
+
+const char* bool_to_char( bool b){
+	return b ? "1" : "0";
+}
+
+INT_PTR WINAPI doAutorenderPreferences(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam){
+	bool hasChangedDontCare = false;
+
+    switch (uMsg){
+            case WM_INITDIALOG:
+				loadPrefs();
+				RestoreWindowPos(hwndDlg, METADATA_WINDOWPOS_KEY, false);
+				CheckDlgButton(hwndDlg, IDC_ALLOW_STEMS, g_pref_allow_stems);
+				SetDlgItemText(hwndDlg, IDC_DEFAULT_RENDER_PATH, g_pref_default_render_path.c_str() );
+				return 0;
+            case WM_COMMAND:
+				switch (LOWORD(wParam)){
+					case IDC_BROWSE:
+						char renderPathChar[1024];
+						bool browseResult;
+						browseResult = BrowseForRenderPath(renderPathChar);
+						if( browseResult ){
+							SetDlgItemText(hwndDlg, IDC_DEFAULT_RENDER_PATH, renderPathChar );
+						}
+						break;
+                    case IDOK:
+						g_pref_allow_stems = IsDlgButtonChecked(hwndDlg, IDC_ALLOW_STEMS) != 0;
+						WritePrivateProfileString(SWS_INI, ALLOW_STEMS_KEY, bool_to_char( g_pref_allow_stems ), get_ini_file());
+
+						processDialogFieldStr( hwndDlg, IDC_DEFAULT_RENDER_PATH, g_pref_default_render_path, hasChangedDontCare );
+						WritePrivateProfileString(SWS_INI, DEFAULT_RENDER_PATH_KEY, g_pref_default_render_path.c_str(), get_ini_file());
+                        // fall through!
+                    case IDCANCEL:
                         SaveWindowPos(hwndDlg, METADATA_WINDOWPOS_KEY);
                         EndDialog(hwndDlg,0);
                         break;
@@ -607,9 +673,15 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
     return 0;
 }
 
+
 void ShowAutorenderMetadata(COMMAND_T*){
 	DialogBox( g_hInst, MAKEINTRESOURCE(IDD_AUTORENDER_METADATA), g_hwndParent, doAutorenderMetadata );
 }
+
+void AutorenderPreferences(COMMAND_T*){
+	DialogBox( g_hInst, MAKEINTRESOURCE(IDD_AUTORENDER_PREFERENCES), g_hwndParent, doAutorenderPreferences );
+}
+
 
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg){
@@ -706,6 +778,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg){
 	if( g_doing_render ) return;
+	loadPrefs();
 	g_tag_artist.clear();
 	g_tag_album.clear();
 	g_tag_genre.clear();
@@ -721,6 +794,7 @@ static COMMAND_T g_commandTable[] = {
 	{ { DEFACCEL, "SWS Autorender: Edit Project Metadata" }, "AUTORENDER_METADATA", ShowAutorenderMetadata, "Edit Project Metadata" },
 	{ { DEFACCEL, "SWS Autorender: Open Render Path" }, "AUTORENDER_OPEN_RENDER_PATH", OpenRenderPath, "Open Render Path" },	
 	{ { DEFACCEL, "SWS Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
+	{ { DEFACCEL, "SWS Autorender: Global Preferences" }, "AUTORENDER_PREFERENCES", AutorenderPreferences, "Global Preferences" },
 #ifdef TESTCODE
 	{ { DEFACCEL, "SWS Autorender: TestCode" }, "AUTORENDER_TESTCODE",  TestFunction, "Autorender: TestCode" },
 #endif

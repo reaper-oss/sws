@@ -65,6 +65,7 @@
 #define IDD_GROOVEDIALOG                157
 #define IDD_AUTORENDER_METADATA         158
 #define IDD_RECINPUTCHECK               159
+#define IDD_AUTORENDER_PREFERENCES      160
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
@@ -284,8 +285,12 @@
 #define IDC_YEAR                        1211
 #define IDC_COMMENT                     1212
 #define IDC_RENDER_PATH                 1213
-#define IDC_BROWSE						1214
+#define IDC_BROWSE                      1214
 #define IDC_DONTSHOW                    1215
+#define IDC_ALLOW_STEM_RENDERING        1219
+#define IDC_ALLOW_STEMS                 1219
+#define IDC_ALLOW_ADDTOPROJ             1220
+#define IDC_DEFAULT_RENDER_PATH         1221
 
 // Next default values for new objects
 // 
@@ -293,7 +298,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        160
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1216
+#define _APS_NEXT_CONTROL_VALUE         1222
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

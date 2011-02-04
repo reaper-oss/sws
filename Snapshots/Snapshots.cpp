@@ -1007,7 +1007,11 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
+	{
+#ifdef _SWS_MENU
 		AddToMenu(hMenu, "SWS Snapshots", g_commandTable[0].accel.accel.cmd);
+#endif
+	}
 	else if (strcmp(menustr, "Track control panel context") == 0 && flag == 0)
 		AddSubMenu(hMenu, SWSCreateMenu(g_commandTable), "SWS Snapshots");
 }

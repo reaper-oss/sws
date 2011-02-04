@@ -345,7 +345,7 @@ void applyOrImportTrackTemplate(const char* _title, bool _add, int _slot, bool _
 */
 		}
 		// patch selected tracks (preserve items)
-		else if (CountSelectedTracksWithMaster(NULL) && 
+		else if (CountSelectedTracks(NULL) && 
 			LoadChunk(fn, &trTmpltChunk) && trTmpltChunk.GetLength())
 		{
 			char* pStart = strstr(trTmpltChunk.Get(), "<TRACK");
@@ -357,9 +357,9 @@ void applyOrImportTrackTemplate(const char* _title, bool _add, int _slot, bool _
 					trTmpltChunk.SetLen((int)(pStart-trTmpltChunk.Get()));
 
 				bool trTmpltHasItems = (strstr(trTmpltChunk.Get(), "<ITEM") != NULL);
-				for (int i = 0; i <= GetNumTracks(); i++)
+				for (int i = 0; i < GetNumTracks(); i++)
 				{
-					MediaTrack* tr = CSurf_TrackFromID(i,false); 
+					MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
 					if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 					{
 						SNM_ChunkParserPatcher p(tr);
@@ -406,7 +406,7 @@ void replaceOrPasteItemsFromsTrackTemplate(const char* _title, bool _paste, int 
 	{
 		WDL_String trTmpltChunk;
 
-		if (CountSelectedTracksWithMaster(NULL) && 
+		if (CountSelectedTracks(NULL) && 
 			LoadChunk(fn, &trTmpltChunk) && trTmpltChunk.GetLength())
 		{
 			char* pItems = strstr(trTmpltChunk.Get(), "<ITEM");
@@ -414,9 +414,9 @@ void replaceOrPasteItemsFromsTrackTemplate(const char* _title, bool _paste, int 
 			{
 				WDL_String itemsChunk(pItems);
 				itemsChunk.SetLen(strlen(pItems)-2, true); // remove ">\n"
-				for (int i = 0; i <= GetNumTracks(); i++)
+				for (int i = 0; i < GetNumTracks(); i++)
 				{
-					MediaTrack* tr = CSurf_TrackFromID(i,false); 
+					MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
 					if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 					{
 						SNM_ChunkParserPatcher p(tr);
@@ -445,9 +445,9 @@ void replaceOrPasteItemsFromsTrackTemplate(const char* _title, bool _paste, int 
 bool autoSaveTrackTemplateSlots(int _slot, const char* _dirPath, char* _fn, bool _delItems)
 {
 	bool slotUpdate = false;
-	for (int i = 0; i <= GetNumTracks(); i++)
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i,false); 
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master (can't save master template natively either)
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			SNM_ChunkParserPatcher p(tr);

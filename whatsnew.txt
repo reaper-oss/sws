@@ -1,3 +1,10 @@
+Fixed possible S&M.ini file corruption (thanks Mercado Negro!)
+
+House cleaning (more to come):
+- Main menu: Moved all SWS, S&M and Shane extension menu items in the main "Extensions" menu
+- Main "Extensions" menu filled in alphabetical order (and not strutured by developper anymore)
+
+
 !v2.0.0 #8 (February 1, 2011)
 Autorender updates:
 +No need to enter data into the project notes field, now use "Autorender: Edit project metadata"

@@ -94,8 +94,9 @@ int AboutBoxInit()
 {
 	SWSRegisterCommands(g_commandTable);
 
+#ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
-
+#endif
 	return 1;
 }

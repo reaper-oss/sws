@@ -348,8 +348,7 @@ bool SNM_TakeParserPatcher::GetTakeChunk(int _takeIdx, WDL_String* _gettedChunk,
 
 // Different from the API's CountTakes(MediaItem*), this ones
 // applies on the chunk (which perharps not yet commited !)
-//JFB!!! => CountTakesInChunk()
-int SNM_TakeParserPatcher::CountTakes()
+int SNM_TakeParserPatcher::CountTakesInChunk()
 {
 	if (m_currentTakeCount < 0)
 	{
@@ -365,29 +364,27 @@ int SNM_TakeParserPatcher::CountTakes()
 	return m_currentTakeCount;
 }
 
-// different from checking the PCM source: this one can 
+// different from checking a PCM source: this method can 
 // apply on a chunk that's not committed yet
-//JFB!!! + IsVERYempty() !
 bool SNM_TakeParserPatcher::IsEmpty(int _takeIdx)
 {
 	WDL_String tkChunk;
 	if (GetTakeChunk(_takeIdx, &tkChunk))
-		return (!strncmp(tkChunk.Get(), "TAKE NULL", 9) || strstr(tkChunk.Get(), "<SOURCE EMPTY"));
+		return (
+			!strncmp(tkChunk.Get(), "TAKE NULL", 9) || // empty take
+			strstr(tkChunk.Get(), "<SOURCE EMPTY")); // take with an empty source
 	return false;
 }
 
 // assumes that _tkChunk begins with "TAKE" 
-// and that the updated chunk already has at least 1 take
-//JFB!!! no more true ^^^
 // returns the end position after insertion (or -1 if failed)
 int SNM_TakeParserPatcher::AddLastTake(WDL_String* _tkChunk)
 {
 	int afterPos = -1;
-	if (_tkChunk && _tkChunk->GetLength())
+	if (_tkChunk && _tkChunk->GetLength() && GetChunk()) // force GetChunk() (+ add fake 1st take if needed)
 	{
-		WDL_String* chunk = GetChunk(); // force GetChunk() (+ add fake 1st take if needed)
-		chunk->Insert(_tkChunk->Get(), chunk->GetLength()-2, _tkChunk->GetLength()); //-2: before ">\n"
-		afterPos = chunk->GetLength()-2;
+		m_chunk->Insert(_tkChunk->Get(), m_chunk->GetLength()-2, _tkChunk->GetLength()); //-2: before ">\n"
+		afterPos = m_chunk->GetLength()-2;
 		m_currentTakeCount++; // *always* reflect the nb of takes in the *chunk*
 		m_updates++; // as we're directly working on the cached chunk..
 	}
@@ -401,10 +398,10 @@ int SNM_TakeParserPatcher::InsertTake(int _takeIdx, WDL_String* _chunk, int _pos
 {
 	int afterPos = -1;
 	int length = _chunk->GetLength();
-	if (_chunk && length)
+	if (_chunk && length && GetChunk()) // force GetChunk() (+ add fake 1st take if needed)
 	{
 		// last pos?
-		if (_takeIdx >= CountTakes()) // indirect call to GetChunk() (+ add fake 1st take if needed)
+		if (_takeIdx >= CountTakesInChunk())
 		{
 			afterPos = AddLastTake(_chunk);
 		}
@@ -427,9 +424,8 @@ int SNM_TakeParserPatcher::InsertTake(int _takeIdx, WDL_String* _chunk, int _pos
 	return afterPos;
 }
 
-// important: assumes there're at least 2 takes 
-//            => DeleteTrackMediaItem() should be used otherwise
-//JFB!!! no more true ^^^
+// usually, when only 1 take remains, DeleteTrackMediaItem() should be called but
+// this method will also work (=> empty item w/o takes)
 bool SNM_TakeParserPatcher::RemoveTake(int _takeIdx, WDL_String* _removedChunk, int* _removedStartPos)
 {
 	bool updated = false;

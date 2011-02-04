@@ -251,14 +251,14 @@ int toggleActionHook(int iCmd)
 	return -1;
 }
 
-// This function handles checking menu items.
+// This function creates the extension menu (flag==0) and handles checking menu items (flag==1).
 // Reaper automatically checks menu items of customized menus using toggleActionHook above,
 // but since we can't tell if a menu is customized we always check either way.
-static void toggleMenuHook(const char* menustr, HMENU hMenu, int flag)
+static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 {
-	// Handle checked menu items
 	if (flag == 1)
 	{
+		// Handle checked menu items
 		// Go through every menu item - see if it exists in the table, then check if necessary
 		MENUITEMINFO mi={sizeof(MENUITEMINFO),};
 		mi.fMask = MIIM_ID | MIIM_SUBMENU;
@@ -266,7 +266,7 @@ static void toggleMenuHook(const char* menustr, HMENU hMenu, int flag)
 		{
 			GetMenuItemInfo(hMenu, i, true, &mi);
 			if (mi.hSubMenu)
-				toggleMenuHook(menustr, mi.hSubMenu, flag);
+				swsMenuHook(menustr, mi.hSubMenu, flag);
 			else if (mi.wID >= (UINT)g_iFirstCommand && mi.wID <= (UINT)g_iLastCommand)
 				for (int j = 0; j < g_toggles.GetSize(); j++)
 				{
@@ -274,6 +274,96 @@ static void toggleMenuHook(const char* menustr, HMENU hMenu, int flag)
 					if (t->accel.accel.cmd == mi.wID)
 						CheckMenuItem(hMenu, i, MF_BYPOSITION | (t->getEnabled(t) ? MF_CHECKED : MF_UNCHECKED));
 				}
+		}
+	}
+	else
+	{
+		// Create the common "Extensions" menu 
+		if (!strcmp(menustr, "Main extensions"))
+		{
+			AddToMenu(hMenu, "About SWS Extensions...", NamedCommandLookup("_SWS_ABOUT"));
+			AddToMenu(hMenu, "Auto Color/Icon...", NamedCommandLookup("_SWSAUTOCOLOR_OPEN"));
+
+			HMENU hAutoRenderSubMenu = CreatePopupMenu();
+			AddSubMenu(hMenu, hAutoRenderSubMenu, "Autorender");
+			AddToMenu(hAutoRenderSubMenu, "Batch render regions", NamedCommandLookup("_AUTORENDER"));
+			AddToMenu(hAutoRenderSubMenu, "Edit project metadata...", NamedCommandLookup("_AUTORENDER_METADATA"));
+			AddToMenu(hAutoRenderSubMenu, "Open render path...", NamedCommandLookup("_AUTORENDER_OPEN_RENDER_PATH"));
+
+			AddToMenu(hMenu, "Cue Buss...", NamedCommandLookup("_S&M_SENDS4"));
+			AddToMenu(hMenu, "Envelope Processor...", NamedCommandLookup("_S&M_SENDS4"));
+			AddToMenu(hMenu, "Find...", NamedCommandLookup("_S&M_SHOWFIND"));
+			AddToMenu(hMenu, "Groove Tool...", NamedCommandLookup("_FNG_GROOVE_TOOL"));
+
+			HMENU hItemTkSubMenu = CreatePopupMenu();
+			AddSubMenu(hMenu, hItemTkSubMenu, "Item/Take");
+			AddToMenu(hItemTkSubMenu, "Repeat Paste...", NamedCommandLookup("_XENAKIOS_REPEATPASTE"));
+			AddToMenu(hItemTkSubMenu, SWS_SEPARATOR, 0);
+			AddToMenu(hItemTkSubMenu, "Randomize item positions...", NamedCommandLookup("_XENAKIOS_RANDOMIZE_ITEMPOS"));
+			AddToMenu(hItemTkSubMenu, "Move selected items to edit cursor", NamedCommandLookup("_XENAKIOS_MOVEITEMSTOEDITCURSOR"));
+			AddToMenu(hItemTkSubMenu, "Move selected items left by item length", NamedCommandLookup("_XENAKIOS_MOVEITEMSLEFTBYLEN"));
+			AddToMenu(hItemTkSubMenu, "Trim/untrim item left edge to edit cursor", NamedCommandLookup("_XENAKIOS_TRIM_LEFTEDGETO_EDCURSOR"));
+			AddToMenu(hItemTkSubMenu, "Trim/untrim item right edge to edit cursor", NamedCommandLookup("_XENAKIOS_TRIM_RIGHTEDGETO_EDCURSOR"));
+			AddToMenu(hItemTkSubMenu, "Reposition selected items...", NamedCommandLookup("_XENAKIOS_REPOSITION_ITEMS"));
+			AddToMenu(hItemTkSubMenu, SWS_SEPARATOR, 0);
+			AddToMenu(hItemTkSubMenu, "Rename selected takes...", NamedCommandLookup("_XENAKIOS_RENAMEMULTIPLETAKES"));
+			AddToMenu(hItemTkSubMenu, "Auto-rename selected takes...", NamedCommandLookup("_XENAKIOS_AUTORENAMETAKES"));
+			AddToMenu(hItemTkSubMenu, SWS_SEPARATOR, 0);
+			AddToMenu(hItemTkSubMenu, "Invert item selection", NamedCommandLookup("_XENAKIOS_INVERTITEMSELECTION"));
+			AddToMenu(hItemTkSubMenu, "Select items to start of track", NamedCommandLookup("_XENAKIOS_SELITEMSTOSTARTOFTRACK"));
+			AddToMenu(hItemTkSubMenu, "Select items to end of track", NamedCommandLookup("_XENAKIOS_SELITEMSTOENDOFTRACK"));
+			AddToMenu(hItemTkSubMenu, "Select first items of selected tracks", NamedCommandLookup("_XENAKIOS_SELFIRSTITEMSOFTRACKS"));
+
+			AddToMenu(hMenu, "LFO Generator...", NamedCommandLookup("_PADRE_ENVLFO"));
+			AddToMenu(hMenu, "Live Configs...", NamedCommandLookup("_S&M_SHOWMIDILIVE"));
+			AddToMenu(hMenu, "MarkerList...", NamedCommandLookup("_SWSMARKERLIST1"));
+
+			HMENU hMarkerSubMenu = CreatePopupMenu();
+			AddSubMenu(hMenu, hMarkerSubMenu, "Marker utilites");
+			AddToMenu(hMarkerSubMenu, "Load marker set...", NamedCommandLookup("_SWSMARKERLIST2"));
+			AddToMenu(hMarkerSubMenu, "Save marker set...", NamedCommandLookup("_SWSMARKERLIST3"));
+			AddToMenu(hMarkerSubMenu, "Delete marker set...", NamedCommandLookup("_SWSMARKERLIST4"));
+			AddToMenu(hMarkerSubMenu, SWS_SEPARATOR, 0);
+			AddToMenu(hMarkerSubMenu, "Copy marker set to clipboard", NamedCommandLookup("_SWSMARKERLIST5"));
+			AddToMenu(hMarkerSubMenu, "Edit project metadata...", NamedCommandLookup("_AUTORENDER_METADATA"));
+			AddToMenu(hMarkerSubMenu, "Paste marker set from clipboard", NamedCommandLookup("_SWSMARKERLIST6"));
+			AddToMenu(hMarkerSubMenu, SWS_SEPARATOR, 0);
+			AddToMenu(hMarkerSubMenu, "Reorder marker IDs", NamedCommandLookup("_SWSMARKERLIST7"));
+			AddToMenu(hMarkerSubMenu, "Reorder region IDs", NamedCommandLookup("_SWSMARKERLIST8"));
+			AddToMenu(hMarkerSubMenu, SWS_SEPARATOR, 0);
+			AddToMenu(hMarkerSubMenu, "Select next region", NamedCommandLookup("_SWS_SELNEXTREG"));
+			AddToMenu(hMarkerSubMenu, "Select prev region", NamedCommandLookup("_SWS_SELPREVREG"));
+			AddToMenu(hMarkerSubMenu, "Delete all markers", NamedCommandLookup("_SWSMARKERLIST9"));
+			AddToMenu(hMarkerSubMenu, "Delete all regions", NamedCommandLookup("_SWSMARKERLIST10"));
+
+			AddToMenu(hMenu, "Media pool...", NamedCommandLookup("_SWSMP_OPEN"));
+			AddToMenu(hMenu, "Notes/Help...", NamedCommandLookup("_S&M_SHOWNOTESHELP"));
+
+			HMENU hPrjMgmtSubMenu = CreatePopupMenu();
+			AddSubMenu(hMenu, hPrjMgmtSubMenu, "Project management");
+			AddToMenu(hPrjMgmtSubMenu, "Project List...", NamedCommandLookup("_SWS_PROJLIST_OPEN"));
+			AddToMenu(hPrjMgmtSubMenu, "Open projects from list...", NamedCommandLookup("_SWS_PROJLISTSOPEN"));
+			AddToMenu(hPrjMgmtSubMenu, "Save list of open projects...", NamedCommandLookup("_SWS_PROJLISTSAVE"));
+			AddToMenu(hPrjMgmtSubMenu, "Add related project(s)...", NamedCommandLookup("_SWS_ADDRELATEDPROJ"));
+			AddToMenu(hPrjMgmtSubMenu, "Delete related project...", NamedCommandLookup("_SWS_DELRELATEDPROJ"));
+/*JFB dynamic todo
+			AddToMenu(hPrjMgmtSubMenu, SWS_SEPARATOR, 0);
+			AddToMenu(hPrjMgmtSubMenu, "(related projects list)", NamedCommandLookup("_SWS_OPENRELATED1"));
+*/
+			AddToMenu(hMenu, "ReaConsole...", NamedCommandLookup("_SWSCONSOLE"));
+			AddToMenu(hMenu, "Resources...", NamedCommandLookup("_S&M_SHOWFXCHAINSLOTS"));
+			AddToMenu(hMenu, "Snapshots...", NamedCommandLookup("_SWSSNAPSHOT_OPEN"));
+//JFB "Track" sub-menu todo
+			AddToMenu(hMenu, "Tracklist...", NamedCommandLookup("_SWSTL_OPEN"));
+			AddToMenu(hMenu, "Zoom preferences...", NamedCommandLookup("_SWS_ZOOMPREFS"));
+
+			AddToMenu(hMenu, SWS_SEPARATOR, 0);
+			HMENU hOptionsSubMenu = CreatePopupMenu();
+			AddSubMenu(hMenu, hOptionsSubMenu, "SWS Options");
+			AddToMenu(hOptionsSubMenu, "Enable marker actions", NamedCommandLookup("_SWSMA_TOGGLE"));
+			AddToMenu(hOptionsSubMenu, "Enable red ruler while recording", NamedCommandLookup("_SWS_RECREDRULER"));
+			AddToMenu(hOptionsSubMenu, "Enable auto coloring", NamedCommandLookup("_SWSAUTOCOLOR_ENABLE"));
+			AddToMenu(hOptionsSubMenu, "Enable auto icon", NamedCommandLookup("_S&MAUTOICON_ENABLE"));
 		}
 	}
 }
@@ -634,8 +724,6 @@ extern "C"
 
 		if (!rec->Register("hookcommand",(void*)hookCommandProc))
 			ERR_RETURN("hook command error\n")
-		if (!rec->Register("hookcustommenu", (void*)toggleMenuHook))
-			ERR_RETURN("Menu hook error\n")
 		if (!rec->Register("toggleaction", (void*)toggleActionHook))
 			ERR_RETURN("Toggle action hook error\n")
 
@@ -667,7 +755,7 @@ extern "C"
 		if (!MiscInit())
 			ERR_RETURN("Misc init error\n")
 		if (!SnMInit(rec))
-			ERR_RETURN("SnM init error\n")
+			ERR_RETURN("S&M init error\n")
 		if(!FNGExtensionInit(hInstance, rec))
 			ERR_RETURN("Fingers init error\n")
 		if (!PadreInit())
@@ -676,6 +764,10 @@ extern "C"
 			ERR_RETURN("About box init error\n")
 		if (!AutorenderInit())
 			ERR_RETURN("Autorender init error\n")
+
+
+		if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
+			ERR_RETURN("Menu hook error\n")
 
 		SWSTimeSlice* ts = new SWSTimeSlice();
 		if (!rec->Register("csurf_inst", ts))

@@ -835,7 +835,9 @@ void SNM_NotesHelpWnd::readActionHelpFilenameIniFile()
 }
 
 void SNM_NotesHelpWnd::saveActionHelpFilenameIniFile() {
-	WritePrivateProfileString("NOTES_HELP_VIEW", "ACTION_HELP_FILE", m_actionHelpFilename.Get(), g_SNMiniFilename.Get());
+	WDL_String escapedStr;
+	makeEscapedConfigString(m_actionHelpFilename.Get(), &escapedStr);
+	WritePrivateProfileString("NOTES_HELP_VIEW", "ACTION_HELP_FILE", escapedStr.Get(), g_SNMiniFilename.Get());
 }
 
 const char* SNM_NotesHelpWnd::getActionHelpFilename() {
@@ -850,11 +852,8 @@ void SetActionHelpFilename(COMMAND_T*)
 {
 	//JFB BrowseForSaveFile() always asks for overwrite: painful!
 	char filename[BUFFER_SIZE] = "";
-	if (g_pNotesHelpWnd && BrowseForSaveFile("Set action help file",
-			g_pNotesHelpWnd->getActionHelpFilename(), "", "INI files\0*.ini\0", filename, BUFFER_SIZE))
-	{
+	if (g_pNotesHelpWnd && BrowseForSaveFile("Set action help file", g_pNotesHelpWnd->getActionHelpFilename(), g_pNotesHelpWnd->getActionHelpFilename(), "INI files\0*.ini\0", filename, BUFFER_SIZE))
 		g_pNotesHelpWnd->setActionHelpFilename(filename);
-	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1065,21 +1064,9 @@ static project_config_extension_t g_projectconfig = {
 	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
 };
 
-static void menuhook(const char* menustr, HMENU hMenu, int flag)
-{
-	if (!strcmp(menustr, "Main view") && !flag)
-	{
-		int cmd = NamedCommandLookup("_S&M_SHOWNOTESHELP");
-		if (cmd > 0)
-			AddToMenu(hMenu, "S&&M Notes/Help", cmd);
-	}
-}
-
 int NotesHelpViewInit() {
 	g_pNotesHelpWnd = new SNM_NotesHelpWnd();
-	if (!g_pNotesHelpWnd || 
-		!plugin_register("hookcustommenu", (void*)menuhook) ||
-		!plugin_register("projectconfig",&g_projectconfig))
+	if (!g_pNotesHelpWnd || !plugin_register("projectconfig",&g_projectconfig))
 		return 0;
 	return 1;
 }

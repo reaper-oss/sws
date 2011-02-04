@@ -722,10 +722,10 @@ int XenakiosInit()
 {
 	if(!plugin_register("projectconfig",&xen_reftrack_pcreg))
 		return 0;
-
+#ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
-
+#endif
 	// Move Xenakios_commands.ini to a new location
 	char oldIniFilename[512], iniFilename[512];
 	_snprintf(oldIniFilename, 512, XEN_INIFILE_OLD, GetExePath()); // old location
@@ -751,6 +751,7 @@ int XenakiosInit()
 
 	srand ((unsigned int)time(NULL));
 
+/*JFB commented: deprecated (Resources view)
 	// Add track template actions
 	char cPath[256];
 	strncpy(cPath, get_ini_file(), 256);
@@ -788,6 +789,6 @@ int XenakiosInit()
 			SWSRegisterCommand(ct);
 		}
 	}
-
+*/
 	return 1;
 }

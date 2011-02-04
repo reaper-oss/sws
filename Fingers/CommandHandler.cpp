@@ -95,7 +95,9 @@ void CReaperCommandHandler::Init(reaper_plugin_info_t *rec, REAPER_PLUGIN_HINSTA
 	me->m_rec = rec;
 	me->m_hInstance = hInstance;
 	rec->Register("hookcommand", (void *)CReaperCommandHandler::hookCommand);
+#ifdef _SWS_MENU
 	rec->Register("hookcustommenu", (void*)CReaperCommandHandler::menuhook);
+#endif
 	rec->Register("toggleaction", (void*)CReaperCommandHandler::toggleActionHook);
 }
 

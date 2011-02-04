@@ -366,7 +366,11 @@ static int g_iORPCmdIndex = 0;
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main file") == 0 && flag == 0)
+	{
+#ifdef _SWS_MENU
 		AddSubMenu(hMenu, SWSCreateMenu(g_projMgrCmdTable), "SWS Project management", 40897);
+#endif
+	}
 	else if (flag == 1)
 	{
 		// Delete all related project entries and regenerate

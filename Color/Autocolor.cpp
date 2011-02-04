@@ -890,8 +890,10 @@ int AutoColorInit()
 
 	SWSRegisterCommands(g_commandTable);
 
+#ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
+#endif
 
 	g_ACIni.SetFormatted(MAX_PATH, "%s%csws-autocoloricon.ini", GetResourcePath(), PATH_SLASH_CHAR);
 

@@ -143,9 +143,9 @@ void MidiItemProcessor::clear()
 
 bool MidiItemProcessor::getMidiEventsList(MediaItem_Take* take, MIDI_eventlist* evts)
 {
-	PCM_source* source = GetMediaItemTake_Source(take);
+	PCM_source* source = take ? GetMediaItemTake_Source(take) : NULL;
 	if(!source)
-		return NULL;
+		return false;
 
 	MediaItem* item = GetMediaItemTake_Item(take);
 

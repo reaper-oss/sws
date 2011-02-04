@@ -256,7 +256,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 #endif
 
 	// FX Chains (items & tracks) ---------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Resources window (FX chains)..." }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, NULL, 0, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Resources window (FX chains)..." }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, "S&&M Resources...", 0, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ClearSlotPrompt, NULL, 0},
 
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, slot 1" }, "S&M_TAKEFXCHAIN1", loadSetTakeFXChain, NULL, 0},
@@ -377,7 +377,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 
 	// Notes/Help -------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (project notes)..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, 0, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (project notes)..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, "S&&M Notes/Help...", 0, IsNotesHelpViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (item notes)..." }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (track notes)..." }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewDisplayed},
 #ifdef _WIN32
@@ -693,9 +693,10 @@ void UIInit()
 
 int SnMInit(reaper_plugin_info_t* _rec)
 {
+#ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
 		return 0;
-
+#endif
 	// for probable future persistance of fake toggle states..
 	for (int i=0; i <= SNM_MAX_ACTION_COUNT; i++)
 		g_fakeToggleStates[i] = false;

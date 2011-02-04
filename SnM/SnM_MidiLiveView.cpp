@@ -1067,22 +1067,10 @@ static project_config_extension_t g_projectconfig = {
 	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
 };
 
-static void menuhook(const char* menustr, HMENU hMenu, int flag)
-{
-	if (!strcmp(menustr, "Main view") && !flag)
-	{
-		int cmd = NamedCommandLookup("_S&M_SHOWMIDILIVE");
-		if (cmd > 0)
-			AddToMenu(hMenu, "S&&M Live Configs", cmd);
-	}
-}
-
 int LiveConfigViewInit() {
 	InitModel();
 	g_pLiveConfigsWnd = new SNM_LiveConfigsWnd();
-	if (!g_pLiveConfigsWnd || 
-//JFB not in main 'view' menu		!plugin_register("hookcustommenu", (void*)menuhook) ||
-		!plugin_register("projectconfig",&g_projectconfig))
+	if (!g_pLiveConfigsWnd || !plugin_register("projectconfig",&g_projectconfig))
 		return 0;
 	return 1;
 }

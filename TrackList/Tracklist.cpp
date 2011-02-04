@@ -861,8 +861,10 @@ int TrackListInit()
 
 	SWSRegisterCommands(g_commandTable);
 
+#ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
+#endif
 
 	g_pList = new SWS_TrackListWnd;
 

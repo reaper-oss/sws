@@ -200,9 +200,9 @@ int MarkerActionsInit()
 	SWSRegisterCommands(g_commandTable);
 
 	g_bMAEnabled = GetPrivateProfileInt("SWS", "MarkerActionsEnabled", 1, get_ini_file()) ? true : false;
-
+#ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
-
+#endif
 	return 1;
 }

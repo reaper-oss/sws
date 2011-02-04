@@ -28,6 +28,7 @@
 
 
 #include "stdafx.h"
+#include "../../WDL/projectcontext.h"
 #include "SnM_Actions.h"
 #include "SNM_FXChainView.h"
 #ifdef _WIN32
@@ -1253,16 +1254,6 @@ void SNM_ResourceWnd::AutoSaveSlots(int _slotPos)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void menuhook(const char* menustr, HMENU hMenu, int flag)
-{
-	if (!strcmp(menustr, "Main view") && !flag)
-	{
-		int cmd = NamedCommandLookup("_S&M_SHOWFXCHAINSLOTS");
-		if (cmd > 0)
-			AddToMenu(hMenu, "S&&M Resources", cmd);
-	}
-}
-
 int ResourceViewInit()
 {
 	// Init the lists of files (ordered by g_type)
@@ -1302,7 +1293,7 @@ int ResourceViewInit()
 	}
 
 	g_pResourcesWnd = new SNM_ResourceWnd();
-	if (!g_pResourcesWnd || !plugin_register("hookcustommenu", (void*)menuhook))
+	if (!g_pResourcesWnd)
 		return 0;
 	return 1;
 }
@@ -1334,14 +1325,30 @@ void ResourceViewExit()
 				item = list->Get(j);
 				if (item)
 				{
+					WDL_String escapedStr;
 					if (item->m_shortPath.GetLength())
-						iniSection.AppendFormatted(BUFFER_SIZE, "SLOT%d=%s\n", j+1, item->m_shortPath.Get()); 
+					{
+						makeEscapedConfigString(item->m_shortPath.Get(), &escapedStr);
+						iniSection.AppendFormatted(BUFFER_SIZE, "SLOT%d=%s\n", j+1, escapedStr.Get()); 
+					}
 					if (item->m_desc.GetLength())
-						iniSection.AppendFormatted(BUFFER_SIZE, "DESC%d=%s\n", j+1, item->m_desc.Get());
+					{
+						makeEscapedConfigString(item->m_desc.Get(), &escapedStr);
+						iniSection.AppendFormatted(BUFFER_SIZE, "DESC%d=%s\n", j+1, escapedStr.Get());
+					}
 				}
 			}
+
+			// "The data in the buffer pointed to by the lpString parameter consists 
+			// of one or more null-terminated strings, followed by a final null character"
+			char* buf = (char*)calloc(iniSection.GetLength()+1, sizeof(char));
+			strncpy(buf, iniSection.Get(), iniSection.GetLength());
+			for (int j=0; j < iniSection.GetLength(); j++)
+				if (buf[j] == '\n') 
+					buf[j] = '\0';
 			WritePrivateProfileStruct(resDir, NULL, NULL, 0, g_SNMiniFilename.Get()); //flush section
-			WritePrivateProfileSection(resDir, iniSection.Get(), g_SNMiniFilename.Get());
+			WritePrivateProfileSection(resDir, buf, g_SNMiniFilename.Get());
+			free(buf);
 		}
 	}
 	delete g_pResourcesWnd;

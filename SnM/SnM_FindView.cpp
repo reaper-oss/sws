@@ -631,24 +631,10 @@ int SNM_FindWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-/*
-static void menuhook(const char* menustr, HMENU hMenu, int flag)
-{
-	if (!strcmp(menustr, "Main view") && !flag)
-	{
-		int cmd = NamedCommandLookup("_S&M_SHOWFIND");
-		if (cmd > 0)
-		{
-			int afterCmd = NamedCommandLookup("_SWSCONSOLE");
-			AddToMenu(hMenu, "S&&M Find", cmd, afterCmd > 0 ? afterCmd : 40075);
-		}
-	}
-}
-*/
 int FindViewInit()
 {
 	g_pFindWnd = new SNM_FindWnd();
-	if (!g_pFindWnd/* || !plugin_register("hookcustommenu", (void*)menuhook)*/)
+	if (!g_pFindWnd)
 		return 0;
 	return 1;
 }

@@ -191,7 +191,6 @@ bool isEmptyMidi(MediaItem_Take* _take)
 		if(p.getMidiEventsList(_take, evts))
 		{
 			int pos=0;
-//JFB!!! v4: tests KO!???
 			emptyMidi = !evts->EnumItems(&pos);
 			MIDI_eventlist_Destroy(evts);
 		}
@@ -350,7 +349,7 @@ bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel
 			{					
 				SNM_TakeParserPatcher p(item, CountTakes(item));
 				int k=0, kOriginal=0;
-				while (k < p.CountTakes() && p.CountTakes() > 1) // p.CountTakes() is a getter
+				while (k < p.CountTakesInChunk() /*JFB!!! && p.CountTakesInChunk() > 1*/) // CountTakesInChunk() is a getter
 				{
 					if ((_empty && p.IsEmpty(k)) ||
 						(_midiEmpty && isEmptyMidi(GetTake(item, kOriginal))))
@@ -362,12 +361,12 @@ bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel
 					k++;
 					kOriginal++;
 				}
-				
+/*JFB!!!				
 				// Removes the item if needed
-				if (p.CountTakes() == 1)
+				if (p.CountTakesInChunk() == 1)
 				{
 					if ((_empty && p.IsEmpty(0)) ||
-						(_midiEmpty && isEmptyMidi(GetTake(item, 0))))
+						(_midiEmpty && isEmptyMidi(GetTake(item, kOriginal))))
 					{
 						// prevent a useless SNM_ChunkParserPatcher commit
 						p.CancelUpdates();
@@ -377,6 +376,7 @@ bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel
 						updated |= removed;
 					}
 				}
+*/
 			}
 		}
 	}

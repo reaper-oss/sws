@@ -160,7 +160,6 @@ protected:
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_TakeParserPatcher
-// important: it assumes there're at least 2 takes! //JFB!!! not true anymore
 //JFB!!! m_activeTakeIdx
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -189,7 +188,7 @@ public:
 	bool Commit(bool _force = false);
 	bool GetTakeChunkPos(int _takeIdx, int* _pos, int* _len = NULL);
 	bool GetTakeChunk(int _takeIdx, WDL_String* _gettedChunk, int* _pos = NULL, int* _len = NULL);
-	int CountTakes();
+	int CountTakesInChunk();
 	bool IsEmpty(int _takeIdx);
 	int AddLastTake(WDL_String* _tkChunk);
 	int InsertTake(int _takeIdx, WDL_String* _chunk, int _pos = -1);

@@ -293,10 +293,11 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 			AddToMenu(hAutoRenderSubMenu, "Global Preferences", NamedCommandLookup("_AUTORENDER_PREFERENCES"));
 
 			AddToMenu(hMenu, "Cue Buss...", NamedCommandLookup("_S&M_SENDS4"));
-			AddToMenu(hMenu, "Envelope Processor...", NamedCommandLookup("_S&M_SENDS4"));
+			AddToMenu(hMenu, "Envelope Processor...", NamedCommandLookup("_PADRE_ENVPROC"));
+			AddToMenu(hMenu, "Fill gaps...", NamedCommandLookup("_SWS_AWFILLGAPSADV"));
 			AddToMenu(hMenu, "Find...", NamedCommandLookup("_S&M_SHOWFIND"));
 			AddToMenu(hMenu, "Groove Tool...", NamedCommandLookup("_FNG_GROOVE_TOOL"));
-
+/*JFB: commented: tested some => crash
 			HMENU hItemTkSubMenu = CreatePopupMenu();
 			AddSubMenu(hMenu, hItemTkSubMenu, "Item/Take");
 			AddToMenu(hItemTkSubMenu, "Repeat Paste...", NamedCommandLookup("_XENAKIOS_REPEATPASTE"));
@@ -315,7 +316,7 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 			AddToMenu(hItemTkSubMenu, "Select items to start of track", NamedCommandLookup("_XENAKIOS_SELITEMSTOSTARTOFTRACK"));
 			AddToMenu(hItemTkSubMenu, "Select items to end of track", NamedCommandLookup("_XENAKIOS_SELITEMSTOENDOFTRACK"));
 			AddToMenu(hItemTkSubMenu, "Select first items of selected tracks", NamedCommandLookup("_XENAKIOS_SELFIRSTITEMSOFTRACKS"));
-
+*/
 			AddToMenu(hMenu, "LFO Generator...", NamedCommandLookup("_PADRE_ENVLFO"));
 			AddToMenu(hMenu, "Live Configs...", NamedCommandLookup("_S&M_SHOWMIDILIVE"));
 			AddToMenu(hMenu, "MarkerList...", NamedCommandLookup("_SWSMARKERLIST1"));
@@ -340,10 +341,10 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 
 			AddToMenu(hMenu, "Media pool...", NamedCommandLookup("_SWSMP_OPEN"));
 			AddToMenu(hMenu, "Notes/Help...", NamedCommandLookup("_S&M_SHOWNOTESHELP"));
+			AddToMenu(hMenu, "Project List...", NamedCommandLookup("_SWS_PROJLIST_OPEN"));
 
 			HMENU hPrjMgmtSubMenu = CreatePopupMenu();
 			AddSubMenu(hMenu, hPrjMgmtSubMenu, "Project management");
-			AddToMenu(hPrjMgmtSubMenu, "Project List...", NamedCommandLookup("_SWS_PROJLIST_OPEN"));
 			AddToMenu(hPrjMgmtSubMenu, "Open projects from list...", NamedCommandLookup("_SWS_PROJLISTSOPEN"));
 			AddToMenu(hPrjMgmtSubMenu, "Save list of open projects...", NamedCommandLookup("_SWS_PROJLISTSAVE"));
 			AddToMenu(hPrjMgmtSubMenu, "Add related project(s)...", NamedCommandLookup("_SWS_ADDRELATEDPROJ"));
@@ -355,7 +356,21 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 			AddToMenu(hMenu, "ReaConsole...", NamedCommandLookup("_SWSCONSOLE"));
 			AddToMenu(hMenu, "Resources...", NamedCommandLookup("_S&M_SHOWFXCHAINSLOTS"));
 			AddToMenu(hMenu, "Snapshots...", NamedCommandLookup("_SWSSNAPSHOT_OPEN"));
-//JFB "Track" sub-menu todo
+/*JFB "Xen's Track" sub-menu todo?
+In case someone is motivated:
+item_68=_XENAKIOS_RESETTRACKVOLANDPAN1 Reset volume and pan of selected tracks
+item_69=_XENAKIOS_RESETTRACKVOL1 Set volume of selected tracks to 0.0 dB
+item_70=_XENAKIOS_SYMMETRICAL_CHANPANSLTOR Pan selected tracks symmetrically, left to right
+item_71=_XENAKIOS_SYMMETRICAL_CHANPANSRTOL Pan selected tracks symmetrically, right to left
+item_72=_XENAKIOS_PANTRACKSRANDOM Pan selected tracks randomly
+item_73=_XENAKIOS_PANTRACKSCENTER Pan selected tracks to center
+item_74=_XENAKIOS_PANTRACKSLEFT Pan selected tracks to left
+item_75=_XENAKIOS_PANTRACKSRIGHT Pan selected tracks to right
+item_76=_XENAKIOS_TOGTRAXVISMIXER Toggle selected tracks visible in mixer
+item_77=_XENAKIOS_SELTRAX_RECARMED Set selected tracks record armed
+item_78=_XENAKIOS_SELTRAX_RECUNARMED Set selected tracks record unarmed
+item_79=_XENAKIOS_RENAMETRAXDLG Rename selected tracks...
+*/
 			AddToMenu(hMenu, "Tracklist...", NamedCommandLookup("_SWSTL_OPEN"));
 			AddToMenu(hMenu, "Zoom preferences...", NamedCommandLookup("_SWS_ZOOMPREFS"));
 

@@ -1013,7 +1013,10 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 #endif
 	}
 	else if (strcmp(menustr, "Track control panel context") == 0 && flag == 0)
+	{
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		AddSubMenu(hMenu, SWSCreateMenu(g_commandTable), "SWS Snapshots");
+	}
 }
 
 int SnapshotsInit()

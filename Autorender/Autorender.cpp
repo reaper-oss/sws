@@ -25,6 +25,8 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "dirent.h"
+//#define UNICODE
 #include <time.h>
 
 #include "RenderTrack.h"
@@ -35,6 +37,7 @@
 #define TAGLIB_NO_CONFIG
 #include "../taglib/tag.h"
 #include "../taglib/fileref.h"
+
 
 int GetCurrentYear(){
 	time_t t = 0;
@@ -93,6 +96,39 @@ void TestFunction(COMMAND_T* = NULL){
 
 // END OF TEST CODE
 
+vector<string> &split(const string &s, char delim, vector<string> &elems) {
+    stringstream ss(s);
+    string item;
+    while(getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
+}
+
+vector<string> split(const string &s, char delim) {
+    vector<string> elems;
+    return split(s, delim, elems);
+}
+
+void CheckDirTree( const string &path, bool isFilename = false ){
+	vector<string> dirComps = split( path, PATH_SLASH_CHAR );
+	string buildPath = "";
+
+#ifdef _WIN32
+	bool skipRoot = true;
+#else
+	bool skipRoot = false;
+#endif
+
+	unsigned int lastIndex = isFilename ? dirComps.size() - 2 : dirComps.size() - 1;
+
+	for( unsigned int i = 0; i <= lastIndex; i++ ){
+		if( i > 0 ) buildPath += PATH_SLASH_CHAR;
+		buildPath.append( dirComps[i] );
+		if( i > 0 || !skipRoot ) CreateDirectory( buildPath.c_str(), NULL );
+	}
+}
+
 void TrimString( string &str ){
     // Trim Both leading and trailing spaces
     size_t startpos = str.find_first_not_of(" \t"); // Find the first character position after excluding leading blank spaces
@@ -145,7 +181,7 @@ void GetProjectString(WDL_String* prjStr){
 }
 
 void WriteProjectFile( string filename, WDL_String* prjStr ){
-
+	//CheckDirTree( filename, true ); This done in GetQueuedRenders
 	ProjectStateContext* outProject = ProjectCreateFileWrite( filename.c_str() );	
 	char line[4096];
 	int pos = 0;	
@@ -241,7 +277,9 @@ string GetProjectNotesParameter( WDL_String *prjStr, string param ){
 string GetQueuedRendersDir(){
 	ostringstream qrStream;
 	qrStream << GetResourcePath() << PATH_SLASH_CHAR << "QueuedRenders";
-	return qrStream.str();
+	string qDir = qrStream.str();
+	CheckDirTree( qDir );
+	return qDir;
 }
 
 string GetCurrentRenderExtension( WDL_String *prjStr ){
@@ -379,6 +417,27 @@ void ForceSaveAndLoad( WDL_String *str ){
 	GetProjectString( str );
 }
 
+bool hasEnding( string const &fullString, string const &ending){
+	if (fullString.length() > ending.length()) {
+        return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+    } else {
+        return false;
+    }
+}
+
+void NukeDirFiles( string dir, string ext = "" ){
+	DIR *dp;
+	struct dirent *dirp;
+	if( ( dp = opendir( dir.c_str() ) ) != NULL ){
+		while( ( dirp = readdir( dp ) ) != NULL ){
+			string thisFile = dir + PATH_SLASH_CHAR + dirp->d_name;
+			if( thisFile.compare(".") && thisFile.compare("..") && ( ext.empty() || hasEnding( thisFile, ext ) ) )
+				DeleteFile( thisFile.c_str() );  //Delete any file except . and ..
+		}
+	}
+	closedir( dp );	
+}
+
 
 void AutorenderRegions(COMMAND_T*) {
 	g_doing_render = true;
@@ -429,9 +488,8 @@ void AutorenderRegions(COMMAND_T*) {
 	SetProjectParameter( &prjStr, "RENDER_ADDTOPROJ", "0" );	
 	if( !g_pref_allow_stems ) SetProjectParameter( &prjStr, "RENDER_STEMS", "0" );
 
-	string queuedRendersDir = GetQueuedRendersDir();
-	// Would be good to delete all files in the render queue directory here and at the end, 
-	// but apparently deleting files is not so easy...
+	string queuedRendersDir = GetQueuedRendersDir(); // This also checks to make sure that the dir exists
+	NukeDirFiles( queuedRendersDir, "rpp" ); // Deletes all .rpp files in the queuedRendersDir
 
 	ostringstream outRenderProjectPrefixStream;
 	outRenderProjectPrefixStream << queuedRendersDir << PATH_SLASH_CHAR << "render_Autorender";
@@ -548,6 +606,8 @@ void AutorenderRegions(COMMAND_T*) {
 
 	OpenRenderPath( NULL );
 	g_doing_render = false;
+	
+	//NukeDirFiles( queuedRendersDir, "rpp" ); //Maybe cleanup .rpp here too?
 }
 
 

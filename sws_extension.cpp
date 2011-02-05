@@ -288,7 +288,9 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 			AddSubMenu(hMenu, hAutoRenderSubMenu, "Autorender");
 			AddToMenu(hAutoRenderSubMenu, "Batch render regions", NamedCommandLookup("_AUTORENDER"));
 			AddToMenu(hAutoRenderSubMenu, "Edit project metadata...", NamedCommandLookup("_AUTORENDER_METADATA"));
-			AddToMenu(hAutoRenderSubMenu, "Open render path...", NamedCommandLookup("_AUTORENDER_OPEN_RENDER_PATH"));
+			AddToMenu(hAutoRenderSubMenu, "Open Render Path", NamedCommandLookup("_AUTORENDER_OPEN_RENDER_PATH"));
+			AddToMenu(hAutoRenderSubMenu, "Show Instructions", NamedCommandLookup("_AUTORENDER_HELP"));
+			AddToMenu(hAutoRenderSubMenu, "Global Preferences", NamedCommandLookup("_AUTORENDER_PREFERENCES"));
 
 			AddToMenu(hMenu, "Cue Buss...", NamedCommandLookup("_S&M_SENDS4"));
 			AddToMenu(hMenu, "Envelope Processor...", NamedCommandLookup("_S&M_SENDS4"));

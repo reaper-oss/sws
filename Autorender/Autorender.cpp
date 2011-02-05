@@ -24,8 +24,12 @@
 /
 ******************************************************************************/
 
+
 #include "stdafx.h"
-#include "dirent.h"
+#ifdef _WIN32
+	#include "dirent.h"
+#endif
+
 //#define UNICODE
 #include <time.h>
 
@@ -324,15 +328,17 @@ void SanitizeFilename( string *fn ){
 
 void ShowAutorenderHelp(COMMAND_T*) {
 	string helpText = "This is how it's done:\n\n";
-	helpText.append("1. Create and name regions to be rendered and tagged.\n");
-	helpText.append("2. [Optional] Select Autorender/Edit Project Metadata and set tag\n");
-	helpText.append("    metadata and render path.\n");
-	helpText.append("3. Autorender/Batch Render Regions!\n\n\n");
+	helpText.append("1. Create and name regions to be rendered\n");
+	helpText.append("    and tagged.\n");
+	helpText.append("2. [Optional] Select Edit Project Metadata\n");
+	helpText.append("    and set tag metadata and render path.\n");
+	helpText.append("3. Batch Render Regions!\n\n\n");
 	helpText.append("Notes:\n\n");
-	helpText.append("Autorender uses the last used render settings. If you need to set\n");
-	helpText.append("your render format, run a dummy render the normal way before \n");
-	helpText.append("batch rendering.\n\n");
-	helpText.append("If no regions are present, the entire project will be rendered and tagged.\n\n");
+	helpText.append("Autorender uses the last used render settings.\n");
+	helpText.append("If you need to set your render format, run a dummy\n");
+	helpText.append("render the normal way before batch rendering.\n\n");
+	helpText.append("If no regions are present, the entire project\n");
+	helpText.append("will be rendered and tagged.\n\n");
 
 	MessageBox( GetMainHwnd(), helpText.c_str(), "Autorender Usage", MB_OK );
 }
@@ -417,12 +423,24 @@ void ForceSaveAndLoad( WDL_String *str ){
 	GetProjectString( str );
 }
 
+void toLowerCase( string &str ){
+	std::transform( str.begin(), str.end(), str.begin(), (int(*)(int)) std::tolower );
+}
+
 bool hasEnding( string const &fullString, string const &ending){
 	if (fullString.length() > ending.length()) {
-        return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+        return (0 == fullString.compare( fullString.length() - ending.length(), ending.length(), ending));
     } else {
         return false;
     }
+}
+
+bool hasEndingCaseInsensitive( string const &fullString, string const &ending){
+	string lFullString = fullString;
+	toLowerCase( lFullString );
+	string lEnding = ending;
+	toLowerCase( lEnding );
+	return hasEnding( lFullString, lEnding );
 }
 
 void NukeDirFiles( string dir, string ext = "" ){
@@ -431,7 +449,7 @@ void NukeDirFiles( string dir, string ext = "" ){
 	if( ( dp = opendir( dir.c_str() ) ) != NULL ){
 		while( ( dirp = readdir( dp ) ) != NULL ){
 			string thisFile = dir + PATH_SLASH_CHAR + dirp->d_name;
-			if( thisFile.compare(".") && thisFile.compare("..") && ( ext.empty() || hasEnding( thisFile, ext ) ) )
+			if( thisFile.compare(".") && thisFile.compare("..") && ( ext.empty() || hasEndingCaseInsensitive( thisFile, ext ) ) )
 				DeleteFile( thisFile.c_str() );  //Delete any file except . and ..
 		}
 	}

@@ -124,7 +124,7 @@ void CheckDirTree( const string &path, bool isFilename = false ){
 	bool skipRoot = false;
 #endif
 
-	unsigned int lastIndex = isFilename ? dirComps.size() - 2 : dirComps.size() - 1;
+	unsigned int lastIndex = (int)(isFilename ? dirComps.size() - 2 : dirComps.size() - 1);
 
 	for( unsigned int i = 0; i <= lastIndex; i++ ){
 		if( i > 0 ) buildPath += PATH_SLASH_CHAR;

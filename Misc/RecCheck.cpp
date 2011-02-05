@@ -69,7 +69,7 @@ bool RecordInputCheck()
 	for (int i = 1; !bDupe && i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (*(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL))
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_RECARM", NULL) && *(int*)GetSetMediaTrackInfo(tr, "I_RECMODE", NULL) != 2)
 		{
 			int iInput = *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL);
 			// Ignore < 0 inputs
@@ -94,7 +94,7 @@ bool RecordInputCheck()
 	}
 	if (bDupe)
 	{	// Display the dlg
-		int iRet = DialogBox(g_hInst, MAKEINTRESOURCE(IDD_RECINPUTCHECK), g_hwndParent, doRecInputDialog);
+		INT_PTR iRet = DialogBox(g_hInst, MAKEINTRESOURCE(IDD_RECINPUTCHECK), g_hwndParent, doRecInputDialog);
 		if (iRet == IDCANCEL)
 			return false;
 	}

@@ -370,7 +370,8 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 	}
 }
 
-// Fake control surface just to get a low priority periodic time slice from Reaper
+// Fake control surface to get a low priority periodic time slice from Reaper
+// and callbacks for some "track params have changed"
 class SWSTimeSlice : public IReaperControlSurface
 {
 public:
@@ -427,11 +428,10 @@ public:
 			m_iACIgnore--;
 	}
 
-	// The rest only are applicable only to the TrackList
 	void SetSurfaceSelected(MediaTrack *tr, bool bSel)	{ ScheduleTracklistUpdate(); }
 	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); }
 	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); UpdateTrackSolo(); }
-	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); }
+	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); UpdateTrackArm(); }
 };
 
 // WDL Stuff

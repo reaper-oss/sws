@@ -33,3 +33,4 @@ void MiscExit();
 
 // TrackParams.cpp
 void UpdateTrackSolo();
+void UpdateTrackArm();

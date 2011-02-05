@@ -1,9 +1,15 @@
+!v2.0.0 #9 (February 4, 2011)
+Autorender: Added global preferences dialog, default render directory option, option to allow stem rendering
+Added actions:
++"SWS: Toolbar solo toggle" (Note, this replaces "SWS: Are any tracks soloed? [no-op, for toolbar]", please re-add to toolbar)
++"SWS: Toolbar arm toggle"
++"SWS: Set all sel tracks inputs to match first sel track"
+Duplicate recording input check now ignores "input monitoring only" record mode.
 Fixed possible S&M.ini file corruption (thanks Mercado Negro!)
 
 House cleaning (more to come):
-- Main menu: Moved all SWS, S&M and Shane extension menu items in the main "Extensions" menu
-- Main "Extensions" menu filled in alphabetical order (and not strutured by developper anymore)
-
++Main menu: Moved all SWS, S&M and Shane extension menu items in the main "Extensions" menu
++Main "Extensions" menu filled in alphabetical order (and not strutured by developper anymore)
 
 !v2.0.0 #8 (February 1, 2011)
 Autorender updates:

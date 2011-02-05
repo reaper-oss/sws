@@ -29,6 +29,12 @@
 #include "TrackParams.h"
 #include "TrackSel.h"
 
+typedef struct TrackInfo
+{
+	GUID guid;
+	int i;
+} TrackInfo;
+
 void EnableMPSend(COMMAND_T* = NULL)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -290,19 +296,78 @@ void UpdateTrackSolo()
 {
 	static int cmdID = 0;
 	if (!cmdID)
-		cmdID = NamedCommandLookup("_SWS_NOOPSOLO");
+		cmdID = NamedCommandLookup("_SWS_SOLOTOGGLE");
 	RefreshToolbar(cmdID);
 }
 
-bool AreTracksSoloed(COMMAND_T* ct)
+void UpdateTrackArm()
+{
+	static int cmdID = 0;
+	if (!cmdID)
+		cmdID = NamedCommandLookup("_SWS_ARMTOGGLE");
+	RefreshToolbar(cmdID);
+}
+
+bool CheckTrackParam(COMMAND_T* ct)
 {
 	int iNumTracks = GetNumTracks();
 	for (int i = 1; i <= iNumTracks; i++)
-		if (*(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_SOLO", NULL))
+		if (*(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), (const char*)ct->user, NULL))
 			return true;
 	return false;
 }
 
+void ToolbarToggle(COMMAND_T* ct)
+{
+	static WDL_TypedBuf<TrackInfo> soloState;
+	static WDL_TypedBuf<TrackInfo> armState;
+	WDL_TypedBuf<TrackInfo>* pState;
+	if (strcmp("I_SOLO", (const char*)ct->user) == 0)
+		pState = &soloState;
+	else
+		pState = &armState;
+
+	if (CheckTrackParam(ct))
+	{
+		pState->Resize(GetNumTracks(), false);
+		for (int i = 1; i <= GetNumTracks(); i++)
+		{
+			MediaTrack* tr = CSurf_TrackFromID(i, false);
+			pState->Get()[i-1].guid = *(GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
+			pState->Get()[i-1].i = *(int*)GetSetMediaTrackInfo(tr, (const char*)ct->user, NULL);
+			GetSetMediaTrackInfo(tr, (const char*)ct->user, &g_i0);
+		}
+	}
+	else
+	{	// Restore state
+		for (int i = 0; i < pState->GetSize(); i++)
+		{
+			MediaTrack* tr = GuidToTrack(&pState->Get()[i].guid);
+			if (tr)
+				GetSetMediaTrackInfo(tr, (const char*)ct->user, &pState->Get()[i].i);
+		}
+	}
+	TrackList_AdjustWindows(false);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+}
+
+void InputMatch(COMMAND_T* ct)
+{
+	int iInput = -2; // Would use -1, but that's for "Input: None"
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			if (iInput == -2)
+				iInput = *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL);
+			else
+				GetSetMediaTrackInfo(tr, "I_RECINPUT", &iInput);
+		}
+	}
+	TrackList_AdjustWindows(false);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+}
 
 static COMMAND_T g_commandTable[] = 
 {
@@ -333,6 +398,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Set selected track(s) record output mode based on items" },		"SWS_SETRECSRCOUT",		RecSrcOut,		},
 	{ { DEFACCEL, "SWS: Set selected track(s) monitor track media while recording" },	"SWS_SETMONMEDIA",		SetMonMedia,	},
 	{ { DEFACCEL, "SWS: Unset selected track(s) monitor track media while recording" },	"SWS_UNSETMONMEDIA",	UnsetMonMedia,	},
+	{ { DEFACCEL, "SWS: Toolbar arm toggle" },									"SWS_ARMTOGGLE",  ToolbarToggle, NULL, (INT_PTR)"I_RECARM", CheckTrackParam, },
 
 	// Add/remove tracks
 	{ { DEFACCEL, "SWS: Insert track above selected tracks" },					"SWS_INSRTTRKABOVE",InsertTrkAbove,		},
@@ -343,7 +409,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Name selected track(s) like first sel item" },			"SWS_NAMETKLIKEITEM", NameTrackLikeItem,	},
 
 	// Solo
-	{ { DEFACCEL, "SWS: Are any tracks soloed? [no-op, for toolbar]" },			"SWS_NOOPSOLO", SWS_NOOP, NULL, 0, AreTracksSoloed,	},
+	{ { DEFACCEL, "SWS: Toolbar solo toggle" },									"SWS_SOLOTOGGLE", ToolbarToggle, NULL, (INT_PTR)"I_SOLO",   CheckTrackParam, },
+
+	// Inputs
+	{ { DEFACCEL, "SWS: Set all sel tracks inputs to match first sel track" },	"SWS_INPUTMATCH", InputMatch, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

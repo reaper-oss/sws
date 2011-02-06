@@ -102,6 +102,10 @@ void TestFunction(COMMAND_T* = NULL){
 
 // END OF TEST CODE
 
+#ifndef _WIN32
+#define max(x,y) ((x)<(y)?(y):(x))
+#endif
+
 vector<string> &split(const string &s, char delim, vector<string> &elems) {
     stringstream ss(s);
     string item;

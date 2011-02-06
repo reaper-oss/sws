@@ -120,10 +120,6 @@ void SNM_NotesHelpWnd::SetType(int _type)
 
 	if (prev == NOTES_HELP_DISABLED && prev != _type)
 		SetTimer(m_hwnd, 1, 125, NULL);
-/*JFB!!! used to be
-	else
-		Update();
-*/
 }
 
 void SNM_NotesHelpWnd::SetText(const char* _str) 
@@ -697,7 +693,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 					{
 						MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
 						char* tkName= tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
-						strncpy(str, tkName ? tkName : "",512);
+						strncpy(str, tkName ? tkName : "", 512);
 					}
 					break;
 				case TRACK_NOTES:

@@ -453,7 +453,7 @@ void SNM_ResourceWnd::OnInitDlg()
 
 	m_cbDblClickType.SetID(COMBOID_DBLCLICK_TYPE);
 	m_cbDblClickType.SetRealParent(m_hwnd);
-	FillDblClickTypeCombo(); //JFB!!! signgle call to SetType() instead !???
+	FillDblClickTypeCombo(); //JFB single call to SetType() instead !?
 	m_parentVwnd.AddChild(&m_cbDblClickType);
 
 	m_cbDblClickTo.SetID(COMBOID_DBLCLICK_TO);
@@ -526,8 +526,8 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			DeleteSelectedSlots(true, wParam == DEL_SLOTFILES_MSG);
 			break;
 		case LOAD_MSG:
-			if (item && GetCurList()->BrowseSlot(slot))
-				Update();
+			if (item)
+				GetCurList()->BrowseSlot(slot);
 			break;
 		case CLEAR_MSG: 
 		{
@@ -693,11 +693,12 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE)
 			{
+				//JFB SetType() instead !?
 				int previousType = g_type;
 				g_type = m_cbType.GetCurSel();
 				if (g_type != previousType)
 				{
-					FillDblClickTypeCombo(); //JFB!!! SetType() instead !?
+					FillDblClickTypeCombo();
 					Update();
 					SetFocus(GetDlgItem(m_hwnd, IDC_FILTER));
 				}
@@ -1033,7 +1034,6 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			btnVwnd->SetPosition(&tr2);
 			x0 += 5+w;
 		}
-
 
 #ifdef _SNM_ITT
 		// Item/take templates
@@ -1438,6 +1438,10 @@ bool FileSlotList::BrowseSlot(int _slot, char* _fn, int _fnSz)
 			if (_fn)
 				strncpy(_fn, filename, _fnSz);
 			SetFromFullPath(_slot, filename);
+
+			if (g_pResourcesWnd)
+				g_pResourcesWnd->Update();
+
 			ok = true;
 		}
 	}

@@ -356,7 +356,7 @@ int SNM_TakeParserPatcher::CountTakesInChunk()
 		char* p = strstr(GetChunk()->Get(), "\nTAKE"); // force GetChunk() (+ add fake 1st take if needed)
 		while (p) 
 		{
-			if (p[5] && (p[5] == '\n' || p[5] == ' '))//JFB!!! p[5] !!
+			if (IsValidTakeChunkLine(p))
 				m_currentTakeCount++;
 			p = strstr((char*)(p+1), "\nTAKE");
 		}
@@ -473,7 +473,7 @@ bool SNM_TakeParserPatcher::ReplaceTake(int _startTakePos, int _takeLength, WDL_
 WDL_String* SNM_TakeParserPatcher::GetChunk()
 {
 	WDL_String* chunk = SNM_ChunkParserPatcher::GetChunk();
-	if (!m_fakeTake && chunk) //JFB!!! never NULL ?
+	if (!m_fakeTake && chunk)
 	{
 		m_fakeTake = true;
 		char* p = strstr(m_chunk->Get(), "\nNAME \"");
@@ -540,7 +540,7 @@ bool SNM_TakeParserPatcher::GetTakeChunkPos(int _takeIdx, int* _pos, int* _len)
 	char* p = strstr(GetChunk()->Get(), "\nTAKE"); // force GetChunk() (+ add fake 1st take if needed)
 	while (p)
 	{
-		if (p[5] && (p[5] == '\n' || p[5] == ' ')) //JFB!!! p[5] !!
+		if (IsValidTakeChunkLine(p))
 		{
 			if (tkCount == _takeIdx)
 			{
@@ -548,18 +548,16 @@ bool SNM_TakeParserPatcher::GetTakeChunkPos(int _takeIdx, int* _pos, int* _len)
 				char* p2 = strstr((char*)(p+1), "\nTAKE");
 				while (p2) 
 				{
-					if (p2[5] && (p2[5] == '\n' || p2[5] == ' '))//JFB!!! p2[5] !!
-						break;
+					if (IsValidTakeChunkLine(p2)) break;
 					p2 = strstr((char*)(p2+1), "\nTAKE");
 				}
 
 				*_pos = (int)(p+1 - m_chunk->Get()); 
 				if (_len)
 				{
-					if (p2 && !strncmp(p2, "\nTAKE", 5))
-						*_len = (int)(p2-p);
-					else // last take
-						*_len = strlen(p+1)-2; // -2 for final ">\n"
+					if (p2 && !strncmp(p2, "\nTAKE", 5)) *_len = (int)(p2-p);
+					// it's the last take
+					else  *_len = strlen(p+1)-2; // -2 for final ">\n"
 				}
 				return true;
 			}

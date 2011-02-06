@@ -161,6 +161,7 @@ protected:
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_TakeParserPatcher
 //JFB!!! m_activeTakeIdx
+//JFB!!! GetSetMediaItemInfo(item, "I_CURTAKE", &newActive);
 ///////////////////////////////////////////////////////////////////////////////
 
 class SNM_TakeParserPatcher : public SNM_ChunkParserPatcher
@@ -172,16 +173,13 @@ public:
 		m_fakeTake = false;
 	}
 
-	//JFB!!! Chelou!!!!
+	// Call to Commit(): when a constructor or destructor calls a virtual 
+	// function it calls the function defined for the type whose constructor
+	// or destructor is currently being run
 	~SNM_TakeParserPatcher()
 	{
 		if (m_autoCommit)
 			Commit(); // nop if chunk not updated (or no valid m_object)
-		if (m_chunk)
-		{
-			delete m_chunk;
-			m_chunk = NULL;
-		}
 	}
 
 	WDL_String* GetChunk();
@@ -198,6 +196,11 @@ public:
 protected:
 	int m_currentTakeCount; // reflects the nb of takes in the *chunk* (may be different than REAPER's ones)
 private:
+	// check that _pLine is indeed the 1st line of a new take in an item chunk
+	// remarks:
+	// _pLine *MUST* start with "\nTAKE" (see private usages)
+	// also, we assume we're processing a valid chunk here (i.e. doesn't with "\nTAKE": at least 5th char after)
+	bool IsValidTakeChunkLine(const char* _pLine) {return (_pLine[5] && (_pLine[5] == '\n' || _pLine[5] == ' '));}
 	bool m_fakeTake;
 };
 

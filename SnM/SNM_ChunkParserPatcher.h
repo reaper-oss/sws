@@ -204,7 +204,6 @@ void* GetObject() {
 }
 
 // Get and cache the RPP chunk
-//JFB!!! NEVER NULL + RECHERCHER LES APPELS
 virtual WDL_String* GetChunk() 
 {
 	WDL_String* chunk = NULL;

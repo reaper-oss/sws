@@ -1,10 +1,10 @@
 Support for v4 empty take lanes:
-+S&M build lanes actions now turn "take mossaics" into lanes using v4 empty takes (rather than v3 empty takes)
-These actions still useful to create take lanes à la v4 from older project saved with "mossaics", for example.
++S&M build lanes actions now turn "take mosaics" into lanes using v4 empty takes (rather than v3 empty takes)
+These actions still useful to create take lanes à la v4 from older project saved with "mosaics", for example.
 +The action "S&M Remove empty take/item among selected items" now also removes v4 empty takes
-Remark: this action was limited to "v3 empty takes" before, i.e. takes with empty source
+Remark: this action was limited to v3 empty takes before, i.e. takes with empty source
 +The action "S&M Clear active take/items" now clears takes using v4 empty takes (rather than v3 empty takes). If all takes of an item are empty, the item is removed.
-Remark: a v4 empty take can be removed thanks to "S&M Cut active take" (removal per take is not possible natively)
+Remark: a v4 empty take can be removed thanks to "S&M Cut active take" (removing a given empty take is not possible natively)
 
 Main "Extensions" menu:
 +Added AW's "Fill gaps..."
@@ -13,6 +13,7 @@ Main "Extensions" menu:
 
 Fixed crash when running some of the S&M Resources view's slot actions
 (applying, importing, pasting, etc. track templates or FX chains from unexisting slots)
+Fixed corner case GUI refresh issue in S&M Resources view
 
  !v2.0.0 #9 (February 4, 2011)
 Autorender: Added global preferences dialog, default render directory option, option to allow stem rendering

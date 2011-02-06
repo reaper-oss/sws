@@ -30,7 +30,6 @@
 
 #include "SNM_ChunkParserPatcher.h"
 
-#define _SNM_v4
 //#define _SNM_MISC
 //#ifdef _SNM_TRACK_GROUP_EX
 

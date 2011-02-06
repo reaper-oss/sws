@@ -200,22 +200,26 @@ bool isEmptyMidi(MediaItem_Take* _take)
 
 void setEmptyTakeChunk(WDL_String* _chunk, int _recPass, int _color)
 {
-#ifdef _SNM_v4
-	_chunk->Set("TAKE NULL\n");
-#else
-	_chunk->Set("TAKE\n");
-    _chunk->Append("NAME \"\"\n");
-    _chunk->Append("VOLPAN 1.000000 0.000000 1.000000 -1.000000\n");
-    _chunk->Append("SOFFS 0.00000000000000\n");
-    _chunk->Append("PLAYRATE 1.00000000000000 1 0.00000000000000 -1\n");
-    _chunk->Append("CHANMODE 0\n");
-	if (_color > 0)
-	    _chunk->AppendFormatted(32, "TAKECOLOR %d\n", _color);
-	if (_recPass > 0)
-	    _chunk->AppendFormatted(16, "RECPASS %d\n", _recPass);
-    _chunk->Append("<SOURCE EMPTY\n");
-    _chunk->Append(">\n");
-#endif
+	if (DockWindowAddEx) //JFB!!! v4 only
+	{
+		_chunk->Set("TAKE NULL\n");
+	}
+	// v3 empty take style
+	else
+	{
+		_chunk->Set("TAKE\n");
+		_chunk->Append("NAME \"\"\n");
+		_chunk->Append("VOLPAN 1.000000 0.000000 1.000000 -1.000000\n");
+		_chunk->Append("SOFFS 0.00000000000000\n");
+		_chunk->Append("PLAYRATE 1.00000000000000 1 0.00000000000000 -1\n");
+		_chunk->Append("CHANMODE 0\n");
+		if (_color > 0)
+			_chunk->AppendFormatted(32, "TAKECOLOR %d\n", _color);
+		if (_recPass > 0)
+			_chunk->AppendFormatted(16, "RECPASS %d\n", _recPass);
+		_chunk->Append("<SOURCE EMPTY\n");
+		_chunk->Append(">\n");
+	}
 }
 
 bool addEmptyTake(MediaItem* _item) {
@@ -412,29 +416,33 @@ void clearTake(COMMAND_T* _ct)
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
 				int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
-#ifdef _SNM_v4
-				SNM_TakeParserPatcher p(item);
-				int pos, len;
-				WDL_String emptyTk("TAKE NULL SEL\n");
-				if (p.GetTakeChunkPos(activeTake, &pos, &len))
+				if (DockWindowAddEx) //JFB!!! v4 only
 				{
-					updated |= p.ReplaceTake(pos, len, &emptyTk);
+					SNM_TakeParserPatcher p(item, CountTakes(item));
+					int pos, len;
+					WDL_String emptyTk("TAKE NULL SEL\n");
+					if (p.GetTakeChunkPos(activeTake, &pos, &len))
+					{
+						updated |= p.ReplaceTake(pos, len, &emptyTk);
 
-					// empty takes only => remove the item
-					if (!strstr(p.GetChunk()->Get(), "\nNAME \""))
-					{	
-						p.CancelUpdates(); // prevent a useless SNM_ChunkParserPatcher commit
-						if (DeleteTrackMediaItem(tr, item)) {
-							j--; 
-							updated = true;
+						// empty takes only => remove the item
+						if (!strstr(p.GetChunk()->Get(), "\nNAME \""))
+						{	
+							p.CancelUpdates(); // prevent a useless SNM_ChunkParserPatcher commit
+							if (DeleteTrackMediaItem(tr, item)) 
+							{
+								j--; 
+								updated = true;
+							}
 						}
 					}
 				}
-
-#else
-				SNM_ChunkParserPatcher p(item);
-				updated |= p.ReplaceSubChunk("SOURCE", 2, activeTake, "<SOURCE EMPTY\n>\n");
-#endif
+				// v3 empty take style
+				else
+				{
+					SNM_ChunkParserPatcher p(item);
+					updated |= p.ReplaceSubChunk("SOURCE", 2, activeTake, "<SOURCE EMPTY\n>\n");
+				}
 			}
 		}
 	}
@@ -641,7 +649,9 @@ bool deleteTakeAndMedia(int _mode)
 				for (int k = 0; k < GetMediaItemNumTakes(item); k++) // nb of takes changes!
 				{
 					MediaItem_Take* tk = GetMediaItemTake(item,k);
-					if (tk && (_mode == 1 || _mode == 2 || // all takes
+					//JFB!!! v4 empty take to do
+					if (tk && 
+						(_mode == 1 || _mode == 2 || // all takes
 						((_mode == 3 || _mode == 4) && GetActiveTake(item) == tk))) // active take only
 					{
 						PCM_source* pcm = (PCM_source*)GetSetMediaItemTakeInfo(tk,"P_SOURCE",NULL);

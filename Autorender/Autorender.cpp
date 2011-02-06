@@ -704,7 +704,10 @@ void processDialogFieldInt( HWND hwndDlg, WPARAM wParam, int &target, bool &hasC
 
 void processDialogFieldCheck( HWND hwndDlg, WPARAM wParam, bool &target, bool &hasChanged ){
 	bool dlg_field;
-	dlg_field = IsWindowEnabled( GetDlgItem(hwndDlg, (int)wParam) ) && IsDlgButtonChecked(hwndDlg, (int)wParam) != 0;
+	//No IsWindowEnabled on OSX...maybe in swell?
+	//dlg_field = IsWindowEnabled( GetDlgItem(hwndDlg, (int)wParam) ) && IsDlgButtonChecked(hwndDlg, (int)wParam) != 0;
+	dlg_field = IsDlgButtonChecked(hwndDlg, (int)wParam) != 0;
+
 	if( dlg_field != target ){
 		target = dlg_field;
 		hasChanged = true;

@@ -27,12 +27,16 @@
 
 class RenderTrack {
 	public:
+		RenderTrack();
 		int trackNumber;
-		//double trackStartTime, trackEndTime;
+		double trackStartTime, trackEndTime;
 		string trackName;
 		string sanitizedTrackName;
-		string getFileName( string );
-		string getPaddedTrackNumber();
+		string getFileName( string, int );
+		string getPaddedTrackNumber( int );
+		bool entireProject;
+		int duplicateNumber;
 	private:
-		string zeroPadNumber( int, int );
+		string zeroPadInt( int, int );
+		string getDuplicateNumberString();
 };

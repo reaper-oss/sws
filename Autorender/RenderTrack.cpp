@@ -27,20 +27,33 @@
 #include "stdafx.h"
 #include "RenderTrack.h"
 
-string RenderTrack::zeroPadNumber(int num, int digits ){
+
+RenderTrack::RenderTrack() { 
+	entireProject = false;
+	duplicateNumber = 0;
+}
+
+string RenderTrack::zeroPadInt(int num, int digits ){
     std::ostringstream ss;
     ss << setw( digits ) << setfill( '0' ) << num;
     return ss.str();
 }
 
-string RenderTrack::getPaddedTrackNumber(){
-	return zeroPadNumber( trackNumber, 2 );
+string RenderTrack::getPaddedTrackNumber( int padLength ){
+	return zeroPadInt( trackNumber, padLength );
 }
 
-string RenderTrack::getFileName( string ext = "" ){
-	string fileName = getPaddedTrackNumber() + " " + sanitizedTrackName;
-	if( !ext.empty() ){
-		fileName += "." + ext;
-	}
+string RenderTrack::getDuplicateNumberString(){
+    std::ostringstream ss;
+    ss << duplicateNumber;
+    return ss.str();
+}
+
+string RenderTrack::getFileName( string ext = "", int trackNumberPad = 2 ){
+	string fileName = "";
+	if( trackNumberPad ) fileName += getPaddedTrackNumber( trackNumberPad ) + " ";
+	fileName += sanitizedTrackName;	
+	if( duplicateNumber > 1 ) fileName += "(" + getDuplicateNumberString() + ")";
+	if( !ext.empty() ) fileName += "." + ext;
 	return fileName;
 }

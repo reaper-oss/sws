@@ -60,6 +60,8 @@ string g_tag_album;
 string g_tag_genre;
 int g_tag_year = GetCurrentYear();
 string g_tag_comment;
+bool g_prepend_track_number = false;
+string g_region_prefix;
 bool g_doing_render = false;
 
 //Pref globals
@@ -427,8 +429,16 @@ void toLowerCase( string &str ){
 	std::transform( str.begin(), str.end(), str.begin(), (int(*)(int)) std::tolower );
 }
 
+bool hasPrefix( string const &fullString, string const &prefix){
+	if (fullString.length() >= prefix.length()) {
+        return (0 == fullString.compare( 0, prefix.length(), prefix));
+    } else {
+        return false;
+    }
+}
+
 bool hasEnding( string const &fullString, string const &ending){
-	if (fullString.length() > ending.length()) {
+	if (fullString.length() >= ending.length()) {
         return (0 == fullString.compare( fullString.length() - ending.length(), ending.length(), ending));
     } else {
         return false;
@@ -521,40 +531,34 @@ void AutorenderRegions(COMMAND_T*) {
 	vector<RenderTrack> renderTracks;
 	map<int,bool> foundIdx;
 
-	//Loop through regions, build render rpps, build RenderTrack vector
+	//Loop through regions, build RenderTrack vector
 	while( EnumProjectMarkers( marker_index++, &isrgn, &pos, &rgnend, &track_name, &idx) > 0 ){
-		//if( isrgn == true && idx > track_index ){
 		if( isrgn == true && foundIdx.find( idx ) == foundIdx.end() ){
 			foundIdx[ idx ] = true;
 
-			track_index++;
-			WDL_String trackPrjStr(prjStr);
-
 			RenderTrack renderTrack;
-			renderTrack.trackNumber = track_index;
-
-			ostringstream trackName;
 			if( strlen( track_name ) > 0 ){
-				trackName << track_name;
-			} else {
-				trackName << "Track " << renderTrack.getPaddedTrackNumber();
-			}
-			renderTrack.trackName = trackName.str();
-			renderTrack.sanitizedTrackName = trackName.str();
-			SanitizeFilename( &renderTrack.sanitizedTrackName );
-			
-			string outRenderProjectPath = outRenderProjectPrefix + renderTrack.getFileName("rpp");
-			string renderFilePath = g_render_path + PATH_SLASH_CHAR + renderTrack.getFileName( renderFileExtension );						
-			SetProjectParameter( &trackPrjStr, "RENDER_FILE", "\"" + renderFilePath + "\"" );	
+				string trackName = track_name;
 
-			ostringstream renderRange;
-			renderRange << "0 " << pos << " " << rgnend;
-			SetProjectParameter( &trackPrjStr, "RENDER_RANGE", renderRange.str() );	
-			
-			WriteProjectFile( outRenderProjectPath, &trackPrjStr );
+				// If a region prefix has been specified, check to see if this region has it and skip if not
+				if( !g_region_prefix.empty() && !hasPrefix( trackName, g_region_prefix ) ) continue;
+
+				renderTrack.trackName = trackName;
+				renderTrack.sanitizedTrackName = renderTrack.trackName;
+				SanitizeFilename( &renderTrack.sanitizedTrackName );
+			} else {
+				// If a region prefix has been specified, skip this track
+				if( !g_region_prefix.empty() ) continue;
+			}
+
+			renderTrack.trackNumber = ++track_index;
+			renderTrack.trackStartTime = pos;
+			renderTrack.trackEndTime = rgnend;			
 			renderTracks.push_back( renderTrack );
 		}
 	}
+
+	foundIdx.clear(); 
 	
 	if( renderTracks.size() == 0 ){
 		//Render entire project with tagging
@@ -565,19 +569,62 @@ void AutorenderRegions(COMMAND_T*) {
 		renderTrack.trackName = prjNameStr;
 		renderTrack.sanitizedTrackName = prjNameStr;
 		SanitizeFilename( &renderTrack.sanitizedTrackName );
-		string outRenderProjectPath = outRenderProjectPrefix + renderTrack.getFileName("rpp");
-		string renderFilePath = g_render_path + PATH_SLASH_CHAR + renderTrack.getFileName( renderFileExtension );						
-		SetProjectParameter( &trackPrjStr, "RENDER_FILE", "\"" + renderFilePath + "\"" );	
-		SetProjectParameter( &trackPrjStr, "RENDER_RANGE", "1 0 0" ); //Render entire project
-		WriteProjectFile( outRenderProjectPath, &trackPrjStr );
+		renderTrack.entireProject = true;
 		renderTracks.push_back( renderTrack );
+	}
+
+	// Get number of digits to pad the track numbers with...at least two
+	int trackNumberPad = (int) max( 2, floor( log10( (double) renderTracks.size() ) ) + 1 );
+
+	// Set to zero if prepending track numbers is turned off
+	int prependTrackNumberPad = g_prepend_track_number ? trackNumberPad : 0;
+
+	//Set nameless tracks to Track XX
+	for( unsigned int i = 0; i < renderTracks.size(); i++){		
+		if( renderTracks[i].trackName.empty() ){
+			renderTracks[i].trackName = "Track " + renderTracks[i].getPaddedTrackNumber( trackNumberPad );
+			renderTracks[i].sanitizedTrackName = renderTracks[i].trackName;
+		}
+	}
+
+	if( !g_prepend_track_number ){
+		//Set duplicate numbers so that tracks can't overwrite each other when track number prepending is off
+		//Although, this could still happen (e.g. if two tracks were named Song and another was named Song(2) )
+		map<string,int> trackDuplicates;
+		for( unsigned int i = 0; i < renderTracks.size(); i++){		
+			if( trackDuplicates[ renderTracks[i].trackName ] ){
+				renderTracks[i].duplicateNumber = ++trackDuplicates[ renderTracks[i].trackName ];
+			} else {
+				trackDuplicates[ renderTracks[i].trackName ] = 1;
+			}
+		}
+		trackDuplicates.clear();
+	}
+
+	//Build render queue
+	for( unsigned int i = 0; i < renderTracks.size(); i++){		
+		WDL_String trackPrjStr(prjStr);
+
+		string outRenderProjectPath = outRenderProjectPrefix + renderTracks[i].getFileName("rpp", trackNumberPad );
+		string renderFilePath = g_render_path + PATH_SLASH_CHAR + renderTracks[i].getFileName( renderFileExtension, prependTrackNumberPad );						
+		SetProjectParameter( &trackPrjStr, "RENDER_FILE", "\"" + renderFilePath + "\"" );
+
+		if( renderTracks[i].entireProject ){
+			SetProjectParameter( &trackPrjStr, "RENDER_RANGE", "1 0 0" ); //Render entire project			
+		} else {
+			ostringstream renderRange;
+			renderRange << "0 " << renderTracks[i].trackStartTime << " " << renderTracks[i].trackEndTime;
+			SetProjectParameter( &trackPrjStr, "RENDER_RANGE", renderRange.str() );	
+		}
+		
+		WriteProjectFile( outRenderProjectPath, &trackPrjStr );
 	}
 
 	Main_OnCommand( 41207, 0 ); //Render all queued renders
 
 	// Tag!
 	for( unsigned int i = 0; i < renderTracks.size(); i++){		
-		string renderedFilePath = g_render_path + PATH_SLASH_CHAR + renderTracks[i].getFileName( renderFileExtension );
+		string renderedFilePath = g_render_path + PATH_SLASH_CHAR + renderTracks[i].getFileName( renderFileExtension, prependTrackNumberPad );
 #ifdef _WIN32
 		wchar_t* w_rendered_path = WideCharPlz( renderedFilePath.c_str() );
 		TagLib::FileRef f( w_rendered_path );
@@ -649,6 +696,14 @@ void processDialogFieldInt( HWND hwndDlg, WPARAM wParam, int &target, bool &hasC
 	}
 }
 
+void processDialogFieldCheck( HWND hwndDlg, WPARAM wParam, bool &target, bool &hasChanged ){
+	bool dlg_field;
+	dlg_field = IsDlgButtonChecked(hwndDlg, (int)wParam) != 0;
+	if( dlg_field != target ){
+		target = dlg_field;
+		hasChanged = true;
+	}
+}
 
 void loadPrefs(){
 	g_pref_allow_stems = GetPrivateProfileInt( SWS_INI, ALLOW_STEMS_KEY, 0, get_ini_file() ) != 0;
@@ -670,6 +725,8 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 				SetDlgItemInt(hwndDlg, IDC_YEAR, g_tag_year, false );
 				SetDlgItemText(hwndDlg, IDC_COMMENT, g_tag_comment.c_str() );
 				SetDlgItemText(hwndDlg, IDC_RENDER_PATH, g_render_path.c_str() );
+				SetDlgItemText(hwndDlg, IDC_REGION_PREFIX, g_region_prefix.c_str() );
+				CheckDlgButton(hwndDlg, IDC_PREPEND_TRACK_NUMBER, g_prepend_track_number);
 
 				return 0;
             case WM_COMMAND:
@@ -683,12 +740,15 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 						}
 						break;
                     case IDOK:
+						
 						processDialogFieldStr( hwndDlg, IDC_ARTIST, g_tag_artist, hasChanged );
 						processDialogFieldStr( hwndDlg, IDC_ALBUM, g_tag_album, hasChanged );
 						processDialogFieldStr( hwndDlg, IDC_GENRE, g_tag_genre, hasChanged );
 						processDialogFieldInt( hwndDlg, IDC_YEAR, g_tag_year, hasChanged );
 						processDialogFieldStr( hwndDlg, IDC_COMMENT, g_tag_comment, hasChanged );
 						processDialogFieldStr( hwndDlg, IDC_RENDER_PATH, g_render_path, hasChanged );
+						processDialogFieldStr( hwndDlg, IDC_REGION_PREFIX, g_region_prefix, hasChanged );
+						processDialogFieldCheck( hwndDlg, IDC_PREPEND_TRACK_NUMBER, g_prepend_track_number, hasChanged );
 
 						if( hasChanged ){
 							Undo_OnStateChangeEx("Set autorender metadata", UNDO_STATE_MISCCFG, -1);
@@ -788,7 +848,12 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 					g_tag_comment = lp.gettoken_str(1);
 				} else if ( !strcmp(lp.gettoken_str(0), "RENDER_PATH") ){
 					g_render_path = lp.gettoken_str(1);
+				} else if ( !strcmp(lp.gettoken_str(0), "REGION_PREFIX") ){
+					g_region_prefix = lp.gettoken_str(1);
+				} else if ( !strcmp(lp.gettoken_str(0), "PREPEND_TRACK_NUMBER") ){
+					g_prepend_track_number = lp.gettoken_int(1) != 0;
 				}
+
 
 			} else {
 				break;
@@ -822,7 +887,8 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	// then there will be a warning with every project file about unknown ext data
 	// If only the year is set, don't write anything either.
 	if (!g_tag_artist.empty() || !g_tag_album.empty() || !g_tag_genre.empty() ||
-		!g_tag_comment.empty() || !g_render_path.empty())
+		!g_tag_comment.empty() || !g_render_path.empty() || !g_region_prefix.empty()
+		|| !g_prepend_track_number )
 	{
 		ctx->AddLine("<AUTORENDER");
 	
@@ -850,6 +916,12 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			writeAutorenderSettingString( ctx, "RENDER_PATH", g_render_path );
 		}
 
+		if( !g_region_prefix.empty() ){
+			writeAutorenderSettingString( ctx, "REGION_PREFIX", g_region_prefix );
+		}
+
+		writeAutorenderSettingInt( ctx, "PREPEND_TRACK_NUMBER", int( g_prepend_track_number ) );
+
 		ctx->AddLine(">");
 	}
 }
@@ -863,6 +935,8 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_tag_year = GetCurrentYear();
 	g_tag_comment.clear();
 	g_render_path.clear();	
+	g_prepend_track_number = true;
+	g_region_prefix.clear();
 }
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
@@ -883,8 +957,6 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag){
 	if (strcmp(menustr, "Main file") == 0 && flag == 0){
 		AddSubMenu(hMenu, SWSCreateMenu( g_commandTable), "SWS Autorender", 40929 );
 	}
-
-	
 }
 
 int AutorenderInit(){

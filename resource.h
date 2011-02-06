@@ -291,6 +291,15 @@
 #define IDC_ALLOW_STEMS                 1219
 #define IDC_ALLOW_ADDTOPROJ             1220
 #define IDC_DEFAULT_RENDER_PATH         1221
+#define IDC_PREPEND_TRACK_NUM           1222
+#define IDC_PREPEND_TRACK_NUMBER        1222
+#define IDC_REGION_PREFIX               1223
+#define IDC_STATIC_ARTIST               1224
+#define IDC_STATIC_ALBUM                1225
+#define IDC_STATIC_GENRE                1226
+#define IDC_STATIC_YEAR                 1227
+#define IDC_STATIC_COMMENT              1228
+#define IDC_STATIC_REGION_PREFIX        1229
 
 // Next default values for new objects
 // 
@@ -298,7 +307,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        160
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1222
+#define _APS_NEXT_CONTROL_VALUE         1230
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

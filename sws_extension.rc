@@ -1066,10 +1066,12 @@ BEGIN
     LTEXT           "Render Path",IDC_STATIC,26,187,41,8
     EDITTEXT        IDC_RENDER_PATH,68,185,136,14,ES_AUTOHSCROLL
     PUSHBUTTON      "Browse...",IDC_BROWSE,206,185,50,14
-    CONTROL         "Prefix rendered files with track number",IDC_PREPEND_TRACK_NUMBER,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,73,126,135,10
-    EDITTEXT        IDC_REGION_PREFIX,173,147,40,14,ES_AUTOHSCROLL
-    LTEXT           "Only render regions starting with",IDC_STATIC_REGION_PREFIX,67,149,101,8
+    CONTROL         "Prepend track number to rendered files",IDC_PREPEND_TRACK_NUMBER,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,73,119,138,10
+    EDITTEXT        IDC_REGION_PREFIX,171,145,40,14,ES_AUTOHSCROLL
+    LTEXT           "Only render regions starting with",IDC_STATIC_REGION_PREFIX,67,147,101,8
+    CONTROL         "Remove prefix from track name",IDC_REMOVE_PREFIX_FROM_TRACK_NAME,
+                    "Button",BS_AUTOCHECKBOX | WS_DISABLED | WS_TABSTOP,86,160,114,10
 END
 
 IDD_RECINPUTCHECK DIALOGEX 0, 0, 172, 78

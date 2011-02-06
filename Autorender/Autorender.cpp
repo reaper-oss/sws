@@ -62,6 +62,7 @@ int g_tag_year = GetCurrentYear();
 string g_tag_comment;
 bool g_prepend_track_number = false;
 string g_region_prefix;
+bool g_remove_region_prefix = true;
 bool g_doing_render = false;
 
 //Pref globals
@@ -320,12 +321,10 @@ void SanitizeFilename( string *fn ){
 	//Windows illegal chars
 	const char *illegalChars = "\\/<>|\":?*";
 #else
-	// TODO: Mac illegal chars
+	// Mac illegal chars
 	const char *illegalChars = ":";
-	// First char can't be a dot
-	// Don't need now because track number is always a prefix, but might if
-	// we allow an option to omit them
-	//if( fn->substr(0,1) == "." ) fn->replace(0,1,"_");
+	// First char can't be a dot, doens't matter if we're prepending track numbers
+	if( !g_prepend_track_number && fn->substr(0,1) == "." ) fn->replace(0,1,"_");
 #endif
 
 	ReplaceChars( fn, illegalChars, "_" );
@@ -542,12 +541,15 @@ void AutorenderRegions(COMMAND_T*) {
 
 			RenderTrack renderTrack;
 			if( strlen( track_name ) > 0 ){
-				string trackName = track_name;
-
+				renderTrack.trackName = track_name;
 				// If a region prefix has been specified, check to see if this region has it and skip if not
-				if( !g_region_prefix.empty() && !hasPrefix( trackName, g_region_prefix ) ) continue;
+				if( !g_region_prefix.empty() ){					
+					if( !hasPrefix( renderTrack.trackName, g_region_prefix ) ) continue;
+					if( g_remove_region_prefix ){
+						renderTrack.trackName.erase( 0, g_region_prefix.length() );
+					}
+				}
 
-				renderTrack.trackName = trackName;
 				renderTrack.sanitizedTrackName = renderTrack.trackName;
 				SanitizeFilename( &renderTrack.sanitizedTrackName );
 			} else {
@@ -702,7 +704,7 @@ void processDialogFieldInt( HWND hwndDlg, WPARAM wParam, int &target, bool &hasC
 
 void processDialogFieldCheck( HWND hwndDlg, WPARAM wParam, bool &target, bool &hasChanged ){
 	bool dlg_field;
-	dlg_field = IsDlgButtonChecked(hwndDlg, (int)wParam) != 0;
+	dlg_field = IsWindowEnabled( GetDlgItem(hwndDlg, (int)wParam) ) && IsDlgButtonChecked(hwndDlg, (int)wParam) != 0;
 	if( dlg_field != target ){
 		target = dlg_field;
 		hasChanged = true;
@@ -730,7 +732,9 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 				SetDlgItemText(hwndDlg, IDC_COMMENT, g_tag_comment.c_str() );
 				SetDlgItemText(hwndDlg, IDC_RENDER_PATH, g_render_path.c_str() );
 				SetDlgItemText(hwndDlg, IDC_REGION_PREFIX, g_region_prefix.c_str() );
+				CheckDlgButton(hwndDlg, IDC_REMOVE_PREFIX_FROM_TRACK_NAME, g_remove_region_prefix);
 				CheckDlgButton(hwndDlg, IDC_PREPEND_TRACK_NUMBER, g_prepend_track_number);
+				
 
 				return 0;
             case WM_COMMAND:
@@ -739,12 +743,14 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 						char renderPathChar[1024];
 						bool browseResult;
 						browseResult = BrowseForRenderPath(renderPathChar);
-						if( browseResult ){
-							SetDlgItemText(hwndDlg, IDC_RENDER_PATH, renderPathChar );
-						}
+						if( browseResult ) SetDlgItemText(hwndDlg, IDC_RENDER_PATH, renderPathChar );
+						break;
+					case IDC_REGION_PREFIX:
+						char prefixChar[256];
+						GetDlgItemText(hwndDlg, IDC_REGION_PREFIX, prefixChar, 256);
+						EnableWindow( GetDlgItem(hwndDlg, IDC_REMOVE_PREFIX_FROM_TRACK_NAME), strlen( prefixChar ) > 0 );
 						break;
                     case IDOK:
-						
 						processDialogFieldStr( hwndDlg, IDC_ARTIST, g_tag_artist, hasChanged );
 						processDialogFieldStr( hwndDlg, IDC_ALBUM, g_tag_album, hasChanged );
 						processDialogFieldStr( hwndDlg, IDC_GENRE, g_tag_genre, hasChanged );
@@ -752,11 +758,10 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 						processDialogFieldStr( hwndDlg, IDC_COMMENT, g_tag_comment, hasChanged );
 						processDialogFieldStr( hwndDlg, IDC_RENDER_PATH, g_render_path, hasChanged );
 						processDialogFieldStr( hwndDlg, IDC_REGION_PREFIX, g_region_prefix, hasChanged );
-						processDialogFieldCheck( hwndDlg, IDC_PREPEND_TRACK_NUMBER, g_prepend_track_number, hasChanged );
+						processDialogFieldCheck( hwndDlg, IDC_REMOVE_PREFIX_FROM_TRACK_NAME, g_remove_region_prefix, hasChanged );
+						processDialogFieldCheck( hwndDlg, IDC_PREPEND_TRACK_NUMBER, g_prepend_track_number, hasChanged );						
 
-						if( hasChanged ){
-							Undo_OnStateChangeEx("Set autorender metadata", UNDO_STATE_MISCCFG, -1);
-						}
+						if( hasChanged ) Undo_OnStateChangeEx("Set autorender metadata", UNDO_STATE_MISCCFG, -1);
                         // fall through!								
                     case IDCANCEL:							
                         SaveWindowPos(hwndDlg, PREFS_WINDOWPOS_KEY);
@@ -854,10 +859,13 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 					g_render_path = lp.gettoken_str(1);
 				} else if ( !strcmp(lp.gettoken_str(0), "REGION_PREFIX") ){
 					g_region_prefix = lp.gettoken_str(1);
+				} else if ( !strcmp(lp.gettoken_str(0), "REMOVE_REGION_PREFIX") ){
+					g_remove_region_prefix = lp.gettoken_int(1) != 0;
 				} else if ( !strcmp(lp.gettoken_str(0), "PREPEND_TRACK_NUMBER") ){
 					g_prepend_track_number = lp.gettoken_int(1) != 0;
 				}
 
+				
 
 			} else {
 				break;
@@ -892,7 +900,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	// If only the year is set, don't write anything either.
 	if (!g_tag_artist.empty() || !g_tag_album.empty() || !g_tag_genre.empty() ||
 		!g_tag_comment.empty() || !g_render_path.empty() || !g_region_prefix.empty()
-		|| !g_prepend_track_number )
+		|| !g_prepend_track_number || !g_remove_region_prefix )
 	{
 		ctx->AddLine("<AUTORENDER");
 	
@@ -923,6 +931,8 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		if( !g_region_prefix.empty() ){
 			writeAutorenderSettingString( ctx, "REGION_PREFIX", g_region_prefix );
 		}
+		
+		writeAutorenderSettingInt( ctx, "REMOVE_REGION_PREFIX", int( g_remove_region_prefix ) );
 
 		writeAutorenderSettingInt( ctx, "PREPEND_TRACK_NUMBER", int( g_prepend_track_number ) );
 
@@ -941,6 +951,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_render_path.clear();	
 	g_prepend_track_number = true;
 	g_region_prefix.clear();
+	g_remove_region_prefix = true;
 }
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };

@@ -291,7 +291,6 @@
 #define IDC_ALLOW_STEMS                 1219
 #define IDC_ALLOW_ADDTOPROJ             1220
 #define IDC_DEFAULT_RENDER_PATH         1221
-#define IDC_PREPEND_TRACK_NUM           1222
 #define IDC_PREPEND_TRACK_NUMBER        1222
 #define IDC_REGION_PREFIX               1223
 #define IDC_STATIC_ARTIST               1224
@@ -300,6 +299,8 @@
 #define IDC_STATIC_YEAR                 1227
 #define IDC_STATIC_COMMENT              1228
 #define IDC_STATIC_REGION_PREFIX        1229
+#define IDC_PREPEND_TRACK_NUMBER2       1230
+#define IDC_REMOVE_PREFIX_FROM_TRACK_NAME 1230
 
 // Next default values for new objects
 // 

@@ -193,7 +193,7 @@ public:
 	int AddLastTake(WDL_String* _tkChunk);
 	int InsertTake(int _takeIdx, WDL_String* _chunk, int _pos = -1);
 	bool RemoveTake(int _takeIdx, WDL_String* _removedChunk = NULL, int* _removedStartPos = NULL);
-	bool ReplaceTake(int _takeIdx, int _startTakePos, int _takeLength, WDL_String* _newTakeChunk);
+	bool ReplaceTake(int _startTakePos, int _takeLength, WDL_String* _newTakeChunk);
 
 protected:
 	int m_currentTakeCount; // reflects the nb of takes in the *chunk* (may be different than REAPER's ones)
@@ -203,12 +203,13 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_RecPassParser
+// Inherits SNM_TakeParserPatcher in order to ease processing
 ///////////////////////////////////////////////////////////////////////////////
 
-class SNM_RecPassParser : public SNM_ChunkParserPatcher
+class SNM_RecPassParser : public SNM_TakeParserPatcher
 {
 public:
-	SNM_RecPassParser(MediaItem* _item) : SNM_ChunkParserPatcher(_item) 
+	SNM_RecPassParser(MediaItem* _item) : SNM_TakeParserPatcher(_item) 
 	{
 		m_maxRecPass = -1;
 		m_takeCounter = 0;
@@ -335,6 +336,7 @@ private:
 };
 
 
+#ifdef _SNM_MISC // deprecated since v4: GetTCPFXParm(), etc..
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_FXKnobParser
 ///////////////////////////////////////////////////////////////////////////////
@@ -361,6 +363,6 @@ private:
 	int m_fx;
 	WDL_PtrList<WDL_IntKeyedArray<int> >* m_knobs;
 };
-
+#endif
 
 #endif

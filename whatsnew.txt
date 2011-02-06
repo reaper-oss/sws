@@ -1,4 +1,20 @@
-!v2.0.0 #9 (February 4, 2011)
+Support for v4 empty take lanes:
++S&M build lanes actions now turn "take mossaics" into lanes using v4 empty takes (rather than v3 empty takes)
+These actions still useful to create take lanes à la v4 from older project saved with "mossaics", for example.
++The action "S&M Remove empty take/item among selected items" now also removes v4 empty takes
+Remark: this action was limited to "v3 empty takes" before, i.e. takes with empty source
++The action "S&M Clear active take/items" now clears takes using v4 empty takes (rather than v3 empty takes). If all takes of an item are empty, the item is removed.
+Remark: a v4 empty take can be removed thanks to "S&M Cut active take" (removal per take is not possible natively)
+
+Main "Extensions" menu:
++Added AW's "Fill gaps..."
++Fixed "Envelope Processor..." menu item
++(Temporary?) removed "Item/Take" sub-menu (Xenakios actions need to be updated for v4)
+
+Fixed crash when running some of the S&M Resources view's slot actions
+(applying, importing, pasting, etc. track templates or FX chains from unexisting slots)
+
+ !v2.0.0 #9 (February 4, 2011)
 Autorender: Added global preferences dialog, default render directory option, option to allow stem rendering
 Added actions:
 +"SWS: Toolbar solo toggle" (Note, this replaces "SWS: Are any tracks soloed? [no-op, for toolbar]", please re-add to toolbar)
@@ -9,7 +25,7 @@ Fixed possible S&M.ini file corruption (thanks Mercado Negro!)
 
 House cleaning (more to come):
 +Main menu: Moved all SWS, S&M and Shane extension menu items in the main "Extensions" menu
-+Main "Extensions" menu filled in alphabetical order (and not strutured by developper anymore)
++Main "Extensions" menu filled in alphabetical order (and not structured by developper anymore)
 
 !v2.0.0 #8 (February 1, 2011)
 Autorender updates:

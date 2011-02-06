@@ -446,12 +446,13 @@ bool SNM_TakeParserPatcher::RemoveTake(int _takeIdx, WDL_String* _removedChunk, 
 }
 
 // assumes _newTakeChunk always begins with "TAKE"
-bool SNM_TakeParserPatcher::ReplaceTake(int _takeIdx, int _startTakePos, int _takeLength, WDL_String* _newTakeChunk)
+bool SNM_TakeParserPatcher::ReplaceTake(int _startTakePos, int _takeLength, WDL_String* _newTakeChunk)
 {
 	bool updated = false;
-	if (GetChunk() && _newTakeChunk && _startTakePos >= 0) // force GetChunk() (+ add fake 1st take if needed)
+	if (GetChunk() && // force GetChunk() (+ add fake 1st take if needed)
+		_newTakeChunk && _startTakePos >= 0) 
 	{
-		int prevLgth = GetChunk()->GetLength(); // simple getter
+		int prevLgth = GetChunk()->GetLength();
 		GetChunk()->DeleteSub(_startTakePos, _takeLength);
 		m_updates++; // as we're directly working on the cached chunk..
 		updated = true;
@@ -572,9 +573,9 @@ bool SNM_TakeParserPatcher::GetTakeChunkPos(int _takeIdx, int* _pos, int* _len)
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_RecPassParser
+// Inherits SNM_TakeParserPatcher in order to ease processing, see header
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB!!! v4 TODO
 bool SNM_RecPassParser::NotifyChunkLine(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
 	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
@@ -582,8 +583,9 @@ bool SNM_RecPassParser::NotifyChunkLine(int _mode,
 {
 	if (_mode == -1)
 	{
-		if ((!m_takeCounter && !strcmp(_lp->gettoken_str(0), "NAME")) || //no "TAKE" in chunks for 1st take!
-			(m_takeCounter && !strcmp(_lp->gettoken_str(0), "TAKE"))) 
+		// Ok because SNM_RecPassParser inherits SNM_TakeParserPatcher
+		// in order to insert a fake "TAKE"
+		if (!strcmp(_lp->gettoken_str(0), "TAKE"))
 		{
 			m_takeCounter++;
 		}
@@ -823,7 +825,7 @@ bool SNM_TakeEnvParserPatcher::SetVis(const char* _envKeyWord, int _vis) {
 }
 
 
-#ifdef _SNM_MISC
+#ifdef _SNM_MISC // deprecated since v4: GetTCPFXParm(), etc..
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_FXKnobParser
 ///////////////////////////////////////////////////////////////////////////////

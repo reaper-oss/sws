@@ -385,12 +385,14 @@ void applyOrImportTrackTemplate(const char* _title, bool _add, int _slot, bool _
 
 void loadSetTrackTemplate(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
-	applyOrImportTrackTemplate(SNM_CMD_SHORTNAME(_ct), false, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
+	if (slot < 0 || slot < g_trTemplateFiles.GetSize())
+		applyOrImportTrackTemplate(SNM_CMD_SHORTNAME(_ct), false, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
 }
 
 void loadImportTrackTemplate(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
-	applyOrImportTrackTemplate(SNM_CMD_SHORTNAME(_ct), true, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
+	if (slot < 0 || slot < g_trTemplateFiles.GetSize())
+		applyOrImportTrackTemplate(SNM_CMD_SHORTNAME(_ct), true, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
 }
 
 void replaceOrPasteItemsFromsTrackTemplate(const char* _title, bool _paste, int _slot, bool _errMsg)

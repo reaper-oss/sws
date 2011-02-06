@@ -198,9 +198,11 @@ bool isEmptyMidi(MediaItem_Take* _take)
 	return emptyMidi;
 }
 
-//JFB!!! v4
 void setEmptyTakeChunk(WDL_String* _chunk, int _recPass, int _color)
 {
+#ifdef _SNM_v4
+	_chunk->Set("TAKE NULL\n");
+#else
 	_chunk->Set("TAKE\n");
     _chunk->Append("NAME \"\"\n");
     _chunk->Append("VOLPAN 1.000000 0.000000 1.000000 -1.000000\n");
@@ -213,6 +215,7 @@ void setEmptyTakeChunk(WDL_String* _chunk, int _recPass, int _color)
 	    _chunk->AppendFormatted(16, "RECPASS %d\n", _recPass);
     _chunk->Append("<SOURCE EMPTY\n");
     _chunk->Append(">\n");
+#endif
 }
 
 bool addEmptyTake(MediaItem* _item) {
@@ -335,7 +338,6 @@ int buildLanes(const char* _undoTitle, int _mode)
 	return (badRecPass ? -1 : updates);
 }
 
-//JFB!!! v4
 // primitive (no undo)
 bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel)
 {
@@ -349,7 +351,7 @@ bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel
 			{					
 				SNM_TakeParserPatcher p(item, CountTakes(item));
 				int k=0, kOriginal=0;
-				while (k < p.CountTakesInChunk() /*JFB!!! && p.CountTakesInChunk() > 1*/) // CountTakesInChunk() is a getter
+				while (k < p.CountTakesInChunk()) // CountTakesInChunk() is a getter
 				{
 					if ((_empty && p.IsEmpty(k)) ||
 						(_midiEmpty && isEmptyMidi(GetTake(item, kOriginal))))
@@ -361,22 +363,15 @@ bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel
 					k++;
 					kOriginal++;
 				}
-/*JFB!!!				
-				// Removes the item if needed
-				if (p.CountTakesInChunk() == 1)
-				{
-					if ((_empty && p.IsEmpty(0)) ||
-						(_midiEmpty && isEmptyMidi(GetTake(item, kOriginal))))
-					{
-						// prevent a useless SNM_ChunkParserPatcher commit
-						p.CancelUpdates();
 
-						bool removed = DeleteTrackMediaItem(_tr, item);
-						if (removed) j--; 
-						updated |= removed;
-					}
+				// Removes the item if needed
+				if (p.CountTakesInChunk() == 0)
+				{
+					p.CancelUpdates(); // prevent a useless SNM_ChunkParserPatcher commit
+					bool removed = DeleteTrackMediaItem(_tr, item);
+					if (removed) j--; 
+					updated |= removed;
 				}
-*/
 			}
 		}
 	}
@@ -417,8 +412,29 @@ void clearTake(COMMAND_T* _ct)
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
 				int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
+#ifdef _SNM_v4
+				SNM_TakeParserPatcher p(item);
+				int pos, len;
+				WDL_String emptyTk("TAKE NULL SEL\n");
+				if (p.GetTakeChunkPos(activeTake, &pos, &len))
+				{
+					updated |= p.ReplaceTake(pos, len, &emptyTk);
+
+					// empty takes only => remove the item
+					if (!strstr(p.GetChunk()->Get(), "\nNAME \""))
+					{	
+						p.CancelUpdates(); // prevent a useless SNM_ChunkParserPatcher commit
+						if (DeleteTrackMediaItem(tr, item)) {
+							j--; 
+							updated = true;
+						}
+					}
+				}
+
+#else
 				SNM_ChunkParserPatcher p(item);
 				updated |= p.ReplaceSubChunk("SOURCE", 2, activeTake, "<SOURCE EMPTY\n>\n");
+#endif
 			}
 		}
 	}
@@ -734,8 +750,8 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 		SNM_TakeParserPatcher p(_item, CountTakes(_item));
 
 		WDL_String takeChunk;
-		int tkPos, tkOriginalLength;
-		if (p.GetTakeChunk(_takeIdx, &takeChunk, &tkPos, &tkOriginalLength))
+		int tkPos, tklen;
+		if (p.GetTakeChunk(_takeIdx, &takeChunk, &tkPos, &tklen))
 		{
 			SNM_ChunkParserPatcher ptk(&takeChunk);
 			bool takeUpdate = false;
@@ -793,7 +809,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 
 			// Update take (with new visibility)
 			if (takeUpdate)
-				updated = p.ReplaceTake(_takeIdx, tkPos, tkOriginalLength, &takeChunk);
+				updated = p.ReplaceTake(tkPos, tklen, &takeChunk);
 		}
 	}
 	return updated;
@@ -956,7 +972,8 @@ void saveItemTakeTemplate(COMMAND_T* _ct)
 
 								fputs(p.GetChunk()->Get(), f);
 								fclose(f);
-								p.CancelUpdates();
+
+								p.CancelUpdates(); // NO UPDATE!
 							}
 						}
 					}

@@ -25,10 +25,10 @@ static void InsertMidiNoteSemitone(int flag, void *data);
 static void SelectAllNearestEditCursor(int flag, void *data);
 static void MoveMidiViewForwardABar(int flag, void *data);
 static void MakeAllNotesSameVelocityAsSelected(int flag, void *data);
-static void GhostTakes(int flag, void *data);
-static void UnGhostTakes(int flag, void *data);
+
 static void SelectMutedMidiNotes(int flag, void *data);
 static void SelectNone(RprMidiTakePtr &midiTake);
+
 static RprMidiNote *getFirstSelected(RprMidiTakePtr &midiTake);
 
 static void QuantizeAllToGrid(int flag, void *data);
@@ -59,49 +59,11 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 
 void MiscCommands::Init()
 {
-	static CReaperCmdReg CommandTable[] = {
-		CReaperCmdReg(
-			"SWS/FNG: record command macro", "FNG_RECORD_MACRO",
-			(CReaperCommand *)new CmdMacroRecorder(true),
-			NO_UNDO
-			),
-
-		CReaperCmdReg(
-			"SWS/FNG: finish/run last command macro", "FNG_FIN_RUN_MACRO", 
-			(CReaperCommand *)new CmdMacroRecorder(false),
-			NO_UNDO
-			),
-
-		CReaperCmdReg(
-			"SWS/FNG: apply MIDI hardware emulation to selected midi takes", "FNG_MIDI_HW_EMULATION_APPLY", 
-			(CReaperCommand *)new CReaperCommand(&EmulateMidiHardware),
-			UNDO_STATE_ITEMS
-			),
-		CReaperCmdReg(
-			"SWS/FNG: MIDI hardware emulation settings...", "FNG_MIDI_HW_EMULATION_SETTINGS", 
-			(CReaperCommand *)new CReaperCommand(&GetEmulationSettings),
-			NO_UNDO
-			),
-		CReaperCmdReg(
-			"SWS/FNG MIDI: select muted MIDI notes", "FNG_SELECT_MUTED", 
-			(CReaperCommand *)new CReaperCommand(&SelectMutedMidiNotes),
-			NO_UNDO
-			),
-		CReaperCmdReg(
-			"SWS/FNG: quantize item positions and MIDI note positions to grid", "FNG_QUANTIZE_TO_GRID", 
-			(CReaperCommand *)new CReaperCommand(&QuantizeAllToGrid),
-			UNDO_STATE_ITEMS
-			),
-			
-		CReaperCmdReg(
-			"SWS/FNG MIDI: select notes nearest edit cursor", "FNG_SELECT_NOTES_NEAR_EDIT_CURSOR",
-			(CReaperCommand *)new CReaperCommand(&SelectAllNearestEditCursor),
-			UNDO_STATE_ITEMS
-			),
-	};
-
-	CReaperCommandHandler *Handler = CReaperCommandHandler::Instance();
-	Handler->AddCommands(CommandTable, __ARRAY_SIZE(CommandTable));
+	RprCommand::registerCommand("SWS/FNG: apply MIDI hardware emulation to selected midi takes", "FNG_MIDI_HW_EMULATION_APPLY", &EmulateMidiHardware, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: MIDI hardware emulation settings...", "FNG_MIDI_HW_EMULATION_SETTINGS", &GetEmulationSettings, NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG MIDI: select muted MIDI notes", "FNG_SELECT_MUTED", &SelectMutedMidiNotes, NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG: quantize item positions and MIDI note positions to grid", "FNG_QUANTIZE_TO_GRID", &QuantizeAllToGrid, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG MIDI: select notes nearest edit cursor", "FNG_SELECT_NOTES_NEAR_EDIT_CURSOR", &SelectAllNearestEditCursor, UNDO_STATE_ITEMS);
 }
 
 static void SelectMutedMidiNotes(int flag, void *data)
@@ -178,61 +140,6 @@ static void MakeAllNotesOfSamePitchSameVelocityAsSelected(int flag, void *data)
 	for(int i = 0; i < midiTake->countNotes(); i++) {
 		if (note->getPitch() == midiTake->getNoteAt(i)->getPitch())
 			midiTake->getNoteAt(i)->setVelocity(note->getVelocity());
-	}
-}
-
-std::list<int> CmdMacroRecorder::m_Commands;
-bool CmdMacroRecorder::m_Run;
-int CmdMacroRecorder::m_RunCommandId;
-std::vector<int> CmdMacroRecorder::m_MyCommandIds;
-int CmdMacroRecorder::m_nCurrentCommandCount;
-int CmdMacroRecorder::m_nCommandCount;
-
-void CmdMacroRecorder::RunCommand(int command)
-{
-	while(m_nCommandCount != m_nCurrentCommandCount)
-		Sleep(250);
-	Main_OnCommandEx(command, 0, 0);
-	m_nCurrentCommandCount++;
-}
-
-void CmdMacroRecorder::GetCommand(int command, int flag)
-{
-	if(m_Run == false) /* i.e recording */
-	{
-		for(std::vector<int>::const_iterator it = m_MyCommandIds.begin(); it != m_MyCommandIds.end(); it++)
-			if( (command & (*it)) == (*it))
-				return;
-		/* ignore show action list command */
-		if( (command & 40605) == 40605)
-				return;
-		m_Commands.push_back(command);
-	}
-	else
-	{
-		m_nCommandCount++;
-	}
-}
-
-
-void CmdMacroRecorder::DoCommand(int flag)
-{
-	if(m_bRecord)
-	{
-		m_Commands.clear();
-		m_Run = false;
-	}
-	else
-	{
-		if (!m_Run)
-			m_Run = true;
-		else
-		{
-			m_nCommandCount = 0;
-			m_nCurrentCommandCount = 0;
-			std::for_each(m_Commands.begin(),
-			m_Commands.end(), CmdMacroRecorder::RunCommand);
-		}
 	}
 }
 

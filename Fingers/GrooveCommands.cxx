@@ -109,104 +109,39 @@ bool IsGrooveDialogOpen()
 
 void GrooveCommands::Init()
 {
-	static CReaperCmdReg CommandTable[] =
-	{
-	 CReaperCmdReg(
-		"SWS/FNG: Apply groove to selected media items (within 16th)", "FNG_APPLY_GROOVE",
-		(CReaperCommand *)new CReaperCommand(&ApplyGroove, 16),
-		UNDO_STATE_ITEMS
-		),
+	RprCommand::registerCommand("SWS/FNG: Apply groove to selected media items (within 16th)", 
+		"FNG_APPLY_GROOVE",&ApplyGroove, 16, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: Apply groove to selected media items (within 32nd)", 
+		"FNG_APPLY_GROOVE_32", &ApplyGroove, 32, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG MIDI: Apply groove to selected MIDI notes in active MIDI editor (within 16th)", 
+		"FNG_APPLY_MIDI_GROOVE_16", &ApplyGrooveInMidiEditor, 16, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG MIDI: Apply groove to selected MIDI notes in active MIDI editor (within 32nd)", 
+		"FNG_APPLY_MIDI_GROOVE_32", &ApplyGrooveInMidiEditor, 32, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: Get groove from selected media items", 
+		"FNG_GET_GROOVE", &StoreGroove, NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG: Get groove from selected MIDI notes in active MIDI editor", 
+		"FNG_GET_GROOVE_MIDI", &StoreGrooveFromMIDIEditor, NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG: Save groove template to file", 
+		"FNG_SAVE_GROOVE", &SaveGrooveToFile, NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG: Load groove template from file", 
+		"FNG_LOAD_GROOVE",&LoadGrooveFromFile, NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG: Show current groove template", 
+		"FNG_SHOW_GROOVE", &ShowGroove, NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG: Toggle groove markers", 
+		"FNG_GROOVE_MARKERS", &MarkGroove, 1, NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG: Toggle groove markers 2x", 
+		"FNG_GROOVE_MARKERS_2", &MarkGroove, 2, NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG: Toggle groove markers 4x", 
+		"FNG_GROOVE_MARKERS_4", &MarkGroove, 4, NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG: Toggle groove markers 8x", 
+		"FNG_GROOVE_MARKERS_8", &MarkGroove, 8, NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG: Set groove marker start to edit cursor", 
+		"FNG_GROOVE_MARKER_START_CUR", &MarkGrooveStart, (int)GrooveTemplateHandler::EDITCURSOR,	NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG: Set groove marker start to current bar", 
+		"FNG_GROOVE_MARKER_START_BAR", &MarkGrooveStart, (int)GrooveTemplateHandler::CURRENTBAR,	NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG: Show groove tool...", 
+		"FNG_GROOVE_TOOL",&ShowGrooveDialog, NO_UNDO);
 
-	  CReaperCmdReg(
-		"SWS/FNG: Apply groove to selected media items (within 32nd)", "FNG_APPLY_GROOVE_32",
-		(CReaperCommand *)new CReaperCommand(&ApplyGroove, 32),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG MIDI: Apply groove to selected MIDI notes in active MIDI editor (within 16th)", "FNG_APPLY_MIDI_GROOVE_16",
-		(CReaperCommand *)new CReaperCommand(&ApplyGrooveInMidiEditor, 16),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG MIDI: Apply groove to selected MIDI notes in active MIDI editor (within 32nd)", "FNG_APPLY_MIDI_GROOVE_32",
-		(CReaperCommand *)new CReaperCommand(&ApplyGrooveInMidiEditor, 32),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: Get groove from selected media items", "FNG_GET_GROOVE",
-		(CReaperCommand *)new CReaperCommand(&StoreGroove),
-		NO_UNDO
-		),
-	  CReaperCmdReg(
-		"SWS/FNG: Get groove from selected MIDI notes in active MIDI editor", "FNG_GET_GROOVE_MIDI",
-		(CReaperCommand *)new CReaperCommand(&StoreGrooveFromMIDIEditor),
-		NO_UNDO
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: Save groove template to file", "FNG_SAVE_GROOVE",
-		(CReaperCommand *)new CReaperCommand(&SaveGrooveToFile),
-		NO_UNDO
-		),
-		
-	  CReaperCmdReg(
-		"SWS/FNG: Load groove template from file", "FNG_LOAD_GROOVE",
-		(CReaperCommand *)new CReaperCommand(&LoadGrooveFromFile),
-		NO_UNDO
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: Show current groove template", "FNG_SHOW_GROOVE",
-		(CReaperCommand *)new CReaperCommand(&ShowGroove),
-		NO_UNDO
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: Toggle groove markers", "FNG_GROOVE_MARKERS", 
-		(CReaperCommand *)new CReaperCommand(&MarkGroove, 1),
-		NO_UNDO
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: Toggle groove markers 2x", "FNG_GROOVE_MARKERS_2", 
-		(CReaperCommand *)new CReaperCommand(&MarkGroove, 2),
-		NO_UNDO
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: Toggle groove markers 4x", "FNG_GROOVE_MARKERS_4",
-		(CReaperCommand *)new CReaperCommand(&MarkGroove, 4),
-		NO_UNDO
-		),
-	  
-	  CReaperCmdReg(
-		"SWS/FNG: Toggle groove markers 8x", "FNG_GROOVE_MARKERS_8",
-		(CReaperCommand *)new CReaperCommand(&MarkGroove, 8),
-		NO_UNDO
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: Set groove marker start to edit cursor", "FNG_GROOVE_MARKER_START_CUR",
-		(CReaperCommand *)new CReaperCommand(&MarkGrooveStart, (int)GrooveTemplateHandler::EDITCURSOR),
-		NO_UNDO
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: Set groove marker start to current bar", "FNG_GROOVE_MARKER_START_BAR",
-		(CReaperCommand *)new CReaperCommand(&MarkGrooveStart, (int)GrooveTemplateHandler::CURRENTBAR),
-		NO_UNDO
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: Show groove tool...", "FNG_GROOVE_TOOL",
-		(CReaperCommand *)new CReaperCommand(&ShowGrooveDialog),
-		NO_UNDO, NULL, IsGrooveDialogOpen, "FNG Groove tool..."
-		),
-	};
-	
-	CReaperCommandHandler *cmdHandler = CReaperCommandHandler::Instance();
-	cmdHandler->AddCommands(CommandTable, __ARRAY_SIZE(CommandTable));
+	RprCommand::registerAsToggleCommand("FNG_GROOVE_TOOL", IsGrooveDialogOpen);
+	RprCommand::registerAsMenuCommand("FNG_GROOVE_TOOL", "FNG: Groove tool...");
 }

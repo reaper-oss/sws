@@ -5,113 +5,85 @@
 #define NO_UNDO 0
 #endif
 
-class CReaperCommandHandler;
-class CReaperCommand
+class RprCommandManager;
+class RprToggleCommand;
+
+class RprCommand
 {
 public:
-	CReaperCommand();
-	CReaperCommand(void (*command)(int, void *), void *commandData = NULL, int commandDataSize = 0);
-	CReaperCommand(void (*command)(int, void *), double commandData);
-	CReaperCommand(void (*command)(int, void *), int commandData);
 
-	virtual ~CReaperCommand();
+	/* Register function as command with no command data */
+	static void registerCommand(const char *description, const char *id, void (*command)(int, void *), int undoFlag);
+	/* Register function as command with command data */
+	static void registerCommand(const char *description, const char *id, void (*command)(int, void *), int commandData, int undoFlag);
+	/* Register command with command data */
+	static void registerCommand(const char *description, const char *id, RprCommand *command, int undoFlag);
+
+	/* Register command as a toggle command. Command must be registered already using registerCommand */
+	static void registerAsToggleCommand(const char *id, bool (*toggleStateFunc)());
+	/* Register command on menu. Command must be registered already using registerCommand */
+	static void registerAsMenuCommand(const char *id, const char *menuText);
+
+	virtual ~RprCommand();
 	
-	bool Run(int command, int flag);
+	void run(int flag);
 
-	void SetCommandId(int CommandId){ m_nCommandId = CommandId; }
-	void SetId(const char *id){ m_szId = id; }
-	void SetDescription(const char *description) { m_szDescription = description; }
-	void SetUndoFlags(int flags) { m_UndoFlags = flags; }
-	void SetMenuText(const char* menuText) { if (menuText) m_szMenuText = menuText; }
-	bool IsCommand(void (*command)(int, void *)) { return command == theCommand; }
-	int GetCommandId() { return m_nCommandId; }
-	const char *GetDescription() { return m_szDescription.c_str(); }
-	const char *GetMenuText() { if (m_szMenuText.length()) return m_szMenuText.c_str(); return NULL; }
-	const char *GetId() { return m_szId.c_str(); }
-	virtual void Init() {}
-	virtual bool LeaveEditCursorAlone() {return false;}
+protected:
+	RprCommand();
+	RprCommand(void (*command)(int, void *), void *commandData = NULL, int commandDataSize = 0);
 
 private:
-	void Setup(void (*command)(int, void *), void *commandData, int commandDataSize);
-	virtual void PreCommand() {}
-	virtual void DoCommand(int flag) {if (theCommand != NULL) theCommand(flag, theCommandData);}
-	virtual void PostCommand() {}
-	void (*theCommand)(int, void *);
-	void *theCommandData;
-	int m_nCommandId;
-	std::string m_szDescription;
-	std::string m_szId;
-	std::string m_szMenuText;
-	int m_UndoFlags;
+
+	void setUndoFlags(int flags) { mUndoFlags = flags; }
+	void setDescription(const char *description);
+
+	void setup(void (*command)(int, void *), void *commandData, int commandDataSize);
+
+	virtual void doCommand(int flag) {if (mCommand != NULL) mCommand(flag, mData);}
+
+	void (*mCommand)(int, void *);
+	void *mData;
+
+	std::string mDescription;
+	int mUndoFlags;
 };
 
-class CReaperCmdToggle {
-public:
-	CReaperCmdToggle(int cmdID, bool (*toggleStateFunc)()):m_cmdID(cmdID),m_toggleStateFunc(toggleStateFunc) {}
-	int GetToggleState() { if (m_toggleStateFunc) return m_toggleStateFunc() ? 1 : 0; return -1; }
-	int GetCommandId() { return m_cmdID; }
-private:
-	bool (*m_toggleStateFunc)();
-	int m_cmdID;
-};
-
-class CReaperCmdReg {
-
-public:
-	CReaperCmdReg(const char *szDescription, const char *szID, CReaperCommand *cmd, int undoFlags = UNDO_STATE_ALL, ACCEL *accel = NULL, bool (*toggleStateFunc)() = NULL, const char* cMenuText = NULL);
-	void SetDescription(const char *szDescription) {if (m_cmd) m_cmd->SetDescription(szDescription);}
-	const char *GetDescription() {if(m_cmd) return m_cmd->GetDescription(); return 0;}
-	const char *GetId() {if(m_cmd) return m_cmd->GetId(); return 0;}
-	bool (*m_toggleStateFunc)(); 
-private:
-	friend class CReaperCommandHandler;
-	ACCEL m_accel;
-	CReaperCommand *m_cmd;
-};
-
-class CReaperCommandObserver
+class RprCommandManager
 {
 public:
-	virtual void GetCommand(int command, int flag) = 0;
-};
-
-class CReaperCommandHandler
-{
-public:
-	static CReaperCommandHandler *Instance();
-	static void AddCommand(CReaperCmdReg &);
-	static void AddCommands(CReaperCmdReg *, int size);
-	static void AddProjectConfig(project_config_extension_t *cfg);
-	static int GetID(void (*command)(int, void *));
-	static bool hookCommand(int command, int flag);
-	static bool onAction(int cmd, int val, int valhw, int relmode, HWND hwnd);
-	static void menuhook(const char* menustr, HMENU hMenu, int flag);
-	static int toggleActionHook(int iCmd);
+	static RprCommandManager *Instance();
+	static void addCommand(const char *description, const char *id, RprCommand *command);
+	static void addToggleCommand(const char *id,  bool (*toggleStateFunc)());
+	static void addMenuCommand(const char *id, const char *menuText);
+	
+	static int getCommandId(const char *id);
+		
 	static void Init(reaper_plugin_info_t *, REAPER_PLUGIN_HINSTANCE);
-	static REAPER_PLUGIN_HINSTANCE GetModuleInstance();
-	static reaper_plugin_info_t* GetPluginInfo();
-	static void registerAccelerator(accelerator_register_t *accelerator);
-	static void registerKbdSection(KbdSectionInfo *kbdSection, SWS_DockWnd *dialog);
-	static void RegisterObserver(CReaperCommandObserver *observer);
-	~CReaperCommandHandler();
-private:
-	
-	class NotifyObserver
-	{
-	public:
-		NotifyObserver(int command, int flag) : m_command(command), m_flag(flag) {}
-		void operator () (CReaperCommandObserver *observer) {observer->GetCommand(m_command, m_flag);}
-	private:
-		int m_command;
-		int m_flag;
-	};
+	~RprCommandManager();
 
-	CReaperCommandHandler() : m_rec(NULL) {}
-	static CReaperCommandHandler *_instance;
-	std::vector<CReaperCommand *> m_commands;
-	std::vector<CReaperCmdToggle *> m_commandToggles;
-	std::vector<CReaperCommandObserver *> m_observers;
-	std::vector<SWS_DockWnd *> mKbdSectionDialogs;
+private:
+	static int toggleCommandHook(int command);
+	static void menuHook(const char* menustr, HMENU hMenu, int flag);
+	static bool commandHook(int command, int flag);
+	
+	RprCommandManager() : m_rec(NULL), m_hInstance(NULL) {}
+
+	void registerTempToggleCommands();
+
+	static RprCommandManager *_instance;
+
+	typedef std::map<std::string, int> IdMap;
+	typedef std::map<int, RprCommand *> CommandMap;
+	typedef std::map<int, RprToggleCommand *> ToggleCommandMap;
+	typedef std::pair<int, std::string> MenuListItem;
+	typedef std::list< MenuListItem > MenuList;
+	
+	
+	CommandMap mCommandMap;
+	ToggleCommandMap mToggleCommandMap;
+	MenuList mMenuList;
+	IdMap mIdMap;
+	
 	reaper_plugin_info_t *m_rec;
 	REAPER_PLUGIN_HINSTANCE m_hInstance;
 	

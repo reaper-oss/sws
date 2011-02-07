@@ -7,90 +7,75 @@ namespace EnvelopeCommands {
 	void Init();
 };
 
-class TestEnvCommand : CReaperCommand
+class TestEnvCommand : public RprCommand
 {
 public:
 	TestEnvCommand() {}
 private:
-	virtual void DoCommand(int flag);
+	virtual void doCommand(int flag);
 };
 
-class PulseEnvCommand : CReaperCommand
+class PulseEnvCommand : public RprCommand
 {
 public:
 	enum PulseType {SQUARE, BEZIER_1};
 	PulseEnvCommand(int nDivisor) : m_nDivisor(nDivisor)
 	{}
 private:
-	virtual void DoCommand(int flag);
+	virtual void doCommand(int flag);
 	int m_nDivisor;
 };
 
-class TimeCompressExpandPoints : CReaperCommand
+class TimeCompressExpandPoints : public RprCommand
 {
 public:
 	TimeCompressExpandPoints(double dAmount) : m_dAmount(dAmount)
 	{}
 private:
-	void DoCommand(int flag);
+	void doCommand(int flag);
 	double m_dAmount;
 };
 
-
-
-class SineEnvCommand : CReaperCommand
+class SineEnvCommand : public RprCommand
 {
 public:
 	SineEnvCommand(int nDivisor) : m_nDivisor(nDivisor)	{}
 private:
-	virtual void DoCommand(int flag);
+	virtual void doCommand(int flag);
 	int m_nDivisor;
 };
 
 enum PointProperty { POINTPOSITION, POINTTIME };
 
-class AddToEnvPoints : CReaperCommand
+class AddToEnvPoints : public RprCommand
 {
 public:
 	AddToEnvPoints(double dAmount, PointProperty pp ) : m_dAmount(dAmount), m_pp(pp)
 	{}
 private:
-	virtual void DoCommand(int flag);
+	virtual void doCommand(int flag);
 	double m_dAmount;
 	PointProperty m_pp;
 };
 
-class LinearShiftAmplitude : CReaperCommand
+class LinearShiftAmplitude : public RprCommand
 {
 public:
 	LinearShiftAmplitude(double dAmount, bool bReverse) : m_dAmount(dAmount), m_bReverse(bReverse)
 	{}
 private:
-	virtual void DoCommand(int flag);
+	virtual void doCommand(int flag);
 	double m_dAmount;
 	bool m_bReverse;
 };
 
-//class CustomToolbarDialog;
-//class MGButton;
-//
-//class EnvelopeGui : CReaperCommand, ClickCommand
-//{
-//public:
-//	EnvelopeGui();
-//private:
-//	void DoCommand(int flag);
-//	void DoClick(int ident);
-//	CustomToolbarDialog *dialog;
-//};
-
-class CompressExpandPoints : CReaperCommand
+class CompressExpandPoints : public RprCommand
 {
 public:
 	CompressExpandPoints(double dAmount, double gradientFactor) : m_dAmount(dAmount), m_dGradientFactor(gradientFactor)
 	{}
 private:
-	virtual void DoCommand(int flag);
+	virtual void doCommand(int flag);
 
 	double m_dAmount;
 	double m_dGradientFactor;

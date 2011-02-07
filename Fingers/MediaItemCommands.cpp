@@ -18,193 +18,39 @@ static void CreateMidiItem();
 
 void MediaItemCommands::Init()
 {
-	static CReaperCmdReg CommandTable[] =
-	{
-	  CReaperCmdReg(
-		"SWS/FNG: expand selected media items", "FNG_EXPAND",
-		new CmdExpandItems(0.005),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: contract selected media items", "FNG_CONTRACT",
-		new CmdExpandItems(-0.005),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: expand selected media items (fine)", "FNG_EXPAND_F",
-		new CmdExpandItems(0.0001),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: contract selected media items (fine)", "FNG_CONTRACT_F",
-		new CmdExpandItems(-0.0001),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: expand/contract selected media items to bar", "FNG_EXPAND_BAR1",
-		new CmdExpandItemsToBar(1),
-		UNDO_STATE_ITEMS),
-
-	  CReaperCmdReg(
-		"SWS/FNG: expand selected media items by 2", "FNG_EXPAND_BY2",
-		new CmdExpandItems(1.0),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: contract selected media items by 1/2", "FNG_CONTRACT_BY_HALF",
-		new CmdExpandItems(-0.5),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: clean selected overlapping media items on same track", "FNG_CLEAN_OVERLAP", 
-		new CReaperCommand(&CmdCleanItemLengths),
-		UNDO_STATE_ITEMS
-		),
-
-	   CReaperCmdReg(
-		"SWS/FNG: legato selected media items on same track", "FNG_LEGATO_LENGTH", 
-		new CReaperCommand(&CmdLegatoItemLengths, 0),
-		UNDO_STATE_ITEMS
-		),
-
-	   CReaperCmdReg(
-		"SWS/FNG: legato selected media items on same track (change rate)", "FNG_LEGATO_RATE", 
-		new CReaperCommand(&CmdLegatoItemLengths, 1),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: rotate selected media items positions", "FNG_ROTATE_POS",
-		new CmdRotateItems(false, false),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: rotate selected media items positions and lengths", "FNG_ROTATE_POSLEN",
-		new CmdRotateItems(true, false),
-		UNDO_STATE_ITEMS
-		),
-
-		CReaperCmdReg(
-		"SWS/FNG: rotate selected media items positions (reverse)", "FNG_ROTATE_POS_REV",
-		new CmdRotateItems(false, true),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: rotate selected media items positions and lengths (reverse)", "FNG_ROTATE_POSLEN_REV",
-		new CmdRotateItems(true, true),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: insert MIDI item with note C4 of size 32nd", "FNG_MIDI_BASIC",
-		new CmdInsertMidiNote(),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: transpose selected MIDI items up a semitone", "FNG_MIDI_UP_SEMI",
-		new CmdPitchUpMidi(1),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: transpose selected MIDI items down a semitone", "FNG_MIDI_DN_SEMI",
-		new CmdPitchUpMidi(-1),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: transpose selected MIDI items up an octave", "FNG_MIDI_UP_OCT",
-		new CmdPitchUpMidi(12),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: transpose selected MIDI items down an octave", "FNG_MIDI_DN_OCT",
-		new CmdPitchUpMidi(-12),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: set selected MIDI items name to first note", "FNG_MIDI_NAME",
-		new CmdSetItemNameMidi(true),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: increase selected MIDI items velocity by 1", "FNG_MIDI_UP_VEL1",
-		new CmdVelChangeMidi(1),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: decrease selected MIDI items velocity by 1", "FNG_MIDI_UP_VELM1",
-		new CmdVelChangeMidi(-1),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: increase selected MIDI items velocity by 10", "FNG_MIDI_UP_VEL10",
-		new CmdVelChangeMidi(10),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: decrease selected MIDI items velocity by 10", "FNG_MIDI_UP_VELM10",
-		new CmdVelChangeMidi(-10),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: time stretch selected items by 2", "FNG_RATE_1_2",
-		new CmdIncreaseItemRate(1.0 / 2.0),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: time compress selected items by 1/2", "FNG_RATE_2",
-		new CmdIncreaseItemRate(2.0),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: time stretch selected items (fine)", "FNG_RATE_1_101",
-		new CmdIncreaseItemRate(1.0/ 1.01),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: time compress selected items (fine)", "FNG_RATE_101",
-		new CmdIncreaseItemRate(1.01),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: move selected items to edit cursor", "FNG_MOVE_TO_EDIT",
-		new CReaperCommand(&CmdMoveItemsToEditCursor),
-		UNDO_STATE_ITEMS
-		),
-
-	  CReaperCmdReg(
-		"SWS/FNG: unselect items that do not start in time selection", "FNG_TIME_SEL_NOT_START",
-		new CReaperCommand(&CmdDeselectIfNotStartInTimeSelection),
-		UNDO_STATE_ITEMS
-		),
-	};
-
-	CReaperCommandHandler *handler = CReaperCommandHandler::Instance();
-	handler->AddCommands(CommandTable, __ARRAY_SIZE(CommandTable));
+	RprCommand::registerCommand("SWS/FNG: expand selected media items", "FNG_EXPAND", new CmdExpandItems(0.005), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: contract selected media items", "FNG_CONTRACT", new CmdExpandItems(-0.005), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: expand selected media items (fine)", "FNG_EXPAND_F", new CmdExpandItems(0.0001), UNDO_STATE_ITEMS);
+    RprCommand::registerCommand("SWS/FNG: contract selected media items (fine)", "FNG_CONTRACT_F", new CmdExpandItems(-0.0001), UNDO_STATE_ITEMS);
+    RprCommand::registerCommand("SWS/FNG: expand/contract selected media items to bar", "FNG_EXPAND_BAR1", new CmdExpandItemsToBar(1), UNDO_STATE_ITEMS);
+    RprCommand::registerCommand("SWS/FNG: expand selected media items by 2", "FNG_EXPAND_BY2", new CmdExpandItems(1.0), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: contract selected media items by 1/2", "FNG_CONTRACT_BY_HALF", new CmdExpandItems(-0.5), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: clean selected overlapping media items on same track", "FNG_CLEAN_OVERLAP", &CmdCleanItemLengths,UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: legato selected media items on same track", "FNG_LEGATO_LENGTH", &CmdLegatoItemLengths, 0, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: legato selected media items on same track (change rate)", "FNG_LEGATO_RATE", &CmdLegatoItemLengths, 1, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: rotate selected media items positions", "FNG_ROTATE_POS", new CmdRotateItems(false, false), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: rotate selected media items positions and lengths", "FNG_ROTATE_POSLEN", new CmdRotateItems(true, false), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: rotate selected media items positions (reverse)", "FNG_ROTATE_POS_REV", new CmdRotateItems(false, true), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: rotate selected media items positions and lengths (reverse)", "FNG_ROTATE_POSLEN_REV", new CmdRotateItems(true, true),UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: insert MIDI item with note C4 of size 32nd", "FNG_MIDI_BASIC", new CmdInsertMidiNote(), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: transpose selected MIDI items up a semitone", "FNG_MIDI_UP_SEMI", new CmdPitchUpMidi(1), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: transpose selected MIDI items down a semitone", "FNG_MIDI_DN_SEMI", new CmdPitchUpMidi(-1), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: transpose selected MIDI items up an octave", "FNG_MIDI_UP_OCT", new CmdPitchUpMidi(12), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: transpose selected MIDI items down an octave", "FNG_MIDI_DN_OCT", new CmdPitchUpMidi(-12), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: set selected MIDI items name to first note", "FNG_MIDI_NAME", new CmdSetItemNameMidi(true), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: increase selected MIDI items velocity by 1", "FNG_MIDI_UP_VEL1", new CmdVelChangeMidi(1), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: decrease selected MIDI items velocity by 1", "FNG_MIDI_UP_VELM1", new CmdVelChangeMidi(-1), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: increase selected MIDI items velocity by 10", "FNG_MIDI_UP_VEL10", new CmdVelChangeMidi(10), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: decrease selected MIDI items velocity by 10", "FNG_MIDI_UP_VELM10", new CmdVelChangeMidi(-10), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: time stretch selected items by 2", "FNG_RATE_1_2", new CmdIncreaseItemRate(1.0 / 2.0), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: time compress selected items by 1/2", "FNG_RATE_2", new CmdIncreaseItemRate(2.0), UNDO_STATE_ITEMS);
+    RprCommand::registerCommand("SWS/FNG: time stretch selected items (fine)", "FNG_RATE_1_101", new CmdIncreaseItemRate(1.0/ 1.01), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: time compress selected items (fine)", "FNG_RATE_101", new CmdIncreaseItemRate(1.01), UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: move selected items to edit cursor", "FNG_MOVE_TO_EDIT", &CmdMoveItemsToEditCursor, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: unselect items that do not start in time selection", "FNG_TIME_SEL_NOT_START", &CmdDeselectIfNotStartInTimeSelection,UNDO_STATE_ITEMS);
 }
 
-void CmdRotateItems::DoCommand(int flag)
+void CmdRotateItems::doCommand(int flag)
 {
 	RprItemCtrPtr ctr = RprItemCollec::getSelected();
 
@@ -259,7 +105,7 @@ void CmdRotateItems::DoCommand(int flag)
 	}
 }
 
-void CmdExpandItems::DoCommand(int flag)
+void CmdExpandItems::doCommand(int flag)
 {
 	RprItemCtrPtr ctr = RprItemCollec::getSelected();
 
@@ -274,7 +120,7 @@ void CmdExpandItems::DoCommand(int flag)
 	}
 }
 
-void CmdExpandItemsToBar::DoCommand(int flag)
+void CmdExpandItemsToBar::doCommand(int flag)
 {
 	RprItemCtrPtr ctr = RprItemCollec::getSelected();
 	if(ctr->size() <= 1)
@@ -304,7 +150,7 @@ void CmdExpandItemsToBar::DoCommand(int flag)
 	}
 }
 
-void SetEditCursor::DoCommand(int flag)
+void SetEditCursor::doCommand(int flag)
 {
 	RprItemCtrPtr ctr = RprItemCollec::getSelected();
 	if(ctr->size() == 0)
@@ -439,7 +285,7 @@ void CreateMidiItem()
 	note->setLength(item.getLength());
 }
 
-void CmdInsertMidiNote::DoCommand(int flag)
+void CmdInsertMidiNote::doCommand(int flag)
 {
 	double start, end;
 	GetSet_LoopTimeRange(false, true, &start, &end, false);
@@ -476,7 +322,7 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 	return true;
 }
 
-void CmdPitchUpMidi::DoCommand(int flag)
+void CmdPitchUpMidi::doCommand(int flag)
 {
 	RprItemCtrPtr ctr = RprItemCollec::getSelected();
 	
@@ -492,7 +338,7 @@ void CmdPitchUpMidi::DoCommand(int flag)
 	}
 }
 
-void CmdSetItemNameMidi::DoCommand(int flag)
+void CmdSetItemNameMidi::doCommand(int flag)
 {
 	RprItemCtrPtr ctr = RprItemCollec::getSelected();
 
@@ -522,7 +368,7 @@ void CmdSetItemNameMidi::DoCommand(int flag)
 	}
 }
 
-void CmdIncreaseItemRate::DoCommand(int flag)
+void CmdIncreaseItemRate::doCommand(int flag)
 {
 	RprItemCtrPtr ctr = RprItemCollec::getSelected();
 	for(int i = 0; i < ctr->size(); i++) {
@@ -535,7 +381,7 @@ void CmdIncreaseItemRate::DoCommand(int flag)
 	}
 }
 
-void CmdVelChangeMidi::DoCommand(int flag)
+void CmdVelChangeMidi::doCommand(int flag)
 {
 	RprItemCtrPtr ctr = RprItemCollec::getSelected();
 	

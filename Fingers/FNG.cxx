@@ -16,11 +16,11 @@
 int FNGExtensionInit(REAPER_PLUGIN_HINSTANCE hInstance, reaper_plugin_info_t *rec)
 {
 	std::srand((unsigned int)time(NULL));
-	CReaperCommandHandler::Init(rec, hInstance);
+	RprCommandManager::Init(rec, hInstance);
 	EnvelopeCommands::Init();
 	MediaItemCommands::Init();
 	MiscCommands::Init();
-	GrooveTemplateHandler::Init();
+	GrooveTemplateHandler::Init(rec);
 	GrooveCommands::Init();
 	MidiLaneCommands::Init();
 #ifdef notfinished

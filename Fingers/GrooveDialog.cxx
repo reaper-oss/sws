@@ -7,6 +7,15 @@
 #include "RprException.hxx"
 #include "../../WDL/dirscan.h"
 
+#ifndef PATH_SEP
+#ifdef _WIN32
+#define PATH_SEP "\\"
+#else
+#define PATH_SEP "/"
+#endif
+#endif
+
+
 static void addDefaultBinding(std::vector<KbdKeyBindingInfo> &bindings, int cmd, int key, int flags = 0)
 {
 	KbdKeyBindingInfo binding;
@@ -30,7 +39,7 @@ static const int FNG_REFRESH     = 0xFF01;
 void ShowGrooveDialog(int flags, void *data);
 
 GrooveDialog::GrooveDialog()
-:SWS_DockWnd(IDD_GROOVEDIALOG, "Groove", "FNGGroove", 30010, CReaperCommandHandler::GetID(ShowGrooveDialog))
+:SWS_DockWnd(IDD_GROOVEDIALOG, "Groove", "FNGGroove", 30010, RprCommandManager::getCommandId("FNG_GROOVE_TOOL"))
 {
 #ifdef _WIN32
 	CoInitializeEx(NULL, 0);
@@ -225,9 +234,9 @@ void GrooveDialog::RefreshGrooveList()
 	WDL_DirScan dirScan;
 	WDL_String searchStr;
 	searchStr = currentDir.c_str();
-	searchStr.Append("\\*.rgt", MAX_PATH);
-
+/* dirScan doesn't support wildcards on OSX do filtering later */
 #ifdef _WIN32
+	searchStr.Append( PATH_SEP "*.rgt", MAX_PATH);
 	int iFind = dirScan.First(searchStr.Get(), true);
 #else
 	int iFind = dirScan.First(searchStr.Get());
@@ -235,8 +244,16 @@ void GrooveDialog::RefreshGrooveList()
 
 	if (iFind == 0) {
 		do {
-			std::string fileHead = dirScan.GetCurrentFN();
-			fileHead = fileHead.substr(0, fileHead.size() - 4);
+			std::string fileName = dirScan.GetCurrentFN();
+/* dirScan doesn't support wildcards on OSX so do basic filtering here */
+#ifndef _WIN32
+			std::string::size_type index = fileName.find_last_of(".");
+			if(index == std::string::npos)
+				continue;
+			if(fileName.substr(index) != ".rgt")
+				continue;
+#endif
+			std::string fileHead = fileName.substr(0, fileName.size() - 4);
 			SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_ADDSTRING, 0, (LPARAM)fileHead.c_str());
 		} while(!dirScan.Next());
 	}
@@ -254,7 +271,7 @@ void GrooveDialog::ApplySelectedGroove()
 		SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_GETTEXT, index, (LPARAM)itemText);
 		grooveName = itemText;
 		itemLocation = currentDir;
-		itemLocation += "\\";
+		itemLocation += PATH_SEP;
 		itemLocation += grooveName;
 		itemLocation += ".rgt";
 		

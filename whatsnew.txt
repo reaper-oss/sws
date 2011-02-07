@@ -1,3 +1,6 @@
+Fixed directory scan for grooves on OSX
+Tidy up of command handling code
+
 Support for v4 empty take lanes:
 +S&M build lanes actions now turn "take mosaics" into lanes using v4 empty takes (rather than v3 empty takes)
 These actions still useful to create take lanes à la v4 from older project saved with "mosaics", for example.

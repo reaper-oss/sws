@@ -7,35 +7,29 @@
 
 void EnvelopeCommands::Init()
 {
-	static CReaperCmdReg CommandTable[] =
-	{
-	  CReaperCmdReg("SWS/FNG: Move selected envelope points right (16th)", "FNG_ENVRIGHT_16", (CReaperCommand *)new AddToEnvPoints(1.0/16.0, POINTTIME),UNDO_STATE_TRACKCFG),
-	  CReaperCmdReg("SWS/FNG: Move selected envelope points left (16th)", "FNG_ENVLEFT_16", (CReaperCommand *)new AddToEnvPoints(-1.0/16.0, POINTTIME),UNDO_STATE_TRACKCFG),
+	  RprCommand::registerCommand("SWS/FNG: Move selected envelope points right (16th)", "FNG_ENVRIGHT_16", new AddToEnvPoints(1.0/16.0, POINTTIME),UNDO_STATE_TRACKCFG);
+	  RprCommand::registerCommand("SWS/FNG: Move selected envelope points left (16th)", "FNG_ENVLEFT_16", new AddToEnvPoints(-1.0/16.0, POINTTIME),UNDO_STATE_TRACKCFG);
 	  
-	  CReaperCmdReg("SWS/FNG: Move selected envelope points right (32nd)", "FNG_ENVRIGHT_32",	(CReaperCommand *)new AddToEnvPoints(1.0/32.0, POINTTIME),UNDO_STATE_TRACKCFG),
-	  CReaperCmdReg("SWS/FNG: Move selected envelope points left (32nd)", "FNG_ENVLEFT_32", (CReaperCommand *)new AddToEnvPoints(-1.0/32.0, POINTTIME),UNDO_STATE_TRACKCFG),
+	  RprCommand::registerCommand("SWS/FNG: Move selected envelope points right (32nd)", "FNG_ENVRIGHT_32", new AddToEnvPoints(1.0/32.0, POINTTIME),UNDO_STATE_TRACKCFG);
+	  RprCommand::registerCommand("SWS/FNG: Move selected envelope points left (32nd)", "FNG_ENVLEFT_32", new AddToEnvPoints(-1.0/32.0, POINTTIME),UNDO_STATE_TRACKCFG);
 		
-	  CReaperCmdReg("SWS/FNG: Move selected envelope points up", "FNG_ENVUP", (CReaperCommand *)new AddToEnvPoints( 1.0, POINTPOSITION),UNDO_STATE_TRACKCFG),
-	  CReaperCmdReg("SWS/FNG: Move selected envelope points down", "FNG_ENVDOWN", (CReaperCommand *)new AddToEnvPoints(  -1.0, POINTPOSITION),UNDO_STATE_TRACKCFG),
+	  RprCommand::registerCommand("SWS/FNG: Move selected envelope points up", "FNG_ENVUP", new AddToEnvPoints( 1.0, POINTPOSITION),UNDO_STATE_TRACKCFG);
+	  RprCommand::registerCommand("SWS/FNG: Move selected envelope points down", "FNG_ENVDOWN", new AddToEnvPoints(  -1.0, POINTPOSITION),UNDO_STATE_TRACKCFG);
 		
-	  CReaperCmdReg("SWS/FNG: Shift selected envelope points up on right", "FNG_ENV_LINEARADD", (CReaperCommand *)new LinearShiftAmplitude( 1.0, false),UNDO_STATE_TRACKCFG),
-	  CReaperCmdReg("SWS/FNG: Shift selected envelope points down on right", "FNG_ENV_LINEARSUB", (CReaperCommand *)new LinearShiftAmplitude( -1.0, false),UNDO_STATE_TRACKCFG),
-	  CReaperCmdReg("SWS/FNG: Shift selected envelope points up on left", "FNG_ENV_LINEARADD_REV", (CReaperCommand *)new LinearShiftAmplitude( 1.0, true),UNDO_STATE_TRACKCFG),
-	  CReaperCmdReg("SWS/FNG: Shift selected envelope points down on left", "FNG_ENV_LINEARSUB_REV", (CReaperCommand *)new LinearShiftAmplitude( -1.0, true),UNDO_STATE_TRACKCFG),
+	  RprCommand::registerCommand("SWS/FNG: Shift selected envelope points up on right", "FNG_ENV_LINEARADD", new LinearShiftAmplitude( 1.0, false),UNDO_STATE_TRACKCFG);
+	  RprCommand::registerCommand("SWS/FNG: Shift selected envelope points down on right", "FNG_ENV_LINEARSUB", new LinearShiftAmplitude( -1.0, false),UNDO_STATE_TRACKCFG);
+	  RprCommand::registerCommand("SWS/FNG: Shift selected envelope points up on left", "FNG_ENV_LINEARADD_REV", new LinearShiftAmplitude( 1.0, true),UNDO_STATE_TRACKCFG);
+	  RprCommand::registerCommand("SWS/FNG: Shift selected envelope points down on left", "FNG_ENV_LINEARSUB_REV", new LinearShiftAmplitude( -1.0, true),UNDO_STATE_TRACKCFG);
 	  
-	  CReaperCmdReg("SWS/FNG: Expand amplitude of selected envelope points around midpoint", "FNG_ENV_EXP_MID", (CReaperCommand *)new CompressExpandPoints( 1.02, 0.0),UNDO_STATE_TRACKCFG),
-	  CReaperCmdReg("SWS/FNG: Compress amplitude of selected envelope points around midpoint", "FNG_ENV_COMPR_MID", (CReaperCommand *)new CompressExpandPoints( 0.98, 0.0),UNDO_STATE_TRACKCFG),
+	  RprCommand::registerCommand("SWS/FNG: Expand amplitude of selected envelope points around midpoint", "FNG_ENV_EXP_MID", new CompressExpandPoints( 1.02, 0.0),UNDO_STATE_TRACKCFG);
+	  RprCommand::registerCommand("SWS/FNG: Compress amplitude of selected envelope points around midpoint", "FNG_ENV_COMPR_MID", new CompressExpandPoints( 0.98, 0.0),UNDO_STATE_TRACKCFG);
 
-	  CReaperCmdReg("SWS/FNG: Time compress selected envelope points", "FNG_ENV_TIME_COMP", (CReaperCommand *)new TimeCompressExpandPoints( -0.05),UNDO_STATE_TRACKCFG),
-	  CReaperCmdReg("SWS/FNG: Time stretch selected envelope points", "FNG_ENV_TIME_STRETCH", (CReaperCommand *)new TimeCompressExpandPoints( 0.05),UNDO_STATE_TRACKCFG),
+	  RprCommand::registerCommand("SWS/FNG: Time compress selected envelope points", "FNG_ENV_TIME_COMP", new TimeCompressExpandPoints( -0.05),UNDO_STATE_TRACKCFG);
+	  RprCommand::registerCommand("SWS/FNG: Time stretch selected envelope points", "FNG_ENV_TIME_STRETCH", new TimeCompressExpandPoints( 0.05),UNDO_STATE_TRACKCFG);
 
-	};
-
-	CReaperCommandHandler *Handler = CReaperCommandHandler::Instance();
-	Handler->AddCommands(CommandTable, __ARRAY_SIZE(CommandTable));
 }
 
-void TimeCompressExpandPoints::DoCommand(int flag)
+void TimeCompressExpandPoints::doCommand(int flag)
 {
 	TrackEnvelope *env = GetSelectedTrackEnvelope(0);
 	if(env == NULL)
@@ -57,7 +51,7 @@ void TimeCompressExpandPoints::DoCommand(int flag)
 	Cenv.Write();
 }
 
-void AddToEnvPoints::DoCommand(int flag)
+void AddToEnvPoints::doCommand(int flag)
 {
 	TrackEnvelope *env = GetSelectedTrackEnvelope(0);
 	if(env == NULL)
@@ -83,7 +77,7 @@ bool isSelected(CEnvelopePoint &p)
 { return p.IsSelected();}
 
 
-void LinearShiftAmplitude::DoCommand(int flag)
+void LinearShiftAmplitude::doCommand(int flag)
 {
 	TrackEnvelope *env = GetSelectedTrackEnvelope(0);
 	if(env == NULL)
@@ -132,7 +126,7 @@ void BoundsOfSelectedPoints(EnvPoints &points, double *min, double *max)
 	}
 }
 
-void CompressExpandPoints::DoCommand(int flag)
+void CompressExpandPoints::doCommand(int flag)
 {
 	TrackEnvelope *env = GetSelectedTrackEnvelope(0);
 	if(env == NULL)

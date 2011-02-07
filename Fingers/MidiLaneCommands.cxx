@@ -17,36 +17,11 @@ static void ShowOnlyTopCCLane(int flag, void *data);
 
 void MidiLaneCommands::Init()
 {
-	static CReaperCmdReg CommandTable[] = {
-		CReaperCmdReg(
-			"SWS/FNG MIDI: cycle through CC lanes", "FNG_CYCLE_CC_LANE",
-			(CReaperCommand *)new CReaperCommand(&CycleThroughMidiLanes, 0),
-			UNDO_STATE_ITEMS
-			),
-		CReaperCmdReg(
-			"SWS/FNG MIDI: cycle through CC lanes (keep lane heights constant)", "FNG_CYCLE_CC_LANE_KEEP_HEIGHT",
-			(CReaperCommand *)new CReaperCommand(&CycleThroughMidiLanes,1),
-			UNDO_STATE_ITEMS
-			),
-		CReaperCmdReg(
-			"SWS/FNG MIDI: show only used CC lanes", "FNG_SHOW_USED_CC_LANES",
-			(CReaperCommand *)new CReaperCommand(&ShowUsedCCLanes),
-			UNDO_STATE_ITEMS
-			),
-		CReaperCmdReg(
-			"SWS/FNG MIDI: hide unused CC lanes", "FNG_HIDE_UNUSED_CC_LANES",
-			(CReaperCommand *)new CReaperCommand(&HideUnusedCCLanes),
-			UNDO_STATE_ITEMS
-			),
-		CReaperCmdReg(
-			"SWS/FNG MIDI: show only top CC lane", "FNG_TOP_CC_LANE",
-			(CReaperCommand *)new CReaperCommand(&ShowOnlyTopCCLane),
-			UNDO_STATE_ITEMS
-			),
-	};
-
-	CReaperCommandHandler *Handler = CReaperCommandHandler::Instance();
-	Handler->AddCommands(CommandTable, __ARRAY_SIZE(CommandTable));
+	RprCommand::registerCommand("SWS/FNG MIDI: cycle through CC lanes", "FNG_CYCLE_CC_LANE", &CycleThroughMidiLanes, 0, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG MIDI: cycle through CC lanes (keep lane heights constant)", "FNG_CYCLE_CC_LANE_KEEP_HEIGHT", &CycleThroughMidiLanes, 1, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG MIDI: show only used CC lanes", "FNG_SHOW_USED_CC_LANES", &ShowUsedCCLanes, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG MIDI: hide unused CC lanes", "FNG_HIDE_UNUSED_CC_LANES", &HideUnusedCCLanes, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG MIDI: show only top CC lane", "FNG_TOP_CC_LANE", &ShowOnlyTopCCLane, UNDO_STATE_ITEMS);
 }
 
 static const struct {

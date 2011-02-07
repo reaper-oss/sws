@@ -289,10 +289,10 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 			AddToMenu(hAutoRenderSubMenu, "Batch render regions", NamedCommandLookup("_AUTORENDER"));
 			AddToMenu(hAutoRenderSubMenu, "Edit project metadata...", NamedCommandLookup("_AUTORENDER_METADATA"));
 			AddToMenu(hAutoRenderSubMenu, "Open Render Path", NamedCommandLookup("_AUTORENDER_OPEN_RENDER_PATH"));
-			AddToMenu(hAutoRenderSubMenu, "Show Instructions", NamedCommandLookup("_AUTORENDER_HELP"));
-			AddToMenu(hAutoRenderSubMenu, "Global Preferences", NamedCommandLookup("_AUTORENDER_PREFERENCES"));
+			AddToMenu(hAutoRenderSubMenu, "Show Instructions...", NamedCommandLookup("_AUTORENDER_HELP"));
+			AddToMenu(hAutoRenderSubMenu, "Global Preferences...", NamedCommandLookup("_AUTORENDER_PREFERENCES"));
 
-			AddToMenu(hMenu, "Cue Buss...", NamedCommandLookup("_S&M_SENDS4"));
+			AddToMenu(hMenu, "Cue Buss Generator...", NamedCommandLookup("_S&M_SENDS4"));
 			AddToMenu(hMenu, "Envelope Processor...", NamedCommandLookup("_PADRE_ENVPROC"));
 			AddToMenu(hMenu, "Fill gaps...", NamedCommandLookup("_SWS_AWFILLGAPSADV"));
 			AddToMenu(hMenu, "Find...", NamedCommandLookup("_S&M_SHOWFIND"));
@@ -339,20 +339,18 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 			AddToMenu(hMarkerSubMenu, "Delete all markers", NamedCommandLookup("_SWSMARKERLIST9"));
 			AddToMenu(hMarkerSubMenu, "Delete all regions", NamedCommandLookup("_SWSMARKERLIST10"));
 
-			AddToMenu(hMenu, "Media pool...", NamedCommandLookup("_SWSMP_OPEN"));
 			AddToMenu(hMenu, "Notes/Help...", NamedCommandLookup("_S&M_SHOWNOTESHELP"));
 			AddToMenu(hMenu, "Project List...", NamedCommandLookup("_SWS_PROJLIST_OPEN"));
 
 			HMENU hPrjMgmtSubMenu = CreatePopupMenu();
-			AddSubMenu(hMenu, hPrjMgmtSubMenu, "Project management");
+			AddSubMenu(hMenu, hPrjMgmtSubMenu, "Project Management");
 			AddToMenu(hPrjMgmtSubMenu, "Open projects from list...", NamedCommandLookup("_SWS_PROJLISTSOPEN"));
 			AddToMenu(hPrjMgmtSubMenu, "Save list of open projects...", NamedCommandLookup("_SWS_PROJLISTSAVE"));
 			AddToMenu(hPrjMgmtSubMenu, "Add related project(s)...", NamedCommandLookup("_SWS_ADDRELATEDPROJ"));
 			AddToMenu(hPrjMgmtSubMenu, "Delete related project...", NamedCommandLookup("_SWS_DELRELATEDPROJ"));
-/*JFB dynamic todo
 			AddToMenu(hPrjMgmtSubMenu, SWS_SEPARATOR, 0);
 			AddToMenu(hPrjMgmtSubMenu, "(related projects list)", NamedCommandLookup("_SWS_OPENRELATED1"));
-*/
+
 			AddToMenu(hMenu, "ReaConsole...", NamedCommandLookup("_SWSCONSOLE"));
 			AddToMenu(hMenu, "Resources...", NamedCommandLookup("_S&M_SHOWFXCHAINSLOTS"));
 			AddToMenu(hMenu, "Snapshots...", NamedCommandLookup("_SWSSNAPSHOT_OPEN"));
@@ -444,7 +442,7 @@ public:
 	}
 
 	void SetSurfaceSelected(MediaTrack *tr, bool bSel)	{ ScheduleTracklistUpdate(); }
-	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); }
+	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); UpdateTrackMute(); }
 	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); UpdateTrackSolo(); }
 	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); UpdateTrackArm(); }
 };
@@ -598,6 +596,7 @@ extern "C"
 		IMPAPI(GetMediaItemTake_Source);
 		IMPAPI(GetMediaItemTake_Track);
 		IMPAPI(GetMediaItemTakeInfo_Value);
+		IMPAPI(GetMediaTrackInfo_Value);
 		IMPAPI(GetNumTracks);
 		IMPAPI(GetOutputChannelName);
 		IMPAPI(GetPeaksBitmap);
@@ -686,6 +685,7 @@ extern "C"
 		IMPAPI(SetEditCurPos2);
 		IMPAPI(SetMediaItemInfo_Value);
 		IMPAPI(SetMediaItemTakeInfo_Value);
+		IMPAPI(SetMediaTrackInfo_Value);
 		IMPAPI(SetProjectMarker);
 		IMPAPI(SetTrackSelected);
 		IMPAPI(ShowActionList);

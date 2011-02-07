@@ -29,12 +29,6 @@
 #include "TrackParams.h"
 #include "TrackSel.h"
 
-typedef struct TrackInfo
-{
-	GUID guid;
-	int i;
-} TrackInfo;
-
 void EnableMPSend(COMMAND_T* = NULL)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -308,25 +302,25 @@ void UpdateTrackArm()
 	RefreshToolbar(cmdID);
 }
 
+void UpdateTrackMute()
+{
+	static int cmdID = 0;
+	if (!cmdID)
+		cmdID = NamedCommandLookup("_SWS_MUTETOGGLE");
+	RefreshToolbar(cmdID);
+}
+
 bool CheckTrackParam(COMMAND_T* ct)
 {
 	int iNumTracks = GetNumTracks();
 	for (int i = 1; i <= iNumTracks; i++)
-		if (*(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), (const char*)ct->user, NULL))
+		if (GetMediaTrackInfo_Value(CSurf_TrackFromID(i, false), (const char*)ct->user) != 0.0)
 			return true;
 	return false;
 }
 
-void ToolbarToggle(COMMAND_T* ct)
+void ToolbarToggle(COMMAND_T* ct, WDL_TypedBuf<TrackInfo>* pState)
 {
-	static WDL_TypedBuf<TrackInfo> soloState;
-	static WDL_TypedBuf<TrackInfo> armState;
-	WDL_TypedBuf<TrackInfo>* pState;
-	if (strcmp("I_SOLO", (const char*)ct->user) == 0)
-		pState = &soloState;
-	else
-		pState = &armState;
-
 	if (CheckTrackParam(ct))
 	{
 		pState->Resize(GetNumTracks(), false);
@@ -334,8 +328,8 @@ void ToolbarToggle(COMMAND_T* ct)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			pState->Get()[i-1].guid = *(GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
-			pState->Get()[i-1].i = *(int*)GetSetMediaTrackInfo(tr, (const char*)ct->user, NULL);
-			GetSetMediaTrackInfo(tr, (const char*)ct->user, &g_i0);
+			pState->Get()[i-1].param = GetMediaTrackInfo_Value(tr, (const char*)ct->user);
+			SetMediaTrackInfo_Value(tr, (const char*)ct->user, 0.0);
 		}
 	}
 	else
@@ -344,11 +338,29 @@ void ToolbarToggle(COMMAND_T* ct)
 		{
 			MediaTrack* tr = GuidToTrack(&pState->Get()[i].guid);
 			if (tr)
-				GetSetMediaTrackInfo(tr, (const char*)ct->user, &pState->Get()[i].i);
+				SetMediaTrackInfo_Value(tr, (const char*)ct->user, pState->Get()[i].param);
 		}
 	}
 	TrackList_AdjustWindows(false);
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+}
+
+void ArmToggle(COMMAND_T* ct)
+{
+	static WDL_TypedBuf<TrackInfo> armState;
+	ToolbarToggle(ct, &armState);
+}
+
+void SoloToggle(COMMAND_T* ct)
+{
+	static WDL_TypedBuf<TrackInfo> soloState;
+	ToolbarToggle(ct, &soloState);
+}
+
+void MuteToggle(COMMAND_T* ct)
+{
+	static WDL_TypedBuf<TrackInfo> muteState;
+	ToolbarToggle(ct, &muteState);
 }
 
 void InputMatch(COMMAND_T* ct)
@@ -398,7 +410,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Set selected track(s) record output mode based on items" },		"SWS_SETRECSRCOUT",		RecSrcOut,		},
 	{ { DEFACCEL, "SWS: Set selected track(s) monitor track media while recording" },	"SWS_SETMONMEDIA",		SetMonMedia,	},
 	{ { DEFACCEL, "SWS: Unset selected track(s) monitor track media while recording" },	"SWS_UNSETMONMEDIA",	UnsetMonMedia,	},
-	{ { DEFACCEL, "SWS: Toolbar arm toggle" },									"SWS_ARMTOGGLE",  ToolbarToggle, NULL, (INT_PTR)"I_RECARM", CheckTrackParam, },
+	{ { DEFACCEL, "SWS: Toolbar arm toggle" },									"SWS_ARMTOGGLE",  ArmToggle, NULL, (INT_PTR)"I_RECARM", CheckTrackParam, },
 
 	// Add/remove tracks
 	{ { DEFACCEL, "SWS: Insert track above selected tracks" },					"SWS_INSRTTRKABOVE",InsertTrkAbove,		},
@@ -409,10 +421,13 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Name selected track(s) like first sel item" },			"SWS_NAMETKLIKEITEM", NameTrackLikeItem,	},
 
 	// Solo
-	{ { DEFACCEL, "SWS: Toolbar solo toggle" },									"SWS_SOLOTOGGLE", ToolbarToggle, NULL, (INT_PTR)"I_SOLO",   CheckTrackParam, },
+	{ { DEFACCEL, "SWS: Toolbar solo toggle" },									"SWS_SOLOTOGGLE", SoloToggle, NULL, (INT_PTR)"I_SOLO", CheckTrackParam, },
 
 	// Inputs
 	{ { DEFACCEL, "SWS: Set all sel tracks inputs to match first sel track" },	"SWS_INPUTMATCH", InputMatch, },
+
+	// Mute
+	{ { DEFACCEL, "SWS: Toolbar mute toggle" },									"SWS_MUTETOGGLE", MuteToggle, NULL, (INT_PTR)"B_MUTE", CheckTrackParam, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

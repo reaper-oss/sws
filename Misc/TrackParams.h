@@ -27,4 +27,10 @@
 
 #pragma once
 
+typedef struct TrackInfo
+{
+	GUID guid;
+	double param;
+} TrackInfo;
+
 int TrackParamsInit();

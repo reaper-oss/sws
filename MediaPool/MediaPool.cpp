@@ -800,7 +800,7 @@ static bool MediaPoolEnabled(COMMAND_T*)
 
 static COMMAND_T g_commandTable[] =
 {
-	{ { DEFACCEL, "SWS: Show media pool" }, "SWSMP_OPEN", OpenMediaPool, "SWS Media pool", 0, MediaPoolEnabled },
+	{ { DEFACCEL, "SWS: [Deprecated] Show media pool " }, "SWSMP_OPEN", OpenMediaPool, "SWS Media pool", 0, MediaPoolEnabled },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 

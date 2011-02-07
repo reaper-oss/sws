@@ -11,23 +11,28 @@ Main "Extensions" menu:
 +Fixed "Envelope Processor..." menu item
 +(Temporary?) removed "Item/Take" sub-menu (Xenakios actions need to be updated for v4)
 
-Fixed crash when running some of the S&M Resources view's slot actions
-(applying, importing, pasting, etc. track templates or FX chains from unexisting slots)
-Fixed corner case GUI refresh issue in S&M Resources view
-
 Autorender:
-Added option to only render tracks with a specified prefix (and optionally remove that prefix from rendered files)
-Added global preferences menu
-Added option to not prepend track numbers to rendered files
-Added limited support to append duplicate numbers to rendered files that would otherwise overwrite each other (This Song(2).mp3)
-Added auto-calculation of track pad length (for projects with large numbers of regions to be rendered)
++Added option to only render tracks with a specified prefix (and optionally remove that prefix from rendered files)
++Added global preferences menu
++Added option to not prepend track numbers to rendered files
++Added limited support to append duplicate numbers to rendered files that would otherwise overwrite each other (This Song(2).mp3)
++Added auto-calculation of track pad length (for projects with large numbers of regions to be rendered)
+
+Fixed crash when running some of the S&M Resources view's slot actions (applying, importing, pasting, etc. track templates or FX chains from unexisting slots)
+Fixed corner case GUI refresh issue in S&M Resources view
+Issue 250: Added action "SWS: Toggle auto fades for new items"
+Added action "SWS: Toolbar mute toggle"
 
  !v2.0.0 #9 (February 4, 2011)
-Autorender: Added global preferences dialog, default render directory option, option to allow stem rendering
+Autorender:
++Added global preferences dialog with default render directory option, option to allow stem rendering
++Fixed crash with new portable installations
+
 Added actions:
 +"SWS: Toolbar solo toggle" (Note, this replaces "SWS: Are any tracks soloed? [no-op, for toolbar]", please re-add to toolbar)
 +"SWS: Toolbar arm toggle"
 +"SWS: Set all sel tracks inputs to match first sel track"
+
 Duplicate recording input check now ignores "input monitoring only" record mode.
 Fixed possible S&M.ini file corruption (thanks Mercado Negro!)
 
@@ -41,9 +46,9 @@ Autorender updates:
 +Unicode character support (Windows only? Testing needed)
 
 Support for v4 empty take lanes (more to come):
-Example: with items starting with a v4 empty take, some actions were broken or had no effect..
 +"Fixed" all S&M actions relate to takes
 +"Fixed" take envelope processing in Padre's Envelope LFO Generator and Envelope Processor
++Example: with items starting with a v4 empty take, some actions were broken or had no effect..
 
 Added pitch take envelope support for Padre's Envelope LFO Generator and Envelope Processor (v4 only)
 

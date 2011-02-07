@@ -126,6 +126,29 @@ bool IsDefFadeOverriden(COMMAND_T*)
 	return g_dDefFadeLen != 0.0 && dDefFade != g_dDefFadeLen;
 }
 
+void TogAutoFades(COMMAND_T*)
+{
+	if (g_bv4)
+	{
+		int* pSplitautoxfade = (int*)GetConfigVar("splitautoxfade");
+		*pSplitautoxfade ^= 8;
+	}
+	else
+	{
+		// Flip the sign on the "deffadelen" bit
+		double* pdDefFade = (double*)GetConfigVar("deffadelen");
+		*pdDefFade = -*pdDefFade;
+	}
+}
+
+bool IsAutoFade(COMMAND_T*)
+{
+	if (g_bv4)
+		return *(int*)GetConfigVar("splitautoxfade") & 8 ? true : false;
+	else
+		return *(double*)GetConfigVar("deffadelen") >= 0.0;
+}
+
 void MetronomeOn(COMMAND_T*)
 {
 	if (!(*(int*)GetConfigVar("projmetroen") & 1))
@@ -149,8 +172,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle move cursor to end of recorded media on stop" },		"SWS_TOGRECMOVECUR",	TogOnRecStopMoveCursor, NULL, 0, IsOnRecStopMoveCursor },
 	{ { DEFACCEL, "SWS: Toggle seek playback on item move/size" },					"SWS_TOGSEEKMODE1",		TogSeekMode, NULL, 65536, IsSeekMode },
 	{ { DEFACCEL, "SWS: Toggle seek playback on loop point change" },				"SWS_TOGSEEKMODE2",		TogSeekMode, NULL, 8, IsSeekMode },
-
-	{ { DEFACCEL, "SWS: Switch grid spacing" },										"SWS_GRIDSPACING",		SwitchGridSpacing,	},
+	//TODO
+	//{ { DEFACCEL, "SWS: Switch grid spacing" },										"SWS_GRIDSPACING",		SwitchGridSpacing,	},
 	{ { DEFACCEL, "SWS: Transport: Record/stop" },									"SWS_RECTOGGLE",		RecToggle,			},
 	{ { DEFACCEL, "SWS: Save transport repeat state" },								"SWS_SAVEREPEAT",		SaveRepeat,			},
 	{ { DEFACCEL, "SWS: Restore transport repeat state" },							"SWS_RESTREPEAT",		RestRepeat,			},
@@ -161,6 +184,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Show master track in track control panel" },				"SWS_SHOWMASTER",		ShowMaster,			},
 	{ { DEFACCEL, "SWS: Hide master track in track control panel" },				"SWS_HIDEMASTER",		HideMaster,			},
 	{ { DEFACCEL, "SWS: Toggle default fade time to zero" },						"SWS_TOGDEFFADEZERO",	TogDefFadeZero,		NULL, 0, IsDefFadeOverriden },
+	{ { DEFACCEL, "SWS: Toggle auto fades for new items" },							"SWS_TOGAUTOFADES",		TogAutoFades,		NULL, 0, IsAutoFade },
 	{ { DEFACCEL, "SWS: Metronome enable" },										"SWS_METROON",			MetronomeOn,		},
 	{ { DEFACCEL, "SWS: Metronome disable" },										"SWS_METROOFF",			MetronomeOff,		},
 	{ { DEFACCEL, "SWS: Write SWS actions to sws_actions.csv" },					"SWS_ACTIONS",			ActionsList,		},

@@ -1,6 +1,4 @@
-Fixed directory scan for grooves on OSX
-Tidy up of command handling code
-
+!v2.0.0 #10 (February 7, 2011)
 Support for v4 empty take lanes:
 +S&M build lanes actions now turn "take mosaics" into lanes using v4 empty takes (rather than v3 empty takes)
 These actions still useful to create take lanes à la v4 from older project saved with "mosaics", for example.
@@ -25,6 +23,7 @@ Fixed crash when running some of the S&M Resources view's slot actions (applying
 Fixed corner case GUI refresh issue in S&M Resources view
 Issue 250: Added action "SWS: Toggle auto fades for new items"
 Added action "SWS: Toolbar mute toggle"
+Fixed directory scan for grooves on OSX
 
  !v2.0.0 #9 (February 4, 2011)
 Autorender:

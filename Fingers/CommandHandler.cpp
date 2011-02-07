@@ -1,4 +1,3 @@
-<<<<<<< .mine
 #include "stdafx.h"
 
 #include "CommandHandler.h"

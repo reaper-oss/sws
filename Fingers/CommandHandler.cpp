@@ -194,17 +194,12 @@ int RprCommandManager::toggleCommandHook(int command)
 	return i->second->getToggleState();
 }
 
-template< typename T, typename U>
-static void deleteMap(std::map<T, U*> &theMap)
-{
-	for(std::map<T, U *>::iterator i = theMap.begin(); i != theMap.end(); ++i) {
-		delete i->second;
-	}
-	theMap.clear();
-}
-
 RprCommandManager::~RprCommandManager()
 { 
-	deleteMap(mCommandMap);
-	deleteMap(mToggleCommandMap);
+	for(CommandMap::iterator i = mCommandMap.begin(); i != mCommandMap.end(); ++i) {
+		delete i->second;
+	}
+	for(ToggleCommandMap::iterator i = mToggleCommandMap.begin(); i != mToggleCommandMap.end(); ++i) {
+		delete i->second;
+	}
 }

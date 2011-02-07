@@ -15,6 +15,13 @@ Fixed crash when running some of the S&M Resources view's slot actions
 (applying, importing, pasting, etc. track templates or FX chains from unexisting slots)
 Fixed corner case GUI refresh issue in S&M Resources view
 
+Autorender:
+Added option to only render tracks with a specified prefix (and optionally remove that prefix from rendered files)
+Added global preferences menu
+Added option to not prepend track numbers to rendered files
+Added limited support to append duplicate numbers to rendered files that would otherwise overwrite each other (This Song(2).mp3)
+Added auto-calculation of track pad length (for projects with large numbers of regions to be rendered)
+
  !v2.0.0 #9 (February 4, 2011)
 Autorender: Added global preferences dialog, default render directory option, option to allow stem rendering
 Added actions:

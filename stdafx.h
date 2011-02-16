@@ -25,6 +25,9 @@
 /
 ******************************************************************************/
 
+// Yeah, I know "AFX" if for MFC, and we don't use MFC in this project.
+// Force of habit. :)
+
 #pragma once
 
 #define STRICT
@@ -82,12 +85,15 @@
 #pragma warning(default : 4996)
 #pragma warning(default : 4267)
 
+// Headers that are used "enough" to be worth of being precompiled,
+// at the expense of needing recompile of the headers on change
 #include "reaper/icontheme.h"
 #include "reaper/reaper_plugin.h"
 #include "reaper/sws_rpf_wrapper.h"
 #include "Utility/SectionLock.h"
 #include "sws_util.h"
 #include "sws_wnd.h"
+#include "Menus.h"
 #include "resource.h"
 #include "Xenakios/XenakiosExts.h"
 #include "ObjectState/ObjectState.h"

@@ -74,7 +74,7 @@ static MidiItemProcessor* midiNoteRandomizer = NULL;
 
 static void Padre_Menuhook(const char* _menustr, HMENU _hMenu, int _flag) {
 	if (!strcmp(_menustr, "Main extensions") && !_flag) {
-		SWSCreateMenu(g_commandTable, _hMenu);
+		SWSCreateMenuFromCommandTable(g_commandTable, _hMenu);
 	}
 }
 

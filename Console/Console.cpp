@@ -59,7 +59,7 @@ typedef struct CUSTOM_COMMAND
 
 WDL_PtrList<CUSTOM_COMMAND> g_customCommands;
 
-console_COMMAND_T g_commands[NUM_COMMANDS] = 
+static console_COMMAND_T g_commands[NUM_COMMANDS] = 
 {
 	{ SOLO_ENABLE,    '+', 'o',  0, "Enable solo on " ,      0 },
 	{ SOLO_DISABLE,   '-', 'o',  0, "Disable solo on ",      0 },
@@ -820,7 +820,7 @@ static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { { 0, 'c', 0 }, "SWS: Open console" },									"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0 },
+	{ { { 0, 'C', 0 }, "SWS: Open console" },									"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0 },
 	{ { DEFACCEL,   "SWS: Open console and copy keystroke" },					"SWSCONSOLE2",      BringKeyCommand, NULL, },
 	{ { DEFACCEL,   "SWS: Open console with 'S' to select track(s)" },			"SWSCONSOLEEXSEL",  ConsoleCommand,  NULL, 'S' },
 	{ { DEFACCEL,   "SWS: Open console with 'n' to name track(s)" },			"SWSCONSOLENAME",   ConsoleCommand,  NULL, 'n' },

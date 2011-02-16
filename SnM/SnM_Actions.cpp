@@ -637,7 +637,7 @@ int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec)
 static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
 {
 	if (!strcmp(_menustr, "Main extensions") && !_flag) {
-		SWSCreateMenu(g_SNM_cmdTable, _hMenu);
+		SWSCreateMenuFromCommandTable(g_SNM_cmdTable, _hMenu);
 	}
 /*
 	else if (!strcmp(_menustr, "Media item context") && !_flag) {

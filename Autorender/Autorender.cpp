@@ -375,7 +375,7 @@ bool BrowseForRenderPath( char *renderPathChar ){
 	return result;
 }
 
-#ifdef _WIN32
+/*#ifdef _WIN32
 void ExecuteWindowsProcess( char* cmd ){
 	STARTUPINFO info={sizeof(info)};
 	PROCESS_INFORMATION processInfo;
@@ -385,20 +385,15 @@ void ExecuteWindowsProcess( char* cmd ){
 		CloseHandle(processInfo.hThread);
 	}
 }
-#endif
+#endif*/
 
 void OpenPathInFindplorer( const char* path ){
 	if( strlen( path ) ){
-		char cmd[512];
 #ifdef _WIN32
-		strcpy( cmd, "explorer \"");
-		strcpy( cmd + strlen( cmd ), path );
-		strcpy( cmd + strlen( cmd ), "\"" );
-		ExecuteWindowsProcess( cmd );
+		ShellExecute(NULL, "explore", path, NULL, NULL, SW_SHOWNORMAL);
 #else
-		strcpy( cmd, "open \"");
-		strcpy( cmd + strlen( cmd ), path );
-		strcpy( cmd + strlen( cmd ), "\"" );
+		char cmd[512];
+		_snprintf(cmd, 512, "open \"%s\"", path);
 		system( cmd );
 #endif
 	}
@@ -472,20 +467,15 @@ void NukeDirFiles( string dir, string ext = "" ){
 
 void MakePathAbsolute( char* path, char* basePath ){
 #ifdef _WIN32
-	char cwd[512];
-	GetCurrentDirectory( 512, cwd );
-	SetCurrentDirectory( basePath );
-	GetFullPathName( path, 1024, path, NULL );
-	SetCurrentDirectory( cwd );
+	if (PathIsRelative(path))
 #else
-	/*
-	char cwd[512];
-	cwd = getcwd();
-	chdir( basePath );
-	realpath( path, path )
-	chdir( cwd );
-	*/
+	if (path[0] != '/' || path[0] != '~') // Reaper probably never uses homedir-rooted paths, but check just in case.
 #endif
+	{
+		char filename[MAX_PATH];
+		strcpy(filename, path);
+		sprintf(path, "%s%c%s", basePath, PATH_SLASH_CHAR, filename);
+	}
 }
 
 void MakeMediaFilesAbsolute( WDL_String *prjStr ){
@@ -1075,7 +1065,7 @@ static COMMAND_T g_commandTable[] = {
 
 static void menuhook(const char* menustr, HMENU hMenu, int flag){
 	if (strcmp(menustr, "Main file") == 0 && flag == 0){
-		AddSubMenu(hMenu, SWSCreateMenu( g_commandTable), "SWS Autorender", 40929 );
+		AddSubMenu(hMenu, SWSCreateMenuFromCommandTable(g_commandTable), "SWS Autorender", 40929 );
 	}
 }
 

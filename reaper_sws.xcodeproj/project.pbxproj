@@ -32,6 +32,8 @@
 		22257D9C108BDC6B0058CF75 /* XenakiosExts.h in Headers */ = {isa = PBXBuildFile; fileRef = 22257D84108BDC6B0058CF75 /* XenakiosExts.h */; };
 		22257D9D108BDC6B0058CF75 /* XenQueryDlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D85108BDC6B0058CF75 /* XenQueryDlg.cpp */; };
 		22257D9E108BDC6B0058CF75 /* XenUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D86108BDC6B0058CF75 /* XenUtils.cpp */; };
+		22284D47130C4A65007DC680 /* Menus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22284D45130C4A65007DC680 /* Menus.cpp */; };
+		22284D48130C4A65007DC680 /* Menus.h in Headers */ = {isa = PBXBuildFile; fileRef = 22284D46130C4A65007DC680 /* Menus.h */; };
 		2233C7861187B4A400BB4BCB /* SnM_FXChainView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2233C7841187B4A400BB4BCB /* SnM_FXChainView.cpp */; };
 		2233C7871187B4A400BB4BCB /* SnM_FXChainView.h in Headers */ = {isa = PBXBuildFile; fileRef = 2233C7851187B4A400BB4BCB /* SnM_FXChainView.h */; };
 		2246D05D12F1622400EEDBD5 /* Autorender.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2246D05912F1622400EEDBD5 /* Autorender.cpp */; };
@@ -311,6 +313,8 @@
 		22257D84108BDC6B0058CF75 /* XenakiosExts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = XenakiosExts.h; path = Xenakios/XenakiosExts.h; sourceTree = "<group>"; };
 		22257D85108BDC6B0058CF75 /* XenQueryDlg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XenQueryDlg.cpp; path = Xenakios/XenQueryDlg.cpp; sourceTree = "<group>"; };
 		22257D86108BDC6B0058CF75 /* XenUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XenUtils.cpp; path = Xenakios/XenUtils.cpp; sourceTree = "<group>"; };
+		22284D45130C4A65007DC680 /* Menus.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Menus.cpp; sourceTree = "<group>"; };
+		22284D46130C4A65007DC680 /* Menus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Menus.h; sourceTree = "<group>"; };
 		2233C7841187B4A400BB4BCB /* SnM_FXChainView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_FXChainView.cpp; path = SnM/SnM_FXChainView.cpp; sourceTree = "<group>"; };
 		2233C7851187B4A400BB4BCB /* SnM_FXChainView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_FXChainView.h; path = SnM/SnM_FXChainView.h; sourceTree = "<group>"; };
 		2246D05912F1622400EEDBD5 /* Autorender.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autorender.cpp; path = Autorender/Autorender.cpp; sourceTree = "<group>"; };
@@ -625,6 +629,8 @@
 				981006F70F4768020072D712 /* MarkerListClass.h */,
 				22A79CF810B4350000A78170 /* MediaPool.cpp */,
 				22A79CF910B4350000A78170 /* MediaPool.h */,
+				22284D45130C4A65007DC680 /* Menus.cpp */,
+				22284D46130C4A65007DC680 /* Menus.h */,
 				981006DB0F4768010072D712 /* MuteState.cpp */,
 				981006D30F4768010072D712 /* MuteState.h */,
 				22C54FCF111B28450024339F /* ObjectState.cpp */,
@@ -1110,6 +1116,7 @@
 				22C77ED212D62F2E002F68D5 /* StringUtil.hxx in Headers */,
 				22C77ED412D62F2E002F68D5 /* TimeMap.h in Headers */,
 				2270FC7212F8551400703F85 /* RecCheck.h in Headers */,
+				22284D48130C4A65007DC680 /* Menus.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1365,6 +1372,7 @@
 				22C77ED112D62F2E002F68D5 /* StringUtil.cxx in Sources */,
 				22C77ED312D62F2E002F68D5 /* TimeMap.cpp in Sources */,
 				2270FC7112F8551400703F85 /* RecCheck.cpp in Sources */,
+				22284D47130C4A65007DC680 /* Menus.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

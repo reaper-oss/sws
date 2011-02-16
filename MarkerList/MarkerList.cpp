@@ -589,6 +589,9 @@ static COMMAND_T g_commandTable[] =
 
 	// no menu
 	{ { DEFACCEL, "SWS: Go to end of project, including markers/regions" },					"SWS_PROJEND",		GotoEndInclMarkers, },
+	{ { DEFACCEL, "SWS: Goto/select next marker/region" },									"SWS_SELNEXTMORR",	SelNextMarkerOrRegion, },
+	{ { DEFACCEL, "SWS: Goto/select previous marker/region" },								"SWS_SELPREVMORR",	SelPrevMarkerOrRegion, },
+
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
@@ -643,7 +646,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
 		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
 	else if (strcmp(menustr, "Main edit") == 0 && flag == 0)
-		AddSubMenu(hMenu, SWSCreateMenu(g_commandTable), "SWS Marker utilites");
+		AddSubMenu(hMenu, SWSCreateMenuFromCommandTable(g_commandTable), "SWS Marker utilites");
 }
 
 int MarkerListInit()

@@ -175,15 +175,10 @@ int SWSRegisterCommands2(COMMAND_T* pCommands, const char* cFile); // Multiple c
 void ActionsList(COMMAND_T*);
 COMMAND_T* SWSUnregisterCommand(int id);
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, const char** pMenuText = NULL);
-HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);
-int SWSGetMenuPosFromID(HMENU hMenu, UINT id);
+HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);
 
 // Utility functions, sws_util.cpp
 BOOL IsCommCtrlVersion6();
-void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter = -1, bool bPos = false, UINT uiSate = MFS_UNCHECKED);
-void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter = -1, UINT uiSate = MFS_UNCHECKED);
-HMENU FindMenuItem(HMENU hMenu, int iCmd, int* iPos);
-void SWSSetMenuText(HMENU hMenu, int iCmd, const char* cText);
 void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
 MediaTrack* GetFirstSelectedTrack();

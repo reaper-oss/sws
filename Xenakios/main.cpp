@@ -681,7 +681,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main extensions") == 0 && flag == 0)
 	{
-		SWSCreateMenu(g_XenCommandTable, hMenu);
+		SWSCreateMenuFromCommandTable(g_XenCommandTable, hMenu);
 	}
 /*JFB Clean-up REAPER's menu
 	else if (strcmp(menustr, "Media item context") == 0 && flag == 0)

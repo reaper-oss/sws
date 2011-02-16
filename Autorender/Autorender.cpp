@@ -209,6 +209,16 @@ void WriteProjectFile( string filename, WDL_String* prjStr ){
 }
 */
 
+void WDLStringReplaceLine( WDL_String *prjStr, int pos, const char *oldLine, const char *newLine ){
+	//if newLine does't have a trailing \n, things will break because WDL_String will insert > at the wrong place!
+	//maybe should check for this here?
+	int lineLen = (int)strlen( oldLine ) + 1; //Add 1 for the omitted newline
+	int startPos = pos - lineLen;
+	prjStr->DeleteSub( startPos, lineLen );
+	prjStr->Insert( newLine, startPos );
+	int i = 0;
+}
+
 void SetProjectParameter( WDL_String *prjStr, string param, string paramValue ){
 	char line[4096];
 	int pos = 0;
@@ -217,17 +227,8 @@ void SetProjectParameter( WDL_String *prjStr, string param, string paramValue ){
 	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
 		if( !lp.parse( line ) && lp.getnumtokens() ) {		
 			if ( strcmp( lp.gettoken_str(0), param.c_str() ) == 0) {
-				
-				int lineLen = (int)strlen( line ) + 1; //Add 1 for the omitted newline
-				int startPos = pos - lineLen;
-
-				string replacementStr = param + string( " " ) + paramValue + string( "\n" );
-				WDL_String replacement;
-				replacement.Set(replacementStr.c_str());
-	
-				prjStr->DeleteSub( startPos, lineLen );
-				prjStr->Insert( replacement.Get(), startPos );
-
+				string replacementStr = param + string( " " ) + paramValue + string( "\n" );				
+				WDLStringReplaceLine( prjStr, pos, line, replacementStr.c_str() );
 				break;
 			}
 		}
@@ -469,6 +470,106 @@ void NukeDirFiles( string dir, string ext = "" ){
 	closedir( dp );	
 }
 
+void MakePathAbsolute( char* path, char* basePath ){
+#ifdef _WIN32
+	char cwd[512];
+	GetCurrentDirectory( 512, cwd );
+	SetCurrentDirectory( basePath );
+	GetFullPathName( path, 1024, path, NULL );
+	SetCurrentDirectory( cwd );
+#else
+	/*
+	char cwd[512];
+	cwd = getcwd();
+	chdir( basePath );
+	realpath( path, path )
+	chdir( cwd );
+	*/
+#endif
+}
+
+void MakeMediaFilesAbsolute( WDL_String *prjStr ){
+	char line[4096];
+	int pos = 0;
+
+	LineParser lp(false);
+	bool inTrack = false;
+	bool inTrackItem = false;
+	bool inTrackItemSource = false;
+	char projPath[512];
+	GetProjectPath(projPath, 512 );
+	int trackIgnoreChunks = 0;
+	int trackItemIgnoreChunks = 0;
+	int trackItemSourceIgnoreChunks = 0;
+	const char *firstChar;
+	string firstTokenStr;
+
+	int lineNum = 0; //for debugging
+
+	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
+		lineNum++;
+		if( !lp.parse( line ) && lp.getnumtokens() ) {
+			firstTokenStr = lp.gettoken_str(0);
+			firstTokenStr = firstTokenStr.substr(0,1);
+			firstChar = firstTokenStr.c_str();
+
+			if ( strcmp( lp.gettoken_str(0), ">" ) == 0 ){
+				//end of a chunk
+				if( inTrackItemSource ){
+					if( trackItemSourceIgnoreChunks == 0 ){
+						inTrackItemSource = false;
+					} else {
+						--trackItemSourceIgnoreChunks;
+					}
+				} else if( inTrackItem ) {
+					if( trackItemIgnoreChunks == 0 ){
+						inTrackItem = false;
+					} else {
+						--trackItemIgnoreChunks;
+					}
+				} else if( inTrack ){
+					if( trackIgnoreChunks == 0 ){
+						inTrack = false;
+					} else {
+						--trackIgnoreChunks;
+					}
+				}
+			} else if( inTrackItemSource ){
+				if( strcmp( lp.gettoken_str(0), "FILE" ) == 0 ){
+					string replacementStr = "FILE ";				
+					char *mediaPath = (char*) lp.gettoken_str(1);
+					MakePathAbsolute( mediaPath, projPath );
+					WDL_String sanitizedMediaFilePath;
+					makeEscapedConfigString( mediaPath, &sanitizedMediaFilePath);
+					replacementStr.append( sanitizedMediaFilePath.Get() );
+					if( lp.getnumtokens() > 1 ){
+						replacementStr.append( " " );
+						replacementStr.append( lp.gettoken_str( 2 ) );
+					}
+					replacementStr.append( string( "\n" ) );
+					WDLStringReplaceLine( prjStr, pos, line, replacementStr.c_str() );
+				} else if ( strcmp( firstChar, "<" ) == 0 ){
+					++trackItemSourceIgnoreChunks;
+				}
+			} else if ( inTrackItem ){
+				if( strcmp( lp.gettoken_str(0), "<SOURCE" ) == 0 ){
+					inTrackItemSource = true;
+				} else if ( strcmp( firstChar, "<" ) == 0 ){
+					++trackItemIgnoreChunks;
+				}
+			} else if ( inTrack ){
+				if( strcmp( lp.gettoken_str(0), "<ITEM" ) == 0 ){
+					inTrackItem = true;
+				} else if ( ( strcmp( firstChar, "<" ) == 0 ) || ( strcmp( firstChar, "<\0" ) == 0 ) ){
+					trackIgnoreChunks++;
+				}
+			} else if ( strcmp( lp.gettoken_str(0), "<TRACK" ) == 0 ){
+				inTrack = true; 
+			}
+		}
+	}	
+}
+
 
 void AutorenderRegions(COMMAND_T*) {
 	g_doing_render = true;
@@ -518,6 +619,7 @@ void AutorenderRegions(COMMAND_T*) {
 	//Project tweaks - only do after render path check! (Don't want to overwrite users settings in the original file)
 	SetProjectParameter( &prjStr, "RENDER_ADDTOPROJ", "0" );	
 	if( !g_pref_allow_stems ) SetProjectParameter( &prjStr, "RENDER_STEMS", "0" );
+	MakeMediaFilesAbsolute( &prjStr );
 
 	string queuedRendersDir = GetQueuedRendersDir(); // This also checks to make sure that the dir exists
 	NukeDirFiles( queuedRendersDir, "rpp" ); // Deletes all .rpp files in the queuedRendersDir

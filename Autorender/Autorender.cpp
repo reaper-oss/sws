@@ -162,6 +162,7 @@ string ParseFileExtension( string path ){
 }
 
 void ParsePath( const char* path, char* parentDir ){
+	//set parentDir to the parent directory or an empty string if none exists
 	strcpy( parentDir, path );
 	char *lastSlash = strrchr( parentDir, PATH_SLASH_CHAR );
 	if( lastSlash ){

@@ -1,3 +1,5 @@
+Autorender: Fixed another silent render bug for relative media items not in the project root directory
+
 !v2.0.0 #11 (February 16, 2011)
 Issue 241: Added "SWS: Goto/select next marker/region" and "SWS: Goto/select previous marker/region"
 Autorender: Fixed bug where projects with relative paths to media files rendered silent tracks

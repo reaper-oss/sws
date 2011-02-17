@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #ifdef _WIN32
 	#include "dirent.h"
+	#include "Shlwapi.h"
 #endif
 
 //#define UNICODE
@@ -160,10 +161,26 @@ string ParseFileExtension( string path ){
     return "";
 }
 
+void GetParentPath( const char* path, char* parentDir ){
+#ifdef _WIN32
+	strcpy( parentDir, path );
+	PathRemoveFileSpec( parentDir );
+	int i = 0;
+#else
+	parentDir = dirname( path );
+#endif
+}
+
+void GetProjectRealPath( char* prjPath ){
+	char rpp[MAX_PATH];
+	EnumProjects(-1, rpp, MAX_PATH);	
+	GetParentPath( rpp, prjPath );	
+}
+
 string GetProjectName(){
-	char prjPath[256];
+	char prjPath[MAX_PATH];
 	string prjPathStr = "";
-	EnumProjects(-1, prjPath, 256);
+	EnumProjects(-1, prjPath, MAX_PATH);
 	if( strlen( prjPath ) == 0 ) return prjPathStr;
 	prjPathStr = prjPath;
     if( prjPathStr.find_last_of( PATH_SLASH_CHAR ) == string::npos ) return prjPathStr;
@@ -175,7 +192,7 @@ string GetProjectName(){
 
 void GetProjectString(WDL_String* prjStr){
 	char str[4096];
-	EnumProjects(-1, str, 256);	
+	EnumProjects(-1, str, MAX_PATH);	
 
 	ProjectStateContext* prj = ProjectCreateFileRead( str );
 
@@ -486,8 +503,6 @@ void MakeMediaFilesAbsolute( WDL_String *prjStr ){
 	bool inTrack = false;
 	bool inTrackItem = false;
 	bool inTrackItemSource = false;
-	char projPath[512];
-	GetProjectPath(projPath, 512 );
 	int trackIgnoreChunks = 0;
 	int trackItemIgnoreChunks = 0;
 	int trackItemSourceIgnoreChunks = 0;
@@ -495,6 +510,10 @@ void MakeMediaFilesAbsolute( WDL_String *prjStr ){
 	string firstTokenStr;
 
 	int lineNum = 0; //for debugging
+
+	//Reaper API's GetProjectPath() returns the path to the project's audio dir, not to .rpp!
+	char projPath[MAX_PATH];
+	GetProjectRealPath( projPath );
 
 	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
 		lineNum++;
@@ -808,8 +827,8 @@ void processDialogFieldCheck( HWND hwndDlg, WPARAM wParam, bool &target, bool &h
 
 void loadPrefs(){
 	g_pref_allow_stems = GetPrivateProfileInt( SWS_INI, ALLOW_STEMS_KEY, 0, get_ini_file() ) != 0;
-	char def_render_path[256];
-	GetPrivateProfileString( SWS_INI, DEFAULT_RENDER_PATH_KEY, "", def_render_path, 256, get_ini_file() );
+	char def_render_path[MAX_PATH];
+	GetPrivateProfileString( SWS_INI, DEFAULT_RENDER_PATH_KEY, "", def_render_path, MAX_PATH, get_ini_file() );
 	g_pref_default_render_path = def_render_path;
 }
 

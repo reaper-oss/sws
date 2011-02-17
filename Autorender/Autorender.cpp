@@ -161,20 +161,14 @@ string ParseFileExtension( string path ){
     return "";
 }
 
-void GetParentPath( const char* path, char* parentDir ){
-#ifdef _WIN32
-	strcpy( parentDir, path );
-	PathRemoveFileSpec( parentDir );
-	int i = 0;
-#else
-	parentDir = dirname( path );
-#endif
+void ParsePath( const char* path, char* parentDir ){	
+	strncpy( parentDir, path, strrchr( path, PATH_SLASH_CHAR ) - path + 1 );
 }
 
 void GetProjectRealPath( char* prjPath ){
 	char rpp[MAX_PATH];
 	EnumProjects(-1, rpp, MAX_PATH);	
-	GetParentPath( rpp, prjPath );	
+	ParsePath( rpp, prjPath );	
 }
 
 string GetProjectName(){

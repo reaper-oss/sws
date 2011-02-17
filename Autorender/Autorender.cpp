@@ -161,8 +161,14 @@ string ParseFileExtension( string path ){
     return "";
 }
 
-void ParsePath( const char* path, char* parentDir ){	
-	strncpy( parentDir, path, strrchr( path, PATH_SLASH_CHAR ) - path + 1 );
+void ParsePath( const char* path, char* parentDir ){
+	strcpy( parentDir, path );
+	char *lastSlash = strrchr( parentDir, PATH_SLASH_CHAR );
+	if( lastSlash ){
+		lastSlash[0] = 0;
+	} else {
+		parentDir = 0;
+	}
 }
 
 void GetProjectRealPath( char* prjPath ){
@@ -480,7 +486,7 @@ void MakePathAbsolute( char* path, char* basePath ){
 #ifdef _WIN32
 	if (PathIsRelative(path))
 #else
-	if (path[0] != '/' || path[0] != '~') // Reaper probably never uses homedir-rooted paths, but check just in case.
+	if (path[0] != '/' && path[0] != '~') // Reaper probably never uses homedir-rooted paths, but check just in case.
 #endif
 	{
 		char filename[MAX_PATH];
@@ -508,7 +514,7 @@ void MakeMediaFilesAbsolute( WDL_String *prjStr ){
 	//Reaper API's GetProjectPath() returns the path to the project's audio dir, not to .rpp!
 	char projPath[MAX_PATH];
 	GetProjectRealPath( projPath );
-
+	
 	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
 		lineNum++;
 		if( !lp.parse( line ) && lp.getnumtokens() ) {

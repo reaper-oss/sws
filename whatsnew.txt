@@ -1,3 +1,6 @@
+- Fixed issue 262: cue buss actions now obey default send & HW output prefs (i.e. prefrences > project > track/send defaults)
+- Restored deprecated Xen's "Load track template n" (where n>10) actions
+
 !v2.0.0 #12 (February 18, 2011)
 Autorender: Fixed another silent render bug for relative media items not in the project root directory
 

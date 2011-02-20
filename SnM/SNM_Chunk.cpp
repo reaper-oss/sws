@@ -54,16 +54,17 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 		// add rcv
 		case -1:
 		{
+			int defSndFlags = *(int*)GetConfigVar("defsendflag");
+			bool audioSnd = ((defSndFlags & 512) != 512);
+			bool midiSnd =  ((defSndFlags & 256) != 256);
+
 			char bufline[512] = "";
 			int n = _snprintf(bufline, 512,
-				"AUXRECV %d %d %s %s 0 0 0 0 0 -1.00000000000000 0 -1\n%s\n", 
-				m_srcId-1, m_sendType, 
-				m_vol, m_pan,
-				_parsedLine);
+				"AUXRECV %d %d %s %s 0 0 0 %d 0 -1.00000000000000 %d -1\n%s\n", 
+				m_srcId-1, m_sendType, m_vol, m_pan, audioSnd ? 0 : -1, midiSnd ? 0 : 31, _parsedLine);
 			_newChunk->Append(bufline,n);
-
-			m_breakParsePatch = true;
 			update = true;
+			m_breakParsePatch = true;
 		}
 		break;
 
@@ -87,7 +88,6 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 				-1, //JFB: can't get -send/rcv- automation!
 				_parsedLine);
 			_newChunk->Append(bufline,n);
-
 			update = true;
 			m_breakParsePatch = true;
 		}
@@ -415,7 +415,7 @@ int SNM_TakeParserPatcher::InsertTake(int _takeIdx, WDL_String* _chunk, int _pos
 			if (pos >= 0)
 			{
 				m_chunk->Insert(_chunk->Get(), pos);
-				afterPos = pos + length;			
+				afterPos = pos + length;
 				m_currentTakeCount++; // *always* reflect the nb of takes in the *chunk*
 				m_updates++; // as we're directly working on the cached chunk..
 			}
@@ -704,7 +704,7 @@ bool SNM_FXSummaryParser::NotifyStartElement(int _mode,
 	{
 		if (_lp->getnumtokens() >= 3 && _parsedParents->GetSize() == 3)
 		{
-			if (!strcmp(_lp->gettoken_str(0), "<VST"))
+			if (!strcmp(_lp->gettoken_str(0), "<VST") || !strcmp(_lp->gettoken_str(0), "<AU")) //JFB! theorical AU stuff, can't test..
 				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(2)));
 			else if (!strcmp(_lp->gettoken_str(0), "<JS") || !strcmp(_lp->gettoken_str(0), "<DX"))
 				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(1)));

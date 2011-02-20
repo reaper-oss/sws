@@ -49,11 +49,12 @@ WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvClipb
 bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, SNM_SendPatcher* _p)
 {
 	bool update = false;
+	char vol[32] = "1.00000000000000";
+	char pan[32] = "0.00000000000000";
+
 	// if pre-fader, then re-copy track vol/pan
 	if (_type == 3)
 	{
-		char vol[32];
-		char pan[32];
 		SNM_ChunkParserPatcher p1(_srcTr, false);
 		if (p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 4, 0, 1, vol) > 0 &&
 			p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 4, 0, 2, pan) > 0)
@@ -65,8 +66,7 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 	// default (or failure case: retry)
 	if (!update)
 	{
-		char vol[32] = "1.00000000000000";
-		char pan[32] = "0.00000000000000";
+		_snprintf(vol, 32, "%.14f", *(double*)GetConfigVar("defsendvol"));
 		update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
 	}
 
@@ -147,6 +147,8 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 			WDL_String mainSend("MAINSEND 1");
 			if (!_sendToMaster)
 				 mainSend.Set("MAINSEND 0");
+			if (g_bv4)
+				mainSend.Append(" 0"); // add parent track channels (v4)
 
 			// adds HW outputs
 			if (_hwOuts)
@@ -159,15 +161,22 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 				{
 					if (_hwOuts[i])
 					{
-						if (!cr) {mainSend.Append("\n"); cr = true;};
-						if (_hwOuts[i] >= (monoHWCount)) 
+						if (!cr) {
+							mainSend.Append("\n"); 
+							cr = true;
+						}
+						if (_hwOuts[i] >= monoHWCount) 
 							mainSend.AppendFormatted(32, "HWOUT %d ", (_hwOuts[i]-monoHWCount) | 1024);
 						else
 							mainSend.AppendFormatted(32, "HWOUT %d ", _hwOuts[i]-1);
-						mainSend.Append("0 1.00000000000000 0.00000000000000 0 0 0 -1.00000000000000 -1\n");
+
+						mainSend.Append("0 ");
+						mainSend.AppendFormatted(20, "%.14f ", *(double*)GetConfigVar("defhwvol"));
+						mainSend.Append("0.00000000000000 0 0 0 -1.00000000000000 -1\n");
 					}
 				}
-				if (!cr) mainSend.Append("\n"); // hot
+				if (!cr)
+					mainSend.Append("\n"); // hot
 			}
 
 			// patch both together

@@ -751,10 +751,9 @@ int XenakiosInit()
 
 	srand ((unsigned int)time(NULL));
 
-/*JFB commented: deprecated (Resources view)
 	// Add track template actions
-	char cPath[256];
-	strncpy(cPath, get_ini_file(), 256);
+	char cPath[BUFFER_SIZE];
+	strncpy(cPath, get_ini_file(), BUFFER_SIZE);
 	char* pC = strrchr(cPath, PATH_SLASH_CHAR);
 	if (pC)
 	{
@@ -778,17 +777,16 @@ int XenakiosInit()
 		{
 			COMMAND_T* ct = new COMMAND_T;
 			memset(ct, 0, sizeof(COMMAND_T));
-			char* desc = new char[40];
+			char* desc = new char[64];
 			ct->accel.desc = desc;
 			char *tbuf;
 			ct->id = tbuf = new char[64];
 			ct->doCommand = DoOpenTrackTemplate;
 			ct->user = i;
 			sprintf(tbuf, "XENAKIOS_LOADTRACKTEMPLATE%d", i);
-			sprintf(desc, "Xenakios/SWS: Load track template %d", i);
+			sprintf(desc, "Xenakios/SWS: [Deprecated] Load track template %d", i);
 			SWSRegisterCommand(ct);
 		}
 	}
-*/
 	return 1;
 }

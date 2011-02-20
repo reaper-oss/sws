@@ -200,7 +200,8 @@ bool isEmptyMidi(MediaItem_Take* _take)
 
 void setEmptyTakeChunk(WDL_String* _chunk, int _recPass, int _color)
 {
-	if (DockWindowAddEx) //JFB!!! v4 only
+	// v4 empty take (but w/o take color)
+	if (g_bv4) 
 	{
 		_chunk->Set("TAKE NULL\n");
 	}
@@ -251,7 +252,7 @@ int buildLanes(const char* _undoTitle, int _mode)
 					int* recPasses = new int[SNM_MAX_TAKES];
 					int takeColors[SNM_MAX_TAKES];
 
-					SNM_RecPassParser p(item);
+					SNM_RecPassParser p(item, CountTakes(item));
 					int itemMaxRecPass = p.GetMaxRecPass(recPasses, takeColors); 
 					maxRecPass = max(itemMaxRecPass, maxRecPass);
 
@@ -416,7 +417,8 @@ void clearTake(COMMAND_T* _ct)
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
 				int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
-				if (DockWindowAddEx) //JFB!!! v4 only
+				// v4 empty take
+				if (g_bv4)
 				{
 					SNM_TakeParserPatcher p(item, CountTakes(item));
 					int pos, len;
@@ -883,7 +885,7 @@ void showHideTakeMuteEnvelope(COMMAND_T* _ct)
 
 void showHideTakePitchEnvelope(COMMAND_T* _ct) 
 {
-	if (DockWindowAddEx) //JFB!!! v4 only
+	if (g_bv4)
 	{
 		char cVis[2] = ""; //empty means toggle
 		int value = (int)_ct->user;
@@ -925,7 +927,7 @@ bool ShowTakeEnvMute(MediaItem_Take* _take) {
 }
 
 bool ShowTakeEnvPitch(MediaItem_Take* _take) {
-	if (DockWindowAddEx) //JFB!!! v4 only
+	if (g_bv4)
 	{
 		WDL_String defaultPoint("PT 0.000000 0.000000 0");
 		return ShowTakeEnv(_take, "PITCHENV", &defaultPoint);

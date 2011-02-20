@@ -30,9 +30,6 @@
 #ifndef _SNM_CHUNK_H_
 #define _SNM_CHUNK_H_
 
-#include "SnM_Actions.h"
-#include "SNM_ChunkParserPatcher.h"
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_SendPatcher
@@ -169,7 +166,7 @@ class SNM_TakeParserPatcher : public SNM_ChunkParserPatcher
 public:
 	SNM_TakeParserPatcher(MediaItem* _item, int _countTakes = -1) : SNM_ChunkParserPatcher(_item) 
 	{
-		m_currentTakeCount = _countTakes; //initialized with REAPER's CountTakes() for optimization
+		m_currentTakeCount = _countTakes; // lazy init through CountTakesInChunk() for optimization
 		m_fakeTake = false;
 	}
 
@@ -194,12 +191,13 @@ public:
 	bool ReplaceTake(int _startTakePos, int _takeLength, WDL_String* _newTakeChunk);
 
 protected:
-	int m_currentTakeCount; // reflects the nb of takes in the *chunk* (may be different than REAPER's ones)
+	int m_currentTakeCount; // nb of takes in the *chunk* (may be different than REAPER's ones)
+//	int m_activeTakeIdx;    // active take in the *chunk* (may be different than REAPER's ones)
 private:
 	// check that _pLine is indeed the 1st line of a new take in an item chunk
 	// remarks:
 	// _pLine *MUST* start with "\nTAKE" (see private usages)
-	// also, we assume we're processing a valid chunk here (i.e. doesn't with "\nTAKE": at least 5th char after)
+	// also, we assume we're processing a valid chunk here (i.e. doesn't end with "\nTAKE")
 	bool IsValidTakeChunkLine(const char* _pLine) {return (_pLine[5] && (_pLine[5] == '\n' || _pLine[5] == ' '));}
 	bool m_fakeTake;
 };
@@ -212,7 +210,7 @@ private:
 class SNM_RecPassParser : public SNM_TakeParserPatcher
 {
 public:
-	SNM_RecPassParser(MediaItem* _item) : SNM_TakeParserPatcher(_item) 
+	SNM_RecPassParser(MediaItem* _item, int _countTakes) : SNM_TakeParserPatcher(_item, _countTakes) 
 	{
 		m_maxRecPass = -1;
 		m_takeCounter = 0;

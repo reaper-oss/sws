@@ -1,7 +1,7 @@
 /******************************************************************************
 / Autocolor.cpp
 /
-/ Copyright (c) 2011 Tim Payne (SWS) / JF Bédague (S&M)
+/ Copyright (c) 2011 Tim Payne (SWS) / Jeffos (S&M)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -918,11 +918,22 @@ int AutoColorInit()
 	{
 		char key[32];
 		_snprintf(key, 32, AC_ITEM_KEY, i+1);
-		GetPrivateProfileString(SWS_INI, key, "\"\" 0 \"\"", str, BUFFER_SIZE, ini.Get());
+		GetPrivateProfileString(SWS_INI, key, "", str, BUFFER_SIZE, ini.Get());
 		if (bUpgrade) // Remove old lines
 			WritePrivateProfileString(SWS_INI, key, NULL, get_ini_file());
+#ifndef _WIN32
+		// OSX GetPrivateProfileString doesn't remove the leading/trailing "
+		if (str[0] == '\"')
+		{
+			char newstr[BUFFER_SIZE];
+			strcpy(newstr, str+1);
+			if (newstr[strlen(newstr)-1] == '\"')
+				newstr[strlen(newstr)-1] = 0;
+			strcpy(str, newstr);
+		}
+#endif
 		LineParser lp(false);
-		if (!lp.parse(str))
+		if (!lp.parse(str) && lp.getnumtokens() == 3)
 			g_pACItems.Add(new SWS_RuleItem(lp.gettoken_str(0), lp.gettoken_int(1), lp.gettoken_str(2)));
 	}	
 

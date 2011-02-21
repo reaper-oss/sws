@@ -78,7 +78,14 @@ void GrooveTemplateHandler::showGrooveDialog()
 
 std::string GrooveTemplateHandler::GetGrooveDir()
 {
-	return getReaperProperty("groove_dir");
+	std::string dir = getReaperProperty("groove_dir");
+	if (dir.empty())
+	{	// Installer puts the grooves into the resource path under "Grooves"
+		dir.assign(GetResourcePath());
+		dir += PATH_SLASH_CHAR;
+		dir += "Grooves";
+	}
+	return dir;
 }
 
 int GrooveTemplateHandler::GetGrooveStrength()

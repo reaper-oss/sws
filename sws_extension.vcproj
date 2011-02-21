@@ -99,7 +99,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Building installer and copying to c:\dev\sws-deploy..."
-				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&quot;&#x0D;&#x0A;if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2 $(SolutionName).nsi&#x0D;&#x0A;if exist &quot;$(OutDir)\$(SolutionName).exe&quot; copy /y &quot;$(OutDir)\$(SolutionName).exe&quot; &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
+				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&quot;&#x0D;&#x0A;if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName).nsi&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -183,7 +183,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Building x64 installer and copying to c:\dev\sws-deploy..."
-				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2 $(SolutionName)_x64.nsi&#x0D;&#x0A;if exist &quot;$(OutDir)\$(SolutionName)_x64.exe&quot; copy /y &quot;$(OutDir)\$(SolutionName)_x64.exe&quot; &quot;c:\dev\sws-deploy&quot;&#x0D;&#x0A;"
+				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName)_x64.nsi&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -3126,22 +3126,6 @@
 				>
 			</File>
 		</Filter>
-		<File
-			RelativePath=".\license.txt"
-			>
-		</File>
-		<File
-			RelativePath=".\maclicense.txt"
-			>
-		</File>
-		<File
-			RelativePath=".\sws_extension.nsi"
-			>
-		</File>
-		<File
-			RelativePath=".\sws_extension_x64.nsi"
-			>
-		</File>
 		<File
 			RelativePath=".\whatsnew.txt"
 			>

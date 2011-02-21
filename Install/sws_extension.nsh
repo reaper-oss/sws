@@ -39,7 +39,7 @@ SectionEnd
 
 Section "Grooves" groove_id
   SetOutPath $GROOVE_DIR
-  File FingersExtras\Grooves\*.rgt
+  File ..\FingersExtras\Grooves\*.rgt
   ; Since we don't allow the user to select the groove dir anymore,
   ; don't set the path in the INI.  The code sets the default instead.
   ;WriteINIStr $INI_PATH\REAPER.ini "fingers" "groove_dir" $GROOVE_DIR

@@ -2,10 +2,10 @@
 ;--------------------------------
 
 Name "SWS Extension x64"
-OutFile "x64\Release\sws_extension_x64.exe"
+OutFile "output\sws_extension_x64.exe"
 InstallDir "$PROGRAMFILES64\Reaper (x64)\Plugins"
 !define CPUBITS 64
-!define OUTPUTFILE x64\Release\reaper_sws64.dll
+!define OUTPUTFILE ..\x64\Release\reaper_sws64.dll
 
 ; Do all the work!
 !include sws_extension.nsh

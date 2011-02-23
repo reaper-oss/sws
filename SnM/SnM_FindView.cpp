@@ -57,27 +57,30 @@ static SNM_FindWnd* g_pFindWnd = NULL;
 char g_searchStr[MAX_SEARCH_STR_LEN] = "";
 bool g_notFound=false;
 
-bool TakeNameMatch(MediaItem_Take* _tk, const char* _searchStr) {
-	char* takeName = (char*)GetSetMediaItemTakeInfo(_tk, "P_NAME", NULL);
+bool TakeNameMatch(MediaItem_Take* _tk, const char* _searchStr)
+{
+	char* takeName = _tk ? (char*)GetSetMediaItemTakeInfo(_tk, "P_NAME", NULL) : NULL;
 	return (takeName && stristr(takeName, _searchStr));
 }
 
-bool TakeFilenameMatch(MediaItem_Take* _tk, const char* _searchStr) {
+bool TakeFilenameMatch(MediaItem_Take* _tk, const char* _searchStr)
+{
 	bool match = false;
-	PCM_source* src =(PCM_source*)GetSetMediaItemTakeInfo(_tk,"P_SOURCE",NULL);
-	if (src) {
+	PCM_source* src = _tk ? (PCM_source*)GetSetMediaItemTakeInfo(_tk, "P_SOURCE", NULL) : NULL;
+	if (src) 
+	{
 		const char* takeFilename = src->GetFileName();
 		match = (takeFilename && stristr(takeFilename, _searchStr));
 	}
 	return match;
 }
 
-bool ItemNotesMatch(MediaItem_Take* _tk, const char* _searchStr) {
+bool ItemNotesMatch(MediaItem* _item, const char* _searchStr)
+{
 	bool match = false;
-	MediaItem* item = GetMediaItemTake_Item(_tk);
-	if (item)
+	if (_item)
 	{
-		SNM_ChunkParserPatcher p(item);
+		SNM_ChunkParserPatcher p(_item);
 		WDL_String notes;
 		if (p.GetSubChunk("NOTES", 2, 0, &notes))
 			//JFB we compare a formated string with a normal one here, oh well..
@@ -87,23 +90,26 @@ bool ItemNotesMatch(MediaItem_Take* _tk, const char* _searchStr) {
 }
 
 bool TrackNameMatch(MediaTrack* _tr, const char* _searchStr) {
-	char* name = (char*)GetSetMediaTrackInfo(_tr, "P_NAME", NULL);
+	char* name = _tr ? (char*)GetSetMediaTrackInfo(_tr, "P_NAME", NULL) : NULL;
 	return (name && stristr(name, _searchStr));
 }
 
-bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr) {
+bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr) 
+{
 	bool match = false;
-	for (int i=0; i < g_pTracksNotes.Get()->GetSize(); i++)
+	if (_tr)
 	{
-		if (g_pTracksNotes.Get()->Get(i)->m_tr == _tr)
+		for (int i=0; i < g_pTracksNotes.Get()->GetSize(); i++)
 		{
-			match = (stristr(g_pTracksNotes.Get()->Get(i)->m_notes.Get(), _searchStr) != NULL);
-			break;
+			if (g_pTracksNotes.Get()->Get(i)->m_tr == _tr)
+			{
+				match = (stristr(g_pTracksNotes.Get()->Get(i)->m_notes.Get(), _searchStr) != NULL);
+				break;
+			}
 		}
 	}
 	return match;
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -139,7 +145,7 @@ bool SNM_FindWnd::Find(int _mode)
 			update = FindMediaItem(_mode, true, TakeFilenameMatch);
 		break;
 		case TYPE_ITEM_NOTES:
-			update = FindMediaItem(_mode, true, ItemNotesMatch);
+			update = FindMediaItem(_mode, true, NULL, ItemNotesMatch);
 		break;
 
 		case TYPE_TRACK_NAME:
@@ -187,7 +193,7 @@ MediaItem* SNM_FindWnd::FindPrevNextItem(int _dir, MediaItem* _item)
 	return previous;
 }
 
-bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*job)(MediaItem_Take*,const char*))
+bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_Take*,const char*), bool (*jobItem)(MediaItem*,const char*))
 {
 	bool update = false, found = false, sel = true;
 	if (g_searchStr && *g_searchStr)
@@ -229,9 +235,7 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*job)(MediaItem_
 				item = GetTrackMediaItem(startTr,++startItemIdx);
 
 			bool firstItem = true, breakSelection = false;
-			for (int i = startTrIdx; 
-				!breakSelection && i <= CountTracks(NULL) && i>=1; 
-				i += (!_dir ? 1 : _dir))
+			for (int i = startTrIdx; !breakSelection && i <= CountTracks(NULL) && i>=1; i += (!_dir ? 1 : _dir))
 			{
 				MediaTrack* tr = CSurf_TrackFromID(i,false); 
 				int nbItems = GetTrackNumMediaItems(tr);
@@ -241,22 +245,36 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*job)(MediaItem_
 				{
 					item = GetTrackMediaItem(tr,j);
 					firstItem = false;
-					for (int k=0; item && k < GetMediaItemNumTakes(item); k++)
-					{
-						MediaItem_Take* tk = GetMediaItemTake(item, k);
-						if (tk && (_allTakes || (!_allTakes && tk == GetActiveTake(item))))
-						{
-							if (job(tk, g_searchStr))
-							{
-								if (!update)
-									Undo_BeginBlock();
 
-								update = found = true;
-								GetSetMediaItemInfo(item, "B_UISEL", &sel);
-								if (_dir) 
+					// search at item level 
+					if (jobItem)
+					{
+						if (jobItem(item, g_searchStr))
+						{
+							if (!update) Undo_BeginBlock();
+							update = found = true;
+							GetSetMediaItemInfo(item, "B_UISEL", &sel);
+							if (_dir) breakSelection = true;
+						}
+					}
+					// search at take level 
+					else if (jobTake)
+					{
+						int nbTakes = GetMediaItemNumTakes(item);
+						for (int k=0; item && k < nbTakes; k++)
+						{
+							MediaItem_Take* tk = GetMediaItemTake(item, k);
+							if (tk && (_allTakes || (!_allTakes && tk == GetActiveTake(item))))
+							{
+								if (jobTake(tk, g_searchStr))
 								{
-									breakSelection = true;
-									break;
+									if (!update) Undo_BeginBlock();
+									update = found = true;
+									GetSetMediaItemInfo(item, "B_UISEL", &sel);
+									if (_dir) {
+										breakSelection = true;
+										break;
+									}
 								}
 							}
 						}

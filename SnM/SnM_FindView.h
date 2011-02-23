@@ -37,7 +37,7 @@ public:
 
 	bool Find(int _mode);
 	MediaItem* FindPrevNextItem(int _dir, MediaItem* _item);
-	bool FindMediaItem(int _dir, bool _allTakes, bool (*job)(MediaItem_Take*,const char*));
+	bool FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_Take*,const char*), bool (*jobItem)(MediaItem*,const char*) = NULL);
 	bool FindTrack(int _dir, bool (*job)(MediaTrack*,const char*));
 	bool FindMarkerRegion(int _dir);
 	void UpdateNotFoundMsg(bool _found);

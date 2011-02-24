@@ -1,8 +1,8 @@
+!v2.0.0 #13 (February 24, 2011)
 Installers updated to include grooves (installed in Reaper resource path\Grooves on Win, manual install for OSX)
 Fixed sws-autocoloricon.ini reading on OSX
 S&M Find now supports v4 empty take lanes (fixes find in item notes, take names and take filenames)
 Fixed issue 262: pre-FX and post-fader S&M cue buss actions now obey send & HW output default prefs (i.e. prefrences > project > track/send defaults). Note: pre-fader busses still mimic the volume of selected tracks.
-
 Restored deprecated Xen's "Load track template n" (where n>10) actions
 
 !v2.0.0 #12 (February 18, 2011)

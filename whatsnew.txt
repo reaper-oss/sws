@@ -1,3 +1,31 @@
+Performance improvments (REAPER startup, S&M actions related to notes, FX, FX chains and track grouping)
+S&M FX chains actions now properly manage FX comments
+
++v4 input FX chains support
+Added input FX chain features in the S&M Resources view (see below)
+Added actions:
+- SWS/S&M: Clear input FX chain for selected tracks
+- SWS/S&M: Copy input FX chain from selected track
+- SWS/S&M: Cut input FX chain from selected tracks
+- SWS/S&M: Paste (replace) input FX chain to selected tracks
+- SWS/S&M: Paste input FX chain to selected tracks
+Remark:
+- with S&M FX chain actions, you can copy a FX chain from a track, an item and paste it as an *input* FX chain and vice et versa (shared FX chain clipboard)
+- v4 only (those actions are visible in v3 but are nop)
+
++S&M Resources view updates:
+- Auto save button (top right) now *adds* new slots. Note: before, a new slot was inserted before the selected one but this could mess slot actions (because all following slot ids were changed..)
+- Auto save button now proposes to define the auto save directory when needed
+- Tweaks (better undo wordings, few user prefs were not saved, popup menu clean-up, etc.)
+In "FX chain" mode (i.e. "FX chain" selected in the top left dropdown box):
+- Added double click option to apply (or paste) FX chain slots as *input* FX chains (visible but nop in v3, see http://reaper.mj-s.com/S&M_ResourcesView_InputFx.jpg|screenshot|)
+- Auto save FX chain (top right button) can now be configured to save track FX chains, *input* FX chains as well as active takes' FX chains, see http://reaper.mj-s.com/S&M_ResourcesView_popup.jpg|new popup menu|
+
++Added actions (issue 258):
+SWS/S&M: Move selected FX up in chain for selected tracks
+SWS/S&M: Move selected FX down in chain for selected tracks
+SWS/S&M: Select last FX for selected tracks
+
 !v2.0.0 #13 (February 24, 2011)
 Installers updated to include grooves (installed in Reaper resource path\Grooves on Win, manual install for OSX)
 Fixed sws-autocoloricon.ini reading on OSX

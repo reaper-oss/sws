@@ -82,8 +82,8 @@ bool ItemNotesMatch(MediaItem* _item, const char* _searchStr)
 	{
 		SNM_ChunkParserPatcher p(_item);
 		WDL_String notes;
-		if (p.GetSubChunk("NOTES", 2, 0, &notes))
-			//JFB we compare a formated string with a normal one here, oh well..
+		if (p.GetSubChunk("NOTES", 2, 0, &notes, "VOLPAN") >= 0) // rmk: we use VOLPAN as it also exists for empty items
+			//JFB TODO? we compare a formated string with a normal one here, oh well..
 			match = (stristr(notes.Get(), _searchStr) != NULL);
 	}
 	return match;
@@ -145,7 +145,7 @@ bool SNM_FindWnd::Find(int _mode)
 			update = FindMediaItem(_mode, true, TakeFilenameMatch);
 		break;
 		case TYPE_ITEM_NOTES:
-			update = FindMediaItem(_mode, true, NULL, ItemNotesMatch);
+			update = FindMediaItem(_mode, false, NULL, ItemNotesMatch);
 		break;
 
 		case TYPE_TRACK_NAME:
@@ -193,6 +193,7 @@ MediaItem* SNM_FindWnd::FindPrevNextItem(int _dir, MediaItem* _item)
 	return previous;
 }
 
+// param _allTakes only makes sense if jobTake() is used
 bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_Take*,const char*), bool (*jobItem)(MediaItem*,const char*))
 {
 	bool update = false, found = false, sel = true;

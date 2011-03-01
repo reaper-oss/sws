@@ -47,12 +47,15 @@
 //
 // Changelog:
 // v1.2
-// - New helper methods, inheritance updates
+// - New helpers, new SNM_COUNT_KEYWORD parsing mode
+// - Inheritance: Commit() & GetChunk() can be overrided
+// - GetSubChunk() now returns the start position of the sub-chunk (or -1 if not found)
 // v1.1
 // - Fixes
-// - Use SWS_GetSetObjectState if _SWS_EXTENSION is defined. This offers another level of cache.
+// - Use SWS_GetSetObjectState if _SWS_EXTENSION is defined. This offers an additional cache system.
+//   See http://code.google.com/p/sws-extension/source/browse/trunk/ObjectState/ObjectState.cpp
 //   Note: SWS_GetSetObjectState == native GetSetObjectState if it is not surrounded with 
-//   SWS_CacheObjectState(true)/(false). See http://code.google.com/p/sws-extension/source/browse/trunk/ObjectState/ObjectState.cpp
+//   SWS_CacheObjectState(true)/SWS_CacheObjectState(false).
 // v1.0 
 // - Licensing update, see header
 // - Performance improvments, more to come..
@@ -89,15 +92,18 @@
 #define SNM_REPLACE_SUBCHUNK_OR_LINE	12
 #define SNM_GET_SUBCHUNK_OR_LINE		13
 #define SNM_GET_SUBCHUNK_OR_LINE_EOL	14
-
+#define SNM_COUNT_KEYWORD				15
 
 // Misc
-#define SNM_MAX_CHUNK_LINE_LENGTH		BUFFER_SIZE //some file paths may be long
+#define SNM_MAX_CHUNK_LINE_LENGTH		2048 // some file paths may be long
 #define SNM_MAX_CHUNK_KEYWORD_LENGTH	64
 #define SNM_HEAPBUF_GRANUL				4096
 
 
-// Defined at eof
+///////////////////////////////////////////////////////////////////////////////
+// Fast chunk processing helpers (some are defined at eof)
+///////////////////////////////////////////////////////////////////////////////
+
 static int RemoveChunkLines(char* _chunk, const char* _searchStr, 
 							bool _checkBOL = false, int _checkEOLChar = 0, int* _len = NULL);
 static int RemoveChunkLines(char* _chunk, WDL_PtrList<const char>* _searchStrs, 
@@ -174,11 +180,9 @@ int ParsePatch(
 	int _tokenPos = -1, 
 	void* _value = NULL,
 	void* _valueExcept = NULL,
-	const char* _breakingKeyword = NULL)
+	const char* _breakKeyword = NULL)
 {
-	return ParsePatchCore(true, _mode, _depth, _expectedParent, 
-		_keyWord, _numTokens, _occurence, 
-		_tokenPos, _value,_valueExcept, _breakingKeyword);
+	return ParsePatchCore(true, _mode, _depth, _expectedParent, _keyWord, _numTokens, _occurence, _tokenPos, _value,_valueExcept, _breakKeyword);
 }
 
 // See ParsePatchCore() comments
@@ -192,11 +196,9 @@ int Parse(
 	int _tokenPos = -1, 
 	void* _value = NULL,
 	void* _valueExcept = NULL,
-	const char* _breakingKeyword = NULL)
+	const char* _breakKeyword = NULL)
 {
-	return ParsePatchCore(false, _mode, _depth, _expectedParent, 
-		_keyWord, _numTokens, _occurence, 
-		_tokenPos, _value,_valueExcept, _breakingKeyword);
+	return ParsePatchCore(false, _mode, _depth, _expectedParent, _keyWord, _numTokens, _occurence, _tokenPos, _value,_valueExcept, _breakKeyword);
 }
 
 void* GetObject() {
@@ -254,16 +256,14 @@ int SetUpdates(int _updates) {
 }
 
 // Commit: only if needed, i.e. if m_object has been set and if the chunk has been updated
-// note: global protections here (temporary, I hope). In REAPER v3.66, 
-//       it's safer *not* to patch while recording and to remove all ids
-//       before patching, see http://forum.cockos.com/showthread.php?t=52002 
+// note: global protections here (temporary, I hope). In REAPER v3.66, it's safer NOT to 
+// patch while recording and to remove all ids before patching, see http://forum.cockos.com/showthread.php?t=52002 
 virtual bool Commit(bool _force = false)
 {
-	if (m_object && (m_updates || _force) && 
-		!(GetPlayState() & 4) && // prevent patches while recording
-		m_chunk->GetLength())
+	if (m_object && (m_updates || _force) && !(GetPlayState() & 4) && m_chunk->GetLength())	
 	{
-		if (!SNM_GetSetObjectState(m_object, m_chunk)) {
+		if (!SNM_GetSetObjectState(m_object, m_chunk)) 
+		{
 			SetChunk("", 0);
 			return true;
 		}
@@ -292,28 +292,35 @@ void CancelUpdates() {
 	SetChunk("", 0);
 }
 
-bool GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_String* _chunk) 
+// returns the start position of the sub-chunk or -1 if not found
+// _breakKeyword: for optimization, optionnal
+int GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_String* _chunk, const char* _breakKeyword = NULL)
 {
+	int posStartOfSubchunk = -1;
 	if (_chunk && _keyword && _depth > 0)
 	{
 		_chunk->Set("");
 		WDL_String startToken;
 		startToken.SetFormatted((int)strlen(_keyword)+2, "<%s", _keyword);
-		if (Parse(SNM_GET_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), -1, _occurence, -1, (void*)_chunk) <= 0)
+		posStartOfSubchunk = Parse(SNM_GET_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), -1, _occurence, -1, (void*)_chunk, NULL, _breakKeyword);
+		if (posStartOfSubchunk <= 0)
+		{
 			_chunk->Set("");
-		return (_chunk->GetLength() > 0);
+			posStartOfSubchunk = -1; // force negative return value if 0 (not found)
+		}
+		else
+			posStartOfSubchunk--; // see ParsePatchCore()
 	}
-	return false;
+	return posStartOfSubchunk;
 }
 
-bool ReplaceSubChunk(const char* _keyword, int _depth, int _occurence, 
-	const char* _newSubChunk = "")
+bool ReplaceSubChunk(const char* _keyword, int _depth, int _occurence, const char* _newSubChunk = "", const char* _breakKeyword = NULL)
 {
 	if (_keyword && _depth > 0)
 	{
 		WDL_String startToken;
 		startToken.SetFormatted((int)strlen(_keyword)+2, "<%s", _keyword);
-		return (ParsePatch(SNM_REPLACE_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), -1, _occurence, 0, (void*)_newSubChunk) > 0);
+		return (ParsePatch(SNM_REPLACE_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), -1, _occurence, 0, (void*)_newSubChunk, NULL, _breakKeyword) > 0);
 	}
 	return false;
 }
@@ -338,21 +345,19 @@ bool ReplaceLine(int _pos, const char* _str = NULL)
 }
 
 // This will replace the line(s) begining with _keyword
-bool ReplaceLine(const char* _parent, const char* _keyword, int _depth, int _occurence, 
-	const char* _newSubChunk = "", const char* _breakingKeyword = NULL)
+bool ReplaceLine(const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _newSubChunk = "", const char* _breakKeyword = NULL)
 {
 	if (_keyword && _depth > 0)
-		return (ParsePatch(SNM_REPLACE_SUBCHUNK_OR_LINE, _depth, _parent, _keyword, -1, _occurence, 0, (void*)_newSubChunk, NULL, _breakingKeyword) > 0);
+		return (ParsePatch(SNM_REPLACE_SUBCHUNK_OR_LINE, _depth, _parent, _keyword, -1, _occurence, 0, (void*)_newSubChunk, NULL, _breakKeyword) > 0);
 	return false;
 }
 
 // This will insert _str at the after (_dir=1) or before (_dir=0) _keyword (i.e. at next/previous start of line)
-// _breakingKeyword: for optimization, optionnal.
-bool InsertAfterBefore(int _dir, const char* _str, const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _breakingKeyword = NULL)
+bool InsertAfterBefore(int _dir, const char* _str, const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _breakKeyword = NULL)
 {
-	if (_str && *_str && _keyword && GetChunk()) // cache if needed
+	if (_str && *_str && _keyword && GetChunk()) // force cache if needed
 	{
-		int pos = GetLinePos(_dir, _parent, _keyword, _depth, _occurence, _breakingKeyword);
+		int pos = GetLinePos(_dir, _parent, _keyword, _depth, _occurence, _breakKeyword);
 		if (pos >= 0) {
 			m_chunk->Insert(_str, pos);
 			m_updates++;
@@ -379,10 +384,10 @@ int RemoveIds() {
 
 // This will return the start of the current, next or previous line position for the searched _keyword
 // _dir: -1 previous line, 0 current line, +1 next line
-// _breakingKeyword: for optimization, optionnal. If specified, the parser won't go further when this keyword is encountred, be carefull with that!
-int GetLinePos(int _dir, const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _breakingKeyword)
+// _breakKeyword: for optimization, optionnal. If specified, the parser won't go further when this keyword is encountred, be carefull with that!
+int GetLinePos(int _dir, const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _breakKeyword = NULL)
 {
-	int pos = Parse(SNM_GET_CHUNK_CHAR, _depth, _parent, _keyword, -1, _occurence, 0, NULL, NULL, _breakingKeyword);
+	int pos = Parse(SNM_GET_CHUNK_CHAR, _depth, _parent, _keyword, -1, _occurence, 0, NULL, NULL, _breakKeyword);
 	if (pos > 0)
 	{
 		pos--; // See ParsePatchCore()
@@ -411,7 +416,7 @@ const char* GetParent(WDL_PtrList<WDL_String>* _parents, int _ancestor=1) {
 
 ///////////////////////////////////////////////////////////////////////////////
 protected:
-	WDL_String* m_chunk; // never NULL, never!
+	WDL_String* m_chunk; //JFB!!! never NULL, never!
 	bool m_autoCommit;
 	void* m_object;
 	int m_updates;
@@ -455,21 +460,20 @@ char* SNM_GetSetObjectState(void* _obj, WDL_String* _str)
 	// Parameters:
 	// _mode: parsing mode, see ParsePatchCore(), <0 for custom parsing modes
 	// _lp: the line being parsed as a LineParser
-	// _parsedLine: : the line being parsed (for facility: can be built from _lp)
+	// _parsedLine: the line being parsed (for facility: can be built from _lp)
 	// _linePos: start position in the original chunk of the line being parsed 
-	// _parsedParents: the parsed line's parent (last item), grand-parent, etc..
-	//                 up to the root. The number of items is also the parsed 
-	//                 depth (so 1-based)
+	// _parsedParents: the parsed line's parent, grand-parent, etc.. up to the root. 
+	//                 The number of items is also the parsed depth (so 1-based)
 	// _newChunk: the chunk beeing built (while parsing)
 	// _updates: number of updates in comparison with the original chunk
 	//
 	// Return values: 
 	// - true if the chunk has been altered 
-	//   => THE LINE BEEN PARSED IS REPLACED WITH _newChunk
+	//   => THE LINE BEING PARSED IS REPLACED WITH _newChunk
 	// - false otherwise
-	//   => THE LINE BEEN PARSED REMAINS AS IT IS
+	//   => THE LINE BEING PARSED REMAINS AS IT IS
 	//
-	// Those callbacks are *always* triggered, expect NotifyChunkLine() that 
+	// Those callbacks are *always* triggered, execpt NotifyChunkLine() that 
 	// is triggered depending on Parse() or ParsePatch() parameters/criteria 
 	// => for optimization: the more criteria, the less calls!
 
@@ -558,20 +562,19 @@ void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch,
 
 // *** ParsePatchCore() ***
 //
-// Globaly, the method is tolerant; the less parameters provided, the more 
-// parsed lines will be notified to inherited instances (through NotifyChunkLine())
-// or, when it's used direcly, the more lines will be read/altered.
-// Examples: 
-// parse all lines, is the nth FX bypassed (under parent 'FXCHAIN')?, etc..
-// Note: sometimes there's a dependency between the params to be provided
-// (most of the time with _mode), must return -1 if it's not respected.
+// Globaly, the method is tolerant; the less parameters provided, the more parsed
+// lines will be notified to inherited instances (through NotifyChunkLine()) or, 
+// when it's used direcly, the more lines will be read/altered.
+// Examples: parse all lines, is the n-th FX bypassed under parent 'FXCHAIN'? etc..
+// Note: sometimes there are dependencies between parameters (most of the time with
+//       _mode), must return -1 if it's not respected.
 //
 // Parameters: see below. 
 //
 // Return values:
-// Always return -1 on error/bad usage,
-// or returns the number of updates done when altering (0 nothing done), 
-// or returns the first found position +1 in the chunk (0 reserved for "not found")
+//   Always return -1 on error/bad usage,
+//   or returns the number of updates done when altering (0 nothing done), 
+//   or returns the first found position +1 in the chunk (0 reserved for "not found")
 //
 int ParsePatchCore(
 	bool _write,        // optimization flag (if false: no re-copy)
@@ -579,12 +582,12 @@ int ParsePatchCore(
 	int _depth,         // 1-based!
 	const char* _expectedParent, 
 	const char* _keyWord, 
-	int _numTokens,     // 0-based (-1: ignored)
+	int _numTokens,     // 1-based (-1: ignored)
 	int _occurence,     // 0-based (-1: ignored, all occurences notified)
 	int _tokenPos,      // 0-based (-1: ignored, may be mandatory depending on _mode)
-	void* _value,       // value to get/set
-	void* _valueExcept, // value to get/set for the "except case"
-	const char* _breakingKeyword = NULL) // // for optimization, optionnal. If specified, the parser won't go further when this keyword is encountred, be carefull with that!
+	void* _value,       // value to get/set (NULL: ignored)
+	void* _valueExcept, // value to get/set for the "except case" (NULL: ignored)
+	const char* _breakKeyword = NULL) // // for optimization, optionnal (if specified, processing is stopped when this keyword is encountred - be carefull with that!)
 {
 #ifdef _SNM_DEBUG 
 	// check params
@@ -599,6 +602,9 @@ int ParsePatchCore(
 		return -1;
 	// sub-chunk processing: depth must always be provided 
 	if (_depth <= 0 && (_mode == SNM_GET_SUBCHUNK_OR_LINE || _mode == SNM_GET_SUBCHUNK_OR_LINE_EOL))
+		return -1;
+	// count keywords: no given occurence should be provided
+	if (_mode == SNM_COUNT_KEYWORD && _occurence != -1)
 		return -1;
 #endif
 
@@ -626,7 +632,7 @@ int ParsePatchCore(
 	{
 		char* pLine = pEOL+1;
 		pEOL = strchr(pLine, '\n');
-		// Breaking conditions
+		// Break conditions
 		if (!pEOL) break;
 		if (m_breakParsePatch) {
 			if (_write) newChunk->Append(pLine);
@@ -745,8 +751,7 @@ int ParsePatchCore(
 			}
 			else if (strictMatch && _mode >= 0)
 			{
-				// This occurence match
-				// note: _occurence == -1 is a valid parameter, processed as "except"
+				// this occurence match
 				if (_occurence == occurence)
 				{
 					switch (_mode)
@@ -808,11 +813,13 @@ int ParsePatchCore(
 							break;
 					}
 				}
-				// this occurence doesn't match
+				// this occurence doesn't match (or _occurence == -1)
 				else 
 				{
 					switch (_mode)
 					{
+						case SNM_COUNT_KEYWORD:
+							break;
 						case SNM_SETALL_CHUNK_CHAR_EXCEPT:
 							if (strcmp((char*)_value, lp.gettoken_str(_tokenPos)) != 0)
 								alter |= WriteChunkLine(newChunk, (char*)_value, _tokenPos, &lp); 
@@ -838,7 +845,7 @@ int ParsePatchCore(
 				}
 				occurence++;
 			}
-			else if (!subChunkKeyword && _keyWord && _breakingKeyword && !strcmp(keyword, _breakingKeyword))
+			else if (!subChunkKeyword && _keyWord && _breakKeyword && !strcmp(keyword, _breakKeyword))
 			{
 				m_breakParsePatch = true;
 			}
@@ -893,6 +900,9 @@ int ParsePatchCore(
 		case SNM_PARSE_EXCEPT:
 			retVal = 1; // read ok..
 			break;
+		case SNM_COUNT_KEYWORD:
+			retVal = occurence;
+			break;
 
 		// *** R/W ***
 		case SNM_PARSE_AND_PATCH:
@@ -919,7 +929,7 @@ int ParsePatchCore(
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Static utility functions
+// Fast chunk processing helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 static SNM_ChunkParserPatcher* FindChunkParserPatcherByObject(WDL_PtrList<SNM_ChunkParserPatcher>* _list, void* _object)

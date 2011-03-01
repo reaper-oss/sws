@@ -619,6 +619,10 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_CONFIG)
 			{
+				// stop cell editing (changing the list content would be ignored otherwise 
+				// => dropdown box & list box unsynchronized)
+				m_pLists.Get(0)->EditListItemEnd(false);
+
 				g_configId = m_cbConfig.GetCurSel();
 				Update();
 			}

@@ -179,7 +179,7 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 					mainSend.Append("\n"); // hot
 			}
 
-			// patch both together
+			// patch both updates (no break keyword here: new empty track)
 			updated |= p->ReplaceLine("TRACK", "MAINSEND", 1, 0, mainSend.Get());
 		}
 

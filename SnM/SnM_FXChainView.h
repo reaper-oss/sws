@@ -114,6 +114,12 @@ class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 		}
 	}
 	// _path: short resource path or full path
+	PathSlotItem* AddSlot(const char* _path="", const char* _desc="") {
+		char shortPath[BUFFER_SIZE] = "";
+		GetShortResourcePath(m_resDir.Get(), _path, shortPath, BUFFER_SIZE);
+		return Add(new PathSlotItem(shortPath, _desc));
+	}
+	// _path: short resource path or full path
 	PathSlotItem* InsertSlot(int _slot, const char* _path="", const char* _desc="") {
 		PathSlotItem* item = NULL;
 		char shortPath[BUFFER_SIZE] = "";

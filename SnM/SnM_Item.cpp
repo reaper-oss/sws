@@ -35,6 +35,26 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// General helpers
+///////////////////////////////////////////////////////////////////////////////
+
+char* GetName(MediaItem* _item) {
+	MediaItem_Take* tk = _item ? GetActiveTake(_item) : NULL;
+	char* takeName = tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
+	return takeName;
+}
+
+// returns -1 if not found
+int getTakeIndex(MediaItem* _item, MediaItem_Take* _take) {
+	if (_item)
+		for (int i=0; i < CountTakes(_item); i++)
+			if (_take == GetTake(_item, i)) // note: NULL take is an empty take since v4
+				return i;
+	return -1;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Split MIDI/Audio
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -181,6 +201,7 @@ void pasteTake(COMMAND_T* _ct)
 // Take lanes: clear take, build lanes, ...
 ///////////////////////////////////////////////////////////////////////////////
 
+//JFB!!! v4 empty take?
 bool isEmptyMidi(MediaItem_Take* _take)
 {
 	bool emptyMidi = false;
@@ -221,10 +242,6 @@ void setEmptyTakeChunk(WDL_String* _chunk, int _recPass, int _color)
 		_chunk->Append("<SOURCE EMPTY\n");
 		_chunk->Append(">\n");
 	}
-}
-
-bool addEmptyTake(MediaItem* _item) {
-	return (AddTakeToMediaItem(_item) != NULL);
 }
 
 // !_undoTitle: no undo
@@ -443,6 +460,7 @@ void clearTake(COMMAND_T* _ct)
 				else
 				{
 					SNM_ChunkParserPatcher p(item);
+					// no break keyword here: we're already at the end of the item..
 					updated |= p.ReplaceSubChunk("SOURCE", 2, activeTake, "<SOURCE EMPTY\n>\n");
 				}
 			}
@@ -744,15 +762,6 @@ void deleteTakeAndMedia(COMMAND_T* _ct) {
 // Take envs: Show/hide take vol/pan/mute envs
 ///////////////////////////////////////////////////////////////////////////////
 
-// returns -1 if not found
-int getTakeIndex(MediaItem* _item, MediaItem_Take* _take) {
-	if (_item)
-		for (int i=0; i < CountTakes(_item); i++)
-			if (_take == GetTake(_item, i)) // note: NULL take is an empty take (since v4) 
-				return i;
-	return -1;
-}
-
 // if returns true: callers must use UpdateTimeline() at some point
 bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint)
 {
@@ -995,4 +1004,3 @@ void saveItemTakeTemplate(COMMAND_T* _ct)
 		}
 	}
 }
-

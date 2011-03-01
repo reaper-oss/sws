@@ -219,14 +219,11 @@ void SNM_NotesHelpWnd::Update(bool _force)
 				{
 					char name[BUFFER_SIZE] = "";
 					MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
-					if (tk)
-					{
-						char* tkName= (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL);
-						sprintf(name, "Notes for \"%s\"", tkName);
-						HWND w = SearchWindow(name);
-						if (w)
-							g_mediaItemNote = NULL; //will force refresh
-					}
+					char* tkName = tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
+					sprintf(name, "Notes for \"%s\"", tkName ? tkName : "Empty Item");
+					HWND w = SearchWindow(name);
+					if (w)
+						g_mediaItemNote = NULL; //will force refresh
 				}
 #endif
 */
@@ -316,9 +313,12 @@ void SNM_NotesHelpWnd::saveCurrentItemNotes()
 			if (!*buf || GetNotesChunkFromString(buf, &newNotes))
 			{
 				SNM_ChunkParserPatcher p(g_mediaItemNote);
-				bool update = p.ReplaceSubChunk("NOTES", 2, 0, newNotes.Get()); // can be "", ie remove notes
+				// Replaces notes (or adds them if failed), remarks:
+				// - newNotes can be "", i.e. remove notes
+				// - we use VOLPAN as it also exists for empty items
+				bool update = p.ReplaceSubChunk("NOTES", 2, 0, newNotes.Get(), "VOLPAN"); 
 				if (!update && *buf)
-					update = p.InsertAfterBefore(1, newNotes.Get(), "ITEM", "IGUID", 1, 0);
+					update = p.InsertAfterBefore(1, newNotes.Get(), "ITEM", g_bv4 ? "IID" : "IGUID", 1, 0, "VOLPAN");
 			}
 			// the patch has occured
 			if (update)
@@ -423,7 +423,7 @@ int SNM_NotesHelpWnd::updateItemNotes()
 			SNM_ChunkParserPatcher p(g_mediaItemNote);
 			WDL_String notes;
 			char buf[MAX_HELP_LENGTH] = "";
-			if (p.GetSubChunk("NOTES", 2, 0, &notes))
+			if (p.GetSubChunk("NOTES", 2, 0, &notes, "VOLPAN") >= 0) // rmk: we use VOLPAN as it also exists for empty items
 				GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH);
 			SetText(buf);
 			refreshType = REQUEST_REFRESH;
@@ -832,7 +832,8 @@ void SNM_NotesHelpWnd::readActionHelpFilenameIniFile()
 
 void SNM_NotesHelpWnd::saveActionHelpFilenameIniFile() {
 	WDL_String escapedStr;
-	makeEscapedConfigString(m_actionHelpFilename.Get(), &escapedStr);
+//JFB!!!	makeEscapedConfigString(m_actionHelpFilename.Get(), &escapedStr);
+	escapedStr.Set(m_actionHelpFilename.Get());
 	WritePrivateProfileString("NOTES_HELP_VIEW", "ACTION_HELP_FILE", escapedStr.Get(), g_SNMiniFilename.Get());
 }
 
@@ -1043,7 +1044,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 		// "translate notes"
 		SNM_ChunkParserPatcher p(&rpp);
 		WDL_String notes;
-		if (p.GetSubChunk("NOTES", 2, 0, &notes))
+		if (p.GetSubChunk("NOTES", 2, 0, &notes, "RIPPLE") >= 0)
 		{
 			char bufNotes[MAX_HELP_LENGTH] = "";
 			if (GetStringFromNotesChunk(&notes, bufNotes, MAX_HELP_LENGTH))

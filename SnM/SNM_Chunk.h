@@ -127,7 +127,8 @@ public:
 	}
 	~SNM_FXChainTrackPatcher() {}
 
-	bool SetFXChain(WDL_String* _fxChain);
+	bool SetFXChain(WDL_String* _fxChain, bool _inputFX = false);
+	int GetInputFXCount();
 
 protected:
 	bool NotifyStartElement(int _mode, 

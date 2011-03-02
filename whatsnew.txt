@@ -5,9 +5,9 @@ SWS/S&M: Delete active take and source file in selected items (prompt, no undo)
 SWS/S&M: Delete active take and source file in selected items (no undo)
 
 +Added actions (issue 268):
-SWS/S&M: Reassign MIDI learned channels for selected tracks (prompt)
+SWS/S&M: Reassign MIDI learned channels of all FX for selected tracks (prompt)
 SWS/S&M: Reassign MIDI learned channel of selected FX for selected tracks (prompt)
-SWS/S&M: Reassign MIDI learned channels to input channel for selected tracks
+SWS/S&M: Reassign MIDI learned channels of all FX to input channel for selected tracks
 
 +Fixes
 Some v4 empty take lanes management in S&M actions & views

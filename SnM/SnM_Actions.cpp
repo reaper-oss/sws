@@ -328,9 +328,9 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, prompt for slot" }, "S&M_PASTE_TRACKFXCHAINp1", loadPasteTrackFXChain, NULL, -1},
 
 	// MIDI learn -------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Reassign MIDI learned channels for selected tracks (prompt)" }, "S&M_ALL_FX_LEARN_CHp", reassignLearntMIDICh, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Reassign MIDI learned channels of all FX for selected tracks (prompt)" }, "S&M_ALL_FX_LEARN_CHp", reassignLearntMIDICh, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Reassign MIDI learned channel of selected FX for selected tracks (prompt)" }, "S&M_SEL_FX_LEARN_CHp", reassignLearntMIDICh, NULL, -2},
-	{ { DEFACCEL, "SWS/S&M: Reassign MIDI learned channels to input channel for selected tracks" }, "S&M_ALLIN_FX_LEARN_CHp", reassignLearntMIDICh, NULL, -3},
+	{ { DEFACCEL, "SWS/S&M: Reassign MIDI learned channels of all FX to input channel for selected tracks" }, "S&M_ALLIN_FX_LEARN_CHp", reassignLearntMIDICh, NULL, -3},
 	
 	// Track templates --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (track templates)..." }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResourceView, NULL, 1, IsResourceViewDisplayed},

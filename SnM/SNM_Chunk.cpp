@@ -486,15 +486,22 @@ WDL_String* SNM_TakeParserPatcher::GetChunk()
 	{
 		m_fakeTake = true;
 		char* p = strstr(m_chunk->Get(), "\nNAME \"");
-		if (p) // empty *items* have no take at all!
+		// empty item (i.e. no take at all) or NULL takes only
+		if (!p) 
+		{
+			p = strstr(m_chunk->Get(), "\nTAKE");
+			if (p) m_chunk->Insert("\nTAKE NULL", (int)(p-m_chunk->Get()));
+		}
+		// "normal" item
+		else
 		{
 			m_chunk->Insert("\nTAKE", (int)(p-m_chunk->Get()));
 
-			// if there wass an empty take "TAKE" before "NAME" it *must* be turned into "TAKE NULL"
+			// if there was an empty take "TAKE" before "NAME" it *must* be turned into "TAKE NULL"
 			// (it's just like that.. can't find any good reason why..)
 			p--; // we assume it's safe (serious other issue otherwise)
 			while (*p && p > m_chunk->Get() && *p != '\n') p--;
-			if (strncmp(p, "\nTAKE NULL", 10))
+			if (!strncmp(p, "\nTAKE", 5) && strncmp(p, "\nTAKE NULL", 10))
 				m_chunk->Insert(" NULL", (int)(p+5-m_chunk->Get()));
 		}
 	}
@@ -502,19 +509,30 @@ WDL_String* SNM_TakeParserPatcher::GetChunk()
 }
 
 // Overrides SNM_ChunkParserPatcher::Commit() in order to remove the fake "TAKE" line
-// Also see comments for SNM_ChunkParserPatcher::Commit()
+// Also see important comments for SNM_ChunkParserPatcher::Commit()
 bool SNM_TakeParserPatcher::Commit(bool _force)
 {
-	if (m_object && (m_updates || _force) && 
-		!(GetPlayState() & 4) && // prevent patches while recording
-		m_chunk->GetLength())
+	if (m_object && (m_updates || _force) && !(GetPlayState() & 4) && m_chunk->GetLength())
 	{
 // SNM_ChunkParserPatcher::Commit() mod -------------------------------------->
 		if (m_fakeTake)
 		{
 			m_fakeTake = false;
 			char* p = strstr(m_chunk->Get(), "\nNAME \"");
-			if (p) // empty *items* have no take at all!
+			// empty item (i.e. no take at all) or NULL takes only
+			if (!p) 
+			{
+				p = strstr(m_chunk->Get(), "\nTAKE");
+				if (p)
+				{
+					char* p2 = (char*)(p+5);
+					while (*p2 && p2 < (m_chunk->Get()+m_chunk->GetLength()) && *p2 != '\n') p2++;
+					if (*p2 == '\n')
+						m_chunk->DeleteSub((int)(p-m_chunk->Get()), (int)(p2-p));
+				}
+			}
+			// "normal" item
+			else
 			{
 				char* p2 = (char*)(p-1);
 				while (*p2 && p2 > m_chunk->Get() && *p2 != '\n') p2--;
@@ -656,8 +674,7 @@ bool SNM_ArmEnvParserPatcher::NotifyChunkLine(int _mode,
 	bool updated = false;
 	if (_mode < 0)
 	{
-		if (_lp->getnumtokens() == 2 && _parsedParents->GetSize() > 1 && 
-			!strcmp(_lp->gettoken_str(0), "ARM"))
+		if (_lp->getnumtokens() == 2 && _parsedParents->GetSize() > 1 && !strcmp(_lp->gettoken_str(0), "ARM"))
 		{
 			const char* grandpa = GetParent(_parsedParents,2);
 			if (!strcmp(grandpa, "TRACK") || !strcmp(grandpa, "FXCHAIN")) //not to scratch item env for ex.
@@ -697,6 +714,45 @@ bool SNM_ArmEnvParserPatcher::IsParentEnv(const char* _parent)
 		!strcmp(_parent, "MASTERPANENV") ||
 		!strcmp(_parent, "MASTERVOLENV2") ||
 		!strcmp(_parent, "MASTERPANENV2"));
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_LearnMIDIChPatcher
+///////////////////////////////////////////////////////////////////////////////
+
+bool SNM_LearnMIDIChPatcher::NotifyChunkLine(int _mode, 
+	LineParser* _lp, const char* _parsedLine, int _linePos,
+	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
+	WDL_String* _newChunk, int _updates)
+{
+	bool updated = false;
+	if (_mode == -1)
+	{
+		if (/*JFB m_fx != -1 &&*/ _lp->getnumtokens() == 3 && !strcmp(_lp->gettoken_str(0), "BYPASS"))
+		{
+			m_currentFx++;
+		}
+		else if ((m_fx == -1 || m_fx == m_currentFx) && _lp->getnumtokens() == 4 && !strcmp(_lp->gettoken_str(0), "PARMLEARN"))
+		{
+			int midiMsg = _lp->gettoken_int(2) & 0xFFF0;
+			midiMsg |= m_newChannel;
+			char bufline[128] = "";
+			int n = _snprintf(bufline, 128, "PARMLEARN %d %d %d", _lp->gettoken_int(1), midiMsg, _lp->gettoken_int(3));
+			_newChunk->Append(bufline,n);
+			updated = true;
+			m_breakParsePatch = (m_fx != -1); // one fx to be patched
+		}
+	}
+	return updated;
+}
+
+bool SNM_LearnMIDIChPatcher::SetChannel(int _newValue, int _fx)
+{
+	m_newChannel = _newValue;
+	m_fx = _fx;
+	m_currentFx = -1;
+	return (ParsePatch(-1,2,"FXCHAIN") > 0);
 }
 
 

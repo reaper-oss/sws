@@ -58,7 +58,7 @@ public:
 
 protected:
 	void OnInitDlg();
-/*JFB!!! r376	
+/*JFB r376	
 	bool IsActive(bool bWantEdit = false);
 */
 	HMENU OnContextMenu(int x, int y);

@@ -259,6 +259,32 @@ private:
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// SNM_LearnMIDIChPatcher
+///////////////////////////////////////////////////////////////////////////////
+
+class SNM_LearnMIDIChPatcher : public SNM_ChunkParserPatcher
+{
+public:
+	SNM_LearnMIDIChPatcher(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) {
+		m_newChannel = -1;
+		m_fx = -1; // i.e. all FX
+		m_currentFx = -1;
+	}
+	~SNM_LearnMIDIChPatcher() {}
+	bool SetChannel(int _newValue, int _fx);
+
+protected:
+	bool NotifyChunkLine(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
+		WDL_String* _newChunk, int _updates);
+private:
+	int m_newChannel;
+	int m_fx;
+	int m_currentFx;
+};
+
+///////////////////////////////////////////////////////////////////////////////
 // SNM_FXSummaryParser
 ///////////////////////////////////////////////////////////////////////////////
 

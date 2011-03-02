@@ -416,7 +416,7 @@ const char* GetParent(WDL_PtrList<WDL_String>* _parents, int _ancestor=1) {
 
 ///////////////////////////////////////////////////////////////////////////////
 protected:
-	WDL_String* m_chunk; //JFB!!! never NULL, never!
+	WDL_String* m_chunk;
 	bool m_autoCommit;
 	void* m_object;
 	int m_updates;

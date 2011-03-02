@@ -455,9 +455,32 @@ bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMa
 	return true;
 }
 
+//returns -1 on cancel, MIDI channel otherwise (0-based)
+int promptForMIDIChannel(const char* _title)
+{
+	int ch = -1;
+	while (ch == -1)
+	{
+		char reply[8]= ""; // no default
+		if (GetUserInputs(_title, 1, "MIDI Channel (1-16):", reply, 8))
+		{
+			ch = atoi(reply); //0 on error
+			if (ch > 0 && ch <= 16) {
+				return (ch-1);
+			}
+			else 
+			{
+				ch = -1;
+				MessageBox(GetMainHwnd(), "Invalid MIDI channel!\nPlease enter a value in [1; 16].", "S&M - Error", /*MB_ICONERROR | */MB_OK);
+			}
+		}
+		else return -1; // user has cancelled
+	}
+	return -1;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
-// tests..
+// tests, other..
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef _SNM_MISC
@@ -488,11 +511,6 @@ void ShowTakeEnvPadreTest(COMMAND_T* _ct)
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Other
-///////////////////////////////////////////////////////////////////////////////
 
 // Create the Wiki ALR summary 
 // no hack but limited to the main section and native actions

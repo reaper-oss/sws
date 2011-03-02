@@ -201,19 +201,21 @@ void pasteTake(COMMAND_T* _ct)
 // Take lanes: clear take, build lanes, ...
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB!!! v4 empty take?
 bool isEmptyMidi(MediaItem_Take* _take)
 {
 	bool emptyMidi = false;
-	MidiItemProcessor p("S&M");
-	if (_take && p.isMidiTake(_take))
+	if (_take) // a v4 empty take isn't a empty *MIDI* take!
 	{
-		MIDI_eventlist* evts = MIDI_eventlist_Create();
-		if(p.getMidiEventsList(_take, evts))
+		MidiItemProcessor p("S&M");
+		if (_take && p.isMidiTake(_take))
 		{
-			int pos=0;
-			emptyMidi = !evts->EnumItems(&pos);
-			MIDI_eventlist_Destroy(evts);
+			MIDI_eventlist* evts = MIDI_eventlist_Create();
+			if(p.getMidiEventsList(_take, evts))
+			{
+				int pos=0;
+				emptyMidi = !evts->EnumItems(&pos);
+				MIDI_eventlist_Destroy(evts);
+			}
 		}
 	}
 	return emptyMidi;
@@ -373,10 +375,9 @@ bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel
 			{					
 				SNM_TakeParserPatcher p(item, CountTakes(item));
 				int k=0, kOriginal=0;
-				while (k < p.CountTakesInChunk()) // CountTakesInChunk() is a getter
+				while (k < p.CountTakesInChunk())
 				{
-					if ((_empty && p.IsEmpty(k)) ||
-						(_midiEmpty && isEmptyMidi(GetTake(item, kOriginal))))
+					if ((_empty && p.IsEmpty(k)) ||	(_midiEmpty && isEmptyMidi(GetTake(item, kOriginal))))
 					{
 						bool removed = p.RemoveTake(k);
 						if (removed) k--; //++ below!
@@ -665,78 +666,84 @@ bool deleteTakeAndMedia(int _mode)
 			MediaItem* item = GetTrackMediaItem(tr,j);
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
-				int originalTkIdx = 0, nbRemainingTakes = GetMediaItemNumTakes(item);
-				for (int k = 0; k < GetMediaItemNumTakes(item); k++) // nb of takes changes!
+				int originalTkIdx = 0;
+				int originalActiveTkIdx = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
+				int nbRemainingTakes = GetMediaItemNumTakes(item);
+				for (int k = 0; k < GetMediaItemNumTakes(item); k++) // nb of takes changes here!
 				{
 					MediaItem_Take* tk = GetMediaItemTake(item,k);
-					//JFB!!! v4 empty take to do
-					if (tk && 
-						(_mode == 1 || _mode == 2 || // all takes
-						((_mode == 3 || _mode == 4) && GetActiveTake(item) == tk))) // active take only
+					if ((_mode == 1 || _mode == 2 || // all takes
+						((_mode == 3 || _mode == 4) && originalActiveTkIdx == k))) // active take only
 					{
-						PCM_source* pcm = (PCM_source*)GetSetMediaItemTakeInfo(tk,"P_SOURCE",NULL);
+						char tkDisplayName[BUFFER_SIZE] = "[empty]";
+						PCM_source* pcm = tk ? (PCM_source*)GetSetMediaItemTakeInfo(tk,"P_SOURCE",NULL) : NULL;
 						if (pcm)
 						{
-							char tkDisplayName[BUFFER_SIZE] = "[empty]";
 							if (pcm->GetFileName() && *(pcm->GetFileName()))
 								strncpy(tkDisplayName, pcm->GetFileName(), BUFFER_SIZE);
 							else if (pcm->GetFileName() && !strlen(pcm->GetFileName()))
 								strncpy(tkDisplayName, (char*)GetSetMediaItemTakeInfo(tk,"P_NAME",NULL), BUFFER_SIZE);
+						}
 
-							int rc = removeFiles.Get(tkDisplayName, -1);
-							if (rc == -1)
-							{							
-								if (_mode == 1 || _mode == 3)
+						// not already removed ?
+						int rc = removeFiles.Get(tkDisplayName, -1);
+						if (rc == -1)
+						{							
+							if (_mode == 1 || _mode == 3)
+							{
+								char buf[BUFFER_SIZE*2];
+
+								if (pcm && pcm->GetFileName() && strlen(pcm->GetFileName())) 
+									sprintf(buf,"[Track %d, item %d] Delete take %d and its media file %s ?", i+1, j+1, originalTkIdx+1, tkDisplayName);
+								else if (pcm && pcm->GetFileName() && !strlen(pcm->GetFileName())) 
+									sprintf(buf,"[Track %d, item %d] Delete take %d (%s, in-project) ?", i+1, j+1, originalTkIdx+1, tkDisplayName);
+								else 
+									sprintf(buf,"[Track %d, item %d] Delete take %d (empty take) ?", i+1, j+1, originalTkIdx+1); // v3 or v4 empty takes
+
+								rc = MessageBox(g_hwndParent, buf, "S&M - Delete take and source files (NO UNDO!)", MB_YESNOCANCEL);
+								if (rc == IDCANCEL) {
+									cancel = true;
+									break;
+								}
+							}
+							else
+								rc = IDYES;
+							removeFiles.Insert(tkDisplayName, rc);
+						}
+
+						if (rc==IDYES)
+						{
+							nbRemainingTakes--;
+							if (pcm && pcm->GetFileName() && strlen(pcm->GetFileName()) && FileExists(pcm->GetFileName()))
+							{
+								// set all media offline (yeah, EACH TIME!)
+								Main_OnCommand(40100,0); 
+								if (SNM_DeleteFile(pcm->GetFileName()))
 								{
-									char buf[BUFFER_SIZE*2];
-
-									if (pcm->GetFileName() && strlen(pcm->GetFileName())) 
-										sprintf(buf,"[Track %d, item %d] Do you want to delete take %d and its media file:\n%s ?", i+1, j+1, originalTkIdx+1, tkDisplayName);
-									else if (pcm->GetFileName() && !strlen(pcm->GetFileName())) 
-										sprintf(buf,"[Track %d, item %d] Do you want to delete take %d (in-project):\n%s ?", i+1, j+1, originalTkIdx+1, tkDisplayName);
-									else 
-										sprintf(buf,"[Track %d, item %d] Do you want to delete take %d (empty take) ?", i+1, j+1, originalTkIdx+1);
-
-									rc = MessageBox(g_hwndParent,buf,"S&M - Delete take and source files (NO UNDO!)", MB_YESNOCANCEL);
-									if (rc == IDCANCEL) {
-										cancel = true;
-										break;
-									}
+									char peakFn[BUFFER_SIZE] = "";
+									GetPeakFileName(pcm->GetFileName(), peakFn, BUFFER_SIZE);
+									if (peakFn && *peakFn != '\0')
+										SNM_DeleteFile(peakFn); // no delete check (peaks files can be absent)
 								}
 								else
-									rc = IDYES;
-								removeFiles.Insert(tkDisplayName, rc);
+									deleteFileOK = false;
 							}
 
-							if (rc==IDYES)
+							// Removes the take (can't factorize chunk updates here..)
+							int cntTakes = CountTakes(item);
+							SNM_TakeParserPatcher p(item, cntTakes);
+							if (cntTakes > 1 && p.RemoveTake(k)) // > 1 because item removed otherwise
 							{
-								nbRemainingTakes--;
-								if (pcm->GetFileName() && strlen(pcm->GetFileName()) && FileExists(pcm->GetFileName()))
-								{
-									// set all media offline (yeah, EACH TIME!)
-									Main_OnCommand(40100,0); 
-									deleteFileOK &= SNM_DeleteFile(pcm->GetFileName());
-									char fileName[BUFFER_SIZE];
-									strcpy(fileName, pcm->GetFileName());
-									char* pEnd = fileName + strlen(fileName);
-
-									// no check with deleteFileOK (files not necessary there)
-									strcpy(pEnd, ".reapeaks"); SNM_DeleteFile(fileName);
-									strcpy(pEnd, ".reapindex"); SNM_DeleteFile(fileName);
-								}
-
-								// Removes the take
-								// (we cannot factorize the chunk updates here..)
-								int cntTakes = CountTakes(item);
-								SNM_TakeParserPatcher p(item, cntTakes);
-								if (cntTakes > 1 && p.RemoveTake(k)) k--; // see RemoveTake(), item removed otherwise
+								// active tale only?
+								if (_mode == 3 || _mode == 4) break;
+								else k--; 
 							}
 						}
 					}
 					originalTkIdx++;
 				}
 
-				if (!nbRemainingTakes) // CountTakes() <on't work here
+				if (!nbRemainingTakes)
 					removedItems.Add(item);
 			}
 		}
@@ -754,7 +761,7 @@ bool deleteTakeAndMedia(int _mode)
 
 void deleteTakeAndMedia(COMMAND_T* _ct) {
 	if (!deleteTakeAndMedia((int)_ct->user))
-		MessageBox(g_hwndParent, "Warning: at least one file couldn't be deleted.\nTips: are you an administrator? used by another process than REAPER?", "S&M - Delete take and source files", MB_OK);
+		MessageBox(g_hwndParent, "Warning: at least one file couldn't be deleted.\nTips: are you an administrator? used by another process?", "S&M - Delete take and source files", MB_OK);
 }
 
 

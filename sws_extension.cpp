@@ -485,6 +485,7 @@ extern "C"
 		IMPAPI(GetMediaTrackInfo_Value);
 		IMPAPI(GetNumTracks);
 		IMPAPI(GetOutputChannelName);
+		IMPAPI(GetPeakFileName);
 		IMPAPI(GetPeaksBitmap);
 		IMPAPI(GetPlayPosition);
 		IMPAPI(GetPlayPosition2);

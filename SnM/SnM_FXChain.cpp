@@ -154,8 +154,6 @@ void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly)
 			}
 		}
 	}
-
-	// Undo point
 	if (updated)
 		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
 }
@@ -177,7 +175,6 @@ void setTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly)
 			}
 		}
 	}
-	// Undo point
 	if (updated)
 		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
 }
@@ -328,8 +325,6 @@ void pasteTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
 			}
 		}
 	}
-
-	// Undo point
 	if (updated)
 		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
 }
@@ -348,7 +343,6 @@ void setTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
 			updated |= patch;
 		}
 	}
-	// Undo point
 	if (updated)
 		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
 }
@@ -420,13 +414,13 @@ bool autoSaveTrackFXChainSlots(int _slot, bool _inputFX, const char* _dirPath, c
 void loadSetTrackFXChain(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
 	if (slot < 0 || slot < g_fxChainFiles.GetSize())
-		applyTracksFXChainSlot(SNM_CMD_SHORTNAME(_ct), slot, true, slot < 0 || !g_fxChainFiles.Get(slot)->IsDefault());
+		applyTracksFXChainSlot(SNM_CMD_SHORTNAME(_ct), slot, true, false, slot < 0 || !g_fxChainFiles.Get(slot)->IsDefault());
 }
 
 void loadPasteTrackFXChain(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
 	if (slot < 0 || slot < g_fxChainFiles.GetSize())
-		applyTracksFXChainSlot(SNM_CMD_SHORTNAME(_ct), slot, false, slot < 0 || !g_fxChainFiles.Get(slot)->IsDefault());
+		applyTracksFXChainSlot(SNM_CMD_SHORTNAME(_ct), slot, false, false, slot < 0 || !g_fxChainFiles.Get(slot)->IsDefault());
 }
 
 void clearTrackFXChain(COMMAND_T* _ct) {
@@ -483,7 +477,7 @@ void setTrackInputFXChain(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Common
+// Common slot code
 ///////////////////////////////////////////////////////////////////////////////
 
 void copyFXChainSlotToClipBoard(int _slot)
@@ -514,3 +508,56 @@ void saveSlotIniFile(const char* _key, int _slot, const char* _path, const char*
 	WritePrivateProfileString(_key, buf, (_desc && *_desc) ? _desc : NULL, g_SNMiniFilename.Get());	
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Other
+///////////////////////////////////////////////////////////////////////////////
+
+void reassignLearntMIDICh(COMMAND_T* _ct)
+{
+	bool updated = false;
+	int ch = (int)_ct->user;
+	int prm = ch; // -1: all fx, -2: sel fx, -3: all fx to input channel
+
+	// Prompt for channel if needed
+	switch(prm)
+	{
+		case -1:
+		case -2:
+			ch = promptForMIDIChannel(SNM_CMD_SHORTNAME(_ct)); //loops on err
+			if (ch == -1) return; // user has cancelled
+			break;
+	}
+
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i,false); // include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			SNM_LearnMIDIChPatcher p(tr);
+			switch(prm)
+			{
+				case -2: {
+					int fx = getSelectedFX(tr);
+					if (fx > 0)
+						updated |= p.SetChannel(ch, fx);
+					break;
+				}
+				case -3: {
+					int in = *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL);
+					if ((in & 0x1000) == 0x1000) {
+						in &= 0x1F;
+						if (in > 0)
+							updated |= p.SetChannel(in-1, -1);
+					}
+					break;
+				}
+				default:
+					updated |= p.SetChannel(ch, -1);
+					break;
+			}
+		}
+	}
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}

@@ -187,7 +187,7 @@ void moveFX(COMMAND_T* _ct);
 // *** SnM_FXChain.cpp ***
 void makeChunkTakeFX(WDL_String* _outTakeFX, WDL_String* _inRfxChain);
 int copyTakeFXChain(WDL_String* _fxChain, int _startSelItem=0);
-void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool _set, bool _errMsg=false);
+void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool _set, bool _errMsg);
 void loadSetTakeFXChain(COMMAND_T* _ct);
 void loadPasteTakeFXChain(COMMAND_T* _ct);
 void loadSetAllTakesFXChain(COMMAND_T* _ct);
@@ -204,7 +204,7 @@ void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
 void setTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
 bool autoSaveItemFXChainSlots(int _slot, const char* _dirPath, char* _fn, int _fnMaxSize);
 
-void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inputFX, bool _errMsg=false);
+void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inputFX, bool _errMsg);
 void pasteTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX);
 void setTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX);
 int copyTrackFXChain(WDL_String* _fxChain, bool _inputFX, int _startTr=0);
@@ -225,6 +225,8 @@ void setTrackInputFXChain(COMMAND_T* _ct);
 void copyFXChainSlotToClipBoard(int _slot);
 void readSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, char* _desc, int _descSize);
 void saveSlotIniFile(const char* _key, int _slot, const char* _path, const char* _desc);
+
+void reassignLearntMIDICh(COMMAND_T* _ct);
 
 // *** SnM_Windows.cpp ***
 bool toggleShowHideWin(const char * _title);
@@ -411,6 +413,7 @@ void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx);
 HWND SearchWindow(const char* _title);
 HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
 bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMaxSize);
+int promptForMIDIChannel(const char* _title);
 #ifdef _SNM_MISC
 void ShowTakeEnvPadreTest(COMMAND_T* _ct);
 void setPresetTest(COMMAND_T* _ct);

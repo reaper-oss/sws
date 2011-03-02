@@ -417,9 +417,12 @@ void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Move FX up/down
+// Other
 ///////////////////////////////////////////////////////////////////////////////
 
+// http://code.google.com/p/sws-extension/issues/detail?id=258
+// pretty brutal code (we'd need a dedicated parser/patcher here) but I consider 
+// this as a bit esoteric..
 void moveFX(COMMAND_T* _ct)
 {
 	bool updated = false;
@@ -429,41 +432,43 @@ void moveFX(COMMAND_T* _ct)
 		MediaTrack* tr = CSurf_TrackFromID(i, false); //include master
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			int sel = getSelectedFX(tr);
 			int nbFx = TrackFX_GetCount(tr);
-			if (sel != -1 && ((dir == 1 && sel < (nbFx-1)) || (dir == -1 && sel > 0)))
+			if (nbFx > 0)
 			{
-				SNM_ChunkParserPatcher p(tr);
-				WDL_String chainChunk;
-				int posChain = p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM");
-				if (posChain > 0)
+				int sel = getSelectedFX(tr);
+				if (sel >= 0 && ((dir == 1 && sel < (nbFx-1)) || (dir == -1 && sel > 0)))
 				{
-					int originalChainLen = chainChunk.GetLength();
-					SNM_ChunkParserPatcher pfxc(&chainChunk);
-					int p1 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel,0);
-					if (p1>0)
+					SNM_ChunkParserPatcher p(tr);
+					WDL_String chainChunk;
+					if (p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM") > 0)
 					{
-						p1--; 
-						int p2 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel+1,0);
-						if (p2 > 0)	p2--;
-						else p2 = chainChunk.GetLength()-2; // -2 for ">\n"
-
-						// store & cut fx
-						WDL_String fxChunk;
-						fxChunk.Set(pfxc.GetChunk()->Get()+p1, p2-p1);
-						pfxc.GetChunk()->DeleteSub(p1, p2-p1);
-						
-						// move fx
-						int p3 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel+dir,0);
-						if (p3>0) pfxc.GetChunk()->Insert(fxChunk.Get(), --p3);
-						else if (dir == 1) pfxc.GetChunk()->Insert(fxChunk.Get(), pfxc.GetChunk()->GetLength()-2);
-
-						// patch updated cunk
-						if (p.ReplaceSubChunk("FXCHAIN", 2, 0, pfxc.GetChunk()->Get(), "<ITEM"))
+						int originalChainLen = chainChunk.GetLength();
+						SNM_ChunkParserPatcher pfxc(&chainChunk);
+						int p1 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel,0);
+						if (p1>0)
 						{
-							updated = true;
-							p.Commit(true);
-							selectFX(tr, sel + dir);
+							p1--; 
+							int p2 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel+1,0);
+							if (p2 > 0)	p2--;
+							else p2 = chainChunk.GetLength()-2; // -2 for ">\n"
+
+							// store & cut fx
+							WDL_String fxChunk;
+							fxChunk.Set(pfxc.GetChunk()->Get()+p1, p2-p1);
+							pfxc.GetChunk()->DeleteSub(p1, p2-p1);
+							
+							// move fx
+							int p3 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel+dir,0);
+							if (p3>0) pfxc.GetChunk()->Insert(fxChunk.Get(), --p3);
+							else if (dir == 1) pfxc.GetChunk()->Insert(fxChunk.Get(), pfxc.GetChunk()->GetLength()-2);
+
+							// patch updated cunk
+							if (p.ReplaceSubChunk("FXCHAIN", 2, 0, pfxc.GetChunk()->Get(), "<ITEM"))
+							{
+								updated = true;
+								p.Commit(true);
+								selectFX(tr, sel + dir);
+							}
 						}
 					}
 				}

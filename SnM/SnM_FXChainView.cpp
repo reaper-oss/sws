@@ -646,7 +646,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case FXC_LOAD_APPLY_TRACK_MSG:
 		case FXC_LOAD_PASTE_TRACK_MSG:
 			if (item && slot >= 0) {
-				applyTracksFXChainSlot(wParam == FXC_LOAD_APPLY_TRACK_MSG ? FXC_LOAD_APPLY_TRACK_STR : FXC_LOAD_PASTE_TRACK_STR, slot, wParam == FXC_LOAD_APPLY_TRACK_MSG, !wasDefaultSlot);
+				applyTracksFXChainSlot(wParam == FXC_LOAD_APPLY_TRACK_MSG ? FXC_LOAD_APPLY_TRACK_STR : FXC_LOAD_PASTE_TRACK_STR, slot, wParam == FXC_LOAD_APPLY_TRACK_MSG, false, !wasDefaultSlot);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -830,11 +830,9 @@ void SNM_ResourceWnd::OnDestroy()
 	WritePrivateProfileString("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", g_autoSaveTrTmpltWithItemsPref ? "1" : "0", g_SNMiniFilename.Get()); 
 	{
 		WDL_String escapedStr;
-//JFB!!!		makeEscapedConfigString(g_autoSaveDirs.Get(0)->Get(), &escapedStr);
-		escapedStr.Set(g_autoSaveDirs.Get(0)->Get());
+		makeEscapedConfigString(g_autoSaveDirs.Get(0)->Get(), &escapedStr);
 		WritePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirFXChain", escapedStr.Get(), g_SNMiniFilename.Get()); 
-//JFB!!!		makeEscapedConfigString(g_autoSaveDirs.Get(1)->Get(), &escapedStr);
-		escapedStr.Set(g_autoSaveDirs.Get(1)->Get());
+		makeEscapedConfigString(g_autoSaveDirs.Get(1)->Get(), &escapedStr);
 		WritePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirTrTemplate", escapedStr.Get(), g_SNMiniFilename.Get()); 
 	}
 
@@ -1345,14 +1343,12 @@ void ResourceViewExit()
 					WDL_String escapedStr;
 					if (item->m_shortPath.GetLength())
 					{
-//JFB!!!						makeEscapedConfigString(item->m_shortPath.Get(), &escapedStr);
-						escapedStr.Set(item->m_shortPath.Get());
+						makeEscapedConfigString(item->m_shortPath.Get(), &escapedStr);
 						iniSection.AppendFormatted(BUFFER_SIZE, "SLOT%d=%s\n", j+1, escapedStr.Get()); 
 					}
 					if (item->m_desc.GetLength())
 					{
-//JFB!!!						makeEscapedConfigString(item->m_desc.Get(), &escapedStr);
-						escapedStr.Set(item->m_desc.Get());
+						makeEscapedConfigString(item->m_desc.Get(), &escapedStr);
 						iniSection.AppendFormatted(BUFFER_SIZE, "DESC%d=%s\n", j+1, escapedStr.Get());
 					}
 				}

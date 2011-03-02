@@ -554,7 +554,7 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		Main_OnCommand((int)wParam, (int)lParam);
 }
 
-/*JFB!!! r376
+/*JFB r376
 bool SNM_NotesHelpWnd::IsActive(bool bWantEdit) {
 	return (bWantEdit || GetForegroundWindow() == m_hwnd || GetFocus() == GetDlgItem(m_hwnd, IDC_EDIT));
 }
@@ -832,8 +832,7 @@ void SNM_NotesHelpWnd::readActionHelpFilenameIniFile()
 
 void SNM_NotesHelpWnd::saveActionHelpFilenameIniFile() {
 	WDL_String escapedStr;
-//JFB!!!	makeEscapedConfigString(m_actionHelpFilename.Get(), &escapedStr);
-	escapedStr.Set(m_actionHelpFilename.Get());
+	makeEscapedConfigString(m_actionHelpFilename.Get(), &escapedStr);
 	WritePrivateProfileString("NOTES_HELP_VIEW", "ACTION_HELP_FILE", escapedStr.Get(), g_SNMiniFilename.Get());
 }
 

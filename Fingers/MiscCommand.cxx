@@ -59,10 +59,10 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 
 void MiscCommands::Init()
 {
-	RprCommand::registerCommand("SWS/FNG: apply MIDI hardware emulation to selected midi takes", "FNG_MIDI_HW_EMULATION_APPLY", &EmulateMidiHardware, UNDO_STATE_ITEMS);
-	RprCommand::registerCommand("SWS/FNG: MIDI hardware emulation settings...", "FNG_MIDI_HW_EMULATION_SETTINGS", &GetEmulationSettings, NO_UNDO);
+	RprCommand::registerCommand("SWS/FNG: Apply MIDI hardware emulation to selected midi takes", "FNG_MIDI_HW_EMULATION_APPLY", &EmulateMidiHardware, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: MIDI hardware emulation settings", "FNG_MIDI_HW_EMULATION_SETTINGS", &GetEmulationSettings, NO_UNDO);
 	RprCommand::registerCommand("SWS/FNG MIDI: select muted MIDI notes", "FNG_SELECT_MUTED", &SelectMutedMidiNotes, NO_UNDO);
-	RprCommand::registerCommand("SWS/FNG: quantize item positions and MIDI note positions to grid", "FNG_QUANTIZE_TO_GRID", &QuantizeAllToGrid, UNDO_STATE_ITEMS);
+	RprCommand::registerCommand("SWS/FNG: Quantize item positions and MIDI note positions to grid", "FNG_QUANTIZE_TO_GRID", &QuantizeAllToGrid, UNDO_STATE_ITEMS);
 	RprCommand::registerCommand("SWS/FNG MIDI: select notes nearest edit cursor", "FNG_SELECT_NOTES_NEAR_EDIT_CURSOR", &SelectAllNearestEditCursor, UNDO_STATE_ITEMS);
 }
 

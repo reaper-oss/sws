@@ -808,7 +808,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 #else
 		AddToMenu(hMenu, "Display...", EDIT_MSG, -1, false, enabled);
 #endif
-		AddToMenu(hMenu, "Show path in Explorer/Finder...", EXPLORE_MSG, -1, false, enabled);
+		AddToMenu(hMenu, "Show path in Explorer/Finder", EXPLORE_MSG, -1, false, enabled);
 	}
 	return hMenu;
 }

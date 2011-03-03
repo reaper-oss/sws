@@ -182,7 +182,7 @@ CAPTION "About SWS Extension"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "&Close",IDCANCEL,103,162,50,14
-    PUSHBUTTON      "&License...",IDC_LICENSE,202,55,46,14
+    PUSHBUTTON      "&License",IDC_LICENSE,202,55,46,14
     LTEXT           "Copyright (C) 2011 Tim Payne of Standing Water Studios\r\tJF Bédague (S&&M actions)\r\tFingers (FNG/Groove actions)\r\tShane StClair (Autorender)\rCopyright (C) 2010 P Bourdon (Padre actions)\rCopyright (C) 2009 Xenakios",IDC_STATIC,7,45,187,52
     LTEXT           "Version String",IDC_VERSION,7,30,241,8
     LTEXT           "SWS Extension, a REAPER plugin.\rMerged with Xenakios Command Extensions, October 2009",IDC_STATIC,7,7,241,19

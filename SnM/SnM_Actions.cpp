@@ -43,7 +43,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-fader (post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, post-fader (post-pan)" }, "S&M_SENDS2", cueTrack, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-FX" }, "S&M_SENDS3", cueTrack, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Open Cue Buss window..." }, "S&M_SENDS4", openCueBussWnd, "S&&M Cue Buss...", NULL, isCueBussWndDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Cue Buss window" }, "S&M_SENDS4", openCueBussWnd, "S&&M Cue Buss Generator", NULL, isCueBussWndDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection" }, "S&M_CUEBUS", cueTrack, NULL, -1},
 
 	{ { DEFACCEL, "SWS/S&M: Remove receives from selected tracks" }, "S&M_SENDS5", removeReceives, NULL, },
@@ -260,7 +260,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 #endif
 
 	// FX Chains (items & tracks) ---------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Resources window (FX chains)..." }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, "S&&M Resources...", 0, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Resources window (FX chains)" }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, "S&&M Resources", 0, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ClearSlotPrompt, NULL, 0},
 
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, slot 1" }, "S&M_TAKEFXCHAIN1", loadSetTakeFXChain, NULL, 0},
@@ -333,7 +333,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Reassign MIDI learned channels of all FX to input channel for selected tracks" }, "S&M_ALLIN_FX_LEARN_CHp", reassignLearntMIDICh, NULL, -3},
 	
 	// Track templates --------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Resources window (track templates)..." }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResourceView, NULL, 1, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Resources window (track templates)" }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResourceView, NULL, 1, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear track template slot..." }, "S&M_CLR_TRTEMPLATE_SLOT", ClearSlotPrompt, NULL, 1},
 
 	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 01" }, "S&M_APPLY_TRTEMPLATE1", loadSetTrackTemplate, NULL, 0},
@@ -393,11 +393,11 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 
 	// Notes/Help -------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (project notes)..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, "S&&M Notes/Help...", 0, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (item notes)..." }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (track notes)..." }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (project notes)" }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, "S&&M Notes/Help", 0, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (item notes)" }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (track notes)" }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewDisplayed},
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (action help)..." }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, 3, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (action help)" }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, 3, IsNotesHelpViewDisplayed},
 #endif
 	//JFB!! TODO: someting better to do here.. note for myself
 	{ { DEFACCEL, "SWS/S&M: Notes/Help - Disables auto updates" }, "S&M_DISABLENOTESHELP", SwitchNotesHelpType, NULL, 0},
@@ -465,11 +465,11 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 
 	// Find -------------------------------------------------------------------
-	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find..." }, "S&M_SHOWFIND", OpenFindView, "S&&M Find...", NULL, IsFindViewDisplayed},
+	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find" }, "S&M_SHOWFIND", OpenFindView, "S&&M Find", NULL, IsFindViewDisplayed},
 
 
 	// Live Configs -----------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Live Configs window..." }, "S&M_SHOWMIDILIVE", OpenLiveConfigView, "S&&M Live Configs...", NULL, IsLiveConfigViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Live Configs window" }, "S&M_SHOWMIDILIVE", OpenLiveConfigView, "S&&M Live Configs", NULL, IsLiveConfigViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 1" }, "S&M_TOGGLE_LIVE_CFG1", ToggleEnableLiveConfig, NULL, 0, IsLiveConfigEnabled},
 	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 2" }, "S&M_TOGGLE_LIVE_CFG2", ToggleEnableLiveConfig, NULL, 1, IsLiveConfigEnabled},
 	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 3" }, "S&M_TOGGLE_LIVE_CFG3", ToggleEnableLiveConfig, NULL, 2, IsLiveConfigEnabled},

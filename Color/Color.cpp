@@ -891,7 +891,7 @@ void ItemToTrackCol(COMMAND_T* = NULL)
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS: Open color management window" },                          "SWSCOLORWND",			ShowColorDialog,	"Color management...", },
+	{ { DEFACCEL, "SWS: Open color management window" },                          "SWSCOLORWND",			ShowColorDialog,	"Show color management", },
 	{ { DEFACCEL, "SWS: Toggle ruler red while recording" },                      "SWS_RECREDRULER",		RecRedRuler,		"Enable red ruler while recording (SWS)", 0, RecRedRulerEnabled },
 	// Position of the above two commands in this table is important for menu generation!
 

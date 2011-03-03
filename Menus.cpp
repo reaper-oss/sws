@@ -155,21 +155,21 @@ int SWSGetMenuPosFromID(HMENU hMenu, UINT id)
 void SWSCreateExtensionsMenu(HMENU hMenu)
 {
 	// Create the common "Extensions" menu 
-	AddToMenu(hMenu, "About SWS Extensions...", NamedCommandLookup("_SWS_ABOUT"));
-	AddToMenu(hMenu, "Auto Color/Icon...", NamedCommandLookup("_SWSAUTOCOLOR_OPEN"));
+	AddToMenu(hMenu, "About SWS Extensions", NamedCommandLookup("_SWS_ABOUT"));
+	AddToMenu(hMenu, "Auto Color/Icon", NamedCommandLookup("_SWSAUTOCOLOR_OPEN"));
 
 	HMENU hAutoRenderSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hAutoRenderSubMenu, "Autorender");
 	AddToMenu(hAutoRenderSubMenu, "Batch render regions", NamedCommandLookup("_AUTORENDER"));
-	AddToMenu(hAutoRenderSubMenu, "Edit project metadata...", NamedCommandLookup("_AUTORENDER_METADATA"));
+	AddToMenu(hAutoRenderSubMenu, "Edit project metadata", NamedCommandLookup("_AUTORENDER_METADATA"));
 	AddToMenu(hAutoRenderSubMenu, "Open Render Path", NamedCommandLookup("_AUTORENDER_OPEN_RENDER_PATH"));
-	AddToMenu(hAutoRenderSubMenu, "Show Instructions...", NamedCommandLookup("_AUTORENDER_HELP"));
-	AddToMenu(hAutoRenderSubMenu, "Global Preferences...", NamedCommandLookup("_AUTORENDER_PREFERENCES"));
+	AddToMenu(hAutoRenderSubMenu, "Show Instructions", NamedCommandLookup("_AUTORENDER_HELP"));
+	AddToMenu(hAutoRenderSubMenu, "Global Preferences", NamedCommandLookup("_AUTORENDER_PREFERENCES"));
 
-	AddToMenu(hMenu, "Cue Buss Generator...", NamedCommandLookup("_S&M_SENDS4"));
+	AddToMenu(hMenu, "Cue Buss Generator", NamedCommandLookup("_S&M_SENDS4"));
 	AddToMenu(hMenu, "Envelope Processor...", NamedCommandLookup("_PADRE_ENVPROC"));
 	AddToMenu(hMenu, "Fill gaps...", NamedCommandLookup("_SWS_AWFILLGAPSADV"));
-	AddToMenu(hMenu, "Find...", NamedCommandLookup("_S&M_SHOWFIND"));
+	AddToMenu(hMenu, "Find", NamedCommandLookup("_S&M_SHOWFIND"));
 	AddToMenu(hMenu, "Groove Tool...", NamedCommandLookup("_FNG_GROOVE_TOOL"));
 /*JFB: commented: tested some => crash
 	HMENU hItemTkSubMenu = CreatePopupMenu();
@@ -192,8 +192,8 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hItemTkSubMenu, "Select first items of selected tracks", NamedCommandLookup("_XENAKIOS_SELFIRSTITEMSOFTRACKS"));
 */
 	AddToMenu(hMenu, "LFO Generator...", NamedCommandLookup("_PADRE_ENVLFO"));
-	AddToMenu(hMenu, "Live Configs...", NamedCommandLookup("_S&M_SHOWMIDILIVE"));
-	AddToMenu(hMenu, "MarkerList...", NamedCommandLookup("_SWSMARKERLIST1"));
+	AddToMenu(hMenu, "Live Configs", NamedCommandLookup("_S&M_SHOWMIDILIVE"));
+	AddToMenu(hMenu, "MarkerList", NamedCommandLookup("_SWSMARKERLIST1"));
 
 	HMENU hMarkerSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hMarkerSubMenu, "Marker utilites");
@@ -202,7 +202,6 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMarkerSubMenu, "Delete marker set...", NamedCommandLookup("_SWSMARKERLIST4"));
 	AddToMenu(hMarkerSubMenu, SWS_SEPARATOR, 0);
 	AddToMenu(hMarkerSubMenu, "Copy marker set to clipboard", NamedCommandLookup("_SWSMARKERLIST5"));
-	AddToMenu(hMarkerSubMenu, "Edit project metadata...", NamedCommandLookup("_AUTORENDER_METADATA"));
 	AddToMenu(hMarkerSubMenu, "Paste marker set from clipboard", NamedCommandLookup("_SWSMARKERLIST6"));
 	AddToMenu(hMarkerSubMenu, SWS_SEPARATOR, 0);
 	AddToMenu(hMarkerSubMenu, "Reorder marker IDs", NamedCommandLookup("_SWSMARKERLIST7"));
@@ -213,8 +212,8 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMarkerSubMenu, "Delete all markers", NamedCommandLookup("_SWSMARKERLIST9"));
 	AddToMenu(hMarkerSubMenu, "Delete all regions", NamedCommandLookup("_SWSMARKERLIST10"));
 
-	AddToMenu(hMenu, "Notes/Help...", NamedCommandLookup("_S&M_SHOWNOTESHELP"));
-	AddToMenu(hMenu, "Project List...", NamedCommandLookup("_SWS_PROJLIST_OPEN"));
+	AddToMenu(hMenu, "Notes/Help", NamedCommandLookup("_S&M_SHOWNOTESHELP"));
+	AddToMenu(hMenu, "Project List", NamedCommandLookup("_SWS_PROJLIST_OPEN"));
 
 	HMENU hPrjMgmtSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hPrjMgmtSubMenu, "Project Management");
@@ -226,8 +225,8 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hPrjMgmtSubMenu, "(related projects list)", NamedCommandLookup("_SWS_OPENRELATED1"));
 
 	AddToMenu(hMenu, "ReaConsole...", NamedCommandLookup("_SWSCONSOLE"));
-	AddToMenu(hMenu, "Resources...", NamedCommandLookup("_S&M_SHOWFXCHAINSLOTS"));
-	AddToMenu(hMenu, "Snapshots...", NamedCommandLookup("_SWSSNAPSHOT_OPEN"));
+	AddToMenu(hMenu, "Resources", NamedCommandLookup("_S&M_SHOWFXCHAINSLOTS"));
+	AddToMenu(hMenu, "Snapshots", NamedCommandLookup("_SWSSNAPSHOT_OPEN"));
 /*JFB "Xen's Track" sub-menu todo?
 In case someone is motivated:
 item_68=_XENAKIOS_RESETTRACKVOLANDPAN1 Reset volume and pan of selected tracks
@@ -243,8 +242,8 @@ item_77=_XENAKIOS_SELTRAX_RECARMED Set selected tracks record armed
 item_78=_XENAKIOS_SELTRAX_RECUNARMED Set selected tracks record unarmed
 item_79=_XENAKIOS_RENAMETRAXDLG Rename selected tracks...
 */
-	AddToMenu(hMenu, "Tracklist...", NamedCommandLookup("_SWSTL_OPEN"));
-	AddToMenu(hMenu, "Zoom preferences...", NamedCommandLookup("_SWS_ZOOMPREFS"));
+	AddToMenu(hMenu, "Tracklist", NamedCommandLookup("_SWSTL_OPEN"));
+	AddToMenu(hMenu, "Zoom preferences", NamedCommandLookup("_SWS_ZOOMPREFS"));
 
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	HMENU hOptionsSubMenu = CreatePopupMenu();

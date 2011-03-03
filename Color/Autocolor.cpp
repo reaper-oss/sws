@@ -496,7 +496,7 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y)
 		AddToMenu(hMenu, "Down in priority", PRI_DOWN_MSG);
 	}
 
-	AddToMenu(hMenu, "Color management...", SWSGetCommandID(ShowColorDialog));
+	AddToMenu(hMenu, "Show color management window", SWSGetCommandID(ShowColorDialog));
 
 	return hMenu;
 }
@@ -921,17 +921,6 @@ int AutoColorInit()
 		GetPrivateProfileString(SWS_INI, key, "", str, BUFFER_SIZE, ini.Get());
 		if (bUpgrade) // Remove old lines
 			WritePrivateProfileString(SWS_INI, key, NULL, get_ini_file());
-#ifndef _WIN32
-		// OSX GetPrivateProfileString doesn't remove the leading/trailing "
-		if (str[0] == '\"')
-		{
-			char newstr[BUFFER_SIZE];
-			strcpy(newstr, str+1);
-			if (newstr[strlen(newstr)-1] == '\"')
-				newstr[strlen(newstr)-1] = 0;
-			strcpy(str, newstr);
-		}
-#endif
 		LineParser lp(false);
 		if (!lp.parse(str) && lp.getnumtokens() == 3)
 			g_pACItems.Add(new SWS_RuleItem(lp.gettoken_str(0), lp.gettoken_int(1), lp.gettoken_str(2)));

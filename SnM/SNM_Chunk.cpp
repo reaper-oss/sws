@@ -477,8 +477,9 @@ bool SNM_TakeParserPatcher::ReplaceTake(int _startTakePos, int _takeLength, WDL_
 }
 
 // Overrides SNM_ChunkParserPatcher::GetChunk() in order to add a fake "TAKE" line.
-// This simplifies all chunk processing (since v4 and its NULL takes, the 1st take 
-// in an item chunk might begin with a "TAKE" lineand not anly with a "NAME" line)
+// This simplifies all chunk processings: we'll then have as much takes as there are
+// lines starting with "TAKE ..." in the item chunk (since v4 and its NULL takes, the 1st 
+// take in a chunk can begin with a "TAKE" line and not only with a "NAME" line anymore)
 WDL_String* SNM_TakeParserPatcher::GetChunk()
 {
 	WDL_String* chunk = SNM_ChunkParserPatcher::GetChunk();
@@ -490,16 +491,18 @@ WDL_String* SNM_TakeParserPatcher::GetChunk()
 		if (!p) 
 		{
 			p = strstr(m_chunk->Get(), "\nTAKE");
-			if (p) m_chunk->Insert("\nTAKE NULL", (int)(p-m_chunk->Get()));
+			if (p)
+				m_chunk->Insert("\nTAKE NULL", (int)(p-m_chunk->Get()));
+			else
+				m_chunk->Insert("TAKE NULL\n", m_chunk->GetLength()-2); // -2 for ">\n"
 		}
 		// "normal" item
 		else
 		{
 			m_chunk->Insert("\nTAKE", (int)(p-m_chunk->Get()));
 
-			// if there was an empty take "TAKE" before "NAME" it *must* be turned into "TAKE NULL"
-			// (it's just like that.. can't find any good reason why..)
-			p--; // we assume it's safe (serious other issue otherwise)
+			// if there was a "TAKE" before "NAME" it must be "TAKE NULL"
+			p--; // we assume it's safe (serious other issues otherwise)
 			while (*p && p > m_chunk->Get() && *p != '\n') p--;
 			if (!strncmp(p, "\nTAKE", 5) && strncmp(p, "\nTAKE NULL", 10))
 				m_chunk->Insert(" NULL", (int)(p+5-m_chunk->Get()));
@@ -508,8 +511,8 @@ WDL_String* SNM_TakeParserPatcher::GetChunk()
 	return chunk;
 }
 
-// Overrides SNM_ChunkParserPatcher::Commit() in order to remove the fake "TAKE" line
-// Also see important comments for SNM_ChunkParserPatcher::Commit()
+// Overrides SNM_ChunkParserPatcher::Commit() in order to remove the fake "TAKE" line, see
+// GetChunk() comments. Also see important comments for SNM_ChunkParserPatcher::Commit()
 bool SNM_TakeParserPatcher::Commit(bool _force)
 {
 	if (m_object && (m_updates || _force) && !(GetPlayState() & 4) && m_chunk->GetLength())
@@ -542,9 +545,8 @@ bool SNM_TakeParserPatcher::Commit(bool _force)
 					p -= (int)(p-p2);
 				}
 
-				// if there's a "TAKE" before "NAME" it *must not* be "TAKE NULL"
-				// (it's just like that.. can't find any good reason why..)
-				p--; // we assume it's safe (serious other issue otherwise)
+				// if there's a "TAKE" before "NAME" it must not be "TAKE NULL"
+				p--; // we assume it's safe (serious other issues otherwise)
 				while (*p && p > m_chunk->Get() && *p != '\n') p--;
 				if (!strncmp(p, "\nTAKE NULL", 10))
 					m_chunk->DeleteSub((int)(p+5-m_chunk->Get()), 5); // removes " NULL"
@@ -721,6 +723,16 @@ bool SNM_ArmEnvParserPatcher::IsParentEnv(const char* _parent)
 // SNM_LearnMIDIChPatcher
 ///////////////////////////////////////////////////////////////////////////////
 
+bool SNM_LearnMIDIChPatcher::NotifyEndElement(int _mode, 
+	LineParser* _lp, const char* _parsedLine, int _linePos,
+	WDL_PtrList<WDL_String>* _parsedParents, 
+	WDL_String* _newChunk, int _updates)
+{
+	if (_mode == -1 && !strcmp(GetParent(_parsedParents), "FXCHAIN"))
+		m_breakParsePatch = true; // optmization
+	return false; 
+}
+
 bool SNM_LearnMIDIChPatcher::NotifyChunkLine(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
 	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
@@ -729,7 +741,7 @@ bool SNM_LearnMIDIChPatcher::NotifyChunkLine(int _mode,
 	bool updated = false;
 	if (_mode == -1)
 	{
-		if (/*JFB m_fx != -1 &&*/ _lp->getnumtokens() == 3 && !strcmp(_lp->gettoken_str(0), "BYPASS"))
+		if (_lp->getnumtokens() == 3 && !strcmp(_lp->gettoken_str(0), "BYPASS"))
 		{
 			m_currentFx++;
 		}
@@ -738,10 +750,12 @@ bool SNM_LearnMIDIChPatcher::NotifyChunkLine(int _mode,
 			int midiMsg = _lp->gettoken_int(2) & 0xFFF0;
 			midiMsg |= m_newChannel;
 			char bufline[128] = "";
-			int n = _snprintf(bufline, 128, "PARMLEARN %d %d %d", _lp->gettoken_int(1), midiMsg, _lp->gettoken_int(3));
+			int n = _snprintf(bufline, 128, "PARMLEARN %d %d %d\n", _lp->gettoken_int(1), midiMsg, _lp->gettoken_int(3));
 			_newChunk->Append(bufline,n);
 			updated = true;
+/* No! There can be several learnt params for that selected FX..
 			m_breakParsePatch = (m_fx != -1); // one fx to be patched
+*/
 		}
 	}
 	return updated;

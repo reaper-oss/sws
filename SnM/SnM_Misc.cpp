@@ -43,8 +43,8 @@
 void letREAPERBreathe(COMMAND_T* _ct)
 {
 #ifdef _WIN32
-  static bool hasinit;
-  if (!hasinit) { hasinit=true; InitCommonControls();  }
+	static bool hasinit;
+	if (!hasinit) { hasinit=true; InitCommonControls();  }
 #endif
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SNM_WAIT), GetForegroundWindow(), WaitDlgProc);
 }

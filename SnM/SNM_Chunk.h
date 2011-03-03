@@ -274,6 +274,10 @@ public:
 	bool SetChannel(int _newValue, int _fx);
 
 protected:
+	bool NotifyEndElement(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		WDL_PtrList<WDL_String>* _parsedParents, 
+		WDL_String* _newChunk, int _updates);
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
 		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,

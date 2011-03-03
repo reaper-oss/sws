@@ -53,6 +53,28 @@ int getTakeIndex(MediaItem* _item, MediaItem_Take* _take) {
 	return -1;
 }
 
+// deletes an item if it's empty or if it's only made of NULL empty takes
+// primitive func (i.e. no undo). returns true if deleted
+bool deleteMediaItemIfNeeded(MediaItem* _item)
+{
+	bool deleted = false;
+	MediaTrack* tr = _item ? GetMediaItem_Track(_item) : NULL;
+	if (tr && _item)
+	{
+		int countTk = CountTakes(_item);
+		if (!countTk) {
+			deleted = true;
+		}
+		else {
+			int i=0, countEmptyTk=0; 
+			while(i < countTk && !GetMediaItemTake(_item, i++)) countEmptyTk++;
+			deleted = (countTk == countEmptyTk);
+		}
+		if (deleted)
+			deleted &= DeleteTrackMediaItem(tr, _item);
+	}
+	return deleted;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Split MIDI/Audio
@@ -168,8 +190,18 @@ void copyCutTake(COMMAND_T* _ct)
 		int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
 		SNM_TakeParserPatcher p(item, CountTakes(item));
 		if (p.GetTakeChunk(activeTake, &g_takeClipoard))
+		{
 			if ((int)_ct->user) // Cut take?
+			{
 				updated = p.RemoveTake(activeTake);
+/*JFB!!! TODO?
+				if (updated) {
+					p.Commit();
+					deleteMediaItemIfNeeded(item);
+				}
+*/
+			}
+		}
 	}
 	if (updated)
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
@@ -207,6 +239,7 @@ bool isEmptyMidi(MediaItem_Take* _take)
 	if (_take) // a v4 empty take isn't a empty *MIDI* take!
 	{
 		MidiItemProcessor p("S&M");
+		//JFB!!! TODO Padre's MidiItemProcessor: there's a bug with slip edited MIDI items
 		if (_take && p.isMidiTake(_take))
 		{
 			MIDI_eventlist* evts = MIDI_eventlist_Create();
@@ -395,6 +428,13 @@ bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel
 					if (removed) j--; 
 					updated |= removed;
 				}
+				// in case we removed empty *MIDI* items but the only remaining takes
+				// are empty (i.e. NULL) ones
+				else if (p.Commit() && deleteMediaItemIfNeeded(item))
+				{
+					j--;
+					updated = true;
+				}
 			}
 		}
 	}
@@ -449,8 +489,7 @@ void clearTake(COMMAND_T* _ct)
 						if (!strstr(p.GetChunk()->Get(), "\nNAME \""))
 						{	
 							p.CancelUpdates(); // prevent a useless SNM_ChunkParserPatcher commit
-							if (DeleteTrackMediaItem(tr, item)) 
-							{
+							if (DeleteTrackMediaItem(tr, item)) {
 								j--; 
 								updated = true;
 							}

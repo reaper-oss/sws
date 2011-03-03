@@ -289,6 +289,7 @@ void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTem
 // *** SnM_Item.cpp ***
 char* GetName(MediaItem* _item);
 int getTakeIndex(MediaItem* _item, MediaItem_Take* _take);
+bool deleteMediaItemIfNeeded(MediaItem* _item);
 void splitMidiAudio(COMMAND_T* _ct);
 void smartSplitMidiAudio(COMMAND_T* _ct);
 #ifdef _SNM_MISC // Deprecated (v3.67)

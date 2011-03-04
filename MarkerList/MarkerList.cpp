@@ -90,6 +90,29 @@ void SWS_MarkerListView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 	MarkerItem* mi = (MarkerItem*)item;
 	if (mi) // Doubled-up calls to SetEditCurPos - oh well!
 		SetEditCurPos(mi->m_dPos, m_pMarkerList->m_bScroll, m_pMarkerList->m_bPlayOnSel);
+
+	if (iKeyState == LVKF_SHIFT)
+	{
+		// Find min-max time and sel across them
+		double dMaxTime = -DBL_MAX;
+		double dMinTime = DBL_MAX;
+		for (int i = 0; i < GetListItemCount(); i++)
+		{
+			int iState;
+			mi = (MarkerItem*)GetListItem(i, &iState);
+			if (iState)
+			{
+				if (mi->m_dPos < dMinTime)
+					dMinTime = mi->m_dPos;
+				if (mi->m_bReg && mi->m_dRegEnd > dMaxTime)
+					dMaxTime = mi->m_dRegEnd;
+				else if (mi->m_dPos > dMaxTime)
+					dMaxTime = mi->m_dPos;
+			}
+		}
+		if (dMaxTime != -DBL_MAX && dMinTime != DBL_MAX)
+			GetSet_LoopTimeRange(true, false, &dMinTime, &dMaxTime, false);
+	}
 }
 
 void SWS_MarkerListView::OnItemDblClk(LPARAM item, int iCol)

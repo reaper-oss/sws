@@ -1,17 +1,20 @@
-+Those actions now support v4 empty take lanes as well as alternate peak (.reapeaks) cache path:
-SWS/S&M: Delete selected items' takes and source files (prompt, no undo)
-SWS/S&M: Delete selected items' takes and source files (no undo)
-SWS/S&M: Delete active take and source file in selected items (prompt, no undo)
-SWS/S&M: Delete active take and source file in selected items (no undo)
+!v2.0.0 #15 (March 4, 2011)
+These actions now support v4 empty take lanes as well as alternate peak (.reapeaks) cache path:
++SWS/S&M: Delete selected items' takes and source files (prompt, no undo)
++SWS/S&M: Delete selected items' takes and source files (no undo)
++SWS/S&M: Delete active take and source file in selected items (prompt, no undo)
++SWS/S&M: Delete active take and source file in selected items (no undo)
 
-+Added actions (issue 268):
-SWS/S&M: Reassign MIDI learned channels of all FX for selected tracks (prompt)
-SWS/S&M: Reassign MIDI learned channel of selected FX for selected tracks (prompt)
-SWS/S&M: Reassign MIDI learned channels of all FX to input channel for selected tracks
+Added actions (issue 268):
++SWS/S&M: Reassign MIDI learned channels of all FX for selected tracks (prompt)
++SWS/S&M: Reassign MIDI learned channel of selected FX for selected tracks (prompt)
++SWS/S&M: Reassign MIDI learned channels of all FX to input channel for selected tracks
 
-+Fixes
-Some v4 empty take lanes management in S&M actions & views
-"Load/apply and Load/paste fx chain to selected tracks" actions that were adding input-fx-chains instead of standard track-fx-chains
+Fixes:
++Some v4 empty take lanes management in S&M actions & views
++"Load/apply and Load/paste fx chain to selected tracks" actions that were adding input-fx-chains instead of standard track-fx-chains
+
+Shift-click in marker list now makes a time selection
 
 !v2.0.0 #14 (March 1, 2011)
 Performance improvments (REAPER startup, S&M actions related to notes, FX, FX chains and track grouping)

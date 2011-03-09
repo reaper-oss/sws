@@ -1,3 +1,4 @@
+!v2.0.0 #16 (March 9, 2011)
 Added actions:
 +SWS: Ignore next marker action
 +SWS: Move cursor and time sel left to grid

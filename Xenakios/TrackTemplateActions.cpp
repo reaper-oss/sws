@@ -31,18 +31,13 @@ using namespace std;
 
 void SplitFileNameComponents(string FullFileName,vector<string>& FNComponents)
 {
-#ifdef _WIN32
-	char cSlash = '\\';
-#else
-	char cSlash = '/';
-#endif
 	FNComponents.clear();
 	string FileNameWithExt;
 	string JustFileName;
 	string JustExtension;
 	string JustPathToFile;
 
-	size_t iLastSlash = FullFileName.find_last_of(cSlash);
+	size_t iLastSlash = FullFileName.find_last_of(PATH_SLASH_CHAR);
 	if (iLastSlash != string::npos)
 	{
 		FileNameWithExt = FullFileName.substr(iLastSlash + 1);
@@ -65,64 +60,35 @@ void SplitFileNameComponents(string FullFileName,vector<string>& FNComponents)
 	FNComponents.push_back(JustExtension);
 }
 
-void DoOpenTrackTemplate(COMMAND_T* t)
+void DoOpenTemplate(int iNum, bool bProject)
 {
-	char templateFNbeginswith[10];
-	sprintf(templateFNbeginswith, (int)t->user >= 100 ? "%03d" : "%02d", (int)t->user);
-	vector<string> blah;
-	string IniFileLoc;
-	IniFileLoc.assign(get_ini_file());
-	SplitFileNameComponents(IniFileLoc,blah);
-	string TemplatesFolder;
-	TemplatesFolder.assign(blah[0].c_str());
-	TemplatesFolder.append("TrackTemplates");
-	vector<string> Filut;
-	SearchDirectory(Filut, TemplatesFolder.c_str(), "RTRACKTEMPLATE", true);
-	if (Filut.size()==0)
+	char cPath[BUFFER_SIZE];
+	_snprintf(cPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, bProject ? "ProjectTemplates" : "TrackTemplates");
+	vector<string> templates;
+	SearchDirectory(templates, cPath, bProject ? "RPP" : "RTRACKTEMPLATE", true);
+	if (templates.size() == 0)
 	{
 		MessageBox(g_hwndParent,"No templates at all were found!","Error",MB_OK);
 		return;
 	}
-	int i;
-	for (i=0;i<(int)Filut.size();i++)
+	for (int i = 0; i < (int)templates.size(); i++)
 	{
-		SplitFileNameComponents(Filut[i],blah);
-		if (strncmp(blah[1].c_str(), templateFNbeginswith, (int)t->user >= 100 ? 3 : 2)==0)
+		const char* pFilename = strrchr(templates[i].c_str(), PATH_SLASH_CHAR);
+		if (pFilename && pFilename[1] && iNum == atol(pFilename+1))
 		{
-			Main_openProject((char*)Filut[i].c_str());
+			Main_openProject((char*)templates[i].c_str());
 			return;
 		}
 	}
-	MessageBox(g_hwndParent,"No matching template found!","Error",MB_OK);
+	MessageBox(g_hwndParent,"No matching template found!  Please name your template starting with a number.","Error",MB_OK);
+}
+
+void DoOpenTrackTemplate(COMMAND_T* t)
+{
+	DoOpenTemplate((int)t->user, false);
 }
 
 void DoOpenProjectTemplate(COMMAND_T* t)
 {
-	char templateFNbeginswith[10];
-	sprintf(templateFNbeginswith, (int)t->user >= 100 ? "%03d" : "%02d", (int)t->user);
-	vector<string> blah;
-	string IniFileLoc;
-	IniFileLoc.assign(get_ini_file());
-	SplitFileNameComponents(IniFileLoc,blah);
-	string TemplatesFolder;
-	TemplatesFolder.assign(blah[0].c_str());
-	TemplatesFolder.append("ProjectTemplates");
-	vector<string> Filut;
-	SearchDirectory(Filut, TemplatesFolder.c_str(), "RPP", true);
-	if (Filut.size()==0)
-	{
-		MessageBox(g_hwndParent,"No project templates at all were found!","Error",MB_OK);
-		return;
-	}
-	int i;
-	for (i=0;i<(int)Filut.size();i++)
-	{
-		SplitFileNameComponents(Filut[i],blah);
-		if (strncmp(blah[1].c_str(), templateFNbeginswith, (int)t->user >= 100 ? 3 : 2)==0)
-		{
-			Main_openProject((char*)Filut[i].c_str());
-			return;
-		}
-	}
-	MessageBox(g_hwndParent,"No matching project template found!","Error",MB_OK);
+	DoOpenTemplate((int)t->user, true);
 }

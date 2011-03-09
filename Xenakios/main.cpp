@@ -738,8 +738,6 @@ int XenakiosInit()
 
 	SWSRegisterCommands(g_XenCommandTable);
 
-	AddExtensionsMainMenu();
-	
 	InitCommandParams();
 	
 	g_filenames = new(WDL_PtrList<char>);
@@ -753,7 +751,7 @@ int XenakiosInit()
 
 	// Add track template actions
 	char cPath[BUFFER_SIZE];
-	_snprintf(cPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, "TrackTemplates");
+	_snprintf(cPath, BUFFER_SIZE, "%s%cTrackTemplates", GetResourcePath(), PATH_SLASH_CHAR);
 	vector<string> templates;
 	SearchDirectory(templates, cPath, "RTRACKTEMPLATE", true);
 	int iMaxTemplate = 0;
@@ -777,7 +775,7 @@ int XenakiosInit()
 	}
 
 	// Add project template actions
-	_snprintf(cPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, "ProjectTemplates");
+	_snprintf(cPath, BUFFER_SIZE, "%s%cProjectTemplates", GetResourcePath(), PATH_SLASH_CHAR);
 	templates.clear();
 	SearchDirectory(templates, cPath, "RPP", true);
 	iMaxTemplate = 0;

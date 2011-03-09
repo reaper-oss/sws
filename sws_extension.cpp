@@ -683,6 +683,7 @@ extern "C"
 
 		if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
 			ERR_RETURN("Menu hook error\n")
+		AddExtensionsMainMenu();
 
 		SWSTimeSlice* ts = new SWSTimeSlice();
 		if (!rec->Register("csurf_inst", ts))

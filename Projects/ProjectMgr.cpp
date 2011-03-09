@@ -202,22 +202,12 @@ static int GetLoadCommandID(int iSlot, bool bCreateNew)
 	static int iLastRegistered = 0;
 	if (iSlot > iLastRegistered && bCreateNew)
 	{
-		COMMAND_T* cmd = new COMMAND_T;
-		memset(&cmd->accel.accel, 0, sizeof(cmd->accel.accel));
-		const char* desc = "SWS: Open related project %d";
-		cmd->accel.desc = new char[strlen(desc) + 5];
-		sprintf((char*)cmd->accel.desc, desc, iSlot+1);
-		const char* id = "SWS_OPENRELATED%d";
-    char *tbuf;
-		cmd->id = tbuf = new char[strlen(id) + 32];
-		sprintf(tbuf, id, iSlot+1);
-		cmd->doCommand = OpenRelatedProject;
-		cmd->menuText = NULL;
-		cmd->user = iSlot;
-		cmd->getEnabled = NULL;
+		char cID[BUFFER_SIZE];
+		char cDesc[BUFFER_SIZE];
+		_snprintf(cID, BUFFER_SIZE, "SWS_OPENRELATED%d", iSlot+1);
+		_snprintf(cDesc, BUFFER_SIZE, "SWS: Open related project %d", iSlot+1);
 		iLastRegistered = iSlot;
-		SWSRegisterCommand(cmd);
-		return cmd->accel.accel.cmd;
+		return SWSRegisterCommandExt(OpenRelatedProject, cID, cDesc, iSlot);
 	}
 
 	return SWSGetCommandID(OpenRelatedProject, iSlot);
@@ -291,20 +281,11 @@ void UpdateOpenProjectTabActions()
 	if (iProjs > iActions)
 		for (; iActions < iProjs; iActions++)
 		{
-			COMMAND_T* cmd = new COMMAND_T;
-			memset(&cmd->accel.accel, 0, sizeof(cmd->accel.accel));
-			const char* desc = "SWS: Switch to project tab %d";
-			cmd->accel.desc = new char[strlen(desc) + 32];
-			sprintf((char*)cmd->accel.desc, desc, iActions+1);
-			const char* id = "SWS_PROJTAB%d";
-      char *tbuf;
-			cmd->id = tbuf = new char[strlen(id) + 32];
-			sprintf(tbuf, id, iActions+1);
-			cmd->doCommand = OpenProjectTab;
-			cmd->menuText = NULL;
-			cmd->user = iActions;
-			cmd->getEnabled = NULL;
-			SWSRegisterCommand(cmd);
+			char cID[BUFFER_SIZE];
+			char cDesc[BUFFER_SIZE];
+			_snprintf(cID, BUFFER_SIZE, "SWS_PROJTAB%d", iActions+1);
+			_snprintf(cDesc, BUFFER_SIZE, "SWS: Switch to project tab %d", iActions+1);
+			SWSRegisterCommandExt(OpenProjectTab, cID, cDesc, iActions);
 		}
 }
 

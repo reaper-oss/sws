@@ -749,21 +749,11 @@ void Snapshot::RegisterGetCommand(int iSlot) // Slot is 1-based index.
 	static int iLastRegistered = 0;
 	if (iSlot > iLastRegistered)
 	{
-		COMMAND_T* cmd = new COMMAND_T;
-		memset(&cmd->accel.accel, 0, sizeof(cmd->accel.accel));
-		const char* desc = "SWS: Recall snapshot %d";
-		cmd->accel.desc = new char[strlen(desc) + 5];
-		sprintf((char*)cmd->accel.desc, desc, iSlot);
-		const char* id = "SWSSNAPSHOT_GET%d";
-    char *tbuf;
-		cmd->id = tbuf = new char[strlen(id) + 32];
-		sprintf(tbuf, id, iSlot);
-		cmd->doCommand = GetSnapshot;
-		cmd->menuText = NULL;
-		cmd->user = iSlot;
-		cmd->getEnabled = NULL;
-		iLastRegistered = iSlot;
-		SWSRegisterCommand(cmd);			
+		char cID[BUFFER_SIZE];
+		char cDesc[BUFFER_SIZE];
+		_snprintf(cID, BUFFER_SIZE, "SWSSNAPSHOT_GET%d", iSlot);
+		_snprintf(cDesc, BUFFER_SIZE, "SWS: Recall snapshot %d", iSlot);
+		SWSRegisterCommandExt(GetSnapshot, cID, cDesc, iSlot);
 	}
 }
 

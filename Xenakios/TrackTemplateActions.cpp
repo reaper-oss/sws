@@ -68,7 +68,7 @@ void SplitFileNameComponents(string FullFileName,vector<string>& FNComponents)
 void DoOpenTrackTemplate(COMMAND_T* t)
 {
 	char templateFNbeginswith[10];
-	sprintf(templateFNbeginswith, "%02d", (int)t->user);
+	sprintf(templateFNbeginswith, (int)t->user >= 100 ? "%03d" : "%02d", (int)t->user);
 	vector<string> blah;
 	string IniFileLoc;
 	IniFileLoc.assign(get_ini_file());
@@ -87,7 +87,7 @@ void DoOpenTrackTemplate(COMMAND_T* t)
 	for (i=0;i<(int)Filut.size();i++)
 	{
 		SplitFileNameComponents(Filut[i],blah);
-		if (strncmp(blah[1].c_str(), templateFNbeginswith, 2)==0)
+		if (strncmp(blah[1].c_str(), templateFNbeginswith, (int)t->user >= 100 ? 3 : 2)==0)
 		{
 			Main_openProject((char*)Filut[i].c_str());
 			return;
@@ -99,7 +99,7 @@ void DoOpenTrackTemplate(COMMAND_T* t)
 void DoOpenProjectTemplate(COMMAND_T* t)
 {
 	char templateFNbeginswith[10];
-	sprintf(templateFNbeginswith, "%02d", (int)t->user);
+	sprintf(templateFNbeginswith, (int)t->user >= 100 ? "%03d" : "%02d", (int)t->user);
 	vector<string> blah;
 	string IniFileLoc;
 	IniFileLoc.assign(get_ini_file());
@@ -118,7 +118,7 @@ void DoOpenProjectTemplate(COMMAND_T* t)
 	for (i=0;i<(int)Filut.size();i++)
 	{
 		SplitFileNameComponents(Filut[i],blah);
-		if (strncmp(blah[1].c_str(), templateFNbeginswith, 2)==0)
+		if (strncmp(blah[1].c_str(), templateFNbeginswith, (int)t->user >= 100 ? 3 : 2)==0)
 		{
 			Main_openProject((char*)Filut[i].c_str());
 			return;

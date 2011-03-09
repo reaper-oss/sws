@@ -1,3 +1,10 @@
+Added actions:
++SWS: Ignore next marker action
++SWS: Move cursor and time sel left to grid
++SWS: Move cursor and time sel right to grid
+
+"Load project template X" actions are now automatically added for any number of project templates that exist in the ProjectTemplates directory.
+
 !v2.0.0 #15 (March 4, 2011)
 These actions now support v4 empty take lanes as well as alternate peak (.reapeaks) cache path:
 +SWS/S&M: Delete selected items' takes and source files (prompt, no undo)

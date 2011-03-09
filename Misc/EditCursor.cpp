@@ -57,10 +57,64 @@ void RedoEditCursor(COMMAND_T*)
 	}
 }
 
+void MoveCursorAndSel(COMMAND_T* ct)
+{
+	double dStart, dEnd, dPos = GetCursorPosition();
+	int iEdge; // -1 for left, 1 for right
+	GetSet_LoopTimeRange(false, false, &dStart, &dEnd, false);
+	if (dStart == dEnd)
+	{
+		iEdge = (int)ct->user;
+		dStart = dEnd = dPos;
+	}
+	else if (dPos <= dStart)
+		iEdge = -1;
+	else if (dPos >= dEnd)
+		iEdge = 1;
+	else if (dPos - dStart < dEnd - dPos)
+		iEdge = -1;
+	else
+		iEdge = 1;
+
+	// Move the edit cursor position
+	
+	// .. natively
+//	if (ct->user < 0)
+//		Main_OnCommand(40646, 0);
+//	else
+//		Main_OnCommand(40647, 0);
+//	dPos = GetCursorPosition();
+
+	// or manually
+	const double dGridThreshold = 1.0e-9;
+	double dQN = TimeMap2_timeToQN(NULL, dPos);
+	// Special case for left move and on grid already
+	int iQN = (int)(dQN + SWS_ADJACENT_ITEM_THRESHOLD);
+	double dTest = fabs(dQN - iQN);
+	if (ct->user == -1 && fabs(dQN - iQN) < SWS_ADJACENT_ITEM_THRESHOLD)
+		--iQN;
+	else if (ct->user == 1)
+		++iQN;
+	dPos = TimeMap2_QNToTime(NULL, (double)iQN);
+
+	// Extend the time sel
+	if (iEdge == -1)
+		dStart = dPos;
+	else
+		dEnd = dPos;
+	GetSet_LoopTimeRange(true, false, &dStart, &dEnd, false);
+
+	// Set the play cursor
+	SetEditCurPos(dPos, true, false);
+}
+
+
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS: Undo edit cursor move" },			"SWS_EDITCURUNDO",	UndoEditCursor,		},
-	{ { DEFACCEL, "SWS: Redo edit cursor move" },			"SWS_EDITCURREDO",	RedoEditCursor,		},
+	{ { DEFACCEL, "SWS: Undo edit cursor move" },					"SWS_EDITCURUNDO",		UndoEditCursor, },
+	{ { DEFACCEL, "SWS: Redo edit cursor move" },					"SWS_EDITCURREDO",		RedoEditCursor, },
+	{ { DEFACCEL, "SWS: Move cursor and time sel left to grid" },	"SWS_MOVECURSELLEFT",	MoveCursorAndSel, NULL, -1 },
+	{ { DEFACCEL, "SWS: Move cursor and time sel right to grid" },	"SWS_MOVECURSELRIGHT",	MoveCursorAndSel, NULL,  1 },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

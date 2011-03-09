@@ -120,7 +120,7 @@ int SWSRegisterCommand2(COMMAND_T* pCommand, const char* cFile)
 		g_commands.Add(pCommand);
 		g_cmdFile.Add(new WDL_String(cFile));
 	}
-	return 1;
+	return pCommand->accel.accel.cmd;
 }
 
 // For each item in table call SWSRegisterCommand
@@ -134,6 +134,17 @@ int SWSRegisterCommands2(COMMAND_T* pCommands, const char* cFile)
 		i++;
 	}
 	return 1;
+}
+
+int SWSRegisterCommandExt2(void (*doCommand)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile)
+{
+	COMMAND_T* ct = new COMMAND_T;
+	memset(ct, 0, sizeof(COMMAND_T));
+	ct->accel.desc = _strdup(cDesc);
+	ct->id = _strdup(cID);
+	ct->doCommand = doCommand;
+	ct->user = user;
+	return SWSRegisterCommand2(ct, cFile);
 }
 
 // Returns the COMMAND_T entry so it can be deleted if necessary

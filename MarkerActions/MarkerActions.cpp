@@ -29,12 +29,18 @@
 #include "stdafx.h"
 
 static bool g_bMAEnabled = true;
+static bool g_bIgnoreNext = false;
 static void RefreshMAToolbar();
 
 void RunActionMarker(const char* cName)
 {
 	if (cName && cName[0] == '!')
 	{
+		if (g_bIgnoreNext)
+		{	// Ignore the entire marker action
+			g_bIgnoreNext = false;
+			return;
+		}
 		LineParser lp(false);
 		lp.parse(&cName[1]);
 		for (int i = 0; i < lp.getnumtokens(); i++)
@@ -121,6 +127,11 @@ void MarkerActionRunUnderCursor(COMMAND_T*)
 			RunActionMarker(cName);
 }
 
+void MarkerActionIgnoreNext(COMMAND_T*)
+{
+	g_bIgnoreNext = true;
+}
+
 void MarkerNudge(bool bRight)
 {
 	// Find the marker underneath the edit cursor
@@ -175,6 +186,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Enable marker actions" },           "SWSMA_ENABLE",		MarkerActionsEnable,		NULL, },
 	{ { DEFACCEL, "SWS: Disable marker actions" },          "SWSMA_DISABLE",	MarkerActionsDisable,		NULL, },
 	{ { DEFACCEL, "SWS: Run action marker under cursor" },  "SWSMA_RUNEDIT",	MarkerActionRunUnderCursor,	NULL, },
+	{ { DEFACCEL, "SWS: Ignore next marker action" },		"SWSMA_IGNORE",		MarkerActionIgnoreNext,		NULL, },
 	
 	// Not sure if these should be in MarkerActions.cpp or MarkerListActions.cpp.  Eh, doesn't matter.
 	{ { DEFACCEL, "SWS: Nudge marker under cursor left" },  "SWS_MNUDGEL",		MarkerNudgeLeft,			NULL, },

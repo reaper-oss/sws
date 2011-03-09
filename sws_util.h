@@ -170,8 +170,10 @@ void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwEx
 // Command/action handling, sws_extension.cpp
 #define SWSRegisterCommand(c) SWSRegisterCommand2(c, __FILE__)
 #define SWSRegisterCommands(c) SWSRegisterCommands2(c, __FILE__)
+#define SWSRegisterCommandExt(a, b, c, d) SWSRegisterCommandExt2(a, b, c, d, __FILE__)
 int SWSRegisterCommand2(COMMAND_T* pCommand, const char* cFile);   // One command
 int SWSRegisterCommands2(COMMAND_T* pCommands, const char* cFile); // Multiple commands in a table, terminated with LAST_COMMAND
+int SWSRegisterCommandExt2(void (*doCommand)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile);
 void ActionsList(COMMAND_T*);
 COMMAND_T* SWSUnregisterCommand(int id);
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, const char** pMenuText = NULL);

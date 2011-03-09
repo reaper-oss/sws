@@ -90,40 +90,20 @@ void SWS_MediaPoolFile::SetAction(bool bAction, const char* cGroup, bool bActive
 
 void SWS_MediaPoolFile::RegisterCommand(const char* cGroup)
 {
-	COMMAND_T* cmd = new COMMAND_T;
-	memset(&cmd->accel, 0, sizeof(cmd->accel));
-
-
+	char cID[BUFFER_SIZE];
+	char cDesc[BUFFER_SIZE];
 	if (cGroup && cGroup[0])
 	{
-		const char* desc = "SWS: Insert file #%d from media pool group %s (%s)";
-		cmd->accel.desc = new char[strlen(desc) + 5 + strlen(cGroup) + strlen(m_cFilename)];
-		sprintf((char*)cmd->accel.desc, desc, m_id + 1, cGroup, m_cFilename);
-
-		const char* idStr = "SWSMP_INSERT%s%d";
-    char *tbuf;
-		cmd->id = tbuf = new char[strlen(idStr) + strlen(cGroup) +  5];
-		sprintf(tbuf, idStr, cGroup, m_id);
+		_snprintf(cID, BUFFER_SIZE, "SWSMP_INSERT%s%d", cGroup, m_id);
+		_snprintf(cDesc, BUFFER_SIZE, "SWS: Insert file #%d from media pool group %s (%s)", m_id+1, cGroup, m_cFilename);
 	}
 	else
 	{
-		const char* desc = "SWS: Insert %s from media pool";
-		cmd->accel.desc = new char[strlen(desc) + strlen(m_cFilename)];
-		sprintf((char*)cmd->accel.desc, desc, m_cFilename);
-
-		const char* id = "SWSMP_";
-    
-    char *tbuf;
-		cmd->id = tbuf = new char[strlen(id) + 41];
-		strcpy(tbuf, id);
-		GetHashString(m_cFilename,tbuf + strlen(id));
+		strcpy(cID, "SWSMP_");
+		GetHashString(m_cFilename, cID + strlen(cID));
+		_snprintf(cDesc, BUFFER_SIZE, "SWS: Insert %s from media pool", m_cFilename);
 	}
-
-	cmd->doCommand = InsertFile;
-	cmd->menuText = NULL;
-	cmd->user = (LPARAM)m_cFilename;
-	cmd->getEnabled = NULL;
-	SWSRegisterCommand(cmd);
+	SWSRegisterCommandExt(InsertFile, cID, cDesc, (INT_PTR)m_cFilename);
 }
 
 void SWS_MediaPoolFile::UnregisterCommand()
@@ -134,8 +114,8 @@ void SWS_MediaPoolFile::UnregisterCommand()
 		COMMAND_T* cmd = SWSUnregisterCommand(id);
 		if (cmd)
 		{
-			delete [] cmd->accel.desc;
-			delete [] (char*)cmd->id;
+			free((void*)cmd->accel.desc); // alloc'ed with strdup, so free instead of delete
+			free((void*)cmd->id);
 			delete cmd;
 		}
 	}

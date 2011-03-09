@@ -884,19 +884,11 @@ int ConsoleInit()
 				*pC = 0;
 			if (strlen(cBuf) && cBuf[0] != '[' && cBuf[0] != '/')
 			{
-				COMMAND_T* ct = new COMMAND_T;
-				memset(ct, 0, sizeof(COMMAND_T));
-				char* desc = new char[strlen(cBuf)+30];
-				ct->accel.desc = desc;
-				char *tbuf;
-				ct->id = tbuf = new char[32];
-				ct->doCommand = RunCommand;
-				ct->user = (INT_PTR)new char[strlen(cBuf)+1];
-				ct->getEnabled = NULL;
-				sprintf(tbuf, "SWSCONSOLE_CUST%d", i++);
-				sprintf(desc, "SWS: Run console command: %s", cBuf);
-				strcpy((char*)ct->user, cBuf);
-				SWSRegisterCommand(ct);
+				char cID[BUFFER_SIZE];
+				char cDesc[BUFFER_SIZE];
+				_snprintf(cID, BUFFER_SIZE, "SWSCONSOLE_CUST%d", i++);
+				_snprintf(cDesc, BUFFER_SIZE, "SWS: Run console command: %s", cBuf);
+				SWSRegisterCommandExt(RunCommand, cID, cDesc, (INT_PTR)_strdup(cBuf));
 			}
 		}
 		fclose(f);

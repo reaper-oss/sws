@@ -258,10 +258,12 @@ void closeAllFXWindowsExceptFocused(COMMAND_T * _ct);
 void toggleAllFXWindows(COMMAND_T * _ct);
 int getFocusedFX(MediaTrack* _tr, int _dir, int* _firstFound = NULL);
 bool cycleFocusFXWnd(int _dir, bool _selectedTracks);
+#ifdef _SNM_MISC
 void cycleFocusFXWndSelTracks(COMMAND_T * _ct);
 void cycleFocusFXWndAllTracks(COMMAND_T * _ct);
+#endif
 void cycleFloatFXWndSelTracks(COMMAND_T * _ct);
-void cycleFocusFXAndMainWndAllTracks(COMMAND_T * _ct);
+void cycleFocusFXMainWndAllTracks(COMMAND_T * _ct);
 void cycleFocusFXMainWndSelTracks(COMMAND_T * _ct);
 void cycleFocusWnd(COMMAND_T * _ct);
 void cycleFocusHideOthersWnd(COMMAND_T * _ct);

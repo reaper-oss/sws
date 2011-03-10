@@ -87,22 +87,24 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Float previous FX (and close others) for selected tracks" }, "S&M_WNONLY1", cycleFloatFXWndSelTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Float next FX (and close others) for selected tracks" }, "S&M_WNONLY2", cycleFloatFXWndSelTracks, NULL, 1},
-
+#ifdef _SNM_MISC // only diff. with following ones is that they don't focus the main window on cycle
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS1", cycleFocusFXWndSelTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks  (cycle)" }, "S&M_WNFOCUS2", cycleFocusFXWndSelTracks, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS2", cycleFocusFXWndSelTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (cycle)" }, "S&M_WNFOCUS3", cycleFocusFXWndAllTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Focus next floating FX (cycle)" }, "S&M_WNFOCUS4", cycleFocusFXWndAllTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX for selected tracks (+ main window on cycle)" }, "S&M_WNFOCUS5", cycleFocusFXMainWndSelTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (+ main window on cycle)" }, "S&M_WNFOCUS6", cycleFocusFXMainWndSelTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (+ main window on cycle)" }, "S&M_WNFOCUS7", cycleFocusFXAndMainWndAllTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Focus next floating FX (+ main window on cycle)" }, "S&M_WNFOCUS8", cycleFocusFXAndMainWndAllTracks, NULL, 1},
+#endif
+	// see above comment, used to be "... (+ main window on cycle)" => turned into "... (cycle)"
+	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS5", cycleFocusFXMainWndSelTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS6", cycleFocusFXMainWndSelTracks, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (cycle)" }, "S&M_WNFOCUS7", cycleFocusFXMainWndAllTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Focus next floating FX (cycle)" }, "S&M_WNFOCUS8", cycleFocusFXMainWndAllTracks, NULL, 1},
 
 	{ { DEFACCEL, "SWS/S&M: Focus main window" }, "S&M_WNMAIN", focusMainWindow, NULL, },
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Focus main window (close others)" }, "S&M_WNMAIN_HIDE_OTHERS", focusMainWindowCloseOthers, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Cycle focused window" }, "S&M_WNFOCUS9", cycleFocusWnd, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Focus next window (hide others)" }, "S&M_WNFOCUS_NEXT", cycleFocusHideOthersWnd, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Focus previous window (hide others)" }, "S&M_WNFOCUS_PREV", cycleFocusHideOthersWnd, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Focus next window (cycle, hide/unhide others)" }, "S&M_WNFOCUS_NEXT", cycleFocusHideOthersWnd, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Focus previous window (cycle, hide/unhide others)" }, "S&M_WNFOCUS_PREV", cycleFocusHideOthersWnd, NULL, -1},
 #endif
 
 	{ { DEFACCEL, "SWS/S&M: Show FX chain for selected tracks (FX 1)" }, "S&M_SHOWFXCHAIN1", showFXChain, NULL, 0},

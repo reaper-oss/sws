@@ -1,6 +1,14 @@
 Added actions (issue 165):
-+SWS/S&M: Focus next window (hide others)
-+SWS/S&M: Focus previous window (hide others)
++SWS/S&M: Focus main window (close others)
++SWS/S&M: Focus next window (cycle, hide/unhide others)
++SWS/S&M: Focus previous window (cycle, hide/unhide others)
+Remark: for these actions, keyboard shortcuts must use modifiers in order to pass-through to the main window (ex: Ctrl+minus = focus previous, Ctrl+plus = focus next)
+
+House cleaning, removed "duplicated" actions (existing focus actions now focus the main window on cycle):
++SWS/S&M: Focus previous floating FX for selected tracks (+ main window on cycle)
++SWS/S&M: Focus next floating FX for selected tracks (+ main window on cycle)
++SWS/S&M: Focus previous floating FX (+ main window on cycle)
++SWS/S&M: Focus next floating FX (+ main window on cycle)
 
 Fixed issue 204 (notes/help view: actions were not displayed when action window is docked)
 S&M GUI tweaks

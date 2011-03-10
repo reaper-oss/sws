@@ -613,7 +613,7 @@ typedef struct {MediaTrack* tr; int fx;} t_TrackFXIds; //JFB TODO: class
 WDL_PtrList_DeleteOnDestroy<t_TrackFXIds> g_hiddenFloatingWindows(free);
 int g_lastCycleFocusFXDirection = 0; //used for direction change..
 
-void cycleFocusFXAndMainWnd(int _dir, bool _selectedTracks, bool _showmain) 
+void cycleFocusFXMainWnd(int _dir, bool _selectedTracks, bool _showmain) 
 {
 	bool cycled = false;
 
@@ -671,20 +671,21 @@ void cycleFocusFXAndMainWnd(int _dir, bool _selectedTracks, bool _showmain)
 	}
 }
 
+#ifdef _SNM_MISC
 void cycleFocusFXWndAllTracks(COMMAND_T * _ct) {
-	cycleFocusFXAndMainWnd((int)_ct->user, false, false);
+	cycleFocusFXMainWnd((int)_ct->user, false, false);
 }
-
 void cycleFocusFXWndSelTracks(COMMAND_T * _ct) {
-	cycleFocusFXAndMainWnd((int)_ct->user, true, false);
+	cycleFocusFXMainWnd((int)_ct->user, true, false);
 }
+#endif
 
-void cycleFocusFXAndMainWndAllTracks(COMMAND_T * _ct) {
-	cycleFocusFXAndMainWnd((int)_ct->user, false, true);
+void cycleFocusFXMainWndAllTracks(COMMAND_T * _ct) {
+	cycleFocusFXMainWnd((int)_ct->user, false, true);
 }
 
 void cycleFocusFXMainWndSelTracks(COMMAND_T * _ct) {
-	cycleFocusFXAndMainWnd((int)_ct->user, true, true);
+	cycleFocusFXMainWnd((int)_ct->user, true, true);
 }
 
 void cycleFloatFXWndSelTracks(COMMAND_T * _ct)

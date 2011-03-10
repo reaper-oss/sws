@@ -754,48 +754,42 @@ int XenakiosInit()
 	_snprintf(cPath, BUFFER_SIZE, "%s%cTrackTemplates", GetResourcePath(), PATH_SLASH_CHAR);
 	vector<string> templates;
 	SearchDirectory(templates, cPath, "RTRACKTEMPLATE", true);
-	int iMaxTemplate = 0;
 	for (int i = 0; i < (int)templates.size(); i++)
 	{
 		const char* pFilename = strrchr(templates[i].c_str(), PATH_SLASH_CHAR);
 		if (pFilename && pFilename[1])
 		{
 			int iNum = atol(pFilename+1);
-			if (iNum > iMaxTemplate)
-				iMaxTemplate = iNum;
+			if (!SWSGetCommandID(DoOpenTrackTemplate, iNum))
+			{
+				char cDesc[BUFFER_SIZE];
+				char cID[BUFFER_SIZE];
+				_snprintf(cID, BUFFER_SIZE, "XENAKIOS_LOADTRACKTEMPLATE%d", iNum);
+				_snprintf(cDesc, BUFFER_SIZE, "Xenakios/SWS: [Deprecated] Load track template %d", iNum);
+				SWSRegisterCommandExt(DoOpenTrackTemplate, cID, cDesc, iNum);
+			}
 		}
-	}
-	for (int i = 11; i <= iMaxTemplate; i++)
-	{
-		char cID[BUFFER_SIZE];
-		char cDesc[BUFFER_SIZE];
-		_snprintf(cID, BUFFER_SIZE, "XENAKIOS_LOADTRACKTEMPLATE%d", i);
-		_snprintf(cDesc, BUFFER_SIZE, "Xenakios/SWS: [Deprecated] Load track template %d", i);
-		SWSRegisterCommandExt(DoOpenTrackTemplate, cID, cDesc, i);
 	}
 
 	// Add project template actions
 	_snprintf(cPath, BUFFER_SIZE, "%s%cProjectTemplates", GetResourcePath(), PATH_SLASH_CHAR);
 	templates.clear();
 	SearchDirectory(templates, cPath, "RPP", true);
-	iMaxTemplate = 0;
 	for (int i = 0; i < (int)templates.size(); i++)
 	{
 		const char* pFilename = strrchr(templates[i].c_str(), PATH_SLASH_CHAR);
 		if (pFilename && pFilename[1])
 		{
 			int iNum = atol(pFilename+1);
-			if (iNum > iMaxTemplate)
-				iMaxTemplate = iNum;
+			if (!SWSGetCommandID(DoOpenProjectTemplate, iNum))
+			{
+				char cID[BUFFER_SIZE];
+				char cDesc[BUFFER_SIZE];
+				_snprintf(cID, BUFFER_SIZE, "XENAKIOS_LOADPROJTEMPL%d", iNum);
+				_snprintf(cDesc, BUFFER_SIZE, "Xenakios/SWS: Load project template %d", iNum);
+				SWSRegisterCommandExt(DoOpenProjectTemplate, cID, cDesc, iNum);
+			}
 		}
-	}
-	for (int i = 11; i <= iMaxTemplate; i++)
-	{
-		char cID[BUFFER_SIZE];
-		char cDesc[BUFFER_SIZE];
-		_snprintf(cID, BUFFER_SIZE, "XENAKIOS_LOADPROJTEMPL%d", i);
-		_snprintf(cDesc, BUFFER_SIZE, "Xenakios/SWS: Load project template %d", i);
-		SWSRegisterCommandExt(DoOpenProjectTemplate, cID, cDesc, i);
 	}
 
 	return 1;

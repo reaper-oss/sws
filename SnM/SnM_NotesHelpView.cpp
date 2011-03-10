@@ -487,7 +487,7 @@ void SNM_NotesHelpWnd::OnInitDlg()
 
 	m_cbType.SetID(COMBOID_TYPE);
 	m_cbType.SetRealParent(m_hwnd);
-	m_cbType.AddItem("Disable (project notes)");
+	m_cbType.AddItem("Project notes");
 	m_cbType.AddItem("Item notes");
 	m_cbType.AddItem("Track notes");
 #ifdef _WIN32
@@ -604,7 +604,7 @@ int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState)
 	return 0; 
 }
 
-void SNM_NotesHelpWnd::OnTimer() {
+void SNM_NotesHelpWnd::OnTimer(WPARAM wParam) {
 	if (!IsActive()) // no update while the user edits..
 		Update();
 }
@@ -652,7 +652,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		if (cbVwnd)
 		{
 			x0 += 5;
-			RECT tr2={x0,y0+3,x0+138,y0+h-2};
+			RECT tr2={x0,y0+3,x0+98,y0+h-2};
 			x0 = tr2.right+5;
 			cbVwnd->SetPosition(&tr2);
 			cbVwnd->SetFont(font);

@@ -74,7 +74,7 @@ protected:
 	void OnInitDlg();
 #ifndef _WIN32
 	bool m_bSettingColor;
-	void OnTimer();
+	void OnTimer(WPARAM wParam=0);
 	void OnDestroy();
 #endif
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);

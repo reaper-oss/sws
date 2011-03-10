@@ -149,7 +149,7 @@ protected:
 	virtual HMENU OnContextMenu(int x, int y) { return NULL; }
 	virtual void OnResize() {}
 	virtual void OnDestroy() {}
-	virtual void OnTimer() {}
+	virtual void OnTimer(WPARAM wParam=0) {}
 	virtual void OnDroppedFiles(HDROP h) {}
 	virtual int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
 	virtual int OnKey(MSG* msg, int iKeyState) { return 0; } // return 1 for "processed key"

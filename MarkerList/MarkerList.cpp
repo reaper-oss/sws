@@ -356,7 +356,7 @@ void SWS_MarkerListWnd::OnDestroy()
 	WritePrivateProfileString(SWS_INI, ML_OPTIONS_KEY, cOptions, get_ini_file());
 }
 
-void SWS_MarkerListWnd::OnTimer()
+void SWS_MarkerListWnd::OnTimer(WPARAM wParam)
 {
 	if (ListView_GetSelectedCount(m_pLists.Get(0)->GetHWND()) <= 1 || !IsActive())
 		Update();

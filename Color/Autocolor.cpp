@@ -391,7 +391,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 }
 
 #ifndef _WIN32
-void SWS_AutoColorWnd::OnTimer()
+void SWS_AutoColorWnd::OnTimer(WPARAM wParam)
 {
 	COLORREF cr;
 	if (m_bSettingColor && GetChosenColor(&cr))

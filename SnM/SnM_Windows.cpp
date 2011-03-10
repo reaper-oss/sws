@@ -30,17 +30,176 @@
 #include "SnM_Actions.h"
 #include "SNM_ChunkParserPatcher.h"
 
-//JFB TODO: class
-typedef struct
+
+///////////////////////////////////////////////////////////////////////////////
+// Misc. window actions/helpers
+///////////////////////////////////////////////////////////////////////////////
+
+void AddUniqueHnwd(HWND _hAdd, HWND* _hwnds, int* count)
 {
-	MediaTrack* tr;
-	int fx;
-} t_TrackFXIds;
+	for (int i=0; i < *count; i++)
+		if(_hwnds[i] == _hAdd)
+			return;
+	_hwnds[(*count)++] = _hAdd;
+}
 
-WDL_PtrList_DeleteOnDestroy<t_TrackFXIds> g_hiddenFloatingWindows(free);
+bool IsChildOf(HWND _hChild, const char* _title, int _nComp)
+{
+	if (_nComp < 0)
+		_nComp = strlen(_title);
 
+	HWND hCurrent = _hChild;
+	char buf[512] = "";
+	while (hCurrent) 
+	{
+		hCurrent = GetParent(hCurrent); //JFB!!! in SWELL ?
+		if (hCurrent)
+		{
+			GetWindowText(hCurrent, buf, 512);
+			if (!strncmp(buf, _title, strlen(_title)))
+				return true;
+		}
+	}
+	return false;
+}
 
 #ifdef _WIN32
+
+#define MAX_ENUM_CHILD_HWNDS 512
+#define MAX_ENUM_HWNDS 256
+
+static int g_hwndsCount = 0;
+static HWND g_hwnds[MAX_ENUM_CHILD_HWNDS];
+
+static int g_childHwndsCount = 0;
+static HWND g_childHwnds[MAX_ENUM_CHILD_HWNDS];
+
+BOOL CALLBACK EnumReaWindows(HWND _hwnd, LPARAM _lParam)
+{
+   HWND hCurrent, hNew;
+   hCurrent = _hwnd;
+   hNew = hCurrent;
+   while (hNew != NULL) {
+	   hNew = GetParent(hCurrent);
+	   if (hNew != NULL)
+		   hCurrent = hNew;
+   }
+   if (hCurrent == GetMainHwnd())
+   {
+	   	char buf[256];
+		GetClassName(_hwnd, buf, sizeof(buf));
+		if (!strcmp(buf, "#32770"))
+			AddUniqueHnwd(_hwnd, g_hwnds, &g_hwndsCount); 
+   }
+   return TRUE;
+} 
+
+static BOOL CALLBACK EnumReaChildWindows(HWND _hwnd, LPARAM _lParam)
+{
+	char str[256];
+	GetClassName(_hwnd, str, sizeof(str));
+	if(strcmp(str, "#32770") == 0)
+	{
+		if (g_childHwndsCount < MAX_ENUM_CHILD_HWNDS)
+			AddUniqueHnwd(_hwnd, g_childHwnds, &g_childHwndsCount); 
+		EnumChildWindows(_hwnd, EnumReaChildWindows, _lParam + 1);
+	}
+	return TRUE;
+}
+#endif
+
+HWND GetReaChildWindowByTitle(HWND _parent, const char* _title, int _nComp)
+{
+#ifdef _WIN32
+	char buf[512] = "";
+	g_childHwndsCount = 0;
+	EnumChildWindows(_parent, EnumReaChildWindows, 0); 
+	for (int i=0; i < g_childHwndsCount && i < MAX_ENUM_CHILD_HWNDS; i++)
+	{
+		HWND w = g_childHwnds[i];
+		GetWindowText(w, buf, 512);
+		if (!strncmp(buf, _title, _nComp))
+			return w;
+	}
+#endif
+	return NULL;
+}
+
+HWND GetReaWindowByTitle(const char* _title, int _nComp)
+{
+#ifdef _WIN32
+	if (_nComp < 0)
+		_nComp = strlen(_title);
+
+	// docked in main window ?
+	HWND w = GetReaChildWindowByTitle(GetMainHwnd(), _title, _nComp);
+	if (w)
+		return w;
+
+	g_hwndsCount = 0;
+	char buf[512] = "";
+	EnumWindows(EnumReaWindows, 0); 
+	for (int i=0; i < g_hwndsCount && i < MAX_ENUM_HWNDS; i++)
+	{
+		w = g_hwnds[i];
+		GetWindowText(w, buf, 512);
+
+		// floating window ?
+		if (!strcmp(_title, buf))
+			return w;
+		// in a floating docker ?
+		else if (!strcmp("Docker", buf))
+		{
+			w = GetReaChildWindowByTitle(w, _title, _nComp);
+			if (w) 
+				return w;
+		}
+	}
+#endif
+	return NULL;
+}
+
+HWND SearchWindow(const char* _title)
+{
+	HWND searchedWnd = NULL;
+#ifdef _WIN32
+	searchedWnd = FindWindow(NULL, _title);
+#else
+/*JFB TODO OSX: tried what follows that in the hope it'll work on OSX but it's KO (http://code.google.com/p/sws-extension/issues/detail?id=175#c83)
+	if (GetMainHwnd())
+	{
+		HWND w = GetWindow(GetMainHwnd(), GW_HWNDFIRST);
+		while (w)
+		{ 
+			if (IsWindowVisible(w) && GetWindow(w, GW_OWNER) == GetMainHwnd())
+			{
+				char name[BUFFER_SIZE] = "";
+				int iLenName = GetWindowText(w, name, BUFFER_SIZE);
+				if (!strcmp(name, _title)) {
+					searchedWnd = w;
+					break;
+				}
+			}
+			w = GetWindow(w, GW_HWNDNEXT);
+		}
+	}
+*/
+#endif
+	return searchedWnd;
+}
+
+HWND GetActionListBox(char* _currentSection, int _sectionMaxSize)
+{
+	HWND actionsWnd = GetReaWindowByTitle("Actions");
+	if (actionsWnd && _currentSection)
+	{
+		HWND cbSection = GetDlgItem(actionsWnd, 0x525);
+		if (cbSection)
+			GetWindowText(cbSection, _currentSection, _sectionMaxSize);
+	}
+	return (actionsWnd ? GetDlgItem(actionsWnd, 0x52B) : NULL);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Routing, env windows - WIN ONLY!
@@ -50,7 +209,10 @@ WDL_PtrList_DeleteOnDestroy<t_TrackFXIds> g_hiddenFloatingWindows(free);
 // APIs since REAPER v3.41, thanks Cockos!)
 ///////////////////////////////////////////////////////////////////////////////
 
-bool toggleShowHideWin(const char * _title) {
+#ifdef _WIN32
+
+bool toggleShowHideWin(const char * _title)
+{
 	HWND w = SearchWindow(_title);
 	if (w != NULL)
 	{
@@ -60,7 +222,8 @@ bool toggleShowHideWin(const char * _title) {
 	return false;
 }
 
-bool closeWin(const char * _title) {
+bool closeWin(const char * _title)
+{
 	HWND w = SearchWindow(_title);
 	if (w != NULL)
 	{
@@ -445,7 +608,11 @@ bool cycleFocusFXWnd(int _dir, bool _selectedTracks, bool* _cycled)
 	return false;
 }
 
+
+typedef struct {MediaTrack* tr; int fx;} t_TrackFXIds; //JFB TODO: class
+WDL_PtrList_DeleteOnDestroy<t_TrackFXIds> g_hiddenFloatingWindows(free);
 int g_lastCycleFocusFXDirection = 0; //used for direction change..
+
 void cycleFocusFXAndMainWnd(int _dir, bool _selectedTracks, bool _showmain) 
 {
 	bool cycled = false;
@@ -557,30 +724,166 @@ void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Misc. window actions
+// Other focus actions
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB OSX (related action ifdef'd out)
 void cycleFocusWnd(COMMAND_T * _ct) 
 {
+#ifdef _WIN32
 	if (GetMainHwnd())
 	{
 		HWND focusedWnd = GetForegroundWindow();
 		HWND w = GetWindow(GetMainHwnd(), GW_HWNDLAST);
-		while (w)
-		{ 
-			if (IsWindowVisible(w) && 
-				GetWindow(w, GW_OWNER) == GetMainHwnd() &&
-				focusedWnd != w)
-			{
+		while (w) { 
+			if (IsWindowVisible(w) && GetWindow(w, GW_OWNER) == GetMainHwnd() && focusedWnd != w) {
 				SetForegroundWindow(w);
 				return;
 			}
 			w = GetWindow(w, GW_HWNDPREV);
 		}
 	}
+#endif
 }
 
-void setMainWindowActive(COMMAND_T* _ct) {
+
+int g_lastFocusHideOthers = 0;
+
+void cycleFocusHideOthersWnd(COMMAND_T * _ct) 
+{
+#ifdef _WIN32
+	g_hwndsCount = 0;
+	EnumWindows(EnumReaWindows, 0);
+	AddUniqueHnwd(GetMainHwnd(), g_hwnds, &g_hwndsCount);
+
+	// Sort & filter windows
+	WDL_PtrList<HWND> hwndList;
+	for (int i =0; i < g_hwndsCount && i < MAX_ENUM_HWNDS; i++)
+	{
+		char buf[512] = "";
+		GetWindowText(g_hwnds[i], buf, 512);
+		if (strcmp("Item/track info", buf) && // wtf !?
+			strcmp("Docker", buf)) // "closed" floating dockers are in fact hidden (and not redrawn => issue)
+		{
+			int j = 0;
+			for (j=0; j < hwndList.GetSize(); j++)
+			{
+				char buf2[512] = "";
+				GetWindowText(*hwndList.Get(j), buf2, 512);
+				if (strcmp(buf, buf2) < 0)
+					break;
+			}
+			hwndList.Insert(j, &g_hwnds[i]);
+		}
+	}
+
+	// Compute window to be displayed
+	g_lastFocusHideOthers += (int)_ct->user; // not a % !
+	if (g_lastFocusHideOthers < 0)
+		g_lastFocusHideOthers = hwndList.GetSize();
+	else  if (g_lastFocusHideOthers == (hwndList.GetSize()+1))
+		g_lastFocusHideOthers = 0;
+
+	// focus one & hide others
+	if (g_lastFocusHideOthers < hwndList.GetSize())
+	{
+		int lastOk = g_lastFocusHideOthers;
+		for (int i=0; i < hwndList.GetSize(); i++)
+		{
+			HWND h = *hwndList.Get(i);
+			if (i != g_lastFocusHideOthers) {
+				if (h != GetMainHwnd())
+					ShowWindow(h, SW_HIDE);
+			}
+			else {
+				ShowWindow(h, SW_SHOW);
+				lastOk = i;
+			}
+		}
+		SetForegroundWindow(*hwndList.Get(lastOk)); 
+	}
+	// focus main window & unhide others
+	else
+	{
+		for (int i=0; i < hwndList.GetSize(); i++)
+			ShowWindow(*hwndList.Get(i), SW_SHOW);
+		SetForegroundWindow(GetMainHwnd()); 
+	}
+#endif
+}
+
+void focusMainWindow(COMMAND_T* _ct) {
 	SetForegroundWindow(GetMainHwnd()); 
+}
+
+void focusMainWindowCloseOthers(COMMAND_T* _ct) 
+{
+#ifdef _WIN32
+	g_hwndsCount = 0;
+	EnumWindows(EnumReaWindows, 0); 
+	for (int i=0; i < g_hwndsCount && i < MAX_ENUM_HWNDS; i++)
+		if (g_hwnds[i] != GetMainHwnd())
+			SendMessage(g_hwnds[i], WM_SYSCOMMAND, SC_CLOSE, 0);
+#endif
+	SetForegroundWindow(GetMainHwnd()); 
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// WALTER helpers
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef _WIN32
+static BOOL CALLBACK EnumXCPWindows(HWND _hwnd, LPARAM _lParam)
+{
+	char str[256] = "";
+	GetClassName(_hwnd, str, 256);
+	if (!strcmp(str, "REAPERVirtWndDlgHost"))
+		AddUniqueHnwd(_hwnd, g_childHwnds, &g_childHwndsCount);
+	else 
+		EnumChildWindows(_hwnd, EnumXCPWindows, _lParam);
+	return TRUE;
+}
+#endif
+
+void ShowThemeHelper(WDL_String* _report, HWND _hwnd, bool _mcp, bool _sel)
+{
+#ifdef _WIN32
+	EnumChildWindows(_hwnd, EnumXCPWindows, 0);
+	for (int i=0; i < g_childHwndsCount && i < MAX_ENUM_CHILD_HWNDS; i++)
+	{
+		HWND w = g_childHwnds[i];
+		if (IsWindowVisible(w))
+		{
+			bool mcpChild = IsChildOf(w, "Mixer", -1);
+			if ((_mcp && mcpChild) || (!_mcp && !mcpChild))
+			{
+				MediaTrack* tr = (MediaTrack*)GetWindowLongPtr(w, GWLP_USERDATA);
+				int trIdx = (int)GetSetMediaTrackInfo(tr, "IP_TRACKNUMBER", NULL);
+				if (trIdx && (!_sel || (_sel && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
+				{
+						RECT r;	GetClientRect(w, &r);
+						_report->AppendFormatted(512, "%s Track #%d '%s': W=%d, H=%d\n", _mcp ? "MCP" : "TCP", trIdx==-1 ? 0 : trIdx, trIdx==-1 ? "[MASTER]" : (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), r.right-r.left, r.bottom-r.top);
+				}
+			}
+		}
+	}
+#endif
+} 
+
+void ShowThemeHelper(COMMAND_T* _ct)
+{
+	WDL_String report("");
+	ShowThemeHelper(&report, GetMainHwnd(), false, (int)_ct->user == 1);
+	if ((int)_ct->user != 1 && report.GetLength())
+		report.Append("\n");
+
+	HWND w = GetReaWindowByTitle("Mixer Master");
+	if (w && IsWindowVisible(w)) 
+		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
+	
+	w = GetReaWindowByTitle("Mixer");
+	if (w && IsWindowVisible(w)) 
+		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
+
+	SNM_ShowConsoleMsg(report.Get(), "S&M - Theme Helper");
 }

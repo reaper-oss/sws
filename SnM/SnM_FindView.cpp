@@ -147,19 +147,14 @@ bool SNM_FindWnd::Find(int _mode)
 		case TYPE_ITEM_NOTES:
 			update = FindMediaItem(_mode, false, NULL, ItemNotesMatch);
 		break;
-
 		case TYPE_TRACK_NAME:
 			update = FindTrack(_mode, TrackNameMatch);
 		break;
 		case TYPE_TRACK_NOTES:
 			update = FindTrack(_mode, TrackNotesMatch);
 		break;
-
 		case TYPE_MARKER_REGION:
 			update = FindMarkerRegion(_mode);
-
-		default:
-		break;
 	}
 	return update;
 }

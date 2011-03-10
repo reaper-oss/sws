@@ -114,6 +114,7 @@ public:
 	int m_id, m_tick;
 };
 
+
 class SNM_SndRcv {
 public:
 	SNM_SndRcv() {}
@@ -129,10 +130,8 @@ public:
 };
 
 
-// SNM_FastListView
-// Defined in SnM_Dlg.cpp
-class SNM_FastListView : public SWS_ListView
-{
+// SNM_FastListView (defined in SnM_Dlg.cpp)
+class SNM_FastListView : public SWS_ListView {
 public:
 	SNM_FastListView(HWND _hwndList, HWND _hwndEdit, int _iCols, SWS_LVColumn* _pCols, const char* _cINIKey, bool _bTooltips)
 	: SWS_ListView(_hwndList, _hwndEdit, _iCols, _pCols, _cINIKey, _bTooltips) {}
@@ -229,6 +228,10 @@ void saveSlotIniFile(const char* _key, int _slot, const char* _path, const char*
 void reassignLearntMIDICh(COMMAND_T* _ct);
 
 // *** SnM_Windows.cpp ***
+bool IsChildOf(HWND _hChild, const char* _title, int _nComp = -1);
+HWND GetReaWindowByTitle(const char* _title, int _nComp = -1);
+HWND SearchWindow(const char* _title);
+HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
 bool toggleShowHideWin(const char * _title);
 bool closeWin(const char * _title);
 void closeOrToggleAllWindows(bool _routing, bool _env, bool _toggle);
@@ -261,7 +264,10 @@ void cycleFloatFXWndSelTracks(COMMAND_T * _ct);
 void cycleFocusFXAndMainWndAllTracks(COMMAND_T * _ct);
 void cycleFocusFXMainWndSelTracks(COMMAND_T * _ct);
 void cycleFocusWnd(COMMAND_T * _ct);
-void setMainWindowActive(COMMAND_T* _ct);
+void cycleFocusHideOthersWnd(COMMAND_T * _ct);
+void focusMainWindow(COMMAND_T* _ct);
+void focusMainWindowCloseOthers(COMMAND_T* _ct);
+void ShowThemeHelper(COMMAND_T* _ct);
 
 // *** SnM_Sends.cpp ***
 bool cueTrack(const char* _busName, int _type, const char* _undoMsg, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
@@ -394,15 +400,7 @@ void MESetCCLanes(COMMAND_T* _ct);
 void MESaveCCLanes(COMMAND_T* _ct);
 
 // *** SnM_Misc.cpp ***
-void letREAPERBreathe(COMMAND_T* _ct);
-void winWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
-void simulateMouseClick(COMMAND_T* _ct);
-void dumpWikiActions2(COMMAND_T* _ct);
-int SNM_MinMax(int _val, int _min, int _max);
-void SNM_ShowConsoleMsg(const char* _msg, const char* _title="", bool _clear=true); 
-void SNM_ShowConsoleDbg(bool _clear, const char* format, ...);
 bool SNM_DeleteFile(const char* _filename);
-bool FileExistsErrMsg(const char* _fn, bool _errMsg=true);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath = false);
 void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn);
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _maxFn);
@@ -411,14 +409,22 @@ bool SaveChunk(const char* _fn, WDL_String* _chunk);
 void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
 void StringToExtensionConfig(char* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx);
-HWND SearchWindow(const char* _title);
-HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
+int SNM_MinMax(int _val, int _min, int _max);
 bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMaxSize);
-int promptForMIDIChannel(const char* _title);
+void SNM_ShowConsoleMsg(const char* _msg, const char* _title="", bool _clear=true); 
+void SNM_ShowConsoleDbg(bool _clear, const char* format, ...);
+int PromptForMIDIChannel(const char* _title);
+
+bool FileExistsErrMsg(const char* _fn, bool _errMsg=true);
+void LetREAPERBreathe(COMMAND_T* _ct);
+void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
+void SimulateMouseClick(COMMAND_T* _ct);
+void DumpWikiActions2(COMMAND_T* _ct);
+
 #ifdef _SNM_MISC
 void ShowTakeEnvPadreTest(COMMAND_T* _ct);
-void setPresetTest(COMMAND_T* _ct);
-void openStuff(COMMAND_T* _ct);
+void DumpWikiActions(COMMAND_T* _ct);
+void OpenStuff(COMMAND_T* _ct);
 #endif
 
 

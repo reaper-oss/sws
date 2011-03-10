@@ -57,7 +57,7 @@ SWSProjConfig<WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<MidiLiveIt
 
 int g_configId = 0; // the current *displayed* config id
 int g_approxDelayMsCC = 250;
-static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Desc."}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, /*presets {150,2,"FX Presets"},*/ {150,1,"Activate action"}, {150,1,"Deactivate action"}};
+static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, /*presets {150,2,"FX Presets"},*/ {150,1,"Activate action"}, {150,1,"Deactivate action"}};
 
 
 bool AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_String* _curPresetConf)

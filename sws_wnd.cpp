@@ -160,7 +160,7 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		case WM_TIMER:
-			OnTimer();
+			OnTimer(wParam);
 			break;
 		case WM_NOTIFY:
 		{

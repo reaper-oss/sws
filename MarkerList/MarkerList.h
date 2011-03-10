@@ -65,7 +65,7 @@ protected:
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	HMENU OnContextMenu(int x, int y);
 	void OnDestroy();
-	void OnTimer();
+	void OnTimer(WPARAM wParam=0);
 	int OnKey(MSG* msg, int iKeyState);
 };
 

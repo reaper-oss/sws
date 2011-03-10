@@ -368,7 +368,7 @@ void SWS_TrackListWnd::OnDestroy()
 	WritePrivateProfileString(SWS_INI, m_cOptionsKey, str, get_ini_file());
 }
 
-void SWS_TrackListWnd::OnTimer()
+void SWS_TrackListWnd::OnTimer(WPARAM wParam)
 {
 	if (m_bUpdate)
 	{

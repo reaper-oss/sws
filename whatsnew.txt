@@ -1,3 +1,10 @@
+Added actions (issue 165):
++SWS/S&M: Focus next window (hide others)
++SWS/S&M: Focus previous window (hide others)
+
+Fixed issue 204 (notes/help view: actions were not displayed when action window is docked)
+S&M GUI tweaks
+
 !v2.0.0 #16 (March 9, 2011)
 Added actions:
 +SWS: Ignore next marker action

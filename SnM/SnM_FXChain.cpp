@@ -524,7 +524,7 @@ void reassignLearntMIDICh(COMMAND_T* _ct)
 	{
 		case -1:
 		case -2:
-			ch = promptForMIDIChannel(SNM_CMD_SHORTNAME(_ct)); //loops on err
+			ch = PromptForMIDIChannel(SNM_CMD_SHORTNAME(_ct)); //loops on err
 			if (ch == -1) return; // user has cancelled
 			break;
 	}

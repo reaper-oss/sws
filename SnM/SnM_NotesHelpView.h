@@ -64,7 +64,7 @@ protected:
 	HMENU OnContextMenu(int x, int y);
 	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState);
-	void OnTimer();
+	void OnTimer(WPARAM wParam=0);
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	int updateItemNotes();

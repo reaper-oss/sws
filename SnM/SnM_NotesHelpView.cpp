@@ -605,7 +605,8 @@ int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState)
 }
 
 void SNM_NotesHelpWnd::OnTimer(WPARAM wParam) {
-	if (!IsActive()) // no update while the user edits..
+	// no update when the user edits & when the view is hidden (e.g. inactive docker tab)
+	if (!IsActive() && IsWindowVisible(m_hwnd))
 		Update();
 }
 
@@ -635,7 +636,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 				h = img->image->getHeight();
 			}
 			else {
-				btnVwnd->SetTextLabel("Lock", 0, font);
+				btnVwnd->SetTextLabel(g_locked ? "Unlock" : "Lock", 0, font);
 				btnVwnd->SetForceBorder(true);
 				w = 50;
 			}

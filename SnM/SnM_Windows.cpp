@@ -52,7 +52,7 @@ bool IsChildOf(HWND _hChild, const char* _title, int _nComp)
 	char buf[512] = "";
 	while (hCurrent) 
 	{
-		hCurrent = GetParent(hCurrent); //JFB!!! in SWELL ?
+		hCurrent = GetParent(hCurrent);
 		if (hCurrent)
 		{
 			GetWindowText(hCurrent, buf, 512);
@@ -68,9 +68,9 @@ bool IsChildOf(HWND _hChild, const char* _title, int _nComp)
 #define MAX_ENUM_CHILD_HWNDS 512
 #define MAX_ENUM_HWNDS 256
 
+//JFB TODO clean with WDL_PtrList instead
 static int g_hwndsCount = 0;
 static HWND g_hwnds[MAX_ENUM_CHILD_HWNDS];
-
 static int g_childHwndsCount = 0;
 static HWND g_childHwnds[MAX_ENUM_CHILD_HWNDS];
 
@@ -862,8 +862,8 @@ void ShowThemeHelper(WDL_String* _report, HWND _hwnd, bool _mcp, bool _sel)
 				int trIdx = (int)GetSetMediaTrackInfo(tr, "IP_TRACKNUMBER", NULL);
 				if (trIdx && (!_sel || (_sel && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
 				{
-						RECT r;	GetClientRect(w, &r);
-						_report->AppendFormatted(512, "%s Track #%d '%s': W=%d, H=%d\n", _mcp ? "MCP" : "TCP", trIdx==-1 ? 0 : trIdx, trIdx==-1 ? "[MASTER]" : (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), r.right-r.left, r.bottom-r.top);
+					RECT r;	GetClientRect(w, &r);
+					_report->AppendFormatted(512, "%s Track #%d '%s': W=%d, H=%d\n", _mcp ? "MCP" : "TCP", trIdx==-1 ? 0 : trIdx, trIdx==-1 ? "[MASTER]" : (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), r.right-r.left, r.bottom-r.top);
 				}
 			}
 		}

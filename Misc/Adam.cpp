@@ -30,6 +30,7 @@
 #include "Adam.h"
 #include "Context.h"
 #include "TrackSel.h"
+#include "ProjPrefs.h"
 #include "../Xenakios/XenakiosExts.h"
 
 
@@ -39,7 +40,7 @@
 
 static bool g_AWCopyFlag;
 static double g_AWCopySelLen;
-
+static bool g_AWTBaseStretchFlag;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Fills gaps aka Beat Detective
@@ -393,7 +394,10 @@ void AWFillGapsAdv(const char* title, char* retVals)
 							double splitPoint = item1TransPos + presTrans - transFade;
 							
 							// Check for default item fades
-							double defItemFades = *(double*)(GetConfigVar("deffadelen"));
+							int fadeStateStore = *(int*)(GetConfigVar("splitautoxfade"));
+							
+							
+							/*
 							bool fadeFlag = 0;
 							
 							if (defItemFades > 0)
@@ -401,15 +405,30 @@ void AWFillGapsAdv(const char* title, char* retVals)
 								fadeFlag = 1;
 								Main_OnCommand(41194,0);
 							}
+							*/
+							/*
+							bool splitFlag = IsSplitFadeOn();
+							bool fadeFlag = IsDefaultFadeOn();
+							
+							if (splitFlag)
+								AWSplitFadeToggle();
+							
+							if (fadeFlag)
+								AWDefaultFadeToggle();
+							*/
+							*(int*)(GetConfigVar("splitautoxfade")) = 12;
 							
 							// Split item1 at the split point
 							MediaItem* item1B = SplitMediaItem(item1, splitPoint);
 							
-							// Revert item fades
+							*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
+							
+							/*// Revert item fades
 							if (fadeFlag)
 							{
 								Main_OnCommand(41194,0);
 							}
+							*/
 							
 							// Get new item1 length after split
 							item1Length = GetMediaItemInfo_Value(item1, "D_LENGTH") + transFade;
@@ -1071,6 +1090,7 @@ void AWFadeSelection(COMMAND_T* t)
 	bool leftFlag=false;
 	bool rightFlag=false;
 	
+	
 	double selStart;
 	double selEnd;
 	
@@ -1093,6 +1113,7 @@ void AWFadeSelection(COMMAND_T* t)
 				rightFlag = false;
 				
 				
+				//Crossfade items section
 				
 				// Try to match up the end with the start of the other selected media items
 				for (int iItem2 = 0; iItem2 < GetTrackNumMediaItems(tr); iItem2++)
@@ -1155,6 +1176,7 @@ void AWFadeSelection(COMMAND_T* t)
 									}
 								}
 								rightFlag=true;
+								//leftFlag=true;
 								break;
 								
 							}
@@ -1163,7 +1185,7 @@ void AWFadeSelection(COMMAND_T* t)
 							
 							else
 							{
-								dFadeLen = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
+								dFadeLen = fabs(*(double*)GetConfigVar("defsplitxfadelen")); // Abs because neg value means "not auto"
 								dEdgeAdj1 = dFadeLen / 2.0;
 								
 								dEdgeAdj2 = dFadeLen / 2.0;
@@ -1207,6 +1229,9 @@ void AWFadeSelection(COMMAND_T* t)
 									}
 								}
 								rightFlag=true;
+								
+								//Added Mar 16/2011, fixes fade in getting created if edit cursor placed in first half of left item, this is technically expected behavior but not in reality
+								leftFlag=true;
 								break;
 							}
 							
@@ -1221,6 +1246,9 @@ void AWFadeSelection(COMMAND_T* t)
 						else if ((fabs(dEnd2 - dStart1) < SWS_ADJACENT_ITEM_THRESHOLD))
 						{
 							leftFlag=true;
+							
+							//Added Mar 16/2011, fixes fade out getting created on right item if edit cursor is within last half of it
+							rightFlag=true;
 						}
 						
 						
@@ -1335,6 +1363,9 @@ void AWFadeSelection(COMMAND_T* t)
 									}
 								}
 								rightFlag=true;
+								
+								//Added Mar16/2011, fixes unexpected fade in's from "fade in to cursor" section
+								leftFlag=true;
 								break;
 							}
 							
@@ -1352,6 +1383,7 @@ void AWFadeSelection(COMMAND_T* t)
 						else if ((dStart1 < dEnd2) && (dStart2 < dStart1) && (dEnd1 > dEnd2)) 
 						{
 							leftFlag=true;
+							rightFlag=true;
 						}
 						
 						
@@ -2295,6 +2327,63 @@ void AWDelete(COMMAND_T*)
 }
 
 
+void AWExtendSelLeft(COMMAND_T*)
+{
+	double selStart;
+	double selEnd;
+	double cursorPos = GetCursorPosition();
+	
+	GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
+	
+	if ((selStart == selEnd) || ((cursorPos != selStart) && (cursorPos != selEnd)))
+	{
+		Main_OnCommand(40626, 0); // Set time selection end point
+		Main_OnCommand(40646, 0); // Move cursor left to grid division
+		Main_OnCommand(40625, 0); // Set time selection start point
+	}
+	else if (cursorPos == selEnd)
+	{
+		Main_OnCommand(40646, 0); // Move cursor left to grid division
+		Main_OnCommand(40626, 0); // Set time selection end point
+		Main_OnCommand(40631, 0); // Go to end of time selection
+
+	}
+	else if (cursorPos == selStart)
+	{
+		Main_OnCommand(40646, 0); // Move cursor left to grid division
+		Main_OnCommand(40625, 0); // Set time selection start point
+	}
+}
+
+void AWExtendSelRight(COMMAND_T*)
+{
+	double selStart;
+	double selEnd;
+	double cursorPos = GetCursorPosition();
+	
+	GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
+	
+	if ((selStart == selEnd) || ((cursorPos != selStart) && (cursorPos != selEnd)))
+	{
+		Main_OnCommand(40625, 0); // Set time selection start point
+		Main_OnCommand(40647, 0); // Move cursor right to grid division
+		Main_OnCommand(40626, 0); // Set time selection end point
+		Main_OnCommand(40631, 0); // Go to end of time selection
+
+	}
+	else if (cursorPos == selEnd)
+	{
+		Main_OnCommand(40647, 0); // Move cursor right to grid division
+		Main_OnCommand(40626, 0); // Set time selection end point
+		Main_OnCommand(40631, 0); // Go to end of time selection
+	}
+	else if (cursorPos == selStart)
+	{
+		Main_OnCommand(40647, 0); // Move cursor right to grid division
+		Main_OnCommand(40625, 0); // Set time selection start point
+	}
+}
+
 
 
 
@@ -2397,21 +2486,323 @@ bool IsCountPlayOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroe
 bool IsCountRecOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroen") & 16) != 0; }
 
 // Editing Preferences
+
+/* Deprecated
 void AWRelEdgeOn(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("relativeedges") |= 1;}
 void AWRelEdgeOff(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("relativeedges") &= ~1;}
 void AWRelEdgeToggle(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("relativeedges") ^= 1;}
 bool IsRelEdgeOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("relativeedges") & 1)  != 0; }
 
-void AWClrTimeSelClkOn(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemclickmovecurs") |= 64;}
-void AWClrTimeSelClkOff(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemclickmovecurs") &= ~64;}
-void AWClrTimeSelClkToggle(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("itemclickmovecurs") ^= 64;}
-bool IsClrTimeSelClkOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("itemclickmovecurs") & 64)  != 0; }
+void AWSplitFadeOn(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("splitautoxfade") |= 1;}
+void AWSplitFadeOff(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("splitautoxfade") &= ~1;}
+void AWSplitFadeToggle(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("splitautoxfade") ^= 1;}
+bool IsSplitFadeOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("splitautoxfade") & 1)  != 0; }
+
+void AWDefaultFadeOff(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("splitautoxfade") |= 8;}
+void AWDefaultFadeOn(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("splitautoxfade") &= ~8;}
+void AWDefaultFadeToggle(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("splitautoxfade") ^= 8;}
+bool IsDefaultFadeOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("splitautoxfade") & 8)  == 0; }
+*/
+ 
+void AWClrTimeSelClkOn(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemclickmovecurs") |= 68;}
+void AWClrTimeSelClkOff(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemclickmovecurs") &= ~68;}
+
+void AWClrTimeSelClkToggle(COMMAND_T* = NULL)		
+{ 
+	// If "click to clear" and "move cursor on time change" are both ON or both OFF, just toggle
+	if ((*(int*)GetConfigVar("itemclickmovecurs") & 64 && *(int*)GetConfigVar("itemclickmovecurs") & 4) || (!(*(int*)GetConfigVar("itemclickmovecurs") & 64) && !(*(int*)GetConfigVar("itemclickmovecurs") & 4)))
+		*(int*)GetConfigVar("itemclickmovecurs") ^= 68;
+
+	// If one of them is different than the other, turn them both ON
+	else 
+		*(int*)GetConfigVar("itemclickmovecurs") |= 68;
+}
+
+bool IsClrTimeSelClkOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("itemclickmovecurs") & 68)  != 0; }
 
 void AWClrLoopClkOn(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemclickmovecurs") |= 32;}
 void AWClrLoopClkOff(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemclickmovecurs") &= ~32;}
 void AWClrLoopClkToggle(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("itemclickmovecurs") ^= 32;}
 bool IsClrLoopClkOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("itemclickmovecurs") & 32)  != 0; }
 
+void UpdateTimebaseToolbar()
+{
+	RefreshToolbar(NamedCommandLookup("_SWS_AWTBASETIME"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWTBASEBEATPOS"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWTBASEBEATALL"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWTBASEBEAT"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWTBASEBTOG"));
+}
+
+void AWTimebaseTime(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("itemtimelock") = 0; UpdateTimebaseToolbar();}
+bool IsTimebaseTime(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("itemtimelock") == 0); }
+
+
+void AWTimebaseBeatPos(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("itemtimelock") = 2; UpdateTimebaseToolbar();}
+bool IsTimebaseBeatPos(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("itemtimelock") == 2); }
+
+void AWTimebaseBeatAll(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("itemtimelock") = 1; UpdateTimebaseToolbar();}
+bool IsTimebaseBeatAll(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("itemtimelock") == 1); }
+
+
+void AWTimebaseBeat(COMMAND_T* = NULL)		
+{ 
+	if (g_AWTBaseStretchFlag)
+		*(int*)GetConfigVar("itemtimelock") = 1; 
+	else 
+		*(int*)GetConfigVar("itemtimelock") = 2; 
+
+
+	UpdateTimebaseToolbar();
+
+}
+bool IsTimebaseBeat(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("itemtimelock") != 0); }
+
+void AWTimebaseToggleStretch(COMMAND_T* = NULL)		
+{ 
+	if (*(int*)GetConfigVar("itemtimelock") == 1)
+	{
+		*(int*)GetConfigVar("itemtimelock") = 2;
+		g_AWTBaseStretchFlag = 0;
+	}
+	else
+	{
+		*(int*)GetConfigVar("itemtimelock") = 1;
+		g_AWTBaseStretchFlag = 1;
+	}
+			
+	UpdateTimebaseToolbar();
+
+}
+
+
+void UpdateGridToolbar()
+{
+	RefreshToolbar(NamedCommandLookup("_SWS_AWTOGGLETRIPLET"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWTOGGLEDOTTED"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWGRID4"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWGRID8"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWGRID16"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWGRID32"));
+}
+
+bool IsGridTriplet(COMMAND_T* = NULL)		
+{
+	double grid = *(double*)GetConfigVar("projgriddiv");
+	double n = 1.0/grid;
+	
+	while (n < 3.0) { n *= 2.0; }
+	
+	double r = fmod(n, 3.0);
+	return r < 0.000001 || r > 2.99999;
+}
+
+bool IsGridDotted(COMMAND_T* = NULL)		
+{
+	double grid = *(double*)GetConfigVar("projgriddiv");
+	double n = 1.0/grid;
+	
+	while (n < (2.0/3.0)) { n *= 2.0; }
+	while (n > (4.0/3.0)) { n *= 0.5; }
+	
+	double r = fmod(n, (2.0/3.0));
+	return r < 0.000001 || r > 0.66666;
+}
+
+/*
+ void AWToggleDotted2(COMMAND_T* = NULL)
+{
+	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
+	
+	if (IsGridDotted()) 
+		*pGridDiv *= 2.0/3.0;
+	else 
+		*pGridDiv *= 3.0/2.0;
+	
+	
+	UpdateGridToolbar();
+	UpdateTimeline();
+	
+}
+ */
+
+void AWToggleDotted(COMMAND_T* = NULL);
+
+void AWToggleTriplet(COMMAND_T* = NULL)
+{
+	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
+	
+	if (IsGridDotted())
+		AWToggleDotted();
+		
+	if (IsGridTriplet()) 
+		*pGridDiv *= 3.0/2.0;
+	else 
+		*pGridDiv *= 2.0/3.0;
+
+	
+	UpdateGridToolbar();
+	UpdateTimeline();
+	
+}
+
+
+
+void AWToggleDotted(COMMAND_T*)
+{
+	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
+	
+	if (IsGridTriplet())
+		AWToggleTriplet();
+		
+	if (IsGridDotted()) 
+		*pGridDiv *= 2.0/3.0;
+	else 
+		*pGridDiv *= 3.0/2.0;
+
+	
+	UpdateGridToolbar();
+	UpdateTimeline();
+	
+}
+
+
+void AWGrid4(COMMAND_T* = NULL)
+{
+	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
+	
+	if (IsGridTriplet()) 
+		*pGridDiv = 1.0*(2.0/3.0);
+	else if (IsGridDotted()) 
+		*pGridDiv = 1.0*(3.0/2.0);
+	else 
+		*pGridDiv = 1.0;
+	
+	UpdateGridToolbar();
+	UpdateTimeline();
+	
+}
+
+bool IsGrid4(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 1.0 || *(double*)GetConfigVar("projgriddiv") == 1.0*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 1.0*(3.0/2.0)); }
+	
+void AWGrid8(COMMAND_T* = NULL)
+{
+	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
+	
+	if (IsGridTriplet()) 
+		*pGridDiv = 0.5*(2.0/3.0);
+	else if (IsGridDotted()) 
+		*pGridDiv = 0.5*(3.0/2.0);
+	else 
+		*pGridDiv = 0.5;
+	
+	UpdateGridToolbar();
+	UpdateTimeline();
+	
+}
+
+bool IsGrid8(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 0.5 || *(double*)GetConfigVar("projgriddiv") == 0.5*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.5*(3.0/2.0)); }
+
+void AWGrid16(COMMAND_T* = NULL)
+{
+	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
+	
+	if (IsGridTriplet()) 
+		*pGridDiv = 0.25*(2.0/3.0);
+	else if (IsGridDotted()) 
+		*pGridDiv = 0.25*(3.0/2.0);
+	else 
+		*pGridDiv = 0.25;
+	
+	UpdateGridToolbar();
+	UpdateTimeline();
+	
+}
+
+bool IsGrid16(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 0.25 || *(double*)GetConfigVar("projgriddiv") == 0.25*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.25*(3.0/2.0)); }
+
+void AWGrid32(COMMAND_T* = NULL)
+{
+	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
+	
+	if (IsGridTriplet()) 
+		*pGridDiv = 0.125*(2.0/3.0);
+	else if (IsGridDotted()) 
+		*pGridDiv = 0.125*(3.0/2.0);
+	else 
+		*pGridDiv = 0.125;
+	
+	UpdateGridToolbar();
+	UpdateTimeline();
+	
+}
+
+bool IsGrid32(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 0.125 || *(double*)GetConfigVar("projgriddiv") == 0.125*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.125*(3.0/2.0)); }
+
+void AWInsertClickTrack(COMMAND_T* t)
+{
+	Undo_BeginBlock();
+	
+	//Insert track at top of track list
+	InsertTrackAtIndex(0,false);
+	TrackList_AdjustWindows(false);
+	
+	Main_OnCommand(40297, 0); // Unselect all tracks
+	
+	MediaTrack* clickTrack = GetTrack(0,0);
+	
+	SetMediaTrackInfo_Value(clickTrack, "I_SELECTED", 1);
+	
+	char buf[512];
+	strcpy(buf,"Click");
+	GetSetMediaTrackInfo(clickTrack,"P_NAME",&buf);
+	
+	Main_OnCommand(40914, 0); // Set first selected track as last touched
+	
+	
+	Main_OnCommand(40013, 0); // Insert Click Source
+	
+	MediaItem* clickSource = GetTrackMediaItem(clickTrack, 0);
+	
+	SetMediaItemLength(clickSource, 600, 0);
+	SetMediaItemPosition(clickSource, 0, 1);
+	
+	Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
+}
+
+void AWToggleClickTrack(COMMAND_T*)
+{
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		
+		if (stricmp("click", (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL)) == 0)
+		{
+			bool bMute = *(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL);
+			bMute = !bMute;
+			GetSetMediaTrackInfo(tr, "B_MUTE", &bMute);
+			MetronomeOff();
+			return;
+		}
+	}
+			
+	Main_OnCommand(40364, 0); // Toggle built in metronome
+}
+
+bool IsClickUnmuted(COMMAND_T* = NULL)			
+{ 
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		
+		if (stricmp("click", (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL)) == 0)
+		{
+			bool bMute = *(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL);
+			return (!bMute); 
+		}
+	}
+	return 0;
+}
 
 static COMMAND_T g_commandTable[] = 
 {
@@ -2441,6 +2832,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Consolidate Selection" },													"SWS_AWCONSOLSEL",					AWConsolidateSelection, },
 
 	
+	
 	// Toggle Actions 
 	
 	// Metronome Actions
@@ -2463,35 +2855,58 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Toggle count-in before recording" },			"SWS_AWCOUNTRECTOG",				AWCountRecToggle, NULL, 0, IsCountRecOn },
 	
 	// Editing Preferences
-	{ { DEFACCEL, "SWS/AW: Enable relative editing when resizing item edges" },			"SWS_AWRELEDGEON",				AWRelEdgeOn, },
+	/* Deprecated
+    { { DEFACCEL, "SWS/AW: Enable relative editing when resizing item edges" },			"SWS_AWRELEDGEON",				AWRelEdgeOn, },
 	{ { DEFACCEL, "SWS/AW: Disable relative editing when resizing item edges" },		"SWS_AWRELEDGEOFF",				AWRelEdgeOff, },
 	{ { DEFACCEL, "SWS/AW: Toggle relative editing when resizing item edges" },			"SWS_AWRELEDGETOG",				AWRelEdgeToggle, NULL, 0, IsRelEdgeOn },
 	
+	{ { DEFACCEL, "SWS/AW: Enable autocrossfade on split" },			"SWS_AWXFADESPLITON",				AWSplitFadeOn, },
+	{ { DEFACCEL, "SWS/AW: Disable autocrossfade on split" },			"SWS_AWXFADESPLITOFF",				AWSplitFadeOff, },
+	{ { DEFACCEL, "SWS/AW: Toggle autocrossfade on split" },			"SWS_AWXFADESPLITTOG",				AWSplitFadeToggle, NULL, 0, IsSplitFadeOn },
 	
-	{ { DEFACCEL, "SWS/AW: Enable clear time selection on click in arrange" },			"SWS_AWCLRTIMESELCLKON",		AWClrTimeSelClkOn, },
-	{ { DEFACCEL, "SWS/AW: Disable clear time selection on click in arrange" },			"SWS_AWCLRTIMESELCLKOFF",		AWClrTimeSelClkOff, },
-	{ { DEFACCEL, "SWS/AW: Toggle clear time selection on click in arrange" },			"SWS_AWCLRTIMESELCLKTOG",		AWClrTimeSelClkToggle, NULL, 0, IsClrTimeSelClkOn },
+	{ { DEFACCEL, "SWS/AW: Enable automatic item fades" },			"SWS_AWDEFFADEON",				AWDefaultFadeOn, },
+	{ { DEFACCEL, "SWS/AW: Disable automatic item fades" },			"SWS_AWDEFFADEOFF",				AWDefaultFadeOff, },
+	{ { DEFACCEL, "SWS/AW: Toggle automatic item fades" },			"SWS_AWDEFFADETOG",				AWDefaultFadeToggle, NULL, 0, IsDefaultFadeOn },
+	*/
+	
+	{ { DEFACCEL, "SWS/AW: Enable 'link time selection and edit cursor'" },			"SWS_AWCLRTIMESELCLKON",		AWClrTimeSelClkOn, },
+	{ { DEFACCEL, "SWS/AW: Disable link time selection and edit cursor'" },			"SWS_AWCLRTIMESELCLKOFF",		AWClrTimeSelClkOff, },
+	{ { DEFACCEL, "SWS/AW: Toggle link time selection and edit cursor'" },			"SWS_AWCLRTIMESELCLKTOG",		AWClrTimeSelClkToggle, NULL, 0, IsClrTimeSelClkOn },
 	
 	{ { DEFACCEL, "SWS/AW: Enable clear loop points on click in ruler" },			"SWS_AWCLRLOOPCLKON",				AWClrLoopClkOn, },
 	{ { DEFACCEL, "SWS/AW: Disable clear loop points on click in ruler" },			"SWS_AWCLRLOOPCLKOFF",				AWClrLoopClkOff, },
 	{ { DEFACCEL, "SWS/AW: Toggle clear loop points on click in ruler" },			"SWS_AWCLRLOOPCLKTOG",				AWClrLoopClkToggle, NULL, 0, IsClrLoopClkOn },
 	
+	{ { DEFACCEL, "SWS/AW: Set project timebase to time" },												"SWS_AWTBASETIME",					AWTimebaseTime, NULL, 0, IsTimebaseTime},
+	{ { DEFACCEL, "SWS/AW: Set project timebase to beats (position only)" },							"SWS_AWTBASEBEATPOS",				AWTimebaseBeatPos, NULL, 0, IsTimebaseBeatPos},
+	{ { DEFACCEL, "SWS/AW: Set project timebase to beats (position, length, rate)" },					"SWS_AWTBASEBEATALL",				AWTimebaseBeatAll, NULL, 0, IsTimebaseBeatAll},
+	//{ { DEFACCEL, "SWS/AW: Toggle 'beats (position only)'/'beats (position, length rate')" },			"SWS_AWTBASEBTOG",				AWTimebaseToggleStretch, NULL, 0, IsTimebaseBeatAll},
+	//{ { DEFACCEL, "SWS/AW: Set project timebase to beats" },											"SWS_AWTBASEBEAT",				AWTimebaseBeat, NULL, 0, IsTimebaseBeat},
 
-	
+	/* Not ready or not safe enough/integrated well enough for public use
+	{ { DEFACCEL, "SWS/AW: Toggle triplet grid" },			"SWS_AWTOGGLETRIPLET",				AWToggleTriplet, NULL, 0, IsGridTriplet},
+	{ { DEFACCEL, "SWS/AW: Toggle dotted grid" },			"SWS_AWTOGGLEDOTTED",				AWToggleDotted, NULL, 0, IsGridDotted},
+
+	{ { DEFACCEL, "SWS/AW: Grid to 1/4" },			"SWS_AWGRID4",				AWGrid4, NULL, 0, IsGrid4},
+	{ { DEFACCEL, "SWS/AW: Grid to 1/8" },			"SWS_AWGRID8",				AWGrid8, NULL, 0, IsGrid8},
+	{ { DEFACCEL, "SWS/AW: Grid to 1/16" },			"SWS_AWGRID16",				AWGrid16, NULL, 0, IsGrid16},
+	{ { DEFACCEL, "SWS/AW: Grid to 1/32" },			"SWS_AWGRID32",				AWGrid32, NULL, 0, IsGrid32},
 	
 	
 	// Stuff that sort of sucks that I might make decent enough to release
 	//{ { DEFACCEL, "SWS/AW: Copy" },			"SWS_AWCOPY",					AWCopy, },
 	//{ { DEFACCEL, "SWS/AW: Cut" },			"SWS_AWCUT",					AWCut, },
-	//{ { DEFACCEL, "SWS/AW: Paste" },		"SWS_AWPASTE",					AWPaste, },
+	{ { DEFACCEL, "SWS/AW: Paste" },		"SWS_AWPASTE",					AWPaste, },
 	//{ { DEFACCEL, "SWS/AW: Delete" },		"SWS_AWDELETE",					AWDelete, NULL, },
 	
 	//{ { DEFACCEL, "SWS/AW: Select Stretched Items" },													"SWS_AWSELSTRETCH",					AWSelectStretched, },
 
 
 	//{ { DEFACCEL, "SWS/AW: Quick Punch Record" },			"SWS_AWQUICKPUNCH",					AWRecordQuickPunch, },
-
 	
+	{ { DEFACCEL, "SWS/AW: Insert click track" },		"SWS_AWINSERTCLICKTRK",					AWInsertClickTrack, NULL, },
+	{ { DEFACCEL, "SWS/AW: Toggle click track mute" },		"SWS_AWTOGGLECLICKTRACK",					AWToggleClickTrack, NULL, 0, IsClickUnmuted},
+    */
 	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

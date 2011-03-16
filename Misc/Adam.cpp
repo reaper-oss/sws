@@ -2776,7 +2776,7 @@ void AWToggleClickTrack(COMMAND_T*)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		
-		if (stricmp("click", (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL)) == 0)
+		if (_stricmp("click", (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL)) == 0)
 		{
 			bool bMute = *(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL);
 			bMute = !bMute;
@@ -2795,7 +2795,7 @@ bool IsClickUnmuted(COMMAND_T* = NULL)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		
-		if (stricmp("click", (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL)) == 0)
+		if (_stricmp("click", (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL)) == 0)
 		{
 			bool bMute = *(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL);
 			return (!bMute); 
@@ -2870,12 +2870,12 @@ static COMMAND_T g_commandTable[] =
 	*/
 	
 	{ { DEFACCEL, "SWS/AW: Enable 'link time selection and edit cursor'" },			"SWS_AWCLRTIMESELCLKON",		AWClrTimeSelClkOn, },
-	{ { DEFACCEL, "SWS/AW: Disable link time selection and edit cursor'" },			"SWS_AWCLRTIMESELCLKOFF",		AWClrTimeSelClkOff, },
-	{ { DEFACCEL, "SWS/AW: Toggle link time selection and edit cursor'" },			"SWS_AWCLRTIMESELCLKTOG",		AWClrTimeSelClkToggle, NULL, 0, IsClrTimeSelClkOn },
+	{ { DEFACCEL, "SWS/AW: Disable 'link time selection and edit cursor'" },		"SWS_AWCLRTIMESELCLKOFF",		AWClrTimeSelClkOff, },
+	{ { DEFACCEL, "SWS/AW: Toggle 'link time selection and edit cursor'" },			"SWS_AWCLRTIMESELCLKTOG",		AWClrTimeSelClkToggle, NULL, 0, IsClrTimeSelClkOn },
 	
-	{ { DEFACCEL, "SWS/AW: Enable clear loop points on click in ruler" },			"SWS_AWCLRLOOPCLKON",				AWClrLoopClkOn, },
-	{ { DEFACCEL, "SWS/AW: Disable clear loop points on click in ruler" },			"SWS_AWCLRLOOPCLKOFF",				AWClrLoopClkOff, },
-	{ { DEFACCEL, "SWS/AW: Toggle clear loop points on click in ruler" },			"SWS_AWCLRLOOPCLKTOG",				AWClrLoopClkToggle, NULL, 0, IsClrLoopClkOn },
+	{ { DEFACCEL, "SWS/AW: Enable clear loop points on click in ruler" },			"SWS_AWCLRLOOPCLKON",			AWClrLoopClkOn, },
+	{ { DEFACCEL, "SWS/AW: Disable clear loop points on click in ruler" },			"SWS_AWCLRLOOPCLKOFF",			AWClrLoopClkOff, },
+	{ { DEFACCEL, "SWS/AW: Toggle clear loop points on click in ruler" },			"SWS_AWCLRLOOPCLKTOG",			AWClrLoopClkToggle, NULL, 0, IsClrLoopClkOn },
 	
 	{ { DEFACCEL, "SWS/AW: Set project timebase to time" },												"SWS_AWTBASETIME",					AWTimebaseTime, NULL, 0, IsTimebaseTime},
 	{ { DEFACCEL, "SWS/AW: Set project timebase to beats (position only)" },							"SWS_AWTBASEBEATPOS",				AWTimebaseBeatPos, NULL, 0, IsTimebaseBeatPos},

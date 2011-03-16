@@ -1,29 +1,29 @@
 /******************************************************************************
- / sws_extension.cpp
- /
- / Copyright (c) 2011 Tim Payne (SWS)
- / http://www.standingwaterstudios.com/reaper
- /
- / Permission is hereby granted, free of charge, to any person obtaining a copy
- / of this software and associated documentation files (the "Software"), to deal
- / in the Software without restriction, including without limitation the rights to
- / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- / of the Software, and to permit persons to whom the Software is furnished to
- / do so, subject to the following conditions:
- / 
- / The above copyright notice and this permission notice shall be included in all
- / copies or substantial portions of the Software.
- / 
- / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
- / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- / NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
- / HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- / WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- / FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- / OTHER DEALINGS IN THE SOFTWARE.
- /
- ******************************************************************************/
+/ sws_extension.cpp
+/
+/ Copyright (c) 2011 Tim Payne (SWS)
+/ http://www.standingwaterstudios.com/reaper
+/
+/ Permission is hereby granted, free of charge, to any person obtaining a copy
+/ of this software and associated documentation files (the "Software"), to deal
+/ in the Software without restriction, including without limitation the rights to
+/ use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+/ of the Software, and to permit persons to whom the Software is furnished to
+/ do so, subject to the following conditions:
+/ 
+/ The above copyright notice and this permission notice shall be included in all
+/ copies or substantial portions of the Software.
+/ 
+/ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+/ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+/ OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+/ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+/ HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+/ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+/ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+/ OTHER DEALINGS IN THE SOFTWARE.
+/
+******************************************************************************/
 
 
 #include "stdafx.h"
@@ -66,10 +66,10 @@ bool hookCommandProc(int command, int flag)
 	static bool bReentrancyCheck = false;
 	if (bReentrancyCheck)
 		return false;
-	
+
 	// for Xen extensions
 	g_KeyUpUndoHandler=0;
-	
+
 	// "Hack" to make actions will #s less than 1000 work with SendMessage (AHK)
 	if (command < 1000)
 	{
@@ -78,15 +78,15 @@ bool hookCommandProc(int command, int flag)
 		bReentrancyCheck = false;
 		return true;
 	}
-	
+
 	// Special case for checking recording
 	if (command == 1013 && !RecordInputCheck())
 		return true;
-	
+
 	// Ignore commands that don't have anything to do with us from this point forward
 	if (command < g_iFirstCommand || command > g_iLastCommand)
 		return false;
-	
+
 	for (int i = 0; i < g_commands.GetSize(); i++)
 	{
 		COMMAND_T* cmd = g_commands.Get(i);
@@ -154,7 +154,7 @@ COMMAND_T* SWSUnregisterCommand(int id)
 	for (int i = 0; i < g_toggles.GetSize(); i++)
 		if (g_toggles.Get(i)->accel.accel.cmd == id)
 			g_toggles.Delete(i--);
-	
+
 	for (int i = 0; i < g_commands.GetSize(); i++)
 	{
 		if (g_commands.Get(i)->accel.accel.cmd == id)
@@ -216,7 +216,7 @@ HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIn
 	int i = 0;
 	if (iIndex)
 		i = *iIndex;
-	
+
 	while (pCommands[i].id != LAST_COMMAND && pCommands[i].id != SWS_ENDSUBMENU)
 	{
 		if (pCommands[i].id == SWS_STARTSUBMENU)
@@ -228,7 +228,7 @@ HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIn
 		}
 		else
 			AddToMenu(hMenu, pCommands[i].menuText, pCommands[i].accel.accel.cmd);
-		
+
 		i++;
 	}
 	
@@ -283,66 +283,66 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 // Fake control surface to get a low priority periodic time slice from Reaper
 // and callbacks for some "track params have changed"
 class SWSTimeSlice : public IReaperControlSurface
+{
+public:
+	const char *GetTypeString() { return ""; }
+	const char *GetDescString() { return ""; }
+	const char *GetConfigString() { return ""; }
+
+	bool m_bChanged;
+	int m_iACIgnore;
+	SWSTimeSlice() : m_bChanged(false), m_iACIgnore(0) {}
+
+	void Run()
 	{
-	public:
-		const char *GetTypeString() { return ""; }
-		const char *GetDescString() { return ""; }
-		const char *GetConfigString() { return ""; }
-		
-		bool m_bChanged;
-		int m_iACIgnore;
-		SWSTimeSlice() : m_bChanged(false), m_iACIgnore(0) {}
-		
-		void Run()
+		ZoomSlice();
+		MarkerActionSlice();
+		ItemPreviewSlice();
+		PlayItemsOnceSlice();
+		ColorSlice();
+		MiscSlice();
+
+		SnMCSurfRun();
+
+		if (m_bChanged)
 		{
-			ZoomSlice();
-			MarkerActionSlice();
-			ItemPreviewSlice();
-			PlayItemsOnceSlice();
-			ColorSlice();
-			MiscSlice();
-			
-			SnMCSurfRun();
-			
-			if (m_bChanged)
-			{
-				m_bChanged = false;
-				ScheduleTracklistUpdate();
-				g_pMarkerList->Update();
-				UpdateSnapshotsDialog();
-				MediaPoolUpdate();
-				ProjectListUpdate();
-			}
-		}
-		
-		// This is our only notification of active project tab change, so update everything
-		void SetTrackListChange()
-		{
-			m_bChanged = true;
-			AutoColorRun(false);
-			SnMCSurfSetTrackListChange();
-			m_iACIgnore = GetNumTracks() + 1;
-		}
-		// For every SetTrackListChange we get NumTracks+1 SetTrackTitle calls, but we only
-		// want to call AutoColorRun once, so ignore those n+1.
-		// However, we still need to trap track name changes with no track list change.
-		void SetTrackTitle(MediaTrack *tr, const char *c)
-		{
+			m_bChanged = false;
 			ScheduleTracklistUpdate();
-			if (!m_iACIgnore)
-			{
-				AutoColorRun(false);
-				SnMCSurfSetTrackTitle();
-			}
-			else
-				m_iACIgnore--;
+			g_pMarkerList->Update();
+			UpdateSnapshotsDialog();
+			MediaPoolUpdate();
+			ProjectListUpdate();
 		}
-		
-		void SetSurfaceSelected(MediaTrack *tr, bool bSel)	{ ScheduleTracklistUpdate(); }
-		void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); UpdateTrackMute(); }
-		void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); UpdateTrackSolo(); }
-		void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); UpdateTrackArm(); }
-	};
+	}
+
+	// This is our only notification of active project tab change, so update everything
+	void SetTrackListChange()
+	{
+		m_bChanged = true;
+		AutoColorRun(false);
+		SnMCSurfSetTrackListChange();
+		m_iACIgnore = GetNumTracks() + 1;
+	}
+	// For every SetTrackListChange we get NumTracks+1 SetTrackTitle calls, but we only
+	// want to call AutoColorRun once, so ignore those n+1.
+	// However, we still need to trap track name changes with no track list change.
+	void SetTrackTitle(MediaTrack *tr, const char *c)
+	{
+		ScheduleTracklistUpdate();
+		if (!m_iACIgnore)
+		{
+			AutoColorRun(false);
+			SnMCSurfSetTrackTitle();
+		}
+		else
+			m_iACIgnore--;
+	}
+
+	void SetSurfaceSelected(MediaTrack *tr, bool bSel)	{ ScheduleTracklistUpdate(); }
+	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); UpdateTrackMute(); }
+	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); UpdateTrackSolo(); }
+	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); UpdateTrackArm(); }
+};
 
 // WDL Stuff
 bool WDL_STYLE_GetBackgroundGradient(double *gradstart, double *gradslope) { return false; }
@@ -353,41 +353,41 @@ int WDL_STYLE_GetSysColor(int i)
 		col = GSC_mainwnd(i); 
 	else 
 		col = GetSysColor(i); 
-	
+
 	// check & "fix" 3D colors that aren't distinguished in many themes..
 #ifdef _WIN32
 	if (i == COLOR_3DSHADOW || i == COLOR_3DLIGHT || i == COLOR_3DHILIGHT)	
 #else
-		if (i == COLOR_3DSHADOW || i == COLOR_3DHILIGHT)	
+	if (i == COLOR_3DSHADOW || i == COLOR_3DHILIGHT)	
 #endif
+	{
+		int col3ds,col3dl,bgcol;
+		if (GSC_mainwnd)
 		{
-			int col3ds,col3dl,bgcol;
-			if (GSC_mainwnd)
-			{
-				col3ds = GSC_mainwnd(COLOR_3DSHADOW);
-				col3dl = GSC_mainwnd(COLOR_3DHILIGHT);
-				bgcol = GSC_mainwnd(COLOR_WINDOW);
-			}
-			else
-			{
-				col3ds = GetSysColor(COLOR_3DSHADOW);
-				col3dl = GetSysColor(COLOR_3DHILIGHT);
-				bgcol = GetSysColor(COLOR_WINDOW);
-			}
-			/*JFB
-			 col3ds =  LICE_RGBA_FROMNATIVE(col3ds, 255);
-			 col3dl =  LICE_RGBA_FROMNATIVE(col3dl, 255);
-			 bgcol =  LICE_RGBA_FROMNATIVE(bgcol, 255);
-			 */
-			if (col3ds == col3dl || col3ds == bgcol || col3dl == bgcol)
-			{
-				int colDelta = SNM_3D_COLORS_DELTA * (i == COLOR_3DSHADOW ? -1 : 1);
-				col = RGB(
-						  SNM_MinMax(LICE_GETR(bgcol) + colDelta, 0, 0xFF),
-						  SNM_MinMax(LICE_GETG(bgcol) + colDelta, 0, 0xFF),
-						  SNM_MinMax(LICE_GETB(bgcol) + colDelta, 0, 0xFF));
-			}
+			col3ds = GSC_mainwnd(COLOR_3DSHADOW);
+			col3dl = GSC_mainwnd(COLOR_3DHILIGHT);
+			bgcol = GSC_mainwnd(COLOR_WINDOW);
 		}
+		else
+		{
+			col3ds = GetSysColor(COLOR_3DSHADOW);
+			col3dl = GetSysColor(COLOR_3DHILIGHT);
+			bgcol = GetSysColor(COLOR_WINDOW);
+		}
+/*JFB
+		col3ds =  LICE_RGBA_FROMNATIVE(col3ds, 255);
+		col3dl =  LICE_RGBA_FROMNATIVE(col3dl, 255);
+		bgcol =  LICE_RGBA_FROMNATIVE(bgcol, 255);
+*/
+		if (col3ds == col3dl || col3ds == bgcol || col3dl == bgcol)
+		{
+			int colDelta = SNM_3D_COLORS_DELTA * (i == COLOR_3DSHADOW ? -1 : 1);
+		    col = RGB(
+				SNM_MinMax(LICE_GETR(bgcol) + colDelta, 0, 0xFF),
+				SNM_MinMax(LICE_GETG(bgcol) + colDelta, 0, 0xFF),
+				SNM_MinMax(LICE_GETB(bgcol) + colDelta, 0, 0xFF));
+		}
+	}
 	return col;
 }
 int WDL_STYLE_WantGlobalButtonBorders() { return 0; }
@@ -424,7 +424,7 @@ extern "C"
 		{
 			ERR_RETURN("Null rec->GetFunc ptr\n")
 		}
-		
+
 		int errcnt=0;
 		IMPAPI(AddExtensionsMainMenu);
 		IMPAPI(AddMediaItemToTrack);
@@ -582,8 +582,6 @@ extern "C"
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
 		IMPAPI(SetMediaItemInfo_Value);
-		IMPAPI(SetMediaItemLength);
-		IMPAPI(SetMediaItemPosition);
 		IMPAPI(SetMediaItemTakeInfo_Value);
 		IMPAPI(SetMediaTrackInfo_Value);
 		IMPAPI(SetProjectMarker);
@@ -624,76 +622,73 @@ extern "C"
 		IMPAPI(UpdateItemInProject);
 		IMPAPI(UpdateTimeline);
 		IMPAPI(ValidatePtr);
-		
-		
+
 		g_hInst = hInstance;
 		g_hwndParent = GetMainHwnd();
-		
+
 		// TODO remove when v4 only:
 		g_bv4 = DockWindowAddEx != NULL;
-		
+
 		if (errcnt)
 		{
 			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have a Reaper version less than 3.74 installed. "
-					   "Please install the latest version of Reaper from www.reaper.fm.", "Version Incompatibility", MB_OK);
+				"Please install the latest version of Reaper from www.reaper.fm.", "Version Incompatibility", MB_OK);
 			return 0;
 		}
-		
+
 		if (!rec->Register("hookcommand",(void*)hookCommandProc))
 			ERR_RETURN("hook command error\n")
-			if (!rec->Register("toggleaction", (void*)toggleActionHook))
-				ERR_RETURN("Toggle action hook error\n")
-				
-				// Call plugin specific init
-				if (!AutoColorInit())
-					ERR_RETURN("Auto Color init error\n")
-					if (!ColorInit())
-						ERR_RETURN("Color init error\n")
-						if (!MarkerListInit())
-							ERR_RETURN("Marker list init error\n")
-							if (!MarkerActionsInit())
-								ERR_RETURN("Marker action init error\n")
-								if (!MediaPoolInit())
-									ERR_RETURN("Mediapool init error\n")
-									if (!ConsoleInit())
-										ERR_RETURN("ReaConsole init error\n")
-										if (!FreezeInit())
-											ERR_RETURN("Freeze init error\n")
-											if (!SnapshotsInit())
-												ERR_RETURN("Snapshots init error\n")
-												if (!TrackListInit())
-													ERR_RETURN("Tracklist init error\n")
-													if (!ProjectListInit())
-														ERR_RETURN("Project List init error\n")
-														if (!ProjectMgrInit())
-															ERR_RETURN("Project Mgr init error\n")
-															if (!XenakiosInit())
-																ERR_RETURN("Xenakios init error\n")
-																if (!MiscInit())
-																	ERR_RETURN("Misc init error\n")
-																	if (!SnMInit(rec))
-																		ERR_RETURN("S&M init error\n")
-																		if(!FNGExtensionInit(hInstance, rec))
-																			ERR_RETURN("Fingers init error\n")
-																			if (!PadreInit())
-																				ERR_RETURN("Padre init error\n")
-																				if (!AboutBoxInit())
-																					ERR_RETURN("About box init error\n")
-																					if (!AutorenderInit())
-																						ERR_RETURN("Autorender init error\n")
-																						
-																						
-																						if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
-																							ERR_RETURN("Menu hook error\n")
-																							AddExtensionsMainMenu();
-		
+		if (!rec->Register("toggleaction", (void*)toggleActionHook))
+			ERR_RETURN("Toggle action hook error\n")
+
+		// Call plugin specific init
+		if (!AutoColorInit())
+			ERR_RETURN("Auto Color init error\n")
+		if (!ColorInit())
+			ERR_RETURN("Color init error\n")
+		if (!MarkerListInit())
+			ERR_RETURN("Marker list init error\n")
+		if (!MarkerActionsInit())
+			ERR_RETURN("Marker action init error\n")
+		if (!MediaPoolInit())
+			ERR_RETURN("Mediapool init error\n")
+		if (!ConsoleInit())
+			ERR_RETURN("ReaConsole init error\n")
+		if (!FreezeInit())
+			ERR_RETURN("Freeze init error\n")
+		if (!SnapshotsInit())
+			ERR_RETURN("Snapshots init error\n")
+		if (!TrackListInit())
+			ERR_RETURN("Tracklist init error\n")
+		if (!ProjectListInit())
+			ERR_RETURN("Project List init error\n")
+		if (!ProjectMgrInit())
+			ERR_RETURN("Project Mgr init error\n")
+		if (!XenakiosInit())
+			ERR_RETURN("Xenakios init error\n")
+		if (!MiscInit())
+			ERR_RETURN("Misc init error\n")
+		if (!SnMInit(rec))
+			ERR_RETURN("S&M init error\n")
+		if(!FNGExtensionInit(hInstance, rec))
+			ERR_RETURN("Fingers init error\n")
+		if (!PadreInit())
+			ERR_RETURN("Padre init error\n")
+		if (!AboutBoxInit())
+			ERR_RETURN("About box init error\n")
+		if (!AutorenderInit())
+			ERR_RETURN("Autorender init error\n")
+
+    	if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
+			ERR_RETURN("Menu hook error\n")
+
 		SWSTimeSlice* ts = new SWSTimeSlice();
 		if (!rec->Register("csurf_inst", ts))
 		{
 			delete ts;
 			ERR_RETURN("TimeSlice init error\n")
 		}
-		
+
 		OK_RETURN("SWS Extension successfully loaded.\n");
 	}
 };   // end extern C

@@ -1,3 +1,4 @@
+!v2.0.0 #17 (March 16, 2011)
 Added actions (issue 165, Win only):
 +SWS/S&M: Focus main window (close others)
 +SWS/S&M: Focus next window (cycle, hide/unhide others)
@@ -10,8 +11,20 @@ House cleaning, removed "duplicated" actions (remaining focus actions now also f
 +SWS/S&M: Focus previous floating FX (+ main window on cycle)
 +SWS/S&M: Focus next floating FX (+ main window on cycle)
 
+New actions from Adam Wathan:
++SWS/AW: Enable 'link time selection and edit cursor'
++SWS/AW: Disable 'link time selection and edit cursor'
++SWS/AW: Toggle 'link time selection and edit cursor'
++SWS/AW: Enable clear loop points on click in ruler
++SWS/AW: Disable clear loop points on click in ruler
++SWS/AW: Toggle clear loop points on click in ruler
++SWS/AW: Set project timebase to time
++SWS/AW: Set project timebase to beats (position only)
++SWS/AW: Set project timebase to beats (position, length, rate)
+
 S&M Notes/help view: optimizations, fixed issue 204 (actions were not refreshed when the view was docked)
 S&M GUI tweaks
+Bug fixes for "Fill Gaps" and "AW Fade" actions
 
 !v2.0.0 #16 (March 9, 2011)
 Added actions:

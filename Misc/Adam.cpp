@@ -2825,7 +2825,7 @@ static COMMAND_T g_commandTable[] =
 	//{ { DEFACCEL, "SWS/AW: Toggle 'beats (position only)'/'beats (position, length rate')" },			"SWS_AWTBASEBTOG",				AWTimebaseToggleStretch, NULL, 0, IsTimebaseBeatAll},
 	//{ { DEFACCEL, "SWS/AW: Set project timebase to beats" },											"SWS_AWTBASEBEAT",				AWTimebaseBeat, NULL, 0, IsTimebaseBeat},
 
-	///* Not ready or not safe enough/integrated well enough for public use
+	/* Not ready or not safe enough/integrated well enough for public use
 	{ { DEFACCEL, "SWS/AW: Toggle triplet grid" },			"SWS_AWTOGGLETRIPLET",				AWToggleTriplet, NULL, 0, IsGridTriplet},
 	{ { DEFACCEL, "SWS/AW: Toggle dotted grid" },			"SWS_AWTOGGLEDOTTED",				AWToggleDotted, NULL, 0, IsGridDotted},
 
@@ -2847,7 +2847,7 @@ static COMMAND_T g_commandTable[] =
 	
 	{ { DEFACCEL, "SWS/AW: Insert click track" },		"SWS_AWINSERTCLICKTRK",					AWInsertClickTrack, NULL, },
 	{ { DEFACCEL, "SWS/AW: Toggle click track mute" },		"SWS_AWTOGGLECLICKTRACK",					AWToggleClickTrack, NULL, 0, IsClickUnmuted},
-    //*/
+    */
 	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

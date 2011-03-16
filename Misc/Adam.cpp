@@ -394,41 +394,50 @@ void AWFillGapsAdv(const char* title, char* retVals)
 							double splitPoint = item1TransPos + presTrans - transFade;
 							
 							// Check for default item fades
-							int fadeStateStore = *(int*)(GetConfigVar("splitautoxfade"));
+							int fadeStateStore; //V4
+							bool fadeFlag = 0; //V3
 							
-							
-							/*
-							bool fadeFlag = 0;
-							
-							if (defItemFades > 0)
+							if (g_bv4)
 							{
-								fadeFlag = 1;
-								Main_OnCommand(41194,0);
+								// V4
+								fadeStateStore = *(int*)(GetConfigVar("splitautoxfade"));
+							
+								*(int*)(GetConfigVar("splitautoxfade")) = 12;
 							}
-							*/
-							/*
-							bool splitFlag = IsSplitFadeOn();
-							bool fadeFlag = IsDefaultFadeOn();
+							else
+							{
+								// V3
+								double defItemFades = *(double*)(GetConfigVar("deffadelen"));
 							
-							if (splitFlag)
-								AWSplitFadeToggle();
 							
-							if (fadeFlag)
-								AWDefaultFadeToggle();
-							*/
-							*(int*)(GetConfigVar("splitautoxfade")) = 12;
+								fadeFlag = 0;
+							
+								if (defItemFades > 0)
+								{
+									fadeFlag = 1;
+									Main_OnCommand(41194,0);
+								}
+							}
+							
 							
 							// Split item1 at the split point
 							MediaItem* item1B = SplitMediaItem(item1, splitPoint);
 							
-							*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
-							
-							/*// Revert item fades
-							if (fadeFlag)
+							// V4
+							if (g_bv4)
+								*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
+							else
 							{
-								Main_OnCommand(41194,0);
+								// V3
+								//Revert item fades
+								 if (fadeFlag)
+								 {
+								 Main_OnCommand(41194,0);
+								 }
 							}
-							*/
+								 
+							
+							
 							
 							// Get new item1 length after split
 							item1Length = GetMediaItemInfo_Value(item1, "D_LENGTH") + transFade;
@@ -1185,7 +1194,11 @@ void AWFadeSelection(COMMAND_T* t)
 							
 							else
 							{
-								dFadeLen = fabs(*(double*)GetConfigVar("defsplitxfadelen")); // Abs because neg value means "not auto"
+								if (g_bv4)
+									dFadeLen = fabs(*(double*)GetConfigVar("defsplitxfadelen")); // Abs because neg value means "not auto"
+								else
+									dFadeLen = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
+								
 								dEdgeAdj1 = dFadeLen / 2.0;
 								
 								dEdgeAdj2 = dFadeLen / 2.0;
@@ -2313,80 +2326,6 @@ void AWPaste(COMMAND_T* t)
 }
 
 
-void AWDelete(COMMAND_T*)
-{
-	double selStart;
-	double selEnd;
-	
-	GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
-	
-	if (GetCursorContext() == 2 && (selStart != selEnd))
-		Main_OnCommand(40089, 0); // Remove env points in time selection
-	else
-		SmartRemove(NULL);
-}
-
-
-void AWExtendSelLeft(COMMAND_T*)
-{
-	double selStart;
-	double selEnd;
-	double cursorPos = GetCursorPosition();
-	
-	GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
-	
-	if ((selStart == selEnd) || ((cursorPos != selStart) && (cursorPos != selEnd)))
-	{
-		Main_OnCommand(40626, 0); // Set time selection end point
-		Main_OnCommand(40646, 0); // Move cursor left to grid division
-		Main_OnCommand(40625, 0); // Set time selection start point
-	}
-	else if (cursorPos == selEnd)
-	{
-		Main_OnCommand(40646, 0); // Move cursor left to grid division
-		Main_OnCommand(40626, 0); // Set time selection end point
-		Main_OnCommand(40631, 0); // Go to end of time selection
-
-	}
-	else if (cursorPos == selStart)
-	{
-		Main_OnCommand(40646, 0); // Move cursor left to grid division
-		Main_OnCommand(40625, 0); // Set time selection start point
-	}
-}
-
-void AWExtendSelRight(COMMAND_T*)
-{
-	double selStart;
-	double selEnd;
-	double cursorPos = GetCursorPosition();
-	
-	GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
-	
-	if ((selStart == selEnd) || ((cursorPos != selStart) && (cursorPos != selEnd)))
-	{
-		Main_OnCommand(40625, 0); // Set time selection start point
-		Main_OnCommand(40647, 0); // Move cursor right to grid division
-		Main_OnCommand(40626, 0); // Set time selection end point
-		Main_OnCommand(40631, 0); // Go to end of time selection
-
-	}
-	else if (cursorPos == selEnd)
-	{
-		Main_OnCommand(40647, 0); // Move cursor right to grid division
-		Main_OnCommand(40626, 0); // Set time selection end point
-		Main_OnCommand(40631, 0); // Go to end of time selection
-	}
-	else if (cursorPos == selStart)
-	{
-		Main_OnCommand(40647, 0); // Move cursor right to grid division
-		Main_OnCommand(40625, 0); // Set time selection start point
-	}
-}
-
-
-
-
 
 
 
@@ -2487,12 +2426,13 @@ bool IsCountRecOn(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("projmetroen
 
 // Editing Preferences
 
-/* Deprecated
+
 void AWRelEdgeOn(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("relativeedges") |= 1;}
 void AWRelEdgeOff(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("relativeedges") &= ~1;}
 void AWRelEdgeToggle(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("relativeedges") ^= 1;}
 bool IsRelEdgeOn(COMMAND_T* = NULL)			{ return (*(int*)GetConfigVar("relativeedges") & 1)  != 0; }
 
+/* Deprecated
 void AWSplitFadeOn(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("splitautoxfade") |= 1;}
 void AWSplitFadeOff(COMMAND_T* = NULL)			{ *(int*)GetConfigVar("splitautoxfade") &= ~1;}
 void AWSplitFadeToggle(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("splitautoxfade") ^= 1;}
@@ -2855,8 +2795,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Toggle count-in before recording" },			"SWS_AWCOUNTRECTOG",				AWCountRecToggle, NULL, 0, IsCountRecOn },
 	
 	// Editing Preferences
+
 	/* Deprecated
-    { { DEFACCEL, "SWS/AW: Enable relative editing when resizing item edges" },			"SWS_AWRELEDGEON",				AWRelEdgeOn, },
+	{ { DEFACCEL, "SWS/AW: Enable relative editing when resizing item edges" },			"SWS_AWRELEDGEON",				AWRelEdgeOn, },
 	{ { DEFACCEL, "SWS/AW: Disable relative editing when resizing item edges" },		"SWS_AWRELEDGEOFF",				AWRelEdgeOff, },
 	{ { DEFACCEL, "SWS/AW: Toggle relative editing when resizing item edges" },			"SWS_AWRELEDGETOG",				AWRelEdgeToggle, NULL, 0, IsRelEdgeOn },
 	
@@ -2880,10 +2821,11 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Set project timebase to time" },												"SWS_AWTBASETIME",					AWTimebaseTime, NULL, 0, IsTimebaseTime},
 	{ { DEFACCEL, "SWS/AW: Set project timebase to beats (position only)" },							"SWS_AWTBASEBEATPOS",				AWTimebaseBeatPos, NULL, 0, IsTimebaseBeatPos},
 	{ { DEFACCEL, "SWS/AW: Set project timebase to beats (position, length, rate)" },					"SWS_AWTBASEBEATALL",				AWTimebaseBeatAll, NULL, 0, IsTimebaseBeatAll},
+	
 	//{ { DEFACCEL, "SWS/AW: Toggle 'beats (position only)'/'beats (position, length rate')" },			"SWS_AWTBASEBTOG",				AWTimebaseToggleStretch, NULL, 0, IsTimebaseBeatAll},
 	//{ { DEFACCEL, "SWS/AW: Set project timebase to beats" },											"SWS_AWTBASEBEAT",				AWTimebaseBeat, NULL, 0, IsTimebaseBeat},
 
-	/* Not ready or not safe enough/integrated well enough for public use
+	///* Not ready or not safe enough/integrated well enough for public use
 	{ { DEFACCEL, "SWS/AW: Toggle triplet grid" },			"SWS_AWTOGGLETRIPLET",				AWToggleTriplet, NULL, 0, IsGridTriplet},
 	{ { DEFACCEL, "SWS/AW: Toggle dotted grid" },			"SWS_AWTOGGLEDOTTED",				AWToggleDotted, NULL, 0, IsGridDotted},
 
@@ -2897,7 +2839,6 @@ static COMMAND_T g_commandTable[] =
 	//{ { DEFACCEL, "SWS/AW: Copy" },			"SWS_AWCOPY",					AWCopy, },
 	//{ { DEFACCEL, "SWS/AW: Cut" },			"SWS_AWCUT",					AWCut, },
 	{ { DEFACCEL, "SWS/AW: Paste" },		"SWS_AWPASTE",					AWPaste, },
-	//{ { DEFACCEL, "SWS/AW: Delete" },		"SWS_AWDELETE",					AWDelete, NULL, },
 	
 	//{ { DEFACCEL, "SWS/AW: Select Stretched Items" },													"SWS_AWSELSTRETCH",					AWSelectStretched, },
 
@@ -2906,7 +2847,7 @@ static COMMAND_T g_commandTable[] =
 	
 	{ { DEFACCEL, "SWS/AW: Insert click track" },		"SWS_AWINSERTCLICKTRK",					AWInsertClickTrack, NULL, },
 	{ { DEFACCEL, "SWS/AW: Toggle click track mute" },		"SWS_AWTOGGLECLICKTRACK",					AWToggleClickTrack, NULL, 0, IsClickUnmuted},
-    */
+    //*/
 	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

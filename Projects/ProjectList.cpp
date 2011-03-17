@@ -1,7 +1,7 @@
 /******************************************************************************
 / MarkerList.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -97,8 +97,8 @@ void SWS_ProjectListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 SWS_ProjectListWnd::SWS_ProjectListWnd()
 :SWS_DockWnd(IDD_PROJLIST, "Project List", "SWSProjectList", 30006, SWSGetCommandID(OpenProjectList))
 {
-	if (m_bShowAfterInit)
-		Show(false, false);
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
 }
 
 void SWS_ProjectListWnd::Update()

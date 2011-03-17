@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Dlg.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
+/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,66 +29,216 @@
 #include "SnM_Actions.h"
 
 
+int g_waitDlgProcCount = 0;
+HWND g_cueBussHwnd = NULL;
+
+
 ///////////////////////////////////////////////////////////////////////////////
-// Custom WDL UIs
+// WDL UIs
 ///////////////////////////////////////////////////////////////////////////////
 
-void SNM_VirtualComboBox::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
+LICE_CachedFont* SNM_GetThemeFont()
 {
-	if (GetFont()) GetFont()->SetBkMode(TRANSPARENT);
-
-	RECT r;
-	GetPosition(&r);
-	r.left+=origin_x;
-	r.right+=origin_x;
-	r.top+=origin_y;
-	r.bottom+=origin_y;
-
-	int col = LICE_RGBA(255,255,255,50); 
-	LICE_FillRect(drawbm,r.left,r.top,r.right-r.left,r.bottom-r.top,col,0.02f,LICE_BLIT_MODE_COPY);
-
+	static LICE_CachedFont themeFont;
+	int sz;
+	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
+	if (!themeFont.GetHFont())
 	{
-	  RECT tr=r;
-	  tr.left=tr.right-(tr.bottom-tr.top);
-	  LICE_FillRect(drawbm,tr.left,tr.top,tr.right-tr.left,tr.bottom-tr.top,col,0.02f,LICE_BLIT_MODE_COPY);
-	}   
-
-	if (GetFont() && GetItem(GetCurSel()) && GetItem(GetCurSel())[0])
-	{
-	  RECT tr=r;
-	  tr.left+=2;
-	  tr.right-=16;
-	  GetFont()->DrawText(drawbm,GetItem(GetCurSel()),-1,&tr,DT_SINGLELINE|DT_VCENTER|DT_LEFT|DT_NOPREFIX);
+		LOGFONT lf = {
+			14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,
+			CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
+		};
+		if (ct) 
+			lf = ct->mediaitem_font;
+		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
 	}
-
-	int pencol = GetFont() ? GetFont()->GetTextColor() : WDL_STYLE_GetSysColor(COLOR_3DSHADOW);
-	pencol = LICE_RGBA_FROMNATIVE(pencol,255);
-	int pencol2 = GetFont() ? GetFont()->GetTextColor() : WDL_STYLE_GetSysColor(COLOR_3DHILIGHT);
-	pencol2 = LICE_RGBA_FROMNATIVE(pencol2,255);
-
-	// draw the down arrow button
-	{
-	  int bs=(r.bottom-r.top);
-	  int l=r.right-bs;
-	  int a=(bs/4)&~1;
-
-	  LICE_Line(drawbm,l-1,r.top,l-1,r.bottom-1,pencol2,0.10f,LICE_BLIT_MODE_COPY,false);
-
-	  int tcol = GetFont() ? GetFont()->GetTextColor() : WDL_STYLE_GetSysColor(COLOR_BTNTEXT);
-	  tcol=LICE_RGBA_FROMNATIVE(tcol,255);
-
-	  LICE_Line(drawbm,l+bs/2-a,r.top+bs/2-a/2,
-					   l+bs/2,r.top+bs/2+a/2,tcol,0.50f,LICE_BLIT_MODE_COPY,true);
-	  LICE_Line(drawbm,l+bs/2,r.top+bs/2+a/2,
-					   l+bs/2+a,r.top+bs/2-a/2,tcol,0.50f,LICE_BLIT_MODE_COPY,true);
-	}  
-
-	// draw the border
-	LICE_Line(drawbm,r.left,r.bottom-1,r.left,r.top,pencol,0.10f,0,false);
-	LICE_Line(drawbm,r.left,r.top,r.right-1,r.top,pencol,0.10f,0,false);
-	LICE_Line(drawbm,r.right-1,r.top,r.right-1,r.bottom-1,pencol2,0.10f,0,false);
-	LICE_Line(drawbm,r.left,r.bottom-1,r.right-1,r.bottom-1,pencol2,0.10f,0,false);
+	themeFont.SetBkMode(TRANSPARENT);
+	if (ct)	
+		themeFont.SetTextColor(LICE_RGBA_FROMNATIVE(ct->main_text,255));
+	else 
+		themeFont.SetTextColor(LICE_RGBA(255,255,255,255));
+	return &themeFont;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_FastListView
+// "Brutal force" update to make list views' updates run much faster, but 
+// subbtle thing like selection restorations aren't managed anymore..
+///////////////////////////////////////////////////////////////////////////////
+
+void SNM_FastListView::Update()
+{
+	// Fill in the data by pulling it from the derived class
+	if (m_iEditingItem == -1 && !m_bDisableUpdates)
+	{
+		m_bDisableUpdates = true;
+		char str[256];
+
+		WDL_TypedBuf<LPARAM> items;
+		GetItemList(&items);
+
+/*JFB original code
+		// Check for deletions - items in the lstwnd are quite likely out of order so gotta do a full O(n^2) search
+		int lvItemCount = ListView_GetItemCount(m_hwndList);
+		for (int i = 0; i < lvItemCount; i++)
+		{
+			LPARAM item = GetListItem(i);
+			bool bFound = false;
+			for (int j = 0; j < items.GetSize(); j++)
+				if (items.Get()[j] == item)
+				{
+					bFound = true;
+					break;
+				}
+
+			if (!bFound)
+			{
+				ListView_DeleteItem(m_hwndList, i--);
+				lvItemCount--;
+			}
+		}
+
+		// Check for additions
+		lvItemCount = ListView_GetItemCount(m_hwndList);
+		for (int i = 0; i < items.GetSize(); i++)
+		{
+			bool bFound = false;
+			int j;
+			for (j = 0; j < lvItemCount; j++)
+			{
+				if (items.Get()[i] == GetListItem(j))
+				{
+					bFound = true;
+					break;
+				}
+			}
+
+			// Update the list, no matter what, because text may have changed
+			LVITEM item;
+			item.mask = 0;
+			int iNewState = GetItemState(items.Get()[i]);
+			if (iNewState >= 0)
+			{
+				int iCurState = bFound ? ListView_GetItemState(m_hwndList, j, LVIS_SELECTED | LVIS_FOCUSED) : 0;
+				if (iNewState && !(iCurState & LVIS_SELECTED))
+				{
+					item.mask |= LVIF_STATE;
+					item.state = LVIS_SELECTED;
+					item.stateMask = LVIS_SELECTED;
+				}
+				else if (!iNewState && (iCurState & LVIS_SELECTED))
+				{
+					item.mask |= LVIF_STATE;
+					item.state = 0;
+					item.stateMask = LVIS_SELECTED | ((iCurState & LVIS_FOCUSED) ? LVIS_FOCUSED : 0);
+				}
+			}
+
+			item.iItem = j;
+			item.pszText = str;
+
+			int iCol = 0;
+			for (int k = 0; k < m_iCols; k++)
+				if (m_pCols[k].iPos != -1)
+				{
+					item.iSubItem = iCol;
+					GetItemText(items.Get()[i], k, str, 256);
+					if (!iCol && !bFound)
+					{
+						item.mask |= LVIF_PARAM | LVIF_TEXT;
+						item.lParam = items.Get()[i];
+						ListView_InsertItem(m_hwndList, &item);
+						lvItemCount++;
+					}
+					else
+					{
+						char curStr[256];
+						ListView_GetItemText(m_hwndList, j, iCol, curStr, 256);
+						if (strcmp(str, curStr))
+							item.mask |= LVIF_TEXT;
+						if (item.mask)
+						{
+							// Only set if there's changes
+							// May be less efficient here, but less messages get sent for sure!
+							ListView_SetItem(m_hwndList, &item);
+						}
+					}
+					item.mask = 0;
+					iCol++;
+				}
+		}
+*/
+
+//JFB mod -------------------------------------------------------------------->
+		ListView_DeleteAllItems(m_hwndList);
+		for (int i = 0; i < items.GetSize(); i++)
+		{
+			LVITEM item;
+			item.mask = 0;
+			item.iItem = i;
+			item.pszText = str;
+
+			int iCol = 0;
+			for (int k = 0; k < m_iCols; k++)
+				if (m_pCols[k].iPos != -1)
+				{
+					item.iSubItem = iCol;
+					GetItemText(items.Get()[i], k, str, 256);
+					if (!iCol)
+					{
+						item.mask |= LVIF_PARAM | LVIF_TEXT;
+						item.lParam = items.Get()[i];
+						ListView_InsertItem(m_hwndList, &item);
+					}
+					else
+					{
+						item.mask |= LVIF_TEXT;
+						ListView_SetItem(m_hwndList, &item);
+					}
+					item.mask = 0;
+					iCol++;
+				}
+		}
+//JFB mod <--------------------------------------------------------------------
+
+		ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
+		int iCol = abs(m_iSortCol) - 1;
+		iCol = DataToDisplayCol(iCol) + 1;
+		if (m_iSortCol < 0)
+			iCol = -iCol;
+		SetListviewColumnArrows(iCol);
+
+#ifdef _WIN32
+		if (m_hwndTooltip)
+		{
+			TOOLINFO ti = { sizeof(TOOLINFO), };
+			ti.lpszText = str;
+			ti.hwnd = m_hwndList;
+			ti.uFlags = TTF_SUBCLASS;
+			ti.hinst  = g_hInst;
+
+			// Delete all existing tools
+			while (SendMessage(m_hwndTooltip, TTM_ENUMTOOLS, 0, (LPARAM)&ti))
+				SendMessage(m_hwndTooltip, TTM_DELTOOL, 0, (LPARAM)&ti);
+
+			RECT r;
+			// Add tooltips after sort
+			for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
+			{
+				// Get the rect of the line
+				ListView_GetItemRect(m_hwndList, i, &r, LVIR_BOUNDS);
+				memcpy(&ti.rect, &r, sizeof(RECT));
+				ti.uId = i;
+				GetItemTooltip(GetListItem(i), str, 100);
+				SendMessage(m_hwndTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+			}
+		}
+#endif
+		m_bDisableUpdates = false;
+	}
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Cue buss dialog box
@@ -141,8 +291,7 @@ void fillHWoutDropDown(HWND _hwnd, int _idc)
 
 WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	const char cWndPosKey[] = "CueBus Window Pos";
-
+	const char cWndPosKey[] = "CueBus Window Pos"; 
 	switch(Message)
 	{
         case WM_INITDIALOG :
@@ -181,6 +330,10 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			return 0;
 		}
 		break;
+
+		case WM_CLOSE :
+			g_cueBussHwnd = NULL; // for proper toggle state report, see openCueBussWnd()
+			break;
 
 		case WM_COMMAND :
 		{
@@ -266,9 +419,6 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					SetFocus(GetDlgItem(hwnd, templateEnable ? IDC_SNM_CUEBUS_TEMPLATE : IDC_SNM_CUEBUS_NAME));
 				}
 				break;
-
-				default:
-					break;
 			}
 		}
 		break;
@@ -276,16 +426,35 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		case WM_DESTROY:
 			SaveWindowPos(hwnd, cWndPosKey);
 			break; 
-
-		default:
-			break;
 	}
 
 	return 0;
 }
 
-#define LET_BREATHE_MS 10
-int g_waitDlgProcCount = 0;
+void openCueBussWnd(COMMAND_T* _ct) {
+	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUS), g_hwndParent, CueBusDlgProc);
+
+	// Toggle
+	if (g_cueBussHwnd) {
+		g_cueBussHwnd = NULL;
+		ShowWindow(hwnd, SW_HIDE);
+	}
+	else {
+		g_cueBussHwnd = hwnd;
+		ShowWindow(hwnd, SW_SHOW);
+		SetFocus(hwnd);
+	}
+}
+
+bool isCueBussWndDisplayed(COMMAND_T* _ct) {
+	return (g_cueBussHwnd && IsWindow(g_cueBussHwnd) && IsWindowVisible(g_cueBussHwnd) ? true : false);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// WaitDlgProc
+///////////////////////////////////////////////////////////////////////////////
+
 WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch(msg)
@@ -304,8 +473,8 @@ WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 */
 		case WM_TIMER:
 			{
-				SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETRANGE, 0, MAKELPARAM(0, LET_BREATHE_MS));
-				if (g_waitDlgProcCount < LET_BREATHE_MS)
+				SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETRANGE, 0, MAKELPARAM(0, SNM_LET_BREATHE_MS));
+				if (g_waitDlgProcCount < SNM_LET_BREATHE_MS)
 				{
 					SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETPOS, (WPARAM) g_waitDlgProcCount, 0);
 					g_waitDlgProcCount++;
@@ -320,3 +489,4 @@ WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 }
+

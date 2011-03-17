@@ -1393,9 +1393,10 @@ int ZoomInit()
 	SWSRegisterCommands(g_commandTable);
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
+#ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
-
+#endif
 	// Init the zoom tool
 	HWND hTrackView = GetTrackWnd();
 	if (hTrackView)

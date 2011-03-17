@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_ME.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS), JF Bédague 
+/ Copyright (c) 2010-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -48,8 +48,8 @@ void MECreateCCLane(COMMAND_T* _ct)
 		{
 			SNM_TakeParserPatcher p(item, CountTakes(item));
 			WDL_String takeChunk;
-			int tkPos, tkOriginalLength;
-			if (p.GetTakeChunk(tkIdx, &takeChunk, &tkPos, &tkOriginalLength))
+			int tkPos, tklen;
+			if (p.GetTakeChunk(tkIdx, &takeChunk, &tkPos, &tklen))
 			{
 				SNM_ChunkParserPatcher ptk(&takeChunk);
 
@@ -75,8 +75,8 @@ void MECreateCCLane(COMMAND_T* _ct)
 					sprintf(newLane, "VELLANE %d 50 0\n", i);
 					ptk.GetChunk()->Insert(newLane, tkFirstPos);
 
-					// "Update" take (invalid tkIdx is managed)
-					updated = p.ReplaceTake(tkIdx, tkPos, tkOriginalLength, ptk.GetChunk());
+					// "Update" take
+					updated = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
 				}
 			}
 		}
@@ -99,8 +99,8 @@ bool replaceCCLanes(const char* _newCClanes)
 			SNM_TakeParserPatcher p(item, CountTakes(item));
 			WDL_String takeChunk;
 
-			int tkPos, tkOriginalLength;
-			if (p.GetTakeChunk(tkIdx, &takeChunk, &tkPos, &tkOriginalLength))
+			int tkPos, tklen;
+			if (p.GetTakeChunk(tkIdx, &takeChunk, &tkPos, &tklen))
 			{
 				SNM_ChunkParserPatcher ptk(&takeChunk);
 				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", 4, 0, 0);
@@ -115,8 +115,8 @@ bool replaceCCLanes(const char* _newCClanes)
 					{
 						// default lane (min sized)
 						ptk.GetChunk()->Insert(_newCClanes, pos);
-						// "Update" take (invalid tkIdx is managed)
-						updated = p.ReplaceTake(tkIdx, tkPos, tkOriginalLength, ptk.GetChunk());
+						// "Update" take
+						updated = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
 					}
 				}
 			}

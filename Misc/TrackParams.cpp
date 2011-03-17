@@ -129,6 +129,7 @@ void BypassFX(COMMAND_T* = NULL)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			GetSetMediaTrackInfo(tr, "I_FXEN", &g_i0);
 	}
+	//JFB no undo point?
 }
 
 void UnbypassFX(COMMAND_T* = NULL)
@@ -139,6 +140,7 @@ void UnbypassFX(COMMAND_T* = NULL)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			GetSetMediaTrackInfo(tr, "I_FXEN", &g_i1);
 	}
+	//JFB no undo point?
 }
 
 static int g_iMasterFXEn = 1;
@@ -284,6 +286,101 @@ void NameTrackLikeItem(COMMAND_T*)
 	// TODO undo?
 }
 
+void UpdateTrackSolo()
+{
+	static int cmdID = 0;
+	if (!cmdID)
+		cmdID = NamedCommandLookup("_SWS_SOLOTOGGLE");
+	RefreshToolbar(cmdID);
+}
+
+void UpdateTrackArm()
+{
+	static int cmdID = 0;
+	if (!cmdID)
+		cmdID = NamedCommandLookup("_SWS_ARMTOGGLE");
+	RefreshToolbar(cmdID);
+}
+
+void UpdateTrackMute()
+{
+	static int cmdID = 0;
+	if (!cmdID)
+		cmdID = NamedCommandLookup("_SWS_MUTETOGGLE");
+	RefreshToolbar(cmdID);
+}
+
+bool CheckTrackParam(COMMAND_T* ct)
+{
+	int iNumTracks = GetNumTracks();
+	for (int i = 1; i <= iNumTracks; i++)
+		if (GetMediaTrackInfo_Value(CSurf_TrackFromID(i, false), (const char*)ct->user) != 0.0)
+			return true;
+	return false;
+}
+
+void ToolbarToggle(COMMAND_T* ct, WDL_TypedBuf<TrackInfo>* pState)
+{
+	if (CheckTrackParam(ct))
+	{
+		pState->Resize(GetNumTracks(), false);
+		for (int i = 1; i <= GetNumTracks(); i++)
+		{
+			MediaTrack* tr = CSurf_TrackFromID(i, false);
+			pState->Get()[i-1].guid = *(GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
+			pState->Get()[i-1].param = GetMediaTrackInfo_Value(tr, (const char*)ct->user);
+			SetMediaTrackInfo_Value(tr, (const char*)ct->user, 0.0);
+		}
+	}
+	else
+	{	// Restore state
+		for (int i = 0; i < pState->GetSize(); i++)
+		{
+			MediaTrack* tr = GuidToTrack(&pState->Get()[i].guid);
+			if (tr)
+				SetMediaTrackInfo_Value(tr, (const char*)ct->user, pState->Get()[i].param);
+		}
+	}
+	TrackList_AdjustWindows(false);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+}
+
+void ArmToggle(COMMAND_T* ct)
+{
+	static WDL_TypedBuf<TrackInfo> armState;
+	ToolbarToggle(ct, &armState);
+}
+
+void SoloToggle(COMMAND_T* ct)
+{
+	static WDL_TypedBuf<TrackInfo> soloState;
+	ToolbarToggle(ct, &soloState);
+}
+
+void MuteToggle(COMMAND_T* ct)
+{
+	static WDL_TypedBuf<TrackInfo> muteState;
+	ToolbarToggle(ct, &muteState);
+}
+
+void InputMatch(COMMAND_T* ct)
+{
+	int iInput = -2; // Would use -1, but that's for "Input: None"
+	for (int i = 1; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			if (iInput == -2)
+				iInput = *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL);
+			else
+				GetSetMediaTrackInfo(tr, "I_RECINPUT", &iInput);
+		}
+	}
+	TrackList_AdjustWindows(false);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+}
+
 static COMMAND_T g_commandTable[] = 
 {
 	// Master/parent send
@@ -313,6 +410,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Set selected track(s) record output mode based on items" },		"SWS_SETRECSRCOUT",		RecSrcOut,		},
 	{ { DEFACCEL, "SWS: Set selected track(s) monitor track media while recording" },	"SWS_SETMONMEDIA",		SetMonMedia,	},
 	{ { DEFACCEL, "SWS: Unset selected track(s) monitor track media while recording" },	"SWS_UNSETMONMEDIA",	UnsetMonMedia,	},
+	{ { DEFACCEL, "SWS: Toolbar arm toggle" },									"SWS_ARMTOGGLE",  ArmToggle, NULL, (INT_PTR)"I_RECARM", CheckTrackParam, },
 
 	// Add/remove tracks
 	{ { DEFACCEL, "SWS: Insert track above selected tracks" },					"SWS_INSRTTRKABOVE",InsertTrkAbove,		},
@@ -321,6 +419,15 @@ static COMMAND_T g_commandTable[] =
 
 	// Name
 	{ { DEFACCEL, "SWS: Name selected track(s) like first sel item" },			"SWS_NAMETKLIKEITEM", NameTrackLikeItem,	},
+
+	// Solo
+	{ { DEFACCEL, "SWS: Toolbar solo toggle" },									"SWS_SOLOTOGGLE", SoloToggle, NULL, (INT_PTR)"I_SOLO", CheckTrackParam, },
+
+	// Inputs
+	{ { DEFACCEL, "SWS: Set all sel tracks inputs to match first sel track" },	"SWS_INPUTMATCH", InputMatch, },
+
+	// Mute
+	{ { DEFACCEL, "SWS: Toolbar mute toggle" },									"SWS_MUTETOGGLE", MuteToggle, NULL, (INT_PTR)"B_MUTE", CheckTrackParam, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

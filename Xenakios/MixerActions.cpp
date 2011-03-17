@@ -147,7 +147,7 @@ void DoTraxPanLaw(COMMAND_T* t)
 
 void DoTraxRecArmed(COMMAND_T* t)
 {
-	int iRecArm = t->user;
+	int iRecArm = (int)t->user;
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* CurTrack = CSurf_TrackFromID(i+1, false);
@@ -157,9 +157,10 @@ void DoTraxRecArmed(COMMAND_T* t)
 	UpdateTimeline();	
 }
 
+//JFB dup with SWS 
 void DoBypassFXofSelTrax(COMMAND_T* t)
 {
-	int iBypass = t->user;
+	int iBypass = (int)t->user;
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* CurTrack = CSurf_TrackFromID(i+1, false);

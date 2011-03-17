@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_NotesHelpView.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÈdague 
+/ Copyright (c) 2010-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,35 +25,38 @@
 /
 ******************************************************************************/
 
-//JFB TODO:
+//JFB TODO?
 // - action_help_t (even if not used yet ?)
 // - drag'n'drop text
-// - undo on *each* key stroke? => fills undo history (+ can't restore caret pos.)
-//   but it fixes:
+// - undo on *each* key stroke.. hum.. 
+//   => fills undo history (+ can't restore caret pos.) but it fixes:
 //   * SaveExtensionConfig() not called if no proj mods but notes may have been added..
 //   * project switches
+// - take changed => title not updated
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_NotesHelpView.h"
 #include "SNM_ChunkParserPatcher.h"
+#include "../../WDL/projectcontext.h"
 
-#define MAX_HELP_LENGTH				4096 // definitive limitation of WritePrivateProfileSection = 0xFFFF
-#define SAVEWINDOW_POS_KEY			"S&M - Notes/help Save Window Position"
+#define MAX_HELP_LENGTH				4096 //JFB 4096 rather than MAX_INI_SECTION (too big)
 
 // Msgs
 #define SET_ACTION_HELP_FILE_MSG	0x110001
 
 enum {
   BUTTONID_LOCK=1000,
-  COMBOID_TYPE
+  COMBOID_TYPE,
+  TXTID_LABEL,
+  BUTTONID_ALR
 };
 
 enum {
   NOTES_HELP_DISABLED=0,
   ITEM_NOTES,
   TRACK_NOTES,
-  ACTION_HELP // last item: no OSX support yet 
+  ACTION_HELP // must remain the last item: no OSX support yet 
 };
 
 enum {
@@ -64,10 +67,10 @@ enum {
 
 // Globals
 SNM_NotesHelpWnd* g_pNotesHelpWnd = NULL;
-SNM_ProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
-SNM_ProjConfig<WDL_String> g_prjNotes;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
+SWSProjConfig<WDL_String> g_prjNotes;
 
-//JFB TODO: clean-up with member attributes..
+//JFB TODO? member attributes?
 int g_bDocked = -1, g_bLastDocked = 0; 
 char g_locked = 1;
 char g_lastText[MAX_HELP_LENGTH];
@@ -91,17 +94,14 @@ MediaTrack* g_trNote = NULL;
 SNM_NotesHelpWnd::SNM_NotesHelpWnd()
 :SWS_DockWnd(IDD_SNM_NOTES_HELP, "Notes/Help", "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
 {
+	m_type = m_previousType = NOTES_HELP_DISABLED;
+
 	// Get the action help file
 	readActionHelpFilenameIniFile();
 	m_internalTLChange = false;
 
-	// GUI inits
-	if (m_bShowAfterInit)
-		Show(false, false);
-
-	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
-	if (GetDlgItem(m_hwnd, IDC_EDIT))
-		SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
 }
 
 int SNM_NotesHelpWnd::GetType(){
@@ -110,13 +110,16 @@ int SNM_NotesHelpWnd::GetType(){
 
 void SNM_NotesHelpWnd::SetType(int _type)
 {
-	m_previousType = m_type;
+	int prev = m_previousType = m_type;
 	m_type = _type;
 	m_cbType.SetCurSel(_type);
-	if (m_previousType == NOTES_HELP_DISABLED && m_previousType != m_type)
+
+	// force an initial refresh (when IDC_EDIT has the focus, re-enabling the timer 
+	// isn't enough: Update() is skipped, see OnTimer() & IsActive()
+	Update(); 
+
+	if (prev == NOTES_HELP_DISABLED && prev != _type)
 		SetTimer(m_hwnd, 1, 125, NULL);
-	else
-		Update();
 }
 
 void SNM_NotesHelpWnd::SetText(const char* _str) 
@@ -130,10 +133,34 @@ void SNM_NotesHelpWnd::SetText(const char* _str)
 	}
 }
 
-void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes) {
+void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes) 
+{
 	if (_emtpyNotes)
 		SetText("");
-	m_parentVwnd.RequestRedraw(NULL); // title refresh
+
+	bool bHide = true;
+	switch(GetType())
+	{
+		case ACTION_HELP:
+			if (g_lastActionId && *g_lastActionId)
+				bHide = false; // for copy/paste even if "Custom: ..."
+			break;
+		case ITEM_NOTES:
+			if (g_mediaItemNote)
+				bHide = false;
+			break;
+		case TRACK_NOTES:
+			if (g_trNote)
+				bHide = false;
+			break;
+		case NOTES_HELP_DISABLED:
+			bHide = false;
+			break;
+		default:
+			break;
+	}
+	ShowWindow(GetDlgItem(GetHWND(), IDC_EDIT), bHide ? SW_HIDE : SW_SHOW);
+	m_parentVwnd.RequestRedraw(NULL); // WDL refresh
 }
 
 void SNM_NotesHelpWnd::CSurfSetTrackTitle() {
@@ -141,7 +168,7 @@ void SNM_NotesHelpWnd::CSurfSetTrackTitle() {
 		RefreshGUI();
 }
 
-//JFB TODO: replace "timer-ish track sel change tracking" with this notif..
+//JFB TODO? replace "timer-ish track sel change tracking" with this notif..
 void SNM_NotesHelpWnd::CSurfSetTrackListChange() 
 {
 	// This is our only notification of active project tab change, so update everything
@@ -163,12 +190,8 @@ void SNM_NotesHelpWnd::Update(bool _force)
 		updateReentrance = true; 
 
 		// force refresh if needed (dock state changed, ..)
-		bool saveCurrent = false; //JFB2 true;
 		if (_force || g_bLastDocked != g_bDocked || m_type != m_previousType)
 		{
-/*JFB2			saveCurrentText(m_previousType);
-			saveCurrent = false;
-*/
 			g_bLastDocked = g_bDocked;
 			m_previousType = m_type;
 			g_lastActionListSel = -1;
@@ -185,43 +208,34 @@ void SNM_NotesHelpWnd::Update(bool _force)
 		switch(m_type)
 		{
 			case ITEM_NOTES:
-				refreshType = updateItemNotes(saveCurrent);
-				if (refreshType == REQUEST_REFRESH_EMPTY) {
-//JFB2					saveCurrentItemNotes();
+				refreshType = updateItemNotes();
+				if (refreshType == REQUEST_REFRESH_EMPTY)
 					g_mediaItemNote = NULL;
-				}
+
 				// Concurent item note update ?
-/*JFB kludge..
+/*JFB commented: kludge..
 #ifdef _WIN32
 				else if (refreshType == NO_REFRESH)
 				{
 					char name[BUFFER_SIZE] = "";
 					MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
-					if (tk)
-					{
-						char* tkName= (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL);
-						sprintf(name, "Notes for \"%s\"", tkName);
-						HWND w = SearchWindow(name);
-						if (w)
-							g_mediaItemNote = NULL; //will force refresh
-					}
+					char* tkName = tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
+					sprintf(name, "Notes for \"%s\"", tkName ? tkName : "Empty Item");
+					HWND w = SearchWindow(name);
+					if (w)
+						g_mediaItemNote = NULL; //will force refresh
 				}
 #endif
 */
 				break;
-
 			case TRACK_NOTES:
-				refreshType = updateTrackNotes(saveCurrent);
-				if (refreshType == REQUEST_REFRESH_EMPTY) {
-//JFB2					saveCurrentTrackNotes();
+				refreshType = updateTrackNotes();
+				if (refreshType == REQUEST_REFRESH_EMPTY)
 					g_trNote = NULL;
-				}
 				break;
-
 			case ACTION_HELP:
-				refreshType = updateActionHelp(saveCurrent);
+				refreshType = updateActionHelp();
 				if (refreshType == REQUEST_REFRESH_EMPTY) {
-//JFB2					saveCurrentHelp();
 					g_lastActionListSel = -1;
 					*g_lastActionId = 0;
 					*g_lastActionDesc = 0;
@@ -229,15 +243,10 @@ void SNM_NotesHelpWnd::Update(bool _force)
 					*g_lastActionListSection = 0;
 				}
 				break;
-
 			case NOTES_HELP_DISABLED:
 				KillTimer(m_hwnd, 1);
 				SetText(g_prjNotes.Get()->Get());
-//JFB				Help_Set(buf, false);
 				refreshType = REQUEST_REFRESH;
-				break;
-
-			default:
 				break;
 		}
 		
@@ -251,15 +260,16 @@ void SNM_NotesHelpWnd::saveCurrentText(int _type)
 {
 	if (g_pNotesHelpWnd)
 	{
-		switch(_type) {
+		switch(_type) 
+		{
 			case ITEM_NOTES: 
-				m_internalTLChange = true; // item note updates lead to SetTrackListChange() CSurf notif (!??!!)
+				m_internalTLChange = true;	// item note updates lead to SetTrackListChange() CSurf notif (reentrance)
+											//JFB TODO .. but check if it can be used for concurent item note updates ?
 				saveCurrentItemNotes(); 
 				break;
 			case TRACK_NOTES: saveCurrentTrackNotes(); break;
 			case ACTION_HELP: saveCurrentHelp(); break;
 			case NOTES_HELP_DISABLED: saveCurrentPrjNotes(); break;
-			default:break;
 		}
 	}
 }
@@ -271,13 +281,15 @@ void SNM_NotesHelpWnd::saveCurrentPrjNotes()
 	GetDlgItemText(GetHWND(), IDC_EDIT, buf, MAX_HELP_LENGTH);
 	if (strncmp(g_lastText, buf, MAX_HELP_LENGTH)) {
 		g_prjNotes.Get()->Set(buf);
-		Undo_OnStateChangeEx("Edit project notes", UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx("Edit project notes", UNDO_STATE_MISCCFG, -1);//JFB TODO? -1 to remplace?
 	}
 }
 
 void SNM_NotesHelpWnd::saveCurrentHelp()
 {
-	if (*g_lastActionId)
+	// skip custom cmds
+	if (*g_lastActionId && g_lastActionDesc && 
+	    *g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
 	{
 		char buf[MAX_HELP_LENGTH] = "";
 		memset(buf, 0, sizeof(buf));
@@ -298,20 +310,22 @@ void SNM_NotesHelpWnd::saveCurrentItemNotes()
 		{
 			bool update = false;
 			WDL_String newNotes;
-			if (!*buf || GetNotesFromString(buf, &newNotes))
+			if (!*buf || GetNotesChunkFromString(buf, &newNotes))
 			{
 				SNM_ChunkParserPatcher p(g_mediaItemNote);
-				bool update = p.ReplaceSubChunk("NOTES", 2, 0, newNotes.Get()); // can be "", ie remove notes
+				// Replaces notes (or adds them if failed), remarks:
+				// - newNotes can be "", i.e. remove notes
+				// - we use VOLPAN as it also exists for empty items
+				bool update = p.ReplaceSubChunk("NOTES", 2, 0, newNotes.Get(), "VOLPAN"); 
 				if (!update && *buf)
-					update = p.InsertAfterBefore(1, newNotes.Get(), "ITEM", "IGUID", 1, 0);
+					update = p.InsertAfterBefore(1, newNotes.Get(), "ITEM", g_bv4 ? "IID" : "IGUID", 1, 0, "VOLPAN");
 			}
 			// the patch has occured
 			if (update)
 			{
 				UpdateItemInProject(g_mediaItemNote);
 				UpdateTimeline();
-				Undo_OnStateChangeEx("Edit item notes", UNDO_STATE_ALL, -1);
-//JFB weird..				Undo_OnStateChange_Item(NULL, "Edit item notes", g_mediaItemNote);
+				Undo_OnStateChangeEx("Edit item notes", UNDO_STATE_ALL, -1); //JFB TODO? -1 to remplace?
 			}
 		}
 	}
@@ -337,74 +351,66 @@ void SNM_NotesHelpWnd::saveCurrentTrackNotes()
 			}
 			if (!found)
 				g_pTracksNotes.Get()->Add(new SNM_TrackNotes(g_trNote, buf));
-			Undo_OnStateChangeEx("Edit track notes", UNDO_STATE_MISCCFG, -1);
+			Undo_OnStateChangeEx("Edit track notes", UNDO_STATE_MISCCFG, -1); //JFB TODO? -1 to remplace?
 		}
 	}
 }
 
-int SNM_NotesHelpWnd::updateActionHelp(bool _savePrevious)
+int SNM_NotesHelpWnd::updateActionHelp()
 {
 	int refreshType = REQUEST_REFRESH_EMPTY;
-	HWND h_list = GetActionListBox(g_lastActionListSection, 64);
-	if (h_list && ListView_GetSelectedCount(h_list))
+	HWND hList = GetActionListBox(g_lastActionListSection, 64);
+	if (hList && ListView_GetSelectedCount(hList))
 	{
 		LVITEM li;
 		li.mask = LVIF_STATE | LVIF_PARAM;
 		li.stateMask = LVIS_SELECTED;
 		li.iSubItem = 0;
-		for (int i = 0; i < ListView_GetItemCount(h_list); i++)
+		for (int i = 0; i < ListView_GetItemCount(hList); i++)
 		{
 			li.iItem = i;
-			ListView_GetItem(h_list, &li);
+			ListView_GetItem(hList, &li);
 			if (li.state == LVIS_SELECTED)
 			{
 				if (i != g_lastActionListSel)
 				{
 					g_lastActionListSel = i;
-/*JFB2
-					if (*g_lastActionId && _savePrevious)
-						saveCurrentHelp();
-*/
 					int cmdId = (int)li.lParam;
 					g_lastActionListCmd = cmdId; 
 
-					LVITEM li0, li1;
+					//JFB TODO: cleanup when we'll be able to access all sections & custom ids
+					ListView_GetItemText(hList,i,1,g_lastActionDesc,128);
+					ListView_GetItemText(hList,i,3,g_lastActionId,64);
 
-					//JFB TODO: cleanup when we'll be able to access all sections
-					li0.mask = LVIF_TEXT;
-					li0.iItem = i;
-					li0.iSubItem = 1;
-					li0.pszText = g_lastActionDesc;
-					li0.cchTextMax = 128;
-					ListView_GetItem(h_list, &li0);
-
-					//JFB TODO: cleanup when we'll be able to access custom ids
-					li1.mask = LVIF_TEXT;
-					li1.iItem = i;
-					li1.iSubItem = 3;
-					li1.pszText = g_lastActionId;
-					li1.cchTextMax = 64;
-					ListView_GetItem(h_list, &li1);
-					if (!*g_lastActionId)
-						sprintf(g_lastActionId, "%d", cmdId);					
-					if (*g_lastActionId)
+					if (g_lastActionId && !*g_lastActionId)
+						sprintf(g_lastActionId, "%d", cmdId);
+					
+					if (g_lastActionId && *g_lastActionId && g_lastActionDesc && *g_lastActionDesc )
 					{
-						char buf[MAX_HELP_LENGTH] = "";
-						loadHelp(g_lastActionId, buf, MAX_HELP_LENGTH);
-						SetText(buf);
-//JFB							Help_Set(buf, false);
+						// skip custom cmds
+						if (!_strnicmp(g_lastActionDesc, "Custom:", 7))
+						{
+							SetText(g_lastActionId);
+						}
+						else
+						{
+							char buf[MAX_HELP_LENGTH] = "";
+							loadHelp(g_lastActionId, buf, MAX_HELP_LENGTH);
+							SetText(buf);
+						}
 						refreshType = REQUEST_REFRESH;
 					}
 				}
 				else
 					refreshType = NO_REFRESH;
+				break;
 			}
 		}
 	}
 	return refreshType;
 }
 
-int SNM_NotesHelpWnd::updateItemNotes(bool _savePrevious)
+int SNM_NotesHelpWnd::updateItemNotes()
 {
 	int refreshType = REQUEST_REFRESH_EMPTY;
 	if (CountSelectedMediaItems(NULL))
@@ -412,19 +418,14 @@ int SNM_NotesHelpWnd::updateItemNotes(bool _savePrevious)
 		MediaItem* selItem = GetSelectedMediaItem(0, 0);
 		if (selItem != g_mediaItemNote)
 		{
-/*JFB2
-			if (_savePrevious)
-				saveCurrentItemNotes();
-*/
 			g_mediaItemNote = selItem;
 
 			SNM_ChunkParserPatcher p(g_mediaItemNote);
 			WDL_String notes;
 			char buf[MAX_HELP_LENGTH] = "";
-			if (p.GetSubChunk("NOTES", 2, 0, &notes))
-				GetStringFromNotes(&notes, buf, MAX_HELP_LENGTH);
+			if (p.GetSubChunk("NOTES", 2, 0, &notes, "VOLPAN") >= 0) // rmk: we use VOLPAN as it also exists for empty items
+				GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH);
 			SetText(buf);
-//JFB				Help_Set(buf, false);
 			refreshType = REQUEST_REFRESH;
 		} 
 		else
@@ -433,7 +434,7 @@ int SNM_NotesHelpWnd::updateItemNotes(bool _savePrevious)
 	return refreshType;
 }
 
-int SNM_NotesHelpWnd::updateTrackNotes(bool _savePrevious)
+int SNM_NotesHelpWnd::updateTrackNotes()
 {
 	int refreshType = REQUEST_REFRESH_EMPTY;
 	if (CountSelectedTracksWithMaster(NULL))
@@ -441,10 +442,6 @@ int SNM_NotesHelpWnd::updateTrackNotes(bool _savePrevious)
 		MediaTrack* selTr = GetSelectedTrackWithMaster(NULL, 0);
 		if (selTr != g_trNote)
 		{
-/*JFB2
-			if (_savePrevious)
-				saveCurrentTrackNotes();
-*/
 			g_trNote = selTr;
 
 			WDL_String* notes = NULL;
@@ -460,7 +457,6 @@ int SNM_NotesHelpWnd::updateTrackNotes(bool _savePrevious)
 				notes = &(tn->m_notes);
 			}
 			SetText(notes->Get());
-//JFB			Help_Set(buf, false);
 			refreshType = REQUEST_REFRESH;
 		} 
 		else
@@ -485,16 +481,24 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	m_btnLock.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnLock);
 
+	m_btnAlr.SetID(BUTTONID_ALR);
+	m_btnAlr.SetRealParent(m_hwnd);
+	m_parentVwnd.AddChild(&m_btnAlr);
+
 	m_cbType.SetID(COMBOID_TYPE);
 	m_cbType.SetRealParent(m_hwnd);
-	m_cbType.AddItem("Disable (project notes)");
+	m_cbType.AddItem("Project notes");
 	m_cbType.AddItem("Item notes");
 	m_cbType.AddItem("Track notes");
 #ifdef _WIN32
 	m_cbType.AddItem("Action help");
 #endif
-	m_cbType.SetCurSel(min(m_cbType.GetCount(), m_type));
+	m_cbType.SetCurSel(min(m_cbType.GetCount(), m_type)); // safety for SWS beta <-> SWS official
 	m_parentVwnd.AddChild(&m_cbType);
+
+	m_txtLabel.SetID(TXTID_LABEL);
+	m_txtLabel.SetRealParent(m_hwnd);
+	m_parentVwnd.AddChild(&m_txtLabel);
 	
 	m_previousType = -1; // will force refresh
 	Update();
@@ -509,15 +513,52 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		saveCurrentText(m_type); // + undos
 	else if (wParam == SET_ACTION_HELP_FILE_MSG)
 		SetActionHelpFilename(NULL);
-	else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE)
+	else if (HIWORD(wParam)==0)	
+	{
+		switch(LOWORD(wParam))
+		{
+			case BUTTONID_LOCK:
+			{
+				g_locked = !g_locked;
+				if (!g_locked)
+					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
+				RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
+			}
+			break;
+			case BUTTONID_ALR:
+			{
+				if (g_lastActionId && *g_lastActionId && g_lastActionDesc && 
+					*g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
+				{
+					char cLink[512] = "";
+					char sectionURL[64] = "";
+					if (GetALRStartOfURL(g_lastActionListSection, sectionURL, 64))
+					{					
+						_snprintf(cLink, 512, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
+						ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
+					}
+				}
+				else
+					ShellExecute(m_hwnd, "open", "http://wiki.cockos.com/wiki/index.php/Action_List_Reference" , NULL, NULL, SW_SHOWNORMAL);
+			}
+			break;
+		}
+	}
+	else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE)	
+	{
 		SetType(m_cbType.GetCurSel());
+		if (!g_locked)
+			SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
+	}
 	else 
 		Main_OnCommand((int)wParam, (int)lParam);
 }
 
-bool SNM_NotesHelpWnd::IsActive(bool bWantEdit) { 
-	return (bWantEdit || GetForegroundWindow() == m_hwnd || GetFocus() == GetDlgItem(m_hwnd, IDC_EDIT)); 
+/*JFB r376
+bool SNM_NotesHelpWnd::IsActive(bool bWantEdit) {
+	return (bWantEdit || GetForegroundWindow() == m_hwnd || GetFocus() == GetDlgItem(m_hwnd, IDC_EDIT));
 }
+*/
 
 HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y)
 {
@@ -529,9 +570,6 @@ HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y)
 void SNM_NotesHelpWnd::OnDestroy() 
 {
 	KillTimer(m_hwnd, 1);
-
-	// when docking/undocking for e.g. (text lost otherwise)
-//JFB2	saveCurrentText(m_type);
 
 	// save prefs
 	char cType[2], cLock[2];
@@ -548,23 +586,27 @@ void SNM_NotesHelpWnd::OnDestroy()
 
 // we don't check iKeyState in order to catch (almost) everything
 // some key masks won't pass here though (e.g. Ctrl+Shift)
+// returns:
+// -1 -> catch and send to the control
+//  0 -> pass-thru to main window (then -666 in SWS_DockWnd::keyHandler())
+//  1 -> eat
 int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState) 
 {
-	// Ensure the return key is catched when docked
 	if (GetDlgItem(m_hwnd, IDC_EDIT) == msg->hwnd)
 	{
-		if (m_bDocked && (msg->message == WM_KEYDOWN || msg->message == WM_CHAR) &&
-			msg->wParam == VK_RETURN)
-		{
-			return (g_locked ? 1 : -1);
+		if (g_locked) {
+			msg->hwnd = m_hwnd; // redirect to main window
+			return 0; // pass-thru to main window
 		}
-		return (g_locked ? 1 : 0); //eat keystroke if locked
+		else if ((msg->message == WM_KEYDOWN || msg->message == WM_CHAR) && msg->wParam == VK_RETURN)
+			return -1; // Catch the return and send to edit control for multi-line
 	}
 	return 0; 
 }
 
-void SNM_NotesHelpWnd::OnTimer() {
-	if (!IsActive()) // no update while the user edits..
+void SNM_NotesHelpWnd::OnTimer(WPARAM wParam) {
+	// no update when the user edits & when the view is hidden (e.g. inactive docker tab)
+	if (!IsActive() && IsWindowVisible(m_hwnd))
 		Update();
 }
 
@@ -573,48 +615,16 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 	if (!g_pNotesHelpWnd) // SWS Can't draw before wnd initialized - why isn't this a member func??
 		return;			  // JFB TODO yes, I was planing a kind of SNM_Wnd at some point..
 	
-	int xo=0, yo=0, sz;
+	int xo=0, yo=0;
     LICE_IBitmap *bm = _painter->GetBuffer(&xo,&yo);
 	if (bm)
 	{
-		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
-
-		static LICE_IBitmap *logo=  NULL;
-		if (!logo)
-		{
-#ifdef _WIN32
-			logo = LICE_LoadPNGFromResource(g_hInst,IDB_SNM,NULL);
-#else
-			// SWS doesn't work, sorry. :( logo =  LICE_LoadPNGFromNamedResource("SnM.png",NULL);
-			logo = NULL;
-#endif
-		}
-
-		static LICE_CachedFont tmpfont;
-		if (!tmpfont.GetHFont())
-		{
-			LOGFONT lf = {
-			  14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-				OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,
-			  #ifdef _WIN32
-			  "MS Shell Dlg"
-			  #else
-			  "Arial"
-			  #endif
-			};
-			if (ct) 
-				lf = ct->mediaitem_font;
-			tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
-		}
-		tmpfont.SetBkMode(TRANSPARENT);
-		if (ct)	tmpfont.SetTextColor(LICE_RGBA_FROMNATIVE(ct->main_text,255));
-		else tmpfont.SetTextColor(LICE_RGBA(255,255,255,255));
-
+		LICE_CachedFont* font = SNM_GetThemeFont();
 		int x0=_r.left+10; int y0=_r.top+5;
 		int w=25, h=25; //default width/height
-		IconTheme* it = (IconTheme*)GetIconThemeStruct(&sz);// returns the whole icon theme (icontheme.h) and the size
 
 		// Lock button
+		IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);// returns the whole icon theme (icontheme.h) and the size
 		WDL_VirtualIconButton* btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_LOCK);
 		if (btnVwnd)
 		{
@@ -622,14 +632,20 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			img = it ? &(it->toolbar_lock[!g_locked]) : NULL;
 			if (img) {
 				btnVwnd->SetIcon(img);
-/*JFB commented: too big!
 				w = img->image->getWidth() / 3;
 				h = img->image->getHeight();
-*/
 			}
-			RECT tr2={x0,y0,x0+w,y0+h};
+			else {
+				btnVwnd->SetTextLabel(g_locked ? "Unlock" : "Lock", 0, font);
+				btnVwnd->SetForceBorder(true);
+				w = 50;
+			}
+
+//JFB			RECT tr2={x0,y0,x0+w,y0+h};
+			RECT tr2={x0, y0 - (img ? 2:-3), x0 + w, y0 - (img ? 2:1) + h};
 			btnVwnd->SetPosition(&tr2);
 			x0 += 5+w;
+			w=25, h=25; // restore default width/height
 		}
 
 		// Dropdown
@@ -637,74 +653,78 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		if (cbVwnd)
 		{
 			x0 += 5;
-			RECT tr2={x0,y0+3,x0+138,y0+h-2};
+			RECT tr2={x0,y0+3,x0+98,y0+h-2};
 			x0 = tr2.right+5;
 			cbVwnd->SetPosition(&tr2);
-			cbVwnd->SetFont(&tmpfont);
+			cbVwnd->SetFont(font);
+		}
+
+		// online help
+		btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_ALR);
+		if (btnVwnd)
+		{
+			if (g_pNotesHelpWnd->GetType() == ACTION_HELP)
+			{
+				x0 += 5;
+				RECT tr2={x0,y0+3,x0+30,y0+h-1};
+				x0 = tr2.right+5;
+				btnVwnd->SetPosition(&tr2);
+				btnVwnd->SetTextLabel("ALR", 0, font);
+				btnVwnd->SetForceBorder(true);
+			}
+			btnVwnd->SetVisible(g_pNotesHelpWnd->GetType() == ACTION_HELP);
+		}
+
+		// Label
+		WDL_VirtualStaticText* txtVwnd = (WDL_VirtualStaticText*)_parentVwnd->GetChildByID(TXTID_LABEL);
+		if (txtVwnd)
+		{
+			char str[512] = "No selection!";
+			switch(g_pNotesHelpWnd->GetType())
+			{
+				case ACTION_HELP:
+					if (g_lastActionDesc && *g_lastActionDesc && g_lastActionListSection && *g_lastActionListSection)
+						_snprintf(str, 512, " [%s]  %s", g_lastActionListSection, g_lastActionDesc);
+/*JFB TODO: use smthg like that when we'll be able to access all sections
+						strncpy(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
+*/
+					break;
+				case ITEM_NOTES:
+					if (g_mediaItemNote)
+					{
+						MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
+						char* tkName= tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
+						strncpy(str, tkName ? tkName : "", 512);
+					}
+					break;
+				case TRACK_NOTES:
+					if (g_trNote)
+					{
+						int id = CSurf_TrackToID(g_trNote, false);
+						if (id > 0)
+							_snprintf(str, 512, " [%d]  %s", id, (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL));
+						else if (id == 0)
+							strcpy(str, "[MASTER]");
+					}
+					break;
+				case NOTES_HELP_DISABLED:
+					EnumProjects(-1, str, 512);
+					break;
+			}
+			txtVwnd->SetText(str);
+
+			x0 += 5;
+			RECT tr2={x0,y0,_r.right-(g_snmLogo?g_snmLogo->getWidth():0)-8-8,y0+h};
+			x0 = tr2.right+5;
+			txtVwnd->SetPosition(&tr2);
+			txtVwnd->SetFont(font);
 		}
 
 	    _painter->PaintVirtWnd(_parentVwnd);
 
-		// labels
-		x0+=5;
-		RECT tr={x0,y0,_r.right-(logo?logo->getWidth():0)-8-8,y0+h};
-//		RECT tr={x0,y0,min(400, _r.right-logo->getWidth()-8-8),y0+h};
-		x0+=tr.right;
-		bool bNoSelection = true;
-		char str[512] = "No selection!";
-		switch(g_pNotesHelpWnd->GetType())
-		{
-			case ACTION_HELP:
-				if (*g_lastActionDesc && *g_lastActionListSection)
-				{
-					_snprintf(str, 512, " [%s]  %s", g_lastActionListSection, g_lastActionDesc);
-					bNoSelection = false;
-				}
-/*JFB TODO: use that when we'll be able to access all sections
-				if (g_lastActionListCmd > 0)
-					strncpy(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
-*/
-				break;
-			case ITEM_NOTES:
-			{
-				if (g_mediaItemNote)
-				{
-					MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
-					char* tkName= tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
-					strncpy(str, tkName ? tkName : "",512);
-					bNoSelection = false;
-				}
-			}
-			break;
-			case TRACK_NOTES:
-			{
-				if (g_trNote)
-				{
-					int id = CSurf_TrackToID(g_trNote, false);
-					if (id > 0)
-						_snprintf(str, 512, " [%d]  %s", id, (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL));
-					else if(id == 0)
-						strcpy(str, "[MASTER]");
-					bNoSelection = false;
-				}
-			}
-			break;
-			case NOTES_HELP_DISABLED:
-			{
-				//JFB would be nice to display the project name here, alas..
-				strcpy(str, "");
-				bNoSelection = false;
-			}
-			break;
-			default:
-				break;
-		}
-		tmpfont.DrawText(bm, str, -1, &tr, DT_LEFT | DT_VCENTER);
-		EnableWindow(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT), !bNoSelection);
-
-//		if ((_r.right - _r.left) > (x0+logo->getWidth()))
-		if (logo && (_r.right - _r.left) > 300)
-			LICE_Blit(bm,logo,_r.right-logo->getWidth()-8,y0+3,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+//		if ((_r.right - _r.left) > (x0+g_snmLogo->getWidth()))
+		if (g_snmLogo && (_r.right - _r.left) > 300)
+			LICE_Blit(bm,g_snmLogo,_r.right-g_snmLogo->getWidth()-8,y0+3,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
 	}
 }
 
@@ -714,68 +734,27 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_PAINT:
 		{
-			RECT r; int sz;
+			RECT r;
 			GetClientRect(m_hwnd,&r);		
 	        m_parentVwnd.SetPosition(&r);
-
-			ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
-			if (ct)	m_vwnd_painter.PaintBegin(m_hwnd, ct->tracklistbg_color);
-			else m_vwnd_painter.PaintBegin(m_hwnd, LICE_RGBA(0,0,0,255));
+			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
 			DrawControls(&m_vwnd_painter, r, &m_parentVwnd);
 			m_vwnd_painter.PaintEnd();
 		}
 		break;
-
 		case WM_LBUTTONDOWN:
-		{
-			SetFocus(g_pNotesHelpWnd->GetHWND());
-			int x = GET_X_LPARAM(lParam);
-			int y = GET_Y_LPARAM(lParam);
-			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w) 
-			{
-				if (w == &m_btnLock)
-				{
-					g_locked = !g_locked;
-					if (!g_locked)
-						SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
-					RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
-				}
-				w->OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-			}
-			//JFB online help TEMP implementation (sizing hard coded)
-			else if (GetType() == ACTION_HELP && x > (10+25+5+5+138) && y > 5 && y < 25)
-			{
-				char cLink[512] = "";
-				char sectionURL[64] = "";
-				if (g_lastActionId && GetALRStartOfURL(g_lastActionListSection, sectionURL, 64))
-				{					
-					sprintf(cLink, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
-					ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
-				}
-			}
-		}
-		break;
-
+			SetFocus(m_hwnd);
+			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)) > 0)
+				SetCapture(m_hwnd);
+			break;
 		case WM_LBUTTONUP:
-		{
-			int x = GET_X_LPARAM(lParam);
-			int y = GET_Y_LPARAM(lParam);
-			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w) w->OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		}
-		break;
-
+			if (GetCapture() == m_hwnd) {
+				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+				ReleaseCapture();
+			}
+			break;
 		case WM_MOUSEMOVE:
-		{
-			int x = GET_X_LPARAM(lParam);
-			int y = GET_Y_LPARAM(lParam);
-			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w) w->OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		}
-		break;
-
-		default:
+			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
 	}
 	return 0;
@@ -853,7 +832,9 @@ void SNM_NotesHelpWnd::readActionHelpFilenameIniFile()
 }
 
 void SNM_NotesHelpWnd::saveActionHelpFilenameIniFile() {
-	WritePrivateProfileString("NOTES_HELP_VIEW", "ACTION_HELP_FILE", m_actionHelpFilename.Get(), g_SNMiniFilename.Get());
+	WDL_String escapedStr;
+	makeEscapedConfigString(m_actionHelpFilename.Get(), &escapedStr);
+	WritePrivateProfileString("NOTES_HELP_VIEW", "ACTION_HELP_FILE", escapedStr.Get(), g_SNMiniFilename.Get());
 }
 
 const char* SNM_NotesHelpWnd::getActionHelpFilename() {
@@ -868,11 +849,8 @@ void SetActionHelpFilename(COMMAND_T*)
 {
 	//JFB BrowseForSaveFile() always asks for overwrite: painful!
 	char filename[BUFFER_SIZE] = "";
-	if (g_pNotesHelpWnd && BrowseForSaveFile("Set action help file",
-			g_pNotesHelpWnd->getActionHelpFilename(), "", "INI files\0*.ini\0", filename, BUFFER_SIZE))
-	{
+	if (g_pNotesHelpWnd && BrowseForSaveFile("Set action help file", g_pNotesHelpWnd->getActionHelpFilename(), g_pNotesHelpWnd->getActionHelpFilename(), "INI files\0*.ini\0", filename, BUFFER_SIZE))
 		g_pNotesHelpWnd->setActionHelpFilename(filename);
-	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -899,18 +877,25 @@ bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufMaxSize)
 	return true;
 }
 
-bool GetStringFromNotes(WDL_String* _notes, char* _buf, int _bufMaxSize)
+bool GetStringFromNotesChunk(WDL_String* _notes, char* _buf, int _bufMaxSize)
 {
 	if (!_buf || !_notes)
 		return false;
 
 	memset(_buf, 0, sizeof(_buf));
+
+/* No! ProcessExtensionLine() provides partial chunks..
+	// Test note chunk validity
+	if (_strnicmp(_notes->Get(), "<NOTES", 6) || _strnicmp((char*)(_notes->Get()+_notes->GetLength()-3), "\n>\n", 3))
+		return (_notes->GetLength() == 0); // empty _notes is a valid case
+*/
 	char* pNotes = _notes->Get();
 
 	// find 1st '|'
-	int i=0, j;	while (*pNotes && pNotes[i] != '|') i++;
+	int i=0, j;
+	while (*pNotes && pNotes[i] && pNotes[i] != '|') i++;
 
-	if (*pNotes) j = i+1;
+	if (*pNotes && pNotes[i]) j = i+1;
 	else return true;
 
 	int bufIdx = 0;
@@ -924,7 +909,7 @@ bool GetStringFromNotes(WDL_String* _notes, char* _buf, int _bufMaxSize)
 	return true;
 }
 
-bool GetNotesFromString(const char* _buf, WDL_String* _notes, const char* _startLine)
+bool GetNotesChunkFromString(const char* _buf, WDL_String* _notes, const char* _startLine)
 {
 	if (_notes && _buf)
 	{
@@ -972,7 +957,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		ExtensionConfigToString(&notes, ctx);
 
 		char buf[MAX_HELP_LENGTH] = "";
-		GetStringFromNotes(&notes, buf, MAX_HELP_LENGTH);
+		GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH);
 		g_prjNotes.Get()->Set(buf);
 		if (g_pNotesHelpWnd && g_pNotesHelpWnd->GetType() == NOTES_HELP_DISABLED)
 			g_pNotesHelpWnd->Update();
@@ -991,7 +976,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 			ExtensionConfigToString(&notes, ctx);
 
 			char buf[MAX_HELP_LENGTH] = "";
-			if (GetStringFromNotes(&notes, buf, MAX_HELP_LENGTH))
+			if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
 				g_pTracksNotes.Get()->Add(new SNM_TrackNotes(tr, buf));
 
 			return true;
@@ -1014,7 +999,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	if (g_prjNotes.Get()->GetLength())
 	{
 		strcpy(startLine, "<S&M_PROJNOTES\n|");
-		if (GetNotesFromString(g_prjNotes.Get()->Get(), &formatedNotes, startLine))
+		if (GetNotesChunkFromString(g_prjNotes.Get()->Get(), &formatedNotes, startLine))
 			StringToExtensionConfig(formatedNotes.Get(), ctx);
 	}
 
@@ -1031,7 +1016,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			guidToString(&g, strId);
 			sprintf(startLine, "<S&M_TRACKNOTES %s\n|", strId);
 
-			if (GetNotesFromString(g_pTracksNotes.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
+			if (GetNotesChunkFromString(g_pTracksNotes.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
 				StringToExtensionConfig(formatedNotes.Get(), ctx);
 		}
 	}
@@ -1039,8 +1024,35 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {
+	// Init S&M project notes with REAPER's ones
 	g_prjNotes.Cleanup();
 	g_prjNotes.Get()->Set("");
+
+	// Load REAPER project notes from RPP file
+	char cBuf[BUFFER_SIZE];
+	EnumProjects(-1, cBuf, BUFFER_SIZE);
+	ProjectStateContext* prjCtx = ProjectCreateFileRead(cBuf);
+	if (prjCtx)
+	{
+		WDL_String rpp;
+		while(!prjCtx->GetLine(cBuf, BUFFER_SIZE)) {
+			rpp.Append(cBuf);
+			rpp.Append("\n");
+		}
+		delete prjCtx;
+
+		// "translate notes"
+		SNM_ChunkParserPatcher p(&rpp);
+		WDL_String notes;
+		if (p.GetSubChunk("NOTES", 2, 0, &notes, "RIPPLE") >= 0)
+		{
+			char bufNotes[MAX_HELP_LENGTH] = "";
+			if (GetStringFromNotesChunk(&notes, bufNotes, MAX_HELP_LENGTH))
+				g_prjNotes.Get()->Set(bufNotes);
+		}
+	}
+
+	// Init track notes
 	g_pTracksNotes.Cleanup();
 	g_pTracksNotes.Get()->Empty(true);
 }
@@ -1049,24 +1061,10 @@ static project_config_extension_t g_projectconfig = {
 	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
 };
 
-static void menuhook(const char* menustr, HMENU hMenu, int flag)
-{
-	if (!strcmp(menustr, "Main view") && !flag)
-	{
-		int cmd = NamedCommandLookup("_S&M_SHOWNOTESHELP");
-		if (cmd > 0)
-			AddToMenu(hMenu, "S&&M Notes/Help", cmd);
-	}
-}
-
-int NotesHelpViewInit()
-{
+int NotesHelpViewInit() {
 	g_pNotesHelpWnd = new SNM_NotesHelpWnd();
-	if (!g_pNotesHelpWnd || 
-		!plugin_register("hookcustommenu", (void*)menuhook) ||
-		!plugin_register("projectconfig",&g_projectconfig))
+	if (!g_pNotesHelpWnd || !plugin_register("projectconfig",&g_projectconfig))
 		return 0;
-
 	return 1;
 }
 
@@ -1074,19 +1072,26 @@ void NotesHelpViewExit() {
 	if (g_pNotesHelpWnd)
 		g_pNotesHelpWnd->saveActionHelpFilenameIniFile();
 	delete g_pNotesHelpWnd;
+	g_pNotesHelpWnd = NULL;
 }
 
-void OpenNotesHelpView(COMMAND_T*) {
-	if (g_pNotesHelpWnd)
-		g_pNotesHelpWnd->Show(true, true);
+void OpenNotesHelpView(COMMAND_T* _ct) {
+	if (g_pNotesHelpWnd) {
+		g_pNotesHelpWnd->Show(g_pNotesHelpWnd->GetType() == (int)_ct->user /* i.e toggle */, true);
+		g_pNotesHelpWnd->SetType((int)_ct->user);
+		if (!g_locked)
+			SetFocus(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT));
+	}
 }
 
-bool IsNotesHelpViewEnabled(COMMAND_T*){
-	return g_pNotesHelpWnd->IsValidWindow();
+bool IsNotesHelpViewDisplayed(COMMAND_T* _ct) {
+	return (g_pNotesHelpWnd && g_pNotesHelpWnd->IsValidWindow());
 }
 
 void SwitchNotesHelpType(COMMAND_T* _ct){
 	g_pNotesHelpWnd->SetType((int)_ct->user);
+	if (!g_locked)
+		SetFocus(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT));
 }
 
 void ToggleNotesHelpLock(COMMAND_T*) {
@@ -1094,9 +1099,9 @@ void ToggleNotesHelpLock(COMMAND_T*) {
 	g_locked = !g_locked;
 	if (g_pNotesHelpWnd)
 	{
+		g_pNotesHelpWnd->RefreshGUI();
 		if (!g_locked)
 			SetFocus(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT));
-		g_pNotesHelpWnd->RefreshGUI();
 	}
 }
 

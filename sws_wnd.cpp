@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_wnd.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -38,35 +38,40 @@
 
 #include "stdafx.h"
 
-SWS_DockWnd::SWS_DockWnd(int iResource, const char* cName, const char* cId, int iDockOrder, int iCmdID)
-:m_hwnd(NULL), m_bDocked(false), m_iResource(iResource), m_cName(cName), m_cId(cId), m_iDockOrder(iDockOrder), m_bUserClosed(false), m_iCmdID(iCmdID)
+SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iDockOrder, int iCmdID)
+:m_hwnd(NULL), m_iResource(iResource), m_cWndTitle(cWndTitle), m_cId(cId), m_iDockOrder(iDockOrder), m_bUserClosed(false), m_iCmdID(iCmdID), m_bLoadingState(false)
 {
-	screenset_register((char*)m_cName, screensetCallback, this);
+	if (screenset_registerNew) // v4
+		screenset_registerNew((char*)cId, screensetCallback, this);
+	else
+		screenset_register((char*)cId, screensetCallbackOld, this);
+
+	memset(&m_state, 0, sizeof(SWS_DockWnd_State));
 
 	m_ar.translateAccel = keyHandler;
 	m_ar.isLocal = true;
 	m_ar.user = this;
 	plugin_register("accelerator", &m_ar);
+}
 
-	m_cWndPosKey = new char[strlen(m_cName)+8];
-	sprintf(m_cWndPosKey, "%s WndPos", m_cName);
-	m_cWndStateKey = new char[strlen(m_cName)+7];
-	sprintf(m_cWndStateKey, "%s State", m_cName);
-
+// Init() must be called from the constructor of *every* derived class.  Unfortunately,
+// you can't just call Init() from the DockWnd/base class, because the vTable isn't
+// setup yet.
+void SWS_DockWnd::Init()
+{
 	// Restore state
-	char str[10];
-	GetPrivateProfileString(SWS_INI, m_cWndStateKey, "0 0", str, 10, get_ini_file());
-	if (strlen(str) == 3)
-	{
-		m_bDocked  = str[2] == '1';
-		m_bShowAfterInit = str[0] == '1';
-	}
+	// First, get the # of bytes
+	int iLen = sizeof(SWS_DockWnd_State) + SaveView(NULL, 0);
+	char* cState = new char[iLen];
+	memset(cState, 0, iLen);
+	// Then load the state from the INI
+	GetPrivateProfileStruct(SWS_INI, m_cId, cState, iLen, get_ini_file());
+	LoadState(cState, iLen);
+	delete [] cState;
 }
 
 SWS_DockWnd::~SWS_DockWnd()
 {
-	delete m_cWndPosKey;
-	delete m_cWndStateKey;
 	plugin_register("-accelerator", &m_ar);
 }
 
@@ -75,15 +80,16 @@ void SWS_DockWnd::Show(bool bToggle, bool bActivate)
 	if (!IsWindow(m_hwnd))
 	{
 		CreateDialogParam(g_hInst, MAKEINTRESOURCE(m_iResource), g_hwndParent, SWS_DockWnd::sWndProc, (LPARAM)this);
-		if (m_bDocked && bActivate)
+		if (IsDocked() && bActivate)
 			DockWindowActivate(m_hwnd);
 #ifndef _WIN32
+		// TODO see if DockWindowRefresh works here
 		InvalidateRect(m_hwnd, NULL, TRUE);
 #endif
 	}
 	else if (!IsWindowVisible(m_hwnd) || (bActivate && !bToggle))
 	{
-		if (m_bDocked)
+		if ((m_state.state & 2))
 			DockWindowActivate(m_hwnd);
 		else
 			ShowWindow(m_hwnd, SW_SHOW);
@@ -95,10 +101,14 @@ void SWS_DockWnd::Show(bool bToggle, bool bActivate)
 
 bool SWS_DockWnd::IsActive(bool bWantEdit)
 {
+	if (!IsValidWindow())
+		return false;
+
 	for (int i = 0; i < m_pLists.GetSize(); i++)
 		if (m_pLists.Get(i)->IsActive(bWantEdit))
 			return true;
-	return GetFocus() == m_hwnd;
+
+	return GetFocus() == m_hwnd || IsChild(m_hwnd, GetFocus());
 }
 
 INT_PTR WINAPI SWS_DockWnd::sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -127,23 +137,30 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// Call derived class initialization
 			OnInitDlg();
 
-			if (m_bDocked)
+			if ((m_state.state & 2))
 			{
 				if (DockWindowAddEx)
-					DockWindowAddEx(m_hwnd, (char*)m_cName, (char*)m_cId, true);
+					DockWindowAddEx(m_hwnd, (char*)m_cWndTitle, (char*)m_cId, true);
 				else
-					DockWindowAdd(m_hwnd, (char*)m_cName, m_iDockOrder, true); 
+					DockWindowAdd(m_hwnd, (char*)m_cWndTitle, m_iDockOrder, true); 
 			}
 			else
 			{
-				RestoreWindowPos(m_hwnd, m_cWndPosKey);
+				EnsureNotCompletelyOffscreen(&m_state.r);
+				if (m_state.r.left || m_state.r.top || m_state.r.right || m_state.r.bottom)
+					SetWindowPos(m_hwnd, NULL, m_state.r.left, m_state.r.top, m_state.r.right-m_state.r.left, m_state.r.bottom-m_state.r.top, SWP_NOZORDER);
+				if (AttachWindowTopmostButton) // v4 only
+				{
+					AttachWindowTopmostButton(m_hwnd);
+					AttachWindowResizeGrip(m_hwnd);
+				}
 				ShowWindow(m_hwnd, SW_SHOW);
 			}
 
 			break;
 		}
 		case WM_TIMER:
-			OnTimer();
+			OnTimer(wParam);
 			break;
 		case WM_NOTIFY:
 		{
@@ -197,10 +214,10 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			// Add std menu items
 			char str[100];
-			sprintf(str, "Dock %s in Docker", m_cName);
+			sprintf(str, "Dock %s in Docker", m_cWndTitle);
 			AddToMenu(hMenu, str, DOCK_MSG);
 			// Check dock state
-			if (m_bDocked)
+			if ((m_state.state & 2))
 				CheckMenuItem(hMenu, DOCK_MSG, MF_BYCOMMAND | MF_CHECKED);
 			AddToMenu(hMenu, "Close Window", IDCANCEL);
 
@@ -250,18 +267,18 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			OnDroppedFiles((HDROP)wParam);
 			break;
 		case WM_DESTROY:
+		{
 			OnDestroy();
 			for (int i = 0; i < m_pLists.GetSize(); i++)
 				m_pLists.Get(i)->OnDestroy();
 
-			if (!m_bDocked)
-				SaveWindowPos(m_hwnd, m_cWndPosKey);
-
-			DockWindowRemove(m_hwnd);
-			char str[10];
-			sprintf(str, "%d %d", m_bUserClosed ? 0 : 1, m_bDocked ? 1 : 0);
-			WritePrivateProfileString(SWS_INI, m_cWndStateKey, str, get_ini_file());
+			char cState[256];
+			int iLen = SaveState(cState, 256);
+			WritePrivateProfileStruct(SWS_INI, m_cId, cState, iLen, get_ini_file());
 			m_bUserClosed = false;
+			
+			DockWindowRemove(m_hwnd); // Always safe to call even if the window isn't docked
+		}
 #ifdef _WIN32
 			break;
 		case WM_NCDESTROY:
@@ -278,38 +295,35 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void SWS_DockWnd::ToggleDocking()
 {
-	if (!m_bDocked)
-	{
-		m_bDocked = true;
-		SaveWindowPos(m_hwnd, m_cWndPosKey);
-		ShowWindow(m_hwnd, SW_HIDE);
-		if (DockWindowAddEx)
-			DockWindowAddEx(m_hwnd, (char*)m_cName, (char*)m_cId, false);
-		else
-			DockWindowAdd(m_hwnd, (char*)m_cName, m_iDockOrder, false); // v4 TODO delete me
-		DockWindowActivate(m_hwnd);
-	}
-	else
-	{
-		DestroyWindow(m_hwnd);
-		m_bDocked = false;
-		Show(false, true);
-	}
+	if (!IsDocked())
+		GetWindowRect(m_hwnd, &m_state.r);
+
+	DestroyWindow(m_hwnd);
+	m_state.state ^= 2;
+	Show(false, true);
 }
 
-LPARAM SWS_DockWnd::screensetCallback(int action, char *id, void *param, int param2)
+// v3 screenset support (delete for v4)
+LRESULT SWS_DockWnd::screensetCallbackOld(int action, char *id, void *param, int param2)
+{
+	return screensetCallback(action, id, param, NULL, param2);
+}
+
+// v4 screenset support
+LRESULT SWS_DockWnd::screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize)
 {
 	SWS_DockWnd* pObj = (SWS_DockWnd*)param;
 	switch(action)
 	{
 	case SCREENSET_ACTION_GETHWND:
-		return (LPARAM)pObj->m_hwnd;
+		return (LRESULT)pObj->m_hwnd;
 	case SCREENSET_ACTION_IS_DOCKED:
-		return (LPARAM)pObj->m_bDocked;
+		return (LRESULT)pObj->IsDocked();
+	// *** V3 only (remove for v4)
 	case SCREENSET_ACTION_SHOW:
 		if (IsWindow(pObj->m_hwnd))
 			DestroyWindow(pObj->m_hwnd);
-		pObj->m_bDocked = param2 ? true : false;
+		if (actionParmSize) pObj->m_state.state |= 2; else pObj->m_state.state &= ~2;
 		pObj->Show(false, true);
 		break;
 	case SCREENSET_ACTION_CLOSE:
@@ -323,9 +337,11 @@ LPARAM SWS_DockWnd::screensetCallback(int action, char *id, void *param, int par
 		if (IsWindow(pObj->m_hwnd))
 			pObj->ToggleDocking();
 		break;
-	case SCREENSET_ACTION_NOMOVE:
-	case SCREENSET_ACTION_GETHASH:
-		return 0;
+	case SCREENSET_ACTION_LOAD_STATE:
+		pObj->LoadState((char*)actionParm, actionParmSize);
+		break;
+	case SCREENSET_ACTION_SAVE_STATE:
+		return pObj->SaveState((char*)actionParm, actionParmSize);
 	}
 	return 0;
 }
@@ -340,7 +356,7 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 		for (int i = 0; i < p->m_pLists.GetSize(); i++)
 		{
 			pLV = p->m_pLists.Get(i);
-			if (p->GetHWND() == msg->hwnd || p->IsActive(true))
+			if (pLV->IsActive(true))
 			{
 				int iRet = pLV->EditingKeyHandler(msg);
 				if (iRet)
@@ -361,10 +377,87 @@ int SWS_DockWnd::keyHandler(MSG* msg, accelerator_register_t* ctx)
 			iRet = pLV->LVKeyHandler(msg, iKeys);
 			if (iRet)
 				return iRet;
-			return -666; // We don't want the key, so force it to main reaper wnd
 		}
+		// We don't want the key, but this window has the focus.
+		// Therefore, force it to main reaper wnd (passthrough) so that main wnd actions work!
+		return -666;
 	}
 	return 0;
+}
+
+// *Local* function to save the state of the view.  This is the window size, position & dock state,
+// as well as any derived class view information from the function SaveView
+int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
+{
+	if (m_bLoadingState)
+		return 0;
+
+	int iLen = sizeof(SWS_DockWnd_State);
+	if (IsWindow(m_hwnd))
+	{
+		if (!IsDocked())
+			GetWindowRect(m_hwnd, &m_state.r);
+		else
+			m_state.whichdock = DockIsChildOfDock ? DockIsChildOfDock(m_hwnd, NULL) : 0;
+	}
+	if (!m_bUserClosed & IsWindow(m_hwnd))
+		m_state.state |= 1;
+	else
+		m_state.state &= ~1;
+
+	if (cStateBuf)
+	{
+		memcpy(cStateBuf, &m_state, iLen);
+		iLen += SaveView(cStateBuf + iLen, iMaxLen - iLen);
+
+		for (int i = 0; i < iLen / (int)sizeof(int); i++)
+			REAPER_MAKELEINTMEM(&(((int*)cStateBuf)[i]));
+	}
+	else
+		iLen += SaveView(NULL, 0);
+
+	return iLen;
+}
+
+// *Local* function to restore view state.  This is the window size, position & dock state.
+// Also calls the derived class method LoadView.
+void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
+{
+	m_bLoadingState = true;
+
+	bool bDocked = IsDocked();
+	if (cStateBuf && iLen >= sizeof(SWS_DockWnd_State))
+	{
+		for (int i = 0; i < sizeof(SWS_DockWnd_State) / (int)sizeof(int); i++)
+			((int*)&m_state)[i] = REAPER_MAKELEINT(*((int*)cStateBuf+i));
+	}
+	else
+		m_state.state = 0;
+
+	if (Dock_UpdateDockID) // v4 only!
+		Dock_UpdateDockID((char*)m_cId, m_state.whichdock);
+
+	if (m_state.state & 1)
+	{
+		if (IsWindow(m_hwnd) && bDocked != ((m_state.state & 2) == 2) ||
+			(bDocked && DockIsChildOfDock(m_hwnd, NULL) != m_state.whichdock))
+			// If the window's already open, but the dock state or docker # has changed,
+			// destroy and reopen.
+			DestroyWindow(m_hwnd);
+
+		Show(false, false);
+	}
+	else if (IsWindow(m_hwnd))
+		DestroyWindow(m_hwnd);
+
+	if (iLen > sizeof(SWS_DockWnd_State))
+	{
+		int iViewLen = iLen - sizeof(SWS_DockWnd_State);
+		char* cTemp = new char[iViewLen];
+		memcpy(cTemp, cStateBuf + sizeof(SWS_DockWnd_State), iViewLen);
+		LoadView(cTemp, iViewLen);
+	}
+	m_bLoadingState = false;
 }
 
 SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips)
@@ -739,6 +832,10 @@ int SWS_ListView::EditingKeyHandler(MSG *msg)
 			EditListItemEnd(true);
 			return 1;
 		}
+		
+		// All other keystrokes when editing should go to the control, not to SWS_DockWnd or Reaper
+		// Fixes bug where the delete key when editing would delete the line, but it would still exist temporarily
+		return -1;
 	}
 	return 0;
 }
@@ -1061,7 +1158,7 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	ScreenToClient(hDlg, ((LPPOINT)&sr)+1);
 
 	// Create a new edit control to go over that rect
-	int lOffset = 0;
+	int lOffset = -1;
 	if (iDispCol)
 		lOffset += GetSystemMetrics(SM_CXEDGE) * 2;
 
@@ -1082,23 +1179,26 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 
 void SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 {
-	if (m_iEditingItem != -1 && bSave && IsWindow(m_hwndList) && IsWindow(m_hwndEdit))
+	if (m_iEditingItem != -1 && IsWindow(m_hwndList) && IsWindow(m_hwndEdit))
 	{
-		char newStr[100];
-		char curStr[100];
-		GetWindowText(m_hwndEdit, newStr, 100);
-		LPARAM item = GetListItem(m_iEditingItem);
-		GetItemText(item, m_iEditingCol, curStr, 100);
-		if (strcmp(curStr, newStr))
+		if (bSave)
 		{
-			SetItemText(item, m_iEditingCol, newStr);
-			GetItemText(item, m_iEditingCol, newStr, 100);
-			ListView_SetItemText(m_hwndList, m_iEditingItem, DataToDisplayCol(m_iEditingCol), newStr);
+			char newStr[100];
+			char curStr[100];
+			GetWindowText(m_hwndEdit, newStr, 100);
+			LPARAM item = GetListItem(m_iEditingItem);
+			GetItemText(item, m_iEditingCol, curStr, 100);
+			if (strcmp(curStr, newStr))
+			{
+				SetItemText(item, m_iEditingCol, newStr);
+				GetItemText(item, m_iEditingCol, newStr, 100);
+				ListView_SetItemText(m_hwndList, m_iEditingItem, DataToDisplayCol(m_iEditingCol), newStr);
+			}
+			if (bResort)
+				ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
+			// TODO resort? Just call update?
+			// Update is likely called when SetItemText is called too...
 		}
-		if (bResort)
-			ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
-		// TODO resort? Just call update?
-		// Update is likely called when SetItemText is called too...
 		m_iEditingItem = -1;
 		ShowWindow(m_hwndEdit, SW_HIDE);
 	}

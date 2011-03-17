@@ -43,7 +43,7 @@ private:
 	WDL_PtrList<char> m_orig;
 };
 
-char* SWS_GetSetObjectState(void* obj, const char* str);
+char* SWS_GetSetObjectState(void* obj, WDL_String* str);
 void SWS_FreeHeapPtr(void* ptr);
 void SWS_CacheObjectState(bool bStart);
 

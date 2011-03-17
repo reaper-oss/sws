@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Actions.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÈdague
+/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,9 +27,8 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
-#include "SNM_NotesHelpView.h"
-#include "SNM_MidiLiveView.h"
-#include "../Utility/SectionLock.h"
+#include "SnM_NotesHelpView.h"
+#include "SnM_MidiLiveView.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,7 +43,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-fader (post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, post-fader (post-pan)" }, "S&M_SENDS2", cueTrack, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-FX" }, "S&M_SENDS3", cueTrack, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Open Cue Buss window..." }, "S&M_SENDS4", cueTrackPrompt, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open Cue Buss window" }, "S&M_SENDS4", openCueBussWnd, "S&&M Cue Buss Generator", NULL, isCueBussWndDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection" }, "S&M_CUEBUS", cueTrack, NULL, -1},
 
 	{ { DEFACCEL, "SWS/S&M: Remove receives from selected tracks" }, "S&M_SENDS5", removeReceives, NULL, },
@@ -88,19 +87,25 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Float previous FX (and close others) for selected tracks" }, "S&M_WNONLY1", cycleFloatFXWndSelTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Float next FX (and close others) for selected tracks" }, "S&M_WNONLY2", cycleFloatFXWndSelTracks, NULL, 1},
-
+#ifdef _SNM_MISC // only diff. with following ones is that they don't focus the main window on cycle
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS1", cycleFocusFXWndSelTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks  (cycle)" }, "S&M_WNFOCUS2", cycleFocusFXWndSelTracks, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS2", cycleFocusFXWndSelTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (cycle)" }, "S&M_WNFOCUS3", cycleFocusFXWndAllTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Focus next floating FX (cycle)" }, "S&M_WNFOCUS4", cycleFocusFXWndAllTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX for selected tracks (+ main window on cycle)" }, "S&M_WNFOCUS5", cycleFocusFXMainWndSelTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (+ main window on cycle)" }, "S&M_WNFOCUS6", cycleFocusFXMainWndSelTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (+ main window on cycle)" }, "S&M_WNFOCUS7", cycleFocusFXAndMainWndAllTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Focus next floating FX (+ main window on cycle)" }, "S&M_WNFOCUS8", cycleFocusFXAndMainWndAllTracks, NULL, 1},
-#ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Cycle focused window" }, "S&M_WNFOCUS9", cycleFocusWnd, NULL, -1},
 #endif
-	{ { DEFACCEL, "SWS/S&M: Focus main window" }, "S&M_WNMAIN", setMainWindowActive, NULL, },
+	// see above comment, used to be "... (+ main window on cycle)" => turned into "... (cycle)"
+	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS5", cycleFocusFXMainWndSelTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS6", cycleFocusFXMainWndSelTracks, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (cycle)" }, "S&M_WNFOCUS7", cycleFocusFXMainWndAllTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Focus next floating FX (cycle)" }, "S&M_WNFOCUS8", cycleFocusFXMainWndAllTracks, NULL, 1},
+
+	{ { DEFACCEL, "SWS/S&M: Focus main window" }, "S&M_WNMAIN", focusMainWindow, NULL, },
+#ifdef _WIN32
+	{ { DEFACCEL, "SWS/S&M: Focus main window (close others)" }, "S&M_WNMAIN_HIDE_OTHERS", focusMainWindowCloseOthers, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Cycle focused window" }, "S&M_WNFOCUS9", cycleFocusWnd, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Focus next window (cycle, hide/unhide others)" }, "S&M_WNFOCUS_NEXT", cycleFocusHideOthersWnd, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Focus previous window (cycle, hide/unhide others)" }, "S&M_WNFOCUS_PREV", cycleFocusHideOthersWnd, NULL, -1},
+#endif
 
 	{ { DEFACCEL, "SWS/S&M: Show FX chain for selected tracks (FX 1)" }, "S&M_SHOWFXCHAIN1", showFXChain, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Show FX chain for selected tracks (FX 2)" }, "S&M_SHOWFXCHAIN2", showFXChain, NULL, 1},
@@ -146,7 +151,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle float selected FX for selected tracks" }, "S&M_TOGLFLOATFXEL", toggleFloatFX, NULL, -1, fakeIsToggledAction},
 
 
-	// Track FX selection -----------------------------------------------------
+	// Track FX selection & move up/down---------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Select last FX for selected tracks" }, "S&M_SEL_LAST_FX", selectFX, NULL, -3},
 	{ { DEFACCEL, "SWS/S&M: Select previous FX (cycling) for selected tracks" }, "S&M_SELFXPREV", selectFX, NULL, -2},
 	{ { DEFACCEL, "SWS/S&M: Select next FX (cycling) for selected tracks" }, "S&M_SELFXNEXT", selectFX, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Select FX 1 for selected tracks" }, "S&M_SELFX1", selectFX, NULL, 0},
@@ -157,6 +163,9 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Select FX 6 for selected tracks" }, "S&M_SELFX6", selectFX, NULL, 5},
 	{ { DEFACCEL, "SWS/S&M: Select FX 7 for selected tracks" }, "S&M_SELFX7", selectFX, NULL, 6},
 	{ { DEFACCEL, "SWS/S&M: Select FX 8 for selected tracks" }, "S&M_SELFX8", selectFX, NULL, 7},
+
+	{ { DEFACCEL, "SWS/S&M: Move selected FX up in chain for selected tracks" }, "S&M_MOVE_FX_UP", moveFX, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Move selected FX down in chain for selected tracks" }, "S&M_MOVE_FX_DOWN", moveFX, NULL, 1},
 
 
 	// Track FX online/offline & bypass/unbypass ------------------------------
@@ -236,7 +245,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) offline for selected tracks" }, "S&M_FXOFFEXCPTSEL", toggleExceptFXOfflineSelectedTracks, NULL, 0, fakeIsToggledAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) bypass for selected tracks" }, "S&M_FXBYPEXCPTSEL", toggleExceptFXBypassSelectedTracks, NULL, 0, fakeIsToggledAction},
-#ifdef _SNM_MISC
+#ifdef _SNM_MISC // very specific..
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 1) online/offline for selected tracks" }, "S&M_FXOFFEXCPT1", toggleExceptFXOfflineSelectedTracks, NULL, 1, fakeIsToggledAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 2) online/offline for selected tracks" }, "S&M_FXOFFEXCPT2", toggleExceptFXOfflineSelectedTracks, NULL, 2, fakeIsToggledAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 3) online/offline for selected tracks" }, "S&M_FXOFFEXCPT3", toggleExceptFXOfflineSelectedTracks, NULL, 3, fakeIsToggledAction},
@@ -257,8 +266,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 #endif
 
 	// FX Chains (items & tracks) ---------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open FX Chains window..." }, "S&M_SHOWFXCHAINSLOTS", OpenFXChainView, NULL, NULL, IsFXChainViewEnabled},
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", clearFXChainSlotPrompt, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open Resources window (FX chains)" }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, "S&&M Resources", 0, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ClearSlotPrompt, NULL, 0},
 
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, slot 1" }, "S&M_TAKEFXCHAIN1", loadSetTakeFXChain, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, slot 2" }, "S&M_TAKEFXCHAIN2", loadSetTakeFXChain, NULL, 1},
@@ -271,10 +280,22 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, prompt for slot" }, "S&M_TAKEFXCHAINp1", loadSetTakeFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected items, all takes, prompt for slot" }, "S&M_TAKEFXCHAINp2", loadSetAllTakesFXChain, NULL, -1},
 
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 1" }, "S&M_PASTE_TAKEFXCHAIN1", loadPasteTakeFXChain, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 2" }, "S&M_PASTE_TAKEFXCHAIN2", loadPasteTakeFXChain, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 3" }, "S&M_PASTE_TAKEFXCHAIN3", loadPasteTakeFXChain, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 4" }, "S&M_PASTE_TAKEFXCHAIN4", loadPasteTakeFXChain, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 5" }, "S&M_PASTE_TAKEFXCHAIN5", loadPasteTakeFXChain, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 6" }, "S&M_PASTE_TAKEFXCHAIN6", loadPasteTakeFXChain, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 7" }, "S&M_PASTE_TAKEFXCHAIN7", loadPasteTakeFXChain, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, slot 8" }, "S&M_PASTE_TAKEFXCHAIN8", loadPasteTakeFXChain, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp1", loadPasteTakeFXChain, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected items, all takes, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp2", loadPasteAllTakesFXChain, NULL, -1},
+
 	{ { DEFACCEL, "SWS/S&M: Copy FX chain from selected item" }, "S&M_COPYFXCHAIN1", copyTakeFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Cut FX chain from selected items" }, "S&M_COPYFXCHAIN2", cutTakeFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items" }, "S&M_COPYFXCHAIN3", setTakeFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, all takes" }, "S&M_COPYFXCHAIN4", setAllTakesFXChain, NULL, }, 
+
 	{ { DEFACCEL, "SWS/S&M: Copy FX chain from selected track" }, "S&M_COPYFXCHAIN5", copyTrackFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Cut FX chain from selected tracks" }, "S&M_COPYFXCHAIN6", cutTrackFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected tracks" }, "S&M_COPYFXCHAIN7", setTrackFXChain, NULL, }, 
@@ -282,9 +303,15 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, all takes" }, "S&M_COPYFXCHAIN9", pasteAllTakesFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks" }, "S&M_COPYFXCHAIN10", pasteTrackFXChain, NULL, }, 
 
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected items" },  "S&M_CLRFXCHAIN1", clearActiveTakeFXChain, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected items, all takes" },  "S&M_CLRFXCHAIN2", clearAllTakesFXChain, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected tracks" }, "S&M_CLRFXCHAIN3", clearTrackFXChain, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Copy input FX chain from selected track" }, "S&M_COPY_INFXCHAIN", copyTrackInputFXChain, NULL, }, 
+	{ { DEFACCEL, "SWS/S&M: Cut input FX chain from selected tracks" }, "S&M_CUT_INFXCHAIN", cutTrackInputFXChain, NULL, }, 
+	{ { DEFACCEL, "SWS/S&M: Paste (replace) input FX chain to selected tracks" }, "S&M_PASTE_REPLACE_INFXCHAIN", setTrackInputFXChain, NULL, }, 
+	{ { DEFACCEL, "SWS/S&M: Paste input FX chain to selected tracks" }, "S&M_PASTE_INFXCHAIN", pasteTrackInputFXChain, NULL, }, 
+
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected items" },  "S&M_CLRFXCHAIN1", clearActiveTakeFXChain, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected items, all takes" },  "S&M_CLRFXCHAIN2", clearAllTakesFXChain, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected tracks" }, "S&M_CLRFXCHAIN3", clearTrackFXChain, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Clear input FX chain for selected tracks" }, "S&M_CLR_INFXCHAIN", clearTrackInputFXChain, NULL, },
 
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected tracks, slot 1" }, "S&M_TRACKFXCHAIN1", loadSetTrackFXChain, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected tracks, slot 2" }, "S&M_TRACKFXCHAIN2", loadSetTrackFXChain, NULL, 1},
@@ -296,8 +323,56 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected tracks, slot 8" }, "S&M_TRACKFXCHAIN8", loadSetTrackFXChain, NULL, 7},
 	{ { DEFACCEL, "SWS/S&M: Load/apply FX chain to selected tracks, prompt for slot" }, "S&M_TRACKFXCHAINp1", loadSetTrackFXChain, NULL, -1},
 	
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 1" }, "S&M_PASTE_TRACKFXCHAIN1", loadPasteTrackFXChain, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 2" }, "S&M_PASTE_TRACKFXCHAIN2", loadPasteTrackFXChain, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 3" }, "S&M_PASTE_TRACKFXCHAIN3", loadPasteTrackFXChain, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 4" }, "S&M_PASTE_TRACKFXCHAIN4", loadPasteTrackFXChain, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 5" }, "S&M_PASTE_TRACKFXCHAIN5", loadPasteTrackFXChain, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 6" }, "S&M_PASTE_TRACKFXCHAIN6", loadPasteTrackFXChain, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 7" }, "S&M_PASTE_TRACKFXCHAIN7", loadPasteTrackFXChain, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, slot 8" }, "S&M_PASTE_TRACKFXCHAIN8", loadPasteTrackFXChain, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Load/paste FX chain to selected tracks, prompt for slot" }, "S&M_PASTE_TRACKFXCHAINp1", loadPasteTrackFXChain, NULL, -1},
+
+	// MIDI learn -------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Reassign MIDI learned channels of all FX for selected tracks (prompt)" }, "S&M_ALL_FX_LEARN_CHp", reassignLearntMIDICh, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Reassign MIDI learned channels of selected FX for selected tracks (prompt)" }, "S&M_SEL_FX_LEARN_CHp", reassignLearntMIDICh, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Reassign MIDI learned channels of all FX to input channel for selected tracks" }, "S&M_ALLIN_FX_LEARN_CHp", reassignLearntMIDICh, NULL, -3},
 	
+	// Track templates --------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Open Resources window (track templates)" }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResourceView, NULL, 1, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear track template slot..." }, "S&M_CLR_TRTEMPLATE_SLOT", ClearSlotPrompt, NULL, 1},
+
+	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 01" }, "S&M_APPLY_TRTEMPLATE1", loadSetTrackTemplate, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 02" }, "S&M_APPLY_TRTEMPLATE2", loadSetTrackTemplate, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 03" }, "S&M_APPLY_TRTEMPLATE3", loadSetTrackTemplate, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 04" }, "S&M_APPLY_TRTEMPLATE4", loadSetTrackTemplate, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 05" }, "S&M_APPLY_TRTEMPLATE5", loadSetTrackTemplate, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 06" }, "S&M_APPLY_TRTEMPLATE6", loadSetTrackTemplate, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 07" }, "S&M_APPLY_TRTEMPLATE7", loadSetTrackTemplate, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 08" }, "S&M_APPLY_TRTEMPLATE8", loadSetTrackTemplate, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 09" }, "S&M_APPLY_TRTEMPLATE9", loadSetTrackTemplate, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, slot 10" }, "S&M_APPLY_TRTEMPLATE10", loadSetTrackTemplate, NULL, 9},
+	{ { DEFACCEL, "SWS/S&M: Load/apply track template to selected tracks, prompt for slot" }, "S&M_APPLY_TRTEMPLATEp", loadSetTrackTemplate, NULL, -1},
+
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 01" }, "S&M_ADD_TRTEMPLATE1", loadImportTrackTemplate, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 02" }, "S&M_ADD_TRTEMPLATE2", loadImportTrackTemplate, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 03" }, "S&M_ADD_TRTEMPLATE3", loadImportTrackTemplate, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 04" }, "S&M_ADD_TRTEMPLATE4", loadImportTrackTemplate, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 05" }, "S&M_ADD_TRTEMPLATE5", loadImportTrackTemplate, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 06" }, "S&M_ADD_TRTEMPLATE6", loadImportTrackTemplate, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 07" }, "S&M_ADD_TRTEMPLATE7", loadImportTrackTemplate, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 08" }, "S&M_ADD_TRTEMPLATE8", loadImportTrackTemplate, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 09" }, "S&M_ADD_TRTEMPLATE9", loadImportTrackTemplate, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, slot 10" }, "S&M_ADD_TRTEMPLATE10", loadImportTrackTemplate, NULL, 9},
+	{ { DEFACCEL, "SWS/S&M: Load/import tracks from track template, prompt for slot" }, "S&M_ADD_TRTEMPLATEp", loadImportTrackTemplate, NULL, -1},
+
+
 	// Takes ------------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Copy active take" }, "S&M_COPY_TAKE", copyCutTake, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Cut active take" }, "S&M_CUT_TAKE", copyCutTake, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Paste take" }, "S&M_PASTE_TAKE", pasteTake, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Paste take (after active take)" }, "S&M_PASTE_TAKE_AFTER", pasteTake, NULL, 1},
+
 	{ { DEFACCEL, "SWS/S&M: Takes - Clear active takes/items" }, "S&M_CLRTAKE1", clearTake, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Takes - Build lanes for selected tracks" }, "S&M_LANETAKE1", buildLanes, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Takes - Activate lane from selected item" }, "S&M_LANETAKE2", activateLaneFromSelItem, NULL, },
@@ -305,32 +380,46 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Takes - Activate lane under mouse cursor" }, "S&M_LANETAKE4", activateLaneUnderMouse, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Takes - Remove empty takes/items among selected items" }, "S&M_DELEMPTYTAKE", removeAllEmptyTakes/*removeEmptyTakes*/, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Takes - Remove empty MIDI takes/items among selected items" }, "S&M_DELEMPTYTAKE2", removeEmptyMidiTakes, NULL, },
-//	{ { DEFACCEL, "SWS/S&M: Takes - Remove all empty takes/items among selected items" }, "S&M_DELEMPTYTAKE3", removeAllEmptyTakes, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Takes - Move all up (cycling) in selected items" }, "S&M_MOVETAKE1", moveTakes, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Takes - Move all down (cycling) in selected items" }, "S&M_MOVETAKE2", moveTakes, NULL, 1},
+#ifdef _SNM_MISC // seems confusing, the above one is fine..
+	{ { DEFACCEL, "SWS/S&M: Takes - Remove all empty takes/items among selected items" }, "S&M_DELEMPTYTAKE3", removeAllEmptyTakes, NULL, },
+#endif
 	{ { DEFACCEL, "SWS/S&M: Takes - Move active up (cycling) in selected items" }, "S&M_MOVETAKE3", moveActiveTake, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Takes - Move active down (cycling) in selected items" }, "S&M_MOVETAKE4", moveActiveTake, NULL, 1},
+#ifdef _SNM_MISC // Deprecated: native actions "Rotate take lanes forward/backward" added in REAPER v3.67
+	{ { DEFACCEL, "SWS/S&M: Takes - Move all up (cycling) in selected items" }, "S&M_MOVETAKE1", moveTakes, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Takes - Move all down (cycling) in selected items" }, "S&M_MOVETAKE2", moveTakes, NULL, 1},
+#endif
 
 	{ { DEFACCEL, "SWS/S&M: Delete selected items' takes and source files (prompt, no undo)" }, "S&M_DELTAKEANDFILE1", deleteTakeAndMedia, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Delete selected items' takes and source files (no undo)" }, "S&M_DELTAKEANDFILE2", deleteTakeAndMedia, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Delete active take and source file in selected items (prompt, no undo)" }, "S&M_DELTAKEANDFILE3", deleteTakeAndMedia, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Delete active take and source file in selected items (no undo)" }, "S&M_DELTAKEANDFILE4", deleteTakeAndMedia, NULL, 4},
 
-	// Notes/help -------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window..." }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, NULL, IsNotesHelpViewEnabled},
-	{ { DEFACCEL, "SWS/S&M: Notes/Help - Switch to project notes (disables auto updates)" }, "S&M_DISABLENOTESHELP", SwitchNotesHelpType, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Notes/Help - Switch to item notes" }, "S&M_ITEMNOTES", SwitchNotesHelpType, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Notes/Help - Switch to track notes" }, "S&M_TRACKNOTES", SwitchNotesHelpType, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Save selected item as item/take template..." }, "S&M_SAVEITEMTAKETEMPLATE", saveItemTakeTemplate, NULL, },
+
+
+	// Notes/Help -------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (project notes)" }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, "S&&M Notes/Help", 0, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (item notes)" }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (track notes)" }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewDisplayed},
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Notes/Help - Switch to action help" }, "S&M_ACTIONHELP", SwitchNotesHelpType, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (action help)" }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, 3, IsNotesHelpViewDisplayed},
 #endif
+	//JFB!! TODO: someting better to do here.. note for myself
+	{ { DEFACCEL, "SWS/S&M: Notes/Help - Disables auto updates" }, "S&M_DISABLENOTESHELP", SwitchNotesHelpType, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Notes/Help - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesHelpLock, NULL, NULL, IsNotesHelpLocked},
 	{ { DEFACCEL, "SWS/S&M: Notes/Help - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
 
 
 	// Split ------------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Split selected items at cursor (MIDI) or at prior zero crossing (audio)" }, "S&M_SPLIT1", splitMidiAudio, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Split selected items at time selection (if exists), else at cursor (MIDI) or at prior zero crossing (audio)" }, "S&M_SPLIT2", smartSplitMidiAudio, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Split selected items at edit cursor (MIDI) or prior zero crossing (audio)" }, "S&M_SPLIT1", splitMidiAudio, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Split selected items at time selection, edit cursor (MIDI) or prior zero crossing (audio)" }, "S&M_SPLIT2", smartSplitMidiAudio, NULL, },
+#ifdef _SNM_MISC
+//  Deprecated: contrary to their native versions, the following actions were spliting selected items *and only them*, 
+//  see http://forum.cockos.com/showthread.php?t=51547.
+//  Due to REAPER v3.67's new native pref "If no items are selected, some split/trim/delete actions affect all items at the edit cursor", 
+//  those actions are less useful: they would still split only selected items, even if that native pref is ticked. 
+//  Also removed because of the spam in the action list (many split actions).
 	{ { DEFACCEL, "SWS/S&M: Split selected items at play cursor" }, "S&M_SPLIT3", splitSelectedItems, NULL, 40196},
 	{ { DEFACCEL, "SWS/S&M: Split selected items at time selection" }, "S&M_SPLIT4", splitSelectedItems, NULL, 40061},
 	{ { DEFACCEL, "SWS/S&M: Split selected items at edit cursor (no change selection)" }, "S&M_SPLIT5", splitSelectedItems, NULL, 40757},
@@ -338,7 +427,9 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Split selected items at time selection (select right)" }, "S&M_SPLIT7", splitSelectedItems, NULL, 40759},
 	{ { DEFACCEL, "SWS/S&M: Split selected items at edit or play cursor" }, "S&M_SPLIT8", splitSelectedItems, NULL, 40012},
 	{ { DEFACCEL, "SWS/S&M: Split selected items at edit or play cursor (ignoring grouping)" }, "S&M_SPLIT9", splitSelectedItems, NULL, 40186},
+#endif
 	{ { DEFACCEL, "SWS/gofer: Split selected items at mouse cursor (obey snapping)" }, "S&M_SPLIT10", goferSplitSelectedItems, NULL, },
+
 
 	// ME ---------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Active ME - Hide all CC lanes" }, "S&M_MEHIDECCLANES", MEHideCCLanes, NULL, },
@@ -351,8 +442,13 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot 2" }, "S&M_MESAVECCLANES2", MESaveCCLanes, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot 3" }, "S&M_MESAVECCLANES3", MESaveCCLanes, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot 4" }, "S&M_MESAVECCLANES4", MESaveCCLanes, NULL, 3},
-	
+
+
 	// Tracks -----------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Copy selected track grouping" }, "S&M_COPY_TR_GRP", copyCutTrackGrouping, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Cut selected tracks grouping" }, "S&M_CUT_TR_GRP", copyCutTrackGrouping, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Paste grouping to selected tracks" }, "S&M_PASTE_TR_GRP", pasteTrackGrouping, NULL, },
+
 	{ { DEFACCEL, "SWS/S&M: Save selected tracks folder states" }, "S&M_SAVEFOLDERSTATE1", saveTracksFolderStates, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Restore selected tracks folder states" }, "S&M_RESTOREFOLDERSTATE1", restoreTracksFolderStates, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Set selected tracks folder states to on" }, "S&M_FOLDERON", setTracksFolderState, NULL, 1},
@@ -373,17 +469,34 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Toggle arming of all plugin envelopes for selected tracks" }, "S&M_TGLARMPLUGENV", toggleArmTrackEnv, NULL, 9, fakeIsToggledAction},
 
-	// Other views ------------------------------------------------------------
-	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find..." }, "S&M_SHOWFIND", OpenFindView, NULL, NULL, IsFindViewEnabled},
-	{ { DEFACCEL, "SWS/S&M: Open Live Configs window..." }, "S&M_SHOWMIDILIVE", OpenMidiLiveView, NULL, NULL, IsMidiLiveViewEnabled},
+
+	// Find -------------------------------------------------------------------
+	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find" }, "S&M_SHOWFIND", OpenFindView, "S&&M Find", NULL, IsFindViewDisplayed},
+
+
+	// Live Configs -----------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Open Live Configs window" }, "S&M_SHOWMIDILIVE", OpenLiveConfigView, "S&&M Live Configs", NULL, IsLiveConfigViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 1" }, "S&M_TOGGLE_LIVE_CFG1", ToggleEnableLiveConfig, NULL, 0, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 2" }, "S&M_TOGGLE_LIVE_CFG2", ToggleEnableLiveConfig, NULL, 1, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 3" }, "S&M_TOGGLE_LIVE_CFG3", ToggleEnableLiveConfig, NULL, 2, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 4" }, "S&M_TOGGLE_LIVE_CFG4", ToggleEnableLiveConfig, NULL, 3, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 5" }, "S&M_TOGGLE_LIVE_CFG5", ToggleEnableLiveConfig, NULL, 4, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 6" }, "S&M_TOGGLE_LIVE_CFG6", ToggleEnableLiveConfig, NULL, 5, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 7" }, "S&M_TOGGLE_LIVE_CFG7", ToggleEnableLiveConfig, NULL, 6, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 8" }, "S&M_TOGGLE_LIVE_CFG8", ToggleEnableLiveConfig, NULL, 7, IsLiveConfigEnabled},
+
 
 	// Other ------------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Let REAPER breathe" }, "S&M_LETBREATHE", letREAPERBreathe, NULL, },
-	{ { DEFACCEL, "SWS/S&M: [Beta] Simulate left mouse click at cursor position" }, "S&M_MOUSE_L_CLICK", simulateMouseClick, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Let REAPER breathe" }, "S&M_LETBREATHE", LetREAPERBreathe, NULL, },
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (w/o extensions)" }, "S&M_ALRSUMMARY1", dumpWikiActions2, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (SWS/Xenakios/S&M extensions only)" }, "S&M_ALRSUMMARY2", dumpWikiActions2, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (FNG extensions only)" }, "S&M_ALRSUMMARY3", dumpWikiActions2, NULL, 3},
+#ifdef _SNM_MISC // a bit windy..
+	{ { DEFACCEL, "SWS/S&M: Show theme helper (all tracks)" }, "S&M_THEME_HELPER_ALL", ShowThemeHelper, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Show theme helper (selected track)" }, "S&M_THEME_HELPER_SEL", ShowThemeHelper, NULL, 1},
+#endif
+	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (use w/o modifier)" }, "S&M_MOUSE_L_CLICK", SimulateMouseClick, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (w/o extensions)" }, "S&M_ALRSUMMARY1", DumpWikiActions2, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (SWS/Xenakios/S&M extensions only)" }, "S&M_ALRSUMMARY2", DumpWikiActions2, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (FNG extensions only)" }, "S&M_ALRSUMMARY3", DumpWikiActions2, NULL, 3},
 #endif
 	{ { DEFACCEL, "SWS/S&M: Show take volume envelope" }, "S&M_TAKEENV1", showHideTakeVolEnvelope, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Show take pan envelope" }, "S&M_TAKEENV2", showHideTakePanEnvelope, NULL, 1},
@@ -396,14 +509,20 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle show take pan envelope" }, "S&M_TAKEENV8", showHideTakePanEnvelope, NULL, -1, fakeIsToggledAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle show take mute envelope" }, "S&M_TAKEENV9", showHideTakeMuteEnvelope, NULL, -1, fakeIsToggledAction},
 */
+	{ { DEFACCEL, "SWS/S&M: Show take pitch envelope" }, "S&M_TAKEENV10", showHideTakePitchEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Hide take pitch envelope" }, "S&M_TAKEENV11", showHideTakePitchEnvelope, NULL, 0},
 
 #ifdef _SNM_MISC
 	// Experimental, misc., deprecated, etc.. ---------------------------------
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take volume envelope" }, "S&M_TMP1", ShowTakeEnvPadreTest, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take pan envelope" }, "S&M_TMP2", ShowTakeEnvPadreTest, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take mute envelope" }, "S&M_TMP3", ShowTakeEnvPadreTest, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: stuff..." }, "S&M_TMP4", openStuff, NULL, },
-#endif	
+	{ { DEFACCEL, "SWS/S&M: stuff..." }, "S&M_TMP4", OpenStuff, NULL, },
+#endif
+
+#ifdef _SWS_MENU
+	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, }, // for main "Extensions" menu
+#endif
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
@@ -411,15 +530,15 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 // *** Action toggle states ***
 
-bool g_fakeToggleStates[MAX_ACTION_COUNT+1]; // +1 for no-op, 1-based..
+bool g_fakeToggleStates[SNM_MAX_ACTION_COUNT+1]; // +1 for no-op, 1-based..
 
 bool fakeIsToggledAction(COMMAND_T* _ct) {
-	return ((_ct && _ct->accel.accel.cmd && _ct->accel.accel.cmd < MAX_ACTION_COUNT) ? 
+	return ((_ct && _ct->accel.accel.cmd && _ct->accel.accel.cmd < SNM_MAX_ACTION_COUNT) ? 
 		g_fakeToggleStates[_ct->accel.accel.cmd] : false);
 }
 
 void fakeToggleAction(COMMAND_T* _ct) {
-	if (_ct && _ct->accel.accel.cmd && _ct->accel.accel.cmd < MAX_ACTION_COUNT)
+	if (_ct && _ct->accel.accel.cmd && _ct->accel.accel.cmd < SNM_MAX_ACTION_COUNT)
 		g_fakeToggleStates[_ct->accel.accel.cmd] = !g_fakeToggleStates[_ct->accel.accel.cmd];
 }
 
@@ -541,15 +660,74 @@ int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Entry points
+// Entry point
 ///////////////////////////////////////////////////////////////////////////////
 
+static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
+{
+	if (!strcmp(_menustr, "Main extensions") && !_flag) {
+		SWSCreateMenuFromCommandTable(g_SNM_cmdTable, _hMenu);
+	}
+/*
+	else if (!strcmp(_menustr, "Media item context") && !_flag) {
+	}
+	else if (!strcmp(_menustr, "Track control panel context") && !_flag) {
+	}
+	else if (_flag == 1) {
+	}
+*/
+}
+
 WDL_String g_SNMiniFilename;
+void IniFileInit()
+{
+	// Init S&M.ini file
+	// (+ "upgrade": move old ones to the new REAPER's resource path)
+	char oldIniFilename[BUFFER_SIZE], iniFilename[BUFFER_SIZE];
+	_snprintf(oldIniFilename, BUFFER_SIZE, SNM_OLD_FORMATED_INI_FILE, GetExePath()); // old location
+	_snprintf(iniFilename, BUFFER_SIZE, SNM_FORMATED_INI_FILE, GetResourcePath());
+	if (FileExists(oldIniFilename))
+		MoveFile(oldIniFilename, iniFilename);
+	g_SNMiniFilename.Set(iniFilename);
+
+	// S&M.ini cleanup & "auto upgrade"
+	// [FXCHAIN] -> [FXChains]
+	char buf[SNM_MAX_INI_SECTION] = "";
+	int sectionSz = GetPrivateProfileSection("FXCHAIN", buf, SNM_MAX_INI_SECTION, iniFilename);
+	WritePrivateProfileStruct("FXCHAIN", NULL, NULL, 0, iniFilename); //flush section
+	if (sectionSz)
+		WritePrivateProfileSection("FXChains", buf, iniFilename);
+
+	// [FXCHAIN_VIEW] -> [RESOURCE_VIEW]
+	*buf = '\0';
+	sectionSz = GetPrivateProfileSection("FXCHAIN_VIEW", buf, SNM_MAX_INI_SECTION, iniFilename);
+	WritePrivateProfileStruct("FXCHAIN_VIEW", NULL, NULL, 0, iniFilename); //flush section
+	if (sectionSz)
+		WritePrivateProfileSection("RESOURCE_VIEW", buf, iniFilename);
+}
+
+LICE_IBitmap* g_snmLogo = NULL;
+void UIInit()
+{
+		if (!g_snmLogo)
+		{
+#ifdef _WIN32
+			g_snmLogo = LICE_LoadPNGFromResource(g_hInst,IDB_SNM,NULL);
+#else
+			// SWS doesn't work, sorry. :( logo =  LICE_LoadPNGFromNamedResource("SnM.png",NULL);
+			g_snmLogo = NULL;
+#endif
+		}
+}
 
 int SnMInit(reaper_plugin_info_t* _rec)
 {
+#ifdef _SWS_MENU
+	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
+		return 0;
+#endif
 	// for probable future persistance of fake toggle states..
-	for (int i=0; i <= MAX_ACTION_COUNT; i++)
+	for (int i=0; i <= SNM_MAX_ACTION_COUNT; i++)
 		g_fakeToggleStates[i] = false;
 
 	// Actions should be registered before views
@@ -558,17 +736,10 @@ int SnMInit(reaper_plugin_info_t* _rec)
 	if (!SNMSectionRegisterCommands(_rec))
 		return 0;
 
-	// Init S&M.ini file (+ "upgrade" old ones to the new REAPER's resource path, if needed)
-	char oldIniFilename[BUFFER_SIZE], iniFilename[BUFFER_SIZE];
-	_snprintf(oldIniFilename, BUFFER_SIZE, SNM_OLD_FORMATED_INI_FILE, GetExePath()); // old location
-	_snprintf(iniFilename, BUFFER_SIZE, SNM_FORMATED_INI_FILE, GetResourcePath());
-	if (FileExists(oldIniFilename))
-		MoveFile(oldIniFilename, iniFilename);
-	g_SNMiniFilename.Set(iniFilename);
-
-	// Init S&M views
-	MidiLiveViewInit();
-	FXChainViewInit();
+	IniFileInit();
+    UIInit();
+	LiveConfigViewInit();
+	ResourceViewInit();
 	NotesHelpViewInit();
 	FindViewInit();
 	return 1;
@@ -576,8 +747,8 @@ int SnMInit(reaper_plugin_info_t* _rec)
 
 void SnMExit()
 {
-	MidiLiveViewExit();
-	FXChainViewExit();
+	LiveConfigViewExit();
+	ResourceViewExit();
 	NotesHelpViewExit();
 	FindViewExit();
 }
@@ -585,22 +756,17 @@ void SnMExit()
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_ScheduledJob (performed in SnMCSurfRun())
-//
-// List of reserved ids:
-// - 0 to 7: Apply live config n (MIDI CC only), with n in [1;8]
-// - 8:		SNM_TrackListChangeScheduledJob
-//
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_jobs;
-HANDLE g_jobsLock;
+SWS_Mutex g_jobsLock;
 
 void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job) 
 {
 	if (!_job)
 		return;
 
-	SectionLock lock(g_jobsLock);
+	SWS_SectionLock lock(&g_jobsLock);
 	bool found = false;
 	for (int i=0; i<g_jobs.GetSize(); i++)
 	{
@@ -620,7 +786,7 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job)
 
 void DeleteScheduledJob(int _id) 
 {
-	SectionLock lock(g_jobsLock);
+	SWS_SectionLock lock(&g_jobsLock);
 	for (int i=0; i<g_jobs.GetSize(); i++)
 	{
 		SNM_ScheduledJob* job = g_jobs.Get(i);
@@ -636,12 +802,9 @@ void DeleteScheduledJob(int _id)
 // IReaperControlSurface callbacks
 ///////////////////////////////////////////////////////////////////////////////
 
-extern SNM_NotesHelpWnd* g_pNotesHelpWnd;
-extern SnM_MidiLiveWnd* g_pMidiLiveWnd;
-
 void SnMCSurfRun()
 {
-	SectionLock lock(g_jobsLock);
+	SWS_SectionLock lock(&g_jobsLock);
 	if (g_jobs.GetSize())
 	{
 		for (int i=g_jobs.GetSize()-1; i >=0; i--)
@@ -657,16 +820,19 @@ void SnMCSurfRun()
 	}
 }
 
+extern SNM_NotesHelpWnd* g_pNotesHelpWnd;
+extern SNM_LiveConfigsWnd* g_pLiveConfigsWnd;
+
 void SnMCSurfSetTrackTitle() {
 	if (g_pNotesHelpWnd)
 		g_pNotesHelpWnd->CSurfSetTrackTitle();
-	if (g_pMidiLiveWnd)
-		g_pMidiLiveWnd->CSurfSetTrackTitle();
+	if (g_pLiveConfigsWnd)
+		g_pLiveConfigsWnd->CSurfSetTrackTitle();
 }
 
 void SnMCSurfSetTrackListChange() {
 	if (g_pNotesHelpWnd)
 		g_pNotesHelpWnd->CSurfSetTrackListChange();
-	if (g_pMidiLiveWnd)
-		g_pMidiLiveWnd->CSurfSetTrackListChange();
+	if (g_pLiveConfigsWnd)
+		g_pLiveConfigsWnd->CSurfSetTrackListChange();
 }

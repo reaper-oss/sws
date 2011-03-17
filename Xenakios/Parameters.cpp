@@ -107,7 +107,7 @@ void ReadINIfile()
 		_snprintf(g_external_app_paths.Tool1MenuText, 100, "%s : %s", cMenuText, cExeName);
 	}
 	else
-		lstrcpyn(g_external_app_paths.Tool1MenuText, cMenuText, 100);
+		lstrcpyn(g_external_app_paths.Tool1MenuText, cMenuText ? cMenuText : "", 100);
 
 
 	SWSGetCommandID(DoLaunchExtTool, 2, &cMenuText);
@@ -121,7 +121,7 @@ void ReadINIfile()
 		_snprintf(g_external_app_paths.Tool2MenuText, 100, "%s : %s", cMenuText, cExeName);
 	}
 	else
-		lstrcpyn(g_external_app_paths.Tool2MenuText, cMenuText, 100);
+		lstrcpyn(g_external_app_paths.Tool2MenuText, cMenuText ? cMenuText : "", 100);
 
 	GetPrivateProfileString("XENAKIOSCOMMANDS","EXTERNALEDITOR1PATH","",resultString,512,g_XenIniFilename.Get());
 	if (resultString[0])

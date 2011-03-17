@@ -337,6 +337,73 @@ void NudgePlayrate(COMMAND_T *t)
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
+void SetItemChannels(COMMAND_T* t)
+{
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	bool bStereo = abs((int)t->user) == 2;
+	for (int i = 0; i < items.GetSize(); i++)
+	{
+		MediaItem* item = items.Get()[i];
+		MediaItem_Take* take = GetActiveTake(item);
+		bool bWasStereo = false;
+		// Ignore empty takes
+		if (take)
+		{	
+			// Find max # of channels in all takes
+			int iMaxNumChannels = 2;
+			for (int j = 0; j < GetMediaItemNumTakes(item); j++)
+			{
+				PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(GetMediaItemTake(item, j), "P_SOURCE", NULL);
+				if (src && src->GetNumChannels() > iMaxNumChannels)
+					iMaxNumChannels = src->GetNumChannels();
+			}
+			if (bStereo) // Stereo mode requires max channel of the first
+				iMaxNumChannels--;
+
+			int iChan = *(int*)GetSetMediaItemTakeInfo(take, "I_CHANMODE", NULL) - 2; // Subtract the normal/rev/down modes
+			if (iChan > 64) // Convert to mono
+			{
+				bWasStereo = true;
+				iChan -= 64;
+			}
+
+			if (bWasStereo == bStereo)
+			{
+				if (iChan < 0)
+					iChan = 0;
+
+				if (t->user > 0)
+					iChan++;
+				else
+					iChan--;
+			}
+			else if (iChan < 0 && t->user > 0) // Corner case of next stereo when in a special mode
+				iChan = 1;
+			else if (t->user > 0 && !bStereo)
+				iChan++;
+			else if (t->user < 0 && bStereo)
+				iChan--;
+
+			// Limit to 1-max
+			if (iChan < 1)
+				iChan = iMaxNumChannels;
+			else if (iChan > iMaxNumChannels)
+				iChan = 1;
+
+			iChan += 2; // Convert back into proper form to set
+			if (bStereo)
+				iChan += 64;
+
+
+			for (int j = 0; j < GetMediaItemNumTakes(item); j++)
+				GetSetMediaItemTakeInfo(GetMediaItemTake(item, j), "I_CHANMODE", &iChan);
+		}
+	}
+	UpdateTimeline();
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+}
+
 void CrossfadeSelItems(COMMAND_T* t)
 {
 	double dFadeLen = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
@@ -452,6 +519,12 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Increase item rate by ~6% (one semitone) preserving length, clear 'preserve pitch'" },	"FNG_INCREASERATE",		NudgePlayrate, NULL, 1 },
 	{ { DEFACCEL, "SWS: Decrease item rate by ~6% (one semitone) preserving length, clear 'preserve pitch'"},	"FNG_DECREASERATE",		NudgePlayrate, NULL, -1 },
 	{ { DEFACCEL, "SWS: Reset item rate, preserving length, clear 'preserve pitch'"},							"SWS_RESETRATE",		NudgePlayrate, NULL, 0 },
+
+	{ { DEFACCEL, "SWS: Set all takes to next mono channel mode"},				"SWS_ITEMCHANMONONEXT",		SetItemChannels, NULL, 1 },
+	{ { DEFACCEL, "SWS: Set all takes to prev mono channel mode"},				"SWS_ITEMCHANMONOPREV",		SetItemChannels, NULL, -1 },
+	{ { DEFACCEL, "SWS: Set all takes to next stereo channel mode"},			"SWS_ITEMCHANSTEREONEXT",	SetItemChannels, NULL, 2 },
+	{ { DEFACCEL, "SWS: Set all takes to prev stereo channel mode"},			"SWS_ITEMCHANSTEREOPREV",	SetItemChannels, NULL, -2 },
+
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

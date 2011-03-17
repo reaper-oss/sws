@@ -87,5 +87,5 @@ void SetFXChain(MediaTrack* tr, const char* str)
 
 	if (str)
 		AppendChunkLine(&newChunk, str);
-	SWS_GetSetObjectState(tr, newChunk.Get());
+	SWS_GetSetObjectState(tr, &newChunk);
 }

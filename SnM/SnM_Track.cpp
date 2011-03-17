@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Track.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
+/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
+#include "SnM_FXChainView.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,9 +47,9 @@ int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPa
 		double grpMask = pow(2.0,(_group-1)*1.0);
 
 		// no track grouping yet ?
-		if (!_cpp->Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "GROUP_FLAGS", -1 , 0, 0, &grpLine))
+		if (!_cpp->Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "GROUP_FLAGS", -1 , 0, 0, &grpLine, NULL, "MAINSEND"))
 		{
-			int patchPos = _cpp->Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", -1, 0, 0);
+			int patchPos = _cpp->Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", -1, 0, 0, NULL, NULL, "MAINSEND");
 			if (patchPos > 0)
 			{
 				patchPos--; // see SNM_ChunkParserPatcher..
@@ -57,9 +58,7 @@ int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPa
 				s.AppendFormatted(128, _master ? " %d 0 " : " 0 %d ", (int)grpMask);
 				s.Append("0 0 0 0 0 0 0 0 0\n");
 				_cpp->GetChunk()->Insert(s.Get(), patchPos);				
-
-				// as we're directly working on the cached chunk..
-				updates = _cpp->SetUpdates(1);
+				updates = _cpp->SetUpdates(1); // as we're directly working on the cached chunk..
 			}
 		}
 		// track grouping already exist => patch only what's needed
@@ -85,13 +84,63 @@ int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPa
 				if (i != (lp.getnumtokens()-1))
 					newFlags.Append(" ");
 			}
-			updates = _cpp->ReplaceLine("TRACK","GROUP_FLAGS", 1, 0, newFlags.Get());
+			updates = _cpp->ReplaceLine("TRACK", "GROUP_FLAGS", 1, 0, newFlags.Get(), "MAINSEND");
 		}
 	}
 	return updates;
 }
 #endif
 
+WDL_String g_trackGrpClipboard;
+
+void copyCutTrackGrouping(COMMAND_T* _ct)
+{
+	int updates = 0;
+	bool copyDone = false;
+	g_trackGrpClipboard.Set(""); // reset clipboard
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			SNM_ChunkParserPatcher p(tr);
+			if (!copyDone)
+				copyDone = (p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "GROUP_FLAGS", -1 , 0, 0, &g_trackGrpClipboard, NULL, "MAINSEND") > 0);
+
+			// cut (for all selected tracks)
+			if ((int)_ct->user)
+				updates += p.RemoveLines("GROUP_FLAGS");
+			// single copy: the 1st found track grouping
+			else if (copyDone)
+				break;
+		}
+	}
+	if (updates)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+void pasteTrackGrouping(COMMAND_T* _ct)
+{
+	int updates = 0;
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			SNM_ChunkParserPatcher p(tr);
+			updates += p.RemoveLines("GROUP_FLAGS");
+			int patchPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", -1, 0, 0, NULL, NULL, "MAINSEND"); //JFB strstr instead?
+			if (patchPos > 0)
+			{
+				p.GetChunk()->Insert(g_trackGrpClipboard.Get(), --patchPos);				
+				p.SetUpdates(1);  // as we're directly working on the cached chunk..
+				updates++;
+			}
+		}
+	}
+	if (updates)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Track folders
@@ -242,8 +291,7 @@ void toggleArmTrackEnv(COMMAND_T* _ct)
 // Track selection (all with ReaProject*)
 ///////////////////////////////////////////////////////////////////////////////
 
-int CountSelectedTracksWithMaster(ReaProject* _proj)
-{
+int CountSelectedTracksWithMaster(ReaProject* _proj) {
 	int selCnt = CountSelectedTracks(_proj);
 	MediaTrack* mtr = GetMasterTrack(_proj);
 	if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL))
@@ -254,15 +302,11 @@ int CountSelectedTracksWithMaster(ReaProject* _proj)
 // Takes the master track into account
 // => to be used with CountSelectedTracksWithMaster() and not the API's CountSelectedTracks()
 // If selected, the master will be returnd with the _idx = 0
-MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx)
-{
+MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx) {
 	MediaTrack* mtr = GetMasterTrack(_proj);
-	if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL)) 
-	{
-		if (!_idx)
-			return mtr;
-		else
-			return GetSelectedTrack(_proj, _idx-1);
+	if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL)) {
+		if (!_idx) return mtr;
+		else return GetSelectedTrack(_proj, _idx-1);
 	}
 	else 
 		return GetSelectedTrack(_proj, _idx);
@@ -271,4 +315,161 @@ MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx)
 
 MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj) {
 	return GetSelectedTrackWithMaster(_proj, 0);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Track template slots
+///////////////////////////////////////////////////////////////////////////////
+
+//JFB TODO? mouse pointer => wait ? (not done 'cause might confuse REAPER)
+void applyOrImportTrackTemplate(const char* _title, bool _import, int _slot, bool _errMsg)
+{
+	bool updated = false;
+
+	// Prompt for slot if needed
+	if (_slot == -1) _slot = g_trTemplateFiles.PromptForSlot(_title); //loops on err
+	if (_slot == -1) return; // user has cancelled
+
+	char fn[BUFFER_SIZE]="";
+	if (g_trTemplateFiles.GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg)) 
+	{
+		WDL_String trTmpltChunk;
+
+		// add as new track
+		if (_import)
+		{
+			Main_openProject(fn);
+/* commented: Main_openProject() includes undo point 
+			updated = true;
+*/
+		}
+		// patch selected tracks (preserve items)
+		else if (CountSelectedTracks(NULL) && 
+			LoadChunk(fn, &trTmpltChunk) && trTmpltChunk.GetLength())
+		{
+			char* pStart = strstr(trTmpltChunk.Get(), "<TRACK");
+			if (pStart) 
+			{
+				// several tracks in the template => truncate
+				pStart = strstr(pStart+6, "<TRACK");
+				if (pStart) 
+					trTmpltChunk.SetLen((int)(pStart-trTmpltChunk.Get()));
+
+				bool trTmpltHasItems = (strstr(trTmpltChunk.Get(), "<ITEM") != NULL);
+				for (int i = 0; i < GetNumTracks(); i++)
+				{
+					MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+					if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+					{
+						SNM_ChunkParserPatcher p(tr);
+						if (!trTmpltHasItems) 
+						{
+							WDL_String tmpChunk(trTmpltChunk.Get());
+							char* pItems = strstr(p.GetChunk()->Get(), "<ITEM");
+							if (pItems)
+								tmpChunk.Insert(pItems, tmpChunk.GetLength()-2, strlen(pItems) - 2); // -2: ">\n"
+							p.SetChunk(&tmpChunk, 1);
+						}
+						else
+							p.SetChunk(&trTmpltChunk, 1);
+						updated |= true;
+					}
+				}
+			}
+		}
+	}
+	if (updated && _title)
+		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
+}
+
+void loadSetTrackTemplate(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_trTemplateFiles.GetSize())
+		applyOrImportTrackTemplate(SNM_CMD_SHORTNAME(_ct), false, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
+}
+
+void loadImportTrackTemplate(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_trTemplateFiles.GetSize())
+		applyOrImportTrackTemplate(SNM_CMD_SHORTNAME(_ct), true, slot, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
+}
+
+void replaceOrPasteItemsFromsTrackTemplate(const char* _title, bool _paste, int _slot, bool _errMsg)
+{
+	bool updated = false;
+
+	// Prompt for slot if needed
+	if (_slot == -1) _slot = g_trTemplateFiles.PromptForSlot(_title); //loops on err
+	if (_slot == -1) return; // user has cancelled
+
+	char fn[BUFFER_SIZE]="";
+	if (g_trTemplateFiles.GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg)) 
+	{
+		WDL_String trTmpltChunk;
+
+		if (CountSelectedTracks(NULL) && 
+			LoadChunk(fn, &trTmpltChunk) && trTmpltChunk.GetLength())
+		{
+			char* pItems = strstr(trTmpltChunk.Get(), "<ITEM");
+			if (pItems)
+			{
+				WDL_String itemsChunk(pItems);
+				itemsChunk.SetLen(strlen(pItems)-2, true); // remove ">\n"
+				for (int i = 0; i < GetNumTracks(); i++)
+				{
+					MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+					if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+					{
+						SNM_ChunkParserPatcher p(tr);
+
+						// Delete items
+						if (!_paste)
+						{
+							char* pItems2 = strstr(p.GetChunk()->Get(), "<ITEM");
+							if (pItems2)
+								p.GetChunk()->DeleteSub((int)(pItems2-p.GetChunk()->Get()), strlen(pItems2)-2); // -2: ">\n"
+						}
+
+						p.GetChunk()->Insert(itemsChunk.Get(), p.GetChunk()->GetLength()-2); // -2: before ">\n"
+						p.SetUpdates(1); // as we directly work on the chunk
+						updated |= true;
+					}
+				}
+			}
+		}
+	}
+	if (updated && _title)
+		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
+}
+
+bool autoSaveTrackTemplateSlots(int _slot, bool _delItems, const char* _dirPath, char* _fn, int _fnMaxSize)
+{
+	bool slotUpdate = false;
+	strncpy(_fn, "<No selected track>", _fnMaxSize); //JFB // default err. msg
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master (can't save master template natively either)
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			SNM_ChunkParserPatcher p(tr);
+
+			// Delete items (temp: won't be committed!)
+			if (_delItems)
+			{
+				char* pItems = strstr(p.GetChunk()->Get(), "<ITEM");
+				if (pItems)
+					p.GetChunk()->DeleteSub((int)(pItems-p.GetChunk()->Get()), strlen(pItems)-2); // -2: ">\n"
+			}
+
+			char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
+			GenerateFilename(_dirPath, (!trName || *trName == '\0') ? "Untitled" : trName, g_trTemplateFiles.GetFileExt(), _fn, _fnMaxSize);
+/*JFB insert slot code commented: can mess the user's slot actions (because all following ids change)
+			slotUpdate |= (SaveChunk(_fn, p.GetChunk()) && g_trTemplateFiles.InsertSlot(_slot, _fn));
+*/
+			slotUpdate |= (SaveChunk(_fn, p.GetChunk()) && g_trTemplateFiles.AddSlot(_fn));
+			p.CancelUpdates();
+		}
+	}
+	return slotUpdate;
 }

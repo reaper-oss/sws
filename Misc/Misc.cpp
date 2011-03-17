@@ -1,7 +1,7 @@
 /******************************************************************************
 / Misc.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -42,6 +42,7 @@
 #include "ItemSel.h"
 #include "Macros.h"
 #include "ProjPrefs.h"
+#include "RecCheck.h"
 #include "TrackParams.h"
 #include "TrackSel.h"
 #include "Zoom.h"
@@ -70,6 +71,8 @@ int MiscInit()
 	if (!MacrosInit())
 		return 0;
 	if (!ProjPrefsInit())
+		return 0;
+	if (!RecordCheckInit())
 		return 0;
 	if (!TrackParamsInit())
 		return 0;

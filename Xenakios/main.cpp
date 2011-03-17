@@ -681,8 +681,9 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main extensions") == 0 && flag == 0)
 	{
-		SWSCreateMenu(g_XenCommandTable, hMenu);
+		SWSCreateMenuFromCommandTable(g_XenCommandTable, hMenu);
 	}
+/*JFB Clean-up REAPER's menu
 	else if (strcmp(menustr, "Media item context") == 0 && flag == 0)
 	{
 		int i = 0;
@@ -698,11 +699,13 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 		while (g_XenCommandTable[i++].accel.accel.cmd != 3);
 		AddSubMenu(hMenu, SWSCreateMenu(&g_XenCommandTable[i]), "Extensions : Track/Mixer/Envelopes");
 	}
+	//JFB !??? can't make what follows work + g_external_app_paths.Tool1MenuText looks bad + OSX?
 	else if (flag == 1)
 	{
 		SWSSetMenuText(hMenu, SWSGetCommandID(DoLaunchExtTool, 1), g_external_app_paths.Tool1MenuText);
 		SWSSetMenuText(hMenu, SWSGetCommandID(DoLaunchExtTool, 2), g_external_app_paths.Tool2MenuText);
 	}
+*/
 }
 
 WDL_String g_XenIniFilename;
@@ -719,10 +722,10 @@ int XenakiosInit()
 {
 	if(!plugin_register("projectconfig",&xen_reftrack_pcreg))
 		return 0;
-
+#ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
-
+#endif
 	// Move Xenakios_commands.ini to a new location
 	char oldIniFilename[512], iniFilename[512];
 	_snprintf(oldIniFilename, 512, XEN_INIFILE_OLD, GetExePath()); // old location
@@ -735,8 +738,6 @@ int XenakiosInit()
 
 	SWSRegisterCommands(g_XenCommandTable);
 
-	AddExtensionsMainMenu();
-	
 	InitCommandParams();
 	
 	g_filenames = new(WDL_PtrList<char>);
@@ -749,40 +750,45 @@ int XenakiosInit()
 	srand ((unsigned int)time(NULL));
 
 	// Add track template actions
-	char cPath[256];
-	strncpy(cPath, get_ini_file(), 256);
-	char* pC = strrchr(cPath, PATH_SLASH_CHAR);
-	if (pC)
+	char cPath[BUFFER_SIZE];
+	_snprintf(cPath, BUFFER_SIZE, "%s%cTrackTemplates", GetResourcePath(), PATH_SLASH_CHAR);
+	vector<string> templates;
+	SearchDirectory(templates, cPath, "RTRACKTEMPLATE", true);
+	for (int i = 0; i < (int)templates.size(); i++)
 	{
-		strcpy(pC+1, "TrackTemplates");
-		vector<string> templates;
-		SearchDirectory(templates, cPath, "RTRACKTEMPLATE", true);
-		int iMaxTemplate = 0;
-		for (int i = 0; i < (int)templates.size(); i++)
+		const char* pFilename = strrchr(templates[i].c_str(), PATH_SLASH_CHAR);
+		if (pFilename && pFilename[1])
 		{
-			char cNum[3];
-			const char* pFilename = strrchr(templates[i].c_str(), PATH_SLASH_CHAR);
-			if (pFilename)
+			int iNum = atol(pFilename+1);
+			if (!SWSGetCommandID(DoOpenTrackTemplate, iNum))
 			{
-				lstrcpyn(cNum, pFilename+1, 3);
-				int iNum = atol(cNum);
-				if (iNum > iMaxTemplate)
-					iMaxTemplate = iNum;
+				char cDesc[BUFFER_SIZE];
+				char cID[BUFFER_SIZE];
+				_snprintf(cID, BUFFER_SIZE, "XENAKIOS_LOADTRACKTEMPLATE%d", iNum);
+				_snprintf(cDesc, BUFFER_SIZE, "Xenakios/SWS: [Deprecated] Load track template %d", iNum);
+				SWSRegisterCommandExt(DoOpenTrackTemplate, cID, cDesc, iNum);
 			}
 		}
-		for (int i = 11; i <= iMaxTemplate; i++)
+	}
+
+	// Add project template actions
+	_snprintf(cPath, BUFFER_SIZE, "%s%cProjectTemplates", GetResourcePath(), PATH_SLASH_CHAR);
+	templates.clear();
+	SearchDirectory(templates, cPath, "RPP", true);
+	for (int i = 0; i < (int)templates.size(); i++)
+	{
+		const char* pFilename = strrchr(templates[i].c_str(), PATH_SLASH_CHAR);
+		if (pFilename && pFilename[1])
 		{
-			COMMAND_T* ct = new COMMAND_T;
-			memset(ct, 0, sizeof(COMMAND_T));
-			char* desc = new char[40];
-			ct->accel.desc = desc;
-			char *tbuf;
-			ct->id = tbuf = new char[64];
-			ct->doCommand = DoOpenTrackTemplate;
-			ct->user = i;
-			sprintf(tbuf, "XENAKIOS_LOADTRACKTEMPLATE%d", i);
-			sprintf(desc, "Xenakios/SWS: Load track template %d", i);
-			SWSRegisterCommand(ct);
+			int iNum = atol(pFilename+1);
+			if (!SWSGetCommandID(DoOpenProjectTemplate, iNum))
+			{
+				char cID[BUFFER_SIZE];
+				char cDesc[BUFFER_SIZE];
+				_snprintf(cID, BUFFER_SIZE, "XENAKIOS_LOADPROJTEMPL%d", iNum);
+				_snprintf(cDesc, BUFFER_SIZE, "Xenakios/SWS: Load project template %d", iNum);
+				SWSRegisterCommandExt(DoOpenProjectTemplate, cID, cDesc, iNum);
+			}
 		}
 	}
 

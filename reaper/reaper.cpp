@@ -1,7 +1,7 @@
 /******************************************************************************
 / Reaper.cpp
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -33,6 +33,7 @@
 //#include "reaper_plugin_functions.h"
 
 // Not included in reaper_plugin_functions.h, so include here:
+void (WINAPI *AttachWindowTopmostButton)(HWND hwnd);
+void (WINAPI *AttachWindowResizeGrip)(HWND hwnd);
 BOOL (WINAPI *CoolSB_GetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi);
 int (WINAPI *CoolSB_SetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi, BOOL fRedraw);
-

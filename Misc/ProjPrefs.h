@@ -28,4 +28,5 @@
 #pragma once
 
 int ProjPrefsInit();
+void MetronomeOff(COMMAND_T* = NULL);
 

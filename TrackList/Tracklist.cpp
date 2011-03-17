@@ -1,7 +1,7 @@
 /******************************************************************************
 / Tracklist.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -208,8 +208,8 @@ m_trLastTouched(NULL),m_bHideFiltered(false),m_bLink(false),m_cOptionsKey("Track
 		m_bLink = str[2] == '1';
 	}
 
-	if (m_bShowAfterInit)
-		Show(false, false);
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
 }
 
 void SWS_TrackListWnd::Update()
@@ -368,7 +368,7 @@ void SWS_TrackListWnd::OnDestroy()
 	WritePrivateProfileString(SWS_INI, m_cOptionsKey, str, get_ini_file());
 }
 
-void SWS_TrackListWnd::OnTimer()
+void SWS_TrackListWnd::OnTimer(WPARAM wParam)
 {
 	if (m_bUpdate)
 	{
@@ -861,8 +861,10 @@ int TrackListInit()
 
 	SWSRegisterCommands(g_commandTable);
 
+#ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
+#endif
 
 	g_pList = new SWS_TrackListWnd;
 

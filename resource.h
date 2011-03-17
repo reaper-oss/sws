@@ -62,6 +62,10 @@
 #define IDD_SNM_FIND                    154
 #define IDD_SNM_MIDI_LIVE               155
 #define IDD_AW_ITEM_SMOOTHING           156
+#define IDD_GROOVEDIALOG                157
+#define IDD_AUTORENDER_METADATA         158
+#define IDD_RECINPUTCHECK               159
+#define IDD_AUTORENDER_PREFERENCES      160
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
@@ -210,7 +214,8 @@
 #define IDC_SNAME                       1139
 #define IDC_TRACK                       1140
 #define IDC_TEXT                        1141
-#define IDC_ENABLED                     1142
+#define IDC_AUTOCOLOR                   1142
+#define IDC_AUTOICON                    1143
 #define IDC_COLOR                       1147
 #define IDC_PADRELFO_SYNCFREQUENCY      1148
 #define IDC_PADRELFO_FREQUENCY          1149
@@ -260,14 +265,50 @@
 #define IDC_FADE_SHAPE                  1191
 #define IDC_SLIDER1                     1192
 #define IDC_SLIDER2                     1193
+#define IDC_APPLYGROOVE                 1194
+#define IDC_GROOVELIST                  1195
+#define IDC_SENS_4TH                    1196
+#define IDC_SENS_8TH                    1197
+#define IDC_SENS_16TH                   1198
+#define IDC_SENS_32ND                   1199
+#define IDC_STRENGTH                    1200
+#define IDC_SENS_GROUP                  1201
+#define IDC_TARG_GROUP                  1202
+#define IDC_TARG_ITEMS                  1203
+#define IDC_TARG_NOTES                  1204
+#define IDC_STORE                       1205
+#define IDC_VELSTRENGTH                 1206
+#define IDC_STRENGTH_GROUP              1207
+#define IDC_ARTIST                      1208
+#define IDC_ALBUM                       1209
+#define IDC_GENRE                       1210
+#define IDC_YEAR                        1211
+#define IDC_COMMENT                     1212
+#define IDC_RENDER_PATH                 1213
+#define IDC_BROWSE                      1214
+#define IDC_DONTSHOW                    1215
+#define IDC_ALLOW_STEM_RENDERING        1219
+#define IDC_ALLOW_STEMS                 1219
+#define IDC_ALLOW_ADDTOPROJ             1220
+#define IDC_DEFAULT_RENDER_PATH         1221
+#define IDC_PREPEND_TRACK_NUMBER        1222
+#define IDC_REGION_PREFIX               1223
+#define IDC_STATIC_ARTIST               1224
+#define IDC_STATIC_ALBUM                1225
+#define IDC_STATIC_GENRE                1226
+#define IDC_STATIC_YEAR                 1227
+#define IDC_STATIC_COMMENT              1228
+#define IDC_STATIC_REGION_PREFIX        1229
+#define IDC_PREPEND_TRACK_NUMBER2       1230
+#define IDC_REMOVE_PREFIX_FROM_TRACK_NAME 1230
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        156
+#define _APS_NEXT_RESOURCE_VALUE        160
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1194
+#define _APS_NEXT_CONTROL_VALUE         1230
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

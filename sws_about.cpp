@@ -80,7 +80,7 @@ void OpenAboutBox(COMMAND_T*)
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS: About..." }, "SWS_ABOUT", OpenAboutBox, "About SWS Extensions...", },
+	{ { DEFACCEL, "SWS: About" }, "SWS_ABOUT", OpenAboutBox, "About SWS Extensions", },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
@@ -94,8 +94,9 @@ int AboutBoxInit()
 {
 	SWSRegisterCommands(g_commandTable);
 
+#ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
-
+#endif
 	return 1;
 }

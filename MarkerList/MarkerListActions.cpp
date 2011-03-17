@@ -226,3 +226,44 @@ void GotoEndInclMarkers(COMMAND_T*)
 	if (dMarkerEnd > GetCursorPosition())
 		SetEditCurPos(dMarkerEnd, true, true);
 }
+
+void SelNextMarkerOrRegion(COMMAND_T*)
+{
+	double dCurPos = GetCursorPosition();
+	double dCurStart, dCurEnd, dRegStart, dRegEnd;
+	GetSet_LoopTimeRange(false, false, &dCurStart, &dCurEnd, false);
+	int x = 0;
+	bool bReg;
+	while ((x = EnumProjectMarkers(x, &bReg, &dRegStart, &dRegEnd, NULL, NULL)))
+	{
+		bool bSelMatches = dCurStart == dRegStart && dCurEnd == dRegEnd;
+		if (dRegStart > dCurPos || (bReg && dRegStart >= dCurPos && !bSelMatches))
+		{
+			GetSet_LoopTimeRange(true, false, &dRegStart, bReg ? &dRegEnd : &dRegStart, false);
+			SetEditCurPos(dRegStart, true, true);
+			return;
+		}
+	}
+	// Currently no wraparound, if needed add "go to first" here.
+}
+
+void SelPrevMarkerOrRegion(COMMAND_T*)
+{
+	// Save the current marker list so we can traverse the list bacwards
+	MarkerList ml(NULL, true);
+
+	double dCurPos = GetCursorPosition();
+	double dCurStart, dCurEnd;
+	GetSet_LoopTimeRange(false, false, &dCurStart, &dCurEnd, false);
+	bool bCurSel = dCurStart != dCurEnd;
+	for (int i = ml.m_items.GetSize()-1; i >= 0; i--)
+	{
+		MarkerItem* mi = ml.m_items.Get(i);
+		if (mi->m_dPos < dCurPos || (!mi->m_bReg && mi->m_dPos <= dCurPos && bCurSel))
+		{
+			GetSet_LoopTimeRange(true, false, &mi->m_dPos, mi->m_bReg ? &mi->m_dRegEnd : &mi->m_dPos, false);
+			SetEditCurPos(mi->m_dPos, true, true);
+			return;
+		}
+	}
+}

@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Misc.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
+/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,233 +36,23 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Misc	actions
+// File util
 ///////////////////////////////////////////////////////////////////////////////
 
-// see http://forum.cockos.com/showthread.php?t=60657
-void letREAPERBreathe(COMMAND_T* _ct)
-{
-#ifdef _WIN32
-  static bool hasinit;
-  if (!hasinit) { hasinit=true; InitCommonControls();  }
-#endif
-	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SNM_WAIT), GetForegroundWindow(), WaitDlgProc);
-}
-
-void winWaitForEvent(DWORD _event, DWORD _timeOut, DWORD _minReTrigger)
-{
-#ifdef _WIN32
-	static DWORD waitTime = 0;
-//	if ((timeGetTime() - waitTime) > _minReTrigger)
-	{
-		waitTime = timeGetTime();
-		while((timeGetTime() - waitTime) < _timeOut) // for safety
-		{
-			MSG msg;
-			if(PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE))
-			{
-				// new message to be processed
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-				if(msg.message == _event)
-					break;
-			}
-		}
-	}
-#endif
-}
-
-// http://forum.cockos.com/showthread.php?p=612065
-void simulateMouseClick(COMMAND_T* _ct)
-{
-	POINT p; // not sure setting the pos is really needed..
-	GetCursorPos(&p);
-	mouse_event(MOUSEEVENTF_LEFTDOWN, p.x, p.y, 0, 0);
-	mouse_event(MOUSEEVENTF_LEFTUP, p.x, p.y, 0, 0);
-	winWaitForEvent(WM_LBUTTONUP);
-}
-
-// Create the Wiki ALR summary for the current section displayed in the "Action" dlg 
-// This is the hack version, see clean but limited dumpWikiActions() below
-// http://forum.cockos.com/showthread.php?t=61929
-
-#define TITLE_SAVE_ALR_WIKI "Save ALR Wiki summary"
-
-void dumpWikiActions2(COMMAND_T* _ct)
-{
-	char currentSection[64] = "";
-	HWND h_list = GetActionListBox(currentSection, 64);
-	if (h_list && currentSection)
-	{
-		char sectionURL[64]= ""; 
-		if (!GetALRStartOfURL(currentSection, sectionURL, 64))
-		{
-			MessageBox(g_hwndParent, "Error: unknown section!", TITLE_SAVE_ALR_WIKI, MB_OK);
-			return;
-		}
-
-		char filename[BUFFER_SIZE];
-		// TODO: I'd like to remove use of GetExePath() here.  Ok, Jeffos? -SWS
-		sprintf(filename, "%s%c%s%s.txt", GetExePath(), PATH_SLASH_CHAR, sectionURL, _ct->user == 2 ? "_SWS" : _ct->user == 3 ? "_FNG" : "");
-
-		//flush
-		FILE* f = fopenUTF8(filename, "w"); 
-		if (f)
-		{
-			fputs("\n", f);
-			fclose(f);
-
-			f = fopenUTF8(filename, "a"); 
-			if (!f) return; //just in case..
-
-			fprintf(f, "{| class=\"wikitable\"\n"); 
-			fprintf(f, "|-\n"); 
-			fprintf(f, "! Action name !! Cmd ID\n"); 
-
-			LVITEM li;
-			li.mask = LVIF_STATE | LVIF_PARAM;
-			li.iSubItem = 0;
-			for (int i = 0; i < ListView_GetItemCount(h_list); i++)
-			{
-				li.iItem = i;
-				ListView_GetItem(h_list, &li);
-
-				int cmdId = (int)li.lParam;
-				char customId[64] = "";
-				char cmdName[256] = "";
-
-				LVITEM li1;
-				li1.mask = LVIF_TEXT;
-				li1.iItem = i;
-				li1.iSubItem = 3;
-				li1.pszText = customId;
-				li1.cchTextMax = 64;
-				ListView_GetItem(h_list, &li1);
-
-				LVITEM li2;
-				li2.mask = LVIF_TEXT;
-				li2.iItem = i;
-				li2.iSubItem = 1;
-				li2.pszText = cmdName;
-				li2.cchTextMax = 256;
-				ListView_GetItem(h_list, &li2);
-
-				if (!strstr(cmdName,"Custom:") &&
-					//native only
-					((_ct->user == 1 && !strstr(cmdName,"SWS:") && !strstr(cmdName,"SWS/") && !strstr(cmdName,"FNG:")) ||
-					// SWS only
-                    (_ct->user == 2 && (strstr(cmdName,"SWS:") || strstr(cmdName,"SWS/"))) ||
-					// FNG only
-					(_ct->user == 3 && strstr(cmdName,"FNG:") && !strstr(cmdName,"SWS"))))
-				{
-					if (!*customId) sprintf(customId, "%d", cmdId);
-					fprintf(f, "|-\n| [[%s_%s|%s]] || %s\n", sectionURL, customId, cmdName, customId);
-				}
-			}
-			fprintf(f, "|}\n");
-			fclose(f);
-
-			char msg[BUFFER_SIZE] = "";
-			sprintf(msg, "Wrote %s", filename); 
-			MessageBox(g_hwndParent, msg, TITLE_SAVE_ALR_WIKI, MB_OK);
-
-		}
-		else
-			MessageBox(g_hwndParent, "Error: unable to write to file!", TITLE_SAVE_ALR_WIKI, MB_OK);
-	}
-	else
-		MessageBox(g_hwndParent, "Error: action window not opened!", TITLE_SAVE_ALR_WIKI, MB_OK);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// S&M Util
-///////////////////////////////////////////////////////////////////////////////
-
-// GUI for lazy guys
-void SNM_ShowConsoleMsg(const char* _msg, const char* _title, bool _clear)
-{
-	if (_clear) ShowConsoleMsg(""); //clear
-	ShowConsoleMsg(_msg);
-
-	// a little hack..
-	if (_title) {
-		HWND w = SearchWindow("ReaScript console output");
-		if (w) SetWindowText(w, _title);
-	}
-}
-
-bool SNM_DeleteFile(const char* _filename)
-{
+bool SNM_DeleteFile(const char* _filename) {
+	if (_filename && *_filename) {
 #ifdef _WIN32
 	return (SendFileToRecycleBin(_filename) ? false : true); // avoid warning warning C4800
 #else
 	return (DeleteFile(_filename) ? true : false); // avoid warning warning C4800
 #endif
-}
-
-HWND SearchWindow(const char* _title)
-{
-	HWND searchedWnd = NULL;
-#ifdef _WIN32
-	searchedWnd = FindWindow(NULL, _title);
-#else
-/*JFB TODO OSX: tried what follows that in the hope it'll work on OSX but it's KO (http://code.google.com/p/sws-extension/issues/detail?id=175#c83)
-	if (GetMainHwnd())
-	{
-		HWND w = GetWindow(GetMainHwnd(), GW_HWNDFIRST);
-		while (w)
-		{ 
-			if (IsWindowVisible(w) && GetWindow(w, GW_OWNER) == GetMainHwnd())
-			{
-				char name[BUFFER_SIZE] = "";
-				int iLenName = GetWindowText(w, name, BUFFER_SIZE);
-				if (!strcmp(name, _title)) {
-					searchedWnd = w;
-					break;
-				}
-			}
-			w = GetWindow(w, GW_HWNDNEXT);
-		}
 	}
-*/
-#endif
-	return searchedWnd;
+	return false;
 }
 
-HWND GetActionListBox(char* _currentSection, int _sectionMaxSize)
-{
-	HWND actionsWnd = SearchWindow("Actions");
-	if (actionsWnd && _currentSection)
-	{
-		HWND cbSection = GetDlgItem(actionsWnd, 0x525);
-		if (cbSection)
-			GetWindowText(cbSection, _currentSection, _sectionMaxSize);
-	}
-	return (actionsWnd ? GetDlgItem(actionsWnd, 0x52B) : NULL);
-}
-
-bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMaxSize)
-{
-	if (!_stricmp(_section, "Main") || !strcmp(_section, "Main (alt recording)"))
-		strncpy(_sectionURL, "ALR_Main", _sectionURLMaxSize);
-	else if (!_stricmp(_section, "Media explorer"))
-		strncpy(_sectionURL, "ALR_MediaExplorer", _sectionURLMaxSize);
-	else if (!_stricmp(_section, "MIDI Editor"))
-		strncpy(_sectionURL, "ALR_MIDIEditor", _sectionURLMaxSize);
-	else if (!_stricmp(_section, "MIDI Event List Editor"))
-		strncpy(_sectionURL, "ALR_MIDIEvtList", _sectionURLMaxSize);
-	else if (!_stricmp(_section, "MIDI Inline Editor"))
-		strncpy(_sectionURL, "ALR_MIDIInline", _sectionURLMaxSize);
-	else
-		return false;
-	return true;
-}
-
-// Browse a given directory in the default resource path and return shorten filename (if possible)
-// If a file is chosen in this directory, just copy the filename relative to this path into _filename, full path otherwise (or if _fullPath is true)
+// Browse + return short resource filename (if possible and if _wantFullPath == false)
 // Returns false if cancelled
-bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _filename, int _maxFilename, bool _fullPath)
+bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath)
 {
 	bool ok = false;
 	char defaultPath[BUFFER_SIZE] = "";
@@ -270,8 +60,8 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 	char* filename = BrowseForFiles(_title, defaultPath, NULL, false, _fileFilters);
 	if (filename) 
 	{
-		if(!_fullPath && stristr(filename, defaultPath)) //JFB ignore case on OSX ?
-			strncpy(_filename, (char*)(filename+strlen(defaultPath)+1), _maxFilename);
+		if(!_wantFullPath)
+			GetShortResourcePath(_resSubDir, filename, _filename, _maxFilename);
 		else
 			strncpy(_filename, filename, _maxFilename);
 		free(filename);
@@ -280,38 +70,67 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 	return ok;
 }
 
-void GetShortResourcePath(const char* _resSubDir, const char* _longFilename, char* _filename, int _maxFilename)
+// Get a short filename from a full resource path
+// ex: C:\Documents and Settings\<user>\Application Data\REAPER\FXChains\EQ\JS\test.RfxChain -> EQ\JS\test.RfxChain
+// Notes: 
+// - *must* work with non existing files (i.e. just some string processing here)
+// - *must* be nop for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
+// - *must* be nop for short resource paths 
+void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn)
 {
-	char defaultPath[BUFFER_SIZE] = "";
-	sprintf(defaultPath, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
-	if(stristr(_longFilename, defaultPath)) //JFB ignore case on OSX ?
-		strncpy(_filename, (char*)(_longFilename+strlen(defaultPath)+1), _maxFilename);
-	else
-		strncpy(_filename, _longFilename, _maxFilename);
-}
-
-void GetFullResourcePath(const char* _resSubDir, const char* _shortFilename, char* _filename, int _maxFilename)
-{
-	if (_shortFilename && _filename) 
+	if (_resSubDir && *_resSubDir && _fullFn && *_fullFn)
 	{
-		if (*_shortFilename == '\0')
-			*_filename = '\0';
-		else if (FileExists(_shortFilename))
-			strncpy(_filename, _shortFilename, _maxFilename);
+		char defaultPath[BUFFER_SIZE] = "";
+		_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s%c", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR);
+		if(stristr(_fullFn, defaultPath) == _fullFn) 
+			strncpy(_shortFn, (char*)(_fullFn + strlen(defaultPath)), _maxFn);
 		else
-			_snprintf(_filename, _maxFilename, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFilename);
+			strncpy(_shortFn, _fullFn, _maxFn);
 	}
+	else if (_shortFn)
+		*_shortFn = '\0';
 }
 
-bool LoadChunk(const char* _filename, WDL_String* _chunk)
+// Get a full resource path from a short filename
+// ex: EQ\JS\test.RfxChain -> C:\Documents and Settings\<user>\Application Data\REAPER\FXChains\EQ\JS\test.RfxChain
+// Notes: 
+// - *must* work with non existing files
+// - *must* be nop for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
+// - *must* be nop for full resource paths 
+void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _maxFn)
 {
-	if (_filename && *_filename && _chunk)
+	if (_shortFn && _fullFn) 
 	{
-		FILE* f = fopenUTF8(_filename, "r");
+		if (*_shortFn == '\0') {
+			*_fullFn = '\0';
+			return;
+		}
+		if (!stristr(_shortFn, GetResourcePath())) {
+
+			char resFn[BUFFER_SIZE], resDir[BUFFER_SIZE];
+			_snprintf(resFn, BUFFER_SIZE, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFn);
+			strcpy(resDir, resFn);
+			char* p = strrchr(resDir, PATH_SLASH_CHAR);
+			if (p) *p = '\0';
+			if (FileExists(resDir)) {
+				strncpy(_fullFn, resFn, _maxFn);
+				return;
+			}
+		}
+		strncpy(_fullFn, _shortFn, _maxFn);
+	}
+	else if (_fullFn)
+		*_fullFn = '\0';
+}
+
+bool LoadChunk(const char* _fn, WDL_String* _chunk)
+{
+	if (_fn && *_fn && _chunk)
+	{
+		FILE* f = fopenUTF8(_fn, "r");
 		if (f)
 		{
 			_chunk->Set("");
-
 			char str[4096];
 			while(fgets(str, 4096, f))
 				_chunk->Append(str);
@@ -320,6 +139,38 @@ bool LoadChunk(const char* _filename, WDL_String* _chunk)
 		}
 	}
 	return false;
+}
+
+bool SaveChunk(const char* _fn, WDL_String* _chunk)
+{
+	if (_fn && *_fn && _chunk)
+	{
+		FILE* f = fopenUTF8(_fn, "w"); 
+		if (f)
+		{
+			fputs(_chunk->Get(), f);
+			fclose(f);
+			return true;
+		}
+	}
+	return false;
+}
+
+void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz)
+{
+	if (_dir && _name && _ext && _updatedFn && *_dir)
+	{
+		char fn[BUFFER_SIZE];
+		bool slash = _dir[strlen(_dir)-1] == PATH_SLASH_CHAR;
+		if (slash) _snprintf(fn, BUFFER_SIZE, "%s%s.%s", _dir, _name, _ext);
+		else _snprintf(fn, BUFFER_SIZE, "%s%c%s.%s", _dir, PATH_SLASH_CHAR, _name, _ext);
+
+		int i=0;
+		while(FileExists(fn))
+			if (slash) _snprintf(fn, BUFFER_SIZE, "%s%s_%03d.%s", _dir, _name, ++i, _ext);
+			else _snprintf(fn, BUFFER_SIZE, "%s%c%s_%03d.%s", _dir, PATH_SLASH_CHAR, _name, ++i, _ext);
+		strncpy(_updatedFn, fn, _updatedSz);
+	}
 }
 
 void StringToExtensionConfig(char* _str, ProjectStateContext* _ctx)
@@ -364,13 +215,251 @@ void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx)
 }
 
 
+///////////////////////////////////////////////////////////////////////////////
+// Util
+///////////////////////////////////////////////////////////////////////////////
+
+int SNM_MinMax(int _val, int _min, int _max) {
+	return min(_max, max(_min, _val));
+}
+
+bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMaxSize)
+{
+	if (!_stricmp(_section, "Main") || !strcmp(_section, "Main (alt recording)"))
+		strncpy(_sectionURL, "ALR_Main", _sectionURLMaxSize);
+	else if (!_stricmp(_section, "Media explorer"))
+		strncpy(_sectionURL, "ALR_MediaExplorer", _sectionURLMaxSize);
+	else if (!_stricmp(_section, "MIDI Editor"))
+		strncpy(_sectionURL, "ALR_MIDIEditor", _sectionURLMaxSize);
+	else if (!_stricmp(_section, "MIDI Event List Editor"))
+		strncpy(_sectionURL, "ALR_MIDIEvtList", _sectionURLMaxSize);
+	else if (!_stricmp(_section, "MIDI Inline Editor"))
+		strncpy(_sectionURL, "ALR_MIDIInline", _sectionURLMaxSize);
+	else
+		return false;
+	return true;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
-// tests..
+// Messages, prompt, etc..
+///////////////////////////////////////////////////////////////////////////////
+
+// GUI for lazy guys
+void SNM_ShowConsoleMsg(const char* _msg, const char* _title, bool _clear)
+{
+	if (_clear) 
+		ShowConsoleMsg(""); //clear
+	ShowConsoleMsg(_msg);
+
+	// a little hack..
+	if (_title) 
+	{
+		HWND w = SearchWindow("ReaScript console output");
+		if (w)
+			SetWindowText(w, _title);
+		else
+			w = SearchWindow(_title);
+
+		if (w) 
+			SetForegroundWindow(w);
+	}
+}
+
+// http://forum.cockos.com/showthread.php?t=48793
+void SNM_ShowConsoleDbg(bool _clear, const char* format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    int bufsize = 2048;
+    char* buffer = (char*)malloc(bufsize);
+#ifdef _WIN32
+    while(buffer && _vsnprintf(buffer, bufsize, format, args) < 0) {
+#else
+	while(buffer && vsnprintf(buffer, bufsize, format, args) < 0) {
+#endif
+        bufsize *= 2;
+        buffer = (char*)realloc(buffer, bufsize);
+    }
+    if (buffer)
+		SNM_ShowConsoleMsg(buffer, "Debug", _clear);
+    va_end(args);
+    free(buffer);
+}
+
+//returns -1 on cancel, MIDI channel otherwise (0-based)
+int PromptForMIDIChannel(const char* _title)
+{
+	int ch = -1;
+	while (ch == -1)
+	{
+		char reply[8]= ""; // no default
+		if (GetUserInputs(_title, 1, "MIDI Channel (1-16):", reply, 8))
+		{
+			ch = atoi(reply); //0 on error
+			if (ch > 0 && ch <= 16) {
+				return (ch-1);
+			}
+			else 
+			{
+				ch = -1;
+				MessageBox(GetMainHwnd(), "Invalid MIDI channel!\nPlease enter a value in [1; 16].", "S&M - Error", /*MB_ICONERROR | */MB_OK);
+			}
+		}
+		else return -1; // user has cancelled
+	}
+	return -1;
+}
+
+bool FileExistsErrMsg(const char* _fn, bool _errMsg)
+{
+	bool exists = false;
+	if (_fn && *_fn)
+	{
+		exists = FileExists(_fn);
+		if (!exists && _errMsg)
+		{
+			char buf[BUFFER_SIZE];
+			_snprintf(buf, BUFFER_SIZE, "File not found:\n%s", _fn);
+			MessageBox(g_hwndParent, buf, "S&M - Error", MB_OK);
+		}
+	}
+	return exists;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Misc	actions
+///////////////////////////////////////////////////////////////////////////////
+
+// http://forum.cockos.com/showthread.php?t=60657
+void LetREAPERBreathe(COMMAND_T* _ct)
+{
+#ifdef _WIN32
+	static bool hasinit;
+	if (!hasinit) { hasinit=true; InitCommonControls();  }
+#endif
+	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SNM_WAIT), GetForegroundWindow(), WaitDlgProc);
+}
+
+void WinWaitForEvent(DWORD _event, DWORD _timeOut, DWORD _minReTrigger)
+{
+#ifdef _WIN32
+	static DWORD waitTime = 0;
+//	if ((timeGetTime() - waitTime) > _minReTrigger)
+	{
+		waitTime = timeGetTime();
+		while((timeGetTime() - waitTime) < _timeOut) // for safety
+		{
+			MSG msg;
+			if(PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE))
+			{
+				// new message to be processed
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+				if(msg.message == _event)
+					break;
+			}
+		}
+	}
+#endif
+}
+
+// http://forum.cockos.com/showthread.php?p=612065
+void SimulateMouseClick(COMMAND_T* _ct)
+{
+	POINT p; // not sure setting the pos is really needed..
+	GetCursorPos(&p);
+	mouse_event(MOUSEEVENTF_LEFTDOWN, p.x, p.y, 0, 0);
+	mouse_event(MOUSEEVENTF_LEFTUP, p.x, p.y, 0, 0);
+	WinWaitForEvent(WM_LBUTTONUP);
+}
+
+// Create the Wiki ALR summary for the current section displayed in the "Action" dlg 
+// This is the hack version, see clean but limited dumpWikiActions() below
+// http://forum.cockos.com/showthread.php?t=61929
+
+#define TITLE_SAVE_ALR_WIKI "Save ALR Wiki summary"
+
+void DumpWikiActions2(COMMAND_T* _ct)
+{
+	char currentSection[64] = "";
+	HWND hList = GetActionListBox(currentSection, 64);
+	if (hList && currentSection)
+	{
+		char sectionURL[64]= ""; 
+		if (!GetALRStartOfURL(currentSection, sectionURL, 64))
+		{
+			MessageBox(g_hwndParent, "Error: unknown section!", TITLE_SAVE_ALR_WIKI, MB_OK);
+			return;
+		}
+
+		char fn[128]; char filename[BUFFER_SIZE];
+		sprintf(fn, "%s%s.txt", sectionURL, _ct->user == 2 ? "_SWS" : _ct->user == 3 ? "_FNG" : "");
+		if (!BrowseForSaveFile(TITLE_SAVE_ALR_WIKI, GetResourcePath(), fn, "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0", filename, BUFFER_SIZE))
+			return;
+
+		//flush
+		FILE* f = fopenUTF8(filename, "w"); 
+		if (f)
+		{
+			fputs("\n", f);
+			fclose(f);
+
+			f = fopenUTF8(filename, "a"); 
+			if (!f) return; //just in case..
+
+			fprintf(f, "{| class=\"wikitable\"\n"); 
+			fprintf(f, "|-\n"); 
+			fprintf(f, "! Action name !! Cmd ID\n"); 
+
+			LVITEM li;
+			li.mask = LVIF_STATE | LVIF_PARAM;
+			li.iSubItem = 0;
+			for (int i = 0; i < ListView_GetItemCount(hList); i++)
+			{
+				li.iItem = i;
+				ListView_GetItem(hList, &li);
+				int cmdId = (int)li.lParam;
+
+				char customId[64] = "";
+				char cmdName[256] = "";
+				ListView_GetItemText(hList,i,1,cmdName,256);
+				ListView_GetItemText(hList,i,3,customId,64);
+
+				if (!strstr(cmdName,"Custom:") &&
+					//native only
+					((_ct->user == 1 && !strstr(cmdName,"SWS:") && !strstr(cmdName,"SWS/") && !strstr(cmdName,"FNG:")) ||
+					// SWS only
+                    (_ct->user == 2 && (strstr(cmdName,"SWS:") || strstr(cmdName,"SWS/"))) ||
+					// FNG only
+					(_ct->user == 3 && strstr(cmdName,"FNG:") && !strstr(cmdName,"SWS"))))
+				{
+					if (!*customId) sprintf(customId, "%d", cmdId);
+					fprintf(f, "|-\n| [[%s_%s|%s]] || %s\n", sectionURL, customId, cmdName, customId);
+				}
+			}
+			fprintf(f, "|}\n");
+			fclose(f);
+
+			char msg[BUFFER_SIZE] = "";
+			sprintf(msg, "Wrote %s", filename); 
+			MessageBox(g_hwndParent, msg, TITLE_SAVE_ALR_WIKI, MB_OK);
+
+		}
+		else
+			MessageBox(g_hwndParent, "Error: unable to write to file!", TITLE_SAVE_ALR_WIKI, MB_OK);
+	}
+	else
+		MessageBox(g_hwndParent, "Error: action window not opened!", TITLE_SAVE_ALR_WIKI, MB_OK);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// tests, other..
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef _SNM_MISC
-
 void ShowTakeEnvPadreTest(COMMAND_T* _ct)
 {
 	bool updated = false;
@@ -398,14 +487,9 @@ void ShowTakeEnvPadreTest(COMMAND_T* _ct)
 	}
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Other
-///////////////////////////////////////////////////////////////////////////////
-
 // Create the Wiki ALR summary 
 // no hack but limited to the main section and native actions
-void dumpWikiActions(COMMAND_T* _ct)
+void DumpWikiActions(COMMAND_T* _ct)
 {
 	char filename[BUFFER_SIZE], cPath[BUFFER_SIZE];
 	strncpy(cPath, GetExePath(), BUFFER_SIZE);
@@ -444,11 +528,6 @@ void dumpWikiActions(COMMAND_T* _ct)
 			MessageBox(g_hwndParent, "Unable to write to file.", "Save ALR Wiki summary", MB_OK);
 	}
 }
-
-void openStuff(COMMAND_T* _ct)
-{
-}
-
 #endif
 
 

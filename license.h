@@ -1,6 +1,8 @@
 #pragma once
 #define LICENSE_TEXT \
-"Copyright (c) 2010 Tim Payne (SWS), Xenakios, Jeffos\r" \
+"Copyright (C) 2011 Tim Payne (SWS), Jeffos, Fingers, Shane StClair\r" \
+"Copyright (C) 2010 P Bourdon\r" \
+"Copyright (C) 2009 Xenakios\r" \
 "\r" \
 "Permission is hereby granted, free of charge, to any person obtaining a copy\r" \
 "of this software and associated documentation files (the \"Software\"), to deal\r" \

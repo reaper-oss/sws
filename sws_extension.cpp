@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_extension.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -34,6 +34,7 @@
 #include "Snapshots/Snapshots.h"
 #include "Zoom.h"
 #include "Misc/Misc.h"
+#include "Misc/RecCheck.h"
 #include "Color/Color.h"
 #include "Color/Autocolor.h"
 #include "MarkerList/MarkerListClass.h"
@@ -45,6 +46,8 @@
 #include "Projects/ProjectList.h"
 #include "SnM/SnM_Actions.h"
 #include "Padre/padreActions.h"
+#include "Fingers/FNG_client.h"
+#include "Autorender/Autorender.h"
 
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
@@ -76,16 +79,21 @@ bool hookCommandProc(int command, int flag)
 		return true;
 	}
 
+	// Special case for checking recording
+	if (command == 1013 && !RecordInputCheck())
+		return true;
+
 	// Ignore commands that don't have anything to do with us from this point forward
 	if (command < g_iFirstCommand || command > g_iLastCommand)
 		return false;
 
 	for (int i = 0; i < g_commands.GetSize(); i++)
 	{
-		if (g_commands.Get(i)->accel.accel.cmd && command == g_commands.Get(i)->accel.accel.cmd)
+		COMMAND_T* cmd = g_commands.Get(i);
+		if (cmd->accel.accel.cmd && command == cmd->accel.accel.cmd && cmd->doCommand != SWS_NOOP)
 		{
 			bReentrancyCheck = true;
-			g_commands.Get(i)->doCommand(g_commands.Get(i));
+			cmd->doCommand(cmd);
 			bReentrancyCheck = false;
 			return true;
 		}
@@ -112,7 +120,7 @@ int SWSRegisterCommand2(COMMAND_T* pCommand, const char* cFile)
 		g_commands.Add(pCommand);
 		g_cmdFile.Add(new WDL_String(cFile));
 	}
-	return 1;
+	return pCommand->accel.accel.cmd;
 }
 
 // For each item in table call SWSRegisterCommand
@@ -126,6 +134,17 @@ int SWSRegisterCommands2(COMMAND_T* pCommands, const char* cFile)
 		i++;
 	}
 	return 1;
+}
+
+int SWSRegisterCommandExt2(void (*doCommand)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile)
+{
+	COMMAND_T* ct = new COMMAND_T;
+	memset(ct, 0, sizeof(COMMAND_T));
+	ct->accel.desc = _strdup(cDesc);
+	ct->id = _strdup(cID);
+	ct->doCommand = doCommand;
+	ct->user = user;
+	return SWSRegisterCommand2(ct, cFile);
 }
 
 // Returns the COMMAND_T entry so it can be deleted if necessary
@@ -153,7 +172,7 @@ COMMAND_T* SWSUnregisterCommand(int id)
 
 void ActionsList(COMMAND_T*)
 {
-	// Load files from the "database"
+	// Output sws_actions.csv
 	char cBuf[512];
 	strncpy(cBuf, get_ini_file(), 256);
 	char* pC = strrchr(cBuf, PATH_SLASH_CHAR);
@@ -167,7 +186,7 @@ void ActionsList(COMMAND_T*)
 			for (int i = 0; i < g_commands.GetSize(); i++)
 			{
 				COMMAND_T* cmd = g_commands.Get(i);
-				sprintf(cBuf, "\"%s\",%s,%d,%s\n", cmd->accel.desc, g_cmdFile.Get(i)->Get(), cmd->accel.accel.cmd, cmd->id);
+				sprintf(cBuf, "\"%s\",%s,%d,_%s\n", cmd->accel.desc, g_cmdFile.Get(i)->Get(), cmd->accel.accel.cmd, cmd->id);
 				fputs(cBuf, f);
 			}
 			fclose(f);
@@ -189,7 +208,7 @@ int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMen
 	return 0;
 }
 
-HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu, int* iIndex)
+HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIndex)
 {
 	// Add menu items
 	if (!hMenu)
@@ -204,7 +223,7 @@ HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu, int* iIndex)
 		{
 			const char* subMenuName = pCommands[i].menuText;
 			i++;
-			HMENU hSubMenu = SWSCreateMenu(pCommands, NULL, &i);
+			HMENU hSubMenu = SWSCreateMenuFromCommandTable(pCommands, NULL, &i);
 			AddSubMenu(hMenu, hSubMenu, subMenuName);
 		}
 		else
@@ -216,19 +235,6 @@ HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu, int* iIndex)
 	if (iIndex)
 		*iIndex = i;
 	return hMenu;
-}
-
-int SWSGetMenuPosFromID(HMENU hMenu, UINT id)
-{	// Replacement for deprecated windows func GetMenuPosFromID
-	MENUITEMINFO mi={sizeof(MENUITEMINFO),};
-	mi.fMask = MIIM_ID;
-	for (int i = 0; i < GetMenuItemCount(hMenu); i++)
-	{
-		GetMenuItemInfo(hMenu, i, true, &mi);
-		if (mi.wID == id)
-			return i;
-	}
-	return -1;
 }
 
 // returns:
@@ -243,14 +249,14 @@ int toggleActionHook(int iCmd)
 	return -1;
 }
 
-// This function handles checking menu items.
+// This function creates the extension menu (flag==0) and handles checking menu items (flag==1).
 // Reaper automatically checks menu items of customized menus using toggleActionHook above,
 // but since we can't tell if a menu is customized we always check either way.
-static void toggleMenuHook(const char* menustr, HMENU hMenu, int flag)
+static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 {
-	// Handle checked menu items
 	if (flag == 1)
 	{
+		// Handle checked menu items
 		// Go through every menu item - see if it exists in the table, then check if necessary
 		MENUITEMINFO mi={sizeof(MENUITEMINFO),};
 		mi.fMask = MIIM_ID | MIIM_SUBMENU;
@@ -258,7 +264,7 @@ static void toggleMenuHook(const char* menustr, HMENU hMenu, int flag)
 		{
 			GetMenuItemInfo(hMenu, i, true, &mi);
 			if (mi.hSubMenu)
-				toggleMenuHook(menustr, mi.hSubMenu, flag);
+				swsMenuHook(menustr, mi.hSubMenu, flag);
 			else if (mi.wID >= (UINT)g_iFirstCommand && mi.wID <= (UINT)g_iLastCommand)
 				for (int j = 0; j < g_toggles.GetSize(); j++)
 				{
@@ -268,9 +274,14 @@ static void toggleMenuHook(const char* menustr, HMENU hMenu, int flag)
 				}
 		}
 	}
+	else if (!strcmp(menustr, "Main extensions"))
+	{
+		SWSCreateExtensionsMenu(hMenu);
+	}
 }
 
-// Fake control surface just to get a low priority periodic time slice from Reaper
+// Fake control surface to get a low priority periodic time slice from Reaper
+// and callbacks for some "track params have changed"
 class SWSTimeSlice : public IReaperControlSurface
 {
 public:
@@ -327,16 +338,58 @@ public:
 			m_iACIgnore--;
 	}
 
-	// The rest only are applicable only to the TrackList
 	void SetSurfaceSelected(MediaTrack *tr, bool bSel)	{ ScheduleTracklistUpdate(); }
-	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); }
-	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); }
-	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); }
+	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); UpdateTrackMute(); }
+	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); UpdateTrackSolo(); }
+	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); UpdateTrackArm(); }
 };
 
 // WDL Stuff
 bool WDL_STYLE_GetBackgroundGradient(double *gradstart, double *gradslope) { return false; }
-int WDL_STYLE_GetSysColor(int i) { if (GSC_mainwnd) return GSC_mainwnd(i); else return GetSysColor(i); }
+int WDL_STYLE_GetSysColor(int i) 
+{
+	int col;
+	if (GSC_mainwnd) 
+		col = GSC_mainwnd(i); 
+	else 
+		col = GetSysColor(i); 
+
+	// check & "fix" 3D colors that aren't distinguished in many themes..
+#ifdef _WIN32
+	if (i == COLOR_3DSHADOW || i == COLOR_3DLIGHT || i == COLOR_3DHILIGHT)	
+#else
+	if (i == COLOR_3DSHADOW || i == COLOR_3DHILIGHT)	
+#endif
+	{
+		int col3ds,col3dl,bgcol;
+		if (GSC_mainwnd)
+		{
+			col3ds = GSC_mainwnd(COLOR_3DSHADOW);
+			col3dl = GSC_mainwnd(COLOR_3DHILIGHT);
+			bgcol = GSC_mainwnd(COLOR_WINDOW);
+		}
+		else
+		{
+			col3ds = GetSysColor(COLOR_3DSHADOW);
+			col3dl = GetSysColor(COLOR_3DHILIGHT);
+			bgcol = GetSysColor(COLOR_WINDOW);
+		}
+/*JFB
+		col3ds =  LICE_RGBA_FROMNATIVE(col3ds, 255);
+		col3dl =  LICE_RGBA_FROMNATIVE(col3dl, 255);
+		bgcol =  LICE_RGBA_FROMNATIVE(bgcol, 255);
+*/
+		if (col3ds == col3dl || col3ds == bgcol || col3dl == bgcol)
+		{
+			int colDelta = SNM_3D_COLORS_DELTA * (i == COLOR_3DSHADOW ? -1 : 1);
+		    col = RGB(
+				SNM_MinMax(LICE_GETR(bgcol) + colDelta, 0, 0xFF),
+				SNM_MinMax(LICE_GETG(bgcol) + colDelta, 0, 0xFF),
+				SNM_MinMax(LICE_GETB(bgcol) + colDelta, 0, 0xFF));
+		}
+	}
+	return col;
+}
 int WDL_STYLE_WantGlobalButtonBorders() { return 0; }
 bool WDL_STYLE_WantGlobalButtonBackground(int *col) { return false; }
 void WDL_STYLE_ScaleImageCoords(int *x, int *y) { }
@@ -378,6 +431,8 @@ extern "C"
 		IMPAPI(AddProjectMarker);
 		IMPAPI(AddTakeToMediaItem);
 		IMPAPI(adjustZoom);
+		*(void**)&AttachWindowTopmostButton = rec->GetFunc("AttachWindowTopmostButton"); // v4 only
+		*(void**)&AttachWindowResizeGrip    = rec->GetFunc("AttachWindowResizeGrip");    // v4 only
 		IMPAPI(Audio_RegHardwareHook);
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
@@ -400,6 +455,8 @@ extern "C"
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteTrack);
 		IMPAPI(DeleteTrackMediaItem);
+		*(void**)&Dock_UpdateDockID = rec->GetFunc("Dock_UpdateDockID"); // v4 only
+		*(void**)&DockIsChildOfDock = rec->GetFunc("DockIsChildOfDock"); // v4 only
 		IMPAPI(DockWindowActivate);
 		IMPAPI(DockWindowAdd);
 		*(void**)&DockWindowAddEx = rec->GetFunc("DockWindowAddEx"); // v4 only
@@ -414,6 +471,7 @@ extern "C"
 		IMPAPI(GetActiveTake)
 		IMPAPI(GetColorThemeStruct);
 		IMPAPI(GetContextMenu);
+		IMPAPI(GetCurrentProjectInLoadSave);
 		IMPAPI(GetCursorContext);
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetCursorPositionEx);
@@ -435,8 +493,10 @@ extern "C"
 		IMPAPI(GetMediaItemTake_Source);
 		IMPAPI(GetMediaItemTake_Track);
 		IMPAPI(GetMediaItemTakeInfo_Value);
+		IMPAPI(GetMediaTrackInfo_Value);
 		IMPAPI(GetNumTracks);
 		IMPAPI(GetOutputChannelName);
+		IMPAPI(GetPeakFileName);
 		IMPAPI(GetPeaksBitmap);
 		IMPAPI(GetPlayPosition);
 		IMPAPI(GetPlayPosition2);
@@ -475,7 +535,7 @@ extern "C"
 		IMPAPI(get_ini_file);
 		IMPAPI(GSC_mainwnd);
 		IMPAPI(guidToString);
-//		IMPAPI(Help_Set);
+		IMPAPI(Help_Set);
 		IMPAPI(InsertMedia);
 		IMPAPI(InsertTrackAtIndex);
 		IMPAPI(IsMediaExtension);
@@ -516,12 +576,14 @@ extern "C"
 		IMPAPI(RefreshToolbar);
 		IMPAPI(Resampler_Create);
 		IMPAPI(screenset_register);
+		*(void**)&screenset_registerNew = rec->GetFunc("screenset_registerNew"); // v4 only
 		IMPAPI(ShowConsoleMsg);
 		IMPAPI(SelectProjectInstance);
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
 		IMPAPI(SetMediaItemInfo_Value);
 		IMPAPI(SetMediaItemTakeInfo_Value);
+		IMPAPI(SetMediaTrackInfo_Value);
 		IMPAPI(SetProjectMarker);
 		IMPAPI(SetTrackSelected);
 		IMPAPI(ShowActionList);
@@ -533,8 +595,10 @@ extern "C"
 		IMPAPI(TimeMap_QNToTime);
 		IMPAPI(TimeMap_timeToQN);
 		IMPAPI(TimeMap2_beatsToTime);
+		IMPAPI(TimeMap2_GetDividedBpmAtTime);
 		IMPAPI(TimeMap2_QNToTime);
 		IMPAPI(TimeMap2_timeToBeats);
+		IMPAPI(TimeMap2_timeToQN);
 		IMPAPI(TrackFX_FormatParamValue);
 		IMPAPI(TrackFX_GetChainVisible);
 		IMPAPI(TrackFX_GetFloatingWindow);
@@ -559,7 +623,6 @@ extern "C"
 		IMPAPI(UpdateTimeline);
 		IMPAPI(ValidatePtr);
 
-
 		g_hInst = hInstance;
 		g_hwndParent = GetMainHwnd();
 
@@ -568,15 +631,13 @@ extern "C"
 
 		if (errcnt)
 		{
-			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have a Reaper version less than 3.66 installed. "
+			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have a Reaper version less than 3.74 installed. "
 				"Please install the latest version of Reaper from www.reaper.fm.", "Version Incompatibility", MB_OK);
 			return 0;
 		}
 
 		if (!rec->Register("hookcommand",(void*)hookCommandProc))
 			ERR_RETURN("hook command error\n")
-		if (!rec->Register("hookcustommenu", (void*)toggleMenuHook))
-			ERR_RETURN("Menu hook error\n")
 		if (!rec->Register("toggleaction", (void*)toggleActionHook))
 			ERR_RETURN("Toggle action hook error\n")
 
@@ -608,11 +669,19 @@ extern "C"
 		if (!MiscInit())
 			ERR_RETURN("Misc init error\n")
 		if (!SnMInit(rec))
-			ERR_RETURN("SnM init error\n")
-		if (!AboutBoxInit())
-			ERR_RETURN("About box init error\n")
+			ERR_RETURN("S&M init error\n")
+		if(!FNGExtensionInit(hInstance, rec))
+			ERR_RETURN("Fingers init error\n")
 		if (!PadreInit())
 			ERR_RETURN("Padre init error\n")
+		if (!AboutBoxInit())
+			ERR_RETURN("About box init error\n")
+		if (!AutorenderInit())
+			ERR_RETURN("Autorender init error\n")
+
+    	if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
+			ERR_RETURN("Menu hook error\n")
+		AddExtensionsMainMenu();
 
 		SWSTimeSlice* ts = new SWSTimeSlice();
 		if (!rec->Register("csurf_inst", ts))

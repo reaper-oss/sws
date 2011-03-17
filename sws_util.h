@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_util.h
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -44,6 +44,7 @@
 #define UTF8_BOX "\xE2\x96\xA1"
 #define UTF8_BBOX "\xE2\x96\xA0"
 #define SWS_CMD_SHORTNAME(_ct) (_ct->accel.desc + 5) // +5 to skip "SWS: "
+#define __ARRAY_SIZE(x) sizeof(x) / sizeof(x[0])
 // For checking to see if items are adjacent
 // Found one case of items after split having diff edges 5e-11 apart, 1e-9 (still much greater than one sample)
 #define SWS_ADJACENT_ITEM_THRESHOLD 1.0e-9
@@ -76,6 +77,9 @@ typedef struct COMMAND_T
 	bool (*getEnabled)(COMMAND_T*);
 } COMMAND_T;
 
+typedef void (*SWS_COMMANDFUNC)(COMMAND_T*);
+#define SWS_NOOP ((SWS_COMMANDFUNC)-1)
+
 template<class PTRTYPE> class SWSProjConfig
 {
 protected:
@@ -87,7 +91,9 @@ public:
 	virtual ~SWSProjConfig() { Empty(); }
 	PTRTYPE* Get()
 	{
-		ReaProject* pProj = Enum_Projects(-1, NULL, 0);
+		ReaProject* pProj = (ReaProject*)GetCurrentProjectInLoadSave();
+		if (!pProj) // If not in a project load/save context, above returns NULL
+			pProj = Enum_Projects(-1, NULL, 0);
 		int i = m_projects.Find(pProj);
 		if (i >= 0)
 			return m_data.Get(i);
@@ -164,20 +170,17 @@ void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwEx
 // Command/action handling, sws_extension.cpp
 #define SWSRegisterCommand(c) SWSRegisterCommand2(c, __FILE__)
 #define SWSRegisterCommands(c) SWSRegisterCommands2(c, __FILE__)
+#define SWSRegisterCommandExt(a, b, c, d) SWSRegisterCommandExt2(a, b, c, d, __FILE__)
 int SWSRegisterCommand2(COMMAND_T* pCommand, const char* cFile);   // One command
 int SWSRegisterCommands2(COMMAND_T* pCommands, const char* cFile); // Multiple commands in a table, terminated with LAST_COMMAND
+int SWSRegisterCommandExt2(void (*doCommand)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile);
 void ActionsList(COMMAND_T*);
 COMMAND_T* SWSUnregisterCommand(int id);
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, const char** pMenuText = NULL);
-HMENU SWSCreateMenu(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);
-int SWSGetMenuPosFromID(HMENU hMenu, UINT id);
+HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);
 
 // Utility functions, sws_util.cpp
 BOOL IsCommCtrlVersion6();
-void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter = -1, bool bPos = false, UINT uiSate = MFS_UNCHECKED);
-void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter = -1, UINT uiSate = MFS_UNCHECKED);
-HMENU FindMenuItem(HMENU hMenu, int iCmd, int* iPos);
-void SWSSetMenuText(HMENU hMenu, int iCmd, const char* cText);
 void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
 MediaTrack* GetFirstSelectedTrack();
@@ -205,3 +208,4 @@ void SWS_GetSelectedTracks(WDL_TypedBuf<MediaTrack*>* buf, bool bMaster = false)
 void SWS_GetSelectedMediaItems(WDL_TypedBuf<MediaItem*>* buf);
 void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack* tr);
 int SWS_GetModifiers();
+void WinSpawnNotepad(const char* pFilename);

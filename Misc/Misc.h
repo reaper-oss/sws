@@ -30,3 +30,8 @@
 void MiscSlice();
 int MiscInit();
 void MiscExit();
+
+// TrackParams.cpp
+void UpdateTrackSolo();
+void UpdateTrackArm();
+void UpdateTrackMute();

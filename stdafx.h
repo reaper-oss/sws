@@ -1,7 +1,7 @@
 /******************************************************************************
 / stdafx.h
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,6 +24,9 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
+
+// Yeah, I know "AFX" if for MFC, and we don't use MFC in this project.
+// Force of habit. :)
 
 #pragma once
 
@@ -51,6 +54,8 @@
 #include <fstream>
 #include <iostream>
 #include <cctype>
+#include <cstdlib>
+#include <cmath>
 #include <vector>
 #include <algorithm>
 #include <bitset>
@@ -59,11 +64,12 @@
 #include <list>
 #include <map>
 #include <set>
+#include <numeric>
+#include <ctime>
 
 #pragma warning(disable : 4996) // POSIX deprecation warnings
 #pragma warning(disable : 4267) // size_t to int warnings
 #include "../WDL/wdltypes.h"
-// Temporary fix for out-of-date WDL
 #include "../WDL/ptrlist.h"
 #include "../WDL/wdlstring.h"
 #include "../WDL/heapbuf.h"
@@ -74,18 +80,20 @@
 #include "../WDL/wingui/virtwnd.h"
 #include "../WDL/wingui/virtwnd-controls.h"
 #include "../WDL/assocarray.h"
-
-
 #include "../WDL/win32_utf8.h"
 #include "../WDL/lineparse.h"
 #pragma warning(default : 4996)
 #pragma warning(default : 4267)
 
+// Headers that are used "enough" to be worth of being precompiled,
+// at the expense of needing recompile of the headers on change
 #include "reaper/icontheme.h"
 #include "reaper/reaper_plugin.h"
 #include "reaper/sws_rpf_wrapper.h"
+#include "Utility/SectionLock.h"
 #include "sws_util.h"
 #include "sws_wnd.h"
+#include "Menus.h"
 #include "resource.h"
 #include "Xenakios/XenakiosExts.h"
 #include "ObjectState/ObjectState.h"

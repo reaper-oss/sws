@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_FindView.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÈdague 
+/ Copyright (c) 2010-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,10 +30,8 @@
 #include "SnM_Actions.h"
 #include "SNM_FindView.h"
 #include "SNM_ChunkParserPatcher.h"
-#include "../Freeze/ItemSelState.h"
+//#include "../Freeze/ItemSelState.h"
 
-
-#define SAVEWINDOW_POS_KEY		"S&M - Find Save Window Position"
 #define MAX_SEARCH_STR_LEN		128
 
 enum {
@@ -59,52 +57,59 @@ static SNM_FindWnd* g_pFindWnd = NULL;
 char g_searchStr[MAX_SEARCH_STR_LEN] = "";
 bool g_notFound=false;
 
-bool TakeNameMatch(MediaItem_Take* _tk, const char* _searchStr) {
-	char* takeName = (char*)GetSetMediaItemTakeInfo(_tk, "P_NAME", NULL);
+bool TakeNameMatch(MediaItem_Take* _tk, const char* _searchStr)
+{
+	char* takeName = _tk ? (char*)GetSetMediaItemTakeInfo(_tk, "P_NAME", NULL) : NULL;
 	return (takeName && stristr(takeName, _searchStr));
 }
 
-bool TakeFilenameMatch(MediaItem_Take* _tk, const char* _searchStr) {
+bool TakeFilenameMatch(MediaItem_Take* _tk, const char* _searchStr)
+{
 	bool match = false;
-	PCM_source* src =(PCM_source*)GetSetMediaItemTakeInfo(_tk,"P_SOURCE",NULL);
-	if (src) {
+	PCM_source* src = _tk ? (PCM_source*)GetSetMediaItemTakeInfo(_tk, "P_SOURCE", NULL) : NULL;
+	if (src) 
+	{
 		const char* takeFilename = src->GetFileName();
 		match = (takeFilename && stristr(takeFilename, _searchStr));
 	}
 	return match;
 }
 
-bool ItemNotesMatch(MediaItem_Take* _tk, const char* _searchStr) {
+bool ItemNotesMatch(MediaItem* _item, const char* _searchStr)
+{
 	bool match = false;
-	MediaItem* item = GetMediaItemTake_Item(_tk);
-	if (item)
+	if (_item)
 	{
-		SNM_ChunkParserPatcher p(item);
+		SNM_ChunkParserPatcher p(_item);
 		WDL_String notes;
-		if (p.GetSubChunk("NOTES", 2, 0, &notes))
-			match = (stristr(notes.Get(), _searchStr) != NULL); //JFB!! bof..
+		if (p.GetSubChunk("NOTES", 2, 0, &notes, "VOLPAN") >= 0) // rmk: we use VOLPAN as it also exists for empty items
+			//JFB TODO? we compare a formated string with a normal one here, oh well..
+			match = (stristr(notes.Get(), _searchStr) != NULL);
 	}
 	return match;
 }
 
 bool TrackNameMatch(MediaTrack* _tr, const char* _searchStr) {
-	char* name = (char*)GetSetMediaTrackInfo(_tr, "P_NAME", NULL);
+	char* name = _tr ? (char*)GetSetMediaTrackInfo(_tr, "P_NAME", NULL) : NULL;
 	return (name && stristr(name, _searchStr));
 }
 
-bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr) {
+bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr) 
+{
 	bool match = false;
-	for (int i=0; i < g_pTracksNotes.Get()->GetSize(); i++)
+	if (_tr)
 	{
-		if (g_pTracksNotes.Get()->Get(i)->m_tr == _tr)
+		for (int i=0; i < g_pTracksNotes.Get()->GetSize(); i++)
 		{
-			match = (stristr(g_pTracksNotes.Get()->Get(i)->m_notes.Get(), _searchStr) != NULL);
-			break;
+			if (g_pTracksNotes.Get()->Get(i)->m_tr == _tr)
+			{
+				match = (stristr(g_pTracksNotes.Get()->Get(i)->m_notes.Get(), _searchStr) != NULL);
+				break;
+			}
 		}
 	}
 	return match;
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -114,13 +119,8 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr) {
 SNM_FindWnd::SNM_FindWnd()
 :SWS_DockWnd(IDD_SNM_FIND, "Find", "SnMFind", 30008, SWSGetCommandID(OpenFindView))
 {
-	// GUI inits
-	if (m_bShowAfterInit)
-		Show(false, false);
-
-	SetWindowLongPtr(m_hwnd, GWLP_USERDATA, (LONG_PTR)this);
-	if (GetDlgItem(m_hwnd, IDC_EDIT))
-		SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
 }
 
 int SNM_FindWnd::GetType(){
@@ -145,21 +145,16 @@ bool SNM_FindWnd::Find(int _mode)
 			update = FindMediaItem(_mode, true, TakeFilenameMatch);
 		break;
 		case TYPE_ITEM_NOTES:
-			update = FindMediaItem(_mode, true, ItemNotesMatch);
+			update = FindMediaItem(_mode, false, NULL, ItemNotesMatch);
 		break;
-
 		case TYPE_TRACK_NAME:
 			update = FindTrack(_mode, TrackNameMatch);
 		break;
 		case TYPE_TRACK_NOTES:
 			update = FindTrack(_mode, TrackNotesMatch);
 		break;
-
 		case TYPE_MARKER_REGION:
 			update = FindMarkerRegion(_mode);
-
-		default:
-		break;
 	}
 	return update;
 }
@@ -193,7 +188,8 @@ MediaItem* SNM_FindWnd::FindPrevNextItem(int _dir, MediaItem* _item)
 	return previous;
 }
 
-bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*job)(MediaItem_Take*,const char*))
+// param _allTakes only makes sense if jobTake() is used
+bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_Take*,const char*), bool (*jobItem)(MediaItem*,const char*))
 {
 	bool update = false, found = false, sel = true;
 	if (g_searchStr && *g_searchStr)
@@ -235,9 +231,7 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*job)(MediaItem_
 				item = GetTrackMediaItem(startTr,++startItemIdx);
 
 			bool firstItem = true, breakSelection = false;
-			for (int i = startTrIdx; 
-				!breakSelection && i <= CountTracks(NULL) && i>=1; 
-				i += (!_dir ? 1 : _dir))
+			for (int i = startTrIdx; !breakSelection && i <= CountTracks(NULL) && i>=1; i += (!_dir ? 1 : _dir))
 			{
 				MediaTrack* tr = CSurf_TrackFromID(i,false); 
 				int nbItems = GetTrackNumMediaItems(tr);
@@ -247,22 +241,36 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*job)(MediaItem_
 				{
 					item = GetTrackMediaItem(tr,j);
 					firstItem = false;
-					for (int k=0; item && k < GetMediaItemNumTakes(item); k++)
-					{
-						MediaItem_Take* tk = GetMediaItemTake(item, k);
-						if (tk && (_allTakes || (!_allTakes && tk == GetActiveTake(item))))
-						{
-							if (job(tk, g_searchStr))
-							{
-								if (!update)
-									Undo_BeginBlock();
 
-								update = found = true;
-								GetSetMediaItemInfo(item, "B_UISEL", &sel);
-								if (_dir) 
+					// search at item level 
+					if (jobItem)
+					{
+						if (jobItem(item, g_searchStr))
+						{
+							if (!update) Undo_BeginBlock();
+							update = found = true;
+							GetSetMediaItemInfo(item, "B_UISEL", &sel);
+							if (_dir) breakSelection = true;
+						}
+					}
+					// search at take level 
+					else if (jobTake)
+					{
+						int nbTakes = GetMediaItemNumTakes(item);
+						for (int k=0; item && k < nbTakes; k++)
+						{
+							MediaItem_Take* tk = GetMediaItemTake(item, k);
+							if (tk && (_allTakes || (!_allTakes && tk == GetActiveTake(item))))
+							{
+								if (jobTake(tk, g_searchStr))
 								{
-									breakSelection = true;
-									break;
+									if (!update) Undo_BeginBlock();
+									update = found = true;
+									GetSetMediaItemInfo(item, "B_UISEL", &sel);
+									if (_dir) {
+										breakSelection = true;
+										break;
+									}
 								}
 							}
 						}
@@ -271,11 +279,10 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*job)(MediaItem_
 			}
 		}
 
-		if (!found)
-			DisplayNotFoundMsg(g_searchStr);
-		else
+		UpdateNotFoundMsg(found);
+		if (found)
 		{
-			//JFB TODO: would be cool to scroll to selected items, but no native actions..
+			//JFB would be cool to scroll to selected items, but no native actions..
 		}
 	}
 
@@ -343,9 +350,8 @@ bool SNM_FindWnd::FindTrack(int _dir, bool (*job)(MediaTrack*,const char*))
 			}
 		}
 
-		if (!found)
-			DisplayNotFoundMsg(g_searchStr);
-		else
+		UpdateNotFoundMsg(found);	
+		if (found)
 			Main_OnCommand(40913,0); // scroll to selected tracks
 	}
 
@@ -385,12 +391,11 @@ bool SNM_FindWnd::FindMarkerRegion(int _dir)
 			}
 		}
 
+		UpdateNotFoundMsg(found);	
 		if (found) {
 			SetEditCurPos(dMinMaxPos, true, false);
 			update = true;
 		}
-		else
-			DisplayNotFoundMsg(g_searchStr);
 	}
 
 	if (update)
@@ -399,18 +404,9 @@ bool SNM_FindWnd::FindMarkerRegion(int _dir)
 	return update;
 }
 
-void SNM_FindWnd::DisplayNotFoundMsg(const char* _searchStr)
+void SNM_FindWnd::UpdateNotFoundMsg(bool _found)
 {
-/*JFB
-	char msg[MAX_SEARCH_STR_LEN*2] = "";
-	sprintf(msg, "Search string '%s' not found.", _searchStr);
-	MessageBox(m_hwnd, msg, "S&M - Find", MB_OK);
-	// avoid stuck btns!
-	m_btnFind.OnMouseUp(0,0);
-	m_btnPrev.OnMouseUp(0,0);
-	m_btnNext.OnMouseUp(0,0);
-*/
-	g_notFound = true;
+	g_notFound = !_found;
 	m_parentVwnd.RequestRedraw(NULL);
 }
 
@@ -423,21 +419,41 @@ void SNM_FindWnd::OnInitDlg()
 	m_type = GetPrivateProfileInt("FIND_VIEW", "TYPE", 0, g_SNMiniFilename.Get());
 
 	// WDL GUI init
+	IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);
     m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_btnFind.SetID(BUTTONID_FIND);
+	WDL_VirtualIconButton_SkinConfig* img = it ? &(it->transport_play[0]) : NULL;
+	WDL_VirtualIconButton_PreprocessSkinConfig(img);
+	if (img)
+		m_btnFind.SetIcon(img);
+	else {
+		m_btnFind.SetTextLabel("Find", 0, SNM_GetThemeFont());
+		m_btnFind.SetForceBorder(true);
+	}
 	m_btnFind.SetRealParent(m_hwnd);
-	m_btnFind.SetImmediate(true);
 	m_parentVwnd.AddChild(&m_btnFind);
 
 	m_btnPrev.SetID(BUTTONID_PREV);
+	img = it ? &(it->transport_rew) : NULL;
+	if (img)
+		m_btnPrev.SetIcon(img);
+	else {
+		m_btnPrev.SetTextLabel("Find", 0, SNM_GetThemeFont());
+		m_btnPrev.SetForceBorder(true);
+	}
 	m_btnPrev.SetRealParent(m_hwnd);
-	m_btnPrev.SetImmediate(true);
 	m_parentVwnd.AddChild(&m_btnPrev);
 
 	m_btnNext.SetID(BUTTONID_NEXT);
+	img = it ? &(it->transport_fwd) : NULL;
+	if (img)
+		m_btnNext.SetIcon(img);
+	else {
+		m_btnNext.SetTextLabel("Next", 0, SNM_GetThemeFont());
+		m_btnNext.SetForceBorder(true);
+	}
 	m_btnNext.SetRealParent(m_hwnd);
-	m_btnNext.SetImmediate(true);
 	m_parentVwnd.AddChild(&m_btnNext);
 
 	m_cbType.SetID(COMBOID_TYPE);
@@ -466,18 +482,25 @@ void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	{
 		case (IDC_EDIT | (EN_CHANGE << 16)):
 		{
-			GetDlgItemText(GetHWND(), IDC_EDIT, g_searchStr, MAX_SEARCH_STR_LEN);
-			g_notFound = false;
-			m_parentVwnd.RequestRedraw(NULL); // buttons grayed for some types
+			GetDlgItemText(m_hwnd, IDC_EDIT, g_searchStr, MAX_SEARCH_STR_LEN);
+			UpdateNotFoundMsg(true);
 			break;
 		}
 		default:
 		{
-			if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE) 
+			if (HIWORD(wParam)==0) 
+			{
+				switch(LOWORD(wParam)){
+					case BUTTONID_FIND: Find(0); break;
+					case BUTTONID_PREV: Find(-1); break;
+					case BUTTONID_NEXT: Find(1); break;
+				}
+			}
+			else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE) 
 			{
 				m_type = m_cbType.GetCurSel();
-				g_notFound = false;
-				m_parentVwnd.RequestRedraw(NULL); // buttons grayed for some types
+				UpdateNotFoundMsg(true);
+				SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 			}
 			else 
 				Main_OnCommand((int)wParam, (int)lParam);
@@ -506,43 +529,11 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 	if (!g_pFindWnd)
 		return;
 
-	int xo=0, yo=0, sz;
+	int xo=0, yo=0;
     LICE_IBitmap *bm = _painter->GetBuffer(&xo,&yo);
 	if (bm)
 	{
-		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
-
-		static LICE_IBitmap *logo=  NULL;
-		if (!logo)
-		{
-#ifdef _WIN32
-			logo = LICE_LoadPNGFromResource(g_hInst,IDB_SNM,NULL);
-#else
-			// SWS doesn't work, sorry. :( logo =  LICE_LoadPNGFromNamedResource("SnM.png",NULL);
-			logo = NULL;
-#endif
-		}
-
-		static LICE_CachedFont tmpfont;
-		if (!tmpfont.GetHFont())
-		{
-			LOGFONT lf = {
-			  14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-				OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,
-			  #ifdef _WIN32
-			  "MS Shell Dlg"
-			  #else
-			  "Arial"
-			  #endif
-			};
-			if (ct) 
-				lf = ct->mediaitem_font;
-			tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
-		}
-		tmpfont.SetBkMode(TRANSPARENT);
-		if (ct)	tmpfont.SetTextColor(LICE_RGBA_FROMNATIVE(ct->main_text,255));
-		else tmpfont.SetTextColor(LICE_RGBA(255,255,255,255));
-
+		LICE_CachedFont* font = SNM_GetThemeFont();
 		int x0=_r.left+10; int y0=_r.top+5;
 
 		// Dropdown
@@ -552,27 +543,26 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			RECT tr2={x0,y0+3,x0+190,y0+25-2};
 			x0 = tr2.right+5;
 			cbVwnd->SetPosition(&tr2);
-			cbVwnd->SetFont(&tmpfont);
+			cbVwnd->SetFont(font);
 		}
 
-		if (logo && (_r.right - _r.left) > (x0+logo->getWidth()))
-			LICE_Blit(bm,logo,_r.right-logo->getWidth()-8,y0+3,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+		if (g_snmLogo && (_r.right - _r.left) > (x0+g_snmLogo->getWidth()))
+			LICE_Blit(bm,g_snmLogo,_r.right-g_snmLogo->getWidth()-8,y0+3,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
 
 		x0 = _r.left+8; y0 = _r.top+5+60;
 		int w=25, h=25; //default width/height
-		IconTheme* it = (IconTheme*)GetIconThemeStruct(&sz);// returns the whole icon theme (icontheme.h) and the size
 
 		// Buttons
 		WDL_VirtualIconButton* btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_FIND);
 		if (btnVwnd)
 		{
-			WDL_VirtualIconButton_SkinConfig* img=NULL;
-			img = it ? &(it->transport_play[0]) : NULL;
+			WDL_VirtualIconButton_SkinConfig* img = btnVwnd->GetIcon();
 			if (img) {
-				btnVwnd->SetIcon(img);
 				w = img->image->getWidth() / 3;
 				h = img->image->getHeight();
 			}
+			else
+				w = 50;
 			RECT tr2={x0,y0,x0+w,y0+h};
 			btnVwnd->SetPosition(&tr2);
 			x0 += 5+w;
@@ -581,13 +571,13 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_PREV);
 		if (btnVwnd)
 		{
-			WDL_VirtualIconButton_SkinConfig* img=NULL;
-			img = it ? &(it->transport_rew) : NULL;
+			WDL_VirtualIconButton_SkinConfig* img = btnVwnd->GetIcon();
 			if (img) {
-				btnVwnd->SetIcon(img);
 				w = img->image->getWidth() / 3;
 				h = img->image->getHeight();
 			}
+			else
+				w = 50;
 			RECT tr2={x0,y0,x0+w,y0+h};
 			btnVwnd->SetPosition(&tr2);
 			x0 += 5+w;
@@ -596,13 +586,13 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_NEXT);
 		if (btnVwnd)
 		{
-			WDL_VirtualIconButton_SkinConfig* img=NULL;
-			img = it ? &(it->transport_fwd) : NULL;
+			WDL_VirtualIconButton_SkinConfig* img = btnVwnd->GetIcon();
 			if (img) {
-				btnVwnd->SetIcon(img);
 				w = img->image->getWidth() / 3;
 				h = img->image->getHeight();
 			}
+			else
+				w = 50;
 			RECT tr2={x0,y0,x0+w,y0+h};
 			btnVwnd->SetPosition(&tr2);
 			x0 += 5+w;
@@ -613,7 +603,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 		{
 			x0+=5;
 			RECT tr={x0,y0,x0+60,y0+h};
-			tmpfont.DrawText(bm, "Not found!", -1, &tr, DT_LEFT | DT_VCENTER);
+			font->DrawText(bm, "Not found!", -1, &tr, DT_LEFT | DT_VCENTER);
 			x0 = tr.right+5;
 		}
 
@@ -627,95 +617,54 @@ int SNM_FindWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_PAINT:
 		{
-			RECT r; int sz;
+			RECT r;
 			GetClientRect(m_hwnd,&r);		
 	        m_parentVwnd.SetPosition(&r);
-
-			ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
-			if (ct)	m_vwnd_painter.PaintBegin(m_hwnd, ct->tracklistbg_color);
-			else m_vwnd_painter.PaintBegin(m_hwnd, LICE_RGBA(0,0,0,255));
+			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
 			DrawControls(&m_vwnd_painter, r, &m_parentVwnd);
 			m_vwnd_painter.PaintEnd();
 		}
 		break;
-
 		case WM_LBUTTONDOWN:
-		{
-			SetFocus(g_pFindWnd->GetHWND());
-			int x = GET_X_LPARAM(lParam);
-			int y = GET_Y_LPARAM(lParam);
-			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w) 
-			{
-				g_notFound = false;
-				m_parentVwnd.RequestRedraw(NULL);
-
-				w->OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-				if (w == &m_btnFind)
-					Find(0);
-				else if (w == &m_btnPrev) 
-					Find(-1);
-				else if (w == &m_btnNext) 
-					Find(1);
-			}
-		}
-		break;
-
+/* commented: selects find text otherwise
+			SetFocus(m_hwnd); 
+*/
+			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0)
+				SetCapture(m_hwnd);
+			break;
 		case WM_LBUTTONUP:
-		{
-			int x = GET_X_LPARAM(lParam);
-			int y = GET_Y_LPARAM(lParam);
-			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w) w->OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		}
-		break;
-
+			if (GetCapture() == m_hwnd)	{
+				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+				ReleaseCapture();
+			}
+			break;
 		case WM_MOUSEMOVE:
-		{
-			int x = GET_X_LPARAM(lParam);
-			int y = GET_Y_LPARAM(lParam);
-			WDL_VWnd *w = m_parentVwnd.VirtWndFromPoint(x,y);
-			if (w) w->OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-		}
-		break;
-
-		default:
+			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
 	}
 	return 0;
 }
 
-/*
-static void menuhook(const char* menustr, HMENU hMenu, int flag)
-{
-	if (!strcmp(menustr, "Main view") && !flag)
-	{
-		int cmd = NamedCommandLookup("_S&M_SHOWFIND");
-		if (cmd > 0)
-		{
-			int afterCmd = NamedCommandLookup("_SWSCONSOLE");
-			AddToMenu(hMenu, "S&&M Find", cmd, afterCmd > 0 ? afterCmd : 40075);
-		}
-	}
-}
-*/
 int FindViewInit()
 {
 	g_pFindWnd = new SNM_FindWnd();
-	if (!g_pFindWnd/* || !plugin_register("hookcustommenu", (void*)menuhook)*/)
+	if (!g_pFindWnd)
 		return 0;
 	return 1;
 }
 
 void FindViewExit() {
 	delete g_pFindWnd;
+	g_pFindWnd = NULL;
 }
 
 void OpenFindView(COMMAND_T*) {
-	if (g_pFindWnd)
+	if (g_pFindWnd) {
 		g_pFindWnd->Show(true, true);
+		SetFocus(GetDlgItem(g_pFindWnd->GetHWND(), IDC_EDIT));
+	}
 }
 
-bool IsFindViewEnabled(COMMAND_T*){
-	return g_pFindWnd->IsValidWindow();
+bool IsFindViewDisplayed(COMMAND_T*){
+	return (g_pFindWnd && g_pFindWnd->IsValidWindow());
 }

@@ -59,7 +59,7 @@ typedef struct CUSTOM_COMMAND
 
 WDL_PtrList<CUSTOM_COMMAND> g_customCommands;
 
-console_COMMAND_T g_commands[NUM_COMMANDS] = 
+static console_COMMAND_T g_commands[NUM_COMMANDS] = 
 {
 	{ SOLO_ENABLE,    '+', 'o',  0, "Enable solo on " ,      0 },
 	{ SOLO_DISABLE,   '-', 'o',  0, "Disable solo on ",      0 },
@@ -806,19 +806,13 @@ void EditCustomCommands(COMMAND_T* = NULL)
 {
 #ifdef _WIN32
 	// Open the custom commands file in notepad
-	char cNotepad[256];
-	char* cWindir = getenv("windir");
-	if (!cWindir)
-		return;
-	_snprintf(cNotepad, 256, "%s\\notepad.exe", cWindir);
 	char cArg[256];
 	strncpy(cArg, get_ini_file(), 256);
 	char* pC = strrchr(cArg, PATH_SLASH_CHAR);
 	if (!pC)
 		return;
 	strcpy(pC+1, "reaconsole_customcommands.txt");
-
-	_spawnl(_P_NOWAIT, cNotepad, cNotepad, cArg, NULL);
+	WinSpawnNotepad(cArg);
 #endif
 }
 
@@ -826,7 +820,7 @@ static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { { 0, 'c', 0 }, "SWS: Open console" },									"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0 },
+	{ { { 0, 'C', 0 }, "SWS: Open console" },									"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0 },
 	{ { DEFACCEL,   "SWS: Open console and copy keystroke" },					"SWSCONSOLE2",      BringKeyCommand, NULL, },
 	{ { DEFACCEL,   "SWS: Open console with 'S' to select track(s)" },			"SWSCONSOLEEXSEL",  ConsoleCommand,  NULL, 'S' },
 	{ { DEFACCEL,   "SWS: Open console with 'n' to name track(s)" },			"SWSCONSOLENAME",   ConsoleCommand,  NULL, 'n' },
@@ -866,8 +860,10 @@ int ConsoleInit()
 
 	SWSRegisterCommands(g_commandTable);
 
+#ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
+#endif
 
 	// Add custom commands
 	char cBuf[256];
@@ -884,21 +880,15 @@ int ConsoleInit()
 		{
 			if ((pC = strchr(cBuf, '\n')) != NULL)
 				*pC = 0;
+			if ((pC = strchr(cBuf, '\r')) != NULL) // SWS Jan30 2011 - Fix files that were copied from PC to mac
+				*pC = 0;
 			if (strlen(cBuf) && cBuf[0] != '[' && cBuf[0] != '/')
 			{
-				COMMAND_T* ct = new COMMAND_T;
-				memset(ct, 0, sizeof(COMMAND_T));
-				char* desc = new char[strlen(cBuf)+30];
-				ct->accel.desc = desc;
-				char *tbuf;
-				ct->id = tbuf = new char[32];
-				ct->doCommand = RunCommand;
-				ct->user = (INT_PTR)new char[strlen(cBuf)+1];
-				ct->getEnabled = NULL;
-				sprintf(tbuf, "SWSCONSOLE_CUST%d", i++);
-				sprintf(desc, "SWS: Run console command: %s", cBuf);
-				strcpy((char*)ct->user, cBuf);
-				SWSRegisterCommand(ct);
+				char cID[BUFFER_SIZE];
+				char cDesc[BUFFER_SIZE];
+				_snprintf(cID, BUFFER_SIZE, "SWSCONSOLE_CUST%d", i++);
+				_snprintf(cDesc, BUFFER_SIZE, "SWS: Run console command: %s", cBuf);
+				SWSRegisterCommandExt(RunCommand, cID, cDesc, (INT_PTR)_strdup(cBuf));
 			}
 		}
 		fclose(f);

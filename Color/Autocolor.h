@@ -27,21 +27,24 @@
 
 #pragma once
 
-class SWS_AutoColorItem
+class SWS_RuleItem
 {
 public:
-	SWS_AutoColorItem(const char* str, int col):m_str(str),m_col(col) {}
+	SWS_RuleItem(const char* str, int col, const char* icon):m_str(str),m_col(col),m_icon(icon) {}
 	WDL_String m_str;
 	int m_col;
+	WDL_String m_icon;
 };
 
-class SWS_AutoColorTrack
+class SWS_RuleTrack
 {
 public:
-	SWS_AutoColorTrack(MediaTrack* tr, int col):m_pTr(tr), m_col(col), m_bColored(true) {}
+	SWS_RuleTrack(MediaTrack* tr):m_pTr(tr), m_col(0), m_bColored(false), m_bIconed(false) {}
 	MediaTrack* m_pTr;
 	int m_col;
 	bool m_bColored;
+	WDL_String m_icon;
+	bool m_bIconed;
 };
 
 class SWS_AutoColorView : public SWS_ListView
@@ -55,6 +58,7 @@ protected:
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
+	void OnItemDblClk(LPARAM item, int iCol);
 	void OnItemSelChanged(LPARAM item, int iState);
 	void OnBeginDrag(LPARAM item);
 };
@@ -64,13 +68,13 @@ class SWS_AutoColorWnd : public SWS_DockWnd
 public:
 	SWS_AutoColorWnd();
 	void Update();
+	void OnCommand(WPARAM wParam, LPARAM lParam);
 	
 protected:
 	void OnInitDlg();
-	void OnCommand(WPARAM wParam, LPARAM lParam);
 #ifndef _WIN32
 	bool m_bSettingColor;
-	void OnTimer();
+	void OnTimer(WPARAM wParam=0);
 	void OnDestroy();
 #endif
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);

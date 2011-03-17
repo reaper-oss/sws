@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_FX.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
+/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -68,7 +68,7 @@ bool isFXOfflineOrBypassedSelectedTracks(COMMAND_T * _ct, int _token)
 		{
 			char state[2];
 			SNM_ChunkParserPatcher p(tr);
-			if (p.ParsePatch(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, state) > 0)
+			if (p.ParsePatch(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, state, NULL, "<ITEM") > 0)
 				return !strcmp(state,"1");
 		}
 	}
@@ -92,7 +92,7 @@ bool patchSelTracksFXState(int _mode, int _token, int _fxCmdId, const char* _val
 			if (fxId >= 0)
 			{
 				SNM_ChunkParserPatcher p(tr);
-				updated = (p.ParsePatch(_mode, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, (void*)_value) > 0);
+				updated = (p.ParsePatch(_mode, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, (void*)_value, NULL, "<ITEM") > 0);
 			}
 		}
 	}
@@ -198,15 +198,15 @@ int selectFX(MediaTrack* _tr, int _fx)
 		char pLastSel[4] = ""; // 4 if there're many FXs
 		sprintf(pLastSel,"%d", _fx);
 		char pShow[4] = ""; // 4 if there're many FXs
-		if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",2,0,1,&pShow) > 0)
+		if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",2,0,1,&pShow,NULL,"<ITEM") > 0)
 		{
 			// Also patch the shown FX if the fx chain dlg is opened
 			if (strcmp(pShow,"0") != 0)
 			{
 				sprintf(pShow,"%d", _fx+1);
-				updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","SHOW",2,0,1,&pShow);
+				updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","SHOW",2,0,1,&pShow,NULL,"<ITEM");
 			}
-			updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",2,0,1,&pLastSel);
+			updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",2,0,1,&pLastSel,NULL,"<ITEM");
 		}
 	}
 	return updates;
@@ -224,7 +224,7 @@ int getSelectedFX(MediaTrack* _tr)
 
 		SNM_ChunkParserPatcher p(_tr);
 		char pLastSel[4] = ""; // 4 if there're many FXs
-		p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",2,0,1,&pLastSel); 
+		p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",2,0,1,&pLastSel, NULL, "<ITEM");
 		return atoi(pLastSel);
 	}
 	return -1;
@@ -240,23 +240,25 @@ void selectFX(COMMAND_T* _ct)
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			int sel = -1;
-			int nbFx = -1;
 			switch(fx)
 			{
+				// sel. last
+				case -3:
+					sel = TrackFX_GetCount(tr) - 1; // -1 on error
+					break;
+
 				// sel. previous
 				case -2:
 					sel = getSelectedFX(tr); // -1 on error
-					nbFx = TrackFX_GetCount(tr);
 					if (sel > 0) sel--;
-					else if (sel == 0) sel = nbFx-1;
+					else if (sel == 0) sel = TrackFX_GetCount(tr)-1;
 					break;
 
 				// sel. next
 				case -1:
 					sel = getSelectedFX(tr); // -1 on error
-					nbFx = TrackFX_GetCount(tr);
-					if (sel >= 0 && sel < (nbFx-1)) sel++;
-					else if (sel == (nbFx-1)) sel = 0;
+					if (sel >= 0 && sel < (TrackFX_GetCount(tr)-1)) sel++;
+					else if (sel == (TrackFX_GetCount(tr)-1)) sel = 0;
 					break;
 					
 				default:
@@ -278,7 +280,7 @@ void selectFX(COMMAND_T* _ct)
 // FX preset
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB TODO: cache?
+//JFB cache?
 int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_String>* _names)
 {
 	int nbPresets = 0;
@@ -292,7 +294,7 @@ int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_Str
 		strncpy(buf, _fxName, 256);
 
 		// remove ".dll"
-		//JFB!! OSX: to check
+		//JFB OSX: to check
 		if (!_stricmp(_fxType, "VST"))
 		{
 			const char* p = stristr(buf,".dll");
@@ -413,3 +415,68 @@ void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf)
 	}
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Other
+///////////////////////////////////////////////////////////////////////////////
+
+// http://code.google.com/p/sws-extension/issues/detail?id=258
+// pretty brutal code (we'd need a dedicated parser/patcher here) but I consider 
+// this as a bit esoteric..
+void moveFX(COMMAND_T* _ct)
+{
+	bool updated = false;
+	int dir = (int)_ct->user;
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false); //include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			int nbFx = TrackFX_GetCount(tr);
+			if (nbFx > 0)
+			{
+				int sel = getSelectedFX(tr);
+				if (sel >= 0 && ((dir == 1 && sel < (nbFx-1)) || (dir == -1 && sel > 0)))
+				{
+					SNM_ChunkParserPatcher p(tr);
+					WDL_String chainChunk;
+					if (p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM") > 0)
+					{
+						int originalChainLen = chainChunk.GetLength();
+						SNM_ChunkParserPatcher pfxc(&chainChunk);
+						int p1 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel,0);
+						if (p1>0)
+						{
+							p1--; 
+							int p2 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel+1,0);
+							if (p2 > 0)	p2--;
+							else p2 = chainChunk.GetLength()-2; // -2 for ">\n"
+
+							// store & cut fx
+							WDL_String fxChunk;
+							fxChunk.Set(pfxc.GetChunk()->Get()+p1, p2-p1);
+							pfxc.GetChunk()->DeleteSub(p1, p2-p1);
+							
+							// move fx
+							int p3 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel+dir,0);
+							if (p3>0) pfxc.GetChunk()->Insert(fxChunk.Get(), --p3);
+							else if (dir == 1) pfxc.GetChunk()->Insert(fxChunk.Get(), pfxc.GetChunk()->GetLength()-2);
+
+							// patch updated cunk
+							if (p.ReplaceSubChunk("FXCHAIN", 2, 0, pfxc.GetChunk()->Get(), "<ITEM"))
+							{
+								updated = true;
+								p.Commit(true);
+								selectFX(tr, sel + dir);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Undo point
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}

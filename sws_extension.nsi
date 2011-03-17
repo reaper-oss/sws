@@ -35,6 +35,8 @@ Section ""
   Delete "$INSTDIR\reaper_snapshot.dll"
   Delete "$INSTDIR\reaper_xenakios_commands.dll"
   Delete "$INSTDIR\reaper_SnMExtension.dll"
+  Delete "$INSTDIR\reaper_FNG_Extension.dll"
+  Delete "$INSTDIR\reaper_fingers.dll"
   File Release\reaper_sws.dll
   Abort:
 SectionEnd

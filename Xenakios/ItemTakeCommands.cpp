@@ -976,7 +976,7 @@ void DoAnalyzeAndShowPeakInItemMedia(COMMAND_T*)
 	{
 		MediaItem* mi = GetSelectedMediaItem(NULL, i);
 		PCM_source* pSrc = (PCM_source*)mi;
-		if (pSrc && strcmp(pSrc->GetType(), "MIDI") != 0)
+		if (pSrc && strcmp(pSrc->GetType(), "MIDI") && strcmp(pSrc->GetType(), "MIDIPOOL"))
 		{
 			pSrc = pSrc->Duplicate();
 			if (pSrc != NULL)
@@ -1015,7 +1015,7 @@ void DoFindItemPeak(COMMAND_T*)
 	{
 		MediaItem* mi = GetSelectedMediaItem(NULL, 0);
 		PCM_source* pSrc = (PCM_source*)mi;
-		if (pSrc && strcmp(pSrc->GetType(), "MIDI") != 0)
+		if (pSrc && strcmp(pSrc->GetType(), "MIDI") && strcmp(pSrc->GetType(), "MIDIPOOL"))
 		{
 			pSrc = pSrc->Duplicate();
 			if (pSrc)

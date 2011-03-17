@@ -26,7 +26,6 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../Utility/SectionLock.h"
 #include "../../WDL/projectcontext.h"
 #include "MarkerListClass.h"
 #include "MarkerList.h"
@@ -91,6 +90,29 @@ void SWS_MarkerListView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 	MarkerItem* mi = (MarkerItem*)item;
 	if (mi) // Doubled-up calls to SetEditCurPos - oh well!
 		SetEditCurPos(mi->m_dPos, m_pMarkerList->m_bScroll, m_pMarkerList->m_bPlayOnSel);
+
+	if (iKeyState == LVKF_SHIFT)
+	{
+		// Find min-max time and sel across them
+		double dMaxTime = -DBL_MAX;
+		double dMinTime = DBL_MAX;
+		for (int i = 0; i < GetListItemCount(); i++)
+		{
+			int iState;
+			mi = (MarkerItem*)GetListItem(i, &iState);
+			if (iState)
+			{
+				if (mi->m_dPos < dMinTime)
+					dMinTime = mi->m_dPos;
+				if (mi->m_bReg && mi->m_dRegEnd > dMaxTime)
+					dMaxTime = mi->m_dRegEnd;
+				else if (mi->m_dPos > dMaxTime)
+					dMaxTime = mi->m_dPos;
+			}
+		}
+		if (dMaxTime != -DBL_MAX && dMinTime != DBL_MAX)
+			GetSet_LoopTimeRange(true, false, &dMinTime, &dMaxTime, false);
+	}
 }
 
 void SWS_MarkerListView::OnItemDblClk(LPARAM item, int iCol)
@@ -175,8 +197,8 @@ int SWS_MarkerListView::GetItemState(LPARAM item)
 SWS_MarkerListWnd::SWS_MarkerListWnd()
 :SWS_DockWnd(IDD_MARKERLIST, "Marker List", "SWSMarkerList", 30001, SWSGetCommandID(OpenMarkerList)), m_dCurPos(DBL_MAX)
 {
-	if (m_bShowAfterInit)
-		Show(false, false);
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
 }
 
 void SWS_MarkerListWnd::Update(bool bForce)
@@ -207,7 +229,7 @@ void SWS_MarkerListWnd::Update(bool bForce)
 
 	if (m_pLists.GetSize() && bChanged)
 	{
-		SectionLock lock(g_curList->m_hLock);
+		SWS_SectionLock lock(&g_curList->m_mutex);
 		m_pLists.Get(0)->Update();
 	}
 }
@@ -334,7 +356,7 @@ void SWS_MarkerListWnd::OnDestroy()
 	WritePrivateProfileString(SWS_INI, ML_OPTIONS_KEY, cOptions, get_ini_file());
 }
 
-void SWS_MarkerListWnd::OnTimer()
+void SWS_MarkerListWnd::OnTimer(WPARAM wParam)
 {
 	if (ListView_GetSelectedCount(m_pLists.Get(0)->GetHWND()) <= 1 || !IsActive())
 		Update();
@@ -590,6 +612,9 @@ static COMMAND_T g_commandTable[] =
 
 	// no menu
 	{ { DEFACCEL, "SWS: Go to end of project, including markers/regions" },					"SWS_PROJEND",		GotoEndInclMarkers, },
+	{ { DEFACCEL, "SWS: Goto/select next marker/region" },									"SWS_SELNEXTMORR",	SelNextMarkerOrRegion, },
+	{ { DEFACCEL, "SWS: Goto/select previous marker/region" },								"SWS_SELPREVMORR",	SelPrevMarkerOrRegion, },
+
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
@@ -644,7 +669,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
 		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
 	else if (strcmp(menustr, "Main edit") == 0 && flag == 0)
-		AddSubMenu(hMenu, SWSCreateMenu(g_commandTable), "SWS Marker utilites");
+		AddSubMenu(hMenu, SWSCreateMenuFromCommandTable(g_commandTable), "SWS Marker utilites");
 }
 
 int MarkerListInit()
@@ -653,10 +678,10 @@ int MarkerListInit()
 		return 0;
 
 	SWSRegisterCommands(g_commandTable);
-
+#ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)menuhook))
 		return 0;
-
+#endif
 	g_pMarkerList = new SWS_MarkerListWnd();
 
 	return 1;

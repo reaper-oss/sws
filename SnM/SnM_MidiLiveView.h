@@ -1,7 +1,8 @@
 /******************************************************************************
 / SnM_MidiLiveView.h
+/ JFB TODO? now, SnM_LiveConfigsView.h would be a better name..
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
+/ Copyright (c) 2010-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -84,6 +85,7 @@ public:
 			m_enable[i] = 1;
 			m_autoRcv[i] = 0; //JFB not released
 			m_muteOthers[i] = 1;
+			m_autoSelect[i] = 1;
 			m_inputTr[i] = NULL;
 
 			m_lastMIDIVal[i] = -1;
@@ -94,16 +96,17 @@ public:
 	int m_enable[SNM_LIVECFG_NB_CONFIGS];
 	int m_autoRcv[SNM_LIVECFG_NB_CONFIGS];
 	int m_muteOthers[SNM_LIVECFG_NB_CONFIGS];
+	int m_autoSelect[SNM_LIVECFG_NB_CONFIGS];
 	MediaTrack* m_inputTr[SNM_LIVECFG_NB_CONFIGS];
 
 	int m_lastMIDIVal[SNM_LIVECFG_NB_CONFIGS];
 	int m_lastDeactivateCmd[SNM_LIVECFG_NB_CONFIGS][4];
 };
 
-class SnM_MidiLiveView : public SWS_ListView
+class SNM_LiveConfigsView : public SWS_ListView
 {
 public:
-	SnM_MidiLiveView(HWND hwndList, HWND hwndEdit);
+	SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit);
 protected:
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void SetItemText(LPARAM item, int iCol, const char* str);
@@ -111,10 +114,10 @@ protected:
 	void OnItemDblClk(LPARAM item, int iCol);
 };
 
-class SnM_MidiLiveWnd : public SWS_DockWnd
+class SNM_LiveConfigsWnd : public SWS_DockWnd
 {
 public:
-	SnM_MidiLiveWnd();
+	SNM_LiveConfigsWnd();
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void CSurfSetTrackTitle();
@@ -134,11 +137,12 @@ protected:
 	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
-	SNM_VirtualComboBox m_cbConfig;
+	WDL_VirtualComboBox m_cbConfig;
 	WDL_VirtualIconButton m_btnEnable;
 	WDL_VirtualIconButton m_btnAutoRcv;
 	WDL_VirtualIconButton m_btnMuteOthers;
-	SNM_VirtualComboBox m_cbInputTr;
+	WDL_VirtualIconButton m_btnAutoSelect;
+	WDL_VirtualComboBox m_cbInputTr;
 };
 
 class SNM_MidiLiveScheduledJob : public SNM_ScheduledJob

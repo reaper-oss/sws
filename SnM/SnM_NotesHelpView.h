@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_NotesHelpView.h
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
+/ Copyright (c) 2010-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,8 +29,8 @@
 #pragma once
 
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufMaxSize);
-bool GetStringFromNotes(WDL_String* _notes, char* _buf, int _bufMaxSize);
-bool GetNotesFromString(const char* _buf, WDL_String* _notes, const char* _startLine = NULL);
+bool GetStringFromNotesChunk(WDL_String* _notes, char* _buf, int _bufMaxSize);
+bool GetNotesChunkFromString(const char* _buf, WDL_String* _notes, const char* _startLine = NULL);
 
 class SNM_NotesHelpWnd : public SWS_DockWnd
 {
@@ -44,7 +44,6 @@ public:
 	void CSurfSetTrackListChange();
 	void Update(bool _force=false);
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	bool IsActive(bool bWantEdit = false);
 
 	void saveCurrentText(int _type);
 	void saveCurrentPrjNotes();
@@ -59,15 +58,18 @@ public:
 
 protected:
 	void OnInitDlg();
+/*JFB r376	
+	bool IsActive(bool bWantEdit = false);
+*/
 	HMENU OnContextMenu(int x, int y);
 	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState);
-	void OnTimer();
+	void OnTimer(WPARAM wParam=0);
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	int updateItemNotes(bool _savePrevious = true);
-	int updateTrackNotes(bool _savePrevious = true);
-	int updateActionHelp(bool _savePrevious = true);
+	int updateItemNotes();
+	int updateTrackNotes();
+	int updateActionHelp();
 
 	void loadHelp(const char* _cmdName, char* _buf, int _bufSize);
 	void saveHelp(const char* _cmdName, const char* _help);
@@ -75,8 +77,10 @@ protected:
 	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
-	SNM_VirtualComboBox m_cbType;
+	WDL_VirtualComboBox m_cbType;
 	WDL_VirtualIconButton m_btnLock;
+	WDL_VirtualIconButton m_btnAlr;
+	WDL_VirtualStaticText m_txtLabel;
 
 	WDL_String m_actionHelpFilename;
 	int m_type, m_previousType;

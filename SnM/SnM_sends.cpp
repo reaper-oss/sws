@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Sends.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF BÈdague
+/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -49,11 +49,12 @@ WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvClipb
 bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, SNM_SendPatcher* _p)
 {
 	bool update = false;
+	char vol[32] = "1.00000000000000";
+	char pan[32] = "0.00000000000000";
+
 	// if pre-fader, then re-copy track vol/pan
 	if (_type == 3)
 	{
-		char vol[32];
-		char pan[32];
 		SNM_ChunkParserPatcher p1(_srcTr, false);
 		if (p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 4, 0, 1, vol) > 0 &&
 			p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 4, 0, 2, pan) > 0)
@@ -64,7 +65,10 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 
 	// default (or failure case: retry)
 	if (!update)
-		update = (_p->AddReceive(_srcTr, _type) > 0);
+	{
+		_snprintf(vol, 32, "%.14f", *(double*)GetConfigVar("defsendvol"));
+		update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
+	}
 
 	return update;
 }
@@ -85,7 +89,7 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 	{
 		char err[512] = "";
 		sprintf(err, "Cue buss not created!\nInvalid track template file: %s", _trTemplatePath);
-		MessageBox(GetMainHwnd(), err, "Error", MB_OK);
+		MessageBox(GetMainHwnd(), err, "S&M - Error", MB_OK);
 		return false;
 	}
 
@@ -143,6 +147,8 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 			WDL_String mainSend("MAINSEND 1");
 			if (!_sendToMaster)
 				 mainSend.Set("MAINSEND 0");
+			if (g_bv4)
+				mainSend.Append(" 0"); // add parent track channels (v4)
 
 			// adds HW outputs
 			if (_hwOuts)
@@ -155,18 +161,25 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 				{
 					if (_hwOuts[i])
 					{
-						if (!cr) {mainSend.Append("\n"); cr = true;};
-						if (_hwOuts[i] >= (monoHWCount)) 
+						if (!cr) {
+							mainSend.Append("\n"); 
+							cr = true;
+						}
+						if (_hwOuts[i] >= monoHWCount) 
 							mainSend.AppendFormatted(32, "HWOUT %d ", (_hwOuts[i]-monoHWCount) | 1024);
 						else
 							mainSend.AppendFormatted(32, "HWOUT %d ", _hwOuts[i]-1);
-						mainSend.Append("0 1.00000000000000 0.00000000000000 0 0 0 -1.00000000000000 -1\n");
+
+						mainSend.Append("0 ");
+						mainSend.AppendFormatted(20, "%.14f ", *(double*)GetConfigVar("defhwvol"));
+						mainSend.Append("0.00000000000000 0 0 0 -1.00000000000000 -1\n");
 					}
 				}
-				if (!cr) mainSend.Append("\n"); // hot
+				if (!cr)
+					mainSend.Append("\n"); // hot
 			}
 
-			// patch both together
+			// patch both updates (no break keyword here: new empty track)
 			updated |= p->ReplaceLine("TRACK", "MAINSEND", 1, 0, mainSend.Get());
 		}
 
@@ -178,7 +191,12 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 			GetSetMediaTrackInfo(cueTr, "I_SELECTED", &g_i1);
 			UpdateTimeline();
 //			TrackList_AdjustWindows(false); // for io buttons, etc (but KO right now..)
-			if (_showRouting) Main_OnCommand(40293, 0);
+
+			// scroll to selected tracks
+			Main_OnCommand(40913,0); 
+
+			if (_showRouting) 
+				Main_OnCommand(40293, 0);
 
 			// Undo point
 			if (_undoMsg)
@@ -186,12 +204,6 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 		}
 	}
 	return updated;
-}
-
-void cueTrackPrompt(COMMAND_T* _ct) {
-	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUS), g_hwndParent, CueBusDlgProc);
-	ShowWindow(hwnd, SW_SHOW);
-	SetFocus(hwnd);
 }
 
 void cueTrack(COMMAND_T* _ct) 
@@ -557,36 +569,30 @@ void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _
 	{
 		GetPrivateProfileString("LAST_CUEBUS","NAME","",_busName,BUFFER_SIZE,g_SNMiniFilename.Get());
 
-		char reaType[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","REATYPE","3",reaType,16,g_SNMiniFilename.Get());
-		*_reaType = atoi(reaType); // 0 if failed 
+		char tmp[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","REATYPE","3",tmp,16,g_SNMiniFilename.Get());
+		*_reaType = atoi(tmp); // 0 if failed 
 
-		char trTemplate[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED","0",trTemplate,16,g_SNMiniFilename.Get());
-		*_trTemplate = (atoi(trTemplate) == 1); // 0 if failed 
+		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED","0",tmp,16,g_SNMiniFilename.Get());
+		*_trTemplate = (atoi(tmp) == 1); // 0 if failed 
 
 		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH","",_trTemplatePath,BUFFER_SIZE,g_SNMiniFilename.Get());
 
-		char showRouting[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","SHOW_ROUTING","1",showRouting,16,g_SNMiniFilename.Get());
-		*_showRouting = (atoi(showRouting) == 1); // 0 if failed 
+		GetPrivateProfileString("LAST_CUEBUS","SHOW_ROUTING","1",tmp,16,g_SNMiniFilename.Get());
+		*_showRouting = (atoi(tmp) == 1); // 0 if failed 
 
-		char sendToMaster[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT","0",sendToMaster,16,g_SNMiniFilename.Get());
-		*_sendToMaster = (atoi(sendToMaster) == 1); // 0 if failed 
+		GetPrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT","0",tmp,16,g_SNMiniFilename.Get());
+		*_sendToMaster = (atoi(tmp) == 1); // 0 if failed 
 
-		char soloDefeat[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT","1",soloDefeat,16,g_SNMiniFilename.Get());
-		*_soloDefeat = atoi(soloDefeat); // 0 if failed 
+		GetPrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT","1",tmp,16,g_SNMiniFilename.Get());
+		*_soloDefeat = atoi(tmp); // 0 if failed 
 
+		char slot[16] = "";
 		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
 		{
-			char slot[16] = "";
 			sprintf(slot,"HWOUT%d",i+1);
-
-			char hwOut[16] = "";
-			GetPrivateProfileString("LAST_CUEBUS",slot,"0",hwOut,BUFFER_SIZE,g_SNMiniFilename.Get());
-			_hwOuts[i] = atoi(hwOut); // 0 if failed 
+			GetPrivateProfileString("LAST_CUEBUS",slot,"0",tmp,BUFFER_SIZE,g_SNMiniFilename.Get());
+			_hwOuts[i] = atoi(tmp); // 0 if failed 
 		}
 	}
 }
@@ -596,26 +602,23 @@ void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTem
 	if (_busName && _trTemplatePath && _hwOuts)
 	{
 		WritePrivateProfileString("LAST_CUEBUS","NAME",_busName,g_SNMiniFilename.Get());
-		char type[16] = "";
-		sprintf(type,"%d",_type);
-		WritePrivateProfileString("LAST_CUEBUS","REATYPE",type,g_SNMiniFilename.Get());
+		char tmp[16] = "";
+		sprintf(tmp,"%d",_type);
+		WritePrivateProfileString("LAST_CUEBUS","REATYPE",tmp,g_SNMiniFilename.Get());
 		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED",_trTemplate ? "1" : "0",g_SNMiniFilename.Get());
 		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH",_trTemplatePath,g_SNMiniFilename.Get());
 		WritePrivateProfileString("LAST_CUEBUS","SHOW_ROUTING",_showRouting ? "1" : "0",g_SNMiniFilename.Get());
 		WritePrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT",_sendToMaster ? "1" : "0",g_SNMiniFilename.Get());
 
-		char soloDefeat[16] = "";
-		sprintf(soloDefeat,"%d",_soloDefeat);
-		WritePrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT",soloDefeat,g_SNMiniFilename.Get());
+		sprintf(tmp,"%d",_soloDefeat);
+		WritePrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT",tmp,g_SNMiniFilename.Get());
 
+		char slot[16] = "";
 		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
 		{
-			char slot[16] = "";
 			sprintf(slot,"HWOUT%d",i+1);
-
-			char hwOut[16] = "";
-			sprintf(hwOut,"%d",_hwOuts[i]);
-			WritePrivateProfileString("LAST_CUEBUS",slot,hwOut,g_SNMiniFilename.Get());
+			sprintf(tmp,"%d",_hwOuts[i]);
+			WritePrivateProfileString("LAST_CUEBUS",slot,tmp,g_SNMiniFilename.Get());
 		}
 	}
 }

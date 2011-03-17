@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Item.cpp
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague 
+/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,6 +35,48 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// General helpers
+///////////////////////////////////////////////////////////////////////////////
+
+char* GetName(MediaItem* _item) {
+	MediaItem_Take* tk = _item ? GetActiveTake(_item) : NULL;
+	char* takeName = tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
+	return takeName;
+}
+
+// returns -1 if not found
+int getTakeIndex(MediaItem* _item, MediaItem_Take* _take) {
+	if (_item)
+		for (int i=0; i < CountTakes(_item); i++)
+			if (_take == GetTake(_item, i)) // note: NULL take is an empty take since v4
+				return i;
+	return -1;
+}
+
+// deletes an item if it's empty or if it's only made of NULL empty takes
+// primitive func (i.e. no undo). returns true if deleted
+bool deleteMediaItemIfNeeded(MediaItem* _item)
+{
+	bool deleted = false;
+	MediaTrack* tr = _item ? GetMediaItem_Track(_item) : NULL;
+	if (tr && _item)
+	{
+		int countTk = CountTakes(_item);
+		if (!countTk) {
+			deleted = true;
+		}
+		else {
+			int i=0, countEmptyTk=0; 
+			while(i < countTk && !GetMediaItemTake(_item, i++)) countEmptyTk++;
+			deleted = (countTk == countEmptyTk);
+		}
+		if (deleted)
+			deleted &= DeleteTrackMediaItem(tr, _item);
+	}
+	return deleted;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Split MIDI/Audio
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -62,23 +104,29 @@ void splitMidiAudio(COMMAND_T* _ct)
 				{
 					bool split=false;
 					MediaItem_Take* tk = GetActiveTake(item);
-					PCM_source* pcm = tk ? (PCM_source*)GetSetMediaItemTakeInfo(tk,"P_SOURCE",NULL) : NULL;
-					if (pcm)
+					if (tk)
 					{
-						// valid take rmk: "" for in-project
-						if (pcm->GetFileName()) 
-							split = (strcmp(pcm->GetType(), "MIDI") == 0);
-						// empty take
-						else
-							split = true;
+						PCM_source* pcm = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL);
+						if (pcm)
+						{
+							// valid src ? (rmk: "" for in-project)
+							if (pcm->GetFileName()) 
+								split = (!strcmp(pcm->GetType(), "MIDI") || !strcmp(pcm->GetType(), "MIDIPOOL"));
+							// empty take
+							else
+								split = true;
 
-						// "split prior zero crossing" in all other cases
-						// Btw, includes all sources: "WAVE", "VORBIS", "SECTION",..
-						if (!split)
-							Main_OnCommand(40792,0);
-						else
-							SplitMediaItem(item, GetCursorPosition());
+							// "split prior zero crossing" in all other cases
+							// Btw, includes all sources: "WAVE", "VORBIS", "SECTION",..
+							if (!split)
+								Main_OnCommand(40792,0);
+							else
+								SplitMediaItem(item, GetCursorPosition());
+						}
 					}
+					// v4 empty takes are null
+					else
+						SplitMediaItem(item, GetCursorPosition());
 				}
 			}
 		}
@@ -105,18 +153,81 @@ void smartSplitMidiAudio(COMMAND_T* _ct)
 		splitMidiAudio(_ct);
 }
 
+#ifdef _SNM_MISC 
+//  Deprecated: contrary to their native versions, the following code was spliting selected items *and only them*, 
+//  see http://forum.cockos.com/showthread.php?t=51547.
+//  Due to REAPER v3.67's new native pref "If no items are selected, some split/trim/delete actions affect all items at the edit cursor", 
+//  those actions are less useful: they would still split only selected items, even if that native pref is ticked. 
+//  Also removed because of the spam in the action list (many split actions).
 void splitSelectedItems(COMMAND_T* _ct) {
 	if (CountSelectedMediaItems(NULL))
 		Main_OnCommand((int)_ct->user, 0);
 }
+#endif
 
 void goferSplitSelectedItems(COMMAND_T* _ct) {
 	if (CountSelectedMediaItems(NULL))
 	{
-		Main_OnCommand(40513, 0);
-		Main_OnCommand(40757, 0);
+		Main_OnCommand(40513, 0); // move edit cursor to mouse cursor (obey snapping)
+		Main_OnCommand(40757, 0); // split at edit cursor (no selection change)
 	}
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Takes
+///////////////////////////////////////////////////////////////////////////////
+
+WDL_String g_takeClipoard;
+
+void copyCutTake(COMMAND_T* _ct)
+{
+	bool updated = false;
+	g_takeClipoard.Set("");
+	MediaItem* item = GetSelectedMediaItem(NULL, 0);
+	if (item)
+	{
+		int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
+		SNM_TakeParserPatcher p(item, CountTakes(item));
+		if (p.GetTakeChunk(activeTake, &g_takeClipoard))
+		{
+			if ((int)_ct->user) // Cut take?
+			{
+				updated = p.RemoveTake(activeTake);
+/*JFB!!! TODO?
+				if (updated) {
+					p.Commit();
+					deleteMediaItemIfNeeded(item);
+				}
+*/
+			}
+		}
+	}
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+void pasteTake(COMMAND_T* _ct)
+{
+	bool updated = false;
+	for (int i = 0; g_takeClipoard.GetLength() && i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
+			{
+				SNM_TakeParserPatcher p(item, CountTakes(item));
+				int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL) + (int)_ct->user;
+				updated |= 	(p.InsertTake(activeTake, &g_takeClipoard) >= 0);
+			}
+		}
+	}
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Take lanes: clear take, build lanes, ...
@@ -125,15 +236,19 @@ void goferSplitSelectedItems(COMMAND_T* _ct) {
 bool isEmptyMidi(MediaItem_Take* _take)
 {
 	bool emptyMidi = false;
-	MidiItemProcessor p("S&M");
-	if (_take && p.isMidiTake(_take))
+	if (_take) // a v4 empty take isn't a empty *MIDI* take!
 	{
-		MIDI_eventlist* evts = MIDI_eventlist_Create();
-		if(p.getMidiEventsList(_take, evts))
+		MidiItemProcessor p("S&M");
+		//JFB!!! TODO Padre's MidiItemProcessor: there's a bug with slip edited MIDI items
+		if (_take && p.isMidiTake(_take))
 		{
-			int pos=0;
-			emptyMidi = !evts->EnumItems(&pos);
-			MIDI_eventlist_Destroy(evts);
+			MIDI_eventlist* evts = MIDI_eventlist_Create();
+			if(p.getMidiEventsList(_take, evts))
+			{
+				int pos=0;
+				emptyMidi = !evts->EnumItems(&pos);
+				MIDI_eventlist_Destroy(evts);
+			}
 		}
 	}
 	return emptyMidi;
@@ -141,22 +256,27 @@ bool isEmptyMidi(MediaItem_Take* _take)
 
 void setEmptyTakeChunk(WDL_String* _chunk, int _recPass, int _color)
 {
-	_chunk->Set("TAKE\n");
-    _chunk->Append("NAME \"\"\n");
-    _chunk->Append("VOLPAN 1.000000 0.000000 1.000000 -1.000000\n");
-    _chunk->Append("SOFFS 0.00000000000000\n");
-    _chunk->Append("PLAYRATE 1.00000000000000 1 0.00000000000000 -1\n");
-    _chunk->Append("CHANMODE 0\n");
-	if (_color > 0)
-	    _chunk->AppendFormatted(32, "TAKECOLOR %d\n", _color);
-	if (_recPass > 0)
-	    _chunk->AppendFormatted(16, "RECPASS %d\n", _recPass);
-    _chunk->Append("<SOURCE EMPTY\n");
-    _chunk->Append(">\n");
-}
-
-bool addEmptyTake(MediaItem* _item) {
-	return (AddTakeToMediaItem(_item) != NULL);
+	// v4 empty take (but w/o take color)
+	if (g_bv4) 
+	{
+		_chunk->Set("TAKE NULL\n");
+	}
+	// v3 empty take style
+	else
+	{
+		_chunk->Set("TAKE\n");
+		_chunk->Append("NAME \"\"\n");
+		_chunk->Append("VOLPAN 1.000000 0.000000 1.000000 -1.000000\n");
+		_chunk->Append("SOFFS 0.00000000000000\n");
+		_chunk->Append("PLAYRATE 1.00000000000000 1 0.00000000000000 -1\n");
+		_chunk->Append("CHANMODE 0\n");
+		if (_color > 0)
+			_chunk->AppendFormatted(32, "TAKECOLOR %d\n", _color);
+		if (_recPass > 0)
+			_chunk->AppendFormatted(16, "RECPASS %d\n", _recPass);
+		_chunk->Append("<SOURCE EMPTY\n");
+		_chunk->Append(">\n");
+	}
 }
 
 // !_undoTitle: no undo
@@ -184,7 +304,7 @@ int buildLanes(const char* _undoTitle, int _mode)
 					int* recPasses = new int[SNM_MAX_TAKES];
 					int takeColors[SNM_MAX_TAKES];
 
-					SNM_RecPassParser p(item);
+					SNM_RecPassParser p(item, CountTakes(item));
 					int itemMaxRecPass = p.GetMaxRecPass(recPasses, takeColors); 
 					maxRecPass = max(itemMaxRecPass, maxRecPass);
 
@@ -288,10 +408,9 @@ bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel
 			{					
 				SNM_TakeParserPatcher p(item, CountTakes(item));
 				int k=0, kOriginal=0;
-				while (k < p.CountTakes() && p.CountTakes() > 1) // p.CountTakes() is a getter
+				while (k < p.CountTakesInChunk())
 				{
-					if ((_empty && p.IsEmpty(k)) ||
-						(_midiEmpty && isEmptyMidi(GetTake(item, kOriginal))))
+					if ((_empty && p.IsEmpty(k)) ||	(_midiEmpty && isEmptyMidi(GetTake(item, kOriginal))))
 					{
 						bool removed = p.RemoveTake(k);
 						if (removed) k--; //++ below!
@@ -300,20 +419,21 @@ bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel
 					k++;
 					kOriginal++;
 				}
-				
-				// Removes the item if needed
-				if (p.CountTakes() == 1)
-				{
-					if ((_empty && p.IsEmpty(0)) ||
-						(_midiEmpty && isEmptyMidi(GetTake(item, 0))))
-					{
-						// prevent a useless SNM_ChunkParserPatcher commit
-						p.CancelUpdates();
 
-						bool removed = DeleteTrackMediaItem(_tr, item);
-						if (removed) j--; 
-						updated |= removed;
-					}
+				// Removes the item if needed
+				if (p.CountTakesInChunk() == 0)
+				{
+					p.CancelUpdates(); // prevent a useless SNM_ChunkParserPatcher commit
+					bool removed = DeleteTrackMediaItem(_tr, item);
+					if (removed) j--; 
+					updated |= removed;
+				}
+				// in case we removed empty *MIDI* items but the only remaining takes
+				// are empty (i.e. NULL) ones
+				else if (p.Commit() && deleteMediaItemIfNeeded(item))
+				{
+					j--;
+					updated = true;
 				}
 			}
 		}
@@ -355,8 +475,34 @@ void clearTake(COMMAND_T* _ct)
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
 				int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
-				SNM_ChunkParserPatcher p(item);
-				updated |= p.ReplaceSubChunk("SOURCE", 2, activeTake, "<SOURCE EMPTY\n>\n");
+				// v4 empty take
+				if (g_bv4)
+				{
+					SNM_TakeParserPatcher p(item, CountTakes(item));
+					int pos, len;
+					WDL_String emptyTk("TAKE NULL SEL\n");
+					if (p.GetTakeChunkPos(activeTake, &pos, &len))
+					{
+						updated |= p.ReplaceTake(pos, len, &emptyTk);
+
+						// empty takes only => remove the item
+						if (!strstr(p.GetChunk()->Get(), "\nNAME \""))
+						{	
+							p.CancelUpdates(); // prevent a useless SNM_ChunkParserPatcher commit
+							if (DeleteTrackMediaItem(tr, item)) {
+								j--; 
+								updated = true;
+							}
+						}
+					}
+				}
+				// v3 empty take style
+				else
+				{
+					SNM_ChunkParserPatcher p(item);
+					// no break keyword here: we're already at the end of the item..
+					updated |= p.ReplaceSubChunk("SOURCE", 2, activeTake, "<SOURCE EMPTY\n>\n");
+				}
 			}
 		}
 	}
@@ -368,6 +514,8 @@ void clearTake(COMMAND_T* _ct)
 	}
 }
 
+#ifdef _SNM_MISC 
+// Deprecated: native actions "Rotate take lanes forward/backward" added in REAPER v3.67
 void moveTakes(COMMAND_T* _ct)
 {
 	bool updated = false;
@@ -417,6 +565,7 @@ void moveTakes(COMMAND_T* _ct)
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
+#endif
 
 void moveActiveTake(COMMAND_T* _ct)
 {
@@ -541,7 +690,7 @@ void removeAllEmptyTakes(COMMAND_T* _ct) {
 	removeEmptyTakes(SNM_CMD_SHORTNAME(_ct), true, true);
 }
 
-//NO UNDO (due to file deletion) !
+//note: no undo due to file deletion
 bool deleteTakeAndMedia(int _mode)
 {
 	bool deleteFileOK = true;
@@ -556,76 +705,84 @@ bool deleteTakeAndMedia(int _mode)
 			MediaItem* item = GetTrackMediaItem(tr,j);
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
-				int originalTkIdx = 0, nbRemainingTakes = GetMediaItemNumTakes(item);
-				for (int k = 0; k < GetMediaItemNumTakes(item); k++) // nb of takes changes!
+				int originalTkIdx = 0;
+				int originalActiveTkIdx = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
+				int nbRemainingTakes = GetMediaItemNumTakes(item);
+				for (int k = 0; k < GetMediaItemNumTakes(item); k++) // nb of takes changes here!
 				{
 					MediaItem_Take* tk = GetMediaItemTake(item,k);
-					if (tk && (_mode == 1 || _mode == 2 || // all takes
-						((_mode == 3 || _mode == 4) && GetActiveTake(item) == tk))) // active take only
+					if ((_mode == 1 || _mode == 2 || // all takes
+						((_mode == 3 || _mode == 4) && originalActiveTkIdx == k))) // active take only
 					{
-						PCM_source* pcm = (PCM_source*)GetSetMediaItemTakeInfo(tk,"P_SOURCE",NULL);
+						char tkDisplayName[BUFFER_SIZE] = "[empty]";
+						PCM_source* pcm = tk ? (PCM_source*)GetSetMediaItemTakeInfo(tk,"P_SOURCE",NULL) : NULL;
 						if (pcm)
 						{
-							char tkDisplayName[BUFFER_SIZE] = "[empty]";
 							if (pcm->GetFileName() && *(pcm->GetFileName()))
 								strncpy(tkDisplayName, pcm->GetFileName(), BUFFER_SIZE);
 							else if (pcm->GetFileName() && !strlen(pcm->GetFileName()))
 								strncpy(tkDisplayName, (char*)GetSetMediaItemTakeInfo(tk,"P_NAME",NULL), BUFFER_SIZE);
+						}
 
-							int rc = removeFiles.Get(tkDisplayName, -1);
-							if (rc == -1)
-							{							
-								if (_mode == 1 || _mode == 3)
+						// not already removed ?
+						int rc = removeFiles.Get(tkDisplayName, -1);
+						if (rc == -1)
+						{							
+							if (_mode == 1 || _mode == 3)
+							{
+								char buf[BUFFER_SIZE*2];
+
+								if (pcm && pcm->GetFileName() && strlen(pcm->GetFileName())) 
+									sprintf(buf,"[Track %d, item %d] Delete take %d and its media file %s ?", i+1, j+1, originalTkIdx+1, tkDisplayName);
+								else if (pcm && pcm->GetFileName() && !strlen(pcm->GetFileName())) 
+									sprintf(buf,"[Track %d, item %d] Delete take %d (%s, in-project) ?", i+1, j+1, originalTkIdx+1, tkDisplayName);
+								else 
+									sprintf(buf,"[Track %d, item %d] Delete take %d (empty take) ?", i+1, j+1, originalTkIdx+1); // v3 or v4 empty takes
+
+								rc = MessageBox(g_hwndParent, buf, "S&M - Delete take and source files (NO UNDO!)", MB_YESNOCANCEL);
+								if (rc == IDCANCEL) {
+									cancel = true;
+									break;
+								}
+							}
+							else
+								rc = IDYES;
+							removeFiles.Insert(tkDisplayName, rc);
+						}
+
+						if (rc==IDYES)
+						{
+							nbRemainingTakes--;
+							if (pcm && pcm->GetFileName() && strlen(pcm->GetFileName()) && FileExists(pcm->GetFileName()))
+							{
+								// set all media offline (yeah, EACH TIME!)
+								Main_OnCommand(40100,0); 
+								if (SNM_DeleteFile(pcm->GetFileName()))
 								{
-									char buf[BUFFER_SIZE*2];
-
-									if (pcm->GetFileName() && strlen(pcm->GetFileName())) 
-										sprintf(buf,"[Track %d, item %d] Do you want to delete take %d and its media file:\n%s ?", i+1, j+1, originalTkIdx+1, tkDisplayName);
-									else if (pcm->GetFileName() && !strlen(pcm->GetFileName())) 
-										sprintf(buf,"[Track %d, item %d] Do you want to delete take %d (in-project):\n%s ?", i+1, j+1, originalTkIdx+1, tkDisplayName);
-									else 
-										sprintf(buf,"[Track %d, item %d] Do you want to delete take %d (empty take) ?", i+1, j+1, originalTkIdx+1);
-
-									rc = MessageBox(g_hwndParent,buf,"S&M - Delete take and source files (NO UNDO!)", MB_YESNOCANCEL);
-									if (rc == IDCANCEL) {
-										cancel = true;
-										break;
-									}
+									char peakFn[BUFFER_SIZE] = "";
+									GetPeakFileName(pcm->GetFileName(), peakFn, BUFFER_SIZE);
+									if (peakFn && *peakFn != '\0')
+										SNM_DeleteFile(peakFn); // no delete check (peaks files can be absent)
 								}
 								else
-									rc = IDYES;
-								removeFiles.Insert(tkDisplayName, rc);
+									deleteFileOK = false;
 							}
 
-							if (rc==IDYES)
+							// Removes the take (can't factorize chunk updates here..)
+							int cntTakes = CountTakes(item);
+							SNM_TakeParserPatcher p(item, cntTakes);
+							if (cntTakes > 1 && p.RemoveTake(k)) // > 1 because item removed otherwise
 							{
-								nbRemainingTakes--;
-								if (pcm->GetFileName() && strlen(pcm->GetFileName()) && FileExists(pcm->GetFileName()))
-								{
-									// set all media offline (yeah, EACH TIME!)
-									Main_OnCommand(40100,0); 
-									deleteFileOK &= SNM_DeleteFile(pcm->GetFileName());
-									char fileName[BUFFER_SIZE];
-									strcpy(fileName, pcm->GetFileName());
-									char* pEnd = fileName + strlen(fileName);
-
-									// no check with deleteFileOK (files not necessary there)
-									strcpy(pEnd, ".reapeaks"); SNM_DeleteFile(fileName);
-									strcpy(pEnd, ".reapindex"); SNM_DeleteFile(fileName);
-								}
-
-								// Removes the take
-								// (we cannot factorize the chunk updates here..)
-								int cntTakes = CountTakes(item);
-								SNM_TakeParserPatcher p(item, cntTakes);
-								if (cntTakes > 1 && p.RemoveTake(k)) k--; // see RemoveTake(), item removed otherwise
+								// active tale only?
+								if (_mode == 3 || _mode == 4) break;
+								else k--; 
 							}
 						}
 					}
 					originalTkIdx++;
 				}
 
-				if (!nbRemainingTakes) // CountTakes() <on't work here
+				if (!nbRemainingTakes)
 					removedItems.Add(item);
 			}
 		}
@@ -643,28 +800,13 @@ bool deleteTakeAndMedia(int _mode)
 
 void deleteTakeAndMedia(COMMAND_T* _ct) {
 	if (!deleteTakeAndMedia((int)_ct->user))
-		MessageBox(g_hwndParent, "Warning: at least one file couldn't be deleted.\nTips: are you an administrator? used by another process than REAPER?", "S&M - Delete take and source files", MB_OK);
+		MessageBox(g_hwndParent, "Warning: at least one file couldn't be deleted.\nTips: are you an administrator? used by another process?", "S&M - Delete take and source files", MB_OK);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Take envs: Show/hide take vol/pan/mute envs
 ///////////////////////////////////////////////////////////////////////////////
-
-// returns -1 if not found
-int getTakeIndex(MediaItem* _item, MediaItem_Take* _take)
-{
-	int i=0;
-	MediaItem_Take* tk = (_item ? GetTake(_item, i) : NULL);
-	while (tk) 
-	{
-		if (tk && tk == _take) 
-			return i;
-		else 
-			tk = GetTake(_item, ++i);
-	}
-	return -1;
-}
 
 // if returns true: callers must use UpdateTimeline() at some point
 bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint)
@@ -675,8 +817,8 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 		SNM_TakeParserPatcher p(_item, CountTakes(_item));
 
 		WDL_String takeChunk;
-		int tkPos, tkOriginalLength;
-		if (p.GetTakeChunk(_takeIdx, &takeChunk, &tkPos, &tkOriginalLength))
+		int tkPos, tklen;
+		if (p.GetTakeChunk(_takeIdx, &takeChunk, &tkPos, &tklen))
 		{
 			SNM_ChunkParserPatcher ptk(&takeChunk);
 			bool takeUpdate = false;
@@ -691,6 +833,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 					char currentVis[32];
 					if (ptk.Parse(SNM_GET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)currentVis) > 0)
 					{
+						// skip if visibility is different from 0 or 1
 						if (!strcmp(currentVis, "1")) strcpy(vis, "0");
 						else if (!strcmp(currentVis, "0")) strcpy(vis, "1");
 					}
@@ -705,13 +848,6 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 					takeUpdate = true;
 					takeChunk.Set(pEnv.GetChunk()->Get());
 				}
-
-/*JFB old code: 3 parser passes!
-				if (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "ACT", -1, 0, 1, (void*)vis) > 0)
-					if (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)vis) > 0)
-						takeUpdate |= (ptk.ParsePatch(SNM_SET_CHUNK_CHAR, 1, _envKeyword, "ARM", -1, 0, 1, (void*)vis) > 0);
-				takeChunk.Set(ptk.GetChunk()->Get());
-*/
 			}
 			// env. doesn't already exists => build a default one (if needed)
 			else
@@ -740,7 +876,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 
 			// Update take (with new visibility)
 			if (takeUpdate)
-				updated = p.ReplaceTake(_takeIdx, tkPos, tkOriginalLength, &takeChunk);
+				updated = p.ReplaceTake(tkPos, tklen, &takeChunk);
 		}
 	}
 	return updated;
@@ -802,6 +938,19 @@ void showHideTakeMuteEnvelope(COMMAND_T* _ct)
 		fakeToggleAction(_ct);
 }
 
+void showHideTakePitchEnvelope(COMMAND_T* _ct) 
+{
+	if (g_bv4)
+	{
+		char cVis[2] = ""; //empty means toggle
+		int value = (int)_ct->user;
+		if (value >= 0)
+			sprintf(cVis, "%d", value);
+		WDL_String defaultPoint("PT 0.000000 0.000000 0");
+		if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint) && value < 0) // toggle
+			fakeToggleAction(_ct);
+	}
+}
 
 // *** some wrappers for Padre ***
 bool ShowTakeEnv(MediaItem_Take* _take, const char* _envKeyword, WDL_String* _defaultPoint)
@@ -829,6 +978,75 @@ bool ShowTakeEnvPan(MediaItem_Take* _take) {
 
 bool ShowTakeEnvMute(MediaItem_Take* _take) {
 	WDL_String defaultPoint("PT 0.000000 1.000000 1");
-	return ShowTakeEnv(_take, "MUTEENV", &defaultPoint);;
+	return ShowTakeEnv(_take, "MUTEENV", &defaultPoint);
 }
 
+bool ShowTakeEnvPitch(MediaItem_Take* _take) {
+	if (g_bv4)
+	{
+		WDL_String defaultPoint("PT 0.000000 0.000000 0");
+		return ShowTakeEnv(_take, "PITCHENV", &defaultPoint);
+	}
+	return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Item/take template slots
+///////////////////////////////////////////////////////////////////////////////
+
+void saveItemTakeTemplate(COMMAND_T* _ct)
+{
+	for (int i = 0; i < GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
+			{
+				char filename[BUFFER_SIZE] = "", defaultPath[BUFFER_SIZE];
+				//JFB3 TODO: ItemTakeTemplates -> const
+				_snprintf(defaultPath, BUFFER_SIZE, "%s%cItemTakeTemplates", GetResourcePath(), PATH_SLASH_CHAR);
+				if (BrowseForSaveFile("Save item/take template", defaultPath, "", "REAPER item/take template (*.RItemTakeTemplate)\0*.RItemTakeTemplate\0", filename, BUFFER_SIZE))
+				{
+					FILE* f = fopenUTF8(filename, "w"); 
+					// Item/take template: keep the active take
+					if (f)
+					{
+						int activeTk = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
+						if (activeTk >= 0)
+						{
+							SNM_TakeParserPatcher p(item, CountTakes(item));
+							char* pFirstTk = strstr(p.GetChunk()->Get(), "NAME ");
+							if (pFirstTk)
+							{
+								int firstTkPos = (int)(pFirstTk - p.GetChunk()->Get());
+								WDL_String tkActive;
+								p.GetTakeChunk(activeTk, &tkActive);
+								char* pActiveTk = tkActive.Get();
+
+								// zap "TAKE blabla..." if needed
+								if (activeTk) {
+									while (*pActiveTk && *pActiveTk != '\n') pActiveTk++;
+									if (*pActiveTk) 
+										pActiveTk++;
+								}
+
+								p.GetChunk()->DeleteSub(firstTkPos, (p.GetChunk()->GetLength()-2) - firstTkPos); // -2 for ">\n"
+								p.GetChunk()->Insert(pActiveTk, firstTkPos);
+								p.RemoveIds();
+
+								fputs(p.GetChunk()->Get(), f);
+								fclose(f);
+
+								p.CancelUpdates(); // NO UPDATE!
+							}
+						}
+					}
+					return;
+				}
+			}
+		}
+	}
+}

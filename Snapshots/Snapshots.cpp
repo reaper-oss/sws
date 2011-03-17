@@ -1,7 +1,7 @@
 /******************************************************************************
 / Snapshots.cpp
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -360,8 +360,8 @@ SWS_SnapshotsWnd::SWS_SnapshotsWnd()
 	g_iSavedType = m_iSelType;
 	g_bSavedSelOnly = g_bSelOnly;
 
-	if (m_bShowAfterInit)
-		Show(false, false);
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
 }
 
 void SWS_SnapshotsWnd::Update()
@@ -1007,9 +1007,16 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	if (strcmp(menustr, "Main view") == 0 && flag == 0)
+	{
+#ifdef _SWS_MENU
 		AddToMenu(hMenu, "SWS Snapshots", g_commandTable[0].accel.accel.cmd);
+#endif
+	}
 	else if (strcmp(menustr, "Track control panel context") == 0 && flag == 0)
-		AddSubMenu(hMenu, SWSCreateMenu(g_commandTable), "SWS Snapshots");
+	{
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+		AddSubMenu(hMenu, SWSCreateMenuFromCommandTable(g_commandTable), "SWS Snapshots");
+	}
 }
 
 int SnapshotsInit()

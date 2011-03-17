@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_FindView.h
 /
-/ Copyright (c) 2009-2010 Tim Payne (SWS), JF Bédague
+/ Copyright (c) 2010-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -37,10 +37,10 @@ public:
 
 	bool Find(int _mode);
 	MediaItem* FindPrevNextItem(int _dir, MediaItem* _item);
-	bool FindMediaItem(int _dir, bool _allTakes, bool (*job)(MediaItem_Take*,const char*));
+	bool FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_Take*,const char*), bool (*jobItem)(MediaItem*,const char*) = NULL);
 	bool FindTrack(int _dir, bool (*job)(MediaTrack*,const char*));
 	bool FindMarkerRegion(int _dir);
-	void DisplayNotFoundMsg(const char* _searchStr);
+	void UpdateNotFoundMsg(bool _found);
 
 protected:
 	void OnInitDlg();
@@ -50,7 +50,7 @@ protected:
 	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
-	SNM_VirtualComboBox m_cbType;
+	WDL_VirtualComboBox m_cbType;
 	WDL_VirtualIconButton m_btnFind;
 	WDL_VirtualIconButton m_btnPrev;
 	WDL_VirtualIconButton m_btnNext;

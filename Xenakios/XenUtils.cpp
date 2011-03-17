@@ -200,40 +200,47 @@ bool BrowseForSaveFile(const char *text, const char *initialdir, const char *ini
 		return false;	
 }
 
-bool BrowseForDirectory(const char *text, const char *initialdir, char *fn, int fnsize)
+static int CALLBACK WINAPI BrowseForDirectoryCallbackProc( HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
-	BROWSEINFO bi;
-	bi.pidlRoot = NULL;
-	bi.pszDisplayName = NULL;
-	bi.hwndOwner = g_hwndParent;
-	bi.lpszTitle = text;
-	bi.ulFlags = BIF_NEWDIALOGSTYLE;
-	bi.lpfn = NULL;
-	bi.iImage = 0;
-
-	LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-	if (pidl)
+	switch (uMsg)
 	{
-		char path[MAX_PATH];
-		BOOL bRet = SHGetPathFromIDList(pidl, path);
-		CoTaskMemFree(pidl);
-		if (bRet)
-		{
-			lstrcpyn(fn, path, fnsize);
-			return true;
-		}
+		case BFFM_INITIALIZED:
+			if (lpData && ((char *)lpData)[0]) 
+				SendMessage(hwnd,BFFM_SETSELECTION,1,(LPARAM)lpData);
+		break;
 	}
-	return false;
+	return 0;
 }
 
+bool BrowseForDirectory(const char *text, const char *initialdir, char *fn, int fnsize)
+{
+  char name[4096];
+  lstrcpyn(name,initialdir?initialdir:"",sizeof(name));
+  BROWSEINFO bi={g_hwndParent,NULL, name, text, BIF_RETURNONLYFSDIRS|BIF_NEWDIALOGSTYLE, BrowseForDirectoryCallbackProc, (LPARAM)name,};
+  LPITEMIDLIST idlist = SHBrowseForFolder( &bi );
+  if (idlist) 
+  {
+    SHGetPathFromIDList( idlist, name );        
+    IMalloc *m;
+    SHGetMalloc(&m);
+    m->Free(idlist);
+    lstrcpyn(fn,name,fnsize);
+    return true;
+  }
+  return false;
+}
 #endif
 
 bool FileExists(const char* file)
 {
-	struct stat s;
+	if (file && *file)
+	{
+		struct stat s;
 #ifdef _WIN32
-	return statUTF8(file, &s) == 0;
+		return statUTF8(file, &s) == 0;
 #else
-	return stat(file, &s) == 0;
+		return stat(file, &s) == 0;
 #endif
+	}
+	return false;
 }

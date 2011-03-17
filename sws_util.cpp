@@ -73,111 +73,6 @@ BOOL IsCommCtrlVersion6()
 #endif
 }
 
-void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPos, UINT uiSate)
-{
-	if (!text)
-		return;
-
-	int iPos = GetMenuItemCount(hMenu);
-	if (bPos)
-		iPos = iInsertAfter;
-	else
-	{
-		if (iInsertAfter < 0)
-			iPos += iInsertAfter + 1;
-		else
-		{
-			HMENU h = FindMenuItem(hMenu, iInsertAfter, &iPos);
-			if (h)
-			{
-				hMenu = h;
-				iPos++;
-			}
-		}
-	}
-	
-	MENUITEMINFO mi={sizeof(MENUITEMINFO),};
-	if (strcmp(text, SWS_SEPARATOR) == 0)
-	{
-		mi.fType = MFT_SEPARATOR;
-		mi.fMask = MIIM_TYPE;
-		InsertMenuItem(hMenu, iPos, true, &mi);
-	}
-	else
-	{
-		mi.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
-		mi.fState = uiSate;
-		mi.fType = MFT_STRING;
-		mi.dwTypeData = (char*)text;
-		mi.wID = id;
-		InsertMenuItem(hMenu, iPos, true, &mi);
-	}
-}
-
-void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, UINT uiSate)
-{
-	int iPos = GetMenuItemCount(hMenu);
-	if (iInsertAfter < 0)
-	{
-		iPos += iInsertAfter + 1;
-		if (iPos < 0)
-			iPos = 0;
-	}
-	else
-	{
-		HMENU h = FindMenuItem(hMenu, iInsertAfter, &iPos);
-		if (h)
-		{
-			hMenu = h;
-			iPos++;
-		}
-	}
-
-	MENUITEMINFO mi={sizeof(MENUITEMINFO),};
-	mi.fMask = MIIM_SUBMENU | MIIM_TYPE | MIIM_STATE;
-	mi.fState = uiSate;
-	mi.fType = MFT_STRING;
-	mi.hSubMenu = subMenu;
-	mi.dwTypeData = (LPSTR)text;
-	InsertMenuItem(hMenu, iPos, true, &mi);
-}
-
-HMENU FindMenuItem(HMENU hMenu, int iCmd, int* iPos)
-{
-	MENUITEMINFO mi={sizeof(MENUITEMINFO),};
-	mi.fMask = MIIM_ID | MIIM_SUBMENU;
-	for (int i = 0; i < GetMenuItemCount(hMenu); i++)
-	{
-		GetMenuItemInfo(hMenu, i, true, &mi);
-		if (mi.hSubMenu)
-		{
-			HMENU hSubMenu = FindMenuItem(mi.hSubMenu, iCmd, iPos);
-			if (hSubMenu)
-				return hSubMenu;
-		}
-		if (mi.wID == iCmd)
-		{
-			*iPos = i;
-			return hMenu;
-		}
-	}
-	return NULL;
-}
-
-void SWSSetMenuText(HMENU hMenu, int iCmd, const char* cText)
-{
-	int iPos;
-	hMenu = FindMenuItem(hMenu, iCmd, &iPos);
-	if (hMenu)
-	{
-		MENUITEMINFO mi={sizeof(MENUITEMINFO),};
-		mi.fMask = MIIM_TYPE;
-		mi.fType = MFT_STRING;
-		mi.dwTypeData = (char*)cText;
-		SetMenuItemInfo(hMenu, iPos, true, &mi);
-	}
-}
-
 void SaveWindowPos(HWND hwnd, const char* cKey)
 {
 	// Remember the dialog position
@@ -511,3 +406,18 @@ MODIFIER g_modifiers[NUM_MODIFIERS] =
 	{ 5, "Alt + Shift" },
 	{ 7, "Ctrl + Alt + Shift" }
 };
+
+void WinSpawnNotepad(const char* pFilename)
+{
+#ifdef _WIN32
+	if (pFilename)
+	{
+		char cNotepad[256];
+		char* cWindir = getenv("windir");
+		if (!cWindir)
+			return;
+		_snprintf(cNotepad, 256, "%s\\notepad.exe", cWindir);
+		_spawnl(_P_NOWAIT, cNotepad, cNotepad, pFilename, NULL);
+	}
+#endif
+}

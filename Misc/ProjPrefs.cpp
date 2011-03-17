@@ -149,8 +149,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle move cursor to end of recorded media on stop" },		"SWS_TOGRECMOVECUR",	TogOnRecStopMoveCursor, NULL, 0, IsOnRecStopMoveCursor },
 	{ { DEFACCEL, "SWS: Toggle seek playback on item move/size" },					"SWS_TOGSEEKMODE1",		TogSeekMode, NULL, 65536, IsSeekMode },
 	{ { DEFACCEL, "SWS: Toggle seek playback on loop point change" },				"SWS_TOGSEEKMODE2",		TogSeekMode, NULL, 8, IsSeekMode },
-
-	{ { DEFACCEL, "SWS: Switch grid spacing" },										"SWS_GRIDSPACING",		SwitchGridSpacing,	},
+	//TODO
+	//{ { DEFACCEL, "SWS: Switch grid spacing" },										"SWS_GRIDSPACING",		SwitchGridSpacing,	},
 	{ { DEFACCEL, "SWS: Transport: Record/stop" },									"SWS_RECTOGGLE",		RecToggle,			},
 	{ { DEFACCEL, "SWS: Save transport repeat state" },								"SWS_SAVEREPEAT",		SaveRepeat,			},
 	{ { DEFACCEL, "SWS: Restore transport repeat state" },							"SWS_RESTREPEAT",		RestRepeat,			},

@@ -2520,6 +2520,8 @@ void UpdateGridToolbar()
 {
 	RefreshToolbar(NamedCommandLookup("_SWS_AWTOGGLETRIPLET"));
 	RefreshToolbar(NamedCommandLookup("_SWS_AWTOGGLEDOTTED"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWGRIDWHOLE"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWGRIDHALF"));
 	RefreshToolbar(NamedCommandLookup("_SWS_AWGRID4"));
 	RefreshToolbar(NamedCommandLookup("_SWS_AWGRID8"));
 	RefreshToolbar(NamedCommandLookup("_SWS_AWGRID16"));
@@ -2605,6 +2607,47 @@ void AWToggleDotted(COMMAND_T*)
 	UpdateTimeline();
 	
 }
+
+void AWGridWhole(COMMAND_T* = NULL)
+{
+	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
+	
+	if (IsGridTriplet()) 
+		*pGridDiv = 4.0*(2.0/3.0);
+	else if (IsGridDotted()) 
+		*pGridDiv = 4.0*(3.0/2.0);
+	else 
+		*pGridDiv = 4.0;
+	
+	UpdateGridToolbar();
+	UpdateTimeline();
+	
+}
+
+bool IsGridWhole(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 4.0 || *(double*)GetConfigVar("projgriddiv") == 4.0*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 4.0*(3.0/2.0)); }
+
+void AWGridHalf(COMMAND_T* = NULL)
+{
+	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
+	
+	if (IsGridTriplet()) 
+		*pGridDiv = 2.0*(2.0/3.0);
+	else if (IsGridDotted()) 
+		*pGridDiv = 2.0*(3.0/2.0);
+	else 
+		*pGridDiv = 2.0;
+	
+	UpdateGridToolbar();
+	UpdateTimeline();
+	
+}
+
+bool IsGridHalf(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 2.0 || *(double*)GetConfigVar("projgriddiv") == 2.0*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 2.0*(3.0/2.0)); }
+
+
+
+
+
 
 
 void AWGrid4(COMMAND_T* = NULL)
@@ -2825,16 +2868,17 @@ static COMMAND_T g_commandTable[] =
 	//{ { DEFACCEL, "SWS/AW: Toggle 'beats (position only)'/'beats (position, length rate')" },			"SWS_AWTBASEBTOG",				AWTimebaseToggleStretch, NULL, 0, IsTimebaseBeatAll},
 	//{ { DEFACCEL, "SWS/AW: Set project timebase to beats" },											"SWS_AWTBASEBEAT",				AWTimebaseBeat, NULL, 0, IsTimebaseBeat},
 
-	/* Not ready or not safe enough/integrated well enough for public use
 	{ { DEFACCEL, "SWS/AW: Toggle triplet grid" },			"SWS_AWTOGGLETRIPLET",				AWToggleTriplet, NULL, 0, IsGridTriplet},
 	{ { DEFACCEL, "SWS/AW: Toggle dotted grid" },			"SWS_AWTOGGLEDOTTED",				AWToggleDotted, NULL, 0, IsGridDotted},
 
-	{ { DEFACCEL, "SWS/AW: Grid to 1/4" },			"SWS_AWGRID4",				AWGrid4, NULL, 0, IsGrid4},
-	{ { DEFACCEL, "SWS/AW: Grid to 1/8" },			"SWS_AWGRID8",				AWGrid8, NULL, 0, IsGrid8},
-	{ { DEFACCEL, "SWS/AW: Grid to 1/16" },			"SWS_AWGRID16",				AWGrid16, NULL, 0, IsGrid16},
-	{ { DEFACCEL, "SWS/AW: Grid to 1/32" },			"SWS_AWGRID32",				AWGrid32, NULL, 0, IsGrid32},
+	{ { DEFACCEL, "SWS/AW: Grid to whole notes" },			"SWS_AWGRIDWHOLE",				AWGridWhole, NULL, 0, IsGridWhole},
+	{ { DEFACCEL, "SWS/AW: Grid to half notes" },			"SWS_AWGRIDHALF",				AWGridHalf, NULL, 0, IsGridHalf},
+	{ { DEFACCEL, "SWS/AW: Grid to 1/4 notes" },			"SWS_AWGRID4",				AWGrid4, NULL, 0, IsGrid4},
+	{ { DEFACCEL, "SWS/AW: Grid to 1/8 notes" },			"SWS_AWGRID8",				AWGrid8, NULL, 0, IsGrid8},
+	{ { DEFACCEL, "SWS/AW: Grid to 1/16 notes" },			"SWS_AWGRID16",				AWGrid16, NULL, 0, IsGrid16},
+	{ { DEFACCEL, "SWS/AW: Grid to 1/32 notes" },			"SWS_AWGRID32",				AWGrid32, NULL, 0, IsGrid32},
 	
-	
+	/* Not ready or not safe enough/integrated well enough for public use
 	// Stuff that sort of sucks that I might make decent enough to release
 	//{ { DEFACCEL, "SWS/AW: Copy" },			"SWS_AWCOPY",					AWCopy, },
 	//{ { DEFACCEL, "SWS/AW: Cut" },			"SWS_AWCUT",					AWCut, },

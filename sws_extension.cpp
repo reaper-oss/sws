@@ -582,6 +582,8 @@ extern "C"
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
 		IMPAPI(SetMediaItemInfo_Value);
+		IMPAPI(SetMediaItemLength);
+		IMPAPI(SetMediaItemPosition);
 		IMPAPI(SetMediaItemTakeInfo_Value);
 		IMPAPI(SetMediaTrackInfo_Value);
 		IMPAPI(SetProjectMarker);

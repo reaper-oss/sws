@@ -1,6 +1,8 @@
 #ifndef __RPRMIDIEVENT_HXX
 #define __RPRMIDIEVENT_HXX
 
+#include <memory>
+
 class RprNode;
 
 class RprMidiBase {
@@ -60,12 +62,11 @@ private:
 class RprExtendedMidiEvent : public RprMidiBase {
 public:
 	RprExtendedMidiEvent();
-	const std::string& getExtendedData();
-	void setExtendedData(const std::string &data);
+	void addExtendedData(const std::string &data);
 	MessageType getMessageType() const;
 	RprNode *toReaper();
 private:
-	std::string mExtendedData;
+	std::list<std::string> mExtendedData;
 };
 
 class RprMidiEvent : public RprMidiBase {
@@ -98,12 +99,13 @@ private:
 class RprMidiEventCreator {
 public:
 	RprMidiEventCreator(RprNode *node);
-	RprExtendedMidiEvent *getExtended();
-	RprMidiEvent *getEvent();
-	RprMidiBase *getBaseEvent();
+	/* Collect midi Event. Once you have collected it you 
+	 * take ownership of it. */
+	RprMidiBase *collectEvent();
+	~RprMidiEventCreator();
 private:
-	RprMidiEvent *mEvent;
-	RprExtendedMidiEvent *mXEvent;
+	std::auto_ptr<RprMidiEvent> mEvent;
+	std::auto_ptr<RprExtendedMidiEvent> mXEvent;
 };
 
 #endif /*__RPRMIDIEVENT_HXX */

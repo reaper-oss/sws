@@ -14,6 +14,22 @@ typedef std::list<RprMidiBase *> RprMidiEvents;
 typedef std::list<RprMidiBase *>::iterator RprMidiEventsIter;
 typedef std::list<RprMidiBase *>::const_iterator RprMidiEventsCIter;
 
+/* Class to auto cleanup pointers to RprMidiBase objects stored in a list */
+class RprTempMidiEvents {
+public:
+	RprTempMidiEvents() {}
+	RprMidiEvents &get() { return mEvents; }
+	~RprTempMidiEvents()
+	{
+		for(RprMidiEventsIter i = mEvents.begin(); i != mEvents.end(); ++i) {
+			delete *i;
+		}
+	}
+
+private:
+	RprMidiEvents mEvents;
+};
+
 class RprMidiContext {
 	
 public:
@@ -406,10 +422,10 @@ static void getMidiEvents(RprNode *midiNode, RprMidiEvents &midiEvents)
 		if(!isMidiEvent(midiNode->getChild(i)->getValue()))
 			continue;
 		RprMidiEventCreator creator(midiNode->getChild(i));
-		RprMidiBase *baseEvent = creator.getBaseEvent();
-		offset += baseEvent->getDelta();
-		baseEvent->setOffset(offset);
-		midiEvents.push_back(creator.getBaseEvent());
+		RprMidiBase *midiEvent = creator.collectEvent();
+		offset += midiEvent->getDelta();
+		midiEvent->setOffset(offset);
+		midiEvents.push_back(midiEvent);
 	}
 }
 
@@ -455,6 +471,7 @@ static bool getMidiNotes(RprMidiEvents &midiEvents, std::vector<RprMidiNote *> &
 	    else
 			other.push_back(current);
 	}
+	midiEvents.clear();
 	
 	/* match note-ons and note-offs, removing zero length notes */
 	// SWS Jan 26 2011 - GCC doesn't like the const_iterators here for the .erase() calls, but MSVC does.  I don't think it's too important.
@@ -468,6 +485,7 @@ static bool getMidiNotes(RprMidiEvents &midiEvents, std::vector<RprMidiNote *> &
 		if(j == noteOffs.end()) {
 			other.push_back(*i);
 			++i;
+			continue;
 		}
 
 		RprMidiBase *noteOn = *i;
@@ -488,7 +506,6 @@ static bool getMidiNotes(RprMidiEvents &midiEvents, std::vector<RprMidiNote *> &
 	}
 
 	/* put non-note events back onto midiEvents list */
-	midiEvents.clear();
 	for(RprMidiEventsCIter j = noteOffs.begin(); j != noteOffs.end(); j++)
 		midiEvents.push_back(*j);
 	for(RprMidiEventsCIter j = other.begin(); j != other.end(); j++)
@@ -532,7 +549,6 @@ private:
 
 static void removeDuplicates(std::vector<RprMidiCC *> *midiCCs)
 {
-	
 	for(int i = 0; i < 128; i++) {
 		vectorRemoval<RprMidiCC> removal(&midiCCs[i]);
 		for(std::vector<RprMidiCC *>::iterator j = midiCCs[i].begin(); j != midiCCs[i].end(); ++j) {
@@ -545,7 +561,6 @@ static void removeDuplicates(std::vector<RprMidiCC *> *midiCCs)
 			}
 		}
 	}
-	
 }
 
 static void removeDuplicates(std::vector<RprMidiNote *> &midiNotes)
@@ -594,16 +609,6 @@ static void removeOverlaps(std::vector<RprMidiNote *> &midiNotes)
 	}
 }
 
-static void removeZeroLengthNotes(std::vector<RprMidiNote *> &midiNotes)
-{
-	vectorRemoval<RprMidiNote> removal(&midiNotes);
-	for(std::vector<RprMidiNote *>::iterator i = midiNotes.begin(); i != midiNotes.end(); i++) {
-		RprMidiNote *note = *i;
-		if(note->getItemLength() == 0)
-			removal.push(note);
-	}
-}
-
 RprMidiNote *RprMidiTake::getNoteAt(int index) const
 {
 	return mNotes.at(index);
@@ -642,25 +647,34 @@ RprMidiCC *RprMidiTake::addCCAt(int controller, int index)
 
 RprMidiTake::RprMidiTake(const RprTake &take, bool readOnly) : RprMidiTemplate(take, readOnly)
 {
-	RprNode *sourceNode = RprMidiTemplate::getMidiSourceNode();
+	try {
+		mContext = NULL;
+		RprNode *sourceNode = RprMidiTemplate::getMidiSourceNode();
 	
-	RprMidiEvents midiEvents;
-	getMidiEvents(sourceNode, midiEvents);
-	mContext = RprMidiContext::createMidiContext(take.getPlayRate(),
+		RprTempMidiEvents tempMidiEvents;
+		getMidiEvents(sourceNode, tempMidiEvents.get());
+		mContext = RprMidiContext::createMidiContext(take.getPlayRate(),
 		getParent()->getPosition() - take.getStartOffset(),
 		getQNValue(sourceNode));
+	
+		if(!getMidiNotes(tempMidiEvents.get(), mNotes, mContext)) {
+			throw RprLibException("Unable to parse MIDI data");
+		}
+		if(!getMidiCCs(tempMidiEvents.get(), mCCs, mContext)) {
+			throw RprLibException("Unable to parse MIDI data");
+		}
+	
+		mOtherEvents.resize(tempMidiEvents.get().size());
+		std::copy(tempMidiEvents.get().begin(), tempMidiEvents.get().end(), mOtherEvents.begin());
+		tempMidiEvents.get().clear();
+		mMidiEventsOffset = clearMidiEventsFromMidiNode(sourceNode);
 
-	
-	if(!getMidiNotes(midiEvents, mNotes, mContext)) {
-		return;
+	} catch (RprMidiBase::RprMidiException &e) {
+		cleanup();
+		/* throw RprLibException so we let the user know something bad
+		 * happened. */
+		throw RprLibException(e.what(), true);
 	}
-	if(!getMidiCCs(midiEvents, mCCs, mContext)) {
-		return;
-	}
-	
-	mOtherEvents.resize(midiEvents.size());
-	std::copy(midiEvents.begin(), midiEvents.end(), mOtherEvents.begin());
-	mMidiEventsOffset = clearMidiEventsFromMidiNode(sourceNode);
 }
 
 template
@@ -695,6 +709,11 @@ RprMidiTake::~RprMidiTake()
 	finalizeMidiEvents(midiEvents);
 	midiEventsToMidiNode(midiEvents, RprMidiTemplate::getMidiSourceNode(), mMidiEventsOffset);
 
+	cleanup();
+}
+
+void RprMidiTake::cleanup()
+{
 	if(mContext)
 		delete mContext;
 	mContext = NULL;
@@ -704,7 +723,6 @@ RprMidiTake::~RprMidiTake()
 	cleanUpPointers(mOtherEvents);
 	cleanUpPointers(mNotes);
 }
-
 
 
 RprMidiTake::RprMidiTakeConversionException::RprMidiTakeConversionException(std::string message)

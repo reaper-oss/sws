@@ -1,5 +1,6 @@
 #include "stdafx.h"
 
+#include <memory>
 
 #include "RprMidiEvent.hxx"
 #include "RprNode.hxx"
@@ -70,6 +71,7 @@ RprMidiBase::RprMidiException::RprMidiException(const char *message) : mMessage(
 {}
 const char *RprMidiBase::RprMidiException::what()
 { return mMessage.c_str(); }
+
 RprMidiBase::RprMidiException::~RprMidiException() throw()
 {}
 
@@ -77,19 +79,15 @@ RprMidiBase::RprMidiException::~RprMidiException() throw()
 
 RprExtendedMidiEvent::RprExtendedMidiEvent() : RprMidiBase()
 {}
-const std::string& RprExtendedMidiEvent::getExtendedData()
-{
-	return mExtendedData;
-}
 
-void RprExtendedMidiEvent::setExtendedData(const std::string &data)
+void RprExtendedMidiEvent::addExtendedData(const std::string &data)
 {
-	mExtendedData = data;
+	mExtendedData.push_back(data);
 }
 
 RprMidiBase::MessageType RprExtendedMidiEvent::getMessageType() const
 {
-	if (mExtendedData.substr(0, 2) == "/w")
+	if (mExtendedData.front().substr(0, 2) == "/w")
 		return RprMidiBase::TextEvent;
 	else
 		return RprMidiBase::Sysex;
@@ -97,7 +95,6 @@ RprMidiBase::MessageType RprExtendedMidiEvent::getMessageType() const
 
 RprNode *RprExtendedMidiEvent::toReaper()
 {
-	
 	std::stringstream oss;
 	if(isSelected())
 		oss << "x";
@@ -108,10 +105,12 @@ RprNode *RprExtendedMidiEvent::toReaper()
 		oss << "m";
 	oss << " ";
 	oss << getDelta() << " 0";
-	RprNode *node = new RprParentNode(oss.str().c_str());
-	RprNode *childNode = new RprPropertyNode(mExtendedData);
-	node->addChild(childNode);
-	return node;
+	std::auto_ptr<RprNode> node(new RprParentNode(oss.str().c_str()));
+	for(std::list<std::string>::const_iterator i = mExtendedData.begin(); i != mExtendedData.end(); ++i) {
+		std::auto_ptr<RprNode> childNode(new RprPropertyNode(*i));
+		node->addChild(childNode.release());
+	}
+	return node.release();
 }
 
 RprMidiEvent::RprMidiEvent() : RprMidiBase()
@@ -240,8 +239,8 @@ RprNode *RprMidiEvent::toReaper()
 			oss << " " << mQuantizeOffset;
 		}
 	}
-	RprNode *node = new RprPropertyNode(oss.str());
-	return node;
+	std::auto_ptr<RprNode> node(new RprPropertyNode(oss.str()));
+	return node.release();
 }
 
 static bool isExtended(const std::string &inStr)
@@ -309,57 +308,57 @@ static bool isNote(std::vector<unsigned char> &midiMessage)
 
 RprMidiEventCreator::RprMidiEventCreator(RprNode *node)
 {
-	mXEvent = NULL;
-	mEvent = NULL;
-
 	std::auto_ptr<std::vector<std::string> > tokens(stringTokenize(node->getValue()));
+
 	if(tokens->empty())
 		throw RprMidiBase::RprMidiException("Error parsing MIDI data");
 
 	int delta = ::atoi(tokens->at(1).c_str());
 	bool selected = isSelected(tokens->at(0));
 	bool muted = isMuted(tokens->at(0));
+
 	if(isExtended(tokens->at(0))) {
-		if(node->childCount() != 1)
-			throw RprMidiBase::RprMidiException("Error parsing MIDI data");
-		mXEvent = new RprExtendedMidiEvent();
+		mXEvent.reset(new RprExtendedMidiEvent());
 		mXEvent->setDelta(delta);
-		mXEvent->setExtendedData(node->getChild(0)->getValue());
+
+		for(int i = 0; i < node->childCount(); ++i) {
+			mXEvent->addExtendedData(node->getChild(i)->getValue());
+		}
+		
 		mXEvent->setMuted(muted);
 		mXEvent->setSelected(selected);
 		return;
 	}
-	mEvent = new RprMidiEvent();
+	mEvent.reset(new RprMidiEvent());
 	mEvent->setSelected(selected);	
 	mEvent->setMuted(muted);
 	mEvent->setDelta(delta);
 	std::vector<unsigned char> midiMessage;
 	for(unsigned int i = 2; i < tokens->size(); i++) {
+
 		if(i == 5 && isNote(midiMessage)) {
 			mEvent->setUnquantizedOffset(::atoi(tokens->at(i).c_str()));
 		} else {
 			midiMessage.push_back(fromHex(tokens->at(i)));
 		}
+
 	}
 	mEvent->setMidiMessage(midiMessage);
 }
 
-RprExtendedMidiEvent *RprMidiEventCreator::getExtended()
+RprMidiBase *RprMidiEventCreator::collectEvent()
 {
-	return mXEvent;
+	if (mEvent.get())
+		return mEvent.release();
+	
+	if (mXEvent.get())
+		return mXEvent.release();
+
+	throw RprMidiBase::RprMidiException("Error parsing MIDI data");
 }
 
-RprMidiEvent *RprMidiEventCreator::getEvent()
-{
-	return mEvent;
-}
-
-RprMidiBase *RprMidiEventCreator::getBaseEvent()
-{
-	if (mEvent)
-		return mEvent;
-	return mXEvent;
-}
+RprMidiEventCreator::~RprMidiEventCreator()
+{}
 
 
 

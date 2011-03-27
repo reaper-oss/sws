@@ -28,25 +28,21 @@ RprMidiTemplate::RprMidiTemplate(const RprTake &take, bool readOnly)
 {
 	mReadOnly = readOnly;
 	mInErrorState = false;
-	mParent = new RprItem(take.getParent());
+	mParent.reset(new RprItem(take.getParent()));
 	RprStateChunkPtr chunk = mParent->getReaperState();
-	mItemNode = RprParentNode::createItemStateTree(chunk->toReaper());
+	mItemNode.reset(RprParentNode::createItemStateTree(chunk->toReaper()));
 	char guid[256];
 	guidToString(take.getGUID(), guid);
-	mMidiSourceNode = findTakeSource(mItemNode, guid);
+	mMidiSourceNode = findTakeSource(mItemNode.get(), guid);
 }
 
 RprMidiTemplate::~RprMidiTemplate()
 {
-	if(mItemNode == NULL || mParent == NULL)
+	if(mItemNode.get() == NULL || mParent.get() == NULL)
 		return;
 
 	if(!mInErrorState && !mReadOnly) {
 		std::string itemState = mItemNode->toReaper();
 		GetSetObjectState(mParent->toReaper(), itemState.c_str());
 	}
-	if(mParent)
-		delete mParent;
-	if(mItemNode)
-		delete mItemNode;
 }

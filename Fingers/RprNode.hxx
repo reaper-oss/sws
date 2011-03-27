@@ -16,7 +16,6 @@ public:
 	virtual void addChild(RprNode *node) = 0;
 	virtual void addChild(RprNode *node, int index) {}
 	virtual void removeChild(int index) = 0;
-	virtual RprNode *clone() = 0;
 	virtual ~RprNode() {}
 
 	void setValue(const std::string &value);
@@ -33,7 +32,6 @@ public:
 	RprNode *getChild(int index);
 	void addChild(RprNode *node);
 	void removeChild(int index);
-	RprNode *clone();
 	~RprPropertyNode() {}
 private:
 	void toReaper(std::ostringstream &oss, int indent);
@@ -49,7 +47,6 @@ public:
 	void addChild(RprNode *node);
 	void addChild(RprNode *node, int index);
 	void removeChild(int index);
-	RprNode *clone();
 	~RprParentNode();
 private:
 	RprParentNode();

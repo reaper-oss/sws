@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <memory>
 
 #include "RprNode.hxx"
 
@@ -111,18 +112,6 @@ void RprParentNode::toReaper(std::ostringstream &oss, int indent)
 	oss << strIndent.c_str() << ">" << std::endl;
 }
 
-RprNode *RprParentNode::clone()
-{
-	RprParentNode *node = new RprParentNode(getValue().c_str());
-	for(std::vector<RprNode *>::iterator i = mChildren.begin();
-		i != mChildren.end();
-		i++) {
-		RprNode *child = *i;
-		node->addChild(child->clone());
-	}
-	return node;
-}
-
 std::string RprNode::toReaper()
 {
 	std::ostringstream oss;
@@ -150,23 +139,27 @@ RprPropertyNode::RprPropertyNode(const std::string &value)
 void RprPropertyNode::removeChild(int index)
 {}
 
-RprNode *RprPropertyNode::clone()
-{
-	RprPropertyNode *node = new RprPropertyNode(getValue());
-	return node;
-}
-
 RprNode *RprParentNode::createItemStateTree(const char *itemState)
 {
 	if(itemState == NULL)
 		return NULL;
+
+	/* check if it is an item node */
+	if(strncmp(itemState, "<ITEM", 5))
+		return NULL;
+
 	std::istringstream iss(itemState);
-	RprParentNode *parentNode = new RprParentNode("ROOT");
-	RprNode *currentNode = parentNode;
+	std::string line = getTrimmedLine(iss);
+	std::auto_ptr<RprParentNode> parentNode(new RprParentNode(line.substr(1).c_str()));
+
+	RprNode *currentNode = parentNode.get();
+	
 	while(!iss.eof()) {
-		std::string line = getTrimmedLine(iss);
+
+		line = getTrimmedLine(iss);
 		if(line.empty())
 			continue;
+
 		if(line[0] == '<')
 			currentNode = addNewChildNode(currentNode, line.substr(1));
 		else if(line[0] == '>')
@@ -174,11 +167,7 @@ RprNode *RprParentNode::createItemStateTree(const char *itemState)
 		else
 			addNewPropertyNode(currentNode, line);
 	}
-	RprNode *itemNode = parentNode->getChild(0);
 
-	itemNode->setParent(NULL);
-	parentNode->mChildren.clear();
-	delete parentNode;
-	return itemNode;
+	return parentNode.release();
 }
 

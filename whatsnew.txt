@@ -1,3 +1,5 @@
+Fix crash when parsing a MIDI take with a large extended MIDI event.
+
 !v2.0.0 #17 (March 16, 2011)
 Added actions (issue 165, Win only):
 +SWS/S&M: Focus main window (close others)

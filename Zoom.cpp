@@ -368,19 +368,10 @@ void HorizZoomSelItems(bool bTimeSel = false)
 	SaveZoomSlice(true);
 }
 
-void CursorTo10(COMMAND_T* = NULL)
+// Ct->user is the screen position in %, negative for play cursor (Vs edit cursor)
+void ScrollToCursor(COMMAND_T* ct)
 {
-	SetHorizPos(GetTrackWnd(), GetCursorPosition(), 0.10);
-}
-
-void CursorTo50(COMMAND_T* = NULL)
-{
-	SetHorizPos(GetTrackWnd(), GetCursorPosition(), 0.50);
-}
-
-void PCursorTo50(COMMAND_T* = NULL)
-{
-	SetHorizPos(GetTrackWnd(), GetPlayPosition(), 0.50);
+	SetHorizPos(GetTrackWnd(), ct->user > 0 ? GetCursorPosition() : GetPlayPosition(), 0.01 * abs((int)ct->user));
 }
 
 void HorizScroll(COMMAND_T* ctx)
@@ -1312,9 +1303,10 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Set reaper window size to reaper.ini setwndsize" },			"SWS_SETWINDOWSIZE",	SetReaperWndSize,	NULL, },
-	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 10%" },				"SWS_HSCROLL10",		CursorTo10,			NULL, },
-	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 50%" },				"SWS_HSCROLL50",		CursorTo50,			NULL, },
-	{ { DEFACCEL, "SWS: Horizontal scroll to put play cursor at 50%" },				"SWS_HSCROLLPLAY50",	PCursorTo50,		NULL, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 10%" },				"SWS_HSCROLL10",		ScrollToCursor,		NULL, 10, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put edit cursor at 50%" },				"SWS_HSCROLL50",		ScrollToCursor,		NULL, 50, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put play cursor at 10%" },				"SWS_HSCROLLPLAY10",	ScrollToCursor,		NULL, -10, },
+	{ { DEFACCEL, "SWS: Horizontal scroll to put play cursor at 50%" },				"SWS_HSCROLLPLAY50",	ScrollToCursor,		NULL, -50, },
 	{ { DEFACCEL, "SWS: Vertical zoom to selected track(s)" },	 					"SWS_VZOOMFIT",			FitSelTracks,		NULL, },
 	{ { DEFACCEL, "SWS: Vertical zoom to selected track(s), minimize others" }, 	"SWS_VZOOMFITMIN",		FitSelTracksMin,	NULL, },
 	{ { DEFACCEL, "SWS: Vertical zoom to selected items(s)" },	 					"SWS_VZOOMIITEMS",		VZoomToSelItems,	NULL, },
@@ -1356,9 +1348,18 @@ static COMMAND_T g_commandTable[] =
 
 void ZoomSlice()
 {
-	if (g_bSmoothScroll && GetPlayState() & 1)
-		PCursorTo50();
-	SaveZoomSlice(false);
+	static bool bRecurseCheck = false;
+	if (!bRecurseCheck)
+	{
+		bRecurseCheck = true;
+		if (g_bSmoothScroll && GetPlayState() & 1)
+			SetHorizPos(GetTrackWnd(), GetPlayPosition(), 0.5);
+
+		SaveZoomSlice(false);
+		bRecurseCheck = false;
+	}
+	else
+		dprintf("Zoom slice recurse!\n");
 }
 
 static int translateAccel(MSG *msg, accelerator_register_t *ctx)

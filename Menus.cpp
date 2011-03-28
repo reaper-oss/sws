@@ -162,15 +162,16 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddSubMenu(hMenu, hAutoRenderSubMenu, "Autorender");
 	AddToMenu(hAutoRenderSubMenu, "Batch render regions", NamedCommandLookup("_AUTORENDER"));
 	AddToMenu(hAutoRenderSubMenu, "Edit project metadata", NamedCommandLookup("_AUTORENDER_METADATA"));
-	AddToMenu(hAutoRenderSubMenu, "Open Render Path", NamedCommandLookup("_AUTORENDER_OPEN_RENDER_PATH"));
-	AddToMenu(hAutoRenderSubMenu, "Show Instructions", NamedCommandLookup("_AUTORENDER_HELP"));
-	AddToMenu(hAutoRenderSubMenu, "Global Preferences", NamedCommandLookup("_AUTORENDER_PREFERENCES"));
+	AddToMenu(hAutoRenderSubMenu, "Open render path", NamedCommandLookup("_AUTORENDER_OPEN_RENDER_PATH"));
+	AddToMenu(hAutoRenderSubMenu, "Show rnstructions", NamedCommandLookup("_AUTORENDER_HELP"));
+	AddToMenu(hAutoRenderSubMenu, "Global preferences", NamedCommandLookup("_AUTORENDER_PREFERENCES"));
 
-	AddToMenu(hMenu, "Cue Buss Generator", NamedCommandLookup("_S&M_SENDS4"));
-	AddToMenu(hMenu, "Envelope Processor...", NamedCommandLookup("_PADRE_ENVPROC"));
+	AddToMenu(hMenu, "Command parameters", NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));
+	AddToMenu(hMenu, "Cue buss generator", NamedCommandLookup("_S&M_SENDS4"));
+	AddToMenu(hMenu, "Envelope processor...", NamedCommandLookup("_PADRE_ENVPROC"));
 	AddToMenu(hMenu, "Fill gaps...", NamedCommandLookup("_SWS_AWFILLGAPSADV"));
 	AddToMenu(hMenu, "Find", NamedCommandLookup("_S&M_SHOWFIND"));
-	AddToMenu(hMenu, "Groove Tool...", NamedCommandLookup("_FNG_GROOVE_TOOL"));
+	AddToMenu(hMenu, "Groove tool...", NamedCommandLookup("_FNG_GROOVE_TOOL"));
 /*JFB: commented: tested some => crash
 	HMENU hItemTkSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hItemTkSubMenu, "Item/Take");

@@ -1,3 +1,10 @@
+!v2.0.0 #18 (March 28, 2011)
+Added actions:
++Issue 256: "SWS: Toggle auto add envelopes when tweaking in write mode" 
++Issue 280: "SWS: Toggle grid lines over/under items"
++"SWS: Horizontal scroll to put play cursor at 10%"
+
+Readded "Command parameters" to the Extensions menu
 Fix crash when parsing a MIDI take with a large extended MIDI event.
 
 !v2.0.0 #17 (March 16, 2011)

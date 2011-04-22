@@ -45,6 +45,7 @@ public:
 protected:
 	void OnInitDlg();
 	void OnDestroy();
+	int OnKey(MSG* msg, int iKeyState) ;
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	// WDL UI

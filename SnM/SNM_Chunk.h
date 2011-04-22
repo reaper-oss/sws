@@ -314,40 +314,6 @@ protected:
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_FXPresetParserPatcher
-//
-// SetPresets(): e.g. "1.4 2.2" => FX1 preset4, FX2 preset2 
-// "1.0 2.0" could clear FX1 and FX2 presets, not yet managed though..
-//
-///////////////////////////////////////////////////////////////////////////////
-
-class SNM_FXPresetParserPatcher : public SNM_ChunkParserPatcher
-{
-public:
-	SNM_FXPresetParserPatcher(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) {
-		m_presetFound = false;
-		m_fx = 0;
-	}
-	~SNM_FXPresetParserPatcher() {}
-	bool SetPresets(WDL_String* _presetConf);
-
-protected:
-	bool NotifyEndElement(int _mode, 
-		LineParser* _lp, const char* _parsedLine, int _linePos,
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
-	bool NotifyChunkLine(int _mode, 
-		LineParser* _lp, const char* _parsedLine, int _linePos,
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
-		WDL_String* _newChunk, int _updates);
-private:
-	WDL_String* m_presetConf;
-	bool m_presetFound;
-	int m_fx;
-};
-
-
-///////////////////////////////////////////////////////////////////////////////
 // SNM_TakeEnvParserPatcher
 ///////////////////////////////////////////////////////////////////////////////
 

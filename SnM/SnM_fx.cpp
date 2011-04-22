@@ -30,6 +30,10 @@
 #include "SNM_ChunkParserPatcher.h"
 
 
+#define SNM_REA_PRESET_CB_ENDING		")  ----"
+#define SNM_REA_USERPRESET_CB_ENDING	"(.rpl)  ----" 
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // FX online/offline, bypass/unbypass
 ///////////////////////////////////////////////////////////////////////////////
@@ -68,7 +72,7 @@ bool isFXOfflineOrBypassedSelectedTracks(COMMAND_T * _ct, int _token)
 		{
 			char state[2];
 			SNM_ChunkParserPatcher p(tr);
-			if (p.ParsePatch(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, state, NULL, "<ITEM") > 0)
+			if (p.ParsePatch(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, state) > 0)
 				return !strcmp(state,"1");
 		}
 	}
@@ -92,7 +96,7 @@ bool patchSelTracksFXState(int _mode, int _token, int _fxCmdId, const char* _val
 			if (fxId >= 0)
 			{
 				SNM_ChunkParserPatcher p(tr);
-				updated = (p.ParsePatch(_mode, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, (void*)_value, NULL, "<ITEM") > 0);
+				updated = (p.ParsePatch(_mode, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, (void*)_value) > 0);
 			}
 		}
 	}
@@ -198,15 +202,15 @@ int selectFX(MediaTrack* _tr, int _fx)
 		char pLastSel[4] = ""; // 4 if there're many FXs
 		sprintf(pLastSel,"%d", _fx);
 		char pShow[4] = ""; // 4 if there're many FXs
-		if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",2,0,1,&pShow,NULL,"<ITEM") > 0)
+		if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",2,0,1,&pShow) > 0)
 		{
 			// Also patch the shown FX if the fx chain dlg is opened
 			if (strcmp(pShow,"0") != 0)
 			{
 				sprintf(pShow,"%d", _fx+1);
-				updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","SHOW",2,0,1,&pShow,NULL,"<ITEM");
+				updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","SHOW",2,0,1,&pShow);
 			}
-			updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",2,0,1,&pLastSel,NULL,"<ITEM");
+			updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",2,0,1,&pLastSel);
 		}
 	}
 	return updates;
@@ -216,16 +220,21 @@ int getSelectedFX(MediaTrack* _tr)
 {
 	if (_tr)
 	{
-		// Avoid a useless parsing (but what does TrackFX_GetChainVisible ?)
+		// Avoids a useless parsing (1st try)
+		if (TrackFX_GetCount(_tr) == 1)
+			return 0;
+
+		// Avoids a useless parsing (2nd try) //JFB but what really does TrackFX_GetChainVisible ?
 		// TrackFX_GetChainVisible: returns index of effect visible in chain, or -1 for chain hidden, or -2 for chain visible but no effect selected
 		int currentFX = TrackFX_GetChainVisible(_tr);
 		if (currentFX >= 0)
 			return currentFX;
 
+		// the 2 attempts above failed => no choice: parse to get the selected FX
 		SNM_ChunkParserPatcher p(_tr);
-		char pLastSel[4] = ""; // 4 if there're many FXs
-		p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",2,0,1,&pLastSel, NULL, "<ITEM");
-		return atoi(pLastSel);
+		char pLastSel[4] = ""; // 4: if there're many, many FXs
+		p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",2,0,1,&pLastSel);
+		return atoi(pLastSel); // return 0 (i.e. 1st FX) if failed
 	}
 	return -1;
 }
@@ -344,6 +353,7 @@ int GetPresetFromConfToken(const char* _preset)
 	return 0;
 }
 
+// Updates a preset conf string
 // _fx: 1-based, _preset: 1-based with 0=remove
 // _presetConf (in & out param): stored as "fx.preset" both 1-based
 void UpdatePresetConf(int _fx, int _preset, WDL_String* _presetConf)
@@ -380,12 +390,13 @@ void UpdatePresetConf(int _fx, int _preset, WDL_String* _presetConf)
 	}
 }
 
+// Returns the preset number (1-based, 0 if failed) from a preset conf string
 // _fx: 0-based, _presetConf: stored as "fx.preset", both 1-based
 // _presetCount: for optionnal check
-int GetSelPresetFromConf(int _fx, WDL_String* _curPresetConf, int _presetCount)
+int GetPresetFromConf(int _fx, WDL_String* _presetConf, int _presetCount)
 {
 	LineParser lp(false);
-	if (_curPresetConf && !lp.parse(_curPresetConf->Get()))
+	if (_presetConf && !lp.parse(_presetConf->Get()))
 	{
 		for (int i=0; i < lp.getnumtokens(); i++)
 		{
@@ -398,6 +409,7 @@ int GetSelPresetFromConf(int _fx, WDL_String* _curPresetConf, int _presetCount)
 	return 0;
 }
 
+// Returns a human readable preset conf string
 // _fx: 1-based, _preset: 1-based with 0=remove
 // _presetConf: in param, _renderConf: out param
 void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf)
@@ -417,12 +429,172 @@ void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Switch presets
+///////////////////////////////////////////////////////////////////////////////
+
+// Primitive to trigger a given preset 
+// No proper API yet => POOR'S MAN'S SOLUTION!
+//
+// So, it simulates an user action: show fx (if needed) -> dropdown event -> close fx (if needed)
+// Notes
+// - undo indirectly managed (i.e.native "Undo FX parameter adjustement"
+// - when triggering the "Restore factory setting" preset (1st item in the dropdown), then
+//   REAPER automatically re-update the preset. In other words, depending on the FX, setting the 
+//   1st preset may result in selecting the 7th preset (i.e. which is the factory setting preset)
+//
+// _userPreset: if true, _presetId is a user preset index. Index in the preset dropdown if false  
+// _presetId: preset index to be triggered (only taken into account when _dir == 0, see below)
+// _dir: +1 or -1 switches to next or previous preset (_presetId is ignored then)
+// returns the triggered preset id or -1 if failed
+int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir, bool _userPreset)
+{
+	int nbFx = _tr ? TrackFX_GetCount(_tr) : 0;
+	if (nbFx > 0 && _fxId < nbFx)
+	{
+		bool presetOk = false, floated = false;
+
+		// float the FX if needed
+		// stupid if no preset exposed, of course..
+		HWND hFX = TrackFX_GetFloatingWindow(_tr, _fxId);
+		if (!hFX) {
+			floatUnfloatFXs(_tr, false, 3, _fxId, true); 
+			hFX = TrackFX_GetFloatingWindow(_tr, _fxId);
+			floated = (hFX != NULL);
+		}
+
+		HWND hFX2 = hFX ? GetDlgItem(hFX, 0) : NULL;
+		HWND cbPreset = hFX2 ? GetDlgItem(hFX2, 0x3E8) : NULL;
+		if (cbPreset)
+		{
+			int presetCount = (int)SendMessage(cbPreset, CB_GETCOUNT, 0, 0);
+			int currentPreset = (int)SendMessage(cbPreset, CB_GETCURSEL, 0, 0);
+
+			// user preset only ?
+			if (_userPreset)
+			{
+				int deltaIdx = 0;
+				char buf[256] = "";
+				while ((deltaIdx+1) < presetCount && (strlen(buf) < strlen(SNM_REA_USERPRESET_CB_ENDING) || strcmp((char*)(buf+strlen(buf)-strlen(SNM_REA_USERPRESET_CB_ENDING)), SNM_REA_USERPRESET_CB_ENDING)))
+				{
+					SendMessage(cbPreset, CB_SETCURSEL, ++deltaIdx, 0); // GUI update only
+					GetWindowText(cbPreset, buf, 256);
+				}
+				if ((deltaIdx+1) < presetCount) _presetId += (deltaIdx+1);
+				else _presetId = -1; // no user presets
+				SendMessage(cbPreset, CB_SETCURSEL, currentPreset, 0); // restore the current preset (GUI update only)
+			}
+
+			if (currentPreset >= 0 && _presetId >= 0 && 
+				((_dir && currentPreset < presetCount) || (!_dir && _presetId < presetCount && _presetId != currentPreset)))
+			{
+				char buf[256] = SNM_REA_PRESET_CB_ENDING;
+				if (_dir) _presetId = currentPreset;
+				presetOk = true;
+				while (strstr(buf, "No preset") || (strlen(buf) >= strlen(SNM_REA_PRESET_CB_ENDING) && !strcmp((char*)(buf+strlen(buf)-strlen(SNM_REA_PRESET_CB_ENDING)), SNM_REA_PRESET_CB_ENDING)))
+				{
+					_presetId += _dir;
+					if (_presetId < 0 || _presetId >= presetCount) {
+						presetOk = false;
+						break;
+					}		
+					SendMessage(cbPreset, CB_SETCURSEL, _presetId, 0); // GUI update only
+					GetWindowText(cbPreset, buf, 256);
+					if (!_dir) _dir = 1;
+				}
+			}
+
+			// switch the preset for real
+			if (presetOk)
+				SendMessage(hFX2, WM_COMMAND, MAKELONG(GetWindowLong(cbPreset, GWL_ID), CBN_SELCHANGE), (LPARAM)_presetId);
+			// restore the current preset (GUI update only)
+			else
+				SendMessage(cbPreset, CB_SETCURSEL, currentPreset, 0);
+		}
+
+		// unfloat the FX if needed
+		if (floated)
+			floatUnfloatFXs(_tr, false, 2, _fxId, true);
+
+		if (presetOk)
+			return _presetId;
+	}
+	return -1;
+}
+
+void triggerFXPreset(int _fxId, int _presetId, int _dir)
+{
+	for (int i = 0; g_bv4 && i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false); //include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			int fxId = _fxId;
+			if (fxId == -1)
+				fxId = getSelectedFX(tr);
+			if (fxId >= 0)
+				triggerFXPreset(tr, fxId, _presetId, _dir);
+		}
+	}
+}
+
+void triggerNextPreset(COMMAND_T* _ct) {
+	triggerFXPreset((int)_ct->user, 0, 1);
+}
+
+void triggerPreviousPreset(COMMAND_T* _ct) {
+	triggerFXPreset((int)_ct->user, 0, -1);
+}
+
+
+// trigger several *USER* presets from several FXs on a same track 
+// _presetConf: "fx.preset", both 1-based - e.g. "1.4 2.2" => FX1 user preset 4, FX2 user preset 2 
+bool triggerFXUserPreset(MediaTrack* _tr, WDL_String* _presetConf)
+{
+	bool updated = false;
+	int nbFx = _tr ? TrackFX_GetCount(_tr) : 0;
+	if (nbFx)
+	{
+		for (int i=0; i < nbFx; i++)
+		{
+			int preset = GetPresetFromConf(i, _presetConf);
+			if (preset)
+				updated |= (triggerFXPreset(_tr, i, preset-1, 0, true) != -1);
+		}
+	}
+	return updated;
+}
+
+
+// *** Trigger preset throiugh MIDI CC action ***
+
+class SNM_TriggerPresetScheduledJob : public SNM_ScheduledJob {
+public:
+	SNM_TriggerPresetScheduledJob(int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd, int _fxId) 
+		: SNM_ScheduledJob(SNM_SCHEDJOB_TRIG_PRESET, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd),m_fxId(_fxId) {}
+	void Perform() {triggerFXPreset(m_fxId, m_val, 0);}
+protected:
+	int m_val, m_valhw, m_relmode, m_fxId;
+	HWND m_hwnd;
+};
+
+void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) 
+{
+	// Absolute CC only
+	if (!_relmode && _valhw < 0 && g_bv4)
+	{
+		SNM_TriggerPresetScheduledJob* job = 
+			new SNM_TriggerPresetScheduledJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd, (int)_ct->user);
+		AddOrReplaceScheduledJob(job);
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Other
 ///////////////////////////////////////////////////////////////////////////////
 
 // http://code.google.com/p/sws-extension/issues/detail?id=258
-// pretty brutal code (we'd need a dedicated parser/patcher here) but I consider 
-// this as a bit esoteric..
+// pretty brutal code (we'd need a dedicated parser/patcher here..)
 void moveFX(COMMAND_T* _ct)
 {
 	bool updated = false;
@@ -462,7 +634,7 @@ void moveFX(COMMAND_T* _ct)
 							if (p3>0) pfxc.GetChunk()->Insert(fxChunk.Get(), --p3);
 							else if (dir == 1) pfxc.GetChunk()->Insert(fxChunk.Get(), pfxc.GetChunk()->GetLength()-2);
 
-							// patch updated cunk
+							// patch updated chunk
 							if (p.ReplaceSubChunk("FXCHAIN", 2, 0, pfxc.GetChunk()->Get(), "<ITEM"))
 							{
 								updated = true;

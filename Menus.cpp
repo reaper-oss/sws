@@ -229,7 +229,6 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMenu, "Resources", NamedCommandLookup("_S&M_SHOWFXCHAINSLOTS"));
 	AddToMenu(hMenu, "Snapshots", NamedCommandLookup("_SWSSNAPSHOT_OPEN"));
 /*JFB "Xen's Track" sub-menu todo?
-In case someone is motivated:
 item_68=_XENAKIOS_RESETTRACKVOLANDPAN1 Reset volume and pan of selected tracks
 item_69=_XENAKIOS_RESETTRACKVOL1 Set volume of selected tracks to 0.0 dB
 item_70=_XENAKIOS_SYMMETRICAL_CHANPANSLTOR Pan selected tracks symmetrically, left to right
@@ -253,5 +252,5 @@ item_79=_XENAKIOS_RENAMETRAXDLG Rename selected tracks...
 	AddToMenu(hOptionsSubMenu, "Enable red ruler while recording", NamedCommandLookup("_SWS_RECREDRULER"));
 	AddToMenu(hOptionsSubMenu, "Enable auto coloring", NamedCommandLookup("_SWSAUTOCOLOR_ENABLE"));
 	AddToMenu(hOptionsSubMenu, "Enable auto icon", NamedCommandLookup("_S&MAUTOICON_ENABLE"));
-
+	AddToMenu(hOptionsSubMenu, "Enable toolbars auto refresh", NamedCommandLookup("_S&M_REFRESH_TOOLBARS_ENABLE"));
 }

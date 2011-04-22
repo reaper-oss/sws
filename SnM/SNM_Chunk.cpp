@@ -812,67 +812,6 @@ WDL_PtrList<SNM_FXSummary>* SNM_FXSummaryParser::GetSummaries()
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_FXPresetParserPatcher
-///////////////////////////////////////////////////////////////////////////////
-
-bool SNM_FXPresetParserPatcher::NotifyEndElement(int _mode, 
-	LineParser* _lp, const char* _parsedLine, int _linePos,
-	WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
-{
-	if (_mode == -1 && !strcmp(GetParent(_parsedParents), "FXCHAIN"))
-		m_breakParsePatch = true; // optmization
-	return false; 
-}
-
-bool SNM_FXPresetParserPatcher::NotifyChunkLine(int _mode, 
-	LineParser* _lp, const char* _parsedLine, int _linePos,
-	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
-{
-	bool updated = false;
-	if (_mode == -1)
-	{
-		if (_lp->getnumtokens() == 2 && !strcmp(_lp->gettoken_str(0), "LASTPRESET"))
-		{
-			int preset = GetSelPresetFromConf(m_fx, m_presetConf);
-			if (preset && preset != _lp->gettoken_int(1)) 
-			{
-				_newChunk->AppendFormatted(32, "LASTPRESET %d\n", preset);
-				updated = true;
-			}
-			m_presetFound = true;
-		}
-		else if (_lp->getnumtokens() == 5 && !strcmp(_lp->gettoken_str(0), "FLOATPOS"))
-		{
-			if (!m_presetFound)
-			{
-				int preset = GetSelPresetFromConf(m_fx, m_presetConf);
-				if (preset)
-				{
-					_newChunk->AppendFormatted(128, "LASTPRESET %d\n%s\n", preset, _parsedLine);
-					updated = true;
-				}
-			}
-
-			// prepare following fx
-			m_fx++;
-			m_presetFound = false;
-		}
-	}
-	return updated;
-}
-
-bool SNM_FXPresetParserPatcher::SetPresets(WDL_String* _presetConf)
-{
-	m_presetConf = _presetConf;
-	m_presetFound = false;
-	m_fx = 0;
-	return (ParsePatch(-1,2,"FXCHAIN") > 0);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // SNM_TakeEnvParserPatcher
 ///////////////////////////////////////////////////////////////////////////////
 

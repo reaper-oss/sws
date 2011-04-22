@@ -515,6 +515,7 @@ extern "C"
 		IMPAPI(GetSetMediaItemTakeInfo);
 		IMPAPI(GetSetMediaTrackInfo);
 		IMPAPI(GetSetObjectState);
+		*(void**)&GetSetObjectState2 = rec->GetFunc("GetSetObjectState2"); // v4 only
 		IMPAPI(GetSetRepeat);
 		IMPAPI(GetTakeEnvelopeByName);
 		IMPAPI(GetSetTrackSendInfo);

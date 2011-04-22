@@ -456,6 +456,34 @@ void DumpWikiActions2(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Misc. "MIDI CC absolute only" actions
+///////////////////////////////////////////////////////////////////////////////
+
+// *** Select project ***
+class SNM_SelectProjectScheduledJob : public SNM_ScheduledJob
+{
+public:
+	SNM_SelectProjectScheduledJob(int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd) 
+		: SNM_ScheduledJob(SNM_SCHEDJOB_SEL_PRJ, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd) {}
+	void Perform() {
+		ReaProject* proj = Enum_Projects(m_val, NULL, 0);
+		if (proj) SelectProjectInstance(proj);
+	}
+protected:
+	int m_val, m_valhw, m_relmode;
+	HWND m_hwnd;
+};
+
+void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
+	if (!_relmode && _valhw < 0) { // Absolute CC only
+		SNM_SelectProjectScheduledJob* job = 
+			new SNM_SelectProjectScheduledJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd);
+		AddOrReplaceScheduledJob(job);
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // tests, other..
 ///////////////////////////////////////////////////////////////////////////////
 

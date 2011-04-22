@@ -347,7 +347,7 @@ bool isToggleFXChain(COMMAND_T * _ct)
 	// single track selection: we can return a toggle state
 	if (selTrCount == 1)
 		return (TrackFX_GetChainVisible(GetFirstSelectedTrackWithMaster(NULL)) != -1);
-	// several tracks selected: possible mix of different state 
+	// several tracks selected: possible mix of different states 
 	// => return a fake toggle state (best effort)
 	else if (selTrCount)
 		return fakeIsToggledAction(_ct);
@@ -405,7 +405,7 @@ void floatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _s
 		if (!_showFlag) 
 			toggleFloatFX(_tr, (_fx == -1 ? getSelectedFX(_tr) : _fx));
 		else 
-			//TODO: offline
+			//JFB TOTEST: offline
 			TrackFX_Show(_tr, (_fx == -1 ? getSelectedFX(_tr) : _fx), _showFlag);
 	}
 }
@@ -490,6 +490,18 @@ int getFocusedFX(MediaTrack* _tr, int _dir, int* _firstFound)
 	return focused;
 }
 
+// returns -1 if none
+int getFirstFloatingFX(MediaTrack* _tr, int _dir)
+{
+	if (_tr)
+	{
+		int fxCount = TrackFX_GetCount(_tr);
+		for (int j = (_dir > 0 ? 0 : (fxCount-1)); (j < fxCount) && (j>=0); j+=_dir)
+			if (IsWindow(TrackFX_GetFloatingWindow(_tr, j)))
+				return j;
+	}
+	return -1;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Floating FX windows: cycle focus
@@ -552,7 +564,7 @@ bool cycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTrack
 bool focusJob(MediaTrack* _tr, int _fx, bool _selectedTracks)
 {
     HWND w2 = TrackFX_GetFloatingWindow(_tr,_fx);
-	if (IsWindow(w2))  {
+	if (IsWindow(w2)) {
 		SetForegroundWindow(w2);
 		return true;
 	}
@@ -710,6 +722,12 @@ void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 				}
 
 				int focusedPrevious = getFocusedFX(tr, dir);
+
+				// specific case: make it work even no FX window is focused
+				// (e.g. classic pitfall: when the action list is focused, http://forum.cockos.com/showpost.php?p=708536&postcount=305)
+				if (focusedPrevious < 0)
+					focusedPrevious = getFirstFloatingFX(tr, dir);
+
 				if (focusedPrevious >= 0 && cycleTracksAndFXs(i, focusedPrevious, dir, true, floatOnlyJob, &cycled))
 					return;
 			}
@@ -849,6 +867,7 @@ static BOOL CALLBACK EnumXCPWindows(HWND _hwnd, LPARAM _lParam)
 void ShowThemeHelper(WDL_String* _report, HWND _hwnd, bool _mcp, bool _sel)
 {
 #ifdef _WIN32
+	g_childHwndsCount = 0;
 	EnumChildWindows(_hwnd, EnumXCPWindows, 0);
 	for (int i=0; i < g_childHwndsCount && i < MAX_ENUM_CHILD_HWNDS; i++)
 	{
@@ -888,3 +907,22 @@ void ShowThemeHelper(COMMAND_T* _ct)
 
 	SNM_ShowConsoleMsg(report.Get(), "S&M - Theme Helper");
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Other
+///////////////////////////////////////////////////////////////////////////////
+
+void GetVisibleTCPTracks(WDL_PtrList<void>* _trList)
+{
+#ifdef _WIN32
+	g_childHwndsCount = 0;
+	EnumChildWindows(GetMainHwnd(), EnumXCPWindows, 0);
+	for (int i=0; i < g_childHwndsCount && i < MAX_ENUM_CHILD_HWNDS; i++)
+	{
+		HWND w = g_childHwnds[i];
+		if (IsWindowVisible(w) && !IsChildOf(w, "Mixer", -1))
+			_trList->Add((void*)GetWindowLongPtr(w, GWLP_USERDATA));
+	}
+#endif
+} 

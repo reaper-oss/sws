@@ -524,6 +524,24 @@ void SNM_FindWnd::OnDestroy()
 	*g_searchStr = 0;
 }
 
+int SNM_FindWnd::OnKey(MSG* _msg, int _iKeyState) 
+{
+	if (_msg->message == WM_KEYDOWN && _msg->wParam == VK_F3)
+	{
+		// F3: find next
+		if (!_iKeyState) {
+				Find(1); 
+				return 1;
+		}
+		// Shift-F3: find previous
+		else if (_iKeyState == LVKF_SHIFT) {
+				Find(-1);
+				return 1;
+		}
+	}
+	return 0;
+}
+
 static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentVwnd)
 {
 	if (!g_pFindWnd)

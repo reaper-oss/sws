@@ -32,6 +32,7 @@
 
 //#define _SNM_MISC
 //#define _SNM_TRACK_GROUP_EX
+#define _SNM_PRESETS
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,6 +58,8 @@
 #define SNM_MAX_INI_SECTION			0xFFFF // definitive limit for WritePrivateProfileSection
 #define SNM_LET_BREATHE_MS			10
 #define SNM_3D_COLORS_DELTA			25
+#define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average monitored)
+#define SNM_CSURF_RUN_POLL_MS		1000
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -69,7 +72,8 @@
 // note: [0..7] are reserved for Live Configs MIDI CC actions
 #define SNM_SCHEDJOB_LIVECFG_TLCHANGE	8
 #define SNM_SCHEDJOB_NOTEHLP_TLCHANGE	9
-#define SNM_SCHEDJOB_LIVECFG_SELPRJ		10
+#define SNM_SCHEDJOB_SEL_PRJ			10
+#define SNM_SCHEDJOB_TRIG_PRESET		11
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -105,10 +109,7 @@ public:
 
 class SNM_ScheduledJob {
 public:
-	SNM_ScheduledJob(int _id, int _approxDelayMs) {
-		m_id = _id;
-		m_tick = (int)floor((_approxDelayMs/27) + 0.5); // 1 tick = 27ms or so (average monitored)
-	}
+	SNM_ScheduledJob(int _id, int _approxDelayMs) : m_id(_id), m_tick((int)floor((_approxDelayMs/SNM_CSURF_RUN_TICK_MS) + 0.5)) {}
 	virtual ~SNM_ScheduledJob() {}
 	virtual void Perform() {}
 	int m_id, m_tick;
@@ -149,6 +150,10 @@ public:
 extern WDL_String g_SNMiniFilename;	
 extern LICE_IBitmap* g_snmLogo;
 
+void EnableToolbarsAutoRefesh(COMMAND_T* _ct);
+bool IsToolbarsAutoRefeshEnabled(COMMAND_T* _ct);
+void RefreshToolbars();
+
 void fakeToggleAction(COMMAND_T* _ct);
 bool fakeIsToggledAction(COMMAND_T* _ct);
 int SnMInit(reaper_plugin_info_t* _rec);
@@ -179,8 +184,16 @@ int getSelectedFX(MediaTrack* _tr);
 void selectFX(COMMAND_T* _ct);
 int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_String>* _names);
 void UpdatePresetConf(int _fx, int _preset, WDL_String* _presetConf);
-int GetSelPresetFromConf(int _fx, WDL_String* _curPresetConf, int _presetCount=0xFFFF);
+int GetPresetFromConf(int _fx, WDL_String* _presetConf, int _presetCount=0xFFFF);
 void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf);
+
+int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir = 0, bool _userPreset = false);
+void triggerFXPreset(int _fxId, int _presetId, int _dir=0);
+void triggerNextPreset(COMMAND_T* _ct);
+void triggerPreviousPreset(COMMAND_T* _ct);
+bool triggerFXUserPreset(MediaTrack* _tr, WDL_String* _presetConf);
+void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
+
 void moveFX(COMMAND_T* _ct);
 
 // *** SnM_FXChain.cpp ***
@@ -257,6 +270,7 @@ void closeAllFXWindows(COMMAND_T * _ct);
 void closeAllFXWindowsExceptFocused(COMMAND_T * _ct);
 void toggleAllFXWindows(COMMAND_T * _ct);
 int getFocusedFX(MediaTrack* _tr, int _dir, int* _firstFound = NULL);
+int getFirstFloatingFX(MediaTrack* _tr, int _dir);
 bool cycleFocusFXWnd(int _dir, bool _selectedTracks);
 #ifdef _SNM_MISC
 void cycleFocusFXWndSelTracks(COMMAND_T * _ct);
@@ -270,6 +284,7 @@ void cycleFocusHideOthersWnd(COMMAND_T * _ct);
 void focusMainWindow(COMMAND_T* _ct);
 void focusMainWindowCloseOthers(COMMAND_T* _ct);
 void ShowThemeHelper(COMMAND_T* _ct);
+void GetVisibleTCPTracks(WDL_PtrList<void>* _trList);
 
 // *** SnM_Sends.cpp ***
 bool cueTrack(const char* _busName, int _type, const char* _undoMsg, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
@@ -332,6 +347,8 @@ bool ShowTakeEnvPan(MediaItem_Take* _take);
 bool ShowTakeEnvMute(MediaItem_Take* _take);
 bool ShowTakeEnvPitch(MediaItem_Take* _take);
 void saveItemTakeTemplate(COMMAND_T* _ct);
+void toggleItemSelExists(COMMAND_T* _ct);
+bool itemSelExists(COMMAND_T* _ct);
 
 // *** SnM_Track.cpp ***
 #ifdef _SNM_TRACK_GROUP_EX
@@ -385,7 +402,6 @@ bool IsLiveConfigViewDisplayed(COMMAND_T*);
 void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 void ToggleEnableLiveConfig(COMMAND_T* _ct);
 bool IsLiveConfigEnabled(COMMAND_T* _ct);
-void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
 // *** SnM_Dlg.cpp ***
 LICE_CachedFont* SNM_GetThemeFont();
@@ -422,6 +438,8 @@ void LetREAPERBreathe(COMMAND_T* _ct);
 void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
 void SimulateMouseClick(COMMAND_T* _ct);
 void DumpWikiActions2(COMMAND_T* _ct);
+
+void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 
 #ifdef _SNM_MISC
 void ShowTakeEnvPadreTest(COMMAND_T* _ct);

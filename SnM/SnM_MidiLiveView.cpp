@@ -50,6 +50,20 @@ enum
   COMBOID_INPUT_TRACK
 };
 
+enum
+{
+  COL_CC=0,
+  COL_COMMENT,
+  COL_TR,
+  COL_TRT,
+  COL_FXC,
+#ifdef _SNM_PRESETS
+  COL_PRESET,
+#endif
+  COL_ACTION_ON,
+  COL_ACTION_OFF
+};
+
 // Globals
 /*JFB static*/ SNM_LiveConfigsWnd* g_pLiveConfigsWnd = NULL;
 SWSProjConfig<MidiLiveConfig> g_liveConfigs;
@@ -57,7 +71,11 @@ SWSProjConfig<WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<MidiLiveIt
 
 int g_configId = 0; // the current *displayed* config id
 int g_approxDelayMsCC = 250;
-static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, /*presets {150,2,"FX Presets"},*/ {150,1,"Activate action"}, {150,1,"Deactivate action"}};
+#ifdef _SNM_PRESETS
+static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX User presets"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
+#else
+static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
+#endif
 
 
 bool AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_String* _curPresetConf)
@@ -88,7 +106,7 @@ bool AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_String* _curPresetConf)
 				int presetCount = getPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names);
 				if (presetCount)
 				{
-					int curSel = GetSelPresetFromConf(i, _curPresetConf, presetCount);
+					int curSel = GetPresetFromConf(i, _curPresetConf, presetCount);
 					AddToMenu(fxSubMenu, "None (unchanged)", SNM_LIVECFG_SET_PRESETS_MSG + msgCpt, -1, false, !curSel ? MFS_CHECKED : MFS_UNCHECKED);
 					g_pLiveConfigsWnd->m_lastFXPresetMsg[0][msgCpt] = i; 
 					g_pLiveConfigsWnd->m_lastFXPresetMsg[1][msgCpt++] = 0; 
@@ -111,7 +129,11 @@ bool AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_String* _curPresetConf)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_LiveConfigsView::SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit)
+#ifdef _SNM_PRESETS
+:SWS_ListView(hwndList, hwndEdit, 8, g_midiLiveCols, "Live Configs View State", false)
+#else
 :SWS_ListView(hwndList, hwndEdit, 7, g_midiLiveCols, "Live Configs View State", false)
+#endif
 {}
 
 void SNM_LiveConfigsView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
@@ -121,13 +143,13 @@ void SNM_LiveConfigsView::GetItemText(LPARAM item, int iCol, char* str, int iStr
 	{
 		switch (iCol)
 		{
-			case 0:
+			case COL_CC:
 				_snprintf(str, iStrMax, "%03d %c", pItem->m_cc, pItem->m_cc == g_liveConfigs.Get()->m_lastMIDIVal[g_configId] ? '*' : ' ');
 				break;
-			case 1:
+			case COL_COMMENT:
 				lstrcpyn(str, pItem->m_desc.Get(), iStrMax);
 				break;
-			case 2:
+			case COL_TR:
 			{
 				bool ok = false;
 				if (pItem->m_track) {
@@ -142,26 +164,26 @@ void SNM_LiveConfigsView::GetItemText(LPARAM item, int iCol, char* str, int iStr
 					lstrcpyn(str, "", iStrMax);
 				break;
 			}
-			case 3:
+			case COL_TRT:
 				lstrcpyn(str, pItem->m_trTemplate.Get(), iStrMax);
 				break;
-			case 4:
+			case COL_FXC:
 				lstrcpyn(str, pItem->m_fxChain.Get(), iStrMax);
 				break;
-/*Preset
-			case 5:
+#ifdef _SNM_PRESETS
+			case COL_PRESET:
 			{
 				WDL_String renderConf;
 				RenderPresetConf(&(pItem->m_presets), &renderConf);
 				lstrcpyn(str, renderConf.Get(), iStrMax);
 				break;
 			}
-*/
+#endif
 			//JFB TODO? actions: kbd_getTextFromCmd, tooltip?
-			case 5:
+			case COL_ACTION_ON:
 				lstrcpyn(str, pItem->m_onAction.Get(), iStrMax);
 				break;
-			case 6:
+			case COL_ACTION_OFF:
 				lstrcpyn(str, pItem->m_offAction.Get(), iStrMax);
 				break;
 			default:
@@ -175,22 +197,22 @@ void SNM_LiveConfigsView::SetItemText(LPARAM item, int iCol, const char* str)
 	MidiLiveItem* pItem = (MidiLiveItem*)item;
 	if (pItem)
 	{
-		if (iCol==1)
+		if (iCol==COL_COMMENT)
 		{
-			// Limit the desc. size (for RPP files)
+			// Limit the comment size (for RPP files)
 			pItem->m_desc.Set(str);
 			pItem->m_desc.Ellipsize(32,32);
 			Update();
 			Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 		}
-		else if (iCol==5 || iCol == 6)
+		else if (iCol==COL_ACTION_ON || iCol == COL_ACTION_OFF)
 		{
 			if (*str != 0 && !NamedCommandLookup(str)) {
 				MessageBox(GetParent(m_hwndList), "Error: this action ID (or custom ID) doesn't exists.", "S&M - Live Configs", MB_OK);
 				return;
 			}
 
-			if (iCol==5)
+			if (iCol==COL_ACTION_ON)
 				pItem->m_onAction.Set(str);
 			else
 				pItem->m_offAction.Set(str);
@@ -219,14 +241,14 @@ void SNM_LiveConfigsView::OnItemDblClk(LPARAM item, int iCol)
 	{
 		switch(iCol)
 		{
-			case 0:
+			case COL_CC:
 				g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_PERFORM_MSG, item);
 				break;
-			case 3:
+			case COL_TRT:
 				if (pItem->m_track)
 					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG, item);
 				break;
-			case 4:
+			case COL_FXC:
 				if (pItem->m_track)
 					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_LOAD_FXCHAIN_MSG, item);
 				break;
@@ -288,7 +310,7 @@ void SNM_LiveConfigsWnd::SelectByCCValue(int _configId, int _cc)
 					ListView_SetItemState(hList, -1, 0, LVIS_SELECTED);
 					ListView_SetItemState(hList, i, LVIS_SELECTED, LVIS_SELECTED); 
 					ListView_EnsureVisible(hList, i, true);
-//JFB4 added but useful?? to test..					Update();
+					Update(); // just usefull to set the "*" when triggering via dbl-click
 					break;
 				}
 			}
@@ -587,7 +609,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 				}
 			}
-/*Preset
+#ifdef _SNM_PRESETS
 			else if (wParam >= SNM_LIVECFG_SET_PRESETS_MSG && wParam < SNM_LIVECFG_CLEAR_PRESETS_MSG) 
 			{
 				bool updt = false;
@@ -606,7 +628,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 				}
 			}
-*/
+#endif
 			// WDL GUI
 			else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_INPUT_TRACK)
 			{
@@ -643,20 +665,20 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
 	{
 		switch(iCol)
 		{
-			case 0:
+			case COL_CC:
 			{
 				hMenu = CreatePopupMenu();
 				AddToMenu(hMenu, "Perform", SNM_LIVECFG_PERFORM_MSG);
 				break;
 			}
-			case 1:
+			case COL_COMMENT:
 			{
 				hMenu = CreatePopupMenu();
 				AddToMenu(hMenu, "Clear", SNM_LIVECFG_CLEAR_DESC_MSG);
 				AddToMenu(hMenu, "Edit", SNM_LIVECFG_EDIT_DESC_MSG);
 				break;
 			}
-			case 2:
+			case COL_TR:
 			{
 				hMenu = CreatePopupMenu();
 				AddToMenu(hMenu, "Clear", SNM_LIVECFG_CLEAR_TRACK_MSG);
@@ -669,7 +691,7 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
 				}
 				break;
 			}
-			case 3:
+			case COL_TRT:
 			{
 				hMenu = CreatePopupMenu();
 				if (item->m_track) {
@@ -679,7 +701,7 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
 				else AddToMenu(hMenu, "(No track)", 0, -1, false, MF_GRAYED);
 				break;
 			}
-			case 4:
+			case COL_FXC:
 			{
 				hMenu = CreatePopupMenu();
 				if (item->m_track) {
@@ -692,8 +714,8 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
 				else AddToMenu(hMenu, "(No track)", 0, -1, false, MF_GRAYED);
 				break;
 			}
-/*Preset
-			case 5:
+#ifdef _SNM_PRESETS
+			case COL_PRESET:
 			{
 				hMenu = CreatePopupMenu();
 				if (item->m_track) {
@@ -710,15 +732,15 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
 				else AddToMenu(hMenu, "(No track)", 0, -1, false, MFS_DISABLED);
 				break;
 			}
-*/
-			case 5:
+#endif
+			case COL_ACTION_ON:
 			{
 				hMenu = CreatePopupMenu();
 				AddToMenu(hMenu, "Clear", SNM_LIVECFG_CLEAR_ON_ACTION_MSG);
 				AddToMenu(hMenu, "Edit", SNM_LIVECFG_EDIT_ON_ACTION_MSG);
 				break;
 			}
-			case 6:
+			case COL_ACTION_OFF:
 			{
 				hMenu = CreatePopupMenu();
 				AddToMenu(hMenu, "Clear", SNM_LIVECFG_CLEAR_OFF_ACTION_MSG);
@@ -1111,8 +1133,8 @@ void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HW
 			new SNM_MidiLiveScheduledJob((int)_ct->user, g_approxDelayMsCC, (int)_ct->user, _val, _valhw, _relmode, _hwnd);
 
 		// delay:
-		// avoid to stuck REPAER when a bunch of CCs are received (which is the standard case 
-		// with HW knobs, faders, ..) but just process the last "stable" one
+		// Avoid to stuck REPAER when a bunch of CCs are received (which is the standard case with HW knobs, faders, ..) 
+		// but just process the last "stable" one => we do this thanks to SNM_ScheduledJob
 		if (g_approxDelayMsCC) {
 			AddOrReplaceScheduledJob(job);
 		}
@@ -1130,15 +1152,14 @@ void SNM_MidiLiveScheduledJob::Perform()
 	MidiLiveConfig* lc = g_liveConfigs.Get();
 	if (!lc || m_val == lc->m_lastMIDIVal[m_cfgId]) 
 		return;
+	else
+		lc->m_lastMIDIVal[m_cfgId] = m_val;
 
 	MidiLiveItem* cfg = g_liveCCConfigs.Get()->Get(m_cfgId)->Get(m_val);
 	if (cfg && !cfg->IsDefault())
 	{
 		if (lc->m_enable[m_cfgId])
 		{
-			// refresh last executed CC value conf.
-			lc->m_lastMIDIVal[m_cfgId] = m_val;
-
 			// Run desactivate action of previous CC
 			// if one, the previous CC's track still selected
 			if (lc->m_lastDeactivateCmd[m_cfgId][0] > 0)
@@ -1208,13 +1229,12 @@ void SNM_MidiLiveScheduledJob::Perform()
 					if (LoadChunk(filename, &chunk) && chunk.GetLength())
 						((SNM_FXChainTrackPatcher*)p)->SetFXChain(&chunk);
 				}
-/*Preset
+#ifdef _SNM_PRESETS
 				else if (cfg->m_presets.GetLength())
 				{
-					p = new SNM_FXPresetParserPatcher(cfg->m_track);
-					((SNM_FXPresetParserPatcher*)p)->SetPresets(&(cfg->m_presets));
+					triggerFXUserPreset(cfg->m_track, &(cfg->m_presets));
 				}
-*/
+#endif
 /*JFB not released
 				if (g_pLiveConfigsWnd->m_autoRcv[m_cfgId] && g_pLiveConfigsWnd->m_inputTr[m_cfgId]) 
 				{			
@@ -1253,12 +1273,12 @@ void SNM_MidiLiveScheduledJob::Perform()
 			else
 				lc->m_lastDeactivateCmd[m_cfgId][0] = -1;
 
-			if (g_pLiveConfigsWnd)
-				g_pLiveConfigsWnd->SelectByCCValue(m_cfgId, m_val);
-
 		} // if (lc->m_enable[m_cfgId])
 
 	} // if (cfg && !cfg->IsDefault())
+
+	if (g_pLiveConfigsWnd)
+		g_pLiveConfigsWnd->SelectByCCValue(m_cfgId, m_val);
 }
 
 void ToggleEnableLiveConfig(COMMAND_T* _ct) {
@@ -1269,30 +1289,4 @@ void ToggleEnableLiveConfig(COMMAND_T* _ct) {
 
 bool IsLiveConfigEnabled(COMMAND_T* _ct) {
 	return (g_liveConfigs.Get()->m_enable[(int)_ct->user] == 1);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Select project (MIDI CC only) 
-///////////////////////////////////////////////////////////////////////////////
-
-void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) 
-{
-	// Absolute CC only
-	if (!_relmode && _valhw < 0)
-	{
-		// Avoid to stuck REPAER when a bunch of CCs are received (which is the standard case 
-		// with HW knobs, faders, ..) but just process the last "stable" one
-		// => we do this thanks to SNM_ScheduledJob
-		SNM_SelectProjectScheduledJob* job = 
-			new SNM_SelectProjectScheduledJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd);
-		AddOrReplaceScheduledJob(job);
-	}
-}
-
-void SNM_SelectProjectScheduledJob::Perform()
-{
-	ReaProject* proj = Enum_Projects(m_val, NULL, 0);
-	if (proj)
-		SelectProjectInstance(proj);
 }

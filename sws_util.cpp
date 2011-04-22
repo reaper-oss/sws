@@ -412,11 +412,11 @@ void WinSpawnNotepad(const char* pFilename)
 #ifdef _WIN32
 	if (pFilename)
 	{
-		char cNotepad[256];
+		char cNotepad[1024];
 		char* cWindir = getenv("windir");
 		if (!cWindir)
 			return;
-		_snprintf(cNotepad, 256, "%s\\notepad.exe", cWindir);
+		_snprintf(cNotepad, 1024, "%s\\notepad.exe", cWindir);
 		_spawnl(_P_NOWAIT, cNotepad, cNotepad, pFilename, NULL);
 	}
 #endif

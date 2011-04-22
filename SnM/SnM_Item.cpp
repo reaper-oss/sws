@@ -994,7 +994,7 @@ bool ShowTakeEnvPitch(MediaItem_Take* _take) {
 ///////////////////////////////////////////////////////////////////////////////
 // Item/take template slots
 ///////////////////////////////////////////////////////////////////////////////
-
+#ifdef _SNM_MISC
 void saveItemTakeTemplate(COMMAND_T* _ct)
 {
 	for (int i = 0; i < GetNumTracks(); i++)
@@ -1049,4 +1049,108 @@ void saveItemTakeTemplate(COMMAND_T* _ct)
 			}
 		}
 	}
+}
+#endif
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Toolbar item selection toggles
+///////////////////////////////////////////////////////////////////////////////
+
+// _items: if not NULL, will be filled with selected items that are out of the scope. 
+//         if NULL, returns true ASAP (when a selected item out of the scope is found)
+bool itemSelExists(int _dir, WDL_PtrList<void>* _items)
+{
+	int countSelItems = CountSelectedMediaItems(NULL);
+	switch (_dir)
+	{
+		case 0: //left
+		case 1: //right
+		{
+			if (countSelItems)
+			{
+				HWND w = // GetTrackWnd(); //JFB!!! commented: FindWindowEx in SWELL
+					FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", "trackview");
+				if (w)
+				{
+					RECT r; GetWindowRect(w, &r);
+					double pos, len, start_time, end_time;
+					GetSet_ArrangeView2(NULL, false, r.left, r.right, &start_time, &end_time);
+					for (int i=0; i < countSelItems; i++)
+					{
+						MediaItem* item = GetSelectedMediaItem(NULL, i);
+						if (item)
+						{
+							pos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+							if (_dir == 1 && end_time < pos) {
+								if (_items) _items->Add(item);
+								else return true;
+							}
+
+							len = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
+							if (_dir == 0 && start_time > (pos + len)) {
+								if (_items)	_items->Add(item);
+								else return true;
+							}
+						}
+					}
+				}
+			}
+			break;
+		}
+		case 2: //up
+		case 3: //down
+		{
+			if (countSelItems)
+			{
+				WDL_PtrList<void> trList;
+				GetVisibleTCPTracks(&trList);
+
+				// Look for min/max visible track ids
+				if (trList.GetSize())
+				{
+					int minVis=0xFFFF, maxVis=-1;
+					for (int i=0; i < trList.GetSize(); i++) 
+					{
+						int trIdx = (int)GetSetMediaTrackInfo((MediaTrack*)trList.Get(i), "IP_TRACKNUMBER", NULL);
+						if (trIdx > 0 && trIdx < minVis) minVis = trIdx;
+						if (trIdx > 0 && trIdx > maxVis) maxVis = trIdx;
+					}
+
+					for (int i=0; i < countSelItems; i++)
+					{
+						MediaItem* item = GetSelectedMediaItem(NULL, i);
+						MediaTrack* tr = item ? GetMediaItem_Track(item) : NULL;
+						if (tr && trList.Find((void*)tr) == -1)
+						{
+							int trIdx = (int)GetSetMediaTrackInfo(tr, "IP_TRACKNUMBER", NULL);
+							if (_dir == 2 && trIdx <= minVis) {
+								if (_items) _items->Add(item);
+								else return true;
+							}
+							else if (_dir == 3 && trIdx >= maxVis) {
+								if (_items) _items->Add(item);
+								else return true;
+							}
+						}
+					}
+				}
+			}
+			break;
+		}
+	}
+	return (_items && _items->GetSize());
+}
+
+// deselects items out of the scope
+void toggleItemSelExists(COMMAND_T* _ct)
+{
+	WDL_PtrList<void> selItems;
+	if (itemSelExists((int)_ct->user, &selItems))
+		for (int i=0; i < selItems.GetSize(); i++)
+			GetSetMediaItemInfo((MediaItem*)selItems.Get(i), "B_UISEL", &g_bFalse);
+}
+
+bool itemSelExists(COMMAND_T* _ct) {
+	return itemSelExists((int)_ct->user, NULL);
 }

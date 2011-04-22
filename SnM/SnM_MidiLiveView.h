@@ -54,34 +54,23 @@
 #define SNM_LIVECFG_UNDO_STR					"Live configs edition"
 
 
-class MidiLiveItem
-{
+class MidiLiveItem {
 public:
 	MidiLiveItem(int _cc, const char* _desc, MediaTrack* _track, const char* _trTemplate, const char* _fxChain, const char* _presets, const char* _onAction, const char* _offAction)
-		:m_cc(_cc),m_desc(_desc),m_track(_track),m_trTemplate(_trTemplate),m_fxChain(_fxChain),m_presets(_presets),m_onAction(_onAction),m_offAction(_offAction) {}
-	bool IsDefault(){
-		return (!m_track && !m_desc.GetLength() && !m_trTemplate.GetLength() && !m_fxChain.GetLength() && !m_presets.GetLength() && !m_onAction.GetLength() && !m_offAction.GetLength());
-	}
+		: m_cc(_cc),m_desc(_desc),m_track(_track),m_trTemplate(_trTemplate),m_fxChain(_fxChain),m_presets(_presets),m_onAction(_onAction),m_offAction(_offAction) {}
+	bool IsDefault(){return (!m_track && !m_desc.GetLength() && !m_trTemplate.GetLength() && !m_fxChain.GetLength() && !m_presets.GetLength() && !m_onAction.GetLength() && !m_offAction.GetLength());}
 	void Clear() {m_track=NULL; m_desc.Set(""); m_trTemplate.Set(""); m_fxChain.Set(""); m_presets.Set(""); m_onAction.Set(""); m_offAction.Set("");}
 
 	int m_cc;
-	WDL_String m_desc;
 	MediaTrack* m_track;
-	WDL_String m_trTemplate;
-	WDL_String m_fxChain;
-	WDL_String m_presets;
-	WDL_String m_onAction;
-	WDL_String m_offAction;
+	WDL_String m_desc, m_trTemplate, m_fxChain, m_presets, m_onAction, m_offAction;
 };
 
-class MidiLiveConfig
-{
+class MidiLiveConfig {
 public:
 	MidiLiveConfig() {Clear();}
-	void Clear() 
-	{
-		for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++) 
-		{
+	void Clear() {
+		for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++) 	{
 			m_enable[i] = 1;
 			m_autoRcv[i] = 0; //JFB not released
 			m_muteOthers[i] = 1;
@@ -103,8 +92,7 @@ public:
 	int m_lastDeactivateCmd[SNM_LIVECFG_NB_CONFIGS][4];
 };
 
-class SNM_LiveConfigsView : public SWS_ListView
-{
+class SNM_LiveConfigsView : public SWS_ListView {
 public:
 	SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit);
 protected:
@@ -114,8 +102,7 @@ protected:
 	void OnItemDblClk(LPARAM item, int iCol);
 };
 
-class SNM_LiveConfigsWnd : public SWS_DockWnd
-{
+class SNM_LiveConfigsWnd : public SWS_DockWnd {
 public:
 	SNM_LiveConfigsWnd();
 	void Update();
@@ -137,58 +124,21 @@ protected:
 	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
-	WDL_VirtualComboBox m_cbConfig;
-	WDL_VirtualIconButton m_btnEnable;
-	WDL_VirtualIconButton m_btnAutoRcv;
-	WDL_VirtualIconButton m_btnMuteOthers;
-	WDL_VirtualIconButton m_btnAutoSelect;
-	WDL_VirtualComboBox m_cbInputTr;
+	WDL_VirtualComboBox m_cbConfig, m_cbInputTr;
+	WDL_VirtualIconButton m_btnEnable, m_btnAutoRcv, m_btnMuteOthers, m_btnAutoSelect;
 };
 
-class SNM_MidiLiveScheduledJob : public SNM_ScheduledJob
-{
+class SNM_MidiLiveScheduledJob : public SNM_ScheduledJob {
 public:
 	SNM_MidiLiveScheduledJob(int _id, int _approxDelayMs, int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd) 
-		: SNM_ScheduledJob(_id, _approxDelayMs) 
-	{
-		m_cfgId = _cfgId;
-		m_val = _val;
-		m_valhw = _valhw;
-		m_relmode = _relmode;
-		m_hwnd = _hwnd;
-	}
+		: SNM_ScheduledJob(_id, _approxDelayMs),m_cfgId(_cfgId),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd) {}
 	void Perform();
-
 protected:
-	int m_cfgId;
-	int m_val;
-	int m_valhw;
-	int m_relmode;
+	int m_cfgId, m_val, m_valhw, m_relmode;
 	HWND m_hwnd;
 };
 
-class SNM_SelectProjectScheduledJob : public SNM_ScheduledJob
-{
-public:
-	SNM_SelectProjectScheduledJob(int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd) 
-		: SNM_ScheduledJob(SNM_SCHEDJOB_LIVECFG_SELPRJ, _approxDelayMs) 
-	{
-		m_val = _val;
-		m_valhw = _valhw;
-		m_relmode = _relmode;
-		m_hwnd = _hwnd;
-	}
-	void Perform();
-
-protected:
-	int m_val;
-	int m_valhw;
-	int m_relmode;
-	HWND m_hwnd;
-};
-
-class SNM_LiveCfg_TLChangeSchedJob : public SNM_ScheduledJob
-{
+class SNM_LiveCfg_TLChangeSchedJob : public SNM_ScheduledJob {
 public:
 	SNM_LiveCfg_TLChangeSchedJob() : SNM_ScheduledJob(SNM_SCHEDJOB_LIVECFG_TLCHANGE, 150) {}
 	void Perform();

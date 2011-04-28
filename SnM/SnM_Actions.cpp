@@ -75,8 +75,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Close all routing windows" }, "S&M_WNCLS1", closeAllRoutingWindows, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Close all envelope windows" }, "S&M_WNCLS2", closeAllEnvWindows, NULL, },
+#ifdef _SNM_MISC
 	{ { DEFACCEL, "SWS/S&M: Toggle show all routing windows" }, "S&M_WNTGL1", toggleAllRoutingWindows, NULL, -666, fakeIsToggledAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle show all envelope windows" }, "S&M_WNTGL2", toggleAllEnvWindows, NULL, -666, fakeIsToggledAction},
+#endif
 #endif
 	{ { DEFACCEL, "SWS/S&M: Close all floating FX windows" }, "S&M_WNCLS3", closeAllFXWindows, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Close all FX chain windows" }, "S&M_WNCLS4", closeAllFXChainsWindows, NULL, },
@@ -479,12 +481,20 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Envelopes --------------------------------------------------------------
 	// take env.
-		{ { DEFACCEL, "SWS/S&M: Show take volume envelope" }, "S&M_TAKEENV1", showHideTakeVolEnvelope, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Show take pan envelope" }, "S&M_TAKEENV2", showHideTakePanEnvelope, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Show take mute envelope" }, "S&M_TAKEENV3", showHideTakeMuteEnvelope, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Hide take volume envelope" }, "S&M_TAKEENV4", showHideTakeVolEnvelope, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Hide take pan envelope" }, "S&M_TAKEENV5", showHideTakePanEnvelope, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Hide take mute envelope" }, "S&M_TAKEENV6", showHideTakeMuteEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Show take volume envelopes" }, "S&M_TAKEENV1", showHideTakeVolEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Show take pan envelopes" }, "S&M_TAKEENV2", showHideTakePanEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Show take mute envelopes" }, "S&M_TAKEENV3", showHideTakeMuteEnvelope, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Hide take volume envelopes" }, "S&M_TAKEENV4", showHideTakeVolEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Hide take pan envelopes" }, "S&M_TAKEENV5", showHideTakePanEnvelope, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Hide take mute envelopes" }, "S&M_TAKEENV6", showHideTakeMuteEnvelope, NULL, 0},
+#ifdef _SNM_MISC
+	{ { DEFACCEL, "SWS/S&M: Set take pan envelopes to 100% right" }, "S&M_TAKEENV_100R", panTakeEnvelope, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Set take pan envelopes to 100% left" }, "S&M_TAKEENV_100L", panTakeEnvelope, NULL, 1},
+#endif
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 100% right" }, "S&M_PAN_TAKES_100R", setPan, NULL, -100},
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 100% left" }, "S&M_PAN_TAKES_100L", setPan, NULL, 100},
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to center" }, "S&M_PAN_TAKES_CENTER", setPan, NULL, 0},
+
 /*exist natively
 	{ { DEFACCEL, "SWS/S&M: Toggle show take volume envelope" }, "S&M_TAKEENV7", showHideTakeVolEnvelope, NULL, -1, fakeIsToggledAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle show take pan envelope" }, "S&M_TAKEENV8", showHideTakePanEnvelope, NULL, -1, fakeIsToggledAction},
@@ -494,6 +504,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Hide take pitch envelope" }, "S&M_TAKEENV11", showHideTakePitchEnvelope, NULL, 0},
 
 	// track env.
+	{ { DEFACCEL, "SWS/S&M: Toolbar track envelopes in write mode toggle" }, "S&M_WRITE_AUTOMATION", toggleWriteEnvExists, NULL, 0, writeEnvExists},
+
 	{ { DEFACCEL, "SWS/S&M: Toggle arming of all active envelopes for selected tracks" }, "S&M_TGLARMALLENVS", toggleArmTrackEnv, NULL, 0, fakeIsToggledAction},
 	{ { DEFACCEL, "SWS/S&M: Arm all active envelopes for selected tracks" }, "S&M_ARMALLENVS", toggleArmTrackEnv, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Disarm all active envelopes for selected tracks" }, "S&M_DISARMALLENVS", toggleArmTrackEnv, NULL, 2},
@@ -509,11 +521,11 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 
 	// Arrange ----------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Toolbar right item selection toggle" },"S&M_SEL_RIGHT", toggleItemSelExists, NULL, 0, itemSelExists},
-	{ { DEFACCEL, "SWS/S&M: Toolbar left item selection toggle" }, "S&M_SEL_LEFT", toggleItemSelExists, NULL, 1, itemSelExists},
+	{ { DEFACCEL, "SWS/S&M: Toolbar right item selection toggle" },"S&M_SEL_RIGHT", toggleItemSelExists, NULL, SNM_ITEM_SEL_RIGHT, itemSelExists},
+	{ { DEFACCEL, "SWS/S&M: Toolbar left item selection toggle" }, "S&M_SEL_LEFT", toggleItemSelExists, NULL, SNM_ITEM_SEL_LEFT, itemSelExists},
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Toolbar upper item selection toggle" }, "S&M_SEL_UP", toggleItemSelExists, NULL, 2, itemSelExists},
-	{ { DEFACCEL, "SWS/S&M: Toolbar bottom item selection toggle" }, "S&M_SEL_DOWN", toggleItemSelExists, NULL, 3, itemSelExists},
+	{ { DEFACCEL, "SWS/S&M: Toolbar top item selection toggle" }, "S&M_SEL_UP", toggleItemSelExists, NULL, SNM_ITEM_SEL_UP, itemSelExists},
+	{ { DEFACCEL, "SWS/S&M: Toolbar bottom item selection toggle" }, "S&M_SEL_DOWN", toggleItemSelExists, NULL, SNM_ITEM_SEL_DOWN, itemSelExists},
 #endif
 
 	// Find -------------------------------------------------------------------
@@ -589,19 +601,20 @@ bool IsToolbarsAutoRefeshEnabled(COMMAND_T* _ct) {
 	return g_toolbarsAutoRefreshEnabled;
 }
 
-// see  SnMCSurfRun()
+// Also see SnMCSurfRun()
 void RefreshToolbars() {
-	if (g_toolbarsAutoRefreshEnabled) 
-	{
-		RefreshToolbar(NamedCommandLookup("_S&M_SEL_LEFT"));
-		RefreshToolbar(NamedCommandLookup("_S&M_SEL_RIGHT"));
+	// item sel. buttons
+	RefreshToolbar(NamedCommandLookup("_S&M_SEL_LEFT"));
+	RefreshToolbar(NamedCommandLookup("_S&M_SEL_RIGHT"));
 #ifdef _WIN32
-		RefreshToolbar(NamedCommandLookup("_S&M_SEL_UP"));
-		RefreshToolbar(NamedCommandLookup("_S&M_SEL_DOWN"));
+	RefreshToolbar(NamedCommandLookup("_S&M_SEL_UP"));
+	RefreshToolbar(NamedCommandLookup("_S&M_SEL_DOWN"));
 #endif
-		// host AW's grid toolbar auto refresh
-// wait for aw's feedback		UpdateGridToolbar();
-	}
+	// write automation button
+	RefreshToolbar(NamedCommandLookup("_S&M_WRITE_AUTOMATION"));
+
+	// host AW's grid toolbar buttons auto refresh
+	UpdateGridToolbar();
 }
 
 
@@ -887,9 +900,14 @@ void SnMCSurfRun()
 {
 	// Polling (SNM_CSURF_RUN_POLL_MS = every second or so)
 	g_approxPollMsCounter += SNM_CSURF_RUN_TICK_MS;
-	if (g_approxPollMsCounter >= SNM_CSURF_RUN_POLL_MS) {
+	if (g_approxPollMsCounter >= SNM_CSURF_RUN_POLL_MS)
+	{
 		g_approxPollMsCounter = 0.0;
-		RefreshToolbars();
+		if (g_toolbarsAutoRefreshEnabled) 
+		{
+			itemSelToolbarPoll();
+			RefreshToolbars();
+		}
 	}
 
 	// Perform scheduled jobs

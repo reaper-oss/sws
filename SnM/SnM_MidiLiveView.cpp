@@ -40,8 +40,7 @@
 #define SAVEWINDOW_POS_KEY		"S&M - Live Configs List Save Window Position"
 #define NB_CC_VALUES			128
 
-enum
-{
+enum {
   COMBOID_CONFIG=1000,
   BUTTONID_ENABLE,
   BUTTONID_AUTO_RCV,
@@ -50,8 +49,7 @@ enum
   COMBOID_INPUT_TRACK
 };
 
-enum
-{
+enum {
   COL_CC=0,
   COL_COMMENT,
   COL_TR,

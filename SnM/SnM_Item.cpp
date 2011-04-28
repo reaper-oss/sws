@@ -905,6 +905,16 @@ bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char*
 	return updated;
 }
 
+//JFB!!! not used yet, TODO: env. to be reseted first
+void panTakeEnvelope(COMMAND_T* _ct) 
+{
+	WDL_String defaultPoint("PT 0.000000 ");
+	defaultPoint.AppendFormatted(128, "%d.000000 0", (int)_ct->user);
+	char* dbg = defaultPoint.Get();
+	// PT 0.000000 -1.000000 0 0 1
+	patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", "1", &defaultPoint);
+}
+
 void showHideTakeVolEnvelope(COMMAND_T* _ct) 
 {
 	char cVis[2] = ""; //empty means toggle
@@ -1054,60 +1064,84 @@ void saveItemTakeTemplate(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Pan actions
+///////////////////////////////////////////////////////////////////////////////
+
+void setPan(COMMAND_T* _ct)
+{
+	bool updated = false;
+	double value = (double)((int)_ct->user/100);
+	int countSelItems = CountSelectedMediaItems(NULL);
+	for (int i=0; i < countSelItems; i++)
+	{
+		MediaItem* item = GetSelectedMediaItem(NULL, i);
+		MediaItem_Take* tk = item ? GetActiveTake(item) : NULL;
+		if (tk)
+		{
+			double curValue = *(double*)GetSetMediaItemTakeInfo(tk, "D_PAN", NULL);
+			if (fabs(curValue - value) > 0.0001)
+			{
+				GetSetMediaItemTakeInfo(tk, "D_PAN", &value);
+				updated = true;
+			}
+		}
+	}
+
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Toolbar item selection toggles
 ///////////////////////////////////////////////////////////////////////////////
 
-// _items: if not NULL, will be filled with selected items that are out of the scope. 
-//         if NULL, returns true ASAP (when a selected item out of the scope is found)
-bool itemSelExists(int _dir, WDL_PtrList<void>* _items)
+WDL_PtrList<void> g_toolbarItemSel[4];
+WDL_PtrList<void> g_toolbarItemSelToggle[4];
+SWS_Mutex g_toolbarItemSelLock;
+
+void itemSelToolbarPoll()
 {
+	SWS_SectionLock lock(&g_toolbarItemSelLock);
+
+	for(int i=0; i < 4; i++)
+		g_toolbarItemSel[i].Empty(false);
+
 	int countSelItems = CountSelectedMediaItems(NULL);
-	switch (_dir)
+	if (countSelItems)
 	{
-		case 0: //left
-		case 1: //right
+		// left/right item sel.
+		double pos,len,start_time,end_time;
+		bool horizontal = false;
+		HWND w = // GetTrackWnd(); //JFB!!! commented: FindWindowEx in SWELL
+			FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", "trackview");
+		if (w)
 		{
-			if (countSelItems)
-			{
-				HWND w = // GetTrackWnd(); //JFB!!! commented: FindWindowEx in SWELL
-					FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", "trackview");
-				if (w)
-				{
-					RECT r; GetWindowRect(w, &r);
-					double pos, len, start_time, end_time;
-					GetSet_ArrangeView2(NULL, false, r.left, r.right, &start_time, &end_time);
-					for (int i=0; i < countSelItems; i++)
-					{
-						MediaItem* item = GetSelectedMediaItem(NULL, i);
-						if (item)
-						{
-							pos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
-							if (_dir == 1 && end_time < pos) {
-								if (_items) _items->Add(item);
-								else return true;
-							}
-
-							len = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
-							if (_dir == 0 && start_time > (pos + len)) {
-								if (_items)	_items->Add(item);
-								else return true;
-							}
-						}
-					}
-				}
-			}
-			break;
+			RECT r; GetWindowRect(w, &r);
+			GetSet_ArrangeView2(NULL, false, r.left, r.right-17, &start_time, &end_time); // -17 = width of the vert. scrollbar
+			horizontal = true;
 		}
-		case 2: //up
-		case 3: //down
-		{
-			if (countSelItems)
-			{
-				WDL_PtrList<void> trList;
-				GetVisibleTCPTracks(&trList);
 
-				// Look for min/max visible track ids
-				if (trList.GetSize())
+		// up/down item sel.
+		WDL_PtrList<void> trList;
+		GetVisibleTCPTracks(&trList);
+		bool vertical = (trList.GetSize() > 0);
+
+		for (int i=0; (horizontal || vertical) && i < countSelItems; i++)
+		{
+			MediaItem* item = GetSelectedMediaItem(NULL, i);
+			if (item)
+			{
+				if (horizontal) 
+				{
+					pos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+					if (end_time < pos)
+						g_toolbarItemSel[SNM_ITEM_SEL_LEFT].Add(item);
+
+					len = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
+					if (start_time > (pos + len))
+						g_toolbarItemSel[SNM_ITEM_SEL_RIGHT].Add(item);
+				}
+				if (vertical)
 				{
 					int minVis=0xFFFF, maxVis=-1;
 					for (int i=0; i < trList.GetSize(); i++) 
@@ -1117,40 +1151,62 @@ bool itemSelExists(int _dir, WDL_PtrList<void>* _items)
 						if (trIdx > 0 && trIdx > maxVis) maxVis = trIdx;
 					}
 
-					for (int i=0; i < countSelItems; i++)
+					MediaTrack* tr = GetMediaItem_Track(item);
+					if (tr && trList.Find((void*)tr) == -1)
 					{
-						MediaItem* item = GetSelectedMediaItem(NULL, i);
-						MediaTrack* tr = item ? GetMediaItem_Track(item) : NULL;
-						if (tr && trList.Find((void*)tr) == -1)
-						{
-							int trIdx = (int)GetSetMediaTrackInfo(tr, "IP_TRACKNUMBER", NULL);
-							if (_dir == 2 && trIdx <= minVis) {
-								if (_items) _items->Add(item);
-								else return true;
-							}
-							else if (_dir == 3 && trIdx >= maxVis) {
-								if (_items) _items->Add(item);
-								else return true;
-							}
-						}
+						int trIdx = (int)GetSetMediaTrackInfo(tr, "IP_TRACKNUMBER", NULL);
+						if (trIdx <= minVis)
+							g_toolbarItemSel[SNM_ITEM_SEL_UP].Add(item);
+						else if (trIdx >= maxVis)
+							g_toolbarItemSel[SNM_ITEM_SEL_DOWN].Add(item);
 					}
 				}
 			}
-			break;
 		}
 	}
-	return (_items && _items->GetSize());
 }
 
-// deselects items out of the scope
+// deselects items out of the scope and -on toggle- reselects those items
 void toggleItemSelExists(COMMAND_T* _ct)
 {
-	WDL_PtrList<void> selItems;
-	if (itemSelExists((int)_ct->user, &selItems))
-		for (int i=0; i < selItems.GetSize(); i++)
-			GetSetMediaItemInfo((MediaItem*)selItems.Get(i), "B_UISEL", &g_bFalse);
+	bool updated = false, toggle = false;
+	WDL_PtrList<void>* l1 = NULL;
+	WDL_PtrList<void>* l2 = NULL;
+
+	SWS_SectionLock lock(&g_toolbarItemSelLock);
+
+	if (g_toolbarItemSel[(int)_ct->user].GetSize()) 
+	{
+		l1 = &(g_toolbarItemSel[(int)_ct->user]);
+		l2 = &(g_toolbarItemSelToggle[(int)_ct->user]);
+	}
+	else if (g_toolbarItemSelToggle[(int)_ct->user].GetSize())
+	{
+		l2 = &(g_toolbarItemSel[(int)_ct->user]);
+		l1 = &(g_toolbarItemSelToggle[(int)_ct->user]);
+		toggle = true;
+	}
+
+	if (l1 && l2) 
+	{
+		l2->Empty(false);
+		for (int i=0; i < l1->GetSize(); i++)
+		{
+			GetSetMediaItemInfo((MediaItem*)l1->Get(i), "B_UISEL", &toggle);
+			l2->Add((MediaItem*)l1->Get(i));
+			updated = true;
+		}
+		l1->Empty(false);
+	}
+
+	if (updated)
+	{
+		UpdateTimeline();
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+	}
 }
 
 bool itemSelExists(COMMAND_T* _ct) {
-	return itemSelExists((int)_ct->user, NULL);
+	SWS_SectionLock lock(&g_toolbarItemSelLock);
+	return (g_toolbarItemSel[(int)_ct->user].GetSize() > 0);
 }

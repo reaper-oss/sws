@@ -77,8 +77,7 @@
 
 #define DRAGNDROP_EMPTY_SLOT_HACK		">empty<"
 
-enum
-{
+enum {
   SNM_SLOT_TYPE_FX_CHAINS=0,
   SNM_SLOT_TYPE_TR_TEMPLATES,
 #ifdef _SNM_ITT
@@ -87,8 +86,7 @@ enum
   SNM_SLOT_TYPE_COUNT
 };
 
-enum
-{
+enum {
   COMBOID_TYPE=1000,
   COMBOID_DBLCLICK_TYPE,
   COMBOID_DBLCLICK_TO,
@@ -99,8 +97,7 @@ enum
 #endif
 };
 
-enum
-{
+enum {
   FXC_AUTOSAVE_PREF_TRACK=0,
   FXC_AUTOSAVE_PREF_INPUT_FX,
   FXC_AUTOSAVE_PREF_ITEM

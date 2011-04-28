@@ -221,9 +221,10 @@ void setTracksFolderState(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Env. arming
+// Track envelopes
 ///////////////////////////////////////////////////////////////////////////////
 
+// rmk: master playrate env. not managed (safer: I don't really understand the model..)
 void toggleArmTrackEnv(COMMAND_T* _ct)
 {
 	bool updated = false;
@@ -288,10 +289,39 @@ void toggleArmTrackEnv(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Toolbar track env. write mode toggle
+///////////////////////////////////////////////////////////////////////////////
+
+void toggleWriteEnvExists(COMMAND_T* _ct)
+{
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i,false); 
+		int autoMode = tr ? *(int*)GetSetMediaTrackInfo(tr, "I_AUTOMODE", NULL) : -1;
+		if (autoMode >= 2 /* touch */ && autoMode <= 4 /* latch */)
+			*(int*)GetSetMediaTrackInfo(tr, "I_AUTOMODE", &g_i1); // => set READ mode
+	}
+}
+
+bool writeEnvExists(COMMAND_T* _ct)
+{
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i,false); 
+		int autoMode = tr ? *(int*)GetSetMediaTrackInfo(tr, "I_AUTOMODE", NULL) : -1;
+		if (autoMode >= 2 /* touch */ && autoMode <= 4 /* latch */)
+			return true;
+	}
+	return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Track selection (all with ReaProject*)
 ///////////////////////////////////////////////////////////////////////////////
 
-int CountSelectedTracksWithMaster(ReaProject* _proj) {
+int CountSelectedTracksWithMaster(ReaProject* _proj) 
+{
 	int selCnt = CountSelectedTracks(_proj);
 	MediaTrack* mtr = GetMasterTrack(_proj);
 	if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL))
@@ -302,9 +332,11 @@ int CountSelectedTracksWithMaster(ReaProject* _proj) {
 // Takes the master track into account
 // => to be used with CountSelectedTracksWithMaster() and not the API's CountSelectedTracks()
 // If selected, the master will be returnd with the _idx = 0
-MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx) {
+MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx) 
+{
 	MediaTrack* mtr = GetMasterTrack(_proj);
-	if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL)) {
+	if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL)) 
+	{
 		if (!_idx) return mtr;
 		else return GetSelectedTrack(_proj, _idx-1);
 	}

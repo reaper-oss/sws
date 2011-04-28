@@ -36,7 +36,7 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Definitions
+// Definitions, enums
 ///////////////////////////////////////////////////////////////////////////////
 
 #define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
@@ -60,6 +60,13 @@
 #define SNM_3D_COLORS_DELTA			25
 #define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average monitored)
 #define SNM_CSURF_RUN_POLL_MS		1000
+
+enum {
+  SNM_ITEM_SEL_RIGHT=0,
+  SNM_ITEM_SEL_LEFT,
+  SNM_ITEM_SEL_UP,
+  SNM_ITEM_SEL_DOWN
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -338,6 +345,7 @@ void removeEmptyTakes(COMMAND_T* _ct);
 void removeEmptyMidiTakes(COMMAND_T* _ct);
 void removeAllEmptyTakes(COMMAND_T* _ct);
 void deleteTakeAndMedia(COMMAND_T* _ct);
+void panTakeEnvelope(COMMAND_T* _ct);
 void showHideTakeVolEnvelope(COMMAND_T* _ct); 
 void showHideTakePanEnvelope(COMMAND_T* _ct);
 void showHideTakeMuteEnvelope(COMMAND_T* _ct);
@@ -347,6 +355,8 @@ bool ShowTakeEnvPan(MediaItem_Take* _take);
 bool ShowTakeEnvMute(MediaItem_Take* _take);
 bool ShowTakeEnvPitch(MediaItem_Take* _take);
 void saveItemTakeTemplate(COMMAND_T* _ct);
+void setPan(COMMAND_T* _ct);
+void itemSelToolbarPoll();
 void toggleItemSelExists(COMMAND_T* _ct);
 bool itemSelExists(COMMAND_T* _ct);
 
@@ -360,6 +370,10 @@ void saveTracksFolderStates(COMMAND_T* _ct);
 void restoreTracksFolderStates(COMMAND_T* _ct);
 void setTracksFolderState(COMMAND_T* _ct);
 void toggleArmTrackEnv(COMMAND_T* _ct);
+
+void toggleWriteEnvExists(COMMAND_T* _ct);
+bool writeEnvExists(COMMAND_T* _ct);
+
 int CountSelectedTracksWithMaster(ReaProject* _proj);
 MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx);
 MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj);

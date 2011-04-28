@@ -276,11 +276,13 @@ void closeAllEnvWindows(COMMAND_T * _ct) {
 	closeOrToggleAllWindows(false, true, false);
 }
 
+//JFB: not used anymore
 void toggleAllRoutingWindows(COMMAND_T * _ct) {
 	closeOrToggleAllWindows(true, false, true);
 	fakeToggleAction(_ct);
 }
 
+//JFB not used anymore
 void toggleAllEnvWindows(COMMAND_T * _ct) {
 	closeOrToggleAllWindows(false, true, true);
 	fakeToggleAction(_ct);

@@ -706,12 +706,19 @@ bool SNM_ArmEnvParserPatcher::IsParentEnv(const char* _parent)
 	return (!strcmp(_parent, "PARMENV") ||
 		!strcmp(_parent, "VOLENV2") ||
 		!strcmp(_parent, "PANENV2") ||
+		!strcmp(_parent, "WIDTHENV2") ||
 		!strcmp(_parent, "VOLENV") ||
 		!strcmp(_parent, "PANENV") ||
+		!strcmp(_parent, "WIDTHENV") ||
 		!strcmp(_parent, "MUTEENV") ||
 		!strcmp(_parent, "AUXVOLENV") ||
 		!strcmp(_parent, "AUXPANENV") ||
 		!strcmp(_parent, "AUXMUTEENV") ||
+/* master playrate env. not managed (safer: I don't really understand the model..)
+		!strcmp(_parent, "MASTERPLAYSPEEDENV") ||
+*/
+		!strcmp(_parent, "MASTERWIDTHENV") ||
+		!strcmp(_parent, "MASTERWIDTHENV2") ||
 		!strcmp(_parent, "MASTERVOLENV") ||
 		!strcmp(_parent, "MASTERPANENV") ||
 		!strcmp(_parent, "MASTERVOLENV2") ||

@@ -1,6 +1,46 @@
+!v2.0.0 #19
+
+Added toolbar actions (with "auto-refreshed" button states - if the new option "Main menu > Extensions > SWS Options > Enable toolbars auto refresh" is ticked):
++SWS/S&M: Toolbar right item selection toggle
++SWS/S&M: Toolbar left item selection toggle
++SWS/S&M: Toolbar top item selection toggle - WIN ONLY!
++SWS/S&M: Toolbar bottom item selection toggle - WIN ONLY!
+These actions are to prevent user errors, related toolbar buttons will light up when you do things on items but *all* selected ones are not visible in the arrange so that can you break things (without realizing it).
+Clicking related buttons will also deselect items that are out of the current scope and re-selects those items on toggle.
+See details, howto and toolbar auto-refresh anim http://forum.cockos.com/showpost.php?p=728774&postcount=315|here|.
++AW's grid actions button states now reflect the current grid setting (when changed elsewhere in REAPER)
+See details about Adam's grid actions http://forum.cockos.com/showthread.php?p=706294|here|, toolbar auto-refresh anim http://stash.reaper.fm/8523/awGridToolbar.gif|here|.
++SWS/S&M: Toolbar track envelopes in write mode toggle
+This action sets track envelopes that are in one of the write modes into read mode (they do not re-set the previous write mode on toggle, yet). Related toolbar buttons will light up in one of your track envelopes is in one of the write modes.
++SWS/S&M: Toggle toolbars auto refresh enable
+
+Added FX preset actions (v4 only, see implementation remarks http://forum.cockos.com/showpost.php?p=728774&postcount=315|here|). They works with any type of FX and any presets (user or factory presets):
++SWS/S&M: Trigger next preset for selected FX of selected tracks
++SWS/S&M: Trigger previous preset for selected FX of selected tracks
++SWS/S&M: Trigger next preset for FX n of selected tracks - where 'n' is in [1; 4]
++SWS/S&M: Trigger previous preset for FX n of selected tracks - where 'n' is in [1; 4]
++SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC absolute only)
++SWS/S&M: Trigger preset for FX n of selected tracks (MIDI CC absolute only) - where 'n' is in [1; 4]
+Remarks: these 2 last MIDI actions are present in the "S&M Extension" section (see top right dropdown in the action dialog box). They are a bit different from the native "Link to PG change" feature: they work with any type of FX (e.g. JS). Bonus: since v4, "Program Change" MIDI events can be learned.
++S&M Live config view: the "User preset" column is back !
+
+Added other actions:
++SWS/S&M: Pan active takes of selected items to 100% right
++SWS/S&M: Pan active takes of selected items to 100% left
++SWS/S&M: Pan active takes of selected items to center
+Note: "pan takes" not pan cakes.
+
+Fixes, tweaks, house cleaning:
++Many S&M track FX (and FX chain) actions run faster ("fix" for http://forum.cockos.com/showpost.php?p=724194&postcount=13)
++All S&M track envelope arming actions now support v4 panning (width/dual pan)
++Find view: added shortcuts (F3 = find next, shift-F3 = find previous)
++Removed SWS/S&M: Toggle show all routing windows" (too much limitations)
++Removed "SWS/S&M: Toggle show all envelope windows" (too much limitations)
++Removed "SWS/S&M: Save selected item as item/take template..." (private)
+
 !v2.0.0 #18 (March 28, 2011)
 Added actions:
-+Issue 256: "SWS: Toggle auto add envelopes when tweaking in write mode" 
++Issue 256: "SWS: Toggle auto add envelopes when tweaking in write mode"
 +Issue 280: "SWS: Toggle grid lines over/under items"
 +"SWS: Horizontal scroll to put play cursor at 10%"
 

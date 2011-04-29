@@ -1071,18 +1071,25 @@ void setPan(COMMAND_T* _ct)
 {
 	bool updated = false;
 	double value = (double)((int)_ct->user/100);
-	int countSelItems = CountSelectedMediaItems(NULL);
-	for (int i=0; i < countSelItems; i++)
+
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		MediaItem* item = GetSelectedMediaItem(NULL, i);
-		MediaItem_Take* tk = item ? GetActiveTake(item) : NULL;
-		if (tk)
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 		{
-			double curValue = *(double*)GetSetMediaItemTakeInfo(tk, "D_PAN", NULL);
-			if (fabs(curValue - value) > 0.0001)
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
-				GetSetMediaItemTakeInfo(tk, "D_PAN", &value);
-				updated = true;
+				MediaItem_Take* tk = GetActiveTake(item);
+				if (tk)
+				{
+					double curValue = *(double*)GetSetMediaItemTakeInfo(tk, "D_PAN", NULL);
+					if (fabs(curValue - value) > 0.0001)
+					{
+						GetSetMediaItemTakeInfo(tk, "D_PAN", &value);
+						updated = true;
+					}
+				}
 			}
 		}
 	}
@@ -1126,39 +1133,43 @@ void itemSelToolbarPoll()
 		GetVisibleTCPTracks(&trList);
 		bool vertical = (trList.GetSize() > 0);
 
-		for (int i=0; (horizontal || vertical) && i < countSelItems; i++)
+		for (int i=0; (horizontal || vertical) && i < GetNumTracks(); i++)
 		{
-			MediaItem* item = GetSelectedMediaItem(NULL, i);
-			if (item)
+			MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 			{
-				if (horizontal) 
+				MediaItem* item = GetTrackMediaItem(tr,j);
+				if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 				{
-					pos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
-					if (end_time < pos)
-						g_toolbarItemSel[SNM_ITEM_SEL_LEFT].Add(item);
-
-					len = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
-					if (start_time > (pos + len))
-						g_toolbarItemSel[SNM_ITEM_SEL_RIGHT].Add(item);
-				}
-				if (vertical)
-				{
-					int minVis=0xFFFF, maxVis=-1;
-					for (int i=0; i < trList.GetSize(); i++) 
+					if (horizontal) 
 					{
-						int trIdx = (int)GetSetMediaTrackInfo((MediaTrack*)trList.Get(i), "IP_TRACKNUMBER", NULL);
-						if (trIdx > 0 && trIdx < minVis) minVis = trIdx;
-						if (trIdx > 0 && trIdx > maxVis) maxVis = trIdx;
+						pos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+						if (end_time < pos)
+							g_toolbarItemSel[SNM_ITEM_SEL_LEFT].Add(item);
+
+						len = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
+						if (start_time > (pos + len))
+							g_toolbarItemSel[SNM_ITEM_SEL_RIGHT].Add(item);
 					}
-
-					MediaTrack* tr = GetMediaItem_Track(item);
-					if (tr && trList.Find((void*)tr) == -1)
+					if (vertical)
 					{
-						int trIdx = (int)GetSetMediaTrackInfo(tr, "IP_TRACKNUMBER", NULL);
-						if (trIdx <= minVis)
-							g_toolbarItemSel[SNM_ITEM_SEL_UP].Add(item);
-						else if (trIdx >= maxVis)
-							g_toolbarItemSel[SNM_ITEM_SEL_DOWN].Add(item);
+						int minVis=0xFFFF, maxVis=-1;
+						for (int i=0; i < trList.GetSize(); i++) 
+						{
+							int trIdx = (int)GetSetMediaTrackInfo((MediaTrack*)trList.Get(i), "IP_TRACKNUMBER", NULL);
+							if (trIdx > 0 && trIdx < minVis) minVis = trIdx;
+							if (trIdx > 0 && trIdx > maxVis) maxVis = trIdx;
+						}
+
+						MediaTrack* tr = GetMediaItem_Track(item);
+						if (tr && trList.Find((void*)tr) == -1)
+						{
+							int trIdx = (int)GetSetMediaTrackInfo(tr, "IP_TRACKNUMBER", NULL);
+							if (trIdx <= minVis)
+								g_toolbarItemSel[SNM_ITEM_SEL_UP].Add(item);
+							else if (trIdx >= maxVis)
+								g_toolbarItemSel[SNM_ITEM_SEL_DOWN].Add(item);
+						}
 					}
 				}
 			}

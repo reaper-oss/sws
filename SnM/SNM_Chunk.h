@@ -158,8 +158,7 @@ protected:
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_TakeParserPatcher
-//JFB!!! m_activeTakeIdx
-//JFB!!! GetSetMediaItemInfo(item, "I_CURTAKE", &newActive);
+//JFB!!! TODO: m_activeTakeIdx /GetSetMediaItemInfo(item, "I_CURTAKE", &newActive);
 ///////////////////////////////////////////////////////////////////////////////
 
 class SNM_TakeParserPatcher : public SNM_ChunkParserPatcher

@@ -292,14 +292,44 @@ void toggleArmTrackEnv(COMMAND_T* _ct)
 // Toolbar track env. write mode toggle
 ///////////////////////////////////////////////////////////////////////////////
 
+WDL_PtrList_DeleteOnDestroy<SNM_TrackInt> g_toolbarAutoModeToggles;
+
 void toggleWriteEnvExists(COMMAND_T* _ct)
 {
-	for (int i = 0; i <= GetNumTracks(); i++)
+	bool updated = false;
+	// Restore write modes
+	if (g_toolbarAutoModeToggles.GetSize())
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i,false); 
-		int autoMode = tr ? *(int*)GetSetMediaTrackInfo(tr, "I_AUTOMODE", NULL) : -1;
-		if (autoMode >= 2 /* touch */ && autoMode <= 4 /* latch */)
-			*(int*)GetSetMediaTrackInfo(tr, "I_AUTOMODE", &g_i1); // => set READ mode
+		for (int i = 0; i < g_toolbarAutoModeToggles.GetSize(); i++)
+		{
+			SNM_TrackInt* tri = g_toolbarAutoModeToggles.Get(i);
+			*(int*)GetSetMediaTrackInfo(tri->m_tr, "I_AUTOMODE", &(tri->m_int));
+			updated = true;
+		}
+		g_toolbarAutoModeToggles.Empty(true);
+	}
+	// Set read mode and store previous write modes
+	else
+	{
+		for (int i = 0; i <= GetNumTracks(); i++)
+		{
+			MediaTrack* tr = CSurf_TrackFromID(i,false); 
+			int autoMode = tr ? *(int*)GetSetMediaTrackInfo(tr, "I_AUTOMODE", NULL) : -1;
+			if (autoMode >= 2 /* touch */ && autoMode <= 4 /* latch */)
+			{
+				*(int*)GetSetMediaTrackInfo(tr, "I_AUTOMODE", &g_i1); // set read mode
+				g_toolbarAutoModeToggles.Add(new SNM_TrackInt(tr, autoMode));
+				updated = true;
+			}
+		}
+	}
+
+	if (updated)
+	{
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+
+		// in case auto refresh toolbar bar option is off..
+		RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_WRITE_ENV"));
 	}
 }
 

@@ -905,7 +905,7 @@ bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char*
 	return updated;
 }
 
-//JFB!!! not used yet, TODO: env. to be reseted first
+//JFB!!! TODO: env. to be reseted first (not used yet)
 void panTakeEnvelope(COMMAND_T* _ct) 
 {
 	WDL_String defaultPoint("PT 0.000000 ");
@@ -1093,10 +1093,10 @@ void setPan(COMMAND_T* _ct)
 			}
 		}
 	}
-
 	if (updated)
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Toolbar item selection toggles
@@ -1110,7 +1110,7 @@ void itemSelToolbarPoll()
 {
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
 
-	for(int i=0; i < 4; i++)
+	for(int i=0; i < SNM_ITEM_SEL_DOWN; i++)
 		g_toolbarItemSel[i].Empty(false);
 
 	int countSelItems = CountSelectedMediaItems(NULL);
@@ -1119,7 +1119,9 @@ void itemSelToolbarPoll()
 		// left/right item sel.
 		double pos,len,start_time,end_time;
 		bool horizontal = false;
-		HWND w = // GetTrackWnd(); //JFB!!! commented: FindWindowEx in SWELL
+		HWND w = 
+/*JFB!!! I rely on (incomplete?) SWELL's FindWindowEx here
+			GetTrackWnd(); */
 			FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", "trackview");
 		if (w)
 		{
@@ -1145,18 +1147,18 @@ void itemSelToolbarPoll()
 					{
 						pos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
 						if (end_time < pos)
-							g_toolbarItemSel[SNM_ITEM_SEL_LEFT].Add(item);
+							g_toolbarItemSel[SNM_ITEM_SEL_RIGHT].Add(item);
 
 						len = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
 						if (start_time > (pos + len))
-							g_toolbarItemSel[SNM_ITEM_SEL_RIGHT].Add(item);
+							g_toolbarItemSel[SNM_ITEM_SEL_LEFT].Add(item);
 					}
 					if (vertical)
 					{
 						int minVis=0xFFFF, maxVis=-1;
-						for (int i=0; i < trList.GetSize(); i++) 
+						for (int k=0; k < trList.GetSize(); k++) 
 						{
-							int trIdx = (int)GetSetMediaTrackInfo((MediaTrack*)trList.Get(i), "IP_TRACKNUMBER", NULL);
+							int trIdx = (int)GetSetMediaTrackInfo((MediaTrack*)trList.Get(k), "IP_TRACKNUMBER", NULL);
 							if (trIdx > 0 && trIdx < minVis) minVis = trIdx;
 							if (trIdx > 0 && trIdx > maxVis) maxVis = trIdx;
 						}
@@ -1181,20 +1183,21 @@ void itemSelToolbarPoll()
 void toggleItemSelExists(COMMAND_T* _ct)
 {
 	bool updated = false, toggle = false;
+	int dir = (int)_ct->user;
 	WDL_PtrList<void>* l1 = NULL;
 	WDL_PtrList<void>* l2 = NULL;
 
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
 
-	if (g_toolbarItemSel[(int)_ct->user].GetSize()) 
+	if (g_toolbarItemSel[dir].GetSize()) 
 	{
-		l1 = &(g_toolbarItemSel[(int)_ct->user]);
-		l2 = &(g_toolbarItemSelToggle[(int)_ct->user]);
+		l1 = &(g_toolbarItemSel[dir]);
+		l2 = &(g_toolbarItemSelToggle[dir]);
 	}
-	else if (g_toolbarItemSelToggle[(int)_ct->user].GetSize())
+	else if (g_toolbarItemSelToggle[dir].GetSize())
 	{
-		l2 = &(g_toolbarItemSel[(int)_ct->user]);
-		l1 = &(g_toolbarItemSelToggle[(int)_ct->user]);
+		l2 = &(g_toolbarItemSel[dir]);
+		l1 = &(g_toolbarItemSelToggle[dir]);
 		toggle = true;
 	}
 
@@ -1214,6 +1217,11 @@ void toggleItemSelExists(COMMAND_T* _ct)
 	{
 		UpdateTimeline();
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+
+		// in case auto refresh toolbar bar option is off..
+		char cmdCustId[64] = "";
+		_snprintf(cmdCustId, 64, "_S&M_TOOLBAR_ITEM_SEL%d", dir);
+		RefreshToolbar(NamedCommandLookup(cmdCustId));
 	}
 }
 

@@ -40,10 +40,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 {
 	// Be carefull: S&M actions expect "SWS/S&M: " in their titles (removed from undo messages, too long)
 
-	// Options
-	{ { DEFACCEL, "SWS/S&M: Toggle toolbars auto refresh enable" },	"S&M_REFRESH_TOOLBARS_ENABLE", EnableToolbarsAutoRefesh, "Enable toolbars auto refresh", 0, IsToolbarsAutoRefeshEnabled},
 
-	// Sends, receives & cue buss ----------------------------------------------
+	// Routing & cue buss -----------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-fader (post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, post-fader (post-pan)" }, "S&M_SENDS2", cueTrack, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-FX" }, "S&M_SENDS3", cueTrack, NULL, 1},
@@ -388,6 +386,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 
 	// Takes ------------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 100% right" }, "S&M_PAN_TAKES_100R", setPan, NULL, -100},
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 100% left" }, "S&M_PAN_TAKES_100L", setPan, NULL, 100},
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to center" }, "S&M_PAN_TAKES_CENTER", setPan, NULL, 0},
+
 	{ { DEFACCEL, "SWS/S&M: Copy active take" }, "S&M_COPY_TAKE", copyCutTake, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Cut active take" }, "S&M_CUT_TAKE", copyCutTake, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Paste take" }, "S&M_PASTE_TAKE", pasteTake, NULL, 0},
@@ -491,10 +493,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Set take pan envelopes to 100% right" }, "S&M_TAKEENV_100R", panTakeEnvelope, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Set take pan envelopes to 100% left" }, "S&M_TAKEENV_100L", panTakeEnvelope, NULL, 1},
 #endif
-	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 100% right" }, "S&M_PAN_TAKES_100R", setPan, NULL, -100},
-	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 100% left" }, "S&M_PAN_TAKES_100L", setPan, NULL, 100},
-	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to center" }, "S&M_PAN_TAKES_CENTER", setPan, NULL, 0},
-
 /*exist natively
 	{ { DEFACCEL, "SWS/S&M: Toggle show take volume envelope" }, "S&M_TAKEENV7", showHideTakeVolEnvelope, NULL, -1, fakeIsToggledAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle show take pan envelope" }, "S&M_TAKEENV8", showHideTakePanEnvelope, NULL, -1, fakeIsToggledAction},
@@ -503,9 +501,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Show take pitch envelope" }, "S&M_TAKEENV10", showHideTakePitchEnvelope, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Hide take pitch envelope" }, "S&M_TAKEENV11", showHideTakePitchEnvelope, NULL, 0},
 
-	// track env.
-	{ { DEFACCEL, "SWS/S&M: Toolbar track envelopes in write mode toggle" }, "S&M_WRITE_AUTOMATION", toggleWriteEnvExists, NULL, 0, writeEnvExists},
-
+	// track env. -------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Toggle arming of all active envelopes for selected tracks" }, "S&M_TGLARMALLENVS", toggleArmTrackEnv, NULL, 0, fakeIsToggledAction},
 	{ { DEFACCEL, "SWS/S&M: Arm all active envelopes for selected tracks" }, "S&M_ARMALLENVS", toggleArmTrackEnv, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Disarm all active envelopes for selected tracks" }, "S&M_DISARMALLENVS", toggleArmTrackEnv, NULL, 2},
@@ -520,16 +516,20 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle arming of all plugin envelopes for selected tracks" }, "S&M_TGLARMPLUGENV", toggleArmTrackEnv, NULL, 9, fakeIsToggledAction},
 
 
-	// Arrange ----------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Toolbar right item selection toggle" },"S&M_SEL_RIGHT", toggleItemSelExists, NULL, SNM_ITEM_SEL_RIGHT, itemSelExists},
-	{ { DEFACCEL, "SWS/S&M: Toolbar left item selection toggle" }, "S&M_SEL_LEFT", toggleItemSelExists, NULL, SNM_ITEM_SEL_LEFT, itemSelExists},
+	// Toolbar auto-refresh ---------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Toggle toolbars auto refresh enable" },	"S&M_TOOLBAR_REFRESH_ENABLE", EnableToolbarsAutoRefesh, "Enable toolbars auto refresh", 0, IsToolbarsAutoRefeshEnabled},
+	{ { DEFACCEL, "SWS/S&M: Toolbar track envelopes in touch/latch/write mode toggle" }, "S&M_TOOLBAR_WRITE_ENV", toggleWriteEnvExists, NULL, 0, writeEnvExists},
+	{ { DEFACCEL, "SWS/S&M: Toolbar left item selection toggle" }, "S&M_TOOLBAR_ITEM_SEL0", toggleItemSelExists, NULL, SNM_ITEM_SEL_LEFT, itemSelExists},
+	{ { DEFACCEL, "SWS/S&M: Toolbar right item selection toggle" },"S&M_TOOLBAR_ITEM_SEL1", toggleItemSelExists, NULL, SNM_ITEM_SEL_RIGHT, itemSelExists},
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Toolbar top item selection toggle" }, "S&M_SEL_UP", toggleItemSelExists, NULL, SNM_ITEM_SEL_UP, itemSelExists},
-	{ { DEFACCEL, "SWS/S&M: Toolbar bottom item selection toggle" }, "S&M_SEL_DOWN", toggleItemSelExists, NULL, SNM_ITEM_SEL_DOWN, itemSelExists},
+	{ { DEFACCEL, "SWS/S&M: Toolbar top item selection toggle" }, "S&M_TOOLBAR_ITEM_SEL2", toggleItemSelExists, NULL, SNM_ITEM_SEL_UP, itemSelExists},
+	{ { DEFACCEL, "SWS/S&M: Toolbar bottom item selection toggle" }, "S&M_TOOLBAR_ITEM_SEL3", toggleItemSelExists, NULL, SNM_ITEM_SEL_DOWN, itemSelExists},
 #endif
 
 	// Find -------------------------------------------------------------------
 	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find" }, "S&M_SHOWFIND", OpenFindView, "S&&M Find", NULL, IsFindViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Find next" }, "S&M_FIND_NEXT", FindNextPrev, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Find previous" }, "S&M_FIND_PREVIOUS", FindNextPrev, NULL, -1},
 
 
 	// Live Configs -----------------------------------------------------------
@@ -552,9 +552,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (selected track)" }, "S&M_THEME_HELPER_SEL", ShowThemeHelper, NULL, 1},
 #endif
 	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (use w/o modifier)" }, "S&M_MOUSE_L_CLICK", SimulateMouseClick, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (w/o extensions)" }, "S&M_ALRSUMMARY1", DumpWikiActions2, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (SWS/Xenakios/S&M extensions only)" }, "S&M_ALRSUMMARY2", DumpWikiActions2, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Save ALR Wiki summary (FNG extensions only)" }, "S&M_ALRSUMMARY3", DumpWikiActions2, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (w/o SWS extension)" }, "S&M_ALRSUMMARY1", DumpWikiActionList2, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (w/ SWS extension)" }, "S&M_ALRSUMMARY2", DumpWikiActionList2, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Dump action list (w/o SWS extension)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Dump action list (w/ SWS extension)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 4},
 #endif
 #ifdef _SNM_MISC
 	// Experimental, misc., deprecated, etc.. ---------------------------------
@@ -604,14 +605,14 @@ bool IsToolbarsAutoRefeshEnabled(COMMAND_T* _ct) {
 // Also see SnMCSurfRun()
 void RefreshToolbars() {
 	// item sel. buttons
-	RefreshToolbar(NamedCommandLookup("_S&M_SEL_LEFT"));
-	RefreshToolbar(NamedCommandLookup("_S&M_SEL_RIGHT"));
+	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_ITEM_SEL0"));
+	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_ITEM_SEL1"));
 #ifdef _WIN32
-	RefreshToolbar(NamedCommandLookup("_S&M_SEL_UP"));
-	RefreshToolbar(NamedCommandLookup("_S&M_SEL_DOWN"));
+	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_ITEM_SEL2"));
+	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_ITEM_SEL3"));
 #endif
 	// write automation button
-	RefreshToolbar(NamedCommandLookup("_S&M_WRITE_AUTOMATION"));
+	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_WRITE_ENV"));
 
 	// host AW's grid toolbar buttons auto refresh
 	UpdateGridToolbar();

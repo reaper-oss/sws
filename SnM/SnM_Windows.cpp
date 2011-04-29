@@ -68,7 +68,7 @@ bool IsChildOf(HWND _hChild, const char* _title, int _nComp)
 #define MAX_ENUM_CHILD_HWNDS 512
 #define MAX_ENUM_HWNDS 256
 
-//JFB TODO clean with WDL_PtrList instead
+//JFB!!! TODO: clean with WDL_PtrList instead
 static int g_hwndsCount = 0;
 static HWND g_hwnds[MAX_ENUM_CHILD_HWNDS];
 static int g_childHwndsCount = 0;
@@ -536,6 +536,7 @@ bool cycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTrack
 			int j = ((i == _trStart) ? (_fxStart + _dir) : (_dir < 0 ? (TrackFX_GetCount(tr)-1) : 0));
 			while (cpt2 < fxCount)
 			{
+/*JFB commented: fix for issue 287 (http://code.google.com/p/sws-extension/issues/detail?id=287)
 				// ** check max / min **
 				// Single track => fx cycle
 				if ((!_selectedTracks && GetNumTracks() == 1) ||
@@ -545,8 +546,10 @@ bool cycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTrack
 					if (j >= fxCount) j = 0;
 					else if (j < 0) j = fxCount-1;
 				}
-				// multiple tracks case (may => track cycle)
-				else if (j >= fxCount || j < 0)
+				// multiple tracks case (may lead to track cycle)
+				else if
+*/
+				if (j >= fxCount || j < 0)
 					break; // implies track cycle
 
 				// *** Perform custom stuff ***
@@ -623,8 +626,7 @@ bool cycleFocusFXWnd(int _dir, bool _selectedTracks, bool* _cycled)
 }
 
 
-typedef struct {MediaTrack* tr; int fx;} t_TrackFXIds; //JFB TODO: class
-WDL_PtrList_DeleteOnDestroy<t_TrackFXIds> g_hiddenFloatingWindows(free);
+WDL_PtrList_DeleteOnDestroy<SNM_TrackInt> g_hiddenFloatingWindows;
 int g_lastCycleFocusFXDirection = 0; //used for direction change..
 
 void cycleFocusFXMainWnd(int _dir, bool _selectedTracks, bool _showmain) 
@@ -639,8 +641,8 @@ void cycleFocusFXMainWnd(int _dir, bool _selectedTracks, bool _showmain)
 			(i < g_hiddenFloatingWindows.GetSize()) && (i >=0); 
 			i += dirChanged ? 1 : -1)
 		{
-			t_TrackFXIds* hiddenIds = g_hiddenFloatingWindows.Get(i);
-			floatUnfloatFXs(hiddenIds->tr, false, 3, hiddenIds->fx, _selectedTracks);
+			SNM_TrackInt* hiddenIds = g_hiddenFloatingWindows.Get(i);
+			floatUnfloatFXs(hiddenIds->m_tr, false, 3, hiddenIds->m_int, _selectedTracks);
 		}
 		// .. the focus indirectly restored with last floatUnfloatFXs() call
 
@@ -667,13 +669,8 @@ void cycleFocusFXMainWnd(int _dir, bool _selectedTracks, bool _showmain)
 						HWND w = TrackFX_GetFloatingWindow(tr, j);
 						if (IsWindow(w))
 						{
-							// store ids (to show it back later)
-							t_TrackFXIds* hiddenIds = (t_TrackFXIds*)malloc(sizeof(t_TrackFXIds));
-							hiddenIds->tr = tr;
-							hiddenIds->fx = j;
-							g_hiddenFloatingWindows.Add(hiddenIds);
-							
-							// hide it
+							// store ids (to show it back later) and hide it
+							g_hiddenFloatingWindows.Add(new SNM_TrackInt(tr, j));
 							floatUnfloatFXs(tr, false, 2, j, _selectedTracks);
 						}
 					}

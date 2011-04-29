@@ -532,7 +532,7 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				{
 					char cLink[512] = "";
 					char sectionURL[64] = "";
-					if (GetALRStartOfURL(g_lastActionListSection, sectionURL, 64))
+					if (GetSectionName(true, g_lastActionListSection, sectionURL, 64))
 					{					
 						_snprintf(cLink, 512, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
 						ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);

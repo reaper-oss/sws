@@ -1073,10 +1073,10 @@ static project_config_extension_t g_projectconfig = { ProcessExtensionLine, Save
 
 static COMMAND_T g_commandTable[] = {
 	{ { {FCONTROL|FALT|FSHIFT|FVIRTKEY,'R',0}, "SWS Autorender: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
-	{ { DEFACCEL, "SWS Autorender: Edit Project Metadata" }, "AUTORENDER_METADATA", ShowAutorenderMetadata, "Edit Project Metadata" },
-	{ { DEFACCEL, "SWS Autorender: Open Render Path" }, "AUTORENDER_OPEN_RENDER_PATH", OpenRenderPath, "Open Render Path" },	
-	{ { DEFACCEL, "SWS Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
-	{ { DEFACCEL, "SWS Autorender: Global Preferences" }, "AUTORENDER_PREFERENCES", AutorenderPreferences, "Global Preferences" },
+	{ { DEFACCEL, "SWS/Shane: Autorender: Edit Project Metadata" }, "AUTORENDER_METADATA", ShowAutorenderMetadata, "Edit Project Metadata" },
+	{ { DEFACCEL, "SWS/Shane: Autorender: Open Render Path" }, "AUTORENDER_OPEN_RENDER_PATH", OpenRenderPath, "Open Render Path" },	
+	{ { DEFACCEL, "SWS/Shane: Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
+	{ { DEFACCEL, "SWS/Shane: Autorender: Global Preferences" }, "AUTORENDER_PREFERENCES", AutorenderPreferences, "Global Preferences" },
 #ifdef TESTCODE
 	{ { DEFACCEL, "SWS Autorender: TestCode" }, "AUTORENDER_TESTCODE",  TestFunction, "Autorender: TestCode" },
 #endif

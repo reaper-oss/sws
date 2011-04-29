@@ -223,20 +223,28 @@ int SNM_MinMax(int _val, int _min, int _max) {
 	return min(_max, max(_min, _val));
 }
 
-bool GetALRStartOfURL(const char* _section, char* _sectionURL, int _sectionURLMaxSize)
+bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sectionURLMaxSize)
 {
-	if (!_stricmp(_section, "Main") || !strcmp(_section, "Main (alt recording)"))
-		strncpy(_sectionURL, "ALR_Main", _sectionURLMaxSize);
-	else if (!_stricmp(_section, "Media explorer"))
-		strncpy(_sectionURL, "ALR_MediaExplorer", _sectionURLMaxSize);
-	else if (!_stricmp(_section, "MIDI Editor"))
-		strncpy(_sectionURL, "ALR_MIDIEditor", _sectionURLMaxSize);
-	else if (!_stricmp(_section, "MIDI Event List Editor"))
-		strncpy(_sectionURL, "ALR_MIDIEvtList", _sectionURLMaxSize);
-	else if (!_stricmp(_section, "MIDI Inline Editor"))
-		strncpy(_sectionURL, "ALR_MIDIInline", _sectionURLMaxSize);
+	if (_alr)
+	{
+		if (!_stricmp(_section, "Main") || !strcmp(_section, "Main (alt recording)"))
+			strncpy(_sectionURL, "ALR_Main", _sectionURLMaxSize);
+		else if (!_stricmp(_section, "Media explorer"))
+			strncpy(_sectionURL, "ALR_MediaExplorer", _sectionURLMaxSize);
+		else if (!_stricmp(_section, "MIDI Editor"))
+			strncpy(_sectionURL, "ALR_MIDIEditor", _sectionURLMaxSize);
+		else if (!_stricmp(_section, "MIDI Event List Editor"))
+			strncpy(_sectionURL, "ALR_MIDIEvtList", _sectionURLMaxSize);
+		else if (!_stricmp(_section, "MIDI Inline Editor"))
+			strncpy(_sectionURL, "ALR_MIDIInline", _sectionURLMaxSize);
+		else return false;
+	}
 	else
-		return false;
+	{
+		if (_section && _sectionURL)
+			strncpy(_sectionURL, _section, _sectionURLMaxSize);
+		else return false;
+	}
 	return true;
 }
 
@@ -375,29 +383,25 @@ void SimulateMouseClick(COMMAND_T* _ct)
 	WinWaitForEvent(WM_LBUTTONUP);
 }
 
-// Create the Wiki ALR summary for the current section displayed in the "Action" dlg 
-// This is the hack version, see clean but limited dumpWikiActions() below
-// http://forum.cockos.com/showthread.php?t=61929
-
-#define TITLE_SAVE_ALR_WIKI "Save ALR Wiki summary"
-
-void DumpWikiActions2(COMMAND_T* _ct)
+// _type: 1 & 2 for ALR wkiki (1=native actions, 2=SWS)
+// _type: 3 & 4 for basic dump (3=native actions, 4=SWS)
+bool dumpActionList(int _type, const char* _title, const char* _lineFormat, const char* _heading, const char* _ending)
 {
 	char currentSection[64] = "";
 	HWND hList = GetActionListBox(currentSection, 64);
 	if (hList && currentSection)
 	{
 		char sectionURL[64]= ""; 
-		if (!GetALRStartOfURL(currentSection, sectionURL, 64))
+		if (!GetSectionName(_type == 1 || _type == 2, currentSection, sectionURL, 64))
 		{
-			MessageBox(g_hwndParent, "Error: unknown section!", TITLE_SAVE_ALR_WIKI, MB_OK);
-			return;
+			MessageBox(g_hwndParent, "Error: unknown section!", _title, MB_OK);
+			return false;
 		}
 
 		char fn[128]; char filename[BUFFER_SIZE];
-		sprintf(fn, "%s%s.txt", sectionURL, _ct->user == 2 ? "_SWS" : _ct->user == 3 ? "_FNG" : "");
-		if (!BrowseForSaveFile(TITLE_SAVE_ALR_WIKI, GetResourcePath(), fn, "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0", filename, BUFFER_SIZE))
-			return;
+		sprintf(fn, "%s%s.txt", sectionURL, !(_type % 2) ? "_SWS" : "");
+		if (!BrowseForSaveFile(_title, GetResourcePath(), fn, "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0", filename, BUFFER_SIZE))
+			return false;
 
 		//flush
 		FILE* f = fopenUTF8(filename, "w"); 
@@ -407,11 +411,10 @@ void DumpWikiActions2(COMMAND_T* _ct)
 			fclose(f);
 
 			f = fopenUTF8(filename, "a"); 
-			if (!f) return; //just in case..
+			if (!f) return false; //just in case..
 
-			fprintf(f, "{| class=\"wikitable\"\n"); 
-			fprintf(f, "|-\n"); 
-			fprintf(f, "! Action name !! Cmd ID\n"); 
+			if (_heading)
+				fprintf(f, _heading); 
 
 			LVITEM li;
 			li.mask = LVIF_STATE | LVIF_PARAM;
@@ -428,32 +431,49 @@ void DumpWikiActions2(COMMAND_T* _ct)
 				ListView_GetItemText(hList,i,3,customId,64);
 
 				if (!strstr(cmdName,"Custom:") &&
-					//native only
-					((_ct->user == 1 && !strstr(cmdName,"SWS:") && !strstr(cmdName,"SWS/") && !strstr(cmdName,"FNG:")) ||
-					// SWS only
-                    (_ct->user == 2 && (strstr(cmdName,"SWS:") || strstr(cmdName,"SWS/"))) ||
-					// FNG only
-					(_ct->user == 3 && strstr(cmdName,"FNG:") && !strstr(cmdName,"SWS"))))
+					((_type % 2 && !strstr(cmdName,"SWS:") && !strstr(cmdName,"SWS/")) ||
+                     (!(_type % 2) && (strstr(cmdName,"SWS:") || strstr(cmdName,"SWS/")))))
 				{
-					if (!*customId) sprintf(customId, "%d", cmdId);
-					fprintf(f, "|-\n| [[%s_%s|%s]] || %s\n", sectionURL, customId, cmdName, customId);
+					if (!*customId) 
+						sprintf(customId, "%d", cmdId);
+					fprintf(f, _lineFormat, sectionURL, customId, cmdName, customId);
 				}
 			}
-			fprintf(f, "|}\n");
+			if (_ending)
+				fprintf(f, _ending); 
+
 			fclose(f);
 
 			char msg[BUFFER_SIZE] = "";
 			sprintf(msg, "Wrote %s", filename); 
-			MessageBox(g_hwndParent, msg, TITLE_SAVE_ALR_WIKI, MB_OK);
+			MessageBox(g_hwndParent, msg, _title, MB_OK);
+			return true;
 
 		}
 		else
-			MessageBox(g_hwndParent, "Error: unable to write to file!", TITLE_SAVE_ALR_WIKI, MB_OK);
+			MessageBox(g_hwndParent, "Error: unable to write to file!", _title, MB_OK);
 	}
 	else
-		MessageBox(g_hwndParent, "Error: action window not opened!", TITLE_SAVE_ALR_WIKI, MB_OK);
+		MessageBox(g_hwndParent, "Error: action window not opened!", _title, MB_OK);
+	return false;
 }
 
+// Create the Wiki ALR summary for the current section displayed in the "Action" dlg 
+// This is the hack version, see clean but limited dumpWikiActionList() below
+// http://forum.cockos.com/showthread.php?t=61929
+void DumpWikiActionList2(COMMAND_T* _ct)
+{
+	dumpActionList(
+		(int)_ct->user, 
+		"Save ALR Wiki summary", 
+		"|-\n| [[%s_%s|%s]] || %s\n",
+		"{| class=\"wikitable\"\n|-\n! Action name !! Cmd ID\n",
+		"|}\n");
+}
+
+void DumpActionList(COMMAND_T* _ct) {
+	dumpActionList((int)_ct->user, "Dump action list", "%s\t%s\t%s\n", "Section\tId\tAction\n", NULL);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Misc. "MIDI CC absolute only" actions
@@ -517,7 +537,7 @@ void ShowTakeEnvPadreTest(COMMAND_T* _ct)
 
 // Create the Wiki ALR summary 
 // no hack but limited to the main section and native actions
-void DumpWikiActions(COMMAND_T* _ct)
+void dumpWikiActionList(COMMAND_T* _ct)
 {
 	char filename[BUFFER_SIZE], cPath[BUFFER_SIZE];
 	strncpy(cPath, GetExePath(), BUFFER_SIZE);

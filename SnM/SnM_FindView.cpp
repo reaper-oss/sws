@@ -470,7 +470,8 @@ void SNM_FindWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_cbType);
 
 	g_notFound = false;
-	*g_searchStr = 0;
+//	*g_searchStr = 0;
+	SetDlgItemText(m_hwnd, IDC_EDIT, g_searchStr);
 
 	m_parentVwnd.RequestRedraw(NULL);
 }
@@ -521,7 +522,7 @@ void SNM_FindWnd::OnDestroy()
 	m_parentVwnd.SetRealParent(NULL);
 
 	g_notFound = false;
-	*g_searchStr = 0;
+//	*g_searchStr = 0;
 }
 
 int SNM_FindWnd::OnKey(MSG* _msg, int _iKeyState) 
@@ -685,4 +686,9 @@ void OpenFindView(COMMAND_T*) {
 
 bool IsFindViewDisplayed(COMMAND_T*){
 	return (g_pFindWnd && g_pFindWnd->IsValidWindow());
+}
+
+void FindNextPrev(COMMAND_T* _ct) {
+	if (g_pFindWnd)
+		g_pFindWnd->Find((int)_ct->user); 
 }

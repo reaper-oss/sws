@@ -1,17 +1,17 @@
 !v2.0.0 #19
 
-Added toolbar actions (with "auto-refreshed" button states - if the new option "Main menu > Extensions > SWS Options > Enable toolbars auto refresh" is ticked):
+Added toolbar actions with "auto-refreshed" button states (if the new option "Main menu > Extensions > SWS Options > Enable toolbars auto refresh" is ticked):
 +SWS/S&M: Toolbar right item selection toggle
 +SWS/S&M: Toolbar left item selection toggle
 +SWS/S&M: Toolbar top item selection toggle - WIN ONLY!
 +SWS/S&M: Toolbar bottom item selection toggle - WIN ONLY!
-These actions are to prevent user errors, related toolbar buttons will light up when you do things on items but *all* selected ones are not visible in the arrange so that can you break things (without realizing it).
-Clicking related buttons will also deselect items that are out of the current scope and re-selects those items on toggle.
+These actions are to prevent user errors: related toolbar buttons will light up when some selected items are not visible in the arrange.
+Clicking related buttons will also deselect items that are out of the current scope and re-selects them on toggle.
 See details, howto and toolbar auto-refresh anim http://forum.cockos.com/showpost.php?p=728774&postcount=315|here|.
 +AW's grid actions button states now reflect the current grid setting (when changed elsewhere in REAPER)
-See details about Adam's grid actions http://forum.cockos.com/showthread.php?p=706294|here|, toolbar auto-refresh anim http://stash.reaper.fm/8523/awGridToolbar.gif|here|.
-+SWS/S&M: Toolbar track envelopes in write mode toggle
-This action sets track envelopes that are in one of the write modes into read mode (they do not re-set the previous write mode on toggle, yet). Related toolbar buttons will light up in one of your track envelopes is in one of the write modes.
+See grid toolbar auto-refresh anim http://stash.reaper.fm/8523/awGridToolbar.gif|here| and details about Adam's grid actions http://forum.cockos.com/showthread.php?p=706294|here|.
++SWS/S&M: Toolbar track envelopes in touch/latch/write mode toggle
+This action sets track envelopes that are in one of the write modes into read mode and re-sets those previous write modes on toggle. Related toolbar buttons will light up if any envelope is in one of the write modes.
 +SWS/S&M: Toggle toolbars auto refresh enable
 
 Added FX preset actions (v4 only, see implementation remarks http://forum.cockos.com/showpost.php?p=728774&postcount=315|here|). They works with any type of FX and any presets (user or factory presets):
@@ -28,13 +28,23 @@ Added other actions:
 +SWS/S&M: Pan active takes of selected items to 100% right
 +SWS/S&M: Pan active takes of selected items to 100% left
 +SWS/S&M: Pan active takes of selected items to center
-Note: "pan takes" not pan cakes.
+Note: "pan takes" not "pan cakes".
++SWS/S&M: Dump action list (w/o SWS extension) - WIN ONLY!
++SWS/S&M: Dump action list (w/ SWS extension) - WIN ONLY!
+Note: dumped files are formatted (openable in Excel for example). See how to use these 2 actions http://wiki.cockos.com/wiki/index.php/S%26M_Dump_action_list|here|.
+
+Find view:
++SWS/S&M: Find next
++SWS/S&M: Find previous
++Preserve the searched string (when closing, undocking, etc.)
++Added shortcuts when the view is focused (F3 = find next, shift-F3 = find previous)
 
 Fixes, tweaks, house cleaning:
++Fixed issue 287 (Unexpected behavior of "SWS/S&M: focus next floating fx for selected tracks (cycle)")
 +Many S&M track FX (and FX chain) actions run faster ("fix" for http://forum.cockos.com/showpost.php?p=724194&postcount=13)
 +All S&M track envelope arming actions now support v4 panning (width/dual pan)
-+Find view: added shortcuts (F3 = find next, shift-F3 = find previous)
-+Removed SWS/S&M: Toggle show all routing windows" (too much limitations)
++Updated "SWS/S&M: Dump ALR Wiki summary [snip]" actions (FNG extension merge)
++Removed "SWS/S&M: Toggle show all routing windows" (too much limitations)
 +Removed "SWS/S&M: Toggle show all envelope windows" (too much limitations)
 +Removed "SWS/S&M: Save selected item as item/take template..." (private)
 
@@ -44,7 +54,7 @@ Added actions:
 +Issue 280: "SWS: Toggle grid lines over/under items"
 +"SWS: Horizontal scroll to put play cursor at 10%"
 
-Readded "Command parameters" to the Extensions menu
+Readded Xenakios' "Command parameters" to the Extensions menu
 Fix crash when parsing a MIDI take with a large extended MIDI event.
 
 !v2.0.0 #17 (March 16, 2011)

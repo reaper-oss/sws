@@ -253,4 +253,5 @@ item_79=_XENAKIOS_RENAMETRAXDLG Rename selected tracks...
 	AddToMenu(hOptionsSubMenu, "Enable marker actions", NamedCommandLookup("_SWSMA_TOGGLE"));
 	AddToMenu(hOptionsSubMenu, "Enable record input check", NamedCommandLookup("_SWS_TOGRECINCHECK"));
 	AddToMenu(hOptionsSubMenu, "Enable red ruler while recording", NamedCommandLookup("_SWS_RECREDRULER"));
+	AddToMenu(hOptionsSubMenu, "Enable toolbars auto refresh", NamedCommandLookup("_S&M_TOOLBAR_REFRESH_ENABLE"));
 }

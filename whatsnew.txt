@@ -1,5 +1,4 @@
-!v2.0.0 #19
-
+!v2.0.0 #19 (April 29, 2011)
 Added toolbar actions with "auto-refreshed" button states (if the new option "Main menu > Extensions > SWS Options > Enable toolbars auto refresh" is ticked):
 +SWS/S&M: Toolbar right item selection toggle
 +SWS/S&M: Toolbar left item selection toggle

@@ -718,16 +718,16 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
 				hMenu = CreatePopupMenu();
 				if (item->m_track) {
 					if (item->m_trTemplate.GetLength() && !item->m_fxChain.GetLength())
-						AddToMenu(hMenu, "(Track template overrides)", 0, -1, false, MFS_DISABLED);
+						AddToMenu(hMenu, "(Track template overrides)", 0, -1, false, MFS_GRAYED);
 					else if (item->m_fxChain.GetLength())
-						AddToMenu(hMenu, "(FX Chain overrides)", 0, -1, false, MFS_DISABLED);
+						AddToMenu(hMenu, "(FX Chain overrides)", 0, -1, false, MFS_GRAYED);
 					else {
 						AddToMenu(hMenu, "Clear all presets (unchanged)", SNM_LIVECFG_CLEAR_PRESETS_MSG);
 						AddToMenu(hMenu, SWS_SEPARATOR, 0);
 						AddFXSubMenu(&hMenu, item->m_track, &(item->m_presets));
 					}
 				}
-				else AddToMenu(hMenu, "(No track)", 0, -1, false, MFS_DISABLED);
+				else AddToMenu(hMenu, "(No track)", 0, -1, false, MFS_GRAYED);
 				break;
 			}
 #endif

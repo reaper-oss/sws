@@ -103,14 +103,25 @@ bool RecordInputCheck()
 
 static void SetRecordInputCheck(COMMAND_T* ct)
 {
-	g_bEnRecInputCheck = ct->user ? true : false;
+	switch(ct->user)
+	{
+		case -1: g_bEnRecInputCheck = !g_bEnRecInputCheck; break;
+		case 0:  g_bEnRecInputCheck = false; break;
+		case 1:  g_bEnRecInputCheck = true;  break;
+	}
 	WritePrivateProfileString(SWS_INI, RECINPUTCHECK_KEY, g_bEnRecInputCheck ? "1" : "0", get_ini_file());
+}
+
+bool IsRecInputChecked(COMMAND_T*)
+{
+	return g_bEnRecInputCheck;
 }
 
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS: Enable checking for duplicate inputs when recording" },			"SWS_ENRECINCHECK",	SetRecordInputCheck, NULL, 1, },
-	{ { DEFACCEL, "SWS: Disable checking for duplicate inputs when recording" },		"SWS_DISRECINCHECK",SetRecordInputCheck, NULL, 0, },
+	{ { DEFACCEL, "SWS: Enable checking for duplicate inputs when recording" },		"SWS_ENRECINCHECK",		SetRecordInputCheck, NULL, 1, },
+	{ { DEFACCEL, "SWS: Disable checking for duplicate inputs when recording" },	"SWS_DISRECINCHECK",	SetRecordInputCheck, NULL, 0, },
+	{ { DEFACCEL, "SWS: Toggle checking for duplicate inputs when recording" },		"SWS_TOGRECINCHECK",	SetRecordInputCheck, NULL, -1, IsRecInputChecked },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 

@@ -248,9 +248,9 @@ item_79=_XENAKIOS_RENAMETRAXDLG Rename selected tracks...
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	HMENU hOptionsSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hOptionsSubMenu, "SWS Options");
-	AddToMenu(hOptionsSubMenu, "Enable marker actions", NamedCommandLookup("_SWSMA_TOGGLE"));
-	AddToMenu(hOptionsSubMenu, "Enable red ruler while recording", NamedCommandLookup("_SWS_RECREDRULER"));
 	AddToMenu(hOptionsSubMenu, "Enable auto coloring", NamedCommandLookup("_SWSAUTOCOLOR_ENABLE"));
 	AddToMenu(hOptionsSubMenu, "Enable auto icon", NamedCommandLookup("_S&MAUTOICON_ENABLE"));
-	AddToMenu(hOptionsSubMenu, "Enable toolbars auto refresh", NamedCommandLookup("_S&M_REFRESH_TOOLBARS_ENABLE"));
+	AddToMenu(hOptionsSubMenu, "Enable marker actions", NamedCommandLookup("_SWSMA_TOGGLE"));
+	AddToMenu(hOptionsSubMenu, "Enable record input check", NamedCommandLookup("_SWS_TOGRECINCHECK"));
+	AddToMenu(hOptionsSubMenu, "Enable red ruler while recording", NamedCommandLookup("_SWS_RECREDRULER"));
 }

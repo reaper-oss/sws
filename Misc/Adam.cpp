@@ -174,6 +174,18 @@ WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,0);
 			x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)"Equal Power");
 			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,1);
+			
+			//experimental starts here
+			x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)"Reverse Equal Power");
+			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,2);
+			x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)"Steep Curve");
+			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,3);
+		    x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)"Reverse Steep Curve");
+			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,4);
+			x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)"S-Curve");
+			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,5);
+			//experimental ends here
+			
 			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETCURSEL,fadeShape,0);
 
 			RestoreWindowPos(hwnd, cWndPosKey, false);
@@ -953,7 +965,7 @@ void AWRecordConditionalAutoGroup(COMMAND_T* t)
 	double t1, t2;
 	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
 	
-	if (*(int*)GetConfigVar("projrecmode") != 0) // 0 is item punch mode
+	if (*(int*)GetConfigVar("projrecmode") != 0) // 0 is item punch mode for projrecmode
 	{	
 		if (t1 != t2)
 		{
@@ -987,12 +999,12 @@ void AWRecordConditionalAutoGroup(COMMAND_T* t)
 
 void AWPlayStopAutoGroup(COMMAND_T* t)
 {
-	if (GetPlayState() & 4)
+	if (GetPlayState() & 4) 
 	{
 		Main_OnCommand(1016, 0); //If recording, Stop
 		int numItems = CountSelectedMediaItems(0);
 		
-		if (numItems > 1)
+		if ((numItems > 1) && ((*(int*)GetConfigVar("autoxfade") & 4) || (*(int*)GetConfigVar("autoxfade") & 8))) // Don't group if not in tape or overlap record mode, takes mode is messy
 		{
 			Main_OnCommand(40032, 0); //Group selected items
 		}
@@ -2526,6 +2538,7 @@ void UpdateGridToolbar()
 	RefreshToolbar(NamedCommandLookup("_SWS_AWGRID8"));
 	RefreshToolbar(NamedCommandLookup("_SWS_AWGRID16"));
 	RefreshToolbar(NamedCommandLookup("_SWS_AWGRID32"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWTOGGLECLICKTRACK"));
 }
 
 bool IsGridTriplet(COMMAND_T* = NULL)		
@@ -2551,22 +2564,6 @@ bool IsGridDotted(COMMAND_T* = NULL)
 	return r < 0.000001 || r > 0.66666;
 }
 
-/*
- void AWToggleDotted2(COMMAND_T* = NULL)
-{
-	double* pGridDiv = (double*)GetConfigVar("projgriddiv");
-	
-	if (IsGridDotted()) 
-		*pGridDiv *= 2.0/3.0;
-	else 
-		*pGridDiv *= 3.0/2.0;
-	
-	
-	UpdateGridToolbar();
-	UpdateTimeline();
-	
-}
- */
 
 void AWToggleDotted(COMMAND_T* = NULL);
 
@@ -2722,6 +2719,7 @@ void AWGrid32(COMMAND_T* = NULL)
 
 bool IsGrid32(COMMAND_T* = NULL)		{ return (*(double*)GetConfigVar("projgriddiv") == 0.125 || *(double*)GetConfigVar("projgriddiv") == 0.125*(2.0/3.0) || *(double*)GetConfigVar("projgriddiv") == 0.125*(3.0/2.0)); }
 
+
 void AWInsertClickTrack(COMMAND_T* t)
 {
 	Undo_BeginBlock();
@@ -2745,10 +2743,14 @@ void AWInsertClickTrack(COMMAND_T* t)
 	
 	Main_OnCommand(40013, 0); // Insert Click Source
 	
+	MetronomeOff();
+	
 	MediaItem* clickSource = GetTrackMediaItem(clickTrack, 0);
 	
 	SetMediaItemLength(clickSource, 600, 0);
 	SetMediaItemPosition(clickSource, 0, 1);
+	
+	UpdateGridToolbar();
 	
 	Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
 }
@@ -2783,13 +2785,152 @@ bool IsClickUnmuted(COMMAND_T* = NULL)
 			bool bMute = *(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL);
 			return (!bMute); 
 		}
+		
 	}
+	if (*(int*)GetConfigVar("projmetroen") & 1)
+		return 1;
 	return 0;
 }
 
+
+
+void AWRenderStem_Smart_Mono(COMMAND_T* = NULL)
+{
+	double timeStart, timeEnd;
+	GetSet_LoopTimeRange2(0, 0, 0, &timeStart, &timeEnd, 0);
+	
+	if (timeStart != timeEnd)
+	{
+		Main_OnCommand(41721, 0); //Render mono stem of selected area
+	}
+	else
+	{
+		Main_OnCommand(40789, 0); //Render mono stem
+	}
+}
+
+void AWRenderStem_Smart_Stereo(COMMAND_T* = NULL)
+{
+	double timeStart, timeEnd;
+	GetSet_LoopTimeRange2(0, 0, 0, &timeStart, &timeEnd, 0);
+	
+	if (timeStart != timeEnd)
+	{
+		Main_OnCommand(41719, 0); //Render mono stem of selected area
+	}
+	else
+	{
+		Main_OnCommand(40788, 0); //Render mono stem
+	}
+}
+
+//Broken as fuck
+void AWToggleTCP(COMMAND_T* = NULL)
+{
+	//int tcpTemp = *(int*)GetConfigVar("leftpanewid_alt");
+	//*(int*)GetConfigVar("leftpanewid_alt") = *(int*)GetConfigVar("leftpanewid");
+	//*(int*)GetConfigVar("leftpanewid") = tcpTemp;
+	
+	*(int*)GetConfigVar("leftpanewid") = 100;
+
+	
+	//char tempString[10];
+		
+	//ShowConsoleMsg(tempString);
+	
+	//UpdateArrange();
+	
+	//int* tcpAlt = (int*)GetConfigVar("leftpanewid_alt");
+	
+	//GetConfigVar();
+}
+
+void AWCascadeInputs(COMMAND_T* t)
+{
+	//int numTracks = CountSelectedTracks(0);
+	char returnString[128] = "1";
+	
+	if (GetUserInputs("Cascade Selected Track Inputs",1,"Start at input:", returnString, 128))
+	{
+		MediaTrack* track;
+		int inputOffset = atoi(returnString);
+		for (int iTrack = 0; iTrack < CountSelectedTracks(0); iTrack++)
+		{
+			track = GetSelectedTrack(0, iTrack);
+			SetMediaTrackInfo_Value(track, "I_RECINPUT", iTrack+inputOffset-1);
+		}
+	}
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+
+}
+
+	
+
+
+void AWSplitXFadeLeft(COMMAND_T* = NULL)
+{
+	double cursorPos = GetCursorPositionEx(0);
+	double dFadeLen;
+	
+	if (g_bv4)
+		dFadeLen = fabs(*(double*)GetConfigVar("defsplitxfadelen")); // Abs because neg value means "not auto"
+	else
+		dFadeLen = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
+	
+	SetEditCurPos2(0, (cursorPos - dFadeLen), 0, 0);
+
+	//turn on autocrossfades on split
+	
+	int fadeStateStore; //V4
+	bool fadeFlag = 0; //V3
+	
+	if (g_bv4)
+	{
+		// V4
+		fadeStateStore = *(int*)(GetConfigVar("splitautoxfade"));
+		
+		*(int*)(GetConfigVar("splitautoxfade")) = 13;
+	}
+	else
+	{
+		// V3
+		double defItemFades = *(double*)(GetConfigVar("deffadelen"));
+		
+		
+		fadeFlag = 0;
+		
+		if (defItemFades > 0)
+		{
+			fadeFlag = 1;
+			Main_OnCommand(41194,0);
+		}
+	}
+	
+	Main_OnCommand(40759, 0); //Split at edit cursor
+	
+	//turn off autocrossfades on split
+	
+	// V4
+	if (g_bv4)
+		*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
+	else
+	{
+		// V3
+		//Revert item fades
+		if (fadeFlag)
+		{
+			Main_OnCommand(41194,0);
+		}
+	}
+	
+	SetEditCurPos2(0, cursorPos, 0, 0);
+
+}
+
+
 static COMMAND_T g_commandTable[] = 
 {
-	// Add commands here (copy paste an example from ItemParams.cpp or similar	
+	// Add commands here (copy paste an example from ItemParams.cpp or similar)
 	
 	// Fill Gaps Actions
 	{ { DEFACCEL, "SWS/AW: Fill gaps between selected items (advanced)" },												"SWS_AWFILLGAPSADV",				AWFillGapsAdv, NULL, 0 },
@@ -2891,7 +3032,19 @@ static COMMAND_T g_commandTable[] =
 	
 	{ { DEFACCEL, "SWS/AW: Insert click track" },		"SWS_AWINSERTCLICKTRK",					AWInsertClickTrack, NULL, },
 	{ { DEFACCEL, "SWS/AW: Toggle click track mute" },		"SWS_AWTOGGLECLICKTRACK",					AWToggleClickTrack, NULL, 0, IsClickUnmuted},
-    */
+	{ { DEFACCEL, "SWS/AW: Toggle TCP" },			"SWS_AWTOGTCP",		AWToggleTCP, },
+
+	
+	*/
+
+
+	{ { DEFACCEL, "SWS/AW: Render tracks to stereo stem tracks, obeying time selection" },			"SWS_AWRENDERSTEREOSMART",		AWRenderStem_Smart_Stereo, },
+	{ { DEFACCEL, "SWS/AW: Render tracks to mono stem tracks, obeying time selection" },			"SWS_AWRENDERMONOSMART",		AWRenderStem_Smart_Mono, },
+    { { DEFACCEL, "SWS/AW: Cascade selected track inputs" },			"SWS_AWCSCINP",		AWCascadeInputs, },
+	{ { DEFACCEL, "SWS/AW: Split selected items at edit cursor w/crossfade on left" },			"SWS_AWSPLITXFADELEFT",		AWSplitXFadeLeft, },
+
+
+
 	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

@@ -693,7 +693,7 @@ bool onAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 	return false;
 }
 
-staticKbdSectionInfo g_SNMSection = {
+static KbdSectionInfo g_SNMSection = {
   0x10000101, "S&M Extension",
   g_SNMSection_kbdCmds, 0,
   g_SNMSection_defKeys, 0,

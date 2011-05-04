@@ -1,3 +1,18 @@
+!v2.0.0 #20
+Added cycle actions (user configurable):
++SWS/S&M: Create cycling action
++SWS/S&M: Create cycling ME action (event list)
++SWS/S&M: Create cycling ME action (piano roll)
+
+Added actions:
++"SWS/AW: Render tracks to stereo stem tracks, obeying time selection"
++"SWS/AW: Render tracks to mono stem tracks, obeying time selection"
++"SWS/AW: Cascade selected track inputs"
++"SWS/AW: Split selected items at edit cursor w/crossfade on left"
+
+Bug fixes:
++Fixed bug in "autogroup" actions
+
 !v2.0.0 #19 (April 29, 2011)
 Added toolbar actions with "auto-refreshed" button states (if the new option "Main menu > Extensions > SWS Options > Enable toolbars auto refresh" is ticked):
 +SWS/S&M: Toolbar right item selection toggle

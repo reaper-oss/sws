@@ -147,6 +147,18 @@ int SWSRegisterCommandExt2(void (*doCommand)(COMMAND_T*), const char* cID, const
 	return SWSRegisterCommand2(ct, cFile);
 }
 
+int SWSRegisterCommandExt3(void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile)
+{
+	COMMAND_T* ct = new COMMAND_T;
+	memset(ct, 0, sizeof(COMMAND_T));
+	ct->accel.desc = _strdup(cDesc);
+	ct->id = _strdup(cID);
+	ct->doCommand = doCommand;
+	ct->getEnabled = getEnabled;
+	ct->user = user;
+	return SWSRegisterCommand2(ct, cFile);
+}
+
 // Returns the COMMAND_T entry so it can be deleted if necessary
 COMMAND_T* SWSUnregisterCommand(int id)
 {
@@ -554,6 +566,7 @@ extern "C"
 		IMPAPI(MIDIEditor_GetActive);
 		IMPAPI(MIDIEditor_GetMode);
 		IMPAPI(MIDIEditor_GetTake);
+		*(void**)&MIDIEditor_LastFocused_OnCommand = rec->GetFunc("MIDIEditor_LastFocused_OnCommand"); // v4 only
 		IMPAPI(MIDIEditor_OnCommand);
 		IMPAPI(MIDI_eventlist_Create);
 		IMPAPI(MIDI_eventlist_Destroy);

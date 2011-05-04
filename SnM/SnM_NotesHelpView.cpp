@@ -415,7 +415,7 @@ int SNM_NotesHelpWnd::updateItemNotes()
 	int refreshType = REQUEST_REFRESH_EMPTY;
 	if (CountSelectedMediaItems(NULL))
 	{
-		MediaItem* selItem = GetSelectedMediaItem(0, 0);
+		MediaItem* selItem = GetSelectedMediaItem(NULL, 0);
 		if (selItem != g_mediaItemNote)
 		{
 			g_mediaItemNote = selItem;

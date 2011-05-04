@@ -39,6 +39,22 @@
 // File util
 ///////////////////////////////////////////////////////////////////////////////
 
+bool FileExistsErrMsg(const char* _fn, bool _errMsg)
+{
+	bool exists = false;
+	if (_fn && *_fn)
+	{
+		exists = FileExists(_fn);
+		if (!exists && _errMsg)
+		{
+			char buf[BUFFER_SIZE];
+			_snprintf(buf, BUFFER_SIZE, "File not found:\n%s", _fn);
+			MessageBox(g_hwndParent, buf, "S&M - Error", MB_OK);
+		}
+	}
+	return exists;
+}
+
 bool SNM_DeleteFile(const char* _filename) {
 	if (_filename && *_filename) {
 #ifdef _WIN32
@@ -214,6 +230,21 @@ void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx)
 	}
 }
 
+// Write a full INI file's section in one go
+void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection)
+{
+	// "The data in the buffer pointed to by the lpString parameter consists 
+	// of one or more null-terminated strings, followed by a final null character"
+	char* buf = (char*)calloc(_iniSection->GetLength()+1, sizeof(char));
+	strncpy(buf, _iniSection->Get(), _iniSection->GetLength());
+	for (int j=0; j < _iniSection->GetLength(); j++)
+		if (buf[j] == '\n') 
+			buf[j] = '\0';
+	WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, g_SNMiniFilename.Get()); //flush section
+	WritePrivateProfileSection(_iniSectionName, buf, g_SNMiniFilename.Get());
+	free(buf);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Util
@@ -317,22 +348,6 @@ int PromptForMIDIChannel(const char* _title)
 		else return -1; // user has cancelled
 	}
 	return -1;
-}
-
-bool FileExistsErrMsg(const char* _fn, bool _errMsg)
-{
-	bool exists = false;
-	if (_fn && *_fn)
-	{
-		exists = FileExists(_fn);
-		if (!exists && _errMsg)
-		{
-			char buf[BUFFER_SIZE];
-			_snprintf(buf, BUFFER_SIZE, "File not found:\n%s", _fn);
-			MessageBox(g_hwndParent, buf, "S&M - Error", MB_OK);
-		}
-	}
-	return exists;
 }
 
 

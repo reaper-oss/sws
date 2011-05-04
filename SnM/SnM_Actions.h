@@ -39,13 +39,6 @@
 // Definitions, enums
 ///////////////////////////////////////////////////////////////////////////////
 
-enum {
-  SNM_ITEM_SEL_LEFT=0,
-  SNM_ITEM_SEL_RIGHT,
-  SNM_ITEM_SEL_UP,
-  SNM_ITEM_SEL_DOWN
-};
-
 #define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
 
 #ifdef _WIN32
@@ -67,6 +60,8 @@ enum {
 #define SNM_3D_COLORS_DELTA			25
 #define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average monitored)
 #define SNM_CSURF_RUN_POLL_MS		1000
+#define SNM_SCHEDJOB_DEFAULT_DELAY		250
+#define SNM_MAX_CYCLING_ACTIONS		8
 
 // Scheduled job *RESERVED* ids
 // note: [0..7] are reserved for Live Configs MIDI CC actions
@@ -75,8 +70,13 @@ enum {
 #define SNM_SCHEDJOB_SEL_PRJ			10
 #define SNM_SCHEDJOB_TRIG_PRESET		11
 
-#define SNM_SCHEDJOB_DEFAULT_DELAY		250
 
+enum {
+  SNM_ITEM_SEL_LEFT=0,
+  SNM_ITEM_SEL_RIGHT,
+  SNM_ITEM_SEL_UP,
+  SNM_ITEM_SEL_DOWN
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Global types & classes
@@ -169,8 +169,12 @@ void SnMCSurfRun();
 void SnMCSurfSetTrackTitle();
 void SnMCSurfSetTrackListChange();
 
+void CreateCyclaction(COMMAND_T*);
+void LoadCyclactions();
+void SaveCyclactions();
+
+
 // *** SnM_fx.cpp ***
-bool patchSelTracksFXState(int _mode, int _token, int _fx, const char* _value, const char * _undoMsg);
 void toggleFXOfflineSelectedTracks(COMMAND_T*);
 bool isFXOfflineSelectedTracks(COMMAND_T*);
 void toggleFXBypassSelectedTracks(COMMAND_T*);
@@ -184,7 +188,6 @@ void setFXBypassSelectedTracks(COMMAND_T*);
 void setFXOnlineSelectedTracks(COMMAND_T*);
 void setFXUnbypassSelectedTracks(COMMAND_T*);
 void setAllFXsBypassSelectedTracks(COMMAND_T*); // ..related online/offline actions natively implemented
-int selectFX(MediaTrack* _tr, int _fx);
 int getSelectedFX(MediaTrack* _tr);
 void selectFX(COMMAND_T*);
 int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_String>* _names);
@@ -250,9 +253,6 @@ bool IsChildOf(HWND _hChild, const char* _title, int _nComp = -1);
 HWND GetReaWindowByTitle(const char* _title, int _nComp = -1);
 HWND SearchWindow(const char* _title);
 HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
-bool toggleShowHideWin(const char * _title);
-bool closeWin(const char * _title);
-void closeOrToggleAllWindows(bool _routing, bool _env, bool _toggle);
 void closeAllRoutingWindows(COMMAND_T*);
 void closeAllEnvWindows(COMMAND_T*);
 void toggleAllRoutingWindows(COMMAND_T*);
@@ -264,9 +264,7 @@ bool isToggleFXChain(COMMAND_T*);
 void showAllFXChainsWindows(COMMAND_T*);
 void closeAllFXChainsWindows(COMMAND_T*);
 void toggleAllFXChainsWindows(COMMAND_T*);
-void toggleFloatFX(MediaTrack* _tr, int _fx);
 void floatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _selTracks);
-void floatUnfloatFXs(bool _all, int _showFlag, int _fx, bool _selTracks);
 void floatFX(COMMAND_T*);
 void unfloatFX(COMMAND_T*);
 void toggleFloatFX(COMMAND_T*);
@@ -275,8 +273,6 @@ void closeAllFXWindows(COMMAND_T*);
 void closeAllFXWindowsExceptFocused(COMMAND_T*);
 void toggleAllFXWindows(COMMAND_T*);
 int getFocusedFX(MediaTrack* _tr, int _dir, int* _firstFound = NULL);
-int getFirstFloatingFX(MediaTrack* _tr, int _dir);
-bool cycleFocusFXWnd(int _dir, bool _selectedTracks);
 #ifdef _SNM_MISC
 void cycleFocusFXWndSelTracks(COMMAND_T*);
 void cycleFocusFXWndAllTracks(COMMAND_T*);
@@ -306,7 +302,7 @@ void pasteSends(COMMAND_T*);
 void copyReceives(COMMAND_T*);
 void cutReceives(COMMAND_T*);
 void pasteReceives(COMMAND_T*);
-int GetComboSendIdxType(int _reaType) ;
+int GetComboSendIdxType(int _reaType);
 const char* GetSendTypeStr(int _type);
 void removeSends(COMMAND_T*);
 void removeReceives(COMMAND_T*);
@@ -431,6 +427,7 @@ void MESetCCLanes(COMMAND_T*);
 void MESaveCCLanes(COMMAND_T*);
 
 // *** SnM_Misc.cpp ***
+bool FileExistsErrMsg(const char* _fn, bool _errMsg=true);
 bool SNM_DeleteFile(const char* _filename);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath = false);
 void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn);
@@ -440,13 +437,13 @@ bool SaveChunk(const char* _fn, WDL_String* _chunk);
 void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
 void StringToExtensionConfig(char* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx);
+void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection);
 int SNM_MinMax(int _val, int _min, int _max);
 bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sectionURLMaxSize);
 void SNM_ShowConsoleMsg(const char* _msg, const char* _title="", bool _clear=true); 
 void SNM_ShowConsoleDbg(bool _clear, const char* format, ...);
 int PromptForMIDIChannel(const char* _title);
 
-bool FileExistsErrMsg(const char* _fn, bool _errMsg=true);
 void LetREAPERBreathe(COMMAND_T*);
 void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
 void SimulateMouseClick(COMMAND_T*);

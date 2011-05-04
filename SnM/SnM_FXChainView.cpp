@@ -1295,6 +1295,7 @@ int ResourceViewInit()
 	g_filesLists.Add(&g_itemTemplateFiles);
 #endif
 
+	// read slots from ini file
 	char path[BUFFER_SIZE] = "";
 	char desc[128], maxSlotCount[16];
 	for (int i=0; i < g_filesLists.GetSize(); i++)
@@ -1302,7 +1303,6 @@ int ResourceViewInit()
 		FileSlotList* list = g_filesLists.Get(i);
 		if (list)
 		{
-			// FX chains: 128 slots for "seamless upgrade" (nb of slots was fixed previously)
 			GetPrivateProfileString(list->GetResourceDir(), "MAX_SLOT", "0", maxSlotCount, 16, g_SNMiniFilename.Get()); 
 			list->Empty(true);
 			int slotCount = atoi(maxSlotCount);
@@ -1322,12 +1322,12 @@ int ResourceViewInit()
 
 void ResourceViewExit()
 {
+	// save slots to ini file
 	for (int i=0; i < g_filesLists.GetSize(); i++)
 	{
 		FileSlotList* list = g_filesLists.Get(i);
 		if (list)
 		{
-			// Write things in one go (avoid to slow down REAPER shutdown)
 			PathSlotItem* item;
 			const char* resDir = list->GetResourceDir();
 			WDL_String iniSection;
@@ -1350,19 +1350,11 @@ void ResourceViewExit()
 					}
 				}
 			}
-
-			// "The data in the buffer pointed to by the lpString parameter consists 
-			// of one or more null-terminated strings, followed by a final null character"
-			char* buf = (char*)calloc(iniSection.GetLength()+1, sizeof(char));
-			strncpy(buf, iniSection.Get(), iniSection.GetLength());
-			for (int j=0; j < iniSection.GetLength(); j++)
-				if (buf[j] == '\n') 
-					buf[j] = '\0';
-			WritePrivateProfileStruct(resDir, NULL, NULL, 0, g_SNMiniFilename.Get()); //flush section
-			WritePrivateProfileSection(resDir, buf, g_SNMiniFilename.Get());
-			free(buf);
+			// Write things in one go (avoid to slow down REAPER shutdown)
+			SaveIniSection(resDir, &iniSection);
 		}
 	}
+
 	delete g_pResourcesWnd;
 	g_pResourcesWnd = NULL;
 }

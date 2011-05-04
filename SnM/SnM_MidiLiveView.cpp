@@ -1251,9 +1251,8 @@ void SNM_MidiLiveScheduledJob::Perform()
 			if (cfg->m_onAction.GetLength())
 			{
 				int cmd = NamedCommandLookup(cfg->m_onAction.Get());
-				if (cmd > 0)
-					if (!KBD_OnMainActionEx(cmd, m_val, m_valhw, m_relmode, g_hwndParent, NULL))
-						Main_OnCommand(cmd,0);
+				if (cmd > 0 && !KBD_OnMainActionEx(cmd, m_val, m_valhw, m_relmode, g_hwndParent, NULL))
+					Main_OnCommand(cmd,0);
 			}
 
 			// (just) prepare desactivate action

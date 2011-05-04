@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../../WDL/projectcontext.h"
 #include "SnM_Actions.h"
 #include "SnM_NotesHelpView.h"
 #include "SnM_MidiLiveView.h"
@@ -544,6 +545,12 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 8" }, "S&M_TOGGLE_LIVE_CFG8", ToggleEnableLiveConfig, NULL, 7, IsLiveConfigEnabled},
 
 
+	// Cyclactions ---------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Create cycling action" }, "S&M_CREATE_CYCLACTION", CreateCyclaction, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Create cycling ME action (event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", CreateCyclaction, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Create cycling ME action (piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", CreateCyclaction, NULL, 2},
+
+
 	// Other, misc & experimental ---------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Let REAPER breathe" }, "S&M_LETBREATHE", LetREAPERBreathe, NULL, },
 #ifdef _WIN32
@@ -573,7 +580,36 @@ static COMMAND_T g_SNM_cmdTable[] =
 };
 
 
-// *** Action toggle states ***
+///////////////////////////////////////////////////////////////////////////////
+// S&M actions ("S&M extension" section)
+///////////////////////////////////////////////////////////////////////////////
+
+static MIDI_COMMAND_T g_SNMSection_cmdTable[] = 
+{
+	{ { DEFACCEL, "SWS/S&M: Apply live config 1 (MIDI CC absolute only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 2 (MIDI CC absolute only)" }, "S&M_LIVECONFIG2", ApplyLiveConfig, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 3 (MIDI CC absolute only)" }, "S&M_LIVECONFIG3", ApplyLiveConfig, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 4 (MIDI CC absolute only)" }, "S&M_LIVECONFIG4", ApplyLiveConfig, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 5 (MIDI CC absolute only)" }, "S&M_LIVECONFIG5", ApplyLiveConfig, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 6 (MIDI CC absolute only)" }, "S&M_LIVECONFIG6", ApplyLiveConfig, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 7 (MIDI CC absolute only)" }, "S&M_LIVECONFIG7", ApplyLiveConfig, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Apply live config 8 (MIDI CC absolute only)" }, "S&M_LIVECONFIG8", ApplyLiveConfig, NULL, 7},
+
+	{ { DEFACCEL, "SWS/S&M: Select project (MIDI CC absolute only)" }, "S&M_SELECT_PROJECT", SelectProject, NULL, },
+
+	{ { DEFACCEL, "SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC absolute only)" }, "S&M_SELFX_PRESET", TriggerFXPreset, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 1 of selected tracks (MIDI CC absolute only)" }, "S&M_FX1_PRESET", TriggerFXPreset, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 2 of selected tracks (MIDI CC absolute only)" }, "S&M_FX2_PRESET", TriggerFXPreset, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 3 of selected tracks (MIDI CC absolute only)" }, "S&M_FX3_PRESET", TriggerFXPreset, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 4 of selected tracks (MIDI CC absolute only)" }, "S&M_FX4_PRESET", TriggerFXPreset, NULL, 3},
+
+	{ {}, LAST_COMMAND, }, // Denote end of table
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Fake action toggle states
+///////////////////////////////////////////////////////////////////////////////
 
 bool g_fakeToggleStates[SNM_MAX_ACTION_COUNT+1]; // +1 for no-op, 1-based..
 
@@ -625,41 +661,16 @@ void RefreshToolbars() {
 
 #define SNM_SECTION_MAX_ACTION_COUNT	128
 
-
-// Globals
 static WDL_IntKeyedArray<MIDI_COMMAND_T*> g_SNMSection_midiCmds;
 static WDL_IntKeyedArray<MIDI_COMMAND_T*> g_SNMSection_toggles;
+/*JFB!!!
 WDL_PtrList<struct KbdAccel>* g_SNMSection_reaAccels;  
 WDL_PtrList<struct CommandAction>* g_SNMSection_reaRecentCmds;
+*/
 KbdCmd g_SNMSection_kbdCmds[SNM_SECTION_MAX_ACTION_COUNT];
 KbdKeyBindingInfo g_SNMSection_defKeys[SNM_SECTION_MAX_ACTION_COUNT];
 int g_SNMSection_minCmdId = 0;
 int g_SNMSection_maxCmdId = 0;
-
-
-// S&M actions (in "S&M Extension" section) 
-static MIDI_COMMAND_T g_SNMSection_cmdTable[] = 
-{
-	{ { DEFACCEL, "SWS/S&M: Apply live config 1 (MIDI CC absolute only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Apply live config 2 (MIDI CC absolute only)" }, "S&M_LIVECONFIG2", ApplyLiveConfig, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Apply live config 3 (MIDI CC absolute only)" }, "S&M_LIVECONFIG3", ApplyLiveConfig, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Apply live config 4 (MIDI CC absolute only)" }, "S&M_LIVECONFIG4", ApplyLiveConfig, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Apply live config 5 (MIDI CC absolute only)" }, "S&M_LIVECONFIG5", ApplyLiveConfig, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Apply live config 6 (MIDI CC absolute only)" }, "S&M_LIVECONFIG6", ApplyLiveConfig, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Apply live config 7 (MIDI CC absolute only)" }, "S&M_LIVECONFIG7", ApplyLiveConfig, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Apply live config 8 (MIDI CC absolute only)" }, "S&M_LIVECONFIG8", ApplyLiveConfig, NULL, 7},
-
-	{ { DEFACCEL, "SWS/S&M: Select project (MIDI CC absolute only)" }, "S&M_SELECT_PROJECT", SelectProject, NULL, },
-
-	{ { DEFACCEL, "SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC absolute only)" }, "S&M_SELFX_PRESET", TriggerFXPreset, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 1 of selected tracks (MIDI CC absolute only)" }, "S&M_FX1_PRESET", TriggerFXPreset, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 2 of selected tracks (MIDI CC absolute only)" }, "S&M_FX2_PRESET", TriggerFXPreset, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 3 of selected tracks (MIDI CC absolute only)" }, "S&M_FX3_PRESET", TriggerFXPreset, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 4 of selected tracks (MIDI CC absolute only)" }, "S&M_FX4_PRESET", TriggerFXPreset, NULL, 3},
-
-	{ {}, LAST_COMMAND, }, // Denote end of table
-};
-
 
 bool onAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 {
@@ -682,14 +693,17 @@ bool onAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 	return false;
 }
 
-static KbdSectionInfo g_SNMSection = {
+staticKbdSectionInfo g_SNMSection = {
   0x10000101, "S&M Extension",
   g_SNMSection_kbdCmds, 0,
   g_SNMSection_defKeys, 0,
   onAction,
+/*JFB!!!
   g_SNMSection_reaAccels,
   g_SNMSection_reaRecentCmds,
+*/
   NULL
+
 };
 
 int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec)
@@ -744,7 +758,7 @@ int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Entry point
+// S&M core stuff
 ///////////////////////////////////////////////////////////////////////////////
 
 static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
@@ -768,8 +782,7 @@ static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
 WDL_String g_SNMiniFilename;
 void IniFileInit()
 {
-	// Init S&M.ini file
-	// (+ "upgrade": move old ones to the new REAPER's resource path)
+	// Init S&M.ini file(+ "upgrade": move old ones to the new REAPER's resource path)
 	char oldIniFilename[BUFFER_SIZE], iniFilename[BUFFER_SIZE];
 	_snprintf(oldIniFilename, BUFFER_SIZE, SNM_OLD_FORMATED_INI_FILE, GetExePath()); // old location
 	_snprintf(iniFilename, BUFFER_SIZE, SNM_FORMATED_INI_FILE, GetResourcePath());
@@ -791,9 +804,6 @@ void IniFileInit()
 	WritePrivateProfileStruct("FXCHAIN_VIEW", NULL, NULL, 0, iniFilename); //flush section
 	if (sectionSz)
 		WritePrivateProfileSection("RESOURCE_VIEW", buf, iniFilename);
-
-	// Load general prefs 
-	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNMiniFilename.Get()) == 1);
 }
 
 LICE_IBitmap* g_snmLogo = NULL;
@@ -812,6 +822,9 @@ void UIInit()
 
 int SnMInit(reaper_plugin_info_t* _rec)
 {
+	if (!_rec)
+		return 0;
+
 #ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
 		return 0;
@@ -827,11 +840,16 @@ int SnMInit(reaper_plugin_info_t* _rec)
 		return 0;
 
 	IniFileInit();
-    UIInit();
+
+	// Load general prefs 
+	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNMiniFilename.Get()) == 1);
+
+	UIInit();
 	LiveConfigViewInit();
 	ResourceViewInit();
 	NotesHelpViewInit();
 	FindViewInit();
+	LoadCyclactions();
 	return 1;
 }
 
@@ -841,6 +859,7 @@ void SnMExit()
 	ResourceViewExit();
 	NotesHelpViewExit();
 	FindViewExit();
+	SaveCyclactions();
 
 	// Save general prefs
 	WritePrivateProfileString("General", "ToolbarsAutoRefresh", g_toolbarsAutoRefreshEnabled ? "1" : "0", g_SNMiniFilename.Get());
@@ -943,4 +962,196 @@ void SnMCSurfSetTrackListChange() {
 		g_pNotesHelpWnd->CSurfSetTrackListChange();
 	if (g_pLiveConfigsWnd)
 		g_pLiveConfigsWnd->CSurfSetTrackListChange();
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Cyclactions
+///////////////////////////////////////////////////////////////////////////////
+
+class ActionState {
+public:
+	ActionState() : m_state(0) {}
+	~ActionState() {}
+	int m_state;
+};
+
+// [0] = main section action, [1] = ME event list section action, [2] = ME piano roll section action
+WDL_PtrList_DeleteOnDestroy<WDL_String> g_cyclingActions[3];
+WDL_PtrList_DeleteOnDestroy<ActionState> g_cyclingActionSates[3];
+char g_cyclactionCustomIds[3][64] = {"S&M_CYCLACTION_", "S&M_ME_LIST_CYCLACTION", "S&M_ME_PIANO_CYCLACTION"};
+char g_cyclactionIniSections[3][64] = {"MAIN_CYCLACTIONS", "ME_LIST_CYCLACTIONS", "ME_PIANO_CYCLACTIONS"};
+
+// _type: 0 = main section action, 1 = ME event list section action, 2 = ME piano roll section action
+void RunCycleAction(int _type, COMMAND_T* _ct)
+{
+	int cycleId = (int)_ct->user;
+	ActionState* currentSate = g_cyclingActionSates[_type].Get(cycleId-1); // cycle action id is 1-based (for user display) !
+
+	char myCustCmdId[256] = "";
+	_snprintf(myCustCmdId, 256, "_%s%d", g_cyclactionCustomIds[_type], cycleId);
+
+	char actionStr[4096] = "";
+	_snprintf(actionStr, 4096, g_cyclingActions[_type].Get(cycleId-1)->Get());
+
+	char* tok = strtok(actionStr, ",");
+	if (tok)
+	{
+		// skip already processed actions
+		int state=0;
+		while ((tok = strtok(NULL, ",")) && state < currentSate->m_state) // note: skip name on 1st loop
+			if (*tok == '!') state++;
+
+		// process new actions until cycle point
+		while (tok)
+		{
+			int cmd = 0;
+			if (!_type) {
+				if ((cmd = NamedCommandLookup(tok)) > 0 && !KBD_OnMainActionEx(cmd, 0, 0, 0, g_hwndParent, NULL)) return;
+			}
+			else if (!MIDIEditor_LastFocused_OnCommand(atoi(tok), _type == 1)) return;
+
+			tok = strtok(NULL, ",");
+			if (!tok || (tok && *tok == '!'))
+			{
+				if (!tok) currentSate->m_state = 0;
+				else currentSate->m_state++;
+				RefreshToolbar(NamedCommandLookup(myCustCmdId));
+				return;
+			}
+		}
+	}
+}
+
+void RunMainCyclaction(COMMAND_T* _ct) {RunCycleAction(0, _ct);}
+void RunMEListCyclaction(COMMAND_T* _ct) {if (g_bv4) RunCycleAction(1, _ct);}
+void RunMEPianoCyclaction(COMMAND_T* _ct) {if (g_bv4) RunCycleAction(2, _ct);}
+
+bool IsCyclactionEnabled(int _type, COMMAND_T* _ct)
+{
+	int cycleId = (int)_ct->user;
+	ActionState* currentSate = g_cyclingActionSates[_type].Get(cycleId-1); // cycle action id is 1-based (for user display) !
+	return ((currentSate->m_state % 2) != 0);
+}
+
+bool IsMainCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(0, _ct);}
+bool IsMEListCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(1, _ct);}
+bool IsMEPianoCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(2, _ct);}
+
+bool CreateCyclaction(int _type, const char* _actionStr, bool _errMsg)
+{
+	if (_actionStr && *_actionStr != ',')
+	{
+		char name[256]= ""; 
+		char reply[4096]= "";
+		strcpy(reply, _actionStr);
+		char* tok = strtok(reply, ",");
+		if (tok)
+		{
+			strncpy(name,tok,256);
+			tok = strtok(NULL, ",");
+
+			int i = 0;
+			while (i < SNM_MAX_CYCLING_ACTIONS && tok) 
+			{
+				if ((*tok == '!') || (!_type && NamedCommandLookup(tok)) || _type)
+				{
+					tok = strtok(NULL, ",");
+					i++;
+				}
+				else
+				{
+					if (_errMsg)
+					{
+						//JFB!!! TO CHECK:
+						// - name must be provided
+						// - no start/end with cycle point
+						// etc..
+						char buf[BUFFER_SIZE];
+						_snprintf(buf, BUFFER_SIZE, "Action '%s' found !", tok);
+						MessageBox(g_hwndParent, buf, "S&M - Error", MB_OK);
+					}
+					return false;
+				}
+			}
+		}
+		else
+		{
+			if (_errMsg) MessageBox(g_hwndParent, "Invalid command name!", "S&M - Error", MB_OK);
+			return false;
+		}
+
+		// Persist and register actions
+		WDL_PtrList_DeleteOnDestroy<WDL_String>* actions = &(g_cyclingActions[_type]);
+		WDL_PtrList_DeleteOnDestroy<ActionState>* actionSates = &(g_cyclingActionSates[_type]);
+		actions->Add(new WDL_String(_actionStr));
+		actionSates->Add(new ActionState());
+
+		int newCycleId = actions->GetSize();
+		if (!SWSGetCommandID(!_type ? RunMainCyclaction : _type == 1 ? RunMEListCyclaction : RunMEPianoCyclaction, newCycleId))
+		{
+			char cID[BUFFER_SIZE];
+			_snprintf(cID, BUFFER_SIZE, "%s%d", g_cyclactionCustomIds[_type], newCycleId);
+			SWSRegisterCommandExt3(
+				!_type ? RunMainCyclaction : _type == 1 ? RunMEListCyclaction : RunMEPianoCyclaction, 
+				!_type ? IsMainCyclactionEnabled : _type == 1 ? IsMEListCyclactionEnabled : IsMEPianoCyclactionEnabled, 
+				cID, name, newCycleId, __FILE__);
+		}
+		else
+		{
+			if (_errMsg) MessageBox(g_hwndParent, "Invternal error!", "S&M - Error", MB_OK);
+			return false;
+		}
+	}
+	else
+	{
+		if (_errMsg) MessageBox(g_hwndParent, "Invternal error!", "S&M - Error", MB_OK);//JFB!!!
+		return false;
+	}
+
+	return true;
+}
+
+void CreateCyclaction(COMMAND_T* _ct)
+{
+	char reply[4096]= "";
+	char question[BUFFER_SIZE]= "Action name:,Comnand:";
+	for (int i=2; i < SNM_MAX_CYCLING_ACTIONS; i++)
+		strcat(question, ",Comnand (! = cycle):");
+
+	if (GetUserInputs(SNM_CMD_SHORTNAME(_ct), SNM_MAX_CYCLING_ACTIONS+1, question, reply, 4096))
+		CreateCyclaction((int)_ct->user, reply, true);
+}
+
+void LoadCyclactions()
+{
+	char buf[32] = "";
+	char actionStr[4096] = "";
+	for (int i=0; i < 3; i++)
+	{
+		GetPrivateProfileString(g_cyclactionIniSections[i], "NB_ACTIONS", "0", buf, 32, g_SNMiniFilename.Get()); 
+		int nb = atoi(buf);
+		for (int j=0; j < nb; j++) 
+		{
+			_snprintf(buf, 32, "ACTION%d", j+1);
+			GetPrivateProfileString(g_cyclactionIniSections[i], buf, "", actionStr, 4096, g_SNMiniFilename.Get());
+			CreateCyclaction(i, *actionStr ? actionStr : "nop,65535", false);
+		}
+	}
+}
+
+void SaveCyclactions()
+{
+	for (int i=0; i < 3; i++)
+	{
+		WDL_String iniSection;
+		iniSection.SetFormatted(32, "NB_ACTIONS=%d\n", g_cyclingActions[i].GetSize());
+		for (int j=0; j < g_cyclingActions[i].GetSize(); j++)
+		{
+			WDL_String escapedStr;
+			makeEscapedConfigString(g_cyclingActions[i].Get(j)->Get(), &escapedStr);
+			iniSection.AppendFormatted(4096+16, "ACTION%d=%s\n", j+1, escapedStr.Get()); 
+		}
+		SaveIniSection(g_cyclactionIniSections[i], &iniSection);
+	}
 }

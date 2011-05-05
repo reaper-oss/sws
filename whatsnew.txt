@@ -1,4 +1,4 @@
-!v2.0.0 #20
+!v2.0.0 #20 (May 5, 2011)
 Added cycle actions (user configurable):
 +SWS/S&M: Create cycling action
 +SWS/S&M: Create cycling ME action (event list)

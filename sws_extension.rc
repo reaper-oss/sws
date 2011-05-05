@@ -1015,8 +1015,8 @@ BEGIN
     LTEXT           "Crossfade length:",IDC_STATIC,140,74,60,8
     EDITTEXT        IDC_XFADE_LEN2,197,72,31,13,ES_AUTOHSCROLL
     LTEXT           "ms",IDC_STATIC,234,74,10,8
-    LTEXT           "Fade shapes:",IDC_STATIC,145,100,48,8
-    COMBOBOX        IDC_FADE_SHAPE,192,98,64,13,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Fade shapes:",IDC_STATIC,132,100,48,8
+    COMBOBOX        IDC_FADE_SHAPE,179,98,77,13,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "OK",IDOK,6,98,34,14
     PUSHBUTTON      "Save",IDC_SAVE,45,98,34,14
     PUSHBUTTON      "Close",IDCANCEL,84,98,34,14
@@ -1512,6 +1512,11 @@ BEGIN
         BOTTOMMARGIN, 144
     END
 
+    IDD_AW_ITEM_SMOOTHING, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 118
+    END
+
     IDD_GROOVEDIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 5
@@ -1609,8 +1614,7 @@ IDC_ZOOMUNDO            CURSOR                  "zoomundo.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
-
+#include "version.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

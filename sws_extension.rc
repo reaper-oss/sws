@@ -1002,7 +1002,11 @@ BEGIN
     LTEXT           "ms",IDC_STATIC,107,59,10,8
     CONTROL         "Mark possible artifacts",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,78,86,10
     GROUPBOX        "",IDC_STATIC,133,5,123,88
-    CONTROL         "Stretch if needed",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,5,70,10
+    #ifdef _WIN32
+	CONTROL         "Stretch if needed",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,5,70,10
+	#else
+	CONTROL         "Stretch if needed",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,2,70,10
+	#endif
     LTEXT           "50%",IDC_STRTCH_LIMIT,234,21,20,8
     CONTROL         "Preserve transient",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,38,75,10
     LTEXT           "Transient length:",IDC_STATIC,140,55,54,8

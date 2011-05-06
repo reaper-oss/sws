@@ -20,7 +20,7 @@ struct subtract : public std::unary_function <T, T>
 };
 
 template <typename T>
-static void openFileStream(const std::string fileName, T &fileStream)
+static void openFileStream(const std::string &fileName, T &fileStream)
 {
     /* Call wchar version of open for ifstream or ofstream to 
      * handle unicode chars in file name. OSX is utf8 so just call open.

@@ -205,8 +205,8 @@ static int CALLBACK WINAPI BrowseForDirectoryCallbackProc( HWND hwnd, UINT uMsg,
 	switch (uMsg)
 	{
 		case BFFM_INITIALIZED:
-			if (lpData && ((char *)lpData)[0]) 
-				SendMessage(hwnd,BFFM_SETSELECTION,1,(LPARAM)lpData);
+			if (lpData && ((wchar_t *)lpData)[0]) 
+				SendMessage(hwnd,BFFM_SETSELECTIONW,1,(LPARAM)lpData);
 		break;
 	}
 	return 0;
@@ -214,17 +214,24 @@ static int CALLBACK WINAPI BrowseForDirectoryCallbackProc( HWND hwnd, UINT uMsg,
 
 bool BrowseForDirectory(const char *text, const char *initialdir, char *fn, int fnsize)
 {
-  char name[4096];
-  lstrcpyn(name,initialdir?initialdir:"",sizeof(name));
-  BROWSEINFO bi={g_hwndParent,NULL, name, text, BIF_RETURNONLYFSDIRS|BIF_NEWDIALOGSTYLE, BrowseForDirectoryCallbackProc, (LPARAM)name,};
-  LPITEMIDLIST idlist = SHBrowseForFolder( &bi );
+   
+  wchar_t widename[4096];
+  wchar_t widetext[4096];
+  MultiByteToWideChar(CP_UTF8, 0, initialdir, -1, widename, 4096);
+  MultiByteToWideChar(CP_UTF8, 0, text, -1, widetext, 4096);
+
+  // explicitly call unicode versions and then convert filename back to utf8
+  BROWSEINFOW bi={g_hwndParent, NULL, widename, widetext, BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE, BrowseForDirectoryCallbackProc, (LPARAM)widename};
+  LPITEMIDLIST idlist = SHBrowseForFolderW( &bi );
   if (idlist) 
   {
-    SHGetPathFromIDList( idlist, name );        
+    SHGetPathFromIDListW( idlist, widename);
+
     IMalloc *m;
     SHGetMalloc(&m);
     m->Free(idlist);
-    lstrcpyn(fn,name,fnsize);
+    
+    WideCharToMultiByte(CP_UTF8, 0, widename, -1, fn, fnsize, NULL, NULL);
     return true;
   }
   return false;

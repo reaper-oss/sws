@@ -1,3 +1,6 @@
++Fixed browsing for folder in Windows when path contains unicode characters
++Fixed opening of groove presets with unicode characters in paths on Windows
+
 !v2.0.0 #20 (May 5, 2011)
 Added cycle actions (user configurable):
 +SWS/S&M: Create cycling action

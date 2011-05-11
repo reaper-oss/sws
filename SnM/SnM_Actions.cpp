@@ -1057,7 +1057,7 @@ void RunCycleAction(int _type, COMMAND_T* _ct)
 					// Dynamic action renaming
 					int id = _ct->accel.accel.cmd;
 					if (SWSUnregisterCommand(_ct->accel.accel.cmd) && 
-						RegisterCyclation(buf, action->m_toggle, _type, _ct->user, _ct->accel.accel.cmd))
+						RegisterCyclation(buf, action->m_toggle, _type, (int)_ct->user, _ct->accel.accel.cmd))
 					{
 						free((void*)_ct->accel.desc); // alloc'ed with strdup, so free instead of delete
 						free((void*)_ct->id);

@@ -1,15 +1,14 @@
-!v2.0.0 #21 (, 2011)
-+Fixed browsing for folder in Windows when path contains unicode characters
-+Fixed opening of groove presets with unicode characters in paths on Windows
-+Toolbar auto-refresh option disabled by very default
-+House cleaning: removed "SWS/S&M: Let REAPER breathe" (see why http://forum.cockos.com/showpost.php?p=737539&postcount=378|here|.)
-
+!v2.0.0 #21 (May 11, 2011)
+Fixed browsing for folder in Windows when path contains unicode characters
+Fixed opening of groove presets with unicode characters in paths on Windows
+Toolbar auto-refresh option disabled by default
+House cleaning: removed "SWS/S&M: Let REAPER breathe" (see why http://forum.cockos.com/showpost.php?p=737539&postcount=378|here|.)
 Cycle action updates:
 +Now, MIDI Editor cycle actions can also run custom macro or ReaScripts
 +Now, cycle actions can also run SWS actions
 +More customizable cycle actions (and toolbar buttons):
-- Optionnal dynamic action renaming (e.g. different tooltips for each step)
-- Optionnal toggle state (butons can light up or not)
+-Optional dynamic action renaming (e.g. different tooltips for each step)
+-Optional toggle state (butons can light up or not)
 
 !v2.0.0 #20 (May 5, 2011)
 Added cycle actions (user configurable):
@@ -18,10 +17,10 @@ Added cycle actions (user configurable):
 +SWS/S&M: Create cycling ME action (piano roll)
 
 Added actions:
-+"SWS/AW: Render tracks to stereo stem tracks, obeying time selection"
-+"SWS/AW: Render tracks to mono stem tracks, obeying time selection"
-+"SWS/AW: Cascade selected track inputs"
-+"SWS/AW: Split selected items at edit cursor w/crossfade on left"
++SWS/AW: Render tracks to stereo stem tracks, obeying time selection
++SWS/AW: Render tracks to mono stem tracks, obeying time selection
++SWS/AW: Cascade selected track inputs
++SWS/AW: Split selected items at edit cursor w/crossfade on left
 
 Bug fixes:
 +Fixed bug in "autogroup" actions

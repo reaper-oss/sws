@@ -28,7 +28,7 @@ static void openFileStream(const std::string &fileName, T &fileStream)
 #ifdef _WIN32
     int stringSize = MultiByteToWideChar(CP_UTF8, 0, fileName.c_str(), -1, NULL, 0);
     std::vector<wchar_t> wideCharFileName(stringSize);
-    MultiByteToWideChar(CP_UTF8, 0, fileName.c_str(), -1, &wideCharFileName[0], wideCharFileName.size());
+    MultiByteToWideChar(CP_UTF8, 0, fileName.c_str(), -1, &wideCharFileName[0], (int)wideCharFileName.size());
     fileStream.open(&wideCharFileName[0]);
 #else
     fileStream.open(fileName.c_str());

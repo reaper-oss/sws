@@ -147,7 +147,8 @@ int SWSRegisterCommandExt2(void (*doCommand)(COMMAND_T*), const char* cID, const
 	return SWSRegisterCommand2(ct, cFile);
 }
 
-int SWSRegisterCommandExt3(void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile)
+// register with cmdId (if != 0, register a new one otherwise)
+int SWSRegisterCommandExt3(void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), int cmdId, const char* cID, const char* cDesc, INT_PTR user, const char* cFile)
 {
 	COMMAND_T* ct = new COMMAND_T;
 	memset(ct, 0, sizeof(COMMAND_T));
@@ -156,7 +157,24 @@ int SWSRegisterCommandExt3(void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COM
 	ct->doCommand = doCommand;
 	ct->getEnabled = getEnabled;
 	ct->user = user;
-	return SWSRegisterCommand2(ct, cFile);
+
+	if (ct->doCommand)
+	{
+		if (!cmdId && !(cmdId = plugin_register("command_id", (void*)ct->id)))
+			return 0;
+		ct->accel.accel.cmd = cmdId;
+		if (!plugin_register("gaccel",&ct->accel))
+			return 0;
+		if (ct->getEnabled) 
+			g_toggles.Add(ct);
+		if (!g_iFirstCommand && g_iFirstCommand > ct->accel.accel.cmd)
+			g_iFirstCommand = ct->accel.accel.cmd;
+		if (ct->accel.accel.cmd > g_iLastCommand)
+			g_iLastCommand = ct->accel.accel.cmd;
+		g_commands.Add(ct);
+		g_cmdFile.Add(new WDL_String(cFile));
+	}
+	return ct->accel.accel.cmd;
 }
 
 // Returns the COMMAND_T entry so it can be deleted if necessary

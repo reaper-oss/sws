@@ -225,6 +225,66 @@ void cueTrack(COMMAND_T* _ct)
 		hwOuts);
 }
 
+void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts)
+{
+	if (_busName && _reaType && _trTemplate && _trTemplatePath && _showRouting && _soloDefeat && _sendToMaster && _hwOuts)
+	{
+		GetPrivateProfileString("LAST_CUEBUS","NAME","",_busName,BUFFER_SIZE,g_SNMiniFilename.Get());
+
+		char tmp[16] = "";
+		GetPrivateProfileString("LAST_CUEBUS","REATYPE","3",tmp,16,g_SNMiniFilename.Get());
+		*_reaType = atoi(tmp); // 0 if failed 
+
+		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED","0",tmp,16,g_SNMiniFilename.Get());
+		*_trTemplate = (atoi(tmp) == 1); // 0 if failed 
+
+		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH","",_trTemplatePath,BUFFER_SIZE,g_SNMiniFilename.Get());
+
+		GetPrivateProfileString("LAST_CUEBUS","SHOW_ROUTING","1",tmp,16,g_SNMiniFilename.Get());
+		*_showRouting = (atoi(tmp) == 1); // 0 if failed 
+
+		GetPrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT","0",tmp,16,g_SNMiniFilename.Get());
+		*_sendToMaster = (atoi(tmp) == 1); // 0 if failed 
+
+		GetPrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT","1",tmp,16,g_SNMiniFilename.Get());
+		*_soloDefeat = atoi(tmp); // 0 if failed 
+
+		char slot[16] = "";
+		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
+		{
+			sprintf(slot,"HWOUT%d",i+1);
+			GetPrivateProfileString("LAST_CUEBUS",slot,"0",tmp,BUFFER_SIZE,g_SNMiniFilename.Get());
+			_hwOuts[i] = atoi(tmp); // 0 if failed 
+		}
+	}
+}
+
+void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts)
+{
+	if (_busName && _trTemplatePath && _hwOuts)
+	{
+		WritePrivateProfileString("LAST_CUEBUS","NAME",_busName,g_SNMiniFilename.Get());
+		char tmp[16] = "";
+		sprintf(tmp,"%d",_type);
+		WritePrivateProfileString("LAST_CUEBUS","REATYPE",tmp,g_SNMiniFilename.Get());
+		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED",_trTemplate ? "1" : "0",g_SNMiniFilename.Get());
+		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH",_trTemplatePath,g_SNMiniFilename.Get());
+		WritePrivateProfileString("LAST_CUEBUS","SHOW_ROUTING",_showRouting ? "1" : "0",g_SNMiniFilename.Get());
+		WritePrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT",_sendToMaster ? "1" : "0",g_SNMiniFilename.Get());
+
+		sprintf(tmp,"%d",_soloDefeat);
+		WritePrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT",tmp,g_SNMiniFilename.Get());
+
+		char slot[16] = "";
+		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
+		{
+			sprintf(slot,"HWOUT%d",i+1);
+			sprintf(tmp,"%d",_hwOuts[i]);
+			WritePrivateProfileString("LAST_CUEBUS",slot,tmp,g_SNMiniFilename.Get());
+		}
+	}
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Cut/Copy/Paste: track with sends, routings
@@ -482,29 +542,6 @@ void pasteReceives(COMMAND_T* _ct) {
 // Common
 ///////////////////////////////////////////////////////////////////////////////
 
-int GetComboSendIdxType(int _reaType) 
-{
-	switch(_reaType)
-	{
-		case 0: return 1;
-		case 3: return 2; 
-		case 1: return 3; 
-		default: return 1;
-	}
-	return 1; // in case _reaType comes from mars
-}
-
-const char* GetSendTypeStr(int _type) 
-{
-	switch(_type)
-	{
-		case 1: return "Post-Fader (Post-Pan)";
-		case 2: return "Pre-Fader (Post-FX)";
-		case 3: return "Pre-FX";
-		default: return NULL;
-	}
-}
-
 void removeSends(COMMAND_T* _ct)
 {
 	bool updated = false;
@@ -563,62 +600,3 @@ void removeRouting(COMMAND_T* _ct)
 	Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); 
 }
 
-void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts)
-{
-	if (_busName && _reaType && _trTemplate && _trTemplatePath && _showRouting && _soloDefeat && _sendToMaster && _hwOuts)
-	{
-		GetPrivateProfileString("LAST_CUEBUS","NAME","",_busName,BUFFER_SIZE,g_SNMiniFilename.Get());
-
-		char tmp[16] = "";
-		GetPrivateProfileString("LAST_CUEBUS","REATYPE","3",tmp,16,g_SNMiniFilename.Get());
-		*_reaType = atoi(tmp); // 0 if failed 
-
-		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED","0",tmp,16,g_SNMiniFilename.Get());
-		*_trTemplate = (atoi(tmp) == 1); // 0 if failed 
-
-		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH","",_trTemplatePath,BUFFER_SIZE,g_SNMiniFilename.Get());
-
-		GetPrivateProfileString("LAST_CUEBUS","SHOW_ROUTING","1",tmp,16,g_SNMiniFilename.Get());
-		*_showRouting = (atoi(tmp) == 1); // 0 if failed 
-
-		GetPrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT","0",tmp,16,g_SNMiniFilename.Get());
-		*_sendToMaster = (atoi(tmp) == 1); // 0 if failed 
-
-		GetPrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT","1",tmp,16,g_SNMiniFilename.Get());
-		*_soloDefeat = atoi(tmp); // 0 if failed 
-
-		char slot[16] = "";
-		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
-		{
-			sprintf(slot,"HWOUT%d",i+1);
-			GetPrivateProfileString("LAST_CUEBUS",slot,"0",tmp,BUFFER_SIZE,g_SNMiniFilename.Get());
-			_hwOuts[i] = atoi(tmp); // 0 if failed 
-		}
-	}
-}
-
-void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts)
-{
-	if (_busName && _trTemplatePath && _hwOuts)
-	{
-		WritePrivateProfileString("LAST_CUEBUS","NAME",_busName,g_SNMiniFilename.Get());
-		char tmp[16] = "";
-		sprintf(tmp,"%d",_type);
-		WritePrivateProfileString("LAST_CUEBUS","REATYPE",tmp,g_SNMiniFilename.Get());
-		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED",_trTemplate ? "1" : "0",g_SNMiniFilename.Get());
-		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH",_trTemplatePath,g_SNMiniFilename.Get());
-		WritePrivateProfileString("LAST_CUEBUS","SHOW_ROUTING",_showRouting ? "1" : "0",g_SNMiniFilename.Get());
-		WritePrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT",_sendToMaster ? "1" : "0",g_SNMiniFilename.Get());
-
-		sprintf(tmp,"%d",_soloDefeat);
-		WritePrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT",tmp,g_SNMiniFilename.Get());
-
-		char slot[16] = "";
-		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
-		{
-			sprintf(slot,"HWOUT%d",i+1);
-			sprintf(tmp,"%d",_hwOuts[i]);
-			WritePrivateProfileString("LAST_CUEBUS",slot,tmp,g_SNMiniFilename.Get());
-		}
-	}
-}

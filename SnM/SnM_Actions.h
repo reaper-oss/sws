@@ -60,7 +60,7 @@
 #define SNM_3D_COLORS_DELTA			25
 #define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average monitored)
 #define SNM_CSURF_RUN_POLL_MS		1000
-#define SNM_SCHEDJOB_DEFAULT_DELAY		250
+#define SNM_SCHEDJOB_DEFAULT_DELAY	250
 #define SNM_MAX_CYCLING_ACTIONS		8
 
 // Scheduled job *RESERVED* ids
@@ -69,6 +69,7 @@
 #define SNM_SCHEDJOB_NOTEHLP_TLCHANGE	9
 #define SNM_SCHEDJOB_SEL_PRJ			10
 #define SNM_SCHEDJOB_TRIG_PRESET		11
+#define SNM_SCHEDJOB_CYCLACTION			12
 
 
 enum {
@@ -169,8 +170,9 @@ void SnMCSurfRun();
 void SnMCSurfSetTrackTitle();
 void SnMCSurfSetTrackListChange();
 
+int RegisterCyclation(const char* _name, bool _toggle, int _type, int _cycleId, int _cmdId = 0);
 void CreateCyclaction(COMMAND_T*);
-void LoadCyclactions();
+void LoadCyclactions(COMMAND_T*);
 void SaveCyclactions();
 
 
@@ -302,8 +304,6 @@ void pasteSends(COMMAND_T*);
 void copyReceives(COMMAND_T*);
 void cutReceives(COMMAND_T*);
 void pasteReceives(COMMAND_T*);
-int GetComboSendIdxType(int _reaType);
-const char* GetSendTypeStr(int _type);
 void removeSends(COMMAND_T*);
 void removeReceives(COMMAND_T*);
 void removeRouting(COMMAND_T*);
@@ -414,8 +414,6 @@ bool IsLiveConfigEnabled(COMMAND_T*);
 
 // *** SnM_Dlg.cpp ***
 LICE_CachedFont* SNM_GetThemeFont();
-void fillHWoutDropDown(HWND _hwnd, int _idc);
-WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 void openCueBussWnd(COMMAND_T*);
 bool isCueBussWndDisplayed(COMMAND_T*);
 WDL_DLGRET WaitDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);

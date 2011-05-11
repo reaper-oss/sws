@@ -549,10 +549,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Create cycling action" }, "S&M_CREATE_CYCLACTION", CreateCyclaction, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Create cycling ME action (event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", CreateCyclaction, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Create cycling ME action (piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", CreateCyclaction, NULL, 2},
+//	{ { DEFACCEL, "SWS/S&M: Load cycling actions" }, "S&M_LOAD_CYCLACTIONS", LoadCyclactions, NULL, },
 
 
 	// Other, misc & experimental ---------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Let REAPER breathe" }, "S&M_LETBREATHE", LetREAPERBreathe, NULL, },
 #ifdef _WIN32
 #ifdef _SNM_MISC
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (all tracks)" }, "S&M_THEME_HELPER_ALL", ShowThemeHelper, NULL, 0},
@@ -566,6 +566,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 #endif
 #ifdef _SNM_MISC
 	// Experimental, misc., deprecated, etc.. ---------------------------------
+	{ { DEFACCEL, "SWS/S&M: Let REAPER breathe" }, "S&M_LETBREATHE", LetREAPERBreathe, NULL, },
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take volume envelope" }, "S&M_TMP1", ShowTakeEnvPadreTest, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take pan envelope" }, "S&M_TMP2", ShowTakeEnvPadreTest, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take mute envelope" }, "S&M_TMP3", ShowTakeEnvPadreTest, NULL, 2},
@@ -628,7 +629,7 @@ void fakeToggleAction(COMMAND_T* _ct) {
 // Toolbars auto refresh option
 ///////////////////////////////////////////////////////////////////////////////
 
-bool g_toolbarsAutoRefreshEnabled = true;
+bool g_toolbarsAutoRefreshEnabled = false;
 
 void EnableToolbarsAutoRefesh(COMMAND_T* _ct) {
 	g_toolbarsAutoRefreshEnabled = !g_toolbarsAutoRefreshEnabled;
@@ -661,12 +662,11 @@ void RefreshToolbars() {
 
 #define SNM_SECTION_MAX_ACTION_COUNT	128
 
+/*JFB not used yet
+static int g_SNMSection_CmdId_gen = 1000;
+*/
 static WDL_IntKeyedArray<MIDI_COMMAND_T*> g_SNMSection_midiCmds;
 static WDL_IntKeyedArray<MIDI_COMMAND_T*> g_SNMSection_toggles;
-/*JFB!!!
-WDL_PtrList<struct KbdAccel>* g_SNMSection_reaAccels;  
-WDL_PtrList<struct CommandAction>* g_SNMSection_reaRecentCmds;
-*/
 KbdCmd g_SNMSection_kbdCmds[SNM_SECTION_MAX_ACTION_COUNT];
 KbdKeyBindingInfo g_SNMSection_defKeys[SNM_SECTION_MAX_ACTION_COUNT];
 int g_SNMSection_minCmdId = 0;
@@ -697,13 +697,7 @@ static KbdSectionInfo g_SNMSection = {
   0x10000101, "S&M Extension",
   g_SNMSection_kbdCmds, 0,
   g_SNMSection_defKeys, 0,
-  onAction,
-/*JFB!!!
-  g_SNMSection_reaAccels,
-  g_SNMSection_reaRecentCmds,
-*/
-  NULL
-
+  onAction
 };
 
 int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec)
@@ -720,7 +714,9 @@ int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec)
 		{
 			if (!(ct->accel.accel.cmd = plugin_register("command_id", (void*)ct->id)))
 				return 0;
-
+/*JFB not used
+			ct->accel.accel.cmd = g_SNMSection_CmdId_gen++;
+*/
 			if (ct->getEnabled)
 				g_SNMSection_toggles.Insert(ct->accel.accel.cmd, ct);
 
@@ -849,7 +845,7 @@ int SnMInit(reaper_plugin_info_t* _rec)
 	ResourceViewInit();
 	NotesHelpViewInit();
 	FindViewInit();
-	LoadCyclactions();
+	LoadCyclactions(NULL);
 	return 1;
 }
 
@@ -969,56 +965,121 @@ void SnMCSurfSetTrackListChange() {
 // Cyclactions
 ///////////////////////////////////////////////////////////////////////////////
 
-class ActionState {
+class Cyclaction {
 public:
-	ActionState() : m_state(0) {}
-	~ActionState() {}
+	Cyclaction(const char* _desc, int _state, bool _toggle) : m_desc(_desc), m_state(_state), m_toggle(_toggle) {}
+	~Cyclaction() {}
+	WDL_String m_desc;
 	int m_state;
+	bool m_toggle;
+};
+
+class ScheduledActions : public SNM_ScheduledJob
+{
+public:
+	ScheduledActions(int _approxDelayMs, int _type, WDL_PtrList<WDL_String>* _actions) 
+	: SNM_ScheduledJob(SNM_SCHEDJOB_CYCLACTION, _approxDelayMs), m_type(_type)
+	{
+		for (int i= 0; _actions && i < _actions->GetSize(); i++)
+			m_actions.Add(new WDL_String(_actions->Get(i)->Get()));
+	}	
+	// best effort: ingore unknown actions but goes one..
+	void Perform()
+	{
+		for (int i= 0; i < m_actions.GetSize(); i++)
+		{
+			int cmd = NamedCommandLookup(m_actions.Get(i)->Get());
+			if (cmd)
+			{
+				if (!m_type && !KBD_OnMainActionEx(cmd, 0, 0, 0, g_hwndParent, NULL)) // Main section
+					break;
+				else if (m_type && !MIDIEditor_LastFocused_OnCommand(cmd, m_type == 1)) // Both ME sections
+					break;
+			}
+		}
+		m_actions.Empty(true);
+	}
+	int m_type;
+	WDL_PtrList_DeleteOnDestroy<WDL_String> m_actions;
 };
 
 // [0] = main section action, [1] = ME event list section action, [2] = ME piano roll section action
-WDL_PtrList_DeleteOnDestroy<WDL_String> g_cyclingActions[3];
-WDL_PtrList_DeleteOnDestroy<ActionState> g_cyclingActionSates[3];
+WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cyclactions[3];
 char g_cyclactionCustomIds[3][64] = {"S&M_CYCLACTION_", "S&M_ME_LIST_CYCLACTION", "S&M_ME_PIANO_CYCLACTION"};
 char g_cyclactionIniSections[3][64] = {"MAIN_CYCLACTIONS", "ME_LIST_CYCLACTIONS", "ME_PIANO_CYCLACTIONS"};
+char g_cyclactionSections[3][64] = {"Main", "MIDI Event List Editor", "MIDI Editor"};
 
 // _type: 0 = main section action, 1 = ME event list section action, 2 = ME piano roll section action
 void RunCycleAction(int _type, COMMAND_T* _ct)
 {
 	int cycleId = (int)_ct->user;
-	ActionState* currentSate = g_cyclingActionSates[_type].Get(cycleId-1); // cycle action id is 1-based (for user display) !
+	Cyclaction* action = g_cyclactions[_type].Get(cycleId-1); // cycle action id is 1-based (for user display) !
+	if (!action)
+		return;
 
-	char myCustCmdId[256] = "";
-	_snprintf(myCustCmdId, 256, "_%s%d", g_cyclactionCustomIds[_type], cycleId);
-
+	char name[256]= "";
 	char actionStr[4096] = "";
-	_snprintf(actionStr, 4096, g_cyclingActions[_type].Get(cycleId-1)->Get());
-
+	strncpy(actionStr, action->m_desc.Get(), 4096);
 	char* tok = strtok(actionStr, ",");
 	if (tok)
 	{
+		// "#name" = toggle action, "name" = normal action
+		strncpy(name, *tok == '#' ? (char*)tok+1 : tok, 256);
+			
 		// skip already processed actions
 		int state=0;
-		while ((tok = strtok(NULL, ",")) && state < currentSate->m_state) // note: skip name on 1st loop
+		while ((tok = strtok(NULL, ",")) && state < action->m_state)
 			if (*tok == '!') state++;
 
 		// process new actions until cycle point
+		WDL_PtrList_DeleteOnDestroy<WDL_String> actions;
 		while (tok)
 		{
-			int cmd = 0;
-			if (!_type) {
-				if ((cmd = NamedCommandLookup(tok)) > 0 && !KBD_OnMainActionEx(cmd, 0, 0, 0, g_hwndParent, NULL)) return;
-			}
-			else if (!MIDIEditor_LastFocused_OnCommand(atoi(tok), _type == 1)) return;
+			// add the actions (checks done at perform time, i.e. best effort)
+			actions.Add(new WDL_String(tok));
 
 			tok = strtok(NULL, ",");
 			if (!tok || (tok && *tok == '!'))
 			{
-				if (!tok) currentSate->m_state = 0;
-				else currentSate->m_state++;
+				char buf[256] = "";
+				if (!tok) {
+					action->m_state = 0;
+					if (strcmp(name, _ct->accel.desc)) strcpy(buf, name);
+				}
+				else {
+					action->m_state++;
+					if (tok[1])	strcpy(buf, (char *)(tok+1));
+				}
+
+				// if "!" followed by some text (or cycling back to 1st action, if needed)
+				if (*buf)
+				{
+					// Dynamic action renaming
+					int id = _ct->accel.accel.cmd;
+					if (SWSUnregisterCommand(_ct->accel.accel.cmd) && 
+						RegisterCyclation(buf, action->m_toggle, _type, _ct->user, _ct->accel.accel.cmd))
+					{
+						free((void*)_ct->accel.desc); // alloc'ed with strdup, so free instead of delete
+						free((void*)_ct->id);
+						delete _ct;
+					}
+				}
+
+				// refresh *this* toolbar button
+				char myCustCmdId[256] = "";
+				_snprintf(myCustCmdId, 256, "_%s%d", g_cyclactionCustomIds[_type], cycleId);
 				RefreshToolbar(NamedCommandLookup(myCustCmdId));
-				return;
+
+				break;
 			}
+		}
+
+		// note: I "skip whilst respecting" the SWS re-entrance test - see hookCommandProc() in sws_entension.cpp - 
+		// thanks to schdeulded actions that performed 50ms later (or so)
+		if (actions.GetSize())
+		{
+			ScheduledActions* job = new ScheduledActions(50, _type, &actions);
+			AddOrReplaceScheduledJob(job);
 		}
 	}
 }
@@ -1027,115 +1088,147 @@ void RunMainCyclaction(COMMAND_T* _ct) {RunCycleAction(0, _ct);}
 void RunMEListCyclaction(COMMAND_T* _ct) {if (g_bv4) RunCycleAction(1, _ct);}
 void RunMEPianoCyclaction(COMMAND_T* _ct) {if (g_bv4) RunCycleAction(2, _ct);}
 
-bool IsCyclactionEnabled(int _type, COMMAND_T* _ct)
-{
+bool IsCyclactionEnabled(int _type, COMMAND_T* _ct) {
 	int cycleId = (int)_ct->user;
-	ActionState* currentSate = g_cyclingActionSates[_type].Get(cycleId-1); // cycle action id is 1-based (for user display) !
-	return ((currentSate->m_state % 2) != 0);
+	Cyclaction* action = g_cyclactions[_type].Get(cycleId-1); // cycle action id is 1-based (for user display) !
+	return (action && action->m_toggle && (action->m_state % 2) != 0);
 }
 
 bool IsMainCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(0, _ct);}
 bool IsMEListCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(1, _ct);}
 bool IsMEPianoCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(2, _ct);}
 
-bool CreateCyclaction(int _type, const char* _actionStr, bool _errMsg)
+bool CheckCyclaction(int _type, const char* _actionStr, bool _checkCmds, bool _errMsg)
 {
-	if (_actionStr && *_actionStr != ',')
+	if (_actionStr && *_actionStr && *_actionStr != ',')
 	{
-		char name[256]= ""; 
-		char reply[4096]= "";
-		strcpy(reply, _actionStr);
-		char* tok = strtok(reply, ",");
+		char actionStr[4096]= "";
+		strcpy(actionStr, _actionStr);
+		char* tok = strtok(actionStr, ","); // get name & ignore it
 		if (tok)
 		{
-			strncpy(name,tok,256);
-			tok = strtok(NULL, ",");
-
-			int i = 0;
-			while (i < SNM_MAX_CYCLING_ACTIONS && tok) 
+			// parse commands
+			if (_checkCmds)
 			{
-				if ((*tok == '!') || (!_type && NamedCommandLookup(tok)) || _type)
+				tok = strtok(NULL, ",");
+				while (tok) 
 				{
-					tok = strtok(NULL, ",");
-					i++;
-				}
-				else
-				{
-					if (_errMsg)
-					{
-						//JFB!!! TO CHECK:
-						// - name must be provided
-						// - no start/end with cycle point
-						// etc..
-						char buf[BUFFER_SIZE];
-						_snprintf(buf, BUFFER_SIZE, "Action '%s' found !", tok);
-						MessageBox(g_hwndParent, buf, "S&M - Error", MB_OK);
+					if (strstr(tok, "_CYCLACTION")) {
+						if (_errMsg) MessageBox(g_hwndParent, "Recursive cycle action !", "S&M - Error", MB_OK);
+						return false;
 					}
-					return false;
+						
+					if ((*tok == '!') || NamedCommandLookup(tok)) {
+						tok = strtok(NULL, ",");
+					}
+					else {
+						char buf[BUFFER_SIZE];
+						_snprintf(buf, BUFFER_SIZE, "Command id %s'%s' not found in the action section '%s' !", !_type ? "(or custom id) " : "", tok, g_cyclactionSections[_type]);
+						if (_errMsg) MessageBox(g_hwndParent, buf, "S&M - Error", MB_OK);
+						return false;
+					}
 				}
 			}
 		}
-		else
-		{
-			if (_errMsg) MessageBox(g_hwndParent, "Invalid command name!", "S&M - Error", MB_OK);
-			return false;
-		}
-
-		// Persist and register actions
-		WDL_PtrList_DeleteOnDestroy<WDL_String>* actions = &(g_cyclingActions[_type]);
-		WDL_PtrList_DeleteOnDestroy<ActionState>* actionSates = &(g_cyclingActionSates[_type]);
-		actions->Add(new WDL_String(_actionStr));
-		actionSates->Add(new ActionState());
-
-		int newCycleId = actions->GetSize();
-		if (!SWSGetCommandID(!_type ? RunMainCyclaction : _type == 1 ? RunMEListCyclaction : RunMEPianoCyclaction, newCycleId))
-		{
-			char cID[BUFFER_SIZE];
-			_snprintf(cID, BUFFER_SIZE, "%s%d", g_cyclactionCustomIds[_type], newCycleId);
-			SWSRegisterCommandExt3(
-				!_type ? RunMainCyclaction : _type == 1 ? RunMEListCyclaction : RunMEPianoCyclaction, 
-				!_type ? IsMainCyclactionEnabled : _type == 1 ? IsMEListCyclactionEnabled : IsMEPianoCyclactionEnabled, 
-				cID, name, newCycleId, __FILE__);
-		}
-		else
-		{
-			if (_errMsg) MessageBox(g_hwndParent, "Invternal error!", "S&M - Error", MB_OK);
+		else {
+			if (_errMsg) MessageBox(g_hwndParent, "Invalid cycle action definition !", "S&M - Error", MB_OK);
 			return false;
 		}
 	}
-	else
-	{
-		if (_errMsg) MessageBox(g_hwndParent, "Invternal error!", "S&M - Error", MB_OK);//JFB!!!
+	else {
+		if (_errMsg) MessageBox(g_hwndParent, "Invalid cycle action name!", "S&M - Error", MB_OK);
 		return false;
 	}
-
 	return true;
+}
+
+bool CreateCyclaction(int _type, const char* _actionStr, bool _checkCmds, bool _errMsg)
+{
+	if (CheckCyclaction(_type, _actionStr, _checkCmds, _errMsg))
+	{
+		bool toggleAction = (*_actionStr == '#');
+		char name[256]= ""; 
+		char actionStr[4096]= "";
+		strcpy(actionStr, _actionStr);
+		char* tok = strtok(actionStr, ",");
+		if (tok)
+		{
+			strncpy(name, toggleAction ? (char*)tok+1 : tok, 256); // "#name" = toggle action, "name" = normal action
+			g_cyclactions[_type].Add(new Cyclaction(_actionStr, 0, toggleAction));
+			int cycleId = g_cyclactions[_type].GetSize();
+			if (!RegisterCyclation(name, toggleAction, _type, cycleId, 0)) 
+			{
+				g_cyclactions[_type].Delete(cycleId, true); // cleanup on error
+				if (_errMsg) MessageBox(g_hwndParent, "Cycle action registration failed !", "S&M - Error", MB_OK);
+			}
+			else
+				return true;
+		}
+	}
+	return false;
+}
+
+// _cmdId: id to re-use or 0 to ask for a new cmd id
+// returns the cmd id, or 0 if failed
+int RegisterCyclation(const char* _name, bool _toggle, int _type, int _cycleId, int _cmdId)
+{
+	if (!SWSGetCommandID(!_type ? RunMainCyclaction : _type == 1 ? RunMEListCyclaction : RunMEPianoCyclaction, _cycleId))
+	{
+		char cID[BUFFER_SIZE];
+		_snprintf(cID, BUFFER_SIZE, "%s%d", g_cyclactionCustomIds[_type], _cycleId);
+		return SWSRegisterCommandExt3(
+			!_type ? RunMainCyclaction : _type == 1 ? RunMEListCyclaction : RunMEPianoCyclaction, 
+			!_toggle ? NULL : (!_type ? IsMainCyclactionEnabled : _type == 1 ? IsMEListCyclactionEnabled : IsMEPianoCyclactionEnabled), 
+			_cmdId, cID, _name, _cycleId, __FILE__);
+	}
+	return 0;
 }
 
 void CreateCyclaction(COMMAND_T* _ct)
 {
 	char reply[4096]= "";
-	char question[BUFFER_SIZE]= "Action name:,Comnand:";
+	char question[BUFFER_SIZE]= "Name (#name: toggle action):,Command:";
 	for (int i=2; i < SNM_MAX_CYCLING_ACTIONS; i++)
-		strcat(question, ",Comnand (! = cycle):");
-
-	if (GetUserInputs(SNM_CMD_SHORTNAME(_ct), SNM_MAX_CYCLING_ACTIONS+1, question, reply, 4096))
-		CreateCyclaction((int)_ct->user, reply, true);
+		strcat(question, ",Command (or ! or !new name):");
+	if (GetUserInputs(SNM_CMD_SHORTNAME(_ct), SNM_MAX_CYCLING_ACTIONS, question, reply, 4096))
+		CreateCyclaction((int)_ct->user, reply, true, true);
 }
 
-void LoadCyclactions()
+void FlushCyclactions(int _type)
+{
+	for (int i=0; i < g_cyclactions[_type].GetSize(); i++)
+	{
+		char custCmdId[256] = "";
+		_snprintf(custCmdId, 256, "_%s%d", g_cyclactionCustomIds[_type], i+1);		
+		int cmd = NamedCommandLookup(custCmdId);
+		COMMAND_T* ct = NULL;
+		if (cmd && (ct = SWSUnregisterCommand(cmd)))
+		{
+			free((void*)ct->accel.desc); // alloc'ed with strdup, so free instead of delete
+			free((void*)ct->id);
+			delete ct;
+		}
+	}
+	g_cyclactions[_type].EmptySafe(true);
+}
+
+void LoadCyclactions(COMMAND_T* _ct)
 {
 	char buf[32] = "";
 	char actionStr[4096] = "";
 	for (int i=0; i < 3; i++)
 	{
+		FlushCyclactions(i);
+
 		GetPrivateProfileString(g_cyclactionIniSections[i], "NB_ACTIONS", "0", buf, 32, g_SNMiniFilename.Get()); 
 		int nb = atoi(buf);
 		for (int j=0; j < nb; j++) 
 		{
 			_snprintf(buf, 32, "ACTION%d", j+1);
 			GetPrivateProfileString(g_cyclactionIniSections[i], buf, "", actionStr, 4096, g_SNMiniFilename.Get());
-			CreateCyclaction(i, *actionStr ? actionStr : "nop,65535", false);
+			// don't check commands (macros & extension actions may not be all registered at this point + already tested on creation)
+			if (!CreateCyclaction(i, actionStr, false, false))
+				CreateCyclaction(i, "no-op,65535", false, false); // we add noop in order to respect following cycle actions' ids
 		}
 	}
 }
@@ -1145,11 +1238,11 @@ void SaveCyclactions()
 	for (int i=0; i < 3; i++)
 	{
 		WDL_String iniSection;
-		iniSection.SetFormatted(32, "NB_ACTIONS=%d\n", g_cyclingActions[i].GetSize());
-		for (int j=0; j < g_cyclingActions[i].GetSize(); j++)
+		iniSection.SetFormatted(32, "NB_ACTIONS=%d\n", g_cyclactions[i].GetSize());
+		for (int j=0; j < g_cyclactions[i].GetSize(); j++)
 		{
 			WDL_String escapedStr;
-			makeEscapedConfigString(g_cyclingActions[i].Get(j)->Get(), &escapedStr);
+			makeEscapedConfigString(g_cyclactions[i].Get(j)->m_desc.Get(), &escapedStr);
 			iniSection.AppendFormatted(4096+16, "ACTION%d=%s\n", j+1, escapedStr.Get()); 
 		}
 		SaveIniSection(g_cyclactionIniSections[i], &iniSection);

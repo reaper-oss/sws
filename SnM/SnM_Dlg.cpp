@@ -29,10 +29,6 @@
 #include "SnM_Actions.h"
 
 
-int g_waitDlgProcCount = 0;
-HWND g_cueBussHwnd = NULL;
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // WDL UIs
 ///////////////////////////////////////////////////////////////////////////////
@@ -244,6 +240,29 @@ void SNM_FastListView::Update()
 // Cue buss dialog box
 ///////////////////////////////////////////////////////////////////////////////
 
+int GetComboSendIdxType(int _reaType) 
+{
+	switch(_reaType)
+	{
+		case 0: return 1;
+		case 3: return 2; 
+		case 1: return 3; 
+		default: return 1;
+	}
+	return 1; // in case _reaType comes from mars
+}
+
+const char* GetSendTypeStr(int _type) 
+{
+	switch(_type)
+	{
+		case 1: return "Post-Fader (Post-Pan)";
+		case 2: return "Pre-Fader (Post-FX)";
+		case 3: return "Pre-FX";
+		default: return NULL;
+	}
+}
+
 void fillHWoutDropDown(HWND _hwnd, int _idc)
 {
 	int x=0, x0=0;
@@ -289,7 +308,9 @@ void fillHWoutDropDown(HWND _hwnd, int _idc)
 	stereos.Empty(true);
 }
 
-WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+HWND g_cueBussHwnd = NULL;
+
+WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	const char cWndPosKey[] = "CueBus Window Pos"; 
 	switch(Message)
@@ -432,7 +453,7 @@ WDL_DLGRET CueBusDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 }
 
 void openCueBussWnd(COMMAND_T* _ct) {
-	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUS), g_hwndParent, CueBusDlgProc);
+	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUS), g_hwndParent, CueBussDlgProc);
 
 	// Toggle
 	if (g_cueBussHwnd) {
@@ -454,6 +475,8 @@ bool isCueBussWndDisplayed(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 // WaitDlgProc
 ///////////////////////////////////////////////////////////////////////////////
+
+int g_waitDlgProcCount = 0;
 
 WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {

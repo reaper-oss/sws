@@ -1,5 +1,15 @@
+!v2.0.0 #21 (, 2011)
 +Fixed browsing for folder in Windows when path contains unicode characters
 +Fixed opening of groove presets with unicode characters in paths on Windows
++Toolbar auto-refresh option disabled by very default
++House cleaning: removed "SWS/S&M: Let REAPER breathe" (see why http://forum.cockos.com/showpost.php?p=737539&postcount=378|here|.)
+
+Cycle action updates:
++Now, MIDI Editor cycle actions can also run custom macro or ReaScripts
++Now, cycle actions can also run SWS actions
++More customizable cycle actions (and toolbar buttons):
+- Optionnal dynamic action renaming (e.g. different tooltips for each step)
+- Optionnal toggle state (butons can light up or not, cycle actions always reported a toggle state in v2.0.0 #20).
 
 !v2.0.0 #20 (May 5, 2011)
 Added cycle actions (user configurable):

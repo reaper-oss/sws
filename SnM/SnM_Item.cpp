@@ -1158,7 +1158,9 @@ void itemSelToolbarPoll()
 						int minVis=0xFFFF, maxVis=-1;
 						for (int k=0; k < trList.GetSize(); k++) 
 						{
-							int trIdx = (int)GetSetMediaTrackInfo((MediaTrack*)trList.Get(k), "IP_TRACKNUMBER", NULL);
+							// TRP changed to CSurf_TrackToID from GetSetMediaTrackInfo(, "IP_TRACKNUMBER") as it's a casting nightmare on OSX
+							//     and CSurf_TrackToID is what's used everywhere else in the project
+							int trIdx = CSurf_TrackToID((MediaTrack*)trList.Get(k), false);
 							if (trIdx > 0 && trIdx < minVis) minVis = trIdx;
 							if (trIdx > 0 && trIdx > maxVis) maxVis = trIdx;
 						}
@@ -1166,7 +1168,7 @@ void itemSelToolbarPoll()
 						MediaTrack* tr = GetMediaItem_Track(item);
 						if (tr && trList.Find((void*)tr) == -1)
 						{
-							int trIdx = (int)GetSetMediaTrackInfo(tr, "IP_TRACKNUMBER", NULL);
+							int trIdx = CSurf_TrackToID(tr, false);
 							if (trIdx <= minVis)
 								g_toolbarItemSel[SNM_ITEM_SEL_UP].Add(item);
 							else if (trIdx >= maxVis)

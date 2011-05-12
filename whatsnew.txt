@@ -1,3 +1,29 @@
+!v2.0.0 #22 (, 2011)
+Added actions (issue 291):
++SWS/S&M: Set selected tracks MIDI input to all channels
++SWS/S&M: Set selected tracks MIDI input to channel n - where 'n' is in [1; 16]
+
+Fixed the following actions/dialog boxes (crash with v4 empty take lanes):
++Xenakios/SWS: Rename selected takes (deprecated)...
++Xenakios/SWS: Take mixer
++Xenakios/SWS: Toggle selected takes normalized/unity gain
++Xenakios/SWS: Trim/untrim item left edge to edit cursor
++Xenakios/SWS: Implode items to takes and pan symmetrically
++Xenakios/SWS: Pan takes of item symmetrically
++Xenakios/SWS: Set item playrate based on item pitch (and reset pitch)
++Xenakios/SWS: Set item pitch based on item playrate
++Xenakios/SWS: Switch item contents to next cue
++Xenakios/SWS: Switch item contents to next cue (preserve item length)
++Xenakios/SWS: Switch item contents to previous cue
++Xenakios/SWS: Switch item contents to previous cue (preserve item length)
++Xenakios/SWS: Switch item contents to first cue
++Xenakios/SWS: Switch item contents to random cue
++Xenakios/SWS: Switch item contents to random cue (preserve item length)
+
+House cleaning:
++Dropped OSX support for all "SWS/S&M: Trigger preset" actions (=> Win only)
++Removed "Xenakios/SWS: Select last track of folder" ("not implemented" message, issue 284)
+
 !v2.0.0 #21 (May 11, 2011)
 Fixed browsing for folder in Windows when path contains unicode characters
 Fixed opening of groove presets with unicode characters in paths on Windows

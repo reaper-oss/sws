@@ -376,6 +376,7 @@ void replaceOrPasteItemsFromsTrackTemplate(const char* _title, bool _paste, int 
 void loadSetTrackTemplate(COMMAND_T*);
 void loadImportTrackTemplate(COMMAND_T*);
 bool autoSaveTrackTemplateSlots(int _slot, bool _delItems, const char* _dirPath, char* _fn, int _fnMaxSize);
+void setMIDIInputChannel(COMMAND_T*);
 
 // *** SnM_ResourceView.cpp ***
 int ResourceViewInit();

@@ -392,7 +392,6 @@ bool MyCueSortFunction (t_cuestruct a,t_cuestruct b)
 
 void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=false,bool RespectSnap=true)
 {
-	//
 	t_cuestruct NewCueStruct;
 	vector<t_cuestruct> VecItemCues;
 	
@@ -413,93 +412,94 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 				double itemSnapOffs=*(double*)GetSetMediaItemInfo(CurItem,"D_SNAPOFFSET",0);
 				VecItemCues.clear();
 				CurTake=GetMediaItemTake(CurItem,-1);
-				double TakePlayRate=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_PLAYRATE",NULL);
-				PCM_source *TakeSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-				REAPER_cue *CurCue;
-				int cueIndx=0;
-				bool morecues=true;
-				while (TakeSource && morecues)
+				if (CurTake)
 				{
-					int rc=TakeSource->Extended(PCM_SOURCE_EXT_ENUMCUES,(void *)(INT_PTR)cueIndx,&CurCue,NULL);
-					if (rc==0) break;
-					if (CurCue!=0)
+					double TakePlayRate=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_PLAYRATE",NULL);
+					PCM_source *TakeSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
+					REAPER_cue *CurCue;
+					int cueIndx=0;
+					bool morecues=true;
+					while (TakeSource && morecues)
 					{
-						NewCueStruct.StartTime=CurCue->m_time-(TakePlayRate* itemSnapOffs);
-						if (NewCueStruct.StartTime<0.0) NewCueStruct.StartTime=0;
-						VecItemCues.push_back(NewCueStruct);
+						int rc=TakeSource->Extended(PCM_SOURCE_EXT_ENUMCUES,(void *)(INT_PTR)cueIndx,&CurCue,NULL);
+						if (rc==0) break;
+						if (CurCue!=0)
+						{
+							NewCueStruct.StartTime=CurCue->m_time-(TakePlayRate* itemSnapOffs);
+							if (NewCueStruct.StartTime<0.0) NewCueStruct.StartTime=0;
+							VecItemCues.push_back(NewCueStruct);
+						}
+						cueIndx++;
+						if (cueIndx>1000) break; // sanity check
 					}
-					cueIndx++;
-					if (cueIndx>1000) break; // sanity check
-				}
-				if (VecItemCues.size()>0)
-				{
-					sort(VecItemCues.begin(),VecItemCues.end(),MyCueSortFunction);
-					//TimeSort(VecItemCues);
-					if (VecItemCues[0].StartTime>0.0)
+					if (VecItemCues.size()>0)
 					{
-					NewCueStruct.StartTime=0.0;
-					NewCueStruct.EndTime=VecItemCues[0].StartTime;
-					VecItemCues.insert(VecItemCues.begin(),NewCueStruct);
-					}	else VecItemCues[0].EndTime=VecItemCues[1].StartTime;
-				//NewCueStruct.StartTime=VecItemCues[VecItemCues.size()-1].EndTime;
-				//NewCueStruct.EndTime=TakeSource->GetLength();
-				//VecItemCues.push_back(NewCueStruct);
-					for (int idiot=1;idiot<(int)VecItemCues.size();idiot++)
-					{
+						sort(VecItemCues.begin(),VecItemCues.end(),MyCueSortFunction);
+						//TimeSort(VecItemCues);
+						if (VecItemCues[0].StartTime>0.0)
+						{
+						NewCueStruct.StartTime=0.0;
+						NewCueStruct.EndTime=VecItemCues[0].StartTime;
+						VecItemCues.insert(VecItemCues.begin(),NewCueStruct);
+						}	else VecItemCues[0].EndTime=VecItemCues[1].StartTime;
+					//NewCueStruct.StartTime=VecItemCues[VecItemCues.size()-1].EndTime;
+					//NewCueStruct.EndTime=TakeSource->GetLength();
+					//VecItemCues.push_back(NewCueStruct);
+						for (int idiot=1;idiot<(int)VecItemCues.size();idiot++)
+						{
+							
+							if (idiot<(int)VecItemCues.size()-1)
+							VecItemCues[idiot].EndTime=VecItemCues[idiot+1].StartTime;
+								else VecItemCues[idiot].EndTime=TakeSource->GetLength();
 						
-						if (idiot<(int)VecItemCues.size()-1)
-						VecItemCues[idiot].EndTime=VecItemCues[idiot+1].StartTime;
-							else VecItemCues[idiot].EndTime=TakeSource->GetLength();
-					
-					}
-					
-					int CurrentCueIndex=0;
-					double MediaOffset=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",NULL);
-					MediaOffset=MediaOffset;
-					for (int idiot=0;idiot<(int)VecItemCues.size();idiot++)
-					{
-						if (MediaOffset>=VecItemCues[idiot].StartTime && MediaOffset<VecItemCues[idiot].EndTime)
-						{
-							CurrentCueIndex=idiot;
-							break;
 						}
-					}
-					int NewCueIndex=0;
-					if (ToCueIndex==-1) // -1 for next/previous cue
-					{
-					
-						if (donextcue==true)
+						
+						int CurrentCueIndex=0;
+						double MediaOffset=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",NULL);
+						MediaOffset=MediaOffset;
+						for (int idiot=0;idiot<(int)VecItemCues.size();idiot++)
 						{
-							NewCueIndex=CurrentCueIndex+1;
-							if (NewCueIndex>(int)VecItemCues.size()-1) NewCueIndex=0;
+							if (MediaOffset>=VecItemCues[idiot].StartTime && MediaOffset<VecItemCues[idiot].EndTime)
+							{
+								CurrentCueIndex=idiot;
+								break;
+							}
 						}
-						if (donextcue==false)
+						int NewCueIndex=0;
+						if (ToCueIndex==-1) // -1 for next/previous cue
 						{
-							NewCueIndex=CurrentCueIndex-1;
-							if (NewCueIndex<0) NewCueIndex=(int)VecItemCues.size()-1;
+						
+							if (donextcue==true)
+							{
+								NewCueIndex=CurrentCueIndex+1;
+								if (NewCueIndex>(int)VecItemCues.size()-1) NewCueIndex=0;
+							}
+							if (donextcue==false)
+							{
+								NewCueIndex=CurrentCueIndex-1;
+								if (NewCueIndex<0) NewCueIndex=(int)VecItemCues.size()-1;
+							}
 						}
+						if (ToCueIndex==-2) // full random
+						{
+							NewCueIndex=rand() % VecItemCues.size();
+						}
+						if (ToCueIndex>=0 && ToCueIndex<(int)VecItemCues.size()) 
+							NewCueIndex=ToCueIndex;
+						double NewTimeA=VecItemCues[NewCueIndex].StartTime;
+						//if (RespectSnap)
+						//  NewTimeA-=itemSnapOffs*TakePlayRate;
+						//if (RespectSnap && donextcue==true)
+						//	NewTimeA-=itemSnapOffs*TakePlayRate;
+						//if (NewTimeA<0.0) NewTimeA=0.0;
+						double NewTimeB=VecItemCues[NewCueIndex].EndTime;
+						double NewLength=(NewTimeB*(1.0/TakePlayRate)) - (NewTimeA*(1.0/TakePlayRate));
+						if (!PreserveItemLen)
+							GetSetMediaItemInfo(CurItem,"D_LENGTH",&NewLength);
+						GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",&NewTimeA);
+						
 					}
-					if (ToCueIndex==-2) // full random
-					{
-						NewCueIndex=rand() % VecItemCues.size();
-					}
-					if (ToCueIndex>=0 && ToCueIndex<(int)VecItemCues.size()) 
-						NewCueIndex=ToCueIndex;
-					double NewTimeA=VecItemCues[NewCueIndex].StartTime;
-					//if (RespectSnap)
-					//  NewTimeA-=itemSnapOffs*TakePlayRate;
-					//if (RespectSnap && donextcue==true)
-					//	NewTimeA-=itemSnapOffs*TakePlayRate;
-					//if (NewTimeA<0.0) NewTimeA=0.0;
-					double NewTimeB=VecItemCues[NewCueIndex].EndTime;
-					double NewLength=(NewTimeB*(1.0/TakePlayRate)) - (NewTimeA*(1.0/TakePlayRate));
-					if (!PreserveItemLen)
-						GetSetMediaItemInfo(CurItem,"D_LENGTH",&NewLength);
-					GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",&NewTimeA);
-					
-				}
-				
-
+				}	
 			}
 		}
 	}
@@ -789,8 +789,7 @@ void DoDeleteActiveTakeAndRecycleSourceMedia(COMMAND_T*)
 			if (IsSel==true)
 			{
 				CurTake=GetMediaItemTake(CurItem,-1);
-				PCM_source *CurPCM;
-				CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
+				PCM_source *CurPCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
 				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
 				{
 					SendFileToRecycleBin(CurPCM->GetFileName());	
@@ -944,16 +943,19 @@ void DoItemPitch2Playrate(COMMAND_T*)
 			if (isSel)
 			{
 				CurTake=GetMediaItemTake(CurItem,-1);
-				double CurPitch=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_PITCH",NULL);
-				double NewPitch=0.0;
-				GetSetMediaItemTakeInfo(CurTake,"D_PITCH",&NewPitch);
-				bool NewPreserve=false;
-				GetSetMediaItemTakeInfo(CurTake,"B_PPITCH",&NewPreserve);
-				double NewRate=pow(2.0,CurPitch/12.0);
-				GetSetMediaItemTakeInfo(CurTake,"D_PLAYRATE",&NewRate);
-				double ItemLen=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
-				ItemLen=ItemLen*(1.0/NewRate);
-				GetSetMediaItemInfo(CurItem,"D_LENGTH",&ItemLen);
+				if (CurTake)
+				{
+					double CurPitch=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_PITCH",NULL);
+					double NewPitch=0.0;
+					GetSetMediaItemTakeInfo(CurTake,"D_PITCH",&NewPitch);
+					bool NewPreserve=false;
+					GetSetMediaItemTakeInfo(CurTake,"B_PPITCH",&NewPreserve);
+					double NewRate=pow(2.0,CurPitch/12.0);
+					GetSetMediaItemTakeInfo(CurTake,"D_PLAYRATE",&NewRate);
+					double ItemLen=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
+					ItemLen=ItemLen*(1.0/NewRate);
+					GetSetMediaItemInfo(CurItem,"D_LENGTH",&ItemLen);
+				}
 			}
 		}
 	}
@@ -978,27 +980,30 @@ void DoItemPlayrate2Pitch(COMMAND_T*)
 			if (isSel)
 			{
 				CurTake=GetMediaItemTake(CurItem,-1);
-				double OldRate=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_PLAYRATE",NULL);
-				double NewRate=1.0;
-				GetSetMediaItemTakeInfo(CurTake,"D_PLAYRATE",&NewRate);
-				// 12.0*log(OldPlayRate)/log(2.0);
-				double NewPitch=12.0*log(OldRate)/log(2.0);
-				GetSetMediaItemTakeInfo(CurTake,"D_PITCH",&NewPitch);
-				double ItemLen=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
-				ItemLen=ItemLen*(OldRate);
-				GetSetMediaItemInfo(CurItem,"D_LENGTH",&ItemLen);
-				/*
-				double CurPitch=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_PITCH",NULL);
-				double NewPitch=0.0;
-				GetSetMediaItemTakeInfo(CurTake,"D_PITCH",&NewPitch);
-				bool NewPreserve=false;
-				GetSetMediaItemTakeInfo(CurTake,"B_PPITCH",&NewPreserve);
-				double NewRate=pow(2.0,CurPitch/12.0);
-				GetSetMediaItemTakeInfo(CurTake,"D_PLAYRATE",&NewRate);
-				double ItemLen=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
-				ItemLen=ItemLen*(1.0/NewRate);
-				GetSetMediaItemInfo(CurItem,"D_LENGTH",&ItemLen);
-				*/
+				if (CurTake)
+				{
+					double OldRate=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_PLAYRATE",NULL);
+					double NewRate=1.0;
+					GetSetMediaItemTakeInfo(CurTake,"D_PLAYRATE",&NewRate);
+					// 12.0*log(OldPlayRate)/log(2.0);
+					double NewPitch=12.0*log(OldRate)/log(2.0);
+					GetSetMediaItemTakeInfo(CurTake,"D_PITCH",&NewPitch);
+					double ItemLen=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
+					ItemLen=ItemLen*(OldRate);
+					GetSetMediaItemInfo(CurItem,"D_LENGTH",&ItemLen);
+					/*
+					double CurPitch=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_PITCH",NULL);
+					double NewPitch=0.0;
+					GetSetMediaItemTakeInfo(CurTake,"D_PITCH",&NewPitch);
+					bool NewPreserve=false;
+					GetSetMediaItemTakeInfo(CurTake,"B_PPITCH",&NewPreserve);
+					double NewRate=pow(2.0,CurPitch/12.0);
+					GetSetMediaItemTakeInfo(CurTake,"D_PLAYRATE",&NewRate);
+					double ItemLen=*(double*)GetSetMediaItemInfo(CurItem,"D_LENGTH",NULL);
+					ItemLen=ItemLen*(1.0/NewRate);
+					GetSetMediaItemInfo(CurItem,"D_LENGTH",&ItemLen);
+					*/
+				}
 			}
 		}
 	}

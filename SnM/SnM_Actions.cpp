@@ -340,6 +340,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 
 	// FX presets -------------------------------------------------------------
+#ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Trigger next preset for selected FX of selected tracks" }, "S&M_NEXT_SELFX_PRESET", triggerNextPreset, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Trigger next preset for FX 1 of selected tracks" }, "S&M_NEXT_FX1_PRESET", triggerNextPreset, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Trigger next preset for FX 2 of selected tracks" }, "S&M_NEXT_FX2_PRESET", triggerNextPreset, NULL, 1},
@@ -350,7 +351,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for FX 2 of selected tracks" }, "S&M_PREVIOUS_FX2_PRESET", triggerPreviousPreset, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for FX 3 of selected tracks" }, "S&M_PREVIOUS_FX3_PRESET", triggerPreviousPreset, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for FX 4 of selected tracks" }, "S&M_PREVIOUS_FX4_PRESET", triggerPreviousPreset, NULL, 3},
-
+#endif
 	
 	// MIDI learn -------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Reassign MIDI learned channels of all FX for selected tracks (prompt)" }, "S&M_ALL_FX_LEARN_CHp", reassignLearntMIDICh, NULL, -1},
@@ -552,6 +553,25 @@ static COMMAND_T g_SNM_cmdTable[] =
 //	{ { DEFACCEL, "SWS/S&M: Load cycling actions" }, "S&M_LOAD_CYCLACTIONS", LoadCyclactions, NULL, },
 
 
+	// REC inputs -------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to all channels" }, "S&M_MIDI_INPUT_ALL_CH", setMIDIInputChannel, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 01" }, "S&M_MIDI_INPUT_CH1", setMIDIInputChannel, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 02" }, "S&M_MIDI_INPUT_CH2", setMIDIInputChannel, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 03" }, "S&M_MIDI_INPUT_CH3", setMIDIInputChannel, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 04" }, "S&M_MIDI_INPUT_CH4", setMIDIInputChannel, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 05" }, "S&M_MIDI_INPUT_CH5", setMIDIInputChannel, NULL, 5},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 06" }, "S&M_MIDI_INPUT_CH6", setMIDIInputChannel, NULL, 6},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 07" }, "S&M_MIDI_INPUT_CH7", setMIDIInputChannel, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 08" }, "S&M_MIDI_INPUT_CH8", setMIDIInputChannel, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 09" }, "S&M_MIDI_INPUT_CH9", setMIDIInputChannel, NULL, 9},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 10" }, "S&M_MIDI_INPUT_CH10", setMIDIInputChannel, NULL, 10},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 11" }, "S&M_MIDI_INPUT_CH11", setMIDIInputChannel, NULL, 11},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 12" }, "S&M_MIDI_INPUT_CH12", setMIDIInputChannel, NULL, 12},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 13" }, "S&M_MIDI_INPUT_CH13", setMIDIInputChannel, NULL, 13},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 14" }, "S&M_MIDI_INPUT_CH14", setMIDIInputChannel, NULL, 14},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 15" }, "S&M_MIDI_INPUT_CH15", setMIDIInputChannel, NULL, 15},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to channel 16" }, "S&M_MIDI_INPUT_CH16", setMIDIInputChannel, NULL, 16},
+
 	// Other, misc & experimental ---------------------------------------------
 #ifdef _WIN32
 #ifdef _SNM_MISC
@@ -597,12 +617,13 @@ static MIDI_COMMAND_T g_SNMSection_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Apply live config 8 (MIDI CC absolute only)" }, "S&M_LIVECONFIG8", ApplyLiveConfig, NULL, 7},
 
 	{ { DEFACCEL, "SWS/S&M: Select project (MIDI CC absolute only)" }, "S&M_SELECT_PROJECT", SelectProject, NULL, },
-
+#ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC absolute only)" }, "S&M_SELFX_PRESET", TriggerFXPreset, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 1 of selected tracks (MIDI CC absolute only)" }, "S&M_FX1_PRESET", TriggerFXPreset, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 2 of selected tracks (MIDI CC absolute only)" }, "S&M_FX2_PRESET", TriggerFXPreset, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 3 of selected tracks (MIDI CC absolute only)" }, "S&M_FX3_PRESET", TriggerFXPreset, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 4 of selected tracks (MIDI CC absolute only)" }, "S&M_FX4_PRESET", TriggerFXPreset, NULL, 3},
+#endif
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

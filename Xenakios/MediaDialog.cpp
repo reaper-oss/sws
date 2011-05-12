@@ -142,7 +142,7 @@ void GetProjectFileList(vector<t_mediafile_status>& AMediaList)
 				for (k=0;k<GetMediaItemNumTakes(CurItem);k++)
 				{
 					MediaItem_Take *CurTake = GetMediaItemTake(CurItem,k);
-					if (CurTake!=0)
+					if (CurTake)
 					{
 						PCM_source *ThePCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
 						string FName;

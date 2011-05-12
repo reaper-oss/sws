@@ -301,7 +301,8 @@ void DoRenameTakeDlg(COMMAND_T*)
 			if (IsSel)
 			{
 				CurTake=GetMediaItemTake(CurItem,-1);
-				VecTakesToRename.push_back(CurTake);
+				if (CurTake)
+					VecTakesToRename.push_back(CurTake);
 			}
 		}
 	}

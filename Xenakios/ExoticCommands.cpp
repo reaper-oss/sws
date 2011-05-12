@@ -1181,13 +1181,14 @@ void On_SliderMove(HWND theHwnd,WPARAM wParam,LPARAM lParam,HWND SliderHandle,in
 		if (movedParam==0)
 		{
 			double NewVol=( 2.0/1000*TheSlipos);
-			
-			GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVol);
+			if (CurTake)
+				GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVol);
 		}
 		if (movedParam==1)
 		{
 			double NewPan=-1.0+(2.0/1000*TheSlipos);
-			GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
+			if (CurTake)
+				GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
 		}
 		UpdateTimeline();
 	}
@@ -1207,9 +1208,9 @@ void TakeMixerResetTakes(bool ResetVol=false,bool ResetPan=false)
 		CurTake=GetMediaItemTake(g_TargetItem,i);
 		double NewVolume=1.0;
 		double NewPan=0.0;
-		if (ResetVol==true)
+		if (CurTake && ResetVol==true)
 			GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVolume);
-		if (ResetPan==true)
+		if (CurTake && ResetPan==true)
 			GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
 	}
 	int SliPos;
@@ -1313,9 +1314,11 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 						//
 						CurTake=GetMediaItemTake(g_TargetItem,i);
 						double NewVol=g_TakeMixerState.StoredVolumes[i];
-						GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVol);
+						if (CurTake)
+							GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVol);
 						double NewPan=g_TakeMixerState.StoredPans[i];
-						GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
+						if (CurTake)
+							GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
 					}
 					GetSetMediaItemInfo(g_TargetItem,"B_ALLTAKESPLAY",&g_TakeMixerState.AllTakesPlay);
 					GetSetMediaItemInfo(g_TargetItem,"D_VOL",&g_TakeMixerState.StoredItemVolume);
@@ -1373,8 +1376,8 @@ void DoShowTakeMixerDlg(COMMAND_T*)
 	for (int i = 0; i < g_TakeMixerState.NumTakes; i++)
 	{
 		MediaItem_Take* CurTake = GetMediaItemTake(g_TargetItem, i);
-		g_TakeMixerState.StoredVolumes[i]= *(double*)GetSetMediaItemTakeInfo(CurTake,"D_VOL",NULL);
-		g_TakeMixerState.StoredPans[i]= *(double*)GetSetMediaItemTakeInfo(CurTake,"D_PAN",NULL);
+		g_TakeMixerState.StoredVolumes[i]= CurTake ? *(double*)GetSetMediaItemTakeInfo(CurTake,"D_VOL",NULL) : 0.0;
+		g_TakeMixerState.StoredPans[i]= CurTake ? *(double*)GetSetMediaItemTakeInfo(CurTake,"D_PAN",NULL) : 0.0;
 	}
 
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_TAKEMIXER), g_hwndParent, TakeMixerDlgProc);

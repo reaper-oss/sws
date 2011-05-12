@@ -205,8 +205,9 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Select tracks with no items" }, "XENAKIOS_SELTRAXNOITEMS", DoSelectTracksWithNoItems,	"Select tracks with no items", },
 	{ { DEFACCEL, "Xenakios/SWS: Select tracks with \"BUSS\" in name" }, "XENAKIOS_SELTRAXWITHBUSS", DoSelectTracksContainingBuss,	"Select tracks with \"BUSS\" in name", },
 	{ { DEFACCEL, "Xenakios/SWS: Unselect tracks with \"BUSS\" in name" }, "XENAKIOS_UNSELTRAXWITHBUSS", DoUnSelectTracksContainingBuss,	"Unselect tracks with \"BUSS\" in name", },
+/*JFB "not implemented" ! Issue 284
 	{ { DEFACCEL, "Xenakios/SWS: Select last track of folder" }, "XENAKIOS_SELLASTTRACKOFFOLDER", DoSelectLastTrackOfFolder,	"Select last track of folder", },
-	
+*/
 	{ { DEFACCEL, "Xenakios/SWS: Dismantle selected folder" }, "XENAKIOS_SELTRACKTONOTFOLDER", DoSetSelectedTrackNormal,	"Dismantle selected folder", },
 	
 	{ { DEFACCEL, "Xenakios/SWS: Set selected tracks as folder" }, "XENAKIOS_SELTRACKSASFOLDER", DoSetSelectedTracksAsFolder,	"Set selected tracks as folder", },
@@ -272,7 +273,9 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: [Deprecated] Project media..." }, "XENAKIOS_MANAGEMEDIA", DoShowProjectMediaDlg,NULL, },
 #endif
 	{ { DEFACCEL, "Xenakios/SWS: Find missing media for project's takes" }, "XENAKIOS_FINDMISSINGMEDIA", DoFindMissingMedia,NULL, true },
+#ifdef _WIN32
 	{ { DEFACCEL, "Xenakios/SWS: Save current contents of actions list to file" }, "XENAKIOS_DODUMPACTIONS", DoDumpActionsWindow,NULL, },
+#endif
 	{ { DEFACCEL, "Xenakios/SWS: Show/hide floating item/track info" }, "XENAKIOS_SHOWHIDE_ITEMINSPECTOR", DoTglFltItemInspector,NULL, true },
 	{ { DEFACCEL, "Xenakios/SWS: Spread selected items over 4 tracks" }, "XENAKIOS_SPREADITEMSOVER4TRAX", DoSpreadSelItemsOver4Tracks,NULL, true },
 	{ { DEFACCEL, "Xenakios/SWS: Spread selected items over tracks..." }, "XENAKIOS_SPREADITEMSOVERTRAX", DoShowSpreadItemsDlg,	NULL, true },

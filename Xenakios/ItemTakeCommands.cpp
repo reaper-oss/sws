@@ -104,23 +104,26 @@ void DoMoveItemsLeftByItemLen(COMMAND_T*)
 
 void DoToggleTakesNormalize(COMMAND_T*)
 {
-	//
 	WDL_PtrList<MediaItem_Take> *TheTakes=new (WDL_PtrList<MediaItem_Take>);
 	int NumActiveTakes=GetActiveTakes(TheTakes);
 	int NumNormalizedTakes=0;
 	for (int i=0;i<NumActiveTakes;i++)
 	{
-		//
-		double TakeVol=*(double*)GetSetMediaItemTakeInfo(TheTakes->Get(i),"D_VOL",NULL);
-		if (TakeVol!=1.0) NumNormalizedTakes++;
+		if (TheTakes->Get(i))
+		{
+			double TakeVol=*(double*)GetSetMediaItemTakeInfo(TheTakes->Get(i),"D_VOL",NULL);
+			if (TakeVol!=1.0) NumNormalizedTakes++;
+		}
 	}
 	if (NumNormalizedTakes>0)
 	{
 		for (int i=0;i<NumActiveTakes;i++)
 		{
-			//
-			double TheGain=1.0;
-			GetSetMediaItemTakeInfo(TheTakes->Get(i),"D_VOL",&TheGain);
+			if (TheTakes->Get(i))
+			{
+				double TheGain=1.0;
+				GetSetMediaItemTakeInfo(TheTakes->Get(i),"D_VOL",&TheGain);
+			}
 		}
 		Undo_OnStateChangeEx("Set take(s) to unity gain",4,-1);
 		UpdateTimeline();
@@ -132,9 +135,7 @@ void DoToggleTakesNormalize(COMMAND_T*)
 		Undo_OnStateChangeEx("Normalize take(s)",4,-1);
 		UpdateTimeline();
 	}
-
 	delete TheTakes;
-		
 }
 
 
@@ -822,17 +823,20 @@ void DoTrimLeftEdgeToEditCursor(COMMAND_T*)
 		for (int k = 0; k < GetMediaItemNumTakes(CurItem); k++)
 		{
 			MediaItem_Take* CurTake = GetMediaItemTake(CurItem, k);
-			double OldMediaOffset = *(double*)GetSetMediaItemTakeInfo(CurTake, "D_STARTOFFS", NULL);
-			double playRate = *(double*)GetSetMediaItemTakeInfo(CurTake, "D_PLAYRATE", NULL);
-			/* media offsets needs to be scaled by playRate */
-			double NewMediaOffset = (OldMediaOffset / playRate - (OldLeftEdge - NewLeftEdge)) * playRate;
-			if(NewMediaOffset < 0) {
-				double shiftAmount = -NewMediaOffset / playRate;
-				NewLeftEdge += shiftAmount; 
-				NewLength -= shiftAmount;
-				NewMediaOffset = 0.0f;
+			if (CurTake)
+			{
+				double OldMediaOffset = *(double*)GetSetMediaItemTakeInfo(CurTake, "D_STARTOFFS", NULL);
+				double playRate = *(double*)GetSetMediaItemTakeInfo(CurTake, "D_PLAYRATE", NULL);
+				/* media offsets needs to be scaled by playRate */
+				double NewMediaOffset = (OldMediaOffset / playRate - (OldLeftEdge - NewLeftEdge)) * playRate;
+				if(NewMediaOffset < 0) {
+					double shiftAmount = -NewMediaOffset / playRate;
+					NewLeftEdge += shiftAmount; 
+					NewLength -= shiftAmount;
+					NewMediaOffset = 0.0f;
+				}
+				GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",&NewMediaOffset);
 			}
-			GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",&NewMediaOffset);
 		}
 		GetSetMediaItemInfo(CurItem, "D_POSITION", &NewLeftEdge);
 		GetSetMediaItemInfo(CurItem, "D_LENGTH", &NewLength);
@@ -1205,11 +1209,12 @@ void DoPanTakesOfItemSymmetrically()
 					for (k=0;k<NumTakes;k++)
 					{
 						CurTake=GetMediaItemTake(CurItem,k);
-					
-						//double SnapOffset=*(double*)GetSetMediaItemInfo(CurItem,"D_SNAPOFFSET",NULL);
-						double NewPan=-1.0+((2.0/(NumTakes-1))*k);
-											
-						GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
+						if (CurTake)
+						{
+							//double SnapOffset=*(double*)GetSetMediaItemInfo(CurItem,"D_SNAPOFFSET",NULL);
+							double NewPan=-1.0+((2.0/(NumTakes-1))*k);				
+							GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
+						}
 					}
 				}
 			} 
@@ -1530,7 +1535,6 @@ int OpenInExtEditor(int editorIdx)
 	if (TheTakes.size()==1)
 	{
 		MediaItem* CurItem=(MediaItem*)GetSetMediaItemTakeInfo(TheTakes[0],"P_ITEM",NULL);
-		//
 		
 		//Main_OnCommand(40639,0); // duplicate active take
 		Main_OnCommand(40601,0); // render items and add as new take

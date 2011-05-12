@@ -535,3 +535,31 @@ bool autoSaveTrackTemplateSlots(int _slot, bool _delItems, const char* _dirPath,
 	}
 	return slotUpdate;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Track input actions
+///////////////////////////////////////////////////////////////////////////////
+
+void setMIDIInputChannel(COMMAND_T* _ct)
+{
+	bool updated = false;
+	int ch = (int)_ct->user; // 0: all channels
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			int in = *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL);
+			if (((in & 0x1000) == 0x1000) && ((in & 0x1F) != ch))
+			{
+				in &= 0x1FE0; 
+				in |= ch;
+				GetSetMediaTrackInfo(tr, "I_RECINPUT", &in);
+				updated = true;
+			}
+		}
+	}
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}

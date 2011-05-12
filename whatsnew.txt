@@ -1,8 +1,4 @@
 !v2.0.0 #22 (, 2011)
-Added actions (issue 291):
-+SWS/S&M: Set selected tracks MIDI input to all channels
-+SWS/S&M: Set selected tracks MIDI input to channel n - where 'n' is in [1; 16]
-
 Fixed the following actions/dialog boxes (crash with v4 empty take lanes):
 +Xenakios/SWS: Rename selected takes (deprecated)...
 +Xenakios/SWS: Take mixer

@@ -442,8 +442,8 @@ bool dumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 
 				char customId[64] = "";
 				char cmdName[256] = "";
-				ListView_GetItemText(hList,i,1,cmdName,256);
-				ListView_GetItemText(hList,i,3,customId,64);
+				ListView_GetItemText(hList, i, 1, cmdName, 256);
+				ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, customId, 64);
 
 				if (!strstr(cmdName,"Custom:") &&
 					((_type % 2 && !strstr(cmdName,"SWS:") && !strstr(cmdName,"SWS/")) ||

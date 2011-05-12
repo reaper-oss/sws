@@ -379,8 +379,8 @@ int SNM_NotesHelpWnd::updateActionHelp()
 					g_lastActionListCmd = cmdId; 
 
 					//JFB TODO: cleanup when we'll be able to access all sections & custom ids
-					ListView_GetItemText(hList,i,1,g_lastActionDesc,128);
-					ListView_GetItemText(hList,i,3,g_lastActionId,64);
+					ListView_GetItemText(hList, i, 1, g_lastActionDesc, 128);
+					ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, g_lastActionId, 64);
 
 					if (g_lastActionId && !*g_lastActionId)
 						sprintf(g_lastActionId, "%d", cmdId);

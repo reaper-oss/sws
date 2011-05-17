@@ -163,7 +163,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hAutoRenderSubMenu, "Batch render regions", NamedCommandLookup("_AUTORENDER"));
 	AddToMenu(hAutoRenderSubMenu, "Edit project metadata", NamedCommandLookup("_AUTORENDER_METADATA"));
 	AddToMenu(hAutoRenderSubMenu, "Open render path", NamedCommandLookup("_AUTORENDER_OPEN_RENDER_PATH"));
-	AddToMenu(hAutoRenderSubMenu, "Show rnstructions", NamedCommandLookup("_AUTORENDER_HELP"));
+	AddToMenu(hAutoRenderSubMenu, "Show help", NamedCommandLookup("_AUTORENDER_HELP"));
 	AddToMenu(hAutoRenderSubMenu, "Global preferences", NamedCommandLookup("_AUTORENDER_PREFERENCES"));
 
 	AddToMenu(hMenu, "Command parameters", NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));

@@ -1232,8 +1232,6 @@ LRESULT CALLBACK DragZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 				pLock = NULL;
 			}
 			bDrag = false;
-			if (GetCapture() == hwnd)
-				ReleaseCapture();
 			break;
 
 		case WM_SETCURSOR:

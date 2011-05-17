@@ -1,3 +1,6 @@
+!v2.0.0 #23 (May 17, 2011)
+Fixed ruler not moving edit cursor
+
 !v2.0.0 #22 (May 17, 2011)
 SWS Zoom updates:
 +Merged in Boreg's drag zoom plugin http://forum.cockos.com/showthread.php?t=42722.  Open SWS Zoom preferences (Extensions menu) to enable (OSX, too!)

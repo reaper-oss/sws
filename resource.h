@@ -89,14 +89,18 @@
 #define IDC_VOLEDIT                     1016
 #define IDC_UNDOZOOM                    1016
 #define IDC_NUMREPEDIT                  1017
+#define IDC_MOVECUR                     1017
 #define IDC_NOTEVALUECOMBO              1018
 #define IDC_UNDOSWSONLY                 1018
 #define IDC_EDIT2                       1019
 #define IDC_LASTUNDOPROJ                1019
 #define IDC_EDIT3                       1020
+#define IDC_SETTIMESEL                  1020
 #define IDC_EDIT4                       1021
 #define IDC_IVOL_NUDGE                  1022
+#define IDC_DRAGUPPER                   1022
 #define IDC_PNUDGE_B                    1023
+#define IDC_DRAGLOWER                   1023
 #define IDC_COMBO1                      1024
 #define IDC_COMBO2                      1025
 #define IDC_RADIO1                      1026
@@ -180,15 +184,17 @@
 #define IDC_SENDS                       1105
 #define IDC_HELPTEXT                    1106
 #define IDC_UPDATE                      1107
-#define IDC_SELECTEDONLY                1108
+#define IDC_SELECTEDONLY_RECALL         1108
 #define IDC_VISIBILITY                  1109
 #define IDC_SELECTION                   1110
 #define IDC_OPTIONS                     1111
 #define IDC_APPLYRECALL                 1112
 #define IDC_FILTERGROUP                 1113
 #define IDC_DESC                        1114
+#define IDC_SHOWSELONLY                 1114
 #define IDC_NAMEPROMPT                  1115
 #define IDC_COLOR1                      1116
+#define IDC_SELECTEDONLY_SAVE           1116
 #define IDC_HIDENEW                     1117
 #define IDC_COLOR2                      1118
 #define IDC_FXCHAIN                     1119
@@ -287,9 +293,7 @@
 #define IDC_RENDER_PATH                 1213
 #define IDC_BROWSE                      1214
 #define IDC_DONTSHOW                    1215
-#define IDC_ALLOW_STEM_RENDERING        1219
 #define IDC_ALLOW_STEMS                 1219
-#define IDC_ALLOW_ADDTOPROJ             1220
 #define IDC_DEFAULT_RENDER_PATH         1221
 #define IDC_PREPEND_TRACK_NUMBER        1222
 #define IDC_REGION_PREFIX               1223
@@ -299,8 +303,8 @@
 #define IDC_STATIC_YEAR                 1227
 #define IDC_STATIC_COMMENT              1228
 #define IDC_STATIC_REGION_PREFIX        1229
-#define IDC_PREPEND_TRACK_NUMBER2       1230
 #define IDC_REMOVE_PREFIX_FROM_TRACK_NAME 1230
+#define IDC_DRAGSCALE                   1230
 
 // Next default values for new objects
 // 
@@ -308,7 +312,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        160
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1230
+#define _APS_NEXT_CONTROL_VALUE         1231
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

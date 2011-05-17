@@ -162,10 +162,6 @@ void MarkerList::UpdateReaper()
 	UpdateTimeline();
 }
 
-#ifndef _WIN32
-int g_iClipFormat = -1;
-#endif
-
 void MarkerList::ListToClipboard()
 {
 	SWS_SectionLock lock(&m_mutex);
@@ -191,12 +187,7 @@ void MarkerList::ListToClipboard()
 		{
 			memcpy(GlobalLock(hglbCopy), str, strlen(str)+1);	
 			GlobalUnlock(hglbCopy);
-#ifndef _WIN32
-			g_iClipFormat = RegisterClipboardFormat("Text");
-			SetClipboardData(g_iClipFormat, hglbCopy); 
-#else
 			SetClipboardData(CF_TEXT, hglbCopy); 
-#endif
 		}
 		CloseClipboard();
 		delete [] str;
@@ -206,16 +197,11 @@ void MarkerList::ListToClipboard()
 void MarkerList::ClipboardToList()
 {
 	SWS_SectionLock lock(&m_mutex);
-	//if (IsClipboardFormatAvailable(CF_TEXT) && OpenClipboard(g_hwndParent))
 	if (OpenClipboard(g_hwndParent))
 	{
 		m_items.Empty(true);
 		LineParser lp(false);
-#ifndef _WIN32
-		HGLOBAL clipBoard = GetClipboardData(g_iClipFormat);
-#else
 		HGLOBAL clipBoard = GetClipboardData(CF_TEXT);
-#endif
 		char* data = NULL;
 		if (clipBoard)
 		{

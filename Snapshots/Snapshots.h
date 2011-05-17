@@ -75,4 +75,4 @@ void NewSnapshot(COMMAND_T* = NULL);
 Snapshot* GetSnapshotPtr(int i);
 void GetSnapshot(COMMAND_T* ct);
 void GetSnapshot(int slot, int iMask, bool bSelOnly);
-void UpdateSnapshotsDialog();
+void UpdateSnapshotsDialog(bool bSelChange = false);

@@ -177,8 +177,6 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Pan selected tracks to left" }, "XENAKIOS_PANTRACKSLEFT", DoPanTracksLeft,	"Pan selected tracks to left", },
 	{ { DEFACCEL, "Xenakios/SWS: Pan selected tracks to right" }, "XENAKIOS_PANTRACKSRIGHT", DoPanTracksRight,	"Pan selected tracks to right", },
 	
-	{ { DEFACCEL, "Xenakios/SWS: Toggle selected tracks visible in mixer" }, "XENAKIOS_TOGTRAXVISMIXER", DoToggleTraxVisMixer,	"Toggle selected tracks visible in mixer", },
-
 	{ { DEFACCEL, "SWS: Set selected tracks pan law to default" }, "XENAKIOS_SELTRAXPANLAWDEF",  DoTraxPanLaw, NULL, 666 },
 	{ { DEFACCEL, "SWS: Set selected tracks pan law to 0.0 dB" },   "XENAKIOS_SELTRAXPANLAWZERO", DoTraxPanLaw, NULL, 0   },
 	{ { DEFACCEL, "SWS: Set selected tracks pan law to -6.0 dB" },  "SWS_PANLAWNEG6",             DoTraxPanLaw, NULL, -60 },

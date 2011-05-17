@@ -114,6 +114,7 @@ public:
 	char* GetTimeString(char* str, int iStrMax, bool bDate);
 	void GetChunk(WDL_String* chunk);
 	void GetDetails(WDL_String* details);
+	bool IncludesSelTracks();
 
 // TODO these should be private
 	char* m_cName;

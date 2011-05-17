@@ -1,4 +1,14 @@
-!v2.0.0 #22 (, 2011)
+!v2.0.0 #22 (May 17, 2011)
+SWS Zoom updates:
++Merged in Boreg's drag zoom plugin http://forum.cockos.com/showthread.php?t=42722.  Open SWS Zoom preferences (Extensions menu) to enable (OSX, too!)
++Issue 212: Added options "Move edit cursor when zooming in" and "Set time selection when zooming in"
+
+Snapshot improvements:
++Issue 107: Add option to snapshots window for "Show snapshots for selected tracks only"
+This filters the snapshots to include only snaps that include selected tracks
++Issue 179: Separate "selected tracks only" options for save/recall
++Issue 294: Fixed "Save over current snapshot" and others inappropriately clearing the active snapshot
+
 Fixed the following actions/dialog boxes (crash with v4 empty take lanes):
 +Xenakios/SWS: Rename selected takes (deprecated)...
 +Xenakios/SWS: Take mixer
@@ -19,6 +29,7 @@ Fixed the following actions/dialog boxes (crash with v4 empty take lanes):
 House cleaning:
 +Dropped OSX support for all "SWS/S&M: Trigger preset" actions (=> Win only)
 +Removed "Xenakios/SWS: Select last track of folder" ("not implemented" message, issue 284)
++Removed duplicate "Xenakios/SWS: Toggle selected tracks visible in mixer"
 
 !v2.0.0 #21 (May 11, 2011)
 Fixed browsing for folder in Windows when path contains unicode characters

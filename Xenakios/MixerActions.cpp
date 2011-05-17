@@ -106,26 +106,6 @@ void DoSelectPrevTrackKeepCur(COMMAND_T*)
 	DoSelectTrack(-1,true);
 }
 
-void DoToggleTraxVisMixer(COMMAND_T*)
-{
-	//
-	MediaTrack *CurTrack;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
-	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int TkSelected=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		if (TkSelected==1)
-		{
-			bool ShowInMixer=*(bool*)GetSetMediaTrackInfo(CurTrack,"B_SHOWINMIXER",NULL);
-			ShowInMixer=!ShowInMixer;
-			GetSetMediaTrackInfo(CurTrack,"B_SHOWINMIXER",&ShowInMixer);
-		}
-	}
-	TrackList_AdjustWindows(false);
-	UpdateTimeline();
-}
-
 void DoTraxPanLaw(COMMAND_T* t)
 {
 	for (int i = 0; i < GetNumTracks(); i++)

@@ -63,24 +63,22 @@ static SWS_SnapshotsWnd* g_pSSWnd;
 void PasteSnapshot(COMMAND_T*);
 void MergeSnapshot(Snapshot* ss);
 
-void UpdateSnapshotsDialog()
-{
-	g_pSSWnd->Update();
-}
-
 static int g_iMask = ALL_MASK;
-static bool g_bSelOnly = false;
+static bool g_bSelOnly_OnRecall = false;
+static bool g_bSelOnly_OnSave = false;
 static int g_iSavedMask;
 static int g_iSavedType;
-static bool g_bSavedSelOnly;
 static bool g_bApplyFilterOnRecall = true;
 static bool g_bHideNewOnRecall = true;
 static bool g_bPromptOnNew = false;
 static bool g_bHideOptions = false;
+static bool g_bShowSelOnly = false;
 
-#ifndef _WIN32
-static int g_iClipFormat;
-#endif
+void UpdateSnapshotsDialog(bool bSelChange)
+{
+	if (!bSelChange || g_bShowSelOnly)
+		g_pSSWnd->Update();
+}
 
 // Clipboard operations:
 void CopySnapshotToClipboard(Snapshot* ss)
@@ -96,12 +94,7 @@ void CopySnapshotToClipboard(Snapshot* ss)
 		{
 			memcpy(GlobalLock(hglbCopy), ssStr.Get(), ssStr.GetLength() + 1);	
 			GlobalUnlock(hglbCopy);
-#ifndef _WIN32
-			g_iClipFormat = RegisterClipboardFormat("Text");
-			SetClipboardData(g_iClipFormat, hglbCopy); 
-#else
 			SetClipboardData(CF_TEXT, hglbCopy); 
-#endif
 		}
 		CloseClipboard();
 	}
@@ -112,11 +105,7 @@ Snapshot* GetSnapshotFromClipboard()
 	Snapshot* ss = NULL;
 	if (OpenClipboard(g_hwndParent))
 	{
-#ifndef _WIN32
-		HGLOBAL clipBoard = GetClipboardData(g_iClipFormat);
-#else
 		HGLOBAL clipBoard = GetClipboardData(CF_TEXT);
-#endif
 		if (clipBoard)
 		{
 			char* clipData = (char*)GlobalLock(clipBoard);
@@ -301,13 +290,13 @@ void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 	if (!(iKeyState & LVKF_SHIFT) && !(iKeyState & LVKF_CONTROL) && !(iKeyState & LVKF_ALT))
 	{
 		g_ss.Get()->m_pCurSnapshot = ss;
-		if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
+		if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly_OnRecall, g_bHideNewOnRecall))
 			Update();
 	}
 	// Save (ctrl click)
 	if (!(iKeyState & LVKF_SHIFT) && (iKeyState & LVKF_CONTROL) && !(iKeyState & LVKF_ALT))
 	{
-		g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly, ss->m_cName));
+		g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly_OnSave, ss->m_cName));
 		delete ss;
 		Update();
 	}
@@ -328,9 +317,24 @@ void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 
 void SWS_SnapshotsView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 {
-	pBuf->Resize(g_ss.Get()->m_snapshots.GetSize());
-	for (int i = 0; i < pBuf->GetSize(); i++)
-		pBuf->Get()[i] = (LPARAM)g_ss.Get()->m_snapshots.Get(i);
+	if (g_bShowSelOnly)
+	{	// Show snaps that include selected tracks
+		int iFilteredSnaps = 0;
+		pBuf->Resize(iFilteredSnaps, false);
+
+		for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
+			if (g_ss.Get()->m_snapshots.Get(i)->IncludesSelTracks())
+			{
+				pBuf->Resize(++iFilteredSnaps);
+				pBuf->Get()[iFilteredSnaps-1] = (LPARAM)g_ss.Get()->m_snapshots.Get(i);
+			}
+	}
+	else
+	{
+		pBuf->Resize(g_ss.Get()->m_snapshots.GetSize());
+		for (int i = 0; i < pBuf->GetSize(); i++)
+			pBuf->Get()[i] = (LPARAM)g_ss.Get()->m_snapshots.Get(i);
+	}
 }
 
 int SWS_SnapshotsView::GetItemState(LPARAM item)
@@ -344,7 +348,7 @@ SWS_SnapshotsWnd::SWS_SnapshotsWnd()
 {
 	// Restore state
 	char str[32];
-	GetPrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, "63 0 0 0 1 0 0", str, 32, get_ini_file());
+	GetPrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, "63 0 0 0 1 0 0 0 0", str, 32, get_ini_file());
 	LineParser lp(false);
 	if (!lp.parse(str))
 	{
@@ -353,12 +357,13 @@ SWS_SnapshotsWnd::SWS_SnapshotsWnd()
 		g_bHideOptions = lp.gettoken_int(2) ? true : false;
 		g_bPromptOnNew = lp.gettoken_int(3) ? true : false;
 		g_bHideNewOnRecall = lp.gettoken_int(4) ? true : false;
-		g_bSelOnly = lp.gettoken_int(5) ? true : false;
+		g_bSelOnly_OnSave = lp.gettoken_int(5) ? true : false;
 		m_iSelType = lp.gettoken_int(6);
+		g_bSelOnly_OnRecall = lp.gettoken_int(7) ? true : false;
+		g_bShowSelOnly = lp.gettoken_int(8) ? true : false;
 	}
 	g_iSavedMask = g_iMask;
 	g_iSavedType = m_iSelType;
-	g_bSavedSelOnly = g_bSelOnly;
 
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -372,13 +377,15 @@ void SWS_SnapshotsWnd::Update()
 	bRecurseCheck = true;
 
 	//Update the check boxes
-	CheckDlgButton(m_hwnd, IDC_MIX,          m_iSelType == 0		? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_CURVIS,       m_iSelType == 1		? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_CUSTOM,       m_iSelType == 2		? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_SELECTEDONLY, g_bSelOnly				? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_APPLYRECALL,  g_bApplyFilterOnRecall	? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_NAMEPROMPT,	 g_bPromptOnNew			? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(m_hwnd, IDC_HIDENEW,		 g_bHideNewOnRecall		? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_MIX,					m_iSelType == 0			? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_CURVIS,				m_iSelType == 1			? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_CUSTOM,				m_iSelType == 2			? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_SELECTEDONLY_SAVE,	g_bSelOnly_OnSave		? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_SELECTEDONLY_RECALL,	g_bSelOnly_OnRecall		? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_APPLYRECALL,			g_bApplyFilterOnRecall	? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_NAMEPROMPT,			g_bPromptOnNew			? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_HIDENEW,				g_bHideNewOnRecall		? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(m_hwnd, IDC_SHOWSELONLY,			g_bShowSelOnly			? BST_CHECKED : BST_UNCHECKED);
 	for (int i = 0; i < MASK_CTRLS; i++)
 	{
 		CheckDlgButton(m_hwnd, cSSCtrls[i], g_iMask & cSSMasks[i] ? BST_CHECKED : BST_UNCHECKED);
@@ -411,7 +418,9 @@ void SWS_SnapshotsWnd::OnInitDlg()
 	m_resize.init_item(IDC_CURVIS, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_CUSTOM, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_SAVE, 1.0, 0.0, 1.0, 0.0);
-	m_resize.init_item(IDC_SELECTEDONLY, 1.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_SELECTEDONLY_SAVE, 1.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_SELECTEDONLY_RECALL, 1.0, 0.0, 1.0, 0.0);
+	m_resize.init_item(IDC_SHOWSELONLY, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_HELPTEXT, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_APPLYRECALL, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_NAMEPROMPT, 1.0, 0.0, 1.0, 0.0);
@@ -436,7 +445,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (ss)
 			{
 				g_ss.Get()->m_pCurSnapshot = ss;
-				if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly, g_bHideNewOnRecall))
+				if (ss->UpdateReaper(g_bApplyFilterOnRecall ? g_iMask : ALL_MASK, g_bSelOnly_OnRecall, g_bHideNewOnRecall))
 					Update();
 			}
 			break;
@@ -463,7 +472,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			if (ss)
 			{
-				g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly, ss->m_cName));
+				g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(g_ss.Get()->m_snapshots.Find(ss), new Snapshot(ss->m_iSlot, g_iMask, g_bSelOnly_OnSave, ss->m_cName));
 				delete ss;
 				Update();
 			}
@@ -538,10 +547,12 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case IDC_MIX:
 		case IDC_CURVIS:
 		case IDC_CUSTOM:
-		case IDC_SELECTEDONLY:
+		case IDC_SELECTEDONLY_SAVE:
+		case IDC_SELECTEDONLY_RECALL:
 		case IDC_APPLYRECALL:
 		case IDC_NAMEPROMPT:
 		case IDC_HIDENEW:
+		case IDC_SHOWSELONLY:
 			// Filter controls are handled in the default case
 			GetOptions();
 			Update();
@@ -634,14 +645,16 @@ void SWS_SnapshotsWnd::OnDestroy()
 	char str[256];
 
 	// Save window state
-	sprintf(str, "%d %d %d %d %d %d %d",
+	sprintf(str, "%d %d %d %d %d %d %d %d %d",
 		g_iMask,
 		g_bApplyFilterOnRecall ? 1 : 0,
 		g_bHideOptions ? 1 : 0,
 		g_bPromptOnNew ? 1 : 0,
 		g_bHideNewOnRecall ? 1 : 0,
-		g_bSelOnly ? 1 : 0,
-		m_iSelType);
+		g_bSelOnly_OnSave ? 1 : 0,
+		m_iSelType,
+		g_bSelOnly_OnRecall ? 1 : 0,
+		g_bShowSelOnly ? 1 : 0);
 	WritePrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, str, get_ini_file());
 }
 
@@ -688,8 +701,10 @@ void SWS_SnapshotsWnd::GetOptions()
 			if (IsDlgButtonChecked(m_hwnd, cSSCtrls[i]) == BST_CHECKED)
 				g_iMask |= cSSMasks[i];
 	}
-	g_bSelOnly = IsDlgButtonChecked(m_hwnd, IDC_SELECTEDONLY) == BST_CHECKED;
+	g_bSelOnly_OnSave = IsDlgButtonChecked(m_hwnd, IDC_SELECTEDONLY_SAVE) == BST_CHECKED;
+	g_bSelOnly_OnRecall = IsDlgButtonChecked(m_hwnd, IDC_SELECTEDONLY_RECALL) == BST_CHECKED;
 	g_bHideNewOnRecall = IsDlgButtonChecked(m_hwnd, IDC_HIDENEW) == BST_CHECKED;
+	g_bShowSelOnly = IsDlgButtonChecked(m_hwnd, IDC_SHOWSELONLY) == BST_CHECKED;
 	g_bApplyFilterOnRecall = IsDlgButtonChecked(m_hwnd, IDC_APPLYRECALL) == BST_CHECKED;
 	g_bPromptOnNew = IsDlgButtonChecked(m_hwnd, IDC_NAMEPROMPT) == BST_CHECKED;
 }
@@ -703,7 +718,9 @@ void SWS_SnapshotsWnd::ShowControls(bool bShow)
 	ShowWindow(GetDlgItem(m_hwnd, IDC_CUSTOM), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_FILTERGROUP), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_SAVE), bShow);
-	ShowWindow(GetDlgItem(m_hwnd, IDC_SELECTEDONLY), bShow);
+	ShowWindow(GetDlgItem(m_hwnd, IDC_SELECTEDONLY_SAVE), bShow);
+	ShowWindow(GetDlgItem(m_hwnd, IDC_SELECTEDONLY_RECALL), bShow);
+	ShowWindow(GetDlgItem(m_hwnd, IDC_SHOWSELONLY), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_HELPTEXT), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_APPLYRECALL), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_NAMEPROMPT), bShow);
@@ -742,7 +759,7 @@ void NewSnapshot(int iMask, bool bSelOnly)
 
 void NewSnapshotEdit(COMMAND_T* = NULL)
 {
-	NewSnapshot(g_iMask, g_bSelOnly);
+	NewSnapshot(g_iMask, g_bSelOnly_OnSave);
 	g_pSSWnd->RenameCurrent();
 }
 
@@ -753,7 +770,7 @@ void NewSnapshot(COMMAND_T* ct)
 	else if (ct && ct->user == 2)
 		NewSnapshot(g_iMask, true);
 	else
-		NewSnapshot(g_iMask, g_bSelOnly);
+		NewSnapshot(g_iMask, g_bSelOnly_OnSave);
 }
 
 void SaveSnapshot(int slot)
@@ -776,14 +793,12 @@ void SaveSnapshot(int slot)
 				break;
 		char str[20];
 		sprintf(str, "Mix %d", slot);
-		g_ss.Get()->m_snapshots.Insert(i, new Snapshot(slot, g_iMask, g_bSelOnly, str));
+		g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Insert(i, new Snapshot(slot, g_iMask, g_bSelOnly_OnSave, str));
 	}
 	else // Overwriting slot
 	{
 		Snapshot* oldSnapshot = g_ss.Get()->m_snapshots.Get(i);
-		g_ss.Get()->m_snapshots.Set(i, new Snapshot(oldSnapshot->m_iSlot, g_iMask, g_bSelOnly, oldSnapshot->m_cName));
-		if (g_ss.Get()->m_pCurSnapshot == oldSnapshot)
-			g_ss.Get()->m_pCurSnapshot = NULL;
+		g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Set(i, new Snapshot(oldSnapshot->m_iSlot, g_iMask, g_bSelOnly_OnSave, oldSnapshot->m_cName));
 		delete oldSnapshot;
 	}
 	g_pSSWnd->Update();
@@ -849,13 +864,29 @@ void GetCurSnapshot(COMMAND_T*)	 { if (g_ss.Get()->m_pCurSnapshot) GetSnapshot(g
 void GetSnapshot(COMMAND_T* ct)	 { GetSnapshot((int)ct->user, ALL_MASK, false); }
 void SetSnapType(COMMAND_T* ct)  { g_pSSWnd->SetFilterType((int)ct->user); UpdateSnapshotsDialog(); }
 void TogSnapParam(COMMAND_T* ct) { g_pSSWnd->SetFilterType(2); g_iMask ^= ct->user; UpdateSnapshotsDialog(); }
-bool IsSnapParamEn(COMMAND_T* ct){ return (g_iMask & ct->user) ? true : false; }
-
-void ToggleSelOnly(COMMAND_T*)	 { g_bSelOnly = !g_bSelOnly; UpdateSnapshotsDialog(); }
+void ToggleSelOnlySave(COMMAND_T*)	{ g_bSelOnly_OnSave = !g_bSelOnly_OnSave; UpdateSnapshotsDialog(); }
+void ToggleSelOnlyRecall(COMMAND_T*){ g_bSelOnly_OnRecall = !g_bSelOnly_OnRecall; UpdateSnapshotsDialog(); }
+void ToggleShowForSelTracks(COMMAND_T*){ g_bShowSelOnly = !g_bShowSelOnly; UpdateSnapshotsDialog(); }
 void ToggleAppToRec(COMMAND_T*)	 { g_bApplyFilterOnRecall = !g_bApplyFilterOnRecall; UpdateSnapshotsDialog(); }
-void ClearFilter(COMMAND_T*)	 { g_pSSWnd->SetFilterType(2); g_iMask = 0; g_bSelOnly = false; UpdateSnapshotsDialog(); }
-void SaveFilter(COMMAND_T*)		 { g_iSavedMask = g_iMask; g_bSavedSelOnly = g_bSelOnly; g_iSavedType = g_pSSWnd->GetFilterType(); }
-void RestoreFilter(COMMAND_T*)	 { g_pSSWnd->SetFilterType(g_iSavedType); g_iMask = g_iSavedMask; g_bSelOnly = g_bSavedSelOnly; UpdateSnapshotsDialog(); }
+void ClearFilter(COMMAND_T*)	 { g_pSSWnd->SetFilterType(2); g_iMask = 0; UpdateSnapshotsDialog(); }
+void SaveFilter(COMMAND_T*)		 { g_iSavedMask = g_iMask; g_iSavedType = g_pSSWnd->GetFilterType(); }
+void RestoreFilter(COMMAND_T*)	 { g_pSSWnd->SetFilterType(g_iSavedType); g_iMask = g_iSavedMask; UpdateSnapshotsDialog(); }
+
+bool IsSnapParamEn(COMMAND_T* ct)
+{
+	if (ct->doCommand == TogSnapParam)
+		return (g_iMask & ct->user) ? true : false;
+	else if (ct->doCommand == ToggleSelOnlySave)
+		return g_bSelOnly_OnSave;
+	else if (ct->doCommand == ToggleSelOnlyRecall)
+		return g_bSelOnly_OnRecall;
+	else if (ct->doCommand == ToggleShowForSelTracks)
+		return g_bShowSelOnly;
+	else if (ct->doCommand == ToggleAppToRec)
+		return g_bApplyFilterOnRecall;
+	return false;
+}
+
 
 static bool SnapshotsWindowEnabled(COMMAND_T*)
 {
@@ -952,16 +983,20 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS: Set snapshots to 'mix' mode" },					"SWSSNAPSHOT_MIXMODE",   SetSnapType,    NULL, 0 },
 	{ { DEFACCEL, "SWS: Set snapshots to 'visibility' mode" },			"SWSSNAPSHOT_VISMODE",   SetSnapType,    NULL, 1 },
-	{ { DEFACCEL, "SWS: Toggle snapshot mute" },						"SWSSNAPSHOT_MUTE",		 TogSnapParam,   NULL, MUTE_MASK,    IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot solo" },						"SWSSNAPSHOT_SOLO",		 TogSnapParam,   NULL, SOLO_MASK,    IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot pan" },							"SWSSNAPSHOT_PAN",		 TogSnapParam,   NULL, PAN_MASK,     IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot vol" },							"SWSSNAPSHOT_VOL",		 TogSnapParam,   NULL, VOL_MASK,     IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot sends" },						"SWSSNAPSHOT_SEND",		 TogSnapParam,   NULL, SENDS_MASK,   IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot FX" },							"SWSSNAPSHOT_FX",		 TogSnapParam,   NULL, FXCHAIN_MASK, IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot visibility" },					"SWSSNAPSHOT_VIS",		 TogSnapParam,   NULL, VIS_MASK,     IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot selection" },					"SWSSNAPSHOT_TOGSEL",    TogSnapParam,   NULL, SEL_MASK,     IsSnapParamEn },
-	{ { DEFACCEL, "SWS: Toggle snapshot selected only" },				"SWSSNAPSHOT_SELONLY",	 ToggleSelOnly,  NULL, },
-	{ { DEFACCEL, "SWS: Toggle snapshot apply filter to recall" },      "SWSSNAPSHOT_APPLYLOAD", ToggleAppToRec, NULL, },
+
+	{ { DEFACCEL, "SWS: Toggle snapshot mute" },						"SWSSNAPSHOT_MUTE",			TogSnapParam,			NULL, MUTE_MASK,    IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot solo" },						"SWSSNAPSHOT_SOLO",			TogSnapParam,			NULL, SOLO_MASK,    IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot pan" },							"SWSSNAPSHOT_PAN",			TogSnapParam,			NULL, PAN_MASK,     IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot vol" },							"SWSSNAPSHOT_VOL",			TogSnapParam,			NULL, VOL_MASK,     IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot sends" },						"SWSSNAPSHOT_SEND",			TogSnapParam,			NULL, SENDS_MASK,   IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot FX" },							"SWSSNAPSHOT_FX",			TogSnapParam,			NULL, FXCHAIN_MASK, IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot visibility" },					"SWSSNAPSHOT_VIS",			TogSnapParam,			NULL, VIS_MASK,     IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot selection" },					"SWSSNAPSHOT_TOGSEL",		TogSnapParam,			NULL, SEL_MASK,     IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot selected only on save" },		"SWSSNAPSHOT_SELONLY",		ToggleSelOnlySave,		NULL, 0,			IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot selected only on recall" },		"SWSSNAPSHOT_SELONLYRECALL",ToggleSelOnlyRecall,	NULL, 0,			IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot apply filter to recall" },      "SWSSNAPSHOT_APPLYLOAD",	ToggleAppToRec,			NULL, 0,			IsSnapParamEn },
+	{ { DEFACCEL, "SWS: Toggle snapshot show only for sel tracks" },	"SWSSNAPSHOT_SHOWONLYSEL",	ToggleShowForSelTracks, NULL, 0,			IsSnapParamEn },
+
 	{ { DEFACCEL, "SWS: Clear all snapshot filter options" },           "SWSSNAPSHOT_CLEARFILT", ClearFilter,    NULL, },
 	{ { DEFACCEL, "SWS: Save current snapshot filter options" },        "SWSSNAPSHOT_SAVEFILT",  SaveFilter,     NULL, },
 	{ { DEFACCEL, "SWS: Restore snapshot filter options" },             "SWSSNAPSHOT_RESTFILT",  RestoreFilter,  NULL, },

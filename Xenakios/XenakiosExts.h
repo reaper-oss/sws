@@ -217,7 +217,6 @@ void DoSelectNextTrack(COMMAND_T*);
 void DoSelectPreviousTrack(COMMAND_T*);
 void DoSelectNextTrackKeepCur(COMMAND_T*);
 void DoSelectPrevTrackKeepCur(COMMAND_T*);
-void DoToggleTraxVisMixer(COMMAND_T*);
 void DoTraxPanLaw(COMMAND_T*);
 void DoTraxRecArmed(COMMAND_T*);
 void DoBypassFXofSelTrax(COMMAND_T*);

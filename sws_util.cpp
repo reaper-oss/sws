@@ -254,7 +254,16 @@ HWND GetTrackWnd()
 #ifdef _WIN32
 	return FindWindowEx(g_hwndParent,0,"REAPERTrackListWindow","trackview");
 #else
-	return GetWindow(g_hwndParent, GW_CHILD); // Not guaranteed to work?
+	return GetWindow(g_hwndParent, GW_CHILD);
+#endif
+}
+
+HWND GetRulerWnd()
+{
+#ifdef _WIN32
+	return FindWindowEx(g_hwndParent,0,"REAPERTimeDisplay","timeline");
+#else
+	return GetWindow(GetTrackWnd(), GW_HWNDNEXT);
 #endif
 }
 

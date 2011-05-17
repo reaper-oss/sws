@@ -823,3 +823,13 @@ void Snapshot::GetDetails(WDL_String* details)
 	}
 }
 
+bool Snapshot::IncludesSelTracks()
+{
+	for (int i = 0; i < m_tracks.GetSize(); i++)
+	{
+		MediaTrack* tr = GuidToTrack(&m_tracks.Get(i)->m_guid);
+		if (tr && *(bool*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			return true;
+	}
+	return false;
+}

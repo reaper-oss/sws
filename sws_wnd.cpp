@@ -734,7 +734,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 	{
 		OnBeginDrag(GetListItem(s->iItem));
 	}
-/*	else if (s->hdr.code == NM_CUSTOMDRAW) // TODO for coloring of the listview
+	/*else if (s->hdr.code == NM_CUSTOMDRAW) // TODO for coloring of the listview
 	{
 		LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)lParam;
 
@@ -1201,6 +1201,7 @@ void SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 		}
 		m_iEditingItem = -1;
 		ShowWindow(m_hwndEdit, SW_HIDE);
+		SetFocus(m_hwndList);
 	}
 }
 

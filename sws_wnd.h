@@ -68,6 +68,7 @@ public:
 
 protected:
 	void EditListItem(int iIndex, int iCol);
+	int DisplayToDataCol(int iCol);
 
 	// These methods are used to "pull" data for updating the listview
 	virtual void SetItemText(LPARAM item, int iCol, const char* str) {}
@@ -101,7 +102,6 @@ protected:
 
 private:
 	void ShowColumns();
-	int DisplayToDataCol(int iCol);
 
 #ifndef _WIN32
 	int m_iClickedCol;

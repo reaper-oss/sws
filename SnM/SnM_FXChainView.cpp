@@ -75,7 +75,7 @@
 #define TRT_LOAD_APPLY_ITEMS_STR		"Load/replace track template items"
 #define TRT_LOAD_PASTE_ITEMS_STR		"Load/paste track template items"
 
-#define DRAGNDROP_EMPTY_SLOT_HACK		">empty<"
+#define DRAGNDROP_EMPTY_SLOT_FILE		">Empty<"
 
 enum {
   SNM_SLOT_TYPE_FX_CHAINS=0,
@@ -143,7 +143,7 @@ WDL_String* GetCurAutoSaveDir() {
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
-:SNM_FastListView(hwndList, hwndEdit, 4, g_fxChainListCols, "Resources View State", false) 
+:SNM_FastListView(hwndList, hwndEdit, 4, g_fxChainListCols, "Resources View State", false)
 {}
 
 void SNM_ResourceView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
@@ -210,11 +210,9 @@ void SNM_ResourceView::SetItemText(LPARAM item, int iCol, const char* str)
 						else 
 							break;
 					}
-					if (MoveFile(fn, newFn)) {
-						GetCurList()->SetFromFullPath(slot, newFn);
-						ListView_SetItemText(m_hwndList, GetEditingItem(), 2, pItem->m_shortPath.Get());
-						// note: Update() is nop when editing
-					}
+					if (MoveFile(fn, newFn) && GetCurList()->SetFromFullPath(slot, newFn))
+						ListView_SetItemText(m_hwndList, GetEditingItem(), DisplayToDataCol(2), pItem->m_shortPath.Get());
+						// ^^ direct GUI update 'cause Update() is no-op when editing
 				}
 			}
 			break;
@@ -330,8 +328,8 @@ void SNM_ResourceView::OnBeginDrag(LPARAM _item)
 		char fullPath[BUFFER_SIZE] = "";
 		GetCurList()->GetFullPath(slot, fullPath, BUFFER_SIZE);
 		bool empty = (pItem->IsDefault() || *fullPath == '\0');
-		iMemNeeded += (int)((empty ? strlen(DRAGNDROP_EMPTY_SLOT_HACK) : strlen(fullPath)) + 1);
-		fullPaths.Add(new WDL_String(empty ? DRAGNDROP_EMPTY_SLOT_HACK : fullPath));
+		iMemNeeded += (int)((empty ? strlen(DRAGNDROP_EMPTY_SLOT_FILE) : strlen(fullPath)) + 1);
+		fullPaths.Add(new WDL_String(empty ? DRAGNDROP_EMPTY_SLOT_FILE : fullPath));
 		g_dragPathSlotItems.Add(pItem);
 		pItem = (PathSlotItem*)EnumSelected(&x);
 	}
@@ -605,8 +603,8 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 							GetCurList()->Add(new PathSlotItem());
 							slot = GetCurList()->GetSize()-1;
 						}
-						GetCurList()->InsertSlot(slot, files[i].c_str());
-						insertedCount++;
+						if (GetCurList()->InsertSlot(slot, files[i].c_str()))
+							insertedCount++;
 					}
 				}
 
@@ -859,11 +857,12 @@ int SNM_ResourceWnd::GetValidDroppedFilesCount(HDROP _h)
 	{
 		DragQueryFile(_h, i, cFile, BUFFER_SIZE);
 
-		// empty slot ?
-		if (!strcmp(cFile, DRAGNDROP_EMPTY_SLOT_HACK))
+		// empty slot d'n'd ?
+		if (!strcmp(cFile, DRAGNDROP_EMPTY_SLOT_FILE))
 			validCnt++;
-		else {
-			// .rfxchain? .rTrackTemplate? etc..
+		// .rfxchain? .rTrackTemplate? etc..
+		else 
+		{
 			char* pExt = strrchr(cFile, '.');
 			if (pExt && !_stricmp(pExt+1, GetCurList()->GetFileExt())) 
 				validCnt++;
@@ -896,7 +895,7 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 		int srcSlot = GetCurList()->Find(g_dragPathSlotItems.Get(0));
 		// drag'n'drop slot to the bottom
 		if (srcSlot >= 0 && srcSlot < dropSlot)
-			dropSlot++; // d'n'd will be more 'natural' 
+			dropSlot++; // d'n'd will be more 'natural'
 	}
 
 	// drop but not on a slot => create slots
@@ -916,6 +915,7 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 	// re-sync pItem 
 	pItem = GetCurList()->Get(dropSlot); 
 
+	// Patch added/inserted slots from dropped data
 	char cFile[BUFFER_SIZE];
 	int slot;
 	for (int i = 0; pItem && i < iFiles; i++)
@@ -923,20 +923,29 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 		slot = GetCurList()->Find(pItem);
 		DragQueryFile(_h, i, cFile, BUFFER_SIZE);
 
-		// empty slots
-		if (!strcmp(cFile, DRAGNDROP_EMPTY_SLOT_HACK)) {
-			dropped++;
-			pItem = GetCurList()->Get(slot+1); 
+		// internal d'n'd ?
+		if (g_dragPathSlotItems.GetSize())
+		{
+			PathSlotItem* item = GetCurList()->Get(slot);
+			if (item)
+			{
+				item->m_shortPath.Set(g_dragPathSlotItems.Get(i)->m_shortPath.Get());
+				item->m_desc.Set(g_dragPathSlotItems.Get(i)->m_desc.Get());
+				dropped++;
+				pItem = GetCurList()->Get(slot+1); 
+			}
 		}
-		// patch added/inserted slots from dropped data
-		else {
-			// .rfxchain? .rTrackTemplate? etc..
+		// .rfxchain? .rTrackTemplate? etc..
+		else 
+		{
 			char* pExt = strrchr(cFile, '.');
 			if (pExt && !_stricmp(pExt+1, GetCurList()->GetFileExt())) 
 			{ 		
-				GetCurList()->SetFromFullPath(slot, cFile);
-				dropped++;
-				pItem = GetCurList()->Get(slot+1); 
+				if (GetCurList()->SetFromFullPath(slot, cFile))
+				{
+					dropped++;
+					pItem = GetCurList()->Get(slot+1); 
+				}
 			}
 		}
 	}
@@ -1441,12 +1450,13 @@ bool FileSlotList::BrowseSlot(int _slot, char* _fn, int _fnSz)
 		{
 			if (_fn)
 				strncpy(_fn, filename, _fnSz);
-			SetFromFullPath(_slot, filename);
 
-			if (g_pResourcesWnd)
-				g_pResourcesWnd->Update();
-
-			ok = true;
+			if (SetFromFullPath(_slot, filename))
+			{
+				if (g_pResourcesWnd)
+					g_pResourcesWnd->Update();
+				ok = true;
+			}
 		}
 	}
 	return ok;

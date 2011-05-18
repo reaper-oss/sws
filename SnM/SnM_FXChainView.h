@@ -143,16 +143,18 @@ class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 	}
 	void GetFullPath(int _slot, char* _fullFn, int _fullFnSz) {
 		PathSlotItem* item = Get(_slot);
-		if (item) 
+		if (item)
 			GetFullResourcePath(m_resDir.Get(), item->m_shortPath.Get(), _fullFn, _fullFnSz);
 	};
-	void SetFromFullPath(int _slot, const char* _fullPath)	{
+	bool SetFromFullPath(int _slot, const char* _fullPath)	{
 		PathSlotItem* item = Get(_slot);
 		if (item) {
 			char shortPath[BUFFER_SIZE] = "";
 			GetShortResourcePath(m_resDir.Get(), _fullPath, shortPath, BUFFER_SIZE);
 			item->m_shortPath.Set(shortPath);
+			return true;
 		}
+		return false;
 	};
 	int PromptForSlot(const char* _title);
 	bool GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg=false);

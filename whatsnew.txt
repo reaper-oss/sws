@@ -1,3 +1,8 @@
+!v2.0.0 #24 (, 2011)
+S&M Resource view
++Fixed drag'ndrop of slots within the view (comments were lost)
++Fixed text editing when some columns are hidden/moved
+
 !v2.0.0 #23 (May 17, 2011)
 Fixed ruler not moving edit cursor
 

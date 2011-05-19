@@ -192,7 +192,7 @@ static NSCursor* MakeCursorFromData(unsigned char* data, int hotspot_x, int hots
 
 // Code here modified from Cockos WDL!
 // Supports all the zoom cursors:
-// IDC_ZOOMIN, IDC_ZOOMOUT, IDC_ZOOMUNDO
+// IDC_ZOOMIN, IDC_ZOOMOUT, IDC_ZOOMUNDO, IDC_ZOOMDRAG
 HCURSOR SWS_LoadCursor(int id)
 {
   // bytemaps are (white<<4)|(alpha)
@@ -200,12 +200,13 @@ HCURSOR SWS_LoadCursor(int id)
   const unsigned char W = 0xFF;
   //const unsigned char G = 0xF8;
   
-  static NSCursor* carr[3] = { 0, 0, 0 };
+  static NSCursor* carr[4] = { 0, 0, 0, 0 };
   
   NSCursor** pc=0;
   if (id == IDC_ZOOMIN) pc = &carr[0];
   else if (id == IDC_ZOOMOUT) pc = &carr[1];
   else if (id == IDC_ZOOMUNDO) pc = &carr[2];
+  else if (id == IDC_ZOOMDRAG) pc = &carr[3];
   else return 0;
   
   if (!(*pc))
@@ -264,6 +265,27 @@ HCURSOR SWS_LoadCursor(int id)
         B, W, B, W, B, 0, B, W, B, W, B, 0, 0, 0, 0, 0,
         B, W, B, W, B, B, B, W, B, W, B, 0, 0, 0, 0, 0,
         0, B, W, B, W, W, W, B, W, B, 0, 0, 0, 0, 0, 0,
+        0, B, W, W, B, B, B, W, W, B, 0, 0, 0, 0, 0, 0,
+        0, 0, B, B, W, W, W, B, B, W, B, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, B, B, B, 0, 0, B, W, B, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, W, B, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, W, B, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, B, 0,
+      };
+      *pc = MakeCursorFromData(p, 5, 5);        
+    }
+    else if (id == IDC_ZOOMDRAG)
+    {
+      static unsigned char p[16*16] = 
+      {
+        0, 0, 0, 0, B, B, B, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, B, B, W, W, W, B, B, 0, 0, 0, 0, 0, 0, 0,
+        0, B, W, W, B, B, B, W, W, B, 0, 0, 0, 0, 0, 0,
+        0, B, W, B, B, W, B, B, W, B, 0, 0, 0, 0, 0, 0,
+        B, W, B, B, W, W, W, B, B, W, B, 0, 0, 0, 0, 0,
+        B, W, B, B, B, B, B, B, B, W, B, 0, 0, 0, 0, 0,
+        B, W, B, B, W, W, W, B, B, W, B, 0, 0, 0, 0, 0,
+        0, B, W, B, B, W, B, B, W, B, 0, 0, 0, 0, 0, 0,
         0, B, W, W, B, B, B, W, W, B, 0, 0, 0, 0, 0, 0,
         0, 0, B, B, W, W, W, B, B, W, B, 0, 0, 0, 0, 0,
         0, 0, 0, 0, B, B, B, 0, 0, B, W, B, 0, 0, 0, 0,

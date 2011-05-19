@@ -66,6 +66,7 @@
 #define IDD_AUTORENDER_METADATA         158
 #define IDD_RECINPUTCHECK               159
 #define IDD_AUTORENDER_PREFERENCES      160
+#define IDC_ZOOMDRAG                    160
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
@@ -97,6 +98,8 @@
 #define IDC_EDIT3                       1020
 #define IDC_SETTIMESEL                  1020
 #define IDC_EDIT4                       1021
+#define IDC_MOVECUR2                    1021
+#define IDC_SEEKPLAY                    1021
 #define IDC_IVOL_NUDGE                  1022
 #define IDC_DRAGUPPER                   1022
 #define IDC_PNUDGE_B                    1023
@@ -310,7 +313,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        160
+#define _APS_NEXT_RESOURCE_VALUE        161
 #define _APS_NEXT_COMMAND_VALUE         40000
 #define _APS_NEXT_CONTROL_VALUE         1231
 #define _APS_NEXT_SYMED_VALUE           100

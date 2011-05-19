@@ -863,6 +863,7 @@ static WNDPROC g_ReaperRulerWndProc = NULL;
 static HCURSOR g_hZoomInCur = NULL;
 static HCURSOR g_hZoomOutCur = NULL;
 static HCURSOR g_hZoomUndoCur = NULL;
+static HCURSOR g_hZoomDragCur = NULL;
 
 // Zoom tool Prefs
 // (defaults are actually set in ZoomInit)
@@ -873,6 +874,7 @@ static bool g_bUndoZoom = false;
 static bool g_bUnzoomMode = false;
 static bool g_bDragUpUndo = false;
 static bool g_bSetCursor = false;
+static bool g_bSeekPlay = false;
 static bool g_bSetTimesel = false;
 static bool g_bDragZoomUpper = false;
 static bool g_bDragZoomLower = false;
@@ -907,9 +909,9 @@ void ZoomToRect(HWND hTrackView, RECT* rZoom, double dX1, double dX2)
 	}
 
 	if (g_bSetCursor)
-		SetEditCurPos(dX1, false, true);
+		SetEditCurPos(dX1, false, g_bSeekPlay);
 	if (g_bSetTimesel)
-		GetSet_LoopTimeRange(true, false, &dX1, &dX2, false);
+		GetSet_LoopTimeRange(true, false, &dX1, &dX2, true);
 
 	// Now, find the track(s) at the rect top/bottom and zoom in
 	if (rZoom->top != rZoom->bottom)
@@ -1196,76 +1198,98 @@ LRESULT CALLBACK ZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 }
 
 enum { UPPER = 1, LOWER = 2 }; // Part of time display where drag started
+#define UPPER_DEADBAND 3   // pixels
+#define LOWER_DEADBAND 5
 
 LRESULT CALLBACK DragZoomWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	int x, y;
-	static POINT ptDragStart;
 	static POINT ptPrev;
 	static int dragArea;
-	static bool bDrag;
-	static int *pLock = NULL;
-	static int savedLock = 0;
-	const int LOCK_ALL = 17409;
-
+	static bool bDragStart = false;
+	static bool bDragging = false;
+	static double dOrigPos;
+	
 	switch (uMsg)
 	{
 		case WM_LBUTTONDOWN:
 		{
-			ptDragStart.x = x = GET_X_LPARAM(lParam); 
-			ptDragStart.y = y = GET_Y_LPARAM(lParam); 
+			ptPrev.x = GET_X_LPARAM(lParam); 
+			ptPrev.y = GET_Y_LPARAM(lParam);
 			RECT r;
 			GetWindowRect(hwnd, &r);
-			if (y * 2 <= r.bottom - r.top + 1)
+			if (ptPrev.y * 2 <= abs(r.bottom - r.top) + 1)
 				dragArea = UPPER;
 			else
 				dragArea = LOWER;
-			bDrag = (dragArea == UPPER && g_bDragZoomUpper) || (dragArea == LOWER && g_bDragZoomLower);
-			ptPrev = ptDragStart;
+			bDragStart = (dragArea == UPPER && g_bDragZoomUpper) || (dragArea == LOWER && g_bDragZoomLower);
 			break;
 		}
 
 		case WM_LBUTTONUP:
-			if (pLock)
-			{
-				*pLock = savedLock;
-				pLock = NULL;
-			}
-			bDrag = false;
+			bDragStart = false;
+			bDragging = false;
 			break;
-
-		case WM_SETCURSOR:
-			if (bDrag)
-			{
-				SetCursor(g_hZoomInCur);
-				return 0;
-			}
-
+			
 		case WM_MOUSEMOVE:
-			x = GET_X_LPARAM(lParam); 
-			y = GET_Y_LPARAM(lParam);
-			if (bDrag)
+			if (bDragStart)
 			{
-				int xDelta, yDelta;
-				xDelta = x - ptPrev.x;
-				yDelta = y - ptPrev.y;
-				ptPrev.x = x;
-				ptPrev.y = y;
-				if (xDelta == 0 && yDelta == 0)
-					break;
-				if (!pLock && dragArea == LOWER)
-				{
-					pLock = (int*)GetConfigVar("projsellock");
-					savedLock = *pLock;
-					*pLock = LOCK_ALL;
-				}
-				SetCursor(g_hZoomInCur);
+				POINT ptClient;
+				ptClient.x = GET_X_LPARAM(lParam);
+				ptClient.y = GET_Y_LPARAM(lParam);
 
-				if (yDelta != 0)
+				int xDelta = ptClient.x - ptPrev.x;
+				int yDelta = ptClient.y - ptPrev.y;
+				ptPrev.x = ptClient.x;
+
+				// Don't start drag zooming until we've crossed a threshold
+				// Then, then take over control of mouse movements (don't call the main wndproc)
+				if (!bDragging && ((dragArea == UPPER && abs(yDelta) < UPPER_DEADBAND) || (dragArea == LOWER && abs(yDelta) < LOWER_DEADBAND)))
+					break;
+
+				if (!bDragging)
 				{
-					adjustZoom((double)yDelta * g_dDragZoomScale, 0, false, 3);
-					return 0;
+					bDragging = true;
+					ptPrev.y = ptClient.y;
+					yDelta = yDelta > 0 ? 1 : -1; // Smooth engagement
+					SCROLLINFO si = { sizeof(SCROLLINFO), };
+					si.fMask = SIF_ALL;
+					CoolSB_GetScrollInfo(GetTrackWnd(), SB_HORZ, &si);
+					dOrigPos = (si.nPos + ptClient.x) / GetHZoomLevel();
 				}
+				
+				if (!xDelta && !yDelta)
+					return 0;
+
+// Setcursor just doesn't work well on OSX :( (the cursor jumps),
+// ...and SetCursorPos works, but it's SLOW
+#ifdef _WIN32 
+				SetCursor(g_hZoomDragCur);
+#endif
+
+				if (yDelta)
+				{
+#ifdef _WIN32
+					
+					// Keep the cursor from moving up and down regardless of actual mouse movement
+					POINT ptScreen = ptClient;
+					ptScreen.y = ptPrev.y;
+					ClientToScreen(hwnd, &ptScreen);
+					SetCursorPos(ptScreen.x, ptScreen.y);
+#else
+					ptPrev.y = ptClient.y;
+#endif
+					adjustZoom((double)yDelta * g_dDragZoomScale, 0, false, 3);
+				}
+
+				static double dPrevPos = 0.0;
+				double dNewPos = dOrigPos - (ptClient.x / GetHZoomLevel());
+				if (dNewPos != dPrevPos)
+				{
+					SetHorizPos(GetTrackWnd(), dNewPos);
+					dPrevPos = dNewPos;
+				}
+				
+				return 0;
 			}
 			break;
 	}
@@ -1323,6 +1347,8 @@ static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 				}
 			EnableWindow(GetDlgItem(hwndDlg, IDC_MMMODIFIER), g_bMidMouseButton);
 			CheckDlgButton(hwndDlg, IDC_MOVECUR, g_bSetCursor);
+			CheckDlgButton(hwndDlg, IDC_SEEKPLAY, g_bSeekPlay);
+			EnableWindow(GetDlgItem(hwndDlg, IDC_SEEKPLAY), g_bSetCursor);
 			CheckDlgButton(hwndDlg, IDC_SETTIMESEL, g_bSetTimesel);
 			CheckDlgButton(hwndDlg, IDC_DRAGUPPER, g_bDragZoomUpper);
 			CheckDlgButton(hwndDlg, IDC_DRAGLOWER, g_bDragZoomLower);
@@ -1346,7 +1372,10 @@ static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 					g_bDragZoomLower  = IsDlgButtonChecked(hwndDlg, IDC_DRAGLOWER) == BST_CHECKED;
 					EnableWindow(GetDlgItem(hwndDlg, IDC_DRAGSCALE), g_bDragZoomUpper || g_bDragZoomLower);
 					break;
-
+				case IDC_MOVECUR:
+					g_bSetCursor	  = IsDlgButtonChecked(hwndDlg, IDC_MOVECUR) == BST_CHECKED;
+					EnableWindow(GetDlgItem(hwndDlg, IDC_SEEKPLAY), g_bSetCursor);
+					break;
 				case IDOK:
 				{
 					g_bMidMouseButton = IsDlgButtonChecked(hwndDlg, IDC_MMZOOM) == BST_CHECKED;
@@ -1360,6 +1389,7 @@ static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 					g_bLastUndoProj   = IsDlgButtonChecked(hwndDlg, IDC_LASTUNDOPROJ) == BST_CHECKED;
 					g_iMidMouseModifier = g_modifiers[SendMessage(GetDlgItem(hwndDlg, IDC_MMMODIFIER), CB_GETCURSEL, 0, 0)].iModifier;
 					g_bSetCursor	  = IsDlgButtonChecked(hwndDlg, IDC_MOVECUR) == BST_CHECKED;
+					g_bSeekPlay       = IsDlgButtonChecked(hwndDlg, IDC_SEEKPLAY) == BST_CHECKED;
 					g_bSetTimesel	  = IsDlgButtonChecked(hwndDlg, IDC_SETTIMESEL) == BST_CHECKED;
 					g_bDragZoomUpper  = IsDlgButtonChecked(hwndDlg, IDC_DRAGUPPER) == BST_CHECKED;
 					g_bDragZoomLower  = IsDlgButtonChecked(hwndDlg, IDC_DRAGLOWER) == BST_CHECKED;
@@ -1521,10 +1551,12 @@ int ZoomInit()
 	g_hZoomInCur   = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMIN));
 	g_hZoomOutCur  = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMOUT));
 	g_hZoomUndoCur = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMUNDO));
+	g_hZoomDragCur = LoadCursor(g_hInst, MAKEINTRESOURCE(IDC_ZOOMDRAG));
 #else
 	g_hZoomInCur   = SWS_LoadCursor(IDC_ZOOMIN);
 	g_hZoomOutCur  = SWS_LoadCursor(IDC_ZOOMOUT);
 	g_hZoomUndoCur = SWS_LoadCursor(IDC_ZOOMUNDO);
+	g_hZoomDragCur = SWS_LoadCursor(IDC_ZOOMDRAG);
 #endif
 
 	// Restore prefs
@@ -1539,6 +1571,7 @@ int ZoomInit()
 	g_iMidMouseModifier = (iPrefs >> 8) & 0x7;
 	g_bSetCursor = !!(iPrefs & 2048);
 	g_bSetTimesel = !!(iPrefs & 4096);
+	g_bSeekPlay = !!(iPrefs & 8192);
 	g_bDragZoomUpper = !!(iPrefs & 16384);
 	g_bDragZoomLower = !!(iPrefs & 32768);
 	char str[32];
@@ -1554,7 +1587,8 @@ void ZoomExit()
 	sprintf(str, "%d", (g_bMidMouseButton ? 1 : 0) + (g_bItemZoom ? 2 : 0) + (g_bUndoZoom ? 4 : 0) +
 		(g_bUnzoomMode ? 8 : 0) + (g_bUndoSWSOnly ? 16 : 0) + (g_bLastUndoProj ? 32 : 0) +
 		(g_bDragUpUndo ? 64 : 0) + (g_iMidMouseModifier << 8) + (g_bSetCursor ? 2048 : 0) +
-		(g_bSetTimesel ? 4096 : 0) + (g_bDragZoomUpper ? 16384 : 0) + (g_bDragZoomLower ? 32768 : 0));
+		(g_bSetTimesel ? 4096 : 0) + (g_bSeekPlay ? 8192 : 0) + (g_bDragZoomUpper ? 16384 : 0) +
+		(g_bDragZoomLower ? 32768 : 0));
 	WritePrivateProfileString(SWS_INI, ZOOMPREFS_KEY, str, get_ini_file());
 	sprintf(str, "%.2f", g_dDragZoomScale);
 	WritePrivateProfileString(SWS_INI, DRAGZOOMSCALE_KEY, str, get_ini_file());

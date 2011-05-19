@@ -394,6 +394,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\zoomdrag.cur"
+				>
+			</File>
+			<File
 				RelativePath=".\zoomin.cur"
 				>
 			</File>

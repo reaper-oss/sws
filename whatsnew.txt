@@ -1,5 +1,9 @@
-!v2.0.0 #24 (, 2011)
-S&M Resource view
+!v2.0.0 #24 (May 18, 2011)
+Zoom updates:
++Option to seek play when moving the edit cursor on zoom in
++Mouse cursor doesn't move in Y when drag zooming, more Abelton Live like (Windows OS only)
+
+S&M Resource view updates:
 +Fixed drag'ndrop of slots within the view (comments were lost)
 +Fixed text editing when some columns are hidden/moved
 

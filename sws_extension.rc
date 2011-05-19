@@ -980,12 +980,14 @@ BEGIN
     CONTROL         "Zooms in",IDC_DRAGUP_ZOOM,"Button",BS_AUTORADIOBUTTON,21,84,44,10
     CONTROL         "Zoom undo",IDC_DRAGUP_UNDO,"Button",BS_AUTORADIOBUTTON,21,96,51,10
     CONTROL         "Unzoom mode",IDC_DRAGUP_UNZOOM,"Button",BS_AUTORADIOBUTTON,21,108,61,10
-    CONTROL         "Move edit cursor when zooming in",IDC_MOVECUR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,129,206,10
+    CONTROL         "Move edit cursor when zooming in",IDC_MOVECUR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,129,129,10
+    CONTROL         "Seek play",IDC_SEEKPLAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,149,129,87,10
     CONTROL         "Set time selection when zooming in",IDC_SETTIMESEL,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,142,206,10
     GROUPBOX        "Drag Zoom",IDC_STATIC,7,162,229,42
     CONTROL         "Upper half of ruler",IDC_DRAGUPPER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,174,93,10
-    CONTROL         "Lower half of ruler",IDC_DRAGLOWER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,187,93,10
+    CONTROL         "Lower half of ruler (disrupts time selection)",IDC_DRAGLOWER,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,187,179,10
     LTEXT           "Scaling:",IDC_STATIC,126,175,26,8
     EDITTEXT        IDC_DRAGSCALE,159,172,40,14,ES_AUTOHSCROLL
     CONTROL         "Undo SWS zooms only (no mousewheel, scroll bar, etc)",IDC_UNDOSWSONLY,
@@ -1610,6 +1612,7 @@ IDB_SNM                 PNG                     "SnM.png"
 IDC_ZOOMIN              CURSOR                  "zoomin.cur"
 IDC_ZOOMOUT             CURSOR                  "zoomout.cur"
 IDC_ZOOMUNDO            CURSOR                  "zoomundo.cur"
+IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 

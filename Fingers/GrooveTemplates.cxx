@@ -668,13 +668,19 @@ bool GrooveTemplateHandler::ProcessExtensionLine(const char *line, ProjectStateC
 				if (strcmp(markerBuf, "<GROOVEMARKERS") == 0) {
                     me->grooveMarkers.clear();
 					status = ctx->GetLine(markerBuf,256);
+                    int lastIndex = -1;
 					while(markerBuf[0] != '>' && status == 0) {
 						char name[256];
 						int index;
 						double pos;
 						sscanf(markerBuf, "%s %d %lf", name, &index, &pos);
+                        /* Workaround for bug which didn't clear the marker list
+                         * prior to adding more. We only add increasing marker indices. */
+                        if(lastIndex > index)
+                            break;
 						me->AddGrooveMarker(index, pos, name);
 						status = ctx->GetLine(markerBuf,256);
+                        lastIndex = index;
 					}
 				}
 				status = ctx->GetLine(markerBuf,256);

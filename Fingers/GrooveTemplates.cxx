@@ -656,6 +656,27 @@ void GrooveTemplateHandler::BeginLoadProjectState(bool isUndo, struct project_co
     me->grooveMarkers.clear();
 }
 
+static bool markerExists(int myIndex, const std::string &myName, double myPos)
+{
+    int markerIndex = 0;
+    bool isRegion;
+    double pos;
+    double regionEnd;
+    char *markerName;
+    int index;
+    double delta = 0.00001;
+    while( EnumProjectMarkers( markerIndex++, &isRegion, &pos, &regionEnd, &markerName, &index) > 0 ) {
+        if(index != myIndex)
+            continue;
+        if(myName != markerName)
+            continue;
+        if(pos > myPos + delta || pos < myPos - delta)
+            continue;
+        return true;
+    }
+    return false;
+}
+
 bool GrooveTemplateHandler::ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
 	if(!isUndo) {
@@ -668,19 +689,15 @@ bool GrooveTemplateHandler::ProcessExtensionLine(const char *line, ProjectStateC
 				if (strcmp(markerBuf, "<GROOVEMARKERS") == 0) {
                     me->grooveMarkers.clear();
 					status = ctx->GetLine(markerBuf,256);
-                    int lastIndex = -1;
 					while(markerBuf[0] != '>' && status == 0) {
 						char name[256];
 						int index;
 						double pos;
 						sscanf(markerBuf, "%s %d %lf", name, &index, &pos);
-                        /* Workaround for bug which didn't clear the marker list
-                         * prior to adding more. We only add increasing marker indices. */
-                        if(lastIndex > index)
-                            break;
-						me->AddGrooveMarker(index, pos, name);
+                        if(markerExists(index, name, pos))
+                            DeleteProjectMarker(0, index, false);
+					
 						status = ctx->GetLine(markerBuf,256);
-                        lastIndex = index;
 					}
 				}
 				status = ctx->GetLine(markerBuf,256);

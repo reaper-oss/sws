@@ -88,6 +88,7 @@ private:
 		int index;
 		std::string name;
 		double pos;
+        bool operator== (const GrooveMarker &rhs);
 	};
 
 	static GrooveTemplateHandler *instance;

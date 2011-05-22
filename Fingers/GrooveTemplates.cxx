@@ -35,6 +35,11 @@ static void openFileStream(const std::string &fileName, T &fileStream)
 #endif
 }
 
+bool GrooveTemplateHandler::GrooveMarker::operator== (const GrooveMarker &rhs)
+{
+    return index == rhs.index;
+}
+
 
 GrooveTemplateHandler *GrooveTemplateHandler::instance = NULL;
 
@@ -620,6 +625,7 @@ void GrooveTemplateHandler::MarkGroove(int multiple)
 		}
 		dOffset += me->nBeatsInGroove;
 	}
+    UpdateTimeline();
 }
 
 void GrooveTemplateHandler::SetMarkerStart(GrooveMarkerStart markerStart)
@@ -646,7 +652,8 @@ std::string GrooveTemplateHandler::GrooveToString()
 
 void GrooveTemplateHandler::BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {
-
+    GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
+    me->grooveMarkers.clear();
 }
 
 bool GrooveTemplateHandler::ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
@@ -659,6 +666,7 @@ bool GrooveTemplateHandler::ProcessExtensionLine(const char *line, ProjectStateC
 			while(markerBuf[0] != '>' && status == 0) {
 				
 				if (strcmp(markerBuf, "<GROOVEMARKERS") == 0) {
+                    me->grooveMarkers.clear();
 					status = ctx->GetLine(markerBuf,256);
 					while(markerBuf[0] != '>' && status == 0) {
 						char name[256];
@@ -671,7 +679,8 @@ bool GrooveTemplateHandler::ProcessExtensionLine(const char *line, ProjectStateC
 				}
 				status = ctx->GetLine(markerBuf,256);
 			}
-			return true;
+	
+            return true;
 		}
 	}
 	return false;
@@ -684,6 +693,10 @@ void GrooveTemplateHandler::AddGrooveMarker(int index, double pos, char *name)
 	mark.index = index;
 	mark.pos = pos;
 	mark.name = name;
+    for(std::vector<GrooveMarker>::iterator i = me->grooveMarkers.begin(); i != me->grooveMarkers.end(); ++i) {
+        if (*i == mark)
+            return;
+    }
 	me->grooveMarkers.push_back(mark);
 }
 

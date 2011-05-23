@@ -4,7 +4,7 @@ Merged tiny extension (2 new actions that can help WALTERing themes, see the dis
 +SWS/S&M: Show theme helper (selected track) - Windows OS only
 
 Theming updates for all S&M views (Find, Resources, Notes/help and Live Configs):
-+Dynamic positioning of themed dropdowns, buttons, etc.. (i.e. no more truncated texts, no mre unaligned components)
++Dynamic positioning of themed dropdowns, buttons, etc.. (i.e. no more truncated texts, no more unaligned components)
 +Windows OS: more use of themes' background colors (instead of "white backgrounds")
 +Fonts are now updated when switching themes
 

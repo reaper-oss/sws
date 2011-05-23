@@ -229,9 +229,7 @@ void ParseTrackId(char* strId, bool bReset)
 	// If the first char is a ! invert selection
 	if (strId[0] == '!')
 	{
-    strId++;
-//		for (int i = 0; strId[i]; i++)
-	//		strId[i] = strId[i+1];
+		strId++;
 		bInvert = true;
 	}
 

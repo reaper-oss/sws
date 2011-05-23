@@ -513,6 +513,7 @@ extern "C"
 		IMPAPI(GetInputChannelName);
 		IMPAPI(GetLastTouchedTrack);
 		IMPAPI(GetMainHwnd);
+		IMPAPI(GetMasterMuteSoloFlags);
 		IMPAPI(GetMasterTrack);
 		IMPAPI(GetMediaItem);
 		IMPAPI(GetMediaItem_Track);

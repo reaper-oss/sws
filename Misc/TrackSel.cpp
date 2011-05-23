@@ -311,12 +311,14 @@ void SelPrevFolder(COMMAND_T* = NULL)
 	}
 }
 
-void SelMutedTracks(COMMAND_T* = NULL)
+// ct->user: 0 == sel unmuted tracks, 1 = sel muted tracks
+void SelMutedTracks(COMMAND_T* ct)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		int iSel = *(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL) ? 1 : 0;
+		bool bMute = *(bool*)GetSetMediaTrackInfo(tr, "B_MUTE", NULL);
+		int iSel = ((ct->user == 1 && bMute) || (ct->user == 0 && !bMute)) ? 1 : 0;
 		GetSetMediaTrackInfo(tr, "I_SELECTED", &iSel);
 	}
 	TrackList_AdjustWindows(false);
@@ -453,7 +455,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Select previous folder" },								"SWS_SELPREVFOLDER",	SelPrevFolder,		},
 	
 	// Sel based on states
-	{ { DEFACCEL, "SWS: Select muted tracks" },										"SWS_SELMUTEDTRACKS",	SelMutedTracks,		},
+	{ { DEFACCEL, "SWS: Select muted tracks" },										"SWS_SELMUTEDTRACKS",	SelMutedTracks, NULL, 1 },
+	{ { DEFACCEL, "SWS: Select unmuted tracks" },									"SWS_SELUNMUTEDTRACKS",	SelMutedTracks, NULL, 0	},
 	{ { DEFACCEL, "SWS: Select soloed tracks" },									"SWS_SELSOLOEDTRACKS",	SelSoloedTracks,	},
 	{ { DEFACCEL, "SWS: Select tracks with flipped phase" },						"SWS_SELPHASETRACKS",	SelPhaseTracks,		},
 	{ { DEFACCEL, "SWS: Select armed tracks" },										"SWS_SELARMEDTRACKS",	SelArmedTracks,		},

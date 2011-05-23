@@ -108,6 +108,37 @@ void MoveCursorAndSel(COMMAND_T* ct)
 	SetEditCurPos(dPos, true, false);
 }
 
+// ct->user: -1 left, 1 right
+void MoveCursorSample(COMMAND_T* ct)
+{
+	double dPos = GetCursorPosition();
+	int* pSrate = (int*)GetConfigVar("projsrate");
+	if (!pSrate)
+		return;
+	double dSrate = (double)*pSrate;
+	INT64 iCurSample = (INT64)(dPos * dSrate);
+	if (ct->user == -1 && (dPos == (double)(iCurSample / dSrate)))
+		iCurSample--;
+	else if (ct->user == 1)
+		iCurSample++;
+	
+	SetEditCurPos((double)(iCurSample / dSrate), true, false);
+}
+
+void MoveCursorMs(COMMAND_T* ct)
+{
+	double dPos = GetCursorPosition();
+	dPos += (double)ct->user / 1000.0;
+	SetEditCurPos(dPos, true, false);
+}
+
+void MoveCursorFade(COMMAND_T* ct)
+{
+	double dPos = GetCursorPosition();
+	dPos += fabs(*(double*)GetConfigVar("deffadelen")) * (double)ct->user; // Abs because neg value means "not auto"
+	SetEditCurPos(dPos, true, false);
+}
+
 
 static COMMAND_T g_commandTable[] = 
 {
@@ -115,6 +146,14 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Redo edit cursor move" },					"SWS_EDITCURREDO",		RedoEditCursor, },
 	{ { DEFACCEL, "SWS: Move cursor and time sel left to grid" },	"SWS_MOVECURSELLEFT",	MoveCursorAndSel, NULL, -1 },
 	{ { DEFACCEL, "SWS: Move cursor and time sel right to grid" },	"SWS_MOVECURSELRIGHT",	MoveCursorAndSel, NULL,  1 },
+	{ { DEFACCEL, "SWS: Move cursor left 1 sample (on grid)" },		"SWS_MOVECURSAMPLEFT",	MoveCursorSample, NULL, -1 },
+	{ { DEFACCEL, "SWS: Move cursor right 1 sample (on grid)" },	"SWS_MOVECURSAMPRIGHT",	MoveCursorSample, NULL,  1 },
+	{ { DEFACCEL, "SWS: Move cursor left 1ms" },					"SWS_MOVECUR1MSLEFT",	MoveCursorMs,     NULL, -1 },
+	{ { DEFACCEL, "SWS: Move cursor right 1ms" },					"SWS_MOVECUR1MSRIGHT",	MoveCursorMs,     NULL,  1 },
+	{ { DEFACCEL, "SWS: Move cursor left 5ms" },					"SWS_MOVECUR5MSLEFT",	MoveCursorMs,     NULL, -5 },
+	{ { DEFACCEL, "SWS: Move cursor right 5ms" },					"SWS_MOVECUR5MSRIGHT",	MoveCursorMs,     NULL,  5 },
+	{ { DEFACCEL, "SWS: Move cursor left by default fade length" },	"SWS_MOVECURFADELEFT",	MoveCursorFade,   NULL, -1 },
+	{ { DEFACCEL, "SWS: Move cursor right by default fade length" },"SWS_MOVECURFADERIGHT",	MoveCursorFade,   NULL,  1 },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

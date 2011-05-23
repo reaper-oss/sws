@@ -62,6 +62,14 @@ void TogMPSend(COMMAND_T* = NULL)
 	}
 }
 
+// ct->user: 0 == mono, 1 == stereo
+void SetMasterMono(COMMAND_T* ct)
+{
+	bool bMono = GetMasterMuteSoloFlags() & 4 ? true : false;
+	if ((bMono && ct->user) || (!bMono && !ct->user))
+		Main_OnCommand(40917, 0);
+}
+
 void MuteRecvs(COMMAND_T* = NULL)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -387,6 +395,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Enable master/parent send on selected track(s)" },		"SWS_ENMPSEND",		EnableMPSend,		},
 	{ { DEFACCEL, "SWS: Disable master/parent send on selected track(s)" },		"SWS_DISMPSEND",	DisableMPSend,		},
 	{ { DEFACCEL, "SWS: Toggle master/parent send on selected track(s)" },		"SWS_TOGMPSEND",	TogMPSend,			},
+	// Master/parent mono/stereo
+	{ { DEFACCEL, "SWS: Set master mono" },										"SWS_MASTERMONO",	SetMasterMono, NULL, 0	},
+	{ { DEFACCEL, "SWS: Set master stereo" },									"SWS_MASTERSTEREO",	SetMasterMono, NULL, 1	},
 
 	// Send/recvs
 	{ { DEFACCEL, "SWS: Mute all receives for selected track(s)" },				"SWS_MUTERECVS",	MuteRecvs,			},

@@ -33,12 +33,14 @@
 //#include "../Freeze/ItemSelState.h"
 
 #define MAX_SEARCH_STR_LEN		128
+// #define ICON_BUTTONS // use icon buttons? text nuttons if undefined: some themes' transport buttons look bad out of their original context..
 
 enum {
   BUTTONID_FIND=1000,
   BUTTONID_PREV,
   BUTTONID_NEXT,
-  COMBOID_TYPE
+  COMBOID_TYPE,
+  TXTID_RESULT
 };
 
 enum {
@@ -219,6 +221,7 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaI
 			update = true;
 		}
 
+		MediaItem* item = NULL;
 		if (startItem)
 		{
 			MediaTrack* startTr = GetMediaItem_Track(startItem);
@@ -226,7 +229,6 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaI
 
 			// find startItem idx
 			int startItemIdx=-1;
-			MediaItem* item = NULL;
 			while (item != startItem) 
 				item = GetTrackMediaItem(startTr,++startItemIdx);
 
@@ -280,9 +282,25 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaI
 		}
 
 		UpdateNotFoundMsg(found);
-		if (found)
+		if (found && item && (_dir == -1 || _dir == 1))
 		{
-			//JFB would be cool to scroll to selected items, but no native actions..
+			// Horizontal scroll to selected item
+			double curPos = GetCursorPosition();
+			SetEditCurPos2(NULL, *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL), true, false);
+			SetEditCurPos2(NULL, curPos, false, false);
+
+			// Vertical scroll to selected item
+			MediaTrack* tr = GetMediaItem_Track(item);
+			if (tr)
+			{
+				SaveSelected();
+				ClearSelected();
+				GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+				Main_OnCommand(40913,0); // scroll to selected tracks
+				ClearSelected();
+				RestoreSelected();
+			}
+			UpdateTimeline();
 		}
 	}
 
@@ -419,40 +437,17 @@ void SNM_FindWnd::OnInitDlg()
 	m_type = GetPrivateProfileInt("FIND_VIEW", "TYPE", 0, g_SNMiniFilename.Get());
 
 	// WDL GUI init
-	IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);
     m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_btnFind.SetID(BUTTONID_FIND);
-	WDL_VirtualIconButton_SkinConfig* img = it ? &(it->transport_play[0]) : NULL;
-	WDL_VirtualIconButton_PreprocessSkinConfig(img);
-	if (img)
-		m_btnFind.SetIcon(img);
-	else {
-		m_btnFind.SetTextLabel("Find", 0, SNM_GetThemeFont());
-		m_btnFind.SetForceBorder(true);
-	}
 	m_btnFind.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnFind);
 
 	m_btnPrev.SetID(BUTTONID_PREV);
-	img = it ? &(it->transport_rew) : NULL;
-	if (img)
-		m_btnPrev.SetIcon(img);
-	else {
-		m_btnPrev.SetTextLabel("Find", 0, SNM_GetThemeFont());
-		m_btnPrev.SetForceBorder(true);
-	}
 	m_btnPrev.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnPrev);
 
 	m_btnNext.SetID(BUTTONID_NEXT);
-	img = it ? &(it->transport_fwd) : NULL;
-	if (img)
-		m_btnNext.SetIcon(img);
-	else {
-		m_btnNext.SetTextLabel("Next", 0, SNM_GetThemeFont());
-		m_btnNext.SetForceBorder(true);
-	}
 	m_btnNext.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnNext);
 
@@ -468,6 +463,11 @@ void SNM_FindWnd::OnInitDlg()
 	m_cbType.AddItem("Find in marker/region names");
 	m_cbType.SetCurSel(m_type);
 	m_parentVwnd.AddChild(&m_cbType);
+
+	m_txtResult.SetID(TXTID_RESULT);
+	m_txtResult.SetColors(LICE_RGBA(170,0,0,255));
+	m_txtResult.SetRealParent(m_hwnd);
+	m_parentVwnd.AddChild(&m_txtResult);
 
 	g_notFound = false;
 //	*g_searchStr = 0;
@@ -552,81 +552,88 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
     LICE_IBitmap *bm = _painter->GetBuffer(&xo,&yo);
 	if (bm)
 	{
+		IconTheme* it = NULL;
+#ifdef ICON_BUTTONS
+		it = (IconTheme*)GetIconThemeStruct(NULL);
+#endif
 		LICE_CachedFont* font = SNM_GetThemeFont();
-		int x0=_r.left+10; int y0=_r.top+5;
+		int x0=_r.left+10, h=35;
 
-		// Dropdown
 		WDL_VirtualComboBox* cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_TYPE);
-		if (cbVwnd)
-		{
-			RECT tr2={x0,y0+3,x0+190,y0+25-2};
-			x0 = tr2.right+5;
-			cbVwnd->SetPosition(&tr2);
+		if (cbVwnd) {
 			cbVwnd->SetFont(font);
+			if (WDL_VWndAutoHPos(cbVwnd, NULL, &_r, &x0, _r.top, h)) {
+				if (g_snmLogo && (x0 + g_snmLogo->getWidth() < _r.right - 5)) {
+					int y = _r.top + int(h/2 - g_snmLogo->getHeight()/2 + 0.5);
+					LICE_Blit(bm,g_snmLogo,_r.right-g_snmLogo->getWidth()-8,y,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+				}
+			}
 		}
 
-		if (g_snmLogo && (_r.right - _r.left) > (x0+g_snmLogo->getWidth()))
-			LICE_Blit(bm,g_snmLogo,_r.right-g_snmLogo->getWidth()-8,y0+3,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
-
-		x0 = _r.left+8; y0 = _r.top+5+60;
-		int w=25, h=25; //default width/height
+		x0 = _r.left+8; 
+		h = 45;
+		int y0 = _r.top+60;
 
 		// Buttons
 		WDL_VirtualIconButton* btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_FIND);
-		if (btnVwnd)
+		if (btnVwnd) 
 		{
-			WDL_VirtualIconButton_SkinConfig* img = btnVwnd->GetIcon();
-			if (img) {
-				w = img->image->getWidth() / 3;
-				h = img->image->getHeight();
+			WDL_VirtualIconButton_SkinConfig* img = it ? &(it->transport_play[0]) : NULL;
+			if (img)
+				btnVwnd->SetIcon(img);
+			else {
+				btnVwnd->SetTextLabel("Find all", 0, font);
+				btnVwnd->SetForceBorder(true);
 			}
-			else
-				w = 50;
-			RECT tr2={x0,y0,x0+w,y0+h};
-			btnVwnd->SetPosition(&tr2);
-			x0 += 5+w;
 			btnVwnd->SetGrayed(!g_searchStr || !(*g_searchStr) || g_pFindWnd->GetType() == TYPE_MARKER_REGION);
-		}
-		btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_PREV);
-		if (btnVwnd)
-		{
-			WDL_VirtualIconButton_SkinConfig* img = btnVwnd->GetIcon();
-			if (img) {
-				w = img->image->getWidth() / 3;
-				h = img->image->getHeight();
+#ifdef ICON_BUTTONS
+			if (WDL_VWndAutoHPos(btnVwnd, NULL, &_r, &x0, y0, h, 0))
+#else
+			if (WDL_VWndAutoHPos(btnVwnd, NULL, &_r, &x0, y0, h, 5))
+#endif
+			{
+				btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_PREV);
+				if (btnVwnd)
+				{
+					img = it ? &(it->transport_rew) : NULL;
+					if (img)
+						btnVwnd->SetIcon(img);
+					else {
+						btnVwnd->SetTextLabel("<", 0, font);
+						btnVwnd->SetForceBorder(true);
+					}
+					btnVwnd->SetGrayed(!g_searchStr || !(*g_searchStr));
+#ifdef ICON_BUTTONS
+					if (WDL_VWndAutoHPos(btnVwnd, NULL, &_r, &x0, y0, h, 0))
+#else
+					if (WDL_VWndAutoHPos(btnVwnd, NULL, &_r, &x0, y0, h, 5))
+#endif
+					{
+						btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_NEXT);
+						if (btnVwnd)
+						{
+							img = it ? &(it->transport_fwd) : NULL;
+							if (img)
+								btnVwnd->SetIcon(img);
+							else {
+								btnVwnd->SetTextLabel(">", 0, font);
+								btnVwnd->SetForceBorder(true);
+							}
+							btnVwnd->SetGrayed(!g_searchStr || !(*g_searchStr));
+							WDL_VWndAutoHPos(btnVwnd, NULL, &_r, &x0, y0, h);
+						}
+					}
+				}
 			}
-			else
-				w = 50;
-			RECT tr2={x0,y0,x0+w,y0+h};
-			btnVwnd->SetPosition(&tr2);
-			x0 += 5+w;
-			btnVwnd->SetGrayed(!g_searchStr || !(*g_searchStr));
-		}
-		btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_NEXT);
-		if (btnVwnd)
-		{
-			WDL_VirtualIconButton_SkinConfig* img = btnVwnd->GetIcon();
-			if (img) {
-				w = img->image->getWidth() / 3;
-				h = img->image->getHeight();
-			}
-			else
-				w = 50;
-			RECT tr2={x0,y0,x0+w,y0+h};
-			btnVwnd->SetPosition(&tr2);
-			x0 += 5+w;
-			btnVwnd->SetGrayed(!g_searchStr || !(*g_searchStr));
 		}
 
-		if (g_notFound)
+		WDL_VirtualStaticText* txt = (WDL_VirtualStaticText*)_parentVwnd->GetChildByID(TXTID_RESULT);
+		if (txt)
 		{
-			x0+=5;
-			RECT tr={x0,y0,x0+60,y0+h};
-			font->DrawText(bm, "Not found!", -1, &tr, DT_LEFT | DT_VCENTER);
-			x0 = tr.right+5;
+			txt->SetFont(font);
+			txt->SetText(g_notFound ? "Not found!" : "");
+			WDL_VWndAutoHPos(txt, NULL, &_r, &x0, y0, h);
 		}
-
-	    _painter->PaintVirtWnd(_parentVwnd);
 	}
 }
 
@@ -638,9 +645,10 @@ int SNM_FindWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			RECT r;
 			GetClientRect(m_hwnd,&r);		
-	        m_parentVwnd.SetPosition(&r);
+			m_parentVwnd.SetPosition(&r);
 			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
 			DrawControls(&m_vwnd_painter, r, &m_parentVwnd);
+			m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
 			m_vwnd_painter.PaintEnd();
 		}
 		break;
@@ -660,6 +668,17 @@ int SNM_FindWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_MOUSEMOVE:
 			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
+#ifdef _SNM_THEMABLE
+		case WM_CTLCOLOREDIT:
+		{
+			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT))
+			{
+				SetBkColor((HDC)wParam, GSC_mainwnd(COLOR_WINDOW));
+				SetTextColor((HDC)wParam, GSC_mainwnd(COLOR_BTNTEXT));
+				return (INT_PTR)SNM_GetThemeBrush();
+			}
+		}
+#endif
 	}
 	return 0;
 }

@@ -55,6 +55,7 @@ protected:
 	WDL_VirtualIconButton m_btnFind;
 	WDL_VirtualIconButton m_btnPrev;
 	WDL_VirtualIconButton m_btnNext;
+	WDL_VirtualStaticText m_txtResult;
 
 	int m_type;
 };

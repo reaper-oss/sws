@@ -561,6 +561,7 @@ void DoStopPreviewItem(COMMAND_T*)
 	}
 }
 
+//JFB deprecated? (more powerfull dump actions exist..)
 void DoDumpActionsWindow(COMMAND_T*)
 {
 #ifndef _WIN32

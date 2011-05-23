@@ -27,9 +27,9 @@
 ******************************************************************************/
 
 // JFB TODO?
-// max nb of tracks & presets to check
-// FX chains: + S&M's FX chain view slots
-// full release?
+// - max nb of tracks & presets to check
+// - FX chains: + S&M's FX chain view slots
+// - full release?
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
@@ -41,12 +41,13 @@
 #define NB_CC_VALUES			128
 
 enum {
-  COMBOID_CONFIG=1000,
+  TXTID_CONFIG=1000,
+  COMBOID_CONFIG,
   BUTTONID_ENABLE,
-  BUTTONID_AUTO_RCV,
+  TXTID_INPUT_TRACK,
+  COMBOID_INPUT_TRACK,
   BUTTONID_MUTE_OTHERS,
   BUTTONID_AUTO_SELECT,
-  COMBOID_INPUT_TRACK
 };
 
 enum {
@@ -114,7 +115,6 @@ bool AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_String* _curPresetConf)
 						g_pLiveConfigsWnd->m_lastFXPresetMsg[1][msgCpt++] = j+1; 
 					}
 				}
-
 				AddSubMenu(*_menu, fxSubMenu, fxName, -1, presetCount ? MFS_ENABLED : MF_GRAYED);
 			}
 		}
@@ -132,7 +132,13 @@ SNM_LiveConfigsView::SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit)
 #else
 :SWS_ListView(hwndList, hwndEdit, 7, g_midiLiveCols, "Live Configs View State", false)
 #endif
-{}
+{
+#ifdef _SNM_THEMABLE
+	ListView_SetBkColor(hwndList, GSC_mainwnd(COLOR_WINDOW));
+	ListView_SetTextBkColor(hwndList, GSC_mainwnd(COLOR_WINDOW));
+	ListView_SetTextColor(hwndList, GSC_mainwnd(COLOR_BTNTEXT));
+#endif
+}
 
 void SNM_LiveConfigsView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
 {
@@ -325,6 +331,7 @@ void SNM_LiveConfigsWnd::Update()
 
 void SNM_LiveConfigsWnd::OnInitDlg()
 {
+	m_lastThemeBrushColor = -1;
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_pLists.Add(new SNM_LiveConfigsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
@@ -333,6 +340,10 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 
 	// WDL GUI init
 	m_parentVwnd.SetRealParent(m_hwnd);
+
+	m_txtConfig.SetID(TXTID_CONFIG);
+	m_txtConfig.SetRealParent(m_hwnd);
+	m_parentVwnd.AddChild(&m_txtConfig);
 
 	m_cbConfig.SetID(COMBOID_CONFIG);
 	m_cbConfig.SetRealParent(m_hwnd);
@@ -349,9 +360,14 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_btnEnable.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnEnable);
 
-	m_btnAutoRcv.SetID(BUTTONID_AUTO_RCV);
-	m_btnAutoRcv.SetRealParent(m_hwnd);
-	m_parentVwnd.AddChild(&m_btnAutoRcv);
+	m_txtInputTr.SetID(TXTID_INPUT_TRACK);
+	m_txtInputTr.SetRealParent(m_hwnd);
+	m_parentVwnd.AddChild(&m_txtInputTr);
+
+	m_cbInputTr.SetID(COMBOID_INPUT_TRACK);
+	m_cbInputTr.SetRealParent(m_hwnd);
+	FillComboInputTrack();
+	m_parentVwnd.AddChild(&m_cbInputTr);
 
 	m_btnMuteOthers.SetID(BUTTONID_MUTE_OTHERS);
 	m_btnMuteOthers.SetRealParent(m_hwnd);
@@ -360,11 +376,6 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_btnAutoSelect.SetID(BUTTONID_AUTO_SELECT);
 	m_btnAutoSelect.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnAutoSelect);
-
-	m_cbInputTr.SetID(COMBOID_INPUT_TRACK);
-	m_cbInputTr.SetRealParent(m_hwnd);
-	FillComboInputTrack();
-	m_parentVwnd.AddChild(&m_cbInputTr);
 
 	Update();
 }
@@ -574,10 +585,6 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 						RefreshToolbar(NamedCommandLookup(customCmdId));
 					}
 					break;
-					case BUTTONID_AUTO_RCV:
-						lc->m_autoRcv[g_configId] = !(lc->m_autoRcv[g_configId]);
-						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
-						break;
 					case BUTTONID_MUTE_OTHERS:
 						lc->m_muteOthers[g_configId] = !(lc->m_muteOthers[g_configId]);
 						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
@@ -784,57 +791,42 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 	if (bm)
 	{
 		LICE_CachedFont* font = SNM_GetThemeFont();
-		int x0=_r.left+10, y0=_r.top+5;
+		int x0=_r.left+10, h=35;
 
-		// Dropdowns
+		WDL_VirtualStaticText* txt = (WDL_VirtualStaticText*)_parentVwnd->GetChildByID(TXTID_CONFIG);
+		if (txt) {
+			txt->SetFont(font);
+			txt->SetText("Config:");
+			if (!WDL_VWndAutoHPos(txt, NULL, &_r, &x0, _r.top, h, 5))
+				return;
+		}
+
 		WDL_VirtualComboBox* cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_CONFIG);
-		if (cbVwnd)
-		{
-			RECT tr={x0,y0,x0+40,y0+25};
-			font->DrawText(bm, "Config:", -1, &tr, DT_LEFT | DT_VCENTER);
-			x0 = tr.right;
-
-			RECT tr2={x0,y0+3,x0+37,y0+25-2};
-			x0 = tr2.right+5;
-			cbVwnd->SetPosition(&tr2);
+		if (cbVwnd)	{
 			cbVwnd->SetFont(font);
-			cbVwnd->SetCurSel(g_configId);
+			if (!WDL_VWndAutoHPos(cbVwnd, txt, &_r, &x0, _r.top, h))
+				return;
 		}
 
-		WDL_VirtualIconButton* btn = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_ENABLE);
-		if (btn)
+		WDL_VirtualIconButton* btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_ENABLE);
+		if (btnVwnd)
 		{
-			x0 += 10;
-			RECT tr={x0,y0+5,x0+60,y0+21};
-			btn->SetPosition(&tr);
-			btn->SetCheckState(g_liveConfigs.Get()->m_enable[g_configId]);
-			btn->SetTextLabel("Enable", -1, font);
-			x0 = tr.right+5;
+			btnVwnd->SetCheckState(g_liveConfigs.Get()->m_enable[g_configId]);
+			btnVwnd->SetTextLabel("Enable", -1, font);
+			if (!WDL_VWndAutoHPos(btnVwnd, NULL, &_r, &x0, _r.top, h, 5))
+				return;
 		}
 
-/*JFB not released
-		btn = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_AUTO_RCV);
-		if (btn)
-		{
-			x0 += 5;
-			RECT tr={x0,y0+5,x0+140,y0+21};
-			btn->SetPosition(&tr);
-			btn->SetCheckState(g_pLiveConfigsWnd->m_autoRcv[g_configId]);
-			btn->SetTextLabel("Auto receive input track", -1, font);
-			x0 = tr.right+5;
+		txt = (WDL_VirtualStaticText*)_parentVwnd->GetChildByID(TXTID_INPUT_TRACK);
+		if (txt) {
+			txt->SetFont(font);
+			txt->SetText("Input track:");
+			if (!WDL_VWndAutoHPos(txt, NULL, &_r, &x0, _r.top, h, 5))
+				return;
 		}
-*/
 
 		cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_INPUT_TRACK);
-		if (cbVwnd)
-		{
-			RECT tr={x0,y0,x0+60,y0+25};
-			font->DrawText(bm, "Input track:", -1, &tr, DT_LEFT | DT_VCENTER);
-			x0 = tr.right;
-
-			RECT tr2={x0,y0+3,x0+125,y0+25-2};
-			x0 = tr2.right+5;
-			cbVwnd->SetPosition(&tr2);
+		if (cbVwnd)	{
 			cbVwnd->SetFont(font);
 			int sel=0;
 			for (int i=1; i <= GetNumTracks(); i++) {
@@ -844,34 +836,32 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 				}
 			}
 			cbVwnd->SetCurSel(sel);
+			if (!WDL_VWndAutoHPos(cbVwnd, txt, &_r, &x0, _r.top, h))
+				return;
 		}
 
-		btn = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_MUTE_OTHERS);
-		if (btn)
+		btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_MUTE_OTHERS);
+		if (btnVwnd)
 		{
-			x0 += 10;
-			RECT tr={x0,y0+5,x0+140,y0+21};
-			btn->SetPosition(&tr);
-			btn->SetCheckState(g_liveConfigs.Get()->m_muteOthers[g_configId]);
-			btn->SetTextLabel("Mute all but active track", -1, font);
-			x0 = tr.right;
+			btnVwnd->SetCheckState(g_liveConfigs.Get()->m_muteOthers[g_configId]);
+			btnVwnd->SetTextLabel("Mute all but active track", -1, font);
+			if (!WDL_VWndAutoHPos(btnVwnd, NULL, &_r, &x0, _r.top, h, 5))
+				return;
 		}
 
-		btn = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_AUTO_SELECT);
-		if (btn)
+		btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_AUTO_SELECT);
+		if (btnVwnd)
 		{
-			x0 += 10;
-			RECT tr={x0,y0+5,x0+120,y0+21};
-			btn->SetPosition(&tr);
-			btn->SetCheckState(g_liveConfigs.Get()->m_autoSelect[g_configId]);
-			btn->SetTextLabel("Auto track selection", -1, font);
-			x0 = tr.right+5;
+			btnVwnd->SetCheckState(g_liveConfigs.Get()->m_autoSelect[g_configId]);
+			btnVwnd->SetTextLabel("Auto track selection", -1, font);
+			if (!WDL_VWndAutoHPos(btnVwnd, NULL, &_r, &x0, _r.top, h, 5))
+				return;
 		}
 
-		_painter->PaintVirtWnd(_parentVwnd, 0);
-
-		if (g_snmLogo && (_r.right - _r.left) > (x0+g_snmLogo->getWidth()))
-			LICE_Blit(bm,g_snmLogo,_r.right-g_snmLogo->getWidth()-8,y0+3,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+		if (g_snmLogo && (x0 + g_snmLogo->getWidth() < _r.right - 5)) {
+			int y = _r.top + int(h/2 - g_snmLogo->getHeight()/2 + 0.5);
+			LICE_Blit(bm,g_snmLogo,_r.right-g_snmLogo->getWidth()-8,y,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+		}
 	}
 }
 
@@ -881,11 +871,23 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_PAINT:
 		{
+#ifdef _SNM_THEMABLE
+			int winCol = GSC_mainwnd(COLOR_WINDOW);
+			if (m_lastThemeBrushColor != winCol) 
+			{
+				m_lastThemeBrushColor = winCol;
+				HWND hl = GetDlgItem(m_hwnd, IDC_LIST);
+				ListView_SetBkColor(hl, winCol);
+				ListView_SetTextBkColor(hl, winCol);
+				ListView_SetTextColor(hl, GSC_mainwnd(COLOR_BTNTEXT));
+			}
+#endif
 			RECT r;
 			GetClientRect(m_hwnd,&r);	
 			m_parentVwnd.SetPosition(&r);
 			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
 			DrawControls(&m_vwnd_painter, r, &m_parentVwnd);
+			m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
 			m_vwnd_painter.PaintEnd();
 		}
 		break;
@@ -903,6 +905,17 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_MOUSEMOVE:
 			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
+#ifdef _SNM_THEMABLE
+		case WM_CTLCOLOREDIT:
+		{
+			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT))
+			{
+				SetBkColor((HDC)wParam, GSC_mainwnd(COLOR_WINDOW));
+				SetTextColor((HDC)wParam, GSC_mainwnd(COLOR_BTNTEXT));
+				return (INT_PTR)SNM_GetThemeBrush();
+			}
+		}
+#endif
 	}
 	return 0;
 }
@@ -1233,11 +1246,6 @@ void SNM_MidiLiveScheduledJob::Perform()
 					triggerFXUserPreset(cfg->m_track, &(cfg->m_presets));
 				}
 #endif
-/*JFB not released
-				if (g_pLiveConfigsWnd->m_autoRcv[m_cfgId] && g_pLiveConfigsWnd->m_inputTr[m_cfgId]) 
-				{			
-				}
-*/			
 				delete p; // + auto commit!!
 
 				// unmute/select

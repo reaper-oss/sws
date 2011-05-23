@@ -563,3 +563,33 @@ void setMIDIInputChannel(COMMAND_T* _ct)
 	if (updated)
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
+
+void remapMIDIInputChannel(COMMAND_T* _ct)
+{
+	bool updated = false;
+	int ch = (int)_ct->user; // 0: source channel
+	char pLine[256] = "";
+	if (ch)	_snprintf(pLine, 256, "MIDI_INPUT_CHANMAP %d\n", ch-1);	
+	for (int i = 0; i <= GetNumTracks(); i++)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			int in = *(int*)GetSetMediaTrackInfo(tr, "I_RECINPUT", NULL);
+			if ((in & 0x1000) == 0x1000) // midi in?
+			{
+				SNM_ChunkParserPatcher p(tr);
+				char currentCh[3] = "";
+				int chunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "MIDI_INPUT_CHANMAP", 2, 0, 1, currentCh, NULL, "TRACKID");
+				if (chunkPos > 0) {
+					if (!ch || atoi(currentCh) != (ch-1))
+						updated |= p.ReplaceLine(--chunkPos, pLine); // pLine may be "", i.e. remove line
+				}
+				else 
+					updated |= p.InsertAfterBefore(0, pLine, "TRACK", "TRACKHEIGHT", 1, 0, "TRACKID");
+			}
+		}
+	}
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}

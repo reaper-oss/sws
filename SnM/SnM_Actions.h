@@ -32,7 +32,11 @@
 
 //#define _SNM_MISC
 //#define _SNM_TRACK_GROUP_EX
+//#define _SNM_ITT // WIP..
+#ifdef _WIN32
 #define _SNM_PRESETS
+#define _SNM_THEMABLE
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -129,16 +133,6 @@ public:
 	double m_vol, m_pan, m_panl;
 };
 
-// SNM_FastListView (defined in SnM_Dlg.cpp)
-class SNM_FastListView : public SWS_ListView {
-public:
-	SNM_FastListView(HWND _hwndList, HWND _hwndEdit, int _iCols, SWS_LVColumn* _pCols, const char* _cINIKey, bool _bTooltips)
-	: SWS_ListView(_hwndList, _hwndEdit, _iCols, _pCols, _cINIKey, _bTooltips) {}
-public:
-	~SNM_FastListView() {}
-	virtual void Update();
-};
-
 class SNM_TrackInt {
 public:
 	SNM_TrackInt(MediaTrack* _tr, int _i) : m_tr(_tr), m_int(_i) {}
@@ -154,14 +148,12 @@ public:
 
 // *** SnM_Actions.cpp ***
 extern WDL_String g_SNMiniFilename;	
-extern LICE_IBitmap* g_snmLogo;
-
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 bool IsToolbarsAutoRefeshEnabled(COMMAND_T*);
 void RefreshToolbars();
-
 void fakeToggleAction(COMMAND_T*);
 bool fakeIsToggledAction(COMMAND_T*);
+void SNM_ShowActionList(COMMAND_T*);
 int SnMInit(reaper_plugin_info_t* _rec);
 void SnMExit();
 void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
@@ -169,12 +161,10 @@ void DeleteScheduledJob(int _id);
 void SnMCSurfRun();
 void SnMCSurfSetTrackTitle();
 void SnMCSurfSetTrackListChange();
-
 int RegisterCyclation(const char* _name, bool _toggle, int _type, int _cycleId, int _cmdId = 0);
 void CreateCyclaction(COMMAND_T*);
 void LoadCyclactions(COMMAND_T*);
 void SaveCyclactions();
-
 
 // *** SnM_fx.cpp ***
 void toggleFXOfflineSelectedTracks(COMMAND_T*);
@@ -196,14 +186,12 @@ int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_Str
 void UpdatePresetConf(int _fx, int _preset, WDL_String* _presetConf);
 int GetPresetFromConf(int _fx, WDL_String* _presetConf, int _presetCount=0xFFFF);
 void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf);
-
 int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir = 0, bool _userPreset = false);
 void triggerFXPreset(int _fxId, int _presetId, int _dir=0);
 void triggerNextPreset(COMMAND_T*);
 void triggerPreviousPreset(COMMAND_T*);
 bool triggerFXUserPreset(MediaTrack* _tr, WDL_String* _presetConf);
 void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
-
 void moveFX(COMMAND_T*);
 
 // *** SnM_FXChain.cpp ***
@@ -225,7 +213,6 @@ void clearAllTakesFXChain(COMMAND_T*);
 void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
 void setTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
 bool autoSaveItemFXChainSlots(int _slot, const char* _dirPath, char* _fn, int _fnMaxSize);
-
 void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inputFX, bool _errMsg);
 void pasteTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX);
 void setTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX);
@@ -243,11 +230,9 @@ void copyTrackInputFXChain(COMMAND_T*);
 void cutTrackInputFXChain(COMMAND_T*);
 void pasteTrackInputFXChain(COMMAND_T*);
 void setTrackInputFXChain(COMMAND_T*);
-
 void copyFXChainSlotToClipBoard(int _slot);
 void readSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, char* _desc, int _descSize);
 void saveSlotIniFile(const char* _key, int _slot, const char* _path, const char* _desc);
-
 void reassignLearntMIDICh(COMMAND_T*);
 
 // *** SnM_Windows.cpp ***
@@ -255,10 +240,12 @@ bool IsChildOf(HWND _hChild, const char* _title, int _nComp = -1);
 HWND GetReaWindowByTitle(const char* _title, int _nComp = -1);
 HWND SearchWindow(const char* _title);
 HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
+#ifdef _SNM_MISC
 void closeAllRoutingWindows(COMMAND_T*);
 void closeAllEnvWindows(COMMAND_T*);
 void toggleAllRoutingWindows(COMMAND_T*);
 void toggleAllEnvWindows(COMMAND_T*);
+#endif
 void showFXChain(COMMAND_T*);
 void hideFXChain(COMMAND_T*);
 void toggleFXChain(COMMAND_T*);
@@ -348,7 +335,9 @@ bool ShowTakeEnvVol(MediaItem_Take* _take);
 bool ShowTakeEnvPan(MediaItem_Take* _take);
 bool ShowTakeEnvMute(MediaItem_Take* _take);
 bool ShowTakeEnvPitch(MediaItem_Take* _take);
+#ifdef _SNM_ITT
 void saveItemTakeTemplate(COMMAND_T*);
+#endif
 void setPan(COMMAND_T*);
 void itemSelToolbarPoll();
 void toggleItemSelExists(COMMAND_T*);
@@ -364,10 +353,8 @@ void saveTracksFolderStates(COMMAND_T*);
 void restoreTracksFolderStates(COMMAND_T*);
 void setTracksFolderState(COMMAND_T*);
 void toggleArmTrackEnv(COMMAND_T*);
-
 void toggleWriteEnvExists(COMMAND_T*);
 bool writeEnvExists(COMMAND_T*);
-
 int CountSelectedTracksWithMaster(ReaProject* _proj);
 MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx);
 MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj);
@@ -377,6 +364,7 @@ void loadSetTrackTemplate(COMMAND_T*);
 void loadImportTrackTemplate(COMMAND_T*);
 bool autoSaveTrackTemplateSlots(int _slot, bool _delItems, const char* _dirPath, char* _fn, int _fnMaxSize);
 void setMIDIInputChannel(COMMAND_T*);
+void remapMIDIInputChannel(COMMAND_T*);
 
 // *** SnM_ResourceView.cpp ***
 int ResourceViewInit();
@@ -387,7 +375,6 @@ void ClearSlotPrompt(COMMAND_T*);
 
 // *** SnM_NotesHelpView.cpp ***
 extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
-
 void SetActionHelpFilename(COMMAND_T*);
 int NotesHelpViewInit();
 void NotesHelpViewExit();
@@ -414,7 +401,13 @@ void ToggleEnableLiveConfig(COMMAND_T*);
 bool IsLiveConfigEnabled(COMMAND_T*);
 
 // *** SnM_Dlg.cpp ***
+extern LICE_IBitmap* g_snmLogo;
 LICE_CachedFont* SNM_GetThemeFont();
+HBRUSH SNM_GetThemeBrush();
+LICE_IBitmap* SNM_GetThemeLogo();
+bool WDL_VWndAutoHPos(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep=12);
+void SNM_UIInit();
+void SNM_UIExit();
 void openCueBussWnd(COMMAND_T*);
 bool isCueBussWndDisplayed(COMMAND_T*);
 WDL_DLGRET WaitDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
@@ -442,15 +435,12 @@ bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sec
 void SNM_ShowConsoleMsg(const char* _msg, const char* _title="", bool _clear=true); 
 void SNM_ShowConsoleDbg(bool _clear, const char* format, ...);
 int PromptForMIDIChannel(const char* _title);
-
 void LetREAPERBreathe(COMMAND_T*);
 void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
 void SimulateMouseClick(COMMAND_T*);
 void DumpWikiActionList2(COMMAND_T*);
 void DumpActionList(COMMAND_T*);
-
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
-
 #ifdef _SNM_MISC
 void ShowTakeEnvPadreTest(COMMAND_T*);
 void dumpWikiActionList(COMMAND_T*);

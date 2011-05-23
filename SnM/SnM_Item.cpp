@@ -239,7 +239,7 @@ bool isEmptyMidi(MediaItem_Take* _take)
 	if (_take) // a v4 empty take isn't a empty *MIDI* take!
 	{
 		MidiItemProcessor p("S&M");
-		//JFB!!! TODO Padre's MidiItemProcessor: there's a bug with slip edited MIDI items
+		//JFB!!! TODO: Padre's MidiItemProcessor has bugs, e.g. slip edited MIDI items
 		if (_take && p.isMidiTake(_take))
 		{
 			MIDI_eventlist* evts = MIDI_eventlist_Create();
@@ -1004,7 +1004,7 @@ bool ShowTakeEnvPitch(MediaItem_Take* _take) {
 ///////////////////////////////////////////////////////////////////////////////
 // Item/take template slots
 ///////////////////////////////////////////////////////////////////////////////
-#ifdef _SNM_MISC
+#ifdef _SNM_ITT
 void saveItemTakeTemplate(COMMAND_T* _ct)
 {
 	for (int i = 0; i < GetNumTracks(); i++)
@@ -1119,10 +1119,9 @@ void itemSelToolbarPoll()
 		// left/right item sel.
 		double pos,len,start_time,end_time;
 		bool horizontal = false;
-		HWND w = 
-/*JFB!!! I rely on (incomplete?) SWELL's FindWindowEx here
-			GetTrackWnd(); */
-			FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", "trackview");
+
+		//JFB I rely on (incomplete?) SWELL's FindWindowEx here (rather than GetTrackWnd()) 
+		HWND w = FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", "trackview");
 		if (w)
 		{
 			RECT r; GetWindowRect(w, &r);

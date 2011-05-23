@@ -26,6 +26,8 @@
 /
 ******************************************************************************/
 
+//JFB TODO?
+// F2: rename
 
 #include "stdafx.h"
 #include "../../WDL/projectcontext.h"
@@ -35,7 +37,8 @@
 #include "../MediaPool/DragDrop.h" //JFB: move to the trunk?
 #endif
 
-//#define _SNM_ITT // WIP: Item/take templates
+
+#define NB_SLOTS_FAST_LISTVIEW			500
 
 // Commands
 #define AUTO_INSERT_SLOTS				0x110000 // common cmds
@@ -48,19 +51,20 @@
 #define EXPLORE_MSG						0x110007
 #define LOAD_MSG						0x110008
 #define AUTO_SAVE_DIR					0x110009
-#define FXC_LOAD_APPLY_TRACK_MSG		0x11000A // specific FX chains cmds
-#define FXC_LOAD_APPLY_TAKE_MSG			0x11000B
-#define FXC_LOAD_APPLY_ALL_TAKES_MSG	0x11000C
-#define FXC_COPY_MSG					0x11000D
-#define FXC_LOAD_PASTE_TRACK_MSG		0x11000E
-#define FXC_LOAD_PASTE_TAKE_MSG			0x11000F
-#define FXC_LOAD_PASTE_ALL_TAKES_MSG	0x110010
-#define FXC_AUTO_SAVE_INPUT_FX			0x110011
-#define FXC_AUTO_SAVE_TRACK				0x110012
-#define FXC_AUTO_SAVE_ITEM				0x110013
-#define TRT_LOAD_APPLY_MSG				0x110014 // specific track template cmds
-#define TRT_LOAD_IMPORT_MSG				0x110015
-#define TRT_AUTO_SAVE_WITH_ITEMS		0x110016
+#define FILTER_BY_PATH					0x11000A
+#define FXC_LOAD_APPLY_TRACK_MSG		0x11000B // specific FX chains cmds
+#define FXC_LOAD_APPLY_TAKE_MSG			0x11000C
+#define FXC_LOAD_APPLY_ALL_TAKES_MSG	0x11000D
+#define FXC_COPY_MSG					0x11000E
+#define FXC_LOAD_PASTE_TRACK_MSG		0x11000F
+#define FXC_LOAD_PASTE_TAKE_MSG			0x110010
+#define FXC_LOAD_PASTE_ALL_TAKES_MSG	0x110011
+#define FXC_AUTO_SAVE_INPUT_FX			0x110012
+#define FXC_AUTO_SAVE_TRACK				0x110013
+#define FXC_AUTO_SAVE_ITEM				0x110014
+#define TRT_LOAD_APPLY_MSG				0x110015 // specific track template cmds
+#define TRT_LOAD_IMPORT_MSG				0x110016
+#define TRT_AUTO_SAVE_WITH_ITEMS		0x110017
 
 // labels shared by actions and popup menu items
 #define FXC_LOAD_APPLY_TRACK_STR		"Load/apply FX chain to selected tracks"
@@ -77,6 +81,8 @@
 
 #define DRAGNDROP_EMPTY_SLOT_FILE		">Empty<"
 
+#define FILTER_DEFAULT_STR				"Filter" //JFB!!! g_filterByPath ? "Filter (by path)" : "Filter (by comment)"
+
 enum {
   SNM_SLOT_TYPE_FX_CHAINS=0,
   SNM_SLOT_TYPE_TR_TEMPLATES,
@@ -88,7 +94,9 @@ enum {
 
 enum {
   COMBOID_TYPE=1000,
+  TXTID_DBL_TYPE,
   COMBOID_DBLCLICK_TYPE,
+  TXTID_DBL_TO,
   COMBOID_DBLCLICK_TO,
   BUTTONID_AUTO_INSERT
 #ifdef _SNM_ITT
@@ -124,9 +132,11 @@ int g_dblClickTo = 0; // for fx chains only
 WDL_PtrList<PathSlotItem> g_dragPathSlotItems; 
 WDL_PtrList<FileSlotList> g_filesLists;
 
+//JFB TODO: member attributes for sure
 WDL_PtrList_DeleteOnDestroy<WDL_String> g_autoSaveDirs;
 bool g_autoSaveTrTmpltWithItemsPref = true;
 int g_autoSaveFXChainPref = FXC_AUTOSAVE_PREF_TRACK;
+bool g_filterByPath = true; // false: filter by comment
 
 
 FileSlotList* GetCurList() {
@@ -143,8 +153,14 @@ WDL_String* GetCurAutoSaveDir() {
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
-:SNM_FastListView(hwndList, hwndEdit, 4, g_fxChainListCols, "Resources View State", false)
-{}
+:SWS_ListView(hwndList, hwndEdit, 4, g_fxChainListCols, "Resources View State", false)
+{
+#ifdef _SNM_THEMABLE
+	ListView_SetBkColor(hwndList, GSC_mainwnd(COLOR_WINDOW));
+	ListView_SetTextBkColor(hwndList, GSC_mainwnd(COLOR_WINDOW));
+	ListView_SetTextColor(hwndList, GSC_mainwnd(COLOR_BTNTEXT));
+#endif
+}
 
 void SNM_ResourceView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
 {
@@ -189,8 +205,7 @@ void SNM_ResourceView::SetItemText(LPARAM item, int iCol, const char* str)
 			case 1:
 			{
 				char fn[BUFFER_SIZE] = "";
-				GetCurList()->GetFullPath(slot, fn, BUFFER_SIZE);
-				if (!pItem->IsDefault() && FileExistsErrMsg(fn))
+				if (GetCurList()->GetFullPath(slot, fn, BUFFER_SIZE) && !pItem->IsDefault() && FileExistsErrMsg(fn))
 				{
 					char newFn[BUFFER_SIZE];
 					strncpy(newFn, fn, BUFFER_SIZE);
@@ -286,7 +301,7 @@ void SNM_ResourceView::OnItemDblClk(LPARAM item, int iCol)
 
 void SNM_ResourceView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 {
-	if (g_pResourcesWnd && g_pResourcesWnd->m_filter.GetLength())
+	if (g_pResourcesWnd && g_pResourcesWnd->m_filter.GetLength() && strcmp(g_pResourcesWnd->m_filter.Get(), FILTER_DEFAULT_STR))
 	{
 		int iCount = 0;
 		LineParser lp(false);
@@ -294,11 +309,11 @@ void SNM_ResourceView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 		for (int i = 0; i < GetCurList()->GetSize(); i++)
 		{
 			PathSlotItem* item = GetCurList()->Get(i);
-			if (item && !item->IsDefault())
+			if (item && (!g_filterByPath || (g_filterByPath && !item->IsDefault())))
 			{
 				bool match = true;
 				for (int j=0; match && j < lp.getnumtokens(); j++)
-					match &= (stristr(item->m_shortPath.Get(), lp.gettoken_str(j)) != NULL);
+					match &= (stristr(g_filterByPath ? item->m_shortPath.Get() : item->m_desc.Get(), lp.gettoken_str(j)) != NULL);
 				if (match) {
 					pBuf->Resize(++iCount);
 					pBuf->Get()[iCount-1] = (LPARAM)item;
@@ -326,11 +341,13 @@ void SNM_ResourceView::OnBeginDrag(LPARAM _item)
 	while(pItem) {
 		int slot = GetCurList()->Find(pItem);
 		char fullPath[BUFFER_SIZE] = "";
-		GetCurList()->GetFullPath(slot, fullPath, BUFFER_SIZE);
-		bool empty = (pItem->IsDefault() || *fullPath == '\0');
-		iMemNeeded += (int)((empty ? strlen(DRAGNDROP_EMPTY_SLOT_FILE) : strlen(fullPath)) + 1);
-		fullPaths.Add(new WDL_String(empty ? DRAGNDROP_EMPTY_SLOT_FILE : fullPath));
-		g_dragPathSlotItems.Add(pItem);
+		if (GetCurList()->GetFullPath(slot, fullPath, BUFFER_SIZE))
+		{
+			bool empty = (pItem->IsDefault() || *fullPath == '\0');
+			iMemNeeded += (int)((empty ? strlen(DRAGNDROP_EMPTY_SLOT_FILE) : strlen(fullPath)) + 1);
+			fullPaths.Add(new WDL_String(empty ? DRAGNDROP_EMPTY_SLOT_FILE : fullPath));
+			g_dragPathSlotItems.Add(pItem);
+		}
 		pItem = (PathSlotItem*)EnumSelected(&x);
 	}
 	if (!iMemNeeded)
@@ -373,6 +390,186 @@ void SNM_ResourceView::OnBeginDrag(LPARAM _item)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// SNM_FastResourceView
+///////////////////////////////////////////////////////////////////////////////
+
+// "Brutal force" update to make it run much faster, but subbtle thing 
+// like selection restorations aren't managed anymore..
+//JFB!!! to be kept in sync with SWS_ListView::Update()
+void SNM_FastResourceView::Update()
+{
+	// Fill in the data by pulling it from the derived class
+	if (m_iEditingItem == -1 && !m_bDisableUpdates)
+	{
+		m_bDisableUpdates = true;
+		char str[256];
+
+		WDL_TypedBuf<LPARAM> items;
+		GetItemList(&items);
+
+/*JFB original code
+		// Check for deletions - items in the lstwnd are quite likely out of order so gotta do a full O(n^2) search
+		int lvItemCount = ListView_GetItemCount(m_hwndList);
+		for (int i = 0; i < lvItemCount; i++)
+		{
+			LPARAM item = GetListItem(i);
+			bool bFound = false;
+			for (int j = 0; j < items.GetSize(); j++)
+				if (items.Get()[j] == item)
+				{
+					bFound = true;
+					break;
+				}
+
+			if (!bFound)
+			{
+				ListView_DeleteItem(m_hwndList, i--);
+				lvItemCount--;
+			}
+		}
+
+		// Check for additions
+		lvItemCount = ListView_GetItemCount(m_hwndList);
+		for (int i = 0; i < items.GetSize(); i++)
+		{
+			bool bFound = false;
+			int j;
+			for (j = 0; j < lvItemCount; j++)
+			{
+				if (items.Get()[i] == GetListItem(j))
+				{
+					bFound = true;
+					break;
+				}
+			}
+
+			// Update the list, no matter what, because text may have changed
+			LVITEM item;
+			item.mask = 0;
+			int iNewState = GetItemState(items.Get()[i]);
+			if (iNewState >= 0)
+			{
+				int iCurState = bFound ? ListView_GetItemState(m_hwndList, j, LVIS_SELECTED | LVIS_FOCUSED) : 0;
+				if (iNewState && !(iCurState & LVIS_SELECTED))
+				{
+					item.mask |= LVIF_STATE;
+					item.state = LVIS_SELECTED;
+					item.stateMask = LVIS_SELECTED;
+				}
+				else if (!iNewState && (iCurState & LVIS_SELECTED))
+				{
+					item.mask |= LVIF_STATE;
+					item.state = 0;
+					item.stateMask = LVIS_SELECTED | ((iCurState & LVIS_FOCUSED) ? LVIS_FOCUSED : 0);
+				}
+			}
+
+			item.iItem = j;
+			item.pszText = str;
+
+			int iCol = 0;
+			for (int k = 0; k < m_iCols; k++)
+				if (m_pCols[k].iPos != -1)
+				{
+					item.iSubItem = iCol;
+					GetItemText(items.Get()[i], k, str, 256);
+					if (!iCol && !bFound)
+					{
+						item.mask |= LVIF_PARAM | LVIF_TEXT;
+						item.lParam = items.Get()[i];
+						ListView_InsertItem(m_hwndList, &item);
+						lvItemCount++;
+					}
+					else
+					{
+						char curStr[256];
+						ListView_GetItemText(m_hwndList, j, iCol, curStr, 256);
+						if (strcmp(str, curStr))
+							item.mask |= LVIF_TEXT;
+						if (item.mask)
+						{
+							// Only set if there's changes
+							// May be less efficient here, but less messages get sent for sure!
+							ListView_SetItem(m_hwndList, &item);
+						}
+					}
+					item.mask = 0;
+					iCol++;
+				}
+		}
+*/
+
+//JFB mod -------------------------------------------------------------------->
+		ListView_DeleteAllItems(m_hwndList);
+		for (int i = 0; i < items.GetSize(); i++)
+		{
+			LVITEM item;
+			item.mask = 0;
+			item.iItem = i;
+			item.pszText = str;
+
+			int iCol = 0;
+			for (int k = 0; k < m_iCols; k++)
+				if (m_pCols[k].iPos != -1)
+				{
+					item.iSubItem = iCol;
+					GetItemText(items.Get()[i], k, str, 256);
+					if (!iCol)
+					{
+						item.mask |= LVIF_PARAM | LVIF_TEXT;
+						item.lParam = items.Get()[i];
+						ListView_InsertItem(m_hwndList, &item);
+					}
+					else
+					{
+						item.mask |= LVIF_TEXT;
+						ListView_SetItem(m_hwndList, &item);
+					}
+					item.mask = 0;
+					iCol++;
+				}
+		}
+//JFB mod <--------------------------------------------------------------------
+
+		ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
+		int iCol = abs(m_iSortCol) - 1;
+		iCol = DataToDisplayCol(iCol) + 1;
+		if (m_iSortCol < 0)
+			iCol = -iCol;
+		SetListviewColumnArrows(iCol);
+
+#ifdef _WIN32
+		if (m_hwndTooltip)
+		{
+			TOOLINFO ti = { sizeof(TOOLINFO), };
+			ti.lpszText = str;
+			ti.hwnd = m_hwndList;
+			ti.uFlags = TTF_SUBCLASS;
+			ti.hinst  = g_hInst;
+
+			// Delete all existing tools
+			while (SendMessage(m_hwndTooltip, TTM_ENUMTOOLS, 0, (LPARAM)&ti))
+				SendMessage(m_hwndTooltip, TTM_DELTOOL, 0, (LPARAM)&ti);
+
+			RECT r;
+			// Add tooltips after sort
+			for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
+			{
+				// Get the rect of the line
+				ListView_GetItemRect(m_hwndList, i, &r, LVIR_BOUNDS);
+				memcpy(&ti.rect, &r, sizeof(RECT));
+				ti.uId = i;
+				GetItemTooltip(GetListItem(i), str, 100);
+				SendMessage(m_hwndTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
+			}
+		}
+#endif
+		m_bDisableUpdates = false;
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // SNM_ResourceWnd
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -380,6 +577,8 @@ SNM_ResourceWnd::SNM_ResourceWnd()
 :SWS_DockWnd(IDD_SNM_FXCHAINLIST, "Resources", "SnMResources", 30006, SWSGetCommandID(OpenResourceView))
 {
 	m_previousType = g_type;
+	m_lastThemeBrushColor = -1;
+	m_filter.Set(FILTER_DEFAULT_STR);
 
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -426,8 +625,10 @@ void SNM_ResourceWnd::FillDblClickTypeCombo()
 void SNM_ResourceWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
+	m_resize.init_item(IDC_FILTER, 1.0, 0.0, 1.0, 0.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
-#ifndef _WIN32
+/*JFB!!! Commented: useless after last "theming" updates ????
+#ifndef _WIN32 //
 	// Realign the filter box on OSX
 	HWND hFilter = GetDlgItem(m_hwnd, IDC_FILTER);
 	RECT rFilter;
@@ -436,8 +637,13 @@ void SNM_ResourceWnd::OnInitDlg()
 	ScreenToClient(m_hwnd,((LPPOINT)&rFilter)+1);
 	SetWindowPos(hFilter, NULL, rFilter.left - 25, rFilter.top - 1, abs(rFilter.right - rFilter.left) - 10, abs(rFilter.bottom - rFilter.top), SWP_NOACTIVATE | SWP_NOZORDER);
 #endif
-
-	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+*/
+	// "fast listview" if there are more than NB_SLOTS_FAST_LISTVIEW slots, normal otherwise
+	// (a fast list view has few drawbacks, e.g. selection not restored after updates)
+	bool fastViewNeeded = false;
+	for (int i=0; !fastViewNeeded && i < g_filesLists.GetSize(); i++)
+		fastViewNeeded = (g_filesLists.Get(i)->GetSize() > NB_SLOTS_FAST_LISTVIEW);
+	m_pLists.Add(fastViewNeeded ? new SNM_FastResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)) : new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
 	// Load prefs 
 	//JFB!!! pb qd 1ere init (no .ini)
@@ -451,6 +657,7 @@ void SNM_ResourceWnd::OnInitDlg()
 	g_dblClickTo = GetPrivateProfileInt("RESOURCE_VIEW", "DBLCLICK_TO", 0, g_SNMiniFilename.Get());
 	g_autoSaveFXChainPref = GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveFXChain", FXC_AUTOSAVE_PREF_TRACK, g_SNMiniFilename.Get());
 	g_autoSaveTrTmpltWithItemsPref = (GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", 1, g_SNMiniFilename.Get()) == 1);
+	g_filterByPath = (GetPrivateProfileInt("RESOURCE_VIEW", "FilterByPath", 1, g_SNMiniFilename.Get()) == 1);
 	// auto save directories
 	{
 		char defaultPath[BUFFER_SIZE] = "", path[BUFFER_SIZE] = "";
@@ -464,7 +671,6 @@ void SNM_ResourceWnd::OnInitDlg()
 	}
 
 	// WDL GUI init
-	IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);
 	m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_cbType.SetID(COMBOID_TYPE);
@@ -492,16 +698,16 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_cbDblClickTo);
 
 	m_btnAutoInsert.SetID(BUTTONID_AUTO_INSERT);
-	WDL_VirtualIconButton_SkinConfig* img = it ? &(it->toolbar_save) : NULL;
-	if (img)
-		m_btnAutoInsert.SetIcon(img);
-	else {
-		m_btnAutoInsert.SetTextLabel("Auto save", 0, SNM_GetThemeFont());
-		m_btnAutoInsert.SetForceBorder(true);
-	}
 	m_btnAutoInsert.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnAutoInsert);
 
+	m_txtDblType.SetID(TXTID_DBL_TYPE);
+	m_txtDblType.SetRealParent(m_hwnd);
+	m_parentVwnd.AddChild(&m_txtDblType);
+
+	m_txtDblTo.SetID(TXTID_DBL_TO);
+	m_txtDblTo.SetRealParent(m_hwnd);
+	m_parentVwnd.AddChild(&m_txtDblTo);
 
 #ifdef _SNM_ITT
 	m_btnItemTakeDetails.SetID(BUTTONID_ITEMTK_DETAILS);
@@ -540,6 +746,24 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			Update();
 			break;
 		}
+		case (IDC_FILTER | (EN_SETFOCUS << 16)):
+		{
+			HWND hFilt = GetDlgItem(m_hwnd, IDC_FILTER);
+			char cFilter[128];
+			GetWindowText(hFilt, cFilter, 128);
+			if (!strcmp(cFilter, FILTER_DEFAULT_STR))
+				SetWindowText(hFilt, "");
+			break;
+		}
+		case (IDC_FILTER | (EN_KILLFOCUS << 16)):
+		{
+			HWND hFilt = GetDlgItem(m_hwnd, IDC_FILTER);
+			char cFilter[128];
+			GetWindowText(hFilt, cFilter, 128);
+			if (*cFilter == '\0') 
+				SetWindowText(hFilt, FILTER_DEFAULT_STR);
+			break;
+		}
 
 		// ***** Common *****
 		case ADD_SLOT_MSG:
@@ -575,11 +799,12 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case EXPLORE_MSG:
 		{
 			char fullPath[BUFFER_SIZE] = "";
-			GetCurList()->GetFullPath(slot, fullPath, BUFFER_SIZE);
-			char* p = strrchr(fullPath, PATH_SLASH_CHAR);
-			if (p) {
-				*(p+1) = '\0'; // ShellExecute() is KO otherwie..
-				ShellExecute(NULL, "open", fullPath, NULL, NULL, SW_SHOWNORMAL);
+			if (GetCurList()->GetFullPath(slot, fullPath, BUFFER_SIZE))	{
+				char* p = strrchr(fullPath, PATH_SLASH_CHAR);
+				if (p) {
+					*(p+1) = '\0'; // ShellExecute() is KO otherwie..
+					ShellExecute(NULL, "open", fullPath, NULL, NULL, SW_SHOWNORMAL);
+				}
 			}
 			break;
 		}
@@ -632,11 +857,15 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				GetCurAutoSaveDir()->Set(path);
 			break;
 		}
+		case FILTER_BY_PATH:
+			g_filterByPath = !g_filterByPath;
+			Update();
+//			SetFocus(GetDlgItem(m_hwnd, IDC_FILTER));
+			break;
 
 		// ***** FX chains *****
 		case FXC_COPY_MSG:
-			if (item)
-				copyFXChainSlotToClipBoard(slot);
+			if (item) copyFXChainSlotToClipBoard(slot);
 			break;
 		case FXC_LOAD_APPLY_TRACK_MSG:
 		case FXC_LOAD_PASTE_TRACK_MSG:
@@ -719,7 +948,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				{
 					FillDblClickTypeCombo();
 					Update();
-					SetFocus(GetDlgItem(m_hwnd, IDC_FILTER));
+//					SetFocus(GetDlgItem(m_hwnd, IDC_FILTER));
 				}
 			}
 			else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_DBLCLICK_TYPE)
@@ -738,6 +967,9 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 {
 	HMENU hMenu = CreatePopupMenu();
 	AddToMenu(hMenu, "Auto fill (from resource path)", AUTO_INSERT_SLOTS);
+	AddToMenu(hMenu, SWS_SEPARATOR, 0);
+	AddToMenu(hMenu, "Filter by path", FILTER_BY_PATH, -1, false, g_filterByPath ? MFS_CHECKED : MFS_UNCHECKED);
+	AddToMenu(hMenu, "Filter by comment", FILTER_BY_PATH, -1, false, g_filterByPath ? MFS_UNCHECKED : MFS_CHECKED);
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	switch(g_type)
 	{
@@ -823,6 +1055,7 @@ void SNM_ResourceWnd::OnDestroy()
 	sprintf(cTmp, "%d", g_autoSaveFXChainPref);
 	WritePrivateProfileString("RESOURCE_VIEW", "AutoSaveFXChain", cTmp, g_SNMiniFilename.Get()); 
 	WritePrivateProfileString("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", g_autoSaveTrTmpltWithItemsPref ? "1" : "0", g_SNMiniFilename.Get()); 
+	WritePrivateProfileString("RESOURCE_VIEW", "FilterByPath", g_filterByPath ? "1" : "0", g_SNMiniFilename.Get()); 
 	{
 		WDL_String escapedStr;
 		makeEscapedConfigString(g_autoSaveDirs.Get(0)->Get(), &escapedStr);
@@ -895,7 +1128,7 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 		int srcSlot = GetCurList()->Find(g_dragPathSlotItems.Get(0));
 		// drag'n'drop slot to the bottom
 		if (srcSlot >= 0 && srcSlot < dropSlot)
-			dropSlot++; // d'n'd will be more 'natural'
+			dropSlot++; //JFB!!! d'n'd will be more 'natural'
 	}
 
 	// drop but not on a slot => create slots
@@ -981,84 +1214,100 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
     LICE_IBitmap *bm = _painter->GetBuffer(&xo,&yo);
 	if (bm)
 	{
+		for (int i=COMBOID_TYPE; i < _parentVwnd->GetNumChildren(); i++)
+			_parentVwnd->GetChildByID(COMBOID_TYPE)->SetVisible(false);
+
 		LICE_CachedFont* font = SNM_GetThemeFont();
-		int x0=_r.left+10, y0=_r.top+5, h=25;
-		int w=25; //default width
+		IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);// returns the whole icon theme (icontheme.h) and the size
+		int x0=_r.left+10, h=35;
+
+		// defines a new area 'r' that takes the right filter edit box into account (contrary to '_r')
+		//JFB!!! OK on OSX !??
+		RECT r;
+		GetWindowRect(GetDlgItem(g_pResourcesWnd->GetHWND(), IDC_FILTER), &r);
+		ScreenToClient(g_pResourcesWnd->GetHWND(), (LPPOINT)&r);
+		ScreenToClient(g_pResourcesWnd->GetHWND(), ((LPPOINT)&r)+1);
+		r.top = _r.top;	r.bottom = _r.bottom;
+		r.right = r.left; r.left = _r.left;
 
 		WDL_VirtualComboBox* cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_TYPE);
 		if (cbVwnd)
 		{
-			RECT tr2={x0,y0+3,x0+110,y0+h-2};
-			x0 = tr2.right+5;
-			cbVwnd->SetPosition(&tr2);
 			cbVwnd->SetFont(font);
+			if (!WDL_VWndAutoHPos(cbVwnd, NULL, &r, &x0, _r.top, h))
+				return;
 		}
 
-		// "Filter:"
+		// "dbl-click to:" (common)
+		WDL_VirtualStaticText* txt = (WDL_VirtualStaticText*)_parentVwnd->GetChildByID(TXTID_DBL_TYPE);
+		if (txt)
 		{
-			x0 += 10;
-			RECT tr={x0,y0,x0+40,y0+h};
-			font->DrawText(bm, "Filter:", -1, &tr, DT_LEFT | DT_VCENTER);
-			x0 = tr.right+5;
+			txt->SetVisible(g_type == SNM_SLOT_TYPE_FX_CHAINS || g_type == SNM_SLOT_TYPE_TR_TEMPLATES);
+			if (g_type == SNM_SLOT_TYPE_FX_CHAINS || g_type == SNM_SLOT_TYPE_TR_TEMPLATES)
+			{
+				txt->SetFont(font);
+				txt->SetText("Dbl-click to:");
+				if (!WDL_VWndAutoHPos(txt, NULL, &r, &x0, _r.top, h, 5))
+					return;
+			}
 		}
 
-		x0 += 125; // i.e. width of the filter edit box
-
-		// common "dbl-click" control
 		cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_DBLCLICK_TYPE);
 		if (cbVwnd)
 		{
+			cbVwnd->SetVisible(g_type == SNM_SLOT_TYPE_FX_CHAINS || g_type == SNM_SLOT_TYPE_TR_TEMPLATES);
 			if (g_type == SNM_SLOT_TYPE_FX_CHAINS || g_type == SNM_SLOT_TYPE_TR_TEMPLATES)
 			{
-				RECT tr={x0,y0,x0+48,y0+h};
-				font->DrawText(bm, "Dbl-click:", -1, &tr, DT_LEFT | DT_VCENTER);
-				x0 = tr.right+5;
-
-				RECT tr2={x0, y0+3, g_type == SNM_SLOT_TYPE_FX_CHAINS ? x0+60 : x0+165, y0+h-2};
-				x0 = tr2.right+5;
-				cbVwnd->SetPosition(&tr2);
 				cbVwnd->SetFont(font);
+				if (!WDL_VWndAutoHPos(cbVwnd, txt, &r, &x0, _r.top, h))
+					return;
 			}
-			cbVwnd->SetVisible(g_type == SNM_SLOT_TYPE_FX_CHAINS || g_type == SNM_SLOT_TYPE_TR_TEMPLATES);
 		}
 
-		// fx chain control
+		// "To selected:" (fx chain only)
+		txt = (WDL_VirtualStaticText*)_parentVwnd->GetChildByID(TXTID_DBL_TO);
+		if (txt)
+		{
+			txt->SetVisible(g_type == SNM_SLOT_TYPE_FX_CHAINS);
+			if (g_type == SNM_SLOT_TYPE_FX_CHAINS)
+			{
+				txt->SetFont(font);
+				txt->SetText("To selected:");
+				if (!WDL_VWndAutoHPos(txt, NULL, &r, &x0, _r.top, h, 5))
+					return;
+			}
+		}
+
 		cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_DBLCLICK_TO);
 		if (cbVwnd)
 		{
+			cbVwnd->SetVisible(g_type == SNM_SLOT_TYPE_FX_CHAINS);
 			if (g_type == SNM_SLOT_TYPE_FX_CHAINS)
 			{
-				x0+=10;
-				RECT tr={x0,y0,x0+60,y0+h};
-				font->DrawText(bm, "To selected:", -1, &tr, DT_LEFT | DT_VCENTER);
-				x0 = tr.right+5;
-
-				RECT tr2={x0,y0+3,x0+112,y0+h-2};
-				x0 = tr2.right+5;
-				cbVwnd->SetPosition(&tr2);
 				cbVwnd->SetFont(font);
+				if (!WDL_VWndAutoHPos(cbVwnd, txt, &r, &x0, _r.top, h))
+					return;
 			}
-			cbVwnd->SetVisible(g_type == SNM_SLOT_TYPE_FX_CHAINS);
 		}
 
 		// common "auto save/insert" control
 		WDL_VirtualIconButton* btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_AUTO_INSERT);
 		if (btnVwnd)
 		{
-			WDL_VirtualIconButton_SkinConfig* img = btnVwnd->GetIcon();
-			if (img) {
-				w = img->image->getWidth() / 3;
-				h = img->image->getHeight();
+			WDL_VirtualIconButton_SkinConfig* img = it ? &(it->toolbar_save) : NULL;
+			if (img)
+				btnVwnd->SetIcon(img);
+			else {
+				btnVwnd->SetTextLabel("Auto save", 0, font);
+				btnVwnd->SetForceBorder(true);
 			}
-			else
-				w = 70;
-			x0 += 10;
-			RECT tr2={x0, y0 - (img ? 2:-3), x0 + w, y0 - (img ? 2:1) + h};
-			btnVwnd->SetPosition(&tr2);
-			x0 += 5+w;
+			if (!WDL_VWndAutoHPos(btnVwnd, NULL, &r, &x0, _r.top, h))
+				return;
 		}
 
-#ifdef _SNM_ITT
+#ifdef _SNM_ITT // WIP..
+		int y0=_r.top+5;
+
 		// Item/take templates
 		WDL_VirtualIconButton* btn = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_ITEMTK_DETAILS);
 		if (btn)
@@ -1074,7 +1323,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 				btn->SetCheckState(hList && !IsWindowVisible(hList));
 
 				RECT tr2={x0,y0,x0+100,y0+25};
-				tmpfont.DrawText(bm, "Show item/take properties", -1, &tr2, DT_LEFT | DT_VCENTER);
+				font->DrawText(bm, "Show item/take properties", -1, &tr2, DT_LEFT | DT_VCENTER);
 				x0 = tr2.right+5;
 			}
 			btn->SetVisible(g_type == SNM_SLOT_TYPE_ITEM_TEMPLATES);
@@ -1109,7 +1358,7 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 */
 //ui					RECT tr2={x0,y0,x0+40,y0+25};
 					RECT tr2={tr.right+5,y1,x1+80,y1+25};
-					tmpfont.DrawText(bm, i < 6 ? g_itemProps[i] : g_takeProps[i-6], -1, &tr2, DT_LEFT | DT_VCENTER);
+					font->DrawText(bm, i < 6 ? g_itemProps[i] : g_takeProps[i-6], -1, &tr2, DT_LEFT | DT_VCENTER);
 //ui					x0 = tr2.right+5;
 					y1 = tr.bottom+5;
 				}
@@ -1117,10 +1366,12 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 			}
 		}
 #endif
-		_painter->PaintVirtWnd(_parentVwnd, 0);
-
-		if (g_snmLogo && (_r.right - _r.left) > (x0+g_snmLogo->getWidth()))
-			LICE_Blit(bm,g_snmLogo,_r.right-g_snmLogo->getWidth()-8,y0+3,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+/*JFB MFC filter edit box instead
+		if (g_snmLogo && (x0 + g_snmLogo->getWidth() < _r.right - 5)) {
+			int y = _r.top + int(h/2 - g_snmLogo->getHeight()/2 + 0.5);
+			LICE_Blit(bm,g_snmLogo,_r.right-g_snmLogo->getWidth()-8,y,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+		}
+*/
 	}
 }
 
@@ -1130,11 +1381,23 @@ int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_PAINT:
 		{
+#ifdef _SNM_THEMABLE
+			int winCol = GSC_mainwnd(COLOR_WINDOW);
+			if (m_lastThemeBrushColor != winCol) 
+			{
+				m_lastThemeBrushColor = winCol;
+				HWND hl = GetDlgItem(m_hwnd, IDC_LIST);
+				ListView_SetBkColor(hl, winCol);
+				ListView_SetTextBkColor(hl, winCol);
+				ListView_SetTextColor(hl, GSC_mainwnd(COLOR_BTNTEXT));
+			}
+#endif
 			RECT r;
 			GetClientRect(m_hwnd,&r);	
 			m_parentVwnd.SetPosition(&r);
 			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
 			DrawControls(&m_vwnd_painter, r, &m_parentVwnd);
+			m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
 			m_vwnd_painter.PaintEnd();
 		}
 		break;
@@ -1152,6 +1415,17 @@ int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_MOUSEMOVE:
 			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
+#ifdef _SNM_THEMABLE
+		case WM_CTLCOLOREDIT:
+		{
+			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT) || (HWND)lParam == GetDlgItem(m_hwnd, IDC_FILTER))
+			{
+				SetBkColor((HDC)wParam, GSC_mainwnd(COLOR_WINDOW));
+				SetTextColor((HDC)wParam, GSC_mainwnd(COLOR_BTNTEXT));
+				return (INT_PTR)SNM_GetThemeBrush();
+			}
+		}
+#endif
 	}
 	return 0;
 }
@@ -1377,7 +1651,7 @@ void OpenResourceView(COMMAND_T* _ct)
 			g_type = (int)_ct->user;
 		g_pResourcesWnd->Show((prevType == (int)_ct->user) /* i.e toggle */, true);
 		g_pResourcesWnd->SetType((int)_ct->user);
-		SetFocus(GetDlgItem(g_pResourcesWnd->GetHWND(), IDC_FILTER));
+//		SetFocus(GetDlgItem(g_pResourcesWnd->GetHWND(), IDC_FILTER));
 	}
 }
 
@@ -1394,7 +1668,7 @@ void ClearSlotPrompt(COMMAND_T* _ct) {
 // FileSlotList
 ///////////////////////////////////////////////////////////////////////////////
 
-//returns -1 on cancel
+// returns -1 on cancel
 int FileSlotList::PromptForSlot(const char* _title)
 {
 	int slot = -1;
@@ -1437,7 +1711,7 @@ void FileSlotList::ClearSlotPrompt(COMMAND_T* _ct) {
 	else ClearSlot(slot);
 }
 
-// Returns false if cancelled
+// returns false if cancelled
 bool FileSlotList::BrowseSlot(int _slot, char* _fn, int _fnSz)
 {
 	bool ok = false;
@@ -1473,8 +1747,8 @@ bool FileSlotList::GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg
 		}
 		else
 		{
-			GetFullPath(_slot, _fn, _fnSz);
-			ok = FileExistsErrMsg(_fn, _errMsg);
+			if (GetFullPath(_slot, _fn, _fnSz))
+				ok = FileExistsErrMsg(_fn, _errMsg);
 		}
 	}
 	return ok;
@@ -1485,8 +1759,7 @@ void FileSlotList::EditSlot(int _slot)
 	if (_slot >= 0 && _slot < GetSize())
 	{
 		char fullPath[BUFFER_SIZE] = "";
-		GetFullPath(_slot, fullPath, BUFFER_SIZE);
-		if (FileExists(fullPath))
+		if (GetFullPath(_slot, fullPath, BUFFER_SIZE) && FileExists(fullPath))
 		{
 #ifdef _WIN32
 			WinSpawnNotepad(fullPath);

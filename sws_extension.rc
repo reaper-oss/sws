@@ -924,7 +924,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | WS_BORDER,6,22,487,121
     EDITTEXT        IDC_EDIT,110,40,59,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | NOT WS_BORDER
-    EDITTEXT        IDC_FILTER,113,5,80,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_FILTER,413,5,80,12,ES_AUTOHSCROLL | NOT WS_TABSTOP
 END
 
 IDD_SNM_NOTES_HELP DIALOGEX 0, 0, 281, 125
@@ -1624,7 +1624,8 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

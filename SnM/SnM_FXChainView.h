@@ -36,17 +36,23 @@
 #define SNM_FILESLOT_MAX_ITEMTK_PROPS	12
 #endif
 
-class SNM_ResourceView : public SNM_FastListView
+class SNM_ResourceView : public SWS_ListView
 {
 public:
 	SNM_ResourceView(HWND hwndList, HWND hwndEdit);
-
 protected:
 	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
 	void SetItemText(LPARAM item, int iCol, const char* str);
 	void OnItemDblClk(LPARAM item, int iCol);
 	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
 	void OnBeginDrag(LPARAM item);
+};
+
+// used if more than NB_SLOTS_FAST_LISTVIEW slots are loaded
+class SNM_FastResourceView : public SNM_ResourceView {
+public:
+	SNM_FastResourceView(HWND hwndList, HWND hwndEdit) : SNM_ResourceView(hwndList, hwndEdit) {}
+	virtual void Update();
 };
 
 class SNM_ResourceWnd : public SWS_DockWnd
@@ -78,6 +84,7 @@ protected:
 	int m_previousType;
 
 	// WDL UI
+	int m_lastThemeBrushColor;
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
 	WDL_VirtualComboBox m_cbType; // common to all 
@@ -88,6 +95,8 @@ protected:
 	WDL_VirtualIconButton m_btnItemTakeDetails;
 	WDL_VirtualIconButton m_btnItemTakeProp[SNM_FILESLOT_MAX_ITEMTK_PROPS];
 #endif
+	WDL_VirtualStaticText m_txtDblType;
+	WDL_VirtualStaticText m_txtDblTo;
 };
 
 
@@ -141,10 +150,13 @@ class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 		}
 		return -1;
 	}
-	void GetFullPath(int _slot, char* _fullFn, int _fullFnSz) {
+	bool GetFullPath(int _slot, char* _fullFn, int _fullFnSz) {
 		PathSlotItem* item = Get(_slot);
-		if (item)
+		if (item) {
 			GetFullResourcePath(m_resDir.Get(), item->m_shortPath.Get(), _fullFn, _fullFnSz);
+			return true;
+		}
+		return false;
 	};
 	bool SetFromFullPath(int _slot, const char* _fullPath)	{
 		PathSlotItem* item = Get(_slot);

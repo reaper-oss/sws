@@ -122,10 +122,12 @@ protected:
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	// WDL UI
+	int m_lastThemeBrushColor;
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
 	WDL_VirtualComboBox m_cbConfig, m_cbInputTr;
-	WDL_VirtualIconButton m_btnEnable, m_btnAutoRcv, m_btnMuteOthers, m_btnAutoSelect;
+	WDL_VirtualIconButton m_btnEnable, m_btnMuteOthers, m_btnAutoSelect;
+	WDL_VirtualStaticText m_txtConfig, m_txtInputTr;
 };
 
 class SNM_MidiLiveScheduledJob : public SNM_ScheduledJob {

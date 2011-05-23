@@ -29,8 +29,8 @@
 // - action_help_t (even if not used yet ?)
 // - drag'n'drop text
 // - undo on *each* key stroke.. hum.. 
-//   => fills undo history (+ can't restore caret pos.) but it fixes:
-//   * SaveExtensionConfig() not called if no proj mods but notes may have been added..
+//   => it fills the undo history (+ can't restore caret pos.) but it fixes:
+//   * SaveExtensionConfig() that is not called if no proj mods but notes may have been added..
 //   * project switches
 // - take changed => title not updated
 
@@ -70,12 +70,11 @@ SNM_NotesHelpWnd* g_pNotesHelpWnd = NULL;
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
 SWSProjConfig<WDL_String> g_prjNotes;
 
-//JFB TODO? member attributes?
 int g_bDocked = -1, g_bLastDocked = 0; 
 char g_locked = 1;
 char g_lastText[MAX_HELP_LENGTH];
 
-// action help tracking
+// Action help tracking
 //JFB TODO: cleanup when we'll be able to access all sections & custom ids
 int g_lastActionListSel = -1;
 DWORD g_lastActionListCmd = 0;
@@ -620,59 +619,42 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 	if (bm)
 	{
 		LICE_CachedFont* font = SNM_GetThemeFont();
-		int x0=_r.left+10; int y0=_r.top+5;
-		int w=25, h=25; //default width/height
+		IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);// returns the whole icon theme (icontheme.h) and the size
+		int x0=_r.left+10, h=35;
 
 		// Lock button
-		IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);// returns the whole icon theme (icontheme.h) and the size
 		WDL_VirtualIconButton* btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_LOCK);
 		if (btnVwnd)
 		{
-			WDL_VirtualIconButton_SkinConfig* img=NULL;
-			img = it ? &(it->toolbar_lock[!g_locked]) : NULL;
-			if (img) {
+			WDL_VirtualIconButton_SkinConfig* img = it ? &(it->toolbar_lock[!g_locked]) : NULL;
+			if (img)
 				btnVwnd->SetIcon(img);
-				w = img->image->getWidth() / 3;
-				h = img->image->getHeight();
-			}
 			else {
 				btnVwnd->SetTextLabel(g_locked ? "Unlock" : "Lock", 0, font);
 				btnVwnd->SetForceBorder(true);
-				w = 50;
 			}
-
-//JFB			RECT tr2={x0,y0,x0+w,y0+h};
-			RECT tr2={x0, y0 - (img ? 2:-3), x0 + w, y0 - (img ? 2:1) + h};
-			btnVwnd->SetPosition(&tr2);
-			x0 += 5+w;
-			w=25, h=25; // restore default width/height
+			if (!WDL_VWndAutoHPos(btnVwnd, NULL, &_r, &x0, _r.top, h))
+				return;
 		}
 
-		// Dropdown
 		WDL_VirtualComboBox* cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_TYPE);
-		if (cbVwnd)
-		{
-			x0 += 5;
-			RECT tr2={x0,y0+3,x0+98,y0+h-2};
-			x0 = tr2.right+5;
-			cbVwnd->SetPosition(&tr2);
+		if (cbVwnd) {
 			cbVwnd->SetFont(font);
+			if (!WDL_VWndAutoHPos(cbVwnd, NULL, &_r, &x0, _r.top, h))
+				return;
 		}
 
 		// online help
 		btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_ALR);
-		if (btnVwnd)
-		{
+		if (btnVwnd) {
+			btnVwnd->SetVisible(g_pNotesHelpWnd->GetType() == ACTION_HELP);
 			if (g_pNotesHelpWnd->GetType() == ACTION_HELP)
 			{
-				x0 += 5;
-				RECT tr2={x0,y0+3,x0+30,y0+h-1};
-				x0 = tr2.right+5;
-				btnVwnd->SetPosition(&tr2);
-				btnVwnd->SetTextLabel("ALR", 0, font);
+				btnVwnd->SetTextLabel("ALR Wiki", 0, font);
 				btnVwnd->SetForceBorder(true);
+				if (!WDL_VWndAutoHPos(btnVwnd, NULL, &_r, &x0, _r.top, h, 5))
+					return;
 			}
-			btnVwnd->SetVisible(g_pNotesHelpWnd->GetType() == ACTION_HELP);
 		}
 
 		// Label
@@ -711,20 +693,16 @@ static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentV
 					EnumProjects(-1, str, 512);
 					break;
 			}
-			txtVwnd->SetText(str);
-
-			x0 += 5;
-			RECT tr2={x0,y0,_r.right-(g_snmLogo?g_snmLogo->getWidth():0)-8-8,y0+h};
-			x0 = tr2.right+5;
-			txtVwnd->SetPosition(&tr2);
 			txtVwnd->SetFont(font);
+			txtVwnd->SetText(str);
+			if (!WDL_VWndAutoHPos(txtVwnd, NULL, &_r, &x0, _r.top, h))
+				return;
 		}
 
-	    _painter->PaintVirtWnd(_parentVwnd);
-
-//		if ((_r.right - _r.left) > (x0+g_snmLogo->getWidth()))
-		if (g_snmLogo && (_r.right - _r.left) > 300)
-			LICE_Blit(bm,g_snmLogo,_r.right-g_snmLogo->getWidth()-8,y0+3,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+		if (g_snmLogo && (x0 + g_snmLogo->getWidth() < _r.right - 5)) {
+			int y = _r.top + int(h/2 - g_snmLogo->getHeight()/2 + 0.5);
+			LICE_Blit(bm,g_snmLogo,_r.right-g_snmLogo->getWidth()-8,y,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+		}
 	}
 }
 
@@ -736,9 +714,10 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			RECT r;
 			GetClientRect(m_hwnd,&r);		
-	        m_parentVwnd.SetPosition(&r);
+			m_parentVwnd.SetPosition(&r);
 			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
 			DrawControls(&m_vwnd_painter, r, &m_parentVwnd);
+			m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
 			m_vwnd_painter.PaintEnd();
 		}
 		break;
@@ -756,6 +735,17 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_MOUSEMOVE:
 			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
+#ifdef _SNM_THEMABLE
+		case WM_CTLCOLOREDIT:
+		{
+			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT))
+			{
+				SetBkColor((HDC)wParam, GSC_mainwnd(COLOR_WINDOW));
+				SetTextColor((HDC)wParam, GSC_mainwnd(COLOR_BTNTEXT));
+				return (INT_PTR)SNM_GetThemeBrush();
+			}
+		}
+#endif
 	}
 	return 0;
 }

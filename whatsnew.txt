@@ -1,3 +1,33 @@
+!v2.0.0 #26 (, 2011)
+Merged tiny extension (2 new actions that can help WALTERing themes, see the discussion starting http://forum.cockos.com/showthread.php?p=697224|here|)
++SWS/S&M: Show theme helper (all tracks) - Windows OS only
++SWS/S&M: Show theme helper (selected track) - Windows OS only
+
+Theming updates for all S&M views (Find, Resources, Notes/help and Live Configs):
++Dynamic positioning of themed dropdowns, buttons, etc.. (i.e. no more truncated texts, no mre unaligned components)
++Windows OS: more use of themes' background colors (instead of "white backgrounds")
++Fonts are now updated when switching themes
+
+Added actions:
++SWS/S&M: Set selected tracks MIDI input to all channels
++SWS/S&M: Set selected tracks MIDI input to channel n - where 'n' is in [1; 16]
++Issue 291: SWS/S&M: Map selected tracks MIDI input to source channel
++Issue 291: SWS/S&M: Map selected tracks MIDI input to channel n - where 'n' is in [1; 16]
+
+S&M Resource view updates:
++New option (in popup menu) to filter the view by comments or paths
++Switch to "fast listview" mode only if there are more than 500 slots
+
+S&M Find updates: 
++Issue 298: move view to found item (more to come..)
++Use text buttons rather than icons (looked bad with some themes)
++Red "Not found!" message
+
+House cleaning:
++S&M Live Configs: dropped OSX support for user FX presets (=> Windows OS only)
++Removed "SWS/S&M: Close all routing windows"
++Removed "SWS/S&M: Close all envelope windows"
+
 !v2.0.0 #25 (May 22, 2011)
 Issue 273: New actions for moving the edit cursor:
 +SWS: Move cursor left/right 1 sample (on grid)

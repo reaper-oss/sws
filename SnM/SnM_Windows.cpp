@@ -209,13 +209,13 @@ HWND GetActionListBox(char* _currentSection, int _sectionMaxSize)
 // APIs since REAPER v3.41, thanks Cockos!)
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef _SNM_MISC
 #ifdef _WIN32
 
 bool toggleShowHideWin(const char * _title)
 {
 	HWND w = SearchWindow(_title);
-	if (w != NULL)
-	{
+	if (w != NULL) {
 		ShowWindow(w, IsWindowVisible(w) ? SW_HIDE : SW_SHOW);
 		return true;
 	}
@@ -225,8 +225,7 @@ bool toggleShowHideWin(const char * _title)
 bool closeWin(const char * _title)
 {
 	HWND w = SearchWindow(_title);
-	if (w != NULL)
-	{
+	if (w != NULL) {
 		SendMessage(w, WM_SYSCOMMAND, SC_CLOSE, 0);
 		return true;
 	}
@@ -289,7 +288,7 @@ void toggleAllEnvWindows(COMMAND_T * _ct) {
 }
 
 #endif
-
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // FX chain windows: show/hide

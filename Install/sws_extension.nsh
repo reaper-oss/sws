@@ -34,6 +34,7 @@ Section "Extension DLL" extension_id
   Delete "$INSTDIR\Plugins\reaper_FNG_Extension.dll"
   Delete "$INSTDIR\Plugins\reaper_fingers.dll"
   Delete "$INSTDIR\Plugins\reaper_dragzoom.dll"
+  Delete "$INSTDIR\Plugins\reaper_WT_InTheSky.dll"
   File ${OUTPUTFILE}
   Abort:
 SectionEnd

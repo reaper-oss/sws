@@ -30,14 +30,21 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// WDL UIs
+// Themed UIs
 ///////////////////////////////////////////////////////////////////////////////
+
+LICE_CachedFont* g_themeFont = NULL;
+int g_lastThemeFontHeight = -1;
+LICE_pixel g_lastThemeFontColor = 0;
+//CHAR g_lastThemeFontFaceName[LF_FACESIZE] = "";
 
 LICE_CachedFont* SNM_GetThemeFont()
 {
-	static LICE_CachedFont themeFont;
 	int sz;
 	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
+
+/*JFB old code: static font KO when REAPER theme was changed
+	static LICE_CachedFont themeFont;
 	if (!themeFont.GetHFont())
 	{
 		LOGFONT lf = {
@@ -49,190 +56,179 @@ LICE_CachedFont* SNM_GetThemeFont()
 		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
 	}
 	themeFont.SetBkMode(TRANSPARENT);
-	if (ct)	
+	if (ct)
 		themeFont.SetTextColor(LICE_RGBA_FROMNATIVE(ct->main_text,255));
 	else 
 		themeFont.SetTextColor(LICE_RGBA(255,255,255,255));
 	return &themeFont;
+*/
+	if (ct)
+	{
+		LICE_pixel col = LICE_RGBA_FROMNATIVE(ct->main_text,255);
+		if (ct->mediaitem_font.lfHeight != g_lastThemeFontHeight
+			|| col != g_lastThemeFontColor 
+//			|| strcmp(ct->mediaitem_font.lfFaceName, g_lastThemeFontFaceName)
+			)
+		{
+			if (g_themeFont)
+			{
+				delete g_themeFont;
+				g_themeFont = NULL;
+			}
+			g_themeFont = new LICE_CachedFont();
+
+			LOGFONT lf = ct->mediaitem_font;
+//			strcpy(g_lastThemeFontFaceName, lf.lfFaceName);
+			g_lastThemeFontHeight = lf.lfHeight;
+			g_lastThemeFontColor = col;
+			g_themeFont->SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
+			g_themeFont->SetBkMode(TRANSPARENT);
+			g_themeFont->SetTextColor(col);
+		}
+	}
+	// Error case: best effort
+	else
+	{
+		static LICE_CachedFont themeFont;
+		if (!themeFont.GetHFont())
+		{
+			LOGFONT lf = {
+				14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,
+				CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
+			};
+			themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
+		}
+		themeFont.SetBkMode(TRANSPARENT);
+		themeFont.SetTextColor(LICE_RGBA(255,255,255,255));
+		return &themeFont;
+	}
+	return g_themeFont;
 }
 
+HBRUSH g_hb = NULL;
+int g_lastThemeBrushColor = -1;
 
-///////////////////////////////////////////////////////////////////////////////
-// SNM_FastListView
-// "Brutal force" update to make list views' updates run much faster, but 
-// subbtle thing like selection restorations aren't managed anymore..
-///////////////////////////////////////////////////////////////////////////////
-
-void SNM_FastListView::Update()
+HBRUSH SNM_GetThemeBrush()
 {
-	// Fill in the data by pulling it from the derived class
-	if (m_iEditingItem == -1 && !m_bDisableUpdates)
+	if (g_lastThemeBrushColor != GSC_mainwnd(COLOR_WINDOW)) 
 	{
-		m_bDisableUpdates = true;
-		char str[256];
-
-		WDL_TypedBuf<LPARAM> items;
-		GetItemList(&items);
-
-/*JFB original code
-		// Check for deletions - items in the lstwnd are quite likely out of order so gotta do a full O(n^2) search
-		int lvItemCount = ListView_GetItemCount(m_hwndList);
-		for (int i = 0; i < lvItemCount; i++)
-		{
-			LPARAM item = GetListItem(i);
-			bool bFound = false;
-			for (int j = 0; j < items.GetSize(); j++)
-				if (items.Get()[j] == item)
-				{
-					bFound = true;
-					break;
-				}
-
-			if (!bFound)
-			{
-				ListView_DeleteItem(m_hwndList, i--);
-				lvItemCount--;
-			}
+		if (g_hb) {
+			DeleteObject(g_hb);
+			g_hb = NULL;
 		}
-
-		// Check for additions
-		lvItemCount = ListView_GetItemCount(m_hwndList);
-		for (int i = 0; i < items.GetSize(); i++)
-		{
-			bool bFound = false;
-			int j;
-			for (j = 0; j < lvItemCount; j++)
-			{
-				if (items.Get()[i] == GetListItem(j))
-				{
-					bFound = true;
-					break;
-				}
-			}
-
-			// Update the list, no matter what, because text may have changed
-			LVITEM item;
-			item.mask = 0;
-			int iNewState = GetItemState(items.Get()[i]);
-			if (iNewState >= 0)
-			{
-				int iCurState = bFound ? ListView_GetItemState(m_hwndList, j, LVIS_SELECTED | LVIS_FOCUSED) : 0;
-				if (iNewState && !(iCurState & LVIS_SELECTED))
-				{
-					item.mask |= LVIF_STATE;
-					item.state = LVIS_SELECTED;
-					item.stateMask = LVIS_SELECTED;
-				}
-				else if (!iNewState && (iCurState & LVIS_SELECTED))
-				{
-					item.mask |= LVIF_STATE;
-					item.state = 0;
-					item.stateMask = LVIS_SELECTED | ((iCurState & LVIS_FOCUSED) ? LVIS_FOCUSED : 0);
-				}
-			}
-
-			item.iItem = j;
-			item.pszText = str;
-
-			int iCol = 0;
-			for (int k = 0; k < m_iCols; k++)
-				if (m_pCols[k].iPos != -1)
-				{
-					item.iSubItem = iCol;
-					GetItemText(items.Get()[i], k, str, 256);
-					if (!iCol && !bFound)
-					{
-						item.mask |= LVIF_PARAM | LVIF_TEXT;
-						item.lParam = items.Get()[i];
-						ListView_InsertItem(m_hwndList, &item);
-						lvItemCount++;
-					}
-					else
-					{
-						char curStr[256];
-						ListView_GetItemText(m_hwndList, j, iCol, curStr, 256);
-						if (strcmp(str, curStr))
-							item.mask |= LVIF_TEXT;
-						if (item.mask)
-						{
-							// Only set if there's changes
-							// May be less efficient here, but less messages get sent for sure!
-							ListView_SetItem(m_hwndList, &item);
-						}
-					}
-					item.mask = 0;
-					iCol++;
-				}
-		}
-*/
-
-//JFB mod -------------------------------------------------------------------->
-		ListView_DeleteAllItems(m_hwndList);
-		for (int i = 0; i < items.GetSize(); i++)
-		{
-			LVITEM item;
-			item.mask = 0;
-			item.iItem = i;
-			item.pszText = str;
-
-			int iCol = 0;
-			for (int k = 0; k < m_iCols; k++)
-				if (m_pCols[k].iPos != -1)
-				{
-					item.iSubItem = iCol;
-					GetItemText(items.Get()[i], k, str, 256);
-					if (!iCol)
-					{
-						item.mask |= LVIF_PARAM | LVIF_TEXT;
-						item.lParam = items.Get()[i];
-						ListView_InsertItem(m_hwndList, &item);
-					}
-					else
-					{
-						item.mask |= LVIF_TEXT;
-						ListView_SetItem(m_hwndList, &item);
-					}
-					item.mask = 0;
-					iCol++;
-				}
-		}
-//JFB mod <--------------------------------------------------------------------
-
-		ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
-		int iCol = abs(m_iSortCol) - 1;
-		iCol = DataToDisplayCol(iCol) + 1;
-		if (m_iSortCol < 0)
-			iCol = -iCol;
-		SetListviewColumnArrows(iCol);
-
-#ifdef _WIN32
-		if (m_hwndTooltip)
-		{
-			TOOLINFO ti = { sizeof(TOOLINFO), };
-			ti.lpszText = str;
-			ti.hwnd = m_hwndList;
-			ti.uFlags = TTF_SUBCLASS;
-			ti.hinst  = g_hInst;
-
-			// Delete all existing tools
-			while (SendMessage(m_hwndTooltip, TTM_ENUMTOOLS, 0, (LPARAM)&ti))
-				SendMessage(m_hwndTooltip, TTM_DELTOOL, 0, (LPARAM)&ti);
-
-			RECT r;
-			// Add tooltips after sort
-			for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
-			{
-				// Get the rect of the line
-				ListView_GetItemRect(m_hwndList, i, &r, LVIR_BOUNDS);
-				memcpy(&ti.rect, &r, sizeof(RECT));
-				ti.uId = i;
-				GetItemTooltip(GetListItem(i), str, 100);
-				SendMessage(m_hwndTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
-			}
-		}
-#endif
-		m_bDisableUpdates = false;
+		g_lastThemeBrushColor = GSC_mainwnd(COLOR_WINDOW);
+		g_hb = (HBRUSH)CreateSolidBrush(g_lastThemeBrushColor);
 	}
+	return g_hb;
+}
+
+LICE_IBitmap* g_snmLogo = NULL;
+
+LICE_IBitmap* SNM_GetThemeLogo()
+{
+	if (!g_snmLogo)
+	{
+#ifdef _WIN32
+		g_snmLogo = LICE_LoadPNGFromResource(g_hInst,IDB_SNM,NULL);
+#else
+		// SWS doesn't work, sorry. :( 
+		//g_snmLogo =  LICE_LoadPNGFromNamedResource("SnM.png",NULL);
+		g_snmLogo = NULL;
+#endif
+	}
+	return g_snmLogo;
+}
+
+// _x: I/O param that gets modified for the next WDL_VWnd to place in the panel
+// _h: height of the panel
+// returns false if display issue (hidden)
+bool WDL_VWndAutoHPos(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep)
+{
+	if (_c)
+	{
+		if (!_h)
+		{
+			_c->SetVisible(false);
+			if (_tiedComp) _tiedComp->SetVisible(false);
+			return false;
+		}
+
+		int width=0, height=_h;
+		bool txt = false;
+		if (!strcmp(_c->GetType(), "vwnd_combobox"))
+		{
+			WDL_VirtualComboBox* cb = (WDL_VirtualComboBox*)_c;
+			for (int i=0; i < cb->GetCount(); i++) {
+				RECT tr = {0,0,0,0};
+				cb->GetFont()->DrawText(NULL, cb->GetItem(i), -1, &tr, DT_CALCRECT);
+				width = max(width, tr.right);
+				height = tr.bottom; 
+			}
+/*JFB could be better??? anyway, InvalidateRect/RequestRedraw issue..
+			RECT tr = {0,0,0,0};
+			cb->GetFont()->DrawText(NULL, cb->GetItem(cb->GetCurSel()), -1, &tr, DT_CALCRECT);
+			width = tr.right;
+			height = tr.bottom; 
+*/
+			height = height + int(height/2 + 0.5);
+			width += 2*height; // 2*height for the arrow zone (square)
+		}
+		else if (!strcmp(_c->GetType(), "vwnd_statictext"))
+		{
+			txt = true;
+			WDL_VirtualStaticText* txt = (WDL_VirtualStaticText*)_c;
+			RECT tr = {0,0,0,0};
+			txt->GetFont()->DrawText(NULL, txt->GetText(), -1, &tr, DT_CALCRECT);
+			width = tr.right;
+		}
+		else if (!strcmp(_c->GetType(), "vwnd_iconbutton"))
+		{
+			WDL_VirtualIconButton* btn = (WDL_VirtualIconButton*)_c;
+			WDL_VirtualIconButton_SkinConfig* img = btn->GetIcon();
+			if (img) {
+				width = img->image->getWidth() / 3;
+				height = img->image->getHeight();
+			}
+			else if (btn->GetFont())
+			{
+				RECT tr = {0,0,0,0};
+				btn->GetFont()->DrawText(NULL, btn->GetTextLabel(), -1, &tr, DT_CALCRECT);
+				height = tr.bottom + int(tr.bottom/2 + 0.5);
+				width = tr.right + height; // +height for some air
+				if (btn->GetCheckState() != -1)
+					width += tr.bottom; // for the tick zone
+			}
+		}
+
+		if (/*!width || !height ||*/ height > _h ||
+			(!txt && (*_x + width > _r->right - 5))) // hide if not text ctl and if larger than display rect
+		{ 
+			_c->SetVisible(false);
+			if (_tiedComp) _tiedComp->SetVisible(false);
+			return false;
+		}
+
+		_y += int(_h/2 - height/2 + 0.5);
+		RECT tr = {*_x, _y, *_x + width, _y+height};
+		_c->SetPosition(&tr);
+		*_x = tr.right+_xStep;
+		_c->SetVisible(true);
+		return true;
+	}
+	return false;
+}
+
+void SNM_UIInit() {
+	SNM_GetThemeLogo(); // force initial S&M logo loading..
+}
+
+void SNM_UIExit() {
+	if (g_themeFont)
+		delete g_themeFont;
+	if (g_hb)
+		DeleteObject(g_hb);
+	if (g_snmLogo)
+		delete g_snmLogo;
 }
 
 

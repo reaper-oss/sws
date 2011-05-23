@@ -485,8 +485,8 @@ void copyFXChainSlotToClipBoard(int _slot)
 	if (_slot >= 0 && _slot < g_fxChainFiles.GetSize()) 
 	{
 		char fullPath[BUFFER_SIZE] = "";
-		g_fxChainFiles.GetFullPath(_slot, fullPath, BUFFER_SIZE);
-		LoadChunk(fullPath, &g_fXChainClipboard);
+		if (g_fxChainFiles.GetFullPath(_slot, fullPath, BUFFER_SIZE))
+			LoadChunk(fullPath, &g_fXChainClipboard);
 	}
 }
 

@@ -746,6 +746,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			Update();
 			break;
 		}
+#ifdef _WIN32
 		case (IDC_FILTER | (EN_SETFOCUS << 16)):
 		{
 			HWND hFilt = GetDlgItem(m_hwnd, IDC_FILTER);
@@ -764,6 +765,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				SetWindowText(hFilt, FILTER_DEFAULT_STR);
 			break;
 		}
+#endif
 
 		// ***** Common *****
 		case ADD_SLOT_MSG:

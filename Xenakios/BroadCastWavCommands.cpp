@@ -49,60 +49,31 @@ void SanitizeString(char *StringToSanitize)
 
 void DoRenameTakesWithBWAVDesc(COMMAND_T*)
 {
-// #define OVECCOUNT 30;
-	MediaTrack* CurTrack;
-	MediaItem* CurItem;
-	MediaItem_Take* CurTake;
-	PCM_source *ThePCMSource;
-	bool ItemSelected;
-	int numItems;
-	int numTakes;
-	char Buf[8192];
-	int sz=8192;
-	int trackID;
-	int itemID;
-	for (trackID=0;trackID<GetNumTracks();trackID++)
+	WDL_TypedBuf<MediaItem*> selectedItems;
+	SWS_GetSelectedMediaItems(&selectedItems);
+	
+	for (int i = 0; i < selectedItems.GetSize(); i++)
 	{
-		CurTrack=CSurf_TrackFromID(trackID+1,FALSE);
-		numItems=GetTrackNumMediaItems(CurTrack);
-		for (itemID=0;itemID<numItems;itemID++)
+		for (int iTake = 0; iTake < GetMediaItemNumTakes(selectedItems.Get()[i]); iTake++)
 		{
-			CurItem = GetTrackMediaItem(CurTrack,itemID);
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
+			MediaItem_Take* curTake = GetMediaItemTake(selectedItems.Get()[i], iTake);
+			PCM_source* pSrc = (PCM_source*)GetSetMediaItemTakeInfo(curTake, "P_SOURCE", NULL);
+			if (!pSrc) 
+				break;
+			
+			char buf[8192];
+			int sz = 8192;
+			sz = pSrc->Extended(PCM_SOURCE_EXT_GETMETADATA, (void*)"DESC", buf, (void*)sz);
+			if (sz > 0 && buf[0])
 			{
-				//
-				numTakes=GetMediaItemNumTakes(CurItem);
-				if (numTakes>0)
-				{
-					//
-					int takeInd;
-					for (takeInd=0;takeInd<numTakes;takeInd++)
-					{
-						//
-						sz=8192;
-						CurTake=GetMediaItemTake(CurItem,takeInd);
-						ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-						if (!ThePCMSource) 
-							break;
-
-						sz=ThePCMSource->Extended(PCM_SOURCE_EXT_GETMETADATA,(void*)"DESC",Buf,(void *)sz);
-						if (sz>0)
-						{
-							//MessageBox(g_hwndParent,Buf,"Broadcast Wave Desc:",MB_OK); 
-							SanitizeString(Buf);
-							GetSetMediaItemTakeInfo(CurTake,"P_NAME",Buf);
-							
-							//delete Newbuf;
-							
-						}
-						else MessageBox(g_hwndParent,"Take source media has no Broadcast Info Description","Info",MB_OK);
-					}
-				}
+				SanitizeString(buf);
+				GetSetMediaItemTakeInfo(curTake, "P_NAME", buf);
 			}
+			else
+				MessageBox(g_hwndParent,"Take source media has no Broadcast Info Description","Info",MB_OK);
 		}
 	}	
-	Undo_OnStateChangeEx("Rename takes with BWAV description",4,-1);
+	Undo_OnStateChangeEx("Rename takes with BWAV description", UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 
@@ -321,72 +292,74 @@ void DoRenameTakeDlg(COMMAND_T*)
 
 void DoOpenRPPofBWAVdesc(COMMAND_T*)
 {
-	vector<MediaItem_Take*> TheTakes;
-	XenGetProjectTakes(TheTakes,true,true);
-	if (TheTakes.size()==0)
+	WDL_TypedBuf<MediaItem*> selectedItems;
+	SWS_GetSelectedMediaItems(&selectedItems);
+	if (selectedItems.GetSize() != 1)
 	{
-		MessageBox(g_hwndParent,"No item selected!","Error",MB_OK);
+		MessageBox(g_hwndParent, "Please select exactly one item.", "Error", MB_OK);
 		return;
 	}
-	if (TheTakes.size()>1) 
+	
+	MediaItem_Take* take = GetMediaItemTake(selectedItems.Get()[0], -1);
+	if (!take)
 	{
-		MessageBox(g_hwndParent,"Only 1 selected item supported!","Error",MB_OK);
+		MessageBox(g_hwndParent, "Active take is empty.", "Error", MB_OK);
 		return;
 	}
-	MediaItem_Take *CurTake;
-	CurTake=TheTakes[0];
-	PCM_source *ThePCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
-	if (ThePCM)
+	
+	PCM_source* pSrc = (PCM_source*)GetSetMediaItemTakeInfo(take, "P_SOURCE", NULL);
+	if (pSrc)
 	{
+		char buf[8192];
 		int sz=8192;
-		char Buf[8192];		
-						
-		sz=ThePCM->Extended(PCM_SOURCE_EXT_GETMETADATA,(void*)"DESC",Buf,(void *)sz);
-		if (sz>0)
+		sz = pSrc->Extended(PCM_SOURCE_EXT_GETMETADATA, (void*)"DESC", buf, (void*)sz);
+		if (sz > 0 && buf[0])
 		{
 			string RPPFileName;
 			string RPPdesc;
-			RPPdesc.assign(Buf);
-			RPPFileName=RPPdesc.substr(4,RPPdesc.size());
+			RPPdesc.assign(buf);
+			RPPFileName = RPPdesc.substr(4, RPPdesc.size());
 			if (FileExists(RPPFileName.c_str()))
 			{
 				char RPPFileNameBuf[1024];
-				sprintf(RPPFileNameBuf,"%s\\reaper.exe \"%s\"",GetExePath(),RPPFileName.c_str());
-				if (!DoLaunchExternalTool(RPPFileNameBuf)) MessageBox(g_hwndParent,"Could not launch REAPER.","Error",MB_OK);
-				
+				sprintf(RPPFileNameBuf,"%s\\reaper.exe \"%s\"", GetExePath(), RPPFileName.c_str());
+				if (!DoLaunchExternalTool(RPPFileNameBuf))
+					MessageBox(g_hwndParent, "Could not launch REAPER.", "Error", MB_OK);
 			}
 			else
 			{
+				bool bRppFound = false;
 				char RppSearchFolderName[1024];
 				if (BrowseForDirectory("Select folder to with RPP files", NULL, RppSearchFolderName, 1024))
 				{
 					vector<string> FoundRPPs;
 					SearchDirectory(FoundRPPs, RppSearchFolderName, "RPP", true);
-					int i;
 					vector<string> FnCompos;
-					SplitFileNameComponents(RPPFileName,FnCompos);
+					SplitFileNameComponents(RPPFileName, FnCompos);
 					bool TheRppWasFound=false;
-					for (i=0;i<(int)FoundRPPs.size();i++)
+					for (int  i = 0; i < (int)FoundRPPs.size(); i++)
 					{
-						int x=(int)FoundRPPs[i].find(FnCompos[1]);
-						if (x!=string::npos)
+						int x = (int)FoundRPPs[i].find(FnCompos[1]);
+						if (x != string::npos)
 						{
 							char RPPFileNameBuf[1024];
-					
-							sprintf(RPPFileNameBuf,"%s\\reaper.exe \"%s\"",GetExePath(),FoundRPPs[i].c_str());
-							if (!DoLaunchExternalTool(RPPFileNameBuf)) MessageBox(g_hwndParent,"Could not launch REAPER.","Error",MB_OK);
-							TheRppWasFound=true;
+ 							sprintf(RPPFileNameBuf, "%s\\reaper.exe \"%s\"", GetExePath(), FoundRPPs[i].c_str());
+							if (!DoLaunchExternalTool(RPPFileNameBuf))
+								MessageBox(g_hwndParent, "Could not launch REAPER.", "Error", MB_OK);
+							bRppFound = true;
 							break;
 						}
 
 					}
-					if (!TheRppWasFound)
+					if (!bRppFound)
 					{
-						MessageBox(g_hwndParent,"RPP was not found from selected folder, please try another folder.","Error",MB_OK);
+						MessageBox(g_hwndParent, "RPP was not found from selected folder, please try another folder.", "Error", MB_OK);
 					}
 				}
 			}
 		}
+		else
+			MessageBox(g_hwndParent, "No BWAV info found in selected take.", "Error", MB_OK);
 	}
 }
 

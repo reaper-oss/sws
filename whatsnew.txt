@@ -1,4 +1,4 @@
-!v2.0.0 #26 (, 2011)
+!v2.0.0 #26 (May 28, 2011)
 Merged tiny extension (2 new actions that can help WALTERing themes, see the discussion starting http://forum.cockos.com/showthread.php?p=697224|here|)
 +SWS/S&M: Show theme helper (all tracks) - Windows OS only
 +SWS/S&M: Show theme helper (selected track) - Windows OS only
@@ -27,6 +27,8 @@ House cleaning:
 +S&M Live Configs: dropped OSX support for user FX presets (=> Windows OS only)
 +Removed "SWS/S&M: Close all routing windows"
 +Removed "SWS/S&M: Close all envelope windows"
+
+Issue 300: Fixed "Open REAPER project in item BWAV info" crash
 
 !v2.0.0 #25 (May 22, 2011)
 Issue 273: New actions for moving the edit cursor:

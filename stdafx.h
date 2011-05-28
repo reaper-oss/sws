@@ -69,6 +69,7 @@
 
 #pragma warning(disable : 4996) // POSIX deprecation warnings
 #pragma warning(disable : 4267) // size_t to int warnings
+#pragma warning(disable : 4244) // __int64 to int warnings
 #include "../WDL/wdltypes.h"
 #include "../WDL/ptrlist.h"
 #include "../WDL/wdlstring.h"

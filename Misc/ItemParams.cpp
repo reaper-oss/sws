@@ -441,7 +441,7 @@ void CrossfadeSelItems(COMMAND_T* t)
 								int iTake;
 								for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
 								{
-									take = GetMediaItemTake(item2, iTake);
+									MediaItem_Take* take = GetMediaItemTake(item2, iTake);
 									if (take && dEdgeAdj > *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL))
 										break;
 								}
@@ -467,7 +467,7 @@ void CrossfadeSelItems(COMMAND_T* t)
 								GetSetMediaItemInfo(item2, "D_SNAPOFFSET", &dSnapOffset2);
 							}
 
-							for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
+							for (int iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
 							{
 								MediaItem_Take* take = GetMediaItemTake(item2, iTake);
 								if (take)

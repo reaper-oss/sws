@@ -435,12 +435,19 @@ void CrossfadeSelItems(COMMAND_T* t)
 						{	// Found a matching item
 							// Need to ensure that there's "room" to move the start of the second item back
 							// Check all of the takes' start offset before doing any "work"
-							int iTake;
-							for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
-								if (dEdgeAdj > *(double*)GetSetMediaItemTakeInfo(GetMediaItemTake(item2, iTake), "D_STARTOFFS", NULL))
-									break;
-							if (iTake < GetMediaItemNumTakes(item2))
-								continue;	// Keep looking
+							// (v3 only, v4 edges can go negative)
+							if (!g_bv4)
+							{
+								int iTake;
+								for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
+								{
+									take = GetMediaItemTake(item2, iTake);
+									if (take && dEdgeAdj > *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL))
+										break;
+								}
+								if (iTake < GetMediaItemNumTakes(item2))
+									continue;	// Keep looking
+							}
 
 							// We're all good, move the edges around and set the crossfades
 							double dLen1 = dEnd1 - dStart1 + dEdgeAdj;

@@ -1,5 +1,5 @@
 /******************************************************************************
-** SNM_ChunkParserPatcher.h - v1.2
+** SNM_ChunkParserPatcher.h - v1.21
 ** Copyright (C) 2008-2011, Jeffos
 **
 **    This software is provided 'as-is', without any express or implied
@@ -46,7 +46,7 @@
 //   (see details there, mods are plainly marked as required by the licensing)
 //
 // Changelog:
-// v1.2
+// v1.21
 // - New helpers, new SNM_COUNT_KEYWORD parsing mode
 // - Inheritance: Commit() & GetChunk() can be overrided
 // - GetSubChunk() now returns the start position of the sub-chunk (or -1 if not found)
@@ -272,7 +272,7 @@ virtual bool Commit(bool _force = false)
 }
 
 const char* GetInfo() {
-	return "SNM_ChunkParserPatcher - v1.2";
+	return "SNM_ChunkParserPatcher - v1.21";
 }
 
 void SetProcessBase64(bool _enable) {
@@ -293,6 +293,7 @@ void CancelUpdates() {
 }
 
 // returns the start position of the sub-chunk or -1 if not found
+// _chunk: output prm, the searched sub-chunk if found
 // _breakKeyword: for optimization, optionnal
 int GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_String* _chunk, const char* _breakKeyword = NULL)
 {
@@ -314,7 +315,9 @@ int GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_String* _c
 	return posStartOfSubchunk;
 }
 
-bool ReplaceSubChunk(const char* _keyword, int _depth, int _occurence, const char* _newSubChunk = "", const char* _breakKeyword = NULL)
+// _newSubChunk: the replacing string (so "" will remove the sub-chunk)
+// returns false if nothing done (e.g. sub-chunk not found)
+bool ReplaceSubChunk(const char* _keyword, int _depth, int _occurence, const char* _newSubChunk, const char* _breakKeyword = NULL)
 {
 	if (_keyword && _depth > 0)
 	{
@@ -323,6 +326,11 @@ bool ReplaceSubChunk(const char* _keyword, int _depth, int _occurence, const cha
 		return (ParsePatch(SNM_REPLACE_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), -1, _occurence, 0, (void*)_newSubChunk, NULL, _breakKeyword) > 0);
 	}
 	return false;
+}
+
+// returns false if nothing done (e.g. sub-chunk not found)
+bool RemoveSubChunk(const char* _keyword, int _depth, int _occurence, const char* _breakKeyword = NULL) {
+	return ReplaceSubChunk(_keyword, _depth, _occurence, "", _breakKeyword);
 }
 
 bool ReplaceLine(int _pos, const char* _str = NULL)

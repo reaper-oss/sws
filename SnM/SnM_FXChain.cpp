@@ -102,9 +102,9 @@ void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly)
 	bool updated = false;
 	if (_chain && _chain->GetLength())
 	{
-		for (int i = 0; i < GetNumTracks(); i++)
+		for (int i = 1; i <= GetNumTracks(); i++) // skip master
 		{
-			MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 			{
 				MediaItem* item = GetTrackMediaItem(tr,j);
@@ -162,9 +162,9 @@ void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly)
 void setTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly)
 {
 	bool updated = false;
-	for (int i = 0; i < GetNumTracks(); i++)
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);
@@ -300,9 +300,9 @@ void pasteTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
 	bool updated = false;
 	if (_chain && _chain->GetLength())
 	{
-		for (int i = 0; i <= GetNumTracks(); i++)
+		for (int i = 0; i <= GetNumTracks(); i++) // include master
 		{
-			MediaTrack* tr = CSurf_TrackFromID(i,false); // include master
+			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			{
 				bool patch = false;
@@ -333,9 +333,9 @@ void pasteTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
 void setTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
 {
 	bool updated = false;
-	for (int i = 0; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++) // include master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i,false); // include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			SNM_FXChainTrackPatcher p(tr);
@@ -350,9 +350,9 @@ void setTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
 // returns the first copied track idx (1-based, 0 = master)
 int copyTrackFXChain(WDL_String* _fxChain, bool _inputFX, int _startTr)
 {
-	for (int i = _startTr; i >= 0 && i <= GetNumTracks(); i++)
+	for (int i = _startTr; i >= 0 && i <= GetNumTracks(); i++) // include master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i,false); // include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			SNM_ChunkParserPatcher p(tr);
@@ -529,16 +529,16 @@ void reassignLearntMIDICh(COMMAND_T* _ct)
 			break;
 	}
 
-	for (int i = 0; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++) // include master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i,false); // include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			SNM_LearnMIDIChPatcher p(tr);
 			switch(prm)
 			{
 				case -2: {
-					int fx = getSelectedFX(tr);
+					int fx = getSelectedTrackFX(tr);
 					if (fx > 0)
 						updated |= p.SetChannel(ch, fx);
 					break;

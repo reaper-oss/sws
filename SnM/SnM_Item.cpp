@@ -28,7 +28,6 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
-#include "SNM_ChunkParserPatcher.h"
 #include "SNM_Chunk.h"
 #include "../Misc/Context.h"
 #include "../Freeze/ItemSelState.h"
@@ -83,9 +82,9 @@ bool deleteMediaItemIfNeeded(MediaItem* _item)
 void splitMidiAudio(COMMAND_T* _ct)
 {
 	bool updated = false;
-	for (int i = 0; i < GetNumTracks(); i++)
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false); 
 		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);
@@ -210,9 +209,9 @@ void copyCutTake(COMMAND_T* _ct)
 void pasteTake(COMMAND_T* _ct)
 {
 	bool updated = false;
-	for (int i = 0; g_takeClipoard.GetLength() && i < GetNumTracks(); i++)
+	for (int i = 1; g_takeClipoard.GetLength() && i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);
@@ -239,7 +238,7 @@ bool isEmptyMidi(MediaItem_Take* _take)
 	if (_take) // a v4 empty take isn't a empty *MIDI* take!
 	{
 		MidiItemProcessor p("S&M");
-		//JFB!!! TODO: Padre's MidiItemProcessor has bugs, e.g. slip edited MIDI items
+		//JFB!!! TODO: replace Padre's MidiItemProcessor which has bugs, e.g. slip edited MIDI items
 		if (_take && p.isMidiTake(_take))
 		{
 			MIDI_eventlist* evts = MIDI_eventlist_Create();
@@ -285,9 +284,9 @@ int buildLanes(const char* _undoTitle, int _mode)
 {
 	int updates = removeEmptyTakes((const char*)NULL, true, false, (_mode==0), (_mode==1));
 	bool badRecPass = false;
-	for (int i = 0; i < GetNumTracks(); i++)
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && _mode || (!_mode && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
 		{
 			WDL_PtrList<void> items;
@@ -325,7 +324,7 @@ int buildLanes(const char* _undoTitle, int _mode)
 				}
 			}
 
-			WDL_PtrList_DeleteOnDestroy<SNM_TakeParserPatcher> ps; // + auto commit on destroy!
+			WDL_PtrList_DeleteOnDestroy<SNM_TakeParserPatcher> ps; // auto commit on destroy!
 			for (int j = 0; j < items.GetSize(); j++)
 			{
 				MediaItem* item = (MediaItem*)items.Get(j);
@@ -458,17 +457,12 @@ bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool
 	return updated;
 }
 
-
-/***********/
-// Commands
-/***********/
-
 void clearTake(COMMAND_T* _ct)
 {
 	bool updated = false;
-	for (int i = 0; i < GetNumTracks(); i++)
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);
@@ -496,7 +490,7 @@ void clearTake(COMMAND_T* _ct)
 						}
 					}
 				}
-				// v3 empty take style
+				// v3 empty take
 				else
 				{
 					SNM_ChunkParserPatcher p(item);
@@ -520,9 +514,9 @@ void moveTakes(COMMAND_T* _ct)
 {
 	bool updated = false;
 	int dir = (int)_ct->user;
-	for (int i = 0; i < GetNumTracks(); i++)
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
@@ -571,9 +565,9 @@ void moveActiveTake(COMMAND_T* _ct)
 {
 	bool updated = false;
 	int dir = (int)_ct->user;
-	for (int i = 0; i < GetNumTracks(); i++)
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
@@ -622,9 +616,9 @@ void buildLanes(COMMAND_T* _ct) {
 void activateLaneFromSelItem(COMMAND_T* _ct)
 {
 	bool updated = false;
-	for (int i = 0; i < GetNumTracks(); i++)
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			// Get the 1st selected + active take
@@ -695,9 +689,9 @@ bool deleteTakeAndMedia(int _mode)
 {
 	bool deleteFileOK = true;
 	WDL_StringKeyedArray<int> removeFiles;
-	for (int i=0; i < GetNumTracks(); i++)
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false);
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		WDL_PtrList<void> removedItems; 
 		bool cancel = false;
 		for (int j=0; !cancel && tr && j < GetTrackNumMediaItems(tr); j++)
@@ -733,11 +727,11 @@ bool deleteTakeAndMedia(int _mode)
 								char buf[BUFFER_SIZE*2];
 
 								if (pcm && pcm->GetFileName() && strlen(pcm->GetFileName())) 
-									sprintf(buf,"[Track %d, item %d] Delete take %d and its media file %s ?", i+1, j+1, originalTkIdx+1, tkDisplayName);
+									sprintf(buf,"[Track %d, item %d] Delete take %d and its media file %s ?", i, j+1, originalTkIdx+1, tkDisplayName);
 								else if (pcm && pcm->GetFileName() && !strlen(pcm->GetFileName())) 
-									sprintf(buf,"[Track %d, item %d] Delete take %d (%s, in-project) ?", i+1, j+1, originalTkIdx+1, tkDisplayName);
+									sprintf(buf,"[Track %d, item %d] Delete take %d (%s, in-project) ?", i, j+1, originalTkIdx+1, tkDisplayName);
 								else 
-									sprintf(buf,"[Track %d, item %d] Delete take %d (empty take) ?", i+1, j+1, originalTkIdx+1); // v3 or v4 empty takes
+									sprintf(buf,"[Track %d, item %d] Delete take %d (empty take) ?", i, j+1, originalTkIdx+1); // v3 or v4 empty takes
 
 								rc = MessageBox(g_hwndParent, buf, "S&M - Delete take and source files (NO UNDO!)", MB_YESNOCANCEL);
 								if (rc == IDCANCEL) {
@@ -755,7 +749,7 @@ bool deleteTakeAndMedia(int _mode)
 							nbRemainingTakes--;
 							if (pcm && pcm->GetFileName() && strlen(pcm->GetFileName()) && FileExists(pcm->GetFileName()))
 							{
-								// set all media offline (yeah, EACH TIME!)
+								// set all media offline (yeah, EACH TIME! Fails otherwise: http://code.google.com/p/sws-extension/issues/detail?id=175#c3)
 								Main_OnCommand(40100,0); 
 								if (SNM_DeleteFile(pcm->GetFileName()))
 								{
@@ -809,7 +803,7 @@ void deleteTakeAndMedia(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 
 // if returns true: callers must use UpdateTimeline() at some point
-bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint)
+bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint, bool _reset)
 {
 	bool updated = false;
 	if (_item)
@@ -821,41 +815,53 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 		if (p.GetTakeChunk(_takeIdx, &takeChunk, &tkPos, &tklen))
 		{
 			SNM_ChunkParserPatcher ptk(&takeChunk);
-			bool takeUpdate = false;
+			bool takeUpdate = false, buildDefaultEnv = false;
 			char vis[2]; strcpy(vis, _vis2);
 
-			// env. already exists
+			// env. already exists?
 			if (strstr(takeChunk.Get(), _envKeyword))
 			{
-				// toggle ?
-				if (!strlen(vis))
+				if (_reset)
 				{
-					char currentVis[32];
-					if (ptk.Parse(SNM_GET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)currentVis) > 0)
-					{
-						// skip if visibility is different from 0 or 1
-						if (!strcmp(currentVis, "1")) strcpy(vis, "0");
-						else if (!strcmp(currentVis, "0")) strcpy(vis, "1");
-					}
-					// just in case..
-					if (!strlen(vis)) 
-						return false;
+					takeUpdate = ptk.RemoveSubChunk(_envKeyword, 1, -1);
+					buildDefaultEnv = true;
 				}
+				else
+				{
+					// toggle ?
+					if (!strlen(vis))
+					{
+						char currentVis[32];
+						if (ptk.Parse(SNM_GET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)currentVis) > 0)
+						{
+							// skip if visibility is different from 0 or 1
+							if (!strcmp(currentVis, "1")) strcpy(vis, "0");
+							else if (!strcmp(currentVis, "0")) strcpy(vis, "1");
+						}
+						// just in case..
+						if (!strlen(vis)) 
+							return false;
+					}
 
-				// prepare the new visibility (in one go)
-				SNM_TakeEnvParserPatcher pEnv(ptk.GetChunk());
-				if (pEnv.SetVis(_envKeyword, atoi(vis))) {
-					takeUpdate = true;
-					takeChunk.Set(pEnv.GetChunk()->Get());
+					// prepare the new visibility (in one go)
+					SNM_TakeEnvParserPatcher pEnv(ptk.GetChunk());
+					if (pEnv.SetVis(_envKeyword, atoi(vis))) {
+						takeUpdate = true;
+						takeChunk.Set(pEnv.GetChunk()->Get());
+					}
 				}
 			}
-			// env. doesn't already exists => build a default one (if needed)
 			else
+				buildDefaultEnv = true;
+
+			// build a default env. (if needed)
+			if (buildDefaultEnv)
 			{						
 				if (!strlen(vis)) 
 					strcpy(vis, "1"); // toggle ?
 				if (!strcmp(vis, "1"))
 				{
+					//JFB last check against REAPER default env. in v4b7
 					//JFB TODO: AppendFormatted (but OSX!)
 					takeChunk.Append("<");
 					takeChunk.Append(_envKeyword);
@@ -882,17 +888,17 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 	return updated;
 }
 
-bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint) 
+bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint, bool _reset) 
 {
 	bool updated = false;
-	for (int i = 0; i < GetNumTracks(); i++)
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
-				updated |= patchTakeEnvelopeVis(item, *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL), _envKeyword, _vis2, _defaultPoint);
+				updated |= patchTakeEnvelopeVis(item, *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL), _envKeyword, _vis2, _defaultPoint, _reset);
 		}
 	}
 
@@ -905,14 +911,11 @@ bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char*
 	return updated;
 }
 
-//JFB!!! TODO: env. to be reseted first (not used yet)
 void panTakeEnvelope(COMMAND_T* _ct) 
 {
 	WDL_String defaultPoint("PT 0.000000 ");
 	defaultPoint.AppendFormatted(128, "%d.000000 0", (int)_ct->user);
-	char* dbg = defaultPoint.Get();
-	// PT 0.000000 -1.000000 0 0 1
-	patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", "1", &defaultPoint);
+	patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", "1", &defaultPoint, true);
 }
 
 void showHideTakeVolEnvelope(COMMAND_T* _ct) 
@@ -922,7 +925,7 @@ void showHideTakeVolEnvelope(COMMAND_T* _ct)
 	if (value >= 0)
 		sprintf(cVis, "%d", value);
 	WDL_String defaultPoint("PT 0.000000 1.000000 0");
-	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint) && value < 0) // toggle
+	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		fakeToggleAction(_ct);
 }
 
@@ -933,7 +936,7 @@ void showHideTakePanEnvelope(COMMAND_T* _ct)
 	if (value >= 0)
 		sprintf(cVis, "%d", value);
 	WDL_String defaultPoint("PT 0.000000 0.000000 0");
-	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint) && value < 0) // toggle
+	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		fakeToggleAction(_ct);
 }
 
@@ -944,7 +947,7 @@ void showHideTakeMuteEnvelope(COMMAND_T* _ct)
 	if (value >= 0)
 		sprintf(cVis, "%d", value);
 	WDL_String defaultPoint("PT 0.000000 1.000000 1");
-	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint) && value < 0) // toggle
+	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		fakeToggleAction(_ct);
 }
 
@@ -957,7 +960,7 @@ void showHideTakePitchEnvelope(COMMAND_T* _ct)
 		if (value >= 0)
 			sprintf(cVis, "%d", value);
 		WDL_String defaultPoint("PT 0.000000 0.000000 0");
-		if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint) && value < 0) // toggle
+		if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false) && value < 0) // toggle
 			fakeToggleAction(_ct);
 	}
 }
@@ -971,7 +974,7 @@ bool ShowTakeEnv(MediaItem_Take* _take, const char* _envKeyword, WDL_String* _de
 	{
 		int idx = getTakeIndex(item, _take);
 		if (idx >= 0) 
-			shown = patchTakeEnvelopeVis(item, idx, _envKeyword , "1", _defaultPoint);
+			shown = patchTakeEnvelopeVis(item, idx, _envKeyword , "1", _defaultPoint, false);
 	}
 	return shown;
 }
@@ -1007,16 +1010,16 @@ bool ShowTakeEnvPitch(MediaItem_Take* _take) {
 #ifdef _SNM_ITT
 void saveItemTakeTemplate(COMMAND_T* _ct)
 {
-	for (int i = 0; i < GetNumTracks(); i++)
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
 				char filename[BUFFER_SIZE] = "", defaultPath[BUFFER_SIZE];
-				//JFB3 TODO: ItemTakeTemplates -> const
+				//JFB!!! TODO: ItemTakeTemplates -> const
 				_snprintf(defaultPath, BUFFER_SIZE, "%s%cItemTakeTemplates", GetResourcePath(), PATH_SLASH_CHAR);
 				if (BrowseForSaveFile("Save item/take template", defaultPath, "", "REAPER item/take template (*.RItemTakeTemplate)\0*.RItemTakeTemplate\0", filename, BUFFER_SIZE))
 				{
@@ -1072,9 +1075,9 @@ void setPan(COMMAND_T* _ct)
 	bool updated = false;
 	double value = (double)((int)_ct->user/100);
 
-	for (int i = 0; i < GetNumTracks(); i++)
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);
@@ -1134,9 +1137,9 @@ void itemSelToolbarPoll()
 		GetVisibleTCPTracks(&trList);
 		bool vertical = (trList.GetSize() > 0);
 
-		for (int i=0; (horizontal || vertical) && i < GetNumTracks(); i++)
+		for (int i=1; (horizontal || vertical) && i <= GetNumTracks(); i++) // skip master
 		{
-			MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 			{
 				MediaItem* item = GetTrackMediaItem(tr,j);
@@ -1230,3 +1233,39 @@ bool itemSelExists(COMMAND_T* _ct) {
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
 	return (g_toolbarItemSel[(int)_ct->user].GetSize() > 0);
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Scroll
+///////////////////////////////////////////////////////////////////////////////
+
+// no undo!
+void scrollToSelItem(MediaItem* _item)
+{
+	if (_item)
+	{
+		// Horizontal scroll to selected item
+		double curPos = GetCursorPosition();
+		SetEditCurPos2(NULL, *(double*)GetSetMediaItemInfo(_item, "D_POSITION", NULL), true, false);
+		SetEditCurPos2(NULL, curPos, false, false);
+
+		// Vertical scroll to selected item
+		MediaTrack* tr = GetMediaItem_Track(_item);
+		if (tr)
+		{
+			SaveSelected();
+			ClearSelected();
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+			Main_OnCommand(40913,0); // scroll to selected track
+			ClearSelected();
+			RestoreSelected();
+		}
+		UpdateTimeline();
+	}
+}
+
+// no undo!
+void scrollToSelItem(COMMAND_T* _ct) {
+	scrollToSelItem(GetSelectedMediaItem(NULL, 0));
+}
+

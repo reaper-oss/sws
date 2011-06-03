@@ -1,5 +1,25 @@
+!v2.0.0 #27 (June , 2011)
 Issue 301: Fixed "Crossfade adjacent selected items" crash
 Issue 302: Fixed "Move right by 1 sample (on grid)" action
+Issue 298: Find "all" now zooms to found items (reminder: find "next/prev" scrolls to the found item)
+
+Added actions:
++SWS/S&M: Toggle all take FX online/offline for selected items
++SWS/S&M: Set all take FX offline for selected items
++SWS/S&M: Set all take FX online for selected items
++SWS/S&M: Toggle all take FX bypass for selected items
++SWS/S&M: Bypass all take FX for selected items
++SWS/S&M: Unbypass all take FX for selected items
++SWS/S&M: Set active take pan envelopes to 100% right
++SWS/S&M: Set active take pan envelopes to 100% left
++SWS/S&M: Set active take pan envelopes to center
++SWS/S&M: Scroll to selected item (no undo)
+
+S&M Resources view:
++Fixed grayed "Add slot" and "Insert slot" popup menu items (since v2.0.0 #26)
++Track templates: auto save now also works with the master track (saving a "master track template" is not possible natively)
++Track templates: applying track templates to the master track is now possible
++Track templates: tweaks (new popup menu items, wordings..)
 
 !v2.0.0 #26 (May 28, 2011)
 Merged tiny extension (2 new actions that can help WALTERing themes, see the discussion starting http://forum.cockos.com/showthread.php?p=697224|here|)

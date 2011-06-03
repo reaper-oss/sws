@@ -64,8 +64,6 @@ public:
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void SelectBySlot(int _slot);
 
-	WDL_String m_filter;
-
 protected:
 	void OnInitDlg();
 	HMENU OnContextMenu(int x, int y);
@@ -73,6 +71,7 @@ protected:
 	int OnKey(MSG* msg, int iKeyState);
 	int GetValidDroppedFilesCount(HDROP _h);
 	void OnDroppedFiles(HDROP _h);
+	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	void FillDblClickTypeCombo();
@@ -82,21 +81,19 @@ protected:
 	void AutoSaveSlots(int _slotPos);
 
 	int m_previousType;
+	bool m_autoSaveTrTmpltWithItemsPref;
+	int m_autoSaveFXChainPref;
+	int m_lastThemeBrushColor;
 
 	// WDL UI
-	int m_lastThemeBrushColor;
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
-	WDL_VirtualComboBox m_cbType; // common to all 
-	WDL_VirtualComboBox m_cbDblClickType; // FX chains & Track templates
-	WDL_VirtualComboBox m_cbDblClickTo; // FX chains only
-	WDL_VirtualIconButton m_btnAutoInsert; // FX chains & Track templates
+	WDL_VirtualComboBox m_cbType, m_cbDblClickType, m_cbDblClickTo;
+	WDL_VirtualIconButton m_btnAutoSave; // FX chains & Track templates
 #ifdef _SNM_ITT
-	WDL_VirtualIconButton m_btnItemTakeDetails;
-	WDL_VirtualIconButton m_btnItemTakeProp[SNM_FILESLOT_MAX_ITEMTK_PROPS];
+	WDL_VirtualIconButton m_btnItemTakeDetails, m_btnItemTakeProp[SNM_FILESLOT_MAX_ITEMTK_PROPS];
 #endif
-	WDL_VirtualStaticText m_txtDblType;
-	WDL_VirtualStaticText m_txtDblTo;
+	WDL_VirtualStaticText m_txtDblClickType, m_txtDblClickTo;
 };
 
 

@@ -33,76 +33,21 @@
 // Themed UIs
 ///////////////////////////////////////////////////////////////////////////////
 
-LICE_CachedFont* g_themeFont = NULL;
-int g_lastThemeFontHeight = -1;
-LICE_pixel g_lastThemeFontColor = 0;
-//CHAR g_lastThemeFontFaceName[LF_FACESIZE] = "";
-
 LICE_CachedFont* SNM_GetThemeFont()
 {
-	int sz;
-	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
-
-/*JFB old code: static font KO when REAPER theme was changed
 	static LICE_CachedFont themeFont;
 	if (!themeFont.GetHFont())
 	{
 		LOGFONT lf = {
-			14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,
-			CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
+			14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
 		};
-		if (ct) 
-			lf = ct->mediaitem_font;
-		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
+		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
 	}
 	themeFont.SetBkMode(TRANSPARENT);
-	if (ct)
-		themeFont.SetTextColor(LICE_RGBA_FROMNATIVE(ct->main_text,255));
-	else 
-		themeFont.SetTextColor(LICE_RGBA(255,255,255,255));
+	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
+	themeFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
 	return &themeFont;
-*/
-	if (ct)
-	{
-		LICE_pixel col = LICE_RGBA_FROMNATIVE(ct->main_text,255);
-		if (ct->mediaitem_font.lfHeight != g_lastThemeFontHeight
-			|| col != g_lastThemeFontColor 
-//			|| strcmp(ct->mediaitem_font.lfFaceName, g_lastThemeFontFaceName)
-			)
-		{
-			if (g_themeFont)
-			{
-				delete g_themeFont;
-				g_themeFont = NULL;
-			}
-			g_themeFont = new LICE_CachedFont();
-
-			LOGFONT lf = ct->mediaitem_font;
-//			strcpy(g_lastThemeFontFaceName, lf.lfFaceName);
-			g_lastThemeFontHeight = lf.lfHeight;
-			g_lastThemeFontColor = col;
-			g_themeFont->SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
-			g_themeFont->SetBkMode(TRANSPARENT);
-			g_themeFont->SetTextColor(col);
-		}
-	}
-	// Error case: best effort
-	else
-	{
-		static LICE_CachedFont themeFont;
-		if (!themeFont.GetHFont())
-		{
-			LOGFONT lf = {
-				14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,
-				CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
-			};
-			themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
-		}
-		themeFont.SetBkMode(TRANSPARENT);
-		themeFont.SetTextColor(LICE_RGBA(255,255,255,255));
-		return &themeFont;
-	}
-	return g_themeFont;
 }
 
 HBRUSH g_hb = NULL;
@@ -122,27 +67,47 @@ HBRUSH SNM_GetThemeBrush()
 	return g_hb;
 }
 
-LICE_IBitmap* g_snmLogo = NULL;
 
 LICE_IBitmap* SNM_GetThemeLogo()
 {
-	if (!g_snmLogo)
+	static LICE_IBitmap* snmLogo;
+	if (!snmLogo)
 	{
 #ifdef _WIN32
-		g_snmLogo = LICE_LoadPNGFromResource(g_hInst,IDB_SNM,NULL);
+		snmLogo = LICE_LoadPNGFromResource(g_hInst,IDB_SNM,NULL);
 #else
 		// SWS doesn't work, sorry. :( 
-		//g_snmLogo =  LICE_LoadPNGFromNamedResource("SnM.png",NULL);
-		g_snmLogo = NULL;
+		//snmLogo =  LICE_LoadPNGFromNamedResource("SnM.png",NULL);
+		snmLogo = NULL;
 #endif
 	}
-	return g_snmLogo;
+	return snmLogo;
 }
 
+//JFB TODO? WDL_VWnd with hyperlink
+bool AddSnMLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h)
+{
+	if (_bm)
+	{
+		LICE_IBitmap* logo = SNM_GetThemeLogo();
+		if (logo && (_x + logo->getWidth() < _r->right - 5))
+		{
+			int y = _r->top + int(_h/2 - logo->getHeight()/2 + 0.5);
+			LICE_Blit(_bm,logo,_r->right-logo->getWidth()-8,y,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+			return true;
+		}
+	}
+	return false;
+}
+
+// Add (auto position) a WDL_VWnd instance
 // _x: I/O param that gets modified for the next WDL_VWnd to place in the panel
 // _h: height of the panel
 // returns false if display issue (hidden)
-bool WDL_VWndAutoHPos(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep)
+// REMARK: JFB!!!
+//    ideally, we'd need to mod WDL_VWnd here rather than checking inherited types (!)
+//    e.g. adding a kind of getPreferedWidthHeight(int* _width, int* _height)
+bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep)
 {
 	if (_c)
 	{
@@ -155,6 +120,8 @@ bool WDL_VWndAutoHPos(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int 
 
 		int width=0, height=_h;
 		bool txt = false;
+
+		// se top remark..
 		if (!strcmp(_c->GetType(), "vwnd_combobox"))
 		{
 			WDL_VirtualComboBox* cb = (WDL_VirtualComboBox*)_c;
@@ -200,7 +167,7 @@ bool WDL_VWndAutoHPos(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int 
 			}
 		}
 
-		if (/*!width || !height ||*/ height > _h ||
+		if (/*!width || !height || height > _h || */
 			(!txt && (*_x + width > _r->right - 5))) // hide if not text ctl and if larger than display rect
 		{ 
 			_c->SetVisible(false);
@@ -218,17 +185,15 @@ bool WDL_VWndAutoHPos(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int 
 	return false;
 }
 
-void SNM_UIInit() {
-	SNM_GetThemeLogo(); // force initial S&M logo loading..
-}
+void SNM_UIInit() {}
 
 void SNM_UIExit() {
-	if (g_themeFont)
-		delete g_themeFont;
 	if (g_hb)
 		DeleteObject(g_hb);
-	if (g_snmLogo)
-		delete g_snmLogo;
+
+	LICE_IBitmap* logo = SNM_GetThemeLogo();
+	if (logo)
+		delete logo;
 }
 
 

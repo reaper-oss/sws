@@ -32,7 +32,6 @@ class SNM_FindWnd : public SWS_DockWnd
 {
 public:
 	SNM_FindWnd();
-	int GetType();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 
 	bool Find(int _mode);
@@ -46,15 +45,14 @@ protected:
 	void OnInitDlg();
 	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState) ;
+	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
 	WDL_VirtualComboBox m_cbType;
-	WDL_VirtualIconButton m_btnFind;
-	WDL_VirtualIconButton m_btnPrev;
-	WDL_VirtualIconButton m_btnNext;
+	WDL_VirtualIconButton m_btnFind, m_btnPrev, m_btnNext;
 	WDL_VirtualStaticText m_txtResult;
 
 	int m_type;

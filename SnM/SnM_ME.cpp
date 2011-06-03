@@ -28,7 +28,6 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
-#include "SNM_ChunkParserPatcher.h"
 #include "SNM_Chunk.h"
 
 #define MAX_CC_LANE_ID 133

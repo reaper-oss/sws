@@ -27,7 +27,6 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
-#include "SNM_ChunkParserPatcher.h"
 
 
 #define SNM_REA_PRESET_CB_ENDING		")  ----"
@@ -35,10 +34,10 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// FX online/offline, bypass/unbypass
+// *TRACK* FX online/offline, bypass/unbypass
 ///////////////////////////////////////////////////////////////////////////////
 
-int getFXIdFromCommand(MediaTrack* _tr, int _fxCmdId)
+int getTrackFXIdFromCmd(MediaTrack* _tr, int _fxCmdId)
 {
 	int fxId = -1;
 	if (_tr)
@@ -46,7 +45,7 @@ int getFXIdFromCommand(MediaTrack* _tr, int _fxCmdId)
 		fxId = _fxCmdId - 1;
 		if (fxId == -1) // selected fx
 		{
-			fxId = getSelectedFX(_tr); //-1 on error
+			fxId = getSelectedTrackFX(_tr); //-1 on error
 			if (fxId < 0) return -1;
 		}
 		if (fxId < 0)
@@ -58,8 +57,6 @@ int getFXIdFromCommand(MediaTrack* _tr, int _fxCmdId)
 
 // Gets a toggle state
 // _token: 1=bypass, 2=offline 
-// note: if the user has a single track selection that changes, REAPER refreshes 
-// refreshes the menu ticks, toolbar tooltips ("on"/"off") but not the button themselves..
 bool isFXOfflineOrBypassedSelectedTracks(COMMAND_T * _ct, int _token) 
 {
 	int selTrCount = CountSelectedTracksWithMaster(NULL);
@@ -67,7 +64,7 @@ bool isFXOfflineOrBypassedSelectedTracks(COMMAND_T * _ct, int _token)
 	if (selTrCount == 1)
 	{
 		MediaTrack* tr = GetFirstSelectedTrackWithMaster(NULL);
-		int fxId = getFXIdFromCommand(tr, (int)_ct->user);
+		int fxId = getTrackFXIdFromCmd(tr, (int)_ct->user);
 		if (tr && fxId >= 0)
 		{
 			char state[2];
@@ -87,12 +84,12 @@ bool isFXOfflineOrBypassedSelectedTracks(COMMAND_T * _ct, int _token)
 bool patchSelTracksFXState(int _mode, int _token, int _fxCmdId, const char* _value, const char * _undoMsg)
 {
 	bool updated = false;
-	for (int i = 0; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++) // include master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false); //include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			int fxId = getFXIdFromCommand(tr, _fxCmdId);
+			int fxId = getTrackFXIdFromCmd(tr, _fxCmdId);
 			if (fxId >= 0)
 			{
 				SNM_ChunkParserPatcher p(tr);
@@ -103,7 +100,7 @@ bool patchSelTracksFXState(int _mode, int _token, int _fxCmdId, const char* _val
 
 	// Undo point
 	if (updated && _undoMsg)
-		Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL/*UNDO_STATE_FX*/, -1);
+		Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL, -1); // using UNDO_STATE_FX crashes 
 	return updated;
 }
 
@@ -132,37 +129,25 @@ bool isFXBypassedSelectedTracks(COMMAND_T * _ct) {
 }
 
 void toggleExceptFXOfflineSelectedTracks(COMMAND_T* _ct) { 
-	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) &&
-		CountSelectedTracksWithMaster(NULL) > 1)
-	{
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)))
 		fakeToggleAction(_ct);
-	}
 } 
   
 void toggleExceptFXBypassSelectedTracks(COMMAND_T* _ct) { 
-	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) &&
-		CountSelectedTracksWithMaster(NULL) > 1)
-	{
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)))
 		fakeToggleAction(_ct);
-	}
 } 
   
 void toggleAllFXsOfflineSelectedTracks(COMMAND_T* _ct) { 
 	// We use the "except mode" but with an unreachable fx number 
-	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)) &&
-		CountSelectedTracksWithMaster(NULL) > 1)
-	{
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
 		fakeToggleAction(_ct);
-	}
 } 
   
 void toggleAllFXsBypassSelectedTracks(COMMAND_T* _ct) { 
 	// We use the "except mode" but with an unreachable fx number 
-	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)) && 
-		CountSelectedTracksWithMaster(NULL) > 1)
-	{
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
 		fakeToggleAction(_ct);
-	}
 } 
 
 void setFXOfflineSelectedTracks(COMMAND_T* _ct) { 
@@ -190,10 +175,66 @@ void setAllFXsBypassSelectedTracks(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// FX selection
+// *TAKE* FX online/offline, bypass/unbypass
 ///////////////////////////////////////////////////////////////////////////////
 
-int selectFX(MediaTrack* _tr, int _fx)
+// *** CORE FUNC ***
+// note: all takes are patched atm (i.e. nothing specific to active takes yet)
+bool patchSelItemsFXState(int _mode, int _token, int _fxId, const char* _value, const char * _undoMsg)
+{
+	bool updated = false;
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
+			{
+				SNM_ChunkParserPatcher p(item);
+				updated = (p.ParsePatch(_mode, 2, "TAKEFX", "BYPASS", 3, _fxId, _token, (void*)_value) > 0);
+			}
+		}
+	}
+
+	// Undo point
+	if (updated && _undoMsg)
+		Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL, -1);
+	return updated;
+}
+
+void toggleAllFXsOfflineSelectedItems(COMMAND_T* _ct) { 
+	// We use the "except mode" but with an unreachable fx number 
+	if (patchSelItemsFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
+		fakeToggleAction(_ct);
+} 
+  
+void toggleAllFXsBypassSelectedItems(COMMAND_T* _ct) { 
+	// We use the "except mode" but with an unreachable fx number 
+	if (patchSelItemsFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
+		fakeToggleAction(_ct);
+} 
+
+void setAllFXsOfflineSelectedItems(COMMAND_T* _ct) {
+	char cInt[2] = "";
+	sprintf(cInt, "%d", (int)_ct->user);
+	// We use the "except mode" but with an unreachable fx number 
+	patchSelItemsFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 2, 0xFFFF, cInt, SNM_CMD_SHORTNAME(_ct));
+}
+
+void setAllFXsBypassSelectedItems(COMMAND_T* _ct) {
+	char cInt[2] = "";
+	sprintf(cInt, "%d", (int)_ct->user);
+	// We use the "except mode" but with an unreachable fx number 
+	patchSelItemsFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 1, 0xFFFF, cInt, SNM_CMD_SHORTNAME(_ct));
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Track FX selection
+///////////////////////////////////////////////////////////////////////////////
+
+int selectTrackFX(MediaTrack* _tr, int _fx)
 {
 	int updates = 0;
 	if (_tr && _fx >=0 && _fx < TrackFX_GetCount(_tr))
@@ -216,7 +257,52 @@ int selectFX(MediaTrack* _tr, int _fx)
 	return updates;
 }
 
-int getSelectedFX(MediaTrack* _tr)
+void selectTrackFX(COMMAND_T* _ct) 
+{
+	bool updated = false;
+	int fx = (int)_ct->user;
+	for (int i = 0; i <= GetNumTracks(); i++)  // include master
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			int sel = -1;
+			switch(fx)
+			{
+				// sel. last
+				case -3:
+					sel = TrackFX_GetCount(tr) - 1; // -1 on error
+					break;
+
+				// sel. previous
+				case -2:
+					sel = getSelectedTrackFX(tr); // -1 on error
+					if (sel > 0) sel--;
+					else if (sel == 0) sel = TrackFX_GetCount(tr)-1;
+					break;
+
+				// sel. next
+				case -1:
+					sel = getSelectedTrackFX(tr); // -1 on error
+					if (sel >= 0 && sel < (TrackFX_GetCount(tr)-1)) sel++;
+					else if (sel == (TrackFX_GetCount(tr)-1)) sel = 0;
+					break;
+					
+				default:
+					sel=fx;
+					break;
+			}
+
+			if (sel >=0)
+				updated = (selectTrackFX(tr, sel) > 0);
+		}
+	}
+	// Undo point
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+int getSelectedTrackFX(MediaTrack* _tr)
 {
 	if (_tr)
 	{
@@ -239,54 +325,9 @@ int getSelectedFX(MediaTrack* _tr)
 	return -1;
 }
 
-void selectFX(COMMAND_T* _ct) 
-{
-	bool updated = false;
-	int fx = (int)_ct->user;
-	for (int i = 0; i <= GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false); //include master
-		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-		{
-			int sel = -1;
-			switch(fx)
-			{
-				// sel. last
-				case -3:
-					sel = TrackFX_GetCount(tr) - 1; // -1 on error
-					break;
-
-				// sel. previous
-				case -2:
-					sel = getSelectedFX(tr); // -1 on error
-					if (sel > 0) sel--;
-					else if (sel == 0) sel = TrackFX_GetCount(tr)-1;
-					break;
-
-				// sel. next
-				case -1:
-					sel = getSelectedFX(tr); // -1 on error
-					if (sel >= 0 && sel < (TrackFX_GetCount(tr)-1)) sel++;
-					else if (sel == (TrackFX_GetCount(tr)-1)) sel = 0;
-					break;
-					
-				default:
-					sel=fx;
-					break;
-			}
-
-			if (sel >=0)
-				updated = (selectFX(tr, sel) > 0);
-		}
-	}
-	// Undo point
-	if (updated)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
-// FX preset
+// Track FX presets
 ///////////////////////////////////////////////////////////////////////////////
 
 //JFB cache?
@@ -427,11 +468,8 @@ void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf)
 	}
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
 // Switch presets
-///////////////////////////////////////////////////////////////////////////////
-
+//
 // Primitive to trigger a given preset 
 // No proper API yet => POOR'S MAN'S SOLUTION!
 //
@@ -523,14 +561,14 @@ int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir, bool _u
 
 void triggerFXPreset(int _fxId, int _presetId, int _dir)
 {
-	for (int i = 0; g_bv4 && i <= GetNumTracks(); i++)
+	for (int i = 0; g_bv4 && i <= GetNumTracks(); i++) // include master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false); //include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			int fxId = _fxId;
 			if (fxId == -1)
-				fxId = getSelectedFX(tr);
+				fxId = getSelectedTrackFX(tr);
 			if (fxId >= 0)
 				triggerFXPreset(tr, fxId, _presetId, _dir);
 		}
@@ -565,7 +603,7 @@ bool triggerFXUserPreset(MediaTrack* _tr, WDL_String* _presetConf)
 }
 
 
-// *** Trigger preset throiugh MIDI CC action ***
+// *** Trigger preset through MIDI CC action ***
 
 class SNM_TriggerPresetScheduledJob : public SNM_ScheduledJob {
 public:
@@ -599,15 +637,15 @@ void moveFX(COMMAND_T* _ct)
 {
 	bool updated = false;
 	int dir = (int)_ct->user;
-	for (int i = 0; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++) // include master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false); //include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			int nbFx = TrackFX_GetCount(tr);
 			if (nbFx > 0)
 			{
-				int sel = getSelectedFX(tr);
+				int sel = getSelectedTrackFX(tr);
 				if (sel >= 0 && ((dir == 1 && sel < (nbFx-1)) || (dir == -1 && sel > 0)))
 				{
 					SNM_ChunkParserPatcher p(tr);
@@ -639,7 +677,7 @@ void moveFX(COMMAND_T* _ct)
 							{
 								updated = true;
 								p.Commit(true);
-								selectFX(tr, sel + dir);
+								selectTrackFX(tr, sel + dir);
 							}
 						}
 					}

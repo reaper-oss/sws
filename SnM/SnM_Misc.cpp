@@ -28,7 +28,7 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
-#include "SNM_ChunkParserPatcher.h"
+
 
 #ifdef _WIN32
 #pragma comment (lib, "winmm.lib")
@@ -526,9 +526,9 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 void ShowTakeEnvPadreTest(COMMAND_T* _ct)
 {
 	bool updated = false;
-	for (int i = 0; i < GetNumTracks(); i++)
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i+1,false); // doesn't include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);

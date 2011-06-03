@@ -30,3 +30,4 @@
 void ZoomSlice();
 int ZoomInit();
 void ZoomExit();
+void ZoomToSelItems(COMMAND_T* = NULL);

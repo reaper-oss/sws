@@ -119,6 +119,7 @@ protected:
 	HMENU OnContextMenu(int x, int y);
 	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState);
+	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	// WDL UI

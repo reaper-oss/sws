@@ -158,7 +158,9 @@ protected:
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_TakeParserPatcher
-//JFB!!! TODO: m_activeTakeIdx /GetSetMediaItemInfo(item, "I_CURTAKE", &newActive);
+// JFB TODO? maintain m_activeTakeIdx when updating takes
+//           + GetSetMediaItemInfo((MediaItem*)m_object, "I_CURTAKE", &m_activeTakeIdx) on commit ?
+//           ATM, we let REAPER manage the active take, seems good so far
 ///////////////////////////////////////////////////////////////////////////////
 
 class SNM_TakeParserPatcher : public SNM_ChunkParserPatcher
@@ -176,7 +178,7 @@ public:
 	~SNM_TakeParserPatcher()
 	{
 		if (m_autoCommit)
-			Commit(); // nop if chunk not updated (or no valid m_object)
+			Commit(); // no-op if chunk not updated (or no valid m_object)
 	}
 
 	WDL_String* GetChunk();
@@ -201,6 +203,7 @@ private:
 	bool IsValidTakeChunkLine(const char* _pLine) {return (_pLine[5] && (_pLine[5] == '\n' || _pLine[5] == ' '));}
 	bool m_fakeTake;
 };
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_RecPassParser

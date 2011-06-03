@@ -95,7 +95,7 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 
 	MediaTrack * cueTr = NULL;
 	SNM_SendPatcher* p = NULL;
-	for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -326,7 +326,7 @@ void copySendsReceives(bool _cut,
 	flushClipboard(_rcvs);
 
 	int selTrackIdx = 0;
-	for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -340,10 +340,9 @@ void copySendsReceives(bool _cut,
 				MediaTrack* dest = (MediaTrack*)GetSetTrackSendInfo(tr, 0, idx, "P_DESTTRACK", NULL);
 				while (dest)
 				{
-					// We do not store cross-cut/pasted tracks' sends ('cause they'll keep the same track id after paste)
-					// not to duplicate with the following receives re-copy
-					if (!_cut ||
-						(_cut && !(*(int*)GetSetMediaTrackInfo(dest, "I_SELECTED", NULL))))
+					// We do not store cross-cut/pasted tracks' sends not to duplicate with the following receives re-copy
+					// (they would keep the same track id after paste)
+					if (!_cut || (_cut && !(*(int*)GetSetMediaTrackInfo(dest, "I_SELECTED", NULL))))
 					{
 						SNM_SndRcv* send = new SNM_SndRcv();
 						if (send && FillIOFromReaper(send, tr, dest, 0, idx))
@@ -384,7 +383,7 @@ bool pasteSendsReceives(WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<
 	WDL_PtrList<SNM_ChunkParserPatcher> ps;
 
 	// 1st loop to remove the native receives 
-	for (int i = 1; i <= GetNumTracks(); i++)  //doesn't include master
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -398,7 +397,7 @@ bool pasteSendsReceives(WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<
 
 	// 2nd one: to add ours
 	int selTrackIdx = 0;
-	for (int i = 1; i <= GetNumTracks(); i++) // doesn't include master
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -442,7 +441,7 @@ bool pasteSendsReceives(WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<
 			selTrackIdx++;
 		}
 	}
-	ps.Empty(true); // + auto commit all chunks (if something to commit) !
+	ps.Empty(true); // + auto commit all chunks (if something to commit)
 	return updated;
 }
 
@@ -545,7 +544,7 @@ void pasteReceives(COMMAND_T* _ct) {
 void removeSends(COMMAND_T* _ct)
 {
 	bool updated = false;
-	for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* trDest = CSurf_TrackFromID(i, false);
 		if (trDest)
@@ -571,7 +570,7 @@ void removeSends(COMMAND_T* _ct)
 void removeReceives(COMMAND_T* _ct)
 {
 	bool updated = false;
-	for (int i = 1; i <= GetNumTracks(); i++) //doesn't include master
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))

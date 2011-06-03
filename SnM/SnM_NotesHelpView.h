@@ -65,6 +65,7 @@ protected:
 	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState);
 	void OnTimer(WPARAM wParam=0);
+	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	int updateItemNotes();
@@ -78,8 +79,7 @@ protected:
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
 	WDL_VirtualComboBox m_cbType;
-	WDL_VirtualIconButton m_btnLock;
-	WDL_VirtualIconButton m_btnAlr;
+	WDL_VirtualIconButton m_btnLock, m_btnAlr;
 	WDL_VirtualStaticText m_txtLabel;
 
 	WDL_String m_actionHelpFilename;

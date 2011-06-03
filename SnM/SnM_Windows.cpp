@@ -28,7 +28,6 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
-#include "SNM_ChunkParserPatcher.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -234,9 +233,9 @@ bool closeWin(const char * _title)
 
 void closeOrToggleAllWindows(bool _routing, bool _env, bool _toggle)
 {
-	for (int i=0; i <= GetNumTracks(); i++)
+	for (int i=0; i <= GetNumTracks(); i++) // include master
 	{
-		MediaTrack *tr = CSurf_TrackFromID(i, false);
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr)
 		{
 			char trName[128];
@@ -300,38 +299,38 @@ void toggleAllEnvWindows(COMMAND_T * _ct) {
 void showFXChain(COMMAND_T* _ct)
 {
 	int focusedFX = _ct ? (int)_ct->user : -1; // -1: current selected fx
-	for (int i = 0; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++) // include master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false); // include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		// NULL _ct => all tracks, selected tracks otherwise
 		if (tr && (!_ct || (_ct && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
-			TrackFX_Show(tr, (focusedFX == -1 ? getSelectedFX(tr) : focusedFX), 1);
+			TrackFX_Show(tr, (focusedFX == -1 ? getSelectedTrackFX(tr) : focusedFX), 1);
 	}
 	// no undo
 }
 
 void hideFXChain(COMMAND_T* _ct) 
 {
-	for (int i = 0; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++) // include master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false); // include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		// NULL _ct => all tracks, selected tracks otherwise
 		if (tr && (!_ct || (_ct && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
-			TrackFX_Show(tr, getSelectedFX(tr), 0);
+			TrackFX_Show(tr, getSelectedTrackFX(tr), 0);
 	}
 	// no undo
 }
 
 void toggleFXChain(COMMAND_T* _ct) 
 {
-	for (int i = 0; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++) // include master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false); // include master
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		// NULL _ct => all tracks, selected tracks otherwise
 		if (tr && (!_ct || (_ct && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
 		{
 			int currentFX = TrackFX_GetChainVisible(tr);
-			TrackFX_Show(tr, getSelectedFX(tr), (currentFX == -2 || currentFX >= 0) ? 0 : 1);
+			TrackFX_Show(tr, getSelectedTrackFX(tr), (currentFX == -2 || currentFX >= 0) ? 0 : 1);
 		}
 	}
 	// no undo
@@ -376,7 +375,7 @@ void toggleFloatFX(MediaTrack* _tr, int _fx)
 {
 	if (_tr &&  _fx < TrackFX_GetCount(_tr))
 	{
-		int currenSel = getSelectedFX(_tr); // avoids several parsings
+		int currenSel = getSelectedTrackFX(_tr); // avoids several parsings
 		if (TrackFX_GetFloatingWindow(_tr, (_fx == -1 ? currenSel : _fx)))
 			TrackFX_Show(_tr, (_fx == -1 ? currenSel : _fx), 2);
 		else
@@ -404,10 +403,10 @@ void floatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _s
 	else if (!_all && matchTrack)
 	{
 		if (!_showFlag) 
-			toggleFloatFX(_tr, (_fx == -1 ? getSelectedFX(_tr) : _fx));
+			toggleFloatFX(_tr, (_fx == -1 ? getSelectedTrackFX(_tr) : _fx));
 		else 
-			//JFB TOTEST: offline
-			TrackFX_Show(_tr, (_fx == -1 ? getSelectedFX(_tr) : _fx), _showFlag);
+			//JFB!!! TOTEST: offline
+			TrackFX_Show(_tr, (_fx == -1 ? getSelectedTrackFX(_tr) : _fx), _showFlag);
 	}
 }
 
@@ -416,7 +415,7 @@ void floatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _s
 // showflag=0 for toggle, =2 for hide floating window (index valid), =3 for show floating window (index valid)
 void floatUnfloatFXs(bool _all, int _showFlag, int _fx, bool _selTracks) 
 {
-	for (int i = 0; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++) // include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && (_all || !_selTracks || (_selTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
@@ -449,7 +448,7 @@ void toggleAllFXWindows(COMMAND_T * _ct) {
 void closeAllFXWindowsExceptFocused(COMMAND_T * _ct)
 {
 	HWND w = GetForegroundWindow();
-	for (int i = 0; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++) // include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && IsWindow(w))
@@ -578,7 +577,7 @@ bool focusJob(MediaTrack* _tr, int _fx, bool _selectedTracks)
 bool floatOnlyJob(MediaTrack* _tr, int _fx, bool _selectedTracks)
 {
 	// hide others
-	for (int i = 0; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++) // include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		int fxCount = (tr ? TrackFX_GetCount(tr) : 0);

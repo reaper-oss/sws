@@ -37,7 +37,6 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_NotesHelpView.h"
-#include "SNM_ChunkParserPatcher.h"
 #include "../../WDL/projectcontext.h"
 
 #define MAX_HELP_LENGTH				4096 //JFB 4096 rather than MAX_INI_SECTION (too big)
@@ -609,101 +608,80 @@ void SNM_NotesHelpWnd::OnTimer(WPARAM wParam) {
 		Update();
 }
 
-static void DrawControls(WDL_VWnd_Painter *_painter, RECT _r, WDL_VWnd* _parentVwnd)
+void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 {
-	if (!g_pNotesHelpWnd) // SWS Can't draw before wnd initialized - why isn't this a member func??
-		return;			  // JFB TODO yes, I was planing a kind of SNM_Wnd at some point..
+	if (!_bm)
+		return;
 	
-	int xo=0, yo=0;
-    LICE_IBitmap *bm = _painter->GetBuffer(&xo,&yo);
-	if (bm)
-	{
-		LICE_CachedFont* font = SNM_GetThemeFont();
-		IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);// returns the whole icon theme (icontheme.h) and the size
-		int x0=_r.left+10, h=35;
+	LICE_CachedFont* font = SNM_GetThemeFont();
+	IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);// returns the whole icon theme (icontheme.h) and the size
+	int x0=_r->left+10, h=35;
 
-		// Lock button
-		WDL_VirtualIconButton* btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_LOCK);
-		if (btnVwnd)
-		{
-			WDL_VirtualIconButton_SkinConfig* img = it ? &(it->toolbar_lock[!g_locked]) : NULL;
-			if (img)
-				btnVwnd->SetIcon(img);
-			else {
-				btnVwnd->SetTextLabel(g_locked ? "Unlock" : "Lock", 0, font);
-				btnVwnd->SetForceBorder(true);
-			}
-			if (!WDL_VWndAutoHPos(btnVwnd, NULL, &_r, &x0, _r.top, h))
-				return;
-		}
-
-		WDL_VirtualComboBox* cbVwnd = (WDL_VirtualComboBox*)_parentVwnd->GetChildByID(COMBOID_TYPE);
-		if (cbVwnd) {
-			cbVwnd->SetFont(font);
-			if (!WDL_VWndAutoHPos(cbVwnd, NULL, &_r, &x0, _r.top, h))
-				return;
-		}
-
-		// online help
-		btnVwnd = (WDL_VirtualIconButton*)_parentVwnd->GetChildByID(BUTTONID_ALR);
-		if (btnVwnd) {
-			btnVwnd->SetVisible(g_pNotesHelpWnd->GetType() == ACTION_HELP);
-			if (g_pNotesHelpWnd->GetType() == ACTION_HELP)
-			{
-				btnVwnd->SetTextLabel("ALR Wiki", 0, font);
-				btnVwnd->SetForceBorder(true);
-				if (!WDL_VWndAutoHPos(btnVwnd, NULL, &_r, &x0, _r.top, h, 5))
-					return;
-			}
-		}
-
-		// Label
-		WDL_VirtualStaticText* txtVwnd = (WDL_VirtualStaticText*)_parentVwnd->GetChildByID(TXTID_LABEL);
-		if (txtVwnd)
-		{
-			char str[512] = "No selection!";
-			switch(g_pNotesHelpWnd->GetType())
-			{
-				case ACTION_HELP:
-					if (g_lastActionDesc && *g_lastActionDesc && g_lastActionListSection && *g_lastActionListSection)
-						_snprintf(str, 512, " [%s]  %s", g_lastActionListSection, g_lastActionDesc);
-/*JFB TODO: use smthg like that when we'll be able to access all sections
-						strncpy(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
-*/
-					break;
-				case ITEM_NOTES:
-					if (g_mediaItemNote)
-					{
-						MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
-						char* tkName= tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
-						strncpy(str, tkName ? tkName : "", 512);
-					}
-					break;
-				case TRACK_NOTES:
-					if (g_trNote)
-					{
-						int id = CSurf_TrackToID(g_trNote, false);
-						if (id > 0)
-							_snprintf(str, 512, " [%d]  %s", id, (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL));
-						else if (id == 0)
-							strcpy(str, "[MASTER]");
-					}
-					break;
-				case NOTES_HELP_DISABLED:
-					EnumProjects(-1, str, 512);
-					break;
-			}
-			txtVwnd->SetFont(font);
-			txtVwnd->SetText(str);
-			if (!WDL_VWndAutoHPos(txtVwnd, NULL, &_r, &x0, _r.top, h))
-				return;
-		}
-
-		if (g_snmLogo && (x0 + g_snmLogo->getWidth() < _r.right - 5)) {
-			int y = _r.top + int(h/2 - g_snmLogo->getHeight()/2 + 0.5);
-			LICE_Blit(bm,g_snmLogo,_r.right-g_snmLogo->getWidth()-8,y,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
-		}
+	// Lock button
+	WDL_VirtualIconButton_SkinConfig* img = it ? &(it->toolbar_lock[!g_locked]) : NULL;
+	if (img)
+		m_btnLock.SetIcon(img);
+	else {
+		m_btnLock.SetTextLabel(g_locked ? "Unlock" : "Lock", 0, font);
+		m_btnLock.SetForceBorder(true);
 	}
+	if (!SetVWndAutoPosition(&m_btnLock, NULL, _r, &x0, _r->top, h))
+		return;
+
+	// view type
+	m_cbType.SetFont(font);
+	if (!SetVWndAutoPosition(&m_cbType, NULL, _r, &x0, _r->top, h))
+		return;
+
+	// online help
+	m_btnAlr.SetVisible(g_pNotesHelpWnd->GetType() == ACTION_HELP);
+	if (g_pNotesHelpWnd->GetType() == ACTION_HELP)
+	{
+		m_btnAlr.SetTextLabel("ALR Wiki", 0, font);
+		m_btnAlr.SetForceBorder(true);
+		if (!SetVWndAutoPosition(&m_btnAlr, NULL, _r, &x0, _r->top, h, 5))
+			return;
+	}
+
+	// label
+	char str[512] = "No selection!";
+	switch(m_type)
+	{
+		case ACTION_HELP:
+			if (g_lastActionDesc && *g_lastActionDesc && g_lastActionListSection && *g_lastActionListSection)
+				_snprintf(str, 512, " [%s]  %s", g_lastActionListSection, g_lastActionDesc);
+/*JFB TODO: use smthg like that when we'll be able to access all sections
+				strncpy(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
+*/
+			break;
+		case ITEM_NOTES:
+			if (g_mediaItemNote)
+			{
+				MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
+				char* tkName= tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
+				strncpy(str, tkName ? tkName : "", 512);
+			}
+			break;
+		case TRACK_NOTES:
+			if (g_trNote)
+			{
+				int id = CSurf_TrackToID(g_trNote, false);
+				if (id > 0)
+					_snprintf(str, 512, " [%d]  %s", id, (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL));
+				else if (id == 0)
+					strcpy(str, "[MASTER]");
+			}
+			break;
+		case NOTES_HELP_DISABLED:
+			EnumProjects(-1, str, 512);
+			break;
+	}
+	m_txtLabel.SetFont(font);
+	m_txtLabel.SetText(str);
+	if (!SetVWndAutoPosition(&m_txtLabel, NULL, _r, &x0, _r->top, h))
+		return;
+
+	AddSnMLogo(_bm, _r, x0, h);
 }
 
 int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -716,7 +694,8 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GetClientRect(m_hwnd,&r);		
 			m_parentVwnd.SetPosition(&r);
 			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
-			DrawControls(&m_vwnd_painter, r, &m_parentVwnd);
+			int xo, yo;
+			DrawControls(m_vwnd_painter.GetBuffer(&xo, &yo), &r);
 			m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
 			m_vwnd_painter.PaintEnd();
 		}

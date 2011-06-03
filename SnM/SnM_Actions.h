@@ -179,9 +179,13 @@ void setFXOfflineSelectedTracks(COMMAND_T*);
 void setFXBypassSelectedTracks(COMMAND_T*);
 void setFXOnlineSelectedTracks(COMMAND_T*);
 void setFXUnbypassSelectedTracks(COMMAND_T*);
-void setAllFXsBypassSelectedTracks(COMMAND_T*); // ..related online/offline actions natively implemented
-int getSelectedFX(MediaTrack* _tr);
-void selectFX(COMMAND_T*);
+void setAllFXsBypassSelectedTracks(COMMAND_T*);
+void toggleAllFXsOfflineSelectedItems(COMMAND_T*);
+void toggleAllFXsBypassSelectedItems(COMMAND_T*);
+void setAllFXsOfflineSelectedItems(COMMAND_T*);
+void setAllFXsBypassSelectedItems(COMMAND_T*);
+void selectTrackFX(COMMAND_T*);
+int getSelectedTrackFX(MediaTrack* _tr);
 int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_String>* _names);
 void UpdatePresetConf(int _fx, int _preset, WDL_String* _presetConf);
 int GetPresetFromConf(int _fx, WDL_String* _presetConf, int _presetCount=0xFFFF);
@@ -342,6 +346,8 @@ void setPan(COMMAND_T*);
 void itemSelToolbarPoll();
 void toggleItemSelExists(COMMAND_T*);
 bool itemSelExists(COMMAND_T*);
+void scrollToSelItem(MediaItem* _item);
+void scrollToSelItem(COMMAND_T*);
 
 // *** SnM_Track.cpp ***
 #ifdef _SNM_TRACK_GROUP_EX
@@ -358,7 +364,7 @@ bool writeEnvExists(COMMAND_T*);
 int CountSelectedTracksWithMaster(ReaProject* _proj);
 MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx);
 MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj);
-void applyOrImportTrackTemplate(const char* _title, bool _import, int _slot, bool _errMsg);
+void applyOrImportTrackTemplate(const char* _title, bool _import, int _slot, bool _withItems, bool _errMsg);
 void replaceOrPasteItemsFromsTrackTemplate(const char* _title, bool _paste, int _slot, bool _errMsg);
 void loadSetTrackTemplate(COMMAND_T*);
 void loadImportTrackTemplate(COMMAND_T*);
@@ -401,11 +407,11 @@ void ToggleEnableLiveConfig(COMMAND_T*);
 bool IsLiveConfigEnabled(COMMAND_T*);
 
 // *** SnM_Dlg.cpp ***
-extern LICE_IBitmap* g_snmLogo;
 LICE_CachedFont* SNM_GetThemeFont();
 HBRUSH SNM_GetThemeBrush();
 LICE_IBitmap* SNM_GetThemeLogo();
-bool WDL_VWndAutoHPos(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep=12);
+bool AddSnMLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h);
+bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep=12);
 void SNM_UIInit();
 void SNM_UIExit();
 void openCueBussWnd(COMMAND_T*);

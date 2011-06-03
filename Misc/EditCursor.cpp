@@ -116,13 +116,15 @@ void MoveCursorSample(COMMAND_T* ct)
 	if (!pSrate)
 		return;
 	double dSrate = (double)*pSrate;
-	INT64 iCurSample = (INT64)(dPos * dSrate);
+	INT64 iCurSample = (INT64)(dPos * dSrate + 0.5);
 	if (ct->user == -1 && (dPos == (double)(iCurSample / dSrate)))
 		iCurSample--;
 	else if (ct->user == 1)
 		iCurSample++;
+
+	double dNewPos = (double)(iCurSample / dSrate);
 	
-	SetEditCurPos((double)(iCurSample / dSrate), true, false);
+	SetEditCurPos(dNewPos, true, false);
 }
 
 void MoveCursorMs(COMMAND_T* ct)

@@ -1,4 +1,5 @@
 Issue 301: Fixed "Crossfade adjacent selected items" crash
+Issue 302: Fixed "Move right by 1 sample (on grid)" action
 
 !v2.0.0 #26 (May 28, 2011)
 Merged tiny extension (2 new actions that can help WALTERing themes, see the discussion starting http://forum.cockos.com/showthread.php?p=697224|here|)

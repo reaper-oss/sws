@@ -1374,7 +1374,7 @@ static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 					break;
 				case IDC_MOVECUR:
 					g_bSetCursor	  = IsDlgButtonChecked(hwndDlg, IDC_MOVECUR) == BST_CHECKED;
-				EnableWindow(GetDlgItem(hwndDlg, IDC_SEEKPLAY), g_bSetCursor);
+					EnableWindow(GetDlgItem(hwndDlg, IDC_SEEKPLAY), g_bSetCursor);
 					break;
 				case IDOK:
 				{
@@ -1389,7 +1389,7 @@ static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 					g_bLastUndoProj   = IsDlgButtonChecked(hwndDlg, IDC_LASTUNDOPROJ) == BST_CHECKED;
 					g_iMidMouseModifier = g_modifiers[SendMessage(GetDlgItem(hwndDlg, IDC_MMMODIFIER), CB_GETCURSEL, 0, 0)].iModifier;
 					g_bSetCursor	  = IsDlgButtonChecked(hwndDlg, IDC_MOVECUR) == BST_CHECKED;
-				g_bSeekPlay       = IsDlgButtonChecked(hwndDlg, IDC_SEEKPLAY) == BST_CHECKED;
+					g_bSeekPlay       = IsDlgButtonChecked(hwndDlg, IDC_SEEKPLAY) == BST_CHECKED;
 					g_bSetTimesel	  = IsDlgButtonChecked(hwndDlg, IDC_SETTIMESEL) == BST_CHECKED;
 					g_bDragZoomUpper  = IsDlgButtonChecked(hwndDlg, IDC_DRAGUPPER) == BST_CHECKED;
 					g_bDragZoomLower  = IsDlgButtonChecked(hwndDlg, IDC_DRAGLOWER) == BST_CHECKED;

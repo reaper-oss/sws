@@ -330,6 +330,7 @@ void removeEmptyTakes(COMMAND_T*);
 void removeEmptyMidiTakes(COMMAND_T*);
 void removeAllEmptyTakes(COMMAND_T*);
 void deleteTakeAndMedia(COMMAND_T*);
+int getPitchTakeEnvRangeFromPrefs();
 void panTakeEnvelope(COMMAND_T*);
 void showHideTakeVolEnvelope(COMMAND_T*); 
 void showHideTakePanEnvelope(COMMAND_T*);
@@ -342,12 +343,12 @@ bool ShowTakeEnvPitch(MediaItem_Take* _take);
 #ifdef _SNM_ITT
 void saveItemTakeTemplate(COMMAND_T*);
 #endif
-void setPan(COMMAND_T*);
 void itemSelToolbarPoll();
 void toggleItemSelExists(COMMAND_T*);
 bool itemSelExists(COMMAND_T*);
 void scrollToSelItem(MediaItem* _item);
 void scrollToSelItem(COMMAND_T*);
+void setPan(COMMAND_T*);
 
 // *** SnM_Track.cpp ***
 #ifdef _SNM_TRACK_GROUP_EX

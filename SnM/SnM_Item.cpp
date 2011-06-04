@@ -799,8 +799,17 @@ void deleteTakeAndMedia(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Take envs: Show/hide take vol/pan/mute envs
+// Take envs
 ///////////////////////////////////////////////////////////////////////////////
+
+int getPitchTakeEnvRangeFromPrefs()
+{
+	int range = *(int*)GetConfigVar("pitchenvrange");
+	// "snap to semitones" bit set ?
+	if (range > 256)
+		range &= 0xFF;
+	return min (231, range); // clamp (like REAPER does)
+}
 
 // if returns true: callers must use UpdateTimeline() at some point
 bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint, bool _reset)
@@ -1019,7 +1028,7 @@ void saveItemTakeTemplate(COMMAND_T* _ct)
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
 				char filename[BUFFER_SIZE] = "", defaultPath[BUFFER_SIZE];
-				//JFB!!! TODO: ItemTakeTemplates -> const
+				//JFB TODO: ItemTakeTemplates -> const
 				_snprintf(defaultPath, BUFFER_SIZE, "%s%cItemTakeTemplates", GetResourcePath(), PATH_SLASH_CHAR);
 				if (BrowseForSaveFile("Save item/take template", defaultPath, "", "REAPER item/take template (*.RItemTakeTemplate)\0*.RItemTakeTemplate\0", filename, BUFFER_SIZE))
 				{
@@ -1064,41 +1073,6 @@ void saveItemTakeTemplate(COMMAND_T* _ct)
 	}
 }
 #endif
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Pan actions
-///////////////////////////////////////////////////////////////////////////////
-
-void setPan(COMMAND_T* _ct)
-{
-	bool updated = false;
-	double value = (double)((int)_ct->user/100);
-
-	for (int i = 1; i <= GetNumTracks(); i++) // skip master
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
-		{
-			MediaItem* item = GetTrackMediaItem(tr,j);
-			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
-			{
-				MediaItem_Take* tk = GetActiveTake(item);
-				if (tk)
-				{
-					double curValue = *(double*)GetSetMediaItemTakeInfo(tk, "D_PAN", NULL);
-					if (fabs(curValue - value) > 0.0001)
-					{
-						GetSetMediaItemTakeInfo(tk, "D_PAN", &value);
-						updated = true;
-					}
-				}
-			}
-		}
-	}
-	if (updated)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1236,10 +1210,10 @@ bool itemSelExists(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Scroll
+// Others
 ///////////////////////////////////////////////////////////////////////////////
 
-// no undo!
+// Scroll to item, no undo!
 void scrollToSelItem(MediaItem* _item)
 {
 	if (_item)
@@ -1264,8 +1238,37 @@ void scrollToSelItem(MediaItem* _item)
 	}
 }
 
-// no undo!
 void scrollToSelItem(COMMAND_T* _ct) {
 	scrollToSelItem(GetSelectedMediaItem(NULL, 0));
 }
 
+// Pan take
+void setPan(COMMAND_T* _ct)
+{
+	bool updated = false;
+	double value = (double)((int)_ct->user/100);
+
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
+			{
+				MediaItem_Take* tk = GetActiveTake(item);
+				if (tk)
+				{
+					double curValue = *(double*)GetSetMediaItemTakeInfo(tk, "D_PAN", NULL);
+					if (fabs(curValue - value) > 0.0001)
+					{
+						GetSetMediaItemTakeInfo(tk, "D_PAN", &value);
+						updated = true;
+					}
+				}
+			}
+		}
+	}
+	if (updated)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}

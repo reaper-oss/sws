@@ -692,8 +692,8 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 			bNeedUpdate = ShowTakeEnvMute(take);
 		break;
 		case eTAKEENV_PITCH:
-			dValMax = 3.0;
-			dValMin = -3.0;
+			dValMax = (double)getPitchTakeEnvRangeFromPrefs();
+			dValMin = dValMax * (-1);
 			bNeedUpdate = ShowTakeEnvPitch(take);
 		break;
 		default:
@@ -1069,8 +1069,8 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processTakeEnv(MediaItem_Take* t
 			bNeedUpdate = ShowTakeEnvMute(take);
 		break;
 		case eTAKEENV_PITCH :
-			dValMax = 3.0;
-			dValMin = -3.0;
+			dValMax = (double)getPitchTakeEnvRangeFromPrefs();
+			dValMin = dValMax * (-1);
 			bNeedUpdate = ShowTakeEnvPitch(take);
 		break;
 		default:

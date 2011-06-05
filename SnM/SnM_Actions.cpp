@@ -268,7 +268,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 8) bypass for selected tracks" }, "S&M_FXBYPEXCPT8", toggleExceptFXBypassSelectedTracks, NULL, 8, fakeIsToggledAction},
 #endif
 
-	// Track FX online/offline & bypass/unbypass ------------------------------
+	// Take FX online/offline & bypass/unbypass ------------------------------
 	{ { DEFACCEL, "SWS/S&M: Toggle all take FX online/offline for selected items" }, "S&M_TGL_TAKEFX_ONLINE", toggleAllFXsOfflineSelectedItems, NULL, -666, fakeIsToggledAction},
 	{ { DEFACCEL, "SWS/S&M: Set all take FX offline for selected items" }, "S&M_TAKEFX_OFFLINE", setAllFXsOfflineSelectedItems, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Set all take FX online for selected items" }, "S&M_TAKEFX_ONLINE", setAllFXsOfflineSelectedItems, NULL, 0},
@@ -504,8 +504,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 #endif
 	{ { DEFACCEL, "SWS/S&M: Show take pitch envelope" }, "S&M_TAKEENV10", showHideTakePitchEnvelope, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Hide take pitch envelope" }, "S&M_TAKEENV11", showHideTakePitchEnvelope, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Set take pan envelopes to 100% right" }, "S&M_TAKEENV_100R", panTakeEnvelope, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Set take pan envelopes to 100% left" }, "S&M_TAKEENV_100L", panTakeEnvelope, NULL, 1},
 
 	// Track envelopes --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Toggle arming of all active envelopes for selected tracks" }, "S&M_TGLARMALLENVS", toggleArmTrackEnv, NULL, 0, fakeIsToggledAction},
@@ -548,10 +546,12 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 8" }, "S&M_TOGGLE_LIVE_CFG8", ToggleEnableLiveConfig, NULL, 7, IsLiveConfigEnabled},
 
 	// Cyclactions ---------------------------------------------------------------
+//	{ { DEFACCEL, "SWS/S&M: Open cycle actions window" }, "S&M_OPEN_CYCLACTIONS_WND", openCyclactionsWnd, "S&&M Cycle actions", NULL, isCyclationsWndDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Create cycling action" }, "S&M_CREATE_CYCLACTION", CreateCyclaction, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Create cycling ME action (event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", CreateCyclaction, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Create cycling ME action (piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", CreateCyclaction, NULL, 2},
-//	{ { DEFACCEL, "SWS/S&M: Load cycling actions" }, "S&M_LOAD_CYCLACTIONS", LoadCyclactions, NULL, },
+//	{ { DEFACCEL, "SWS/S&M: Import cycling actions" }, "S&M_IMPORT_CYCLACTIONS", LoadCyclactions, NULL, },
+//	{ { DEFACCEL, "SWS/S&M: Export cycling actions" }, "S&M_EXPORT_CYCLACTIONS", SaveCyclactions, NULL, },
 
 	// REC inputs -------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to all channels" }, "S&M_MIDI_INPUT_ALL_CH", setMIDIInputChannel, NULL, 0},
@@ -1003,6 +1003,10 @@ public:
 	bool m_toggle;
 };
 
+// used to avoid subbtle "recursive cycle action" cases
+// (e.g. a cycle action that calls a macro that calls a cycle action..)
+static bool g_bReentrancyCheck = false;
+
 class ScheduledActions : public SNM_ScheduledJob
 {
 public:
@@ -1015,6 +1019,7 @@ public:
 	// best effort: ingore unknown actions but goes one..
 	void Perform()
 	{
+		g_bReentrancyCheck = true;
 		for (int i= 0; i < m_actions.GetSize(); i++)
 		{
 			int cmd = NamedCommandLookup(m_actions.Get(i)->Get());
@@ -1027,6 +1032,7 @@ public:
 			}
 		}
 		m_actions.Empty(true);
+		g_bReentrancyCheck = false;
 	}
 	int m_type;
 	WDL_PtrList_DeleteOnDestroy<WDL_String> m_actions;
@@ -1105,7 +1111,7 @@ void RunCycleAction(int _type, COMMAND_T* _ct)
 
 		// note: I "skip whilst respecting" the SWS re-entrance test - see hookCommandProc() in sws_entension.cpp - 
 		// thanks to schdeulded actions that performed 50ms later (or so)
-		if (actions.GetSize())
+		if (actions.GetSize() && !g_bReentrancyCheck)
 		{
 			ScheduledActions* job = new ScheduledActions(50, _type, &actions);
 			AddOrReplaceScheduledJob(job);

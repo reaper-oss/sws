@@ -77,20 +77,9 @@ void MoveCursorAndSel(COMMAND_T* ct)
 		iEdge = 1;
 
 	// Move the edit cursor position
-	
-	// .. natively
-//	if (ct->user < 0)
-//		Main_OnCommand(40646, 0);
-//	else
-//		Main_OnCommand(40647, 0);
-//	dPos = GetCursorPosition();
-
-	// or manually
-	const double dGridThreshold = 1.0e-9;
 	double dQN = TimeMap2_timeToQN(NULL, dPos);
 	// Special case for left move and on grid already
 	int iQN = (int)(dQN + SWS_ADJACENT_ITEM_THRESHOLD);
-	double dTest = fabs(dQN - iQN);
 	if (ct->user == -1 && fabs(dQN - iQN) < SWS_ADJACENT_ITEM_THRESHOLD)
 		--iQN;
 	else if (ct->user == 1)

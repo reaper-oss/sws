@@ -336,7 +336,6 @@ void DoOpenRPPofBWAVdesc(COMMAND_T*)
 					SearchDirectory(FoundRPPs, RppSearchFolderName, "RPP", true);
 					vector<string> FnCompos;
 					SplitFileNameComponents(RPPFileName, FnCompos);
-					bool TheRppWasFound=false;
 					for (int  i = 0; i < (int)FoundRPPs.size(); i++)
 					{
 						int x = (int)FoundRPPs[i].find(FnCompos[1]);

@@ -1,3 +1,4 @@
+!v2.0.0 #27 (June 4, 2011)
 Issue 301: Fixed "Crossfade adjacent selected items" crash
 Issue 302: Fixed "Move right by 1 sample (on grid)" action
 Issue 298: Find "all" now zooms to found items (reminder: find "next/prev" scrolls to the found item)

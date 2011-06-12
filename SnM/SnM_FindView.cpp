@@ -38,6 +38,7 @@ enum {
   BUTTONID_FIND=1000,
   BUTTONID_PREV,
   BUTTONID_NEXT,
+  BUTTONID_ZOOM_SCROLL_EN,
   COMBOID_TYPE,
   TXTID_RESULT
 };
@@ -120,6 +121,9 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr)
 SNM_FindWnd::SNM_FindWnd()
 :SWS_DockWnd(IDD_SNM_FIND, "Find", "SnMFind", 30008, SWSGetCommandID(OpenFindView))
 {
+	m_type = 0;
+	m_zoomSrollItems = false;
+
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
 }
@@ -277,7 +281,7 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaI
 		}
 
 		UpdateNotFoundMsg(found);
-		if (found)
+		if (found && m_zoomSrollItems)
 		{
 			if (!_dir)
 				 ZoomToSelItems();
@@ -414,10 +418,16 @@ void SNM_FindWnd::OnInitDlg()
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
 
 	// Load prefs 
-	m_type = GetPrivateProfileInt("FIND_VIEW", "TYPE", 0, g_SNMiniFilename.Get());
+	m_type = GetPrivateProfileInt("FIND_VIEW", "Type", 0, g_SNMiniFilename.Get());
+	m_zoomSrollItems = (GetPrivateProfileInt("FIND_VIEW", "ZoomScrollToFoundItems", 0, g_SNMiniFilename.Get()) == 1);
 
 	// WDL GUI init
     m_parentVwnd.SetRealParent(m_hwnd);
+
+	m_btnEnableZommScroll.SetID(BUTTONID_ZOOM_SCROLL_EN);
+	m_btnEnableZommScroll.SetRealParent(m_hwnd);
+	m_btnEnableZommScroll.SetCheckState(m_zoomSrollItems);
+	m_parentVwnd.AddChild(&m_btnEnableZommScroll);
 
 	m_btnFind.SetID(BUTTONID_FIND);
 	m_btnFind.SetRealParent(m_hwnd);
@@ -469,9 +479,12 @@ void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		default:
 		{
-			if (HIWORD(wParam)==0) 
+			WORD hiwParam = HIWORD(wParam);
+			if (!hiwParam || hiwParam == 600) // 600 for large tick box
 			{
-				switch(LOWORD(wParam)){
+				switch(LOWORD(wParam))
+				{
+					case BUTTONID_ZOOM_SCROLL_EN: m_zoomSrollItems = !m_zoomSrollItems; break;
 					case BUTTONID_FIND: Find(0); break;
 					case BUTTONID_PREV: Find(-1); break;
 					case BUTTONID_NEXT: Find(1); break;
@@ -480,7 +493,7 @@ void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE) 
 			{
 				m_type = m_cbType.GetCurSel();
-				UpdateNotFoundMsg(true);
+				UpdateNotFoundMsg(true); // + redraw
 				SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 			}
 			else 
@@ -495,7 +508,8 @@ void SNM_FindWnd::OnDestroy()
 	// save prefs
 	char cType[2];
 	sprintf(cType, "%d", m_type);
-	WritePrivateProfileString("FIND_VIEW", "TYPE", cType, g_SNMiniFilename.Get());
+	WritePrivateProfileString("FIND_VIEW", "Type", cType, g_SNMiniFilename.Get());
+	WritePrivateProfileString("FIND_VIEW", "ZoomScrollToFoundItems", m_zoomSrollItems ? "1" : "0", g_SNMiniFilename.Get());
 
 	m_cbType.Empty();
 	m_parentVwnd.RemoveAllChildren(false);
@@ -535,10 +549,30 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	LICE_CachedFont* font = SNM_GetThemeFont();
 	int x0=_r->left+10, h=35;
 
+	// 1st row of controls
 	m_cbType.SetFont(font);
 	if (SetVWndAutoPosition(&m_cbType, NULL, _r, &x0, _r->top, h))
-		AddSnMLogo(_bm, _r, x0, h);
+	{
+		switch (m_type)
+		{
+			case TYPE_ITEM_NAME:
+			case TYPE_ITEM_NAME_ALL_TAKES:
+			case TYPE_ITEM_FILENAME:
+			case TYPE_ITEM_FILENAME_ALL_TAKES:
+			case TYPE_ITEM_NOTES:
+				m_btnEnableZommScroll.SetVisible(true);
+				m_btnEnableZommScroll.SetCheckState(m_zoomSrollItems);
+				m_btnEnableZommScroll.SetTextLabel("Zoom/Scroll", -1, font);
+				if (SetVWndAutoPosition(&m_btnEnableZommScroll, NULL, _r, &x0, _r->top, h))
+					AddSnMLogo(_bm, _r, x0, h);
+				break;
+			default:
+				m_btnEnableZommScroll.SetVisible(false);
+				break;
+		}
+	}
 
+	// 2nd row of controls
 	x0 = _r->left+8; 
 	h = 45;
 	int y0 = _r->top+60;

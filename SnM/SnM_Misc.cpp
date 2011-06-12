@@ -66,6 +66,18 @@ bool SNM_DeleteFile(const char* _filename) {
 	return false;
 }
 
+bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
+{
+	if (_destFn && _srcFn)
+	{
+		WDL_String chunk;
+		if (LoadChunk(_srcFn, &chunk) && chunk.GetLength())
+			return SaveChunk(_destFn, &chunk);
+	}
+	return false;
+}
+
+
 // Browse + return short resource filename (if possible and if _wantFullPath == false)
 // Returns false if cancelled
 bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath)
@@ -336,13 +348,11 @@ int PromptForMIDIChannel(const char* _title)
 		if (GetUserInputs(_title, 1, "MIDI Channel (1-16):", reply, 8))
 		{
 			ch = atoi(reply); //0 on error
-			if (ch > 0 && ch <= 16) {
+			if (ch > 0 && ch <= 16)
 				return (ch-1);
-			}
-			else 
-			{
+			else {
 				ch = -1;
-				MessageBox(GetMainHwnd(), "Invalid MIDI channel!\nPlease enter a value in [1; 16].", "S&M - Error", /*MB_ICONERROR | */MB_OK);
+				MessageBox(GetMainHwnd(), "Invalid MIDI channel!\nPlease enter a value in [1; 16].", "S&M - Error", MB_OK);
 			}
 		}
 		else return -1; // user has cancelled
@@ -355,6 +365,7 @@ int PromptForMIDIChannel(const char* _title)
 // Misc	actions
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef _SNM_MISC
 // http://forum.cockos.com/showthread.php?t=60657
 void LetREAPERBreathe(COMMAND_T* _ct)
 {
@@ -364,6 +375,7 @@ void LetREAPERBreathe(COMMAND_T* _ct)
 #endif
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SNM_WAIT), GetForegroundWindow(), WaitDlgProc);
 }
+#endif
 
 void WinWaitForEvent(DWORD _event, DWORD _timeOut, DWORD _minReTrigger)
 {
@@ -488,33 +500,6 @@ void DumpWikiActionList2(COMMAND_T* _ct)
 
 void DumpActionList(COMMAND_T* _ct) {
 	dumpActionList((int)_ct->user, "Dump action list", "%s\t%s\t%s\n", "Section\tId\tAction\n", NULL);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Misc. "MIDI CC absolute only" actions
-///////////////////////////////////////////////////////////////////////////////
-
-// *** Select project ***
-class SNM_SelectProjectScheduledJob : public SNM_ScheduledJob
-{
-public:
-	SNM_SelectProjectScheduledJob(int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd) 
-		: SNM_ScheduledJob(SNM_SCHEDJOB_SEL_PRJ, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd) {}
-	void Perform() {
-		ReaProject* proj = Enum_Projects(m_val, NULL, 0);
-		if (proj) SelectProjectInstance(proj);
-	}
-protected:
-	int m_val, m_valhw, m_relmode;
-	HWND m_hwnd;
-};
-
-void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
-	if (!_relmode && _valhw < 0) { // Absolute CC only
-		SNM_SelectProjectScheduledJob* job = 
-			new SNM_SelectProjectScheduledJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd);
-		AddOrReplaceScheduledJob(job);
-	}
 }
 
 

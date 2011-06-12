@@ -32,7 +32,6 @@
 
 //#define _SNM_MISC
 //#define _SNM_TRACK_GROUP_EX
-//#define _SNM_ITT // WIP..
 #ifdef _WIN32
 #define _SNM_PRESETS
 #define _SNM_THEMABLE
@@ -201,7 +200,10 @@ void moveFX(COMMAND_T*);
 // *** SnM_FXChain.cpp ***
 void makeChunkTakeFX(WDL_String* _outTakeFX, WDL_String* _inRfxChain);
 int copyTakeFXChain(WDL_String* _fxChain, int _startSelItem=0);
+void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
+void setTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
 void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool _set, bool _errMsg);
+bool autoSaveItemFXChainSlots(int _slot, const char* _dirPath, char* _fn, int _fnMaxSize);
 void loadSetTakeFXChain(COMMAND_T*);
 void loadPasteTakeFXChain(COMMAND_T*);
 void loadSetAllTakesFXChain(COMMAND_T*);
@@ -214,13 +216,10 @@ void pasteAllTakesFXChain(COMMAND_T*);
 void setAllTakesFXChain(COMMAND_T*);
 void clearActiveTakeFXChain(COMMAND_T*);
 void clearAllTakesFXChain(COMMAND_T*);
-void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
-void setTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
-bool autoSaveItemFXChainSlots(int _slot, const char* _dirPath, char* _fn, int _fnMaxSize);
-void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inputFX, bool _errMsg);
 void pasteTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX);
 void setTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX);
 int copyTrackFXChain(WDL_String* _fxChain, bool _inputFX, int _startTr=0);
+void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inputFX, bool _errMsg);
 bool autoSaveTrackFXChainSlots(int _slot, bool _inputFX, const char* _dirPath, char* _fn, int _fnMaxSize);
 void loadSetTrackFXChain(COMMAND_T*);
 void loadPasteTrackFXChain(COMMAND_T*);
@@ -237,6 +236,10 @@ void setTrackInputFXChain(COMMAND_T*);
 void copyFXChainSlotToClipBoard(int _slot);
 void readSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, char* _desc, int _descSize);
 void saveSlotIniFile(const char* _key, int _slot, const char* _path, const char* _desc);
+void smartCopyFXChain(COMMAND_T*);
+void smartPasteFXChain(COMMAND_T*);
+void smartPasteReplaceFXChain(COMMAND_T*);
+void smartCutFXChain(COMMAND_T*);
 void reassignLearntMIDICh(COMMAND_T*);
 
 // *** SnM_Windows.cpp ***
@@ -340,7 +343,7 @@ bool ShowTakeEnvVol(MediaItem_Take* _take);
 bool ShowTakeEnvPan(MediaItem_Take* _take);
 bool ShowTakeEnvMute(MediaItem_Take* _take);
 bool ShowTakeEnvPitch(MediaItem_Take* _take);
-#ifdef _SNM_ITT
+#ifdef _SNM_MISC
 void saveItemTakeTemplate(COMMAND_T*);
 #endif
 void itemSelToolbarPoll();
@@ -365,11 +368,11 @@ bool writeEnvExists(COMMAND_T*);
 int CountSelectedTracksWithMaster(ReaProject* _proj);
 MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx);
 MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj);
-void applyOrImportTrackTemplate(const char* _title, bool _import, int _slot, bool _withItems, bool _errMsg);
-void replaceOrPasteItemsFromsTrackTemplate(const char* _title, bool _paste, int _slot, bool _errMsg);
+void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _withItems, bool _errMsg);
+void replaceOrPasteItemsFromTrackSlot(const char* _title, bool _paste, int _slot, bool _errMsg);
 void loadSetTrackTemplate(COMMAND_T*);
 void loadImportTrackTemplate(COMMAND_T*);
-bool autoSaveTrackTemplateSlots(int _slot, bool _delItems, const char* _dirPath, char* _fn, int _fnMaxSize);
+bool autoSaveTrackSlots(int _slot, bool _delItems, const char* _dirPath, char* _fn, int _fnMaxSize);
 void setMIDIInputChannel(COMMAND_T*);
 void remapMIDIInputChannel(COMMAND_T*);
 
@@ -417,7 +420,11 @@ void SNM_UIInit();
 void SNM_UIExit();
 void openCueBussWnd(COMMAND_T*);
 bool isCueBussWndDisplayed(COMMAND_T*);
+void openCyclactionsWnd(COMMAND_T*);
+bool isCyclationsWndDisplayed(COMMAND_T*);
+#ifdef _SNM_MISC
 WDL_DLGRET WaitDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+#endif
 
 // *** SnM_ME.cpp ***
 void MECreateCCLane(COMMAND_T*);
@@ -425,9 +432,17 @@ void MEHideCCLanes(COMMAND_T*);
 void MESetCCLanes(COMMAND_T*);
 void MESaveCCLanes(COMMAND_T*);
 
+// *** SnM_Project.cpp ***
+void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
+void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errMsg);
+bool autoSaveProjectSlot(int _slot, bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnMaxSize);
+void loadOrSelectProject(COMMAND_T*);
+void loadNewTabOrSelectProject(COMMAND_T*);
+
 // *** SnM_Misc.cpp ***
 bool FileExistsErrMsg(const char* _fn, bool _errMsg=true);
 bool SNM_DeleteFile(const char* _filename);
+bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath = false);
 void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn);
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _maxFn);
@@ -442,12 +457,13 @@ bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sec
 void SNM_ShowConsoleMsg(const char* _msg, const char* _title="", bool _clear=true); 
 void SNM_ShowConsoleDbg(bool _clear, const char* format, ...);
 int PromptForMIDIChannel(const char* _title);
+#ifdef _SNM_MISC
 void LetREAPERBreathe(COMMAND_T*);
+#endif
 void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
 void SimulateMouseClick(COMMAND_T*);
 void DumpWikiActionList2(COMMAND_T*);
 void DumpActionList(COMMAND_T*);
-void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 #ifdef _SNM_MISC
 void ShowTakeEnvPadreTest(COMMAND_T*);
 void dumpWikiActionList(COMMAND_T*);

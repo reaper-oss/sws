@@ -104,7 +104,7 @@ bool AddSnMLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h)
 // _x: I/O param that gets modified for the next WDL_VWnd to place in the panel
 // _h: height of the panel
 // returns false if display issue (hidden)
-// REMARK: JFB!!!
+// JFB!!! REMARK: 
 //    ideally, we'd need to mod WDL_VWnd here rather than checking inherited types (!)
 //    e.g. adding a kind of getPreferedWidthHeight(int* _width, int* _height)
 bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep)
@@ -434,11 +434,179 @@ bool isCueBussWndDisplayed(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Cyclactions dialog box
+///////////////////////////////////////////////////////////////////////////////
+
+HWND g_cyclactionsHwnd = NULL;
+
+WDL_DLGRET CyclactionsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+	const char cWndPosKey[] = "Cyclactions Window Pos";
+	switch(Message)
+	{
+        case WM_INITDIALOG :
+		{
+			char busName[BUFFER_SIZE] = "";
+			char trTemplatePath[BUFFER_SIZE] = "";
+			int reaType, userType, soloDefeat, hwOuts[8];
+			bool trTemplate, showRouting, sendToMaster;
+			readCueBusIniFile(busName, &reaType, &trTemplate, trTemplatePath, &showRouting, &soloDefeat, &sendToMaster, hwOuts);
+			userType = GetComboSendIdxType(reaType);
+			SetDlgItemText(hwnd,IDC_SNM_CUEBUS_NAME,busName);
+
+			int x=0;
+			for(int i=1; i<4; i++)
+			{
+				x = (int)SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_ADDSTRING,0,(LPARAM)GetSendTypeStr(i));
+				SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_SETITEMDATA,x,i);
+				if (i==userType) SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_SETCURSEL,x,0);
+			}
+
+			SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,trTemplatePath);
+			CheckDlgButton(hwnd, IDC_CHECK1, sendToMaster);
+			CheckDlgButton(hwnd, IDC_CHECK2, showRouting);
+			CheckDlgButton(hwnd, IDC_CHECK3, trTemplate);
+			CheckDlgButton(hwnd, IDC_CHECK4, (soloDefeat == 1));
+
+			for(int i=0; i < SNM_MAX_HW_OUTS; i++) 
+			{
+				fillHWoutDropDown(hwnd,IDC_SNM_CUEBUS_HWOUT1+i);
+				SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_HWOUT1+i,CB_SETCURSEL,hwOuts[i],0);
+			}
+
+			RestoreWindowPos(hwnd, cWndPosKey, false);
+			SetFocus(GetDlgItem(hwnd, IDC_SNM_CUEBUS_NAME));
+			PostMessage(hwnd, WM_COMMAND, IDC_CHECK3, 0); // enable//disable state
+			return 0;
+		}
+		break;
+
+		case WM_CLOSE :
+			g_cyclactionsHwnd = NULL; // for proper toggle state report, see openCueBussWnd()
+			break;
+
+		case WM_COMMAND :
+		{
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+				case IDC_SAVE:
+				{
+					char cueBusName[BUFFER_SIZE];
+					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_NAME,cueBusName,BUFFER_SIZE);
+
+					int userType = 2, reaType;
+					int combo = (int)SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_GETCURSEL,0,0);
+					if(combo != CB_ERR)
+						userType = combo+1;
+					switch(userType)
+					{
+						case 1: reaType=0; break;
+						case 2: reaType=3; break;
+						case 3: reaType=1; break;
+						default: break;
+					}
+
+					int sendToMaster = IsDlgButtonChecked(hwnd, IDC_CHECK1);
+					int showRouting = IsDlgButtonChecked(hwnd, IDC_CHECK2);
+					int trTemplate = IsDlgButtonChecked(hwnd, IDC_CHECK3);
+					int soloDefeat = IsDlgButtonChecked(hwnd, IDC_CHECK4);
+
+					char trTemplatePath[BUFFER_SIZE];
+					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,trTemplatePath,BUFFER_SIZE);
+
+					int hwOuts[SNM_MAX_HW_OUTS];
+					for (int i=0; i<SNM_MAX_HW_OUTS; i++)
+					{
+						hwOuts[i] = (int)SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_HWOUT1+i,CB_GETCURSEL,0,0);
+						if(hwOuts[i] == CB_ERR)	hwOuts[i] = 0;
+					}
+
+					// *** Create cue buss ***
+					if (LOWORD(wParam) == IDC_SAVE ||
+						cueTrack(cueBusName, reaType, "Create cue buss",
+							(showRouting == 1), soloDefeat, 
+							trTemplate ? trTemplatePath : NULL, 
+							(sendToMaster == 1), hwOuts))
+					{
+						saveCueBusIniFile(cueBusName, reaType, (trTemplate == 1), trTemplatePath, (showRouting == 1), soloDefeat, (sendToMaster == 1), hwOuts);
+					}
+					return 0;
+				}
+				break;
+
+				case IDCANCEL:
+				{
+					ShowWindow(hwnd, SW_HIDE);
+					return 0;
+				}
+				break;
+
+				case IDC_FILES:
+				{
+					char currentPath[BUFFER_SIZE];
+					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,currentPath,BUFFER_SIZE);
+					if (!strlen(currentPath))
+						_snprintf(currentPath, BUFFER_SIZE, "%s%c%TrackTemplates", GetResourcePath(), PATH_SLASH_CHAR);
+					char* filename = BrowseForFiles("Load track template", currentPath, NULL, false, "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0");
+					if (filename) {
+						SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,filename);
+						free(filename);
+					}
+				}
+				break;
+
+				case IDC_CHECK3:
+				{
+					bool templateEnable = (IsDlgButtonChecked(hwnd, IDC_CHECK3) == 1);
+					EnableWindow(GetDlgItem(hwnd, IDC_SNM_CUEBUS_TEMPLATE), templateEnable);
+					EnableWindow(GetDlgItem(hwnd, IDC_FILES), templateEnable);
+					EnableWindow(GetDlgItem(hwnd, IDC_SNM_CUEBUS_NAME), !templateEnable);
+					for(int k=0; k < SNM_MAX_HW_OUTS ; k++)
+						EnableWindow(GetDlgItem(hwnd, IDC_SNM_CUEBUS_HWOUT1+k), !templateEnable);
+					EnableWindow(GetDlgItem(hwnd, IDC_CHECK1), !templateEnable);
+					EnableWindow(GetDlgItem(hwnd, IDC_CHECK4), !templateEnable);
+					SetFocus(GetDlgItem(hwnd, templateEnable ? IDC_SNM_CUEBUS_TEMPLATE : IDC_SNM_CUEBUS_NAME));
+				}
+				break;
+			}
+		}
+		break;
+
+		case WM_DESTROY:
+			SaveWindowPos(hwnd, cWndPosKey);
+			break; 
+	}
+
+	return 0;
+}
+
+void openCyclactionsWnd(COMMAND_T* _ct) {
+	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CYCLACTION), g_hwndParent, CyclactionsDlgProc);
+
+	// Toggle
+	if (g_cyclactionsHwnd) {
+		g_cyclactionsHwnd = NULL;
+		ShowWindow(hwnd, SW_HIDE);
+	}
+	else {
+		g_cyclactionsHwnd = hwnd;
+		ShowWindow(hwnd, SW_SHOW);
+		SetFocus(hwnd);
+	}
+}
+
+bool isCyclationsWndDisplayed(COMMAND_T* _ct) {
+	return (g_cyclactionsHwnd && IsWindow(g_cyclactionsHwnd) && IsWindowVisible(g_cyclactionsHwnd) ? true : false);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // WaitDlgProc
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef _SNM_MISC
 int g_waitDlgProcCount = 0;
-
 WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch(msg)
@@ -473,4 +641,4 @@ WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 	return 0;
 }
-
+#endif

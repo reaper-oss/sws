@@ -1,5 +1,27 @@
-+Fixed duplicated "take pan envelopes" actions
-+Fixed subtle "recursive cycle action" cases (e.g. a cycle action that calls a macro that calls a cycle action)
+Fixed duplicated "take pan envelopes" actions
+Fixed subtle "recursive cycling action" cases (e.g. a cycle action that calls a macro that calls a cycle action)
+
+Added actions:
++SWS/S&M: Copy FX chain (depending on focus)
++SWS/S&M: Paste FX chain (depending on focus)
++SWS/S&M: Paste (replace) FX chain (depending on focus)
++SWS/S&M: Cut FX chain (depending on focus)
+
+S&M Find: added "Zoom/Scroll" option (when searching for items)
+
+S&M Resources:
+The view now also manages project templates (i.e. new option in top left dropdown box)!
+Added related actions:
++SWS/S&M: Select/load project template, slot n  - where 'n' is in [1; 10]
++SWS/S&M: Select/load project template, prompt for slot
++SWS/S&M: Select/load project template (new tab), slot n  - where 'n' is in [1; 10]
++SWS/S&M: Select/load project template (new tab), prompt for slot
+Added options/popup menu items common for FX chains, track template & project templates:
++Display current auto-save path
++Set auto-save directory to default resource path
++Set auto-save directory to project path (/FXChains, TrackTemplate or ProjectTemplates)
+
+House cleaning: simplified a bunch of actions names (i.e. "Load/apply", "Load/paste", etc.. => "Apply", "Paste", etc..)
 
 !v2.0.0 #27 (June 4, 2011)
 Issue 301: Fixed "Crossfade adjacent selected items" crash

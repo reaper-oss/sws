@@ -52,10 +52,11 @@ protected:
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
 	WDL_VirtualComboBox m_cbType;
-	WDL_VirtualIconButton m_btnFind, m_btnPrev, m_btnNext;
+	WDL_VirtualIconButton m_btnEnableZommScroll, m_btnFind, m_btnPrev, m_btnNext;
 	WDL_VirtualStaticText m_txtResult;
 
 	int m_type;
+	bool m_zoomSrollItems;
 };
 
 

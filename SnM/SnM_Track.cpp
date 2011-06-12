@@ -382,10 +382,10 @@ MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Track template slots
+// Track template slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
-void applyOrImportTrackTemplate(const char* _title, bool _import, int _slot, bool _replaceItems, bool _errMsg)
+void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _replaceItems, bool _errMsg)
 {
 	bool updated = false;
 
@@ -458,16 +458,16 @@ void applyOrImportTrackTemplate(const char* _title, bool _import, int _slot, boo
 void loadSetTrackTemplate(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
 	if (slot < 0 || slot < g_trTemplateFiles.GetSize())
-		applyOrImportTrackTemplate(SNM_CMD_SHORTNAME(_ct), false, slot, false, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
+		applyOrImportTrackSlot(SNM_CMD_SHORTNAME(_ct), false, slot, false, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
 }
 
 void loadImportTrackTemplate(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
 	if (slot < 0 || slot < g_trTemplateFiles.GetSize())
-		applyOrImportTrackTemplate(SNM_CMD_SHORTNAME(_ct), true, slot, false, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
+		applyOrImportTrackSlot(SNM_CMD_SHORTNAME(_ct), true, slot, false, slot < 0 || !g_trTemplateFiles.Get(slot)->IsDefault());
 }
 
-void replaceOrPasteItemsFromsTrackTemplate(const char* _title, bool _paste, int _slot, bool _errMsg)
+void replaceOrPasteItemsFromTrackSlot(const char* _title, bool _paste, int _slot, bool _errMsg)
 {
 	bool updated = false;
 
@@ -515,10 +515,10 @@ void replaceOrPasteItemsFromsTrackTemplate(const char* _title, bool _paste, int 
 		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
 }
 
-bool autoSaveTrackTemplateSlots(int _slot, bool _delItems, const char* _dirPath, char* _fn, int _fnMaxSize)
+bool autoSaveTrackSlots(int _slot, bool _delItems, const char* _dirPath, char* _fn, int _fnMaxSize)
 {
 	bool slotUpdate = false;
-	strncpy(_fn, "<No selected track>", _fnMaxSize); //JFB // default err. msg
+	strncpy(_fn, "<No selected track>", _fnMaxSize); // default for err. msg
 	for (int i = 0; i <= GetNumTracks(); i++) // include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);

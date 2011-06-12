@@ -806,7 +806,7 @@ int getPitchTakeEnvRangeFromPrefs()
 {
 	int range = *(int*)GetConfigVar("pitchenvrange");
 	// "snap to semitones" bit set ?
-	if (range > 256)
+	if (range > 0xFF)
 		range &= 0xFF;
 	return min (231, range); // clamp (like REAPER does)
 }
@@ -1016,7 +1016,7 @@ bool ShowTakeEnvPitch(MediaItem_Take* _take) {
 ///////////////////////////////////////////////////////////////////////////////
 // Item/take template slots
 ///////////////////////////////////////////////////////////////////////////////
-#ifdef _SNM_ITT
+#ifdef _SNM_MISC
 void saveItemTakeTemplate(COMMAND_T* _ct)
 {
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master

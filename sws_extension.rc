@@ -1112,6 +1112,32 @@ BEGIN
     CONTROL         "Allow batch stem rendering",IDC_ALLOW_STEMS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,23,48,101,10
 END
 
+IDD_SNM_CYCLACTION DIALOGEX 0, 0, 322, 225
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "S&M - Create/edit cycle action"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    LTEXT           "Section:", IDC_STATIC, 7, 7, 55, 10, SS_LEFT | SS_CENTERIMAGE
+    AUTORADIOBUTTON "Main", IDC_RADIO1, 41, 7, 30, 10, BS_AUTORADIOBUTTON | WS_GROUP
+    AUTORADIOBUTTON "MIDI Editor (piano roll)", IDC_RADIO2, 74, 7, 85, 10
+    AUTORADIOBUTTON "MIDI Editor (event list)", IDC_RADIO3, 161, 7, 90, 10
+//    LTEXT           "Enter cmd ids, custom ids or '!' to create steps (or '!new action name')", IDC_STATIC, 104, 207, 213, 13, SS_LEFT | SS_CENTERIMAGE
+    GROUPBOX        " Cycle actions ", IDC_STATIC, 5, 21, 148, 178
+//    LTEXT           "Name:", IDC_STATIC, 169, 35, 22, 8, SS_LEFT | SS_CENTERIMAGE
+    EDITTEXT        IDC_NAME, 169 /*193*/, 33, 140 /*116*/, 13, ES_AUTOHSCROLL
+    LISTBOX         IDC_LIST1, 169, 52, 140, 121, WS_TABSTOP | WS_VSCROLL | LBS_NOINTEGRALHEIGHT | LBS_SORT | LBS_NOTIFY
+    PUSHBUTTON      "Add", IDC_ADD, 12, 179, 32, 14
+    PUSHBUTTON      "Clear", IDC_CLEAR, 50, 179, 32, 14
+    GROUPBOX        " Selected cycle action ", IDC_STATIC, 161, 21, 156, 178
+    LISTBOX         IDC_LIST2, 12, 33, 134, 140, WS_TABSTOP | WS_HSCROLL | WS_VSCROLL | LBS_NOINTEGRALHEIGHT | LBS_SORT | LBS_NOTIFY
+    PUSHBUTTON      "Insert", IDC_INSERT, 169, 179, 32, 14
+    PUSHBUTTON      "Remove", IDC_REMOVE, 207, 179, 32, 14
+    AUTOCHECKBOX    "Toggle state", IDC_CHECK1, 255, 182, 52, 8, BS_LEFTTEXT, WS_EX_RIGHT
+    DEFPUSHBUTTON   "OK", IDOK, 5, 206, 40, 14
+    PUSHBUTTON      "Cancel", IDCANCEL, 53, 206, 40, 14
+    PUSHBUTTON      "Open action list", 4, 259, 205, 57, 14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

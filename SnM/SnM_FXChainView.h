@@ -1,6 +1,6 @@
 /******************************************************************************
 / SnM_FXChainView.h
-/ JFB TODO? now, a better name would be "SnM_ResourceView.h"
+/ JFB TODO? now, SnM_Resources.cpp/.h would be better names..
 /
 / Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
@@ -32,9 +32,6 @@
 #ifndef _SNM_RESVIEW_H_
 #define _SNM_RESVIEW_H_
 
-#ifdef _SNM_ITT
-#define SNM_FILESLOT_MAX_ITEMTK_PROPS	12
-#endif
 
 class SNM_ResourceView : public SWS_ListView
 {
@@ -89,10 +86,7 @@ protected:
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
 	WDL_VirtualComboBox m_cbType, m_cbDblClickType, m_cbDblClickTo;
-	WDL_VirtualIconButton m_btnAutoSave; // FX chains & Track templates
-#ifdef _SNM_ITT
-	WDL_VirtualIconButton m_btnItemTakeDetails, m_btnItemTakeProp[SNM_FILESLOT_MAX_ITEMTK_PROPS];
-#endif
+	WDL_VirtualIconButton m_btnAutoSave;
 	WDL_VirtualStaticText m_txtDblClickType, m_txtDblClickTo;
 };
 
@@ -185,8 +179,6 @@ private:
 //JFB
 extern FileSlotList g_fxChainFiles;
 extern FileSlotList g_trTemplateFiles;
-#ifdef _SNM_ITT
-extern FileSlotList g_itemTemplateFiles;
-#endif
+extern FileSlotList g_prjTemplateFiles;
 
 #endif

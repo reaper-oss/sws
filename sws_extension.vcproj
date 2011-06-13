@@ -2338,6 +2338,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnM\SnM_Project.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\SnM\SnM_sends.cpp"
 				>
 			</File>

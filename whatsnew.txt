@@ -1,3 +1,4 @@
+!v2.0.0 #28 (June 13, 2011)
 Fixed duplicated "take pan envelopes" actions
 Fixed subtle "recursive cycling action" cases (e.g. a cycle action that calls a macro that calls a cycle action)
 

@@ -40,6 +40,7 @@
 		2246D05E12F1622400EEDBD5 /* Autorender.h in Headers */ = {isa = PBXBuildFile; fileRef = 2246D05A12F1622400EEDBD5 /* Autorender.h */; };
 		2246D05F12F1622400EEDBD5 /* RenderTrack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2246D05B12F1622400EEDBD5 /* RenderTrack.cpp */; };
 		2246D06012F1622400EEDBD5 /* RenderTrack.h in Headers */ = {isa = PBXBuildFile; fileRef = 2246D05C12F1622400EEDBD5 /* RenderTrack.h */; };
+		22495D7B13A5649800381F53 /* SnM_Project.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22495D7A13A5649800381F53 /* SnM_Project.cpp */; };
 		225130BF116101670028F26A /* padreActions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225130B2116101670028F26A /* padreActions.cpp */; };
 		225130C0116101670028F26A /* padreActions.h in Headers */ = {isa = PBXBuildFile; fileRef = 225130B3116101670028F26A /* padreActions.h */; };
 		225130C1116101670028F26A /* padreEnvelopeProcessor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225130B4116101670028F26A /* padreEnvelopeProcessor.cpp */; };
@@ -321,6 +322,7 @@
 		2246D05A12F1622400EEDBD5 /* Autorender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autorender.h; path = Autorender/Autorender.h; sourceTree = "<group>"; };
 		2246D05B12F1622400EEDBD5 /* RenderTrack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RenderTrack.cpp; path = Autorender/RenderTrack.cpp; sourceTree = "<group>"; };
 		2246D05C12F1622400EEDBD5 /* RenderTrack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RenderTrack.h; path = Autorender/RenderTrack.h; sourceTree = "<group>"; };
+		22495D7A13A5649800381F53 /* SnM_Project.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Project.cpp; path = SnM/SnM_Project.cpp; sourceTree = "<group>"; };
 		225130B2116101670028F26A /* padreActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreActions.cpp; path = Padre/padreActions.cpp; sourceTree = "<group>"; };
 		225130B3116101670028F26A /* padreActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreActions.h; path = Padre/padreActions.h; sourceTree = "<group>"; };
 		225130B4116101670028F26A /* padreEnvelopeProcessor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreEnvelopeProcessor.cpp; path = Padre/padreEnvelopeProcessor.cpp; sourceTree = "<group>"; };
@@ -906,6 +908,7 @@
 				33E88A7E11EDFD6700B0F4BE /* SnM_ME.cpp */,
 				33E88A7F11EDFD6700B0F4BE /* SnM_NotesHelpView.cpp */,
 				33E88A8011EDFD6700B0F4BE /* SnM_NotesHelpView.h */,
+				22495D7A13A5649800381F53 /* SnM_Project.cpp */,
 				22C769F810B0F04D00774777 /* SnM_sends.cpp */,
 				221CEFA9118212A0009245C9 /* SnM_Track.cpp */,
 				22C769F910B0F04D00774777 /* SnM_Windows.cpp */,
@@ -1373,6 +1376,7 @@
 				22C77ED312D62F2E002F68D5 /* TimeMap.cpp in Sources */,
 				2270FC7112F8551400703F85 /* RecCheck.cpp in Sources */,
 				22284D47130C4A65007DC680 /* Menus.cpp in Sources */,
+				22495D7B13A5649800381F53 /* SnM_Project.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

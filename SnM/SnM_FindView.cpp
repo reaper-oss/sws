@@ -550,6 +550,7 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	int x0=_r->left+10, h=35;
 
 	// 1st row of controls
+	bool drawLogo = false;
 	m_cbType.SetFont(font);
 	if (SetVWndAutoPosition(&m_cbType, NULL, _r, &x0, _r->top, h))
 	{
@@ -563,14 +564,17 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 				m_btnEnableZommScroll.SetVisible(true);
 				m_btnEnableZommScroll.SetCheckState(m_zoomSrollItems);
 				m_btnEnableZommScroll.SetTextLabel("Zoom/Scroll", -1, font);
-				if (SetVWndAutoPosition(&m_btnEnableZommScroll, NULL, _r, &x0, _r->top, h))
-					AddSnMLogo(_bm, _r, x0, h);
+				drawLogo = SetVWndAutoPosition(&m_btnEnableZommScroll, NULL, _r, &x0, _r->top, h);
 				break;
 			default:
 				m_btnEnableZommScroll.SetVisible(false);
+				drawLogo = true;
 				break;
 		}
 	}
+
+	if (drawLogo)
+		AddSnMLogo(_bm, _r, x0, h);
 
 	// 2nd row of controls
 	x0 = _r->left+8; 

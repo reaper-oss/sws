@@ -383,6 +383,12 @@ MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Track template slots (Resources view)
+//
+// JFB TODO: 
+// - manage multiple track case when applying (importing: OK, applying: rcv removed atm)
+// - manage folders when saving (=> several tracks to be saved even if only one track -the parent- is selected)
+// - auto-save: properly manage AUXRECV (removed atm)
+// - archive tracks
 ///////////////////////////////////////////////////////////////////////////////
 
 void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _replaceItems, bool _errMsg)
@@ -416,6 +422,11 @@ void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _r
 				pStart = strstr(pStart+6, "<TRACK");
 				if (pStart) 
 					trTmpltChunk.SetLen((int)(pStart-trTmpltChunk.Get()));
+
+				// remove receives from the template
+				// note: can occur with multiple tracks in a template (rcv between those tracks),
+				//       we remove them because track ids of the template won't match the project one
+				RemoveChunkLines(trTmpltChunk.Get(), "AUXRECV", false); // don't check bol: template files are indented!
 
 				for (int i = 0; i <= GetNumTracks(); i++) // include master
 				{
@@ -525,6 +536,9 @@ bool autoSaveTrackSlots(int _slot, bool _delItems, const char* _dirPath, char* _
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			SNM_ChunkParserPatcher p(tr);
+
+			// remove receives
+			RemoveChunkLines(p.GetChunk()->Get(), "AUXRECV", true);
 
 			// Delete items (temp: won't be committed!)
 			if (_delItems)

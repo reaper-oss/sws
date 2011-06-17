@@ -111,12 +111,12 @@ bool autoSaveProjectSlot(int _slot, bool _saveCurPrj, const char* _dirPath, char
 
 void loadOrSelectProject(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_trTemplateFiles.GetSize())
+	if (slot < 0 || slot < g_prjTemplateFiles.GetSize())
 		loadOrSelectProject(SNM_CMD_SHORTNAME(_ct), slot, false, slot < 0 || !g_prjTemplateFiles.Get(slot)->IsDefault());
 }
 
 void loadNewTabOrSelectProject(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_trTemplateFiles.GetSize())
+	if (slot < 0 || slot < g_prjTemplateFiles.GetSize())
 		loadOrSelectProject(SNM_CMD_SHORTNAME(_ct), slot, true, slot < 0 || !g_prjTemplateFiles.Get(slot)->IsDefault());
 }

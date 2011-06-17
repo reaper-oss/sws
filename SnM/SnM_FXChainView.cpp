@@ -165,6 +165,7 @@ SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
 
 void SNM_ResourceView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
 {
+	if (str) *str = '\0';
 	PathSlotItem* pItem = (PathSlotItem*)item;
 	if (pItem)
 	{
@@ -173,8 +174,8 @@ void SNM_ResourceView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax
 			case 0:
 			{
 				int slot = GetCurList()->Find(pItem);
-				if (slot >= 0) _snprintf(str, iStrMax, "%5.d", slot+1);
-				else strcpy(str, "?");
+				if (slot >= 0)
+					_snprintf(str, iStrMax, "%5.d", slot+1);
 			}
 			break;
 			case 1:
@@ -1001,29 +1002,37 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 	HMENU hMenu = CreatePopupMenu();
 	AddToMenu(hMenu, "Auto-fill (from resource path)", AUTO_INSERT_SLOTS);
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hMenu, "Filter by path", FILTER_BY_PATH_MSG, -1, false, g_filterByPathPref ? MFS_CHECKED : MFS_UNCHECKED);
-	AddToMenu(hMenu, "Filter by comment", FILTER_BY_PATH_MSG, -1, false, g_filterByPathPref ? MFS_UNCHECKED : MFS_CHECKED);
+
+	HMENU hFilterSubMenu = CreatePopupMenu();
+	AddSubMenu(hMenu, hFilterSubMenu, "Filter on");
+	AddToMenu(hFilterSubMenu, "Path", FILTER_BY_PATH_MSG, -1, false, g_filterByPathPref ? MFS_CHECKED : MFS_UNCHECKED);
+	AddToMenu(hFilterSubMenu, "Comment", FILTER_BY_PATH_MSG, -1, false, g_filterByPathPref ? MFS_UNCHECKED : MFS_CHECKED);
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
+
+	HMENU hAutoSaveSubMenu = CreatePopupMenu();
+	AddSubMenu(hMenu, hAutoSaveSubMenu, "Auto-save button");
 	char autoSavePath[BUFFER_SIZE] = "";
-	_snprintf(autoSavePath, BUFFER_SIZE, "[Current %ss auto-save path: %s]", GetCurList()->GetDesc(), GetCurAutoSaveDir()->Get());
-	AddToMenu(hMenu, autoSavePath, -1, -1, false, MF_GRAYED);
-	AddToMenu(hMenu, "Set auto-save directory...", AUTOSAVE_DIR_MSG);
-	AddToMenu(hMenu, "Set auto-save directory to default resource path", AUTOSAVE_DIR_DEFAULT_MSG);
+	_snprintf(autoSavePath, BUFFER_SIZE, "(Current auto-save path: %s)", GetCurAutoSaveDir()->Get());
+	AddToMenu(hAutoSaveSubMenu, autoSavePath, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (that's how does REAPER too)
+	AddToMenu(hAutoSaveSubMenu, "Set auto-save directory...", AUTOSAVE_DIR_MSG);
+	AddToMenu(hAutoSaveSubMenu, "Set auto-save directory to default resource path", AUTOSAVE_DIR_DEFAULT_MSG);
 	switch(g_type)
 	{
 		case SNM_SLOT_TYPE_FX_CHAINS:
-			AddToMenu(hMenu, "Set auto-save directory to project path (/FXChains)", AUTOSAVE_DIR_PRJ_MSG);
-			AddToMenu(hMenu, "Auto-save button: FX chains from track selection", FXC_AUTO_SAVE_TRACK, -1, false, m_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_TRACK ? MFS_CHECKED : MFS_UNCHECKED);
-			AddToMenu(hMenu, "Auto-save button: FX chains from item selection", FXC_AUTO_SAVE_ITEM, -1, false, m_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_ITEM ? MFS_CHECKED : MFS_UNCHECKED);
+			AddToMenu(hAutoSaveSubMenu, "Set auto-save directory to project path (/FXChains)", AUTOSAVE_DIR_PRJ_MSG);
+			AddToMenu(hAutoSaveSubMenu, SWS_SEPARATOR, 0);
+			AddToMenu(hAutoSaveSubMenu, "Auto-save FX chains from track selection", FXC_AUTO_SAVE_TRACK, -1, false, m_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_TRACK ? MFS_CHECKED : MFS_UNCHECKED);
+			AddToMenu(hAutoSaveSubMenu, "Auto-save FX chains from item selection", FXC_AUTO_SAVE_ITEM, -1, false, m_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_ITEM ? MFS_CHECKED : MFS_UNCHECKED);
 			if (g_bv4)
-				AddToMenu(hMenu, "Auto-save button: input FX chains from track selection", FXC_AUTO_SAVE_INPUT_FX, -1, false, m_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? MFS_CHECKED : MFS_UNCHECKED);
+				AddToMenu(hAutoSaveSubMenu, "Auto-save input FX chains from track selection", FXC_AUTO_SAVE_INPUT_FX, -1, false, m_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? MFS_CHECKED : MFS_UNCHECKED);
 			break;
 		case SNM_SLOT_TYPE_TR_TEMPLATES:
-			AddToMenu(hMenu, "Set auto-save directory to project path (/TrackTemplates)", AUTOSAVE_DIR_PRJ_MSG);
-			AddToMenu(hMenu, "Auto-save button: save track templates with items", TRT_AUTO_SAVE_WITEMS_MSG, -1, false, m_autoSaveTrTmpltWithItemsPref ? MFS_CHECKED : MFS_UNCHECKED);
+			AddToMenu(hAutoSaveSubMenu, "Set auto-save directory to project path (/TrackTemplates)", AUTOSAVE_DIR_PRJ_MSG);
+			AddToMenu(hAutoSaveSubMenu, SWS_SEPARATOR, 0);
+			AddToMenu(hAutoSaveSubMenu, "Auto-save track templates with items", TRT_AUTO_SAVE_WITEMS_MSG, -1, false, m_autoSaveTrTmpltWithItemsPref ? MFS_CHECKED : MFS_UNCHECKED);
 			break;
 		case SNM_SLOT_TYPE_PRJ_TEMPLATES:
-			AddToMenu(hMenu, "Set auto-save directory to project path (/ProjectTemplates)", AUTOSAVE_DIR_PRJ_MSG);
+			AddToMenu(hAutoSaveSubMenu, "Set auto-save directory to project path (/ProjectTemplates)", AUTOSAVE_DIR_PRJ_MSG);
 			break;
 	}
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
@@ -1069,9 +1078,9 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 		}
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 #ifdef _WIN32
-		AddToMenu(hMenu, "Edit...", EDIT_MSG, -1, false, enabled);
+		AddToMenu(hMenu, "Edit file...", EDIT_MSG, -1, false, enabled);
 #else
-		AddToMenu(hMenu, "Display...", EDIT_MSG, -1, false, enabled);
+		AddToMenu(hMenu, "Display file...", EDIT_MSG, -1, false, enabled);
 #endif
 		AddToMenu(hMenu, "Show path in Explorer/Finder", EXPLORE_MSG, -1, false, enabled);
 	}

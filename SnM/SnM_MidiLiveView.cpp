@@ -141,6 +141,7 @@ SNM_LiveConfigsView::SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit)
 
 void SNM_LiveConfigsView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
 {
+	if (str) *str = '\0';
 	MidiLiveItem* pItem = (MidiLiveItem*)item;
 	if (pItem)
 	{
@@ -154,17 +155,11 @@ void SNM_LiveConfigsView::GetItemText(LPARAM item, int iCol, char* str, int iStr
 				break;
 			case COL_TR:
 			{
-				bool ok = false;
 				if (pItem->m_track) {
 					char* name = (char*)GetSetMediaTrackInfo(pItem->m_track, "P_NAME", NULL);
 					if (name)
-					{
 						_snprintf(str, iStrMax, "[%d] \"%s\"", CSurf_TrackToID(pItem->m_track, false), name);
-						ok = true;
-					}
 				}
-				if (!ok)
-					lstrcpyn(str, "", iStrMax);
 				break;
 			}
 			case COL_TRT:

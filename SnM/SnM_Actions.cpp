@@ -397,7 +397,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot 10" }, "S&M_ADD_TRTEMPLATE10", loadImportTrackTemplate, NULL, 9},
 	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, prompt for slot" }, "S&M_ADD_TRTEMPLATEp", loadImportTrackTemplate, NULL, -1},
 
-	// Project templates
+	// Project templates ------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Open Resources window (project templates)" }, "S&M_SHOW_RESVIEW_PRJ_TEMPLATES", OpenResourceView, NULL, 2, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear project template slot..." }, "S&M_CLR_PRJTEMPLATE_SLOT", ClearSlotPrompt, NULL, 2},
+
 	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot 01" }, "S&M_APPLY_PRJTEMPLATE1", loadOrSelectProject, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot 02" }, "S&M_APPLY_PRJTEMPLATE2", loadOrSelectProject, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot 03" }, "S&M_APPLY_PRJTEMPLATE3", loadOrSelectProject, NULL, 2},
@@ -576,12 +579,12 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 8" }, "S&M_TOGGLE_LIVE_CFG8", ToggleEnableLiveConfig, NULL, 7, IsLiveConfigEnabled},
 
 	// Cyclactions ---------------------------------------------------------------
-//	{ { DEFACCEL, "SWS/S&M: Open cycle actions window" }, "S&M_OPEN_CYCLACTIONS_WND", openCyclactionsWnd, "S&&M Cycle actions", NULL, isCyclationsWndDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Create cycling action" }, "S&M_CREATE_CYCLACTION", CreateCyclaction, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Create cycling ME action (event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", CreateCyclaction, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Create cycling ME action (piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", CreateCyclaction, NULL, 2},
-//	{ { DEFACCEL, "SWS/S&M: Import cycling actions" }, "S&M_IMPORT_CYCLACTIONS", LoadCyclactions, NULL, },
-//	{ { DEFACCEL, "SWS/S&M: Export cycling actions" }, "S&M_EXPORT_CYCLACTIONS", SaveCyclactions, NULL, },
+//	{ { DEFACCEL, "SWS/S&M: Open cycle actions window" }, "S&M_OPEN_CYCLACTIONS_WND", openCyclactionsWnd, "S&&M cycle actions", NULL, isCyclationsWndDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Create cycle action" }, "S&M_CREATE_CYCLACTION", CreateCyclaction, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Create cycle ME action (event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", CreateCyclaction, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Create cycle ME action (piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", CreateCyclaction, NULL, 2},
+//	{ { DEFACCEL, "SWS/S&M: Import cycle actions" }, "S&M_IMPORT_CYCLACTIONS", LoadCyclactions, NULL, },
+//	{ { DEFACCEL, "SWS/S&M: Export cycle actions" }, "S&M_EXPORT_CYCLACTIONS", SaveCyclactions, NULL, },
 
 	// REC inputs -------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Set selected tracks MIDI input to all channels" }, "S&M_MIDI_INPUT_ALL_CH", setMIDIInputChannel, NULL, 0},
@@ -1028,9 +1031,7 @@ class Cyclaction {
 public:
 	Cyclaction(const char* _desc, int _state, bool _toggle) : m_desc(_desc), m_state(_state), m_toggle(_toggle) {}
 	~Cyclaction() {}
-	WDL_String m_desc;
-	int m_state;
-	bool m_toggle;
+	WDL_String m_desc; int m_state;	bool m_toggle;
 };
 
 // used to avoid subbtle "recursive cycle action" cases
@@ -1296,7 +1297,7 @@ void LoadCyclactions(COMMAND_T* _ct)
 			GetPrivateProfileString(g_cyclactionIniSections[i], buf, "", actionStr, 4096, g_SNMiniFilename.Get());
 			// don't check commands (macros & extension actions may not be all registered at this point + already tested on creation)
 			if (!CreateCyclaction(i, actionStr, false, false))
-				CreateCyclaction(i, "no-op,65535", false, false); // we add noop in order to respect following cycle actions' ids
+				CreateCyclaction(i, "no-op,65535", false, false); // we add no-op in order to respect following cycle actions' ids
 		}
 	}
 }

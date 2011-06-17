@@ -1,6 +1,12 @@
+Issue 308: Fixed "Select/load project template" actions
+
+Added actions:
++SWS/S&M: Open Resources window (project templates)
++SWS/S&M: Clear project template slot...
+
 !v2.0.0 #28 (June 13, 2011)
 Fixed duplicated "take pan envelopes" actions
-Fixed subtle "recursive cycling action" cases (e.g. a cycle action that calls a macro that calls a cycle action)
+Fixed subtle "recursive cycle action" cases (e.g. a cycle action that calls a macro that calls a cycle action)
 
 Added actions:
 +SWS/S&M: Copy FX chain (depending on focus)
@@ -132,7 +138,7 @@ Fixed the following actions/dialog boxes (crash with v4 empty take lanes):
 +Xenakios/SWS: Switch item contents to random cue (preserve item length)
 
 House cleaning:
-+Dropped OSX support for all "SWS/S&M: Trigger preset" actions (=> Win only)
++Dropped OSX support for all "SWS/S&M: Trigger preset" actions (=> Windows OS only)
 +Removed "Xenakios/SWS: Select last track of folder" ("not implemented" message, issue 284)
 +Removed duplicate "Xenakios/SWS: Toggle selected tracks visible in mixer"
 
@@ -150,9 +156,9 @@ Cycle action updates:
 
 !v2.0.0 #20 (May 5, 2011)
 Added cycle actions (user configurable):
-+SWS/S&M: Create cycling action
-+SWS/S&M: Create cycling ME action (event list)
-+SWS/S&M: Create cycling ME action (piano roll)
++SWS/S&M: Create cycle action
++SWS/S&M: Create cycle ME action (event list)
++SWS/S&M: Create cycle ME action (piano roll)
 
 Added actions:
 +SWS/AW: Render tracks to stereo stem tracks, obeying time selection
@@ -167,8 +173,8 @@ Bug fixes:
 Added toolbar actions with "auto-refreshed" button states (if the new option "Main menu > Extensions > SWS Options > Enable toolbars auto refresh" is ticked):
 +SWS/S&M: Toolbar right item selection toggle
 +SWS/S&M: Toolbar left item selection toggle
-+SWS/S&M: Toolbar top item selection toggle - WIN ONLY!
-+SWS/S&M: Toolbar bottom item selection toggle - WIN ONLY!
++SWS/S&M: Toolbar top item selection toggle - Windows OS only!
++SWS/S&M: Toolbar bottom item selection toggle - Windows OS only!
 These actions are to prevent user errors: related toolbar buttons will light up when some selected items are not visible in the arrange.
 Clicking related buttons will also deselect items that are out of the current scope and re-selects them on toggle.
 See details, howto and toolbar auto-refresh anim http://forum.cockos.com/showpost.php?p=728774&postcount=315|here|.
@@ -193,8 +199,8 @@ Added other actions:
 +SWS/S&M: Pan active takes of selected items to 100% left
 +SWS/S&M: Pan active takes of selected items to center
 Note: "pan takes" not "pan cakes".
-+SWS/S&M: Dump action list (w/o SWS extension) - WIN ONLY!
-+SWS/S&M: Dump action list (w/ SWS extension) - WIN ONLY!
++SWS/S&M: Dump action list (w/o SWS extension) - Windows OS only!
++SWS/S&M: Dump action list (w/ SWS extension) - Windows OS only!
 Note: dumped files are formatted (openable in Excel for example). See how to use these 2 actions http://wiki.cockos.com/wiki/index.php/S%26M_Dump_action_list|here|.
 
 Find view:
@@ -222,7 +228,7 @@ Readded Xenakios' "Command parameters" to the Extensions menu
 Fix crash when parsing a MIDI take with a large extended MIDI event.
 
 !v2.0.0 #17 (March 16, 2011)
-Added actions (issue 165, Win only):
+Added actions (issue 165, Windows OS only):
 +SWS/S&M: Focus main window (close others)
 +SWS/S&M: Focus next window (cycle, hide/unhide others)
 +SWS/S&M: Focus previous window (cycle, hide/unhide others)
@@ -619,7 +625,7 @@ Changed View menu for REAPER v4 compatibility.
 Issue 214: Fixed OSX crash when opening a project list file
 
 !v1.8.6 #3 (November 16, 2010)
-Issue 167: Fixed OSX take mixer, as well as other Xenakios dialogs with sliders (some Win fixes too)
+Issue 167: Fixed OSX take mixer, as well as other Xenakios dialogs with sliders (some Windows OS fixes too)
 
 !v1.8.6 #2 (November 15, 2010)
 Issue 198: Edit cursor position undo/redo.  Added actions "SWS: Undo edit cursor move" and "SWS: Redo edit cursor move"
@@ -647,7 +653,7 @@ Fixed issue 208
 Simulate left mouse click at cursor position for OSX, but still beta
 
 !v1.8.5 #5 (November 3, 2010)
-New action "SWS/S&M: Simulate left mouse click at cursor position (Win only)"
+New action "SWS/S&M: Simulate left mouse click at cursor position (Windows OS only)"
 Some S&M actions run faster
 
 !v1.8.5 #4 (November 3, 2010)
@@ -875,7 +881,7 @@ Build lane actions updated:
 S&M FX Chain view improvments:
 +Paste of FX Chains in now possible (only FX Chain replacement was possible until now)
 +External drag'n'drop of FX Chains (e.g. drag from an external explorer, drop into the view)
-+Internal drag'n'drop of FX Chains (drag from the view, drop in a track) - WIN ONLY
++Internal drag'n'drop of FX Chains (drag from the view, drop in a track) - Windows OS only
 +Added actions:
 SWS/S&M: Paste FX chain to selected items
 SWS/S&M: Paste FX chain to selected items, all takes
@@ -896,7 +902,7 @@ Added new dockable view "S&M Notes/help" for item notes, track notes and, on Win
 +S&M Notes/help & S&M Find demo: http://reaper.mj-s.com/notes_and_find.gif|here|.
 +Added related actions:
 SWS/S&M: Open Notes/help window...
-SWS/S&M: Notes/help - Switch to action help - WIN ONLY
+SWS/S&M: Notes/help - Switch to action help - Windows OS only
 SWS/S&M: Notes/help - Switch to item notes
 SWS/S&M: Notes/help - Switch to track notes
 SWS/S&M: Notes/help - Switch to project notes (disable auto updates)  (<i>Note this is *not* REAPER's project notes.</i>)
@@ -932,7 +938,7 @@ These actions only apply for ACTIVE envelopes (i.e. these actions don't create e
 Send envelopes are not (yet) managed, use receive envelopes instead
 As these toggle actions act on several tracks, the reported toggle state is a "best effort" one
 
-Action List Reference summaries auto generation (Wiki copy/pastable) - Win only
+Action List Reference summaries auto generation (Wiki copy/pastable) - Windows OS only
 +See details http://forum.cockos.com/showthread.php?t=61929|here|. ALR: http://www.cockos.com/wiki/index.php/Action_List_Reference|here|.
 +SWS/S&M: Save ALR Wiki summary (w/o extensions)
 +SWS/S&M: Save ALR Wiki summary (SWS/Xenakios/S&M extensions only)
@@ -983,7 +989,7 @@ S&M updates:
 - SWS/S&M: Active ME - Save displayed CC lanes, slot <i>n</i> (n: 1..4)
 - SWS/S&M: Active ME - Set displayed CC lanes, slot <i>n</i> (n: 1..4)
 Note: those actions apply to the active MIDI Editor but only belong to the main section of the action list, for the moment. Displayed CC lanes are saved in <my_reaper_dir>/Plugins/S&M.ini
-- SWS/S&M: Cycle focused window (win only)
+- SWS/S&M: Cycle focused window (Windows OS only)
 This actions need to be bind with a special modifier in order to pass-thru the main window (example: Ctrl Shift a).
 Also, few windows eat keystrokes, it will not work for them (e.g. action list which text filter is focused by default).
 - SWS/S&M: Let REAPER breathe

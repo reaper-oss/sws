@@ -46,7 +46,7 @@
 //   (see details there, mods are plainly marked as required by the licensing)
 //
 // Changelog:
-// v1.21
+// v1.22
 // - New helpers, new SNM_COUNT_KEYWORD parsing mode
 // - Inheritance: Commit() & GetChunk() can be overrided
 // - GetSubChunk() now returns the start position of the sub-chunk (or -1 if not found)
@@ -272,7 +272,7 @@ virtual bool Commit(bool _force = false)
 }
 
 const char* GetInfo() {
-	return "SNM_ChunkParserPatcher - v1.21";
+	return "SNM_ChunkParserPatcher - v1.22";
 }
 
 void SetProcessBase64(bool _enable) {
@@ -532,7 +532,7 @@ bool WriteChunkLine(WDL_String* _chunkLine, const char* _value, int _tokenPos, L
 	return updated;
 }
 
-// just to avoid many duplicate strcmp() calls in ParsePatchCore()
+// just to avoid duplicate strcmp() calls in ParsePatchCore()
 void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch, 
 		int _expectedDepth, int _parsedDepth,
 		const char* _expectedParent, const char* _parsedParent,
@@ -542,28 +542,19 @@ void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch,
 	*_tolerantMatch = false;
 	*_strictMatch = false;
 
-	if (_expectedNumTokens > 0 && _expectedNumTokens != _parsedNumTokens)
+	if (_expectedNumTokens >= 0 && _expectedNumTokens != _parsedNumTokens)
 		return;
 
-	if (_expectedDepth == -1) {
+	if (_expectedDepth == -1)
 		*_tolerantMatch = true;
-	}
 	else if (_expectedDepth == _parsedDepth) {
-		if (!_expectedParent) {
+		if (!_expectedParent)
 			*_tolerantMatch = true;
-		}
 		else if (!strcmp(_parsedParent, _expectedParent)) {
-			if (!_expectedKeyword) {
+			if (!_expectedKeyword)
 				*_tolerantMatch = true;
-			}
-			else if ((_expectedNumTokens == -1 || _expectedNumTokens == _parsedNumTokens) && !strcmp(_parsedKeyword, _expectedKeyword)) {
+			else if (!strcmp(_parsedKeyword, _expectedKeyword))
 				*_strictMatch = *_tolerantMatch = true;
-/*JFB OK
-			else if (!strcmp(_parsedKeyword, _expectedKeyword)) {
-				*_strictMatch = *_tolerantMatch = 
-					(_expectedNumTokens == -1 || _expectedNumTokens == _parsedNumTokens);
-*/
-			}
 		}
 	}
 }

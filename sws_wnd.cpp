@@ -579,6 +579,22 @@ LPARAM SWS_ListView::EnumSelected(int* i)
 	return NULL;
 }
 
+bool SWS_ListView::SelectByItem(LPARAM _item)
+{
+	for (int i = 0; i < GetListItemCount(); i++)
+	{
+		LPARAM item = GetListItem(i);
+		if (item == _item) 
+		{
+			ListView_SetItemState(m_hwndList, -1, 0, LVIS_SELECTED);
+			ListView_SetItemState(m_hwndList, i, LVIS_SELECTED, LVIS_SELECTED); 
+			ListView_EnsureVisible(m_hwndList, i, true);
+			return true;
+		}
+	}
+	return false;
+}
+
 int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 {
 	NMLISTVIEW* s = (NMLISTVIEW*)lParam;
@@ -1177,8 +1193,9 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	SendMessage(m_hwndEdit, EM_SETSEL, 0, -1);
 }
 
-void SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
+bool SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 {
+	bool updated = false;
 	if (m_iEditingItem != -1 && IsWindow(m_hwndList) && IsWindow(m_hwndEdit))
 	{
 		if (bSave)
@@ -1193,6 +1210,7 @@ void SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 				SetItemText(item, m_iEditingCol, newStr);
 				GetItemText(item, m_iEditingCol, newStr, 100);
 				ListView_SetItemText(m_hwndList, m_iEditingItem, DataToDisplayCol(m_iEditingCol), newStr);
+				updated = true;
 			}
 			if (bResort)
 				ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
@@ -1203,6 +1221,7 @@ void SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 		ShowWindow(m_hwndEdit, SW_HIDE);
 		SetFocus(m_hwndList);
 	}
+	return updated;
 }
 
 int SWS_ListView::OnItemSort(LPARAM item1, LPARAM item2)

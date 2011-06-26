@@ -28,7 +28,7 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
-
+#include "../Prompt.h"
 
 #ifdef _WIN32
 #pragma comment (lib, "winmm.lib")
@@ -37,6 +37,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // File util
+// JFB!!! TODO: WDL_UTF8
 ///////////////////////////////////////////////////////////////////////////////
 
 bool FileExistsErrMsg(const char* _fn, bool _errMsg)
@@ -243,7 +244,7 @@ void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx)
 }
 
 // Write a full INI file's section in one go
-void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection)
+void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection, const char* _iniFn)
 {
 	// "The data in the buffer pointed to by the lpString parameter consists 
 	// of one or more null-terminated strings, followed by a final null character"
@@ -252,8 +253,8 @@ void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection)
 	for (int j=0; j < _iniSection->GetLength(); j++)
 		if (buf[j] == '\n') 
 			buf[j] = '\0';
-	WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, g_SNMiniFilename.Get()); //flush section
-	WritePrivateProfileSection(_iniSectionName, buf, g_SNMiniFilename.Get());
+	WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, _iniFn); //flush section
+	WritePrivateProfileSection(_iniSectionName, buf, _iniFn);
 	free(buf);
 }
 
@@ -261,6 +262,28 @@ void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection)
 ///////////////////////////////////////////////////////////////////////////////
 // Util
 ///////////////////////////////////////////////////////////////////////////////
+
+bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufMaxSize)
+{
+	if (!_buf || !_bufSrc)
+		return false;
+
+	memset(_buf, 0, sizeof(_buf));
+
+	int i=0, j=0;
+	while (_bufSrc[i] && i < _bufMaxSize && j < _bufMaxSize)
+	{
+		if (_bufSrc[i] == '\n') {
+			_buf[j++] = '\r';
+			_buf[j++] = '\n';
+		}
+		else if (_bufSrc[i] != '\r')
+			_buf[j++] = _bufSrc[i];
+		i++;
+	}
+	_buf[_bufMaxSize-1] = 0; //just in case..
+	return true;
+}
 
 int SNM_MinMax(int _val, int _min, int _max) {
 	return min(_max, max(_min, _val));
@@ -297,45 +320,13 @@ bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sec
 ///////////////////////////////////////////////////////////////////////////////
 
 // GUI for lazy guys
-void SNM_ShowConsoleMsg(const char* _msg, const char* _title, bool _clear)
+void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent)
 {
-	if (_clear) 
-		ShowConsoleMsg(""); //clear
-	ShowConsoleMsg(_msg);
-
-	// a little hack..
-	if (_title) 
-	{
-		HWND w = SearchWindow("ReaScript console output");
-		if (w)
-			SetWindowText(w, _title);
-		else
-			w = SearchWindow(_title);
-
-		if (w) 
-			SetForegroundWindow(w);
-	}
-}
-
-// http://forum.cockos.com/showthread.php?t=48793
-void SNM_ShowConsoleDbg(bool _clear, const char* format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    int bufsize = 2048;
-    char* buffer = (char*)malloc(bufsize);
-#ifdef _WIN32
-    while(buffer && _vsnprintf(buffer, bufsize, format, args) < 0) {
-#else
-	while(buffer && vsnprintf(buffer, bufsize, format, args) < 0) {
-#endif
-        bufsize *= 2;
-        buffer = (char*)realloc(buffer, bufsize);
-    }
-    if (buffer)
-		SNM_ShowConsoleMsg(buffer, "Debug", _clear);
-    va_end(args);
-    free(buffer);
+	HWND h = _hParent;
+	if (!h) h = GetMainHwnd();
+	char msg[4096] = "";
+	if (GetStringWithRN(_msg, msg, 4096) && *msg)
+		DisplayInfoBox(h, _title, msg);
 }
 
 //returns -1 on cancel, MIDI channel otherwise (0-based)
@@ -414,8 +405,8 @@ void SimulateMouseClick(COMMAND_T* _ct)
 // _type: 3 & 4 for basic dump (3=native actions, 4=SWS)
 bool dumpActionList(int _type, const char* _title, const char* _lineFormat, const char* _heading, const char* _ending)
 {
-	char currentSection[64] = "";
-	HWND hList = GetActionListBox(currentSection, 64);
+	char currentSection[SNM_MAX_SECTION_NAME_LEN] = "";
+	HWND hList = GetActionListBox(currentSection, SNM_MAX_SECTION_NAME_LEN);
 	if (hList && currentSection)
 	{
 		char sectionURL[64]= ""; 

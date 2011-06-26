@@ -50,6 +50,7 @@ public:
 	LPARAM GetListItem(int iIndex, int* iState = NULL);
 	bool IsSelected(int index);
 	LPARAM EnumSelected(int* i);
+	bool SelectByItem(LPARAM item);
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 	void OnDestroy();
 	int EditingKeyHandler(MSG *msg);
@@ -59,7 +60,7 @@ public:
 	LPARAM GetHitItem(int x, int y, int* iCol);
 	void EditListItem(LPARAM item, int iCol);
 	int GetEditingItem() { return m_iEditingItem; }
-	void EditListItemEnd(bool bSave, bool bResort = true);
+	bool EditListItemEnd(bool bSave, bool bResort = true);
 	
 	bool IsActive(bool bWantEdit) { return GetFocus() == m_hwndList || (bWantEdit && m_iEditingItem != -1); }
 	void DisableUpdates(bool bDisable) { m_bDisableUpdates = bDisable; }

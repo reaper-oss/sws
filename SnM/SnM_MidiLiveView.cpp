@@ -574,8 +574,8 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 						lc->m_enable[g_configId] = !(lc->m_enable[g_configId]);
 						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 						// Retreive the related toggle action and refresh toolbars
-						char customCmdId[128];
-						_snprintf(customCmdId, 128, "%s%d", "_S&M_TOGGLE_LIVE_CFG", g_configId+1);
+						char customCmdId[SNM_MAX_ACTION_CUSTID_LEN];
+						_snprintf(customCmdId, SNM_MAX_ACTION_CUSTID_LEN, "%s%d", "_S&M_TOGGLE_LIVE_CFG", g_configId+1);
 						RefreshToolbar(NamedCommandLookup(customCmdId));
 					}
 					break;

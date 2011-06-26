@@ -1197,8 +1197,8 @@ void toggleItemSelExists(COMMAND_T* _ct)
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 
 		// in case auto refresh toolbar bar option is off..
-		char cmdCustId[64] = "";
-		_snprintf(cmdCustId, 64, "_S&M_TOOLBAR_ITEM_SEL%d", dir);
+		char cmdCustId[SNM_MAX_ACTION_CUSTID_LEN] = "";
+		_snprintf(cmdCustId, SNM_MAX_ACTION_CUSTID_LEN, "_S&M_TOOLBAR_ITEM_SEL%d", dir);
 		RefreshToolbar(NamedCommandLookup(cmdCustId));
 	}
 }

@@ -33,64 +33,6 @@
 #define _SNM_RESVIEW_H_
 
 
-class SNM_ResourceView : public SWS_ListView
-{
-public:
-	SNM_ResourceView(HWND hwndList, HWND hwndEdit);
-protected:
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void SetItemText(LPARAM item, int iCol, const char* str);
-	void OnItemDblClk(LPARAM item, int iCol);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	void OnBeginDrag(LPARAM item);
-};
-
-// used if more than NB_SLOTS_FAST_LISTVIEW slots are loaded
-class SNM_FastResourceView : public SNM_ResourceView {
-public:
-	SNM_FastResourceView(HWND hwndList, HWND hwndEdit) : SNM_ResourceView(hwndList, hwndEdit) {}
-	virtual void Update();
-};
-
-class SNM_ResourceWnd : public SWS_DockWnd
-{
-public:
-	SNM_ResourceWnd();
-	void SetType(int _type);
-	void Update();
-	void OnCommand(WPARAM wParam, LPARAM lParam);
-	void SelectBySlot(int _slot);
-
-protected:
-	void OnInitDlg();
-	HMENU OnContextMenu(int x, int y);
-	void OnDestroy();
-	int OnKey(MSG* msg, int iKeyState);
-	int GetValidDroppedFilesCount(HDROP _h);
-	void OnDroppedFiles(HDROP _h);
-	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
-	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-	void FillDblClickTypeCombo();
-	void AddSlot(bool _update);
-	void InsertAtSelectedSlot(bool _update);
-	void DeleteSelectedSlots(bool _update, bool _delFiles=false);
-	void AutoSaveSlots(int _slotPos);
-
-	int m_previousType;
-	bool m_autoSaveTrTmpltWithItemsPref;
-	int m_autoSaveFXChainPref;
-	int m_lastThemeBrushColor;
-
-	// WDL UI
-	WDL_VWnd_Painter m_vwnd_painter;
-	WDL_VWnd m_parentVwnd; // owns all children windows
-	WDL_VirtualComboBox m_cbType, m_cbDblClickType, m_cbDblClickTo;
-	WDL_VirtualIconButton m_btnAutoSave;
-	WDL_VirtualStaticText m_txtDblClickType, m_txtDblClickTo;
-};
-
-
 class PathSlotItem {
 public:
 	PathSlotItem(const char* _shortPath="", const char* _desc="") : m_shortPath(_shortPath), m_desc(_desc) {}
@@ -113,6 +55,7 @@ class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
 			if (p) *(p+1) = '\0';
 		}
 	}
+	int GetType() {return m_type;}
 	// _path: short resource path or full path
 	PathSlotItem* AddSlot(const char* _path="", const char* _desc="") {
 		char shortPath[BUFFER_SIZE] = "";
@@ -176,9 +119,70 @@ private:
 	WDL_String m_ext; // file extension w/o '.' (ex: "rfxchain")
 };
 
+
 //JFB
 extern FileSlotList g_fxChainFiles;
 extern FileSlotList g_trTemplateFiles;
 extern FileSlotList g_prjTemplateFiles;
+
+
+class SNM_ResourceView : public SWS_ListView
+{
+public:
+	SNM_ResourceView(HWND hwndList, HWND hwndEdit);
+protected:
+	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
+	void SetItemText(LPARAM item, int iCol, const char* str);
+	void OnItemDblClk(LPARAM item, int iCol);
+	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
+	void OnBeginDrag(LPARAM item);
+};
+
+// used if more than NB_SLOTS_FAST_LISTVIEW slots are loaded
+class SNM_FastResourceView : public SNM_ResourceView {
+public:
+	SNM_FastResourceView(HWND hwndList, HWND hwndEdit) : SNM_ResourceView(hwndList, hwndEdit) {}
+	virtual void Update();
+};
+
+
+class SNM_ResourceWnd : public SWS_DockWnd
+{
+public:
+	SNM_ResourceWnd();
+	void SetType(int _type);
+	void Update();
+	void OnCommand(WPARAM wParam, LPARAM lParam);
+	void SelectBySlot(int _slot);
+
+protected:
+	void OnInitDlg();
+	HMENU OnContextMenu(int x, int y);
+	void OnDestroy();
+	int OnKey(MSG* msg, int iKeyState);
+	int GetValidDroppedFilesCount(HDROP _h);
+	void OnDroppedFiles(HDROP _h);
+	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
+	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+	void FillDblClickTypeCombo();
+	void AddSlot(bool _update);
+	void InsertAtSelectedSlot(bool _update);
+	void DeleteSelectedSlots(bool _update, bool _delFiles=false);
+	void AutoSaveSlots(int _slotPos);
+
+	int m_previousType;
+	bool m_autoSaveTrTmpltWithItemsPref;
+	int m_autoSaveFXChainPref;
+	int m_lastThemeBrushColor;
+
+	// WDL UI
+	WDL_VWnd_Painter m_vwnd_painter;
+	WDL_VWnd m_parentVwnd; // owns all children windows
+	WDL_VirtualComboBox m_cbType, m_cbDblClickType, m_cbDblClickTo;
+	WDL_VirtualIconButton m_btnAutoSave;
+	WDL_VirtualStaticText m_txtDblClickType, m_txtDblClickTo;
+};
+
 
 #endif

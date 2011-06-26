@@ -1,4 +1,14 @@
+Added "Cycle action editor" (demo http://reaper.mj-s.com/cyclaction_editor.gif|here|):
++Unlimited number of cycle actions
++Unlimited number of commands per cycle action
++Import/export features
++Learn commands from the action list (Windows OS only)
+Other cycle action updates:
++Performance improvments
++Consolidated undo points
+
 Issue 308: Fixed "Select/load project template" actions
+Unicode fixes
 
 Added actions:
 +SWS/S&M: Open Resources window (project templates)

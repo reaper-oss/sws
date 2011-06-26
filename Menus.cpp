@@ -167,7 +167,8 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hAutoRenderSubMenu, "Global preferences", NamedCommandLookup("_AUTORENDER_PREFERENCES"));
 
 	AddToMenu(hMenu, "Command parameters", NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));
-	AddToMenu(hMenu, "Cue buss generator", NamedCommandLookup("_S&M_SENDS4"));
+	AddToMenu(hMenu, "Cue Buss generator", NamedCommandLookup("_S&M_SENDS4"));
+	AddToMenu(hMenu, "Cycle Action editor...", NamedCommandLookup("_S&M_CREATE_CYCLACTION"));
 	AddToMenu(hMenu, "Envelope processor...", NamedCommandLookup("_PADRE_ENVPROC"));
 	AddToMenu(hMenu, "Fill gaps...", NamedCommandLookup("_SWS_AWFILLGAPSADV"));
 	AddToMenu(hMenu, "Find", NamedCommandLookup("_S&M_SHOWFIND"));
@@ -192,7 +193,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hItemTkSubMenu, "Select items to end of track", NamedCommandLookup("_XENAKIOS_SELITEMSTOENDOFTRACK"));
 	AddToMenu(hItemTkSubMenu, "Select first items of selected tracks", NamedCommandLookup("_XENAKIOS_SELFIRSTITEMSOFTRACKS"));
 */
-	AddToMenu(hMenu, "LFO Generator...", NamedCommandLookup("_PADRE_ENVLFO"));
+	AddToMenu(hMenu, "LFO generator...", NamedCommandLookup("_PADRE_ENVLFO"));
 	AddToMenu(hMenu, "Live Configs", NamedCommandLookup("_S&M_SHOWMIDILIVE"));
 	AddToMenu(hMenu, "MarkerList", NamedCommandLookup("_SWSMARKERLIST1"));
 

@@ -28,7 +28,6 @@
 
 #pragma once
 
-bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufMaxSize);
 bool GetStringFromNotesChunk(WDL_String* _notes, char* _buf, int _bufMaxSize);
 bool GetNotesChunkFromString(const char* _buf, WDL_String* _notes, const char* _startLine = NULL);
 

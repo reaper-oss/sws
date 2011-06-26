@@ -34,6 +34,12 @@
 // Misc. window actions/helpers
 ///////////////////////////////////////////////////////////////////////////////
 
+bool SNM_IsActiveWindow(HWND _h) {
+	if (!_h || !IsWindow(_h))
+		return false;
+	return (GetFocus() == _h || IsChild(_h, GetFocus()));
+}
+
 void AddUniqueHnwd(HWND _hAdd, HWND* _hwnds, int* count)
 {
 	for (int i=0; i < *count; i++)
@@ -67,7 +73,7 @@ bool IsChildOf(HWND _hChild, const char* _title, int _nComp)
 #define MAX_ENUM_CHILD_HWNDS 512
 #define MAX_ENUM_HWNDS 256
 
-//JFB!!! TODO: clean with WDL_PtrList instead
+//JFB TODO: clean with WDL_PtrList instead
 static int g_hwndsCount = 0;
 static HWND g_hwnds[MAX_ENUM_CHILD_HWNDS];
 static int g_childHwndsCount = 0;
@@ -197,6 +203,38 @@ HWND GetActionListBox(char* _currentSection, int _sectionMaxSize)
 			GetWindowText(cbSection, _currentSection, _sectionMaxSize);
 	}
 	return (actionsWnd ? GetDlgItem(actionsWnd, 0x52B) : NULL);
+}
+
+// no multi-selection mgmt here..
+int GetSelectedActionId(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc, int _descSize)
+{
+	HWND hList = GetActionListBox(_section, _secSize);
+	if (hList && ListView_GetSelectedCount(hList))
+	{
+		LVITEM li;
+		li.mask = LVIF_STATE | LVIF_PARAM;
+		li.stateMask = LVIS_SELECTED;
+		li.iSubItem = 0;
+		for (int i = 0; i < ListView_GetItemCount(hList); i++)
+		{
+			li.iItem = i;
+			ListView_GetItem(hList, &li);
+			if (li.state == LVIS_SELECTED)
+			{
+				if (_cmdId)
+					*_cmdId = (int)li.lParam;
+
+				if (_desc && _descSize > 0)
+					ListView_GetItemText(hList, i, 1, _desc, _descSize); //JFB displaytodata?
+
+				ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, _id, _idSize);  //JFB displaytodata?
+				if (_id && !*_id)
+					sprintf(_id, "%d", (int)li.lParam);
+				return i;
+			}
+		}
+	}
+	return -1;
 }
 
 
@@ -405,8 +443,7 @@ void floatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _s
 		if (!_showFlag) 
 			toggleFloatFX(_tr, (_fx == -1 ? getSelectedTrackFX(_tr) : _fx));
 		else 
-			//JFB!!! TOTEST: offline
-			TrackFX_Show(_tr, (_fx == -1 ? getSelectedTrackFX(_tr) : _fx), _showFlag);
+			TrackFX_Show(_tr, (_fx == -1 ? getSelectedTrackFX(_tr) : _fx), _showFlag); // offline fx is managed
 	}
 }
 
@@ -902,7 +939,7 @@ void ShowThemeHelper(COMMAND_T* _ct)
 	if (w && IsWindowVisible(w)) 
 		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
 
-	SNM_ShowConsoleMsg(report.Get(), "S&M - Theme Helper");
+	SNM_ShowMsg(report.Get(), "S&M - Theme Helper");
 }
 
 

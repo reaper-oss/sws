@@ -77,8 +77,8 @@ char g_lastText[MAX_HELP_LENGTH];
 //JFB TODO: cleanup when we'll be able to access all sections & custom ids
 int g_lastActionListSel = -1;
 DWORD g_lastActionListCmd = 0;
-char g_lastActionListSection[64] = "";
-char g_lastActionId[64] = "";
+char g_lastActionSection[SNM_MAX_SECTION_NAME_LEN] = "";
+char g_lastActionId[SNM_MAX_ACTION_CUSTID_LEN] = "";
 char g_lastActionDesc[128] = ""; 
 
 MediaItem* g_mediaItemNote = NULL;
@@ -193,10 +193,10 @@ void SNM_NotesHelpWnd::Update(bool _force)
 			g_bLastDocked = g_bDocked;
 			m_previousType = m_type;
 			g_lastActionListSel = -1;
-			*g_lastActionId = 0;
-			*g_lastActionDesc = 0;
+			*g_lastActionId = '\0';
+			*g_lastActionDesc = '\0';
 			g_lastActionListCmd = 0;
-			*g_lastActionListSection = 0;
+			*g_lastActionSection = '\0';
 			g_mediaItemNote = NULL;
 			g_trNote = NULL;
 		}
@@ -235,10 +235,10 @@ void SNM_NotesHelpWnd::Update(bool _force)
 				refreshType = updateActionHelp();
 				if (refreshType == REQUEST_REFRESH_EMPTY) {
 					g_lastActionListSel = -1;
-					*g_lastActionId = 0;
-					*g_lastActionDesc = 0;
+					*g_lastActionId = '\0';
+					*g_lastActionDesc = '\0';
 					g_lastActionListCmd = 0;
-					*g_lastActionListSection = 0;
+					*g_lastActionSection = '\0';
 				}
 				break;
 			case NOTES_HELP_DISABLED:
@@ -356,56 +356,36 @@ void SNM_NotesHelpWnd::saveCurrentTrackNotes()
 
 int SNM_NotesHelpWnd::updateActionHelp()
 {
-	int refreshType = REQUEST_REFRESH_EMPTY;
-	HWND hList = GetActionListBox(g_lastActionListSection, 64);
-	if (hList && ListView_GetSelectedCount(hList))
+	int iSel, actionId;
+	char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "", desc[128] = "";
+	iSel = GetSelectedActionId(g_lastActionSection, SNM_MAX_SECTION_NAME_LEN, &actionId, idstr, 64, desc, 128);
+	if (iSel >= 0)
 	{
-		LVITEM li;
-		li.mask = LVIF_STATE | LVIF_PARAM;
-		li.stateMask = LVIS_SELECTED;
-		li.iSubItem = 0;
-		for (int i = 0; i < ListView_GetItemCount(hList); i++)
+		if (iSel != g_lastActionListSel)
 		{
-			li.iItem = i;
-			ListView_GetItem(hList, &li);
-			if (li.state == LVIS_SELECTED)
+			g_lastActionListSel = iSel;
+			g_lastActionListCmd = actionId; 
+			strncpy(g_lastActionDesc, desc, 128);
+			strncpy(g_lastActionId, idstr, SNM_MAX_ACTION_CUSTID_LEN);
+
+			if (g_lastActionId && *g_lastActionId && g_lastActionDesc && *g_lastActionDesc)
 			{
-				if (i != g_lastActionListSel)
-				{
-					g_lastActionListSel = i;
-					int cmdId = (int)li.lParam;
-					g_lastActionListCmd = cmdId; 
-
-					//JFB TODO: cleanup when we'll be able to access all sections & custom ids
-					ListView_GetItemText(hList, i, 1, g_lastActionDesc, 128);
-					ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, g_lastActionId, 64);
-
-					if (g_lastActionId && !*g_lastActionId)
-						sprintf(g_lastActionId, "%d", cmdId);
-					
-					if (g_lastActionId && *g_lastActionId && g_lastActionDesc && *g_lastActionDesc )
-					{
-						// skip custom cmds
-						if (!_strnicmp(g_lastActionDesc, "Custom:", 7))
-						{
-							SetText(g_lastActionId);
-						}
-						else
-						{
-							char buf[MAX_HELP_LENGTH] = "";
-							loadHelp(g_lastActionId, buf, MAX_HELP_LENGTH);
-							SetText(buf);
-						}
-						refreshType = REQUEST_REFRESH;
-					}
-				}
+				// skip macros
+				if (!_strnicmp(g_lastActionDesc, "Custom:", 7))
+					SetText(g_lastActionId);
 				else
-					refreshType = NO_REFRESH;
-				break;
+				{
+					char buf[MAX_HELP_LENGTH] = "";
+					loadHelp(g_lastActionId, buf, MAX_HELP_LENGTH);
+					SetText(buf);
+				}
+				return REQUEST_REFRESH;
 			}
 		}
+		else
+			return NO_REFRESH;
 	}
-	return refreshType;
+	return REQUEST_REFRESH_EMPTY;
 }
 
 int SNM_NotesHelpWnd::updateItemNotes()
@@ -530,7 +510,7 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				{
 					char cLink[512] = "";
 					char sectionURL[64] = "";
-					if (GetSectionName(true, g_lastActionListSection, sectionURL, 64))
+					if (GetSectionName(true, g_lastActionSection, sectionURL, 64))
 					{					
 						_snprintf(cLink, 512, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
 						ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
@@ -648,8 +628,8 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	switch(m_type)
 	{
 		case ACTION_HELP:
-			if (g_lastActionDesc && *g_lastActionDesc && g_lastActionListSection && *g_lastActionListSection)
-				_snprintf(str, 512, " [%s]  %s", g_lastActionListSection, g_lastActionDesc);
+			if (g_lastActionDesc && *g_lastActionDesc && g_lastActionSection && *g_lastActionSection)
+				_snprintf(str, 512, " [%s]  %s", g_lastActionSection, g_lastActionDesc);
 /*JFB TODO: use smthg like that when we'll be able to access all sections
 				strncpy(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
 */
@@ -818,33 +798,11 @@ void SetActionHelpFilename(COMMAND_T*)
 {
 	//JFB BrowseForSaveFile() always asks for overwrite: painful!
 	char filename[BUFFER_SIZE] = "";
-	if (g_pNotesHelpWnd && BrowseForSaveFile("Set action help file", g_pNotesHelpWnd->getActionHelpFilename(), g_pNotesHelpWnd->getActionHelpFilename(), "INI files\0*.ini\0", filename, BUFFER_SIZE))
+	if (g_pNotesHelpWnd && BrowseForSaveFile("Set action help file", g_pNotesHelpWnd->getActionHelpFilename(), g_pNotesHelpWnd->getActionHelpFilename(), SNM_INI_EXT_LIST, filename, BUFFER_SIZE))
 		g_pNotesHelpWnd->setActionHelpFilename(filename);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
-bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufMaxSize)
-{
-	if (!_buf || !_bufSrc)
-		return false;
-
-	memset(_buf, 0, sizeof(_buf));
-
-	int i=0, j=0;
-	while (_bufSrc[i] && i < _bufMaxSize && j < _bufMaxSize)
-	{
-		if (_bufSrc[i] == '\n') {
-			_buf[j++] = '\r';
-			_buf[j++] = '\n';
-		}
-		else if (_bufSrc[i] != '\r')
-			_buf[j++] = _bufSrc[i];
-		i++;
-	}
-	_buf[_bufMaxSize-1] = 0; //just in case..
-	return true;
-}
 
 bool GetStringFromNotesChunk(WDL_String* _notes, char* _buf, int _bufMaxSize)
 {

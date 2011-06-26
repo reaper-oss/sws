@@ -134,7 +134,7 @@ int g_dblClickTo = 0; // for fx chains only
 
 WDL_PtrList<PathSlotItem> g_dragPathSlotItems; 
 WDL_PtrList<FileSlotList> g_filesLists;
-WDL_PtrList_DeleteOnDestroy<WDL_String> g_autoSaveDirs;
+WDL_PtrList<WDL_String> g_autoSaveDirs; //JFB fix for issue 292? was WDL_PtrListOnDestroy (possible exit crash ?)
 // ----------------------------------------------------------------------------
 
 FileSlotList* GetCurList() {
@@ -148,6 +148,126 @@ WDL_String* GetCurAutoSaveDir() {
 bool IsFiltered() {
 	return (g_filter.GetLength() && strcmp(g_filter.Get(), FILTER_DEFAULT_STR));
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// FileSlotList
+///////////////////////////////////////////////////////////////////////////////
+
+// returns -1 on cancel
+int FileSlotList::PromptForSlot(const char* _title)
+{
+	int slot = -1;
+	while (slot == -1)
+	{
+		char promptMsg[64]; 
+		_snprintf(promptMsg, 64, "Slot (1-%d):", GetSize());
+
+		char reply[8]= ""; // empty default slot
+		if (GetUserInputs(_title, 1, promptMsg, reply, 8))
+		{
+			slot = atoi(reply); //0 on error
+			if (slot > 0 && slot <= GetSize()) {
+				return (slot-1);
+			}
+			else 
+			{
+				slot = -1;
+				char errMsg[128];
+				_snprintf(errMsg, 128, "Invalid %s slot!\nPlease enter a value in [1; %d].", m_desc.Get(), GetSize());
+				MessageBox(GetMainHwnd(), errMsg, "S&M - Error", /*MB_ICONERROR | */MB_OK);
+			}
+		}
+		else return -1; // user has cancelled
+	}
+	return -1; //in case the slot comes from mars
+}
+
+void FileSlotList::ClearSlot(int _slot, bool _guiUpdate) {
+	if (_slot >=0 && _slot < GetSize())	{
+		Get(_slot)->Clear();
+		if (_guiUpdate && g_pResourcesWnd)
+			g_pResourcesWnd->Update();
+	}
+}
+
+void FileSlotList::ClearSlotPrompt(COMMAND_T* _ct) {
+	int slot = PromptForSlot(SNM_CMD_SHORTNAME(_ct)); //loops on err
+	if (slot == -1) return; // user has cancelled
+	else ClearSlot(slot);
+}
+
+// returns false if cancelled
+bool FileSlotList::BrowseSlot(int _slot, char* _fn, int _fnSz)
+{
+	bool ok = false;
+	if (_slot >= 0 && _slot < GetSize())
+	{
+		char title[128]="", filename[BUFFER_SIZE]="", fileFilter[256]="";
+		_snprintf(title, 128, "S&M - Load %s (slot %d)", m_desc.Get(), _slot+1);
+		GetFileFilter(fileFilter, 256);
+		if (BrowseResourcePath(title, m_resDir.Get(), fileFilter, filename, BUFFER_SIZE, true))
+		{
+			if (_fn)
+				strncpy(_fn, filename, _fnSz);
+
+			if (SetFromFullPath(_slot, filename))
+			{
+				if (g_pResourcesWnd)
+					g_pResourcesWnd->Update();
+				ok = true;
+			}
+		}
+	}
+	return ok;
+}
+
+bool FileSlotList::GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg)
+{
+	bool ok = false;
+	if (_slot >= 0 && _slot < GetSize())
+	{
+		if (Get(_slot)->IsDefault())
+		{
+			ok = BrowseSlot(_slot, _fn, _fnSz);
+		}
+		else
+		{
+			if (GetFullPath(_slot, _fn, _fnSz))
+				ok = FileExistsErrMsg(_fn, _errMsg);
+		}
+	}
+	return ok;
+}
+
+void FileSlotList::EditSlot(int _slot)
+{
+	if (_slot >= 0 && _slot < GetSize())
+	{
+		char fullPath[BUFFER_SIZE] = "";
+		if (GetFullPath(_slot, fullPath, BUFFER_SIZE) && FileExists(fullPath))
+		{
+#ifdef _WIN32
+			WinSpawnNotepad(fullPath);
+#else
+			WDL_String chain;
+			if (LoadChunk(fullPath, &chain))
+			{
+				char title[64] = "";
+				_snprintf(title, 64, "S&M - %s (slot %d)", m_desc.Get(), _slot+1);
+				SNM_Show(chain.Get(), title);
+			}
+#endif
+		}
+		else if (*fullPath != '\0')
+		{
+			char buf[BUFFER_SIZE];
+			_snprintf(buf, BUFFER_SIZE, "File not found:\n%s", fullPath);
+			MessageBox(g_hwndParent, buf, "S&M - Error", MB_OK);
+		}
+	}
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_ResourceView
@@ -629,7 +749,7 @@ void SNM_ResourceWnd::FillDblClickTypeCombo()
 			m_cbDblClickType.AddItem("Replace items of sel. tracks");
 			break;
 		case SNM_SLOT_TYPE_PRJ_TEMPLATES:
-			m_cbDblClickType.AddItem("Load/select project"); //JFB!!!
+			m_cbDblClickType.AddItem("Load/select project");
 			m_cbDblClickType.AddItem("Load/select project tab");
 			break;
 	}
@@ -641,7 +761,7 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_resize.init_item(IDC_FILTER, 1.0, 0.0, 1.0, 0.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
-/*JFB!!! Commented: useless since r488 theming updates !???
+/*JFB commented: useless since r488 theming updates
 #ifndef _WIN32
 	// Realign the filter box on OSX
 	HWND hFilter = GetDlgItem(m_hwnd, IDC_FILTER);
@@ -1272,7 +1392,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	int x0=_r->left+10, h=35;
 
 	// defines a new rect 'r' that takes the filter edit box into account (contrary to '_r')
-	//JFB!!! OK on OSX !??
+	//JFB!!! OK on OSX !?
 	RECT r;
 	GetWindowRect(GetDlgItem(m_hwnd, IDC_FILTER), &r);
 	ScreenToClient(m_hwnd, (LPPOINT)&r);
@@ -1439,7 +1559,8 @@ void SNM_ResourceWnd::InsertAtSelectedSlot(bool _update)
 
 void SNM_ResourceWnd::DeleteSelectedSlots(bool _update, bool _delFiles)
 {
-	bool updt = false;
+	// DeleteOnDestroy list: keep (displayed!) pointers until the list view is updated
+	FileSlotList deItems(GetCurList()->GetType(), GetCurList()->GetResourceDir(), GetCurList()->GetDesc(), GetCurList()->GetFileExt());
 	int x=0;
 	PathSlotItem* item;
 	while((item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x)))
@@ -1447,19 +1568,19 @@ void SNM_ResourceWnd::DeleteSelectedSlots(bool _update, bool _delFiles)
 		int slot = GetCurList()->Find(item);
 		if (slot >= 0) 
 		{
-			updt = true;
 			if (_delFiles)
 			{
 				char fullPath[BUFFER_SIZE] = "";
 				GetFullResourcePath(GetCurList()->GetResourceDir(), item->m_shortPath.Get(), fullPath, BUFFER_SIZE);
 				SNM_DeleteFile(fullPath);
 			}
-			GetCurList()->Delete(slot, true);
+			deItems.Add(item);
+			GetCurList()->Delete(slot, false); // no delete yet
 		}
 	}
-	if (_update && updt)
+	if (_update && deItems.GetSize())
 		Update();
-}
+} // + deItems auto-clean-up !
 
 // _slotPos: insert at this slot, or add if < 0
 void SNM_ResourceWnd::AutoSaveSlots(int _slotPos)
@@ -1538,7 +1659,7 @@ int ResourceViewInit()
 		if (list)
 		{
 			GetPrivateProfileString(list->GetResourceDir(), "MAX_SLOT", "0", maxSlotCount, 16, g_SNMiniFilename.Get()); 
-			list->Empty(true);
+			list->EmptySafe(true);
 			int slotCount = atoi(maxSlotCount);
 			for (int j=0; j < slotCount; j++) 
 			{
@@ -1585,7 +1706,7 @@ void ResourceViewExit()
 				}
 			}
 			// Write things in one go (avoid to slow down REAPER shutdown)
-			SaveIniSection(resDir, &iniSection);
+			SaveIniSection(resDir, &iniSection, g_SNMiniFilename.Get());
 		}
 	}
 
@@ -1614,121 +1735,3 @@ void ClearSlotPrompt(COMMAND_T* _ct) {
 	g_filesLists.Get((int)_ct->user)->ClearSlotPrompt(_ct);
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-// FileSlotList
-///////////////////////////////////////////////////////////////////////////////
-
-// returns -1 on cancel
-int FileSlotList::PromptForSlot(const char* _title)
-{
-	int slot = -1;
-	while (slot == -1)
-	{
-		char promptMsg[64]; 
-		_snprintf(promptMsg, 64, "Slot (1-%d):", GetSize());
-
-		char reply[8]= ""; // empty default slot
-		if (GetUserInputs(_title, 1, promptMsg, reply, 8))
-		{
-			slot = atoi(reply); //0 on error
-			if (slot > 0 && slot <= GetSize()) {
-				return (slot-1);
-			}
-			else 
-			{
-				slot = -1;
-				char errMsg[128];
-				_snprintf(errMsg, 128, "Invalid %s slot!\nPlease enter a value in [1; %d].", m_desc.Get(), GetSize());
-				MessageBox(GetMainHwnd(), errMsg, "S&M - Error", /*MB_ICONERROR | */MB_OK);
-			}
-		}
-		else return -1; // user has cancelled
-	}
-	return -1; //in case the slot comes from mars
-}
-
-void FileSlotList::ClearSlot(int _slot, bool _guiUpdate) {
-	if (_slot >=0 && _slot < GetSize())	{
-		Get(_slot)->Clear();
-		if (_guiUpdate && g_pResourcesWnd)
-			g_pResourcesWnd->Update();
-	}
-}
-
-void FileSlotList::ClearSlotPrompt(COMMAND_T* _ct) {
-	int slot = PromptForSlot(SNM_CMD_SHORTNAME(_ct)); //loops on err
-	if (slot == -1) return; // user has cancelled
-	else ClearSlot(slot);
-}
-
-// returns false if cancelled
-bool FileSlotList::BrowseSlot(int _slot, char* _fn, int _fnSz)
-{
-	bool ok = false;
-	if (_slot >= 0 && _slot < GetSize())
-	{
-		char title[128]="", filename[BUFFER_SIZE]="", fileFilter[256]="";
-		_snprintf(title, 128, "S&M - Load %s (slot %d)", m_desc.Get(), _slot+1);
-		GetFileFilter(fileFilter, 256);
-		if (BrowseResourcePath(title, m_resDir.Get(), fileFilter, filename, BUFFER_SIZE, true))
-		{
-			if (_fn)
-				strncpy(_fn, filename, _fnSz);
-
-			if (SetFromFullPath(_slot, filename))
-			{
-				if (g_pResourcesWnd)
-					g_pResourcesWnd->Update();
-				ok = true;
-			}
-		}
-	}
-	return ok;
-}
-
-bool FileSlotList::GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg)
-{
-	bool ok = false;
-	if (_slot >= 0 && _slot < GetSize())
-	{
-		if (Get(_slot)->IsDefault())
-		{
-			ok = BrowseSlot(_slot, _fn, _fnSz);
-		}
-		else
-		{
-			if (GetFullPath(_slot, _fn, _fnSz))
-				ok = FileExistsErrMsg(_fn, _errMsg);
-		}
-	}
-	return ok;
-}
-
-void FileSlotList::EditSlot(int _slot)
-{
-	if (_slot >= 0 && _slot < GetSize())
-	{
-		char fullPath[BUFFER_SIZE] = "";
-		if (GetFullPath(_slot, fullPath, BUFFER_SIZE) && FileExists(fullPath))
-		{
-#ifdef _WIN32
-			WinSpawnNotepad(fullPath);
-#else
-			WDL_String chain;
-			if (LoadChunk(fullPath, &chain))
-			{
-				char title[64] = "";
-				_snprintf(title, 64, "S&M - %s (slot %d)", m_desc.Get(), _slot+1);
-				SNM_ShowConsoleMsg(chain.Get(), title);
-			}
-#endif
-		}
-		else if (*fullPath != '\0')
-		{
-			char buf[BUFFER_SIZE];
-			_snprintf(buf, BUFFER_SIZE, "File not found:\n%s", fullPath);
-			MessageBox(g_hwndParent, buf, "S&M - Error", MB_OK);
-		}
-	}
-}

@@ -2282,6 +2282,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnM\SnM_Cyclactions.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_Cyclactions.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SnM\SnM_Dlg.cpp"
 				>
 			</File>

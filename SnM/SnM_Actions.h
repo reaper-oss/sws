@@ -48,12 +48,17 @@
 #define SNM_FORMATED_INI_FILE		"%s\\S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE	"%s\\Plugins\\S&M.ini"
 #define SNM_ACTION_HELP_INI_FILE	"%s\\S&M_Action_help_en.ini"
+#define SNM_CYCACTION_INI_FILE		"%s\\S&M_Cyclactions.ini"
 #else
 #define SNM_FORMATED_INI_FILE		"%s/S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE	"%s/Plugins/S&M.ini"
 #define SNM_ACTION_HELP_INI_FILE	"%s/S&M_Action_help_en.ini"
+#define SNM_CYCACTION_INI_FILE		"%s/S&M_Cyclactions.ini"
 #endif
+#define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
 #define SNM_MAX_ACTION_COUNT		0xFFFF
+#define SNM_MAX_SECTION_NAME_LEN	64
+#define SNM_MAX_ACTION_CUSTID_LEN	128
 #define SNM_MAX_TRACK_GROUPS		32 
 #define SNM_MAX_HW_OUTS				8
 #define SNM_MAX_TAKES				128
@@ -65,6 +70,7 @@
 #define SNM_CSURF_RUN_POLL_MS		1000
 #define SNM_SCHEDJOB_DEFAULT_DELAY	250
 #define SNM_MAX_CYCLING_ACTIONS		8
+#define SNM_MAX_CYCLING_SECTIONS	3
 
 // Scheduled job *RESERVED* ids
 // note: [0..7] are reserved for Live Configs MIDI CC actions
@@ -81,6 +87,9 @@ enum {
   SNM_ITEM_SEL_UP,
   SNM_ITEM_SEL_DOWN
 };
+
+static void freecharptr(char* _p) {free(_p);}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Global types & classes
@@ -160,10 +169,33 @@ void DeleteScheduledJob(int _id);
 void SnMCSurfRun();
 void SnMCSurfSetTrackTitle();
 void SnMCSurfSetTrackListChange();
-int RegisterCyclation(const char* _name, bool _toggle, int _type, int _cycleId, int _cmdId = 0);
-void CreateCyclaction(COMMAND_T*);
-void LoadCyclactions(COMMAND_T*);
-void SaveCyclactions();
+
+// *** SnM_Cyclactions.cpp
+int RegisterCyclation(const char* _name, bool _toggle, int _type, int _cycleId, int _cmdId);
+int CyclactionsInit();
+void openCyclactionsWnd(COMMAND_T*);
+bool isCyclationsWndDisplayed(COMMAND_T*);
+
+// *** SnM_Dlg.cpp ***
+LICE_CachedFont* SNM_GetThemeFont();
+HBRUSH SNM_GetThemeBrush();
+LICE_IBitmap* SNM_GetThemeLogo();
+bool AddSnMLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h);
+bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep=12);
+void SNM_UIInit();
+void SNM_UIExit();
+void openCueBussWnd(COMMAND_T*);
+bool isCueBussWndDisplayed(COMMAND_T*);
+#ifdef _SNM_MISC
+WDL_DLGRET WaitDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+#endif
+
+// *** SnM_FindView.cpp ***
+int FindViewInit();
+void FindViewExit();
+void OpenFindView(COMMAND_T*);
+bool IsFindViewDisplayed(COMMAND_T*);
+void FindNextPrev(COMMAND_T*);
 
 // *** SnM_fx.cpp ***
 void toggleFXOfflineSelectedTracks(COMMAND_T*);
@@ -242,68 +274,6 @@ void smartPasteReplaceFXChain(COMMAND_T*);
 void smartCutFXChain(COMMAND_T*);
 void reassignLearntMIDICh(COMMAND_T*);
 
-// *** SnM_Windows.cpp ***
-bool IsChildOf(HWND _hChild, const char* _title, int _nComp = -1);
-HWND GetReaWindowByTitle(const char* _title, int _nComp = -1);
-HWND SearchWindow(const char* _title);
-HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
-#ifdef _SNM_MISC
-void closeAllRoutingWindows(COMMAND_T*);
-void closeAllEnvWindows(COMMAND_T*);
-void toggleAllRoutingWindows(COMMAND_T*);
-void toggleAllEnvWindows(COMMAND_T*);
-#endif
-void showFXChain(COMMAND_T*);
-void hideFXChain(COMMAND_T*);
-void toggleFXChain(COMMAND_T*);
-bool isToggleFXChain(COMMAND_T*);
-void showAllFXChainsWindows(COMMAND_T*);
-void closeAllFXChainsWindows(COMMAND_T*);
-void toggleAllFXChainsWindows(COMMAND_T*);
-void floatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _selTracks);
-void floatFX(COMMAND_T*);
-void unfloatFX(COMMAND_T*);
-void toggleFloatFX(COMMAND_T*);
-void showAllFXWindows(COMMAND_T*);
-void closeAllFXWindows(COMMAND_T*);
-void closeAllFXWindowsExceptFocused(COMMAND_T*);
-void toggleAllFXWindows(COMMAND_T*);
-int getFocusedFX(MediaTrack* _tr, int _dir, int* _firstFound = NULL);
-#ifdef _SNM_MISC
-void cycleFocusFXWndSelTracks(COMMAND_T*);
-void cycleFocusFXWndAllTracks(COMMAND_T*);
-#endif
-void cycleFloatFXWndSelTracks(COMMAND_T*);
-void cycleFocusFXMainWndAllTracks(COMMAND_T*);
-void cycleFocusFXMainWndSelTracks(COMMAND_T*);
-void cycleFocusWnd(COMMAND_T*);
-void cycleFocusHideOthersWnd(COMMAND_T*);
-void focusMainWindow(COMMAND_T*);
-void focusMainWindowCloseOthers(COMMAND_T*);
-void ShowThemeHelper(COMMAND_T*);
-void GetVisibleTCPTracks(WDL_PtrList<void>* _trList);
-
-// *** SnM_Sends.cpp ***
-bool cueTrack(const char* _busName, int _type, const char* _undoMsg, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
-void cueTrack(COMMAND_T*);
-void copyWithIOs(COMMAND_T*);
-void cutWithIOs(COMMAND_T*);
-void pasteWithIOs(COMMAND_T*);
-void copyRoutings(COMMAND_T*);
-void cutRoutings(COMMAND_T*);
-void pasteRoutings(COMMAND_T*);
-void copySends(COMMAND_T*);
-void cutSends(COMMAND_T*);
-void pasteSends(COMMAND_T*);
-void copyReceives(COMMAND_T*);
-void cutReceives(COMMAND_T*);
-void pasteReceives(COMMAND_T*);
-void removeSends(COMMAND_T*);
-void removeReceives(COMMAND_T*);
-void removeRouting(COMMAND_T*);
-void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
-void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
-
 // *** SnM_Item.cpp ***
 char* GetName(MediaItem* _item);
 int getTakeIndex(MediaItem* _item, MediaItem_Take* _take);
@@ -353,6 +323,98 @@ void scrollToSelItem(MediaItem* _item);
 void scrollToSelItem(COMMAND_T*);
 void setPan(COMMAND_T*);
 
+// *** SnM_LiveConfigsView.cpp ***
+int LiveConfigViewInit();
+void LiveConfigViewExit();
+void OpenLiveConfigView(COMMAND_T*);
+bool IsLiveConfigViewDisplayed(COMMAND_T*);
+void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
+void ToggleEnableLiveConfig(COMMAND_T*);
+bool IsLiveConfigEnabled(COMMAND_T*);
+
+// *** SnM_ME.cpp ***
+void MECreateCCLane(COMMAND_T*);
+void MEHideCCLanes(COMMAND_T*);
+void MESetCCLanes(COMMAND_T*);
+void MESaveCCLanes(COMMAND_T*);
+
+// *** SnM_Misc.cpp ***
+bool FileExistsErrMsg(const char* _fn, bool _errMsg=true);
+bool SNM_DeleteFile(const char* _filename);
+bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
+bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath = false);
+void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn);
+void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _maxFn);
+bool LoadChunk(const char* _fn, WDL_String* _chunk);
+bool SaveChunk(const char* _fn, WDL_String* _chunk);
+void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
+void StringToExtensionConfig(char* _str, ProjectStateContext* _ctx);
+void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx);
+void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection, const char* _iniFn);
+bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufMaxSize);
+int SNM_MinMax(int _val, int _min, int _max);
+bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sectionURLMaxSize);
+void SNM_ShowMsg(const char* _msg, const char* _title="", HWND _hParent=NULL); 
+int PromptForMIDIChannel(const char* _title);
+#ifdef _SNM_MISC
+void LetREAPERBreathe(COMMAND_T*);
+#endif
+void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
+void SimulateMouseClick(COMMAND_T*);
+void DumpWikiActionList2(COMMAND_T*);
+void DumpActionList(COMMAND_T*);
+#ifdef _SNM_MISC
+void ShowTakeEnvPadreTest(COMMAND_T*);
+void dumpWikiActionList(COMMAND_T*);
+void OpenStuff(COMMAND_T*);
+#endif
+
+// *** SnM_NotesHelpView.cpp ***
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
+void SetActionHelpFilename(COMMAND_T*);
+int NotesHelpViewInit();
+void NotesHelpViewExit();
+void OpenNotesHelpView(COMMAND_T*);
+bool IsNotesHelpViewDisplayed(COMMAND_T*);
+void SwitchNotesHelpType(COMMAND_T*);
+void ToggleNotesHelpLock(COMMAND_T*);
+bool IsNotesHelpLocked(COMMAND_T*);
+
+// *** SnM_Project.cpp ***
+void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
+void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errMsg);
+bool autoSaveProjectSlot(int _slot, bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnMaxSize);
+void loadOrSelectProject(COMMAND_T*);
+void loadNewTabOrSelectProject(COMMAND_T*);
+
+// *** SnM_ResourceView.cpp ***
+int ResourceViewInit();
+void ResourceViewExit();
+void OpenResourceView(COMMAND_T*);
+bool IsResourceViewDisplayed(COMMAND_T*);
+void ClearSlotPrompt(COMMAND_T*);
+
+// *** SnM_Sends.cpp ***
+bool cueTrack(const char* _busName, int _type, const char* _undoMsg, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
+void cueTrack(COMMAND_T*);
+void copyWithIOs(COMMAND_T*);
+void cutWithIOs(COMMAND_T*);
+void pasteWithIOs(COMMAND_T*);
+void copyRoutings(COMMAND_T*);
+void cutRoutings(COMMAND_T*);
+void pasteRoutings(COMMAND_T*);
+void copySends(COMMAND_T*);
+void cutSends(COMMAND_T*);
+void pasteSends(COMMAND_T*);
+void copyReceives(COMMAND_T*);
+void cutReceives(COMMAND_T*);
+void pasteReceives(COMMAND_T*);
+void removeSends(COMMAND_T*);
+void removeReceives(COMMAND_T*);
+void removeRouting(COMMAND_T*);
+void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
+void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
+
 // *** SnM_Track.cpp ***
 #ifdef _SNM_TRACK_GROUP_EX
 int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPatcher* _cpp);
@@ -376,104 +438,47 @@ bool autoSaveTrackSlots(int _slot, bool _delItems, const char* _dirPath, char* _
 void setMIDIInputChannel(COMMAND_T*);
 void remapMIDIInputChannel(COMMAND_T*);
 
-// *** SnM_ResourceView.cpp ***
-int ResourceViewInit();
-void ResourceViewExit();
-void OpenResourceView(COMMAND_T*);
-bool IsResourceViewDisplayed(COMMAND_T*);
-void ClearSlotPrompt(COMMAND_T*);
-
-// *** SnM_NotesHelpView.cpp ***
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
-void SetActionHelpFilename(COMMAND_T*);
-int NotesHelpViewInit();
-void NotesHelpViewExit();
-void OpenNotesHelpView(COMMAND_T*);
-bool IsNotesHelpViewDisplayed(COMMAND_T*);
-void SwitchNotesHelpType(COMMAND_T*);
-void ToggleNotesHelpLock(COMMAND_T*);
-bool IsNotesHelpLocked(COMMAND_T*);
-
-// *** SnM_FindView.cpp ***
-int FindViewInit();
-void FindViewExit();
-void OpenFindView(COMMAND_T*);
-bool IsFindViewDisplayed(COMMAND_T*);
-void FindNextPrev(COMMAND_T*);
-
-// *** SnM_LiveConfigsView.cpp ***
-int LiveConfigViewInit();
-void LiveConfigViewExit();
-void OpenLiveConfigView(COMMAND_T*);
-bool IsLiveConfigViewDisplayed(COMMAND_T*);
-void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
-void ToggleEnableLiveConfig(COMMAND_T*);
-bool IsLiveConfigEnabled(COMMAND_T*);
-
-// *** SnM_Dlg.cpp ***
-LICE_CachedFont* SNM_GetThemeFont();
-HBRUSH SNM_GetThemeBrush();
-LICE_IBitmap* SNM_GetThemeLogo();
-bool AddSnMLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h);
-bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep=12);
-void SNM_UIInit();
-void SNM_UIExit();
-void openCueBussWnd(COMMAND_T*);
-bool isCueBussWndDisplayed(COMMAND_T*);
-void openCyclactionsWnd(COMMAND_T*);
-bool isCyclationsWndDisplayed(COMMAND_T*);
+// *** SnM_Windows.cpp ***
+bool SNM_IsActiveWindow(HWND _h);
+bool IsChildOf(HWND _hChild, const char* _title, int _nComp = -1);
+HWND GetReaWindowByTitle(const char* _title, int _nComp = -1);
+HWND SearchWindow(const char* _title);
+HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
+int GetSelectedActionId(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc = NULL, int _descSize = -1);
 #ifdef _SNM_MISC
-WDL_DLGRET WaitDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+void closeAllRoutingWindows(COMMAND_T*);
+void closeAllEnvWindows(COMMAND_T*);
+void toggleAllRoutingWindows(COMMAND_T*);
+void toggleAllEnvWindows(COMMAND_T*);
 #endif
-
-// *** SnM_ME.cpp ***
-void MECreateCCLane(COMMAND_T*);
-void MEHideCCLanes(COMMAND_T*);
-void MESetCCLanes(COMMAND_T*);
-void MESaveCCLanes(COMMAND_T*);
-
-// *** SnM_Project.cpp ***
-void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
-void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errMsg);
-bool autoSaveProjectSlot(int _slot, bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnMaxSize);
-void loadOrSelectProject(COMMAND_T*);
-void loadNewTabOrSelectProject(COMMAND_T*);
-
-// *** SnM_Misc.cpp ***
-bool FileExistsErrMsg(const char* _fn, bool _errMsg=true);
-bool SNM_DeleteFile(const char* _filename);
-bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
-bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath = false);
-void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn);
-void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _maxFn);
-bool LoadChunk(const char* _fn, WDL_String* _chunk);
-bool SaveChunk(const char* _fn, WDL_String* _chunk);
-void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
-void StringToExtensionConfig(char* _str, ProjectStateContext* _ctx);
-void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx);
-void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection);
-int SNM_MinMax(int _val, int _min, int _max);
-bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sectionURLMaxSize);
-void SNM_ShowConsoleMsg(const char* _msg, const char* _title="", bool _clear=true); 
-void SNM_ShowConsoleDbg(bool _clear, const char* format, ...);
-int PromptForMIDIChannel(const char* _title);
+void showFXChain(COMMAND_T*);
+void hideFXChain(COMMAND_T*);
+void toggleFXChain(COMMAND_T*);
+bool isToggleFXChain(COMMAND_T*);
+void showAllFXChainsWindows(COMMAND_T*);
+void closeAllFXChainsWindows(COMMAND_T*);
+void toggleAllFXChainsWindows(COMMAND_T*);
+void floatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _selTracks);
+void floatFX(COMMAND_T*);
+void unfloatFX(COMMAND_T*);
+void toggleFloatFX(COMMAND_T*);
+void showAllFXWindows(COMMAND_T*);
+void closeAllFXWindows(COMMAND_T*);
+void closeAllFXWindowsExceptFocused(COMMAND_T*);
+void toggleAllFXWindows(COMMAND_T*);
+int getFocusedFX(MediaTrack* _tr, int _dir, int* _firstFound = NULL);
 #ifdef _SNM_MISC
-void LetREAPERBreathe(COMMAND_T*);
+void cycleFocusFXWndSelTracks(COMMAND_T*);
+void cycleFocusFXWndAllTracks(COMMAND_T*);
 #endif
-void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
-void SimulateMouseClick(COMMAND_T*);
-void DumpWikiActionList2(COMMAND_T*);
-void DumpActionList(COMMAND_T*);
-#ifdef _SNM_MISC
-void ShowTakeEnvPadreTest(COMMAND_T*);
-void dumpWikiActionList(COMMAND_T*);
-void OpenStuff(COMMAND_T*);
-#endif
+void cycleFloatFXWndSelTracks(COMMAND_T*);
+void cycleFocusFXMainWndAllTracks(COMMAND_T*);
+void cycleFocusFXMainWndSelTracks(COMMAND_T*);
+void cycleFocusWnd(COMMAND_T*);
+void cycleFocusHideOthersWnd(COMMAND_T*);
+void focusMainWindow(COMMAND_T*);
+void focusMainWindowCloseOthers(COMMAND_T*);
+void ShowThemeHelper(COMMAND_T*);
+void GetVisibleTCPTracks(WDL_PtrList<void>* _trList);
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Inline funcs
-///////////////////////////////////////////////////////////////////////////////
-
-static void freecharptr(char *p) { free(p); }
 

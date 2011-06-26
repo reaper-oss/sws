@@ -25,35 +25,11 @@
 /
 ******************************************************************************/
 
-//* move RefreshToolbar after exec (?)
-//* toggle column
-//* DO NOT REGISTER NO-OP ACTIONS!!!
-//* do not delay if no SWS actions
-//* multi-delete
-//* check section sur learn
-//* apply grise/degrise
-//* do NOT register action w/o cmds or with 1 cmd '!'
-//* WM_CLOSE : idem IDCANCEL, hide toggle
-//* keyedArray? => compression
-//* ScreenToClient, etc... !!!!!
-//* actions qui disparaissent!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-//* apply: perd la selection!!!!!!
-//* EnumSelected à cleaner
-//* multi-sel left
-//* reset, import, export
-//* share code with note view (?)
-//* .ini etc à cleaner
-//* RUN, undo consolidation!
-//tests SNM_ChunkParserPatcher.h !
-//err msg sur cmds
-//help link + .rc update
-//?	g_mvL->Update(); + g_mvR->Update();
-//ctrl-F JFB!
 
 #include "stdafx.h"
-#include "../../WDL/projectcontext.h"
 #include "SnM_Actions.h"
 #include "SnM_Cyclactions.h"
+#include "../../WDL/projectcontext.h"
 
 
 // [0] = main section action, [1] = ME event list section action, [2] = ME piano roll section action

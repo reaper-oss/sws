@@ -55,6 +55,7 @@ enum {
   NOTES_HELP_DISABLED=0,
   ITEM_NOTES,
   TRACK_NOTES,
+  MARKER_NAME,
   ACTION_HELP // must remain the last item: no OSX support yet 
 };
 
@@ -81,6 +82,8 @@ char g_lastActionSection[SNM_MAX_SECTION_NAME_LEN] = "";
 char g_lastActionId[SNM_MAX_ACTION_CUSTID_LEN] = "";
 char g_lastActionDesc[128] = ""; 
 
+double g_lastMarkerPos = -1.0;
+int g_lastMarkerIdx = -1;
 MediaItem* g_mediaItemNote = NULL;
 MediaTrack* g_trNote = NULL;
 
@@ -126,7 +129,7 @@ void SNM_NotesHelpWnd::SetText(const char* _str)
 	{
 		char buf[MAX_HELP_LENGTH] = "";
 		GetStringWithRN(_str, buf, MAX_HELP_LENGTH);
-		strncpy(g_lastText, buf, MAX_HELP_LENGTH);
+		lstrcpyn(g_lastText, buf, MAX_HELP_LENGTH);
 		SetDlgItemText(GetHWND(), IDC_EDIT, buf);
 	}
 }
@@ -151,13 +154,17 @@ void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes)
 			if (g_trNote)
 				bHide = false;
 			break;
+		case MARKER_NAME:
+			if (g_lastMarkerIdx != -1)
+				bHide = false;
+			break;
 		case NOTES_HELP_DISABLED:
 			bHide = false;
 			break;
 		default:
 			break;
 	}
-	ShowWindow(GetDlgItem(GetHWND(), IDC_EDIT), bHide ? SW_HIDE : SW_SHOW);
+	ShowWindow(GetDlgItem(GetHWND(), IDC_EDIT), bHide || g_locked ? SW_HIDE : SW_SHOW);
 	m_parentVwnd.RequestRedraw(NULL); // WDL refresh
 }
 
@@ -199,6 +206,8 @@ void SNM_NotesHelpWnd::Update(bool _force)
 			*g_lastActionSection = '\0';
 			g_mediaItemNote = NULL;
 			g_trNote = NULL;
+			g_lastMarkerPos = -1.0;
+			g_lastMarkerIdx = -1;
 		}
 
 		// Update
@@ -241,6 +250,13 @@ void SNM_NotesHelpWnd::Update(bool _force)
 					*g_lastActionSection = '\0';
 				}
 				break;
+			case MARKER_NAME:
+				refreshType = updateMarkerName();
+				if (refreshType == REQUEST_REFRESH_EMPTY) {
+					g_lastMarkerPos = -1.0;
+					g_lastMarkerIdx = -1;
+				}
+				break;
 			case NOTES_HELP_DISABLED:
 				KillTimer(m_hwnd, 1);
 				SetText(g_prjNotes.Get()->Get());
@@ -262,10 +278,11 @@ void SNM_NotesHelpWnd::saveCurrentText(int _type)
 		{
 			case ITEM_NOTES: 
 				m_internalTLChange = true;	// item note updates lead to SetTrackListChange() CSurf notif (reentrance)
-											//JFB TODO .. but check if it can be used for concurent item note updates ?
+											//JFB TODO .. check if it can be used for concurent item note updates ?
 				saveCurrentItemNotes(); 
 				break;
 			case TRACK_NOTES: saveCurrentTrackNotes(); break;
+			case MARKER_NAME: saveCurrentMarkerName(); break;
 			case ACTION_HELP: saveCurrentHelp(); break;
 			case NOTES_HELP_DISABLED: saveCurrentPrjNotes(); break;
 		}
@@ -314,7 +331,7 @@ void SNM_NotesHelpWnd::saveCurrentItemNotes()
 				// Replaces notes (or adds them if failed), remarks:
 				// - newNotes can be "", i.e. remove notes
 				// - we use VOLPAN as it also exists for empty items
-				bool update = p.ReplaceSubChunk("NOTES", 2, 0, newNotes.Get(), "VOLPAN"); 
+				update = p.ReplaceSubChunk("NOTES", 2, 0, newNotes.Get(), "VOLPAN"); 
 				if (!update && *buf)
 					update = p.InsertAfterBefore(1, newNotes.Get(), "ITEM", g_bv4 ? "IID" : "IGUID", 1, 0, "VOLPAN");
 			}
@@ -354,6 +371,23 @@ void SNM_NotesHelpWnd::saveCurrentTrackNotes()
 	}
 }
 
+void SNM_NotesHelpWnd::saveCurrentMarkerName()
+{
+	if (g_lastMarkerIdx >= 0)
+	{
+		double pos; int markrgnindexnumber;
+		if (EnumProjectMarkers2(NULL, g_lastMarkerIdx, NULL, &pos, NULL, NULL, &markrgnindexnumber))
+		{
+			char buf[SNM_MAX_MARKER_NAME_LEN] = "";
+			memset(buf, 0, sizeof(buf));
+			GetDlgItemText(GetHWND(), IDC_EDIT, buf, SNM_MAX_MARKER_NAME_LEN);
+			ShortenStringToFirstRN(buf);
+			if (strncmp(g_lastText, buf, SNM_MAX_MARKER_NAME_LEN) && SetProjectMarker2(NULL, markrgnindexnumber, false, pos, 0.0, buf))
+				Undo_OnStateChangeEx("Edit marker name", UNDO_STATE_ALL, -1);
+		}
+	}
+}
+
 int SNM_NotesHelpWnd::updateActionHelp()
 {
 	int iSel, actionId;
@@ -365,8 +399,8 @@ int SNM_NotesHelpWnd::updateActionHelp()
 		{
 			g_lastActionListSel = iSel;
 			g_lastActionListCmd = actionId; 
-			strncpy(g_lastActionDesc, desc, 128);
-			strncpy(g_lastActionId, idstr, SNM_MAX_ACTION_CUSTID_LEN);
+			lstrcpyn(g_lastActionDesc, desc, 128);
+			lstrcpyn(g_lastActionId, idstr, SNM_MAX_ACTION_CUSTID_LEN);
 
 			if (g_lastActionId && *g_lastActionId && g_lastActionDesc && *g_lastActionDesc)
 			{
@@ -443,6 +477,40 @@ int SNM_NotesHelpWnd::updateTrackNotes()
 	return refreshType;
 }
 
+int SNM_NotesHelpWnd::updateMarkerName()
+{
+	int refreshType = REQUEST_REFRESH_EMPTY;
+
+	double dPos;
+	if (GetPlayState())
+		dPos = GetPlayPosition();
+	else 
+		dPos = GetCursorPosition();
+
+	if (g_lastMarkerPos < 0.0 || fabs(g_lastMarkerPos-dPos) > 0.1)
+	{
+		g_lastMarkerPos = dPos;
+		int idx = FindMarker(dPos);
+		if (idx >= 0)
+		{
+			if (idx != g_lastMarkerIdx)
+			{
+				char* name;
+				EnumProjectMarkers2(NULL, idx, NULL, NULL, NULL, &name, NULL);
+				SetText(name);
+				refreshType = REQUEST_REFRESH;
+				g_lastMarkerIdx = idx;
+			}
+			else
+				refreshType = NO_REFRESH;
+		}
+		// else => empty
+	}
+	else
+		refreshType = NO_REFRESH;
+	return refreshType;
+}
+
 void SNM_NotesHelpWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_EDIT, 0.0, 0.0, 1.0, 1.0);
@@ -468,6 +536,7 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	m_cbType.AddItem("Project notes");
 	m_cbType.AddItem("Item notes");
 	m_cbType.AddItem("Track notes");
+	m_cbType.AddItem("Marker names");
 #ifdef _WIN32
 	m_cbType.AddItem("Action help");
 #endif
@@ -501,6 +570,7 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if (!g_locked)
 					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 				RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
+				RefreshGUI();
 			}
 			break;
 			case BUTTONID_ALR:
@@ -584,7 +654,10 @@ int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState)
 
 void SNM_NotesHelpWnd::OnTimer(WPARAM wParam) {
 	// no update when the user edits & when the view is hidden (e.g. inactive docker tab)
-	if (!IsActive() && IsWindowVisible(m_hwnd))
+	// but when the view is active: update only for markers and if the view is locked 
+    //(=> updates during playback, in other cases -e.g. item selection change- the main window 
+	// *will* be the active one)
+	if ((!IsActive() || (g_locked && m_type == MARKER_NAME)) && IsWindowVisible(m_hwnd))
 		Update();
 }
 
@@ -629,9 +702,9 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	{
 		case ACTION_HELP:
 			if (g_lastActionDesc && *g_lastActionDesc && g_lastActionSection && *g_lastActionSection)
-				_snprintf(str, 512, " [%s]  %s", g_lastActionSection, g_lastActionDesc);
-/*JFB TODO: use smthg like that when we'll be able to access all sections
-				strncpy(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
+				_snprintf(str, 512, " [%s] %s", g_lastActionSection, g_lastActionDesc);
+/*JFB API limitation: use smthg like that when we'll be able to access all sections
+				lstrcpyn(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
 */
 			break;
 		case ITEM_NOTES:
@@ -639,7 +712,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 			{
 				MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
 				char* tkName= tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
-				strncpy(str, tkName ? tkName : "", 512);
+				lstrcpyn(str, tkName ? tkName : "", 512);
 			}
 			break;
 		case TRACK_NOTES:
@@ -647,10 +720,26 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 			{
 				int id = CSurf_TrackToID(g_trNote, false);
 				if (id > 0)
-					_snprintf(str, 512, " [%d]  %s", id, (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL));
+					_snprintf(str, 512, " [%d] %s", id, (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL));
 				else if (id == 0)
 					strcpy(str, "[MASTER]");
 			}
+			break;
+		case MARKER_NAME:
+			if (g_lastMarkerIdx >= 0)
+			{
+				double pos; int nb;
+				if (EnumProjectMarkers2(NULL, g_lastMarkerIdx, NULL, &pos, NULL, NULL, &nb))
+				{
+					char timeStr[32] = "";
+					format_timestr_pos(pos, timeStr, 32, -1);
+					_snprintf(str, 512, " [%d] %s", nb, timeStr);
+				}
+				else
+					*str = '\0';
+			}
+			else
+				strcpy(str, "No marker found before play/edit cursor position!");
 			break;
 		case NOTES_HELP_DISABLED:
 			EnumProjects(-1, str, 512);
@@ -662,6 +751,82 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 		return;
 
 	AddSnMLogo(_bm, _r, x0, h);
+
+	// big notes (dynamic font size)
+	if (g_locked)
+	{
+		char txt[MAX_HELP_LENGTH] = "";
+		GetDlgItemText(GetHWND(), IDC_EDIT, txt, MAX_HELP_LENGTH);
+		if (m_type == MARKER_NAME)
+			ShortenStringToFirstRN(txt);
+
+/*JFB light weight display, looks bad..
+		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
+		int ww,hh;
+		LICE_MeasureText(txt, &ww, &hh);
+		LICE_MemBitmap* img_txt = new LICE_MemBitmap(ww,hh);
+		LICE_Clear(img_txt,0);
+		LICE_DrawText(img_txt,0,0,txt,ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255),1.0,LICE_BLIT_MODE_COPY);
+		LICE_ScaledBlit(_bm,img_txt,10,h+5,_bm->getWidth()-10,_bm->getHeight()-h,0,0,ww,hh,1.0,LICE_BLIT_MODE_ADD);
+		delete img_txt;
+*/
+
+		char buf[MAX_HELP_LENGTH] = "";
+		lstrcpyn(buf, txt, MAX_HELP_LENGTH);                    
+		int numlines=1, maxlinelen=-1;
+		char* p = strstr(buf, "\n");
+		char* p2 = buf;
+		while (p)
+		{
+		  maxlinelen = max(maxlinelen, (int)(p-p2));
+		  p2 = p+1;
+		  *p=0;
+		  p = strstr(p+1, "\n");
+		  ++numlines;
+		}
+		if (maxlinelen < 0)
+			maxlinelen = strlen(buf);
+
+		p=buf;
+
+		LICE_CachedFont font;
+		// creating fonts is super slow => use a text width estimation instead
+		int fontHeight = (int)((_bm->getHeight()-h)/numlines + 0.5);
+		while (fontHeight > 5 && (fontHeight*maxlinelen*0.6) > _bm->getWidth()) 
+			fontHeight--;
+
+		if (fontHeight <= 5)
+			return;
+
+		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
+		HFONT lf = CreateFont(fontHeight,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE);
+		font.SetFromHFont(lf,LICE_FONT_FLAG_OWNS_HFONT);
+		font.SetBkMode(TRANSPARENT);
+		font.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
+
+		int top = (int)(h + (_bm->getHeight()-h)/2 - (fontHeight*numlines)/2 + 0.5);
+		for (int i = 0; i < numlines; ++i)
+		{                   
+			RECT tr = {0,0,0,0};
+			font.DrawText(NULL, p, -1, &tr, DT_CALCRECT);
+			int txtw = tr.right - tr.left;
+			tr.top = top + i*fontHeight;
+			tr.bottom = tr.top+fontHeight;
+			tr.left = (int)(_bm->getWidth()/2 - txtw/2 + 0.5);
+			tr.right = tr.left + txtw;
+			font.DrawText(_bm, p, -1, &tr, 0);
+			p += strlen(p)+1;
+		}
+		font.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
+		DeleteObject(lf); 
+    }
+	else
+		LICE_FillRect(_bm,0,h,_bm->getWidth(),_bm->getHeight()-h,WDL_STYLE_GetSysColor(COLOR_WINDOW),0.5,LICE_BLIT_MODE_COPY);
+}
+
+void SNM_NotesHelpWnd::OnResize() {
+  InvalidateRect(m_hwnd,NULL,FALSE);
 }
 
 int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -675,7 +840,9 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_parentVwnd.SetPosition(&r);
 			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
 			int xo, yo;
-			DrawControls(m_vwnd_painter.GetBuffer(&xo, &yo), &r);
+			LICE_IBitmap* bm = m_vwnd_painter.GetBuffer(&xo, &yo);
+			bm->resize(r.right-r.left,r.bottom-r.top);
+			DrawControls(bm, &r);
 			m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
 			m_vwnd_painter.PaintEnd();
 		}

@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
+#include "../Prompt.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -199,6 +200,43 @@ void SNM_UIExit() {
 	LICE_IBitmap* logo = SNM_GetThemeLogo();
 	if (logo)
 		delete logo;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Messages, prompt, etc..
+///////////////////////////////////////////////////////////////////////////////
+
+// GUI for lazy guys
+void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent)
+{
+	HWND h = _hParent;
+	if (!h) h = GetMainHwnd();
+	char msg[4096] = "";
+	if (GetStringWithRN(_msg, msg, 4096) && *msg)
+		DisplayInfoBox(h, _title, msg);
+}
+
+//returns -1 on cancel, MIDI channel otherwise (0-based)
+int PromptForMIDIChannel(const char* _title)
+{
+	int ch = -1;
+	while (ch == -1)
+	{
+		char reply[8]= ""; // no default
+		if (GetUserInputs(_title, 1, "MIDI Channel (1-16):", reply, 8))
+		{
+			ch = atoi(reply); //0 on error
+			if (ch > 0 && ch <= 16)
+				return (ch-1);
+			else {
+				ch = -1;
+				MessageBox(GetMainHwnd(), "Invalid MIDI channel!\nPlease enter a value in [1; 16].", "S&M - Error", MB_OK);
+			}
+		}
+		else return -1; // user has cancelled
+	}
+	return -1;
 }
 
 

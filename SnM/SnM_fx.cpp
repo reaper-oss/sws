@@ -33,6 +33,9 @@
 #define SNM_REA_USERPRESET_CB_ENDING	"(.rpl)  ----" 
 
 
+int g_buggyPlugSupport = 0; // defined in S&M.ini
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // *TRACK* FX online/offline, bypass/unbypass
 ///////////////////////////////////////////////////////////////////////////////
@@ -90,11 +93,35 @@ bool patchSelTracksFXState(int _mode, int _token, int _fxCmdId, const char* _val
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			int fxId = getTrackFXIdFromCmd(tr, _fxCmdId);
+			int shownFxId = -1;
 			if (fxId >= 0)
 			{
 				SNM_ChunkParserPatcher p(tr);
-				updated = (p.ParsePatch(_mode, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, (void*)_value) > 0);
-			}
+				bool updt = (p.ParsePatch(_mode, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, (void*)_value) > 0);
+				updated |= updt;
+
+				// close the GUI for buggy plugins
+				// http://code.google.com/p/sws-extension/issues/detail?id=317
+				if (updt && g_buggyPlugSupport && _token == 2)
+				{
+					p.ParsePatch(SNM_SETALL_CHUNK_CHAR_EXCEPT,2,"FXCHAIN","FLOAT",5,255,0,(void*)"FLOATPOS"); //unfloat all
+
+					char pIdx[4] = "";
+					int pos = p.ParsePatch(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "SHOW",2,0,1,(void*)pIdx);
+					if (pos > 0)
+					{
+						shownFxId = atoi(pIdx);
+						if (shownFxId)
+						{
+							p.GetChunk()->DeleteSub(--pos,1);
+							p.GetChunk()->Insert("0", pos);
+						}
+					}
+				}
+			} // chunk auto commit
+			
+			if (shownFxId > 0) // buggy plugs only: restore unfloated GUI (like REAPER does)
+				TrackFX_Show(tr, shownFxId-1, 1);
 		}
 	}
 
@@ -192,7 +219,19 @@ bool patchSelItemsFXState(int _mode, int _token, int _fxId, const char* _value, 
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
 				SNM_ChunkParserPatcher p(item);
-				updated = (p.ParsePatch(_mode, 2, "TAKEFX", "BYPASS", 3, _fxId, _token, (void*)_value) > 0);
+				bool updt = (p.ParsePatch(_mode, 2, "TAKEFX", "BYPASS", 3, _fxId, _token, (void*)_value) > 0);
+				updated |= updt;
+
+/*JFB not used: doesn't seem to occur with take FX
+				// close the GUI for buggy plugins
+				// http://code.google.com/p/sws-extension/issues/detail?id=317
+				// API limitation: can't restore shown FX here (contrary to track FX)
+				if (updt && g_buggyPlugSupport && _token == 2)
+				{
+					p.ParsePatch(SNM_SETALL_CHUNK_CHAR_EXCEPT,2,"TAKEFX","FLOAT",5,255,0,(void*)"FLOATPOS"); //unfloat all
+					p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "TAKEFX", "SHOW",2,0,1,(void*)"0"); // no FX shown..
+				}
+*/
 			}
 		}
 	}
@@ -341,7 +380,7 @@ int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_Str
 		// *** Get ini filename *** //
 
 		// Process FX name
-		strncpy(buf, _fxName, 256);
+		lstrcpyn(buf, _fxName, 256);
 
 		// remove ".dll"
 		//JFB OSX: to check

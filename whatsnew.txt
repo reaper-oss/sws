@@ -1,14 +1,21 @@
-Added "Cycle action editor" (demo http://reaper.mj-s.com/cyclaction_editor.gif|here|):
+Added "Cycle action editor" (main menu > extensions > cycle action editor):
 +Unlimited number of cycle actions
 +Unlimited number of commands per cycle action
 +Import/export features
-+Learn commands from the action list (Windows OS only)
++Learn selected commands of the action list (Windows OS only)
++Demo http://reaper.mj-s.com/cyclaction_editor.gif|here|
 Other cycle action updates:
 +Performance improvments
 +Consolidated undo points
 
+S&M Notes/help:
++When the view is locked, the text is now displayed with a dynamic sized font (i.e. display à la "Big clock")
++Added marker names (in the top left dropdown box). They are edited/displayed according to edit/play cursor position (can be used for lyrics, etc..)
++Demo http://reaper.mj-s.com/S&M_big_notes.gif|here|
+
 Issue 308: Fixed "Select/load project template" actions
-Unicode fixes
+Issue 317: Fixed Shorcircuit hang when set online with opened GUI (needs "BuggyPlugsSupport=1" in the S&M.ini file, full story http://code.google.com/p/sws-extension/issues/detail?id=317|here|)
+Tweaks: little unicode fixes, better message boxes on OSX..
 
 Added actions:
 +SWS/S&M: Open Resources window (project templates)

@@ -494,6 +494,7 @@ extern "C"
 		IMPAPI(DockWindowRemove);
 		IMPAPI(EnsureNotCompletelyOffscreen);
 		IMPAPI(EnumProjectMarkers);
+		IMPAPI(EnumProjectMarkers2);
 		IMPAPI(EnumProjects);
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);
@@ -620,6 +621,7 @@ extern "C"
 		IMPAPI(SetMediaItemTakeInfo_Value);
 		IMPAPI(SetMediaTrackInfo_Value);
 		IMPAPI(SetProjectMarker);
+		IMPAPI(SetProjectMarker2);
 		IMPAPI(SetTrackSelected);
 		IMPAPI(ShowActionList);
 		IMPAPI(SplitMediaItem);

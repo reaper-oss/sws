@@ -626,9 +626,9 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (selected track)" }, "S&M_THEME_HELPER_SEL", ShowThemeHelper, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (use w/o modifier)" }, "S&M_MOUSE_L_CLICK", SimulateMouseClick, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (w/o SWS extension)" }, "S&M_ALRSUMMARY1", DumpWikiActionList2, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (w/ SWS extension)" }, "S&M_ALRSUMMARY2", DumpWikiActionList2, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (SWS extension only)" }, "S&M_ALRSUMMARY2", DumpWikiActionList2, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (w/o SWS extension)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Dump action list (w/ SWS extension)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Dump action list (SWS extension only)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 4},
 #endif
 #ifdef _SNM_MISC // experimental, deprecated, etc.. 
 	{ { DEFACCEL, "SWS/S&M: Let REAPER breathe" }, "S&M_LETBREATHE", LetREAPERBreathe, NULL, },
@@ -896,6 +896,7 @@ int SnMInit(reaper_plugin_info_t* _rec)
 
 	// Load general prefs 
 	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNMiniFilename.Get()) == 1);
+	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNMiniFilename.Get());
 
 	SNM_UIInit();
 	LiveConfigViewInit();
@@ -916,6 +917,7 @@ void SnMExit()
 
 	// Save general prefs
 	WritePrivateProfileString("General", "ToolbarsAutoRefresh", g_toolbarsAutoRefreshEnabled ? "1" : "0", g_SNMiniFilename.Get());
+	WritePrivateProfileString("General", "BuggyPlugsSupport", g_buggyPlugSupport ? "1" : "0", g_SNMiniFilename.Get());
 }
 
 

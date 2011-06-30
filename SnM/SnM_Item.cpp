@@ -713,9 +713,9 @@ bool deleteTakeAndMedia(int _mode)
 						if (pcm)
 						{
 							if (pcm->GetFileName() && *(pcm->GetFileName()))
-								strncpy(tkDisplayName, pcm->GetFileName(), BUFFER_SIZE);
+								lstrcpyn(tkDisplayName, pcm->GetFileName(), BUFFER_SIZE);
 							else if (pcm->GetFileName() && !strlen(pcm->GetFileName()))
-								strncpy(tkDisplayName, (char*)GetSetMediaItemTakeInfo(tk,"P_NAME",NULL), BUFFER_SIZE);
+								lstrcpyn(tkDisplayName, (char*)GetSetMediaItemTakeInfo(tk,"P_NAME",NULL), BUFFER_SIZE);
 						}
 
 						// not already removed ?

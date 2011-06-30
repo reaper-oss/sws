@@ -526,10 +526,10 @@ void replaceOrPasteItemsFromTrackSlot(const char* _title, bool _paste, int _slot
 		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
 }
 
-bool autoSaveTrackSlots(int _slot, bool _delItems, const char* _dirPath, char* _fn, int _fnMaxSize)
+bool autoSaveTrackSlots(int _slot, bool _delItems, const char* _dirPath, char* _fn, int _fnSize)
 {
 	bool slotUpdate = false;
-	strncpy(_fn, "<No selected track>", _fnMaxSize); // default for err. msg
+	lstrcpyn(_fn, "<No selected track>", _fnSize); // default for err. msg
 	for (int i = 0; i <= GetNumTracks(); i++) // include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -549,7 +549,7 @@ bool autoSaveTrackSlots(int _slot, bool _delItems, const char* _dirPath, char* _
 			}
 
 			char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-			GenerateFilename(_dirPath, !trName ? "Master" : (*trName == '\0' ? "Untitled" : trName), g_trTemplateFiles.GetFileExt(), _fn, _fnMaxSize);
+			GenerateFilename(_dirPath, !trName ? "Master" : (*trName == '\0' ? "Untitled" : trName), g_trTemplateFiles.GetFileExt(), _fn, _fnSize);
 /*JFB insert slot code commented: can mess the user's slot actions (because all following ids change)
 			slotUpdate |= (SaveChunk(_fn, p.GetChunk()) && g_trTemplateFiles.InsertSlot(_slot, _fn));
 */

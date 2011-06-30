@@ -124,7 +124,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 			if (strcmp(action->GetName(), _ct->accel.desc)) strcpy(buf, action->GetName());
 			done = true;
 		}
-		else if (*cmd == '!' && i != (action->GetCmdSize()-1)) // last ! ignored
+		else if (*cmd == '!') // last ! ignored
 		{
 			action->m_performState++;
 			if (cmd[1])	strcpy(buf, (char *)(cmd+1));
@@ -420,7 +420,7 @@ void Cyclaction::UpdateNameAndCmds()
 	m_cmds.EmptySafe(false); // no delete (pointers may still be used in a ListView: to be deleted by callers)
 
 	char actionStr[MAX_CYCLATION_LEN] = "";
-	strncpy(actionStr, m_desc.Get(), MAX_CYCLATION_LEN);
+	lstrcpyn(actionStr, m_desc.Get(), MAX_CYCLATION_LEN);
 	char* tok = strtok(actionStr, ",");
 	if (tok) {
 		// "#name" = toggle action, "name" = normal action
@@ -455,8 +455,8 @@ void Cyclaction::UpdateFromCmd()
 #define DEFAULT_ADD_TEXT_R		"Right click here to add commands"
 
 
-static SWS_LVColumn g_cyclactionsCols[] = { { 50, 0, "Id" }, { 220, 1, "Cycle action name" }, { 50, 2, "Toggle" } };
-static SWS_LVColumn g_commandsCols[] = { { 150, 1, "Command" }, { 100, 0, "Name (main section only)" } };
+static SWS_LVColumn g_cyclactionsCols[] = { { 50, 0, "Id" }, { 260, 1, "Cycle action name" }, { 50, 2, "Toggle" } };
+static SWS_LVColumn g_commandsCols[] = { { 180, 1, "Command" }, { 180, 0, "Name (main section only)" } };
 
 static SNM_CyclactionsView* g_mvL = NULL;
 static SNM_CommandsView* g_mvR = NULL;
@@ -474,6 +474,7 @@ void UpdateEditedStatus(bool _edited) {
 
 char g_lastExportFn[BUFFER_SIZE] = "";
 char g_lastImportFn[BUFFER_SIZE] = "";
+
 
 ////////////////////
 // Left list view
@@ -803,9 +804,10 @@ void ResetSection(int _section)
 {
 	WDL_PtrList_DeleteOnDestroy<Cyclaction> actionsToDelete;
 	// keep pointers (may be used in a listview: delete after listview update)
-	if (_section = g_editedSection)
+	if (_section == g_editedSection)
 		for (int i=0; i < g_editedActionItems[_section].GetSize(); i++)
 			actionsToDelete.Add(g_editedActionItems[_section].Get(i));
+
 	g_editedActionItems[_section].EmptySafe(_section != g_editedSection);
 
 	if (_section == g_editedSection)
@@ -945,11 +947,12 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 								{
 									char custCmdId[SNM_MAX_ACTION_CUSTID_LEN] = "";
 									_snprintf(custCmdId, SNM_MAX_ACTION_CUSTID_LEN, "_%s%d", g_cyclactionCustomIds[g_editedSection], cycleId+1);
-									int id = NamedCommandLookup(custCmdId); // API limitation: all cyclations are in the main section (even if they target another section)
-									if (id)
+									int id = SNM_NamedCommandLookup(custCmdId);
+									if (id) {
 										Main_OnCommand(id, 0);
-									else 
-										MessageBox(_hwnd, "This action is not registered !", "S&M - Error", MB_OK);
+										break;
+									}
+									MessageBox(_hwnd, "This action is not registered !", "S&M - Error", MB_OK);
 								}
 							}
 							break;
@@ -1069,7 +1072,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 							case 1020:
 								if (char* fn = BrowseForFiles("S&M - Import cycle actions", g_lastImportFn, NULL, false, SNM_INI_EXT_LIST)) {
 									LoadCyclactions(true, g_editedActionItems, g_editedSection, fn);
-									strncpy(g_lastImportFn, fn, BUFFER_SIZE);
+									lstrcpyn(g_lastImportFn, fn, BUFFER_SIZE);
 									free(fn);
 									g_editedAction = NULL;
 									UpdateListViews();
@@ -1080,7 +1083,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 							case 1021:
 								if (char* fn = BrowseForFiles("S&M - Import cycle actions", g_lastImportFn, NULL, false, SNM_INI_EXT_LIST)) {
 									LoadCyclactions(true, g_editedActionItems, -1, fn);
-									strncpy(g_lastImportFn, fn, BUFFER_SIZE);
+									lstrcpyn(g_lastImportFn, fn, BUFFER_SIZE);
 									free(fn);
 									g_editedAction = NULL;
 									UpdateListViews();

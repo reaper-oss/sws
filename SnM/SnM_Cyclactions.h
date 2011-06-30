@@ -1,5 +1,5 @@
 /******************************************************************************
-/ SnM_Cyclactions.cpp
+/ SnM_Cyclactions.h
 /
 / Copyright (c) 2011 Jeffos, Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper

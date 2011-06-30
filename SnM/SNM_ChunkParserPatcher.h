@@ -1,9 +1,9 @@
 /******************************************************************************
-** SNM_ChunkParserPatcher.h - v1.21
+** SNM_ChunkParserPatcher.h - v1.22
 ** Copyright (C) 2008-2011, Jeffos
 **
 **    This software is provided 'as-is', without any express or implied
-**    warranty.  In no event will the authors be held liable for any damages
+**    warranty. In no event will the authors be held liable for any damages
 **    arising from the use of this software.
 **
 **    Permission is granted to anyone to use this software for any purpose,
@@ -35,13 +35,13 @@
 // See many use-cases here: 
 // http://code.google.com/p/sws-extension/source/browse/trunk#trunk/SnM
 //
-// This code uses/is tied to Cockos' WDL library: http://cockos.com/wdl
+// This code uses Cockos' WDL library: http://cockos.com/wdl
 // Thank you Cockos!
 // 
 // Important: 
-// - Chunks may be HUGE!
-// - The code assumes getted/setted RPP chunks are consistent
-// - For additional performance improvments, this WDL_String mod can be used:
+// - Chunks can be HUGE!
+// - The code assumes RPP chunks are consistent
+// - For major performance improvments, this WDL_String mod can be used:
 //   http://code.google.com/p/sws-extension/source/browse/trunk/SnM/wdlstring.h 
 //   (see details there, mods are plainly marked as required by the licensing)
 //
@@ -58,7 +58,7 @@
 //   SWS_CacheObjectState(true)/SWS_CacheObjectState(false).
 // v1.0 
 // - Licensing update, see header
-// - Performance improvments, more to come..
+// - Performance improvments
 // - Safer commit of chunk updates (auto ids removal)
 
 #pragma once
@@ -433,8 +433,8 @@ protected:
 	// ------------------------------------------------------------------------
 	bool m_breakParsePatch; // this one can be enabled to break parsing (and patching: bulk recopy)
 
-	// Base64 sub-chunks and in-project MIDI data are skipped by default (can be HUGE,
-	// i.e. several Mo). You can enable these attributes to force their processing
+	// Base64 sub-chunks and in-project MIDI data are skipped by default (can be HUGE)
+	// Enable these attributes to force processing
 	bool m_processBase64;
 	bool m_processInProjectMIDI;
 

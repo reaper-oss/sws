@@ -28,7 +28,6 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
-#include "../Prompt.h"
 
 #ifdef _WIN32
 #pragma comment (lib, "winmm.lib")
@@ -37,7 +36,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // File util
-// JFB!!! TODO: WDL_UTF8
+// JFB!!! TODO: WDL_UTF8, exist_fn, ..
 ///////////////////////////////////////////////////////////////////////////////
 
 bool FileExistsErrMsg(const char* _fn, bool _errMsg)
@@ -81,7 +80,7 @@ bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 
 // Browse + return short resource filename (if possible and if _wantFullPath == false)
 // Returns false if cancelled
-bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _filename, int _maxFilename, bool _wantFullPath)
+bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _fn, int _fnSize, bool _wantFullPath)
 {
 	bool ok = false;
 	char defaultPath[BUFFER_SIZE] = "";
@@ -90,9 +89,9 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 	if (filename) 
 	{
 		if(!_wantFullPath)
-			GetShortResourcePath(_resSubDir, filename, _filename, _maxFilename);
+			GetShortResourcePath(_resSubDir, filename, _fn, _fnSize);
 		else
-			strncpy(_filename, filename, _maxFilename);
+			lstrcpyn(_fn, filename, _fnSize);
 		free(filename);
 		ok = true;
 	}
@@ -105,16 +104,16 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 // - *must* work with non existing files (i.e. just some string processing here)
 // - *must* be nop for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
 // - *must* be nop for short resource paths 
-void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _maxFn)
+void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _fnSize)
 {
 	if (_resSubDir && *_resSubDir && _fullFn && *_fullFn)
 	{
 		char defaultPath[BUFFER_SIZE] = "";
 		_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s%c", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR);
 		if(stristr(_fullFn, defaultPath) == _fullFn) 
-			strncpy(_shortFn, (char*)(_fullFn + strlen(defaultPath)), _maxFn);
+			lstrcpyn(_shortFn, (char*)(_fullFn + strlen(defaultPath)), _fnSize);
 		else
-			strncpy(_shortFn, _fullFn, _maxFn);
+			lstrcpyn(_shortFn, _fullFn, _fnSize);
 	}
 	else if (_shortFn)
 		*_shortFn = '\0';
@@ -126,7 +125,7 @@ void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _sh
 // - *must* work with non existing files
 // - *must* be nop for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
 // - *must* be nop for full resource paths 
-void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _maxFn)
+void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fnSize)
 {
 	if (_shortFn && _fullFn) 
 	{
@@ -142,11 +141,11 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 			char* p = strrchr(resDir, PATH_SLASH_CHAR);
 			if (p) *p = '\0';
 			if (FileExists(resDir)) {
-				strncpy(_fullFn, resFn, _maxFn);
+				lstrcpyn(_fullFn, resFn, _fnSize);
 				return;
 			}
 		}
-		strncpy(_fullFn, _shortFn, _maxFn);
+		lstrcpyn(_fullFn, _shortFn, _fnSize);
 	}
 	else if (_fullFn)
 		*_fullFn = '\0';
@@ -198,7 +197,7 @@ void GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 		while(FileExists(fn))
 			if (slash) _snprintf(fn, BUFFER_SIZE, "%s%s_%03d.%s", _dir, _name, ++i, _ext);
 			else _snprintf(fn, BUFFER_SIZE, "%s%c%s_%03d.%s", _dir, PATH_SLASH_CHAR, _name, ++i, _ext);
-		strncpy(_updatedFn, fn, _updatedSz);
+		lstrcpyn(_updatedFn, fn, _updatedSz);
 	}
 }
 
@@ -249,7 +248,7 @@ void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection, const 
 	// "The data in the buffer pointed to by the lpString parameter consists 
 	// of one or more null-terminated strings, followed by a final null character"
 	char* buf = (char*)calloc(_iniSection->GetLength()+1, sizeof(char));
-	strncpy(buf, _iniSection->Get(), _iniSection->GetLength());
+	lstrcpyn(buf, _iniSection->Get(), _iniSection->GetLength());
 	for (int j=0; j < _iniSection->GetLength(); j++)
 		if (buf[j] == '\n') 
 			buf[j] = '\0';
@@ -263,7 +262,44 @@ void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection, const 
 // Util
 ///////////////////////////////////////////////////////////////////////////////
 
-bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufMaxSize)
+// REAPER bug: NamedCommandLookup() can return an id for an unregistered _cmdId 
+int SNM_NamedCommandLookup(const char* _cmdId)
+{
+	int id = NamedCommandLookup(_cmdId);
+	if (id)
+	{
+		const char* buf = kbd_getTextFromCmd((DWORD)id, NULL);
+		if (buf && *buf)
+			return id;
+	}
+	return 0;
+}
+
+int FindMarker(double _pos)
+{
+	int x=0, idx=-1; double dMarkerPos;
+	// relies on markers indexed by positions
+	while (x = EnumProjectMarkers(x, NULL, &dMarkerPos, NULL, NULL, NULL))
+	{
+		if (_pos >= dMarkerPos)
+		{
+			double dMarkerPos2;
+			if (EnumProjectMarkers(x, NULL, &dMarkerPos2, NULL, NULL, NULL))
+			{
+				if (_pos < dMarkerPos2)
+				{
+					idx = x-1;
+					break;
+				}
+			}
+			else
+				idx = x-1;
+		}
+	}
+	return idx;
+}
+
+bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize)
 {
 	if (!_buf || !_bufSrc)
 		return false;
@@ -271,7 +307,7 @@ bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufMaxSize)
 	memset(_buf, 0, sizeof(_buf));
 
 	int i=0, j=0;
-	while (_bufSrc[i] && i < _bufMaxSize && j < _bufMaxSize)
+	while (_bufSrc[i] && i < _bufSize && j < _bufSize)
 	{
 		if (_bufSrc[i] == '\n') {
 			_buf[j++] = '\r';
@@ -281,74 +317,48 @@ bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufMaxSize)
 			_buf[j++] = _bufSrc[i];
 		i++;
 	}
-	_buf[_bufMaxSize-1] = 0; //just in case..
+	_buf[_bufSize-1] = 0; //just in case..
 	return true;
+}
+
+void ShortenStringToFirstRN(char* _buf)
+{
+	if (_buf)
+	{
+		char* p = strchr(_buf, '\r');
+		if (p) *p = '\0';
+		p = strchr(_buf, '\n');
+		if (p) *p = '\0';
+	}
 }
 
 int SNM_MinMax(int _val, int _min, int _max) {
 	return min(_max, max(_min, _val));
 }
 
-bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sectionURLMaxSize)
+bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize)
 {
 	if (_alr)
 	{
 		if (!_stricmp(_section, "Main") || !strcmp(_section, "Main (alt recording)"))
-			strncpy(_sectionURL, "ALR_Main", _sectionURLMaxSize);
+			lstrcpyn(_sectionURL, "ALR_Main", _sectionURLSize);
 		else if (!_stricmp(_section, "Media explorer"))
-			strncpy(_sectionURL, "ALR_MediaExplorer", _sectionURLMaxSize);
+			lstrcpyn(_sectionURL, "ALR_MediaExplorer", _sectionURLSize);
 		else if (!_stricmp(_section, "MIDI Editor"))
-			strncpy(_sectionURL, "ALR_MIDIEditor", _sectionURLMaxSize);
+			lstrcpyn(_sectionURL, "ALR_MIDIEditor", _sectionURLSize);
 		else if (!_stricmp(_section, "MIDI Event List Editor"))
-			strncpy(_sectionURL, "ALR_MIDIEvtList", _sectionURLMaxSize);
+			lstrcpyn(_sectionURL, "ALR_MIDIEvtList", _sectionURLSize);
 		else if (!_stricmp(_section, "MIDI Inline Editor"))
-			strncpy(_sectionURL, "ALR_MIDIInline", _sectionURLMaxSize);
+			lstrcpyn(_sectionURL, "ALR_MIDIInline", _sectionURLSize);
 		else return false;
 	}
 	else
 	{
 		if (_section && _sectionURL)
-			strncpy(_sectionURL, _section, _sectionURLMaxSize);
+			lstrcpyn(_sectionURL, _section, _sectionURLSize);
 		else return false;
 	}
 	return true;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Messages, prompt, etc..
-///////////////////////////////////////////////////////////////////////////////
-
-// GUI for lazy guys
-void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent)
-{
-	HWND h = _hParent;
-	if (!h) h = GetMainHwnd();
-	char msg[4096] = "";
-	if (GetStringWithRN(_msg, msg, 4096) && *msg)
-		DisplayInfoBox(h, _title, msg);
-}
-
-//returns -1 on cancel, MIDI channel otherwise (0-based)
-int PromptForMIDIChannel(const char* _title)
-{
-	int ch = -1;
-	while (ch == -1)
-	{
-		char reply[8]= ""; // no default
-		if (GetUserInputs(_title, 1, "MIDI Channel (1-16):", reply, 8))
-		{
-			ch = atoi(reply); //0 on error
-			if (ch > 0 && ch <= 16)
-				return (ch-1);
-			else {
-				ch = -1;
-				MessageBox(GetMainHwnd(), "Invalid MIDI channel!\nPlease enter a value in [1; 16].", "S&M - Error", MB_OK);
-			}
-		}
-		else return -1; // user has cancelled
-	}
-	return -1;
 }
 
 
@@ -401,7 +411,7 @@ void SimulateMouseClick(COMMAND_T* _ct)
 	WinWaitForEvent(WM_LBUTTONUP);
 }
 
-// _type: 1 & 2 for ALR wkiki (1=native actions, 2=SWS)
+// _type: 1 & 2 for ALR wiki (1=native actions, 2=SWS)
 // _type: 3 & 4 for basic dump (3=native actions, 4=SWS)
 bool dumpActionList(int _type, const char* _title, const char* _lineFormat, const char* _heading, const char* _ending)
 {
@@ -479,6 +489,7 @@ bool dumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 // Create the Wiki ALR summary for the current section displayed in the "Action" dlg 
 // This is the hack version, see clean but limited dumpWikiActionList() below
 // http://forum.cockos.com/showthread.php?t=61929
+// http://wiki.cockos.com/wiki/index.php/Action_List_Reference
 void DumpWikiActionList2(COMMAND_T* _ct)
 {
 	dumpActionList(
@@ -531,7 +542,7 @@ void ShowTakeEnvPadreTest(COMMAND_T* _ct)
 void dumpWikiActionList(COMMAND_T* _ct)
 {
 	char filename[BUFFER_SIZE], cPath[BUFFER_SIZE];
-	strncpy(cPath, GetExePath(), BUFFER_SIZE);
+	lstrcpyn(cPath, GetExePath(), BUFFER_SIZE);
 	if (BrowseForSaveFile("Save ALR Wiki summary", cPath, NULL, "Text file (*.TXT)\0*.TXT\0All Files\0*.*\0", filename, BUFFER_SIZE))
 	{
 		//flush

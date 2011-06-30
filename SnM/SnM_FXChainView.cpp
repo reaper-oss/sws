@@ -209,7 +209,7 @@ bool FileSlotList::BrowseSlot(int _slot, char* _fn, int _fnSz)
 		if (BrowseResourcePath(title, m_resDir.Get(), fileFilter, filename, BUFFER_SIZE, true))
 		{
 			if (_fn)
-				strncpy(_fn, filename, _fnSz);
+				lstrcpyn(_fn, filename, _fnSz);
 
 			if (SetFromFullPath(_slot, filename))
 			{
@@ -330,7 +330,7 @@ void SNM_ResourceView::SetItemText(LPARAM item, int iCol, const char* str)
 				if (GetCurList()->GetFullPath(slot, fn, BUFFER_SIZE) && !pItem->IsDefault() && FileExistsErrMsg(fn))
 				{
 					char newFn[BUFFER_SIZE];
-					strncpy(newFn, fn, BUFFER_SIZE);
+					lstrcpyn(newFn, fn, BUFFER_SIZE);
 					char* p = strrchr(newFn, PATH_SLASH_CHAR);
 					if (p) *p = '\0';
 					else break; // safety

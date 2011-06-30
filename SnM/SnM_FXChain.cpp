@@ -183,10 +183,10 @@ void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool
 		}
 	}
 }
-bool autoSaveItemFXChainSlots(int _slot, const char* _dirPath, char* _fn, int _fnMaxSize)
+bool autoSaveItemFXChainSlots(int _slot, const char* _dirPath, char* _fn, int _fnSize)
 {
 	bool slotUpdate = false;
-	strncpy(_fn, "<No selected item>", _fnMaxSize); // default for err. msg
+	lstrcpyn(_fn, "<No selected item>", _fnSize); // default for err. msg
 
 	for (int i=0; i < CountSelectedMediaItems(NULL); i++)
 	{
@@ -199,14 +199,14 @@ bool autoSaveItemFXChainSlots(int _slot, const char* _dirPath, char* _fn, int _f
 				RemoveAllIds(&fxChain);
 
 				char* itemName = GetName(item);
-				GenerateFilename(_dirPath, (!itemName || *itemName == '\0') ? "Untitled" : itemName, g_fxChainFiles.GetFileExt(), _fn, _fnMaxSize);
+				GenerateFilename(_dirPath, (!itemName || *itemName == '\0') ? "Untitled" : itemName, g_fxChainFiles.GetFileExt(), _fn, _fnSize);
 /*JFB insert slot code commented: can mess the user's slot actions (because all following ids change)
 				slotUpdate |= (SaveChunk(_fn, &fxChain) && g_fxChainFiles.InsertSlot(_slot, _fn));
 */
 				slotUpdate |= (SaveChunk(_fn, &fxChain) && g_fxChainFiles.AddSlot(_fn));
 			}
 			else if (!fxChain.GetLength())
-				strncpy(_fn, "<Empty FX chain>", _fnMaxSize); //JFB // for displayed err. msg
+				lstrcpyn(_fn, "<Empty FX chain>", _fnSize); //JFB // for displayed err. msg
 		}
 	}
 	return slotUpdate;
@@ -382,10 +382,10 @@ void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inpu
 	}
 }
 
-bool autoSaveTrackFXChainSlots(int _slot, bool _inputFX, const char* _dirPath, char* _fn, int _fnMaxSize)
+bool autoSaveTrackFXChainSlots(int _slot, bool _inputFX, const char* _dirPath, char* _fn, int _fnSize)
 {
 	bool slotUpdate = false;
-	strncpy(_fn, "<No selected track>", _fnMaxSize); //default for err. msg
+	lstrcpyn(_fn, "<No selected track>", _fnSize); //default for err. msg
 
 	for (int i = 0; i <= GetNumTracks(); i++)
 	{
@@ -400,14 +400,14 @@ bool autoSaveTrackFXChainSlots(int _slot, bool _inputFX, const char* _dirPath, c
 				char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 				char autoSlotName[256] = "";
 				_snprintf(autoSlotName, 256, "%s%s", (!trName || *trName == '\0') ? "Untitled" : trName, _inputFX ? "_inputFX" : "");
-				GenerateFilename(_dirPath, autoSlotName, g_fxChainFiles.GetFileExt(), _fn, _fnMaxSize);
+				GenerateFilename(_dirPath, autoSlotName, g_fxChainFiles.GetFileExt(), _fn, _fnSize);
 /*JFB insert slot code commented: can mess the user's slot actions (because all following ids change)
 				slotUpdate |= (SaveChunk(_fn, &fxChain) && g_fxChainFiles.InsertSlot(_slot, _fn));
 */
 				slotUpdate |= (SaveChunk(_fn, &fxChain) && g_fxChainFiles.AddSlot(_fn));
 			}
 			else if (!fxChain.GetLength())
-				strncpy(_fn, "<Empty FX chain>", _fnMaxSize); //JFB // for displayed err. msg
+				lstrcpyn(_fn, "<Empty FX chain>", _fnSize); //JFB bof.. for displayed err. msg
 		}
 	}
 	return slotUpdate;

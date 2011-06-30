@@ -255,7 +255,7 @@ void FileSlotList::EditSlot(int _slot)
 			{
 				char title[64] = "";
 				_snprintf(title, 64, "S&M - %s (slot %d)", m_desc.Get(), _slot+1);
-				SNM_Show(chain.Get(), title);
+				SNM_ShowMsg(chain.Get(), title);
 			}
 #endif
 		}

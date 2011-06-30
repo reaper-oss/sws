@@ -1,9 +1,11 @@
+!v2.0.0 #29 (June 30, 2011)
 Added "Cycle action editor" (main menu > extensions > cycle action editor):
 +Unlimited number of cycle actions
 +Unlimited number of commands per cycle action
 +Import/export features
 +Learn selected commands of the action list (Windows OS only)
 +Demo http://reaper.mj-s.com/cyclaction_editor.gif|here|
+
 Other cycle action updates:
 +Performance improvments
 +Consolidated undo points

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		220E6F3B13BCD1C900409C44 /* SnM_Cyclactions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 220E6F3913BCD1C900409C44 /* SnM_Cyclactions.cpp */; };
+		220E6F3C13BCD1C900409C44 /* SnM_Cyclactions.h in Headers */ = {isa = PBXBuildFile; fileRef = 220E6F3A13BCD1C900409C44 /* SnM_Cyclactions.h */; };
 		221CEFAA118212A0009245C9 /* SnM_Track.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 221CEFA9118212A0009245C9 /* SnM_Track.cpp */; };
 		22219AFD124AF1CE006CBC5D /* Macros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22219AFB124AF1CE006CBC5D /* Macros.cpp */; };
 		22219AFE124AF1CE006CBC5D /* Macros.h in Headers */ = {isa = PBXBuildFile; fileRef = 22219AFC124AF1CE006CBC5D /* Macros.h */; };
@@ -289,6 +291,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		220E6F3913BCD1C900409C44 /* SnM_Cyclactions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Cyclactions.cpp; path = SnM/SnM_Cyclactions.cpp; sourceTree = "<group>"; };
+		220E6F3A13BCD1C900409C44 /* SnM_Cyclactions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Cyclactions.h; path = SnM/SnM_Cyclactions.h; sourceTree = "<group>"; };
 		221CEFA9118212A0009245C9 /* SnM_Track.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Track.cpp; path = SnM/SnM_Track.cpp; sourceTree = "<group>"; };
 		22219AFB124AF1CE006CBC5D /* Macros.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Macros.cpp; path = Misc/Macros.cpp; sourceTree = "<group>"; };
 		22219AFC124AF1CE006CBC5D /* Macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Macros.h; path = Misc/Macros.h; sourceTree = "<group>"; };
@@ -894,6 +898,8 @@
 				22FFD283114DB5F10077F1CA /* SNM_Chunk.cpp */,
 				22FFD284114DB5F10077F1CA /* SNM_Chunk.h */,
 				22FFD285114DB5F10077F1CA /* SNM_ChunkParserPatcher.h */,
+				220E6F3913BCD1C900409C44 /* SnM_Cyclactions.cpp */,
+				220E6F3A13BCD1C900409C44 /* SnM_Cyclactions.h */,
 				22ABB3861195B91700E4B242 /* SnM_Dlg.cpp */,
 				22FFD287114DB5F10077F1CA /* SnM_Item.cpp */,
 				22AF6DEB12308A350017808F /* SnM_FindView.cpp */,
@@ -1120,6 +1126,7 @@
 				22C77ED412D62F2E002F68D5 /* TimeMap.h in Headers */,
 				2270FC7212F8551400703F85 /* RecCheck.h in Headers */,
 				22284D48130C4A65007DC680 /* Menus.h in Headers */,
+				220E6F3C13BCD1C900409C44 /* SnM_Cyclactions.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1377,6 +1384,7 @@
 				2270FC7112F8551400703F85 /* RecCheck.cpp in Sources */,
 				22284D47130C4A65007DC680 /* Menus.cpp in Sources */,
 				22495D7B13A5649800381F53 /* SnM_Project.cpp in Sources */,
+				220E6F3B13BCD1C900409C44 /* SnM_Cyclactions.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

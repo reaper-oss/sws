@@ -54,6 +54,19 @@ int GetCurrentYear(){
 	return curYear;
 }
 
+string GetRenderQueueTimeString(){
+  time_t rawtime;
+  struct tm * timeinfo;
+  char buffer[14];
+  time ( &rawtime );
+  timeinfo = localtime ( &rawtime );
+
+  strftime( buffer,14,"%y%m%d_%H%M%S",timeinfo);
+  
+  //if this hasn't been made clear before, i suck at c++
+  return string( buffer );
+}
+
 // Globals
 string g_render_path;
 string g_tag_artist;
@@ -635,7 +648,9 @@ void AutorenderRegions(COMMAND_T*) {
 	NukeDirFiles( queuedRendersDir, "rpp" ); // Deletes all .rpp files in the queuedRendersDir
 
 	ostringstream outRenderProjectPrefixStream;
-	outRenderProjectPrefixStream << queuedRendersDir << PATH_SLASH_CHAR << "render_Autorender";
+	//old version
+	//outRenderProjectPrefixStream << queuedRendersDir << PATH_SLASH_CHAR << "render_Autorender";
+	outRenderProjectPrefixStream << queuedRendersDir << PATH_SLASH_CHAR << "qrender_";
 	string outRenderProjectPrefix = outRenderProjectPrefixStream.str();
 	
 	//init the stuff we need for the region loop
@@ -723,7 +738,10 @@ void AutorenderRegions(COMMAND_T*) {
 	for( unsigned int i = 0; i < renderTracks.size(); i++){		
 		WDL_String trackPrjStr(prjStr);
 
-		string outRenderProjectPath = outRenderProjectPrefix + renderTracks[i].getFileName("rpp", trackNumberPad );
+		// old version
+		//string outRenderProjectPath = outRenderProjectPrefix + renderTracks[i].getFileName("rpp", trackNumberPad );
+		string outRenderProjectPath = outRenderProjectPrefix + GetRenderQueueTimeString() + "_" + GetProjectName() + "_" + renderTracks[i].getFileName("rpp", trackNumberPad );
+		
 		string renderFilePath = g_render_path + PATH_SLASH_CHAR + renderTracks[i].getFileName( renderFileExtension, prependTrackNumberPad );						
 		SetProjectParameter( &trackPrjStr, "RENDER_FILE", "\"" + renderFilePath + "\"" );
 

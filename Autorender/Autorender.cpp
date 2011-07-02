@@ -301,7 +301,6 @@ string GetProjectNotesParameter( WDL_String *prjStr, string param ){
 					string paramVal = "";
 					for( int i = 1; i <= lp.getnumtokens(); i++ ){
 						if( i > 1 ) paramVal += " ";
-						paramVal += lp.gettoken_str( i );
 					}
 					TrimString( paramVal );
 					return paramVal;
@@ -648,9 +647,13 @@ void AutorenderRegions(COMMAND_T*) {
 	NukeDirFiles( queuedRendersDir, "rpp" ); // Deletes all .rpp files in the queuedRendersDir
 
 	ostringstream outRenderProjectPrefixStream;
-	//old version
-	//outRenderProjectPrefixStream << queuedRendersDir << PATH_SLASH_CHAR << "render_Autorender";
-	outRenderProjectPrefixStream << queuedRendersDir << PATH_SLASH_CHAR << "qrender_";
+	outRenderProjectPrefixStream << queuedRendersDir << PATH_SLASH_CHAR;
+	if( g_bv4 ){
+		 outRenderProjectPrefixStream << "qrender_";
+	} else {
+		outRenderProjectPrefixStream << "render_Autorender";
+	}
+	
 	string outRenderProjectPrefix = outRenderProjectPrefixStream.str();
 	
 	//init the stuff we need for the region loop
@@ -738,10 +741,12 @@ void AutorenderRegions(COMMAND_T*) {
 	for( unsigned int i = 0; i < renderTracks.size(); i++){		
 		WDL_String trackPrjStr(prjStr);
 
-		// old version
-		//string outRenderProjectPath = outRenderProjectPrefix + renderTracks[i].getFileName("rpp", trackNumberPad );
-		string outRenderProjectPath = outRenderProjectPrefix + GetRenderQueueTimeString() + "_" + GetProjectName() + "_" + renderTracks[i].getFileName("rpp", trackNumberPad );
-		
+		string outRenderProjectPath = outRenderProjectPrefix;
+		if( g_bv4 ){
+			outRenderProjectPath += GetRenderQueueTimeString() + "_" + GetProjectName() + "_";
+		}
+		outRenderProjectPath += renderTracks[i].getFileName("rpp", trackNumberPad );
+
 		string renderFilePath = g_render_path + PATH_SLASH_CHAR + renderTracks[i].getFileName( renderFileExtension, prependTrackNumberPad );						
 		SetProjectParameter( &trackPrjStr, "RENDER_FILE", "\"" + renderFilePath + "\"" );
 

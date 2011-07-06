@@ -279,26 +279,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// FX Chains (items & tracks) ---------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (FX chains)" }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, "S&&M Resources", 0, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ClearSlotPrompt, NULL, 0},
-
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, slot 1" }, "S&M_TAKEFXCHAIN1", loadSetTakeFXChain, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, slot 2" }, "S&M_TAKEFXCHAIN2", loadSetTakeFXChain, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, slot 3" }, "S&M_TAKEFXCHAIN3", loadSetTakeFXChain, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, slot 4" }, "S&M_TAKEFXCHAIN4", loadSetTakeFXChain, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, slot 5" }, "S&M_TAKEFXCHAIN5", loadSetTakeFXChain, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, slot 6" }, "S&M_TAKEFXCHAIN6", loadSetTakeFXChain, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, slot 7" }, "S&M_TAKEFXCHAIN7", loadSetTakeFXChain, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, slot 8" }, "S&M_TAKEFXCHAIN8", loadSetTakeFXChain, NULL, 7},
 	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, prompt for slot" }, "S&M_TAKEFXCHAINp1", loadSetTakeFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, all takes, prompt for slot" }, "S&M_TAKEFXCHAINp2", loadSetAllTakesFXChain, NULL, -1},
-
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot 1" }, "S&M_PASTE_TAKEFXCHAIN1", loadPasteTakeFXChain, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot 2" }, "S&M_PASTE_TAKEFXCHAIN2", loadPasteTakeFXChain, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot 3" }, "S&M_PASTE_TAKEFXCHAIN3", loadPasteTakeFXChain, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot 4" }, "S&M_PASTE_TAKEFXCHAIN4", loadPasteTakeFXChain, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot 5" }, "S&M_PASTE_TAKEFXCHAIN5", loadPasteTakeFXChain, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot 6" }, "S&M_PASTE_TAKEFXCHAIN6", loadPasteTakeFXChain, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot 7" }, "S&M_PASTE_TAKEFXCHAIN7", loadPasteTakeFXChain, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot 8" }, "S&M_PASTE_TAKEFXCHAIN8", loadPasteTakeFXChain, NULL, 7},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp1", loadPasteTakeFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, all takes, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp2", loadPasteAllTakesFXChain, NULL, -1},
 
@@ -329,24 +311,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain (depending on focus)" }, "S&M_SMART_SET_FXCHAIN", smartPasteReplaceFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Cut FX chain (depending on focus)" }, "S&M_SMART_CUT_FXCHAIN", smartCutFXChain, NULL, }, 
 
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, slot 1" }, "S&M_TRACKFXCHAIN1", loadSetTrackFXChain, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, slot 2" }, "S&M_TRACKFXCHAIN2", loadSetTrackFXChain, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, slot 3" }, "S&M_TRACKFXCHAIN3", loadSetTrackFXChain, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, slot 4" }, "S&M_TRACKFXCHAIN4", loadSetTrackFXChain, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, slot 5" }, "S&M_TRACKFXCHAIN5", loadSetTrackFXChain, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, slot 6" }, "S&M_TRACKFXCHAIN6", loadSetTrackFXChain, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, slot 7" }, "S&M_TRACKFXCHAIN7", loadSetTrackFXChain, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, slot 8" }, "S&M_TRACKFXCHAIN8", loadSetTrackFXChain, NULL, 7},
 	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, prompt for slot" }, "S&M_TRACKFXCHAINp1", loadSetTrackFXChain, NULL, -1},
-	
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, slot 1" }, "S&M_PASTE_TRACKFXCHAIN1", loadPasteTrackFXChain, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, slot 2" }, "S&M_PASTE_TRACKFXCHAIN2", loadPasteTrackFXChain, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, slot 3" }, "S&M_PASTE_TRACKFXCHAIN3", loadPasteTrackFXChain, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, slot 4" }, "S&M_PASTE_TRACKFXCHAIN4", loadPasteTrackFXChain, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, slot 5" }, "S&M_PASTE_TRACKFXCHAIN5", loadPasteTrackFXChain, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, slot 6" }, "S&M_PASTE_TRACKFXCHAIN6", loadPasteTrackFXChain, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, slot 7" }, "S&M_PASTE_TRACKFXCHAIN7", loadPasteTrackFXChain, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, slot 8" }, "S&M_PASTE_TRACKFXCHAIN8", loadPasteTrackFXChain, NULL, 7},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, prompt for slot" }, "S&M_PASTE_TRACKFXCHAINp1", loadPasteTrackFXChain, NULL, -1},
 
 	// FX presets -------------------------------------------------------------
@@ -371,57 +336,13 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// Track templates --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (track templates)" }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResourceView, NULL, 1, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear track template slot..." }, "S&M_CLR_TRTEMPLATE_SLOT", ClearSlotPrompt, NULL, 1},
-
-	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot 01" }, "S&M_APPLY_TRTEMPLATE1", loadSetTrackTemplate, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot 02" }, "S&M_APPLY_TRTEMPLATE2", loadSetTrackTemplate, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot 03" }, "S&M_APPLY_TRTEMPLATE3", loadSetTrackTemplate, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot 04" }, "S&M_APPLY_TRTEMPLATE4", loadSetTrackTemplate, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot 05" }, "S&M_APPLY_TRTEMPLATE5", loadSetTrackTemplate, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot 06" }, "S&M_APPLY_TRTEMPLATE6", loadSetTrackTemplate, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot 07" }, "S&M_APPLY_TRTEMPLATE7", loadSetTrackTemplate, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot 08" }, "S&M_APPLY_TRTEMPLATE8", loadSetTrackTemplate, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot 09" }, "S&M_APPLY_TRTEMPLATE9", loadSetTrackTemplate, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot 10" }, "S&M_APPLY_TRTEMPLATE10", loadSetTrackTemplate, NULL, 9},
 	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, prompt for slot" }, "S&M_APPLY_TRTEMPLATEp", loadSetTrackTemplate, NULL, -1},
-
-	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot 01" }, "S&M_ADD_TRTEMPLATE1", loadImportTrackTemplate, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot 02" }, "S&M_ADD_TRTEMPLATE2", loadImportTrackTemplate, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot 03" }, "S&M_ADD_TRTEMPLATE3", loadImportTrackTemplate, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot 04" }, "S&M_ADD_TRTEMPLATE4", loadImportTrackTemplate, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot 05" }, "S&M_ADD_TRTEMPLATE5", loadImportTrackTemplate, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot 06" }, "S&M_ADD_TRTEMPLATE6", loadImportTrackTemplate, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot 07" }, "S&M_ADD_TRTEMPLATE7", loadImportTrackTemplate, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot 08" }, "S&M_ADD_TRTEMPLATE8", loadImportTrackTemplate, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot 09" }, "S&M_ADD_TRTEMPLATE9", loadImportTrackTemplate, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot 10" }, "S&M_ADD_TRTEMPLATE10", loadImportTrackTemplate, NULL, 9},
 	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, prompt for slot" }, "S&M_ADD_TRTEMPLATEp", loadImportTrackTemplate, NULL, -1},
 
 	// Project templates ------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (project templates)" }, "S&M_SHOW_RESVIEW_PRJ_TEMPLATES", OpenResourceView, NULL, 2, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear project template slot..." }, "S&M_CLR_PRJTEMPLATE_SLOT", ClearSlotPrompt, NULL, 2},
-
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot 01" }, "S&M_APPLY_PRJTEMPLATE1", loadOrSelectProject, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot 02" }, "S&M_APPLY_PRJTEMPLATE2", loadOrSelectProject, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot 03" }, "S&M_APPLY_PRJTEMPLATE3", loadOrSelectProject, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot 04" }, "S&M_APPLY_PRJTEMPLATE4", loadOrSelectProject, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot 05" }, "S&M_APPLY_PRJTEMPLATE5", loadOrSelectProject, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot 06" }, "S&M_APPLY_PRJTEMPLATE6", loadOrSelectProject, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot 07" }, "S&M_APPLY_PRJTEMPLATE7", loadOrSelectProject, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot 08" }, "S&M_APPLY_PRJTEMPLATE8", loadOrSelectProject, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot 09" }, "S&M_APPLY_PRJTEMPLATE9", loadOrSelectProject, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot 10" }, "S&M_APPLY_PRJTEMPLATE10", loadOrSelectProject, NULL, 9},
 	{ { DEFACCEL, "SWS/S&M: Select/load project template, prompt for slot" }, "S&M_APPLY_PRJTEMPLATEp", loadOrSelectProject, NULL, -1},
-
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot 01" }, "S&M_NEWTAB_PRJTEMPLATE1", loadNewTabOrSelectProject, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot 02" }, "S&M_NEWTAB_PRJTEMPLATE2", loadNewTabOrSelectProject, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot 03" }, "S&M_NEWTAB_PRJTEMPLATE3", loadNewTabOrSelectProject, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot 04" }, "S&M_NEWTAB_PRJTEMPLATE4", loadNewTabOrSelectProject, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot 05" }, "S&M_NEWTAB_PRJTEMPLATE5", loadNewTabOrSelectProject, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot 06" }, "S&M_NEWTAB_PRJTEMPLATE6", loadNewTabOrSelectProject, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot 07" }, "S&M_NEWTAB_PRJTEMPLATE7", loadNewTabOrSelectProject, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot 08" }, "S&M_NEWTAB_PRJTEMPLATE8", loadNewTabOrSelectProject, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot 09" }, "S&M_NEWTAB_PRJTEMPLATE9", loadNewTabOrSelectProject, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot 10" }, "S&M_NEWTAB_PRJTEMPLATE10", loadNewTabOrSelectProject, NULL, 9},
 	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), prompt for slot" }, "S&M_NEWTAB_PRJTEMPLATEp", loadNewTabOrSelectProject, NULL, -1},
 
 	// Items ------------------------------------------------------------------
@@ -449,7 +370,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 #endif
 	{ { DEFACCEL, "SWS/S&M: Takes - Move active up (cycling) in selected items" }, "S&M_MOVETAKE3", moveActiveTake, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Takes - Move active down (cycling) in selected items" }, "S&M_MOVETAKE4", moveActiveTake, NULL, 1},
-#ifdef _SNM_MISC // Deprecated: native actions "Rotate take lanes forward/backward" added in REAPER v3.67
+#ifdef _SNM_MISC // deprecated: native actions "Rotate take lanes forward/backward" added in REAPER v3.67
 	{ { DEFACCEL, "SWS/S&M: Takes - Move all up (cycling) in selected items" }, "S&M_MOVETAKE1", moveTakes, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Takes - Move all down (cycling) in selected items" }, "S&M_MOVETAKE2", moveTakes, NULL, 1},
 #endif
@@ -646,6 +567,40 @@ static COMMAND_T g_SNM_cmdTable[] =
 };
 
 
+// *** table of dynamic cmds ***
+// "dynamic" means that the number of instances of each action is choosen by the user in the S&M.ini file. this is typically used for "slot actions".
+// in the ini file, the number of actions to create is defined in the "NbOfActions" section, using the leading part of the custom id.
+// example:
+// [NbOfActions]
+// S&M_TAKEFXCHAIN=64
+// S&M_PASTE_TAKEFXCHAIN=0
+// S&M_ADD_TRTEMPLATE=16
+// in this g_SNM_dynamicCmdTable table:
+// - items are not real commands but "meta" commands, this table must be registered with SNMRegisterDynamicCommands()
+// - COMMAND_T.user is used to specify the default number of actions to create
+// - a function doCommand(COMMAND_T*) or getEnabled(COMMAND_T*) will be trigered with 0-based COMMAND_T.user
+// - action names are formated strings, they must contain "%d". atm, %02d is used for better sort in the action list (max = 99)
+// - custom command ids aren't formated strings, but final ids will end with "slot" numbers (1-based for display reasons)
+// example: { { DEFACCEL, "Do stuff #%d" }, "DO_STUFF%d", doStuff, NULL, 2},
+// if not overrided in the S&M.ini file, 2 actions will be created: "Do stuff #1" and "Do stuff #2" both calling doStuff(COMMAND_T* c)
+// with c->user=0 and c->user=1, respectively. custom ids will be "_DO_STUFF1" and "_DO_STUFF2", repectively.
+
+static COMMAND_T g_SNM_dynamicCmdTable[] = 
+{
+	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, slot %02d" }, "S&M_TAKEFXCHAIN", loadSetTakeFXChain, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot %02d" }, "S&M_PASTE_TAKEFXCHAIN", loadPasteTakeFXChain, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, all takes, slot %02d" }, "S&M_FXCHAIN_ALLTAKES", loadSetAllTakesFXChain, NULL, 0}, // no action created by default
+	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, all takes, slot %02d" }, "S&M_PASTE_FXCHAIN_ALLTAKES", loadPasteAllTakesFXChain, NULL, 0}, 
+	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, slot %02d" }, "S&M_TRACKFXCHAIN", loadSetTrackFXChain, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, slot %02d" }, "S&M_PASTE_TRACKFXCHAIN", loadPasteTrackFXChain, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot %02d" }, "S&M_APPLY_TRTEMPLATE", loadSetTrackTemplate, NULL, 10},
+	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot %02d" }, "S&M_ADD_TRTEMPLATE", loadImportTrackTemplate, NULL, 10},
+	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot %02d" }, "S&M_APPLY_PRJTEMPLATE", loadOrSelectProject, NULL, 10},
+	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot %02d" }, "S&M_NEWTAB_PRJTEMPLATE", loadNewTabOrSelectProject, NULL, 10},
+	{ {}, LAST_COMMAND, }, // Denote end of table
+};
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // S&M actions ("S&M extension" section)
 ///////////////////////////////////////////////////////////////////////////////
@@ -670,7 +625,6 @@ static MIDI_COMMAND_T g_SNMSection_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 3 of selected tracks (MIDI CC absolute only)" }, "S&M_FX3_PRESET", TriggerFXPreset, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 4 of selected tracks (MIDI CC absolute only)" }, "S&M_FX4_PRESET", TriggerFXPreset, NULL, 3},
 #endif
-
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
@@ -689,7 +643,7 @@ bool fakeIsToggledAction(COMMAND_T* _ct) {
 void fakeToggleAction(COMMAND_T* _ct) {
 	if (_ct && _ct->accel.accel.cmd) {
 		g_fakeToggleStates.Insert(_ct->accel.accel.cmd, *g_fakeToggleStates.Get(_ct->accel.accel.cmd, &g_bFalse) ? &g_bFalse : &g_bTrue);
-/* doesn't seem required
+/*JFB doesn't seem required.. hum..
 		RefreshToolbar(_ct->accel.accel.cmd);
 */
 	}
@@ -832,13 +786,12 @@ void SNM_ShowActionList(COMMAND_T* _ct) {
 // S&M core stuff
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef _SWS_MENU
 static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
 {
 	if (!strcmp(_menustr, "Main extensions") && !_flag) 
 	{
-#ifdef _SWS_MENU
 		SWSCreateMenuFromCommandTable(g_SNM_cmdTable, _hMenu);
-#endif
 	}
 /*
 	else if (!strcmp(_menustr, "Media item context") && !_flag) {
@@ -849,8 +802,33 @@ static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
 	}
 */
 }
+#endif
+
+// see g_SNM_dynamicCmdTable's comments
+int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _fn)
+{
+	char actionName[SNM_MAX_ACTION_NAME_LEN], custId[SNM_MAX_ACTION_CUSTID_LEN];
+	int i = 0;
+	while(_cmds[i].id != LAST_COMMAND)
+	{
+		COMMAND_T* ct = &_cmds[i++];
+		int nb = GetPrivateProfileInt("NbOfActions", ct->id, (int)ct->user, g_SNMiniFilename.Get());
+		nb = SNM_MinMax(nb, 0, SNM_MAX_DYNAMIC_ACTIONS);
+		for (int j=0; j < nb; j++)
+		{
+			_snprintf(actionName, SNM_MAX_ACTION_NAME_LEN, ct->accel.desc, j+1);
+			_snprintf(custId, SNM_MAX_ACTION_CUSTID_LEN, "%s%d", ct->id, j+1);
+			if (SWSRegisterCommandExt3(ct->doCommand, ct->getEnabled, 0, custId, actionName, j, _fn))
+				ct->user = nb; // patch the real number of instances
+			else
+				return 0;
+		}
+	}
+	return 1;
+}
 
 WDL_String g_SNMiniFilename;
+
 void IniFileInit()
 {
 	// Init S&M.ini file(+ "upgrade": move old ones to the new REAPER's resource path)
@@ -875,6 +853,31 @@ void IniFileInit()
 	WritePrivateProfileStruct("FXCHAIN_VIEW", NULL, NULL, 0, iniFilename); //flush section
 	if (sectionSz)
 		WritePrivateProfileSection("RESOURCE_VIEW", buf, iniFilename);
+
+	// Load general prefs 
+	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, iniFilename) == 1);
+	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, iniFilename);
+}
+
+void IniFileExit()
+{
+	WDL_String iniSection;
+
+	// Save general prefs
+	iniSection.AppendFormatted(128, "; S&M.ini - SWS/S&M Extension v%d.%d.%d Build #%d\n", SWS_VERSION); 
+	iniSection.AppendFormatted(BUFFER_SIZE, "; %s\n", g_SNMiniFilename.Get()); 
+	iniSection.AppendFormatted(64, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0); 
+	iniSection.AppendFormatted(64, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1 : 0); 
+	SaveIniSection("General", &iniSection, g_SNMiniFilename.Get());
+
+	// save dynamic actions
+	iniSection.SetFormatted(128, "; Set the number of slots/actions you want below (max = %d)\n", SNM_MAX_DYNAMIC_ACTIONS);
+	int i = 0;
+	while(g_SNM_dynamicCmdTable[i].id != LAST_COMMAND) {
+		COMMAND_T* ct = &g_SNM_dynamicCmdTable[i++];
+		iniSection.AppendFormatted(SNM_MAX_ACTION_CUSTID_LEN+3, "%s=%d\t; %s\n", ct->id, (int)ct->user, ct->accel.desc); 
+	}
+	SaveIniSection("NbOfActions", &iniSection, g_SNMiniFilename.Get());
 }
 
 int SnMInit(reaper_plugin_info_t* _rec)
@@ -882,21 +885,16 @@ int SnMInit(reaper_plugin_info_t* _rec)
 	if (!_rec)
 		return 0;
 
+	IniFileInit();
 #ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
 		return 0;
 #endif
 	// Actions should be registered before views
-	if (!SWSRegisterCommands(g_SNM_cmdTable))
+	if (!SWSRegisterCommands(g_SNM_cmdTable) || 
+		!SNMRegisterDynamicCommands(g_SNM_dynamicCmdTable, __FILE__) ||
+		!SNMSectionRegisterCommands(_rec))
 		return 0;
-	if (!SNMSectionRegisterCommands(_rec))
-		return 0;
-
-	IniFileInit();
-
-	// Load general prefs 
-	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNMiniFilename.Get()) == 1);
-	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNMiniFilename.Get());
 
 	SNM_UIInit();
 	LiveConfigViewInit();
@@ -914,10 +912,7 @@ void SnMExit()
 	NotesHelpViewExit();
 	FindViewExit();
 	SNM_UIExit(); 
-
-	// Save general prefs
-	WritePrivateProfileString("General", "ToolbarsAutoRefresh", g_toolbarsAutoRefreshEnabled ? "1" : "0", g_SNMiniFilename.Get());
-	WritePrivateProfileString("General", "BuggyPlugsSupport", g_buggyPlugSupport ? "1" : "0", g_SNMiniFilename.Get());
+	IniFileExit();
 }
 
 

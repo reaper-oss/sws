@@ -29,6 +29,7 @@
 #pragma once
 
 #include "SNM_ChunkParserPatcher.h"
+#include "version.h"
 
 //#define _SNM_MISC
 //#define _SNM_TRACK_GROUP_EX
@@ -59,12 +60,14 @@
 #define SNM_MAX_ACTION_COUNT		0xFFFF
 #define SNM_MAX_SECTION_NAME_LEN	64
 #define SNM_MAX_ACTION_CUSTID_LEN	128
+#define SNM_MAX_ACTION_NAME_LEN		128
 #define SNM_MAX_MARKER_NAME_LEN		64
-#define SNM_MAX_TRACK_GROUPS		32 
+#define SNM_MAX_TRACK_GROUPS		32
 #define SNM_MAX_HW_OUTS				8
 #define SNM_MAX_TAKES				128
 #define SNM_MAX_FX					128
 #define SNM_MAX_INI_SECTION			0xFFFF // definitive limit for WritePrivateProfileSection
+#define SNM_MAX_DYNAMIC_ACTIONS		99     // if > 99 the display of action names should be updated
 #define SNM_LET_BREATHE_MS			10
 #define SNM_3D_COLORS_DELTA			25
 #define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average monitored)
@@ -163,6 +166,7 @@ void RefreshToolbars();
 void fakeToggleAction(COMMAND_T*);
 bool fakeIsToggledAction(COMMAND_T*);
 void SNM_ShowActionList(COMMAND_T*);
+int SNMRegisterDynamicCommands(COMMAND_T* _pCommands);
 int SnMInit(reaper_plugin_info_t* _rec);
 void SnMExit();
 void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);

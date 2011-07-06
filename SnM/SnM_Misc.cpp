@@ -419,14 +419,14 @@ bool dumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 	HWND hList = GetActionListBox(currentSection, SNM_MAX_SECTION_NAME_LEN);
 	if (hList && currentSection)
 	{
-		char sectionURL[64]= ""; 
-		if (!GetSectionName(_type == 1 || _type == 2, currentSection, sectionURL, 64))
+		char sectionURL[SNM_MAX_SECTION_NAME_LEN] = ""; 
+		if (!GetSectionName(_type == 1 || _type == 2, currentSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
 		{
 			MessageBox(g_hwndParent, "Error: unknown section!", _title, MB_OK);
 			return false;
 		}
 
-		char fn[128]; char filename[BUFFER_SIZE];
+		char fn[SNM_MAX_SECTION_NAME_LEN*2]; char filename[BUFFER_SIZE];
 		sprintf(fn, "%s%s.txt", sectionURL, !(_type % 2) ? "_SWS" : "");
 		if (!BrowseForSaveFile(_title, GetResourcePath(), fn, "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0", filename, BUFFER_SIZE))
 			return false;
@@ -453,17 +453,17 @@ bool dumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 				ListView_GetItem(hList, &li);
 				int cmdId = (int)li.lParam;
 
-				char customId[64] = "";
-				char cmdName[256] = "";
-				ListView_GetItemText(hList, i, 1, cmdName, 256);
-				ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, customId, 64);
+				char customId[SNM_MAX_ACTION_CUSTID_LEN] = "";
+				char cmdName[SNM_MAX_ACTION_NAME_LEN] = "";
+				ListView_GetItemText(hList, i, 1, cmdName, SNM_MAX_ACTION_NAME_LEN);
+				ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, customId, SNM_MAX_ACTION_CUSTID_LEN);
 
 				if (!strstr(cmdName,"Custom:") &&
 					((_type % 2 && !strstr(cmdName,"SWS:") && !strstr(cmdName,"SWS/")) ||
                      (!(_type % 2) && (strstr(cmdName,"SWS:") || strstr(cmdName,"SWS/")))))
 				{
 					if (!*customId) 
-						sprintf(customId, "%d", cmdId);
+						_snprintf(customId, SNM_MAX_ACTION_CUSTID_LEN, "%d", cmdId);
 					fprintf(f, _lineFormat, sectionURL, customId, cmdName, customId);
 				}
 			}
@@ -473,7 +473,7 @@ bool dumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 			fclose(f);
 
 			char msg[BUFFER_SIZE] = "";
-			sprintf(msg, "Wrote %s", filename); 
+			_snprintf(msg, BUFFER_SIZE, "Wrote %s", filename); 
 			MessageBox(g_hwndParent, msg, _title, MB_OK);
 			return true;
 

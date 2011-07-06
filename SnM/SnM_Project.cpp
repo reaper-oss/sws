@@ -85,11 +85,15 @@ void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errM
 			if (_newTab)
 				Main_OnCommand(40859,0);
 			Main_openProject(fn);
+
+/*JFB API limitation: would be great to set the project as "not saved" here(like native project templates)
+	See http://code.google.com/p/sws-extension/issues/detail?id=321
+*/
 		}
 	}
 }
 
-bool autoSaveProjectSlot(int _slot, bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnMaxSize)
+bool autoSaveProjectSlot(int _slot, bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnSize)
 {
 	bool slotUpdate = false;
 	if (_saveCurPrj)
@@ -99,7 +103,7 @@ bool autoSaveProjectSlot(int _slot, bool _saveCurPrj, const char* _dirPath, char
 	EnumProjects(-1, prjFn, BUFFER_SIZE);
 	ExtractFileNameEx(prjFn, name, true); //JFB!!! Xen code a revoir
 
-	GenerateFilename(_dirPath, name, g_prjTemplateFiles.GetFileExt(), _fn, _fnMaxSize);
+	GenerateFilename(_dirPath, name, g_prjTemplateFiles.GetFileExt(), _fn, _fnSize);
 	WDL_String chunk;
 	if (LoadChunk(prjFn, &chunk))
 		slotUpdate |= (SaveChunk(_fn, &chunk) && g_prjTemplateFiles.AddSlot(_fn));

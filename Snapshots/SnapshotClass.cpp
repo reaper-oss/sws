@@ -754,6 +754,7 @@ void Snapshot::RegisterGetCommand(int iSlot) // Slot is 1-based index.
 		_snprintf(cID, BUFFER_SIZE, "SWSSNAPSHOT_GET%d", iSlot);
 		_snprintf(cDesc, BUFFER_SIZE, "SWS: Recall snapshot %d", iSlot);
 		SWSRegisterCommandExt(GetSnapshot, cID, cDesc, iSlot);
+		iLastRegistered = iSlot;
 	}
 }
 

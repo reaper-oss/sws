@@ -578,11 +578,11 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if (g_lastActionId && *g_lastActionId && g_lastActionDesc && 
 					*g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
 				{
-					char cLink[512] = "";
-					char sectionURL[64] = "";
-					if (GetSectionName(true, g_lastActionSection, sectionURL, 64))
+					char cLink[256] = "";
+					char sectionURL[SNM_MAX_SECTION_NAME_LEN] = "";
+					if (GetSectionName(true, g_lastActionSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
 					{					
-						_snprintf(cLink, 512, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
+						_snprintf(cLink, 256, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
 						ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
 					}
 				}

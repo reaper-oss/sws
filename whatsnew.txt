@@ -1,3 +1,25 @@
+Issue 310: Autorender not working in Reaper v4.0 beta
+Issue 323: Fixed duplicated "Recall snapshot" actions
+
+S&M Resources view: 
+The number of related slot actions can now be customized in the S&M.ini file:
+[NbOfActions]
+; Set the number of slots/actions you want below (max = 99)
+S&M_TAKEFXCHAIN=8	          ; SWS/S&M: Apply FX chain to selected items, slot n
+S&M_PASTE_TAKEFXCHAIN=8	          ; SWS/S&M: Paste FX chain to selected items, slot n
+S&M_FXCHAIN_ALLTAKES=0	          ; SWS/S&M: Apply FX chain to selected items, all takes, slot n
+S&M_PASTE_FXCHAIN_ALLTAKES=0	  ; SWS/S&M: Paste FX chain to selected items, all takes, slot n
+S&M_TRACKFXCHAIN=8	          ; SWS/S&M: Apply FX chain to selected tracks, slot n
+S&M_PASTE_TRACKFXCHAIN=8	  ; SWS/S&M: Paste FX chain to selected tracks, slot n
+S&M_APPLY_TRTEMPLATE=10	          ; SWS/S&M: Apply track template to selected tracks, slot n
+S&M_ADD_TRTEMPLATE=10	          ; SWS/S&M: Import tracks from track template, slot n
+S&M_APPLY_PRJTEMPLATE=10	  ; SWS/S&M: Select/load project template, slot n
+S&M_NEWTAB_PRJTEMPLATE=10	  ; SWS/S&M: Select/load project template (new tab), slot n
+
+This also "unhides" (i.e. 0 slot by default) 2 new actions:
++SWS/S&M: Apply FX chain to selected items, all takes, slot n
++SWS/S&M: Paste FX chain to selected items, all takes, slot n
+
 !v2.0.0 #29 (June 30, 2011)
 Added "Cycle action editor" (main menu > extensions > cycle action editor):
 +Unlimited number of cycle actions

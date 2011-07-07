@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
+#include "../../WDL/projectcontext.h"
 
 
 WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndTrackClipboard; 
@@ -234,18 +235,13 @@ void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _
 		char tmp[16] = "";
 		GetPrivateProfileString("LAST_CUEBUS","REATYPE","3",tmp,16,g_SNMiniFilename.Get());
 		*_reaType = atoi(tmp); // 0 if failed 
-
 		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED","0",tmp,16,g_SNMiniFilename.Get());
 		*_trTemplate = (atoi(tmp) == 1); // 0 if failed 
-
 		GetPrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH","",_trTemplatePath,BUFFER_SIZE,g_SNMiniFilename.Get());
-
 		GetPrivateProfileString("LAST_CUEBUS","SHOW_ROUTING","1",tmp,16,g_SNMiniFilename.Get());
 		*_showRouting = (atoi(tmp) == 1); // 0 if failed 
-
 		GetPrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT","0",tmp,16,g_SNMiniFilename.Get());
 		*_sendToMaster = (atoi(tmp) == 1); // 0 if failed 
-
 		GetPrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT","1",tmp,16,g_SNMiniFilename.Get());
 		*_soloDefeat = atoi(tmp); // 0 if failed 
 
@@ -259,16 +255,20 @@ void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _
 	}
 }
 
-void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts)
+void saveCueBusIniFile(const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts)
 {
 	if (_busName && _trTemplatePath && _hwOuts)
 	{
-		WritePrivateProfileString("LAST_CUEBUS","NAME",_busName,g_SNMiniFilename.Get());
+		WDL_String escapedStr;
+		makeEscapedConfigString(_busName, &escapedStr);
+
+		WritePrivateProfileString("LAST_CUEBUS","NAME",escapedStr.Get(),g_SNMiniFilename.Get());
 		char tmp[16] = "";
 		sprintf(tmp,"%d",_type);
 		WritePrivateProfileString("LAST_CUEBUS","REATYPE",tmp,g_SNMiniFilename.Get());
 		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED",_trTemplate ? "1" : "0",g_SNMiniFilename.Get());
-		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH",_trTemplatePath,g_SNMiniFilename.Get());
+		makeEscapedConfigString(_trTemplatePath, &escapedStr);
+		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_PATH",escapedStr.Get(),g_SNMiniFilename.Get());
 		WritePrivateProfileString("LAST_CUEBUS","SHOW_ROUTING",_showRouting ? "1" : "0",g_SNMiniFilename.Get());
 		WritePrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT",_sendToMaster ? "1" : "0",g_SNMiniFilename.Get());
 

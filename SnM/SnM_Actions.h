@@ -422,7 +422,7 @@ void removeSends(COMMAND_T*);
 void removeReceives(COMMAND_T*);
 void removeRouting(COMMAND_T*);
 void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
-void saveCueBusIniFile(char* _busName, int _type, bool _trTemplate, char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
+void saveCueBusIniFile(const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
 
 // *** SnM_Track.cpp ***
 #ifdef _SNM_TRACK_GROUP_EX

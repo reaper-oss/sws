@@ -245,16 +245,23 @@ void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx)
 // Write a full INI file's section in one go
 void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection, const char* _iniFn)
 {
-	// "The data in the buffer pointed to by the lpString parameter consists 
-	// of one or more null-terminated strings, followed by a final null character"
-	char* buf = (char*)calloc(_iniSection->GetLength()+1, sizeof(char));
-	lstrcpyn(buf, _iniSection->Get(), _iniSection->GetLength());
-	for (int j=0; j < _iniSection->GetLength(); j++)
-		if (buf[j] == '\n') 
-			buf[j] = '\0';
-	WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, _iniFn); //flush section
-	WritePrivateProfileSection(_iniSectionName, buf, _iniFn);
-	free(buf);
+	if (_iniSectionName && _iniSection && _iniFn)
+	{
+/*JFB!!! doing that leads to something close to the issue 292 (ini file cache odd pb)
+		if (_iniSection->GetLength())
+			_iniSection->Append(" \n");
+*/
+		// "The data in the buffer pointed to by the lpString parameter consists 
+		// of one or more null-terminated strings, followed by a final null character"
+		char* buf = (char*)calloc(_iniSection->GetLength()+1, sizeof(char));
+		lstrcpyn(buf, _iniSection->Get(), _iniSection->GetLength());
+		for (int j=0; j < _iniSection->GetLength(); j++)
+			if (buf[j] == '\n') 
+				buf[j] = '\0';
+		WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, _iniFn); //flush section
+		WritePrivateProfileSection(_iniSectionName, buf, _iniFn);
+		free(buf);
+	}
 }
 
 

@@ -1,24 +1,19 @@
-Issue 310: Autorender not working in Reaper v4.0 beta
+Issue 310: Fixed Autorender not working in Reaper v4.0 beta
 Issue 323: Fixed duplicated "Recall snapshot" actions
 
-S&M Resources view: 
-The number of related slot actions can now be customized in the S&M.ini file:
-[NbOfActions]
-; Set the number of slots/actions you want below (max = 99)
-S&M_TAKEFXCHAIN=8	          ; SWS/S&M: Apply FX chain to selected items, slot n
-S&M_PASTE_TAKEFXCHAIN=8	          ; SWS/S&M: Paste FX chain to selected items, slot n
-S&M_FXCHAIN_ALLTAKES=0	          ; SWS/S&M: Apply FX chain to selected items, all takes, slot n
-S&M_PASTE_FXCHAIN_ALLTAKES=0	  ; SWS/S&M: Paste FX chain to selected items, all takes, slot n
-S&M_TRACKFXCHAIN=8	          ; SWS/S&M: Apply FX chain to selected tracks, slot n
-S&M_PASTE_TRACKFXCHAIN=8	  ; SWS/S&M: Paste FX chain to selected tracks, slot n
-S&M_APPLY_TRTEMPLATE=10	          ; SWS/S&M: Apply track template to selected tracks, slot n
-S&M_ADD_TRTEMPLATE=10	          ; SWS/S&M: Import tracks from track template, slot n
-S&M_APPLY_PRJTEMPLATE=10	  ; SWS/S&M: Select/load project template, slot n
-S&M_NEWTAB_PRJTEMPLATE=10	  ; SWS/S&M: Select/load project template (new tab), slot n
-
+S&M Resources view:
+The number of slot actions can now be customized in the S&M.ini file, in the new section "NbOfActions".
+This section is automatically created for you. *Quit REAPER* then just change the number of slots/actions (none: 0, max: 99).
+An example (w/ the list of current configurable actions and their default numbers) is http://reaper.mj-s.com/NbOfActions.txt|here|.
 This also "unhides" (i.e. 0 slot by default) 2 new actions:
 +SWS/S&M: Apply FX chain to selected items, all takes, slot n
 +SWS/S&M: Paste FX chain to selected items, all takes, slot n
+
+Beware! Updated custom ids of folowing actions:
+SWS/S&M: Trigger next preset for FX n of selected tracks
+SWS/S&M: Trigger previous preset for FX 1 of selected tracks
+=> if used in toolbars, macros, etc.. an update is needed, sorry about that (beta!)
+=> however these actions are now configurable too
 
 !v2.0.0 #29 (June 30, 2011)
 Added "Cycle action editor" (main menu > extensions > cycle action editor):
@@ -26,7 +21,6 @@ Added "Cycle action editor" (main menu > extensions > cycle action editor):
 +Unlimited number of commands per cycle action
 +Import/export features
 +Learn selected commands of the action list (Windows OS only)
-+Demo http://reaper.mj-s.com/cyclaction_editor.gif|here|
 
 Other cycle action updates:
 +Performance improvments

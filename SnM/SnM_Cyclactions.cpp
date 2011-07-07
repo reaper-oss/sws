@@ -157,9 +157,8 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 	if (actions.GetSize() && !g_bReentrancyCheck)
 	{
 		ScheduledActions* job = new ScheduledActions(50, _section, cycleId, name.Get(), &actions);
-		// note: I "skip whilst respecting" (!) the SWS re-entrance test - see hookCommandProc() in sws_entension.cpp - 
-		// thanks to schdeulded actions that performed 50ms later (or so)
-		// we include macros too (can contain SWS stuff..): better 
+		// note: I "skip whilst respecting" (!) the SWS re-entrance test - see hookCommandProc() in sws_entension.cpp -
+		// thanks to scheduled actions that performed 50ms later (or so). we include macros too (can contain SWS stuff..)
 		if (hasCustomIds)
 			AddOrReplaceScheduledJob(job);
 		// perform immedialtely
@@ -282,7 +281,7 @@ void FlushCyclactions(int _section)
 		COMMAND_T* ct = NULL;
 		if (cmd && (ct = SWSUnregisterCommand(cmd)))
 		{
-			free((void*)ct->accel.desc); // alloc'ed with strdup, so free instead of delete
+			free((void*)ct->accel.desc);
 			free((void*)ct->id);
 			delete ct;
 		}
@@ -341,7 +340,7 @@ void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions, int 
 		if (_section == sec || _section == -1)
 		{
 			WDL_PtrList_DeleteOnDestroy<int> freeCycleIds;
-			WDL_String iniSection, escapedStr;
+			WDL_String iniSection("; Do not tweak by hand! Use the Cycle Action editor instead\n"), escapedStr;
 
 			// prepare "compression" (i.e. will re-assign ids of new actions for the next load)
 			for (int j=0; j < _cyclactions[sec].GetSize(); j++)

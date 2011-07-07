@@ -9,11 +9,10 @@ This also "unhides" (i.e. 0 slot by default) 2 new actions:
 +SWS/S&M: Apply FX chain to selected items, all takes, slot n
 +SWS/S&M: Paste FX chain to selected items, all takes, slot n
 
-Beware! Updated custom ids of folowing actions:
+Beware! Folowing actions are now configurable but their custom ids changed:
 SWS/S&M: Trigger next preset for FX n of selected tracks
-SWS/S&M: Trigger previous preset for FX 1 of selected tracks
-=> if used in toolbars, macros, etc.. an update is needed, sorry about that (beta!)
-=> however these actions are now configurable too
+SWS/S&M: Trigger previous preset for FX n of selected tracks
+=> if used in toolbars, macros, etc.. an update is needed (sorry about that!)
 
 !v2.0.0 #29 (June 30, 2011)
 Added "Cycle action editor" (main menu > extensions > cycle action editor):

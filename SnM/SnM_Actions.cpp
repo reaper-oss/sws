@@ -368,14 +368,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// ME ---------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Active ME - Hide all CC lanes" }, "S&M_MEHIDECCLANES", MEHideCCLanes, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Active ME - Create CC lane" }, "S&M_MECREATECCLANE", MECreateCCLane, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Active ME - Set displayed CC lanes, slot 1" }, "S&M_MESETCCLANES1", MESetCCLanes, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Active ME - Set displayed CC lanes, slot 2" }, "S&M_MESETCCLANES2", MESetCCLanes, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Active ME - Set displayed CC lanes, slot 3" }, "S&M_MESETCCLANES3", MESetCCLanes, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Active ME - Set displayed CC lanes, slot 4" }, "S&M_MESETCCLANES4", MESetCCLanes, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot 1" }, "S&M_MESAVECCLANES1", MESaveCCLanes, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot 2" }, "S&M_MESAVECCLANES2", MESaveCCLanes, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot 3" }, "S&M_MESAVECCLANES3", MESaveCCLanes, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot 4" }, "S&M_MESAVECCLANES4", MESaveCCLanes, NULL, 3},
 
 	// Tracks -----------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Copy selected track grouping" }, "S&M_COPY_TR_GRP", copyCutTrackGrouping, NULL, 0},
@@ -542,8 +534,8 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot %02d" }, "S&M_APPLY_PRJTEMPLATE", loadOrSelectProject, NULL, 10},
 	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot %02d" }, "S&M_NEWTAB_PRJTEMPLATE", loadNewTabOrSelectProject, NULL, 10},
 #ifdef _SNM_PRESETS
-	{ { DEFACCEL, "SWS/S&M: Trigger next preset for FX %02d of selected tracks" }, "S&M_NEXT_PRESET_FX", triggerNextPreset, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for FX %02d of selected tracks" }, "S&M_PREVIOUS_PRESET_FX", triggerPreviousPreset, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Trigger next preset for FX %02d of selected tracks" }, "S&M_NEXT_PRESET_FX", triggerNextPreset, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for FX %02d of selected tracks" }, "S&M_PREVIOUS_PRESET_FX", triggerPreviousPreset, NULL, 4},
 #endif
 	{ { DEFACCEL, "SWS/S&M: Select FX %02d for selected tracks" }, "S&M_SELFX", selectTrackFX, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Show FX chain for selected tracks, FX %02d" }, "S&M_SHOWFXCHAIN", showFXChain, NULL, 8},
@@ -551,6 +543,8 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Unfloat FX %02d for selected tracks" }, "S&M_UNFLOATFX", unfloatFX, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Toggle float FX %02d for selected tracks" }, "S&M_TOGLFLOATFX", toggleFloatFX, NULL, 8, fakeIsToggledAction},
 
+	{ { DEFACCEL, "SWS/S&M: Active ME - Set displayed CC lanes, slot %02d" }, "S&M_MESETCCLANES", MESetCCLanes, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot %02d" }, "S&M_MESAVECCLANES", MESaveCCLanes, NULL, 4},
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
@@ -836,12 +830,12 @@ void IniFileExit()
 
 		// replace %02d with 'n' in displayed action names
 		// note: the code does some assumptions here on g_SNM_dynamicCmdTable consistency..
-//JFB!!! KO!?		lstrcpyn(name, (char*)SNM_CMD_SHORTNAME(&ct), SNM_MAX_ACTION_NAME_LEN);
+//JFB!!! KO		lstrcpyn(name, (char*)SNM_CMD_SHORTNAME(&ct), SNM_MAX_ACTION_NAME_LEN);
 		lstrcpyn(name, ct->accel.desc, SNM_MAX_ACTION_NAME_LEN);
 		if (char* p = strstr(name, "%")) {
 			p[0] = 'n';
 			if (char* p2 = strstr((char*)(p+1), " "))
-				memmove((char*)(p+1), p2, strlen(p2)+1);// 4 for "%02d"
+				memmove((char*)(p+1), p2, strlen(p2)+1);
 			else
 				p[1] = '\0';
 		}

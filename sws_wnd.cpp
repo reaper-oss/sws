@@ -781,6 +781,9 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 
 void SWS_ListView::OnDestroy()
 {
+	// For safety
+	EditListItemEnd(false);
+
 	// Save cols
 	char str[256];
 	int cols[20];

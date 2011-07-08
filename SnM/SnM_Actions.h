@@ -57,8 +57,8 @@
 #define SNM_CYCACTION_INI_FILE		"%s/S&M_Cyclactions.ini"
 #endif
 #define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
-#define SNM_MAX_ACTION_COUNT		0xFFFF
 #define SNM_MAX_SECTION_NAME_LEN	64
+#define SNM_MAX_SECTION_ACTIONS		128
 #define SNM_MAX_ACTION_CUSTID_LEN	128
 #define SNM_MAX_ACTION_NAME_LEN		128
 #define SNM_MAX_MARKER_NAME_LEN		64
@@ -263,6 +263,8 @@ void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inpu
 bool autoSaveTrackFXChainSlots(int _slot, bool _inputFX, const char* _dirPath, char* _fn, int _fnSize);
 void loadSetTrackFXChain(COMMAND_T*);
 void loadPasteTrackFXChain(COMMAND_T*);
+void loadSetTrackInFXChain(COMMAND_T*);
+void loadPasteTrackInFXChain(COMMAND_T*);
 void clearTrackFXChain(COMMAND_T*);
 void copyTrackFXChain(COMMAND_T*);
 void cutTrackFXChain(COMMAND_T*);
@@ -362,7 +364,8 @@ void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection, const 
 int SNM_NamedCommandLookup(const char* _cmdId);
 int FindMarker(double _pos);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
-void ShortenStringToFirstRN(char* _buf);
+void ShortenStringToFirstRN(char* _str);
+void ReplaceStringFormat(char* _str, char _replaceCh);
 int SNM_MinMax(int _val, int _min, int _max);
 bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
 #ifdef _SNM_MISC
@@ -385,7 +388,6 @@ int NotesHelpViewInit();
 void NotesHelpViewExit();
 void OpenNotesHelpView(COMMAND_T*);
 bool IsNotesHelpViewDisplayed(COMMAND_T*);
-void SwitchNotesHelpType(COMMAND_T*);
 void ToggleNotesHelpLock(COMMAND_T*);
 bool IsNotesHelpLocked(COMMAND_T*);
 

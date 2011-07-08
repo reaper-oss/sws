@@ -38,8 +38,7 @@
 
 static COMMAND_T g_SNM_cmdTable[] = 
 {
-	// Be carefull !!!
-	// S&M actions expect "SWS/S&M: " in their names (removed from undo messages: too long)
+	// Beware! S&M actions expect "SWS/S&M: " in their names (removed from undo messages: too long)
 
 	// Routing & cue buss -----------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-fader (post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
@@ -237,8 +236,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// FX Chains (items & tracks) ---------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (FX chains)" }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, "S&&M Resources", 0, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ClearSlotPrompt, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, prompt for slot" }, "S&M_TAKEFXCHAINp1", loadSetTakeFXChain, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, all takes, prompt for slot" }, "S&M_TAKEFXCHAINp2", loadSetAllTakesFXChain, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, prompt for slot" }, "S&M_TAKEFXCHAINp1", loadSetTakeFXChain, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, all takes, prompt for slot" }, "S&M_TAKEFXCHAINp2", loadSetAllTakesFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp1", loadPasteTakeFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, all takes, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp2", loadPasteAllTakesFXChain, NULL, -1},
 
@@ -255,7 +254,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks" }, "S&M_COPYFXCHAIN10", pasteTrackFXChain, NULL, }, 
 
 	{ { DEFACCEL, "SWS/S&M: Copy input FX chain from selected track" }, "S&M_COPY_INFXCHAIN", copyTrackInputFXChain, NULL, }, 
-	{ { DEFACCEL, "SWS/S&M: Cut input FX chain from selected tracks" }, "S&M_CUT_INFXCHAIN", cutTrackInputFXChain, NULL, }, 
+	{ { DEFACCEL, "SWS/S&M: Cut input FX chain from selected tracks" }, "S&M_CUT_INFXCHAIN", cutTrackInputFXChain, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) input FX chain to selected tracks" }, "S&M_PASTE_REPLACE_INFXCHAIN", setTrackInputFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Paste input FX chain to selected tracks" }, "S&M_PASTE_INFXCHAIN", pasteTrackInputFXChain, NULL, }, 
 
@@ -269,7 +268,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain (depending on focus)" }, "S&M_SMART_SET_FXCHAIN", smartPasteReplaceFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Cut FX chain (depending on focus)" }, "S&M_SMART_CUT_FXCHAIN", smartCutFXChain, NULL, }, 
 
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, prompt for slot" }, "S&M_TRACKFXCHAINp1", loadSetTrackFXChain, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected tracks, prompt for slot" }, "S&M_TRACKFXCHAINp1", loadSetTrackFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, prompt for slot" }, "S&M_PASTE_TRACKFXCHAINp1", loadPasteTrackFXChain, NULL, -1},
 
 	// FX presets -------------------------------------------------------------
@@ -338,11 +337,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (project notes)" }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, "S&&M Notes/Help", 0, IsNotesHelpViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (item notes)" }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (track notes)" }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (marker names)" }, "S&M_MARKERNAMES", OpenNotesHelpView, NULL, 3, IsNotesHelpViewDisplayed},
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (action help)" }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, 3, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (action help)" }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, 4, IsNotesHelpViewDisplayed},
 #endif
-	//JFB!! TODO: someting better to do here.. note for myself
-	{ { DEFACCEL, "SWS/S&M: Notes/Help - Disables auto updates" }, "S&M_DISABLENOTESHELP", SwitchNotesHelpType, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Notes/Help - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesHelpLock, NULL, NULL, IsNotesHelpLocked},
 	{ { DEFACCEL, "SWS/S&M: Notes/Help - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
 
@@ -428,6 +426,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Find previous" }, "S&M_FIND_PREVIOUS", FindNextPrev, NULL, -1},
 
 	// Live Configs -----------------------------------------------------------
+	//JFB TODO: "not configurable" dynamic actions
 	{ { DEFACCEL, "SWS/S&M: Open Live Configs window" }, "S&M_SHOWMIDILIVE", OpenLiveConfigView, "S&&M Live Configs", NULL, IsLiveConfigViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 1" }, "S&M_TOGGLE_LIVE_CFG1", ToggleEnableLiveConfig, NULL, 0, IsLiveConfigEnabled},
 	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 2" }, "S&M_TOGGLE_LIVE_CFG2", ToggleEnableLiveConfig, NULL, 1, IsLiveConfigEnabled},
@@ -520,17 +519,21 @@ static COMMAND_T g_SNM_cmdTable[] =
 // example: { { DEFACCEL, "Do stuff #%d" }, "DO_STUFF%d", doStuff, NULL, 2},
 // if not overrided in the S&M.ini file (e.g. "DO_STUFF=99"), 2 actions will be created: "Do stuff #1" and "Do stuff #2" both calling 
 // doStuff(COMMAND_T* c) with c->user=0 and c->user=1, respectively. custom ids will be "_DO_STUFF1" and "_DO_STUFF2", repectively.
-
 static COMMAND_T g_SNM_dynamicCmdTable[] = 
 {
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, slot %02d" }, "S&M_TAKEFXCHAIN", loadSetTakeFXChain, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, slot %02d" }, "S&M_TAKEFXCHAIN", loadSetTakeFXChain, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot %02d" }, "S&M_PASTE_TAKEFXCHAIN", loadPasteTakeFXChain, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, all takes, slot %02d" }, "S&M_FXCHAIN_ALLTAKES", loadSetAllTakesFXChain, NULL, 0}, // default: none
+	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, all takes, slot %02d" }, "S&M_FXCHAIN_ALLTAKES", loadSetAllTakesFXChain, NULL, 0}, // default: none
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, all takes, slot %02d" }, "S&M_PASTE_FXCHAIN_ALLTAKES", loadPasteAllTakesFXChain, NULL, 0}, // default: none
-	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, slot %02d" }, "S&M_TRACKFXCHAIN", loadSetTrackFXChain, NULL, 8},
+
+	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected tracks, slot %02d" }, "S&M_TRACKFXCHAIN", loadSetTrackFXChain, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, slot %02d" }, "S&M_PASTE_TRACKFXCHAIN", loadPasteTrackFXChain, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Paste (replace) input FX chain to selected tracks, slot %02d" }, "S&M_INFXCHAIN", loadSetTrackInFXChain, NULL, 0}, // default: none
+	{ { DEFACCEL, "SWS/S&M: Paste input FX chain to selected tracks, slot %02d" }, "S&M_PASTE_INFXCHAIN", loadPasteTrackInFXChain, NULL, 0}, // default: none
+
 	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot %02d" }, "S&M_APPLY_TRTEMPLATE", loadSetTrackTemplate, NULL, 10},
 	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot %02d" }, "S&M_ADD_TRTEMPLATE", loadImportTrackTemplate, NULL, 10},
+
 	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot %02d" }, "S&M_APPLY_PRJTEMPLATE", loadOrSelectProject, NULL, 10},
 	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot %02d" }, "S&M_NEWTAB_PRJTEMPLATE", loadNewTabOrSelectProject, NULL, 10},
 #ifdef _SNM_PRESETS
@@ -538,6 +541,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for FX %02d of selected tracks" }, "S&M_PREVIOUS_PRESET_FX", triggerPreviousPreset, NULL, 4},
 #endif
 	{ { DEFACCEL, "SWS/S&M: Select FX %02d for selected tracks" }, "S&M_SELFX", selectTrackFX, NULL, 8},
+
 	{ { DEFACCEL, "SWS/S&M: Show FX chain for selected tracks, FX %02d" }, "S&M_SHOWFXCHAIN", showFXChain, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Float FX %02d for selected tracks" }, "S&M_FLOATFX", floatFX, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Unfloat FX %02d for selected tracks" }, "S&M_UNFLOATFX", unfloatFX, NULL, 8},
@@ -633,17 +637,15 @@ void RefreshToolbars() {
 // "S&M Extension" action section
 ///////////////////////////////////////////////////////////////////////////////
 
-#define SNM_SECTION_MAX_ACTION_COUNT	128
-
+static WDL_IntKeyedArray<MIDI_COMMAND_T*> g_SNMSection_midiCmds;
+static WDL_IntKeyedArray<MIDI_COMMAND_T*> g_SNMSection_toggles;
+KbdCmd g_SNMSection_kbdCmds[SNM_MAX_SECTION_ACTIONS];
+KbdKeyBindingInfo g_SNMSection_defKeys[SNM_MAX_SECTION_ACTIONS];
+int g_SNMSection_minCmdId = 0;
+int g_SNMSection_maxCmdId = 0;
 /*JFB not used yet
 static int g_SNMSection_CmdId_gen = 1000;
 */
-static WDL_IntKeyedArray<MIDI_COMMAND_T*> g_SNMSection_midiCmds;
-static WDL_IntKeyedArray<MIDI_COMMAND_T*> g_SNMSection_toggles;
-KbdCmd g_SNMSection_kbdCmds[SNM_SECTION_MAX_ACTION_COUNT];
-KbdKeyBindingInfo g_SNMSection_defKeys[SNM_SECTION_MAX_ACTION_COUNT];
-int g_SNMSection_minCmdId = 0;
-int g_SNMSection_maxCmdId = 0;
 
 bool onAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 {
@@ -704,7 +706,7 @@ int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec)
 	}
 
 	int nbCmds = i;
-	if (nbCmds > SNM_SECTION_MAX_ACTION_COUNT)
+	if (nbCmds > SNM_MAX_SECTION_ACTIONS)
 		return 0;
 
 	// Map MIDI_COMMAND_T[] to the section's KbdCmd[] & KbdKeyBindingInfo[]
@@ -814,7 +816,7 @@ void IniFileExit()
 {
 	WDL_String iniSection;
 
-	// Save general prefs
+	// save general prefs & info
 	iniSection.AppendFormatted(128, "; S&M.ini - SWS/S&M Extension v%d.%d.%d Build #%d\n", SWS_VERSION); 
 	iniSection.AppendFormatted(BUFFER_SIZE, "; %s\n", g_SNMiniFilename.Get()); 
 	iniSection.AppendFormatted(64, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0); 
@@ -824,22 +826,11 @@ void IniFileExit()
 	// save dynamic actions
 	iniSection.SetFormatted(128, "; Set the number of slots/actions you want below (none: 0, max: %d, quit REAPER first!)\n", SNM_MAX_DYNAMIC_ACTIONS);
 	int i = 0; char name[SNM_MAX_ACTION_NAME_LEN];
-	while(g_SNM_dynamicCmdTable[i].id != LAST_COMMAND)
-	{
+	while(g_SNM_dynamicCmdTable[i].id != LAST_COMMAND) {
 		COMMAND_T* ct = &g_SNM_dynamicCmdTable[i++];
-
-		// replace %02d with 'n' in displayed action names
-		// note: the code does some assumptions here on g_SNM_dynamicCmdTable consistency..
-//JFB!!! KO		lstrcpyn(name, (char*)SNM_CMD_SHORTNAME(&ct), SNM_MAX_ACTION_NAME_LEN);
-		lstrcpyn(name, ct->accel.desc, SNM_MAX_ACTION_NAME_LEN);
-		if (char* p = strstr(name, "%")) {
-			p[0] = 'n';
-			if (char* p2 = strstr((char*)(p+1), " "))
-				memmove((char*)(p+1), p2, strlen(p2)+1);
-			else
-				p[1] = '\0';
-		}
-		iniSection.AppendFormatted(SNM_MAX_ACTION_CUSTID_LEN+SNM_MAX_ACTION_NAME_LEN+8, "%s=%d ; %s\n", ct->id, (int)ct->user, (char*)(name+9)); // +9 to skip "SWS/S&M: "
+		strncpy(name, SNM_CMD_SHORTNAME(ct), SNM_MAX_ACTION_NAME_LEN); // strncpy: lstrcpyn() KO here
+		ReplaceStringFormat(name, 'n');
+		iniSection.AppendFormatted(SNM_MAX_ACTION_CUSTID_LEN+SNM_MAX_ACTION_NAME_LEN+8, "%s=%d ; %s\n", ct->id, (int)ct->user, name);
 	}
 	SaveIniSection("NbOfActions", &iniSection, g_SNMiniFilename.Get());
 
@@ -856,6 +847,7 @@ int SnMInit(reaper_plugin_info_t* _rec)
 		return 0;
 
 	IniFileInit();
+
 #ifdef _SWS_MENU
 	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
 		return 0;
@@ -922,7 +914,7 @@ void DeleteScheduledJob(int _id)
 	for (int i=0; i<g_jobs.GetSize(); i++)
 	{
 		SNM_ScheduledJob* job = g_jobs.Get(i);
-		if (job->m_id == _id) { 
+		if (job->m_id == _id) {
 			g_jobs.Delete(i, true);
 			break;
 		}

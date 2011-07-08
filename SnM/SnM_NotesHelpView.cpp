@@ -1182,12 +1182,6 @@ bool IsNotesHelpViewDisplayed(COMMAND_T* _ct) {
 	return (g_pNotesHelpWnd && g_pNotesHelpWnd->IsValidWindow());
 }
 
-void SwitchNotesHelpType(COMMAND_T* _ct){
-	g_pNotesHelpWnd->SetType((int)_ct->user);
-	if (!g_locked)
-		SetFocus(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT));
-}
-
 void ToggleNotesHelpLock(COMMAND_T*) {
 
 	g_locked = !g_locked;

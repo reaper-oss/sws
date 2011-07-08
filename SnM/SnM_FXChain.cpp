@@ -428,6 +428,18 @@ void loadPasteTrackFXChain(COMMAND_T* _ct) {
 		applyTracksFXChainSlot(SNM_CMD_SHORTNAME(_ct), slot, false, false, slot < 0 || !g_fxChainFiles.Get(slot)->IsDefault());
 }
 
+void loadSetTrackInFXChain(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_fxChainFiles.GetSize())
+		applyTracksFXChainSlot(SNM_CMD_SHORTNAME(_ct), slot, true, g_bv4, slot < 0 || !g_fxChainFiles.Get(slot)->IsDefault());
+}
+
+void loadPasteTrackInFXChain(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_fxChainFiles.GetSize())
+		applyTracksFXChainSlot(SNM_CMD_SHORTNAME(_ct), slot, false, g_bv4, slot < 0 || !g_fxChainFiles.Get(slot)->IsDefault());
+}
+
 void clearTrackFXChain(COMMAND_T* _ct) {
 	setTrackFXChain(SNM_CMD_SHORTNAME(_ct), NULL, false);
 }

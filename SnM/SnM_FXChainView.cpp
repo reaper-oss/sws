@@ -74,17 +74,17 @@
 #define AUTOSAVE_DIR_DEFAULT_MSG		0x11001E
 
 // labels shared by actions and popup menu items
-#define FXC_LOAD_APPLY_TRACK_STR		"Load/apply FX chain to selected tracks"
-#define FXCIN_LOAD_APPLY_TRACK_STR		"Load/apply input FX chain to selected tracks"
-#define FXC_LOAD_APPLY_TAKE_STR			"Load/apply FX chain to selected items"
-#define FXC_LOAD_APPLY_ALL_TAKES_STR	"Load/apply FX chain to selected items, all takes"
-#define FXC_LOAD_PASTE_TRACK_STR		"Load/paste FX chain to selected tracks"
-#define FXC_LOAD_PASTE_TAKE_STR			"Load/paste FX chain to selected items"
-#define FXC_LOAD_PASTE_ALL_TAKES_STR	"Load/paste FX chain to selected items, all takes"
-#define TRT_LOAD_APPLY_STR				"Load/apply track template to selected tracks (w/o items)"
-#define TRT_LOAD_IMPORT_STR				"Load/import tracks from track template (w/ items)"
-#define TRT_LOAD_APPLY_ITEMS_STR		"Load/replace selected tracks' items w/ track template ones"
-#define TRT_LOAD_PASTE_ITEMS_STR		"Load/paste track template's items to selected tracks"
+#define FXC_LOAD_APPLY_TRACK_STR		"Paste (replace) FX chain to selected tracks"
+#define FXCIN_LOAD_APPLY_TRACK_STR		"Paste (replace) input FX chain to selected tracks"
+#define FXC_LOAD_APPLY_TAKE_STR			"Paste (replace) FX chain to selected items"
+#define FXC_LOAD_APPLY_ALL_TAKES_STR	"Paste (replace) FX chain to selected items, all takes"
+#define FXC_LOAD_PASTE_TRACK_STR		"Paste FX chain to selected tracks"
+#define FXC_LOAD_PASTE_TAKE_STR			"Paste FX chain to selected items"
+#define FXC_LOAD_PASTE_ALL_TAKES_STR	"Paste FX chain to selected items, all takes"
+#define TRT_LOAD_APPLY_STR				"Apply track template to selected tracks (w/o items)"
+#define TRT_LOAD_IMPORT_STR				"Import tracks from track template (w/ items)"
+#define TRT_LOAD_APPLY_ITEMS_STR		"Replace selected tracks' items w/ track template ones"
+#define TRT_LOAD_PASTE_ITEMS_STR		"Paste track template's items to selected tracks"
 #define PRJ_SELECT_LOAD_STR				"Select/load project template"
 #define PRJ_SELECT_LOAD_NEWTAB_STR		"Select/load project template (new tab)"
 

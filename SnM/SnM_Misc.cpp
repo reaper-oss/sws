@@ -328,15 +328,25 @@ bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize)
 	return true;
 }
 
-void ShortenStringToFirstRN(char* _buf)
-{
-	if (_buf)
-	{
-		char* p = strchr(_buf, '\r');
+void ShortenStringToFirstRN(char* _str) {
+	if (_str) {
+		char* p = strchr(_str, '\r');
 		if (p) *p = '\0';
-		p = strchr(_buf, '\n');
+		p = strchr(_str, '\n');
 		if (p) *p = '\0';
 	}
+}
+
+// replace "%blabla" with '_replaceCh' in _str
+void ReplaceStringFormat(char* _str, char _replaceCh) {
+	if (_str && *_str)
+		if (char* p = strstr(_str, "%")) {
+			p[0] = _replaceCh;
+			if (char* p2 = strstr((char*)(p+1), " "))
+				memmove((char*)(p+1), p2, strlen(p2)+1);
+			else
+				p[1] = '\0'; //assumes there's another char just after '%'
+		}
 }
 
 int SNM_MinMax(int _val, int _min, int _max) {

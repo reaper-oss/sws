@@ -70,6 +70,46 @@ void SetMasterMono(COMMAND_T* ct)
 		Main_OnCommand(40917, 0);
 }
 
+void SetAllMasterOutputMutes(COMMAND_T* ct)
+{
+	MediaTrack* tr = CSurf_TrackFromID(0, false);
+	int i = 0;
+	bool bMute = ct->user ? true : false;
+	while (GetSetTrackSendInfo(tr, 1, i, "B_MUTE", NULL))
+	{
+		GetSetTrackSendInfo(tr, 1, i++, "B_MUTE", &bMute);
+	}
+	if (i)
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, 0);
+}
+
+bool IsMasterOutputMuted(COMMAND_T* ct)
+{
+	void* muted = GetSetTrackSendInfo(CSurf_TrackFromID(0,false), 1, (int)ct->user, "B_MUTE", NULL);
+	if (muted) return *(bool*)muted;
+	return false;
+}
+
+void MasterOutputMute(COMMAND_T* ct, int mode) // mode 0==toggle, 1==set mute, 2==set unmute
+{
+	MediaTrack* tr = CSurf_TrackFromID(0, false);
+	bool* pMute;
+	if ((pMute = (bool*)GetSetTrackSendInfo(tr, 1, ct->user, "B_MUTE", NULL)))
+	{
+		bool bMute;
+		if (mode == 0)
+			bMute = *pMute ? false : true;
+		else
+			bMute = mode == 1 ? true : false;
+		GetSetTrackSendInfo(tr, 1, ct->user, "B_MUTE", &bMute);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, 0);
+	}
+}
+
+void TogMasterOutputMute(COMMAND_T* ct)		{ MasterOutputMute(ct, 0); }
+void SetMasterOutputMute(COMMAND_T* ct)		{ MasterOutputMute(ct, 1); }
+void UnSetMasterOutputMute(COMMAND_T* ct)	{ MasterOutputMute(ct, 2); }
+
 void MuteRecvs(COMMAND_T* = NULL)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -398,6 +438,31 @@ static COMMAND_T g_commandTable[] =
 	// Master/parent mono/stereo
 	{ { DEFACCEL, "SWS: Set master mono" },										"SWS_MASTERMONO",	SetMasterMono, NULL, 0	},
 	{ { DEFACCEL, "SWS: Set master stereo" },									"SWS_MASTERSTEREO",	SetMasterMono, NULL, 1	},
+	// Master outputs (moved from Xen-land)
+	{ { DEFACCEL, "SWS: Toggle master track output 1 mute" },					"XEN_TOG_MAS_SEND0MUTE",		TogMasterOutputMute,	NULL, 0, IsMasterOutputMuted },
+	{ { DEFACCEL, "SWS: Toggle master track output 2 mute" },					"XEN_TOG_MAS_SEND1MUTE",		TogMasterOutputMute,	NULL, 1, IsMasterOutputMuted },
+	{ { DEFACCEL, "SWS: Toggle master track output 3 mute" },					"XEN_TOG_MAS_SEND2MUTE",		TogMasterOutputMute,	NULL, 2, IsMasterOutputMuted },
+	{ { DEFACCEL, "SWS: Toggle master track output 4 mute" },					"XEN_TOG_MAS_SEND3MUTE",		TogMasterOutputMute,	NULL, 3, IsMasterOutputMuted },
+	{ { DEFACCEL, "SWS: Toggle master track output 5 mute" },					"XEN_TOG_MAS_SEND4MUTE",		TogMasterOutputMute,	NULL, 4, IsMasterOutputMuted },
+	{ { DEFACCEL, "SWS: Toggle master track output 6 mute" },					"XEN_TOG_MAS_SEND5MUTE",		TogMasterOutputMute,	NULL, 5, IsMasterOutputMuted },
+	{ { DEFACCEL, "SWS: Toggle master track output 7 mute" },					"XEN_TOG_MAS_SEND6MUTE",		TogMasterOutputMute,	NULL, 6, IsMasterOutputMuted },
+	{ { DEFACCEL, "SWS: Toggle master track output 8 mute" },					"XEN_TOG_MAS_SEND7MUTE",		TogMasterOutputMute,	NULL, 7, IsMasterOutputMuted },
+	{ { DEFACCEL, "SWS: Toggle master track output 9 mute" },					"XEN_TOG_MAS_SEND8MUTE",		TogMasterOutputMute,	NULL, 8, IsMasterOutputMuted },
+	{ { DEFACCEL, "SWS: Toggle master track output 10 mute" },					"XEN_TOG_MAS_SEND9MUTE",		TogMasterOutputMute,	NULL, 9, IsMasterOutputMuted },
+	{ { DEFACCEL, "SWS: Toggle master track output 11 mute" },					"XEN_TOG_MAS_SEND10MUTE",		TogMasterOutputMute,	NULL, 10, IsMasterOutputMuted },
+	{ { DEFACCEL, "SWS: Toggle master track output 12 mute" },					"XEN_TOG_MAS_SEND11MUTE",		TogMasterOutputMute,	NULL, 11, IsMasterOutputMuted },
+	{ { DEFACCEL, "SWS: Set master track output 1 muted" },						"XEN_SET_MAS_SEND0MUTE",		SetMasterOutputMute,	NULL, 0 },
+	{ { DEFACCEL, "SWS: Set master track output 2 muted" },						"XEN_SET_MAS_SEND1MUTE",		SetMasterOutputMute,	NULL, 1 },
+	{ { DEFACCEL, "SWS: Set master track output 3 muted" },						"XEN_SET_MAS_SEND2MUTE",		SetMasterOutputMute,	NULL, 2 },
+	{ { DEFACCEL, "SWS: Set master track output 4 muted" },						"XEN_SET_MAS_SEND3MUTE",		SetMasterOutputMute,	NULL, 3 },
+	{ { DEFACCEL, "SWS: Set master track output 5 muted" },						"XEN_SET_MAS_SEND4MUTE",		SetMasterOutputMute,	NULL, 4 },
+	{ { DEFACCEL, "SWS: Set master track output 1 unmuted" },					"XEN_UNSET_MAS_SEND0MUTE",		UnSetMasterOutputMute,	NULL, 0 },
+	{ { DEFACCEL, "SWS: Set master track output 2 unmuted" },					"XEN_UNSET_MAS_SEND1MUTE",		UnSetMasterOutputMute,	NULL, 1 },
+	{ { DEFACCEL, "SWS: Set master track output 3 unmuted" },					"XEN_UNSET_MAS_SEND2MUTE",		UnSetMasterOutputMute,	NULL, 2 },
+	{ { DEFACCEL, "SWS: Set master track output 4 unmuted" },					"XEN_UNSET_MAS_SEND3MUTE",		UnSetMasterOutputMute,	NULL, 3 },
+	{ { DEFACCEL, "SWS: Set master track output 5 unmuted" },					"XEN_UNSET_MAS_SEND4MUTE",		UnSetMasterOutputMute,	NULL, 4 },
+	{ { DEFACCEL, "SWS: Set all master track outputs unmuted" },				"XEN_SET_MAS_SENDALLUNMUTE",	SetAllMasterOutputMutes,NULL, 0 },
+	{ { DEFACCEL, "SWS: Set all master track outputs muted" },					"XEN_SET_MAS_SENDALLMUTE",		SetAllMasterOutputMutes,NULL, 1 },
 
 	// Send/recvs
 	{ { DEFACCEL, "SWS: Mute all receives for selected track(s)" },				"SWS_MUTERECVS",	MuteRecvs,			},

@@ -160,6 +160,9 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		case WM_TIMER:
+			for (int i = 0; i < m_pLists.GetSize(); i++)
+				if (m_pLists.Get(i)->GetEditingItem() != -1)
+					return m_pLists.Get(i)->OnEditingTimer();
 			OnTimer(wParam);
 			break;
 		case WM_NOTIFY:
@@ -654,14 +657,17 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 	}
 	else if (s->hdr.code == NM_CLICK)
 	{
-		EditListItemEnd(true);
+		// Ignore clicks if editing (SWELL sends an extra NM_CLICK after NM_DBLCLK)
+		if (m_iEditingItem != -1)
+			return 0;
+		
 		int iDataCol = DisplayToDataCol(s->iSubItem);
-		// Call the std click handler
 #ifdef _WIN32
 		int iKeys = ((NMITEMACTIVATE*)lParam)->uKeyFlags;
 #else
 		int iKeys = SWS_GetModifiers();
 #endif
+		// Call the std click handler
 		OnItemClk(GetListItem(s->iItem), iDataCol, iKeys);
 
 		// Then do some extra work for the item button click handler
@@ -1164,7 +1170,6 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	int iDispCol = DataToDisplayCol(iCol);
 	ListView_GetSubItemRect(m_hwndList, iIndex, iDispCol, LVIR_LABEL, &r);
 
-#ifdef _WIN32
 	RECT sr = r;
 	ClientToScreen(m_hwndList, (LPPOINT)&sr);
 	ClientToScreen(m_hwndList, ((LPPOINT)&sr)+1);
@@ -1175,15 +1180,14 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 
 	// Create a new edit control to go over that rect
 	int lOffset = -1;
+#ifdef _WIN32
 	if (iDispCol)
 		lOffset += GetSystemMetrics(SM_CXEDGE) * 2;
+#endif
 
 	SetWindowPos(m_hwndEdit, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	SetWindowPos(m_hwndEdit, HWND_TOP, sr.left+lOffset, sr.top, sr.right-sr.left, sr.bottom-sr.top, SWP_SHOWWINDOW | SWP_NOZORDER);
-#else
-	SetWindowPos(m_hwndEdit, HWND_TOP, r.left, r.top-1, r.right-r.left, r.bottom-r.top+2, 0);
 	ShowWindow(m_hwndEdit, SW_SHOW);
-#endif
 
 	LPARAM item = GetListItem(iIndex);
 	char str[100];
@@ -1191,6 +1195,7 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	SetWindowText(m_hwndEdit, str);
 	SetFocus(m_hwndEdit);
 	SendMessage(m_hwndEdit, EM_SETSEL, 0, -1);
+	SetTimer(GetParent(m_hwndList), 0x1000, 50, NULL);
 }
 
 bool SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
@@ -1217,11 +1222,20 @@ bool SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 			// TODO resort? Just call update?
 			// Update is likely called when SetItemText is called too...
 		}
+		KillTimer(GetParent(m_hwndList), 0x1000);
 		m_iEditingItem = -1;
 		ShowWindow(m_hwndEdit, SW_HIDE);
 		SetFocus(m_hwndList);
 	}
 	return updated;
+}
+
+int SWS_ListView::OnEditingTimer()
+{
+	if (m_iEditingItem == -1 || GetFocus() != m_hwndEdit)
+		EditListItemEnd(true);
+
+	return 0;
 }
 
 int SWS_ListView::OnItemSort(LPARAM item1, LPARAM item2)

@@ -61,6 +61,7 @@ public:
 	void EditListItem(LPARAM item, int iCol);
 	int GetEditingItem() { return m_iEditingItem; }
 	bool EditListItemEnd(bool bSave, bool bResort = true);
+	int OnEditingTimer();
 	
 	bool IsActive(bool bWantEdit) { return GetFocus() == m_hwndList || (bWantEdit && m_iEditingItem != -1); }
 	void DisableUpdates(bool bDisable) { m_bDisableUpdates = bDisable; }

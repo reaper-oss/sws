@@ -30,32 +30,44 @@
 #include "stdafx.h"
 #include "TrackSel.h"
 
-static WDL_PtrList<GUID> g_pSelTracks;
+static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<GUID> > g_pSelTracks;
+void SaveTracks(WDL_TypedBuf<MediaTrack*>* tracks)
+{
+	g_pSelTracks.Cleanup();
+	g_pSelTracks.Get()->Empty(true);
+	for (int i = 0; i < tracks->GetSize(); i++)
+	{
+		GUID* g = new GUID;
+		*g = *(GUID*)GetSetMediaTrackInfo(tracks->Get()[i], "GUID", NULL);
+		g_pSelTracks.Get()->Add(g);
+	}
+}
+
 void SaveSelTracks(COMMAND_T*)
 {
-	g_pSelTracks.Empty(true);
-	for (int i = 0; i <= GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-		{
-			GUID* g = new GUID;
-			*g = *(GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
-			g_pSelTracks.Add(g);
-		}
-	}
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks, true);
+	SaveTracks(&selTracks);
 }
 
 void RestoreSelTracks(COMMAND_T*)
 {
 	ClearSelected();
-	for (int i = 0; i < g_pSelTracks.GetSize(); i++)
+	for (int i = 0; i < g_pSelTracks.Get()->GetSize(); i++)
 		for (int j = 0; j <= GetNumTracks(); j++)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(j, false);
-			if (TrackMatchesGuid(tr, g_pSelTracks.Get(i)))
+			if (TrackMatchesGuid(tr, g_pSelTracks.Get()->Get(i)))
 				GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
 		}
+}
+
+void TogSaveSelTracks(COMMAND_T* ct)
+{
+	WDL_TypedBuf<MediaTrack*> selTracks;
+	SWS_GetSelectedTracks(&selTracks, true);
+	RestoreSelTracks(ct);
+	SaveTracks(&selTracks);
 }
 
 void GetSelFolderTracks(WDL_PtrList<void>* pParents, WDL_PtrList<void>* pChildren)
@@ -437,6 +449,7 @@ static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS: Save current track selection" },						"SWS_SAVESEL",			SaveSelTracks,		},
 	{ { DEFACCEL, "SWS: Restore saved track selection" },						"SWS_RESTORESEL",		RestoreSelTracks,	},
+	{ { DEFACCEL, "SWS: Toggle between current and saved track selection" },	"SWS_TOGSAVESEL",		TogSaveSelTracks,	}, 
 	{ { DEFACCEL, "SWS: Toggle (invert) track selection" },						"SWS_TOGTRACKSEL",		TogTrackSel,		},
 	{ { DEFACCEL, "SWS: Select only track(s) with selected item(s)" },			"SWS_SELTRKWITEM",		SelTracksWItems,	},
 	{ { DEFACCEL, "SWS: Set last touched track to match track selection" },		"SWS_SETLTT",			SetLTT,				},

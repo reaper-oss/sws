@@ -197,6 +197,14 @@ void OpenRelatedProject(COMMAND_T* pCmd)
 	*pNewProjOpts = iNewProjOpts;
 }
 
+void OpenLastProject(COMMAND_T*)
+{
+	char cLastProj[MAX_PATH];
+	GetPrivateProfileString("REAPER", "lastprojuiref", "", cLastProj, MAX_PATH, get_ini_file());
+	if (cLastProj[0])
+		Main_openProject(cLastProj);
+}
+
 static int GetLoadCommandID(int iSlot, bool bCreateNew)
 {
 	static int iLastRegistered = 0;
@@ -325,8 +333,8 @@ COMMAND_T g_projMgrCmdTable[] =
 	{ { DEFACCEL, "SWS: Add related project(s)" },		"SWS_ADDRELATEDPROJ",	AddRelatedProject,		"Add related project(s)...", },
 	{ { DEFACCEL, "SWS: Delete related project" },		"SWS_DELRELATEDPROJ",	DelRelatedProject,		"Delete related project...", },
 	{ { DEFACCEL, "SWS: Open project list" },			"SWS_PROJLIST_OPEN",	OpenProjectList,		"SWS Project List", 0, ProjectListEnabled },
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, "SWS: Open related project 1" },		"SWS_OPENRELATED1",		OpenRelatedProject,		"(related projects list)", 0 },
+	{ { DEFACCEL, "SWS: Open last project" },			"SWS_OPENLASTPROJ",		OpenLastProject,		NULL, },
 
 	{ { DEFACCEL, "SWS: Switch to last project tab" },	"SWS_LASTPROJTAB",		LastProjectTab,			NULL, },
 	{ { DEFACCEL, "SWS: Switch to project tab 1" },		"SWS_FIRSTPROJTAB",		OpenProjectTab,			NULL, 0 },

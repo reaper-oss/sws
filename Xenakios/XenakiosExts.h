@@ -266,13 +266,6 @@ void DoNudgeMasterVol1dbDown(COMMAND_T*);
 void DoNudgeSelTrackVolumeUp(COMMAND_T*);
 void DoNudgeSelTrackVolumeDown(COMMAND_T*);
 void DoSetMasterToZeroDb(COMMAND_T*);
-void ToggleMasterSendMute(int indx,int mode=0);
-bool IsMasterSendMuted(COMMAND_T*);
-void DoToggleMasterSendMute(COMMAND_T*);
-void DoSetMasterSendMute(COMMAND_T*);
-void DoUnSetMasterSendMute(COMMAND_T*);
-void DoSetAllMastersSendsMuted(COMMAND_T*);
-void DoSetAllMastersSendsUnMuted(COMMAND_T*);
 
 //===========================================================
 // MoreItemCommands.cpp

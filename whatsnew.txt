@@ -1,4 +1,8 @@
+!v2.0.0 #30 (July 7, 2011)
+Issue 309: Add action "SWS: Open last project"
 Issue 310: Fixed Autorender not working in Reaper v4.0 beta
+Issue 315: Add action "SWS: Toggle between current and saved track selection"
+Issue 319: Fixed double-click renaming of fields on OSX
 Issue 323: Fixed duplicated "Recall snapshot" actions
 
 S&M Resources view:

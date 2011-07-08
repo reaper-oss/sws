@@ -4,6 +4,7 @@ Issue 310: Fixed Autorender not working in Reaper v4.0 beta
 Issue 315: Add action "SWS: Toggle between current and saved track selection"
 Issue 319: Fixed double-click renaming of fields on OSX
 Issue 323: Fixed duplicated "Recall snapshot" actions
+Issue 326: Renamed "set/unset/toggle master send" actions to "master outputs", added toggles to 12
 
 S&M Resources view:
 The number of slot actions can now be customized in the S&M.ini file, in the new section "NbOfActions".

@@ -99,7 +99,6 @@
 #define IDC_EDIT3                       1020
 #define IDC_SETTIMESEL                  1020
 #define IDC_EDIT4                       1021
-#define IDC_MOVECUR2                    1021
 #define IDC_SEEKPLAY                    1021
 #define IDC_IVOL_NUDGE                  1022
 #define IDC_DRAGUPPER                   1022
@@ -309,9 +308,8 @@
 #define IDC_STATIC_REGION_PREFIX        1229
 #define IDC_REMOVE_PREFIX_FROM_TRACK_NAME 1230
 #define IDC_DRAGSCALE                   1230
-#define IDC_LIST1						1231
-#define IDC_LIST2						1232
-#define IDC_INSERT						1233
+#define IDC_LIST1                       1231
+#define IDC_LIST2                       1232
 
 // Next default values for new objects
 // 

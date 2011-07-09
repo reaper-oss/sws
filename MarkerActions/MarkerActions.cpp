@@ -201,20 +201,10 @@ static void RefreshMAToolbar()
 	RefreshToolbar(g_commandTable[0].accel.accel.cmd);
 }
 
-static void menuhook(const char* menustr, HMENU hMenu, int flag)
-{
-	if (flag == 0 && strcmp(menustr, "Main options") == 0)
-		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd, 40745);
-}
-
 int MarkerActionsInit()
 {
 	SWSRegisterCommands(g_commandTable);
 
 	g_bMAEnabled = GetPrivateProfileInt("SWS", "MarkerActionsEnabled", 1, get_ini_file()) ? true : false;
-#ifdef _SWS_MENU
-	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		return 0;
-#endif
 	return 1;
 }

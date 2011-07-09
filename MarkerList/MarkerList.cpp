@@ -664,24 +664,12 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
-static void menuhook(const char* menustr, HMENU hMenu, int flag)
-{
-	if (strcmp(menustr, "Main view") == 0 && flag == 0)
-		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
-	else if (strcmp(menustr, "Main edit") == 0 && flag == 0)
-		AddSubMenu(hMenu, SWSCreateMenuFromCommandTable(g_commandTable), "SWS Marker utilites");
-}
-
 int MarkerListInit()
 {
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
 
 	SWSRegisterCommands(g_commandTable);
-#ifdef _SWS_MENU
-	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		return 0;
-#endif
 	g_pMarkerList = new SWS_MarkerListWnd();
 
 	return 1;

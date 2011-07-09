@@ -1515,16 +1515,6 @@ static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 
 static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
-static void menuhook(const char* menustr, HMENU hMenu, int flag)
-{
-	if (strcmp(menustr, "Main extensions") == 0 && flag == 0)
-	{
-		int i = -1;
-		while (g_commandTable[++i].id != LAST_COMMAND)
-			if (g_commandTable[i].menuText)
-				AddToMenu(hMenu, g_commandTable[i].menuText, g_commandTable[i].accel.accel.cmd);
-	}
-}
 
 #define ZOOMPREFS_KEY "ZoomPrefs"
 #define DRAGZOOMSCALE_KEY "DragZoomScale"
@@ -1535,10 +1525,6 @@ int ZoomInit()
 	SWSRegisterCommands(g_commandTable);
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
-#ifdef _SWS_MENU
-	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		return 0;
-#endif
 	// Init the zoom tool
 	HWND hTrackView = GetTrackWnd();
 	if (hTrackView)

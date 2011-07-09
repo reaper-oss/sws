@@ -84,19 +84,8 @@ static COMMAND_T g_commandTable[] =
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
-static void menuhook(const char* menustr, HMENU hMenu, int flag)
-{
-	if (strcmp(menustr, "Main extensions") == 0 && flag == 0)
-		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
-}
-
 int AboutBoxInit()
 {
 	SWSRegisterCommands(g_commandTable);
-
-#ifdef _SWS_MENU
-	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		return 0;
-#endif
 	return 1;
 }

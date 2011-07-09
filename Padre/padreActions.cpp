@@ -72,21 +72,11 @@ static COMMAND_T g_commandTable[] =
 
 static MidiItemProcessor* midiNoteRandomizer = NULL;
 
-static void Padre_Menuhook(const char* _menustr, HMENU _hMenu, int _flag) {
-	if (!strcmp(_menustr, "Main extensions") && !_flag) {
-		SWSCreateMenuFromCommandTable(g_commandTable, _hMenu);
-	}
-}
-
 int PadreInit()
 {
-#ifdef _SWS_MENU
-	if (!plugin_register("hookcustommenu", (void*)Padre_Menuhook))
-		return 0;
-#endif
 	midiNoteRandomizer = new MidiItemProcessor("MIDI Note Position Randomize");
 	midiNoteRandomizer->addFilter(new MidiFilterRandomNotePos());
-//midiNoteRandomizer->addFilter(new MidiFilterShortenEndEvents());
+	//midiNoteRandomizer->addFilter(new MidiFilterShortenEndEvents());
 
 	return SWSRegisterCommands(g_commandTable);
 }

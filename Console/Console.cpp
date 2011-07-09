@@ -844,24 +844,12 @@ static COMMAND_T g_commandTable[] =
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
-static void menuhook(const char* menustr, HMENU hMenu, int flag)
-{
-	if (strcmp(menustr, "Main view") == 0 && flag == 0)
-		// Add reaconsole menu item
-		AddToMenu(hMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
-}
-
 int ConsoleInit()
 {
 	if (!plugin_register("accelerator",&g_ar))
 		return 0;
 
 	SWSRegisterCommands(g_commandTable);
-
-#ifdef _SWS_MENU
-	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		return 0;
-#endif
 
 	// Add custom commands
 	char cBuf[256];

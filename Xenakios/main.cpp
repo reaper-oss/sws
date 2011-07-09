@@ -678,37 +678,6 @@ void DoToggleSTopAtEndOfTimeSel(COMMAND_T*)
 	DoSetStopAtEndOfTimeSel(-1);
 }
 
-static void menuhook(const char* menustr, HMENU hMenu, int flag)
-{
-	if (strcmp(menustr, "Main extensions") == 0 && flag == 0)
-	{
-		SWSCreateMenuFromCommandTable(g_XenCommandTable, hMenu);
-	}
-/*JFB Clean-up REAPER's menu
-	else if (strcmp(menustr, "Media item context") == 0 && flag == 0)
-	{
-		int i = 0;
-		while (g_XenCommandTable[i++].accel.accel.cmd != 1);
-		AddSubMenu(hMenu, SWSCreateMenu(&g_XenCommandTable[i]), "Extensions : Item/Take selection", -24);
-		i = 0;
-		while (g_XenCommandTable[i++].accel.accel.cmd != 2);
-		AddSubMenu(hMenu, SWSCreateMenu(&g_XenCommandTable[i]), "Extensions : Item/Take manipulation", -24);
-	}
-	else if (strcmp(menustr, "Track control panel context") == 0 && flag == 0)
-	{
-		int i = 0;
-		while (g_XenCommandTable[i++].accel.accel.cmd != 3);
-		AddSubMenu(hMenu, SWSCreateMenu(&g_XenCommandTable[i]), "Extensions : Track/Mixer/Envelopes");
-	}
-	//JFB !??? can't make what follows work + g_external_app_paths.Tool1MenuText looks bad + OSX?
-	else if (flag == 1)
-	{
-		SWSSetMenuText(hMenu, SWSGetCommandID(DoLaunchExtTool, 1), g_external_app_paths.Tool1MenuText);
-		SWSSetMenuText(hMenu, SWSGetCommandID(DoLaunchExtTool, 2), g_external_app_paths.Tool2MenuText);
-	}
-*/
-}
-
 WDL_String g_XenIniFilename;
 
 #ifdef _WIN32
@@ -723,10 +692,6 @@ int XenakiosInit()
 {
 	if(!plugin_register("projectconfig",&xen_reftrack_pcreg))
 		return 0;
-#ifdef _SWS_MENU
-	if (!plugin_register("hookcustommenu", (void*)menuhook))
-		return 0;
-#endif
 	// Move Xenakios_commands.ini to a new location
 	char oldIniFilename[512], iniFilename[512];
 	_snprintf(oldIniFilename, 512, XEN_INIFILE_OLD, GetExePath()); // old location

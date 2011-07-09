@@ -981,13 +981,7 @@ static COMMAND_T g_commandTable[] =
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	int menuid = -1;
-	if (strcmp(menustr, "Main options") == 0 && flag == 0)
-	{
-#ifdef _SWS_MENU
-		AddToMenu(hMenu, g_commandTable[1].menuText, g_commandTable[1].accel.accel.cmd, 40745);
-#endif
-	}
-	else if (strcmp(menustr, "Track control panel context") == 0)
+	if (strcmp(menustr, "Track control panel context") == 0)
 		menuid = 0;
 	else if (strcmp(menustr, "Media item context") == 0)
 		menuid = 1;

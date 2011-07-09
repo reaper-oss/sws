@@ -863,7 +863,7 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 	switch (uMsg){
             case WM_INITDIALOG:
 				RestoreWindowPos(hwndDlg, PREFS_WINDOWPOS_KEY, false);
-				SetDlgItemText(hwndDlg, IDC_ALLOW_STEMS, g_tag_artist.c_str() );
+				SetDlgItemText(hwndDlg, IDC_ARTIST, g_tag_artist.c_str() );
 				SetDlgItemText(hwndDlg, IDC_ALBUM, g_tag_album.c_str() );
 				SetDlgItemText(hwndDlg, IDC_GENRE, g_tag_genre.c_str() );
 				SetDlgItemInt(hwndDlg, IDC_YEAR, g_tag_year, false );
@@ -1106,20 +1106,10 @@ static COMMAND_T g_commandTable[] = {
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
-static void menuhook(const char* menustr, HMENU hMenu, int flag){
-	if (strcmp(menustr, "Main file") == 0 && flag == 0){
-		AddSubMenu(hMenu, SWSCreateMenuFromCommandTable(g_commandTable), "SWS Autorender", 40929 );
-	}
-}
-
 int AutorenderInit(){
 	SWSRegisterCommands(g_commandTable);
 
 	if (!plugin_register("projectconfig",&g_projectconfig))
 		return 0;
-#ifdef _SWS_MENU
-    if (!plugin_register("hookcustommenu", (void*)menuhook))
-        return 0;
-#endif
 	return 1;
 }

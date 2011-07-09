@@ -1118,7 +1118,7 @@ CAPTION "S&M - Cycle Action editor"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "Section:",IDC_STATIC,5,7,55,10,SS_CENTERIMAGE
-    COMBOBOX        IDC_COMBO,41,5,100,13,CBS_DROPDOWNLIST | WS_VSCROLL //| WS_TABSTOP
+    COMBOBOX        IDC_COMBO,41,5,100,13,CBS_DROPDOWNLIST | WS_VSCROLL
     PUSHBUTTON      "Reset",IDC_REMOVE,330,5,57,14
     PUSHBUTTON      "Import/export",IDC_BROWSE,391,5,57,14
     PUSHBUTTON      "Show action list",IDC_LIST,452,5,57,14
@@ -1650,8 +1650,7 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
-
+#include "version.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

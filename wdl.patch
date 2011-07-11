@@ -1,0 +1,265 @@
+--- wdlstring.h	Mon Jan 19 16:26:36 1970
++++ wdlstring.h	Mon Jan 19 16:26:36 1970
+@@ -27,6 +27,12 @@
+   operator overloading. It uses a WDL_HeapBuf for internal storage.
+ 
+   You can do Set, Get, Append, Insert, and SetLen.. that's about it
++
++  JFB mod --->
++     Avoid many strlen() calls thanks to a new member attribute m_length (faster).
++     One drawback is that if the string is shorten manually (without using SetLen(n, true)),
++     things can go wrong..
++  JFB mod <---
+   
+ */
+ 
+@@ -41,18 +47,26 @@
+ class WDL_String
+ {
+ public:
+-  WDL_String(int hbgran) : m_hb(hbgran WDL_HEAPBUF_TRACEPARM("WDL_String(4)"))
++//JFB mod --->
++  WDL_String(int hbgran) : m_hb(hbgran WDL_HEAPBUF_TRACEPARM("WDL_String(4)")), m_length(0)
++//JFB mod <---
+   {
+   }
+-  WDL_String(const char *initial=NULL, int initial_len=0) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String"))
++//JFB mod --->
++  WDL_String(const char *initial=NULL, int initial_len=0) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String")), m_length(0)
++//JFB mod <---
+   {
+     if (initial) Set(initial,initial_len);
+   }
+-  WDL_String(WDL_String &s) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String(2)"))
++//JFB mod --->
++  WDL_String(WDL_String &s) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String(2)")), m_length(0)
++//JFB mod <---
+   {
+     Set(s.Get());
+   }
+-  WDL_String(WDL_String *s) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String(3)"))
++//JFB mod --->
++  WDL_String(WDL_String *s) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String(3)")), m_length(0)
++//JFB mod <---
+   {
+     if (s && s != this) Set(s->Get());
+   }
+@@ -96,6 +110,10 @@
+     {
+       memcpy(newbuf,str,s);
+       newbuf[s]=0;
++
++      //JFB added --->
++      m_length = s;
++      //JFB <---
+     }
+   }
+ #endif
+@@ -114,13 +132,19 @@
+     if (maxlen && s > maxlen) s=maxlen;
+     if (!s) return; // do nothing if setting to empty and not allocated
+ 
+-    int olds=(int)strlen(Get());
++    //JFB mod --->
++    int olds=m_length;
++    //JFB <---
+ 
+     char *newbuf=(char*)m_hb.Resize(olds + s + 1,false);
+     if (newbuf)
+     {
+       memcpy(newbuf + olds, str, s);
+       newbuf[olds+s]=0;
++
++      //JFB added --->
++      m_length += s;
++      //JFB <---
+     }
+   }
+ #endif
+@@ -133,10 +157,17 @@
+ 	  char *p=Get();
+ 	  if (!p || !*p) return;
+ 
+-	  int l=(int)strlen(p);
++      //JFB mod --->
++      int l=m_length;
++      //JFB <---
++
+ 	  if (position < 0 || position >= l) return;
+ 	  if (position+len > l) len=l-position;
+ 	  memmove(p+position,p+position+len,l-position-len+1); // +1 for null
++
++      //JFB added --->
++	  m_length -= len;
++      //JFB <---
+   }
+ #endif
+ 
+@@ -150,18 +181,25 @@
+     =0)
+ #endif
+   {
+-	  int sl=(int)strlen(Get());
++      //JFB mod --->
++      int sl=m_length, olds=m_length;
++      //JFB <---
++
+ 	  if (position > sl) position=sl;
+ 
+ 	  int ilen=(int)strlen(str);
+ 	  if (maxlen > 0 && maxlen < ilen) ilen=maxlen;
+ 
+-	  Append(str);
++	  Append(str);  //JFB indirectly updates m_length but see below..
+ 	  char *cur=Get();
+ 
+       	  memmove(cur+position+ilen,cur+position,sl-position);
+ 	  memcpy(cur+position,str,ilen);
+ 	  cur[sl+ilen]=0;
++
++      //JFB added --->
++	  m_length = olds+ilen;
++      //JFB <---
+   }
+ #endif
+ 
+@@ -176,7 +214,14 @@
+ #endif
+   {                       // can use to resize down, too, or resize up for a sprintf() etc
+     char *b=(char*)m_hb.Resize(length+1,resizeDown);
+-    if (b) b[length]=0;
++    //JFB mod --->
++    if (b)
++	{
++		b[length]=0;
++		if (resizeDown && (length < m_length)) m_length = length;
++		else m_length = (int)strlen(b); //JFB lazy here
++	}
++    //JFB <---
+   }
+ #endif
+ 
+@@ -196,7 +241,11 @@
+     if (written < 0) written = 0;
+ 		va_end(arglist);
+     b[written] = '\0';
+-	}
++
++    //JFB added --->
++    m_length = written;
++    //JFB <---
++  }
+ #endif
+ 
+   void WDL_STRING_PREFIX AppendFormatted(int maxlen, const char* fmt, ...) 
+@@ -204,7 +253,10 @@
+     ; 
+ #else
+   {
+-    int offs=(int)strlen(Get());
++    //JFB mod --->
++    int offs=m_length;
++    //JFB <---
++
+     char* b= (char*) m_hb.Resize(offs+maxlen+1,false)+offs;
+   	va_list arglist;
+ 		va_start(arglist, fmt);
+@@ -216,7 +268,11 @@
+     if (written < 0) written = 0;
+ 		va_end(arglist);
+     b[written] = '\0';
+-	}
++
++    //JFB added --->
++    m_length += written;
++    //JFB <---
++  }
+ #endif
+ 
+   void WDL_STRING_PREFIX Ellipsize(int minlen, int maxlen)
+@@ -225,7 +281,10 @@
+ #else
+   {
+     char* b = Get();
+-    if ((int) strlen(b) > maxlen) {
++
++    //JFB mod --->
++    if (m_length > maxlen) {
++    //JFB <---
+       int i;
+       for (i = maxlen-4; i >= minlen; --i) {
+         if (b[i] == ' ') {
+@@ -235,6 +294,10 @@
+       }
+       if (i < minlen) strcpy(b+maxlen-4, "...");    
+     }
++
++    //JFB added --->
++    m_length = (int)strlen(b); // ok, lazy here..  
++    //JFB <---
+   }
+ #endif
+ 
+@@ -247,10 +310,21 @@
+     static char c; c=0; 
+     return &c; // don't return "", in case it gets written to.
+   }
+-  int GetLength() { return (int)strlen(Get()); }
+ 
+-  private:
++  int GetLength()
++  {
++    //JFB mod --->
++    return m_length;
++    //JFB <---
++  }
++
++  //JFB mod --->
++  protected:
++  //JFB <---
+     WDL_HeapBuf m_hb;
++    //JFB added --->
++    int m_length;
++    //JFB <---
+ };
+ #endif
+ 
+--- swell/swell-ini.cpp	Mon Jan 19 16:26:36 1970
++++ swell/swell-ini.cpp	Mon Jan 19 16:26:36 1970
+@@ -168,7 +168,15 @@
+         {
+           *t++=0;
+           if (*p) 
++		  {
++			// Mimic Win32 behavior of stripping quotes and whitespace
++			while(*t==' ' || *t=='\t') ++t;
++			char* e = t+strlen(t)-1;
++			while(e >= t && (*e==' ' || *e=='\t')) --e;
++			if (e > t && ((*t=='\"' && *e=='\"') || (*t=='\'' && *e=='\''))) { ++t; --e; }
++			e[1] = 0;
+             cursec->AddUnsorted(p,strdup(t));
++		  }
+         }
+       }
+     }
+@@ -314,7 +322,7 @@
+   int szOut=0;
+   WDL_StringKeyedArray<char *> *cursec = ctx ? ctx->m_sections.Get(appname) : NULL;
+ 
+-  if (ctx) 
++  if (ctx && cursec) 
+   {
+     int x;
+     for(x=0;x<cursec->GetSize();x++)
+--- wingui/virtwnd-controls.h	Mon Jan 19 16:26:36 1970
++++ wingui/virtwnd-controls.h	Mon Jan 19 16:26:36 1970
+@@ -114,7 +114,9 @@
+     void SetForceText(bool ft, int color=0) { m_forcetext=ft; m_forcetext_color=color; }
+     bool GetForceText() { return m_forcetext; }
+ 
++	// JFB for SWS:
++	LICE_IFont* GetFont() { return m_textfont; }
+     void SetFont(LICE_IFont *font, LICE_IFont *vfont=NULL) { m_textfont=font; m_textfontv=vfont; }
+ 
+   private:
+ 

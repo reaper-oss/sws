@@ -199,10 +199,16 @@ void OpenRelatedProject(COMMAND_T* pCmd)
 
 void OpenLastProject(COMMAND_T*)
 {
+	char key[32];
 	char cLastProj[MAX_PATH];
-	GetPrivateProfileString("REAPER", "lastprojuiref", "", cLastProj, MAX_PATH, get_ini_file());
-	if (cLastProj[0])
-		Main_openProject(cLastProj);
+	int recentNum = GetPrivateProfileInt("REAPER", "numrecent", 0, get_ini_file());
+	if (recentNum > 0)
+	{
+		sprintf(key, "recent%02d", recentNum);
+		GetPrivateProfileString("Recent", key, "", cLastProj, MAX_PATH, get_ini_file());
+		if (cLastProj[0])
+			Main_openProject(cLastProj);
+	}
 }
 
 static int GetLoadCommandID(int iSlot, bool bCreateNew)

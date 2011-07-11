@@ -74,10 +74,10 @@
 #define AUTOSAVE_DIR_DEFAULT_MSG		0x11001E
 
 // labels shared by actions and popup menu items
-#define FXC_LOAD_APPLY_TRACK_STR		"Paste (replace) FX chain to selected tracks"
-#define FXCIN_LOAD_APPLY_TRACK_STR		"Paste (replace) input FX chain to selected tracks"
-#define FXC_LOAD_APPLY_TAKE_STR			"Paste (replace) FX chain to selected items"
-#define FXC_LOAD_APPLY_ALL_TAKES_STR	"Paste (replace) FX chain to selected items, all takes"
+#define FXC_LOAD_APPLY_TRACK_STR		"Apply FX chain to selected tracks"
+#define FXCIN_LOAD_APPLY_TRACK_STR		"Apply input FX chain to selected tracks"
+#define FXC_LOAD_APPLY_TAKE_STR			"Apply FX chain to selected items"
+#define FXC_LOAD_APPLY_ALL_TAKES_STR	"Apply FX chain to selected items, all takes"
 #define FXC_LOAD_PASTE_TRACK_STR		"Paste FX chain to selected tracks"
 #define FXC_LOAD_PASTE_TAKE_STR			"Paste FX chain to selected items"
 #define FXC_LOAD_PASTE_ALL_TAKES_STR	"Paste FX chain to selected items, all takes"
@@ -806,6 +806,7 @@ void SNM_ResourceWnd::OnInitDlg()
 	}
 
 	// WDL GUI init
+	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_cbType.SetID(COMBOID_TYPE);

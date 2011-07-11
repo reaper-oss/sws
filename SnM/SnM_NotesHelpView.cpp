@@ -26,13 +26,13 @@
 ******************************************************************************/
 
 //JFB TODO?
-// - action_help_t (even if not used yet ?)
-// - drag'n'drop text
-// - undo on *each* key stroke.. hum.. 
-//   => it fills the undo history (+ can't restore caret pos.) but it fixes:
+// - atm, undo on *each* key stroke (!)
+//   => it fills the undo history (+ can't restore caret pos.) BUT it fixes:
 //   * SaveExtensionConfig() that is not called if no proj mods but notes may have been added..
 //   * project switches
 // - take changed => title not updated
+// - action_help_t (even if not used yet ?)
+// - drag'n'drop text
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
@@ -521,6 +521,7 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	g_locked = GetPrivateProfileInt("NOTES_HELP_VIEW", "LOCK", 1, g_SNMiniFilename.Get());
 
 	// WDL GUI init
+	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
     m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_btnLock.SetID(BUTTONID_LOCK);
@@ -789,8 +790,10 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 
 		p=buf;
 
-		LICE_CachedFont font;
-		// creating fonts is super slow => use a text width estimation instead
+		static LICE_CachedFont dynFont;
+
+		// creating fonts is ***super slow***
+		// => use a text width estimation instead
 		int fontHeight = (int)((_bm->getHeight()-h)/numlines + 0.5);
 		while (fontHeight > 5 && (fontHeight*maxlinelen*0.6) > _bm->getWidth()) 
 			fontHeight--;
@@ -801,24 +804,24 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
 		HFONT lf = CreateFont(fontHeight,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE);
-		font.SetFromHFont(lf,LICE_FONT_FLAG_OWNS_HFONT);
-		font.SetBkMode(TRANSPARENT);
-		font.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
+		dynFont.SetFromHFont(lf,LICE_FONT_FLAG_OWNS_HFONT);
+		dynFont.SetBkMode(TRANSPARENT);
+		dynFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
 
 		int top = (int)(h + (_bm->getHeight()-h)/2 - (fontHeight*numlines)/2 + 0.5);
 		for (int i = 0; i < numlines; ++i)
 		{                   
 			RECT tr = {0,0,0,0};
-			font.DrawText(NULL, p, -1, &tr, DT_CALCRECT);
+			dynFont.DrawText(NULL, p, -1, &tr, DT_CALCRECT);
 			int txtw = tr.right - tr.left;
 			tr.top = top + i*fontHeight;
 			tr.bottom = tr.top+fontHeight;
 			tr.left = (int)(_bm->getWidth()/2 - txtw/2 + 0.5);
 			tr.right = tr.left + txtw;
-			font.DrawText(_bm, p, -1, &tr, 0);
+			dynFont.DrawText(_bm, p, -1, &tr, 0);
 			p += strlen(p)+1;
 		}
-		font.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
+		dynFont.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
 		DeleteObject(lf); 
     }
 	else
@@ -937,7 +940,7 @@ void SNM_NotesHelpWnd::saveHelp(const char* _cmdName, const char* _help)
 		WritePrivateProfileStruct(_cmdName, NULL, NULL, 0, m_actionHelpFilename.Get()); //flush section
 		WritePrivateProfileSection(_cmdName, buf, m_actionHelpFilename.Get());
 	}
-} 
+}
 
 void SNM_NotesHelpWnd::readActionHelpFilenameIniFile()
 {

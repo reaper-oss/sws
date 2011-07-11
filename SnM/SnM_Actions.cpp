@@ -33,7 +33,7 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// S&M actions (main section)
+// S&M "static" actions (main section)
 ///////////////////////////////////////////////////////////////////////////////
 
 static COMMAND_T g_SNM_cmdTable[] = 
@@ -90,7 +90,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Float previous FX (and close others) for selected tracks" }, "S&M_WNONLY1", cycleFloatFXWndSelTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Float next FX (and close others) for selected tracks" }, "S&M_WNONLY2", cycleFloatFXWndSelTracks, NULL, 1},
-#ifdef _SNM_MISC // only diff. with following ones is that they don't focus the main window on cycle
+#ifdef _SNM_MISC // only diff. with the ones below is that they don't focus the main window on cycle
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS1", cycleFocusFXWndSelTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS2", cycleFocusFXWndSelTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (cycle)" }, "S&M_WNFOCUS3", cycleFocusFXWndAllTracks, NULL, -1},
@@ -236,8 +236,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// FX Chains (items & tracks) ---------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (FX chains)" }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, "S&&M Resources", 0, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ClearSlotPrompt, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, prompt for slot" }, "S&M_TAKEFXCHAINp1", loadSetTakeFXChain, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, all takes, prompt for slot" }, "S&M_TAKEFXCHAINp2", loadSetAllTakesFXChain, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, prompt for slot" }, "S&M_TAKEFXCHAINp1", loadSetTakeFXChain, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, all takes, prompt for slot" }, "S&M_TAKEFXCHAINp2", loadSetAllTakesFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp1", loadPasteTakeFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, all takes, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp2", loadPasteAllTakesFXChain, NULL, -1},
 
@@ -268,7 +268,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain (depending on focus)" }, "S&M_SMART_SET_FXCHAIN", smartPasteReplaceFXChain, NULL, }, 
 	{ { DEFACCEL, "SWS/S&M: Cut FX chain (depending on focus)" }, "S&M_SMART_CUT_FXCHAIN", smartCutFXChain, NULL, }, 
 
-	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected tracks, prompt for slot" }, "S&M_TRACKFXCHAINp1", loadSetTrackFXChain, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, prompt for slot" }, "S&M_TRACKFXCHAINp1", loadSetTrackFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, prompt for slot" }, "S&M_PASTE_TRACKFXCHAINp1", loadPasteTrackFXChain, NULL, -1},
 
 	// FX presets -------------------------------------------------------------
@@ -481,7 +481,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 16" }, "S&M_MAP_MIDI_INPUT_CH16", remapMIDIInputChannel, NULL, 16},
 
 	// Other, misc ------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Show action list (S&M Extension)" }, "S&M_ACTION_LIST", SNM_ShowActionList, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Show action list (S&M Extension section)" }, "S&M_ACTION_LIST", SNM_ShowActionList, NULL, 0},
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (all tracks)" }, "S&M_THEME_HELPER_ALL", ShowThemeHelper, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (selected track)" }, "S&M_THEME_HELPER_SEL", ShowThemeHelper, NULL, 1},
@@ -507,28 +507,31 @@ static COMMAND_T g_SNM_cmdTable[] =
 };
 
 
-// *** table of dynamic cmds ***
-// "dynamic" means that the number of instances of each action can be customized in the S&M.ini file. this is typically used for "slot actions".
-// in the ini file, the number of actions to create is defined in the "NbOfActions" section, using the leading part of the custom id.
+///////////////////////////////////////////////////////////////////////////////
+// S&M "dynamic" actions (main section)
+//
+// "dynamic" means that the number of instances of each action can be customized in the S&M.ini file (section "NbOfActions"). 
 // in this g_SNM_dynamicCmdTable table:
 // - items are not real commands but "meta" commands, this table must be registered with SNMRegisterDynamicCommands()
 // - COMMAND_T.user is used to specify the default number of actions to create
 // - a function doCommand(COMMAND_T*) or getEnabled(COMMAND_T*) will be trigered with 0-based COMMAND_T.user
 // - action names are formated strings, they must contain "%02d" and only that. %02d is used for better sort in the action list (max = 99)
 // - custom command ids aren't formated strings, but final ids will end with "slot" numbers (1-based for display reasons)
-// example: { { DEFACCEL, "Do stuff #%d" }, "DO_STUFF%d", doStuff, NULL, 2},
-// if not overrided in the S&M.ini file (e.g. "DO_STUFF=99"), 2 actions will be created: "Do stuff #1" and "Do stuff #2" both calling 
+// example: { { DEFACCEL, "Do stuff #%02d" }, "DO_STUFF", doStuff, NULL, 2},
+// if not overrided in the S&M.ini file (e.g. "DO_STUFF=99"), 2 actions will be created: "Do stuff #01" and "Do stuff #02" both calling
 // doStuff(COMMAND_T* c) with c->user=0 and c->user=1, respectively. custom ids will be "_DO_STUFF1" and "_DO_STUFF2", repectively.
-static COMMAND_T g_SNM_dynamicCmdTable[] = 
+///////////////////////////////////////////////////////////////////////////////
+
+static COMMAND_T g_SNM_dynamicCmdTable[] =
 {
-	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, slot %02d" }, "S&M_TAKEFXCHAIN", loadSetTakeFXChain, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, slot %02d" }, "S&M_TAKEFXCHAIN", loadSetTakeFXChain, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot %02d" }, "S&M_PASTE_TAKEFXCHAIN", loadPasteTakeFXChain, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, all takes, slot %02d" }, "S&M_FXCHAIN_ALLTAKES", loadSetAllTakesFXChain, NULL, 0}, // default: none
+	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, all takes, slot %02d" }, "S&M_FXCHAIN_ALLTAKES", loadSetAllTakesFXChain, NULL, 0}, // default: none
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, all takes, slot %02d" }, "S&M_PASTE_FXCHAIN_ALLTAKES", loadPasteAllTakesFXChain, NULL, 0}, // default: none
 
-	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected tracks, slot %02d" }, "S&M_TRACKFXCHAIN", loadSetTrackFXChain, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected tracks, slot %02d" }, "S&M_TRACKFXCHAIN", loadSetTrackFXChain, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, slot %02d" }, "S&M_PASTE_TRACKFXCHAIN", loadPasteTrackFXChain, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Paste (replace) input FX chain to selected tracks, slot %02d" }, "S&M_INFXCHAIN", loadSetTrackInFXChain, NULL, 0}, // default: none
+	{ { DEFACCEL, "SWS/S&M: Apply input FX chain to selected tracks, slot %02d" }, "S&M_INFXCHAIN", loadSetTrackInFXChain, NULL, 0}, // default: none
 	{ { DEFACCEL, "SWS/S&M: Paste input FX chain to selected tracks, slot %02d" }, "S&M_PASTE_INFXCHAIN", loadPasteTrackInFXChain, NULL, 0}, // default: none
 
 	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot %02d" }, "S&M_APPLY_TRTEMPLATE", loadSetTrackTemplate, NULL, 10},
@@ -788,10 +791,12 @@ void IniFileInit()
 	if (FileExists(buf))
 		MoveFile(buf, iniFn);
 	g_SNMiniFilename.Set(iniFn);
+/*JFB not needed (issue 292 fixed in r504)
 #ifdef _WIN32
 	// issue 292: force the S&M.ini cache refresh (accessed below) by accessing a 3rd one
 	GetPrivateProfileString("dummy","dummy","",buf,SNM_MAX_INI_SECTION,get_ini_file());
 #endif
+*/
 	// S&M.ini cleanup & "auto upgrade"
 	// [FXCHAIN] -> [FXChains]
 	*buf = '\0';
@@ -833,12 +838,13 @@ void IniFileExit()
 		iniSection.AppendFormatted(SNM_MAX_ACTION_CUSTID_LEN+SNM_MAX_ACTION_NAME_LEN+8, "%s=%d ; %s\n", ct->id, (int)ct->user, name);
 	}
 	SaveIniSection("NbOfActions", &iniSection, g_SNMiniFilename.Get());
-
+/*JFB not needed (issue 292 fixed in r504)
 #ifdef _WIN32
 		// issue 292: force writing of the ini file
 		// http://support.microsoft.com/kb/68827
 		WritePrivateProfileString(NULL, NULL, NULL, g_SNMiniFilename.Get());
 #endif
+*/
 }
 
 int SnMInit(reaper_plugin_info_t* _rec)

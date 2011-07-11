@@ -422,6 +422,7 @@ void SNM_FindWnd::OnInitDlg()
 	m_zoomSrollItems = (GetPrivateProfileInt("FIND_VIEW", "ZoomScrollToFoundItems", 0, g_SNMiniFilename.Get()) == 1);
 
 	// WDL GUI init
+	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
     m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_btnEnableZommScroll.SetID(BUTTONID_ZOOM_SCROLL_EN);

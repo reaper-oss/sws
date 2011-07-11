@@ -1,11 +1,10 @@
-Added configurable slot actions:
-+SWS/S&M: Paste (replace) input FX chain to selected tracks, slot n
+Added configurable slot actions (no slot by default):
++SWS/S&M: Apply input FX chain to selected tracks, slot n
 +SWS/S&M: Paste input FX chain to selected tracks, slot n
 
 Housecleaning:
-Removed useless action "SWS/S&M: Notes/Help - Disables auto updates"
-Renamed all "Apply FX chain [...]" actions and menu items into "Paste (replace) FX chain [...]"
 Renamed actions "Set displayed CC lanes, slot n" into "Restore displayed CC lanes, slot n"
+Removed useless action "SWS/S&M: Notes/Help - Disables auto updates"
 
 !v2.0.0 #30 (July 7, 2011)
 Issue 309: Add action "SWS: Open last project"

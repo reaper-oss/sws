@@ -333,6 +333,7 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	g_approxDelayMsCC = GetPrivateProfileInt("LIVE_CONFIGS", "CC_DELAY", 250, g_SNMiniFilename.Get());
 
 	// WDL GUI init
+	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_txtConfig.SetID(TXTID_CONFIG);

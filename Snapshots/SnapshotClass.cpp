@@ -175,6 +175,19 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 	m_iVis  = GetTrackVis(tr);
 	m_iSel  = *((int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL));
 
+	if (g_bv4)
+	{
+		m_iPanMode	= *((int*)GetSetMediaTrackInfo(tr, "I_PANMODE", NULL));
+		m_dPanWidth	= *((double*)GetSetMediaTrackInfo(tr, "D_WIDTH", NULL));
+		m_dPanL		= *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANL", NULL));
+		m_dPanR		= *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANR", NULL));
+	}
+	else
+	{
+		m_iPanMode = -1; // Project default
+		m_dPanWidth = m_dPanL = m_dPanR = 0.0;
+	}	
+
 	// Don't bother storing the sends if it's masked
 	if (mask & SENDS_MASK)
 		m_sends.Build(tr);
@@ -210,6 +223,10 @@ TrackSnapshot::TrackSnapshot(TrackSnapshot& ts):m_sends(ts.m_sends)
 	}
 	m_sName.Set(ts.m_sName.Get());
 	m_iTrackNum = ts.m_iTrackNum;
+	m_iPanMode	= ts.m_iPanMode;
+	m_dPanWidth	= ts.m_dPanWidth;
+	m_dPanL		= ts.m_dPanL;
+	m_dPanR		= ts.m_dPanR;
 }
 
 TrackSnapshot::TrackSnapshot(LineParser* lp)
@@ -223,6 +240,11 @@ TrackSnapshot::TrackSnapshot(LineParser* lp)
 	// For backward compat, flip the TCP vis bit
 	m_iVis = lp->gettoken_int(7) ^ 2;
 	m_iSel = lp->gettoken_int(8);
+	m_iPanMode	= lp->getnumtokens() < 10 ? -1 : lp->gettoken_int(9); // If loading old format, set pan mode to -1 for proj default
+	m_dPanWidth	= lp->gettoken_float(10);
+	m_dPanL		= lp->gettoken_float(11);
+	m_dPanR		= lp->gettoken_float(12);
+
 	// Set the track name "early" for backward compat
 	MediaTrack* tr = GuidToTrack(&m_guid);
 	if (tr)
@@ -254,7 +276,16 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, WDL_PtrLis
 	if (mask & VOL_MASK)
 		GetSetMediaTrackInfo(tr, "D_VOL", &m_dVol);
 	if (mask & PAN_MASK)
+	{
 		GetSetMediaTrackInfo(tr, "D_PAN", &m_dPan);
+		if (g_bv4)
+		{
+			GetSetMediaTrackInfo(tr, "I_PANMODE", &m_iPanMode);
+			GetSetMediaTrackInfo(tr, "D_WIDTH", &m_dPanWidth);
+			GetSetMediaTrackInfo(tr, "D_DUALPANL", &m_dPanL);
+			GetSetMediaTrackInfo(tr, "D_DUALPANR", &m_dPanR);
+		}
+	}
 	if (mask & MUTE_MASK)
 		GetSetMediaTrackInfo(tr, "B_MUTE", &m_bMute);
 	if (mask & SOLO_MASK)
@@ -318,7 +349,7 @@ void TrackSnapshot::GetChunk(WDL_String* chunk)
 {
 	char guidStr[64];
 	guidToString(&m_guid, guidStr);
-	chunk->AppendFormatted(chunk->GetLength()+100, "<TRACK %s %.14f %.14f %d %d %d %d %d\n", guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel);
+	chunk->AppendFormatted(chunk->GetLength()+200, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %.14f %.14f %.14f\n", guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR);
 	chunk->AppendFormatted(chunk->GetLength()+100, "NAME \"%s\" %d\n", m_sName.Get(), m_iTrackNum);
 	
 	m_sends.GetChunk(chunk);
@@ -351,10 +382,23 @@ void TrackSnapshot::GetDetails(WDL_String* details, int iMask)
 		details->AppendFormatted(50, "Volume: %.2fdb\r\n", VAL2DB(m_dVol));
 	if (iMask & PAN_MASK)
 	{
-		if (m_dPan == 0.0)
-			details->Append("Pan: center\r\n");
+		int iPanMode = m_iPanMode;
+		if (g_bv4 && iPanMode == -1)
+			iPanMode = *(int*)GetConfigVar("panmode"); // display pan in project format
+
+		if (iPanMode != 6)
+		{
+			if (m_dPan == 0.0)
+				details->Append("Pan: center");
+			else
+				details->AppendFormatted(50, "Pan: %d%% %s", abs((int)(m_dPan * 100.0)), m_dPan < 0.0 ? "left" : "right");
+		}
+		if (iPanMode == 5) // stereo pan
+			details->AppendFormatted(50, ", width %d%%\r\n", (int)(m_dPanWidth * 100.0));
+		else if (iPanMode == 6) // dual pan
+			details->AppendFormatted(50, "Left pan: %d%%%c, Right pan: %d%%%c\r\n", abs((int)(m_dPanL * 100.0)), m_dPanL == 0.0 ? 'C' : (m_dPanL < 0.0 ? 'L' : 'R'), abs((int)(m_dPanR * 100.0)), m_dPanR == 0.0 ? 'C' : (m_dPanR < 0.0 ? 'L' : 'R'));
 		else
-			details->AppendFormatted(50, "Pan: %d%% %s\r\n", abs((int)(m_dPan * 100.0)), m_dPan < 0.0 ? "left" : "right");
+			details->Append("\r\n");
 	}
 	if (iMask & MUTE_MASK)
 		details->Append(m_bMute ? "Mute: on\r\n" : "Mute: off\r\n");

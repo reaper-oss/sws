@@ -52,6 +52,9 @@ bool IsAutoAddEnvs(COMMAND_T*)  { int* p = (int*)GetConfigVar("env_autoadd"); re
 void TogGridOverUnder(COMMAND_T*) { int* p = (int*)GetConfigVar("gridinbg"); if (p) *p = *p == 2 ? 0 : 2; UpdateArrange(); }
 bool IsGridOver(COMMAND_T*)  { int* p = (int*)GetConfigVar("gridinbg"); return p && !*p; }
 
+void TogSelGroupMode(COMMAND_T*) { int* p = (int*)GetConfigVar("projgroupsel"); if (p) *p = !*p; }
+bool IsSelGroupMode(COMMAND_T*)  { int* p = (int*)GetConfigVar("projgroupsel"); return p && *p; }
+
 void SwitchGridSpacing(COMMAND_T*)
 {
 	// TODO
@@ -157,6 +160,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle seek playback on loop point change" },				"SWS_TOGSEEKMODE2",		TogSeekMode, NULL, 8, IsSeekMode },
 	{ { DEFACCEL, "SWS: Toggle auto add envelopes when tweaking in write mode" },	"SWS_TOGAUTOADDENVS",	TogAutoAddEnvs, NULL, 0, IsAutoAddEnvs },
 	{ { DEFACCEL, "SWS: Toggle grid lines over/under items" },						"SWS_TOGGRID_OU",		TogGridOverUnder, NULL, 0, IsGridOver },
+	{ { DEFACCEL, "SWS: Toggle selecting one grouped item selects group" },			"SWS_TOGSELGROUP",      TogSelGroupMode, NULL, 0, IsSelGroupMode },
 	//TODO
 	//{ { DEFACCEL, "SWS: Switch grid spacing" },										"SWS_GRIDSPACING",		SwitchGridSpacing,	},
 	{ { DEFACCEL, "SWS: Transport: Record/stop" },									"SWS_RECTOGGLE",		RecToggle,			},

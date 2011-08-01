@@ -75,6 +75,12 @@ public:
 	TrackSends m_sends;
 	WDL_String m_sName;
 	int m_iTrackNum;
+
+	// New v4 pans:
+	int m_iPanMode;
+	double m_dPanWidth;
+	double m_dPanL;
+	double m_dPanR;
 };
 
 // Mask:

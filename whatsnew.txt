@@ -1,8 +1,11 @@
+!v2.0.0 #31 (July 31, 2011)
 Added configurable slot actions (no slot by default):
 +SWS/S&M: Apply input FX chain to selected tracks, slot n
 +SWS/S&M: Paste input FX chain to selected tracks, slot n
 
-Housecleaning:
+Issue 324: Snapshot support for v4 pan styles/settings
+Added action "SWS: Toggle selecting one grouped item selects group"
+Fixed x64 installer issue
 Renamed actions "Set displayed CC lanes, slot n" into "Restore displayed CC lanes, slot n"
 Removed useless action "SWS/S&M: Notes/Help - Disables auto updates"
 

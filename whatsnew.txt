@@ -1,3 +1,6 @@
+!v2.0.0 #32 (August 2, 2011)
+Fixed "stuck" cycle actions window on OSX
+
 !v2.0.0 #31 (July 31, 2011)
 Added configurable slot actions (no slot by default):
 +SWS/S&M: Apply input FX chain to selected tracks, slot n

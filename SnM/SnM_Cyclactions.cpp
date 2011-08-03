@@ -858,13 +858,14 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			// which list view?
 			bool left=false, right=false;
 			{
+				POINT pt;
+				pt.x = x; pt.y = y;
 				HWND h = GetDlgItem(_hwnd, IDC_LIST1);
 				RECT r;	GetWindowRect(h, &r);
-				left = (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
-
+				left = PtInRect(&r, pt);
 				h = GetDlgItem(_hwnd, IDC_LIST2);
 				GetWindowRect(h, &r);
-				right = (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
+				right = PtInRect(&r,pt);
 			}
 
 			if (left || right)

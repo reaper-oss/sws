@@ -1038,13 +1038,13 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 						break;
 					g_cyclactionsHwnd = NULL; // for proper toggle state report, see openCyclactionsWnd()
 					SaveWindowPos(_hwnd, CYCLACTIONWND_POS_KEY);
-					DestroyWindow(_hwnd);
+					ShowWindow(_hwnd, SW_HIDE);
 					break;
 				case IDCANCEL:
 					Cancel(false);
 					g_cyclactionsHwnd = NULL; // for proper toggle state report, see openCyclactionsWnd()
 					SaveWindowPos(_hwnd, CYCLACTIONWND_POS_KEY);
-					DestroyWindow(_hwnd);
+					ShowWindow(_hwnd, SW_HIDE);
 					break;
 				case IDC_BROWSE:
 				{

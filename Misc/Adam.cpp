@@ -3019,7 +3019,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Grid to 1/16 notes" },			"SWS_AWGRID16",				AWGrid16, NULL, 0, IsGrid16},
 	{ { DEFACCEL, "SWS/AW: Grid to 1/32 notes" },			"SWS_AWGRID32",				AWGrid32, NULL, 0, IsGrid32},
 	
-	/* Not ready or not safe enough/integrated well enough for public use
+	///* Not ready or not safe enough/integrated well enough for public use
 	// Stuff that sort of sucks that I might make decent enough to release
 	//{ { DEFACCEL, "SWS/AW: Copy" },			"SWS_AWCOPY",					AWCopy, },
 	//{ { DEFACCEL, "SWS/AW: Cut" },			"SWS_AWCUT",					AWCut, },
@@ -3035,7 +3035,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Toggle TCP" },			"SWS_AWTOGTCP",		AWToggleTCP, },
 
 	
-	*/
+	//*/
 
 
 	{ { DEFACCEL, "SWS/AW: Render tracks to stereo stem tracks, obeying time selection" },			"SWS_AWRENDERSTEREOSMART",		AWRenderStem_Smart_Stereo, },

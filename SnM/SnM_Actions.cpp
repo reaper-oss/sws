@@ -438,9 +438,15 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 8" }, "S&M_TOGGLE_LIVE_CFG8", ToggleEnableLiveConfig, NULL, 7, IsLiveConfigEnabled},
 
 	// Cyclactions ---------------------------------------------------------------
+#ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor" }, "S&M_CREATE_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 0, isCyclationsWndDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor (event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 1, isCyclationsWndDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor (piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 2, isCyclationsWndDisplayed},
+#else
+	{ { DEFACCEL, "SWS/S&M: Create cycle action" }, "S&M_CREATE_CYCLACTION", openCyclactionsWnd, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Create cycle ME action (event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", openCyclactionsWnd, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Create cycle ME action (piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", openCyclactionsWnd, NULL, 2},
+#endif
 
 	// REC inputs -------------------------------------------------------------
 	//JFB TODO: "not configurable" dynamic actions

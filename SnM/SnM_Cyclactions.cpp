@@ -324,13 +324,13 @@ void LoadCyclactions(bool _errMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyc
 	}
 
 	if (_errMsg && msg.GetLength())
-		SNM_ShowMsg(msg.Get(), "S&M - Warning(s)", g_cyclactionsHwnd);
+		SNM_ShowMsg(msg.Get(), "S&M - Cycle Actions - Error(s) & Warning(s)", g_cyclactionsHwnd);
 }
 
 // NULL _cyclactions => update main model
 //_section or -1 for all sections
 // NULL _iniFn => S&M.ini
-void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions, int _section = -1, const char* _iniFn = NULL)
+void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
 {
 	if (!_cyclactions)
 		_cyclactions = g_cyclactions;
@@ -1040,12 +1040,14 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					g_cyclactionsHwnd = NULL; // for proper toggle state report, see openCyclactionsWnd()
 					SaveWindowPos(_hwnd, CYCLACTIONWND_POS_KEY);
 					ShowWindow(_hwnd, SW_HIDE);
+//JFB r525					EndDialog(_hwnd,0);
 					break;
 				case IDCANCEL:
 					Cancel(false);
 					g_cyclactionsHwnd = NULL; // for proper toggle state report, see openCyclactionsWnd()
 					SaveWindowPos(_hwnd, CYCLACTIONWND_POS_KEY);
 					ShowWindow(_hwnd, SW_HIDE);
+//JFB r525					EndDialog(_hwnd,0);
 					break;
 				case IDC_BROWSE:
 				{
@@ -1249,6 +1251,7 @@ int CyclactionsInit()
 
 void openCyclactionsWnd(COMMAND_T* _ct)
 {
+#ifdef _WIN32
 	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CYCLACTION), g_hwndParent, CyclactionsWndProc);
 
 	// Toggle
@@ -1267,6 +1270,23 @@ void openCyclactionsWnd(COMMAND_T* _ct)
 		SendDlgItemMessage(hwnd,IDC_COMBO,CB_SETCURSEL,(int)_ct->user,0); // ok, won't lead to a WM_COMMAND 
 		UpdateSection((int)_ct->user);
 	}
+#else
+	char reply[4096]= "";
+	char question[BUFFER_SIZE]= "Name (#name: toggle action):,Command:";
+	for (int i=2; i < SNM_MAX_CYCLING_ACTIONS; i++)
+		strcat(question, ",Command (or ! or !new name):");
+
+	char title[128]= "S&M - ";
+	strcat(title, SNM_CMD_SHORTNAME(_ct));
+	if (GetUserInputs(title, SNM_MAX_CYCLING_ACTIONS, question, reply, 4096))
+	{
+		WDL_String msg;
+		if (CreateCyclaction((int)_ct->user, reply, &msg))
+			SaveCyclactions();
+		else if (msg.GetLength())
+			SNM_ShowMsg(msg.Get(), "S&M - Cycle Actions - Error(s) & Warning(s)", g_hwndParent);
+	}
+#endif
 }
 
 bool isCyclationsWndDisplayed(COMMAND_T* _ct) {

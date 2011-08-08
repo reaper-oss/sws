@@ -862,10 +862,10 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				pt.x = x; pt.y = y;
 				HWND h = GetDlgItem(_hwnd, IDC_LIST1);
 				RECT r;	GetWindowRect(h, &r);
-				left = PtInRect(&r, pt);
+				left = PtInRect(&r, pt) ? true : false;
 				h = GetDlgItem(_hwnd, IDC_LIST2);
 				GetWindowRect(h, &r);
-				right = PtInRect(&r,pt);
+				right = PtInRect(&r,pt) ? true : false;
 			}
 
 			if (left || right)
@@ -1040,19 +1040,19 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					g_cyclactionsHwnd = NULL; // for proper toggle state report, see openCyclactionsWnd()
 					SaveWindowPos(_hwnd, CYCLACTIONWND_POS_KEY);
 					ShowWindow(_hwnd, SW_HIDE);
-//JFB r525					EndDialog(_hwnd,0);
+//JFB r525			EndDialog(_hwnd,0);
 					break;
 				case IDCANCEL:
 					Cancel(false);
 					g_cyclactionsHwnd = NULL; // for proper toggle state report, see openCyclactionsWnd()
 					SaveWindowPos(_hwnd, CYCLACTIONWND_POS_KEY);
 					ShowWindow(_hwnd, SW_HIDE);
-//JFB r525					EndDialog(_hwnd,0);
+//JFB r525			EndDialog(_hwnd,0);
 					break;
 				case IDC_BROWSE:
 				{
 					AllEditListItemEnd(true);
-				    HMENU menu=CreatePopupMenu();
+					HMENU menu=CreatePopupMenu();
 					AddToMenu(menu, "Import in current section...", 1020);
 					AddToMenu(menu, "Import all sections...", 1021);
 					AddToMenu(menu, SWS_SEPARATOR, 0);

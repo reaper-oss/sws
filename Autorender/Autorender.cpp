@@ -1095,7 +1095,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
 static COMMAND_T g_commandTable[] = {
-	{ { {FCONTROL|FALT|FSHIFT|FVIRTKEY,'R',0}, "SWS Autorender: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
+	{ { DEFACCEL, "SWS Autorender: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
 	{ { DEFACCEL, "SWS/Shane: Autorender: Edit Project Metadata" }, "AUTORENDER_METADATA", ShowAutorenderMetadata, "Edit Project Metadata" },
 	{ { DEFACCEL, "SWS/Shane: Autorender: Open Render Path" }, "AUTORENDER_OPEN_RENDER_PATH", OpenRenderPath, "Open Render Path" },	
 	{ { DEFACCEL, "SWS/Shane: Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },

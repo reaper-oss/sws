@@ -688,8 +688,8 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 		return;
 
 	// online help
-	m_btnAlr.SetVisible(g_pNotesHelpWnd->GetType() == ACTION_HELP);
-	if (g_pNotesHelpWnd->GetType() == ACTION_HELP)
+	m_btnAlr.SetVisible(m_type == ACTION_HELP);
+	if (m_type == ACTION_HELP)
 	{
 		m_btnAlr.SetTextLabel("ALR Wiki", 0, font);
 		m_btnAlr.SetForceBorder(true);

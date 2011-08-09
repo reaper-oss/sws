@@ -1,3 +1,6 @@
+!v2.1.0 #1 (August 9, 2011)
+Offical SWS v2.1 release to coincide with Reaper v4!  Please note this version of SWS will work with both Reaper v3 and v4, but v3 support will be dropped in the future.  Please support Cockos and purchase a v4 license if you do not already own one.
+
 !v2.0.0 #35 (August 8, 2011)
 Issue 332: OSX: Fixed cycle action editor -- now replaced with a basic "create cycle action" modal dialog box. The dialog box can be opened from the actions list (there are 3 "create cycle action" actions) but not from the main "Extensions" menu like on Windows.
 Issue 335: OSX: Fixed crash when starting Reaper with Notes/Help window previously opened

@@ -310,6 +310,8 @@
 #define IDC_DRAGSCALE                   1230
 #define IDC_LIST1                       1231
 #define IDC_LIST2                       1232
+#define IDC_PROGRES                     1234
+#define IDC_PROGRESS                    1234
 
 // Next default values for new objects
 // 
@@ -317,7 +319,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        162
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1234
+#define _APS_NEXT_CONTROL_VALUE         1235
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

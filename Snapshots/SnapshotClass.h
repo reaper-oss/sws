@@ -81,6 +81,7 @@ public:
 	double m_dPanWidth;
 	double m_dPanL;
 	double m_dPanR;
+	double m_dPanLaw;
 };
 
 // Mask:

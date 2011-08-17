@@ -16,7 +16,7 @@ copy ..\version.h temp\oldversion.h > NUL
 copy ..\whatsnew.txt temp\oldwhatsnew.txt > NUL
 
 rem == Update version.h and create version "sidebar" for SWS.com
-vcbuild ..\sws_versioninc.vcproj release
+\bin\incversion ..\version.h
 type www\extra_1.dat > output\extra.htm
 \bin\PrintVersion ..\version.h >> output\extra.htm
 type www\extra_2.dat >> output\extra.htm

@@ -1,5 +1,5 @@
 /******************************************************************************
-/ Misc.cpp
+/ Analysis.h
 /
 / Copyright (c) 2011 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
@@ -25,69 +25,7 @@
 /
 ******************************************************************************/
 
-// "Misc" is a container for actions that don't belong in any of the other
-// major subgroups of the SWS extension.  For the most part, these are just
-// actions that change to state of Reaper in some fashion.
-//
-// All the actions are contained in separate .cpp files in the Misc directory.
-// This file, misc.cpp, is just serves as a place to initialize each individual
-// misc module.
+#pragma once
 
-#include "stdafx.h"
-#include "Adam.h"
-#include "Analysis.h"
-#include "Context.h"
-#include "EditCursor.h"
-#include "FolderActions.h"
-#include "ItemParams.h"
-#include "ItemSel.h"
-#include "Macros.h"
-#include "ProjPrefs.h"
-#include "RecCheck.h"
-#include "TrackParams.h"
-#include "TrackSel.h"
-#include "Zoom.h"
-#include "Misc.h"
+int AnalysisInit();
 
-void MiscSlice()
-{
-	EditCursorSlice();
-}
-
-int MiscInit()
-{
-	// Call sub-init routines
-	if (!AdamInit())
-		return 0;
-	if (!AnalysisInit())
-		return 0;
-	if (!ContextInit())
-		return 0;
-	if (!EditCursorInit())
-		return 0;
-	if (!FolderActionsInit())
-		return 0;
-	if (!ItemParamsInit())
-		return 0;
-	if (!ItemSelInit())
-		return 0;
-	if (!MacrosInit())
-		return 0;
-	if (!ProjPrefsInit())
-		return 0;
-	if (!RecordCheckInit())
-		return 0;
-	if (!TrackParamsInit())
-		return 0;
-	if (!TrackSelInit())
-		return 0;
-	if (!ZoomInit())
-		return 0;
-	
-	return 1;
-}
-
-void MiscExit()
-{
-	ZoomExit();
-}

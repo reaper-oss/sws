@@ -896,328 +896,64 @@ void DoApplyTrackFXMonoAndResetVol(COMMAND_T*)
 	Undo_EndBlock("Apply Track FX To Items (Mono) And Reset Volume", UNDO_STATE_ITEMS);
 }
 
-void AnalyzePCMSourceForPeaks(PCM_source *pSrc, double *dPeakL, double *dPeakR, double *dRMS_L, double *dRMS_R, INT64* peakSample)
-{
-	const int iFrameLen = 1024;
-	double* buf = new double[iFrameLen * pSrc->GetNumChannels()];
-	double sumSquaresL = 0.0;
-	double sumSquaresR = 0.0;
-	*dPeakL = 0.0;
-	*dPeakR = 0.0;
-	double dPeak = 0.0;
-	
-	PCM_source_transfer_t transferBlock={0,};
-	transferBlock.length = iFrameLen;
-	transferBlock.samplerate = pSrc->GetSampleRate();
-	transferBlock.samples = buf;
-	transferBlock.nch = pSrc->GetNumChannels();
-
-	INT64 sampleCounter = 0;
-	int iFrame = 0;
-
-	do
-	{
-		transferBlock.time_s = (double)iFrameLen * iFrame++ / pSrc->GetSampleRate();
-		pSrc->GetSamples(&transferBlock);
-
-		if (pSrc->GetNumChannels() == 1)
-		{
-			for (int j = 0; j < transferBlock.samples_out; j++)
-			{
-				sumSquaresL += buf[j] * buf[j];
-				if (fabs(buf[j]) > *dPeakL)
-				{
-					*dPeakL = fabs(buf[j]);
-					if (peakSample)
-						*peakSample = sampleCounter;
-				}
-				sampleCounter++;
-			}
-		}		
-		else if (pSrc->GetNumChannels() == 2)
-		{
-			for (int j = 0; j < transferBlock.samples_out; j++)
-			{
-				sumSquaresL += buf[j*2]   * buf[j*2];
-				sumSquaresR += buf[j*2+1] * buf[j*2+1];
-				double dAbsL = fabs(buf[j*2]);
-				double dAbsR = fabs(buf[j*2+1]);
-
-				if (dAbsL > *dPeakL)
-					*dPeakL = dAbsL;
-				if (dAbsR > *dPeakR)
-					*dPeakR = dAbsR;
-				if (peakSample)
-				{
-					if (dAbsL > dPeak)
-					{
-						dPeak = dAbsL;
-						*peakSample = sampleCounter;
-					}
-					if (dAbsR > dPeak)
-					{
-						dPeak = dAbsR;
-						*peakSample = sampleCounter;
-					}
-				}
-				sampleCounter++;
-			}
-		}
-	}
-	while (transferBlock.samples_out);
-
-	if (dRMS_L)
-		*dRMS_L = sqrt(sumSquaresL / sampleCounter);
-	if (dRMS_R)
-		*dRMS_R = sqrt(sumSquaresR / sampleCounter);
-	delete[] buf;
-}
-
-
-void DoAnalyzeAndShowPeakInItemMedia(COMMAND_T*)
-{
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
-	{
-		MediaItem* mi = GetSelectedMediaItem(NULL, i);
-		PCM_source* pSrc = (PCM_source*)mi;
-		if (pSrc && strcmp(pSrc->GetType(), "MIDI") && strcmp(pSrc->GetType(), "MIDIPOOL"))
-		{
-			pSrc = pSrc->Duplicate();
-			if (pSrc != NULL)
-			{
-				double dPeakL;
-				double dPeakR;
-				double rmsL;
-				double rmsR;
-
-				double dZero = 0.0;
-				GetSetMediaItemInfo((MediaItem*)pSrc, "D_POSITION", &dZero);
-				
-				// Do the work!
-				AnalyzePCMSourceForPeaks(pSrc, &dPeakL, &dPeakR, &rmsL, &rmsR, NULL);
-
-				char MesBuf[256];
-				if (pSrc->GetNumChannels() == 1)
-					sprintf(MesBuf,"Peak level of mono item = %f dB\nRMS level of mono item= %.2f dB",
-					  VAL2DB(dPeakL), VAL2DB(rmsL));
-				else if (pSrc->GetNumChannels() == 2)
-					sprintf(MesBuf,"Peak levels for stereo item, Left = %.2f dB , Right = %.2f dB\nRMS levels of stereo item, Left=%.2f dB, Right =%.2f dB",
-					  VAL2DB(dPeakL), VAL2DB(dPeakR), VAL2DB(rmsL), VAL2DB(rmsR));
-				else
-					sprintf(MesBuf, "Non-supported channel count!");
-				MessageBox(g_hwndParent, MesBuf, "Item peak gain", MB_OK);
-				delete pSrc;
-			}
-		}
-	}
-}
-
-void DoFindItemPeak(COMMAND_T*)
-{
-	// Just use the first item
-	if (CountSelectedMediaItems(NULL))
-	{
-		MediaItem* mi = GetSelectedMediaItem(NULL, 0);
-		PCM_source* pSrc = (PCM_source*)mi;
-		if (pSrc && strcmp(pSrc->GetType(), "MIDI") && strcmp(pSrc->GetType(), "MIDIPOOL"))
-		{
-			pSrc = pSrc->Duplicate();
-			if (pSrc)
-			{
-				double dPeakL;
-				double dPeakR;
-				INT64 iPeakSample = 0;
-
-				double dZero = 0.0;
-				GetSetMediaItemInfo((MediaItem*)pSrc, "D_POSITION", &dZero);
-				// Do the work!
-				AnalyzePCMSourceForPeaks(pSrc, &dPeakL, &dPeakR, NULL, NULL, &iPeakSample);
-
-				if (iPeakSample)
-				{
-					double dSrate = pSrc->GetSampleRate();
-					double dPos = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
-					dPos += iPeakSample / dSrate;
-					SetEditCurPos(dPos, true, false);
-				}
-			}
-		}
-	}
-}
-
 void DoSelItemsToEndOfTrack(COMMAND_T*)
 {
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	int numItems;
-	bool ItemSelected=false;
-	int flags;
-	int i;
-	int j;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		GetTrackInfo(i,&flags);
-		//if (flags & 0x02)
-		//{ 
-		numItems=GetTrackNumMediaItems(MunRaita);
-		int LastSelItemIndex=-1;
-		for (j=0;j<numItems;j++)
+		MediaTrack* tr = CSurf_TrackFromID(i+1, false);
+		bool bSel = false;
+		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
 		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			//propertyName="D_";
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				LastSelItemIndex=j;
-				break;
-			}
-
-
+			MediaItem* mi = GetTrackMediaItem(tr, j);
+			if (!bSel && *(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
+				bSel = true;
+			else if (bSel)
+				GetSetMediaItemInfo(mi, "B_UISEL", &g_bTrue);
 		}
-		if (LastSelItemIndex>=0)
-		{
-			//
-			for (j=0;j<GetTrackNumMediaItems(MunRaita);j++)
-			{
-				CurItem = GetTrackMediaItem(MunRaita,j);
-				if (j>=LastSelItemIndex && j<GetTrackNumMediaItems(MunRaita))
-					ItemSelected=true; else ItemSelected=false;
-				
-				GetSetMediaItemInfo(CurItem,"B_UISEL",&ItemSelected);
-			}
-
-		}
-		//}
-
-
 	}
 	UpdateTimeline();
 }
 
 void DoSelItemsToStartOfTrack(COMMAND_T*)
 {
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	int numItems;
-	bool ItemSelected=false;
-	int flags;
-	int j;
-	int i;
-	for (i=0;i<GetNumTracks();i++)
+	for (int i = 0; i < GetNumTracks(); i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		GetTrackInfo(i,&flags);
-		//if (flags & 0x02)
-		//{ 
-		numItems=GetTrackNumMediaItems(MunRaita);
-		int LastSelItemIndex=-1;
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			//propertyName="D_";
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				LastSelItemIndex=j;
-				//break;
-			}
+		MediaTrack* tr = CSurf_TrackFromID(i+1, false);
+		int iLastSelItem = -1;
+		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
+			if (*(bool*)GetSetMediaItemInfo(GetTrackMediaItem(tr, j), "B_UISEL", NULL))
+				iLastSelItem = j;
 
-
-		}
-		if (LastSelItemIndex>=0)
-		{
-			//
-			for (j=0;j<GetTrackNumMediaItems(MunRaita);j++)
-			{
-				CurItem = GetTrackMediaItem(MunRaita,j);
-				if (j>=0 && j<=LastSelItemIndex)
-					ItemSelected=true; else ItemSelected=false;
-				
-				GetSetMediaItemInfo(CurItem,"B_UISEL",&ItemSelected);
-			}
-
-		}
-		//}
-
-
+		for (int j = 0; j < iLastSelItem; j++)
+			GetSetMediaItemInfo(GetTrackMediaItem(tr, j), "B_UISEL", &g_bTrue);
 	}
 	UpdateTimeline();
 }
 
 void DoSetAllTakesPlay()
 {
-	//
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	//MediaItem_Take* CurTake;
-	int numItems;;
-	
-	
-	bool ItemSelected=false;
-	
-	int i;
-	int j;
-	
-	for (i=0;i<GetNumTracks();i++)
-	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		for (j=0;j<numItems;j++)
-		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			//propertyName="D_";
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
-			{
-				bool PlayAllTakes=true;
-				GetSetMediaItemInfo(CurItem,"B_ALLTAKESPLAY",&PlayAllTakes);
-				
-			} 
-
-		}
-	}
-	//Undo_OnStateChangeEx("Trim/Untrim Item Right Edge",4,-1);
-	//UpdateTimeline();
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	for (int i = 0; i < items.GetSize(); i++)
+		GetSetMediaItemInfo(items.Get()[i], "B_ALLTAKESPLAY", &g_bTrue);
 }
 
 
 void DoPanTakesOfItemSymmetrically()
 {
-	//
-	MediaTrack* MunRaita;
-	MediaItem* CurItem;
-	MediaItem_Take* CurTake;
-	int numItems;
-	bool ItemSelected=false;
-	int i;
-	int j;
-	int k;
-	for (i=0;i<GetNumTracks();i++)
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	for (int i = 0; i < items.GetSize(); i++)
 	{
-		MunRaita = CSurf_TrackFromID(i+1,FALSE);
-		numItems=GetTrackNumMediaItems(MunRaita);
-		for (j=0;j<numItems;j++)
+		int iTakes = GetMediaItemNumTakes(items.Get()[i]);
+		for (int j = 0; j < iTakes; j++)
 		{
-			CurItem = GetTrackMediaItem(MunRaita,j);
-			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
-			if (ItemSelected==TRUE)
+			MediaItem_Take* take = GetMediaItemTake(items.Get()[i], j);
+			if (take)
 			{
-				if (GetMediaItemNumTakes(CurItem)>0)
-				{
-					int NumTakes=GetMediaItemNumTakes(CurItem);
-					for (k=0;k<NumTakes;k++)
-					{
-						CurTake=GetMediaItemTake(CurItem,k);
-						if (CurTake)
-						{
-							//double SnapOffset=*(double*)GetSetMediaItemInfo(CurItem,"D_SNAPOFFSET",NULL);
-							double NewPan=-1.0+((2.0/(NumTakes-1))*k);				
-							GetSetMediaItemTakeInfo(CurTake,"D_PAN",&NewPan);
-						}
-					}
-				}
-			} 
+				double dNewPan= -1.0 + ((2.0 / (iTakes - 1)) * j);				
+				GetSetMediaItemTakeInfo(take, "D_PAN", &dNewPan);
+			}
 		}
 	}
 }

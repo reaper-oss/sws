@@ -187,6 +187,7 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 		m_iPanMode = -1; // Project default
 		m_dPanWidth = m_dPanL = m_dPanR = 0.0;
 	}	
+	m_dPanLaw = *((double*)GetSetMediaTrackInfo(tr, "D_PANLAW", NULL));
 
 	// Don't bother storing the sends if it's masked
 	if (mask & SENDS_MASK)
@@ -227,6 +228,7 @@ TrackSnapshot::TrackSnapshot(TrackSnapshot& ts):m_sends(ts.m_sends)
 	m_dPanWidth	= ts.m_dPanWidth;
 	m_dPanL		= ts.m_dPanL;
 	m_dPanR		= ts.m_dPanR;
+	m_dPanLaw	= ts.m_dPanLaw;
 }
 
 TrackSnapshot::TrackSnapshot(LineParser* lp)
@@ -244,6 +246,7 @@ TrackSnapshot::TrackSnapshot(LineParser* lp)
 	m_dPanWidth	= lp->gettoken_float(10);
 	m_dPanL		= lp->gettoken_float(11);
 	m_dPanR		= lp->gettoken_float(12);
+	m_dPanLaw   = lp->getnumtokens() < 14 ? -100.0 : lp->gettoken_float(13); // If loading old format, set law to -2 for "ignore"
 
 	// Set the track name "early" for backward compat
 	MediaTrack* tr = GuidToTrack(&m_guid);
@@ -285,6 +288,8 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, WDL_PtrLis
 			GetSetMediaTrackInfo(tr, "D_DUALPANL", &m_dPanL);
 			GetSetMediaTrackInfo(tr, "D_DUALPANR", &m_dPanR);
 		}
+		if (m_dPanLaw != -100.0)
+			GetSetMediaTrackInfo(tr, "D_PANLAW", &m_dPanLaw);
 	}
 	if (mask & MUTE_MASK)
 		GetSetMediaTrackInfo(tr, "B_MUTE", &m_bMute);
@@ -349,7 +354,7 @@ void TrackSnapshot::GetChunk(WDL_String* chunk)
 {
 	char guidStr[64];
 	guidToString(&m_guid, guidStr);
-	chunk->AppendFormatted(chunk->GetLength()+200, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %.14f %.14f %.14f\n", guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR);
+	chunk->AppendFormatted(chunk->GetLength()+250, "<TRACK %s %.14f %.14f %d %d %d %d %d %d %.14f %.14f %.14f %.14f\n", guidStr, m_dVol, m_dPan, m_bMute ? 1 : 0, m_iSolo, m_iFXEn, m_iVis ^ 2, m_iSel, m_iPanMode, m_dPanWidth, m_dPanL, m_dPanR, m_dPanLaw);
 	chunk->AppendFormatted(chunk->GetLength()+100, "NAME \"%s\" %d\n", m_sName.Get(), m_iTrackNum);
 	
 	m_sends.GetChunk(chunk);
@@ -394,9 +399,14 @@ void TrackSnapshot::GetDetails(WDL_String* details, int iMask)
 				details->AppendFormatted(50, "Pan: %d%% %s", abs((int)(m_dPan * 100.0)), m_dPan < 0.0 ? "left" : "right");
 		}
 		if (iPanMode == 5) // stereo pan
-			details->AppendFormatted(50, ", width %d%%\r\n", (int)(m_dPanWidth * 100.0));
+			details->AppendFormatted(50, ", width %d%%", (int)(m_dPanWidth * 100.0));
 		else if (iPanMode == 6) // dual pan
-			details->AppendFormatted(50, "Left pan: %d%%%c, Right pan: %d%%%c\r\n", abs((int)(m_dPanL * 100.0)), m_dPanL == 0.0 ? 'C' : (m_dPanL < 0.0 ? 'L' : 'R'), abs((int)(m_dPanR * 100.0)), m_dPanR == 0.0 ? 'C' : (m_dPanR < 0.0 ? 'L' : 'R'));
+			details->AppendFormatted(50, "Left pan: %d%%%c, Right pan: %d%%%c", abs((int)(m_dPanL * 100.0)), m_dPanL == 0.0 ? 'C' : (m_dPanL < 0.0 ? 'L' : 'R'), abs((int)(m_dPanR * 100.0)), m_dPanR == 0.0 ? 'C' : (m_dPanR < 0.0 ? 'L' : 'R'));
+
+		if (m_dPanLaw == -1.0)
+			details->Append(", default pan law\r\n");
+		else if (m_dPanLaw != -100.0)
+			details->AppendFormatted(50, ", Pan law %.4f\r\n", m_dPanLaw);
 		else
 			details->Append("\r\n");
 	}

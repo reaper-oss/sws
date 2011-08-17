@@ -383,18 +383,12 @@ bool g_ScanFinished=false;
 vector<string> FoundMediaFiles;
 char g_FolderName[1024] = "";
 
-#ifdef _WIN32
-void DirScanThreadFunc(void *Param)
-#else
-DWORD DirScanThreadFunc(void *Param)
-#endif
+DWORD WINAPI DirScanThreadFunc(void*)
 {
 	FoundMediaFiles.clear();
 	SearchDirectory(FoundMediaFiles, g_FolderName, NULL, true);
-	g_ScanStatus=0;
-#ifndef _WIN32
+	g_ScanStatus = 0;
 	return 0;
-#endif
 }
 
 BOOL WINAPI ScanProgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -405,11 +399,7 @@ BOOL WINAPI ScanProgDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			{
 				g_ScanStatus=1;
 				g_bAbortScan=false;
-#ifdef _WIN32
-				_beginthread(DirScanThreadFunc, 0, NULL);
-#else
-				CreateThread(NULL, 0, DirScanThreadFunc, 0, 0, 0); // TODO test this!
-#endif
+				CreateThread(NULL, 0, DirScanThreadFunc, 0, 0, 0);
 				SetTimer(hwnd,1717,250,NULL);
 				return 0;
 			}

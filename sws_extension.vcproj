@@ -98,7 +98,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Building installer and copying to c:\dev\sws-deploy..."
+				Description="Building installer... (created in Install/output)"
 				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&quot;&#x0D;&#x0A;if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName).nsi&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
@@ -182,7 +182,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="Building x64 installer and copying to c:\dev\sws-deploy..."
+				Description="Building x64 installer... (created in Install/output)"
 				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName)_x64.nsi&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
@@ -2901,6 +2901,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\sws_waitdlg.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\sws_waitdlg.h"
+					>
+				</File>
+				<File
 					RelativePath=".\sws_wnd.cpp"
 					>
 				</File>
@@ -3089,6 +3097,14 @@
 		<Filter
 			Name="Misc / General Actions"
 			>
+			<File
+				RelativePath=".\Misc\Analysis.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\Analysis.h"
+				>
+			</File>
 			<File
 				RelativePath=".\Misc\Context.cpp"
 				>

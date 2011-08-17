@@ -142,8 +142,6 @@ void DoTrimRightEdgeToEditCursor(COMMAND_T*);
 void DoResetItemRateAndPitch(COMMAND_T*);
 void DoApplyTrackFXStereoAndResetVol(COMMAND_T*);
 void DoApplyTrackFXMonoAndResetVol(COMMAND_T*);
-void DoAnalyzeAndShowPeakInItemMedia(COMMAND_T*);
-void DoFindItemPeak(COMMAND_T*);
 void DoSelItemsToEndOfTrack(COMMAND_T*);
 void DoSelItemsToStartOfTrack(COMMAND_T*);
 void DoPanTakesSymmetricallyWithUndo(COMMAND_T*);

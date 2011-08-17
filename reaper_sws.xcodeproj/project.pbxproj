@@ -167,6 +167,10 @@
 		22AF6E8D12308C810017808F /* zlib.h in Headers */ = {isa = PBXBuildFile; fileRef = 22AF6E7012308C810017808F /* zlib.h */; };
 		22AF6E8E12308C810017808F /* zutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E7112308C810017808F /* zutil.c */; };
 		22AF6E8F12308C810017808F /* zutil.h in Headers */ = {isa = PBXBuildFile; fileRef = 22AF6E7212308C810017808F /* zutil.h */; };
+		22B22D6313FA575C00D187A9 /* Analysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22B22D6113FA575C00D187A9 /* Analysis.cpp */; };
+		22B22D6413FA575C00D187A9 /* Analysis.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B22D6213FA575C00D187A9 /* Analysis.h */; };
+		22B22D6C13FA578100D187A9 /* sws_waitdlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22B22D6A13FA578100D187A9 /* sws_waitdlg.cpp */; };
+		22B22D6D13FA578100D187A9 /* sws_waitdlg.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B22D6B13FA578100D187A9 /* sws_waitdlg.h */; };
 		22B4C24F0FE311C7009A6731 /* Prompt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22B4C24D0FE311C7009A6731 /* Prompt.cpp */; };
 		22B4C2500FE311C7009A6731 /* Prompt.h in Headers */ = {isa = PBXBuildFile; fileRef = 22B4C24E0FE311C7009A6731 /* Prompt.h */; };
 		22BEA483115F4A7C00B34AE1 /* ProjectList.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22BEA47F115F4A7C00B34AE1 /* ProjectList.cpp */; };
@@ -432,6 +436,10 @@
 		22AF6E7012308C810017808F /* zlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zlib.h; path = ../WDL/zlib/zlib.h; sourceTree = SOURCE_ROOT; };
 		22AF6E7112308C810017808F /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zutil.c; path = ../WDL/zlib/zutil.c; sourceTree = SOURCE_ROOT; };
 		22AF6E7212308C810017808F /* zutil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zutil.h; path = ../WDL/zlib/zutil.h; sourceTree = SOURCE_ROOT; };
+		22B22D6113FA575C00D187A9 /* Analysis.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Analysis.cpp; path = Misc/Analysis.cpp; sourceTree = "<group>"; };
+		22B22D6213FA575C00D187A9 /* Analysis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Analysis.h; path = Misc/Analysis.h; sourceTree = "<group>"; };
+		22B22D6A13FA578100D187A9 /* sws_waitdlg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sws_waitdlg.cpp; sourceTree = "<group>"; };
+		22B22D6B13FA578100D187A9 /* sws_waitdlg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sws_waitdlg.h; sourceTree = "<group>"; };
 		22B4C24D0FE311C7009A6731 /* Prompt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Prompt.cpp; sourceTree = "<group>"; };
 		22B4C24E0FE311C7009A6731 /* Prompt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Prompt.h; sourceTree = "<group>"; };
 		22B671331091DD2A00C494D0 /* swell-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "swell-internal.h"; path = "../WDL/swell/swell-internal.h"; sourceTree = SOURCE_ROOT; };
@@ -668,6 +676,8 @@
 				981007170F4768020072D712 /* sws_extension.rc_mac_menu */,
 				981006E90F4768020072D712 /* sws_util.cpp */,
 				981006EA0F4768020072D712 /* sws_util.h */,
+				22B22D6A13FA578100D187A9 /* sws_waitdlg.cpp */,
+				22B22D6B13FA578100D187A9 /* sws_waitdlg.h */,
 				229AC7E4108F891700E4A962 /* sws_wnd.cpp */,
 				229AC7E5108F891700E4A962 /* sws_wnd.h */,
 				981006D00F4768010072D712 /* TimeState.cpp */,
@@ -764,10 +774,10 @@
 		229A7E7B1165742C00325BC2 /* Misc */ = {
 			isa = PBXGroup;
 			children = (
-				2270FC6F12F8551400703F85 /* RecCheck.cpp */,
-				2270FC7012F8551400703F85 /* RecCheck.h */,
 				22C31F21125EF71A0072434F /* Adam.cpp */,
 				22C31F22125EF71A0072434F /* Adam.h */,
+				22B22D6113FA575C00D187A9 /* Analysis.cpp */,
+				22B22D6213FA575C00D187A9 /* Analysis.h */,
 				229A7E7C1165744400325BC2 /* Context.cpp */,
 				229A7E7D1165744400325BC2 /* Context.h */,
 				2273566512910ABF001A1570 /* EditCursor.cpp */,
@@ -784,6 +794,8 @@
 				229A7E851165744400325BC2 /* Misc.h */,
 				229A7E861165744400325BC2 /* ProjPrefs.cpp */,
 				229A7E871165744400325BC2 /* ProjPrefs.h */,
+				2270FC6F12F8551400703F85 /* RecCheck.cpp */,
+				2270FC7012F8551400703F85 /* RecCheck.h */,
 				229A7E881165744400325BC2 /* TrackParams.cpp */,
 				229A7E891165744400325BC2 /* TrackParams.h */,
 				229A7E8A1165744400325BC2 /* TrackSel.cpp */,
@@ -1127,6 +1139,8 @@
 				2270FC7212F8551400703F85 /* RecCheck.h in Headers */,
 				22284D48130C4A65007DC680 /* Menus.h in Headers */,
 				220E6F3C13BCD1C900409C44 /* SnM_Cyclactions.h in Headers */,
+				22B22D6413FA575C00D187A9 /* Analysis.h in Headers */,
+				22B22D6D13FA578100D187A9 /* sws_waitdlg.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1385,6 +1399,8 @@
 				22284D47130C4A65007DC680 /* Menus.cpp in Sources */,
 				22495D7B13A5649800381F53 /* SnM_Project.cpp in Sources */,
 				220E6F3B13BCD1C900409C44 /* SnM_Cyclactions.cpp in Sources */,
+				22B22D6313FA575C00D187A9 /* Analysis.cpp in Sources */,
+				22B22D6C13FA578100D187A9 /* sws_waitdlg.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

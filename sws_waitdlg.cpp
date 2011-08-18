@@ -44,7 +44,12 @@ SWS_WaitDlg::SWS_WaitDlg(const char* cTitle, double* dProgress, HWND hParent)
 	m_hwnd = NULL;
 	m_dProgress = dProgress;
 	m_cTitle = cTitle;
-	DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_SNM_WAIT), hParent ? hParent : g_hwndParent, sWaitDlgWndProc, (LPARAM)this);
+	double dPrevProgress = *dProgress;
+	Sleep(0);
+	if (*dProgress - dPrevProgress < 0.10)
+		// 10% done in one time slice?  Skip the dlg display.
+		DialogBoxParam(g_hInst, MAKEINTRESOURCE(IDD_SNM_WAIT), hParent ? hParent : g_hwndParent, sWaitDlgWndProc, (LPARAM)this);
+	// Block until process done if user-closed dlg
 	while (*dProgress < 1.0)
 		Sleep(1);
 }

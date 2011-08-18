@@ -1,6 +1,14 @@
+!v2.1.0 #2 (August 18, 2011)
+Issue 340/Issue 60: Added actions for item/sample analysis, especially drum sample pack creating:
++SWS: Normalize items to RMS (entire item)
++SWS: Normalize items to peak RMS (Like watching for the highest a RMS meter goes over time)
++SWS: Organize items by peak
++SWS: Organize items by RMS (entire item)
++SWS: Organize items by peak RMS
++SWS: Set RMS analysis/normalize options (Sets target db for normalize and window size for peak RMS calculation)
++Also similar are existing actions "SWS: Analyze and display item peak and RMS" and "SWS: Move cursor to item peak amplitude"
+
 Issue 147: Added pan law to pan snapshots
-Issue 340: Added action "SWS: Organize items by RMS", for organizing your drum samples, etc.  Works best when all items are the same length.
-Renamed "Display item peak gains" to "Analyze and display item peak and RMS"
 
 !v2.1.0 #1 (August 9, 2011)
 Offical SWS v2.1 release to coincide with Reaper v4!  Please note this version of SWS will work with both Reaper v3 and v4, but v3 support will be dropped in the future.  Please support Cockos and purchase a v4 license if you do not already own one.

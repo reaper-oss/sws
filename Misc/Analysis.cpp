@@ -29,109 +29,179 @@
 #include "Analysis.h"
 #include "../sws_waitdlg.h"
 
-// dPeakVal, dRMS, and peakSample are arrays of iChannels size.
-// iChannels can be != pSrc channels.
-// dProgress is a double from 0.0-1.0 for threaded progress bar generation
-void AnalyzePCMSource(PCM_source *pSrc, int iChannels, double dPeakVal[], double dRMS[], INT64 peakSample[], double* dProgress = NULL)
+#define SWS_RMS_KEY "RMS normalize params"
+
+// Data passing to/from the Analyze functions.
+// All array pointers are caller alloc'ed and optional (NULL)
+typedef struct ANALYZE_PCM
 {
-	if (!pSrc)
+	PCM_source* pcm;		// in  Pointer to zero-based PCM source (required)
+	int iChannels;			// in  Dimension of the channel arrays.  This can be zero to disable, or < number of actual item channels
+	double* dPeakVals;		// i/o Array of channel peaks, caller alloc, iChannel size (optional)
+	double dPeakVal;		// out Maximum peak valume over all channels
+	double* dRMSs;			// i/o Array of channel RMS values
+	double dRMS;			// out RMS of all channels
+	INT64* peakSamples;		// i/o Array of channel peak locations (not calculated if dPeakVals is omitted)
+	INT64 peakSample;		// out Position of max peak
+	double dProgress;		// out Analysis progress, 0.0-1.0 for 0-100%
+	INT64 sampleCount;		// out # of samples analyzed
+	double dWindowSize;		// RMS window in seconds.  If this is != 0.0, then RMS is calculated/returned as max within window
+} ANALYZE_PCM;
+
+// See above for parameter info
+void AnalyzePCMSource(ANALYZE_PCM* a)
+{
+	if (!a->pcm)
 		return;
 
-	const int iFrameLen = 16384;
-	ReaSample* buf = new ReaSample[iFrameLen * pSrc->GetNumChannels()];
-	double* dSumSquares = new double[iChannels];
-	for (int i = 0; i < iChannels; i++)
-	{
-		if (dPeakVal) dPeakVal[i] = 0.0;
-		if (dRMS) dRMS[i] = 0.0;
-		if (peakSample) peakSample[i] = 0;
-		dSumSquares[i] = 0.0;
-	}
-	if (dProgress) *dProgress = 0.0;
+	// Init local transfer block "t" and sum of squares
+	PCM_source_transfer_t t={0,};
+	t.samplerate = a->pcm->GetSampleRate();
+	t.nch = a->pcm->GetNumChannels();
+	t.length = a->dWindowSize == 0.0 ? 16384 : (int)(a->dWindowSize * t.samplerate);
+	t.samples = new ReaSample[t.length * t.nch];
+	t.time_s = 0.0;
 	
-	PCM_source_transfer_t transferBlock={0,};
-	transferBlock.length = iFrameLen;
-	transferBlock.samplerate = pSrc->GetSampleRate();
-	transferBlock.samples = buf;
-	transferBlock.nch = pSrc->GetNumChannels();
-	transferBlock.time_s = 0.0;
+	ReaSample* prevBuf = NULL;
+	if (a->dWindowSize != 0.0)
+	{
+		prevBuf = new ReaSample[t.length * t.nch];
+		memset(prevBuf, 0, t.length * t.nch);
+	}
 
-	INT64 sampleCounter = 0;
-	INT64 totalSamples = pSrc->GetLength() * pSrc->GetSampleRate();
+	double* dSumSquares = new double[t.nch];
+	for (int i = 0; i < t.nch; i++)
+		dSumSquares[i] = 0.0;
+
+	// Init output variables.  Note can have different channel count.
+	for (int i = 0; i < a->iChannels; i++)
+	{
+		if (a->dPeakVals) a->dPeakVals[i] = 0.0;
+		if (a->dRMSs) a->dRMSs[i] = 0.0;
+		if (a->peakSamples) a->peakSamples[i] = 0;
+	}
+	a->dPeakVal = 0.0;
+	a->dRMS = 0.0;
+	a->peakSample = 0;
+	a->dProgress = 0.0;
+	a->sampleCount = 0;
+
+	INT64 totalSamples = a->pcm->GetLength() * t.samplerate;
 	int iFrame = 0;
 
-	pSrc->GetSamples(&transferBlock);
-	while (transferBlock.samples_out)
+	a->pcm->GetSamples(&t);
+	while (t.samples_out)
 	{
-		for (int samp = 0; samp < transferBlock.samples_out; samp++)
+		for (int samp = 0; samp < t.samples_out; samp++)
 		{
-			for (int chan = 0; chan < transferBlock.nch && chan < iChannels; chan++)
+			for (int chan = 0; chan < t.nch; chan++)
 			{
-				int i = samp*transferBlock.nch + chan;
-				if (dRMS)
-					dSumSquares[chan] += buf[i] * buf[i];
-				if (dPeakVal && fabs(buf[i]) > dPeakVal[chan])
+				int i = samp*t.nch + chan;
+				dSumSquares[chan] += t.samples[i] * t.samples[i];
+				double absamp = fabs(t.samples[i]);
+				if (absamp > a->dPeakVal)
 				{
-					dPeakVal[chan] = fabs(buf[i]);
-					if (peakSample)
-						peakSample[chan] = sampleCounter;
+					a->dPeakVal = absamp;
+					a->peakSample = a->sampleCount;
+				}
+
+				if (a->dPeakVals && chan < a->iChannels && absamp > a->dPeakVals[chan])
+				{
+					a->dPeakVals[chan] = absamp;
+					if (a->peakSamples)
+						a->peakSamples[chan] = a->sampleCount;
+				}
+				if (a->dWindowSize != 0.0)
+				{
+					dSumSquares[chan] -= prevBuf[i] * prevBuf[i];
+					double curRMS = sqrt(dSumSquares[chan] / t.length);
+					if (curRMS > a->dRMS) // Overall
+						a->dRMS = curRMS;
+					if (a->dRMSs && curRMS > a->dRMSs[chan]) // Single channel, if enabled
+						a->dRMSs[chan] = curRMS;
 				}
 			}
-			sampleCounter++;
+			a->sampleCount++;
+		}
+		if (a->dWindowSize != 0.0)
+		{	// Swap buffers in windowed mode for history
+			ReaSample* temp = t.samples;
+			t.samples = prevBuf;
+			prevBuf = temp;
 		}
 
-		if (dProgress) *dProgress = (double)sampleCounter / totalSamples;
+
+		a->dProgress = (double)a->sampleCount / totalSamples;
 		
 		iFrame++;
-		transferBlock.time_s = (double)iFrameLen * iFrame / pSrc->GetSampleRate();
-		pSrc->GetSamples(&transferBlock);
+		t.time_s = (double)t.length * iFrame / t.samplerate;
+		// Get next block
+		a->pcm->GetSamples(&t);
 	}
 
-	if (dRMS && sampleCounter)
-		for (int i = 0; i < iChannels; i++)
-			dRMS[i] = sqrt(dSumSquares[i] / sampleCounter);
+	if (a->dWindowSize == 0.0)
+	{
+		// Non-windowed mode.  Calculate the RMS for the entire item
+		// First per channel
+		if (a->dRMSs && a->sampleCount)
+			for (int i = 0; i < a->iChannels && i < t.nch; i++)
+				a->dRMSs[i] = sqrt(dSumSquares[i] / a->sampleCount);
 
-	delete[] buf;
+		// Then for all channels combined
+		double dSS = 0.0;
+		for (int i = 0; i < t.nch; i++)
+			dSS += dSumSquares[i];
+		a->dRMS = sqrt(dSS / (a->sampleCount * t.nch));
+	}
+
+	delete[] t.samples;
+	delete[] prevBuf;
 	delete[] dSumSquares;
 
 	// Ensure dProgress is exactly 1.0
-	if (dProgress) *dProgress = 1.0;
+	a->dProgress = 1.0;
 }
 
-typedef struct ANALYZE_PCM
-{
-	PCM_source* pcm;
-	int iChannels;
-	double* dPeakVal;
-	double* dRMS;
-	INT64* peakSample;
-	double dProgress;
-} ANALYZE_PCM;
 
 DWORD WINAPI AnalyzePCMThread(void* pAnalyze)
 {
-	ANALYZE_PCM* p = (ANALYZE_PCM*)pAnalyze;
-	AnalyzePCMSource(p->pcm, p->iChannels, p->dPeakVal, p->dRMS, p->peakSample, &p->dProgress);
+	AnalyzePCMSource((ANALYZE_PCM*)pAnalyze);
 	return 0;
 }
 
-void AnalyzePCM(PCM_source *pSrc, int iChannels, double dPeakVal[], double dRMS[], INT64 peakSample[], const char* cName)
+// return true for successful analysis
+// wraps AnalyzePCM to check item validity and create a wait dialog
+bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a)
 {
-	ANALYZE_PCM a;
-	a.pcm = pSrc;
-	a.iChannels = iChannels;
-	a.dPeakVal = dPeakVal;
-	a.dRMS = dRMS;
-	a.peakSample = peakSample;
-	a.dProgress = 0.0;
-	CreateThread(NULL, 0, AnalyzePCMThread, &a, 0, NULL);
+	a->dProgress = 0.0;
+	a->pcm = (PCM_source*)mi;
+
+	if (!a->pcm || strcmp(a->pcm->GetType(), "MIDI") == 0 || strcmp(a->pcm->GetType(), "MIDIPOOL") == 0)
+		return false;
+
+	a->pcm = a->pcm->Duplicate();
+	if (!a->pcm || !a->pcm->GetNumChannels())
+		return false;
+
+	double dZero = 0.0;
+	GetSetMediaItemInfo((MediaItem*)a->pcm, "D_POSITION", &dZero);
+			
+	const char* cName = NULL;
+	MediaItem_Take* take = GetMediaItemTake(mi, -1);
+	if (take)
+		cName = (const char*)GetSetMediaItemTakeInfo(take, "P_NAME", NULL);
+
+	CreateThread(NULL, 0, AnalyzePCMThread, a, 0, NULL);
 
 	WDL_String title;
 	title.AppendFormatted(100, "Please wait, analyzing %s...", cName ? cName : "item");
-	SWS_WaitDlg wait(title.Get(), &a.dProgress);
+	SWS_WaitDlg wait(title.Get(), &a->dProgress);
+
+	delete a->pcm;
+	return true;
 }
 
-void AnalyzeItem(COMMAND_T*)
+void DoAnalyzeItem(COMMAND_T*)
 {
 	WDL_TypedBuf<MediaItem*> items;
 	SWS_GetSelectedMediaItems(&items);
@@ -139,39 +209,29 @@ void AnalyzeItem(COMMAND_T*)
 	for (int i = 0; i < items.GetSize(); i++)
 	{
 		MediaItem* mi = items.Get()[i];
-		PCM_source* pSrc = (PCM_source*)mi;
-		if (pSrc && strcmp(pSrc->GetType(), "MIDI") && strcmp(pSrc->GetType(), "MIDIPOOL"))
+		int iChannels = ((PCM_source*)mi)->GetNumChannels();
+		if (iChannels)
 		{
-			pSrc = pSrc->Duplicate();
-			if (pSrc && pSrc->GetNumChannels())
+			bDidWork = true;
+			ANALYZE_PCM a;
+			memset(&a, 0, sizeof(a));
+			a.iChannels = iChannels;
+			a.dPeakVals = new double[iChannels];
+			a.dRMSs     = new double[iChannels];
+
+			if (AnalyzeItem(mi, &a))
 			{
-				bDidWork = true;
-				double* dPeakVal = new double[pSrc->GetNumChannels()];
-				double* dRMS = new double[pSrc->GetNumChannels()];
-
-				double dZero = 0.0;
-				GetSetMediaItemInfo((MediaItem*)pSrc, "D_POSITION", &dZero);
-				
-				// Do the work!
-				const char* cName = NULL;
-				MediaItem_Take* take = GetMediaItemTake(mi, -1);
-				if (take)
-					cName = (const char*)GetSetMediaItemTakeInfo(take, "P_NAME", NULL);
-
-				AnalyzePCM(pSrc, pSrc->GetNumChannels(), dPeakVal, dRMS, NULL, cName); 
-
 				WDL_String str;
 				str.Set("Peak level:");
-				for (int i = 0; i < pSrc->GetNumChannels(); i++)
-					str.AppendFormatted(50, " Channel %d = %.2f dB", i+1, VAL2DB(dPeakVal[i]));
+				for (int i = 0; i < iChannels; i++)
+					str.AppendFormatted(50, " Channel %d = %.2f dB", i+1, VAL2DB(a.dPeakVals[i]));
 				str.Append("\nRMS level:");
-				for (int i = 0; i < pSrc->GetNumChannels(); i++)
-					str.AppendFormatted(50, " Channel %d = %.2f dB", i+1, VAL2DB(dRMS[i]));
+				for (int i = 0; i < iChannels; i++)
+					str.AppendFormatted(50, " Channel %d = %.2f dB", i+1, VAL2DB(a.dRMSs[i]));
 				MessageBox(g_hwndParent, str.Get(), "Item analysis", MB_OK);
-				delete pSrc;
-				delete [] dPeakVal;
-				delete [] dRMS;
 			}
+			delete [] a.dPeakVals;
+			delete [] a.dRMSs;
 		}
 	}
 	if (!bDidWork)
@@ -187,47 +247,21 @@ void FindItemPeak(COMMAND_T*)
 	MediaItem* mi = GetSelectedMediaItem(NULL, 0);
 	if (mi)
 	{
-		PCM_source* pSrc = (PCM_source*)mi;
-		if (pSrc && strcmp(pSrc->GetType(), "MIDI") && strcmp(pSrc->GetType(), "MIDIPOOL"))
+		ANALYZE_PCM a;
+		memset(&a, 0, sizeof(a));
+		if (AnalyzeItem(mi, &a))
 		{
-			pSrc = pSrc->Duplicate();
-			if (pSrc && pSrc->GetNumChannels())
-			{
-				double* dPeakVal = new double[pSrc->GetNumChannels()];
-				INT64* peakSample = new INT64[pSrc->GetNumChannels()];
-
-				double dZero = 0.0;
-				GetSetMediaItemInfo((MediaItem*)pSrc, "D_POSITION", &dZero);
-
-				// Do the work!
-				const char* cName = NULL;
-				MediaItem_Take* take = GetMediaItemTake(mi, -1);
-				if (take)
-					cName = (const char*)GetSetMediaItemTakeInfo(take, "P_NAME", NULL);
-				AnalyzePCM(pSrc, pSrc->GetNumChannels(), dPeakVal, NULL, peakSample, cName); 
-			
-				int iMaxChan = 0;
-				double dMaxPeak = 0.0;
-				for (int i = 0; i < pSrc->GetNumChannels(); i++)
-					if (dPeakVal[i] > dMaxPeak)
-						iMaxChan = i;
-
-				double dSrate = pSrc->GetSampleRate();
-				double dPos = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
-				dPos += peakSample[iMaxChan] / dSrate;
-				SetEditCurPos(dPos, true, false);
-
-				delete pSrc;
-				delete [] dPeakVal;
-				delete [] peakSample;
-			}
+			double dSrate = ((PCM_source*)mi)->GetSampleRate();
+			double dPos = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
+			dPos += a.peakSample / dSrate;
+			SetEditCurPos(dPos, true, false);
 		}
 	}
 	else
 		MessageBox(NULL, "No items selected to analyze.", "Error", MB_OK);
 }
 
-void OrganizeByRMS(COMMAND_T* ct)
+void OrganizeByVol(COMMAND_T* ct)
 {
 	for (int iTrack = 1; iTrack <= GetNumTracks(); iTrack++)
 	{
@@ -236,61 +270,107 @@ void OrganizeByRMS(COMMAND_T* ct)
 		if (items.GetSize() > 1)
 		{
 			double dStart = *(double*)GetSetMediaItemInfo(items.Get()[0], "D_POSITION", NULL);
-			double* pRMS = new double[items.GetSize()];
+			double* pVol = new double[items.GetSize()];
+			ANALYZE_PCM a;
+			memset(&a, 0, sizeof(a));
+			if (ct->user == 2)
+			{	// Windowed mode, set the window size
+				char str[100];
+				GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
+				char* pWindow = strchr(str, ',');
+				a.dWindowSize = pWindow ? atof(pWindow+1) : 0.1;
+			}
 			for (int i = 0; i < items.GetSize(); i++)
 			{
-				PCM_source* pSrc = (PCM_source*)items.Get()[i];
-				pRMS[i] = -1.0;
-				if (pSrc && strcmp(pSrc->GetType(), "MIDI") && strcmp(pSrc->GetType(), "MIDIPOOL"))
-				{
-					pSrc = pSrc->Duplicate();
-					if (pSrc && pSrc->GetNumChannels())
-					{
-						double dZero = 0.0;
-						GetSetMediaItemInfo((MediaItem*)pSrc, "D_POSITION", &dZero);
-						double* dRMS = new double[pSrc->GetNumChannels()];
-						const char* cName = NULL;
-						MediaItem_Take* take = GetMediaItemTake(items.Get()[i], -1);
-						if (take)
-							cName = (const char*)GetSetMediaItemTakeInfo(take, "P_NAME", NULL);
-						AnalyzePCM(pSrc, pSrc->GetNumChannels(), NULL, dRMS, NULL, cName);
-						for (int j = 0; j < pSrc->GetNumChannels(); j++)
-							if (dRMS[j] > pRMS[i])
-								pRMS[i] = dRMS[j];
-						delete pSrc;
-						delete [] dRMS;
-					}
-				}
+				pVol[i] = -1.0;
+				if (AnalyzeItem(items.Get()[i], &a))
+					pVol[i] = ct->user ? a.dRMS : a.dPeakVal;
 			}
 			// Sort and arrange items from min to max RMS
 			while (true)
 			{
 				int iItem = -1;
-				double dMinRMS = 1e99;
+				double dMinVol = 1e99;
 				for (int i = 0; i < items.GetSize(); i++)
-					if (pRMS[i] >= 0.0 && pRMS[i] < dMinRMS)
+					if (pVol[i] >= 0.0 && pVol[i] < dMinVol)
 					{
-						dMinRMS = pRMS[i];
+						dMinVol = pVol[i];
 						iItem = i;
 					}
 				if (iItem == -1)
 					break;
-				pRMS[iItem] = -1.0;
+				pVol[iItem] = -1.0;
 				GetSetMediaItemInfo(items.Get()[iItem], "D_POSITION", &dStart);
 				dStart += *(double*)GetSetMediaItemInfo(items.Get()[iItem], "D_LENGTH", NULL);
 			}
-			delete [] pRMS;
+			delete [] pVol;
 			UpdateTimeline();
 			Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 		}
 	}
 }
 
+void RMSNormalize(double dTargetDb, double dWindowSize)
+{
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	bool bDidWork = false;
+	ANALYZE_PCM a;
+	memset(&a, 0, sizeof(a));
+	a.dWindowSize = dWindowSize;
+
+	for (int i = 0; i < items.GetSize(); i++)
+	{
+		MediaItem* mi = items.Get()[i];
+		MediaItem_Take* take = GetMediaItemTake(mi, -1);
+		if (take && AnalyzeItem(mi, &a) && a.dRMS != 0.0)
+		{
+			bDidWork = true;
+			double dVol = *(double*)GetSetMediaItemTakeInfo(take, "D_VOL", NULL);
+			dVol *= DB2VAL(dTargetDb) / a.dRMS;
+			GetSetMediaItemTakeInfo(take, "D_VOL", &dVol);
+		}
+	}
+	if (bDidWork)
+	{
+		UpdateTimeline();
+		Undo_OnStateChangeEx("Normalize items to RMS", UNDO_STATE_ITEMS, -1);
+	}
+}
+
+// ct->user == 0 full item, otherwise windowed
+void DoRMSNormalize(COMMAND_T* ct)
+{
+	char str[100];
+	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", str, 100, get_ini_file());
+	char* pWindow = strchr(str, ',');
+	double dTarget = str[0] ? atof(str) : -20;
+	double dWindow = pWindow ? atof(pWindow+1) : 0.1;
+
+	RMSNormalize(dTarget, ct->user ? dWindow : 0.0);
+}
+
+void SetRMSOptions(COMMAND_T*)
+{
+	char reply[100];
+	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", reply, 100, get_ini_file());
+	if (GetUserInputs("SWS RMS options", 2, "Target RMS normalize level (db),Window size for peak RMS (s)", reply, 100))
+	{	// Do really basic input check
+		if (strchr(reply, ',') && strlen(reply) > 2)
+			WritePrivateProfileString(SWS_INI, SWS_RMS_KEY, reply, get_ini_file());
+	}
+}
+
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS: Analyze and display item peak and RMS" },	"SWS_ANALYZEITEM",		AnalyzeItem,	NULL, },
-	{ { DEFACCEL, "SWS: Move cursor to item peak amplitude" },		"SWS_FINDITEMPEAK",		FindItemPeak,	NULL, },
-	{ { DEFACCEL, "SWS: Organize items by RMS" },					"SWS_RMSORGANIZE",		OrganizeByRMS,	NULL, },
+	{ { DEFACCEL, "SWS: Analyze and display item peak and RMS" },	"SWS_ANALYZEITEM",		DoAnalyzeItem,		NULL, },
+	{ { DEFACCEL, "SWS: Move cursor to item peak sample" },			"SWS_FINDITEMPEAK",		FindItemPeak,		NULL, },
+	{ { DEFACCEL, "SWS: Organize items by peak" },					"SWS_PEAKORGANIZE",		OrganizeByVol,		NULL, 0, },
+	{ { DEFACCEL, "SWS: Organize items by RMS (entire item)" },		"SWS_RMSORGANIZE",		OrganizeByVol,		NULL, 1, },
+	{ { DEFACCEL, "SWS: Organize items by peak RMS" },				"SWS_RMSPEAKORGANIZE",	OrganizeByVol,		NULL, 2, },
+	{ { DEFACCEL, "SWS: Normalize items to RMS (entire item)" },	"SWS_NORMRMS",			DoRMSNormalize,		NULL, 0, },
+	{ { DEFACCEL, "SWS: Normalize items to peak RMS" },				"SWS_NORMPEAKRMS",		DoRMSNormalize,		NULL, 1, },
+	{ { DEFACCEL, "SWS: Set RMS analysis/normalize options" },		"SWS_SETRMSOPTIONS",	SetRMSOptions,		NULL, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

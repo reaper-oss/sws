@@ -1297,7 +1297,7 @@ void openCyclactionsWnd(COMMAND_T* _ct)
 	if (GetUserInputs(title, SNM_MAX_CYCLING_ACTIONS, question, reply, 4096))
 	{
 		WDL_String msg;
-		if (CreateCyclaction((int)_ct->user, reply, &msg))
+		if (CreateCyclaction((int)_ct->user, reply, &msg, true))
 			SaveCyclactions();
 		else if (msg.GetLength())
 			SNM_ShowMsg(msg.Get(), "S&M - Cycle Actions - Error(s) & Warning(s)", g_hwndParent);

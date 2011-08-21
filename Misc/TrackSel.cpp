@@ -452,7 +452,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle between current and saved track selection" },	"SWS_TOGSAVESEL",		TogSaveSelTracks,	}, 
 	{ { DEFACCEL, "SWS: Toggle (invert) track selection" },						"SWS_TOGTRACKSEL",		TogTrackSel,		},
 	{ { DEFACCEL, "SWS: Select only track(s) with selected item(s)" },			"SWS_SELTRKWITEM",		SelTracksWItems,	},
-	{ { DEFACCEL, "SWS: Set last touched track to match track selection" },		"SWS_SETLTT",			SetLTT,				},
+	{ { DEFACCEL, "SWS: Set last touched track to match track selection (deprecated)" },		"SWS_SETLTT",			SetLTT,				},
 	
 	// Folder/parent/child selection
 	{ { DEFACCEL, "SWS: Select only children of selected folders" },			"SWS_SELCHILDREN",		SelChildrenOnly,	},

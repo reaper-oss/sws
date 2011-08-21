@@ -202,6 +202,22 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 	// and the full FX chain
 	if (mask & FXCHAIN_MASK)
 		GetFXChain(tr, &m_sFXChain);
+	
+	// Get the "std" envelopes
+	if (mask & VOL_MASK)
+	{
+		GetSetEnvelope(tr, &m_sVolEnv, "Volume (Pre-FX)", false);
+		GetSetEnvelope(tr, &m_sVolEnv2, "Volume", false);
+	}
+	if (mask & PAN_MASK)
+	{
+		GetSetEnvelope(tr, &m_sPanEnv, "Pan (Pre-FX)", false);
+		GetSetEnvelope(tr, &m_sPanEnv2, "Pan", false);
+		GetSetEnvelope(tr, &m_sWidthEnv, "Width (Pre-FX)", false);
+		GetSetEnvelope(tr, &m_sWidthEnv2, "Width", false);
+	}
+	if (mask & MUTE_MASK)
+		GetSetEnvelope(tr, &m_sMuteEnv, "Mute", false);
 }
 
 // "Copy" constructor with mask large items don't get copied too
@@ -277,7 +293,11 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, WDL_PtrLis
 		return false; // Ignore if the track isn't selected
 
 	if (mask & VOL_MASK)
+	{
 		GetSetMediaTrackInfo(tr, "D_VOL", &m_dVol);
+		GetSetEnvelope(tr, &m_sVolEnv, "Volume (Pre-FX)", true);
+		GetSetEnvelope(tr, &m_sVolEnv2, "Volume", true);
+	}
 	if (mask & PAN_MASK)
 	{
 		GetSetMediaTrackInfo(tr, "D_PAN", &m_dPan);
@@ -290,9 +310,16 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, WDL_PtrLis
 		}
 		if (m_dPanLaw != -100.0)
 			GetSetMediaTrackInfo(tr, "D_PANLAW", &m_dPanLaw);
+		GetSetEnvelope(tr, &m_sPanEnv, "Pan (Pre-FX)", true);
+		GetSetEnvelope(tr, &m_sPanEnv2, "Pan", true);
+		GetSetEnvelope(tr, &m_sWidthEnv, "Width (Pre-FX)", true);
+		GetSetEnvelope(tr, &m_sWidthEnv2, "Width", true);
 	}
 	if (mask & MUTE_MASK)
+	{
 		GetSetMediaTrackInfo(tr, "B_MUTE", &m_bMute);
+		GetSetEnvelope(tr, &m_sMuteEnv, "Mute", true);
+	}
 	if (mask & SOLO_MASK)
 		GetSetMediaTrackInfo(tr, "I_SOLO", &m_iSolo);
 	if (mask & VIS_MASK)
@@ -362,6 +389,20 @@ void TrackSnapshot::GetChunk(WDL_String* chunk)
 		m_fx.Get(i)->GetChunk(chunk);
 	if (m_sFXChain.GetSize())
 		chunk->Append(m_sFXChain.Get());
+	if (m_sVolEnv.GetLength())
+		chunk->Append(m_sVolEnv.Get());
+	if (m_sVolEnv2.GetLength())
+		chunk->Append(m_sVolEnv2.Get());
+	if (m_sPanEnv.GetLength())
+		chunk->Append(m_sPanEnv.Get());
+	if (m_sPanEnv2.GetLength())
+		chunk->Append(m_sPanEnv2.Get());
+	if (m_sWidthEnv.GetLength())
+		chunk->Append(m_sWidthEnv.Get());
+	if (m_sWidthEnv2.GetLength())
+		chunk->Append(m_sWidthEnv2.Get());
+	if (m_sMuteEnv.GetLength())
+		chunk->Append(m_sMuteEnv.Get());
 	chunk->Append(">\n");
 }
 
@@ -384,7 +425,13 @@ void TrackSnapshot::GetDetails(WDL_String* details, int iMask)
 		details->AppendFormatted(100, "Track #%d \"%s\" (not in current project!):\r\n", m_iTrackNum, m_sName.Get());
 
 	if (iMask & VOL_MASK)
+	{
 		details->AppendFormatted(50, "Volume: %.2fdb\r\n", VAL2DB(m_dVol));
+		if (m_sVolEnv.GetLength())
+			details->AppendFormatted(50, "Volume (Pre-FX) envelope\r\n");
+		if (m_sVolEnv2.GetLength())
+			details->AppendFormatted(50, "Volume envelope\r\n");
+	}
 	if (iMask & PAN_MASK)
 	{
 		int iPanMode = m_iPanMode;
@@ -409,9 +456,22 @@ void TrackSnapshot::GetDetails(WDL_String* details, int iMask)
 			details->AppendFormatted(50, ", Pan law %.4f\r\n", m_dPanLaw);
 		else
 			details->Append("\r\n");
+
+		if (m_sPanEnv.GetLength())
+			details->AppendFormatted(50, "Pan (Pre-FX) envelope\r\n");
+		if (m_sPanEnv2.GetLength())
+			details->AppendFormatted(50, "Pan envelope\r\n");
+		if (m_sWidthEnv.GetLength())
+			details->AppendFormatted(50, "Width (Pre-FX) envelope\r\n");
+		if (m_sWidthEnv2.GetLength())
+			details->AppendFormatted(50, "Width envelope\r\n");
 	}
 	if (iMask & MUTE_MASK)
+	{
 		details->Append(m_bMute ? "Mute: on\r\n" : "Mute: off\r\n");
+		if (m_sMuteEnv.GetLength())
+			details->AppendFormatted(50, "Mute envelope\r\n");
+	}
 	if (iMask & SOLO_MASK)
 		details->Append(m_iSolo ? "Solo: on\r\n" : "Solo: off\r\n");
 	if (iMask & SEL_MASK)
@@ -481,6 +541,59 @@ void TrackSnapshot::GetDetails(WDL_String* details, int iMask)
 		else
 			details->Append("No sends\r\n");
 	}
+}
+
+void TrackSnapshot::GetSetEnvelope(MediaTrack* tr, WDL_String* str, const char* env, bool bSet)
+{
+	TrackEnvelope* te = GetTrackEnvelopeByName(tr, env);
+	if (!bSet)
+	{	// Get envelope from REAPER
+		if (te)
+		{
+			char envStr[262144] = "";
+			GetSetEnvelopeState(te, envStr, 262144);
+			str->Set(envStr);
+		}
+		else
+			str->Set("");
+	}
+	else if (str->GetLength())
+	{	// Set envelope
+		if (te)
+			GetSetEnvelopeState(te, str->Get(), 0);
+		else
+		{
+			WDL_String state;
+			state.Set(SWS_GetSetObjectState(tr, NULL));
+			*strrchr(state.Get(), '>') = 0; // Remove the last >
+			// Do a little dance to set the length properly
+			WDL_String newState;
+			newState.Set(state.Get());
+			newState.Append(str->Get());
+			newState.Append(">\n");
+			SWS_GetSetObjectState(tr, &newState);
+		}
+	}
+}
+
+bool TrackSnapshot::ProcessEnv(const char* chunk, char* line, int iLineMax, int* pos, const char* env, WDL_String* str)
+{
+	if (strcmp(env, line) == 0)
+	{
+		str->Set(line);
+		str->Append("\n");
+		int iDepth = 1;
+		while (iDepth && GetChunkLine(chunk, line, iLineMax, pos, true))
+		{
+			str->Append(line);
+			if (line[0] == '<')
+				iDepth++;
+			else if (line[0] == '>')
+				iDepth--;
+		}
+		return true;
+	}
+	return false;
 }
 
 Snapshot::Snapshot(int slot, int mask, bool bSelOnly, const char* name)
@@ -608,6 +721,14 @@ Snapshot::Snapshot(const char* chunk)
 						iDepth++;
 				}
 			}
+			// Yuck, not too happy with the below code, but it works.
+			else if (ts->ProcessEnv(chunk, line, 4096, &pos, "<VOLENV", &ts->m_sVolEnv)) {}
+			else if (ts->ProcessEnv(chunk, line, 4096, &pos, "<VOLENV2", &ts->m_sVolEnv2)) {}
+			else if (ts->ProcessEnv(chunk, line, 4096, &pos, "<PANENV", &ts->m_sPanEnv)) {}
+			else if (ts->ProcessEnv(chunk, line, 4096, &pos, "<PANENV2", &ts->m_sPanEnv2)) {}
+			else if (ts->ProcessEnv(chunk, line, 4096, &pos, "<WIDTHENV", &ts->m_sWidthEnv)) {}
+			else if (ts->ProcessEnv(chunk, line, 4096, &pos, "<WIDTHENV2", &ts->m_sWidthEnv2)) {}
+			else if (ts->ProcessEnv(chunk, line, 4096, &pos, "<MUTEENV", &ts->m_sMuteEnv)) {}
 		}
 	}
 	RegisterGetCommand(m_iSlot);

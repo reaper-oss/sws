@@ -1,3 +1,11 @@
+!v2.1.0 #3 (August 21, 2011)
+Issue 77/Issue 147: Snapshots now store native envelopes:
++"Vol" option now stores pre and post FX envelopes
++"Pan" option now stores pre and post pan and width envelopes
++"Mute" option now stores mute envelopes
+
+Bug fix for new SWS install defaulting to deprecated FX snapshot storage (thanks, cylens!)
+
 !v2.1.0 #2 (August 18, 2011)
 Issue 340/Issue 60: Added actions for item/sample analysis, especially drum sample pack creating:
 +SWS: Normalize items to RMS (entire item)
@@ -8,7 +16,7 @@ Issue 340/Issue 60: Added actions for item/sample analysis, especially drum samp
 +SWS: Set RMS analysis/normalize options (Sets target db for normalize and window size for peak RMS calculation)
 +Also similar are existing actions "SWS: Analyze and display item peak and RMS" and "SWS: Move cursor to item peak amplitude"
 
-Issue 147: Added pan law to pan snapshots
+Issue 77/Issue 147: Added pan law to pan snapshots
 
 !v2.1.0 #1 (August 9, 2011)
 Offical SWS v2.1 release to coincide with Reaper v4!  Please note this version of SWS will work with both Reaper v3 and v4, but v3 support will be dropped in the future.  Please support Cockos and purchase a v4 license if you do not already own one.

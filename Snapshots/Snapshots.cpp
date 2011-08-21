@@ -348,7 +348,7 @@ SWS_SnapshotsWnd::SWS_SnapshotsWnd()
 {
 	// Restore state
 	char str[32];
-	GetPrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, "63 0 0 0 1 0 0 0 0", str, 32, get_ini_file());
+	GetPrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, "559 0 0 0 1 0 0 0 0", str, 32, get_ini_file());
 	LineParser lp(false);
 	if (!lp.parse(str))
 	{
@@ -362,6 +362,13 @@ SWS_SnapshotsWnd::SWS_SnapshotsWnd()
 		g_bSelOnly_OnRecall = lp.gettoken_int(7) ? true : false;
 		g_bShowSelOnly = lp.gettoken_int(8) ? true : false;
 	}
+	// Remove deprecated FXATM
+	if (g_iMask & FXATM_MASK)
+	{
+		g_iMask |= FXCHAIN_MASK;
+		g_iMask &= ~FXATM_MASK;
+	}
+
 	g_iSavedMask = g_iMask;
 	g_iSavedType = m_iSelType;
 

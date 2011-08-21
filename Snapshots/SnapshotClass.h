@@ -61,6 +61,9 @@ public:
 	void GetChunk(WDL_String* chunk);
 	void GetDetails(WDL_String* details, int iMask);
 
+	static void GetSetEnvelope(MediaTrack* tr, WDL_String* str, const char* env, bool bSet);
+	static bool ProcessEnv(const char* chunk, char* line, int iLineMax, int* pos, const char* env, WDL_String* str);
+
 // TODO these should be private
 	GUID m_guid;
     double m_dVol;
@@ -82,6 +85,14 @@ public:
 	double m_dPanL;
 	double m_dPanR;
 	double m_dPanLaw;
+	
+	WDL_String m_sVolEnv;
+	WDL_String m_sVolEnv2;
+	WDL_String m_sPanEnv;
+	WDL_String m_sPanEnv2;
+	WDL_String m_sWidthEnv;
+	WDL_String m_sWidthEnv2;
+	WDL_String m_sMuteEnv;
 };
 
 // Mask:
@@ -95,7 +106,7 @@ public:
 #define VIS_MASK		0x080
 #define SEL_MASK		0x100
 #define FXCHAIN_MASK	0x200
-#define ALL_MASK        0xFFF // large enough for forward compat
+#define ALL_MASK        0xFEF // large enough for forward compat, leave out FXATM
 #define CHUNK_MASK		(FXCHAIN_MASK | SENDS_MASK)
 #define MIX_MASK		(VOL_MASK | PAN_MASK | MUTE_MASK | SOLO_MASK | FXCHAIN_MASK | SENDS_MASK)
 

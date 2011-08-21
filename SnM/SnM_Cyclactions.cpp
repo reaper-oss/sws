@@ -197,7 +197,7 @@ bool CheckEditableCyclaction(const char* _actionStr, WDL_String* _errMsg, bool _
 	return true;
 }
 
-bool CheckRegisterCyclaction(int _section, Cyclaction* _a, WDL_String* _errMsg)
+bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_String* _errMsg, bool _checkCmdIds)
 {
 	if (_a)
 	{
@@ -207,20 +207,29 @@ bool CheckRegisterCyclaction(int _section, Cyclaction* _a, WDL_String* _errMsg)
 			const char* cmd = _a->GetCmd(i);
 			if (strstr(cmd, "_CYCLACTION")) {
 				if (_errMsg) 
-					_errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: recursive cycle action\n\n", _a->GetName(), g_cyclactionSections[_section]);
+					_errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: recursive cycle action (i.e. uses another cycle action)\n\n", _a->GetName(), g_cyclactionSections[_section]);
 				return false;
 			}
 			else if (*cmd == '!')
 				steps++;
 			else if (!strcmp(cmd, "65535"))
 				noop++;
-			// API limit: only for the main section, NamedCommandLookup() KO in other sections
-			// => all cyclactions are in main section although they can target another section..
-			else if (!_section && !NamedCommandLookup(cmd)) 
+			else if (!_section) // main section?
 			{
-				if (_errMsg) 
-					_errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: command id (or custom id) '%s' not found\n\n", _a->GetName(), g_cyclactionSections[_section], cmd);
-				return false;
+				if (atoi(cmd) >= g_iFirstCommand)
+				{
+					if (_errMsg) 
+						_errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: for extensions' actions, you must use custom ids (e.g. _SWS_ABOUT),\nnot command ids (e.g. 47145)\n\n", _a->GetName(), g_cyclactionSections[_section], cmd);
+					return false;
+				}
+				// API limit: NamedCommandLookup() KO in other sections than the main one
+				// => all cyclactions belong to the main section although they can target other sections..
+				if(_checkCmdIds && !NamedCommandLookup(cmd))
+				{
+					if (_errMsg) 
+						_errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: command id (or custom id) '%s' not found\n\n", _a->GetName(), g_cyclactionSections[_section], cmd);
+					return false;
+				}
 			}
 		}
 
@@ -240,14 +249,14 @@ bool CheckRegisterCyclaction(int _section, Cyclaction* _a, WDL_String* _errMsg)
 }
 
 // return true if cyclaction added (but not necesary registered)
-bool CreateCyclaction(int _section, const char* _actionStr, WDL_String* _errMsg)
+bool CreateCyclaction(int _section, const char* _actionStr, WDL_String* _errMsg, bool _checkCmdIds)
 {
 	if (CheckEditableCyclaction(_actionStr, _errMsg))
 	{
 		Cyclaction* a = new Cyclaction(_section, _actionStr);
 		g_cyclactions[_section].Add(a);
 		int cycleId = g_cyclactions[_section].GetSize();
-		if (CheckRegisterCyclaction(_section, a, _errMsg))
+		if (CheckRegisterableCyclaction(_section, a, _errMsg, _checkCmdIds))
 			RegisterCyclation(a->GetName(), a->IsToggle(), _section, cycleId, 0);
 		return true;
 	}
@@ -290,9 +299,11 @@ void FlushCyclactions(int _section)
 }
 
 // _cyclactions: NULL adds/register to main model, otherwise just imports into _cyclactions
-//_section or -1 for all sections
-// NULL _iniFn => S&M.ini
-void LoadCyclactions(bool _errMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
+// _section or -1 for all sections
+// _iniFn: NULL => S&M.ini
+// _checkCmdIds: false to skip some checks - when loading cycle actions (but not when creating 
+//               them with the editor) all other referenced actions may not have been registered yet..
+void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
 {
 	char buf[32] = "";
 	char actionStr[MAX_CYCLATION_LEN] = "";
@@ -317,8 +328,8 @@ void LoadCyclactions(bool _errMsg, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyc
 						_cyclactions[sec].Add(new Cyclaction(sec, actionStr, true));
 				}
 				// main model update + action register
-				else if (!CreateCyclaction(sec, actionStr, _errMsg ? &msg : NULL))
-					CreateCyclaction(sec, EMPTY_CYCLACTION, false);  // +no-op in order to preserve cycle actions' ids
+				else if (!CreateCyclaction(sec, actionStr, _errMsg ? &msg : NULL, _checkCmdIds))
+					CreateCyclaction(sec, EMPTY_CYCLACTION, NULL, false);  // +no-op in order to preserve cycle actions' ids
 			}
 		}
 	}
@@ -442,6 +453,7 @@ void Cyclaction::UpdateFromCmd()
 	m_desc.Set(newDesc.Get());
 	m_empty = (strcmp(EMPTY_CYCLACTION, m_desc.Get()) == 0);
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // GUI
@@ -603,10 +615,14 @@ void SNM_CommandsView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax
 				break;
 			break;
 			case 1:
-				if (pItem->GetLength() && pItem->Get()[0] == '!')
+				if (pItem->GetLength() && pItem->Get()[0] == '!') {
 					lstrcpyn(str, "Step -----", iStrMax);
+					return;
+				}
 				//JFB API limitation: only for main section..
-				else if (g_editedAction && !g_editedAction->m_section) {
+				if (g_editedAction && !g_editedAction->m_section) {
+					if (atoi(pItem->Get()) >= g_iFirstCommand)
+						return;
 					int cmd = NamedCommandLookup(pItem->Get());
 					if (cmd)
 						lstrcpyn(str, kbd_getTextFromCmd(cmd, NULL), iStrMax); 
@@ -677,7 +693,7 @@ int SNM_CommandsView::OnItemSort(LPARAM _item1, LPARAM _item2)
 
 void SNM_CommandsView::OnBeginDrag(LPARAM item)
 {
-	if (g_mvL && g_mvL->EditListItemEnd(true))
+	if ((g_mvL && g_mvL->EditListItemEnd(true)) || (g_mvR && g_mvR->EditListItemEnd(true)))
 		UpdateEditedStatus(true);
 	SetCapture(GetParent(m_hwndList));
 }
@@ -777,7 +793,7 @@ void Apply()
 	AllEditListItemEnd(true);
 	UpdateEditedStatus(false); // ok, apply: eof edition
 	SaveCyclactions(g_editedActionItems);
-	LoadCyclactions(true); // + flush, unregister, re-register
+	LoadCyclactions(true, true); // + flush, unregister, re-register
 	EditModelInit();
 
 	g_editedAction = g_editedActionItems[g_editedSection].Get(editedActionId); // contains bounds checking..
@@ -792,7 +808,7 @@ void Cancel(bool _checkSave)
 	if (_checkSave && g_edited && IDYES == MessageBox(g_cyclactionsHwnd ? g_cyclactionsHwnd : g_hwndParent, "Save cycle actions before quitting ?", "S&M - Cycle Action editor - Warning", MB_YESNO))
 	{
 		SaveCyclactions(g_editedActionItems);
-		LoadCyclactions(false); // + flush, unregister, re-register
+		LoadCyclactions(false, true); // + flush, unregister, re-register
 	}
 	UpdateEditedStatus(false); // cancel: eof edition
 	EditModelInit();
@@ -1073,7 +1089,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 							// import in current section
 							case 1020:
 								if (char* fn = BrowseForFiles("S&M - Import cycle actions", g_lastImportFn, NULL, false, SNM_INI_EXT_LIST)) {
-									LoadCyclactions(true, g_editedActionItems, g_editedSection, fn);
+									LoadCyclactions(true, false, g_editedActionItems, g_editedSection, fn);
 									lstrcpyn(g_lastImportFn, fn, BUFFER_SIZE);
 									free(fn);
 									g_editedAction = NULL;
@@ -1084,7 +1100,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 							// import all sections
 							case 1021:
 								if (char* fn = BrowseForFiles("S&M - Import cycle actions", g_lastImportFn, NULL, false, SNM_INI_EXT_LIST)) {
-									LoadCyclactions(true, g_editedActionItems, -1, fn);
+									LoadCyclactions(true, false, g_editedActionItems, -1, fn);
 									lstrcpyn(g_lastImportFn, fn, BUFFER_SIZE);
 									free(fn);
 									g_editedAction = NULL;
@@ -1243,7 +1259,7 @@ int CyclactionsInit()
 	_snprintf(g_lastExportFn, BUFFER_SIZE, SNM_CYCACTION_INI_FILE, GetResourcePath());
 	_snprintf(g_lastImportFn, BUFFER_SIZE, SNM_CYCACTION_INI_FILE, GetResourcePath());
 
-	LoadCyclactions(false);
+	LoadCyclactions(false, false); // do check cmd ids (may not have been registered yet)
 	if (!plugin_register("accelerator",&g_ar))
 		return 0;
 	return 1;

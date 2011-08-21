@@ -1,3 +1,9 @@
+Issue 352: fixed cycle actions that contain Custom actions
+
+Cycle action editor:
++Better drag & drop support for the right list view (drag & drop of commands)
++Cycle actions now support SWS/FNG actions
+
 !v2.1.0 #3 (August 21, 2011)
 Issue 77/Issue 147: Snapshots now store native envelopes:
 +"Vol" option now stores pre and post FX envelopes

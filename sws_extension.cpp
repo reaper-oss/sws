@@ -113,7 +113,7 @@ int SWSRegisterCommand2(COMMAND_T* pCommand, const char* cFile)
 			return 0;
 		if (pCommand->getEnabled)
 			g_toggles.Add(pCommand);
-		if (!g_iFirstCommand && g_iFirstCommand > pCommand->accel.accel.cmd)
+		if (!g_iFirstCommand || g_iFirstCommand > pCommand->accel.accel.cmd)
 			g_iFirstCommand = pCommand->accel.accel.cmd;
 		if (pCommand->accel.accel.cmd > g_iLastCommand)
 			g_iLastCommand = pCommand->accel.accel.cmd;
@@ -167,7 +167,7 @@ int SWSRegisterCommandExt3(void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COM
 			return 0;
 		if (ct->getEnabled) 
 			g_toggles.Add(ct);
-		if (!g_iFirstCommand && g_iFirstCommand > ct->accel.accel.cmd)
+		if (!g_iFirstCommand || g_iFirstCommand > ct->accel.accel.cmd)
 			g_iFirstCommand = ct->accel.accel.cmd;
 		if (ct->accel.accel.cmd > g_iLastCommand)
 			g_iLastCommand = ct->accel.accel.cmd;
@@ -705,8 +705,6 @@ extern "C"
 			ERR_RETURN("Xenakios init error\n")
 		if (!MiscInit())
 			ERR_RETURN("Misc init error\n")
-		if (!SnMInit(rec))
-			ERR_RETURN("S&M init error\n")
 		if(!FNGExtensionInit(hInstance, rec))
 			ERR_RETURN("Fingers init error\n")
 		if (!PadreInit())
@@ -715,6 +713,8 @@ extern "C"
 			ERR_RETURN("About box init error\n")
 		if (!AutorenderInit())
 			ERR_RETURN("Autorender init error\n")
+		if (!SnMInit(rec)) // last init (for cyle actions)
+			ERR_RETURN("S&M init error\n")
 
     	if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
 			ERR_RETURN("Menu hook error\n")

@@ -903,6 +903,9 @@ void SWS_ListView::Update()
 		SWS_ListItemList items;
 		GetItemList(&items);
 
+		if (!items.GetSize())
+			ListView_DeleteAllItems(m_hwndList);
+
 		// The list is sorted, use that to our advantage here:
 		int lvItemCount = ListView_GetItemCount(m_hwndList);
 		int newIndex = lvItemCount;

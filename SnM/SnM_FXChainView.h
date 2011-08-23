@@ -131,11 +131,11 @@ class SNM_ResourceView : public SWS_ListView
 public:
 	SNM_ResourceView(HWND hwndList, HWND hwndEdit);
 protected:
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void SetItemText(LPARAM item, int iCol, const char* str);
-	void OnItemDblClk(LPARAM item, int iCol);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	void OnBeginDrag(LPARAM item);
+	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
+	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
+	void OnItemDblClk(SWS_ListItem* item, int iCol);
+	void GetItemList(SWS_ListItemList* pList);
+	void OnBeginDrag(SWS_ListItem* item);
 };
 
 // used if more than NB_SLOTS_FAST_LISTVIEW slots are loaded

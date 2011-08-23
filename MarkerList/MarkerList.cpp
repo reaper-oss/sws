@@ -49,7 +49,7 @@ SWS_MarkerListView::SWS_MarkerListView(HWND hwndList, HWND hwndEdit, SWS_MarkerL
 {
 }
 
-void SWS_MarkerListView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
+void SWS_MarkerListView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	MarkerItem* mi = (MarkerItem*)item;
 	if (mi)
@@ -72,7 +72,7 @@ void SWS_MarkerListView::GetItemText(LPARAM item, int iCol, char* str, int iStrM
 	}
 }
 
-void SWS_MarkerListView::OnItemSelChanged(LPARAM item, int iState)
+void SWS_MarkerListView::OnItemSelChanged(SWS_ListItem* item, int iState)
 {
 	if (iState & LVIS_FOCUSED)
 	{
@@ -85,7 +85,7 @@ void SWS_MarkerListView::OnItemSelChanged(LPARAM item, int iState)
 	}
 }
 
-void SWS_MarkerListView::OnItemClk(LPARAM item, int iCol, int iKeyState)
+void SWS_MarkerListView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState)
 {
 	MarkerItem* mi = (MarkerItem*)item;
 	if (mi) // Doubled-up calls to SetEditCurPos - oh well!
@@ -115,14 +115,14 @@ void SWS_MarkerListView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 	}
 }
 
-void SWS_MarkerListView::OnItemDblClk(LPARAM item, int iCol)
+void SWS_MarkerListView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	MarkerItem* mi = (MarkerItem*)item;
 	if (mi->m_bReg)
 		GetSet_LoopTimeRange(true, true, &mi->m_dPos, &mi->m_dRegEnd, m_pMarkerList->m_bPlayOnSel);
 }
 
-int SWS_MarkerListView::OnItemSort(LPARAM item1, LPARAM item2)
+int SWS_MarkerListView::OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2)
 {
 	int iRet;
 	MarkerItem* mi1 = (MarkerItem*)item1;
@@ -153,7 +153,7 @@ int SWS_MarkerListView::OnItemSort(LPARAM item1, LPARAM item2)
 	return SWS_ListView::OnItemSort(item1, item2);
 }
 
-void SWS_MarkerListView::SetItemText(LPARAM item, int iCol, const char* str)
+void SWS_MarkerListView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 {
 	if (iCol == 3)
 	{
@@ -164,31 +164,28 @@ void SWS_MarkerListView::SetItemText(LPARAM item, int iCol, const char* str)
 	}
 }
 
-void SWS_MarkerListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
+void SWS_MarkerListView::GetItemList(SWS_ListItemList* pList)
 {
 	if (m_pMarkerList->m_filter.GetLength())
 	{
-		int iCount = 0;
 		LineParser lp(false);
 		lp.parse(m_pMarkerList->m_filter.Get());
 		for (int i = 0; i < g_curList->m_items.GetSize(); i++)
 			for (int j = 0; j < lp.getnumtokens(); j++)
 				if (stristr(g_curList->m_items.Get(i)->GetName(), lp.gettoken_str(j)))
 				{
-					pBuf->Resize(++iCount);
-					pBuf->Get()[iCount-1] = (LPARAM)g_curList->m_items.Get(i);
+					pList->Add((SWS_ListItem*)g_curList->m_items.Get(i));
 					break;
 				}
 	}
 	else
 	{
-		pBuf->Resize(g_curList->m_items.GetSize(), false);
-		for (int i = 0; i < pBuf->GetSize(); i++)
-			pBuf->Get()[i] = (LPARAM)g_curList->m_items.Get(i);
+		for (int i = 0; i < g_curList->m_items.GetSize(); i++)
+			pList->Add((SWS_ListItem*)g_curList->m_items.Get(i));
 	}
 }
 
-int SWS_MarkerListView::GetItemState(LPARAM item)
+int SWS_MarkerListView::GetItemState(SWS_ListItem* item)
 {
 	MarkerItem* mi = (MarkerItem*)item;
 	return GetCursorPosition() == mi->m_dPos ? 1 : 0;

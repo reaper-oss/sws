@@ -74,7 +74,7 @@ SWS_TrackListView::SWS_TrackListView(HWND hwndList, HWND hwndEdit, SWS_TrackList
 {
 }
 
-void SWS_TrackListView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
+void SWS_TrackListView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	MediaTrack* tr = (MediaTrack*)item;
 	if (tr)
@@ -109,7 +109,7 @@ void SWS_TrackListView::GetItemText(LPARAM item, int iCol, char* str, int iStrMa
 	}
 }
 
-void SWS_TrackListView::OnItemBtnClk(LPARAM item, int iCol, int iKeyState)
+void SWS_TrackListView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState)
 {
 	MediaTrack* tr = (MediaTrack*)item; // Always non-null
 	
@@ -157,13 +157,13 @@ void SWS_TrackListView::OnItemBtnClk(LPARAM item, int iCol, int iKeyState)
 		Main_OnCommand(9, 0);
 }
 
-void SWS_TrackListView::OnItemDblClk(LPARAM item, int iCol)
+void SWS_TrackListView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	Main_OnCommand(40913, 0); // Scroll selected tracks into view
 	// TODO new track on NULL?  needs mod of SWS_wnd and all other OnItemDblClk()s
 }
 
-void SWS_TrackListView::OnItemSelChanged(LPARAM item, int iState)
+void SWS_TrackListView::OnItemSelChanged(SWS_ListItem* item, int iState)
 {
 	MediaTrack* tr = (MediaTrack*)item;
 	if (iState & LVIS_FOCUSED)
@@ -172,7 +172,7 @@ void SWS_TrackListView::OnItemSelChanged(LPARAM item, int iState)
 		GetSetMediaTrackInfo(tr, "I_SELECTED", iState & LVIS_SELECTED ? &g_i1 : &g_i0);
 }
 
-void SWS_TrackListView::SetItemText(LPARAM item, int iCol, const char* str)
+void SWS_TrackListView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 {
 	if (iCol == 1)
 	{
@@ -181,15 +181,14 @@ void SWS_TrackListView::SetItemText(LPARAM item, int iCol, const char* str)
 	}
 }
 
-void SWS_TrackListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
+void SWS_TrackListView::GetItemList(SWS_ListItemList* pList)
 {
 	WDL_PtrList<void>* pTracks = m_pTrackListWnd->GetFilter()->Get()->GetFilteredTracks();
-	pBuf->Resize(pTracks->GetSize());
 	for (int i = 0; i < pTracks->GetSize(); i++)
-		pBuf->Get()[i] = (LPARAM)pTracks->Get(i);
+		pList->Add((SWS_ListItem*)pTracks->Get(i));
 }
 
-int SWS_TrackListView::GetItemState(LPARAM item)
+int SWS_TrackListView::GetItemState(SWS_ListItem* item)
 {
 	MediaTrack* tr = (MediaTrack*)item;
 	return *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL);
@@ -289,7 +288,7 @@ void SWS_TrackListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case RENAME_MSG:
 			if (m_trLastTouched)
-				m_pLists.Get(0)->EditListItem((LPARAM)m_trLastTouched, 1);
+				m_pLists.Get(0)->EditListItem((SWS_ListItem*)m_trLastTouched, 1);
 			break;
 		default:
 			if (wParam >= LOADSNAP_MSG)
@@ -322,7 +321,7 @@ HMENU SWS_TrackListWnd::OnContextMenu(int x, int y)
 	AddToMenu(contextMenu, "Show all tracks", SWSGetCommandID(ShowAll));
 	AddToMenu(contextMenu, "Show SWS Snapshots", SWSGetCommandID(OpenSnapshotsDialog));
 
-	LPARAM item = m_pLists.Get(0)->GetHitItem(x, y, NULL);
+	SWS_ListItem* item = m_pLists.Get(0)->GetHitItem(x, y, NULL);
 	if (item)
 	{
 		m_trLastTouched = (MediaTrack*)item;
@@ -422,7 +421,7 @@ int SWS_TrackListWnd::OnKey(MSG* msg, int iKeyState)
 			{
 				// Find the focused track, and un-focus it
 				for (int i = 0; i < m_pLists.Get(0)->GetListItemCount(); i++)
-					if (m_pLists.Get(0)->GetListItem(i) == (LPARAM)m_trLastTouched)
+					if (m_pLists.Get(0)->GetListItem(i) == (SWS_ListItem*)m_trLastTouched)
 					{
 						ListView_SetItemState(m_pLists.Get(0)->GetHWND(), i, 0, LVIS_FOCUSED);
 						break;
@@ -469,7 +468,7 @@ int SWS_TrackListWnd::OnKey(MSG* msg, int iKeyState)
 			
 			// Update the focus
 			for (int i = 0; i < m_pLists.Get(0)->GetListItemCount(); i++)
-				if (m_pLists.Get(0)->GetListItem(i) == (LPARAM)m_trLastTouched)
+				if (m_pLists.Get(0)->GetListItem(i) == (SWS_ListItem*)m_trLastTouched)
 				{
 					ListView_SetItemState(m_pLists.Get(0)->GetHWND(), i, LVIS_FOCUSED, LVIS_FOCUSED);
 					break;

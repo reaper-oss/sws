@@ -1126,26 +1126,31 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_prjNotes.Get()->Set("");
 
 	// Load REAPER project notes from RPP file
-	char cBuf[BUFFER_SIZE];
+	char cBuf[BUFFER_SIZE] = "";
 	EnumProjects(-1, cBuf, BUFFER_SIZE);
-	ProjectStateContext* prjCtx = ProjectCreateFileRead(cBuf);
-	if (prjCtx)
+	// SWS - It's possible at this point that we're not reading an RPP file (eg during import), check to be sure!
+	// If so, just ignore the possibility that there might be project notes.
+	if (strlen(cBuf) > 3 && _stricmp(cBuf+strlen(cBuf)-3, "RPP") == 0)
 	{
-		WDL_String rpp;
-		while(!prjCtx->GetLine(cBuf, BUFFER_SIZE)) {
-			rpp.Append(cBuf);
-			rpp.Append("\n");
-		}
-		delete prjCtx;
-
-		// "translate notes"
-		SNM_ChunkParserPatcher p(&rpp);
-		WDL_String notes;
-		if (p.GetSubChunk("NOTES", 2, 0, &notes, "RIPPLE") >= 0)
+		ProjectStateContext* prjCtx = ProjectCreateFileRead(cBuf);
+		if (prjCtx)
 		{
-			char bufNotes[MAX_HELP_LENGTH] = "";
-			if (GetStringFromNotesChunk(&notes, bufNotes, MAX_HELP_LENGTH))
-				g_prjNotes.Get()->Set(bufNotes);
+			WDL_String rpp;
+			while(!prjCtx->GetLine(cBuf, BUFFER_SIZE)) {
+				rpp.Append(cBuf);
+				rpp.Append("\n");
+			}
+			delete prjCtx;
+
+			// "translate notes"
+			SNM_ChunkParserPatcher p(&rpp);
+			WDL_String notes;
+			if (p.GetSubChunk("NOTES", 2, 0, &notes, "RIPPLE") >= 0)
+			{
+				char bufNotes[MAX_HELP_LENGTH] = "";
+				if (GetStringFromNotesChunk(&notes, bufNotes, MAX_HELP_LENGTH))
+					g_prjNotes.Get()->Set(bufNotes);
+			}
 		}
 	}
 

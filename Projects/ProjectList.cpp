@@ -39,7 +39,7 @@ SWS_ProjectListView::SWS_ProjectListView(HWND hwndList, HWND hwndEdit)
 {
 }
 
-void SWS_ProjectListView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
+void SWS_ProjectListView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	ReaProject* proj = (ReaProject*)item;
 	int i = 0;
@@ -76,22 +76,18 @@ void SWS_ProjectListView::GetItemText(LPARAM item, int iCol, char* str, int iStr
 	}
 }
 
-void SWS_ProjectListView::OnItemDblClk(LPARAM item, int iCol)
+void SWS_ProjectListView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	SelectProjectInstance((ReaProject*)item);
 	g_pProjList->Show(false, true);
 }
 
-void SWS_ProjectListView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
+void SWS_ProjectListView::GetItemList(SWS_ListItemList* pList)
 {
 	ReaProject* proj;
 	int i = 0;
-	pBuf->Resize(0, false);
 	while((proj = Enum_Projects(i++, NULL, 0)))
-	{
-		pBuf->Resize(i);
-		pBuf->Get()[i-1] = (LPARAM)proj;
-	}
+		pList->Add((SWS_ListItem*)proj);
 }
 
 SWS_ProjectListWnd::SWS_ProjectListWnd()

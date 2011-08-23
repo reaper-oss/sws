@@ -3032,7 +3032,7 @@ static COMMAND_T g_commandTable[] =
 	
 	{ { DEFACCEL, "SWS/AW: Insert click track" },		"SWS_AWINSERTCLICKTRK",					AWInsertClickTrack, NULL, },
 	{ { DEFACCEL, "SWS/AW: Toggle click track mute" },		"SWS_AWTOGGLECLICKTRACK",					AWToggleClickTrack, NULL, 0, IsClickUnmuted},
-	{ { DEFACCEL, "SWS/AW: Toggle TCP" },			"SWS_AWTOGTCP",		AWToggleTCP, },
+	// Broken { { DEFACCEL, "SWS/AW: Toggle TCP" },			"SWS_AWTOGTCP",		AWToggleTCP, },
 
 	
 	//*/

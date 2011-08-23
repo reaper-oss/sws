@@ -76,12 +76,12 @@ public:
 	void DoDelete();
 
 protected:
-	void SetItemText(LPARAM item, int iCol, const char* str);
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void OnItemBtnClk(LPARAM item, int iCol, int iKeyState);
-	void OnItemSelChanged(LPARAM item, int iState);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	int  GetItemState(LPARAM item);
+	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
+	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
+	void OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState);
+	void OnItemSelChanged(SWS_ListItem* item, int iState);
+	void GetItemList(SWS_ListItemList* pList);
+	int  GetItemState(SWS_ListItem* item);
 
 private:
 	SWS_MediaPoolWnd* m_pWnd;
@@ -94,12 +94,12 @@ public:
 	void DoDelete();
 
 protected:
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void OnItemBtnClk(LPARAM item, int iCol, int iKeyState);
-	void OnItemSelChanged(LPARAM item, int iState);
-	void OnItemDblClk(LPARAM item, int iCol);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	void OnBeginDrag(LPARAM item);
+	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
+	void OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState);
+	void OnItemSelChanged(SWS_ListItem* item, int iState);
+	void OnItemDblClk(SWS_ListItem* item, int iCol);
+	void GetItemList(SWS_ListItemList* pList);
+	void OnBeginDrag(SWS_ListItem* item);
 
 private:
 	SWS_MediaPoolWnd* m_pWnd;

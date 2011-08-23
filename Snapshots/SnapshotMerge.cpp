@@ -76,7 +76,7 @@ int SWS_SnapshotMergeView::OnItemSort(LPARAM lParam1, LPARAM lParam2)
 		return iRet;
 }
 
-void SWS_SnapshotMergeView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
+void SWS_SnapshotMergeView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	SWS_SSMergeItem* mi = (SWS_SSMergeItem*)item;
 	str[0] = 0;
@@ -116,11 +116,10 @@ void SWS_SnapshotMergeView::GetItemText(LPARAM item, int iCol, char* str, int iS
 	}
 }
 
-void SWS_SnapshotMergeView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
+void SWS_SnapshotMergeView::GetItemList(SWS_ListItemList* pList)
 {
-	pBuf->Resize(g_mergeItems.GetSize());
 	for (int i = 0; i < g_mergeItems.GetSize(); i++)
-		pBuf->Get()[i] = (LPARAM)g_mergeItems.Get(i);
+		pList->Add((SWS_ListItem*)g_mergeItems.Get(i));
 }
 
 INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)

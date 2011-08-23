@@ -34,9 +34,9 @@ public:
 	SWS_ProjectListView(HWND hwndList, HWND hwndEdit);
 
 protected:
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void OnItemDblClk(LPARAM item, int iCol);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
+	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
+	void OnItemDblClk(SWS_ListItem* item, int iCol);
+	void GetItemList(SWS_ListItemList* pList);
 };
 
 class SWS_ProjectListWnd : public SWS_DockWnd

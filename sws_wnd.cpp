@@ -193,7 +193,7 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			// On OSX, change the selection to match the right click
 			for (int i = 0; i < m_pLists.GetSize(); i++)
 			{
-				LPARAM item = m_pLists.Get(i)->GetHitItem(x, y, NULL);
+				SWS_ListItem* item = m_pLists.Get(i)->GetHitItem(x, y, NULL);
 				if (item)
 				{
 					HWND hList = m_pLists.Get(i)->GetHWND();
@@ -540,7 +540,7 @@ SWS_ListView::~SWS_ListView()
 	delete [] m_pCols;
 }
 
-LPARAM SWS_ListView::GetListItem(int index, int* iState)
+SWS_ListItem* SWS_ListView::GetListItem(int index, int* iState)
 {
 	if (index < 0)
 		return NULL;
@@ -552,7 +552,7 @@ LPARAM SWS_ListView::GetListItem(int index, int* iState)
 	ListView_GetItem(m_hwndList, &li);
 	if (iState)
 		*iState = li.state;
-	return li.lParam;
+	return (SWS_ListItem*)li.lParam;
 }
 
 bool SWS_ListView::IsSelected(int index)
@@ -562,7 +562,7 @@ bool SWS_ListView::IsSelected(int index)
 	return ListView_GetItemState(m_hwndList, index, LVIS_SELECTED) ? true : false;
 }
 
-LPARAM SWS_ListView::EnumSelected(int* i)
+SWS_ListItem* SWS_ListView::EnumSelected(int* i)
 {
 	int temp = 0;
 	if (!i)
@@ -577,16 +577,16 @@ LPARAM SWS_ListView::EnumSelected(int* i)
 		li.iItem = (*i)++;
 		ListView_GetItem(m_hwndList, &li);
 		if (li.state)
-			return li.lParam;
+			return (SWS_ListItem*)li.lParam;
 	}
 	return NULL;
 }
 
-bool SWS_ListView::SelectByItem(LPARAM _item)
+bool SWS_ListView::SelectByItem(SWS_ListItem* _item)
 {
 	for (int i = 0; i < GetListItemCount(); i++)
 	{
-		LPARAM item = GetListItem(i);
+		SWS_ListItem* item = GetListItem(i);
 		if (item == _item) 
 		{
 			ListView_SetItemState(m_hwndList, -1, 0, LVIS_SELECTED);
@@ -642,7 +642,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 			for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
 			{
 				int iState;
-				LPARAM item = GetListItem(i, &iState);
+				SWS_ListItem* item = GetListItem(i, &iState);
 				OnItemSelChanged(item, iState);
 			}
 		}
@@ -707,7 +707,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 			//     back to where it should be in that handler
 			
 			int iState;
-			LPARAM item = GetListItem(s->iItem, &iState);
+			SWS_ListItem* item = GetListItem(s->iItem, &iState);
 			m_iClickedKeys = iKeys;
 			
 			// Case 1:
@@ -892,51 +892,56 @@ void SWS_ListView::Update()
 		m_bDisableUpdates = true;
 		char str[256];
 
-		WDL_TypedBuf<LPARAM> items;
-		GetItemList(&items);
-
-		// Check for deletions - items in the lstwnd are quite likely out of order so gotta do a full O(n^2) search
-		int lvItemCount = ListView_GetItemCount(m_hwndList);
-		for (int i = 0; i < lvItemCount; i++)
+		bool bResort = false;
+		static int iLastSortCol = -999;
+		if (m_iSortCol != iLastSortCol)
 		{
-			LPARAM item = GetListItem(i);
-			bool bFound = false;
-			for (int j = 0; j < items.GetSize(); j++)
-				if (items.Get()[j] == item)
-				{
-					bFound = true;
-					break;
-				}
-
-			if (!bFound)
-			{
-				ListView_DeleteItem(m_hwndList, i--);
-				lvItemCount--;
-			}
+			iLastSortCol = m_iSortCol;
+			bResort = true;
 		}
 
-		// Check for additions
-		lvItemCount = ListView_GetItemCount(m_hwndList);
-		for (int i = 0; i < items.GetSize(); i++)
+		SWS_ListItemList items;
+		GetItemList(&items);
+
+		// The list is sorted, use that to our advantage here:
+		int lvItemCount = ListView_GetItemCount(m_hwndList);
+		int newIndex = lvItemCount;
+		for (int i = 0; items.GetSize(); i++)
 		{
 			bool bFound = false;
-			int j;
-			for (j = 0; j < lvItemCount; j++)
-			{
-				if (items.Get()[i] == GetListItem(j))
+			SWS_ListItem* pItem;
+			if (i < lvItemCount)
+			{	// First check items in the listview, match to item list
+				pItem = GetListItem(i);
+				int iIndex = items.Find(pItem);
+				if (iIndex == -1)
 				{
+					// Delete items from listview that aren't in the item list
+					ListView_DeleteItem(m_hwndList, i);
+					i--;
+					lvItemCount--;
+					continue;
+				}
+				else
+				{
+					// Delete item from item list to indicate "used"
+					items.Delete(iIndex);
 					bFound = true;
-					break;
 				}
 			}
+			else
+			{	// Items left in the item list are new
+				pItem = items.Remove();
+			}
 
+			// We have an item pointer, and a listview index, add/edit the listview
 			// Update the list, no matter what, because text may have changed
 			LVITEM item;
 			item.mask = 0;
-			int iNewState = GetItemState(items.Get()[i]);
+			int iNewState = GetItemState(pItem);
 			if (iNewState >= 0)
 			{
-				int iCurState = bFound ? ListView_GetItemState(m_hwndList, j, LVIS_SELECTED | LVIS_FOCUSED) : 0;
+				int iCurState = bFound ? ListView_GetItemState(m_hwndList, i, LVIS_SELECTED | LVIS_FOCUSED) : 0;
 				if (iNewState && !(iCurState & LVIS_SELECTED))
 				{
 					item.mask |= LVIF_STATE;
@@ -951,7 +956,7 @@ void SWS_ListView::Update()
 				}
 			}
 
-			item.iItem = j;
+			item.iItem = bFound ? i : newIndex++;
 			item.pszText = str;
 
 			int iCol = 0;
@@ -959,18 +964,18 @@ void SWS_ListView::Update()
 				if (m_pCols[k].iPos != -1)
 				{
 					item.iSubItem = iCol;
-					GetItemText(items.Get()[i], k, str, 256);
+					GetItemText(pItem, k, str, 256);
 					if (!iCol && !bFound)
 					{
 						item.mask |= LVIF_PARAM | LVIF_TEXT;
-						item.lParam = items.Get()[i];
+						item.lParam = (LPARAM)pItem;
 						ListView_InsertItem(m_hwndList, &item);
-						lvItemCount++;
+						bResort = true;
 					}
 					else
 					{
 						char curStr[256];
-						ListView_GetItemText(m_hwndList, j, iCol, curStr, 256);
+						ListView_GetItemText(m_hwndList, item.iItem, iCol, curStr, 256);
 						if (strcmp(str, curStr))
 							item.mask |= LVIF_TEXT;
 						if (item.mask)
@@ -985,12 +990,15 @@ void SWS_ListView::Update()
 				}
 		}
 
-		ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
-		int iCol = abs(m_iSortCol) - 1;
-		iCol = DataToDisplayCol(iCol) + 1;
-		if (m_iSortCol < 0)
-			iCol = -iCol;
-		SetListviewColumnArrows(iCol);
+		if (bResort)
+		{
+			ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
+			int iCol = abs(m_iSortCol) - 1;
+			iCol = DataToDisplayCol(iCol) + 1;
+			if (m_iSortCol < 0)
+				iCol = -iCol;
+			SetListviewColumnArrows(iCol);
+		}
 
 #ifdef _WIN32
 		if (m_hwndTooltip)
@@ -1026,7 +1034,7 @@ void SWS_ListView::Update()
 bool SWS_ListView::DoColumnMenu(int x, int y)
 {
 	int iCol;
-	LPARAM item = GetHitItem(x, y, &iCol);
+	SWS_ListItem* item = GetHitItem(x, y, &iCol);
 	if (!item && iCol != -1)
 	{
 		HMENU hMenu = CreatePopupMenu();
@@ -1101,7 +1109,7 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 	return false;
 }
 
-LPARAM SWS_ListView::GetHitItem(int x, int y, int* iCol)
+SWS_ListItem* SWS_ListView::GetHitItem(int x, int y, int* iCol)
 {
 	LVHITTESTINFO ht;
 	POINT pt = { x, y };
@@ -1138,13 +1146,13 @@ LPARAM SWS_ListView::GetHitItem(int x, int y, int* iCol)
 	return NULL;
 }
 
-void SWS_ListView::EditListItem(LPARAM item, int iCol)
+void SWS_ListView::EditListItem(SWS_ListItem* item, int iCol)
 {
 	// Convert to index and call edit
 #ifdef _WIN32
 	LVFINDINFO fi;
 	fi.flags = LVFI_PARAM;
-	fi.lParam = item;
+	fi.lParam = (LPARAM)item;
 	int iItem = ListView_FindItem(m_hwndList, -1, &fi);
 #else
 	int iItem = -1;
@@ -1154,7 +1162,7 @@ void SWS_ListView::EditListItem(LPARAM item, int iCol)
 	{
 		li.iItem = i;
 		ListView_GetItem(m_hwndList, &li);
-		if (li.lParam == item)
+		if ((SWS_ListItem*)li.lParam == item)
 		{
 			iItem = i;
 			break;
@@ -1192,7 +1200,7 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	SetWindowPos(m_hwndEdit, HWND_TOP, sr.left+lOffset, sr.top, sr.right-sr.left, sr.bottom-sr.top, SWP_SHOWWINDOW | SWP_NOZORDER);
 	ShowWindow(m_hwndEdit, SW_SHOW);
 
-	LPARAM item = GetListItem(iIndex);
+	SWS_ListItem* item = GetListItem(iIndex);
 	char str[100];
 	GetItemText(item, iCol, str, 100);
 	SetWindowText(m_hwndEdit, str);
@@ -1211,7 +1219,7 @@ bool SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 			char newStr[100];
 			char curStr[100];
 			GetWindowText(m_hwndEdit, newStr, 100);
-			LPARAM item = GetListItem(m_iEditingItem);
+			SWS_ListItem* item = GetListItem(m_iEditingItem);
 			GetItemText(item, m_iEditingCol, curStr, 100);
 			if (strcmp(curStr, newStr))
 			{
@@ -1241,7 +1249,7 @@ int SWS_ListView::OnEditingTimer()
 	return 0;
 }
 
-int SWS_ListView::OnItemSort(LPARAM item1, LPARAM item2)
+int SWS_ListView::OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2)
 {
 	// Just sort by string
 	char str1[64];
@@ -1364,5 +1372,5 @@ int SWS_ListView::DataToDisplayCol(int iCol)
 int SWS_ListView::sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam)
 {
 	SWS_ListView* pLV = (SWS_ListView*)lSortParam;
-	return pLV->OnItemSort(lParam1, lParam2);
+	return pLV->OnItemSort((SWS_ListItem*)lParam1, (SWS_ListItem*)lParam2);
 }

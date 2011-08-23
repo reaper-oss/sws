@@ -96,10 +96,10 @@ class SNM_LiveConfigsView : public SWS_ListView {
 public:
 	SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit);
 protected:
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void SetItemText(LPARAM item, int iCol, const char* str);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	void OnItemDblClk(LPARAM item, int iCol);
+	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
+	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
+	void GetItemList(SWS_ListItemList* pList);
+	void OnItemDblClk(SWS_ListItem* item, int iCol);
 };
 
 class SNM_LiveConfigsWnd : public SWS_DockWnd {

@@ -35,12 +35,12 @@ public:
 
 protected:
 	int OnItemSort(LPARAM lParam1, LPARAM lParam2);
-	void SetItemText(LPARAM item, int iCol, const char* str);
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void GetItemTooltip(LPARAM item, char* str, int iStrMax);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	int  GetItemState(LPARAM item);
-	void OnItemClk(LPARAM item, int iCol, int iKeyState);
+	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
+	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
+	void GetItemTooltip(SWS_ListItem* item, char* str, int iStrMax);
+	void GetItemList(SWS_ListItemList* pList);
+	int  GetItemState(SWS_ListItem* item);
+	void OnItemClk(SWS_ListItem* item, int iCol, int iKeyState);
 };
 
 class SWS_SnapshotsWnd : public SWS_DockWnd

@@ -247,13 +247,13 @@ void SWS_MediaPoolGroupView::DoDelete()
 		}
 }
 
-void SWS_MediaPoolGroupView::SetItemText(LPARAM item, int iCol, const char* str)
+void SWS_MediaPoolGroupView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 {
 	if (item && iCol == 0)
 		((SWS_MediaPoolGroup*)item)->SetName(str);
 }
 
-void SWS_MediaPoolGroupView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
+void SWS_MediaPoolGroupView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	SWS_MediaPoolGroup* pGroup = (SWS_MediaPoolGroup*)item;
 	switch (iCol)
@@ -273,7 +273,7 @@ void SWS_MediaPoolGroupView::GetItemText(LPARAM item, int iCol, char* str, int i
 	}
 }
 
-void SWS_MediaPoolGroupView::OnItemBtnClk(LPARAM item, int iCol, int iKeyState)
+void SWS_MediaPoolGroupView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState)
 {
 	SWS_MediaPoolGroup* pGroup = (SWS_MediaPoolGroup*)item;
 	if (pGroup && pGroup != &m_pWnd->m_projGroup && iCol == 2)
@@ -305,7 +305,7 @@ void SWS_MediaPoolGroupView::OnItemBtnClk(LPARAM item, int iCol, int iKeyState)
 	}
 }
 
-void SWS_MediaPoolGroupView::OnItemSelChanged(LPARAM item, int iState)
+void SWS_MediaPoolGroupView::OnItemSelChanged(SWS_ListItem* item, int iState)
 {
 	SWS_MediaPoolGroup* group = (SWS_MediaPoolGroup*)item;
 	if (iState & LVIS_FOCUSED && m_pWnd->m_curGroup != group)
@@ -320,20 +320,16 @@ void SWS_MediaPoolGroupView::OnItemSelChanged(LPARAM item, int iState)
 	}
 }
 
-void SWS_MediaPoolGroupView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
+void SWS_MediaPoolGroupView::GetItemList(SWS_ListItemList* pList)
 {
-	//     curproj + globals                          + project groups
-	pBuf->Resize(1 + m_pWnd->m_globalGroups.GetSize() + m_pWnd->m_projGroups.Get()->GetSize());
-	pBuf->Get()[0] = (LPARAM)&m_pWnd->m_projGroup;
-	int iBuf = 1;
-
+	pList->Add((SWS_ListItem*)&m_pWnd->m_projGroup);
 	for (int i = 0; i < m_pWnd->m_globalGroups.GetSize(); i++)
-		pBuf->Get()[iBuf++] = (LPARAM)m_pWnd->m_globalGroups.Get(i);
+		pList->Add((SWS_ListItem*)m_pWnd->m_globalGroups.Get(i));
 	for (int i = 0; i < m_pWnd->m_projGroups.Get()->GetSize(); i++)
-		pBuf->Get()[iBuf++] = (LPARAM)m_pWnd->m_projGroups.Get()->Get(i);
+		pList->Add((SWS_ListItem*)m_pWnd->m_projGroups.Get()->Get(i));
 }
 
-int SWS_MediaPoolGroupView::GetItemState(LPARAM item)
+int SWS_MediaPoolGroupView::GetItemState(SWS_ListItem* item)
 {
 	return (SWS_MediaPoolGroup*)item == m_pWnd->m_curGroup ? 1 : 0;
 }
@@ -361,7 +357,7 @@ void SWS_MediaPoolFileView::DoDelete()
 }
 
 
-void SWS_MediaPoolFileView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
+void SWS_MediaPoolFileView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	SWS_MediaPoolFile* pFile = (SWS_MediaPoolFile*)item;
 	switch (iCol)
@@ -395,7 +391,7 @@ void SWS_MediaPoolFileView::GetItemText(LPARAM item, int iCol, char* str, int iS
 	}
 }
 
-void SWS_MediaPoolFileView::OnItemBtnClk(LPARAM item, int iCol, int iKeyState)
+void SWS_MediaPoolFileView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState)
 {
 	if (iCol == 3 && m_pWnd->m_curGroup != &m_pWnd->m_projGroup)
 	{
@@ -411,28 +407,24 @@ void SWS_MediaPoolFileView::OnItemBtnClk(LPARAM item, int iCol, int iKeyState)
 	}
 }
 
-void SWS_MediaPoolFileView::OnItemSelChanged(LPARAM item, int iState)
+void SWS_MediaPoolFileView::OnItemSelChanged(SWS_ListItem* item, int iState)
 {
 	// TODO update the info text
 }
 
-void SWS_MediaPoolFileView::OnItemDblClk(LPARAM item, int iCol)
+void SWS_MediaPoolFileView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	// Insert the file
 	InsertFile((char*)((SWS_MediaPoolFile*)item)->GetFilename());
 }
 
-void SWS_MediaPoolFileView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
+void SWS_MediaPoolFileView::GetItemList(SWS_ListItemList* pList)
 {
-	int iSize = 0;
-	if (m_pWnd->m_curGroup)
-		iSize = m_pWnd->m_curGroup->m_files.GetSize();
-	pBuf->Resize(iSize);
-	for (int i = 0; i < iSize; i++)
-		pBuf->Get()[i] = (LPARAM)m_pWnd->m_curGroup->m_files.Get(i);
+	for (int i = 0; m_pWnd->m_curGroup && i < m_pWnd->m_curGroup->m_files.GetSize(); i++)
+		pList->Add((SWS_ListItem*)m_pWnd->m_curGroup->m_files.Get(i));
 }
 
-void SWS_MediaPoolFileView::OnBeginDrag(LPARAM item)
+void SWS_MediaPoolFileView::OnBeginDrag(SWS_ListItem* item)
 {
 #ifdef _WIN32
 	LVITEM li;

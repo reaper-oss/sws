@@ -139,7 +139,7 @@ SNM_LiveConfigsView::SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit)
 #endif
 }
 
-void SNM_LiveConfigsView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
+void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	if (str) *str = '\0';
 	MidiLiveItem* pItem = (MidiLiveItem*)item;
@@ -190,7 +190,7 @@ void SNM_LiveConfigsView::GetItemText(LPARAM item, int iCol, char* str, int iStr
 	}
 }
 
-void SNM_LiveConfigsView::SetItemText(LPARAM item, int iCol, const char* str)
+void SNM_LiveConfigsView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 {
 	MidiLiveItem* pItem = (MidiLiveItem*)item;
 	if (pItem)
@@ -221,18 +221,17 @@ void SNM_LiveConfigsView::SetItemText(LPARAM item, int iCol, const char* str)
 	}
 }
 
-void SNM_LiveConfigsView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
+void SNM_LiveConfigsView::GetItemList(SWS_ListItemList* pList)
 {
-	pBuf->Resize(NB_CC_VALUES);
-	for (int i = 0; i < pBuf->GetSize(); i++)
+	for (int i = 0; i < NB_CC_VALUES; i++)
 	{
 		WDL_PtrList<MidiLiveItem>* configs = g_liveCCConfigs.Get()->Get(g_configId);
 		if (configs)
-			pBuf->Get()[i] = (LPARAM)configs->Get(i);
+			pList->Add((SWS_ListItem*)configs->Get(i));
 	}
 }
 
-void SNM_LiveConfigsView::OnItemDblClk(LPARAM item, int iCol)
+void SNM_LiveConfigsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	MidiLiveItem* pItem = (MidiLiveItem*)item;
 	if (pItem)
@@ -240,15 +239,15 @@ void SNM_LiveConfigsView::OnItemDblClk(LPARAM item, int iCol)
 		switch(iCol)
 		{
 			case COL_CC:
-				g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_PERFORM_MSG, item);
+				g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_PERFORM_MSG, (LPARAM)pItem);
 				break;
 			case COL_TRT:
 				if (pItem->m_track)
-					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG, item);
+					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG, (LPARAM)pItem);
 				break;
 			case COL_FXC:
 				if (pItem->m_track)
-					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_LOAD_FXCHAIN_MSG, item);
+					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_LOAD_FXCHAIN_MSG, (LPARAM)pItem);
 				break;
 			default:
 				break;
@@ -405,7 +404,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case SNM_LIVECFG_EDIT_DESC_MSG:
 			if (item) 
-				m_pLists.Get(0)->EditListItem((LPARAM)item, 1);
+				m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, 1);
 			break;
 		case SNM_LIVECFG_CLEAR_DESC_MSG:
 		{
@@ -497,7 +496,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case SNM_LIVECFG_EDIT_ON_ACTION_MSG:
 			if (item) 
-				m_pLists.Get(0)->EditListItem((LPARAM)item, 5);
+				m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, 5);
 			break;
 		case SNM_LIVECFG_CLEAR_ON_ACTION_MSG:
 		{
@@ -515,7 +514,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case SNM_LIVECFG_EDIT_OFF_ACTION_MSG:
 			if (item) 
-				m_pLists.Get(0)->EditListItem((LPARAM)item, 6);
+				m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, 6);
 			break;
 		case SNM_LIVECFG_CLEAR_OFF_ACTION_MSG:
 		{

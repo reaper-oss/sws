@@ -55,12 +55,12 @@ public:
 	void OnEndDrag();
 
 protected:
-	void SetItemText(LPARAM item, int iCol, const char* str);
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	void OnItemDblClk(LPARAM item, int iCol);
-	void OnItemSelChanged(LPARAM item, int iState);
-	void OnBeginDrag(LPARAM item);
+	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
+	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
+	void GetItemList(SWS_ListItemList* pList);
+	void OnItemDblClk(SWS_ListItem* item, int iCol);
+	void OnItemSelChanged(SWS_ListItem* item, int iState);
+	void OnBeginDrag(SWS_ListItem* item);
 };
 
 class SWS_AutoColorWnd : public SWS_DockWnd

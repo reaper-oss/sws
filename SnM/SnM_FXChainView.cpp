@@ -283,7 +283,7 @@ SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
 #endif
 }
 
-void SNM_ResourceView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
+void SNM_ResourceView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	if (str) *str = '\0';
 	PathSlotItem* pItem = (PathSlotItem*)item;
@@ -315,7 +315,7 @@ void SNM_ResourceView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax
 	}
 }
 
-void SNM_ResourceView::SetItemText(LPARAM item, int iCol, const char* str)
+void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 {
 	PathSlotItem* pItem = (PathSlotItem*)item;
 	int slot = GetCurList()->Find(pItem);
@@ -366,7 +366,7 @@ void SNM_ResourceView::SetItemText(LPARAM item, int iCol, const char* str)
 }
 
 
-void SNM_ResourceView::OnItemDblClk(LPARAM item, int iCol)
+void SNM_ResourceView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	PathSlotItem* pItem = (PathSlotItem*)item;
 	int slot = GetCurList()->Find(pItem);
@@ -428,7 +428,7 @@ void SNM_ResourceView::OnItemDblClk(LPARAM item, int iCol)
 	}
 }
 
-void SNM_ResourceView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
+void SNM_ResourceView::GetItemList(SWS_ListItemList* pList)
 {
 	if (IsFiltered())
 	{
@@ -443,22 +443,19 @@ void SNM_ResourceView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
 				bool match = true;
 				for (int j=0; match && j < lp.getnumtokens(); j++)
 					match &= (stristr(g_filterByPathPref ? item->m_shortPath.Get() : item->m_desc.Get(), lp.gettoken_str(j)) != NULL);
-				if (match) {
-					pBuf->Resize(++iCount);
-					pBuf->Get()[iCount-1] = (LPARAM)item;
-				}
+				if (match)
+					pList->Add((SWS_ListItem*)item);
 			}
 		}
 	}
 	else
 	{
-		pBuf->Resize(GetCurList()->GetSize());
-		for (int i = 0; i < pBuf->GetSize(); i++)
-			pBuf->Get()[i] = (LPARAM)GetCurList()->Get(i);
+		for (int i = 0; i < GetCurList()->GetSize(); i++)
+			pList->Add((SWS_ListItem*)GetCurList()->Get(i));
 	}
 }
 
-void SNM_ResourceView::OnBeginDrag(LPARAM _item)
+void SNM_ResourceView::OnBeginDrag(SWS_ListItem* _item)
 {
 #ifdef _WIN32
 	g_dragPathSlotItems.Empty(false);
@@ -534,102 +531,10 @@ void SNM_FastResourceView::Update()
 		m_bDisableUpdates = true;
 		char str[256];
 
-		WDL_TypedBuf<LPARAM> items;
+		SWS_ListItemList items;
 		GetItemList(&items);
 
-/*JFB original code
-		// Check for deletions - items in the lstwnd are quite likely out of order so gotta do a full O(n^2) search
-		int lvItemCount = ListView_GetItemCount(m_hwndList);
-		for (int i = 0; i < lvItemCount; i++)
-		{
-			LPARAM item = GetListItem(i);
-			bool bFound = false;
-			for (int j = 0; j < items.GetSize(); j++)
-				if (items.Get()[j] == item)
-				{
-					bFound = true;
-					break;
-				}
-
-			if (!bFound)
-			{
-				ListView_DeleteItem(m_hwndList, i--);
-				lvItemCount--;
-			}
-		}
-
-		// Check for additions
-		lvItemCount = ListView_GetItemCount(m_hwndList);
-		for (int i = 0; i < items.GetSize(); i++)
-		{
-			bool bFound = false;
-			int j;
-			for (j = 0; j < lvItemCount; j++)
-			{
-				if (items.Get()[i] == GetListItem(j))
-				{
-					bFound = true;
-					break;
-				}
-			}
-
-			// Update the list, no matter what, because text may have changed
-			LVITEM item;
-			item.mask = 0;
-			int iNewState = GetItemState(items.Get()[i]);
-			if (iNewState >= 0)
-			{
-				int iCurState = bFound ? ListView_GetItemState(m_hwndList, j, LVIS_SELECTED | LVIS_FOCUSED) : 0;
-				if (iNewState && !(iCurState & LVIS_SELECTED))
-				{
-					item.mask |= LVIF_STATE;
-					item.state = LVIS_SELECTED;
-					item.stateMask = LVIS_SELECTED;
-				}
-				else if (!iNewState && (iCurState & LVIS_SELECTED))
-				{
-					item.mask |= LVIF_STATE;
-					item.state = 0;
-					item.stateMask = LVIS_SELECTED | ((iCurState & LVIS_FOCUSED) ? LVIS_FOCUSED : 0);
-				}
-			}
-
-			item.iItem = j;
-			item.pszText = str;
-
-			int iCol = 0;
-			for (int k = 0; k < m_iCols; k++)
-				if (m_pCols[k].iPos != -1)
-				{
-					item.iSubItem = iCol;
-					GetItemText(items.Get()[i], k, str, 256);
-					if (!iCol && !bFound)
-					{
-						item.mask |= LVIF_PARAM | LVIF_TEXT;
-						item.lParam = items.Get()[i];
-						ListView_InsertItem(m_hwndList, &item);
-						lvItemCount++;
-					}
-					else
-					{
-						char curStr[256];
-						ListView_GetItemText(m_hwndList, j, iCol, curStr, 256);
-						if (strcmp(str, curStr))
-							item.mask |= LVIF_TEXT;
-						if (item.mask)
-						{
-							// Only set if there's changes
-							// May be less efficient here, but less messages get sent for sure!
-							ListView_SetItem(m_hwndList, &item);
-						}
-					}
-					item.mask = 0;
-					iCol++;
-				}
-		}
-*/
-
-//JFB mod -------------------------------------------------------------------->
+// SWS removed original code comment because it's changed significantly
 		ListView_DeleteAllItems(m_hwndList);
 		for (int i = 0; i < items.GetSize(); i++)
 		{
@@ -643,11 +548,11 @@ void SNM_FastResourceView::Update()
 				if (m_pCols[k].iPos != -1)
 				{
 					item.iSubItem = iCol;
-					GetItemText(items.Get()[i], k, str, 256);
+					GetItemText(items.Get(i), k, str, 256);
 					if (!iCol)
 					{
 						item.mask |= LVIF_PARAM | LVIF_TEXT;
-						item.lParam = items.Get()[i];
+						item.lParam = (LPARAM)items.Get(i);
 						ListView_InsertItem(m_hwndList, &item);
 					}
 					else
@@ -1160,7 +1065,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 	AddToMenu(hMenu, "Add slot", ADD_SLOT_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
 
 	int iCol;
-	LPARAM item = m_pLists.Get(0)->GetHitItem(x, y, &iCol);
+	SWS_ListItem* item = m_pLists.Get(0)->GetHitItem(x, y, &iCol);
 	PathSlotItem* pItem = (PathSlotItem*)item;
 	if (pItem && iCol >= 0)
 	{

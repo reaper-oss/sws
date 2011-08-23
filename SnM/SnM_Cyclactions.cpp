@@ -494,7 +494,7 @@ char g_lastImportFn[BUFFER_SIZE] = "";
 SNM_CyclactionsView::SNM_CyclactionsView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, 3, g_cyclactionsCols, "LCyclactionViewState", false) {}
 
-void SNM_CyclactionsView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
+void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	if (str) *str = '\0';
 	Cyclaction* a = (Cyclaction*)item;
@@ -545,28 +545,24 @@ void SNM_CyclactionsView::SetItemText(LPARAM _item, int _iCol, const char* _str)
 }
 
 // filter EMPTY_CYCLACTIONs
-void SNM_CyclactionsView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
+void SNM_CyclactionsView::GetItemList(SWS_ListItemList* pList)
 {
 	int iCount=0;
 	for (int i = 0; i < g_editedActionItems[g_editedSection].GetSize(); i++)
 	{
 		Cyclaction* a = (Cyclaction*)g_editedActionItems[g_editedSection].Get(i);
 		if (a && !a->IsEmpty())
-		{
-			pBuf->Resize(++iCount);
-			pBuf->Get()[iCount-1] = (LPARAM)a;
-		}
+			pList->Add((SWS_ListItem*)a);
 	}
 
 	if (!iCount)
 	{
 		static Cyclaction add(g_editedSection, DEFAULT_ADD_TEXT_L);
-		pBuf->Resize(1);
-		pBuf->Get()[0] = (LPARAM)&add;
+		pList->Add((SWS_ListItem*)&add);
 	}
 }
 
-void SNM_CyclactionsView::OnItemSelChanged(LPARAM item, int iState)
+void SNM_CyclactionsView::OnItemSelChanged(SWS_ListItem* item, int iState)
 {
 	if (g_mvR && g_mvR->EditListItemEnd(true))
 		UpdateEditedStatus(true);
@@ -580,7 +576,7 @@ void SNM_CyclactionsView::OnItemSelChanged(LPARAM item, int iState)
 		g_mvR->Update();
 }
 
-void SNM_CyclactionsView::OnItemBtnClk(LPARAM item, int iCol, int iKeyState) {
+void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState) {
 	if (item && iCol == 2) {
 		Cyclaction* pItem = (Cyclaction*)item;
 		pItem->SetToggle(!pItem->IsToggle());
@@ -602,7 +598,7 @@ SNM_CommandsView::SNM_CommandsView(HWND hwndList, HWND hwndEdit)
 	SetListviewColumnArrows(0);
 }
 
-void SNM_CommandsView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
+void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	if (str) *str = '\0';
 	WDL_String* pItem = (WDL_String*)item;
@@ -632,7 +628,7 @@ void SNM_CommandsView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax
 	}
 }
 
-void SNM_CommandsView::SetItemText(LPARAM _item, int _iCol, const char* _str)
+void SNM_CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
 	WDL_String* cmd = (WDL_String*)_item;
 	if (cmd && g_editedAction && _str && strcmp(cmd->Get(), _str))
@@ -648,29 +644,26 @@ void SNM_CommandsView::SetItemText(LPARAM _item, int _iCol, const char* _str)
 	}
 }
 
-void SNM_CommandsView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
+void SNM_CommandsView::GetItemList(SWS_ListItemList* pList)
 {
 	if (g_editedAction)
 	{
 		int nb = g_editedAction->GetCmdSize();
-		pBuf->Resize(nb);
 		if (nb)
 		{
 			for (int i = 0; i < nb; i++)
-				pBuf->Get()[i] = (LPARAM)g_editedAction->GetCmdString(i);
+				pList->Add((SWS_ListItem*)g_editedAction->GetCmdString(i));
 		}
 		else if (g_editedActionItems[g_editedSection].GetSize())
 		{
 			static WDL_String add(DEFAULT_ADD_TEXT_R);
-			pBuf->Resize(1);
-			pBuf->Get()[0] = (LPARAM)&add;
+			pList->Add((SWS_ListItem*)&add);
 		}
 	}
 	else if (g_editedActionItems[g_editedSection].GetSize())
 	{
 		static WDL_String empty(DEFAULT_EMPTY_TEXT);
-		pBuf->Resize(1);
-		pBuf->Get()[0] = (LPARAM)&empty;
+		pList->Add((SWS_ListItem*)&empty);
 	}
 }
 
@@ -691,7 +684,7 @@ int SNM_CommandsView::OnItemSort(LPARAM _item1, LPARAM _item2)
 	return 0;
 }
 
-void SNM_CommandsView::OnBeginDrag(LPARAM item)
+void SNM_CommandsView::OnBeginDrag(SWS_ListItem* item)
 {
 	if ((g_mvL && g_mvL->EditListItemEnd(true)) || (g_mvR && g_mvR->EditListItemEnd(true)))
 		UpdateEditedStatus(true);
@@ -735,7 +728,7 @@ void SNM_CommandsView::OnDrag()
 	}
 }
 
-void SNM_CommandsView::OnItemSelChanged(LPARAM item, int iState) {
+void SNM_CommandsView::OnItemSelChanged(SWS_ListItem* item, int iState) {
 	if (g_mvL && g_mvL->EditListItemEnd(true))
 		UpdateEditedStatus(true);
 }
@@ -798,7 +791,7 @@ void Apply()
 
 	g_editedAction = g_editedActionItems[g_editedSection].Get(editedActionId); // contains bounds checking..
 	if (g_editedAction && g_mvL)
-		g_mvL->SelectByItem((LPARAM)g_editedAction);
+		g_mvL->SelectByItem((SWS_ListItem*)g_editedAction);
 	UpdateListViews();
 }
 
@@ -889,7 +882,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				SWS_ListView* lv = (left ? (SWS_ListView*)g_mvL : (SWS_ListView*)g_mvR);
 #ifndef _WIN32
 				// On OSX, change the selection to match the right click
-				LPARAM hitItem = lv->GetHitItem(x, y, NULL);
+				SWS_ListItem* hitItem = lv->GetHitItem(x, y, NULL);
 				if (hitItem)
 				{
 					HWND hList = lv->GetHWND();
@@ -932,8 +925,8 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 							g_editedActionItems[g_editedSection].Add(a);
 							UpdateListViews();
 							UpdateEditedStatus(true);
-							g_mvL->SelectByItem((LPARAM)a);
-							g_mvL->EditListItem((LPARAM)a, 1);
+							g_mvL->SelectByItem((SWS_ListItem*)a);
+							g_mvL->EditListItem((SWS_ListItem*)a, 1);
 						}
 						break;
 						// remove cyclaction (for the user.. in fact in clears")
@@ -978,7 +971,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 								WDL_String* newCmd = g_editedAction->AddCmd("!");
 								g_mvR->Update();
 								UpdateEditedStatus(true);
-								g_mvR->EditListItem((LPARAM)newCmd, 0);
+								g_mvR->EditListItem((SWS_ListItem*)newCmd, 0);
 							}
 							break;
 						// learn cmd
@@ -988,7 +981,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 								WDL_String* newCmd = g_editedAction->AddCmd(idstr);
 								g_mvR->Update();
 								UpdateEditedStatus(true);
-								g_mvR->SelectByItem((LPARAM)newCmd);
+								g_mvR->SelectByItem((SWS_ListItem*)newCmd);
 							}
 							else {
 								char bufMsg[256] = "";

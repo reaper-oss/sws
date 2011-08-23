@@ -67,7 +67,7 @@ SWS_AutoColorView::SWS_AutoColorView(HWND hwndList, HWND hwndEdit)
 {
 }
 
-void SWS_AutoColorView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
+void SWS_AutoColorView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	SWS_RuleItem* pItem = (SWS_RuleItem*)item;
 	if (!pItem)
@@ -97,7 +97,7 @@ void SWS_AutoColorView::GetItemText(LPARAM item, int iCol, char* str, int iStrMa
 	}
 }
 
-void SWS_AutoColorView::SetItemText(LPARAM item, int iCol, const char* str)
+void SWS_AutoColorView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 {
 	SWS_RuleItem* pItem = (SWS_RuleItem*)item;
 	if (!pItem)
@@ -126,26 +126,25 @@ void SWS_AutoColorView::SetItemText(LPARAM item, int iCol, const char* str)
 	g_pACWnd->Update();
 }
 
-void SWS_AutoColorView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
+void SWS_AutoColorView::GetItemList(SWS_ListItemList* pList)
 {
-	pBuf->Resize(g_pACItems.GetSize());
-	for (int i = 0; i < pBuf->GetSize(); i++)
-		pBuf->Get()[i] = (LPARAM)g_pACItems.Get(i);
+	for (int i = 0; i < g_pACItems.GetSize(); i++)
+		pList->Add((SWS_ListItem*)g_pACItems.Get(i));
 }
 
-void SWS_AutoColorView::OnItemDblClk(LPARAM item, int iCol)
+void SWS_AutoColorView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	SWS_RuleItem* pItem = (SWS_RuleItem*)item;
 	if (pItem && iCol == 3)
-		g_pACWnd->OnCommand(LOAD_ICON_MSG, item);
+		g_pACWnd->OnCommand(LOAD_ICON_MSG, (LPARAM)pItem);
 }
 
-void SWS_AutoColorView::OnItemSelChanged(LPARAM item, int iState)
+void SWS_AutoColorView::OnItemSelChanged(SWS_ListItem* item, int iState)
 {
 	g_pACWnd->Update();
 }
 
-void SWS_AutoColorView::OnBeginDrag(LPARAM item)
+void SWS_AutoColorView::OnBeginDrag(SWS_ListItem* item)
 {
 	if (abs(m_iSortCol) == 1)
 		SetCapture(GetParent(m_hwndList));
@@ -466,7 +465,7 @@ int SWS_AutoColorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y)
 {
 	int iCol;
-	LPARAM item = m_pLists.Get(0)->GetHitItem(x, y, &iCol);
+	SWS_ListItem* item = m_pLists.Get(0)->GetHitItem(x, y, &iCol);
 	HMENU hMenu = CreatePopupMenu();
 
 	if (item && iCol == 1)

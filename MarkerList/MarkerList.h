@@ -36,14 +36,14 @@ public:
 	SWS_MarkerListView(HWND hwndList, HWND hwndEdit, SWS_MarkerListWnd* pList);
 
 protected:
-	void SetItemText(LPARAM item, int iCol, const char* str);
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void OnItemSelChanged(LPARAM item, int iState);
-	void OnItemClk(LPARAM item, int iCol, int iKeyState);
-	void OnItemDblClk(LPARAM item, int iCol);
-	int  OnItemSort(LPARAM item1, LPARAM item2);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	int  GetItemState(LPARAM item);
+	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
+	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
+	void OnItemSelChanged(SWS_ListItem* item, int iState);
+	void OnItemClk(SWS_ListItem* item, int iCol, int iKeyState);
+	void OnItemDblClk(SWS_ListItem* item, int iCol);
+	int  OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2);
+	void GetItemList(SWS_ListItemList* pList);
+	int  GetItemState(SWS_ListItem* item);
 
 private:
 	SWS_MarkerListWnd* m_pMarkerList;

@@ -238,7 +238,7 @@ int SWS_SnapshotsView::OnNotify(WPARAM wParam, LPARAM lParam)
 	return SWS_ListView::OnNotify(wParam, lParam);
 }
 
-void SWS_SnapshotsView::SetItemText(LPARAM item, int iCol, const char* str)
+void SWS_SnapshotsView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 {
 	if (iCol == 1)
 	{
@@ -247,7 +247,7 @@ void SWS_SnapshotsView::SetItemText(LPARAM item, int iCol, const char* str)
 	}
 }
 
-void SWS_SnapshotsView::GetItemText(LPARAM item, int iCol, char* str, int iStrMax)
+void SWS_SnapshotsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	Snapshot* ss = (Snapshot*)item;
 	switch(iCol)
@@ -270,7 +270,7 @@ void SWS_SnapshotsView::GetItemText(LPARAM item, int iCol, char* str, int iStrMa
 	}
 }
 
-void SWS_SnapshotsView::GetItemTooltip(LPARAM item, char* str, int iStrMax)
+void SWS_SnapshotsView::GetItemTooltip(SWS_ListItem* item, char* str, int iStrMax)
 {
 	if (item)
 	{
@@ -279,7 +279,7 @@ void SWS_SnapshotsView::GetItemTooltip(LPARAM item, char* str, int iStrMax)
 	}
 }
 
-void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol, int iKeyState)
+void SWS_SnapshotsView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState)
 {
 	if (!item)
 		return;
@@ -315,29 +315,22 @@ void SWS_SnapshotsView::OnItemClk(LPARAM item, int iCol, int iKeyState)
 	}
 }
 
-void SWS_SnapshotsView::GetItemList(WDL_TypedBuf<LPARAM>* pBuf)
+void SWS_SnapshotsView::GetItemList(SWS_ListItemList* pList)
 {
 	if (g_bShowSelOnly)
 	{	// Show snaps that include selected tracks
-		int iFilteredSnaps = 0;
-		pBuf->Resize(iFilteredSnaps, false);
-
 		for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
 			if (g_ss.Get()->m_snapshots.Get(i)->IncludesSelTracks())
-			{
-				pBuf->Resize(++iFilteredSnaps);
-				pBuf->Get()[iFilteredSnaps-1] = (LPARAM)g_ss.Get()->m_snapshots.Get(i);
-			}
+				pList->Add((SWS_ListItem*)g_ss.Get()->m_snapshots.Get(i));
 	}
 	else
 	{
-		pBuf->Resize(g_ss.Get()->m_snapshots.GetSize());
-		for (int i = 0; i < pBuf->GetSize(); i++)
-			pBuf->Get()[i] = (LPARAM)g_ss.Get()->m_snapshots.Get(i);
+		for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
+			pList->Add((SWS_ListItem*)g_ss.Get()->m_snapshots.Get(i));
 	}
 }
 
-int SWS_SnapshotsView::GetItemState(LPARAM item)
+int SWS_SnapshotsView::GetItemState(SWS_ListItem* item)
 {
 	Snapshot* ss = (Snapshot*)item;
 	return ss == g_ss.Get()->m_pCurSnapshot ? 1 : 0;
@@ -412,7 +405,7 @@ void SWS_SnapshotsWnd::RenameCurrent()
 	for (i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
 		if (g_ss.Get()->m_snapshots.Get(i) == g_ss.Get()->m_pCurSnapshot)
 			break;
-	m_pLists.Get(0)->EditListItem((LPARAM)g_ss.Get()->m_snapshots.Get(i), 1);
+	m_pLists.Get(0)->EditListItem((SWS_ListItem*)g_ss.Get()->m_snapshots.Get(i), 1);
 }
 
 void SWS_SnapshotsWnd::OnInitDlg()
@@ -583,7 +576,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
 {
 	HMENU contextMenu = CreatePopupMenu();
-	LPARAM item = m_pLists.Get(0)->GetHitItem(x, y, NULL);
+	SWS_ListItem* item = m_pLists.Get(0)->GetHitItem(x, y, NULL);
 
 	if (item)
 	{

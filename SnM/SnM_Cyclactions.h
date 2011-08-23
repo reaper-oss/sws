@@ -71,11 +71,11 @@ class SNM_CyclactionsView : public SWS_ListView
 public:
 	SNM_CyclactionsView(HWND hwndList, HWND hwndEdit);
 protected:
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
+	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
 	void SetItemText(LPARAM _item, int _iCol, const char* _str);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
-	void OnItemSelChanged(LPARAM item, int iState);
-	void OnItemBtnClk(LPARAM item, int iCol, int iKeyState);
+	void GetItemList(SWS_ListItemList* pList);
+	void OnItemSelChanged(SWS_ListItem* item, int iState);
+	void OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState);
 };
 
 class SNM_CommandsView : public SWS_ListView
@@ -84,10 +84,10 @@ public:
 	SNM_CommandsView(HWND hwndList, HWND hwndEdit);
 	void OnDrag();
 protected:
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void SetItemText(LPARAM item, int iCol, const char* str);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
+	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
+	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
+	void GetItemList(SWS_ListItemList* pList);
 	int OnItemSort(LPARAM _item1, LPARAM _item2); 
-	void OnBeginDrag(LPARAM item);
-	void OnItemSelChanged(LPARAM item, int iState);
+	void OnBeginDrag(SWS_ListItem* item);
+	void OnItemSelChanged(SWS_ListItem* item, int iState);
 };

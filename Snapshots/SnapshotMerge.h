@@ -42,8 +42,8 @@ public:
 
 protected:
 	int OnItemSort(LPARAM lParam1, LPARAM lParam2);
-	void GetItemText(LPARAM item, int iCol, char* str, int iStrMax);
-	void GetItemList(WDL_TypedBuf<LPARAM>* pBuf);
+	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
+	void GetItemList(SWS_ListItemList* pList);
 };
 
 bool MergeSnapshots(Snapshot* ss);

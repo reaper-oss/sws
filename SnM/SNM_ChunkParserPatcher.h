@@ -225,10 +225,10 @@ virtual WDL_String* GetChunk()
 }
 
 
-// IMPORTANT: in order to keep 'm_updates' up-to-date, you *MUST* use 
+// IMPORTANT: m_updates has to be kept up-to-date. You MUST use 
 // UpdateChunk() & SetChunk() methods when altering the cached chunk,
 // nothing will be comitted otherwise 
-// -OR- you *MUST* also manually alter 'm_updates'.
+// -OR- you MUST also manually alter m_updates.
 
 // clearing the cache is allowed
 void SetChunk(const char* _newChunk, int _updates) {

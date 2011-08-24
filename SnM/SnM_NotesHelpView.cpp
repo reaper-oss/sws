@@ -1097,7 +1097,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	{
 		strcpy(startLine, "<S&M_PROJNOTES\n|");
 		if (GetNotesChunkFromString(g_prjNotes.Get()->Get(), &formatedNotes, startLine))
-			StringToExtensionConfig(formatedNotes.Get(), ctx);
+			StringToExtensionConfig(&formatedNotes, ctx);
 	}
 
 	// Save track notes
@@ -1114,7 +1114,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			sprintf(startLine, "<S&M_TRACKNOTES %s\n|", strId);
 
 			if (GetNotesChunkFromString(g_pTracksNotes.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
-				StringToExtensionConfig(formatedNotes.Get(), ctx);
+				StringToExtensionConfig(&formatedNotes, ctx);
 		}
 	}
 }

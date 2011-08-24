@@ -1,3 +1,5 @@
+Issue 358: fixed possible crash on project load  
+
 !v2.1.0 #5 (August 22, 2011)
 Issue 353: Much improved sws window list performance (eg Markerlist with many, many markers)
 Issue 354: Fixed crash when importing non-RPP project files.

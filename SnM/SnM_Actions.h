@@ -358,11 +358,12 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 bool LoadChunk(const char* _fn, WDL_String* _chunk);
 bool SaveChunk(const char* _fn, WDL_String* _chunk);
 void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
-void StringToExtensionConfig(char* _str, ProjectStateContext* _ctx);
+void StringToExtensionConfig(WDL_String* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx);
 void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection, const char* _iniFn);
 int SNM_NamedCommandLookup(const char* _cmdId);
 int FindMarker(double _pos);
+void makeUnformatedConfigString(const char* _in, WDL_String* _out);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 void ShortenStringToFirstRN(char* _str);
 void ReplaceStringFormat(char* _str, char _replaceCh);

@@ -201,11 +201,14 @@ void GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 	}
 }
 
-void StringToExtensionConfig(char* _str, ProjectStateContext* _ctx)
+void StringToExtensionConfig(WDL_String* _str, ProjectStateContext* _ctx)
 {
 	if (_str && _ctx)
 	{
-		char* pEOL = _str-1;
+		WDL_String unformatedStr;
+		makeUnformatedConfigString(_str->Get(), &unformatedStr);
+
+		char* pEOL = unformatedStr.Get()-1;
 		char curLine[4096] = "";
 		for(;;) 
 		{
@@ -304,6 +307,25 @@ int FindMarker(double _pos)
 		}
 	}
 	return idx;
+}
+
+void makeUnformatedConfigString(const char* _in, WDL_String* _out)
+{
+	if (_in && _out)
+	{
+		_out->Set(_in);
+		char* p = strstr(_out->Get(), "%");
+		while(p)
+		{
+			int pos = p - _out->Get();
+			if (pos+1 < _out->GetLength()) {
+				pos++;
+				if (p[1] != '%')
+					_out->Insert("%", pos);
+			}
+			p = (pos+1 < _out->GetLength()) ? strstr((char*)(_out->Get()+pos+1), "%") : NULL;
+		}
+	}
 }
 
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize)

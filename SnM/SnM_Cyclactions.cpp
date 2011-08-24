@@ -219,7 +219,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_String* _errM
 				if (atoi(cmd) >= g_iFirstCommand)
 				{
 					if (_errMsg) 
-						_errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: for extensions' actions, you must use custom ids (e.g. _SWS_ABOUT),\nnot command ids (e.g. 47145)\n\n", _a->GetName(), g_cyclactionSections[_section], cmd);
+						_errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: for extensions' actions, you must use custom ids (e.g. _SWS_ABOUT),\nnot command ids (e.g. 47145)\n\n", _a->GetName(), g_cyclactionSections[_section]);
 					return false;
 				}
 				// API limit: NamedCommandLookup() KO in other sections than the main one

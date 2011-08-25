@@ -318,11 +318,7 @@ void makeUnformatedConfigString(const char* _in, WDL_String* _out)
 		while(p)
 		{
 			int pos = p - _out->Get();
-			if (pos+1 < _out->GetLength()) {
-				pos++;
-				if (p[1] != '%')
-					_out->Insert("%", pos);
-			}
+			_out->Insert("%", ++pos); // ++ops! but Insert() clamps to length..
 			p = (pos+1 < _out->GetLength()) ? strstr((char*)(_out->Get()+pos+1), "%") : NULL;
 		}
 	}

@@ -30,21 +30,33 @@
 class MarkerItem
 {
 public:
-	MarkerItem(bool bReg, double dPos, double dRegEnd, const char* cName, int id);
+	MarkerItem(bool bReg, double dPos, double dRegEnd, const char* cName, int id, int color);
 	MarkerItem(LineParser* lp);
 	~MarkerItem();
+	char* ItemString(char* str, int iSize);
+	void SetFromString(LineParser* lp);
+	bool Compare(bool bReg, double dPos, double dRegEnd, const char* cName, int id, int color);
+	bool Compare(MarkerItem* mi);
+	void AddToProject();
+
+	// Member access	
+	void SetName(const char* newname);
+	const char* GetName() { return m_cName ? m_cName : ""; }
+	double GetPos() { return m_dPos; }
+	void SetPos(double dPos) { m_dPos = dPos; }
+	double GetRegEnd() { return m_dRegEnd; }
+	void SetRegEnd(double dEnd) { m_dRegEnd = dEnd; }
+	bool IsRegion() { return m_bReg; }
+	int GetID() { return m_id; }
+	int GetColor() { return m_iColor; }
+
+private:
+	char* m_cName;
 	double m_dPos;
 	bool m_bReg;
 	double m_dRegEnd;
 	int m_id;
-	char* ItemString(char* str, int iSize);
-	void SetName(const char* newname);
-	const char* GetName() { return m_cName ? m_cName : ""; }
-	void SetFromString(LineParser* lp);
-	bool Compare(bool bReg, double dPos, double dRegEnd, const char* cName, int id);
-	bool Compare(MarkerItem* mi);
-private:
-	char* m_cName;
+	int m_iColor;
 };
 
 class MarkerList
@@ -64,3 +76,5 @@ public:
 	WDL_PtrList<MarkerItem> m_items;
 	SWS_Mutex m_mutex;
 };
+
+int EnumMarkers(int idx, bool* isrgn, double* pos, double* rgnend, char** name, int* markrgnindexnumber, int* color);

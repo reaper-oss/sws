@@ -32,22 +32,24 @@
 #include "MarkerListClass.h"
 #include "MarkerListActions.h"
 
-MarkerItem::MarkerItem(bool bReg, double dPos, double dRegEnd, const char* cName, int id)
+MarkerItem::MarkerItem(bool bReg, double dPos, double dRegEnd, const char* cName, int id, int color)
 {
 	m_bReg = bReg;
 	m_dPos = dPos;
 	m_dRegEnd = bReg ? dRegEnd : -1.0;
 	m_id = id;
 	SetName(cName);
+	m_iColor = color;
 }
 
 MarkerItem::MarkerItem(LineParser* lp)
 {
-	m_id      = atol(lp->gettoken_str(0));
-	m_dPos    = atof(lp->gettoken_str(1));
+	m_id      = lp->gettoken_int(0);
+	m_dPos    = lp->gettoken_float(1);
 	SetName(lp->gettoken_str(2));
-	m_bReg    = atol(lp->gettoken_str(3)) ? true : false;
-	m_dRegEnd = atof(lp->gettoken_str(4));
+	m_bReg    = lp->gettoken_int(3) ? true : false;
+	m_dRegEnd = lp->gettoken_float(4);
+	m_iColor  = lp->gettoken_int(5);
 }
 
 MarkerItem::~MarkerItem()
@@ -59,7 +61,7 @@ char* MarkerItem::ItemString(char* str, int iSize)
 {
 	WDL_String name;
 	makeEscapedConfigString(GetName(), &name);
-	_snprintf(str, iSize, "%d %.14f %s %d %.14f", m_id, m_dPos, name.Get(), m_bReg ? 1 : 0, m_dRegEnd);
+	_snprintf(str, iSize, "%d %.14f %s %d %.14f %d", m_id, m_dPos, name.Get(), m_bReg ? 1 : 0, m_dRegEnd, m_iColor);
 	return str;
 }
 void MarkerItem::SetName(const char* newname)
@@ -73,14 +75,23 @@ void MarkerItem::SetName(const char* newname)
 		m_cName = NULL;
 }
 
-bool MarkerItem::Compare(bool bReg, double dPos, double dRegEnd, const char* cName, int id)
+bool MarkerItem::Compare(bool bReg, double dPos, double dRegEnd, const char* cName, int id, int color)
 {
 	return (bReg == m_bReg && dPos == m_dPos && strcmp(cName, GetName()) == 0 && id == m_id && (!bReg || dRegEnd == m_dRegEnd));
 }
 
 bool MarkerItem::Compare(MarkerItem* mi)
 {
-	return Compare(mi->m_bReg, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), mi->m_id);
+	return Compare(mi->IsRegion(), mi->GetPos(), mi->GetRegEnd(), mi->GetName(), mi->m_id, mi->m_iColor);
+}
+
+void MarkerItem::AddToProject()
+{
+	//if (g_bv4)
+		// TODO!!!
+	//	AddProjectMarker2(NULL, mi->IsRegion(), mi->GetPos(), mi->GetRegEnd(), mi->GetName(), mi->m_id);
+	//else
+	AddProjectMarker(NULL, m_bReg, m_dPos, m_dRegEnd, GetName(), m_id);
 }
 
 MarkerList::MarkerList(const char* name, bool bGetCurList)
@@ -113,18 +124,18 @@ bool MarkerList::BuildFromReaper()
 	// Instead of emptying and starting over, try to just add or delete for simple cases (added/deleted marker)
 	// markers moved in time are reallocated
 	// m_items maintains the same ordering as EnumProjectMarkers
-	int id, x = 0, i = 0;
+	int id, x = 0, i = 0, iColor = 0;
 	bool bR, bChanged = false;
 	double dPos, dRend;
 	char *cName;
 
-	while ((x=EnumProjectMarkers(x, &bR, &dPos, &dRend, &cName, &id)))
+	while ((x=EnumMarkers(x, &bR, &dPos, &dRend, &cName, &id, &iColor)))
 	{
-		if (i >= m_items.GetSize() || !m_items.Get(i)->Compare(bR, dPos, dRend, cName ? cName : "", id))
+		if (i >= m_items.GetSize() || !m_items.Get(i)->Compare(bR, dPos, dRend, cName ? cName : "", id, iColor))
 		{ // not found, try ahead one more
-			if (i+1 >= m_items.GetSize() || !m_items.Get(i+1)->Compare(bR, dPos, dRend, cName, id))
+			if (i+1 >= m_items.GetSize() || !m_items.Get(i+1)->Compare(bR, dPos, dRend, cName, id, iColor))
 			{	// not found one ahead, assume new and insert at current position
-				m_items.Insert(i, new MarkerItem(bR, dPos, dRend, cName, id));
+				m_items.Insert(i, new MarkerItem(bR, dPos, dRend, cName, id, iColor));
 				bChanged = true;
 			}
 			else
@@ -155,10 +166,8 @@ void MarkerList::UpdateReaper()
 	SWS_SectionLock lock(&m_mutex);
 
 	for (int i = 0; i < m_items.GetSize(); i++)
-	{
-		MarkerItem* mi = m_items.Get(i);
-		AddProjectMarker(NULL, mi->m_bReg, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), mi->m_id);
-	}
+		m_items.Get(i)->AddToProject();
+
 	UpdateTimeline();
 }
 
@@ -250,16 +259,16 @@ void MarkerList::ExportToClipboard(const char* format)
 	for (int i = 0; i < m_items.GetSize(); i++)
 	{
 		if (format[0] == 'a' ||
-			(format[0] == 'r' && m_items.Get(i)->m_bReg) ||
-			(format[0] == 'm' && !m_items.Get(i)->m_bReg))
+			(format[0] == 'r' && m_items.Get(i)->IsRegion()) ||
+			(format[0] == 'm' && !m_items.Get(i)->IsRegion()))
 		{
 			// Cheat a bit and use the region end variable for markers as "location of next marker or eop"
-			if (!m_items.Get(i)->m_bReg)
+			if (!m_items.Get(i)->IsRegion())
 			{
 				if (i < m_items.GetSize() - 1)
-					m_items.Get(i)->m_dRegEnd = m_items.Get(i+1)->m_dPos;
+					m_items.Get(i)->SetRegEnd(m_items.Get(i+1)->GetPos());
 				else
-					m_items.Get(i)->m_dRegEnd = dEnd;
+					m_items.Get(i)->SetRegEnd(dEnd);
 			}
 
 			for (unsigned int j = 1; j < strlen(format); j++)
@@ -270,11 +279,11 @@ void MarkerList::ExportToClipboard(const char* format)
 					s += sprintf(s, "%d", count++);
 					break;
 				case 'i':
-					s += sprintf(s, "%d", m_items.Get(i)->m_id);
+					s += sprintf(s, "%d", m_items.Get(i)->GetID());
 					break;
 				case 'l':
 				{
-					double len = m_items.Get(i)->m_dRegEnd-m_items.Get(i)->m_dPos;
+					double len = m_items.Get(i)->GetRegEnd() - m_items.Get(i)->GetPos();
 					if (len < 0.0)
 						len = 0.0;
 					format_timestr_pos(len, s, (int)(iLen-(s-str)), 5);
@@ -286,16 +295,16 @@ void MarkerList::ExportToClipboard(const char* format)
 					s += sprintf(s, "%s", m_items.Get(i)->GetName());
 					break;
 				case 't':
-					format_timestr_pos(m_items.Get(i)->m_dPos, s, (int)(iLen-(s-str)), 5);
+					format_timestr_pos(m_items.Get(i)->GetPos(), s, (int)(iLen-(s-str)), 5);
 					s += strlen(s)-3;
 					s[0] = 0;
 					break;
 				case 's':
-					format_timestr_pos(m_items.Get(i)->m_dPos, s, (int)(iLen-(s-str)), 4);
+					format_timestr_pos(m_items.Get(i)->GetPos(), s, (int)(iLen-(s-str)), 4);
 					s += strlen(s);
 					break;
 				case 'p':
-					format_timestr_pos(m_items.Get(i)->m_dPos, s, (int)(iLen-(s-str)), -1);
+					format_timestr_pos(m_items.Get(i)->GetPos(), s, (int)(iLen-(s-str)), -1);
 					s += strlen(s);
 					break;
 				case '\\':
@@ -369,24 +378,34 @@ void MarkerList::CropToTimeSel(bool bOffset)
 	// Don't crop the end of regions
 	for (int i = 0; i < m_items.GetSize(); i++)
 	{
-		if (m_items.Get(i)->m_dPos > dEnd ||
-			(!m_items.Get(i)->m_bReg && m_items.Get(i)->m_dPos < dStart) ||
-			(m_items.Get(i)->m_bReg  && m_items.Get(i)->m_dRegEnd < dStart))
+		MarkerItem* item = m_items.Get(i);
+		if (item->GetPos() > dEnd ||
+			(!item->IsRegion() && item->GetPos() < dStart) ||
+			(item->IsRegion()  && item->GetRegEnd() < dStart))
 		{ // delete the item
 			m_items.Delete(i, true);
 			i--;
 		}
 		else
 		{
-			if (m_items.Get(i)->m_bReg && m_items.Get(i)->m_dPos < dStart && m_items.Get(i)->m_dRegEnd >= dStart)
-				m_items.Get(i)->m_dPos = dStart;
+			if (item->IsRegion() && item->GetPos() < dStart && item->GetRegEnd() >= dStart)
+				item->SetPos(dStart);
 			
 			if (bOffset)
 			{
-				m_items.Get(i)->m_dPos -= dStart;
-				if (m_items.Get(i)->m_bReg)
-					m_items.Get(i)->m_dRegEnd -= dStart;
+				item->SetPos(item->GetPos() - dStart);
+				if (item->IsRegion())
+					item->SetRegEnd(item->GetRegEnd() - dStart);
 			}
 		}
 	}
+}
+
+// Helper func
+int EnumMarkers(int idx, bool* isrgn, double* pos, double* rgnend, char** name, int* markrgnindexnumber, int* color)
+{
+	if (g_bv4)
+		return EnumProjectMarkers3(NULL, idx, isrgn, pos, rgnend, name, markrgnindexnumber, color);
+	if (color) *color = 0;
+	return EnumProjectMarkers(idx, isrgn, pos, rgnend, name, markrgnindexnumber);
 }

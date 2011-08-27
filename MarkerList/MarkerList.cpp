@@ -57,13 +57,13 @@ void SWS_MarkerListView::GetItemText(SWS_ListItem* item, int iCol, char* str, in
 		switch (iCol)
 		{
 		case 0:
-			format_timestr_pos(mi->m_dPos, str, iStrMax, -1);
+			format_timestr_pos(mi->GetPos(), str, iStrMax, -1);
 			break;
 		case 1:
-			_snprintf(str, iStrMax, "%s", mi->m_bReg ? "Region" : "Marker");
+			_snprintf(str, iStrMax, "%s", mi->IsRegion() ? "Region" : "Marker");
 			break;
 		case 2:
-			_snprintf(str, iStrMax, "%d", mi->m_id);
+			_snprintf(str, iStrMax, "%d", mi->GetID());
 			break;
 		case 3:
 			lstrcpyn(str, mi->GetName(), iStrMax);
@@ -77,10 +77,10 @@ void SWS_MarkerListView::OnItemSelChanged(SWS_ListItem* item, int iState)
 	if (iState & LVIS_FOCUSED)
 	{
 		MarkerItem* mi = (MarkerItem*)item;
-		if (mi->m_dPos != GetCursorPosition())
+		if (mi->GetPos() != GetCursorPosition())
 		{
-			SetEditCurPos(mi->m_dPos, m_pMarkerList->m_bScroll, false); // Never play here, do it from the clk handler
-			m_pMarkerList->m_dCurPos = mi->m_dPos; // Save pos
+			SetEditCurPos(mi->GetPos(), m_pMarkerList->m_bScroll, false); // Never play here, do it from the clk handler
+			m_pMarkerList->m_dCurPos = mi->GetPos(); // Save pos
 		}
 	}
 }
@@ -89,7 +89,7 @@ void SWS_MarkerListView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState)
 {
 	MarkerItem* mi = (MarkerItem*)item;
 	if (mi) // Doubled-up calls to SetEditCurPos - oh well!
-		SetEditCurPos(mi->m_dPos, m_pMarkerList->m_bScroll, m_pMarkerList->m_bPlayOnSel);
+		SetEditCurPos(mi->GetPos(), m_pMarkerList->m_bScroll, m_pMarkerList->m_bPlayOnSel);
 
 	if (iKeyState == LVKF_SHIFT)
 	{
@@ -102,12 +102,12 @@ void SWS_MarkerListView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState)
 			mi = (MarkerItem*)GetListItem(i, &iState);
 			if (iState)
 			{
-				if (mi->m_dPos < dMinTime)
-					dMinTime = mi->m_dPos;
-				if (mi->m_bReg && mi->m_dRegEnd > dMaxTime)
-					dMaxTime = mi->m_dRegEnd;
-				else if (mi->m_dPos > dMaxTime)
-					dMaxTime = mi->m_dPos;
+				if (mi->GetPos() < dMinTime)
+					dMinTime = mi->GetPos();
+				if (mi->IsRegion() && mi->GetRegEnd() > dMaxTime)
+					dMaxTime = mi->GetRegEnd();
+				else if (mi->GetPos() > dMaxTime)
+					dMaxTime = mi->GetPos();
 			}
 		}
 		if (dMaxTime != -DBL_MAX && dMinTime != DBL_MAX)
@@ -118,8 +118,11 @@ void SWS_MarkerListView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState)
 void SWS_MarkerListView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	MarkerItem* mi = (MarkerItem*)item;
-	if (mi->m_bReg)
-		GetSet_LoopTimeRange(true, true, &mi->m_dPos, &mi->m_dRegEnd, m_pMarkerList->m_bPlayOnSel);
+	if (mi->IsRegion())
+	{
+		double d1 = mi->GetPos(), d2 = mi->GetRegEnd();
+		GetSet_LoopTimeRange(true, true, &d1, &d2, m_pMarkerList->m_bPlayOnSel);
+	}
 }
 
 int SWS_MarkerListView::OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2)
@@ -130,9 +133,9 @@ int SWS_MarkerListView::OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2)
 
 	if (abs(m_iSortCol) == 1)
 	{
-		if (mi1->m_dPos > mi2->m_dPos)
+		if (mi1->GetPos() > mi2->GetPos())
 			iRet = 1;
-		else if (mi1->m_dPos < mi2->m_dPos)
+		else if (mi1->GetPos() < mi2->GetPos())
 			iRet = -1;
 		if (m_iSortCol < 0)
 			return -iRet;
@@ -141,9 +144,9 @@ int SWS_MarkerListView::OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2)
 	}
 	else if (abs(m_iSortCol) == 3)
 	{
-		if (mi1->m_id > mi2->m_id)
+		if (mi1->GetID() > mi2->GetID())
 			iRet = 1;
-		else if (mi1->m_id < mi2->m_id)
+		else if (mi1->GetID() < mi2->GetID())
 			iRet = -1;
 		if (m_iSortCol < 0)
 			return -iRet;
@@ -159,7 +162,7 @@ void SWS_MarkerListView::SetItemText(SWS_ListItem* item, int iCol, const char* s
 	{
 		MarkerItem* mi = (MarkerItem*)item;
 		mi->SetName(str);
-		SetProjectMarker(mi->m_id, mi->m_bReg, mi->m_dPos, mi->m_dRegEnd, str);
+		SetProjectMarker(mi->GetID(), mi->IsRegion(), mi->GetPos(), mi->GetRegEnd(), str);
 		Update();
 	}
 }
@@ -188,7 +191,7 @@ void SWS_MarkerListView::GetItemList(SWS_ListItemList* pList)
 int SWS_MarkerListView::GetItemState(SWS_ListItem* item)
 {
 	MarkerItem* mi = (MarkerItem*)item;
-	return GetCursorPosition() == mi->m_dPos ? 1 : 0;
+	return GetCursorPosition() == mi->GetPos() ? 1 : 0;
 }
 
 SWS_MarkerListWnd::SWS_MarkerListWnd()
@@ -294,7 +297,7 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					if (li.state == LVIS_SELECTED)
 					{
 						MarkerItem* item = (MarkerItem*)li.lParam;
-						DeleteProjectMarker(NULL, item->m_id, item->m_bReg);
+						DeleteProjectMarker(NULL, item->GetID(), item->IsRegion());
 					}
 				}
 				Undo_EndBlock("Delete marker(s)", UNDO_STATE_MISCCFG);
@@ -372,7 +375,7 @@ int SWS_MarkerListWnd::OnKey(MSG* msg, int iKeyState)
 		{
 			MarkerItem* mi = (MarkerItem*)m_pLists.Get(0)->EnumSelected(NULL);
 			if (mi)
-				SetEditCurPos(mi->m_dPos, m_bScroll, m_bPlayOnSel);
+				SetEditCurPos(mi->GetPos(), m_bScroll, m_bPlayOnSel);
 			return 1;
 		}
 	}

@@ -495,6 +495,7 @@ extern "C"
 		IMPAPI(EnsureNotCompletelyOffscreen);
 		IMPAPI(EnumProjectMarkers);
 		IMPAPI(EnumProjectMarkers2);
+		*(void**)&EnumProjectMarkers3 = rec->GetFunc("EnumProjectMarkers3"); // v4 only
 		IMPAPI(EnumProjects);
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);

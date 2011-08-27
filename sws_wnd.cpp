@@ -909,7 +909,7 @@ void SWS_ListView::Update()
 		// The list is sorted, use that to our advantage here:
 		int lvItemCount = ListView_GetItemCount(m_hwndList);
 		int newIndex = lvItemCount;
-		for (int i = 0; items.GetSize(); i++)
+		for (int i = 0; items.GetSize() || i < lvItemCount; i++)
 		{
 			bool bFound = false;
 			SWS_ListItem* pItem;

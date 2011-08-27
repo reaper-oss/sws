@@ -125,8 +125,8 @@ void RenumberIds(COMMAND_T*)
 	for (int i = 0; i < ml.m_items.GetSize(); i++)
 	{
 		MarkerItem* mi = ml.m_items.Get(i);
-		if (!mi->m_bReg)
-			AddProjectMarker(NULL, false, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), iID++);
+		if (!mi->IsRegion())
+			AddProjectMarker(NULL, false, mi->GetPos(), mi->GetRegEnd(), mi->GetName(), iID++);
 	}
 	g_pMarkerList->Update();
 	UpdateTimeline();
@@ -140,8 +140,8 @@ void RenumberRegions(COMMAND_T*)
 	for (int i = 0; i < ml.m_items.GetSize(); i++)
 	{
 		MarkerItem* mi = ml.m_items.Get(i);
-		if (mi->m_bReg)
-			AddProjectMarker(NULL, true, mi->m_dPos, mi->m_dRegEnd, mi->GetName(), iID++);
+		if (mi->IsRegion())
+			AddProjectMarker(NULL, true, mi->GetPos(), mi->GetRegEnd(), mi->GetName(), iID++);
 	}
 	g_pMarkerList->Update();
 	UpdateTimeline();
@@ -259,10 +259,11 @@ void SelPrevMarkerOrRegion(COMMAND_T*)
 	for (int i = ml.m_items.GetSize()-1; i >= 0; i--)
 	{
 		MarkerItem* mi = ml.m_items.Get(i);
-		if (mi->m_dPos < dCurPos || (!mi->m_bReg && mi->m_dPos <= dCurPos && bCurSel))
+		if (mi->GetPos() < dCurPos || (!mi->IsRegion() && mi->GetPos() <= dCurPos && bCurSel))
 		{
-			GetSet_LoopTimeRange(true, false, &mi->m_dPos, mi->m_bReg ? &mi->m_dRegEnd : &mi->m_dPos, false);
-			SetEditCurPos(mi->m_dPos, true, true);
+			double dNewStart = mi->GetPos(), dNewEnd = mi->GetRegEnd();
+			GetSet_LoopTimeRange(true, false, &dNewStart, mi->IsRegion() ? &dNewEnd : &dNewStart, false);
+			SetEditCurPos(mi->GetPos(), true, true);
 			return;
 		}
 	}

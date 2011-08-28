@@ -41,7 +41,7 @@ public:
 	SWS_SnapshotMergeView(HWND hwndList, HWND hwndEdit);
 
 protected:
-	int OnItemSort(LPARAM lParam1, LPARAM lParam2);
+	int OnItemSort(SWS_ListItem* lParam1, SWS_ListItem* lParam2);
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
 	void GetItemList(SWS_ListItemList* pList);
 };

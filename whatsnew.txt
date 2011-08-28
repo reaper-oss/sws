@@ -1,5 +1,7 @@
+!v2.1.0 #6 (August 28, 2011)
 Issue 358: Fixed possible crash on project load  
 Issue 360: Fixed SWS list crash introduced in v2.1.0 #5
+Issue 362: Fixed possible cycle action corruption and other sort issues
 
 !v2.1.0 #5 (August 22, 2011)
 Issue 353: Much improved sws window list performance (eg Markerlist with many, many markers)

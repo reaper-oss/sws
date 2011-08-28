@@ -198,7 +198,7 @@ SWS_SnapshotsView::SWS_SnapshotsView(HWND hwndList, HWND hwndEdit)
 {
 }
 
-int SWS_SnapshotsView::OnItemSort(LPARAM lParam1, LPARAM lParam2)
+int SWS_SnapshotsView::OnItemSort(SWS_ListItem* lParam1, SWS_ListItem* lParam2)
 {
 	Snapshot* item1 = (Snapshot*)lParam1;
 	Snapshot* item2 = (Snapshot*)lParam2;

@@ -48,7 +48,7 @@ SWS_SnapshotMergeView::SWS_SnapshotMergeView(HWND hwndList, HWND hwndEdit)
 {
 }
 
-int SWS_SnapshotMergeView::OnItemSort(LPARAM lParam1, LPARAM lParam2)
+int SWS_SnapshotMergeView::OnItemSort(SWS_ListItem* lParam1, SWS_ListItem* lParam2)
 {
 	SWS_SSMergeItem* item1 = (SWS_SSMergeItem*)lParam1;
 	SWS_SSMergeItem* item2 = (SWS_SSMergeItem*)lParam2;

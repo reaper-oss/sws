@@ -87,7 +87,7 @@ protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
 	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
 	void GetItemList(SWS_ListItemList* pList);
-	int OnItemSort(LPARAM _item1, LPARAM _item2); 
+	int OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2); 
 	void OnBeginDrag(SWS_ListItem* item);
 	void OnItemSelChanged(SWS_ListItem* item, int iState);
 };

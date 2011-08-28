@@ -667,7 +667,7 @@ void SNM_CommandsView::GetItemList(SWS_ListItemList* pList)
 	}
 }
 
-int SNM_CommandsView::OnItemSort(LPARAM _item1, LPARAM _item2) 
+int SNM_CommandsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2) 
 {
 	if (g_editedAction)
 	{

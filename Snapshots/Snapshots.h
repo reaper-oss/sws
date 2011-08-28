@@ -34,7 +34,7 @@ public:
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 
 protected:
-	int OnItemSort(LPARAM lParam1, LPARAM lParam2);
+	int OnItemSort(SWS_ListItem* lParam1, SWS_ListItem* lParam2);
 	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
 	void GetItemTooltip(SWS_ListItem* item, char* str, int iStrMax);

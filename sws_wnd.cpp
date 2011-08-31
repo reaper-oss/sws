@@ -564,6 +564,9 @@ bool SWS_ListView::IsSelected(int index)
 
 SWS_ListItem* SWS_ListView::EnumSelected(int* i)
 {
+	if (!m_hwndList)
+		return NULL;
+
 	int temp = 0;
 	if (!i)
 		i = &temp;
@@ -986,6 +989,7 @@ void SWS_ListView::Update()
 							// Only set if there's changes
 							// May be less efficient here, but less messages get sent for sure!
 							ListView_SetItem(m_hwndList, &item);
+							bResort = true;
 						}
 					}
 					item.mask = 0;

@@ -551,7 +551,9 @@ static void removeDuplicates(std::vector<RprMidiCC *> *midiCCs)
 {
 	for(int i = 0; i < 128; i++) {
 		vectorRemoval<RprMidiCC> removal(&midiCCs[i]);
-		for(std::vector<RprMidiCC *>::iterator j = midiCCs[i].begin(); j != midiCCs[i].end(); ++j) {
+		if (midiCCs[i].size() < 2)
+			break;
+		for(std::vector<RprMidiCC *>::iterator j = midiCCs[i].begin(); j + 1 != midiCCs[i].end(); ++j) {
 			for(std::vector<RprMidiCC *>::iterator k = j + 1; k != midiCCs[i].end(); ++k) {
 				if( (*k)->getItemPosition() != (*j)->getItemPosition())
 					break;
@@ -566,8 +568,9 @@ static void removeDuplicates(std::vector<RprMidiCC *> *midiCCs)
 static void removeDuplicates(std::vector<RprMidiNote *> &midiNotes)
 {
 	vectorRemoval<RprMidiNote> removal(&midiNotes);
-
-	for(std::vector<RprMidiNote *>::iterator i = midiNotes.begin(); i != midiNotes.end(); i++) {
+	if (midiNotes.size() < 2) 
+		return;
+	for(std::vector<RprMidiNote *>::iterator i = midiNotes.begin(); i + 1 != midiNotes.end(); i++) {
 		RprMidiNote *lhs = *i;
 		for(std::vector<RprMidiNote *>::iterator j = i + 1; j != midiNotes.end(); j++) {
 			RprMidiNote *rhs = *j;

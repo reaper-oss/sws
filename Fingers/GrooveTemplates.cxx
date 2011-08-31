@@ -208,7 +208,9 @@ static void applyGrooveToMidiTake(RprMidiTake &midiTake, double beatDivider, dou
         if(!GetGrooveBeatPosition(noteBeat, BeatsInMeasure(BeatToMeasure(noteBeat)) / beatDivider, positionStrength, &grooveBeats, grooveItem))
             continue;
 
-        double itemFirstBeat = TimeToBeat(rprItem.getPosition());
+		/* fudge factor for issue 348 */
+		static const double epsilon = 0.0000000001;
+        double itemFirstBeat = TimeToBeat(rprItem.getPosition()) - epsilon;
         double itemLastBeat = TimeToBeat(rprItem.getPosition() + rprItem.getLength());
         if(grooveItem.position >= itemFirstBeat && grooveItem.position < itemLastBeat) {
             note->setPosition(BeatToTime(grooveItem.position));

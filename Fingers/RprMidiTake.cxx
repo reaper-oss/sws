@@ -339,8 +339,8 @@ RprMidiCC::~RprMidiCC()
 static int getQNValue(RprNode *midiNode)
 {
 	const std::string &qnString = midiNode->getChild(0)->getValue();
-	std::auto_ptr< std::vector<std::string> > tokens(stringTokenize(qnString));
-	return ::atoi(tokens->at(2).c_str());
+	StringVector tokens(qnString);
+	return ::atoi(tokens.atPtr(2));
 }
 
 static bool sortMidiBase(const RprMidiBase *lhs, const RprMidiBase *rhs)
@@ -513,53 +513,22 @@ static bool getMidiNotes(RprMidiEvents &midiEvents, std::vector<RprMidiNote *> &
 	return true;
 }
 
-template
-<typename T>
-class vectorRemoval {
-public:
-	vectorRemoval(std::vector<T *> *sourceVector)
-	{ mSourceVector = sourceVector; }
-
-	void push(T *item)
-	{
-		toDelete.push_back(item);								
-	}
-	
-	~vectorRemoval()
-	{
-		if(toDelete.empty())
-			return;
-
-		for(typename std::list<T *>::iterator i = toDelete.begin(); i != toDelete.end(); ++i) {
-			typename std::vector<T *>::iterator j = std::find(mSourceVector->begin(), mSourceVector->end(), *i);
-			if(j != mSourceVector->end())
-				mSourceVector->erase(j);
-		}
-
-		while(!toDelete.empty()) {
-			typename std::list<T *>::iterator i = toDelete.begin();
-			delete *i;
-			toDelete.erase(i);
-		}
-	}
-private:
-	std::list<T *> toDelete;
-	std::vector<T *> *mSourceVector;
-};
-
 static void removeDuplicates(std::vector<RprMidiCC *> *midiCCs)
 {
 	for(int i = 0; i < 128; i++) {
-		vectorRemoval<RprMidiCC> removal(&midiCCs[i]);
-		if (midiCCs[i].size() < 2)
-			break;
-		for(std::vector<RprMidiCC *>::iterator j = midiCCs[i].begin(); j + 1 != midiCCs[i].end(); ++j) {
+		for(int ccOffset = 0; (midiCCs[i].begin() + ccOffset) != midiCCs[i].end(); ++ccOffset) {
+			std::vector<RprMidiCC *>::iterator j = midiCCs[i].begin() + ccOffset;
+			RprMidiCC *cc = *j;
 			for(std::vector<RprMidiCC *>::iterator k = j + 1; k != midiCCs[i].end(); ++k) {
+				if( (*k)->getItemPosition() > (*j)->getItemPosition())
+					break;
 				if( (*k)->getItemPosition() != (*j)->getItemPosition())
-					break;
+					continue;	
 				if( (*k)->getChannel() != (*j)->getChannel())
-					break;
-				removal.push(*k);
+					continue;
+				delete *k;
+				k = midiCCs[i].erase(k);
+				j = midiCCs[i].begin() + ccOffset;
 			}
 		}
 	}
@@ -567,34 +536,41 @@ static void removeDuplicates(std::vector<RprMidiCC *> *midiCCs)
 
 static void removeDuplicates(std::vector<RprMidiNote *> &midiNotes)
 {
-	vectorRemoval<RprMidiNote> removal(&midiNotes);
-	if (midiNotes.size() < 2) 
-		return;
-	for(std::vector<RprMidiNote *>::iterator i = midiNotes.begin(); i + 1 != midiNotes.end(); i++) {
+	for(int noteOffset = 0; (midiNotes.begin() + noteOffset) != midiNotes.end(); noteOffset++) {
+		std::vector<RprMidiNote *>::iterator i = midiNotes.begin() + noteOffset;
 		RprMidiNote *lhs = *i;
 		for(std::vector<RprMidiNote *>::iterator j = i + 1; j != midiNotes.end(); j++) {
 			RprMidiNote *rhs = *j;
+			if (rhs->getItemPosition() > lhs->getItemPosition())
+				break;
 			if(lhs->getItemPosition() != rhs->getItemPosition())
 				continue;
 			if(lhs->getPitch() != rhs->getPitch())
 				continue;
 			if(lhs->getChannel() != rhs->getChannel())
 				continue;
-			if(lhs->getItemLength() > rhs->getItemLength())
-				removal.push(rhs);
-			else
-				removal.push(lhs);
+			if(lhs->getItemLength() > rhs->getItemLength()) {
+				delete rhs;
+				j = midiNotes.erase(j);
+			} else {
+				delete lhs;
+				i = midiNotes.erase(i);
+				noteOffset--;
+				break;
+			}
 		}
 	}
 }
 
 static void removeOverlaps(std::vector<RprMidiNote *> &midiNotes)
 {
-	vectorRemoval<RprMidiNote> removal(&midiNotes);
-	for(std::vector<RprMidiNote *>::iterator i = midiNotes.begin(); i != midiNotes.end(); i++) {
+	for(int noteOffset = 0; (midiNotes.begin() + noteOffset) != midiNotes.end(); ++noteOffset) {
+		std::vector<RprMidiNote *>::iterator i = midiNotes.begin() + noteOffset;
 		RprMidiNote *lhs = *i;
 		for(std::vector<RprMidiNote *>::iterator j = i + 1; j != midiNotes.end(); j++) {
 			RprMidiNote *rhs = *j;
+			if(rhs->getItemPosition() >= lhs->getItemPosition() + lhs->getItemLength())
+				break;
 			if(lhs->getPitch() != rhs->getPitch())
 				continue;
 			if(lhs->getChannel() != rhs->getChannel())
@@ -602,7 +578,9 @@ static void removeOverlaps(std::vector<RprMidiNote *> &midiNotes)
 			if(lhs->getItemPosition() + lhs->getItemLength() >= rhs->getItemPosition()) {
 				int lhsLength = rhs->getItemPosition() - lhs->getItemPosition() - 1;
 				if(lhsLength <= 0) {
-					removal.push(lhs);
+					delete lhs;
+					i = midiNotes.erase(i);
+					noteOffset--;
 				} else {
 					lhs->setItemLength(lhsLength);
 				}
@@ -691,6 +669,10 @@ void cleanUpPointers(std::vector<T *> &pointers)
 
 RprMidiTake::~RprMidiTake()
 {
+	if (isReadOnly()) {
+		cleanup();
+		return;
+	}
 	std::vector<RprMidiBase *> midiEvents;
 	std::sort(mNotes.begin(), mNotes.end(), compareMidiPositions<RprMidiNote>);
 	for(int i = 0; i < 128; i++)

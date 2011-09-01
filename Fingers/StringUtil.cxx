@@ -1,30 +1,53 @@
 #include "stdafx.h"
-#include <memory>
-
 #include "StringUtil.hxx"
 
-std::vector<std::string>* stringTokenize(const std::string &inStr)
+StringVector::StringVector(const std::string& inStr)
 {
-	std::auto_ptr< std::vector<std::string> > tokens(new std::vector<std::string>);
-	std::string::size_type i = 0;
-	while(1) {
+	mString = inStr;
+	std::string::size_type i = inStr.find_first_not_of(' ');
+	while(true) {
 		std::string::size_type posSpace = inStr.find_first_of(' ', i);
 		std::string::size_type posChar = inStr.find_first_not_of(' ',i );
-
+		
 		if(posChar == std::string::npos)
-			return tokens.release();
+			return;
 
 		if(posSpace == std::string::npos) {
-			tokens->push_back(inStr.substr(posChar));
-			return tokens.release();
+			SubStringIndex index;
+			index.offset = posChar;
+			index.length = inStr.length() - posChar;
+			mIndexes.push_back(index);
+			return;
 		}
-
-		if(posSpace < posChar) {
-			i = posChar;
+		i = posSpace + 1;
+		if (posSpace < posChar) {
 			continue;
 		}
-		
-		tokens->push_back(inStr.substr(posChar, posSpace - posChar));
-		i = posSpace + 1;
-	}
+		SubStringIndex index;
+		index.offset = posChar;
+		index.length = posSpace - posChar;
+		mString[posSpace] = 0;
+		mIndexes.push_back(index);
+	};
+}
+
+bool StringVector::empty() const
+{
+	return mIndexes.empty();
+}
+
+const char* StringVector::atPtr(int index) const
+{
+	return &mString.c_str()[mIndexes.at(index).offset];
+}
+
+int StringVector::size() const
+{
+	return (int)mIndexes.size();
+}
+
+std::string StringVector::at(int index) const
+{
+	const SubStringIndex &subStringIndex = mIndexes.at(index);
+	return mString.substr(subStringIndex.offset, subStringIndex.length);
 }

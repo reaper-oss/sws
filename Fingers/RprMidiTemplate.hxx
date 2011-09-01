@@ -17,6 +17,7 @@ public:
 protected:
 	RprNode *getMidiSourceNode() { return mMidiSourceNode; }
 	void errorOccurred() { mInErrorState = true; }
+	bool isReadOnly() const { return mReadOnly; }
 private:
 
 	std::auto_ptr<RprItem> mParent;

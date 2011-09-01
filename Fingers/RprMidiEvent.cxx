@@ -243,9 +243,9 @@ RprNode *RprMidiEvent::toReaper()
 	return node.release();
 }
 
-static bool isExtended(const std::string &inStr)
+static bool isExtended(const char* inStr)
 {
-	if(inStr.empty())
+	if(inStr[0] == 0)
 		throw RprMidiBase::RprMidiException("Error parsing MIDI data");
 	if(inStr[0] == 'x')
 		return true;
@@ -254,9 +254,9 @@ static bool isExtended(const std::string &inStr)
 	return false;
 }
 
-static bool isSelected(const std::string &inStr)
+static bool isSelected(const char* inStr)
 {
-	if(inStr.empty())
+	if(inStr[0] == 0)
 		throw RprMidiBase::RprMidiException("Error parsing MIDI data");
 	if(inStr[0] == 'E')
 		return false;
@@ -270,9 +270,9 @@ static bool isSelected(const std::string &inStr)
 	throw RprMidiBase::RprMidiException("Error parsing MIDI data");
 }
 
-static bool isMuted(const std::string &inStr)
+static bool isMuted(const char* inStr)
 {
-	if(inStr.size() <= 1)
+	if(inStr[0] == 0 || inStr[1] == 0)
 		return false;
 	if(inStr[1] == 'm')
 		return true;
@@ -308,16 +308,16 @@ static bool isNote(std::vector<unsigned char> &midiMessage)
 
 RprMidiEventCreator::RprMidiEventCreator(RprNode *node)
 {
-	std::auto_ptr<std::vector<std::string> > tokens(stringTokenize(node->getValue()));
+	StringVector tokens(node->getValue());
 
-	if(tokens->empty())
+	if(tokens.empty())
 		throw RprMidiBase::RprMidiException("Error parsing MIDI data");
 
-	int delta = ::atoi(tokens->at(1).c_str());
-	bool selected = isSelected(tokens->at(0));
-	bool muted = isMuted(tokens->at(0));
+	int delta = ::atoi(tokens.atPtr(1));
+	bool selected = isSelected(tokens.atPtr(0));
+	bool muted = isMuted(tokens.atPtr(0));
 
-	if(isExtended(tokens->at(0))) {
+	if(isExtended(tokens.atPtr(0))) {
 		mXEvent.reset(new RprExtendedMidiEvent());
 		mXEvent->setDelta(delta);
 
@@ -334,12 +334,12 @@ RprMidiEventCreator::RprMidiEventCreator(RprNode *node)
 	mEvent->setMuted(muted);
 	mEvent->setDelta(delta);
 	std::vector<unsigned char> midiMessage;
-	for(unsigned int i = 2; i < tokens->size(); i++) {
+	for(int i = 2; i < tokens.size(); i++) {
 
 		if(i == 5 && isNote(midiMessage)) {
-			mEvent->setUnquantizedOffset(::atoi(tokens->at(i).c_str()));
+			mEvent->setUnquantizedOffset(::atoi(tokens.atPtr(i)));
 		} else {
-			midiMessage.push_back(fromHex(tokens->at(i)));
+			midiMessage.push_back(fromHex(tokens.atPtr(i)));
 		}
 
 	}
@@ -359,10 +359,3 @@ RprMidiBase *RprMidiEventCreator::collectEvent()
 
 RprMidiEventCreator::~RprMidiEventCreator()
 {}
-
-
-
-
-
-
-

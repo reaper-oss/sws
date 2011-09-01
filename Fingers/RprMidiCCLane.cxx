@@ -8,7 +8,6 @@
 #include "RprException.hxx"
 #include "StringUtil.hxx"
 
-
 RprMidiCCLane::RprMidiCCLane(RprTake &midiTake, bool readOnly) : RprMidiTemplate(midiTake, readOnly)
 {
 	RprNode *midiNode = RprMidiTemplate::getMidiSourceNode();
@@ -16,9 +15,9 @@ RprMidiCCLane::RprMidiCCLane(RprTake &midiTake, bool readOnly) : RprMidiTemplate
 		/* VELLANE 16 56 0 */
 		if(midiNode->getChild(i)->getValue().substr(0, 7) == "VELLANE") {
 			RprMidiLane midiLane;
-			std::vector<std::string> *velLane = stringTokenize(midiNode->getChild(i)->getValue());
-			midiLane.laneId = ::atoi( velLane->at(1).c_str());
-			midiLane.height = ::atoi( velLane->at(2).c_str());
+			StringVector velLane(midiNode->getChild(i)->getValue());
+			midiLane.laneId = ::atoi( velLane.atPtr(1));
+			midiLane.height = ::atoi( velLane.atPtr(2));
 			mMidiLanes.push_back(midiLane);
 		}
 	}

@@ -433,8 +433,17 @@ static void finalizeGroove(int &beatsInGroove, std::vector<GrooveItem> &grooveIn
 void GrooveTemplateHandler::StoreGrooveFromMidiEditor()
 {
     RprMidiTakePtr takePtr = RprMidiTake::createFromMidiEditor(true);
-    if(takePtr->countNotes() == 0)
+	bool hasSelectedNotes = false;
+	for(int i = 0; i < takePtr->countNotes(); ++i) {
+		if (takePtr->getNoteAt(i)->isSelected()) {
+			hasSelectedNotes = true;
+			break;
+		}
+	}
+	if(!hasSelectedNotes) {
+		MessageBox(GetMainHwnd(), "No notes selected", "Error", 0);
         return;
+	}
     GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
     GrooveTemplateHandler::ClearGroove();
 

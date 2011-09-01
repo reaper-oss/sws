@@ -66,6 +66,7 @@ bool SNM_DeleteFile(const char* _filename) {
 	return false;
 }
 
+//JFB!!!
 bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 {
 	if (_destFn && _srcFn)
@@ -122,9 +123,9 @@ void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _sh
 // Get a full resource path from a short filename
 // ex: EQ\JS\test.RfxChain -> C:\Documents and Settings\<user>\Application Data\REAPER\FXChains\EQ\JS\test.RfxChain
 // Notes: 
-// - *must* work with non existing files
-// - *must* be nop for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
-// - *must* be nop for full resource paths 
+// - work with non existing files
+// - nop for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
+// - nop for full resource paths 
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fnSize)
 {
 	if (_shortFn && _fullFn) 
@@ -205,6 +206,7 @@ void StringToExtensionConfig(WDL_String* _str, ProjectStateContext* _ctx)
 {
 	if (_str && _ctx)
 	{
+		// see http://code.google.com/p/sws-extension/issues/detail?id=358
 		WDL_String unformatedStr;
 		makeUnformatedConfigString(_str->Get(), &unformatedStr);
 
@@ -318,7 +320,7 @@ void makeUnformatedConfigString(const char* _in, WDL_String* _out)
 		while(p)
 		{
 			int pos = p - _out->Get();
-			_out->Insert("%", ++pos); // ++ops! but Insert() clamps to length..
+			_out->Insert("%", ++pos); // ++pos! but Insert() clamps to length..
 			p = (pos+1 < _out->GetLength()) ? strstr((char*)(_out->Get()+pos+1), "%") : NULL;
 		}
 	}

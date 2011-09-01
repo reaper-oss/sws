@@ -41,7 +41,7 @@
 #define NB_SLOTS_FAST_LISTVIEW			500
 
 // Commands
-#define AUTO_INSERT_SLOTS				0x110000 // common cmds
+#define AUTO_ADD_SLOTS					0x110000 // common cmds
 #define CLEAR_MSG						0x110001
 #define DEL_SLOTS_MSG					0x110002
 #define DEL_SLOTFILES_MSG				0x110003
@@ -51,27 +51,29 @@
 #define EXPLORE_MSG						0x110007
 #define LOAD_MSG						0x110008
 #define AUTOSAVE_DIR_MSG				0x110009
-#define FILTER_BY_PATH_MSG				0x11000A
-#define FXC_LOAD_APPLY_TRACK_MSG		0x11000B // specific FX chains cmds
-#define FXC_LOAD_APPLY_TAKE_MSG			0x11000C
-#define FXC_LOAD_APPLY_ALL_TAKES_MSG	0x11000D
-#define FXC_COPY_MSG					0x11000E
-#define FXC_LOAD_PASTE_TRACK_MSG		0x11000F
-#define FXC_LOAD_PASTE_TAKE_MSG			0x110010
-#define FXC_LOAD_PASTE_ALL_TAKES_MSG	0x110011
-#define FXC_AUTO_SAVE_INPUT_FX			0x110012
-#define FXC_AUTO_SAVE_TRACK				0x110013
-#define FXC_AUTO_SAVE_ITEM				0x110014
-#define TRT_LOAD_APPLY_MSG				0x110015 // specific track template cmds
-#define TRT_LOAD_IMPORT_MSG				0x110016
-#define TRT_LOAD_APPLY_ITEMS_MSG		0x110017
-#define TRT_LOAD_PASTE_ITEMS_MSG		0x110018
-#define TRT_AUTO_SAVE_WITEMS_MSG		0x110019
-#define PRJ_SELECT_LOAD_MSG				0x11001A
-#define PRJ_SELECT_LOAD_NEWTAB_MSG		0x11001B
-#define PRJ_AUTO_SAVE_MSG				0x11001C
-#define AUTOSAVE_DIR_PRJ_MSG			0x11001D
-#define AUTOSAVE_DIR_DEFAULT_MSG		0x11001E
+#define AUTOSAVE_DIR_PRJ_MSG			0x11000A
+#define AUTOSAVE_DIR_DEFAULT_MSG		0x11000B
+#define FILTER_BY_PATH_MSG				0x11000C
+#define FXC_LOAD_APPLY_TRACK_MSG		0x11000D // specific FX chains cmds
+#define FXC_LOAD_APPLY_TAKE_MSG			0x11000E
+#define FXC_LOAD_APPLY_ALL_TAKES_MSG	0x11000F
+#define FXC_COPY_MSG					0x110010
+#define FXC_LOAD_PASTE_TRACK_MSG		0x110011
+#define FXC_LOAD_PASTE_TAKE_MSG			0x110012
+#define FXC_LOAD_PASTE_ALL_TAKES_MSG	0x110013
+#define FXC_AUTO_SAVE_INPUT_FX			0x110014
+#define FXC_AUTO_SAVE_TRACK				0x110015
+#define FXC_AUTO_SAVE_ITEM				0x110016
+#define TRT_LOAD_APPLY_MSG				0x110017 // specific track template cmds
+#define TRT_LOAD_IMPORT_MSG				0x110018
+#define TRT_LOAD_APPLY_ITEMS_MSG		0x110019
+#define TRT_LOAD_PASTE_ITEMS_MSG		0x11001A
+#define TRT_AUTO_SAVE_WITEMS_MSG		0x11001B
+#define PRJ_SELECT_LOAD_MSG				0x11001C // specific project template cmds
+#define PRJ_SELECT_LOAD_NEWTAB_MSG		0x11001D
+#define PRJ_AUTO_ADD_RECENTS			0x11001E
+#define PRJ_LOADER_CONF					0x11001F
+
 
 // labels shared by actions and popup menu items
 #define FXC_LOAD_APPLY_TRACK_STR		"Apply FX chain to selected tracks"
@@ -126,8 +128,11 @@ FileSlotList g_prjTemplateFiles(SNM_SLOT_TYPE_PRJ_TEMPLATES, "ProjectTemplates",
 int g_type = -1;
 
 WDL_String g_filter(FILTER_DEFAULT_STR);
-int g_autoSaveFXChainPref = FXC_AUTOSAVE_PREF_TRACK;
+
+// other prefs are member variables of SNM_ResourceWnd
 bool g_filterByPathPref = true; // false: filter by comment
+int g_projectLoaderStartSlotPref = -1; // 1-based
+int g_projectLoaderEndSlotPref = -1; // 1-based
 
 int g_dblClickType[SNM_SLOT_TYPE_COUNT];
 int g_dblClickTo = 0; // for fx chains only
@@ -695,6 +700,10 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_autoSaveFXChainPref = GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveFXChain", FXC_AUTOSAVE_PREF_TRACK, g_SNMiniFilename.Get());
 	m_autoSaveTrTmpltWithItemsPref = (GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", 1, g_SNMiniFilename.Get()) == 1);
 	g_filterByPathPref = (GetPrivateProfileInt("RESOURCE_VIEW", "FilterByPath", 1, g_SNMiniFilename.Get()) == 1);
+
+	g_projectLoaderStartSlotPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderStartSlot", 1, g_SNMiniFilename.Get());
+	g_projectLoaderEndSlotPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderEndSlot", g_filesLists.Get(SNM_SLOT_TYPE_PRJ_TEMPLATES)->GetSize(), g_SNMiniFilename.Get());
+
 	// auto save directories
 	{
 		char defaultPath[BUFFER_SIZE] = "", path[BUFFER_SIZE] = "";
@@ -837,42 +846,31 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
-		case AUTO_INSERT_SLOTS:
+		case AUTO_ADD_SLOTS:
 		{
 			char startPath[BUFFER_SIZE];
 			_snprintf(startPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, GetCurList()->GetResourceDir());
-			vector<string> files; //JFB TODO get rid of that vector 
+
+			//JFB TODO get rid of that => WDL instead
+			vector<string> files; 
 			SearchDirectory(files, startPath, GetCurList()->GetFileExt(), true);
-			if ((int)files.size()) 
-			{
-				int insertedCount = 0;
-				bool noslot = false;
-				for (int i=((int)files.size() - 1); i >=0 ; i--)
-				{
-					// skip if already present (would also be very easy to overflow the view otherwise)
-					if (GetCurList()->FindByResFulltPath(files[i].c_str()) < 0)
-					{
-						if (slot < 0) { // trick: avoid reversed alphabetical order..
-							noslot = true;
-							GetCurList()->Add(new PathSlotItem());
-							slot = GetCurList()->GetSize()-1;
-						}
-						if (GetCurList()->InsertSlot(slot, files[i].c_str()))
-							insertedCount++;
+
+			int sz = (int)files.size();
+			if (sz) {
+				int added=0;
+				for (int i=0; i < sz; i++) {
+					// skip if already present
+					if (GetCurList()->FindByResFulltPath(files[i].c_str()) < 0) {
+						GetCurList()->AddSlot(files[i].c_str());
+						added++;
 					}
-				}
-
-				if (noslot) // .. end of trick
-					GetCurList()->Delete(GetCurList()->GetSize()-1); 
-
-				if (insertedCount)
-				{
+				}				
+				if (added) {
 					Update();
-					SelectBySlot(slot + insertedCount);
+					SelectBySlot(GetCurList()->GetSize()-1);
 				}
 			}
-			else 
-			{
+			else {
 				char errMsg[BUFFER_SIZE] = "";
 				_snprintf(errMsg, 512, "%s is empty or does not exist!", startPath);
 				MessageBox(GetMainHwnd(), errMsg, "S&M - Warning", MB_OK);
@@ -973,7 +971,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			m_autoSaveTrTmpltWithItemsPref = !m_autoSaveTrTmpltWithItemsPref;
 			break;
 
-		// ***** Track template *****
+		// ***** Project template *****
 		case PRJ_SELECT_LOAD_MSG:
 		case PRJ_SELECT_LOAD_NEWTAB_MSG:
 			if (item && slot >= 0) {
@@ -981,6 +979,39 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
+			break;
+		case PRJ_AUTO_ADD_RECENTS:
+		{
+			int added=0, nbRecents=GetPrivateProfileInt("REAPER", "numrecent", 0, get_ini_file());
+			nbRecents = min(98, nbRecents); // just in case: 2 digits max..
+			if (nbRecents)
+			{
+				char key[16], path[BUFFER_SIZE];
+				WDL_PtrList_DeleteOnDestroy<WDL_String> prjs;
+				for (int i=0; i < nbRecents; i++) {
+					_snprintf(key, 9, "recent%02d", i+1);
+					GetPrivateProfileString("Recent", key, "", path, BUFFER_SIZE, get_ini_file());
+					if (*path)
+						prjs.Add(new WDL_String(path));
+				}
+				for (int i=0; i < prjs.GetSize(); i++) {
+					// skip if already present
+					if (GetCurList()->FindByResFulltPath(prjs.Get(i)->Get()) < 0) {
+						GetCurList()->AddSlot(prjs.Get(i)->Get());
+						added++;
+					}
+				}		
+			}
+			if (added) {
+				Update();
+				SelectBySlot(GetCurList()->GetSize()-1);
+			}
+			else
+				MessageBox(GetMainHwnd(), "No valid recent projects found!", "S&M - Warning", MB_OK);
+			break;
+		}
+		case PRJ_LOADER_CONF:
+			projectLoaderConf(NULL);
 			break;
 
 		// ***** WDL GUI & others *****
@@ -1026,7 +1057,12 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 {
 	HMENU hMenu = CreatePopupMenu();
-	AddToMenu(hMenu, "Auto-fill (from resource path)", AUTO_INSERT_SLOTS);
+	AddToMenu(hMenu, "Auto-fill (from resource path)", AUTO_ADD_SLOTS);
+	if (g_type == SNM_SLOT_TYPE_PRJ_TEMPLATES) {
+		AddToMenu(hMenu, "Add recent projects", PRJ_AUTO_ADD_RECENTS);
+		AddToMenu(hMenu, "Project loader/selecter configuration", PRJ_LOADER_CONF);
+	}
+
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 
 	HMENU hFilterSubMenu = CreatePopupMenu();
@@ -1104,11 +1140,11 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 		}
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 #ifdef _WIN32
-		AddToMenu(hMenu, "Edit file...", EDIT_MSG, -1, false, enabled);
+		AddToMenu(hMenu, "Edit/display file...", EDIT_MSG, -1, false, enabled);
 #else
 		AddToMenu(hMenu, "Display file...", EDIT_MSG, -1, false, enabled);
 #endif
-		AddToMenu(hMenu, "Show path in Explorer/Finder", EXPLORE_MSG, -1, false, enabled);
+		AddToMenu(hMenu, "Show path in explorer/finder", EXPLORE_MSG, -1, false, enabled);
 	}
 	return hMenu;
 }
@@ -1116,7 +1152,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 void SNM_ResourceWnd::OnDestroy() 
 {
 	// save prefs
-	char cTmp[2];
+	char cTmp[6];
 	sprintf(cTmp, "%d", m_cbType.GetCurSel());
 	WritePrivateProfileString("RESOURCE_VIEW", "Type", cTmp, g_SNMiniFilename.Get());
 
@@ -1137,6 +1173,12 @@ void SNM_ResourceWnd::OnDestroy()
 
 	WritePrivateProfileString("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", m_autoSaveTrTmpltWithItemsPref ? "1" : "0", g_SNMiniFilename.Get()); 
 	WritePrivateProfileString("RESOURCE_VIEW", "FilterByPath", g_filterByPathPref ? "1" : "0", g_SNMiniFilename.Get()); 
+
+	sprintf(cTmp, "%d", g_projectLoaderStartSlotPref);
+	WritePrivateProfileString("RESOURCE_VIEW", "ProjectLoaderStartSlot", cTmp, g_SNMiniFilename.Get()); 
+	sprintf(cTmp, "%d", g_projectLoaderEndSlotPref);
+	WritePrivateProfileString("RESOURCE_VIEW", "ProjectLoaderEndSlot", cTmp, g_SNMiniFilename.Get()); 
+
 	{
 		WDL_String escapedStr;
 		makeEscapedConfigString(g_autoSaveDirs.Get(0)->Get(), &escapedStr);

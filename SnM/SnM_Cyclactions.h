@@ -41,8 +41,9 @@ public:
 	bool IsEmpty() {return m_empty;}
 	bool IsToggle() {return *m_desc.Get() == '#';}
 	void SetToggle(bool _toggle);
-	const char* GetName() {return m_name.Get();} //JFB TODO? in fact depnds on m_state
+	const char* GetName() {return m_name.Get();}
 	void SetName(const char* _name) {m_name.Set(_name); UpdateFromCmd();}
+	const char* GetStepName(int _performState = -1);
 
 	int GetCmdSize() {return m_cmds.GetSize();}
 	const char* GetCmd(int _i) {return m_cmds.Get(_i)->Get();}
@@ -72,7 +73,7 @@ public:
 	SNM_CyclactionsView(HWND hwndList, HWND hwndEdit);
 protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
-	void SetItemText(LPARAM _item, int _iCol, const char* _str);
+	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
 	void GetItemList(SWS_ListItemList* pList);
 	void OnItemSelChanged(SWS_ListItem* item, int iState);
 	void OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState);

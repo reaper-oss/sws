@@ -276,6 +276,27 @@ void clearAllTakesFXChain(COMMAND_T* _ct) {
 // Track FX chains
 ///////////////////////////////////////////////////////////////////////////////
 
+// best effort for http://code.google.com/p/sws-extension/issues/detail?id=363
+// update the track's nb of channels if that info exists (as a comment) in the provided chunk
+// return true if update done
+bool SetTrackChannelsForFXChain(MediaTrack* _tr, WDL_String* _chain)
+{
+	if (_tr && _chain && !strncmp(_chain->Get(), "#NCHAN ", 7))
+	{
+		int nbChInChain = atoi((const char*)(_chain->Get()+7));
+		if (nbChInChain && !(nbChInChain % 2)) // valid and even?
+		{
+			int nbChInTr = *(int*)GetSetMediaTrackInfo(_tr, "I_NCHAN", NULL);
+			if (nbChInChain > nbChInTr)
+			{
+				GetSetMediaTrackInfo(_tr, "I_NCHAN", &nbChInChain);
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 void pasteTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
 {
 	bool updated = false;
@@ -286,6 +307,10 @@ void pasteTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			{
+				// try to set track channels
+				updated |= SetTrackChannelsForFXChain(tr, _chain);
+
+				// the meat
 				bool patch = false;
 				SNM_FXChainTrackPatcher p(tr);
 				WDL_String currentFXChain;
@@ -319,6 +344,10 @@ void setTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
+			// try to set track channels
+			updated |= SetTrackChannelsForFXChain(tr, _chain);
+
+			// the meat
 			SNM_FXChainTrackPatcher p(tr);
 			bool patch = p.SetFXChain(_chain, _inputFX);
 			updated |= patch;
@@ -396,6 +425,12 @@ bool autoSaveTrackFXChainSlots(int _slot, bool _inputFX, const char* _dirPath, c
 			if (copyTrackFXChain(&fxChain, _inputFX, i) == i)
 			{
 				RemoveAllIds(&fxChain);
+
+				// add track channels (as a comment so that it doesn't bother REAPER)
+				// i.e. best effort for http://code.google.com/p/sws-extension/issues/detail?id=363
+				WDL_String nbChStr;
+				nbChStr.SetFormatted(32, "#NCHAN %d\n", *(int*)GetSetMediaTrackInfo(tr, "I_NCHAN", NULL));
+				fxChain.Insert(nbChStr.Get(), 0);
 
 				char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 				char autoSlotName[256] = "";

@@ -179,6 +179,7 @@ int SWSRegisterCommandExt3(void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COM
 void ActionsList(COMMAND_T*);
 COMMAND_T* SWSUnregisterCommand(int id);
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, const char** pMenuText = NULL);
+COMMAND_T* SWSGetCommandByID(int cmdId);
 HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);
 
 // Utility functions, sws_util.cpp

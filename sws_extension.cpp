@@ -238,6 +238,14 @@ int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMen
 	return 0;
 }
 
+COMMAND_T* SWSGetCommandByID(int cmdId)
+{
+	for (int i = 0; i < g_commands.GetSize(); i++)
+		if (cmdId == g_commands.Get(i)->accel.accel.cmd)
+			return g_commands.Get(i);
+	return NULL;
+}
+
 HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIndex)
 {
 	// Add menu items

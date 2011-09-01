@@ -397,7 +397,10 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errMsg);
 bool autoSaveProjectSlot(int _slot, bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnSize);
 void loadOrSelectProject(COMMAND_T*);
-void loadNewTabOrSelectProject(COMMAND_T*);
+void loadOrSelectProjectNewTab(COMMAND_T*);
+void projectLoaderConf(COMMAND_T*);
+void loadOrSelectNextPreviousProject(COMMAND_T*);
+void openProjectPathInExplorerFinder(COMMAND_T*);
 
 // *** SnM_ResourceView.cpp ***
 int ResourceViewInit();

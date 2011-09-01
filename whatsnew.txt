@@ -1,3 +1,9 @@
+Fixes:
+Issue 366: Fixed crash with Show Used CC lanes
+Issue 348: Fixed note on left hand edge of take sometimes being missed when applying groove
+Faster parsing and construction of midi takes
+Fix crash with groove quantize when no notes are selected
+
 !v2.1.0 #6 (August 28, 2011)
 Issue 358: Fixed possible crash on project load  
 Issue 360: Fixed SWS list crash introduced in v2.1.0 #5

@@ -467,6 +467,7 @@ extern "C"
 		IMPAPI(AddExtensionsMainMenu);
 		IMPAPI(AddMediaItemToTrack);
 		IMPAPI(AddProjectMarker);
+		*(void**)&AddProjectMarker2 = rec->GetFunc("AddProjectMarker2"); // v4 only
 		IMPAPI(AddTakeToMediaItem);
 		IMPAPI(adjustZoom);
 		*(void**)&AttachWindowTopmostButton = rec->GetFunc("AttachWindowTopmostButton"); // v4 only
@@ -575,6 +576,7 @@ extern "C"
 		IMPAPI(GetUserInputs);
 		IMPAPI(get_config_var);
 		IMPAPI(get_ini_file);
+		*(void**)&GR_SelectColor = rec->GetFunc("GR_SelectColor"); // v4 only
 		IMPAPI(GSC_mainwnd);
 		IMPAPI(guidToString);
 		IMPAPI(Help_Set);
@@ -631,6 +633,7 @@ extern "C"
 		IMPAPI(SetMediaTrackInfo_Value);
 		IMPAPI(SetProjectMarker);
 		IMPAPI(SetProjectMarker2);
+		*(void**)&SetProjectMarker3 = rec->GetFunc("SetProjectMarker3"); // v4 only
 		IMPAPI(SetTrackSelected);
 		IMPAPI(ShowActionList);
 		IMPAPI(SplitMediaItem);

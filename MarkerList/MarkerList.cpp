@@ -35,6 +35,7 @@
 #define ML_OPTIONS_KEY "MarkerlistOptions"
 
 #define DELETE_MSG		0x100F0
+#define COLOR_MSG		0x100F1
 #define FIRST_LOAD_MSG	0x10100
 
 // Globals
@@ -42,10 +43,10 @@ static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<MarkerList> > g_savedLists;
 MarkerList* g_curList = NULL;
 SWS_MarkerListWnd* g_pMarkerList = NULL;
 
-static SWS_LVColumn g_cols[] = { { 75, 0, "Time" }, { 45, 0, "Type" }, { 30, 0, "ID" }, { 170, 1, "Description" } };
+static SWS_LVColumn g_cols[] = { { 75, 0, "Time" }, { 45, 0, "Type" }, { 30, 0, "ID" }, { 170, 1, "Description" },  { 70, 0, "Color", -1 }};
 
 SWS_MarkerListView::SWS_MarkerListView(HWND hwndList, HWND hwndEdit, SWS_MarkerListWnd* pList)
-:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "MarkerList View State", false), m_pMarkerList(pList)
+:SWS_ListView(hwndList, hwndEdit, 5, g_cols, "MarkerList View State", false), m_pMarkerList(pList)
 {
 }
 
@@ -68,6 +69,13 @@ void SWS_MarkerListView::GetItemText(SWS_ListItem* item, int iCol, char* str, in
 		case 3:
 			lstrcpyn(str, mi->GetName(), iStrMax);
 			break;
+		case 4:
+#ifdef _WIN32
+			_snprintf(str, iStrMax, "0x%02x%02x%02x", mi->GetColor() & 0xFF, (mi->GetColor() >> 8) & 0xFF, (mi->GetColor() >> 16) & 0xFF);
+#else
+			_snprintf(str, iStrMax, "0x%06x", mi->GetColor());
+#endif
+		break;
 		}
 	}
 }
@@ -118,11 +126,16 @@ void SWS_MarkerListView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState)
 void SWS_MarkerListView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	MarkerItem* mi = (MarkerItem*)item;
-	if (mi->IsRegion())
+	if (iCol != 4)
 	{
-		double d1 = mi->GetPos(), d2 = mi->GetRegEnd();
-		GetSet_LoopTimeRange(true, true, &d1, &d2, m_pMarkerList->m_bPlayOnSel);
+		if (mi->IsRegion())
+		{
+			double d1 = mi->GetPos(), d2 = mi->GetRegEnd();
+			GetSet_LoopTimeRange(true, true, &d1, &d2, m_pMarkerList->m_bPlayOnSel);
+		}
 	}
+	else if (g_pMarkerList && IsWindow(g_pMarkerList->GetHWND()))
+		SendMessage(g_pMarkerList->GetHWND(), WM_COMMAND, COLOR_MSG, 0);
 }
 
 int SWS_MarkerListView::OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2)
@@ -162,7 +175,7 @@ void SWS_MarkerListView::SetItemText(SWS_ListItem* item, int iCol, const char* s
 	{
 		MarkerItem* mi = (MarkerItem*)item;
 		mi->SetName(str);
-		SetProjectMarker(mi->GetID(), mi->IsRegion(), mi->GetPos(), mi->GetRegEnd(), str);
+		mi->UpdateProject();
 		Update();
 	}
 }
@@ -286,24 +299,31 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (ListView_GetSelectedCount(m_pLists.Get(0)->GetHWND()))
 			{
 				Undo_BeginBlock();
-				LVITEM li;
-				li.mask = LVIF_STATE | LVIF_PARAM;
-				li.stateMask = LVIS_SELECTED;
-				li.iSubItem = 0;
-				for (int i = 0; i < ListView_GetItemCount(m_pLists.Get(0)->GetHWND()); i++)
-				{
-					li.iItem = i;
-					ListView_GetItem(m_pLists.Get(0)->GetHWND(), &li);
-					if (li.state == LVIS_SELECTED)
-					{
-						MarkerItem* item = (MarkerItem*)li.lParam;
-						DeleteProjectMarker(NULL, item->GetID(), item->IsRegion());
-					}
-				}
+				int i = 0;
+				MarkerItem* item;
+				while ((item = (MarkerItem*)m_pLists.Get(0)->EnumSelected(&i)))
+					DeleteProjectMarker(NULL, item->GetID(), item->IsRegion());
 				Undo_EndBlock("Delete marker(s)", UNDO_STATE_MISCCFG);
 				Update();
 				break;
 			}
+		case COLOR_MSG:
+		{
+			int iColor;
+			m_pLists.Get(0)->DisableUpdates(true);
+			if (GR_SelectColor(m_hwnd, &iColor))
+			{
+				int i = 0;
+				MarkerItem* item;
+				while ((item = (MarkerItem*)m_pLists.Get(0)->EnumSelected(&i)))
+				{
+					item->SetColor(iColor | 0x1000000);
+					item->UpdateProject();
+				}
+			}
+			m_pLists.Get(0)->DisableUpdates(false);
+			break;
+		}
 		default:
 			if (wParam >= FIRST_LOAD_MSG && wParam - FIRST_LOAD_MSG < (UINT)g_savedLists.Get()->GetSize())
 			{	// Load marker list
@@ -318,6 +338,8 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y)
 {
 	HMENU hMenu = CreatePopupMenu();
+	if (SetProjectMarker3) // v4 only
+		AddToMenu(hMenu, "Set color...", COLOR_MSG);
 	AddToMenu(hMenu, "Save marker set...", SWSGetCommandID(SaveMarkerList));
 	AddToMenu(hMenu, "Delete market set...", SWSGetCommandID(DeleteMarkerList));
 
@@ -636,8 +658,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		{
 			if (lp.getnumtokens() > 0 && lp.gettoken_str(0)[0] == '>')
 				break;
-			else if (lp.getnumtokens() == 5)
-				ml->m_items.Add(new MarkerItem(&lp));
+			ml->m_items.Add(new MarkerItem(&lp));
 		}
 	}
 	return true;

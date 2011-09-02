@@ -49,14 +49,23 @@ ObjectStateCache::~ObjectStateCache()
 
 void ObjectStateCache::WriteCache()
 {
+#ifdef GOS_DEBUG
+	int iCount = 0;
+#endif
 	for (int i = 0; i < m_obj.GetSize(); i++)
 	{
 		if (m_str.Get(i)->GetLength() && m_orig.Get(i) && strcmp(m_str.Get(i)->Get(), m_orig.Get(i)))
 		{
 			RemoveAllIds(m_str.Get(i));
 			GetSetObjectState(m_obj.Get(i), m_str.Get(i)->Get());
+#ifdef GOS_DEBUG
+			iCount++;
+#endif
 		}
 	}
+#ifdef GOS_DEBUG
+	dprintf("ObjectStateCache::WriteCache applied %d chunks.\n", iCount);
+#endif
 
 	EmptyCache();
 }

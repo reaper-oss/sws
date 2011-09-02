@@ -44,7 +44,7 @@ SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, 
 	if (screenset_registerNew) // v4
 		screenset_registerNew((char*)cId, screensetCallback, this);
 	else
-		screenset_register((char*)cId, screensetCallbackOld, this);
+		screenset_register((char*)cId, (void*)screensetCallbackOld, this);
 
 	memset(&m_state, 0, sizeof(SWS_DockWnd_State));
 

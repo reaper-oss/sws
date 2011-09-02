@@ -38,6 +38,7 @@ public:
 	bool Compare(bool bReg, double dPos, double dRegEnd, const char* cName, int id, int color);
 	bool Compare(MarkerItem* mi);
 	void AddToProject();
+	void UpdateProject();
 
 	// Member access	
 	void SetName(const char* newname);
@@ -49,6 +50,7 @@ public:
 	bool IsRegion() { return m_bReg; }
 	int GetID() { return m_id; }
 	int GetColor() { return m_iColor; }
+	void SetColor(int iColor) { m_iColor = iColor; }
 
 private:
 	char* m_cName;

@@ -1,3 +1,4 @@
+!v2.1.0 #7 (September 2, 2011)
 Fixes:
 Issue 366: Fixed crash with Show Used CC lanes
 Issue 348: Fixed note on left hand edge of take sometimes being missed when applying groove
@@ -18,8 +19,10 @@ Cycle actions:
 +Undoing a cycle action now also restores its previous states (Issue 361)
 +Cycle action buttons are now refreshed on undo
 
+Marker list now supports save/restore and changing of colors ("Set color..." in the context menu), including en masse with ctrl-click - requires Reaper v4.03
+
 !v2.1.0 #6 (August 28, 2011)
-Issue 358: Fixed possible crash on project load  
+Issue 358: Fixed possible crash on project load
 Issue 360: Fixed SWS list crash introduced in v2.1.0 #5
 Issue 362: Fixed possible cycle action corruption and other sort issues
 

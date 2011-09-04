@@ -38,8 +38,6 @@
 #endif
 
 
-#define NB_SLOTS_FAST_LISTVIEW			500
-
 // Commands
 #define AUTO_ADD_SLOTS					0x110000 // common cmds
 #define CLEAR_MSG						0x110001
@@ -521,95 +519,6 @@ void SNM_ResourceView::OnBeginDrag(SWS_ListItem* _item)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_FastResourceView
-///////////////////////////////////////////////////////////////////////////////
-
-// "Brutal force" update to make it run much faster, but subbtle thing 
-// like selection restorations aren't managed anymore..
-
-//JFB!!! to be kept in sync with SWS_ListView::Update(), last check in SWS v2.0#26
-void SNM_FastResourceView::Update()
-{
-	// Fill in the data by pulling it from the derived class
-	if (m_iEditingItem == -1 && !m_bDisableUpdates)
-	{
-		m_bDisableUpdates = true;
-		char str[256];
-
-		SWS_ListItemList items;
-		GetItemList(&items);
-
-// SWS removed original code comment because it's changed significantly
-		ListView_DeleteAllItems(m_hwndList);
-		for (int i = 0; i < items.GetSize(); i++)
-		{
-			LVITEM item;
-			item.mask = 0;
-			item.iItem = i;
-			item.pszText = str;
-
-			int iCol = 0;
-			for (int k = 0; k < m_iCols; k++)
-				if (m_pCols[k].iPos != -1)
-				{
-					item.iSubItem = iCol;
-					GetItemText(items.Get(i), k, str, 256);
-					if (!iCol)
-					{
-						item.mask |= LVIF_PARAM | LVIF_TEXT;
-						item.lParam = (LPARAM)items.Get(i);
-						ListView_InsertItem(m_hwndList, &item);
-					}
-					else
-					{
-						item.mask |= LVIF_TEXT;
-						ListView_SetItem(m_hwndList, &item);
-					}
-					item.mask = 0;
-					iCol++;
-				}
-		}
-//JFB mod <--------------------------------------------------------------------
-
-		ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
-		int iCol = abs(m_iSortCol) - 1;
-		iCol = DataToDisplayCol(iCol) + 1;
-		if (m_iSortCol < 0)
-			iCol = -iCol;
-		SetListviewColumnArrows(iCol);
-
-#ifdef _WIN32
-		if (m_hwndTooltip)
-		{
-			TOOLINFO ti = { sizeof(TOOLINFO), };
-			ti.lpszText = str;
-			ti.hwnd = m_hwndList;
-			ti.uFlags = TTF_SUBCLASS;
-			ti.hinst  = g_hInst;
-
-			// Delete all existing tools
-			while (SendMessage(m_hwndTooltip, TTM_ENUMTOOLS, 0, (LPARAM)&ti))
-				SendMessage(m_hwndTooltip, TTM_DELTOOL, 0, (LPARAM)&ti);
-
-			RECT r;
-			// Add tooltips after sort
-			for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
-			{
-				// Get the rect of the line
-				ListView_GetItemRect(m_hwndList, i, &r, LVIR_BOUNDS);
-				memcpy(&ti.rect, &r, sizeof(RECT));
-				ti.uId = i;
-				GetItemTooltip(GetListItem(i), str, 100);
-				SendMessage(m_hwndTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
-			}
-		}
-#endif
-		m_bDisableUpdates = false;
-	}
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // SNM_ResourceWnd
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -671,7 +580,7 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_resize.init_item(IDC_FILTER, 1.0, 0.0, 1.0, 0.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
-/*JFB commented: useless since r488 theming updates
+/*JFB commented: useless (?) since r488 theming updates
 #ifndef _WIN32
 	// Realign the filter box on OSX
 	HWND hFilter = GetDlgItem(m_hwnd, IDC_FILTER);
@@ -682,12 +591,7 @@ void SNM_ResourceWnd::OnInitDlg()
 	SetWindowPos(hFilter, NULL, rFilter.left - 25, rFilter.top - 1, abs(rFilter.right - rFilter.left) - 10, abs(rFilter.bottom - rFilter.top), SWP_NOACTIVATE | SWP_NOZORDER);
 #endif
 */
-	// "fast listview" if there are more than NB_SLOTS_FAST_LISTVIEW slots, normal otherwise
-	// (a fast list view has few drawbacks, e.g. selection not restored after updates)
-	bool fastViewNeeded = false;
-	for (int i=0; !fastViewNeeded && i < g_filesLists.GetSize(); i++)
-		fastViewNeeded = (g_filesLists.Get(i)->GetSize() > NB_SLOTS_FAST_LISTVIEW);
-	m_pLists.Add(fastViewNeeded ? new SNM_FastResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)) : new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
 	// Load prefs 
 	//JFB!!! pb qd 1ere init (no .ini)

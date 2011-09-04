@@ -141,13 +141,6 @@ protected:
 	void OnBeginDrag(SWS_ListItem* item);
 };
 
-// used if more than NB_SLOTS_FAST_LISTVIEW slots are loaded
-class SNM_FastResourceView : public SNM_ResourceView {
-public:
-	SNM_FastResourceView(HWND hwndList, HWND hwndEdit) : SNM_ResourceView(hwndList, hwndEdit) {}
-	virtual void Update();
-};
-
 
 class SNM_ResourceWnd : public SWS_DockWnd
 {
@@ -157,7 +150,6 @@ public:
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void SelectBySlot(int _slot);
-
 protected:
 	void OnInitDlg();
 	HMENU OnContextMenu(int x, int y);

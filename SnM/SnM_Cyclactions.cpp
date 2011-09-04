@@ -251,7 +251,7 @@ bool CreateCyclaction(int _section, const char* _actionStr, WDL_String* _errMsg,
 {
 	if (CheckEditableCyclaction(_actionStr, _errMsg))
 	{
-		Cyclaction* a = new Cyclaction(_section, _actionStr);
+		Cyclaction* a = new Cyclaction(_actionStr);
 		g_cyclactions[_section].Add(a);
 		int cycleId = g_cyclactions[_section].GetSize();
 		if (CheckRegisterableCyclaction(_section, a, _errMsg, _checkCmdIds))
@@ -323,7 +323,7 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 				if (_cyclactions)
 				{
 					if (CheckEditableCyclaction(actionStr, _errMsg ? &msg : NULL, false))
-						_cyclactions[sec].Add(new Cyclaction(sec, actionStr, true));
+						_cyclactions[sec].Add(new Cyclaction(actionStr, true));
 				}
 				// main model update + action register
 				else if (!CreateCyclaction(sec, actionStr, _errMsg ? &msg : NULL, _checkCmdIds))
@@ -479,18 +479,18 @@ void Cyclaction::UpdateFromCmd()
 
 #define CYCLACTION_STATE_KEY	"CyclactionsState"
 #define CYCLACTIONWND_POS_KEY	"CyclactionsWndPos"
-#define DEFAULT_EMPTY_TEXT		"<- Select a cycle action"
-#define DEFAULT_ADD_TEXT_L		"Right click here to add cycle actions"
-#define DEFAULT_ADD_TEXT_R		"Right click here to add commands"
-
 
 static SWS_LVColumn g_cyclactionsCols[] = { { 50, 0, "Id" }, { 260, 1, "Cycle action name" }, { 50, 2, "Toggle" } };
 static SWS_LVColumn g_commandsCols[] = { { 180, 1, "Command" }, { 180, 0, "Name (main section only)" } };
+static SNM_CyclactionsView* g_lvL = NULL;
+static SNM_CommandsView* g_lvR = NULL;
 
-static SNM_CyclactionsView* g_mvL = NULL;
-static SNM_CommandsView* g_mvR = NULL;
+// fake list views' contents
+static Cyclaction g_DEFAULT_L("Right click here to add cycle actions");
+static WDL_String g_EMPTY_R("<- Select a cycle action");
+static WDL_String g_DEFAULT_R("Right click here to add commands");
 
-WDL_PtrList_DeleteOnDestroy<Cyclaction> g_editedActionItems[SNM_MAX_CYCLING_SECTIONS];
+WDL_PtrList_DeleteOnDestroy<Cyclaction> g_editedActions[SNM_MAX_CYCLING_SECTIONS];
 Cyclaction* g_editedAction = NULL;
 int g_editedSection = 0; // main section action, 1 = ME event list section action, 2 = ME piano roll section action
 bool g_edited = false;
@@ -498,10 +498,10 @@ char g_lastExportFn[BUFFER_SIZE] = "";
 char g_lastImportFn[BUFFER_SIZE] = "";
 
 
-int CountEditedActionItems() {
+int CountEditedActions() {
 	int count = 0;
-	for (int i=0; i < g_editedActionItems[g_editedSection].GetSize(); i++)
-		if(!g_editedActionItems[g_editedSection].Get(i)->IsEmpty())
+	for (int i=0; i < g_editedActions[g_editedSection].GetSize(); i++)
+		if(!g_editedActions[g_editedSection].Get(i)->IsEmpty())
 			count++;
 	return count;
 }
@@ -513,10 +513,10 @@ void UpdateEditedStatus(bool _edited) {
 }
 
 void UpdateListViews() {
-	if (g_mvL)
-		g_mvL->Update();
-	if (g_mvR)
-		g_mvR->Update();
+	if (g_lvL)
+		g_lvL->Update();
+	if (g_lvR)
+		g_lvR->Update();
 }
 
 void UpdateSection(int _newSection) {
@@ -529,25 +529,25 @@ void UpdateSection(int _newSection) {
 
 void AllEditListItemEnd(bool _save) {
 	bool edited = g_edited;
-	if (g_mvL && g_mvL->EditListItemEnd(_save))
+	if (g_lvL && g_lvL->EditListItemEnd(_save))
 		edited = true;
-	if (g_mvR && g_mvR->EditListItemEnd(_save))
+	if (g_lvR && g_lvR->EditListItemEnd(_save))
 		edited = true;
-	UpdateEditedStatus(edited);// just to be sure..
+	UpdateEditedStatus(edited);// just to make sure..
 }
 
 void EditModelInit()
 {
 	// keep pointers (may be used in a listview: delete after listview update)
 	WDL_PtrList_DeleteOnDestroy<Cyclaction> actionsToDelete;
-	for (int i=0; i < g_editedActionItems[g_editedSection].GetSize(); i++)
-		actionsToDelete.Add(g_editedActionItems[g_editedSection].Get(i));
+	for (int i=0; i < g_editedActions[g_editedSection].GetSize(); i++)
+		actionsToDelete.Add(g_editedActions[g_editedSection].Get(i));
 
 	// model init (we display/edit copies for apply/cancel)
 	for (int sec=0; sec < SNM_MAX_CYCLING_SECTIONS; sec++) {
-		g_editedActionItems[sec].EmptySafe(g_editedSection != sec); // keep current (displayed!) pointers
+		g_editedActions[sec].EmptySafe(g_editedSection != sec); // keep current (displayed!) pointers
 		for (int i=0; i < g_cyclactions[sec].GetSize(); i++)
-			g_editedActionItems[sec].Add(new Cyclaction(g_cyclactions[sec].Get(i)));
+			g_editedActions[sec].Add(new Cyclaction(g_cyclactions[sec].Get(i)));
 	}
 	g_editedAction = NULL;
 	UpdateListViews();
@@ -555,18 +555,15 @@ void EditModelInit()
 
 void Apply()
 {
-	int editedActionId = g_editedActionItems[g_editedSection].Find(g_editedAction);
+	int editedActionId = g_editedActions[g_editedSection].Find(g_editedAction);
 
 	AllEditListItemEnd(true);
-	UpdateEditedStatus(false); // ok, apply: eof edition
-	SaveCyclactions(g_editedActionItems);
-	LoadCyclactions(true, true); // + flush, unregister, re-register
-	EditModelInit();
+	bool wasEdited = g_edited;
 
-	g_editedAction = g_editedActionItems[g_editedSection].Get(editedActionId); // contains bounds checking..
-	if (g_editedAction && g_mvL)
-		g_mvL->SelectByItem((SWS_ListItem*)g_editedAction);
-	UpdateListViews();
+	UpdateEditedStatus(false); // ok, apply: eof edition, note: g_edited=false here!
+	SaveCyclactions(g_editedActions);
+	LoadCyclactions(wasEdited, true); // + flush, unregister, re-register
+	EditModelInit();
 }
 
 void Cancel(bool _checkSave)
@@ -574,12 +571,11 @@ void Cancel(bool _checkSave)
 	AllEditListItemEnd(false);
 	if (_checkSave && g_edited && IDYES == MessageBox(g_cyclactionsHwnd ? g_cyclactionsHwnd : g_hwndParent, "Save cycle actions before quitting ?", "S&M - Cycle Action editor - Warning", MB_YESNO))
 	{
-		SaveCyclactions(g_editedActionItems);
-		LoadCyclactions(false, true); // + flush, unregister, re-register
+		SaveCyclactions(g_editedActions);
+		LoadCyclactions(true, true); // + flush, unregister, re-register
 	}
 	UpdateEditedStatus(false); // cancel: eof edition
 	EditModelInit();
-	UpdateListViews();
 }
 
 void ResetSection(int _section)
@@ -587,17 +583,16 @@ void ResetSection(int _section)
 	WDL_PtrList_DeleteOnDestroy<Cyclaction> actionsToDelete;
 	// keep pointers (may be used in a listview: delete after listview update)
 	if (_section == g_editedSection)
-		for (int i=0; i < g_editedActionItems[_section].GetSize(); i++)
-			actionsToDelete.Add(g_editedActionItems[_section].Get(i));
+		for (int i=0; i < g_editedActions[_section].GetSize(); i++)
+			actionsToDelete.Add(g_editedActions[_section].Get(i));
 
-	g_editedActionItems[_section].EmptySafe(_section != g_editedSection);
+	g_editedActions[_section].EmptySafe(_section != g_editedSection);
 
 	if (_section == g_editedSection)
 	{
 		g_editedAction = NULL;
 		UpdateListViews();
 	}
-
 	UpdateEditedStatus(true);
 } // + actionsToDelete auto clean-up!
 
@@ -618,15 +613,15 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 		switch (iCol)
 		{
 			case 0: 
-			if (!a->m_added)
-			{
-				int id = g_editedActionItems[g_editedSection].Find(a);
-				if (id >= 0)
-					_snprintf(str, iStrMax, "%5.d", id+1);
-			}
-			else
-				lstrcpyn(str, "*", iStrMax);				
-			break;
+				if (!a->m_added)
+				{
+					int id = g_editedActions[g_editedSection].Find(a);
+					if (id >= 0)
+						_snprintf(str, iStrMax, "%5.d", id+1);
+				}
+				else
+					lstrcpyn(str, "*", iStrMax);				
+				break;
 			case 1:
 				lstrcpyn(str, a->GetName(), iStrMax);				
 				break;
@@ -642,7 +637,7 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
 	Cyclaction* a = (Cyclaction*)_item;
-	if (a && _iCol == 1)
+	if (a && a != &g_DEFAULT_L && _iCol == 1)
 	{
 		WDL_String errMsg;
 		if (!CheckEditableCyclaction(_str, &errMsg) && strcmp(a->GetName(), _str)) 
@@ -662,42 +657,31 @@ void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char
 // filter EMPTY_CYCLACTIONs
 void SNM_CyclactionsView::GetItemList(SWS_ListItemList* pList)
 {
-	if (CountEditedActionItems())
+	if (CountEditedActions())
 	{
-		for (int i = 0; i < g_editedActionItems[g_editedSection].GetSize(); i++)
+		for (int i = 0; i < g_editedActions[g_editedSection].GetSize(); i++)
 		{
-			Cyclaction* a = (Cyclaction*)g_editedActionItems[g_editedSection].Get(i);
+			Cyclaction* a = (Cyclaction*)g_editedActions[g_editedSection].Get(i);
 			if (a && !a->IsEmpty())
 				pList->Add((SWS_ListItem*)a);
 		}
 	}
 	else
-	{
-		static Cyclaction def(g_editedSection, DEFAULT_ADD_TEXT_L);
-		pList->Add((SWS_ListItem*)&def);
-	}
+		pList->Add((SWS_ListItem*)&g_DEFAULT_L);
 }
 
 void SNM_CyclactionsView::OnItemSelChanged(SWS_ListItem* item, int iState)
 {
-	if (g_mvR && g_mvR->EditListItemEnd(true))
-		UpdateEditedStatus(true);
-
-	if (item && iState)
-		g_editedAction = (Cyclaction*)item;
-	else
-		g_editedAction = NULL;
-
-	if (g_mvR)
-		g_mvR->Update();
+	AllEditListItemEnd(true);
+	g_editedAction = (item && iState ? (Cyclaction*)item : NULL);
+	g_lvR->Update();
 }
 
 void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState) {
 	if (item && iCol == 2) {
 		Cyclaction* pItem = (Cyclaction*)item;
 		pItem->SetToggle(!pItem->IsToggle());
-		if (g_mvL)
-			g_mvL->Update();
+		Update();
 		UpdateEditedStatus(true);
 	}
 }
@@ -711,7 +695,6 @@ SNM_CommandsView::SNM_CommandsView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, 2, g_commandsCols, "RCyclactionViewState", false)
 {
 //	SetWindowLongPtr(hwndList, GWL_STYLE, GetWindowLongPtr(hwndList, GWL_STYLE) | LVS_SINGLESEL);
-	SetListviewColumnArrows(0);
 }
 
 void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
@@ -725,14 +708,13 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 			case 0:
 				lstrcpyn(str, pItem->Get(), iStrMax);				
 				break;
-			break;
 			case 1:
 				if (pItem->GetLength() && pItem->Get()[0] == '!') {
 					lstrcpyn(str, "Step -----", iStrMax);
 					return;
 				}
 				//JFB API limitation: only for main section..
-				if (g_editedAction && !g_editedAction->m_section) {
+				if (g_editedAction && !g_editedSection) {
 					if (atoi(pItem->Get()) >= g_iFirstCommand)
 						return;
 					int cmd = NamedCommandLookup(pItem->Get());
@@ -747,7 +729,7 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 void SNM_CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
 	WDL_String* cmd = (WDL_String*)_item;
-	if (cmd && g_editedAction && _str && strcmp(cmd->Get(), _str))
+	if (cmd && _str && g_editedAction && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R && strcmp(cmd->Get(), _str))
 	{
 		g_editedAction->SetCmd(cmd, _str);
 
@@ -765,24 +747,19 @@ void SNM_CommandsView::GetItemList(SWS_ListItemList* pList)
 	if (g_editedAction)
 	{
 		int nb = g_editedAction->GetCmdSize();
-		if (nb)
-		{
+		if (nb) {
 			for (int i = 0; i < nb; i++)
 				pList->Add((SWS_ListItem*)g_editedAction->GetCmdString(i));
 		}
-		else if (CountEditedActionItems())
-		{
-			static WDL_String def(DEFAULT_ADD_TEXT_R);
-			pList->Add((SWS_ListItem*)&def);
-		}
+		else if (CountEditedActions())
+			pList->Add((SWS_ListItem*)&g_DEFAULT_R);
 	}
-	else if (CountEditedActionItems())
-	{
-		static WDL_String empty(DEFAULT_EMPTY_TEXT);
-		pList->Add((SWS_ListItem*)&empty);
-	}
+	else if (CountEditedActions())
+		pList->Add((SWS_ListItem*)&g_EMPTY_R);
 }
 
+// special sort criteria
+// (so that the order of commands can't be altered when sorting the list)
 int SNM_CommandsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2) 
 {
 	if (g_editedAction) {
@@ -814,10 +791,14 @@ void SNM_CommandsView::OnDrag()
 			int iNewPriority = g_editedAction->FindCmd(hitItem);
 			int iSelPriority;
 
-			int x=0; WDL_PtrList<WDL_String> draggedItems;
-			while(WDL_String* selItem = (WDL_String*)EnumSelected(&x))
+			int x=0;
+			WDL_PtrList<SWS_ListItem> draggedItems;
+			SWS_ListItem* selItem = EnumSelected(&x);
+/*JFB!!! SWS_ListView issue (r539): limit to one item ^^
+			while(SWS_ListItem* selItem = EnumSelected(&x))
+*/
 			{
-				iSelPriority = g_editedAction->FindCmd(selItem);
+				iSelPriority = g_editedAction->FindCmd((WDL_String*)selItem);
 				if (iNewPriority == iSelPriority)
 					return;
 				draggedItems.Add(selItem);
@@ -828,20 +809,24 @@ void SNM_CommandsView::OnDrag()
 			bool bDir = iNewPriority > iSelPriority;
 			for (int i = bDir ? 0 : draggedItems.GetSize()-1; bDir ? i < draggedItems.GetSize() : i >= 0; bDir ? i++ : i--)
 			{
-				g_editedAction->RemoveCmd(draggedItems.Get(i));
-				g_editedAction->InsertCmd(iNewPriority, draggedItems.Get(i));
+				g_editedAction->RemoveCmd((WDL_String*)draggedItems.Get(i));
+				g_editedAction->InsertCmd(iNewPriority, (WDL_String*)draggedItems.Get(i));
 			}
 
-			if (g_mvR)
-				g_mvR->Update();
-			UpdateEditedStatus(true);
+//JFB!!! SWS_ListView issue (r539): simple Update() is KO here
+//       because of the list view's "special" sort criteria
+//       => force GUI refresh 
+			ListView_DeleteAllItems(m_hwndList);
+			Update();
+			for (int i = 0; i < draggedItems.GetSize(); i++)
+				SelectByItem(draggedItems.Get(i));
+			UpdateEditedStatus(draggedItems.GetSize() > 0);
 		}
 	}
 }
 
 void SNM_CommandsView::OnItemSelChanged(SWS_ListItem* item, int iState) {
-	if (g_mvL && g_mvL->EditListItemEnd(true))
-		UpdateEditedStatus(true);
+	AllEditListItemEnd(true);
 }
 
 
@@ -868,14 +853,11 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 			HWND hListL = GetDlgItem(_hwnd, IDC_LIST1);
 			HWND hListR = GetDlgItem(_hwnd, IDC_LIST2);
-			g_mvL = new SNM_CyclactionsView(hListL, GetDlgItem(_hwnd, IDC_EDIT));
-			g_mvR = new SNM_CommandsView(hListR, GetDlgItem(_hwnd, IDC_EDIT));
-
+			g_lvL = new SNM_CyclactionsView(hListL, GetDlgItem(_hwnd, IDC_EDIT));
+			g_lvR = new SNM_CommandsView(hListR, GetDlgItem(_hwnd, IDC_EDIT));
 			g_edited = false;
 			EnableWindow(GetDlgItem(_hwnd, IDC_APPLY), g_edited);
-
 			EditModelInit();
-			UpdateListViews();
 		}
 		return 0;
 		case WM_CONTEXTMENU:
@@ -883,7 +865,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			AllEditListItemEnd(true);
 
 			int x = LOWORD(lParam), y = HIWORD(lParam);
-			if (g_mvL->DoColumnMenu(x, y) || g_mvR->DoColumnMenu(x, y))
+			if (g_lvL->DoColumnMenu(x, y) || g_lvR->DoColumnMenu(x, y))
 				return 0;
 
 			// which list view?
@@ -901,7 +883,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 			if (left || right)
 			{
-				SWS_ListView* lv = (left ? (SWS_ListView*)g_mvL : (SWS_ListView*)g_mvR);
+				SWS_ListView* lv = (left ? (SWS_ListView*)g_lvL : (SWS_ListView*)g_lvR);
 #ifndef _WIN32
 				// On OSX, change the selection to match the right click
 				SWS_ListItem* hitItem = lv->GetHitItem(x, y, NULL);
@@ -913,25 +895,25 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				}
 #endif
 				HMENU menu = CreatePopupMenu();
-				Cyclaction* action = (Cyclaction*)g_mvL->GetHitItem(x, y, NULL);
-				WDL_String* cmd = (WDL_String*)g_mvR->GetHitItem(x, y, NULL);
+				Cyclaction* action = (Cyclaction*)g_lvL->GetHitItem(x, y, NULL);
+				WDL_String* cmd = (WDL_String*)g_lvR->GetHitItem(x, y, NULL);
 				if (left) // reminder: no multi sel in this one
 				{
 					AddToMenu(menu, "Add cycle action", 1000);
-					if (action && strcmp(action->GetName(), DEFAULT_ADD_TEXT_L))
+					if (action && action != &g_DEFAULT_L)
 					{
 						AddToMenu(menu, "Remove selected cycle action(s)", 1001); 
 						AddToMenu(menu, SWS_SEPARATOR, 0);
 						AddToMenu(menu, "Run", 1002, -1, false, action->m_added ? MF_GRAYED : MF_ENABLED); 
 					}
 				}
-				else if (g_editedAction)
+				else if (g_editedAction && g_editedAction != &g_DEFAULT_L)
 				{
 					AddToMenu(menu, "Add command", 1010);
 #ifdef _WIN32
 					AddToMenu(menu, "Add/learn from 'Actions' window", 1011);
 #endif
-					if (cmd && strcmp(cmd->Get(), DEFAULT_EMPTY_TEXT) && strcmp(cmd->Get(), DEFAULT_ADD_TEXT_R))
+					if (cmd && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R)
 						AddToMenu(menu, "Remove selected command(s)", 1012);
 				}
 
@@ -942,13 +924,13 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					{
 						// add cyclaction
 						case 1000: {
-							Cyclaction* a = new Cyclaction(g_editedSection, "Untitled");
+							Cyclaction* a = new Cyclaction("Untitled");
 							a->m_added = true;
-							g_editedActionItems[g_editedSection].Add(a);
+							g_editedActions[g_editedSection].Add(a);
 							UpdateListViews();
 							UpdateEditedStatus(true);
-							g_mvL->SelectByItem((SWS_ListItem*)a);
-							g_mvL->EditListItem((SWS_ListItem*)a, 1);
+							g_lvL->SelectByItem((SWS_ListItem*)a);
+							g_lvL->EditListItem((SWS_ListItem*)a, 1);
 						}
 						break;
 						// remove cyclaction (for the user.. in fact in clears)
@@ -956,7 +938,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 						{
 							// keep pointers (may be used in a listview: delete after listview update)
 							int x=0; WDL_PtrList_DeleteOnDestroy<WDL_String> cmdsToDelete;
-							while(Cyclaction* a = (Cyclaction*)g_mvL->EnumSelected(&x)) {
+							while(Cyclaction* a = (Cyclaction*)g_lvL->EnumSelected(&x)) {
 								for (int i=0; i < a->GetCmdSize(); i++)
 									cmdsToDelete.Add(a->GetCmdString(i));
 								a->Update(EMPTY_CYCLACTION);
@@ -973,7 +955,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 						// run
 						case 1002:
 							if (action) {
-								int cycleId = g_editedActionItems[g_editedSection].Find(action);
+								int cycleId = g_editedActions[g_editedSection].Find(action);
 								if (cycleId >= 0)
 								{
 									char custCmdId[SNM_MAX_ACTION_CUSTID_LEN] = "";
@@ -991,9 +973,9 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 						case 1010:
 							if (g_editedAction) {
 								WDL_String* newCmd = g_editedAction->AddCmd("!");
-								g_mvR->Update();
+								g_lvR->Update();
 								UpdateEditedStatus(true);
-								g_mvR->EditListItem((SWS_ListItem*)newCmd, 0);
+								g_lvR->EditListItem((SWS_ListItem*)newCmd, 0);
 							}
 							break;
 						// learn cmd
@@ -1001,9 +983,9 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 							int actionId; char section[SNM_MAX_SECTION_NAME_LEN] = "", idstr[64] = "";
 							if (GetSelectedActionId(section, SNM_MAX_SECTION_NAME_LEN, &actionId, idstr, 64) >= 0 && !strcmp(section, g_cyclactionSections[g_editedSection])) {
 								WDL_String* newCmd = g_editedAction->AddCmd(idstr);
-								g_mvR->Update();
+								g_lvR->Update();
 								UpdateEditedStatus(true);
-								g_mvR->SelectByItem((SWS_ListItem*)newCmd);
+								g_lvR->SelectByItem((SWS_ListItem*)newCmd);
 							}
 							else {
 								char bufMsg[256] = "";
@@ -1014,16 +996,16 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 						break;
 						// remove sel cmds
 						case 1012:
-							if (g_mvR && g_editedAction)
+							if (g_lvR && g_editedAction)
 							{
 								// keep pointers (may be used in a listview: delete after listview update)
 								int x=0; WDL_PtrList_DeleteOnDestroy<WDL_String> cmdsToDelete;
-								while(WDL_String* delcmd = (WDL_String*)g_mvR->EnumSelected(&x)) {
+								while(WDL_String* delcmd = (WDL_String*)g_lvR->EnumSelected(&x)) {
 									cmdsToDelete.Add(delcmd);
 									g_editedAction->RemoveCmd(delcmd, false);
 								}
 								if (cmdsToDelete.GetSize()) {
-									g_mvR->Update();
+									g_lvR->Update();
 									UpdateEditedStatus(true);
 								}
 							} // + cmdsToDelete auto clean-up
@@ -1037,14 +1019,14 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		case WM_NOTIFY:
 		{
 			NMHDR* hdr = (NMHDR*)lParam;
-			if (hdr && g_mvL && hdr->hwndFrom == g_mvL->GetHWND())
-				return g_mvL->OnNotify(wParam, lParam);
-			if (hdr && g_mvR && hdr->hwndFrom == g_mvR->GetHWND())
-				return g_mvR->OnNotify(wParam, lParam);
+			if (hdr && g_lvL && hdr->hwndFrom == g_lvL->GetHWND())
+				return g_lvL->OnNotify(wParam, lParam);
+			if (hdr && g_lvR && hdr->hwndFrom == g_lvR->GetHWND())
+				return g_lvR->OnNotify(wParam, lParam);
 		}
 		break;
 		case WM_CLOSE:
-			Cancel(false);
+			Cancel(false); //JFB false: painful check for mods (?)
 			SaveWindowPos(_hwnd, CYCLACTIONWND_POS_KEY);
 			g_cyclactionsHwnd = NULL; // for proper toggle state report, see openCyclactionsWnd()
 			break;
@@ -1104,7 +1086,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 							// import in current section
 							case 1020:
 								if (char* fn = BrowseForFiles("S&M - Import cycle actions", g_lastImportFn, NULL, false, SNM_INI_EXT_LIST)) {
-									LoadCyclactions(true, false, g_editedActionItems, g_editedSection, fn);
+									LoadCyclactions(true, false, g_editedActions, g_editedSection, fn);
 									lstrcpyn(g_lastImportFn, fn, BUFFER_SIZE);
 									free(fn);
 									g_editedAction = NULL;
@@ -1115,7 +1097,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 							// import all sections
 							case 1021:
 								if (char* fn = BrowseForFiles("S&M - Import cycle actions", g_lastImportFn, NULL, false, SNM_INI_EXT_LIST)) {
-									LoadCyclactions(true, false, g_editedActionItems, -1, fn);
+									LoadCyclactions(true, false, g_editedActions, -1, fn);
 									lstrcpyn(g_lastImportFn, fn, BUFFER_SIZE);
 									free(fn);
 									g_editedAction = NULL;
@@ -1128,7 +1110,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 							case 1022:
 							{
 								int x=0; WDL_PtrList_DeleteOnDestroy<Cyclaction> actions[SNM_MAX_CYCLING_SECTIONS];
-								while(Cyclaction* a = (Cyclaction*)g_mvL->EnumSelected(&x))
+								while(Cyclaction* a = (Cyclaction*)g_lvL->EnumSelected(&x))
 									actions[g_editedSection].Add(new Cyclaction(a));
 								if (actions[g_editedSection].GetSize()) {
 									char fn[BUFFER_SIZE] = "";
@@ -1143,8 +1125,8 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 							case 1023:
 							{
 								WDL_PtrList_DeleteOnDestroy<Cyclaction> actions[SNM_MAX_CYCLING_SECTIONS];
-								for (int i=0; i < g_editedActionItems[g_editedSection].GetSize(); i++)
-									actions[g_editedSection].Add(new Cyclaction(g_editedActionItems[g_editedSection].Get(i)));
+								for (int i=0; i < g_editedActions[g_editedSection].GetSize(); i++)
+									actions[g_editedSection].Add(new Cyclaction(g_editedActions[g_editedSection].Get(i)));
 								if (actions[g_editedSection].GetSize()) {
 									char fn[BUFFER_SIZE] = "";
 									if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
@@ -1156,10 +1138,10 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 								break;
 							// export all sections
 							case 1024:
-								if (g_editedActionItems[0].GetSize() || g_editedActionItems[1].GetSize() || g_editedActionItems[2].GetSize()) { // yeah.., i know..
+								if (g_editedActions[0].GetSize() || g_editedActions[1].GetSize() || g_editedActions[2].GetSize()) { // yeah.., i know..
 									char fn[BUFFER_SIZE] = "";
 									if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
-										SaveCyclactions(g_editedActionItems, -1, fn);
+										SaveCyclactions(g_editedActions, -1, fn);
 										strcpy(g_lastExportFn, fn);
 									}
 								}
@@ -1200,15 +1182,15 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					break;
 			}
 			return 0;
-
 			case WM_MOUSEMOVE:
-				if (GetCapture() == _hwnd && g_mvR) {
-					g_mvR->OnDrag();
+				if (GetCapture() == _hwnd) {
+					if (g_lvR)
+						g_lvR->OnDrag();
 					return 1;
 				}
 				break;
 			case WM_LBUTTONUP:
-				if (GetCapture() == _hwnd && g_mvR) {
+				if (GetCapture() == _hwnd) {
 					ReleaseCapture();
 					return 1;
 				}
@@ -1228,12 +1210,12 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				break;
 		case WM_DESTROY:
 			Cancel(false); // JFB false: removed check on close (painful)
-			g_mvL->OnDestroy();
-			delete g_mvL;
-			g_mvL = NULL;
-			g_mvR->OnDestroy();
-			delete g_mvR;
-			g_mvR = NULL;
+			g_lvL->OnDestroy();
+			delete g_lvL;
+			g_lvL = NULL;
+			g_lvR->OnDestroy();
+			delete g_lvR;
+			g_lvR = NULL;
 			break;
 	}
 	return 0;
@@ -1246,12 +1228,12 @@ static int translateAccel(MSG *msg, accelerator_register_t *ctx)
 	if (msg->message == WM_KEYDOWN)
 	{
 		SWS_ListView* lv = NULL;
-		if (g_mvL && g_mvL->IsActive(true))
-			lv = g_mvL;
-		else if (g_mvR && g_mvR->IsActive(true))
-			lv = g_mvR;
+		if (g_lvL && g_lvL->IsActive(true))
+			lv = g_lvL;
+		else if (g_lvR && g_lvR->IsActive(true))
+			lv = g_lvR;
 
-		if ((SNM_IsActiveWindow(g_cyclactionsHwnd) || lv))
+		if (SNM_IsActiveWindow(g_cyclactionsHwnd) || lv)
 		{
 			if (lv)
 			{

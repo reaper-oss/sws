@@ -34,8 +34,8 @@ class Cyclaction
 {
 public:
 	// constructors suppose params are valid
-	Cyclaction(int _section, const char* _desc, bool _added=false) : m_section(_section),m_desc(_desc), m_performState(0), m_added(_added), m_empty(false) {UpdateNameAndCmds();}
-	Cyclaction(Cyclaction* _a) : m_section(_a->m_section),m_desc(_a->m_desc), m_performState(_a->m_performState), m_added(_a->m_added), m_empty(_a->IsEmpty()) {UpdateNameAndCmds();}
+	Cyclaction(const char* _desc, bool _added=false) : m_desc(_desc), m_performState(0), m_added(_added), m_empty(false) {UpdateNameAndCmds();}
+	Cyclaction(Cyclaction* _a) : m_desc(_a->m_desc), m_performState(_a->m_performState), m_added(_a->m_added), m_empty(_a->IsEmpty()) {UpdateNameAndCmds();}
 	~Cyclaction() {}
 	void Update(const char* _desc) {m_desc.Set(_desc); UpdateNameAndCmds();}
 	bool IsEmpty() {return m_empty;}
@@ -55,7 +55,7 @@ public:
 	int FindCmd(WDL_String* _cmd) {return m_cmds.Find(_cmd);}
 	
 	WDL_String m_desc; 
-	int m_performState, m_section;
+	int m_performState;
 	bool m_added;
 
 private:

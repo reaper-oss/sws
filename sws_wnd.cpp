@@ -757,6 +757,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 	}
 	else if (s->hdr.code == LVN_BEGINDRAG)
 	{
+		EditListItemEnd(true);
 		OnBeginDrag(GetListItem(s->iItem));
 	}
 	/*else if (s->hdr.code == NM_CUSTOMDRAW) // TODO for coloring of the listview
@@ -926,6 +927,7 @@ void SWS_ListView::Update()
 					ListView_DeleteItem(m_hwndList, i);
 					i--;
 					lvItemCount--;
+					newIndex--;
 					continue;
 				}
 				else

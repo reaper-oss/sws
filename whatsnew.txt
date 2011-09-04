@@ -1,3 +1,6 @@
+Fixed possible SWS list views refresh issues introduced in v2.1.0 #5
+Cycle action editor: fixed drag & drop of commands (right list view) broken since in v2.1.0 #5
+
 !v2.1.0 #7 (September 2, 2011)
 Fixes:
 Issue 366: Fixed crash with Show Used CC lanes
@@ -7,19 +10,22 @@ Fix crash with groove quantize when no notes are selected
 Cycle action editor: fixed action renaming bug introduced in v2.1.0 #5
 Cycle action editor: fixed corrupted "Right click here..." cycle action introduced in v2.1.0 #5
 
+Marker list now supports save/restore and changing of colors ("Set color..." in the context menu), including en masse with ctrl-click - requires Reaper v4.03
+
 Resources view: "Auto-fill" (context menu) now adds slots rather than inserting them (i.e. do not change existing slot numbers)
-Resources view/FX Chains: support for track channels numbers when saved ("auto-save" button) in the resource view (Issue 363)
+Resources view/FX Chains: support for track channels when FX Chains are saved in the Resources view (Issue 363)
 Resources view/Projects: added "Add recent projects" in the context menu (it adds all recent projects as listed in Main menu>File>Recent projects)
 Resources view/Projects: added project loader/selecter actions (can be usefull for live performance):
-+SWS/S&M: Project loader/selecter: configuration - This ones allows you setting start/end slots (empty slots are ignored, also present in the context menu)
++SWS/S&M: Project loader/selecter: configuration - This one allows you defining start/end slots (empty slot gaps are ignored)
 +SWS/S&M: Project loader/selecter: next (cycle)
 +SWS/S&M: Project loader/selecter: previous (cycle)
 
 Cycle actions:
-+Undoing a cycle action now also restores its previous states (Issue 361)
++Undoing a cycle action now also restores its previous state (Issue 361)
 +Cycle action buttons are now refreshed on undo
 
-Marker list now supports save/restore and changing of colors ("Set color..." in the context menu), including en masse with ctrl-click - requires Reaper v4.03
+Added action:
++SWS/S&M: Open project path in explorer/finder
 
 !v2.1.0 #6 (August 28, 2011)
 Issue 358: Fixed possible crash on project load

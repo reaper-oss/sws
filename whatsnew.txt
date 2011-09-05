@@ -1,3 +1,5 @@
+!v2.1.0 #8 (September 4, 2011)
+Fixed crashing on undo reported in the main reaper forum thread
 Fixed possible SWS list views refresh issues introduced in v2.1.0 #5
 Cycle action editor: fixed drag & drop of commands (right list view) broken since in v2.1.0 #5
 

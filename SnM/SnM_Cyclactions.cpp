@@ -1274,7 +1274,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 				int sec = lp.gettoken_int(0);
 				int cycleId = lp.gettoken_int(1);
 				int state = lp.gettoken_int(2);
-				if (g_cyclactions[sec].Get(cycleId)->m_performState != state)
+				if (g_cyclactions[sec].Get(cycleId) && g_cyclactions[sec].Get(cycleId)->m_performState != state)
 				{
 					// Dynamic action renaming
 					char custCmdId[SNM_MAX_ACTION_CUSTID_LEN] = "";

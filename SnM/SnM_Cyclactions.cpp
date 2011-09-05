@@ -45,7 +45,7 @@ HWND g_cyclactionsHwnd = NULL;
 // The meat!
 ///////////////////////////////////////////////////////////////////////////////
 
-// used to avoid subbtle "recursive cycle action" cases
+// for subbtle "recursive cycle action" cases
 // (e.g. a cycle action that calls a macro that calls a cycle action..)
 static bool g_bReentrancyCheck = false;
 
@@ -1271,32 +1271,37 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		{
 			if (!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
 			{
-				int sec = lp.gettoken_int(0);
-				int cycleId = lp.gettoken_int(1);
-				int state = lp.gettoken_int(2);
-				if (g_cyclactions[sec].Get(cycleId) && g_cyclactions[sec].Get(cycleId)->m_performState != state)
-				{
-					// Dynamic action renaming
-					char custCmdId[SNM_MAX_ACTION_CUSTID_LEN] = "";
-					_snprintf(custCmdId, SNM_MAX_ACTION_CUSTID_LEN, "_%s%d", g_cyclactionCustomIds[sec], cycleId+1);
-					int cmdId = NamedCommandLookup(custCmdId);
-					if (cmdId)
-					{
-						COMMAND_T* c = SWSGetCommandByID(cmdId);
-						if (c && SWSUnregisterCommand(cmdId) && 
-							RegisterCyclation(g_cyclactions[sec].Get(cycleId)->GetStepName(state), g_cyclactions[sec].Get(cycleId)->IsToggle(), sec, cycleId+1, cmdId))
-						{
-							free((void*)c->accel.desc); // alloc'ed with strdup
-							free((void*)c->id);
-							delete c;
-						}
-						RefreshToolbar(cmdId);
-					}
-
-					g_cyclactions[sec].Get(cycleId)->m_performState = state;
-				}
-				if (lp.gettoken_str(0)[0] == '>')
+				if (lp.getnumtokens() && lp.gettoken_str(0)[0] == '>')
 					break;
+				else if (lp.getnumtokens() == 3)
+				{
+					int success, sec, cycleId, state;
+					sec = lp.gettoken_int(0, &success);
+					if (success) cycleId = lp.gettoken_int(1, &success);
+					if (success) state = lp.gettoken_int(2, &success);
+					if (success && g_cyclactions[sec].Get(cycleId) && g_cyclactions[sec].Get(cycleId)->m_performState != state)
+					{
+						// Dynamic action renaming
+						char custCmdId[SNM_MAX_ACTION_CUSTID_LEN] = "";
+						_snprintf(custCmdId, SNM_MAX_ACTION_CUSTID_LEN, "_%s%d", g_cyclactionCustomIds[sec], cycleId+1);
+						int cmdId = NamedCommandLookup(custCmdId);
+						if (cmdId)
+						{
+							COMMAND_T* c = SWSGetCommandByID(cmdId);
+							if (c && SWSUnregisterCommand(cmdId) && 
+								RegisterCyclation(g_cyclactions[sec].Get(cycleId)->GetStepName(state), g_cyclactions[sec].Get(cycleId)->IsToggle(), sec, cycleId+1, cmdId))
+							{
+								free((void*)c->accel.desc); // alloc'ed with strdup
+								free((void*)c->id);
+								delete c;
+							}
+							g_cyclactions[sec].Get(cycleId)->m_performState = state; // before refreshing toolbars!
+							RefreshToolbar(cmdId);
+						}
+						else
+							g_cyclactions[sec].Get(cycleId)->m_performState = state;
+					}
+				}
 			}
 			else
 				break;

@@ -1317,12 +1317,16 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		return;
 
 	WDL_String confStr("<S&M_CYCLACTIONS\n");
+	int iHeaderLen = confStr.GetLength();
 	for (int i=0; i < SNM_MAX_CYCLING_SECTIONS; i++)
 		for (int j=0; j < g_cyclactions[i].GetSize(); j++)
 			if (!g_cyclactions[i].Get(j)->IsEmpty())
 				confStr.AppendFormatted(128,"%d %d %d\n", i, j, g_cyclactions[i].Get(j)->m_performState);
-	confStr.Append(">\n");
-	StringToExtensionConfig(&confStr, ctx);
+	if (confStr.GetLength() > iHeaderLen)
+	{	// SWS only write out line if there's cycle actions present
+		confStr.Append(">\n");
+		StringToExtensionConfig(&confStr, ctx);
+	}
 }
 
 static project_config_extension_t g_projectconfig = {

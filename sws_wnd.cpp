@@ -189,25 +189,7 @@ int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (m_pLists.Get(i)->DoColumnMenu(x, y))
 					return 0;
 			
-#ifndef _WIN32
-			// On OSX, change the selection to match the right click
-			for (int i = 0; i < m_pLists.GetSize(); i++)
-			{
-				SWS_ListItem* item = m_pLists.Get(i)->GetHitItem(x, y, NULL);
-				if (item)
-				{
-					HWND hList = m_pLists.Get(i)->GetHWND();
-					for (int j = 0; j < ListView_GetItemCount(hList); j++)
-					{
-						if (item == m_pLists.Get(i)->GetListItem(j))
-							ListView_SetItemState(hList, j, LVIS_SELECTED, LVIS_SELECTED);
-						else
-							ListView_SetItemState(hList, j, 0, LVIS_SELECTED);
-					}
-					break;
-				}
-			}			
-#endif
+			// SWS issue 373 - removed code from here that removed all but one selection on right click on OSX
 
 			HMENU hMenu = OnContextMenu(x, y);
 			if (!hMenu)

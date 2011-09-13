@@ -89,7 +89,9 @@ public:
 	MediaTrack* m_inputTr[SNM_LIVECFG_NB_CONFIGS];
 
 	int m_lastMIDIVal[SNM_LIVECFG_NB_CONFIGS];
-	int m_lastDeactivateCmd[SNM_LIVECFG_NB_CONFIGS][4];
+
+	// [0] = cmd, [1] = val, [2] = valhw, [3] = relmode, [4] = track index
+	int m_lastDeactivateCmd[SNM_LIVECFG_NB_CONFIGS][5];
 };
 
 class SNM_LiveConfigsView : public SWS_ListView {
@@ -99,7 +101,9 @@ protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
 	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
 	void GetItemList(SWS_ListItemList* pList);
+	void OnItemSelChanged(SWS_ListItem* item, int iState);
 	void OnItemDblClk(SWS_ListItem* item, int iCol);
+	int OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2);
 };
 
 class SNM_LiveConfigsWnd : public SWS_DockWnd {

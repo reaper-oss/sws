@@ -29,7 +29,7 @@
 // JFB TODO?
 // - max nb of tracks & presets to check
 // - FX chains: + S&M's FX chain view slots
-// - full release?
+// - full release? auto send creation, etc..
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
@@ -70,56 +70,11 @@ SWSProjConfig<WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<MidiLiveIt
 int g_configId = 0; // the current *displayed* config id
 int g_approxDelayMsCC = 250;
 #ifdef _SNM_PRESETS
-static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX User presets"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
+static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX user presets"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
 #else
 static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
 #endif
 
-
-bool AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_String* _curPresetConf)
-{
-	memset(g_pLiveConfigsWnd->m_lastFXPresetMsg[0], -1, SNM_LIVECFG_MAX_PRESET_COUNT * sizeof(int));
-	memset(g_pLiveConfigsWnd->m_lastFXPresetMsg[1], -1, SNM_LIVECFG_MAX_PRESET_COUNT * sizeof(int));
-
-	int fxCount = TrackFX_GetCount(_tr);
-	if(!fxCount) {
-		AddToMenu(*_menu, "(No FX on track)", 0, -1, false, MF_GRAYED);
-		return false;
-	}
-	
-	SNM_FXSummaryParser p(_tr);
-	WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
-	if (summaries && summaries->GetSize())
-	{
-		char fxName[512];
-		int msgCpt = 0;
-		//JFB TODO: check max. msgCpt value..
-		for(int i = 0; i < fxCount; i++) 
-		{
-			SNM_FXSummary* sum = summaries->Get(i);
-			if(TrackFX_GetFXName(_tr, i, fxName, 512))
-			{
-				HMENU fxSubMenu = CreatePopupMenu();
-				WDL_PtrList_DeleteOnDestroy<WDL_String> names;
-				int presetCount = getPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names);
-				if (presetCount)
-				{
-					int curSel = GetPresetFromConf(i, _curPresetConf, presetCount);
-					AddToMenu(fxSubMenu, "None (unchanged)", SNM_LIVECFG_SET_PRESETS_MSG + msgCpt, -1, false, !curSel ? MFS_CHECKED : MFS_UNCHECKED);
-					g_pLiveConfigsWnd->m_lastFXPresetMsg[0][msgCpt] = i; 
-					g_pLiveConfigsWnd->m_lastFXPresetMsg[1][msgCpt++] = 0; 
-					for(int j = 0; j < presetCount; j++) {
-						AddToMenu(fxSubMenu, names.Get(j)->Get(), SNM_LIVECFG_SET_PRESETS_MSG + msgCpt, -1, false, ((j+1)==curSel) ? MFS_CHECKED : MFS_UNCHECKED);
-						g_pLiveConfigsWnd->m_lastFXPresetMsg[0][msgCpt] = i; 
-						g_pLiveConfigsWnd->m_lastFXPresetMsg[1][msgCpt++] = j+1; 
-					}
-				}
-				AddSubMenu(*_menu, fxSubMenu, fxName, -1, presetCount ? MFS_ENABLED : MF_GRAYED);
-			}
-		}
-	}
-	return true;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_LiveConfigsView
@@ -172,7 +127,8 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 			case COL_PRESET:
 			{
 				WDL_String renderConf;
-				RenderPresetConf(&(pItem->m_presets), &renderConf);
+//				RenderPresetConf(&(pItem->m_presets), &renderConf);
+				RenderPresetConf2(pItem->m_track, &(pItem->m_presets), &renderConf);
 				lstrcpyn(str, renderConf.Get(), iStrMax);
 				break;
 			}
@@ -231,6 +187,29 @@ void SNM_LiveConfigsView::GetItemList(SWS_ListItemList* pList)
 	}
 }
 
+void SNM_LiveConfigsView::OnItemSelChanged(SWS_ListItem* item, int iState)
+{
+	// can lead to confusion with auto track selection ticked
+	if (!g_liveConfigs.Get()->m_autoSelect[g_configId])
+	{
+//		Undo_BeginBlock2(NULL);
+		for (int i=0; i <= GetNumTracks(); i++) {
+			MediaTrack* tr = CSurf_TrackFromID(i, false);
+			if (tr) GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
+		}
+		int x=0;
+		while(MidiLiveItem* item = (MidiLiveItem*)EnumSelected(&x))
+			if (item->m_track)
+				GetSetMediaTrackInfo(item->m_track, "I_SELECTED", &g_i1);
+		TrackList_AdjustWindows(false);
+		Main_OnCommand(40913,0); // scroll to selected tracks
+//		Undo_EndBlock2(NULL, "Change Track Selection", UNDO_STATE_ALL);
+//		Undo_OnStateChangeEx("Change Track Selection", , -1);
+//JFB!!! restore sel ko, wtf!??
+	}
+}
+
+
 void SNM_LiveConfigsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	MidiLiveItem* pItem = (MidiLiveItem*)item;
@@ -253,6 +232,43 @@ void SNM_LiveConfigsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 				break;
 		}
 	}
+}
+
+// faster: default SWS_ListItem's sort algo but don't use GetItemText() for presets
+// (so biaised for presets which are sorted by fx# + preset#)
+int SNM_LiveConfigsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2)
+{
+#ifdef _SNM_PRESETS
+	char str1[64];
+	char str2[64];
+	if (abs(m_iSortCol)-1 != COL_PRESET)
+		GetItemText(_item1, abs(m_iSortCol)-1, str1, 64);
+	else
+		lstrcpyn(str1, ((MidiLiveItem*)_item1)->m_presets.Get(), 64);
+
+	if (abs(m_iSortCol)-1 != COL_PRESET)
+		GetItemText(_item2, abs(m_iSortCol)-1, str2, 64);
+	else
+		lstrcpyn(str2, ((MidiLiveItem*)_item2)->m_presets.Get(), 64);
+
+	// If strings are purely numbers, sort numerically
+	char* pEnd1, *pEnd2;
+	int i1 = strtol(str1, &pEnd1, 0);
+	int i2 = strtol(str2, &pEnd2, 0);
+	int iRet = 0;
+	if ((i1 || i2) && !*pEnd1 && !*pEnd2) {
+		if (i1 > i2) iRet = 1;
+		else if (i1 < i2) iRet = -1;
+	}
+	else
+		iRet = strcmp(str1, str2);
+	
+	if (m_iSortCol < 0) return -iRet;
+	else return iRet;
+	return 0;
+#else
+	return SWS_ListView::OItemSort(_item1, _item2);
+#endif
 }
 
 
@@ -653,6 +669,54 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		}
 	}
+}
+
+void AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_String* _curPresetConf)
+{
+	memset(g_pLiveConfigsWnd->m_lastFXPresetMsg[0], -1, SNM_LIVECFG_MAX_PRESET_COUNT * sizeof(int));
+	memset(g_pLiveConfigsWnd->m_lastFXPresetMsg[1], -1, SNM_LIVECFG_MAX_PRESET_COUNT * sizeof(int));
+
+	int fxCount = (_tr ? TrackFX_GetCount(_tr) : 0);
+	if (!fxCount) {
+		AddToMenu(*_menu, "(No FX on track)", 0, -1, false, MF_GRAYED);
+		return;
+	}
+
+	SNM_FXSummaryParser p(_tr);
+	WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
+	if (summaries && fxCount == summaries->GetSize())
+	{
+		char fxName[512];
+		int msgCpt = 0;
+		//JFB TODO: check max. msgCpt value..
+		for(int i = 0; i < fxCount; i++) 
+		{
+			if(TrackFX_GetFXName(_tr, i, fxName, 512))
+			{
+				HMENU fxSubMenu = CreatePopupMenu();
+				WDL_PtrList_DeleteOnDestroy<WDL_String> names;
+				SNM_FXSummary* sum = summaries->Get(i);
+				int presetCount = (sum ? getPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names) : 0);
+				if (presetCount)
+				{
+					int curSel = GetPresetFromConf(i, _curPresetConf, presetCount);
+					AddToMenu(fxSubMenu, "None (unchanged)", SNM_LIVECFG_SET_PRESETS_MSG + msgCpt, -1, false, !curSel ? MFS_CHECKED : MFS_UNCHECKED);
+					g_pLiveConfigsWnd->m_lastFXPresetMsg[0][msgCpt] = i; 
+					g_pLiveConfigsWnd->m_lastFXPresetMsg[1][msgCpt++] = 0; 
+					for(int j = 0; j < presetCount; j++) {
+						AddToMenu(fxSubMenu, names.Get(j)->Get(), SNM_LIVECFG_SET_PRESETS_MSG + msgCpt, -1, false, ((j+1)==curSel) ? MFS_CHECKED : MFS_UNCHECKED);
+						g_pLiveConfigsWnd->m_lastFXPresetMsg[0][msgCpt] = i; 
+						g_pLiveConfigsWnd->m_lastFXPresetMsg[1][msgCpt++] = j+1; 
+					}
+				}
+				WDL_String fxNameId;
+				fxNameId.SetFormatted(512, "FX %d - %s", i+1, fxName);
+				AddSubMenu(*_menu, fxSubMenu, fxNameId.Get(), -1, presetCount ? MFS_ENABLED : MF_GRAYED);
+			}
+		}
+	}
+	else
+		AddToMenu(*_menu, "(Unknown FX on track)", 0, -1, false, MF_GRAYED);
 }
 
 HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
@@ -1134,56 +1198,71 @@ void SNM_MidiLiveScheduledJob::Perform()
 	{
 		if (lc->m_enable[m_cfgId])
 		{
-			// Run desactivate action of previous CC
-			// if one, the previous CC's track still selected
+			WDL_PtrList<MediaTrack> otherConfigTracks;
+			for (int i=0; i < g_liveCCConfigs.Get()->Get(m_cfgId)->GetSize(); i++)
+			{
+				MidiLiveItem* cfgOther = g_liveCCConfigs.Get()->Get(m_cfgId)->Get(i);
+				// note: a same track can be present in several rows
+				if (cfgOther && cfgOther->m_track && cfgOther->m_track != cfg->m_track && otherConfigTracks.Find(cfgOther->m_track) == -1)
+					otherConfigTracks.Add(cfgOther->m_track);
+			}
+
+			// save selected tracks, unselect all track
+			WDL_PtrList<MediaTrack> selTracks;
+			if (lc->m_autoSelect[m_cfgId])
+			{
+				for (int i=0; i <= GetNumTracks(); i++) // include master
+				{
+					MediaTrack* tr = CSurf_TrackFromID(i, false);
+					if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {
+						if (tr != cfg->m_track && otherConfigTracks.Find(tr) == -1) 
+							selTracks.Add(tr);
+						GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);	
+					}
+				}
+			}
+
+			// run desactivate action (of the previous config)
+			// if auto-selection is enabled, only the related track is selected while 
+			// performing the action. other tracks selections are restored later
 			if (lc->m_lastDeactivateCmd[m_cfgId][0] > 0)
 			{
+				MediaTrack* deactiveTr = lc->m_lastDeactivateCmd[m_cfgId][4] > 0 ? CSurf_TrackFromID(lc->m_lastDeactivateCmd[m_cfgId][4], false) : NULL;
+				if (deactiveTr && lc->m_autoSelect[m_cfgId])
+					GetSetMediaTrackInfo(deactiveTr, "I_SELECTED", &g_i1); 
+
 				if (!KBD_OnMainActionEx(lc->m_lastDeactivateCmd[m_cfgId][0], lc->m_lastDeactivateCmd[m_cfgId][1], lc->m_lastDeactivateCmd[m_cfgId][2], lc->m_lastDeactivateCmd[m_cfgId][3], g_hwndParent, NULL))
 					Main_OnCommand(lc->m_lastDeactivateCmd[m_cfgId][0],0);
+
+				if (deactiveTr && lc->m_autoSelect[m_cfgId])
+					GetSetMediaTrackInfo(deactiveTr, "I_SELECTED", &g_i0); // no track selected after that..
+
 				lc->m_lastDeactivateCmd[m_cfgId][0] = -1;
 			}
 
 			if (cfg->m_track)
 			{
-				// Mute/unselect all but this
-				WDL_PtrList<MediaTrack> cfgTracks;
-				for (int i=0; i < g_liveCCConfigs.Get()->Get(m_cfgId)->GetSize(); i++)
-				{
-					MidiLiveItem* cfgOther = g_liveCCConfigs.Get()->Get(m_cfgId)->Get(i);
-					if (/*i != m_val && */cfgOther && cfgOther->m_track && cfgTracks.Find(cfgOther->m_track) == -1)
-					{
-						cfgTracks.Add(cfgOther->m_track);
-						if (lc->m_autoSelect[m_cfgId] && cfgOther->m_track != cfg->m_track)
-							GetSetMediaTrackInfo(cfgOther->m_track, "I_SELECTED", &g_i0);	
+				// avoid glitches AFAP: in any case (mute pref ignored), we mute!
+				// we'll restore mute state of the focused track after processing
+				DWORD muteTime = 0;
+				bool mute = *(bool*)GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", NULL);
+				if (!mute) {
+					GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &g_bTrue);
+					muteTime = GetTickCount();
+				}
 
-						if (lc->m_muteOthers[m_cfgId])
-						{
-							if (cfgOther->m_track != cfg->m_track)
-								GetSetMediaTrackInfo(cfgOther->m_track, "B_MUTE", &g_bTrue);
-
-							// mute receives from the input track if needed
-							if (lc->m_inputTr[m_cfgId] && 
-								lc->m_inputTr[m_cfgId] != cfgOther->m_track)
-							{
-								int rcvIdx=0;
-								MediaTrack* rcvTr = (MediaTrack*)GetSetTrackSendInfo(cfgOther->m_track, -1, rcvIdx, "P_SRCTRACK", NULL);
-								while(rcvTr)
-								{
-									if (rcvTr == lc->m_inputTr[m_cfgId])
-									{
-										bool b = (cfgOther->m_track != cfg->m_track);
-										GetSetTrackSendInfo(cfgOther->m_track, -1, rcvIdx, "B_MUTE", &b);
-									}
-									rcvTr = (MediaTrack*)GetSetTrackSendInfo(cfgOther->m_track, -1, ++rcvIdx, "P_SRCTRACK", NULL);
-								}
-							}
+				// Mute all all other tracks of that config
+				if (lc->m_muteOthers[m_cfgId]) {
+					for (int i=0; i < otherConfigTracks.GetSize(); i++) {
+						MediaTrack* cfgOtherTr = otherConfigTracks.Get(i);
+						if (cfgOtherTr) {
+							GetSetMediaTrackInfo(cfgOtherTr, "B_MUTE", &g_bTrue);
+							muteReceives(lc->m_inputTr[m_cfgId], cfgOtherTr, true);
 						}
 					}
 				}
 
-				// Avoid glitches AFAP: we'll unmute the focused track later (after processing)
-				GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &g_bTrue);
-
+				// track configuration
 				SNM_ChunkParserPatcher* p = NULL;
 				if (cfg->m_trTemplate.GetLength())
 				{
@@ -1206,25 +1285,41 @@ void SNM_MidiLiveScheduledJob::Perform()
 #ifdef _SNM_PRESETS
 				else if (cfg->m_presets.GetLength())
 				{
+					WaitForTrackMute(&muteTime); // 0 is ignored
 					triggerFXUserPreset(cfg->m_track, &(cfg->m_presets));
 				}
 #endif
-				delete p; // + auto commit!!
+				WaitForTrackMute(&muteTime); // 0 is ignored
+				delete p; // + auto commit (if needed)
 
-				// unmute/select
+
+				// select track (the only one selected at this point, if auto-selection is enabled)
 				if (lc->m_autoSelect[m_cfgId])
 					GetSetMediaTrackInfo(cfg->m_track, "I_SELECTED", &g_i1);
-				GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &g_bFalse);
+
+				//	unmute the config track (or restore its mute state)			
+				if (lc->m_muteOthers[m_cfgId]) {
+					GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &g_bFalse);
+					muteReceives(lc->m_inputTr[m_cfgId], cfg->m_track, false);
+				}
+				else
+					GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &mute);
 
 			} // end of track processing
 
-			// Perform activate action
+			// perform activate action
+			// if auto-selection is used, only the related track is selected at this point
 			if (cfg->m_onAction.GetLength())
 			{
 				int cmd = NamedCommandLookup(cfg->m_onAction.Get());
 				if (cmd > 0 && !KBD_OnMainActionEx(cmd, m_val, m_valhw, m_relmode, g_hwndParent, NULL))
 					Main_OnCommand(cmd,0);
 			}
+
+			// restore other (i.e. not part of this config) selected tracks
+			if (lc->m_autoSelect[m_cfgId])
+				for (int k=0; k < selTracks.GetSize(); k++)
+					GetSetMediaTrackInfo(selTracks.Get(k), "I_SELECTED", &g_i1);
 
 			// (just) prepare desactivate action
 			if (cfg->m_offAction.GetLength())
@@ -1236,6 +1331,7 @@ void SNM_MidiLiveScheduledJob::Perform()
 					lc->m_lastDeactivateCmd[m_cfgId][1] = m_val;
 					lc->m_lastDeactivateCmd[m_cfgId][2] = m_valhw;
 					lc->m_lastDeactivateCmd[m_cfgId][3] = m_relmode;
+					lc->m_lastDeactivateCmd[m_cfgId][4] = cfg->m_track ? CSurf_TrackToID(cfg->m_track, false) : -1;
 				}
 			}
 			else

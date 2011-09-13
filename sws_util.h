@@ -48,6 +48,7 @@
 // For checking to see if items are adjacent
 // Found one case of items after split having diff edges 5e-11 apart, 1e-9 (still much greater than one sample)
 #define SWS_ADJACENT_ITEM_THRESHOLD 1.0e-9
+#define BOUNDED(x,lo,hi) ((x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x))
 
 #ifdef _WIN32
 #define PATH_SLASH_CHAR '\\'

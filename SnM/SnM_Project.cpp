@@ -93,7 +93,7 @@ void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errM
 	}
 }
 
-bool autoSaveProjectSlot(int _slot, bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnSize)
+bool autoSaveProjectSlot(bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnSize)
 {
 	bool slotUpdate = false;
 	if (_saveCurPrj)
@@ -101,15 +101,12 @@ bool autoSaveProjectSlot(int _slot, bool _saveCurPrj, const char* _dirPath, char
 
 	char prjFn[BUFFER_SIZE] = "", name[BUFFER_SIZE] = "";
 	EnumProjects(-1, prjFn, BUFFER_SIZE);
-	ExtractFileNameEx(prjFn, name, true); //JFB!!! Xen code a revoir
+	ExtractFileNameEx(prjFn, name, true);
 
 	GenerateFilename(_dirPath, name, g_prjTemplateFiles.GetFileExt(), _fn, _fnSize);
 	WDL_String chunk;
 	if (LoadChunk(prjFn, &chunk))
 		slotUpdate |= (SaveChunk(_fn, &chunk) && g_prjTemplateFiles.AddSlot(_fn));
-/*JFB insert slot code commented: can mess the user's slot actions (because all following ids change)
-		slotUpdate |= (SaveChunk(_fn, &chunk) && g_prjTemplateFiles.InsertSlot(_slot, _fn));
-*/
 	return slotUpdate;
 }
 

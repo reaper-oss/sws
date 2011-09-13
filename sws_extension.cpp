@@ -421,9 +421,9 @@ int WDL_STYLE_GetSysColor(int i)
 		{
 			int colDelta = SNM_3D_COLORS_DELTA * (i == COLOR_3DSHADOW ? -1 : 1);
 		    col = RGB(
-				SNM_MinMax(LICE_GETR(bgcol) + colDelta, 0, 0xFF),
-				SNM_MinMax(LICE_GETG(bgcol) + colDelta, 0, 0xFF),
-				SNM_MinMax(LICE_GETB(bgcol) + colDelta, 0, 0xFF));
+				BOUNDED(LICE_GETR(bgcol) + colDelta, 0, 0xFF),
+				BOUNDED(LICE_GETG(bgcol) + colDelta, 0, 0xFF),
+				BOUNDED(LICE_GETB(bgcol) + colDelta, 0, 0xFF));
 		}
 	}
 	return col;

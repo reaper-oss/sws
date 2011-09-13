@@ -229,7 +229,8 @@ int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_Str
 void UpdatePresetConf(int _fx, int _preset, WDL_String* _presetConf);
 int GetPresetFromConf(int _fx, WDL_String* _presetConf, int _presetCount=0xFFFF);
 void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf);
-int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir = 0, bool _userPreset = false);
+void RenderPresetConf2(MediaTrack* _tr, WDL_String* _presetConf, WDL_String* _renderConf);
+int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir = 0, bool _userPreset = false, bool _selTracks = true);
 void triggerFXPreset(int _fxId, int _presetId, int _dir=0);
 void triggerNextPreset(COMMAND_T*);
 void triggerPreviousPreset(COMMAND_T*);
@@ -243,7 +244,7 @@ int copyTakeFXChain(WDL_String* _fxChain, int _startSelItem=0);
 void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
 void setTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
 void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool _set, bool _errMsg);
-bool autoSaveItemFXChainSlots(int _slot, const char* _dirPath, char* _fn, int _fnSize);
+bool autoSaveItemFXChainSlots(const char* _dirPath, char* _fn, int _fnSize);
 void loadSetTakeFXChain(COMMAND_T*);
 void loadPasteTakeFXChain(COMMAND_T*);
 void loadSetAllTakesFXChain(COMMAND_T*);
@@ -260,7 +261,7 @@ void pasteTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX);
 void setTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX);
 int copyTrackFXChain(WDL_String* _fxChain, bool _inputFX, int _startTr=0);
 void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inputFX, bool _errMsg);
-bool autoSaveTrackFXChainSlots(int _slot, bool _inputFX, const char* _dirPath, char* _fn, int _fnSize);
+bool autoSaveTrackFXChainSlots(bool _inputFX, const char* _dirPath, char* _fn, int _fnSize);
 void loadSetTrackFXChain(COMMAND_T*);
 void loadPasteTrackFXChain(COMMAND_T*);
 void loadSetTrackInFXChain(COMMAND_T*);
@@ -367,8 +368,8 @@ void makeUnformatedConfigString(const char* _in, WDL_String* _out);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 void ShortenStringToFirstRN(char* _str);
 void ReplaceStringFormat(char* _str, char _replaceCh);
-int SNM_MinMax(int _val, int _min, int _max);
 bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
+bool WaitForTrackMute(DWORD* _muteTime);
 #ifdef _SNM_MISC
 void LetREAPERBreathe(COMMAND_T*);
 #endif
@@ -395,7 +396,7 @@ bool IsNotesHelpLocked(COMMAND_T*);
 // *** SnM_Project.cpp ***
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errMsg);
-bool autoSaveProjectSlot(int _slot, bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnSize);
+bool autoSaveProjectSlot(bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnSize);
 void loadOrSelectProject(COMMAND_T*);
 void loadOrSelectProjectNewTab(COMMAND_T*);
 void projectLoaderConf(COMMAND_T*);
@@ -407,11 +408,14 @@ int ResourceViewInit();
 void ResourceViewExit();
 void OpenResourceView(COMMAND_T*);
 bool IsResourceViewDisplayed(COMMAND_T*);
-void ClearSlotPrompt(COMMAND_T*);
+void ResourceViewClearSlotPrompt(COMMAND_T*);
+void ResourceViewAutoSave(COMMAND_T*);
 
 // *** SnM_Sends.cpp ***
 bool cueTrack(const char* _busName, int _type, const char* _undoMsg, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
 void cueTrack(COMMAND_T*);
+void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
+void saveCueBusIniFile(const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
 void copyWithIOs(COMMAND_T*);
 void cutWithIOs(COMMAND_T*);
 void pasteWithIOs(COMMAND_T*);
@@ -427,8 +431,7 @@ void pasteReceives(COMMAND_T*);
 void removeSends(COMMAND_T*);
 void removeReceives(COMMAND_T*);
 void removeRouting(COMMAND_T*);
-void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
-void saveCueBusIniFile(const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
+void muteReceives(MediaTrack* _source, MediaTrack* _dest, bool _mute);
 
 // *** SnM_Track.cpp ***
 #ifdef _SNM_TRACK_GROUP_EX
@@ -449,7 +452,7 @@ void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _w
 void replaceOrPasteItemsFromTrackSlot(const char* _title, bool _paste, int _slot, bool _errMsg);
 void loadSetTrackTemplate(COMMAND_T*);
 void loadImportTrackTemplate(COMMAND_T*);
-bool autoSaveTrackSlots(int _slot, bool _delItems, const char* _dirPath, char* _fn, int _fnSize);
+bool autoSaveTrackSlots(bool _delItems, const char* _dirPath, char* _fn, int _fnSize);
 void setMIDIInputChannel(COMMAND_T*);
 void remapMIDIInputChannel(COMMAND_T*);
 

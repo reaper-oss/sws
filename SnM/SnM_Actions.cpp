@@ -235,7 +235,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// FX Chains (items & tracks) ---------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (FX chains)" }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, "S&&M Resources", 0, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ClearSlotPrompt, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ResourceViewClearSlotPrompt, NULL, 0},
+//	{ { DEFACCEL, "SWS/S&M: Auto-save FX Chains" }, "S&M_SAVE_FXCHAIN_SLOT", ResourceViewAutoSave, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, prompt for slot" }, "S&M_TAKEFXCHAINp1", loadSetTakeFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Apply FX chain to selected items, all takes, prompt for slot" }, "S&M_TAKEFXCHAINp2", loadSetAllTakesFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp1", loadPasteTakeFXChain, NULL, -1},
@@ -284,18 +285,22 @@ static COMMAND_T g_SNM_cmdTable[] =
 	
 	// Track templates --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (track templates)" }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResourceView, NULL, 1, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear track template slot..." }, "S&M_CLR_TRTEMPLATE_SLOT", ClearSlotPrompt, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Clear track template slot..." }, "S&M_CLR_TRTEMPLATE_SLOT", ResourceViewClearSlotPrompt, NULL, 1},
+//	{ { DEFACCEL, "SWS/S&M: Auto-save track template" }, "S&M_SAVE_TRTEMPLATE_SLOT", ResourceViewAutoSave, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, prompt for slot" }, "S&M_APPLY_TRTEMPLATEp", loadSetTrackTemplate, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, prompt for slot" }, "S&M_ADD_TRTEMPLATEp", loadImportTrackTemplate, NULL, -1},
 
 	// Projects & project templates -------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (project templates)" }, "S&M_SHOW_RESVIEW_PRJ_TEMPLATES", OpenResourceView, NULL, 2, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear project template slot..." }, "S&M_CLR_PRJTEMPLATE_SLOT", ClearSlotPrompt, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Clear project template slot..." }, "S&M_CLR_PRJTEMPLATE_SLOT", ResourceViewClearSlotPrompt, NULL, 2},
+//	{ { DEFACCEL, "SWS/S&M: Auto-save project template" }, "S&M_SAVE_PRJTEMPLATE_SLOT", ResourceViewAutoSave, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Select/load project template, prompt for slot" }, "S&M_APPLY_PRJTEMPLATEp", loadOrSelectProject, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), prompt for slot" }, "S&M_NEWTAB_PRJTEMPLATEp", loadOrSelectProjectNewTab, NULL, -1},
+
 	{ { DEFACCEL, "SWS/S&M: Project loader/selecter: configuration" }, "S&M_PRJ_LOADER_CONF", projectLoaderConf, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Project loader/selecter: next (cycle)" }, "S&M_PRJ_LOADER_NEXT", loadOrSelectNextPreviousProject, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Project loader/selecter: previous (cycle)" }, "S&M_PRJ_LOADER_PREV", loadOrSelectNextPreviousProject, NULL, -1},
+
 	{ { DEFACCEL, "SWS/S&M: Open project path in explorer/finder" }, "S&M_OPEN_PRJ_PATH", openProjectPathInExplorerFinder, NULL, },
 	
 	// Items ------------------------------------------------------------------
@@ -368,8 +373,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/gofer: Split selected items at mouse cursor (obey snapping)" }, "S&M_SPLIT10", goferSplitSelectedItems, NULL, },
 
 	// ME ---------------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Active ME - Hide all CC lanes" }, "S&M_MEHIDECCLANES", MEHideCCLanes, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Active ME - Create CC lane" }, "S&M_MECREATECCLANE", MECreateCCLane, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Hide all CC lanes" }, "S&M_MEHIDECCLANES", MEHideCCLanes, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Create CC lane" }, "S&M_MECREATECCLANE", MECreateCCLane, NULL, },
 
 	// Tracks -----------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Copy selected track grouping" }, "S&M_COPY_TR_GRP", copyCutTrackGrouping, NULL, 0},
@@ -444,12 +449,12 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// Cyclactions ---------------------------------------------------------------
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor" }, "S&M_CREATE_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 0, isCyclationsWndDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor (event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 1, isCyclationsWndDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor (piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 2, isCyclationsWndDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor (MIDI editor event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 1, isCyclationsWndDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor (MIDI editor piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 2, isCyclationsWndDisplayed},
 #else
 	{ { DEFACCEL, "SWS/S&M: Create cycle action" }, "S&M_CREATE_CYCLACTION", openCyclactionsWnd, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Create cycle ME action (event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", openCyclactionsWnd, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Create cycle ME action (piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", openCyclactionsWnd, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Create cycle action (MIDI editor event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", openCyclactionsWnd, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Create cycle action (MIDI editor piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", openCyclactionsWnd, NULL, 2},
 #endif
 
 	// REC inputs -------------------------------------------------------------
@@ -776,7 +781,7 @@ int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _fn)
 	{
 		COMMAND_T* ct = &_cmds[i++];
 		int nb = GetPrivateProfileInt("NbOfActions", ct->id, (int)ct->user, g_SNMiniFilename.Get());
-		nb = SNM_MinMax(nb, 0, SNM_MAX_DYNAMIC_ACTIONS);
+		nb = BOUNDED(nb, 0, SNM_MAX_DYNAMIC_ACTIONS);
 		for (int j=0; j < nb; j++)
 		{
 			_snprintf(actionName, SNM_MAX_ACTION_NAME_LEN, ct->accel.desc, j+1);

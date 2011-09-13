@@ -421,6 +421,13 @@ const char* GetParent(WDL_PtrList<WDL_String>* _parents, int _ancestor=1) {
 	return "";
 }
 
+bool IsChildOf(WDL_PtrList<WDL_String>* _parents, const char* _ancestor) {
+	for (int i=0; i < _parents->GetSize(); i++)
+		if (!strcmp(_parents->Get(i)->Get(), _ancestor))
+			return true;
+	return false;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 protected:
@@ -470,7 +477,7 @@ char* SNM_GetSetObjectState(void* _obj, WDL_String* _str)
 	// _lp: the line being parsed as a LineParser
 	// _parsedLine: the line being parsed (for facility: can be built from _lp)
 	// _linePos: start position in the original chunk of the line being parsed 
-	// _parsedParents: the parsed line's parent, grand-parent, etc.. up to the root. 
+	// _parsedParents: the parsed line's parent, grand-parent, etc.. up to the root
 	//                 The number of items is also the parsed depth (so 1-based)
 	// _newChunk: the chunk beeing built (while parsing)
 	// _updates: number of updates in comparison with the original chunk
@@ -481,7 +488,7 @@ char* SNM_GetSetObjectState(void* _obj, WDL_String* _str)
 	// - false otherwise
 	//   => THE LINE BEING PARSED REMAINS AS IT IS
 	//
-	// Those callbacks are *always* triggered, execpt NotifyChunkLine() that 
+	// Those callbacks are *always* triggered, except NotifyChunkLine() that 
 	// is triggered depending on Parse() or ParsePatch() parameters/criteria 
 	// => for optimization: the more criteria, the less calls!
 
@@ -489,7 +496,7 @@ char* SNM_GetSetObjectState(void* _obj, WDL_String* _str)
 
 	virtual void NotifyEndChunk(int _mode) {}
 
-	virtual bool NotifyStartElement	(int _mode, 
+	virtual bool NotifyStartElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine,  int _linePos, 
 		WDL_PtrList<WDL_String>* _parsedParents, 
 		WDL_String* _newChunk, int _updates) {return false;} // no update

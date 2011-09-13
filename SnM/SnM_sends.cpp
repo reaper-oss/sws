@@ -599,3 +599,17 @@ void removeRouting(COMMAND_T* _ct)
 	Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); 
 }
 
+void muteReceives(MediaTrack* _source, MediaTrack* _dest, bool _mute)
+{
+	if (_source && _dest && _source != _dest)
+	{
+		int rcvIdx=0;
+		MediaTrack* rcvTr = (MediaTrack*)GetSetTrackSendInfo(_dest, -1, rcvIdx, "P_SRCTRACK", NULL);
+		while(rcvTr)
+		{
+			if (rcvTr == _source)
+				GetSetTrackSendInfo(_dest, -1, rcvIdx, "B_MUTE", &_mute);
+			rcvTr = (MediaTrack*)GetSetTrackSendInfo(_dest, -1, ++rcvIdx, "P_SRCTRACK", NULL);
+		}
+	}
+}

@@ -884,16 +884,6 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 			if (left || right)
 			{
 				SWS_ListView* lv = (left ? (SWS_ListView*)g_lvL : (SWS_ListView*)g_lvR);
-#ifndef _WIN32
-				// On OSX, change the selection to match the right click
-				SWS_ListItem* hitItem = lv->GetHitItem(x, y, NULL);
-				if (hitItem)
-				{
-					HWND hList = lv->GetHWND();
-					for (int j=0; j < ListView_GetItemCount(hList); j++)
-						ListView_SetItemState(hList, j, hitItem == lv->GetListItem(j) ? LVIS_SELECTED : 0, LVIS_SELECTED);
-				}
-#endif
 				HMENU menu = CreatePopupMenu();
 				Cyclaction* action = (Cyclaction*)g_lvL->GetHitItem(x, y, NULL);
 				WDL_String* cmd = (WDL_String*)g_lvR->GetHitItem(x, y, NULL);

@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
+#include "SnM_Chunk.h"
 
 
 #define SNM_REA_PRESET_CB_ENDING		")  ----"
@@ -375,7 +376,7 @@ int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_Str
 	int nbPresets = 0;
 	if (_fxType && _fxName && _names)
 	{
-		char iniFilename[BUFFER_SIZE], buf[256];
+		char iniFilename[BUFFER_SIZE]="", buf[256]="";
 
 		// *** Get ini filename *** //
 
@@ -499,19 +500,54 @@ void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf)
 	{
 		for (int i=0; i < lp.getnumtokens(); i++)
 		{
-			int fx = (int)floor(lp.gettoken_float(i));
-			int preset = GetPresetFromConfToken(lp.gettoken_str(i));
-			if (_renderConf->GetLength()) _renderConf->Append(", ");
-			_renderConf->AppendFormatted(256, "FX%d: %d", fx, preset);
+			int success, fx = (int)floor(lp.gettoken_float(i, &success)); // float because token is like "1.3"
+			int preset = success ? GetPresetFromConfToken(lp.gettoken_str(i)) : 0;
+			if (_renderConf->GetLength())
+				_renderConf->Append(", ");
+			if (preset)
+				_renderConf->AppendFormatted(256, "FX %d: preset %d", fx, preset);
+			else
+				_renderConf->AppendFormatted(256, "FX %d: preset ?", fx);
 		}	
 	}
 }
 
-// Switch presets
-//
-// Primitive to trigger a given preset 
-// No proper API yet => POOR'S MAN'S SOLUTION!
-//
+// this one renders a string with preset names 
+// to be used moderately: uses chunk parsing!!
+void RenderPresetConf2(MediaTrack* _tr, WDL_String* _presetConf, WDL_String* _renderConf)
+{
+	if (_tr && _presetConf && _renderConf && _presetConf->GetLength() && TrackFX_GetCount(_tr))
+	{
+		LineParser lp(false);
+		if (!lp.parse(_presetConf->Get()))
+		{
+			for (int i=0; i < lp.getnumtokens(); i++)
+			{
+				if (_renderConf->GetLength())
+					_renderConf->Append(", ");
+
+				int success, fx = (int)floor(lp.gettoken_float(i, &success)) - 1; // float because token is like "1.3"
+				int preset = success ? GetPresetFromConfToken(lp.gettoken_str(i)) - 1 : 0;
+
+				// avoid parsing as far as possible!
+				SNM_FXSummaryParser p(_tr);
+				WDL_PtrList<SNM_FXSummary>* summaries = NULL;
+				if (preset)
+					summaries = p.GetSummaries();
+				SNM_FXSummary* sum = summaries ? summaries->Get(fx) : NULL;
+				WDL_PtrList_DeleteOnDestroy<WDL_String> names;
+				int presetCount = (sum ? getPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names) : 0);
+				if (presetCount && preset < presetCount)
+					_renderConf->AppendFormatted(256, "FX %d: %s", fx+1, names.Get(preset)->Get());
+				else
+					_renderConf->AppendFormatted(256, "FX %d: preset %d", fx+1, preset+1);
+			}
+		}
+	}
+}
+
+ 
+// Primitive to switch FX presets but clunky: no proper API yet..
 // So, it simulates an user action: show fx (if needed) -> dropdown event -> close fx (if needed)
 // Notes
 // - undo indirectly managed (i.e.native "Undo FX parameter adjustement"
@@ -523,7 +559,7 @@ void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf)
 // _presetId: preset index to be triggered (only taken into account when _dir == 0, see below)
 // _dir: +1 or -1 switches to next or previous preset (_presetId is ignored then)
 // returns the triggered preset id or -1 if failed
-int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir, bool _userPreset)
+int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir, bool _userPreset, bool _selTracks)
 {
 	int nbFx = _tr ? TrackFX_GetCount(_tr) : 0;
 	if (nbFx > 0 && _fxId < nbFx)
@@ -534,7 +570,7 @@ int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir, bool _u
 		// stupid if no preset exposed, of course..
 		HWND hFX = TrackFX_GetFloatingWindow(_tr, _fxId);
 		if (!hFX) {
-			floatUnfloatFXs(_tr, false, 3, _fxId, true); 
+			floatUnfloatFXs(_tr, false, 3, _fxId, _selTracks); 
 			hFX = TrackFX_GetFloatingWindow(_tr, _fxId);
 			floated = (hFX != NULL);
 		}
@@ -544,10 +580,10 @@ int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir, bool _u
 		if (cbPreset)
 		{
 			int presetCount = (int)SendMessage(cbPreset, CB_GETCOUNT, 0, 0);
-			int currentPreset = (int)SendMessage(cbPreset, CB_GETCURSEL, 0, 0);
+			int currentPreset = (int)SendMessage(cbPreset, CB_GETCURSEL, 0, 0); //JFB gets stuff by name (=> duplicated preset names not supported yet)
 
 			// user preset only ?
-			if (_userPreset)
+			if (_userPreset) //JFB!!! && currentPreset >= 0 && presetCount >= 0) ???
 			{
 				int deltaIdx = 0;
 				char buf[256] = "";
@@ -561,6 +597,7 @@ int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir, bool _u
 				SendMessage(cbPreset, CB_SETCURSEL, currentPreset, 0); // restore the current preset (GUI update only)
 			}
 
+			// find next valid preset
 			if (currentPreset >= 0 && _presetId >= 0 && 
 				((_dir && currentPreset < presetCount) || (!_dir && _presetId < presetCount && _presetId != currentPreset)))
 			{
@@ -590,7 +627,7 @@ int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir, bool _u
 
 		// unfloat the FX if needed
 		if (floated)
-			floatUnfloatFXs(_tr, false, 2, _fxId, true);
+			floatUnfloatFXs(_tr, false, 2, _fxId, _selTracks);
 
 		if (presetOk)
 			return _presetId;
@@ -622,7 +659,6 @@ void triggerPreviousPreset(COMMAND_T* _ct) {
 	triggerFXPreset((int)_ct->user, 0, -1);
 }
 
-
 // trigger several *USER* presets from several FXs on a same track 
 // _presetConf: "fx.preset", both 1-based - e.g. "1.4 2.2" => FX1 user preset 4, FX2 user preset 2 
 bool triggerFXUserPreset(MediaTrack* _tr, WDL_String* _presetConf)
@@ -635,12 +671,11 @@ bool triggerFXUserPreset(MediaTrack* _tr, WDL_String* _presetConf)
 		{
 			int preset = GetPresetFromConf(i, _presetConf);
 			if (preset)
-				updated |= (triggerFXPreset(_tr, i, preset-1, 0, true) != -1);
+				updated |= (triggerFXPreset(_tr, i, preset-1, 0, true, false) != -1);
 		}
 	}
 	return updated;
 }
-
 
 // *** Trigger preset through MIDI CC action ***
 

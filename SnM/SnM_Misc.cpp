@@ -66,7 +66,7 @@ bool SNM_DeleteFile(const char* _filename) {
 	return false;
 }
 
-//JFB!!!
+//JFB!!! crappy code for OSX compatibility..
 bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 {
 	if (_destFn && _srcFn)
@@ -252,7 +252,7 @@ void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection, const 
 {
 	if (_iniSectionName && _iniSection && _iniFn)
 	{
-/*JFB!!! doing that leads to something close to the issue 292 (ini file cache odd pb)
+/*JFB note: doing that leads to something close to the issue 292 (ini file cache odd pb)
 		if (_iniSection->GetLength())
 			_iniSection->Append(" \n");
 */
@@ -369,10 +369,6 @@ void ReplaceStringFormat(char* _str, char _replaceCh) {
 		}
 }
 
-int SNM_MinMax(int _val, int _min, int _max) {
-	return min(_max, max(_min, _val));
-}
-
 bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize)
 {
 	if (_alr)
@@ -398,6 +394,25 @@ bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sec
 	return true;
 }
 
+bool WaitForTrackMute(DWORD* _muteTime)
+{
+	if (_muteTime && *_muteTime) {
+		unsigned int fade = int(*(int*)GetConfigVar("mutefadems10") / 10 + 0.5);
+		while ((GetTickCount() - *_muteTime) < fade)
+		{
+#ifdef _WIN32
+			// keep the UI updating
+			MSG msg;
+			while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+				DispatchMessage(&msg);
+#endif
+			Sleep(1);
+		}
+		*_muteTime = 0;
+		return true;
+	}
+	return false;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Misc	actions

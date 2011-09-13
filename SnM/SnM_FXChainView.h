@@ -149,7 +149,7 @@ public:
 	void SetType(int _type);
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	void SelectBySlot(int _slot);
+	void SelectBySlot(int _slot1, int _slot2 = -1);
 protected:
 	void OnInitDlg();
 	HMENU OnContextMenu(int x, int y);
@@ -164,12 +164,12 @@ protected:
 	void AddSlot(bool _update);
 	void InsertAtSelectedSlot(bool _update);
 	void DeleteSelectedSlots(bool _update, bool _delFiles=false);
-	void AutoSaveSlots(int _slotPos);
+	void AutoSave();
+	void AutoFill(const char* _startPath);
 
-	int m_previousType;
+
 	bool m_autoSaveTrTmpltWithItemsPref;
-	int m_autoSaveFXChainPref;
-	int m_lastThemeBrushColor;
+	int m_previousType, m_autoSaveFXChainPref, m_lastThemeBrushColor;
 
 	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;

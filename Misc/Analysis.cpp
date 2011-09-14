@@ -338,6 +338,41 @@ void RMSNormalize(double dTargetDb, double dWindowSize)
 	}
 }
 
+void RMSNormalizeAll(double dTargetDb, double dWindowSize)
+{
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	double dMaxRMS = -DBL_MAX;
+	ANALYZE_PCM a;
+	memset(&a, 0, sizeof(a));
+	a.dWindowSize = dWindowSize;
+
+	for (int i = 0; i < items.GetSize(); i++)
+	{
+		MediaItem* mi = items.Get()[i];
+		MediaItem_Take* take = GetMediaItemTake(mi, -1);
+		if (take && AnalyzeItem(mi, &a) && a.dRMS != 0.0 && a.dRMS > dMaxRMS)
+			dMaxRMS = a.dRMS;
+	}
+
+	if (dMaxRMS > -DBL_MAX)
+	{
+		for (int i = 0; i < items.GetSize(); i++)
+		{
+			MediaItem* mi = items.Get()[i];
+			MediaItem_Take* take = GetMediaItemTake(mi, -1);
+			if (take)
+			{
+				double dVol = *(double*)GetSetMediaItemTakeInfo(take, "D_VOL", NULL);
+				dVol *= DB2VAL(dTargetDb) / dMaxRMS;
+				GetSetMediaItemTakeInfo(take, "D_VOL", &dVol);
+			}
+		}
+		UpdateTimeline();
+		Undo_OnStateChangeEx("Normalize items to RMS", UNDO_STATE_ITEMS, -1);
+	}
+}
+
 // ct->user == 0 full item, otherwise windowed
 void DoRMSNormalize(COMMAND_T* ct)
 {
@@ -347,7 +382,10 @@ void DoRMSNormalize(COMMAND_T* ct)
 	double dTarget = str[0] ? atof(str) : -20;
 	double dWindow = pWindow ? atof(pWindow+1) : 0.1;
 
-	RMSNormalize(dTarget, ct->user ? dWindow : 0.0);
+	if (ct->user != 2)
+		RMSNormalize(dTarget, ct->user ? dWindow : 0.0);
+	else
+		RMSNormalizeAll(dTarget, dWindow);
 }
 
 void SetRMSOptions(COMMAND_T*)
@@ -369,7 +407,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Organize items by RMS (entire item)" },		"SWS_RMSORGANIZE",		OrganizeByVol,		NULL, 1, },
 	{ { DEFACCEL, "SWS: Organize items by peak RMS" },				"SWS_RMSPEAKORGANIZE",	OrganizeByVol,		NULL, 2, },
 	{ { DEFACCEL, "SWS: Normalize items to RMS (entire item)" },	"SWS_NORMRMS",			DoRMSNormalize,		NULL, 0, },
-	{ { DEFACCEL, "SWS: Normalize items to peak RMS" },				"SWS_NORMPEAKRMS",		DoRMSNormalize,		NULL, 1, },
+	{ { DEFACCEL, "SWS: Normalize item(s) to peak RMS" },			"SWS_NORMPEAKRMS",		DoRMSNormalize,		NULL, 1, },
+	{ { DEFACCEL, "SWS: Normalize items to overall peak RMS" },		"SWS_NORMPEAKRMSALL",	DoRMSNormalize,		NULL, 2, },
 	{ { DEFACCEL, "SWS: Set RMS analysis/normalize options" },		"SWS_SETRMSOPTIONS",	SetRMSOptions,		NULL, },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table

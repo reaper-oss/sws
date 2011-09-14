@@ -267,7 +267,7 @@ int SNM_LiveConfigsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2)
 	else return iRet;
 	return 0;
 #else
-	return SWS_ListView::OItemSort(_item1, _item2);
+	return SWS_ListView::OnItemSort(_item1, _item2);
 #endif
 }
 

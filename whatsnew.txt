@@ -1,3 +1,4 @@
+!v2.1.0 #11 (September 15, 2011)
 Resources view / track templates: auto-save now fully mimics the way track templates are saved natively (details in http://code.google.com/p/sws-extension/issues/detail?id=376|Issue 376|)
 Resources view / FX Chains: auto-save now fully mimics the way FX Chains are saved natively (Issue 376)
 
@@ -18,7 +19,7 @@ Resources view:
 +OSX (Issue 373): multiple selection of slots
 +Text filter: added "Name" criteria, filtering by path now ignores trailing filenames
 
-Added action "SWS: Normalize items to overall peak RMS", adjusts all selected items by the same amount (eg adjusting volume of a split/comped line)
+Issue 371: Added action "SWS: Normalize items to overall peak RMS", adjusts all selected items by the same amount (eg adjusting volume of a split/comped line)
 
 !v2.1.0 #9 (September 7, 2011)
 Issue 367: OSX: Fixed issues after opening docked windows

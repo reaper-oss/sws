@@ -1,5 +1,5 @@
 /******************************************************************************
-** SNM_ChunkParserPatcher.h - v1.22
+** SNM_ChunkParserPatcher.h - v1.23
 ** Copyright (C) 2008-2011, Jeffos
 **
 **    This software is provided 'as-is', without any express or implied
@@ -35,7 +35,7 @@
 // See many use-cases here: 
 // http://code.google.com/p/sws-extension/source/browse/trunk#trunk/SnM
 //
-// This code uses Cockos' WDL library: http://cockos.com/wdl
+// This code relies on Cockos' WDL library: http://cockos.com/wdl
 // Thank you Cockos!
 // 
 // Important: 
@@ -46,6 +46,14 @@
 //   (see details there, mods are plainly marked as required by the licensing)
 //
 // Changelog:
+// v1.23
+// - TEMPORARY VERSION: DO NOT UPDATE TRACKS CONTAINING FREEZE DATA
+//   (until they are not fully managed, see Commit())
+// - Beware! Slight functionnal update in ParsePatchCore(), old code commented
+// - Freeze track support: performance improvments + do not mess with freeze data
+//   i.e. FREEZE sub-chunks are optionally ignored (like base-64 and in-project
+//   MIDI data that are skipped by default)
+// - Fixed/hardened parsing (e.g. indented chunks support), new helpers
 // v1.22
 // - New helpers, new SNM_COUNT_KEYWORD parsing mode
 // - Inheritance: Commit() & GetChunk() can be overrided
@@ -112,13 +120,14 @@ static int RemoveChunkLines(WDL_String* _chunk, const char* _searchStr,
 							bool _checkBOL = false, int _checkEOLChar = 0, int* _len = NULL);
 static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<const char>* _searchStrs,
 							bool _checkBOL = false, int _checkEOLChar = 0, int* _len = NULL);
+static void ChunkLeftTrim(char* _in, WDL_String* _out);
+static int FindEndOfSubChunk(const char* _chunk, int _startPos);
 
-static int RemoveAllIds(char* _chunk, int* _len = NULL){
+// both preserves POOLEDEVTS ids as well as frozen fx ids (FXID_NEXT)
+static int RemoveAllIds(char* _chunk, int* _len = NULL) {
 	return RemoveChunkLines(_chunk, "ID {", false, '}', _len);
 }
-
-// Rmk: preserves POOLEDEVTS ids
-static int RemoveAllIds(WDL_String* _chunk, int* _len = NULL){
+static int RemoveAllIds(WDL_String* _chunk, int* _len = NULL) {
 	return RemoveChunkLines(_chunk, "ID {", false, '}', _len);
 }
 
@@ -132,7 +141,8 @@ class SNM_ChunkParserPatcher
 public:
 
 // Attached to a reaThing* (MediaTrack*, MediaItem*, ..)
-SNM_ChunkParserPatcher(void* _object, bool _autoCommit=true, bool _processBase64=false, bool _processInProjectMIDI=false)
+SNM_ChunkParserPatcher(void* _object, bool _autoCommit=true,
+					   bool _processBase64=false, bool _processInProjectMIDI=false, bool _processFreeze=false)
 {
 	m_chunk = new WDL_String(SNM_HEAPBUF_GRANUL);
 	m_object = _object;
@@ -141,20 +151,24 @@ SNM_ChunkParserPatcher(void* _object, bool _autoCommit=true, bool _processBase64
 	m_breakParsePatch = false;
 	m_processBase64 = _processBase64;
 	m_processInProjectMIDI = _processInProjectMIDI;
+	m_processFreeze = _processFreeze;
+	m_chunkType = -1;
 }
 
 // Simple text chunk parser/patcher
-SNM_ChunkParserPatcher(WDL_String* _chunk, bool _processBase64=false, bool _processInProjectMIDI=false)
+SNM_ChunkParserPatcher(WDL_String* _chunk,
+					   bool _processBase64=false, bool _processInProjectMIDI=false, bool _processFreeze=false)
 {
 	m_chunk = new WDL_String(SNM_HEAPBUF_GRANUL);
-	if (m_chunk && _chunk)
-		m_chunk->Set(_chunk->Get());
+	ChunkLeftTrim(_chunk->Get(), m_chunk);
 	m_object = NULL;
 	m_updates = 0;
 	m_autoCommit = false;
 	m_breakParsePatch = false;
 	m_processBase64 = _processBase64;
 	m_processInProjectMIDI = _processInProjectMIDI;
+	m_processFreeze = _processFreeze;
+	m_chunkType = -1;
 }
 
 virtual ~SNM_ChunkParserPatcher() 
@@ -260,7 +274,11 @@ int SetUpdates(int _updates) {
 // patch while recording and to remove all ids before patching, see http://forum.cockos.com/showthread.php?t=52002 
 virtual bool Commit(bool _force = false)
 {
-	if (m_object && (m_updates || _force) && !(GetPlayState() & 4) && m_chunk->GetLength())	
+	if (m_object && (m_updates || _force) && m_chunk->GetLength() && !(GetPlayState() & 4)
+#ifndef _SNM_DEBUG
+		&& GetChunkType()==1 && !strstr(m_chunk->Get(), "\n<FREEZE ") //JFB!!! <- TEMPORARY in v1.23
+#endif
+		)
 	{
 		if (!SNM_GetSetObjectState(m_object, m_chunk)) 
 		{
@@ -272,7 +290,7 @@ virtual bool Commit(bool _force = false)
 }
 
 const char* GetInfo() {
-	return "SNM_ChunkParserPatcher - v1.22";
+	return "SNM_ChunkParserPatcher - v1.23";
 }
 
 void SetProcessBase64(bool _enable) {
@@ -283,6 +301,24 @@ void SetProcessInProjectMIDI(bool _enable) {
 	m_processInProjectMIDI = _enable;
 }
 
+void SetProcessFreeze(bool _enable) {
+	m_processFreeze = _enable;
+}
+
+// returns 1 for track, 2 for item, 0 for other (e.g. envelope)
+// note: we can't rely on m_object in case this instance is a simple string parser
+int GetChunkType() {
+	if (m_chunkType < 0) {
+		int len = GetChunk()->GetLength(); // force get if needed
+		if (len >= 7 && (!strncmp(m_chunk->Get(), "<TRACK\n", 7) || !strncmp(m_chunk->Get(), "<TRACK ", 7)))
+			m_chunkType = 1;
+		else if (len >= 6 && (!strncmp(m_chunk->Get(), "<ITEM\n", 6) || !strncmp(m_chunk->Get(), "<ITEM ", 6)))
+			m_chunkType = 2;
+		else
+			m_chunkType = 0;
+	}
+	return m_chunkType;
+}
 
 //**********************
 // Helper methods
@@ -293,26 +329,26 @@ void CancelUpdates() {
 }
 
 // returns the start position of the sub-chunk or -1 if not found
-// _chunk: output prm, the searched sub-chunk if found
+// _chunk: optionnal output prm, the searched sub-chunk if found
 // _breakKeyword: for optimization, optionnal
-int GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_String* _chunk, const char* _breakKeyword = NULL)
+int GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_String* _chunk = NULL, const char* _breakKeyword = NULL)
 {
-	int posStartOfSubchunk = -1;
-	if (_chunk && _keyword && _depth > 0)
+	int pos = -1;
+	if (_keyword && _depth > 0)
 	{
-		_chunk->Set("");
+		if (_chunk) _chunk->Set("");
 		WDL_String startToken;
 		startToken.SetFormatted((int)strlen(_keyword)+2, "<%s", _keyword);
-		posStartOfSubchunk = Parse(SNM_GET_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), -1, _occurence, -1, (void*)_chunk, NULL, _breakKeyword);
-		if (posStartOfSubchunk <= 0)
+		pos = Parse(SNM_GET_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), -1, _occurence, -1, (void*)_chunk, NULL, _breakKeyword);
+		if (pos <= 0)
 		{
-			_chunk->Set("");
-			posStartOfSubchunk = -1; // force negative return value if 0 (not found)
+			if (_chunk) _chunk->Set("");
+			pos = -1; // force negative return value if 0 (not found)
 		}
 		else
-			posStartOfSubchunk--; // see ParsePatchCore()
+			pos--; // see ParsePatchCore()
 	}
-	return posStartOfSubchunk;
+	return pos;
 }
 
 // _newSubChunk: the replacing string (so "" will remove the sub-chunk)
@@ -333,6 +369,8 @@ bool RemoveSubChunk(const char* _keyword, int _depth, int _occurence, const char
 	return ReplaceSubChunk(_keyword, _depth, _occurence, "", _breakKeyword);
 }
 
+// replace characters in the chunk from _pos to the next eol
+// _str: the replacing string or NULL to remove characters
 bool ReplaceLine(int _pos, const char* _str = NULL)
 {
 	if (_pos >=0 && GetChunk()->GetLength() > _pos) // + indirectly cache chunk if needed
@@ -352,7 +390,7 @@ bool ReplaceLine(int _pos, const char* _str = NULL)
 	return false;
 }
 
-// This will replace the line(s) begining with _keyword
+// replace line(s) begining with _keyword
 bool ReplaceLine(const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _newSubChunk = "", const char* _breakKeyword = NULL)
 {
 	if (_keyword && _depth > 0)
@@ -360,7 +398,35 @@ bool ReplaceLine(const char* _parent, const char* _keyword, int _depth, int _occ
 	return false;
 }
 
-// This will insert _str at the after (_dir=1) or before (_dir=0) _keyword (i.e. at next/previous start of line)
+// remove line(s) begining with _keyword
+bool RemoveLine(const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _breakKeyword = NULL) {
+	return ReplaceLine(_parent, _keyword, _depth, _occurence, "", _breakKeyword);
+}
+
+// remove line(s) containing or begining with _keyword
+// this one is faster but it does not check depth, parent, etc.. 
+// => beware of nested data! (in FREEZE sub-chunks, for example)
+int RemoveLines(const char* _removedKeyword, bool _checkBOL = true, int _checkEOLChar = 0) {
+	return SetUpdates(RemoveChunkLines(GetChunk(), _removedKeyword, _checkBOL, _checkEOLChar));
+}
+
+// remove line(s) containing or begining with any string of _removedKeywords
+// this one is faster but it does not check depth, parent, etc.. 
+// => beware of nested data! (in FREEZE sub-chunks, for example)
+int RemoveLines(WDL_PtrList<const char>* _removedKeywords, bool _checkBOL = true, int _checkEOLChar = 0) {
+	return SetUpdates(RemoveChunkLines(GetChunk(), _removedKeywords, _checkBOL, _checkEOLChar));
+}
+
+// remove all ids, e.g. GUIDs, FXIDs, etc..
+// it is faster but it does not check depth, parent, etc.. 
+// notes:
+// - m_updates is volontary ignored here: not considered as an user update (internal)
+// - preserves POOLEDEVTS ids as well as frozen fx ids (FXID_NEXT)
+int RemoveIds() {
+	return RemoveChunkLines(GetChunk(), "ID {", false, '}');
+}
+
+//inserts _str either after (_dir=1) or before (_dir=0) _keyword (i.e. at next/previous start of line)
 bool InsertAfterBefore(int _dir, const char* _str, const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _breakKeyword = NULL)
 {
 	if (_str && *_str && _keyword && GetChunk()) // force cache if needed
@@ -375,22 +441,7 @@ bool InsertAfterBefore(int _dir, const char* _str, const char* _parent, const ch
 	return false;
 }
 
-int RemoveLines(const char* _removedKeyword, bool _checkBOL = true, int _checkEOLChar = 0) {
-	return SetUpdates(RemoveChunkLines(GetChunk(), _removedKeyword, _checkBOL, _checkEOLChar));
-}
-
-int RemoveLines(WDL_PtrList<const char>* _removedKeywords, bool _checkBOL = true, int _checkEOLChar = 0) {
-	return SetUpdates(RemoveChunkLines(GetChunk(), _removedKeywords, _checkBOL, _checkEOLChar));
-}
-
-// Notes:
-// - m_updates is volontary ignored here, not considered as an user update (internal)
-// - preserves POOLEDEVTS ids
-int RemoveIds() {
-	return RemoveChunkLines(GetChunk(), "ID {", false, '}');
-}
-
-// This will return the start of the current, next or previous line position for the searched _keyword
+// returns the current, next or previous line (start) position for the searched _keyword
 // _dir: -1 previous line, 0 current line, +1 next line
 // _breakKeyword: for optimization, optionnal. If specified, the parser won't go further when this keyword is encountred, be carefull with that!
 int GetLinePos(int _dir, const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _breakKeyword = NULL)
@@ -436,16 +487,17 @@ protected:
 	void* m_object;
 	int m_updates;
 
-	// 'Advanced' optionnal optimization flags 
-	// ------------------------------------------------------------------------
-	bool m_breakParsePatch; // this one can be enabled to break parsing (and patching: bulk recopy)
+	// 'advanced' optionnal optimization flags --------------------------------
 
-	// Base64 sub-chunks and in-project MIDI data are skipped by default (can be HUGE)
-	// Enable these attributes to force processing
-	bool m_processBase64;
-	bool m_processInProjectMIDI;
+	// this one can be enabled to break parsing (+ bulk recopy when patching)
+	bool m_breakParsePatch;
 
-	bool m_isParsingSource; // this one is READ-ONLY (automatically set when parsing)
+	// options: base-64 and in-project MIDI data as well as FREEZE sub-chunks
+	// are skipped by default when parsing (+ bulk recopy when patching)
+	bool m_processBase64, m_processInProjectMIDI, m_processFreeze;
+
+	// this one is READ-ONLY (automatically set when parsing SOURCE sub-chunks)
+	bool m_isParsingSource;
 
 
 char* SNM_GetSetObjectState(void* _obj, WDL_String* _str)
@@ -575,8 +627,9 @@ void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch,
 // Note: sometimes there are dependencies between parameters (most of the time with
 //       _mode), must return -1 if it's not respected.
 //
-// Parameters: see below. 
+// This function assumes the chunk is valid and trimmed.
 //
+// Parameters: see below. 
 // Return values:
 //   Always return -1 on error/bad usage,
 //   or returns the number of updates done when altering (0 nothing done), 
@@ -596,6 +649,7 @@ int ParsePatchCore(
 	const char* _breakKeyword = NULL) // // for optimization, optionnal (if specified, processing is stopped when this keyword is encountred - be carefull with that!)
 {
 #ifdef _SNM_DEBUG 
+//JFB TODO: additional checks with _occurence
 	// check params
 	if ((!_value || _tokenPos < 0) && 
 			(_mode == SNM_SET_CHUNK_CHAR || _mode == SNM_SETALL_CHUNK_CHAR_EXCEPT || _mode == SNM_GETALL_CHUNK_CHAR_EXCEPT))
@@ -633,12 +687,13 @@ int ParsePatchCore(
 	m_isParsingSource = false; // avoids many strcmp() calls
 	char* pEOL = cData-1;
 
-	// OK, big stuff begins
+	// ok, big stuff begins
 	for(;;)
 	{
 		char* pLine = pEOL+1;
 		pEOL = strchr(pLine, '\n');
-		// Break conditions
+
+		// break conditions
 		if (!pEOL) break;
 		if (m_breakParsePatch) {
 			if (_write) newChunk->Append(pLine);
@@ -650,18 +705,33 @@ int ParsePatchCore(
 		// *** Major optimization: skip some sub-chunks (optionnal) ***
 		char* pEOSkippedChunk = NULL;
 
-		// skip base64 sub-chunks (e.g. FX states, sysEx events, ..)
+		// skip base64 data (e.g. FX states, sysEx events, ..)
 		if (!m_processBase64 &&
 			curLineLength>2 && *(pEOL-1)=='=' && *(pEOL-2)=='=')
 		{
-			pEOSkippedChunk = strchr(pLine, '>');
+			pEOSkippedChunk = strstr(pLine, ">\n");
 		}
-		// skip in-project MIDI
+		// skip in-project MIDI data
 		else if (!m_processInProjectMIDI && m_isParsingSource &&
 			(curLineLength>2 && !_strnicmp(pLine, "E ", 2)) ||
 			(curLineLength>3 && !_strnicmp(pLine, "Em ", 3)))
 		{
 			pEOSkippedChunk = strstr(pLine, "GUID {");
+		}
+		// skip track freeze sub-chunks
+		else if (!m_processFreeze && parents.GetSize()==1 && 
+			GetChunkType()==1 && //JFB!!!
+			curLineLength>8 && !strncmp(pLine, "<FREEZE ", 8))
+		{
+			int skippedLen = FindEndOfSubChunk(pLine, 0);
+			while (skippedLen >= 0) // in case of multiple freeze
+			{
+				pEOSkippedChunk = (char*)(pLine+skippedLen);
+				if (!strncmp(pEOSkippedChunk, "<FREEZE ", 8)) //JFB!!! no check on length!
+					skippedLen = FindEndOfSubChunk(pLine, skippedLen);
+				else
+					skippedLen = -1;
+			}
 		}
 		
 		if (pEOSkippedChunk) 
@@ -758,7 +828,10 @@ int ParsePatchCore(
 			else if (strictMatch && _mode >= 0)
 			{
 				// this occurence match
+/*JFB!!! before v1.23
 				if (_occurence == occurence)
+*/
+				if (_occurence == occurence || _occurence == -1)
 				{
 					switch (_mode)
 					{
@@ -776,7 +849,7 @@ int ParsePatchCore(
 						case SNM_SETALL_CHUNK_CHAR_EXCEPT:
 						case SNM_TOGGLE_CHUNK_INT_EXCEPT:
 							if (_valueExcept){
-								if (strcmp((char*)_valueExcept, lp.gettoken_str(_tokenPos)) != 0)
+								if (strcmp((char*)_valueExcept, lp.gettoken_str(_tokenPos)))
 									alter |= WriteChunkLine(newChunk, (char*)_valueExcept, _tokenPos, &lp); 
 							}
 							break;
@@ -819,7 +892,7 @@ int ParsePatchCore(
 							break;
 					}
 				}
-				// this occurence doesn't match (or _occurence == -1)
+				// this occurence doesn't match
 				else 
 				{
 					switch (_mode)
@@ -827,11 +900,11 @@ int ParsePatchCore(
 						case SNM_COUNT_KEYWORD:
 							break;
 						case SNM_SETALL_CHUNK_CHAR_EXCEPT:
-							if (strcmp((char*)_value, lp.gettoken_str(_tokenPos)) != 0)
+							if (strcmp((char*)_value, lp.gettoken_str(_tokenPos)))
 								alter |= WriteChunkLine(newChunk, (char*)_value, _tokenPos, &lp); 
 							break;
 						case SNM_GETALL_CHUNK_CHAR_EXCEPT:
-							if (strcmp((char*)_value, lp.gettoken_str(_tokenPos)) != 0)
+							if (strcmp((char*)_value, lp.gettoken_str(_tokenPos)))
 								return 0;
 							break;
 						case SNM_PARSE_AND_PATCH_EXCEPT:
@@ -931,22 +1004,15 @@ int ParsePatchCore(
 
 	return retVal;
 }
+
+	// -1 = not initialized yet, 1 = track, 2 = item, 0 = other
+	int m_chunkType;
 };
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Fast chunk processing helpers
 ///////////////////////////////////////////////////////////////////////////////
-
-static SNM_ChunkParserPatcher* FindChunkParserPatcherByObject(WDL_PtrList<SNM_ChunkParserPatcher>* _list, void* _object)
-{
-	if (_list && _object) {
-		for (int i=0; i < _list->GetSize(); i++)
-			if (_list->Get(i)->GetObject() == _object)
-				return _list->Get(i);
-	}
-	return NULL;
-}
 
 // _len: optionnal IN (initial length) -and- OUT (length after processing) param
 static int RemoveChunkLines(char* _chunk, const char* _searchStr, bool _checkBOL, int _checkEOLChar, int* _len)
@@ -1022,6 +1088,60 @@ static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<const char>* _search
 		_chunk->SetLen(len, true); // in case my WDL_String mod is used..
 	if (_len) *_len = len;
 	return updates;
+}
+
+static void ChunkLeftTrim(char* _in, WDL_String* _out)
+{
+	if (!_in || !_out)
+		return;
+
+	char* pEOL = _in-1;
+	for(;;) {
+		char* pLine = pEOL+1;
+		while(*pLine && *pLine == ' ') pLine++;
+		pEOL = strchr(pLine, '\n');
+		if (!pEOL) break;
+		else if (*pLine) _out->Append(pLine, (int)(pEOL-pLine+1));
+	}
+}
+
+// returns the position after the sub-chunk starting at _startPos in _chunk, or -1 if failed
+// no deep checks here: faster (but relies on chunk validity with left-trimed lines)
+static int FindEndOfSubChunk(const char* _chunk, int _startPos)
+{
+	if (_chunk && _startPos >= 0) {
+		int depth = 1;
+		char* boc = strstr((char*)(_chunk+_startPos+1), "\n<");
+		char* eoc = strstr((char*)(_chunk+_startPos+1), "\n>\n");
+		while ((boc || eoc) && depth > 0) {
+			if (boc && (!eoc || boc < eoc)) {
+				depth++;
+				boc = strstr((char*)(boc+1), "\n<");
+			}
+			else if (eoc && (!boc || eoc < boc)) {
+				depth--;
+				if (!depth)
+					return (int)(eoc-_chunk+3); // +3 to zap "\n>\n" 
+				eoc = strstr((char*)(eoc+1), "\n>\n");
+			}
+		}
+	}
+	return -1;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Other static helpers
+///////////////////////////////////////////////////////////////////////////////
+
+static SNM_ChunkParserPatcher* FindChunkParserPatcherByObject(WDL_PtrList<SNM_ChunkParserPatcher>* _list, void* _object)
+{
+	if (_list && _object) {
+		for (int i=0; i < _list->GetSize(); i++)
+			if (_list->Get(i)->GetObject() == _object)
+				return _list->Get(i);
+	}
+	return NULL;
 }
 
 #endif

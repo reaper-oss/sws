@@ -68,13 +68,14 @@
 #define SNM_MAX_FX					128
 #define SNM_MAX_INI_SECTION			0xFFFF // definitive limit for WritePrivateProfileSection
 #define SNM_MAX_DYNAMIC_ACTIONS		99     // if > 99 the display of action names should be updated
+#define SNM_MAX_CYCLING_ACTIONS		8
+#define SNM_MAX_CYCLING_SECTIONS	3
+#define SNM_MAX_ENV_SUBCHUNK_NAME	16
 #define SNM_LET_BREATHE_MS			10
 #define SNM_3D_COLORS_DELTA			25
 #define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average monitored)
 #define SNM_CSURF_RUN_POLL_MS		1000
 #define SNM_SCHEDJOB_DEFAULT_DELAY	250
-#define SNM_MAX_CYCLING_ACTIONS		8
-#define SNM_MAX_CYCLING_SECTIONS	3
 
 // Scheduled job *RESERVED* ids
 // note: [0..7] are reserved for Live Configs MIDI CC actions
@@ -442,6 +443,9 @@ void pasteTrackGrouping(COMMAND_T*);
 void saveTracksFolderStates(COMMAND_T*);
 void restoreTracksFolderStates(COMMAND_T*);
 void setTracksFolderState(COMMAND_T*);
+int trackEnvelopesCount();
+const char* trackEnvelope(int _i);
+bool trackEnvelopesLookup(const char* _str);
 void toggleArmTrackEnv(COMMAND_T*);
 void toggleWriteEnvExists(COMMAND_T*);
 bool writeEnvExists(COMMAND_T*);
@@ -452,7 +456,7 @@ void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _w
 void replaceOrPasteItemsFromTrackSlot(const char* _title, bool _paste, int _slot, bool _errMsg);
 void loadSetTrackTemplate(COMMAND_T*);
 void loadImportTrackTemplate(COMMAND_T*);
-bool autoSaveTrackSlots(bool _delItems, const char* _dirPath, char* _fn, int _fnSize);
+bool autoSaveTrackSlots(bool _delItems, bool _delEnvs, const char* _dirPath, char* _fn, int _fnSize);
 void setMIDIInputChannel(COMMAND_T*);
 void remapMIDIInputChannel(COMMAND_T*);
 

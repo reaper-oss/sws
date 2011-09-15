@@ -1,5 +1,7 @@
 /******************************************************************************
 / SNM_Chunk.h
+/ 
+/ Some "SAX-ish like" parser classes inheriting SNM_ChunkParserPatcher
 /
 / Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
@@ -156,31 +158,29 @@ protected:
 	bool m_copyingFxChain;
 };
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_TakeParserPatcher
-// JFB TODO? maintain m_activeTakeIdx when updating takes
-//           + GetSetMediaItemInfo((MediaItem*)m_object, "I_CURTAKE", &m_activeTakeIdx) on commit ?
-//           ATM, we let REAPER manage the active take, seems good so far
+// JFB TODO? 
+//  maintain m_activeTakeIdx when updating takes
+//  + GetSetMediaItemInfo((MediaItem*)m_object, "I_CURTAKE", &m_activeTakeIdx)
+//  on commit ? ATM, we let REAPER manage the active take, seems ok so far..
 ///////////////////////////////////////////////////////////////////////////////
 
 class SNM_TakeParserPatcher : public SNM_ChunkParserPatcher
 {
 public:
-	SNM_TakeParserPatcher(MediaItem* _item, int _countTakes = -1) : SNM_ChunkParserPatcher(_item) 
-	{
+	SNM_TakeParserPatcher(MediaItem* _item, int _countTakes = -1) : SNM_ChunkParserPatcher(_item) {
 		m_currentTakeCount = _countTakes; // lazy init through CountTakesInChunk() for optimization
 		m_fakeTake = false;
 	}
-
 	// Call to Commit(): when a constructor or destructor calls a virtual 
 	// function it calls the function defined for the type whose constructor
 	// or destructor is currently being run
-	~SNM_TakeParserPatcher()
-	{
+	~SNM_TakeParserPatcher() {
 		if (m_autoCommit)
 			Commit(); // no-op if chunk not updated (or no valid m_object)
 	}
-
 	WDL_String* GetChunk();
 	bool Commit(bool _force = false);
 	bool GetTakeChunkPos(int _takeIdx, int* _pos, int* _len = NULL);
@@ -191,7 +191,6 @@ public:
 	int InsertTake(int _takeIdx, WDL_String* _chunk, int _pos = -1);
 	bool RemoveTake(int _takeIdx, WDL_String* _removedChunk = NULL, int* _removedStartPos = NULL);
 	bool ReplaceTake(int _startTakePos, int _takeLength, WDL_String* _newTakeChunk);
-
 protected:
 	int m_currentTakeCount; // nb of takes in the *chunk* (may be different than REAPER's ones)
 //	int m_activeTakeIdx;    // active take in the *chunk* (may be different than REAPER's ones)
@@ -213,26 +212,52 @@ private:
 class SNM_RecPassParser : public SNM_TakeParserPatcher
 {
 public:
-	SNM_RecPassParser(MediaItem* _item, int _countTakes) : SNM_TakeParserPatcher(_item, _countTakes) 
-	{
+	SNM_RecPassParser(MediaItem* _item, int _countTakes) : SNM_TakeParserPatcher(_item, _countTakes) {
 		m_maxRecPass = -1;
 		m_takeCounter = 0;
 	}
 	~SNM_RecPassParser() {}
 	int GetMaxRecPass(int* _recPasses=NULL, int* _takeColors=NULL);
-
 protected:
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
 		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
 		WDL_String* _newChunk, int _updates);
-
 	int m_maxRecPass;
 	int m_recPasses[SNM_MAX_TAKES];
 	int m_takeColors[SNM_MAX_TAKES];
-
 private:
 	int m_takeCounter;
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_EnvRemover
+///////////////////////////////////////////////////////////////////////////////
+
+class SNM_EnvRemover : public SNM_ChunkParserPatcher
+{
+public:
+	SNM_EnvRemover(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) {
+		m_removingEnv = false;
+	}
+	~SNM_EnvRemover() {}
+	bool SNM_EnvRemover::RemoveEnvelopes();
+protected:
+	bool NotifyStartElement(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		WDL_PtrList<WDL_String>* _parsedParents, 
+		WDL_String* _newChunk, int _updates);
+	bool NotifyEndElement(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		WDL_PtrList<WDL_String>* _parsedParents, 
+		WDL_String* _newChunk, int _updates);
+	bool NotifyChunkLine(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
+		WDL_String* _newChunk, int _updates);
+private:
+	bool m_removingEnv;
 };
 
 
@@ -248,13 +273,11 @@ public:
 	}
 	~SNM_ArmEnvParserPatcher() {}
 	void SetNewValue(int _newValue) {m_newValue = _newValue;}
-
 protected:
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
 		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
 		WDL_String* _newChunk, int _updates);
-	bool IsParentEnv(const char* _parent);
 private:
 	int m_newValue;
 };
@@ -274,7 +297,6 @@ public:
 	}
 	~SNM_LearnMIDIChPatcher() {}
 	bool SetChannel(int _newValue, int _fx);
-
 protected:
 	bool NotifyEndElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
@@ -285,10 +307,9 @@ protected:
 		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
 		WDL_String* _newChunk, int _updates);
 private:
-	int m_newChannel;
-	int m_fx;
-	int m_currentFx;
+	int m_newChannel, m_fx, m_currentFx;
 };
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_FXSummaryParser
@@ -300,7 +321,6 @@ public:
 	SNM_FXSummaryParser(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) {}
 	~SNM_FXSummaryParser() {}
 	WDL_PtrList<SNM_FXSummary>* GetSummaries();
-
 protected:
 	bool NotifyStartElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
@@ -310,7 +330,6 @@ protected:
 		LineParser* _lp, const char* _parsedLine, int _linePos,
 		WDL_PtrList<WDL_String>* _parsedParents, 
 		WDL_String* _newChunk, int _updates);
-
 	WDL_PtrList_DeleteOnDestroy<SNM_FXSummary> m_summaries;
 };
 
@@ -325,7 +344,6 @@ public:
 	SNM_TakeEnvParserPatcher(WDL_String* _tkChunk) : SNM_ChunkParserPatcher(_tkChunk) {m_vis = -1;}
 	~SNM_TakeEnvParserPatcher() {}
 	bool SetVis(const char* _envKeyWord, int _vis);
-
 protected:
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
@@ -337,6 +355,7 @@ private:
 
 
 #ifdef _SNM_MISC // deprecated since v4: GetTCPFXParm(), etc..
+
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_FXKnobParser
 ///////////////////////////////////////////////////////////////////////////////
@@ -347,7 +366,6 @@ public:
 	SNM_FXKnobParser(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) {m_fx = -1;}
 	~SNM_FXKnobParser() {}
 	bool SNM_FXKnobParser::GetKnobs(WDL_PtrList<WDL_IntKeyedArray<int> >* _knobs);
-
 protected:
 	bool SNM_FXKnobParser::NotifyEndElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
@@ -358,11 +376,11 @@ protected:
 		LineParser* _lp, const char* _parsedLine, int _linePos,
 		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
 		WDL_String* _newChunk, int _updates);
-
 private:
 	int m_fx;
 	WDL_PtrList<WDL_IntKeyedArray<int> >* m_knobs;
 };
+
 #endif
 
 #endif

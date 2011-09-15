@@ -1126,23 +1126,19 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_prjNotes.Get()->Set("");
 
 	// Load REAPER project notes from RPP file
-	char cBuf[BUFFER_SIZE] = "";
-	EnumProjects(-1, cBuf, BUFFER_SIZE);
+	char buf[BUFFER_SIZE] = "";
+	EnumProjects(-1, buf, BUFFER_SIZE);
+
 	// SWS - It's possible at this point that we're not reading an RPP file (eg during import), check to be sure!
 	// If so, just ignore the possibility that there might be project notes.
-	if (strlen(cBuf) > 3 && _stricmp(cBuf+strlen(cBuf)-3, "RPP") == 0)
+	if (strlen(buf) > 3 && _stricmp(buf+strlen(buf)-3, "RPP") == 0)
 	{
-		ProjectStateContext* prjCtx = ProjectCreateFileRead(cBuf);
-		if (prjCtx)
-		{
-			WDL_String rpp;
-			while(!prjCtx->GetLine(cBuf, BUFFER_SIZE)) {
-				rpp.Append(cBuf);
-				rpp.Append("\n");
-			}
-			delete prjCtx;
+		WDL_String rpp;
 
-			// "translate notes"
+		// avoid useless parsing if S&M project notes are already present
+		// i.e. faster REAPER startup, done once per project in the worst case
+		if (LoadChunk(buf, &rpp) && !strstr(rpp.Get(), "<S&M_PROJNOTES\n"))
+		{
 			SNM_ChunkParserPatcher p(&rpp);
 			WDL_String notes;
 			if (p.GetSubChunk("NOTES", 2, 0, &notes, "RIPPLE") >= 0)

@@ -1011,7 +1011,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 			stringToGuid(lp.gettoken_str(5), &g);
 			lc->m_inputTr[configId] = GuidToTrack(&g);
 			lc->m_autoSelect[configId] = lp.gettoken_int(6, &success);
-			if (!success)
+			if (!success) // for historical reasons..
 				lc->m_autoSelect[configId] = 1;
 		}
 
@@ -1251,7 +1251,7 @@ void SNM_MidiLiveScheduledJob::Perform()
 					muteTime = GetTickCount();
 				}
 
-				// Mute all all other tracks of that config
+				// Mute all other tracks of that config
 				if (lc->m_muteOthers[m_cfgId]) {
 					for (int i=0; i < otherConfigTracks.GetSize(); i++) {
 						MediaTrack* cfgOtherTr = otherConfigTracks.Get(i);

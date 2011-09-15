@@ -1,3 +1,11 @@
+Resources view / track templates: auto-save now fully mimics the way track templates are saved natively (details in http://code.google.com/p/sws-extension/issues/detail?id=376|Issue 376|)
+Resources view / FX Chains: auto-save now fully mimics the way FX Chains are saved natively (Issue 376)
+
+Optimization: faster SWS init / REAPER startup
+
+REAPER v4.03pre's track freeze: some actions won't have any effect on frozen tracks
+(temporary until this new native feature is not officialy released and properly managed in SWS entensions)
+
 !v2.1.0 #10 (September 13, 2011)
 Live configs:
 +Smoother switching between configs: now respects the native "track mute fade" preference (more to come..)
@@ -6,7 +14,7 @@ Live configs:
 +Fixed ignored FX presets switches (when "Auto track selection" was not ticked)
 
 Resources view:
-+Context menu (Issue 373): added menu items "Auto-save", "Auto-fill from default resource path", "Auto-fill from project path" and "Auto-fill..."
++Context menu (Issue 373): added menu items "Auto-save", "Auto-fill from project path" and "Auto-fill..."
 +OSX (Issue 373): multiple selection of slots
 +Text filter: added "Name" criteria, filtering by path now ignores trailing filenames
 

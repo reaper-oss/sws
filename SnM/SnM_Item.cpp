@@ -1227,6 +1227,7 @@ void scrollToSelItem(MediaItem* _item)
 		MediaTrack* tr = GetMediaItem_Track(_item);
 		if (tr)
 		{
+			//JFB change restore sel programatically => not cool for controle surfcaes
 			SaveSelected();
 			ClearSelected();
 			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);

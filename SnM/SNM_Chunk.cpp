@@ -1,6 +1,8 @@
 /******************************************************************************
 / SNM_Chunk.cpp
 /
+/ Some "SAX-ish like" parser classes inheriting SNM_ChunkParserPatcher
+/
 / Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
@@ -29,18 +31,23 @@
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
 
-/*JFB TODO additionnal optimizations: 
+/*JFB
+TODO? additionnal optimizations: 
 - check for more m_breakParsePatch /_breakingKeyword
 - check _mode < 0
 - return &m_wdlStrings (rather than copies)
 - use m_isParsingSource possible?
-- Parse(-1) > 0
+reminders:
+- Parse(-1) >= 0, ParsePatch(-1) > 0
+- requires check on depth: 
+  NotifyStartChunk(), NotifyEndChunk(), NotifyStartElement(), NotifyEndElement(), NotifySkippedSubChunk()
+- AppendFormatted(n+2, etc..); //+2 for OSX
 */
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_SendPatcher
-// We don't need to implement NotifySkippedSubChunk() because we're working
-// on single lines (not sub-chunks)
+// no NotifySkippedSubChunk() needed: single lines (not sub-chunks)
 ///////////////////////////////////////////////////////////////////////////////
 
 bool SNM_SendPatcher::NotifyChunkLine(int _mode, 
@@ -124,7 +131,11 @@ bool SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, SNM_SndRcv* _io)
 }
 
 int SNM_SendPatcher::RemoveReceives() {
+/*JFB!!! can fail since v4.03: freeze support
 	return RemoveLines("AUXRECV");
+*/
+	return RemoveLine("TRACK", "AUXRECV", 1, -1, "MIDIOUT");
+
 }
 
 int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr) 
@@ -188,7 +199,6 @@ bool SNM_FXChainTakePatcher::NotifyEndElement(int _mode,
 	{
 		m_copyingTakeFx = false;
 	}
-
 	return update;
 }
 
@@ -515,9 +525,9 @@ WDL_String* SNM_TakeParserPatcher::GetChunk()
 // GetChunk() comments. Also see important comments for SNM_ChunkParserPatcher::Commit()
 bool SNM_TakeParserPatcher::Commit(bool _force)
 {
-	if (m_object && (m_updates || _force) && !(GetPlayState() & 4) && m_chunk->GetLength())
+	if (m_object && (m_updates || _force) && m_chunk->GetLength() && !(GetPlayState() & 4))
 	{
-// SNM_ChunkParserPatcher::Commit() mod -------------------------------------->
+// SNM_ChunkParserPatcher::Commit() mod ----->
 		if (m_fakeTake)
 		{
 			m_fakeTake = false;
@@ -552,7 +562,7 @@ bool SNM_TakeParserPatcher::Commit(bool _force)
 					m_chunk->DeleteSub((int)(p+5-m_chunk->Get()), 5); // removes " NULL"
 			}
 		}
-// SNM_ChunkParserPatcher::Commit() mod <--------------------------------------
+// SNM_ChunkParserPatcher::Commit() mod <-----
 
 		if (!SNM_GetSetObjectState(m_object, m_chunk)) {
 			SetChunk("", 0);
@@ -664,6 +674,54 @@ int SNM_RecPassParser::GetMaxRecPass(int* _recPasses, int* _takeColors)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// SNM_EnvRemover
+// JFB!!! FREEZE OK
+///////////////////////////////////////////////////////////////////////////////
+
+bool SNM_EnvRemover::NotifyStartElement(int _mode, 
+	LineParser* _lp, const char* _parsedLine, int _linePos,
+	WDL_PtrList<WDL_String>* _parsedParents, 
+	WDL_String* _newChunk, int _updates)
+{
+	if (_mode == -1 && trackEnvelopesLookup((char*)(_lp->gettoken_str(0)+1)))
+	{
+			const char* grandpa = GetParent(_parsedParents, 2);
+			// don't scratch item env for ex.
+			m_removingEnv = (!strcmp(grandpa, "TRACK") || !strcmp(grandpa, "FXCHAIN"));
+	}
+	return m_removingEnv;
+}
+
+bool SNM_EnvRemover::NotifyEndElement(int _mode, 
+	LineParser* _lp, const char* _parsedLine, int _linePos,
+	WDL_PtrList<WDL_String>* _parsedParents, 
+	WDL_String* _newChunk, int _updates)
+{
+	bool update = m_removingEnv;
+	if (_mode == -1 && m_removingEnv) 
+	{
+		m_removingEnv = false; // re-enable copy
+		// note: "update" stays true if m_removingEnv was initially true, 
+		// i.e. we don't copy the end of chunk ">"
+	}
+	return update;
+}
+
+bool SNM_EnvRemover::NotifyChunkLine(int _mode, 
+	LineParser* _lp, const char* _parsedLine, int _linePos,
+	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
+	WDL_String* _newChunk, int _updates)
+{
+	return m_removingEnv;
+}
+
+bool SNM_EnvRemover::RemoveEnvelopes() {
+	m_removingEnv = false;
+	return (ParsePatch(-1) > 0);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // SNM_ArmEnvParserPatcher
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -678,12 +736,12 @@ bool SNM_ArmEnvParserPatcher::NotifyChunkLine(int _mode,
 	{
 		if (_lp->getnumtokens() == 2 && _parsedParents->GetSize() > 1 && !strcmp(_lp->gettoken_str(0), "ARM"))
 		{
-			const char* grandpa = GetParent(_parsedParents,2);
-			if (!strcmp(grandpa, "TRACK") || !strcmp(grandpa, "FXCHAIN")) //not to scratch item env for ex.
+			const char* grandpa = GetParent(_parsedParents, 2);
+			if (!strcmp(grandpa, "TRACK") || !strcmp(grandpa, "FXCHAIN")) // don't scratch item env for ex
 			{
 				const char* parent = GetParent(_parsedParents);
 				// most "frequent" first!
-				if ((_mode == -1 && IsParentEnv(parent)) || 
+				if ((_mode == -1 && trackEnvelopesLookup(parent)) || 
 					(_mode == -2 && !strcmp(parent, "AUXVOLENV")) ||
 					(_mode == -3 && !strcmp(parent, "AUXPANENV")) ||
 					(_mode == -4 && !strcmp(parent, "AUXMUTEENV")) ||
@@ -699,30 +757,6 @@ bool SNM_ArmEnvParserPatcher::NotifyChunkLine(int _mode,
 		}
 	}
 	return updated;
-}
-
-bool SNM_ArmEnvParserPatcher::IsParentEnv(const char* _parent)
-{
-	return (!strcmp(_parent, "PARMENV") ||
-		!strcmp(_parent, "VOLENV2") ||
-		!strcmp(_parent, "PANENV2") ||
-		!strcmp(_parent, "WIDTHENV2") ||
-		!strcmp(_parent, "VOLENV") ||
-		!strcmp(_parent, "PANENV") ||
-		!strcmp(_parent, "WIDTHENV") ||
-		!strcmp(_parent, "MUTEENV") ||
-		!strcmp(_parent, "AUXVOLENV") ||
-		!strcmp(_parent, "AUXPANENV") ||
-		!strcmp(_parent, "AUXMUTEENV") ||
-/* master playrate env. not managed (safer: I don't really understand the model..)
-		!strcmp(_parent, "MASTERPLAYSPEEDENV") ||
-*/
-		!strcmp(_parent, "MASTERWIDTHENV") ||
-		!strcmp(_parent, "MASTERWIDTHENV2") ||
-		!strcmp(_parent, "MASTERVOLENV") ||
-		!strcmp(_parent, "MASTERPANENV") ||
-		!strcmp(_parent, "MASTERVOLENV2") ||
-		!strcmp(_parent, "MASTERPANENV2"));
 }
 
 
@@ -760,7 +794,7 @@ bool SNM_LearnMIDIChPatcher::NotifyChunkLine(int _mode,
 			int n = _snprintf(bufline, 128, "PARMLEARN %d %d %d\n", _lp->gettoken_int(1), midiMsg, _lp->gettoken_int(3));
 			_newChunk->Append(bufline,n);
 			updated = true;
-/* No! There can be several learnt params for that selected FX..
+/* no! there can be several learned params for that FX..
 			m_breakParsePatch = (m_fx != -1); // one fx to be patched
 */
 		}
@@ -849,6 +883,7 @@ bool SNM_TakeEnvParserPatcher::SetVis(const char* _envKeyWord, int _vis) {
 
 
 #ifdef _SNM_MISC // deprecated since v4: GetTCPFXParm(), etc..
+
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_FXKnobParser
 ///////////////////////////////////////////////////////////////////////////////
@@ -892,8 +927,9 @@ bool SNM_FXKnobParser::GetKnobs(WDL_PtrList<WDL_IntKeyedArray<int> >* _knobs)
 	{
 		m_knobs = _knobs;
 		m_knobs->Empty(true);
-		return (ParsePatch(-1,2,"FXCHAIN") >= 0);
+		return (ParsePatch(-1,2,"FXCHAIN") > 0);
 	}
 	return false;
 }
+
 #endif

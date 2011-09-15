@@ -176,6 +176,14 @@ void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool
 		WDL_String chain;
 		if (LoadChunk(fn, &chain))
 		{
+			// remove fx param envelopes (were saved for track fx chains before SWS v2.1.0 #11)
+			{
+				SNM_ChunkParserPatcher p(&chain);
+				while (p.RemoveSubChunk("PARMENV", 1, 0));
+					if (p.GetUpdates())
+						chain.Set(p.GetChunk()->Get());
+			}
+
 			if (_set) 
 				setTakeFXChain(_title, &chain, _activeOnly);
 			else 
@@ -359,8 +367,17 @@ int copyTrackFXChain(WDL_String* _fxChain, bool _inputFX, int _startTr)
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			SNM_ChunkParserPatcher p(tr);
-			if (p.GetSubChunk(_inputFX ? "FXCHAIN_REC" : "FXCHAIN", 2, 0, _fxChain, "<ITEM") >= 0)
+			if (p.GetSubChunk(_inputFX ? "FXCHAIN_REC" : "FXCHAIN", 2, 0, _fxChain, "<ITEM") >= 0)//JFB!!! FREEZE OK
 			{
+				// remove fx param envelopes
+				//JFB brutal!
+				{
+					SNM_ChunkParserPatcher p2(_fxChain);
+					while (p2.RemoveSubChunk("PARMENV", 2, 0));
+					if (p2.GetUpdates())
+						_fxChain->Set(p2.GetChunk()->Get());
+				}
+
 				WDL_PtrList<const char> removedKeywords;
 				removedKeywords.Add(_inputFX ? "<FXCHAIN_REC" : "<FXCHAIN");
 				removedKeywords.Add("WNDRECT");
@@ -368,10 +385,8 @@ int copyTrackFXChain(WDL_String* _fxChain, bool _inputFX, int _startTr)
 				removedKeywords.Add("FLOATPOS");
 				removedKeywords.Add("LASTSEL");
 				removedKeywords.Add("DOCKED");
-				RemoveChunkLines(_fxChain, &removedKeywords, true);
-
-				// remove last ">\n" 
-				_fxChain->DeleteSub(_fxChain->GetLength()-2, 2);
+				RemoveChunkLines(_fxChain, &removedKeywords, true);			
+				_fxChain->DeleteSub(_fxChain->GetLength()-2, 2); // remove last ">\n" 
 				return i;
 			}
 		}
@@ -396,6 +411,14 @@ void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inpu
 		WDL_String chain;
 		if (LoadChunk(fn, &chain))
 		{
+			// remove fx param envelopes (were saved for track fx chains before SWS v2.1.0 #11)
+			{
+				SNM_ChunkParserPatcher p(&chain);
+				while (p.RemoveSubChunk("PARMENV", 1, 0));
+					if (p.GetUpdates())
+						chain.Set(p.GetChunk()->Get());
+			}
+
 			if (_set) 
 				setTrackFXChain(_title, &chain, _inputFX);
 			else 

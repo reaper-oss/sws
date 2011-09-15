@@ -1557,7 +1557,7 @@ void SNM_ResourceWnd::AutoSave()
 			}
 			break;
 		case SNM_SLOT_TYPE_TR_TEMPLATES:
-			slotUpdate = autoSaveTrackSlots(!m_autoSaveTrTmpltWithItemsPref, GetCurAutoSaveDir()->Get(), fn, BUFFER_SIZE);
+			slotUpdate = autoSaveTrackSlots(!m_autoSaveTrTmpltWithItemsPref, true /*JFB!!!*/, GetCurAutoSaveDir()->Get(), fn, BUFFER_SIZE);
 			break;
 		case SNM_SLOT_TYPE_PRJ_TEMPLATES:
 			slotUpdate = autoSaveProjectSlot(true, GetCurAutoSaveDir()->Get(), fn, BUFFER_SIZE);

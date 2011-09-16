@@ -303,35 +303,41 @@ void DelTracksChild(COMMAND_T* = NULL)
 	Undo_OnStateChangeEx("Delete track(s)", UNDO_STATE_TRACKCFG, -1);
 }
 
-void NameTrackLikeItem(COMMAND_T*)
+void NameTrackLikeItem(COMMAND_T* ct)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 		{
-			for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
+			MediaItem* mi = GetTrackMediaItem(tr, j);
+			if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL) && GetMediaItemNumTakes(mi))
 			{
-				MediaItem* mi = GetTrackMediaItem(tr, j);
-				if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL) && GetMediaItemNumTakes(mi))
+				MediaItem_Take* mit = GetMediaItemTake(mi, -1);
+				PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(mit, "P_SOURCE", NULL);
+				if (src && src->GetFileName())
 				{
-					MediaItem_Take* mit = GetMediaItemTake(mi, -1);
-					PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(mit, "P_SOURCE", NULL);
-					if (src && src->GetFileName())
+					const char* cFilename = src->GetFileName();
+					if (*cFilename)
 					{
-						const char* cFilename = src->GetFileName();
 						const char* pC = strrchr(cFilename, PATH_SLASH_CHAR);
 						if (pC)
 							cFilename = pC + 1;
 						GetSetMediaTrackInfo(tr, "P_NAME", (void*)cFilename);
 					}
-					break;
+					// in-project MIDI: use take name instead
+					else
+					{
+						char* pTkName = (char*)GetSetMediaItemTakeInfo(mit, "P_NAME", NULL);
+						if (pTkName)
+							GetSetMediaTrackInfo(tr, "P_NAME", (void*)pTkName);
+					}
 				}
+				break;
 			}
 		}
 	}
-
-	// TODO undo?
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }
 
 void UpdateTrackSolo()

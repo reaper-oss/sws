@@ -42,11 +42,11 @@ public:
 };
 
 
-class FileSlotList : public WDL_PtrList_DeleteOnDestroy<PathSlotItem>
+class FileSlotList : public WDL_PtrList<PathSlotItem>
 {
   public:
 	FileSlotList(int _type, const char* _resDir, const char* _desc, const char* _ext) 
-		: m_type(_type), m_resDir(_resDir),m_desc(_desc),m_ext(_ext),WDL_PtrList_DeleteOnDestroy<PathSlotItem>() {}
+		: m_type(_type), m_resDir(_resDir),m_desc(_desc),m_ext(_ext),WDL_PtrList<PathSlotItem>() {}
 	void GetFileFilter(char* _filter, int _maxFilterLength) {
 		if (_filter) {
 			_snprintf(_filter, _maxFilterLength, "REAPER %s (*.%s)X*.%s", m_desc.Get(), m_ext.Get(), m_ext.Get());

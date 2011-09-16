@@ -120,6 +120,13 @@ enum {
 
 
 // Globals
+
+// JFB important note:
+// All global WDL_PtrList vars (includes FileSlotList) *used to be* WDL_PtrList_DeleteOnDestroy ones but
+// something weird could occur when REAPER unloads the extension: hang or crash (e.g. issues 292 & 380) 
+// on Windows 7 while saving related data in INI files (lists were already unallocated..)
+// Anyway, no prob here because application exit will destroy the entire runtime context regardless.
+
 static SNM_ResourceWnd* g_pResourcesWnd = NULL;
 static SWS_LVColumn g_fxChainListCols[] = { {65,2,"Slot"}, {100,1,"Name"}, {250,2,"Path"}, {200,1,"Comment"} };
 
@@ -142,7 +149,7 @@ int g_dblClickTo = 0; // for fx chains only
 
 WDL_PtrList<PathSlotItem> g_dragPathSlotItems; 
 WDL_PtrList<FileSlotList> g_filesLists;
-WDL_PtrList<WDL_String> g_autoSaveDirs; //JFB!!! leak but fix for issue 292? was WDL_PtrListOnDestroy (possible exit crash ?)
+WDL_PtrList<WDL_String> g_autoSaveDirs;
 WDL_PtrList<WDL_String> g_autoFillDirs;
 // ----------------------------------------------------------------------------
 

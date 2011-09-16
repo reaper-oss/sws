@@ -1,3 +1,6 @@
+Issue 380: fixed possible hang when exiting REAPER on Windows 7
+Issue 372: fixed "SWS: Name selected track(s) like first sel item" that was not working with in-project MIDI items (+ added undo point)
+
 !v2.1.0 #11 (September 15, 2011)
 Resources view / track templates: auto-save now fully mimics the way track templates are saved natively (details in http://code.google.com/p/sws-extension/issues/detail?id=376|Issue 376|)
 Resources view / FX Chains: auto-save now fully mimics the way FX Chains are saved natively (Issue 376)

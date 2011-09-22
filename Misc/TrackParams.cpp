@@ -305,39 +305,68 @@ void DelTracksChild(COMMAND_T* = NULL)
 
 void NameTrackLikeItem(COMMAND_T* ct)
 {
-	for (int i = 1; i <= GetNumTracks(); i++)
+	WDL_TypedBuf<MediaTrack*> tracks;
+	SWS_GetSelectedTracks(&tracks);
+	bool bUndo = false;
+	for (int i = 0; i < tracks.GetSize(); i++)
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		for (int j = 0; j < GetTrackNumMediaItems(tracks.Get()[i]); j++)
 		{
-			MediaItem* mi = GetTrackMediaItem(tr, j);
+			MediaItem* mi = GetTrackMediaItem(tracks.Get()[i], j);
 			if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL) && GetMediaItemNumTakes(mi))
 			{
-				MediaItem_Take* mit = GetMediaItemTake(mi, -1);
-				PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(mit, "P_SOURCE", NULL);
-				if (src && src->GetFileName())
+				MediaItem_Take* take = GetMediaItemTake(mi, -1);
+				if (take)
 				{
-					const char* cFilename = src->GetFileName();
-					if (*cFilename)
+					const char* pName = (const char*)GetSetMediaItemTakeInfo(take, "P_NAME", NULL);
+					if (pName && strlen(pName))
 					{
-						const char* pC = strrchr(cFilename, PATH_SLASH_CHAR);
-						if (pC)
-							cFilename = pC + 1;
-						GetSetMediaTrackInfo(tr, "P_NAME", (void*)cFilename);
+						char* pNameNoExt = new char[strlen(pName)+1];
+						strcpy(pNameNoExt, pName);
+						char* pDot = strrchr(pNameNoExt, '.');
+						if (pDot && IsMediaExtension(pDot+1, false))
+							*pDot = 0;
+						GetSetMediaTrackInfo(tracks.Get()[i], "P_NAME", (void*)pNameNoExt);
+						bUndo = true;
+						delete [] pNameNoExt;
 					}
-					// in-project MIDI: use take name instead
-					else
-					{
-						char* pTkName = (char*)GetSetMediaItemTakeInfo(mit, "P_NAME", NULL);
-						if (pTkName)
-							GetSetMediaTrackInfo(tr, "P_NAME", (void*)pTkName);
-					}
+					break;
 				}
-				break;
 			}
 		}
 	}
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
+	if (bUndo)
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+}
+
+void NameTrackLikeFirstItem(COMMAND_T* ct)
+{
+	// Get the first item's take
+	MediaItem* item = GetSelectedMediaItem(NULL, 0);
+	if (!item || !GetMediaItemNumTakes(item))
+		return;
+	MediaItem_Take* take = GetMediaItemTake(item, -1);
+	if (!take)
+		return;
+	// Get the first item's name
+	const char* pName = (const char*)GetSetMediaItemTakeInfo(take, "P_NAME", NULL);
+	if (!pName || !strlen(pName))
+		return;
+
+	// Strip out extension
+	char* pNameNoExt = new char[strlen(pName)+1];
+	strcpy(pNameNoExt, pName);
+	char* pDot = strrchr(pNameNoExt, '.');
+	if (pDot && IsMediaExtension(pDot+1, false))
+		*pDot = 0;
+
+	// Set all sel tracks to that name
+	WDL_TypedBuf<MediaTrack*> tracks;
+	SWS_GetSelectedTracks(&tracks);
+	for (int i = 0; i < tracks.GetSize(); i++)
+		GetSetMediaTrackInfo(tracks.Get()[i], "P_NAME", (void*)pNameNoExt);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, -1);
+	delete [] pNameNoExt;
 }
 
 void UpdateTrackSolo()
@@ -500,7 +529,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Delete track(s) with children (prompt)" },				"SWS_DELTRACKCHLD",	DelTracksChild,		},
 
 	// Name
-	{ { DEFACCEL, "SWS: Name selected track(s) like first sel item" },			"SWS_NAMETKLIKEITEM", NameTrackLikeItem,	},
+	{ { DEFACCEL, "SWS: Name sel track(s) like first sel item on track" },		"SWS_NAMETKLIKEITEM",  NameTrackLikeItem,	},
+	{ { DEFACCEL, "SWS: Name sel track(s) like first sel item in project" },	"SWS_NAMETKLIKEFIRST", NameTrackLikeFirstItem,	},
 
 	// Solo
 	{ { DEFACCEL, "SWS: Toolbar solo toggle" },									"SWS_SOLOTOGGLE", SoloToggle, NULL, (INT_PTR)"I_SOLO", CheckTrackParam, },

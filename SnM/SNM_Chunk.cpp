@@ -32,11 +32,6 @@
 #include "SNM_Chunk.h"
 
 /*JFB
-TODO? additionnal optimizations: 
-- check for more m_breakParsePatch /_breakingKeyword
-- check _mode < 0
-- return &m_wdlStrings (rather than copies)
-- use m_isParsingSource possible?
 reminders:
 - Parse(-1) >= 0, ParsePatch(-1) > 0
 - requires check on depth: 
@@ -75,6 +70,12 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 		}
 		break;
 
+		// remove rcv
+		case -2:
+			update = (m_srcId > 0 && _lp->gettoken_int(1) == (m_srcId - 1));
+			// update unchanged, i.e. we do not re-copy this receive
+		break;
+
 		// add "detailed" receive
 		case -3:
 		{
@@ -109,7 +110,7 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 int SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, int _sendType, char* _vol, char* _pan) 
 {
 	m_srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
-	if (m_srcId == -1)
+	if (m_srcId <= 0)
 		return 0; 
 	m_sendType = _sendType;
 	m_vol = _vol;
@@ -121,7 +122,7 @@ int SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, int _sendType, char* _vol, c
 bool SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, SNM_SndRcv* _io)
 {
 	m_srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
-	if (!_io || m_srcId == -1)
+	if (!_io || m_srcId <= 0)
 		return false; 
 	m_sendType = _io->m_mode;
 	m_vol = NULL;
@@ -131,22 +132,23 @@ bool SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, SNM_SndRcv* _io)
 }
 
 int SNM_SendPatcher::RemoveReceives() {
-/*JFB!!! can fail since v4.03: freeze support
+/* can fail since v4.1: freeze support
 	return RemoveLines("AUXRECV");
 */
 	return RemoveLine("TRACK", "AUXRECV", 1, -1, "MIDIOUT");
-
 }
 
 int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr) 
 {
-	int srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
-	if (srcId <= 0)
+	m_srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
+	if (m_srcId <= 0)
 		return 0;
-
+/* can fail since v4.1: freeze support
 	char buf[32];
 	_snprintf(buf, 32, "AUXRECV %d", srcId-1);
 	return RemoveLines(buf);
+*/
+	return (ParsePatch(-2, 1, "TRACK", "AUXRECV", -1, -1, -1, NULL, NULL, "MIDIOUT") > 0);
 }
 
 
@@ -675,7 +677,6 @@ int SNM_RecPassParser::GetMaxRecPass(int* _recPasses, int* _takeColors)
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_EnvRemover
-// JFB!!! FREEZE OK
 ///////////////////////////////////////////////////////////////////////////////
 
 bool SNM_EnvRemover::NotifyStartElement(int _mode, 
@@ -734,7 +735,7 @@ bool SNM_ArmEnvParserPatcher::NotifyChunkLine(int _mode,
 	bool updated = false;
 	if (_mode < 0)
 	{
-		if (_lp->getnumtokens() == 2 && _parsedParents->GetSize() > 1 && !strcmp(_lp->gettoken_str(0), "ARM"))
+		if (_lp->getnumtokens() == 2 && _parsedParents->GetSize() > 1 &&  !strcmp(_lp->gettoken_str(0), "ARM"))
 		{
 			const char* grandpa = GetParent(_parsedParents, 2);
 			if (!strcmp(grandpa, "TRACK") || !strcmp(grandpa, "FXCHAIN")) // don't scratch item env for ex

@@ -1,5 +1,6 @@
-Issue 385: fixed slow REAPER startup introduced in v2.1.0 #11
-Issue 377: frozen tracks support
+!v2.1.0 #13 (September 23, 2011)
+Issue 385: Fixed slow REAPER startup introduced in v2.1.0 #11
+Issue 377: Frozen tracks support
 
 !v2.1.0 #12 (September 21, 2011)
 Issue 380: Fixed possible hang when exiting REAPER on Windows 7

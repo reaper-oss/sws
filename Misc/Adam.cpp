@@ -2168,6 +2168,23 @@ void AWStretchFill(COMMAND_T* t)
 
 // Experimental cut, copy and paste that will let you use relative paste since JCS are mean
 
+void AWBusDelete(COMMAND_T* t)
+{
+
+    if (GetCursorContext() == 0)
+    {
+        for (int i = 0; i < CountSelectedTracks(NULL); i++)
+        {
+            if (GetMediaTrackInfo_Value(GetSelectedTrack(0, i), "I_FOLDERDEPTH") == 1)
+                SetMediaTrackInfo_Value(GetSelectedTrack(0, i), "I_FOLDERDEPTH", 0);
+        }
+    }
+        
+    SmartRemove(NULL);
+}
+
+
+
 void AWCopy(COMMAND_T* t)
 {
 	Undo_BeginBlock();
@@ -3024,6 +3041,8 @@ static COMMAND_T g_commandTable[] =
 	//{ { DEFACCEL, "SWS/AW: Copy" },			"SWS_AWCOPY",					AWCopy, },
 	//{ { DEFACCEL, "SWS/AW: Cut" },			"SWS_AWCUT",					AWCut, },
 	{ { DEFACCEL, "SWS/AW: Paste" },		"SWS_AWPASTE",					AWPaste, },
+    { { DEFACCEL, "SWS/AW: Remove tracks/items/env, obeying time selection and leaving children" },		"SWS_AWBUSDELETE",					AWBusDelete, },
+
 	
 	//{ { DEFACCEL, "SWS/AW: Select Stretched Items" },													"SWS_AWSELSTRETCH",					AWSelectStretched, },
 

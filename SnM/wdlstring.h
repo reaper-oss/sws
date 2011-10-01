@@ -1,7 +1,7 @@
 /*
     WDL - wdlstring.h
     Copyright (C) 2005 and later, Cockos Incorporated
-  
+
     This software is provided 'as-is', without any express or implied
     warranty.  In no event will the authors be held liable for any damages
     arising from the use of this software.
@@ -28,12 +28,9 @@
 
   You can do Set, Get, Append, Insert, and SetLen.. that's about it
 
-  JFB mod --->
-     Avoid many strlen() calls thanks to a new member attribute m_length (faster).
-     One drawback is that if the string is shorten manually (without using SetLen(n, true)),
-     things can go wrong..
-  JFB mod <---
-  
+  Optionnal WDL_STRING_FAST ifdef: good for large strings & repetitive processing.
+  When defined, this will avoid many calls to strlen() but the string's length
+  must not be changed 'manually' (use SetLen(7) rather than Get()[8]=0, etc..)
 */
 
 #ifndef _WDL_STRING_H_
@@ -43,42 +40,55 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+
+#ifndef WDL_STRING_INTF_ONLY
+static int strminlen(const char* str, int n)
+{
+  if (n > 0) {
+    const char* p = str;
+    while (p-str < n && *p) ++p;
+    return (int)(p-str);
+  }
+  return (int)strlen(str);
+}
+#endif
+
+
 #ifndef WDL_STRING_IMPL_ONLY
 class WDL_String
 {
 public:
-//JFB mod --->
-//  WDL_String(int hbgran) : m_hb(hbgran WDL_HEAPBUF_TRACEPARM("WDL_String(4)"))
-  WDL_String(int hbgran) : m_hb(hbgran WDL_HEAPBUF_TRACEPARM("WDL_String(4)")), m_length(0)
-//JFB mod <---
+  WDL_String(int hbgran) : m_hb(hbgran WDL_HEAPBUF_TRACEPARM("WDL_String(4)"))
+#ifdef WDL_STRING_FAST
+  , m_length(0)
+#endif
   {
   }
-//JFB mod --->
-//  WDL_String(const char *initial=NULL, int initial_len=0) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String"))
-  WDL_String(const char *initial=NULL, int initial_len=0) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String")), m_length(0)
-//JFB mod <---
+  WDL_String(const char *initial=NULL, int initial_len=0) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String"))
+#ifdef WDL_STRING_FAST
+  , m_length(0)
+#endif
   {
     if (initial) Set(initial,initial_len);
   }
-//JFB mod --->
-//  WDL_String(WDL_String &s) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String(2)"))
-  WDL_String(WDL_String &s) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String(2)")), m_length(0)
-//JFB mod <---
+  WDL_String(WDL_String &s) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String(2)"))
+#ifdef WDL_STRING_FAST
+  , m_length(0)
+#endif
   {
     Set(s.Get());
   }
-//JFB mod --->
-//  WDL_String(WDL_String *s) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String(3)"))
-  WDL_String(WDL_String *s) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String(3)")), m_length(0)
-//JFB mod <---
+  WDL_String(WDL_String *s) : m_hb(128 WDL_HEAPBUF_TRACEPARM("WDL_String(3)"))
+#ifdef WDL_STRING_FAST
+  , m_length(0)
+#endif
   {
     if (s && s != this) Set(s->Get());
   }
-
   ~WDL_String()
   {
   }
-#define WDL_STRING_PREFIX
+#define WDL_STRING_PREFIX 
 #else
 #define WDL_STRING_PREFIX WDL_String::
 #endif
@@ -93,19 +103,24 @@ public:
     =0)
 #endif
   {
-    int s=strlen(str);
-    if (maxlen && s > maxlen) s=maxlen;   
-    if (!s && !m_hb.GetSize()) return; // do nothing if setting to empty and not allocated
+    // this would be ideal
+    //int s = (maxlen ? strnlen(str, maxlen) : strlen(str));
+    int s = strminlen(str, maxlen);
+    if (!s && !m_hb.GetSize())
+    {
+#ifdef WDL_STRING_FAST
+      m_length = 0;
+#endif
+      return; // do nothing if setting to empty and not allocated
+    }
 
-    char *newbuf=(char*)m_hb.Resize(s+1,false);
-    if (newbuf) 
+    if (char* newbuf=(char*)m_hb.Resize(s+1,false)) 
     {
       memcpy(newbuf,str,s);
       newbuf[s]=0;
-
-      //JFB added --->
+#ifdef WDL_STRING_FAST
       m_length = s;
-      //JFB <---
+#endif
     }
   }
 #endif
@@ -120,24 +135,17 @@ public:
     =0)
 #endif
   {
-    int s=strlen(str);
-    if (maxlen && s > maxlen) s=maxlen;
-    if (!s) return; // do nothing if setting to empty and not allocated
+    int s = strminlen(str, maxlen);
+    if (!s) return;
 
-    //JFB mod --->
-//    int olds=strlen(Get());
-    int olds=m_length;
-    //JFB <---
-
-    char *newbuf=(char*)m_hb.Resize(olds + s + 1,false);
-    if (newbuf)
+    int olds=GetLength();
+    if (char* newbuf=(char*)m_hb.Resize(olds+s+1,false))
     {
       memcpy(newbuf + olds, str, s);
       newbuf[olds+s]=0;
-
-      //JFB added --->
+#ifdef WDL_STRING_FAST
       m_length += s;
-      //JFB <---
+#endif
     }
   }
 #endif
@@ -150,19 +158,14 @@ public:
 	  char *p=Get();
 	  if (!p || !*p) return;
 
-      //JFB mod --->
-//	  int l=strlen(p);
-      int l=m_length;
-      //JFB <---
-
+	  int l=GetLength();
 	  if (position < 0 || position >= l) return;
 	  if (position+len > l) len=l-position;
 	  memmove(p+position,p+position+len,l-position-len+1); // +1 for null
-
-      //JFB added --->
+#ifdef WDL_STRING_FAST
 	  m_length -= len;
-      //JFB <---
-  }
+#endif
+}
 #endif
 
   void WDL_STRING_PREFIX Insert(const char *str, int position, int maxlen
@@ -175,26 +178,21 @@ public:
     =0)
 #endif
   {
-      //JFB mod --->
-//	  int sl=strlen(Get());
-      int sl=m_length, olds=m_length;
-      //JFB <---
+    int sl=GetLength();
+    if (position > sl) position=sl;
 
-	  if (position > sl) position=sl;
+    int ilen=strminlen(str,maxlen);
+    if (!ilen) return;
 
-	  int ilen=strlen(str);
-	  if (maxlen > 0 && maxlen < ilen) ilen=maxlen;
-
-	  Append(str);  //JFB indirectly updates m_length but see below..
-	  char *cur=Get();
-
-      memmove(cur+position+ilen,cur+position,sl-position);
-	  memcpy(cur+position,str,ilen);
-	  cur[sl+ilen]=0;
-
-      //JFB added --->
-	  m_length = olds+ilen;
-      //JFB <---
+    if (char* newbuf=(char*)m_hb.Resize(sl+ilen+1,false))
+    {
+      memmove(newbuf+position+ilen,newbuf+position,sl-position);
+      memcpy(newbuf+position,str,ilen);
+      newbuf[sl+ilen]=0;
+#ifdef WDL_STRING_FAST
+      m_length += ilen;
+#endif
+    }
   }
 #endif
 
@@ -208,16 +206,13 @@ public:
     =false)
 #endif
   {                       // can use to resize down, too, or resize up for a sprintf() etc
-    char *b=(char*)m_hb.Resize(length+1,resizeDown);
-    //JFB mod --->
-//    if (b) b[length]=0;
-    if (b)
-	{
-		b[length]=0;
-		if (resizeDown && (length < m_length)) m_length = length;
-		else m_length = strlen(b); //JFB lazy here
-	}
-    //JFB <---
+    if (char* b=(char*)m_hb.Resize(length+1,resizeDown))
+    {
+      b[length]=0;
+#ifdef WDL_STRING_FAST
+      m_length = (length < m_length ? length : m_length); // string len != allocation size
+#endif
+    }
   }
 #endif
 
@@ -226,21 +221,22 @@ public:
     ; 
 #else
   {
-    char* b= (char*) m_hb.Resize(maxlen+1,false);
-  	va_list arglist;
-		va_start(arglist, fmt);
-    #ifdef _WIN32
-		int written = _vsnprintf(b, maxlen, fmt, arglist);
-    #else
-		int written = vsnprintf(b, maxlen, fmt, arglist);
-    #endif
-    if (written < 0) written = 0;
-		va_end(arglist);
-    b[written] = '\0';
-
-    //JFB added --->
-    m_length = written;
-    //JFB <---
+    if (char* b=(char*)m_hb.Resize(maxlen+1,false))
+    {
+      va_list arglist;
+      va_start(arglist, fmt);
+#ifdef _WIN32
+      int written = _vsnprintf(b, maxlen, fmt, arglist);
+#else
+      int written = vsnprintf(b, maxlen, fmt, arglist);
+#endif
+      if (written < 0) written = 0;
+      va_end(arglist);
+      b[written] = '\0';
+#ifdef WDL_STRING_FAST
+      m_length = written;
+#endif
+    }
   }
 #endif
 
@@ -249,26 +245,23 @@ public:
     ; 
 #else
   {
-    //JFB mod --->
-//    int offs=strlen(Get());
-    int offs=m_length;
-    //JFB <---
-
-    char* b= (char*) m_hb.Resize(offs+maxlen+1,false)+offs;
-  	va_list arglist;
-		va_start(arglist, fmt);
-    #ifdef _WIN32
-		int written = _vsnprintf(b, maxlen, fmt, arglist);
-    #else
-		int written = vsnprintf(b, maxlen, fmt, arglist);
-    #endif
-    if (written < 0) written = 0;
-		va_end(arglist);
-    b[written] = '\0';
-
-    //JFB added --->
-    m_length += written;
-    //JFB <---
+    int offs=GetLength();
+    if (char* b=(char*)m_hb.Resize(offs+maxlen+1,false)+offs)
+    {
+      va_list arglist;
+      va_start(arglist, fmt);
+#ifdef _WIN32
+      int written = _vsnprintf(b, maxlen, fmt, arglist);
+#else
+      int written = vsnprintf(b, maxlen, fmt, arglist);
+#endif
+      if (written < 0) written = 0;
+      va_end(arglist);
+      b[written] = '\0';
+#ifdef WDL_STRING_FAST
+      m_length += written;
+#endif
+    }
   }
 #endif
 
@@ -277,25 +270,26 @@ public:
     ;
 #else
   {
-    char* b = Get();
-
-    //JFB mod --->
-//    if ((int) strlen(b) > maxlen) {
-    if (m_length > maxlen) {
-    //JFB <---
+    if (GetLength() > maxlen)
+    {
+      char* b = Get();
       int i;
       for (i = maxlen-4; i >= minlen; --i) {
         if (b[i] == ' ') {
           strcpy(b+i, "...");
+#ifdef WDL_STRING_FAST
+          m_length = i+3;
+#endif
           break;
         }
       }
-      if (i < minlen) strcpy(b+maxlen-4, "...");    
+      if (i < minlen && maxlen > 4) {
+        strcpy(b+maxlen-4, "...");
+#ifdef WDL_STRING_FAST
+        m_length = maxlen-1;
+#endif
+      }
     }
-
-    //JFB added --->
-    m_length = strlen(b); // ok, lazy here..  
-    //JFB <---
   }
 #endif
 
@@ -305,26 +299,27 @@ public:
     char *p=NULL;
     if (m_hb.GetSize()) p=(char *)m_hb.Get();
     if (p) return p;
+
+#ifdef WDL_STRING_FAST
+    m_length=0;
+#endif
     static char c; c=0; 
     return &c; // don't return "", in case it gets written to.
   }
 
-  int GetLength()
-  {
-    //JFB mod --->
-//    return (int)strlen(Get());
-    return m_length;
-    //JFB <---
-  }
+  int GetLength() {
+#ifdef WDL_STRING_FAST
+  return (m_hb.GetSize()?m_length:0);
+#else
+  return (int)strlen(Get());
+#endif
+}
 
-  //JFB mod --->
-//  private:
-  protected:
-  //JFB <---
+  private:
     WDL_HeapBuf m_hb;
-    //JFB added --->
+#ifdef WDL_STRING_FAST
     int m_length;
-    //JFB <---
+#endif
 };
 #endif
 

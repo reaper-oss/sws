@@ -1283,7 +1283,6 @@ void AWFadeSelection(COMMAND_T* t)
 						{
 							
 							
-							
 							// If split is within selection and selection is within total item selection
 							if ((selStart > dStart1) && (selEnd < dEnd2) && (selEnd > dStart2) && (selStart < dEnd1))
 							{
@@ -1417,8 +1416,32 @@ void AWFadeSelection(COMMAND_T* t)
 						else if ((dEnd1 < dStart2))
 						{
 							
-							// If selection starts inside item1, crosses gap and ends inside item 2
-							if ((selStart > dStart1) && (selStart < dEnd1) && (selEnd > dStart2) && (selEnd < dEnd2))
+                            // Make sure there's no other items in the gap, otherwise you get a crossfade between two items and an item in the middle that overlaps the crossfade
+                            
+                            bool itemBetweenFlag;
+                            
+							for (int iItem3 = 0; iItem3 < GetTrackNumMediaItems(tr); iItem3++)
+                            {
+                                
+                                MediaItem* item3 = GetTrackMediaItem(tr, iItem3);
+                                
+                                if (item3 != item1 && item3 != item2 && *(bool*)GetSetMediaItemInfo(item3, "B_UISEL", NULL))
+                                {
+                                    
+                                    double dStart3 = *(double*)GetSetMediaItemInfo(item3, "D_POSITION", NULL);
+                                    double dEnd3   = *(double*)GetSetMediaItemInfo(item3, "D_LENGTH", NULL) + dStart3;
+                                    
+                                    // Check to see if item3 is between item1 and 2
+                                    if (dStart3 > dEnd1 && dEnd3 < dStart2)
+                                    {
+                                        itemBetweenFlag = TRUE;
+                                    }
+                                    
+                                }
+                            }
+                            
+							// If selection starts inside item1, crosses gap and ends inside item 2, and there's no items in between
+							if ((selStart > dStart1) && (selStart < dEnd1) && (selEnd > dStart2) && (selEnd < dEnd2) && !itemBetweenFlag)
 							{
 								dFadeLen = selEnd - selStart;
 								dEdgeAdj1 = selEnd - dEnd1;

@@ -2864,26 +2864,6 @@ void AWRenderStem_Smart_Stereo(COMMAND_T* = NULL)
 	}
 }
 
-//Broken as fuck
-void AWToggleTCP(COMMAND_T* = NULL)
-{
-	//int tcpTemp = *(int*)GetConfigVar("leftpanewid_alt");
-	//*(int*)GetConfigVar("leftpanewid_alt") = *(int*)GetConfigVar("leftpanewid");
-	//*(int*)GetConfigVar("leftpanewid") = tcpTemp;
-	
-	*(int*)GetConfigVar("leftpanewid") = 100;
-
-	
-	//char tempString[10];
-		
-	//ShowConsoleMsg(tempString);
-	
-	//UpdateArrange();
-	
-	//int* tcpAlt = (int*)GetConfigVar("leftpanewid_alt");
-	
-	//GetConfigVar();
-}
 
 void AWCascadeInputs(COMMAND_T* t)
 {
@@ -2976,7 +2956,7 @@ void UpdateTrackTimebaseToolbar()
 }
 
 
-void AWSelTracksTimebaseTime(COMMAND_T* = NULL)	
+void AWSelTracksTimebaseTime(COMMAND_T* t)	
 {
     
     MediaTrack* tr;
@@ -2987,6 +2967,7 @@ void AWSelTracksTimebaseTime(COMMAND_T* = NULL)
         SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 0);
     }
     UpdateTrackTimebaseToolbar();
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 
@@ -3012,7 +2993,7 @@ bool IsSelTracksTimebaseTime(COMMAND_T* = NULL)
 }
 
 
-void AWSelTracksTimebaseBeatPos(COMMAND_T* = NULL)
+void AWSelTracksTimebaseBeatPos(COMMAND_T* t)
 {  
     MediaTrack* tr;
     
@@ -3023,6 +3004,7 @@ void AWSelTracksTimebaseBeatPos(COMMAND_T* = NULL)
         SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 2);
     }
     UpdateTrackTimebaseToolbar();
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 
@@ -3045,7 +3027,7 @@ bool IsSelTracksTimebaseBeatPos(COMMAND_T* = NULL)
     return 1;
 }
 
-void AWSelTracksTimebaseBeatAll(COMMAND_T* = NULL)
+void AWSelTracksTimebaseBeatAll(COMMAND_T* t)
 {  
     MediaTrack* tr;
     
@@ -3055,6 +3037,7 @@ void AWSelTracksTimebaseBeatAll(COMMAND_T* = NULL)
         SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 1);
     }
     UpdateTrackTimebaseToolbar();
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 
@@ -3077,6 +3060,25 @@ bool IsSelTracksTimebaseBeatAll(COMMAND_T* = NULL)
     return 1;
 }
 
+void AWSelChilOrSelItems(COMMAND_T* t)
+{  
+    MediaTrack* tr = GetLastTouchedTrack();
+    
+    if(GetMediaTrackInfo_Value(tr, "I_FOLDERDEPTH") == 1)
+        SelChildren();
+    else
+    {
+        for(int i = 0; i < CountTrackMediaItems(tr); i++)
+        {
+            MediaItem* item = GetTrackMediaItem(tr, i);
+            SetMediaItemInfo_Value(item, "B_UISEL", 1);
+        }
+    }
+        
+    UpdateArrange();
+    
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+}
 
 
 static COMMAND_T g_commandTable[] = 
@@ -3189,7 +3191,6 @@ static COMMAND_T g_commandTable[] =
 	
 	{ { DEFACCEL, "SWS/AW: Insert click track" },		"SWS_AWINSERTCLICKTRK",					AWInsertClickTrack, NULL, },
 	{ { DEFACCEL, "SWS/AW: Toggle click track mute" },		"SWS_AWTOGGLECLICKTRACK",					AWToggleClickTrack, NULL, 0, IsClickUnmuted},
-	// Broken { { DEFACCEL, "SWS/AW: Toggle TCP" },			"SWS_AWTOGTCP",		AWToggleTCP, },
 
 	
 	//*/
@@ -3200,6 +3201,8 @@ static COMMAND_T g_commandTable[] =
     { { DEFACCEL, "SWS/AW: Cascade selected track inputs" },			"SWS_AWCSCINP",		AWCascadeInputs, },
 	{ { DEFACCEL, "SWS/AW: Split selected items at edit cursor w/crossfade on left" },			"SWS_AWSPLITXFADELEFT",		AWSplitXFadeLeft, },
 
+
+    //{ { DEFACCEL, "SWS/AW: Select children of selected folder or all items on selected track" },			"SWS_AWSELCHLDORITEMS",		AWSelChilOrSelItems, },
 
 
 	

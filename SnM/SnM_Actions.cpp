@@ -646,8 +646,9 @@ void RefreshToolbars() {
 	// write automation button
 	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_WRITE_ENV"));
 
-	// host AW's grid toolbar buttons auto refresh
+	// host AW's grid toolbar buttons auto refresh and track timebase auto refresh
 	UpdateGridToolbar();
+    UpdateTrackTimebaseToolbar();
 }
 
 

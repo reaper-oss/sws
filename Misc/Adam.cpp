@@ -2968,6 +2968,117 @@ void AWSplitXFadeLeft(COMMAND_T* = NULL)
 }
 
 
+void UpdateTrackTimebaseToolbar()
+{
+	RefreshToolbar(NamedCommandLookup("_SWS_AWTRTBASETIME"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWTRTBASEBEATPOS"));
+	RefreshToolbar(NamedCommandLookup("_SWS_AWTRTBASEBEATALL"));
+}
+
+
+void AWSelTracksTimebaseTime(COMMAND_T* = NULL)	
+{
+    
+    MediaTrack* tr;
+    
+    for (int i = 0; i < CountSelectedTracks(NULL); i++)
+    {
+        tr = GetSelectedTrack(NULL, i);
+        SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 0);
+    }
+    UpdateTrackTimebaseToolbar();
+}
+
+
+bool IsSelTracksTimebaseTime(COMMAND_T* = NULL)			
+{ 
+    
+    MediaTrack* tr;
+    
+    if(CountSelectedTracks(NULL) == 0)
+        return 0;
+    
+    for (int i = 0; i < CountSelectedTracks(NULL); i++)
+    {
+        tr = GetSelectedTrack(NULL, i);
+        if (GetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE") != 0)
+        {
+            return 0;
+        }
+    } 
+    
+    return 1;
+
+}
+
+
+void AWSelTracksTimebaseBeatPos(COMMAND_T* = NULL)
+{  
+    MediaTrack* tr;
+    
+    
+    for (int i = 0; i < CountSelectedTracks(NULL); i++)
+    {
+        tr = GetSelectedTrack(NULL, i);
+        SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 2);
+    }
+    UpdateTrackTimebaseToolbar();
+}
+
+
+bool IsSelTracksTimebaseBeatPos(COMMAND_T* = NULL)		
+{ 
+    MediaTrack* tr;
+    
+    if(CountSelectedTracks(NULL) == 0)
+        return 0;
+    
+    for (int i = 0; i < CountSelectedTracks(NULL); i++)
+    {
+        tr = GetSelectedTrack(NULL, i);
+        if (GetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE") != 2)
+        {
+            return 0;
+        }
+    } 
+    
+    return 1;
+}
+
+void AWSelTracksTimebaseBeatAll(COMMAND_T* = NULL)
+{  
+    MediaTrack* tr;
+    
+    for (int i = 0; i < CountSelectedTracks(NULL); i++)
+    {
+        tr = GetSelectedTrack(NULL, i);
+        SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 1);
+    }
+    UpdateTrackTimebaseToolbar();
+}
+
+
+bool IsSelTracksTimebaseBeatAll(COMMAND_T* = NULL)		
+{ 
+    MediaTrack* tr;
+    
+    if(CountSelectedTracks(NULL) == 0)
+        return 0;
+    
+    for (int i = 0; i < CountSelectedTracks(NULL); i++)
+    {
+        tr = GetSelectedTrack(NULL, i);
+        if (GetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE") != 1)
+        {
+            return 0;
+        }
+    } 
+    
+    return 1;
+}
+
+
+
 static COMMAND_T g_commandTable[] = 
 {
 	// Add commands here (copy paste an example from ItemParams.cpp or similar)
@@ -3046,6 +3157,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Set project timebase to beats (position only)" },							"SWS_AWTBASEBEATPOS",				AWTimebaseBeatPos, NULL, 0, IsTimebaseBeatPos},
 	{ { DEFACCEL, "SWS/AW: Set project timebase to beats (position, length, rate)" },					"SWS_AWTBASEBEATALL",				AWTimebaseBeatAll, NULL, 0, IsTimebaseBeatAll},
 	
+    { { DEFACCEL, "SWS/AW: Set selected tracks timebase to time" },												"SWS_AWTRACKTBASETIME",					AWSelTracksTimebaseTime, NULL, 0, IsSelTracksTimebaseTime},
+    { { DEFACCEL, "SWS/AW: Set selected tracks timebase to beats (position only)" },							"SWS_AWTRACKTBASEBEATPOS",				AWSelTracksTimebaseBeatPos, NULL, 0, IsSelTracksTimebaseBeatPos},
+    { { DEFACCEL, "SWS/AW: Set selected tracks timebase to beats (position, length, rate)" },					"SWS_AWTRACKTBASEBEATALL",				AWSelTracksTimebaseBeatAll, NULL, 0, IsSelTracksTimebaseBeatAll},
+
 	//{ { DEFACCEL, "SWS/AW: Toggle 'beats (position only)'/'beats (position, length rate')" },			"SWS_AWTBASEBTOG",				AWTimebaseToggleStretch, NULL, 0, IsTimebaseBeatAll},
 	//{ { DEFACCEL, "SWS/AW: Set project timebase to beats" },											"SWS_AWTBASEBEAT",				AWTimebaseBeat, NULL, 0, IsTimebaseBeat},
 

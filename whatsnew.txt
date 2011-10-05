@@ -5,6 +5,10 @@
 +Added advanced parameter "ToolbarsAutoRefreshFreq" in the S&M.ini file: the default value should be fine but you can tweak it so that toolbars are refreshed without noticeable lag
 +ToolbarsAutoRefreshFreq is in ms (min: 100, max: 5000). Make sure you exited REAPER before editing the INI file.
 
+SWS list views:
++Fixed SWS list views not obeying to sort requests (sometimes)
++Faster sort when clicking on headers
+
 !v2.1.0 #13 (September 23, 2011)
 Issue 385: Fixed slow REAPER startup introduced in v2.1.0 #11
 Issue 377: Frozen tracks support

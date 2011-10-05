@@ -735,7 +735,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 			m_iSortCol = -m_iSortCol;
 		else
 			m_iSortCol = iDataCol + 1;
-		Update();
+		Sort();
 	}
 	else if (s->hdr.code == LVN_BEGINDRAG)
 	{
@@ -982,14 +982,7 @@ void SWS_ListView::Update()
 		}
 
 		if (bResort)
-		{
-			ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
-			int iCol = abs(m_iSortCol) - 1;
-			iCol = DataToDisplayCol(iCol) + 1;
-			if (m_iSortCol < 0)
-				iCol = -iCol;
-			SetListviewColumnArrows(iCol);
-		}
+			Sort();
 
 #ifdef _WIN32
 		if (m_hwndTooltip)
@@ -1295,6 +1288,16 @@ void SWS_ListView::ShowColumns()
 	HWND header = ListView_GetHeader(m_hwndList);
 	Header_SetOrderArray(header, iCols, &cols);
 #endif
+}
+
+void SWS_ListView::Sort()
+{
+	ListView_SortItems(m_hwndList, sListCompare, (LPARAM)this);
+	int iCol = abs(m_iSortCol) - 1;
+	iCol = DataToDisplayCol(iCol) + 1;
+	if (m_iSortCol < 0)
+		iCol = -iCol;
+	SetListviewColumnArrows(iCol);
 }
 
 void SWS_ListView::SetListviewColumnArrows(int iSortCol)

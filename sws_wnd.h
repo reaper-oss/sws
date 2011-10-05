@@ -124,6 +124,7 @@ protected:
 
 private:
 	void ShowColumns();
+	void Sort();
 
 #ifndef _WIN32
 	int m_iClickedCol;

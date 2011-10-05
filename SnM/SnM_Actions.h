@@ -73,8 +73,8 @@
 #define SNM_MAX_ENV_SUBCHUNK_NAME	16
 #define SNM_LET_BREATHE_MS			10
 #define SNM_3D_COLORS_DELTA			25
-#define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average monitored)
-#define SNM_CSURF_RUN_POLL_MS		1000
+#define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average I monitored)
+#define SNM_DEF_TOOLBAR_RFRSH_FREQ	300    // default frequency in ms for the "auto-refresh toolbars" option 
 #define SNM_SCHEDJOB_DEFAULT_DELAY	250
 
 // Scheduled job *RESERVED* ids

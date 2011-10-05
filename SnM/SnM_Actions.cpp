@@ -625,6 +625,7 @@ void fakeToggleAction(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 
 bool g_toolbarsAutoRefreshEnabled = false;
+int g_toolbarsAutoRefreshFreq = SNM_DEF_TOOLBAR_RFRSH_FREQ;
 
 void EnableToolbarsAutoRefesh(COMMAND_T* _ct) {
 	g_toolbarsAutoRefreshEnabled = !g_toolbarsAutoRefreshEnabled;
@@ -648,7 +649,7 @@ void RefreshToolbars() {
 
 	// host AW's grid toolbar buttons auto refresh and track timebase auto refresh
 	UpdateGridToolbar();
-    UpdateTrackTimebaseToolbar();
+	UpdateTrackTimebaseToolbar();
 }
 
 
@@ -830,6 +831,7 @@ void IniFileInit()
 
 	// Load general prefs 
 	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, iniFn) == 1);
+	g_toolbarsAutoRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, iniFn), 100, 5000);
 	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, iniFn);
 }
 
@@ -840,7 +842,8 @@ void IniFileExit()
 	// save general prefs & info
 	iniSection.AppendFormatted(128, "; S&M.ini - SWS/S&M Extension v%d.%d.%d Build #%d\n", SWS_VERSION); 
 	iniSection.AppendFormatted(BUFFER_SIZE, "; %s\n", g_SNMiniFilename.Get()); 
-	iniSection.AppendFormatted(64, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0); 
+	iniSection.AppendFormatted(64, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0);
+	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_toolbarsAutoRefreshFreq);
 	iniSection.AppendFormatted(64, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1 : 0); 
 	SaveIniSection("General", &iniSection, g_SNMiniFilename.Get());
 
@@ -952,9 +955,10 @@ double g_approxPollMsCounter = 0.0;
 
 void SnMCSurfRun()
 {
-	// Polling (SNM_CSURF_RUN_POLL_MS = every second or so)
 	g_approxPollMsCounter += SNM_CSURF_RUN_TICK_MS;
-	if (g_approxPollMsCounter >= SNM_CSURF_RUN_POLL_MS)
+
+	// toolbars auto-refresh option
+	if (g_approxPollMsCounter >= g_toolbarsAutoRefreshFreq)
 	{
 		g_approxPollMsCounter = 0.0;
 		if (g_toolbarsAutoRefreshEnabled) 
@@ -964,7 +968,7 @@ void SnMCSurfRun()
 		}
 	}
 
-	// Perform scheduled jobs
+	// perform scheduled jobs
 	SWS_SectionLock lock(&g_jobsLock);
 	if (g_jobs.GetSize())
 	{

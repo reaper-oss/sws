@@ -1,3 +1,10 @@
+"Auto-refresh toolbars" option (Main menu > Extensions > SWS options): added toolbar enabled actions and advanced parameter
++SWS/AW: Set selected tracks timebase to time
++SWS/AW: Set selected tracks timebase to beats (position only)
++SWS/AW: Set selected tracks timebase to beats (position/length/rate)
++Added advanced parameter "ToolbarsAutoRefreshFreq" in the S&M.ini file: the default value should be fine but you can tweak it so that toolbars are refreshed without noticeable lag
++ToolbarsAutoRefreshFreq is in ms (min: 100, max: 5000). Make sure you exited REAPER before editing the INI file.
+
 !v2.1.0 #13 (September 23, 2011)
 Issue 385: Fixed slow REAPER startup introduced in v2.1.0 #11
 Issue 377: Frozen tracks support

@@ -368,13 +368,12 @@
      for(x=0;x<cursec->GetSize();x++)
 --- wingui/virtwnd-controls.h	Mon Jan 19 16:26:36 1970
 +++ wingui/virtwnd-controls.h	Mon Jan 19 16:26:36 1970
-@@ -114,7 +114,9 @@
+@@ -114,7 +114,8 @@
      void SetForceText(bool ft, int color=0) { m_forcetext=ft; m_forcetext_color=color; }
      bool GetForceText() { return m_forcetext; }
  
-+    // JFB for SWS:
-+    LICE_IFont* GetFont() { return m_textfont; }
      void SetFont(LICE_IFont *font, LICE_IFont *vfont=NULL) { m_textfont=font; m_textfontv=vfont; }
++    LICE_IFont *GetFont(bool vfont=false) { return vfont?m_textfontv:m_textfont; }
  
    private:
  

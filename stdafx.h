@@ -72,13 +72,7 @@
 #pragma warning(disable : 4244) // __int64 to int warnings
 #include "../WDL/wdltypes.h"
 #include "../WDL/ptrlist.h"
-
-//JFB WDL_STRING_FAST defined here rather than in project for OSX
-// note: visual studio bug! with some VS versions, the #ifdef'd code
-//       is grayed out but correctly enabled
-#define WDL_STRING_FAST
 #include "../WDL/wdlstring.h"
-
 #include "../WDL/heapbuf.h"
 #include "../WDL/db2val.h"
 #include "../WDL/wingui/wndsize.h"

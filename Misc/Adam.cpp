@@ -2880,7 +2880,7 @@ void AWCascadeInputs(COMMAND_T* t)
 			SetMediaTrackInfo_Value(track, "I_RECINPUT", iTrack+inputOffset-1);
 		}
 	}
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 
 }
 
@@ -2967,7 +2967,7 @@ void AWSelTracksTimebaseTime(COMMAND_T* t)
         SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 0);
     }
     UpdateTrackTimebaseToolbar();
-    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 
@@ -3004,7 +3004,7 @@ void AWSelTracksTimebaseBeatPos(COMMAND_T* t)
         SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 2);
     }
     UpdateTrackTimebaseToolbar();
-    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 
@@ -3037,7 +3037,7 @@ void AWSelTracksTimebaseBeatAll(COMMAND_T* t)
         SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 1);
     }
     UpdateTrackTimebaseToolbar();
-    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 
@@ -3080,7 +3080,7 @@ void AWSelChilOrSelItems(COMMAND_T* t)
         
     UpdateArrange();
     
-    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 void AWSelTracksPanMode(int mode)
@@ -3110,25 +3110,25 @@ void AWSelTracksPanLaw(int j)
 void AWSelTracksPanBalanceNew(COMMAND_T* t)
 {   
     AWSelTracksPanMode(3);
-    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 void AWSelTracksPanBalanceOld(COMMAND_T* t)
 {   
     AWSelTracksPanMode(0);
-    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 void AWSelTracksPanStereoPan(COMMAND_T* t)
 {   
     AWSelTracksPanMode(5);
-    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 void AWSelTracksPanDualPan(COMMAND_T* t)
 {   
     AWSelTracksPanMode(6);
-    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 static COMMAND_T g_commandTable[] = 

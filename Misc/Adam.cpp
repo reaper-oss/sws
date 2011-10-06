@@ -3068,6 +3068,9 @@ void AWSelChilOrSelItems(COMMAND_T* t)
         SelChildren();
     else
     {
+     
+        //Set Cursor context to items somehow here
+        
         for(int i = 0; i < CountTrackMediaItems(tr); i++)
         {
             MediaItem* item = GetTrackMediaItem(tr, i);
@@ -3080,6 +3083,53 @@ void AWSelChilOrSelItems(COMMAND_T* t)
     Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
+void AWSelTracksPanMode(int mode)
+{
+    MediaTrack* tr;
+    
+    for (int i = 0; i < CountSelectedTracks(NULL); i++)
+    {
+        tr = GetSelectedTrack(NULL, i);
+        SetMediaTrackInfo_Value(tr, "I_PANMODE", mode);
+    }
+    
+}
+
+void AWSelTracksPanLaw(int j)
+{
+    MediaTrack* tr;
+    
+    for (int i = 0; i < CountSelectedTracks(NULL); i++)
+    {
+        tr = GetSelectedTrack(NULL, i);
+        SetMediaTrackInfo_Value(tr, "I_PANLAW", j);
+    }
+    
+}
+
+void AWSelTracksPanBalanceNew(COMMAND_T* t)
+{   
+    AWSelTracksPanMode(3);
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+}
+
+void AWSelTracksPanBalanceOld(COMMAND_T* t)
+{   
+    AWSelTracksPanMode(0);
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+}
+
+void AWSelTracksPanStereoPan(COMMAND_T* t)
+{   
+    AWSelTracksPanMode(5);
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+}
+
+void AWSelTracksPanDualPan(COMMAND_T* t)
+{   
+    AWSelTracksPanMode(6);
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+}
 
 static COMMAND_T g_commandTable[] = 
 {
@@ -3202,6 +3252,13 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Split selected items at edit cursor w/crossfade on left" },			"SWS_AWSPLITXFADELEFT",		AWSplitXFadeLeft, },
 
 
+    { { DEFACCEL, "SWS/AW: Set selected tracks pan mode to stereo balance" },			"SWS_AWPANBALANCENEW",		AWSelTracksPanBalanceNew, },
+    { { DEFACCEL, "SWS/AW: Set selected tracks pan mode to 3.x balance" },			"SWS_AWPANBALANCEOLD",		AWSelTracksPanBalanceOld, },
+    { { DEFACCEL, "SWS/AW: Set selected tracks pan mode to stereo pan" },			"SWS_AWPANSTEREOPAN",		AWSelTracksPanStereoPan, },
+    { { DEFACCEL, "SWS/AW: Set selected tracks pan mode to dual pan" },			"SWS_AWPANDUALPAN",		AWSelTracksPanDualPan, },
+
+    
+    // Sucks because can't figure out how to change cursor context to items
     //{ { DEFACCEL, "SWS/AW: Select children of selected folder or all items on selected track" },			"SWS_AWSELCHLDORITEMS",		AWSelChilOrSelItems, },
 
 

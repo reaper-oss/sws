@@ -492,6 +492,30 @@ void CrossfadeSelItems(COMMAND_T* t)
 	}
 }
 
+void SetItemLen(COMMAND_T* t)
+{
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
+	if (items.GetSize() == 0)
+		return;
+
+	static double dLen = 1.0;
+	char reply[50];
+	sprintf(reply, "%f", dLen);
+	if (GetUserInputs("Set selected items length", 1, "New item length (s)", reply, 50))
+	{
+		dLen = atof(reply);
+		if (dLen <= 0.0)
+			return;
+
+		for (int i = 0; i < items.GetSize(); i++)
+			GetSetMediaItemInfo(items.Get()[i], "D_LENGTH", &dLen);
+
+		UpdateTimeline();
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	}
+}
+
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Toggle mute of items on selected track(s)" },			"SWS_TOGITEMMUTE",		TogItemMute,			},
@@ -532,6 +556,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Set all takes to next stereo channel mode"},			"SWS_ITEMCHANSTEREONEXT",	SetItemChannels, NULL, 2 },
 	{ { DEFACCEL, "SWS: Set all takes to prev stereo channel mode"},			"SWS_ITEMCHANSTEREOPREV",	SetItemChannels, NULL, -2 },
 
+	{ { DEFACCEL, "SWS: Set selected items length..."},							"SWS_SETITEMLEN",			SetItemLen, NULL, 0 },
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

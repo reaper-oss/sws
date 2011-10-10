@@ -20,9 +20,12 @@ mv sws_osx/universal.dylib sws_osx/reaper_sws.dylib
 #
 # Make installer
 #
-Install/pkg-dmg --source sws_osx --copy Install/sws_osx_install.dsstore:/.DS_Store --copy Install/sws_osx_install.png:.sws_osx_install.png --copy Install/maclicense.txt:license.txt --copy FingersExtras/Grooves:/ --license Install/maclicense.txt --target Install/output/sws_osx.dmg
+# Uses the pkg-dmg script available here: https://github.com/opichals/osx-pkg-dmg
+if [ -f Install/pkg-dmg ]; then
+  Install/pkg-dmg --source sws_osx --copy Install/sws_osx_install.dsstore:/.DS_Store --copy Install/sws_osx_install.png:.sws_osx_install.png --copy Install/maclicense.txt:license.txt --copy FingersExtras/Grooves:/ --license Install/maclicense.txt --target Install/output/sws_osx.dmg
+fi  
 #
-# Upload
+# Upload (optional)
 #
 if [ -f Install/osx_upload.command ]; then
   Install/osx_upload.command

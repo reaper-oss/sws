@@ -148,7 +148,7 @@ protected:
 		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
 		WDL_String* _newChunk, int _updates);
 
-	bool SNM_FXChainTrackPatcher::NotifySkippedSubChunk(int _mode, 
+	bool NotifySkippedSubChunk(int _mode, 
 		const char* _subChunk, int _subChunkLength, int _subChunkPos,
 		WDL_PtrList<WDL_String>* _parsedParents, 
 		WDL_String* _newChunk, int _updates);
@@ -242,7 +242,7 @@ public:
 		m_removingEnv = false;
 	}
 	~SNM_EnvRemover() {}
-	bool SNM_EnvRemover::RemoveEnvelopes();
+	bool RemoveEnvelopes();
 protected:
 	bool NotifyStartElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,

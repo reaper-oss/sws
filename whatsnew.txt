@@ -1,3 +1,4 @@
+!v2.1.0 #14 (October 9, 2011)
 "Auto-refresh toolbars" option (Main menu > Extensions > SWS options): added toolbar enabled actions and advanced parameter
 +SWS/AW: Set selected tracks timebase to time
 +SWS/AW: Set selected tracks timebase to beats (position only)
@@ -8,6 +9,11 @@
 SWS list views:
 +Fixed SWS list views not obeying to sort requests (sometimes)
 +Faster sort when clicking on headers
+
+Issue 394: SWS Wait... actions don't work on OSX, removed from OSX release.
+Added action "SWS: Set selected items length..."
+
+OSX: Now building with Xcode 3.2, please report any regression issues.
 
 !v2.1.0 #13 (September 23, 2011)
 Issue 385: Fixed slow REAPER startup introduced in v2.1.0 #11

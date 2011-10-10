@@ -3054,14 +3054,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Misc\ItemParams.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Misc\ItemParams.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Freeze\ItemSelState.cpp"
 				>
 			</File>
@@ -3127,6 +3119,14 @@
 			</File>
 			<File
 				RelativePath=".\Misc\FolderActions.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\ItemParams.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\ItemParams.h"
 				>
 			</File>
 			<File

@@ -30,6 +30,8 @@
 #include "stdafx.h"
 #include "Macros.h"
 
+#ifdef _WIN32 // Sorry OSX users, win32 only.
+
 void WaitAction(COMMAND_T* t)
 {
 	int iPlayState = GetPlayState();
@@ -62,12 +64,10 @@ void WaitAction(COMMAND_T* t)
 		// Check for cursor going past stop, user stopping, and looping around
 		while(GetPlayPosition() < dStop && GetPlayState() && GetPlayPosition() >= dStart)
 		{
-#ifdef _WIN32
  			// Keep the UI updating
 			MSG msg;
 			while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
 				DispatchMessage(&msg);
-#endif
 			Sleep(1);
 		}
 	}
@@ -88,3 +88,5 @@ int MacrosInit()
 
 	return 1;
 }
+
+#endif // #ifdef _WIN32

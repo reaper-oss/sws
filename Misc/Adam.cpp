@@ -38,8 +38,7 @@
 
 // Globals for copy and paste
 
-static bool g_AWCopyFlag;
-static double g_AWCopySelLen;
+bool g_AWAutoGroup;
 static bool g_AWTBaseStretchFlag;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -895,6 +894,70 @@ void AWRecordConditional2(COMMAND_T* t)
 }
 
 
+
+//Auto Group
+
+void AWToggleAutoGroup(COMMAND_T* = NULL)
+{
+    g_AWAutoGroup = !g_AWAutoGroup;
+    char str[32];
+	sprintf(str, "%d", g_AWAutoGroup);
+	WritePrivateProfileString(SWS_INI, "AWAutoGroup", str, get_ini_file());
+}
+
+bool AWIsAutoGroupEnabled(COMMAND_T* = NULL)
+{
+    return g_AWAutoGroup;
+}
+
+bool g_AWIsRecording; // For auto group, remember if it was just recording
+
+void AWDoAutoGroup(bool rec)
+{
+    //If transport changes to recording, set recording flag
+    if (rec)
+        g_AWIsRecording++;
+    
+    // If a "not playing anymore" message is sent and we were just recording
+    if (!rec && g_AWIsRecording)
+    {
+        if (g_AWAutoGroup)
+        {
+            int numItems = CountSelectedMediaItems(0);
+            
+            if ((numItems > 1) && ((*(int*)GetConfigVar("autoxfade") & 4) || (*(int*)GetConfigVar("autoxfade") & 8))) // Don't group if not in tape or overlap record mode, takes mode is messy
+            {
+                int groupCount=0;
+                MediaItem* item;
+                
+                //Find highest current group
+                for (int i = 0; i < CountMediaItems(NULL); i++)
+                {
+                    item = GetMediaItem(NULL, i);
+                    
+                    if (GetMediaItemInfo_Value(item, "I_GROUPID") > groupCount)
+                        groupCount = GetMediaItemInfo_Value(item, "I_GROUPID");
+                }
+                
+                //Add one to assign new items to a new group
+                groupCount++;
+                
+                // Assign items to new group
+                for (int j=0; j < CountSelectedMediaItems(NULL); j++)
+                {
+                    item = GetSelectedMediaItem(NULL, j);
+                    SetMediaItemInfo_Value(item, "I_GROUPID", groupCount);
+                }                
+            }   
+            
+            // No longer recording so reset flag to false
+            g_AWIsRecording = false;
+        }             
+    }
+}
+
+// Deprecated actions, now you can use the native record/play/stop actions and they will obey the Auto Grouping toggle
+
 void AWRecordAutoGroup(COMMAND_T* t)
 {
 	if (GetPlayState() & 4)
@@ -929,12 +992,12 @@ void AWRecordConditionalAutoGroup2(COMMAND_T* t)
 	
 	else if (CountSelectedMediaItems(0) != 0)
 	{
-		Main_OnCommand(40253, 0); //Set record mode to time selection auto punch
+		Main_OnCommand(40253, 0); //Set record mode to auto punch selected items
 	}
 	
 	else 
 	{
-		Main_OnCommand(40252, 0); //Set record mode to time selection auto punch
+		Main_OnCommand(40252, 0); //Set record mode to normal
 	}
 	
 	
@@ -957,9 +1020,6 @@ void AWRecordConditionalAutoGroup2(COMMAND_T* t)
 	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
-
-
-
 void AWRecordConditionalAutoGroup(COMMAND_T* t)
 {
 	double t1, t2;
@@ -974,7 +1034,7 @@ void AWRecordConditionalAutoGroup(COMMAND_T* t)
 		
 		else 
 		{
-			Main_OnCommand(40252, 0); //Set record mode to time selection auto punch
+			Main_OnCommand(40252, 0); //Set record mode to normal
 		}
 	}
 	
@@ -1017,6 +1077,11 @@ void AWPlayStopAutoGroup(COMMAND_T* t)
 	UpdateTimeline();
 	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
+
+
+
+
+
 
 void AWSelectToEnd(COMMAND_T* t)
 {
@@ -2206,126 +2271,13 @@ void AWBusDelete(COMMAND_T* t)
     SmartRemove(NULL);
 }
 
-
-
-void AWCopy(COMMAND_T* t)
-{
-	Undo_BeginBlock();
-	
-	g_AWCopyFlag = 0;
-	
-	double selStart;
-	double selEnd;
-	
-	GetSet_LoopTimeRange2(0, 0, 0, &selStart, &selEnd, 0);
-	
-	
-	// If items have focus
-	if (GetCursorContext() == 1)
-	{
-		
-		if (selStart != selEnd)
-		{
-			g_AWCopySelLen = selEnd - selStart;
-			g_AWCopyFlag = 1;
-		}
-		
-		// Create array of selected media items
-		WDL_TypedBuf<MediaItem*> items;
-		SWS_GetSelectedMediaItems(&items);
-		
-		
-		// If there are selected items
-		
-		if (items.GetSize() > 0)
-		{
-			g_AWCopyFlag = 0;
-			
-			// Create array to store item timebases
-			char* cItemsTimebase = new char[items.GetSize()];
-			
-			// Loop through every item in array
-			for (int i = 0; i < items.GetSize(); i++)
-			{
-				// Store timebase of current item in array
-				cItemsTimebase[i] = *(char*)GetSetMediaItemInfo(items.Get()[i], "C_BEATATTACHMODE", NULL);
-				
-				// Set item's timebase to "Time"
-				char cZero = 0;
-				GetSetMediaItemInfo(items.Get()[i], "C_BEATATTACHMODE", &cZero);
-			}
-			
-			
-			SmartCopy(NULL);
-			
-			
-			// Restore item's original timebase
-			for (int i = 0; i < items.GetSize(); i++)
-				GetSetMediaItemInfo(items.Get()[i], "C_BEATATTACHMODE", &(cItemsTimebase[i]));
-			
-			// Delete timebase array
-			delete [] cItemsTimebase;
-		}
-		
-		
-	}
-	
-	// Otherwise just do whatever, I don't want anything to do with it
-	else
-		SmartCopy(NULL);
-	
-	Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
-	
-}
-
-void AWCut(COMMAND_T* t)
-{
-	Undo_BeginBlock();
-	
-	g_AWCopyFlag = 0;
-	
-	
-	// If items have focus
-	if (GetCursorContext() == 1)
-	{
-		Main_OnCommand(40433, 0); // Set item timebase to time, necessary for relative paste
-		
-		SmartCut(NULL);
-		
-	}
-	
-	// Otherwise just do whatever, I don't want anything to do with it
-	else
-		SmartCut(NULL);
-	
-	Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
-	
-}
-
 void AWPaste(COMMAND_T* t)
 {
 	Undo_BeginBlock();
 	
 	int* pTrimMode = (int*)GetConfigVar("autoxfade");
 	
-	if (g_AWCopyFlag)
-	{
-		// Code to paste empty time selection goes here
-		
-		
-		double t1 = GetCursorPosition();
-		double t2 = t1 + g_AWCopySelLen;
-		
-		GetSet_LoopTimeRange(true, false, &t1, &t2, false);
-		
-		if (*pTrimMode & 2)
-		{
-			Main_OnCommand(40718, 0); // item select all item on selected track in time selection
-			Main_OnCommand(40312, 0); // item remove selected area of item	
-		}
-	}
-	
-	else if (GetCursorContext() == 1)
+    if (GetCursorContext() == 1)
 	{
 		int* pCursorMode = (int*)GetConfigVar("itemclickmovecurs");
 		int savedMode = *pCursorMode;
@@ -3131,6 +3083,10 @@ void AWSelTracksPanDualPan(COMMAND_T* t)
     Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
+
+
+
+
 static COMMAND_T g_commandTable[] = 
 {
 	// Add commands here (copy paste an example from ItemParams.cpp or similar)
@@ -3226,10 +3182,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Grid to 1/16 notes" },			"SWS_AWGRID16",				AWGrid16, NULL, 0, IsGrid16},
 	{ { DEFACCEL, "SWS/AW: Grid to 1/32 notes" },			"SWS_AWGRID32",				AWGrid32, NULL, 0, IsGrid32},
 	
-	///* Not ready or not safe enough/integrated well enough for public use
-	// Stuff that sort of sucks that I might make decent enough to release
-	//{ { DEFACCEL, "SWS/AW: Copy" },			"SWS_AWCOPY",					AWCopy, },
-	//{ { DEFACCEL, "SWS/AW: Cut" },			"SWS_AWCUT",					AWCut, },
+
 	{ { DEFACCEL, "SWS/AW: Paste" },		"SWS_AWPASTE",					AWPaste, },
     { { DEFACCEL, "SWS/AW: Remove tracks/items/env, obeying time selection and leaving children" },		"SWS_AWBUSDELETE",					AWBusDelete, },
 
@@ -3257,6 +3210,8 @@ static COMMAND_T g_commandTable[] =
     { { DEFACCEL, "SWS/AW: Set selected tracks pan mode to stereo pan" },			"SWS_AWPANSTEREOPAN",		AWSelTracksPanStereoPan, },
     { { DEFACCEL, "SWS/AW: Set selected tracks pan mode to dual pan" },			"SWS_AWPANDUALPAN",		AWSelTracksPanDualPan, },
 
+
+    { { DEFACCEL, "SWS/AW: Toggle auto group newly recorded items" },			"SWS_AWAUTOGROUPTOG",			AWToggleAutoGroup, NULL, 0, AWIsAutoGroupEnabled},
     
     // Sucks because can't figure out how to change cursor context to items
     //{ { DEFACCEL, "SWS/AW: Select children of selected folder or all items on selected track" },			"SWS_AWSELCHLDORITEMS",		AWSelChilOrSelItems, },
@@ -3269,6 +3224,10 @@ static COMMAND_T g_commandTable[] =
 int AdamInit()
 {
 	SWSRegisterCommands(g_commandTable);
+    
+    char str[32];
+	GetPrivateProfileString(SWS_INI, "AWAutoGroup", "0", str, 32, get_ini_file());
+	g_AWAutoGroup = atoi(str);
 
 	return 1;
 }

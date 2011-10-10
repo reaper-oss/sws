@@ -35,6 +35,7 @@
 #include "Zoom.h"
 #include "Misc/Misc.h"
 #include "Misc/RecCheck.h"
+#include "Misc/Adam.h"
 #include "Color/Color.h"
 #include "Color/Autocolor.h"
 #include "MarkerList/MarkerListClass.h"
@@ -318,6 +319,8 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 	}
 }
 
+
+
 // Fake control surface to get a low priority periodic time slice from Reaper
 // and callbacks for some "track params have changed"
 class SWSTimeSlice : public IReaperControlSurface
@@ -353,6 +356,11 @@ public:
 		}
 	}
 
+    void SetPlayState(bool play, bool pause, bool rec)
+    {
+        AWDoAutoGroup(rec);
+    }
+    
 	// This is our only notification of active project tab change, so update everything
 	void SetTrackListChange()
 	{

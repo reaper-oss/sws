@@ -33,3 +33,4 @@ int AdamInit();
 void AWFillGapsAdv(const char* title, char* retVals);
 void UpdateGridToolbar();
 void UpdateTrackTimebaseToolbar();
+void AWDoAutoGroup(bool rec);

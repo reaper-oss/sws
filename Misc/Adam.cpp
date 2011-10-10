@@ -38,9 +38,6 @@
 
 // Globals for copy and paste
 
-bool g_AWAutoGroup;
-static bool g_AWTBaseStretchFlag;
-
 ///////////////////////////////////////////////////////////////////////////////
 // Fills gaps aka Beat Detective
 // for Adam to get started...
@@ -897,6 +894,8 @@ void AWRecordConditional2(COMMAND_T* t)
 
 //Auto Group
 
+bool g_AWAutoGroup = false;
+
 void AWToggleAutoGroup(COMMAND_T* = NULL)
 {
     g_AWAutoGroup = !g_AWAutoGroup;
@@ -910,7 +909,7 @@ bool AWIsAutoGroupEnabled(COMMAND_T* = NULL)
     return g_AWAutoGroup;
 }
 
-bool g_AWIsRecording; // For auto group, remember if it was just recording
+bool g_AWIsRecording = false; // For auto group, remember if it was just recording
 
 void AWDoAutoGroup(bool rec)
 {
@@ -938,16 +937,18 @@ void AWDoAutoGroup(bool rec)
                     if (GetMediaItemInfo_Value(item, "I_GROUPID") > groupCount)
                         groupCount = GetMediaItemInfo_Value(item, "I_GROUPID");
                 }
-                
+                                
                 //Add one to assign new items to a new group
                 groupCount++;
                 
-                // Assign items to new group
-                for (int j=0; j < CountSelectedMediaItems(NULL); j++)
+                WDL_TypedBuf<MediaItem*> items;
+                SWS_GetSelectedMediaItems(&items);
+                for (int i = 0; i < items.GetSize(); i++)
                 {
-                    item = GetSelectedMediaItem(NULL, j);
-                    SetMediaItemInfo_Value(item, "I_GROUPID", groupCount);
-                }                
+                    SetMediaItemInfo_Value(items.Get()[i], "I_GROUPID", groupCount);
+                }
+                
+                UpdateArrange();
             }   
             
             // No longer recording so reset flag to false
@@ -2489,35 +2490,6 @@ void AWTimebaseBeatAll(COMMAND_T* = NULL)		{ *(int*)GetConfigVar("itemtimelock")
 bool IsTimebaseBeatAll(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("itemtimelock") == 1); }
 
 
-void AWTimebaseBeat(COMMAND_T* = NULL)		
-{ 
-	if (g_AWTBaseStretchFlag)
-		*(int*)GetConfigVar("itemtimelock") = 1; 
-	else 
-		*(int*)GetConfigVar("itemtimelock") = 2; 
-
-
-	UpdateTimebaseToolbar();
-
-}
-bool IsTimebaseBeat(COMMAND_T* = NULL)		{ return (*(int*)GetConfigVar("itemtimelock") != 0); }
-
-void AWTimebaseToggleStretch(COMMAND_T* = NULL)		
-{ 
-	if (*(int*)GetConfigVar("itemtimelock") == 1)
-	{
-		*(int*)GetConfigVar("itemtimelock") = 2;
-		g_AWTBaseStretchFlag = 0;
-	}
-	else
-	{
-		*(int*)GetConfigVar("itemtimelock") = 1;
-		g_AWTBaseStretchFlag = 1;
-	}
-			
-	UpdateTimebaseToolbar();
-
-}
 
 
 void UpdateGridToolbar()
@@ -3101,7 +3073,8 @@ static COMMAND_T g_commandTable[] =
 	// Transport Actions
 	{ { DEFACCEL, "SWS/AW: Record Conditional (normal or time sel only)" },																"SWS_AWRECORDCOND",					AWRecordConditional, },
 	{ { DEFACCEL, "SWS/AW: Record Conditional (normal, time sel or item sel)" },														"SWS_AWRECORDCOND2",				AWRecordConditional2, },
-	{ { DEFACCEL, "SWS/AW: Record (automatically group simultaneously recorded items)" },												"SWS_AWRECORDGROUP",				AWRecordAutoGroup, },
+    { { DEFACCEL, "SWS/AW: Toggle auto group newly recorded items" },                                                                   "SWS_AWAUTOGROUPTOG",               AWToggleAutoGroup, NULL, 0, AWIsAutoGroupEnabled},
+    { { DEFACCEL, "SWS/AW: Record (automatically group simultaneously recorded items)" },												"SWS_AWRECORDGROUP",				AWRecordAutoGroup, },
 	{ { DEFACCEL, "SWS/AW: Record Conditional (normal or time sel only, automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP",			AWRecordConditionalAutoGroup, },
 	{ { DEFACCEL, "SWS/AW: Record Conditional (normal/time sel/item sel, automatically group simultaneously recorded items)" },			"SWS_AWRECORDCONDGROUP2",			AWRecordConditionalAutoGroup2, },
 	{ { DEFACCEL, "SWS/AW: Play/Stop (automatically group simultaneously recorded items)" },											"SWS_AWPLAYSTOPGRP",				AWPlayStopAutoGroup, },
@@ -3169,9 +3142,6 @@ static COMMAND_T g_commandTable[] =
     { { DEFACCEL, "SWS/AW: Set selected tracks timebase to beats (position only)" },							"SWS_AWTRACKTBASEBEATPOS",				AWSelTracksTimebaseBeatPos, NULL, 0, IsSelTracksTimebaseBeatPos},
     { { DEFACCEL, "SWS/AW: Set selected tracks timebase to beats (position, length, rate)" },					"SWS_AWTRACKTBASEBEATALL",				AWSelTracksTimebaseBeatAll, NULL, 0, IsSelTracksTimebaseBeatAll},
 
-	//{ { DEFACCEL, "SWS/AW: Toggle 'beats (position only)'/'beats (position, length rate')" },			"SWS_AWTBASEBTOG",				AWTimebaseToggleStretch, NULL, 0, IsTimebaseBeatAll},
-	//{ { DEFACCEL, "SWS/AW: Set project timebase to beats" },											"SWS_AWTBASEBEAT",				AWTimebaseBeat, NULL, 0, IsTimebaseBeat},
-
 	{ { DEFACCEL, "SWS/AW: Toggle triplet grid" },			"SWS_AWTOGGLETRIPLET",				AWToggleTriplet, NULL, 0, IsGridTriplet},
 	{ { DEFACCEL, "SWS/AW: Toggle dotted grid" },			"SWS_AWTOGGLEDOTTED",				AWToggleDotted, NULL, 0, IsGridDotted},
 
@@ -3211,7 +3181,6 @@ static COMMAND_T g_commandTable[] =
     { { DEFACCEL, "SWS/AW: Set selected tracks pan mode to dual pan" },			"SWS_AWPANDUALPAN",		AWSelTracksPanDualPan, },
 
 
-    { { DEFACCEL, "SWS/AW: Toggle auto group newly recorded items" },			"SWS_AWAUTOGROUPTOG",			AWToggleAutoGroup, NULL, 0, AWIsAutoGroupEnabled},
     
     // Sucks because can't figure out how to change cursor context to items
     //{ { DEFACCEL, "SWS/AW: Select children of selected folder or all items on selected track" },			"SWS_AWSELCHLDORITEMS",		AWSelChilOrSelItems, },

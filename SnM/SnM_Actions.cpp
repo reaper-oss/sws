@@ -773,7 +773,7 @@ int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _fn)
 	{
 		COMMAND_T* ct = &_cmds[i++];
 		int nb = GetPrivateProfileInt("NbOfActions", ct->id, (int)ct->user, g_SNMiniFilename.Get());
-		nb = BOUNDED(nb, 0, _cmds[i].menuText == NULL ? SNM_MAX_DYNAMIC_ACTIONS : atoi(_cmds[i].menuText));
+		nb = BOUNDED(nb, 0, ct->menuText == NULL ? SNM_MAX_DYNAMIC_ACTIONS : atoi(ct->menuText));
 		for (int j=0; j < nb; j++)
 		{
 			_snprintf(actionName, SNM_MAX_ACTION_NAME_LEN, ct->accel.desc, j+1);
@@ -797,7 +797,7 @@ void SNMSaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 		strncpy(name, SNM_CMD_SHORTNAME(ct), SNM_MAX_ACTION_NAME_LEN); // strncpy: lstrcpyn() KO here
 		ReplaceStringFormat(name, 'n');
 		if (ct->menuText != NULL) { // custom max value specified ?
-			strncat(name, " (n < ", SNM_MAX_ACTION_NAME_LEN);
+			strncat(name, " (n <= ", SNM_MAX_ACTION_NAME_LEN);
 			strncat(name, ct->menuText, SNM_MAX_ACTION_NAME_LEN);
 			strncat(name, "!)", SNM_MAX_ACTION_NAME_LEN);
 		}

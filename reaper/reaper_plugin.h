@@ -1,7 +1,7 @@
 /***************************************
 *** REAPER Plug-in API
 **
-** Copyright (C) 2006-2009, Cockos Incorporated
+** Copyright (C) 2006-2010, Cockos Incorporated
 **
 **    This software is provided 'as-is', without any express or implied
 **    warranty.  In no event will the authors be held liable for any damages
@@ -144,6 +144,15 @@ typedef struct reaper_plugin_info_t
 **** interface for plugin objects to save/load state. they should use ../WDL/LineParser.h too...
 ***************************************************************************************/
 
+// ProjectStateContext tempflags meaning for &0xFFFF
+enum 
+{
+  PROJSTATECTX_UNDO_REDO=1,
+  PROJSTATECTX_SAVE_LOAD=2, // project, track template, etc
+  PROJSTATECTX_CUTCOPY_PASTE=3,
+};
+// &0xFFFF0000 is for receiver use
+
 #ifndef _WDL_PROJECTSTATECONTEXT_DEFINED_
 #define _REAPER_PLUGIN_PROJECTSTATECONTEXT_DEFINED_
 class ProjectStateContext // this is also defined in WDL, need to keep these interfaces identical
@@ -155,6 +164,9 @@ public:
   virtual int GetLine(char *buf, int buflen)=0; // returns -1 on eof
 
   virtual INT64 GetOutputSize()=0; // output size written so far, only usable on REAPER 3.14+
+
+  virtual int GetTempFlag()=0;
+  virtual void SetTempFlag(int flag)=0;
 };
 #endif
 
@@ -174,7 +186,7 @@ typedef struct
 class MIDI_eventlist
 {
 public:
-  virtual void AddItem(MIDI_event_t *evt)=0; // puts the item in the correct place
+  virtual void AddItem(MIDI_event_t *evt)=0;
   virtual MIDI_event_t *EnumItems(int *bpos)=0; 
   virtual void DeleteItem(int bpos)=0;
   virtual int GetSize()=0; // size of block in bytes
@@ -342,13 +354,15 @@ typedef struct
 
 #define PCM_SOURCE_EXT_OPENEDITOR 0x10001 // parm1=hwnd, parm2=track idx, parm3=item description
 #define PCM_SOURCE_EXT_GETEDITORSTRING 0x10002 // parm1=index (0 or 1), returns desc
-// 0x10003 is deprecated
+#define PCM_SOURCE_EXT_CLOSESECONDARYSRC 0x10003 // close all secondary srcs that are open in the receiver's editor
 #define PCM_SOURCE_EXT_SETITEMCONTEXT 0x10004 // parm1=pointer to item handle, parm2=pointer to take handle
 #define PCM_SOURCE_EXT_ADDMIDIEVENTS 0x10005 // parm1=pointer to midi_realtime_write_struct_t, nch=1 for replace, =0 for overdub, parm2=midi_quantize_mode_t* (optional)
 #define PCM_SOURCE_EXT_GETASSOCIATED_RPP 0x10006 // parm1=pointer to char* that will receive a pointer to the string
 #define PCM_SOURCE_EXT_GETMETADATA 0x10007 // parm1=pointer to name string, parm2=pointer to buffer, parm3=(int)buffersizemax . returns length used. Defined strings are "DESC", "ORIG", "ORIGREF", "DATE", "TIME", "UMID", "CODINGHISTORY" (i.e. BWF)
 #define PCM_SOURCE_EXT_SETASSECONDARYSOURCE 0x10008  // parm1=optional pointer to src (same subtype as receiver), if supplied, set the receiver as secondary src for parm1's editor, if not supplied, receiver has to figure out if there is an appropriate editor open to attach to, parm2=trackidx, parm3=itemname
 #define PCM_SOURCE_EXT_SHOWMIDIPREVIEW 0x10009  // parm1=(MIDI_eventlist*), can be NULL for all-notes-off (also to check if this source supports showing preview at this moment)
+#define PCM_SOURCE_EXT_SEND_EDITOR_MSG 0x1000A  // parm1=int: 1=focus editor to primary, 2=focus editor to all
+#define PCM_SOURCE_EXT_SETSECONDARYSOURCELIST 0x1000B // parm1=(PCM_source**)sourcelist, parm2=list size, parm3=close any existing src not in the list
 #define PCM_SOURCE_EXT_CONFIGISFILENAME 0x20000
 #define PCM_SOURCE_EXT_GETBPMANDINFO 0x40000 // parm1=pointer to double for bpm. parm2=pointer to double for snap/downbeat offset (seconds).
 #define PCM_SOURCE_EXT_GETNTRACKS 0x80000 // for midi data, returns number of tracks that would have been available
@@ -358,17 +372,23 @@ typedef struct
 #define PCM_SOURCE_EXT_WANTTRIM 0x90002 // bla
 #define PCM_SOURCE_EXT_TRIMITEM 0x90003 // parm1=lrflag, parm2=double *{position,length,startoffs,rate}
 #define PCM_SOURCE_EXT_EXPORTTOFILE 0x90004 // parm1=output filename, only currently supported by MIDI but in theory any source could support this
-#define PCM_SOURCE_EXT_ENUMCUES 0x90005 // parm1=(int) index of cue to get, parm2=REAPER_cue **. returns 0/sets parm2 to NULL when out of cues
+#define PCM_SOURCE_EXT_ENUMCUES 0x90005 // parm1=(int) index of cue to get, parm2=REAPER_cue **. returns 0/sets parm2 to NULL when out of cues. return value otherwise is how much to advance parm2 (1, or 2 usually)
 // a PCM_source may be the parent of a number of beat-based slices, if so the parent should report length and nchannels only, handle ENUMSLICES, and be deleted after the slices are retrieved
 #define PCM_SOURCE_EXT_ENUMSLICES 0x90006 // parm1=(int*) index of slice to get, parm2=REAPER_slice* (pointing to caller's existing slice struct). if parm2 passed in zero, returns the number of slices. returns 0 if no slices or out of slices. 
 #define PCM_SOURCE_EXT_ENDPLAYNOTIFY 0x90007 // notify a source that it can release any pooled resources
-#define PCM_SOURCE_EXT_SETPREVIEWTEMPO 0x90008 // parm1=(double*)bpm, only meaningful for slice-based source media
+#define PCM_SOURCE_EXT_SETPREVIEWTEMPO 0x90008 // parm1=(double*)bpm, only meaningful for MIDI or slice-based source media
 
 enum { RAWMIDI_NOTESONLY=1, RAWMIDI_UNFILTERED=2 };
 #define PCM_SOURCE_EXT_GETRAWMIDIEVENTS 0x90009 // parm1 = (PCM_source_transfer_t *), parm2 = RAWMIDI flags
 
 #define PCM_SOURCE_EXT_SETRESAMPLEMODE 0x9000A // parm1= mode to pass to resampler->Extended(RESAMPLE_EXT_SETRSMODE,mode,0,0)
 #define PCM_SOURCE_EXT_NOTIFYPREVIEWPLAYPOS 0x9000B // parm1 = ptr to double of play position, or NULL if stopped
+#define PCM_SOURCE_EXT_SETSIZE 0x9000C // parm1=(double*)startpos, parm2=(double*)endpos, parm3=1 if start/end in QN. Start can be negative. Receiver may adjust start/end to avoid erasing content, in which case the adjusted values are returned in parm1 and parm2.
+#define PCM_SOURCE_EXT_GETSOURCETEMPO 0x9000D // parm=(double*)bpm, this is for reporting purposes only, does not necessarily mean the media should be adjusted (as PCM_SOURCE_EXT_GETBPMANDINFO means)
+#define PCM_SOURCE_EXT_ISABNORMALAUDIO  0x9000E // return 1 if rex, video, etc (meaning file export will just copy file directly rather than trim/converting)
+#define PCM_SOURCE_EXT_GETPOOLEDMIDIID 0x9000F // parm1=(char*)id, parm2=(int*)pool user count, parm3=(MediaItem_Take**)firstuser
+#define PCM_SOURCE_EXT_REMOVEFROMMIDIPOOL 0x90010 
+#define PCM_SOURCE_EXT_GETMIDIDATAHASH 0x90011 // parm1=(WDL_UINT64*)hash (64-bit hash of the MIDI source data)
 
 // register with Register("pcmsrc",&struct ... and unregister with "-pcmsrc"
 typedef struct {
@@ -480,6 +500,7 @@ class PCM_sink
 #define PCM_SINK_EXT_SETRATE 0x80004 // parm1 = (double *) rateadj
 #define PCM_SINK_EXT_GETBITDEPTH 0x80005 // parm1 = (int*) bitdepth (return 1 if supported)
 #define PCM_SINK_EXT_ADDCUE 0x80006 // parm1=(PCM_cue*)cue
+#define PCM_SINK_EXT_SETCURBLOCKTIME 0x80007 // parm1 = (double *) project position -- called before each WriteDoubles etc
 
 typedef struct  // register using "pcmsink"
 {
@@ -528,6 +549,7 @@ public:
 };
 #define RESAMPLE_EXT_SETRSMODE 0x1000 // parm1 == (int)resamplemode, or -1 for project default
 #define RESAMPLE_EXT_SETFEEDMODE 0x1001 // parm1 = nonzero to set ResamplePrepare's out_samples to refer to request a specific number of input samples
+#define RESAMPLE_EXT_RESETWITHFRACPOS 0x6000 // parm1 = (double*)&fracpos
 
 
 /***************************************************************************************
@@ -792,9 +814,9 @@ typedef struct
   // the user can edit the list of actions/macros
 #ifdef _WDL_PTRLIST_H_
   WDL_PtrList<struct KbdAccel> *accels;  
-  WDL_PtrList<struct CommandAction> *recent_cmds;
+  WDL_TypedBuf<int>* recent_cmds;
 #else
-  void *accels;
+  void* accels;
   void *recent_cmds;
 #endif
 
@@ -891,20 +913,20 @@ typedef struct
 enum
 {
   SCREENSET_ACTION_GETHWND = 0,
-  SCREENSET_ACTION_IS_DOCKED = 1,
-  SCREENSET_ACTION_SHOW = 2, //param2 = dock status
-  SCREENSET_ACTION_CLOSE = 3,
+  SCREENSET_ACTION_IS_DOCKED = 1, // returns 1 if docked
+  SCREENSET_ACTION_SHOW = 2, // deprecated in v4, param2 = dock status
+  SCREENSET_ACTION_CLOSE = 3, // deprecated in v4
   SCREENSET_ACTION_SWITCH_DOCK = 4, //dock if undocked and vice-versa
-  SCREENSET_ACTION_NOMOVE = 5, //return 1 if no move desired
-  SCREENSET_ACTION_GETHASH = 6, //return hash string
+  SCREENSET_ACTION_NOMOVE = 5, // deprecated in v4, return 1 if no move desired
+  SCREENSET_ACTION_GETHASH = 6, // deprecated in v4, return hash string
   // v4 actions
-  SCREENSET_ACTION_LOAD_STATE = 0x100, // load state from actionParm (of actionParmSize). if both are NULL, hide.
+  SCREENSET_ACTION_LOAD_STATE=0x100, // load state from actionParm (of actionParmSize). if both are NULL, hide.
   SCREENSET_ACTION_SAVE_STATE,  // save state to actionParm, max length actionParmSize (will usually be 4k or greater), return length
 };
 typedef LRESULT (*screensetCallbackFunc)(int action, char *id, void *param, int param2);
 typedef LRESULT (*screensetNewCallbackFunc)(int action, char *id, void *param, void *actionParm, int actionParmSize);
 
-// This are managed using screenset_register() etc
+// This is managed using screenset_registerNew(), screenset_unregister(), etc
 // Use screenset_registerNew for screensetNewCallbackFunc, v4 only!
 
 

@@ -4,7 +4,6 @@
 #include "../../WDL/lice/lice.h"
 #include "../../WDL/wingui/virtwnd-skin.h"
 
-#define GUI_PRERENDER_ITEMS 1
 
 typedef struct
 {
@@ -76,7 +75,9 @@ typedef struct
  
   LICE_IBitmap *scrollbar_bmp;
 
-  LICE_IBitmap *tcp_vu, *mcp_vu, *mcp_master_vu;
+  LICE_IBitmap *vu_indicator; // used to be OLD_tcp_vu;
+  
+  LICE_IBitmap *OLD_mcp_vu, *OLD_mcp_master_vu;
 
   // be sure to add any WDL_VirtualSlider_SkinConfig to the list of WDL_VirtualSlider_PreprocessSkinConfig calls
   WDL_VirtualSlider_SkinConfig tcp_volfader, tcp_panfader, mcp_volfader, mcp_panfader, 
@@ -136,7 +137,7 @@ typedef struct
   WDL_VirtualWnd_BGCfg mcp_sendlist_arrows;
   WDL_VirtualWnd_BGCfg mcp_fxlist_arrows, mcp_master_fxlist_arrows;
 
-  LICE_IBitmap *mcp_sendlist_knob, *mcp_sendlist_meter;
+  LICE_IBitmap *mcp_sendlist_knob, *OLD__mcp_sendlist_meter;
 
 
   LICE_IBitmap  *tcp_fxparm_knob;
@@ -156,10 +157,10 @@ typedef struct
   WDL_VirtualWnd_BGCfg mcp_master_sendlist_bg;
   WDL_VirtualWnd_BGCfg mcp_master_sendlist_norm, mcp_master_sendlist_mute, mcp_master_sendlist_empty;
   WDL_VirtualWnd_BGCfg mcp_master_sendlist_arrows;
-  LICE_IBitmap *mcp_master_sendlist_knob, *mcp_master_sendlist_meter;
+  LICE_IBitmap *mcp_master_sendlist_knob, *OLD__mcp_master_sendlist_meter;
 
-  WDL_VirtualWnd_BGCfg prerendered_itembg[8];  // [(ismutedtrack?4:0) + (itemsel?2:0) + (whichtrack&1)] ... only used if GUI_PRERENDER_ITEMS==1
-
+  WDL_VirtualWnd_BGCfg DEPRECATED_prerendered_itembg[8];
+ 
   WDL_VirtualIconButton_SkinConfig envcp_parammod_on;
   WDL_VirtualIconButton_SkinConfig envcp_learn_on;
 
@@ -177,7 +178,119 @@ typedef struct
   WDL_VirtualIconButton_SkinConfig toolbar_add, toolbar_delete;
   WDL_VirtualIconButton_SkinConfig toolbar_sync[2];
 
+  WDL_VirtualIconButton_SkinConfig mcp_folder_end;
+  WDL_VirtualIconButton_SkinConfig mcp_foldercomp[3];  // [1] is not used at present
+
+  WDL_VirtualIconButton_SkinConfig track_io_on[3];  // [0]=recv, [1]=send, [2]=both
+  WDL_VirtualIconButton_SkinConfig track_io_on_dis[3];  // as above with master/parent disabled
+  WDL_VirtualIconButton_SkinConfig mcp_io_on[3];  // like track_io_on
+  WDL_VirtualIconButton_SkinConfig mcp_io_on_dis[3];  // like track_io_on_dis
+
+  WDL_VirtualIconButton_SkinConfig tcp_solosafe;
+  WDL_VirtualIconButton_SkinConfig mcp_solosafe;
+
+  WDL_VirtualIconButton_SkinConfig transport_bpm;
+  WDL_VirtualWnd_BGCfg transport_bpm_bg;
+  WDL_VirtualWnd_BGCfg transport_group_bg;
+  WDL_VirtualWnd_BGCfg transport_edit_bg;
+  WDL_VirtualWnd_BGCfg transport_status_bg[2];  // 1=underrun
+
+  WDL_VirtualWnd_BGCfg mcp_sendlist_midihw;
+
+  int tcp_folderindent; // TRACK_TCP_FOLDERINDENTSIZE
+  int tcp_supercollapsed_height; //SUPERCOLLAPSED_VIEW_SIZE
+  int tcp_small_height; // collapsed, COLLAPSED_VIEW_SIZE
+  int tcp_medium_height; // SMALLISH_SIZE
+  int tcp_full_height; ///NORMAL_SIZE
+  int tcp_master_min_height; //MIN_MASTER_SIZE 
+
+  int envcp_min_height; // MIN_ENVCP_HEIGHT
+
+  int mcp_min_height;
+
+  int no_meter_reclbl;
+
+  WDL_VirtualWnd_BGCfg tcp_recinput, mcp_recinput;
+
+  WDL_VirtualWnd_BGCfg tcp_trackidx[2], mcp_trackidx[2];
+  WDL_VirtualWnd_BGCfg tcp_mainnamebg_sel, mcp_mainnamebg_sel;
+
+  WDL_VirtualIconButton_SkinConfig track_fx_in[2], mcp_fx_in[2];
+
+
+  WDL_VirtualIconButton_SkinConfig gen_mute[2], gen_monostereo[2], gen_phase[2], gen_solo[2];
+  WDL_VirtualIconButton_SkinConfig gen_envmode[5];
+  WDL_VirtualIconButton_SkinConfig gen_play[2], gen_pause[2], gen_repeat[2], gen_rew, gen_fwd, gen_stop, gen_io;
+
+  WDL_VirtualSlider_SkinConfig gen_volfader, gen_panfader, tcp_widthfader, mcp_widthfader;
+
+  WDL_VirtualWnd_BGCfg tcp_iconbg[2][2], mcp_iconbg[2][2]; // area drawn behind track icon area [master][sel]
+  WDL_VirtualWnd_BGCfg mcp_extmixbg[2][2]; // area drawn behind extended mixer [master][sel]
+
+  WDL_VirtualWnd_BGCfg toosmall_r,toosmall_b;
+
+  LICE_IBitmap *splash;
+
+  WDL_VirtualWnd_BGCfg knob;
+  WDL_VirtualWnd_BGCfg knob_sm;
+
+  WDL_VirtualIconButton_SkinConfig gen_midi[2];
+
+  WDL_VirtualWnd_BGCfg mcp_sendlist_meter_new,mcp_master_sendlist_meter_new;
+
+  WDL_VirtualWnd_BGCfg mcp_sendlist_knob_bg, tcp_fxparm_knob_bg, mcp_fxparm_knob_bg;
+
+  // NOTE: DO NOT REMOVE/INSERT IN THIS STRUCT. ONLY ADD.
+
+  WDL_VirtualWnd_BGCfg tcp_vu_new, mcp_vu_new, mcp_master_vu_new;
+
+
+  WDL_VirtualWnd_BGCfg mcp_arrowbuttons_lr,mcp_arrowbuttons_ud,tcp_arrowbuttons_lr,tcp_arrowbuttons_ud;
+
+  WDL_VirtualIconButton_SkinConfig toolbar_quant[2];
+
+  WDL_VirtualIconButton_SkinConfig item_pooled[2];
+
+  WDL_VirtualWnd_BGCfg tcp_vol_knob, tcp_vol_knob_sm, tcp_pan_knob, tcp_pan_knob_sm, tcp_wid_knob, tcp_wid_knob_sm; 
+  WDL_VirtualWnd_BGCfg mcp_vol_knob, mcp_vol_knob_sm, mcp_pan_knob, mcp_pan_knob_sm, mcp_wid_knob, mcp_wid_knob_sm; 
+
+  WDL_VirtualWnd_BGCfg tcp_vol_label, tcp_pan_label, tcp_wid_label;
+  WDL_VirtualWnd_BGCfg mcp_vol_label, mcp_pan_label, mcp_wid_label;
+  WDL_VirtualWnd_BGCfg tcp_master_vol_label, tcp_master_pan_label, tcp_master_wid_label;
+  WDL_VirtualWnd_BGCfg mcp_master_vol_label, mcp_master_pan_label, mcp_master_wid_label;
+
+  char tcp_voltext_flags[2];
+  char mcp_voltext_flags[2];
+  char tcp_master_voltext_flags[2];
+  char mcp_master_voltext_flags[2];
+
+  LICE_IBitmap *toolbar_blank, *toolbar_overlay;
+
+  WDL_VirtualWnd_BGCfg meter_mute, meter_automute, meter_unsolo, meter_solodim, meter_foldermute;
+
+  WDL_VirtualWnd_BGCfg meter_bg_v,meter_bg_h, meter_ol_v,meter_ol_h; // applied only within meter bounds
+
+  WDL_VirtualWnd_BGCfg meter_bg_mcp,meter_bg_tcp, meter_ol_mcp,meter_ol_tcp, meter_bg_mcp_master, meter_ol_mcp_master; // applied in meter bounds and outside
+
+  LICE_IBitmap *meter_strip_v, *meter_strip_h, *meter_strip_v_rms;
+  WDL_VirtualWnd_BGCfg meter_clip_v, meter_clip_h, meter_clip_v_rms, meter_clip_v_rms2;
+
 } IconTheme;
+
+void themeCompositeToolbarImage(LICE_IBitmap *img, bool postOnly=false);
+
+// index: whichtrack&1 | sel?2 | inactivetake?4 | (trackmute?8 else itemmute?16 else lock?24)
+extern WDL_VirtualWnd_BGCfg* g_prerendered_itembg[32];  
+
+extern WDL_VirtualWnd_BGCfgCache *g_transport_bg_cache;
+extern WDL_VirtualWnd_BGCfgCache *g_tcp_bg_cache; // normal [sel]
+extern WDL_VirtualWnd_BGCfgCache *g_tcp_main_bg_cache; // master [sel]
+extern WDL_VirtualWnd_BGCfgCache *g_tcp_folder_bg_cache; // folder [sel]
+extern WDL_VirtualWnd_BGCfgCache *g_mcp_bg_cache; // normal [sel]
+extern WDL_VirtualWnd_BGCfgCache *g_mcp_main_bg_cache; // master [sel]
+extern WDL_VirtualWnd_BGCfgCache *g_mcp_folder_bg_cache; // folder [sel]
+
+extern WDL_VirtualWnd_BGCfgCache *g_envcp_bg_cache;
 
 
 
@@ -325,6 +438,57 @@ typedef struct
   int toolbararmed_color;
   int toolbararmed_drawmode;
 
+  int track_divline[2];
+  int envlane_divline[2];
+
+  int mcp_sends_midihw;
+
+  int tcp_locked_drawmode;
+  int tcp_locked_color;
+
+  int selitem_tag; // use only if 0x80000000
+  int activetake_tag;  // use only if 0x80000000
+
+  int midifont_col_dark;
+  int midifont_col_light;
+
+  int midioct;
+  int midioct_inline;
+
+  int midi_selbgcol;
+  int midi_selbgmode;
+
+  int arrange_bg;
+
+  int mcp_fxparm_normal;
+  int mcp_fxparm_bypassed;
+  int mcp_fxparm_offlined;
+
+  int env_item_pitch;
+
+  int main_resize_color;
+
+  LOGFONT transport_status_font;
+  int transport_status_font_color;
+  int transport_status_bg_color;
+  
+  // inherits from main_*
+  int transport_editbk; 
+  int main_bg2; // actual main window / transport bg
+  int main_text2;  // actual main window / transport text
+
+  int toolbar_button_text_on;
+  int toolbar_frame;
+
+  int vu_ind_very_bot;
+  int vu_ind_bot;
+  int vu_ind_mid;
+  int vu_ind_top;
+
+  int io_text; // overrides for i/o window
+  int io_3d[2];
+  
+  int marqueezoom_fill,marqueezoom_outline,marqueezoom_drawmode;
   // NOTE: DO NOT REMOVE/INSERT IN THIS STRUCT. ONLY ADD.
 } ColorTheme;
 

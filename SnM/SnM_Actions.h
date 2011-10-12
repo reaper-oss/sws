@@ -63,6 +63,7 @@
 #define SNM_MAX_ACTION_NAME_LEN		128
 #define SNM_MAX_MARKER_NAME_LEN		64
 #define SNM_MAX_TRACK_GROUPS		32
+#define SNM_MAX_TRACK_GROUPS_STR	"32"
 #define SNM_MAX_HW_OUTS				8
 #define SNM_MAX_TAKES				128
 #define SNM_MAX_FX					128
@@ -382,6 +383,7 @@ void DumpActionList(COMMAND_T*);
 void ShowTakeEnvPadreTest(COMMAND_T*);
 void dumpWikiActionList(COMMAND_T*);
 void OpenStuff(COMMAND_T*);
+void TestWDLString(COMMAND_T*);
 #endif
 
 // *** SnM_NotesHelpView.cpp ***
@@ -440,6 +442,8 @@ int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPa
 #endif
 void copyCutTrackGrouping(COMMAND_T*);
 void pasteTrackGrouping(COMMAND_T*);
+void SetTrackGroup(COMMAND_T*);
+void SetTrackToFirstUnusedGroup(COMMAND_T*);
 void saveTracksFolderStates(COMMAND_T*);
 void restoreTracksFolderStates(COMMAND_T*);
 void setTracksFolderState(COMMAND_T*);

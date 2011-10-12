@@ -381,6 +381,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Cut selected tracks grouping" }, "S&M_CUT_TR_GRP", copyCutTrackGrouping, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Paste grouping to selected tracks" }, "S&M_PASTE_TR_GRP", pasteTrackGrouping, NULL, },
 
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks to first unused group (default flags)" }, "S&M_SET_TRACK_UNUSEDGROUP", SetTrackToFirstUnusedGroup, NULL, },
+
 	{ { DEFACCEL, "SWS/S&M: Save selected tracks folder states" }, "S&M_SAVEFOLDERSTATE1", saveTracksFolderStates, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Restore selected tracks folder states" }, "S&M_RESTOREFOLDERSTATE1", restoreTracksFolderStates, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Set selected tracks folder states to on" }, "S&M_FOLDERON", setTracksFolderState, NULL, 1},
@@ -506,12 +508,14 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Dump action list (w/o SWS extension)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (SWS extension only)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 4},
 #endif
+	
 #ifdef _SNM_MISC // experimental, deprecated, etc.. 
 	{ { DEFACCEL, "SWS/S&M: Let REAPER breathe" }, "S&M_LETBREATHE", LetREAPERBreathe, NULL, },
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take volume envelope" }, "S&M_TMP1", ShowTakeEnvPadreTest, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take pan envelope" }, "S&M_TMP2", ShowTakeEnvPadreTest, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take mute envelope" }, "S&M_TMP3", ShowTakeEnvPadreTest, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: stuff..." }, "S&M_TMP4", OpenStuff, NULL, },
+	{ { DEFACCEL, "SWS/S&M: TestWDLString" }, "S&M_TestWDLString", TestWDLString, NULL, },
 #endif
 
 #ifdef _SWS_MENU
@@ -529,8 +533,9 @@ static COMMAND_T g_SNM_cmdTable[] =
 // in this g_SNM_dynamicCmdTable table:
 // - items are not real commands but "meta" commands, this table must be registered with SNMRegisterDynamicCommands()
 // - COMMAND_T.user is used to specify the default number of actions to create
+// - COMMAND_T.menuText is used to specify a custom max value (NULL means max = 99)
 // - a function doCommand(COMMAND_T*) or getEnabled(COMMAND_T*) will be trigered with 0-based COMMAND_T.user
-// - action names are formated strings, they must contain "%02d" and only that. %02d is used for better sort in the action list (max = 99)
+// - action names are formated strings, they must contain "%02d" (used for better sort in the action list, 2 digits for max = 99)
 // - custom command ids aren't formated strings, but final ids will end with "slot" numbers (1-based for display reasons)
 // example: { { DEFACCEL, "Do stuff #%02d" }, "DO_STUFF", doStuff, NULL, 2},
 // if not overrided in the S&M.ini file (e.g. "DO_STUFF=99"), 2 actions will be created: "Do stuff #01" and "Do stuff #02" both calling
@@ -567,6 +572,9 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Active ME - Restore displayed CC lanes, slot %02d" }, "S&M_MESETCCLANES", MESetCCLanes, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot %02d" }, "S&M_MESAVECCLANES", MESaveCCLanes, NULL, 4},
+
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks to group %02d (default flags)" }, "S&M_SET_TRACK_GROUP", SetTrackGroup, SNM_MAX_TRACK_GROUPS_STR, 8},
+
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
@@ -753,26 +761,8 @@ void SNM_ShowActionList(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// S&M core stuff
+// "Dynamic" actions
 ///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _SWS_MENU
-static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
-{
-	if (!strcmp(_menustr, "Main extensions") && !_flag) 
-	{
-		SWSCreateMenuFromCommandTable(g_SNM_cmdTable, _hMenu);
-	}
-/*
-	else if (!strcmp(_menustr, "Media item context") && !_flag) {
-	}
-	else if (!strcmp(_menustr, "Track control panel context") && !_flag) {
-	}
-	else if (_flag == 1) {
-	}
-*/
-}
-#endif
 
 // see g_SNM_dynamicCmdTable's comments
 int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _fn)
@@ -783,7 +773,7 @@ int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _fn)
 	{
 		COMMAND_T* ct = &_cmds[i++];
 		int nb = GetPrivateProfileInt("NbOfActions", ct->id, (int)ct->user, g_SNMiniFilename.Get());
-		nb = BOUNDED(nb, 0, SNM_MAX_DYNAMIC_ACTIONS);
+		nb = BOUNDED(nb, 0, _cmds[i].menuText == NULL ? SNM_MAX_DYNAMIC_ACTIONS : atoi(_cmds[i].menuText));
 		for (int j=0; j < nb; j++)
 		{
 			_snprintf(actionName, SNM_MAX_ACTION_NAME_LEN, ct->accel.desc, j+1);
@@ -796,6 +786,30 @@ int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _fn)
 	}
 	return 1;
 }
+
+void SNMSaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
+{
+	WDL_String iniSection;
+	iniSection.SetFormatted(128, "; Set the number of slots/actions you want below (none: 0, max: %d, quit REAPER first!)\n", SNM_MAX_DYNAMIC_ACTIONS);
+	int i=0; char name[SNM_MAX_ACTION_NAME_LEN] = "";
+	while(_cmds[i].id != LAST_COMMAND) {
+		COMMAND_T* ct = &_cmds[i++];
+		strncpy(name, SNM_CMD_SHORTNAME(ct), SNM_MAX_ACTION_NAME_LEN); // strncpy: lstrcpyn() KO here
+		ReplaceStringFormat(name, 'n');
+		if (ct->menuText != NULL) { // custom max value specified ?
+			strncat(name, " (n < ", SNM_MAX_ACTION_NAME_LEN);
+			strncat(name, ct->menuText, SNM_MAX_ACTION_NAME_LEN);
+			strncat(name, "!)", SNM_MAX_ACTION_NAME_LEN);
+		}
+		iniSection.AppendFormatted(SNM_MAX_ACTION_CUSTID_LEN+SNM_MAX_ACTION_NAME_LEN+8, "%s=%d ; %s\n", ct->id, (int)ct->user, name);
+	}
+	SaveIniSection("NbOfActions", &iniSection, _inifn);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// S&M.ini file
+///////////////////////////////////////////////////////////////////////////////
 
 WDL_String g_SNMiniFilename;
 
@@ -848,23 +862,28 @@ void IniFileExit()
 	SaveIniSection("General", &iniSection, g_SNMiniFilename.Get());
 
 	// save dynamic actions
-	iniSection.SetFormatted(128, "; Set the number of slots/actions you want below (none: 0, max: %d, quit REAPER first!)\n", SNM_MAX_DYNAMIC_ACTIONS);
-	int i = 0; char name[SNM_MAX_ACTION_NAME_LEN];
-	while(g_SNM_dynamicCmdTable[i].id != LAST_COMMAND) {
-		COMMAND_T* ct = &g_SNM_dynamicCmdTable[i++];
-		strncpy(name, SNM_CMD_SHORTNAME(ct), SNM_MAX_ACTION_NAME_LEN); // strncpy: lstrcpyn() KO here
-		ReplaceStringFormat(name, 'n');
-		iniSection.AppendFormatted(SNM_MAX_ACTION_CUSTID_LEN+SNM_MAX_ACTION_NAME_LEN+8, "%s=%d ; %s\n", ct->id, (int)ct->user, name);
+	SNMSaveDynamicCommands(g_SNM_dynamicCmdTable, g_SNMiniFilename.Get());
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// S&M core stuff
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef _SWS_MENU
+static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
+{
+	if (!strcmp(_menustr, "Main extensions") && !_flag) {
+		SWSCreateMenuFromCommandTable(g_SNM_cmdTable, _hMenu);
 	}
-	SaveIniSection("NbOfActions", &iniSection, g_SNMiniFilename.Get());
-/*JFB not needed (issue 292 fixed in r504)
-#ifdef _WIN32
-		// issue 292: force writing of the ini file
-		// http://support.microsoft.com/kb/68827
-		WritePrivateProfileString(NULL, NULL, NULL, g_SNMiniFilename.Get());
-#endif
+/*
+	else if (!strcmp(_menustr, "Media item context") && !_flag) {}
+	else if (!strcmp(_menustr, "Track control panel context") && !_flag) {}
+	else if (_flag == 1) {}
 */
 }
+#endif
+
 
 int SnMInit(reaper_plugin_info_t* _rec)
 {

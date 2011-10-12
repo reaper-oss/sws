@@ -1,5 +1,7 @@
 Added actions:
 +SWS/AW: Toggle auto group newly recorded items
++SWS/S&M: Set selected tracks to first unused group (default flags)
++SWS/S&M: Set selected tracks to group n (default flags) - where n is in [1; 8] by default but it can be customized in the S&M.ini file (32 track groups max)
 
 !v2.1.0 #14 (October 9, 2011)
 "Auto-refresh toolbars" option (Main menu > Extensions > SWS options): added toolbar enabled actions and advanced parameter

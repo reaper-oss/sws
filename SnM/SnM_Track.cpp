@@ -65,7 +65,7 @@ int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPa
 		else
 		{
 			// complete the line if needed
-			while (grpLine.GetLength() < 64)
+			while (grpLine.GetLength() < 64) // complete the line if needed (64 is more than needed: future-proof)
 			{
 				if (grpLine.Get()[grpLine.GetLength()-1] != ' ')
 					grpLine.Append(" ");
@@ -139,6 +139,93 @@ void pasteTrackGrouping(COMMAND_T* _ct)
 		}
 	}
 	if (updates)
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+bool SetTrackGroup(int _group)
+{
+	int updates = 0;
+	if (_group >= 0 && _group < SNM_MAX_TRACK_GROUPS)
+	{
+		double grpMask = pow(2.0, _group*1.0);
+		char grpDefault[SNM_MAX_CHUNK_LINE_LENGTH] = "";
+		GetPrivateProfileString("REAPER", "tgrpdef", "", grpDefault, SNM_MAX_CHUNK_LINE_LENGTH, get_ini_file());
+		WDL_String defFlags(grpDefault);
+		while (defFlags.GetLength() < 64) { // complete the line if needed (64 is more than needed: future-proof)
+			if (defFlags.Get()[defFlags.GetLength()-1] != ' ') defFlags.Append(" ");
+			defFlags.Append("0");
+		}
+
+		WDL_String newFlags("GROUP_FLAGS ");
+		LineParser lp(false);
+		if (!lp.parse(defFlags.Get())) {
+			for (int i=0; i < lp.getnumtokens(); i++) {
+				int n = lp.gettoken_int(i);
+				newFlags.AppendFormatted(128, "%d", !n ? 0 : (int)grpMask);
+				newFlags.Append(i == (lp.getnumtokens()-1) ? "\n" : " ");
+			}
+		}
+
+		for (int i = 1; i <= GetNumTracks(); i++) // skip master
+		{
+			MediaTrack* tr = CSurf_TrackFromID(i, false);
+			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			{
+				SNM_ChunkParserPatcher p(tr);
+				updates += p.RemoveLine("TRACK", "GROUP_FLAGS", 1, 0, "TRACKHEIGHT");
+				int pos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", -1, 0, 0, NULL, NULL, "INQ");
+				if (pos > 0) {
+					pos--; // see SNM_ChunkParserPatcher..
+					p.GetChunk()->Insert(newFlags.Get(), pos);				
+					p.SetUpdates(++updates); // as we're directly working on the cached chunk..
+				}
+			}
+		}
+	}
+	return (updates > 0);
+}
+
+int FindFirstUnusedGroup()
+{
+	bool grp[SNM_MAX_TRACK_GROUPS];
+	for (int i=0; i < SNM_MAX_TRACK_GROUPS; i++) grp[i] = false;
+
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
+	{
+		//JFB TODO? exclude selected tracks?
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+		{
+			SNM_ChunkParserPatcher p(tr);
+			WDL_String grpLine;
+			if (p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "GROUP_FLAGS", -1 , 0, 0, &grpLine, NULL, "TRACKHEIGHT"))
+			{
+				LineParser lp(false);
+				if (!lp.parse(grpLine.Get())) {
+					for (int j=1; j < lp.getnumtokens(); j++) { // skip 1st token GROUP_FLAGS
+						int val = lp.gettoken_int(j);
+						for (int k=0; k < SNM_MAX_TRACK_GROUPS; k++) {
+							int grpMask = int(pow(2.0, k*1.0));
+							grp[k] |= ((val & grpMask) == grpMask);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	for (int i=0; i < SNM_MAX_TRACK_GROUPS; i++) 
+		if (!grp[i]) return i;
+
+	return -1;
+}
+
+void SetTrackGroup(COMMAND_T* _ct) {
+	if (SetTrackGroup((int)_ct->user))
+		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+void SetTrackToFirstUnusedGroup(COMMAND_T* _ct) {
+	if (SetTrackGroup(FindFirstUnusedGroup()))
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 

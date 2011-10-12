@@ -3196,7 +3196,7 @@ int AdamInit()
     
     char str[32];
 	GetPrivateProfileString(SWS_INI, "AWAutoGroup", "0", str, 32, get_ini_file());
-	g_AWAutoGroup = atoi(str);
+	g_AWAutoGroup = (atoi(str) ? true : false); // fix warning C4800
 
 	return 1;
 }

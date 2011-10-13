@@ -1,3 +1,4 @@
+!v2.1.0 #15 (October 13, 2011)
 Added actions:
 +SWS/AW: Toggle auto group newly recorded items
 +SWS/S&M: Set selected tracks to first unused group (default flags)

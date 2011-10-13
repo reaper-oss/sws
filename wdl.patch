@@ -322,7 +322,7 @@
 +/*JFB: commented for ascendant compatibility, temporary..
 +  const char *Get() const { return m_hb.GetSize()?(char*)m_hb.Get():""; }
 +*/
-+  char *Get() const { return m_hb.GetSize()?(char*)m_hb.Get():""; }
++  char *Get() const { return m_hb.GetSize()?(char*)m_hb.Get():(char*)""; }
 +  int GetLength() const { int a = m_hb.GetSize(); return a>0?a-1:0; }
 +#else
 +  char *Get() const

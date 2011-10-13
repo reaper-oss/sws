@@ -915,38 +915,38 @@ void AWDoAutoGroup(bool rec)
 {
     //If transport changes to recording, set recording flag
     if (rec)
-        g_AWIsRecording++;
+        g_AWIsRecording = true;
     
     // If a "not playing anymore" message is sent and we were just recording
     if (!rec && g_AWIsRecording)
     {
         if (g_AWAutoGroup)
         {
-            int numItems = CountSelectedMediaItems(0);
+            WDL_TypedBuf<MediaItem*> items;
+            SWS_GetSelectedMediaItems(&items);
             
-            if ((numItems > 1) && ((*(int*)GetConfigVar("autoxfade") & 4) || (*(int*)GetConfigVar("autoxfade") & 8))) // Don't group if not in tape or overlap record mode, takes mode is messy
+			if (items.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") & 4) || (*(int*)GetConfigVar("autoxfade") & 8))) // Don't group if not in tape or overlap record mode, takes mode is messy
             {
-                int groupCount=0;
-                MediaItem* item;
-                
                 //Find highest current group
-                for (int i = 0; i < CountMediaItems(NULL); i++)
-                {
-                    item = GetMediaItem(NULL, i);
-                    
-                    if (GetMediaItemInfo_Value(item, "I_GROUPID") > groupCount)
-                        groupCount = GetMediaItemInfo_Value(item, "I_GROUPID");
-                }
-                                
-                //Add one to assign new items to a new group
-                groupCount++;
+				int maxGroupId = 0;
+
+				for (int i = 1; i <= GetNumTracks(); i++)
+				{
+					MediaTrack* tr = CSurf_TrackFromID(i, false);
+					for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
+					{
+						MediaItem* item = GetTrackMediaItem(tr, j);
+						int id = *(int*)GetSetMediaItemInfo(item, "I_GROUPID", NULL);
+						if (id > maxGroupId)
+							id = maxGroupId;
+					}
+				}
                 
-                WDL_TypedBuf<MediaItem*> items;
-                SWS_GetSelectedMediaItems(&items);
+                //Add one to assign new items to a new group
+                maxGroupId++;
+                
                 for (int i = 0; i < items.GetSize(); i++)
-                {
-                    SetMediaItemInfo_Value(items.Get()[i], "I_GROUPID", groupCount);
-                }
+                    GetSetMediaItemInfo(items.Get()[i], "I_GROUPID", &maxGroupId);
                 
                 UpdateArrange();
             }   
@@ -3193,10 +3193,8 @@ static COMMAND_T g_commandTable[] =
 int AdamInit()
 {
 	SWSRegisterCommands(g_commandTable);
-    
-    char str[32];
-	GetPrivateProfileString(SWS_INI, "AWAutoGroup", "0", str, 32, get_ini_file());
-	g_AWAutoGroup = (atoi(str) ? true : false); // fix warning C4800
+	
+	g_AWAutoGroup = GetPrivateProfileInt(SWS_INI, "AWAutoGroup", 0, get_ini_file()) ? true : false;
 
 	return 1;
 }

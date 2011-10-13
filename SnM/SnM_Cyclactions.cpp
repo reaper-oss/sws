@@ -452,7 +452,7 @@ void Cyclaction::UpdateNameAndCmds()
 	char* tok = strtok(actionStr, ",");
 	if (tok) {
 		// "#name" = toggle action, "name" = normal action
-		m_name.Set(*tok == '#' ? (char*)tok+1 : tok);
+		m_name.Set(*tok == '#' ? (const char*)tok+1 : tok);
 		while (tok = strtok(NULL, ","))
 			m_cmds.Add(new WDL_String(tok));
 	}
@@ -465,10 +465,10 @@ void Cyclaction::UpdateFromCmd()
 	newDesc.Append(GetName());
 	newDesc.Append(",");
 	for (int i = 0; i < m_cmds.GetSize(); i++) {
-		newDesc.Append(m_cmds.Get(i)->Get());
+		newDesc.Append(m_cmds.Get(i));
 		newDesc.Append(",");
 	}
-	m_desc.Set(newDesc.Get());
+	m_desc.Set(&newDesc);
 	m_empty = (strcmp(EMPTY_CYCLACTION, m_desc.Get()) == 0);
 }
 

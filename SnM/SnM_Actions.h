@@ -32,7 +32,6 @@
 #include "version.h"
 
 //#define _SNM_MISC
-//#define _SNM_TRACK_GROUP_EX
 #ifdef _WIN32
 #define _SNM_PRESETS
 #define _SNM_THEMABLE
@@ -122,7 +121,7 @@ public:
 	SNM_FXSummary(const char* _type, const char* _realName)
 		: m_type(_type),m_realName(_realName){}
 	virtual ~SNM_FXSummary() {}
-	WDL_String m_type;WDL_String m_realName;
+	WDL_String m_type, m_realName;
 };
 
 class SNM_ScheduledJob {
@@ -241,7 +240,7 @@ void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HW
 void moveFX(COMMAND_T*);
 
 // *** SnM_FXChain.cpp ***
-void makeChunkTakeFX(WDL_String* _outTakeFX, WDL_String* _inRfxChain);
+void makeChunkTakeFX(WDL_String* _outTakeFX, const WDL_String* _inRfxChain);
 int copyTakeFXChain(WDL_String* _fxChain, int _startSelItem=0);
 void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
 void setTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
@@ -358,8 +357,8 @@ bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _fn, int _fnSize, bool _wantFullPath = false);
 void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _fnSize);
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fnSize);
-bool LoadChunk(const char* _fn, WDL_String* _chunk);
-bool SaveChunk(const char* _fn, WDL_String* _chunk);
+bool LoadChunk(const char* _fn, WDL_String* _chunk, bool _trim = true, int _maxlen = 0);
+bool SaveChunk(const char* _fn, WDL_String* _chunk, bool _indent);
 void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
 void StringToExtensionConfig(WDL_String* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx);
@@ -383,8 +382,8 @@ void DumpActionList(COMMAND_T*);
 void ShowTakeEnvPadreTest(COMMAND_T*);
 void dumpWikiActionList(COMMAND_T*);
 void OpenStuff(COMMAND_T*);
-void TestWDLString(COMMAND_T*);
 #endif
+void TestWDLString(COMMAND_T*);
 
 // *** SnM_NotesHelpView.cpp ***
 extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
@@ -437,11 +436,9 @@ void removeRouting(COMMAND_T*);
 void muteReceives(MediaTrack* _source, MediaTrack* _dest, bool _mute);
 
 // *** SnM_Track.cpp ***
-#ifdef _SNM_TRACK_GROUP_EX
-int addSoloToGroup(MediaTrack * _tr, int _group, bool _master, SNM_ChunkParserPatcher* _cpp);
-#endif
 void copyCutTrackGrouping(COMMAND_T*);
 void pasteTrackGrouping(COMMAND_T*);
+void removeTrackGrouping(COMMAND_T*);
 void SetTrackGroup(COMMAND_T*);
 void SetTrackToFirstUnusedGroup(COMMAND_T*);
 void saveTracksFolderStates(COMMAND_T*);
@@ -456,7 +453,9 @@ bool writeEnvExists(COMMAND_T*);
 int CountSelectedTracksWithMaster(ReaProject* _proj);
 MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx);
 MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj);
-void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _withItems, bool _errMsg);
+bool makeSingleTrackTemplateChunk(WDL_String* _inRawChunk, WDL_String* _out, bool _delItems, bool _delEnvs);
+bool applyTrackTemplate(MediaTrack* _tr, WDL_String* _tmpltChunk, bool _rawChunk, SNM_ChunkParserPatcher* _p = NULL, bool _itemsFromTmplt = false, bool _envsFromTmplt = false);
+void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _itemsFromTmplt,  bool _envsFromTmplt, bool _errMsg);
 void replaceOrPasteItemsFromTrackSlot(const char* _title, bool _paste, int _slot, bool _errMsg);
 void loadSetTrackTemplate(COMMAND_T*);
 void loadImportTrackTemplate(COMMAND_T*);

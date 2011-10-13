@@ -193,7 +193,7 @@ void copyCutTake(COMMAND_T* _ct)
 			if ((int)_ct->user) // Cut take?
 			{
 				updated = p.RemoveTake(activeTake);
-/*JFB!!! TODO?
+/*JFB TODO? leaves an empty item atm
 				if (updated) {
 					p.Commit();
 					deleteMediaItemIfNeeded(item);
@@ -812,7 +812,7 @@ int getPitchTakeEnvRangeFromPrefs()
 }
 
 // if returns true: callers must use UpdateTimeline() at some point
-bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint, bool _reset)
+bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, char* _vis2, const WDL_String* _defaultPoint, bool _reset)
 {
 	bool updated = false;
 	if (_item)
@@ -823,7 +823,6 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 		int tkPos, tklen;
 		if (p.GetTakeChunk(_takeIdx, &takeChunk, &tkPos, &tklen))
 		{
-			SNM_ChunkParserPatcher ptk(&takeChunk);
 			bool takeUpdate = false, buildDefaultEnv = false;
 			char vis[2]; strcpy(vis, _vis2);
 
@@ -832,6 +831,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 			{
 				if (_reset)
 				{
+					SNM_ChunkParserPatcher ptk(&takeChunk);
 					takeUpdate = ptk.RemoveSubChunk(_envKeyword, 1, -1);
 					buildDefaultEnv = true;
 				}
@@ -840,6 +840,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 					// toggle ?
 					if (!strlen(vis))
 					{
+						SNM_ChunkParserPatcher ptk(&takeChunk);
 						char currentVis[32];
 						if (ptk.Parse(SNM_GET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)currentVis) > 0)
 						{
@@ -853,10 +854,9 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 					}
 
 					// prepare the new visibility (in one go)
-					SNM_TakeEnvParserPatcher pEnv(ptk.GetChunk());
-					if (pEnv.SetVis(_envKeyword, atoi(vis))) {
-						takeUpdate = true;
-						takeChunk.Set(pEnv.GetChunk()->Get());
+					{
+						SNM_TakeEnvParserPatcher pEnv(&takeChunk);
+						takeUpdate = pEnv.SetVis(_envKeyword, atoi(vis));
 					}
 				}
 			}
@@ -870,20 +870,16 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 					strcpy(vis, "1"); // toggle ?
 				if (!strcmp(vis, "1"))
 				{
-					//JFB last check against REAPER default env. in v4b7
-					//JFB TODO: AppendFormatted (but OSX!)
 					takeChunk.Append("<");
 					takeChunk.Append(_envKeyword);
 					takeChunk.Append("\nACT ");
 					takeChunk.Append(vis);
 					takeChunk.Append("\nVIS ");
 					takeChunk.Append(vis);
-					takeChunk.Append(" 1 1.000000\n");
-					takeChunk.Append("LANEHEIGHT 0 0\n");
-					takeChunk.Append("ARM ");
+					takeChunk.Append(" 1 1.000000\nLANEHEIGHT 0 0\nARM ");
 					takeChunk.Append(vis);
 					takeChunk.Append("\nDEFSHAPE 0\n");
-					takeChunk.Append(_defaultPoint->Get());
+					takeChunk.Append(_defaultPoint);
 					takeChunk.Append("\n>\n");
 					takeUpdate = true;
 				}
@@ -897,7 +893,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 	return updated;
 }
 
-bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char* _vis2, WDL_String* _defaultPoint, bool _reset) 
+bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char* _vis2, const WDL_String* _defaultPoint, bool _reset) 
 {
 	bool updated = false;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
@@ -975,7 +971,7 @@ void showHideTakePitchEnvelope(COMMAND_T* _ct)
 }
 
 // *** some wrappers for Padre ***
-bool ShowTakeEnv(MediaItem_Take* _take, const char* _envKeyword, WDL_String* _defaultPoint)
+bool ShowTakeEnv(MediaItem_Take* _take, const char* _envKeyword, const WDL_String* _defaultPoint)
 {
 	bool shown = false;
 	MediaItem* item = (_take ? GetMediaItemTake_Item(_take) : NULL);
@@ -1016,6 +1012,7 @@ bool ShowTakeEnvPitch(MediaItem_Take* _take) {
 ///////////////////////////////////////////////////////////////////////////////
 // Item/take template slots
 ///////////////////////////////////////////////////////////////////////////////
+
 #ifdef _SNM_MISC
 void saveItemTakeTemplate(COMMAND_T* _ct)
 {
@@ -1032,37 +1029,18 @@ void saveItemTakeTemplate(COMMAND_T* _ct)
 				_snprintf(defaultPath, BUFFER_SIZE, "%s%cItemTakeTemplates", GetResourcePath(), PATH_SLASH_CHAR);
 				if (BrowseForSaveFile("Save item/take template", defaultPath, "", "REAPER item/take template (*.RItemTakeTemplate)\0*.RItemTakeTemplate\0", filename, BUFFER_SIZE))
 				{
-					FILE* f = fopenUTF8(filename, "w"); 
 					// Item/take template: keep the active take
-					if (f)
+					if (FILE* f = fopenUTF8(filename, "w"))
 					{
 						int activeTk = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
 						if (activeTk >= 0)
 						{
+							WDL_String tkChunk;
 							SNM_TakeParserPatcher p(item, CountTakes(item));
-							char* pFirstTk = strstr(p.GetChunk()->Get(), "NAME ");
-							if (pFirstTk)
+							if (p.GetTakeChunk(activeTk, &tkChunk))
 							{
-								int firstTkPos = (int)(pFirstTk - p.GetChunk()->Get());
-								WDL_String tkActive;
-								p.GetTakeChunk(activeTk, &tkActive);
-								char* pActiveTk = tkActive.Get();
-
-								// zap "TAKE blabla..." if needed
-								if (activeTk) {
-									while (*pActiveTk && *pActiveTk != '\n') pActiveTk++;
-									if (*pActiveTk) 
-										pActiveTk++;
-								}
-
-								p.GetChunk()->DeleteSub(firstTkPos, (p.GetChunk()->GetLength()-2) - firstTkPos); // -2 for ">\n"
-								p.GetChunk()->Insert(pActiveTk, firstTkPos);
-								p.RemoveIds();
-
 								fputs(p.GetChunk()->Get(), f);
 								fclose(f);
-
-								p.CancelUpdates(); // NO UPDATE!
 							}
 						}
 					}

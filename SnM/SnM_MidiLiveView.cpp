@@ -192,6 +192,7 @@ void SNM_LiveConfigsView::OnItemSelChanged(SWS_ListItem* item, int iState)
 	// can lead to confusion with auto track selection ticked
 	if (!g_liveConfigs.Get()->m_autoSelect[g_configId])
 	{
+//JFB!!! restore sel ko, wtf!?? => undos commented
 //		Undo_BeginBlock2(NULL);
 		for (int i=0; i <= GetNumTracks(); i++) {
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -205,7 +206,6 @@ void SNM_LiveConfigsView::OnItemSelChanged(SWS_ListItem* item, int iState)
 		Main_OnCommand(40913,0); // scroll to selected tracks
 //		Undo_EndBlock2(NULL, "Change Track Selection", UNDO_STATE_ALL);
 //		Undo_OnStateChangeEx("Change Track Selection", , -1);
-//JFB!!! restore sel ko, wtf!??
 	}
 }
 
@@ -352,11 +352,9 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_txtConfig.SetID(TXTID_CONFIG);
-	m_txtConfig.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_txtConfig);
 
 	m_cbConfig.SetID(COMBOID_CONFIG);
-	m_cbConfig.SetRealParent(m_hwnd);
 	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++)
 	{
 		char cfg[4] = "";
@@ -367,24 +365,19 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_cbConfig);
 
 	m_btnEnable.SetID(BUTTONID_ENABLE);
-	m_btnEnable.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnEnable);
 
 	m_txtInputTr.SetID(TXTID_INPUT_TRACK);
-	m_txtInputTr.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_txtInputTr);
 
 	m_cbInputTr.SetID(COMBOID_INPUT_TRACK);
-	m_cbInputTr.SetRealParent(m_hwnd);
 	FillComboInputTrack();
 	m_parentVwnd.AddChild(&m_cbInputTr);
 
 	m_btnMuteOthers.SetID(BUTTONID_MUTE_OTHERS);
-	m_btnMuteOthers.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnMuteOthers);
 
 	m_btnAutoSelect.SetID(BUTTONID_AUTO_SELECT);
-	m_btnAutoSelect.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnAutoSelect);
 
 	Update();
@@ -1271,7 +1264,7 @@ void SNM_MidiLiveScheduledJob::Perform()
 					char filename[BUFFER_SIZE];
 					GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), filename, BUFFER_SIZE);
 					if (LoadChunk(filename, &chunk) && chunk.GetLength())
-						p->SetChunk(&chunk, 1);
+						applyTrackTemplate(cfg->m_track, &chunk, true, p);
 				}
 				else if (cfg->m_fxChain.GetLength())
 				{

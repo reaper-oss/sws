@@ -39,12 +39,12 @@ extern SNM_ResourceWnd* g_pResourcesWnd; // SNM_ResourceView.cpp
 // Take FX chains
 ///////////////////////////////////////////////////////////////////////////////
 
-void makeChunkTakeFX(WDL_String* _outTakeFX, WDL_String* _inRfxChain)
+void makeChunkTakeFX(WDL_String* _outTakeFX, const WDL_String* _inRfxChain)
 {
 	if (_outTakeFX && _inRfxChain)
 	{
 		_outTakeFX->Append("<TAKEFX\nWNDRECT 0 0 0 0\nSHOW 0\nLASTSEL 1\nDOCKED 0\n");
-		_outTakeFX->Append(_inRfxChain->Get());
+		_outTakeFX->Append(_inRfxChain);
 		_outTakeFX->Append(">\n");
 	}
 }
@@ -67,7 +67,7 @@ int copyTakeFXChain(WDL_String* _fxChain, int _startSelItem)
 				removedKeywords.Add("LASTSEL");
 				removedKeywords.Add("DOCKED");
 				RemoveChunkLines(fxChain, &removedKeywords, true);
-				_fxChain->Set(fxChain->Get());
+				_fxChain->Set(fxChain);
 				return i;
 			}
 		}
@@ -97,8 +97,7 @@ void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly)
 						int tkPos, tklen;
 						if (p.GetTakeChunk(tkIdx, &takeChunk, &tkPos, &tklen)) 
 						{
-							SNM_ChunkParserPatcher ptk(&takeChunk);
-							WDL_String* ptkChunk = ptk.GetChunk();
+							SNM_ChunkParserPatcher ptk(&takeChunk, false);
 
 							// already a FX chain for this take?
 							int eolTkFx = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE_EOL, 1, "TAKEFX", "<TAKEFX", 1, 0, 1);
@@ -106,7 +105,7 @@ void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly)
 							// paste FX chain (just before the end of the current TAKEFX)
 							if (eolTkFx > 0) 
 							{
-								ptkChunk->Insert(_chain->Get(), eolTkFx-2); //-2: before ">\n"
+								ptk.GetChunk()->Insert(_chain->Get(), eolTkFx-2); //-2: before ">\n"
 							}
 							// set/create FX chain (after SOURCE)
 							else 
@@ -114,14 +113,14 @@ void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly)
 								int eolSrc = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE_EOL, 1, "SOURCE", "<SOURCE", -1, 0, 1);
 								if (eolSrc > 0)
 								{
-									// no need of eolTakeFx-- ! eolTakeFx is the previous '\n' position
+									// no need of eolTakeFx-- (eolTakeFx is the previous '\n' position)
 									WDL_String newTakeFx;
 									makeChunkTakeFX(&newTakeFx, _chain);
-									ptkChunk->Insert(newTakeFx.Get(), eolSrc);
+									ptk.GetChunk()->Insert(newTakeFx.Get(), eolSrc);
 								}
 							}
 							// Update take
-							updated = p.ReplaceTake(tkPos, tklen, ptkChunk);
+							updated = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
 						}
 						else done = true;
 
@@ -176,12 +175,11 @@ void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool
 		WDL_String chain;
 		if (LoadChunk(fn, &chain))
 		{
-			// remove fx param envelopes (were saved for track fx chains before SWS v2.1.0 #11)
+			// remove all fx param envelopes
+			// (were saved for track fx chains before SWS v2.1.0 #11)
 			{
 				SNM_ChunkParserPatcher p(&chain);
-				while (p.RemoveSubChunk("PARMENV", 1, 0));
-					if (p.GetUpdates())
-						chain.Set(p.GetChunk()->Get());
+				p.RemoveSubChunk("PARMENV", 1, -1);
 			}
 
 			if (_set) 
@@ -206,7 +204,7 @@ bool autoSaveItemFXChainSlots(const char* _dirPath, char* _fn, int _fnSize)
 
 				char* itemName = GetName(item);
 				GenerateFilename(_dirPath, (!itemName || *itemName == '\0') ? "Untitled" : itemName, g_fxChainFiles.GetFileExt(), _fn, _fnSize);
-				slotUpdate |= (SaveChunk(_fn, &fxChain) && g_fxChainFiles.AddSlot(_fn));
+				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_fxChainFiles.AddSlot(_fn));
 			}
 		}
 	}
@@ -367,17 +365,15 @@ int copyTrackFXChain(WDL_String* _fxChain, bool _inputFX, int _startTr)
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			SNM_ChunkParserPatcher p(tr);
-			if (p.GetSubChunk(_inputFX ? "FXCHAIN_REC" : "FXCHAIN", 2, 0, _fxChain, "<ITEM") >= 0)//JFB!!! FREEZE OK
+			if (p.GetSubChunk(_inputFX ? "FXCHAIN_REC" : "FXCHAIN", 2, 0, _fxChain, "<ITEM") >= 0)
 			{
-				// remove fx param envelopes
-				//JFB brutal!
+				// remove all fx param envelopes
 				{
 					SNM_ChunkParserPatcher p2(_fxChain);
-					while (p2.RemoveSubChunk("PARMENV", 2, 0));
-					if (p2.GetUpdates())
-						_fxChain->Set(p2.GetChunk()->Get());
+					p2.RemoveSubChunk("PARMENV", 2, -1);
 				}
 
+				// brutal removal ok here (it only deals with a fx chain chunk)
 				WDL_PtrList<const char> removedKeywords;
 				removedKeywords.Add(_inputFX ? "<FXCHAIN_REC" : "<FXCHAIN");
 				removedKeywords.Add("WNDRECT");
@@ -411,12 +407,11 @@ void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inpu
 		WDL_String chain;
 		if (LoadChunk(fn, &chain))
 		{
-			// remove fx param envelopes (were saved for track fx chains before SWS v2.1.0 #11)
+			// remove all fx param envelopes
+			// (were saved for track fx chains before SWS v2.1.0 #11)
 			{
 				SNM_ChunkParserPatcher p(&chain);
-				while (p.RemoveSubChunk("PARMENV", 1, 0));
-					if (p.GetUpdates())
-						chain.Set(p.GetChunk()->Get());
+				p.RemoveSubChunk("PARMENV", 1, -1);
 			}
 
 			if (_set) 
@@ -450,7 +445,7 @@ bool autoSaveTrackFXChainSlots(bool _inputFX, const char* _dirPath, char* _fn, i
 				char autoSlotName[256] = "";
 				_snprintf(autoSlotName, 256, "%s%s", (!trName || *trName == '\0') ? "Untitled" : trName, _inputFX ? "_inputFX" : "");
 				GenerateFilename(_dirPath, autoSlotName, g_fxChainFiles.GetFileExt(), _fn, _fnSize);
-				slotUpdate |= (SaveChunk(_fn, &fxChain) && g_fxChainFiles.AddSlot(_fn));
+				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_fxChainFiles.AddSlot(_fn));
 			}
 		}
 	}

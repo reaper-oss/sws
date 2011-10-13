@@ -41,6 +41,34 @@ reminders:
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// SNM_ChunkIndenter
+///////////////////////////////////////////////////////////////////////////////
+
+bool SNM_ChunkIndenter::NotifyChunkLine(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
+		WDL_String* _newChunk, int _updates)
+{
+	bool update = false;
+	if (_mode == -1)
+	{
+		int depth = _parsedParents->GetSize();
+		if (depth)
+		{
+			if (*_parsedLine == '<')
+				depth--;
+			for (int i=0; i < depth; i++)
+				_newChunk->Append("  ");
+		}
+		_newChunk->Append(_parsedLine);
+		_newChunk->Append("\n");
+		update = true;
+	}
+	return update;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // SNM_SendPatcher
 // no NotifySkippedSubChunk() needed: single lines (not sub-chunks)
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,8 +88,8 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 			bool audioSnd = ((defSndFlags & 512) != 512);
 			bool midiSnd =  ((defSndFlags & 256) != 256);
 
-			char bufline[512] = "";
-			int n = _snprintf(bufline, 512,
+			char bufline[SNM_MAX_CHUNK_LINE_LENGTH] = "";
+			int n = _snprintf(bufline, SNM_MAX_CHUNK_LINE_LENGTH,
 				"AUXRECV %d %d %s %s 0 0 0 %d 0 -1.00000000000000 %d -1\n%s\n", 
 				m_srcId-1, m_sendType, m_vol, m_pan, audioSnd ? 0 : -1, midiSnd ? 0 : 31, _parsedLine);
 			_newChunk->Append(bufline,n);
@@ -79,8 +107,8 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 		// add "detailed" receive
 		case -3:
 		{
-			char bufline[512] = "";
-			int n = _snprintf(bufline, 512,
+			char bufline[SNM_MAX_CHUNK_LINE_LENGTH] = "";
+			int n = _snprintf(bufline, SNM_MAX_CHUNK_LINE_LENGTH,
 				"AUXRECV %d %d %.14f %.14f %d %d %d %d %d %.14f %d %d\n%s\n", 
 				m_srcId-1, 
 				m_sendType, 
@@ -244,15 +272,15 @@ bool SNM_FXChainTakePatcher::SetFXChain(WDL_String* _fxChain, bool _activeTakeOn
 {
 	m_fxChain = _fxChain;
 	m_removingTakeFx = false;
-	m_activeTake = (*(int*)GetSetMediaItemInfo((MediaItem*)m_object, "I_CURTAKE", NULL) == 0);
+	m_activeTake = (*(int*)GetSetMediaItemInfo((MediaItem*)m_reaObject, "I_CURTAKE", NULL) == 0);
 	// ParsePatch(): we can't specify more parameters, the parser has to go in depth
-	return (ParsePatch((_activeTakeOnly && GetMediaItemNumTakes((MediaItem*)m_object) > 1) ? -2 : -1) > 0);
+	return (ParsePatch((_activeTakeOnly && GetMediaItemNumTakes((MediaItem*)m_reaObject) > 1) ? -2 : -1) > 0);
 	return false;
 }
 
 WDL_String* SNM_FXChainTakePatcher::GetFXChain()
 {
-	m_activeTake = (*(int*)GetSetMediaItemInfo((MediaItem*)m_object, "I_CURTAKE", NULL) == 0);
+	m_activeTake = (*(int*)GetSetMediaItemInfo((MediaItem*)m_reaObject, "I_CURTAKE", NULL) == 0);
 	m_copiedFXChain.Set("");
 	m_copyingTakeFx = false;
 	// Parse(): we can't specify more parameters, the parser has to go in depth
@@ -320,7 +348,7 @@ bool SNM_FXChainTrackPatcher::NotifyChunkLine(int _mode,
 		_newChunk->Append("LASTSEL 1\n");
 		_newChunk->Append("DOCKED 0\n");
 		if (m_fxChain)
-			_newChunk->Append(m_fxChain->Get());
+			_newChunk->Append(m_fxChain);
 		_newChunk->Append(">\n");
 	}
 	return update; 
@@ -361,7 +389,7 @@ bool SNM_TakeParserPatcher::GetTakeChunk(int _takeIdx, WDL_String* _gettedChunk,
 	bool found = GetTakeChunkPos(_takeIdx, &pos, &len); // indirect call to GetChunk() (force cache + add fake 1st take if needed)
 	if (found && _gettedChunk)
 	{
-		_gettedChunk->Set((char*)(m_chunk->Get()+pos), len);
+		_gettedChunk->Set((const char*)(m_chunk->Get()+pos), len);
 		if (_pos) *_pos = pos;
 		if (_len) *_len = len;
 	}
@@ -455,7 +483,7 @@ bool SNM_TakeParserPatcher::RemoveTake(int _takeIdx, WDL_String* _removedChunk, 
 	if (GetTakeChunkPos(_takeIdx, &pos, &len)) // indirect call to GetChunk() (force cache + add fake 1st take if needed)
 	{
 		if (_removedChunk)
-			_removedChunk->Set((char*)(m_chunk->Get()+pos), len);
+			_removedChunk->Set((const char*)(m_chunk->Get()+pos), len);
 		if (_removedStartPos)
 			*_removedStartPos = pos;
 
@@ -527,7 +555,7 @@ WDL_String* SNM_TakeParserPatcher::GetChunk()
 // GetChunk() comments. Also see important comments for SNM_ChunkParserPatcher::Commit()
 bool SNM_TakeParserPatcher::Commit(bool _force)
 {
-	if (m_object && (m_updates || _force) && m_chunk->GetLength() && !(GetPlayState() & 4))
+	if (m_reaObject && (m_updates || _force) && m_chunk->GetLength() && !(GetPlayState() & 4))
 	{
 // SNM_ChunkParserPatcher::Commit() mod ----->
 		if (m_fakeTake)
@@ -566,7 +594,7 @@ bool SNM_TakeParserPatcher::Commit(bool _force)
 		}
 // SNM_ChunkParserPatcher::Commit() mod <-----
 
-		if (!SNM_GetSetObjectState(m_object, m_chunk)) {
+		if (!SNM_GetSetObjectState(m_reaObject, m_chunk)) {
 			SetChunk("", 0);
 			return true;
 		}

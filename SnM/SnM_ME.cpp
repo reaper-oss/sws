@@ -50,7 +50,7 @@ void MECreateCCLane(COMMAND_T* _ct)
 			int tkPos, tklen;
 			if (p.GetTakeChunk(tkIdx, &takeChunk, &tkPos, &tklen))
 			{
-				SNM_ChunkParserPatcher ptk(&takeChunk);
+				SNM_ChunkParserPatcher ptk(&takeChunk, false);
 
 				// Check current displayed lanes
 				bool lanes[MAX_CC_LANE_ID+1];
@@ -70,8 +70,8 @@ void MECreateCCLane(COMMAND_T* _ct)
 					tkFirstPos--; // see SNM_ChunkParserPatcher
 					// find the first unused index
 					i=1; while(lanes[i] && i <= MAX_CC_LANE_ID) i++;
-					char newLane[BUFFER_SIZE] = "";
-					sprintf(newLane, "VELLANE %d 50 0\n", i);
+					char newLane[SNM_MAX_CHUNK_LINE_LENGTH] = "";
+					_snprintf(newLane, SNM_MAX_CHUNK_LINE_LENGTH, "VELLANE %d 50 0\n", i);
 					ptk.GetChunk()->Insert(newLane, tkFirstPos);
 
 					// "Update" take
@@ -101,7 +101,7 @@ bool replaceCCLanes(const char* _newCClanes)
 			int tkPos, tklen;
 			if (p.GetTakeChunk(tkIdx, &takeChunk, &tkPos, &tklen))
 			{
-				SNM_ChunkParserPatcher ptk(&takeChunk);
+				SNM_ChunkParserPatcher ptk(&takeChunk, false);
 				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", 4, 0, 0);
 				if (pos > 0)
 				{
@@ -109,10 +109,8 @@ bool replaceCCLanes(const char* _newCClanes)
 
 					// Remove all lanes for this take
 					if (ptk.RemoveLines("VELLANE"))
-					{
-						// default lane (min sized)
-						ptk.GetChunk()->Insert(_newCClanes, pos);
-						// "Update" take
+					{	
+						ptk.GetChunk()->Insert(_newCClanes, pos); // default lane (min sized)
 						updated = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
 					}
 				}
@@ -168,7 +166,7 @@ void MESaveCCLanes(COMMAND_T* _ct)
 			WDL_String takeChunk;
 			if (p.GetTakeChunk(tkIdx, &takeChunk))
 			{
-				SNM_ChunkParserPatcher ptk(&takeChunk);
+				SNM_ChunkParserPatcher ptk(&takeChunk, false);
 
 				// Check start/end position of lanes in the chunk
 				int firstPos = 0, lastPos = 0, laneCpt = 0;
@@ -186,7 +184,7 @@ void MESaveCCLanes(COMMAND_T* _ct)
 
 					char laneSlot[MAX_CC_LANES_SLOT] = "";
 					int eolLastPos = lastPos;
-					char* pp = ptk.GetChunk()->Get();
+					char* pp = ptk.GetChunk()->Get(); //ok 'cause read only
 					while (pp[eolLastPos] && pp[eolLastPos] != '\n') eolLastPos++;
 
 					int i = firstPos, j=0;
@@ -198,7 +196,7 @@ void MESaveCCLanes(COMMAND_T* _ct)
 					laneSlot[j] = 0;
 
 					// Store the lanes
-					char slot[20];
+					char slot[32];
 					sprintf(slot, "CC_LANES_SLOT%d", _ct->user + 1);
 					WritePrivateProfileString("MIDI_EDITOR", slot, laneSlot, g_SNMiniFilename.Get());
 				}

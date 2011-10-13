@@ -426,10 +426,8 @@ int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_Str
 	return nbPresets;
 }
 
-int GetPresetFromConfToken(const char* _preset)
-{
-	const char* p = strchr(_preset, '.');
-	if (p)
+int GetPresetFromConfToken(const char* _preset) {
+	if (const char* p = strchr(_preset, '.'))
 		return atoi(p+1);
 	return 0;
 }
@@ -467,7 +465,7 @@ void UpdatePresetConf(int _fx, int _preset, WDL_String* _presetConf)
 			newConf.AppendFormatted(256, "%d.%d", _fx, _preset);
 		}
 
-		_presetConf->Set(newConf.Get());
+		_presetConf->Set(&newConf);
 	}
 }
 
@@ -583,7 +581,7 @@ int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir, bool _u
 			int currentPreset = (int)SendMessage(cbPreset, CB_GETCURSEL, 0, 0); //JFB gets stuff by name (=> duplicated preset names not supported yet)
 
 			// user preset only ?
-			if (_userPreset) //JFB!!! && currentPreset >= 0 && presetCount >= 0) ???
+			if (_userPreset) //JFB && currentPreset >= 0 && presetCount >= 0) ??
 			{
 				int deltaIdx = 0;
 				char buf[256] = "";
@@ -727,18 +725,20 @@ void moveFX(COMMAND_T* _ct)
 					if (p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM") > 0)
 					{
 						int originalChainLen = chainChunk.GetLength();
-						SNM_ChunkParserPatcher pfxc(&chainChunk);
+						SNM_ChunkParserPatcher pfxc(&chainChunk, false);
 						int p1 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel,0);
 						if (p1>0)
 						{
-							p1--; 
+							p1--;
+
+							// locate end of fx
 							int p2 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel+1,0);
 							if (p2 > 0)	p2--;
-							else p2 = chainChunk.GetLength()-2; // -2 for ">\n"
+							else p2 = pfxc.GetChunk()->GetLength()-2; // -2 for ">\n"
 
 							// store & cut fx
 							WDL_String fxChunk;
-							fxChunk.Set(pfxc.GetChunk()->Get()+p1, p2-p1);
+							fxChunk.Set((const char*)(pfxc.GetChunk()->Get()+p1), p2-p1);
 							pfxc.GetChunk()->DeleteSub(p1, p2-p1);
 							
 							// move fx

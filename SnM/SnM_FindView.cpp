@@ -426,24 +426,19 @@ void SNM_FindWnd::OnInitDlg()
     m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_btnEnableZommScroll.SetID(BUTTONID_ZOOM_SCROLL_EN);
-	m_btnEnableZommScroll.SetRealParent(m_hwnd);
 	m_btnEnableZommScroll.SetCheckState(m_zoomSrollItems);
 	m_parentVwnd.AddChild(&m_btnEnableZommScroll);
 
 	m_btnFind.SetID(BUTTONID_FIND);
-	m_btnFind.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnFind);
 
 	m_btnPrev.SetID(BUTTONID_PREV);
-	m_btnPrev.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnPrev);
 
 	m_btnNext.SetID(BUTTONID_NEXT);
-	m_btnNext.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnNext);
 
 	m_cbType.SetID(COMBOID_TYPE);
-	m_cbType.SetRealParent(m_hwnd);
 	m_cbType.AddItem("Find in item names");
 	m_cbType.AddItem("Find in item names (all takes)");
 	m_cbType.AddItem("Find in media filenames");
@@ -457,7 +452,6 @@ void SNM_FindWnd::OnInitDlg()
 
 	m_txtResult.SetID(TXTID_RESULT);
 	m_txtResult.SetColors(LICE_RGBA(170,0,0,255));
-	m_txtResult.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_txtResult);
 
 	g_notFound = false;

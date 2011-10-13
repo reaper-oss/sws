@@ -34,6 +34,25 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// SNM_ChunkIndenter
+///////////////////////////////////////////////////////////////////////////////
+
+class SNM_ChunkIndenter : public SNM_ChunkParserPatcher
+{
+public:
+	SNM_ChunkIndenter(WDL_String* _chunk, bool _autoCommit = true)
+		: SNM_ChunkParserPatcher(_chunk, _autoCommit, true, true, true) {}
+	~SNM_ChunkIndenter() {}
+	bool Indent() {return (ParsePatch(-1) > 0);}
+protected:
+	bool NotifyChunkLine(int _mode, 
+		LineParser* _lp, const char* _parsedLine, int _linePos,
+		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
+		WDL_String* _newChunk, int _updates);
+};
+
+
+///////////////////////////////////////////////////////////////////////////////
 // SNM_SendPatcher
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -238,9 +257,8 @@ private:
 class SNM_EnvRemover : public SNM_ChunkParserPatcher
 {
 public:
-	SNM_EnvRemover(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) {
-		m_removingEnv = false;
-	}
+	SNM_EnvRemover(WDL_String* _str, bool _autoCommit = true)
+		: SNM_ChunkParserPatcher(_str, _autoCommit) {m_removingEnv = false; }
 	~SNM_EnvRemover() {}
 	bool RemoveEnvelopes();
 protected:
@@ -341,7 +359,8 @@ protected:
 class SNM_TakeEnvParserPatcher : public SNM_ChunkParserPatcher
 {
 public:
-	SNM_TakeEnvParserPatcher(WDL_String* _tkChunk) : SNM_ChunkParserPatcher(_tkChunk) {m_vis = -1;}
+	SNM_TakeEnvParserPatcher(WDL_String* _tkChunk, bool _autoCommit = true) 
+		: SNM_ChunkParserPatcher(_tkChunk, _autoCommit) {m_vis = -1;}
 	~SNM_TakeEnvParserPatcher() {}
 	bool SetVis(const char* _envKeyWord, int _vis);
 protected:

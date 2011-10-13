@@ -28,15 +28,12 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
-
-#ifdef _WIN32
-#pragma comment (lib, "winmm.lib")
-#endif
+#include "SNM_Chunk.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // File util
-// JFB!!! TODO: WDL_UTF8, exist_fn, ..
+// JFB!!! TODO: WDL_UTF8, v4's exist_fn, ..
 ///////////////////////////////////////////////////////////////////////////////
 
 bool FileExistsErrMsg(const char* _fn, bool _errMsg)
@@ -72,8 +69,8 @@ bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 	if (_destFn && _srcFn)
 	{
 		WDL_String chunk;
-		if (LoadChunk(_srcFn, &chunk) && chunk.GetLength())
-			return SaveChunk(_destFn, &chunk);
+		if (LoadChunk(_srcFn, &chunk, false) && chunk.GetLength())
+			return SaveChunk(_destFn, &chunk, false);
 	}
 	return false;
 }
@@ -152,32 +149,48 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 		*_fullFn = '\0';
 }
 
-bool LoadChunk(const char* _fn, WDL_String* _chunk)
+bool LoadChunk(const char* _fn, WDL_String* _chunk, bool _trim, int _maxlen)
 {
-	if (_fn && *_fn && _chunk)
+	if (_chunk)
 	{
-		FILE* f = fopenUTF8(_fn, "r");
-		if (f)
+		_chunk->Set("");
+		if (_fn && *_fn)
 		{
-			_chunk->Set("");
-			char str[4096];
-			while(fgets(str, 4096, f))
-				_chunk->Append(str);
-			fclose(f);
-			return true;
+			if (FILE* f = fopenUTF8(_fn, "r"))
+			{
+				char str[SNM_MAX_CHUNK_LINE_LENGTH];
+				while(fgets(str, SNM_MAX_CHUNK_LINE_LENGTH, f))
+				{
+					if (_maxlen && (int)(_chunk->GetLength()+strlen(str)) > _maxlen)
+						break;
+
+					if (_trim) // left trim + remove empty lines
+					{
+						char* p = str;
+						while(*p && (*p == ' ' || *p == '\t')) p++;
+						if (*p != '\n') // !*p managed in Append()
+							_chunk->Append(p, SNM_MAX_CHUNK_LINE_LENGTH);
+					}
+					else
+						_chunk->Append(str, SNM_MAX_CHUNK_LINE_LENGTH);
+				}
+				fclose(f);
+				return true;
+			}
 		}
 	}
 	return false;
 }
 
-bool SaveChunk(const char* _fn, WDL_String* _chunk)
+bool SaveChunk(const char* _fn, WDL_String* _chunk, bool _indent)
 {
 	if (_fn && *_fn && _chunk)
 	{
-		FILE* f = fopenUTF8(_fn, "w"); 
-		if (f)
+		SNM_ChunkIndenter p(_chunk, false); // nothing done yet
+		if (_indent) p.Indent();
+		if (FILE* f = fopenUTF8(_fn, "w"))
 		{
-			fputs(_chunk->Get(), f);
+			fputs(p.GetUpdates() ? p.GetChunk()->Get() : _chunk->Get(), f); // avoid parser commit: faster
 			fclose(f);
 			return true;
 		}
@@ -316,12 +329,12 @@ void makeUnformatedConfigString(const char* _in, WDL_String* _out)
 	if (_in && _out)
 	{
 		_out->Set(_in);
-		char* p = strstr(_out->Get(), "%");
+		char* p = strchr(_out->Get(), '%');
 		while(p)
 		{
 			int pos = p - _out->Get();
 			_out->Insert("%", ++pos); // ++pos! but Insert() clamps to length..
-			p = (pos+1 < _out->GetLength()) ? strstr((char*)(_out->Get()+pos+1), "%") : NULL;
+			p = (pos+1 < _out->GetLength()) ? strchr((char*)(_out->Get()+pos+1), '%') : NULL;
 		}
 	}
 }
@@ -360,9 +373,9 @@ void ShortenStringToFirstRN(char* _str) {
 // replace "%blabla" with '_replaceCh' in _str
 void ReplaceStringFormat(char* _str, char _replaceCh) {
 	if (_str && *_str)
-		if (char* p = strstr(_str, "%")) {
+		if (char* p = strchr(_str, '%')) {
 			p[0] = _replaceCh;
-			if (char* p2 = strstr((char*)(p+1), " "))
+			if (char* p2 = strchr((char*)(p+1), ' '))
 				memmove((char*)(p+1), p2, strlen(p2)+1);
 			else
 				p[1] = '\0'; //assumes there's another char just after '%'
@@ -434,10 +447,10 @@ void WinWaitForEvent(DWORD _event, DWORD _timeOut, DWORD _minReTrigger)
 {
 #ifdef _WIN32
 	static DWORD waitTime = 0;
-//	if ((timeGetTime() - waitTime) > _minReTrigger)
+//	if ((GetTickCount() - waitTime) > _minReTrigger)
 	{
-		waitTime = timeGetTime();
-		while((timeGetTime() - waitTime) < _timeOut) // for safety
+		waitTime = GetTickCount();
+		while((GetTickCount() - waitTime) < _timeOut) // for safety
 		{
 			MSG msg;
 			if(PeekMessage(&msg, NULL, NULL, NULL, PM_REMOVE))
@@ -630,6 +643,353 @@ void dumpWikiActionList(COMMAND_T* _ct)
 			MessageBox(g_hwndParent, "Unable to write to file.", "Save ALR Wiki summary", MB_OK);
 	}
 }
+
+void OpenStuff(COMMAND_T* _ct) {}
+
+void TestWDLString(COMMAND_T*) {}
+
 #endif
 
+int TestReport(bool _ok, int _tstId, char* _report)
+{
+	static DWORD t = GetTickCount();
+	int t2=0;
+	if (_tstId)
+	{
+		t2 = GetTickCount() - t;
+		char reportline[64] = "";
+		_snprintf(reportline, 64, "Test %02d\t%d ms\t%s\n", _tstId, t2, _ok ? "ok" : "FAILED!");
+		strcat(_report, reportline);
+	}
+	t = GetTickCount();
+	return t2;
+}
+
+void TestWDLString(COMMAND_T*)
+{
+	char report[4096] = ""; 
+	int tst=0, t=0;
+	DWORD t2 = 0;
+
+
+	WDL_String massiveChunk,massiveChunk2,massiveChunk3; // 2 & 3 will get altered
+	t2 = GetTickCount();
+	LoadChunk("C:\\MASSIVE_CHUNK.RPP", &massiveChunk); // this will be looooong with slow WDL_Stirng..
+	{
+		char reportline[64] = "";
+		_snprintf(reportline, 64, "pre-Test chunk loaded in %1.3f s (%d bytes)\n", (float)((GetTickCount()-t2)/1000), massiveChunk.GetLength());
+		strcat(report, reportline);
+	}
+
+	massiveChunk3.Set(&massiveChunk);
+
+	TestReport(false, 0, NULL); //reinit
+
+	WDL_String s;
+
+	//////////////////////////////////////////////////////////////////////
+
+	// Set
+	strcat(report, "\nSet:\n");
+
+	/*for (int i=0; i < 50; i++)*/ massiveChunk2.Set(massiveChunk.Get());
+	t += TestReport(massiveChunk.GetLength() == massiveChunk2.GetLength(), ++tst, report);
+
+	for (int i=0; i < 1000000; i++) s.Set("1234567890");
+	t += TestReport(s.GetLength() == 10 && !strcmp(s.Get(), "1234567890"), ++tst, report);
+
+	for (int i=0; i < 1000000; i++) s.Set("1234567890", 5);
+	t += TestReport(s.GetLength() == 5 && !strcmp(s.Get(), "12345"), ++tst, report);
+	for (int i=0; i < 1000000; i++) s.Set("");
+	t += TestReport(s.GetLength() == 0 && s.Get()[0] == 0, ++tst, report);
+	for (int i=0; i < 1000000; i++) s.Set("1234567890", 255);
+	t += TestReport(s.GetLength() == 10 && !strcmp(s.Get(), "1234567890"), ++tst, report);
+	{ // unalloc tst
+		WDL_String s2;
+		t += TestReport(!s2.GetLength() && s2.Get()[0] == 0, ++tst, report);
+	}
+
+
+	// Append
+	strcat(report, "\nAppend:\n");
+
+	s.Set("123");
+	s.Append("4567890");
+	t += TestReport(s.GetLength() == 10 && !strcmp(s.Get(), "1234567890"), ++tst, report);
+	s.Append("1234567890", 3);
+	t += TestReport(s.GetLength() == 13 && !strcmp(s.Get(), "1234567890123"), ++tst, report);
+	s.Append("", 3);
+	t += TestReport(s.GetLength() == 13 && !strcmp(s.Get(), "1234567890123"), ++tst, report);
+	s.Append("4567890", 255);
+	t += TestReport(s.GetLength() == 20 && !strcmp(s.Get(), "12345678901234567890"), ++tst, report);
+	{ // unalloc tst
+		WDL_String s2;
+		s2.Append("1234567890", 5);
+		t += TestReport(s2.GetLength() == 5 && !strcmp(s2.Get(), "12345"), ++tst, report);
+	}
+	// speed tests
+	s.Set("");
+	t2 = GetTickCount();
+	for (int i=0; (GetTickCount()-t2) < 10000 && i < 1000000; i++)
+		s.Append("1234567890");
+	t += TestReport((GetTickCount()-t2) < 10000 && s.GetLength() == 10000000, ++tst, report);
+
+	s.Set("");
+	char* pEOL = massiveChunk.Get()-1;
+	t2 = GetTickCount();
+	while((GetTickCount()-t2) < 10000) {
+		char* pLine = pEOL+1;
+		pEOL = strchr(pLine, '\n');
+		if (!pEOL) break;
+		else if (*pLine) s.Append(pLine, (int)(pEOL-pLine+1));
+	}
+	t += TestReport((GetTickCount()-t2) < 10000 && s.GetLength() == massiveChunk.GetLength(), ++tst, report);
+
+
+	// DeleteSub
+	strcat(report, "\nDeleteSub:\n");
+
+	s.Set("12345678901234567890");
+	s.DeleteSub(255, 2);
+	t += TestReport(s.GetLength() == 20 && !strcmp(s.Get(), "12345678901234567890"), ++tst, report);
+	s.DeleteSub(10, 255);
+	t += TestReport(s.GetLength() == 10 && !strcmp(s.Get(), "1234567890"), ++tst, report);
+	s.DeleteSub(5, 2);
+	t += TestReport(s.GetLength() == 8 && !strcmp(s.Get(), "12345890"), ++tst, report);
+	s.DeleteSub(0, s.GetLength()*2);
+	t += TestReport(!s.GetLength() && s.Get()[0] == 0, ++tst, report);
+	{ // unalloc tst
+		WDL_String s2;
+		s2.DeleteSub(0, 5);
+		t += TestReport(!s2.GetLength() && s2.Get()[0] == 0, ++tst, report);
+	}
+	// speed test
+	t2 = GetTickCount();
+	while((GetTickCount()-t2) < 10000 && massiveChunk2.GetLength())
+		massiveChunk2.DeleteSub(0, 20000); // 20000 chars so that we don't get fooled with slow memmove..
+	t += TestReport((GetTickCount()-t2) < 10000 && !massiveChunk2.GetLength(), ++tst, report);
+
+
+	// Insert
+	strcat(report, "\nInsert:\n");
+
+	s.Set("1234567890");
+	s.Insert("4567890", 255, 3);
+	t += TestReport(s.GetLength() == 13 && !strcmp(s.Get(), "1234567890456"), ++tst, report);
+	s.Insert("1234567890", 10, 3);
+	t += TestReport(s.GetLength() == 16 && !strcmp(s.Get(), "1234567890123456"), ++tst, report);
+	s.Insert("7890", 255);
+	t += TestReport(s.GetLength() == 20 && !strcmp(s.Get(), "12345678901234567890"), ++tst, report);
+	s.Insert("", 2);
+	t += TestReport(s.GetLength() == 20 && !strcmp(s.Get(), "12345678901234567890"), ++tst, report);
+	s.Insert("1234567890123", 0, 10);
+	t += TestReport(s.GetLength() == 30 && !strcmp(s.Get(), "123456789012345678901234567890"), ++tst, report);
+	{ // unalloc tst
+		WDL_String s2;
+		s2.Insert("1234567890", 5, 5);
+		t += TestReport(s2.GetLength() == 5 && !strcmp(s2.Get(), "12345"), ++tst, report);
+	}
+	// speed tests
+	s.Set("");
+	t2 = GetTickCount();
+	for (int i=0; (GetTickCount()-t2) < 10000 && i < 1000000; i++)
+		s.Insert("1234567890", !s.GetLength() ? 0 : s.GetLength()-9);
+	t += TestReport((GetTickCount()-t2) < 10000 && s.GetLength() == 10000000, ++tst, report);
+
+	s.Set("");
+	pEOL = massiveChunk.Get()-1;
+	t2 = GetTickCount();
+	while((GetTickCount()-t2) < 10000) {
+		char* pLine = pEOL+1;
+		pEOL = strchr(pLine, '\n');
+		if (!pEOL) break;
+		else if (*pLine) s.Insert(pLine, max(0, s.GetLength()-50), (int)(pEOL-pLine+1)); //makes no sense, just for test..
+	}
+	t += TestReport((GetTickCount()-t2) < 10000 && s.GetLength() == massiveChunk.GetLength(), ++tst, report);
+
+
+	// SetLen
+	strcat(report, "\nSetLen:\n");
+
+	s.Set("1234567890");
+	for (int i=0; i < 1000000; i++) s.SetLen(20);
+	t += TestReport(s.GetLength() == 10 && !strcmp(s.Get(), "1234567890"), ++tst, report);
+	for (int i=0; i < 1000000; i++) s.SetLen(5);
+	t += TestReport(s.GetLength() == 5 && !strcmp(s.Get(), "12345"), ++tst, report);
+	for (int i=0; i < 1000000; i++) s.SetLen(0);
+	t += TestReport(!s.GetLength() && s.Get()[0] == 0, ++tst, report);
+	{ // unalloc tst
+		WDL_String s2;
+		s2.SetLen(5);
+		t += TestReport(s2.GetLength() == 5, ++tst, report); // no test on content: garbage
+	}
+
+
+	// SetFormatted
+	strcat(report, "\nSetFormatted:\n");
+
+	for (int i=0; i < 1000000; i++) s.SetFormatted(10, "%s%d", "12345", 67890);
+	t += TestReport(s.GetLength() == 10 && !strcmp(s.Get(), "1234567890"), ++tst, report);
+	for (int i=0; i < 1000000; i++) s.SetFormatted(5, "%s", "1234567890");
+	t += TestReport(!s.GetLength() && s.Get()[0] == 0, ++tst, report); // hum.. would be better to strip down? (but taht would be a functionnal change!)
+	for (int i=0; i < 1000000; i++) s.SetFormatted(20, "%s", "1234567890");
+	t += TestReport(s.GetLength() == 10 && !strcmp(s.Get(), "1234567890"), ++tst, report);
+	{ // unalloc tst
+		WDL_String s2;
+		s2.SetFormatted(10, "%s", "1234567890");
+		t += TestReport(s2.GetLength() == 10 && !strcmp(s2.Get(), "1234567890"), ++tst, report);
+	}
+	// no speed test: would suck hard (we'd need our own vsnprintf code..)
+
+
+	// AppendFormatted
+	strcat(report, "\nAppendFormatted:\n");
+
+	s.Set("1234567890");
+	s.AppendFormatted(10, "%s%d", "12345", 67890);
+	t += TestReport(s.GetLength() == 20 && !strcmp(s.Get(), "12345678901234567890"), ++tst, report);
+	s.AppendFormatted(5, "%s", "1234567890");
+	t += TestReport(s.GetLength() == 20 && !strcmp(s.Get(), "12345678901234567890"), ++tst, report); // hum.. would be better to strip down? (but taht would be a functionnal change!)
+	{ // unalloc tst
+		WDL_String s2;
+		s2.AppendFormatted(10, "%s", "1234567890");
+		t += TestReport(s2.GetLength() == 10 && !strcmp(s2.Get(), "1234567890"), ++tst, report);
+	}
+	// speed test
+	s.Set("");
+	pEOL = massiveChunk3.Get()-1;
+	t2 = GetTickCount();
+	while((GetTickCount()-t2) < 10000) {
+		char* pLine = pEOL+1;
+		pEOL = strchr(pLine, '\n');
+		if (!pEOL) break;
+		else if (*pLine) {
+			*pEOL = 0;
+			s.AppendFormatted((int)(pEOL-pLine+1), "%s\n", pLine);
+		}
+	}
+	t += TestReport((GetTickCount()-t2) < 10000 && s.GetLength() == massiveChunk.GetLength(), ++tst, report);
+
+
+	// Ellipsize
+	strcat(report, "\nEllipsize:\n");
+
+	s.Set("1234567890");
+	s.Ellipsize(255, 6);
+	t += TestReport(s.GetLength() == 5 && !strcmp(s.Get(), "12..."), ++tst, report);
+	s.Set("1234567890");
+	s.Ellipsize(255, 5);
+	t += TestReport(s.GetLength() == 4 && !strcmp(s.Get(), "1..."), ++tst, report);
+	s.Set("1234567890");
+	s.Ellipsize(5, 255);
+	t += TestReport(s.GetLength() == 10 && !strcmp(s.Get(), "1234567890"), ++tst, report);
+	s.Set("123");
+	s.Ellipsize(5, 255);
+	t += TestReport(s.GetLength() == 3 && !strcmp(s.Get(), "123"), ++tst, report);
+	s.Set("123");
+	s.Ellipsize(5, 2);
+	t += TestReport(s.GetLength() == 3 && !strcmp(s.Get(), "123"), ++tst, report);
+	s.Set("1");
+	s.Ellipsize(1, 2);
+	t += TestReport(s.GetLength() == 1 && !strcmp(s.Get(), "1"), ++tst, report);
+	{ // unalloc tst
+		WDL_String s2;
+		s2.Ellipsize(255, 6);
+		t += TestReport(!s2.GetLength() && s2.Get()[0] == 0, ++tst, report);
+	}
+	
+	//////////////////////////////////////////////////////////////////////
+
+	WDL_String tstStr("1234567890");
+	WDL_String tstStr4567890("4567890");
+	WDL_String tstStr7890("7890");
+	WDL_String tstStr1234567890123("1234567890123");
+	WDL_String tstEmptyStr;
+
+	// Set2
+	strcat(report, "\nSet2:\n");
+	
+	WDL_String massiveChunk4;
+	/*for (int i=0; i < 50; i++)*/ massiveChunk4.Set(&massiveChunk);
+	t += TestReport(massiveChunk.GetLength() == massiveChunk4.GetLength(), ++tst, report);
+
+	for (int i=0; i < 1000000; i++) s.Set(&tstStr);
+	t += TestReport(s.GetLength() == 10 && !strcmp(s.Get(), "1234567890"), ++tst, report);
+
+	for (int i=0; i < 1000000; i++) s.Set(&tstStr, 5);
+	t += TestReport(s.GetLength() == 5 && !strcmp(s.Get(), "12345"), ++tst, report);
+	for (int i=0; i < 1000000; i++) s.Set(&tstEmptyStr);
+	t += TestReport(s.GetLength() == 0 && s.Get()[0] == 0, ++tst, report);
+	for (int i=0; i < 1000000; i++) s.Set(&tstStr, 255);
+	t += TestReport(s.GetLength() == 10 && !strcmp(s.Get(), "1234567890"), ++tst, report);
+	{ // unalloc tst
+		WDL_String s1;
+		WDL_String s2(s1);
+		t += TestReport(!s2.GetLength() && s2.Get()[0] == 0, ++tst, report);
+	}
+
+
+	// Append2
+	strcat(report, "\nAppend2:\n");
+
+	s.Set("123");
+	s.Append(&tstStr4567890);
+	t += TestReport(s.GetLength() == 10 && !strcmp(s.Get(), "1234567890"), ++tst, report);
+	s.Append(&tstStr, 3);
+	t += TestReport(s.GetLength() == 13 && !strcmp(s.Get(), "1234567890123"), ++tst, report);
+	s.Append(&tstEmptyStr, 3);
+	t += TestReport(s.GetLength() == 13 && !strcmp(s.Get(), "1234567890123"), ++tst, report);
+	s.Append(&tstStr4567890, 255);
+	t += TestReport(s.GetLength() == 20 && !strcmp(s.Get(), "12345678901234567890"), ++tst, report);
+	{ // unalloc tst
+		WDL_String s2;
+		s2.Append(&tstStr, 5);
+		t += TestReport(s2.GetLength() == 5 && !strcmp(s2.Get(), "12345"), ++tst, report);
+	}
+	// speed test
+	s.Set("");
+	t2 = GetTickCount();
+	for (int i=0; (GetTickCount()-t2) < 10000 && i < 1000000; i++)
+		s.Append(&tstStr);
+	t += TestReport((GetTickCount()-t2) < 10000 && s.GetLength() == 10000000, ++tst, report);
+
+
+	// Insert2
+	strcat(report, "\nInsert2:\n");
+
+	s.Set("1234567890");
+	s.Insert(&tstStr4567890, 255, 3);
+	t += TestReport(s.GetLength() == 13 && !strcmp(s.Get(), "1234567890456"), ++tst, report);
+	s.Insert(&tstStr, 10, 3);
+	t += TestReport(s.GetLength() == 16 && !strcmp(s.Get(), "1234567890123456"), ++tst, report);
+	s.Insert(&tstStr7890, 255);
+	t += TestReport(s.GetLength() == 20 && !strcmp(s.Get(), "12345678901234567890"), ++tst, report);
+	s.Insert(&tstEmptyStr, 2);
+	t += TestReport(s.GetLength() == 20 && !strcmp(s.Get(), "12345678901234567890"), ++tst, report);
+	s.Insert(&tstStr1234567890123, 0, 10);
+	t += TestReport(s.GetLength() == 30 && !strcmp(s.Get(), "123456789012345678901234567890"), ++tst, report);
+	{ // unalloc tst
+		WDL_String s2;
+		s2.Insert(&tstStr, 5, 5);
+		t += TestReport(s2.GetLength() == 5 && !strcmp(s2.Get(), "12345"), ++tst, report);
+	}
+	// speed tests
+	s.Set("");
+	t2 = GetTickCount();
+	for (int i=0; (GetTickCount()-t2) < 10000 && i < 1000000; i++)
+		s.Insert(&tstStr, !s.GetLength() ? 0 : s.GetLength()-9);
+	t += TestReport((GetTickCount()-t2) < 10000 && s.GetLength() == 10000000, ++tst, report);
+
+
+
+	//////////////////////////////////////////////////////////////////////
+
+	char totalTime[64];
+	_snprintf(totalTime, 64, "TOTAL TIME: %1.3f sec\n", (float)t/1000);
+
+	char report2[4096] = ""; 
+	strcat(report2, totalTime);
+	strcat(report2, report);
+	ShowConsoleMsg(report2);
+}
 

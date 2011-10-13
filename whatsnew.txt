@@ -2,6 +2,22 @@ Added actions:
 +SWS/AW: Toggle auto group newly recorded items
 +SWS/S&M: Set selected tracks to first unused group (default flags)
 +SWS/S&M: Set selected tracks to group n (default flags) - where n is in [1; 8] by default but it can be customized in the S&M.ini file (32 track groups max)
++SWS/S&M: Remove track grouping for selected tracks
+
+Cue Buss Generator & Live Configs: track templates improvements (same as Issue 376)
+
+Resources view: saved FX chains and track templates are now indented
+
+Notes/Help view: better resizing, improved "big font" display (less flickering)
+
+Faster REAPER startup, especially with large projects (for real this time!)
+
+House cleaning:
++Removed folowing actions (the action "Create cue buss track from track selection (use last settings)" is enough):
+SWS/S&M: Create cue buss track from track selection (pre-fader/post-FX)
+SWS/S&M: Create cue buss track from track selection (post-fader)
+SWS/S&M: Create cue buss track from track selection (pre-FX)
++Some actions were slightly renamed ("ME" -> "MIDI Editor")
 
 !v2.1.0 #14 (October 9, 2011)
 "Auto-refresh toolbars" option (Main menu > Extensions > SWS options): added toolbar enabled actions and advanced parameter

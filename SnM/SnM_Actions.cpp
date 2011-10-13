@@ -41,11 +41,13 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// Beware! S&M actions expect "SWS/S&M: " in their names (removed from undo messages: too long)
 
 	// Routing & cue buss -----------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-fader (post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, post-fader (post-pan)" }, "S&M_SENDS2", cueTrack, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection, pre-FX" }, "S&M_SENDS3", cueTrack, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection (use last settings)" }, "S&M_CUEBUS", cueTrack, NULL, -1},
+#ifdef _SNM_MISC // the previous one is enough
+	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection (use last settings but pre-fader/post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection (use last settings but post-fader)" }, "S&M_SENDS2", cueTrack, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection (use last settings but pre-FX)" }, "S&M_SENDS3", cueTrack, NULL, 1},
+#endif
 	{ { DEFACCEL, "SWS/S&M: Open Cue Buss generator" }, "S&M_SENDS4", openCueBussWnd, "S&&M Cue Buss generator", NULL, isCueBussWndDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection" }, "S&M_CUEBUS", cueTrack, NULL, -1},
 
 	{ { DEFACCEL, "SWS/S&M: Remove receives from selected tracks" }, "S&M_SENDS5", removeReceives, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Remove sends from selected tracks" }, "S&M_SENDS6", removeSends, NULL, },
@@ -380,7 +382,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Copy selected track grouping" }, "S&M_COPY_TR_GRP", copyCutTrackGrouping, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Cut selected tracks grouping" }, "S&M_CUT_TR_GRP", copyCutTrackGrouping, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Paste grouping to selected tracks" }, "S&M_PASTE_TR_GRP", pasteTrackGrouping, NULL, },
-
+	{ { DEFACCEL, "SWS/S&M: Remove track grouping for selected tracks" }, "S&M_REMOVE_TR_GRP", removeTrackGrouping, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Set selected tracks to first unused group (default flags)" }, "S&M_SET_TRACK_UNUSEDGROUP", SetTrackToFirstUnusedGroup, NULL, },
 
 	{ { DEFACCEL, "SWS/S&M: Save selected tracks folder states" }, "S&M_SAVEFOLDERSTATE1", saveTracksFolderStates, NULL, 0},
@@ -451,12 +453,12 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// Cyclactions ---------------------------------------------------------------
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor" }, "S&M_CREATE_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 0, isCyclationsWndDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor (MIDI editor event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 1, isCyclationsWndDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor (MIDI editor piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 2, isCyclationsWndDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor (MIDI Editor event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 1, isCyclationsWndDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor (MIDI Editor piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 2, isCyclationsWndDisplayed},
 #else
 	{ { DEFACCEL, "SWS/S&M: Create cycle action" }, "S&M_CREATE_CYCLACTION", openCyclactionsWnd, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Create cycle action (MIDI editor event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", openCyclactionsWnd, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Create cycle action (MIDI editor piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", openCyclactionsWnd, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Create cycle action (MIDI Editor event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", openCyclactionsWnd, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Create cycle action (MIDI Editor piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", openCyclactionsWnd, NULL, 2},
 #endif
 
 	// REC inputs -------------------------------------------------------------
@@ -508,15 +510,14 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Dump action list (w/o SWS extension)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (SWS extension only)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 4},
 #endif
-	
-#ifdef _SNM_MISC // experimental, deprecated, etc.. 
+#ifdef _SNM_MISC // tests, experimental, deprecated, etc.. 
 	{ { DEFACCEL, "SWS/S&M: Let REAPER breathe" }, "S&M_LETBREATHE", LetREAPERBreathe, NULL, },
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take volume envelope" }, "S&M_TMP1", ShowTakeEnvPadreTest, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take pan envelope" }, "S&M_TMP2", ShowTakeEnvPadreTest, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take mute envelope" }, "S&M_TMP3", ShowTakeEnvPadreTest, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: stuff..." }, "S&M_TMP4", OpenStuff, NULL, },
-	{ { DEFACCEL, "SWS/S&M: TestWDLString" }, "S&M_TestWDLString", TestWDLString, NULL, },
 #endif
+	{ { DEFACCEL, "SWS/S&M: test -> WDL_String" }, "S&M_TMP5", TestWDLString, NULL, },
 
 #ifdef _SWS_MENU
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, }, // for main "Extensions" menu
@@ -570,8 +571,8 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Unfloat FX %02d for selected tracks" }, "S&M_UNFLOATFX", unfloatFX, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Toggle float FX %02d for selected tracks" }, "S&M_TOGLFLOATFX", toggleFloatFX, NULL, 8, fakeIsToggledAction},
 
-	{ { DEFACCEL, "SWS/S&M: Active ME - Restore displayed CC lanes, slot %02d" }, "S&M_MESETCCLANES", MESetCCLanes, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Active ME - Save displayed CC lanes, slot %02d" }, "S&M_MESAVECCLANES", MESaveCCLanes, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Restore displayed CC lanes, slot %02d" }, "S&M_MESETCCLANES", MESetCCLanes, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Save displayed CC lanes, slot %02d" }, "S&M_MESAVECCLANES", MESaveCCLanes, NULL, 4},
 
 	{ { DEFACCEL, "SWS/S&M: Set selected tracks to group %02d (default flags)" }, "S&M_SET_TRACK_GROUP", SetTrackGroup, SNM_MAX_TRACK_GROUPS_STR, 8},
 
@@ -765,20 +766,20 @@ void SNM_ShowActionList(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 
 // see g_SNM_dynamicCmdTable's comments
-int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _fn)
+int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 {
 	char actionName[SNM_MAX_ACTION_NAME_LEN], custId[SNM_MAX_ACTION_CUSTID_LEN];
 	int i = 0;
 	while(_cmds[i].id != LAST_COMMAND)
 	{
 		COMMAND_T* ct = &_cmds[i++];
-		int nb = GetPrivateProfileInt("NbOfActions", ct->id, (int)ct->user, g_SNMiniFilename.Get());
+		int nb = GetPrivateProfileInt("NbOfActions", ct->id, (int)ct->user, _inifn);
 		nb = BOUNDED(nb, 0, ct->menuText == NULL ? SNM_MAX_DYNAMIC_ACTIONS : atoi(ct->menuText));
 		for (int j=0; j < nb; j++)
 		{
 			_snprintf(actionName, SNM_MAX_ACTION_NAME_LEN, ct->accel.desc, j+1);
 			_snprintf(custId, SNM_MAX_ACTION_CUSTID_LEN, "%s%d", ct->id, j+1);
-			if (SWSRegisterCommandExt3(ct->doCommand, ct->getEnabled, 0, custId, actionName, j, _fn))
+			if (SWSRegisterCommandExt3(ct->doCommand, ct->getEnabled, 0, custId, actionName, j, __FILE__))
 				ct->user = nb; // patch the real number of instances
 			else
 				return 0;
@@ -856,13 +857,21 @@ void IniFileExit()
 	// save general prefs & info
 	iniSection.AppendFormatted(128, "; S&M.ini - SWS/S&M Extension v%d.%d.%d Build #%d\n", SWS_VERSION); 
 	iniSection.AppendFormatted(BUFFER_SIZE, "; %s\n", g_SNMiniFilename.Get()); 
-	iniSection.AppendFormatted(64, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0);
+	iniSection.AppendFormatted(64, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_toolbarsAutoRefreshFreq);
 	iniSection.AppendFormatted(64, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1 : 0); 
 	SaveIniSection("General", &iniSection, g_SNMiniFilename.Get());
 
 	// save dynamic actions
 	SNMSaveDynamicCommands(g_SNM_dynamicCmdTable, g_SNMiniFilename.Get());
+
+/*JFB not needed (issue 292 fixed in r504)
+#ifdef _WIN32
+		// issue 292: force writing of the ini file
+		// http://support.microsoft.com/kb/68827
+		WritePrivateProfileString(NULL, NULL, NULL, g_SNMiniFilename.Get());
+#endif
+*/
 }
 
 
@@ -898,7 +907,7 @@ int SnMInit(reaper_plugin_info_t* _rec)
 #endif
 	// Actions should be registered before views
 	if (!SWSRegisterCommands(g_SNM_cmdTable) || 
-		!SNMRegisterDynamicCommands(g_SNM_dynamicCmdTable, __FILE__) ||
+		!SNMRegisterDynamicCommands(g_SNM_dynamicCmdTable, g_SNMiniFilename.Get()) ||
 		!SNMSectionRegisterCommands(_rec))
 		return 0;
 

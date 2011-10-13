@@ -127,7 +127,7 @@ bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, i
 		int width=0, height=_h;
 		bool txt = false;
 
-		// se top remark..
+		// see top remark..
 		if (!strcmp(_c->GetType(), "vwnd_combobox"))
 		{
 			WDL_VirtualComboBox* cb = (WDL_VirtualComboBox*)_c;

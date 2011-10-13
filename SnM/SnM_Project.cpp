@@ -95,19 +95,12 @@ void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errM
 
 bool autoSaveProjectSlot(bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnSize)
 {
-	bool slotUpdate = false;
-	if (_saveCurPrj)
-		Main_OnCommand(40026,0);
-
+	if (_saveCurPrj) Main_OnCommand(40026,0);
 	char prjFn[BUFFER_SIZE] = "", name[BUFFER_SIZE] = "";
 	EnumProjects(-1, prjFn, BUFFER_SIZE);
 	ExtractFileNameEx(prjFn, name, true);
-
 	GenerateFilename(_dirPath, name, g_prjTemplateFiles.GetFileExt(), _fn, _fnSize);
-	WDL_String chunk;
-	if (LoadChunk(prjFn, &chunk))
-		slotUpdate |= (SaveChunk(_fn, &chunk) && g_prjTemplateFiles.AddSlot(_fn));
-	return slotUpdate;
+	return (SNM_CopyFile(_fn, prjFn) && g_prjTemplateFiles.AddSlot(_fn));
 }
 
 void loadOrSelectProject(COMMAND_T* _ct) {

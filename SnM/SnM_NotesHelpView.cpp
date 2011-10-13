@@ -72,7 +72,7 @@ SWSProjConfig<WDL_String> g_prjNotes;
 
 int g_bDocked = -1, g_bLastDocked = 0; 
 char g_locked = 1;
-char g_lastText[MAX_HELP_LENGTH];
+char g_lastText[MAX_HELP_LENGTH] = "";
 
 // Action help tracking
 //JFB TODO: cleanup when we'll be able to access all sections & custom ids
@@ -295,7 +295,7 @@ void SNM_NotesHelpWnd::saveCurrentPrjNotes()
 	memset(buf, 0, sizeof(buf));
 	GetDlgItemText(GetHWND(), IDC_EDIT, buf, MAX_HELP_LENGTH);
 	if (strncmp(g_lastText, buf, MAX_HELP_LENGTH)) {
-		g_prjNotes.Get()->Set(buf);
+		g_prjNotes.Get()->Set(buf); // CRLF removed only when saving project..
 		Undo_OnStateChangeEx("Edit project notes", UNDO_STATE_MISCCFG, -1);//JFB TODO? -1 to remplace?
 	}
 }
@@ -335,7 +335,6 @@ void SNM_NotesHelpWnd::saveCurrentItemNotes()
 				if (!update && *buf)
 					update = p.InsertAfterBefore(1, newNotes.Get(), "ITEM", g_bv4 ? "IID" : "IGUID", 1, 0, "VOLPAN");
 			}
-			// the patch has occured
 			if (update)
 			{
 				UpdateItemInProject(g_mediaItemNote);
@@ -355,6 +354,7 @@ void SNM_NotesHelpWnd::saveCurrentTrackNotes()
 		GetDlgItemText(GetHWND(), IDC_EDIT, buf, MAX_HELP_LENGTH);
 		if (strncmp(g_lastText, buf, MAX_HELP_LENGTH))
 		{
+			 // CRLF removed only when saving project..
 			bool found = false;
 			for (int i = 0; i < g_pTracksNotes.Get()->GetSize(); i++) 
 			{
@@ -381,9 +381,12 @@ void SNM_NotesHelpWnd::saveCurrentMarkerName()
 			char buf[SNM_MAX_MARKER_NAME_LEN] = "";
 			memset(buf, 0, sizeof(buf));
 			GetDlgItemText(GetHWND(), IDC_EDIT, buf, SNM_MAX_MARKER_NAME_LEN);
-			ShortenStringToFirstRN(buf);
-			if (strncmp(g_lastText, buf, SNM_MAX_MARKER_NAME_LEN) && SetProjectMarker2(NULL, markrgnindexnumber, false, pos, 0.0, buf))
-				Undo_OnStateChangeEx("Edit marker name", UNDO_STATE_ALL, -1);
+			if (strncmp(g_lastText, buf, SNM_MAX_MARKER_NAME_LEN))
+			{
+				ShortenStringToFirstRN(buf);
+				if (SetProjectMarker2(NULL, markrgnindexnumber, false, pos, 0.0, buf))
+					Undo_OnStateChangeEx("Edit marker name", UNDO_STATE_ALL, -1);
+			}
 		}
 	}
 }
@@ -525,15 +528,12 @@ void SNM_NotesHelpWnd::OnInitDlg()
     m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_btnLock.SetID(BUTTONID_LOCK);
-	m_btnLock.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnLock);
 
 	m_btnAlr.SetID(BUTTONID_ALR);
-	m_btnAlr.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnAlr);
 
 	m_cbType.SetID(COMBOID_TYPE);
-	m_cbType.SetRealParent(m_hwnd);
 	m_cbType.AddItem("Project notes");
 	m_cbType.AddItem("Item notes");
 	m_cbType.AddItem("Track notes");
@@ -545,7 +545,6 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_cbType);
 
 	m_txtLabel.SetID(TXTID_LABEL);
-	m_txtLabel.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_txtLabel);
 	
 	m_previousType = -1; // will force refresh
@@ -667,9 +666,75 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	if (!_bm)
 		return;
 	
+	int h=35;
+
+	// big notes (dynamic font size)
+	// drawn first so that it is displayed even in small dlgs..
+	if (g_locked)
+	{
+		char buf[MAX_HELP_LENGTH] = "";
+		GetDlgItemText(GetHWND(), IDC_EDIT, buf, MAX_HELP_LENGTH);
+		if (m_type == MARKER_NAME)
+			ShortenStringToFirstRN(buf);
+
+		int numlines=1, maxlinelen=-1;
+		char* p = strchr(buf, '\n');
+		char* p2 = buf;
+		while (p)
+		{
+		  maxlinelen = max(maxlinelen, (int)(p-p2));
+		  p2 = p+1;
+		  *p=0;
+		  p = strchr(p+1, '\n');
+		  ++numlines;
+		}
+		if (maxlinelen < 1)
+			maxlinelen = strlen(buf);
+		else
+			maxlinelen--; // lines in CRLF
+
+		p=buf;
+
+		static LICE_CachedFont dynFont;
+
+		// creating fonts is ***super slow***
+		// => use a text width estimation instead
+		int fontHeight = (int)((_bm->getHeight()-h)/numlines + 0.5);
+		while (fontHeight > 5 && (fontHeight*maxlinelen*0.6) > _bm->getWidth()) 
+			fontHeight--;
+
+		if (fontHeight <= 5)
+			return;
+
+		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
+		HFONT lf = CreateFont(fontHeight,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE);
+		dynFont.SetFromHFont(lf,LICE_FONT_FLAG_OWNS_HFONT);
+		dynFont.SetBkMode(TRANSPARENT);
+		dynFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
+
+		int top = (int)(h + (_bm->getHeight()-h)/2 - (fontHeight*numlines)/2 + 0.5);
+		for (int i = 0; i < numlines; ++i)
+		{                   
+			RECT tr = {0,0,0,0};
+			dynFont.DrawText(NULL, p, -1, &tr, DT_CALCRECT);
+			int txtw = tr.right - tr.left;
+			tr.top = top + i*fontHeight;
+			tr.bottom = tr.top+fontHeight;
+			tr.left = (int)(_bm->getWidth()/2 - txtw/2 + 0.5);
+			tr.right = tr.left + txtw;
+			dynFont.DrawText(_bm, p, -1, &tr, 0);
+			p += strlen(p)+1;
+		}
+		dynFont.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
+		DeleteObject(lf); 
+    }
+	else
+		LICE_FillRect(_bm,0,h,_bm->getWidth(),_bm->getHeight()-h,WDL_STYLE_GetSysColor(COLOR_WINDOW),0.5,LICE_BLIT_MODE_COPY);
+
 	LICE_CachedFont* font = SNM_GetThemeFont();
 	IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);// returns the whole icon theme (icontheme.h) and the size
-	int x0=_r->left+10, h=35;
+	int x0=_r->left+10;
 
 	// Lock button
 	WDL_VirtualIconButton_SkinConfig* img = it ? &(it->toolbar_lock[!g_locked]) : NULL;
@@ -752,80 +817,6 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 		return;
 
 	AddSnMLogo(_bm, _r, x0, h);
-
-	// big notes (dynamic font size)
-	if (g_locked)
-	{
-		char txt[MAX_HELP_LENGTH] = "";
-		GetDlgItemText(GetHWND(), IDC_EDIT, txt, MAX_HELP_LENGTH);
-		if (m_type == MARKER_NAME)
-			ShortenStringToFirstRN(txt);
-
-/*JFB light weight display, looks bad..
-		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
-		int ww,hh;
-		LICE_MeasureText(txt, &ww, &hh);
-		LICE_MemBitmap* img_txt = new LICE_MemBitmap(ww,hh);
-		LICE_Clear(img_txt,0);
-		LICE_DrawText(img_txt,0,0,txt,ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255),1.0,LICE_BLIT_MODE_COPY);
-		LICE_ScaledBlit(_bm,img_txt,10,h+5,_bm->getWidth()-10,_bm->getHeight()-h,0,0,ww,hh,1.0,LICE_BLIT_MODE_ADD);
-		delete img_txt;
-*/
-
-		char buf[MAX_HELP_LENGTH] = "";
-		lstrcpyn(buf, txt, MAX_HELP_LENGTH);                    
-		int numlines=1, maxlinelen=-1;
-		char* p = strstr(buf, "\n");
-		char* p2 = buf;
-		while (p)
-		{
-		  maxlinelen = max(maxlinelen, (int)(p-p2));
-		  p2 = p+1;
-		  *p=0;
-		  p = strstr(p+1, "\n");
-		  ++numlines;
-		}
-		if (maxlinelen < 0)
-			maxlinelen = strlen(buf);
-
-		p=buf;
-
-		static LICE_CachedFont dynFont;
-
-		// creating fonts is ***super slow***
-		// => use a text width estimation instead
-		int fontHeight = (int)((_bm->getHeight()-h)/numlines + 0.5);
-		while (fontHeight > 5 && (fontHeight*maxlinelen*0.6) > _bm->getWidth()) 
-			fontHeight--;
-
-		if (fontHeight <= 5)
-			return;
-
-		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
-		HFONT lf = CreateFont(fontHeight,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE);
-		dynFont.SetFromHFont(lf,LICE_FONT_FLAG_OWNS_HFONT);
-		dynFont.SetBkMode(TRANSPARENT);
-		dynFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
-
-		int top = (int)(h + (_bm->getHeight()-h)/2 - (fontHeight*numlines)/2 + 0.5);
-		for (int i = 0; i < numlines; ++i)
-		{                   
-			RECT tr = {0,0,0,0};
-			dynFont.DrawText(NULL, p, -1, &tr, DT_CALCRECT);
-			int txtw = tr.right - tr.left;
-			tr.top = top + i*fontHeight;
-			tr.bottom = tr.top+fontHeight;
-			tr.left = (int)(_bm->getWidth()/2 - txtw/2 + 0.5);
-			tr.right = tr.left + txtw;
-			dynFont.DrawText(_bm, p, -1, &tr, 0);
-			p += strlen(p)+1;
-		}
-		dynFont.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
-		DeleteObject(lf); 
-    }
-	else
-		LICE_FillRect(_bm,0,h,_bm->getWidth(),_bm->getHeight()-h,WDL_STYLE_GetSysColor(COLOR_WINDOW),0.5,LICE_BLIT_MODE_COPY);
 }
 
 void SNM_NotesHelpWnd::OnResize() {
@@ -1133,13 +1124,13 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	// If so, just ignore the possibility that there might be project notes.
 	if (strlen(buf) > 3 && _stricmp(buf+strlen(buf)-3, "RPP") == 0)
 	{
-		WDL_String rpp;
+		WDL_String startOfrpp;
 
-		// avoid useless parsing if S&M project notes are already present
-		// i.e. faster REAPER startup, done once per project in the worst case
-		if (LoadChunk(buf, &rpp) && !strstr(rpp.Get(), "<S&M_PROJNOTES\n"))
+		// jut read the very begining of the file (where notes are, no-op if notes are longer)
+		// => much faster REAPER startup (based on the parser tolerance..)
+		if (LoadChunk(buf, &startOfrpp, false, MAX_HELP_LENGTH+128) && startOfrpp.GetLength())
 		{
-			SNM_ChunkParserPatcher p(&rpp);
+			SNM_ChunkParserPatcher p(&startOfrpp);
 			WDL_String notes;
 			if (p.GetSubChunk("NOTES", 2, 0, &notes, "RIPPLE") >= 0)
 			{

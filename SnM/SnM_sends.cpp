@@ -31,17 +31,17 @@
 #include "../../WDL/projectcontext.h"
 
 
-WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndTrackClipboard; 
-WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvTrackClipboard; 
-WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndClipboard;
-WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvClipboard;
+/*JFB
+bug (?): there are UI refresh issues when updating routings through the API
+see http://forum.cockos.com/project.php?issueid=2642
+*/
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Cue buss 
 ///////////////////////////////////////////////////////////////////////////////
 
-// Adds a receive (with vol & pan from source track for pre-fader)
+// adds a receive (with vol & pan from source track for pre-fader)
 // _srcTr:  source track (unchanged)
 // _destTr: destination track
 // _type:   reaper's type
@@ -57,10 +57,10 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 	if (_type == 3)
 	{
 		SNM_ChunkParserPatcher p1(_srcTr, false);
-		if (p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 4, 0, 1, vol) > 0 &&
-			p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 4, 0, 2, pan) > 0)
+		if (p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 4, 0, 1, vol, NULL, "MUTESOLO") > 0 &&
+			p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 4, 0, 2, pan, NULL, "MUTESOLO") > 0)
 		{
-			update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0); // null values managed
+			update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
 		}
 	}
 
@@ -74,7 +74,6 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 	return update;
 }
 
-// Adds a cue buss track from track selection
 // _type:   reaper's type
 //          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
 // _undoMsg NULL=no undo
@@ -85,8 +84,8 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 {
 	bool updated = false;
 
-	WDL_String chunk;
-	if (_trTemplatePath && !LoadChunk(_trTemplatePath, &chunk))
+	WDL_String tmpltChunk;
+	if (_trTemplatePath && (!LoadChunk(_trTemplatePath, &tmpltChunk) || !tmpltChunk.GetLength()))
 	{
 		char err[512] = "";
 		sprintf(err, "Cue buss not created!\nInvalid track template file: %s", _trTemplatePath);
@@ -111,35 +110,24 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 				cueTr = CSurf_TrackFromID(GetNumTracks(), false);
 				GetSetMediaTrackInfo(cueTr, "P_NAME", (void*)_busName);
 				p = new SNM_SendPatcher(cueTr);
-				if (chunk.GetLength())
-					p->SetChunk(&chunk, 1);
+				if (tmpltChunk.GetLength())
+					applyTrackTemplate(cueTr, &tmpltChunk, true, p);
 				updated = true;
 			}
 
 			// add a send
 			if (cueTr && p && tr != cueTr)
-			{
 				addReceiveWithVolPan(tr, cueTr, _type, p); 
-#ifdef _SNM_TRACK_GROUP_EX
-				SNM_ChunkParserPatcher pSrc(tr);
-				updated |= (addSoloToGroup(cueTr, _soloGrp, true, &pSrc) > 0); // nop if invalid prms
-#endif
-			}
 		}
 	}
 
 	if (cueTr && p)
 	{
-#ifdef _SNM_TRACK_GROUP_EX
-		// add slave solo to track grouping
-		updated |= (addSoloToGroup(cueTr, _soloGrp, false, p) > 0); // nop if invalid prms
-#endif
 		// send to master/parent init
-		if (!chunk.GetLength())
+		if (!tmpltChunk.GetLength())
 		{
 			// solo defeat
-			if (_soloDefeat)
-			{
+			if (_soloDefeat) {
 				char c1[2] = "1";
 				updated |= (p->ParsePatch(SNM_SET_CHUNK_CHAR, 1, "TRACK", "MUTESOLO", -1, 0, 3, c1) > 0);
 			}
@@ -289,6 +277,11 @@ void saveCueBusIniFile(const char* _busName, int _type, bool _trTemplate, const 
 ///////////////////////////////////////////////////////////////////////////////
 // Cut/Copy/Paste: track with sends, routings
 ///////////////////////////////////////////////////////////////////////////////
+
+WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndTrackClipboard;
+WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvTrackClipboard; 
+WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndClipboard;
+WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvClipboard;
 
 void flushClipboard(WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _clipboard) {
 	if (_clipboard)

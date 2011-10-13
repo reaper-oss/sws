@@ -271,7 +271,7 @@ void FileSlotList::EditSlot(int _slot)
 			WinSpawnNotepad(fullPath);
 #else
 			WDL_String chain;
-			if (LoadChunk(fullPath, &chain))
+			if (LoadChunk(fullPath, &chain, false))
 			{
 				char title[64] = "";
 				_snprintf(title, 64, "S&M - %s (slot %d)", m_desc.Get(), _slot+1);
@@ -415,10 +415,10 @@ void SNM_ResourceView::OnItemDblClk(SWS_ListItem* item, int iCol)
 				switch(g_dblClickType[g_type])
 				{
 					case 0:
-						applyOrImportTrackSlot(TRT_LOAD_APPLY_STR, false, slot, false, !wasDefaultSlot);
+						applyOrImportTrackSlot(TRT_LOAD_APPLY_STR, false, slot, false, false, !wasDefaultSlot);
 						break;
 					case 1:
-						applyOrImportTrackSlot(TRT_LOAD_IMPORT_STR, true, slot, false, !wasDefaultSlot);
+						applyOrImportTrackSlot(TRT_LOAD_IMPORT_STR, true, slot, false, false, !wasDefaultSlot);
 						break;
 					case 2:
 						replaceOrPasteItemsFromTrackSlot(TRT_LOAD_PASTE_ITEMS_STR, true, slot, !wasDefaultSlot);
@@ -679,7 +679,6 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_cbType.SetID(COMBOID_TYPE);
-	m_cbType.SetRealParent(m_hwnd);
 	m_cbType.AddItem("FX chains");
 	m_cbType.AddItem("Track templates");
 	m_cbType.AddItem("Project templates");
@@ -687,12 +686,10 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_cbType);
 
 	m_cbDblClickType.SetID(COMBOID_DBLCLICK_TYPE);
-	m_cbDblClickType.SetRealParent(m_hwnd);
 	FillDblClickTypeCombo(); //JFB single call to SetType() instead !?
 	m_parentVwnd.AddChild(&m_cbDblClickType);
 
 	m_cbDblClickTo.SetID(COMBOID_DBLCLICK_TO);
-	m_cbDblClickTo.SetRealParent(m_hwnd);
 	m_cbDblClickTo.AddItem("Tracks");
 	m_cbDblClickTo.AddItem("Tracks (input FX)");
 	m_cbDblClickTo.AddItem("Items");
@@ -701,15 +698,12 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_cbDblClickTo);
 
 	m_btnAutoSave.SetID(BUTTONID_AUTO_SAVE);
-	m_btnAutoSave.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_btnAutoSave);
 
 	m_txtDblClickType.SetID(TXTID_DBL_TYPE);
-	m_txtDblClickType.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_txtDblClickType);
 
 	m_txtDblClickTo.SetID(TXTID_DBL_TO);
-	m_txtDblClickTo.SetRealParent(m_hwnd);
 	m_parentVwnd.AddChild(&m_txtDblClickTo);
 
 	// This restores the text filter when docking/undocking
@@ -914,7 +908,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case TRT_LOAD_APPLY_MSG:
 		case TRT_LOAD_IMPORT_MSG:
 			if (item && slot >= 0) {
-				applyOrImportTrackSlot(wParam == TRT_LOAD_APPLY_MSG ? TRT_LOAD_APPLY_STR : TRT_LOAD_IMPORT_STR, wParam == TRT_LOAD_IMPORT_MSG, slot, false, !wasDefaultSlot);
+				applyOrImportTrackSlot(wParam == TRT_LOAD_APPLY_MSG ? TRT_LOAD_APPLY_STR : TRT_LOAD_IMPORT_STR, wParam == TRT_LOAD_IMPORT_MSG, slot, false, false, !wasDefaultSlot);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -1320,7 +1314,6 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	int x0=_r->left+10, h=35;
 
 	// defines a new rect 'r' that takes the filter edit box into account (contrary to '_r')
-	//JFB!!! OK on OSX !?
 	RECT r;
 	GetWindowRect(GetDlgItem(m_hwnd, IDC_FILTER), &r);
 	ScreenToClient(m_hwnd, (LPPOINT)&r);

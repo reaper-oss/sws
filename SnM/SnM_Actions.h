@@ -382,8 +382,8 @@ void DumpActionList(COMMAND_T*);
 void ShowTakeEnvPadreTest(COMMAND_T*);
 void dumpWikiActionList(COMMAND_T*);
 void OpenStuff(COMMAND_T*);
-#endif
 void TestWDLString(COMMAND_T*);
+#endif
 
 // *** SnM_NotesHelpView.cpp ***
 extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;

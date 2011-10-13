@@ -408,25 +408,33 @@ int WDL_STYLE_GetSysColor(int i)
 #endif
 	{
 		int col3ds,col3dl,bgcol;
-		if (GSC_mainwnd)
-		{
-			col3ds = GSC_mainwnd(COLOR_3DSHADOW);
-			col3dl = GSC_mainwnd(COLOR_3DHILIGHT);
-			bgcol = GSC_mainwnd(COLOR_WINDOW);
+		if (ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL)) {
+			col3dl = LICE_RGBA_FROMNATIVE(ct->io_3d[0],255);
+			col3ds = LICE_RGBA_FROMNATIVE(ct->io_3d[1],255);
+#ifdef _WIN32
+			if (i == COLOR_3DLIGHT || i == COLOR_3DHILIGHT)
+#else
+			if ( i == COLOR_3DHILIGHT)	
+#endif
+				col = col3dl;
+			else if (i == COLOR_3DSHADOW)
+				col = col3ds;
 		}
 		else
 		{
-			col3ds = GetSysColor(COLOR_3DSHADOW);
-			col3dl = GetSysColor(COLOR_3DHILIGHT);
-			bgcol = GetSysColor(COLOR_WINDOW);
+			if (GSC_mainwnd) {
+				col3ds = GSC_mainwnd(COLOR_3DSHADOW);
+				col3dl = GSC_mainwnd(COLOR_3DHILIGHT);
+				bgcol = GSC_mainwnd(COLOR_WINDOW);
+			}
+			else {
+				col3ds = GetSysColor(COLOR_3DSHADOW);
+				col3dl = GetSysColor(COLOR_3DHILIGHT);
+				bgcol = GetSysColor(COLOR_WINDOW);
+			}
 		}
-/*JFB
-		col3ds =  LICE_RGBA_FROMNATIVE(col3ds, 255);
-		col3dl =  LICE_RGBA_FROMNATIVE(col3dl, 255);
-		bgcol =  LICE_RGBA_FROMNATIVE(bgcol, 255);
-*/
-		if (col3ds == col3dl || col3ds == bgcol || col3dl == bgcol)
-		{
+
+		if (col3ds == col3dl || col3ds == bgcol || col3dl == bgcol) {
 			int colDelta = SNM_3D_COLORS_DELTA * (i == COLOR_3DSHADOW ? -1 : 1);
 		    col = RGB(
 				BOUNDED(LICE_GETR(bgcol) + colDelta, 0, 0xFF),

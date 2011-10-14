@@ -76,6 +76,8 @@
 #define PRJ_SELECT_LOAD_NEWTAB_MSG		0x110051
 #define PRJ_AUTO_FILL_RECENTS_MSG		0x110052
 #define PRJ_LOADER_CONF					0x110053
+#define PRJ_LOADER_SET					0x110054
+#define PRJ_LOADER_CLEAR				0x110055
 
 // labels shared by actions and popup menu items
 #define FXC_LOAD_APPLY_TRACK_STR		"Apply FX chain to selected tracks"
@@ -127,7 +129,7 @@ enum {
 // on Windows 7 while saving related data in INI files (lists were already unallocated..)
 // Anyway, no prob here because application exit will destroy the entire runtime context regardless.
 
-static SNM_ResourceWnd* g_pResourcesWnd = NULL;
+/*JFB static*/ SNM_ResourceWnd* g_pResourcesWnd = NULL;
 static SWS_LVColumn g_fxChainListCols[] = { {65,2,"Slot"}, {100,1,"Name"}, {250,2,"Path"}, {200,1,"Comment"} };
 
 FileSlotList g_fxChainFiles(SNM_SLOT_TYPE_FX_CHAINS, "FXChains", "FX chain", "RfxChain");
@@ -141,8 +143,8 @@ WDL_String g_filter(FILTER_DEFAULT_STR);
 
 // other prefs are member variables of SNM_ResourceWnd
 int g_filterPref = 1; // 0: name, 1: path, 2: comment
-int g_projectLoaderStartSlotPref = -1; // 1-based
-int g_projectLoaderEndSlotPref = -1; // 1-based
+int g_prjLoaderStartPref = -1; // 1-based
+int g_prjLoaderEndPref = -1; // 1-based
 
 int g_dblClickType[SNM_SLOT_TYPE_COUNT];
 int g_dblClickTo = 0; // for fx chains only
@@ -314,8 +316,14 @@ void SNM_ResourceView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 			case 0:
 			{
 				int slot = GetCurList()->Find(pItem);
-				if (slot >= 0)
-					_snprintf(str, iStrMax, "%5.d", slot+1);
+				if (slot >= 0) {
+					slot++;
+					if (g_type == SNM_SLOT_TYPE_PRJ_TEMPLATES && isProjectLoaderConfValid())
+						_snprintf(str, iStrMax, "%5.d %s", slot, slot<g_prjLoaderStartPref || slot>g_prjLoaderEndPref ? "  " : 
+							g_prjLoaderStartPref==slot ? "->" : g_prjLoaderEndPref==slot ? "<-" :  "--");
+					else
+						_snprintf(str, iStrMax, "%5.d", slot);
+				}
 			}
 			break;
 			case 1:
@@ -346,6 +354,10 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 			// file renaming
 			case 1:
 			{
+/*JFB!!! slight SWS_ListView::OnNotify() update needed here..
+				if (pItem->IsDefault())
+					OnItemDblClk(item, 0);
+*/
 				char fn[BUFFER_SIZE] = "";
 				if (GetCurList()->GetFullPath(slot, fn, BUFFER_SIZE) && !pItem->IsDefault() && FileExistsErrMsg(fn))
 				{
@@ -646,8 +658,8 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_autoSaveTrTmpltWithItemsPref = (GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", 1, g_SNMiniFilename.Get()) == 1);
 	g_filterPref = GetPrivateProfileInt("RESOURCE_VIEW", "FilterByPath", 1, g_SNMiniFilename.Get());
 
-	g_projectLoaderStartSlotPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderStartSlot", 1, g_SNMiniFilename.Get());
-	g_projectLoaderEndSlotPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderEndSlot", g_filesLists.Get(SNM_SLOT_TYPE_PRJ_TEMPLATES)->GetSize(), g_SNMiniFilename.Get());
+	g_prjLoaderStartPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderStartSlot", 1, g_SNMiniFilename.Get());
+	g_prjLoaderEndPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderEndSlot", g_filesLists.Get(SNM_SLOT_TYPE_PRJ_TEMPLATES)->GetSize(), g_SNMiniFilename.Get());
 
 	// auto-save & auto-fill directories
 	{
@@ -965,6 +977,27 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			projectLoaderConf(NULL);
 			break;
 
+		case PRJ_LOADER_SET:
+		{
+			int min=GetCurList()->GetSize(), max=0;
+			while(item) {
+				slot = GetCurList()->Find(item)+1;
+				if (slot>max) max = slot;
+				if (slot<min) min = slot;
+				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
+			}
+			if (max>min) {
+				g_prjLoaderStartPref = min;
+				g_prjLoaderEndPref = max;
+				Update();
+			}
+			break;
+		}
+		case PRJ_LOADER_CLEAR:
+			g_prjLoaderStartPref = g_prjLoaderEndPref = -1;
+			Update();
+			break;
+
 		// ***** WDL GUI & others *****
 		default:
 		{
@@ -1098,8 +1131,11 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 	}
 
 	if (g_type == SNM_SLOT_TYPE_PRJ_TEMPLATES) {
+		int x=0, nbsel=0; while(m_pLists.Get(0)->EnumSelected(&x))nbsel++;
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		AddToMenu(hMenu, "Project loader/selecter configuration...", PRJ_LOADER_CONF);
+		AddToMenu(hMenu, "Set project loader/selecter from selection", PRJ_LOADER_SET, -1, false, nbsel>1 ? MF_ENABLED : MF_GRAYED);
+		AddToMenu(hMenu, "Clear project loader/selecter configuration", PRJ_LOADER_CLEAR, -1, false, isProjectLoaderConfValid() ? MF_ENABLED : MF_GRAYED);
 	}
 
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
@@ -1140,9 +1176,9 @@ void SNM_ResourceWnd::OnDestroy()
 	sprintf(cTmp, "%d", g_filterPref);
 	WritePrivateProfileString("RESOURCE_VIEW", "FilterByPath", cTmp, g_SNMiniFilename.Get()); 
 
-	sprintf(cTmp, "%d", g_projectLoaderStartSlotPref);
+	sprintf(cTmp, "%d", g_prjLoaderStartPref);
 	WritePrivateProfileString("RESOURCE_VIEW", "ProjectLoaderStartSlot", cTmp, g_SNMiniFilename.Get()); 
-	sprintf(cTmp, "%d", g_projectLoaderEndSlotPref);
+	sprintf(cTmp, "%d", g_prjLoaderEndPref);
 	WritePrivateProfileString("RESOURCE_VIEW", "ProjectLoaderEndSlot", cTmp, g_SNMiniFilename.Get()); 
 
 	// auto-save & auto-fill directories

@@ -401,6 +401,7 @@ void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errM
 bool autoSaveProjectSlot(bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnSize);
 void loadOrSelectProject(COMMAND_T*);
 void loadOrSelectProjectNewTab(COMMAND_T*);
+bool isProjectLoaderConfValid();
 void projectLoaderConf(COMMAND_T*);
 void loadOrSelectNextPreviousProject(COMMAND_T*);
 void openProjectPathInExplorerFinder(COMMAND_T*);

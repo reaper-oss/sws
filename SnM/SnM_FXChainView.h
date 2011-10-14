@@ -125,8 +125,8 @@ extern FileSlotList g_fxChainFiles;
 extern FileSlotList g_trTemplateFiles;
 extern FileSlotList g_prjTemplateFiles;
 
-extern int g_projectLoaderStartSlotPref;
-extern int g_projectLoaderEndSlotPref;
+extern int g_prjLoaderStartPref;
+extern int g_prjLoaderEndPref;
 
 
 class SNM_ResourceView : public SWS_ListView

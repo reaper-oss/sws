@@ -117,69 +117,57 @@ void loadOrSelectProjectNewTab(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Project loader actions
+// Project loader/selecter actions
 ///////////////////////////////////////////////////////////////////////////////
 
+extern SNM_ResourceWnd* g_pResourcesWnd; // SNM_ResourceView.cpp
 int g_prjCurSlot = -1; // 0-based
 
 bool isProjectLoaderConfValid() {
-	return (g_projectLoaderStartSlotPref > 0 && 
-		g_projectLoaderEndSlotPref > g_projectLoaderStartSlotPref && 
-		g_projectLoaderEndSlotPref <= g_prjTemplateFiles.GetSize());
-}
-
-void projectLoaderConfLazyUpdate() {
-	if (!isProjectLoaderConfValid()) {
-		g_projectLoaderStartSlotPref = 1;
-		g_projectLoaderEndSlotPref = g_prjTemplateFiles.GetSize();
-	}
+	return (g_prjLoaderStartPref > 0 && 
+		g_prjLoaderEndPref > g_prjLoaderStartPref && 
+		g_prjLoaderEndPref <= g_prjTemplateFiles.GetSize());
 }
 
 void projectLoaderConf(COMMAND_T* _ct)
 {
-	projectLoaderConfLazyUpdate();
-
 	bool ok = false;
-	if (isProjectLoaderConfValid())
+	int start, end;
+	char reply[BUFFER_SIZE], question[BUFFER_SIZE] = "Start slot (in Resources view):,End slot:";
+	_snprintf(reply, BUFFER_SIZE, "%d,%d", g_prjLoaderStartPref, g_prjLoaderEndPref);
+	if (GetUserInputs("S&M - Project loader/selecter", 2, question, reply, 4096))
 	{
-		int start, end;
-		char reply[BUFFER_SIZE], question[BUFFER_SIZE] = "Start slot (in Resources view):,End slot:";
-		_snprintf(reply, BUFFER_SIZE, "%d,%d", g_projectLoaderStartSlotPref, g_projectLoaderEndSlotPref);
-		if (GetUserInputs("S&M - Project loader/selecter", 2, question, reply, 4096))
+		if (*reply && *reply != ',' && strlen(reply) > 2)
 		{
-			if (*reply && *reply != ',' && strlen(reply) > 2)
+			if (char* p = strchr(reply, ','))
 			{
-				char* p = strchr(reply, ',');
-				if (p)
+				start = atoi(reply);
+				end = atoi((char*)(p+1));
+				if (start > 0 && end > start && end <= g_prjTemplateFiles.GetSize())
 				{
-					start = atoi(reply);
-					end = atoi((char*)(p+1));
-					if (start > 0 && end > start && end <= g_prjTemplateFiles.GetSize())
-					{
-						g_projectLoaderStartSlotPref = start;
-						g_projectLoaderEndSlotPref = end;
-						ok = true;
-					}
+					g_prjLoaderStartPref = start;
+					g_prjLoaderEndPref = end;
+					ok = true;
 				}
 			}
 		}
-		else
-			ok = true;
 	}
-	if (!ok)
-		MessageBox(GetMainHwnd(), "Invalid start and/or end slot(s) !\nProbable cause: out of bounds, the Resources view is empty, etc...", "S&M - Error", MB_OK);
+
+	if (ok) {
+		g_prjCurSlot = -1; // reset current prj
+		if (g_pResourcesWnd) g_pResourcesWnd->Update();
+	}
+	else MessageBox(GetMainHwnd(), "Invalid start and/or end slot(s) !\nProbable cause: out of bounds, the Resources view is empty, etc...", "S&M - Error", MB_OK);
 }
 
 void loadOrSelectNextPreviousProject(COMMAND_T* _ct)
 {
-	projectLoaderConfLazyUpdate();
-
 	// check prefs validity (user configurable..)
 	// reminder: 1-based prefs!
 	if (isProjectLoaderConfValid())
 	{
 		int dir = (int)_ct->user; // -1 (previous) or +1 (next)
-		int cpt=0, slotCount = g_projectLoaderEndSlotPref-g_projectLoaderStartSlotPref+1;
+		int cpt=0, slotCount = g_prjLoaderEndPref-g_prjLoaderStartPref+1;
 
 		// (try to) find the current project in the slot range defined in the prefs
 		if (g_prjCurSlot < 0)
@@ -187,31 +175,32 @@ void loadOrSelectNextPreviousProject(COMMAND_T* _ct)
 			char pCurPrj[BUFFER_SIZE] = "";
 			EnumProjects(-1, pCurPrj, BUFFER_SIZE);
 			if (pCurPrj && *pCurPrj)
-				for (int i=g_projectLoaderStartSlotPref-1; g_prjCurSlot < 0 && i < g_projectLoaderEndSlotPref-1; i++)
+				for (int i=g_prjLoaderStartPref-1; g_prjCurSlot < 0 && i < g_prjLoaderEndPref-1; i++)
 					if (!g_prjTemplateFiles.Get(i)->IsDefault() && strstr(pCurPrj, g_prjTemplateFiles.Get(i)->m_shortPath.Get()))
 						g_prjCurSlot = i;
 		}
 
 		if (g_prjCurSlot < 0) // not found => default init
-			g_prjCurSlot = (dir > 0 ? g_projectLoaderStartSlotPref-2 : g_projectLoaderEndSlotPref);
+			g_prjCurSlot = (dir > 0 ? g_prjLoaderStartPref-2 : g_prjLoaderEndPref);
 
 		// the meat
 		do
 		{
-			if ((dir > 0 && (g_prjCurSlot+dir) > (g_projectLoaderEndSlotPref-1)) ||	
-				(dir < 0 && (g_prjCurSlot+dir) < (g_projectLoaderStartSlotPref-1)))
+			if ((dir > 0 && (g_prjCurSlot+dir) > (g_prjLoaderEndPref-1)) ||	
+				(dir < 0 && (g_prjCurSlot+dir) < (g_prjLoaderStartPref-1)))
 			{
-				g_prjCurSlot = (dir > 0 ? g_projectLoaderStartSlotPref-1 : g_projectLoaderEndSlotPref-1);
+				g_prjCurSlot = (dir > 0 ? g_prjLoaderStartPref-1 : g_prjLoaderEndPref-1);
 			}
 			else g_prjCurSlot += dir;
 		}
 		while (++cpt <= slotCount && g_prjTemplateFiles.Get(g_prjCurSlot)->IsDefault());
 
 		// found one?
-		if (cpt <= slotCount)
+		if (cpt <= slotCount) {
 			loadOrSelectProject("", g_prjCurSlot, false, false);
-		else
-			g_prjCurSlot = -1;
+			if (g_pResourcesWnd) g_pResourcesWnd->SelectBySlot(g_prjCurSlot);
+		}
+		else g_prjCurSlot = -1;
 	}
 }
 
@@ -226,8 +215,7 @@ void openProjectPathInExplorerFinder(COMMAND_T* _ct)
 	GetProjectPath(path, BUFFER_SIZE);
 	if (*path)
 	{
-		char* p = strrchr(path, PATH_SLASH_CHAR);
-		if (p) {
+		if (char* p = strrchr(path, PATH_SLASH_CHAR)) {
 			*(p+1) = '\0'; // ShellExecute() is KO otherwie..
 			ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
 		}

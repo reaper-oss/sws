@@ -289,6 +289,25 @@ void AWFillGapsAdv(COMMAND_T* t)
 	}
 }
 
+int AWCountItemGroups()
+{
+    int maxGroupId = 0;
+    
+    for (int i = 1; i <= GetNumTracks(); i++)
+    {
+        MediaTrack* tr = CSurf_TrackFromID(i, false);
+        for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
+        {
+            MediaItem* item = GetTrackMediaItem(tr, j);
+            int id = *(int*)GetSetMediaItemInfo(item, "I_GROUPID", NULL);
+            if (id > maxGroupId)
+                maxGroupId = id;
+        }
+    }
+    
+    return maxGroupId;
+}
+
 void AWFillGapsAdv(const char* title, char* retVals)
 {
 	// Divided by 1000 to convert to milliseconds except maxStretch
@@ -304,12 +323,15 @@ void AWFillGapsAdv(const char* title, char* retVals)
 	if ((triggerPad < 0) || (fadeLength < 0) || (maxGap < 0) || (maxStretch < 0) || (maxStretch > 1) || (presTrans < 0) || (transFade < 0) || (fadeShape < 0) || (fadeShape > 5))
 	{
 		//ShowMessageBox("Don't use such stupid values, try again.","Invalid Input",0);
-		MessageBox(g_hwndParent, "All values must be non-negative, Maximum Stretch must be a value from 0 to 1 and Fade Shape must be a value from 0 to 5.", "Item Smoothing Input Error", MB_OK);
+		MessageBox(g_hwndParent, "All values must be non-negative", "Input Error", MB_OK);
 		return;
 	}
 	
 	
-	
+	int maxGroupID = 0;
+    
+    if (presTrans)
+         maxGroupID = AWCountItemGroups();
 
 	
 	// Run loop for every track in project
@@ -387,7 +409,7 @@ void AWFillGapsAdv(const char* title, char* retVals)
 					{
 						
 						// If preserve transient is enabled, split item at preserve point
-						if (presTrans > 0)
+						if (presTrans)
 						{
 							
 							// Get snap offset for item1
@@ -430,6 +452,12 @@ void AWFillGapsAdv(const char* title, char* retVals)
 							
 							// Split item1 at the split point
 							MediaItem* item1B = SplitMediaItem(item1, splitPoint);
+                            
+                            int item1Group = (int)GetMediaItemInfo_Value(item1, "I_GROUPID");
+                            
+                            if (item1Group)
+                                SetMediaItemInfo_Value(item1B, "I_GROUPID", item1Group + maxGroupID);
+                            
 							
 							// V4
 							if (g_bv4)
@@ -911,6 +939,8 @@ bool AWIsAutoGroupEnabled(COMMAND_T* = NULL)
 
 bool g_AWIsRecording = false; // For auto group, remember if it was just recording
 
+
+
 void AWDoAutoGroup(bool rec)
 {
     //If transport changes to recording, set recording flag
@@ -928,19 +958,7 @@ void AWDoAutoGroup(bool rec)
 			if (items.GetSize() > 1 && ((*(int*)GetConfigVar("autoxfade") & 4) || (*(int*)GetConfigVar("autoxfade") & 8))) // Don't group if not in tape or overlap record mode, takes mode is messy
             {
                 //Find highest current group
-				int maxGroupId = 0;
-
-				for (int i = 1; i <= GetNumTracks(); i++)
-				{
-					MediaTrack* tr = CSurf_TrackFromID(i, false);
-					for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
-					{
-						MediaItem* item = GetTrackMediaItem(tr, j);
-						int id = *(int*)GetSetMediaItemInfo(item, "I_GROUPID", NULL);
-						if (id > maxGroupId)
-							id = maxGroupId;
-					}
-				}
+				int maxGroupId = AWCountItemGroups();
                 
                 //Add one to assign new items to a new group
                 maxGroupId++;

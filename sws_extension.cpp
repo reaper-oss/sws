@@ -394,11 +394,7 @@ public:
 bool WDL_STYLE_GetBackgroundGradient(double *gradstart, double *gradslope) { return false; }
 int WDL_STYLE_GetSysColor(int i) 
 {
-	int col;
-	if (GSC_mainwnd) 
-		col = GSC_mainwnd(i); 
-	else 
-		col = GetSysColor(i); 
+	int col = GSC_mainwnd(i); 
 
 	// check & "fix" 3D colors that aren't distinguished in many themes..
 #ifdef _WIN32
@@ -407,31 +403,17 @@ int WDL_STYLE_GetSysColor(int i)
 	if (i == COLOR_3DSHADOW || i == COLOR_3DHILIGHT)	
 #endif
 	{
-		int col3ds,col3dl,bgcol;
-		if (ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL)) {
-			col3dl = LICE_RGBA_FROMNATIVE(ct->io_3d[0],255);
-			col3ds = LICE_RGBA_FROMNATIVE(ct->io_3d[1],255);
-#ifdef _WIN32
-			if (i == COLOR_3DLIGHT || i == COLOR_3DHILIGHT)
-#else
-			if ( i == COLOR_3DHILIGHT)	
-#endif
-				col = col3dl;
-			else if (i == COLOR_3DSHADOW)
-				col = col3ds;
+		int col3ds,col3dl,bgcol=GSC_mainwnd(COLOR_WINDOW);
+		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
+		if (g_bv4 && ct) {
+			col3dl = ct->io_3d[0];
+			col3ds = ct->io_3d[1];
+			if (i == COLOR_3DSHADOW) col = col3ds;
+			else col = col3dl;
 		}
-		else
-		{
-			if (GSC_mainwnd) {
-				col3ds = GSC_mainwnd(COLOR_3DSHADOW);
-				col3dl = GSC_mainwnd(COLOR_3DHILIGHT);
-				bgcol = GSC_mainwnd(COLOR_WINDOW);
-			}
-			else {
-				col3ds = GetSysColor(COLOR_3DSHADOW);
-				col3dl = GetSysColor(COLOR_3DHILIGHT);
-				bgcol = GetSysColor(COLOR_WINDOW);
-			}
+		else {
+			col3dl = GSC_mainwnd(COLOR_3DHILIGHT);
+			col3ds = GSC_mainwnd(COLOR_3DSHADOW);
 		}
 
 		if (col3ds == col3dl || col3ds == bgcol || col3dl == bgcol) {

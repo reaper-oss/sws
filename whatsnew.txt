@@ -1,6 +1,7 @@
-S&M themable views: fixed 3D highlight/shaw colors
+!v2.1.0 #16 (October 14, 2011)
+S&M themable views: fixed 3D highlight/shadow colors
 
-Resource view: project loader/selecter overhauled: <insert LICEcap here>
+Resource view: project loader/selecter overhauled: (todo LICEcap)
 +Slots that are part of the configuration are now displayed as such (in the 1st column)
 +Added context menu items "Set project loader/selecter from selection" and "Clear project loader/selecter configuration"
 +The current opened project (or selected project tab) is automatically selected
@@ -8,6 +9,8 @@ Resource view: project loader/selecter overhauled: <insert LICEcap here>
 You first have to configure start/end project slots in the Resources view. Then you can switch between those projects with the actions:
 SWS/S&M: Project loader/selecter: next (cycle)
 SWS/S&M: Project loader/selecter: previous (cycle)
+
+Fixed autogrouping broken in 2.1.0 #15
 
 !v2.1.0 #15 (October 13, 2011)
 Added actions:

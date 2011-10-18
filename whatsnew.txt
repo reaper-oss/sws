@@ -1,12 +1,14 @@
+Cycle action editor: added "Consolidated undo points" tick box
+On OSX (with basic cycle action editor), this option can be changed in the S&M.ini file, e.g. [Cyclactions]Undos=0
+
 !v2.1.0 #16 (October 14, 2011)
 S&M themable views: fixed 3D highlight/shadow colors
 
-Resource view: project loader/selecter overhauled: (todo LICEcap)
-+Slots that are part of the configuration are now displayed as such (in the 1st column)
+Resource view: Project Loader/Selecter overhauled
 +Added context menu items "Set project loader/selecter from selection" and "Clear project loader/selecter configuration"
-+The current opened project (or selected project tab) is automatically selected
-+Reminder: the project loader/selecter allows you opening some projects (or selecting projects tabs) with actions, useful for live performance.
-You first have to configure start/end project slots in the Resources view. Then you can switch between those projects with the actions:
++Slots that are part of the configuration are now displayed as such (in the 1st column)
++The current opened project slot is automatically selected
++Reminder: the Project Loader/Selecter allows you opening some projects (or selecting project tabs) with actions. It is useful for live performance. Details and demo http://forum.cockos.com/showpost.php?p=831103&postcount=655|here|.
 SWS/S&M: Project loader/selecter: next (cycle)
 SWS/S&M: Project loader/selecter: previous (cycle)
 

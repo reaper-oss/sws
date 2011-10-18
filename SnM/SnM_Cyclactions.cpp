@@ -36,9 +36,10 @@
 WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cyclactions[SNM_MAX_CYCLING_SECTIONS];
 char g_cyclactionCustomIds[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_ACTION_CUSTID_LEN] = {"S&M_CYCLACTION_", "S&M_ME_LIST_CYCLACTION", "S&M_ME_PIANO_CYCLACTION"};
 char g_cyclactionIniSections[SNM_MAX_CYCLING_SECTIONS][64] = {"MAIN_CYCLACTIONS", "ME_LIST_CYCLACTIONS", "ME_PIANO_CYCLACTIONS"};
-char g_cyclactionSections[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN] = {"Main", "MIDI Event List Editor", "MIDI Editor"}; // must be the same than REAPER names
+char g_cyclactionSections[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN] = {"Main", "MIDI Event List Editor", "MIDI Editor"}; //JFB must == native section names!
 
 HWND g_cyclactionsHwnd = NULL;
+bool g_undos;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,7 +64,9 @@ public:
 	{
 		g_bReentrancyCheck = true;
 
-		Undo_BeginBlock2(NULL);
+		if (g_undos)
+			Undo_BeginBlock2(NULL);
+
 		for (int i= 0; i < m_actions.GetSize(); i++)
 		{
 			int cmd = NamedCommandLookup(m_actions.Get(i)->Get());
@@ -80,7 +83,9 @@ public:
 			_snprintf(custCmdId, SNM_MAX_ACTION_CUSTID_LEN, "_%s%d", g_cyclactionCustomIds[m_section], m_cycleId);
 			RefreshToolbar(NamedCommandLookup(custCmdId));
 		}
-		Undo_EndBlock2(NULL, m_name.Get(), UNDO_STATE_ALL);
+
+		if (g_undos)
+			Undo_EndBlock2(NULL, m_name.Get(), UNDO_STATE_ALL);
 
 		m_actions.Empty(true);
 		g_bReentrancyCheck = false;
@@ -143,9 +148,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 			if (SWSUnregisterCommand(_ct->accel.accel.cmd) && 
 				RegisterCyclation(buf, action->IsToggle(), _section, (int)_ct->user, _ct->accel.accel.cmd))
 			{
-				free((void*)_ct->accel.desc); // alloc'ed with strdup
-				free((void*)_ct->id);
-				delete _ct;
+				SWSFreeCommand(_ct);
 			}
 		}
 		if (done)
@@ -175,7 +178,7 @@ void RunMEPianoCyclaction(COMMAND_T* _ct) {if (g_bv4) RunCycleAction(2, _ct);}
 bool IsCyclactionEnabled(int _type, COMMAND_T* _ct) {
 	int cycleId = (int)_ct->user;
 	Cyclaction* action = g_cyclactions[_type].Get(cycleId-1); // cycle action id is 1-based (for user display) !
-	return (action && action->IsToggle() && (action->m_performState % 2) != 0);
+	return (action && /*action->IsToggle() &&*/ (action->m_performState % 2) != 0);
 }
 
 bool IsMainCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(0, _ct);}
@@ -288,9 +291,7 @@ void FlushCyclactions(int _section)
 		COMMAND_T* ct = NULL;
 		if (cmd && (ct = SWSUnregisterCommand(cmd)))
 		{
-			free((void*)ct->accel.desc);
-			free((void*)ct->id);
-			delete ct;
+			SWSFreeCommand(ct);
 		}
 	}
 	g_cyclactions[_section].EmptySafe(true);
@@ -301,6 +302,7 @@ void FlushCyclactions(int _section)
 // _iniFn: NULL => S&M.ini
 // _checkCmdIds: false to skip some checks - usefull when loading cycle actions (but not when creating 
 //               them with the editor) because all other referenced actions may not have been registered yet..
+// remark: undo pref ignored, only loads cycle actions so that the user keeps it's own undo pref
 void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
 {
 	char buf[32] = "";
@@ -339,6 +341,7 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 // NULL _cyclactions => update main model
 //_section or -1 for all sections
 // NULL _iniFn => S&M.ini
+// remark: undo pref ignored, only saves cycle actions so that the user keeps it's own undo pref
 void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
 {
 	if (!_cyclactions)
@@ -555,11 +558,13 @@ void EditModelInit()
 
 void Apply()
 {
-	int editedActionId = g_editedActions[g_editedSection].Find(g_editedAction);
+	// consolidated undo points
+	g_undos = (IsDlgButtonChecked(g_cyclactionsHwnd, IDC_CHECK1) == BST_CHECKED);
+	WritePrivateProfileString("Cyclactions", "Undos", g_undos ? "1" : "0", g_SNMiniFilename.Get());
 
+	// cycle actions
 	AllEditListItemEnd(true);
 	bool wasEdited = g_edited;
-
 	UpdateEditedStatus(false); // ok, apply: eof edition, note: g_edited=false here!
 	SaveCyclactions(g_editedActions);
 	LoadCyclactions(wasEdited, true); // + flush, unregister, re-register
@@ -842,6 +847,8 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		{
 			SetWindowLongPtr(GetDlgItem(_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b); //JFB needed !?
 			RestoreWindowPos(_hwnd, CYCLACTIONWND_POS_KEY);
+
+			CheckDlgButton(_hwnd, IDC_CHECK1, g_undos ? BST_CHECKED : BST_UNCHECKED);
 
 			int x, x0; 
 			for(int i=0; i < SNM_MAX_CYCLING_SECTIONS; i++) {
@@ -1170,6 +1177,9 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				case IDC_HELPTEXT:
 					ShellExecute(_hwnd, "open", "http://wiki.cockos.com/wiki/index.php/ALR_Main_S%26M_CREATE_CYCLACTION" , NULL, NULL, SW_SHOWNORMAL);
 					break;
+				case IDC_CHECK1:
+					UpdateEditedStatus(true);
+					break;
 			}
 			return 0;
 			case WM_MOUSEMOVE:
@@ -1246,7 +1256,7 @@ static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	if (!isUndo) // undo only (no save)
+	if (!isUndo || !g_undos) // undo only (no save)
 		return false;
 
 	LineParser lp(false);
@@ -1281,9 +1291,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 							if (c && SWSUnregisterCommand(cmdId) && 
 								RegisterCyclation(g_cyclactions[sec].Get(cycleId)->GetStepName(state), g_cyclactions[sec].Get(cycleId)->IsToggle(), sec, cycleId+1, cmdId))
 							{
-								free((void*)c->accel.desc); // alloc'ed with strdup
-								free((void*)c->id);
-								delete c;
+								SWSFreeCommand(c);
 							}
 							g_cyclactions[sec].Get(cycleId)->m_performState = state; // before refreshing toolbars!
 							RefreshToolbar(cmdId);
@@ -1303,7 +1311,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	if (!isUndo) // undo only (no save)
+	if (!isUndo || !g_undos) // undo only (no save)
 		return;
 
 	WDL_String confStr("<S&M_CYCLACTIONS\n");
@@ -1331,7 +1339,12 @@ int CyclactionsInit()
 	_snprintf(g_lastExportFn, BUFFER_SIZE, SNM_CYCACTION_INI_FILE, GetResourcePath());
 	_snprintf(g_lastImportFn, BUFFER_SIZE, SNM_CYCACTION_INI_FILE, GetResourcePath());
 
+	// load undo pref (default == enabled for ascendant compatibility)
+	g_undos = (GetPrivateProfileInt("Cyclactions", "Undos", 1, g_SNMiniFilename.Get()) == 1 ? true : false);
+
+	// load cycle actions
 	LoadCyclactions(false, false); // do not check cmd ids (may not have been registered yet)
+
 	if (!plugin_register("accelerator",&g_ar) || !plugin_register("projectconfig",&g_projectconfig))
 		return 0;
 	return 1;
@@ -1355,7 +1368,7 @@ void openCyclactionsWnd(COMMAND_T* _ct)
 		ShowWindow(hwnd, SW_SHOW);
 		SetFocus(hwnd);
 		AllEditListItemEnd(false);
-		SendDlgItemMessage(hwnd,IDC_COMBO,CB_SETCURSEL,(int)_ct->user,0); // ok, won't lead to a WM_COMMAND 
+		SendDlgItemMessage(hwnd,IDC_COMBO,CB_SETCURSEL,(int)_ct->user,0); // ok: won't lead to a WM_COMMAND
 		UpdateSection((int)_ct->user);
 	}
 #else

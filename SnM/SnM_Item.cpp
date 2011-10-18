@@ -1181,6 +1181,7 @@ void toggleItemSelExists(COMMAND_T* _ct)
 	}
 }
 
+// returns the toggle state as fast as possible: background job done in itemSelToolbarPoll() 
 bool itemSelExists(COMMAND_T* _ct) {
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
 	return (g_toolbarItemSel[(int)_ct->user].GetSize() > 0);

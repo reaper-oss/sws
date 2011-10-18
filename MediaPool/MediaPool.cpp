@@ -110,15 +110,7 @@ void SWS_MediaPoolFile::UnregisterCommand()
 {
 	int id = SWSGetCommandID(InsertFile, (INT_PTR)m_cFilename);
 	if (id)
-	{
-		COMMAND_T* cmd = SWSUnregisterCommand(id);
-		if (cmd)
-		{
-			free((void*)cmd->accel.desc); // alloc'ed with strdup, so free instead of delete
-			free((void*)cmd->id);
-			delete cmd;
-		}
-	}
+		SWSFreeCommand(SWSUnregisterCommand(id));
 }
 
 SWS_MediaPoolGroup::SWS_MediaPoolGroup(const char* cName, bool bGlobal):m_cGroupname(NULL), m_bGlobal(bGlobal)

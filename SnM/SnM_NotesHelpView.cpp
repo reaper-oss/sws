@@ -1080,7 +1080,8 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		if (CSurf_TrackToID(g_pTracksNotes.Get()->Get(i)->m_tr, false) < 0)
 			g_pTracksNotes.Get()->Delete(i--, true);
 
-	char startLine[4096], strId[128];
+	char startLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
+	char strId[128] = "";
 	WDL_String formatedNotes;
 
 	// Save project notes
@@ -1102,7 +1103,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			else
 				g = GUID_NULL;
 			guidToString(&g, strId);
-			sprintf(startLine, "<S&M_TRACKNOTES %s\n|", strId);
+			_snprintf(startLine, SNM_MAX_CHUNK_LINE_LENGTH, "<S&M_TRACKNOTES %s\n|", strId);
 
 			if (GetNotesChunkFromString(g_pTracksNotes.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
 				StringToExtensionConfig(&formatedNotes, ctx);

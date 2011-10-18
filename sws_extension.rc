@@ -1119,6 +1119,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "Section:",IDC_STATIC,5,7,55,10,SS_CENTERIMAGE
     COMBOBOX        IDC_COMBO,41,5,100,13,CBS_DROPDOWNLIST | WS_VSCROLL
+    CONTROL         "Consolidated undo points",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,150,7,100,10
     PUSHBUTTON      "Reset",IDC_REMOVE,330,5,57,14
     PUSHBUTTON      "Import/export",IDC_BROWSE,391,5,57,14
     PUSHBUTTON      "Show action list",IDC_LIST,452,5,57,14
@@ -1137,7 +1138,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_CONSOLE, DIALOG
     BEGIN
@@ -1657,7 +1658,8 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

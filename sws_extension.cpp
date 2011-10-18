@@ -50,14 +50,23 @@
 #include "Fingers/FNG_client.h"
 #include "Autorender/Autorender.h"
 
+#define SWS_NEW_ACTION_STORAGE
+
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
+#ifndef SWS_NEW_ACTION_STORAGE
 static WDL_PtrList<COMMAND_T> g_commands;
 static WDL_PtrList<WDL_String> g_cmdFile;
 // Not strictly necessary but saves going through the whole
 // command array when asking about toggle state
 static WDL_PtrList<COMMAND_T> g_toggles;
+#else
+void freeCmdFileItem(WDL_String* p) {delete p;}
+static WDL_IntKeyedArray<WDL_String*> g_cmdFile(freeCmdFileItem);
+static WDL_IntKeyedArray<COMMAND_T*> g_commands; // no valdispose function, use SWSFreeCommand()
+#endif
+
 int g_iFirstCommand = 0;
 int g_iLastCommand = 0;
 bool g_bv4 = false;
@@ -88,6 +97,7 @@ bool hookCommandProc(int command, int flag)
 	if (command < g_iFirstCommand || command > g_iLastCommand)
 		return false;
 
+#ifndef SWS_NEW_ACTION_STORAGE
 	for (int i = 0; i < g_commands.GetSize(); i++)
 	{
 		COMMAND_T* cmd = g_commands.Get(i);
@@ -99,6 +109,18 @@ bool hookCommandProc(int command, int flag)
 			return true;
 		}
 	}
+#else
+	if (COMMAND_T* cmd = g_commands.Get(command, NULL))
+	{
+		if (cmd->accel.accel.cmd && cmd->doCommand != SWS_NOOP)
+		{
+			bReentrancyCheck = true;
+			cmd->doCommand(cmd);
+			bReentrancyCheck = false;
+			return true;
+		}
+	}
+#endif
 	return false;
 }
 
@@ -112,14 +134,22 @@ int SWSRegisterCommand2(COMMAND_T* pCommand, const char* cFile)
 			return 0;
 		if (!plugin_register("gaccel",&pCommand->accel))
 			return 0;
+#ifndef SWS_NEW_ACTION_STORAGE
 		if (pCommand->getEnabled)
 			g_toggles.Add(pCommand);
+#endif
+
 		if (!g_iFirstCommand || g_iFirstCommand > pCommand->accel.accel.cmd)
 			g_iFirstCommand = pCommand->accel.accel.cmd;
 		if (pCommand->accel.accel.cmd > g_iLastCommand)
 			g_iLastCommand = pCommand->accel.accel.cmd;
+#ifndef SWS_NEW_ACTION_STORAGE
 		g_commands.Add(pCommand);
 		g_cmdFile.Add(new WDL_String(cFile));
+#else
+		g_commands.Insert(pCommand->accel.accel.cmd, pCommand);
+		g_cmdFile.Insert(pCommand->accel.accel.cmd, new WDL_String(cFile));
+#endif
 	}
 	return pCommand->accel.accel.cmd;
 }
@@ -166,14 +196,21 @@ int SWSRegisterCommandExt3(void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COM
 		ct->accel.accel.cmd = cmdId;
 		if (!plugin_register("gaccel",&ct->accel))
 			return 0;
-		if (ct->getEnabled) 
+#ifndef SWS_NEW_ACTION_STORAGE
+		if (ct->getEnabled)
 			g_toggles.Add(ct);
+#endif
 		if (!g_iFirstCommand || g_iFirstCommand > ct->accel.accel.cmd)
 			g_iFirstCommand = ct->accel.accel.cmd;
 		if (ct->accel.accel.cmd > g_iLastCommand)
 			g_iLastCommand = ct->accel.accel.cmd;
+#ifndef SWS_NEW_ACTION_STORAGE
 		g_commands.Add(ct);
 		g_cmdFile.Add(new WDL_String(cFile));
+#else
+		g_commands.Insert(cmdId, ct);
+		g_cmdFile.Insert(cmdId, new WDL_String(cFile));
+#endif
 	}
 	return ct->accel.accel.cmd;
 }
@@ -181,6 +218,7 @@ int SWSRegisterCommandExt3(void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COM
 // Returns the COMMAND_T entry so it can be deleted if necessary
 COMMAND_T* SWSUnregisterCommand(int id)
 {
+#ifndef SWS_NEW_ACTION_STORAGE
 	// First check the toggle command list
 	for (int i = 0; i < g_toggles.GetSize(); i++)
 		if (g_toggles.Get(i)->accel.accel.cmd == id)
@@ -198,7 +236,29 @@ COMMAND_T* SWSUnregisterCommand(int id)
 			return cmd;
 		}
 	}
+#else
+	if (COMMAND_T* cmd = g_commands.Get(id, NULL))
+	{
+		plugin_register("-gaccel", &cmd->accel);
+		plugin_register("-command_id", &id);
+		g_commands.Delete(id);
+		g_cmdFile.Delete(id);
+		return cmd;
+	}
+#endif
 	return NULL;
+}
+
+// SWSUnregisterCommand() must be called first
+void SWSFreeCommand(COMMAND_T* c)
+{
+	if (c)
+	{
+		free((void*)c->accel.desc); // alloc'ed with strdup
+		free((void*)c->id);
+		delete c;
+		c = NULL;
+	}
 }
 
 void ActionsList(COMMAND_T*)
@@ -214,12 +274,24 @@ void ActionsList(COMMAND_T*)
 		fputs("Action,File,CmdID,CmdStr\n", f);
 		if (f)
 		{
+#ifndef SWS_NEW_ACTION_STORAGE
 			for (int i = 0; i < g_commands.GetSize(); i++)
 			{
 				COMMAND_T* cmd = g_commands.Get(i);
 				sprintf(cBuf, "\"%s\",%s,%d,_%s\n", cmd->accel.desc, g_cmdFile.Get(i)->Get(), cmd->accel.accel.cmd, cmd->id);
 				fputs(cBuf, f);
 			}
+#else
+			for (int i = 0; i < g_commands.GetSize(); i++)
+			{
+				if (COMMAND_T* cmd = g_commands.Enumerate(i, NULL, NULL))
+				{
+					WDL_String* pFn = g_cmdFile.Get(cmd->accel.accel.cmd, NULL);
+					sprintf(cBuf, "\"%s\",%s,%d,_%s\n", cmd->accel.desc, pFn ? pFn->Get() : "", cmd->accel.accel.cmd, cmd->id);
+					fputs(cBuf, f);
+				}
+			}
+#endif
 			fclose(f);
 		}
 	}
@@ -227,6 +299,7 @@ void ActionsList(COMMAND_T*)
 
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMenuText)
 {
+#ifndef SWS_NEW_ACTION_STORAGE
 	for (int i = 0; i < g_commands.GetSize(); i++)
 	{
 		if (g_commands.Get(i)->doCommand == cmdFunc && g_commands.Get(i)->user == user)
@@ -236,14 +309,33 @@ int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMen
 			return g_commands.Get(i)->accel.accel.cmd;
 		}
 	}
+#else
+	for (int i = 0; i < g_commands.GetSize(); i++)
+	{
+		if (COMMAND_T* cmd = g_commands.Enumerate(i, NULL, NULL))
+		{
+			if (cmd->doCommand == cmdFunc && cmd->user == user)
+			{
+				if (pMenuText)
+					*pMenuText = cmd->menuText;
+				return cmd->accel.accel.cmd;
+			}
+		}
+	}
+#endif
 	return 0;
 }
 
 COMMAND_T* SWSGetCommandByID(int cmdId)
 {
+#ifndef SWS_NEW_ACTION_STORAGE
 	for (int i = 0; i < g_commands.GetSize(); i++)
 		if (cmdId == g_commands.Get(i)->accel.accel.cmd)
 			return g_commands.Get(i);
+#else
+	if (cmdId >= g_iFirstCommand && cmdId <= g_iLastCommand)
+		return g_commands.Get(cmdId, NULL);
+#endif
 	return NULL;
 }
 
@@ -282,9 +374,15 @@ HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIn
 //  1 = action belongs to this extension and is currently set to "on"
 int toggleActionHook(int iCmd)
 {
+#ifndef SWS_NEW_ACTION_STORAGE
 	for (int i = 0; i < g_toggles.GetSize(); i++)
-		if (g_toggles.Get(i)->accel.accel.cmd == iCmd)
+		if (g_toggles.Get(i)->accel.accel.cmd == iCmd) 
 			return g_toggles.Get(i)->getEnabled(g_toggles.Get(i)) ? 1 : 0;
+#else
+	if (iCmd >= g_iFirstCommand && iCmd <= g_iLastCommand)
+			if (COMMAND_T* ct = g_commands.Get(iCmd, NULL))
+				return (ct->getEnabled ? (ct->getEnabled(ct) ? 1 : 0) : -1);
+#endif
 	return -1;
 }
 
@@ -305,12 +403,17 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 			if (mi.hSubMenu)
 				swsMenuHook(menustr, mi.hSubMenu, flag);
 			else if (mi.wID >= (UINT)g_iFirstCommand && mi.wID <= (UINT)g_iLastCommand)
+#ifndef SWS_NEW_ACTION_STORAGE
 				for (int j = 0; j < g_toggles.GetSize(); j++)
 				{
 					COMMAND_T* t = g_toggles.Get(j);
 					if (t->accel.accel.cmd == mi.wID)
 						CheckMenuItem(hMenu, i, MF_BYPOSITION | (t->getEnabled(t) ? MF_CHECKED : MF_UNCHECKED));
 				}
+#else
+				if (COMMAND_T* t = g_commands.Get(mi.wID, NULL))
+					CheckMenuItem(hMenu, i, MF_BYPOSITION | (t->getEnabled && t->getEnabled(t) ? MF_CHECKED : MF_UNCHECKED));
+#endif
 		}
 	}
 	else if (!strcmp(menustr, "Main extensions"))

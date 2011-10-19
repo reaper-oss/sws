@@ -341,7 +341,7 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 // NULL _cyclactions => update main model
 //_section or -1 for all sections
 // NULL _iniFn => S&M.ini
-// remark: undo pref ignored, only saves cycle actions so that the user keeps it's own undo pref
+// remark: undo pref ignored, only saves cycle actions
 void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
 {
 	if (!_cyclactions)
@@ -567,6 +567,11 @@ void Apply()
 	bool wasEdited = g_edited;
 	UpdateEditedStatus(false); // ok, apply: eof edition, note: g_edited=false here!
 	SaveCyclactions(g_editedActions);
+#ifdef _WIN32
+	// force ini file cache refresh: fix for the strange issue 397 (?)
+	// see http://support.microsoft.com/kb/68827 & http://code.google.com/p/sws-extension/issues/detail?id=397
+	WritePrivateProfileString(NULL, NULL, NULL, g_SNMiniFilename.Get());
+#endif
 	LoadCyclactions(wasEdited, true); // + flush, unregister, re-register
 	EditModelInit();
 }

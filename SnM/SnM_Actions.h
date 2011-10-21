@@ -60,7 +60,7 @@
 #define SNM_MAX_SECTION_ACTIONS		128
 #define SNM_MAX_ACTION_CUSTID_LEN	128
 #define SNM_MAX_ACTION_NAME_LEN		128
-#define SNM_MAX_MARKER_NAME_LEN		64
+#define SNM_MAX_MARKER_NAME_LEN		64     // + regions
 #define SNM_MAX_TRACK_GROUPS		32
 #define SNM_MAX_TRACK_GROUPS_STR	"32"
 #define SNM_MAX_HW_OUTS				8
@@ -76,6 +76,7 @@
 #define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average I monitored)
 #define SNM_DEF_TOOLBAR_RFRSH_FREQ	300    // default frequency in ms for the "auto-refresh toolbars" option 
 #define SNM_SCHEDJOB_DEFAULT_DELAY	250
+#define SNM_DEF_VWND_X_STEP			12
 
 // Scheduled job *RESERVED* ids
 // note: [0..7] are reserved for Live Configs MIDI CC actions
@@ -93,7 +94,8 @@ enum {
   SNM_ITEM_SEL_DOWN
 };
 
-static void freecharptr(char* _p) {free(_p);}
+static void freecharptr(char* _p) { free(_p); _p=NULL; }
+static void deleteintptr(int* _p) { delete _p; _p=NULL; }
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -185,9 +187,10 @@ bool isCyclationsWndDisplayed(COMMAND_T*);
 // *** SnM_Dlg.cpp ***
 LICE_CachedFont* SNM_GetThemeFont();
 HBRUSH SNM_GetThemeBrush();
+void SNM_ThemeListView(SWS_ListView* _lv);
 LICE_IBitmap* SNM_GetThemeLogo();
 bool AddSnMLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h);
-bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep=12);
+bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep=SNM_DEF_VWND_X_STEP);
 void SNM_UIInit();
 void SNM_UIExit();
 void SNM_ShowMsg(const char* _msg, const char* _title="", HWND _hParent=NULL); 
@@ -364,7 +367,7 @@ void StringToExtensionConfig(WDL_String* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx);
 void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection, const char* _iniFn);
 int SNM_NamedCommandLookup(const char* _cmdId);
-int FindMarker(double _pos);
+int FindMarkerRegion(double _pos);
 void makeUnformatedConfigString(const char* _in, WDL_String* _out);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 void ShortenStringToFirstRN(char* _str);
@@ -471,12 +474,6 @@ HWND GetReaWindowByTitle(const char* _title, int _nComp = -1);
 HWND SearchWindow(const char* _title);
 HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
 int GetSelectedActionId(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc = NULL, int _descSize = -1);
-#ifdef _SNM_MISC
-void closeAllRoutingWindows(COMMAND_T*);
-void closeAllEnvWindows(COMMAND_T*);
-void toggleAllRoutingWindows(COMMAND_T*);
-void toggleAllEnvWindows(COMMAND_T*);
-#endif
 void showFXChain(COMMAND_T*);
 void hideFXChain(COMMAND_T*);
 void toggleFXChain(COMMAND_T*);

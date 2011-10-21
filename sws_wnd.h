@@ -82,6 +82,7 @@ public:
 	int GetEditingItem() { return m_iEditingItem; }
 	bool EditListItemEnd(bool bSave, bool bResort = true);
 	int OnEditingTimer();
+	const char* GetINIKey() { return m_cINIKey; }
 	
 	bool IsActive(bool bWantEdit) { return GetFocus() == m_hwndList || (bWantEdit && m_iEditingItem != -1); }
 	void DisableUpdates(bool bDisable) { m_bDisableUpdates = bDisable; }
@@ -106,6 +107,8 @@ protected:
 	virtual void OnItemDblClk(SWS_ListItem* item, int iCol) {}
 	virtual int  OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2);
 	virtual void OnBeginDrag(SWS_ListItem* item) {}
+	virtual bool IsEditListItemAllowed(SWS_ListItem* item, int iCol) { return true; }
+
 	int DataToDisplayCol(int iCol);
 	void SetListviewColumnArrows(int iSortCol);
 	static int CALLBACK sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam);

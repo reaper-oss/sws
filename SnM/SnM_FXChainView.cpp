@@ -121,12 +121,10 @@ enum {
 };
 
 
-// Globals
-
 // JFB important note:
 // All global WDL_PtrList vars (includes FileSlotList) *used to be* WDL_PtrList_DeleteOnDestroy ones but
 // something weird could occur when REAPER unloads the extension: hang or crash (e.g. issues 292 & 380) 
-// on Windows 7 while saving related data in INI files (lists were already unallocated..)
+// on Windows 7 while saving INI files (those lists were already unallocated..)
 // Anyway, no prob here because application exit will destroy the entire runtime context regardless.
 
 /*JFB static*/ SNM_ResourceWnd* g_pResourcesWnd = NULL;
@@ -298,18 +296,13 @@ void FileSlotList::EditSlot(int _slot)
 SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, 4, g_fxChainListCols, "Resources View State", false)
 {
-#ifdef _SNM_THEMABLE
-	ListView_SetBkColor(hwndList, GSC_mainwnd(COLOR_WINDOW));
-	ListView_SetTextBkColor(hwndList, GSC_mainwnd(COLOR_WINDOW));
-	ListView_SetTextColor(hwndList, GSC_mainwnd(COLOR_BTNTEXT));
-#endif
+	SNM_ThemeListView(this);
 }
 
 void SNM_ResourceView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	if (str) *str = '\0';
-	PathSlotItem* pItem = (PathSlotItem*)item;
-	if (pItem)
+	if (PathSlotItem* pItem = (PathSlotItem*)item)
 	{
 		switch (iCol)
 		{
@@ -343,6 +336,13 @@ void SNM_ResourceView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 	}
 }
 
+bool SNM_ResourceView::IsEditListItemAllowed(SWS_ListItem* item, int iCol)
+{
+	if (PathSlotItem* pItem = (PathSlotItem*)item)
+		return !pItem->IsDefault();
+	return false;
+}
+
 void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 {
 	PathSlotItem* pItem = (PathSlotItem*)item;
@@ -354,17 +354,12 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 			// file renaming
 			case 1:
 			{
-/*JFB!!! slight SWS_ListView::OnNotify() update needed here..
-				if (pItem->IsDefault())
-					OnItemDblClk(item, 0);
-*/
 				char fn[BUFFER_SIZE] = "";
 				if (GetCurList()->GetFullPath(slot, fn, BUFFER_SIZE) && !pItem->IsDefault() && FileExistsErrMsg(fn))
 				{
 					char newFn[BUFFER_SIZE];
 					lstrcpyn(newFn, fn, BUFFER_SIZE);
-					char* p = strrchr(newFn, PATH_SLASH_CHAR);
-					if (p) *p = '\0';
+					if (char* p = strrchr(newFn, PATH_SLASH_CHAR)) *p = '\0';
 					else break; // safety
 					_snprintf(newFn, BUFFER_SIZE, "%s%c%s.%s", newFn, PATH_SLASH_CHAR, str, GetCurList()->GetFileExt());
 					if (FileExists(newFn)) 
@@ -580,7 +575,6 @@ SNM_ResourceWnd::SNM_ResourceWnd()
 {
 	m_previousType = g_type;
 	m_autoSaveTrTmpltWithItemsPref = true;
-	m_lastThemeBrushColor = -1;
 
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -713,9 +707,11 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_btnAutoSave);
 
 	m_txtDblClickType.SetID(TXTID_DBL_TYPE);
+	m_txtDblClickType.SetText("Dbl-click to:");
 	m_parentVwnd.AddChild(&m_txtDblClickType);
 
 	m_txtDblClickTo.SetID(TXTID_DBL_TO);
+	m_txtDblClickTo.SetText("To selected:");
 	m_parentVwnd.AddChild(&m_txtDblClickTo);
 
 	// This restores the text filter when docking/undocking
@@ -798,13 +794,11 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case EXPLORE_MSG:
 		{
 			char fullPath[BUFFER_SIZE] = "";
-			if (GetCurList()->GetFullPath(slot, fullPath, BUFFER_SIZE))	{
-				char* p = strrchr(fullPath, PATH_SLASH_CHAR);
-				if (p) {
+			if (GetCurList()->GetFullPath(slot, fullPath, BUFFER_SIZE))
+				if (char* p = strrchr(fullPath, PATH_SLASH_CHAR)) {
 					*(p+1) = '\0'; // ShellExecute() is KO otherwie..
 					ShellExecute(NULL, "open", fullPath, NULL, NULL, SW_SHOWNORMAL);
 				}
-			}
 			break;
 		}
 		case AUTO_FILL_DIR_MSG:
@@ -1357,6 +1351,17 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	r.top = _r->top; r.bottom = _r->bottom;
 	r.right = r.left; r.left = _r->left;
 
+	//"auto-save" button (common)
+	WDL_VirtualIconButton_SkinConfig* img = it ? &(it->toolbar_save) : NULL;
+	if (img)
+		m_btnAutoSave.SetIcon(img);
+	else {
+		m_btnAutoSave.SetTextLabel("Auto-save", 0, font);
+		m_btnAutoSave.SetForceBorder(true);
+	}
+	if (!SetVWndAutoPosition(&m_btnAutoSave, NULL, &r, &x0, _r->top, h))
+		return;
+
 	// type dropdown
 	m_cbType.SetFont(font);
 	if (!SetVWndAutoPosition(&m_cbType, NULL, &r, &x0, _r->top, h))
@@ -1364,7 +1369,6 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 
 	// "dbl-click to:" (common)
 	m_txtDblClickType.SetFont(font);
-	m_txtDblClickType.SetText("Dbl-click to:");
 	if (!SetVWndAutoPosition(&m_txtDblClickType, NULL, &r, &x0, _r->top, h, 5))
 		return;
 
@@ -1377,7 +1381,6 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	if (g_type == SNM_SLOT_TYPE_FX_CHAINS)
 	{
 		m_txtDblClickTo.SetFont(font);
-		m_txtDblClickTo.SetText("To selected:");
 		if (!SetVWndAutoPosition(&m_txtDblClickTo, NULL, &r, &x0, _r->top, h, 5))
 			return;
 	}
@@ -1390,17 +1393,6 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 			return;
 	}
 
-	//"auto-save" button (common)
-	WDL_VirtualIconButton_SkinConfig* img = it ? &(it->toolbar_save) : NULL;
-	if (img)
-		m_btnAutoSave.SetIcon(img);
-	else {
-		m_btnAutoSave.SetTextLabel("Auto-save", 0, font);
-		m_btnAutoSave.SetForceBorder(true);
-	}
-	if (!SetVWndAutoPosition(&m_btnAutoSave, NULL, &r, &x0, _r->top, h))
-		return;
-
 /*JFB MFC filter edit box instead
 	AddSnMLogo(_bm, _r, x0, h);
 */
@@ -1412,19 +1404,9 @@ int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_PAINT:
 		{
-#ifdef _SNM_THEMABLE
-			int winCol = GSC_mainwnd(COLOR_WINDOW);
-			if (m_lastThemeBrushColor != winCol) 
-			{
-				m_lastThemeBrushColor = winCol;
-				HWND hl = GetDlgItem(m_hwnd, IDC_LIST);
-				ListView_SetBkColor(hl, winCol);
-				ListView_SetTextBkColor(hl, winCol);
-				ListView_SetTextColor(hl, GSC_mainwnd(COLOR_BTNTEXT));
-			}
-#endif
-			int xo, yo;
-			RECT r;
+			SNM_ThemeListView(m_pLists.Get(0));
+
+			int xo, yo; RECT r;
 			GetClientRect(m_hwnd, &r);	
 			m_parentVwnd.SetPosition(&r);
 			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
@@ -1449,7 +1431,6 @@ int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 #ifdef _SNM_THEMABLE
 		case WM_CTLCOLOREDIT:
-		{
 			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT) || (HWND)lParam == GetDlgItem(m_hwnd, IDC_FILTER))
 			{
 				SetBkColor((HDC)wParam, GSC_mainwnd(COLOR_WINDOW));
@@ -1457,7 +1438,6 @@ int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				return (INT_PTR)SNM_GetThemeBrush();
 			}
 			break;
-		}
 #endif
 	}
 	return 0;

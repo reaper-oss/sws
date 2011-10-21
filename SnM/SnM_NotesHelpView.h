@@ -49,7 +49,7 @@ public:
 	void saveCurrentHelp();
 	void saveCurrentItemNotes();
 	void saveCurrentTrackNotes();
-	void saveCurrentMarkerName();
+	void saveCurrentMarkerRegionName();
 
 	const char* getActionHelpFilename();
 	void setActionHelpFilename(const char* _filename);
@@ -71,7 +71,7 @@ protected:
 
 	int updateItemNotes();
 	int updateTrackNotes();
-	int updateMarkerName();
+	int updateMarkerRegionName();
 	int updateActionHelp();
 
 	void loadHelp(const char* _cmdName, char* _buf, int _bufSize);

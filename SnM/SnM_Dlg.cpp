@@ -73,6 +73,46 @@ HBRUSH SNM_GetThemeBrush()
 	return g_hb;
 }
 
+// key = ini file key
+WDL_StringKeyedArray<int*> g_lastListViewColors(true, deleteintptr); 
+
+void SNM_ThemeListView(SWS_ListView* _lv)
+{
+#ifdef _SNM_THEMABLE
+	if (_lv && _lv->GetHWND())
+	{
+		int bgcol=-1, txtcol=-1;
+		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
+
+		if (g_bv4 && ct) {
+			bgcol = ct->window_list[0];
+			txtcol = ct->window_list[1];
+			// note: grid (ct->window_list[2]) & selection colors not managed
+		}
+
+		if (bgcol == txtcol) { // safety (e.g. REAPER < v4.11pre4)
+			bgcol = GSC_mainwnd(COLOR_WINDOW);
+			txtcol = GSC_mainwnd(COLOR_BTNTEXT);
+		}
+
+		// lazy update of the cache
+		int* lastListCols = g_lastListViewColors.Get(_lv->GetINIKey(), NULL);
+		if (!lastListCols) {
+			lastListCols = new int[2];
+			lastListCols[0] = -1; lastListCols[1] = -1; 
+			g_lastListViewColors.Insert(_lv->GetINIKey(), lastListCols);
+		}
+
+		if (lastListCols[0] != bgcol || lastListCols[1] != txtcol) {
+			lastListCols[0] = bgcol;
+			lastListCols[1] = txtcol;
+			ListView_SetBkColor(_lv->GetHWND(), bgcol);
+			ListView_SetTextColor(_lv->GetHWND(), txtcol);
+			ListView_SetTextBkColor(_lv->GetHWND(), bgcol);
+		}
+	}
+#endif
+}
 
 LICE_IBitmap* SNM_GetThemeLogo()
 {
@@ -137,7 +177,7 @@ bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, i
 				width = max(width, tr.right);
 				height = tr.bottom; 
 			}
-/*JFB could be better??? anyway, InvalidateRect/RequestRedraw issue..
+/*JFB could be better? anyway, InvalidateRect/RequestRedraw issue..
 			RECT tr = {0,0,0,0};
 			cb->GetFont()->DrawText(NULL, cb->GetItem(cb->GetCurSel()), -1, &tr, DT_CALCRECT);
 			width = tr.right;
@@ -170,6 +210,8 @@ bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, i
 				width = tr.right + height; // +height for some air
 				if (btn->GetCheckState() != -1)
 					width += tr.bottom; // for the tick zone
+				// workaround for paint glitch with odd (i.e. not even) heights
+				if (height%2 == 1) { height--; _y++; }
 			}
 		}
 

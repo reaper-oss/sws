@@ -55,7 +55,7 @@ enum {
   NOTES_HELP_DISABLED=0,
   ITEM_NOTES,
   TRACK_NOTES,
-  MARKER_NAME,
+  MARKER_REGION_NAME,
   ACTION_HELP // must remain the last item: no OSX support yet 
 };
 
@@ -65,7 +65,7 @@ enum {
   NO_REFRESH
 };
 
-// Globals
+
 SNM_NotesHelpWnd* g_pNotesHelpWnd = NULL;
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
 SWSProjConfig<WDL_String> g_prjNotes;
@@ -154,7 +154,7 @@ void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes)
 			if (g_trNote)
 				bHide = false;
 			break;
-		case MARKER_NAME:
+		case MARKER_REGION_NAME:
 			if (g_lastMarkerIdx != -1)
 				bHide = false;
 			break;
@@ -250,8 +250,8 @@ void SNM_NotesHelpWnd::Update(bool _force)
 					*g_lastActionSection = '\0';
 				}
 				break;
-			case MARKER_NAME:
-				refreshType = updateMarkerName();
+			case MARKER_REGION_NAME:
+				refreshType = updateMarkerRegionName();
 				if (refreshType == REQUEST_REFRESH_EMPTY) {
 					g_lastMarkerPos = -1.0;
 					g_lastMarkerIdx = -1;
@@ -282,7 +282,7 @@ void SNM_NotesHelpWnd::saveCurrentText(int _type)
 				saveCurrentItemNotes(); 
 				break;
 			case TRACK_NOTES: saveCurrentTrackNotes(); break;
-			case MARKER_NAME: saveCurrentMarkerName(); break;
+			case MARKER_REGION_NAME: saveCurrentMarkerRegionName(); break;
 			case ACTION_HELP: saveCurrentHelp(); break;
 			case NOTES_HELP_DISABLED: saveCurrentPrjNotes(); break;
 		}
@@ -371,12 +371,12 @@ void SNM_NotesHelpWnd::saveCurrentTrackNotes()
 	}
 }
 
-void SNM_NotesHelpWnd::saveCurrentMarkerName()
+void SNM_NotesHelpWnd::saveCurrentMarkerRegionName()
 {
 	if (g_lastMarkerIdx >= 0)
 	{
-		double pos; int markrgnindexnumber;
-		if (EnumProjectMarkers2(NULL, g_lastMarkerIdx, NULL, &pos, NULL, NULL, &markrgnindexnumber))
+		double pos, end; int markrgnindexnumber; bool isRgn;
+		if (EnumProjectMarkers2(NULL, g_lastMarkerIdx, &isRgn, &pos, &end, NULL /*name*/, &markrgnindexnumber))
 		{
 			char buf[SNM_MAX_MARKER_NAME_LEN] = "";
 			memset(buf, 0, sizeof(buf));
@@ -384,8 +384,8 @@ void SNM_NotesHelpWnd::saveCurrentMarkerName()
 			if (strncmp(g_lastText, buf, SNM_MAX_MARKER_NAME_LEN))
 			{
 				ShortenStringToFirstRN(buf);
-				if (SetProjectMarker2(NULL, markrgnindexnumber, false, pos, 0.0, buf))
-					Undo_OnStateChangeEx("Edit marker name", UNDO_STATE_ALL, -1);
+				if (SetProjectMarker2(NULL, markrgnindexnumber, isRgn, pos, end, buf))
+					Undo_OnStateChangeEx(isRgn ? "Edit region name" : "Edit marker name", UNDO_STATE_ALL, -1);
 			}
 		}
 	}
@@ -480,7 +480,7 @@ int SNM_NotesHelpWnd::updateTrackNotes()
 	return refreshType;
 }
 
-int SNM_NotesHelpWnd::updateMarkerName()
+int SNM_NotesHelpWnd::updateMarkerRegionName()
 {
 	int refreshType = REQUEST_REFRESH_EMPTY;
 
@@ -493,7 +493,7 @@ int SNM_NotesHelpWnd::updateMarkerName()
 	if (g_lastMarkerPos < 0.0 || fabs(g_lastMarkerPos-dPos) > 0.1)
 	{
 		g_lastMarkerPos = dPos;
-		int idx = FindMarker(dPos);
+		int idx = FindMarkerRegion(dPos);
 		if (idx >= 0)
 		{
 			if (idx != g_lastMarkerIdx)
@@ -537,7 +537,7 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	m_cbType.AddItem("Project notes");
 	m_cbType.AddItem("Item notes");
 	m_cbType.AddItem("Track notes");
-	m_cbType.AddItem("Marker names");
+	m_cbType.AddItem("Markers/regions");
 #ifdef _WIN32
 	m_cbType.AddItem("Action help");
 #endif
@@ -657,7 +657,7 @@ void SNM_NotesHelpWnd::OnTimer(WPARAM wParam) {
 	// but when the view is active: update only for markers and if the view is locked 
     //(=> updates during playback, in other cases -e.g. item selection change- the main window 
 	// *will* be the active one)
-	if ((!IsActive() || (g_locked && m_type == MARKER_NAME)) && IsWindowVisible(m_hwnd))
+	if ((!IsActive() || (g_locked && m_type == MARKER_REGION_NAME)) && IsWindowVisible(m_hwnd))
 		Update();
 }
 
@@ -674,7 +674,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	{
 		char buf[MAX_HELP_LENGTH] = "";
 		GetDlgItemText(GetHWND(), IDC_EDIT, buf, MAX_HELP_LENGTH);
-		if (m_type == MARKER_NAME)
+		if (m_type == MARKER_REGION_NAME)
 			ShortenStringToFirstRN(buf);
 
 		int numlines=1, maxlinelen=-1;
@@ -791,7 +791,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 					strcpy(str, "[MASTER]");
 			}
 			break;
-		case MARKER_NAME:
+		case MARKER_REGION_NAME:
 			if (g_lastMarkerIdx >= 0)
 			{
 				double pos; int nb;
@@ -805,7 +805,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 					*str = '\0';
 			}
 			else
-				strcpy(str, "No marker found before play/edit cursor position!");
+				strcpy(str, "No marker or region found before play/edit cursor position!");
 			break;
 		case NOTES_HELP_DISABLED:
 			EnumProjects(-1, str, 512);
@@ -856,15 +856,13 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
 #ifdef _SNM_THEMABLE
-		case WM_CTLCOLOREDIT:
-		{
-			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT))
-			{
+		case WM_CTLCOLOREDIT: 
+			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT)) {
 				SetBkColor((HDC)wParam, GSC_mainwnd(COLOR_WINDOW));
 				SetTextColor((HDC)wParam, GSC_mainwnd(COLOR_BTNTEXT));
 				return (INT_PTR)SNM_GetThemeBrush();
 			}
-		}
+			break;
 #endif
 	}
 	return 0;

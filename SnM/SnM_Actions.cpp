@@ -41,11 +41,11 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// Beware! S&M actions expect "SWS/S&M: " in their names (removed from undo messages: too long)
 
 	// Routing & cue buss -----------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection (use last settings)" }, "S&M_CUEBUS", cueTrack, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (use last settings)" }, "S&M_CUEBUS", cueTrack, NULL, -1},
 #ifdef _SNM_MISC // the previous one is enough
-	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection (use last settings but pre-fader/post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection (use last settings but post-fader)" }, "S&M_SENDS2", cueTrack, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Create cue buss track from track selection (use last settings but pre-FX)" }, "S&M_SENDS3", cueTrack, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (pre-fader/post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (post-fader)" }, "S&M_SENDS2", cueTrack, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (pre-FX)" }, "S&M_SENDS3", cueTrack, NULL, 1},
 #endif
 	{ { DEFACCEL, "SWS/S&M: Open Cue Buss generator" }, "S&M_SENDS4", openCueBussWnd, "S&&M Cue Buss generator", NULL, isCueBussWndDisplayed},
 
@@ -70,15 +70,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Cut selected tracks receives" }, "S&M_CUTSNDRCV4", cutReceives, NULL, },
 
 	// Windows ----------------------------------------------------------------
-#ifdef _SNM_MISC	// fragile sucky solution + win only + limited (toggle actions are not able to *open* wnds, just hide/show once opened) 
-					// + only makes sense with the pref "General > Adavanced UI/System > allow env./routing windows to stay open" 
-#ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Close all routing windows" }, "S&M_WNCLS1", closeAllRoutingWindows, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Close all envelope windows" }, "S&M_WNCLS2", closeAllEnvWindows, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Toggle show all routing windows" }, "S&M_WNTGL1", toggleAllRoutingWindows, NULL, -666, fakeIsToggledAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle show all envelope windows" }, "S&M_WNTGL2", toggleAllEnvWindows, NULL, -666, fakeIsToggledAction},
-#endif
-#endif
 	{ { DEFACCEL, "SWS/S&M: Close all floating FX windows" }, "S&M_WNCLS3", closeAllFXWindows, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Close all FX chain windows" }, "S&M_WNCLS4", closeAllFXChainsWindows, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Close all floating FX windows for selected tracks" }, "S&M_WNCLS5", closeAllFXWindows, NULL, 1},
@@ -530,16 +521,17 @@ static COMMAND_T g_SNM_cmdTable[] =
 ///////////////////////////////////////////////////////////////////////////////
 // S&M "dynamic" actions (main section)
 //
-// "dynamic" means that the number of instances of each action can be customized in the S&M.ini file (section "NbOfActions"). 
-// in this g_SNM_dynamicCmdTable table:
+// "Dynamic" means that the number of instances of each action can be customized in the S&M.ini file (section "NbOfActions"). 
+// In the folowing table:
 // - items are not real commands but "meta" commands, this table must be registered with SNMRegisterDynamicCommands()
 // - COMMAND_T.user is used to specify the default number of actions to create
-// - COMMAND_T.menuText is used to specify a custom max value (NULL means max = 99)
+// - COMMAND_T.menuText is used to specify a custom max number of actions (NULL means max = 99)
 // - a function doCommand(COMMAND_T*) or getEnabled(COMMAND_T*) will be trigered with 0-based COMMAND_T.user
-// - action names are formated strings, they must contain "%02d" (used for better sort in the action list, 2 digits for max = 99)
+// - action names are formated strings, they must contain "%02d" (for better sort in the action list, 2 digits for max = 99)
 // - custom command ids aren't formated strings, but final ids will end with "slot" numbers (1-based for display reasons)
-// example: { { DEFACCEL, "Do stuff #%02d" }, "DO_STUFF", doStuff, NULL, 2},
-// if not overrided in the S&M.ini file (e.g. "DO_STUFF=99"), 2 actions will be created: "Do stuff #01" and "Do stuff #02" both calling
+//
+// Example: { { DEFACCEL, "Do stuff #%02d" }, "DO_STUFF", doStuff, NULL, 2},
+// if not overrided in the S&M.ini file (e.g. "DO_STUFF=32"), 2 actions will be created: "Do stuff #01" and "Do stuff #02" both calling
 // doStuff(COMMAND_T* c) with c->user=0 and c->user=1, respectively. custom ids will be "_DO_STUFF1" and "_DO_STUFF2", repectively.
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -581,7 +573,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// S&M actions ("S&M extension" section)
+// "S&M extension" section
 ///////////////////////////////////////////////////////////////////////////////
 
 static MIDI_COMMAND_T g_SNMSection_cmdTable[] = 
@@ -609,7 +601,7 @@ static MIDI_COMMAND_T g_SNMSection_cmdTable[] =
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Fake action toggle states
+// Fake toggle states
 ///////////////////////////////////////////////////////////////////////////////
 
 // store fake toogle states, indexed per cmd id (faster + lazy init)
@@ -685,9 +677,8 @@ bool onAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 	// Ignore commands that don't have anything to do with us from this point forward
 	if (_cmd < g_SNMSection_minCmdId || _cmd > g_SNMSection_maxCmdId)
 		return false;
-
-	MIDI_COMMAND_T* ct = g_SNMSection_midiCmds.Get(_cmd, NULL);
-	if (ct)
+	
+	if (MIDI_COMMAND_T* ct = g_SNMSection_midiCmds.Get(_cmd, NULL))
 	{
 		bReentrancyCheck = true;
 		ct->doCommand(ct, _val, _valhw, _relmode, _hwnd);
@@ -763,9 +754,9 @@ void SNM_ShowActionList(COMMAND_T* _ct) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // "Dynamic" actions
+// see g_SNM_dynamicCmdTable's comments
 ///////////////////////////////////////////////////////////////////////////////
 
-// see g_SNM_dynamicCmdTable's comments
 int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 {
 	char actionName[SNM_MAX_ACTION_NAME_LEN], custId[SNM_MAX_ACTION_CUSTID_LEN];
@@ -823,12 +814,7 @@ void IniFileInit()
 	if (FileExists(buf))
 		MoveFile(buf, iniFn);
 	g_SNMiniFilename.Set(iniFn);
-/*JFB not needed (issue 292 fixed in r504)
-#ifdef _WIN32
-	// issue 292: force the S&M.ini cache refresh (accessed below) by accessing a 3rd one
-	GetPrivateProfileString("dummy","dummy","",buf,SNM_MAX_INI_SECTION,get_ini_file());
-#endif
-*/
+
 	// S&M.ini cleanup & "auto upgrade"
 	// [FXCHAIN] -> [FXChains]
 	*buf = '\0';
@@ -855,7 +841,7 @@ void IniFileExit()
 	WDL_String iniSection;
 
 	// save general prefs & info
-	iniSection.AppendFormatted(128, "; S&M.ini - SWS/S&M Extension v%d.%d.%d Build #%d\n", SWS_VERSION); 
+	iniSection.AppendFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build #%d\n", SWS_VERSION); 
 	iniSection.AppendFormatted(BUFFER_SIZE, "; %s\n", g_SNMiniFilename.Get()); 
 	iniSection.AppendFormatted(64, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_toolbarsAutoRefreshFreq);
@@ -864,14 +850,10 @@ void IniFileExit()
 
 	// save dynamic actions
 	SNMSaveDynamicCommands(g_SNM_dynamicCmdTable, g_SNMiniFilename.Get());
-
-/*JFB not needed (issue 292 fixed in r504)
 #ifdef _WIN32
-		// issue 292: force writing of the ini file
-		// http://support.microsoft.com/kb/68827
+		// force ini file's cache flush, see http://support.microsoft.com/kb/68827
 		WritePrivateProfileString(NULL, NULL, NULL, g_SNMiniFilename.Get());
 #endif
-*/
 }
 
 
@@ -979,21 +961,24 @@ void DeleteScheduledJob(int _id)
 // IReaperControlSurface callbacks
 ///////////////////////////////////////////////////////////////////////////////
 
-double g_approxPollMsCounter = 0.0;
+double g_toolbarMsCounter = 0.0;
+double g_itemSelMsCounter = 0.0;
 
 void SnMCSurfRun()
 {
-	g_approxPollMsCounter += SNM_CSURF_RUN_TICK_MS;
+	g_toolbarMsCounter += SNM_CSURF_RUN_TICK_MS;
+	g_itemSelMsCounter += SNM_CSURF_RUN_TICK_MS;
 
 	// toolbars auto-refresh option
-	if (g_approxPollMsCounter >= g_toolbarsAutoRefreshFreq)
-	{
-		g_approxPollMsCounter = 0.0;
+	if (g_itemSelMsCounter > 1000) { // might be hungry => gentle hard-coded freq
+		g_itemSelMsCounter = 0.0;
 		if (g_toolbarsAutoRefreshEnabled) 
-		{
 			itemSelToolbarPoll();
+	}
+	if (g_toolbarMsCounter > g_toolbarsAutoRefreshFreq) {
+		g_toolbarMsCounter = 0.0;
+		if (g_toolbarsAutoRefreshEnabled) 
 			RefreshToolbars();
-		}
 	}
 
 	// perform scheduled jobs

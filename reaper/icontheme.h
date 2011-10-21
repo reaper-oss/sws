@@ -489,6 +489,12 @@ typedef struct
   int io_3d[2];
   
   int marqueezoom_fill,marqueezoom_outline,marqueezoom_drawmode;
+
+//JFB found by reverse eng. --->
+  int unknown_1[7];
+  int window_list[3];
+//JFB <---
+
   // NOTE: DO NOT REMOVE/INSERT IN THIS STRUCT. ONLY ADD.
 } ColorTheme;
 

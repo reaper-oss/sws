@@ -723,8 +723,11 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 	else if (s->hdr.code == NM_DBLCLK && s->iItem >= 0)
 	{
 		int iDataCol = DisplayToDataCol(s->iSubItem);
-		if (iDataCol >= 0 && iDataCol < m_iCols && m_pCols[iDataCol].iType & 1)
+		if (iDataCol >= 0 && iDataCol < m_iCols && m_pCols[iDataCol].iType & 1 && 
+			IsEditListItemAllowed(GetListItem(s->iItem), iDataCol))
+		{
 			EditListItem(s->iItem, iDataCol);
+		}
 		else
 			OnItemDblClk(GetListItem(s->iItem), iDataCol);
 	}

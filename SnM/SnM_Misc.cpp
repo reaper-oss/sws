@@ -136,8 +136,7 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 			char resFn[BUFFER_SIZE], resDir[BUFFER_SIZE];
 			_snprintf(resFn, BUFFER_SIZE, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFn);
 			strcpy(resDir, resFn);
-			char* p = strrchr(resDir, PATH_SLASH_CHAR);
-			if (p) *p = '\0';
+			if (char* p = strrchr(resDir, PATH_SLASH_CHAR)) *p = '\0';
 			if (FileExists(resDir)) {
 				lstrcpyn(_fullFn, resFn, _fnSize);
 				return;
@@ -224,7 +223,7 @@ void StringToExtensionConfig(WDL_String* _str, ProjectStateContext* _ctx)
 		makeUnformatedConfigString(_str->Get(), &unformatedStr);
 
 		char* pEOL = unformatedStr.Get()-1;
-		char curLine[4096] = "";
+		char curLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 		for(;;) 
 		{
 			char* pLine = pEOL+1;
@@ -244,7 +243,7 @@ void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx)
 	if (_str && _ctx)
 	{
 		LineParser lp(false);
-		char linebuf[4096];
+		char linebuf[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 		while(true)
 		{
 			if (!_ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
@@ -260,12 +259,12 @@ void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx)
 	}
 }
 
-// Write a full INI file's section in one go
+// write a full INI file's section in one go
 void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection, const char* _iniFn)
 {
 	if (_iniSectionName && _iniSection && _iniFn)
 	{
-/*JFB note: doing that leads to something close to the issue 292 (ini file cache odd pb)
+/*JFB no!! doing that leads to some odd ini file cache pb
 		if (_iniSection->GetLength())
 			_iniSection->Append(" \n");
 */
@@ -290,8 +289,7 @@ void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection, const 
 // REAPER bug: NamedCommandLookup() can return an id for an unregistered _cmdId 
 int SNM_NamedCommandLookup(const char* _cmdId)
 {
-	int id = NamedCommandLookup(_cmdId);
-	if (id)
+	if (int id = NamedCommandLookup(_cmdId))
 	{
 		const char* buf = kbd_getTextFromCmd((DWORD)id, NULL);
 		if (buf && *buf)
@@ -300,19 +298,18 @@ int SNM_NamedCommandLookup(const char* _cmdId)
 	return 0;
 }
 
-int FindMarker(double _pos)
+// relies on markers indexed by positions
+int FindMarkerRegion(double _pos)
 {
-	int x=0, idx=-1; double dMarkerPos;
-	// relies on markers indexed by positions
-	while (x = EnumProjectMarkers(x, NULL, &dMarkerPos, NULL, NULL, NULL))
+	int x=0, idx=-1; double dPos, dEnd; bool isRgn;
+	while (x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL))
 	{
-		if (_pos >= dMarkerPos)
+		if (_pos >= dPos && (!isRgn || (isRgn && _pos <= dEnd)))
 		{
-			double dMarkerPos2;
-			if (EnumProjectMarkers(x, NULL, &dMarkerPos2, NULL, NULL, NULL))
+			//JFB TODO? exclude ended regions..
+			if (EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL))
 			{
-				if (_pos < dMarkerPos2)
-				{
+				if (_pos < dPos) {
 					idx = x-1;
 					break;
 				}

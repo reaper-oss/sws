@@ -386,10 +386,8 @@ int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_Str
 		// remove ".dll"
 		//JFB OSX: to check
 		if (!_stricmp(_fxType, "VST"))
-		{
-			const char* p = stristr(buf,".dll");
-			if (p) buf[(int)(p-buf)] = '\0';
-		}
+			if (const char* p = stristr(buf,".dll"))
+				buf[(int)(p-buf)] = '\0';
 
 		// replace special chars
 		int i=0;

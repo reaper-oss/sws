@@ -1,5 +1,5 @@
 /******************************************************************************
-** SNM_ChunkParserPatcher.h - v1.231
+** SNM_ChunkParserPatcher.h - v1.232
 ** Copyright (C) 2008-2011, Jeffos
 **
 **    This software is provided 'as-is', without any express or implied
@@ -104,26 +104,26 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Fast chunk processing helpers (some are defined at eof)
+// Fast chunk processing helpers (see eof)
 ///////////////////////////////////////////////////////////////////////////////
 
-static int RemoveChunkLines(char* _chunk, const char* _searchStr, 
-							bool _checkBOL = false, int _checkEOLChar = 0, int* _len = NULL);
+static int RemoveChunkLines(char* _chunk, const char* _searchStr,
+							bool _checkBOL = false, int _checkEOLChar = 0);
 static int RemoveChunkLines(char* _chunk, WDL_PtrList<const char>* _searchStrs, 
-							bool _checkBOL = false, int _checkEOLChar = 0, int* _len = NULL);
+							bool _checkBOL = false, int _checkEOLChar = 0);
 static int RemoveChunkLines(WDL_String* _chunk, const char* _searchStr,
-							bool _checkBOL = false, int _checkEOLChar = 0, int* _len = NULL);
+							bool _checkBOL = false, int _checkEOLChar = 0);
 static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<const char>* _searchStrs,
-							bool _checkBOL = false, int _checkEOLChar = 0, int* _len = NULL);
+							bool _checkBOL = false, int _checkEOLChar = 0);
 
 static int FindEndOfSubChunk(const char* _chunk, int _startPos);
 
 // both preserves POOLEDEVTS ids as well as frozen fx ids (FXID_NEXT)
-static int RemoveAllIds(char* _chunk, int* _len = NULL) {
-	return RemoveChunkLines(_chunk, "ID {", false, '}', _len);
+static int RemoveAllIds(char* _chunk) {
+	return RemoveChunkLines(_chunk, "ID {", false, '}');
 }
-static int RemoveAllIds(WDL_String* _chunk, int* _len = NULL) {
-	return RemoveChunkLines(_chunk, "ID {", false, '}', _len);
+static int RemoveAllIds(WDL_String* _chunk) {
+	return RemoveChunkLines(_chunk, "ID {", false, '}');
 }
 
 
@@ -292,7 +292,7 @@ virtual bool Commit(bool _force = false)
 }
 
 const char* GetInfo() {
-	return "SNM_ChunkParserPatcher - v1.231";
+	return "SNM_ChunkParserPatcher - v1.232";
 }
 
 void SetProcessBase64(bool _enable) {
@@ -1018,13 +1018,12 @@ int ParsePatchCore(
 ///////////////////////////////////////////////////////////////////////////////
 
 // _len: for optimization, optionnal IN (initial length) and OUT (length after processing) param
-static int RemoveChunkLines(char* _chunk, const char* _searchStr, bool _checkBOL, int _checkEOLChar, int* _len)
+static int RemoveChunkLines(char* _chunk, const char* _searchStr, bool _checkBOL, int _checkEOLChar)
 {
 	if (!_chunk || !_searchStr)
 		return 0;
 
 	int updates = 0;
-	int len = (!_len ? strlen(_chunk) : *_len);
 	char* idStr = strstr(_chunk, _searchStr);
 	while(idStr) 
 	{
@@ -1033,66 +1032,36 @@ static int RemoveChunkLines(char* _chunk, const char* _searchStr, bool _checkBOL
 		while (*bol && bol > _chunk && *bol != '\n') bol--;
 		if (eol && bol && (*bol == '\n' || bol == _chunk) &&
 			// additionnal optionnal checks (safety)
-			 (!_checkEOLChar || (_checkEOLChar && *((char*)(eol-1)) == _checkEOLChar)) &&
-			 (!_checkBOL || (_checkBOL && idStr == (char*)(bol + ((bol == _chunk ? 0 : 1))))))
+			(!_checkEOLChar || (_checkEOLChar && *((char*)(eol-1)) == _checkEOLChar)) &&
+			(!_checkBOL || (_checkBOL && idStr == (char*)(bol + ((bol == _chunk ? 0 : 1))))))
 		{
-			updates++; eol++; 
+			updates++; 
 			if (bol != _chunk) bol++;
-			// we avoid a bunch of strlen(eol) here
-			memmove(bol, eol, len - ((int)(eol-_chunk)) + 1); // +1 for ending '\0'
-			len -= (int)(eol-bol);
+			memset(bol,' ', (int)(eol-bol)); // REAPER supports blank lines, much faster than memmove()
 			idStr = strstr(bol, _searchStr);
 		}
 		else 
 			idStr = strstr((char*)(idStr+1), _searchStr);
 	}
-	if (_len) *_len = len;
 	return updates;
 }
 
-// _len: optionnal IN (initial length) -and- OUT (length after processing) param
-static int RemoveChunkLines(char* _chunk, WDL_PtrList<const char>* _searchStrs, bool _checkBOL, int _checkEOLChar, int* _len)
-{
-	if (!_chunk || !_searchStrs)
-		return 0;
-
+static int RemoveChunkLines(char* _chunk, WDL_PtrList<const char>* _searchStrs, bool _checkBOL, int _checkEOLChar) {
 	int updates = 0;
-	int len = (!_len ? strlen(_chunk) : *_len);
-
-	// faster than parsing+check each keyword
-	for (int i=0; i < _searchStrs->GetSize(); i++)
-		updates += RemoveChunkLines(_chunk, _searchStrs->Get(i), _checkBOL, _checkEOLChar, &len);
-
-	if (_len) *_len = len;
+	if (_chunk && _searchStrs) {
+		// faster than parsing+check each keyword
+		for (int i=0; i < _searchStrs->GetSize(); i++)
+			updates += RemoveChunkLines(_chunk, _searchStrs->Get(i), _checkBOL, _checkEOLChar);
+	}
 	return updates;
 }
 
-// WDL_String wrapper in case my WDL_String mod is used (due to memmove() solution)
-static int RemoveChunkLines(WDL_String* _chunk, const char* _searchStr, bool _checkBOL, int _checkEOLChar, int* _len)
-{
-	if (!_chunk || !_searchStr)
-		return 0;
-
-	int len = (!_len ? _chunk->GetLength() : *_len);
-	int updates = RemoveChunkLines(_chunk->Get(), _searchStr, _checkBOL, _checkEOLChar, &len);
-	if (updates > 0)
-		_chunk->SetLen(len); // <- WDL_String mod: must be done
-	if (_len) *_len = len;
-	return updates;
+// WDL_String wrappers
+static int RemoveChunkLines(WDL_String* _chunk, const char* _searchStr, bool _checkBOL, int _checkEOLChar) {
+	return (_chunk ? RemoveChunkLines(_chunk->Get(), _searchStr, _checkBOL, _checkEOLChar) : 0);
 }
-
-// WDL_String wrapper in case my WDL_String mod is used (due to memmove() solution)
-static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<const char>* _searchStrs, bool _checkBOL, int _checkEOLChar, int* _len)
-{
-	if (!_chunk || !_searchStrs)
-		return 0;
-
-	int len = (!_len ? _chunk->GetLength() : *_len);
-	int updates = RemoveChunkLines(_chunk->Get(), _searchStrs, _checkBOL, _checkEOLChar, &len);
-	if (updates > 0)
-		_chunk->SetLen(len); // <- WDL_String mod: must be done
-	if (_len) *_len = len;
-	return updates;
+static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<const char>* _searchStrs, bool _checkBOL, int _checkEOLChar) {
+	return (_chunk ? RemoveChunkLines(_chunk->Get(), _searchStrs, _checkBOL, _checkEOLChar) : 0);
 }
 
 // returns the position after the sub-chunk starting at _startPos in _chunk, or -1 if failed

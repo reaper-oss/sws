@@ -1,6 +1,14 @@
 Cycle action editor: added "Consolidated undo points" tick box
 On OSX (with basic cycle action editor), this option can be changed in the S&M.ini file, e.g. [Cyclactions]Undos=0
 
+Notes/Help view: region names can now be edited too (they are edited/displayed according to edit/play cursor position)
+
+All S&M themable views: tweaks, list views now use brand new configurable background/text colors ("Window list" colors in the preferences)
+
+Optimizations:
++Mmany S&M actions run faster
+"Auto-refresh toolbars" option (Main menu > Extensions > SWS options): optimizations for large projects
+
 !v2.1.0 #16 (October 14, 2011)
 S&M themable views: fixed 3D highlight/shadow colors
 

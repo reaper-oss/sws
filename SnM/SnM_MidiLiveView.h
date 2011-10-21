@@ -94,6 +94,7 @@ public:
 	int m_lastDeactivateCmd[SNM_LIVECFG_NB_CONFIGS][5];
 };
 
+
 class SNM_LiveConfigsView : public SWS_ListView {
 public:
 	SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit);
@@ -105,6 +106,7 @@ protected:
 	void OnItemDblClk(SWS_ListItem* item, int iCol);
 	int OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2);
 };
+
 
 class SNM_LiveConfigsWnd : public SWS_DockWnd {
 public:
@@ -127,7 +129,6 @@ protected:
 	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	// WDL UI
-	int m_lastThemeBrushColor;
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
 	WDL_VirtualComboBox m_cbConfig, m_cbInputTr;

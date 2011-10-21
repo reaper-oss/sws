@@ -51,8 +51,7 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 		if (_filter) {
 			_snprintf(_filter, _maxFilterLength, "REAPER %s (*.%s)X*.%s", m_desc.Get(), m_ext.Get(), m_ext.Get());
 			// special code for multiple null terminated strings ('X' -> '\0')
-			char* p = strchr(_filter, ')');
-			if (p) *(p+1) = '\0';
+			if (char* p = strchr(_filter, ')')) *(p+1) = '\0';
 		}
 	}
 	int GetType() {return m_type;}
@@ -135,6 +134,7 @@ public:
 	SNM_ResourceView(HWND hwndList, HWND hwndEdit);
 protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
+	bool IsEditListItemAllowed(SWS_ListItem* item, int iCol);
 	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
 	void OnItemDblClk(SWS_ListItem* item, int iCol);
 	void GetItemList(SWS_ListItemList* pList);
@@ -169,7 +169,7 @@ protected:
 
 
 	bool m_autoSaveTrTmpltWithItemsPref;
-	int m_previousType, m_autoSaveFXChainPref, m_lastThemeBrushColor;
+	int m_previousType, m_autoSaveFXChainPref;
 
 	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;

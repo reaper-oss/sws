@@ -170,7 +170,7 @@ HWND SearchWindow(const char* _title)
 #ifdef _WIN32
 	searchedWnd = FindWindow(NULL, _title);
 #else
-/*JFB TODO OSX: tried what follows that in the hope it'll work on OSX but it's KO (http://code.google.com/p/sws-extension/issues/detail?id=175#c83)
+/*JFB TODO OSX: tried that but it's KO (http://code.google.com/p/sws-extension/issues/detail?id=175#c83)
 	if (GetMainHwnd())
 	{
 		HWND w = GetWindow(GetMainHwnd(), GW_HWNDFIRST);
@@ -237,95 +237,6 @@ int GetSelectedActionId(char* _section, int _secSize, int* _cmdId, char* _id, in
 	return -1;
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Routing, env windows - WIN ONLY!
-//
-// I know... I'm not happy with this "get window by name" solution either.
-// Though, floating FX and FX chain window actions are now okay (new dedicated 
-// APIs since REAPER v3.41, thanks Cockos!)
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _SNM_MISC
-#ifdef _WIN32
-
-bool toggleShowHideWin(const char * _title)
-{
-	HWND w = SearchWindow(_title);
-	if (w != NULL) {
-		ShowWindow(w, IsWindowVisible(w) ? SW_HIDE : SW_SHOW);
-		return true;
-	}
-	return false;
-}
-
-bool closeWin(const char * _title)
-{
-	HWND w = SearchWindow(_title);
-	if (w != NULL) {
-		SendMessage(w, WM_SYSCOMMAND, SC_CLOSE, 0);
-		return true;
-	}
-	return false;
-}
-
-void closeOrToggleAllWindows(bool _routing, bool _env, bool _toggle)
-{
-	for (int i=0; i <= GetNumTracks(); i++) // include master
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (tr)
-		{
-			char trName[128];
-			strcpy(trName, GetTrackInfo((int)tr, NULL));
-
-			//  *** Routing ***
-			if (_routing)
-			{
-				char routingName[128];
-				if (!i) strcpy(routingName, "Outputs for Master Track");
-				else sprintf(routingName, "Routing for track %d \"%s\"", i, trName);
-
-				if (_toggle) toggleShowHideWin(routingName);
-				else closeWin(routingName);
-			}
-
-			// *** Env ***
-			if (_env)
-			{
-				char envName[128];
-				if (!i) strcpy(envName, "Envelopes for Master Track");
-				else sprintf(envName, "Envelopes for track %d \"%s\"", i, trName);
-
-				if (_toggle) toggleShowHideWin(envName);
-				else closeWin(envName);
-			}
-		}
-	}
-}
-
-void closeAllRoutingWindows(COMMAND_T * _ct) {
-	closeOrToggleAllWindows(true, false, false);
-}
-
-void closeAllEnvWindows(COMMAND_T * _ct) {
-	closeOrToggleAllWindows(false, true, false);
-}
-
-//JFB: not used anymore
-void toggleAllRoutingWindows(COMMAND_T * _ct) {
-	closeOrToggleAllWindows(true, false, true);
-	fakeToggleAction(_ct);
-}
-
-//JFB not used anymore
-void toggleAllEnvWindows(COMMAND_T * _ct) {
-	closeOrToggleAllWindows(false, true, true);
-	fakeToggleAction(_ct);
-}
-
-#endif
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // FX chain windows: show/hide
@@ -539,6 +450,7 @@ int getFirstFloatingFX(MediaTrack* _tr, int _dir)
 	}
 	return -1;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Floating FX windows: cycle focus

@@ -62,23 +62,26 @@ enum {
   COL_ACTION_OFF
 };
 
-// Globals
+
 /*JFB static*/ SNM_LiveConfigsWnd* g_pLiveConfigsWnd = NULL;
 SWSProjConfig<MidiLiveConfig> g_liveConfigs;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<MidiLiveItem> > > g_liveCCConfigs;
 
 int g_configId = 0; // the current *displayed* config id
 int g_approxDelayMsCC = 250;
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_LiveConfigsView
+///////////////////////////////////////////////////////////////////////////////
+
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<MidiLiveItem> > > g_liveCCConfigs;
+
 #ifdef _SNM_PRESETS
 static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX user presets"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
 #else
 static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
 #endif
 
-
-///////////////////////////////////////////////////////////////////////////////
-// SNM_LiveConfigsView
-///////////////////////////////////////////////////////////////////////////////
 
 SNM_LiveConfigsView::SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit)
 #ifdef _SNM_PRESETS
@@ -87,18 +90,13 @@ SNM_LiveConfigsView::SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, 7, g_midiLiveCols, "Live Configs View State", false)
 #endif
 {
-#ifdef _SNM_THEMABLE
-	ListView_SetBkColor(hwndList, GSC_mainwnd(COLOR_WINDOW));
-	ListView_SetTextBkColor(hwndList, GSC_mainwnd(COLOR_WINDOW));
-	ListView_SetTextColor(hwndList, GSC_mainwnd(COLOR_BTNTEXT));
-#endif
+	SNM_ThemeListView(this);
 }
 
 void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	if (str) *str = '\0';
-	MidiLiveItem* pItem = (MidiLiveItem*)item;
-	if (pItem)
+	if (MidiLiveItem* pItem = (MidiLiveItem*)item)
 	{
 		switch (iCol)
 		{
@@ -140,16 +138,13 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 			case COL_ACTION_OFF:
 				lstrcpyn(str, pItem->m_offAction.Get(), iStrMax);
 				break;
-			default:
-				break;
 		}
 	}
 }
 
 void SNM_LiveConfigsView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 {
-	MidiLiveItem* pItem = (MidiLiveItem*)item;
-	if (pItem)
+	if (MidiLiveItem* pItem = (MidiLiveItem*)item)
 	{
 		if (iCol==COL_COMMENT)
 		{
@@ -180,11 +175,8 @@ void SNM_LiveConfigsView::SetItemText(SWS_ListItem* item, int iCol, const char* 
 void SNM_LiveConfigsView::GetItemList(SWS_ListItemList* pList)
 {
 	for (int i = 0; i < NB_CC_VALUES; i++)
-	{
-		WDL_PtrList<MidiLiveItem>* configs = g_liveCCConfigs.Get()->Get(g_configId);
-		if (configs)
+		if (WDL_PtrList<MidiLiveItem>* configs = g_liveCCConfigs.Get()->Get(g_configId))
 			pList->Add((SWS_ListItem*)configs->Get(i));
-	}
 }
 
 void SNM_LiveConfigsView::OnItemSelChanged(SWS_ListItem* item, int iState)
@@ -212,8 +204,7 @@ void SNM_LiveConfigsView::OnItemSelChanged(SWS_ListItem* item, int iState)
 
 void SNM_LiveConfigsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
-	MidiLiveItem* pItem = (MidiLiveItem*)item;
-	if (pItem)
+	if (MidiLiveItem* pItem = (MidiLiveItem*)item)
 	{
 		switch(iCol)
 		{
@@ -228,8 +219,6 @@ void SNM_LiveConfigsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 				if (pItem->m_track)
 					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_LOAD_FXCHAIN_MSG, (LPARAM)pItem);
 				break;
-			default:
-				break;
 		}
 	}
 }
@@ -239,8 +228,8 @@ void SNM_LiveConfigsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 int SNM_LiveConfigsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2)
 {
 #ifdef _SNM_PRESETS
-	char str1[64];
-	char str2[64];
+	char str1[64]=""; char str2[64]="";
+
 	if (abs(m_iSortCol)-1 != COL_PRESET)
 		GetItemText(_item1, abs(m_iSortCol)-1, str1, 64);
 	else
@@ -340,7 +329,6 @@ void SNM_LiveConfigsWnd::Update()
 
 void SNM_LiveConfigsWnd::OnInitDlg()
 {
-	m_lastThemeBrushColor = -1;
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_pLists.Add(new SNM_LiveConfigsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 
@@ -352,6 +340,7 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_txtConfig.SetID(TXTID_CONFIG);
+	m_txtConfig.SetText("Config:");
 	m_parentVwnd.AddChild(&m_txtConfig);
 
 	m_cbConfig.SetID(COMBOID_CONFIG);
@@ -368,6 +357,7 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_btnEnable);
 
 	m_txtInputTr.SetID(TXTID_INPUT_TRACK);
+	m_txtInputTr.SetText("Input track:");
 	m_parentVwnd.AddChild(&m_txtInputTr);
 
 	m_cbInputTr.SetID(COMBOID_INPUT_TRACK);
@@ -658,7 +648,6 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			else
 				Main_OnCommand((int)wParam, (int)lParam);
-
 			break;
 		}
 	}
@@ -716,8 +705,7 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
 {
 	HMENU hMenu = NULL;
 	int iCol;
-	MidiLiveItem* item = (MidiLiveItem*)m_pLists.Get(0)->GetHitItem(x, y, &iCol);
-	if (item)
+	if (MidiLiveItem* item = (MidiLiveItem*)m_pLists.Get(0)->GetHitItem(x, y, &iCol))
 	{
 		switch(iCol)
 		{
@@ -841,7 +829,6 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	int x0=_r->left+10, h=35;
 
 	m_txtConfig.SetFont(font);
-	m_txtConfig.SetText("Config:");
 	if (!SetVWndAutoPosition(&m_txtConfig, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
@@ -855,7 +842,6 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 		return;
 
 	m_txtInputTr.SetFont(font);
-	m_txtInputTr.SetText("Input track:");
 	if (!SetVWndAutoPosition(&m_txtInputTr, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
@@ -890,17 +876,8 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_PAINT:
 		{
-#ifdef _SNM_THEMABLE
-			int winCol = GSC_mainwnd(COLOR_WINDOW);
-			if (m_lastThemeBrushColor != winCol) 
-			{
-				m_lastThemeBrushColor = winCol;
-				HWND hl = GetDlgItem(m_hwnd, IDC_LIST);
-				ListView_SetBkColor(hl, winCol);
-				ListView_SetTextBkColor(hl, winCol);
-				ListView_SetTextColor(hl, GSC_mainwnd(COLOR_BTNTEXT));
-			}
-#endif
+			SNM_ThemeListView(m_pLists.Get(0));
+
 			int xo, yo;
 			RECT r;
 			GetClientRect(m_hwnd,&r);	
@@ -927,14 +904,12 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 #ifdef _SNM_THEMABLE
 		case WM_CTLCOLOREDIT:
-		{
-			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT))
-			{
+			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT)) {
 				SetBkColor((HDC)wParam, GSC_mainwnd(COLOR_WINDOW));
 				SetTextColor((HDC)wParam, GSC_mainwnd(COLOR_BTNTEXT));
 				return (INT_PTR)SNM_GetThemeBrush();
 			}
-		}
+			break;
 #endif
 	}
 	return 0;
@@ -993,9 +968,8 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	{
 		GUID g;	
 		int configId = lp.gettoken_int(1) - 1;
-		MidiLiveConfig* lc = g_liveConfigs.Get();
 
-		if (lc)
+		if (MidiLiveConfig* lc = g_liveConfigs.Get())
 		{
 			int success;
 			lc->m_enable[configId] = lp.gettoken_int(2);
@@ -1008,8 +982,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 				lc->m_autoSelect[configId] = 1;
 		}
 
-		WDL_PtrList<MidiLiveItem>* ccConfigs = g_liveCCConfigs.Get()->Get(configId);
-		if (ccConfigs)
+		if (WDL_PtrList<MidiLiveItem>* ccConfigs = g_liveCCConfigs.Get()->Get(configId))
 		{
 			char linebuf[4096];
 			while(true)
@@ -1063,8 +1036,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 				if (firstCfg)
 				{
 					firstCfg = false;
-					MidiLiveConfig* lc = g_liveConfigs.Get();
-					if (lc)
+					if (MidiLiveConfig* lc = g_liveConfigs.Get())
 					{
 						if (lc->m_inputTr[i] && CSurf_TrackToID(lc->m_inputTr[i], false) > 0) 
 							g = *(GUID*)GetSetMediaTrackInfo(lc->m_inputTr[i], "GUID", NULL);

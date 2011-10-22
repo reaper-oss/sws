@@ -76,12 +76,14 @@ HBRUSH SNM_GetThemeBrush()
 void SNM_GetThemeWinColors(int* _bg, int* _txt)
 {
 	int bgcol=-1, txtcol=-1;
+/*JFB
 	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
 	if (g_bv4 && ct) {
 		bgcol = ct->window_list[0];
 		txtcol = ct->window_list[1];
 		// note: grid (ct->window_list[2]) & selection colors not managed
 	}
+*/
 	if (bgcol == txtcol) { // safety (e.g. REAPER < v4.11pre4)
 		bgcol = GSC_mainwnd(COLOR_WINDOW);
 		txtcol = GSC_mainwnd(COLOR_BTNTEXT);

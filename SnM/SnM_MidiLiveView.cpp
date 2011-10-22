@@ -90,7 +90,6 @@ SNM_LiveConfigsView::SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, 7, g_midiLiveCols, "Live Configs View State", false)
 #endif
 {
-	SNM_ThemeListView(this);
 }
 
 void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
@@ -331,6 +330,7 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_pLists.Add(new SNM_LiveConfigsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+	SNM_ThemeListView(m_pLists.Get(0), true);
 
 	// Load prefs 
 	g_approxDelayMsCC = GetPrivateProfileInt("LIVE_CONFIGS", "CC_DELAY", 250, g_SNMiniFilename.Get());
@@ -876,7 +876,7 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_PAINT:
 		{
-			SNM_ThemeListView(m_pLists.Get(0));
+			SNM_ThemeListView(m_pLists.Get(0), false);
 
 			int xo, yo;
 			RECT r;

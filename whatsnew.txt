@@ -6,8 +6,8 @@ Notes/Help view: region names can now be edited too (they are edited/displayed a
 All S&M themable views: tweaks, list views now use brand new configurable background/text colors ("Window list" colors in the preferences)
 
 Optimizations:
-+Mmany S&M actions run faster
-"Auto-refresh toolbars" option (Main menu > Extensions > SWS options): optimizations for large projects
++Many S&M actions run faster
++"Auto-refresh toolbars" option (Main menu > Extensions > SWS options): optimizations for large projects
 
 !v2.1.0 #16 (October 14, 2011)
 S&M themable views: fixed 3D highlight/shadow colors
@@ -16,7 +16,7 @@ Resource view: Project Loader/Selecter overhauled
 +Added context menu items "Set project loader/selecter from selection" and "Clear project loader/selecter configuration"
 +Slots that are part of the configuration are now displayed as such (in the 1st column)
 +The current opened project slot is automatically selected
-+Reminder: the Project Loader/Selecter allows you opening some projects (or selecting project tabs) with actions. It is useful for live performance. Details and demo http://forum.cockos.com/showpost.php?p=831103&postcount=655|here|.
++Reminder: the Project Loader/Selecter allows you opening some projects (or selecting project tabs) with following actions. It is useful for live performance. Details and demo http://forum.cockos.com/showpost.php?p=831103&postcount=655|here|.
 SWS/S&M: Project loader/selecter: next (cycle)
 SWS/S&M: Project loader/selecter: previous (cycle)
 
@@ -38,7 +38,7 @@ Notes/Help view: better resizing, improved "big font" display (less flickering)
 Faster REAPER startup, especially with large projects (for real this time!)
 
 House cleaning:
-+Removed folowing actions (the action "Create cue buss track from track selection (use last settings)" is enough):
++Removed following actions (the action "Create cue buss track from track selection (use last settings)" is enough):
 SWS/S&M: Create cue buss track from track selection (pre-fader/post-FX)
 SWS/S&M: Create cue buss track from track selection (post-fader)
 SWS/S&M: Create cue buss track from track selection (pre-FX)

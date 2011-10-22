@@ -76,7 +76,7 @@ HBRUSH SNM_GetThemeBrush()
 // key = ini file key
 WDL_StringKeyedArray<int*> g_lastListViewColors(true, deleteintptr); 
 
-void SNM_ThemeListView(SWS_ListView* _lv)
+void SNM_ThemeListView(SWS_ListView* _lv, bool _force)
 {
 #ifdef _SNM_THEMABLE
 	if (_lv && _lv->GetHWND())
@@ -103,7 +103,7 @@ void SNM_ThemeListView(SWS_ListView* _lv)
 			g_lastListViewColors.Insert(_lv->GetINIKey(), lastListCols);
 		}
 
-		if (lastListCols[0] != bgcol || lastListCols[1] != txtcol) {
+		if (_force || lastListCols[0] != bgcol || lastListCols[1] != txtcol) {
 			lastListCols[0] = bgcol;
 			lastListCols[1] = txtcol;
 			ListView_SetBkColor(_lv->GetHWND(), bgcol);

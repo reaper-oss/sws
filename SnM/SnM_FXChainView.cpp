@@ -296,7 +296,6 @@ void FileSlotList::EditSlot(int _slot)
 SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, 4, g_fxChainListCols, "Resources View State", false)
 {
-	SNM_ThemeListView(this);
 }
 
 void SNM_ResourceView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
@@ -639,6 +638,7 @@ void SNM_ResourceWnd::OnInitDlg()
 #endif
 */
 	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+	SNM_ThemeListView(m_pLists.Get(0), true);
 
 	// Load prefs 
 	//JFB!!! pb qd 1ere init (no .ini)
@@ -1404,7 +1404,7 @@ int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_PAINT:
 		{
-			SNM_ThemeListView(m_pLists.Get(0));
+			SNM_ThemeListView(m_pLists.Get(0), false);
 
 			int xo, yo; RECT r;
 			GetClientRect(m_hwnd, &r);	

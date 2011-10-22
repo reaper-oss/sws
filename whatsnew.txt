@@ -3,8 +3,6 @@ On OSX (with basic cycle action editor), this option can be changed in the S&M.i
 
 Notes/Help view: region names can now be edited too (they are edited/displayed according to edit/play cursor position)
 
-All S&M themable views: tweaks, list views now use brand new configurable background/text colors ("Window list" colors in the preferences)
-
 Optimizations:
 +Many S&M actions run faster
 +"Auto-refresh toolbars" option (Main menu > Extensions > SWS options): optimizations for large projects

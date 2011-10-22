@@ -905,8 +905,9 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 #ifdef _SNM_THEMABLE
 		case WM_CTLCOLOREDIT:
 			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT)) {
-				SetBkColor((HDC)wParam, GSC_mainwnd(COLOR_WINDOW));
-				SetTextColor((HDC)wParam, GSC_mainwnd(COLOR_BTNTEXT));
+				int bg, txt; SNM_GetThemeWinColors(&bg, &txt);
+				SetBkColor((HDC)wParam, bg);
+				SetTextColor((HDC)wParam, txt);
 				return (INT_PTR)SNM_GetThemeBrush();
 			}
 			break;

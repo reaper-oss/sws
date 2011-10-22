@@ -1431,10 +1431,10 @@ int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 #ifdef _SNM_THEMABLE
 		case WM_CTLCOLOREDIT:
-			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT) || (HWND)lParam == GetDlgItem(m_hwnd, IDC_FILTER))
-			{
-				SetBkColor((HDC)wParam, GSC_mainwnd(COLOR_WINDOW));
-				SetTextColor((HDC)wParam, GSC_mainwnd(COLOR_BTNTEXT));
+			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT) || (HWND)lParam == GetDlgItem(m_hwnd, IDC_FILTER)) {
+				int bg, txt; SNM_GetThemeWinColors(&bg, &txt);
+				SetBkColor((HDC)wParam, bg);
+				SetTextColor((HDC)wParam, txt);
 				return (INT_PTR)SNM_GetThemeBrush();
 			}
 			break;

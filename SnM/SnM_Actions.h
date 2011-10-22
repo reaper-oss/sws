@@ -187,6 +187,7 @@ bool isCyclationsWndDisplayed(COMMAND_T*);
 // *** SnM_Dlg.cpp ***
 LICE_CachedFont* SNM_GetThemeFont();
 HBRUSH SNM_GetThemeBrush();
+void SNM_GetThemeWinColors(int* _bg, int* _txt);
 void SNM_ThemeListView(SWS_ListView* _lv, bool _force);
 LICE_IBitmap* SNM_GetThemeLogo();
 bool AddSnMLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h);

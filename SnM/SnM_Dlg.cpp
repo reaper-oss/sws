@@ -73,6 +73,23 @@ HBRUSH SNM_GetThemeBrush()
 	return g_hb;
 }
 
+void SNM_GetThemeWinColors(int* _bg, int* _txt)
+{
+	int bgcol=-1, txtcol=-1;
+	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
+	if (g_bv4 && ct) {
+		bgcol = ct->window_list[0];
+		txtcol = ct->window_list[1];
+		// note: grid (ct->window_list[2]) & selection colors not managed
+	}
+	if (bgcol == txtcol) { // safety (e.g. REAPER < v4.11pre4)
+		bgcol = GSC_mainwnd(COLOR_WINDOW);
+		txtcol = GSC_mainwnd(COLOR_BTNTEXT);
+	}
+	if (_bg) *_bg = bgcol;
+	if (_txt) *_txt = txtcol;
+}
+
 // key = ini file key
 WDL_StringKeyedArray<int*> g_lastListViewColors(true, deleteintptr); 
 
@@ -81,19 +98,8 @@ void SNM_ThemeListView(SWS_ListView* _lv, bool _force)
 #ifdef _SNM_THEMABLE
 	if (_lv && _lv->GetHWND())
 	{
-		int bgcol=-1, txtcol=-1;
-		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
-
-		if (g_bv4 && ct) {
-			bgcol = ct->window_list[0];
-			txtcol = ct->window_list[1];
-			// note: grid (ct->window_list[2]) & selection colors not managed
-		}
-
-		if (bgcol == txtcol) { // safety (e.g. REAPER < v4.11pre4)
-			bgcol = GSC_mainwnd(COLOR_WINDOW);
-			txtcol = GSC_mainwnd(COLOR_BTNTEXT);
-		}
+		int bgcol, txtcol;
+		SNM_GetThemeWinColors(&bgcol, &txtcol);
 
 		// lazy update of the cache
 		int* lastListCols = g_lastListViewColors.Get(_lv->GetINIKey(), NULL);

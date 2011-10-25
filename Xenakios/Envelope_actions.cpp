@@ -95,7 +95,7 @@ public:
 			void *pcurenv= GetSelectedTrackEnvelope(pproj);
 			if (pcurenv)
 			{
-				char *buf;
+				const char *buf;
 				buf=SWS_GetSetObjectState(pcurenv,0);
 				if (buf)
 				{

@@ -88,7 +88,7 @@ int SearchDirectory(vector<string> &refvecFiles, const char* cDir, const char* c
 			}
 			else
 			{
-				char* cFoundExt  = strrchr(foundFile.Get(), '.');
+				const char* cFoundExt  = strrchr(foundFile.Get(), '.');
 				if (cFoundExt)
 				{
 					cFoundExt++;

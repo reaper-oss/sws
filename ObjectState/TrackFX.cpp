@@ -32,7 +32,7 @@
 void GetFXChain(MediaTrack* tr, WDL_TypedBuf<char>* buf)
 {
 	buf->Resize(0); // Empty
-	char* chunk = SWS_GetSetObjectState(tr, NULL);
+	const char* chunk = SWS_GetSetObjectState(tr, NULL);
 	int pos = 0;
 	int iDepth = 0;
 	char line[4096];
@@ -64,7 +64,7 @@ void SetFXChain(MediaTrack* tr, const char* str)
 {
 	WDL_String newChunk;
 	char line[4096];
-	char* chunk = SWS_GetSetObjectState(tr, NULL);
+	const char* chunk = SWS_GetSetObjectState(tr, NULL);
 	int pos = 0;
 	int iDepth = 0;
 

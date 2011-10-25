@@ -712,7 +712,7 @@ void appendSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_String* _chunk)
 				int newId = tracks.Find(tr);
 				if (newId >= 0)
 				{
-					char* p3rdTokenToEol = strchr(line.Get(), ' ');
+					const char* p3rdTokenToEol = strchr(line.Get(), ' ');
 					if (p3rdTokenToEol) p3rdTokenToEol = strchr((char*)(p3rdTokenToEol+1), ' ');
 					if (p3rdTokenToEol)
 					{

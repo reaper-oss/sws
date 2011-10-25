@@ -975,7 +975,7 @@ bool GetStringFromNotesChunk(WDL_String* _notes, char* _buf, int _bufMaxSize)
 	if (_strnicmp(_notes->Get(), "<NOTES", 6) || _strnicmp((char*)(_notes->Get()+_notes->GetLength()-3), "\n>\n", 3))
 		return (_notes->GetLength() == 0); // empty _notes is a valid case
 */
-	char* pNotes = _notes->Get();
+	const char* pNotes = _notes->Get();
 
 	// find 1st '|'
 	int i=0, j;

@@ -403,7 +403,7 @@ int SNM_TakeParserPatcher::CountTakesInChunk()
 	if (m_currentTakeCount < 0)
 	{
 		m_currentTakeCount = 0;
-		char* p = strstr(GetChunk()->Get(), "\nTAKE"); // force GetChunk() (force cache + add fake 1st take if needed)
+		const char* p = strstr(GetChunk()->Get(), "\nTAKE"); // force GetChunk() (force cache + add fake 1st take if needed)
 		while (p) 
 		{
 			if (IsValidTakeChunkLine(p))
@@ -526,7 +526,7 @@ WDL_String* SNM_TakeParserPatcher::GetChunk()
 	if (!m_fakeTake && chunk)
 	{
 		m_fakeTake = true;
-		char* p = strstr(m_chunk->Get(), "\nNAME \"");
+		const char* p = strstr(m_chunk->Get(), "\nNAME \"");
 		// empty item (i.e. no take at all) or NULL takes only
 		if (!p) 
 		{
@@ -561,7 +561,7 @@ bool SNM_TakeParserPatcher::Commit(bool _force)
 		if (m_fakeTake)
 		{
 			m_fakeTake = false;
-			char* p = strstr(m_chunk->Get(), "\nNAME \"");
+			const char* p = strstr(m_chunk->Get(), "\nNAME \"");
 			// empty item (i.e. no take at all) or NULL takes only
 			if (!p) 
 			{
@@ -606,7 +606,7 @@ bool SNM_TakeParserPatcher::Commit(bool _force)
 bool SNM_TakeParserPatcher::GetTakeChunkPos(int _takeIdx, int* _pos, int* _len)
 {
 	int tkCount = 0;
-	char* p = strstr(GetChunk()->Get(), "\nTAKE"); // force GetChunk() (+ add fake 1st take if needed)
+	const char* p = strstr(GetChunk()->Get(), "\nTAKE"); // force GetChunk() (+ add fake 1st take if needed)
 	while (p)
 	{
 		if (IsValidTakeChunkLine(p))

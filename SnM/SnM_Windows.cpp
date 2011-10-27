@@ -810,7 +810,7 @@ static BOOL CALLBACK EnumXCPWindows(HWND _hwnd, LPARAM _lParam)
 }
 #endif
 
-void ShowThemeHelper(WDL_String* _report, HWND _hwnd, bool _mcp, bool _sel)
+void ShowThemeHelper(WDL_FastString* _report, HWND _hwnd, bool _mcp, bool _sel)
 {
 #ifdef _WIN32
 	g_childHwndsCount = 0;
@@ -838,7 +838,7 @@ void ShowThemeHelper(WDL_String* _report, HWND _hwnd, bool _mcp, bool _sel)
 
 void ShowThemeHelper(COMMAND_T* _ct)
 {
-	WDL_String report("");
+	WDL_FastString report("");
 	ShowThemeHelper(&report, GetMainHwnd(), false, (int)_ct->user == 1);
 	if ((int)_ct->user != 1 && report.GetLength())
 		report.Append("\n");

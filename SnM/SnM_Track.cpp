@@ -35,7 +35,7 @@
 // Track grouping
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_String g_trackGrpClipboard;
+WDL_FastString g_trackGrpClipboard;
 
 void copyCutTrackGrouping(COMMAND_T* _ct)
 {
@@ -109,13 +109,13 @@ bool SetTrackGroup(int _group)
 		double grpMask = pow(2.0, _group*1.0);
 		char grpDefault[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 		GetPrivateProfileString("REAPER", "tgrpdef", "", grpDefault, SNM_MAX_CHUNK_LINE_LENGTH, get_ini_file());
-		WDL_String defFlags(grpDefault);
+		WDL_FastString defFlags(grpDefault);
 		while (defFlags.GetLength() < 64) { // complete the line (64 is more than needed: future-proof)
 			if (defFlags.Get()[defFlags.GetLength()-1] != ' ') defFlags.Append(" ");
 			defFlags.Append("0");
 		}
 
-		WDL_String newFlags("GROUP_FLAGS ");
+		WDL_FastString newFlags("GROUP_FLAGS ");
 		LineParser lp(false);
 		if (!lp.parse(defFlags.Get())) {
 			for (int i=0; i < lp.getnumtokens(); i++) {
@@ -155,7 +155,7 @@ int FindFirstUnusedGroup()
 		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 		{
 			SNM_ChunkParserPatcher p(tr);
-			WDL_String grpLine;
+			WDL_FastString grpLine;
 			if (p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "GROUP_FLAGS", -1 , 0, 0, &grpLine, NULL, "TRACKHEIGHT"))
 			{
 				LineParser lp(false);
@@ -481,7 +481,7 @@ MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj) {
 // Track templates & track template slots (of the Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
-bool makeSingleTrackTemplateChunk(WDL_String* _inRawChunk, WDL_String* _out, bool _delItems, bool _delEnvs)
+bool makeSingleTrackTemplateChunk(WDL_FastString* _inRawChunk, WDL_FastString* _out, bool _delItems, bool _delEnvs)
 {
 	if (_inRawChunk && _out)
 	{
@@ -511,12 +511,12 @@ bool makeSingleTrackTemplateChunk(WDL_String* _inRawChunk, WDL_String* _out, boo
 }
 
 // apply a track template (primitive, no undo point)
-bool applyTrackTemplate(MediaTrack* _tr, WDL_String* _tmpltChunk, bool _rawChunk, SNM_ChunkParserPatcher* _p, bool _itemsFromTmplt, bool _envsFromTmplt)
+bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _rawChunk, SNM_ChunkParserPatcher* _p, bool _itemsFromTmplt, bool _envsFromTmplt)
 {
 	bool updated = false;
 	if (_tr && _tmpltChunk)
 	{
-		WDL_String newChunk;
+		WDL_FastString newChunk;
 		SNM_ChunkParserPatcher* p = (_p ? _p : new SNM_ChunkParserPatcher(_tr));
 
 		// safety: force item removal for master track
@@ -556,7 +556,7 @@ void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _i
 	char fn[BUFFER_SIZE]="";
 	if (g_trTemplateFiles.GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg)) 
 	{
-		WDL_String tmp;
+		WDL_FastString tmp;
 
 		// add as new track
 		if (_import)
@@ -569,7 +569,7 @@ void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _i
 		// patch selected tracks with 1st track found in template
 		else if (CountSelectedTracksWithMaster(NULL) && LoadChunk(fn, &tmp) && tmp.GetLength())
 		{
-			WDL_String tmpltChunk;
+			WDL_FastString tmpltChunk;
 			makeSingleTrackTemplateChunk(&tmp, &tmpltChunk, !_itemsFromTmplt, !_envsFromTmplt);
 			for (int i = 0; i <= GetNumTracks(); i++) // include master
 			{
@@ -606,10 +606,10 @@ void replaceOrPasteItemsFromTrackSlot(const char* _title, bool _paste, int _slot
 	char fn[BUFFER_SIZE]="";
 	if (g_trTemplateFiles.GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg)) 
 	{
-		WDL_String tmpltChunk;
+		WDL_FastString tmpltChunk;
 		if (CountSelectedTracks(NULL) && LoadChunk(fn, &tmpltChunk) && tmpltChunk.GetLength())
 		{
-			WDL_String tmpltItemsChunk;
+			WDL_FastString tmpltItemsChunk;
 			{
 				SNM_ChunkParserPatcher p(&tmpltChunk);
 				//JFB!!! all items in one go???
@@ -647,7 +647,7 @@ void replaceOrPasteItemsFromTrackSlot(const char* _title, bool _paste, int _slot
 		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
 }
 
-void appendTrackChunk(MediaTrack* _tr, WDL_String* _chunk, bool _delItems, bool _delEnvs)
+void appendTrackChunk(MediaTrack* _tr, WDL_FastString* _chunk, bool _delItems, bool _delEnvs)
 {
 	if (_tr && _chunk)
 	{
@@ -660,7 +660,7 @@ void appendTrackChunk(MediaTrack* _tr, WDL_String* _chunk, bool _delItems, bool 
 	}
 }
 
-void appendSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_String* _chunk)
+void appendSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_FastString* _chunk)
 {
 	if (!_chunk)
 		return;
@@ -693,7 +693,7 @@ void appendSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_String* _chunk)
 	// update receives ids ----------------------------------------------------
 	// note: no breakKeywords used here, multiple tracks in the template chunk!
 	SNM_ChunkParserPatcher p(_chunk);
-	WDL_String line;
+	WDL_FastString line;
 	int occurence = 0;
 	int pos = p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "AUXRECV", -1, occurence, 1, &line); 
 	while (pos > 0)
@@ -712,11 +712,11 @@ void appendSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_String* _chunk)
 				int newId = tracks.Find(tr);
 				if (newId >= 0)
 				{
-					char* p3rdTokenToEol = strchr(line.Get(), ' ');
+					const char* p3rdTokenToEol = strchr(line.Get(), ' ');
 					if (p3rdTokenToEol) p3rdTokenToEol = strchr((char*)(p3rdTokenToEol+1), ' ');
 					if (p3rdTokenToEol)
 					{
-						WDL_String newRcv;
+						WDL_FastString newRcv;
 						newRcv.SetFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "AUXRECV %d%s\n", newId, p3rdTokenToEol);
 						replaced = p.ReplaceLine(pos, newRcv.Get());
 						if (replaced)
@@ -738,7 +738,7 @@ void appendSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_String* _chunk)
 
 bool autoSaveTrackSlots(bool _delItems, bool _delEnvs, const char* _dirPath, char* _fn, int _fnSize)
 {
-	WDL_String fullChunk;
+	WDL_FastString fullChunk;
 	appendSelTrackTemplates(_delItems, _delEnvs, &fullChunk);
 
 	char* trName = NULL;

@@ -68,7 +68,7 @@ enum {
 
 SNM_NotesHelpWnd* g_pNotesHelpWnd = NULL;
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
-SWSProjConfig<WDL_String> g_prjNotes;
+SWSProjConfig<WDL_FastString> g_prjNotes;
 
 int g_bDocked = -1, g_bLastDocked = 0; 
 char g_locked = 1;
@@ -324,7 +324,7 @@ void SNM_NotesHelpWnd::saveCurrentItemNotes()
 		if (strncmp(g_lastText, buf, MAX_HELP_LENGTH))
 		{
 			bool update = false;
-			WDL_String newNotes;
+			WDL_FastString newNotes;
 			if (!*buf || GetNotesChunkFromString(buf, &newNotes))
 			{
 				SNM_ChunkParserPatcher p(g_mediaItemNote);
@@ -436,7 +436,7 @@ int SNM_NotesHelpWnd::updateItemNotes()
 			g_mediaItemNote = selItem;
 
 			SNM_ChunkParserPatcher p(g_mediaItemNote);
-			WDL_String notes;
+			WDL_FastString notes;
 			char buf[MAX_HELP_LENGTH] = "";
 			if (p.GetSubChunk("NOTES", 2, 0, &notes, "VOLPAN") >= 0) // rmk: we use VOLPAN as it also exists for empty items
 				GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH);
@@ -459,7 +459,7 @@ int SNM_NotesHelpWnd::updateTrackNotes()
 		{
 			g_trNote = selTr;
 
-			WDL_String* notes = NULL;
+			WDL_FastString* notes = NULL;
 			for (int i = 0; i < g_pTracksNotes.Get()->GetSize(); i++) {
 				if (g_pTracksNotes.Get()->Get(i)->m_tr == g_trNote) {
 					notes = &(g_pTracksNotes.Get()->Get(i)->m_notes);
@@ -940,7 +940,7 @@ void SNM_NotesHelpWnd::readActionHelpFilenameIniFile()
 }
 
 void SNM_NotesHelpWnd::saveActionHelpFilenameIniFile() {
-	WDL_String escapedStr;
+	WDL_FastString escapedStr;
 	makeEscapedConfigString(m_actionHelpFilename.Get(), &escapedStr);
 	WritePrivateProfileString("NOTES_HELP_VIEW", "ACTION_HELP_FILE", escapedStr.Get(), g_SNMiniFilename.Get());
 }
@@ -963,7 +963,7 @@ void SetActionHelpFilename(COMMAND_T*)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool GetStringFromNotesChunk(WDL_String* _notes, char* _buf, int _bufMaxSize)
+bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize)
 {
 	if (!_buf || !_notes)
 		return false;
@@ -975,7 +975,7 @@ bool GetStringFromNotesChunk(WDL_String* _notes, char* _buf, int _bufMaxSize)
 	if (_strnicmp(_notes->Get(), "<NOTES", 6) || _strnicmp((char*)(_notes->Get()+_notes->GetLength()-3), "\n>\n", 3))
 		return (_notes->GetLength() == 0); // empty _notes is a valid case
 */
-	char* pNotes = _notes->Get();
+	const char* pNotes = _notes->Get();
 
 	// find 1st '|'
 	int i=0, j;
@@ -995,7 +995,7 @@ bool GetStringFromNotesChunk(WDL_String* _notes, char* _buf, int _bufMaxSize)
 	return true;
 }
 
-bool GetNotesChunkFromString(const char* _buf, WDL_String* _notes, const char* _startLine)
+bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine)
 {
 	if (_notes && _buf)
 	{
@@ -1039,7 +1039,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	// Load project notes
 	if (!strcmp(lp.gettoken_str(0), "<S&M_PROJNOTES"))
 	{
-		WDL_String notes;
+		WDL_FastString notes;
 		ExtensionConfigToString(&notes, ctx);
 
 		char buf[MAX_HELP_LENGTH] = "";
@@ -1058,7 +1058,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		MediaTrack* tr = GuidToTrack(&g);
 		if (tr)
 		{
-			WDL_String notes;
+			WDL_FastString notes;
 			ExtensionConfigToString(&notes, ctx);
 
 			char buf[MAX_HELP_LENGTH] = "";
@@ -1080,7 +1080,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 	char startLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 	char strId[128] = "";
-	WDL_String formatedNotes;
+	WDL_FastString formatedNotes;
 
 	// Save project notes
 	if (g_prjNotes.Get()->GetLength())
@@ -1123,14 +1123,14 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	// If so, just ignore the possibility that there might be project notes.
 	if (strlen(buf) > 3 && _stricmp(buf+strlen(buf)-3, "RPP") == 0)
 	{
-		WDL_String startOfrpp;
+		WDL_FastString startOfrpp;
 
 		// jut read the very begining of the file (where notes are, no-op if notes are longer)
 		// => much faster REAPER startup (based on the parser tolerance..)
 		if (LoadChunk(buf, &startOfrpp, false, MAX_HELP_LENGTH+128) && startOfrpp.GetLength())
 		{
 			SNM_ChunkParserPatcher p(&startOfrpp);
-			WDL_String notes;
+			WDL_FastString notes;
 			if (p.GetSubChunk("NOTES", 2, 0, &notes, "RIPPLE") >= 0)
 			{
 				char bufNotes[MAX_HELP_LENGTH] = "";

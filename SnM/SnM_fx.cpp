@@ -371,7 +371,7 @@ int getSelectedTrackFX(MediaTrack* _tr)
 ///////////////////////////////////////////////////////////////////////////////
 
 //JFB cache?
-int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_String>* _names)
+int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _names)
 {
 	int nbPresets = 0;
 	if (_fxType && _fxName && _names)
@@ -417,7 +417,7 @@ int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_Str
 			{
 				_snprintf(key, 32, "Preset%d", i);
 				GetPrivateProfileString(key, "Name", "", buf, 256, iniFilename);
-				_names->Add(new WDL_String(buf));
+				_names->Add(new WDL_FastString(buf));
 			}
 		}
 	}
@@ -433,9 +433,9 @@ int GetPresetFromConfToken(const char* _preset) {
 // Updates a preset conf string
 // _fx: 1-based, _preset: 1-based with 0=remove
 // _presetConf (in & out param): stored as "fx.preset" both 1-based
-void UpdatePresetConf(int _fx, int _preset, WDL_String* _presetConf)
+void UpdatePresetConf(int _fx, int _preset, WDL_FastString* _presetConf)
 {
-	WDL_String newConf;
+	WDL_FastString newConf;
 	LineParser lp(false);
 	if (_presetConf && !lp.parse(_presetConf->Get()))
 	{
@@ -470,7 +470,7 @@ void UpdatePresetConf(int _fx, int _preset, WDL_String* _presetConf)
 // Returns the preset number (1-based, 0 if failed) from a preset conf string
 // _fx: 0-based, _presetConf: stored as "fx.preset", both 1-based
 // _presetCount: for optionnal check
-int GetPresetFromConf(int _fx, WDL_String* _presetConf, int _presetCount)
+int GetPresetFromConf(int _fx, WDL_FastString* _presetConf, int _presetCount)
 {
 	LineParser lp(false);
 	if (_presetConf && !lp.parse(_presetConf->Get()))
@@ -489,7 +489,7 @@ int GetPresetFromConf(int _fx, WDL_String* _presetConf, int _presetCount)
 // Returns a human readable preset conf string
 // _fx: 1-based, _preset: 1-based with 0=remove
 // _presetConf: in param, _renderConf: out param
-void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf)
+void RenderPresetConf(WDL_FastString* _presetConf, WDL_FastString* _renderConf)
 {
 	LineParser lp(false);
 	if (_presetConf && _renderConf && !lp.parse(_presetConf->Get()))
@@ -510,7 +510,7 @@ void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf)
 
 // this one renders a string with preset names 
 // to be used moderately: uses chunk parsing!!
-void RenderPresetConf2(MediaTrack* _tr, WDL_String* _presetConf, WDL_String* _renderConf)
+void RenderPresetConf2(MediaTrack* _tr, WDL_FastString* _presetConf, WDL_FastString* _renderConf)
 {
 	if (_tr && _presetConf && _renderConf && _presetConf->GetLength() && TrackFX_GetCount(_tr))
 	{
@@ -531,7 +531,7 @@ void RenderPresetConf2(MediaTrack* _tr, WDL_String* _presetConf, WDL_String* _re
 				if (preset)
 					summaries = p.GetSummaries();
 				SNM_FXSummary* sum = summaries ? summaries->Get(fx) : NULL;
-				WDL_PtrList_DeleteOnDestroy<WDL_String> names;
+				WDL_PtrList_DeleteOnDestroy<WDL_FastString> names;
 				int presetCount = (sum ? getPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names) : 0);
 				if (presetCount && preset < presetCount)
 					_renderConf->AppendFormatted(256, "FX %d: %s", fx+1, names.Get(preset)->Get());
@@ -657,7 +657,7 @@ void triggerPreviousPreset(COMMAND_T* _ct) {
 
 // trigger several *USER* presets from several FXs on a same track 
 // _presetConf: "fx.preset", both 1-based - e.g. "1.4 2.2" => FX1 user preset 4, FX2 user preset 2 
-bool triggerFXUserPreset(MediaTrack* _tr, WDL_String* _presetConf)
+bool triggerFXUserPreset(MediaTrack* _tr, WDL_FastString* _presetConf)
 {
 	bool updated = false;
 	int nbFx = _tr ? TrackFX_GetCount(_tr) : 0;
@@ -719,7 +719,7 @@ void moveFX(COMMAND_T* _ct)
 				if (sel >= 0 && ((dir == 1 && sel < (nbFx-1)) || (dir == -1 && sel > 0)))
 				{
 					SNM_ChunkParserPatcher p(tr);
-					WDL_String chainChunk;
+					WDL_FastString chainChunk;
 					if (p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM") > 0)
 					{
 						int originalChainLen = chainChunk.GetLength();
@@ -735,7 +735,7 @@ void moveFX(COMMAND_T* _ct)
 							else p2 = pfxc.GetChunk()->GetLength()-2; // -2 for ">\n"
 
 							// store & cut fx
-							WDL_String fxChunk;
+							WDL_FastString fxChunk;
 							fxChunk.Set((const char*)(pfxc.GetChunk()->Get()+p1), p2-p1);
 							pfxc.GetChunk()->DeleteSub(p1, p2-p1);
 							

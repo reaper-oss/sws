@@ -40,15 +40,15 @@
 class SNM_ChunkIndenter : public SNM_ChunkParserPatcher
 {
 public:
-	SNM_ChunkIndenter(WDL_String* _chunk, bool _autoCommit = true)
+	SNM_ChunkIndenter(WDL_FastString* _chunk, bool _autoCommit = true)
 		: SNM_ChunkParserPatcher(_chunk, _autoCommit, true, true, true) {}
 	~SNM_ChunkIndenter() {}
 	bool Indent() {return (ParsePatch(-1) > 0);}
 protected:
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
-		WDL_String* _newChunk, int _updates);
+		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents,
+		WDL_FastString* _newChunk, int _updates);
 };
 
 
@@ -76,8 +76,8 @@ public:
 protected:
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos, 
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 
 	int m_srcId;
 	int m_sendType;
@@ -102,32 +102,32 @@ public:
 	}
 	~SNM_FXChainTakePatcher() {}
 
-	bool SetFXChain(WDL_String* _fxChain, bool _activeTakeOnly);
-	WDL_String* GetFXChain();
+	bool SetFXChain(WDL_FastString* _fxChain, bool _activeTakeOnly);
+	WDL_FastString* GetFXChain();
 
 protected:
 	bool NotifyStartElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos, 
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 
 	bool NotifyEndElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 
 	bool NotifySkippedSubChunk(int _mode, 
 		const char* _subChunk, int _subChunkLength, int _subChunkPos,
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 
-	WDL_String* m_fxChain;
-	WDL_String m_copiedFXChain;
+	WDL_FastString* m_fxChain;
+	WDL_FastString m_copiedFXChain;
 	bool m_removingTakeFx;
 	bool m_copyingTakeFx;
 	bool m_activeTake;
@@ -148,31 +148,31 @@ public:
 	}
 	~SNM_FXChainTrackPatcher() {}
 
-	bool SetFXChain(WDL_String* _fxChain, bool _inputFX = false);
+	bool SetFXChain(WDL_FastString* _fxChain, bool _inputFX = false);
 	int GetInputFXCount();
 
 protected:
 	bool NotifyStartElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos, 
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 
 	bool NotifyEndElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos, 
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 
 	bool NotifySkippedSubChunk(int _mode, 
 		const char* _subChunk, int _subChunkLength, int _subChunkPos,
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 
-	WDL_String* m_fxChain;
+	WDL_FastString* m_fxChain;
 	bool m_removingFxChain;
 	bool m_copyingFxChain;
 };
@@ -200,16 +200,16 @@ public:
 		if (m_autoCommit)
 			Commit(); // no-op if chunk not updated (or no valid m_object)
 	}
-	WDL_String* GetChunk();
+	WDL_FastString* GetChunk();
 	bool Commit(bool _force = false);
 	bool GetTakeChunkPos(int _takeIdx, int* _pos, int* _len = NULL);
-	bool GetTakeChunk(int _takeIdx, WDL_String* _gettedChunk, int* _pos = NULL, int* _len = NULL);
+	bool GetTakeChunk(int _takeIdx, WDL_FastString* _gettedChunk, int* _pos = NULL, int* _len = NULL);
 	int CountTakesInChunk();
 	bool IsEmpty(int _takeIdx);
-	int AddLastTake(WDL_String* _tkChunk);
-	int InsertTake(int _takeIdx, WDL_String* _chunk, int _pos = -1);
-	bool RemoveTake(int _takeIdx, WDL_String* _removedChunk = NULL, int* _removedStartPos = NULL);
-	bool ReplaceTake(int _startTakePos, int _takeLength, WDL_String* _newTakeChunk);
+	int AddLastTake(WDL_FastString* _tkChunk);
+	int InsertTake(int _takeIdx, WDL_FastString* _chunk, int _pos = -1);
+	bool RemoveTake(int _takeIdx, WDL_FastString* _removedChunk = NULL, int* _removedStartPos = NULL);
+	bool ReplaceTake(int _startTakePos, int _takeLength, WDL_FastString* _newTakeChunk);
 protected:
 	int m_currentTakeCount; // nb of takes in the *chunk* (may be different than REAPER's ones)
 //	int m_activeTakeIdx;    // active take in the *chunk* (may be different than REAPER's ones)
@@ -240,8 +240,8 @@ public:
 protected:
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
-		WDL_String* _newChunk, int _updates);
+		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents,
+		WDL_FastString* _newChunk, int _updates);
 	int m_maxRecPass;
 	int m_recPasses[SNM_MAX_TAKES];
 	int m_takeColors[SNM_MAX_TAKES];
@@ -257,23 +257,23 @@ private:
 class SNM_EnvRemover : public SNM_ChunkParserPatcher
 {
 public:
-	SNM_EnvRemover(WDL_String* _str, bool _autoCommit = true)
+	SNM_EnvRemover(WDL_FastString* _str, bool _autoCommit = true)
 		: SNM_ChunkParserPatcher(_str, _autoCommit) {m_removingEnv = false; }
 	~SNM_EnvRemover() {}
 	bool RemoveEnvelopes();
 protected:
 	bool NotifyStartElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 	bool NotifyEndElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
-		WDL_String* _newChunk, int _updates);
+		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents,
+		WDL_FastString* _newChunk, int _updates);
 private:
 	bool m_removingEnv;
 };
@@ -294,8 +294,8 @@ public:
 protected:
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
-		WDL_String* _newChunk, int _updates);
+		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents,
+		WDL_FastString* _newChunk, int _updates);
 private:
 	int m_newValue;
 };
@@ -318,12 +318,12 @@ public:
 protected:
 	bool NotifyEndElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
-		WDL_String* _newChunk, int _updates);
+		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents,
+		WDL_FastString* _newChunk, int _updates);
 private:
 	int m_newChannel, m_fx, m_currentFx;
 };
@@ -342,12 +342,12 @@ public:
 protected:
 	bool NotifyStartElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 	bool NotifyEndElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 	WDL_PtrList_DeleteOnDestroy<SNM_FXSummary> m_summaries;
 };
 
@@ -359,15 +359,15 @@ protected:
 class SNM_TakeEnvParserPatcher : public SNM_ChunkParserPatcher
 {
 public:
-	SNM_TakeEnvParserPatcher(WDL_String* _tkChunk, bool _autoCommit = true) 
+	SNM_TakeEnvParserPatcher(WDL_FastString* _tkChunk, bool _autoCommit = true) 
 		: SNM_ChunkParserPatcher(_tkChunk, _autoCommit) {m_vis = -1;}
 	~SNM_TakeEnvParserPatcher() {}
 	bool SetVis(const char* _envKeyWord, int _vis);
 protected:
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
-		WDL_String* _newChunk, int _updates);
+		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents,
+		WDL_FastString* _newChunk, int _updates);
 private:
 	int m_vis;
 };
@@ -388,13 +388,13 @@ public:
 protected:
 	bool SNM_FXKnobParser::NotifyEndElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates);
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates);
 
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
-		WDL_String* _newChunk, int _updates);
+		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents,
+		WDL_FastString* _newChunk, int _updates);
 private:
 	int m_fx;
 	WDL_PtrList<WDL_IntKeyedArray<int> >* m_knobs;

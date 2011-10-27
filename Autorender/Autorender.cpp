@@ -204,7 +204,7 @@ string GetProjectName(){
 	return prjPathStr;
 }
 
-void GetProjectString(WDL_String* prjStr){
+void GetProjectString(WDL_FastString* prjStr){
 	char str[4096];
 	EnumProjects(-1, str, MAX_PATH);	
 
@@ -222,7 +222,7 @@ void GetProjectString(WDL_String* prjStr){
     delete prj;
 }
 
-void WriteProjectFile( string filename, WDL_String* prjStr ){
+void WriteProjectFile( string filename, WDL_FastString* prjStr ){
 	//CheckDirTree( filename, true ); This done in GetQueuedRenders
 	ProjectStateContext* outProject = ProjectCreateFileWrite( filename.c_str() );	
 	char line[4096];
@@ -240,8 +240,8 @@ void WriteProjectFile( string filename, WDL_String* prjStr ){
 }
 */
 
-void WDLStringReplaceLine( WDL_String *prjStr, int pos, const char *oldLine, const char *newLine ){
-	//if newLine does't have a trailing \n, things will break because WDL_String will insert > at the wrong place!
+void WDLStringReplaceLine( WDL_FastString *prjStr, int pos, const char *oldLine, const char *newLine ){
+	//if newLine does't have a trailing \n, things will break because WDL_FastString will insert > at the wrong place!
 	//maybe should check for this here?
 	int lineLen = (int)strlen( oldLine ) + 1; //Add 1 for the omitted newline
 	int startPos = pos - lineLen;
@@ -250,7 +250,7 @@ void WDLStringReplaceLine( WDL_String *prjStr, int pos, const char *oldLine, con
 	int i = 0;
 }
 
-void SetProjectParameter( WDL_String *prjStr, string param, string paramValue ){
+void SetProjectParameter( WDL_FastString *prjStr, string param, string paramValue ){
 	char line[4096];
 	int pos = 0;
 	LineParser lp(false);
@@ -266,7 +266,7 @@ void SetProjectParameter( WDL_String *prjStr, string param, string paramValue ){
 	}	
 }
 
-string GetProjectParameterValueStr( WDL_String *prjStr, string param, int token = 1 ){
+string GetProjectParameterValueStr( WDL_FastString *prjStr, string param, int token = 1 ){
 	char line[4096];
 	int pos = 0;
 	LineParser lp(false);
@@ -283,7 +283,7 @@ string GetProjectParameterValueStr( WDL_String *prjStr, string param, int token 
 }
 
 /*
-string GetProjectNotesParameter( WDL_String *prjStr, string param ){
+string GetProjectNotesParameter( WDL_FastString *prjStr, string param ){
 	char line[4096];
 	int pos = 0;
 	LineParser lp(false);
@@ -324,7 +324,7 @@ string GetQueuedRendersDir(){
 	return qDir;
 }
 
-string GetCurrentRenderExtension( WDL_String *prjStr ){
+string GetCurrentRenderExtension( WDL_FastString *prjStr ){
 	return ParseFileExtension( GetProjectParameterValueStr( prjStr, "RENDER_FILE" ) );
 }
 
@@ -448,7 +448,7 @@ wchar_t* WideCharPlz( const char* inChar ){
 }
 #endif
 
-void ForceSaveAndLoad( WDL_String *str ){
+void ForceSaveAndLoad( WDL_FastString *str ){
 	Undo_OnStateChangeEx("Autorender: Load project data", UNDO_STATE_MISCCFG, -1);
 	Main_OnCommand( 40026, 0 ); //Save current project
 	GetProjectString( str );
@@ -508,7 +508,7 @@ void MakePathAbsolute( char* path, char* basePath ){
 	}
 }
 
-void MakeMediaFilesAbsolute( WDL_String *prjStr ){
+void MakeMediaFilesAbsolute( WDL_FastString *prjStr ){
 	char line[4096];
 	int pos = 0;
 
@@ -561,7 +561,7 @@ void MakeMediaFilesAbsolute( WDL_String *prjStr ){
 					string replacementStr = "FILE ";				
 					char *mediaPath = (char*) lp.gettoken_str(1);
 					MakePathAbsolute( mediaPath, projPath );
-					WDL_String sanitizedMediaFilePath;
+					WDL_FastString sanitizedMediaFilePath;
 					makeEscapedConfigString( mediaPath, &sanitizedMediaFilePath);
 					replacementStr.append( sanitizedMediaFilePath.Get() );
 					if( lp.getnumtokens() > 1 ){
@@ -596,8 +596,8 @@ void MakeMediaFilesAbsolute( WDL_String *prjStr ){
 void AutorenderRegions(COMMAND_T*) {
 	g_doing_render = true;
 
-	//Get the project config as a WDL_String
-	WDL_String prjStr;
+	//Get the project config as a WDL_FastString
+	WDL_FastString prjStr;
 	ForceSaveAndLoad( &prjStr );
 
 	//use default path if no render path specified
@@ -699,7 +699,7 @@ void AutorenderRegions(COMMAND_T*) {
 	if( renderTracks.size() == 0 ){
 		//Render entire project with tagging
 		string prjNameStr = GetProjectName();
-		WDL_String trackPrjStr(prjStr);
+		WDL_FastString trackPrjStr(prjStr);
 		RenderTrack renderTrack;
 		renderTrack.trackNumber = 1;
 		renderTrack.trackName = prjNameStr;
@@ -739,7 +739,7 @@ void AutorenderRegions(COMMAND_T*) {
 
 	//Build render queue
 	for( unsigned int i = 0; i < renderTracks.size(); i++){		
-		WDL_String trackPrjStr(prjStr);
+		WDL_FastString trackPrjStr(prjStr);
 
 		string outRenderProjectPath = outRenderProjectPrefix;
 		if( g_bv4 ){
@@ -1023,9 +1023,9 @@ void writeAutorenderSettingInt( ProjectStateContext *ctx, const char* settingNam
 void writeAutorenderSettingString( ProjectStateContext *ctx, const char* settingName, string setting ){
 	// Need to use makeEscapedConfigString to make sure that if the user enters "'` etc into the
 	// metadata that the RPP isn't corrupted
-	WDL_String sanitizedStr;
+	WDL_FastString sanitizedStr;
 	makeEscapedConfigString(setting.c_str(), &sanitizedStr);
-	WDL_String str(settingName);
+	WDL_FastString str(settingName);
 	str.Append(" ");
 	str.Append(sanitizedStr.Get());
 	ctx->AddLine(str.Get());

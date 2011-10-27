@@ -53,11 +53,11 @@ static bool g_bReentrancyCheck = false;
 class ScheduledActions : public SNM_ScheduledJob
 {
 public:
-	ScheduledActions(int _approxDelayMs, int _section, int _cycleId, const char* _name, WDL_PtrList<WDL_String>* _actions) 
+	ScheduledActions(int _approxDelayMs, int _section, int _cycleId, const char* _name, WDL_PtrList<WDL_FastString>* _actions) 
 	: SNM_ScheduledJob(SNM_SCHEDJOB_CYCLACTION, _approxDelayMs), m_section(_section), m_cycleId(_cycleId), m_name(_name)
 	{
 		for (int i= 0; _actions && i < _actions->GetSize(); i++)
-			m_actions.Add(new WDL_String(_actions->Get(i)->Get()));
+			m_actions.Add(new WDL_FastString(_actions->Get(i)->Get()));
 	}	
 	// best effort: ingore unknown actions but goes one..
 	void Perform()
@@ -91,8 +91,8 @@ public:
 		g_bReentrancyCheck = false;
 	}
 	int m_section, m_cycleId;
-	WDL_String m_name;
-	WDL_PtrList_DeleteOnDestroy<WDL_String> m_actions;
+	WDL_FastString m_name;
+	WDL_PtrList_DeleteOnDestroy<WDL_FastString> m_actions;
 };
 
 void RunCycleAction(int _section, COMMAND_T* _ct)
@@ -103,7 +103,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 		return;
 
 	// process new actions until cycle point
-	WDL_String name(action->GetName());
+	WDL_FastString name(action->GetName());
 	int state=0, startIdx=0;
 	while (startIdx < action->GetCmdSize() && state < action->m_performState) {
 		const char* cmd = action->GetCmd(startIdx++);
@@ -115,7 +115,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 	}
 
 	bool hasCustomIds = false;
-	WDL_PtrList_DeleteOnDestroy<WDL_String> actions;
+	WDL_PtrList_DeleteOnDestroy<WDL_FastString> actions;
 	for (int i=startIdx; i < action->GetCmdSize(); i++)
 	{
 		const char* cmd = action->GetCmd(i);
@@ -136,7 +136,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 
 		// add the actions (checks done at perform time, i.e. best effort)
 		if (*cmd != '!') {
-			actions.Add(new WDL_String(cmd));
+			actions.Add(new WDL_FastString(cmd));
 			if (!hasCustomIds && !atoi(cmd)) // Custom, extension !?
 				hasCustomIds = true;
 		}
@@ -185,7 +185,7 @@ bool IsMainCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(0, _ct)
 bool IsMEListCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(1, _ct);}
 bool IsMEPianoCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(2, _ct);}
 
-bool CheckEditableCyclaction(const char* _actionStr, WDL_String* _errMsg, bool _allowEmpty = true)
+bool CheckEditableCyclaction(const char* _actionStr, WDL_FastString* _errMsg, bool _allowEmpty = true)
 {
 	if (!(_actionStr && *_actionStr && *_actionStr != ',' && strcmp(_actionStr, "#,")))
 	{
@@ -198,7 +198,7 @@ bool CheckEditableCyclaction(const char* _actionStr, WDL_String* _errMsg, bool _
 	return true;
 }
 
-bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_String* _errMsg, bool _checkCmdIds)
+bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _errMsg, bool _checkCmdIds)
 {
 	if (_a)
 	{
@@ -250,7 +250,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_String* _errM
 }
 
 // return true if cyclaction added (but not necesary registered)
-bool CreateCyclaction(int _section, const char* _actionStr, WDL_String* _errMsg, bool _checkCmdIds)
+bool CreateCyclaction(int _section, const char* _actionStr, WDL_FastString* _errMsg, bool _checkCmdIds)
 {
 	if (CheckEditableCyclaction(_actionStr, _errMsg))
 	{
@@ -307,7 +307,7 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 {
 	char buf[32] = "";
 	char actionStr[MAX_CYCLATION_LEN] = "";
-	WDL_String msg;
+	WDL_FastString msg;
 	for (int sec=0; sec < SNM_MAX_CYCLING_SECTIONS; sec++)
 	{
 		if (_section == sec || _section == -1)
@@ -352,7 +352,7 @@ void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NUL
 		if (_section == sec || _section == -1)
 		{
 			WDL_PtrList_DeleteOnDestroy<int> freeCycleIds;
-			WDL_String iniSection("; Do not tweak by hand! Use the Cycle Action editor instead\n"), escapedStr;
+			WDL_FastString iniSection("; Do not tweak by hand! Use the Cycle Action editor instead\n"), escapedStr;
 
 			// prepare "compression" (i.e. will re-assign ids of new actions for the next load)
 			for (int j=0; j < _cyclactions[sec].GetSize(); j++)
@@ -431,7 +431,7 @@ void Cyclaction::SetToggle(bool _toggle) {
 	// no need for deeper updates (cmds, etc.. )
 }
 
-void Cyclaction::SetCmd(WDL_String* _cmd, const char* _newCmd) {
+void Cyclaction::SetCmd(WDL_FastString* _cmd, const char* _newCmd) {
 	int i = m_cmds.Find(_cmd);
 	if (_cmd && _newCmd && i >= 0) {
 		m_cmds.Get(i)->Set(_newCmd);
@@ -439,8 +439,8 @@ void Cyclaction::SetCmd(WDL_String* _cmd, const char* _newCmd) {
 	}
 }
 
-WDL_String* Cyclaction::AddCmd(const char* _cmd) {
-	WDL_String* c = new WDL_String(_cmd); 
+WDL_FastString* Cyclaction::AddCmd(const char* _cmd) {
+	WDL_FastString* c = new WDL_FastString(_cmd); 
 	m_cmds.Add(c); 
 	UpdateFromCmd(); 
 	return c;
@@ -457,14 +457,14 @@ void Cyclaction::UpdateNameAndCmds()
 		// "#name" = toggle action, "name" = normal action
 		m_name.Set(*tok == '#' ? (const char*)tok+1 : tok);
 		while (tok = strtok(NULL, ","))
-			m_cmds.Add(new WDL_String(tok));
+			m_cmds.Add(new WDL_FastString(tok));
 	}
 	m_empty = (strcmp(EMPTY_CYCLACTION, m_desc.Get()) == 0);
 }
 
 void Cyclaction::UpdateFromCmd()
 {
-	WDL_String newDesc(IsToggle() ? "#" : "");
+	WDL_FastString newDesc(IsToggle() ? "#" : "");
 	newDesc.Append(GetName());
 	newDesc.Append(",");
 	for (int i = 0; i < m_cmds.GetSize(); i++) {
@@ -490,8 +490,8 @@ static SNM_CommandsView* g_lvR = NULL;
 
 // fake list views' contents
 static Cyclaction g_DEFAULT_L("Right click here to add cycle actions");
-static WDL_String g_EMPTY_R("<- Select a cycle action");
-static WDL_String g_DEFAULT_R("Right click here to add commands");
+static WDL_FastString g_EMPTY_R("<- Select a cycle action");
+static WDL_FastString g_DEFAULT_R("Right click here to add commands");
 
 WDL_PtrList_DeleteOnDestroy<Cyclaction> g_editedActions[SNM_MAX_CYCLING_SECTIONS];
 Cyclaction* g_editedAction = NULL;
@@ -649,7 +649,7 @@ void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char
 	Cyclaction* a = (Cyclaction*)_item;
 	if (a && a != &g_DEFAULT_L && _iCol == 1)
 	{
-		WDL_String errMsg;
+		WDL_FastString errMsg;
 		if (!CheckEditableCyclaction(_str, &errMsg) && strcmp(a->GetName(), _str)) 
 		{
 			if (errMsg.GetLength())
@@ -710,7 +710,7 @@ SNM_CommandsView::SNM_CommandsView(HWND hwndList, HWND hwndEdit)
 void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
 	if (str) *str = '\0';
-	WDL_String* pItem = (WDL_String*)item;
+	WDL_FastString* pItem = (WDL_FastString*)item;
 	if (pItem)
 	{
 		switch (iCol)
@@ -738,7 +738,7 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 
 void SNM_CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
-	WDL_String* cmd = (WDL_String*)_item;
+	WDL_FastString* cmd = (WDL_FastString*)_item;
 	if (cmd && _str && g_editedAction && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R && strcmp(cmd->Get(), _str))
 	{
 		g_editedAction->SetCmd(cmd, _str);
@@ -773,8 +773,8 @@ void SNM_CommandsView::GetItemList(SWS_ListItemList* pList)
 int SNM_CommandsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2) 
 {
 	if (g_editedAction) {
-		int i1 = g_editedAction->FindCmd((WDL_String*)_item1);
-		int i2 = g_editedAction->FindCmd((WDL_String*)_item2);
+		int i1 = g_editedAction->FindCmd((WDL_FastString*)_item1);
+		int i2 = g_editedAction->FindCmd((WDL_FastString*)_item2);
 		if (i1 >= 0 && i2 >= 0) {
 			if (i1 > i2) return 1;
 			else if (i1 < i2) return -1;
@@ -795,7 +795,7 @@ void SNM_CommandsView::OnDrag()
 	{
 		POINT p;
 		GetCursorPos(&p);
-		WDL_String* hitItem = (WDL_String*)GetHitItem(p.x, p.y, NULL);
+		WDL_FastString* hitItem = (WDL_FastString*)GetHitItem(p.x, p.y, NULL);
 		if (hitItem)
 		{
 			int iNewPriority = g_editedAction->FindCmd(hitItem);
@@ -808,7 +808,7 @@ void SNM_CommandsView::OnDrag()
 			while(SWS_ListItem* selItem = EnumSelected(&x))
 */
 			{
-				iSelPriority = g_editedAction->FindCmd((WDL_String*)selItem);
+				iSelPriority = g_editedAction->FindCmd((WDL_FastString*)selItem);
 				if (iNewPriority == iSelPriority)
 					return;
 				draggedItems.Add(selItem);
@@ -819,8 +819,8 @@ void SNM_CommandsView::OnDrag()
 			bool bDir = iNewPriority > iSelPriority;
 			for (int i = bDir ? 0 : draggedItems.GetSize()-1; bDir ? i < draggedItems.GetSize() : i >= 0; bDir ? i++ : i--)
 			{
-				g_editedAction->RemoveCmd((WDL_String*)draggedItems.Get(i));
-				g_editedAction->InsertCmd(iNewPriority, (WDL_String*)draggedItems.Get(i));
+				g_editedAction->RemoveCmd((WDL_FastString*)draggedItems.Get(i));
+				g_editedAction->InsertCmd(iNewPriority, (WDL_FastString*)draggedItems.Get(i));
 			}
 
 //JFB!!! SWS_ListView issue (r539): simple Update() is KO here
@@ -898,7 +898,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 				SWS_ListView* lv = (left ? (SWS_ListView*)g_lvL : (SWS_ListView*)g_lvR);
 				HMENU menu = CreatePopupMenu();
 				Cyclaction* action = (Cyclaction*)g_lvL->GetHitItem(x, y, NULL);
-				WDL_String* cmd = (WDL_String*)g_lvR->GetHitItem(x, y, NULL);
+				WDL_FastString* cmd = (WDL_FastString*)g_lvR->GetHitItem(x, y, NULL);
 				if (left) // reminder: no multi sel in this one
 				{
 					AddToMenu(menu, "Add cycle action", 1000);
@@ -939,7 +939,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 						case 1001:
 						{
 							// keep pointers (may be used in a listview: delete after listview update)
-							int x=0; WDL_PtrList_DeleteOnDestroy<WDL_String> cmdsToDelete;
+							int x=0; WDL_PtrList_DeleteOnDestroy<WDL_FastString> cmdsToDelete;
 							while(Cyclaction* a = (Cyclaction*)g_lvL->EnumSelected(&x)) {
 								for (int i=0; i < a->GetCmdSize(); i++)
 									cmdsToDelete.Add(a->GetCmdString(i));
@@ -974,7 +974,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 						// Add cmd
 						case 1010:
 							if (g_editedAction) {
-								WDL_String* newCmd = g_editedAction->AddCmd("!");
+								WDL_FastString* newCmd = g_editedAction->AddCmd("!");
 								g_lvR->Update();
 								UpdateEditedStatus(true);
 								g_lvR->EditListItem((SWS_ListItem*)newCmd, 0);
@@ -984,7 +984,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 						case 1011: {
 							int actionId; char section[SNM_MAX_SECTION_NAME_LEN] = "", idstr[64] = "";
 							if (GetSelectedActionId(section, SNM_MAX_SECTION_NAME_LEN, &actionId, idstr, 64) >= 0 && !strcmp(section, g_cyclactionSections[g_editedSection])) {
-								WDL_String* newCmd = g_editedAction->AddCmd(idstr);
+								WDL_FastString* newCmd = g_editedAction->AddCmd(idstr);
 								g_lvR->Update();
 								UpdateEditedStatus(true);
 								g_lvR->SelectByItem((SWS_ListItem*)newCmd);
@@ -1001,8 +1001,8 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 							if (g_lvR && g_editedAction)
 							{
 								// keep pointers (may be used in a listview: delete after listview update)
-								int x=0; WDL_PtrList_DeleteOnDestroy<WDL_String> cmdsToDelete;
-								while(WDL_String* delcmd = (WDL_String*)g_lvR->EnumSelected(&x)) {
+								int x=0; WDL_PtrList_DeleteOnDestroy<WDL_FastString> cmdsToDelete;
+								while(WDL_FastString* delcmd = (WDL_FastString*)g_lvR->EnumSelected(&x)) {
 									cmdsToDelete.Add(delcmd);
 									g_editedAction->RemoveCmd(delcmd, false);
 								}
@@ -1319,7 +1319,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	if (!isUndo || !g_undos) // undo only (no save)
 		return;
 
-	WDL_String confStr("<S&M_CYCLACTIONS\n");
+	WDL_FastString confStr("<S&M_CYCLACTIONS\n");
 	int iHeaderLen = confStr.GetLength();
 	for (int i=0; i < SNM_MAX_CYCLING_SECTIONS; i++)
 		for (int j=0; j < g_cyclactions[i].GetSize(); j++)
@@ -1386,7 +1386,7 @@ void openCyclactionsWnd(COMMAND_T* _ct)
 	strcat(title, SNM_CMD_SHORTNAME(_ct));
 	if (GetUserInputs(title, SNM_MAX_CYCLING_ACTIONS, question, reply, 4096))
 	{
-		WDL_String msg;
+		WDL_FastString msg;
 		if (CreateCyclaction((int)_ct->user, reply, &msg, true))
 			SaveCyclactions();
 		else if (msg.GetLength())

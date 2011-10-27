@@ -46,7 +46,7 @@ void MECreateCCLane(COMMAND_T* _ct)
 		if (tkIdx >= 0)
 		{
 			SNM_TakeParserPatcher p(item, CountTakes(item));
-			WDL_String takeChunk;
+			WDL_FastString takeChunk;
 			int tkPos, tklen;
 			if (p.GetTakeChunk(tkIdx, &takeChunk, &tkPos, &tklen))
 			{
@@ -96,7 +96,7 @@ bool replaceCCLanes(const char* _newCClanes)
 		if (tkIdx >= 0)
 		{
 			SNM_TakeParserPatcher p(item, CountTakes(item));
-			WDL_String takeChunk;
+			WDL_FastString takeChunk;
 
 			int tkPos, tklen;
 			if (p.GetTakeChunk(tkIdx, &takeChunk, &tkPos, &tklen))
@@ -163,7 +163,7 @@ void MESaveCCLanes(COMMAND_T* _ct)
 		if (tkIdx >= 0)
 		{
 			SNM_TakeParserPatcher p(item, CountTakes(item));
-			WDL_String takeChunk;
+			WDL_FastString takeChunk;
 			if (p.GetTakeChunk(tkIdx, &takeChunk))
 			{
 				SNM_ChunkParserPatcher ptk(&takeChunk, false);
@@ -184,7 +184,7 @@ void MESaveCCLanes(COMMAND_T* _ct)
 
 					char laneSlot[MAX_CC_LANES_SLOT] = "";
 					int eolLastPos = lastPos;
-					char* pp = ptk.GetChunk()->Get(); //ok 'cause read only
+					const char* pp = ptk.GetChunk()->Get(); //ok 'cause read only
 					while (pp[eolLastPos] && pp[eolLastPos] != '\n') eolLastPos++;
 
 					int i = firstPos, j=0;

@@ -83,7 +83,7 @@ void UpdateSnapshotsDialog(bool bSelChange)
 // Clipboard operations:
 void CopySnapshotToClipboard(Snapshot* ss)
 {
-	WDL_String ssStr;
+	WDL_FastString ssStr;
 	ss->GetChunk(&ssStr);
 	if (OpenClipboard(g_hwndParent))
 	{
@@ -138,7 +138,7 @@ void ExportSnapshot(Snapshot* ss)
 		ProjectStateContext* cfg = ProjectCreateFileWrite(filename);
 		if (cfg)
 		{
-			WDL_String chunk;
+			WDL_FastString chunk;
 			ss->GetChunk(&chunk);
 			char line[4096];
 			int pos = 0;
@@ -528,7 +528,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case DETAILS_MSG:
 		{
 			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
-			WDL_String details;
+			WDL_FastString details;
 			ss->GetDetails(&details);
 			DisplayInfoBox(m_hwnd, "Snapshot Details", details.Get());
 			break;
@@ -1017,7 +1017,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	WDL_String chunk;
+	WDL_FastString chunk;
 	char line[4096];
 	for (int i = 0; i < g_ss.Get()->m_snapshots.GetSize(); i++)
 	{

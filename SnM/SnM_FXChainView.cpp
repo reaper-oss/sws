@@ -137,7 +137,7 @@ FileSlotList g_prjTemplateFiles(SNM_SLOT_TYPE_PRJ_TEMPLATES, "ProjectTemplates",
 // shared between the list view & the wnd -------------------------------------
 int g_type = -1;
 
-WDL_String g_filter(FILTER_DEFAULT_STR);
+WDL_FastString g_filter(FILTER_DEFAULT_STR);
 
 // other prefs are member variables of SNM_ResourceWnd
 int g_filterPref = 1; // 0: name, 1: path, 2: comment
@@ -149,19 +149,19 @@ int g_dblClickTo = 0; // for fx chains only
 
 WDL_PtrList<PathSlotItem> g_dragPathSlotItems; 
 WDL_PtrList<FileSlotList> g_filesLists;
-WDL_PtrList<WDL_String> g_autoSaveDirs;
-WDL_PtrList<WDL_String> g_autoFillDirs;
+WDL_PtrList<WDL_FastString> g_autoSaveDirs;
+WDL_PtrList<WDL_FastString> g_autoFillDirs;
 // ----------------------------------------------------------------------------
 
 FileSlotList* GetCurList() {
 	return g_filesLists.Get(g_type);
 }
 
-WDL_String* GetCurAutoSaveDir() {
+WDL_FastString* GetCurAutoSaveDir() {
 	return g_autoSaveDirs.Get(g_type);
 }
 
-WDL_String* GetCurAutoFillDir() {
+WDL_FastString* GetCurAutoFillDir() {
 	return g_autoFillDirs.Get(g_type);
 }
 
@@ -270,7 +270,7 @@ void FileSlotList::EditSlot(int _slot)
 #ifdef _WIN32
 			WinSpawnNotepad(fullPath);
 #else
-			WDL_String chain;
+			WDL_FastString chain;
 			if (LoadChunk(fullPath, &chain, false))
 			{
 				char title[64] = "";
@@ -374,7 +374,7 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 							break;
 					}
 					if (MoveFile(fn, newFn) && GetCurList()->SetFromFullPath(slot, newFn))
-						ListView_SetItemText(m_hwndList, GetEditingItem(), DisplayToDataCol(2), pItem->m_shortPath.Get());
+						ListView_SetItemText(m_hwndList, GetEditingItem(), DisplayToDataCol(2), (LPSTR)pItem->m_shortPath.Get());
 						// ^^ direct GUI update 'cause Update() is no-op when editing
 				}
 			}
@@ -512,7 +512,7 @@ void SNM_ResourceView::OnBeginDrag(SWS_ListItem* _item)
 
 	// Store dragged items (for internal d'n'd) + full paths + get the amount of memory needed
 	int iMemNeeded = 0, x=0;
-	WDL_PtrList_DeleteOnDestroy<WDL_String> fullPaths;
+	WDL_PtrList_DeleteOnDestroy<WDL_FastString> fullPaths;
 	PathSlotItem* pItem = (PathSlotItem*)EnumSelected(&x);
 	while(pItem) {
 		int slot = GetCurList()->Find(pItem);
@@ -521,7 +521,7 @@ void SNM_ResourceView::OnBeginDrag(SWS_ListItem* _item)
 		{
 			bool empty = (pItem->IsDefault() || *fullPath == '\0');
 			iMemNeeded += (int)((empty ? strlen(DRAGNDROP_EMPTY_SLOT_FILE) : strlen(fullPath)) + 1);
-			fullPaths.Add(new WDL_String(empty ? DRAGNDROP_EMPTY_SLOT_FILE : fullPath));
+			fullPaths.Add(new WDL_FastString(empty ? DRAGNDROP_EMPTY_SLOT_FILE : fullPath));
 			g_dragPathSlotItems.Add(pItem);
 		}
 		pItem = (PathSlotItem*)EnumSelected(&x);
@@ -661,23 +661,23 @@ void SNM_ResourceWnd::OnInitDlg()
 		g_autoSaveDirs.Empty(true);
 		_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, g_filesLists.Get(0)->GetResourceDir());
 		GetPrivateProfileString("RESOURCE_VIEW", "AutoSaveDirFXChain", defaultPath, path, BUFFER_SIZE, g_SNMiniFilename.Get());
-		g_autoSaveDirs.Add(new WDL_String(path));
+		g_autoSaveDirs.Add(new WDL_FastString(path));
 		_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, g_filesLists.Get(1)->GetResourceDir());
 		GetPrivateProfileString("RESOURCE_VIEW", "AutoSaveDirTrTemplate", defaultPath, path, BUFFER_SIZE, g_SNMiniFilename.Get());
-		g_autoSaveDirs.Add(new WDL_String(path));
+		g_autoSaveDirs.Add(new WDL_FastString(path));
 		_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, g_filesLists.Get(2)->GetResourceDir());
 		GetPrivateProfileString("RESOURCE_VIEW", "AutoSaveDirPrjTemplate", defaultPath, path, BUFFER_SIZE, g_SNMiniFilename.Get());
-		g_autoSaveDirs.Add(new WDL_String(path));
+		g_autoSaveDirs.Add(new WDL_FastString(path));
 
 		g_autoFillDirs.Empty(true);
 		GetPrivateProfileString("RESOURCE_VIEW", "AutoFillDirFXChain", defaultPath, path, BUFFER_SIZE, g_SNMiniFilename.Get());
-		g_autoFillDirs.Add(new WDL_String(path));
+		g_autoFillDirs.Add(new WDL_FastString(path));
 		_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, g_filesLists.Get(1)->GetResourceDir());
 		GetPrivateProfileString("RESOURCE_VIEW", "AutoFillDirTrTemplate", defaultPath, path, BUFFER_SIZE, g_SNMiniFilename.Get());
-		g_autoFillDirs.Add(new WDL_String(path));
+		g_autoFillDirs.Add(new WDL_FastString(path));
 		_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, g_filesLists.Get(2)->GetResourceDir());
 		GetPrivateProfileString("RESOURCE_VIEW", "AutoFillDirPrjTemplate", defaultPath, path, BUFFER_SIZE, g_SNMiniFilename.Get());
-		g_autoFillDirs.Add(new WDL_String(path));
+		g_autoFillDirs.Add(new WDL_FastString(path));
 	}
 
 	// WDL GUI init
@@ -948,12 +948,12 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (nbRecents)
 			{
 				char key[16], path[BUFFER_SIZE];
-				WDL_PtrList_DeleteOnDestroy<WDL_String> prjs;
+				WDL_PtrList_DeleteOnDestroy<WDL_FastString> prjs;
 				for (int i=0; i < nbRecents; i++) {
 					_snprintf(key, 9, "recent%02d", i+1);
 					GetPrivateProfileString("Recent", key, "", path, BUFFER_SIZE, get_ini_file());
 					if (*path)
-						prjs.Add(new WDL_String(path));
+						prjs.Add(new WDL_FastString(path));
 				}
 				for (int i=0; i < prjs.GetSize(); i++)
 					if (GetCurList()->FindByResFulltPath(prjs.Get(i)->Get()) < 0) // skip if already present
@@ -1177,7 +1177,7 @@ void SNM_ResourceWnd::OnDestroy()
 
 	// auto-save & auto-fill directories
 	{
-		WDL_String escapedStr;
+		WDL_FastString escapedStr;
 		makeEscapedConfigString(g_autoSaveDirs.Get(0)->Get(), &escapedStr);
 		WritePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirFXChain", escapedStr.Get(), g_SNMiniFilename.Get()); 
 		makeEscapedConfigString(g_autoSaveDirs.Get(1)->Get(), &escapedStr);
@@ -1667,14 +1667,14 @@ void ResourceViewExit()
 		{
 			PathSlotItem* item;
 			const char* resDir = list->GetResourceDir();
-			WDL_String iniSection;
+			WDL_FastString iniSection;
 			iniSection.SetFormatted(32, "MAX_SLOT=%d\n", list->GetSize());
 			for (int j=0; j < list->GetSize(); j++)
 			{
 				item = list->Get(j);
 				if (item)
 				{
-					WDL_String escapedStr;
+					WDL_FastString escapedStr;
 					if (item->m_shortPath.GetLength())
 					{
 						makeEscapedConfigString(item->m_shortPath.Get(), &escapedStr);

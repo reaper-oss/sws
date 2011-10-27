@@ -177,7 +177,7 @@ void goferSplitSelectedItems(COMMAND_T* _ct) {
 // Takes
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_String g_takeClipoard;
+WDL_FastString g_takeClipoard;
 
 void copyCutTake(COMMAND_T* _ct)
 {
@@ -253,7 +253,7 @@ bool isEmptyMidi(MediaItem_Take* _take)
 	return emptyMidi;
 }
 
-void setEmptyTakeChunk(WDL_String* _chunk, int _recPass, int _color)
+void setEmptyTakeChunk(WDL_FastString* _chunk, int _recPass, int _color)
 {
 	// v4 empty take (but w/o take color)
 	if (g_bv4) 
@@ -331,15 +331,15 @@ int buildLanes(const char* _undoTitle, int _mode)
 				SNM_TakeParserPatcher* p = new SNM_TakeParserPatcher(item, CountTakes(item));
 				ps.Add(p);
 
-				WDL_PtrList_DeleteOnDestroy<WDL_String> chunks;
+				WDL_PtrList_DeleteOnDestroy<WDL_FastString> chunks;
 				for (int k=0; k < maxRecPass; k++)
-					chunks.Add(new WDL_String());
+					chunks.Add(new WDL_FastString());
 
 				// Optimz: use a cache for take chunks
 				WDL_IntKeyedArray<char*> oldChunks(freecharptr);
 				int tkIdx = 0;					
 				while (tkIdx < CountTakes(item)) {
-					WDL_String c;
+					WDL_FastString c;
 					oldChunks.Insert(tkIdx, _strdup(p->GetTakeChunk(tkIdx, &c) ? c.Get() : ""));
 					tkIdx++;
 				}
@@ -474,7 +474,7 @@ void clearTake(COMMAND_T* _ct)
 				{
 					SNM_TakeParserPatcher p(item, CountTakes(item));
 					int pos, len;
-					WDL_String emptyTk("TAKE NULL SEL\n");
+					WDL_FastString emptyTk("TAKE NULL SEL\n");
 					if (p.GetTakeChunkPos(activeTake, &pos, &len))
 					{
 						updated |= p.ReplaceTake(pos, len, &emptyTk);
@@ -532,7 +532,7 @@ void moveTakes(COMMAND_T* _ct)
 					{
 						newActive = (active == (nbTakes-1) ? 0 : (active+1));
 						// Remove last take and re-add it as 1st one
-						WDL_String chunk;
+						WDL_FastString chunk;
 						updated = p.RemoveTake(nbTakes-1, &chunk);
 						if (updated)
 							p.InsertTake(0, &chunk);						
@@ -541,7 +541,7 @@ void moveTakes(COMMAND_T* _ct)
 					{
 						newActive = (!active ? (nbTakes-1) : (active-1));
 						// Remove 1st take and re-add it as last one
-						WDL_String chunk;
+						WDL_FastString chunk;
 						updated = p.RemoveTake(0, &chunk);
 						if (updated)
 							p.AddLastTake(&chunk);						
@@ -583,7 +583,7 @@ void moveActiveTake(COMMAND_T* _ct)
 						((dir == 1 && active == (initialNbbTakes-1)) ||
 						(dir == -1 && !active));
 
-					WDL_String removedChunk;
+					WDL_FastString removedChunk;
 					SNM_TakeParserPatcher p(item, CountTakes(item));
 					if (swapFirstLast) {
 						updated |= p.RemoveTake(dir == -1 ? 0 : (initialNbbTakes-1), &removedChunk);
@@ -812,14 +812,14 @@ int getPitchTakeEnvRangeFromPrefs()
 }
 
 // if returns true: callers must use UpdateTimeline() at some point
-bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, char* _vis2, const WDL_String* _defaultPoint, bool _reset)
+bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, char* _vis2, const WDL_FastString* _defaultPoint, bool _reset)
 {
 	bool updated = false;
 	if (_item)
 	{					
 		SNM_TakeParserPatcher p(_item, CountTakes(_item));
 
-		WDL_String takeChunk;
+		WDL_FastString takeChunk;
 		int tkPos, tklen;
 		if (p.GetTakeChunk(_takeIdx, &takeChunk, &tkPos, &tklen))
 		{
@@ -893,7 +893,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 	return updated;
 }
 
-bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char* _vis2, const WDL_String* _defaultPoint, bool _reset) 
+bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char* _vis2, const WDL_FastString* _defaultPoint, bool _reset) 
 {
 	bool updated = false;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
@@ -918,7 +918,7 @@ bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char*
 
 void panTakeEnvelope(COMMAND_T* _ct) 
 {
-	WDL_String defaultPoint("PT 0.000000 ");
+	WDL_FastString defaultPoint("PT 0.000000 ");
 	defaultPoint.AppendFormatted(128, "%d.000000 0", (int)_ct->user);
 	patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", "1", &defaultPoint, true);
 }
@@ -929,7 +929,7 @@ void showHideTakeVolEnvelope(COMMAND_T* _ct)
 	int value = (int)_ct->user;
 	if (value >= 0)
 		sprintf(cVis, "%d", value);
-	WDL_String defaultPoint("PT 0.000000 1.000000 0");
+	WDL_FastString defaultPoint("PT 0.000000 1.000000 0");
 	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		fakeToggleAction(_ct);
 }
@@ -940,7 +940,7 @@ void showHideTakePanEnvelope(COMMAND_T* _ct)
 	int value = (int)_ct->user;
 	if (value >= 0)
 		sprintf(cVis, "%d", value);
-	WDL_String defaultPoint("PT 0.000000 0.000000 0");
+	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		fakeToggleAction(_ct);
 }
@@ -951,7 +951,7 @@ void showHideTakeMuteEnvelope(COMMAND_T* _ct)
 	int value = (int)_ct->user;
 	if (value >= 0)
 		sprintf(cVis, "%d", value);
-	WDL_String defaultPoint("PT 0.000000 1.000000 1");
+	WDL_FastString defaultPoint("PT 0.000000 1.000000 1");
 	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		fakeToggleAction(_ct);
 }
@@ -964,14 +964,14 @@ void showHideTakePitchEnvelope(COMMAND_T* _ct)
 		int value = (int)_ct->user;
 		if (value >= 0)
 			sprintf(cVis, "%d", value);
-		WDL_String defaultPoint("PT 0.000000 0.000000 0");
+		WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 		if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false) && value < 0) // toggle
 			fakeToggleAction(_ct);
 	}
 }
 
 // *** some wrappers for Padre ***
-bool ShowTakeEnv(MediaItem_Take* _take, const char* _envKeyword, const WDL_String* _defaultPoint)
+bool ShowTakeEnv(MediaItem_Take* _take, const char* _envKeyword, const WDL_FastString* _defaultPoint)
 {
 	bool shown = false;
 	MediaItem* item = (_take ? GetMediaItemTake_Item(_take) : NULL);
@@ -985,24 +985,24 @@ bool ShowTakeEnv(MediaItem_Take* _take, const char* _envKeyword, const WDL_Strin
 }
 
 bool ShowTakeEnvVol(MediaItem_Take* _take) {
-	WDL_String defaultPoint("PT 0.000000 1.000000 0");
+	WDL_FastString defaultPoint("PT 0.000000 1.000000 0");
 	return ShowTakeEnv(_take, "VOLENV", &defaultPoint);
 }
 
 bool ShowTakeEnvPan(MediaItem_Take* _take) {
-	WDL_String defaultPoint("PT 0.000000 0.000000 0");
+	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 	return ShowTakeEnv(_take, "PANENV", &defaultPoint);
 }
 
 bool ShowTakeEnvMute(MediaItem_Take* _take) {
-	WDL_String defaultPoint("PT 0.000000 1.000000 1");
+	WDL_FastString defaultPoint("PT 0.000000 1.000000 1");
 	return ShowTakeEnv(_take, "MUTEENV", &defaultPoint);
 }
 
 bool ShowTakeEnvPitch(MediaItem_Take* _take) {
 	if (g_bv4)
 	{
-		WDL_String defaultPoint("PT 0.000000 0.000000 0");
+		WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 		return ShowTakeEnv(_take, "PITCHENV", &defaultPoint);
 	}
 	return false;
@@ -1035,7 +1035,7 @@ void saveItemTakeTemplate(COMMAND_T* _ct)
 						int activeTk = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
 						if (activeTk >= 0)
 						{
-							WDL_String tkChunk;
+							WDL_FastString tkChunk;
 							SNM_TakeParserPatcher p(item, CountTakes(item));
 							if (p.GetTakeChunk(activeTk, &tkChunk))
 							{

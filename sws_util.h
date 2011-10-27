@@ -215,3 +215,5 @@ void SWS_GetSelectedMediaItems(WDL_TypedBuf<MediaItem*>* buf);
 void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack* tr);
 int SWS_GetModifiers();
 void WinSpawnNotepad(const char* pFilename);
+//JFB: temp function (until WDL's ProjectContext does not use WDL_FastString)
+void makeEscapedConfigString(const char *in, WDL_FastString *out);

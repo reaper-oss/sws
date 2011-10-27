@@ -35,18 +35,19 @@ public:
 	~ObjectStateCache();
 	void WriteCache();
 	void EmptyCache();
-	char* GetSetObjState(void* obj, const char* str);
+	const char* GetSetObjState(void* obj, const char* str);
 	int m_iUseCount;
 private:
 	WDL_PtrList<void> m_obj;
-	WDL_PtrList<WDL_String> m_str;
+	WDL_PtrList<WDL_FastString> m_str;
 	WDL_PtrList<char> m_orig;
 };
 
-char* SWS_GetSetObjectState(void* obj, WDL_String* str);
+const char* SWS_GetSetObjectState(void* obj, WDL_FastString* str);
 void SWS_FreeHeapPtr(void* ptr);
+void SWS_FreeHeapPtr(const char* ptr);
 void SWS_CacheObjectState(bool bStart);
 
 bool GetChunkLine(const char* chunk, char* line, int iLineMax, int* pos, bool bNewLine);
-void AppendChunkLine(WDL_String* chunk, const char* line);
+void AppendChunkLine(WDL_FastString* chunk, const char* line);
 bool GetChunkFromProjectState(const char* cSection, WDL_TypedBuf<char>* chunk, const char* line, ProjectStateContext *ctx);

@@ -781,7 +781,7 @@ int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 
 void SNMSaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 {
-	WDL_String iniSection;
+	WDL_FastString iniSection;
 	iniSection.SetFormatted(128, "; Set the number of slots/actions you want below (none: 0, max: %d, quit REAPER first!)\n", SNM_MAX_DYNAMIC_ACTIONS);
 	int i=0; char name[SNM_MAX_ACTION_NAME_LEN] = "";
 	while(_cmds[i].id != LAST_COMMAND) {
@@ -803,7 +803,7 @@ void SNMSaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 // S&M.ini file
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_String g_SNMiniFilename;
+WDL_FastString g_SNMiniFilename;
 
 void IniFileInit()
 {
@@ -838,7 +838,7 @@ void IniFileInit()
 
 void IniFileExit()
 {
-	WDL_String iniSection;
+	WDL_FastString iniSection;
 
 	// save general prefs & info
 	iniSection.AppendFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build #%d\n", SWS_VERSION); 

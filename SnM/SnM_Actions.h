@@ -115,7 +115,7 @@ class SNM_TrackNotes {
 public:
 	SNM_TrackNotes(MediaTrack* _tr, const char* _notes) 
 		: m_tr(_tr) {m_notes.Set(_notes ? _notes : "");}
-	MediaTrack* m_tr; WDL_String m_notes;
+	MediaTrack* m_tr; WDL_FastString m_notes;
 };
 
 class SNM_FXSummary {
@@ -123,7 +123,7 @@ public:
 	SNM_FXSummary(const char* _type, const char* _realName)
 		: m_type(_type),m_realName(_realName){}
 	virtual ~SNM_FXSummary() {}
-	WDL_String m_type, m_realName;
+	WDL_FastString m_type, m_realName;
 };
 
 class SNM_ScheduledJob {
@@ -162,7 +162,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 // *** SnM_Actions.cpp ***
-extern WDL_String g_SNMiniFilename;	
+extern WDL_FastString g_SNMiniFilename;	
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 bool IsToolbarsAutoRefeshEnabled(COMMAND_T*);
 void RefreshToolbars();
@@ -230,24 +230,24 @@ void setAllFXsOfflineSelectedItems(COMMAND_T*);
 void setAllFXsBypassSelectedItems(COMMAND_T*);
 void selectTrackFX(COMMAND_T*);
 int getSelectedTrackFX(MediaTrack* _tr);
-int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_String>* _names);
-void UpdatePresetConf(int _fx, int _preset, WDL_String* _presetConf);
-int GetPresetFromConf(int _fx, WDL_String* _presetConf, int _presetCount=0xFFFF);
-void RenderPresetConf(WDL_String* _presetConf, WDL_String* _renderConf);
-void RenderPresetConf2(MediaTrack* _tr, WDL_String* _presetConf, WDL_String* _renderConf);
+int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _names);
+void UpdatePresetConf(int _fx, int _preset, WDL_FastString* _presetConf);
+int GetPresetFromConf(int _fx, WDL_FastString* _presetConf, int _presetCount=0xFFFF);
+void RenderPresetConf(WDL_FastString* _presetConf, WDL_FastString* _renderConf);
+void RenderPresetConf2(MediaTrack* _tr, WDL_FastString* _presetConf, WDL_FastString* _renderConf);
 int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir = 0, bool _userPreset = false, bool _selTracks = true);
 void triggerFXPreset(int _fxId, int _presetId, int _dir=0);
 void triggerNextPreset(COMMAND_T*);
 void triggerPreviousPreset(COMMAND_T*);
-bool triggerFXUserPreset(MediaTrack* _tr, WDL_String* _presetConf);
+bool triggerFXUserPreset(MediaTrack* _tr, WDL_FastString* _presetConf);
 void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 void moveFX(COMMAND_T*);
 
 // *** SnM_FXChain.cpp ***
-void makeChunkTakeFX(WDL_String* _outTakeFX, const WDL_String* _inRfxChain);
-int copyTakeFXChain(WDL_String* _fxChain, int _startSelItem=0);
-void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
-void setTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly);
+void makeChunkTakeFX(WDL_FastString* _outTakeFX, const WDL_FastString* _inRfxChain);
+int copyTakeFXChain(WDL_FastString* _fxChain, int _startSelItem=0);
+void pasteTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly);
+void setTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly);
 void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool _set, bool _errMsg);
 bool autoSaveItemFXChainSlots(const char* _dirPath, char* _fn, int _fnSize);
 void loadSetTakeFXChain(COMMAND_T*);
@@ -262,9 +262,9 @@ void pasteAllTakesFXChain(COMMAND_T*);
 void setAllTakesFXChain(COMMAND_T*);
 void clearActiveTakeFXChain(COMMAND_T*);
 void clearAllTakesFXChain(COMMAND_T*);
-void pasteTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX);
-void setTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX);
-int copyTrackFXChain(WDL_String* _fxChain, bool _inputFX, int _startTr=0);
+void pasteTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX);
+void setTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX);
+int copyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr=0);
 void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inputFX, bool _errMsg);
 bool autoSaveTrackFXChainSlots(bool _inputFX, const char* _dirPath, char* _fn, int _fnSize);
 void loadSetTrackFXChain(COMMAND_T*);
@@ -303,7 +303,7 @@ void goferSplitSelectedItems(COMMAND_T*);
 void copyCutTake(COMMAND_T*);
 void pasteTake(COMMAND_T*);
 bool isEmptyMidi(MediaItem_Take* _take);
-void setEmptyTakeChunk(WDL_String* _chunk, int _recPass = -1, int _color = -1);
+void setEmptyTakeChunk(WDL_FastString* _chunk, int _recPass = -1, int _color = -1);
 int buildLanes(const char* _undoTitle, int _mode);
 bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel);
 bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel = false, bool _itemSel = true);
@@ -361,15 +361,15 @@ bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _fn, int _fnSize, bool _wantFullPath = false);
 void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _fnSize);
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fnSize);
-bool LoadChunk(const char* _fn, WDL_String* _chunk, bool _trim = true, int _maxlen = 0);
-bool SaveChunk(const char* _fn, WDL_String* _chunk, bool _indent);
+bool LoadChunk(const char* _fn, WDL_FastString* _chunk, bool _trim = true, int _maxlen = 0);
+bool SaveChunk(const char* _fn, WDL_FastString* _chunk, bool _indent);
 void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
-void StringToExtensionConfig(WDL_String* _str, ProjectStateContext* _ctx);
-void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx);
-void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection, const char* _iniFn);
+void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx);
+void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx);
+void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, const char* _iniFn);
 int SNM_NamedCommandLookup(const char* _cmdId);
 int FindMarkerRegion(double _pos);
-void makeUnformatedConfigString(const char* _in, WDL_String* _out);
+void makeUnformatedConfigString(const char* _in, WDL_FastString* _out);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 void ShortenStringToFirstRN(char* _str);
 void ReplaceStringFormat(char* _str, char _replaceCh);
@@ -458,8 +458,8 @@ bool writeEnvExists(COMMAND_T*);
 int CountSelectedTracksWithMaster(ReaProject* _proj);
 MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx);
 MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj);
-bool makeSingleTrackTemplateChunk(WDL_String* _inRawChunk, WDL_String* _out, bool _delItems, bool _delEnvs);
-bool applyTrackTemplate(MediaTrack* _tr, WDL_String* _tmpltChunk, bool _rawChunk, SNM_ChunkParserPatcher* _p = NULL, bool _itemsFromTmplt = false, bool _envsFromTmplt = false);
+bool makeSingleTrackTemplateChunk(WDL_FastString* _inRawChunk, WDL_FastString* _out, bool _delItems, bool _delEnvs);
+bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _rawChunk, SNM_ChunkParserPatcher* _p = NULL, bool _itemsFromTmplt = false, bool _envsFromTmplt = false);
 void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _itemsFromTmplt,  bool _envsFromTmplt, bool _errMsg);
 void replaceOrPasteItemsFromTrackSlot(const char* _title, bool _paste, int _slot, bool _errMsg);
 void loadSetTrackTemplate(COMMAND_T*);

@@ -219,7 +219,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				{
 					if (iCmd == 1000)
 					{
-						WDL_String details;
+						WDL_FastString details;
 						mi->m_ts->GetDetails(&details, g_ss->m_iMask);
 						DisplayInfoBox(hwndDlg, "Track Snapshot Details", details.Get());
 					}
@@ -335,7 +335,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 								int iNewTrack = GetNumTracks()+1;
 								InsertTrackAtIndex(iNewTrack, false);
 								g_mergeItems.Get(i)->m_destTr = CSurf_TrackFromID(iNewTrack, false);
-								GetSetMediaTrackInfo(g_mergeItems.Get(i)->m_destTr, "P_NAME", g_mergeItems.Get(i)->m_ts->m_sName.Get());
+								GetSetMediaTrackInfo(g_mergeItems.Get(i)->m_destTr, "P_NAME", (void*)g_mergeItems.Get(i)->m_ts->m_sName.Get());
 							}
 
 							TrackSnapshot* ts = g_ss->m_tracks.Add(new TrackSnapshot(*g_mergeItems.Get(i)->m_ts));

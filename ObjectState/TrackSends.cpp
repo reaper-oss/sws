@@ -98,7 +98,7 @@ INT_PTR WINAPI doResolve(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 // Return TRUE on delete send
 bool ResolveMissingRecv(MediaTrack* tr, int iSend, TrackSend* ts, WDL_PtrList<TrackSendFix>* pFix)
 {
-	WDL_String str;
+	WDL_FastString str;
 	char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 	if (!cName || !cName[0])
 		cName = "(unnamed)";
@@ -157,7 +157,7 @@ TrackSend::TrackSend(TrackSend& ts)
 	m_str.Set(ts.m_str.Get());
 }
 
-WDL_String* TrackSend::AuxRecvString(MediaTrack* srcTr, WDL_String* str)
+WDL_FastString* TrackSend::AuxRecvString(MediaTrack* srcTr, WDL_FastString* str)
 {
 	int iSrc = CSurf_TrackToID(srcTr, false) - 1;
 	str->SetFormatted(20, "AUXRECV %d ", iSrc);
@@ -165,7 +165,7 @@ WDL_String* TrackSend::AuxRecvString(MediaTrack* srcTr, WDL_String* str)
 	return str;
 }
 
-void TrackSend::GetChunk(WDL_String* chunk)
+void TrackSend::GetChunk(WDL_FastString* chunk)
 {
 	char guidStr[64];
 	guidToString(&m_destGuid, guidStr);
@@ -175,7 +175,7 @@ void TrackSend::GetChunk(WDL_String* chunk)
 TrackSends::TrackSends(TrackSends& ts)
 {
 	for (int i = 0; i < ts.m_hwSends.GetSize(); i++)
-		m_hwSends.Add(new WDL_String(ts.m_hwSends.Get(i)->Get()));
+		m_hwSends.Add(new WDL_FastString(ts.m_hwSends.Get(i)->Get()));
 	for (int i = 0; i < ts.m_sends.GetSize(); i++)
 		m_sends.Add(new TrackSend(*ts.m_sends.Get(i)));
 }
@@ -189,13 +189,13 @@ TrackSends::~TrackSends()
 void TrackSends::Build(MediaTrack* tr)
 {
 	// Get the HW sends from the track object string
-	char* trackStr = SWS_GetSetObjectState(tr, NULL);
+	const char* trackStr = SWS_GetSetObjectState(tr, NULL);
 	char line[4096];
 	int pos = 0;
 	while (GetChunkLine(trackStr, line, 4096, &pos, false))
 	{
 		if (strncmp(line, "HWOUT", 5) == 0)
-			m_hwSends.Add(new WDL_String(line));
+			m_hwSends.Add(new WDL_FastString(line));
 	}
 	SWS_FreeHeapPtr(trackStr);
 
@@ -233,8 +233,8 @@ void TrackSends::Build(MediaTrack* tr)
 void TrackSends::UpdateReaper(MediaTrack* tr, WDL_PtrList<TrackSendFix>* pFix)
 {
 	// First replace all the hw sends with the stored
-	char* trackStr = SWS_GetSetObjectState(tr, NULL);
-	WDL_String newTrackStr;
+	const char* trackStr = SWS_GetSetObjectState(tr, NULL);
+	WDL_FastString newTrackStr;
 	char line[4096];
 	int pos = 0;
 	bool bChanged = false;
@@ -288,7 +288,7 @@ void TrackSends::UpdateReaper(MediaTrack* tr, WDL_PtrList<TrackSendFix>* pFix)
 	// Loop through each track
 	char searchStr[20];
 	sprintf(searchStr, "AUXRECV %d", CSurf_TrackToID(tr, false) - 1);
-	WDL_String sendStr;
+	WDL_FastString sendStr;
 	GUID* trGuid = (GUID*)GetSetMediaTrackInfo(tr, "GUID", NULL);
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
@@ -333,7 +333,7 @@ void TrackSends::UpdateReaper(MediaTrack* tr, WDL_PtrList<TrackSendFix>* pFix)
 	}
 }
 
-void TrackSends::GetChunk(WDL_String* chunk)
+void TrackSends::GetChunk(WDL_FastString* chunk)
 {
 	for (int i = 0; i < m_hwSends.GetSize(); i++)
 	{

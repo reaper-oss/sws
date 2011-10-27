@@ -83,7 +83,7 @@ bool ItemNotesMatch(MediaItem* _item, const char* _searchStr)
 	if (_item)
 	{
 		SNM_ChunkParserPatcher p(_item);
-		WDL_String notes;
+		WDL_FastString notes;
 		if (p.GetSubChunk("NOTES", 2, 0, &notes, "VOLPAN") >= 0) // rmk: we use VOLPAN as it also exists for empty items
 			//JFB TODO? we compare a formated string with a normal one here, oh well..
 			match = (stristr(notes.Get(), _searchStr) != NULL);

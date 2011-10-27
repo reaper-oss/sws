@@ -49,7 +49,7 @@ void ReadFillGapsIniFile(char* cmdString,
 						 int* fadeShape=NULL, int* markErrors=NULL, int* stretch=NULL, int* trans=NULL)
 {
 	char tmp[128] = "";
-	WDL_String cmd;
+	WDL_FastString cmd;
 	int s,t;
 
 	GetPrivateProfileString("SWS","FillGapsTriggerPad","5",tmp,128,get_ini_file());

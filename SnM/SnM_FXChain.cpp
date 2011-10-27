@@ -31,7 +31,7 @@
 #include "SNM_FXChainView.h"
 
 
-WDL_String g_fXChainClipboard;
+WDL_FastString g_fXChainClipboard;
 extern SNM_ResourceWnd* g_pResourcesWnd; // SNM_ResourceView.cpp
 
 
@@ -39,7 +39,7 @@ extern SNM_ResourceWnd* g_pResourcesWnd; // SNM_ResourceView.cpp
 // Take FX chains
 ///////////////////////////////////////////////////////////////////////////////
 
-void makeChunkTakeFX(WDL_String* _outTakeFX, const WDL_String* _inRfxChain)
+void makeChunkTakeFX(WDL_FastString* _outTakeFX, const WDL_FastString* _inRfxChain)
 {
 	if (_outTakeFX && _inRfxChain)
 	{
@@ -49,7 +49,7 @@ void makeChunkTakeFX(WDL_String* _outTakeFX, const WDL_String* _inRfxChain)
 	}
 }
 
-int copyTakeFXChain(WDL_String* _fxChain, int _startSelItem)
+int copyTakeFXChain(WDL_FastString* _fxChain, int _startSelItem)
 {
 	for (int i = _startSelItem; _fxChain && i < CountSelectedMediaItems(NULL); i++)
 	{
@@ -57,7 +57,7 @@ int copyTakeFXChain(WDL_String* _fxChain, int _startSelItem)
 		if (item)
 		{
 			SNM_FXChainTakePatcher p(item);
-			WDL_String* fxChain = p.GetFXChain();
+			WDL_FastString* fxChain = p.GetFXChain();
 			if (fxChain) 
 			{
 				WDL_PtrList<const char> removedKeywords;
@@ -75,7 +75,7 @@ int copyTakeFXChain(WDL_String* _fxChain, int _startSelItem)
 	return -1;
 }
 
-void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly)
+void pasteTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly)
 {
 	bool updated = false;
 	if (_chain && _chain->GetLength())
@@ -93,7 +93,7 @@ void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly)
 					bool done = false;
 					while (!done && tkIdx >= 0)
 					{
-						WDL_String takeChunk;
+						WDL_FastString takeChunk;
 						int tkPos, tklen;
 						if (p.GetTakeChunk(tkIdx, &takeChunk, &tkPos, &tklen)) 
 						{
@@ -114,7 +114,7 @@ void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly)
 								if (eolSrc > 0)
 								{
 									// no need of eolTakeFx-- (eolTakeFx is the previous '\n' position)
-									WDL_String newTakeFx;
+									WDL_FastString newTakeFx;
 									makeChunkTakeFX(&newTakeFx, _chain);
 									ptk.GetChunk()->Insert(newTakeFx.Get(), eolSrc);
 								}
@@ -136,7 +136,7 @@ void pasteTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly)
 }
 
 // _chain: NULL clears the FX chain
-void setTakeFXChain(const char* _title, WDL_String* _chain, bool _activeOnly)
+void setTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly)
 {
 	bool updated = false;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
@@ -172,7 +172,7 @@ void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool
 	char fn[BUFFER_SIZE] = "";
 	if (g_fxChainFiles.GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg) && CountSelectedMediaItems(NULL))
 	{
-		WDL_String chain;
+		WDL_FastString chain;
 		if (LoadChunk(fn, &chain))
 		{
 			// remove all fx param envelopes
@@ -197,7 +197,7 @@ bool autoSaveItemFXChainSlots(const char* _dirPath, char* _fn, int _fnSize)
 		MediaItem* item = GetSelectedMediaItem(NULL, i);
 		if (item)
 		{
-			WDL_String fxChain("");
+			WDL_FastString fxChain("");
 			if (copyTakeFXChain(&fxChain, i) == i)
 			{
 				RemoveAllIds(&fxChain);
@@ -278,7 +278,7 @@ void clearAllTakesFXChain(COMMAND_T* _ct) {
 // best effort for http://code.google.com/p/sws-extension/issues/detail?id=363
 // update the track's nb of channels if that info exists (as a comment) in the provided chunk
 // return true if update done
-bool SetTrackChannelsForFXChain(MediaTrack* _tr, WDL_String* _chain)
+bool SetTrackChannelsForFXChain(MediaTrack* _tr, WDL_FastString* _chain)
 {
 	if (_tr && _chain && !strncmp(_chain->Get(), "#NCHAN ", 7))
 	{
@@ -296,7 +296,7 @@ bool SetTrackChannelsForFXChain(MediaTrack* _tr, WDL_String* _chain)
 	return false;
 }
 
-void pasteTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
+void pasteTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX)
 {
 	bool updated = false;
 	if (_chain && _chain->GetLength())
@@ -312,7 +312,7 @@ void pasteTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
 				// the meat
 				bool patch = false;
 				SNM_FXChainTrackPatcher p(tr);
-				WDL_String currentFXChain;
+				WDL_FastString currentFXChain;
 				int pos = p.GetSubChunk(_inputFX ? "FXCHAIN_REC" : "FXCHAIN", 2, 0, &currentFXChain, "<ITEM");
 
 				// paste (well.. insert at the end of the current FX chain)
@@ -335,7 +335,7 @@ void pasteTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
 }
 
 // _chain: NULL to clear
-void setTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
+void setTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX)
 {
 	bool updated = false;
 	for (int i = 0; i <= GetNumTracks(); i++) // include master
@@ -357,7 +357,7 @@ void setTrackFXChain(const char* _title, WDL_String* _chain, bool _inputFX)
 }
 
 // returns the first copied track idx (1-based, 0 = master)
-int copyTrackFXChain(WDL_String* _fxChain, bool _inputFX, int _startTr)
+int copyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr)
 {
 	for (int i = _startTr; i >= 0 && i <= GetNumTracks(); i++) // include master
 	{
@@ -404,7 +404,7 @@ void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inpu
 	char fn[BUFFER_SIZE]="";
 	if (g_fxChainFiles.GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg) && CountSelectedTracksWithMaster(NULL))
 	{
-		WDL_String chain;
+		WDL_FastString chain;
 		if (LoadChunk(fn, &chain))
 		{
 			// remove all fx param envelopes
@@ -430,14 +430,14 @@ bool autoSaveTrackFXChainSlots(bool _inputFX, const char* _dirPath, char* _fn, i
 		MediaTrack* tr = CSurf_TrackFromID(i,false); 
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			WDL_String fxChain("");
+			WDL_FastString fxChain("");
 			if (copyTrackFXChain(&fxChain, _inputFX, i) == i)
 			{
 				RemoveAllIds(&fxChain);
 
 				// add track channels (as a comment so that it doesn't bother REAPER)
 				// i.e. best effort for http://code.google.com/p/sws-extension/issues/detail?id=363
-				WDL_String nbChStr;
+				WDL_FastString nbChStr;
 				nbChStr.SetFormatted(32, "#NCHAN %d\n", *(int*)GetSetMediaTrackInfo(tr, "I_NCHAN", NULL));
 				fxChain.Insert(nbChStr.Get(), 0);
 

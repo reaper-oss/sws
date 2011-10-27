@@ -77,14 +77,14 @@ void ObjectStateCache::EmptyCache()
 	m_orig.Empty(true, FreeHeapPtr);
 }
 
-char* ObjectStateCache::GetSetObjState(void* obj, const char* str)
+const char* ObjectStateCache::GetSetObjState(void* obj, const char* str)
 {
 	int i = m_obj.Find(obj);
 	if (i < 0)
 	{
 		i = m_obj.GetSize();
 		m_obj.Add(obj);
-		m_str.Add(new WDL_String);
+		m_str.Add(new WDL_FastString);
 		if (str && str[0])
 			m_orig.Add(NULL);
 		else
@@ -104,9 +104,9 @@ char* ObjectStateCache::GetSetObjState(void* obj, const char* str)
 
 ObjectStateCache* g_objStateCache = NULL;
 
-char* SWS_GetSetObjectState(void* obj, WDL_String* str)
+const char* SWS_GetSetObjectState(void* obj, WDL_FastString* str)
 {
-	char* ret;
+	const char* ret;
 	
 	if (g_objStateCache)
 		ret = g_objStateCache->GetSetObjState(obj, str ? str->Get() : NULL);
@@ -132,6 +132,11 @@ void SWS_FreeHeapPtr(void* ptr)
 	// Ignore frees on cached object states, 
 	if (!g_objStateCache)
 		FreeHeapPtr(ptr);
+}
+
+void SWS_FreeHeapPtr(const char* ptr)
+{
+	SWS_FreeHeapPtr((void*)ptr);
 }
 
 void SWS_CacheObjectState(bool bStart)
@@ -162,7 +167,7 @@ void SWS_CacheObjectState(bool bStart)
 }
 
 // Helper function for parsing object "chunks" into more useful lines
-// newlines are retained.  Caller allocates the WDL_String necessary for the output
+// newlines are retained.  Caller allocates the WDL_FastString necessary for the output
 // pos stores the state of the line parsing, set to zero to return the first line
 // Return of true means valid line, false is "end of chunk"
 bool GetChunkLine(const char* chunk, char* line, int iLineMax, int* pos, bool bNewLine)
@@ -198,10 +203,10 @@ bool GetChunkLine(const char* chunk, char* line, int iLineMax, int* pos, bool bN
 	return true;
 }
 
-void AppendChunkLine(WDL_String* chunk, const char* line)
+void AppendChunkLine(WDL_FastString* chunk, const char* line)
 {
 	// Insert a line into the chunk before the closing >
-	char* pIns = strrchr(chunk->Get(), '>');
+	const char* pIns = strrchr(chunk->Get(), '>');
 	if (!pIns)
 		return;
 	int pos = (int)(pIns - chunk->Get());

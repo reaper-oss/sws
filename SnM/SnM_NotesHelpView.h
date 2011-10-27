@@ -28,8 +28,8 @@
 
 #pragma once
 
-bool GetStringFromNotesChunk(WDL_String* _notes, char* _buf, int _bufMaxSize);
-bool GetNotesChunkFromString(const char* _buf, WDL_String* _notes, const char* _startLine = NULL);
+bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize);
+bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine = NULL);
 
 class SNM_NotesHelpWnd : public SWS_DockWnd
 {
@@ -84,7 +84,7 @@ protected:
 	WDL_VirtualIconButton m_btnLock, m_btnAlr;
 	WDL_VirtualStaticText m_txtLabel;
 
-	WDL_String m_actionHelpFilename;
+	WDL_FastString m_actionHelpFilename;
 	int m_type, m_previousType;
 	bool m_internalTLChange;
 };

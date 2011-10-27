@@ -43,14 +43,14 @@ public:
 	TrackSend(GUID* guid, int iMode, double dVol, double dPan, int iMute, int iMono, int iPhase, int iSrc, int iDest, int iMidi, int iAuto);
 	TrackSend(const char* str);
 	TrackSend(TrackSend& ts);
-	WDL_String* AuxRecvString(MediaTrack* srcTr, WDL_String* str);
-	void GetChunk(WDL_String* chunk);
+	WDL_FastString* AuxRecvString(MediaTrack* srcTr, WDL_FastString* str);
+	void GetChunk(WDL_FastString* chunk);
 	const GUID* GetGuid() { return &m_destGuid; }
 	void SetGuid(const GUID* guid) { m_destGuid = *guid; }
 
 private:
 	GUID m_destGuid;
-	WDL_String m_str;
+	WDL_FastString m_str;
 };
 
 class TrackSends
@@ -61,9 +61,9 @@ public:
 	~TrackSends();
 	void Build(MediaTrack* tr);
 	void UpdateReaper(MediaTrack* tr, WDL_PtrList<TrackSendFix>* pFix);
-	void GetChunk(WDL_String* chunk);
+	void GetChunk(WDL_FastString* chunk);
 
 // TODO these should be private
-	WDL_PtrList<WDL_String> m_hwSends;
+	WDL_PtrList<WDL_FastString> m_hwSends;
 	WDL_PtrList<TrackSend> m_sends;
 };

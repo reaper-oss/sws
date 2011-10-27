@@ -123,7 +123,7 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 #ifdef _SNM_PRESETS
 			case COL_PRESET:
 			{
-				WDL_String renderConf;
+				WDL_FastString renderConf;
 //				RenderPresetConf(&(pItem->m_presets), &renderConf);
 				RenderPresetConf2(pItem->m_track, &(pItem->m_presets), &renderConf);
 				lstrcpyn(str, renderConf.Get(), iStrMax);
@@ -287,7 +287,7 @@ void SNM_LiveConfigsWnd::FillComboInputTrack() {
 	m_cbInputTr.AddItem("None");
 	for (int i=1; i <= GetNumTracks(); i++)
 	{
-		WDL_String ellips;
+		WDL_FastString ellips;
 		char* name = (char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i,false), "P_NAME", NULL);
 		ellips.SetFormatted(64, "[%d] \"%s\"", i, name);
 		ellips.Ellipsize(24, 24);
@@ -653,7 +653,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-void AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_String* _curPresetConf)
+void AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf)
 {
 	memset(g_pLiveConfigsWnd->m_lastFXPresetMsg[0], -1, SNM_LIVECFG_MAX_PRESET_COUNT * sizeof(int));
 	memset(g_pLiveConfigsWnd->m_lastFXPresetMsg[1], -1, SNM_LIVECFG_MAX_PRESET_COUNT * sizeof(int));
@@ -676,7 +676,7 @@ void AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_String* _curPresetConf)
 			if(TrackFX_GetFXName(_tr, i, fxName, 512))
 			{
 				HMENU fxSubMenu = CreatePopupMenu();
-				WDL_PtrList_DeleteOnDestroy<WDL_String> names;
+				WDL_PtrList_DeleteOnDestroy<WDL_FastString> names;
 				SNM_FXSummary* sum = summaries->Get(i);
 				int presetCount = (sum ? getPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names) : 0);
 				if (presetCount)
@@ -691,7 +691,7 @@ void AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_String* _curPresetConf)
 						g_pLiveConfigsWnd->m_lastFXPresetMsg[1][msgCpt++] = j+1; 
 					}
 				}
-				WDL_String fxNameId;
+				WDL_FastString fxNameId;
 				fxNameId.SetFormatted(512, "FX %d - %s", i+1, fxName);
 				AddSubMenu(*_menu, fxSubMenu, fxNameId.Get(), -1, presetCount ? MFS_ENABLED : MF_GRAYED);
 			}
@@ -1233,7 +1233,7 @@ void SNM_MidiLiveScheduledJob::Perform()
 				if (cfg->m_trTemplate.GetLength())
 				{
 					p = new SNM_ChunkParserPatcher(cfg->m_track);
-					WDL_String chunk;
+					WDL_FastString chunk;
 					char filename[BUFFER_SIZE];
 					GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), filename, BUFFER_SIZE);
 					if (LoadChunk(filename, &chunk) && chunk.GetLength())
@@ -1242,7 +1242,7 @@ void SNM_MidiLiveScheduledJob::Perform()
 				else if (cfg->m_fxChain.GetLength())
 				{
 					p = new SNM_FXChainTrackPatcher(cfg->m_track);
-					WDL_String chunk;
+					WDL_FastString chunk;
 					char filename[BUFFER_SIZE];
 					GetFullResourcePath("FXChains", cfg->m_fxChain.Get(), filename, BUFFER_SIZE);
 					if (LoadChunk(filename, &chunk) && chunk.GetLength())

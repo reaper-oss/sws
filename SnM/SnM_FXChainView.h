@@ -38,7 +38,7 @@ public:
 	PathSlotItem(const char* _shortPath="", const char* _desc="") : m_shortPath(_shortPath), m_desc(_desc) {}
 	bool IsDefault() {return (!m_shortPath.GetLength());}
 	void Clear() {m_shortPath.Set(""); m_desc.Set("");}
-	WDL_String m_shortPath, m_desc;
+	WDL_FastString m_shortPath, m_desc;
 };
 
 
@@ -113,9 +113,9 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 
 private:
 	int m_type;
-	WDL_String m_resDir; // Resource sub-directory name *AND* S&M.ini section
-	WDL_String m_desc; // used in user messages
-	WDL_String m_ext; // file extension w/o '.' (ex: "rfxchain")
+	WDL_FastString m_resDir; // Resource sub-directory name *AND* S&M.ini section
+	WDL_FastString m_desc; // used in user messages
+	WDL_FastString m_ext; // file extension w/o '.' (ex: "rfxchain")
 };
 
 

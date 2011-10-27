@@ -84,7 +84,7 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 {
 	bool updated = false;
 
-	WDL_String tmpltChunk;
+	WDL_FastString tmpltChunk;
 	if (_trTemplatePath && (!LoadChunk(_trTemplatePath, &tmpltChunk) || !tmpltChunk.GetLength()))
 	{
 		char err[512] = "";
@@ -133,7 +133,7 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 			}
 			
 			// master/parend send
-			WDL_String mainSend("MAINSEND 1");
+			WDL_FastString mainSend("MAINSEND 1");
 			if (!_sendToMaster)
 				 mainSend.Set("MAINSEND 0");
 			if (g_bv4)
@@ -247,7 +247,7 @@ void saveCueBusIniFile(const char* _busName, int _type, bool _trTemplate, const 
 {
 	if (_busName && _trTemplatePath && _hwOuts)
 	{
-		WDL_String escapedStr;
+		WDL_FastString escapedStr;
 		makeEscapedConfigString(_busName, &escapedStr);
 
 		WritePrivateProfileString("LAST_CUEBUS","NAME",escapedStr.Get(),g_SNMiniFilename.Get());

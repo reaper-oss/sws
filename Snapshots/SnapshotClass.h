@@ -37,7 +37,7 @@ public:
     FXSnapshot(LineParser* lp);
     ~FXSnapshot();
 
-	void GetChunk(WDL_String* chunk);
+	void GetChunk(WDL_FastString* chunk);
     void RestoreParams(const char* str);
     int UpdateReaper(MediaTrack* tr, bool* bMatched, int num);
 	bool Exists(MediaTrack* tr);
@@ -58,11 +58,11 @@ public:
 
 	bool UpdateReaper(int mask, bool bSelOnly, int* fxErr, WDL_PtrList<TrackSendFix>* pFix);
 	bool Cleanup();
-	void GetChunk(WDL_String* chunk);
-	void GetDetails(WDL_String* details, int iMask);
+	void GetChunk(WDL_FastString* chunk);
+	void GetDetails(WDL_FastString* details, int iMask);
 
-	static void GetSetEnvelope(MediaTrack* tr, WDL_String* str, const char* env, bool bSet);
-	static bool ProcessEnv(const char* chunk, char* line, int iLineMax, int* pos, const char* env, WDL_String* str);
+	static void GetSetEnvelope(MediaTrack* tr, WDL_FastString* str, const char* env, bool bSet);
+	static bool ProcessEnv(const char* chunk, char* line, int iLineMax, int* pos, const char* env, WDL_FastString* str);
 
 // TODO these should be private
 	GUID m_guid;
@@ -76,7 +76,7 @@ public:
     WDL_PtrList<FXSnapshot> m_fx;
 	WDL_TypedBuf<char> m_sFXChain;
 	TrackSends m_sends;
-	WDL_String m_sName;
+	WDL_FastString m_sName;
 	int m_iTrackNum;
 
 	// New v4 pans:
@@ -86,13 +86,13 @@ public:
 	double m_dPanR;
 	double m_dPanLaw;
 	
-	WDL_String m_sVolEnv;
-	WDL_String m_sVolEnv2;
-	WDL_String m_sPanEnv;
-	WDL_String m_sPanEnv2;
-	WDL_String m_sWidthEnv;
-	WDL_String m_sWidthEnv2;
-	WDL_String m_sMuteEnv;
+	WDL_FastString m_sVolEnv;
+	WDL_FastString m_sVolEnv2;
+	WDL_FastString m_sPanEnv;
+	WDL_FastString m_sPanEnv2;
+	WDL_FastString m_sWidthEnv;
+	WDL_FastString m_sWidthEnv2;
+	WDL_FastString m_sMuteEnv;
 };
 
 // Mask:
@@ -130,8 +130,8 @@ public:
 	int Find(MediaTrack* tr);
 	static void RegisterGetCommand(int iSlot);
 	char* GetTimeString(char* str, int iStrMax, bool bDate);
-	void GetChunk(WDL_String* chunk);
-	void GetDetails(WDL_String* details);
+	void GetChunk(WDL_FastString* chunk);
+	void GetDetails(WDL_FastString* details);
 	bool IncludesSelTracks();
 
 // TODO these should be private

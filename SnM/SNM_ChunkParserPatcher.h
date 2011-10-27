@@ -20,12 +20,12 @@
 **
 ******************************************************************************/
 
-// Here are some tools to parse, patch, process.. all RPP chunks and sub-chunks. 
+// Here are some tools to parse, patch, process.. RPP chunks and sub-chunks. 
 // SNM_ChunkParserPatcher is a class that can be used either as a SAX-ish 
 // parser (inheritance) or as a direct getter or alering tool, see ParsePatch() 
 // and Parse().
 //
-// In both cases, it's also either attached to a WDL_String* (simple text 
+// In both cases, it's also either attached to a WDL_FastString* (simple text 
 // chunk parser/patcher) -OR- to a reaThing* (MediaTrack*, MediaItem*, ..). 
 // In the latter case, a SNM_ChunkParserPatcher instance only gets (and sets, 
 // if needed) the chunk once, in between, the user works on a cache. *If any* 
@@ -41,9 +41,6 @@
 // Important: 
 // - Chunks can be HUGE!
 // - The code assumes RPP chunks are consistent
-// - For major performance improvments, this WDL_String mod can be used:
-//   http://code.google.com/p/sws-extension/source/browse/trunk/SnM/wdlstring.h 
-//   (see details there, mods are plainly marked as required by the licensing)
 //
 // Changelog:
 // v1.23x
@@ -111,9 +108,9 @@ static int RemoveChunkLines(char* _chunk, const char* _searchStr,
 							bool _checkBOL = false, int _checkEOLChar = 0);
 static int RemoveChunkLines(char* _chunk, WDL_PtrList<const char>* _searchStrs, 
 							bool _checkBOL = false, int _checkEOLChar = 0);
-static int RemoveChunkLines(WDL_String* _chunk, const char* _searchStr,
+static int RemoveChunkLines(WDL_FastString* _chunk, const char* _searchStr,
 							bool _checkBOL = false, int _checkEOLChar = 0);
-static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<const char>* _searchStrs,
+static int RemoveChunkLines(WDL_FastString* _chunk, WDL_PtrList<const char>* _searchStrs,
 							bool _checkBOL = false, int _checkEOLChar = 0);
 
 static int FindEndOfSubChunk(const char* _chunk, int _startPos);
@@ -122,7 +119,7 @@ static int FindEndOfSubChunk(const char* _chunk, int _startPos);
 static int RemoveAllIds(char* _chunk) {
 	return RemoveChunkLines(_chunk, "ID {", false, '}');
 }
-static int RemoveAllIds(WDL_String* _chunk) {
+static int RemoveAllIds(WDL_FastString* _chunk) {
 	return RemoveChunkLines(_chunk, "ID {", false, '}');
 }
 
@@ -142,7 +139,7 @@ public:
 SNM_ChunkParserPatcher(void* _reaObject, bool _autoCommit=true,
 					   bool _processBase64=false, bool _processInProjectMIDI=false, bool _processFreeze=false)
 {
-	m_chunk = new WDL_String(SNM_HEAPBUF_GRANUL);
+	m_chunk = new WDL_FastString(SNM_HEAPBUF_GRANUL);
 	m_reaObject = _reaObject;
 	m_originalChunk = NULL;
 	m_updates = 0;
@@ -154,14 +151,14 @@ SNM_ChunkParserPatcher(void* _reaObject, bool _autoCommit=true,
 	m_chunkType = -1;
 }
 
-// Attached to a WDL_String* (simple text chunk parser/patcher)
+// Attached to a WDL_FastString* (simple text chunk parser/patcher)
 // _autoCommit: if false, a call to Commit() is needed to apply the mods
 //              if true, updates are automatically applied when destroying the object
 // _processXXX : optimization flags
-SNM_ChunkParserPatcher(WDL_String* _chunk, bool _autoCommit=true,
+SNM_ChunkParserPatcher(WDL_FastString* _chunk, bool _autoCommit=true,
 					   bool _processBase64=false, bool _processInProjectMIDI=false, bool _processFreeze=false)
 {
-	m_chunk = new WDL_String(SNM_HEAPBUF_GRANUL);
+	m_chunk = new WDL_FastString(SNM_HEAPBUF_GRANUL);
 	m_reaObject = NULL;
 	m_originalChunk = _chunk;
 	m_updates = 0;
@@ -222,12 +219,12 @@ void* GetObject() {
 
 // get and cache the RPP chunk
 // note: this method *always* returns a valid value (i.e. never NULL)
-virtual WDL_String* GetChunk() 
+virtual WDL_FastString* GetChunk() 
 {
 	if (!m_chunk->GetLength())
 	{
 		if (m_reaObject) {
-			char* cData = m_reaObject ? SNM_GetSetObjectState(m_reaObject, NULL) : NULL;
+			const char* cData = m_reaObject ? SNM_GetSetObjectState(m_reaObject, NULL) : NULL;
 			if (cData) {
 				m_chunk->Set(cData);
 				SNM_FreeHeapPtr(cData);
@@ -252,7 +249,7 @@ void SetChunk(const char* _newChunk, int _updates) {
 }
 
 // for facility (hooked to above)
-void SetChunk(WDL_String* _newChunk, int _updates) {
+void SetChunk(WDL_FastString* _newChunk, int _updates) {
 	m_updates = _updates;
 	if (_newChunk) GetChunk()->Set(_newChunk);
 	else GetChunk()->Set("");
@@ -336,13 +333,13 @@ void CancelUpdates() {
 // _depth: _keyword's depth
 // _chunk: optionnal output prm, the searched sub-chunk if found
 // _breakKeyword: for optimization, optionnal
-int GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_String* _chunk = NULL, const char* _breakKeyword = NULL)
+int GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_FastString* _chunk = NULL, const char* _breakKeyword = NULL)
 {
 	int pos = -1;
 	if (_keyword && _depth > 0)
 	{
 		if (_chunk) _chunk->Set("");
-		WDL_String startToken;
+		WDL_FastString startToken;
 		startToken.SetFormatted((int)strlen(_keyword)+2, "<%s", _keyword);
 		pos = Parse(SNM_GET_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), -1, _occurence, -1, (void*)_chunk, NULL, _breakKeyword);
 		if (pos <= 0) {
@@ -362,7 +359,7 @@ bool ReplaceSubChunk(const char* _keyword, int _depth, int _occurence, const cha
 {
 	if (_keyword && _depth > 0)
 	{
-		WDL_String startToken;
+		WDL_FastString startToken;
 		startToken.SetFormatted((int)strlen(_keyword)+2, "<%s", _keyword);
 		return (ParsePatch(SNM_REPLACE_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), -1, _occurence, 0, (void*)_newSubChunk, NULL, _breakKeyword) > 0);
 	}
@@ -381,7 +378,7 @@ bool ReplaceLine(int _pos, const char* _str = NULL)
 	if (_pos >=0 && GetChunk()->GetLength() > _pos) // + indirectly cache chunk if needed
 	{
 		int pos = _pos;
-		char* pChunk = m_chunk->Get();
+		const char* pChunk = m_chunk->Get();
 		while (pChunk[pos] && pChunk[pos] != '\n') pos++;
 		if (pChunk[pos] == '\n')
 		{
@@ -456,7 +453,7 @@ int GetLinePos(int _dir, const char* _parent, const char* _keyword, int _depth, 
 		pos--; // See ParsePatchCore()
 		if (_dir == -1 || _dir == 1)
 		{
-			char* pChunk = m_chunk->Get();
+			const char* pChunk = m_chunk->Get();
 			if (_dir == -1 && pos >= 2)
 				pos-=2; // zap the previous '\n'
 			while (pChunk[pos] && pChunk[pos] != '\n') pos += _dir;
@@ -469,14 +466,14 @@ int GetLinePos(int _dir, const char* _parent, const char* _keyword, int _depth, 
 	return -1;
 }
 
-const char* GetParent(WDL_PtrList<WDL_String>* _parents, int _ancestor=1) {
+const char* GetParent(WDL_PtrList<WDL_FastString>* _parents, int _ancestor=1) {
 	int sz = _parents ? _parents->GetSize() : 0;
 	if (sz >= _ancestor)
 		return _parents->Get(sz-_ancestor)->Get();
 	return "";
 }
 
-bool IsChildOf(WDL_PtrList<WDL_String>* _parents, const char* _ancestor) {
+bool IsChildOf(WDL_PtrList<WDL_FastString>* _parents, const char* _ancestor) {
 	for (int i=0; i < _parents->GetSize(); i++)
 		if (!strcmp(_parents->Get(i)->Get(), _ancestor))
 			return true;
@@ -486,10 +483,10 @@ bool IsChildOf(WDL_PtrList<WDL_String>* _parents, const char* _ancestor) {
 
 ///////////////////////////////////////////////////////////////////////////////
 protected:
-	WDL_String* m_chunk;
+	WDL_FastString* m_chunk;
 	bool m_autoCommit;
 	void* m_reaObject;
-	WDL_String* m_originalChunk;
+	WDL_FastString* m_originalChunk;
 	int m_updates;
 
 	// 'advanced' optionnal optimization flags --------------------------------
@@ -505,7 +502,7 @@ protected:
 	bool m_isParsingSource;
 
 
-char* SNM_GetSetObjectState(void* _obj, WDL_String* _str)
+const char* SNM_GetSetObjectState(void* _obj, WDL_FastString* _str)
 {
 #ifdef _SWS_EXTENSION
 	return SWS_GetSetObjectState(_obj, _str);
@@ -555,30 +552,30 @@ char* SNM_GetSetObjectState(void* _obj, WDL_String* _str)
 
 	virtual bool NotifyStartElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine,  int _linePos, 
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates) {return false;} // no update
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates) {return false;} // no update
 
 	virtual bool NotifyEndElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates) {return false;} // no update
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates) {return false;} // no update
 
 	virtual bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos, 
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates) {return false;} // no update
+		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates) {return false;} // no update
 
 	virtual bool NotifySkippedSubChunk(int _mode, 
 		const char* _subChunk, int _subChunkLength, int _subChunkPos,
-		WDL_PtrList<WDL_String>* _parsedParents, 
-		WDL_String* _newChunk, int _updates) {return false;} // no update
+		WDL_PtrList<WDL_FastString>* _parsedParents, 
+		WDL_FastString* _newChunk, int _updates) {return false;} // no update
 
 
 ///////////////////////////////////////////////////////////////////////////////
 private:
 	int m_chunkType; // -1 = not initialized yet, 1 = track, 2 = item, 0 = other
 
-bool WriteChunkLine(WDL_String* _chunkLine, const char* _value, int _tokenPos, LineParser* _lp)
+bool WriteChunkLine(WDL_FastString* _chunkLine, const char* _value, int _tokenPos, LineParser* _lp)
 {
 	bool updated = false;
 	if (strcmp(_lp->gettoken_str(_tokenPos), _value) != 0) //update *if* needed
@@ -679,25 +676,25 @@ int ParsePatchCore(
 #endif
 
 	// get/cache the chunk
-	char* cData = GetChunk() ? GetChunk()->Get() : NULL;
+	const char* cData = GetChunk() ? GetChunk()->Get() : NULL;
 	if (!cData)
 		return -1;
 
 	// Start of chunk parsing
 	NotifyStartChunk(_mode);
 
-	WDL_String* newChunk = _write ? new WDL_String(SNM_HEAPBUF_GRANUL) : NULL; 
+	WDL_FastString* newChunk = _write ? new WDL_FastString(SNM_HEAPBUF_GRANUL) : NULL; 
 	char curLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 	int updates = 0, occurence = 0, posStartOfSubchunk = -1;
-	WDL_String* subChunkKeyword = NULL;
-	WDL_PtrList_DeleteOnDestroy<WDL_String> parents;
+	WDL_FastString* subChunkKeyword = NULL;
+	WDL_PtrList_DeleteOnDestroy<WDL_FastString> parents;
 	m_isParsingSource = false; // avoids many strcmp() calls
-	char* pEOL = cData-1;
+	const char* pEOL = cData-1;
 
 	// ok, big stuff begins
 	for(;;)
 	{
-		char* pLine = pEOL+1;
+		const char* pLine = pEOL+1;
 		pEOL = strchr(pLine, '\n');
 
 		// break conditions
@@ -709,7 +706,7 @@ int ParsePatchCore(
 		int curLineLength = (int)(pEOL-pLine); // avoids many strlen() calls
 
 		// *** optimization (optionnal): skip some data and sub-chunks  ***
-		char* pEOSkippedChunk = NULL;
+		const char* pEOSkippedChunk = NULL;
 
 		// skip base64 data (e.g. FX states, sysEx events, ..)
 		if (!m_processBase64 &&
@@ -746,7 +743,7 @@ int ParsePatchCore(
 			if (_write && !alter)
 				newChunk->Insert(pLine, newChunk->GetLength(), (int)(pEOSkippedChunk-pLine));
 			if ((_mode == SNM_GET_SUBCHUNK_OR_LINE || _mode == SNM_GET_SUBCHUNK_OR_LINE_EOL) && subChunkKeyword && _value)
-				((WDL_String*)_value)->Insert(pLine, ((WDL_String*)_value)->GetLength(), (int)(pEOSkippedChunk-pLine));
+				((WDL_FastString*)_value)->Insert(pLine, ((WDL_FastString*)_value)->GetLength(), (int)(pEOSkippedChunk-pLine));
 
 			pLine = pEOSkippedChunk;
 			pEOL = strchr(pEOSkippedChunk, '\n');
@@ -774,7 +771,7 @@ int ParsePatchCore(
 				m_isParsingSource |= (lpNumTokens == 2 && curLineLength>9 /* e.g. <SOURCE MIDI*/ && !strcmp(keyword+1, "SOURCE"));
 
 				// notify & update parent list
-				parents.Add(new WDL_String(keyword+1)); // +1 to zap '<'
+				parents.Add(new WDL_FastString(keyword+1)); // +1 to zap '<'
 				alter = NotifyStartElement(_mode, &lp, curLine, linePos, &parents, newChunk, updates);
 			}
 			else if (*keyword == '>')
@@ -794,7 +791,7 @@ int ParsePatchCore(
 					else if (_mode == SNM_GET_SUBCHUNK_OR_LINE || _mode == SNM_GET_SUBCHUNK_OR_LINE_EOL)
 					{
 						if (_value) 
-							((WDL_String*)_value)->Append(">\n",2);
+							((WDL_FastString*)_value)->Append(">\n",2);
 
 						// SNM_GET_SUBCHUNK_OR_LINE:
 						// => returns 1st *KEYWORD* position of the sub-chunk + 1 (0 reserved for "not found")
@@ -816,7 +813,7 @@ int ParsePatchCore(
 		// end of chunk lines (">") are not processed/notified (but copied if needed)
 		if (parents.GetSize())
 		{
-			WDL_String* currentParent = parents.Get(parents.GetSize()-1);
+			WDL_FastString* currentParent = parents.Get(parents.GetSize()-1);
 
 			bool tolerantMatch, strictMatch;
 			IsMatchingParsedLine(
@@ -845,7 +842,7 @@ int ParsePatchCore(
 						case SNM_GET_CHUNK_CHAR:
 						{
 							if (_value) strcpy((char*)_value, lp.gettoken_str(_tokenPos));
-							char* p = strstr(pLine, _keyWord);
+							const char* p = strstr(pLine, _keyWord);
 							// returns the *KEYWORD* position + 1 ('cause 0 reserved for "not found")
 							return (p ? ((int)(p-cData+1)) : -1); 
 						}
@@ -880,8 +877,8 @@ int ParsePatchCore(
 							break;
 						case SNM_GET_SUBCHUNK_OR_LINE:
 						{
-							if (_value) ((WDL_String*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine);
-							char* pSub = strstr(pLine, _keyWord);
+							if (_value) ((WDL_FastString*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine);
+							const char* pSub = strstr(pLine, _keyWord);
 							// *KEYWORD* position + 1 (0 reserved for "not found")
 							posStartOfSubchunk = (pSub ? ((int)(pSub-cData+1)) : -1);
 							if (_value && *_keyWord == '<') subChunkKeyword = currentParent;
@@ -890,7 +887,7 @@ int ParsePatchCore(
 						break;
 						case SNM_GET_SUBCHUNK_OR_LINE_EOL:
 						{							
-							if (_value) ((WDL_String*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine);
+							if (_value) ((WDL_FastString*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine);
 							if (*_keyWord == '<') // no test on _value: has to go to the end of subchunk
 								subChunkKeyword = currentParent;
 							else return ((int)(pEOL-cData+1)); // *EOL* position + 1 (0 reserved for "not found")
@@ -940,7 +937,7 @@ int ParsePatchCore(
 			{
 				alter = (_mode == SNM_REPLACE_SUBCHUNK_OR_LINE);
 				if (_value && (_mode == SNM_GET_SUBCHUNK_OR_LINE || _mode == SNM_GET_SUBCHUNK_OR_LINE_EOL))
-					((WDL_String*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine);
+					((WDL_FastString*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine);
 			}
 		}
 		updates += (_write && alter);
@@ -958,7 +955,7 @@ int ParsePatchCore(
 		{
 			m_updates += updates;
 			// avoids buffer re-copy
-			WDL_String* oldChunk = m_chunk;
+			WDL_FastString* oldChunk = m_chunk;
 			m_chunk = newChunk;
 			delete oldChunk;
 		}
@@ -1049,19 +1046,21 @@ static int RemoveChunkLines(char* _chunk, const char* _searchStr, bool _checkBOL
 static int RemoveChunkLines(char* _chunk, WDL_PtrList<const char>* _searchStrs, bool _checkBOL, int _checkEOLChar) {
 	int updates = 0;
 	if (_chunk && _searchStrs) {
-		// faster than parsing+check each keyword
+		// faster than parsing+checking each keyword
 		for (int i=0; i < _searchStrs->GetSize(); i++)
 			updates += RemoveChunkLines(_chunk, _searchStrs->Get(i), _checkBOL, _checkEOLChar);
 	}
 	return updates;
 }
 
-// WDL_String wrappers
-static int RemoveChunkLines(WDL_String* _chunk, const char* _searchStr, bool _checkBOL, int _checkEOLChar) {
-	return (_chunk ? RemoveChunkLines(_chunk->Get(), _searchStr, _checkBOL, _checkEOLChar) : 0);
+// WDL_FastString wrappers
+static int RemoveChunkLines(WDL_FastString* _chunk, const char* _searchStr, bool _checkBOL, int _checkEOLChar) {
+	// cast to char* OK here: the WDL_FastString length is not updated
+	return (_chunk ? RemoveChunkLines((char*)_chunk->Get(), _searchStr, _checkBOL, _checkEOLChar) : 0);
 }
-static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<const char>* _searchStrs, bool _checkBOL, int _checkEOLChar) {
-	return (_chunk ? RemoveChunkLines(_chunk->Get(), _searchStrs, _checkBOL, _checkEOLChar) : 0);
+static int RemoveChunkLines(WDL_FastString* _chunk, WDL_PtrList<const char>* _searchStrs, bool _checkBOL, int _checkEOLChar) {
+	// cast to char* OK here: the WDL_FastString length is not updated
+	return (_chunk ? RemoveChunkLines((char*)_chunk->Get(), _searchStrs, _checkBOL, _checkEOLChar) : 0);
 }
 
 // returns the position after the sub-chunk starting at _startPos in _chunk, or -1 if failed
@@ -1070,12 +1069,12 @@ static int FindEndOfSubChunk(const char* _chunk, int _startPos)
 {
 	if (_chunk && _startPos >= 0) {
 		int depth = 1;
-		char* boc = strstr((char*)(_chunk+_startPos+1), "\n<");
-		char* eoc = strstr((char*)(_chunk+_startPos+1), "\n>\n");
+		const char* boc = strstr(_chunk+_startPos+1, "\n<");
+		const char* eoc = strstr(_chunk+_startPos+1, "\n>\n");
 		while ((boc || eoc) && depth > 0) {
 			if (boc && (!eoc || boc < eoc)) {
 				depth++;
-				boc = strstr((char*)(boc+1), "\n<");
+				boc = strstr(boc+1, "\n<");
 			}
 			else if (eoc && (!boc || eoc < boc)) {
 				depth--;

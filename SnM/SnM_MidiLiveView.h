@@ -63,7 +63,7 @@ public:
 
 	int m_cc;
 	MediaTrack* m_track;
-	WDL_String m_desc, m_trTemplate, m_fxChain, m_presets, m_onAction, m_offAction;
+	WDL_FastString m_desc, m_trTemplate, m_fxChain, m_presets, m_onAction, m_offAction;
 };
 
 class MidiLiveConfig {

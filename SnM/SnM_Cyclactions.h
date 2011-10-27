@@ -47,14 +47,14 @@ public:
 
 	int GetCmdSize() {return m_cmds.GetSize();}
 	const char* GetCmd(int _i) {return m_cmds.Get(_i)->Get();}
-	void SetCmd(WDL_String* _cmd, const char* _newCmd);
-	WDL_String* AddCmd(const char* _cmd);
-	void InsertCmd(int _pos, WDL_String* _cmd) {m_cmds.Insert(_pos, _cmd); UpdateFromCmd();}
-	void RemoveCmd(WDL_String* _cmd, bool _wantDelete=false){m_cmds.Delete(m_cmds.Find(_cmd), _wantDelete); UpdateFromCmd();}
-	WDL_String* GetCmdString(int _i) {return m_cmds.Get(_i);}
-	int FindCmd(WDL_String* _cmd) {return m_cmds.Find(_cmd);}
+	void SetCmd(WDL_FastString* _cmd, const char* _newCmd);
+	WDL_FastString* AddCmd(const char* _cmd);
+	void InsertCmd(int _pos, WDL_FastString* _cmd) {m_cmds.Insert(_pos, _cmd); UpdateFromCmd();}
+	void RemoveCmd(WDL_FastString* _cmd, bool _wantDelete=false){m_cmds.Delete(m_cmds.Find(_cmd), _wantDelete); UpdateFromCmd();}
+	WDL_FastString* GetCmdString(int _i) {return m_cmds.Get(_i);}
+	int FindCmd(WDL_FastString* _cmd) {return m_cmds.Find(_cmd);}
 	
-	WDL_String m_desc; 
+	WDL_FastString m_desc; 
 	int m_performState;
 	bool m_added;
 
@@ -62,9 +62,9 @@ private:
 	void UpdateNameAndCmds();
 	void UpdateFromCmd();
 	
-	WDL_String m_name;
+	WDL_FastString m_name;
 	bool m_empty;
-	WDL_PtrList_DeleteOnDestroy<WDL_String> m_cmds;
+	WDL_PtrList_DeleteOnDestroy<WDL_FastString> m_cmds;
 };
 
 class SNM_CyclactionsView : public SWS_ListView

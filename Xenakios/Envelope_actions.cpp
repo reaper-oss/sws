@@ -95,15 +95,11 @@ public:
 			void *pcurenv= GetSelectedTrackEnvelope(pproj);
 			if (pcurenv)
 			{
-				char *buf;
-				buf=SWS_GetSetObjectState(pcurenv,0);
-				if (buf)
+				if (const char* buf = SWS_GetSetObjectState(pcurenv,0))
 				{
 					this->ParseState(buf);
 					SWS_FreeHeapPtr(buf);
-				};
-			
-			
+				};	
 			}
 		}
 	}
@@ -131,7 +127,7 @@ public:
 			void *pcurenv= GetSelectedTrackEnvelope(Enum_Projects(-1,0,0));
 			if (pcurenv)
 			{
-				WDL_String str; // Prob should convert m_newenvstate to use WDL_String
+				WDL_FastString str; // Prob should convert m_newenvstate to use WDL_FastString
 				str.Set(m_newenvstate.str().c_str());
 				SWS_GetSetObjectState(pcurenv, &str);
 			}

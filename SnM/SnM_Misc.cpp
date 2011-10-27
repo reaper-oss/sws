@@ -68,7 +68,7 @@ bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 {
 	if (_destFn && _srcFn)
 	{
-		WDL_String chunk;
+		WDL_FastString chunk;
 		if (LoadChunk(_srcFn, &chunk, false) && chunk.GetLength())
 			return SaveChunk(_destFn, &chunk, false);
 	}
@@ -148,7 +148,7 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 		*_fullFn = '\0';
 }
 
-bool LoadChunk(const char* _fn, WDL_String* _chunk, bool _trim, int _maxlen)
+bool LoadChunk(const char* _fn, WDL_FastString* _chunk, bool _trim, int _maxlen)
 {
 	if (_chunk)
 	{
@@ -181,7 +181,7 @@ bool LoadChunk(const char* _fn, WDL_String* _chunk, bool _trim, int _maxlen)
 	return false;
 }
 
-bool SaveChunk(const char* _fn, WDL_String* _chunk, bool _indent)
+bool SaveChunk(const char* _fn, WDL_FastString* _chunk, bool _indent)
 {
 	if (_fn && *_fn && _chunk)
 	{
@@ -214,19 +214,19 @@ void GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 	}
 }
 
-void StringToExtensionConfig(WDL_String* _str, ProjectStateContext* _ctx)
+void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx)
 {
 	if (_str && _ctx)
 	{
 		// see http://code.google.com/p/sws-extension/issues/detail?id=358
-		WDL_String unformatedStr;
+		WDL_FastString unformatedStr;
 		makeUnformatedConfigString(_str->Get(), &unformatedStr);
 
-		char* pEOL = unformatedStr.Get()-1;
+		const char* pEOL = unformatedStr.Get()-1;
 		char curLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 		for(;;) 
 		{
-			char* pLine = pEOL+1;
+			const char* pLine = pEOL+1;
 			pEOL = strchr(pLine, '\n');
 			if (!pEOL)
 				break;
@@ -238,7 +238,7 @@ void StringToExtensionConfig(WDL_String* _str, ProjectStateContext* _ctx)
 	}
 }
 
-void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx)
+void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx)
 {
 	if (_str && _ctx)
 	{
@@ -260,7 +260,7 @@ void ExtensionConfigToString(WDL_String* _str, ProjectStateContext* _ctx)
 }
 
 // write a full INI file's section in one go
-void SaveIniSection(const char* _iniSectionName, WDL_String* _iniSection, const char* _iniFn)
+void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, const char* _iniFn)
 {
 	if (_iniSectionName && _iniSection && _iniFn)
 	{
@@ -321,17 +321,17 @@ int FindMarkerRegion(double _pos)
 	return idx;
 }
 
-void makeUnformatedConfigString(const char* _in, WDL_String* _out)
+void makeUnformatedConfigString(const char* _in, WDL_FastString* _out)
 {
 	if (_in && _out)
 	{
 		_out->Set(_in);
-		char* p = strchr(_out->Get(), '%');
+		const char* p = strchr(_out->Get(), '%');
 		while(p)
 		{
 			int pos = p - _out->Get();
 			_out->Insert("%", ++pos); // ++pos! but Insert() clamps to length..
-			p = (pos+1 < _out->GetLength()) ? strchr((char*)(_out->Get()+pos+1), '%') : NULL;
+			p = (pos+1 < _out->GetLength()) ? strchr((_out->Get()+pos+1), '%') : NULL;
 		}
 	}
 }

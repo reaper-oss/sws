@@ -84,7 +84,7 @@ FXSnapshot::~FXSnapshot()
 	delete [] m_dParams;
 }
 
-void FXSnapshot::GetChunk(WDL_String *chunk)
+void FXSnapshot::GetChunk(WDL_FastString *chunk)
 {
 	chunk->AppendFormatted(chunk->GetLength()+100, "<FX \"%s\" %d\n", m_cName, m_iNumParams);
 	int iDoublesLeft = m_iNumParams;
@@ -377,7 +377,7 @@ bool TrackSnapshot::Cleanup()
 }
 
 // Only append, don't overwrite the chunk string
-void TrackSnapshot::GetChunk(WDL_String* chunk)
+void TrackSnapshot::GetChunk(WDL_FastString* chunk)
 {
 	char guidStr[64];
 	guidToString(&m_guid, guidStr);
@@ -406,7 +406,7 @@ void TrackSnapshot::GetChunk(WDL_String* chunk)
 	chunk->Append(">\n");
 }
 
-void TrackSnapshot::GetDetails(WDL_String* details, int iMask)
+void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 {
 	MediaTrack* tr = GuidToTrack(&m_guid);
 
@@ -543,7 +543,7 @@ void TrackSnapshot::GetDetails(WDL_String* details, int iMask)
 	}
 }
 
-void TrackSnapshot::GetSetEnvelope(MediaTrack* tr, WDL_String* str, const char* env, bool bSet)
+void TrackSnapshot::GetSetEnvelope(MediaTrack* tr, WDL_FastString* str, const char* env, bool bSet)
 {
 	TrackEnvelope* te = GetTrackEnvelopeByName(tr, env);
 	if (!bSet)
@@ -560,23 +560,20 @@ void TrackSnapshot::GetSetEnvelope(MediaTrack* tr, WDL_String* str, const char* 
 	else if (str->GetLength())
 	{	// Set envelope
 		if (te)
-			GetSetEnvelopeState(te, str->Get(), 0);
+			GetSetEnvelopeState(te, (char*)str->Get(), 0);
 		else
 		{
-			WDL_String state;
+			WDL_FastString state;
 			state.Set(SWS_GetSetObjectState(tr, NULL));
-			*strrchr(state.Get(), '>') = 0; // Remove the last >
-			// Do a little dance to set the length properly
-			WDL_String newState;
-			newState.Set(state.Get());
-			newState.Append(str->Get());
-			newState.Append(">\n");
-			SWS_GetSetObjectState(tr, &newState);
+			// Remove the last >
+			const char* p = strrchr(state.Get(), '>');
+			state.DeleteSub(p-state.Get(), state.GetLength());
+			SWS_GetSetObjectState(tr, &state);
 		}
 	}
 }
 
-bool TrackSnapshot::ProcessEnv(const char* chunk, char* line, int iLineMax, int* pos, const char* env, WDL_String* str)
+bool TrackSnapshot::ProcessEnv(const char* chunk, char* line, int iLineMax, int* pos, const char* env, WDL_FastString* str)
 {
 	if (strcmp(env, line) == 0)
 	{
@@ -686,7 +683,7 @@ Snapshot::Snapshot(const char* chunk)
 			// Same format as AUXRECV but on the send track, with second param as recv GUID
 				ts->m_sends.m_sends.Add(new TrackSend(line));
 			else if (strcmp("HWOUT", lp.gettoken_str(0)) == 0)
-				ts->m_sends.m_hwSends.Add(new WDL_String(line));
+				ts->m_sends.m_hwSends.Add(new WDL_FastString(line));
 			else if (strcmp("FX", lp.gettoken_str(0)) == 0) // "One liner"
 				ts->m_fx.Add(new FXSnapshot(&lp));
 			else if (strcmp("<FX", lp.gettoken_str(0)) == 0) // Multiple lines
@@ -969,7 +966,7 @@ char* Snapshot::GetTimeString(char* str, int iStrMax, bool bDate)
 }
 
 // Get chunk for writing out
-void Snapshot::GetChunk(WDL_String* chunk)
+void Snapshot::GetChunk(WDL_FastString* chunk)
 {
 	chunk->SetFormatted(chunk->GetLength()+100, "<SWSSNAPSHOT \"%s\" %d %d %d\n", m_cName, m_iSlot, m_iMask, m_time);
 	for (int i = 0; i < m_tracks.GetSize(); i++)
@@ -978,7 +975,7 @@ void Snapshot::GetChunk(WDL_String* chunk)
 }
 
 // Get a human-readable string that explains the snapshot
-void Snapshot::GetDetails(WDL_String* details)
+void Snapshot::GetDetails(WDL_FastString* details)
 {
 	char cTemp[100];
 	details->AppendFormatted(100, "Snapshot %d \"%s\", stored ", m_iSlot, m_cName);

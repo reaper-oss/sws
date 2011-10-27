@@ -46,8 +46,8 @@ reminders:
 
 bool SNM_ChunkIndenter::NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
-		int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,
-		WDL_String* _newChunk, int _updates)
+		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents,
+		WDL_FastString* _newChunk, int _updates)
 {
 	bool update = false;
 	if (_mode == -1)
@@ -75,8 +75,8 @@ bool SNM_ChunkIndenter::NotifyChunkLine(int _mode,
 
 bool SNM_SendPatcher::NotifyChunkLine(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos, 
-	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents,  
-	WDL_String* _newChunk, int _updates)
+	int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents,  
+	WDL_FastString* _newChunk, int _updates)
 {
 	bool update = false;
 	switch(_mode)
@@ -186,8 +186,8 @@ int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr)
 
 bool SNM_FXChainTakePatcher::NotifyStartElement(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos, 
-	WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	// start to *not* recopy
 	if ((_mode == -1 || (m_activeTake && _mode == -2)) && !strcmp(GetParent(_parsedParents), "TAKEFX"))
@@ -204,8 +204,8 @@ bool SNM_FXChainTakePatcher::NotifyStartElement(int _mode,
 
 bool SNM_FXChainTakePatcher::NotifyEndElement(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos, 
-	WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	bool update = m_removingTakeFx;
 	if ((_mode == -1 || (m_activeTake && _mode == -2)) && !strcmp(GetParent(_parsedParents), "SOURCE")) 
@@ -235,8 +235,8 @@ bool SNM_FXChainTakePatcher::NotifyEndElement(int _mode,
 // _mode: -1 set active ALL takes FX chain, -2 set active take's FX chain, -3 copy active take's FX chain
 bool SNM_FXChainTakePatcher::NotifyChunkLine(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	bool update = m_removingTakeFx;
 
@@ -259,8 +259,8 @@ bool SNM_FXChainTakePatcher::NotifyChunkLine(int _mode,
 
 bool SNM_FXChainTakePatcher::NotifySkippedSubChunk(int _mode, 
 	const char* _subChunk, int _subChunkLength, int _subChunkPos,
-	WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	if (_mode == -3 && m_copyingTakeFx)
 		m_copiedFXChain.Insert(_subChunk, m_copiedFXChain.GetLength(), _subChunkLength);
@@ -268,7 +268,7 @@ bool SNM_FXChainTakePatcher::NotifySkippedSubChunk(int _mode,
 }
 
 // _fxChain == NULL clears current FX chain(s)
-bool SNM_FXChainTakePatcher::SetFXChain(WDL_String* _fxChain, bool _activeTakeOnly)
+bool SNM_FXChainTakePatcher::SetFXChain(WDL_FastString* _fxChain, bool _activeTakeOnly)
 {
 	m_fxChain = _fxChain;
 	m_removingTakeFx = false;
@@ -278,7 +278,7 @@ bool SNM_FXChainTakePatcher::SetFXChain(WDL_String* _fxChain, bool _activeTakeOn
 	return false;
 }
 
-WDL_String* SNM_FXChainTakePatcher::GetFXChain()
+WDL_FastString* SNM_FXChainTakePatcher::GetFXChain()
 {
 	m_activeTake = (*(int*)GetSetMediaItemInfo((MediaItem*)m_reaObject, "I_CURTAKE", NULL) == 0);
 	m_copiedFXChain.Set("");
@@ -299,8 +299,8 @@ WDL_String* SNM_FXChainTakePatcher::GetFXChain()
 
 bool SNM_FXChainTrackPatcher::NotifyStartElement(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	const char* parent = GetParent(_parsedParents);
 	// start to *not* recopy
@@ -310,8 +310,8 @@ bool SNM_FXChainTrackPatcher::NotifyStartElement(int _mode,
 
 bool SNM_FXChainTrackPatcher::NotifyEndElement(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	bool update = m_removingFxChain;
 	const char* parent = GetParent(_parsedParents);
@@ -329,8 +329,8 @@ bool SNM_FXChainTrackPatcher::NotifyEndElement(int _mode,
 // _mode -1: set FX chain, -2: set input FX chain
 bool SNM_FXChainTrackPatcher::NotifyChunkLine(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	bool update = m_removingFxChain;
 
@@ -356,14 +356,14 @@ bool SNM_FXChainTrackPatcher::NotifyChunkLine(int _mode,
 
 bool SNM_FXChainTrackPatcher::NotifySkippedSubChunk(int _mode, 
 	const char* _subChunk, int _subChunkLength, int _subChunkPos,
-	WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	return m_removingFxChain;
 }
 
 // if _fxChain == NULL then clears the current FX chain
-bool SNM_FXChainTrackPatcher::SetFXChain(WDL_String* _fxChain, bool _inputFX)
+bool SNM_FXChainTrackPatcher::SetFXChain(WDL_FastString* _fxChain, bool _inputFX)
 {
 	m_fxChain = _fxChain;
 	m_removingFxChain = false;
@@ -383,7 +383,7 @@ int SNM_FXChainTrackPatcher::GetInputFXCount() {
 
 // _pos: if valid, it'll be set to the start position of the _gettedChunk (if found, -1 otherwise)
 // return false if _takeIdx not found (e.g. empty *item*)
-bool SNM_TakeParserPatcher::GetTakeChunk(int _takeIdx, WDL_String* _gettedChunk, int* _pos, int* _len)
+bool SNM_TakeParserPatcher::GetTakeChunk(int _takeIdx, WDL_FastString* _gettedChunk, int* _pos, int* _len)
 {
 	int pos, len;
 	bool found = GetTakeChunkPos(_takeIdx, &pos, &len); // indirect call to GetChunk() (force cache + add fake 1st take if needed)
@@ -403,7 +403,7 @@ int SNM_TakeParserPatcher::CountTakesInChunk()
 	if (m_currentTakeCount < 0)
 	{
 		m_currentTakeCount = 0;
-		char* p = strstr(GetChunk()->Get(), "\nTAKE"); // force GetChunk() (force cache + add fake 1st take if needed)
+		const char* p = strstr(GetChunk()->Get(), "\nTAKE"); // force GetChunk() (force cache + add fake 1st take if needed)
 		while (p) 
 		{
 			if (IsValidTakeChunkLine(p))
@@ -418,7 +418,7 @@ int SNM_TakeParserPatcher::CountTakesInChunk()
 // apply on a chunk that's not committed yet
 bool SNM_TakeParserPatcher::IsEmpty(int _takeIdx)
 {
-	WDL_String tkChunk;
+	WDL_FastString tkChunk;
 	if (GetTakeChunk(_takeIdx, &tkChunk))
 		return (
 			!strncmp(tkChunk.Get(), "TAKE NULL", 9) || // empty take
@@ -428,7 +428,7 @@ bool SNM_TakeParserPatcher::IsEmpty(int _takeIdx)
 
 // assumes that _tkChunk begins with "TAKE" 
 // returns the end position after insertion (or -1 if failed)
-int SNM_TakeParserPatcher::AddLastTake(WDL_String* _tkChunk)
+int SNM_TakeParserPatcher::AddLastTake(WDL_FastString* _tkChunk)
 {
 	int afterPos = -1;
 	if (_tkChunk && _tkChunk->GetLength() && GetChunk()) // force GetChunk() (force cache + add fake 1st take if needed)
@@ -444,7 +444,7 @@ int SNM_TakeParserPatcher::AddLastTake(WDL_String* _tkChunk)
 // assumes _chunk always begins with "TAKE"
 // _pos: start pos of the take if known, for optimization (-1 if unknown)
 // returns the end position after insertion (or -1 if failed)
-int SNM_TakeParserPatcher::InsertTake(int _takeIdx, WDL_String* _chunk, int _pos)
+int SNM_TakeParserPatcher::InsertTake(int _takeIdx, WDL_FastString* _chunk, int _pos)
 {
 	int afterPos = -1;
 	int length = _chunk->GetLength();
@@ -476,7 +476,7 @@ int SNM_TakeParserPatcher::InsertTake(int _takeIdx, WDL_String* _chunk, int _pos
 
 // usually, when only 1 take remains, DeleteTrackMediaItem() should be called but
 // this method will also work (=> empty item w/o takes)
-bool SNM_TakeParserPatcher::RemoveTake(int _takeIdx, WDL_String* _removedChunk, int* _removedStartPos)
+bool SNM_TakeParserPatcher::RemoveTake(int _takeIdx, WDL_FastString* _removedChunk, int* _removedStartPos)
 {
 	bool updated = false;
 	int pos, len;
@@ -496,7 +496,7 @@ bool SNM_TakeParserPatcher::RemoveTake(int _takeIdx, WDL_String* _removedChunk, 
 }
 
 // assumes _newTakeChunk always begins with "TAKE"
-bool SNM_TakeParserPatcher::ReplaceTake(int _startTakePos, int _takeLength, WDL_String* _newTakeChunk)
+bool SNM_TakeParserPatcher::ReplaceTake(int _startTakePos, int _takeLength, WDL_FastString* _newTakeChunk)
 {
 	bool updated = false;
 	if (GetChunk() && _newTakeChunk && _startTakePos >= 0) // force GetChunk() (force cache + add fake 1st take if needed)
@@ -506,7 +506,7 @@ bool SNM_TakeParserPatcher::ReplaceTake(int _startTakePos, int _takeLength, WDL_
 		m_updates++; // as we're directly working on the cached chunk..
 		updated = true;
 		m_currentTakeCount--;
-		if (prevLgth > GetChunk()->GetLength()) // see WDL_String.DeleteSub()
+		if (prevLgth > GetChunk()->GetLength()) // see WDL_FastString.DeleteSub()
 		{
 			GetChunk()->Insert(_newTakeChunk->Get(), _startTakePos, _newTakeChunk->GetLength());
 			m_updates++; 
@@ -520,13 +520,13 @@ bool SNM_TakeParserPatcher::ReplaceTake(int _startTakePos, int _takeLength, WDL_
 // This simplifies all chunk processings: we'll then have as much takes as there are
 // lines starting with "TAKE ..." in the item chunk (since v4 and its NULL takes, the 1st 
 // take in a chunk can begin with a "TAKE" line and not only with a "NAME" line anymore)
-WDL_String* SNM_TakeParserPatcher::GetChunk()
+WDL_FastString* SNM_TakeParserPatcher::GetChunk()
 {
-	WDL_String* chunk = SNM_ChunkParserPatcher::GetChunk();
+	WDL_FastString* chunk = SNM_ChunkParserPatcher::GetChunk();
 	if (!m_fakeTake && chunk)
 	{
 		m_fakeTake = true;
-		char* p = strstr(m_chunk->Get(), "\nNAME \"");
+		const char* p = strstr(m_chunk->Get(), "\nNAME \"");
 		// empty item (i.e. no take at all) or NULL takes only
 		if (!p) 
 		{
@@ -561,14 +561,14 @@ bool SNM_TakeParserPatcher::Commit(bool _force)
 		if (m_fakeTake)
 		{
 			m_fakeTake = false;
-			char* p = strstr(m_chunk->Get(), "\nNAME \"");
+			const char* p = strstr(m_chunk->Get(), "\nNAME \"");
 			// empty item (i.e. no take at all) or NULL takes only
 			if (!p) 
 			{
 				p = strstr(m_chunk->Get(), "\nTAKE");
 				if (p)
 				{
-					char* p2 = (char*)(p+5);
+					const char* p2 = p+5;
 					while (*p2 && p2 < (m_chunk->Get()+m_chunk->GetLength()) && *p2 != '\n') p2++;
 					if (*p2 == '\n')
 						m_chunk->DeleteSub((int)(p-m_chunk->Get()), (int)(p2-p));
@@ -606,7 +606,7 @@ bool SNM_TakeParserPatcher::Commit(bool _force)
 bool SNM_TakeParserPatcher::GetTakeChunkPos(int _takeIdx, int* _pos, int* _len)
 {
 	int tkCount = 0;
-	char* p = strstr(GetChunk()->Get(), "\nTAKE"); // force GetChunk() (+ add fake 1st take if needed)
+	const char* p = strstr(GetChunk()->Get(), "\nTAKE"); // force GetChunk() (+ add fake 1st take if needed)
 	while (p)
 	{
 		if (IsValidTakeChunkLine(p))
@@ -614,11 +614,11 @@ bool SNM_TakeParserPatcher::GetTakeChunkPos(int _takeIdx, int* _pos, int* _len)
 			if (tkCount == _takeIdx)
 			{
 				// is there a next take ?
-				char* p2 = strstr((char*)(p+1), "\nTAKE");
+				const char* p2 = strstr(p+1, "\nTAKE");
 				while (p2) 
 				{
 					if (IsValidTakeChunkLine(p2)) break;
-					p2 = strstr((char*)(p2+1), "\nTAKE");
+					p2 = strstr(p2+1, "\nTAKE");
 				}
 
 				*_pos = (int)(p+1 - m_chunk->Get()); 
@@ -632,7 +632,7 @@ bool SNM_TakeParserPatcher::GetTakeChunkPos(int _takeIdx, int* _pos, int* _len)
 			}
 			tkCount++;
 		}
-		p = strstr((char*)(p+1), "\nTAKE");
+		p = strstr(p+1, "\nTAKE");
 	}
 	return false;
 }
@@ -645,8 +645,8 @@ bool SNM_TakeParserPatcher::GetTakeChunkPos(int _takeIdx, int* _pos, int* _len)
 
 bool SNM_RecPassParser::NotifyChunkLine(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	if (_mode == -1)
 	{
@@ -709,8 +709,8 @@ int SNM_RecPassParser::GetMaxRecPass(int* _recPasses, int* _takeColors)
 
 bool SNM_EnvRemover::NotifyStartElement(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	if (_mode == -1 && trackEnvelopesLookup((char*)(_lp->gettoken_str(0)+1)))
 	{
@@ -723,8 +723,8 @@ bool SNM_EnvRemover::NotifyStartElement(int _mode,
 
 bool SNM_EnvRemover::NotifyEndElement(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	bool update = m_removingEnv;
 	if (_mode == -1 && m_removingEnv) 
@@ -738,8 +738,8 @@ bool SNM_EnvRemover::NotifyEndElement(int _mode,
 
 bool SNM_EnvRemover::NotifyChunkLine(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	return m_removingEnv;
 }
@@ -757,8 +757,8 @@ bool SNM_EnvRemover::RemoveEnvelopes() {
 // _mode: -1 all envelopes, -2 receive vol envelopes, -3 receive pan envelopes, -4 receive mute envelopes
 bool SNM_ArmEnvParserPatcher::NotifyChunkLine(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	bool updated = false;
 	if (_mode < 0)
@@ -795,8 +795,8 @@ bool SNM_ArmEnvParserPatcher::NotifyChunkLine(int _mode,
 
 bool SNM_LearnMIDIChPatcher::NotifyEndElement(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	if (_mode == -1 && !strcmp(GetParent(_parsedParents), "FXCHAIN"))
 		m_breakParsePatch = true; // optmization
@@ -805,8 +805,8 @@ bool SNM_LearnMIDIChPatcher::NotifyEndElement(int _mode,
 
 bool SNM_LearnMIDIChPatcher::NotifyChunkLine(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	bool updated = false;
 	if (_mode == -1)
@@ -846,8 +846,8 @@ bool SNM_LearnMIDIChPatcher::SetChannel(int _newValue, int _fx)
 
 bool SNM_FXSummaryParser::NotifyStartElement(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	if (_mode == -1)
 	{
@@ -864,8 +864,8 @@ bool SNM_FXSummaryParser::NotifyStartElement(int _mode,
 
 bool SNM_FXSummaryParser::NotifyEndElement(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	if (_mode == -1 && !strcmp(GetParent(_parsedParents), "FXCHAIN"))
 		m_breakParsePatch = true; // optmization
@@ -887,8 +887,8 @@ WDL_PtrList<SNM_FXSummary>* SNM_FXSummaryParser::GetSummaries()
 
 bool SNM_TakeEnvParserPatcher::NotifyChunkLine(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	bool updated = false;
 	if (_mode == -1)
@@ -919,8 +919,8 @@ bool SNM_TakeEnvParserPatcher::SetVis(const char* _envKeyWord, int _vis) {
 
 bool SNM_FXKnobParser::NotifyEndElement(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	if (_mode == -1 && !strcmp(GetParent(_parsedParents), "FXCHAIN"))
 		m_breakParsePatch = true; // optmization
@@ -929,8 +929,8 @@ bool SNM_FXKnobParser::NotifyEndElement(int _mode,
 
 bool SNM_FXKnobParser::NotifyChunkLine(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
-	int _parsedOccurence, WDL_PtrList<WDL_String>* _parsedParents, 
-	WDL_String* _newChunk, int _updates)
+	int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 
+	WDL_FastString* _newChunk, int _updates)
 {
 	bool updated = false;
 	if (_mode == -1)

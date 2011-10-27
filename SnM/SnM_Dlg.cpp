@@ -325,21 +325,21 @@ void fillHWoutDropDown(HWND _hwnd, int _idc)
 	SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,x0,0);
 	
 	// get mono outputs
-	WDL_PtrList<WDL_String> monos;
+	WDL_PtrList<WDL_FastString> monos;
 	int monoIdx=0;
 	while (GetOutputChannelName(monoIdx))
 	{
-		monos.Add(new WDL_String(GetOutputChannelName(monoIdx)));
+		monos.Add(new WDL_FastString(GetOutputChannelName(monoIdx)));
 		monoIdx++;
 	}
 
 	// add stereo outputs
-	WDL_PtrList<WDL_String> stereos;
+	WDL_PtrList<WDL_FastString> stereos;
 	if (monoIdx)
 	{
 		for(int i=0; i < (monoIdx-1); i++)
 		{
-			WDL_String* hw = new WDL_String();
+			WDL_FastString* hw = new WDL_FastString();
 			hw->SetFormatted(256, "%s / %s", monos.Get(i)->Get(), monos.Get(i+1)->Get());
 			stereos.Add(hw);
 		}

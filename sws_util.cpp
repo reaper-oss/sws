@@ -430,3 +430,38 @@ void WinSpawnNotepad(const char* pFilename)
 	}
 #endif
 }
+
+//JFB: temp function (until WDL's ProjectContext does not use WDL_FastString)
+void makeEscapedConfigString(const char *in, WDL_FastString *out)
+{
+  int flags=0;
+  const char *p=in;
+  while (*p && flags!=7)
+  {
+    char c=*p++;
+    if (c=='"') flags|=1;
+    else if (c=='\'') flags|=2;
+    else if (c=='`') flags|=4;
+  }
+  if (flags!=7)
+  {
+    const char *src=(flags&1)?((flags&2)?"`":"'"):"\"";
+    out->Set(src);
+    out->Append(in);
+    out->Append(src);
+  }
+  else  // ick, change ` into '
+  {
+    out->Set("`");
+    out->Append(in);
+    out->Append("`");
+
+	// cast to char* OK here: the WDL_FastString length is not updated
+    char *p=(char*)(out->Get()+1);
+    while (*p && p[1])
+    {
+      if (*p == '`') *p='\'';
+      p++;
+    }
+  }
+}

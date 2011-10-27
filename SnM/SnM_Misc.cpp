@@ -222,11 +222,11 @@ void StringToExtensionConfig(WDL_String* _str, ProjectStateContext* _ctx)
 		WDL_String unformatedStr;
 		makeUnformatedConfigString(_str->Get(), &unformatedStr);
 
-		const char* pEOL = unformatedStr.Get()-1;
+		char* pEOL = unformatedStr.Get()-1;
 		char curLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 		for(;;) 
 		{
-			const char* pLine = pEOL+1;
+			char* pLine = pEOL+1;
 			pEOL = strchr(pLine, '\n');
 			if (!pEOL)
 				break;
@@ -326,7 +326,7 @@ void makeUnformatedConfigString(const char* _in, WDL_String* _out)
 	if (_in && _out)
 	{
 		_out->Set(_in);
-		const char* p = strchr(_out->Get(), '%');
+		char* p = strchr(_out->Get(), '%');
 		while(p)
 		{
 			int pos = p - _out->Get();

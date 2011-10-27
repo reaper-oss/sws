@@ -189,7 +189,7 @@ TrackSends::~TrackSends()
 void TrackSends::Build(MediaTrack* tr)
 {
 	// Get the HW sends from the track object string
-	const char* trackStr = SWS_GetSetObjectState(tr, NULL);
+	char* trackStr = SWS_GetSetObjectState(tr, NULL);
 	char line[4096];
 	int pos = 0;
 	while (GetChunkLine(trackStr, line, 4096, &pos, false))
@@ -233,7 +233,7 @@ void TrackSends::Build(MediaTrack* tr)
 void TrackSends::UpdateReaper(MediaTrack* tr, WDL_PtrList<TrackSendFix>* pFix)
 {
 	// First replace all the hw sends with the stored
-	const char* trackStr = SWS_GetSetObjectState(tr, NULL);
+	char* trackStr = SWS_GetSetObjectState(tr, NULL);
 	WDL_String newTrackStr;
 	char line[4096];
 	int pos = 0;

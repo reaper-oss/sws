@@ -227,10 +227,10 @@ virtual WDL_String* GetChunk()
 	if (!m_chunk->GetLength())
 	{
 		if (m_reaObject) {
-			const char* cData = m_reaObject ? SNM_GetSetObjectState(m_reaObject, NULL) : NULL;
+			char* cData = m_reaObject ? SNM_GetSetObjectState(m_reaObject, NULL) : NULL;
 			if (cData) {
 				m_chunk->Set(cData);
-				SNM_FreeHeapPtr((void*)cData);
+				SNM_FreeHeapPtr(cData);
 			}
 		}
 		else if (m_originalChunk)
@@ -381,7 +381,7 @@ bool ReplaceLine(int _pos, const char* _str = NULL)
 	if (_pos >=0 && GetChunk()->GetLength() > _pos) // + indirectly cache chunk if needed
 	{
 		int pos = _pos;
-		const char* pChunk = m_chunk->Get();
+		char* pChunk = m_chunk->Get();
 		while (pChunk[pos] && pChunk[pos] != '\n') pos++;
 		if (pChunk[pos] == '\n')
 		{
@@ -456,7 +456,7 @@ int GetLinePos(int _dir, const char* _parent, const char* _keyword, int _depth, 
 		pos--; // See ParsePatchCore()
 		if (_dir == -1 || _dir == 1)
 		{
-			const char* pChunk = m_chunk->Get();
+			char* pChunk = m_chunk->Get();
 			if (_dir == -1 && pos >= 2)
 				pos-=2; // zap the previous '\n'
 			while (pChunk[pos] && pChunk[pos] != '\n') pos += _dir;
@@ -505,7 +505,7 @@ protected:
 	bool m_isParsingSource;
 
 
-const char* SNM_GetSetObjectState(void* _obj, WDL_String* _str)
+char* SNM_GetSetObjectState(void* _obj, WDL_String* _str)
 {
 #ifdef _SWS_EXTENSION
 	return SWS_GetSetObjectState(_obj, _str);
@@ -679,7 +679,7 @@ int ParsePatchCore(
 #endif
 
 	// get/cache the chunk
-	const char* cData = GetChunk() ? GetChunk()->Get() : NULL;
+	char* cData = GetChunk() ? GetChunk()->Get() : NULL;
 	if (!cData)
 		return -1;
 
@@ -692,12 +692,12 @@ int ParsePatchCore(
 	WDL_String* subChunkKeyword = NULL;
 	WDL_PtrList_DeleteOnDestroy<WDL_String> parents;
 	m_isParsingSource = false; // avoids many strcmp() calls
-	const char* pEOL = cData-1;
+	char* pEOL = cData-1;
 
 	// ok, big stuff begins
 	for(;;)
 	{
-		const char* pLine = pEOL+1;
+		char* pLine = pEOL+1;
 		pEOL = strchr(pLine, '\n');
 
 		// break conditions
@@ -709,7 +709,7 @@ int ParsePatchCore(
 		int curLineLength = (int)(pEOL-pLine); // avoids many strlen() calls
 
 		// *** optimization (optionnal): skip some data and sub-chunks  ***
-		const char* pEOSkippedChunk = NULL;
+		char* pEOSkippedChunk = NULL;
 
 		// skip base64 data (e.g. FX states, sysEx events, ..)
 		if (!m_processBase64 &&
@@ -845,7 +845,7 @@ int ParsePatchCore(
 						case SNM_GET_CHUNK_CHAR:
 						{
 							if (_value) strcpy((char*)_value, lp.gettoken_str(_tokenPos));
-							const char* p = strstr(pLine, _keyWord);
+							char* p = strstr(pLine, _keyWord);
 							// returns the *KEYWORD* position + 1 ('cause 0 reserved for "not found")
 							return (p ? ((int)(p-cData+1)) : -1); 
 						}
@@ -881,7 +881,7 @@ int ParsePatchCore(
 						case SNM_GET_SUBCHUNK_OR_LINE:
 						{
 							if (_value) ((WDL_String*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine);
-							const char* pSub = strstr(pLine, _keyWord);
+							char* pSub = strstr(pLine, _keyWord);
 							// *KEYWORD* position + 1 (0 reserved for "not found")
 							posStartOfSubchunk = (pSub ? ((int)(pSub-cData+1)) : -1);
 							if (_value && *_keyWord == '<') subChunkKeyword = currentParent;
@@ -1058,12 +1058,10 @@ static int RemoveChunkLines(char* _chunk, WDL_PtrList<const char>* _searchStrs, 
 
 // WDL_String wrappers
 static int RemoveChunkLines(WDL_String* _chunk, const char* _searchStr, bool _checkBOL, int _checkEOLChar) {
-	return (_chunk ? RemoveChunkLines(_chunk->GetBuffer(), _searchStr, _checkBOL, _checkEOLChar) : 0);
-	// Chunk length doesn't change so no need to call _chunk->SetLen after GetBuffer()
+	return (_chunk ? RemoveChunkLines(_chunk->Get(), _searchStr, _checkBOL, _checkEOLChar) : 0);
 }
 static int RemoveChunkLines(WDL_String* _chunk, WDL_PtrList<const char>* _searchStrs, bool _checkBOL, int _checkEOLChar) {
-	return (_chunk ? RemoveChunkLines(_chunk->GetBuffer(), _searchStrs, _checkBOL, _checkEOLChar) : 0);
-	// Chunk length doesn't change so no need to call _chunk->SetLen after GetBuffer()
+	return (_chunk ? RemoveChunkLines(_chunk->Get(), _searchStrs, _checkBOL, _checkEOLChar) : 0);
 }
 
 // returns the position after the sub-chunk starting at _startPos in _chunk, or -1 if failed

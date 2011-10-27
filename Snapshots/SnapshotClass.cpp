@@ -560,15 +560,18 @@ void TrackSnapshot::GetSetEnvelope(MediaTrack* tr, WDL_String* str, const char* 
 	else if (str->GetLength())
 	{	// Set envelope
 		if (te)
-			GetSetEnvelopeState(te, (char*)str->Get(), 0);
+			GetSetEnvelopeState(te, str->Get(), 0);
 		else
 		{
 			WDL_String state;
 			state.Set(SWS_GetSetObjectState(tr, NULL));
-			 // Remove the last >
-			const char* p = strrchr(state.Get(), '>');
-			state.DeleteSub(p-state.Get(), state.GetLength());
-			SWS_GetSetObjectState(tr, &state);
+			*strrchr(state.Get(), '>') = 0; // Remove the last >
+			// Do a little dance to set the length properly
+			WDL_String newState;
+			newState.Set(state.Get());
+			newState.Append(str->Get());
+			newState.Append(">\n");
+			SWS_GetSetObjectState(tr, &newState);
 		}
 	}
 }

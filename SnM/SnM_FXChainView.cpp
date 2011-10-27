@@ -374,7 +374,7 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 							break;
 					}
 					if (MoveFile(fn, newFn) && GetCurList()->SetFromFullPath(slot, newFn))
-						ListView_SetItemText(m_hwndList, GetEditingItem(), DisplayToDataCol(2), (char*)pItem->m_shortPath.Get());
+						ListView_SetItemText(m_hwndList, GetEditingItem(), DisplayToDataCol(2), pItem->m_shortPath.Get());
 						// ^^ direct GUI update 'cause Update() is no-op when editing
 				}
 			}

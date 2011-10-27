@@ -77,7 +77,7 @@ void ObjectStateCache::EmptyCache()
 	m_orig.Empty(true, FreeHeapPtr);
 }
 
-const char* ObjectStateCache::GetSetObjState(void* obj, const char* str)
+char* ObjectStateCache::GetSetObjState(void* obj, const char* str)
 {
 	int i = m_obj.Find(obj);
 	if (i < 0)
@@ -104,9 +104,9 @@ const char* ObjectStateCache::GetSetObjState(void* obj, const char* str)
 
 ObjectStateCache* g_objStateCache = NULL;
 
-const char* SWS_GetSetObjectState(void* obj, WDL_String* str)
+char* SWS_GetSetObjectState(void* obj, WDL_String* str)
 {
-	const char* ret;
+	char* ret;
 	
 	if (g_objStateCache)
 		ret = g_objStateCache->GetSetObjState(obj, str ? str->Get() : NULL);
@@ -126,10 +126,6 @@ const char* SWS_GetSetObjectState(void* obj, WDL_String* str)
 	return ret;
 }
 
-void SWS_FreeHeapPtr(const char* ptr)
-{
-	SWS_FreeHeapPtr((void*)ptr);
-}
 
 void SWS_FreeHeapPtr(void* ptr)
 {
@@ -205,7 +201,7 @@ bool GetChunkLine(const char* chunk, char* line, int iLineMax, int* pos, bool bN
 void AppendChunkLine(WDL_String* chunk, const char* line)
 {
 	// Insert a line into the chunk before the closing >
-	const char* pIns = strrchr(chunk->Get(), '>');
+	char* pIns = strrchr(chunk->Get(), '>');
 	if (!pIns)
 		return;
 	int pos = (int)(pIns - chunk->Get());

@@ -184,7 +184,7 @@ void MESaveCCLanes(COMMAND_T* _ct)
 
 					char laneSlot[MAX_CC_LANES_SLOT] = "";
 					int eolLastPos = lastPos;
-					const char* pp = ptk.GetChunk()->Get(); //ok 'cause read only
+					char* pp = ptk.GetChunk()->Get(); //ok 'cause read only
 					while (pp[eolLastPos] && pp[eolLastPos] != '\n') eolLastPos++;
 
 					int i = firstPos, j=0;

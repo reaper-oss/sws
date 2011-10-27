@@ -39,7 +39,7 @@ void FilteredVisState::SetFilter(const char* cFilter)
 	static WDL_String sLCFilter;
 	sLCFilter.Set(m_sFilter.Get());
 	for (int i = 0; i < sLCFilter.GetLength(); i++)
-		sLCFilter.GetBuffer()[i] = tolower(sLCFilter.Get()[i]);
+		sLCFilter.Get()[i] = tolower(sLCFilter.Get()[i]);
 	m_parsedFilter->parse(sLCFilter.Get());
 }
 
@@ -163,7 +163,7 @@ bool FilteredVisState::MatchesFilter(MediaTrack* tr)
 	if (!sTrackName.GetLength())
 		return false;
 	for (int i = 0; i < sTrackName.GetLength(); i++)
-		sTrackName.GetBuffer()[i] = tolower(sTrackName.Get()[i]);
+		sTrackName.Get()[i] = tolower(sTrackName.Get()[i]);
 	for (int j = 0; j < m_parsedFilter->getnumtokens(); j++)
 		if (strstr(sTrackName.Get(), m_parsedFilter->gettoken_str(j)))
 			return true;

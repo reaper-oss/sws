@@ -657,10 +657,10 @@ int SNM_FindWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 #ifdef _SNM_THEMABLE
 		case WM_CTLCOLOREDIT:
 			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT)) {
-				int bg, txt; SNM_GetThemeWinColors(&bg, &txt);
+				int bg, txt; SNM_GetThemeEditColors(&bg, &txt);
 				SetBkColor((HDC)wParam, bg);
 				SetTextColor((HDC)wParam, txt);
-				return (INT_PTR)SNM_GetThemeBrush();
+				return (INT_PTR)SNM_GetThemeBrush(bg);
 			}
 			break;
 #endif

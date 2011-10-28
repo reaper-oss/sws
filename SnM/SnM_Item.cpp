@@ -272,7 +272,7 @@ void setEmptyTakeChunk(WDL_FastString* _chunk, int _recPass, int _color)
 		if (_color > 0)
 			_chunk->AppendFormatted(32, "TAKECOLOR %d\n", _color);
 		if (_recPass > 0)
-			_chunk->AppendFormatted(16, "RECPASS %d\n", _recPass);
+			_chunk->AppendFormatted(32, "RECPASS %d\n", _recPass);
 		_chunk->Append("<SOURCE EMPTY\n");
 		_chunk->Append(">\n");
 	}

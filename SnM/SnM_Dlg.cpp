@@ -59,31 +59,26 @@ LICE_CachedFont* SNM_GetThemeFont()
 HBRUSH g_hb = NULL;
 int g_lastThemeBrushColor = -1;
 
-HBRUSH SNM_GetThemeBrush()
+HBRUSH SNM_GetThemeBrush(int _col)
 {
-	if (g_lastThemeBrushColor != GSC_mainwnd(COLOR_WINDOW)) 
-	{
-		if (g_hb) {
-			DeleteObject(g_hb);
-			g_hb = NULL;
-		}
-		g_lastThemeBrushColor = GSC_mainwnd(COLOR_WINDOW);
-		g_hb = (HBRUSH)CreateSolidBrush(g_lastThemeBrushColor);
+	if (g_hb) {
+		DeleteObject(g_hb);
+		g_hb = NULL;
 	}
+	g_lastThemeBrushColor = (_col==-666 ? GSC_mainwnd(COLOR_WINDOW) : _col);
+	g_hb = (HBRUSH)CreateSolidBrush(g_lastThemeBrushColor);
 	return g_hb;
 }
 
-void SNM_GetThemeWinColors(int* _bg, int* _txt)
+void SNM_GetThemeListColors(int* _bg, int* _txt)
 {
 	int bgcol=-1, txtcol=-1;
-/*JFB
 	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
 	if (g_bv4 && ct) {
 		bgcol = ct->window_list[0];
 		txtcol = ct->window_list[1];
 		// note: grid (ct->window_list[2]) & selection colors not managed
 	}
-*/
 	if (bgcol == txtcol) { // safety (e.g. REAPER < v4.11pre4)
 		bgcol = GSC_mainwnd(COLOR_WINDOW);
 		txtcol = GSC_mainwnd(COLOR_BTNTEXT);
@@ -92,32 +87,25 @@ void SNM_GetThemeWinColors(int* _bg, int* _txt)
 	if (_txt) *_txt = txtcol;
 }
 
-// key = ini file key
-WDL_StringKeyedArray<int*> g_lastListViewColors(true, deleteintptr); 
+void SNM_GetThemeEditColors(int* _bg, int* _txt)
+{
+	int bgcol=-1, txtcol=GSC_mainwnd(COLOR_BTNTEXT);
+	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
+	if (ct) bgcol = ct->main_editbk;
+	if (bgcol == txtcol) bgcol = GSC_mainwnd(COLOR_WINDOW);
+	if (_bg) *_bg = bgcol;
+	if (_txt) *_txt = txtcol;
+}
 
-void SNM_ThemeListView(SWS_ListView* _lv, bool _force)
+void SNM_ThemeListView(SWS_ListView* _lv)
 {
 #ifdef _SNM_THEMABLE
-	if (_lv && _lv->GetHWND())
-	{
+	if (_lv && _lv->GetHWND()) {
 		int bgcol, txtcol;
-		SNM_GetThemeWinColors(&bgcol, &txtcol);
-
-		// lazy update of the cache
-		int* lastListCols = g_lastListViewColors.Get(_lv->GetINIKey(), NULL);
-		if (!lastListCols) {
-			lastListCols = new int[2];
-			lastListCols[0] = -1; lastListCols[1] = -1; 
-			g_lastListViewColors.Insert(_lv->GetINIKey(), lastListCols);
-		}
-
-		if (_force || lastListCols[0] != bgcol || lastListCols[1] != txtcol) {
-			lastListCols[0] = bgcol;
-			lastListCols[1] = txtcol;
-			ListView_SetBkColor(_lv->GetHWND(), bgcol);
-			ListView_SetTextColor(_lv->GetHWND(), txtcol);
-			ListView_SetTextBkColor(_lv->GetHWND(), bgcol);
-		}
+		SNM_GetThemeListColors(&bgcol, &txtcol);
+		ListView_SetBkColor(_lv->GetHWND(), bgcol);
+		ListView_SetTextColor(_lv->GetHWND(), txtcol);
+		ListView_SetTextBkColor(_lv->GetHWND(), bgcol);
 	}
 #endif
 }

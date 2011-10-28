@@ -330,7 +330,7 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_pLists.Add(new SNM_LiveConfigsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
-	SNM_ThemeListView(m_pLists.Get(0), true);
+	SNM_ThemeListView(m_pLists.Get(0));
 
 	// Load prefs 
 	g_approxDelayMsCC = GetPrivateProfileInt("LIVE_CONFIGS", "CC_DELAY", 250, g_SNMiniFilename.Get());
@@ -876,10 +876,8 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_PAINT:
 		{
-			SNM_ThemeListView(m_pLists.Get(0), false);
-
-			int xo, yo;
-			RECT r;
+			SNM_ThemeListView(m_pLists.Get(0));
+			int xo, yo; RECT r;
 			GetClientRect(m_hwnd,&r);	
 			m_parentVwnd.SetPosition(&r);
 			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
@@ -905,10 +903,10 @@ int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 #ifdef _SNM_THEMABLE
 		case WM_CTLCOLOREDIT:
 			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT)) {
-				int bg, txt; SNM_GetThemeWinColors(&bg, &txt);
+				int bg, txt; SNM_GetThemeListColors(&bg, &txt);
 				SetBkColor((HDC)wParam, bg);
 				SetTextColor((HDC)wParam, txt);
-				return (INT_PTR)SNM_GetThemeBrush();
+				return (INT_PTR)SNM_GetThemeBrush(bg);
 			}
 			break;
 #endif

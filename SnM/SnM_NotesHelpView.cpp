@@ -856,11 +856,12 @@ int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
 #ifdef _SNM_THEMABLE
-		case WM_CTLCOLOREDIT: 
+		case WM_CTLCOLOREDIT:
 			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT)) {
-				SetBkColor((HDC)wParam, GSC_mainwnd(COLOR_WINDOW));
-				SetTextColor((HDC)wParam, GSC_mainwnd(COLOR_BTNTEXT));
-				return (INT_PTR)SNM_GetThemeBrush();
+				int bg, txt; SNM_GetThemeEditColors(&bg, &txt);
+				SetBkColor((HDC)wParam, bg);
+				SetTextColor((HDC)wParam, txt);
+				return (INT_PTR)SNM_GetThemeBrush(bg);
 			}
 			break;
 #endif

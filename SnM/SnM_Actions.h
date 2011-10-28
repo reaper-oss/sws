@@ -186,9 +186,10 @@ bool isCyclationsWndDisplayed(COMMAND_T*);
 
 // *** SnM_Dlg.cpp ***
 LICE_CachedFont* SNM_GetThemeFont();
-HBRUSH SNM_GetThemeBrush();
-void SNM_GetThemeWinColors(int* _bg, int* _txt);
-void SNM_ThemeListView(SWS_ListView* _lv, bool _force);
+HBRUSH SNM_GetThemeBrush(int _col=-666);
+void SNM_GetThemeListColors(int* _bg, int* _txt);
+void SNM_GetThemeEditColors(int* _bg, int* _txt);
+void SNM_ThemeListView(SWS_ListView* _lv);
 LICE_IBitmap* SNM_GetThemeLogo();
 bool AddSnMLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h);
 bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep=SNM_DEF_VWND_X_STEP);

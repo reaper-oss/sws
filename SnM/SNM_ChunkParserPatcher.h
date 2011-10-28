@@ -1,5 +1,5 @@
 /******************************************************************************
-** SNM_ChunkParserPatcher.h - v1.232
+** SNM_ChunkParserPatcher.h - v1.234
 ** Copyright (C) 2008-2011, Jeffos
 **
 **    This software is provided 'as-is', without any express or implied
@@ -30,7 +30,7 @@
 // In the latter case, a SNM_ChunkParserPatcher instance only gets (and sets, 
 // if needed) the chunk once, in between, the user works on a cache. *If any* 
 // the updates are automatically comitted when destroying a SNM_ChunkParserPatcher 
-// instance (can also be forced/done manually, see m_autoCommit & Commit()).
+// instance (can also be avoided/forced, see m_autoCommit & Commit()).
 //
 // See many use-cases here: 
 // http://code.google.com/p/sws-extension/source/browse/trunk#trunk/SnM
@@ -289,7 +289,7 @@ virtual bool Commit(bool _force = false)
 }
 
 const char* GetInfo() {
-	return "SNM_ChunkParserPatcher - v1.232";
+	return "SNM_ChunkParserPatcher - v1.234";
 }
 
 void SetProcessBase64(bool _enable) {
@@ -625,7 +625,7 @@ void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch,
 ///////////////////////////////////////////////////////////////////////////////
 // ParsePatchCore()
 //
-// Globaly, the method is tolerant; the less parameters provided, the more parsed
+// Globaly, the func is tolerant; the less parameters provided, the more parsed
 // lines will be notified to inherited instances (through NotifyChunkLine()) or, 
 // when it's used direcly, the more lines will be read/altered.
 // Examples: parse all lines, is the n-th FX bypassed under parent 'FXCHAIN'? etc..
@@ -877,7 +877,11 @@ int ParsePatchCore(
 							break;
 						case SNM_GET_SUBCHUNK_OR_LINE:
 						{
-							if (_value) ((WDL_FastString*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine);
+							if (_value) {
+								// faster than AppendFormatted(, "%s\n",);
+								((WDL_FastString*)_value)->Append(curLine);
+								((WDL_FastString*)_value)->Append("\n");
+							}
 							const char* pSub = strstr(pLine, _keyWord);
 							// *KEYWORD* position + 1 (0 reserved for "not found")
 							posStartOfSubchunk = (pSub ? ((int)(pSub-cData+1)) : -1);
@@ -887,7 +891,11 @@ int ParsePatchCore(
 						break;
 						case SNM_GET_SUBCHUNK_OR_LINE_EOL:
 						{							
-							if (_value) ((WDL_FastString*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine);
+							if (_value) {
+								// faster than AppendFormatted(, "%s\n",);
+								((WDL_FastString*)_value)->Append(curLine);
+								((WDL_FastString*)_value)->Append("\n");
+							}
 							if (*_keyWord == '<') // no test on _value: has to go to the end of subchunk
 								subChunkKeyword = currentParent;
 							else return ((int)(pEOL-cData+1)); // *EOL* position + 1 (0 reserved for "not found")
@@ -936,16 +944,22 @@ int ParsePatchCore(
 			else if (subChunkKeyword) 
 			{
 				alter = (_mode == SNM_REPLACE_SUBCHUNK_OR_LINE);
-				if (_value && (_mode == SNM_GET_SUBCHUNK_OR_LINE || _mode == SNM_GET_SUBCHUNK_OR_LINE_EOL))
-					((WDL_FastString*)_value)->AppendFormatted(curLineLength+2, "%s\n", curLine);
+				if (_value && (_mode == SNM_GET_SUBCHUNK_OR_LINE || _mode == SNM_GET_SUBCHUNK_OR_LINE_EOL)) {
+					// faster than AppendFormatted(, "%s\n",);
+					((WDL_FastString*)_value)->Append(curLine);
+					((WDL_FastString*)_value)->Append("\n");
+				}
 			}
 		}
 		updates += (_write && alter);
 
 		// copy current line if RW mode & if it wasn't altered above & if inerited classes 
 		// authorize it (for optimization when using matching criteria: depth, parent,..)
-		if (_write && !alter && lpNumTokens)
-			newChunk->AppendFormatted(curLineLength+2, "%s\n", curLine);
+		if (_write && !alter && lpNumTokens) {
+			// faster than newChunk->AppendFormatted(curLineLength+2, "%s\n", curLine);
+			newChunk->Append(curLine);
+			newChunk->Append("\n");
+		}
 	}
 
 	// update cache if needed
@@ -1063,8 +1077,8 @@ static int RemoveChunkLines(WDL_FastString* _chunk, WDL_PtrList<const char>* _se
 	return (_chunk ? RemoveChunkLines((char*)_chunk->Get(), _searchStrs, _checkBOL, _checkEOLChar) : 0);
 }
 
-// returns the position after the sub-chunk starting at _startPos in _chunk, or -1 if failed
-// no deep checks here: faster (but relies on chunk validity with left-trimed lines)
+// returns the end position of the sub-chunk starting at _startPos in _chunk (-1 if failed)
+// no deep checks here: faster but it relies on the chunk consistency (+ left-trimed lines)
 static int FindEndOfSubChunk(const char* _chunk, int _startPos)
 {
 	if (_chunk && _startPos >= 0) {

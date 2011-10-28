@@ -638,7 +638,7 @@ void SNM_ResourceWnd::OnInitDlg()
 #endif
 */
 	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
-	SNM_ThemeListView(m_pLists.Get(0), true);
+	SNM_ThemeListView(m_pLists.Get(0));
 
 	// Load prefs 
 	//JFB!!! pb qd 1ere init (no .ini)
@@ -1404,8 +1404,7 @@ int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_PAINT:
 		{
-			SNM_ThemeListView(m_pLists.Get(0), false);
-
+			SNM_ThemeListView(m_pLists.Get(0));
 			int xo, yo; RECT r;
 			GetClientRect(m_hwnd, &r);	
 			m_parentVwnd.SetPosition(&r);
@@ -1431,13 +1430,21 @@ int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 #ifdef _SNM_THEMABLE
 		case WM_CTLCOLOREDIT:
-			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT) || (HWND)lParam == GetDlgItem(m_hwnd, IDC_FILTER)) {
-				int bg, txt; SNM_GetThemeWinColors(&bg, &txt);
+		{
+			int bg, txt; bool match=false;
+			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT)) {
+				match = true; SNM_GetThemeListColors(&bg, &txt);
+			}
+			else if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_FILTER)) {
+				match = true; SNM_GetThemeEditColors(&bg, &txt);
+			}
+			if (match) {
 				SetBkColor((HDC)wParam, bg);
 				SetTextColor((HDC)wParam, txt);
-				return (INT_PTR)SNM_GetThemeBrush();
+				return (INT_PTR)SNM_GetThemeBrush(bg);
 			}
 			break;
+		}
 #endif
 	}
 	return 0;

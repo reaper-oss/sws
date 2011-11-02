@@ -101,7 +101,6 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 		}
 		return false;
 	};
-	int PromptForSlot(const char* _title);
 	bool GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg=false);
 	bool BrowseSlot(int _slot, char* _fn=NULL, int _fnSz=0);
 	void EditSlot(int _slot);

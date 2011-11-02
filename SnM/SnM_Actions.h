@@ -32,6 +32,7 @@
 #include "version.h"
 
 //#define _SNM_MISC
+//#define _SNM_CYCLACTION_OSX
 #ifdef _WIN32
 #define _SNM_PRESETS
 #define _SNM_THEMABLE
@@ -180,9 +181,16 @@ void SnMCSurfSetTrackListChange();
 
 // *** SnM_Cyclactions.cpp
 int RegisterCyclation(const char* _name, bool _toggle, int _type, int _cycleId, int _cmdId);
+#ifdef _SNM_CYCLACTION_OSX
+int CyclactionViewInit();
+void CyclactionViewExit();
+void OpenCyclactionView(COMMAND_T*);
+bool IsCyclactionViewDisplayed(COMMAND_T*);
+#else
 int CyclactionsInit();
 void openCyclactionsWnd(COMMAND_T*);
 bool isCyclationsWndDisplayed(COMMAND_T*);
+#endif
 
 // *** SnM_Dlg.cpp ***
 LICE_CachedFont* SNM_GetThemeFont();
@@ -196,7 +204,7 @@ bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, i
 void SNM_UIInit();
 void SNM_UIExit();
 void SNM_ShowMsg(const char* _msg, const char* _title="", HWND _hParent=NULL); 
-int PromptForMIDIChannel(const char* _title);
+int PromptForInteger(const char* _title, const char* _what, int _min, int _max);
 void openCueBussWnd(COMMAND_T*);
 bool isCueBussWndDisplayed(COMMAND_T*);
 #ifdef _SNM_MISC
@@ -468,6 +476,9 @@ void loadImportTrackTemplate(COMMAND_T*);
 bool autoSaveTrackSlots(bool _delItems, bool _delEnvs, const char* _dirPath, char* _fn, int _fnSize);
 void setMIDIInputChannel(COMMAND_T*);
 void remapMIDIInputChannel(COMMAND_T*);
+void StopTrackPreviewsRun();
+void PlaySelTrackPreview(COMMAND_T*);
+void ClearMediaFileSlot(COMMAND_T*);
 
 // *** SnM_Windows.cpp ***
 bool SNM_IsActiveWindow(HWND _h);
@@ -475,7 +486,7 @@ bool IsChildOf(HWND _hChild, const char* _title, int _nComp = -1);
 HWND GetReaWindowByTitle(const char* _title, int _nComp = -1);
 HWND SearchWindow(const char* _title);
 HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
-int GetSelectedActionId(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc = NULL, int _descSize = -1);
+int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc = NULL, int _descSize = -1);
 void showFXChain(COMMAND_T*);
 void hideFXChain(COMMAND_T*);
 void toggleFXChain(COMMAND_T*);

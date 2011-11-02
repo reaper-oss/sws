@@ -67,6 +67,30 @@ private:
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> m_cmds;
 };
 
+
+#ifdef _SNM_CYCLACTION_OSX
+class SNM_CyclactionWnd : public SWS_DockWnd
+{
+public:
+	SNM_CyclactionWnd();
+	void OnCommand(WPARAM wParam, LPARAM lParam);
+	void Update();
+protected:
+	void OnInitDlg();
+	void OnDestroy();
+	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
+	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	HMENU OnContextMenu(int x, int y);
+
+	// WDL UI
+	WDL_VWnd_Painter m_vwnd_painter;
+	WDL_VWnd m_parentVwnd;
+	WDL_VirtualComboBox m_cbSection;
+	WDL_VirtualIconButton m_btnUndo;
+	WDL_VirtualStaticText m_txtSection;
+};
+#endif
+
 class SNM_CyclactionsView : public SWS_ListView
 {
 public:

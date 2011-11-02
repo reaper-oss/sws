@@ -64,7 +64,7 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errMsg)
 {
 	// Prompt for slot if needed
-	if (_slot == -1) _slot = g_prjTemplateFiles.PromptForSlot(_title); //loops on err
+	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_prjTemplateFiles.GetSize()); // loops on err
 	if (_slot == -1) return; // user has cancelled
 
 	char fn[BUFFER_SIZE]="";

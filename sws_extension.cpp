@@ -711,6 +711,7 @@ extern "C"
 		IMPAPI(parse_timestr_pos);
 		IMPAPI(PCM_Sink_Create);
 		IMPAPI(PCM_Source_CreateFromFile);
+		IMPAPI(PCM_Source_CreateFromFileEx);
 		IMPAPI(PCM_Source_CreateFromSimple);
 		IMPAPI(PCM_Source_CreateFromType);
 		IMPAPI(PlayPreview);

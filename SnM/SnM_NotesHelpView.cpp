@@ -80,7 +80,7 @@ int g_lastActionListSel = -1;
 DWORD g_lastActionListCmd = 0;
 char g_lastActionSection[SNM_MAX_SECTION_NAME_LEN] = "";
 char g_lastActionId[SNM_MAX_ACTION_CUSTID_LEN] = "";
-char g_lastActionDesc[128] = ""; 
+char g_lastActionDesc[SNM_MAX_ACTION_NAME_LEN] = ""; 
 
 double g_lastMarkerPos = -1.0;
 int g_lastMarkerIdx = -1;
@@ -394,24 +394,22 @@ void SNM_NotesHelpWnd::saveCurrentMarkerRegionName()
 int SNM_NotesHelpWnd::updateActionHelp()
 {
 	int iSel, actionId;
-	char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "", desc[128] = "";
-	iSel = GetSelectedActionId(g_lastActionSection, SNM_MAX_SECTION_NAME_LEN, &actionId, idstr, 64, desc, 128);
+	char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "", desc[SNM_MAX_ACTION_NAME_LEN] = "";
+	iSel = GetSelectedAction(g_lastActionSection, SNM_MAX_SECTION_NAME_LEN, &actionId, idstr, SNM_MAX_ACTION_CUSTID_LEN, desc, SNM_MAX_ACTION_NAME_LEN);
 	if (iSel >= 0)
 	{
 		if (iSel != g_lastActionListSel)
 		{
 			g_lastActionListSel = iSel;
 			g_lastActionListCmd = actionId; 
-			lstrcpyn(g_lastActionDesc, desc, 128);
+			lstrcpyn(g_lastActionDesc, desc, SNM_MAX_ACTION_NAME_LEN);
 			lstrcpyn(g_lastActionId, idstr, SNM_MAX_ACTION_CUSTID_LEN);
 
 			if (g_lastActionId && *g_lastActionId && g_lastActionDesc && *g_lastActionDesc)
 			{
-				// skip macros
-				if (!_strnicmp(g_lastActionDesc, "Custom:", 7))
+				if (!_strnicmp(g_lastActionDesc, "Custom:", 7)) // skip macros
 					SetText(g_lastActionId);
-				else
-				{
+				else {
 					char buf[MAX_HELP_LENGTH] = "";
 					loadHelp(g_lastActionId, buf, MAX_HELP_LENGTH);
 					SetText(buf);

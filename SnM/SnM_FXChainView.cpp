@@ -92,7 +92,7 @@
 #define TRT_LOAD_APPLY_ITEMS_STR		"Replace selected tracks' items w/ track template ones"
 #define TRT_LOAD_PASTE_ITEMS_STR		"Paste track template's items to selected tracks"
 #define PRJ_SELECT_LOAD_STR				"Select/load project template"
-#define PRJ_SELECT_LOAD_NEWTAB_STR		"Select/load project template (new tab)"
+#define PRJ_SELECT_LOAD_NEWTAB_STR		"Select/load project templates (new tab)"
 
 #define DRAGNDROP_EMPTY_SLOT_FILE		">Empty<"
 #define FILTER_DEFAULT_STR				"Filter"
@@ -174,35 +174,6 @@ bool IsFiltered() {
 // FileSlotList
 ///////////////////////////////////////////////////////////////////////////////
 
-// returns -1 on cancel
-int FileSlotList::PromptForSlot(const char* _title)
-{
-	int slot = -1;
-	while (slot == -1)
-	{
-		char promptMsg[64]; 
-		_snprintf(promptMsg, 64, "Slot (1-%d):", GetSize());
-
-		char reply[8]= ""; // empty default slot
-		if (GetUserInputs(_title, 1, promptMsg, reply, 8))
-		{
-			slot = atoi(reply); //0 on error
-			if (slot > 0 && slot <= GetSize()) {
-				return (slot-1);
-			}
-			else 
-			{
-				slot = -1;
-				char errMsg[128];
-				_snprintf(errMsg, 128, "Invalid %s slot!\nPlease enter a value in [1; %d].", m_desc.Get(), GetSize());
-				MessageBox(GetMainHwnd(), errMsg, "S&M - Error", /*MB_ICONERROR | */MB_OK);
-			}
-		}
-		else return -1; // user has cancelled
-	}
-	return -1; //in case the slot comes from mars
-}
-
 void FileSlotList::ClearSlot(int _slot, bool _guiUpdate) {
 	if (_slot >=0 && _slot < GetSize())	{
 		Get(_slot)->Clear();
@@ -212,7 +183,7 @@ void FileSlotList::ClearSlot(int _slot, bool _guiUpdate) {
 }
 
 void FileSlotList::ClearSlotPrompt(COMMAND_T* _ct) {
-	int slot = PromptForSlot(SNM_CMD_SHORTNAME(_ct)); //loops on err
+	int slot = PromptForInteger(SNM_CMD_SHORTNAME(_ct), "Slot", 1, GetSize()); //loops on err
 	if (slot == -1) return; // user has cancelled
 	else ClearSlot(slot);
 }
@@ -933,13 +904,25 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 		// ***** Project template *****
 		case PRJ_SELECT_LOAD_MSG:
-		case PRJ_SELECT_LOAD_NEWTAB_MSG:
 			if (item && slot >= 0) {
-				loadOrSelectProject(wParam == PRJ_SELECT_LOAD_MSG ? PRJ_SELECT_LOAD_STR : PRJ_SELECT_LOAD_NEWTAB_STR, slot, wParam == PRJ_SELECT_LOAD_NEWTAB_MSG, !wasDefaultSlot);
+				loadOrSelectProject(PRJ_SELECT_LOAD_STR, slot, false, !wasDefaultSlot);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
 			break;
+		case PRJ_SELECT_LOAD_NEWTAB_MSG:
+		{
+			bool updt = false;
+			while(item) {
+				slot = GetCurList()->Find(item);
+				wasDefaultSlot = item->IsDefault();
+				loadOrSelectProject(PRJ_SELECT_LOAD_NEWTAB_STR, slot, true, !wasDefaultSlot);
+				updt |= (wasDefaultSlot && !item->IsDefault()); // slot has been filled ?
+				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
+			}
+			if (updt) Update();
+			break;
+		}
 		case PRJ_AUTO_FILL_RECENTS_MSG:
 		{
 			int startSlot = GetCurList()->GetSize();

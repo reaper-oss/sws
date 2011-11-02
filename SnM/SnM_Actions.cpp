@@ -32,6 +32,11 @@
 #include "../Misc/Adam.h"
 
 
+#ifdef _SNM_MISC
+void QuickTest(COMMAND_T* _ct) {}
+#endif
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // S&M "static" actions (main section)
 ///////////////////////////////////////////////////////////////////////////////
@@ -442,6 +447,11 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle enable live config 8" }, "S&M_TOGGLE_LIVE_CFG8", ToggleEnableLiveConfig, NULL, 7, IsLiveConfigEnabled},
 
 	// Cyclactions ---------------------------------------------------------------
+#ifdef _SNM_CYCLACTION_OSX
+	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor" }, "S&M_CREATE_CYCLACTION", OpenCyclactionView, "S&&M Cycle Action editor", 0, IsCyclactionViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor (event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", OpenCyclactionView, "S&&M Cycle Action editor", 1, IsCyclactionViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor (piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", OpenCyclactionView, "S&&M Cycle Action editor", 2, IsCyclactionViewDisplayed},
+#else
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor" }, "S&M_CREATE_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 0, isCyclationsWndDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open Cycle Action editor (MIDI Editor event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", openCyclactionsWnd, "S&&M Cycle Action editor", 1, isCyclationsWndDisplayed},
@@ -450,6 +460,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Create cycle action" }, "S&M_CREATE_CYCLACTION", openCyclactionsWnd, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Create cycle action (MIDI Editor event list)" }, "S&M_CREATE_ME_LIST_CYCLACTION", openCyclactionsWnd, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Create cycle action (MIDI Editor piano roll)" }, "S&M_CREATE_ME_PIANO_CYCLACTION", openCyclactionsWnd, NULL, 2},
+#endif
 #endif
 
 	// REC inputs -------------------------------------------------------------
@@ -490,6 +501,9 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 15" }, "S&M_MAP_MIDI_INPUT_CH15", remapMIDIInputChannel, NULL, 15},
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 16" }, "S&M_MAP_MIDI_INPUT_CH16", remapMIDIInputChannel, NULL, 16},
 
+	// Media file slots -------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Clear media file slot..." }, "S&M_CLR_MEDIAFILE_SLOT", ClearMediaFileSlot, NULL, },
+
 	// Other, misc ------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Show action list (S&M Extension section)" }, "S&M_ACTION_LIST", SNM_ShowActionList, NULL, 0},
 #ifdef _WIN32
@@ -508,6 +522,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: test -> Padre show take mute envelope" }, "S&M_TMP3", ShowTakeEnvPadreTest, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: stuff..." }, "S&M_TMP4", OpenStuff, NULL, },
 	{ { DEFACCEL, "SWS/S&M: test -> WDL_String" }, "S&M_TMP5", TestWDLString, NULL, },
+	{ { DEFACCEL, "SWS/S&M: test" }, "S&M_TMP6", QuickTest, NULL, },
 #endif
 
 #ifdef _SWS_MENU
@@ -567,6 +582,8 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Save displayed CC lanes, slot %02d" }, "S&M_MESAVECCLANES", MESaveCCLanes, NULL, 4},
 
 	{ { DEFACCEL, "SWS/S&M: Set selected tracks to group %02d (default flags)" }, "S&M_SET_TRACK_GROUP", SetTrackGroup, SNM_MAX_TRACK_GROUPS_STR, 8},
+
+	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks, slot %02d" }, "S&M_PLAYMEDIA_SELTRACK", PlaySelTrackPreview, NULL, 8},
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
@@ -715,7 +732,7 @@ int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec)
 			if (ct->getEnabled)
 				g_SNMSection_toggles.Insert(ct->accel.accel.cmd, ct);
 
-			if (!g_SNMSection_minCmdId && g_SNMSection_minCmdId > ct->accel.accel.cmd)
+			if (!g_SNMSection_minCmdId || g_SNMSection_minCmdId > ct->accel.accel.cmd)
 				g_SNMSection_minCmdId = ct->accel.accel.cmd;
 			if (ct->accel.accel.cmd > g_SNMSection_maxCmdId)
 				g_SNMSection_maxCmdId = ct->accel.accel.cmd;
@@ -843,9 +860,9 @@ void IniFileExit()
 	// save general prefs & info
 	iniSection.AppendFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build #%d\n", SWS_VERSION); 
 	iniSection.AppendFormatted(BUFFER_SIZE, "; %s\n", g_SNMiniFilename.Get()); 
-	iniSection.AppendFormatted(64, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0); 
+	iniSection.AppendFormatted(128, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_toolbarsAutoRefreshFreq);
-	iniSection.AppendFormatted(64, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1 : 0); 
+	iniSection.AppendFormatted(128, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1 : 0); 
 	SaveIniSection("General", &iniSection, g_SNMiniFilename.Get());
 
 	// save dynamic actions
@@ -898,7 +915,11 @@ int SnMInit(reaper_plugin_info_t* _rec)
 	ResourceViewInit();
 	NotesHelpViewInit();
 	FindViewInit();
+#ifdef _SNM_CYCLACTION_OSX
+	CyclactionViewInit();
+#else
 	CyclactionsInit();
+#endif
 	return 1;
 }
 
@@ -980,6 +1001,9 @@ void SnMCSurfRun()
 		if (g_toolbarsAutoRefreshEnabled) 
 			RefreshToolbars();
 	}
+
+	// stop playing track previews if needed
+	StopTrackPreviewsRun();
 
 	// perform scheduled jobs
 	SWS_SectionLock lock(&g_jobsLock);

@@ -205,8 +205,11 @@ HWND GetActionListBox(char* _currentSection, int _sectionMaxSize)
 	return (actionsWnd ? GetDlgItem(actionsWnd, 0x52B) : NULL);
 }
 
-// no multi-selection mgmt here..
-int GetSelectedActionId(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc, int _descSize)
+// returns the list view's selected item, -1 if failed, -2 if the related action's custom id cannot be retreived
+// note: no multi-selection mgmt here..
+// API LIMIT: things like kbd_getTextFromCmd() cannot work for other sections than the main one
+// => TODO: clean-up when we'll be able to access sections properly..
+int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc, int _descSize)
 {
 	HWND hList = GetActionListBox(_section, _secSize);
 	if (hList && ListView_GetSelectedCount(hList))
@@ -221,15 +224,30 @@ int GetSelectedActionId(char* _section, int _secSize, int* _cmdId, char* _id, in
 			ListView_GetItem(hList, &li);
 			if (li.state == LVIS_SELECTED)
 			{
-				if (_cmdId)
-					*_cmdId = (int)li.lParam;
+				int cmdId = (int)li.lParam;
+				if (_cmdId) *_cmdId = cmdId;
 
+				char actionName[SNM_MAX_ACTION_NAME_LEN] = "";
+				ListView_GetItemText(hList, i, 1, actionName, SNM_MAX_ACTION_NAME_LEN); //JFB displaytodata? (ok: columns not re-orderable yet)
 				if (_desc && _descSize > 0)
-					ListView_GetItemText(hList, i, 1, _desc, _descSize); //JFB displaytodata?
+					lstrcpyn(_desc, actionName, _descSize);
 
-				ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, _id, _idSize);  //JFB displaytodata?
-				if (_id && !*_id)
-					sprintf(_id, "%d", (int)li.lParam);
+				if (_id && _idSize > 0)
+				{
+					// SWS action? => get the custom id in a reliable way
+					if (COMMAND_T* ct = SWSGetCommandByID(cmdId)) {						
+						_snprintf(_id, _idSize, "_%s", ct->id);
+						return i;
+					}
+					// best effort to get the custom id (relies on displayed columns..)
+					ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
+					if (!*_id) {
+						if (_strnicmp(actionName, "Custom:", 7))
+							_snprintf(_id, _idSize, "%d", (int)li.lParam);
+						else
+							return -2;
+					}
+				}
 				return i;
 			}
 		}
@@ -871,4 +889,5 @@ void GetVisibleTCPTracks(WDL_PtrList<void>* _trList)
 			_trList->Add((void*)GetWindowLongPtr(w, GWLP_USERDATA));
 	}
 #endif
-} 
+}
+

@@ -255,21 +255,25 @@ void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent)
 		DisplayInfoBox(h, _title, msg);
 }
 
-//returns -1 on cancel, MIDI channel otherwise (0-based)
-int PromptForMIDIChannel(const char* _title)
+// _min and _max: 1-based (i.e. as displayed)
+//returns -1 on cancel, 0-based number otherwise
+int PromptForInteger(const char* _title, const char* _what, int _min, int _max)
 {
-	int ch = -1;
-	while (ch == -1)
+	WDL_String str;
+	int nb = -1;
+	while (nb == -1)
 	{
+		str.SetFormatted(128, "%s (%d-%d):", _what, _min, _max);
 		char reply[8]= ""; // no default
-		if (GetUserInputs(_title, 1, "MIDI Channel (1-16):", reply, 8))
+		if (GetUserInputs(_title, 1, str.Get(), reply, 8))
 		{
-			ch = atoi(reply); //0 on error
-			if (ch > 0 && ch <= 16)
-				return (ch-1);
+			nb = atoi(reply); // 0 on error
+			if (nb >= _min && nb <= _max)
+				return (nb-1);
 			else {
-				ch = -1;
-				MessageBox(GetMainHwnd(), "Invalid MIDI channel!\nPlease enter a value in [1; 16].", "S&M - Error", MB_OK);
+				nb = -1;
+				str.SetFormatted(128, "Invalid %s!\nPlease enter a value in [%d; %d].", _what, _min, _max);
+				MessageBox(GetMainHwnd(), str.Get(), "S&M - Error", MB_OK);
 			}
 		}
 		else return -1; // user has cancelled

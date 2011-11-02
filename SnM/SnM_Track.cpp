@@ -101,10 +101,9 @@ void removeTrackGrouping(COMMAND_T* _ct)
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
-bool SetTrackGroup(int _group)
+bool GetDefaultGroupFlags(WDL_FastString* _line, int _group)
 {
-	int updates = 0;
-	if (_group >= 0 && _group < SNM_MAX_TRACK_GROUPS)
+	if (_line && _group >= 0 && _group < SNM_MAX_TRACK_GROUPS)
 	{
 		double grpMask = pow(2.0, _group*1.0);
 		char grpDefault[SNM_MAX_CHUNK_LINE_LENGTH] = "";
@@ -115,16 +114,28 @@ bool SetTrackGroup(int _group)
 			defFlags.Append("0");
 		}
 
-		WDL_FastString newFlags("GROUP_FLAGS ");
+		_line->Set("GROUP_FLAGS ");
 		LineParser lp(false);
 		if (!lp.parse(defFlags.Get())) {
 			for (int i=0; i < lp.getnumtokens(); i++) {
 				int n = lp.gettoken_int(i);
-				newFlags.AppendFormatted(128, "%d", !n ? 0 : (int)grpMask);
-				newFlags.Append(i == (lp.getnumtokens()-1) ? "\n" : " ");
+				_line->AppendFormatted(32, "%d", !n ? 0 : (int)grpMask);
+				_line->Append(i == (lp.getnumtokens()-1) ? "\n" : " ");
 			}
+			return true;
 		}
+	}
+	if (_line) _line->Set("");
+	return false;
+}
 
+bool SetTrackGroup(int _group)
+{
+	int updates = 0;
+	WDL_FastString defFlags;
+	if (GetDefaultGroupFlags(&defFlags, _group))
+	{
+		double grpMask = pow(2.0, _group*1.0);
 		for (int i = 1; i <= GetNumTracks(); i++) // skip master
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -135,7 +146,7 @@ bool SetTrackGroup(int _group)
 				int pos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", -1, 0, 0, NULL, NULL, "INQ");
 				if (pos > 0) {
 					pos--; // see SNM_ChunkParserPatcher..
-					p.GetChunk()->Insert(newFlags.Get(), pos);				
+					p.GetChunk()->Insert(defFlags.Get(), pos);				
 					p.SetUpdates(++updates); // as we're directly working on the cached chunk..
 				}
 			}
@@ -550,7 +561,7 @@ void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _i
 	bool updated = false;
 
 	// Prompt for slot if needed
-	if (_slot == -1) _slot = g_trTemplateFiles.PromptForSlot(_title); //loops on err
+	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_trTemplateFiles.GetSize()); // loops on err
 	if (_slot == -1) return; // user has cancelled
 
 	char fn[BUFFER_SIZE]="";
@@ -600,7 +611,7 @@ void replaceOrPasteItemsFromTrackSlot(const char* _title, bool _paste, int _slot
 	bool updated = false;
 
 	// prompt for slot if needed
-	if (_slot == -1) _slot = g_trTemplateFiles.PromptForSlot(_title); //loops on err
+	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_trTemplateFiles.GetSize()); // loops on err
 	if (_slot == -1) return; // user has cancelled
 
 	char fn[BUFFER_SIZE]="";
@@ -814,3 +825,140 @@ void remapMIDIInputChannel(COMMAND_T* _ct)
 	if (updated)
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Play track preview
+///////////////////////////////////////////////////////////////////////////////
+
+WDL_PtrList<preview_register_t> g_playPreviews;
+SWS_Mutex g_playPreviewsLock;
+
+void TrackPreviewInitDelelteMutex(preview_register_t* _prev, bool _init) {
+	if (_init) {
+#ifdef _WIN32
+		InitializeCriticalSection(&_prev->cs);
+#else
+		pthread_mutex_init(&_prev->mutex, NULL);
+#endif
+	}
+	else {
+#ifdef _WIN32
+		DeleteCriticalSection(&_prev->cs);
+#else
+		pthread_mutex_destroy(&_prev->mutex);
+#endif
+	}
+}
+
+void TrackPreviewLockUnlockMutex(preview_register_t* _prev, bool _lock) {
+	if (_lock) {
+#ifdef _WIN32
+		EnterCriticalSection(&_prev->cs);
+#else
+		pthread_mutex_lock(&_prev->mutex);
+#endif
+	}
+	else {
+#ifdef _WIN32
+		LeaveCriticalSection(&_prev->cs);
+#else
+		pthread_mutex_unlock(&_prev->mutex);
+#endif
+	}
+}
+
+void DeleteTrackPreview(void* _prev) {
+	if (_prev) {
+		preview_register_t* prev = (preview_register_t*)_prev;
+		delete prev->src;
+		TrackPreviewInitDelelteMutex(prev, false);
+		free(prev);
+		_prev = NULL;
+	}
+}
+
+void StopTrackPreviewsRun()
+{
+	SWS_SectionLock lock(&g_playPreviewsLock);
+	if (g_playPreviews.GetSize())
+	{
+		for (int i=g_playPreviews.GetSize()-1; i >=0; i--)
+		{
+			preview_register_t* prev = g_playPreviews.Get(i);
+			TrackPreviewLockUnlockMutex(prev, true);
+			if (prev->curpos >= prev->src->GetLength())
+			{
+				TrackPreviewLockUnlockMutex(prev, false);
+				StopTrackPreview(prev);
+				g_playPreviews.Delete(i, true, DeleteTrackPreview);
+			}
+			else
+				TrackPreviewLockUnlockMutex(prev, false);
+		}
+	}
+}
+
+void PlaySelTrackPreview(COMMAND_T* _ct)
+{
+	int iSlot = ((int)_ct->user)+1;
+	char pSlot[32] = "";
+	_snprintf(pSlot, 32, "SLOT%d", iSlot);
+
+	char fn[BUFFER_SIZE] = "";
+	GetPrivateProfileString("MediaFiles", pSlot, "", fn, BUFFER_SIZE, g_SNMiniFilename.Get());
+
+	// undefined slot => lazy init
+	if (!*fn || !FileExists(fn))
+	{
+		WDL_FastString str;
+		if (!fn) str.SetFormatted(BUFFER_SIZE, "File not found (slot %d):\n%s\n\nDo you want to select a new file for this slot?", iSlot, fn);
+		else str.SetFormatted(BUFFER_SIZE, "Media file slot %d is undefined!\nDo you want to select a file for this slot?", iSlot);
+		if (IDYES == MessageBox(GetMainHwnd(), str.Get(), "S&M - Play media file - Error", MB_YESNO)) 
+		{
+			str.SetFormatted(128, "S&M - Select media file for slot %d", iSlot);
+			char projPath[BUFFER_SIZE]; GetProjectPath(projPath, BUFFER_SIZE);
+			if (char* pFile = BrowseForFiles(str.Get(), projPath, NULL, false, plugin_getFilterList())) {
+				if (*pFile) {
+					lstrcpyn(fn, pFile, BUFFER_SIZE);
+					WDL_FastString escapedStr; makeEscapedConfigString(pFile, &escapedStr);
+					WritePrivateProfileString("MediaFiles", pSlot, escapedStr.Get(), g_SNMiniFilename.Get());
+				}
+				free(pFile);
+			}
+			else return;
+		}
+		else return;
+	}
+
+	SWS_SectionLock lock(&g_playPreviewsLock);
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		{
+			if (PCM_source* src = PCM_Source_CreateFromFileEx(fn, false))
+			{
+				preview_register_t* prev = new preview_register_t;
+				TrackPreviewInitDelelteMutex(prev, true);
+				prev->src = src;
+				prev->m_out_chan = -1; //i-1;
+				prev->curpos = 0.0;
+				prev->loop = false;
+				prev->volume = 1.0;
+				prev->preview_track = tr;
+				PlayTrackPreview(prev); // go!
+				g_playPreviews.Add(prev); 
+			}
+		}
+	}
+}
+
+void ClearMediaFileSlot(COMMAND_T* _ct) {
+	int iSlot = PromptForInteger(SNM_CMD_SHORTNAME(_ct), "Slot", 1, SNM_MAX_DYNAMIC_ACTIONS); // loops on err
+	if (iSlot == -1) return; // user has cancelled
+	char pSlot[32] = "";
+	_snprintf(pSlot, 32, "SLOT%d", iSlot+1);
+	WritePrivateProfileString("MediaFiles", pSlot, NULL, g_SNMiniFilename.Get());
+}
+

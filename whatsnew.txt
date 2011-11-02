@@ -4,14 +4,16 @@ Added media file slot actions (details in http://code.google.com/p/sws-extension
 
 Cycle action editor:
 +Added "Consolidated undo points" tick box. On OSX (with basic cycle action editor), this option can be changed in the S&M.ini file, e.g. [Cyclactions]Undos=0
-+Action learn: SWS actions can be now learned whatever are the displayed columns in the action list
-+Macro learn: a clear error message is now displayed when the column "Custom ID" is not displayed in the action list
++Action learn: now, SWS actions can be learned whatever are the displayed columns in the action list
++Macro learn: a clear error message is displayed when the column "Custom ID" is not displayed in the action list
 
-Notes/Help view: region names can now be edited too (they are edited/displayed according to edit/play cursor position)
+Notes/Help view: region names can be edited too (they are edited/displayed according to edit/play cursor position)
 
 Resources view: the context menu item "Select/load project templates (new tab)" now also opens multiple selected projects in separate tabs (issue 369)
 
-(On Windows/REAPER v4.11) All S&M themable views now use the following configurable colors of the Theme Editor:
+(On Windows/REAPER v4.11) All S&M themable views use the following configurable colors of the Theme Editor:
++Window background
++Window text
 +Window edit background
 +Window list background
 +Window list text

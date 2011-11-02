@@ -1,5 +1,5 @@
-Added media file slot actions:
-+SWS/S&M: Play media file in selected tracks, slot n - where 'n' is in [1; 8], cutomizable in the S&M.ini file (up to 99)
+Added media file slot actions (details in http://code.google.com/p/sws-extension/issues/detail?id=386|issue 386|):
++SWS/S&M: Play media file in selected tracks, slot n - where 'n' is in [1; 8], cutomizable in the S&M.ini file (up to 99 slots). Supports any media file (.mid, .wav, etc..).
 +SWS/S&M: Clear media file slot...
 
 Cycle action editor:

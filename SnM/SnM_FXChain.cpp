@@ -166,7 +166,7 @@ void setTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly
 void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool _set, bool _errMsg)
 {
 	// Prompt for slot if needed
-	if (_slot == -1) _slot = g_fxChainFiles.PromptForSlot(_title); //loops on err
+	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_fxChainFiles.GetSize()); // loops on err
 	if (_slot == -1) return; // user has cancelled
 
 	char fn[BUFFER_SIZE] = "";
@@ -398,7 +398,7 @@ int copyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr)
 void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inputFX, bool _errMsg)
 {
 	// Prompt for slot if needed
-	if (_slot == -1) _slot = g_fxChainFiles.PromptForSlot(_title); //loops on err
+	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_fxChainFiles.GetSize()); // loops on err
 	if (_slot == -1) return; // user has cancelled
 
 	char fn[BUFFER_SIZE]="";
@@ -602,11 +602,10 @@ void reassignLearntMIDICh(COMMAND_T* _ct)
 	int prm = ch; // -1: all fx, -2: sel fx, -3: all fx to input channel
 
 	// Prompt for channel if needed
-	switch(prm)
-	{
+	switch(prm) {
 		case -1:
 		case -2:
-			ch = PromptForMIDIChannel(SNM_CMD_SHORTNAME(_ct)); //loops on err
+			ch = PromptForInteger(SNM_CMD_SHORTNAME(_ct), "MIDI channel", 1, 16); // loops on err
 			if (ch == -1) return; // user has cancelled
 			break;
 	}

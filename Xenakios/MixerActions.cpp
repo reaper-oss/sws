@@ -106,7 +106,7 @@ void DoSelectPrevTrackKeepCur(COMMAND_T*)
 	DoSelectTrack(-1,true);
 }
 
-void DoTraxPanLaw(COMMAND_T* t)
+void DoTraxPanLaw(COMMAND_T* ct)
 {
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
@@ -114,20 +114,20 @@ void DoTraxPanLaw(COMMAND_T* t)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			double dLawGain = -1.0; // < 0 == default
-			if (t->user != 666) // Magic # for "default"
+			if (ct->user != 666) // Magic # for "default"
 			{
-				double dLawDb = (double)t->user / 10.0;
+				double dLawDb = (double)ct->user / 10.0;
 				dLawGain = DB2VAL(dLawDb);
 			}
 			GetSetMediaTrackInfo(tr, "D_PANLAW", &dLawGain);
 		}
 	}
-	Undo_OnStateChange(strchr(t->accel.desc, ':') + 2);
+	Undo_OnStateChange(XEN_CMD_SHORTNAME(ct));
 }
 
-void DoTraxRecArmed(COMMAND_T* t)
+void DoTraxRecArmed(COMMAND_T* ct)
 {
-	int iRecArm = (int)t->user;
+	int iRecArm = (int)ct->user;
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* CurTrack = CSurf_TrackFromID(i+1, false);
@@ -138,9 +138,9 @@ void DoTraxRecArmed(COMMAND_T* t)
 }
 
 //JFB dup with SWS 
-void DoBypassFXofSelTrax(COMMAND_T* t)
+void DoBypassFXofSelTrax(COMMAND_T* ct)
 {
-	int iBypass = (int)t->user;
+	int iBypass = (int)ct->user;
 	for (int i = 0; i < GetNumTracks(); i++)
 	{
 		MediaTrack* CurTrack = CSurf_TrackFromID(i+1, false);
@@ -148,10 +148,10 @@ void DoBypassFXofSelTrax(COMMAND_T* t)
 			GetSetMediaTrackInfo(CurTrack, "I_FXEN", &iBypass);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Set track fx enabled/disabled",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
-void DoResetTracksVolPan(COMMAND_T*)
+void DoResetTracksVolPan(COMMAND_T* ct)
 {
 	Undo_BeginBlock();
 	for (int i=0;i<GetNumTracks();i++)
@@ -165,10 +165,10 @@ void DoResetTracksVolPan(COMMAND_T*)
 			GetSetMediaTrackInfo(CurTrack,"D_VOL",&NewVol);
 		}
 	}
-	Undo_EndBlock("Reset track volume and pan",UNDO_STATE_TRACKCFG);
+	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG);
 }
 
-void DoSetSymmetricalpansL2R(COMMAND_T*)
+void DoSetSymmetricalpansL2R(COMMAND_T* ct)
 {
 	int numselectedTracks = NumSelTracks();
 	if (numselectedTracks > 1)
@@ -184,12 +184,12 @@ void DoSetSymmetricalpansL2R(COMMAND_T*)
 				GetSetMediaTrackInfo(CurTrack, "D_PAN", &newpan);
 			}
 		}
-		Undo_EndBlock("Pan tracks, left to right",0);	
+		Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);	
 	}
 }
 
 
-void DoSetSymmetricalpansR2L(COMMAND_T*)
+void DoSetSymmetricalpansR2L(COMMAND_T* ct)
 {
 	int numselectedTracks = NumSelTracks();
 	if (numselectedTracks > 1)
@@ -205,11 +205,11 @@ void DoSetSymmetricalpansR2L(COMMAND_T*)
 				GetSetMediaTrackInfo(CurTrack, "D_PAN", &newpan);
 			}
 		}
-		Undo_EndBlock("Pan tracks, left to right",0);	
+		Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);	
 	}
 }
 
-void DoPanTracksRandom(COMMAND_T*)
+void DoPanTracksRandom(COMMAND_T* ct)
 {
 	Undo_BeginBlock();
 	for (int i=0;i<GetNumTracks();i++)
@@ -221,7 +221,7 @@ void DoPanTracksRandom(COMMAND_T*)
 			GetSetMediaTrackInfo(CurTrack,"D_PAN",&NewPan);
 		}
 	}
-	Undo_EndBlock("Pan tracks randomly",UNDO_STATE_TRACKCFG);
+	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG);
 }
 
 void DoSelRandomTrack(COMMAND_T*)
@@ -382,7 +382,7 @@ void DoSelectLastTrackOfFolder(COMMAND_T*)
 	} else MessageBox(g_hwndParent,"No tracks selected!","Error",MB_OK);
 }
 
-void DoSetSelectedTrackNormal(COMMAND_T*)
+void DoSetSelectedTrackNormal(COMMAND_T* ct)
 {
 	/*
 	// this is for reaper<=2.53
@@ -440,13 +440,13 @@ void DoSetSelectedTrackNormal(COMMAND_T*)
 				int foldepth=0;
 				GetSetMediaTrackInfo(TracksToReset[i],"I_FOLDERDEPTH",&foldepth);
 			}
-			Undo_OnStateChangeEx("Dismantle folder",UNDO_STATE_TRACKCFG,-1);
+			Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 		}
 		
 	}
 }
 
-void DoSetSelectedTracksAsFolder(COMMAND_T*)
+void DoSetSelectedTracksAsFolder(COMMAND_T* ct)
 {
 	MediaTrack *CurTrack;
 	vector<MediaTrack*> VecSelTracks;
@@ -470,7 +470,7 @@ void DoSetSelectedTracksAsFolder(COMMAND_T*)
 	GetSetMediaTrackInfo(VecSelTracks[0],"I_FOLDERDEPTH",&foldepth);
 	foldepth=-1;
 	GetSetMediaTrackInfo(VecSelTracks[VecSelTracks.size()-1],"I_FOLDERDEPTH",&foldepth);
-	Undo_OnStateChangeEx("Create folder of selected tracks",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 	} else MessageBox(g_hwndParent,"Less than 2 tracks selected!","Error",MB_OK);
 }
 
@@ -520,7 +520,7 @@ WDL_DLGRET RenameTraxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 	return 0;
 }
 
-void DoRenameTracksDlg(COMMAND_T*)
+void DoRenameTracksDlg(COMMAND_T* ct)
 {
 	static bool FirstRun=true;
 	if (FirstRun)
@@ -572,7 +572,7 @@ void DoRenameTracksDlg(COMMAND_T*)
 		}
 	}
 	if (!g_RenaTraxDialogCancelled && VecSelTracks.size()>0)
-		Undo_OnStateChangeEx("Rename track(s)",UNDO_STATE_TRACKCFG,-1);
+		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoSelectFirstOfSelectedTracks(COMMAND_T*)
@@ -605,7 +605,7 @@ void DoInsertNewTrackAtTop(COMMAND_T*)
 	TrackList_AdjustWindows(false);
 }
 
-void DoLabelTraxDefault(COMMAND_T*)
+void DoLabelTraxDefault(COMMAND_T* ct)
 {
 	vector<MediaTrack*> TheTracks;
 	XenGetProjectTracks(TheTracks,true);
@@ -616,10 +616,10 @@ void DoLabelTraxDefault(COMMAND_T*)
 		strcpy(buf,g_command_params.DefaultTrackLabel.c_str());
 		GetSetMediaTrackInfo(TheTracks[i],"P_NAME",&buf);
 	}
-	Undo_OnStateChangeEx("Default label on tracks",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
-void DoTraxLabelPrefix(COMMAND_T*)
+void DoTraxLabelPrefix(COMMAND_T* ct)
 {
 	if (!g_command_params.TrackLabelPrefix.size())
 	{
@@ -638,10 +638,10 @@ void DoTraxLabelPrefix(COMMAND_T*)
 		strcpy(buf,NewLabel.c_str());
 		GetSetMediaTrackInfo(TheTracks[i],"P_NAME",&buf);
 	}
-	Undo_OnStateChangeEx("Insert prefix to track label(s)",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
-void DoTraxLabelSuffix(COMMAND_T*)
+void DoTraxLabelSuffix(COMMAND_T* ct)
 {
 	if (!g_command_params.TrackLabelSuffix.size())
 	{
@@ -661,7 +661,7 @@ void DoTraxLabelSuffix(COMMAND_T*)
 		strcpy(buf,NewLabel.c_str());
 		GetSetMediaTrackInfo(TheTracks[i],"P_NAME",&buf);
 	}
-	Undo_OnStateChangeEx("Insert suffix to track label(s)",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoMinMixSendPanelH(COMMAND_T*)
@@ -699,8 +699,6 @@ void DoMaxMixFxPanHeight(COMMAND_T*)
 		GetSetMediaTrackInfo(TheTracks[i],"F_MCP_FXSEND_SCALE",&NewScale);
 		NewScale=0.0;
 		GetSetMediaTrackInfo(TheTracks[i],"F_MCP_SENDRGN_SCALE",&NewScale);
-		
-		
 	}	
 }
 
@@ -710,10 +708,8 @@ void DoRemoveTimeSelectionLeaveLoop(COMMAND_T*)
     int OldLockLoopToTime=*locklooptotime;
 	if (sz==sizeof(int) && locklooptotime) 
 	{ 
-		
-	int newLockLooptotime=0;
-	*locklooptotime=newLockLooptotime; /* update reaper's
-              copy */
+		int newLockLooptotime=0;
+		*locklooptotime=newLockLooptotime; /* update reaper's copy */
 	}
 	double a=0.0;
 	double b=0.0;
@@ -778,7 +774,7 @@ void DoFolderDepthDump(COMMAND_T*)
 	}
 }
 
-void DoPanTracksCenter(COMMAND_T*)
+void DoPanTracksCenter(COMMAND_T* ct)
 {
 	vector<MediaTrack*> TheTracks;
 	XenGetProjectTracks(TheTracks,true);
@@ -789,10 +785,10 @@ void DoPanTracksCenter(COMMAND_T*)
 		GetSetMediaTrackInfo(TheTracks[i],"D_PAN",&newPan);
 
 	}
-	Undo_OnStateChangeEx("Set track pan to center",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
-void DoPanTracksLeft(COMMAND_T*)
+void DoPanTracksLeft(COMMAND_T* ct)
 {
 	vector<MediaTrack*> TheTracks;
 	XenGetProjectTracks(TheTracks,true);
@@ -803,10 +799,10 @@ void DoPanTracksLeft(COMMAND_T*)
 		GetSetMediaTrackInfo(TheTracks[i],"D_PAN",&newPan);
 
 	}
-	Undo_OnStateChangeEx("Set track pan to left",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
-void DoPanTracksRight(COMMAND_T*)
+void DoPanTracksRight(COMMAND_T* ct)
 {
 	vector<MediaTrack*> TheTracks;
 	XenGetProjectTracks(TheTracks,true);
@@ -817,10 +813,10 @@ void DoPanTracksRight(COMMAND_T*)
 		GetSetMediaTrackInfo(TheTracks[i],"D_PAN",&newPan);
 
 	}
-	Undo_OnStateChangeEx("Set track pan to right",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
-void DoSetTrackVolumeToZero(COMMAND_T*)
+void DoSetTrackVolumeToZero(COMMAND_T* ct)
 {
 	vector<MediaTrack*> TheTracks;
 	XenGetProjectTracks(TheTracks,true);
@@ -831,7 +827,7 @@ void DoSetTrackVolumeToZero(COMMAND_T*)
 		GetSetMediaTrackInfo(TheTracks[i],"D_VOL",&newVol);
 
 	}
-	Undo_OnStateChangeEx("Set track volume to 0.0dB",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoRenderReceivesAsStems(COMMAND_T*)
@@ -970,9 +966,8 @@ void DoStoreRenderSpeed(COMMAND_T*)
     if (sz==sizeof(int) && renderspeedmode) 
 	{ 
 		g_renderspeed=*renderspeedmode;
-		
-		
-	} else MessageBox(g_hwndParent,"Error getting configuration variable from REAPER","Error",MB_OK);
+	}
+	else MessageBox(g_hwndParent,"Error getting configuration variable from REAPER","Error",MB_OK);
 }
 
 void DoRecallRenderSpeed(COMMAND_T*)
@@ -1228,19 +1223,19 @@ void NudgeTrackVolumeDB(int tkIndex,double decibel)
 	}
 }
 
-void DoNudgeMasterVol1dbUp(COMMAND_T*)
+void DoNudgeMasterVol1dbUp(COMMAND_T* ct)
 {
 	NudgeTrackVolumeDB(0,1.0);
-	Undo_OnStateChangeEx("Nudge Master volume up",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
-void DoNudgeMasterVol1dbDown(COMMAND_T*)
+void DoNudgeMasterVol1dbDown(COMMAND_T* ct)
 {
 	NudgeTrackVolumeDB(0,-1.0);
-	Undo_OnStateChangeEx("Nudge Master volume down",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
-void DoNudgeSelTrackVolumeUp(COMMAND_T*)
+void DoNudgeSelTrackVolumeUp(COMMAND_T* ct)
 {
 	t_vect_of_Reaper_tracks thetracks;
 	XenGetProjectTracks(thetracks,true);
@@ -1249,10 +1244,10 @@ void DoNudgeSelTrackVolumeUp(COMMAND_T*)
 		int index=CSurf_TrackToID(thetracks[i],false);
 		NudgeTrackVolumeDB(index,g_command_params.TrackVolumeNudge);
 	}
-	Undo_OnStateChangeEx("Nudge selected track(s) volume(s) up",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
-void DoNudgeSelTrackVolumeDown(COMMAND_T*)
+void DoNudgeSelTrackVolumeDown(COMMAND_T* ct)
 {
 	t_vect_of_Reaper_tracks thetracks;
 	XenGetProjectTracks(thetracks,true);
@@ -1261,16 +1256,16 @@ void DoNudgeSelTrackVolumeDown(COMMAND_T*)
 		int index=CSurf_TrackToID(thetracks[i],false);
 		NudgeTrackVolumeDB(index,-g_command_params.TrackVolumeNudge);
 	}
-	Undo_OnStateChangeEx("Nudge selected track(s) volume(s) down",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
-void DoSetMasterToZeroDb(COMMAND_T*)
+void DoSetMasterToZeroDb(COMMAND_T* ct)
 {
 	MediaTrack* ptk=CSurf_TrackFromID(0,false);
 	if (ptk)
 	{
 		double newgain=1.0;
 		GetSetMediaTrackInfo(ptk,"D_VOL",&newgain);
-		Undo_OnStateChangeEx("Reset Master volume",UNDO_STATE_TRACKCFG,-1);
+		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 	}
 }

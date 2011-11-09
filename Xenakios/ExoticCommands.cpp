@@ -57,10 +57,10 @@ void DoNudgeSelectedItemsPositions(bool UseConfig, bool Positive, double NudgeTi
 	UpdateTimeline();
 }
 
-void DoSetItemFadesConfLen(COMMAND_T* t)
+void DoSetItemFadesConfLen(COMMAND_T* ct)
 {
-	double dFadeInLen  = t->user == 0 ? g_command_params.CommandFadeInA  : g_command_params.CommandFadeInB;
-	double dFadeOutLen = t->user == 0 ? g_command_params.CommandFadeOutA : g_command_params.CommandFadeOutB;
+	double dFadeInLen  = ct->user == 0 ? g_command_params.CommandFadeInA  : g_command_params.CommandFadeInB;
+	double dFadeOutLen = ct->user == 0 ? g_command_params.CommandFadeOutA : g_command_params.CommandFadeOutB;
 	double dZero = 0.0;
 	WDL_TypedBuf<MediaItem*> items;
 	SWS_GetSelectedMediaItems(&items);
@@ -78,14 +78,14 @@ void DoSetItemFadesConfLen(COMMAND_T* t)
 			dNewFadeOutLen = (dItemLen - dNoFadeTime) * dFadeOutLen / (dFadeInLen + dFadeOutLen);
 		}
 
-		GetSetMediaItemInfo(items.Get()[i], "C_FADEINSHAPE",  &(t->user == 0 ? g_command_params.CommandFadeInShapeA  : g_command_params.CommandFadeInShapeB));
-		GetSetMediaItemInfo(items.Get()[i], "C_FADEOUTSHAPE", &(t->user == 0 ? g_command_params.CommandFadeOutShapeA : g_command_params.CommandFadeOutShapeB));
+		GetSetMediaItemInfo(items.Get()[i], "C_FADEINSHAPE",  &(ct->user == 0 ? g_command_params.CommandFadeInShapeA  : g_command_params.CommandFadeInShapeB));
+		GetSetMediaItemInfo(items.Get()[i], "C_FADEOUTSHAPE", &(ct->user == 0 ? g_command_params.CommandFadeOutShapeA : g_command_params.CommandFadeOutShapeB));
 		GetSetMediaItemInfo(items.Get()[i], "D_FADEINLEN",  &dNewFadeInLen);
 		GetSetMediaItemInfo(items.Get()[i], "D_FADEOUTLEN", &dNewFadeOutLen);
 		GetSetMediaItemInfo(items.Get()[i], "D_FADEINLEN_AUTO",  &dZero);
 		GetSetMediaItemInfo(items.Get()[i], "D_FADEOUTLEN_AUTO", &dZero);
 	}
-	Undo_OnStateChangeEx("Set item fades to configured lengths", UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 

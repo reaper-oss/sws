@@ -78,7 +78,7 @@ int XenGetProjectTakes(vector<MediaItem_Take*>& TheTakes, bool OnlyActive, bool 
 	return (int)TheTakes.size();
 }
 
-void DoMoveItemsLeftByItemLen(COMMAND_T*)
+void DoMoveItemsLeftByItemLen(COMMAND_T* ct)
 {
 	vector<MediaItem*> VecItems;
 	for (int i = 0; i < GetNumTracks(); i++)
@@ -99,7 +99,7 @@ void DoMoveItemsLeftByItemLen(COMMAND_T*)
 		GetSetMediaItemInfo(VecItems[i], "D_POSITION", &NewPos);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Move item back by item length", 4, -1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), 4, -1);
 }
 
 void DoToggleTakesNormalize(COMMAND_T*)
@@ -397,7 +397,7 @@ void DoShowVolPanDialog(COMMAND_T*)
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_ITEMPANVOLDIALOG), g_hwndParent, ItemPanVolDlgProc);
 }
 
-void DoChooseNewSourceFileForSelTakes(COMMAND_T*)
+void DoChooseNewSourceFileForSelTakes(COMMAND_T* ct)
 {
 	WDL_PtrList<MediaItem_Take> *TheTakes=new (WDL_PtrList<MediaItem_Take>);
 	PCM_source *ThePCMSource;
@@ -443,7 +443,7 @@ void DoChooseNewSourceFileForSelTakes(COMMAND_T*)
 			free(cFileName);
 			Main_OnCommand(40047,0); // Build any missing peaks
 			Main_OnCommand(40439,0); // Selected Media Online
-			Undo_OnStateChangeEx("Replace takes source files",4,-1);
+			Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 			UpdateTimeline();
 		}
 	}
@@ -685,7 +685,7 @@ bool GenerateShuffledTakeRandomTable(int *IntTable,int numItems,int badFirstNumb
 
 }
 
-void DoShuffleSelectTakesInItems(COMMAND_T*)
+void DoShuffleSelectTakesInItems(COMMAND_T* ct)
 {
 	//
 	MediaTrack* MunRaita;
@@ -767,13 +767,13 @@ void DoShuffleSelectTakesInItems(COMMAND_T*)
 			}
 		}
 		delete[] TakeIndexes;
-		Undo_OnStateChangeEx("Select Takes In Selected Items, Shuffled Random",4,-1);
+		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 		UpdateTimeline();
 	}
 	
 }
 
-void DoMoveItemsToEditCursor(COMMAND_T*)
+void DoMoveItemsToEditCursor(COMMAND_T* ct)
 {
 	double EditCurPos=GetCursorPosition();
 	for (int i = 0; i < CountSelectedMediaItems(0); i++)
@@ -785,12 +785,12 @@ void DoMoveItemsToEditCursor(COMMAND_T*)
 	}
 	if (CountSelectedMediaItems(0))
 	{
-		Undo_OnStateChangeEx("Move Selected Items To Edit Cursor", UNDO_STATE_ITEMS, -1);
+		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 		UpdateTimeline();
 	}
 }
 
-void DoRemoveItemFades(COMMAND_T*)
+void DoRemoveItemFades(COMMAND_T* ct)
 {
 	double dFade = 0.0;
 	for (int i = 0; i < CountSelectedMediaItems(0); i++)
@@ -801,12 +801,12 @@ void DoRemoveItemFades(COMMAND_T*)
 		GetSetMediaItemInfo(item, "D_FADEINLEN_AUTO",  &dFade);
 		GetSetMediaItemInfo(item, "D_FADEOUTLEN_AUTO", &dFade);
 	}
-	Undo_OnStateChangeEx("Set Item Fades To 0", UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 
 
-void DoTrimLeftEdgeToEditCursor(COMMAND_T*)
+void DoTrimLeftEdgeToEditCursor(COMMAND_T* ct)
 {
 	double NewLeftEdge = GetCursorPosition();
 	bool modified = false;
@@ -843,12 +843,12 @@ void DoTrimLeftEdgeToEditCursor(COMMAND_T*)
 	}
 	if (modified)
 	{
-		Undo_OnStateChangeEx("Trim/Untrim Item Left Edge", UNDO_STATE_ITEMS, -1);
+		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 		UpdateTimeline();
 	}
 }
 
-void DoTrimRightEdgeToEditCursor(COMMAND_T*)
+void DoTrimRightEdgeToEditCursor(COMMAND_T* ct)
 {
 	double dRightEdge = GetCursorPosition();
 	bool modified = false;
@@ -862,20 +862,20 @@ void DoTrimRightEdgeToEditCursor(COMMAND_T*)
 	}
 	if (modified)
 	{
-		Undo_OnStateChangeEx("Trim/Untrim Item Right Edge", UNDO_STATE_ITEMS, -1);
+		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 		UpdateTimeline();
 	}
 }
 
-void DoResetItemRateAndPitch(COMMAND_T*)
+void DoResetItemRateAndPitch(COMMAND_T* ct)
 {
 	Undo_BeginBlock();
 	Main_OnCommand(40652, 0); // set item rate to 1.0
 	Main_OnCommand(40653, 0); // reset item pitch to 0.0
-	Undo_EndBlock("Reset Item Pitch And Rate",0);
+	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);
 }
 
-void DoApplyTrackFXStereoAndResetVol(COMMAND_T*)
+void DoApplyTrackFXStereoAndResetVol(COMMAND_T* ct)
 {
 	Undo_BeginBlock();
 	Main_OnCommand(40209,0); // apply track fx in stereo to items
@@ -883,17 +883,17 @@ void DoApplyTrackFXStereoAndResetVol(COMMAND_T*)
 	for (int i = 0; i < CountSelectedMediaItems(0); i++)
 		GetSetMediaItemInfo(GetSelectedMediaItem(0, i), "D_VOL", &dVol);
 
-	Undo_EndBlock("Apply Track FX To Items And Reset Volume", UNDO_STATE_ITEMS);
+	Undo_EndBlock(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS);
 }
 
-void DoApplyTrackFXMonoAndResetVol(COMMAND_T*)
+void DoApplyTrackFXMonoAndResetVol(COMMAND_T* ct)
 {
 	Undo_BeginBlock();
 	Main_OnCommand(40361,0); // apply track fx in mono to items
 	double dVol = 1.0;
 	for (int i = 0; i < CountSelectedMediaItems(0); i++)
 		GetSetMediaItemInfo(GetSelectedMediaItem(0, i), "D_VOL", &dVol);
-	Undo_EndBlock("Apply Track FX To Items (Mono) And Reset Volume", UNDO_STATE_ITEMS);
+	Undo_EndBlock(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS);
 }
 
 void DoSelItemsToEndOfTrack(COMMAND_T*)
@@ -958,21 +958,21 @@ void DoPanTakesOfItemSymmetrically()
 	}
 }
 
-void DoPanTakesSymmetricallyWithUndo(COMMAND_T*)
+void DoPanTakesSymmetricallyWithUndo(COMMAND_T* ct)
 {
 	DoPanTakesOfItemSymmetrically();
-	Undo_OnStateChangeEx("Set Pan Of Takes In Item",4,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 	UpdateTimeline();
 }
 
 
-void DoImplodeTakesSetPlaySetSymPans(COMMAND_T*)
+void DoImplodeTakesSetPlaySetSymPans(COMMAND_T* ct)
 {
 	Undo_BeginBlock();
 	Main_OnCommand(40438,0); // implode items across tracks into takes
 	DoSetAllTakesPlay();
 	DoPanTakesOfItemSymmetrically();
-	Undo_EndBlock("Implode Items And Pan Symmetrically",0);
+	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);
 	//UpdateTimeline();
 }
 
@@ -1228,7 +1228,7 @@ void DoReposItemsDlg(COMMAND_T*)
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_REPOSITEMS), g_hwndParent, ReposItemsDlgProc);
 }
 
-void DoSpeadSelItemsOverNewTx(COMMAND_T*)
+void DoSpeadSelItemsOverNewTx(COMMAND_T* ct)
 {
 	vector<MediaItem*> TheItems;
 	XenGetProjectItems(TheItems,true,false);
@@ -1258,7 +1258,7 @@ void DoSpeadSelItemsOverNewTx(COMMAND_T*)
 		newDep=-1;
 		GetSetMediaTrackInfo(DestTrack,"I_FOLDERDEPTH",&newDep);
 		TrackList_AdjustWindows(false);
-		Undo_OnStateChangeEx("Spread selected items on new tracks",UNDO_STATE_ALL,-1);
+		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_ALL,-1);
 
 	} else MessageBox(g_hwndParent,"No or only one item selected!","Error",MB_OK);
 		
@@ -1294,7 +1294,7 @@ int OpenInExtEditor(int editorIdx)
 void DoOpenInExtEditor1(COMMAND_T*) { OpenInExtEditor(0); }
 void DoOpenInExtEditor2(COMMAND_T*) { OpenInExtEditor(1); }
 
-void DoMatrixItemImplode(COMMAND_T*)
+void DoMatrixItemImplode(COMMAND_T* ct)
 {
 	vector<MediaItem*> TheItems;
 	XenGetProjectItems(TheItems,true,false);
@@ -1331,7 +1331,7 @@ void DoMatrixItemImplode(COMMAND_T*)
 	}
 	*/
 	//40058 // paste
-	Undo_EndBlock("Matrix implode items",0);
+	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);
 	//Undo_OnStateChangeEx("Matrix implode items",4,-1);
 }
 
@@ -1443,7 +1443,7 @@ void DoTimeSelAdaptDelete(COMMAND_T*)
 	}
 }
 
-void DoDeleteMutedItems(COMMAND_T*)
+void DoDeleteMutedItems(COMMAND_T* ct)
 {
 	
 	Undo_BeginBlock();
@@ -1461,6 +1461,6 @@ void DoDeleteMutedItems(COMMAND_T*)
 		}
 	}
 	Main_OnCommand(40006,0);
-	Undo_EndBlock("Remove muted items",0);
+	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);
 	UpdateTimeline();
 }

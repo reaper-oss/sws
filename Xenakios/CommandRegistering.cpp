@@ -269,11 +269,6 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: [Deprecated] Project media..." }, "XENAKIOS_MANAGEMEDIA", DoShowProjectMediaDlg,NULL, },
 #endif
 	{ { DEFACCEL, "Xenakios/SWS: Find missing media for project's takes" }, "XENAKIOS_FINDMISSINGMEDIA", DoFindMissingMedia,NULL, true },
-/*JFB commented: http://code.google.com/p/sws-extension/issues/detail?id=311
-#ifdef _WIN32
-	{ { DEFACCEL, "Xenakios/SWS: Save current contents of actions list to file" }, "XENAKIOS_DODUMPACTIONS", DoDumpActionsWindow,NULL, },
-#endif
-*/
 	{ { DEFACCEL, "Xenakios/SWS: Show/hide floating item/track info" }, "XENAKIOS_SHOWHIDE_ITEMINSPECTOR", DoTglFltItemInspector,NULL, true },
 	{ { DEFACCEL, "Xenakios/SWS: Spread selected items over 4 tracks" }, "XENAKIOS_SPREADITEMSOVER4TRAX", DoSpreadSelItemsOver4Tracks,NULL, true },
 	{ { DEFACCEL, "Xenakios/SWS: Spread selected items over tracks..." }, "XENAKIOS_SPREADITEMSOVERTRAX", DoShowSpreadItemsDlg,	NULL, true },

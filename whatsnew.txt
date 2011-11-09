@@ -1,3 +1,40 @@
+
+Resources view: two new slot types, Media files and Themes!
+
+New "Media files" slot type in the Resources view:
+Manage slots for all media file types supported by REAPER (WAV, MIDI, etc..) and more.. Just like other slot types of the Resources view, it features:
++Context menu: various "auto-fill slots" features, rename file, insert/add/clear/etc.. slot, delete slots & files, show path in explorer/finder, etc..
++External drag-drop (e.g. drag a bunch of files from an external tool -> drop them into the Resources view)
++Internal drag-drop (e.g. drag-drop slots, drag a bunch of slots from the Resources view -> drop them into the arrange) - Windows OS only
++Reminder: you can switch the Resources view to "Media files" in the top left dropdown box
+Added slot actions for media files:
++SWS/S&M: Open Resources window (Media files)
++SWS/S&M: Toggle play media file in selected tracks, slot n - where 'n' is in [1; 8], cutomizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Toggle play media file in selected tracks, prompt for slot
++SWS/S&M: Play media file in selected tracks, prompt for slot
++SWS/S&M: Stop playing media files
++SWS/S&M: Stop playing media files in selected tracks
++SWS/S&M: Add media file to current track, slot n - where 'n' is in [1; 4], cutomizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Add media file to new track, slot n - where 'n' is in [1; 4], cutomizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Add media file to selected items as takes, slot n - where 'n' is in [1; 4], cutomizable in the S&M.ini file (up to 99 slots)
+
+New "Themes" slot type in the Resources view (on Windows OS only):
+Manage slots for themes.. Just like other slot types of the Resources view, it features:
++Context menu: various "auto-fill slots" features, rename file, insert/add/clear/etc.. slot, delete slots & files, show path in explorer/finder, etc..
++External drag-drop (e.g. drag a bunch of ReaperthemeZip files -> drop them into the Resources view)
++Internal drag-drop (e.g. drag-drop slots, drag a slot from the Resources view -> drop into into the arrange)
++Reminder: you can switch the Resources view to "Themes" in the top left dropdown box
+Added slot actions for themes:
++SWS/S&M: Open Resources window (Themes)
++SWS/S&M: Load theme, slot n - where 'n' is in [1; 4], cutomizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Load theme, prompt for slot
++SWS/S&M: Clear theme slot..."
+
+Fixed issue 409: fixed theming colors when REAPER version is < v4.11
+Almost all Xenakios actions now have consistent undo point names (vs action name)
+Removed Xenakios log file
+
+!v2.1.0 #17 (November 2, 2011)
 Added media file slot actions (details in http://code.google.com/p/sws-extension/issues/detail?id=386|issue 386|):
 +SWS/S&M: Play media file in selected tracks, slot n - where 'n' is in [1; 8], cutomizable in the S&M.ini file (up to 99 slots). Supports any media file (.mid, .wav, etc..).
 +SWS/S&M: Clear media file slot...
@@ -42,7 +79,7 @@ Fixed autogrouping broken in 2.1.0 #15
 Added actions:
 +SWS/AW: Toggle auto group newly recorded items
 +SWS/S&M: Set selected tracks to first unused group (default flags)
-+SWS/S&M: Set selected tracks to group n (default flags) - where n is in [1; 8] by default but it can be customized in the S&M.ini file (32 track groups max)
++SWS/S&M: Set selected tracks to group n (default flags) - where n is in [1; 8], cutomizable in the S&M.ini file (up to 32 groups)
 +SWS/S&M: Remove track grouping for selected tracks
 
 Cue Buss Generator & Live Configs: track templates improvements (same as Issue 376)
@@ -140,7 +177,7 @@ Marker list now supports save/restore and changing of colors ("Set color..." in 
 Resources view: "Auto-fill" (context menu) now adds slots rather than inserting them (i.e. do not change existing slot numbers)
 Resources view/FX Chains: support for track channels when FX Chains are saved in the Resources view (Issue 363)
 Resources view/Projects: added "Add recent projects" in the context menu (it adds all recent projects as listed in Main menu>File>Recent projects)
-Resources view/Projects: added project loader/selecter actions (can be usefull for live performance):
+Resources view/Projects: added project loader/selecter actions (useful for live performance):
 +SWS/S&M: Project loader/selecter: configuration - This one allows you defining start/end slots (empty slot gaps are ignored)
 +SWS/S&M: Project loader/selecter: next (cycle)
 +SWS/S&M: Project loader/selecter: previous (cycle)
@@ -362,7 +399,7 @@ Zoom updates:
 +Mouse cursor doesn't move in Y when drag zooming, more Abelton Live like (Windows OS only)
 
 S&M Resource view updates:
-+Fixed drag'ndrop of slots within the view (comments were lost)
++Fixed drag-drop of slots within the view (comments were lost)
 +Fixed text editing when some columns are hidden/moved
 
 !v2.0.0 #23 (May 17, 2011)
@@ -796,8 +833,8 @@ SWS/S&M: Load/paste FX chain to selected items, all takes, prompt for slot
 -> on Win, files are sent to the recycle bin
 - Show path in Explorer/Finder...
 +Column "Name" is now editable (file renaming from the view)
-+Drag'n'drop improvments:
-- Internal drag'n'drop of slots (i.e. now moves slots rather than copying them)
++drag-drop improvments:
+- Internal drag-drop of slots (i.e. now moves slots rather than copying them)
 - More 'natural' + fixed shortcomings: d'n'd of empty slots, selection after d'n'd, d'n'd when the list is empty, etc..
 +On Win, "Display track template/FX chain" (in the popup menu) now launches notepad
 +Paths pointing to unexisting files aren't reseted anymore
@@ -1139,8 +1176,8 @@ Build lane actions updated:
 
 S&M FX Chain view improvments:
 +Paste of FX Chains in now possible (only FX Chain replacement was possible until now)
-+External drag'n'drop of FX Chains (e.g. drag from an external explorer, drop into the view)
-+Internal drag'n'drop of FX Chains (drag from the view, drop in a track) - Windows OS only
++External drag-drop of FX Chains (e.g. drag from an external explorer, drop into the view)
++Internal drag-drop of FX Chains (drag from the view, drop in a track) - Windows OS only
 +Added actions:
 SWS/S&M: Paste FX chain to selected items
 SWS/S&M: Paste FX chain to selected items, all takes

@@ -64,11 +64,11 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errMsg)
 {
 	// Prompt for slot if needed
-	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_prjTemplateFiles.GetSize()); // loops on err
+	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_PRJ)->GetSize()); // loops on err
 	if (_slot == -1) return; // user has cancelled
 
 	char fn[BUFFER_SIZE]="";
-	if (g_prjTemplateFiles.GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg)) 
+	if (g_slots.Get(SNM_SLOT_PRJ)->GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg)) 
 	{
 		char fn2[BUFFER_SIZE] = "";
 		ReaProject* prj = NULL;
@@ -96,23 +96,23 @@ void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errM
 bool autoSaveProjectSlot(bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnSize)
 {
 	if (_saveCurPrj) Main_OnCommand(40026,0);
-	char prjFn[BUFFER_SIZE] = "", name[BUFFER_SIZE] = "";
+	char prjFn[BUFFER_SIZE] = "", name[256] = "";
 	EnumProjects(-1, prjFn, BUFFER_SIZE);
-	ExtractFileNameEx(prjFn, name, true);
-	GenerateFilename(_dirPath, name, g_prjTemplateFiles.GetFileExt(), _fn, _fnSize);
-	return (SNM_CopyFile(_fn, prjFn) && g_prjTemplateFiles.AddSlot(_fn));
+	GetFilenameNoExt(prjFn, name, 256);
+	GenerateFilename(_dirPath, name, g_slots.Get(SNM_SLOT_PRJ)->GetFileExt(), _fn, _fnSize);
+	return (SNM_CopyFile(_fn, prjFn) && g_slots.Get(SNM_SLOT_PRJ)->AddSlot(_fn));
 }
 
 void loadOrSelectProject(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_prjTemplateFiles.GetSize())
-		loadOrSelectProject(SNM_CMD_SHORTNAME(_ct), slot, false, slot < 0 || !g_prjTemplateFiles.Get(slot)->IsDefault());
+	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_PRJ)->GetSize())
+		loadOrSelectProject(SNM_CMD_SHORTNAME(_ct), slot, false, slot < 0 || !g_slots.Get(SNM_SLOT_PRJ)->Get(slot)->IsDefault());
 }
 
 void loadOrSelectProjectNewTab(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_prjTemplateFiles.GetSize())
-		loadOrSelectProject(SNM_CMD_SHORTNAME(_ct), slot, true, slot < 0 || !g_prjTemplateFiles.Get(slot)->IsDefault());
+	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_PRJ)->GetSize())
+		loadOrSelectProject(SNM_CMD_SHORTNAME(_ct), slot, true, slot < 0 || !g_slots.Get(SNM_SLOT_PRJ)->Get(slot)->IsDefault());
 }
 
 
@@ -126,7 +126,7 @@ int g_prjCurSlot = -1; // 0-based
 bool isProjectLoaderConfValid() {
 	return (g_prjLoaderStartPref > 0 && 
 		g_prjLoaderEndPref > g_prjLoaderStartPref && 
-		g_prjLoaderEndPref <= g_prjTemplateFiles.GetSize());
+		g_prjLoaderEndPref <= g_slots.Get(SNM_SLOT_PRJ)->GetSize());
 }
 
 void projectLoaderConf(COMMAND_T* _ct)
@@ -143,7 +143,7 @@ void projectLoaderConf(COMMAND_T* _ct)
 			{
 				start = atoi(reply);
 				end = atoi((char*)(p+1));
-				if (start > 0 && end > start && end <= g_prjTemplateFiles.GetSize())
+				if (start > 0 && end > start && end <= g_slots.Get(SNM_SLOT_PRJ)->GetSize())
 				{
 					g_prjLoaderStartPref = start;
 					g_prjLoaderEndPref = end;
@@ -176,7 +176,7 @@ void loadOrSelectNextPreviousProject(COMMAND_T* _ct)
 			EnumProjects(-1, pCurPrj, BUFFER_SIZE);
 			if (pCurPrj && *pCurPrj)
 				for (int i=g_prjLoaderStartPref-1; g_prjCurSlot < 0 && i < g_prjLoaderEndPref-1; i++)
-					if (!g_prjTemplateFiles.Get(i)->IsDefault() && strstr(pCurPrj, g_prjTemplateFiles.Get(i)->m_shortPath.Get()))
+					if (!g_slots.Get(SNM_SLOT_PRJ)->Get(i)->IsDefault() && strstr(pCurPrj, g_slots.Get(SNM_SLOT_PRJ)->Get(i)->m_shortPath.Get()))
 						g_prjCurSlot = i;
 		}
 
@@ -193,7 +193,7 @@ void loadOrSelectNextPreviousProject(COMMAND_T* _ct)
 			}
 			else g_prjCurSlot += dir;
 		}
-		while (++cpt <= slotCount && g_prjTemplateFiles.Get(g_prjCurSlot)->IsDefault());
+		while (++cpt <= slotCount && g_slots.Get(SNM_SLOT_PRJ)->Get(g_prjCurSlot)->IsDefault());
 
 		// found one?
 		if (cpt <= slotCount) {

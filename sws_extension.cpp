@@ -507,7 +507,7 @@ int WDL_STYLE_GetSysColor(int i)
 #endif
 	{
 		int col3ds,col3dl,bgcol=GSC_mainwnd(COLOR_WINDOW);
-		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
+		ColorTheme* ct = SNM_GetColorTheme();
 		if (g_bv4 && ct) {
 			col3dl = ct->io_3d[0];
 			col3ds = ct->io_3d[1];

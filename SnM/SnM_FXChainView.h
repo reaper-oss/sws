@@ -26,11 +26,26 @@
 /
 ******************************************************************************/
 
-
 #pragma once
 
 #ifndef _SNM_RESVIEW_H_
 #define _SNM_RESVIEW_H_
+
+
+// JFB add new resource types here ------------------------------------------->
+enum {
+  SNM_SLOT_FXC=0,
+  SNM_SLOT_TR,
+  SNM_SLOT_PRJ,
+  SNM_SLOT_MEDIA,
+  // etc..
+#ifdef _WIN32
+  // keep this one as the last one (win only)
+  SNM_SLOT_THM,
+#endif
+  SNM_SLOT_TYPE_COUNT
+};
+// <---------------------------------------------------------------------------
 
 
 class PathSlotItem {
@@ -45,15 +60,12 @@ public:
 class FileSlotList : public WDL_PtrList<PathSlotItem>
 {
   public:
-	FileSlotList(int _type, const char* _resDir, const char* _desc, const char* _ext) 
-		: m_type(_type), m_resDir(_resDir),m_desc(_desc),m_ext(_ext),WDL_PtrList<PathSlotItem>() {}
-	void GetFileFilter(char* _filter, int _maxFilterLength) {
-		if (_filter) {
-			_snprintf(_filter, _maxFilterLength, "REAPER %s (*.%s)X*.%s", m_desc.Get(), m_ext.Get(), m_ext.Get());
-			// special code for multiple null terminated strings ('X' -> '\0')
-			if (char* p = strchr(_filter, ')')) *(p+1) = '\0';
-		}
-	}
+	FileSlotList(int _type, const char* _resDir, const char* _desc, const char* _ext, bool _notepad, bool _autoSave) 
+		: m_type(_type), m_resDir(_resDir),m_desc(_desc),m_ext(_ext), m_notepad(_notepad), m_autoSave(_autoSave),
+		WDL_PtrList<PathSlotItem>() {}
+	FileSlotList(const FileSlotList* _fl)
+		: m_type(_fl->m_type), m_resDir(_fl->m_resDir),m_desc(_fl->m_desc),m_ext(_fl->m_ext), m_notepad(_fl->m_notepad), m_autoSave(_fl->m_autoSave),
+		WDL_PtrList<PathSlotItem>() {}
 	int GetType() {return m_type;}
 	// _path: short resource path or full path
 	PathSlotItem* AddSlot(const char* _path="", const char* _desc="") {
@@ -106,23 +118,46 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 	void EditSlot(int _slot);
 	void ClearSlot(int _slot, bool _guiUpdate=true);
 	void ClearSlotPrompt(COMMAND_T* _ct);
-	const char* GetDesc() {return m_desc.Get();}
-	const char* GetFileExt() {return m_ext.Get();}
 	const char* GetResourceDir() {return m_resDir.Get();}
-
-private:
+	const char* GetDesc() {return m_desc.Get();}
+	const char* GetMenuDesc() {
+		if (!m_menuDesc.GetLength()) {
+			m_menuDesc.SetFormatted(m_desc.GetLength()+8, "%ss", m_desc.Get()); // add trailing 's'
+			char* p = (char*)m_menuDesc.Get();
+			*p = toupper(*p); // 1st char to upper
+		}
+		return m_menuDesc.Get();
+	}
+	const char* GetFileExt() {return m_ext.Get();}
+	bool IsValidFileExt(const char* _ext) {
+		if (!_ext) return false;
+		if (!m_ext.GetLength())
+			return IsMediaExtension(_ext, false);
+		return (_stricmp(_ext, m_ext.Get()) == 0);
+	}
+	void GetFileFilter(char* _filter, int _maxFilterLength) {
+		if (!_filter) return;
+		if (m_ext.GetLength()) {
+			_snprintf(_filter, _maxFilterLength, "REAPER %s (*.%s)X*.%s", m_desc.Get(), m_ext.Get(), m_ext.Get());
+			// special code for multiple null terminated strings ('X' -> '\0')
+			if (char* p = strchr(_filter, ')')) *(p+1) = '\0';
+		} 
+		else memcpy(_filter, plugin_getFilterList(), _maxFilterLength); // memcpy because of '\0'
+	}
+	bool HasNotepad() {return m_notepad;}
+	bool HasAutoSave() {return m_autoSave;}
+protected:
 	int m_type;
-	WDL_FastString m_resDir; // Resource sub-directory name *AND* S&M.ini section
-	WDL_FastString m_desc; // used in user messages
-	WDL_FastString m_ext; // file extension w/o '.' (ex: "rfxchain")
+	WDL_FastString m_resDir;	// resource sub-directory name and S&M.ini section/key names
+	WDL_FastString m_desc;		// used in user messages and in main dropdown box menu items
+	WDL_FastString m_ext;		// file extension w/o '.' (ex: "rfxchain"), "" means all supported media files
+	WDL_FastString m_menuDesc;	// deduced from m_desc (lazy init)
+	bool m_notepad, m_autoSave;
 };
 
 
 //JFB
-extern FileSlotList g_fxChainFiles;
-extern FileSlotList g_trTemplateFiles;
-extern FileSlotList g_prjTemplateFiles;
-
+extern WDL_PtrList<FileSlotList> g_slots;
 extern int g_prjLoaderStartPref;
 extern int g_prjLoaderEndPref;
 

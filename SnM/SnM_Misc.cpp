@@ -29,12 +29,38 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
+#include "SNM_FXChainView.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // File util
 // JFB!!! TODO: WDL_UTF8, v4's exist_fn, ..
 ///////////////////////////////////////////////////////////////////////////////
+
+const char* GetFileExtension(const char* _fn)
+{
+	if (const char* ext = strrchr(_fn, '.'))
+		return ext+1;
+	return "";
+}
+
+void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz)
+{
+	const char* p = strrchr(_fullFn, PATH_SLASH_CHAR);
+	if (p) p++;
+	else p = _fullFn;
+	lstrcpyn(_fn, p, _fnSz);
+	_fn = strrchr(_fn, '.');
+	if (_fn) *_fn = '\0';
+}
+
+const char* GetFilenameWithExt(const char* _fullFn)
+{
+	const char* p = strrchr(_fullFn, PATH_SLASH_CHAR);
+	if (p) p++;
+	else p = _fullFn;
+	return p;
+}
 
 bool FileExistsErrMsg(const char* _fn, bool _errMsg)
 {
@@ -260,14 +286,13 @@ void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx)
 }
 
 // write a full INI file's section in one go
+// "the data in the buffer pointed to by the lpString parameter consists 
+// of one or more null-terminated strings, followed by a final null character"
+// note: _iniSection gets mangled to avoid a re-copy 
 void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, const char* _iniFn)
 {
 	if (_iniSectionName && _iniSection && _iniFn)
 	{
-/*JFB no!! doing that leads to some odd ini file cache pb
-		if (_iniSection->GetLength())
-			_iniSection->Append(" \n");
-*/
 		// "The data in the buffer pointed to by the lpString parameter consists 
 		// of one or more null-terminated strings, followed by a final null character"
 		char* buf = (char*)calloc(_iniSection->GetLength()+1, sizeof(char));
@@ -278,9 +303,55 @@ void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, co
 		WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, _iniFn); //flush section
 		WritePrivateProfileSection(_iniSectionName, buf, _iniFn);
 		free(buf);
+/* JFB commented atm: should be faster though (!?)
+		// final null character
+		int newSz = _iniSection->GetLength()+1;
+		_iniSection->SetLen(newSz);
+		char* p = (char*)_iniSection->Get(); // cast to char* OK here: the WDL_FastString length will not be updated
+		p[newSz-1] = '\0';
+		// null-terminated strings
+		for (int j=0; j < newSz; j++)
+			if (p[j] == '\n') p[j] = '\0';
+		WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, _iniFn); // flush section
+		WritePrivateProfileSection(_iniSectionName, p, _iniFn);
+*/
 	}
 }
 
+// fills a list of filenames for the desired extension
+// if _ext == NULL or '\0', look for media files
+// note: it is up to the caller to free _files (e.g. WDL_PtrList_DeleteOnDestroy)
+void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs)
+{
+	WDL_DirScan ds;
+	if (_files && _initDir && !ds.First(_initDir))
+	{
+		bool lookForMedias = (!_ext || !*_ext);
+		do 
+		{
+			if (!strcmp(ds.GetCurrentFN(), ".") || !strcmp(ds.GetCurrentFN(), "..")) 
+				continue;
+
+			WDL_String* foundFn = new WDL_String();
+			ds.GetCurrentFullFN(foundFn);
+
+			if (ds.GetCurrentIsDirectory())
+			{
+				if (_subdirs) ScanFiles(_files, foundFn->Get(), _ext, true);
+				delete foundFn;
+			}
+			else
+			{
+				const char* ext = GetFileExtension(foundFn->Get());
+				if ((lookForMedias && IsMediaExtension(ext, false)) || (!lookForMedias && !_stricmp(ext, _ext)))
+					_files->Add(foundFn);
+				else
+					delete foundFn;
+			}
+		}
+		while(!ds.Next());
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Util
@@ -565,6 +636,34 @@ void DumpWikiActionList2(COMMAND_T* _ct)
 void DumpActionList(COMMAND_T* _ct) {
 	dumpActionList((int)_ct->user, "Dump action list", "%s\t%s\t%s\n", "Section\tId\tAction\n", NULL);
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Theme actions & slots (Resources view)
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef _WIN32
+void LoadThemeSlot(const char* _title, int _slot, bool _errMsg)
+{
+	// Prompt for slot if needed
+	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_THM)->GetSize()); // loops on err
+	if (_slot == -1) return; // user has cancelled
+
+	char fn[BUFFER_SIZE]="";
+	if (g_slots.Get(SNM_SLOT_THM)->GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg))
+	{
+		char cmd[BUFFER_SIZE]=""; _snprintf(cmd, BUFFER_SIZE, "%s\\reaper.exe", GetExePath());
+		WDL_FastString fnStr; fnStr.SetFormatted(BUFFER_SIZE, " \"%s\"", fn);
+		_spawnl(_P_NOWAIT, cmd, fnStr.Get(), NULL);
+	}
+}
+
+void LoadThemeSlot(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_THM)->GetSize())
+		LoadThemeSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_THM)->Get(slot)->IsDefault());
+}
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////

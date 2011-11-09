@@ -29,6 +29,9 @@
 
 using namespace std;
 
+//#define _XEN_LOG
+#define XEN_CMD_SHORTNAME(_ct) (_ct->accel.desc + 14) // +14 to skip "Xenakios/SWS: "
+
 //===========================================================
 // AutoRename.cpp
 void DoAutoRename(COMMAND_T*);
@@ -189,7 +192,6 @@ void DoMoveCursor10pixLeftCreateSel(COMMAND_T*);
 void DoMoveCursor10pixRightCreateSel(COMMAND_T*);
 void ItemPreviewSlice();
 void DoPreviewItem(COMMAND_T*);
-void DoDumpActionsWindow(COMMAND_T*);
 void DoScrollTVPageDown(COMMAND_T*);
 void DoScrollTVPageUp(COMMAND_T*);
 void DoScrollTVHome(COMMAND_T*);

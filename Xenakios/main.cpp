@@ -191,7 +191,7 @@ void DoInsRndFileRndOffsetAtTimeSel(COMMAND_T*)
 	DoInsRndFileEx(false,true,true);
 }
 
-void DoRoundRobinSelectTakes(COMMAND_T*)
+void DoRoundRobinSelectTakes(COMMAND_T* ct)
 {
 	//
 	MediaTrack* CurTrack;
@@ -222,7 +222,7 @@ void DoRoundRobinSelectTakes(COMMAND_T*)
 			}
 		}
 	}
-	Undo_OnStateChangeEx("Cycle Select Takes",4,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 	UpdateTimeline();
 }
 
@@ -265,17 +265,17 @@ void DoSelectTakeInSelectedItems(int takeIndx) // -1 first -2 last take, otherwi
 	}
 }
 
-void DoSelectFirstTakesInItems(COMMAND_T*)
+void DoSelectFirstTakesInItems(COMMAND_T* ct)
 {
 	DoSelectTakeInSelectedItems(-1);
-	Undo_OnStateChangeEx("Select First Takes Of Items",4,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 	UpdateTimeline();
 }
 
-void DoSelectLastTakesInItems(COMMAND_T*)
+void DoSelectLastTakesInItems(COMMAND_T* ct)
 {
 	DoSelectTakeInSelectedItems(-2);
-	Undo_OnStateChangeEx("Select Last Takes Of Items",4,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 	UpdateTimeline();
 }
 
@@ -365,20 +365,20 @@ void DoSaveMarkersAsTextFile(COMMAND_T*)
 	}
 }
 
-void DoResampleTakeOneSemitoneDown(COMMAND_T*)
+void DoResampleTakeOneSemitoneDown(COMMAND_T* ct)
 {
 	Undo_BeginBlock();
 	Main_OnCommand(40518, 0);
 	Main_OnCommand(40205, 0);
-	Undo_EndBlock("Pitch item down by 1 semitone (resampled)",0);	
+	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);	
 }
 
-void DoResampleTakeOneSemitoneUp(COMMAND_T*)
+void DoResampleTakeOneSemitoneUp(COMMAND_T* ct)
 {
 	Undo_BeginBlock();
 	Main_OnCommand(40517, 0);
 	Main_OnCommand(40204, 0);
-	Undo_EndBlock("Pitch item up by 1 semitone (resampled)",0);
+	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);
 }
 
 void DoLoopAndPlaySelectedItems(COMMAND_T*)
@@ -561,39 +561,6 @@ void DoStopPreviewItem(COMMAND_T*)
 	}
 }
 
-//JFB deprecated? (more powerfull dump actions exist..)
-void DoDumpActionsWindow(COMMAND_T*)
-{
-#ifndef _WIN32
-	MessageBox(g_hwndParent, "Not implemented for OSX.", "Action Unavailable", MB_OK);
-	return;
-#endif
-
-	std::ofstream os("C:/ReaperActionlist.txt");
-	os << "Shortcut\t\t\tDescription" << "\n";
-	HWND hActionsWindow= FindWindowEx(NULL,NULL,"#32770","Actions");
-	if (hActionsWindow!=0)
-	{
-		HWND hActionListView=FindWindowEx(hActionsWindow,NULL,"SysListView32","List1");
-		if (hActionListView!=0)
-		{
-			int NumActions=ListView_GetItemCount(hActionListView);
-			int i;
-			for (i=0;i<NumActions;i++)
-			{
-				char buf[500];
-				char buf2[50];
-				ListView_GetItemText(hActionListView,i,1,buf,500);
-				ListView_GetItemText(hActionListView,i,0,buf2,50);
-				if (strcmp(buf2,"")==0) strcpy(buf2,"No shortcut");
-				os << buf2;
-				os.width(30);
-				os << "\t\t\t" << buf << "\n";
-			}
-		}
-	}
-}
-
 void DoScrollTVPageDown(COMMAND_T*)
 {
 	HWND hTrackView=GetTrackWnd();
@@ -630,7 +597,7 @@ void DoScrollTVEnd(COMMAND_T*)
 	}
 }
 
-void DoRenameMarkersWithAscendingNumbers(COMMAND_T*)
+void DoRenameMarkersWithAscendingNumbers(COMMAND_T* ct)
 {
 	int x=0;
 	
@@ -649,7 +616,7 @@ void DoRenameMarkersWithAscendingNumbers(COMMAND_T*)
 			j++;
 		}
 	}
-	Undo_OnStateChangeEx("Rename markers with ascending numbers",8,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),8,-1);
 }
 
 void DoSetStopAtEndOfTimeSel(int enabled) // -1 toggle 0 unset 1 set

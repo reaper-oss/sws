@@ -492,7 +492,11 @@ typedef struct
 
 //JFB found by reverse eng. --->
   int unknown_1[7];
-  int window_list[3];
+  int genlist_bg;
+  int genlist_fg;
+  int genlist_gridlines;
+  int genlist_sel[2];
+  int genlist_selinactive[2];
 //JFB <---
 
   // NOTE: DO NOT REMOVE/INSERT IN THIS STRUCT. ONLY ADD.

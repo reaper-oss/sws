@@ -193,6 +193,7 @@ bool isCyclationsWndDisplayed(COMMAND_T*);
 #endif
 
 // *** SnM_Dlg.cpp ***
+ColorTheme* SNM_GetColorTheme(bool _checkForSize=false);
 LICE_CachedFont* SNM_GetThemeFont();
 HBRUSH SNM_GetThemeBrush(int _col=-666);
 void SNM_GetThemeListColors(int* _bg, int* _txt);
@@ -364,6 +365,9 @@ void MESetCCLanes(COMMAND_T*);
 void MESaveCCLanes(COMMAND_T*);
 
 // *** SnM_Misc.cpp ***
+const char* GetFileExtension(const char* _fn);
+void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz);
+const char* GetFilenameWithExt(const char* _fullFn);
 bool FileExistsErrMsg(const char* _fn, bool _errMsg=true);
 bool SNM_DeleteFile(const char* _filename);
 bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
@@ -376,6 +380,7 @@ void GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx);
 void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, const char* _iniFn);
+void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs);
 int SNM_NamedCommandLookup(const char* _cmdId);
 int FindMarkerRegion(double _pos);
 void makeUnformatedConfigString(const char* _in, WDL_FastString* _out);
@@ -391,6 +396,10 @@ void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
 void SimulateMouseClick(COMMAND_T*);
 void DumpWikiActionList2(COMMAND_T*);
 void DumpActionList(COMMAND_T*);
+#ifdef _WIN32
+void LoadThemeSlot(const char* _title, int _slot, bool _errMsg);
+void LoadThemeSlot(COMMAND_T* _ct);
+#endif
 #ifdef _SNM_MISC
 void ShowTakeEnvPadreTest(COMMAND_T*);
 void dumpWikiActionList(COMMAND_T*);
@@ -477,8 +486,15 @@ bool autoSaveTrackSlots(bool _delItems, bool _delEnvs, const char* _dirPath, cha
 void setMIDIInputChannel(COMMAND_T*);
 void remapMIDIInputChannel(COMMAND_T*);
 void StopTrackPreviewsRun();
-void PlaySelTrackPreview(COMMAND_T*);
-void ClearMediaFileSlot(COMMAND_T*);
+void StopSelTrackPreview(COMMAND_T*);
+void PlaySelTrackSlot(const char* _title, int _slot, bool _errMsg);
+void PlaySelTrackSlot(COMMAND_T*);
+void TogglePlaySelTrackSlot(const char* _title, int _slot, bool _errMsg);
+void TogglePlaySelTrackSlot(COMMAND_T* _ct);
+void InsertMediaSlot(const char* _title, int _slot, int _insertMode, bool _errMsg);
+void InsertMediaSlotCurTr(COMMAND_T* _ct);
+void InsertMediaSlotNewTr(COMMAND_T* _ct);
+void InsertMediaSlotTakes(COMMAND_T* _ct);
 
 // *** SnM_Windows.cpp ***
 bool SNM_IsActiveWindow(HWND _h);

@@ -502,7 +502,23 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 16" }, "S&M_MAP_MIDI_INPUT_CH16", remapMIDIInputChannel, NULL, 16},
 
 	// Media file slots -------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Clear media file slot..." }, "S&M_CLR_MEDIAFILE_SLOT", ClearMediaFileSlot, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open Resources window (Media files)" }, "S&M_SHOW_RESVIEW_MEDIA", OpenResourceView, "S&&M Resources", 3, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear media file slot..." }, "S&M_CLR_MEDIA_SLOT", ResourceViewClearSlotPrompt, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks, prompt for slot" }, "S&M_PLAYMEDIA_SELTRACKp", PlaySelTrackSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Toggle play media file in selected tracks, prompt for slot" }, "S&M_TGL_PLAYMEDIA_SELTRACKp", TogglePlaySelTrackSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Stop playing media files" }, "S&M_STOPMEDIA_ALLTRACK", StopSelTrackPreview, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Stop playing media files in selected tracks" }, "S&M_STOPMEDIA_SELTRACK", StopSelTrackPreview, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Add media file to current track, prompt for slot" }, "S&M_ADDMEDIA_CURTRACKp", InsertMediaSlotCurTr, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Add media file to new track, prompt for slot" }, "S&M_ADDMEDIA_NEWTRACKp", InsertMediaSlotNewTr, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Add media file to selected items as takes, prompt for slot" }, "S&M_ADDMEDIA_SELITEMp", InsertMediaSlotTakes, NULL, -1},
+
+	// Theme slots ------------------------------------------------------------
+#ifdef _WIN32
+	{ { DEFACCEL, "SWS/S&M: Open Resources window (Themes)" }, "S&M_SHOW_RESVIEW_THEME", OpenResourceView, "S&&M Resources", 4, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear theme slot..." }, "S&M_CLR_THEME_SLOT", ResourceViewClearSlotPrompt, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Load theme, prompt for slot" }, "S&M_LOAD_THEMEp", LoadThemeSlot, NULL, -1},
+#endif
+
 
 	// Other, misc ------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Show action list (S&M Extension section)" }, "S&M_ACTION_LIST", SNM_ShowActionList, NULL, 0},
@@ -567,6 +583,17 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot %02d" }, "S&M_APPLY_PRJTEMPLATE", loadOrSelectProject, NULL, 10},
 	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot %02d" }, "S&M_NEWTAB_PRJTEMPLATE", loadOrSelectProjectNewTab, NULL, 10},
+
+	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks, slot %02d" }, "S&M_PLAYMEDIA_SELTRACK", PlaySelTrackSlot, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Toggle play media file in selected tracks, slot %02d" }, "S&M_TGL_PLAYMEDIA_SELTRACK", TogglePlaySelTrackSlot, NULL, 8, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Add media file to current track, slot %02d" }, "S&M_ADDMEDIA_CURTRACK", InsertMediaSlotCurTr, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Add media file to new track, slot %02d" }, "S&M_ADDMEDIA_NEWTRACK", InsertMediaSlotNewTr, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Add media file to selected items as takes, slot %02d" }, "S&M_ADDMEDIA_SELITEM", InsertMediaSlotTakes, NULL, 4},
+
+#ifdef _WIN32
+	{ { DEFACCEL, "SWS/S&M: Load theme, slot %02d" }, "S&M_LOAD_THEME", LoadThemeSlot, NULL, 4},
+#endif
+
 #ifdef _SNM_PRESETS
 	{ { DEFACCEL, "SWS/S&M: Trigger next preset for FX %02d of selected tracks" }, "S&M_NEXT_PRESET_FX", triggerNextPreset, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for FX %02d of selected tracks" }, "S&M_PREVIOUS_PRESET_FX", triggerPreviousPreset, NULL, 4},
@@ -582,8 +609,6 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Save displayed CC lanes, slot %02d" }, "S&M_MESAVECCLANES", MESaveCCLanes, NULL, 4},
 
 	{ { DEFACCEL, "SWS/S&M: Set selected tracks to group %02d (default flags)" }, "S&M_SET_TRACK_GROUP", SetTrackGroup, SNM_MAX_TRACK_GROUPS_STR, 8},
-
-	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks, slot %02d" }, "S&M_PLAYMEDIA_SELTRACK", PlaySelTrackPreview, NULL, 8},
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
@@ -824,7 +849,7 @@ WDL_FastString g_SNMiniFilename;
 
 void IniFileInit()
 {
-	// Init S&M.ini file(+ "upgrade": move old ones to the new REAPER's resource path)
+	// S&M.ini deinition, cleanup & "upgrade"
 	char buf[SNM_MAX_INI_SECTION], iniFn[BUFFER_SIZE];
 	_snprintf(buf, BUFFER_SIZE, SNM_OLD_FORMATED_INI_FILE, GetExePath()); // old location
 	_snprintf(iniFn, BUFFER_SIZE, SNM_FORMATED_INI_FILE, GetResourcePath());
@@ -832,20 +857,26 @@ void IniFileInit()
 		MoveFile(buf, iniFn);
 	g_SNMiniFilename.Set(iniFn);
 
-	// S&M.ini cleanup & "auto upgrade"
 	// [FXCHAIN] -> [FXChains]
-	*buf = '\0';
-	int sectionSz = GetPrivateProfileSection("FXCHAIN", buf, SNM_MAX_INI_SECTION, iniFn);
+	*buf = '\0'; int sectionSz = GetPrivateProfileSection("FXCHAIN", buf, SNM_MAX_INI_SECTION, iniFn);
 	WritePrivateProfileStruct("FXCHAIN", NULL, NULL, 0, iniFn); //flush section
-	if (sectionSz)
-		WritePrivateProfileSection("FXChains", buf, iniFn);
+	if (sectionSz) WritePrivateProfileSection("FXChains", buf, iniFn);
 
 	// [FXCHAIN_VIEW] -> [RESOURCE_VIEW]
-	*buf = '\0';
-	sectionSz = GetPrivateProfileSection("FXCHAIN_VIEW", buf, SNM_MAX_INI_SECTION, iniFn);
+	*buf = '\0'; sectionSz = GetPrivateProfileSection("FXCHAIN_VIEW", buf, SNM_MAX_INI_SECTION, iniFn);
 	WritePrivateProfileStruct("FXCHAIN_VIEW", NULL, NULL, 0, iniFn); //flush section
-	if (sectionSz)
-		WritePrivateProfileSection("RESOURCE_VIEW", buf, iniFn);
+	if (sectionSz) WritePrivateProfileSection("RESOURCE_VIEW", buf, iniFn);
+
+	// Flush some deprecated pref key names (no biggy here, default values will apply..)
+	WritePrivateProfileString("RESOURCE_VIEW", "DblClick_Type", NULL, g_SNMiniFilename.Get());
+	WritePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Tr_Template", NULL, g_SNMiniFilename.Get());
+	WritePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Prj_Template", NULL, g_SNMiniFilename.Get());
+	WritePrivateProfileString("RESOURCE_VIEW", "AutoSaveFXChain", NULL, g_SNMiniFilename.Get());
+	WritePrivateProfileString("RESOURCE_VIEW", "AutoFillFXChain", NULL, g_SNMiniFilename.Get());
+	WritePrivateProfileString("RESOURCE_VIEW", "AutoSaveTrTemplate", NULL, g_SNMiniFilename.Get());
+	WritePrivateProfileString("RESOURCE_VIEW", "AutoFillTrTemplate", NULL, g_SNMiniFilename.Get());
+	WritePrivateProfileString("RESOURCE_VIEW", "AutoSavePrjTemplate", NULL, g_SNMiniFilename.Get());
+	WritePrivateProfileString("RESOURCE_VIEW", "AutoFillPrjTemplate", NULL, g_SNMiniFilename.Get());
 
 	// Load general prefs 
 	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, iniFn) == 1);

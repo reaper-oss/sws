@@ -168,14 +168,14 @@ private:
 
 CEnvelopeStateHandler g_EnvelopeHandler;
 
-void DoShiftEnvelopeLater(COMMAND_T*)
+void DoShiftEnvelopeLater(COMMAND_T* ct)
 {
 	g_EnvelopeHandler.EnvTransform_ShiftInTime(1.0);
-	Undo_OnStateChangeEx("Shift envelope in time",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
-void DoShiftEnvelopeEarlier(COMMAND_T*)
+void DoShiftEnvelopeEarlier(COMMAND_T* ct)
 {
 	g_EnvelopeHandler.EnvTransform_ShiftInTime(-1.0);
-	Undo_OnStateChangeEx("Shift envelope in time",UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }

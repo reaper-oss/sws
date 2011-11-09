@@ -331,5 +331,5 @@ void DoAutoRename(COMMAND_T*)
 		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_AUTORENAMETAKES), g_hwndParent, (DLGPROC)AutoRenameDlgProc);
 	}
 	else
-		MessageBox(g_hwndParent, "No items selected!", "Error", MB_OK);
+		MessageBox(g_hwndParent, "No selected item!", "Error", MB_OK);
 }

@@ -34,6 +34,12 @@
 // Themed UIs
 ///////////////////////////////////////////////////////////////////////////////
 
+ColorTheme* SNM_GetColorTheme(bool _checkForSize) {
+	int sz; ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
+	if (ct && (!_checkForSize || _checkForSize && sz >= sizeof(ColorTheme))) return ct;
+	return NULL;
+}
+
 LICE_CachedFont* SNM_GetThemeFont()
 {
 	static LICE_CachedFont themeFont;
@@ -51,7 +57,7 @@ LICE_CachedFont* SNM_GetThemeFont()
 		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
 	}
 	themeFont.SetBkMode(TRANSPARENT);
-	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
+	ColorTheme* ct = SNM_GetColorTheme();
 	themeFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
 	return &themeFont;
 }
@@ -73,13 +79,13 @@ HBRUSH SNM_GetThemeBrush(int _col)
 void SNM_GetThemeListColors(int* _bg, int* _txt)
 {
 	int bgcol=-1, txtcol=-1;
-	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
+	ColorTheme* ct = SNM_GetColorTheme(true);
 	if (g_bv4 && ct) {
-		bgcol = ct->window_list[0];
-		txtcol = ct->window_list[1];
-		// note: grid (ct->window_list[2]) & selection colors not managed
+		bgcol = ct->genlist_bg;
+		txtcol = ct->genlist_fg;
+		// note: grid & selection colors not managed
 	}
-	if (bgcol == txtcol) { // safety (e.g. REAPER < v4.11pre4)
+	if (bgcol == txtcol) { // safety
 		bgcol = GSC_mainwnd(COLOR_WINDOW);
 		txtcol = GSC_mainwnd(COLOR_BTNTEXT);
 	}
@@ -89,10 +95,16 @@ void SNM_GetThemeListColors(int* _bg, int* _txt)
 
 void SNM_GetThemeEditColors(int* _bg, int* _txt)
 {
-	int bgcol=-1, txtcol=GSC_mainwnd(COLOR_BTNTEXT);
-	ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
-	if (ct) bgcol = ct->main_editbk;
-	if (bgcol == txtcol) bgcol = GSC_mainwnd(COLOR_WINDOW);
+	int bgcol=-1, txtcol=-1;
+	ColorTheme* ct = SNM_GetColorTheme();
+	if (ct) {
+		bgcol =  ct->main_editbk;
+		txtcol = GSC_mainwnd(COLOR_BTNTEXT);
+	}
+	if (bgcol == txtcol) { // safety
+		bgcol = GSC_mainwnd(COLOR_WINDOW);
+		txtcol = GSC_mainwnd(COLOR_BTNTEXT);
+	}
 	if (_bg) *_bg = bgcol;
 	if (_txt) *_txt = txtcol;
 }

@@ -87,10 +87,13 @@ BOOL WINAPI RenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+#ifdef _XEN_LOG
 ofstream *g_renamelogstream=0;
+#endif
 
 void AddToRenameLog(string &oldfilename,string &newfilename)
 {
+#ifdef _XEN_LOG
 	if (!g_renamelogstream)
 	{
 		//std::ofstream os(OutFileName);	
@@ -100,9 +103,10 @@ void AddToRenameLog(string &oldfilename,string &newfilename)
 	}
 	if (g_renamelogstream)
 		*g_renamelogstream << "\"" << oldfilename << "\" <renamed_to> \"" << newfilename << "\"" << endl;
+#endif
 }
 
-void DoRenameSourceFileDialog666(COMMAND_T*)
+void DoRenameSourceFileDialog666(COMMAND_T* ct)
 {
 	vector<MediaItem_Take*> thetakes;
 	vector<MediaItem_Take*> alltakes;
@@ -164,11 +168,11 @@ void DoRenameSourceFileDialog666(COMMAND_T*)
 	if (bChanges)
 	{
 		UpdateTimeline();
-		Undo_OnStateChangeEx("Rename take source file (doesn't really undo file rename!!!)",4,-1);
+		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 	}
 }
 
-void DoRenameTakeAndSourceFileDialog(COMMAND_T*)
+void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 {
 	vector<MediaItem_Take*> thetakes;
 	vector<MediaItem_Take*> alltakes;
@@ -233,10 +237,10 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T*)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Rename take(s) and source file(s) (doesn't undo file rename!)",4,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 }
 
-void DoRenameTakeDialog666(COMMAND_T*)
+void DoRenameTakeDialog666(COMMAND_T* ct)
 {
 	vector<MediaItem_Take*> thetakes;
 	XenGetProjectTakes(thetakes,true,true);
@@ -256,10 +260,10 @@ void DoRenameTakeDialog666(COMMAND_T*)
 			break;
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Rename take(s)",4,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 }
 
-void DoRenameTakeAllDialog666(COMMAND_T*)
+void DoRenameTakeAllDialog666(COMMAND_T* ct)
 {
 	vector<MediaItem_Take*> thetakes;
 	XenGetProjectTakes(thetakes,true,true);
@@ -277,6 +281,6 @@ void DoRenameTakeAllDialog666(COMMAND_T*)
 				GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",(char*)g_renameparams.NewName.c_str());
 		}
 		UpdateTimeline();
-		Undo_OnStateChangeEx("Rename take(s)",4,-1);
+		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 	}
 }

@@ -47,7 +47,7 @@ void SanitizeString(char *StringToSanitize)
 
 }
 
-void DoRenameTakesWithBWAVDesc(COMMAND_T*)
+void DoRenameTakesWithBWAVDesc(COMMAND_T* ct)
 {
 	WDL_TypedBuf<MediaItem*> selectedItems;
 	SWS_GetSelectedMediaItems(&selectedItems);
@@ -73,7 +73,7 @@ void DoRenameTakesWithBWAVDesc(COMMAND_T*)
 				MessageBox(g_hwndParent,"Take source media has no Broadcast Info Description","Info",MB_OK);
 		}
 	}	
-	Undo_OnStateChangeEx("Rename takes with BWAV description", UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 

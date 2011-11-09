@@ -582,7 +582,7 @@ void DoStoreSelectedTakes(COMMAND_T*)
 	//CurTake = GetMediaItemTake(CurItem,-1);
 }
 
-void DoRecallSelectedTakes(COMMAND_T*)
+void DoRecallSelectedTakes(COMMAND_T* ct)
 {
 	MediaItem *CurItem;
 	MediaItem *CompareItem;
@@ -610,18 +610,15 @@ void DoRecallSelectedTakes(COMMAND_T*)
 		bool Dummybool=g_VecItemStates[i].ItemSelected;
 		if (Dummybool==true)
 		{
-		int TakeIndex=g_VecItemStates[i].ActiveTake;
-		CurItem=g_VecItemStates[i].ReaperItem;
-		GetSetMediaItemInfo(CurItem,"B_UISEL",&Dummybool);
-		GetSetMediaItemInfo(CurItem,"I_CURTAKE",&TakeIndex);
-		}
-		
+			int TakeIndex=g_VecItemStates[i].ActiveTake;
+			CurItem=g_VecItemStates[i].ReaperItem;
+			GetSetMediaItemInfo(CurItem,"B_UISEL",&Dummybool);
+			GetSetMediaItemInfo(CurItem,"I_CURTAKE",&TakeIndex);
+		}	
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Recall item selection and active takes",4,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 }
-
-
 
 void DoDeleteItemAndMedia(COMMAND_T*)
 {
@@ -896,7 +893,7 @@ void DoSetPrevFadeOutShape(COMMAND_T*)
 	CycleItemsFadeShape(1,false);
 }
 
-void DoSetFadeToCrossfade(COMMAND_T*)
+void DoSetFadeToCrossfade(COMMAND_T* ct)
 {
 	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
 	{
@@ -907,10 +904,10 @@ void DoSetFadeToCrossfade(COMMAND_T*)
 		GetSetMediaItemInfo(item, "D_FADEOUTLEN", &AutoFadeOut);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Set item fades to crossfade lengths",4,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 }
 
-void DoSetFadeToDefaultFade(COMMAND_T*)
+void DoSetFadeToDefaultFade(COMMAND_T* ct)
 {
 	double* pdDefFade = (double*)GetConfigVar("deffadelen");
 	double dZero = 0.0;
@@ -923,10 +920,10 @@ void DoSetFadeToDefaultFade(COMMAND_T*)
 		GetSetMediaItemInfo(item, "D_FADEOUTLEN", pdDefFade);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Set item fades to default length",4,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 }
 
-void DoItemPitch2Playrate(COMMAND_T*)
+void DoItemPitch2Playrate(COMMAND_T* ct)
 {
 	MediaItem *CurItem;
 	MediaItem_Take *CurTake;
@@ -960,10 +957,10 @@ void DoItemPitch2Playrate(COMMAND_T*)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Item pitch to playrate",4,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 }
 
-void DoItemPlayrate2Pitch(COMMAND_T*)
+void DoItemPlayrate2Pitch(COMMAND_T* ct)
 {
 	MediaItem *CurItem;
 	MediaItem_Take *CurTake;
@@ -1008,7 +1005,7 @@ void DoItemPlayrate2Pitch(COMMAND_T*)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Item playrate to pitch",4,-1);	
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);	
 }
 
 
@@ -1344,7 +1341,7 @@ void DoReplaceItemFileWithPrevRPPInFolder(COMMAND_T*)
 	ReplaceItemSourceFileFromFolder(false,0,-1,true); // don't ask folder mode next/prev, -1 prev file in folder, only look for rpp files
 }
 
-void DoReverseItemOrder(COMMAND_T*)
+void DoReverseItemOrder(COMMAND_T* ct)
 {
 	vector<MediaItem*> theitems;
 	XenGetProjectItems(theitems,true,false);
@@ -1361,7 +1358,7 @@ void DoReverseItemOrder(COMMAND_T*)
 		GetSetMediaItemInfo(theitems[i],"D_POSITION",&itempos);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Reverse order of items",4,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 }
 
 typedef struct t_itemorderstruct
@@ -1372,7 +1369,7 @@ typedef struct t_itemorderstruct
 	double itemlen;
 } t_itemorderstruct;
 
-void DoShuffleItemOrder(COMMAND_T*)
+void DoShuffleItemOrder(COMMAND_T* ct)
 {
 	vector<MediaItem*> theitems;
 	XenGetProjectItems(theitems,true,false);
@@ -1404,10 +1401,10 @@ void DoShuffleItemOrder(COMMAND_T*)
 		i++;
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Shuffle order of items",4,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 }
 
-void DoShuffleItemOrder2(COMMAND_T*)
+void DoShuffleItemOrder2(COMMAND_T* ct)
 {
 	vector<MediaItem*> theitems;
 	XenGetProjectItems(theitems,true,false);
@@ -1442,7 +1439,7 @@ void DoShuffleItemOrder2(COMMAND_T*)
 			i++;
 		}
 		UpdateTimeline();
-		Undo_OnStateChangeEx("Shuffle order of items (2)",4,-1);
+		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 	}
 }
 
@@ -1565,7 +1562,7 @@ void DoSelectItemUnderEditCursorOnSelTrack(COMMAND_T*)
 	UpdateTimeline();
 }
 
-void DoNormalizeSelTakesTodB(COMMAND_T*)
+void DoNormalizeSelTakesTodB(COMMAND_T* ct)
 {
 	// 40108 // normalize takes
 	vector<MediaItem_Take*> seltakes;
@@ -1587,14 +1584,13 @@ void DoNormalizeSelTakesTodB(COMMAND_T*)
 				double newgain=DB2VAL(newdb);
 				GetSetMediaItemTakeInfo(seltakes[i],"D_VOL",&newgain);
 			}
-			Undo_EndBlock("Normalize items to dB value",0);
+			Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);
 			UpdateTimeline();
 		}
-
 	}
 }
 
-void DoResetItemsOffsetAndLength(COMMAND_T*)
+void DoResetItemsOffsetAndLength(COMMAND_T* ct)
 {
 	vector<MediaItem_Take*> thetakes;
 	XenGetProjectTakes(thetakes,true,true);
@@ -1616,7 +1612,7 @@ void DoResetItemsOffsetAndLength(COMMAND_T*)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Reset item length and media offset",4,-1);
+	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
 }
 
 void SetSelItemsFadesToConf(const char *confID)

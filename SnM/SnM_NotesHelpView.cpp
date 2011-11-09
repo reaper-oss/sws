@@ -703,8 +703,8 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 
 		if (fontHeight <= 5)
 			return;
-
-		ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(NULL);
+		
+		ColorTheme* ct = SNM_GetColorTheme();
 		HFONT lf = CreateFont(fontHeight,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE);
 		dynFont.SetFromHFont(lf,LICE_FONT_FLAG_OWNS_HFONT);

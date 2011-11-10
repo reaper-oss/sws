@@ -56,6 +56,7 @@
 #define SNM_ACTION_HELP_INI_FILE	"%s/S&M_Action_help_en.ini"
 #define SNM_CYCACTION_INI_FILE		"%s/S&M_Cyclactions.ini"
 #endif
+#define SNM_INI_FILE_VERSION		1
 #define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
 #define SNM_MAX_SECTION_NAME_LEN	64
 #define SNM_MAX_SECTION_ACTIONS		128
@@ -380,6 +381,8 @@ void GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx);
 void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, const char* _iniFn);
+void RenamePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn);
+void RenamePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn);
 void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs);
 int SNM_NamedCommandLookup(const char* _cmdId);
 int FindMarkerRegion(double _pos);
@@ -419,10 +422,10 @@ bool IsNotesHelpLocked(COMMAND_T*);
 
 // *** SnM_Project.cpp ***
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
-void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errMsg);
+void loadOrSelectProjectSlot(const char* _title, int _slot, bool _newTab, bool _errMsg);
 bool autoSaveProjectSlot(bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnSize);
-void loadOrSelectProject(COMMAND_T*);
-void loadOrSelectProjectNewTab(COMMAND_T*);
+void loadOrSelectProjectSlot(COMMAND_T*);
+void loadOrSelectProjectTabSlot(COMMAND_T*);
 bool isProjectLoaderConfValid();
 void projectLoaderConf(COMMAND_T*);
 void loadOrSelectNextPreviousProject(COMMAND_T*);
@@ -487,14 +490,16 @@ void setMIDIInputChannel(COMMAND_T*);
 void remapMIDIInputChannel(COMMAND_T*);
 void StopTrackPreviewsRun();
 void StopSelTrackPreview(COMMAND_T*);
-void PlaySelTrackSlot(const char* _title, int _slot, bool _errMsg);
+void PlaySelTrackSlot(const char* _title, int _slot, bool _errMsg, bool _loop);
 void PlaySelTrackSlot(COMMAND_T*);
-void TogglePlaySelTrackSlot(const char* _title, int _slot, bool _errMsg);
-void TogglePlaySelTrackSlot(COMMAND_T* _ct);
+void LoopSelTrackSlot(COMMAND_T*);
+void TogglePlaySelTrackSlot(const char* _title, int _slot, bool _errMsg, bool _loop);
+void TogglePlaySelTrackSlot(COMMAND_T*);
+void ToggleLoopSelTrackSlot(COMMAND_T*);
 void InsertMediaSlot(const char* _title, int _slot, int _insertMode, bool _errMsg);
-void InsertMediaSlotCurTr(COMMAND_T* _ct);
-void InsertMediaSlotNewTr(COMMAND_T* _ct);
-void InsertMediaSlotTakes(COMMAND_T* _ct);
+void InsertMediaSlotCurTr(COMMAND_T*);
+void InsertMediaSlotNewTr(COMMAND_T*);
+void InsertMediaSlotTakes(COMMAND_T*);
 
 // *** SnM_Windows.cpp ***
 bool SNM_IsActiveWindow(HWND _h);

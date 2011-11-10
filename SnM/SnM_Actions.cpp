@@ -292,8 +292,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (project templates)" }, "S&M_SHOW_RESVIEW_PRJ_TEMPLATES", OpenResourceView, NULL, 2, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear project template slot..." }, "S&M_CLR_PRJTEMPLATE_SLOT", ResourceViewClearSlotPrompt, NULL, 2},
 //	{ { DEFACCEL, "SWS/S&M: Auto-save project template" }, "S&M_SAVE_PRJTEMPLATE_SLOT", ResourceViewAutoSave, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, prompt for slot" }, "S&M_APPLY_PRJTEMPLATEp", loadOrSelectProject, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), prompt for slot" }, "S&M_NEWTAB_PRJTEMPLATEp", loadOrSelectProjectNewTab, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Select/load project template, prompt for slot" }, "S&M_APPLY_PRJTEMPLATEp", loadOrSelectProjectSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), prompt for slot" }, "S&M_NEWTAB_PRJTEMPLATEp", loadOrSelectProjectTabSlot, NULL, -1},
 
 	{ { DEFACCEL, "SWS/S&M: Project loader/selecter: configuration" }, "S&M_PRJ_LOADER_CONF", projectLoaderConf, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Project loader/selecter: next (cycle)" }, "S&M_PRJ_LOADER_NEXT", loadOrSelectNextPreviousProject, NULL, 1},
@@ -505,7 +505,9 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (Media files)" }, "S&M_SHOW_RESVIEW_MEDIA", OpenResourceView, "S&&M Resources", 3, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear media file slot..." }, "S&M_CLR_MEDIA_SLOT", ResourceViewClearSlotPrompt, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks, prompt for slot" }, "S&M_PLAYMEDIA_SELTRACKp", PlaySelTrackSlot, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Toggle play media file in selected tracks, prompt for slot" }, "S&M_TGL_PLAYMEDIA_SELTRACKp", TogglePlaySelTrackSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Play/loop media file in selected tracks, prompt for slot" }, "S&M_LOOPMEDIA_SELTRACKp", LoopSelTrackSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle), prompt for slot" }, "S&M_TGL_PLAYMEDIA_SELTRACKp", TogglePlaySelTrackSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Play/loop media file in selected tracks (toggle), prompt for slot" }, "S&M_TGL_LOOPMEDIA_SELTRACKp", ToggleLoopSelTrackSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Stop playing media files" }, "S&M_STOPMEDIA_ALLTRACK", StopSelTrackPreview, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Stop playing media files in selected tracks" }, "S&M_STOPMEDIA_SELTRACK", StopSelTrackPreview, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Add media file to current track, prompt for slot" }, "S&M_ADDMEDIA_CURTRACKp", InsertMediaSlotCurTr, NULL, -1},
@@ -581,11 +583,13 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot %02d" }, "S&M_APPLY_TRTEMPLATE", loadSetTrackTemplate, NULL, 10},
 	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot %02d" }, "S&M_ADD_TRTEMPLATE", loadImportTrackTemplate, NULL, 10},
 
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot %02d" }, "S&M_APPLY_PRJTEMPLATE", loadOrSelectProject, NULL, 10},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot %02d" }, "S&M_NEWTAB_PRJTEMPLATE", loadOrSelectProjectNewTab, NULL, 10},
+	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot %02d" }, "S&M_APPLY_PRJTEMPLATE", loadOrSelectProjectSlot, NULL, 10},
+	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot %02d" }, "S&M_NEWTAB_PRJTEMPLATE", loadOrSelectProjectTabSlot, NULL, 10},
 
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks, slot %02d" }, "S&M_PLAYMEDIA_SELTRACK", PlaySelTrackSlot, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Toggle play media file in selected tracks, slot %02d" }, "S&M_TGL_PLAYMEDIA_SELTRACK", TogglePlaySelTrackSlot, NULL, 8, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Play/loop media file in selected tracks, slot %02d" }, "S&M_LOOPMEDIA_SELTRACK", LoopSelTrackSlot, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle), slot %02d" }, "S&M_TGL_PLAYMEDIA_SELTRACK", TogglePlaySelTrackSlot, NULL, 8, fakeIsToggledAction},
+	{ { DEFACCEL, "SWS/S&M: Play/loop media file in selected tracks (toggle), slot %02d" }, "S&M_TGL_LOOPMEDIA_SELTRACK", ToggleLoopSelTrackSlot, NULL, 8, fakeIsToggledAction},
 	{ { DEFACCEL, "SWS/S&M: Add media file to current track, slot %02d" }, "S&M_ADDMEDIA_CURTRACK", InsertMediaSlotCurTr, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Add media file to new track, slot %02d" }, "S&M_ADDMEDIA_NEWTRACK", InsertMediaSlotNewTr, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Add media file to selected items as takes, slot %02d" }, "S&M_ADDMEDIA_SELITEM", InsertMediaSlotTakes, NULL, 4},
@@ -823,19 +827,34 @@ int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 
 void SNMSaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 {
-	WDL_FastString iniSection;
-	iniSection.SetFormatted(128, "; Set the number of slots/actions you want below (none: 0, max: %d, quit REAPER first!)\n", SNM_MAX_DYNAMIC_ACTIONS);
-	int i=0; char name[SNM_MAX_ACTION_NAME_LEN] = "";
-	while(_cmds[i].id != LAST_COMMAND) {
+	WDL_FastString iniSection, str;
+	iniSection.SetFormatted(128, "; Set the number of slots/actions you want below (none: 0, max: %d, exit REAPER first!)\n", SNM_MAX_DYNAMIC_ACTIONS);
+
+	WDL_String nameStr; // not fast string here: buffer gets mangeled..
+	int i=0;
+	while(_cmds[i].id != LAST_COMMAND)
+	{
 		COMMAND_T* ct = &_cmds[i++];
-		strncpy(name, SNM_CMD_SHORTNAME(ct), SNM_MAX_ACTION_NAME_LEN); // strncpy: lstrcpyn() KO here
-		ReplaceStringFormat(name, 'n');
-		if (ct->menuText != NULL) { // custom max value specified ?
-			strncat(name, " (n <= ", SNM_MAX_ACTION_NAME_LEN);
-			strncat(name, ct->menuText, SNM_MAX_ACTION_NAME_LEN);
-			strncat(name, "!)", SNM_MAX_ACTION_NAME_LEN);
+		
+		nameStr.Set(SNM_CMD_SHORTNAME(ct));
+		ReplaceStringFormat(nameStr.Get(), 'n');
+		if (ct->menuText != NULL) // custom max value specified ?
+		{
+			nameStr.Append(" (n <= ");
+			nameStr.Append(ct->menuText);
+			nameStr.Append("!)");
 		}
-		iniSection.AppendFormatted(SNM_MAX_ACTION_CUSTID_LEN+SNM_MAX_ACTION_NAME_LEN+8, "%s=%d ; %s\n", ct->id, (int)ct->user, name);
+
+		// indent things
+/*JFB \t solution sucks here!
+		iniSection.AppendFormatted(SNM_MAX_ACTION_CUSTID_LEN+SNM_MAX_ACTION_NAME_LEN+8, "%s=%d\t; %s\n", ct->id, (int)ct->user, name);
+*/
+		str.SetFormatted(BUFFER_SIZE, "%s=%d", ct->id, (int)ct->user);
+		while (str.GetLength() < 32) str.Append(" ");
+		str.Append(" ; ");
+		iniSection.Append(str.Get());
+		iniSection.Append(nameStr.Get());
+		iniSection.Append("\n");
 	}
 	SaveIniSection("NbOfActions", &iniSection, _inifn);
 }
@@ -846,39 +865,42 @@ void SNMSaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_FastString g_SNMiniFilename;
+int g_iniFileVersion = 0;
 
 void IniFileInit()
 {
-	// S&M.ini deinition, cleanup & "upgrade"
-	char buf[SNM_MAX_INI_SECTION], iniFn[BUFFER_SIZE];
-	_snprintf(buf, BUFFER_SIZE, SNM_OLD_FORMATED_INI_FILE, GetExePath()); // old location
+	// S&M.ini definition
+	char iniFn[BUFFER_SIZE]="";
 	_snprintf(iniFn, BUFFER_SIZE, SNM_FORMATED_INI_FILE, GetResourcePath());
-	if (FileExists(buf))
-		MoveFile(buf, iniFn);
 	g_SNMiniFilename.Set(iniFn);
 
-	// [FXCHAIN] -> [FXChains]
-	*buf = '\0'; int sectionSz = GetPrivateProfileSection("FXCHAIN", buf, SNM_MAX_INI_SECTION, iniFn);
-	WritePrivateProfileStruct("FXCHAIN", NULL, NULL, 0, iniFn); //flush section
-	if (sectionSz) WritePrivateProfileSection("FXChains", buf, iniFn);
+	// move from old location if needed/possible
+	char oldIniFn[BUFFER_SIZE]="";
+	_snprintf(oldIniFn, BUFFER_SIZE, SNM_OLD_FORMATED_INI_FILE, GetExePath());
+	if (FileExists(oldIniFn))
+		MoveFile(oldIniFn, iniFn); // no check: use the new file whatever happens
 
-	// [FXCHAIN_VIEW] -> [RESOURCE_VIEW]
-	*buf = '\0'; sectionSz = GetPrivateProfileSection("FXCHAIN_VIEW", buf, SNM_MAX_INI_SECTION, iniFn);
-	WritePrivateProfileStruct("FXCHAIN_VIEW", NULL, NULL, 0, iniFn); //flush section
-	if (sectionSz) WritePrivateProfileSection("RESOURCE_VIEW", buf, iniFn);
+	// S&M.ini upgrade if needed
+	g_iniFileVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, iniFn);
+	if (g_iniFileVersion < 1) // i.e. sws version < v2.1.0 #18
+	{
+		// upgrade deprecated section names 
+		RenamePrivateProfileSection("FXCHAIN", "FXChains", iniFn);
+		RenamePrivateProfileSection("FXCHAIN_VIEW", "RESOURCE_VIEW", iniFn);
+		// upgrade deprecated key names (automatically generated now..)
+		RenamePrivateProfileString("RESOURCE_VIEW", "DblClick_Type", "DblClickFXChains", iniFn);
+		RenamePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Tr_Template", "DblClickTrackTemplates", iniFn);
+		RenamePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Prj_Template", "DblClickProjectTemplates", iniFn);
+		RenamePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirFXChain", "AutoSaveDirFXChains", iniFn);
+		RenamePrivateProfileString("RESOURCE_VIEW", "AutoFillDirFXChain", "AutoFillDirFXChains", iniFn);
+		RenamePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirTrTemplate", "AutoSaveDirTrackTemplates", iniFn);
+		RenamePrivateProfileString("RESOURCE_VIEW", "AutoFillDirTrTemplate", "AutoFillDirTrackTemplates", iniFn);
+		RenamePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirPrjTemplate", "AutoSaveDirProjectTemplates", iniFn);
+		RenamePrivateProfileString("RESOURCE_VIEW", "AutoFillDirPrjTemplate", "AutoFillDirProjectTemplates", iniFn);
+	}
+	g_iniFileVersion = SNM_INI_FILE_VERSION;
 
-	// Flush some deprecated pref key names (no biggy here, default values will apply..)
-	WritePrivateProfileString("RESOURCE_VIEW", "DblClick_Type", NULL, g_SNMiniFilename.Get());
-	WritePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Tr_Template", NULL, g_SNMiniFilename.Get());
-	WritePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Prj_Template", NULL, g_SNMiniFilename.Get());
-	WritePrivateProfileString("RESOURCE_VIEW", "AutoSaveFXChain", NULL, g_SNMiniFilename.Get());
-	WritePrivateProfileString("RESOURCE_VIEW", "AutoFillFXChain", NULL, g_SNMiniFilename.Get());
-	WritePrivateProfileString("RESOURCE_VIEW", "AutoSaveTrTemplate", NULL, g_SNMiniFilename.Get());
-	WritePrivateProfileString("RESOURCE_VIEW", "AutoFillTrTemplate", NULL, g_SNMiniFilename.Get());
-	WritePrivateProfileString("RESOURCE_VIEW", "AutoSavePrjTemplate", NULL, g_SNMiniFilename.Get());
-	WritePrivateProfileString("RESOURCE_VIEW", "AutoFillPrjTemplate", NULL, g_SNMiniFilename.Get());
-
-	// Load general prefs 
+	// load general prefs 
 	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, iniFn) == 1);
 	g_toolbarsAutoRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, iniFn), 100, 5000);
 	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, iniFn);
@@ -886,11 +908,11 @@ void IniFileInit()
 
 void IniFileExit()
 {
-	WDL_FastString iniSection;
-
 	// save general prefs & info
-	iniSection.AppendFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build #%d\n", SWS_VERSION); 
-	iniSection.AppendFormatted(BUFFER_SIZE, "; %s\n", g_SNMiniFilename.Get()); 
+	WDL_FastString iniSection;
+	iniSection.SetFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build #%d\n; ", SWS_VERSION); 
+	iniSection.Append(g_SNMiniFilename.Get()); 
+	iniSection.AppendFormatted(128, "\nIniFileUpgrade=%d\n", g_iniFileVersion); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_toolbarsAutoRefreshFreq);
 	iniSection.AppendFormatted(128, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1 : 0); 
@@ -898,9 +920,10 @@ void IniFileExit()
 
 	// save dynamic actions
 	SNMSaveDynamicCommands(g_SNM_dynamicCmdTable, g_SNMiniFilename.Get());
+
 #ifdef _WIN32
-		// force ini file's cache flush, see http://support.microsoft.com/kb/68827
-		WritePrivateProfileString(NULL, NULL, NULL, g_SNMiniFilename.Get());
+	// force ini file's cache flush, see http://support.microsoft.com/kb/68827
+	WritePrivateProfileString(NULL, NULL, NULL, g_SNMiniFilename.Get());
 #endif
 }
 
@@ -912,9 +935,7 @@ void IniFileExit()
 #ifdef _SWS_MENU
 static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
 {
-	if (!strcmp(_menustr, "Main extensions") && !_flag) {
-		SWSCreateMenuFromCommandTable(g_SNM_cmdTable, _hMenu);
-	}
+	if (!strcmp(_menustr, "Main extensions") && !_flag) SWSCreateMenuFromCommandTable(g_SNM_cmdTable, _hMenu);
 /*
 	else if (!strcmp(_menustr, "Media item context") && !_flag) {}
 	else if (!strcmp(_menustr, "Track control panel context") && !_flag) {}

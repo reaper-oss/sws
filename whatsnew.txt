@@ -2,37 +2,50 @@
 Resources view: two new slot types, Media files and Themes!
 
 New "Media files" slot type in the Resources view:
-Manage slots for all media file types supported by REAPER (WAV, MIDI, etc..) and more.. Just like other slot types of the Resources view, it features:
-+Context menu: various "auto-fill slots" features, rename file, insert/add/clear/etc.. slot, delete slots & files, show path in explorer/finder, etc..
+Manage slots for all media file types supported by REAPER (WAV, MIDI, etc..) and more.
++Reminder: you can switch the Resources view to "Media files" in the top left dropdown box
 +External drag-drop (e.g. drag a bunch of files from an external tool -> drop them into the Resources view)
 +Internal drag-drop (e.g. drag-drop slots, drag a bunch of slots from the Resources view -> drop them into the arrange) - Windows OS only
-+Reminder: you can switch the Resources view to "Media files" in the top left dropdown box
+Context menu: 
++Various "auto-fill slots" features, rename file, insert/add/clear/etc.. slot, delete slots & files, show path in explorer/finder, etc..
++Bulk add multiple selected media file slots to current track, to new tracks and to selected items as takes
++Bulk play or loop multiple media file slots
+In this view the double-click can be customized to:
++Toggle play or loop in selected tracks
++Add media file to current track, to new track or to selected items as takes
 Added slot actions for media files:
 +SWS/S&M: Open Resources window (Media files)
-+SWS/S&M: Toggle play media file in selected tracks, slot n - where 'n' is in [1; 8], cutomizable in the S&M.ini file (up to 99 slots)
-+SWS/S&M: Toggle play media file in selected tracks, prompt for slot
++SWS/S&M: Add media file to current track, slot n  - where 'n' is in [1; 4], cutomizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Add media file to new track, slot n  - where 'n' is in [1; 4], cutomizable
++SWS/S&M: Add media file to selected items as takes, slot n - where 'n' is in [1; 4], cutomizable
++SWS/S&M: Play media file in selected tracks, slot n - where 'n' is in [1; 8], cutomizable
 +SWS/S&M: Play media file in selected tracks, prompt for slot
++SWS/S&M: Play media file in selected tracks (toggle), slot n - where 'n' is in [1; 8], cutomizable
++SWS/S&M: Play media file in selected tracks (toggle), prompt for slot
++SWS/S&M: Play/loop media file in selected tracks (toggle), slot n - where 'n' is in [1; 8], cutomizable
++SWS/S&M: Play/loop media file in selected tracks (toggle), prompt for slot
++SWS/S&M: Play/loop media file in selected tracks, slot n - where 'n' is in [1; 8], cutomizable
++SWS/S&M: Play/loop media file in selected tracks, prompt for slot
 +SWS/S&M: Stop playing media files
 +SWS/S&M: Stop playing media files in selected tracks
-+SWS/S&M: Add media file to current track, slot n - where 'n' is in [1; 4], cutomizable in the S&M.ini file (up to 99 slots)
-+SWS/S&M: Add media file to new track, slot n - where 'n' is in [1; 4], cutomizable in the S&M.ini file (up to 99 slots)
-+SWS/S&M: Add media file to selected items as takes, slot n - where 'n' is in [1; 4], cutomizable in the S&M.ini file (up to 99 slots)
 
 New "Themes" slot type in the Resources view (on Windows OS only):
-Manage slots for themes.. Just like other slot types of the Resources view, it features:
-+Context menu: various "auto-fill slots" features, rename file, insert/add/clear/etc.. slot, delete slots & files, show path in explorer/finder, etc..
-+External drag-drop (e.g. drag a bunch of ReaperthemeZip files -> drop them into the Resources view)
-+Internal drag-drop (e.g. drag-drop slots, drag a slot from the Resources view -> drop into into the arrange)
+Manage slots for themes, i.e. for .ReaperthemeZip files (unpacked themes are not supported).
 +Reminder: you can switch the Resources view to "Themes" in the top left dropdown box
++External drag-drop (e.g. drag a bunch of .ReaperthemeZip files -> drop them into the Resources view)
++Internal drag-drop (e.g. drag-drop slots, drag a slot from the Resources view -> drop into into the arrange)
++Context menu: load theme, various "auto-fill slots" features, insert/add/clear/etc..
 Added slot actions for themes:
 +SWS/S&M: Open Resources window (Themes)
 +SWS/S&M: Load theme, slot n - where 'n' is in [1; 4], cutomizable in the S&M.ini file (up to 99 slots)
 +SWS/S&M: Load theme, prompt for slot
-+SWS/S&M: Clear theme slot..."
++SWS/S&M: Clear theme slot...
 
-Fixed issue 409: fixed theming colors when REAPER version is < v4.11
-Almost all Xenakios actions now have consistent undo point names (vs action name)
-Removed Xenakios log file
+Many Xenakios actions now have consistent undo names (vs action names) + removed a log file
+
+Fixed issue 409: bad theming colors when REAPER version was < v4.11
+
+S&M.ini file: better presentation of configurable slot actions
 
 !v2.1.0 #17 (November 2, 2011)
 Added media file slot actions (details in http://code.google.com/p/sws-extension/issues/detail?id=386|issue 386|):
@@ -48,12 +61,13 @@ Notes/Help view: region names can be edited too (they are edited/displayed accor
 
 Resources view: the context menu item "Select/load project templates (new tab)" now also opens multiple selected projects in separate tabs (issue 369)
 
-(On Windows/REAPER v4.11) All S&M themable views use the following configurable colors of the Theme Editor:
+All S&M themable views use the following configurable colors of the Theme Editor (on Windows & REAPER v4.11):
 +Window background
 +Window text
 +Window edit background
 +Window list background
 +Window list text
++I/O Window 3D highlight and shadows colors ("Main Window 3D" colors are poorly defined in the v4 default theme..)
 
 Optimizations:
 +Many actions run faster

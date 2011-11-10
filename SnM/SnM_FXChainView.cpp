@@ -46,7 +46,7 @@
 #define AUTO_FILL_DEFAULT_MSG			0x110003
 #define CLEAR_MSG						0x110004
 #define DEL_SLOTS_MSG					0x110005
-#define DEL_SLOTFILES_MSG				0x110006
+#define CLRSLOTS_DELFILES_MSG				0x110006
 #define ADD_SLOT_MSG					0x110007
 #define INSERT_SLOT_MSG					0x110008
 #define EDIT_MSG						0x110009
@@ -76,13 +76,20 @@
 #define TRT_LOAD_PASTE_ITEMS_MSG		0x110043
 #define TRT_AUTO_SAVE_WITEMS_MSG		0x110044
 #define PRJ_SELECT_LOAD_MSG				0x110050 // specific project template cmds
-#define PRJ_SELECT_LOAD_NEWTAB_MSG		0x110051
+#define PRJ_SELECT_LOAD_TAB_MSG			0x110051
 #define PRJ_AUTO_FILL_RECENTS_MSG		0x110052
-#define PRJ_LOADER_CONF					0x110053
-#define PRJ_LOADER_SET					0x110054
-#define PRJ_LOADER_CLEAR				0x110055
+#define PRJ_LOADER_CONF_MSG				0x110053
+#define PRJ_LOADER_SET_MSG				0x110054
+#define PRJ_LOADER_CLEAR_MSG			0x110055
+#define MED_PLAY_MSG					0x110060  // specific media file cmds
+#define MED_LOOP_MSG					0x110061
+#define MED_ADD_CURTR_MSG				0x110062
+#define MED_ADD_NEWTR_MSG				0x110063
+#define MED_ADD_TAKES_MSG				0x110064
+#define THM_LOAD_MSG					0x110070  // specific theme file cmds
 
-// labels shared by actions and popup menu items
+
+// labels shared by actions (well, undo points) and popup menu items
 #define FXC_LOAD_APPLY_TRACK_STR		"Apply FX chain to selected tracks"
 #define FXCIN_LOAD_APPLY_TRACK_STR		"Apply input FX chain to selected tracks"
 #define FXC_LOAD_APPLY_TAKE_STR			"Apply FX chain to selected items"
@@ -95,7 +102,7 @@
 #define TRT_LOAD_APPLY_ITEMS_STR		"Replace selected tracks' items w/ track template ones"
 #define TRT_LOAD_PASTE_ITEMS_STR		"Paste track template's items to selected tracks"
 #define PRJ_SELECT_LOAD_STR				"Select/load project template"
-#define PRJ_SELECT_LOAD_NEWTAB_STR		"Select/load project templates (new tab)"
+#define PRJ_SELECT_LOAD_TAB_STR			"Select/load project templates (new tab)"
 
 #define DRAGNDROP_EMPTY_SLOT_FILE		">Empty<"
 #define FILTER_DEFAULT_STR				"Filter"
@@ -418,20 +425,21 @@ void SNM_ResourceView::OnItemDblClk(SWS_ListItem* item, int iCol)
 			case SNM_SLOT_PRJ:
 				switch(g_dblClickType[g_type]) {
 					case 0:
-						loadOrSelectProject(PRJ_SELECT_LOAD_STR, slot, false, !wasDefaultSlot);
+						loadOrSelectProjectSlot(PRJ_SELECT_LOAD_STR, slot, false, !wasDefaultSlot);
 						break;
 					case 1:
-						loadOrSelectProject(PRJ_SELECT_LOAD_NEWTAB_STR, slot, true, !wasDefaultSlot);
+						loadOrSelectProjectSlot(PRJ_SELECT_LOAD_TAB_STR, slot, true, !wasDefaultSlot);
 						break;
 				}
 				break;
 			case SNM_SLOT_MEDIA: {
 				int insertMode = -1;
 				switch(g_dblClickType[g_type]) {
-					case 0: TogglePlaySelTrackSlot("Toggle play media file in selected tracks" /*JFB!!!*/, slot, !wasDefaultSlot); break;
-					case 1: insertMode = 0; break;
-					case 2: insertMode = 1; break;
-					case 3: insertMode = 3; break;
+					case 0: TogglePlaySelTrackSlot("Play media file in selected tracks (toggle)" /*JFB!!!*/, slot, !wasDefaultSlot, false); break;
+					case 1: TogglePlaySelTrackSlot("Play/loop media file in selected tracks (toggle)" /*JFB!!!*/, slot, !wasDefaultSlot, true); break;
+					case 2: insertMode = 0; break;
+					case 3: insertMode = 1; break;
+					case 4: insertMode = 3; break;
 				}
 				if (insertMode >= 0)
 					InsertMediaSlot("Insert media" /*JFB!!!*/, slot, insertMode, !wasDefaultSlot);
@@ -595,25 +603,27 @@ void SNM_ResourceWnd::FillDblClickTypeCombo()
 	m_cbDblClickType.Empty();
 	switch(g_type)
 	{
+		/*JFB!!!*/
 		case SNM_SLOT_FXC:
 			m_cbDblClickType.AddItem("Apply");
 			m_cbDblClickType.AddItem("Paste");
 			break;
 		case SNM_SLOT_TR:
-			m_cbDblClickType.AddItem("Apply to sel. tracks (w/o items)");
+			m_cbDblClickType.AddItem("Apply to sel tracks (w/o items)");
 			m_cbDblClickType.AddItem("Import tracks (w/ items)");
-			m_cbDblClickType.AddItem("Paste items to sel. tracks");
-			m_cbDblClickType.AddItem("Replace items of sel. tracks");
+			m_cbDblClickType.AddItem("Paste items to sel tracks");
+			m_cbDblClickType.AddItem("Replace items of sel tracks");
 			break;
 		case SNM_SLOT_PRJ:
 			m_cbDblClickType.AddItem("Load/select project");
 			m_cbDblClickType.AddItem("Load/select project tab");
 			break;
 		case SNM_SLOT_MEDIA:
-			m_cbDblClickType.AddItem("Toggle play in selected tracks");
+			m_cbDblClickType.AddItem("Play in sel tracks (toggle)");
+			m_cbDblClickType.AddItem("Play/loop in sel tracks (toggle)");
 			m_cbDblClickType.AddItem("Add to current track");
 			m_cbDblClickType.AddItem("Add to new track");
-			m_cbDblClickType.AddItem("Add to selected items as takes");
+			m_cbDblClickType.AddItem("Add to sel items as takes");
 			break;
 		case SNM_SLOT_THM:
 			m_cbDblClickType.AddItem("Load theme");
@@ -669,7 +679,7 @@ void SNM_ResourceWnd::OnInitDlg()
 		GetPrivateProfileString("RESOURCE_VIEW", iniKey, defaultPath, path, BUFFER_SIZE, g_SNMiniFilename.Get());
 		g_autoFillDirs.Add(new WDL_FastString(path));
 
-		_snprintf(iniKey, 64, "DblClick_%s", g_slots.Get(i)->GetResourceDir());
+		_snprintf(iniKey, 64, "DblClick%s", g_slots.Get(i)->GetResourceDir());
 		g_dblClickType[i] = GetPrivateProfileInt("RESOURCE_VIEW", iniKey, 0, g_SNMiniFilename.Get());
 	}
 
@@ -758,29 +768,20 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case INSERT_SLOT_MSG:
 			InsertAtSelectedSlot(true);
 			break;
-		case DEL_SLOTFILES_MSG:
+		case CLEAR_MSG:
+			ClearSelectedSlots(true);
+			break;
+		case CLRSLOTS_DELFILES_MSG:
+			ClearSelectedSlots(true, true);
+			break;
 		case DEL_SLOTS_MSG:
-			DeleteSelectedSlots(true, wParam == DEL_SLOTFILES_MSG);
+			DeleteSelectedSlots(true);
 			break;
 		case LOAD_MSG:
-			if (item)
-				GetCurList()->BrowseSlot(slot);
+			if (item) GetCurList()->BrowseSlot(slot);
 			break;
-		case CLEAR_MSG: 
-		{
-			bool updt = false;
-			while(item) {
-				slot = GetCurList()->Find(item);
-				GetCurList()->ClearSlot(slot, false);
-				updt = true;
-				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
-			}
-			if (updt) Update();
-			break;
-		}
 		case EDIT_MSG:
-			if (item)
-				GetCurList()->EditSlot(slot);
+			if (item) GetCurList()->EditSlot(slot);
 			break;
 		case EXPLORE_MSG:
 		{
@@ -932,18 +933,18 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		// ***** Project template *****
 		case PRJ_SELECT_LOAD_MSG:
 			if (item && slot >= 0) {
-				loadOrSelectProject(PRJ_SELECT_LOAD_STR, slot, false, !wasDefaultSlot);
+				loadOrSelectProjectSlot(PRJ_SELECT_LOAD_STR, slot, false, !wasDefaultSlot);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
 			break;
-		case PRJ_SELECT_LOAD_NEWTAB_MSG:
+		case PRJ_SELECT_LOAD_TAB_MSG:
 		{
 			bool updt = false;
 			while(item) {
 				slot = GetCurList()->Find(item);
 				wasDefaultSlot = item->IsDefault();
-				loadOrSelectProject(PRJ_SELECT_LOAD_NEWTAB_STR, slot, true, !wasDefaultSlot);
+				loadOrSelectProjectSlot(PRJ_SELECT_LOAD_TAB_STR, slot, true, !wasDefaultSlot);
 				updt |= (wasDefaultSlot && !item->IsDefault()); // slot has been filled ?
 				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
 			}
@@ -977,10 +978,10 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				MessageBox(GetMainHwnd(), "No valid recent projects found!", "S&M - Warning", MB_OK);
 			break;
 		}
-		case PRJ_LOADER_CONF:
+		case PRJ_LOADER_CONF_MSG:
 			projectLoaderConf(NULL);
 			break;
-		case PRJ_LOADER_SET:
+		case PRJ_LOADER_SET_MSG:
 		{
 			int min=GetCurList()->GetSize(), max=0;
 			while(item) {
@@ -996,9 +997,35 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
-		case PRJ_LOADER_CLEAR:
+		case PRJ_LOADER_CLEAR_MSG:
 			g_prjLoaderStartPref = g_prjLoaderEndPref = -1;
 			Update();
+			break;
+
+		// ***** media files *****
+		case MED_PLAY_MSG:
+		case MED_LOOP_MSG:
+			while(item) {
+				slot = GetCurList()->Find(item);
+				wasDefaultSlot = item->IsDefault();
+				TogglePlaySelTrackSlot("Play/loop media file" /*JFB!!!*/, slot, !wasDefaultSlot, wParam==MED_LOOP_MSG);
+				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
+			}
+			break;
+		case MED_ADD_CURTR_MSG:
+		case MED_ADD_NEWTR_MSG:
+		case MED_ADD_TAKES_MSG:
+			while(item) {
+				slot = GetCurList()->Find(item);
+				wasDefaultSlot = item->IsDefault();
+				InsertMediaSlot("Insert media" /*JFB!!!*/, slot, wParam==MED_ADD_CURTR_MSG?0:wParam==MED_ADD_NEWTR_MSG?1:3, !wasDefaultSlot);
+				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
+			}
+			break;
+
+		// ***** theme *****
+		case THM_LOAD_MSG:
+			LoadThemeSlot("Load theme" /*JFB!!!*/, slot, !wasDefaultSlot);
 			break;
 
 		// ***** WDL GUI & others *****
@@ -1044,7 +1071,83 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 {
 	HMENU hMenu = CreatePopupMenu();
+	int iCol;
+	SWS_ListItem* item = m_pLists.Get(0)->GetHitItem(x, y, &iCol);
+	PathSlotItem* pItem = (PathSlotItem*)item;
+	UINT enabled = (pItem && !pItem->IsDefault()) ? MF_ENABLED : MF_GRAYED;
+	if (pItem && iCol >= 0)
+	{
+		switch(g_type)
+		{
+			case SNM_SLOT_FXC:
+				AddToMenu(hMenu, FXC_LOAD_APPLY_TRACK_STR, FXC_LOAD_APPLY_TRACK_MSG, -1, false, enabled);
+				AddToMenu(hMenu, FXC_LOAD_PASTE_TRACK_STR, FXC_LOAD_PASTE_TRACK_MSG, -1, false, enabled);
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hMenu, FXC_LOAD_APPLY_TAKE_STR, FXC_LOAD_APPLY_TAKE_MSG, -1, false, enabled);
+				AddToMenu(hMenu, FXC_LOAD_APPLY_ALL_TAKES_STR, FXC_LOAD_APPLY_ALL_TAKES_MSG, -1, false, enabled);
+				AddToMenu(hMenu, FXC_LOAD_PASTE_TAKE_STR, FXC_LOAD_PASTE_TAKE_MSG, -1, false, enabled);
+				AddToMenu(hMenu, FXC_LOAD_PASTE_ALL_TAKES_STR, FXC_LOAD_PASTE_ALL_TAKES_MSG, -1, false, enabled);
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hMenu, "Copy", FXC_COPY_MSG, -1, false, enabled);
+				break;
+			case SNM_SLOT_TR:
+				AddToMenu(hMenu, TRT_LOAD_APPLY_STR, TRT_LOAD_APPLY_MSG, -1, false, enabled);
+				AddToMenu(hMenu, TRT_LOAD_IMPORT_STR, TRT_LOAD_IMPORT_MSG, -1, false, enabled);
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hMenu, TRT_LOAD_APPLY_ITEMS_STR, TRT_LOAD_APPLY_ITEMS_MSG, -1, false, enabled);
+				AddToMenu(hMenu, TRT_LOAD_PASTE_ITEMS_STR, TRT_LOAD_PASTE_ITEMS_MSG, -1, false, enabled);
+				break;
+			case SNM_SLOT_PRJ:
+			{
+				AddToMenu(hMenu, PRJ_SELECT_LOAD_STR, PRJ_SELECT_LOAD_MSG, -1, false, enabled);
+				AddToMenu(hMenu, PRJ_SELECT_LOAD_TAB_STR, PRJ_SELECT_LOAD_TAB_MSG, -1, false, enabled);
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				int x=0, nbsel=0; while(m_pLists.Get(0)->EnumSelected(&x))nbsel++;
+				 /*JFB!!!*/
+				AddToMenu(hMenu, "Project loader/selecter configuration...", PRJ_LOADER_CONF_MSG);
+				AddToMenu(hMenu, "Set project loader/selecter from slot selection", PRJ_LOADER_SET_MSG, -1, false, nbsel>1 ? MF_ENABLED : MF_GRAYED);
+				AddToMenu(hMenu, "Clear project loader/selecter configuration", PRJ_LOADER_CLEAR_MSG, -1, false, isProjectLoaderConfValid() ? MF_ENABLED : MF_GRAYED);
+				break;
+			}
+			case SNM_SLOT_MEDIA:
+				 /*JFB!!!*/
+				AddToMenu(hMenu, "Play in selected tracks (toggle)", MED_PLAY_MSG, -1, false, enabled);
+				AddToMenu(hMenu, "Play/loop in seleted tracks (toggle)", MED_LOOP_MSG, -1, false, enabled);
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hMenu, "Add to current track", MED_ADD_CURTR_MSG, -1, false, enabled);
+				AddToMenu(hMenu, "Add to new tracks"/*JFB!!! s!!!*/, MED_ADD_NEWTR_MSG, -1, false, enabled);
+				AddToMenu(hMenu, "Add to selected items as takes", MED_ADD_TAKES_MSG, -1, false, enabled);
+				break;
+			case SNM_SLOT_THM:
+				AddToMenu(hMenu, "Load theme" /*JFB!!!*/, THM_LOAD_MSG, -1, false, enabled);
+				break;
+		}
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+	}
 
+	// always displayed, even if the list is empty
+	AddToMenu(hMenu, "Add slot", ADD_SLOT_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
+
+	if (pItem && iCol >= 0)
+	{
+		AddToMenu(hMenu, "Insert slot", INSERT_SLOT_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
+		AddToMenu(hMenu, "Clear slots", CLEAR_MSG, -1, false, enabled);
+		AddToMenu(hMenu, "Delete slots", DEL_SLOTS_MSG);
+
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+		AddToMenu(hMenu, "Load slot/file...", LOAD_MSG);
+		AddToMenu(hMenu, "Delete files", CLRSLOTS_DELFILES_MSG, -1, false, enabled);
+		AddToMenu(hMenu, "Rename file", RENAME_MSG, -1, false, enabled);
+		if (GetCurList()->HasNotepad())
+#ifdef _WIN32
+			AddToMenu(hMenu, "Edit file...", EDIT_MSG, -1, false, enabled);
+#else
+			AddToMenu(hMenu, "Display file...", EDIT_MSG, -1, false, enabled);
+#endif
+		AddToMenu(hMenu, "Show path in explorer/finder...", EXPLORE_MSG, -1, false, enabled);
+	}
+
+	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	HMENU hAutoFillSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hAutoFillSubMenu, "Auto-fill");
 	AddToMenu(hAutoFillSubMenu, "Auto-fill...", AUTO_FILL_DIR_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
@@ -1087,70 +1190,6 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 	}
 
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hMenu, "Add slot", ADD_SLOT_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
-
-	int iCol;
-	SWS_ListItem* item = m_pLists.Get(0)->GetHitItem(x, y, &iCol);
-	PathSlotItem* pItem = (PathSlotItem*)item;
-	if (pItem && iCol >= 0)
-	{
-		UINT enabled = !pItem->IsDefault() ? MF_ENABLED : MF_GRAYED;
-		AddToMenu(hMenu, "Insert slot", INSERT_SLOT_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
-		AddToMenu(hMenu, "Clear slots", CLEAR_MSG, -1, false, enabled);
-		AddToMenu(hMenu, "Delete slots", DEL_SLOTS_MSG);
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
-		AddToMenu(hMenu, "Load slot/file...", LOAD_MSG);
-		AddToMenu(hMenu, "Delete slots and files", DEL_SLOTFILES_MSG);
-		AddToMenu(hMenu, "Rename file", RENAME_MSG, -1, false, enabled);
-
-		switch(g_type)
-		{
-			case SNM_SLOT_FXC:
-				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, "Copy", FXC_COPY_MSG, -1, false, enabled);
-				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, FXC_LOAD_APPLY_TRACK_STR, FXC_LOAD_APPLY_TRACK_MSG);
-				AddToMenu(hMenu, FXC_LOAD_PASTE_TRACK_STR, FXC_LOAD_PASTE_TRACK_MSG);
-				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, FXC_LOAD_APPLY_TAKE_STR, FXC_LOAD_APPLY_TAKE_MSG);
-				AddToMenu(hMenu, FXC_LOAD_APPLY_ALL_TAKES_STR, FXC_LOAD_APPLY_ALL_TAKES_MSG);
-				AddToMenu(hMenu, FXC_LOAD_PASTE_TAKE_STR, FXC_LOAD_PASTE_TAKE_MSG);
-				AddToMenu(hMenu, FXC_LOAD_PASTE_ALL_TAKES_STR, FXC_LOAD_PASTE_ALL_TAKES_MSG);
-				break;
-			case SNM_SLOT_TR:
-				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, TRT_LOAD_APPLY_STR, TRT_LOAD_APPLY_MSG);
-				AddToMenu(hMenu, TRT_LOAD_IMPORT_STR, TRT_LOAD_IMPORT_MSG);
-				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, TRT_LOAD_APPLY_ITEMS_STR, TRT_LOAD_APPLY_ITEMS_MSG);
-				AddToMenu(hMenu, TRT_LOAD_PASTE_ITEMS_STR, TRT_LOAD_PASTE_ITEMS_MSG);
-				break;
-			case SNM_SLOT_PRJ:
-				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, PRJ_SELECT_LOAD_STR, PRJ_SELECT_LOAD_MSG);
-				AddToMenu(hMenu, PRJ_SELECT_LOAD_NEWTAB_STR, PRJ_SELECT_LOAD_NEWTAB_MSG);
-				break;
-		}
-
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
-		if (GetCurList()->HasNotepad())
-#ifdef _WIN32
-			AddToMenu(hMenu, "Edit/display file...", EDIT_MSG, -1, false, enabled);
-#else
-			AddToMenu(hMenu, "Display file...", EDIT_MSG, -1, false, enabled);
-#endif
-		AddToMenu(hMenu, "Show path in explorer/finder...", EXPLORE_MSG, -1, false, enabled);
-	}
-
-	if (g_type == SNM_SLOT_PRJ) {
-		int x=0, nbsel=0; while(m_pLists.Get(0)->EnumSelected(&x))nbsel++;
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
-		AddToMenu(hMenu, "Project loader/selecter configuration...", PRJ_LOADER_CONF);
-		AddToMenu(hMenu, "Set project loader/selecter from selection", PRJ_LOADER_SET, -1, false, nbsel>1 ? MF_ENABLED : MF_GRAYED);
-		AddToMenu(hMenu, "Clear project loader/selecter configuration", PRJ_LOADER_CLEAR, -1, false, isProjectLoaderConfValid() ? MF_ENABLED : MF_GRAYED);
-	}
-
-	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	HMENU hFilterSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hFilterSubMenu, "Filter on");
 	AddToMenu(hFilterSubMenu, "Name", FILTER_BY_NAME_MSG, -1, false, g_filterPref == 0 ? MFS_CHECKED : MFS_UNCHECKED);
@@ -1185,14 +1224,16 @@ void SNM_ResourceWnd::OnDestroy()
 	char iniKey[64]=""; WDL_FastString escapedStr;
 	for (int i=0; i < SNM_SLOT_TYPE_COUNT; i++)
 	{
-		_snprintf(iniKey, 64, "AutoSaveDir%s", g_slots.Get(i)->GetResourceDir());
-		makeEscapedConfigString(g_autoSaveDirs.Get(i)->Get(), &escapedStr);
-		WritePrivateProfileString("RESOURCE_VIEW", iniKey, escapedStr.Get(), g_SNMiniFilename.Get()); 
+		if (g_slots.Get(i)->HasAutoSave()) {
+			_snprintf(iniKey, 64, "AutoSaveDir%s", g_slots.Get(i)->GetResourceDir());
+			makeEscapedConfigString(g_autoSaveDirs.Get(i)->Get(), &escapedStr);
+			WritePrivateProfileString("RESOURCE_VIEW", iniKey, escapedStr.Get(), g_SNMiniFilename.Get()); 
+		}
 		_snprintf(iniKey, 64, "AutoFillDir%s", g_slots.Get(i)->GetResourceDir());
 		makeEscapedConfigString(g_autoFillDirs.Get(i)->Get(), &escapedStr);
 		WritePrivateProfileString("RESOURCE_VIEW", iniKey, escapedStr.Get(), g_SNMiniFilename.Get());
 
-		_snprintf(iniKey, 64, "DblClick_%s", g_slots.Get(i)->GetResourceDir());
+		_snprintf(iniKey, 64, "DblClick%s", g_slots.Get(i)->GetResourceDir());
 		_snprintf(cTmp, 8, "%d", g_dblClickType[i]);
 		WritePrivateProfileString("RESOURCE_VIEW", iniKey, cTmp, g_SNMiniFilename.Get());
 	}
@@ -1509,12 +1550,33 @@ void SNM_ResourceWnd::InsertAtSelectedSlot(bool _update)
 	AddSlot(_update); // empty list, no selection, etc.. => add
 }
 
+void SNM_ResourceWnd::ClearSelectedSlots(bool _update, bool _delFiles)
+{
+	bool updt = false; int x=0; PathSlotItem* item;
+	while((item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x)))
+	{
+		int slot = GetCurList()->Find(item);
+		if (slot >= 0) 
+		{
+			if (_delFiles)
+			{
+				char fullPath[BUFFER_SIZE] = "";
+				GetFullResourcePath(GetCurList()->GetResourceDir(), item->m_shortPath.Get(), fullPath, BUFFER_SIZE);
+				SNM_DeleteFile(fullPath);
+			}
+			GetCurList()->ClearSlot(slot, false);
+			updt = true;
+		}
+	}
+	if (_update && updt)
+		Update();
+}
+
 void SNM_ResourceWnd::DeleteSelectedSlots(bool _update, bool _delFiles)
 {
 	// DeleteOnDestroy list: keep (displayed!) pointers until the list view is updated
 	FileSlotList delItems(GetCurList());
-	int x=0;
-	PathSlotItem* item;
+	int x=0; PathSlotItem* item;
 	while((item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x)))
 	{
 		int slot = GetCurList()->Find(item);
@@ -1699,6 +1761,6 @@ void ResourceViewClearSlotPrompt(COMMAND_T* _ct) {
 
 void ResourceViewAutoSave(COMMAND_T* _ct) {
 	if (g_slots.Get((int)_ct->user)->HasAutoSave()) {
-		//JFB TO DO (requires slight refactoring..)
+		//JFB TO DO?? (requires serious refactoring..)
 	}
 }

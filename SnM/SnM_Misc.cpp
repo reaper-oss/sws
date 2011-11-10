@@ -285,22 +285,19 @@ void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx)
 	}
 }
 
-// write a full INI file's section in one go
+// write a full ini file section in one go
 // "the data in the buffer pointed to by the lpString parameter consists 
 // of one or more null-terminated strings, followed by a final null character"
-// note: _iniSection gets mangled to avoid a re-copy 
 void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, const char* _iniFn)
 {
 	if (_iniSectionName && _iniSection && _iniFn)
 	{
-		// "The data in the buffer pointed to by the lpString parameter consists 
-		// of one or more null-terminated strings, followed by a final null character"
 		char* buf = (char*)calloc(_iniSection->GetLength()+1, sizeof(char));
 		lstrcpyn(buf, _iniSection->Get(), _iniSection->GetLength());
 		for (int j=0; j < _iniSection->GetLength(); j++)
 			if (buf[j] == '\n') 
 				buf[j] = '\0';
-		WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, _iniFn); //flush section
+		WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, _iniFn); // flush section
 		WritePrivateProfileSection(_iniSectionName, buf, _iniFn);
 		free(buf);
 /* JFB commented atm: should be faster though (!?)
@@ -316,6 +313,24 @@ void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, co
 		WritePrivateProfileSection(_iniSectionName, p, _iniFn);
 */
 	}
+}
+
+void RenamePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn)
+{
+	char buf[SNM_MAX_INI_SECTION]="";
+	int sectionSz = GetPrivateProfileSection(_oldAppName, buf, SNM_MAX_INI_SECTION, _iniFn);
+	WritePrivateProfileStruct(_oldAppName, NULL, NULL, 0, _iniFn); // flush section
+	if (sectionSz)
+		WritePrivateProfileSection(_newAppName, buf, _iniFn);
+}
+
+void RenamePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn)
+{
+	char buf[BUFFER_SIZE]="";
+	GetPrivateProfileString(_appName, _oldKey, "", buf, BUFFER_SIZE, _iniFn);
+	WritePrivateProfileString(_appName, _oldKey, NULL, _iniFn); // remove key
+	if (*buf)
+		WritePrivateProfileString(_appName, _newKey, buf, _iniFn);
 }
 
 // fills a list of filenames for the desired extension

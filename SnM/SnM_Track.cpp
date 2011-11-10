@@ -871,7 +871,7 @@ void TrackPreviewLockUnlockMutex(preview_register_t* _prev, bool _lock) {
 	}
 }
 
-void AddStartTrackPreview(MediaTrack* _tr, const char* _fn)
+void AddStartTrackPreview(MediaTrack* _tr, const char* _fn, bool _loop)
 {
 	if (PCM_source* src = PCM_Source_CreateFromFileEx(_fn, false))
 	{
@@ -880,7 +880,7 @@ void AddStartTrackPreview(MediaTrack* _tr, const char* _fn)
 		prev->src = src;
 		prev->m_out_chan = -1;
 		prev->curpos = 0.0;
-		prev->loop = false;
+		prev->loop = _loop;
 		prev->volume = 1.0;
 		prev->preview_track = _tr;
 		g_playPreviews.Add(prev);
@@ -904,7 +904,7 @@ void StopTrackPreviewsRun()
 	{
 		preview_register_t* prev = g_playPreviews.Get(i);
 		TrackPreviewLockUnlockMutex(prev, true);
-		if (prev->curpos >= prev->src->GetLength())
+		if (!prev->loop && prev->curpos >= prev->src->GetLength())
 		{
 			TrackPreviewLockUnlockMutex(prev, false);
 			StopTrackPreview(prev);
@@ -928,8 +928,10 @@ void StopSelTrackPreview(COMMAND_T* _ct)
 			if (tr && (!selTracks || (selTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
 			{
 				TrackPreviewLockUnlockMutex(prev, true);
-				if (prev->preview_track == tr)
+				if (prev->preview_track == tr) {
+					prev->loop = false;
 					prev->curpos = prev->src->GetLength(); // => will be stopped by next call to StopTrackPreviewsRun()
+				}
 				TrackPreviewLockUnlockMutex(prev, false);
 			}
 		}
@@ -942,7 +944,7 @@ void StopSelTrackPreview(COMMAND_T* _ct)
 //JFB!!! TODO: new file SnM_Media.cpp
 ///////////////////////////////////////////////////////////////////////////////
 
-void PlaySelTrackSlot(const char* _title, int _slot, bool _errMsg)
+void PlaySelTrackSlot(const char* _title, int _slot, bool _errMsg, bool _loop)
 {
 	// Prompt for slot if needed
 	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_MEDIA)->GetSize()); // loops on err
@@ -956,7 +958,7 @@ void PlaySelTrackSlot(const char* _title, int _slot, bool _errMsg)
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-				AddStartTrackPreview(tr, fn);
+				AddStartTrackPreview(tr, fn, _loop);
 		}
 	}
 }
@@ -964,10 +966,16 @@ void PlaySelTrackSlot(const char* _title, int _slot, bool _errMsg)
 void PlaySelTrackSlot(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
 	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
-		PlaySelTrackSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault());
+		PlaySelTrackSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault(), false);
 }
 
-void TogglePlaySelTrackSlot(const char* _title, int _slot, bool _errMsg)
+void LoopSelTrackSlot(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
+		PlaySelTrackSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault(), true);
+}
+
+void TogglePlaySelTrackSlot(const char* _title, int _slot, bool _errMsg, bool _loop)
 {
 	// Prompt for slot if needed
 	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_MEDIA)->GetSize()); // loops on err
@@ -996,7 +1004,9 @@ void TogglePlaySelTrackSlot(const char* _title, int _slot, bool _errMsg)
 				if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 				{
 					TrackPreviewLockUnlockMutex(prev, true);
-					if (prev->preview_track == tr && !strcmp(prev->src->GetFileName(), fn)) {
+					if (prev->preview_track == tr && !strcmp(prev->src->GetFileName(), fn))
+					{
+						prev->loop = false;
 						prev->curpos = prev->src->GetLength(); // => will be stopped by next call to StopTrackPreviewsRun()
 						trsToStart.Delete(trsToStart.Find(tr));
 					}
@@ -1008,7 +1018,7 @@ void TogglePlaySelTrackSlot(const char* _title, int _slot, bool _errMsg)
 		// start play if needed
 		for (int i=0; i <= trsToStart.GetSize(); i++)
 			if (MediaTrack* tr = (MediaTrack*)trsToStart.Get(i))
-				AddStartTrackPreview(tr, fn);
+				AddStartTrackPreview(tr, fn, _loop);
 	}
 }
 
@@ -1016,7 +1026,14 @@ void TogglePlaySelTrackSlot(COMMAND_T* _ct)
 {
 	int slot = (int)_ct->user;
 	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
-		TogglePlaySelTrackSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault());
+		TogglePlaySelTrackSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault(), false);
+}
+
+void ToggleLoopSelTrackSlot(COMMAND_T* _ct)
+{
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
+		TogglePlaySelTrackSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault(), true);
 }
 
 // _insertMode: 0=add to current track, 1=add new track, 3=add to selected items as takes, &4=stretch/loop to fit time sel, &8=try to match tempo 1x, &16=try to match tempo 0.5x, &32=try to match tempo 2x

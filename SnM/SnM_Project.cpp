@@ -61,7 +61,7 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 // Resources view: project template slots
 ///////////////////////////////////////////////////////////////////////////////
 
-void loadOrSelectProject(const char* _title, int _slot, bool _newTab, bool _errMsg)
+void loadOrSelectProjectSlot(const char* _title, int _slot, bool _newTab, bool _errMsg)
 {
 	// Prompt for slot if needed
 	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_PRJ)->GetSize()); // loops on err
@@ -103,16 +103,16 @@ bool autoSaveProjectSlot(bool _saveCurPrj, const char* _dirPath, char* _fn, int 
 	return (SNM_CopyFile(_fn, prjFn) && g_slots.Get(SNM_SLOT_PRJ)->AddSlot(_fn));
 }
 
-void loadOrSelectProject(COMMAND_T* _ct) {
+void loadOrSelectProjectSlot(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
 	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_PRJ)->GetSize())
-		loadOrSelectProject(SNM_CMD_SHORTNAME(_ct), slot, false, slot < 0 || !g_slots.Get(SNM_SLOT_PRJ)->Get(slot)->IsDefault());
+		loadOrSelectProjectSlot(SNM_CMD_SHORTNAME(_ct), slot, false, slot < 0 || !g_slots.Get(SNM_SLOT_PRJ)->Get(slot)->IsDefault());
 }
 
-void loadOrSelectProjectNewTab(COMMAND_T* _ct) {
+void loadOrSelectProjectTabSlot(COMMAND_T* _ct) {
 	int slot = (int)_ct->user;
 	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_PRJ)->GetSize())
-		loadOrSelectProject(SNM_CMD_SHORTNAME(_ct), slot, true, slot < 0 || !g_slots.Get(SNM_SLOT_PRJ)->Get(slot)->IsDefault());
+		loadOrSelectProjectSlot(SNM_CMD_SHORTNAME(_ct), slot, true, slot < 0 || !g_slots.Get(SNM_SLOT_PRJ)->Get(slot)->IsDefault());
 }
 
 
@@ -197,7 +197,7 @@ void loadOrSelectNextPreviousProject(COMMAND_T* _ct)
 
 		// found one?
 		if (cpt <= slotCount) {
-			loadOrSelectProject("", g_prjCurSlot, false, false);
+			loadOrSelectProjectSlot("", g_prjCurSlot, false, false);
 			if (g_pResourcesWnd) g_pResourcesWnd->SelectBySlot(g_prjCurSlot);
 		}
 		else g_prjCurSlot = -1;

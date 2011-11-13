@@ -1,3 +1,4 @@
+Show Bank Select and Bank/Program Select lanes in FNG CC lane actions 
 Fixed FNG crashes (issue 410 and issue 390)
 
 Resources view: two new slot types, Media files and Themes!

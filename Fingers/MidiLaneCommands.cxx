@@ -35,7 +35,7 @@ static const struct {
 		{RprMidiBase::ChannelPressure, 130 },
 		{RprMidiBase::ProgramChange, 131 },
 		{RprMidiBase::Sysex, 133 },
-		{RprMidiBase::TextEvent, 132 }
+		{RprMidiBase::TextEvent, 132 },
 	};
 
 static void CycleThroughMidiLanes(int flag, void *data)
@@ -125,7 +125,13 @@ static void ShowUsedCCLanes(int flag, void *data)
 			laneView->append(eventIndexTable[i].index, defaultHeight);
 		}
 	}
-	for(int i = 0; i < 120; ++i) {
+
+    /* Special case: Bank select (CC0) and lane 131 (Program change) */
+    if (midiTake->countCCs(0) > 0 && !laneView->isShown(131)) {
+        laneView->append(131, defaultHeight);
+    }
+
+	for(int i = 1; i < 120; ++i) {
 		if (midiTake->countCCs(i) > 0 && !laneView->isShown(i)) {
 			laneView->append(i, defaultHeight);
 		}
@@ -136,23 +142,33 @@ static void HideUnusedCCLanes(int flag, void *data)
 {
 	RprMidiCCLanePtr laneView = RprMidiCCLane::createFromMidiEditor();
 	RprMidiTakePtr midiTake = RprMidiTake::createFromMidiEditor(true);
-	std::vector<int> ccIndices;
+	std::list<int> ccIndices;
 	for(int i = 0; i < laneView->countShown(); ++i) {
 		int index = laneView->getIdAt(i);
+        /* Special case for bank-select and program change events */
+        if (index == 131 || index == 0) {
+            if (midiTake->countCCs(0) == 0 && midiTake->hasEventType(RprMidiBase::ProgramChange)) {
+                ccIndices.push_back(index);
+            }
+            continue;
+        }
+
 		for(int j = 0; j < __ARRAY_SIZE(eventIndexTable); ++j) {
 			if(index == eventIndexTable[j].index) {
 				if(!midiTake->hasEventType(eventIndexTable[j].messageType))
 					ccIndices.push_back(index);
 			}
 		}
-		if( index >= 0 && index <= 119) {
+
+        if( index > 0 && index <= 119) {
 			if(midiTake->countCCs(index) == 0)
 				ccIndices.push_back(index);
 		}
 		if( index == -1 && midiTake->countNotes() == 0)
 			ccIndices.push_back(index);
 	}
-	for(std::vector<int>::const_iterator i = ccIndices.begin(); i != ccIndices.end(); ++i) {
+
+	for(std::list<int>::const_iterator i = ccIndices.begin(); i != ccIndices.end(); ++i) {
 		for(int j = 0; j < laneView->countShown(); ++j) {
 			if (laneView->getIdAt(j) == *i) {
 				laneView->remove(j);

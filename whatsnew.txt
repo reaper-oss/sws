@@ -1,3 +1,4 @@
+Fixed FNG crashes (issue 410 and issue 390)
 
 Resources view: two new slot types, Media files and Themes!
 

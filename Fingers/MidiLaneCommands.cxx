@@ -131,7 +131,7 @@ static void ShowUsedCCLanes(int flag, void *data)
         laneView->append(131, defaultHeight);
     }
 
-	for(int i = 1; i < 120; ++i) {
+	for(int i = 0; i < 120; ++i) {
 		if (midiTake->countCCs(i) > 0 && !laneView->isShown(i)) {
 			laneView->append(i, defaultHeight);
 		}

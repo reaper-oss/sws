@@ -645,8 +645,8 @@ RprMidiTake::RprMidiTake(const RprTake &take, bool readOnly) : RprMidiTemplate(t
 			throw RprLibException("Unable to parse MIDI data");
 		}
 	
-		mOtherEvents.resize(tempMidiEvents.get().size());
-		std::copy(tempMidiEvents.get().begin(), tempMidiEvents.get().end(), mOtherEvents.begin());
+		mOtherEvents.reserve(tempMidiEvents.get().size());
+        std::copy(tempMidiEvents.get().begin(), tempMidiEvents.get().end(), std::back_inserter(mOtherEvents));
 		tempMidiEvents.get().clear();
 		mMidiEventsOffset = clearMidiEventsFromMidiNode(sourceNode);
 

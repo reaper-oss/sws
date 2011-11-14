@@ -86,11 +86,11 @@ void SetAllMasterOutputMutes(COMMAND_T* ct)
 void NudgeMasterOutputVol(COMMAND_T* ct)
 {
 	MediaTrack* tr = CSurf_TrackFromID(0, false);
-	int iOutput = ct->user >> 8;
+	int iOutput = abs(ct->user) >> 8;
 	double *pVol = (double*)GetSetTrackSendInfo(tr, 1, iOutput, "D_VOL", NULL);
 	if (pVol)
 	{
-		double dVol = DB2VAL(VAL2DB(*pVol) + (ct->user & 0xFF));
+		double dVol = DB2VAL(VAL2DB(*pVol) + (abs(ct->user) & 0xFF) * (ct->user >= 0 ? 1 : -1));
 		GetSetTrackSendInfo(tr, 1, iOutput, "D_VOL", &dVol);
 		TrackList_AdjustWindows(false);
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, 0);
@@ -100,10 +100,10 @@ void NudgeMasterOutputVol(COMMAND_T* ct)
 void SetMasterOutputVol(COMMAND_T* ct)
 {
 	MediaTrack* tr = CSurf_TrackFromID(0, false);
-	int iOutput = ct->user >> 8;
+	int iOutput = abs(ct->user) >> 8;
 	if (GetSetTrackSendInfo(tr, 1, iOutput, "D_VOL", NULL))
 	{
-		double dVol = DB2VAL((double)(ct->user & 0xFF));
+		double dVol = DB2VAL((double)((abs(ct->user) & 0xFF) * (ct->user >= 0 ? 1 : -1)));
 		GetSetTrackSendInfo(tr, 1, iOutput, "D_VOL", &dVol);
 		TrackList_AdjustWindows(false);
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, 0);

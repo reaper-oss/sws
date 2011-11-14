@@ -79,7 +79,7 @@ protected:
 	void OnInitDlg();
 	void OnDestroy();
 	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
-	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	HMENU OnContextMenu(int x, int y);
 
 	// WDL UI

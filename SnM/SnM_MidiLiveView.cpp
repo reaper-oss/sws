@@ -870,7 +870,7 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	AddSnMLogo(_bm, _r, x0, h);
 }
 
-int SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{

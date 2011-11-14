@@ -415,7 +415,7 @@ void SWS_AutoColorWnd::OnDestroy()
 }
 #endif
 
-int SWS_AutoColorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR SWS_AutoColorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (uMsg == WM_DRAWITEM)
 	{

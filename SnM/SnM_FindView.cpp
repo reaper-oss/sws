@@ -622,7 +622,7 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	SetVWndAutoPosition(&m_txtResult, NULL, _r, &x0, y0, h);
 }
 
-int SNM_FindWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR SNM_FindWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{

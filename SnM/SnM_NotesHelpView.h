@@ -67,7 +67,7 @@ protected:
 	void OnTimer(WPARAM wParam=0);
 	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
 	void OnResize();
-	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	int updateItemNotes();
 	int updateTrackNotes();

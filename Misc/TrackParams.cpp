@@ -83,6 +83,33 @@ void SetAllMasterOutputMutes(COMMAND_T* ct)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, 0);
 }
 
+void NudgeMasterOutputVol(COMMAND_T* ct)
+{
+	MediaTrack* tr = CSurf_TrackFromID(0, false);
+	int iOutput = ct->user >> 8;
+	double *pVol = (double*)GetSetTrackSendInfo(tr, 1, iOutput, "D_VOL", NULL);
+	if (pVol)
+	{
+		double dVol = DB2VAL(VAL2DB(*pVol) + (ct->user & 0xFF));
+		GetSetTrackSendInfo(tr, 1, iOutput, "D_VOL", &dVol);
+		TrackList_AdjustWindows(false);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, 0);
+	}
+}
+
+void SetMasterOutputVol(COMMAND_T* ct)
+{
+	MediaTrack* tr = CSurf_TrackFromID(0, false);
+	int iOutput = ct->user >> 8;
+	if (GetSetTrackSendInfo(tr, 1, iOutput, "D_VOL", NULL))
+	{
+		double dVol = DB2VAL((double)(ct->user & 0xFF));
+		GetSetTrackSendInfo(tr, 1, iOutput, "D_VOL", &dVol);
+		TrackList_AdjustWindows(false);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, 0);
+	}
+}
+
 bool IsMasterOutputMuted(COMMAND_T* ct)
 {
 	void* muted = GetSetTrackSendInfo(CSurf_TrackFromID(0,false), 1, (int)ct->user, "B_MUTE", NULL);
@@ -498,6 +525,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Set master track output 5 unmuted" },					"XEN_UNSET_MAS_SEND4MUTE",		UnSetMasterOutputMute,	NULL, 4 },
 	{ { DEFACCEL, "SWS: Set all master track outputs unmuted" },				"XEN_SET_MAS_SENDALLUNMUTE",	SetAllMasterOutputMutes,NULL, 0 },
 	{ { DEFACCEL, "SWS: Set all master track outputs muted" },					"XEN_SET_MAS_SENDALLMUTE",		SetAllMasterOutputMutes,NULL, 1 },
+	// Master output nudge/set functions support more that just output 1, the channel is passed in left shifted by 8
+	{ { DEFACCEL, "SWS: Nudge master output 1 volume +1db" },					"SWS_MAST_O1_1",				NudgeMasterOutputVol,	NULL, 1 },
+	{ { DEFACCEL, "SWS: Nudge master output 1 volume -1db" },					"SWS_MAST_O1_-1",				NudgeMasterOutputVol,	NULL, -1 },
+	{ { DEFACCEL, "SWS: Set master output 1 volume to 0db" },					"SWS_MAST_O1_0",				SetMasterOutputVol,		NULL, 0 },
 
 	// Send/recvs
 	{ { DEFACCEL, "SWS: Mute all receives for selected track(s)" },				"SWS_MUTERECVS",	MuteRecvs,			},

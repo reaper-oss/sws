@@ -126,7 +126,7 @@ protected:
 	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState);
 	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
-	int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;

@@ -177,7 +177,7 @@ protected:
 	virtual void OnDestroy() {}
 	virtual void OnTimer(WPARAM wParam=0) {}
 	virtual void OnDroppedFiles(HDROP h) {}
-	virtual int OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
+	virtual INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
 	virtual int OnKey(MSG* msg, int iKeyState) { return 0; } // return 1 for "processed key"
 	
 	// Functions for derived classes to load/save some view information (for startup/screensets)
@@ -192,7 +192,7 @@ protected:
 
 private:
 	static INT_PTR WINAPI sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	int wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	INT_PTR wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static LRESULT screensetCallbackOld(int action, char *id, void *param, int param2);
 	static LRESULT screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize);
 	static int keyHandler(MSG *msg, accelerator_register_t *ctx);

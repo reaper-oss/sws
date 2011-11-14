@@ -821,7 +821,7 @@ void SNM_NotesHelpWnd::OnResize() {
   InvalidateRect(m_hwnd,NULL,FALSE);
 }
 
-int SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{

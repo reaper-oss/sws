@@ -86,7 +86,9 @@
 #define MED_ADD_CURTR_MSG				0x110062
 #define MED_ADD_NEWTR_MSG				0x110063
 #define MED_ADD_TAKES_MSG				0x110064
+#ifdef _WIN32
 #define THM_LOAD_MSG					0x110070  // specific theme file cmds
+#endif
 
 
 // labels shared by actions (well, undo points) and popup menu items
@@ -445,9 +447,11 @@ void SNM_ResourceView::OnItemDblClk(SWS_ListItem* item, int iCol)
 					InsertMediaSlot("Insert media" /*JFB!!!*/, slot, insertMode, !wasDefaultSlot);
 				break;
 			}
+#ifdef _WIN32
 	 		case SNM_SLOT_THM:
 				LoadThemeSlot("Load theme" /*JFB!!!*/, slot, !wasDefaultSlot);
 				break;
+#endif
 		}
 
 		// in case the slot changed
@@ -460,7 +464,6 @@ void SNM_ResourceView::GetItemList(SWS_ListItemList* pList)
 {
 	if (IsFiltered())
 	{
-		int iCount = 0;
 		char buf[BUFFER_SIZE] = "";
 		LineParser lp(false);
 		if (!lp.parse(g_filter.Get()))
@@ -625,9 +628,11 @@ void SNM_ResourceWnd::FillDblClickTypeCombo()
 			m_cbDblClickType.AddItem("Add to new track");
 			m_cbDblClickType.AddItem("Add to sel items as takes");
 			break;
+#ifdef _WIN32
 		case SNM_SLOT_THM:
 			m_cbDblClickType.AddItem("Load theme");
 			break;
+#endif
 	}
 	m_cbDblClickType.SetCurSel(g_dblClickType[g_type]);
 }
@@ -1024,9 +1029,11 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 
 		// ***** theme *****
+#ifdef _WIN32
 		case THM_LOAD_MSG:
 			LoadThemeSlot("Load theme" /*JFB!!!*/, slot, !wasDefaultSlot);
 			break;
+#endif
 
 		// ***** WDL GUI & others *****
 		default:
@@ -1118,9 +1125,11 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 				AddToMenu(hMenu, "Add to new tracks"/*JFB!!! s!!!*/, MED_ADD_NEWTR_MSG, -1, false, enabled);
 				AddToMenu(hMenu, "Add to selected items as takes", MED_ADD_TAKES_MSG, -1, false, enabled);
 				break;
+#ifdef _WIN32
 			case SNM_SLOT_THM:
 				AddToMenu(hMenu, "Load theme" /*JFB!!!*/, THM_LOAD_MSG, -1, false, enabled);
 				break;
+#endif
 		}
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	}
@@ -1427,7 +1436,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 */
 }
 
-int SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{

@@ -1,6 +1,4 @@
-Show Bank Select and Bank/Program Select lanes in FNG CC lane actions 
-Fixed FNG crashes (issue 410 and issue 390)
-
+!v2.1.0 #18 (November 14, 2011)
 Resources view: two new slot types, Media files and Themes!
 
 New "Media files" slot type in the Resources view:
@@ -43,10 +41,15 @@ Added slot actions for themes:
 +SWS/S&M: Load theme, prompt for slot
 +SWS/S&M: Clear theme slot...
 
-Many Xenakios actions now have consistent undo names (vs action names) + removed a log file
+Show Bank Select and Bank/Program Select lanes in FNG CC lane actions 
+Fixed FNG crashes (issue 410 and issue 390)
+
+Issue 375: Added actions to control the master track hardware output:
++SWS: Nudge master output 1 volume +1/-1db
++SWS: Set master output 1 volume to 0db
 
 Fixed issue 409: bad theming colors when REAPER version was < v4.11
-
+Many Xenakios actions now have consistent undo names (vs action names) + removed a log file
 S&M.ini file: better presentation of configurable slot actions
 
 !v2.1.0 #17 (November 2, 2011)

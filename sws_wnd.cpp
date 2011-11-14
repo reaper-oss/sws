@@ -126,7 +126,7 @@ INT_PTR WINAPI SWS_DockWnd::sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 		return 0;
 }
 
-int SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{

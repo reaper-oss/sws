@@ -1,3 +1,6 @@
+!v2.1.0 #19 (November 14, 2011)
+Issue 375: Fixed "SWS: Nudge master output 1 volume -1db" action
+
 !v2.1.0 #18 (November 14, 2011)
 Resources view: two new slot types, Media files and Themes!
 

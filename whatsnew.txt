@@ -3,9 +3,11 @@ Added actions:
 
 Resources view:
 +Custom resource types !?
-+Auto-save for media file slots
-(select some items and click on the top left Auto-save button: media files are saved (incl. for in-project MIDI items) and slots are added
-Issue 411: fixes for S&M media files slot actions (thanks Anton9!)
++More REAPER-ish text filter (by name, by path and/or by comment, configurable in the context menu)
+Auto-save for media file slots:
++Select some items (incl. in-project MIDI items) and click on the top left Auto-save button
++The auto-save directory can be displayed/changed in the context menu
+Issue 411, fixes for S&M media files slot actions (thanks Anton9!):
 +Fixed play and loop toggle actions when MIDI files are imported as in-project MIDI items (in the preferences)
 +Fixed toggle states for all actions "Play/loop media file, slot n (toggle)" (toggle states were stuck to "off")
 +Send all notes off when stopping MIDI files (i.e. fixed stuck notes)
@@ -14,8 +16,6 @@ House cleaning:
 +Renamed all "SWS/S&M: Apply FX chain [...]" actions into "Paste (replace) FX chain [...]"
 +Notes/help view (in "Action help" mode): renamed the button "Wiki ALR" into "Online help..."
 +Windows OS: do not systematically send deleted files to the recycle bin (hard delete for temp files)
-+Resources view: better undo point names
-+Resources view: more REAPER-ish text filter (by name, by path and/or by comment, configurable in the context menu)
 +OSX: S&M logos like on Windows OS
 
 Fixed toggle states for all actions "SWS/S&M: Toggle arming of [...] envelope for selected tracks" (toggle states were stuck to "off")

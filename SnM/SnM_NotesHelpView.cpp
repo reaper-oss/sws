@@ -37,7 +37,7 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_NotesHelpView.h"
-#include "../../WDL/projectcontext.h"
+//#include "../../WDL/projectcontext.h"
 
 #define MAX_HELP_LENGTH				4096 //JFB 4096 rather than MAX_INI_SECTION (too big)
 
@@ -754,7 +754,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	m_btnAlr.SetVisible(m_type == ACTION_HELP);
 	if (m_type == ACTION_HELP)
 	{
-		m_btnAlr.SetTextLabel("ALR Wiki", 0, font);
+		m_btnAlr.SetTextLabel("Online help...", 0, font);
 		m_btnAlr.SetForceBorder(true);
 		if (!SetVWndAutoPosition(&m_btnAlr, NULL, _r, &x0, _r->top, h, 5))
 			return;
@@ -767,7 +767,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 		case ACTION_HELP:
 			if (g_lastActionDesc && *g_lastActionDesc && g_lastActionSection && *g_lastActionSection)
 				_snprintf(str, 512, " [%s] %s", g_lastActionSection, g_lastActionDesc);
-/*JFB API limitation: use smthg like that when we'll be able to access all sections
+/* API LIMITATION: use smthg like that when we'll be able to access all sections
 				lstrcpyn(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
 */
 			break;

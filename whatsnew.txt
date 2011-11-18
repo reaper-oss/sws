@@ -1,3 +1,25 @@
+Added actions:
++SWS/S&M: Send all notes off to selected tracks
+
+Resources view:
++Custom resource types !?
++Auto-save for media file slots
+(select some items and click on the top left Auto-save button: media files are saved (incl. for in-project MIDI items) and slots are added
+Issue 411: fixes for S&M media files slot actions (thanks Anton9!)
++Fixed play and loop toggle actions when MIDI files are imported as in-project MIDI items (in the preferences)
++Fixed toggle states for all actions "Play/loop media file, slot n (toggle)" (toggle states were stuck to "off")
++Send all notes off when stopping MIDI files (i.e. fixed stuck notes)
+
+House cleaning:
++Renamed all "SWS/S&M: Apply FX chain [...]" actions into "Paste (replace) FX chain [...]"
++Notes/help view (in "Action help" mode): renamed the button "Wiki ALR" into "Online help..."
++Windows OS: do not systematically send deleted files to the recycle bin (hard delete for temp files)
++Resources view: better undo point names
++Resources view: more REAPER-ish text filter (by name, by path and/or by comment, configurable in the context menu)
++OSX: S&M logos like on Windows OS
+
+Fixed toggle states for all actions "SWS/S&M: Toggle arming of [...] envelope for selected tracks" (toggle states were stuck to "off")
+
 !v2.1.0 #19 (November 14, 2011)
 Issue 375: Fixed "SWS: Nudge master output 1 volume -1db" action
 
@@ -5,14 +27,14 @@ Issue 375: Fixed "SWS: Nudge master output 1 volume -1db" action
 Resources view: two new slot types, Media files and Themes!
 
 New "Media files" slot type in the Resources view:
-Manage slots for all media file types supported by REAPER (WAV, MIDI, etc..) and more.
+Manage slots for all media file types supported by REAPER (WAV, MIDI, etc..).
 +Reminder: you can switch the Resources view to "Media files" in the top left dropdown box
 +External drag-drop (e.g. drag a bunch of files from an external tool -> drop them into the Resources view)
 +Internal drag-drop (e.g. drag-drop slots, drag a bunch of slots from the Resources view -> drop them into the arrange) - Windows OS only
 Context menu: 
-+Various "auto-fill slots" features, rename file, insert/add/clear/etc.. slot, delete slots & files, show path in explorer/finder, etc..
-+Bulk add multiple selected media file slots to current track, to new tracks and to selected items as takes
-+Bulk play or loop multiple media file slots
++Various "auto-fill slots" features, rename & delete file(s), insert/add/clear/etc.. slot, show path in explorer/finder, etc..
++Bulk-add multiple selected media file slots to current track, to new tracks or to selected items as takes
++Bulk-play or loop multiple media file slots
 In this view the double-click can be customized to:
 +Toggle play or loop in selected tracks
 +Add media file to current track, to new track or to selected items as takes
@@ -33,10 +55,10 @@ Added slot actions for media files:
 +SWS/S&M: Stop playing media files in selected tracks
 
 New "Themes" slot type in the Resources view (on Windows OS only):
-Manage slots for themes, i.e. for .ReaperthemeZip files (unpacked themes are not supported).
+Manage slots for themes, i.e. slots for ReaperthemeZip files (unpacked themes are not supported).
 +Reminder: you can switch the Resources view to "Themes" in the top left dropdown box
 +External drag-drop (e.g. drag a bunch of .ReaperthemeZip files -> drop them into the Resources view)
-+Internal drag-drop (e.g. drag-drop slots, drag a slot from the Resources view -> drop into into the arrange)
++Internal drag-drop (e.g. drag-drop slots, drag a slot from the Resources view -> drop it into the arrange)
 +Context menu: load theme, various "auto-fill slots" features, insert/add/clear/etc..
 Added slot actions for themes:
 +SWS/S&M: Open Resources window (Themes)

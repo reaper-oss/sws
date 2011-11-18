@@ -127,6 +127,7 @@ LICE_IBitmap* SNM_GetThemeLogo()
 	static LICE_IBitmap* snmLogo;
 	if (!snmLogo)
 	{
+/*JFB commented: load from resources, no OSX support (was looking in REAPER's resources..)
 #ifdef _WIN32
 		snmLogo = LICE_LoadPNGFromResource(g_hInst,IDB_SNM,NULL);
 #else
@@ -134,6 +135,12 @@ LICE_IBitmap* SNM_GetThemeLogo()
 		//snmLogo =  LICE_LoadPNGFromNamedResource("SnM.png",NULL);
 		snmLogo = NULL;
 #endif
+*/
+		// logo is now loaded from memory (OSX support)
+		if (WDL_HeapBuf* hb = TranscodeStr64ToHeapBuf(SNM_LOGO_PNG_FILE)) {
+			snmLogo = LICE_LoadPNGFromMemory(hb->Get(), hb->GetSize());
+			delete hb;
+		}
 	}
 	return snmLogo;
 }

@@ -1201,6 +1201,7 @@ bool SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 	bool updated = false;
 	if (m_iEditingItem != -1 && IsWindow(m_hwndList) && IsWindow(m_hwndEdit))
 	{
+		KillTimer(GetParent(m_hwndList), 0x1000);
 		if (bSave)
 		{
 			char newStr[100];
@@ -1220,7 +1221,6 @@ bool SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 			// TODO resort? Just call update?
 			// Update is likely called when SetItemText is called too...
 		}
-		KillTimer(GetParent(m_hwndList), 0x1000);
 		m_iEditingItem = -1;
 		ShowWindow(m_hwndEdit, SW_HIDE);
 		SetFocus(m_hwndList);

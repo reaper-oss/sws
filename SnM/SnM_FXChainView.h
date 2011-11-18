@@ -32,39 +32,36 @@
 #define _SNM_RESVIEW_H_
 
 
-// JFB add new resource types here ------------------------------------------->
 enum {
   SNM_SLOT_FXC=0,
   SNM_SLOT_TR,
   SNM_SLOT_PRJ,
-  SNM_SLOT_MEDIA,
+  SNM_SLOT_MEDIA
   // etc..
 #ifdef _WIN32
   // keep this one as the last one (win only)
-  SNM_SLOT_THM,
+  ,SNM_SLOT_THM
 #endif
-  SNM_SLOT_TYPE_COUNT
 };
-// <---------------------------------------------------------------------------
 
 
 class PathSlotItem {
 public:
-	PathSlotItem(const char* _shortPath="", const char* _desc="") : m_shortPath(_shortPath), m_desc(_desc) {}
+	PathSlotItem(const char* _shortPath="", const char* _comment="") : m_shortPath(_shortPath), m_comment(_comment) {}
 	bool IsDefault() {return (!m_shortPath.GetLength());}
-	void Clear() {m_shortPath.Set(""); m_desc.Set("");}
-	WDL_FastString m_shortPath, m_desc;
+	void Clear() {m_shortPath.Set(""); m_comment.Set("");}
+	WDL_FastString m_shortPath, m_comment;
 };
 
 
 class FileSlotList : public WDL_PtrList<PathSlotItem>
 {
   public:
-	FileSlotList(int _type, const char* _resDir, const char* _desc, const char* _ext, bool _notepad, bool _autoSave) 
-		: m_type(_type), m_resDir(_resDir),m_desc(_desc),m_ext(_ext), m_notepad(_notepad), m_autoSave(_autoSave),
+	FileSlotList(int _type, const char* _resDir, const char* _desc, const char* _ext, bool _notepad, bool _autoSave, bool _dlClick) 
+		: m_type(_type), m_resDir(_resDir),m_desc(_desc),m_ext(_ext),m_notepad(_notepad),m_autoSave(_autoSave),m_dlClick(_dlClick),
 		WDL_PtrList<PathSlotItem>() {}
 	FileSlotList(const FileSlotList* _fl)
-		: m_type(_fl->m_type), m_resDir(_fl->m_resDir),m_desc(_fl->m_desc),m_ext(_fl->m_ext), m_notepad(_fl->m_notepad), m_autoSave(_fl->m_autoSave),
+		: m_type(_fl->m_type), m_resDir(_fl->m_resDir),m_desc(_fl->m_desc),m_ext(_fl->m_ext),m_notepad(_fl->m_notepad),m_autoSave(_fl->m_autoSave),m_dlClick(_fl->m_dlClick),
 		WDL_PtrList<PathSlotItem>() {}
 	int GetType() {return m_type;}
 	// _path: short resource path or full path
@@ -118,7 +115,14 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 	void EditSlot(int _slot);
 	void ClearSlot(int _slot, bool _guiUpdate=true);
 	void ClearSlotPrompt(COMMAND_T* _ct);
-	const char* GetResourceDir() {return m_resDir.Get();}
+	const char* GetResourceDir(bool _dir=true) { 
+		const char* p = m_resDir.Get();
+		if (!_dir) {
+			const char* p2 = strrchr(p, PATH_SLASH_CHAR);
+			if (p2 && *(p2+1)) p = p2+1;
+		}
+		return p;
+	}
 	const char* GetDesc() {return m_desc.Get();}
 	const char* GetMenuDesc() {
 		if (!m_menuDesc.GetLength()) {
@@ -141,18 +145,19 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 			_snprintf(_filter, _maxFilterLength, "REAPER %s (*.%s)X*.%s", m_desc.Get(), m_ext.Get(), m_ext.Get());
 			// special code for multiple null terminated strings ('X' -> '\0')
 			if (char* p = strchr(_filter, ')')) *(p+1) = '\0';
-		} 
+		}
 		else memcpy(_filter, plugin_getFilterList(), _maxFilterLength); // memcpy because of '\0'
 	}
 	bool HasNotepad() {return m_notepad;}
 	bool HasAutoSave() {return m_autoSave;}
+	bool HasDblClick() {return m_dlClick;}
 protected:
 	int m_type;
 	WDL_FastString m_resDir;	// resource sub-directory name and S&M.ini section/key names
 	WDL_FastString m_desc;		// used in user messages and in main dropdown box menu items
 	WDL_FastString m_ext;		// file extension w/o '.' (ex: "rfxchain"), "" means all supported media files
 	WDL_FastString m_menuDesc;	// deduced from m_desc (lazy init)
-	bool m_notepad, m_autoSave;
+	bool m_notepad, m_autoSave, m_dlClick;
 };
 
 

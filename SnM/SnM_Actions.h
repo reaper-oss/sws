@@ -73,6 +73,7 @@
 #define SNM_MAX_CYCLING_ACTIONS		8
 #define SNM_MAX_CYCLING_SECTIONS	3
 #define SNM_MAX_ENV_SUBCHUNK_NAME	16
+#define SNM_MAX_SLOT_TYPES			32
 #define SNM_LET_BREATHE_MS			10
 #define SNM_3D_COLORS_DELTA			25
 #define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average I monitored)
@@ -96,8 +97,8 @@ enum {
   SNM_ITEM_SEL_DOWN
 };
 
-static void freecharptr(char* _p) { free(_p); _p=NULL; }
-static void deleteintptr(int* _p) { delete _p; _p=NULL; }
+static void freecharptr(char* _p) { FREE_NULL(_p); }
+static void deleteintptr(int* _p) { DELETE_NULL(_p); }
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -111,6 +112,7 @@ typedef struct MIDI_COMMAND_T {
 	const char* menuText;
 	INT_PTR user;
 	bool (*getEnabled)(MIDI_COMMAND_T*);
+	int excecCount;
 } MIDI_COMMAND_T;
 
 class SNM_TrackNotes {
@@ -168,8 +170,11 @@ extern WDL_FastString g_SNMiniFilename;
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 bool IsToolbarsAutoRefeshEnabled(COMMAND_T*);
 void RefreshToolbars();
-void fakeToggleAction(COMMAND_T*);
-bool fakeIsToggledAction(COMMAND_T*);
+void FakeToggle(COMMAND_T*);
+bool FakeIsToggleAction(COMMAND_T*);
+#ifdef _SNM_MISC
+bool FakeIsToggleMidiAction(MIDI_COMMAND_T*);
+#endif
 void SNM_ShowActionList(COMMAND_T*);
 int SNMRegisterDynamicCommands(COMMAND_T* _pCommands);
 int SnMInit(reaper_plugin_info_t* _rec);
@@ -293,8 +298,6 @@ void cutTrackInputFXChain(COMMAND_T*);
 void pasteTrackInputFXChain(COMMAND_T*);
 void setTrackInputFXChain(COMMAND_T*);
 void copyFXChainSlotToClipBoard(int _slot);
-void readSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, char* _desc, int _descSize);
-void saveSlotIniFile(const char* _key, int _slot, const char* _path, const char* _desc);
 void smartCopyFXChain(COMMAND_T*);
 void smartPasteFXChain(COMMAND_T*);
 void smartPasteReplaceFXChain(COMMAND_T*);
@@ -349,6 +352,17 @@ bool itemSelExists(COMMAND_T*);
 void scrollToSelItem(MediaItem* _item);
 void scrollToSelItem(COMMAND_T*);
 void setPan(COMMAND_T*);
+void PlaySelTrackMediaSlot(const char* _title, int _slot, bool _errMsg, bool _loop);
+void PlaySelTrackMediaSlot(COMMAND_T*);
+void LoopSelTrackMediaSlot(COMMAND_T*);
+bool TogglePlaySelTrackMediaSlot(const char* _title, int _slot, bool _errMsg, bool _loop);
+void TogglePlaySelTrackMediaSlot(COMMAND_T*);
+void ToggleLoopSelTrackMediaSlot(COMMAND_T*);
+void InsertMediaSlot(const char* _title, int _slot, int _insertMode, bool _errMsg);
+void InsertMediaSlotCurTr(COMMAND_T*);
+void InsertMediaSlotNewTr(COMMAND_T*);
+void InsertMediaSlotTakes(COMMAND_T*);
+bool autoSaveMediaSlot(const char* _dirPath, char* _fn, int _fnSize);
 
 // *** SnM_LiveConfigsView.cpp ***
 int LiveConfigViewInit();
@@ -370,13 +384,17 @@ const char* GetFileExtension(const char* _fn);
 void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz);
 const char* GetFilenameWithExt(const char* _fullFn);
 bool FileExistsErrMsg(const char* _fn, bool _errMsg=true);
-bool SNM_DeleteFile(const char* _filename);
+bool SNM_DeleteFile(const char* _filename, bool _recycleBin);
 bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _fn, int _fnSize, bool _wantFullPath = false);
 void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _fnSize);
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fnSize);
 bool LoadChunk(const char* _fn, WDL_FastString* _chunk, bool _trim = true, int _maxlen = 0);
 bool SaveChunk(const char* _fn, WDL_FastString* _chunk, bool _indent);
+WDL_HeapBuf* LoadBin(const char* _fn);
+bool SaveBin(const char* _fn, const WDL_HeapBuf* _hb);
+bool TranscodeFileToFile64(const char* _outFn, const char* _inFn);
+WDL_HeapBuf* TranscodeStr64ToHeapBuf(const char* _str64);
 void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
 void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx);
@@ -488,18 +506,13 @@ void loadImportTrackTemplate(COMMAND_T*);
 bool autoSaveTrackSlots(bool _delItems, bool _delEnvs, const char* _dirPath, char* _fn, int _fnSize);
 void setMIDIInputChannel(COMMAND_T*);
 void remapMIDIInputChannel(COMMAND_T*);
+bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _loop);
+bool SNM_PlayTrackPreview(MediaTrack* _tr, const char* _fn, bool _loop);
+bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _loop);
 void StopTrackPreviewsRun();
 void StopSelTrackPreview(COMMAND_T*);
-void PlaySelTrackSlot(const char* _title, int _slot, bool _errMsg, bool _loop);
-void PlaySelTrackSlot(COMMAND_T*);
-void LoopSelTrackSlot(COMMAND_T*);
-void TogglePlaySelTrackSlot(const char* _title, int _slot, bool _errMsg, bool _loop);
-void TogglePlaySelTrackSlot(COMMAND_T*);
-void ToggleLoopSelTrackSlot(COMMAND_T*);
-void InsertMediaSlot(const char* _title, int _slot, int _insertMode, bool _errMsg);
-void InsertMediaSlotCurTr(COMMAND_T*);
-void InsertMediaSlotNewTr(COMMAND_T*);
-void InsertMediaSlotTakes(COMMAND_T*);
+void CC123Tracks(WDL_PtrList<void>* _trs);
+void CC123SelTracks(COMMAND_T*);
 
 // *** SnM_Windows.cpp ***
 bool SNM_IsActiveWindow(HWND _h);
@@ -539,3 +552,45 @@ void ShowThemeHelper(COMMAND_T*);
 void GetVisibleTCPTracks(WDL_PtrList<void>* _trList);
 
 
+///////////////////////////////////////////////////////////////////////////////
+// Base64 stuff
+///////////////////////////////////////////////////////////////////////////////
+
+#define SNM_CC123_MID_FILE "TVRoZAAAAAYAAAABA8BNVHJrAAAASQCwewACsXsAAbJ7AAGzewACtA==\n\
+ewABtXsAAbZ7AAK3ewABuHsAAbl7AAK6ewABu3sAAbx7AAK9ewABvg==\n\
+ewABv3sAhyywewAA/y8A\n"
+
+#define SNM_LOGO_PNG_FILE "iVBORw0KGgoAAAANSUhEUgAAADIAAAAUCAMAAAGPE64+AAAAFXRFWA==\n\
+dENyZWF0aW9uIFRpbWUAB9oHEQEwJvx8Q0oAAAAHdElNRQfaBxAXJA==\n\
+C+Ibk70AAAAJcEhZcwAACvAAAArwAUKsNJgAAAMAUExURQAAAAgICA==\n\
+EBAQGBgYISEhKSkpMTExOTk5QkJCSkpKUlJSWlpaY2Nja2trc3Nzew==\n\
+e3uEhISMjIyUlJScnJylpaWtra21tbW9vb3GxsbOzs7W1tbe3t7n5w==\n\
+5+/v7/f39////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+/////////////////////////////////////////////////////w==\n\
+//9msyl1AAAAAnRSTlP/AOW3MEoAAAGoSURBVHjanVLbcqswDJQwlA==\n\
+W0KggYCBeP//L7symLYv58zU4xhHK8mrlUSPJQp9AvzuvXc1v4c5Fw==\n\
+OEAm3Yve0UgX21tvriLACA2QZwpI2VpUFSwphGfHoLyeGguircWO3g==\n\
+HpPQKkrvc/FnApF4XGf8cWNzN4bOllQQAn+IiE5gphF4ZygXsIYWaw==\n\
+RAJdlgKBpkww3PBwaPU3Uf3N+p9IYpVoSuL2NgZ2PpSlwVR5RmRFVQ==\n\
+1NpBsKh6IvdwMgDWTPVmRVDhFTk6uIhkTPZBHPmbcXdW00NOBg0Gag==\n\
+TcxV1oa7PxAHvm2t2LHpbDfuyLre8KLLhufkKbP2rfL8mwb/CxHXvQ==\n\
+1nUeijg2g9+W+4G4kauX89LJFVLjWN4wk4+dWiP8aeadV5PWZD1Dcg==\n\
+/puT7HTa3EIZDDLZFms0K+a1/O7aK77xbizkFvO2wuEbZWCbODfFDA==\n\
+z64F+VlLOQZ6Dua4dpaajpNwpPDxaQ9twrF7XSHyaDJROqMpYYyy1Q==\n\
+3iwJ0Fssw64SzlIi+8dZ/OISxbhGsZobtpoDrVUq5ZrAYwjPaYw7LQ==\n\
+vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"

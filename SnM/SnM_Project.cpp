@@ -40,8 +40,8 @@ public:
 	SNM_SelectProjectScheduledJob(int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd) 
 		: SNM_ScheduledJob(SNM_SCHEDJOB_SEL_PRJ, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd) {}
 	void Perform() {
-		ReaProject* proj = Enum_Projects(m_val, NULL, 0);
-		if (proj) SelectProjectInstance(proj);
+		if (ReaProject* proj = Enum_Projects(m_val, NULL, 0))
+			SelectProjectInstance(proj);
 	}
 protected:
 	int m_val, m_valhw, m_relmode;
@@ -86,7 +86,7 @@ void loadOrSelectProjectSlot(const char* _title, int _slot, bool _newTab, bool _
 				Main_OnCommand(40859,0);
 			Main_openProject(fn);
 
-/*JFB API limitation: would be great to set the project as "not saved" here (like native project templates)
+/* API LIMITATION: would be great to set the project as "not saved" here (like native project templates)
 	See http://code.google.com/p/sws-extension/issues/detail?id=321
 */
 		}

@@ -29,7 +29,7 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SnM_Cyclactions.h"
-#include "../../WDL/projectcontext.h"
+//#include "../../WDL/projectcontext.h"
 
 
 // [0] = main section action, [1] = ME event list section action, [2] = ME piano roll section action
@@ -223,7 +223,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 						_errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: for extensions' actions, you must use custom ids (e.g. _SWS_ABOUT),\nnot command ids (e.g. 47145)\n\n", _a->GetName(), g_cyclactionSections[_section]);
 					return false;
 				}
-				// API limit: NamedCommandLookup() KO in other sections than the main one
+				// API LIMITATION: NamedCommandLookup() KO in other sections than the main one
 				// => all cyclactions belong to the main section although they can target other sections..
 				if(_checkCmdIds && !NamedCommandLookup(cmd))
 				{
@@ -722,7 +722,7 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 					lstrcpyn(str, "Step -----", iStrMax);
 					return;
 				}
-				//JFB API limitation: only for main section..
+				// API LIMITATION: only for main section..
 				if (g_editedAction && !g_editedSection) {
 					if (atoi(pItem->Get()) >= g_iFirstCommand)
 						return;

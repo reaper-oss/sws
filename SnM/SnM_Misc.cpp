@@ -30,6 +30,7 @@
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
 #include "SNM_FXChainView.h"
+#include "../../WDL/projectcontext.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -78,29 +79,31 @@ bool FileExistsErrMsg(const char* _fn, bool _errMsg)
 	return exists;
 }
 
-bool SNM_DeleteFile(const char* _filename) {
-	if (_filename && *_filename) {
+bool SNM_DeleteFile(const char* _filename, bool _recycleBin)
+{
+	bool ok = false;
+	if (_filename && *_filename) 
+	{
 #ifdef _WIN32
-	return (SendFileToRecycleBin(_filename) ? false : true); // avoid warning warning C4800
-#else
-	return (DeleteFile(_filename) ? true : false); // avoid warning warning C4800
+		if (_recycleBin)
+			return (SendFileToRecycleBin(_filename) ? false : true); // avoid warning warning C4800
 #endif
+		ok = (DeleteFile(_filename) ? true : false); // avoid warning warning C4800
 	}
-	return false;
+	return ok;
 }
 
-//JFB!!! crappy code for OSX compatibility..
 bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 {
-	if (_destFn && _srcFn)
-	{
-		WDL_FastString chunk;
-		if (LoadChunk(_srcFn, &chunk, false) && chunk.GetLength())
-			return SaveChunk(_destFn, &chunk, false);
+	bool ok = false;
+	if (_destFn && _srcFn) {
+		if (WDL_HeapBuf* hb = LoadBin(_srcFn)) {
+			ok = SaveBin(_destFn, hb);
+			DELETE_NULL(hb);
+		}
 	}
-	return false;
+	return ok;
 }
-
 
 // Browse + return short resource filename (if possible and if _wantFullPath == false)
 // Returns false if cancelled
@@ -176,32 +179,32 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 
 bool LoadChunk(const char* _fn, WDL_FastString* _chunk, bool _trim, int _maxlen)
 {
-	if (_chunk)
-	{
-		_chunk->Set("");
-		if (_fn && *_fn)
-		{
-			if (FILE* f = fopenUTF8(_fn, "r"))
-			{
-				char str[SNM_MAX_CHUNK_LINE_LENGTH];
-				while(fgets(str, SNM_MAX_CHUNK_LINE_LENGTH, f))
-				{
-					if (_maxlen && (int)(_chunk->GetLength()+strlen(str)) > _maxlen)
-						break;
+	if (!_chunk)
+		return false;
 
-					if (_trim) // left trim + remove empty lines
-					{
-						char* p = str;
-						while(*p && (*p == ' ' || *p == '\t')) p++;
-						if (*p != '\n') // !*p managed in Append()
-							_chunk->Append(p, SNM_MAX_CHUNK_LINE_LENGTH);
-					}
-					else
-						_chunk->Append(str, SNM_MAX_CHUNK_LINE_LENGTH);
+	_chunk->Set("");
+	if (_fn && *_fn)
+	{
+		if (FILE* f = fopenUTF8(_fn, "r"))
+		{
+			char str[SNM_MAX_CHUNK_LINE_LENGTH];
+			while(fgets(str, SNM_MAX_CHUNK_LINE_LENGTH, f))
+			{
+				if (_maxlen && (int)(_chunk->GetLength()+strlen(str)) > _maxlen)
+					break;
+
+				if (_trim) // left trim + remove empty lines
+				{
+					char* p = str;
+					while(*p && (*p == ' ' || *p == '\t')) p++;
+					if (*p != '\n') // !*p managed in Append()
+						_chunk->Append(p);
 				}
-				fclose(f);
-				return true;
+				else
+					_chunk->Append(str);
 			}
+			fclose(f);
+			return true;
 		}
 	}
 	return false;
@@ -221,6 +224,78 @@ bool SaveChunk(const char* _fn, WDL_FastString* _chunk, bool _indent)
 		}
 	}
 	return false;
+}
+
+// returns NULL if failed, otherwise it's up to the caller to free the returned buffer
+WDL_HeapBuf* LoadBin(const char* _fn)
+{
+  WDL_HeapBuf* hb = NULL;
+  if (FILE* f = fopenUTF8(_fn , "rb"))
+  {
+	long lSize;
+	fseek(f, 0, SEEK_END);
+	lSize = ftell(f);
+	rewind(f);
+
+	hb = new WDL_HeapBuf();
+	void* p = hb->Resize(lSize,false);
+	if (p && hb->GetSize() == lSize) {
+		size_t result = fread(p,1,lSize,f);
+		if (result != lSize)
+			DELETE_NULL(hb);
+	}
+	else
+		DELETE_NULL(hb);
+	fclose(f);
+  }
+  return hb;
+}
+
+bool SaveBin(const char* _fn, const WDL_HeapBuf* _hb)
+{
+	bool ok = false;
+	if (_hb && _hb->GetSize())
+	{
+		if (FILE* f = fopenUTF8(_fn , "wb"))
+		{
+			ok = (fwrite(_hb->Get(), 1, _hb->GetSize(), f) == _hb->GetSize());
+			fclose(f);
+		}
+	}
+	return ok;
+}
+
+bool TranscodeFileToFile64(const char* _outFn, const char* _inFn)
+{
+	bool ok = false;
+	WDL_HeapBuf* hb = LoadBin(_inFn); 
+	if (hb && hb->GetSize())
+	{
+		ProjectStateContext* ctx = ProjectCreateFileWrite(_outFn);
+		cfg_encode_binary(ctx, hb->Get(), hb->GetSize());
+		delete ctx;
+		ok = FileExistsErrMsg(_outFn, false);
+	}
+	delete hb;
+	return ok;
+}
+
+// returns NULL if failed, otherwise it's up to the caller to free the returned buffer
+WDL_HeapBuf* TranscodeStr64ToHeapBuf(const char* _str64)
+{
+	WDL_HeapBuf* hb = NULL;
+	long len = strlen(_str64);
+	WDL_HeapBuf hbTmp;
+	void* p = hbTmp.Resize(len, false);
+	if (p && hbTmp.GetSize() == len)
+	{
+		memcpy(p, _str64, len);
+		ProjectStateContext* ctx = ProjectCreateMemCtx(&hbTmp);
+		hb = new WDL_HeapBuf();
+		cfg_decode_binary(ctx, hb);
+		delete ctx;
+	}
+	return hb;
 }
 
 void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz)
@@ -372,7 +447,7 @@ void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char
 // Util
 ///////////////////////////////////////////////////////////////////////////////
 
-// REAPER bug: NamedCommandLookup() can return an id for an unregistered _cmdId 
+//JFB!!! REAPER bug? NamedCommandLookup() can return an id for an unregistered _cmdId 
 int SNM_NamedCommandLookup(const char* _cmdId)
 {
 	if (int id = NamedCommandLookup(_cmdId))

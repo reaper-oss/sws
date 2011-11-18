@@ -28,7 +28,7 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
-#include "../../WDL/projectcontext.h"
+//#include "../../WDL/projectcontext.h"
 
 
 /*JFB

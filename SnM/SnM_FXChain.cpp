@@ -306,7 +306,7 @@ void pasteTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			{
-				// try to set track channels
+				// (try to) set track channels
 				updated |= SetTrackChannelsForFXChain(tr, _chain);
 
 				// the meat
@@ -343,7 +343,7 @@ void setTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX)
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			// try to set track channels
+			// (try to) set track channels
 			updated |= SetTrackChannelsForFXChain(tr, _chain);
 
 			// the meat
@@ -544,24 +544,6 @@ void copyFXChainSlotToClipBoard(int _slot)
 		if (g_slots.Get(SNM_SLOT_FXC)->GetFullPath(_slot, fullPath, BUFFER_SIZE))
 			LoadChunk(fullPath, &g_fXChainClipboard);
 	}
-}
-
-void readSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, char* _desc, int _descSize)
-{
-	char buf[32];
-	_snprintf(buf, 32, "SLOT%d", _slot+1);
-	GetPrivateProfileString(_key, buf, "", _path, _pathSize, g_SNMiniFilename.Get());
-	_snprintf(buf, 32, "DESC%d", _slot+1);
-	GetPrivateProfileString(_key, buf, "", _desc, _descSize, g_SNMiniFilename.Get());
-}
-
-void saveSlotIniFile(const char* _key, int _slot, const char* _path, const char* _desc)
-{
-	char buf[32] = "";
-	_snprintf(buf, 32, "SLOT%d", _slot+1);
-	WritePrivateProfileString(_key, buf, (_path && *_path) ? _path : NULL, g_SNMiniFilename.Get());
-	_snprintf(buf, 32, "DESC%d", _slot+1);
-	WritePrivateProfileString(_key, buf, (_desc && *_desc) ? _desc : NULL, g_SNMiniFilename.Get());	
 }
 
 void smartCopyFXChain(COMMAND_T* _ct) {

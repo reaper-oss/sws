@@ -29,6 +29,7 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
+#include "SnM_FXChainView.h"
 #include "../Misc/Context.h"
 #include "../Freeze/ItemSelState.h"
 
@@ -751,12 +752,12 @@ bool deleteTakeAndMedia(int _mode)
 							{
 								// set all media offline (yeah, EACH TIME! Fails otherwise: http://code.google.com/p/sws-extension/issues/detail?id=175#c3)
 								Main_OnCommand(40100,0); 
-								if (SNM_DeleteFile(pcm->GetFileName()))
+								if (SNM_DeleteFile(pcm->GetFileName(), true))
 								{
 									char peakFn[BUFFER_SIZE] = "";
 									GetPeakFileName(pcm->GetFileName(), peakFn, BUFFER_SIZE);
 									if (peakFn && *peakFn != '\0')
-										SNM_DeleteFile(peakFn); // no delete check (peaks files can be absent)
+										SNM_DeleteFile(peakFn, true); // no delete check (peaks files can be absent)
 								}
 								else
 									deleteFileOK = false;
@@ -931,7 +932,7 @@ void showHideTakeVolEnvelope(COMMAND_T* _ct)
 		sprintf(cVis, "%d", value);
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 0");
 	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false) && value < 0) // toggle
-		fakeToggleAction(_ct);
+		FakeToggle(_ct);
 }
 
 void showHideTakePanEnvelope(COMMAND_T* _ct) 
@@ -942,7 +943,7 @@ void showHideTakePanEnvelope(COMMAND_T* _ct)
 		sprintf(cVis, "%d", value);
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false) && value < 0) // toggle
-		fakeToggleAction(_ct);
+		FakeToggle(_ct);
 }
 
 void showHideTakeMuteEnvelope(COMMAND_T* _ct) 
@@ -953,7 +954,7 @@ void showHideTakeMuteEnvelope(COMMAND_T* _ct)
 		sprintf(cVis, "%d", value);
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 1");
 	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false) && value < 0) // toggle
-		fakeToggleAction(_ct);
+		FakeToggle(_ct);
 }
 
 void showHideTakePitchEnvelope(COMMAND_T* _ct) 
@@ -966,7 +967,7 @@ void showHideTakePitchEnvelope(COMMAND_T* _ct)
 			sprintf(cVis, "%d", value);
 		WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 		if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false) && value < 0) // toggle
-			fakeToggleAction(_ct);
+			FakeToggle(_ct);
 	}
 }
 
@@ -1251,4 +1252,130 @@ void setPan(COMMAND_T* _ct)
 	}
 	if (updated)
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Media file slots (Resources view)
+//JFB!!! TODO?: new file SnM_Media.cpp?
+///////////////////////////////////////////////////////////////////////////////
+
+void PlaySelTrackMediaSlot(const char* _title, int _slot, bool _errMsg, bool _loop)
+{
+	// Prompt for slot if needed
+	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_MEDIA)->GetSize()); // loops on err
+	if (_slot == -1) return; // user has cancelled
+
+	char fn[BUFFER_SIZE]="";
+	if (g_slots.Get(SNM_SLOT_MEDIA)->GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg))
+	{
+		for (int i=1; i <= GetNumTracks(); i++) // skip master
+		{
+			MediaTrack* tr = CSurf_TrackFromID(i, false);
+			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+				SNM_PlayTrackPreview(tr, fn, _loop);
+		}
+	}
+}
+
+void PlaySelTrackMediaSlot(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
+		PlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault(), false);
+}
+
+void LoopSelTrackMediaSlot(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
+		PlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault(), true);
+}
+
+// returns true if something done
+bool TogglePlaySelTrackMediaSlot(const char* _title, int _slot, bool _errMsg, bool _loop)
+{
+	// Prompt for slot if needed
+	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_MEDIA)->GetSize()); // loops on err
+	if (_slot == -1) return false; // user has cancelled
+
+	char fn[BUFFER_SIZE]="";
+	if (g_slots.Get(SNM_SLOT_MEDIA)->GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg))
+		return SNM_TogglePlaySelTrackPreviews(fn, _loop);
+	return false;
+}
+
+void TogglePlaySelTrackMediaSlot(COMMAND_T* _ct)
+{
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
+		if (TogglePlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault(), false))
+			FakeToggle(_ct);
+}
+
+void ToggleLoopSelTrackMediaSlot(COMMAND_T* _ct)
+{
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
+		if (TogglePlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault(), true))
+			FakeToggle(_ct);
+}
+
+// _insertMode: 0=add to current track, 1=add new track, 3=add to selected items as takes, &4=stretch/loop to fit time sel, &8=try to match tempo 1x, &16=try to match tempo 0.5x, &32=try to match tempo 2x
+void InsertMediaSlot(const char* _title, int _slot, int _insertMode, bool _errMsg)
+{
+	// Prompt for slot if needed
+	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_MEDIA)->GetSize()); // loops on err
+	if (_slot == -1) return; // user has cancelled
+
+	char fn[BUFFER_SIZE]="";
+	if (g_slots.Get(SNM_SLOT_MEDIA)->GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg))
+		InsertMedia(fn, _insertMode); // includes undo JFB!!! => _title no used..
+}
+
+void InsertMediaSlotCurTr(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
+		InsertMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, 0, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault());
+}
+
+void InsertMediaSlotNewTr(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
+		InsertMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, 1, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault());
+}
+
+void InsertMediaSlotTakes(COMMAND_T* _ct) {
+	int slot = (int)_ct->user;
+	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
+		InsertMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, 3, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault());
+}
+
+bool autoSaveMediaSlot(const char* _dirPath, char* _fn, int _fnSize)
+{
+	bool updated = false;
+	for (int i = 1; i <= GetNumTracks(); i++) // skip master
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false); 
+		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		{
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (item && *(bool*)GetSetMediaItemInfo(item, "B_UISEL", NULL))
+				if (MediaItem_Take* tk = GetActiveTake(item))
+					if (PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL))
+						if (src->GetFileName())
+							if(*src->GetFileName()) {
+								char name[128];
+								GetFilenameNoExt(src->GetFileName(), name, 128);
+								GenerateFilename(_dirPath, name, GetFileExtension(src->GetFileName()), _fn, _fnSize);
+								updated |= (SNM_CopyFile(_fn, src->GetFileName()) && g_slots.Get(SNM_SLOT_MEDIA)->AddSlot(_fn));
+							}
+							else { // MIDI in-project
+								char name[128];
+								GetFilenameNoExt((char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), name, 128);
+								GenerateFilename(_dirPath, name, "mid", _fn, _fnSize);
+								src->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, _fn, NULL, NULL);
+								updated |= (g_slots.Get(SNM_SLOT_MEDIA)->AddSlot(_fn) != NULL);
+							}
+		}
+	}
+	return updated;
 }

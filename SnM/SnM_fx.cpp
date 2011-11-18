@@ -80,7 +80,7 @@ bool isFXOfflineOrBypassedSelectedTracks(COMMAND_T * _ct, int _token)
 	// several tracks selected: possible mix of different state 
 	// => return a fake toggle state (best effort)
 	else if (selTrCount)
-		return fakeIsToggledAction(_ct);
+		return FakeIsToggleAction(_ct);
 	return false;
 }
 
@@ -136,7 +136,7 @@ void toggleFXOfflineSelectedTracks(COMMAND_T* _ct) {
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 2, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) && 
 		CountSelectedTracksWithMaster(NULL) > 1)
 	{
-		fakeToggleAction(_ct);
+		FakeToggle(_ct);
 	}
 } 
 
@@ -148,7 +148,7 @@ void toggleFXBypassSelectedTracks(COMMAND_T* _ct) {
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 1, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) &&
 		CountSelectedTracksWithMaster(NULL) > 1)
 	{
-		fakeToggleAction(_ct);
+		FakeToggle(_ct);
 	}
 } 
 
@@ -158,24 +158,24 @@ bool isFXBypassedSelectedTracks(COMMAND_T * _ct) {
 
 void toggleExceptFXOfflineSelectedTracks(COMMAND_T* _ct) { 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)))
-		fakeToggleAction(_ct);
+		FakeToggle(_ct);
 } 
   
 void toggleExceptFXBypassSelectedTracks(COMMAND_T* _ct) { 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)))
-		fakeToggleAction(_ct);
+		FakeToggle(_ct);
 } 
   
 void toggleAllFXsOfflineSelectedTracks(COMMAND_T* _ct) { 
 	// We use the "except mode" but with an unreachable fx number 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
-		fakeToggleAction(_ct);
+		FakeToggle(_ct);
 } 
   
 void toggleAllFXsBypassSelectedTracks(COMMAND_T* _ct) { 
 	// We use the "except mode" but with an unreachable fx number 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
-		fakeToggleAction(_ct);
+		FakeToggle(_ct);
 } 
 
 void setFXOfflineSelectedTracks(COMMAND_T* _ct) { 
@@ -226,7 +226,7 @@ bool patchSelItemsFXState(int _mode, int _token, int _fxId, const char* _value, 
 /*JFB not used: doesn't seem to occur with take FX
 				// close the GUI for buggy plugins
 				// http://code.google.com/p/sws-extension/issues/detail?id=317
-				// API limitation: can't restore shown FX here (contrary to track FX)
+				// API LIMITATION: can't restore shown FX here (contrary to track FX)
 				if (updt && g_buggyPlugSupport && _token == 2)
 				{
 					p.ParsePatch(SNM_SETALL_CHUNK_CHAR_EXCEPT,2,"TAKEFX","FLOAT",5,255,0,(void*)"FLOATPOS"); //unfloat all
@@ -246,13 +246,13 @@ bool patchSelItemsFXState(int _mode, int _token, int _fxId, const char* _value, 
 void toggleAllFXsOfflineSelectedItems(COMMAND_T* _ct) { 
 	// We use the "except mode" but with an unreachable fx number 
 	if (patchSelItemsFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
-		fakeToggleAction(_ct);
+		FakeToggle(_ct);
 } 
   
 void toggleAllFXsBypassSelectedItems(COMMAND_T* _ct) { 
 	// We use the "except mode" but with an unreachable fx number 
 	if (patchSelItemsFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
-		fakeToggleAction(_ct);
+		FakeToggle(_ct);
 } 
 
 void setAllFXsOfflineSelectedItems(COMMAND_T* _ct) {

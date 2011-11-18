@@ -207,7 +207,7 @@ HWND GetActionListBox(char* _currentSection, int _sectionMaxSize)
 
 // returns the list view's selected item, -1 if failed, -2 if the related action's custom id cannot be retreived
 // note: no multi-selection mgmt here..
-// API LIMIT: things like kbd_getTextFromCmd() cannot work for other sections than the main one
+// API LIMITATION: things like kbd_getTextFromCmd() cannot work for other sections than the main one
 // => TODO: clean-up when we'll be able to access sections properly..
 int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc, int _descSize)
 {
@@ -304,7 +304,7 @@ void toggleFXChain(COMMAND_T* _ct)
 
 	// fake toggle state update
 	if (CountSelectedTracksWithMaster(NULL) > 1)
-		fakeToggleAction(_ct);
+		FakeToggle(_ct);
 }
 
 // for toggle state
@@ -317,7 +317,7 @@ bool isToggleFXChain(COMMAND_T * _ct)
 	// several tracks selected: possible mix of different states 
 	// => return a fake toggle state (best effort)
 	else if (selTrCount)
-		return fakeIsToggledAction(_ct);
+		return FakeIsToggleAction(_ct);
 	return false;
 }
 
@@ -329,7 +329,7 @@ void closeAllFXChainsWindows(COMMAND_T * _ct) {
 }
 void toggleAllFXChainsWindows(COMMAND_T * _ct) {
 	toggleFXChain(NULL);
-	fakeToggleAction(_ct);
+	FakeToggle(_ct);
 }
 
 
@@ -397,7 +397,7 @@ void unfloatFX(COMMAND_T* _ct) {
 }
 void toggleFloatFX(COMMAND_T* _ct) {
 	floatUnfloatFXs(false, 0, (int)_ct->user, true);
-	fakeToggleAction(_ct);
+	FakeToggle(_ct);
 }
 
 void showAllFXWindows(COMMAND_T * _ct) {
@@ -408,7 +408,7 @@ void closeAllFXWindows(COMMAND_T * _ct) {
 }
 void toggleAllFXWindows(COMMAND_T * _ct) {
 	floatUnfloatFXs(true, 0, -1, ((int)_ct->user == 1));
-	fakeToggleAction(_ct);
+	FakeToggle(_ct);
 }
 
 void closeAllFXWindowsExceptFocused(COMMAND_T * _ct)

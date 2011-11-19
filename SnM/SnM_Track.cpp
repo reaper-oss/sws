@@ -840,7 +840,7 @@ void remapMIDIInputChannel(COMMAND_T* _ct)
 PCM_source* g_cc123src = NULL;
 
 WDL_PtrList<preview_register_t> g_playPreviews;
-SWS_Mutex g_playPreviewsLock;
+SWS_Mutex g_playPreviewsMutex;
 
 void TrackPreviewInitDeleteMutex(preview_register_t* _prev, bool _init) {
 	if (_init)
@@ -874,7 +874,7 @@ void TrackPreviewLockUnlockMutex(preview_register_t* _prev, bool _lock) {
 
 bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _loop)
 {
-	SWS_SectionLock lock(&g_playPreviewsLock);
+	SWS_SectionLock lock(&g_playPreviewsMutex);
 	if (_src)
 	{
 		preview_register_t* prev = new preview_register_t;
@@ -911,26 +911,31 @@ bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _loop)
 			trsToStart.Add(tr);
 	}
 
-	SWS_SectionLock lock(&g_playPreviewsLock);
-
-	// stop play if needed, store otherwise
-	for (int i=g_playPreviews.GetSize()-1; i >=0; i--)
 	{
-		preview_register_t* prev = g_playPreviews.Get(i);
-		for (int j=1; j <= GetNumTracks(); j++) // skip master
+		SWS_SectionLock lock(&g_playPreviewsMutex);
+
+		// stop play if needed, store otherwise
+		for (int i=g_playPreviews.GetSize()-1; i >=0; i--)
 		{
-			MediaTrack* tr = CSurf_TrackFromID(j, false);
-			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			preview_register_t* prev = g_playPreviews.Get(i);
+			for (int j=1; j <= GetNumTracks(); j++) // skip master
 			{
-				TrackPreviewLockUnlockMutex(prev, true);
-				if (prev->preview_track == tr && !strcmp(prev->src->GetFileName(), _fn))
+				MediaTrack* tr = CSurf_TrackFromID(j, false);
+				if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 				{
-					prev->loop = false;
-					prev->curpos = prev->src->GetLength(); // => will be stopped by next call to StopTrackPreviewsRun()
-					trsToStart.Delete(trsToStart.Find(tr));
-					done = true;
+					TrackPreviewLockUnlockMutex(prev, true);
+					if (prev->preview_track == tr && 
+						prev->volume > 0.5 && // playing
+						!strcmp(prev->src->GetFileName(), _fn))
+					{
+						prev->loop = false;
+						prev->volume = 0.0;
+						prev->curpos = prev->src->GetLength(); // => will be stopped by next call to StopTrackPreviewsRun()
+						trsToStart.Delete(trsToStart.Find(tr));
+						done = true;
+					}
+					TrackPreviewLockUnlockMutex(prev, false);
 				}
-				TrackPreviewLockUnlockMutex(prev, false);
 			}
 		}
 	}
@@ -954,27 +959,29 @@ void DeleteTrackPreview(void* _prev) {
 
 void StopTrackPreviewsRun()
 {
-	SWS_SectionLock lock(&g_playPreviewsLock);
 	WDL_PtrList<void> cc123Trs;
-	for (int i=g_playPreviews.GetSize()-1; i >=0; i--)
 	{
-		preview_register_t* prev = g_playPreviews.Get(i);
-		TrackPreviewLockUnlockMutex(prev, true);
-		if (!prev->loop && prev->curpos >= prev->src->GetLength())
+		SWS_SectionLock lock(&g_playPreviewsMutex);
+		for (int i=g_playPreviews.GetSize()-1; i >=0; i--)
 		{
-			// prepare all notes off, if needed
-			if (!strcmp(prev->src->GetType(), "MIDI") && 
-				prev->src != g_cc123src &&
-				cc123Trs.Find(prev->preview_track) == -1)
+			preview_register_t* prev = g_playPreviews.Get(i);
+			TrackPreviewLockUnlockMutex(prev, true);
+			if (!prev->loop && (prev->volume < 0.5 || fabs(prev->curpos - prev->src->GetLength()) < 0.0001))
 			{
-				cc123Trs.Add(prev->preview_track);
+				// prepare all notes off, if needed
+				if (!strcmp(prev->src->GetType(), "MIDI") && 
+					prev->src != g_cc123src &&
+					cc123Trs.Find(prev->preview_track) == -1)
+				{
+					cc123Trs.Add(prev->preview_track);
+				}
+				TrackPreviewLockUnlockMutex(prev, false);
+				StopTrackPreview(prev);
+				g_playPreviews.Delete(i, true, DeleteTrackPreview);
 			}
-			TrackPreviewLockUnlockMutex(prev, false);
-			StopTrackPreview(prev);
-			g_playPreviews.Delete(i, true, DeleteTrackPreview);
+			else
+				TrackPreviewLockUnlockMutex(prev, false);
 		}
-		else
-			TrackPreviewLockUnlockMutex(prev, false);
 	}
 	CC123Tracks(&cc123Trs);
 }
@@ -982,8 +989,8 @@ void StopTrackPreviewsRun()
 void StopSelTrackPreview(COMMAND_T* _ct)
 {
 	bool selTracks = ((int)_ct->user == 1);
-	SWS_SectionLock lock(&g_playPreviewsLock);
-	for (int i=g_playPreviews.GetSize()-1; i >=0; i--)
+	SWS_SectionLock lock(&g_playPreviewsMutex);
+	for (int i=g_playPreviews.GetSize()-1; i >= 0; i--)
 	{
 		preview_register_t* prev = g_playPreviews.Get(i);
 		for (int j=1; j <= GetNumTracks(); j++) // skip master
@@ -994,6 +1001,7 @@ void StopSelTrackPreview(COMMAND_T* _ct)
 				TrackPreviewLockUnlockMutex(prev, true);
 				if (prev->preview_track == tr) {
 					prev->loop = false;
+					prev->volume = 0.0;
 					prev->curpos = prev->src->GetLength(); // => will be stopped by next call to StopTrackPreviewsRun()
 				}
 				TrackPreviewLockUnlockMutex(prev, false);

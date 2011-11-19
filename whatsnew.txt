@@ -1,3 +1,4 @@
+!v2.1.0 #20 (November 19, 2011)
 Added actions:
 +SWS/S&M: Send all notes off to selected tracks
 
@@ -19,6 +20,7 @@ House cleaning:
 +OSX: S&M logos like on Windows OS
 
 Fixed toggle states for all actions "SWS/S&M: Toggle arming of [...] envelope for selected tracks" (toggle states were stuck to "off")
+Issue 400: Fixed marker set paste in Reaper v4.x
 
 !v2.1.0 #19 (November 14, 2011)
 Issue 375: Fixed "SWS: Nudge master output 1 volume -1db" action

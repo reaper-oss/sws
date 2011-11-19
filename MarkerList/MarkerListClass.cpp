@@ -236,7 +236,7 @@ void MarkerList::ClipboardToList()
 		char* line = strtok(data, "\r\n");
 		while(line)
 		{
-			if (!lp.parse(line) && lp.getnumtokens() == 5)
+			if (!lp.parse(line) && lp.getnumtokens() >= 5)
 				m_items.Add(new MarkerItem(&lp));
 			line = strtok(NULL, "\r\n");
 		}

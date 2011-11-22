@@ -390,22 +390,53 @@ void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, co
 	}
 }
 
-void RenamePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn)
+void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn, const char* _newIniFn)
 {
 	char buf[SNM_MAX_INI_SECTION]="";
 	int sectionSz = GetPrivateProfileSection(_oldAppName, buf, SNM_MAX_INI_SECTION, _iniFn);
 	WritePrivateProfileStruct(_oldAppName, NULL, NULL, 0, _iniFn); // flush section
 	if (sectionSz)
-		WritePrivateProfileSection(_newAppName, buf, _iniFn);
+		WritePrivateProfileSection(_newAppName, buf, _newIniFn ? _newIniFn : _iniFn);
 }
 
-void RenamePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn)
+void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn)
 {
 	char buf[BUFFER_SIZE]="";
 	GetPrivateProfileString(_appName, _oldKey, "", buf, BUFFER_SIZE, _iniFn);
 	WritePrivateProfileString(_appName, _oldKey, NULL, _iniFn); // remove key
 	if (*buf)
-		WritePrivateProfileString(_appName, _newKey, buf, _iniFn);
+		WritePrivateProfileString(_appName, _newKey, buf, _newIniFn ? _newIniFn : _iniFn);
+}
+
+void SNM_UpgradeIniFiles()
+{
+	if (g_iniFileVersion < 1) // i.e. sws version < v2.1.0 #18
+	{
+		// upgrade deprecated section names 
+		UpdatePrivateProfileSection("FXCHAIN", "FXChains", g_SNMIniFn.Get());
+		UpdatePrivateProfileSection("FXCHAIN_VIEW", "RESOURCE_VIEW", g_SNMIniFn.Get());
+		// upgrade deprecated key names (automatically generated now..)
+		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClick_Type", "DblClickFXChains", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Tr_Template", "DblClickTrackTemplates", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Prj_Template", "DblClickProjectTemplates", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirFXChain", "AutoSaveDirFXChains", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirFXChain", "AutoFillDirFXChains", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirTrTemplate", "AutoSaveDirTrackTemplates", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirTrTemplate", "AutoFillDirTrackTemplates", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirPrjTemplate", "AutoSaveDirProjectTemplates", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirPrjTemplate", "AutoFillDirProjectTemplates", g_SNMIniFn.Get());
+	}
+	if (g_iniFileVersion < 2) // i.e. sws version < v2.1.0 #21
+	{
+		// move cycle actions to a new dedicated file (+ make backup if it already exists)
+		WDL_FastString fn;
+		fn.SetFormatted(BUFFER_SIZE, SNM_CYCLACTION_BAK_FILE, GetResourcePath());
+		if (FileExists(g_SNMCyclactionIniFn.Get()))
+			MoveFile(g_SNMCyclactionIniFn.Get(), fn.Get());
+		UpdatePrivateProfileSection("MAIN_CYCLACTIONS", "Main_Cyclactions", g_SNMIniFn.Get(), g_SNMCyclactionIniFn.Get());
+		UpdatePrivateProfileSection("ME_LIST_CYCLACTIONS", "ME_List_Cyclactions", g_SNMIniFn.Get(), g_SNMCyclactionIniFn.Get());
+		UpdatePrivateProfileSection("ME_PIANO_CYCLACTIONS", "ME_Piano_Cyclactions", g_SNMIniFn.Get(), g_SNMCyclactionIniFn.Get());
+	}
 }
 
 // fills a list of filenames for the desired extension

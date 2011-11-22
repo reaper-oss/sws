@@ -878,46 +878,39 @@ void SNMSaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 // S&M.ini file
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_FastString g_SNMiniFilename;
+WDL_FastString g_SNMIniFn;
+WDL_FastString g_SNMCyclactionIniFn;
 int g_iniFileVersion = 0;
+int g_bSNMbeta = 0;
 
 void IniFileInit()
 {
-	// S&M.ini definition
-	char iniFn[BUFFER_SIZE]="";
-	_snprintf(iniFn, BUFFER_SIZE, SNM_FORMATED_INI_FILE, GetResourcePath());
-	g_SNMiniFilename.Set(iniFn);
+	g_SNMIniFn.SetFormatted(BUFFER_SIZE, SNM_FORMATED_INI_FILE, GetResourcePath());
+	g_SNMCyclactionIniFn.SetFormatted(BUFFER_SIZE, SNM_CYCLACTION_INI_FILE, GetResourcePath());
 
 	// move from old location if needed/possible
-	char oldIniFn[BUFFER_SIZE]="";
-	_snprintf(oldIniFn, BUFFER_SIZE, SNM_OLD_FORMATED_INI_FILE, GetExePath());
-	if (FileExists(oldIniFn))
-		MoveFile(oldIniFn, iniFn); // no check: use the new file whatever happens
+	WDL_FastString fn;
+	fn.SetFormatted(BUFFER_SIZE, SNM_OLD_FORMATED_INI_FILE, GetExePath());
+	if (FileExists(fn.Get()))
+		MoveFile(fn.Get(), g_SNMIniFn.Get()); // no check: use the new file whatever happens
 
-	// S&M.ini upgrade, if needed
-	g_iniFileVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, iniFn);
-	if (g_iniFileVersion < 1) // i.e. sws version < v2.1.0 #18
-	{
-		// upgrade deprecated section names 
-		RenamePrivateProfileSection("FXCHAIN", "FXChains", iniFn);
-		RenamePrivateProfileSection("FXCHAIN_VIEW", "RESOURCE_VIEW", iniFn);
-		// upgrade deprecated key names (automatically generated now..)
-		RenamePrivateProfileString("RESOURCE_VIEW", "DblClick_Type", "DblClickFXChains", iniFn);
-		RenamePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Tr_Template", "DblClickTrackTemplates", iniFn);
-		RenamePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Prj_Template", "DblClickProjectTemplates", iniFn);
-		RenamePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirFXChain", "AutoSaveDirFXChains", iniFn);
-		RenamePrivateProfileString("RESOURCE_VIEW", "AutoFillDirFXChain", "AutoFillDirFXChains", iniFn);
-		RenamePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirTrTemplate", "AutoSaveDirTrackTemplates", iniFn);
-		RenamePrivateProfileString("RESOURCE_VIEW", "AutoFillDirTrTemplate", "AutoFillDirTrackTemplates", iniFn);
-		RenamePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirPrjTemplate", "AutoSaveDirProjectTemplates", iniFn);
-		RenamePrivateProfileString("RESOURCE_VIEW", "AutoFillDirPrjTemplate", "AutoFillDirProjectTemplates", iniFn);
-	}
+	// ini files upgrade, if needed
+	g_iniFileVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNMIniFn.Get());
+	SNM_UpgradeIniFiles();
 	g_iniFileVersion = SNM_INI_FILE_VERSION;
 
 	// load general prefs 
-	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, iniFn) == 1);
-	g_toolbarsAutoRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, iniFn), 100, 5000);
-	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, iniFn);
+	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNMIniFn.Get()) == 1);
+	g_toolbarsAutoRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, g_SNMIniFn.Get()), 100, 5000);
+	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNMIniFn.Get());
+#ifndef _WIN32
+	g_bSNMbeta = GetPrivateProfileInt("General", "Beta", 0, g_SNMIniFn.Get());
+#else
+	g_bSNMbeta |= 1; // themable edit controls
+	g_bSNMbeta |= 2; // themed list view (the Cockos' way)
+	g_bSNMbeta |= 4; // cycle action editor beta
+//	g_bSNMbeta |= 8; // themed list view (the WM_PAINT way)
+#endif
 }
 
 void IniFileExit()
@@ -925,19 +918,20 @@ void IniFileExit()
 	// save general prefs & info
 	WDL_FastString iniSection;
 	iniSection.SetFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build #%d\n; ", SWS_VERSION); 
-	iniSection.Append(g_SNMiniFilename.Get()); 
+	iniSection.Append(g_SNMIniFn.Get()); 
 	iniSection.AppendFormatted(128, "\nIniFileUpgrade=%d\n", g_iniFileVersion); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_toolbarsAutoRefreshFreq);
 	iniSection.AppendFormatted(128, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1 : 0); 
-	SaveIniSection("General", &iniSection, g_SNMiniFilename.Get());
+	iniSection.AppendFormatted(128, "Beta=%d\n", g_bSNMbeta); 
+	SaveIniSection("General", &iniSection, g_SNMIniFn.Get());
 
 	// save dynamic actions
-	SNMSaveDynamicCommands(g_SNM_dynamicCmdTable, g_SNMiniFilename.Get());
+	SNMSaveDynamicCommands(g_SNM_dynamicCmdTable, g_SNMIniFn.Get());
 
 #ifdef _WIN32
 	// force ini file's cache flush, see http://support.microsoft.com/kb/68827
-	WritePrivateProfileString(NULL, NULL, NULL, g_SNMiniFilename.Get());
+	WritePrivateProfileString(NULL, NULL, NULL, g_SNMIniFn.Get());
 #endif
 }
 
@@ -972,7 +966,7 @@ int SnMInit(reaper_plugin_info_t* _rec)
 #endif
 	// Actions should be registered before views
 	if (!SWSRegisterCommands(g_SNM_cmdTable) || 
-		!SNMRegisterDynamicCommands(g_SNM_dynamicCmdTable, g_SNMiniFilename.Get()) ||
+		!SNMRegisterDynamicCommands(g_SNM_dynamicCmdTable, g_SNMIniFn.Get()) ||
 		!SNMSectionRegisterCommands(_rec))
 		return 0;
 

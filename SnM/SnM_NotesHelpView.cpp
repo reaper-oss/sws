@@ -39,13 +39,12 @@
 #include "SNM_NotesHelpView.h"
 //#include "../../WDL/projectcontext.h"
 
-#define MAX_HELP_LENGTH				4096 //JFB 4096 rather than MAX_INI_SECTION (too big)
 
-// Msgs
-#define SET_ACTION_HELP_FILE_MSG	0x110001
+#define MAX_HELP_LENGTH				4096 //JFB 4096 rather than MAX_INI_SECTION (too big)
+#define SET_ACTION_HELP_FILE_MSG	0xF001
 
 enum {
-  BUTTONID_LOCK=1000,
+  BUTTONID_LOCK=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
   COMBOID_TYPE,
   TXTID_LABEL,
   BUTTONID_ALR
@@ -518,8 +517,8 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
 
 	// Load prefs 
-	m_type = GetPrivateProfileInt("NOTES_HELP_VIEW", "TYPE", 0, g_SNMiniFilename.Get());
-	g_locked = GetPrivateProfileInt("NOTES_HELP_VIEW", "LOCK", 1, g_SNMiniFilename.Get());
+	m_type = GetPrivateProfileInt("NOTES_HELP_VIEW", "TYPE", 0, g_SNMIniFn.Get());
+	g_locked = GetPrivateProfileInt("NOTES_HELP_VIEW", "LOCK", 1, g_SNMIniFn.Get());
 
 	// WDL GUI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
@@ -554,15 +553,17 @@ void SNM_NotesHelpWnd::OnInitDlg()
 
 void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-	if (wParam == (IDC_EDIT | (EN_CHANGE << 16)))
-		saveCurrentText(m_type); // + undos
-	else if (wParam == SET_ACTION_HELP_FILE_MSG)
-		SetActionHelpFilename(NULL);
-	else if (HIWORD(wParam)==0)	
+	switch (LOWORD(wParam))
 	{
-		switch(LOWORD(wParam))
-		{
-			case BUTTONID_LOCK:
+		case IDC_EDIT:
+			if (HIWORD(wParam)==EN_CHANGE)
+				saveCurrentText(m_type); // + undos
+			break;
+		case SET_ACTION_HELP_FILE_MSG:
+			SetActionHelpFilename(NULL);
+			break;
+		case BUTTONID_LOCK:
+			if (!HIWORD(wParam))
 			{
 				g_locked = !g_locked;
 				if (!g_locked)
@@ -571,33 +572,34 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				RefreshGUI();
 			}
 			break;
-			case BUTTONID_ALR:
+		case BUTTONID_ALR:
+			if (!HIWORD(wParam) &&
+				g_lastActionId && *g_lastActionId && g_lastActionDesc && 
+				*g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
 			{
-				if (g_lastActionId && *g_lastActionId && g_lastActionDesc && 
-					*g_lastActionDesc && _strnicmp(g_lastActionDesc, "Custom:", 7))
-				{
-					char cLink[256] = "";
-					char sectionURL[SNM_MAX_SECTION_NAME_LEN] = "";
-					if (GetSectionName(true, g_lastActionSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
-					{					
-						_snprintf(cLink, 256, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
-						ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
-					}
+				char cLink[256] = "";
+				char sectionURL[SNM_MAX_SECTION_NAME_LEN] = "";
+				if (GetSectionName(true, g_lastActionSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
+				{					
+					_snprintf(cLink, 256, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionId);
+					ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
 				}
-				else
-					ShellExecute(m_hwnd, "open", "http://wiki.cockos.com/wiki/index.php/Action_List_Reference" , NULL, NULL, SW_SHOWNORMAL);
+			}
+			else
+				ShellExecute(m_hwnd, "open", "http://wiki.cockos.com/wiki/index.php/Action_List_Reference" , NULL, NULL, SW_SHOWNORMAL);
+			break;
+		case COMBOID_TYPE:
+			if (HIWORD(wParam)==CBN_SELCHANGE)
+			{
+				SetType(m_cbType.GetCurSel());
+				if (!g_locked)
+					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 			}
 			break;
-		}
+		default:
+			Main_OnCommand((int)wParam, (int)lParam);
+			break;
 	}
-	else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE)	
-	{
-		SetType(m_cbType.GetCurSel());
-		if (!g_locked)
-			SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
-	}
-	else 
-		Main_OnCommand((int)wParam, (int)lParam);
 }
 
 /*JFB r376
@@ -621,8 +623,8 @@ void SNM_NotesHelpWnd::OnDestroy()
 	char cType[2], cLock[2];
 	sprintf(cType, "%d", m_type);
 	sprintf(cLock, "%d", g_locked);
-	WritePrivateProfileString("NOTES_HELP_VIEW", "TYPE", cType, g_SNMiniFilename.Get()); 
-	WritePrivateProfileString("NOTES_HELP_VIEW", "LOCK", cLock, g_SNMiniFilename.Get()); 
+	WritePrivateProfileString("NOTES_HELP_VIEW", "TYPE", cType, g_SNMIniFn.Get()); 
+	WritePrivateProfileString("NOTES_HELP_VIEW", "LOCK", cLock, g_SNMIniFn.Get()); 
 
 	m_previousType = -1;
 	m_cbType.Empty();
@@ -853,16 +855,17 @@ INT_PTR SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam
 		case WM_MOUSEMOVE:
 			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
-#ifdef _SNM_THEMABLE
+//#ifdef _SNM_EDIT_THEMABLE
 		case WM_CTLCOLOREDIT:
-			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT)) {
+			if (g_bSNMbeta&1 && (HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT))
+			{
 				int bg, txt; SNM_GetThemeEditColors(&bg, &txt);
 				SetBkColor((HDC)wParam, bg);
 				SetTextColor((HDC)wParam, txt);
 				return (INT_PTR)SNM_GetThemeBrush(bg);
 			}
 			break;
-#endif
+//#endif
 	}
 	return 0;
 }
@@ -934,14 +937,14 @@ void SNM_NotesHelpWnd::readActionHelpFilenameIniFile()
 {
 	char defaultHelpPath[BUFFER_SIZE], buf[BUFFER_SIZE];
 	_snprintf(defaultHelpPath, BUFFER_SIZE, SNM_ACTION_HELP_INI_FILE, GetResourcePath());
-	GetPrivateProfileString("NOTES_HELP_VIEW", "ACTION_HELP_FILE", defaultHelpPath, buf, BUFFER_SIZE, g_SNMiniFilename.Get());
+	GetPrivateProfileString("NOTES_HELP_VIEW", "ACTION_HELP_FILE", defaultHelpPath, buf, BUFFER_SIZE, g_SNMIniFn.Get());
 	m_actionHelpFilename.Set(buf);
 }
 
 void SNM_NotesHelpWnd::saveActionHelpFilenameIniFile() {
 	WDL_FastString escapedStr;
 	makeEscapedConfigString(m_actionHelpFilename.Get(), &escapedStr);
-	WritePrivateProfileString("NOTES_HELP_VIEW", "ACTION_HELP_FILE", escapedStr.Get(), g_SNMiniFilename.Get());
+	WritePrivateProfileString("NOTES_HELP_VIEW", "ACTION_HELP_FILE", escapedStr.Get(), g_SNMIniFn.Get());
 }
 
 const char* SNM_NotesHelpWnd::getActionHelpFilename() {

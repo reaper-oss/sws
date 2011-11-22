@@ -121,12 +121,12 @@ INT_PTR WINAPI SWS_DockWnd::sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 		pObj->m_hwnd = hwndDlg;
 	}
 	if (pObj)
-		return pObj->wndProc(uMsg, wParam, lParam);
+		return pObj->WndProc(uMsg, wParam, lParam);
 	else
 		return 0;
 }
 
-INT_PTR SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch (uMsg)
 	{
@@ -225,14 +225,14 @@ INT_PTR SWS_DockWnd::wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			switch (wParam)
 			{
-			case DOCK_MSG:
-				ToggleDocking();
-				break;
-			case IDCANCEL:
-			case IDOK:
-				m_bUserClosed = true;
-				DestroyWindow(m_hwnd);
-				break;
+				case DOCK_MSG:
+					ToggleDocking();
+					break;
+				case IDCANCEL:
+				case IDOK:
+					m_bUserClosed = true;
+					DestroyWindow(m_hwnd);
+					break;
 			}
 			break;
 		case WM_SIZE:
@@ -1370,4 +1370,236 @@ int SWS_ListView::sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam
 {
 	SWS_ListView* pLV = (SWS_ListView*)lSortParam;
 	return pLV->OnItemSort((SWS_ListItem*)lParam1, (SWS_ListItem*)lParam2);
+}
+
+
+// Theming..
+
+#ifdef _WIN32
+
+void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
+{
+  int i;
+  HPEN pen = CreatePen(PS_SOLID,0,color);
+  HGDIOBJ oldObj = SelectObject(hdc,pen);
+  for(i=0;i<ncol;i++)
+  {
+    RECT r;
+    if (!ListView_GetSubItemRect(hwnd,0,i,LVIR_BOUNDS,&r) && i) break;
+    r.left--;
+    r.right--;
+    if (!i)
+    {
+      int h =r.bottom-r.top;
+      if (!ListView_GetItemCount(hwnd)) 
+      {
+        r.top = 0;
+        HWND head=ListView_GetHeader(hwnd);
+        if (head)
+        {
+          GetWindowRect(head,&r);
+          r.top=r.bottom-r.top;
+        }
+        h=17;// todo getsystemmetrics
+      }
+      if (h>0)
+      {
+        while (r.top < br.bottom)
+        {
+          if (r.top >= br.top)
+          {
+            MoveToEx(hdc,br.left,r.top,NULL);
+            LineTo(hdc,br.right,r.top);
+          }
+          r.top +=h;
+        }
+      }
+    }
+    else if (r.right >= br.left && r.left < br.right)
+    {
+      if (i)
+      {
+        if (i==1)
+        {
+          MoveToEx(hdc,r.left,br.top,NULL);
+          LineTo(hdc,r.left,br.bottom);
+        }
+        MoveToEx(hdc,r.right,br.top,NULL);
+        LineTo(hdc,r.right,br.bottom);
+      }
+    }
+  }
+  SelectObject(hdc,oldObj);
+  DeleteObject(pen);
+}
+#endif
+
+bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int cstate[LISTVIEW_COLORHOOK_STATESIZE], int listID, int whichTheme, int wantGridForColumns)
+{
+  int sz;
+  ColorTheme* ctheme = (ColorTheme*)GetColorThemeStruct(&sz);
+  if (!ctheme || sz < sizeof(ColorTheme))
+	  return false;
+
+  // if whichTheme&1, is tree view
+  switch (uMsg)
+  {
+    case WM_PAINT:
+      {
+        int c1=RGB(255,255,255);
+        int c2=RGB(0,0,0);
+        int c3=RGB(224,224,224);
+
+#ifndef _WIN32
+        int selcols[4];
+        selcols[0]=g_ctheme.genlist_sel[0];
+        selcols[1]=g_ctheme.genlist_sel[1];
+        selcols[2]=g_ctheme.genlist_selinactive[0];
+        selcols[3]=g_ctheme.genlist_selinactive[1];
+#endif
+        if ((whichTheme&~1) == 0)
+        {
+          c1 = ctheme->genlist_bg;
+          c2 = ctheme->genlist_fg;
+          c3 = ctheme->genlist_gridlines;
+        }
+        if (cstate[0] != c1 || cstate[1] != c2 || cstate[2] != c3
+#ifndef _WIN32
+            || memcmp(selcols,cstate+3,4*sizeof(int))
+#endif
+            )
+        {
+          cstate[0]=c1;
+          cstate[1]=c2;
+          cstate[2]=c3;
+          HWND h = GetDlgItem(hwndDlg,listID);
+#ifndef _WIN32
+          memcpy(cstate+3,selcols,4*sizeof(int));
+          if (h) ListView_SetSelColors(h,selcols,4);
+#endif
+          if (h)
+          {
+            if (whichTheme&1)
+            {
+              TreeView_SetBkColor(h,c1);
+              TreeView_SetTextColor(h,c2);
+            }
+            else
+            {
+              ListView_SetBkColor(h,c1);
+              ListView_SetTextBkColor(h,c1);
+              ListView_SetTextColor(h,c2);
+#ifndef _WIN32
+              ListView_SetGridColor(h,c3);
+#endif
+            }
+          }
+        }
+      }
+    break;
+    case WM_CREATE:
+    case WM_INITDIALOG:
+      memset(cstate,0,sizeof(cstate));
+    break;
+#ifdef _WIN32
+    case WM_NOTIFY:
+      if (lParam)
+      {
+        NMHDR *hdr = (NMHDR *)lParam;
+        bool wantThemedSelState=true;
+        if (hdr->idFrom == listID) switch (hdr->code)
+        {
+          case NM_CUSTOMDRAW:
+            if (whichTheme&1)
+            {
+              LPNMTVCUSTOMDRAW lptvcd = (LPNMTVCUSTOMDRAW)lParam;
+              if (wantThemedSelState) switch(lptvcd->nmcd.dwDrawStage) 
+              {
+                case CDDS_PREPAINT:
+                  SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,CDRF_NOTIFYITEMDRAW);
+                return true;      
+                case CDDS_ITEMPREPAINT:
+                  if (wantThemedSelState&&lptvcd->nmcd.dwItemSpec)
+                  {              
+                    TVITEM tvi={TVIF_HANDLE|TVIF_STATE ,(HTREEITEM)lptvcd->nmcd.dwItemSpec};
+                    TreeView_GetItem(hdr->hwndFrom,&tvi);
+                    if(tvi.state&(TVIS_SELECTED|TVIS_DROPHILITED))
+                    {
+                      int bg1=ctheme->genlist_sel[0];
+                      int bg2=ctheme->genlist_selinactive[0];
+                      int fg1=ctheme->genlist_sel[1];
+                      int fg2=ctheme->genlist_selinactive[1];
+
+                      bool active = (tvi.state&TVIS_DROPHILITED) || GetFocus()==hdr->hwndFrom;
+                      lptvcd->clrText = active ? fg1 : fg2;
+                      lptvcd->clrTextBk = active ? bg1 : bg2;
+                      lptvcd->nmcd.uItemState &= ~CDIS_SELECTED;
+                    }
+                    SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,0);
+                    return true;
+                  }
+                break;
+              }
+            }
+            else if (wantGridForColumns||wantThemedSelState)
+            {
+              LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)lParam;
+              switch(lplvcd->nmcd.dwDrawStage) 
+              {
+                case CDDS_PREPAINT:
+                  SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,(wantGridForColumns?CDRF_NOTIFYPOSTPAINT:0)|
+                                                          (wantThemedSelState?CDRF_NOTIFYITEMDRAW:0));
+                return true;      
+                case CDDS_ITEMPREPAINT:
+                  if (wantThemedSelState)
+                  {
+                    int s = ListView_GetItemState(hdr->hwndFrom, (int)lplvcd->nmcd.dwItemSpec, LVIS_SELECTED|LVIS_FOCUSED);
+                    if(s&LVIS_SELECTED)
+                    {
+                      int bg1=ctheme->genlist_sel[0];
+                      int bg2=ctheme->genlist_selinactive[0];
+                      int fg1=ctheme->genlist_sel[1];
+                      int fg2=ctheme->genlist_selinactive[1];
+
+                      bool active = GetFocus()==hdr->hwndFrom;
+                      lplvcd->clrText = active ? fg1 : fg2;
+                      lplvcd->clrTextBk = active ? bg1 : bg2;
+                      lplvcd->nmcd.uItemState &= ~CDIS_SELECTED;
+                    }
+                    if (s&LVIS_FOCUSED)
+                    {
+/*
+                      // todo: theme option for colors for focus state as well?
+                      if (0 && GetFocus()==hdr->hwndFrom)
+                      {
+                        lplvcd->clrText = BrightenColorSlightly(lplvcd->clrText);
+                        lplvcd->clrTextBk = BrightenColorSlightly(lplvcd->clrTextBk);
+                      }
+*/
+                      lplvcd->nmcd.uItemState &= ~CDIS_FOCUS;
+                    }
+                    SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,0);
+                    return true;
+                  }
+                break;
+                case CDDS_POSTPAINT:                  
+                  if (wantGridForColumns)
+                  {
+                    int c1 = ctheme->genlist_gridlines;
+                    int c2 = ctheme->genlist_bg;
+                    if (c1 != c2)
+                    {
+                      DrawListCustomGridLines(hdr->hwndFrom,lplvcd->nmcd.hdc,lplvcd->nmcd.rc,c1,wantGridForColumns);
+                    }
+                  }
+                  SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,0);
+                return true;          
+              }
+            }
+          break;
+        }
+      }
+#endif
+  }
+  return false;
 }

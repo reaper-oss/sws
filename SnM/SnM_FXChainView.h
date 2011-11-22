@@ -60,9 +60,6 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 	FileSlotList(int _type, const char* _resDir, const char* _desc, const char* _ext, bool _notepad, bool _autoSave, bool _dlClick) 
 		: m_type(_type), m_resDir(_resDir),m_desc(_desc),m_ext(_ext),m_notepad(_notepad),m_autoSave(_autoSave),m_dlClick(_dlClick),
 		WDL_PtrList<PathSlotItem>() {}
-	FileSlotList(const FileSlotList* _fl)
-		: m_type(_fl->m_type), m_resDir(_fl->m_resDir),m_desc(_fl->m_desc),m_ext(_fl->m_ext),m_notepad(_fl->m_notepad),m_autoSave(_fl->m_autoSave),m_dlClick(_fl->m_dlClick),
-		WDL_PtrList<PathSlotItem>() {}
 	int GetType() {return m_type;}
 	// _path: short resource path or full path
 	PathSlotItem* AddSlot(const char* _path="", const char* _desc="") {
@@ -188,8 +185,10 @@ public:
 	void SetType(int _type);
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
+	void ClearListSelection();
 	void SelectBySlot(int _slot1, int _slot2 = -1);
 protected:
+	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void OnInitDlg();
 	HMENU OnContextMenu(int x, int y);
 	void OnDestroy();
@@ -202,11 +201,9 @@ protected:
 	void FillDblClickTypeCombo();
 	void AddSlot(bool _update);
 	void InsertAtSelectedSlot(bool _update);
-	void ClearSelectedSlots(bool _update, bool _delFiles=false);
-	void DeleteSelectedSlots(bool _update, bool _delFiles=false);
+	void ClearDeleteSelectedSlots(bool _del, bool _delLastEmpty, bool _delFiles, bool _update);
 	void AutoSave();
 	void AutoFill(const char* _startPath);
-
 
 	bool m_autoSaveTrTmpltWithItemsPref;
 	int m_previousType, m_autoSaveFXChainPref;

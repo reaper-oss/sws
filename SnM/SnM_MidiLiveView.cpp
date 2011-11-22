@@ -36,11 +36,31 @@
 #include "SnM_MidiLiveView.h"
 #include "SnM_Chunk.h"
 
+
 #define SAVEWINDOW_POS_KEY		"S&M - Live Configs List Save Window Position"
 #define NB_CC_VALUES			128
 
+#define SNM_LIVECFG_CLEAR_CC_ROW_MSG			0xF001
+#define SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG		0xF002
+#define SNM_LIVECFG_CLEAR_TRACK_TEMPLATE_MSG	0xF003
+#define SNM_LIVECFG_LOAD_FXCHAIN_MSG			0xF004
+#define SNM_LIVECFG_CLEAR_FXCHAIN_MSG			0xF005
+#define SNM_LIVECFG_PERFORM_MSG					0xF006 
+#define SNM_LIVECFG_EDIT_DESC_MSG				0xF007
+#define SNM_LIVECFG_CLEAR_DESC_MSG				0xF008
+#define SNM_LIVECFG_EDIT_ON_ACTION_MSG			0xF009
+#define SNM_LIVECFG_CLEAR_ON_ACTION_MSG			0xF00A
+#define SNM_LIVECFG_EDIT_OFF_ACTION_MSG			0xF00B
+#define SNM_LIVECFG_CLEAR_OFF_ACTION_MSG		0xF00C 
+#define SNM_LIVECFG_SET_TRACK_MSG				0xF00D // => 243 track max.
+#define SNM_LIVECFG_CLEAR_TRACK_MSG				0xF100
+#define SNM_LIVECFG_SET_PRESETS_MSG				0xF101 // => theorically 3838 preset max, but see SNM_LIVECFG_MAX_PRESET_COUNT
+#define SNM_LIVECFG_CLEAR_PRESETS_MSG			0xFFFF
+
+#define SNM_LIVECFG_UNDO_STR					"Live configs edition"
+
 enum {
-  TXTID_CONFIG=1000,
+  TXTID_CONFIG=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
   COMBOID_CONFIG,
   BUTTONID_ENABLE,
   TXTID_INPUT_TRACK,
@@ -271,6 +291,17 @@ SNM_LiveConfigsWnd::SNM_LiveConfigsWnd()
 	Init();
 }
 
+INT_PTR SNM_LiveConfigsWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (g_bSNMbeta&2)
+	{
+		static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE];
+		if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, 0))
+			return 1;
+	}
+	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
+}
+
 void SNM_LiveConfigsWnd::CSurfSetTrackListChange() {
 	// we use a ScheduledJob because of possible multi-notifs
 	SNM_LiveCfg_TLChangeSchedJob* job = new SNM_LiveCfg_TLChangeSchedJob();
@@ -330,10 +361,10 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_pLists.Add(new SNM_LiveConfigsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
-	SNM_ThemeListView(m_pLists.Get(0));
+	if (g_bSNMbeta&2 || g_bSNMbeta&8) SNM_ThemeListView(m_pLists.Get(0));
 
 	// Load prefs 
-	g_approxDelayMsCC = GetPrivateProfileInt("LIVE_CONFIGS", "CC_DELAY", 250, g_SNMiniFilename.Get());
+	g_approxDelayMsCC = GetPrivateProfileInt("LIVE_CONFIGS", "CC_DELAY", 250, g_SNMIniFn.Get());
 
 	// WDL GUI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
@@ -346,8 +377,8 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_cbConfig.SetID(COMBOID_CONFIG);
 	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++)
 	{
-		char cfg[4] = "";
-		sprintf(cfg, "%d", i+1);
+		char cfg[8] = "";
+		_snprintf(cfg, 8, "%d", i+1);
 		m_cbConfig.AddItem(cfg);
 	}
 	m_cbConfig.SetCurSel(g_configId);
@@ -375,9 +406,11 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 
 void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
+	MidiLiveConfig* lc = g_liveConfigs.Get();
 	int x=0;
 	MidiLiveItem* item = (MidiLiveItem*)m_pLists.Get(0)->EnumSelected(&x);
-	switch (wParam)
+
+	switch (LOWORD(wParam))
 	{
 		case SNM_LIVECFG_CLEAR_CC_ROW_MSG:
 		{
@@ -560,35 +593,56 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
-		default:
-		{
-			WORD hiwParam = HIWORD(wParam);
-			if (!hiwParam || hiwParam == 600) // 600 for large tick box
+
+		case BUTTONID_ENABLE:
+			if (!HIWORD(wParam) || HIWORD(wParam)==600)
 			{
-				MidiLiveConfig* lc = g_liveConfigs.Get();
-				switch(LOWORD(wParam))
-				{
-					case BUTTONID_ENABLE:
-					{
-						lc->m_enable[g_configId] = !(lc->m_enable[g_configId]);
-						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
-						// Retreive the related toggle action and refresh toolbars
-						char customCmdId[SNM_MAX_ACTION_CUSTID_LEN];
-						_snprintf(customCmdId, SNM_MAX_ACTION_CUSTID_LEN, "%s%d", "_S&M_TOGGLE_LIVE_CFG", g_configId+1);
-						RefreshToolbar(NamedCommandLookup(customCmdId));
-					}
-					break;
-					case BUTTONID_MUTE_OTHERS:
-						lc->m_muteOthers[g_configId] = !(lc->m_muteOthers[g_configId]);
-						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
-						break;
-					case BUTTONID_AUTO_SELECT:
-						lc->m_autoSelect[g_configId] = !(lc->m_autoSelect[g_configId]);
-						Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
-						break;
-				}
+				lc->m_enable[g_configId] = !(lc->m_enable[g_configId]);
+				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+				// Retreive the related toggle action and refresh toolbars
+				char customCmdId[SNM_MAX_ACTION_CUSTID_LEN];
+				_snprintf(customCmdId, SNM_MAX_ACTION_CUSTID_LEN, "%s%d", "_S&M_TOGGLE_LIVE_CFG", g_configId+1);
+				RefreshToolbar(NamedCommandLookup(customCmdId));
 			}
-			else if (wParam >= SNM_LIVECFG_SET_TRACK_MSG && wParam < SNM_LIVECFG_CLEAR_TRACK_MSG) 
+			break;
+		case BUTTONID_MUTE_OTHERS:
+			if (!HIWORD(wParam) || HIWORD(wParam)==600)
+			{
+				lc->m_muteOthers[g_configId] = !(lc->m_muteOthers[g_configId]);
+				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+			}
+			break;
+		case BUTTONID_AUTO_SELECT:
+			if (!HIWORD(wParam) || HIWORD(wParam)==600)
+			{
+				lc->m_autoSelect[g_configId] = !(lc->m_autoSelect[g_configId]);
+				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+			}
+			break;
+		case COMBOID_INPUT_TRACK:
+			if (HIWORD(wParam)==CBN_SELCHANGE)
+			{
+				if (!m_cbInputTr.GetCurSel())
+					lc->m_inputTr[g_configId] = NULL;
+				else
+					lc->m_inputTr[g_configId] = CSurf_TrackFromID(m_cbInputTr.GetCurSel(), false);
+				m_parentVwnd.RequestRedraw(NULL);
+				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+			}
+			break;
+		case COMBOID_CONFIG:
+			if (HIWORD(wParam)==CBN_SELCHANGE)
+			{
+				// stop cell editing (changing the list content would be ignored otherwise 
+				// => dropdown box & list box unsynchronized)
+				m_pLists.Get(0)->EditListItemEnd(false);
+				g_configId = m_cbConfig.GetCurSel();
+				Update();
+			}
+			break;
+
+		default:
+			if (wParam >= SNM_LIVECFG_SET_TRACK_MSG && wParam < SNM_LIVECFG_CLEAR_TRACK_MSG) 
 			{
 				bool updt = false;
 				while(item)
@@ -627,29 +681,9 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				}
 			}
 #endif
-			// WDL GUI
-			else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_INPUT_TRACK)
-			{
-				if (!m_cbInputTr.GetCurSel())
-					g_liveConfigs.Get()->m_inputTr[g_configId] = NULL;
-				else
-					g_liveConfigs.Get()->m_inputTr[g_configId] = CSurf_TrackFromID(m_cbInputTr.GetCurSel(), false);
-				m_parentVwnd.RequestRedraw(NULL);
-				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
-			}
-			else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_CONFIG)
-			{
-				// stop cell editing (changing the list content would be ignored otherwise 
-				// => dropdown box & list box unsynchronized)
-				m_pLists.Get(0)->EditListItemEnd(false);
-
-				g_configId = m_cbConfig.GetCurSel();
-				Update();
-			}
 			else
 				Main_OnCommand((int)wParam, (int)lParam);
 			break;
-		}
 	}
 }
 
@@ -801,7 +835,7 @@ void SNM_LiveConfigsWnd::OnDestroy()
 	// save prefs
 	char cDelay[16];
 	sprintf(cDelay, "%d", g_approxDelayMsCC);
-	WritePrivateProfileString("LIVE_CONFIGS", "CC_DELAY", cDelay, g_SNMiniFilename.Get()); 
+	WritePrivateProfileString("LIVE_CONFIGS", "CC_DELAY", cDelay, g_SNMIniFn.Get()); 
 
 	m_cbConfig.Empty();
 	m_cbInputTr.Empty();
@@ -876,7 +910,9 @@ INT_PTR SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lPar
 	{
 		case WM_PAINT:
 		{
-			SNM_ThemeListView(m_pLists.Get(0));
+//#ifdef _SNM_LIST_THEMABLE1
+			if (g_bSNMbeta&8) SNM_ThemeListView(m_pLists.Get(0));
+//#endif
 			int xo, yo; RECT r;
 			GetClientRect(m_hwnd,&r);	
 			m_parentVwnd.SetPosition(&r);
@@ -900,16 +936,18 @@ INT_PTR SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lPar
 		case WM_MOUSEMOVE:
 			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
-#ifdef _SNM_THEMABLE
+//#ifdef _SNM_EDIT_THEMABLE
 		case WM_CTLCOLOREDIT:
-			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT)) {
-				int bg, txt; SNM_GetThemeListColors(&bg, &txt);
+			if ((g_bSNMbeta&2 || g_bSNMbeta&8) &&
+				(HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT))
+			{
+				int bg, txt; SNM_GetThemeListColors(&bg, &txt); // not SNM_GetThemeEditColors (list's IDC_EDIT)
 				SetBkColor((HDC)wParam, bg);
 				SetTextColor((HDC)wParam, txt);
 				return (INT_PTR)SNM_GetThemeBrush(bg);
 			}
 			break;
-#endif
+// #endif
 	}
 	return 0;
 }

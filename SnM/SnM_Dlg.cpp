@@ -47,11 +47,11 @@ LICE_CachedFont* SNM_GetThemeFont()
 	{
 		LOGFONT lf = {
 #ifdef _WIN32
-14
+14,
 #else
-12
+12,
 #endif
-			,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+			0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
 		};
 		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
@@ -111,15 +111,14 @@ void SNM_GetThemeEditColors(int* _bg, int* _txt)
 
 void SNM_ThemeListView(SWS_ListView* _lv)
 {
-#ifdef _SNM_THEMABLE
-	if (_lv && _lv->GetHWND()) {
+	if (_lv && _lv->GetHWND())
+	{
 		int bgcol, txtcol;
 		SNM_GetThemeListColors(&bgcol, &txtcol);
 		ListView_SetBkColor(_lv->GetHWND(), bgcol);
 		ListView_SetTextColor(_lv->GetHWND(), txtcol);
 		ListView_SetTextBkColor(_lv->GetHWND(), bgcol);
 	}
-#endif
 }
 
 LICE_IBitmap* SNM_GetThemeLogo()
@@ -127,7 +126,7 @@ LICE_IBitmap* SNM_GetThemeLogo()
 	static LICE_IBitmap* snmLogo;
 	if (!snmLogo)
 	{
-/*JFB commented: load from resources, no OSX support (was looking in REAPER's resources..)
+/*JFB commented: load from resources, KO for OSX (looks for REAPER's resources..)
 #ifdef _WIN32
 		snmLogo = LICE_LoadPNGFromResource(g_hInst,IDB_SNM,NULL);
 #else
@@ -145,7 +144,7 @@ LICE_IBitmap* SNM_GetThemeLogo()
 	return snmLogo;
 }
 
-//JFB TODO? WDL_VWnd with hyperlink
+//JFB TODO? hyperlink WDL_VWnd ?
 bool AddSnMLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h)
 {
 	if (_bm)
@@ -265,13 +264,26 @@ void SNM_UIExit() {
 ///////////////////////////////////////////////////////////////////////////////
 
 // GUI for lazy guys
-void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent)
+void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent, bool _clear)
 {
+#ifdef _WIN32
+	if (_clear) ShowConsoleMsg("");
+	ShowConsoleMsg(_msg);
+	if (_title) // a little hack..
+	{
+		HWND h = FindWindow(NULL, "ReaScript console output");
+		if (h) SetWindowText(h, _title);
+		else h = FindWindow(NULL, _title);
+		if (h) SetForegroundWindow(h);
+	}
+#else
+	//JFB nice but modal..
 	HWND h = _hParent;
 	if (!h) h = GetMainHwnd();
 	char msg[4096] = "";
 	if (GetStringWithRN(_msg, msg, 4096) && *msg)
 		DisplayInfoBox(h, _title, msg);
+#endif
 }
 
 // _min and _max: 1-based (i.e. as displayed)

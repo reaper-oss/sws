@@ -31,17 +31,19 @@
 #include "SNM_ChunkParserPatcher.h"
 #include "version.h"
 
-//#define _SNM_MISC
-//#define _SNM_CYCLACTION_OSX
-#ifdef _WIN32
-#define _SNM_PRESETS
-#define _SNM_THEMABLE
-#endif
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // Definitions, enums
 ///////////////////////////////////////////////////////////////////////////////
+
+//#define _SNM_MISC
+#define _SNM_CYCLACTION_OSX
+#ifdef _WIN32
+#define _SNM_PRESETS
+//#define _SNM_LIST_THEMABLE1
+//#define _SNM_EDIT_THEMABLE
+#endif
+
 
 #define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
 
@@ -49,14 +51,19 @@
 #define SNM_FORMATED_INI_FILE		"%s\\S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE	"%s\\Plugins\\S&M.ini"
 #define SNM_ACTION_HELP_INI_FILE	"%s\\S&M_Action_help_en.ini"
-#define SNM_CYCACTION_INI_FILE		"%s\\S&M_Cyclactions.ini"
+#define SNM_CYCLACTION_INI_FILE		"%s\\S&M_Cyclactions.ini"
+#define SNM_CYCLACTION_BAK_FILE		"%s\\S&M_Cyclactions.bak"
+#define SNM_CYCLACTION_EXPORT_FILE	"%s\\S&M_Cyclactions_export.ini"
 #else
 #define SNM_FORMATED_INI_FILE		"%s/S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE	"%s/Plugins/S&M.ini"
 #define SNM_ACTION_HELP_INI_FILE	"%s/S&M_Action_help_en.ini"
-#define SNM_CYCACTION_INI_FILE		"%s/S&M_Cyclactions.ini"
+#define SNM_CYCLACTION_INI_FILE		"%s/S&M_Cyclactions.ini"
+#define SNM_CYCLACTION_BAK_FILE		"%s/S&M_Cyclactions.bak"
+#define SNM_CYCLACTION_EXPORT_FILE	"%s/S&M_Cyclactions_export.ini"
 #endif
-#define SNM_INI_FILE_VERSION		1
+
+#define SNM_INI_FILE_VERSION		2
 #define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
 #define SNM_MAX_SECTION_NAME_LEN	64
 #define SNM_MAX_SECTION_ACTIONS		128
@@ -166,7 +173,10 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 // *** SnM_Actions.cpp ***
-extern WDL_FastString g_SNMiniFilename;	
+extern WDL_FastString g_SNMIniFn;
+extern WDL_FastString g_SNMCyclactionIniFn;
+extern int g_iniFileVersion;
+extern int g_bSNMbeta;
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 bool IsToolbarsAutoRefeshEnabled(COMMAND_T*);
 void RefreshToolbars();
@@ -199,7 +209,7 @@ bool isCyclationsWndDisplayed(COMMAND_T*);
 #endif
 
 // *** SnM_Dlg.cpp ***
-ColorTheme* SNM_GetColorTheme(bool _checkForSize=false);
+ColorTheme* SNM_GetColorTheme(bool _checkForSize = false);
 LICE_CachedFont* SNM_GetThemeFont();
 HBRUSH SNM_GetThemeBrush(int _col=-666);
 void SNM_GetThemeListColors(int* _bg, int* _txt);
@@ -207,10 +217,10 @@ void SNM_GetThemeEditColors(int* _bg, int* _txt);
 void SNM_ThemeListView(SWS_ListView* _lv);
 LICE_IBitmap* SNM_GetThemeLogo();
 bool AddSnMLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h);
-bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep=SNM_DEF_VWND_X_STEP);
+bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep = SNM_DEF_VWND_X_STEP);
 void SNM_UIInit();
 void SNM_UIExit();
-void SNM_ShowMsg(const char* _msg, const char* _title="", HWND _hParent=NULL); 
+void SNM_ShowMsg(const char* _msg, const char* _title = "", HWND _hParent = NULL, bool _clear = true); 
 int PromptForInteger(const char* _title, const char* _what, int _min, int _max);
 void openCueBussWnd(COMMAND_T*);
 bool isCueBussWndDisplayed(COMMAND_T*);
@@ -399,8 +409,9 @@ void GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx);
 void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, const char* _iniFn);
-void RenamePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn);
-void RenamePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn);
+void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn, const char* _newIniFn = NULL);
+void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn = NULL);
+void SNM_UpgradeIniFiles();
 void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs);
 int SNM_NamedCommandLookup(const char* _cmdId);
 int FindMarkerRegion(double _pos);
@@ -594,3 +605,4 @@ TcxV1oa7PxAHvm2t2LHpbDfuyLre8KLLhufkKbP2rfL8mwb/CxHXvQ==\n\
 z64F+VlLOQZ6Dua4dpaajpNwpPDxaQ9twrF7XSHyaDJROqMpYYyy1Q==\n\
 3iwJ0Fssw64SzlIi+8dZ/OISxbhGsZobtpoDrVUq5ZrAYwjPaYw7LQ==\n\
 vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"
+

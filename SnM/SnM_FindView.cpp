@@ -35,7 +35,7 @@
 //#define ICON_BUTTONS // use icon buttons? => text buttons if undefined (transport buttons can look bad with some themes..)
 
 enum {
-  BUTTONID_FIND=1000,
+  BUTTONID_FIND=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
   BUTTONID_PREV,
   BUTTONID_NEXT,
   BUTTONID_ZOOM_SCROLL_EN,
@@ -418,8 +418,8 @@ void SNM_FindWnd::OnInitDlg()
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
 
 	// Load prefs 
-	m_type = GetPrivateProfileInt("FIND_VIEW", "Type", 0, g_SNMiniFilename.Get());
-	m_zoomSrollItems = (GetPrivateProfileInt("FIND_VIEW", "ZoomScrollToFoundItems", 0, g_SNMiniFilename.Get()) == 1);
+	m_type = GetPrivateProfileInt("FIND_VIEW", "Type", 0, g_SNMIniFn.Get());
+	m_zoomSrollItems = (GetPrivateProfileInt("FIND_VIEW", "ZoomScrollToFoundItems", 0, g_SNMIniFn.Get()) == 1);
 
 	// WDL GUI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
@@ -464,37 +464,37 @@ void SNM_FindWnd::OnInitDlg()
 void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	// WDL GUI
-	switch(wParam)
+	switch(LOWORD(wParam))
 	{
-		case (IDC_EDIT | (EN_CHANGE << 16)):
-		{
-			GetDlgItemText(m_hwnd, IDC_EDIT, g_searchStr, MAX_SEARCH_STR_LEN);
-			UpdateNotFoundMsg(true);
-			break;
-		}
-		default:
-		{
-			WORD hiwParam = HIWORD(wParam);
-			if (!hiwParam || hiwParam == 600) // 600 for large tick box
-			{
-				switch(LOWORD(wParam))
-				{
-					case BUTTONID_ZOOM_SCROLL_EN: m_zoomSrollItems = !m_zoomSrollItems; break;
-					case BUTTONID_FIND: Find(0); break;
-					case BUTTONID_PREV: Find(-1); break;
-					case BUTTONID_NEXT: Find(1); break;
-				}
+		case IDC_EDIT:
+			if (HIWORD(wParam)==EN_CHANGE) {
+				GetDlgItemText(m_hwnd, IDC_EDIT, g_searchStr, MAX_SEARCH_STR_LEN);
+				UpdateNotFoundMsg(true);
 			}
-			else if (HIWORD(wParam)==CBN_SELCHANGE && LOWORD(wParam)==COMBOID_TYPE) 
-			{
+			break;
+		case BUTTONID_ZOOM_SCROLL_EN:
+			if (!HIWORD(wParam) ||  HIWORD(wParam)==600)
+				m_zoomSrollItems = !m_zoomSrollItems;
+			break;
+		case BUTTONID_FIND:
+			Find(0);
+			break;
+		case BUTTONID_PREV:
+			Find(-1);
+			break;
+		case BUTTONID_NEXT:
+			Find(1);
+			break;
+		case COMBOID_TYPE:
+			if (HIWORD(wParam)==CBN_SELCHANGE) {
 				m_type = m_cbType.GetCurSel();
 				UpdateNotFoundMsg(true); // + redraw
 				SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 			}
-			else 
-				Main_OnCommand((int)wParam, (int)lParam);
 			break;
-		}
+		default:
+			Main_OnCommand((int)wParam, (int)lParam);
+			break;
 	}
 }
 
@@ -503,8 +503,8 @@ void SNM_FindWnd::OnDestroy()
 	// save prefs
 	char cType[2];
 	sprintf(cType, "%d", m_type);
-	WritePrivateProfileString("FIND_VIEW", "Type", cType, g_SNMiniFilename.Get());
-	WritePrivateProfileString("FIND_VIEW", "ZoomScrollToFoundItems", m_zoomSrollItems ? "1" : "0", g_SNMiniFilename.Get());
+	WritePrivateProfileString("FIND_VIEW", "Type", cType, g_SNMIniFn.Get());
+	WritePrivateProfileString("FIND_VIEW", "ZoomScrollToFoundItems", m_zoomSrollItems ? "1" : "0", g_SNMIniFn.Get());
 
 	m_cbType.Empty();
 	m_parentVwnd.RemoveAllChildren(false);
@@ -654,16 +654,17 @@ INT_PTR SNM_FindWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_MOUSEMOVE:
 			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
 			break;
-#ifdef _SNM_THEMABLE
+//#ifdef _SNM_EDIT_THEMABLE
 		case WM_CTLCOLOREDIT:
-			if ((HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT)) {
+			if (g_bSNMbeta&1 &&
+				(HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT)) {
 				int bg, txt; SNM_GetThemeEditColors(&bg, &txt);
 				SetBkColor((HDC)wParam, bg);
 				SetTextColor((HDC)wParam, txt);
 				return (INT_PTR)SNM_GetThemeBrush(bg);
 			}
 			break;
-#endif
+//#endif
 	}
 	return 0;
 }

@@ -1,5 +1,22 @@
+Cycle actions improvements:
++The Cycle action editor is now resizable, dockable, themable, etc..
+Note: import/export features have been moved to the context menu!
++Cycle actions are now saved in a distinct file S&M_Cyclactions.ini (they were saved in the S&M.ini file before)
+This is to ease REAPER's configurations export/import (ReaperConfigZip or copy/paste): the new S&M_Cyclactions.ini is exchangeable, not the S&M.ini file (which can contain local paths, etc..)
+Auto upgrade: the new S&M_Cyclactions.ini file is automatically created with your current cycle actions (if needed, a S&M_Cyclactions.BAK file is also saved).
+
+On Windows OS, all S&M list views now also use the following configurable colors of the Theme Editor (REAPER > v4.11):
++Window list selection bg
++Window list selection fg
++Window list selection inactive bg
++Window list selection inactive fg
+
+OSX Beta port (to be enabled in the S&M.ini file, details http://code.google.com/p/sws-extension/issues/detail?id=416#c0|here|):
++Cycle action editor like on Windows OS (minus "action learn")
++All S&M views are themed like on Windows OS
+
 !v2.1.0 #20 (November 19, 2011)
-Added actions:
+Added action:
 +SWS/S&M: Send all notes off to selected tracks
 
 Resources view:

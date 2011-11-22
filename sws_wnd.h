@@ -29,8 +29,10 @@
 
 #ifdef _WIN32
 #define SWSDLG_TYPEFACE "MS Shell Dlg"
+#define LISTVIEW_COLORHOOK_STATESIZE 3
 #else
 #define SWSDLG_TYPEFACE "Arial"
+#define LISTVIEW_COLORHOOK_STATESIZE (3+4)
 #endif
 
 typedef struct SWS_LVColumn
@@ -167,6 +169,7 @@ public:
 	static const int DOCK_MSG = 0xFF0000;
 
 protected:
+	virtual INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void Init(); // call from derived constructor!!
 	bool IsDocked() { return (m_state.state & 2) == 2; }
 	void ToggleDocking();
@@ -179,7 +182,7 @@ protected:
 	virtual void OnDroppedFiles(HDROP h) {}
 	virtual INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
 	virtual int OnKey(MSG* msg, int iKeyState) { return 0; } // return 1 for "processed key"
-	
+
 	// Functions for derived classes to load/save some view information (for startup/screensets)
 	virtual int SaveView(char* cViewBuf, int iLen) { return 0; } // return num of chars in state (if cViewBuf == NULL, ret # of bytes needed)
 	virtual void LoadView(const char* cViewBuf, int iLen) {}
@@ -192,7 +195,6 @@ protected:
 
 private:
 	static INT_PTR WINAPI sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	INT_PTR wndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static LRESULT screensetCallbackOld(int action, char *id, void *param, int param2);
 	static LRESULT screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize);
 	static int keyHandler(MSG *msg, accelerator_register_t *ctx);
@@ -206,3 +208,7 @@ private:
 	accelerator_register_t m_ar;
 	SWS_DockWnd_State m_state;
 };
+
+
+bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int cstate[LISTVIEW_COLORHOOK_STATESIZE], int listID, int whichTheme, int wantGridForColumns); // if returns value, return 1
+

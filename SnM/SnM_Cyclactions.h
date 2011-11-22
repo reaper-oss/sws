@@ -75,7 +75,9 @@ public:
 	SNM_CyclactionWnd();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void Update();
+	bool IsConsolidatedUndo() { return m_btnUndo.GetCheckState()==1; }
 protected:
+	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void OnInitDlg();
 	void OnDestroy();
 	void DrawControls(LICE_IBitmap* _bm, RECT* _r);

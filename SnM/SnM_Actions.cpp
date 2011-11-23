@@ -897,6 +897,7 @@ void IniFileInit()
 	// ini files upgrade, if needed
 	g_iniFileVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNMIniFn.Get());
 	SNM_UpgradeIniFiles();
+	fn.SetFormatted(64, "%p", SWSGetCommandByID); WritePrivateProfileString("General", "Magic", fn.Get() , g_SNMIniFn.Get());
 	g_iniFileVersion = SNM_INI_FILE_VERSION;
 
 	// load general prefs 
@@ -951,7 +952,6 @@ static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
 */
 }
 #endif
-
 
 int SnMInit(reaper_plugin_info_t* _rec)
 {

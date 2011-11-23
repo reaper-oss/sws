@@ -201,7 +201,7 @@ protected:
 	void FillDblClickTypeCombo();
 	void AddSlot(bool _update);
 	void InsertAtSelectedSlot(bool _update);
-	void ClearDeleteSelectedSlots(bool _del, bool _delLastEmpty, bool _delFiles, bool _update);
+	void ClearDeleteSelectedSlots(int _mode, bool _update);
 	void AutoSave();
 	void AutoFill(const char* _startPath);
 

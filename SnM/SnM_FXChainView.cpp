@@ -771,13 +771,13 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			InsertAtSelectedSlot(true);
 			break;
 		case CLEAR_SLOTS_MSG:
-			ClearDeleteSelectedSlots(false, false, false, true);
+			ClearDeleteSelectedSlots(0, true);
 			break;
 		case DEL_SLOTS_MSG:
-			ClearDeleteSelectedSlots(true, true, false, true);
+			ClearDeleteSelectedSlots(1, true);
 			break;
 		case DEL_FILES_MSG:
-			ClearDeleteSelectedSlots(false, false /*JFB!!!*/, true, true);
+			ClearDeleteSelectedSlots(6, true);
 			break;
 		case LOAD_MSG:
 			if (item) GetCurList()->BrowseSlot(slot);
@@ -1261,7 +1261,7 @@ int SNM_ResourceWnd::OnKey(MSG* _msg, int _iKeyState)
 		}
 		// DEL (no modifier)
 		else if (_msg->wParam == VK_DELETE && !_iKeyState) {
-			ClearDeleteSelectedSlots(true, true, false, true);
+			ClearDeleteSelectedSlots(3, true);
 			return 1;
 		}
 	}
@@ -1579,7 +1579,9 @@ void SNM_ResourceWnd::InsertAtSelectedSlot(bool _update)
 	AddSlot(_update); // empty list, no selection, etc.. => add
 }
 
-void SNM_ResourceWnd::ClearDeleteSelectedSlots(bool _del, bool _delLastEmpty, bool _delFiles, bool _update)
+// _mode: _mode&1 = delete slots (clear otherwise), _mode&2 = delete only *last* empty slots, _mode&4 = delete files
+// note: _mode&2 is just an option to avoid leaving empty slots at the end of the list when clearing
+void SNM_ResourceWnd::ClearDeleteSelectedSlots(int _mode, bool _update)
 {
 	bool updt = false;
 	int oldSz = GetCurList()->GetSize();
@@ -1600,19 +1602,19 @@ void SNM_ResourceWnd::ClearDeleteSelectedSlots(bool _del, bool _delLastEmpty, bo
 	while(x >= 0 && selSlots.Get(--x) == &g_i1) endSelSlot=x;
 
 	char fullPath[BUFFER_SIZE] = "";
-	WDL_PtrList_DeleteOnDestroy<PathSlotItem> delItems; //DeleteOnDestroy list: keep (displayed!) pointers until the list view is updated
+	WDL_PtrList_DeleteOnDestroy<PathSlotItem> delItems; // DeleteOnDestroy: keep (displayed!) pointers until the list view is updated
 	for (int slot=selSlots.GetSize()-1; slot >=0 ; slot--)
 	{
-		if (*selSlots.Get(slot))
+		if (*selSlots.Get(slot)) // avoids new Find(item) calls! 
 		{
 			if (PathSlotItem* item = GetCurList()->Get(slot))
 			{
-				if (_delFiles) {
+				if (_mode&4) {
 					GetFullResourcePath(GetCurList()->GetResourceDir(), item->m_shortPath.Get(), fullPath, BUFFER_SIZE);
 					SNM_DeleteFile(fullPath, true);
 				}
 
-				if (_del || (_delLastEmpty && endSelSlot >= 0 && slot >= endSelSlot)) 
+				if (_mode&1 || (_mode&2 && endSelSlot>=0 && slot>=endSelSlot)) 
 				{
 					selSlots.Delete(slot, false); // keep the sel list "in sync"
 					GetCurList()->Delete(slot, false); // remove slot - but no deleted pointer yet
@@ -1645,7 +1647,7 @@ void SNM_ResourceWnd::AutoSave()
 			case IDYES: this->OnCommand(AUTOSAVE_DIR_MSG, 0); break;
 			case IDNO: return;
 		}
-		if (!FileExists(GetCurAutoSaveDir()->Get())) // re-check: the user may have cancelled..
+		if (!FileExists(GetCurAutoSaveDir()->Get())) // re-check for cancel..
 			return;
 	}
 

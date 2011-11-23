@@ -1362,19 +1362,20 @@ bool autoSaveMediaSlot(const char* _dirPath, char* _fn, int _fnSize)
 				if (MediaItem_Take* tk = GetActiveTake(item))
 					if (PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL))
 						if (src->GetFileName())
+						{
+							char name[128]="";
 							if(*src->GetFileName()) {
-								char name[128];
 								GetFilenameNoExt(src->GetFileName(), name, 128);
 								GenerateFilename(_dirPath, name, GetFileExtension(src->GetFileName()), _fn, _fnSize);
 								updated |= (SNM_CopyFile(_fn, src->GetFileName()) && g_slots.Get(SNM_SLOT_MEDIA)->AddSlot(_fn));
 							}
 							else { // MIDI in-project
-								char name[128];
 								GetFilenameNoExt((char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), name, 128);
 								GenerateFilename(_dirPath, name, "mid", _fn, _fnSize);
 								src->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, _fn, NULL, NULL);
 								updated |= (g_slots.Get(SNM_SLOT_MEDIA)->AddSlot(_fn) != NULL);
 							}
+						}
 		}
 	}
 	return updated;

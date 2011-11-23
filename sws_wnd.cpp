@@ -1172,6 +1172,16 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	ClientToScreen(m_hwndList, (LPPOINT)&sr);
 	ClientToScreen(m_hwndList, ((LPPOINT)&sr)+1);
 
+	// clamp to list view width
+	GetWindowRect(m_hwndList, &r);
+#ifdef _WIN32
+	sr.right = min(r.right-(GetSystemMetrics(SM_CXEDGE)*2), sr.right);
+#else
+/* JFB commented: can't test.. needed on OSX too ?
+	sr.right = min(r.right-2, sr.right);
+*/
+#endif
+
 	HWND hDlg = GetParent(m_hwndEdit);
 	ScreenToClient(hDlg, (LPPOINT)&sr);
 	ScreenToClient(hDlg, ((LPPOINT)&sr)+1);

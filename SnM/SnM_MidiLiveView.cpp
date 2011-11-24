@@ -85,6 +85,7 @@ enum {
 
 /*JFB static*/ SNM_LiveConfigsWnd* g_pLiveConfigsWnd = NULL;
 SWSProjConfig<MidiLiveConfig> g_liveConfigs;
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<MidiLiveItem> > > g_liveCCConfigs;
 
 int g_configId = 0; // the current *displayed* config id
 int g_approxDelayMsCC = 250;
@@ -93,8 +94,6 @@ int g_approxDelayMsCC = 250;
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_LiveConfigsView
 ///////////////////////////////////////////////////////////////////////////////
-
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<MidiLiveItem> > > g_liveCCConfigs;
 
 #ifdef _SNM_PRESETS
 static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX user presets"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
@@ -127,11 +126,9 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 				break;
 			case COL_TR:
 			{
-				if (pItem->m_track) {
-					char* name = (char*)GetSetMediaTrackInfo(pItem->m_track, "P_NAME", NULL);
-					if (name)
+				if (pItem->m_track)
+					if (char* name = (char*)GetSetMediaTrackInfo(pItem->m_track, "P_NAME", NULL))
 						_snprintf(str, iStrMax, "[%d] \"%s\"", CSurf_TrackToID(pItem->m_track, false), name);
-				}
 				break;
 			}
 			case COL_TRT:
@@ -167,7 +164,7 @@ void SNM_LiveConfigsView::SetItemText(SWS_ListItem* item, int iCol, const char* 
 	{
 		if (iCol==COL_COMMENT)
 		{
-			// Limit the comment size (for RPP files)
+			// limit the comment size (for RPP files)
 			pItem->m_desc.Set(str);
 			pItem->m_desc.Ellipsize(32,32);
 			Update();
@@ -193,8 +190,8 @@ void SNM_LiveConfigsView::SetItemText(SWS_ListItem* item, int iCol, const char* 
 
 void SNM_LiveConfigsView::GetItemList(SWS_ListItemList* pList)
 {
-	for (int i = 0; i < NB_CC_VALUES; i++)
-		if (WDL_PtrList<MidiLiveItem>* configs = g_liveCCConfigs.Get()->Get(g_configId))
+	if (WDL_PtrList<MidiLiveItem>* configs = g_liveCCConfigs.Get()->Get(g_configId))
+		for (int i=0; i < configs->GetSize(); i++)
 			pList->Add((SWS_ListItem*)configs->Get(i));
 }
 
@@ -320,7 +317,7 @@ void SNM_LiveConfigsWnd::FillComboInputTrack() {
 	{
 		WDL_FastString ellips;
 		char* name = (char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i,false), "P_NAME", NULL);
-		ellips.SetFormatted(64, "[%d] \"%s\"", i, name);
+		ellips.SetFormatted(SNM_MAX_TRACK_NAME_LEN, "[%d] \"%s\"", i, name);
 		ellips.Ellipsize(24, 24);
 		m_cbInputTr.AddItem(ellips.Get());
 	}
@@ -762,9 +759,9 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
 				AddToMenu(hMenu, "Clear", SNM_LIVECFG_CLEAR_TRACK_MSG);
 				for (int i=1; i <= GetNumTracks(); i++)
 				{
-					char str[64] = "";
+					char str[SNM_MAX_TRACK_NAME_LEN] = "";
 					char* name = (char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i,false), "P_NAME", NULL);
-					_snprintf(str, 64, "[%d] \"%s\"", i, name);
+					_snprintf(str, SNM_MAX_TRACK_NAME_LEN, "[%d] \"%s\"", i, name);
 					AddToMenu(hMenu, str, SNM_LIVECFG_SET_TRACK_MSG + i);
 				}
 				break;
@@ -833,8 +830,8 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
 void SNM_LiveConfigsWnd::OnDestroy() 
 {
 	// save prefs
-	char cDelay[16];
-	sprintf(cDelay, "%d", g_approxDelayMsCC);
+	char cDelay[8];
+	_snprintf(cDelay, 8, "%d", g_approxDelayMsCC);
 	WritePrivateProfileString("LIVE_CONFIGS", "CC_DELAY", cDelay, g_SNMIniFn.Get()); 
 
 	m_cbConfig.Empty();
@@ -847,7 +844,7 @@ int SNM_LiveConfigsWnd::OnKey(MSG* msg, int iKeyState)
 {
 	if (msg->message == WM_KEYDOWN && msg->wParam == VK_DELETE && !iKeyState)
 	{
-		OnCommand(SNM_LIVECFG_CLEAR_CC_ROW_MSG, 0);
+		this->OnCommand(SNM_LIVECFG_CLEAR_CC_ROW_MSG, 0);
 		return 1;
 	}
 	return 0;
@@ -969,20 +966,20 @@ void InitModel()
 
 void SNM_LiveCfg_TLChangeSchedJob::Perform()
 {
-	// Check or model consistency against the track list update
-	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++) // for "safety" (size MUST be SNM_LIVECFG_NB_CONFIGS)
+	// check or model consistency against the track list update
+	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++)
 	{
-		for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++) // for "safety" (size MUST be NB_CC_VALUES)
+		for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++)
 		{
 			MidiLiveItem* item = g_liveCCConfigs.Get()->Get(i)->Get(j);
-			if (item && item->m_track && CSurf_TrackToID(item->m_track, false) <= 0) // bad or master
+			if (item && item->m_track && CSurf_TrackToID(item->m_track, false) <= 0) // bad track (or master)
 				item->m_track = NULL;
 		}
 		if (g_liveConfigs.Get()->m_inputTr[i] && CSurf_TrackToID(g_liveConfigs.Get()->m_inputTr[i], false) <= 0)
 			g_liveConfigs.Get()->m_inputTr[i] = NULL;
 
-//			g_lastPerformedMIDIVal[i] = -1;
-//			g_lastDeactivateCmd[i][0] = -1;
+//		g_lastPerformedMIDIVal[i] = -1;
+//		g_lastDeactivateCmd[i][0] = -1;
 	}
 
 	if (g_pLiveConfigsWnd)
@@ -1063,12 +1060,12 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	char curLine[SNM_MAX_CHUNK_LINE_LENGTH] = "", strId[128] = "";
 	GUID g; 
 	bool firstCfg = true;
-	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++) // for "safety" (size MUST be SNM_LIVECFG_NB_CONFIGS)
+	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++)
 	{
-	  for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++) // for "safety" (size MUST be NB_CC_VALUES)
+	  for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++)
 	  {
 			MidiLiveItem* item = g_liveCCConfigs.Get()->Get(i)->Get(j);
-			if (item && !item->IsDefault()) // avoid a bunch of useless data in RPP files!
+			if (item && !item->IsDefault()) // avoid useless data in RPP files
 			{
 				if (firstCfg)
 				{
@@ -1121,12 +1118,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 {
 	g_liveConfigs.Cleanup();
 	g_liveCCConfigs.Cleanup();
-	if (!g_liveCCConfigs.Get()->GetSize())
-	{
-		g_liveConfigs.Get()->Clear();
-		g_liveCCConfigs.Get()->Empty(true);
-		InitModel();
-	}
+	InitModel(); // + init g_liveConfigs and g_liveCCConfigs
 }
 
 static project_config_extension_t g_projectconfig = {
@@ -1134,16 +1126,14 @@ static project_config_extension_t g_projectconfig = {
 };
 
 int LiveConfigViewInit() {
-	InitModel();
 	g_pLiveConfigsWnd = new SNM_LiveConfigsWnd();
-	if (!g_pLiveConfigsWnd || !plugin_register("projectconfig",&g_projectconfig))
+	if (!g_pLiveConfigsWnd || !plugin_register("projectconfig", &g_projectconfig))
 		return 0;
 	return 1;
 }
 
 void LiveConfigViewExit() {
-	delete g_pLiveConfigsWnd;
-	g_pLiveConfigsWnd = NULL;
+	DELETE_NULL(g_pLiveConfigsWnd);
 }
 
 void OpenLiveConfigView(COMMAND_T*) {

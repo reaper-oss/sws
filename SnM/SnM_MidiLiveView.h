@@ -49,14 +49,15 @@ public:
 class MidiLiveConfig {
 public:
 	MidiLiveConfig() {Clear();}
-	void Clear() {
-		for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++) 	{
+	void Clear()
+	{
+		for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++)
+		{
 			m_enable[i] = 1;
 			m_autoRcv[i] = 0; //JFB not released
 			m_muteOthers[i] = 1;
 			m_autoSelect[i] = 1;
 			m_inputTr[i] = NULL;
-
 			m_lastMIDIVal[i] = -1;
 			m_lastDeactivateCmd[i][0] = -1;
 		}
@@ -67,7 +68,6 @@ public:
 	int m_muteOthers[SNM_LIVECFG_NB_CONFIGS];
 	int m_autoSelect[SNM_LIVECFG_NB_CONFIGS];
 	MediaTrack* m_inputTr[SNM_LIVECFG_NB_CONFIGS];
-
 	int m_lastMIDIVal[SNM_LIVECFG_NB_CONFIGS];
 
 	// [0] = cmd, [1] = val, [2] = valhw, [3] = relmode, [4] = track index
@@ -109,7 +109,6 @@ protected:
 	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
 	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-	// WDL UI
 	WDL_VWnd_Painter m_vwnd_painter;
 	WDL_VWnd m_parentVwnd; // owns all children windows
 	WDL_VirtualComboBox m_cbConfig, m_cbInputTr;

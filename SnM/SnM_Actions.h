@@ -72,6 +72,7 @@
 #define SNM_MAX_MARKER_NAME_LEN		64     // + regions
 #define SNM_MAX_TRACK_GROUPS		32
 #define SNM_MAX_TRACK_GROUPS_STR	"32"
+#define SNM_MAX_TRACK_NAME_LEN		128
 #define SNM_MAX_HW_OUTS				8
 #define SNM_MAX_TAKES				128
 #define SNM_MAX_FX					128

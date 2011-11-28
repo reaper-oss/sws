@@ -63,11 +63,11 @@ int getTrackFXIdFromCmd(MediaTrack* _tr, int _fxCmdId)
 // _token: 1=bypass, 2=offline 
 bool isFXOfflineOrBypassedSelectedTracks(COMMAND_T * _ct, int _token) 
 {
-	int selTrCount = CountSelectedTracksWithMaster(NULL);
+	int selTrCount = SNM_CountSelectedTracks(NULL, true);
 	// single track selection: we can return a toggle state
 	if (selTrCount == 1)
 	{
-		MediaTrack* tr = GetFirstSelectedTrackWithMaster(NULL);
+		MediaTrack* tr = SNM_GetSelectedTrack(NULL, 0, true);
 		int fxId = getTrackFXIdFromCmd(tr, (int)_ct->user);
 		if (tr && fxId >= 0)
 		{
@@ -134,7 +134,7 @@ bool patchSelTracksFXState(int _mode, int _token, int _fxCmdId, const char* _val
 
 void toggleFXOfflineSelectedTracks(COMMAND_T* _ct) { 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 2, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) && 
-		CountSelectedTracksWithMaster(NULL) > 1)
+		SNM_CountSelectedTracks(NULL, true) > 1)
 	{
 		FakeToggle(_ct);
 	}
@@ -146,7 +146,7 @@ bool isFXOfflineSelectedTracks(COMMAND_T * _ct) {
 
 void toggleFXBypassSelectedTracks(COMMAND_T* _ct) { 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 1, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) &&
-		CountSelectedTracksWithMaster(NULL) > 1)
+		SNM_CountSelectedTracks(NULL, true) > 1)
 	{
 		FakeToggle(_ct);
 	}
@@ -707,7 +707,7 @@ void moveFX(COMMAND_T* _ct)
 {
 	bool updated = false;
 	int dir = (int)_ct->user;
-	for (int i = 0; i <= GetNumTracks(); i++) // include master
+	for (int i=0; i <= GetNumTracks(); i++) // include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -757,8 +757,6 @@ void moveFX(COMMAND_T* _ct)
 			}
 		}
 	}
-
-	// Undo point
 	if (updated)
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }

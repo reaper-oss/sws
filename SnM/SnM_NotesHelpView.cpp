@@ -70,7 +70,7 @@ SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
 SWSProjConfig<WDL_FastString> g_prjNotes;
 
 int g_bDocked = -1, g_bLastDocked = 0; 
-char g_locked = 1;
+bool g_locked = 1;
 char g_lastText[MAX_HELP_LENGTH] = "";
 
 // Action help tracking
@@ -92,7 +92,7 @@ MediaTrack* g_trNote = NULL;
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_NotesHelpWnd::SNM_NotesHelpWnd()
-:SWS_DockWnd(IDD_SNM_NOTES_HELP, "Notes/Help", "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
+	:SNM_DockWnd(IDD_SNM_NOTES_HELP, "Notes/Help", "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
 {
 	m_type = m_previousType = NOTES_HELP_DISABLED;
 
@@ -175,7 +175,7 @@ void SNM_NotesHelpWnd::CSurfSetTrackTitle() {
 //JFB TODO? replace "timer-ish track sel change tracking" with this notif..
 void SNM_NotesHelpWnd::CSurfSetTrackListChange() 
 {
-	// This is our only notification of active project tab change, so update everything
+	// this is our only notification of active project tab change, so update everything
 	// (we use a ScheduledJob because of possible multi-notifs)
 	if (!m_internalTLChange)
 	{
@@ -277,7 +277,7 @@ void SNM_NotesHelpWnd::saveCurrentText(int _type)
 		{
 			case ITEM_NOTES: 
 				m_internalTLChange = true;	// item note updates lead to SetTrackListChange() CSurf notif (reentrance)
-											//JFB TODO .. check if it can be used for concurent item note updates ?
+											//JFB TODO .. can be used for concurent item note updates ?
 				saveCurrentItemNotes(); 
 				break;
 			case TRACK_NOTES: saveCurrentTrackNotes(); break;
@@ -449,9 +449,9 @@ int SNM_NotesHelpWnd::updateItemNotes()
 int SNM_NotesHelpWnd::updateTrackNotes()
 {
 	int refreshType = REQUEST_REFRESH_EMPTY;
-	if (CountSelectedTracksWithMaster(NULL))
+	if (SNM_CountSelectedTracks(NULL, true))
 	{
-		MediaTrack* selTr = GetSelectedTrackWithMaster(NULL, 0);
+		MediaTrack* selTr = SNM_GetSelectedTrack(NULL, 0, true);
 		if (selTr != g_trNote)
 		{
 			g_trNote = selTr;
@@ -482,7 +482,7 @@ int SNM_NotesHelpWnd::updateMarkerRegionName()
 	int refreshType = REQUEST_REFRESH_EMPTY;
 
 	double dPos;
-	if (GetPlayState())
+	if (GetPlayState() && g_locked)
 		dPos = GetPlayPosition();
 	else 
 		dPos = GetCursorPosition();
@@ -518,7 +518,7 @@ void SNM_NotesHelpWnd::OnInitDlg()
 
 	// Load prefs 
 	m_type = GetPrivateProfileInt("NOTES_HELP_VIEW", "TYPE", 0, g_SNMIniFn.Get());
-	g_locked = GetPrivateProfileInt("NOTES_HELP_VIEW", "LOCK", 1, g_SNMIniFn.Get());
+	g_locked = (GetPrivateProfileInt("NOTES_HELP_VIEW", "LOCK", 0, g_SNMIniFn.Get()) == 1);
 
 	// WDL GUI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
@@ -538,7 +538,7 @@ void SNM_NotesHelpWnd::OnInitDlg()
 #ifdef _WIN32
 	m_cbType.AddItem("Action help");
 #endif
-	m_cbType.SetCurSel(min(m_cbType.GetCount(), m_type)); // safety for SWS beta <-> SWS official
+	m_cbType.SetCurSel(min(m_cbType.GetCount(), m_type)); // safety
 	m_parentVwnd.AddChild(&m_cbType);
 
 	m_txtLabel.SetID(TXTID_LABEL);
@@ -566,10 +566,14 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (!HIWORD(wParam))
 			{
 				g_locked = !g_locked;
-				if (!g_locked)
+				if (!g_locked) {
 					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
+				}
 				RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
-				RefreshGUI();
+				if (m_type == MARKER_REGION_NAME)
+					Update(true); // play vs edit cursor when unlocking
+				else
+					 RefreshGUI();
 			}
 			break;
 		case BUTTONID_ALR:
@@ -647,7 +651,7 @@ int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState)
 			return 0; // pass-thru to main window
 		}
 		else if ((msg->message == WM_KEYDOWN || msg->message == WM_CHAR) && msg->wParam == VK_RETURN)
-			return -1; // Catch the return and send to edit control for multi-line
+			return -1; // catch the return and send to edit control for multi-line
 	}
 	return 0; 
 }
@@ -669,7 +673,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	int h=35;
 
 	// big notes (dynamic font size)
-	// drawn first so that it is displayed even in small dlgs..
+	// drawn first so that it is displayed even with tiny sizing..
 	if (g_locked)
 	{
 		char buf[MAX_HELP_LENGTH] = "";
@@ -730,35 +734,34 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 		DeleteObject(lf); 
     }
 	else
-		LICE_FillRect(_bm,0,h,_bm->getWidth(),_bm->getHeight()-h,WDL_STYLE_GetSysColor(COLOR_WINDOW),0.5,LICE_BLIT_MODE_COPY);
+		LICE_FillRect(_bm,0,h,_bm->getWidth(),_bm->getHeight()-h,WDL_STYLE_GetSysColor(COLOR_WINDOW),0.0,LICE_BLIT_MODE_COPY);
 
 	LICE_CachedFont* font = SNM_GetThemeFont();
 	IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);// returns the whole icon theme (icontheme.h) and the size
 	int x0=_r->left+10;
 
 	// Lock button
-	WDL_VirtualIconButton_SkinConfig* img = it ? &(it->toolbar_lock[!g_locked]) : NULL;
-	if (img)
-		m_btnLock.SetIcon(img);
-	else {
+	WDL_VirtualIconButton_SkinConfig* skin = it ? &(it->toolbar_lock[!g_locked]) : NULL;
+	if (skin)
+		m_btnLock.SetIcon(skin);
+	else
+	{
 		m_btnLock.SetTextLabel(g_locked ? "Unlock" : "Lock", 0, font);
 		m_btnLock.SetForceBorder(true);
 	}
-	if (!SetVWndAutoPosition(&m_btnLock, NULL, _r, &x0, _r->top, h))
+	if (!SNM_AutoVWndPosition(&m_btnLock, NULL, _r, &x0, _r->top, h))
 		return;
 
 	// view type
 	m_cbType.SetFont(font);
-	if (!SetVWndAutoPosition(&m_cbType, NULL, _r, &x0, _r->top, h))
+	if (!SNM_AutoVWndPosition(&m_cbType, NULL, _r, &x0, _r->top, h))
 		return;
 
 	// online help
 	m_btnAlr.SetVisible(m_type == ACTION_HELP);
-	if (m_type == ACTION_HELP)
-	{
-		m_btnAlr.SetTextLabel("Online help...", 0, font);
-		m_btnAlr.SetForceBorder(true);
-		if (!SetVWndAutoPosition(&m_btnAlr, NULL, _r, &x0, _r->top, h, 5))
+	if (m_type == ACTION_HELP) {
+		SNM_SkinToolbarButton(&m_btnAlr, "Online help...");
+		if (!SNM_AutoVWndPosition(&m_btnAlr, NULL, _r, &x0, _r->top, h))
 			return;
 	}
 
@@ -813,59 +816,25 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	}
 	m_txtLabel.SetFont(font);
 	m_txtLabel.SetText(str);
-	if (!SetVWndAutoPosition(&m_txtLabel, NULL, _r, &x0, _r->top, h))
+	if (!SNM_AutoVWndPosition(&m_txtLabel, NULL, _r, &x0, _r->top, h))
 		return;
 
-	AddSnMLogo(_bm, _r, x0, h);
+	SNM_AddLogo(_bm, _r, x0, h);
 }
 
 void SNM_NotesHelpWnd::OnResize() {
   InvalidateRect(m_hwnd,NULL,FALSE);
 }
 
-INT_PTR SNM_NotesHelpWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+HBRUSH SNM_NotesHelpWnd::ColorEdit(HWND _hwnd, HDC _hdc)
 {
-	switch (uMsg)
+	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
 	{
-		case WM_PAINT:
-		{
-			RECT r;
-			GetClientRect(m_hwnd,&r);		
-			m_parentVwnd.SetPosition(&r);
-			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
-			int xo, yo;
-			LICE_IBitmap* bm = m_vwnd_painter.GetBuffer(&xo, &yo);
-			bm->resize(r.right-r.left,r.bottom-r.top);
-			DrawControls(bm, &r);
-			m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
-			m_vwnd_painter.PaintEnd();
-		}
-		break;
-		case WM_LBUTTONDOWN:
-			SetFocus(m_hwnd);
-			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)) > 0)
-				SetCapture(m_hwnd);
-			break;
-		case WM_LBUTTONUP:
-			if (GetCapture() == m_hwnd) {
-				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-				ReleaseCapture();
-			}
-			break;
-		case WM_MOUSEMOVE:
-			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-			break;
-//#ifdef _SNM_EDIT_THEMABLE
-		case WM_CTLCOLOREDIT:
-			if (g_bSNMbeta&1 && (HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT))
-			{
-				int bg, txt; SNM_GetThemeEditColors(&bg, &txt);
-				SetBkColor((HDC)wParam, bg);
-				SetTextColor((HDC)wParam, txt);
-				return (INT_PTR)SNM_GetThemeBrush(bg);
-			}
-			break;
-//#endif
+		int bg, txt;
+		SNM_GetThemeEditColors(&bg, &txt);
+		SetBkColor(_hdc, bg);
+		SetTextColor(_hdc, txt);
+		return SNM_GetThemeBrush(bg);
 	}
 	return 0;
 }
@@ -1006,7 +975,8 @@ bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const cha
 		else _notes->Set(_startLine);
 
 		int j=0;
-		while (_buf[j]) {
+		while (_buf[j])
+		{
 			if (_buf[j] == '\n') 
 				_notes->Append("\n|");
 			else if (_buf[j] != '\r') 
@@ -1161,8 +1131,7 @@ int NotesHelpViewInit() {
 void NotesHelpViewExit() {
 	if (g_pNotesHelpWnd)
 		g_pNotesHelpWnd->saveActionHelpFilenameIniFile();
-	delete g_pNotesHelpWnd;
-	g_pNotesHelpWnd = NULL;
+	DELETE_NULL(g_pNotesHelpWnd);
 }
 
 void OpenNotesHelpView(COMMAND_T* _ct) {

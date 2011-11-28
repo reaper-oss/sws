@@ -69,27 +69,25 @@ private:
 
 
 #ifdef _SNM_CYCLACTION_OSX
-class SNM_CyclactionWnd : public SWS_DockWnd
+class SNM_CyclactionWnd : public SNM_DockWnd
 {
 public:
 	SNM_CyclactionWnd();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	void Update();
+	void Update(bool _updateListViews=true);
 	bool IsConsolidatedUndo() { return m_btnUndo.GetCheckState()==1; }
 protected:
 	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void OnInitDlg();
 	void OnDestroy();
-	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
-	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	HMENU OnContextMenu(int x, int y);
+	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
+	HBRUSH ColorEdit(HWND _hwnd, HDC _hdc);
 
-	// WDL UI
-	WDL_VWnd_Painter m_vwnd_painter;
-	WDL_VWnd m_parentVwnd;
 	WDL_VirtualComboBox m_cbSection;
 	WDL_VirtualIconButton m_btnUndo;
 	WDL_VirtualStaticText m_txtSection;
+	SNM_ToolbarButton m_btnApply, m_btnCancel, m_btnActionList;
 };
 #endif
 
@@ -100,6 +98,7 @@ public:
 protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
 	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
+	bool IsEditListItemAllowed(SWS_ListItem* item, int iCol);
 	void GetItemList(SWS_ListItemList* pList);
 	void OnItemSelChanged(SWS_ListItem* item, int iState);
 	void OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState);
@@ -113,6 +112,7 @@ public:
 protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
 	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
+	bool IsEditListItemAllowed(SWS_ListItem* item, int iCol);
 	void GetItemList(SWS_ListItemList* pList);
 	int OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2); 
 	void OnBeginDrag(SWS_ListItem* item);

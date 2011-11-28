@@ -230,7 +230,7 @@ COMMAND_T* SWSUnregisterCommand(int id)
 		{
 			COMMAND_T* cmd = g_commands.Get(i);
 			plugin_register("-gaccel", &cmd->accel);
-			//plugin_register("-command_id", cmd->id); // Appears to be unnecessary
+			plugin_register("-command_id", cmd->id);
 			g_commands.Delete(i);
 			g_cmdFile.Delete(i);
 			return cmd;
@@ -247,18 +247,6 @@ COMMAND_T* SWSUnregisterCommand(int id)
 	}
 #endif
 	return NULL;
-}
-
-// SWSUnregisterCommand() must be called first
-void SWSFreeCommand(COMMAND_T* c)
-{
-	if (c)
-	{
-		free((void*)c->accel.desc); // alloc'ed with strdup
-		free((void*)c->id);
-		delete c;
-		c = NULL;
-	}
 }
 
 void ActionsList(COMMAND_T*)
@@ -622,6 +610,7 @@ extern "C"
 		IMPAPI(GetEnvelopeName);
 		IMPAPI(GetExePath);
 		IMPAPI(GetHZoomLevel);
+		IMPAPI(GetIconThemePointer);
 		IMPAPI(GetInputChannelName);
 		IMPAPI(GetLastTouchedTrack);
 		IMPAPI(GetMainHwnd);
@@ -716,6 +705,7 @@ extern "C"
 		IMPAPI(PCM_Source_CreateFromType);
 		IMPAPI(PlayPreview);
 		IMPAPI(PlayTrackPreview);
+		IMPAPI(PlayTrackPreview2Ex);
 		IMPAPI(plugin_getFilterList);
 		IMPAPI(plugin_register);
 		IMPAPI(projectconfig_var_addr);

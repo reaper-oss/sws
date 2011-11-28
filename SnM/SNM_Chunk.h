@@ -259,6 +259,8 @@ class SNM_EnvRemover : public SNM_ChunkParserPatcher
 public:
 	SNM_EnvRemover(WDL_FastString* _str, bool _autoCommit = true)
 		: SNM_ChunkParserPatcher(_str, _autoCommit) {m_removingEnv = false; }
+	SNM_EnvRemover(MediaTrack* _tr, bool _autoCommit = true)
+		: SNM_ChunkParserPatcher(_tr, _autoCommit) {m_removingEnv = false; }
 	~SNM_EnvRemover() {}
 	bool RemoveEnvelopes();
 protected:

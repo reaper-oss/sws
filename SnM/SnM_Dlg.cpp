@@ -34,9 +34,110 @@
 // Themed UIs
 ///////////////////////////////////////////////////////////////////////////////
 
+INT_PTR SNM_DockWnd::OnUnhandledMsg(UINT _uMsg, WPARAM _wParam, LPARAM _lParam)
+{
+	switch (_uMsg)
+	{
+		case WM_PAINT: {
+			int xo, yo; RECT r;
+			GetClientRect(m_hwnd,&r);		
+			m_parentVwnd.SetPosition(&r);
+			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
+			LICE_IBitmap* bm = m_vwnd_painter.GetBuffer(&xo, &yo);
+			bm->resize(r.right-r.left,r.bottom-r.top);
+			DrawControls(bm, &r);
+			m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
+			m_vwnd_painter.PaintEnd();
+		}
+		break;
+		case WM_LBUTTONDOWN:
+			SetFocus(m_hwnd); 
+			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(_lParam),GET_Y_LPARAM(_lParam)) > 0)
+				SetCapture(m_hwnd);
+			break;
+		case WM_LBUTTONDBLCLK:
+			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(_lParam),GET_Y_LPARAM(_lParam)) > 0)
+				m_parentVwnd.OnMouseUp(GET_X_LPARAM(_lParam),GET_Y_LPARAM(_lParam));
+			break;
+		case WM_LBUTTONUP:
+			if (GetCapture() == m_hwnd)	{
+				m_parentVwnd.OnMouseUp(GET_X_LPARAM(_lParam),GET_Y_LPARAM(_lParam));
+				ReleaseCapture();
+			}
+			break;
+		case WM_MOUSEMOVE:
+			m_parentVwnd.OnMouseMove(GET_X_LPARAM(_lParam),GET_Y_LPARAM(_lParam));
+			break;
+#ifdef _WIN32
+		case WM_CTLCOLOREDIT:
+			return (INT_PTR)ColorEdit((HWND)_lParam, (HDC)_wParam);
+#endif
+	}
+	return 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_ToolbarButton
+///////////////////////////////////////////////////////////////////////////////
+
+/* WDL_VirtualIconButton reuires a slight update to inherit OnPaintOver()*/
+void SNM_ToolbarButton::OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
+{
+	WDL_VirtualIconButton::OnPaintOver(drawbm, origin_x, origin_y, cliprect);
+
+	// paint text over (obey the theme's "toolbar text" on/off colors)
+	if (m_iconCfg && m_iconCfg->olimage && m_forcetext)
+	{
+		bool isdown = !!(m_pressed&1);
+		ColorTheme* ct = SNM_GetColorTheme();
+		LICE_IFont *font = SNM_GetToolbarFont();
+		bool isVert=false;
+		if (font && m_textfontv && m_position.right-m_position.left < m_position.bottom - m_position.top)
+		{
+			isVert=true;
+			font = m_textfontv;
+		}
+
+		// draw text
+		if (font&&m_textlbl.Get()[0])
+		{
+			int fgc = m_forcetext_color ? m_forcetext_color :
+				(!ct ? LICE_RGBA_FROMNATIVE(GSC(COLOR_BTNTEXT),255) :
+					(isdown ? LICE_RGBA_FROMNATIVE(ct->toolbar_button_text_on,255) : LICE_RGBA_FROMNATIVE(ct->toolbar_button_text,255)));
+
+			//font->SetCombineMode(LICE_BLIT_MODE_COPY, alpha); // this affects the glyphs that get cached
+			font->SetBkMode(TRANSPARENT);
+			font->SetTextColor(fgc);
+
+			RECT r2=m_position;
+			r2.left += origin_x+m_margin_l;
+			r2.right += origin_x-m_margin_r;
+			r2.top += origin_y+m_margin_t;
+			r2.bottom += origin_y-m_margin_b;
+
+			int f = DT_SINGLELINE|DT_NOPREFIX;
+			if (isVert) f |= DT_CENTER | (m_textalign<0?DT_TOP:m_textalign>0?DT_BOTTOM:DT_VCENTER);
+			else f |= DT_VCENTER|(m_textalign<0?DT_LEFT:m_textalign>0?DT_RIGHT:DT_CENTER);
+			font->DrawText(drawbm,m_textlbl.Get(),-1,&r2,f);
+		}
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Themed UIs
+///////////////////////////////////////////////////////////////////////////////
+
 ColorTheme* SNM_GetColorTheme(bool _checkForSize) {
 	int sz; ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
 	if (ct && (!_checkForSize || _checkForSize && sz >= sizeof(ColorTheme))) return ct;
+	return NULL;
+}
+
+IconTheme* SNM_GetIconTheme(bool _checkForSize) {
+	int sz; IconTheme* it = (IconTheme*)GetIconThemeStruct(&sz);
+	if (it && (!_checkForSize || _checkForSize && sz >= sizeof(IconTheme))) return it;
 	return NULL;
 }
 
@@ -62,6 +163,28 @@ LICE_CachedFont* SNM_GetThemeFont()
 	return &themeFont;
 }
 
+LICE_CachedFont* SNM_GetToolbarFont()
+{
+	static LICE_CachedFont themeFont;
+	if (!themeFont.GetHFont())
+	{
+		LOGFONT lf = {
+#ifdef _WIN32
+14,
+#else
+12,
+#endif
+			0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
+		};
+		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
+	}
+	themeFont.SetBkMode(TRANSPARENT);
+	ColorTheme* ct = SNM_GetColorTheme();
+	themeFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->toolbar_button_text,255) : LICE_RGBA(255,255,255,255));
+	return &themeFont;
+}
+
 HBRUSH g_hb = NULL;
 int g_lastThemeBrushColor = -1;
 
@@ -79,7 +202,7 @@ HBRUSH SNM_GetThemeBrush(int _col)
 void SNM_GetThemeListColors(int* _bg, int* _txt)
 {
 	int bgcol=-1, txtcol=-1;
-	ColorTheme* ct = SNM_GetColorTheme(true);
+	ColorTheme* ct = SNM_GetColorTheme(true); // true: list view colors are recent (v4.11)
 	if (g_bv4 && ct) {
 		bgcol = ct->genlist_bg;
 		txtcol = ct->genlist_fg;
@@ -144,8 +267,33 @@ LICE_IBitmap* SNM_GetThemeLogo()
 	return snmLogo;
 }
 
-//JFB TODO? hyperlink WDL_VWnd ?
-bool AddSnMLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h)
+void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
+{
+	static WDL_VirtualIconButton_SkinConfig skin;
+	IconTheme* it = SNM_GetIconTheme(true); // true: blank & overlay images are recent (v4)
+	if (it && it->toolbar_blank
+/*JFB no! (lazy init behind the scene?)
+		&& it->toolbar_overlay
+*/
+		)
+	{
+		skin.image = it->toolbar_blank;
+		skin.olimage = it->toolbar_overlay;
+		WDL_VirtualIconButton_PreprocessSkinConfig(&skin);
+		_btn->SetIcon(&skin);
+		_btn->SetForceText(true); // do not force colors (done in SNM_ToolbarButton::OnPaintOver())
+		_btn->SetTextLabel(_text, 0, SNM_GetToolbarFont());
+	}
+	else 
+	{
+		_btn->SetIcon(NULL); // important: could crash when switching theme..
+		_btn->SetTextLabel(_text, 0, SNM_GetThemeFont());
+		_btn->SetForceBorder(true);
+	}
+}
+
+//JFB TODO? hyperlink ?
+bool SNM_AddLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h)
 {
 	if (_bm)
 	{
@@ -167,7 +315,7 @@ bool AddSnMLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h)
 // JFB TODO? REMARK: 
 //    ideally, we'd need to mod WDL_VWnd here rather than checking inherited types (!)
 //    e.g. adding a kind of getPreferedWidthHeight(int* _width, int* _height)
-bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep)
+bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep)
 {
 	if (_c)
 	{
@@ -191,7 +339,7 @@ bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, i
 				width = max(width, tr.right);
 				height = tr.bottom; 
 			}
-/*JFB could be better? anyway, InvalidateRect/RequestRedraw issue..
+/*JFB could be better? InvalidateRect/RequestRedraw issue anyway..
 			RECT tr = {0,0,0,0};
 			cb->GetFont()->DrawText(NULL, cb->GetItem(cb->GetCurSel()), -1, &tr, DT_CALCRECT);
 			width = tr.right;
@@ -208,13 +356,13 @@ bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, i
 			txt->GetFont()->DrawText(NULL, txt->GetText(), -1, &tr, DT_CALCRECT);
 			width = tr.right;
 		}
-		else if (!strcmp(_c->GetType(), "vwnd_iconbutton"))
+		else if (!strcmp(_c->GetType(), "vwnd_iconbutton") || !strcmp(_c->GetType(), "vwnd_s&m_toolbar"))
 		{
 			WDL_VirtualIconButton* btn = (WDL_VirtualIconButton*)_c;
-			WDL_VirtualIconButton_SkinConfig* img = btn->GetIcon();
-			if (img) {
-				width = img->image->getWidth() / 3;
-				height = img->image->getHeight();
+			WDL_VirtualIconButton_SkinConfig* skin = btn->GetIcon();
+			if (skin && skin->image) {
+				width = skin->image->getWidth() / 3;
+				height = skin->image->getHeight();
 			}
 			else if (btn->GetFont())
 			{
@@ -226,6 +374,12 @@ bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, i
 					width += tr.bottom; // for the tick zone
 				// workaround for paint glitch with odd (i.e. not even) heights
 				if (height%2 == 1) { height--; _y++; }
+			}
+
+			// larger toolbar buttons!
+			if (btn->GetIcon() && !strcmp(_c->GetType(), "vwnd_s&m_toolbar")) {
+				width = int(2.6*width);
+				height = int(0.75*height + 0.5) + 1; // +1 for text vertical alignment
 			}
 		}
 
@@ -250,12 +404,8 @@ bool SetVWndAutoPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, i
 void SNM_UIInit() {}
 
 void SNM_UIExit() {
-	if (g_hb)
-		DeleteObject(g_hb);
-
-	LICE_IBitmap* logo = SNM_GetThemeLogo();
-	if (logo)
-		delete logo;
+	if (g_hb) DeleteObject(g_hb);
+	if (LICE_IBitmap* logo = SNM_GetThemeLogo()) DELETE_NULL(logo);
 }
 
 
@@ -272,9 +422,12 @@ void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent, bool _clea
 	if (_title) // a little hack..
 	{
 		HWND h = FindWindow(NULL, "ReaScript console output");
-		if (h) SetWindowText(h, _title);
-		else h = FindWindow(NULL, _title);
-		if (h) SetForegroundWindow(h);
+		if (h)
+			SetWindowText(h, _title);
+		else // already opened?
+			h = FindWindow(NULL, _title);
+		if (h)
+			SetForegroundWindow(h);
 	}
 #else
 	//JFB nice but modal..

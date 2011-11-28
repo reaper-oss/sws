@@ -35,7 +35,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // File util
-// JFB!!! TODO: WDL_UTF8, v4's exist_fn, ..
+// JFB!!! TODO: WDL_UTF8, exist_fn, ..
 ///////////////////////////////////////////////////////////////////////////////
 
 const char* GetFileExtension(const char* _fn)
@@ -255,13 +255,10 @@ bool SaveBin(const char* _fn, const WDL_HeapBuf* _hb)
 {
 	bool ok = false;
 	if (_hb && _hb->GetSize())
-	{
-		if (FILE* f = fopenUTF8(_fn , "wb"))
-		{
+		if (FILE* f = fopenUTF8(_fn , "wb")) {
 			ok = (fwrite(_hb->Get(), 1, _hb->GetSize(), f) == _hb->GetSize());
 			fclose(f);
 		}
-	}
 	return ok;
 }
 
@@ -375,7 +372,7 @@ void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, co
 		WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, _iniFn); // flush section
 		WritePrivateProfileSection(_iniSectionName, buf, _iniFn);
 		free(buf);
-/* JFB commented atm: should be faster though (!?)
+/* JFB commented: should be faster though (!?)
 		// final null character
 		int newSz = _iniSection->GetLength()+1;
 		_iniSection->SetLen(newSz);
@@ -478,19 +475,7 @@ void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char
 // Util
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB!!! REAPER bug? NamedCommandLookup() can return an id for an unregistered _cmdId 
-int SNM_NamedCommandLookup(const char* _cmdId)
-{
-	if (int id = NamedCommandLookup(_cmdId))
-	{
-		const char* buf = kbd_getTextFromCmd((DWORD)id, NULL);
-		if (buf && *buf)
-			return id;
-	}
-	return 0;
-}
-
-// relies on markers indexed by positions
+// relies on markers & regions indexed by positions
 int FindMarkerRegion(double _pos)
 {
 	int x=0, idx=-1; double dPos, dEnd; bool isRgn;
@@ -615,6 +600,29 @@ bool WaitForTrackMute(DWORD* _muteTime)
 	}
 	return false;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Theme slots (Resources view)
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef _WIN32
+void LoadThemeSlot(const char* _title, int _slot)
+{
+	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_THM)->GetOrPromptOrBrowseSlot(_title, _slot))
+	{
+		char cmd[BUFFER_SIZE]=""; _snprintf(cmd, BUFFER_SIZE, "%s\\reaper.exe", GetExePath());
+		WDL_FastString fnStr2; fnStr2.SetFormatted(BUFFER_SIZE, " \"%s\"", fnStr->Get());
+		_spawnl(_P_NOWAIT, cmd, fnStr2.Get(), NULL);
+		delete fnStr;
+	}
+}
+
+void LoadThemeSlot(COMMAND_T* _ct) {
+	LoadThemeSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user);
+}
+#endif
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Misc	actions
@@ -757,34 +765,6 @@ void DumpWikiActionList2(COMMAND_T* _ct)
 void DumpActionList(COMMAND_T* _ct) {
 	dumpActionList((int)_ct->user, "Dump action list", "%s\t%s\t%s\n", "Section\tId\tAction\n", NULL);
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Theme actions & slots (Resources view)
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _WIN32
-void LoadThemeSlot(const char* _title, int _slot, bool _errMsg)
-{
-	// Prompt for slot if needed
-	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_THM)->GetSize()); // loops on err
-	if (_slot == -1) return; // user has cancelled
-
-	char fn[BUFFER_SIZE]="";
-	if (g_slots.Get(SNM_SLOT_THM)->GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg))
-	{
-		char cmd[BUFFER_SIZE]=""; _snprintf(cmd, BUFFER_SIZE, "%s\\reaper.exe", GetExePath());
-		WDL_FastString fnStr; fnStr.SetFormatted(BUFFER_SIZE, " \"%s\"", fn);
-		_spawnl(_P_NOWAIT, cmd, fnStr.Get(), NULL);
-	}
-}
-
-void LoadThemeSlot(COMMAND_T* _ct) {
-	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_THM)->GetSize())
-		LoadThemeSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_THM)->Get(slot)->IsDefault());
-}
-#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////

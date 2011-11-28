@@ -31,6 +31,8 @@
 #include "SnM_Cyclactions.h"
 //#include "../../WDL/projectcontext.h"
 
+//#define _SNM_MFC
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Core stuff
@@ -45,7 +47,7 @@ char g_cyclactionSections[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN] = 
 #ifdef _SNM_CYCLACTION_OSX
 static SNM_CyclactionWnd* g_pCyclactionWnd = NULL;
 #endif
-HWND g_cyclactionsHwnd = NULL; //JFB!!! to be removed when transfer done!
+HWND g_cyclactionsHwnd = NULL; //JFB!!! to be removed when transfer to DockWnd done
 bool g_undos = true;
 
 // for subbtle "recursive cycle action" cases
@@ -56,7 +58,7 @@ class ScheduledActions : public SNM_ScheduledJob
 {
 public:
 	ScheduledActions(int _approxDelayMs, int _section, int _cycleId, const char* _name, WDL_PtrList<WDL_FastString>* _actions) 
-	: SNM_ScheduledJob(SNM_SCHEDJOB_CYCLACTION, _approxDelayMs), m_section(_section), m_cycleId(_cycleId), m_name(_name)
+		: SNM_ScheduledJob(SNM_SCHEDJOB_CYCLACTION, _approxDelayMs), m_section(_section), m_cycleId(_cycleId), m_name(_name)
 	{
 		for (int i= 0; _actions && i < _actions->GetSize(); i++)
 			m_actions.Add(new WDL_FastString(_actions->Get(i)->Get()));
@@ -69,10 +71,10 @@ public:
 		if (g_undos)
 			Undo_BeginBlock2(NULL);
 
-		for (int i= 0; i < m_actions.GetSize(); i++)
+		for (int i=0; i < m_actions.GetSize(); i++)
 		{
-			int cmd = NamedCommandLookup(m_actions.Get(i)->Get());
-			if (cmd) {
+			if (int cmd = NamedCommandLookup(m_actions.Get(i)->Get()))
+			{
 				if (!m_section && !KBD_OnMainActionEx(cmd, 0, 0, 0, g_hwndParent, NULL)) // Main section
 					break;
 				else if (m_section && !MIDIEditor_LastFocused_OnCommand(cmd, m_section == 1)) // Both ME sections
@@ -150,7 +152,9 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 			if (SWSUnregisterCommand(_ct->accel.accel.cmd) && 
 				RegisterCyclation(buf, action->IsToggle(), _section, (int)_ct->user, _ct->accel.accel.cmd))
 			{
-				SWSFreeCommand(_ct);
+				free((void*)_ct->accel.desc); // alloc'ed with strdup
+				free((void*)_ct->id);
+				DELETE_NULL(_ct);
 			}
 		}
 		if (done)
@@ -208,7 +212,8 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 		for (int i=0; i < _a->GetCmdSize(); i++)
 		{
 			const char* cmd = _a->GetCmd(i);
-			if (strstr(cmd, "_CYCLACTION")) {
+			if (strstr(cmd, "_CYCLACTION"))
+			{
 				if (_errMsg) 
 					_errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: recursive cycle action (i.e. uses another cycle action)\n\n", _a->GetName(), g_cyclactionSections[_section]);
 				return false;
@@ -293,7 +298,9 @@ void FlushCyclactions(int _section)
 		COMMAND_T* ct = NULL;
 		if (cmd && (ct = SWSUnregisterCommand(cmd)))
 		{
-			SWSFreeCommand(ct);
+			free((void*)ct->accel.desc); // alloc'ed with strdup
+			free((void*)ct->id);
+			DELETE_NULL(ct);
 		}
 	}
 	g_cyclactions[_section].EmptySafe(true);
@@ -515,8 +522,13 @@ int CountEditedActions() {
 
 void UpdateEditedStatus(bool _edited) {
 	g_edited = _edited;
+#ifdef _SNM_MFC
 	if (g_cyclactionsHwnd)
 		EnableWindow(GetDlgItem(g_cyclactionsHwnd, IDC_APPLY), g_edited);
+#else
+	if (g_pCyclactionWnd)
+		g_pCyclactionWnd->Update(false);
+#endif
 }
 
 void UpdateListViews() {
@@ -655,7 +667,7 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
 	Cyclaction* a = (Cyclaction*)_item;
-	if (a && a != &g_DEFAULT_L && _iCol == 1)
+	if (a && _iCol == 1)
 	{
 		WDL_FastString errMsg;
 		if (!CheckEditableCyclaction(_str, &errMsg) && strcmp(a->GetName(), _str)) 
@@ -672,7 +684,11 @@ void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char
 	// no update on cell editing (disabled)
 }
 
-// filter EMPTY_CYCLACTIONs
+bool SNM_CyclactionsView::IsEditListItemAllowed(SWS_ListItem* _item, int _iCol) {
+	Cyclaction* a = (Cyclaction*)_item;
+	return (a != &g_DEFAULT_L);
+}
+
 void SNM_CyclactionsView::GetItemList(SWS_ListItemList* pList)
 {
 	if (CountEditedActions())
@@ -746,7 +762,7 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 void SNM_CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
 	WDL_FastString* cmd = (WDL_FastString*)_item;
-	if (cmd && _str && g_editedAction && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R && strcmp(cmd->Get(), _str))
+	if (cmd && _str && g_editedAction && strcmp(cmd->Get(), _str))
 	{
 		g_editedAction->SetCmd(cmd, _str);
 
@@ -757,6 +773,11 @@ void SNM_CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _
 
 		UpdateEditedStatus(true);
 	}
+}
+
+bool SNM_CommandsView::IsEditListItemAllowed(SWS_ListItem* _item, int _iCol) {
+	WDL_FastString* cmd = (WDL_FastString*)_item;
+	return (cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R);
 }
 
 void SNM_CommandsView::GetItemList(SWS_ListItemList* pList)
@@ -867,11 +888,14 @@ enum
 {
   COMBOID_SECTION=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
   TXTID_SECTION,
-  BUTTONID_UNDO
+  BUTTONID_UNDO,
+  BUTTONID_APPLY,
+  BUTTONID_CANCEL,
+  BUTTONID_ACTIONLIST
 };
 
 SNM_CyclactionWnd::SNM_CyclactionWnd()
-:SWS_DockWnd(IDD_SNM_CYCLACTION, "Cycle action editor", "SnMCyclaction", 30011, SWSGetCommandID(OpenCyclactionView))
+	: SNM_DockWnd(IDD_SNM_CYCLACTION, "Cycle action editor", "SnMCyclaction", 30011, SWSGetCommandID(OpenCyclactionView))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -879,19 +903,18 @@ SNM_CyclactionWnd::SNM_CyclactionWnd()
 
 INT_PTR SNM_CyclactionWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (g_bSNMbeta&2)
-	{
-		static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE][2];
-		if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[0], IDC_LIST1, 0, 0) ||
-			ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[1], IDC_LIST2, 0, 0))
-			return 1;
-	}
+	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE][2];
+	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[0], IDC_LIST1, 0, 0) ||
+		ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[1], IDC_LIST2, 0, 0))
+		return 1;
 	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }
 
-void SNM_CyclactionWnd::Update() {
-	for (int i=0; i < m_pLists.GetSize(); i++)
-		m_pLists.Get(i)->Update();
+void SNM_CyclactionWnd::Update(bool _updateListViews)
+{
+	if (_updateListViews)
+		for (int i=0; i < m_pLists.GetSize(); i++)
+			m_pLists.Get(i)->Update();
 	m_parentVwnd.RequestRedraw(NULL);
 }
 
@@ -901,18 +924,19 @@ void SNM_CyclactionWnd::OnInitDlg()
 
 	g_lvL = new SNM_CyclactionsView(GetDlgItem(m_hwnd, IDC_LIST1), GetDlgItem(m_hwnd, IDC_EDIT));
 	m_pLists.Add(g_lvL);
-	if (g_bSNMbeta&2 || g_bSNMbeta&8) SNM_ThemeListView(g_lvL);
+	SNM_ThemeListView(g_lvL);
 
 	g_lvR = new SNM_CommandsView(GetDlgItem(m_hwnd, IDC_LIST2), GetDlgItem(m_hwnd, IDC_EDIT));
 	m_pLists.Add(g_lvR);
-	if (g_bSNMbeta&2 || g_bSNMbeta&8) SNM_ThemeListView(g_lvR);
+	SNM_ThemeListView(g_lvR);
 
 	m_resize.init_item(IDC_LIST1, 0.0, 0.0, 0.5, 1.0);
 	m_resize.init_item(IDC_LIST2, 0.5, 0.0, 1.0, 1.0);
+#ifdef _SNM_MFC
 	m_resize.init_item(IDC_APPLY, 0.0, 1.0, 0.0, 1.0);
 	m_resize.init_item(IDC_ABORT, 0.0, 1.0, 0.0, 1.0);
 	m_resize.init_item(IDC_COMMAND, 1.0, 1.0, 1.0, 1.0);
-
+#endif
 	// WDL GUI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
     m_parentVwnd.SetRealParent(m_hwnd);
@@ -931,7 +955,17 @@ void SNM_CyclactionWnd::OnInitDlg()
 	m_btnUndo.SetCheckState(g_undos);
 	m_parentVwnd.AddChild(&m_btnUndo);
 
+	m_btnApply.SetID(BUTTONID_APPLY);
+	m_parentVwnd.AddChild(&m_btnApply);
+
+	m_btnCancel.SetID(BUTTONID_CANCEL);
+	m_parentVwnd.AddChild(&m_btnCancel);
+
+	m_btnActionList.SetID(BUTTONID_ACTIONLIST);
+	m_parentVwnd.AddChild(&m_btnActionList);
+#ifdef _SNM_MFC
 	EnableWindow(GetDlgItem(m_hwnd, IDC_APPLY), g_edited);
+#endif
 	Update();
 }
 
@@ -979,12 +1013,11 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				{
 					char custCmdId[SNM_MAX_ACTION_CUSTID_LEN] = "";
 					_snprintf(custCmdId, SNM_MAX_ACTION_CUSTID_LEN, "_%s%d", g_cyclactionCustomIds[g_editedSection], cycleId+1);
-					int id = SNM_NamedCommandLookup(custCmdId);
-					if (id) {
+					if (int id = NamedCommandLookup(custCmdId)) {
 						Main_OnCommand(id, 0);
 						break;
 					}
-					MessageBox(m_hwnd, "This action is not registered !", "S&M - Cycle Action editor - Error", MB_OK);
+					MessageBox(m_hwnd, "This action is not registered yet !", "S&M - Cycle Action editor - Error", MB_OK);
 				}
 			}
 			break;
@@ -1038,18 +1071,6 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					UpdateEditedStatus(true);
 				}
 			} // + cmdsToDelete auto clean-up
-			break;
-
-		case IDC_COMMAND: // show action list
-			AllEditListItemEnd(false);
-			//JFB KO!? ShowActionList(NULL, GetMainHwnd());
-			Main_OnCommand(40605, 0);
-			break;
-		case IDC_APPLY:
-			Apply();
-			break;
-		case IDC_ABORT: // and not IDCANCEL which is automatically used when closing (see sws_wnd.cpp) !
-			Cancel(false);
 			break;
 		case IMPORT_CUR_SECTION_MSG:
 			if (char* fn = BrowseForFiles("S&M - Import cycle actions", g_lastImportFn, NULL, false, SNM_INI_EXT_LIST))
@@ -1118,7 +1139,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			for (int sec=0; sec < SNM_MAX_CYCLING_SECTIONS; sec++)
 				ResetSection(sec);
 			break;
-/*JFB!!!
+/*JFB
 		case IDC_HELPTEXT:
 			ShellExecute(m_hwnd, "open", "http://wiki.cockos.com/wiki/index.php/ALR_Main_S%26M_CREATE_CYCLACTION" , NULL, NULL, SW_SHOWNORMAL);
 			break;
@@ -1134,6 +1155,29 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				m_btnUndo.SetCheckState(!m_btnUndo.GetCheckState()?1:0);
 				UpdateEditedStatus(true);
 			}
+			break;
+#ifdef _SNM_MFC
+		case IDC_APPLY:
+#else
+		case BUTTONID_APPLY:
+#endif
+			Apply();
+			break;
+#ifdef _SNM_MFC
+		case IDC_ABORT: // and not IDCANCEL which is automatically used when closing (see sws_wnd.cpp) !
+#else
+		case BUTTONID_CANCEL:
+#endif
+			Cancel(false);
+			break;
+#ifdef _SNM_MFC
+		case IDC_COMMAND:
+#else
+		case BUTTONID_ACTIONLIST:
+#endif
+			AllEditListItemEnd(false);
+			//JFB KO!? ShowActionList(NULL, GetMainHwnd());
+			Main_OnCommand(40605, 0);
 			break;
 		default:
 			Main_OnCommand((int)wParam, (int)lParam);
@@ -1155,79 +1199,58 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 {
 	if (!_bm) return;
 
-	IconTheme* it = NULL;
 	LICE_CachedFont* font = SNM_GetThemeFont();
+
+	// 1st row of controls
 	int x0=_r->left+10, h=35;
 
 	m_txtSection.SetFont(font);
-	if (SetVWndAutoPosition(&m_txtSection, NULL, _r, &x0, _r->top, h, 5)) {
+	if (SNM_AutoVWndPosition(&m_txtSection, NULL, _r, &x0, _r->top, h, 5)) {
 		m_cbSection.SetFont(font);
-		if (SetVWndAutoPosition(&m_cbSection, &m_txtSection, _r, &x0, _r->top, h))
+		if (SNM_AutoVWndPosition(&m_cbSection, &m_txtSection, _r, &x0, _r->top, h))
 		{
 /*no! remains a GUI only info only until applied..
 			m_btnUndo.SetCheckState(g_undos);
 */
 			m_btnUndo.SetTextLabel("Consolidated undo points", -1, font);
-			if (!SetVWndAutoPosition(&m_btnUndo, NULL, _r, &x0, _r->top, h))
-				return;
+			if (SNM_AutoVWndPosition(&m_btnUndo, NULL, _r, &x0, _r->top, h))
+				SNM_AddLogo(_bm, _r, x0, h);
 		}
-		else return;
 	}
-	else return;
-	AddSnMLogo(_bm, _r, x0, h);
+
+	// 2nd row of controls
+	x0 = _r->left+8; h=37;
+	int y0 = _r->bottom-h;
+
+	SNM_SkinToolbarButton(&m_btnApply, "Apply");
+	m_btnApply.SetGrayed(!g_edited);
+	if (SNM_AutoVWndPosition(&m_btnApply, NULL, _r, &x0, y0, h, 1))
+	{
+		SNM_SkinToolbarButton(&m_btnCancel, "Cancel");
+		if (SNM_AutoVWndPosition(&m_btnCancel, NULL, _r, &x0, y0, h, 1))
+		{
+			SNM_SkinToolbarButton(&m_btnActionList, "Action list...");
+			SNM_AutoVWndPosition(&m_btnActionList, NULL, _r, &x0, y0, h, 0);
+
+			// right re-align
+			RECT r; m_btnActionList.GetPosition(&r);
+			int w = r.right-r.left;
+			r.left = _r->right-w-7;
+			r.right = r.left+w;
+			m_btnActionList.SetPosition(&r);
+		}
+	}
 }
 
-INT_PTR SNM_CyclactionWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+HBRUSH SNM_CyclactionWnd::ColorEdit(HWND _hwnd, HDC _hdc)
 {
-	switch (uMsg)
+	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
 	{
-		case WM_PAINT:
-		{
-//#ifdef _SNM_LIST_THEMABLE1
-			if (g_bSNMbeta&8) {
-				SNM_ThemeListView(g_lvL);
-				SNM_ThemeListView(g_lvR);
-			}
-//#endif
-			int xo, yo; RECT r;
-			GetClientRect(m_hwnd, &r);		
-			m_parentVwnd.SetPosition(&r);
-			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
-			DrawControls(m_vwnd_painter.GetBuffer(&xo, &yo), &r);
-			m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
-			m_vwnd_painter.PaintEnd();
-			break;
-		}
-		case WM_LBUTTONDOWN:
-			SetFocus(m_hwnd); 
-			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0)
-				SetCapture(m_hwnd);
-			break;
-		case WM_LBUTTONUP:
-			if (GetCapture() == m_hwnd)	{
-				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-				ReleaseCapture();
-			}
-			break;
-		case WM_MOUSEMOVE:
-			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-			if (GetCapture() == m_hwnd && m_pLists.Get(1)->IsActive(true)) {
-				g_lvR->OnDrag();
-				return 1;
-			}
-			break;
-//#ifdef _SNM_EDIT_THEMABLE
-		case WM_CTLCOLOREDIT:
-			if ((g_bSNMbeta&2 || g_bSNMbeta&8) &&
-				(HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT))
-			{
-				int bg, txt; SNM_GetThemeListColors(&bg, &txt); // not SNM_GetThemeEditColors (lists' IDC_EDIT)
-				SetBkColor((HDC)wParam, bg);
-				SetTextColor((HDC)wParam, txt);
-				return (INT_PTR)SNM_GetThemeBrush(bg);
-			}
-			break;
-//#endif
+		int bg, txt;
+		SNM_GetThemeListColors(&bg, &txt); // not SNM_GetThemeEditColors (lists' IDC_EDIT)
+		SetBkColor(_hdc, bg);
+		SetTextColor(_hdc, txt);
+		return SNM_GetThemeBrush(bg);
 	}
 	return 0;
 }
@@ -1417,7 +1440,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 								{
 									char custCmdId[SNM_MAX_ACTION_CUSTID_LEN] = "";
 									_snprintf(custCmdId, SNM_MAX_ACTION_CUSTID_LEN, "_%s%d", g_cyclactionCustomIds[g_editedSection], cycleId+1);
-									int id = SNM_NamedCommandLookup(custCmdId);
+									int id = NamedCommandLookup(custCmdId);
 									if (id) {
 										Main_OnCommand(id, 0);
 										break;
@@ -1764,7 +1787,9 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 							if (c && SWSUnregisterCommand(cmdId) && 
 								RegisterCyclation(g_cyclactions[sec].Get(cycleId)->GetStepName(state), g_cyclactions[sec].Get(cycleId)->IsToggle(), sec, cycleId+1, cmdId))
 							{
-								SWSFreeCommand(c);
+								free((void*)c->accel.desc); // alloc'ed with strdup
+								free((void*)c->id);
+								DELETE_NULL(c);
 							}
 							g_cyclactions[sec].Get(cycleId)->m_performState = state; // before refreshing toolbars!
 							RefreshToolbar(cmdId);
@@ -1904,7 +1929,7 @@ void CyclactionViewExit() {
 
 void OpenCyclactionView(COMMAND_T* _ct)
 {
-	if (g_bSNMbeta&4)
+	if (g_bSNMbeta)
 	{
 		if (g_pCyclactionWnd) 
 		{

@@ -88,7 +88,7 @@ protected:
 };
 
 
-class SNM_LiveConfigsWnd : public SWS_DockWnd {
+class SNM_LiveConfigsWnd : public SNM_DockWnd {
 public:
 	SNM_LiveConfigsWnd();
 	void Update();
@@ -107,10 +107,8 @@ protected:
 	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState);
 	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
-	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	HBRUSH ColorEdit(HWND _hwnd, HDC _hdc);
 
-	WDL_VWnd_Painter m_vwnd_painter;
-	WDL_VWnd m_parentVwnd; // owns all children windows
 	WDL_VirtualComboBox m_cbConfig, m_cbInputTr;
 	WDL_VirtualIconButton m_btnEnable, m_btnMuteOthers, m_btnAutoSelect;
 	WDL_VirtualStaticText m_txtConfig, m_txtInputTr;

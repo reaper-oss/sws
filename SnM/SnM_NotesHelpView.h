@@ -31,7 +31,7 @@
 bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize);
 bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine = NULL);
 
-class SNM_NotesHelpWnd : public SWS_DockWnd
+class SNM_NotesHelpWnd : public SNM_DockWnd
 {
 public:
 	SNM_NotesHelpWnd();
@@ -67,7 +67,7 @@ protected:
 	void OnTimer(WPARAM wParam=0);
 	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
 	void OnResize();
-	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	HBRUSH ColorEdit(HWND _hwnd, HDC _hdc);
 
 	int updateItemNotes();
 	int updateTrackNotes();
@@ -77,11 +77,9 @@ protected:
 	void loadHelp(const char* _cmdName, char* _buf, int _bufSize);
 	void saveHelp(const char* _cmdName, const char* _help);
 
-	// WDL UI
-	WDL_VWnd_Painter m_vwnd_painter;
-	WDL_VWnd m_parentVwnd; // owns all children windows
 	WDL_VirtualComboBox m_cbType;
-	WDL_VirtualIconButton m_btnLock, m_btnAlr;
+	WDL_VirtualIconButton m_btnLock;
+	SNM_ToolbarButton m_btnAlr;
 	WDL_VirtualStaticText m_txtLabel;
 
 	WDL_FastString m_actionHelpFilename;

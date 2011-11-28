@@ -164,44 +164,12 @@ HWND GetReaWindowByTitle(const char* _title, int _nComp)
 	return NULL;
 }
 
-HWND SearchWindow(const char* _title)
-{
-	HWND searchedWnd = NULL;
-#ifdef _WIN32
-	searchedWnd = FindWindow(NULL, _title);
-#else
-/*JFB TODO OSX: tried that but it's KO (http://code.google.com/p/sws-extension/issues/detail?id=175#c83)
-	if (GetMainHwnd())
-	{
-		HWND w = GetWindow(GetMainHwnd(), GW_HWNDFIRST);
-		while (w)
-		{ 
-			if (IsWindowVisible(w) && GetWindow(w, GW_OWNER) == GetMainHwnd())
-			{
-				char name[BUFFER_SIZE] = "";
-				int iLenName = GetWindowText(w, name, BUFFER_SIZE);
-				if (!strcmp(name, _title)) {
-					searchedWnd = w;
-					break;
-				}
-			}
-			w = GetWindow(w, GW_HWNDNEXT);
-		}
-	}
-*/
-#endif
-	return searchedWnd;
-}
-
 HWND GetActionListBox(char* _currentSection, int _sectionMaxSize)
 {
 	HWND actionsWnd = GetReaWindowByTitle("Actions");
 	if (actionsWnd && _currentSection)
-	{
-		HWND cbSection = GetDlgItem(actionsWnd, 0x525);
-		if (cbSection)
+		if (HWND cbSection = GetDlgItem(actionsWnd, 0x525))
 			GetWindowText(cbSection, _currentSection, _sectionMaxSize);
-	}
 	return (actionsWnd ? GetDlgItem(actionsWnd, 0x52B) : NULL);
 }
 
@@ -241,7 +209,8 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 					}
 					// best effort to get the custom id (relies on displayed columns..)
 					ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
-					if (!*_id) {
+					if (!*_id)
+					{
 						if (_strnicmp(actionName, "Custom:", 7))
 							_snprintf(_id, _idSize, "%d", (int)li.lParam);
 						else
@@ -303,17 +272,17 @@ void toggleFXChain(COMMAND_T* _ct)
 	// no undo
 
 	// fake toggle state update
-	if (CountSelectedTracksWithMaster(NULL) > 1)
+	if (SNM_CountSelectedTracks(NULL, true) > 1)
 		FakeToggle(_ct);
 }
 
 // for toggle state
 bool isToggleFXChain(COMMAND_T * _ct) 
 {
-	int selTrCount = CountSelectedTracksWithMaster(NULL);
+	int selTrCount = SNM_CountSelectedTracks(NULL, true);
 	// single track selection: we can return a toggle state
 	if (selTrCount == 1)
-		return (TrackFX_GetChainVisible(GetFirstSelectedTrackWithMaster(NULL)) != -1);
+		return (TrackFX_GetChainVisible(SNM_GetSelectedTrack(NULL, 0, true)) != -1);
 	// several tracks selected: possible mix of different states 
 	// => return a fake toggle state (best effort)
 	else if (selTrCount)
@@ -562,7 +531,7 @@ bool floatOnlyJob(MediaTrack* _tr, int _fx, bool _selectedTracks)
 
 bool cycleFocusFXWnd(int _dir, bool _selectedTracks, bool* _cycled)
 {
-	if (!_selectedTracks || (_selectedTracks && CountSelectedTracksWithMaster(NULL)))
+	if (!_selectedTracks || (_selectedTracks && SNM_CountSelectedTracks(NULL, true)))
 	{
 		MediaTrack* firstTrFound = NULL;
 		int firstFXFound = -1;
@@ -667,7 +636,7 @@ void cycleFocusFXMainWndSelTracks(COMMAND_T * _ct) {
 void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 {
 	int dir = (int)_ct->user;
-	if (CountSelectedTracksWithMaster(NULL))
+	if (SNM_CountSelectedTracks(NULL, true))
 	{
 		MediaTrack* firstTrFound = NULL;
 		int firstFXFound = -1;

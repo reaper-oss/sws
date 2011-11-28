@@ -181,7 +181,6 @@ int SWSRegisterCommandExt2(void (*doCommand)(COMMAND_T*), const char* cID, const
 int SWSRegisterCommandExt3(void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), int cmdId, const char* cID, const char* cDesc, INT_PTR user, const char* cFile);
 void ActionsList(COMMAND_T*);
 COMMAND_T* SWSUnregisterCommand(int id);
-void SWSFreeCommand(COMMAND_T* c);
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, const char** pMenuText = NULL);
 COMMAND_T* SWSGetCommandByID(int cmdId);
 HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);

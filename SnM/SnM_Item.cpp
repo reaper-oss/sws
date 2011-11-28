@@ -35,7 +35,7 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// General helpers
+// General item helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 char* GetName(MediaItem* _item) {
@@ -75,6 +75,45 @@ bool deleteMediaItemIfNeeded(MediaItem* _item)
 	}
 	return deleted;
 }
+
+// get, set & clear item selection (primitives: no undo points)
+
+void SNM_GetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks)
+{
+	int count = SNM_GetNumTracks(_proj);
+	for (int i=1; i <= count; i++) // skip master
+		if (MediaTrack* tr = SNM_GetTrack(_proj, i))
+			if (tr && (!_onSelTracks || (_onSelTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
+				for (int j=0; j < GetTrackNumMediaItems(tr); j++)
+					if (MediaItem* item = GetTrackMediaItem(tr,j))
+						if (*(bool*)GetSetMediaItemInfo(item, "B_UISEL", NULL))
+							_items->Add(item);
+}
+
+void SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks)
+{
+	int count = SNM_GetNumTracks(_proj);
+	for (int i=1; i <= count; i++) // skip master
+		if (MediaTrack* tr = SNM_GetTrack(_proj, i))
+			if (!_onSelTracks || (_onSelTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
+				for (int j=0; j < GetTrackNumMediaItems(tr); j++)
+					if (MediaItem* item = GetTrackMediaItem(tr, j))
+						for (int k=0; k < _items->GetSize(); k++)
+							if (_items->Get(k) == item)
+								GetSetMediaItemInfo(item, "B_UISEL", &g_bTrue);
+}
+
+void SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks)
+{
+	int count = SNM_GetNumTracks(_proj);
+	for (int i=1; i <= count; i++) // skip master
+		if (MediaTrack* tr = SNM_GetTrack(_proj, i))
+			if (tr && (!_onSelTracks || (_onSelTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
+				for (int j=0; j < GetTrackNumMediaItems(tr); j++)
+					if (MediaItem* item = GetTrackMediaItem(tr, j))
+						GetSetMediaItemInfo(item, "B_UISEL", &g_bFalse);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Split MIDI/Audio
@@ -165,7 +204,10 @@ void splitSelectedItems(COMMAND_T* _ct) {
 }
 #endif
 
-void goferSplitSelectedItems(COMMAND_T* _ct) {
+// no undo point created: use native ones
+// (SNM_CMD_SHORTNAME() will not work  "SWS/gofer")
+void goferSplitSelectedItems(COMMAND_T* _ct)
+{
 	if (CountSelectedMediaItems(NULL))
 	{
 		Main_OnCommand(40513, 0); // move edit cursor to mouse cursor (obey snapping)
@@ -568,8 +610,7 @@ void moveActiveTake(COMMAND_T* _ct)
 	int dir = (int)_ct->user;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 		{
 			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 			{
@@ -619,10 +660,9 @@ void activateLaneFromSelItem(COMMAND_T* _ct)
 	bool updated = false;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 		{
-			// Get the 1st selected + active take
+			// get the 1st selected item and its active take
 			int active = -1;
 			for (int j = 0; tr && active == -1 && j < GetTrackNumMediaItems(tr); j++)
 			{
@@ -634,7 +674,7 @@ void activateLaneFromSelItem(COMMAND_T* _ct)
 				}
 			}
 
-			// Sel active take for all items
+			// activate take for all items
 			if (tr && active >= 0)
 			{
 				for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
@@ -651,7 +691,6 @@ void activateLaneFromSelItem(COMMAND_T* _ct)
 		}
 	}
 
-	// Undo point + UpdateTimeline
 	if (_ct && updated)
 	{
 		UpdateTimeline();
@@ -663,13 +702,18 @@ void activateLaneFromSelItem(COMMAND_T* _ct)
 void activateLaneUnderMouse(COMMAND_T* _ct)
 {
 	Undo_BeginBlock();
-	SelItems items;
-	items.Save(NULL);
+
+	WDL_PtrList<MediaItem> selItems;
+	SNM_GetSelectedItems(NULL, &selItems);
+
 	Main_OnCommand(40528,0); // select item under mouse cursor
 	Main_OnCommand(41342,0); // activate take under mouse cursor
 	activateLaneFromSelItem(NULL);
-	items.Restore(NULL);
+
+	SNM_ClearSelectedItems(NULL);
+	SNM_SetSelectedItems(NULL, &selItems);
 	UpdateTimeline();
+
 	Undo_EndBlock(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
 }
 
@@ -1069,16 +1113,14 @@ void itemSelToolbarPoll()
 	for(int i=0; i < SNM_ITEM_SEL_DOWN; i++)
 		g_toolbarItemSel[i].Empty(false);
 
-	int countSelItems = CountSelectedMediaItems(NULL);
-	if (countSelItems)
+	if (int countSelItems = CountSelectedMediaItems(NULL))
 	{
 		// left/right item sel.
 		double pos,len,start_time,end_time;
 		bool horizontal = false;
 
 		//JFB I rely on (incomplete?) SWELL's FindWindowEx here (rather than GetTrackWnd()) 
-		HWND w = FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", "trackview");
-		if (w)
+		if (HWND w = FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", "trackview"))
 		{
 			RECT r; GetWindowRect(w, &r);
 			GetSet_ArrangeView2(NULL, false, r.left, r.right-17, &start_time, &end_time); // -17 = width of the vert. scrollbar
@@ -1198,22 +1240,23 @@ void scrollToSelItem(MediaItem* _item)
 {
 	if (_item)
 	{
-		// Horizontal scroll to selected item
+		// horizontal scroll to selected item
 		double curPos = GetCursorPosition();
 		SetEditCurPos2(NULL, *(double*)GetSetMediaItemInfo(_item, "D_POSITION", NULL), true, false);
 		SetEditCurPos2(NULL, curPos, false, false);
 
-		// Vertical scroll to selected item
+		// vertical scroll to selected item
 		MediaTrack* tr = GetMediaItem_Track(_item);
 		if (tr)
 		{
 			//JFB change restore sel programatically => not cool for controle surfcaes
-			SaveSelected();
-			ClearSelected();
+			WDL_PtrList<MediaTrack> selTrs;
+			SNM_GetSelectedTracks(NULL, &selTrs);
+			SNM_ClearSelectedTracks(NULL);
 			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
 			Main_OnCommand(40913,0); // scroll to selected track
-			ClearSelected();
-			RestoreSelected();
+			SNM_ClearSelectedTracks(NULL);
+			SNM_SetSelectedTracks(NULL, &selTrs);
 		}
 		UpdateTimeline();
 	}
@@ -1260,93 +1303,68 @@ void setPan(COMMAND_T* _ct)
 //JFB!!! TODO?: new file SnM_Media.cpp?
 ///////////////////////////////////////////////////////////////////////////////
 
-void PlaySelTrackMediaSlot(const char* _title, int _slot, bool _errMsg, bool _loop)
+void PlaySelTrackMediaSlot(const char* _title, int _slot, bool _loop)
 {
-	// Prompt for slot if needed
-	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_MEDIA)->GetSize()); // loops on err
-	if (_slot == -1) return; // user has cancelled
-
-	char fn[BUFFER_SIZE]="";
-	if (g_slots.Get(SNM_SLOT_MEDIA)->GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg))
+	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_MEDIA)->GetOrPromptOrBrowseSlot(_title, _slot))
 	{
 		for (int i=1; i <= GetNumTracks(); i++) // skip master
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-				SNM_PlayTrackPreview(tr, fn, _loop);
+				SNM_PlayTrackPreview(tr, fnStr->Get(), _loop);
 		}
+		delete fnStr;
 	}
 }
 
 void PlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
-		PlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault(), false);
+	PlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false);
 }
 
 void LoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
-		PlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault(), true);
+	PlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true);
 }
 
 // returns true if something done
-bool TogglePlaySelTrackMediaSlot(const char* _title, int _slot, bool _errMsg, bool _loop)
+bool TogglePlaySelTrackMediaSlot(const char* _title, int _slot, bool _loop)
 {
-	// Prompt for slot if needed
-	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_MEDIA)->GetSize()); // loops on err
-	if (_slot == -1) return false; // user has cancelled
-
-	char fn[BUFFER_SIZE]="";
-	if (g_slots.Get(SNM_SLOT_MEDIA)->GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg))
-		return SNM_TogglePlaySelTrackPreviews(fn, _loop);
-	return false;
+	bool done = false;
+	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_MEDIA)->GetOrPromptOrBrowseSlot(_title, _slot)) {
+		done = SNM_TogglePlaySelTrackPreviews(fnStr->Get(), _loop);
+		delete fnStr;
+	}
+	return done;
 }
 
-void TogglePlaySelTrackMediaSlot(COMMAND_T* _ct)
-{
-	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
-		if (TogglePlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault(), false))
-			FakeToggle(_ct);
+void TogglePlaySelTrackMediaSlot(COMMAND_T* _ct) {
+	if (TogglePlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false))
+		FakeToggle(_ct);
 }
 
-void ToggleLoopSelTrackMediaSlot(COMMAND_T* _ct)
-{
-	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
-		if (TogglePlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault(), true))
-			FakeToggle(_ct);
+void ToggleLoopSelTrackMediaSlot(COMMAND_T* _ct) {
+	if (TogglePlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true))
+		FakeToggle(_ct);
 }
 
 // _insertMode: 0=add to current track, 1=add new track, 3=add to selected items as takes, &4=stretch/loop to fit time sel, &8=try to match tempo 1x, &16=try to match tempo 0.5x, &32=try to match tempo 2x
-void InsertMediaSlot(const char* _title, int _slot, int _insertMode, bool _errMsg)
+void InsertMediaSlot(const char* _title, int _slot, int _insertMode)
 {
-	// Prompt for slot if needed
-	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_MEDIA)->GetSize()); // loops on err
-	if (_slot == -1) return; // user has cancelled
-
-	char fn[BUFFER_SIZE]="";
-	if (g_slots.Get(SNM_SLOT_MEDIA)->GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg))
-		InsertMedia(fn, _insertMode); // includes undo JFB!!! => _title no used..
+	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_MEDIA)->GetOrPromptOrBrowseSlot(_title, _slot)) {
+		InsertMedia((char*)fnStr->Get(), _insertMode); //JFB includes undo => _title no used..
+		delete fnStr;
+	}
 }
 
 void InsertMediaSlotCurTr(COMMAND_T* _ct) {
-	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
-		InsertMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, 0, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault());
+	InsertMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, 0);
 }
 
 void InsertMediaSlotNewTr(COMMAND_T* _ct) {
-	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
-		InsertMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, 1, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault());
+	InsertMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, 1);
 }
 
 void InsertMediaSlotTakes(COMMAND_T* _ct) {
-	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_MEDIA)->GetSize())
-		InsertMediaSlot(SNM_CMD_SHORTNAME(_ct), slot, 3, slot < 0 || !g_slots.Get(SNM_SLOT_MEDIA)->Get(slot)->IsDefault());
+	InsertMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, 3);
 }
 
 bool autoSaveMediaSlot(const char* _dirPath, char* _fn, int _fnSize)

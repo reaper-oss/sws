@@ -28,7 +28,7 @@
 
 #pragma once
 
-class SNM_FindWnd : public SWS_DockWnd
+class SNM_FindWnd : public SNM_DockWnd
 {
 public:
 	SNM_FindWnd();
@@ -46,14 +46,12 @@ protected:
 	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState) ;
 	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
-	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	HBRUSH ColorEdit(HWND _hwnd, HDC _hdc);
 
-	// WDL UI
-	WDL_VWnd_Painter m_vwnd_painter;
-	WDL_VWnd m_parentVwnd; // owns all children windows
 	WDL_VirtualComboBox m_cbType;
-	WDL_VirtualIconButton m_btnEnableZommScroll, m_btnFind, m_btnPrev, m_btnNext;
-	WDL_VirtualStaticText m_txtResult;
+	WDL_VirtualIconButton m_btnEnableZommScroll;
+	WDL_VirtualStaticText m_txtScope, m_txtResult;
+	SNM_ToolbarButton m_btnFind, m_btnPrev, m_btnNext;
 
 	int m_type;
 	bool m_zoomSrollItems;

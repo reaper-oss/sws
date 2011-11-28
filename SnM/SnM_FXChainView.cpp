@@ -71,10 +71,12 @@
 #define FXC_AUTOSAVE_TR_MSG			0xF028
 #define FXC_AUTOSAVE_ITEM_MSG		0xF029
 #define TRT_APPLY_MSG				0xF040 // track template cmds
-#define TRT_IMPORT_MSG				0xF041
-#define TRT_APPLY_ITEMS_MSG			0xF042
-#define TRT_PASTE_ITEMS_MSG			0xF043
-#define TRT_AUTOSAVE_WITEMS_MSG		0xF044
+#define TRT_APPLY_WITEMS_MSG		0xF041
+#define TRT_IMPORT_MSG				0xF042
+#define TRT_REPLACE_ITEMS_MSG		0xF043
+#define TRT_PASTE_ITEMS_MSG			0xF044
+#define TRT_AUTOSAVE_WITEMS_MSG		0xF045
+
 #define PRJ_SELECT_LOAD_MSG			0xF050 // project template cmds
 #define PRJ_SELECT_LOAD_TAB_MSG		0xF051
 #define PRJ_AUTOFILL_RECENTS_MSG	0xF052
@@ -91,8 +93,7 @@
 #define THM_LOAD_MSG				0xF070  // theme file cmds
 #endif
 
-
-// labels shared by actions (well, undo points) and popup menu items
+// labels for undo points and popup menu items
 #define FXC_APPLY_TR_STR		"Paste (replace) FX chain to selected tracks"
 #define FXCIN_APPLY_TR_STR		"Paste (replace) input FX chain to selected tracks"
 #define FXC_APPLY_TAKE_STR		"Paste (replace) FX chain to selected items"
@@ -102,13 +103,15 @@
 #define FXC_PASTE_TAKE_STR		"Paste FX chain to selected items"
 #define FXC_PASTE_ALLTAKES_STR	"Paste FX chain to selected items, all takes"
 #define TRT_APPLY_STR			"Apply track template to selected tracks (w/o items)"
-#define TRT_IMPORT_STR			"Import tracks from track template (w/ items)"
-#define TRT_APPLY_ITEMS_STR		"Replace selected tracks' items w/ track template ones"
-#define TRT_PASTE_ITEMS_STR		"Paste track template's items to selected tracks"
+#define TRT_APPLY_WITEMS_STR	"Apply track template to selected tracks (w/ items)"
+#define TRT_IMPORT_STR			"Import tracks from track template"
+#define TRT_APPLY_ITEMS_STR		"Replace items of selected tracks"
+#define TRT_PASTE_ITEMS_STR		"Paste items to selected tracks"
 #define PRJ_SELECT_LOAD_STR		"Select/load project template"
 #define PRJ_SELECT_LOAD_TAB_STR	"Select/load project templates (new tab)"
 #define MED_PLAY_STR			"Play media file in selected tracks (toggle)"
 #define MED_LOOP_STR			"Play/loop media file in selected tracks (toggle)"
+#define MED_PLAYLOOP_STR		"Play/loop media file"
 #define MED_ADD_STR				"Insert media"
 #ifdef _WIN32
 #define THM_LOAD_STR			"Load theme"
@@ -117,6 +120,7 @@
 #define DRAGDROP_EMPTY_SLOT		">Empty<"
 #define FILTER_DEFAULT_STR		"Filter"
 #define AUTO_SAVE_ERR_STR		"Probable cause: no selection, cannot write file, invalid filename, empty chunk, etc..."
+#define AUTO_FILL_ERR_STR		"Probable cause: all files are already present, empty/invalid directory, etc..."
 
 enum {
   COMBOID_TYPE=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
@@ -232,6 +236,23 @@ bool FileSlotList::GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg
 			ok = FileExistsErrMsg(_fn, _errMsg);
 	}
 	return ok;
+}
+
+// returns NULL if failed, otherwise it's up to the caller to free the returned string
+WDL_FastString* FileSlotList::GetOrPromptOrBrowseSlot(const char* _title, int _slot)
+{
+	WDL_FastString* fnStr = NULL;
+	if (_slot < 0 || _slot < GetSize())
+	{
+		// prompt for slot if needed
+		if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, GetSize()); // loops on err
+		if (_slot == -1) return NULL; // user has cancelled
+
+		char fn[BUFFER_SIZE]="";
+		if (GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _slot < 0 || !Get(_slot)->IsDefault()))
+			fnStr = new WDL_FastString(fn);
+	}
+	return fnStr;
 }
 
 void FileSlotList::EditSlot(int _slot)
@@ -384,66 +405,71 @@ void SNM_ResourceView::OnItemDblClk(SWS_ListItem* item, int iCol)
 			case SNM_SLOT_FXC:
 				switch(g_dblClickTo) {
 					case 0:
-						applyTracksFXChainSlot(!g_dblClickType[g_type]?FXC_APPLY_TR_STR:FXC_PASTE_TR_STR, slot, !g_dblClickType[g_type], false, !wasDefaultSlot);
+						applyTracksFXChainSlot(!g_dblClickType[g_type]?FXC_APPLY_TR_STR:FXC_PASTE_TR_STR, slot, !g_dblClickType[g_type], false);
 						break;
 					case 1:
-						applyTracksFXChainSlot(!g_dblClickType[g_type]?FXCIN_APPLY_TR_STR:FXCIN_PASTE_TR_STR, slot, !g_dblClickType[g_type], g_bv4, !wasDefaultSlot);
+						applyTracksFXChainSlot(!g_dblClickType[g_type]?FXCIN_APPLY_TR_STR:FXCIN_PASTE_TR_STR, slot, !g_dblClickType[g_type], g_bv4);
 						break;
 					case 2:
-						applyTakesFXChainSlot(!g_dblClickType[g_type]?FXC_APPLY_TAKE_STR:FXC_PASTE_TAKE_STR, slot, true, !g_dblClickType[g_type], !wasDefaultSlot);
+						applyTakesFXChainSlot(!g_dblClickType[g_type]?FXC_APPLY_TAKE_STR:FXC_PASTE_TAKE_STR, slot, true, !g_dblClickType[g_type]);
 						break;
 					case 3:
-						applyTakesFXChainSlot(!g_dblClickType[g_type]?FXC_APPLY_ALLTAKES_STR:FXC_PASTE_ALLTAKES_STR, slot, false, !g_dblClickType[g_type], !wasDefaultSlot);
+						applyTakesFXChainSlot(!g_dblClickType[g_type]?FXC_APPLY_ALLTAKES_STR:FXC_PASTE_ALLTAKES_STR, slot, false, !g_dblClickType[g_type]);
 						break;
 				}
 				break;
 			case SNM_SLOT_TR:
 				switch(g_dblClickType[g_type]) {
 					case 0:
-						applyOrImportTrackSlot(TRT_APPLY_STR, false, slot, false, false, !wasDefaultSlot);
+						applyOrImportTrackSlot(TRT_APPLY_STR, slot, false, false, false);
 						break;
 					case 1:
-						applyOrImportTrackSlot(TRT_IMPORT_STR, true, slot, false, false, !wasDefaultSlot);
+						applyOrImportTrackSlot(TRT_APPLY_WITEMS_STR, slot, false, true, false);
 						break;
 					case 2:
-						replaceOrPasteItemsFromTrackSlot(TRT_PASTE_ITEMS_STR, true, slot, !wasDefaultSlot);
+						applyOrImportTrackSlot(TRT_IMPORT_STR, slot, true, false, false);
 						break;
 					case 3:
-						replaceOrPasteItemsFromTrackSlot(TRT_APPLY_ITEMS_STR, false, slot, !wasDefaultSlot);
+						replaceOrPasteItemsFromTrackSlot(TRT_PASTE_ITEMS_STR, slot, true);
+						break;
+					case 4:
+						replaceOrPasteItemsFromTrackSlot(TRT_APPLY_ITEMS_STR, slot, false);
 						break;
 				}
 				break;
 			case SNM_SLOT_PRJ:
 				switch(g_dblClickType[g_type]) {
 					case 0:
-						loadOrSelectProjectSlot(PRJ_SELECT_LOAD_STR, slot, false, !wasDefaultSlot);
+						loadOrSelectProjectSlot(PRJ_SELECT_LOAD_STR, slot, false);
 						break;
 					case 1:
-						loadOrSelectProjectSlot(PRJ_SELECT_LOAD_TAB_STR, slot, true, !wasDefaultSlot);
+						loadOrSelectProjectSlot(PRJ_SELECT_LOAD_TAB_STR, slot, true);
 						break;
 				}
 				break;
-			case SNM_SLOT_MEDIA: {
+			case SNM_SLOT_MEDIA:
+			{
 				int insertMode = -1;
-				switch(g_dblClickType[g_type]) {
-					case 0: TogglePlaySelTrackMediaSlot(MED_PLAY_STR, slot, !wasDefaultSlot, false); break;
-					case 1: TogglePlaySelTrackMediaSlot(MED_LOOP_STR, slot, !wasDefaultSlot, true); break;
+				switch(g_dblClickType[g_type]) 
+				{
+					case 0: TogglePlaySelTrackMediaSlot(MED_PLAY_STR, slot, false); break;
+					case 1: TogglePlaySelTrackMediaSlot(MED_LOOP_STR, slot, true); break;
 					case 2: insertMode = 0; break;
 					case 3: insertMode = 1; break;
 					case 4: insertMode = 3; break;
 				}
 				if (insertMode >= 0)
-					InsertMediaSlot(MED_ADD_STR, slot, insertMode, !wasDefaultSlot);
+					InsertMediaSlot(MED_ADD_STR, slot, insertMode);
 				break;
 			}
 #ifdef _WIN32
 	 		case SNM_SLOT_THM:
-				LoadThemeSlot(THM_LOAD_STR, slot, !wasDefaultSlot);
+				LoadThemeSlot(THM_LOAD_STR, slot);
 				break;
 #endif
 		}
 
-		// in case the slot changed
+		// update if the slot changed
 		if (wasDefaultSlot && !pItem->IsDefault())
 			Update();
 	}
@@ -558,7 +584,7 @@ void SNM_ResourceView::OnBeginDrag(SWS_ListItem* _item)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_ResourceWnd::SNM_ResourceWnd()
-:SWS_DockWnd(IDD_SNM_FXCHAINLIST, "Resources", "SnMResources", 30006, SWSGetCommandID(OpenResourceView))
+	: SNM_DockWnd(IDD_SNM_FXCHAINLIST, "Resources", "SnMResources", 30006, SWSGetCommandID(OpenResourceView))
 {
 	m_previousType = g_type;
 	m_autoSaveTrTmpltWithItemsPref = true;
@@ -569,12 +595,9 @@ SNM_ResourceWnd::SNM_ResourceWnd()
 
 INT_PTR SNM_ResourceWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (g_bSNMbeta&2)
-	{
-		static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE];
-		if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, 0))
-			return 1;
-	}
+	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE];
+	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, 0))
+		return 1;
 	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }
 
@@ -597,19 +620,20 @@ void SNM_ResourceWnd::Update()
 	m_parentVwnd.RequestRedraw(NULL);
 }
 
+//JFB!!! hard coded labels..
 void SNM_ResourceWnd::FillDblClickTypeCombo()
 {
 	m_cbDblClickType.Empty();
 	switch(g_type)
 	{
-		/*JFB!!!*/
 		case SNM_SLOT_FXC:
 			m_cbDblClickType.AddItem("Paste (replace)");
 			m_cbDblClickType.AddItem("Paste");
 			break;
 		case SNM_SLOT_TR:
 			m_cbDblClickType.AddItem("Apply to sel tracks (w/o items)");
-			m_cbDblClickType.AddItem("Import tracks (w/ items)");
+			m_cbDblClickType.AddItem("Apply to sel tracks (w/ items)");
+			m_cbDblClickType.AddItem("Import tracks");
 			m_cbDblClickType.AddItem("Paste items to sel tracks");
 			m_cbDblClickType.AddItem("Replace items of sel tracks");
 			break;
@@ -638,7 +662,7 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_resize.init_item(IDC_FILTER, 1.0, 0.0, 1.0, 0.0);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
-/*JFB commented: useless (?) since r488 theming updates
+/*JFB commented: seems useless since r488 theming updates
 #ifndef _WIN32
 	// Realign the filter box on OSX
 	HWND hFilter = GetDlgItem(m_hwnd, IDC_FILTER);
@@ -650,18 +674,18 @@ void SNM_ResourceWnd::OnInitDlg()
 #endif
 */
 	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
-	if (g_bSNMbeta&2 || g_bSNMbeta&8) SNM_ThemeListView(m_pLists.Get(0));
+	SNM_ThemeListView(m_pLists.Get(0));
+
 
 	// load prefs 
-	//JFB!!! voir qd 1ere init (pas de .ini) => ok car override par OpenResourceView() via son appel à SetType()
-	g_type = GetPrivateProfileInt("RESOURCE_VIEW", "Type", SNM_SLOT_FXC, g_SNMIniFn.Get());
-	g_filterPref = GetPrivateProfileInt("RESOURCE_VIEW", "FilterByPath", 1, g_SNMIniFn.Get());
 
+	// BOUNDED: safety, some custom slot types may have been removed..
+	g_type = BOUNDED((int)GetPrivateProfileInt("RESOURCE_VIEW", "Type", SNM_SLOT_FXC, g_SNMIniFn.Get()), 0, g_slots.GetSize()-1);
+
+	g_filterPref = GetPrivateProfileInt("RESOURCE_VIEW", "FilterByPath", 1, g_SNMIniFn.Get());
 	g_dblClickTo = GetPrivateProfileInt("RESOURCE_VIEW", "DblClick_To", 0, g_SNMIniFn.Get());
 	m_autoSaveFXChainPref = GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveFXChain", FXC_AUTOSAVE_PREF_TRACK, g_SNMIniFn.Get());
-
 	m_autoSaveTrTmpltWithItemsPref = (GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", 1, g_SNMIniFn.Get()) == 1);
-
 	g_prjLoaderStartPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderStartSlot", 1, g_SNMIniFn.Get());
 	g_prjLoaderEndPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderEndSlot", g_slots.Get(SNM_SLOT_PRJ)->GetSize(), g_SNMIniFn.Get());
 
@@ -717,8 +741,7 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_txtDblClickTo.SetText("To selected:");
 	m_parentVwnd.AddChild(&m_txtDblClickTo);
 
-	// This restores the text filter when docking/undocking
-	// >>> + indirect call to Update() <<<
+	// restores the text filter when docking/undocking + indirect call to Update() !
 	SetDlgItemText(GetHWND(), IDC_FILTER, g_filter.Get());
 
 /* Perfs: see above comment
@@ -884,7 +907,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case FXC_APPLY_TR_MSG:
 		case FXC_PASTE_TR_MSG:
 			if (item && slot >= 0) {
-				applyTracksFXChainSlot(wParam == FXC_APPLY_TR_MSG ? FXC_APPLY_TR_STR : FXC_PASTE_TR_STR, slot, wParam == FXC_APPLY_TR_MSG, false, !wasDefaultSlot);
+				applyTracksFXChainSlot(LOWORD(wParam)==FXC_APPLY_TR_MSG?FXC_APPLY_TR_STR:FXC_PASTE_TR_STR, slot, LOWORD(wParam)==FXC_APPLY_TR_MSG, false);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -892,7 +915,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case FXC_APPLY_TAKE_MSG:
 		case FXC_PASTE_TAKE_MSG:
 			if (item && slot >= 0) {
-				applyTakesFXChainSlot(wParam == FXC_APPLY_TAKE_MSG ? FXC_APPLY_TAKE_STR : FXC_PASTE_TAKE_STR, slot, true, wParam == FXC_APPLY_TAKE_MSG, !wasDefaultSlot);
+				applyTakesFXChainSlot(LOWORD(wParam)==FXC_APPLY_TAKE_MSG?FXC_APPLY_TAKE_STR:FXC_PASTE_TAKE_STR, slot, true, LOWORD(wParam)==FXC_APPLY_TAKE_MSG);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -900,7 +923,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case FXC_APPLY_ALLTAKES_MSG:
 		case FXC_PASTE_ALLTAKES_MSG:
 			if (item && slot >= 0) {
-				applyTakesFXChainSlot(wParam == FXC_APPLY_ALLTAKES_MSG ? FXC_APPLY_ALLTAKES_STR : FXC_PASTE_ALLTAKES_STR, slot, false, wParam == FXC_APPLY_ALLTAKES_MSG, !wasDefaultSlot);
+				applyTakesFXChainSlot(LOWORD(wParam)==FXC_APPLY_ALLTAKES_MSG?FXC_APPLY_ALLTAKES_STR:FXC_PASTE_ALLTAKES_STR, slot, false, LOWORD(wParam)==FXC_APPLY_ALLTAKES_MSG);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -917,17 +940,24 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 		// ***** Track template *****
 		case TRT_APPLY_MSG:
-		case TRT_IMPORT_MSG:
+		case TRT_APPLY_WITEMS_MSG:
 			if (item && slot >= 0) {
-				applyOrImportTrackSlot(wParam == TRT_APPLY_MSG ? TRT_APPLY_STR : TRT_IMPORT_STR, wParam == TRT_IMPORT_MSG, slot, false, false, !wasDefaultSlot);
+				applyOrImportTrackSlot(LOWORD(wParam)==TRT_APPLY_MSG?TRT_APPLY_STR:TRT_APPLY_WITEMS_STR, slot, false, LOWORD(wParam)==TRT_APPLY_WITEMS_MSG, false);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
 			break;
-		case TRT_APPLY_ITEMS_MSG:
+		case TRT_IMPORT_MSG:
+			if (item && slot >= 0) {
+				applyOrImportTrackSlot(TRT_IMPORT_STR, slot, true, false, false);
+				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
+					Update();
+			}
+			break;
+		case TRT_REPLACE_ITEMS_MSG:
 		case TRT_PASTE_ITEMS_MSG:
 			if (item && slot >= 0) {
-				replaceOrPasteItemsFromTrackSlot(wParam == TRT_APPLY_ITEMS_MSG ? TRT_APPLY_ITEMS_STR : TRT_PASTE_ITEMS_STR, wParam == TRT_PASTE_ITEMS_MSG, slot, !wasDefaultSlot);
+				replaceOrPasteItemsFromTrackSlot(LOWORD(wParam)==TRT_REPLACE_ITEMS_MSG?TRT_APPLY_ITEMS_STR:TRT_PASTE_ITEMS_STR, slot, LOWORD(wParam)==TRT_PASTE_ITEMS_MSG);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -939,7 +969,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		// ***** Project template *****
 		case PRJ_SELECT_LOAD_MSG:
 			if (item && slot >= 0) {
-				loadOrSelectProjectSlot(PRJ_SELECT_LOAD_STR, slot, false, !wasDefaultSlot);
+				loadOrSelectProjectSlot(PRJ_SELECT_LOAD_STR, slot, false);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -950,7 +980,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			while(item) {
 				slot = GetCurList()->Find(item);
 				wasDefaultSlot = item->IsDefault();
-				loadOrSelectProjectSlot(PRJ_SELECT_LOAD_TAB_STR, slot, true, !wasDefaultSlot);
+				loadOrSelectProjectSlot(PRJ_SELECT_LOAD_TAB_STR, slot, true);
 				updt |= (wasDefaultSlot && !item->IsDefault()); // slot has been filled ?
 				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
 			}
@@ -1014,7 +1044,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			while(item) {
 				slot = GetCurList()->Find(item);
 				wasDefaultSlot = item->IsDefault();
-				TogglePlaySelTrackMediaSlot("Play/loop media file" /*JFB!!!*/, slot, !wasDefaultSlot, wParam==MED_LOOP_MSG);
+				TogglePlaySelTrackMediaSlot(MED_PLAYLOOP_STR, slot, LOWORD(wParam)==MED_LOOP_MSG);
 				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
 			}
 			break;
@@ -1024,7 +1054,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			while(item) {
 				slot = GetCurList()->Find(item);
 				wasDefaultSlot = item->IsDefault();
-				InsertMediaSlot(MED_ADD_STR, slot, wParam==MED_ADD_CURTR_MSG?0:wParam==MED_ADD_NEWTR_MSG?1:3, !wasDefaultSlot);
+				InsertMediaSlot(MED_ADD_STR, slot, LOWORD(wParam)==MED_ADD_CURTR_MSG ? 0 : LOWORD(wParam)==MED_ADD_NEWTR_MSG ? 1 : 3);
 				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
 			}
 			break;
@@ -1032,7 +1062,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		// ***** theme *****
 #ifdef _WIN32
 		case THM_LOAD_MSG:
-			LoadThemeSlot(THM_LOAD_STR, slot, !wasDefaultSlot);
+			LoadThemeSlot(THM_LOAD_STR, slot);
 			break;
 #endif
 
@@ -1044,15 +1074,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				// => dropdown box & list box unsynchronized)
 				m_pLists.Get(0)->EditListItemEnd(false);
 
-				//JFB SetType() instead !?
-				int previousType = g_type;
-				g_type = m_cbType.GetCurSel();
-				if (g_type != previousType)
-				{
-					FillDblClickTypeCombo();
-					Update();
-//					SetFocus(GetDlgItem(m_hwnd, IDC_FILTER));
-				}
+				SetType(m_cbType.GetCurSel());
 			}
 			break;
 		case COMBOID_DBLCLICK_TYPE:
@@ -1069,6 +1091,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
+//JFB!!! some hard coded labels..
 HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 {
 	HMENU hMenu = CreatePopupMenu();
@@ -1093,9 +1116,10 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 				break;
 			case SNM_SLOT_TR:
 				AddToMenu(hMenu, TRT_APPLY_STR, TRT_APPLY_MSG, -1, false, enabled);
+				AddToMenu(hMenu, TRT_APPLY_WITEMS_STR, TRT_APPLY_WITEMS_MSG, -1, false, enabled);
 				AddToMenu(hMenu, TRT_IMPORT_STR, TRT_IMPORT_MSG, -1, false, enabled);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, TRT_APPLY_ITEMS_STR, TRT_APPLY_ITEMS_MSG, -1, false, enabled);
+				AddToMenu(hMenu, TRT_APPLY_ITEMS_STR, TRT_REPLACE_ITEMS_MSG, -1, false, enabled);
 				AddToMenu(hMenu, TRT_PASTE_ITEMS_STR, TRT_PASTE_ITEMS_MSG, -1, false, enabled);
 				break;
 			case SNM_SLOT_PRJ:
@@ -1104,7 +1128,6 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 				AddToMenu(hMenu, PRJ_SELECT_LOAD_TAB_STR, PRJ_SELECT_LOAD_TAB_MSG, -1, false, enabled);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				int x=0, nbsel=0; while(m_pLists.Get(0)->EnumSelected(&x))nbsel++;
-				 /*JFB!!!*/
 				AddToMenu(hMenu, "Project loader/selecter configuration...", PRJ_LOADER_CONF_MSG);
 				AddToMenu(hMenu, "Set project loader/selecter from slot selection", PRJ_LOADER_SET_MSG, -1, false, nbsel>1 ? MF_ENABLED : MF_GRAYED);
 				AddToMenu(hMenu, "Clear project loader/selecter configuration", PRJ_LOADER_CLEAR_MSG, -1, false, isProjectLoaderConfValid() ? MF_ENABLED : MF_GRAYED);
@@ -1114,9 +1137,8 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 				AddToMenu(hMenu, MED_PLAY_STR, MED_PLAY_MSG, -1, false, enabled);
 				AddToMenu(hMenu, MED_LOOP_STR, MED_LOOP_MSG, -1, false, enabled);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				 /*JFB!!!*/
 				AddToMenu(hMenu, "Add to current track", MED_ADD_CURTR_MSG, -1, false, enabled);
-				AddToMenu(hMenu, "Add to new tracks"/*JFB!!! s!*/, MED_ADD_NEWTR_MSG, -1, false, enabled);
+				AddToMenu(hMenu, "Add to new tracks", MED_ADD_NEWTR_MSG, -1, false, enabled);
 				AddToMenu(hMenu, "Add to selected items as takes", MED_ADD_TAKES_MSG, -1, false, enabled);
 				break;
 #ifdef _WIN32
@@ -1395,19 +1417,19 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 
 	// "auto-save" button
 	m_btnAutoSave.SetGrayed(!GetCurList()->HasAutoSave());
-	WDL_VirtualIconButton_SkinConfig* img = it ? &(it->toolbar_save) : NULL;
-	if (img)
-		m_btnAutoSave.SetIcon(img);
+	WDL_VirtualIconButton_SkinConfig* skin = it ? &(it->toolbar_save) : NULL;
+	if (skin)
+		m_btnAutoSave.SetIcon(skin);
 	else {
 		m_btnAutoSave.SetTextLabel("Auto-save", 0, font);
 		m_btnAutoSave.SetForceBorder(true);
 	}
-	if (!SetVWndAutoPosition(&m_btnAutoSave, NULL, &r, &x0, _r->top, h))
+	if (!SNM_AutoVWndPosition(&m_btnAutoSave, NULL, &r, &x0, _r->top, h))
 		return;
 
 	// type dropdown (common)
 	m_cbType.SetFont(font);
-	if (!SetVWndAutoPosition(&m_cbType, NULL, &r, &x0, _r->top, h))
+	if (!SNM_AutoVWndPosition(&m_cbType, NULL, &r, &x0, _r->top, h))
 		return;
 
 	// "dbl-click to" (common)
@@ -1416,10 +1438,10 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	if (GetCurList()->HasDblClick())
 	{
 		m_txtDblClickType.SetFont(font);
-		if (!SetVWndAutoPosition(&m_txtDblClickType, NULL, &r, &x0, _r->top, h, 5))
+		if (!SNM_AutoVWndPosition(&m_txtDblClickType, NULL, &r, &x0, _r->top, h, 5))
 			return;
 		m_cbDblClickType.SetFont(font);
-		if (!SetVWndAutoPosition(&m_cbDblClickType, &m_txtDblClickType, &r, &x0, _r->top, h))
+		if (!SNM_AutoVWndPosition(&m_cbDblClickType, &m_txtDblClickType, &r, &x0, _r->top, h))
 			return;
 	}
 
@@ -1429,73 +1451,36 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	if (g_type == SNM_SLOT_FXC)
 	{
 		m_txtDblClickTo.SetFont(font);
-		if (!SetVWndAutoPosition(&m_txtDblClickTo, NULL, &r, &x0, _r->top, h, 5))
+		if (!SNM_AutoVWndPosition(&m_txtDblClickTo, NULL, &r, &x0, _r->top, h, 5))
 			return;
 		m_cbDblClickTo.SetFont(font);
-		if (!SetVWndAutoPosition(&m_cbDblClickTo, &m_txtDblClickTo, &r, &x0, _r->top, h))
+		if (!SNM_AutoVWndPosition(&m_cbDblClickTo, &m_txtDblClickTo, &r, &x0, _r->top, h))
 			return;
 	}
 
 /*JFB MFC filter edit box instead
-	AddSnMLogo(_bm, _r, x0, h);
+	SNM_AddLogo(_bm, _r, x0, h);
 */
 }
 
-INT_PTR SNM_ResourceWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+HBRUSH SNM_ResourceWnd::ColorEdit(HWND _hwnd, HDC _hdc)
 {
-	switch (uMsg)
+	int bg, txt; bool match=false;
+	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
 	{
-		case WM_PAINT:
-		{
-//#ifdef _SNM_LIST_THEMABLE1
-			if (g_bSNMbeta&8) SNM_ThemeListView(m_pLists.Get(0));
-//#endif
-			int xo, yo; RECT r;
-			GetClientRect(m_hwnd, &r);	
-			m_parentVwnd.SetPosition(&r);
-			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
-			DrawControls(m_vwnd_painter.GetBuffer(&xo, &yo), &r);
-			m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
-			m_vwnd_painter.PaintEnd();
-		}
-		break;
-		case WM_LBUTTONDOWN:
-			SetFocus(m_hwnd);
-			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0)
-				SetCapture(m_hwnd);
-			break;
-		case WM_LBUTTONUP:
-			if (GetCapture() == m_hwnd) {
-				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-				ReleaseCapture();
-			}
-			break;
-		case WM_MOUSEMOVE:
-			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-			break;
-//#ifdef _SNM_EDIT_THEMABLE
-		case WM_CTLCOLOREDIT:
-		{
-			int bg, txt; bool match=false;
-			if ((g_bSNMbeta&2 || g_bSNMbeta&8) && 
-				(HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT))
-			{
-				match = true; SNM_GetThemeListColors(&bg, &txt);
-			}
-			else if (g_bSNMbeta&1 && 
-				(HWND)lParam == GetDlgItem(m_hwnd, IDC_FILTER))
-			{
-				match = true; SNM_GetThemeEditColors(&bg, &txt);
-			}
-			if (match)
-			{
-				SetBkColor((HDC)wParam, bg);
-				SetTextColor((HDC)wParam, txt);
-				return (INT_PTR)SNM_GetThemeBrush(bg);
-			}
-			break;
-		}
-//#endif
+		match = true;
+		SNM_GetThemeListColors(&bg, &txt);
+	}
+	else if (_hwnd == GetDlgItem(m_hwnd, IDC_FILTER))
+	{
+		match = true;
+		SNM_GetThemeEditColors(&bg, &txt);
+	}
+	if (match)
+	{
+		SetBkColor(_hdc, bg);
+		SetTextColor(_hdc, txt);
+		return SNM_GetThemeBrush(bg);
 	}
 	return 0;
 }
@@ -1670,7 +1655,7 @@ void SNM_ResourceWnd::AutoSave()
 			}
 			break;
 		case SNM_SLOT_TR:
-			autoSaveTrackSlots(!m_autoSaveTrTmpltWithItemsPref, true /*JFB!!!*/, GetCurAutoSaveDir()->Get(), fn, BUFFER_SIZE);
+			autoSaveTrackSlots(!m_autoSaveTrTmpltWithItemsPref, true /*JFB? manage envelopes?*/, GetCurAutoSaveDir()->Get(), fn, BUFFER_SIZE);
 			break;
 		case SNM_SLOT_PRJ:
 			autoSaveProjectSlot(true, GetCurAutoSaveDir()->Get(), fn, BUFFER_SIZE);
@@ -1688,7 +1673,7 @@ void SNM_ResourceWnd::AutoSave()
 	else
 	{
 		char msg[BUFFER_SIZE];
-		if (*fn) _snprintf(msg, BUFFER_SIZE, "Auto-save failed: %s\n%s", fn, AUTO_SAVE_ERR_STR);
+		if (fn && *fn) _snprintf(msg, BUFFER_SIZE, "Auto-save failed: %s\n%s", fn, AUTO_SAVE_ERR_STR);
 		else _snprintf(msg, BUFFER_SIZE, "Auto-save failed!\n%s", AUTO_SAVE_ERR_STR);
 		MessageBox(g_hwndParent, msg, "S&M - Error", MB_OK);
 	}
@@ -1696,22 +1681,27 @@ void SNM_ResourceWnd::AutoSave()
 
 void SNM_ResourceWnd::AutoFill(const char* _startPath)
 {
+	int startSlot = GetCurList()->GetSize();
 	if (_startPath && *_startPath)
 	{
-		int startSlot = GetCurList()->GetSize();
 		WDL_PtrList_DeleteOnDestroy<WDL_String> files; 
 		ScanFiles(&files, _startPath, GetCurList()->GetFileExt(), true);
 		if (int sz = files.GetSize())
 			for (int i=0; i < sz; i++)				
 				if (GetCurList()->FindByResFulltPath(files.Get(i)->Get()) < 0) // skip if already present
 					GetCurList()->AddSlot(files.Get(i)->Get());
-
-		if (startSlot != GetCurList()->GetSize()) {
-			Update();
-			SelectBySlot(startSlot, GetCurList()->GetSize());
-		}
-		else
-			MessageBox(GetMainHwnd(), "No slot added!\n(empty/invalid directory or all files are already present)", "S&M - Warning", MB_OK);
+	}
+	if (startSlot != GetCurList()->GetSize())
+	{
+		Update();
+		SelectBySlot(startSlot, GetCurList()->GetSize());
+	}
+	else
+	{
+		char msg[BUFFER_SIZE*2];
+		if (_startPath && *_startPath) _snprintf(msg, BUFFER_SIZE*2, "No slot added from: %s\n%s", _startPath, AUTO_FILL_ERR_STR);
+		else _snprintf(msg, BUFFER_SIZE, "No slot added!\n%s", AUTO_FILL_ERR_STR);
+		MessageBox(GetMainHwnd(), msg, "S&M - Warning", MB_OK);
 	}
 }
 
@@ -1829,10 +1819,7 @@ void ResourceViewExit()
 			SaveIniSection(list->GetResourceDir(false), &iniSection, g_SNMIniFn.Get());
 		}
 	}
-
-	// cleanup
-	delete g_pResourcesWnd;
-	g_pResourcesWnd = NULL;
+	DELETE_NULL(g_pResourcesWnd);
 }
 
 void OpenResourceView(COMMAND_T* _ct) 

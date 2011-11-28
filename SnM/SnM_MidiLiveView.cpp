@@ -282,7 +282,7 @@ int SNM_LiveConfigsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_LiveConfigsWnd::SNM_LiveConfigsWnd()
-:SWS_DockWnd(IDD_SNM_MIDI_LIVE, "Live Configs", "SnMLiveConfigs", 30009, SWSGetCommandID(OpenLiveConfigView))
+	: SNM_DockWnd(IDD_SNM_MIDI_LIVE, "Live Configs", "SnMLiveConfigs", 30009, SWSGetCommandID(OpenLiveConfigView))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -290,12 +290,9 @@ SNM_LiveConfigsWnd::SNM_LiveConfigsWnd()
 
 INT_PTR SNM_LiveConfigsWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (g_bSNMbeta&2)
-	{
-		static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE];
-		if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, 0))
-			return 1;
-	}
+	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE];
+	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, 0))
+		return 1;
 	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }
 
@@ -358,7 +355,7 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_pLists.Add(new SNM_LiveConfigsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
-	if (g_bSNMbeta&2 || g_bSNMbeta&8) SNM_ThemeListView(m_pLists.Get(0));
+	SNM_ThemeListView(m_pLists.Get(0));
 
 	// Load prefs 
 	g_approxDelayMsCC = GetPrivateProfileInt("LIVE_CONFIGS", "CC_DELAY", 250, g_SNMIniFn.Get());
@@ -860,20 +857,20 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	int x0=_r->left+10, h=35;
 
 	m_txtConfig.SetFont(font);
-	if (!SetVWndAutoPosition(&m_txtConfig, NULL, _r, &x0, _r->top, h, 5))
+	if (!SNM_AutoVWndPosition(&m_txtConfig, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
 	m_cbConfig.SetFont(font);
-	if (!SetVWndAutoPosition(&m_cbConfig, &m_txtConfig, _r, &x0, _r->top, h))
+	if (!SNM_AutoVWndPosition(&m_cbConfig, &m_txtConfig, _r, &x0, _r->top, h))
 		return;
 
 	m_btnEnable.SetCheckState(g_liveConfigs.Get()->m_enable[g_configId]);
 	m_btnEnable.SetTextLabel("Enable", -1, font);
-	if (!SetVWndAutoPosition(&m_btnEnable, NULL, _r, &x0, _r->top, h, 5))
+	if (!SNM_AutoVWndPosition(&m_btnEnable, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
 	m_txtInputTr.SetFont(font);
-	if (!SetVWndAutoPosition(&m_txtInputTr, NULL, _r, &x0, _r->top, h, 5))
+	if (!SNM_AutoVWndPosition(&m_txtInputTr, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
 	m_cbInputTr.SetFont(font);
@@ -885,84 +882,37 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 		}
 	}
 	m_cbInputTr.SetCurSel(sel);
-	if (!SetVWndAutoPosition(&m_cbInputTr, &m_txtInputTr, _r, &x0, _r->top, h))
+	if (!SNM_AutoVWndPosition(&m_cbInputTr, &m_txtInputTr, _r, &x0, _r->top, h))
 		return;
 
 	m_btnMuteOthers.SetCheckState(g_liveConfigs.Get()->m_muteOthers[g_configId]);
 	m_btnMuteOthers.SetTextLabel("Mute all but active track", -1, font);
-	if (!SetVWndAutoPosition(&m_btnMuteOthers, NULL, _r, &x0, _r->top, h, 5))
+	if (!SNM_AutoVWndPosition(&m_btnMuteOthers, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
 	m_btnAutoSelect.SetCheckState(g_liveConfigs.Get()->m_autoSelect[g_configId]);
 	m_btnAutoSelect.SetTextLabel("Auto track selection", -1, font);
-	if (!SetVWndAutoPosition(&m_btnAutoSelect, NULL, _r, &x0, _r->top, h, 5))
+	if (!SNM_AutoVWndPosition(&m_btnAutoSelect, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
-	AddSnMLogo(_bm, _r, x0, h);
+	SNM_AddLogo(_bm, _r, x0, h);
 }
 
-INT_PTR SNM_LiveConfigsWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+HBRUSH SNM_LiveConfigsWnd::ColorEdit(HWND _hwnd, HDC _hdc)
 {
-	switch (uMsg)
+	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
 	{
-		case WM_PAINT:
-		{
-//#ifdef _SNM_LIST_THEMABLE1
-			if (g_bSNMbeta&8) SNM_ThemeListView(m_pLists.Get(0));
-//#endif
-			int xo, yo; RECT r;
-			GetClientRect(m_hwnd,&r);	
-			m_parentVwnd.SetPosition(&r);
-			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
-			DrawControls(m_vwnd_painter.GetBuffer(&xo, &yo), &r);
-			m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
-			m_vwnd_painter.PaintEnd();
-		}
-		break;
-		case WM_LBUTTONDOWN:
-			SetFocus(m_hwnd);
-			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0)
-				SetCapture(m_hwnd);
-			break;
-		case WM_LBUTTONUP:
-			if (GetCapture() == m_hwnd)	{
-				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-				ReleaseCapture();
-			}
-			break;
-		case WM_MOUSEMOVE:
-			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-			break;
-//#ifdef _SNM_EDIT_THEMABLE
-		case WM_CTLCOLOREDIT:
-			if ((g_bSNMbeta&2 || g_bSNMbeta&8) &&
-				(HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT))
-			{
-				int bg, txt; SNM_GetThemeListColors(&bg, &txt); // not SNM_GetThemeEditColors (list's IDC_EDIT)
-				SetBkColor((HDC)wParam, bg);
-				SetTextColor((HDC)wParam, txt);
-				return (INT_PTR)SNM_GetThemeBrush(bg);
-			}
-			break;
-// #endif
+		int bg, txt;
+		SNM_GetThemeListColors(&bg, &txt); // not SNM_GetThemeEditColors (list's IDC_EDIT)
+		SetBkColor(_hdc, bg);
+		SetTextColor(_hdc, txt);
+		return SNM_GetThemeBrush(bg);
 	}
 	return 0;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
-
-void InitModel()
-{
-	g_liveConfigs.Get()->Clear(); // then lazy init
-	g_liveCCConfigs.Get()->Empty(true);
-	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++) 
-	{
-		g_liveCCConfigs.Get()->Add(new WDL_PtrList_DeleteOnDestroy<MidiLiveItem>);
-		for (int j = 0; j < NB_CC_VALUES; j++)
-			g_liveCCConfigs.Get()->Get(i)->Add(new MidiLiveItem(j, "", NULL, "", "", "", "", ""));
-	}
-}
 
 void SNM_LiveCfg_TLChangeSchedJob::Perform()
 {
@@ -1117,8 +1067,16 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {
 	g_liveConfigs.Cleanup();
+	g_liveConfigs.Get()->Clear();
+
 	g_liveCCConfigs.Cleanup();
-	InitModel(); // + init g_liveConfigs and g_liveCCConfigs
+	g_liveCCConfigs.Get()->Empty(true);
+	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++) 
+	{
+		g_liveCCConfigs.Get()->Add(new WDL_PtrList_DeleteOnDestroy<MidiLiveItem>);
+		for (int j = 0; j < NB_CC_VALUES; j++)
+			g_liveCCConfigs.Get()->Get(i)->Add(new MidiLiveItem(j, "", NULL, "", "", "", "", ""));
+	}
 }
 
 static project_config_extension_t g_projectconfig = {

@@ -431,7 +431,7 @@ bool SNM_TakeParserPatcher::IsEmpty(int _takeIdx)
 int SNM_TakeParserPatcher::AddLastTake(WDL_FastString* _tkChunk)
 {
 	int afterPos = -1;
-	if (_tkChunk && _tkChunk->GetLength() && GetChunk()) // force GetChunk() (force cache + add fake 1st take if needed)
+	if (_tkChunk && _tkChunk->GetLength() && GetChunk()) // force GetChunk() (cache + add fake 1st take if needed)
 	{
 		m_chunk->Insert(_tkChunk->Get(), m_chunk->GetLength()-2, _tkChunk->GetLength()); //-2: before ">\n"
 		afterPos = m_chunk->GetLength()-2;

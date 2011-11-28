@@ -32,10 +32,10 @@
 #include "../Zoom.h"
 
 #define MAX_SEARCH_STR_LEN		128
-//#define ICON_BUTTONS // use icon buttons? => text buttons if undefined (transport buttons can look bad with some themes..)
 
 enum {
-  BUTTONID_FIND=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+  TXTID_SCOPE=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+  BUTTONID_FIND,
   BUTTONID_PREV,
   BUTTONID_NEXT,
   BUTTONID_ZOOM_SCROLL_EN,
@@ -54,10 +54,12 @@ enum {
 	TYPE_MARKER_REGION
 };
 
-// Globals
 static SNM_FindWnd* g_pFindWnd = NULL;
 char g_searchStr[MAX_SEARCH_STR_LEN] = "";
 bool g_notFound=false;
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 bool TakeNameMatch(MediaItem_Take* _tk, const char* _searchStr)
 {
@@ -119,297 +121,13 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_FindWnd::SNM_FindWnd()
-:SWS_DockWnd(IDD_SNM_FIND, "Find", "SnMFind", 30008, SWSGetCommandID(OpenFindView))
+	: SNM_DockWnd(IDD_SNM_FIND, "Find", "SnMFind", 30008, SWSGetCommandID(OpenFindView))
 {
 	m_type = 0;
 	m_zoomSrollItems = false;
 
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
-}
-
-bool SNM_FindWnd::Find(int _mode)
-{
-	bool update = false;
-	switch(m_type)
-	{
-		case TYPE_ITEM_NAME:
-			update = FindMediaItem(_mode, false, TakeNameMatch);
-		break;
-		case TYPE_ITEM_NAME_ALL_TAKES:
-			update = FindMediaItem(_mode, true, TakeNameMatch);
-		break;
-		case TYPE_ITEM_FILENAME:
-			update = FindMediaItem(_mode, false, TakeFilenameMatch);
-		break;
-		case TYPE_ITEM_FILENAME_ALL_TAKES:
-			update = FindMediaItem(_mode, true, TakeFilenameMatch);
-		break;
-		case TYPE_ITEM_NOTES:
-			update = FindMediaItem(_mode, false, NULL, ItemNotesMatch);
-		break;
-		case TYPE_TRACK_NAME:
-			update = FindTrack(_mode, TrackNameMatch);
-		break;
-		case TYPE_TRACK_NOTES:
-			update = FindTrack(_mode, TrackNotesMatch);
-		break;
-		case TYPE_MARKER_REGION:
-			update = FindMarkerRegion(_mode);
-	}
-	return update;
-}
-
-MediaItem* SNM_FindWnd::FindPrevNextItem(int _dir, MediaItem* _item)
-{
-	if (!_dir)
-		return NULL;
-
-	MediaItem* previous = NULL;
-	int startTrIdx = (_dir == -1 ? CountTracks(NULL) : 1);
-	if (_item)
-		startTrIdx = CSurf_TrackToID(GetMediaItem_Track(_item), false);
-
-	bool found = (_item == NULL);
-	for (int i = startTrIdx; !previous && i <= CountTracks(NULL) && i >= 1; i+=_dir)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false); 
-		int nbItems = GetTrackNumMediaItems(tr);
-		for (int j = (_dir > 0 ? 0 : (nbItems-1)); j < nbItems && j >= 0; j+=_dir)
-		{
-			MediaItem* item = GetTrackMediaItem(tr,j);
-			if (found && item) {
-				previous = item;
-				break;
-			}
-			if (_item && item == _item)
-				found = true;
-		}
-	}
-	return previous;
-}
-
-// param _allTakes only makes sense if jobTake() is used
-bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_Take*,const char*), bool (*jobItem)(MediaItem*,const char*))
-{
-	bool update = false, found = false, sel = true;
-	if (g_searchStr && *g_searchStr)
-	{
-		MediaItem* startItem = NULL;
-		bool clearCurrentSelection = false;
-		if (_dir)
-		{
-			if (CountSelectedMediaItems(NULL))
-			{
-				startItem = FindPrevNextItem(_dir, GetSelectedMediaItem(NULL, _dir > 0 ? 0 : CountSelectedMediaItems(NULL) - 1));
-				clearCurrentSelection = (startItem != NULL); 
-			}
-			else
-				startItem = FindPrevNextItem(_dir, NULL);
-		}
-		else
-		{
-			startItem = FindPrevNextItem(1, NULL);
-			clearCurrentSelection = (startItem != NULL); 
-		}
-
-		if (clearCurrentSelection)
-		{
-			Undo_BeginBlock();
-			Main_OnCommand(40289,0); // unselect all items
-			update = true;
-		}
-
-		MediaItem* item = NULL;
-		if (startItem)
-		{
-			MediaTrack* startTr = GetMediaItem_Track(startItem);
-			int startTrIdx = CSurf_TrackToID(startTr, false);
-
-			// find startItem idx
-			int startItemIdx=-1;
-			while (item != startItem) 
-				item = GetTrackMediaItem(startTr,++startItemIdx);
-
-			bool firstItem = true, breakSelection = false;
-			for (int i = startTrIdx; !breakSelection && i <= CountTracks(NULL) && i>=1; i += (!_dir ? 1 : _dir))
-			{
-				MediaTrack* tr = CSurf_TrackFromID(i, false); 
-				int nbItems = GetTrackNumMediaItems(tr);
-				for (int j = (firstItem ? startItemIdx : (_dir >= 0 ? 0 : (nbItems-1))); 
-					 tr && !breakSelection && j < nbItems && j >= 0; 
-					 j += (!_dir ? 1 : _dir))
-				{
-					item = GetTrackMediaItem(tr,j);
-					firstItem = false;
-
-					// search at item level 
-					if (jobItem)
-					{
-						if (jobItem(item, g_searchStr))
-						{
-							if (!update) Undo_BeginBlock();
-							update = found = true;
-							GetSetMediaItemInfo(item, "B_UISEL", &sel);
-							if (_dir) breakSelection = true;
-						}
-					}
-					// search at take level 
-					else if (jobTake)
-					{
-						int nbTakes = GetMediaItemNumTakes(item);
-						for (int k=0; item && k < nbTakes; k++)
-						{
-							MediaItem_Take* tk = GetMediaItemTake(item, k);
-							if (tk && (_allTakes || (!_allTakes && tk == GetActiveTake(item))))
-							{
-								if (jobTake(tk, g_searchStr))
-								{
-									if (!update) Undo_BeginBlock();
-									update = found = true;
-									GetSetMediaItemInfo(item, "B_UISEL", &sel);
-									if (_dir) {
-										breakSelection = true;
-										break;
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-
-		UpdateNotFoundMsg(found);
-		if (found && m_zoomSrollItems)
-		{
-			if (!_dir)
-				 ZoomToSelItems();
-			else if (item)
-				scrollToSelItem(item);
-		}
-	}
-
-	if (update)
-	{
-		UpdateTimeline();
-		Undo_EndBlock("Find: change media item selection", UNDO_STATE_ALL);
-	}
-	return update;
-}
-
-bool SNM_FindWnd::FindTrack(int _dir, bool (*job)(MediaTrack*,const char*))
-{
-	bool update = false, found = false;
-	if (g_searchStr && *g_searchStr)
-	{
-		int startTrIdx = -1;
-		bool clearCurrentSelection = false;
-		if (_dir)
-		{
-			int selTracksCount = CountSelectedTracksWithMaster(NULL);
-			if (selTracksCount)
-			{
-				MediaTrack* startTr = GetSelectedTrackWithMaster(NULL, _dir > 0 ? 0 : selTracksCount - 1);
-				int id = CSurf_TrackToID(startTr, false);
-				if ((_dir > 0 && id < CountTracks(NULL)) || (_dir < 0 && id >0))
-				{
-					startTrIdx = id + _dir;
-					clearCurrentSelection = true;
-				}
-			}
-			else
-				startTrIdx = (_dir > 0 ? 0 : CountTracks(NULL));
-		}
-		else
-		{
-			startTrIdx = 0;
-			clearCurrentSelection = true;
-		}
-
-		if (clearCurrentSelection)
-		{
-			Undo_BeginBlock();
-			Main_OnCommand(40297,0); // unselect all tracks
-			update = true;
-		}
-
-		if (startTrIdx >= 0)
-		{
-			for (int i = startTrIdx; i <= CountTracks(NULL) && i>=0; i += (!_dir ? 1 : _dir))
-			{
-				MediaTrack* tr = CSurf_TrackFromID(i, false); 
-				if (tr && job(tr, g_searchStr))
-				{
-					if (!update)
-						Undo_BeginBlock();
-
-					update = found = true;
-					GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
-					if (_dir) 
-						break;
-				}
-			}
-		}
-
-		UpdateNotFoundMsg(found);	
-		if (found)
-			Main_OnCommand(40913,0); // scroll to selected tracks
-	}
-
-	if (update)
-		Undo_EndBlock("Find: change track selection", UNDO_STATE_ALL);
-
-	return update;
-}
-
-bool SNM_FindWnd::FindMarkerRegion(int _dir)
-{
-	if (!_dir)
-		return false;
-
-	bool update = false, found = false;
-	if (g_searchStr && *g_searchStr)
-	{
-		double startPos = GetCursorPosition();
-
-		int id, x = 0;
-		bool bR;
-		double dPos, dRend, dMinMaxPos = _dir < 0 ? -DBL_MAX : DBL_MAX;
-		char *cName;
-		while ((x=EnumProjectMarkers2(NULL, x, &bR, &dPos, &dRend, &cName, &id)))
-		{
-			if (_dir == 1 && dPos > startPos) {
-				if (stristr(cName, g_searchStr)) {
-					found = true;
-					dMinMaxPos = min(dPos, dMinMaxPos);
-				}
-			}
-			else if (_dir == -1 && dPos < startPos) {
-				if (stristr(cName, g_searchStr)) {
-					found = true;
-					dMinMaxPos = max(dPos, dMinMaxPos);
-				}
-			}
-		}
-
-		UpdateNotFoundMsg(found);	
-		if (found) {
-			SetEditCurPos(dMinMaxPos, true, false);
-			update = true;
-		}
-	}
-
-	if (update)
-		Undo_OnStateChangeEx("Find: change cursor position", UNDO_STATE_ALL, -1);
-
-	return update;
-}
-
-void SNM_FindWnd::UpdateNotFoundMsg(bool _found)
-{
-	g_notFound = !_found;
-	m_parentVwnd.RequestRedraw(NULL);
 }
 
 void SNM_FindWnd::OnInitDlg()
@@ -424,6 +142,10 @@ void SNM_FindWnd::OnInitDlg()
 	// WDL GUI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
     m_parentVwnd.SetRealParent(m_hwnd);
+	
+	m_txtScope.SetID(TXTID_SCOPE);
+	m_txtScope.SetText("Find in:");
+	m_parentVwnd.AddChild(&m_txtScope);
 
 	m_btnEnableZommScroll.SetID(BUTTONID_ZOOM_SCROLL_EN);
 	m_btnEnableZommScroll.SetCheckState(m_zoomSrollItems);
@@ -439,14 +161,14 @@ void SNM_FindWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_btnNext);
 
 	m_cbType.SetID(COMBOID_TYPE);
-	m_cbType.AddItem("Find in item names");
-	m_cbType.AddItem("Find in item names (all takes)");
-	m_cbType.AddItem("Find in media filenames");
-	m_cbType.AddItem("Find in media filenames (all takes)");
-	m_cbType.AddItem("Find in item notes");
-	m_cbType.AddItem("Find in track names");
-	m_cbType.AddItem("Find in track notes");
-	m_cbType.AddItem("Find in marker/region names");
+	m_cbType.AddItem("Item names");
+	m_cbType.AddItem("Item names (all takes)");
+	m_cbType.AddItem("Media filenames");
+	m_cbType.AddItem("Media filenames (all takes)");
+	m_cbType.AddItem("Item notes");
+	m_cbType.AddItem("Track names");
+	m_cbType.AddItem("Track notes");
+	m_cbType.AddItem("Marker/region names");
 	m_cbType.SetCurSel(m_type);
 	m_parentVwnd.AddChild(&m_cbType);
 
@@ -537,17 +259,18 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	if (!_bm)
 		return;
 
-	IconTheme* it = NULL;
-#ifdef ICON_BUTTONS
-	it = (IconTheme*)GetIconThemeStruct(NULL);
-#endif
 	LICE_CachedFont* font = SNM_GetThemeFont();
-	int x0=_r->left+10, h=35;
 
 	// 1st row of controls
+	int x0=_r->left+10, h=35;
 	bool drawLogo = false;
+
+	m_txtScope.SetFont(font);
+	if (!SNM_AutoVWndPosition(&m_txtScope, NULL, _r, &x0, _r->top, h, 5))
+		return;
+
 	m_cbType.SetFont(font);
-	if (SetVWndAutoPosition(&m_cbType, NULL, _r, &x0, _r->top, h))
+	if (SNM_AutoVWndPosition(&m_cbType, &m_txtScope, _r, &x0, _r->top, h))
 	{
 		switch (m_type)
 		{
@@ -559,7 +282,7 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 				m_btnEnableZommScroll.SetVisible(true);
 				m_btnEnableZommScroll.SetCheckState(m_zoomSrollItems);
 				m_btnEnableZommScroll.SetTextLabel("Zoom/Scroll", -1, font);
-				drawLogo = SetVWndAutoPosition(&m_btnEnableZommScroll, NULL, _r, &x0, _r->top, h);
+				drawLogo = SNM_AutoVWndPosition(&m_btnEnableZommScroll, NULL, _r, &x0, _r->top, h);
 				break;
 			default:
 				m_btnEnableZommScroll.SetVisible(false);
@@ -569,105 +292,329 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	}
 
 	if (drawLogo)
-		AddSnMLogo(_bm, _r, x0, h);
+		SNM_AddLogo(_bm, _r, x0, h);
 
 	// 2nd row of controls
-	x0 = _r->left+8; 
 	h = 45;
+	x0 = _r->left+8; 
 	int y0 = _r->top+60;
 
-	// Buttons
-	WDL_VirtualIconButton_SkinConfig* img = it ? &(it->transport_play[0]) : NULL;
-	if (img)
-		m_btnFind.SetIcon(img);
-	else {
-		m_btnFind.SetTextLabel("Find all", 0, font);
-		m_btnFind.SetForceBorder(true);
-	}
+	SNM_SkinToolbarButton(&m_btnFind, "Find all");
 	m_btnFind.SetGrayed(!g_searchStr || !(*g_searchStr) || m_type == TYPE_MARKER_REGION);
-#ifdef ICON_BUTTONS
-	if (SetVWndAutoPosition(&m_btnFind, NULL, _r, &x0, y0, h, 0))
-#else
-	if (SetVWndAutoPosition(&m_btnFind, NULL, _r, &x0, y0, h, 5))
-#endif
+	if (SNM_AutoVWndPosition(&m_btnFind, NULL, _r, &x0, y0, h, 1))
 	{
-		img = it ? &(it->transport_rew) : NULL;
-		if (img)
-			m_btnPrev.SetIcon(img);
-		else {
-			m_btnPrev.SetTextLabel("<", 0, font);
-			m_btnPrev.SetForceBorder(true);
-		}
+		SNM_SkinToolbarButton(&m_btnPrev, "Previous");
 		m_btnPrev.SetGrayed(!g_searchStr || !(*g_searchStr));
-#ifdef ICON_BUTTONS
-		if (SetVWndAutoPosition(&m_btnPrev, NULL, _r, &x0, y0, h, 0))
-#else
-		if (SetVWndAutoPosition(&m_btnPrev, NULL, _r, &x0, y0, h, 5))
-#endif
+		if (SNM_AutoVWndPosition(&m_btnPrev, NULL, _r, &x0, y0, h, 1))
 		{
-			img = it ? &(it->transport_fwd) : NULL;
-			if (img)
-				m_btnNext.SetIcon(img);
-			else {
-				m_btnNext.SetTextLabel(">", 0, font);
-				m_btnNext.SetForceBorder(true);
-			}
+			SNM_SkinToolbarButton(&m_btnNext, "Next");
 			m_btnNext.SetGrayed(!g_searchStr || !(*g_searchStr));
-			SetVWndAutoPosition(&m_btnNext, NULL, _r, &x0, y0, h);
+			SNM_AutoVWndPosition(&m_btnNext, NULL, _r, &x0, y0, h);
 		}
 	}
 
 	m_txtResult.SetFont(font);
 	m_txtResult.SetText(g_notFound ? "Not found !" : "");
-	SetVWndAutoPosition(&m_txtResult, NULL, _r, &x0, y0, h);
+	SNM_AutoVWndPosition(&m_txtResult, NULL, _r, &x0, y0, h);
 }
 
-INT_PTR SNM_FindWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam)
+HBRUSH SNM_FindWnd::ColorEdit(HWND _hwnd, HDC _hdc)
 {
-	switch (uMsg)
+	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
 	{
-		case WM_PAINT:
-		{
-			int xo, yo;
-			RECT r;
-			GetClientRect(m_hwnd, &r);		
-			m_parentVwnd.SetPosition(&r);
-			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
-			DrawControls(m_vwnd_painter.GetBuffer(&xo, &yo), &r);
-			m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
-			m_vwnd_painter.PaintEnd();
-		}
-		break;
-		case WM_LBUTTONDOWN:
-/* commented: selects find text otherwise
-			SetFocus(m_hwnd); 
-*/
-			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0)
-				SetCapture(m_hwnd);
-			break;
-		case WM_LBUTTONUP:
-			if (GetCapture() == m_hwnd)	{
-				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-				ReleaseCapture();
-			}
-			break;
-		case WM_MOUSEMOVE:
-			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
-			break;
-//#ifdef _SNM_EDIT_THEMABLE
-		case WM_CTLCOLOREDIT:
-			if (g_bSNMbeta&1 &&
-				(HWND)lParam == GetDlgItem(m_hwnd, IDC_EDIT)) {
-				int bg, txt; SNM_GetThemeEditColors(&bg, &txt);
-				SetBkColor((HDC)wParam, bg);
-				SetTextColor((HDC)wParam, txt);
-				return (INT_PTR)SNM_GetThemeBrush(bg);
-			}
-			break;
-//#endif
+		int bg, txt;
+		SNM_GetThemeEditColors(&bg, &txt);
+		SetBkColor(_hdc, bg);
+		SetTextColor(_hdc, txt);
+		return SNM_GetThemeBrush(bg);
 	}
 	return 0;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool SNM_FindWnd::Find(int _mode)
+{
+	bool update = false;
+	switch(m_type)
+	{
+		case TYPE_ITEM_NAME:
+			update = FindMediaItem(_mode, false, TakeNameMatch);
+		break;
+		case TYPE_ITEM_NAME_ALL_TAKES:
+			update = FindMediaItem(_mode, true, TakeNameMatch);
+		break;
+		case TYPE_ITEM_FILENAME:
+			update = FindMediaItem(_mode, false, TakeFilenameMatch);
+		break;
+		case TYPE_ITEM_FILENAME_ALL_TAKES:
+			update = FindMediaItem(_mode, true, TakeFilenameMatch);
+		break;
+		case TYPE_ITEM_NOTES:
+			update = FindMediaItem(_mode, false, NULL, ItemNotesMatch);
+		break;
+		case TYPE_TRACK_NAME:
+			update = FindTrack(_mode, TrackNameMatch);
+		break;
+		case TYPE_TRACK_NOTES:
+			update = FindTrack(_mode, TrackNotesMatch);
+		break;
+		case TYPE_MARKER_REGION:
+			update = FindMarkerRegion(_mode);
+	}
+	return update;
+}
+
+MediaItem* SNM_FindWnd::FindPrevNextItem(int _dir, MediaItem* _item)
+{
+	if (!_dir)
+		return NULL;
+
+	MediaItem* previous = NULL;
+	int startTrIdx = (_dir == -1 ? CountTracks(NULL) : 1);
+	if (_item)
+		startTrIdx = CSurf_TrackToID(GetMediaItem_Track(_item), false);
+
+	bool found = (_item == NULL);
+	for (int i = startTrIdx; !previous && i <= CountTracks(NULL) && i >= 1; i+=_dir)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false); 
+		int nbItems = GetTrackNumMediaItems(tr);
+		for (int j = (_dir > 0 ? 0 : (nbItems-1)); j < nbItems && j >= 0; j+=_dir)
+		{
+			MediaItem* item = GetTrackMediaItem(tr,j);
+			if (found && item) {
+				previous = item;
+				break;
+			}
+			if (_item && item == _item)
+				found = true;
+		}
+	}
+	return previous;
+}
+
+// param _allTakes only makes sense if jobTake() is used
+bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_Take*,const char*), bool (*jobItem)(MediaItem*,const char*))
+{
+	bool update = false, found = false, sel = true;
+	if (g_searchStr && *g_searchStr)
+	{
+		MediaItem* startItem = NULL;
+		bool clearCurrentSelection = false;
+		if (_dir)
+		{
+			WDL_PtrList<MediaItem> items;
+			SNM_GetSelectedItems(NULL, &items);
+			if (items.GetSize())
+			{
+				startItem = FindPrevNextItem(_dir, items.Get(_dir > 0 ? 0 : items.GetSize()-1));
+				clearCurrentSelection = (startItem != NULL); 
+			}
+			else
+				startItem = FindPrevNextItem(_dir, NULL);
+		}
+		else
+		{
+			startItem = FindPrevNextItem(1, NULL);
+			clearCurrentSelection = (startItem != NULL); 
+		}
+
+		if (clearCurrentSelection)
+		{
+			Undo_BeginBlock();
+			Main_OnCommand(40289,0); // unselect all items
+			update = true;
+		}
+
+		MediaItem* item = NULL;
+		if (startItem)
+		{
+			MediaTrack* startTr = GetMediaItem_Track(startItem);
+			int startTrIdx = CSurf_TrackToID(startTr, false);
+
+			// find startItem idx
+			int startItemIdx=-1;
+			while (item != startItem) 
+				item = GetTrackMediaItem(startTr,++startItemIdx);
+
+			bool firstItem = true, breakSelection = false;
+			for (int i = startTrIdx; !breakSelection && i <= CountTracks(NULL) && i>=1; i += (!_dir ? 1 : _dir))
+			{
+				MediaTrack* tr = CSurf_TrackFromID(i, false); 
+				int nbItems = GetTrackNumMediaItems(tr);
+				for (int j = (firstItem ? startItemIdx : (_dir >= 0 ? 0 : (nbItems-1))); 
+					 tr && !breakSelection && j < nbItems && j >= 0; 
+					 j += (!_dir ? 1 : _dir))
+				{
+					item = GetTrackMediaItem(tr,j);
+					firstItem = false;
+
+					// search at item level 
+					if (jobItem)
+					{
+						if (jobItem(item, g_searchStr))
+						{
+							if (!update) Undo_BeginBlock();
+							update = found = true;
+							GetSetMediaItemInfo(item, "B_UISEL", &sel);
+							if (_dir) breakSelection = true;
+						}
+					}
+					// search at take level 
+					else if (jobTake)
+					{
+						int nbTakes = GetMediaItemNumTakes(item);
+						for (int k=0; item && k < nbTakes; k++)
+						{
+							MediaItem_Take* tk = GetMediaItemTake(item, k);
+							if (tk && (_allTakes || (!_allTakes && tk == GetActiveTake(item))))
+							{
+								if (jobTake(tk, g_searchStr))
+								{
+									if (!update) Undo_BeginBlock();
+									update = found = true;
+									GetSetMediaItemInfo(item, "B_UISEL", &sel);
+									if (_dir) {
+										breakSelection = true;
+										break;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		UpdateNotFoundMsg(found);
+		if (found && m_zoomSrollItems)
+		{
+			if (!_dir)
+				 ZoomToSelItems();
+			else if (item)
+				scrollToSelItem(item);
+		}
+	}
+	if (update)
+	{
+		UpdateTimeline();
+		Undo_EndBlock("Find: change media item selection", UNDO_STATE_ALL);
+	}
+	return update;
+}
+
+bool SNM_FindWnd::FindTrack(int _dir, bool (*job)(MediaTrack*,const char*))
+{
+	bool update = false, found = false;
+	if (g_searchStr && *g_searchStr)
+	{
+		int startTrIdx = -1;
+		bool clearCurrentSelection = false;
+		if (_dir)
+		{
+			if (int selTracksCount = SNM_CountSelectedTracks(NULL, true))
+			{
+				MediaTrack* startTr = SNM_GetSelectedTrack(NULL, _dir > 0 ? 0 : selTracksCount-1, true);
+				int id = CSurf_TrackToID(startTr, false);
+				if ((_dir > 0 && id < CountTracks(NULL)) || (_dir < 0 && id >0))
+				{
+					startTrIdx = id + _dir;
+					clearCurrentSelection = true;
+				}
+			}
+			else
+				startTrIdx = (_dir > 0 ? 0 : CountTracks(NULL));
+		}
+		else
+		{
+			startTrIdx = 0;
+			clearCurrentSelection = true;
+		}
+
+		if (clearCurrentSelection)
+		{
+			Undo_BeginBlock();
+			Main_OnCommand(40297,0); // unselect all tracks
+			update = true;
+		}
+
+		if (startTrIdx >= 0)
+		{
+			for (int i = startTrIdx; i <= CountTracks(NULL) && i>=0; i += (!_dir ? 1 : _dir))
+			{
+				MediaTrack* tr = CSurf_TrackFromID(i, false); 
+				if (tr && job(tr, g_searchStr))
+				{
+					if (!update)
+						Undo_BeginBlock();
+
+					update = found = true;
+					GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+					if (_dir) 
+						break;
+				}
+			}
+		}
+
+		UpdateNotFoundMsg(found);	
+		if (found)
+			Main_OnCommand(40913,0); // scroll to selected tracks
+	}
+
+	if (update)
+		Undo_EndBlock("Find: change track selection", UNDO_STATE_ALL);
+
+	return update;
+}
+
+bool SNM_FindWnd::FindMarkerRegion(int _dir)
+{
+	if (!_dir)
+		return false;
+
+	bool update = false, found = false;
+	if (g_searchStr && *g_searchStr)
+	{
+		double startPos = GetCursorPosition();
+		int id, x = 0;
+		bool bR;
+		double dPos, dRend, dMinMaxPos = _dir < 0 ? -DBL_MAX : DBL_MAX;
+		char *cName;
+		while ((x=EnumProjectMarkers2(NULL, x, &bR, &dPos, &dRend, &cName, &id)))
+		{
+			if (_dir == 1 && dPos > startPos) {
+				if (stristr(cName, g_searchStr)) {
+					found = true;
+					dMinMaxPos = min(dPos, dMinMaxPos);
+				}
+			}
+			else if (_dir == -1 && dPos < startPos) {
+				if (stristr(cName, g_searchStr)) {
+					found = true;
+					dMinMaxPos = max(dPos, dMinMaxPos);
+				}
+			}
+		}
+		UpdateNotFoundMsg(found);	
+		if (found) {
+			SetEditCurPos(dMinMaxPos, true, false);
+			update = true;
+		}
+	}
+	if (update)
+		Undo_OnStateChangeEx("Find: change cursor position", UNDO_STATE_ALL, -1);
+	return update;
+}
+
+void SNM_FindWnd::UpdateNotFoundMsg(bool _found)
+{
+	g_notFound = !_found;
+	m_parentVwnd.RequestRedraw(NULL);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 int FindViewInit()
 {
@@ -678,8 +625,7 @@ int FindViewInit()
 }
 
 void FindViewExit() {
-	delete g_pFindWnd;
-	g_pFindWnd = NULL;
+	DELETE_NULL(g_pFindWnd);
 }
 
 void OpenFindView(COMMAND_T*) {

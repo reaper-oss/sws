@@ -32,6 +32,96 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Track getters (with ReaProject* parameter)
+///////////////////////////////////////////////////////////////////////////////
+
+int SNM_GetNumTracks(ReaProject* _proj) {
+	return CountTracks(_proj) + 1;
+}
+
+// get a track from a project by track count (1-based, 0 for master)
+// rmk: to be used with SNM_GetNumTracks() and not the API's CountTracks()
+//      which does not take the master into account..
+MediaTrack* SNM_GetTrack(ReaProject* _proj, int _idx)
+{
+	if (!_idx)
+		return GetMasterTrack(_proj);
+	return GetTrack(_proj, _idx-1);
+}
+
+int SNM_GetTrackId(ReaProject* _proj, MediaTrack* _tr)
+{
+	int count = SNM_GetNumTracks(_proj);
+	for (int i=0; i <= count; i++)
+		if (SNM_GetTrack(_proj, i) == _tr)
+			return i;
+	return -1;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Track selection (with ReaProject* parameter)
+///////////////////////////////////////////////////////////////////////////////
+
+int SNM_CountSelectedTracks(ReaProject* _proj, bool _master)
+{
+	int selCnt = CountSelectedTracks(_proj);
+	if (_master)
+	{
+		MediaTrack* mtr = GetMasterTrack(_proj);
+		if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL))
+			selCnt++;
+	}
+	return selCnt;
+}
+
+// get a track from a project by selected track count index
+// rmk: to be used with SNM_CountSelectedTracks() and not the API's 
+//      CountSelectedTracks() which does not take the master into account..
+MediaTrack* SNM_GetSelectedTrack(ReaProject* _proj, int _idx, bool _master)
+{
+	if (_master)
+	{
+		MediaTrack* mtr = GetMasterTrack(_proj);
+		if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL)) 
+		{
+			if (!_idx) return mtr;
+			else return GetSelectedTrack(_proj, _idx-1);
+		}
+	}
+	return GetSelectedTrack(_proj, _idx);
+}
+
+// save, restore & clear track selection (primitives: no undo points)
+
+void SNM_GetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs)
+{
+	int count = SNM_GetNumTracks(_proj);
+	for (int i=0; i <= count; i++)
+	{
+		MediaTrack* tr = SNM_GetTrack(_proj, i);
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			_trs->Add(tr);
+	}
+}
+
+void SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs)
+{
+	for (int i=0; i < _trs->GetSize(); i++)
+	{
+		MediaTrack* tr = _trs->Get(i);
+		if (tr && SNM_GetTrackId(_proj, tr) >= 0)
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+	}
+}
+
+void SNM_ClearSelectedTracks(ReaProject* _proj) {
+	for (int i = 0; i <= SNM_GetNumTracks(_proj); i++)
+		GetSetMediaTrackInfo(SNM_GetTrack(_proj, i), "I_SELECTED", &g_i0);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Track grouping
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -458,41 +548,7 @@ bool writeEnvExists(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Track selection (all with ReaProject*)
-///////////////////////////////////////////////////////////////////////////////
-
-int CountSelectedTracksWithMaster(ReaProject* _proj) 
-{
-	int selCnt = CountSelectedTracks(_proj);
-	MediaTrack* mtr = GetMasterTrack(_proj);
-	if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL))
-		selCnt++;
-	return selCnt;
-}
-
-// Takes the master track into account
-// => to be used with CountSelectedTracksWithMaster() and not the API's CountSelectedTracks()
-// If selected, the master will be returnd with the _idx = 0
-MediaTrack* GetSelectedTrackWithMaster(ReaProject* _proj, int _idx) 
-{
-	MediaTrack* mtr = GetMasterTrack(_proj);
-	if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL)) 
-	{
-		if (!_idx) return mtr;
-		else return GetSelectedTrack(_proj, _idx-1);
-	}
-	else 
-		return GetSelectedTrack(_proj, _idx);
-	return NULL;
-}
-
-MediaTrack* GetFirstSelectedTrackWithMaster(ReaProject* _proj) {
-	return GetSelectedTrackWithMaster(_proj, 0);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Track templates & track template slots (of the Resources view)
+// Track templates
 ///////////////////////////////////////////////////////////////////////////////
 
 bool makeSingleTrackTemplateChunk(WDL_FastString* _inRawChunk, WDL_FastString* _out, bool _delItems, bool _delEnvs)
@@ -511,7 +567,6 @@ bool makeSingleTrackTemplateChunk(WDL_FastString* _inRawChunk, WDL_FastString* _
 			p2.RemoveLine("TRACK", "AUXRECV", 1, -1, "MIDIOUT"); // check depth & parent (skip frozen AUXRECV)
 
 			// remove items from template, if any
-//JFB!!! a faire partout
 			if (_delItems)
 				p2.RemoveSubChunk("ITEM", 2, -1);
 
@@ -547,7 +602,7 @@ bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _rawC
 		// add track's items, if any
 		if (!_itemsFromTmplt && GetMasterTrack(NULL) != _tr)
 		{
-			int posItems = p->GetSubChunk("ITEM", 2, 0); //JFB!!! get all in one work !?
+			int posItems = p->GetSubChunk("ITEM", 2, 0); //JFB!!! get all in one go !?
 			if (posItems >= 0)
 				newChunk.Insert((char*)(p->GetChunk()->Get()+posItems), newChunk.GetLength()-2, p->GetChunk()->GetLength()-posItems- 2); // -2: ">\n"
 		}
@@ -559,29 +614,28 @@ bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _rawC
 	return updated;
 }
 
-void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _itemsFromTmplt, bool _envsFromTmplt, bool _errMsg)
+
+///////////////////////////////////////////////////////////////////////////////
+// Track templates slots (Resources view)
+///////////////////////////////////////////////////////////////////////////////
+
+void applyOrImportTrackSlot(const char* _title, int _slot, bool _import, bool _itemsFromTmplt, bool _envsFromTmplt)
 {
 	bool updated = false;
-
-	// Prompt for slot if needed
-	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_TR)->GetSize()); // loops on err
-	if (_slot == -1) return; // user has cancelled
-
-	char fn[BUFFER_SIZE]="";
-	if (g_slots.Get(SNM_SLOT_TR)->GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg)) 
+	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_TR)->GetOrPromptOrBrowseSlot(_title, _slot))
 	{
 		WDL_FastString tmp;
 
 		// add as new track
 		if (_import)
 		{
-			Main_openProject(fn);
+			Main_openProject((char*)fnStr->Get());
 /* commented: Main_openProject() includes undo point 
 			updated = true;
 */
 		}
 		// patch selected tracks with 1st track found in template
-		else if (CountSelectedTracksWithMaster(NULL) && LoadChunk(fn, &tmp) && tmp.GetLength())
+		else if (SNM_CountSelectedTracks(NULL, true) && LoadChunk(fnStr->Get(), &tmp) && tmp.GetLength())
 		{
 			WDL_FastString tmpltChunk;
 			makeSingleTrackTemplateChunk(&tmp, &tmpltChunk, !_itemsFromTmplt, !_envsFromTmplt);
@@ -592,36 +646,27 @@ void applyOrImportTrackSlot(const char* _title, bool _import, int _slot, bool _i
 					updated |= applyTrackTemplate(tr, &tmpltChunk, false, NULL, _itemsFromTmplt); //manages master track specific case..
 			}
 		}
+		delete fnStr;
 	}
 	if (updated && _title)
 		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
 }
 
 void loadSetTrackTemplate(COMMAND_T* _ct) {
-	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_TR)->GetSize())
-		applyOrImportTrackSlot(SNM_CMD_SHORTNAME(_ct), false, slot, false, false, slot < 0 || !g_slots.Get(SNM_SLOT_TR)->Get(slot)->IsDefault());
+	applyOrImportTrackSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, false);
 }
 
 void loadImportTrackTemplate(COMMAND_T* _ct) {
-	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_TR)->GetSize())
-		applyOrImportTrackSlot(SNM_CMD_SHORTNAME(_ct), true, slot, false, false, slot < 0 || !g_slots.Get(SNM_SLOT_TR)->Get(slot)->IsDefault());
+	applyOrImportTrackSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, false, false);
 }
 
-void replaceOrPasteItemsFromTrackSlot(const char* _title, bool _paste, int _slot, bool _errMsg)
+void replaceOrPasteItemsFromTrackSlot(const char* _title, int _slot, bool _paste)
 {
 	bool updated = false;
-
-	// prompt for slot if needed
-	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_TR)->GetSize()); // loops on err
-	if (_slot == -1) return; // user has cancelled
-
-	char fn[BUFFER_SIZE]="";
-	if (g_slots.Get(SNM_SLOT_TR)->GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg)) 
+	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_TR)->GetOrPromptOrBrowseSlot(_title, _slot))
 	{
 		WDL_FastString tmpltChunk;
-		if (CountSelectedTracks(NULL) && LoadChunk(fn, &tmpltChunk) && tmpltChunk.GetLength())
+		if (CountSelectedTracks(NULL) && LoadChunk(fnStr->Get(), &tmpltChunk) && tmpltChunk.GetLength())
 		{
 			WDL_FastString tmpltItemsChunk;
 			{
@@ -656,6 +701,7 @@ void replaceOrPasteItemsFromTrackSlot(const char* _title, bool _paste, int _slot
 				}
 			}
 		}
+		delete fnStr;
 	}
 	if (updated && _title)
 		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
@@ -665,12 +711,20 @@ void appendTrackChunk(MediaTrack* _tr, WDL_FastString* _chunk, bool _delItems, b
 {
 	if (_tr && _chunk)
 	{
-		//JFB!!! double get => timing: bof!
-		SNM_ChunkParserPatcher p(_tr);
-		SNM_EnvRemover p2(p.GetChunk(), false);
-		if (_delEnvs) p2.RemoveEnvelopes();
-		if (_delItems) p2.RemoveSubChunk("ITEM", 2, -1);
-		_chunk->Append(p2.GetChunk());
+		SNM_EnvRemover p(_tr, false); // no auto-commit!
+
+		if (_delEnvs)
+			p.RemoveEnvelopes();
+		if (_delItems)
+			p.RemoveSubChunk("ITEM", 2, -1);
+/* faster but less future-proof..
+		if (_delItems) {
+			int itemsStartPos = p.GetSubChunk("ITEM", 2, 0); // no breakKeyword possible here: track chunks end with items
+			if (itemsStartPos >= 0)
+				p.GetChunk()->DeleteSub(itemsStartPos, p.GetChunk()->GetLength()-itemsStartPos-2); // -2: ">\n"
+		}
+*/
+		_chunk->Append(p.GetChunk());
 	}
 }
 
@@ -837,10 +891,14 @@ void remapMIDIInputChannel(COMMAND_T* _ct)
 // Play track preview
 ///////////////////////////////////////////////////////////////////////////////
 
-PCM_source* g_cc123src = NULL;
+//#define _SNM_CACHE_SRC
 
+PCM_source* g_cc123src = NULL;
 WDL_PtrList<preview_register_t> g_playPreviews;
 SWS_Mutex g_playPreviewsMutex;
+#ifdef _SNM_CACHE_SRC
+WDL_StringKeyedArray<PCM_source*> g_srcCache;
+#endif
 
 void TrackPreviewInitDeleteMutex(preview_register_t* _prev, bool _init) {
 	if (_init)
@@ -872,6 +930,17 @@ void TrackPreviewLockUnlockMutex(preview_register_t* _prev, bool _lock) {
 #endif
 }
 
+#ifdef _SNM_CACHE_SRC
+PCM_source* GetAndCacheSource(const char* _fn)
+{
+	PCM_source* src = g_srcCache.Get(_fn, NULL);
+	if (!src)
+		if (src = PCM_Source_CreateFromFileEx(_fn, true)) // "true" so that the src is not imported as in-project data
+			g_srcCache.Insert(_fn, src);
+	return src;
+}
+#endif
+
 bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _loop)
 {
 	SWS_SectionLock lock(&g_playPreviewsMutex);
@@ -893,8 +962,13 @@ bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _loop)
 }
 
 // primitive func: _fn must be a valid/existing file
-bool SNM_PlayTrackPreview(MediaTrack* _tr, const char* _fn, bool _loop) {
+bool SNM_PlayTrackPreview(MediaTrack* _tr, const char* _fn, bool _loop)
+{
+#ifdef _SNM_CACHE_SRC
+	if (PCM_source* src = GetAndCacheSource(_fn))
+#else
 	if (PCM_source* src = PCM_Source_CreateFromFileEx(_fn, true)) // "true" so that the src is not imported as in-project data 
+#endif
 		return SNM_PlayTrackPreview(_tr, src, _loop);
 	return false;
 }
@@ -948,10 +1022,14 @@ bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _loop)
 }
 
 
-void DeleteTrackPreview(void* _prev) {
-	if (_prev) {
+void DeleteTrackPreview(void* _prev)
+{
+	if (_prev)
+	{
 		preview_register_t* prev = (preview_register_t*)_prev;
+#ifndef _SNM_CACHE_SRC
 		if (prev->src != g_cc123src) DELETE_NULL(prev->src);
+#endif
 		TrackPreviewInitDeleteMutex(prev, false);
 		DELETE_NULL(_prev);
 	}
@@ -1023,9 +1101,9 @@ void CC123Tracks(WDL_PtrList<void>* _trs)
 	// lazy init of the "all notes off" PCM_source
 	if (!g_cc123src)
 	{
-/*JFB!!! commented: does not work, unfortunately..
-// REAPER API bug? nailed it down to PCM_Source_CreateFromType("MIDI") which seems to be KO
-// workaround = write a temp .mid file instead
+/*JFB!!! commented: does not work..
+// nailed it down to PCM_Source_CreateFromType("MIDI") which seems to be KO
+// => workaround: write a temp .mid file instead
 
 		// make cc123s
 		int smpLen = 48000; // 1s

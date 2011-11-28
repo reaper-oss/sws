@@ -108,6 +108,7 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 		return false;
 	};
 	bool GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg=false);
+	WDL_FastString* GetOrPromptOrBrowseSlot(const char* _title, int _slot);
 	bool BrowseSlot(int _slot, char* _fn=NULL, int _fnSz=0);
 	void EditSlot(int _slot);
 	void ClearSlot(int _slot, bool _guiUpdate=true);
@@ -178,7 +179,7 @@ protected:
 };
 
 
-class SNM_ResourceWnd : public SWS_DockWnd
+class SNM_ResourceWnd : public SNM_DockWnd
 {
 public:
 	SNM_ResourceWnd();
@@ -196,7 +197,7 @@ protected:
 	int GetValidDroppedFilesCount(HDROP _h);
 	void OnDroppedFiles(HDROP _h);
 	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
-	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	HBRUSH ColorEdit(HWND _hwnd, HDC _hdc);
 
 	void FillDblClickTypeCombo();
 	void AddSlot(bool _update);
@@ -208,9 +209,6 @@ protected:
 	bool m_autoSaveTrTmpltWithItemsPref;
 	int m_previousType, m_autoSaveFXChainPref;
 
-	// WDL UI
-	WDL_VWnd_Painter m_vwnd_painter;
-	WDL_VWnd m_parentVwnd; // owns all children windows
 	WDL_VirtualComboBox m_cbType, m_cbDblClickType, m_cbDblClickTo;
 	WDL_VirtualIconButton m_btnAutoSave;
 	WDL_VirtualStaticText m_txtDblClickType, m_txtDblClickTo;

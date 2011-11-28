@@ -58,38 +58,32 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Resources view: project template slots
+// Project template slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
-void loadOrSelectProjectSlot(const char* _title, int _slot, bool _newTab, bool _errMsg)
+void loadOrSelectProjectSlot(const char* _title, int _slot, bool _newTab)
 {
-	// Prompt for slot if needed
-	if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, g_slots.Get(SNM_SLOT_PRJ)->GetSize()); // loops on err
-	if (_slot == -1) return; // user has cancelled
-
-	char fn[BUFFER_SIZE]="";
-	if (g_slots.Get(SNM_SLOT_PRJ)->GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _errMsg)) 
+	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_PRJ)->GetOrPromptOrBrowseSlot(_title, _slot))
 	{
 		char fn2[BUFFER_SIZE] = "";
 		ReaProject* prj = NULL;
 		int i=0;
 		bool found = false;
 		while (!found && (prj = Enum_Projects(i++, fn2, BUFFER_SIZE)))
-			if (!strcmp(fn, fn2))
+			if (!strcmp(fnStr->Get(), fn2))
 				found = true;
 
 		if (found)
 			SelectProjectInstance(prj);
 		else
 		{
-			if (_newTab)
-				Main_OnCommand(40859,0);
-			Main_openProject(fn);
-
+			if (_newTab) Main_OnCommand(40859,0);
+			Main_openProject((char*)fnStr->Get());
 /* API LIMITATION: would be great to set the project as "not saved" here (like native project templates)
 	See http://code.google.com/p/sws-extension/issues/detail?id=321
 */
 		}
+		delete fnStr;
 	}
 }
 
@@ -104,15 +98,11 @@ bool autoSaveProjectSlot(bool _saveCurPrj, const char* _dirPath, char* _fn, int 
 }
 
 void loadOrSelectProjectSlot(COMMAND_T* _ct) {
-	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_PRJ)->GetSize())
-		loadOrSelectProjectSlot(SNM_CMD_SHORTNAME(_ct), slot, false, slot < 0 || !g_slots.Get(SNM_SLOT_PRJ)->Get(slot)->IsDefault());
+	loadOrSelectProjectSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false);
 }
 
 void loadOrSelectProjectTabSlot(COMMAND_T* _ct) {
-	int slot = (int)_ct->user;
-	if (slot < 0 || slot < g_slots.Get(SNM_SLOT_PRJ)->GetSize())
-		loadOrSelectProjectSlot(SNM_CMD_SHORTNAME(_ct), slot, true, slot < 0 || !g_slots.Get(SNM_SLOT_PRJ)->Get(slot)->IsDefault());
+	loadOrSelectProjectSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true);
 }
 
 
@@ -197,7 +187,7 @@ void loadOrSelectNextPreviousProject(COMMAND_T* _ct)
 
 		// found one?
 		if (cpt <= slotCount) {
-			loadOrSelectProjectSlot("", g_prjCurSlot, false, false);
+			loadOrSelectProjectSlot("", g_prjCurSlot, false);
 			if (g_pResourcesWnd) g_pResourcesWnd->SelectBySlot(g_prjCurSlot);
 		}
 		else g_prjCurSlot = -1;

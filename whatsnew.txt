@@ -1,26 +1,43 @@
 Cycle actions improvements:
 +The Cycle action editor is now resizable, dockable, themable, etc..
-Note: import/export features have been moved to the context menu!
+Note: import, export and reset features have been moved to the context menu!
 +Cycle actions are now saved in a distinct file S&M_Cyclactions.ini (they were saved in the S&M.ini file before)
 This is to ease REAPER's configurations export/import (ReaperConfigZip or copy/paste): the new S&M_Cyclactions.ini is exchangeable, not the S&M.ini file (which can contain local paths, etc..)
 Auto upgrade: the new S&M_Cyclactions.ini file is automatically created with your current cycle actions (if needed, a S&M_Cyclactions.BAK file is also saved).
++OSX *Beta* support: to be enabled in the S&M.ini file, details http://code.google.com/p/sws-extension/issues/detail?id=416#c0|here|): same editor than on Windows OS (minus the "action learn" feature)
 
-On Windows OS, all S&M list views now also use the following configurable colors of the Theme Editor (REAPER > v4.11):
+Live Configs:
++Fixed possible crash on Win 7 (when switching projects)
++Fixed possible loss of the "Input track" dropdown box (with veeeery long track names)
+
+Resources view:
++Track templates: new double click option, better context menu item names, etc..
++Fixed possible crash when removing a custom resource type from the S&M.ini file
++<b>Limited "spam" in the action list: all slot actions now only have 4 instances by default</b> (cutomizable at the end of the S&M.ini file, up to 99 slots per action)
+Note: your current slot actions are preserved, of course!
+
+Notes/help: do not update region/marker names when playing and editing (but only when the view is locked)
+
+S&M views theming:
+S&M views now use themed buttons (i.e. toolbar_blank.png and composite_toolbar_overlay.png, if it exists)
+List views also obey following colors of the Theme Editor (REAPER > v4.11, on Windows OS and OSX!) :
 +Window list selection bg
 +Window list selection fg
 +Window list selection inactive bg
 +Window list selection inactive fg
 
-OSX Beta port (to be enabled in the S&M.ini file, details http://code.google.com/p/sws-extension/issues/detail?id=416#c0|here|):
-+Cycle action editor like on Windows OS (minus "action learn")
-+All S&M views are themed like on Windows OS
+The following media item actions will work whatever is the current track selection:
++SWS/S&M: Takes - Move active up (cycling) in selected items
++SWS/S&M: Takes - Move active down (cycling) in selected items
++SWS/S&M: Takes - Activate lanes from selected items
++SWS/S&M: Takes - Activate lane under mouse cursor
 
 !v2.1.0 #20 (November 19, 2011)
 Added action:
 +SWS/S&M: Send all notes off to selected tracks
 
 Resources view:
-+Custom resource types !?
++Custom resource types !? Details http://forum.cockos.com/showpost.php?p=851041&postcount=690|here|.
 +More REAPER-ish text filter (by name, by path and/or by comment, configurable in the context menu)
 Auto-save for media file slots:
 +Select some items (incl. in-project MIDI items) and click on the top left Auto-save button
@@ -334,7 +351,7 @@ This also "unhides" (i.e. 0 slot by default) 2 new actions:
 +SWS/S&M: Apply FX chain to selected items, all takes, slot n
 +SWS/S&M: Paste FX chain to selected items, all takes, slot n
 
-Beware! Folowing actions are now configurable but their custom ids changed:
+Beware! following actions are now configurable but their custom ids changed:
 SWS/S&M: Trigger next preset for FX n of selected tracks
 SWS/S&M: Trigger previous preset for FX n of selected tracks
 => if used in toolbars, macros, etc.. an update is needed (sorry about that!)
@@ -936,7 +953,7 @@ S&M house cleaning:
 S&M Cue Buss...
 S&M Find...
 S&M Live Configs...
-+Removed the folowing split actions:
++Removed the following split actions:
 Contrary to their related native versions, the following ones were spliting selected items *and only them*, see http://forum.cockos.com/showthread.php?t=51547|this related thread|.
 Due to REAPER v3.67's new native pref "If no items are selected, some split/trim/delete actions affect all items at the edit cursor", those actions are less useful (well, they would still split only selected items even if that native pref is ticked). Also removed because of the spam in the action list (many split actions).
 SWS/S&M: Split selected items at play cursor

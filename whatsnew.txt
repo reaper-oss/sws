@@ -1,3 +1,4 @@
+!v2.1.0 #21 (November 28, 2011)
 Cycle actions improvements:
 +The Cycle action editor is now resizable, dockable, themable, etc..
 Note: import, export and reset features have been moved to the context menu!

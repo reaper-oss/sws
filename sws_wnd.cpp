@@ -1462,10 +1462,10 @@ bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int 
 
 #ifndef _WIN32
         int selcols[4];
-        selcols[0]=g_ctheme.genlist_sel[0];
-        selcols[1]=g_ctheme.genlist_sel[1];
-        selcols[2]=g_ctheme.genlist_selinactive[0];
-        selcols[3]=g_ctheme.genlist_selinactive[1];
+        selcols[0]=ctheme->genlist_sel[0];
+        selcols[1]=ctheme->genlist_sel[1];
+        selcols[2]=ctheme->genlist_selinactive[0];
+        selcols[3]=ctheme->genlist_selinactive[1];
 #endif
         if ((whichTheme&~1) == 0)
         {

@@ -38,6 +38,10 @@
 
 #include "stdafx.h"
 
+#define CELL_EDIT_TIMER			0x1000
+#define CELL_EDIT_TIMEOUT		50
+
+
 SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iDockOrder, int iCmdID)
 :m_hwnd(NULL), m_iResource(iResource), m_cWndTitle(cWndTitle), m_cId(cId), m_iDockOrder(iDockOrder), m_bUserClosed(false), m_iCmdID(iCmdID), m_bLoadingState(false)
 {
@@ -160,10 +164,14 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		case WM_TIMER:
-			for (int i = 0; i < m_pLists.GetSize(); i++)
-				if (m_pLists.Get(i)->GetEditingItem() != -1)
-					return m_pLists.Get(i)->OnEditingTimer();
-			OnTimer(wParam);
+			if (wParam == CELL_EDIT_TIMER)
+			{
+				for (int i = 0; i < m_pLists.GetSize(); i++)
+					if (m_pLists.Get(i)->GetEditingItem() != -1)
+						return m_pLists.Get(i)->OnEditingTimer();
+			}
+			else
+				OnTimer(wParam);
 			break;
 		case WM_NOTIFY:
 		{
@@ -1203,7 +1211,7 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	SetWindowText(m_hwndEdit, str);
 	SetFocus(m_hwndEdit);
 	SendMessage(m_hwndEdit, EM_SETSEL, 0, -1);
-	SetTimer(GetParent(m_hwndList), 0x1000, 50, NULL);
+	SetTimer(GetParent(m_hwndList), CELL_EDIT_TIMER, CELL_EDIT_TIMEOUT, NULL);
 }
 
 bool SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
@@ -1211,7 +1219,7 @@ bool SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 	bool updated = false;
 	if (m_iEditingItem != -1 && IsWindow(m_hwndList) && IsWindow(m_hwndEdit))
 	{
-		KillTimer(GetParent(m_hwndList), 0x1000);
+		KillTimer(GetParent(m_hwndList), CELL_EDIT_TIMER);
 		if (bSave)
 		{
 			char newStr[100];

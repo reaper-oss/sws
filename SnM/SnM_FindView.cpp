@@ -121,7 +121,7 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_FindWnd::SNM_FindWnd()
-	: SNM_DockWnd(IDD_SNM_FIND, "Find", "SnMFind", 30008, SWSGetCommandID(OpenFindView))
+	: SWS_DockWnd(IDD_SNM_FIND, "Find", "SnMFind", 30008, SWSGetCommandID(OpenFindView))
 {
 	m_type = 0;
 	m_zoomSrollItems = false;
@@ -229,9 +229,6 @@ void SNM_FindWnd::OnDestroy()
 	WritePrivateProfileString("FIND_VIEW", "ZoomScrollToFoundItems", m_zoomSrollItems ? "1" : "0", g_SNMIniFn.Get());
 
 	m_cbType.Empty();
-	m_parentVwnd.RemoveAllChildren(false);
-	m_parentVwnd.SetRealParent(NULL);
-
 	g_notFound = false;
 //	*g_searchStr = 0;
 }
@@ -254,15 +251,14 @@ int SNM_FindWnd::OnKey(MSG* _msg, int _iKeyState)
 	return 0;
 }
 
-void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
+void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
-	if (!_bm)
-		return;
-
 	LICE_CachedFont* font = SNM_GetThemeFont();
 
 	// 1st row of controls
 	int x0=_r->left+10, h=35;
+	if (_tooltipHeight)
+		*_tooltipHeight = h;
 	bool drawLogo = false;
 
 	m_txtScope.SetFont(font);
@@ -318,7 +314,7 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	SNM_AutoVWndPosition(&m_txtResult, NULL, _r, &x0, y0, h);
 }
 
-HBRUSH SNM_FindWnd::ColorEdit(HWND _hwnd, HDC _hdc)
+HBRUSH SNM_FindWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
 {
 	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
 	{

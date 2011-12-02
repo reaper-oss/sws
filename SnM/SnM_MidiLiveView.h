@@ -88,7 +88,7 @@ protected:
 };
 
 
-class SNM_LiveConfigsWnd : public SNM_DockWnd {
+class SNM_LiveConfigsWnd : public SWS_DockWnd {
 public:
 	SNM_LiveConfigsWnd();
 	void Update();
@@ -106,8 +106,8 @@ protected:
 	HMENU OnContextMenu(int x, int y);
 	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState);
-	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
-	HBRUSH ColorEdit(HWND _hwnd, HDC _hdc);
+	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
+	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
 
 	WDL_VirtualComboBox m_cbConfig, m_cbInputTr;
 	WDL_VirtualIconButton m_btnEnable, m_btnMuteOthers, m_btnAutoSelect;

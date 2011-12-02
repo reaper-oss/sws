@@ -113,19 +113,6 @@ static void deleteintptr(int* _p) { DELETE_NULL(_p); }
 // Global types & classes
 ///////////////////////////////////////////////////////////////////////////////
 
-class SNM_DockWnd : public SWS_DockWnd
-{
-public:
-	SNM_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iDockOrder, int iCmdID)
-		: SWS_DockWnd(iResource, cWndTitle, cId, iDockOrder, iCmdID) {}
-protected:
-	virtual void DrawControls(LICE_IBitmap* _bm, RECT* _r) {}
-	virtual INT_PTR OnUnhandledMsg(UINT _uMsg, WPARAM _wParam, LPARAM _lParam);
-	virtual HBRUSH ColorEdit(HWND _hwnd, HDC _hdc) { return 0; }
-	WDL_VWnd_Painter m_vwnd_painter;
-	WDL_VWnd m_parentVwnd; // owns all children windows
-};
-
 class SNM_ToolbarButton : public WDL_VirtualIconButton {
 public:
 	SNM_ToolbarButton() : WDL_VirtualIconButton() {}
@@ -242,8 +229,8 @@ void SNM_GetThemeEditColors(int* _bg, int* _txt);
 void SNM_ThemeListView(SWS_ListView* _lv);
 LICE_IBitmap* SNM_GetThemeLogo();
 void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text);
-bool SNM_AddLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h);
-bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep = SNM_DEF_VWND_X_STEP);
+bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h);
+bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xStep = SNM_DEF_VWND_X_STEP);
 void SNM_UIInit();
 void SNM_UIExit();
 void SNM_ShowMsg(const char* _msg, const char* _title = "", HWND _hParent = NULL, bool _clear = true); 

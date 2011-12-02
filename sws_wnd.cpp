@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_wnd.cpp
 /
-/ Copyright (c) 2011 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -38,8 +38,10 @@
 
 #include "stdafx.h"
 
-#define CELL_EDIT_TIMER			0x1000
-#define CELL_EDIT_TIMEOUT		50
+#define CELL_EDIT_TIMER		0x1000
+#define CELL_EDIT_TIMEOUT	50
+#define TOOLTIP_TIMER		0x1001
+#define TOOLTIP_TIMEOUT		350
 
 
 SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iDockOrder, int iCmdID)
@@ -170,6 +172,26 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					if (m_pLists.Get(i)->GetEditingItem() != -1)
 						return m_pLists.Get(i)->OnEditingTimer();
 			}
+			else if (wParam == TOOLTIP_TIMER)
+			{
+				KillTimer(m_hwnd, wParam);
+
+				POINT p; GetCursorPos(&p);
+				ScreenToClient(m_hwnd,&p);
+				RECT r; GetClientRect(m_hwnd,&r);
+				char buf[TOOLTIP_MAX_LEN] = "";
+				if (PtInRect(&r,p))
+					if (!m_parentVwnd.GetToolTipString(p.x,p.y,buf,sizeof(buf)))
+						if (!GetToolTipString(p.x,p.y,buf,sizeof(buf)))
+							*buf='\0';
+
+				if (strcmp(buf, m_tooltip))
+				{
+					m_tooltip_pt = p;
+					lstrcpyn(m_tooltip,buf,sizeof(m_tooltip));
+					InvalidateRect(m_hwnd,NULL,FALSE);
+				}
+			}
 			else
 				OnTimer(wParam);
 			break;
@@ -207,8 +229,9 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			// Add std menu items
 			char str[100];
-			sprintf(str, "Dock %s in Docker", m_cWndTitle);
-			AddToMenu(hMenu, str, DOCK_MSG);
+			if (_snprintf(str, 100, "Dock %s in Docker", m_cWndTitle) > 0)
+				AddToMenu(hMenu, str, DOCK_MSG);
+
 			// Check dock state
 			if ((m_state.state & 2))
 				CheckMenuItem(hMenu, DOCK_MSG, MF_BYCOMMAND | MF_CHECKED);
@@ -230,7 +253,6 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		case WM_COMMAND:
 			OnCommand(wParam, lParam);
-
 			switch (wParam)
 			{
 				case DOCK_MSG:
@@ -250,6 +272,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (!bRecurseCheck)
 				{
 					bRecurseCheck = true;
+					KillTooltip();
 					OnResize();
 					m_resize.onResize();
 					bRecurseCheck = false;
@@ -262,6 +285,10 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_DESTROY:
 		{
 			OnDestroy();
+
+			m_parentVwnd.RemoveAllChildren(false);
+			m_parentVwnd.SetRealParent(NULL);
+
 			for (int i = 0; i < m_pLists.GetSize(); i++)
 				m_pLists.Get(i)->OnDestroy();
 
@@ -280,6 +307,84 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_hwnd = NULL;
 			RefreshToolbar(m_iCmdID);
 			break;
+		case WM_PAINT:
+			OnPaint();
+			if (m_parentVwnd.GetNumChildren())
+			{
+				int h, xo, yo; RECT r;
+				GetClientRect(m_hwnd,&r);		
+				m_parentVwnd.SetPosition(&r);
+				m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
+				if (LICE_IBitmap* bm = m_vwnd_painter.GetBuffer(&xo, &yo))
+				{
+					bm->resize(r.right-r.left,r.bottom-r.top);
+					DrawControls(bm, &r, &h);
+					m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
+					if (*m_tooltip)
+					{
+						POINT p = { m_tooltip_pt.x + xo, m_tooltip_pt.y + yo };
+						RECT rr = { r.left+xo,r.top+yo,r.right+xo,r.bottom+yo };
+						if (h>0) rr.bottom = h+yo; //JFB!!! WIP.. make sure some tooltips are not hidden by MFCs..
+						DrawTooltipForPoint(bm,p,&rr,m_tooltip);
+					}
+				}
+				m_vwnd_painter.PaintEnd();
+			}
+			break;
+		case WM_LBUTTONDBLCLK:
+			if (!OnMouseDblClick(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) &&
+				m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0)
+			{
+				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			}
+			break;
+		case WM_LBUTTONDOWN:
+			KillTooltip(true);
+			SetFocus(m_hwnd); 
+			if (OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0 ||
+				m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0)
+			{
+				SetCapture(m_hwnd);
+			}
+			break;
+		case WM_LBUTTONUP:
+			if (GetCapture() == m_hwnd)
+			{
+				if (!OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)))
+					m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+				ReleaseCapture();
+			}
+			KillTooltip(true);
+			break;
+		case WM_MOUSEMOVE:
+			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)); // no capture test (hover, etc..)
+			if (GetCapture() == m_hwnd)
+			{
+				if (!OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)))
+				{
+					POINT pt = {GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)};
+					for (int i=0; i < m_pLists.GetSize(); i++)
+					{
+						RECT r;	GetWindowRect(m_pLists.Get(i)->GetHWND(), &r);
+						ScreenToClient(m_hwnd, (LPPOINT)&r);
+						ScreenToClient(m_hwnd, ((LPPOINT)&r)+1);
+						if (PtInRect(&r,pt)) {
+							m_pLists.Get(i)->OnDrag();
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				KillTooltip(true);
+				SetTimer(m_hwnd, TOOLTIP_TIMER, TOOLTIP_TIMEOUT, NULL);
+			}
+			break;
+#ifdef _WIN32
+		case WM_CTLCOLOREDIT:
+			return (INT_PTR)OnColorEdit((HWND)lParam, (HDC)wParam);
+#endif
 		default:
 			return OnUnhandledMsg(uMsg, wParam, lParam);
 	}
@@ -451,6 +556,15 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 		LoadView(cTemp, iViewLen);
 	}
 	m_bLoadingState = false;
+}
+
+void SWS_DockWnd::KillTooltip(bool doRefresh)
+{
+	KillTimer(m_hwnd, TOOLTIP_TIMER);
+	bool had=!!m_tooltip[0];
+	*m_tooltip='\0';
+	if (had && doRefresh)
+		InvalidateRect(m_hwnd,NULL,FALSE);
 }
 
 SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips)
@@ -1275,7 +1389,7 @@ int SWS_ListView::OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2)
 			iRet = -1;
 	}
 	else
-		iRet = strcmp(str1, str2);
+		iRet = _stricmp(str1, str2);
 	
 	if (m_iSortCol < 0)
 		return -iRet;
@@ -1391,10 +1505,12 @@ int SWS_ListView::sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam
 }
 
 
-// Theming..
+///////////////////////////////////////////////////////////////////////////////
+// Code bits courtesy of Cockos. Thank you Cockos!
+///////////////////////////////////////////////////////////////////////////////
 
+// From Justin: http://askjf.com/index.php?q=1609s
 #ifdef _WIN32
-
 void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
 {
   int i;
@@ -1620,4 +1736,56 @@ bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int 
 #endif
   }
   return false;
+}
+
+// From Justin: "this should likely go into WDL"
+void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char *text)
+{
+  if (!bm || !text || !text[0]) return;
+
+    static LICE_CachedFont tmpfont;
+    if (!tmpfont.GetHFont())
+    {
+      bool doOutLine = true;
+      LOGFONT lf = {
+          14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+          OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
+      };
+      tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
+    }
+    tmpfont.SetBkMode(TRANSPARENT);
+    LICE_pixel col1 = LICE_RGBA(0,0,0,255);
+    LICE_pixel col2 = LICE_RGBA(255,255,192,255);
+
+    tmpfont.SetTextColor(col1);
+    RECT r={0,};
+    tmpfont.DrawText(bm,text,-1,&r,DT_CALCRECT);
+
+    int xo = min(max(mousePt.x,wndr->left),wndr->right);
+    int yo = min(max(mousePt.y + 24,wndr->top),wndr->bottom);
+
+    if (yo + r.bottom > wndr->bottom-4) // too close to bottom, move up if possible
+    {
+      if (mousePt.y - r.bottom - 12 >= wndr->top)
+        yo = mousePt.y - r.bottom - 12;
+      else
+        yo = wndr->bottom -4 - r.bottom;
+//JFB added (prevents hidden tooltip behind the mouse pointer) --------------->
+      xo += 15;
+//JFB <------------------------------------------------------------------------
+    }
+
+    if (xo + r.right > wndr->right - 4)
+      xo = wndr->right - 4 - r.right;
+
+    r.left += xo;
+    r.top += yo;
+    r.right += xo;
+    r.bottom += yo;
+    
+    int border = 3;
+    LICE_FillRect(bm,r.left-border,r.top-border,r.right-r.left+border*2,r.bottom-r.top+border*2,col2,1.0f,LICE_BLIT_MODE_COPY);
+    LICE_DrawRect(bm,r.left-border,r.top-border,r.right-r.left+border*2,r.bottom-r.top+border*2,col1,1.0f,LICE_BLIT_MODE_COPY);
+    
+    tmpfont.DrawText(bm,text,-1,&r,0);
 }

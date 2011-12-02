@@ -52,7 +52,6 @@ class SWS_AutoColorView : public SWS_ListView
 public:
 	SWS_AutoColorView(HWND hwndList, HWND hwndEdit);
 	void OnDrag();
-	void OnEndDrag();
 
 protected:
 	void SetItemText(SWS_ListItem* item, int iCol, const char* str);

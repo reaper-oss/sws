@@ -31,7 +31,7 @@
 bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize);
 bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine = NULL);
 
-class SNM_NotesHelpWnd : public SNM_DockWnd
+class SNM_NotesHelpWnd : public SWS_DockWnd
 {
 public:
 	SNM_NotesHelpWnd();
@@ -65,9 +65,9 @@ protected:
 	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState);
 	void OnTimer(WPARAM wParam=0);
-	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
+	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	void OnResize();
-	HBRUSH ColorEdit(HWND _hwnd, HDC _hdc);
+	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
 
 	int updateItemNotes();
 	int updateTrackNotes();

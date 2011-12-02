@@ -895,7 +895,7 @@ enum
 };
 
 SNM_CyclactionWnd::SNM_CyclactionWnd()
-	: SNM_DockWnd(IDD_SNM_CYCLACTION, "Cycle action editor", "SnMCyclaction", 30011, SWSGetCommandID(OpenCyclactionView))
+	: SWS_DockWnd(IDD_SNM_CYCLACTION, "Cycle action editor", "SnMCyclaction", 30011, SWSGetCommandID(OpenCyclactionView))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -1191,18 +1191,16 @@ void SNM_CyclactionWnd::OnDestroy()
 	Cancel(true);
 */
 	m_cbSection.Empty();
-	m_parentVwnd.RemoveAllChildren(false);
-	m_parentVwnd.SetRealParent(NULL);
 }
 
-void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
+void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
-	if (!_bm) return;
-
 	LICE_CachedFont* font = SNM_GetThemeFont();
 
 	// 1st row of controls
 	int x0=_r->left+10, h=35;
+	if (_tooltipHeight)
+		*_tooltipHeight = h;
 
 	m_txtSection.SetFont(font);
 	if (SNM_AutoVWndPosition(&m_txtSection, NULL, _r, &x0, _r->top, h, 5)) {
@@ -1242,7 +1240,7 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	}
 }
 
-HBRUSH SNM_CyclactionWnd::ColorEdit(HWND _hwnd, HDC _hdc)
+HBRUSH SNM_CyclactionWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
 {
 	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
 	{

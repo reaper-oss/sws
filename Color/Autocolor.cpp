@@ -187,11 +187,6 @@ void SWS_AutoColorView::OnDrag()
 	}
 }
 
-void SWS_AutoColorView::OnEndDrag()
-{
-	ReleaseCapture();
-}
-
 SWS_AutoColorWnd::SWS_AutoColorWnd()
 :SWS_DockWnd(IDD_AUTOCOLOR, "Auto Color/Icon", "SWSAutoColor", 30005, SWSGetCommandID(OpenAutoColor))
 #ifndef _WIN32
@@ -448,17 +443,6 @@ INT_PTR SWS_AutoColorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam
 			return 1;
 		}
 	}
-	else if (uMsg == WM_MOUSEMOVE && GetCapture() == m_hwnd)
-	{
-		m_pView->OnDrag();
-		return 1;
-	}
-	else if (uMsg == WM_LBUTTONUP && GetCapture() == m_hwnd)
-	{
-		m_pView->OnEndDrag();
-		return 1;
-	}
-
 	return 0;
 }
 

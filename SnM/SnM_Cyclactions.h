@@ -69,7 +69,7 @@ private:
 
 
 #ifdef _SNM_CYCLACTION_OSX
-class SNM_CyclactionWnd : public SNM_DockWnd
+class SNM_CyclactionWnd : public SWS_DockWnd
 {
 public:
 	SNM_CyclactionWnd();
@@ -81,8 +81,8 @@ protected:
 	void OnInitDlg();
 	void OnDestroy();
 	HMENU OnContextMenu(int x, int y);
-	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
-	HBRUSH ColorEdit(HWND _hwnd, HDC _hdc);
+	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
+	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
 
 	WDL_VirtualComboBox m_cbSection;
 	WDL_VirtualIconButton m_btnUndo;

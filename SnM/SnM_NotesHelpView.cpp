@@ -92,7 +92,7 @@ MediaTrack* g_trNote = NULL;
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_NotesHelpWnd::SNM_NotesHelpWnd()
-	:SNM_DockWnd(IDD_SNM_NOTES_HELP, "Notes/Help", "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
+	:SWS_DockWnd(IDD_SNM_NOTES_HELP, "Notes/Help", "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
 {
 	m_type = m_previousType = NOTES_HELP_DISABLED;
 
@@ -632,8 +632,6 @@ void SNM_NotesHelpWnd::OnDestroy()
 
 	m_previousType = -1;
 	m_cbType.Empty();
-	m_parentVwnd.RemoveAllChildren(false);
-	m_parentVwnd.SetRealParent(NULL);
 }
 
 // we don't check iKeyState in order to catch (almost) everything
@@ -665,12 +663,11 @@ void SNM_NotesHelpWnd::OnTimer(WPARAM wParam) {
 		Update();
 }
 
-void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
+void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
-	if (!_bm)
-		return;
-	
 	int h=35;
+	if (_tooltipHeight)
+		*_tooltipHeight = h;
 
 	// big notes (dynamic font size)
 	// drawn first so that it is displayed even with tiny sizing..
@@ -826,7 +823,7 @@ void SNM_NotesHelpWnd::OnResize() {
   InvalidateRect(m_hwnd,NULL,FALSE);
 }
 
-HBRUSH SNM_NotesHelpWnd::ColorEdit(HWND _hwnd, HDC _hdc)
+HBRUSH SNM_NotesHelpWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
 {
 	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
 	{

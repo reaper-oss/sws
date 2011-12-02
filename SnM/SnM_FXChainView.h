@@ -179,7 +179,7 @@ protected:
 };
 
 
-class SNM_ResourceWnd : public SNM_DockWnd
+class SNM_ResourceWnd : public SWS_DockWnd
 {
 public:
 	SNM_ResourceWnd();
@@ -196,8 +196,8 @@ protected:
 	int OnKey(MSG* msg, int iKeyState);
 	int GetValidDroppedFilesCount(HDROP _h);
 	void OnDroppedFiles(HDROP _h);
-	void DrawControls(LICE_IBitmap* _bm, RECT* _r);
-	HBRUSH ColorEdit(HWND _hwnd, HDC _hdc);
+	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
+	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
 
 	void FillDblClickTypeCombo();
 	void AddSlot(bool _update);

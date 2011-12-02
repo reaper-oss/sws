@@ -31,53 +31,6 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Themed UIs
-///////////////////////////////////////////////////////////////////////////////
-
-INT_PTR SNM_DockWnd::OnUnhandledMsg(UINT _uMsg, WPARAM _wParam, LPARAM _lParam)
-{
-	switch (_uMsg)
-	{
-		case WM_PAINT: {
-			int xo, yo; RECT r;
-			GetClientRect(m_hwnd,&r);		
-			m_parentVwnd.SetPosition(&r);
-			m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
-			LICE_IBitmap* bm = m_vwnd_painter.GetBuffer(&xo, &yo);
-			bm->resize(r.right-r.left,r.bottom-r.top);
-			DrawControls(bm, &r);
-			m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
-			m_vwnd_painter.PaintEnd();
-		}
-		break;
-		case WM_LBUTTONDOWN:
-			SetFocus(m_hwnd); 
-			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(_lParam),GET_Y_LPARAM(_lParam)) > 0)
-				SetCapture(m_hwnd);
-			break;
-		case WM_LBUTTONDBLCLK:
-			if (m_parentVwnd.OnMouseDown(GET_X_LPARAM(_lParam),GET_Y_LPARAM(_lParam)) > 0)
-				m_parentVwnd.OnMouseUp(GET_X_LPARAM(_lParam),GET_Y_LPARAM(_lParam));
-			break;
-		case WM_LBUTTONUP:
-			if (GetCapture() == m_hwnd)	{
-				m_parentVwnd.OnMouseUp(GET_X_LPARAM(_lParam),GET_Y_LPARAM(_lParam));
-				ReleaseCapture();
-			}
-			break;
-		case WM_MOUSEMOVE:
-			m_parentVwnd.OnMouseMove(GET_X_LPARAM(_lParam),GET_Y_LPARAM(_lParam));
-			break;
-#ifdef _WIN32
-		case WM_CTLCOLOREDIT:
-			return (INT_PTR)ColorEdit((HWND)_lParam, (HDC)_wParam);
-#endif
-	}
-	return 0;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // SNM_ToolbarButton
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -293,7 +246,7 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 }
 
 //JFB TODO? hyperlink ?
-bool SNM_AddLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h)
+bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
 {
 	if (_bm)
 	{
@@ -315,7 +268,7 @@ bool SNM_AddLogo(LICE_IBitmap* _bm, RECT* _r, int _x, int _h)
 // JFB TODO? REMARK: 
 //    ideally, we'd need to mod WDL_VWnd here rather than checking inherited types (!)
 //    e.g. adding a kind of getPreferedWidthHeight(int* _width, int* _height)
-bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, RECT* _r, int* _x, int _y, int _h, int _xStep)
+bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xStep)
 {
 	if (_c)
 	{

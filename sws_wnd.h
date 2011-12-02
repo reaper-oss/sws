@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_wnd.h
 /
-/ Copyright (c) 2011 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,6 +27,7 @@
 
 #pragma once
 
+#define TOOLTIP_MAX_LEN 256
 #ifdef _WIN32
 #define SWSDLG_TYPEFACE "MS Shell Dlg"
 #define LISTVIEW_COLORHOOK_STATESIZE 3
@@ -75,6 +76,7 @@ public:
 	bool SelectByItem(SWS_ListItem* item);
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 	void OnDestroy();
+	virtual void OnDrag() {}
 	int EditingKeyHandler(MSG *msg);
 	int LVKeyHandler(MSG *msg, int iKeyState);
 	virtual void Update();
@@ -176,22 +178,37 @@ protected:
 	virtual void OnInitDlg() {}
 	virtual int OnNotify(WPARAM wParam, LPARAM lParam) { return 0; }
 	virtual HMENU OnContextMenu(int x, int y) { return NULL; }
+	virtual void OnPaint() {}
 	virtual void OnResize() {}
 	virtual void OnDestroy() {}
 	virtual void OnTimer(WPARAM wParam=0) {}
 	virtual void OnDroppedFiles(HDROP h) {}
-	virtual INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
 	virtual int OnKey(MSG* msg, int iKeyState) { return 0; } // return 1 for "processed key"
+	virtual int OnMouseDown(int xpos, int ypos) { return 0; } // return -1 to eat, >0 to capture
+	virtual bool OnMouseDblClick(int xpos, int ypos) { return false; }
+	virtual bool OnMouseMove(int xpos, int ypos) { return false; }
+	virtual bool OnMouseUp(int xpos, int ypos) { return false; }
+	virtual HBRUSH OnColorEdit(HWND hwnd, HDC hdc) { return 0; }
+	virtual INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
 
 	// Functions for derived classes to load/save some view information (for startup/screensets)
 	virtual int SaveView(char* cViewBuf, int iLen) { return 0; } // return num of chars in state (if cViewBuf == NULL, ret # of bytes needed)
 	virtual void LoadView(const char* cViewBuf, int iLen) {}
+
+	// Functions for WDL_VWnd-based GUIs
+	virtual void DrawControls(LICE_IBitmap* bm, const RECT* r, int* tooltipHeight = NULL) {}
+	virtual bool GetToolTipString(int xpos, int ypos, char* bufOut, int bufOutSz) { return false; }
+	virtual void KillTooltip(bool doRefresh=false);
 
 	HWND m_hwnd;
 	bool m_bUserClosed;
 	bool m_bLoadingState;
 	WDL_WndSizer m_resize;
 	WDL_PtrList<SWS_ListView> m_pLists;
+	WDL_VWnd_Painter m_vwnd_painter;
+	WDL_VWnd m_parentVwnd; // owns all children windows
+	char m_tooltip[TOOLTIP_MAX_LEN];
+	POINT m_tooltip_pt;
 
 private:
 	static INT_PTR WINAPI sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -211,4 +228,4 @@ private:
 
 
 bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int cstate[LISTVIEW_COLORHOOK_STATESIZE], int listID, int whichTheme, int wantGridForColumns); // if returns value, return 1
-
+void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char *text);

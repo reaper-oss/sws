@@ -282,7 +282,7 @@ int SNM_LiveConfigsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_LiveConfigsWnd::SNM_LiveConfigsWnd()
-	: SNM_DockWnd(IDD_SNM_MIDI_LIVE, "Live Configs", "SnMLiveConfigs", 30009, SWSGetCommandID(OpenLiveConfigView))
+	: SWS_DockWnd(IDD_SNM_MIDI_LIVE, "Live Configs", "SnMLiveConfigs", 30009, SWSGetCommandID(OpenLiveConfigView))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -833,8 +833,6 @@ void SNM_LiveConfigsWnd::OnDestroy()
 
 	m_cbConfig.Empty();
 	m_cbInputTr.Empty();
-	m_parentVwnd.RemoveAllChildren(false);
-	m_parentVwnd.SetRealParent(NULL);
 }
 
 int SNM_LiveConfigsWnd::OnKey(MSG* msg, int iKeyState) 
@@ -848,13 +846,13 @@ int SNM_LiveConfigsWnd::OnKey(MSG* msg, int iKeyState)
 }
 
 
-void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
+void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
-	if (!_bm)
-		return;
-	
-	LICE_CachedFont* font = SNM_GetThemeFont();
 	int x0=_r->left+10, h=35;
+	if (_tooltipHeight)
+		*_tooltipHeight = h;
+
+	LICE_CachedFont* font = SNM_GetThemeFont();
 
 	m_txtConfig.SetFont(font);
 	if (!SNM_AutoVWndPosition(&m_txtConfig, NULL, _r, &x0, _r->top, h, 5))
@@ -898,7 +896,7 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 	SNM_AddLogo(_bm, _r, x0, h);
 }
 
-HBRUSH SNM_LiveConfigsWnd::ColorEdit(HWND _hwnd, HDC _hdc)
+HBRUSH SNM_LiveConfigsWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
 {
 	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
 	{

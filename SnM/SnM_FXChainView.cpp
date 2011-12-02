@@ -584,7 +584,7 @@ void SNM_ResourceView::OnBeginDrag(SWS_ListItem* _item)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_ResourceWnd::SNM_ResourceWnd()
-	: SNM_DockWnd(IDD_SNM_FXCHAINLIST, "Resources", "SnMResources", 30006, SWSGetCommandID(OpenResourceView))
+	: SWS_DockWnd(IDD_SNM_FXCHAINLIST, "Resources", "SnMResources", 30006, SWSGetCommandID(OpenResourceView))
 {
 	m_previousType = g_type;
 	m_autoSaveTrTmpltWithItemsPref = true;
@@ -1266,8 +1266,6 @@ void SNM_ResourceWnd::OnDestroy()
 	m_cbType.Empty();
 	m_cbDblClickType.Empty();
 	m_cbDblClickTo.Empty();
-	m_parentVwnd.RemoveAllChildren(false);
-	m_parentVwnd.SetRealParent(NULL);
 }
 
 
@@ -1398,14 +1396,14 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 	DragFinish(_h);
 }
 
-void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
+void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
-	if (!_bm)
-		return;
+	int x0=_r->left+10, h=35;
+	if (_tooltipHeight)
+		*_tooltipHeight = h;
 
 	LICE_CachedFont* font = SNM_GetThemeFont();
 	IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);// returns the whole icon theme (icontheme.h) and the size
-	int x0=_r->left+10, h=35;
 
 	// defines a new rect 'r' that takes the filter edit box into account (contrary to '_r')
 	RECT r;
@@ -1463,7 +1461,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, RECT* _r)
 */
 }
 
-HBRUSH SNM_ResourceWnd::ColorEdit(HWND _hwnd, HDC _hdc)
+HBRUSH SNM_ResourceWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
 {
 	int bg, txt; bool match=false;
 	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))

@@ -27,7 +27,7 @@
 
 #pragma once
 
-#define TOOLTIP_MAX_LEN 256
+#define TOOLTIP_MAX_LEN 512
 #ifdef _WIN32
 #define SWSDLG_TYPEFACE "MS Shell Dlg"
 #define LISTVIEW_COLORHOOK_STATESIZE 3

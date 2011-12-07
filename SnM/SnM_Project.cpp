@@ -61,9 +61,9 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 // Project template slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
-void loadOrSelectProjectSlot(const char* _title, int _slot, bool _newTab)
+void loadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab)
 {
-	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_PRJ)->GetOrPromptOrBrowseSlot(_title, _slot))
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot))
 	{
 		char fn2[BUFFER_SIZE] = "";
 		ReaProject* prj = NULL;
@@ -87,22 +87,22 @@ void loadOrSelectProjectSlot(const char* _title, int _slot, bool _newTab)
 	}
 }
 
-bool autoSaveProjectSlot(bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnSize)
+bool autoSaveProjectSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _saveCurPrj)
 {
 	if (_saveCurPrj) Main_OnCommand(40026,0);
 	char prjFn[BUFFER_SIZE] = "", name[256] = "";
 	EnumProjects(-1, prjFn, BUFFER_SIZE);
 	GetFilenameNoExt(prjFn, name, 256);
-	GenerateFilename(_dirPath, name, g_slots.Get(SNM_SLOT_PRJ)->GetFileExt(), _fn, _fnSize);
-	return (SNM_CopyFile(_fn, prjFn) && g_slots.Get(SNM_SLOT_PRJ)->AddSlot(_fn));
+	GenerateFilename(_dirPath, name, g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
+	return (SNM_CopyFile(_fn, prjFn) && g_slots.Get(_slotType)->AddSlot(_fn));
 }
 
 void loadOrSelectProjectSlot(COMMAND_T* _ct) {
-	loadOrSelectProjectSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false);
+	loadOrSelectProjectSlot(g_tiedSlotActions[SNM_SLOT_PRJ], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false);
 }
 
 void loadOrSelectProjectTabSlot(COMMAND_T* _ct) {
-	loadOrSelectProjectSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true);
+	loadOrSelectProjectSlot(g_tiedSlotActions[SNM_SLOT_PRJ], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true);
 }
 
 
@@ -141,13 +141,16 @@ void projectLoaderConf(COMMAND_T* _ct)
 				}
 			}
 		}
-	}
 
-	if (ok) {
-		g_prjCurSlot = -1; // reset current prj
-		if (g_pResourcesWnd) g_pResourcesWnd->Update();
+		if (ok)
+		{
+			g_prjCurSlot = -1; // reset current prj
+			if (g_pResourcesWnd)
+				g_pResourcesWnd->Update();
+		}
+		else
+			MessageBox(GetMainHwnd(), "Invalid start and/or end slot(s) !\nProbable cause: out of bounds, the Resources view is empty, etc...", "S&M - Error", MB_OK);
 	}
-	else MessageBox(GetMainHwnd(), "Invalid start and/or end slot(s) !\nProbable cause: out of bounds, the Resources view is empty, etc...", "S&M - Error", MB_OK);
 }
 
 void loadOrSelectNextPreviousProject(COMMAND_T* _ct)
@@ -187,7 +190,7 @@ void loadOrSelectNextPreviousProject(COMMAND_T* _ct)
 
 		// found one?
 		if (cpt <= slotCount) {
-			loadOrSelectProjectSlot("", g_prjCurSlot, false);
+			loadOrSelectProjectSlot(SNM_SLOT_PRJ, "", g_prjCurSlot, false);
 			if (g_pResourcesWnd) g_pResourcesWnd->SelectBySlot(g_prjCurSlot);
 		}
 		else g_prjCurSlot = -1;
@@ -206,7 +209,7 @@ void openProjectPathInExplorerFinder(COMMAND_T* _ct)
 	if (*path)
 	{
 		if (char* p = strrchr(path, PATH_SLASH_CHAR)) {
-			*(p+1) = '\0'; // ShellExecute() is KO otherwie..
+			*(p+1) = '\0'; // ShellExecute() is KO otherwise..
 			ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
 		}
 	}

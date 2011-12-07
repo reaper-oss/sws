@@ -164,9 +164,9 @@ void setTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly
 
 // _slot: 0-based, -1 will prompt for slot
 // _set=false: paste, _set=true: set
-void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool _set)
+void applyTakesFXChainSlot(int _slotType, const char* _title, int _slot, bool _activeOnly, bool _set)
 {
-	WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_FXC)->GetOrPromptOrBrowseSlot(_title, _slot);
+	WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot);
 	if (fnStr && CountSelectedMediaItems(NULL))
 	{
 		WDL_FastString chain;
@@ -185,7 +185,7 @@ void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool
 	}
 }
 
-bool autoSaveItemFXChainSlots(const char* _dirPath, char* _fn, int _fnSize)
+bool autoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize)
 {
 	bool slotUpdate = false;
 	WDL_PtrList<MediaItem> items;
@@ -200,8 +200,8 @@ bool autoSaveItemFXChainSlots(const char* _dirPath, char* _fn, int _fnSize)
 				RemoveAllIds(&fxChain);
 
 				char* itemName = GetName(item);
-				GenerateFilename(_dirPath, (!itemName || *itemName == '\0') ? "Untitled" : itemName, g_slots.Get(SNM_SLOT_FXC)->GetFileExt(), _fn, _fnSize);
-				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(SNM_SLOT_FXC)->AddSlot(_fn));
+				GenerateFilename(_dirPath, (!itemName || *itemName == '\0') ? "Untitled" : itemName, g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
+				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
 			}
 		}
 	}
@@ -209,19 +209,19 @@ bool autoSaveItemFXChainSlots(const char* _dirPath, char* _fn, int _fnSize)
 }
 
 void loadSetTakeFXChain(COMMAND_T* _ct) {
-	applyTakesFXChainSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
+	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
 }
 
 void loadPasteTakeFXChain(COMMAND_T* _ct) {
-	applyTakesFXChainSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
+	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
 }
 
 void loadSetAllTakesFXChain(COMMAND_T* _ct) {
-	applyTakesFXChainSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
+	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
 }
 
 void loadPasteAllTakesFXChain(COMMAND_T* _ct) {
-	applyTakesFXChainSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
+	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
 }
 
 void copyTakeFXChain(COMMAND_T* _ct) {
@@ -382,9 +382,9 @@ int copyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr)
 ///////////////////////////////////////////////////////////////////////////////
 
 // _set=false => paste
-void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inputFX)
+void applyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _set, bool _inputFX)
 {
-	WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_FXC)->GetOrPromptOrBrowseSlot(_title, _slot);
+	WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot);
 	if (fnStr && SNM_CountSelectedTracks(NULL, true))
 	{
 		WDL_FastString chain;
@@ -403,7 +403,7 @@ void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inpu
 	}
 }
 
-bool autoSaveTrackFXChainSlots(bool _inputFX, const char* _dirPath, char* _fn, int _fnSize)
+bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _inputFX)
 {
 	bool slotUpdate = false;
 	for (int i = 0; i <= GetNumTracks(); i++)
@@ -425,8 +425,8 @@ bool autoSaveTrackFXChainSlots(bool _inputFX, const char* _dirPath, char* _fn, i
 				char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 				char autoSlotName[256] = "";
 				_snprintf(autoSlotName, 256, "%s%s", (!trName || *trName == '\0') ? "Untitled" : trName, _inputFX ? "_inputFX" : "");
-				GenerateFilename(_dirPath, autoSlotName, g_slots.Get(SNM_SLOT_FXC)->GetFileExt(), _fn, _fnSize);
-				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(SNM_SLOT_FXC)->AddSlot(_fn));
+				GenerateFilename(_dirPath, autoSlotName, g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
+				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
 			}
 		}
 	}
@@ -434,19 +434,19 @@ bool autoSaveTrackFXChainSlots(bool _inputFX, const char* _dirPath, char* _fn, i
 }
 
 void loadSetTrackFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
+	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
 }
 
 void loadPasteTrackFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
+	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
 }
 
 void loadSetTrackInFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, g_bv4);
+	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, g_bv4);
 }
 
 void loadPasteTrackInFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, g_bv4);
+	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, g_bv4);
 }
 
 void clearTrackFXChain(COMMAND_T* _ct) {

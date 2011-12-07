@@ -1,6 +1,6 @@
 /******************************************************************************
 / SnM_Actions.h
-/ JFB TODO? now, a better name would be "SnM.h"
+/ JFB TODO? split into several .h + a better name would be "SnM.h"
 /
 / Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
@@ -29,7 +29,6 @@
 #pragma once
 
 #include "SNM_ChunkParserPatcher.h"
-#include "version.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,6 +53,8 @@
 #define SNM_CYCLACTION_INI_FILE		"%s\\S&M_Cyclactions.ini"
 #define SNM_CYCLACTION_BAK_FILE		"%s\\S&M_Cyclactions.bak"
 #define SNM_CYCLACTION_EXPORT_FILE	"%s\\S&M_Cyclactions_export.ini"
+#define SNM_FONT_NAME				"MS Shell Dlg"
+#define SNM_FONT_HEIGHT				14
 #else
 #define SNM_FORMATED_INI_FILE		"%s/S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE	"%s/Plugins/S&M.ini"
@@ -61,9 +62,11 @@
 #define SNM_CYCLACTION_INI_FILE		"%s/S&M_Cyclactions.ini"
 #define SNM_CYCLACTION_BAK_FILE		"%s/S&M_Cyclactions.bak"
 #define SNM_CYCLACTION_EXPORT_FILE	"%s/S&M_Cyclactions_export.ini"
+#define SNM_FONT_NAME				"Arial"
+#define SNM_FONT_HEIGHT				12
 #endif
 
-#define SNM_INI_FILE_VERSION		2
+#define SNM_INI_FILE_VERSION		3
 #define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
 #define SNM_MAX_SECTION_NAME_LEN	64
 #define SNM_MAX_SECTION_ACTIONS		128
@@ -81,7 +84,7 @@
 #define SNM_MAX_CYCLING_ACTIONS		8
 #define SNM_MAX_CYCLING_SECTIONS	3
 #define SNM_MAX_ENV_SUBCHUNK_NAME	16
-#define SNM_MAX_SLOT_TYPES			32
+#define SNM_MAX_SLOT_TYPES			16
 #define SNM_LET_BREATHE_MS			10
 #define SNM_3D_COLORS_DELTA			25
 #define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average I monitored)
@@ -113,19 +116,10 @@ static void deleteintptr(int* _p) { DELETE_NULL(_p); }
 // Global types & classes
 ///////////////////////////////////////////////////////////////////////////////
 
-class SNM_ToolbarButton : public WDL_VirtualIconButton {
-public:
-	SNM_ToolbarButton() : WDL_VirtualIconButton() {}
-	const char *GetType() { return "vwnd_s&m_toolbar"; }
-	void SetGrayed(bool grayed) { WDL_VirtualIconButton::SetGrayed(grayed); if (grayed) m_pressed=0; } // avoid stuck overlay when mousedown leads to grayed button
-	void GetPositionPaintOverExtent(RECT *r) { *r=m_position; }
-	void OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
-};
-
 class SNM_TrackNotes {
 public:
-	SNM_TrackNotes(MediaTrack* _tr, const char* _notes) 
-		: m_tr(_tr) {m_notes.Set(_notes ? _notes : "");}
+	SNM_TrackNotes(MediaTrack* _tr, const char* _notes)
+		: m_tr(_tr),m_notes(_notes ? _notes : "") {}
 	MediaTrack* m_tr; WDL_FastString m_notes;
 };
 
@@ -139,7 +133,8 @@ public:
 
 class SNM_ScheduledJob {
 public:
-	SNM_ScheduledJob(int _id, int _approxDelayMs) : m_id(_id), m_tick((int)floor((_approxDelayMs/SNM_CSURF_RUN_TICK_MS) + 0.5)) {}
+	SNM_ScheduledJob(int _id, int _approxDelayMs)
+		: m_id(_id), m_tick((int)floor((_approxDelayMs/SNM_CSURF_RUN_TICK_MS) + 0.5)) {}
 	virtual ~SNM_ScheduledJob() {}
 	virtual void Perform() {}
 	int m_id, m_tick;
@@ -176,6 +171,74 @@ typedef struct MIDI_COMMAND_T {
 	bool (*getEnabled)(MIDI_COMMAND_T*);
 	int excecCount;
 } MIDI_COMMAND_T;
+
+class SNM_ImageVWnd : public WDL_VWnd {
+public:
+	SNM_ImageVWnd(LICE_IBitmap* _img) : WDL_VWnd() { m_img = _img; }
+	virtual const char *GetType() { return "SNM_ImageVWnd"; }
+	virtual int GetWidth();
+	virtual int GetHeight();
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+protected:
+	LICE_IBitmap* m_img;
+};
+
+LICE_IBitmap* SNM_GetThemeLogo();
+
+class SNM_Logo : public SNM_ImageVWnd {
+public:
+	SNM_Logo() : SNM_ImageVWnd(SNM_GetThemeLogo()) {}
+	virtual const char *GetType() { return "SNM_Logo"; }
+	virtual bool GetToolTipString(int xpos, int ypos, char* bufOut, int bufOutSz) { lstrcpyn(bufOut, "Strong & Mighty", bufOutSz); return true; }
+};
+
+class SNM_AddDelButton : public WDL_VWnd {
+public:
+	SNM_AddDelButton() : WDL_VWnd() { m_add=true; m_en=true; }
+	virtual const char *GetType() { return "SNM_AddDelButton"; }
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+	virtual void SetAdd(bool _add) { m_add=_add; }
+	virtual void SetEnabled(bool _en) { m_en=_en; }
+	virtual int OnMouseDown(int xpos, int ypos) { return m_en?1:0;	}
+	virtual void OnMouseUp(int xpos, int ypos) { if (m_en) SendCommand(WM_COMMAND,GetID(),0,this); }
+protected:
+	bool m_add, m_en;
+};
+
+class SNM_MiniAddDelButtons : public WDL_VWnd {
+public:
+	SNM_MiniAddDelButtons() : WDL_VWnd()
+	{
+		m_btnPlus.SetID(0xF666); // temp ids.. SetIDs() must be used
+		m_btnMinus.SetID(0xF667);
+		m_btnPlus.SetAdd(true);
+		m_btnMinus.SetAdd(false); 
+		AddChild(&m_btnPlus);
+		AddChild(&m_btnMinus);
+	}
+	~SNM_MiniAddDelButtons() { RemoveAllChildren(false); }
+	virtual void SetIDs(int _id, int _addId, int _delId) { SetID(_id); m_btnPlus.SetID(_addId); m_btnMinus.SetID(_delId); }
+	virtual const char *GetType() { return "SNM_MiniAddDelButtons"; }
+	virtual void SetPosition(const RECT *r)
+	{
+		m_position=*r; 
+		RECT rr = {0, 0, 9, 9};
+		m_btnPlus.SetPosition(&rr);
+		RECT rr2 = {0, 10, 9, 19};
+		m_btnMinus.SetPosition(&rr2);
+	}
+protected:
+	SNM_AddDelButton m_btnPlus, m_btnMinus;
+};
+
+class SNM_ToolbarButton : public WDL_VirtualIconButton {
+public:
+	SNM_ToolbarButton() : WDL_VirtualIconButton() {}
+	const char *GetType() { return "SNM_ToolbarButton"; }
+	void SetGrayed(bool grayed) { WDL_VirtualIconButton::SetGrayed(grayed); if (grayed) m_pressed=0; } // avoid stuck overlay when mousedown leads to grayed button
+	void GetPositionPaintOverExtent(RECT *r) { *r=m_position; }
+	void OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -227,9 +290,13 @@ HBRUSH SNM_GetThemeBrush(int _col=-666);
 void SNM_GetThemeListColors(int* _bg, int* _txt);
 void SNM_GetThemeEditColors(int* _bg, int* _txt);
 void SNM_ThemeListView(SWS_ListView* _lv);
+/* defined on top, see SNM_ImageVWnd
 LICE_IBitmap* SNM_GetThemeLogo();
+*/
+void SNM_SkinButton(WDL_VirtualIconButton* _btn, WDL_VirtualIconButton_SkinConfig* _skin, const char* _text);
 void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text);
 bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h);
+bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h);
 bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xStep = SNM_DEF_VWND_X_STEP);
 void SNM_UIInit();
 void SNM_UIExit();
@@ -287,8 +354,8 @@ void makeChunkTakeFX(WDL_FastString* _outTakeFX, const WDL_FastString* _inRfxCha
 int copyTakeFXChain(WDL_FastString* _fxChain, int _startSelItem=0);
 void pasteTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly);
 void setTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly);
-void applyTakesFXChainSlot(const char* _title, int _slot, bool _activeOnly, bool _set);
-bool autoSaveItemFXChainSlots(const char* _dirPath, char* _fn, int _fnSize);
+void applyTakesFXChainSlot(int _slotType, const char* _title, int _slot, bool _activeOnly, bool _set);
+bool autoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize);
 void loadSetTakeFXChain(COMMAND_T*);
 void loadPasteTakeFXChain(COMMAND_T*);
 void loadSetAllTakesFXChain(COMMAND_T*);
@@ -304,8 +371,8 @@ void clearAllTakesFXChain(COMMAND_T*);
 void pasteTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX);
 void setTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX);
 int copyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr=0);
-void applyTracksFXChainSlot(const char* _title, int _slot, bool _set, bool _inputFX);
-bool autoSaveTrackFXChainSlots(bool _inputFX, const char* _dirPath, char* _fn, int _fnSize);
+void applyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _set, bool _inputFX);
+bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _inputFX);
 void loadSetTrackFXChain(COMMAND_T*);
 void loadPasteTrackFXChain(COMMAND_T*);
 void loadSetTrackInFXChain(COMMAND_T*);
@@ -381,14 +448,14 @@ void setPan(COMMAND_T*);
 void PlaySelTrackMediaSlot(const char* _title, int _slot, bool _loop);
 void PlaySelTrackMediaSlot(COMMAND_T*);
 void LoopSelTrackMediaSlot(COMMAND_T*);
-bool TogglePlaySelTrackMediaSlot(const char* _title, int _slot, bool _loop);
+bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _loop);
 void TogglePlaySelTrackMediaSlot(COMMAND_T*);
 void ToggleLoopSelTrackMediaSlot(COMMAND_T*);
-void InsertMediaSlot(const char* _title, int _slot, int _insertMode);
+void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMode);
 void InsertMediaSlotCurTr(COMMAND_T*);
 void InsertMediaSlotNewTr(COMMAND_T*);
 void InsertMediaSlotTakes(COMMAND_T*);
-bool autoSaveMediaSlot(const char* _dirPath, char* _fn, int _fnSize);
+bool autoSaveMediaSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize);
 
 // *** SnM_LiveConfigsView.cpp ***
 int LiveConfigViewInit();
@@ -430,6 +497,7 @@ void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const
 void SNM_UpgradeIniFiles();
 void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs);
 int FindMarkerRegion(double _pos);
+int FindMarkerRegionNum(double _pos);
 void makeUnformatedConfigString(const char* _in, WDL_FastString* _out);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 void ShortenStringToFirstRN(char* _str);
@@ -444,7 +512,7 @@ void SimulateMouseClick(COMMAND_T*);
 void DumpWikiActionList2(COMMAND_T*);
 void DumpActionList(COMMAND_T*);
 #ifdef _WIN32
-void LoadThemeSlot(const char* _title, int _slot);
+void LoadThemeSlot(int _slotType, const char* _title, int _slot);
 void LoadThemeSlot(COMMAND_T* _ct);
 #endif
 #ifdef _SNM_MISC
@@ -466,8 +534,8 @@ bool IsNotesHelpLocked(COMMAND_T*);
 
 // *** SnM_Project.cpp ***
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
-void loadOrSelectProjectSlot(const char* _title, int _slot, bool _newTab);
-bool autoSaveProjectSlot(bool _saveCurPrj, const char* _dirPath, char* _fn, int _fnSize);
+void loadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab);
+bool autoSaveProjectSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _saveCurPrj);
 void loadOrSelectProjectSlot(COMMAND_T*);
 void loadOrSelectProjectTabSlot(COMMAND_T*);
 bool isProjectLoaderConfValid();
@@ -481,6 +549,8 @@ void ResourceViewExit();
 void OpenResourceView(COMMAND_T*);
 bool IsResourceViewDisplayed(COMMAND_T*);
 void ResourceViewClearSlotPrompt(COMMAND_T*);
+void ResourceViewAutoSaveFXChain(COMMAND_T*);
+void ResourceViewAutoSaveTrTemplate(COMMAND_T*);
 void ResourceViewAutoSave(COMMAND_T*);
 
 // *** SnM_Sends.cpp ***
@@ -530,11 +600,11 @@ void SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs);
 void SNM_ClearSelectedTracks(ReaProject* _proj);
 bool makeSingleTrackTemplateChunk(WDL_FastString* _inRawChunk, WDL_FastString* _out, bool _delItems, bool _delEnvs);
 bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _rawChunk, SNM_ChunkParserPatcher* _p = NULL, bool _itemsFromTmplt = false, bool _envsFromTmplt = false);
-void applyOrImportTrackSlot(const char* _title, int _slot, bool _import, bool _itemsFromTmplt, bool _envsFromTmplt);
-void replaceOrPasteItemsFromTrackSlot(const char* _title, int _slot, bool _paste);
+void applyOrImportTrackSlot(int _slotType, const char* _title, int _slot, bool _import, bool _itemsFromTmplt, bool _envsFromTmplt);
+void replaceOrPasteItemsFromTrackSlot(int _slotType, const char* _title, int _slot, bool _paste);
 void loadSetTrackTemplate(COMMAND_T*);
 void loadImportTrackTemplate(COMMAND_T*);
-bool autoSaveTrackSlots(bool _delItems, bool _delEnvs, const char* _dirPath, char* _fn, int _fnSize);
+bool autoSaveTrackSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _delItems, bool _delEnvs);
 void setMIDIInputChannel(COMMAND_T*);
 void remapMIDIInputChannel(COMMAND_T*);
 bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _loop);

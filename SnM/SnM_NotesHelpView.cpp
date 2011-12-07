@@ -42,6 +42,8 @@
 
 #define MAX_HELP_LENGTH				4096 //JFB 4096 rather than MAX_INI_SECTION (too big)
 #define SET_ACTION_HELP_FILE_MSG	0xF001
+#define UPDATE_TIMER				1
+#define UPDATE_FREQ					125
 
 enum {
   BUTTONID_LOCK=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
@@ -119,7 +121,7 @@ void SNM_NotesHelpWnd::SetType(int _type)
 	Update(); 
 
 	if (prev == NOTES_HELP_DISABLED && prev != _type)
-		SetTimer(m_hwnd, 1, 125, NULL);
+		SetTimer(m_hwnd, UPDATE_TIMER, UPDATE_FREQ, NULL);
 }
 
 void SNM_NotesHelpWnd::SetText(const char* _str) 
@@ -257,7 +259,7 @@ void SNM_NotesHelpWnd::Update(bool _force)
 				}
 				break;
 			case NOTES_HELP_DISABLED:
-				KillTimer(m_hwnd, 1);
+				KillTimer(m_hwnd, UPDATE_TIMER);
 				SetText(g_prjNotes.Get()->Get());
 				refreshType = REQUEST_REFRESH;
 				break;
@@ -548,7 +550,22 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	Update();
 
 	if (m_type != NOTES_HELP_DISABLED)
-		SetTimer(m_hwnd, 1, 125, NULL);
+		SetTimer(m_hwnd, UPDATE_TIMER, UPDATE_FREQ, NULL);
+}
+
+void SNM_NotesHelpWnd::OnDestroy() 
+{
+	KillTimer(m_hwnd, UPDATE_TIMER);
+
+	// save prefs
+	char cType[2], cLock[2];
+	sprintf(cType, "%d", m_type);
+	sprintf(cLock, "%d", g_locked);
+	WritePrivateProfileString("NOTES_HELP_VIEW", "TYPE", cType, g_SNMIniFn.Get()); 
+	WritePrivateProfileString("NOTES_HELP_VIEW", "LOCK", cLock, g_SNMIniFn.Get()); 
+
+	m_previousType = -1;
+	m_cbType.Empty();
 }
 
 void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -619,21 +636,6 @@ HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y)
 	return hMenu;
 }
 
-void SNM_NotesHelpWnd::OnDestroy() 
-{
-	KillTimer(m_hwnd, 1);
-
-	// save prefs
-	char cType[2], cLock[2];
-	sprintf(cType, "%d", m_type);
-	sprintf(cLock, "%d", g_locked);
-	WritePrivateProfileString("NOTES_HELP_VIEW", "TYPE", cType, g_SNMIniFn.Get()); 
-	WritePrivateProfileString("NOTES_HELP_VIEW", "LOCK", cLock, g_SNMIniFn.Get()); 
-
-	m_previousType = -1;
-	m_cbType.Empty();
-}
-
 // we don't check iKeyState in order to catch (almost) everything
 // some key masks won't pass here though (e.g. Ctrl+Shift)
 // returns:
@@ -654,13 +656,17 @@ int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState)
 	return 0; 
 }
 
-void SNM_NotesHelpWnd::OnTimer(WPARAM wParam) {
-	// no update when the user edits & when the view is hidden (e.g. inactive docker tab)
-	// but when the view is active: update only for markers and if the view is locked 
-    //(=> updates during playback, in other cases -e.g. item selection change- the main window 
-	// *will* be the active one)
-	if ((!IsActive() || (g_locked && m_type == MARKER_REGION_NAME)) && IsWindowVisible(m_hwnd))
-		Update();
+void SNM_NotesHelpWnd::OnTimer(WPARAM wParam)
+{
+	if (wParam == UPDATE_TIMER)
+	{
+		// no update when the user edits & when the view is hidden (e.g. inactive docker tab)
+		// but when the view is active: update only for markers and if the view is locked 
+		//(=> updates during playback, in other cases -e.g. item selection change- the main window 
+		// *will* be the active one)
+		if ((!IsActive() || (g_locked && m_type == MARKER_REGION_NAME)) && IsWindowVisible(m_hwnd))
+			Update();
+	}
 }
 
 void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
@@ -734,18 +740,11 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 		LICE_FillRect(_bm,0,h,_bm->getWidth(),_bm->getHeight()-h,WDL_STYLE_GetSysColor(COLOR_WINDOW),0.0,LICE_BLIT_MODE_COPY);
 
 	LICE_CachedFont* font = SNM_GetThemeFont();
-	IconTheme* it = (IconTheme*)GetIconThemeStruct(NULL);// returns the whole icon theme (icontheme.h) and the size
+	IconTheme* it = SNM_GetIconTheme();
 	int x0=_r->left+10;
 
 	// Lock button
-	WDL_VirtualIconButton_SkinConfig* skin = it ? &(it->toolbar_lock[!g_locked]) : NULL;
-	if (skin)
-		m_btnLock.SetIcon(skin);
-	else
-	{
-		m_btnLock.SetTextLabel(g_locked ? "Unlock" : "Lock", 0, font);
-		m_btnLock.SetForceBorder(true);
-	}
+	SNM_SkinButton(&m_btnLock, it ? &(it->toolbar_lock[!g_locked]) : NULL, g_locked ? "Unlock" : "Lock");
 	if (!SNM_AutoVWndPosition(&m_btnLock, NULL, _r, &x0, _r->top, h))
 		return;
 
@@ -755,7 +754,6 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 		return;
 
 	// online help
-	m_btnAlr.SetVisible(m_type == ACTION_HELP);
 	if (m_type == ACTION_HELP) {
 		SNM_SkinToolbarButton(&m_btnAlr, "Online help...");
 		if (!SNM_AutoVWndPosition(&m_btnAlr, NULL, _r, &x0, _r->top, h))
@@ -817,10 +815,6 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 		return;
 
 	SNM_AddLogo(_bm, _r, x0, h);
-}
-
-void SNM_NotesHelpWnd::OnResize() {
-  InvalidateRect(m_hwnd,NULL,FALSE);
 }
 
 HBRUSH SNM_NotesHelpWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
@@ -977,7 +971,7 @@ bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const cha
 			if (_buf[j] == '\n') 
 				_notes->Append("\n|");
 			else if (_buf[j] != '\r') 
-				_notes->AppendFormatted(2, "%c", _buf[j]); 
+				_notes->Append(_buf+j, 1);
 			j++;
 		}
 		_notes->Append("\n>\n");

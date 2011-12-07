@@ -58,15 +58,14 @@ public:
 
 protected:
 	void OnInitDlg();
+	void OnDestroy();
 /*JFB r376	
 	bool IsActive(bool bWantEdit = false);
 */
 	HMENU OnContextMenu(int x, int y);
-	void OnDestroy();
 	int OnKey(MSG* msg, int iKeyState);
 	void OnTimer(WPARAM wParam=0);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
-	void OnResize();
 	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
 
 	int updateItemNotes();

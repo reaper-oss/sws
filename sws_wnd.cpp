@@ -53,6 +53,7 @@ SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, 
 		screenset_register((char*)cId, (void*)screensetCallbackOld, this);
 
 	memset(&m_state, 0, sizeof(SWS_DockWnd_State));
+	*m_tooltip = '\0';
 
 	m_ar.translateAccel = keyHandler;
 	m_ar.isLocal = true;
@@ -284,6 +285,9 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		case WM_DESTROY:
 		{
+			KillTimer(m_hwnd, CELL_EDIT_TIMER);
+			KillTooltip();
+
 			OnDestroy();
 
 			m_parentVwnd.RemoveAllChildren(false);
@@ -311,21 +315,26 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			OnPaint();
 			if (m_parentVwnd.GetNumChildren())
 			{
-				int h, xo, yo; RECT r;
+				int xo, yo; RECT r;
 				GetClientRect(m_hwnd,&r);		
 				m_parentVwnd.SetPosition(&r);
 				m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
 				if (LICE_IBitmap* bm = m_vwnd_painter.GetBuffer(&xo, &yo))
 				{
 					bm->resize(r.right-r.left,r.bottom-r.top);
-					DrawControls(bm, &r, &h);
+					int x=0; while (WDL_VWnd* w = m_parentVwnd.EnumChildren(x++)) w->SetVisible(false);
+					int h=0; DrawControls(bm, &r, &h);
 					m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
 					if (*m_tooltip)
 					{
-						POINT p = { m_tooltip_pt.x + xo, m_tooltip_pt.y + yo };
-						RECT rr = { r.left+xo,r.top+yo,r.right+xo,r.bottom+yo };
-						if (h>0) rr.bottom = h+yo; //JFB!!! WIP.. make sure some tooltips are not hidden by MFCs..
-						DrawTooltipForPoint(bm,p,&rr,m_tooltip);
+						if (!(*(int*)GetConfigVar("tooltips")&2)) // obeys the "Tooltip for UI elements" pref
+						{
+							POINT p = { m_tooltip_pt.x + xo, m_tooltip_pt.y + yo };
+							RECT rr = { r.left+xo,r.top+yo,r.right+xo,r.bottom+yo };
+							if (h>0) rr.bottom = h+yo; //JFB WIP.. make sure some tooltips are not hidden by MFCs..
+							DrawTooltipForPoint(bm,p,&rr,m_tooltip);
+						}
+						Help_Set(m_tooltip, true);
 					}
 				}
 				m_vwnd_painter.PaintEnd();
@@ -1755,7 +1764,7 @@ void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char
     }
     tmpfont.SetBkMode(TRANSPARENT);
     LICE_pixel col1 = LICE_RGBA(0,0,0,255);
-    LICE_pixel col2 = LICE_RGBA(255,255,192,255);
+    LICE_pixel col2 = LICE_RGBA(255,255,225,255); //JFB mod, was: col2 = LICE_RGBA(255,255,192,255);
 
     tmpfont.SetTextColor(col1);
     RECT r={0,};
@@ -1769,10 +1778,10 @@ void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char
       if (mousePt.y - r.bottom - 12 >= wndr->top)
         yo = mousePt.y - r.bottom - 12;
       else
-        yo = wndr->bottom -4 - r.bottom;
-//JFB added (prevents hidden tooltip behind the mouse pointer) --------------->
+        yo = wndr->bottom - 4 - r.bottom;
+
+      //JFB added (prevents hidden tooltip behind the mouse pointer):
       xo += 15;
-//JFB <------------------------------------------------------------------------
     }
 
     if (xo + r.right > wndr->right - 4)

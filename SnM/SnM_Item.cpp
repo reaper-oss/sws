@@ -652,7 +652,7 @@ void moveActiveTake(COMMAND_T* _ct)
 
 void buildLanes(COMMAND_T* _ct) {
 	if (buildLanes(SNM_CMD_SHORTNAME(_ct), (int)_ct->user) < 0)
-		MessageBox(g_hwndParent, "Some items were ignored, probable causes:\n- Items not recorded or recorded before REAPER v3.66 (no record pass id)\n- Imploded takes with duplicated record pass ids", "S&M - Build lanes - Warning", MB_OK);
+		MessageBox(GetMainHwnd(), "Some items were ignored, probable causes:\n- Items not recorded or recorded before REAPER v3.66 (no record pass id)\n- Imploded takes with duplicated record pass ids", "S&M - Build lanes - Warning", MB_OK);
 }
 
 void activateLaneFromSelItem(COMMAND_T* _ct)
@@ -778,7 +778,7 @@ bool deleteTakeAndMedia(int _mode)
 								else 
 									sprintf(buf,"[Track %d, item %d] Delete take %d (empty take) ?", i, j+1, originalTkIdx+1); // v3 or v4 empty takes
 
-								rc = MessageBox(g_hwndParent, buf, "S&M - Delete take and source files (NO UNDO!)", MB_YESNOCANCEL);
+								rc = MessageBox(GetMainHwnd(), buf, "S&M - Delete take and source files (NO UNDO!)", MB_YESNOCANCEL);
 								if (rc == IDCANCEL) {
 									cancel = true;
 									break;
@@ -839,7 +839,7 @@ bool deleteTakeAndMedia(int _mode)
 
 void deleteTakeAndMedia(COMMAND_T* _ct) {
 	if (!deleteTakeAndMedia((int)_ct->user))
-		MessageBox(g_hwndParent, "Warning: at least one file couldn't be deleted.\nTips: are you an administrator? used by another process?", "S&M - Delete take and source files", MB_OK);
+		MessageBox(GetMainHwnd(), "Warning: at least one file couldn't be deleted.\nTips: are you an administrator? used by another process?", "S&M - Delete take and source files", MB_OK);
 }
 
 
@@ -1120,7 +1120,7 @@ void itemSelToolbarPoll()
 		bool horizontal = false;
 
 		//JFB I rely on (incomplete?) SWELL's FindWindowEx here (rather than GetTrackWnd()) 
-		if (HWND w = FindWindowEx(g_hwndParent, 0, "REAPERTrackListWindow", "trackview"))
+		if (HWND w = FindWindowEx(GetMainHwnd(), 0, "REAPERTrackListWindow", "trackview"))
 		{
 			RECT r; GetWindowRect(w, &r);
 			GetSet_ArrangeView2(NULL, false, r.left, r.right-17, &start_time, &end_time); // -17 = width of the vert. scrollbar
@@ -1326,10 +1326,10 @@ void LoopSelTrackMediaSlot(COMMAND_T* _ct) {
 }
 
 // returns true if something done
-bool TogglePlaySelTrackMediaSlot(const char* _title, int _slot, bool _loop)
+bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _loop)
 {
 	bool done = false;
-	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_MEDIA)->GetOrPromptOrBrowseSlot(_title, _slot)) {
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
 		done = SNM_TogglePlaySelTrackPreviews(fnStr->Get(), _loop);
 		delete fnStr;
 	}
@@ -1337,37 +1337,37 @@ bool TogglePlaySelTrackMediaSlot(const char* _title, int _slot, bool _loop)
 }
 
 void TogglePlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false))
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false))
 		FakeToggle(_ct);
 }
 
 void ToggleLoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true))
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true))
 		FakeToggle(_ct);
 }
 
 // _insertMode: 0=add to current track, 1=add new track, 3=add to selected items as takes, &4=stretch/loop to fit time sel, &8=try to match tempo 1x, &16=try to match tempo 0.5x, &32=try to match tempo 2x
-void InsertMediaSlot(const char* _title, int _slot, int _insertMode)
+void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMode)
 {
-	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_MEDIA)->GetOrPromptOrBrowseSlot(_title, _slot)) {
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
 		InsertMedia((char*)fnStr->Get(), _insertMode); //JFB includes undo => _title no used..
 		delete fnStr;
 	}
 }
 
 void InsertMediaSlotCurTr(COMMAND_T* _ct) {
-	InsertMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, 0);
+	InsertMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, 0);
 }
 
 void InsertMediaSlotNewTr(COMMAND_T* _ct) {
-	InsertMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, 1);
+	InsertMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, 1);
 }
 
 void InsertMediaSlotTakes(COMMAND_T* _ct) {
-	InsertMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, 3);
+	InsertMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, 3);
 }
 
-bool autoSaveMediaSlot(const char* _dirPath, char* _fn, int _fnSize)
+bool autoSaveMediaSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize)
 {
 	bool updated = false;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
@@ -1385,13 +1385,13 @@ bool autoSaveMediaSlot(const char* _dirPath, char* _fn, int _fnSize)
 							if(*src->GetFileName()) {
 								GetFilenameNoExt(src->GetFileName(), name, 128);
 								GenerateFilename(_dirPath, name, GetFileExtension(src->GetFileName()), _fn, _fnSize);
-								updated |= (SNM_CopyFile(_fn, src->GetFileName()) && g_slots.Get(SNM_SLOT_MEDIA)->AddSlot(_fn));
+								updated |= (SNM_CopyFile(_fn, src->GetFileName()) && g_slots.Get(_slotType)->AddSlot(_fn));
 							}
 							else { // MIDI in-project
 								GetFilenameNoExt((char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), name, 128);
 								GenerateFilename(_dirPath, name, "mid", _fn, _fnSize);
 								src->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, _fn, NULL, NULL);
-								updated |= (g_slots.Get(SNM_SLOT_MEDIA)->AddSlot(_fn) != NULL);
+								updated |= (g_slots.Get(_slotType)->AddSlot(_fn) != NULL);
 							}
 						}
 		}

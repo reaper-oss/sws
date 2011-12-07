@@ -1,3 +1,24 @@
+Resources view updates:
+Issue 408: added resource slot bookmarks
++New tiny add/delete bookmark buttons
++New tick box: slots actions can be tied to bookmarks instead of default resource types (FX chains, Track templates, etc..)
+Added actions (Issue 422):
++SWS/S&M: Auto-save FX Chain slots for selected tracks
++SWS/S&M: Auto-save input FX Chain slots for selected tracks
++SWS/S&M: Auto-save FX Chain slots for selected items
++SWS/S&M: Auto-save track template slots
++SWS/S&M: Auto-save track template (with items) slots
++SWS/S&M: Auto-save project template slot
++SWS/S&M: Auto-save media file slots for selected items
+Other:
++Added tooltips
++Issue 412: reorganized the GUI a bit, better docking/resizing behavior
++Default customizable action: the enter key now also acts like double-click
+
+Cycle action editor: re-fixed drag-drop of commands in right list view re-broken in v2.1.0 #21
+Live Configs: the enter key activates the selected config
+Notes/help view: less flickering
+
 !v2.1.0 #21 (November 28, 2011)
 Cycle actions improvements:
 +The Cycle action editor is now resizable, dockable, themable, etc..

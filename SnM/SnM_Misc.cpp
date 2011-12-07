@@ -73,7 +73,7 @@ bool FileExistsErrMsg(const char* _fn, bool _errMsg)
 		{
 			char buf[BUFFER_SIZE];
 			_snprintf(buf, BUFFER_SIZE, "File not found:\n%s", _fn);
-			MessageBox(g_hwndParent, buf, "S&M - Error", MB_OK);
+			MessageBox(GetMainHwnd(), buf, "S&M - Error", MB_OK);
 		}
 	}
 	return exists;
@@ -434,6 +434,11 @@ void SNM_UpgradeIniFiles()
 		UpdatePrivateProfileSection("ME_LIST_CYCLACTIONS", "ME_List_Cyclactions", g_SNMIniFn.Get(), g_SNMCyclactionIniFn.Get());
 		UpdatePrivateProfileSection("ME_PIANO_CYCLACTIONS", "ME_Piano_Cyclactions", g_SNMIniFn.Get(), g_SNMCyclactionIniFn.Get());
 	}
+	if (g_iniFileVersion < 3) // i.e. sws version < v2.1.0 #22
+	{
+		WritePrivateProfileString("RESOURCE_VIEW", "DblClick_To", NULL, g_SNMIniFn.Get()); // remove key
+		UpdatePrivateProfileString("RESOURCE_VIEW", "FilterByPath", "Filter", g_SNMIniFn.Get());
+	}
 }
 
 // fills a list of filenames for the desired extension
@@ -496,6 +501,14 @@ int FindMarkerRegion(double _pos)
 		}
 	}
 	return idx;
+}
+
+int FindMarkerRegionNum(double _pos)
+{
+	int num=-1, idx=FindMarkerRegion(_pos);
+	if (idx >= 0)
+		EnumProjectMarkers2(NULL, idx, NULL, NULL, NULL, NULL, &num);
+	return num;
 }
 
 void makeUnformatedConfigString(const char* _in, WDL_FastString* _out)
@@ -607,9 +620,9 @@ bool WaitForTrackMute(DWORD* _muteTime)
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef _WIN32
-void LoadThemeSlot(const char* _title, int _slot)
+void LoadThemeSlot(int _slotType, const char* _title, int _slot)
 {
-	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_THM)->GetOrPromptOrBrowseSlot(_title, _slot))
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot))
 	{
 		char cmd[BUFFER_SIZE]=""; _snprintf(cmd, BUFFER_SIZE, "%s\\reaper.exe", GetExePath());
 		WDL_FastString fnStr2; fnStr2.SetFormatted(BUFFER_SIZE, " \"%s\"", fnStr->Get());
@@ -619,7 +632,7 @@ void LoadThemeSlot(const char* _title, int _slot)
 }
 
 void LoadThemeSlot(COMMAND_T* _ct) {
-	LoadThemeSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user);
+	LoadThemeSlot(g_tiedSlotActions[SNM_SLOT_THM], SNM_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 #endif
 
@@ -684,7 +697,7 @@ bool dumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 		char sectionURL[SNM_MAX_SECTION_NAME_LEN] = ""; 
 		if (!GetSectionName(_type == 1 || _type == 2, currentSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
 		{
-			MessageBox(g_hwndParent, "Error: unknown section!", _title, MB_OK);
+			MessageBox(GetMainHwnd(), "Error: unknown section!", _title, MB_OK);
 			return false;
 		}
 
@@ -736,15 +749,15 @@ bool dumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 
 			char msg[BUFFER_SIZE] = "";
 			_snprintf(msg, BUFFER_SIZE, "Wrote %s", filename); 
-			MessageBox(g_hwndParent, msg, _title, MB_OK);
+			MessageBox(GetMainHwnd(), msg, _title, MB_OK);
 			return true;
 
 		}
 		else
-			MessageBox(g_hwndParent, "Error: unable to write to file!", _title, MB_OK);
+			MessageBox(GetMainHwnd(), "Error: unable to write to file!", _title, MB_OK);
 	}
 	else
-		MessageBox(g_hwndParent, "Error: action window not opened!", _title, MB_OK);
+		MessageBox(GetMainHwnd(), "Error: action window not opened!", _title, MB_OK);
 	return false;
 }
 
@@ -837,7 +850,7 @@ void dumpWikiActionList(COMMAND_T* _ct)
 			fclose(f);
 		}
 		else
-			MessageBox(g_hwndParent, "Unable to write to file.", "Save ALR Wiki summary", MB_OK);
+			MessageBox(GetMainHwnd(), "Unable to write to file.", "Save ALR Wiki summary", MB_OK);
 	}
 }
 

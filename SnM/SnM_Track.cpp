@@ -619,10 +619,10 @@ bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _rawC
 // Track templates slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
-void applyOrImportTrackSlot(const char* _title, int _slot, bool _import, bool _itemsFromTmplt, bool _envsFromTmplt)
+void applyOrImportTrackSlot(int _slotType, const char* _title, int _slot, bool _import, bool _itemsFromTmplt, bool _envsFromTmplt)
 {
 	bool updated = false;
-	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_TR)->GetOrPromptOrBrowseSlot(_title, _slot))
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot))
 	{
 		WDL_FastString tmp;
 
@@ -653,17 +653,17 @@ void applyOrImportTrackSlot(const char* _title, int _slot, bool _import, bool _i
 }
 
 void loadSetTrackTemplate(COMMAND_T* _ct) {
-	applyOrImportTrackSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, false);
+	applyOrImportTrackSlot(g_tiedSlotActions[SNM_SLOT_TR], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, false);
 }
 
 void loadImportTrackTemplate(COMMAND_T* _ct) {
-	applyOrImportTrackSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, false, false);
+	applyOrImportTrackSlot(g_tiedSlotActions[SNM_SLOT_TR], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, false, false);
 }
 
-void replaceOrPasteItemsFromTrackSlot(const char* _title, int _slot, bool _paste)
+void replaceOrPasteItemsFromTrackSlot(int _slotType, const char* _title, int _slot, bool _paste)
 {
 	bool updated = false;
-	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_TR)->GetOrPromptOrBrowseSlot(_title, _slot))
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot))
 	{
 		WDL_FastString tmpltChunk;
 		if (CountSelectedTracks(NULL) && LoadChunk(fnStr->Get(), &tmpltChunk) && tmpltChunk.GetLength())
@@ -804,7 +804,7 @@ void appendSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_FastString* _chu
 	}
 }
 
-bool autoSaveTrackSlots(bool _delItems, bool _delEnvs, const char* _dirPath, char* _fn, int _fnSize)
+bool autoSaveTrackSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _delItems, bool _delEnvs)
 {
 	WDL_FastString fullChunk;
 	appendSelTrackTemplates(_delItems, _delEnvs, &fullChunk);
@@ -819,8 +819,8 @@ bool autoSaveTrackSlots(bool _delItems, bool _delEnvs, const char* _dirPath, cha
 				break;
 			}
 		}
-		GenerateFilename(_dirPath, !trName ? "Master" : (*trName == '\0' ? "Untitled" : trName), g_slots.Get(SNM_SLOT_TR)->GetFileExt(), _fn, _fnSize);
-		return (SaveChunk(_fn, &fullChunk, true) && g_slots.Get(SNM_SLOT_TR)->AddSlot(_fn));
+		GenerateFilename(_dirPath, !trName ? "Master" : (*trName == '\0' ? "Untitled" : trName), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
+		return (SaveChunk(_fn, &fullChunk, true) && g_slots.Get(_slotType)->AddSlot(_fn));
 	}
 	return false;
 }

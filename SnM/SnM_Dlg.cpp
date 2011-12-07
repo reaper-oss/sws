@@ -31,15 +31,14 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_ToolbarButton
+// WDL_VWnd custom controls
 ///////////////////////////////////////////////////////////////////////////////
 
-/* WDL_VirtualIconButton reuires a slight update to inherit OnPaintOver()*/
 void SNM_ToolbarButton::OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
 {
 	WDL_VirtualIconButton::OnPaintOver(drawbm, origin_x, origin_y, cliprect);
 
-	// paint text over (obey the theme's "toolbar text" on/off colors)
+	// paint text over (obeys the theme's "toolbar text" on/off colors)
 	if (m_iconCfg && m_iconCfg->olimage && m_forcetext)
 	{
 		bool isdown = !!(m_pressed&1);
@@ -77,6 +76,46 @@ void SNM_ToolbarButton::OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int orig
 	}
 }
 
+int SNM_ImageVWnd::GetWidth() {
+	if (m_img) return m_img->getWidth();
+	return 0;
+}
+
+int SNM_ImageVWnd::GetHeight() {
+	if (m_img) return m_img->getHeight();
+	return 0;
+}
+
+void SNM_ImageVWnd::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect) {
+	if (m_img)
+		LICE_Blit(drawbm,m_img,m_position.left+origin_x,m_position.top+origin_y,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+}
+
+void SNM_AddDelButton::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
+{
+	RECT r = m_position;
+	r.left+=origin_x;
+	r.right+=origin_x;
+	r.top += origin_y;
+	r.bottom += origin_y;
+
+	ColorTheme* ct = SNM_GetColorTheme();
+	int col = ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255);
+	float alpha = m_en ? 0.8f : 0.4f;
+
+	// border
+	LICE_Line(drawbm,r.left,r.bottom-1,r.left,r.top,col,alpha,0,false);
+	LICE_Line(drawbm,r.left,r.top,r.right-1,r.top,col,alpha,0,false);
+	LICE_Line(drawbm,r.right-1,r.top,r.right-1,r.bottom-1,col,alpha,0,false);
+	LICE_Line(drawbm,r.left,r.bottom-1,r.right-1,r.bottom-1,col,alpha,0,false);
+
+	// + or -
+	int delta = m_add?2:3;
+	LICE_Line(drawbm,r.left+delta,int(r.top+((r.bottom-r.top)/2)+0.5),r.right-(delta+1),int(r.top+((r.bottom-r.top)/2)+0.5),col,alpha,0,false);
+	if (m_add)
+		LICE_Line(drawbm,int(r.left+((r.right-r.left)/2)+0.5), r.top+delta,int(r.left+((r.right-r.left)/2)+0.5),r.bottom-(delta+1),col,alpha,0,false);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Themed UIs
@@ -100,13 +139,8 @@ LICE_CachedFont* SNM_GetThemeFont()
 	if (!themeFont.GetHFont())
 	{
 		LOGFONT lf = {
-#ifdef _WIN32
-14,
-#else
-12,
-#endif
-			0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
+			SNM_FONT_HEIGHT, 0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
 		};
 		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
 	}
@@ -122,13 +156,8 @@ LICE_CachedFont* SNM_GetToolbarFont()
 	if (!themeFont.GetHFont())
 	{
 		LOGFONT lf = {
-#ifdef _WIN32
-14,
-#else
-12,
-#endif
-			0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
+			SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
 		};
 		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
 	}
@@ -220,6 +249,19 @@ LICE_IBitmap* SNM_GetThemeLogo()
 	return snmLogo;
 }
 
+void SNM_SkinButton(WDL_VirtualIconButton* _btn, WDL_VirtualIconButton_SkinConfig* _skin, const char* _text)
+{
+	if (_skin && _skin->image) {
+		_btn->SetIcon(_skin);
+		_btn->SetForceBorder(false);
+	}
+	else {
+		_btn->SetIcon(NULL);
+		_btn->SetTextLabel(_text, 0, SNM_GetThemeFont());
+		_btn->SetForceBorder(true);
+	}
+}
+
 void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 {
 	static WDL_VirtualIconButton_SkinConfig skin;
@@ -234,6 +276,7 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 		skin.olimage = it->toolbar_overlay;
 		WDL_VirtualIconButton_PreprocessSkinConfig(&skin);
 		_btn->SetIcon(&skin);
+		_btn->SetForceBorder(false);
 		_btn->SetForceText(true); // do not force colors (done in SNM_ToolbarButton::OnPaintOver())
 		_btn->SetTextLabel(_text, 0, SNM_GetToolbarFont());
 	}
@@ -245,7 +288,7 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 	}
 }
 
-//JFB TODO? hyperlink ?
+//JFB TODO? WDL_VWnd? hyperlink ?
 bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
 {
 	if (_bm)
@@ -261,8 +304,24 @@ bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
 	return false;
 }
 
-// Add (auto position) a WDL_VWnd instance
-// _x: I/O param that gets modified for the next WDL_VWnd to place in the panel
+//JFB!!! no used yet
+bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h)
+{
+	if (_x+_logo->GetWidth() < _r->right-8)
+	{
+		int x = _r->right - _logo->GetWidth() - 8;
+		int y = _r->top + int(_h/2 - _logo->GetHeight()/2 + 0.5);
+		RECT tr = {x, y, x + _logo->GetWidth(), y + _logo->GetHeight()};
+		_logo->SetPosition(&tr);
+		_logo->SetVisible(true);
+		return true;
+	}
+	return false;
+}
+
+// auto position a WDL_VWnd instance
+// note: by default all components are hidden, see WM_PAINT in sws_wnd.cpp
+// _x: I/O param that gets modified (for the next WDL_VWnd to be placed in the panel)
 // _h: height of the panel
 // returns false if display issue (hidden)
 // JFB TODO? REMARK: 
@@ -270,15 +329,8 @@ bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
 //    e.g. adding a kind of getPreferedWidthHeight(int* _width, int* _height)
 bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xStep)
 {
-	if (_c)
+	if (_c && _h && abs(_r->bottom-_r->top) >= _h)
 	{
-		if (!_h)
-		{
-			_c->SetVisible(false);
-			if (_tiedComp) _tiedComp->SetVisible(false);
-			return false;
-		}
-
 		int width=0, height=_h;
 		bool txt = false;
 
@@ -309,39 +361,60 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int
 			txt->GetFont()->DrawText(NULL, txt->GetText(), -1, &tr, DT_CALCRECT);
 			width = tr.right;
 		}
-		else if (!strcmp(_c->GetType(), "vwnd_iconbutton") || !strcmp(_c->GetType(), "vwnd_s&m_toolbar"))
+		else if (!strcmp(_c->GetType(), "vwnd_iconbutton") || !strcmp(_c->GetType(), "SNM_ToolbarButton"))
 		{
 			WDL_VirtualIconButton* btn = (WDL_VirtualIconButton*)_c;
 			WDL_VirtualIconButton_SkinConfig* skin = btn->GetIcon();
-			if (skin && skin->image) {
+			if (skin && skin->image)
+			{
 				width = skin->image->getWidth() / 3;
 				height = skin->image->getHeight();
+				if (!strcmp(_c->GetType(), "SNM_ToolbarButton")) {
+					width = int(2.6*width); // larger toolbar buttons!
+					height = int(0.75*height + 0.5) + 1; // +1 for text vertical alignment
+				}
 			}
 			else if (btn->GetFont())
 			{
 				RECT tr = {0,0,0,0};
 				btn->GetFont()->DrawText(NULL, btn->GetTextLabel(), -1, &tr, DT_CALCRECT);
 				height = tr.bottom + int(tr.bottom/2 + 0.5);
-				width = tr.right + height; // +height for some air
-				if (btn->GetCheckState() != -1)
+				width = int(tr.right + height/2 + 0.5); // +height/2 for some air
+				if (btn->GetCheckState() != -1) {
 					width += tr.bottom; // for the tick zone
+					height -= 2;
+				}
+/*JFB -= 2 above.. glitch but looks better/aligned
 				// workaround for paint glitch with odd (i.e. not even) heights
 				if (height%2 == 1) { height--; _y++; }
-			}
-
-			// larger toolbar buttons!
-			if (btn->GetIcon() && !strcmp(_c->GetType(), "vwnd_s&m_toolbar")) {
-				width = int(2.6*width);
-				height = int(0.75*height + 0.5) + 1; // +1 for text vertical alignment
+*/
 			}
 		}
+		else  if (!strcmp(_c->GetType(), "SNM_MiniAddDelButtons"))
+		{
+			width=9;
+			height=9*2+1;
+		}
 
-		if (/*!width || !height || height > _h || */
+/*JFB old code (hides controls "too easily"), see below
+		if (//!width || !height || height > _h ||
 			(!txt && (*_x + width > _r->right - 5))) // hide if not text ctl and if larger than display rect
-		{ 
+		{
 			_c->SetVisible(false);
-			if (_tiedComp) _tiedComp->SetVisible(false);
+			if (_tiedComp)
+				_tiedComp->SetVisible(false);
 			return false;
+		}
+*/
+		if (*_x+width > _r->right-10) // out of horizontal available room?
+		{
+			if (*_x+20 > (_r->right-10)) // ensures a minimum width
+			{
+				if (_tiedComp && _tiedComp->IsVisible())
+					_tiedComp->SetVisible(false);
+				return false;
+			}
+			width = _r->right - 10 - *_x; // force width
 		}
 
 		_y += int(_h/2 - height/2 + 0.5);
@@ -351,6 +424,10 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int
 		_c->SetVisible(true);
 		return true;
 	}
+
+	if (_tiedComp && _tiedComp->IsVisible())
+		_tiedComp->SetVisible(false);
+
 	return false;
 }
 
@@ -636,7 +713,7 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 }
 
 void openCueBussWnd(COMMAND_T* _ct) {
-	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUS), g_hwndParent, CueBussDlgProc);
+	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUS), GetMainHwnd(), CueBussDlgProc);
 
 	// Toggle
 	if (g_cueBussHwnd) {

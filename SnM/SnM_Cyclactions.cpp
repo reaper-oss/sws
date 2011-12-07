@@ -63,7 +63,7 @@ public:
 		for (int i= 0; _actions && i < _actions->GetSize(); i++)
 			m_actions.Add(new WDL_FastString(_actions->Get(i)->Get()));
 	}	
-	// best effort: ingore unknown actions but goes one..
+	// best effort: ingore unknown actions but goes on..
 	void Perform()
 	{
 		g_bReentrancyCheck = true;
@@ -75,7 +75,7 @@ public:
 		{
 			if (int cmd = NamedCommandLookup(m_actions.Get(i)->Get()))
 			{
-				if (!m_section && !KBD_OnMainActionEx(cmd, 0, 0, 0, g_hwndParent, NULL)) // Main section
+				if (!m_section && !KBD_OnMainActionEx(cmd, 0, 0, 0, GetMainHwnd(), NULL)) // Main section
 					break;
 				else if (m_section && !MIDIEditor_LastFocused_OnCommand(cmd, m_section == 1)) // Both ME sections
 					break;
@@ -351,7 +351,7 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 //_section or -1 for all sections
 // NULL _iniFn => S&M.ini
 // remark: undo pref ignored, only saves cycle actions
-void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
+void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
 {
 	if (!_cyclactions)
 		_cyclactions = g_cyclactions;
@@ -399,7 +399,7 @@ void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NUL
 					}
 				}
 			}
-			// "Nb_Actions" is a bad name now: it's a max id (kept for upgrability)
+			// "Nb_Actions" is a bad name now: it is a max id (kept for ascendant comp.)
 			iniSection.AppendFormatted(32, "Nb_Actions=%d\n", maxId);
 			SaveIniSection(g_cyclactionIniSections[sec], &iniSection, _iniFn ? _iniFn : g_SNMCyclactionIniFn.Get());
 		}
@@ -598,7 +598,7 @@ void Cancel(bool _checkSave)
 {
 	AllEditListItemEnd(false);
 	if (_checkSave && g_edited && 
-			IDYES == MessageBox(g_cyclactionsHwnd?g_cyclactionsHwnd:g_hwndParent,
+			IDYES == MessageBox(g_cyclactionsHwnd?g_cyclactionsHwnd:GetMainHwnd(),
 				"Save cycle actions before quitting editor ?",
 				"S&M - Cycle Action editor - Warning", MB_YESNO))
 	{
@@ -667,13 +667,13 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
 	Cyclaction* a = (Cyclaction*)_item;
-	if (a && _iCol == 1)
+	if (a && a != &g_DEFAULT_L && _iCol == 1)
 	{
 		WDL_FastString errMsg;
 		if (!CheckEditableCyclaction(_str, &errMsg) && strcmp(a->GetName(), _str)) 
 		{
 			if (errMsg.GetLength())
-				MessageBox(g_cyclactionsHwnd?g_cyclactionsHwnd:g_hwndParent, errMsg.Get(), "S&M - Cycle Action editor - Error", MB_OK);
+				MessageBox(g_cyclactionsHwnd?g_cyclactionsHwnd:GetMainHwnd(), errMsg.Get(), "S&M - Cycle Action editor - Error", MB_OK);
 		}
 		else
 		{
@@ -762,7 +762,8 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 void SNM_CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
 	WDL_FastString* cmd = (WDL_FastString*)_item;
-	if (cmd && _str && g_editedAction && strcmp(cmd->Get(), _str))
+	if (cmd && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R && 
+		_str && g_editedAction && strcmp(cmd->Get(), _str))
 	{
 		g_editedAction->SetCmd(cmd, _str);
 
@@ -967,6 +968,14 @@ void SNM_CyclactionWnd::OnInitDlg()
 	EnableWindow(GetDlgItem(m_hwnd, IDC_APPLY), g_edited);
 #endif
 	Update();
+}
+
+void SNM_CyclactionWnd::OnDestroy() 
+{
+/*no! would be triggered on dock/undock..
+	Cancel(true);
+*/
+	m_cbSection.Empty();
 }
 
 void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -1185,14 +1194,6 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-void SNM_CyclactionWnd::OnDestroy() 
-{
-/*no! would be triggered on dock/undock..
-	Cancel(true);
-*/
-	m_cbSection.Empty();
-}
-
 void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
 	LICE_CachedFont* font = SNM_GetThemeFont();
@@ -1217,7 +1218,7 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 	}
 
 	// 2nd row of controls
-	x0 = _r->left+8; h=37;
+	x0 = _r->left+8; h=39;
 	int y0 = _r->bottom-h;
 
 	SNM_SkinToolbarButton(&m_btnApply, "Apply");
@@ -1851,7 +1852,7 @@ int CyclactionsInit()
 void openCyclactionsWnd(COMMAND_T* _ct)
 {
 #ifdef _WIN32
-	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CYCLACTION), g_hwndParent, CyclactionsWndProc);
+	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CYCLACTION), GetMainHwnd(), CyclactionsWndProc);
 
 	// Toggle
 	if (g_cyclactionsHwnd && (g_editedSection == (int)_ct->user))
@@ -1883,7 +1884,7 @@ void openCyclactionsWnd(COMMAND_T* _ct)
 		if (CreateCyclaction((int)_ct->user, reply, &msg, true))
 			SaveCyclactions();
 		else if (msg.GetLength())
-			SNM_ShowMsg(msg.Get(), "S&M - Cycle Actions - Warning(s)", g_hwndParent);
+			SNM_ShowMsg(msg.Get(), "S&M - Cycle Actions - Warning(s)", GetMainHwnd());
 	}
 #endif
 }
@@ -1952,7 +1953,7 @@ void OpenCyclactionView(COMMAND_T* _ct)
 			if (CreateCyclaction((int)_ct->user, reply, &msg, true))
 				SaveCyclactions();
 			else if (msg.GetLength())
-				SNM_ShowMsg(msg.Get(), "S&M - Cycle Actions - Warning(s)", g_hwndParent);
+				SNM_ShowMsg(msg.Get(), "S&M - Cycle Actions - Warning(s)", GetMainHwnd());
 		}
 	}
 }

@@ -41,6 +41,7 @@ enum {
   BUTTONID_ZOOM_SCROLL_EN,
   COMBOID_TYPE,
   TXTID_RESULT
+//  ,LOGOID
 };
 
 enum {
@@ -176,11 +177,27 @@ void SNM_FindWnd::OnInitDlg()
 	m_txtResult.SetColors(LICE_RGBA(170,0,0,255));
 	m_parentVwnd.AddChild(&m_txtResult);
 
+//	m_logo.SetID(LOGOID);
+//	m_parentVwnd.AddChild(&m_logo);
+
 	g_notFound = false;
 //	*g_searchStr = 0;
 	SetDlgItemText(m_hwnd, IDC_EDIT, g_searchStr);
 
 	m_parentVwnd.RequestRedraw(NULL);
+}
+
+void SNM_FindWnd::OnDestroy() 
+{
+	// save prefs
+	char cType[2];
+	sprintf(cType, "%d", m_type);
+	WritePrivateProfileString("FIND_VIEW", "Type", cType, g_SNMIniFn.Get());
+	WritePrivateProfileString("FIND_VIEW", "ZoomScrollToFoundItems", m_zoomSrollItems ? "1" : "0", g_SNMIniFn.Get());
+
+	m_cbType.Empty();
+	g_notFound = false;
+//	*g_searchStr = 0;
 }
 
 void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -218,19 +235,6 @@ void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			Main_OnCommand((int)wParam, (int)lParam);
 			break;
 	}
-}
-
-void SNM_FindWnd::OnDestroy() 
-{
-	// save prefs
-	char cType[2];
-	sprintf(cType, "%d", m_type);
-	WritePrivateProfileString("FIND_VIEW", "Type", cType, g_SNMIniFn.Get());
-	WritePrivateProfileString("FIND_VIEW", "ZoomScrollToFoundItems", m_zoomSrollItems ? "1" : "0", g_SNMIniFn.Get());
-
-	m_cbType.Empty();
-	g_notFound = false;
-//	*g_searchStr = 0;
 }
 
 int SNM_FindWnd::OnKey(MSG* _msg, int _iKeyState) 
@@ -275,13 +279,11 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 			case TYPE_ITEM_FILENAME:
 			case TYPE_ITEM_FILENAME_ALL_TAKES:
 			case TYPE_ITEM_NOTES:
-				m_btnEnableZommScroll.SetVisible(true);
 				m_btnEnableZommScroll.SetCheckState(m_zoomSrollItems);
 				m_btnEnableZommScroll.SetTextLabel("Zoom/Scroll", -1, font);
 				drawLogo = SNM_AutoVWndPosition(&m_btnEnableZommScroll, NULL, _r, &x0, _r->top, h);
 				break;
 			default:
-				m_btnEnableZommScroll.SetVisible(false);
 				drawLogo = true;
 				break;
 		}
@@ -289,6 +291,7 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 
 	if (drawLogo)
 		SNM_AddLogo(_bm, _r, x0, h);
+//		SNM_AddLogo2(&m_logo, _r, x0, h);
 
 	// 2nd row of controls
 	h = 45;
@@ -599,7 +602,7 @@ bool SNM_FindWnd::FindMarkerRegion(int _dir)
 		}
 	}
 	if (update)
-		Undo_OnStateChangeEx("Find: change cursor position", UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx("Find: change edit cursor position", UNDO_STATE_ALL, -1); // in case the pref "undo pt for edit cursor positions" is enabled..
 	return update;
 }
 

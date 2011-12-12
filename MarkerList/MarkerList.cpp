@@ -395,10 +395,10 @@ int SWS_MarkerListWnd::OnKey(MSG* msg, int iKeyState)
 		}
 		else if (msg->wParam == VK_RETURN)
 		{
-			MarkerItem* mi = (MarkerItem*)m_pLists.Get(0)->EnumSelected(NULL);
-			if (mi)
+			if (MarkerItem* mi = (MarkerItem*)m_pLists.Get(0)->EnumSelected(NULL)) {
 				SetEditCurPos(mi->GetPos(), m_bScroll, m_bPlayOnSel);
-			return 1;
+				return 1;
+			}
 		}
 	}
 	return 0;

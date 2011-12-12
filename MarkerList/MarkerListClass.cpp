@@ -39,7 +39,7 @@ MarkerItem::MarkerItem(bool bReg, double dPos, double dRegEnd, const char* cName
 	m_dRegEnd = bReg ? dRegEnd : -1.0;
 	m_id = id;
 	SetName(cName);
-	m_iColor = color & 0xFFFFFF;
+	m_iColor = color;
 }
 
 MarkerItem::MarkerItem(LineParser* lp)
@@ -77,7 +77,7 @@ void MarkerItem::SetName(const char* newname)
 
 bool MarkerItem::Compare(bool bReg, double dPos, double dRegEnd, const char* cName, int id, int color)
 {
-	return (bReg == m_bReg && dPos == m_dPos && strcmp(cName, GetName()) == 0 && id == m_id && (!bReg || dRegEnd == m_dRegEnd));
+	return (bReg == m_bReg && dPos == m_dPos && strcmp(cName, GetName()) == 0 && id == m_id && (!bReg || dRegEnd == m_dRegEnd) && m_iColor == color);
 }
 
 bool MarkerItem::Compare(MarkerItem* mi)

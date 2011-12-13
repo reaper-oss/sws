@@ -88,7 +88,7 @@ bool MarkerItem::Compare(MarkerItem* mi)
 void MarkerItem::AddToProject()
 {
 	if (AddProjectMarker2)
-		AddProjectMarker2(NULL, m_bReg, m_dPos, m_dRegEnd, GetName(), m_id, m_iColor);
+		AddProjectMarker2(NULL, m_bReg, m_dPos, m_dRegEnd, GetName(), m_id, m_iColor ? m_iColor | 0x1000000 : 0);
 	else
 		AddProjectMarker(NULL, m_bReg, m_dPos, m_dRegEnd, GetName(), m_id);
 }
@@ -96,7 +96,7 @@ void MarkerItem::AddToProject()
 void MarkerItem::UpdateProject()
 {
 	if (SetProjectMarker3)
-		SetProjectMarker3(NULL, m_id, m_bReg, m_dPos, m_dRegEnd, GetName(), m_iColor);
+		SetProjectMarker3(NULL, m_id, m_bReg, m_dPos, m_dRegEnd, GetName(), m_iColor ? m_iColor | 0x1000000 : 0);
 	else
 		SetProjectMarker(m_id, m_bReg, m_dPos, m_dRegEnd, GetName());
 }

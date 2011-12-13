@@ -41,14 +41,15 @@ public:
 	void UpdateProject();
 
 	// Member access	
-	void SetName(const char* newname);
 	const char* GetName() { return m_cName ? m_cName : ""; }
+	void SetName(const char* newname);
 	double GetPos() { return m_dPos; }
 	void SetPos(double dPos) { m_dPos = dPos; }
 	double GetRegEnd() { return m_dRegEnd; }
 	void SetRegEnd(double dEnd) { m_dRegEnd = dEnd; }
 	bool IsRegion() { return m_bReg; }
 	int GetID() { return m_id; }
+	void SetID(int id) { m_id = id; }
 	int GetColor() { return m_iColor; }
 	void SetColor(int iColor) { m_iColor = iColor; }
 

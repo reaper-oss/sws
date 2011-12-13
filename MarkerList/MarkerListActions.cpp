@@ -126,7 +126,10 @@ void RenumberIds(COMMAND_T*)
 	{
 		MarkerItem* mi = ml.m_items.Get(i);
 		if (!mi->IsRegion())
-			AddProjectMarker(NULL, false, mi->GetPos(), mi->GetRegEnd(), mi->GetName(), iID++);
+		{
+			mi->SetID(iID++);
+			mi->AddToProject();
+		}
 	}
 	g_pMarkerList->Update();
 	UpdateTimeline();
@@ -141,7 +144,10 @@ void RenumberRegions(COMMAND_T*)
 	{
 		MarkerItem* mi = ml.m_items.Get(i);
 		if (mi->IsRegion())
-			AddProjectMarker(NULL, true, mi->GetPos(), mi->GetRegEnd(), mi->GetName(), iID++);
+		{
+			mi->SetID(iID++);
+			mi->AddToProject();
+		}
 	}
 	g_pMarkerList->Update();
 	UpdateTimeline();

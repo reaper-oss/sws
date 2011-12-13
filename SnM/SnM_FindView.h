@@ -25,8 +25,11 @@
 /
 ******************************************************************************/
 
-
 #pragma once
+
+#ifndef _SNM_FINDVIEW_H_
+#define _SNM_FINDVIEW_H_
+
 
 class SNM_FindWnd : public SWS_DockWnd
 {
@@ -59,3 +62,4 @@ protected:
 };
 
 
+#endif

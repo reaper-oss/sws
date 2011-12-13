@@ -28,6 +28,10 @@
 
 #pragma once
 
+#ifndef _SNM_H_
+#define _SNM_H_
+
+
 #include "SNM_ChunkParserPatcher.h"
 
 
@@ -36,6 +40,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 //#define _SNM_MISC
+#define _MARKER_REGION_NAME
 #define _SNM_CYCLACTION_OSX
 #ifdef _WIN32
 #define _SNM_PRESETS
@@ -68,6 +73,7 @@
 
 #define SNM_INI_FILE_VERSION		3
 #define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
+#define SNM_SUB_EXT_LIST			"SubRip subtitle files (*.SRT)\0*.SRT\0"
 #define SNM_MAX_SECTION_NAME_LEN	64
 #define SNM_MAX_SECTION_ACTIONS		128
 #define SNM_MAX_ACTION_CUSTID_LEN	128
@@ -85,6 +91,8 @@
 #define SNM_MAX_CYCLING_SECTIONS	3
 #define SNM_MAX_ENV_SUBCHUNK_NAME	16
 #define SNM_MAX_SLOT_TYPES			16
+#define MAX_CC_LANE_ID				133
+#define MAX_CC_LANES_LEN			4096
 #define SNM_LET_BREATHE_MS			10
 #define SNM_3D_COLORS_DELTA			25
 #define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average I monitored)
@@ -123,6 +131,13 @@ public:
 	MediaTrack* m_tr; WDL_FastString m_notes;
 };
 
+class SNM_RegionSubtitle {
+public:
+	SNM_RegionSubtitle(int _id, const char* _notes) 
+		: m_id(_id),m_notes(_notes ? _notes : "") {}
+	int m_id; WDL_FastString m_notes;
+};
+
 class SNM_FXSummary {
 public:
 	SNM_FXSummary(const char* _type, const char* _realName)
@@ -138,6 +153,14 @@ public:
 	virtual ~SNM_ScheduledJob() {}
 	virtual void Perform() {}
 	int m_id, m_tick;
+};
+
+class SNM_MarkerRegionSubscriber {
+public:
+	SNM_MarkerRegionSubscriber() {}
+	virtual ~SNM_MarkerRegionSubscriber() {}
+	// _updateFlags: 1 marker update, 2 region update, 3 both region & marker updates
+	virtual void NotifyMarkerRegionUpdate(int _updateFlags) {}
 };
 
 class SNM_SndRcv {
@@ -264,6 +287,8 @@ int SnMInit(reaper_plugin_info_t* _rec);
 void SnMExit();
 void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
 void DeleteScheduledJob(int _id);
+void RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub);
+void UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
 void SnMCSurfRun();
 void SnMCSurfSetTrackTitle();
 void SnMCSurfSetTrackListChange();
@@ -496,13 +521,16 @@ void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppNam
 void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn = NULL);
 void SNM_UpgradeIniFiles();
 void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs);
-int FindMarkerRegion(double _pos);
-int FindMarkerRegionNum(double _pos);
+int FindMarkerRegion(double _pos, int* _idOut = NULL);
+int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn);
+int GetMarkerRegionIdFromIndex(int _idx);
+int GetMarkerRegionIndexFromId(int _id);
+void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms = NULL);
 void makeUnformatedConfigString(const char* _in, WDL_FastString* _out);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 void ShortenStringToFirstRN(char* _str);
 void ReplaceStringFormat(char* _str, char _replaceCh);
-bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
+bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
 bool WaitForTrackMute(DWORD* _muteTime);
 #ifdef _SNM_MISC
 void LetREAPERBreathe(COMMAND_T*);
@@ -523,10 +551,12 @@ void TestWDLString(COMMAND_T*);
 #endif
 
 // *** SnM_NotesHelpView.cpp ***
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTracksNotes;
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTrackNotes;
 void SetActionHelpFilename(COMMAND_T*);
 int NotesHelpViewInit();
 void NotesHelpViewExit();
+void ImportSubTitleFile(COMMAND_T* _ct);
+void ExportSubTitleFile(COMMAND_T* _ct);
 void OpenNotesHelpView(COMMAND_T*);
 bool IsNotesHelpViewDisplayed(COMMAND_T*);
 void ToggleNotesHelpLock(COMMAND_T*);
@@ -695,3 +725,4 @@ z64F+VlLOQZ6Dua4dpaajpNwpPDxaQ9twrF7XSHyaDJROqMpYYyy1Q==\n\
 3iwJ0Fssw64SzlIi+8dZ/OISxbhGsZobtpoDrVUq5ZrAYwjPaYw7LQ==\n\
 vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"
 
+#endif

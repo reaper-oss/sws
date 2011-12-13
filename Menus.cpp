@@ -216,7 +216,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMarkerSubMenu, "Delete all markers", NamedCommandLookup("_SWSMARKERLIST9"));
 	AddToMenu(hMarkerSubMenu, "Delete all regions", NamedCommandLookup("_SWSMARKERLIST10"));
 
-	AddToMenu(hMenu, "Notes/Help", NamedCommandLookup("_S&M_SHOWNOTESHELP"));
+	AddToMenu(hMenu, "Notes/Subtitles/Help", NamedCommandLookup("_S&M_SHOWNOTESHELP"));
 	AddToMenu(hMenu, "Project List", NamedCommandLookup("_SWS_PROJLIST_OPEN"));
 
 	HMENU hPrjMgmtSubMenu = CreatePopupMenu();

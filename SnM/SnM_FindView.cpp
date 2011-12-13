@@ -104,11 +104,11 @@ bool TrackNotesMatch(MediaTrack* _tr, const char* _searchStr)
 	bool match = false;
 	if (_tr)
 	{
-		for (int i=0; i < g_pTracksNotes.Get()->GetSize(); i++)
+		for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++)
 		{
-			if (g_pTracksNotes.Get()->Get(i)->m_tr == _tr)
+			if (g_pTrackNotes.Get()->Get(i)->m_tr == _tr)
 			{
-				match = (stristr(g_pTracksNotes.Get()->Get(i)->m_notes.Get(), _searchStr) != NULL);
+				match = (stristr(g_pTrackNotes.Get()->Get(i)->m_notes.Get(), _searchStr) != NULL);
 				break;
 			}
 		}
@@ -190,8 +190,8 @@ void SNM_FindWnd::OnInitDlg()
 void SNM_FindWnd::OnDestroy() 
 {
 	// save prefs
-	char cType[2];
-	sprintf(cType, "%d", m_type);
+	char cType[2] = "";
+	_snprintf(cType, 2, "%d", m_type);
 	WritePrivateProfileString("FIND_VIEW", "Type", cType, g_SNMIniFn.Get());
 	WritePrivateProfileString("FIND_VIEW", "ZoomScrollToFoundItems", m_zoomSrollItems ? "1" : "0", g_SNMIniFn.Get());
 

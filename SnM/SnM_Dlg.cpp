@@ -304,7 +304,7 @@ bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
 	return false;
 }
 
-//JFB!!! no used yet
+//JFB!!! not used yet
 bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h)
 {
 	if (_x+_logo->GetWidth() < _r->right-8)
@@ -464,8 +464,8 @@ void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent, bool _clea
 	HWND h = _hParent;
 	if (!h) h = GetMainHwnd();
 	char msg[4096] = "";
-	if (GetStringWithRN(_msg, msg, 4096) && *msg)
-		DisplayInfoBox(h, _title, msg);
+	GetStringWithRN(_msg, msg, 4096); // truncates if needed
+	DisplayInfoBox(h, _title, msg);
 #endif
 }
 

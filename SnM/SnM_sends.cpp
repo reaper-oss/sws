@@ -87,8 +87,8 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 	WDL_FastString tmpltChunk;
 	if (_trTemplatePath && (!LoadChunk(_trTemplatePath, &tmpltChunk) || !tmpltChunk.GetLength()))
 	{
-		char err[512] = "";
-		sprintf(err, "Cue buss not created!\nInvalid track template file: %s", _trTemplatePath);
+		char err[BUFFER_SIZE] = "";
+		_snprintf(err, BUFFER_SIZE, "Cue buss not created!\nInvalid track template file: %s", _trTemplatePath);
 		MessageBox(GetMainHwnd(), err, "S&M - Error", MB_OK);
 		return false;
 	}
@@ -236,7 +236,7 @@ void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _
 		char slot[16] = "";
 		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
 		{
-			sprintf(slot,"HWOUT%d",i+1);
+			_snprintf(slot, 16, "HWOUT%d", i+1);
 			GetPrivateProfileString("LAST_CUEBUS",slot,"0",tmp,BUFFER_SIZE,g_SNMIniFn.Get());
 			_hwOuts[i] = atoi(tmp); // 0 if failed 
 		}
@@ -252,7 +252,7 @@ void saveCueBusIniFile(const char* _busName, int _type, bool _trTemplate, const 
 
 		WritePrivateProfileString("LAST_CUEBUS","NAME",escapedStr.Get(),g_SNMIniFn.Get());
 		char tmp[16] = "";
-		sprintf(tmp,"%d",_type);
+		_snprintf(tmp, 16, "%d" ,_type);
 		WritePrivateProfileString("LAST_CUEBUS","REATYPE",tmp,g_SNMIniFn.Get());
 		WritePrivateProfileString("LAST_CUEBUS","TRACK_TEMPLATE_ENABLED",_trTemplate ? "1" : "0",g_SNMIniFn.Get());
 		makeEscapedConfigString(_trTemplatePath, &escapedStr);
@@ -260,14 +260,14 @@ void saveCueBusIniFile(const char* _busName, int _type, bool _trTemplate, const 
 		WritePrivateProfileString("LAST_CUEBUS","SHOW_ROUTING",_showRouting ? "1" : "0",g_SNMIniFn.Get());
 		WritePrivateProfileString("LAST_CUEBUS","SEND_TO_MASTERPARENT",_sendToMaster ? "1" : "0",g_SNMIniFn.Get());
 
-		sprintf(tmp,"%d",_soloDefeat);
+		_snprintf(tmp, 16, "%d", _soloDefeat);
 		WritePrivateProfileString("LAST_CUEBUS","SOLO_DEFEAT",tmp,g_SNMIniFn.Get());
 
 		char slot[16] = "";
 		for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
 		{
-			sprintf(slot,"HWOUT%d",i+1);
-			sprintf(tmp,"%d",_hwOuts[i]);
+			_snprintf(slot, 16, "HWOUT%d", i+1);
+			_snprintf(tmp, 16, "%d", _hwOuts[i]);
 			WritePrivateProfileString("LAST_CUEBUS",slot,tmp,g_SNMIniFn.Get());
 		}
 	}

@@ -196,8 +196,8 @@ void setFXUnbypassSelectedTracks(COMMAND_T* _ct) {
 
 void setAllFXsBypassSelectedTracks(COMMAND_T* _ct) {
 	char cInt[2] = "";
-	sprintf(cInt, "%d", (int)_ct->user);
-	// We use the "except mode" but with an unreachable fx number 
+	_snprintf(cInt, 2, "%d", (int)_ct->user);
+	// we use the "except mode" but with an unreachable fx number 
 	patchSelTracksFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 1, 0xFFFF, cInt, SNM_CMD_SHORTNAME(_ct)); 
 }
 
@@ -237,35 +237,34 @@ bool patchSelItemsFXState(int _mode, int _token, int _fxId, const char* _value, 
 		}
 	}
 
-	// Undo point
 	if (updated && _undoMsg)
 		Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL, -1);
 	return updated;
 }
 
 void toggleAllFXsOfflineSelectedItems(COMMAND_T* _ct) { 
-	// We use the "except mode" but with an unreachable fx number 
+	// "except mode" but with an unreachable fx number 
 	if (patchSelItemsFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
 		FakeToggle(_ct);
 } 
   
 void toggleAllFXsBypassSelectedItems(COMMAND_T* _ct) { 
-	// We use the "except mode" but with an unreachable fx number 
+	// "except mode" but with an unreachable fx number 
 	if (patchSelItemsFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
 		FakeToggle(_ct);
 } 
 
 void setAllFXsOfflineSelectedItems(COMMAND_T* _ct) {
 	char cInt[2] = "";
-	sprintf(cInt, "%d", (int)_ct->user);
-	// We use the "except mode" but with an unreachable fx number 
+	_snprintf(cInt, 2, "%d", (int)_ct->user);
+	// "except mode" but with an unreachable fx number 
 	patchSelItemsFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 2, 0xFFFF, cInt, SNM_CMD_SHORTNAME(_ct));
 }
 
 void setAllFXsBypassSelectedItems(COMMAND_T* _ct) {
 	char cInt[2] = "";
-	sprintf(cInt, "%d", (int)_ct->user);
-	// We use the "except mode" but with an unreachable fx number 
+	_snprintf(cInt, 2, "%d", (int)_ct->user);
+	// "except mode" but with an unreachable fx number 
 	patchSelItemsFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 1, 0xFFFF, cInt, SNM_CMD_SHORTNAME(_ct));
 }
 
@@ -281,14 +280,14 @@ int selectTrackFX(MediaTrack* _tr, int _fx)
 	{
 		SNM_ChunkParserPatcher p(_tr);
 		char pLastSel[4] = ""; // 4 if there're many FXs
-		sprintf(pLastSel,"%d", _fx);
+		_snprintf(pLastSel, 4, "%d", _fx);
 		char pShow[4] = ""; // 4 if there're many FXs
 		if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",2,0,1,&pShow) > 0)
 		{
-			// Also patch the shown FX if the fx chain dlg is opened
-			if (strcmp(pShow,"0") != 0)
+			// patch the shown FX if the fx chain dlg is opened
+			if (strcmp(pShow, "0") != 0)
 			{
-				sprintf(pShow,"%d", _fx+1);
+				_snprintf(pShow, 4, "%d", _fx+1);
 				updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","SHOW",2,0,1,&pShow);
 			}
 			updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",2,0,1,&pLastSel);

@@ -365,15 +365,20 @@ static COMMAND_T g_SNM_cmdTable[] =
 #endif
 
 	// Notes/Help -------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (project notes)" }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, "S&&M Notes/Help", 0, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (item notes)" }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (track notes)" }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (marker names)" }, "S&M_MARKERNAMES", OpenNotesHelpView, NULL, 3, IsNotesHelpViewDisplayed},
-#ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Help window (action help)" }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, 4, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (project notes)" }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, "S&&M Notes/Help", 0, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (item notes)" }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (track notes)" }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewDisplayed},
+#ifdef _MARKER_REGION_NAME
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (marker/region names)" }, "S&M_MARKERNAMES", OpenNotesHelpView, NULL, 3, IsNotesHelpViewDisplayed},
 #endif
-	{ { DEFACCEL, "SWS/S&M: Notes/Help - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesHelpLock, NULL, NULL, IsNotesHelpLocked},
-	{ { DEFACCEL, "SWS/S&M: Notes/Help - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (marker/region subtitles)" }, "S&M_MARKERSUBTITLES", OpenNotesHelpView, NULL, 4, IsNotesHelpViewDisplayed},
+#ifdef _WIN32
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (action help)" }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, 4, IsNotesHelpViewDisplayed},
+#endif
+	{ { DEFACCEL, "SWS/S&M: Notes/Subtitles/Help - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesHelpLock, NULL, NULL, IsNotesHelpLocked},
+	{ { DEFACCEL, "SWS/S&M: Notes/Subtitles/Help - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Notes/Subtitles/Help - Import subtitle file..." }, "S&M_IMPORT_SUBTITLE", ImportSubTitleFile, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Notes/Subtitles/Help - Export subtitle file..." }, "S&M_EXPORT_SUBTITLE", ExportSubTitleFile, NULL, },
 
 	// Split ------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Split selected items at edit cursor (MIDI) or prior zero crossing (audio)" }, "S&M_SPLIT1", splitMidiAudio, NULL, },
@@ -998,18 +1003,16 @@ void SnMExit()
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_ScheduledJob (performed in SnMCSurfRun())
+// SNM_ScheduledJob (managed in SnMCSurfRun())
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_jobs;
-SWS_Mutex g_jobsLock;
+SWS_Mutex g_jobsMutex;
 
 void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job) 
 {
-	if (!_job)
-		return;
-
-	SWS_SectionLock lock(&g_jobsLock);
+	if (!_job) return;
+	SWS_SectionLock lock(&g_jobsMutex);
 	bool found = false;
 	for (int i=0; i<g_jobs.GetSize(); i++)
 	{
@@ -1029,7 +1032,7 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job)
 
 void DeleteScheduledJob(int _id) 
 {
-	SWS_SectionLock lock(&g_jobsLock);
+	SWS_SectionLock lock(&g_jobsMutex);
 	for (int i=0; i<g_jobs.GetSize(); i++)
 	{
 		SNM_ScheduledJob* job = g_jobs.Get(i);
@@ -1042,36 +1045,65 @@ void DeleteScheduledJob(int _id)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// SNM_MarkerRegionSubscriber (managed in SnMCSurfRun())
+///////////////////////////////////////////////////////////////////////////////
+
+WDL_PtrList<SNM_MarkerRegionSubscriber> g_mkrRgnSubscribers;
+SWS_Mutex g_mkrRgnSubscribersMutex;
+
+void RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) 
+{
+	if (!_sub) return;
+	SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
+	if (g_mkrRgnSubscribers.Find(_sub) < 0)
+		g_mkrRgnSubscribers.Add(_sub);
+}
+
+void UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) 
+{
+	if (!_sub) return;
+	SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
+	int idx = g_mkrRgnSubscribers.Find(_sub);
+	if (idx > 0)
+		g_mkrRgnSubscribers.Delete(idx, false);
+}
+
+
+int g_markerCount = 0;
+int g_regionCount = 0;
+
+// returns 0 if nothing changed, 1: marker update, 2: region update, 3: both region & marker updates
+// note: just diffs nb of markers/regions (that's enough atm)
+int MarkerRegionChanged()
+{
+	int x=0, markerCount=0, regionCount=0; bool isRgn;
+	while (x = EnumProjectMarkers2(NULL, x, &isRgn, NULL, NULL, NULL, NULL))
+		if (isRgn) regionCount++;
+		else markerCount++;
+
+	int updateFlags = (markerCount!=g_markerCount ? 1 : 0);
+	updateFlags |= (regionCount!=g_regionCount ? 2 : 0);
+
+	g_regionCount = regionCount;
+	g_markerCount = markerCount;
+
+	return updateFlags;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // IReaperControlSurface callbacks
 ///////////////////////////////////////////////////////////////////////////////
 
 double g_toolbarMsCounter = 0.0;
-double g_itemSelMsCounter = 0.0;
+double g_itemSelToolbarMsCounter = 0.0;
+double g_markerRegionNotifyMsCounter = 0.0;
 
 void SnMCSurfRun()
 {
-	g_toolbarMsCounter += SNM_CSURF_RUN_TICK_MS;
-	g_itemSelMsCounter += SNM_CSURF_RUN_TICK_MS;
-
-	// toolbars auto-refresh option
-	if (g_itemSelMsCounter > 1000) { // might be hungry => gentle hard-coded freq
-		g_itemSelMsCounter = 0.0;
-		if (g_toolbarsAutoRefreshEnabled) 
-			itemSelToolbarPoll();
-	}
-	if (g_toolbarMsCounter > g_toolbarsAutoRefreshFreq) {
-		g_toolbarMsCounter = 0.0;
-		if (g_toolbarsAutoRefreshEnabled) 
-			RefreshToolbars();
-	}
-
-	// stop playing track previews if needed
-	StopTrackPreviewsRun();
-
 	// perform scheduled jobs
-	SWS_SectionLock lock(&g_jobsLock);
-	if (g_jobs.GetSize())
 	{
+		SWS_SectionLock lock(&g_jobsMutex);
 		for (int i=g_jobs.GetSize()-1; i >=0; i--)
 		{
 			SNM_ScheduledJob* job = g_jobs.Get(i);
@@ -1082,6 +1114,36 @@ void SnMCSurfRun()
 				g_jobs.Delete(i, true);
 			}
 		}
+	}
+
+	// marker/region updates notifications
+	g_markerRegionNotifyMsCounter += SNM_CSURF_RUN_TICK_MS;
+	if (g_markerRegionNotifyMsCounter > 500)
+	{
+		g_markerRegionNotifyMsCounter = 0.0;
+
+		SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
+		if (int updateFlags = MarkerRegionChanged())
+			for (int i=g_mkrRgnSubscribers.GetSize()-1; i >=0; i--)
+				g_mkrRgnSubscribers.Get(i)->NotifyMarkerRegionUpdate(updateFlags);
+	}
+
+	// stop playing track previews if needed
+	StopTrackPreviewsRun();
+
+	// toolbars auto-refresh options
+	g_toolbarMsCounter += SNM_CSURF_RUN_TICK_MS;
+	g_itemSelToolbarMsCounter += SNM_CSURF_RUN_TICK_MS;
+
+	if (g_itemSelToolbarMsCounter > 1000) { // might be hungry => gentle hard-coded freq
+		g_itemSelToolbarMsCounter = 0.0;
+		if (g_toolbarsAutoRefreshEnabled) 
+			itemSelToolbarPoll();
+	}
+	if (g_toolbarMsCounter > g_toolbarsAutoRefreshFreq) {
+		g_toolbarMsCounter = 0.0;
+		if (g_toolbarsAutoRefreshEnabled) 
+			RefreshToolbars();
 	}
 }
 

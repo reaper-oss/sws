@@ -32,13 +32,13 @@
 // combined flags for insert media (dbl click)
 
 #include "stdafx.h"
-//#include "../../WDL/projectcontext.h"
 #include "SnM_Actions.h"
 #include "SNM_FXChainView.h"
 #include "../Prompt.h"
 #ifdef _WIN32
 #include "../MediaPool/DragDrop.h" //JFB: move to the trunk?
 #endif
+//#include "../../WDL/projectcontext.h"
 
 
 // Commands
@@ -415,7 +415,7 @@ void FileSlotList::EditSlot(int _slot)
 static SWS_LVColumn g_fxChainListCols[] = { {65,2,"Slot"}, {100,1,"Name"}, {250,2,"Path"}, {200,1,"Comment"} };
 
 SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 4, g_fxChainListCols, "Resources View State", false)
+	: SWS_ListView(hwndList, hwndEdit, 4, g_fxChainListCols, "Resources View State", false)
 {
 //	ListView_SetExtendedListViewStyleEx(hwndList, ListView_GetExtendedListViewStyle(hwndList), LVS_EX_GRIDLINES);
 }
@@ -434,7 +434,8 @@ void SNM_ResourceView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 				{
 					slot++;
 					if (g_type == SNM_SLOT_PRJ && isProjectLoaderConfValid()) // no GetTypeForUser() here: only one loader/selecter config atm..
-						_snprintf(str, iStrMax, "%5.d %s", slot, slot<g_prjLoaderStartPref || slot>g_prjLoaderEndPref ? "  " : 
+						_snprintf(str, iStrMax, "%5.d %s", slot, 
+							slot<g_prjLoaderStartPref || slot>g_prjLoaderEndPref ? "  " : 
 							g_prjLoaderStartPref==slot ? "->" : g_prjLoaderEndPref==slot ? "<-" :  "--");
 					else
 						_snprintf(str, iStrMax, "%5.d", slot);
@@ -526,8 +527,7 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 	}
 }
 
-void SNM_ResourceView::OnItemDblClk(SWS_ListItem* item, int iCol)
-{
+void SNM_ResourceView::OnItemDblClk(SWS_ListItem* item, int iCol) {
 	Perform();
 }
 
@@ -2075,9 +2075,9 @@ void ResourceViewExit()
 
 	GetIniSectionNames(&iniSections);
 
-	////////////////////////////////////////
-	// save the "RESOURCE_VIEW" ini section
-	////////////////////////////////////////
+
+	// *** save the "RESOURCE_VIEW" ini section
+
 	iniStr.Set("");
 
 	// save custom slot type definitions
@@ -2130,9 +2130,8 @@ void ResourceViewExit()
 	SaveIniSection("RESOURCE_VIEW", &iniStr, g_SNMIniFn.Get());
 
 
-	///////////////////////////////////
-	// save slots ini sections
-	///////////////////////////////////
+	// *** save slots ini sections
+
 	for (int i=0; i < g_slots.GetSize(); i++)
 	{
 		iniStr.SetFormatted(BUFFER_SIZE, "Max_slot=%d\n", g_slots.Get(i)->GetSize());

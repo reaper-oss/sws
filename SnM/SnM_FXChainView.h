@@ -156,8 +156,10 @@ protected:
 	SNM_MiniAddDelButtons m_btnsAddDel;
 };
 
+
 void FlushCustomTypesIniFile();
 void AutoSave(int _type, int _whichFXChain, bool _trTmpltWithItems);
 void AutoFill(int _type, const char* _startPath);
+
 
 #endif

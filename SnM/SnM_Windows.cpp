@@ -173,7 +173,7 @@ HWND GetActionListBox(char* _currentSection, int _sectionMaxSize)
 	return (actionsWnd ? GetDlgItem(actionsWnd, 0x52B) : NULL);
 }
 
-// returns the list view's selected item, -1 if failed, -2 if the related action's custom id cannot be retreived
+// returns the list view's selected item, -1 if failed, -2 if the related action's custom id cannot be retrieved (column hidden)
 // note: no multi-selection mgmt here..
 // API LIMITATION: things like kbd_getTextFromCmd() cannot work for other sections than the main one
 // => TODO: clean-up when we'll be able to access sections properly..

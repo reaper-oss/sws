@@ -25,23 +25,35 @@
 /
 ******************************************************************************/
 
-
 #pragma once
 
-bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize);
-bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine = NULL);
+#ifndef _SNM_NOTESVIEW_H_
+#define _SNM_NOTESVIEW_H_
+
+
+class NoteHelp_UpdateJob : public SNM_ScheduledJob {
+public:
+	NoteHelp_UpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_NOTEHLP_TLCHANGE, 150) {}
+	void Perform();
+};
+
+class NoteHelp_MarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
+public:
+	NoteHelp_MarkerRegionSubscriber() : SNM_MarkerRegionSubscriber() {}
+	void NotifyMarkerRegionUpdate(int _updateFlags);
+};
 
 class SNM_NotesHelpWnd : public SWS_DockWnd
 {
 public:
 	SNM_NotesHelpWnd();
-	int GetType();
+	~SNM_NotesHelpWnd();
+
 	void SetType(int _type);
 	void SetText(const char* _str);
 	void RefreshGUI(bool _emtpyNotes = false);
 	void CSurfSetTrackTitle();
 	void CSurfSetTrackListChange();
-	void Update(bool _force=false);
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 
 	void saveCurrentText(int _type);
@@ -49,12 +61,13 @@ public:
 	void saveCurrentHelp();
 	void saveCurrentItemNotes();
 	void saveCurrentTrackNotes();
-	void saveCurrentMarkerRegionName();
+	void saveCurrentMkrRgnNameOrNotes(bool _name);
 
-	const char* getActionHelpFilename();
-	void setActionHelpFilename(const char* _filename);
-	void readActionHelpFilenameIniFile();
-	void saveActionHelpFilenameIniFile();
+	void Update(bool _force = false);
+	int updateActionHelp();
+	int updateItemNotes();
+	int updateTrackNotes();
+	int updateMkrRgnNameOrNotes(bool _name);
 
 protected:
 	void OnInitDlg();
@@ -65,31 +78,24 @@ protected:
 	HMENU OnContextMenu(int x, int y);
 	int OnKey(MSG* msg, int iKeyState);
 	void OnTimer(WPARAM wParam=0);
+	void OnResize();
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
 
-	int updateItemNotes();
-	int updateTrackNotes();
-	int updateMarkerRegionName();
-	int updateActionHelp();
-
-	void loadHelp(const char* _cmdName, char* _buf, int _bufSize);
-	void saveHelp(const char* _cmdName, const char* _help);
-
 	WDL_VirtualComboBox m_cbType;
 	WDL_VirtualIconButton m_btnLock;
-	SNM_ToolbarButton m_btnAlr;
+	SNM_ToolbarButton m_btnAlr, m_btnActionList, m_btnImportSub, m_btnExportSub;
 	WDL_VirtualStaticText m_txtLabel;
 
-	WDL_FastString m_actionHelpFilename;
-	int m_type, m_previousType;
 	bool m_internalTLChange;
+	NoteHelp_MarkerRegionSubscriber m_mkrRgnSubscriber;
 };
 
 
-class SNM_NoteHlp_TLChangeSchedJob : public SNM_ScheduledJob
-{
-public:
-	SNM_NoteHlp_TLChangeSchedJob() : SNM_ScheduledJob(SNM_SCHEDJOB_NOTEHLP_TLCHANGE, 150) {}
-	void Perform();
-};
+void loadHelp(const char* _cmdName, char* _buf, int _bufSize);
+void saveHelp(const char* _cmdName, const char* _help);
+bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize);
+bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine = NULL);
+
+
+#endif

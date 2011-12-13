@@ -28,6 +28,9 @@
 
 #pragma once
 
+#ifndef _SNM_LIVECFGVIEW_H_
+#define _SNM_LIVECFGVIEW_H_
+
 
 #define SNM_LIVECFG_NB_CONFIGS			8
 #define SNM_LIVECFG_MAX_PRESET_COUNT	2048 //JFB would be ideal: (SNM_LIVECFG_CLEAR_PRESETS_MSG - SNM_LIVECFG_SET_PRESETS_MSG)
@@ -131,3 +134,6 @@ public:
 	SNM_LiveCfg_TLChangeSchedJob() : SNM_ScheduledJob(SNM_SCHEDJOB_LIVECFG_TLCHANGE, 150) {}
 	void Perform();
 };
+
+
+#endif

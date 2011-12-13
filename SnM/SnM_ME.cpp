@@ -25,13 +25,9 @@
 /
 ******************************************************************************/
 
-
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
-
-#define MAX_CC_LANE_ID 133
-#define MAX_CC_LANES_SLOT 4096
 
 
 void MECreateCCLane(COMMAND_T* _ct)
@@ -133,15 +129,16 @@ void MESetCCLanes(COMMAND_T* _ct)
 	MediaItem_Take* tk = me ? MIDIEditor_GetTake(me) : NULL;
 	if (tk)
 	{
-		// Read stored lanes
-		char laneSlot[MAX_CC_LANES_SLOT], slot[20] = "";
-		sprintf(slot, "CC_LANES_SLOT%d", _ct->user + 1);
-		GetPrivateProfileString("MIDI_EDITOR", slot, "", laneSlot, MAX_CC_LANES_SLOT, g_SNMIniFn.Get());
+		// recall lanes
+		char laneSlot[MAX_CC_LANES_LEN], slot[32] = "";
+		_snprintf(slot, 32, "CC_LANES_SLOT%d", _ct->user + 1);
+		GetPrivateProfileString("MIDI_EDITOR", slot, "", laneSlot, MAX_CC_LANES_LEN, g_SNMIniFn.Get());
 
 		int i=0; 
-		while (laneSlot[i] && i < (MAX_CC_LANES_SLOT-2)) // -2: see string termination
+		while (laneSlot[i] && i < (MAX_CC_LANES_LEN-2)) // -2: see string termination
 		{ 
-			if (laneSlot[i] == '|') laneSlot[i] = '\n';
+			if (laneSlot[i] == '|')
+				laneSlot[i] = '\n';
 			i++;
 		}
 		laneSlot[i++] = '\n';
@@ -168,7 +165,7 @@ void MESaveCCLanes(COMMAND_T* _ct)
 			{
 				SNM_ChunkParserPatcher ptk(&takeChunk, false);
 
-				// Check start/end position of lanes in the chunk
+				// check start/end position of lanes in the chunk
 				int firstPos = 0, lastPos = 0, laneCpt = 0;
 				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", -1, laneCpt, 0);
 				while (pos > 0) 
@@ -182,22 +179,22 @@ void MESaveCCLanes(COMMAND_T* _ct)
 				{
 					firstPos--; // see SNM_ChunkParserPatcher
 
-					char laneSlot[MAX_CC_LANES_SLOT] = "";
+					char laneSlot[MAX_CC_LANES_LEN] = "";
 					int eolLastPos = lastPos;
 					const char* pp = ptk.GetChunk()->Get(); //ok 'cause read only
 					while (pp[eolLastPos] && pp[eolLastPos] != '\n') eolLastPos++;
 
 					int i = firstPos, j=0;
-					while (pp[i] && i<eolLastPos && j < (MAX_CC_LANES_SLOT-1) ) { //-1 see string termination
+					while (pp[i] && i<eolLastPos && j < (MAX_CC_LANES_LEN-1) ) { //-1 see string termination
 						if (pp[i] != '\n') laneSlot[j++] = pp[i];
 						else laneSlot[j++] = '|';
 						i++;
 					}
 					laneSlot[j] = 0;
 
-					// Store the lanes
-					char slot[32];
-					sprintf(slot, "CC_LANES_SLOT%d", _ct->user + 1);
+					// store lanes
+					char slot[32] = "";
+					_snprintf(slot, 32, "CC_LANES_SLOT%d", _ct->user + 1);
 					WritePrivateProfileString("MIDI_EDITOR", slot, laneSlot, g_SNMIniFn.Get());
 				}
 			}

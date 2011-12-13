@@ -512,7 +512,7 @@ const char* SNM_GetSetObjectState(void* _obj, WDL_FastString* _str)
 		RemoveAllIds(_str);
 #ifdef _SNM_DEBUG
 		char filename[BUFFER_SIZE] = "";
-		sprintf(filename, "%s%cSNM_ChunkParserPatcher_lastCommit.txt", GetExePath(), PATH_SLASH_CHAR);
+		_snprintf(filename, BUFFER_SIZE, "%s%cSNM_ChunkParserPatcher_lastCommit.txt", GetExePath(), PATH_SLASH_CHAR);
 		FILE* f = fopen(filename, "w"); 
 		if (f) {
 			fputs(_str->Get(), f);
@@ -865,7 +865,7 @@ int ParsePatchCore(
 						case SNM_TOGGLE_CHUNK_INT:
 						{
 							char bufConversion[16] = "";
-							sprintf(bufConversion, "%d", !lp.gettoken_int(_tokenPos));
+							_snprintf(bufConversion, 16, "%d", !lp.gettoken_int(_tokenPos));
 							alter |= WriteChunkLine(newChunk, bufConversion, _tokenPos, &lp); 
 							m_breakParsePatch = (_occurence != -1);
 						}
@@ -925,7 +925,7 @@ int ParsePatchCore(
 						case SNM_TOGGLE_CHUNK_INT_EXCEPT:
 						{
 							char bufConversion[16] = "";
-							sprintf(bufConversion, "%d", !lp.gettoken_int(_tokenPos));
+							_snprintf(bufConversion, 16, "%d", !lp.gettoken_int(_tokenPos));
 							alter |= WriteChunkLine(newChunk, bufConversion, _tokenPos, &lp); 
 						}
 						break; 

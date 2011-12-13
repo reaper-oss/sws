@@ -1,3 +1,13 @@
+Notes/Help view -> Notes/Subtitles/Help:
++Added subtitle support, the view has a new mode: "Marker/Region subtitles" (in the top left dropdown box).
+You can edit some notes that are attached to regions and/or markers (notes are saved in project files).
+When text edition is locked, the text is displayed with a dynamic sized font (i.e. display à la "Big clock") that follows the edit cursor position (=> subtitles).
+Useful for lyrics and video stuff (you can display subttiles or even to edit them in REAPER)
++Import/Export of of SubRip subtitle files (.srt files, supported in most video players)
+Added related actions:
++SWS/S&M: Notes/Subtitles/Help - Import subtitle file... - It adds regions and notes for each subtitle of the loaded file
++SWS/S&M: Notes/Subtitles/Help - Export subtitle file... - It exports current *region* notes as subtitle files
+
 !v2.1.0 #22 (December 12, 2011)
 Resources view updates:
 Issue 408: added resource slot bookmarks
@@ -14,9 +24,9 @@ Added actions (Issue 422):
 Other:
 +Added tooltips
 +Issue 412: reorganized the GUI a bit, better docking/resizing behavior
-+Default customizable action: the enter key now also acts like double-click
++Default customizable action: the enter key now also acts as double-click
 
-Cycle action editor: re-fixed drag-drop of commands in right list view re-broken in v2.1.0 #21
+Cycle action editor: re-fixed drag-drop of commands in the right list view re-broken in v2.1.0 #21
 Live Configs: the enter key activates the selected config
 Notes/help view: less flickering
 Properly keep marker/region colors when renumbering

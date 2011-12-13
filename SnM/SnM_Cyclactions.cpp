@@ -128,13 +128,13 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 		if (i == (action->GetCmdSize()-1))
 		{
 			action->m_performState = 0;
-			if (strcmp(action->GetName(), _ct->accel.desc)) strcpy(buf, action->GetName());
+			if (strcmp(action->GetName(), _ct->accel.desc)) lstrcpyn(buf, action->GetName(), 256);
 			done = true;
 		}
 		else if (*cmd == '!') // last ! ignored
 		{
 			action->m_performState++;
-			if (cmd[1])	strcpy(buf, (char *)(cmd+1));
+			if (cmd[1])	lstrcpyn(buf, (char *)(cmd+1), 256);
 			done = true;
 		}
 
@@ -1112,7 +1112,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				char fn[BUFFER_SIZE] = "";
 				if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
 					SaveCyclactions(actions, g_editedSection, fn);
-					strcpy(g_lastExportFn, fn);
+					lstrcpyn(g_lastExportFn, fn, BUFFER_SIZE);
 				}
 			}
 			break;
@@ -1126,7 +1126,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				char fn[BUFFER_SIZE] = "";
 				if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
 					SaveCyclactions(actions, g_editedSection, fn);
-					strcpy(g_lastExportFn, fn);
+					lstrcpyn(g_lastExportFn, fn, BUFFER_SIZE);
 				}
 			}
 			break;
@@ -1137,7 +1137,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				char fn[BUFFER_SIZE] = "";
 				if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
 					SaveCyclactions(g_editedActions, -1, fn);
-					strcpy(g_lastExportFn, fn);
+					lstrcpyn(g_lastExportFn, fn, BUFFER_SIZE);
 				}
 			}
 			break;
@@ -1185,7 +1185,6 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case BUTTONID_ACTIONLIST:
 #endif
 			AllEditListItemEnd(false);
-			//JFB KO!? ShowActionList(NULL, GetMainHwnd());
 			Main_OnCommand(40605, 0);
 			break;
 		default:
@@ -1234,7 +1233,7 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 			// right re-align
 			RECT r; m_btnActionList.GetPosition(&r);
 			int w = r.right-r.left;
-			r.left = _r->right-w-7;
+			r.left = _r->right-w-9;
 			r.right = r.left+w;
 			m_btnActionList.SetPosition(&r);
 		}
@@ -1531,7 +1530,6 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 					break;
 				case IDC_COMMAND: // show action list
 					AllEditListItemEnd(false);
-					//JFB KO!! ShowActionList(NULL, GetMainHwnd());
 					Main_OnCommand(40605, 0);
 					break;
 				case IDOK:

@@ -729,7 +729,7 @@ void removeAllEmptyTakes(COMMAND_T* _ct) {
 	removeEmptyTakes(SNM_CMD_SHORTNAME(_ct), true, true);
 }
 
-//note: no undo due to file deletion
+// note: no undo due to file deletion
 bool deleteTakeAndMedia(int _mode)
 {
 	bool deleteFileOK = true;
@@ -772,13 +772,13 @@ bool deleteTakeAndMedia(int _mode)
 								char buf[BUFFER_SIZE*2];
 
 								if (pcm && pcm->GetFileName() && strlen(pcm->GetFileName())) 
-									sprintf(buf,"[Track %d, item %d] Delete take %d and its media file %s ?", i, j+1, originalTkIdx+1, tkDisplayName);
+									_snprintf(buf, BUFFER_SIZE*2, "[Track %d, item %d] Delete take %d and its media file %s ?", i, j+1, originalTkIdx+1, tkDisplayName);
 								else if (pcm && pcm->GetFileName() && !strlen(pcm->GetFileName())) 
-									sprintf(buf,"[Track %d, item %d] Delete take %d (%s, in-project) ?", i, j+1, originalTkIdx+1, tkDisplayName);
+									_snprintf(buf, BUFFER_SIZE*2, "[Track %d, item %d] Delete take %d (%s, in-project) ?", i, j+1, originalTkIdx+1, tkDisplayName);
 								else 
-									sprintf(buf,"[Track %d, item %d] Delete take %d (empty take) ?", i, j+1, originalTkIdx+1); // v3 or v4 empty takes
+									_snprintf(buf, BUFFER_SIZE*2, "[Track %d, item %d] Delete take %d (empty take) ?", i, j+1, originalTkIdx+1); // v3 or v4 empty takes
 
-								rc = MessageBox(GetMainHwnd(), buf, "S&M - Delete take and source files (NO UNDO!)", MB_YESNOCANCEL);
+								rc = MessageBox(GetMainHwnd(), buf, "S&M - Delete take and source files (no undo!)", MB_YESNOCANCEL);
 								if (rc == IDCANCEL) {
 									cancel = true;
 									break;
@@ -807,7 +807,7 @@ bool deleteTakeAndMedia(int _mode)
 									deleteFileOK = false;
 							}
 
-							// Removes the take (can't factorize chunk updates here..)
+							// removes the take (can't factorize chunk updates here..)
 							int cntTakes = CountTakes(item);
 							SNM_TakeParserPatcher p(item, cntTakes);
 							if (cntTakes > 1 && p.RemoveTake(k)) // > 1 because item removed otherwise
@@ -853,11 +853,11 @@ int getPitchTakeEnvRangeFromPrefs()
 	// "snap to semitones" bit set ?
 	if (range > 0xFF)
 		range &= 0xFF;
-	return min (231, range); // clamp (like REAPER does)
+	return min(231, range); // clamp (like REAPER does)
 }
 
-// if returns true: callers must use UpdateTimeline() at some point
-bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, char* _vis2, const WDL_FastString* _defaultPoint, bool _reset)
+// callers must use UpdateTimeline() at some point if it returns true..
+bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, char* _vis, const WDL_FastString* _defaultPoint, bool _reset)
 {
 	bool updated = false;
 	if (_item)
@@ -869,7 +869,8 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 		if (p.GetTakeChunk(_takeIdx, &takeChunk, &tkPos, &tklen))
 		{
 			bool takeUpdate = false, buildDefaultEnv = false;
-			char vis[2]; strcpy(vis, _vis2);
+			char vis[2] = {'\0','\0'}; 
+			*vis = *_vis;
 
 			// env. already exists?
 			if (strstr(takeChunk.Get(), _envKeyword))
@@ -890,11 +891,11 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 						if (ptk.Parse(SNM_GET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)currentVis) > 0)
 						{
 							// skip if visibility is different from 0 or 1
-							if (!strcmp(currentVis, "1")) strcpy(vis, "0");
-							else if (!strcmp(currentVis, "0")) strcpy(vis, "1");
+							if (*currentVis == '1') *vis = '0';
+							else if (*currentVis == '0') *vis = '1';
 						}
 						// just in case..
-						if (!strlen(vis)) 
+						if (!vis[0]) 
 							return false;
 					}
 
@@ -911,9 +912,9 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 			// build a default env. (if needed)
 			if (buildDefaultEnv)
 			{						
-				if (!strlen(vis)) 
-					strcpy(vis, "1"); // toggle ?
-				if (!strcmp(vis, "1"))
+				if (!vis[0]) 
+					*vis = '1'; // toggle ?
+				if (*vis == '1')
 				{
 					takeChunk.Append("<");
 					takeChunk.Append(_envKeyword);
@@ -930,7 +931,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 				}
 			}
 
-			// Update take (with new visibility)
+			// update take (with new visibility)
 			if (takeUpdate)
 				updated = p.ReplaceTake(tkPos, tklen, &takeChunk);
 		}
@@ -973,7 +974,7 @@ void showHideTakeVolEnvelope(COMMAND_T* _ct)
 	char cVis[2] = ""; //empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0)
-		sprintf(cVis, "%d", value);
+		_snprintf(cVis, 2, "%d", value);
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 0");
 	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
@@ -984,7 +985,7 @@ void showHideTakePanEnvelope(COMMAND_T* _ct)
 	char cVis[2] = ""; //empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0)
-		sprintf(cVis, "%d", value);
+		_snprintf(cVis, 2, "%d", value);
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
@@ -995,7 +996,7 @@ void showHideTakeMuteEnvelope(COMMAND_T* _ct)
 	char cVis[2] = ""; //empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0)
-		sprintf(cVis, "%d", value);
+		_snprintf(cVis, 2, "%d", value);
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 1");
 	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
@@ -1008,7 +1009,7 @@ void showHideTakePitchEnvelope(COMMAND_T* _ct)
 		char cVis[2] = ""; //empty means toggle
 		int value = (int)_ct->user;
 		if (value >= 0)
-			sprintf(cVis, "%d", value);
+			_snprintf(cVis, 2, "%d", value);
 		WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 		if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false) && value < 0) // toggle
 			FakeToggle(_ct);
@@ -1119,7 +1120,7 @@ void itemSelToolbarPoll()
 		double pos,len,start_time,end_time;
 		bool horizontal = false;
 
-		//JFB I rely on (incomplete?) SWELL's FindWindowEx here (rather than GetTrackWnd()) 
+		//JFB relies on (incomplete?) SWELL's FindWindowEx here (rather than GetTrackWnd()) 
 		if (HWND w = FindWindowEx(GetMainHwnd(), 0, "REAPERTrackListWindow", "trackview"))
 		{
 			RECT r; GetWindowRect(w, &r);
@@ -1219,8 +1220,8 @@ void toggleItemSelExists(COMMAND_T* _ct)
 
 		// in case auto refresh toolbar bar option is off..
 		char cmdCustId[SNM_MAX_ACTION_CUSTID_LEN] = "";
-		_snprintf(cmdCustId, SNM_MAX_ACTION_CUSTID_LEN, "_S&M_TOOLBAR_ITEM_SEL%d", dir);
-		RefreshToolbar(NamedCommandLookup(cmdCustId));
+		if (_snprintf(cmdCustId, SNM_MAX_ACTION_CUSTID_LEN, "_S&M_TOOLBAR_ITEM_SEL%d", dir) > 0)
+			RefreshToolbar(NamedCommandLookup(cmdCustId));
 	}
 }
 

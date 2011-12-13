@@ -111,9 +111,9 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 {
 	bool ok = false;
 	char defaultPath[BUFFER_SIZE] = "";
-	sprintf(defaultPath, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
-	char* filename = BrowseForFiles(_title, defaultPath, NULL, false, _fileFilters);
-	if (filename) 
+	_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
+
+	if (char* filename = BrowseForFiles(_title, defaultPath, NULL, false, _fileFilters)) 
 	{
 		if(!_wantFullPath)
 			GetShortResourcePath(_resSubDir, filename, _fn, _fnSize);
@@ -162,9 +162,9 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 		}
 		if (!stristr(_shortFn, GetResourcePath())) {
 
-			char resFn[BUFFER_SIZE], resDir[BUFFER_SIZE];
+			char resFn[BUFFER_SIZE] = "", resDir[BUFFER_SIZE];
 			_snprintf(resFn, BUFFER_SIZE, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFn);
-			strcpy(resDir, resFn);
+			lstrcpyn(resDir, resFn, BUFFER_SIZE);
 			if (char* p = strrchr(resDir, PATH_SLASH_CHAR)) *p = '\0';
 			if (FileExists(resDir)) {
 				lstrcpyn(_fullFn, resFn, _fnSize);
@@ -188,7 +188,7 @@ bool LoadChunk(const char* _fn, WDL_FastString* _chunk, bool _trim, int _maxlen)
 		if (FILE* f = fopenUTF8(_fn, "r"))
 		{
 			char str[SNM_MAX_CHUNK_LINE_LENGTH];
-			while(fgets(str, SNM_MAX_CHUNK_LINE_LENGTH, f))
+			while(fgets(str, SNM_MAX_CHUNK_LINE_LENGTH, f) && *str)
 			{
 				if (_maxlen && (int)(_chunk->GetLength()+strlen(str)) > _maxlen)
 					break;
@@ -197,7 +197,7 @@ bool LoadChunk(const char* _fn, WDL_FastString* _chunk, bool _trim, int _maxlen)
 				{
 					char* p = str;
 					while(*p && (*p == ' ' || *p == '\t')) p++;
-					if (*p != '\n') // !*p managed in Append()
+					if (*p != '\n') // the !*p case is managed in Append()
 						_chunk->Append(p);
 				}
 				else
@@ -364,26 +364,16 @@ void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, co
 {
 	if (_iniSectionName && _iniSection && _iniFn)
 	{
-		char* buf = (char*)calloc(_iniSection->GetLength()+1, sizeof(char));
-		lstrcpyn(buf, _iniSection->Get(), _iniSection->GetLength());
-		for (int j=0; j < _iniSection->GetLength(); j++)
-			if (buf[j] == '\n') 
-				buf[j] = '\0';
-		WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, _iniFn); // flush section
-		WritePrivateProfileSection(_iniSectionName, buf, _iniFn);
-		free(buf);
-/* JFB commented: should be faster though (!?)
-		// final null character
-		int newSz = _iniSection->GetLength()+1;
-		_iniSection->SetLen(newSz);
-		char* p = (char*)_iniSection->Get(); // cast to char* OK here: the WDL_FastString length will not be updated
-		p[newSz-1] = '\0';
-		// null-terminated strings
-		for (int j=0; j < newSz; j++)
-			if (p[j] == '\n') p[j] = '\0';
-		WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, _iniFn); // flush section
-		WritePrivateProfileSection(_iniSectionName, p, _iniFn);
-*/
+		if (char* buf = (char*)calloc(_iniSection->GetLength()+1, sizeof(char)))
+		{
+			memcpy(buf, _iniSection->Get(), _iniSection->GetLength());
+			for (int j=0; j < _iniSection->GetLength(); j++)
+				if (buf[j] == '\n') 
+					buf[j] = '\0';
+			WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, _iniFn); // flush section
+			WritePrivateProfileSection(_iniSectionName, buf, _iniFn);
+			free(buf);
+		}
 	}
 }
 
@@ -477,38 +467,86 @@ void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Util
+// Other helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// relies on markers & regions indexed by positions
-int FindMarkerRegion(double _pos)
+// returns the 1st marker or region index found at _pos
+// note: relies on markers & regions indexed by positions
+int FindMarkerRegion(double _pos, int* _idOut)
 {
-	int x=0, idx=-1; double dPos, dEnd; bool isRgn;
-	while (x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL))
+	if (_idOut)
+		*_idOut = -1;
+
+	int x=0, idx=-1, num=-1; double dPos, dEnd; bool isRgn;
+	while (x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, &num))
 	{
 		if (_pos >= dPos && (!isRgn || (isRgn && _pos <= dEnd)))
 		{
-			//JFB TODO? exclude ended regions..
-			if (EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL))
+			//JFB TODO? exclude ended regions?
+			if (EnumProjectMarkers2(NULL, x, NULL, &dPos, NULL, NULL, NULL))
 			{
 				if (_pos < dPos) {
 					idx = x-1;
 					break;
 				}
 			}
-			else
+			else {
 				idx = x-1;
+				break;
+			}
 		}
 	}
+	if (idx >= 0 && _idOut)
+		*_idOut = MakeMarkerRegionId(num, isRgn);
 	return idx;
 }
 
-int FindMarkerRegionNum(double _pos)
+// API LIMITATION: no way to identify a marker (or a region)
+// => we build an id in "best effort" mode (like region|num, 
+//    so a valid id is always > 0 but "num" must be <= 0xFFFF)
+// => we would need something like GUIDs for regions & markers..
+//JFB!!! TODO: Ox7FFFFFFF
+int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn)
 {
-	int num=-1, idx=FindMarkerRegion(_pos);
-	if (idx >= 0)
-		EnumProjectMarkers2(NULL, idx, NULL, NULL, NULL, NULL, &num);
-	return num;
+	if (_markrgnindexnumber >= 0 && _markrgnindexnumber <= 0xFFFF) {
+		_markrgnindexnumber |= ((_isRgn?1:0) << 16);
+		return _markrgnindexnumber;
+	}
+	return -1;
+}
+
+int GetMarkerRegionIdFromIndex(int _idx)
+{
+	if (_idx >= 0)
+	{
+		int num; bool isRgn;
+		if (EnumProjectMarkers2(NULL, _idx, &isRgn, NULL, NULL, NULL, &num))
+			return MakeMarkerRegionId(num, isRgn);
+	}
+	return -1;
+}
+
+// see MakeMarkerRegionId()'s comments
+int GetMarkerRegionIndexFromId(int _id)
+{
+	if (_id > 0)
+	{
+		int num = LOWORD(_id);
+		bool isRgn = (HIWORD(_id) == 1);
+		int x=0, num2; bool isRgn2;
+		while (x = EnumProjectMarkers2(NULL, x, &isRgn2, NULL, NULL, NULL, &num2))
+			if (num == num2 && isRgn == isRgn2)
+				return x-1;
+	}
+	return -1;
+}
+
+void TranslatePos(double _pos, int* _h, int* _m, int* _s, int* _ms)
+{
+	if (_h) *_h = int(_pos/3600);
+	if (_m) *_m = int((_pos - 3600*int(_pos/3600)) / 60);
+	if (_s) *_s = int(_pos - 3600*int(_pos/3600) - 60*int((_pos-3600*int(_pos/3600))/60));
+	if (_ms) *_ms = int(1000*(_pos-int(_pos)) + 0.5); // rounding
 }
 
 void makeUnformatedConfigString(const char* _in, WDL_FastString* _out)
@@ -526,26 +564,29 @@ void makeUnformatedConfigString(const char* _in, WDL_FastString* _out)
 	}
 }
 
-bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize)
+bool GetStringWithRN(const char* _bufIn, char* _bufOut, int _bufOutSz)
 {
-	if (!_buf || !_bufSrc)
+	if (!_bufOut || !_bufIn)
 		return false;
 
-	memset(_buf, 0, sizeof(_buf));
-
 	int i=0, j=0;
-	while (_bufSrc[i] && i < _bufSize && j < _bufSize)
+	while (_bufIn[i] && j < _bufOutSz)
 	{
-		if (_bufSrc[i] == '\n') {
-			_buf[j++] = '\r';
-			_buf[j++] = '\n';
+		if (_bufIn[i] == '\n') {
+			_bufOut[j++] = '\r';
+			_bufOut[j++] = '\n';
 		}
-		else if (_bufSrc[i] != '\r')
-			_buf[j++] = _bufSrc[i];
+		else if (_bufIn[i] != '\r')
+			_bufOut[j++] = _bufIn[i];
 		i++;
 	}
-	_buf[_bufSize-1] = 0; //just in case..
-	return true;
+
+	if (j < _bufOutSz)
+		_bufOut[j] = '\0';
+	else
+		_bufOut[_bufOutSz-1] = '\0'; // truncates, best effort..
+
+	return (j < _bufOutSz);
 }
 
 void ShortenStringToFirstRN(char* _str) {
@@ -557,20 +598,24 @@ void ShortenStringToFirstRN(char* _str) {
 	}
 }
 
-// replace "%blabla" with '_replaceCh' in _str
+// replace "%blabla " with "_replaceCh " in _str
 void ReplaceStringFormat(char* _str, char _replaceCh) {
 	if (_str && *_str)
 		if (char* p = strchr(_str, '%')) {
-			p[0] = _replaceCh;
-			if (char* p2 = strchr((char*)(p+1), ' '))
-				memmove((char*)(p+1), p2, strlen(p2)+1);
-			else
-				p[1] = '\0'; //assumes there's another char just after '%'
+			if (p[1]) {
+				p[0] = _replaceCh;
+				if (char* p2 = strchr((char*)(p+1), ' ')) memmove((char*)(p+1), p2, strlen(p2)+1);
+				else p[1] = '\0';
+			}
+			else p[0] = '\0';
 		}
 }
 
-bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize)
+bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize)
 {
+	if (!_section || !_sectionURL)
+		return false;
+
 	if (_alr)
 	{
 		if (!_stricmp(_section, "Main") || !strcmp(_section, "Main (alt recording)"))
@@ -583,14 +628,11 @@ bool GetSectionName(bool _alr, const char* _section, char* _sectionURL, int _sec
 			lstrcpyn(_sectionURL, "ALR_MIDIEvtList", _sectionURLSize);
 		else if (!_stricmp(_section, "MIDI Inline Editor"))
 			lstrcpyn(_sectionURL, "ALR_MIDIInline", _sectionURLSize);
-		else return false;
+		else
+			return false;
 	}
 	else
-	{
-		if (_section && _sectionURL)
-			lstrcpyn(_sectionURL, _section, _sectionURLSize);
-		else return false;
-	}
+		lstrcpyn(_sectionURL, _section, _sectionURLSize);
 	return true;
 }
 
@@ -695,14 +737,14 @@ bool dumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 	if (hList && currentSection)
 	{
 		char sectionURL[SNM_MAX_SECTION_NAME_LEN] = ""; 
-		if (!GetSectionName(_type == 1 || _type == 2, currentSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
+		if (!GetSectionNameAsURL(_type == 1 || _type == 2, currentSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
 		{
 			MessageBox(GetMainHwnd(), "Error: unknown section!", _title, MB_OK);
 			return false;
 		}
 
 		char fn[SNM_MAX_SECTION_NAME_LEN*2]; char filename[BUFFER_SIZE];
-		sprintf(fn, "%s%s.txt", sectionURL, !(_type % 2) ? "_SWS" : "");
+		_snprintf(fn, SNM_MAX_SECTION_NAME_LEN*2, "%s%s.txt", sectionURL, !(_type % 2) ? "_SWS" : "");
 		if (!BrowseForSaveFile(_title, GetResourcePath(), fn, "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0", filename, BUFFER_SIZE))
 			return false;
 
@@ -780,11 +822,11 @@ void DumpActionList(COMMAND_T* _ct) {
 }
 
 
+#ifdef _SNM_MISC
 ///////////////////////////////////////////////////////////////////////////////
 // tests, other..
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef _SNM_MISC
 void ShowTakeEnvPadreTest(COMMAND_T* _ct)
 {
 	bool updated = false;

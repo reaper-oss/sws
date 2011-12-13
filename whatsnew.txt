@@ -1,10 +1,9 @@
 Notes/Help view -> Notes/Subtitles/Help:
-+Added subtitle support, the view has a new mode: "Marker/Region subtitles" (in the top left dropdown box).
-You can edit some notes that are attached to regions and/or markers (notes are saved in project files).
-When text edition is locked, the text is displayed with a dynamic sized font (i.e. display à la "Big clock") that follows the edit cursor position (=> subtitles).
-Useful for lyrics and video stuff (you can display subttiles or even to edit them in REAPER)
-+Import/Export of of SubRip subtitle files (.srt files, supported in most video players)
-Added related actions:
++Subtitles support, i.e. new mode: "Marker/Region subtitles" in the top left dropdown box. 
+You can edit regions and/or markers notes (notes are saved in project files).
+When the view/text edition is locked, notes are displayed with a dynamic sized font (i.e. display à la "Big clock") that follows the play cursor position (=> subtitles).
+Useful for lyrics, video stuff (you can display subttiles or even to edit them in REAPER), etc...
+Also added new buttons and actions to import/export of SubRip subtitle files (.srt files supported by most video players) :
 +SWS/S&M: Notes/Subtitles/Help - Import subtitle file... - It adds regions and notes for each subtitle of the loaded file
 +SWS/S&M: Notes/Subtitles/Help - Export subtitle file... - It exports current *region* notes as subtitle files
 

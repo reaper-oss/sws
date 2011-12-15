@@ -90,7 +90,7 @@ int SNM_ImageVWnd::GetHeight() {
 
 void SNM_ImageVWnd::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect) {
 	if (m_img)
-		LICE_Blit(drawbm,m_img,m_position.left+origin_x,m_position.top+origin_y,NULL,1.0f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+		LICE_Blit(drawbm,m_img,m_position.left+origin_x,m_position.top+origin_y,NULL,1.0f,LICE_BLIT_MODE_COPY|LICE_BLIT_USE_ALPHA);
 }
 
 void SNM_AddDelButton::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)

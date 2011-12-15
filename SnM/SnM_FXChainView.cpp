@@ -2307,10 +2307,11 @@ void SNM_ImageWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltip
 		*_tooltipHeight = h;
 
 	SNM_AddLogo(_bm, _r, x0, h);
-
+/*JFB!!!
 	if (_r->right > _r->left && _r->bottom > _r->top &&
 		(_r->right-_r->left) > m_img.GetWidth() && 
 		(_r->bottom-_r->top) > m_img.GetHeight())
+*/
 	{
 		m_img.SetVisible(true);
 		int x = _r->left + int((_r->right-_r->left)/2 - m_img.GetWidth()/2 + 0.5);

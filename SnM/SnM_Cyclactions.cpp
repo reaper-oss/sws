@@ -351,7 +351,7 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 //_section or -1 for all sections
 // NULL _iniFn => S&M.ini
 // remark: undo pref ignored, only saves cycle actions
-void SaveCyclactions(WDL_PtrList<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
+void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
 {
 	if (!_cyclactions)
 		_cyclactions = g_cyclactions;
@@ -1110,7 +1110,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				actions[g_editedSection].Add(new Cyclaction(a));
 			if (actions[g_editedSection].GetSize()) {
 				char fn[BUFFER_SIZE] = "";
-				if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
+				if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
 					SaveCyclactions(actions, g_editedSection, fn);
 					lstrcpyn(g_lastExportFn, fn, BUFFER_SIZE);
 				}
@@ -1124,7 +1124,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				actions[g_editedSection].Add(new Cyclaction(g_editedActions[g_editedSection].Get(i)));
 			if (actions[g_editedSection].GetSize()) {
 				char fn[BUFFER_SIZE] = "";
-				if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
+				if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
 					SaveCyclactions(actions, g_editedSection, fn);
 					lstrcpyn(g_lastExportFn, fn, BUFFER_SIZE);
 				}
@@ -1601,7 +1601,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 									actions[g_editedSection].Add(new Cyclaction(a));
 								if (actions[g_editedSection].GetSize()) {
 									char fn[BUFFER_SIZE] = "";
-									if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
+									if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
 										SaveCyclactions(actions, g_editedSection, fn);
 										strcpy(g_lastExportFn, fn);
 									}
@@ -1616,7 +1616,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 									actions[g_editedSection].Add(new Cyclaction(g_editedActions[g_editedSection].Get(i)));
 								if (actions[g_editedSection].GetSize()) {
 									char fn[BUFFER_SIZE] = "";
-									if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
+									if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
 										SaveCyclactions(actions, g_editedSection, fn);
 										strcpy(g_lastExportFn, fn);
 									}
@@ -1627,7 +1627,7 @@ INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 							case 1024:
 								if (g_editedActions[0].GetSize() || g_editedActions[1].GetSize() || g_editedActions[2].GetSize()) { // yeah.., i know..
 									char fn[BUFFER_SIZE] = "";
-									if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
+									if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
 										SaveCyclactions(g_editedActions, -1, fn);
 										strcpy(g_lastExportFn, fn);
 									}

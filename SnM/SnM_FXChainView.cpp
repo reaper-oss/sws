@@ -71,6 +71,8 @@
 #define FXC_AUTOSAVE_INPUT_FX		0xF027
 #define FXC_AUTOSAVE_TR_MSG			0xF028
 #define FXC_AUTOSAVE_ITEM_MSG		0xF029
+#define FXC_AUTOSAVE_DEFNAME_MSG	0xF02A
+#define FXC_AUTOSAVE_FX1NAME_MSG	0xF02B
 #define TRT_APPLY_MSG				0xF040 // track template cmds
 #define TRT_APPLY_WITEMS_MSG		0xF041
 #define TRT_IMPORT_MSG				0xF042
@@ -90,8 +92,10 @@
 #define MED_ADD_NEWTR_MSG			0xF063
 #define MED_ADD_TAKES_MSG			0xF064
 #define MED_AUTOSAVE_MSG			0xF065
+#define IMG_SHOW_MSG				0xF070  // image file cmds
+#define IMG_TRICON_MSG				0xF071
 #ifdef _WIN32
-#define THM_LOAD_MSG				0xF070  // theme file cmds
+#define THM_LOAD_MSG				0xF080  // theme file cmds
 #endif
 
 // labels for undo points and popup menu items
@@ -109,11 +113,13 @@
 #define TRT_APPLY_ITEMS_STR		"Replace items of selected tracks"
 #define TRT_PASTE_ITEMS_STR		"Paste items to selected tracks"
 #define PRJ_SELECT_LOAD_STR		"Open/select project"
-#define PRJ_SELECT_LOAD_TAB_STR	"Open/select project templates (new tab)"
+#define PRJ_SELECT_LOAD_TAB_STR	"Open/select project (new tab)"
 #define MED_PLAY_STR			"Play media file in selected tracks (toggle)"
-#define MED_LOOP_STR			"Play/loop media file in selected tracks (toggle)"
+#define MED_LOOP_STR			"Loop media file in selected tracks (toggle)"
 #define MED_PLAYLOOP_STR		"Play/loop media file"
 #define MED_ADD_STR				"Insert media"
+#define IMG_SHOW_STR			"Show image"
+#define IMG_TRICON_STR			"Set track icon for selected tracks"
 #ifdef _WIN32
 #define THM_LOAD_STR			"Load theme"
 #endif
@@ -166,7 +172,7 @@ int g_prjLoaderStartPref = -1; // 1-based
 int g_prjLoaderEndPref = -1; // 1-based
 bool g_autoSaveTrTmpltWithItemsPref = true;
 int g_autoSaveFXChainPref = FXC_AUTOSAVE_PREF_TRACK;
-
+int g_autoSaveFXChainNamePref = 0;
 
 // helper funcs
 FileSlotList* GetCurList() {
@@ -185,18 +191,10 @@ WDL_FastString* GetAutoFillDir(int _type = -1) {
 
 int GetTypeForUser(int _type = -1) {
 	if (_type < 0) _type = g_type;
-	if (!g_slots.Get(_type)->GetFileExt()[0])
-		return SNM_SLOT_MEDIA;
-	else if (!_stricmp(g_slots.Get(_type)->GetFileExt(), "rfxchain"))
-		return SNM_SLOT_FXC;
-	else if (!_stricmp(g_slots.Get(_type)->GetFileExt(), "RTrackTemplate"))
-		return SNM_SLOT_TR;
-	else if (!_stricmp(g_slots.Get(_type)->GetFileExt(), "rpp"))
-		return SNM_SLOT_PRJ;
-#ifdef _WIN32
-	else if (!_stricmp(g_slots.Get(_type)->GetFileExt(), "ReaperthemeZip"))
-		return SNM_SLOT_THM;
-#endif
+	if (_type >= SNM_NUM_DEFAULT_SLOTS)
+		for (int i=0; i < SNM_NUM_DEFAULT_SLOTS; i++)
+			if (!_stricmp(g_slots.Get(_type)->GetFileExt(), g_slots.Get(i)->GetFileExt()))
+				return i;
 	return _type;
 }
 
@@ -700,8 +698,8 @@ void SNM_ResourceView::Perform()
 				int insertMode = -1;
 				switch(dblClickType) 
 				{
-					case 0: TogglePlaySelTrackMediaSlot(g_type, MED_PLAY_STR, slot, false); break;
-					case 1: TogglePlaySelTrackMediaSlot(g_type, MED_LOOP_STR, slot, true); break;
+					case 0: TogglePlaySelTrackMediaSlot(g_type, MED_PLAY_STR, slot, false, false); break;
+					case 1: TogglePlaySelTrackMediaSlot(g_type, MED_LOOP_STR, slot, false, true); break;
 					case 2: insertMode = 0; break;
 					case 3: insertMode = 1; break;
 					case 4: insertMode = 3; break;
@@ -710,6 +708,13 @@ void SNM_ResourceView::Perform()
 					InsertMediaSlot(g_type, MED_ADD_STR, slot, insertMode);
 				break;
 			}
+			case SNM_SLOT_IMG:
+				switch(dblClickType) {
+					case 0: ShowImageSlot(g_type, IMG_SHOW_STR, slot); break;
+					case 1: SetSelTrackIconSlot(g_type, IMG_TRICON_STR, slot); break;
+					case 2: InsertMediaSlot(g_type, MED_ADD_STR, slot, 0); break;
+				}
+				break;
 #ifdef _WIN32
 	 		case SNM_SLOT_THM:
 				LoadThemeSlot(g_type, THM_LOAD_STR, slot);
@@ -802,10 +807,15 @@ void SNM_ResourceWnd::FillDblClickCombos()
 			break;
 		case SNM_SLOT_MEDIA:
 			m_cbDblClickType.AddItem("Play in sel tracks (toggle)");
-			m_cbDblClickType.AddItem("Play/loop in sel tracks (toggle)");
+			m_cbDblClickType.AddItem("Loop in sel tracks (toggle)");
 			m_cbDblClickType.AddItem("Add to current track");
 			m_cbDblClickType.AddItem("Add to new track");
 			m_cbDblClickType.AddItem("Add to sel items as takes");
+			break;
+		case SNM_SLOT_IMG:
+			m_cbDblClickType.AddItem(IMG_SHOW_STR);
+			m_cbDblClickType.AddItem(IMG_TRICON_STR);
+			m_cbDblClickType.AddItem("Add to current track as item");
 			break;
 #ifdef _WIN32
 		case SNM_SLOT_THM:
@@ -945,7 +955,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case AUTO_FILL_DIR_MSG:
 		{
 			char startPath[BUFFER_SIZE] = "";
-			if (BrowseForDirectory("Auto-fill directory", GetAutoFillDir()->Get(), startPath, BUFFER_SIZE)) {
+			if (BrowseForDirectory("S&M - Auto-fill directory", GetAutoFillDir()->Get(), startPath, BUFFER_SIZE)) {
 				GetAutoFillDir()->Set(startPath);
 				AutoFill(g_type, startPath);
 			}
@@ -972,7 +982,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case AUTOSAVE_DIR_MSG:
 		{
 			char path[BUFFER_SIZE] = "";
-			if (BrowseForDirectory("Set auto-save directory", GetAutoSaveDir()->Get(), path, BUFFER_SIZE))
+			if (BrowseForDirectory("S&M - Set auto-save directory", GetAutoSaveDir()->Get(), path, BUFFER_SIZE))
 				GetAutoSaveDir()->Set(path);
 			break;
 		}
@@ -1028,7 +1038,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				char name[256] = "";
 				_snprintf(name, 256, "My %s", GetCurList()->GetMenuDesc());
-				if (PromptUserForString(GetMainHwnd(), "S&M - Add resource slot type:", name, 256) && strlen(name))
+				if (PromptUserForString(GetMainHwnd(), "S&M - Add resource slot bookmark", name, 256) && strlen(name))
 				{
 					int newType = g_slots.GetSize();
 
@@ -1055,7 +1065,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case BUTTONID_DEL_BOOKMARK:
 			if (IsCustomSlotType())
 			{
-				int reply = MessageBox(m_hwnd, "Delete files too ?", "S&M - Delete resource slot type", MB_YESNOCANCEL);
+				int reply = MessageBox(m_hwnd, "Delete files too ?", "S&M - Delete resource slot bookmark", MB_YESNOCANCEL);
 				if (reply != IDCANCEL)
 				{
 					// cleanup ini file (types may not be contiguous anymore..)
@@ -1116,6 +1126,10 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case FXC_AUTOSAVE_ITEM_MSG:
 			g_autoSaveFXChainPref = FXC_AUTOSAVE_PREF_ITEM;
+			break;
+		case FXC_AUTOSAVE_DEFNAME_MSG:
+		case FXC_AUTOSAVE_FX1NAME_MSG:
+			g_autoSaveFXChainNamePref = g_autoSaveFXChainNamePref ? 0:1;
 			break;
 
 		// ***** Track template *****
@@ -1224,7 +1238,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			while(item) {
 				slot = GetCurList()->Find(item);
 				wasDefaultSlot = item->IsDefault();
-				TogglePlaySelTrackMediaSlot(g_type, MED_PLAYLOOP_STR, slot, LOWORD(wParam)==MED_LOOP_MSG);
+				TogglePlaySelTrackMediaSlot(g_type, MED_PLAYLOOP_STR, slot, false, LOWORD(wParam)==MED_LOOP_MSG);
 				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
 			}
 			break;
@@ -1246,7 +1260,15 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 #endif
 
-		// ***** WDL GUI & others *****
+		// ***** image *****
+		case IMG_SHOW_MSG:
+			ShowImageSlot(g_type, IMG_SHOW_STR, slot);
+			break;
+		case IMG_TRICON_MSG:
+			SetSelTrackIconSlot(g_type, IMG_TRICON_STR, slot);
+			break;
+
+			// ***** WDL GUI & others *****
 		case COMBOID_TYPE:
 			if (HIWORD(wParam)==CBN_SELCHANGE)
 			{
@@ -1296,8 +1318,10 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 				AddToMenu(hMenu, FXC_APPLY_ALLTAKES_STR, FXC_APPLY_ALLTAKES_MSG, -1, false, enabled);
 				AddToMenu(hMenu, FXC_PASTE_TAKE_STR, FXC_PASTE_TAKE_MSG, -1, false, enabled);
 				AddToMenu(hMenu, FXC_PASTE_ALLTAKES_STR, FXC_PASTE_ALLTAKES_MSG, -1, false, enabled);
+/*JFB seems confusing: it is not a "copy slot" thingy!
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				AddToMenu(hMenu, "Copy", FXC_COPY_MSG, -1, false, enabled);
+*/
 				break;
 			case SNM_SLOT_TR:
 				AddToMenu(hMenu, TRT_APPLY_STR, TRT_APPLY_MSG, -1, false, enabled);
@@ -1328,6 +1352,11 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 				AddToMenu(hMenu, "Add to current track", MED_ADD_CURTR_MSG, -1, false, enabled);
 				AddToMenu(hMenu, "Add to new tracks", MED_ADD_NEWTR_MSG, -1, false, enabled);
 				AddToMenu(hMenu, "Add to selected items as takes", MED_ADD_TAKES_MSG, -1, false, enabled);
+				break;
+			case SNM_SLOT_IMG:
+				AddToMenu(hMenu, IMG_SHOW_STR, IMG_SHOW_MSG, -1, false, enabled);
+				AddToMenu(hMenu, IMG_TRICON_STR, IMG_TRICON_MSG, -1, false, enabled);
+				AddToMenu(hMenu, "Add to current track as item", MED_ADD_CURTR_MSG, -1, false, enabled);
 				break;
 #ifdef _WIN32
 			case SNM_SLOT_THM:
@@ -1390,8 +1419,12 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 				AddToMenu(hAutoSaveSubMenu, SWS_SEPARATOR, 0);
 				AddToMenu(hAutoSaveSubMenu, "Auto-save FX chains from track selection", FXC_AUTOSAVE_TR_MSG, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_TRACK ? MFS_CHECKED : MFS_UNCHECKED);
 				AddToMenu(hAutoSaveSubMenu, "Auto-save FX chains from item selection", FXC_AUTOSAVE_ITEM_MSG, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_ITEM ? MFS_CHECKED : MFS_UNCHECKED);
-				if (g_bv4)
-					AddToMenu(hAutoSaveSubMenu, "Auto-save input FX chains from track selection", FXC_AUTOSAVE_INPUT_FX, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? MFS_CHECKED : MFS_UNCHECKED);
+				if (g_bv4) AddToMenu(hAutoSaveSubMenu, "Auto-save input FX chains from track selection", FXC_AUTOSAVE_INPUT_FX, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? MFS_CHECKED : MFS_UNCHECKED);
+/*JFB!!! WIP...
+				AddToMenu(hAutoSaveSubMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hAutoSaveSubMenu, "Create filename from track/item name", FXC_AUTOSAVE_DEFNAME_MSG, -1, false, g_autoSaveFXChainNamePref==0 ? MFS_CHECKED : MFS_UNCHECKED);
+				AddToMenu(hAutoSaveSubMenu, "Create filename from 1st FX name", FXC_AUTOSAVE_FX1NAME_MSG, -1, false, g_autoSaveFXChainNamePref ? MFS_CHECKED : MFS_UNCHECKED);
+*/
 				break;
 			case SNM_SLOT_TR:
 				AddToMenu(hAutoSaveSubMenu, "Set auto-save directory to project path (/TrackTemplates)", AUTOSAVE_DIR_PRJ_MSG);
@@ -1645,6 +1678,8 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 					}
 				}
 				break;
+			case COMBOID_TYPE:
+				return (lstrcpyn(_bufOut, "Resource/slot type", _bufOutSz) != NULL);
 			case BUTTONID_ADD_BOOKMARK:
 				return (_snprintf(_bufOut, _bufOutSz, "Add %s bookmark", g_slots.Get(typeForUser)->GetDesc()) > 0);
 			case BUTTONID_DEL_BOOKMARK:
@@ -1832,7 +1867,7 @@ void AutoSave(int _type, int _whichFXChain, bool _trTmpltWithItems)
 			case IDYES: 
 			{
 				char path[BUFFER_SIZE] = "";
-				if (BrowseForDirectory("Set auto-save directory", autoSaveDir, path, BUFFER_SIZE)) {
+				if (BrowseForDirectory("S&M - Set auto-save directory", autoSaveDir, path, BUFFER_SIZE)) {
 					g_autoSaveDirs.Get(_type)->Set(path);
 					autoSaveDir = g_autoSaveDirs.Get(_type)->Get(); // may have been realloc'd just above..
 				}
@@ -1853,13 +1888,13 @@ void AutoSave(int _type, int _whichFXChain, bool _trTmpltWithItems)
 			switch (_whichFXChain)
 			{
 				case FXC_AUTOSAVE_PREF_INPUT_FX:
-					autoSaveTrackFXChainSlots(_type, autoSaveDir, fn, BUFFER_SIZE, g_bv4);
+					autoSaveTrackFXChainSlots(_type, autoSaveDir, fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, g_bv4);
 					break;
 				case FXC_AUTOSAVE_PREF_TRACK:
-					autoSaveTrackFXChainSlots(_type, autoSaveDir, fn, BUFFER_SIZE, false);
+					autoSaveTrackFXChainSlots(_type, autoSaveDir, fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, false);
 					break;
 				case FXC_AUTOSAVE_PREF_ITEM:
-					autoSaveItemFXChainSlots(_type, autoSaveDir, fn, BUFFER_SIZE);
+					autoSaveItemFXChainSlots(_type, autoSaveDir, fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1);
 					break;
 			}
 			break;
@@ -1997,6 +2032,11 @@ int ResourceViewInit()
 	g_slots.Add(new FileSlotList("TrackTemplates", "track template", "RTrackTemplate", true, true, true));
 	g_slots.Add(new FileSlotList("ProjectTemplates", "project", "RPP", true, true, true));
 	g_slots.Add(new FileSlotList("MediaFiles", "media file", "", false, true, true)); // "" means "all supported media files"
+#ifdef _WIN32
+	g_slots.Add(new FileSlotList("data\\track_icons", "images", "png", false, false, true));
+#else
+	g_slots.Add(new FileSlotList("data/track_icons", "images", "png", false, false, true));
+#endif
 	// etc..
 // <---------------------------------------------------------------------------
 #ifdef _WIN32
@@ -2010,6 +2050,7 @@ int ResourceViewInit()
 
 	g_filterPref = GetPrivateProfileInt("RESOURCE_VIEW", "Filter", 1, g_SNMIniFn.Get());
 	g_autoSaveFXChainPref = GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveFXChain", FXC_AUTOSAVE_PREF_TRACK, g_SNMIniFn.Get());
+	g_autoSaveFXChainNamePref = GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveFXChainName", 0, g_SNMIniFn.Get());
 	g_autoSaveTrTmpltWithItemsPref = (GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", 1, g_SNMIniFn.Get()) == 1);
 	g_prjLoaderStartPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderStartSlot", -1, g_SNMIniFn.Get());
 	g_prjLoaderEndPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderEndSlot", -1, g_SNMIniFn.Get());
@@ -2117,6 +2158,7 @@ void ResourceViewExit()
 		switch (i) {
 			case SNM_SLOT_FXC:
 				iniStr.AppendFormatted(BUFFER_SIZE, "AutoSaveFXChain=%d\n", g_autoSaveFXChainPref);
+				iniStr.AppendFormatted(BUFFER_SIZE, "AutoSaveFXChainName=%d\n", g_autoSaveFXChainNamePref);
 				break;
 			case SNM_SLOT_TR:
 				iniStr.AppendFormatted(BUFFER_SIZE, "AutoSaveTrTemplateWithItems=%s\n", g_autoSaveTrTmpltWithItemsPref ? "1" : "0", g_SNMIniFn.Get());
@@ -2171,24 +2213,151 @@ bool IsResourceViewDisplayed(COMMAND_T* _ct) {
 	return (g_pResourcesWnd && g_pResourcesWnd->IsValidWindow());
 }
 
-void ResourceViewClearSlotPrompt(COMMAND_T* _ct) {
-	g_slots.Get((int)_ct->user)->ClearSlotPrompt(_ct);
+void ResViewDeleteAllSlots(COMMAND_T* _ct)
+{
+	FileSlotList* fl = g_slots.Get(g_tiedSlotActions[(int)_ct->user]);
+	WDL_PtrList_DeleteOnDestroy<PathSlotItem> delItems; // keep (displayed!) pointers until the list view is updated
+	for (int i=fl->GetSize()-1; i >= 0; i--) {
+		delItems.Add(fl->Get(i));
+		fl->Delete(i, false);
+	}
+	if (g_pResourcesWnd && delItems.GetSize())
+		g_pResourcesWnd->Update();
+} // + delItems auto clean-up !
+
+void ResViewClearSlotPrompt(COMMAND_T* _ct) {
+	g_slots.Get(g_tiedSlotActions[(int)_ct->user])->ClearSlotPrompt(_ct);
 }
 
+void ResViewClearFXChainSlot(COMMAND_T* _ct) {
+	g_slots.Get(g_tiedSlotActions[SNM_SLOT_FXC])->ClearSlot((int)_ct->user);
+}
+
+void ResViewClearTrTemplateSlot(COMMAND_T* _ct) {
+	g_slots.Get(g_tiedSlotActions[SNM_SLOT_TR])->ClearSlot((int)_ct->user);
+}
+
+void ResViewClearPrjTemplateSlot(COMMAND_T* _ct) {
+	g_slots.Get(g_tiedSlotActions[SNM_SLOT_PRJ])->ClearSlot((int)_ct->user);
+}
+
+void ResViewClearMediaSlot(COMMAND_T* _ct) {
+	//JFB TODO? stop sound?
+	g_slots.Get(g_tiedSlotActions[SNM_SLOT_MEDIA])->ClearSlot((int)_ct->user);
+}
+
+void ResViewClearImageSlot(COMMAND_T* _ct) {
+	g_slots.Get(g_tiedSlotActions[SNM_SLOT_IMG])->ClearSlot((int)_ct->user);
+}
+
+#ifdef _WIN32
+void ResViewClearThemeSlot(COMMAND_T* _ct) {
+	g_slots.Get(g_tiedSlotActions[SNM_SLOT_THM])->ClearSlot((int)_ct->user);
+}
+#endif
+
 // specific auto-save for fx chains
-void ResourceViewAutoSaveFXChain(COMMAND_T* _ct) {
+void ResViewAutoSaveFXChain(COMMAND_T* _ct) {
 	AutoSave(g_tiedSlotActions[SNM_SLOT_FXC], (int)_ct->user, g_autoSaveTrTmpltWithItemsPref); // 3rd param ignored
 }
 
 // specific auto-save for track templates
-void ResourceViewAutoSaveTrTemplate(COMMAND_T* _ct) {
+void ResViewAutoSaveTrTemplate(COMMAND_T* _ct) {
 	AutoSave(g_tiedSlotActions[SNM_SLOT_TR], g_autoSaveFXChainPref, ((int)_ct->user == 1)); // 2nd param ignored
 }
 
 // auto-save for all other types..
-void ResourceViewAutoSave(COMMAND_T* _ct) {
+void ResViewAutoSave(COMMAND_T* _ct) {
 	int type = (int)_ct->user;
 	if (g_slots.Get(type)->HasAutoSave()) {
 		AutoSave(g_tiedSlotActions[type], g_autoSaveFXChainPref, g_autoSaveTrTmpltWithItemsPref); // 2nd & 3rd params ignored
 	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_ImageWnd
+///////////////////////////////////////////////////////////////////////////////
+
+SNM_ImageWnd* g_pImageWnd = NULL;
+
+SNM_ImageWnd::SNM_ImageWnd()
+	: SWS_DockWnd(IDD_SNM_IMAGE, "Image", "SnMImage", 30009, SWSGetCommandID(OpenImageView))
+{
+	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
+	Init();
+}
+
+void SNM_ImageWnd::OnInitDlg()
+{
+	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
+
+	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
+    m_parentVwnd.SetRealParent(m_hwnd);
+	
+	m_img.SetID(2000); //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+	m_parentVwnd.AddChild(&m_img);
+	m_parentVwnd.RequestRedraw(NULL);
+}
+
+void SNM_ImageWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
+{
+	int x0=_r->left+10, h=35;
+	if (_tooltipHeight)
+		*_tooltipHeight = h;
+
+	SNM_AddLogo(_bm, _r, x0, h);
+
+	if (_r->right > _r->left && _r->bottom > _r->top &&
+		(_r->right-_r->left) > m_img.GetWidth() && 
+		(_r->bottom-_r->top) > m_img.GetHeight())
+	{
+		m_img.SetVisible(true);
+		int x = _r->left + int((_r->right-_r->left)/2 - m_img.GetWidth()/2 + 0.5);
+		int y = _r->top + int((_r->bottom-_r->top)/2 - m_img.GetHeight()/2 + 0.5);
+		RECT tr = {x, y, x+m_img.GetWidth(), y+m_img.GetHeight()};
+		m_img.SetPosition(&tr);
+	}
+}
+
+int ImageViewInit()
+{
+	g_pImageWnd = new SNM_ImageWnd();
+	if (!g_pImageWnd)
+		return 0;
+	return 1;
+}
+
+void ImageViewExit() {
+	DELETE_NULL(g_pImageWnd);
+}
+
+void OpenImageView(COMMAND_T* _ct) {
+	OpenImageView("");
+}
+
+WDL_FastString g_lastImageFn;
+
+void OpenImageView(const char* _fn)
+{
+	if (g_pImageWnd)
+	{
+		WDL_FastString g_prevFn(g_lastImageFn.Get());
+		g_lastImageFn.Set("");
+		if (_fn && *_fn) {
+			if (LICE_IBitmap* img = LICE_LoadPNG(_fn, NULL)) {
+				g_pImageWnd->SetImage(img);
+				g_lastImageFn.Set(_fn);
+			}
+		}
+		else
+			g_pImageWnd->SetImage(NULL);
+
+		g_pImageWnd->Show(!strcmp(g_prevFn.Get(), _fn) /* i.e toggle */, false); // non active!
+		g_pImageWnd->RequestRedraw();
+	}
+}
+
+bool IsImageViewDisplayed(COMMAND_T*){
+	return (g_pImageWnd && g_pImageWnd->IsValidWindow());
 }

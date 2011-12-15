@@ -197,7 +197,8 @@ typedef struct MIDI_COMMAND_T {
 
 class SNM_ImageVWnd : public WDL_VWnd {
 public:
-	SNM_ImageVWnd(LICE_IBitmap* _img) : WDL_VWnd() { m_img = _img; }
+	SNM_ImageVWnd(LICE_IBitmap* _img = NULL) : WDL_VWnd() { SetImage(_img); }
+	virtual void SetImage(LICE_IBitmap* _img) { m_img = _img; }
 	virtual const char *GetType() { return "SNM_ImageVWnd"; }
 	virtual int GetWidth();
 	virtual int GetHeight();
@@ -380,7 +381,7 @@ int copyTakeFXChain(WDL_FastString* _fxChain, int _startSelItem=0);
 void pasteTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly);
 void setTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly);
 void applyTakesFXChainSlot(int _slotType, const char* _title, int _slot, bool _activeOnly, bool _set);
-bool autoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize);
+bool autoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _nameFromFx);
 void loadSetTakeFXChain(COMMAND_T*);
 void loadPasteTakeFXChain(COMMAND_T*);
 void loadSetAllTakesFXChain(COMMAND_T*);
@@ -397,7 +398,7 @@ void pasteTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX
 void setTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX);
 int copyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr=0);
 void applyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _set, bool _inputFX);
-bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _inputFX);
+bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _nameFromFx, bool _inputFX);
 void loadSetTrackFXChain(COMMAND_T*);
 void loadPasteTrackFXChain(COMMAND_T*);
 void loadSetTrackInFXChain(COMMAND_T*);
@@ -470,12 +471,14 @@ bool itemSelExists(COMMAND_T*);
 void scrollToSelItem(MediaItem* _item);
 void scrollToSelItem(COMMAND_T*);
 void setPan(COMMAND_T*);
-void PlaySelTrackMediaSlot(const char* _title, int _slot, bool _loop);
+void PlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop);
 void PlaySelTrackMediaSlot(COMMAND_T*);
 void LoopSelTrackMediaSlot(COMMAND_T*);
-bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _loop);
+bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop);
 void TogglePlaySelTrackMediaSlot(COMMAND_T*);
 void ToggleLoopSelTrackMediaSlot(COMMAND_T*);
+void TogglePauseSelTrackMediaSlot(COMMAND_T*);
+void ToggleLoopPauseSelTrackMediaSlot(COMMAND_T*);
 void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMode);
 void InsertMediaSlotCurTr(COMMAND_T*);
 void InsertMediaSlotNewTr(COMMAND_T*);
@@ -525,6 +528,7 @@ int FindMarkerRegion(double _pos, int* _idOut = NULL);
 int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn);
 int GetMarkerRegionIdFromIndex(int _idx);
 int GetMarkerRegionIndexFromId(int _id);
+bool IsRegion(int _id);
 void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms = NULL);
 void makeUnformatedConfigString(const char* _in, WDL_FastString* _out);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
@@ -541,8 +545,12 @@ void DumpWikiActionList2(COMMAND_T*);
 void DumpActionList(COMMAND_T*);
 #ifdef _WIN32
 void LoadThemeSlot(int _slotType, const char* _title, int _slot);
-void LoadThemeSlot(COMMAND_T* _ct);
+void LoadThemeSlot(COMMAND_T*);
 #endif
+void ShowImageSlot(int _slotType, const char* _title, int _slot);
+void ShowImageSlot(COMMAND_T*);
+void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot);
+void SetSelTrackIconSlot(COMMAND_T*);
 #ifdef _SNM_MISC
 void ShowTakeEnvPadreTest(COMMAND_T*);
 void dumpWikiActionList(COMMAND_T*);
@@ -555,8 +563,8 @@ extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTrackNotes
 void SetActionHelpFilename(COMMAND_T*);
 int NotesHelpViewInit();
 void NotesHelpViewExit();
-void ImportSubTitleFile(COMMAND_T* _ct);
-void ExportSubTitleFile(COMMAND_T* _ct);
+void ImportSubTitleFile(COMMAND_T*);
+void ExportSubTitleFile(COMMAND_T*);
 void OpenNotesHelpView(COMMAND_T*);
 bool IsNotesHelpViewDisplayed(COMMAND_T*);
 void ToggleNotesHelpLock(COMMAND_T*);
@@ -578,10 +586,24 @@ int ResourceViewInit();
 void ResourceViewExit();
 void OpenResourceView(COMMAND_T*);
 bool IsResourceViewDisplayed(COMMAND_T*);
-void ResourceViewClearSlotPrompt(COMMAND_T*);
-void ResourceViewAutoSaveFXChain(COMMAND_T*);
-void ResourceViewAutoSaveTrTemplate(COMMAND_T*);
-void ResourceViewAutoSave(COMMAND_T*);
+void ResViewDeleteAllSlots(COMMAND_T*);
+void ResViewClearSlotPrompt(COMMAND_T*);
+void ResViewClearFXChainSlot(COMMAND_T*);
+void ResViewClearTrTemplateSlot(COMMAND_T*);
+void ResViewClearPrjTemplateSlot(COMMAND_T*);
+void ResViewClearMediaSlot(COMMAND_T*);
+void ResViewClearImageSlot(COMMAND_T*);
+#ifdef _WIN32
+void ResViewClearThemeSlot(COMMAND_T*);
+#endif
+void ResViewAutoSaveFXChain(COMMAND_T*);
+void ResViewAutoSaveTrTemplate(COMMAND_T*);
+void ResViewAutoSave(COMMAND_T*);
+int ImageViewInit();
+void ImageViewExit();
+void OpenImageView(COMMAND_T*);
+void OpenImageView(const char* _fn);
+bool IsImageViewDisplayed(COMMAND_T*);
 
 // *** SnM_Sends.cpp ***
 bool cueTrack(const char* _busName, int _type, const char* _undoMsg, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
@@ -628,7 +650,9 @@ MediaTrack* SNM_GetSelectedTrack(ReaProject* _proj, int _idx, bool _master);
 void SNM_GetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs);
 void SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs);
 void SNM_ClearSelectedTracks(ReaProject* _proj);
-bool makeSingleTrackTemplateChunk(WDL_FastString* _inRawChunk, WDL_FastString* _out, bool _delItems, bool _delEnvs);
+bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz);
+void SetTrackIcon(MediaTrack* _tr, const char* _fn);
+void SetSelTrackIcon(const char* _fn);
 bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _rawChunk, SNM_ChunkParserPatcher* _p = NULL, bool _itemsFromTmplt = false, bool _envsFromTmplt = false);
 void applyOrImportTrackSlot(int _slotType, const char* _title, int _slot, bool _import, bool _itemsFromTmplt, bool _envsFromTmplt);
 void replaceOrPasteItemsFromTrackSlot(int _slotType, const char* _title, int _slot, bool _paste);
@@ -637,11 +661,13 @@ void loadImportTrackTemplate(COMMAND_T*);
 bool autoSaveTrackSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _delItems, bool _delEnvs);
 void setMIDIInputChannel(COMMAND_T*);
 void remapMIDIInputChannel(COMMAND_T*);
-bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _loop);
-bool SNM_PlayTrackPreview(MediaTrack* _tr, const char* _fn, bool _loop);
-bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _loop);
+bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _pause, bool _loop);
+bool SNM_PlayTrackPreview(MediaTrack* _tr, const char* _fn, bool _pause, bool _loop);
+void SNM_PlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop);
+bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop);
 void StopTrackPreviewsRun();
-void StopSelTrackPreview(COMMAND_T*);
+void StopTrackPreviews(bool _selTracksOnly);
+void StopTrackPreviews(COMMAND_T*);
 void CC123Tracks(WDL_PtrList<void>* _trs);
 void CC123SelTracks(COMMAND_T*);
 

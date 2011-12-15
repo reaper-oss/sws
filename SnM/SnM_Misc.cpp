@@ -502,14 +502,13 @@ int FindMarkerRegion(double _pos, int* _idOut)
 }
 
 // API LIMITATION: no way to identify a marker (or a region)
-// => we build an id in "best effort" mode (like region|num, 
-//    so a valid id is always > 0 but "num" must be <= 0xFFFF)
+// => we build an id in "best effort" mode (like region|num)
 // => we would need something like GUIDs for regions & markers..
-//JFB!!! TODO: Ox7FFFFFFF
 int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn)
 {
-	if (_markrgnindexnumber >= 0 && _markrgnindexnumber <= 0xFFFF) {
-		_markrgnindexnumber |= ((_isRgn?1:0) << 16);
+	// note: MSB is ignored so that the encoded number is always positive
+	if (_markrgnindexnumber >= 0 && _markrgnindexnumber <= 0x3FFFFFFF) {
+		_markrgnindexnumber |= ((_isRgn?1:0) << 30);
 		return _markrgnindexnumber;
 	}
 	return -1;
@@ -531,14 +530,18 @@ int GetMarkerRegionIndexFromId(int _id)
 {
 	if (_id > 0)
 	{
-		int num = LOWORD(_id);
-		bool isRgn = (HIWORD(_id) == 1);
+		int num = _id & 0x3FFFFFFF;
+		bool isRgn = IsRegion(_id);
 		int x=0, num2; bool isRgn2;
 		while (x = EnumProjectMarkers2(NULL, x, &isRgn2, NULL, NULL, NULL, &num2))
 			if (num == num2 && isRgn == isRgn2)
 				return x-1;
 	}
 	return -1;
+}
+
+bool IsRegion(int _id) {
+	return (_id > 0 && (_id&0x40000000) != 0);
 }
 
 void TranslatePos(double _pos, int* _h, int* _m, int* _s, int* _ms)
@@ -680,6 +683,33 @@ void LoadThemeSlot(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Image slots (Resources view)
+///////////////////////////////////////////////////////////////////////////////
+
+void ShowImageSlot(int _slotType, const char* _title, int _slot) {
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
+		OpenImageView(fnStr->Get());
+		delete fnStr;
+	}
+}
+
+void ShowImageSlot(COMMAND_T* _ct) {
+	ShowImageSlot(g_tiedSlotActions[SNM_SLOT_IMG], SNM_CMD_SHORTNAME(_ct), (int)_ct->user);
+}
+
+void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot) {
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
+		SetSelTrackIcon(fnStr->Get());
+		delete fnStr;
+	}
+}
+
+void SetSelTrackIconSlot(COMMAND_T* _ct) {
+	SetSelTrackIconSlot(g_tiedSlotActions[SNM_SLOT_IMG], SNM_CMD_SHORTNAME(_ct), (int)_ct->user);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Misc	actions
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -743,9 +773,9 @@ bool dumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 			return false;
 		}
 
-		char fn[SNM_MAX_SECTION_NAME_LEN*2]; char filename[BUFFER_SIZE];
-		_snprintf(fn, SNM_MAX_SECTION_NAME_LEN*2, "%s%s.txt", sectionURL, !(_type % 2) ? "_SWS" : "");
-		if (!BrowseForSaveFile(_title, GetResourcePath(), fn, "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0", filename, BUFFER_SIZE))
+		char name[SNM_MAX_SECTION_NAME_LEN*2]; char filename[BUFFER_SIZE];
+		_snprintf(name, SNM_MAX_SECTION_NAME_LEN*2, "%s%s.txt", sectionURL, !(_type % 2) ? "_SWS" : "");
+		if (!BrowseForSaveFile(_title, GetResourcePath(), name, "Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0", filename, BUFFER_SIZE))
 			return false;
 
 		//flush
@@ -811,14 +841,14 @@ void DumpWikiActionList2(COMMAND_T* _ct)
 {
 	dumpActionList(
 		(int)_ct->user, 
-		"Save ALR Wiki summary", 
+		"S&M - Save ALR Wiki summary", 
 		"|-\n| [[%s_%s|%s]] || %s\n",
 		"{| class=\"wikitable\"\n|-\n! Action name !! Cmd ID\n",
 		"|}\n");
 }
 
 void DumpActionList(COMMAND_T* _ct) {
-	dumpActionList((int)_ct->user, "Dump action list", "%s\t%s\t%s\n", "Section\tId\tAction\n", NULL);
+	dumpActionList((int)_ct->user, "S&M - Dump action list", "%s\t%s\t%s\n", "Section\tId\tAction\n", NULL);
 }
 
 
@@ -860,7 +890,7 @@ void dumpWikiActionList(COMMAND_T* _ct)
 {
 	char filename[BUFFER_SIZE], cPath[BUFFER_SIZE];
 	lstrcpyn(cPath, GetExePath(), BUFFER_SIZE);
-	if (BrowseForSaveFile("Save ALR Wiki summary", cPath, NULL, "Text file (*.TXT)\0*.TXT\0All Files\0*.*\0", filename, BUFFER_SIZE))
+	if (BrowseForSaveFile("S&M - Save ALR Wiki summary", cPath, NULL, "Text file (*.TXT)\0*.TXT\0All Files\0*.*\0", filename, BUFFER_SIZE))
 	{
 		//flush
 		FILE* f = fopenUTF8(filename, "w"); 

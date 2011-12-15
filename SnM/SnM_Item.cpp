@@ -1073,7 +1073,7 @@ void saveItemTakeTemplate(COMMAND_T* _ct)
 				char filename[BUFFER_SIZE] = "", defaultPath[BUFFER_SIZE];
 				//JFB TODO: ItemTakeTemplates -> const
 				_snprintf(defaultPath, BUFFER_SIZE, "%s%cItemTakeTemplates", GetResourcePath(), PATH_SLASH_CHAR);
-				if (BrowseForSaveFile("Save item/take template", defaultPath, "", "REAPER item/take template (*.RItemTakeTemplate)\0*.RItemTakeTemplate\0", filename, BUFFER_SIZE))
+				if (BrowseForSaveFile("S&M - Save item/take template", defaultPath, NULL, "REAPER item/take template (*.RItemTakeTemplate)\0*.RItemTakeTemplate\0", filename, BUFFER_SIZE))
 				{
 					// Item/take template: keep the active take
 					if (FILE* f = fopenUTF8(filename, "w"))
@@ -1304,52 +1304,56 @@ void setPan(COMMAND_T* _ct)
 //JFB!!! TODO?: new file SnM_Media.cpp?
 ///////////////////////////////////////////////////////////////////////////////
 
-void PlaySelTrackMediaSlot(const char* _title, int _slot, bool _loop)
-{
-	if (WDL_FastString* fnStr = g_slots.Get(SNM_SLOT_MEDIA)->GetOrPromptOrBrowseSlot(_title, _slot))
-	{
-		for (int i=1; i <= GetNumTracks(); i++) // skip master
-		{
-			MediaTrack* tr = CSurf_TrackFromID(i, false);
-			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-				SNM_PlayTrackPreview(tr, fnStr->Get(), _loop);
-		}
+void PlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop) {
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
+		SNM_PlaySelTrackPreviews(fnStr->Get(), _pause, _loop);
 		delete fnStr;
 	}
 }
 
 void PlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	PlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false);
+	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
 }
 
 void LoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	PlaySelTrackMediaSlot(SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true);
+	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
 }
 
+// note: no per slot "pause" actions (does not make much sense..)
+
 // returns true if something done
-bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _loop)
+bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop)
 {
 	bool done = false;
 	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
-		done = SNM_TogglePlaySelTrackPreviews(fnStr->Get(), _loop);
+		done = SNM_TogglePlaySelTrackPreviews(fnStr->Get(), _pause, _loop);
 		delete fnStr;
 	}
 	return done;
 }
 
 void TogglePlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false))
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false))
 		FakeToggle(_ct);
 }
 
 void ToggleLoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true))
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true))
+		FakeToggle(_ct);
+}
+
+void TogglePauseSelTrackMediaSlot(COMMAND_T* _ct) {
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, false))
+		FakeToggle(_ct);
+}
+
+void ToggleLoopPauseSelTrackMediaSlot(COMMAND_T* _ct) {
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, true))
 		FakeToggle(_ct);
 }
 
 // _insertMode: 0=add to current track, 1=add new track, 3=add to selected items as takes, &4=stretch/loop to fit time sel, &8=try to match tempo 1x, &16=try to match tempo 0.5x, &32=try to match tempo 2x
-void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMode)
-{
+void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMode) {
 	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
 		InsertMedia((char*)fnStr->Get(), _insertMode); //JFB includes undo => _title no used..
 		delete fnStr;
@@ -1395,6 +1399,7 @@ bool autoSaveMediaSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSi
 								updated |= (g_slots.Get(_slotType)->AddSlot(_fn) != NULL);
 							}
 						}
+						// else: v4 empty take
 		}
 	}
 	return updated;

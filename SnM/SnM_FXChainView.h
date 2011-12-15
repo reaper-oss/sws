@@ -37,6 +37,7 @@ enum {
   SNM_SLOT_TR,
   SNM_SLOT_PRJ,
   SNM_SLOT_MEDIA,
+  SNM_SLOT_IMG,
   // etc..
 #ifdef _WIN32
   SNM_SLOT_THM,
@@ -160,6 +161,19 @@ protected:
 void FlushCustomTypesIniFile();
 void AutoSave(int _type, int _whichFXChain, bool _trTmpltWithItems);
 void AutoFill(int _type, const char* _startPath);
+
+
+class SNM_ImageWnd : public SWS_DockWnd
+{
+public:
+	SNM_ImageWnd();
+	void SetImage(LICE_IBitmap* _img) { m_img.SetImage(_img); }
+	void RequestRedraw() { m_parentVwnd.RequestRedraw(NULL); }
+protected:
+	void OnInitDlg();
+	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
+	SNM_ImageVWnd m_img;
+};
 
 
 #endif

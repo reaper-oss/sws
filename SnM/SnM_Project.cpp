@@ -108,6 +108,9 @@ void loadOrSelectProjectTabSlot(COMMAND_T* _ct) {
 
 ///////////////////////////////////////////////////////////////////////////////
 // Project loader/selecter actions
+// note: g_tiedSlotActions[] is ignored here, the opener/selecter only deals 
+//       with g_slots.Get(SNM_SLOT_PRJ): that feature is not available for 
+//       custom project slots
 ///////////////////////////////////////////////////////////////////////////////
 
 extern SNM_ResourceWnd* g_pResourcesWnd; // SNM_ResourceView.cpp

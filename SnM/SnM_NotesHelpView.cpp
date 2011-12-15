@@ -56,17 +56,6 @@ enum {
 };
 
 enum {
-  PROJECT_NOTES=0,
-  ITEM_NOTES,
-  TRACK_NOTES,
-#ifdef _MARKER_REGION_NAME
-  MARKER_REGION_NAME,
-#endif
-  MARKER_REGION_SUBTITLES,
-  ACTION_HELP // must remain the last item: no OSX support yet 
-};
-
-enum {
   REQUEST_REFRESH=0,
   REQUEST_REFRESH_EMPTY,
   NO_REFRESH
@@ -78,7 +67,7 @@ SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTrackNotes;
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_RegionSubtitle> > g_pRegionSubtitles; // for markers too..
 SWSProjConfig<WDL_FastString> g_prjNotes;
 
-int g_notesType = -1; //JFB!!! wtf!? cannot use "g_notesType": linker conflict with SnM_FXChainView's g_notesType
+int g_notesType = -1; //JFB!!! wtf!? cannot use "g_notesType": linker conflict with SnM_FXChainView's g_type
 int g_previousNotesType = -1;
 bool g_locked = 1;
 char g_lastText[MAX_HELP_LENGTH] = "";
@@ -106,7 +95,7 @@ MediaTrack* g_trNote = NULL;
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_NotesHelpWnd::SNM_NotesHelpWnd()
-	:SWS_DockWnd(IDD_SNM_NOTES_HELP, "Notes/Subtitles/Help", "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
+	: SWS_DockWnd(IDD_SNM_NOTES_HELP, "Notes/Subtitles/Help", "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
 {
 	m_internalTLChange = false;
 	RegisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
@@ -203,29 +192,27 @@ void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes)
 	bool bHide = true;
 	switch(g_notesType)
 	{
-		case ACTION_HELP:
-			if (g_lastActionListSel >= 0)
-				bHide = false; // for copy/paste even if "Custom: ..."
+		case SNM_NOTES_PROJECT:
+			bHide = false;
 			break;
-		case ITEM_NOTES:
+		case SNM_NOTES_ITEM:
 			if (g_mediaItemNote)
 				bHide = false;
 			break;
-		case TRACK_NOTES:
+		case SNM_NOTES_TRACK:
 			if (g_trNote)
 				bHide = false;
 			break;
 #ifdef _MARKER_REGION_NAME
-		case MARKER_REGION_NAME:
+		case SNM_NOTES_REGION_NAME:
 #endif
-		case MARKER_REGION_SUBTITLES:
+		case SNM_NOTES_REGION_SUBTITLES:
 			if (g_lastMarkerRegionId > 0)
 				bHide = false;
 			break;
-		case PROJECT_NOTES:
-			bHide = false;
-			break;
-		default:
+		case SNM_NOTES_ACTION_HELP:
+			if (g_lastActionListSel >= 0)
+				bHide = false; // for copy/paste even if "Custom: ..."
 			break;
 	}
 	ShowWindow(GetDlgItem(m_hwnd, IDC_EDIT), bHide || g_locked ? SW_HIDE : SW_SHOW);
@@ -233,7 +220,7 @@ void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes)
 }
 
 void SNM_NotesHelpWnd::CSurfSetTrackTitle() {
-	if (g_notesType == TRACK_NOTES)
+	if (g_notesType == SNM_NOTES_TRACK)
 		RefreshGUI();
 }
 
@@ -269,9 +256,9 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if (!g_locked)
 					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 				RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
-				if (g_notesType == MARKER_REGION_SUBTITLES
+				if (g_notesType == SNM_NOTES_REGION_SUBTITLES
 #ifdef _MARKER_REGION_NAME
-					|| g_notesType == MARKER_REGION_NAME
+					|| g_notesType == SNM_NOTES_REGION_NAME
 #endif
 					)
 					Update(true); // play vs edit cursor when unlocking
@@ -324,7 +311,7 @@ bool SNM_NotesHelpWnd::IsActive(bool bWantEdit) {
 
 HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y)
 {
-	if (g_notesType == ACTION_HELP)
+	if (g_notesType == SNM_NOTES_ACTION_HELP)
 	{
 		HMENU hMenu = CreatePopupMenu();
 		AddToMenu(hMenu, "Set action help file...", SET_ACTION_HELP_FILE_MSG);
@@ -355,16 +342,16 @@ int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState)
 
 void SNM_NotesHelpWnd::OnTimer(WPARAM wParam)
 {
-	if (wParam == UPDATE_TIMER && g_notesType != PROJECT_NOTES)
+	if (wParam == UPDATE_TIMER && g_notesType != SNM_NOTES_PROJECT)
 	{
 		// no update when the user edits & when the view is hidden (e.g. inactive docker tab)
 		// but when the view is active: update only for markers and if the view is locked 
 		//(=> updates during playback, in other cases -e.g. item selection change- the main window 
 		// *will* be the active one)
 		if (IsWindowVisible(m_hwnd) && 
-			(!IsActive() || (g_locked && (g_notesType == MARKER_REGION_SUBTITLES
+			(!IsActive() || (g_locked && (g_notesType == SNM_NOTES_REGION_SUBTITLES
 #ifdef _MARKER_REGION_NAME
-			|| g_notesType == MARKER_REGION_NAME
+			|| g_notesType == SNM_NOTES_REGION_NAME
 #endif			
 			))))
 		{
@@ -377,7 +364,7 @@ void SNM_NotesHelpWnd::OnResize()
 {
 	if (g_notesType != g_previousNotesType)
 	{
-		if (g_notesType == MARKER_REGION_SUBTITLES || g_notesType == ACTION_HELP)
+		if (g_notesType == SNM_NOTES_REGION_SUBTITLES || g_notesType == SNM_NOTES_ACTION_HELP)
 			m_resize.get_item(IDC_EDIT)->orig.bottom -= 30; //JFB!!! 30 ok on OSX too !?
 		else
 			memcpy(&m_resize.get_item(IDC_EDIT)->orig, &m_resize.get_item(IDC_EDIT)->real_orig, sizeof(RECT));
@@ -400,7 +387,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 		if (*buf)
 		{
 #ifdef _MARKER_REGION_NAME
-			if (g_notesType == MARKER_REGION_NAME)
+			if (g_notesType == SNM_NOTES_REGION_NAME)
 				ShortenStringToFirstRN(buf);
 #endif
 			int numlines=1, maxlinelen=-1;
@@ -478,14 +465,10 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 			char str[512] = "No selection!";
 			switch(g_notesType)
 			{
-				case ACTION_HELP:
-					if (g_lastActionDesc && *g_lastActionDesc && g_lastActionSection && *g_lastActionSection)
-						_snprintf(str, 512, " [%s] %s", g_lastActionSection, g_lastActionDesc);
-/* API LIMITATION: use smthg like that when we'll be able to access all sections
-						lstrcpyn(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
-*/
+				case SNM_NOTES_PROJECT:
+					EnumProjects(-1, str, 512);
 					break;
-				case ITEM_NOTES:
+				case SNM_NOTES_ITEM:
 					if (g_mediaItemNote)
 					{
 						MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
@@ -493,7 +476,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 						lstrcpyn(str, tkName ? tkName : "", 512);
 					}
 					break;
-				case TRACK_NOTES:
+				case SNM_NOTES_TRACK:
 					if (g_trNote)
 					{
 						int id = CSurf_TrackToID(g_trNote, false);
@@ -504,9 +487,9 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 					}
 					break;
 #ifdef _MARKER_REGION_NAME
-				case MARKER_REGION_NAME:
+				case SNM_NOTES_REGION_NAME:
 #endif
-				case MARKER_REGION_SUBTITLES:
+				case SNM_NOTES_REGION_SUBTITLES:
 					if (g_lastMarkerRegionId > 0)
 					{
 						int idx = GetMarkerRegionIndexFromId(g_lastMarkerRegionId);
@@ -518,7 +501,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 								char timeStr1[32]="", timeStr2[32]="";
 								format_timestr_pos(pos, timeStr1, 32, -1);
 								format_timestr_pos(end, timeStr2, 32, -1);
-								if (g_notesType == MARKER_REGION_SUBTITLES)
+								if (g_notesType == SNM_NOTES_REGION_SUBTITLES)
 									_snprintf(str, 512, "[%d] \"%s\" (%s -> %s)", num, name, timeStr1, timeStr2);
 								else
 									_snprintf(str, 512, "[%d] %s -> %s", num, timeStr1, timeStr2);
@@ -527,7 +510,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 							{
 								char timeStr[32] = "";
 								format_timestr_pos(pos, timeStr, 32, -1);
-								if (g_notesType == MARKER_REGION_SUBTITLES)
+								if (g_notesType == SNM_NOTES_REGION_SUBTITLES)
 									_snprintf(str, 512, "[%d] \"%s\" (%s)", num, name, timeStr);
 								else
 									_snprintf(str, 512, "[%d] %s", num, timeStr);
@@ -539,8 +522,12 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 					else
 						strcpy(str, "No marker or region before play/edit cursor position!");
 					break;
-				case PROJECT_NOTES:
-					EnumProjects(-1, str, 512);
+				case SNM_NOTES_ACTION_HELP:
+					if (g_lastActionDesc && *g_lastActionDesc && g_lastActionSection && *g_lastActionSection)
+						_snprintf(str, 512, " [%s] %s", g_lastActionSection, g_lastActionDesc);
+/* API LIMITATION: use smthg like that when we'll be able to access all sections
+						lstrcpyn(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
+*/
 					break;
 			}
 
@@ -560,7 +547,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	int y0 = _r->bottom-h;
 
 	// import/export buttons
-	if (g_notesType == MARKER_REGION_SUBTITLES)
+	if (g_notesType == SNM_NOTES_REGION_SUBTITLES)
 	{
 		SNM_SkinToolbarButton(&m_btnImportSub, "Import...");
 		if (!SNM_AutoVWndPosition(&m_btnImportSub, NULL, _r, &x0, y0, h))
@@ -572,7 +559,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	}
 
 	// online help & action list buttons
-	if (g_notesType == ACTION_HELP)
+	if (g_notesType == SNM_NOTES_ACTION_HELP)
 	{
 		SNM_SkinToolbarButton(&m_btnActionList, "Action list...");
 		if (!SNM_AutoVWndPosition(&m_btnActionList, NULL, _r, &x0, y0, h))
@@ -605,25 +592,25 @@ void SNM_NotesHelpWnd::saveCurrentText(int _type)
 {
 	switch(_type) 
 	{
-		case ITEM_NOTES: 
+		case SNM_NOTES_PROJECT:
+			saveCurrentPrjNotes();
+			break;
+		case SNM_NOTES_ITEM: 
 			m_internalTLChange = true;	// item note updates lead to SetTrackListChange() CSurf notif (reentrance)
 										// JFB TODO? can be used for concurent item note updates ?
 			saveCurrentItemNotes(); 
 			break;
-		case TRACK_NOTES:
+		case SNM_NOTES_TRACK:
 			saveCurrentTrackNotes();
 			break;
 #ifdef _MARKER_REGION_NAME
-		case MARKER_REGION_NAME:
+		case SNM_NOTES_REGION_NAME:
 #endif
-		case MARKER_REGION_SUBTITLES:
-			saveCurrentMkrRgnNameOrNotes(_type != MARKER_REGION_SUBTITLES);
+		case SNM_NOTES_REGION_SUBTITLES:
+			saveCurrentMkrRgnNameOrNotes(_type != SNM_NOTES_REGION_SUBTITLES);
 			break;
-		case ACTION_HELP:
+		case SNM_NOTES_ACTION_HELP:
 			saveCurrentHelp();
-			break;
-		case PROJECT_NOTES:
-			saveCurrentPrjNotes();
 			break;
 	}
 }
@@ -748,7 +735,7 @@ void SNM_NotesHelpWnd::saveCurrentMkrRgnNameOrNotes(bool _name)
 				}
 				if (!found)
 					g_pRegionSubtitles.Get()->Add(new SNM_RegionSubtitle(g_lastMarkerRegionId, buf));
-				Undo_OnStateChangeEx(HIWORD(g_lastMarkerRegionId) ? "Edit region subtitle" : "Edit marker subtitle", UNDO_STATE_MISCCFG, -1);
+				Undo_OnStateChangeEx(IsRegion(g_lastMarkerRegionId) ? "Edit region subtitle" : "Edit marker subtitle", UNDO_STATE_MISCCFG, -1);
 			}
 		}
 	}
@@ -783,7 +770,11 @@ void SNM_NotesHelpWnd::Update(bool _force)
 		int refreshType = NO_REFRESH;
 		switch(g_notesType)
 		{
-			case ITEM_NOTES:
+			case SNM_NOTES_PROJECT:
+				SetText(g_prjNotes.Get()->Get());
+				refreshType = REQUEST_REFRESH;
+				break;
+			case SNM_NOTES_ITEM:
 				refreshType = updateItemNotes();
 /*JFB commented: kludge..
 #ifdef _WIN32
@@ -800,21 +791,17 @@ void SNM_NotesHelpWnd::Update(bool _force)
 #endif
 */
 				break;
-			case TRACK_NOTES:
+			case SNM_NOTES_TRACK:
 				refreshType = updateTrackNotes();
 				break;
-			case ACTION_HELP:
-				refreshType = updateActionHelp();
-				break;
 #ifdef _MARKER_REGION_NAME
-			case MARKER_REGION_NAME:
+			case SNM_NOTES_REGION_NAME:
 #endif
-			case MARKER_REGION_SUBTITLES:
-				refreshType = updateMkrRgnNameOrNotes(g_notesType != MARKER_REGION_SUBTITLES);
+			case SNM_NOTES_REGION_SUBTITLES:
+				refreshType = updateMkrRgnNameOrNotes(g_notesType != SNM_NOTES_REGION_SUBTITLES);
 				break;
-			case PROJECT_NOTES:
-				SetText(g_prjNotes.Get()->Get());
-				refreshType = REQUEST_REFRESH;
+			case SNM_NOTES_ACTION_HELP:
+				refreshType = updateActionHelp();
 				break;
 		}
 		
@@ -1024,8 +1011,7 @@ void saveHelp(const char* _cmdName, const char* _help)
 	}
 }
 
-void SetActionHelpFilename(COMMAND_T*)
-{
+void SetActionHelpFilename(COMMAND_T*) {
 	if (char* fn = BrowseForFiles("S&M - Set action help file", g_actionHelpFilename, NULL, false, SNM_INI_EXT_LIST)) {
 		lstrcpyn(g_actionHelpFilename, fn, BUFFER_SIZE);
 		free(fn);
@@ -1100,13 +1086,13 @@ void NoteHelp_UpdateJob::Perform() {
 
 void NoteHelp_MarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags)
 {
-	if (g_pNotesHelpWnd && g_notesType == MARKER_REGION_SUBTITLES
+	if (g_pNotesHelpWnd && g_notesType == SNM_NOTES_REGION_SUBTITLES
 #ifdef _MARKER_REGION_NAME
-		|| g_notesType == MARKER_REGION_NAME
+		|| g_notesType == SNM_NOTES_REGION_NAME
 #endif
 		)
 	{
-/*JFB schedule job? humm.. would delay things again..
+/*JFB schedule job? humm.. would delay things a bit, again..
 		NoteHelp_UpdateJob* job = new NoteHelp_UpdateJob();
 		AddOrReplaceScheduledJob(job);
 */
@@ -1345,7 +1331,6 @@ bool ImportSubRipFile(const char* _fn)
 
 void ImportSubTitleFile(COMMAND_T* _ct)
 {
-	if (!g_lastImportSubFn[0]) GetProjectPath(g_lastImportSubFn, BUFFER_SIZE);
 	if (char* fn = BrowseForFiles("S&M - Import subtitle file", g_lastImportSubFn, NULL, false, SNM_SUB_EXT_LIST))
 	{
 		lstrcpyn(g_lastImportSubFn, fn, BUFFER_SIZE);
@@ -1413,9 +1398,7 @@ bool ExportSubRipFile(const char* _fn)
 void ExportSubTitleFile(COMMAND_T* _ct)
 {
 	char fn[BUFFER_SIZE] = "";
-	if (!g_lastExportSubFn[0]) GetProjectPath(g_lastExportSubFn, BUFFER_SIZE);
-	if (BrowseForSaveFile("S&M - Export subtitle file", g_lastExportSubFn, NULL, SNM_SUB_EXT_LIST, fn, BUFFER_SIZE))
-	{
+	if (BrowseForSaveFile("S&M - Export subtitle file", g_lastExportSubFn, strrchr(g_lastExportSubFn, '.') ? g_lastExportSubFn : NULL, SNM_SUB_EXT_LIST, fn, BUFFER_SIZE)) {
 		lstrcpyn(g_lastExportSubFn, fn, BUFFER_SIZE);
 		ExportSubRipFile(fn);
 	}
@@ -1426,6 +1409,9 @@ void ExportSubTitleFile(COMMAND_T* _ct)
 
 int NotesHelpViewInit()
 {
+	lstrcpyn(g_lastImportSubFn, GetResourcePath(), BUFFER_SIZE);
+	lstrcpyn(g_lastExportSubFn, GetResourcePath(), BUFFER_SIZE);
+
 	// load prefs 
 	g_notesType = GetPrivateProfileInt("NOTES_HELP_VIEW", "TYPE", 0, g_SNMIniFn.Get());
 	g_locked = (GetPrivateProfileInt("NOTES_HELP_VIEW", "LOCK", 0, g_SNMIniFn.Get()) == 1);

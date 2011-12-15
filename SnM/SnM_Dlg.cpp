@@ -27,7 +27,9 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
+#ifndef _WIN32
 #include "../Prompt.h"
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -679,7 +681,7 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,currentPath,BUFFER_SIZE);
 					if (!strlen(currentPath))
 						_snprintf(currentPath, BUFFER_SIZE, "%s%c%TrackTemplates", GetResourcePath(), PATH_SLASH_CHAR);
-					char* filename = BrowseForFiles("Load track template", currentPath, NULL, false, "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0");
+					char* filename = BrowseForFiles("S&M - Load track template", currentPath, NULL, false, "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0");
 					if (filename) {
 						SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,filename);
 						free(filename);

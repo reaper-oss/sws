@@ -1,11 +1,62 @@
-Notes/Help view -> Notes/Subtitles/Help:
-+Subtitles support, i.e. new mode: "Marker/Region subtitles" in the top left dropdown box. 
-You can edit regions and/or markers notes (notes are saved in project files).
-When the view/text edition is locked, notes are displayed with a dynamic sized font (i.e. display à la "Big clock") that follows the play cursor position (=> subtitles).
+Notes/Help view -> Notes/Subtitles/Help
++Subtitles support: new mode "Marker/Region subtitles" in the top left dropdown box.
+You can edit notes for regions and/or markers. Such notes are saved in project files. 
+When the view/text edition is locked, notes are displayed with a dynamic sized font (display à la "Big clock") and they follow the play cursor position (i.e. subtitles!).
 Useful for lyrics, video stuff (you can display subttiles or even to edit them in REAPER), etc...
-Also added new buttons and actions to import/export of SubRip subtitle files (.srt files supported by most video players) :
-+SWS/S&M: Notes/Subtitles/Help - Import subtitle file... - It adds regions and notes for each subtitle of the loaded file
-+SWS/S&M: Notes/Subtitles/Help - Export subtitle file... - It exports current *region* notes as subtitle files
+Also added new buttons and actions to import/export SubRip subtitle files (.srt files, this format is supported by most video players) :
++SWS/S&M: Notes/Subtitles/Help - Import subtitle file... - It adds a region with notes for each subtitle of the loaded file
++SWS/S&M: Notes/Subtitles/Help - Export subtitle file... - It exports current region/marker notes as a subtitle file
+
+Media file slots improvements:
++Only send all notes off when MIDI files are stopped (i.e. no extra CC123 MIDI messages when MIDI files are played until the end). Useful for MIDI hardware outputs.
++Other improvements when stopping media files (better fix for issue 411)
+Added actions with pause:
++SWS/S&M: Play media file in selected tracks (toggle pause), slot n - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Play media file in selected tracks (toggle pause), prompt for slot
++SWS/S&M: Loop media file in selected tracks (toggle pause), prompt for slot - Infinite looping! To be stopped!
+<b>IMPORTANT:</b> due to its scary name, the folowing action is hidden by default (i.e. 0 slot in the default S&M.ini file but it is customizable there: up to 99 slots)
++SWS/S&M: Loop media file in selected tracks (toggle pause), slot n - Infinite looping! To be stopped!
+
+Resources view updates:
++Fixed few slots actions that could not be tied to bookmarks (they were not obeying the tick box "Tie slot actions")
+Added clear/delete slot actions (Issue 431):
++SWS/S&M: Delete all FX chain slots
++SWS/S&M: Delete all track template slots
++SWS/S&M: Delete all project template slots
++SWS/S&M: Delete all media file slots
++SWS/S&M: Delete all image slots
++SWS/S&M: Delete all theme slots
+<b>IMPORTANT:</b> a bit specific, so the following actions are hidden by default (i.e. 0 slot in the default S&M.ini file but it is customizable there: up to 99 slots)
++SWS/S&M: Clear FX chain slot n
++SWS/S&M: Clear track template slot n
++SWS/S&M: Clear project template slot n
++SWS/S&M: Clear media file slot n
++SWS/S&M: Clear image slot n
++SWS/S&M: Clear theme slot n - On Windows OS only
+
+New "Images" slot type in the Resources view: manage slots for PNG files (Issue 418)
++Reminder: you can switch the Resources view to "Images" in the top left dropdown box
++External drag-drop (e.g. drag a bunch of PNG files from an external tool -> drop them into the Resources view)
++Internal drag-drop (e.g. re-order slots, drag a slot from the Resources view -> drop it into a track) - Windows OS only
++Context menu: show image, set as track icon, etc.. various "auto-fill slots" features, insert/add/clear/etc..
+In this view, double-click and the ENTER key can be customized to:
++Show an image (in a dedicated dockable/resizable "S&M - Image" window)
++Set an image as track icon
++Add an image as an item to the current track
+Added slot actions for images:
++SWS/S&M: Open Resources window (images)
++SWS/S&M: Show image, slot n - where 'n' is in [1; 4], cutomizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Show image, prompt for slot
++SWS/S&M: Set track icon for selected tracks, slot n - where 'n' is in [1; 4], cutomizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Set track icon for selected tracks, prompt for slot
++SWS/S&M: Clear image slot...
++SWS/S&M: Open/clear image window
+
+Issue 433: fixed creation of cycle actions broken in v2.1.0 #22
+
+House cleaning:
++Renamed all actions "SWS/S&M: Select/load project template [...]" into "Open/select project template [...]"
++Renamed all actions "SWS/S&M: Play/loop media file [...]" into "Loop media file [...]"
 
 !v2.1.0 #22 (December 12, 2011)
 Resources view updates:
@@ -99,7 +150,7 @@ New "Media files" slot type in the Resources view:
 Manage slots for all media file types supported by REAPER (WAV, MIDI, etc..).
 +Reminder: you can switch the Resources view to "Media files" in the top left dropdown box
 +External drag-drop (e.g. drag a bunch of files from an external tool -> drop them into the Resources view)
-+Internal drag-drop (e.g. drag-drop slots, drag a bunch of slots from the Resources view -> drop them into the arrange) - Windows OS only
++Internal drag-drop (e.g. re-order slots, drag a bunch of slots from the Resources view -> drop them into the arrange) - Windows OS only
 Context menu: 
 +Various "auto-fill slots" features, rename & delete file(s), insert/add/clear/etc.. slot, show path in explorer/finder, etc..
 +Bulk-add multiple selected media file slots to current track, to new tracks or to selected items as takes
@@ -127,7 +178,7 @@ New "Themes" slot type in the Resources view (on Windows OS only):
 Manage slots for themes, i.e. slots for ReaperthemeZip files (unpacked themes are not supported).
 +Reminder: you can switch the Resources view to "Themes" in the top left dropdown box
 +External drag-drop (e.g. drag a bunch of .ReaperthemeZip files -> drop them into the Resources view)
-+Internal drag-drop (e.g. drag-drop slots, drag a slot from the Resources view -> drop it into the arrange)
++Internal drag-drop (e.g. re-order slots, drag a slot from the Resources view -> drop it into the arrange)
 +Context menu: load theme, various "auto-fill slots" features, insert/add/clear/etc..
 Added slot actions for themes:
 +SWS/S&M: Open Resources window (Themes)

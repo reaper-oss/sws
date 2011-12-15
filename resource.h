@@ -68,6 +68,7 @@
 #define IDD_AUTORENDER_PREFERENCES      160
 #define IDC_ZOOMDRAG                    160
 #define IDD_SNM_CYCLACTION              161
+#define IDD_SNM_IMAGE                   162
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
@@ -317,7 +318,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        162
+#define _APS_NEXT_RESOURCE_VALUE        163
 #define _APS_NEXT_COMMAND_VALUE         40000
 #define _APS_NEXT_CONTROL_VALUE         1235
 #define _APS_NEXT_SYMED_VALUE           100

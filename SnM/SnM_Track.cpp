@@ -548,6 +548,48 @@ bool writeEnvExists(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Track icons
+///////////////////////////////////////////////////////////////////////////////
+
+// return false if no track icon has been found
+// note: _fnOutSz is ignored atm
+bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz) {
+	if (_tr && _fnOut) {
+		SNM_ChunkParserPatcher p(_tr);
+		 return (p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 2, 0, 1, _fnOut, NULL, "TRACKID") > 0);
+	}
+}
+
+// remove track icon if _fn == ""
+void SetTrackIcon(MediaTrack* _tr, const char* _fn)
+{
+	if (_tr && _fn)
+	{
+		SNM_ChunkParserPatcher p(_tr); // nothing done yet
+		int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 2, 0, 1, NULL, NULL, "TRACKID");
+		char pIconLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
+		if (_snprintf(pIconLine, SNM_MAX_CHUNK_LINE_LENGTH, "TRACKIMGFN \"%s\"\n", _fn) > 0)
+		{
+			if (iconChunkPos > 0)
+				p.ReplaceLine(--iconChunkPos, pIconLine);
+			else 
+				p.InsertAfterBefore(0, pIconLine, "TRACK", "FX", 1, 0, "TRACKID");
+		}
+	}
+}
+
+void SetSelTrackIcon(const char* _fn)
+{
+	for (int j=1; _fn && j <= GetNumTracks(); j++) // exclude master (no "master track icon" yet, v4.13)
+	{
+		MediaTrack* tr = CSurf_TrackFromID(j, false);
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			SetTrackIcon(tr, _fn);
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Track templates
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -894,10 +936,32 @@ void remapMIDIInputChannel(COMMAND_T* _ct)
 //#define _SNM_CACHE_SRC
 
 PCM_source* g_cc123src = NULL;
-WDL_PtrList<preview_register_t> g_playPreviews;
-SWS_Mutex g_playPreviewsMutex;
+
+class PausedPreview
+{
+public:
+	PausedPreview(const char* _fn, MediaTrack* _tr, double _pos)
+		: m_fn(_fn),m_tr(_tr),m_pos(_pos) {}
+	bool IsMatching(preview_register_t* _prev) {
+		return (_prev && _prev->preview_track == m_tr && 
+			_prev->src && _prev->src->GetFileName() &&
+			!strcmp(_prev->src->GetFileName(), m_fn.Get()));
+	}
+	WDL_FastString m_fn; MediaTrack* m_tr; double m_pos;
+};
+
+
 #ifdef _SNM_CACHE_SRC
 WDL_StringKeyedArray<PCM_source*> g_srcCache;
+
+PCM_source* GetAndCacheSource(const char* _fn)
+{
+	PCM_source* src = g_srcCache.Get(_fn, NULL);
+	if (!src)
+		if (src = PCM_Source_CreateFromFileEx(_fn, true)) // "true" so that the src is not imported as in-project data
+			g_srcCache.Insert(_fn, src);
+	return src;
+}
 #endif
 
 void TrackPreviewInitDeleteMutex(preview_register_t* _prev, bool _init) {
@@ -930,18 +994,27 @@ void TrackPreviewLockUnlockMutex(preview_register_t* _prev, bool _lock) {
 #endif
 }
 
-#ifdef _SNM_CACHE_SRC
-PCM_source* GetAndCacheSource(const char* _fn)
+void DeleteTrackPreview(void* _prev)
 {
-	PCM_source* src = g_srcCache.Get(_fn, NULL);
-	if (!src)
-		if (src = PCM_Source_CreateFromFileEx(_fn, true)) // "true" so that the src is not imported as in-project data
-			g_srcCache.Insert(_fn, src);
-	return src;
-}
+	if (_prev)
+	{
+		preview_register_t* prev = (preview_register_t*)_prev;
+#ifndef _SNM_CACHE_SRC
+		if (prev->src != g_cc123src) DELETE_NULL(prev->src);
 #endif
+		TrackPreviewInitDeleteMutex(prev, false);
+		DELETE_NULL(_prev);
+	}
+}
 
-bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _loop)
+
+///////////////////////////////////////////////////////////////////////////////
+
+WDL_PtrList_DeleteOnDestroy<preview_register_t> g_playPreviews(DeleteTrackPreview);
+WDL_PtrList_DeleteOnDestroy<PausedPreview> g_pausedItems;
+SWS_Mutex g_playPreviewsMutex; // g_playPreviews + g_pausedItems mutex
+
+bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _pause, bool _loop)
 {
 	SWS_SectionLock lock(&g_playPreviewsMutex);
 	if (_src)
@@ -955,26 +1028,47 @@ bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _loop)
 		prev->loop = _loop;
 		prev->volume = 1.0;
 		prev->preview_track = _tr;
+
+		// update start position for paused items
+		if (_pause)
+			for (int i=g_pausedItems.GetSize()-1; i>=0; i--)
+				if (g_pausedItems.Get(i)->IsMatching(prev)) {
+					prev->curpos = g_pausedItems.Get(i)->m_pos;
+					g_pausedItems.Delete(i, true);
+//					break;
+				}
+
+		// go!
 		g_playPreviews.Add(prev);
-		return (PlayTrackPreview(prev) != 0); // go!
+		return (PlayTrackPreview(prev) != 0);
 	}
 	return false;
 }
 
 // primitive func: _fn must be a valid/existing file
-bool SNM_PlayTrackPreview(MediaTrack* _tr, const char* _fn, bool _loop)
+bool SNM_PlayTrackPreview(MediaTrack* _tr, const char* _fn, bool _pause, bool _loop)
 {
 #ifdef _SNM_CACHE_SRC
 	if (PCM_source* src = GetAndCacheSource(_fn))
 #else
 	if (PCM_source* src = PCM_Source_CreateFromFileEx(_fn, true)) // "true" so that the src is not imported as in-project data 
 #endif
-		return SNM_PlayTrackPreview(_tr, src, _loop);
+		return SNM_PlayTrackPreview(_tr, src, _pause, _loop);
 	return false;
 }
 
+void SNM_PlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop)
+{
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
+	{
+		MediaTrack* tr = CSurf_TrackFromID(i, false);
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			SNM_PlayTrackPreview(tr, _fn, _pause, _loop);
+	}
+}
+
 // returns true if something done
-bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _loop)
+bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop)
 {
 	bool done = false;
 	WDL_PtrList<void> trsToStart;
@@ -1003,8 +1097,9 @@ bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _loop)
 						!strcmp(prev->src->GetFileName(), _fn))
 					{
 						prev->loop = false;
-						prev->volume = 0.0;
-						prev->curpos = prev->src->GetLength(); // => will be stopped by next call to StopTrackPreviewsRun()
+						prev->volume = 0.0; // => will be stopped by next call to StopTrackPreviewsRun()
+						if (_pause)
+							g_pausedItems.Insert(0, new PausedPreview(_fn, tr, prev->curpos)); 
 						trsToStart.Delete(trsToStart.Find(tr));
 						done = true;
 					}
@@ -1017,22 +1112,8 @@ bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _loop)
 	// start play if needed
 	for (int i=0; i <= trsToStart.GetSize(); i++)
 		if (MediaTrack* tr = (MediaTrack*)trsToStart.Get(i))
-			done |= SNM_PlayTrackPreview(tr, _fn, _loop);
+			done |= SNM_PlayTrackPreview(tr, _fn, _pause, _loop);
 	return done;
-}
-
-
-void DeleteTrackPreview(void* _prev)
-{
-	if (_prev)
-	{
-		preview_register_t* prev = (preview_register_t*)_prev;
-#ifndef _SNM_CACHE_SRC
-		if (prev->src != g_cc123src) DELETE_NULL(prev->src);
-#endif
-		TrackPreviewInitDeleteMutex(prev, false);
-		DELETE_NULL(_prev);
-	}
 }
 
 void StopTrackPreviewsRun()
@@ -1044,11 +1125,14 @@ void StopTrackPreviewsRun()
 		{
 			preview_register_t* prev = g_playPreviews.Get(i);
 			TrackPreviewLockUnlockMutex(prev, true);
-			if (!prev->loop && (prev->volume < 0.5 || fabs(prev->curpos - prev->src->GetLength()) < 0.0001))
+			if (!prev->loop && 
+				(prev->volume < 0.5 || // preview has been stopped
+				prev->curpos > prev->src->GetLength())) // preview has been entirely played
 			{
-				// prepare all notes off, if needed
-				if (!strcmp(prev->src->GetType(), "MIDI") && 
-					prev->src != g_cc123src &&
+				// prepare all notes off, if needed (i.e. only for stopped MIDI files)
+				if (prev->src != g_cc123src && 
+					prev->volume < 0.5 &&
+					!strcmp(prev->src->GetType(), "MIDI") && 
 					cc123Trs.Find(prev->preview_track) == -1)
 				{
 					cc123Trs.Add(prev->preview_track);
@@ -1064,9 +1148,8 @@ void StopTrackPreviewsRun()
 	CC123Tracks(&cc123Trs);
 }
 
-void StopSelTrackPreview(COMMAND_T* _ct)
+void StopTrackPreviews(bool _selTracksOnly)
 {
-	bool selTracks = ((int)_ct->user == 1);
 	SWS_SectionLock lock(&g_playPreviewsMutex);
 	for (int i=g_playPreviews.GetSize()-1; i >= 0; i--)
 	{
@@ -1074,18 +1157,27 @@ void StopSelTrackPreview(COMMAND_T* _ct)
 		for (int j=1; j <= GetNumTracks(); j++) // skip master
 		{
 			MediaTrack* tr = CSurf_TrackFromID(j, false);
-			if (tr && (!selTracks || (selTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
+			if (tr && (!_selTracksOnly || (_selTracksOnly && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
 			{
 				TrackPreviewLockUnlockMutex(prev, true);
+
 				if (prev->preview_track == tr) {
 					prev->loop = false;
-					prev->volume = 0.0;
-					prev->curpos = prev->src->GetLength(); // => will be stopped by next call to StopTrackPreviewsRun()
+					prev->volume = 0.0; // => will be stopped by next call to StopTrackPreviewsRun()
 				}
+
+				for (int i=g_pausedItems.GetSize()-1; i>=0; i--)
+					if (g_pausedItems.Get(i)->m_tr == tr)
+						g_pausedItems.Delete(i, true);
+
 				TrackPreviewLockUnlockMutex(prev, false);
 			}
 		}
 	}
+}
+
+void StopTrackPreviews(COMMAND_T* _ct) {
+	StopTrackPreviews((int)_ct->user == 1);
 }
 
 
@@ -1102,7 +1194,7 @@ void CC123Tracks(WDL_PtrList<void>* _trs)
 	if (!g_cc123src)
 	{
 /*JFB!!! commented: does not work..
-// nailed it down to PCM_Source_CreateFromType("MIDI") which seems to be KO
+// nailed it down to PCM_Source_CreateFromType("MIDI") which seems to be KO (?)
 // => workaround: write a temp .mid file instead
 
 		// make cc123s
@@ -1151,7 +1243,7 @@ void CC123Tracks(WDL_PtrList<void>* _trs)
 	// play cc123s
 	if (g_cc123src)
 		for (int i=0; i < _trs->GetSize(); i++)
-			SNM_PlayTrackPreview((MediaTrack*)_trs->Get(i), g_cc123src, false);
+			SNM_PlayTrackPreview((MediaTrack*)_trs->Get(i), g_cc123src, false, false);
 }
 
 void CC123SelTracks(COMMAND_T* _ct)

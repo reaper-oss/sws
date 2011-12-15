@@ -185,7 +185,7 @@ void applyTakesFXChainSlot(int _slotType, const char* _title, int _slot, bool _a
 	}
 }
 
-bool autoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize)
+bool autoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _nameFromFx)
 {
 	bool slotUpdate = false;
 	WDL_PtrList<MediaItem> items;
@@ -403,7 +403,7 @@ void applyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _
 	}
 }
 
-bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _inputFX)
+bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _nameFromFx, bool _inputFX)
 {
 	bool slotUpdate = false;
 	for (int i = 0; i <= GetNumTracks(); i++)
@@ -416,7 +416,7 @@ bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, i
 			{
 				RemoveAllIds(&fxChain);
 
-				// add track channels (as a comment so that it doesn't bother REAPER)
+				// add track channels (as a comment so that it does not bother REAPER)
 				// i.e. best effort for http://code.google.com/p/sws-extension/issues/detail?id=363
 				WDL_FastString nbChStr;
 				nbChStr.SetFormatted(32, "#NCHAN %d\n", *(int*)GetSetMediaTrackInfo(tr, "I_NCHAN", NULL));
@@ -508,10 +508,10 @@ void setTrackInputFXChain(COMMAND_T* _ct) {
 
 void copyFXChainSlotToClipBoard(int _slot)
 {
-	if (_slot >= 0 && _slot < g_slots.Get(SNM_SLOT_FXC)->GetSize()) 
+	if (_slot >= 0 && _slot < g_slots.Get(g_tiedSlotActions[SNM_SLOT_FXC])->GetSize()) 
 	{
 		char fullPath[BUFFER_SIZE] = "";
-		if (g_slots.Get(SNM_SLOT_FXC)->GetFullPath(_slot, fullPath, BUFFER_SIZE))
+		if (g_slots.Get(g_tiedSlotActions[SNM_SLOT_FXC])->GetFullPath(_slot, fullPath, BUFFER_SIZE))
 			LoadChunk(fullPath, &g_fXChainClipboard);
 	}
 }

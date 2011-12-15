@@ -1126,6 +1126,14 @@ BEGIN
 //    PUSHBUTTON      "Show action list",IDC_COMMAND,452,206,57,14
 END
 
+IDD_SNM_IMAGE DIALOGEX 0, 0, 260, 65
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "S&M - Image"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT,40,40,59,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | NOT WS_BORDER
+END
 
 /////////////////////////////////////////////////////////////////////////////
 //

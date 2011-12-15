@@ -233,10 +233,11 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// FX Chains (items & tracks) ---------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (FX chains)" }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, "S&&M Resources", SNM_SLOT_FXC, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ResourceViewClearSlotPrompt, NULL, SNM_SLOT_FXC},
-	{ { DEFACCEL, "SWS/S&M: Auto-save FX Chain slots for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT1", ResourceViewAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_TRACK},
-	{ { DEFACCEL, "SWS/S&M: Auto-save FX Chain slots for selected items" }, "S&M_SAVE_FXCHAIN_SLOT2", ResourceViewAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_ITEM},
-	{ { DEFACCEL, "SWS/S&M: Auto-save input FX Chain slots for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT3", ResourceViewAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_INPUT_FX},
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_FXC},
+	{ { DEFACCEL, "SWS/S&M: Delete all FX chain slots" }, "S&M_DEL_ALL_FXCHAINSLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_FXC},
+	{ { DEFACCEL, "SWS/S&M: Auto-save FX Chain slots for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT1", ResViewAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_TRACK},
+	{ { DEFACCEL, "SWS/S&M: Auto-save FX Chain slots for selected items" }, "S&M_SAVE_FXCHAIN_SLOT2", ResViewAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_ITEM},
+	{ { DEFACCEL, "SWS/S&M: Auto-save input FX Chain slots for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT3", ResViewAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_INPUT_FX},
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, prompt for slot" }, "S&M_TAKEFXCHAINp1", loadSetTakeFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, all takes, prompt for slot" }, "S&M_TAKEFXCHAINp2", loadSetAllTakesFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, prompt for slot" }, "S&M_PASTE_TAKEFXCHAINp1", loadPasteTakeFXChain, NULL, -1},
@@ -274,18 +275,20 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Track templates --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (track templates)" }, "S&M_SHOW_RESVIEW_TR_TEMPLATES", OpenResourceView, NULL, SNM_SLOT_TR, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear track template slot..." }, "S&M_CLR_TRTEMPLATE_SLOT", ResourceViewClearSlotPrompt, NULL, SNM_SLOT_TR},
-	{ { DEFACCEL, "SWS/S&M: Auto-save track template slots" }, "S&M_SAVE_TRTEMPLATE_SLOT1", ResourceViewAutoSaveTrTemplate, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Auto-save track template (with items) slots" }, "S&M_SAVE_TRTEMPLATE_SLOT2", ResourceViewAutoSaveTrTemplate, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Clear track template slot..." }, "S&M_CLR_TRTEMPLATE_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_TR},
+	{ { DEFACCEL, "SWS/S&M: Delete all track template slots" }, "S&M_DEL_ALL_TRTEMPLATE_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_TR},
+	{ { DEFACCEL, "SWS/S&M: Auto-save track template slots" }, "S&M_SAVE_TRTEMPLATE_SLOT1", ResViewAutoSaveTrTemplate, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Auto-save track template (with items) slots" }, "S&M_SAVE_TRTEMPLATE_SLOT2", ResViewAutoSaveTrTemplate, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, prompt for slot" }, "S&M_APPLY_TRTEMPLATEp", loadSetTrackTemplate, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, prompt for slot" }, "S&M_ADD_TRTEMPLATEp", loadImportTrackTemplate, NULL, -1},
 
 	// Projects & project templates -------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open Resources window (project templates)" }, "S&M_SHOW_RESVIEW_PRJ_TEMPLATES", OpenResourceView, NULL, SNM_SLOT_PRJ, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear project template slot..." }, "S&M_CLR_PRJTEMPLATE_SLOT", ResourceViewClearSlotPrompt, NULL, SNM_SLOT_PRJ},
-	{ { DEFACCEL, "SWS/S&M: Auto-save project template slot" }, "S&M_SAVE_PRJTEMPLATE_SLOT", ResourceViewAutoSave, NULL, SNM_SLOT_PRJ},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, prompt for slot" }, "S&M_APPLY_PRJTEMPLATEp", loadOrSelectProjectSlot, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), prompt for slot" }, "S&M_NEWTAB_PRJTEMPLATEp", loadOrSelectProjectTabSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Clear project template slot..." }, "S&M_CLR_PRJTEMPLATE_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_PRJ},
+	{ { DEFACCEL, "SWS/S&M: Delete all project template slots" }, "S&M_DEL_ALL_PRJTEMPLATE_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_PRJ},
+	{ { DEFACCEL, "SWS/S&M: Auto-save project template slot" }, "S&M_SAVE_PRJTEMPLATE_SLOT", ResViewAutoSave, NULL, SNM_SLOT_PRJ},
+	{ { DEFACCEL, "SWS/S&M: Open/select project template, prompt for slot" }, "S&M_APPLY_PRJTEMPLATEp", loadOrSelectProjectSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Open/select project template (new tab), prompt for slot" }, "S&M_NEWTAB_PRJTEMPLATEp", loadOrSelectProjectTabSlot, NULL, -1},
 
 	{ { DEFACCEL, "SWS/S&M: Project loader/selecter: configuration" }, "S&M_PRJ_LOADER_CONF", projectLoaderConf, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Project loader/selecter: next (cycle)" }, "S&M_PRJ_LOADER_NEXT", loadOrSelectNextPreviousProject, NULL, 1},
@@ -294,23 +297,34 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open project path in explorer/finder" }, "S&M_OPEN_PRJ_PATH", openProjectPathInExplorerFinder, NULL, },
 	
 	// Media file slots -------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Resources window (Media files)" }, "S&M_SHOW_RESVIEW_MEDIA", OpenResourceView, "S&&M Resources", SNM_SLOT_MEDIA, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear media file slot..." }, "S&M_CLR_MEDIA_SLOT", ResourceViewClearSlotPrompt, NULL, SNM_SLOT_MEDIA},
-	{ { DEFACCEL, "SWS/S&M: Auto-save media file slots for selected items" }, "S&M_SAVE_MEDIA_SLOT", ResourceViewAutoSave, NULL, SNM_SLOT_MEDIA},
+	{ { DEFACCEL, "SWS/S&M: Open Resources window (media files)" }, "S&M_SHOW_RESVIEW_MEDIA", OpenResourceView, "S&&M Resources", SNM_SLOT_MEDIA, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear media file slot..." }, "S&M_CLR_MEDIA_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_MEDIA},
+	{ { DEFACCEL, "SWS/S&M: Delete all media file slots" }, "S&M_DEL_ALL_MEDIA_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_MEDIA},
+	{ { DEFACCEL, "SWS/S&M: Auto-save media file slots for selected items" }, "S&M_SAVE_MEDIA_SLOT", ResViewAutoSave, NULL, SNM_SLOT_MEDIA},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks, prompt for slot" }, "S&M_PLAYMEDIA_SELTRACKp", PlaySelTrackMediaSlot, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Play/loop media file in selected tracks, prompt for slot" }, "S&M_LOOPMEDIA_SELTRACKp", LoopSelTrackMediaSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks, prompt for slot" }, "S&M_LOOPMEDIA_SELTRACKp", LoopSelTrackMediaSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle), prompt for slot" }, "S&M_TGL_PLAYMEDIA_SELTRACKp", TogglePlaySelTrackMediaSlot, NULL, -1, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Play/loop media file in selected tracks (toggle), prompt for slot" }, "S&M_TGL_LOOPMEDIA_SELTRACKp", ToggleLoopSelTrackMediaSlot, NULL, -1, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Stop playing media files" }, "S&M_STOPMEDIA_ALLTRACK", StopSelTrackPreview, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Stop playing media files in selected tracks" }, "S&M_STOPMEDIA_SELTRACK", StopSelTrackPreview, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle), prompt for slot" }, "S&M_TGL_LOOPMEDIA_SELTRACKp", ToggleLoopSelTrackMediaSlot, NULL, -1, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause), prompt for slot" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTRACKp", TogglePauseSelTrackMediaSlot, NULL, -1, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause), prompt for slot - Infinite looping! To be stopped!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTRACKp", ToggleLoopPauseSelTrackMediaSlot, NULL, -1, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Stop playing media files" }, "S&M_STOPMEDIA_ALLTRACK", StopTrackPreviews, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Stop playing media files in selected tracks" }, "S&M_STOPMEDIA_SELTRACK", StopTrackPreviews, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Add media file to current track, prompt for slot" }, "S&M_ADDMEDIA_CURTRACKp", InsertMediaSlotCurTr, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Add media file to new track, prompt for slot" }, "S&M_ADDMEDIA_NEWTRACKp", InsertMediaSlotNewTr, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Add media file to selected items as takes, prompt for slot" }, "S&M_ADDMEDIA_SELITEMp", InsertMediaSlotTakes, NULL, -1},
 
+	// Image slots ------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Open Resources window (images)" }, "S&M_SHOW_RESVIEW_IMAGE", OpenResourceView, "S&&M Resources", SNM_SLOT_IMG, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear image slot..." }, "S&M_CLR_IMAGE_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_IMG},
+	{ { DEFACCEL, "SWS/S&M: Delete all image slots" }, "S&M_DEL_ALL_IMAGE_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_IMG},
+	{ { DEFACCEL, "SWS/S&M: Show image, prompt for slot" }, "S&M_SHOW_IMAGEp", ShowImageSlot, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Set track icon for selected tracks, prompt for slot" }, "S&M_SET_TRACK_ICONp", SetSelTrackIconSlot, NULL, -1},
+
 	// Theme slots ------------------------------------------------------------
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Open Resources window (Themes)" }, "S&M_SHOW_RESVIEW_THEME", OpenResourceView, "S&&M Resources", SNM_SLOT_THM, IsResourceViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Clear theme slot..." }, "S&M_CLR_THEME_SLOT", ResourceViewClearSlotPrompt, NULL, SNM_SLOT_THM},
+	{ { DEFACCEL, "SWS/S&M: Open Resources window (themes)" }, "S&M_SHOW_RESVIEW_THEME", OpenResourceView, "S&&M Resources", SNM_SLOT_THM, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Clear theme slot..." }, "S&M_CLR_THEME_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_THM},
+	{ { DEFACCEL, "SWS/S&M: Delete all theme slots" }, "S&M_DEL_ALL_THEME_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_THM},
 	{ { DEFACCEL, "SWS/S&M: Load theme, prompt for slot" }, "S&M_LOAD_THEMEp", LoadThemeSlot, NULL, -1},
 #endif
 
@@ -365,15 +379,15 @@ static COMMAND_T g_SNM_cmdTable[] =
 #endif
 
 	// Notes/Help -------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (project notes)" }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, "S&&M Notes/Help", 0, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (item notes)" }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, 1, IsNotesHelpViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (track notes)" }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, 2, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (project notes)" }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, SNM_NOTES_PROJECT, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (item notes)" }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, SNM_NOTES_ITEM, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (track notes)" }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, SNM_NOTES_TRACK, IsNotesHelpViewDisplayed},
 #ifdef _MARKER_REGION_NAME
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (marker/region names)" }, "S&M_MARKERNAMES", OpenNotesHelpView, NULL, 3, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (marker/region names)" }, "S&M_MARKERNAMES", OpenNotesHelpView, NULL, SNM_NOTES_REGION_NAME, IsNotesHelpViewDisplayed},
 #endif
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (marker/region subtitles)" }, "S&M_MARKERSUBTITLES", OpenNotesHelpView, NULL, 4, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (marker/region subtitles)" }, "S&M_MARKERSUBTITLES", OpenNotesHelpView, NULL, SNM_NOTES_REGION_SUBTITLES, IsNotesHelpViewDisplayed},
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (action help)" }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, 4, IsNotesHelpViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open Notes/Subtitles/Help window (action help)" }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, SNM_NOTES_ACTION_HELP, IsNotesHelpViewDisplayed},
 #endif
 	{ { DEFACCEL, "SWS/S&M: Notes/Subtitles/Help - Toggle lock" }, "S&M_ACTIONHELPTGLOCK", ToggleNotesHelpLock, NULL, NULL, IsNotesHelpLocked},
 	{ { DEFACCEL, "SWS/S&M: Notes/Subtitles/Help - Set action help file..." }, "S&M_ACTIONHELPPATH", SetActionHelpFilename, NULL, },
@@ -531,6 +545,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 16" }, "S&M_MAP_MIDI_INPUT_CH16", remapMIDIInputChannel, NULL, 16},
 
 	// Other, misc ------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Open/clear image window" }, "S&M_CLR_IMAGEVIEW", OpenImageView, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Send all notes off to selected tracks" }, "S&M_CC123_SEL_TRACKS", CC123SelTracks, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Show action list (S&M Extension section)" }, "S&M_ACTION_LIST", SNM_ShowActionList, NULL, 0},
 #ifdef _WIN32
@@ -589,31 +604,41 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 static COMMAND_T g_SNM_dynamicCmdTable[] =
 {
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot %02d" }, "S&M_CLRFXCHAINSLOT", ResViewClearFXChainSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, slot %02d" }, "S&M_TAKEFXCHAIN", loadSetTakeFXChain, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot %02d" }, "S&M_PASTE_TAKEFXCHAIN", loadPasteTakeFXChain, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, all takes, slot %02d" }, "S&M_FXCHAIN_ALLTAKES", loadSetAllTakesFXChain, NULL, 0}, // default: none
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, all takes, slot %02d" }, "S&M_PASTE_FXCHAIN_ALLTAKES", loadPasteAllTakesFXChain, NULL, 0}, // default: none
-
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected tracks, slot %02d" }, "S&M_TRACKFXCHAIN", loadSetTrackFXChain, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected tracks, slot %02d" }, "S&M_PASTE_TRACKFXCHAIN", loadPasteTrackFXChain, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) input FX chain to selected tracks, slot %02d" }, "S&M_INFXCHAIN", loadSetTrackInFXChain, NULL, 0}, // default: none
 	{ { DEFACCEL, "SWS/S&M: Paste input FX chain to selected tracks, slot %02d" }, "S&M_PASTE_INFXCHAIN", loadPasteTrackInFXChain, NULL, 0}, // default: none
 
+	{ { DEFACCEL, "SWS/S&M: Clear track template slot %02d" }, "S&M_CLR_TRTEMPLATE_SLOT", ResViewClearTrTemplateSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Apply track template to selected tracks, slot %02d" }, "S&M_APPLY_TRTEMPLATE", loadSetTrackTemplate, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Import tracks from track template, slot %02d" }, "S&M_ADD_TRTEMPLATE", loadImportTrackTemplate, NULL, 4},
 
-	{ { DEFACCEL, "SWS/S&M: Select/load project template, slot %02d" }, "S&M_APPLY_PRJTEMPLATE", loadOrSelectProjectSlot, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Select/load project template (new tab), slot %02d" }, "S&M_NEWTAB_PRJTEMPLATE", loadOrSelectProjectTabSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Clear project template slot %02d" }, "S&M_CLR_PRJTEMPLATE_SLOT", ResViewClearPrjTemplateSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Open/select project template, slot %02d" }, "S&M_APPLY_PRJTEMPLATE", loadOrSelectProjectSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Open/select project template (new tab), slot %02d" }, "S&M_NEWTAB_PRJTEMPLATE", loadOrSelectProjectTabSlot, NULL, 4},
 
+	{ { DEFACCEL, "SWS/S&M: Clear media file slot %02d" }, "S&M_CLR_MEDIA_SLOT", ResViewClearMediaSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks, slot %02d" }, "S&M_PLAYMEDIA_SELTRACK", PlaySelTrackMediaSlot, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Play/loop media file in selected tracks, slot %02d" }, "S&M_LOOPMEDIA_SELTRACK", LoopSelTrackMediaSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks, slot %02d" }, "S&M_LOOPMEDIA_SELTRACK", LoopSelTrackMediaSlot, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle), slot %02d" }, "S&M_TGL_PLAYMEDIA_SELTRACK", TogglePlaySelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Play/loop media file in selected tracks (toggle), slot %02d" }, "S&M_TGL_LOOPMEDIA_SELTRACK", ToggleLoopSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle), slot %02d" }, "S&M_TGL_LOOPMEDIA_SELTRACK", ToggleLoopSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause), slot %02d" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTR", TogglePauseSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause), slot %02d - Infinite looping! To be stopped!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR", ToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Add media file to current track, slot %02d" }, "S&M_ADDMEDIA_CURTRACK", InsertMediaSlotCurTr, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Add media file to new track, slot %02d" }, "S&M_ADDMEDIA_NEWTRACK", InsertMediaSlotNewTr, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Add media file to selected items as takes, slot %02d" }, "S&M_ADDMEDIA_SELITEM", InsertMediaSlotTakes, NULL, 4},
 
+	{ { DEFACCEL, "SWS/S&M: Clear image slot %02d" }, "S&M_CLR_IMAGE_SLOT", ResViewClearImageSlot, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Show image, slot %02d" }, "S&M_SHOW_IMG", ShowImageSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Set track icon for selected tracks, slot %02d" }, "S&M_SET_TRACK_ICON", SetSelTrackIconSlot, NULL, 4},
+
 #ifdef _WIN32
+	{ { DEFACCEL, "SWS/S&M: Clear theme slot %02d" }, "S&M_CLR_THEME_SLOT", ResViewClearThemeSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Load theme, slot %02d" }, "S&M_LOAD_THEME", LoadThemeSlot, NULL, 4},
 #endif
 
@@ -983,6 +1008,7 @@ int SnMInit(reaper_plugin_info_t* _rec)
 	ResourceViewInit();
 	NotesHelpViewInit();
 	FindViewInit();
+	ImageViewInit();
 #ifdef _SNM_CYCLACTION_OSX
 	CyclactionViewInit();
 #else
@@ -997,6 +1023,7 @@ void SnMExit()
 	ResourceViewExit();
 	NotesHelpViewExit();
 	FindViewExit();
+	ImageViewExit();
 	SNM_UIExit();
 	IniFileExit();
 }

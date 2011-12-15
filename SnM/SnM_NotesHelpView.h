@@ -31,6 +31,18 @@
 #define _SNM_NOTESVIEW_H_
 
 
+enum {
+  SNM_NOTES_PROJECT=0,
+  SNM_NOTES_ITEM,
+  SNM_NOTES_TRACK,
+#ifdef _MARKER_REGION_NAME
+  SNM_NOTES_REGION_NAME,
+#endif
+  SNM_NOTES_REGION_SUBTITLES,
+  SNM_NOTES_ACTION_HELP // must remain the last item: no OSX support yet 
+};
+
+
 class NoteHelp_UpdateJob : public SNM_ScheduledJob {
 public:
 	NoteHelp_UpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_NOTEHLP_TLCHANGE, 150) {}

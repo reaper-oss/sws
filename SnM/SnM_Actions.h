@@ -198,10 +198,10 @@ typedef struct MIDI_COMMAND_T {
 class SNM_ImageVWnd : public WDL_VWnd {
 public:
 	SNM_ImageVWnd(LICE_IBitmap* _img = NULL) : WDL_VWnd() { SetImage(_img); }
-	virtual void SetImage(LICE_IBitmap* _img) { m_img = _img; }
 	virtual const char *GetType() { return "SNM_ImageVWnd"; }
 	virtual int GetWidth();
 	virtual int GetHeight();
+	virtual void SetImage(LICE_IBitmap* _img) { m_img = _img; }
 	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
 protected:
 	LICE_IBitmap* m_img;

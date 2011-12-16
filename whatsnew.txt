@@ -1,3 +1,9 @@
+Image window:
++Fixed alpha channel problem
++Added stretch option in the context menu
+
+Resources view: bookmark names as defined by the user
+
 !v2.1.0 #23 (December 15, 2011)
 Notes/Help view -> Notes/Subtitles/Help
 +Subtitles support: new mode "Marker/Region subtitles" in the top left dropdown box.
@@ -19,14 +25,14 @@ Added actions with pause:
 +SWS/S&M: Loop media file in selected tracks (toggle pause), slot n - Infinite looping! To be stopped!
 
 Resources view updates:
-+Fixed few slots actions that could not be tied to bookmarks (they were not obeying the tick box "Tie slot actions")
++Fixed few slot actions that could not be tied to bookmarks (they were not obeying the tick box "Tie slot actions")
 Added clear/delete slot actions (Issue 431):
 +SWS/S&M: Delete all FX chain slots
 +SWS/S&M: Delete all track template slots
 +SWS/S&M: Delete all project template slots
 +SWS/S&M: Delete all media file slots
 +SWS/S&M: Delete all image slots
-+SWS/S&M: Delete all theme slots
++SWS/S&M: Delete all theme slots - On Windows OS only
 <b>IMPORTANT:</b> a bit specific, so the following actions are hidden by default (i.e. 0 slot in the default S&M.ini file but it is customizable there: up to 99 slots)
 +SWS/S&M: Clear FX chain slot n
 +SWS/S&M: Clear track template slot n

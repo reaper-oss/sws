@@ -215,6 +215,13 @@ bool IsCustomSlotType(int _type = -1) {
 	return (_type >= GetFirstCustomSlotType());
 }
 
+const char* GetMenuDesc(int _type = -1) {
+	if (_type < 0) _type = g_type;
+	if (_type >= SNM_NUM_DEFAULT_SLOTS)
+		return g_slots.Get(_type)->GetDesc();
+	return g_slots.Get(_type)->GetMenuDesc();
+}
+
 void GetIniSectionName(int _type, char* _bufOut, int _bufOutSz) {
 	int custType1 = GetFirstCustomSlotType();
 	if (_type >= custType1) {
@@ -578,7 +585,7 @@ void SNM_ResourceView::OnBeginDrag(SWS_ListItem* _item)
 #ifdef _WIN32
 	g_dragPathSlotItems.Empty(false);
 
-	// Store dragged items (for internal d'n'd) + full paths + get the amount of memory needed
+	// store dragged items (for internal d'n'd) + full paths + get the amount of memory needed
 	int iMemNeeded = 0, x=0;
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> fullPaths;
 	PathSlotItem* pItem = (PathSlotItem*)EnumSelected(&x);
@@ -612,7 +619,7 @@ void SNM_ResourceView::OnBeginDrag(SWS_ListItem* _item)
 	pDrop->fWide = false;
 	char* pBuf = (char*)pDrop + pDrop->pFiles;
 
-	// Add the files to the DROPFILES struct, double-NULL terminated
+	// add files to the DROPFILES struct, double-NULL terminated
 	for (int i=0; i < fullPaths.GetSize(); i++) {
 		strcpy(pBuf, fullPaths.Get(i)->Get());
 		pBuf += strlen(pBuf) + 1;
@@ -773,7 +780,7 @@ void SNM_ResourceWnd::FillTypeCombo()
 {
 	m_cbType.Empty();
 	for (int i=0; i < g_slots.GetSize(); i++)
-		m_cbType.AddItem(g_slots.Get(i)->GetMenuDesc());
+		m_cbType.AddItem(GetMenuDesc(i));
 	m_cbType.SetCurSel(g_type < g_slots.GetSize() ? g_type : SNM_SLOT_FXC);
 }
 
@@ -1037,8 +1044,8 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (g_slots.GetSize() < SNM_MAX_SLOT_TYPES)
 			{
 				char name[256] = "";
-				_snprintf(name, 256, "My %s", GetCurList()->GetMenuDesc());
-				if (PromptUserForString(GetMainHwnd(), "S&M - Add resource slot bookmark", name, 256) && strlen(name))
+				_snprintf(name, 256, "My %s", GetMenuDesc());
+				if (PromptUserForString(GetMainHwnd(), "S&M - Add resource slot bookmark", name, 256) && *name)
 				{
 					int newType = g_slots.GetSize();
 
@@ -1514,7 +1521,7 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 		for (int i = 0; i < iValidFiles; i++)
 			GetCurList()->Add(new PathSlotItem());
 	}
-	// drop on a slot => insert need slots at drop point
+	// drop on a slot => insert slots at drop point
 	else 
 	{
 		for (int i = 0; i < iValidFiles; i++)
@@ -1647,7 +1654,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 	}
 }
 
-//JFB hard coded labels.. same as related action names
+//JFB hard coded labels.. should be the same than related action names
 bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
 {
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1))
@@ -1986,7 +1993,7 @@ void ReadSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, ch
 	GetPrivateProfileString(_key, buf, "", _desc, _descSize, g_SNMIniFn.Get());
 }
 
-// adds custom slot types from the S&M.ini file, example: 
+// adds bookmarks and custom slot types from the S&M.ini file, example: 
 // CustomSlotType1="Data\track_icons,track icons,png"
 // CustomSlotType2="TextFiles,text file,txt"
 void AddCustomTypesFromIniFile()
@@ -2033,9 +2040,9 @@ int ResourceViewInit()
 	g_slots.Add(new FileSlotList("ProjectTemplates", "project", "RPP", true, true, true));
 	g_slots.Add(new FileSlotList("MediaFiles", "media file", "", false, true, true)); // "" means "all supported media files"
 #ifdef _WIN32
-	g_slots.Add(new FileSlotList("data\\track_icons", "images", "png", false, false, true));
+	g_slots.Add(new FileSlotList("data\\track_icons", "image", "png", false, false, true));
 #else
-	g_slots.Add(new FileSlotList("data/track_icons", "images", "png", false, false, true));
+	g_slots.Add(new FileSlotList("data/track_icons", "image", "png", false, false, true));
 #endif
 	// etc..
 // <---------------------------------------------------------------------------
@@ -2282,8 +2289,10 @@ void ResViewAutoSave(COMMAND_T* _ct) {
 SNM_ImageWnd* g_pImageWnd = NULL;
 
 SNM_ImageWnd::SNM_ImageWnd()
-	: SWS_DockWnd(IDD_SNM_IMAGE, "Image", "SnMImage", 30009, SWSGetCommandID(OpenImageView))
+	: SWS_DockWnd(IDD_SNM_IMAGE, "Image", "SnMImage", 30010, SWSGetCommandID(OpenImageView))
 {
+	m_stretch = false;
+
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
 }
@@ -2300,24 +2309,43 @@ void SNM_ImageWnd::OnInitDlg()
 	m_parentVwnd.RequestRedraw(NULL);
 }
 
+void SNM_ImageWnd::OnCommand(WPARAM wParam, LPARAM lParam)
+{
+	switch(LOWORD(wParam))
+	{
+		case 0xF001:
+			m_stretch = !m_stretch;
+			RequestRedraw();
+			break;
+		default:
+			Main_OnCommand((int)wParam, (int)lParam);
+			break;
+	}
+}
+
+HMENU SNM_ImageWnd::OnContextMenu(int x, int y)
+{
+	HMENU hMenu = CreatePopupMenu();
+	AddToMenu(hMenu, "Stretch images", 0xF001, -1, false, m_stretch?MFS_CHECKED:MFS_UNCHECKED);
+	return hMenu;
+}
+
 void SNM_ImageWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
 	int x0=_r->left+10, h=35;
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
 
-	SNM_AddLogo(_bm, _r, x0, h);
-/*JFB!!!
-	if (_r->right > _r->left && _r->bottom > _r->top &&
-		(_r->right-_r->left) > m_img.GetWidth() && 
-		(_r->bottom-_r->top) > m_img.GetHeight())
-*/
+	m_img.SetVisible(true);
+	if (m_stretch)
+		m_img.SetPosition(_r);
+	else
 	{
-		m_img.SetVisible(true);
 		int x = _r->left + int((_r->right-_r->left)/2 - m_img.GetWidth()/2 + 0.5);
 		int y = _r->top + int((_r->bottom-_r->top)/2 - m_img.GetHeight()/2 + 0.5);
 		RECT tr = {x, y, x+m_img.GetWidth(), y+m_img.GetHeight()};
 		m_img.SetPosition(&tr);
+		SNM_AddLogo(_bm, _r, x0, h);
 	}
 }
 
@@ -2326,10 +2354,18 @@ int ImageViewInit()
 	g_pImageWnd = new SNM_ImageWnd();
 	if (!g_pImageWnd)
 		return 0;
+
+	// load prefs
+	g_pImageWnd->SetStretch(!!GetPrivateProfileInt("ImageView", "Stretch", 0, g_SNMIniFn.Get()));
+
 	return 1;
 }
 
-void ImageViewExit() {
+void ImageViewExit()
+{
+	// save prefs
+	if (g_pImageWnd)
+		WritePrivateProfileString("ImageView", "Stretch", g_pImageWnd->IsStretched()?"1":"0", g_SNMIniFn.Get()); 
 	DELETE_NULL(g_pImageWnd);
 }
 
@@ -2354,7 +2390,7 @@ void OpenImageView(const char* _fn)
 		else
 			g_pImageWnd->SetImage(NULL);
 
-		g_pImageWnd->Show(!strcmp(g_prevFn.Get(), _fn) /* i.e toggle */, false); // non active!
+		g_pImageWnd->Show(!strcmp(g_prevFn.Get(), _fn) /* i.e toggle */, true);
 		g_pImageWnd->RequestRedraw();
 	}
 }

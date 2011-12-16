@@ -36,6 +36,7 @@
 
 #define DELETE_MSG		0x100F0
 #define COLOR_MSG		0x100F1
+#define RENAME_MSG		0x100F2
 #define FIRST_LOAD_MSG	0x10100
 
 // Globals
@@ -324,6 +325,10 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			m_pLists.Get(0)->DisableUpdates(false);
 			break;
 		}
+		case RENAME_MSG:
+			m_pLists.Get(0)->EditListItem(m_pLists.Get(0)->EnumSelected(NULL), 3);
+			break;
+
 		default:
 			if (wParam >= FIRST_LOAD_MSG && wParam - FIRST_LOAD_MSG < (UINT)g_savedLists.Get()->GetSize())
 			{	// Load marker list
@@ -338,6 +343,7 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y)
 {
 	HMENU hMenu = CreatePopupMenu();
+	AddToMenu(hMenu, "Rename", RENAME_MSG);
 	if (SetProjectMarker3) // v4 only
 		AddToMenu(hMenu, "Set color...", COLOR_MSG);
 	AddToMenu(hMenu, "Save marker set...", SWSGetCommandID(SaveMarkerList));
@@ -399,6 +405,24 @@ int SWS_MarkerListWnd::OnKey(MSG* msg, int iKeyState)
 				SetEditCurPos(mi->GetPos(), m_bScroll, m_bPlayOnSel);
 				return 1;
 			}
+		}
+		else if (msg->wParam == VK_HOME)
+		{
+			for (int i = 0; i < ListView_GetItemCount(m_pLists.Get(0)->GetHWND()); i++)
+				ListView_SetItemState(m_pLists.Get(0)->GetHWND(), i, i == 0 ? LVIS_SELECTED : 0, LVIS_SELECTED);
+			return 1;
+		}
+		else if (msg->wParam == VK_END)
+		{
+			int count = ListView_GetItemCount(m_pLists.Get(0)->GetHWND());
+			for (int i = 0; i < count; i++)
+				ListView_SetItemState(m_pLists.Get(0)->GetHWND(), i, i == count-1 ? LVIS_SELECTED : 0, LVIS_SELECTED);
+			return 1;
+		}
+		else if (msg->wParam == VK_F2)
+		{
+			OnCommand(RENAME_MSG, 0);
+			return 1;
 		}
 	}
 	return 0;

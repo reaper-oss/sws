@@ -36,7 +36,7 @@
 #include "SNM_FXChainView.h"
 #include "../Prompt.h"
 #ifdef _WIN32
-#include "../MediaPool/DragDrop.h" //JFB: move to the trunk?
+#include "../DragDrop.h"
 #endif
 //#include "../../WDL/projectcontext.h"
 

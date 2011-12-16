@@ -1,3 +1,4 @@
+!v2.1.0 #23 (December 15, 2011)
 Notes/Help view -> Notes/Subtitles/Help
 +Subtitles support: new mode "Marker/Region subtitles" in the top left dropdown box.
 You can edit notes for regions and/or markers. Such notes are saved in project files. 
@@ -52,11 +53,13 @@ Added slot actions for images:
 +SWS/S&M: Clear image slot...
 +SWS/S&M: Open/clear image window
 
+Issue 430: Added Rename to markerlist context menu, F2 renames too
 Issue 433: fixed creation of cycle actions broken in v2.1.0 #22
 
 House cleaning:
 +Renamed all actions "SWS/S&M: Select/load project template [...]" into "Open/select project template [...]"
 +Renamed all actions "SWS/S&M: Play/loop media file [...]" into "Loop media file [...]"
++Removed Media Pool dialog - replaced natively plus with Resource view "play" actions
 
 !v2.1.0 #22 (December 12, 2011)
 Resources view updates:

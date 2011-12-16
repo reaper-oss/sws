@@ -104,8 +104,6 @@
 		229AC804108FB3BE00E4A962 /* MarkerListClass.h in Headers */ = {isa = PBXBuildFile; fileRef = 981006F70F4768020072D712 /* MarkerListClass.h */; };
 		229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC80B108FBFCB00E4A962 /* SectionLock.h */; };
 		22A664BB10BC6FE100F0B239 /* sha.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A664BA10BC6FE100F0B239 /* sha.cpp */; };
-		22A79CFA10B4350000A78170 /* MediaPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A79CF810B4350000A78170 /* MediaPool.cpp */; };
-		22A79CFB10B4350000A78170 /* MediaPool.h in Headers */ = {isa = PBXBuildFile; fileRef = 22A79CF910B4350000A78170 /* MediaPool.h */; };
 		22A8751F10FEBFA10026F62F /* sws_util.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98E8A0AF0F9123F900FC657D /* sws_util.mm */; };
 		22ABB3871195B91700E4B242 /* SnM_Dlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22ABB3861195B91700E4B242 /* SnM_Dlg.cpp */; };
 		22AC0E0F112A7DE50067BBE3 /* projectcontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22AC0E0E112A7DE50067BBE3 /* projectcontext.cpp */; };
@@ -377,8 +375,6 @@
 		229AC7F5108F985C00E4A962 /* MarkerListActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerListActions.h; path = MarkerList/MarkerListActions.h; sourceTree = "<group>"; };
 		229AC80B108FBFCB00E4A962 /* SectionLock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SectionLock.h; path = Utility/SectionLock.h; sourceTree = "<group>"; };
 		22A664BA10BC6FE100F0B239 /* sha.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sha.cpp; path = ../WDL/sha.cpp; sourceTree = SOURCE_ROOT; };
-		22A79CF810B4350000A78170 /* MediaPool.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MediaPool.cpp; path = MediaPool/MediaPool.cpp; sourceTree = "<group>"; };
-		22A79CF910B4350000A78170 /* MediaPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MediaPool.h; path = MediaPool/MediaPool.h; sourceTree = "<group>"; };
 		22ABB3861195B91700E4B242 /* SnM_Dlg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Dlg.cpp; path = SnM/SnM_Dlg.cpp; sourceTree = "<group>"; };
 		22AC0E0E112A7DE50067BBE3 /* projectcontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = projectcontext.cpp; path = ../WDL/projectcontext.cpp; sourceTree = SOURCE_ROOT; };
 		22AF6DEB12308A350017808F /* SnM_FindView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_FindView.cpp; path = SnM/SnM_FindView.cpp; sourceTree = "<group>"; };
@@ -645,8 +641,6 @@
 				229AC7F5108F985C00E4A962 /* MarkerListActions.h */,
 				981006F60F4768020072D712 /* MarkerListClass.cpp */,
 				981006F70F4768020072D712 /* MarkerListClass.h */,
-				22A79CF810B4350000A78170 /* MediaPool.cpp */,
-				22A79CF910B4350000A78170 /* MediaPool.h */,
 				22284D45130C4A65007DC680 /* Menus.cpp */,
 				22284D46130C4A65007DC680 /* Menus.h */,
 				981006DB0F4768010072D712 /* MuteState.cpp */,
@@ -1062,7 +1056,6 @@
 				229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */,
 				22C769EC10B0F00800774777 /* TrackFX.h in Headers */,
 				22C769FB10B0F04D00774777 /* SnM_Actions.h in Headers */,
-				22A79CFB10B4350000A78170 /* MediaPool.h in Headers */,
 				2264CBC910FEC33200447317 /* swell-dlggen.h in Headers */,
 				2264CBCC10FEC33300447317 /* swell-internal.h in Headers */,
 				2264CBD310FEC33900447317 /* swell.h in Headers */,
@@ -1296,7 +1289,6 @@
 				22C769FA10B0F04D00774777 /* SnM_Actions.cpp in Sources */,
 				22C769FC10B0F04D00774777 /* SnM_fx.cpp in Sources */,
 				22C769FD10B0F04D00774777 /* SnM_sends.cpp in Sources */,
-				22A79CFA10B4350000A78170 /* MediaPool.cpp in Sources */,
 				22A664BB10BC6FE100F0B239 /* sha.cpp in Sources */,
 				22A8751F10FEBFA10026F62F /* sws_util.mm in Sources */,
 				2264CBC810FEC33100447317 /* swell-dlg.mm in Sources */,

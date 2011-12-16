@@ -2877,11 +2877,11 @@
 				Name="GUI"
 				>
 				<File
-					RelativePath=".\MediaPool\DragDrop.cpp"
+					RelativePath=".\DragDrop.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\MediaPool\DragDrop.h"
+					RelativePath=".\DragDrop.h"
 					>
 				</File>
 				<File
@@ -3203,18 +3203,6 @@
 			</File>
 			<File
 				RelativePath=".\TrackList\TracklistFilter.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="Media Pool"
-			>
-			<File
-				RelativePath=".\MediaPool\MediaPool.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\MediaPool\MediaPool.h"
 				>
 			</File>
 		</Filter>

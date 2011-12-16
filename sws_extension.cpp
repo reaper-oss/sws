@@ -42,7 +42,6 @@
 #include "MarkerList/MarkerList.h"
 #include "TrackList/TrackListFilter.h"
 #include "TrackList/Tracklist.h"
-#include "MediaPool/MediaPool.h"
 #include "Projects/ProjectMgr.h"
 #include "Projects/ProjectList.h"
 #include "SnM/SnM_Actions.h"
@@ -442,7 +441,6 @@ public:
 			ScheduleTracklistUpdate();
 			g_pMarkerList->Update();
 			UpdateSnapshotsDialog();
-			MediaPoolUpdate();
 			ProjectListUpdate();
 		}
 	}
@@ -535,7 +533,6 @@ extern "C"
 			SnapshotsExit();
 			TrackListExit();
 			MarkerListExit();
-			MediaPoolExit();
 			AutoColorExit();
 			ProjectListExit();
 			MiscExit();
@@ -791,8 +788,6 @@ extern "C"
 			ERR_RETURN("Marker list init error\n")
 		if (!MarkerActionsInit())
 			ERR_RETURN("Marker action init error\n")
-		if (!MediaPoolInit())
-			ERR_RETURN("Mediapool init error\n")
 		if (!ConsoleInit())
 			ERR_RETURN("ReaConsole init error\n")
 		if (!FreezeInit())

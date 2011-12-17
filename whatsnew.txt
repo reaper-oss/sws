@@ -1,3 +1,4 @@
+!v2.1.0 #24 (December 16, 2011)
 Image window:
 +Fixed alpha channel problem
 +Added stretch option in the context menu

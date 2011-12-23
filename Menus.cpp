@@ -29,6 +29,7 @@
 // for the SWS extension.
 
 #include "stdafx.h"
+#include "SnM/SnM_Actions.h" //JFB!!! to be removed if/when the cycle action editor will be ok on OSX
 
 // *************************** UTILITY FUNCTIONS ***************************
 
@@ -168,9 +169,8 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 
 	AddToMenu(hMenu, "Command parameters", NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));
 	AddToMenu(hMenu, "Cue Buss generator", NamedCommandLookup("_S&M_SENDS4"));
-#ifdef _WIN32
-	AddToMenu(hMenu, "Cycle Action editor...", NamedCommandLookup("_S&M_CREATE_CYCLACTION"));
-#endif
+	if (g_SNMbeta)
+		AddToMenu(hMenu, "Cycle Action editor...", NamedCommandLookup("_S&M_CREATE_CYCLACTION"));
 	AddToMenu(hMenu, "Envelope processor...", NamedCommandLookup("_PADRE_ENVPROC"));
 	AddToMenu(hMenu, "Fill gaps...", NamedCommandLookup("_SWS_AWFILLGAPSADV"));
 	AddToMenu(hMenu, "Find", NamedCommandLookup("_S&M_SHOWFIND"));

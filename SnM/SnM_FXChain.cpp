@@ -199,8 +199,19 @@ bool autoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, in
 			{
 				RemoveAllIds(&fxChain);
 
-				char* itemName = GetName(item);
-				GenerateFilename(_dirPath, (!itemName || *itemName == '\0') ? "Untitled" : itemName, g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
+				WDL_FastString name;
+				if (_nameFromFx)
+				{
+					SNM_FXSummaryParser p(&fxChain);
+					WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
+					SNM_FXSummary* sum = summaries ? summaries->Get(0) : NULL;
+					if (sum)
+						name.Set(sum->m_name.Get());
+				}
+				else if (GetName(item))
+					name.Set(GetName(item));
+
+				GenerateFilename(_dirPath, (!name.GetLength()) ? "Untitled" : name.Get(), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
 				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
 			}
 		}
@@ -422,10 +433,19 @@ bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, i
 				nbChStr.SetFormatted(32, "#NCHAN %d\n", *(int*)GetSetMediaTrackInfo(tr, "I_NCHAN", NULL));
 				fxChain.Insert(nbChStr.Get(), 0);
 
-				char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-				char autoSlotName[256] = "";
-				_snprintf(autoSlotName, 256, "%s%s", (!trName || *trName == '\0') ? "Untitled" : trName, _inputFX ? "_inputFX" : "");
-				GenerateFilename(_dirPath, autoSlotName, g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
+				WDL_FastString name;
+				if (_nameFromFx)
+				{
+					SNM_FXSummaryParser p(&fxChain);
+					WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
+					SNM_FXSummary* sum = summaries ? summaries->Get(0) : NULL;
+					if (sum)
+						name.Set(sum->m_name.Get());
+				}
+				else if (GetSetMediaTrackInfo(tr, "P_NAME", NULL))
+					name.Set((char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL));
+
+				GenerateFilename(_dirPath, !name.GetLength() ? "Untitled" : name.Get(), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
 				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
 			}
 		}

@@ -132,9 +132,9 @@ public:
 	void ClearListSelection();
 	void SelectBySlot(int _slot1, int _slot2 = -1);
 protected:
-	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void OnInitDlg();
 	void OnDestroy();
+	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	HMENU OnContextMenu(int x, int y);
 	int OnKey(MSG* msg, int iKeyState);
 	int GetValidDroppedFilesCount(HDROP _h);

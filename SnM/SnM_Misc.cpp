@@ -397,7 +397,7 @@ void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const
 
 void SNM_UpgradeIniFiles()
 {
-	if (g_iniFileVersion < 1) // i.e. sws version < v2.1.0 #18
+	if (g_SNMIniFileVersion < 1) // i.e. sws version < v2.1.0 #18
 	{
 		// upgrade deprecated section names 
 		UpdatePrivateProfileSection("FXCHAIN", "FXChains", g_SNMIniFn.Get());
@@ -413,7 +413,7 @@ void SNM_UpgradeIniFiles()
 		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirPrjTemplate", "AutoSaveDirProjectTemplates", g_SNMIniFn.Get());
 		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirPrjTemplate", "AutoFillDirProjectTemplates", g_SNMIniFn.Get());
 	}
-	if (g_iniFileVersion < 2) // i.e. sws version < v2.1.0 #21
+	if (g_SNMIniFileVersion < 2) // i.e. sws version < v2.1.0 #21
 	{
 		// move cycle actions to a new dedicated file (+ make backup if it already exists)
 		WDL_FastString fn;
@@ -424,7 +424,7 @@ void SNM_UpgradeIniFiles()
 		UpdatePrivateProfileSection("ME_LIST_CYCLACTIONS", "ME_List_Cyclactions", g_SNMIniFn.Get(), g_SNMCyclactionIniFn.Get());
 		UpdatePrivateProfileSection("ME_PIANO_CYCLACTIONS", "ME_Piano_Cyclactions", g_SNMIniFn.Get(), g_SNMCyclactionIniFn.Get());
 	}
-	if (g_iniFileVersion < 3) // i.e. sws version < v2.1.0 #22
+	if (g_SNMIniFileVersion < 3) // i.e. sws version < v2.1.0 #22
 	{
 		WritePrivateProfileString("RESOURCE_VIEW", "DblClick_To", NULL, g_SNMIniFn.Get()); // remove key
 		UpdatePrivateProfileString("RESOURCE_VIEW", "FilterByPath", "Filter", g_SNMIniFn.Get());

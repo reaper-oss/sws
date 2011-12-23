@@ -1304,34 +1304,43 @@ void setPan(COMMAND_T* _ct)
 //JFB!!! TODO?: new file SnM_Media.cpp?
 ///////////////////////////////////////////////////////////////////////////////
 
-void PlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop) {
+void PlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop, double _msi) {
 	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
-		SNM_PlaySelTrackPreviews(fnStr->Get(), _pause, _loop);
+		SNM_PlaySelTrackPreviews(fnStr->Get(), _pause, _loop, _msi);
 		delete fnStr;
 	}
 }
 
 void PlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
+	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, -1.0);
 }
 
 void LoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
+	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, -1.0);
 }
 
-// note: no per slot "pause" actions (does not make much sense..)
+void SyncPlaySelTrackMediaSlot(COMMAND_T* _ct) {
+	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, 1.0);
+}
+
+void SyncLoopSelTrackMediaSlot(COMMAND_T* _ct) {
+	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, 1.0);
+}
+
+// note: no per slot "pause" actions (does not make sense..)
 
 // returns true if something done
-bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop)
+bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop, double _msi)
 {
 	bool done = false;
 	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
-		done = SNM_TogglePlaySelTrackPreviews(fnStr->Get(), _pause, _loop);
+		done = SNM_TogglePlaySelTrackPreviews(fnStr->Get(), _pause, _loop, _msi);
 		delete fnStr;
 	}
 	return done;
 }
 
+// no sync
 void TogglePlaySelTrackMediaSlot(COMMAND_T* _ct) {
 	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false))
 		FakeToggle(_ct);
@@ -1351,6 +1360,29 @@ void ToggleLoopPauseSelTrackMediaSlot(COMMAND_T* _ct) {
 	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, true))
 		FakeToggle(_ct);
 }
+
+// with sync
+#ifdef _SNM_MISC
+void SyncTogglePlaySelTrackMediaSlot(COMMAND_T* _ct) {
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, 1.0))
+		FakeToggle(_ct);
+}
+
+void SyncToggleLoopSelTrackMediaSlot(COMMAND_T* _ct) {
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, 1.0))
+		FakeToggle(_ct);
+}
+
+void SyncTogglePauseSelTrackMediaSlot(COMMAND_T* _ct) {
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, false, 1.0))
+		FakeToggle(_ct);
+}
+
+void SyncToggleLoopPauseSelTrackMediaSlot(COMMAND_T* _ct) {
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, true, 1.0))
+		FakeToggle(_ct);
+}
+#endif
 
 // _insertMode: 0=add to current track, 1=add new track, 3=add to selected items as takes, &4=stretch/loop to fit time sel, &8=try to match tempo 1x, &16=try to match tempo 0.5x, &32=try to match tempo 2x
 void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMode) {

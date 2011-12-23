@@ -289,6 +289,64 @@ SNM_LiveConfigsWnd::SNM_LiveConfigsWnd()
 	Init();
 }
 
+void SNM_LiveConfigsWnd::OnInitDlg()
+{
+	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
+	m_pLists.Add(new SNM_LiveConfigsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+	SNM_ThemeListView(m_pLists.Get(0));
+
+	// Load prefs 
+	g_approxDelayMsCC = GetPrivateProfileInt("LIVE_CONFIGS", "CC_DELAY", 250, g_SNMIniFn.Get());
+
+	// WDL GUI init
+	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
+	m_parentVwnd.SetRealParent(m_hwnd);
+
+	m_txtConfig.SetID(TXTID_CONFIG);
+	m_txtConfig.SetText("Config:");
+	m_parentVwnd.AddChild(&m_txtConfig);
+
+	m_cbConfig.SetID(COMBOID_CONFIG);
+	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++)
+	{
+		char cfg[8] = "";
+		_snprintf(cfg, 8, "%d", i+1);
+		m_cbConfig.AddItem(cfg);
+	}
+	m_cbConfig.SetCurSel(g_configId);
+	m_parentVwnd.AddChild(&m_cbConfig);
+
+	m_btnEnable.SetID(BUTTONID_ENABLE);
+	m_parentVwnd.AddChild(&m_btnEnable);
+
+	m_txtInputTr.SetID(TXTID_INPUT_TRACK);
+	m_txtInputTr.SetText("Input track:");
+	m_parentVwnd.AddChild(&m_txtInputTr);
+
+	m_cbInputTr.SetID(COMBOID_INPUT_TRACK);
+	FillComboInputTrack();
+	m_parentVwnd.AddChild(&m_cbInputTr);
+
+	m_btnMuteOthers.SetID(BUTTONID_MUTE_OTHERS);
+	m_parentVwnd.AddChild(&m_btnMuteOthers);
+
+	m_btnAutoSelect.SetID(BUTTONID_AUTO_SELECT);
+	m_parentVwnd.AddChild(&m_btnAutoSelect);
+
+	Update();
+}
+
+void SNM_LiveConfigsWnd::OnDestroy() 
+{
+	// save prefs
+	char cDelay[8];
+	_snprintf(cDelay, 8, "%d", g_approxDelayMsCC);
+	WritePrivateProfileString("LIVE_CONFIGS", "CC_DELAY", cDelay, g_SNMIniFn.Get()); 
+
+	m_cbConfig.Empty();
+	m_cbInputTr.Empty();
+}
+
 INT_PTR SNM_LiveConfigsWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE];
@@ -350,64 +408,6 @@ void SNM_LiveConfigsWnd::Update()
 	if (m_pLists.GetSize())
 		m_pLists.Get(0)->Update();
 	m_parentVwnd.RequestRedraw(NULL);
-}
-
-void SNM_LiveConfigsWnd::OnInitDlg()
-{
-	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
-	m_pLists.Add(new SNM_LiveConfigsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
-	SNM_ThemeListView(m_pLists.Get(0));
-
-	// Load prefs 
-	g_approxDelayMsCC = GetPrivateProfileInt("LIVE_CONFIGS", "CC_DELAY", 250, g_SNMIniFn.Get());
-
-	// WDL GUI init
-	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
-	m_parentVwnd.SetRealParent(m_hwnd);
-
-	m_txtConfig.SetID(TXTID_CONFIG);
-	m_txtConfig.SetText("Config:");
-	m_parentVwnd.AddChild(&m_txtConfig);
-
-	m_cbConfig.SetID(COMBOID_CONFIG);
-	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++)
-	{
-		char cfg[8] = "";
-		_snprintf(cfg, 8, "%d", i+1);
-		m_cbConfig.AddItem(cfg);
-	}
-	m_cbConfig.SetCurSel(g_configId);
-	m_parentVwnd.AddChild(&m_cbConfig);
-
-	m_btnEnable.SetID(BUTTONID_ENABLE);
-	m_parentVwnd.AddChild(&m_btnEnable);
-
-	m_txtInputTr.SetID(TXTID_INPUT_TRACK);
-	m_txtInputTr.SetText("Input track:");
-	m_parentVwnd.AddChild(&m_txtInputTr);
-
-	m_cbInputTr.SetID(COMBOID_INPUT_TRACK);
-	FillComboInputTrack();
-	m_parentVwnd.AddChild(&m_cbInputTr);
-
-	m_btnMuteOthers.SetID(BUTTONID_MUTE_OTHERS);
-	m_parentVwnd.AddChild(&m_btnMuteOthers);
-
-	m_btnAutoSelect.SetID(BUTTONID_AUTO_SELECT);
-	m_parentVwnd.AddChild(&m_btnAutoSelect);
-
-	Update();
-}
-
-void SNM_LiveConfigsWnd::OnDestroy() 
-{
-	// save prefs
-	char cDelay[8];
-	_snprintf(cDelay, 8, "%d", g_approxDelayMsCC);
-	WritePrivateProfileString("LIVE_CONFIGS", "CC_DELAY", cDelay, g_SNMIniFn.Get()); 
-
-	m_cbConfig.Empty();
-	m_cbInputTr.Empty();
 }
 
 void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)

@@ -340,7 +340,6 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int
 	if (_c && _h && abs(_r->bottom-_r->top) >= _h)
 	{
 		int width=0, height=_h;
-		bool txt = false;
 
 		// see top remark..
 		if (!strcmp(_c->GetType(), "vwnd_combobox"))
@@ -363,7 +362,6 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int
 		}
 		else if (!strcmp(_c->GetType(), "vwnd_statictext"))
 		{
-			txt = true;
 			WDL_VirtualStaticText* txt = (WDL_VirtualStaticText*)_c;
 			RECT tr = {0,0,0,0};
 			txt->GetFont()->DrawText(NULL, txt->GetText(), -1, &tr, DT_CALCRECT);
@@ -404,17 +402,7 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int
 			height=9*2+1;
 		}
 
-/*JFB old code (hides controls "too easily"), see below
-		if (//!width || !height || height > _h ||
-			(!txt && (*_x + width > _r->right - 5))) // hide if not text ctl and if larger than display rect
-		{
-			_c->SetVisible(false);
-			if (_tiedComp)
-				_tiedComp->SetVisible(false);
-			return false;
-		}
-*/
-		if (*_x+width > _r->right-10) // out of horizontal available room?
+		if (*_x+width > _r->right-10) // horizontal room?
 		{
 			if (*_x+20 > (_r->right-10)) // ensures a minimum width
 			{

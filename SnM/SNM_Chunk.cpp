@@ -851,12 +851,12 @@ bool SNM_FXSummaryParser::NotifyStartElement(int _mode,
 {
 	if (_mode == -1)
 	{
-		if (_lp->getnumtokens() >= 3 && _parsedParents->GetSize() == 3)
+		if (_lp->getnumtokens() >= 3) //JFB!!! && _parsedParents->GetSize() == 3)
 		{
 			if (!strcmp(_lp->gettoken_str(0), "<VST") || !strcmp(_lp->gettoken_str(0), "<AU")) //JFB! theorical AU stuff, can't test..
-				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(2)));
+				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(1), _lp->gettoken_str(2)));
 			else if (!strcmp(_lp->gettoken_str(0), "<JS") || !strcmp(_lp->gettoken_str(0), "<DX"))
-				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(1)));
+				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(1), _lp->gettoken_str(1)));
 		}
 	}
 	return false;

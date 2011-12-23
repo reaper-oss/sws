@@ -545,7 +545,9 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 16" }, "S&M_MAP_MIDI_INPUT_CH16", remapMIDIInputChannel, NULL, 16},
 
 	// Other, misc ------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/clear image window" }, "S&M_CLR_IMAGEVIEW", OpenImageView, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageView, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Clear image window" }, "S&M_CLR_IMAGEVIEW", ClearImageView, NULL, },
+
 	{ { DEFACCEL, "SWS/S&M: Send all notes off to selected tracks" }, "S&M_CC123_SEL_TRACKS", CC123SelTracks, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Show action list (S&M Extension section)" }, "S&M_ACTION_LIST", SNM_ShowActionList, NULL, 0},
 #ifdef _WIN32
@@ -625,10 +627,20 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Clear media file slot %02d" }, "S&M_CLR_MEDIA_SLOT", ResViewClearMediaSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks, slot %02d" }, "S&M_PLAYMEDIA_SELTRACK", PlaySelTrackMediaSlot, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks, slot %02d" }, "S&M_LOOPMEDIA_SELTRACK", LoopSelTrackMediaSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (sync with next measure), slot %02d" }, "S&M_PLAYMEDIA_SELTRACK_SYNC", SyncPlaySelTrackMediaSlot, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (sync with next measure), slot %02d" }, "S&M_LOOPMEDIA_SELTRACK_SYNC", SyncLoopSelTrackMediaSlot, NULL, 4},
+
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle), slot %02d" }, "S&M_TGL_PLAYMEDIA_SELTRACK", TogglePlaySelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle), slot %02d" }, "S&M_TGL_LOOPMEDIA_SELTRACK", ToggleLoopSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause), slot %02d" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTR", TogglePauseSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause), slot %02d - Infinite looping! To be stopped!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR", ToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
+
+#ifdef _SNM_MISC // not sure it is interesting..
+	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_PLAYMEDIA_SELTRACK_SYNC", SyncTogglePlaySelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_LOOPMEDIA_SELTRACK_SYNC", SyncToggleLoopSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause, sync with next measure), slot %02d" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTR_SYNC", SyncTogglePauseSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %02d - Infinite looping! To be stopped!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR_SYNC", SyncToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
+#endif
 	{ { DEFACCEL, "SWS/S&M: Add media file to current track, slot %02d" }, "S&M_ADDMEDIA_CURTRACK", InsertMediaSlotCurTr, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Add media file to new track, slot %02d" }, "S&M_ADDMEDIA_NEWTRACK", InsertMediaSlotNewTr, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Add media file to selected items as takes, slot %02d" }, "S&M_ADDMEDIA_SELITEM", InsertMediaSlotTakes, NULL, 4},
@@ -895,10 +907,7 @@ void SNMSaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 			nameStr.Append("!)");
 		}
 
-		// indent things
-/*JFB \t solution sucks here!
-		iniSection.AppendFormatted(SNM_MAX_ACTION_CUSTID_LEN+SNM_MAX_ACTION_NAME_LEN+8, "%s=%d\t; %s\n", ct->id, (int)ct->user, name);
-*/
+		// indent things (note: a \t solution would suck here!
 		str.SetFormatted(BUFFER_SIZE, "%s=%d", ct->id, (int)ct->user);
 		while (str.GetLength() < 32) str.Append(" ");
 		str.Append(" ; ");
@@ -916,8 +925,9 @@ void SNMSaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 
 WDL_FastString g_SNMIniFn;
 WDL_FastString g_SNMCyclactionIniFn;
-int g_iniFileVersion = 0;
-int g_bSNMbeta = 0;
+int g_SNMIniFileVersion = 0;
+int g_SNMbeta = 0;
+int g_SNMMediaFlags = 0;
 
 void IniFileInit()
 {
@@ -931,20 +941,25 @@ void IniFileInit()
 		MoveFile(fn.Get(), g_SNMIniFn.Get()); // no check: use the new file whatever happens
 
 	// ini files upgrade, if needed
-	g_iniFileVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNMIniFn.Get());
+	g_SNMIniFileVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNMIniFn.Get());
 	SNM_UpgradeIniFiles();
 	fn.SetFormatted(64, "%p", SWSGetCommandByID); WritePrivateProfileString("General", "Magic", fn.Get() , g_SNMIniFn.Get());
-	g_iniFileVersion = SNM_INI_FILE_VERSION;
+	g_SNMIniFileVersion = SNM_INI_FILE_VERSION;
 
-	// load general prefs 
+	// load general prefs
+	g_SNMMediaFlags |= (GetPrivateProfileInt("General", "MediaFileLockAudio", 0, g_SNMIniFn.Get()) ? 1:0);
 	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNMIniFn.Get()) == 1);
 	g_toolbarsAutoRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, g_SNMIniFn.Get()), 100, 5000);
 	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNMIniFn.Get());
+
+/*JFB!!! temp! enable by default...
 #ifndef _WIN32
-	g_bSNMbeta = GetPrivateProfileInt("General", "Beta", 0, g_SNMIniFn.Get());
+	g_SNMbeta = GetPrivateProfileInt("General", "Beta", 0, g_SNMIniFn.Get());
 #else
-	g_bSNMbeta = 1; // cycle action editor beta
+	g_SNMbeta = 1; // cycle action editor beta
 #endif
+*/
+	g_SNMbeta = 1; // cycle action editor beta
 }
 
 void IniFileExit()
@@ -953,11 +968,12 @@ void IniFileExit()
 	WDL_FastString iniSection;
 	iniSection.SetFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build #%d\n; ", SWS_VERSION); 
 	iniSection.Append(g_SNMIniFn.Get()); 
-	iniSection.AppendFormatted(128, "\nIniFileUpgrade=%d\n", g_iniFileVersion); 
+	iniSection.AppendFormatted(128, "\nIniFileUpgrade=%d\n", g_SNMIniFileVersion); 
+	iniSection.AppendFormatted(128, "MediaFileLockAudio=%d\n", g_SNMMediaFlags&1 ? 1:0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_toolbarsAutoRefreshFreq);
 	iniSection.AppendFormatted(128, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1 : 0); 
-	iniSection.AppendFormatted(128, "Beta=%d\n", g_bSNMbeta); 
+//JFB!!!	iniSection.AppendFormatted(128, "Beta=%d\n", g_SNMbeta); 
 	SaveIniSection("General", &iniSection, g_SNMIniFn.Get());
 
 	// save dynamic actions

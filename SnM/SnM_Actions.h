@@ -40,7 +40,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 //#define _SNM_MISC
-#define _MARKER_REGION_NAME
+//#define _MARKER_REGION_NAME
 #define _SNM_CYCLACTION_OSX
 #ifdef _WIN32
 #define _SNM_PRESETS
@@ -140,10 +140,9 @@ public:
 
 class SNM_FXSummary {
 public:
-	SNM_FXSummary(const char* _type, const char* _realName)
-		: m_type(_type),m_realName(_realName){}
-	virtual ~SNM_FXSummary() {}
-	WDL_FastString m_type, m_realName;
+	SNM_FXSummary(const char* _type, const char* _name, const char* _realName)
+		: m_type(_type),m_name(_name),m_realName(_realName){}
+	WDL_FastString m_type, m_name, m_realName;
 };
 
 class SNM_ScheduledJob {
@@ -272,8 +271,9 @@ public:
 // *** SnM_Actions.cpp ***
 extern WDL_FastString g_SNMIniFn;
 extern WDL_FastString g_SNMCyclactionIniFn;
-extern int g_iniFileVersion;
-extern int g_bSNMbeta;
+extern int g_SNMIniFileVersion;
+extern int g_SNMbeta;
+extern int g_SNMMediaFlags;
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 bool IsToolbarsAutoRefeshEnabled(COMMAND_T*);
 void RefreshToolbars();
@@ -471,14 +471,21 @@ bool itemSelExists(COMMAND_T*);
 void scrollToSelItem(MediaItem* _item);
 void scrollToSelItem(COMMAND_T*);
 void setPan(COMMAND_T*);
-void PlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop);
 void PlaySelTrackMediaSlot(COMMAND_T*);
 void LoopSelTrackMediaSlot(COMMAND_T*);
-bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop);
+void SyncPlaySelTrackMediaSlot(COMMAND_T*);
+void SyncLoopSelTrackMediaSlot(COMMAND_T*);
+bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop, double _msi = -1.0);
 void TogglePlaySelTrackMediaSlot(COMMAND_T*);
 void ToggleLoopSelTrackMediaSlot(COMMAND_T*);
 void TogglePauseSelTrackMediaSlot(COMMAND_T*);
 void ToggleLoopPauseSelTrackMediaSlot(COMMAND_T*);
+#ifdef _SNM_MISC
+void SyncTogglePlaySelTrackMediaSlot(COMMAND_T*);
+void SyncToggleLoopSelTrackMediaSlot(COMMAND_T*);
+void SyncTogglePauseSelTrackMediaSlot(COMMAND_T*);
+void SyncToggleLoopPauseSelTrackMediaSlot(COMMAND_T*);
+#endif
 void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMode);
 void InsertMediaSlotCurTr(COMMAND_T*);
 void InsertMediaSlotNewTr(COMMAND_T*);
@@ -603,6 +610,7 @@ int ImageViewInit();
 void ImageViewExit();
 void OpenImageView(COMMAND_T*);
 void OpenImageView(const char* _fn);
+void ClearImageView(COMMAND_T*);
 bool IsImageViewDisplayed(COMMAND_T*);
 
 // *** SnM_Sends.cpp ***
@@ -661,11 +669,11 @@ void loadImportTrackTemplate(COMMAND_T*);
 bool autoSaveTrackSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _delItems, bool _delEnvs);
 void setMIDIInputChannel(COMMAND_T*);
 void remapMIDIInputChannel(COMMAND_T*);
-bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _pause, bool _loop);
-bool SNM_PlayTrackPreview(MediaTrack* _tr, const char* _fn, bool _pause, bool _loop);
-void SNM_PlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop);
-bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop);
 void StopTrackPreviewsRun();
+bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _pause, bool _loop, double _msi);
+bool SNM_PlayTrackPreview(MediaTrack* _tr, const char* _fn, bool _pause, bool _loop, double _msi);
+void SNM_PlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, double _msi);
+bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, double _msi = -1.0);
 void StopTrackPreviews(bool _selTracksOnly);
 void StopTrackPreviews(COMMAND_T*);
 void CC123Tracks(WDL_PtrList<void>* _trs);

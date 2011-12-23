@@ -1,3 +1,22 @@
+OSX cleanup/fixes (thanks Kundalinguist and CaptainHook!)
++Fixed import and edition of cycle actions
++Added "Cycle Action Editor" in main menu > extensions (like on Windows OS)
++Cycle Action Editor it is now available out of the box
+
+Resources view:
++New auto-save preferences for FX chains: Context menu > Auto-save configuration > "Create filename from track/item name" (default) and "Create filename from 1st FX name" (useful to create FX libraries)
+New option and actions for playback synchronization
++SWS/S&M: Play media file in selected tracks (sync with next measure), slot n - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Loop media file in selected tracks (sync with next measure), slot n - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
++Added "advanced" option in the S&M.ini file to synchroneously play/stop/pause/etc.. media files across tracks (see details in http://code.google.com/p/sws-extension/issues/detail?id=435|issue 435|)
+
+Notes/Subtitles/Help view:
++Fixed refresh problem introduced in v2.1.0 #23
++The "big font" name can be customized in the S&M.ini file: "BigFontName" in the section [NOTES_HELP_VIEW]
++House cleaning: removed "Region/marker names" management
+
+Added other actions:
++SWS/S&M: Clear image window
 !v2.1.0 #24 (December 16, 2011)
 Image window:
 +Fixed alpha channel problem

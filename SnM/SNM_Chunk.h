@@ -339,6 +339,7 @@ class SNM_FXSummaryParser : public SNM_ChunkParserPatcher
 {
 public:
 	SNM_FXSummaryParser(MediaTrack* _tr) : SNM_ChunkParserPatcher(_tr) {}
+	SNM_FXSummaryParser(WDL_FastString* _str) : SNM_ChunkParserPatcher(_str) {}
 	~SNM_FXSummaryParser() {}
 	WDL_PtrList<SNM_FXSummary>* GetSummaries();
 protected:

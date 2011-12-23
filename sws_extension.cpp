@@ -681,6 +681,8 @@ extern "C"
 		IMPAPI(Main_OnCommand);
 		IMPAPI(Main_OnCommandEx);
 		IMPAPI(Main_openProject);
+		IMPAPI(MainThread_LockTracks);
+		IMPAPI(MainThread_UnlockTracks);
 		IMPAPI(MIDIEditor_GetActive);
 		IMPAPI(MIDIEditor_GetMode);
 		IMPAPI(MIDIEditor_GetTake);

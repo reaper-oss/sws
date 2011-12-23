@@ -37,3 +37,5 @@ void (WINAPI *AttachWindowTopmostButton)(HWND hwnd);
 void (WINAPI *AttachWindowResizeGrip)(HWND hwnd);
 BOOL (WINAPI *CoolSB_GetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi);
 int (WINAPI *CoolSB_SetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi, BOOL fRedraw);
+void (WINAPI *MainThread_LockTracks)();
+void (WINAPI *MainThread_UnlockTracks)();

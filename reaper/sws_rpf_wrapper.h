@@ -33,6 +33,8 @@ extern void (WINAPI *AttachWindowTopmostButton)(HWND hwnd); // v4 only
 extern void (WINAPI *AttachWindowResizeGrip)(HWND hwnd); // v4 only
 extern BOOL (WINAPI *CoolSB_GetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi);
 extern int (WINAPI *CoolSB_SetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi, BOOL fRedraw);
+extern void (WINAPI *MainThread_LockTracks)();
+extern void (WINAPI *MainThread_UnlockTracks)();
 
 #define WDL_VirtualWnd_ScaledBlitBG WDL_VirtualWnd_ScaledBlitBG_fptr
 #define WDL_VirtualWnd_BGCfg WDL_VirtualWnd_BGCfg_stub

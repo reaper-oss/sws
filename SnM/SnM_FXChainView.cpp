@@ -329,7 +329,13 @@ void FileSlotList::ClearSlot(int _slot, bool _guiUpdate) {
 	}
 }
 
-void FileSlotList::ClearSlotPrompt(COMMAND_T* _ct) {
+void FileSlotList::ClearSlotPrompt(COMMAND_T* _ct)
+{
+	if (!GetSize()) {
+		MessageBox(GetMainHwnd(), "No slot defined in the Resources view!", "S&M - Error", MB_OK);
+		return;
+	}
+
 	int slot = PromptForInteger(SNM_CMD_SHORTNAME(_ct), "Slot", 1, GetSize()); //loops on err
 	if (slot == -1) return; // user has cancelled
 	else ClearSlot(slot);
@@ -376,12 +382,19 @@ bool FileSlotList::GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg
 // returns NULL if failed, otherwise it's up to the caller to free the returned string
 WDL_FastString* FileSlotList::GetOrPromptOrBrowseSlot(const char* _title, int _slot)
 {
+	if (!GetSize()) {
+		MessageBox(GetMainHwnd(), "No slot defined in the Resources view!", "S&M - Error", MB_OK);
+		return NULL;
+	}
+
 	WDL_FastString* fnStr = NULL;
 	if (_slot < 0 || _slot < GetSize())
 	{
 		// prompt for slot if needed
-		if (_slot == -1) _slot = PromptForInteger(_title, "Slot", 1, GetSize()); // loops on err
-		if (_slot == -1) return NULL; // user has cancelled
+		if (_slot == -1)
+			_slot = PromptForInteger(_title, "Slot", 1, GetSize()); // loops on err
+		if (_slot == -1)
+			return NULL; // user has cancelled
 
 		char fn[BUFFER_SIZE]="";
 		if (GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _slot < 0 || !Get(_slot)->IsDefault()))
@@ -749,6 +762,62 @@ SNM_ResourceWnd::SNM_ResourceWnd()
 	Init();
 }
 
+void SNM_ResourceWnd::OnInitDlg()
+{
+	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
+	m_resize.init_item(IDC_FILTER, 1.0, 1.0, 1.0, 1.0);
+
+	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
+
+	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+	SNM_ThemeListView(m_pLists.Get(0));
+
+	// WDL GUI init
+	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
+	m_parentVwnd.SetRealParent(m_hwnd);
+
+	m_cbType.SetID(COMBOID_TYPE);
+	FillTypeCombo();
+	m_parentVwnd.AddChild(&m_cbType);
+
+	m_cbDblClickType.SetID(COMBOID_DBLCLICK_TYPE);
+	m_parentVwnd.AddChild(&m_cbDblClickType);
+	m_cbDblClickTo.SetID(COMBOID_DBLCLICK_TO);
+	m_parentVwnd.AddChild(&m_cbDblClickTo);
+	FillDblClickCombos();
+
+	m_btnAutoSave.SetID(BUTTONID_AUTO_SAVE);
+	m_parentVwnd.AddChild(&m_btnAutoSave);
+
+	m_txtDblClickType.SetID(TXTID_DBL_TYPE);
+	m_txtDblClickType.SetText("Dbl-click to:");
+	m_parentVwnd.AddChild(&m_txtDblClickType);
+
+	m_btnsAddDel.SetIDs(CONTAINER_ADD_DEL, BUTTONID_ADD_BOOKMARK, BUTTONID_DEL_BOOKMARK);
+	m_parentVwnd.AddChild(&m_btnsAddDel);
+
+	m_btnTiedActions.SetID(BUTTONID_TIED_ACTIONS);
+	m_parentVwnd.AddChild(&m_btnTiedActions);
+
+	m_txtDblClickTo.SetID(TXTID_DBL_TO);
+	m_txtDblClickTo.SetText("To sel.:");
+	m_parentVwnd.AddChild(&m_txtDblClickTo);
+
+	// restores the text filter when docking/undocking + indirect call to Update() !
+	SetDlgItemText(GetHWND(), IDC_FILTER, g_filter.Get());
+
+/* Perfs: see above comment
+	Update();
+*/
+}
+
+void SNM_ResourceWnd::OnDestroy() 
+{
+	m_cbType.Empty();
+	m_cbDblClickType.Empty();
+	m_cbDblClickTo.Empty();
+}
+
 INT_PTR SNM_ResourceWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE];
@@ -832,62 +901,6 @@ void SNM_ResourceWnd::FillDblClickCombos()
 	}
 	m_cbDblClickType.SetCurSel(LOWORD(g_dblClickPrefs[g_type]));
 	m_cbDblClickTo.SetCurSel(HIWORD(g_dblClickPrefs[g_type]));
-}
-
-void SNM_ResourceWnd::OnInitDlg()
-{
-	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
-	m_resize.init_item(IDC_FILTER, 1.0, 1.0, 1.0, 1.0);
-
-	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
-
-	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
-	SNM_ThemeListView(m_pLists.Get(0));
-
-	// WDL GUI init
-	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
-	m_parentVwnd.SetRealParent(m_hwnd);
-
-	m_cbType.SetID(COMBOID_TYPE);
-	FillTypeCombo();
-	m_parentVwnd.AddChild(&m_cbType);
-
-	m_cbDblClickType.SetID(COMBOID_DBLCLICK_TYPE);
-	m_parentVwnd.AddChild(&m_cbDblClickType);
-	m_cbDblClickTo.SetID(COMBOID_DBLCLICK_TO);
-	m_parentVwnd.AddChild(&m_cbDblClickTo);
-	FillDblClickCombos();
-
-	m_btnAutoSave.SetID(BUTTONID_AUTO_SAVE);
-	m_parentVwnd.AddChild(&m_btnAutoSave);
-
-	m_txtDblClickType.SetID(TXTID_DBL_TYPE);
-	m_txtDblClickType.SetText("Dbl-click to:");
-	m_parentVwnd.AddChild(&m_txtDblClickType);
-
-	m_btnsAddDel.SetIDs(CONTAINER_ADD_DEL, BUTTONID_ADD_BOOKMARK, BUTTONID_DEL_BOOKMARK);
-	m_parentVwnd.AddChild(&m_btnsAddDel);
-
-	m_btnTiedActions.SetID(BUTTONID_TIED_ACTIONS);
-	m_parentVwnd.AddChild(&m_btnTiedActions);
-
-	m_txtDblClickTo.SetID(TXTID_DBL_TO);
-	m_txtDblClickTo.SetText("To sel.:");
-	m_parentVwnd.AddChild(&m_txtDblClickTo);
-
-	// restores the text filter when docking/undocking + indirect call to Update() !
-	SetDlgItemText(GetHWND(), IDC_FILTER, g_filter.Get());
-
-/* Perfs: see above comment
-	Update();
-*/
-}
-
-void SNM_ResourceWnd::OnDestroy() 
-{
-	m_cbType.Empty();
-	m_cbDblClickType.Empty();
-	m_cbDblClickTo.Empty();
 }
 
 void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -1072,7 +1085,11 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case BUTTONID_DEL_BOOKMARK:
 			if (IsCustomSlotType())
 			{
-				int reply = MessageBox(m_hwnd, "Delete files too ?", "S&M - Delete resource slot bookmark", MB_YESNOCANCEL);
+				int reply;
+				if (GetCurList()->GetSize())
+					reply = MessageBox(m_hwnd, "Delete files too ?", "S&M - Delete resource slot bookmark", MB_YESNOCANCEL);
+				else
+					reply = MessageBox(m_hwnd, "Are you sure you want to delete this bookmark ?", "S&M - Delete resource slot bookmark", MB_OKCANCEL);
 				if (reply != IDCANCEL)
 				{
 					// cleanup ini file (types may not be contiguous anymore..)
@@ -1427,11 +1444,9 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 				AddToMenu(hAutoSaveSubMenu, "Auto-save FX chains from track selection", FXC_AUTOSAVE_TR_MSG, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_TRACK ? MFS_CHECKED : MFS_UNCHECKED);
 				AddToMenu(hAutoSaveSubMenu, "Auto-save FX chains from item selection", FXC_AUTOSAVE_ITEM_MSG, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_ITEM ? MFS_CHECKED : MFS_UNCHECKED);
 				if (g_bv4) AddToMenu(hAutoSaveSubMenu, "Auto-save input FX chains from track selection", FXC_AUTOSAVE_INPUT_FX, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? MFS_CHECKED : MFS_UNCHECKED);
-/*JFB!!! WIP...
 				AddToMenu(hAutoSaveSubMenu, SWS_SEPARATOR, 0);
 				AddToMenu(hAutoSaveSubMenu, "Create filename from track/item name", FXC_AUTOSAVE_DEFNAME_MSG, -1, false, g_autoSaveFXChainNamePref==0 ? MFS_CHECKED : MFS_UNCHECKED);
 				AddToMenu(hAutoSaveSubMenu, "Create filename from 1st FX name", FXC_AUTOSAVE_FX1NAME_MSG, -1, false, g_autoSaveFXChainNamePref ? MFS_CHECKED : MFS_UNCHECKED);
-*/
 				break;
 			case SNM_SLOT_TR:
 				AddToMenu(hAutoSaveSubMenu, "Set auto-save directory to project path (/TrackTemplates)", AUTOSAVE_DIR_PRJ_MSG);
@@ -1699,18 +1714,16 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 HBRUSH SNM_ResourceWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
 {
 	int bg, txt; bool match=false;
-	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
-	{
+	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT)) {
 		match = true;
 		SNM_GetThemeListColors(&bg, &txt);
 	}
-	else if (_hwnd == GetDlgItem(m_hwnd, IDC_FILTER))
-	{
+	else if (_hwnd == GetDlgItem(m_hwnd, IDC_FILTER)) {
 		match = true;
 		SNM_GetThemeEditColors(&bg, &txt);
 	}
-	if (match)
-	{
+
+	if (match) {
 		SetBkColor(_hdc, bg);
 		SetTextColor(_hdc, txt);
 		return SNM_GetThemeBrush(bg);
@@ -2326,7 +2339,7 @@ void SNM_ImageWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 HMENU SNM_ImageWnd::OnContextMenu(int x, int y)
 {
 	HMENU hMenu = CreatePopupMenu();
-	AddToMenu(hMenu, "Stretch images", 0xF001, -1, false, m_stretch?MFS_CHECKED:MFS_UNCHECKED);
+	AddToMenu(hMenu, "Stretch to fit", 0xF001, -1, false, m_stretch?MFS_CHECKED:MFS_UNCHECKED);
 	return hMenu;
 }
 
@@ -2370,7 +2383,10 @@ void ImageViewExit()
 }
 
 void OpenImageView(COMMAND_T* _ct) {
-	OpenImageView("");
+	if (g_pImageWnd) {
+		g_pImageWnd->Show(true, true);
+		g_pImageWnd->RequestRedraw();
+	}
 }
 
 WDL_FastString g_lastImageFn;
@@ -2391,6 +2407,13 @@ void OpenImageView(const char* _fn)
 			g_pImageWnd->SetImage(NULL);
 
 		g_pImageWnd->Show(!strcmp(g_prevFn.Get(), _fn) /* i.e toggle */, true);
+		g_pImageWnd->RequestRedraw();
+	}
+}
+
+void ClearImageView(COMMAND_T*) {
+	if (g_pImageWnd) {
+		g_pImageWnd->SetImage(NULL);
 		g_pImageWnd->RequestRedraw();
 	}
 }

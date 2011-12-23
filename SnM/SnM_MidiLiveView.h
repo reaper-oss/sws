@@ -102,11 +102,10 @@ public:
 	void SelectByCCValue(int _configId, int _cc);
 
 	int m_lastFXPresetMsg[2][SNM_LIVECFG_MAX_PRESET_COUNT];
-	
 protected:
-	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void OnInitDlg();
 	void OnDestroy();
+	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	HMENU OnContextMenu(int x, int y);
 	int OnKey(MSG* msg, int iKeyState);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);

@@ -315,8 +315,8 @@ void FlushCyclactions(int _section)
 void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
 {
 	char buf[32] = "";
-	char actionStr[MAX_CYCLATION_LEN] = "";
-	WDL_FastString msg;
+	char actionBuf[MAX_CYCLATION_LEN] = "";
+	WDL_FastString msg, actionStr;
 	for (int sec=0; sec < SNM_MAX_CYCLING_SECTIONS; sec++)
 	{
 		if (_section == sec || _section == -1)
@@ -329,15 +329,23 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 			for (int j=0; j < nb; j++) 
 			{
 				_snprintf(buf, 32, "Action%d", j+1);
-				GetPrivateProfileString(g_cyclactionIniSections[sec], buf, EMPTY_CYCLACTION, actionStr, MAX_CYCLATION_LEN, _iniFn ? _iniFn : g_SNMCyclactionIniFn.Get());
+				GetPrivateProfileString(g_cyclactionIniSections[sec], buf, EMPTY_CYCLACTION, actionBuf, MAX_CYCLATION_LEN, _iniFn ? _iniFn : g_SNMCyclactionIniFn.Get());
+
+				//JFB!!! workaround for OSX, see http://forum.cockos.com/showpost.php?p=869530&postcount=730
+				// pb with escaped strings: swell-ini.cpp mod bug?
+				actionStr.Set(actionBuf);
+				for (int i=actionStr.GetLength()-1; i>=0; i--)
+					if (actionStr.Get()[i] == '\"' || actionStr.Get()[i] == '\'')
+						actionStr.DeleteSub(i, 1);
+
 				// import into _cyclactions
 				if (_cyclactions)
 				{
-					if (CheckEditableCyclaction(actionStr, _errMsg ? &msg : NULL, false))
-						_cyclactions[sec].Add(new Cyclaction(actionStr, true));
+					if (CheckEditableCyclaction(actionStr.Get(), _errMsg ? &msg : NULL, false))
+						_cyclactions[sec].Add(new Cyclaction(actionStr.Get(), true));
 				}
 				// main model update + action register
-				else if (!CreateCyclaction(sec, actionStr, _errMsg ? &msg : NULL, _checkCmdIds))
+				else if (!CreateCyclaction(sec, actionStr.Get(), _errMsg ? &msg : NULL, _checkCmdIds))
 					CreateCyclaction(sec, EMPTY_CYCLACTION, NULL, false);  // +no-op in order to preserve cycle actions' ids
 			}
 		}
@@ -455,7 +463,7 @@ WDL_FastString* Cyclaction::AddCmd(const char* _cmd) {
 	return c;
 }
 
-void Cyclaction::UpdateNameAndCmds() 
+void Cyclaction::UpdateNameAndCmds()
 {
 	m_cmds.EmptySafe(false); // no delete (pointers may still be used in a ListView: to be deleted by callers)
 
@@ -466,7 +474,7 @@ void Cyclaction::UpdateNameAndCmds()
 		// "#name" = toggle action, "name" = normal action
 		m_name.Set(*tok == '#' ? (const char*)tok+1 : tok);
 		while (tok = strtok(NULL, ","))
-			m_cmds.Add(new WDL_FastString(tok));
+				m_cmds.Add(new WDL_FastString(tok));
 	}
 	m_empty = (strcmp(EMPTY_CYCLACTION, m_desc.Get()) == 0);
 }
@@ -666,6 +674,11 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 //JFB cancel cell editing on error would be great.. SWS_ListView mod?
 void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
+	if (const char* p = strchr(_str, ',')) {
+		MessageBox(GetMainHwnd(), "The comma character is not allowed in cycle action names!", "S&M - Error", MB_OK);
+		return;
+	}
+
 	Cyclaction* a = (Cyclaction*)_item;
 	if (a && a != &g_DEFAULT_L && _iCol == 1)
 	{
@@ -1926,7 +1939,7 @@ void CyclactionViewExit() {
 
 void OpenCyclactionView(COMMAND_T* _ct)
 {
-	if (g_bSNMbeta)
+	if (g_SNMbeta)
 	{
 		if (g_pCyclactionWnd) 
 		{

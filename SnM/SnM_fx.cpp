@@ -370,10 +370,10 @@ int getSelectedTrackFX(MediaTrack* _tr)
 ///////////////////////////////////////////////////////////////////////////////
 
 //JFB cache?
-int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _names)
+int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _presetNames)
 {
 	int nbPresets = 0;
-	if (_fxType && _fxName && _names)
+	if (_fxType && _fxName && _presetNames)
 	{
 		char iniFilename[BUFFER_SIZE]="", buf[256]="";
 
@@ -416,7 +416,7 @@ int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_Fas
 			{
 				_snprintf(key, 32, "Preset%d", i);
 				GetPrivateProfileString(key, "Name", "", buf, 256, iniFilename);
-				_names->Add(new WDL_FastString(buf));
+				_presetNames->Add(new WDL_FastString(buf));
 			}
 		}
 	}

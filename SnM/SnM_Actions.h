@@ -362,7 +362,7 @@ void setAllFXsOfflineSelectedItems(COMMAND_T*);
 void setAllFXsBypassSelectedItems(COMMAND_T*);
 void selectTrackFX(COMMAND_T*);
 int getSelectedTrackFX(MediaTrack* _tr);
-int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _names);
+int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _presetNames);
 void UpdatePresetConf(int _fx, int _preset, WDL_FastString* _presetConf);
 int GetPresetFromConf(int _fx, WDL_FastString* _presetConf, int _presetCount=0xFFFF);
 void RenderPresetConf(WDL_FastString* _presetConf, WDL_FastString* _renderConf);

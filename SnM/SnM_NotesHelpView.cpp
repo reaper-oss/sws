@@ -254,8 +254,8 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (!HIWORD(wParam))
 			{
 				g_locked = !g_locked;
-				if (!g_locked)
-					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
+//				if (!g_locked)
+//					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 				RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
 				if (g_notesType == SNM_NOTES_REGION_SUBTITLES
 #ifdef _MARKER_REGION_NAME
@@ -293,8 +293,8 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (HIWORD(wParam)==CBN_SELCHANGE)
 			{
 				SetType(m_cbType.GetCurSel());
-				if (!g_locked)
-					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
+//				if (!g_locked)
+//					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 			}
 			break;
 		default:
@@ -1467,9 +1467,16 @@ void ToggleNotesHelpLock(COMMAND_T*) {
 	g_locked = !g_locked;
 	if (g_pNotesHelpWnd)
 	{
-		g_pNotesHelpWnd->RefreshGUI();
-		if (!g_locked)
-			SetFocus(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT));
+		if (g_notesType == SNM_NOTES_REGION_SUBTITLES
+#ifdef _MARKER_REGION_NAME
+			|| g_notesType == SNM_NOTES_REGION_NAME
+#endif
+			)
+				g_pNotesHelpWnd->Update(true); // play vs edit cursor when unlocking
+			else
+				g_pNotesHelpWnd->RefreshGUI();
+//		if (!g_locked)
+//			SetFocus(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT));
 	}
 }
 

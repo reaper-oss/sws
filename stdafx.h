@@ -25,7 +25,7 @@
 /
 ******************************************************************************/
 
-// Yeah, I know "AFX" if for MFC, and we don't use MFC in this project.
+// Yeah, I know "AFX" is for MFC, and we don't use MFC in this project.
 // Force of habit. :)
 
 #pragma once
@@ -85,12 +85,17 @@
 #include "../WDL/lineparse.h"
 #pragma warning(default : 4996)
 #pragma warning(default : 4267)
+#pragma warning(default : 4244)
+
+// Reaper
+#include "reaper/reaper_plugin.h"
+#include "reaper/sws_rpf_wrapper.h"	// Must be before lice.h
+#include "reaper/icontheme.h"		// Must be after sws_rpf_wrapper (reaper_plugin_functions.h) because it includes lice.h
+
+#include "../WDL/lice/lice.h"
 
 // Headers that are used "enough" to be worth of being precompiled,
 // at the expense of needing recompile of the headers on change
-#include "reaper/icontheme.h"
-#include "reaper/reaper_plugin.h"
-#include "reaper/sws_rpf_wrapper.h"
 #include "Utility/SectionLock.h"
 #include "sws_util.h"
 #include "sws_wnd.h"

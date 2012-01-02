@@ -567,7 +567,7 @@ void TrackSnapshot::GetSetEnvelope(MediaTrack* tr, WDL_FastString* str, const ch
 			state.Set(SWS_GetSetObjectState(tr, NULL));
 			// Remove the last >
 			const char* p = strrchr(state.Get(), '>');
-			state.DeleteSub(p-state.Get(), state.GetLength());
+			state.DeleteSub((int)(p - state.Get()), state.GetLength());
 			SWS_GetSetObjectState(tr, &state);
 		}
 	}

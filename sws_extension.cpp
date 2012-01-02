@@ -40,7 +40,7 @@
 #include "Color/Autocolor.h"
 #include "MarkerList/MarkerListClass.h"
 #include "MarkerList/MarkerList.h"
-#include "TrackList/TrackListFilter.h"
+#include "TrackList/TracklistFilter.h"
 #include "TrackList/Tracklist.h"
 #include "Projects/ProjectMgr.h"
 #include "Projects/ProjectList.h"

@@ -1,3 +1,4 @@
+!v2.1.0 #25 (January 1, 2012)
 OSX cleanup/fixes (thanks Kundalinguist and CaptainHook!)
 +Fixed import and edition of cycle actions
 +Added "Cycle Action Editor" in main menu > extensions (like on Windows OS)

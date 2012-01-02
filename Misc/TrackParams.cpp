@@ -121,14 +121,14 @@ void MasterOutputMute(COMMAND_T* ct, int mode) // mode 0==toggle, 1==set mute, 2
 {
 	MediaTrack* tr = CSurf_TrackFromID(0, false);
 	bool* pMute;
-	if ((pMute = (bool*)GetSetTrackSendInfo(tr, 1, ct->user, "B_MUTE", NULL)))
+	if ((pMute = (bool*)GetSetTrackSendInfo(tr, 1, (int)ct->user, "B_MUTE", NULL)))
 	{
 		bool bMute;
 		if (mode == 0)
 			bMute = *pMute ? false : true;
 		else
 			bMute = mode == 1 ? true : false;
-		GetSetTrackSendInfo(tr, 1, ct->user, "B_MUTE", &bMute);
+		GetSetTrackSendInfo(tr, 1, (int)ct->user, "B_MUTE", &bMute);
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_TRACKCFG, 0);
 	}
 }

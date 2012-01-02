@@ -60,7 +60,7 @@ public:
 	SWS_ListItem* Remove() { if (!m_list.GetSize()) return NULL; int last = m_list.GetSize()-1; SWS_ListItem* item = (SWS_ListItem*)m_list.Get(last); m_list.Delete(last); return item; }
 	void Empty() { m_list.Empty(); }
 private:
-	static int ILIComp(const INT_PTR** a, const INT_PTR** b) { return *a-*b; };
+	static int ILIComp(const INT_PTR** a, const INT_PTR** b) { return (int)(*a-*b); };
 	WDL_PtrList<INT_PTR> m_list;
 };
 

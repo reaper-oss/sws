@@ -330,13 +330,7 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 			{
 				_snprintf(buf, 32, "Action%d", j+1);
 				GetPrivateProfileString(g_cyclactionIniSections[sec], buf, EMPTY_CYCLACTION, actionBuf, MAX_CYCLATION_LEN, _iniFn ? _iniFn : g_SNMCyclactionIniFn.Get());
-
-				//JFB!!! workaround for OSX, see http://forum.cockos.com/showpost.php?p=869530&postcount=730
-				// pb with escaped strings: swell-ini.cpp mod bug?
 				actionStr.Set(actionBuf);
-				for (int i=actionStr.GetLength()-1; i>=0; i--)
-					if (actionStr.Get()[i] == '\"' || actionStr.Get()[i] == '\'')
-						actionStr.DeleteSub(i, 1);
 
 				// import into _cyclactions
 				if (_cyclactions)

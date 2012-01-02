@@ -560,7 +560,7 @@ void makeUnformatedConfigString(const char* _in, WDL_FastString* _out)
 		const char* p = strchr(_out->Get(), '%');
 		while(p)
 		{
-			int pos = p - _out->Get();
+			int pos = (int)(p - _out->Get());
 			_out->Insert("%", ++pos); // ++pos! but Insert() clamps to length..
 			p = (pos+1 < _out->GetLength()) ? strchr((_out->Get()+pos+1), '%') : NULL;
 		}

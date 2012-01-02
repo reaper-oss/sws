@@ -1,30 +1,68 @@
---- swell/swell-ini.cpp	Mon Jan 19 16:26:36 1970
-+++ swell/swell-ini.cpp	Mon Jan 19 16:26:36 1970
-@@ -168,7 +168,15 @@
-         {
-           *t++=0;
-           if (*p) 
-+          {
-+            // Mimic Win32 behavior of stripping quotes and whitespace
-+            while(*t==' ' || *t=='\t') ++t;
-+            char* e = t+strlen(t)-1;
-+            while(e >= t && (*e==' ' || *e=='\t')) --e;
-+            if (e > t && ((*t=='\"' && *e=='\"') || (*t=='\'' && *e=='\''))) { ++t; --e; }
-+            e[1] = 0;
-             cursec->AddUnsorted(p,strdup(t));
-+          }
-         }
-       }
-     }
-@@ -314,7 +322,7 @@
+--- swell/swell-ini.cpp	Mon Sep 05 15:14:57 2011
++++ swell/swell-ini.cpp	Sun Jan 01 18:47:49 2012
+@@ -301,6 +301,24 @@
+   return TRUE;
+ }
+ 
++char* lstrcpyn_trimmed(char* dest, const char* src, int len)
++{
++	if (len<1)
++		return dest;
++	// Mimic Win32 behavior of stripping quotes and whitespace
++	while(*src==' ' || *src=='\t') ++src; // Strip beginning whitespace
++	const char* end = src+strlen(src)-1;
++	while(end >= src && (*end==' ' || *end=='\t')) --end; // Strip end whitespace
++	if (end > src && ((*src=='\"' && *end=='\"') || (*src=='\'' && *end=='\'')))
++	{	// Strip initial set of "" or ''
++		++src; --end;
++	}
++	int newlen = end-src+2;
++	if (newlen > len)
++		newlen = len;
++	return lstrcpyn(dest, src, newlen);
++}	
++
+ DWORD GetPrivateProfileSection(const char *appname, char *strout, DWORD strout_len, const char *fn)
+ {
+   WDL_MutexLock lock(&m_mutex);
+@@ -314,7 +332,7 @@
    int szOut=0;
    WDL_StringKeyedArray<char *> *cursec = ctx ? ctx->m_sections.Get(appname) : NULL;
  
 -  if (ctx) 
-+  if (ctx && cursec)
++  if (ctx && cursec) 
    {
      int x;
      for(x=0;x<cursec->GetSize();x++)
+@@ -332,9 +350,10 @@
+         
+         WRSTR(kv)
+         WRSTR("=")
+-        WRSTR(val)
+-        
+ #undef WRSTR
++		  
++	    lstrcpyn_trimmed(strout+szOut, val, strout_len - szOut - 2);
++        szOut += strlen(strout+szOut);
+ 
+         l=1;
+         if (l > strout_len - szOut - 1) l = strout_len - 1 - szOut;
+@@ -408,13 +427,13 @@
+       const char *val = cursec->Get(keyname);
+       if (val)
+       {
+-        lstrcpyn(ret,val,retsize);
++        lstrcpyn_trimmed(ret,val,retsize);
+         return strlen(ret);
+       }
+     }
+   }
+ //  printf("def %s %s %s %s\n",appname,keyname,def,fn);
+-  lstrcpyn(ret,def?def:"",retsize);
++  lstrcpyn_trimmed(ret,def?def:"",retsize);
+   return strlen(ret);
+ }
+ 
 --- wingui/virtwnd-controls.h	Mon Jan 19 16:26:36 1970
 +++ wingui/virtwnd-controls.h	Mon Jan 19 16:26:36 1970
 @@ -115,8 +115,9 @@

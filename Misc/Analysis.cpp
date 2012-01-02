@@ -86,7 +86,7 @@ void AnalyzePCMSource(ANALYZE_PCM* a)
 	a->dProgress = 0.0;
 	a->sampleCount = 0;
 
-	INT64 totalSamples = a->pcm->GetLength() * t.samplerate;
+	INT64 totalSamples = (INT64)(a->pcm->GetLength() * t.samplerate);
 	int iFrame = 0;
 
 	a->pcm->GetSamples(&t);

@@ -912,8 +912,8 @@ SNM_CyclactionWnd::SNM_CyclactionWnd()
 INT_PTR SNM_CyclactionWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE][2];
-	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[0], IDC_LIST1, 0, 0) ||
-		ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[1], IDC_LIST2, 0, 0))
+	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[0], IDC_LIST1, 0, 3) ||
+		ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[1], IDC_LIST2, 0, 2))
 		return 1;
 	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }

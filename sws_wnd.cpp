@@ -1519,10 +1519,17 @@ int SWS_ListView::sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam
 ///////////////////////////////////////////////////////////////////////////////
 
 // From Justin: http://askjf.com/index.php?q=1609s
+// JFB mod: clamp grid lines to nb of displayed rows, 
+//   it also fixes this glitch: http://stash.reaper.fm/11297/fixed_glitch.gif
+//   (after mod: http://stash.reaper.fm/11298/fixed_glitch2.gif)
 #ifdef _WIN32
 void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
 {
-  int i;
+// JFB mod --->
+//  int i;
+  int i, cnt = ListView_GetItemCount(hwnd);
+  if (!cnt) return;
+// <---
   HPEN pen = CreatePen(PS_SOLID,0,color);
   HGDIOBJ oldObj = SelectObject(hdc,pen);
   for(i=0;i<ncol;i++)
@@ -1534,6 +1541,7 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
     if (!i)
     {
       int h =r.bottom-r.top;
+/* JFB commented: cnt cannot be 0 here, i.e. no line when the list is empty --->
       if (!ListView_GetItemCount(hwnd)) 
       {
         r.top = 0;
@@ -1545,9 +1553,14 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
         }
         h=17;// todo getsystemmetrics
       }
+<--- */
       if (h>0)
       {
-        while (r.top < br.bottom)
+ //JFB mod --->
+        int row=0;
+        while (r.top < br.bottom && row++ <= cnt)
+//        while (r.top < br.bottom)
+// <---
         {
           if (r.top >= br.top)
           {
@@ -1565,10 +1578,16 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
         if (i==1)
         {
           MoveToEx(hdc,r.left,br.top,NULL);
-          LineTo(hdc,r.left,br.bottom);
+//JFB mod: clamp vertical lines height (prevents a GUI glitch with SWS_ListView) --->
+          LineTo(hdc,r.left,min(br.bottom, r.top+(r.bottom-r.top)*cnt));
+//          LineTo(hdc,r.left,br.bottom);
+// <---
         }
         MoveToEx(hdc,r.right,br.top,NULL);
-        LineTo(hdc,r.right,br.bottom);
+//JFB mod: clamp vertical lines height --->
+        LineTo(hdc,r.right,min(br.bottom, r.top+(r.bottom-r.top)*cnt));
+//        LineTo(hdc,r.right,br.bottom);
+// <---
       }
     }
   }
@@ -1579,10 +1598,15 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
 
 bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int cstate[LISTVIEW_COLORHOOK_STATESIZE], int listID, int whichTheme, int wantGridForColumns)
 {
+//JFB added --->
+#ifndef _WIN32
+  wantGridForColumns=0; //JFB!!! no grid lines on OSX yet (cannot test!)
+#endif
   int sz;
   ColorTheme* ctheme = (ColorTheme*)GetColorThemeStruct(&sz);
   if (!ctheme || sz < sizeof(ColorTheme))
 	  return false;
+// <---
 
   // if whichTheme&1, is tree view
   switch (uMsg)
@@ -1711,7 +1735,7 @@ bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int 
                     }
                     if (s&LVIS_FOCUSED)
                     {
-/*
+/*JFB commented
                       // todo: theme option for colors for focus state as well?
                       if (0 && GetFocus()==hdr->hwndFrom)
                       {
@@ -1764,7 +1788,10 @@ void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char
     }
     tmpfont.SetBkMode(TRANSPARENT);
     LICE_pixel col1 = LICE_RGBA(0,0,0,255);
-    LICE_pixel col2 = LICE_RGBA(255,255,225,255); //JFB mod, was: col2 = LICE_RGBA(255,255,192,255);
+/*JFB mod: same tooltip color than REAPER
+    LICE_pixel col2 = LICE_RGBA(255,255,225,255);
+*/
+    LICE_pixel col2 = LICE_RGBA(255,255,192,255);
 
     tmpfont.SetTextColor(col1);
     RECT r={0,};
@@ -1780,7 +1807,7 @@ void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char
       else
         yo = wndr->bottom - 4 - r.bottom;
 
-      //JFB added (prevents hidden tooltip behind the mouse pointer):
+//JFB added: try to prevent hidden tooltip behind the mouse pointer (clamped below..)
       xo += 15;
     }
 

@@ -821,7 +821,7 @@ void SNM_ResourceWnd::OnDestroy()
 INT_PTR SNM_ResourceWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE];
-	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, 0))
+	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, 4))
 		return 1;
 	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }

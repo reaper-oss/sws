@@ -1,5 +1,7 @@
+On Windows OS: all S&M list views now support grid lines, i.e. they use the color "Window list grid lines" of the Theme Editor
+
 !v2.1.0 #25 (January 1, 2012)
-OSX cleanup/fixes (thanks Kundalinguist and CaptainHook!)
+OSX cleanup/fixes (thanks to Kundalinguist and CaptainHook!)
 +Fixed import and edition of cycle actions
 +Added "Cycle Action Editor" in main menu > extensions (like on Windows OS)
 +Cycle Action Editor it is now available out of the box

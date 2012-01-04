@@ -1,3 +1,4 @@
+Issue 426: fixed snapshots problem with 'frozen' tracks
 On Windows OS: all S&M list views now support grid lines, i.e. they use the color "Window list grid lines" of the Theme Editor
 
 !v2.1.0 #25 (January 1, 2012)

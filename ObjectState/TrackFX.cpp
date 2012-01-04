@@ -27,65 +27,29 @@
 
 #include "stdafx.h"
 #include "TrackFX.h"
+#include "../SnM/SnM_Actions.h"
+#include "../SnM/SNM_ChunkParserPatcher.h"
+#include "../SnM/SNM_Chunk.h"
 
 // Functions for getting/setting track FX chains
 void GetFXChain(MediaTrack* tr, WDL_TypedBuf<char>* buf)
 {
-	buf->Resize(0); // Empty
-	const char* chunk = SWS_GetSetObjectState(tr, NULL);
-	int pos = 0;
-	int iDepth = 0;
-	char line[4096];
-
-	while (GetChunkLine(chunk, line, 4096, &pos, true))
-	{
-		if (strncmp(line, "<FXCHAIN", 8) == 0)
-		{
-			buf->Resize((int)strlen(line)+1);
-			strcpy(buf->Get(), line);
-			iDepth = 1;
-		}
-		else if (iDepth)
-		{
-			int iPos = buf->GetSize() - 1;
-			buf->Resize(iPos + (int)strlen(line) + 1);
-			strcpy(buf->Get()+iPos, line);
-			if (line[0] == '<')
-				iDepth++;
-			else if (line[0] == '>')
-				iDepth--;
-		}
+	SNM_ChunkParserPatcher p(tr);
+	WDL_FastString chainChunk;
+	if (p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM") > 0) {
+		buf->Resize(chainChunk.GetLength() + 1);
+		strcpy(buf->Get(), chainChunk.Get());
 	}
-
-	SWS_FreeHeapPtr(chunk);
 }
 
 void SetFXChain(MediaTrack* tr, const char* str)
 {
-	WDL_FastString newChunk;
-	char line[4096];
-	const char* chunk = SWS_GetSetObjectState(tr, NULL);
-	int pos = 0;
-	int iDepth = 0;
-
-	// Fill new chunk with everything except the FX chain that may or may not already exist
-	while (GetChunkLine(chunk, line, 4096, &pos, true))
-	{
-		if (strncmp(line, "<FXCHAIN", 8) == 0)
-			iDepth = 1;
-		else if (iDepth)
-		{
-			if (line[0] == '<')
-				iDepth++;
-			else if (line[0] == '>')
-				iDepth--;
-		}
-		else
-			newChunk.Append(line);
+	SNM_FXChainTrackPatcher p(tr);
+	WDL_FastString chainChunk;
+	// adapt FX chain format (the SNM_FXChainTrackPatcher uses the .RFXChain file format)
+	if (str && !strncmp(str, "<FXCHAIN", 8)) {
+		chainChunk.Set(strchr(str, '\n') + 1); // removes the line stating with "<FXCHAIN"
+		chainChunk.SetLen(chainChunk.GetLength()-2); // remove trailing ">\n"
 	}
-	SWS_FreeHeapPtr(chunk);
-
-	if (str)
-		AppendChunkLine(&newChunk, str);
-	SWS_GetSetObjectState(tr, &newChunk);
+	p.SetFXChain(str ? &chainChunk : NULL);
 }

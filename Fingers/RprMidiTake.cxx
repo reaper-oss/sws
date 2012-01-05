@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#include <algorithm>
+
 #include "RprMidiTake.hxx"
 #include "RprStateChunk.hxx"
 #include "RprNode.hxx"
@@ -348,9 +350,18 @@ static bool sortMidiBase(const RprMidiBase *lhs, const RprMidiBase *rhs)
 	return rhs->getOffset() > lhs->getOffset();
 }
 
+static void removeNegativeMidiEvents(std::vector< RprMidiBase *> &midiEvents)
+{
+    std::vector<RprMidiBase *>::iterator i = midiEvents.begin();
+    while(i != midiEvents.end() && (*i)->getOffset() < 0) {
+        i = midiEvents.erase(i);
+    }
+}
+
 static void finalizeMidiEvents(std::vector< RprMidiBase *> &midiEvents)
 {
 	std::sort(midiEvents.begin(), midiEvents.end(), sortMidiBase);
+    removeNegativeMidiEvents(midiEvents);
 	int offset = 0;
 	for(std::vector<RprMidiBase *>::iterator i = midiEvents.begin(); i != midiEvents.end(); i++) {
 		RprMidiBase *current = *i;
@@ -635,7 +646,7 @@ RprMidiTake::RprMidiTake(const RprTake &take, bool readOnly) : RprMidiTemplate(t
 		RprTempMidiEvents tempMidiEvents;
 		getMidiEvents(sourceNode, tempMidiEvents.get());
 		mContext = RprMidiContext::createMidiContext(take.getPlayRate(),
-		getParent()->getPosition() - take.getStartOffset(),
+		getParent()->getPosition() - (take.getStartOffset() / take.getPlayRate()),
 		getQNValue(sourceNode));
 	
 		if(!getMidiNotes(tempMidiEvents.get(), mNotes, mContext)) {
@@ -743,7 +754,6 @@ double RprMidiTake::getGridDivision()
 		if(midiNode->getChild(i)->getValue().find("CFGEDIT ") != std::string::npos) {
 			const std::string &cfgedit = midiNode->getChild(i)->getValue();
 			double gridDivision = 0.0;
-			
 			sscanf(cfgedit.c_str(), "CFGEDIT %*d %*d %*d %*d %*d %*d %*d %*d %*d %*d %*d %lf", &gridDivision);
 			return gridDivision;
 		}

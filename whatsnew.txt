@@ -1,9 +1,11 @@
+!v2.1.0 #26 (January 4, 2012)
 Fingers MIDI action fixes:
 + Remove negative Midi Events before commiting
 + Fix for MIDI event positioning when take has an offset and playrate != 1.0
 
-Issue 426: fixed snapshots problem with 'frozen' tracks
+Issue 426: Fixed snapshots problem with 'frozen' tracks
 On Windows OS: all S&M list views now support grid lines, i.e. they use the color "Window list grid lines" of the Theme Editor
+OSX: Fixed "beachball" when running cycle actions
 
 !v2.1.0 #25 (January 1, 2012)
 OSX cleanup/fixes (thanks to Kundalinguist and CaptainHook!)

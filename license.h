@@ -1,6 +1,7 @@
 #pragma once
 #define LICENSE_TEXT \
-"Copyright (C) 2011 Tim Payne (SWS), Jeffos, Fingers, Shane StClair\r" \
+"Copyright (C) 2012 Tim Payne (SWS), Jeffos, Fingers\r" \
+"Copyright (C) 2011 Shane StClair, Adam Wathan\r" \
 "Copyright (C) 2010 P Bourdon\r" \
 "Copyright (C) 2009 Xenakios\r" \
 "\r" \

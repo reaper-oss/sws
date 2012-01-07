@@ -24,11 +24,8 @@ public:
 	void SetShape(EnvShape shape) { nEnvShape = shape; }
 	EnvShape GetShape() { return nEnvShape; }
 
-	void SetSelected() { nSelected = 1; }
-	void SetUnselected() { nSelected = 0; }
 	bool IsSelected() { return nSelected == 1;}
 
-	void SetBezierTension(double tension) { nEnvShape = Bezier; dBezierTension = tension; }
 	double GetBezierTension() { return dBezierTension; }
 	
 	void SetParent(CEnvelope *parent) { pParent = parent;}

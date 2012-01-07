@@ -141,12 +141,6 @@ bool RprMidiNote::isMuted() const
 	return mNoteOn->isMuted();
 }
 
-void RprMidiNote::setMuted(bool muted)
-{
-	mNoteOn->setMuted(muted);
-	mNoteOff->setMuted(muted);
-}
-
 void RprMidiNote::setSelected(bool selected)
 {
 	mNoteOn->setSelected(selected);
@@ -157,24 +151,12 @@ int RprMidiNote::getItemPosition() const
 {
 	return mNoteOn->getOffset();
 }
-void RprMidiNote::setItemPosition(int position)
-{
-	int len = getItemLength();
-
-	int unquantizedNoteOn = mNoteOn->getOffset() + mNoteOn->getUnquantizedOffset();
-	int unquantizedNoteOff = mNoteOff->getOffset() + mNoteOff->getUnquantizedOffset();
-
-	mNoteOn->setOffset(position);
-	mNoteOff->setOffset(position + len);
-
-	mNoteOn->setUnquantizedOffset(unquantizedNoteOn - position);
-	mNoteOff->setUnquantizedOffset( unquantizedNoteOff - (position + len));
-}
 
 int RprMidiNote::getChannel() const
 {
 	return (int)(mNoteOn->getChannel() + 1);
 }
+
 void RprMidiNote::setChannel(int channel)
 {
 	mNoteOn->setChannel(channel - 1);
@@ -265,72 +247,14 @@ RprMidiCC::RprMidiCC(RprMidiBase *cc, RprMidiContext *context)
 	mContext = context;
 }
 
-double RprMidiCC::getPosition() const
-{
-	return getPositionMidiOffset(mContext, mCC->getOffset());
-}
-
-void RprMidiCC::setPosition(double position)
-{
-	mCC->setOffset(getMidiOffsetPosition(mContext, position));
-}
-
 int RprMidiCC::getChannel() const
 {
 	return mCC->getChannel() + 1;	
 }
 
-void RprMidiCC::setChannel(int channel)
-{
-	mCC->setChannel(channel - 1);
-}
-
-int RprMidiCC::getController() const
-{
-	return mCC->getValue1();
-}
-
-void RprMidiCC::setValue(int value)
-{
-	if (value > 127)
-		value = 127;
-	if (value < 0)
-		value = 0;
-	mCC->setValue2((unsigned char)value);
-}
-
-int RprMidiCC::getValue() const
-{
-	return mCC->getValue2();
-}
-
-bool RprMidiCC::isSelected() const
-{
-	return mCC->isSelected();
-}
-void RprMidiCC::setSelected(bool selected)
-{
-	mCC->setSelected(selected);
-}
-
-bool RprMidiCC::isMuted() const
-{
-	return mCC->isMuted();
-}
-
-void RprMidiCC::setMuted(bool muted)
-{
-	mCC->setMuted(muted);
-}
-
 int RprMidiCC::getItemPosition() const
 {
 	return mCC->getOffset();
-}
-
-void RprMidiCC::setItemPosition(int position)
-{
-	mCC->setOffset(position);
 }
 
 RprMidiCC::~RprMidiCC()
@@ -618,25 +542,6 @@ int RprMidiTake::countNotes() const
 	return (int)mNotes.size();
 }
 
-void RprMidiTake::removeNoteAt(int index)
-{
-	delete mNotes.at(index);
-	mNotes.erase(mNotes.begin() + index);
-}
-
-void RprMidiTake::removeCCAt(int controller, int index)
-{
-	delete mCCs[controller].at(index);
-	mCCs[controller].erase(mCCs[controller].begin() + index);
-}
-
-RprMidiCC *RprMidiTake::addCCAt(int controller, int index)
-{
-	RprMidiCC *cc = new RprMidiCC(mContext, controller);
-	mCCs[controller].insert(mCCs[controller].begin() + index , cc);
-	return cc;
-}
-
 RprMidiTake::RprMidiTake(const RprTake &take, bool readOnly) : RprMidiTemplate(take, readOnly)
 {
 	try {
@@ -720,19 +625,6 @@ void RprMidiTake::cleanup()
 	cleanUpPointers(mNotes);
 }
 
-
-RprMidiTake::RprMidiTakeConversionException::RprMidiTakeConversionException(std::string message)
-{
-	mMessage = message;
-}
-const char *RprMidiTake::RprMidiTakeConversionException::what()
-{
-	return mMessage.c_str();
-}
-
-RprMidiTake::RprMidiTakeConversionException::~RprMidiTakeConversionException() throw()
-{}
-
 RprMidiTakePtr RprMidiTake::createFromMidiEditor(bool readOnly)
 {
 	void *midiEditor = MIDIEditor_GetActive();
@@ -745,34 +637,6 @@ RprMidiTakePtr RprMidiTake::createFromMidiEditor(bool readOnly)
 		return takePtr;
 	}
 	throw RprLibException("Only in-project MIDI can be modified", true);
-}
-
-double RprMidiTake::getGridDivision()
-{
-	RprNode *midiNode = RprMidiTemplate::getMidiSourceNode();
-	for(int i = 0; i < midiNode->childCount(); i++) {
-		if(midiNode->getChild(i)->getValue().find("CFGEDIT ") != std::string::npos) {
-			const std::string &cfgedit = midiNode->getChild(i)->getValue();
-			double gridDivision = 0.0;
-			sscanf(cfgedit.c_str(), "CFGEDIT %*d %*d %*d %*d %*d %*d %*d %*d %*d %*d %*d %lf", &gridDivision);
-			return gridDivision;
-		}
-	}
-	return 0.0;
-}
-
-double RprMidiTake::getNoteDivision()
-{
-	RprNode *midiNode = RprMidiTemplate::getMidiSourceNode();
-	for(int i = 0; i < midiNode->childCount(); i++) {
-		if(midiNode->getChild(i)->getValue().find("CFGEDIT ") != std::string::npos) {
-			const std::string &cfgedit = midiNode->getChild(i)->getValue();
-			double noteDivision = 0.0;
-			sscanf(cfgedit.c_str(), "CFGEDIT %*d %*d %*d %*d %*d %*d %*d %*d %*d %*d %*d %*f %*d %*d %*d %*d %*d %*d %*d %*d %lf", &noteDivision);
-			return noteDivision;
-		}
-	}
-	return 0.0;
 }
 
 int RprMidiTake::countCCs(int controller) const
@@ -801,10 +665,5 @@ bool RprMidiTake::hasEventType(RprMidiBase::MessageType messageType)
 				return true;
 	}
 	return hasEvent(mOtherEvents, messageType);
-}
-
-RprMidiCC *RprMidiTake::getCCAt(int controller, int index) const
-{
-	return mCCs[controller].at(index);
 }
 

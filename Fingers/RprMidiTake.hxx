@@ -11,7 +11,6 @@ class RprMidiContext;
 class RprItem;
 class RprNode;
 class RprMidiTake;
-class RprMidiLaneView;
 
 typedef std::auto_ptr<RprMidiTake> RprMidiTakePtr;
 
@@ -39,12 +38,10 @@ public:
 	void setSelected(bool selected);
 
 	bool isMuted() const;
-	void setMuted(bool muted);
-
+	
 	int getItemPosition() const;
 	int getItemLength() const;
 
-	void setItemPosition(int position);
 	void setItemLength(int);
 
 	~RprMidiNote();
@@ -60,26 +57,10 @@ public:
 	RprMidiCC(RprMidiContext *context, int controller);
 	RprMidiCC(RprMidiBase *cc, RprMidiContext *context);
 	
-	double getPosition() const;
-	void setPosition(double position);
-
 	int getChannel() const;
-	void setChannel(int channel);
-
-	int getController() const;
-
-    void setValue(int pitch);
-    int getValue() const;
-
-	bool isSelected() const;
-	void setSelected(bool selected);
-
-	bool isMuted() const;
-	void setMuted(bool muted);
 
 	int getItemPosition() const;
-	void setItemPosition(int position);
-
+	
 	~RprMidiCC();
 private:
 	friend class RprMidiTake;
@@ -91,35 +72,15 @@ class RprMidiTake : public RprMidiTemplate {
 public:
 	static RprMidiTakePtr createFromMidiEditor(bool readOnly = false);
 	RprMidiTake(const RprTake &take, bool readOnly = false);
+    ~RprMidiTake();
 
 	RprMidiNote *getNoteAt(int index) const;
-	void removeNoteAt(int index);
 	int countNotes() const;
 	RprMidiNote *addNoteAt(int index);
 
 	int countCCs(int controller) const;
-	RprMidiCC *getCCAt(int controller, int index) const;
-
-	void removeCCAt(int controller, int index);
-	RprMidiCC *addCCAt(int controller, int index);
-
-	bool hasEventType(RprMidiBase::MessageType);
-
-	double getGridDivision();
-	double getNoteDivision();
-
-	static void openInEditor(RprTake &take);
 	
-	~RprMidiTake();
-
-	class RprMidiTakeConversionException : public std::exception {
-	public:
-		RprMidiTakeConversionException(std::string message);
-		const char *what();
-		virtual ~RprMidiTakeConversionException() throw();
-	private:
-		std::string mMessage;
-	};
+	bool hasEventType(RprMidiBase::MessageType);
 
 private:
 	void cleanup();

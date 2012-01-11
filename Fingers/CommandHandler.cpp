@@ -3,36 +3,64 @@
 #include "CommandHandler.h"
 #include "RprException.hxx"
 
-class RprToggleCommand {
+static COMMAND_T createSWSCommand(const char* description, const char* id, RprCommand* command);
+static void onSWSCommand(COMMAND_T* cmd);
+static bool onToggleCommand(COMMAND_T* cmd);
+COMMAND_T createSWSToggleCommand(const char* description, const char* id, RprToggleCommand* command);
+
+class SWSCommandFinder 
+{
 public:
-    RprToggleCommand(int cmdID, bool (*toggleStateFunc)()) : m_toggleStateFunc(toggleStateFunc) {}
-    int getToggleState() { if (m_toggleStateFunc) return m_toggleStateFunc() ? 1 : 0; return -1; }
+    SWSCommandFinder(const char* id);
+    bool operator()(const COMMAND_T& cmd);
 private:
-    bool (*m_toggleStateFunc)();
+    const char* mId;
 };
 
 
-RprCommandManager *RprCommandManager::_instance = NULL;
+RprCommand::RprCommand() 
+: mCommand(NULL), mData(NULL), mUndoFlags(NO_UNDO)
+{}
 
-RprCommandManager *RprCommandManager::Instance()
+RprCommand::RprCommand(void (*command)(int, void *), void *commandData, int commandDataSize)
 {
-    if (_instance == NULL)
-    {
-        _instance = new RprCommandManager();
-    }
-    return _instance;
+    setup(command, commandData, commandDataSize);
 }
 
-void RprCommand::registerCommand(const char *description, const char *id, void (*command)(int, void *), int undoFlag)
+void RprCommand::setup(void (*command)(int, void *), void *commandData, int commandDataSize)
+{
+    mCommand = command;
+    mData = malloc(commandDataSize);
+    ::memcpy(mData, commandData, commandDataSize);
+}
+
+RprCommand::~RprCommand()
+{
+    if(mData != NULL)
+        free(mData);
+}
+
+void RprCommand::registerCommand(const char *description, const char *id, 
+                                 void (*command)(int, void *), int undoFlag)
 {
     RprCommand *newCmd = new RprCommand(command);
     RprCommand::registerCommand(description, id, newCmd, undoFlag);
 }
 
-void RprCommand::registerCommand(const char *description, const char *id, void (*command)(int, void *), int commandData, int undoFlag)
+void RprCommand::registerCommand(const char *description, const char *id, 
+                                 void (*command)(int, void *), int commandData, int undoFlag)
 {
     RprCommand *newCmd = new RprCommand(command, &commandData, sizeof(int));
     RprCommand::registerCommand(description, id, newCmd, undoFlag);
+}
+
+void RprCommand::registerToggleCommand(const char *description, const char *id,
+                                       void (*command)(int, void *), bool (*toggleCommand)(void), int undoFlag)
+{
+    RprToggleCommand *newCmd = new RprToggleCommand(command, toggleCommand);
+    newCmd->setUndoFlags(undoFlag);
+    newCmd->setDescription(description);
+    RprCommandManager::addToggleCommand(description, id, newCmd);    
 }
 
 void RprCommand::registerCommand(const char *description, const char *id, RprCommand *command, int undoFlag)
@@ -47,159 +75,121 @@ void RprCommand::setDescription(const char *description)
     mDescription = description;
 }
 
-void RprCommand::registerAsToggleCommand(const char *id, bool (*toggleStateFunc)())
-{
-    RprCommandManager::addToggleCommand(id, toggleStateFunc);
-}
-
-void RprCommand::registerAsMenuCommand(const char *id, const char *menuText)
-{
-    RprCommandManager::addMenuCommand(id, menuText);
-}
-
-RprCommand::RprCommand() :
-mCommand(NULL), mData(NULL), mUndoFlags(NO_UNDO)
-{}
-
 void RprCommand::run(int flag)
 {
     if(mUndoFlags != 0 && mUndoFlags != UNDO_STATE_ITEMS)
         Undo_BeginBlock();
 
-    try {
+    try 
+    {
         doCommand(flag);
-    } catch(RprLibException &e) {
-        if(e.notify()) {
+    } 
+    catch(RprLibException &e) 
+    {
+        if(e.notify())
+        {
             MessageBox(GetMainHwnd(), e.what(), "Error", 0);
         }
     }
 
-    if(mUndoFlags != 0 && mUndoFlags != UNDO_STATE_ITEMS) {
+    if(mUndoFlags != 0 && mUndoFlags != UNDO_STATE_ITEMS)
+    {
         Undo_EndBlock(mDescription.c_str(), mUndoFlags);
     }
     if(mUndoFlags == UNDO_STATE_ITEMS)
         Undo_OnStateChange(mDescription.c_str());
 }
 
-RprCommand::~RprCommand()
+
+RprCommandManager *RprCommandManager::_instance = NULL;
+
+RprCommandManager *RprCommandManager::Instance()
 {
-    if(mData != NULL)
-        free(mData);
+    if (_instance == NULL)
+    {
+        _instance = new RprCommandManager();
+    }
+    return _instance;
 }
 
-void RprCommand::setup(void (*command)(int, void *), void *commandData, int commandDataSize)
+RprCommandManager::~RprCommandManager()
+{}
+
+RprToggleCommand::RprToggleCommand(void (*command)(int, void *), 
+                                   bool (*toggleCommand)(void), void *commandData , int commandDataSize)
+                                   : RprCommand(command, commandData, commandDataSize)
 {
-    mCommand = command;
-    mData = malloc(commandDataSize);
-    ::memcpy(mData, commandData, commandDataSize);
+    mToggleCommand = toggleCommand;
 }
 
-RprCommand::RprCommand(void (*command)(int, void *), void *commandData, int commandDataSize)
+bool RprToggleCommand::runToggleAction()
 {
-    setup(command, commandData, commandDataSize);
-}
-
-void RprCommandManager::Init(reaper_plugin_info_t *rec, REAPER_PLUGIN_HINSTANCE hInstance)
-{
-    RprCommandManager *me = RprCommandManager::Instance();
-    me->m_rec = rec;
-    me->m_hInstance = hInstance;
-    rec->Register("hookcommand", (void *)RprCommandManager::commandHook);
-#ifdef _SWS_MENU
-    rec->Register("hookcustommenu", (void*)RprCommandManager::menuHook);
-#endif
-    rec->Register("toggleaction", (void*)RprCommandManager::toggleCommandHook);
-
+    return mToggleCommand();
 }
 
 void RprCommandManager::addCommand(const char *description, const char *id, RprCommand *command)
 {
     RprCommandManager *me = RprCommandManager::Instance();
-
-    int commandId = me->m_rec->Register("command_id", (void *)id);
-
-    me->mIdMap[id] = commandId;
-    me->mCommandMap[commandId] = command;
-
-    gaccel_register_t gaccel;
-    std::memset(&gaccel, 0, sizeof(gaccel_register_t));
-    gaccel.desc = description;
-    gaccel.accel.cmd = commandId;
-    me->m_rec->Register("gaccel", &gaccel);
+    me->mSWSCommands.push_back(createSWSCommand(description, id, command));
+    SWSRegisterCommand2(&me->mSWSCommands.back(), __FILE__);
 }
 
-void RprCommandManager::addToggleCommand(const char *id, bool (*toggleStateFunc)())
-{
-    int commandId = RprCommandManager::getCommandId(id);
-    if(commandId != 0) {
-        RprToggleCommand *toggleCommand = new RprToggleCommand(commandId, toggleStateFunc);
-        RprCommandManager *me = RprCommandManager::Instance();
-        me->mToggleCommandMap[commandId] = toggleCommand;
-    }
-}
-
-void RprCommandManager::addMenuCommand(const char *id, const char *menuText)
+void RprCommandManager::addToggleCommand(const char *description, const char *id, RprToggleCommand *command)
 {
     RprCommandManager *me = RprCommandManager::Instance();
-    MenuListItem item;
-    item.first = RprCommandManager::getCommandId(id);
-    item.second = menuText;
-    me->mMenuList.push_back( item);
+    me->mSWSCommands.push_back(createSWSToggleCommand(description, id, command));
+    SWSRegisterCommand2(&me->mSWSCommands.back(), __FILE__);
 }
 
-bool RprCommandManager::commandHook(int command, int flag)
+static COMMAND_T 
+createSWSCommand(const char* description, const char* id, RprCommand* command)
 {
-    RprCommandManager *me = RprCommandManager::Instance();
+    COMMAND_T SWSCommand = { { DEFACCEL, description }, id, onSWSCommand, NULL, 
+        (INT_PTR)command, NULL};
+    return SWSCommand;
+}
 
-    CommandMap::iterator i = me->mCommandMap.find(command);
-    if(i == me->mCommandMap.end())
-        return false;
-    RprCommand *cmd = i->second;
-    cmd->run(flag);
-    return true;
+static COMMAND_T 
+createSWSToggleCommand(const char* description, const char* id, RprToggleCommand* command)
+{
+    COMMAND_T SWSCommand = { { DEFACCEL, description }, id, onSWSCommand, NULL, 
+        (INT_PTR)command, onToggleCommand};
+    return SWSCommand;
+}
+
+static void 
+onSWSCommand(COMMAND_T* cmd)
+{
+    RprCommand* fingersCommand = (RprCommand*)cmd->user;
+    fingersCommand->run(0);
+}
+
+static bool 
+onToggleCommand(COMMAND_T* cmd)
+{
+    RprToggleCommand* fingersCommand = (RprToggleCommand*)cmd->user;
+    return fingersCommand->runToggleAction();
 }
 
 int RprCommandManager::getCommandId(const char *id)
 {
     RprCommandManager *me = RprCommandManager::Instance();
-    IdMap::const_iterator i = me->mIdMap.find(id);
-    if( i == me->mIdMap.end())
-        return 0;
-    return i->second;
-}
 
-void RprCommandManager::menuHook(const char* menustr, HMENU hMenu, int flag)
-{
-    if (strcmp(menustr, "Main extensions") == 0 && flag == 0)
+    std::list<COMMAND_T>::iterator command = std::find_if(me->mSWSCommands.begin(),
+        me->mSWSCommands.end(), SWSCommandFinder(id));
+
+    if (command != me->mSWSCommands.end())
     {
-        RprCommandManager *me = RprCommandManager::Instance();
-        for(MenuList::const_iterator i = me->mMenuList.begin(); i != me->mMenuList.end(); ++i) {
-            AddToMenu(hMenu, i->second.c_str(), i->first);
-        }
-        AddToMenu(hMenu, SWS_SEPARATOR, 0);
+        return command->accel.accel.cmd;
     }
+    return -1;
 }
 
-// returns:
-// -1 = action does not belong to this extension, or does not toggle
-//  0 = action belongs to this extension and is currently set to "off"
-//  1 = action belongs to this extension and is currently set to "on"
-int RprCommandManager::toggleCommandHook(int command)
+SWSCommandFinder::SWSCommandFinder(const char* id)
+: mId(id) {}
+
+bool SWSCommandFinder::operator()(const COMMAND_T& cmd)
 {
-    RprCommandManager *me = RprCommandManager::Instance();
-    ToggleCommandMap::const_iterator i = me->mToggleCommandMap.find(command);
-    if( i == me->mToggleCommandMap.end()) {
-        return -1;
-    }
-    return i->second->getToggleState();
+    return strcmp(cmd.id, mId) == 0;
 }
 
-RprCommandManager::~RprCommandManager()
-{ 
-    for(CommandMap::iterator i = mCommandMap.begin(); i != mCommandMap.end(); ++i) {
-        delete i->second;
-    }
-    for(ToggleCommandMap::iterator i = mToggleCommandMap.begin(); i != mToggleCommandMap.end(); ++i) {
-        delete i->second;
-    }
-}

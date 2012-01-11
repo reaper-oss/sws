@@ -4,7 +4,6 @@
 #include "CommandHandler.h"
 #include "TimeMap.h"
 
-#include "FileUtil.hxx"
 #include "RprItem.hxx"
 #include "RprTake.hxx"
 #include "RprTrack.hxx"
@@ -147,57 +146,6 @@ void CmdExpandItemsToBar::doCommand(int flag)
 			pos = pos + dFactor * ( pos - startPos);
 			item.setPosition(pos);
 		}
-	}
-}
-
-void SetEditCursor::doCommand(int flag)
-{
-	RprItemCtrPtr ctr = RprItemCollec::getSelected();
-	if(ctr->size() == 0)
-		return;
-
-	if(m_pos == SetEditCursor::FirstSelected)
-	{
-		RprItem first = ctr->first();
-		SetEditCurPos( first.getPosition(), false, false);
-		return;
-	}
-
-	if(m_pos == SetEditCursor::FirstSelectedRight)
-	{
-		RprItem first = ctr->first();
-		SetEditCurPos( first.getPosition() + first.getLength(), false, false);
-		return;
-	}
-
-	double cursorPos = GetCursorPosition();
-
-	ctr->sort();
-
-	if(m_pos == SetEditCursor::ClosestSelected || m_pos == SetEditCursor::ClosestSelectedRight )
-	{
-		RprItem first = ctr->first();
-		double closestPos = first.getPosition();
-		double newCursorPos = closestPos;
-		if(m_pos == SetEditCursor::ClosestSelectedRight)
-			newCursorPos += first.getPosition() + first.getLength();
-		double distance = abs(closestPos - cursorPos);
-		for(int i = 0; i < ctr->size(); i++)
-		{
-			double pos = ctr->getAt(i).getPosition();
-			double distanceNew = abs(pos - cursorPos);
-
-			if(distanceNew < distance)
-			{
-				closestPos = pos;
-				newCursorPos = closestPos;
-				distance = distanceNew;
-				if(m_pos == SetEditCursor::ClosestSelectedRight)
-					newCursorPos += ctr->getAt(i).getLength();
-			}
-			
-		}
-		SetEditCurPos( newCursorPos, false, false);
 	}
 }
 

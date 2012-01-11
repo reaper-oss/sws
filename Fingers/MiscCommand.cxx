@@ -12,25 +12,10 @@
 #include "TimeMap.h"
 #include "RprStateChunk.hxx"
 
-static bool RunMidiCommand(int commandId);
-
-static void CreatePatternItem(int flag, void *data);
-static void ActivateMediaExplorerShell(int flag, void *data);
-static void ShowVersion(int flag, void *data);
-static void SelectWindow(int flag, void *data);
 static void EmulateMidiHardware(int flag, void *data);
 static void GetEmulationSettings(int flag, void *data);
-static void InsertMidiNote(int flag, void *data);
-static void InsertMidiNoteSemitone(int flag, void *data);
 static void SelectAllNearestEditCursor(int flag, void *data);
-static void MoveMidiViewForwardABar(int flag, void *data);
-static void MakeAllNotesSameVelocityAsSelected(int flag, void *data);
-
 static void SelectMutedMidiNotes(int flag, void *data);
-static void SelectNone(RprMidiTakePtr &midiTake);
-
-static RprMidiNote *getFirstSelected(RprMidiTakePtr &midiTake);
-
 static void QuantizeAllToGrid(int flag, void *data);
 
 static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
@@ -73,20 +58,6 @@ static void SelectMutedMidiNotes(int flag, void *data)
 		midiTake->getNoteAt(i)->setSelected(midiTake->getNoteAt(i)->isMuted());
 }
 
-static bool RunMidiCommand(int commandId)
-{
-	return MIDIEditor_OnCommand(MIDIEditor_GetActive(), commandId);
-}
-
-static RprMidiNote *getFirstSelected(RprMidiTakePtr &midiTake)
-{
-	for(int i = 0; i < midiTake->countNotes(); i++) {
-		if (midiTake->getNoteAt(i)->isSelected()) {
-			return midiTake->getNoteAt(i);
-		}
-	}
-}
-
 static void SelectAllNearestEditCursor(int flag, void *data)
 {
 	double editCursor = GetCursorPosition();
@@ -113,33 +84,6 @@ static void SelectAllNearestEditCursor(int flag, void *data)
 		} else {
 			note->setSelected(false);
 		}
-	}
-}
-
-
-
-static void MakeAllNotesSameVelocityAsSelected(int flag, void *data)
-{
-	RprMidiTakePtr midiTake = RprMidiTake::createFromMidiEditor();
-	RprMidiNote *note = getFirstSelected(midiTake);
-	if (note == NULL)
-		return;
-
-	for(int i = 0; i < midiTake->countNotes(); i++) {
-		midiTake->getNoteAt(i)->setVelocity(note->getVelocity());
-	}
-}
-
-static void MakeAllNotesOfSamePitchSameVelocityAsSelected(int flag, void *data)
-{
-	RprMidiTakePtr midiTake = RprMidiTake::createFromMidiEditor();
-	RprMidiNote *note = getFirstSelected(midiTake);
-	if (note == NULL)
-		return;
-
-	for(int i = 0; i < midiTake->countNotes(); i++) {
-		if (note->getPitch() == midiTake->getNoteAt(i)->getPitch())
-			midiTake->getNoteAt(i)->setVelocity(note->getVelocity());
 	}
 }
 

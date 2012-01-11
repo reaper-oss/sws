@@ -139,9 +139,6 @@ void GrooveCommands::Init()
 		"FNG_GROOVE_MARKER_START_CUR", &MarkGrooveStart, (int)GrooveTemplateHandler::EDITCURSOR,	NO_UNDO);
 	RprCommand::registerCommand("SWS/FNG: Set groove marker start to current bar", 
 		"FNG_GROOVE_MARKER_START_BAR", &MarkGrooveStart, (int)GrooveTemplateHandler::CURRENTBAR,	NO_UNDO);
-	RprCommand::registerCommand("SWS/FNG: Show groove tool", 
-		"FNG_GROOVE_TOOL",&ShowGrooveDialog, NO_UNDO);
-
-	RprCommand::registerAsToggleCommand("FNG_GROOVE_TOOL", IsGrooveDialogOpen);
-	RprCommand::registerAsMenuCommand("FNG_GROOVE_TOOL", "FNG: Groove tool...");
+	RprCommand::registerToggleCommand("SWS/FNG: Show groove tool", 
+		"FNG_GROOVE_TOOL",&ShowGrooveDialog, IsGrooveDialogOpen, NO_UNDO);
 }

@@ -2454,14 +2454,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Fingers\FileUtil.cxx"
-				>
-			</File>
-			<File
-				RelativePath=".\Fingers\FileUtil.hxx"
-				>
-			</File>
-			<File
 				RelativePath=".\Fingers\FNG.cxx"
 				>
 			</File>

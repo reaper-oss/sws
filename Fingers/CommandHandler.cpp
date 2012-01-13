@@ -6,7 +6,7 @@
 static COMMAND_T createSWSCommand(const char* description, const char* id, RprCommand* command);
 static void onSWSCommand(COMMAND_T* cmd);
 static bool onToggleCommand(COMMAND_T* cmd);
-COMMAND_T createSWSToggleCommand(const char* description, const char* id, RprToggleCommand* command);
+static COMMAND_T createSWSToggleCommand(const char* description, const char* id, RprToggleCommand* command);
 
 class SWSCommandFinder 
 {

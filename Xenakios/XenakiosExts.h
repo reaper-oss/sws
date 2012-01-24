@@ -248,7 +248,6 @@ void DoMinMixSendAndFxPanelH(COMMAND_T*);
 void DoMaxMixFxPanHeight(COMMAND_T*);
 void DoRemoveTimeSelectionLeaveLoop(COMMAND_T*);
 void DoToggleTrackHeightAB(COMMAND_T*);
-void DoFolderDepthDump(COMMAND_T*);
 void DoPanTracksCenter(COMMAND_T*);
 void DoPanTracksLeft(COMMAND_T*);
 void DoPanTracksRight(COMMAND_T*);

@@ -747,33 +747,6 @@ void DoToggleTrackHeightAB(COMMAND_T*)
 	UpdateTimeline();
 }
 
-void DoFolderDepthDump(COMMAND_T*)
-{
-	
-	vector<MediaTrack*> TheTracks;
-	XenGetProjectTracks(TheTracks,true);
-	int foldep=*(int*)GetSetMediaTrackInfo(TheTracks[0],"I_FOLDERDEPTH",NULL);
-	if (foldep==1)
-	{
-		int childIdx=CSurf_TrackToID(TheTracks[0],false)+1;
-		foldep=0;
-		while (foldep!=-1)
-		{
-			MediaTrack *CurTrack=CSurf_TrackFromID(childIdx,false);
-			if (CurTrack)
-			{
-				foldep=*(int*)GetSetMediaTrackInfo(CurTrack,"I_FOLDERDEPTH",NULL);
-				
-				bool visi=*(bool*)GetSetMediaTrackInfo(CurTrack,"B_SHOWINMIXER",NULL);
-				if (visi) visi=false; else visi=true;
-				if (foldep<=0) GetSetMediaTrackInfo(CurTrack,"B_SHOWINMIXER",&visi);
-				if (foldep==-1) break;
-				childIdx++;
-			}
-		}
-	}
-}
-
 void DoPanTracksCenter(COMMAND_T* ct)
 {
 	vector<MediaTrack*> TheTracks;

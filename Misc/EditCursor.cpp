@@ -118,9 +118,11 @@ void MoveCursorSample(COMMAND_T* ct)
 
 void MoveCursorMs(COMMAND_T* ct)
 {
-	double dPos = GetCursorPosition();
-	dPos += (double)ct->user / 1000.0;
-	SetEditCurPos(dPos, true, false);
+	//double dPos = GetCursorPosition();
+	//dPos += (double)ct->user / 1000.0;
+	//SetEditCurPos(dPos, true, true);
+	// MoveEditCursor will scrub; leaving the old SetEditCur code above in case there are unintended consequences
+	MoveEditCursor((double)ct->user / 1000.0, false);
 }
 
 void MoveCursorFade(COMMAND_T* ct)

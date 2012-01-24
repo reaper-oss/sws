@@ -1650,12 +1650,12 @@ void DoMoveCurConfPixLeftCts(COMMAND_T*)	{ for (int i=0; i < g_command_params.Pi
 
 void DoMoveCurConfSecsLeft(COMMAND_T*)
 {
-	SetEditCurPos(GetCursorPosition() - g_command_params.CurPosSecsAmount, false, false);
+	MoveEditCursor(-g_command_params.CurPosSecsAmount, false);
 }
 
 void DoMoveCurConfSecsRight(COMMAND_T*)
 {
-	SetEditCurPos(GetCursorPosition() + g_command_params.CurPosSecsAmount,false,false);
+	MoveEditCursor(g_command_params.CurPosSecsAmount, false);
 }
 
 double g_StoreEditCurPos=0.0;

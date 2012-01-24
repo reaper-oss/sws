@@ -1,7 +1,11 @@
+!v2.1.0 #27 (January 23, 2012)
+Remove broken/confusing action "Toggle visibility of selected folder parent's children in mixer".  Replace with macro "sel children"/"toggle mixer vis" if you like.
+Move cursor left/right ms/config seconds now respects preference "When moving edit cursor via action or control surface: Scrub/Do not scrub"
+
 !v2.1.0 #26 (January 4, 2012)
 Fingers MIDI action fixes:
-+ Remove negative Midi Events before commiting
-+ Fix for MIDI event positioning when take has an offset and playrate != 1.0
++Remove negative Midi Events before commiting
++Fix for MIDI event positioning when take has an offset and playrate != 1.0
 
 Issue 426: Fixed snapshots problem with 'frozen' tracks
 On Windows OS: all S&M list views now support grid lines, i.e. they use the color "Window list grid lines" of the Theme Editor

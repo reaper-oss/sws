@@ -28,9 +28,6 @@
 #include "stdafx.h"
 #include "Parameters.h"
 
-#define MAIN_MENU_TEXT "E&xtensions"
-#define MAIN_MENU_POS 8  // where to put main menu.  Negative counts from right, positive counts from left
-
 using namespace std;
 
 void DoMoveEditCursor32ndLeft(COMMAND_T*)
@@ -209,7 +206,6 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Dismantle selected folder" }, "XENAKIOS_SELTRACKTONOTFOLDER", DoSetSelectedTrackNormal,	"Dismantle selected folder", },
 	
 	{ { DEFACCEL, "Xenakios/SWS: Set selected tracks as folder" }, "XENAKIOS_SELTRACKSASFOLDER", DoSetSelectedTracksAsFolder,	"Set selected tracks as folder", },
-	{ { DEFACCEL, "Xenakios/SWS: Toggle visibility of selected folder parent's children in mixer" }, "XENAKIOS_BLEHFOLDDUMP", DoFolderDepthDump,	"Toggle visibility of selected folder parent's children in mixer", },
 	
 	{ { DEFACCEL, "Xenakios/SWS: Rename selected tracks..." }, "XENAKIOS_RENAMETRAXDLG", DoRenameTracksDlg,	"Rename selected tracks...", },
 	{ { DEFACCEL, "Xenakios/SWS: Minimize selected tracks send panel height in mixer" }, "XENAKIOS_MINIZMIXSENDHEIGHT", DoMinMixSendPanelH, NULL, },

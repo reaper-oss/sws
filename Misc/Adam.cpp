@@ -2829,65 +2829,63 @@ void AWCascadeInputs(COMMAND_T* t)
 	
 
 
-void AWSplitXFadeLeft(COMMAND_T* = NULL)
+
+
+void AWSplitXFadeLeft(COMMAND_T* t)
 {
+    Undo_BeginBlock();
+    
 	double cursorPos = GetCursorPositionEx(0);
 	double dFadeLen;
+    int fadeShape;
 	
 	if (g_bv4)
+    {
 		dFadeLen = fabs(*(double*)GetConfigVar("defsplitxfadelen")); // Abs because neg value means "not auto"
+        fadeShape = *(int*)GetConfigVar("defxfadeshape");
+    }
 	else
+    {
 		dFadeLen = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
-	
-	SetEditCurPos2(0, (cursorPos - dFadeLen), 0, 0);
+        fadeShape = *(int*)GetConfigVar("deffadeshape");
+	}
 
-	//turn on autocrossfades on split
-	
-	int fadeStateStore; //V4
-	bool fadeFlag = 0; //V3
-	
-	if (g_bv4)
-	{
-		// V4
-		fadeStateStore = *(int*)(GetConfigVar("splitautoxfade"));
-		
-		*(int*)(GetConfigVar("splitautoxfade")) = 13;
-	}
-	else
-	{
-		// V3
-		double defItemFades = *(double*)(GetConfigVar("deffadelen"));
-		
-		
-		fadeFlag = 0;
-		
-		if (defItemFades > 0)
-		{
-			fadeFlag = 1;
-			Main_OnCommand(41194,0);
-		}
-	}
-	
-	Main_OnCommand(40759, 0); //Split at edit cursor
-	
-	//turn off autocrossfades on split
-	
-	// V4
-	if (g_bv4)
-		*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
-	else
-	{
-		// V3
-		//Revert item fades
-		if (fadeFlag)
-		{
-			Main_OnCommand(41194,0);
-		}
-	}
-	
-	SetEditCurPos2(0, cursorPos, 0, 0);
+    WDL_TypedBuf<MediaItem*> items;
+    SWS_GetSelectedMediaItems(&items);
+    
+    MediaItem* newItem;
+    double dItemLength, dItemStart;
+    
+    for (int i = 0; i < items.GetSize(); i++)
+    {
+        dItemLength = GetMediaItemInfo_Value(items.Get()[i], "D_LENGTH");
+        dItemStart = GetMediaItemInfo_Value(items.Get()[i], "D_POSITION");
+        
+        if (cursorPos > dItemStart && cursorPos < (dItemStart + dItemLength))
+        {
+            newItem = SplitMediaItem(items.Get()[i], (cursorPos - dFadeLen));
+            
+            dItemLength = GetMediaItemInfo_Value(items.Get()[i], "D_LENGTH");
+            SetMediaItemLength(items.Get()[i], (dItemLength+dFadeLen), 0);
+            
+            SetMediaItemInfo_Value(items.Get()[i], "D_FADEOUTLEN_AUTO", dFadeLen);
+            SetMediaItemInfo_Value(items.Get()[i], "C_FADEOUTSHAPE", fadeShape);
 
+            
+            SetMediaItemInfo_Value(newItem, "D_FADEINLEN_AUTO", dFadeLen);
+            SetMediaItemInfo_Value(newItem, "C_FADEINSHAPE", fadeShape);
+        }
+        
+        SetMediaItemInfo_Value(items.Get()[i], "B_UISEL", 0);
+    }       
+    
+    UpdateArrange();
+    
+    Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
+    
 }
+
+
 
 
 void UpdateTrackTimebaseToolbar()

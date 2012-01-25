@@ -2826,10 +2826,13 @@ void AWCascadeInputs(COMMAND_T* t)
 
 }
 
-	
-
-
-
+void AWSelectGroupIfGrouping(COMMAND_T* = NULL)
+{
+    bool groupOverride = *(bool*)GetConfigVar("projgroupover");
+    
+    if (!groupOverride)
+        Main_OnCommand(40034, 0); //Select all items in groups    
+}
 
 void AWSplitXFadeLeft(COMMAND_T* t)
 {
@@ -2849,32 +2852,87 @@ void AWSplitXFadeLeft(COMMAND_T* t)
 		dFadeLen = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
 		fadeShape = *(int*)GetConfigVar("deffadeshape");
 	}
-
+    
+    
+    //turn OFF autocrossfades on split
+	
+	int fadeStateStore; //V4
+	bool fadeFlag = 0; //V3
+	
+	if (g_bv4)
+	{
+		// V4
+		fadeStateStore = *(int*)(GetConfigVar("splitautoxfade"));
+		
+		*(int*)(GetConfigVar("splitautoxfade")) = 12;
+	}
+	else
+	{
+		// V3
+		double defItemFades = *(double*)(GetConfigVar("deffadelen"));
+		
+		
+		fadeFlag = 0;
+		
+		if (defItemFades < 0)
+		{
+			fadeFlag = 1;
+			Main_OnCommand(41194,0);
+		}
+	}
+    
 	WDL_TypedBuf<MediaItem*> items;
 	SWS_GetSelectedMediaItems(&items);
     
 	MediaItem* newItem;
 	double dItemLength, dItemStart;
     
+    int numGroups = AWCountItemGroups();
+    int item1group;
+    
+    
 	for (int i = 0; i < items.GetSize(); i++)
 	{
-	dItemLength = GetMediaItemInfo_Value(items.Get()[i], "D_LENGTH");
-	dItemStart = GetMediaItemInfo_Value(items.Get()[i], "D_POSITION");
+        dItemLength = GetMediaItemInfo_Value(items.Get()[i], "D_LENGTH");
+        dItemStart = GetMediaItemInfo_Value(items.Get()[i], "D_POSITION");
+        item1group = GetMediaItemInfo_Value(items.Get()[i], "I_GROUPID");
 
-	if (cursorPos > dItemStart && cursorPos < (dItemStart + dItemLength))
-	{
-		newItem = SplitMediaItem(items.Get()[i], (cursorPos - dFadeLen));
-		dItemLength = GetMediaItemInfo_Value(items.Get()[i], "D_LENGTH");
-		SetMediaItemLength(items.Get()[i], (dItemLength+dFadeLen), 0);
-		SetMediaItemInfo_Value(items.Get()[i], "D_FADEOUTLEN_AUTO", dFadeLen);
-		SetMediaItemInfo_Value(items.Get()[i], "C_FADEOUTSHAPE", fadeShape);
-		SetMediaItemInfo_Value(newItem, "D_FADEINLEN_AUTO", dFadeLen);
-		SetMediaItemInfo_Value(newItem, "C_FADEINSHAPE", fadeShape);
-	}
+        if (cursorPos > dItemStart && cursorPos < (dItemStart + dItemLength))
+        {
+            newItem = SplitMediaItem(items.Get()[i], (cursorPos - dFadeLen));
+            dItemLength = GetMediaItemInfo_Value(items.Get()[i], "D_LENGTH");
+            SetMediaItemLength(items.Get()[i], (dItemLength+dFadeLen), 0);
+            SetMediaItemInfo_Value(items.Get()[i], "D_FADEOUTLEN_AUTO", dFadeLen);
+            SetMediaItemInfo_Value(items.Get()[i], "C_FADEOUTSHAPE", fadeShape);
+            SetMediaItemInfo_Value(newItem, "D_FADEINLEN_AUTO", dFadeLen);
+            SetMediaItemInfo_Value(newItem, "C_FADEINSHAPE", fadeShape);
+            
+            if(item1group)
+                SetMediaItemInfo_Value(newItem, "I_GROUPID", numGroups + item1group);
+            
+        }
 	
-	SetMediaItemInfo_Value(items.Get()[i], "B_UISEL", 0);
+        SetMediaItemInfo_Value(items.Get()[i], "B_UISEL", 0);
 	}       
 	
+    
+    // restore xfade setting
+	
+	// V4
+	if (g_bv4)
+		*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
+	else
+	{
+		// V3
+		//Revert item fades
+		if (fadeFlag)
+		{
+			Main_OnCommand(41194,0);
+		}
+	}
+    
+    
+    
 	UpdateArrange();
 	Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
 }
@@ -3181,8 +3239,9 @@ static COMMAND_T g_commandTable[] =
 
 	{ { DEFACCEL, "SWS/AW: Render tracks to stereo stem tracks, obeying time selection" },			"SWS_AWRENDERSTEREOSMART",		AWRenderStem_Smart_Stereo, },
 	{ { DEFACCEL, "SWS/AW: Render tracks to mono stem tracks, obeying time selection" },			"SWS_AWRENDERMONOSMART",		AWRenderStem_Smart_Mono, },
-    { { DEFACCEL, "SWS/AW: Cascade selected track inputs" },			"SWS_AWCSCINP",		AWCascadeInputs, },
-	{ { DEFACCEL, "SWS/AW: Split selected items at edit cursor w/crossfade on left" },			"SWS_AWSPLITXFADELEFT",		AWSplitXFadeLeft, },
+    { { DEFACCEL, "SWS/AW: Cascade selected track inputs" },                                        "SWS_AWCSCINP",		AWCascadeInputs, },
+    { { DEFACCEL, "SWS/AW: Select all items in group if grouping is enabled" },                     "SWS_AWSELGROUPIFGROUP",		AWSelectGroupIfGrouping, },
+	{ { DEFACCEL, "SWS/AW: Split selected items at edit cursor w/crossfade on left" },              "SWS_AWSPLITXFADELEFT",		AWSplitXFadeLeft, },
 
 
     { { DEFACCEL, "SWS/AW: Set selected tracks pan mode to stereo balance" },			"SWS_AWPANBALANCENEW",		AWSelTracksPanBalanceNew, },

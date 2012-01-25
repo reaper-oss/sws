@@ -2833,56 +2833,50 @@ void AWCascadeInputs(COMMAND_T* t)
 
 void AWSplitXFadeLeft(COMMAND_T* t)
 {
-    Undo_BeginBlock();
+	Undo_BeginBlock();
     
 	double cursorPos = GetCursorPositionEx(0);
 	double dFadeLen;
-    int fadeShape;
+	int fadeShape;
 	
 	if (g_bv4)
-    {
+	{
 		dFadeLen = fabs(*(double*)GetConfigVar("defsplitxfadelen")); // Abs because neg value means "not auto"
-        fadeShape = *(int*)GetConfigVar("defxfadeshape");
-    }
+		fadeShape = *(int*)GetConfigVar("defxfadeshape");
+	}
 	else
-    {
+	{
 		dFadeLen = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
-        fadeShape = *(int*)GetConfigVar("deffadeshape");
+		fadeShape = *(int*)GetConfigVar("deffadeshape");
 	}
 
-    WDL_TypedBuf<MediaItem*> items;
-    SWS_GetSelectedMediaItems(&items);
+	WDL_TypedBuf<MediaItem*> items;
+	SWS_GetSelectedMediaItems(&items);
     
-    MediaItem* newItem;
-    double dItemLength, dItemStart;
+	MediaItem* newItem;
+	double dItemLength, dItemStart;
     
-    for (int i = 0; i < items.GetSize(); i++)
-    {
-        dItemLength = GetMediaItemInfo_Value(items.Get()[i], "D_LENGTH");
-        dItemStart = GetMediaItemInfo_Value(items.Get()[i], "D_POSITION");
-        
-        if (cursorPos > dItemStart && cursorPos < (dItemStart + dItemLength))
-        {
-            newItem = SplitMediaItem(items.Get()[i], (cursorPos - dFadeLen));
-            
-            dItemLength = GetMediaItemInfo_Value(items.Get()[i], "D_LENGTH");
-            SetMediaItemLength(items.Get()[i], (dItemLength+dFadeLen), 0);
-            
-            SetMediaItemInfo_Value(items.Get()[i], "D_FADEOUTLEN_AUTO", dFadeLen);
-            SetMediaItemInfo_Value(items.Get()[i], "C_FADEOUTSHAPE", fadeShape);
+	for (int i = 0; i < items.GetSize(); i++)
+	{
+	dItemLength = GetMediaItemInfo_Value(items.Get()[i], "D_LENGTH");
+	dItemStart = GetMediaItemInfo_Value(items.Get()[i], "D_POSITION");
 
-            
-            SetMediaItemInfo_Value(newItem, "D_FADEINLEN_AUTO", dFadeLen);
-            SetMediaItemInfo_Value(newItem, "C_FADEINSHAPE", fadeShape);
-        }
-        
-        SetMediaItemInfo_Value(items.Get()[i], "B_UISEL", 0);
-    }       
-    
-    UpdateArrange();
-    
-    Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
-    
+	if (cursorPos > dItemStart && cursorPos < (dItemStart + dItemLength))
+	{
+		newItem = SplitMediaItem(items.Get()[i], (cursorPos - dFadeLen));
+		dItemLength = GetMediaItemInfo_Value(items.Get()[i], "D_LENGTH");
+		SetMediaItemLength(items.Get()[i], (dItemLength+dFadeLen), 0);
+		SetMediaItemInfo_Value(items.Get()[i], "D_FADEOUTLEN_AUTO", dFadeLen);
+		SetMediaItemInfo_Value(items.Get()[i], "C_FADEOUTSHAPE", fadeShape);
+		SetMediaItemInfo_Value(newItem, "D_FADEINLEN_AUTO", dFadeLen);
+		SetMediaItemInfo_Value(newItem, "C_FADEINSHAPE", fadeShape);
+	}
+	
+	SetMediaItemInfo_Value(items.Get()[i], "B_UISEL", 0);
+	}       
+	
+	UpdateArrange();
+	Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
 }
 
 

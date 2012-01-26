@@ -128,7 +128,6 @@
 		22AF6E4012308C3A0017808F /* png.h in Headers */ = {isa = PBXBuildFile; fileRef = 22AF6E2C12308C3A0017808F /* png.h */; };
 		22AF6E4112308C3A0017808F /* pngconf.h in Headers */ = {isa = PBXBuildFile; fileRef = 22AF6E2D12308C3A0017808F /* pngconf.h */; };
 		22AF6E4212308C3A0017808F /* pngerror.c in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E2E12308C3A0017808F /* pngerror.c */; };
-		22AF6E4312308C3A0017808F /* pnggccrd.c in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E2F12308C3A0017808F /* pnggccrd.c */; };
 		22AF6E4412308C3A0017808F /* pngget.c in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E3012308C3A0017808F /* pngget.c */; };
 		22AF6E4512308C3A0017808F /* pngmem.c in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E3112308C3A0017808F /* pngmem.c */; };
 		22AF6E4612308C3A0017808F /* pngpread.c in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E3212308C3A0017808F /* pngpread.c */; };
@@ -138,7 +137,6 @@
 		22AF6E4A12308C3A0017808F /* pngrutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E3612308C3A0017808F /* pngrutil.c */; };
 		22AF6E4B12308C3A0017808F /* pngset.c in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E3712308C3A0017808F /* pngset.c */; };
 		22AF6E4D12308C3A0017808F /* pngtrans.c in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E3912308C3A0017808F /* pngtrans.c */; };
-		22AF6E4E12308C3A0017808F /* pngvcrd.c in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E3A12308C3A0017808F /* pngvcrd.c */; };
 		22AF6E4F12308C3A0017808F /* pngwio.c in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E3B12308C3A0017808F /* pngwio.c */; };
 		22AF6E5012308C3A0017808F /* pngwrite.c in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E3C12308C3A0017808F /* pngwrite.c */; };
 		22AF6E5112308C3A0017808F /* pngwtran.c in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E3D12308C3A0017808F /* pngwtran.c */; };
@@ -395,7 +393,6 @@
 		22AF6E2C12308C3A0017808F /* png.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = png.h; path = ../WDL/libpng/png.h; sourceTree = SOURCE_ROOT; };
 		22AF6E2D12308C3A0017808F /* pngconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pngconf.h; path = ../WDL/libpng/pngconf.h; sourceTree = SOURCE_ROOT; };
 		22AF6E2E12308C3A0017808F /* pngerror.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pngerror.c; path = ../WDL/libpng/pngerror.c; sourceTree = SOURCE_ROOT; };
-		22AF6E2F12308C3A0017808F /* pnggccrd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pnggccrd.c; path = ../WDL/libpng/pnggccrd.c; sourceTree = SOURCE_ROOT; };
 		22AF6E3012308C3A0017808F /* pngget.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pngget.c; path = ../WDL/libpng/pngget.c; sourceTree = SOURCE_ROOT; };
 		22AF6E3112308C3A0017808F /* pngmem.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pngmem.c; path = ../WDL/libpng/pngmem.c; sourceTree = SOURCE_ROOT; };
 		22AF6E3212308C3A0017808F /* pngpread.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pngpread.c; path = ../WDL/libpng/pngpread.c; sourceTree = SOURCE_ROOT; };
@@ -405,7 +402,6 @@
 		22AF6E3612308C3A0017808F /* pngrutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pngrutil.c; path = ../WDL/libpng/pngrutil.c; sourceTree = SOURCE_ROOT; };
 		22AF6E3712308C3A0017808F /* pngset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pngset.c; path = ../WDL/libpng/pngset.c; sourceTree = SOURCE_ROOT; };
 		22AF6E3912308C3A0017808F /* pngtrans.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pngtrans.c; path = ../WDL/libpng/pngtrans.c; sourceTree = SOURCE_ROOT; };
-		22AF6E3A12308C3A0017808F /* pngvcrd.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pngvcrd.c; path = ../WDL/libpng/pngvcrd.c; sourceTree = SOURCE_ROOT; };
 		22AF6E3B12308C3A0017808F /* pngwio.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pngwio.c; path = ../WDL/libpng/pngwio.c; sourceTree = SOURCE_ROOT; };
 		22AF6E3C12308C3A0017808F /* pngwrite.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pngwrite.c; path = ../WDL/libpng/pngwrite.c; sourceTree = SOURCE_ROOT; };
 		22AF6E3D12308C3A0017808F /* pngwtran.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pngwtran.c; path = ../WDL/libpng/pngwtran.c; sourceTree = SOURCE_ROOT; };
@@ -850,7 +846,6 @@
 				22AF6E2C12308C3A0017808F /* png.h */,
 				22AF6E2D12308C3A0017808F /* pngconf.h */,
 				22AF6E2E12308C3A0017808F /* pngerror.c */,
-				22AF6E2F12308C3A0017808F /* pnggccrd.c */,
 				22AF6E3012308C3A0017808F /* pngget.c */,
 				22AF6E3112308C3A0017808F /* pngmem.c */,
 				22AF6E3212308C3A0017808F /* pngpread.c */,
@@ -860,7 +855,6 @@
 				22AF6E3612308C3A0017808F /* pngrutil.c */,
 				22AF6E3712308C3A0017808F /* pngset.c */,
 				22AF6E3912308C3A0017808F /* pngtrans.c */,
-				22AF6E3A12308C3A0017808F /* pngvcrd.c */,
 				22AF6E3B12308C3A0017808F /* pngwio.c */,
 				22AF6E3C12308C3A0017808F /* pngwrite.c */,
 				22AF6E3D12308C3A0017808F /* pngwtran.c */,
@@ -1334,7 +1328,6 @@
 				22AF6E2312308BEE0017808F /* lice_textnew.cpp in Sources */,
 				22AF6E3F12308C3A0017808F /* png.c in Sources */,
 				22AF6E4212308C3A0017808F /* pngerror.c in Sources */,
-				22AF6E4312308C3A0017808F /* pnggccrd.c in Sources */,
 				22AF6E4412308C3A0017808F /* pngget.c in Sources */,
 				22AF6E4512308C3A0017808F /* pngmem.c in Sources */,
 				22AF6E4612308C3A0017808F /* pngpread.c in Sources */,
@@ -1344,7 +1337,6 @@
 				22AF6E4A12308C3A0017808F /* pngrutil.c in Sources */,
 				22AF6E4B12308C3A0017808F /* pngset.c in Sources */,
 				22AF6E4D12308C3A0017808F /* pngtrans.c in Sources */,
-				22AF6E4E12308C3A0017808F /* pngvcrd.c in Sources */,
 				22AF6E4F12308C3A0017808F /* pngwio.c in Sources */,
 				22AF6E5012308C3A0017808F /* pngwrite.c in Sources */,
 				22AF6E5112308C3A0017808F /* pngwtran.c in Sources */,

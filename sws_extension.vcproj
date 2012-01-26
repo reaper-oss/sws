@@ -652,7 +652,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -671,7 +671,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -698,7 +697,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -717,7 +716,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -740,7 +738,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -759,7 +757,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -782,7 +779,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -801,7 +798,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -828,7 +824,7 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -847,7 +843,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -873,7 +868,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -883,6 +879,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -892,7 +889,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -923,7 +920,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -933,6 +931,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -942,49 +941,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Test|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\WDL\libpng\pnggccrd.c"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Test|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1007,7 +964,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1017,6 +975,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1026,7 +985,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1049,7 +1008,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1059,6 +1019,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1068,7 +1029,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1091,7 +1052,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1101,6 +1063,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1110,7 +1073,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1133,7 +1096,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1143,6 +1107,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1152,7 +1117,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1175,7 +1140,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1185,6 +1151,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1194,7 +1161,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1217,7 +1184,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1227,6 +1195,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1236,7 +1205,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1259,7 +1228,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1269,6 +1239,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1278,7 +1249,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1301,7 +1272,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1311,6 +1283,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1320,7 +1293,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1343,7 +1316,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1353,6 +1327,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1362,49 +1337,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Test|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="..\WDL\libpng\pngvcrd.c"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Release|x64"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								UsePrecompiledHeader="0"
-								WarningLevel="2"
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Test|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1427,7 +1360,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1437,6 +1371,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1446,7 +1381,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1469,7 +1404,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1479,6 +1415,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1488,7 +1425,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1511,7 +1448,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1521,6 +1459,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1530,7 +1469,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1553,7 +1492,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW;PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
+								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1563,6 +1503,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1572,7 +1513,7 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								PreprocessorDefinitions="PNG_WRITE_SUPPORTED"
+								AdditionalIncludeDirectories="../WDL/zlib"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>

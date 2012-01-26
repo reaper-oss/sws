@@ -2895,7 +2895,7 @@ void AWSplitXFadeLeft(COMMAND_T* t)
 	{
         dItemLength = GetMediaItemInfo_Value(items.Get()[i], "D_LENGTH");
         dItemStart = GetMediaItemInfo_Value(items.Get()[i], "D_POSITION");
-        item1group = GetMediaItemInfo_Value(items.Get()[i], "I_GROUPID");
+        item1group = (int)GetMediaItemInfo_Value(items.Get()[i], "I_GROUPID");
 
         if (cursorPos > dItemStart && cursorPos < (dItemStart + dItemLength))
         {

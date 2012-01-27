@@ -2889,6 +2889,8 @@ void AWSplitXFadeLeft(COMMAND_T* t)
     
     int numGroups = AWCountItemGroups();
     int item1group;
+    int lastGroup;
+    int groupAdd = 0;
     
     
 	for (int i = 0; i < items.GetSize(); i++)
@@ -2908,8 +2910,15 @@ void AWSplitXFadeLeft(COMMAND_T* t)
             SetMediaItemInfo_Value(newItem, "C_FADEINSHAPE", fadeShape);
             
             if(item1group)
-                SetMediaItemInfo_Value(newItem, "I_GROUPID", numGroups + item1group);
-            
+            {
+                if (item1group != lastGroup)
+                {
+                    lastGroup = item1group;
+                    groupAdd++;
+                }
+                
+                SetMediaItemInfo_Value(newItem, "I_GROUPID", numGroups + groupAdd);
+            }
         }
 	
         SetMediaItemInfo_Value(items.Get()[i], "B_UISEL", 0);

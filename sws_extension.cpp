@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_extension.cpp
 /
-/ Copyright (c) 2011 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -49,22 +49,14 @@
 #include "Fingers/FNG_client.h"
 #include "Autorender/Autorender.h"
 
-#define SWS_NEW_ACTION_STORAGE
 
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
-#ifndef SWS_NEW_ACTION_STORAGE
-static WDL_PtrList<COMMAND_T> g_commands;
-static WDL_PtrList<WDL_String> g_cmdFile;
-// Not strictly necessary but saves going through the whole
-// command array when asking about toggle state
-static WDL_PtrList<COMMAND_T> g_toggles;
-#else
-void freeCmdFileItem(WDL_String* p) {delete p;}
-static WDL_IntKeyedArray<WDL_String*> g_cmdFile(freeCmdFileItem);
-static WDL_IntKeyedArray<COMMAND_T*> g_commands; // no valdispose function, use SWSFreeCommand()
-#endif
+
+void freeCmdFilesValue(WDL_String* p) {delete p;}
+static WDL_IntKeyedArray<WDL_String*> g_cmdFiles(freeCmdFilesValue);
+static WDL_IntKeyedArray<COMMAND_T*> g_commands; // no valdispose (cmds can be allocated in different ways)
 
 int g_iFirstCommand = 0;
 int g_iLastCommand = 0;
@@ -96,19 +88,6 @@ bool hookCommandProc(int command, int flag)
 	if (command < g_iFirstCommand || command > g_iLastCommand)
 		return false;
 
-#ifndef SWS_NEW_ACTION_STORAGE
-	for (int i = 0; i < g_commands.GetSize(); i++)
-	{
-		COMMAND_T* cmd = g_commands.Get(i);
-		if (cmd->accel.accel.cmd && command == cmd->accel.accel.cmd && cmd->doCommand != SWS_NOOP)
-		{
-			bReentrancyCheck = true;
-			cmd->doCommand(cmd);
-			bReentrancyCheck = false;
-			return true;
-		}
-	}
-#else
 	if (COMMAND_T* cmd = g_commands.Get(command, NULL))
 	{
 		if (cmd->accel.accel.cmd && cmd->doCommand != SWS_NOOP)
@@ -119,66 +98,54 @@ bool hookCommandProc(int command, int flag)
 			return true;
 		}
 	}
-#endif
 	return false;
 }
 
 // 1) Get command ID from Reaper
-// 2) Add keyboard accelerator and add to the "action" list
-int SWSRegisterCommand2(COMMAND_T* pCommand, const char* cFile)
+// 2) Add keyboard accelerator (with localized action name) and add to the "action" list
+int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool _localize)
 {
 	if (pCommand->doCommand)
 	{
-		if (!(pCommand->accel.accel.cmd = plugin_register("command_id", (void*)pCommand->id)))
-			return 0;
-		if (!plugin_register("gaccel",&pCommand->accel))
-			return 0;
-#ifndef SWS_NEW_ACTION_STORAGE
-		if (pCommand->getEnabled)
-			g_toggles.Add(pCommand);
-#endif
+		if (!cmdId && !(cmdId = plugin_register("command_id", (void*)pCommand->id))) return 0;
+		pCommand->accel.accel.cmd = cmdId;
 
-		if (!g_iFirstCommand || g_iFirstCommand > pCommand->accel.accel.cmd)
-			g_iFirstCommand = pCommand->accel.accel.cmd;
-		if (pCommand->accel.accel.cmd > g_iLastCommand)
-			g_iLastCommand = pCommand->accel.accel.cmd;
-#ifndef SWS_NEW_ACTION_STORAGE
-		g_commands.Add(pCommand);
-		g_cmdFile.Add(new WDL_String(cFile));
-#else
-		g_commands.Insert(pCommand->accel.accel.cmd, pCommand);
-		g_cmdFile.Insert(pCommand->accel.accel.cmd, new WDL_String(cFile));
-#endif
+		// localized action name, if needed
+		const char* defaultName = pCommand->accel.desc;
+		if (_localize)
+			// no-op when no LangPack file is defined + no alloc here
+			pCommand->accel.desc = GetLocalizedActionName(pCommand->id, pCommand->accel.desc);
+
+		if (!plugin_register("gaccel", &pCommand->accel)) return 0;
+
+		// now that it is registered, restore the default SWS action name
+		if (pCommand->accel.desc != defaultName)
+			pCommand->accel.desc = defaultName;
+
+		if (!g_iFirstCommand || g_iFirstCommand > cmdId)
+			g_iFirstCommand = cmdId;
+		if (cmdId > g_iLastCommand)
+			g_iLastCommand = cmdId;
+
+		g_commands.Insert(cmdId, pCommand);
+		g_cmdFiles.Insert(cmdId, new WDL_String(cFile));
 	}
-	return pCommand->accel.accel.cmd;
+	return cmdId;
 }
 
 // For each item in table call SWSRegisterCommand
-int SWSRegisterCommands2(COMMAND_T* pCommands, const char* cFile)
+int SWSRegisterCmds(COMMAND_T* pCommands, const char* cFile, bool _localize)
 {
-	// Register our commands from table
 	int i = 0;
 	while(pCommands[i].id != LAST_COMMAND)
-	{
-		SWSRegisterCommand2(&pCommands[i], cFile);
-		i++;
-	}
+		SWSRegisterCmd(&pCommands[i++], cFile, 0, _localize);
 	return 1;
 }
 
-int SWSRegisterCommandExt2(void (*doCommand)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile)
-{
-	COMMAND_T* ct = new COMMAND_T;
-	memset(ct, 0, sizeof(COMMAND_T));
-	ct->accel.desc = _strdup(cDesc);
-	ct->id = _strdup(cID);
-	ct->doCommand = doCommand;
-	ct->user = user;
-	return SWSRegisterCommand2(ct, cFile);
-}
-
-// register with cmdId (if != 0, register a new one otherwise)
-int SWSRegisterCommandExt3(void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), int cmdId, const char* cID, const char* cDesc, INT_PTR user, const char* cFile)
+// Make and register a dynamic action (created at runtime)
+// If cmdId==0, get command ID from Reaper (use the provided cmdId otherwise)
+// Note: SWSFreeUnregisterDynamicCmd() can be used to free/unregister such an action
+int SWSCreateRegisterDynamicCmd(int cmdId, void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile, bool _localize)
 {
 	COMMAND_T* ct = new COMMAND_T;
 	memset(ct, 0, sizeof(COMMAND_T));
@@ -187,64 +154,30 @@ int SWSRegisterCommandExt3(void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COM
 	ct->doCommand = doCommand;
 	ct->getEnabled = getEnabled;
 	ct->user = user;
-
-	if (ct->doCommand)
-	{
-		if (!cmdId && !(cmdId = plugin_register("command_id", (void*)ct->id)))
-			return 0;
-		ct->accel.accel.cmd = cmdId;
-		if (!plugin_register("gaccel",&ct->accel))
-			return 0;
-#ifndef SWS_NEW_ACTION_STORAGE
-		if (ct->getEnabled)
-			g_toggles.Add(ct);
-#endif
-		if (!g_iFirstCommand || g_iFirstCommand > ct->accel.accel.cmd)
-			g_iFirstCommand = ct->accel.accel.cmd;
-		if (ct->accel.accel.cmd > g_iLastCommand)
-			g_iLastCommand = ct->accel.accel.cmd;
-#ifndef SWS_NEW_ACTION_STORAGE
-		g_commands.Add(ct);
-		g_cmdFile.Add(new WDL_String(cFile));
-#else
-		g_commands.Insert(cmdId, ct);
-		g_cmdFile.Insert(cmdId, new WDL_String(cFile));
-#endif
-	}
-	return ct->accel.accel.cmd;
+	return SWSRegisterCmd(ct, cFile, cmdId, _localize);
 }
 
-// Returns the COMMAND_T entry so it can be deleted if necessary
-COMMAND_T* SWSUnregisterCommand(int id)
+void SWSFreeUnregisterDynamicCmd(int id)
 {
-#ifndef SWS_NEW_ACTION_STORAGE
-	// First check the toggle command list
-	for (int i = 0; i < g_toggles.GetSize(); i++)
-		if (g_toggles.Get(i)->accel.accel.cmd == id)
-			g_toggles.Delete(i--);
-
-	for (int i = 0; i < g_commands.GetSize(); i++)
+	if (COMMAND_T* ct = SWSUnregisterCmd(id))
 	{
-		if (g_commands.Get(i)->accel.accel.cmd == id)
-		{
-			COMMAND_T* cmd = g_commands.Get(i);
-			plugin_register("-gaccel", &cmd->accel);
-			plugin_register("-command_id", cmd->id);
-			g_commands.Delete(i);
-			g_cmdFile.Delete(i);
-			return cmd;
-		}
+		free((void*)ct->accel.desc);
+		free((void*)ct->id);
+		DELETE_NULL(ct);
 	}
-#else
-	if (COMMAND_T* cmd = g_commands.Get(id, NULL))
+}
+
+// Returns the COMMAND_T entry (so it can be freed if necessary)
+COMMAND_T* SWSUnregisterCmd(int id)
+{
+	if (COMMAND_T* ct = g_commands.Get(id, NULL))
 	{
-		plugin_register("-gaccel", &cmd->accel);
+		plugin_register("-gaccel", &ct->accel);
 		plugin_register("-command_id", &id);
 		g_commands.Delete(id);
-		g_cmdFile.Delete(id);
-		return cmd;
+		g_cmdFiles.Delete(id);
+		return ct;
 	}
-#endif
 	return NULL;
 }
 
@@ -261,24 +194,15 @@ void ActionsList(COMMAND_T*)
 		fputs("Action,File,CmdID,CmdStr\n", f);
 		if (f)
 		{
-#ifndef SWS_NEW_ACTION_STORAGE
-			for (int i = 0; i < g_commands.GetSize(); i++)
-			{
-				COMMAND_T* cmd = g_commands.Get(i);
-				sprintf(cBuf, "\"%s\",%s,%d,_%s\n", cmd->accel.desc, g_cmdFile.Get(i)->Get(), cmd->accel.accel.cmd, cmd->id);
-				fputs(cBuf, f);
-			}
-#else
 			for (int i = 0; i < g_commands.GetSize(); i++)
 			{
 				if (COMMAND_T* cmd = g_commands.Enumerate(i, NULL, NULL))
 				{
-					WDL_String* pFn = g_cmdFile.Get(cmd->accel.accel.cmd, NULL);
+					WDL_String* pFn = g_cmdFiles.Get(cmd->accel.accel.cmd, NULL);
 					sprintf(cBuf, "\"%s\",%s,%d,_%s\n", cmd->accel.desc, pFn ? pFn->Get() : "", cmd->accel.accel.cmd, cmd->id);
 					fputs(cBuf, f);
 				}
 			}
-#endif
 			fclose(f);
 		}
 	}
@@ -286,17 +210,6 @@ void ActionsList(COMMAND_T*)
 
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMenuText)
 {
-#ifndef SWS_NEW_ACTION_STORAGE
-	for (int i = 0; i < g_commands.GetSize(); i++)
-	{
-		if (g_commands.Get(i)->doCommand == cmdFunc && g_commands.Get(i)->user == user)
-		{
-			if (pMenuText)
-				*pMenuText = g_commands.Get(i)->menuText;
-			return g_commands.Get(i)->accel.accel.cmd;
-		}
-	}
-#else
 	for (int i = 0; i < g_commands.GetSize(); i++)
 	{
 		if (COMMAND_T* cmd = g_commands.Enumerate(i, NULL, NULL))
@@ -309,20 +222,12 @@ int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user, const char** pMen
 			}
 		}
 	}
-#endif
 	return 0;
 }
 
-COMMAND_T* SWSGetCommandByID(int cmdId)
-{
-#ifndef SWS_NEW_ACTION_STORAGE
-	for (int i = 0; i < g_commands.GetSize(); i++)
-		if (cmdId == g_commands.Get(i)->accel.accel.cmd)
-			return g_commands.Get(i);
-#else
+COMMAND_T* SWSGetCommandByID(int cmdId) {
 	if (cmdId >= g_iFirstCommand && cmdId <= g_iLastCommand)
 		return g_commands.Get(cmdId, NULL);
-#endif
 	return NULL;
 }
 
@@ -361,15 +266,9 @@ HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIn
 //  1 = action belongs to this extension and is currently set to "on"
 int toggleActionHook(int iCmd)
 {
-#ifndef SWS_NEW_ACTION_STORAGE
-	for (int i = 0; i < g_toggles.GetSize(); i++)
-		if (g_toggles.Get(i)->accel.accel.cmd == iCmd) 
-			return g_toggles.Get(i)->getEnabled(g_toggles.Get(i)) ? 1 : 0;
-#else
 	if (iCmd >= g_iFirstCommand && iCmd <= g_iLastCommand)
-			if (COMMAND_T* ct = g_commands.Get(iCmd, NULL))
-				return (ct->getEnabled ? (ct->getEnabled(ct) ? 1 : 0) : -1);
-#endif
+		if (COMMAND_T* ct = g_commands.Get(iCmd, NULL))
+			return (ct->getEnabled ? (ct->getEnabled(ct) ? 1 : 0) : -1);
 	return -1;
 }
 
@@ -389,24 +288,14 @@ static void swsMenuHook(const char* menustr, HMENU hMenu, int flag)
 			GetMenuItemInfo(hMenu, i, true, &mi);
 			if (mi.hSubMenu)
 				swsMenuHook(menustr, mi.hSubMenu, flag);
-			else if (mi.wID >= (UINT)g_iFirstCommand && mi.wID <= (UINT)g_iLastCommand)
-#ifndef SWS_NEW_ACTION_STORAGE
-				for (int j = 0; j < g_toggles.GetSize(); j++)
-				{
-					COMMAND_T* t = g_toggles.Get(j);
-					if (t->accel.accel.cmd == mi.wID)
-						CheckMenuItem(hMenu, i, MF_BYPOSITION | (t->getEnabled(t) ? MF_CHECKED : MF_UNCHECKED));
-				}
-#else
+			else if (mi.wID >= (UINT)g_iFirstCommand && mi.wID <= (UINT)g_iLastCommand) {
 				if (COMMAND_T* t = g_commands.Get(mi.wID, NULL))
 					CheckMenuItem(hMenu, i, MF_BYPOSITION | (t->getEnabled && t->getEnabled(t) ? MF_CHECKED : MF_UNCHECKED));
-#endif
+			}
 		}
 	}
 	else if (!strcmp(menustr, "Main extensions"))
-	{
 		SWSCreateExtensionsMenu(hMenu);
-	}
 }
 
 
@@ -681,8 +570,8 @@ extern "C"
 		IMPAPI(Main_OnCommand);
 		IMPAPI(Main_OnCommandEx);
 		IMPAPI(Main_openProject);
-		IMPAPI(MainThread_LockTracks);
-		IMPAPI(MainThread_UnlockTracks);
+		*(void**)&MainThread_LockTracks = rec->GetFunc("MainThread_LockTracks"); // v4 only
+		*(void**)&MainThread_UnlockTracks = rec->GetFunc("MainThread_UnlockTracks"); // v4 only
 		IMPAPI(MIDIEditor_GetActive);
 		IMPAPI(MIDIEditor_GetMode);
 		IMPAPI(MIDIEditor_GetTake);
@@ -704,7 +593,7 @@ extern "C"
 		IMPAPI(PCM_Source_CreateFromType);
 		IMPAPI(PlayPreview);
 		IMPAPI(PlayTrackPreview);
-		IMPAPI(PlayTrackPreview2Ex);
+		*(void**)&PlayTrackPreview2Ex = rec->GetFunc("PlayTrackPreview2Ex"); // v4 only
 		IMPAPI(plugin_getFilterList);
 		IMPAPI(plugin_register);
 		IMPAPI(projectconfig_var_addr);

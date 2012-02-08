@@ -32,13 +32,12 @@
 #define _SNM_LIVECFGVIEW_H_
 
 
-#define SNM_LIVECFG_NB_CONFIGS			8
 #define SNM_LIVECFG_MAX_PRESET_COUNT	2048 //JFB would be ideal: (SNM_LIVECFG_CLEAR_PRESETS_MSG - SNM_LIVECFG_SET_PRESETS_MSG)
 
 
 class MidiLiveItem {
 public:
-	MidiLiveItem(int _cc, const char* _desc, MediaTrack* _track, const char* _trTemplate, const char* _fxChain, const char* _presets, const char* _onAction, const char* _offAction)
+	MidiLiveItem(int _cc, const char* _desc="", MediaTrack* _track=NULL, const char* _trTemplate="", const char* _fxChain="", const char* _presets="", const char* _onAction="", const char* _offAction="")
 		: m_cc(_cc),m_desc(_desc),m_track(_track),m_trTemplate(_trTemplate),m_fxChain(_fxChain),m_presets(_presets),m_onAction(_onAction),m_offAction(_offAction) {}
 	bool IsDefault(){return (!m_track && !m_desc.GetLength() && !m_trTemplate.GetLength() && !m_fxChain.GetLength() && !m_presets.GetLength() && !m_onAction.GetLength() && !m_offAction.GetLength());}
 	void Clear() {m_track=NULL; m_desc.Set(""); m_trTemplate.Set(""); m_fxChain.Set(""); m_presets.Set(""); m_onAction.Set(""); m_offAction.Set("");}
@@ -49,6 +48,7 @@ public:
 };
 
 
+//JFB TODO [] -> WDL_PtrList
 class MidiLiveConfig {
 public:
 	MidiLiveConfig() {Clear();}
@@ -88,6 +88,7 @@ protected:
 	void OnItemSelChanged(SWS_ListItem* item, int iState);
 	void OnItemDblClk(SWS_ListItem* item, int iCol);
 	int OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2);
+//	void GetItemTooltip(SWS_ListItem* item, char* str, int iStrMax);
 };
 
 
@@ -110,6 +111,7 @@ protected:
 	int OnKey(MSG* msg, int iKeyState);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
+	bool Insert();
 
 	WDL_VirtualComboBox m_cbConfig, m_cbInputTr;
 	WDL_VirtualIconButton m_btnEnable, m_btnMuteOthers, m_btnAutoSelect;

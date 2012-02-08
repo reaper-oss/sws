@@ -29,7 +29,6 @@
 // for the SWS extension.
 
 #include "stdafx.h"
-#include "SnM/SnM_Actions.h" //JFB!!! to be removed if/when the cycle action editor will be ok on OSX
 
 // *************************** UTILITY FUNCTIONS ***************************
 
@@ -155,6 +154,9 @@ int SWSGetMenuPosFromID(HMENU hMenu, UINT id)
 
 void SWSCreateExtensionsMenu(HMENU hMenu)
 {
+	if (GetMenuItemCount(hMenu))
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+
 	// Create the common "Extensions" menu 
 	AddToMenu(hMenu, "About SWS Extensions", NamedCommandLookup("_SWS_ABOUT"));
 	AddToMenu(hMenu, "Auto Color/Icon", NamedCommandLookup("_SWSAUTOCOLOR_OPEN"));
@@ -169,8 +171,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 
 	AddToMenu(hMenu, "Command parameters", NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));
 	AddToMenu(hMenu, "Cue Buss generator", NamedCommandLookup("_S&M_SENDS4"));
-	if (g_SNMbeta)
-		AddToMenu(hMenu, "Cycle Action editor...", NamedCommandLookup("_S&M_CREATE_CYCLACTION"));
+	AddToMenu(hMenu, "Cycle Action editor...", NamedCommandLookup("_S&M_CYCLEDITOR"));
 	AddToMenu(hMenu, "Envelope processor...", NamedCommandLookup("_PADRE_ENVPROC"));
 	AddToMenu(hMenu, "Fill gaps...", NamedCommandLookup("_SWS_AWFILLGAPSADV"));
 	AddToMenu(hMenu, "Find", NamedCommandLookup("_S&M_SHOWFIND"));
@@ -216,7 +217,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMarkerSubMenu, "Delete all markers", NamedCommandLookup("_SWSMARKERLIST9"));
 	AddToMenu(hMarkerSubMenu, "Delete all regions", NamedCommandLookup("_SWSMARKERLIST10"));
 
-	AddToMenu(hMenu, "Notes/Subtitles/Help", NamedCommandLookup("_S&M_SHOWNOTESHELP"));
+	AddToMenu(hMenu, "Notes/Subtitles/Help", NamedCommandLookup("_S&M_SHOW_NOTES_VIEW"));
 	AddToMenu(hMenu, "Project List", NamedCommandLookup("_SWS_PROJLIST_OPEN"));
 
 	HMENU hPrjMgmtSubMenu = CreatePopupMenu();
@@ -229,12 +230,19 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hPrjMgmtSubMenu, "(related projects list)", NamedCommandLookup("_SWS_OPENRELATED1"));
 
 	AddToMenu(hMenu, "ReaConsole...", NamedCommandLookup("_SWSCONSOLE"));
-	AddToMenu(hMenu, "Resources", NamedCommandLookup("_S&M_SHOWFXCHAINSLOTS"));
+	AddToMenu(hMenu, "Resources", NamedCommandLookup("_S&M_SHOW_RESOURCES_VIEW"));
 	AddToMenu(hMenu, "Snapshots", NamedCommandLookup("_SWSSNAPSHOT_OPEN"));
 	AddToMenu(hMenu, "Tracklist", NamedCommandLookup("_SWSTL_OPEN"));
 	AddToMenu(hMenu, "Zoom preferences", NamedCommandLookup("_SWS_ZOOMPREFS"));
 
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
+	HMENU hLangPackSubMenu = CreatePopupMenu();
+	AddSubMenu(hMenu, hLangPackSubMenu, "SWS Language file");
+	AddToMenu(hLangPackSubMenu, "Load LangPack file...", NamedCommandLookup("_S&M_LOAD_LANGPACK"));
+	AddToMenu(hLangPackSubMenu, "Generate LangPack file...", NamedCommandLookup("_S&M_GEN_LANGPACK"));
+	AddToMenu(hLangPackSubMenu, "Upgrade current LangPack file", NamedCommandLookup("_S&M_UPGRADE_LANGPACK"));
+	AddToMenu(hLangPackSubMenu, "Reset to factory settings (English)", NamedCommandLookup("_S&M_RESET_LANGPACK"));
+
 	HMENU hOptionsSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hOptionsSubMenu, "SWS Options");
 	AddToMenu(hOptionsSubMenu, "Enable auto coloring", NamedCommandLookup("_SWSAUTOCOLOR_ENABLE"));

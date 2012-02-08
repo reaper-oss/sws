@@ -604,6 +604,7 @@ void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch,
 	*_tolerantMatch = false;
 	*_strictMatch = false;
 
+//JFB!!! comment this bit? would be more futur proof? => _expectedNumTokens to remove!
 	if (_expectedNumTokens >= 0 && _expectedNumTokens != _parsedNumTokens)
 		return;
 

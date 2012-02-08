@@ -313,7 +313,7 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 	}
 
 	m_txtResult.SetFont(font);
-	m_txtResult.SetText(g_notFound ? "Not found !" : "");
+	m_txtResult.SetText(g_notFound ? "Not found!" : "");
 	SNM_AutoVWndPosition(&m_txtResult, NULL, _r, &x0, y0, h);
 }
 

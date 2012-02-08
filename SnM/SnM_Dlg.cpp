@@ -76,6 +76,7 @@ void SNM_ToolbarButton::OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int orig
 			font->DrawText(drawbm,m_textlbl.Get(),-1,&r2,f);
 		}
 	}
+
 }
 
 int SNM_ImageVWnd::GetWidth() {
@@ -283,6 +284,11 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 		skin.image = it->toolbar_blank;
 		skin.olimage = it->toolbar_overlay;
 		WDL_VirtualIconButton_PreprocessSkinConfig(&skin);
+
+		//JFB!!! most stupid hack since WDL 65568bc (overlay == main image size)
+		for (int i=0; i<4 ; i++)
+			skin.image_ltrb_ol[i]=0;
+
 		_btn->SetIcon(&skin);
 		_btn->SetForceBorder(false);
 		_btn->SetForceText(true); // do not force colors (done in SNM_ToolbarButton::OnPaintOver())
@@ -312,7 +318,7 @@ bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
 	return false;
 }
 
-//JFB!!! not used yet
+//JFB not used yet
 bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h)
 {
 	if (_x+_logo->GetWidth() < _r->right-8)
@@ -402,7 +408,7 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int
 			height=9*2+1;
 		}
 
-		if (*_x+width > _r->right-10) // horizontal room?
+		if (*_x+width > _r->right-10) // enough horizontal room?
 		{
 			if (*_x+20 > (_r->right-10)) // ensures a minimum width
 			{
@@ -447,11 +453,11 @@ void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent, bool _clea
 	ShowConsoleMsg(_msg);
 	if (_title) // a little hack..
 	{
-		HWND h = FindWindow(NULL, "ReaScript console output");
+		HWND h = GetReaWindowByTitle(GetLocalizedString("REAPER", "DLG_437", "6C47A20E99E77954", "ReaScript console output"));
 		if (h)
 			SetWindowText(h, _title);
 		else // already opened?
-			h = FindWindow(NULL, _title);
+			h = GetReaWindowByTitle(_title);
 		if (h)
 			SetForegroundWindow(h);
 	}
@@ -727,45 +733,3 @@ bool isCueBussWndDisplayed(COMMAND_T* _ct) {
 	return (g_cueBussHwnd && IsWindow(g_cueBussHwnd) && IsWindowVisible(g_cueBussHwnd) ? true : false);
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-// WaitDlgProc
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _SNM_MISC
-int g_waitDlgProcCount = 0;
-WDL_DLGRET WaitDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	switch(msg)
-	{
-		case WM_INITDIALOG:
-			SetTimer(hwnd, 1, 1, NULL);
-			break;
-/*
-		case WM_COMMAND:
-			if ((LOWORD(wParam)==IDOK || LOWORD(wParam)==IDCANCEL))
-			{
-				EndDialog(hwnd,0);
-				g_waitDlgProcCount = 0;
-			}
-			break;
-*/
-		case WM_TIMER:
-			{
-				SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETRANGE, 0, MAKELPARAM(0, SNM_LET_BREATHE_MS));
-				if (g_waitDlgProcCount < SNM_LET_BREATHE_MS)
-				{
-					SendDlgItemMessage(hwnd, IDC_EDIT, PBM_SETPOS, (WPARAM) g_waitDlgProcCount, 0);
-					g_waitDlgProcCount++;
-				}
-				else
-				{
-					EndDialog(hwnd,0);
-					g_waitDlgProcCount = 0;
-				}
-			}
-			break;
-	}
-	return 0;
-}
-#endif

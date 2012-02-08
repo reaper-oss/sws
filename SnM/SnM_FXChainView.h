@@ -82,6 +82,7 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 	void ClearSlotPrompt(COMMAND_T* _ct);
 	const char* GetResourceDir() {  return m_resDir.Get(); }
 	const char* GetDesc() { return m_desc.Get(); }
+	void SetDesc(const char* _desc) { m_desc.Set(_desc); }
 	const char* GetMenuDesc();
 	const char* GetFileExt() { return m_ext.Get(); }
 	bool IsValidFileExt(const char* _ext);
@@ -131,10 +132,13 @@ public:
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void ClearListSelection();
 	void SelectBySlot(int _slot1, int _slot2 = -1);
+	void FillTypeCombo();
 protected:
 	void OnInitDlg();
 	void OnDestroy();
 	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	void AutoSaveContextMenu(HMENU _menu, bool _saveItems);
+	void AutoFillContextMenu(HMENU _menu, bool _fillItems);
 	HMENU OnContextMenu(int x, int y);
 	int OnKey(MSG* msg, int iKeyState);
 	int GetValidDroppedFilesCount(HDROP _h);
@@ -143,24 +147,25 @@ protected:
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
 	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
 
-	void FillTypeCombo();
 	void FillDblClickCombos();
 	void AddSlot(bool _update);
 	void InsertAtSelectedSlot(bool _update);
 	void ClearDeleteSlots(int _mode, bool _update);
 
-	int m_previousType;
-
 	WDL_VirtualComboBox m_cbType, m_cbDblClickType, m_cbDblClickTo;
-	WDL_VirtualIconButton m_btnAutoSave, m_btnTiedActions;
+	WDL_VirtualIconButton m_btnAutoFill, m_btnAutoSave, m_btnTiedActions, m_btnOffsetTrTemplate;
 	WDL_VirtualStaticText m_txtDblClickType, m_txtDblClickTo;
 	SNM_MiniAddDelButtons m_btnsAddDel;
 };
 
 
 void FlushCustomTypesIniFile();
-void AutoSave(int _type, int _whichFXChain, bool _trTmpltWithItems);
-void AutoFill(int _type, const char* _startPath);
+void AutoSave(int _type, int _flags = 0);
+void AutoFill(int _type);
+
+void NewBookmark(int _type, bool _copyCurrent = false);
+void DeleteBookmark(int _bookmarkType);
+void RenameBookmark(int _bookmarkType);
 
 
 class SNM_ImageWnd : public SWS_DockWnd

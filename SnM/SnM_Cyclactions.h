@@ -72,19 +72,21 @@ private:
 };
 
 
-#ifdef _SNM_CYCLACTION_OSX
 class SNM_CyclactionWnd : public SWS_DockWnd
 {
 public:
 	SNM_CyclactionWnd();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void Update(bool _updateListViews=true);
+	void UpdateSection(int _newSection);
 	bool IsConsolidatedUndo() { return m_btnUndo.GetCheckState()==1; }
+	void SetType(int _section) { m_cbSection.SetCurSel(_section); UpdateSection(_section); }
 protected:
 	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void OnInitDlg();
 	void OnDestroy();
 	HMENU OnContextMenu(int x, int y);
+	int OnKey(MSG* msg, int iKeyState);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
 
@@ -93,7 +95,7 @@ protected:
 	WDL_VirtualStaticText m_txtSection;
 	SNM_ToolbarButton m_btnApply, m_btnCancel, m_btnActionList;
 };
-#endif
+
 
 class SNM_CyclactionsView : public SWS_ListView
 {
@@ -107,6 +109,7 @@ protected:
 	void OnItemSelChanged(SWS_ListItem* item, int iState);
 	void OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState);
 };
+
 
 class SNM_CommandsView : public SWS_ListView
 {

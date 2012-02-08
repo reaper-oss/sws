@@ -175,7 +175,7 @@ void splitMidiAudio(COMMAND_T* _ct)
 	if (updated)
 	{
 		UpdateTimeline();
-		// Undo wording hard coded: action name too long + almost consistent 
+		// hard coded undo label: action name too long + consistent 
 		// with the unique native wording (whatever is the split action)
 		Undo_EndBlock("Split selected items", UNDO_STATE_ALL);
 	}
@@ -1301,7 +1301,7 @@ void setPan(COMMAND_T* _ct)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Media file slots (Resources view)
-//JFB!!! TODO?: new file SnM_Media.cpp?
+//JFB!!! TODO?: new file SnM_Media.cpp? OSX...
 ///////////////////////////////////////////////////////////////////////////////
 
 void PlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop, double _msi) {
@@ -1418,14 +1418,15 @@ bool autoSaveMediaSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSi
 					if (PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL))
 						if (src->GetFileName())
 						{
-							char name[128]="";
+							char name[SNM_MAX_FX_NAME_LEN] = "";
 							if(*src->GetFileName()) {
-								GetFilenameNoExt(src->GetFileName(), name, 128);
+								GetFilenameNoExt(src->GetFileName(), name, SNM_MAX_FX_NAME_LEN);
 								GenerateFilename(_dirPath, name, GetFileExtension(src->GetFileName()), _fn, _fnSize);
 								updated |= (SNM_CopyFile(_fn, src->GetFileName()) && g_slots.Get(_slotType)->AddSlot(_fn));
 							}
 							else { // MIDI in-project
-								GetFilenameNoExt((char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), name, 128);
+								GetFilenameNoExt((char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), name, SNM_MAX_FX_NAME_LEN);
+								Filenamize(name);
 								GenerateFilename(_dirPath, name, "mid", _fn, _fnSize);
 								src->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, _fn, NULL, NULL);
 								updated |= (g_slots.Get(_slotType)->AddSlot(_fn) != NULL);

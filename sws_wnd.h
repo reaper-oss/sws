@@ -27,7 +27,9 @@
 
 #pragma once
 
-#define TOOLTIP_MAX_LEN 512
+#define TOOLTIP_MAX_LEN		512
+#define MIN_DOCKWND_WIDTH	147
+#define MIN_DOCKWND_HEIGHT	175
 #ifdef _WIN32
 #define SWSDLG_TYPEFACE "MS Shell Dlg"
 #define LISTVIEW_COLORHOOK_STATESIZE 3
@@ -87,6 +89,8 @@ public:
 	bool EditListItemEnd(bool bSave, bool bResort = true);
 	int OnEditingTimer();
 	const char* GetINIKey() { return m_cINIKey; }
+	int DisplayToDataCol(int iCol);
+	int DataToDisplayCol(int iCol);
 	
 	bool IsActive(bool bWantEdit) { return GetFocus() == m_hwndList || (bWantEdit && m_iEditingItem != -1); }
 	void DisableUpdates(bool bDisable) { m_bDisableUpdates = bDisable; }
@@ -95,7 +99,6 @@ public:
 
 protected:
 	void EditListItem(int iIndex, int iCol);
-	int DisplayToDataCol(int iCol);
 
 	// These methods are used to "pull" data for updating the listview
 	virtual void SetItemText(SWS_ListItem* item, int iCol, const char* str) {}
@@ -113,7 +116,6 @@ protected:
 	virtual void OnBeginDrag(SWS_ListItem* item) {}
 	virtual bool IsEditListItemAllowed(SWS_ListItem* item, int iCol) { return true; }
 
-	int DataToDisplayCol(int iCol);
 	void SetListviewColumnArrows(int iSortCol);
 	static int CALLBACK sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam);
 
@@ -175,6 +177,8 @@ protected:
 	void Init(); // call from derived constructor!!
 	bool IsDocked() { return (m_state.state & 2) == 2; }
 	void ToggleDocking();
+	virtual void GetMinSize(int* w, int* h) { *w=MIN_DOCKWND_WIDTH; *h=MIN_DOCKWND_HEIGHT; }
+
 	virtual void OnInitDlg() {}
 	virtual int OnNotify(WPARAM wParam, LPARAM lParam) { return 0; }
 	virtual HMENU OnContextMenu(int x, int y) { return NULL; }

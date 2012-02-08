@@ -214,7 +214,6 @@ static int CALLBACK WINAPI BrowseForDirectoryCallbackProc( HWND hwnd, UINT uMsg,
 
 bool BrowseForDirectory(const char *text, const char *initialdir, char *fn, int fnsize)
 {
-   
   wchar_t widename[4096];
   wchar_t widetext[4096];
   MultiByteToWideChar(CP_UTF8, 0, initialdir, -1, widename, 4096);
@@ -238,16 +237,26 @@ bool BrowseForDirectory(const char *text, const char *initialdir, char *fn, int 
 }
 #endif
 
+// the API function file_exists() is a bit different, it returns false for folder paths
 bool FileExists(const char* file)
 {
-	if (file && *file)
+	bool exists = false;
+	if (file && *file && strchr(file, PATH_SLASH_CHAR)) // valid absolute path?
 	{
-		struct stat s;
+		if (char* fn = _strdup(file))
+		{
+			int len = strlen(fn);
+			if (fn[len-1] == PATH_SLASH_CHAR) // bug fix for directories
+				fn[len-1] = '\0';
+
+			struct stat s;
 #ifdef _WIN32
-		return statUTF8(file, &s) == 0;
+			exists = (statUTF8(fn, &s) == 0);
 #else
-		return stat(file, &s) == 0;
+			exists = (stat(fn, &s) == 0);
 #endif
+			free(fn);
+		}
 	}
-	return false;
+	return exists;
 }

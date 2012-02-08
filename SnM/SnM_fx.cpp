@@ -30,8 +30,9 @@
 #include "SnM_Chunk.h"
 
 
-#define SNM_REA_PRESET_CB_ENDING		")  ----"
-#define SNM_REA_USERPRESET_CB_ENDING	"(.rpl)  ----" 
+#define SNM_REA_PRESET_CB_ENDING	")  ----"	//JFB!!! not localized!! anyway this hacking combox solution sucks (temp, I hope)
+#define SNM_REA_USERPRESET_CB		GetLocalizedString("REAPER", "common", "0EC28D42C155A657", "----  User Presets (.rpl)  ----")
+#define SNM_REA_NOPRESET_CB			GetLocalizedString("REAPER", "common", "93244D3BB94E6F33", "No preset")
 
 
 int g_buggyPlugSupport = 0; // defined in S&M.ini
@@ -369,7 +370,6 @@ int getSelectedTrackFX(MediaTrack* _tr)
 // Track FX presets
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB cache?
 int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _presetNames)
 {
 	int nbPresets = 0;
@@ -500,9 +500,9 @@ void RenderPresetConf(WDL_FastString* _presetConf, WDL_FastString* _renderConf)
 			if (_renderConf->GetLength())
 				_renderConf->Append(", ");
 			if (preset)
-				_renderConf->AppendFormatted(256, "FX %d: preset %d", fx, preset);
+				_renderConf->AppendFormatted(256, "FX%d: preset %d", fx, preset);
 			else
-				_renderConf->AppendFormatted(256, "FX %d: preset ?", fx);
+				_renderConf->AppendFormatted(256, "FX%d: preset ?", fx);
 		}	
 	}
 }
@@ -522,20 +522,20 @@ void RenderPresetConf2(MediaTrack* _tr, WDL_FastString* _presetConf, WDL_FastStr
 					_renderConf->Append(", ");
 
 				int success, fx = (int)floor(lp.gettoken_float(i, &success)) - 1; // float because token is like "1.3"
-				int preset = success ? GetPresetFromConfToken(lp.gettoken_str(i)) - 1 : 0;
+				int preset = success ? GetPresetFromConfToken(lp.gettoken_str(i)) - 1 : -1;
 
 				// avoid parsing as far as possible!
 				SNM_FXSummaryParser p(_tr);
 				WDL_PtrList<SNM_FXSummary>* summaries = NULL;
-				if (preset)
+				if (preset >= 0)
 					summaries = p.GetSummaries();
 				SNM_FXSummary* sum = summaries ? summaries->Get(fx) : NULL;
 				WDL_PtrList_DeleteOnDestroy<WDL_FastString> names;
 				int presetCount = (sum ? getPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names) : 0);
-				if (presetCount && preset < presetCount)
-					_renderConf->AppendFormatted(256, "FX %d: %s", fx+1, names.Get(preset)->Get());
+				if (presetCount && preset >=0 && preset < presetCount)
+					_renderConf->AppendFormatted(256, "FX%d: %s", fx+1, names.Get(preset)->Get());
 				else
-					_renderConf->AppendFormatted(256, "FX %d: preset %d", fx+1, preset+1);
+					_renderConf->AppendFormatted(256, "FX%d: preset %d", fx+1, preset+1);
 			}
 		}
 	}
@@ -545,7 +545,7 @@ void RenderPresetConf2(MediaTrack* _tr, WDL_FastString* _presetConf, WDL_FastStr
 // Primitive to switch FX presets but clunky: no proper API yet..
 // So, it simulates an user action: show fx (if needed) -> dropdown event -> close fx (if needed)
 // Notes
-// - undo indirectly managed (i.e.native "Undo FX parameter adjustement"
+// - undo indirectly managed (i.e.native "Undo FX parameter adjustement")
 // - when triggering the "Restore factory setting" preset (1st item in the dropdown), then
 //   REAPER automatically re-update the preset. In other words, depending on the FX, setting the 
 //   1st preset may result in selecting the 7th preset (i.e. which is the factory setting preset)
@@ -582,7 +582,7 @@ int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir, bool _u
 			{
 				int deltaIdx = 0;
 				char buf[256] = "";
-				while ((deltaIdx+1) < presetCount && (strlen(buf) < strlen(SNM_REA_USERPRESET_CB_ENDING) || strcmp((char*)(buf+strlen(buf)-strlen(SNM_REA_USERPRESET_CB_ENDING)), SNM_REA_USERPRESET_CB_ENDING)))
+				while ((deltaIdx+1) < presetCount && strcmp(buf, SNM_REA_USERPRESET_CB))
 				{
 					SendMessage(cbPreset, CB_SETCURSEL, ++deltaIdx, 0); // GUI update only
 					GetWindowText(cbPreset, buf, 256);
@@ -599,7 +599,7 @@ int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir, bool _u
 				char buf[256] = SNM_REA_PRESET_CB_ENDING;
 				if (_dir) _presetId = currentPreset;
 				presetOk = true;
-				while (strstr(buf, "No preset") || (strlen(buf) >= strlen(SNM_REA_PRESET_CB_ENDING) && !strcmp((char*)(buf+strlen(buf)-strlen(SNM_REA_PRESET_CB_ENDING)), SNM_REA_PRESET_CB_ENDING)))
+				while (strstr(buf, SNM_REA_NOPRESET_CB) || (strlen(buf) >= strlen(SNM_REA_PRESET_CB_ENDING) && !strcmp((char*)(buf+strlen(buf)-strlen(SNM_REA_PRESET_CB_ENDING)), SNM_REA_PRESET_CB_ENDING)))
 				{
 					_presetId += _dir;
 					if (_presetId < 0 || _presetId >= presetCount) {
@@ -659,16 +659,10 @@ void triggerPreviousPreset(COMMAND_T* _ct) {
 bool triggerFXUserPreset(MediaTrack* _tr, WDL_FastString* _presetConf)
 {
 	bool updated = false;
-	int nbFx = _tr ? TrackFX_GetCount(_tr) : 0;
-	if (nbFx)
-	{
+	if (int nbFx = (_tr ? TrackFX_GetCount(_tr) : 0))
 		for (int i=0; i < nbFx; i++)
-		{
-			int preset = GetPresetFromConf(i, _presetConf);
-			if (preset)
+			if (int preset = GetPresetFromConf(i, _presetConf))
 				updated |= (triggerFXPreset(_tr, i, preset-1, 0, true, false) != -1);
-		}
-	}
 	return updated;
 }
 
@@ -684,9 +678,9 @@ protected:
 	HWND m_hwnd;
 };
 
+// absolute CC only
 void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) 
 {
-	// Absolute CC only
 	if (!_relmode && _valhw < 0 && g_bv4)
 	{
 		SNM_TriggerPresetScheduledJob* job = 
@@ -701,7 +695,7 @@ void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HW
 ///////////////////////////////////////////////////////////////////////////////
 
 // http://code.google.com/p/sws-extension/issues/detail?id=258
-// pretty brutal code (we'd need a dedicated parser/patcher here..)
+// brutal code (we'd need a dedicated parser/patcher here..)
 void moveFX(COMMAND_T* _ct)
 {
 	bool updated = false;

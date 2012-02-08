@@ -48,7 +48,7 @@ void SetFXChain(MediaTrack* tr, const char* str)
 	WDL_FastString chainChunk;
 	// adapt FX chain format (the SNM_FXChainTrackPatcher uses the .RFXChain file format)
 	if (str && !strncmp(str, "<FXCHAIN", 8)) {
-		chainChunk.Set(strchr(str, '\n') + 1); // removes the line stating with "<FXCHAIN"
+		chainChunk.Set(strchr(str, '\n') + 1); // removes the line starting with "<FXCHAIN"
 		chainChunk.SetLen(chainChunk.GetLength()-2); // remove trailing ">\n"
 	}
 	p.SetFXChain(str ? &chainChunk : NULL);

@@ -511,7 +511,12 @@ void SNM_UpgradeIniFiles()
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_StringKeyedArray<WDL_FastString*> g_langpackFns(false, deletefaststrptr);
-WDL_StringKeyedArray<WDL_FastString*> g_i8nCache(false, deletefaststrptr);
+#ifdef _SNM_I8N_CACHE2
+WDL_StringKeyedArray<WDL_StringKeyedArray<WDL_StringKeyedArray<WDL_FastString*>* >* > g_i8nCache;
+#else
+void freei8nCacheValue(WDL_FastString* p) {delete p;}
+WDL_StringKeyedArray<WDL_FastString*> g_i8nCache(false, freei8nCacheValue);
+#endif
 
 void ClearLangPackCache(const char* _langpack)
 {
@@ -571,13 +576,14 @@ void GetLocalizedProfileString(const char* _langpack, const char* _section, cons
 		{
 			if (!_stricmp(_langpack, "SWS"))
 				GetPrivateProfileString(SNM_I8N_SWS_COMMON_SEC, _key, _defaultStr, _bufOut, _bufOutSz, fnStr->Get());
-			    //JFB TODO? 3rd try?
+			    //JFB TODO: 3rd try ?
 			else
 				GetPrivateProfileString("common", _key, _defaultStr, _bufOut, _bufOutSz, fnStr->Get());
 		}
 	}
 }
 
+//JFB!!! debug point when exit!!
 // this function never returns NULL
 // note: nothing is instanciated if no langpack file is defined (lazy init otherwise)
 const char* GetFromI8NCache(const char* _langpack, const char* _section, const char* _key, const char* _defaultStr, bool _swsAction)
@@ -586,11 +592,25 @@ const char* GetFromI8NCache(const char* _langpack, const char* _section, const c
 	WDL_FastString* fnStr = GetCurLangPackFn(_langpack);
 	if (fnStr->GetLength())
 	{
+#ifdef _SNM_I8N_CACHE2
+		WDL_StringKeyedArray<WDL_StringKeyedArray<WDL_FastString*>* >* c1 = g_i8nCache.Get(_langpack, NULL);
+		if (!c1) {
+			c1 = new WDL_StringKeyedArray<WDL_StringKeyedArray<WDL_FastString*>* >;
+			g_i8nCache.Insert(_langpack, c1);
+		}
+		WDL_StringKeyedArray<WDL_FastString*>* c2 = c1->Get(_section, NULL);
+		if (!c2) {
+			c2 = new WDL_StringKeyedArray<WDL_FastString*>;
+			c1->Insert(_section, c2);
+		}
+		WDL_FastString* str = c2->Get(_key, NULL);
+#else
 		// make the key (most significant ids first)
 		WDL_FastString cacheKeyStr(_key);
 		cacheKeyStr.Append(_section);
 		cacheKeyStr.Append(_langpack);
 		WDL_FastString* str = g_i8nCache.Get(cacheKeyStr.Get(), NULL);
+#endif
 		if (!str)
 		{
 			char buf[SNM_I8N_DEF_STR_LEN] = "";
@@ -604,7 +624,11 @@ const char* GetFromI8NCache(const char* _langpack, const char* _section, const c
 					if (int len = IsSwsAction(_defaultStr))
 						str->Insert(_defaultStr, 0, len);
 
+#ifdef _SNM_I8N_CACHE2
+			c2->Insert(_key, str);
+#else
 			g_i8nCache.Insert(cacheKeyStr.Get(), str);
+#endif
 		}
 		return str->Get();
 	}
@@ -637,7 +661,16 @@ bool IsDupLangPackKeyErrMsg(const char* _key, WDL_StringKeyedArray<WDL_FastStrin
 // note: multiples Append() are faster than AppendFormatted()
 void AppendToLangPackStr(const char* _section, WDL_StringKeyedArray<WDL_FastString*>* _strings, WDL_FastString* _strOut, bool _isNew)
 {
+#ifndef _SNM_I8N_VIA_SAVEINISECTION
+	if (_section)
+	{
+		_strOut->Append("[");
+		_strOut->Append(_section);
+		_strOut->Append("]\n");
+	}
+#else
 	_strOut->SetFormatted(128, "; NOTE: as you translate a string, remove the %s from the beginning of the line.\n", SNM_I8N_NEW_STR_TAG);
+#endif
 	for (int i=0; i < _strings->GetSize(); i++)
 	{
 		const char* name = "";
@@ -651,6 +684,9 @@ void AppendToLangPackStr(const char* _section, WDL_StringKeyedArray<WDL_FastStri
 				_strOut->Append("\n");
 			}
 	}
+#ifndef _SNM_I8N_VIA_SAVEINISECTION
+	_strOut->Append("\n");
+#endif
 }
 
 // returns 1 if upgrade done, 0 if already present , -1 on error
@@ -662,7 +698,20 @@ int UpgradeLangPackAction(const char* _section, const char* _customId, const cha
 
 	if (IsDupLangPackKeyErrMsg(name, _strings))
 		return -1; // err
-
+#ifndef _SNM_I8N_VIA_SAVEINISECTION
+	if (*buf)
+	{
+		_strings->Insert(name, new WDL_FastString(_customId));
+		return 0;
+	}
+	else
+	{
+		WDL_FastString* idStr = new WDL_FastString(SNM_I8N_NEW_STR_TAG);
+		idStr->Append(_customId);
+		_strings->Insert(name, idStr); // sort behind the scene..
+		return 1; 
+	}
+#else
 	if (*buf)
 	{
 		_strings->Insert(name, new WDL_FastString(_customId));
@@ -685,6 +734,7 @@ int UpgradeLangPackAction(const char* _section, const char* _customId, const cha
 			return 1; 
 		}
 	}
+#endif
 }
 
 bool ConfirmNewLangPackMsg()
@@ -708,8 +758,13 @@ void ResetLangPack(COMMAND_T* _ct)
 	if (fnStr->GetLength())
 	{
 		WritePrivateProfileString("SWS", "langpack", NULL, get_ini_file());
+
+		WDL_FastString msg("Reseted SWS LangPack file ");
+		msg.Append(fnStr->Get());
+		msg.Append("\nThis file is preserved. Restart REAPER to complete the operation!");
+		MessageBox(GetMainHwnd(), msg.Get(), "S&M - Information", MB_OK);
+
 		ClearLangPackCache("SWS"); // done after: fnStr is used above..
-		MessageBox(GetMainHwnd(), "Undefined SWS LangPack file\nRestart REAPER to complete the operation!", "S&M - Information", MB_OK);
 	}
 	else
 		MessageBox(GetMainHwnd(), "No SWS LangPack file is defined!", "S&M - Error", MB_OK);
@@ -726,12 +781,8 @@ void LoadAssignLangPack(COMMAND_T* _ct)
 	{
 		WritePrivateProfileString("SWS", "langpack", strstr(fn, resPath.Get()) ? GetFilenameWithExt(fn) : fn, get_ini_file());
 		ClearLangPackCache("SWS");
-
-		WDL_FastString msg("Defined new SWS LangPack file: ");
-		msg.Append(fn);
-		msg.Append("\nRestart REAPER to complete the operation!");
-		MessageBox(GetMainHwnd(), msg.Get(), "S&M - Information", MB_OK);
 		free(fn);
+		MessageBox(GetMainHwnd(), "Restart REAPER to complete the operation!", "S&M - Information", MB_OK);
 	}
 }
 
@@ -740,8 +791,10 @@ void GenerateLangPack(COMMAND_T* _ct)
 	if (!ConfirmNewLangPackMsg())
 		return;
 
-	WDL_FastString resPath, defaultFn;
+	WDL_FastString resPath;
 	resPath.SetFormatted(BUFFER_SIZE, "%s%cLangPack%c", GetResourcePath(), PATH_SLASH_CHAR, PATH_SLASH_CHAR);
+
+	WDL_FastString defaultFn;
 	defaultFn.Append(resPath.Get());
 	defaultFn.Append("sws_english.txt");
 
@@ -749,6 +802,10 @@ void GenerateLangPack(COMMAND_T* _ct)
 	if (BrowseForSaveFile("S&M - Generate default SWS LangPack file", defaultFn.Get(), defaultFn.Get(), SNM_TXT_EXT_LIST, fn, BUFFER_SIZE))
 	{
 		WDL_FastString langpack;
+#ifndef _SNM_I8N_VIA_SAVEINISECTION
+		langpack.Append(SNM_I8N_DEF_LANGPACK_NAME);
+		langpack.AppendFormatted(128, "; NOTE: as you translate a string, remove %s from the beginning of the line.\n\n", SNM_I8N_NEW_STR_TAG);
+#endif
 		WDL_StringKeyedArray<WDL_FastString*> orderedStrings(true, deletefaststrptr); // just to sort things
 		int strCount = 0;
 
@@ -762,7 +819,9 @@ void GenerateLangPack(COMMAND_T* _ct)
 					orderedStrings.Insert(name, new WDL_FastString(ct->id));
 				}
 		AppendToLangPackStr(SNM_I8N_SWS_ACTION_SEC, &orderedStrings, &langpack, true);
+#ifdef _SNM_I8N_VIA_SAVEINISECTION
 		SaveIniSection(SNM_I8N_SWS_ACTION_SEC, &langpack, fn);
+#endif
 		strCount += orderedStrings.GetSize();
 		orderedStrings.DeleteAll();
 
@@ -777,29 +836,45 @@ void GenerateLangPack(COMMAND_T* _ct)
 			i++;
 		}
 		AppendToLangPackStr(SNM_I8N_SNM_ACTION_SEC, &orderedStrings, &langpack, true);
+#ifdef _SNM_I8N_VIA_SAVEINISECTION
 		SaveIniSection(SNM_I8N_SNM_ACTION_SEC, &langpack, fn);
+#endif
 		strCount += orderedStrings.GetSize();
 		orderedStrings.DeleteAll();
 
-		// update REAPER.ini + reset localized strings cache
-		WritePrivateProfileString("SWS", "langpack", strstr(fn, resPath.Get()) ? GetFilenameWithExt(fn) : fn, get_ini_file());
-		ClearLangPackCache("SWS");
-
-		// add langpack name if needed (after the cache has been cleared)
-		if (!IsLangPackShared() && LoadChunk(fn, &langpack, true) && strncmp(langpack.Get(), "#NAME:", 6)) 
+		// 3) write the LangPack file
+#ifndef _SNM_I8N_VIA_SAVEINISECTION
+		if (FILE* f = fopenUTF8(fn, "w"))
+#endif
 		{
-			langpack.Insert(SNM_I8N_DEF_LANGPACK_NAME, 0);
-			if (FILE* f = fopenUTF8(fn, "w")) {
-				fputs(langpack.Get(), f);
-				fclose(f);
-			}
-		}
+#ifndef _SNM_I8N_VIA_SAVEINISECTION
+			fputs(langpack.Get(), f);
+			fclose(f);
+#endif
+			// 4) update REAPER.ini + reset localized strings cache + final info message
+			WritePrivateProfileString("SWS", "langpack", strstr(fn, resPath.Get()) ? GetFilenameWithExt(fn) : fn, get_ini_file());
+			ClearLangPackCache("SWS");
 
-		// msg
-		WDL_FastString msg;
-		msg.SetFormatted(BUFFER_SIZE, "Wrote %s (%d strings)\n", fn, strCount);
-		msg.Append("Restart REAPER after editing this file!");
-		MessageBox(GetMainHwnd(), msg.Get(), "S&M - Information", MB_OK);
+#ifdef _SNM_I8N_VIA_SAVEINISECTION
+			// add langpack name if needed
+			if (!IsLangPackShared() && LoadChunk(fn, &langpack, true) && strncmp(langpack.Get(), "#NAME:", 6)) 
+			{
+				langpack.Insert(SNM_I8N_DEF_LANGPACK_NAME, 0);
+				if (FILE* f = fopenUTF8(fn, "w")) {
+					fputs(langpack.Get(), f);
+					fclose(f);
+				}
+			}
+#endif
+			WDL_FastString msg;
+			msg.SetFormatted(BUFFER_SIZE, "Wrote %s (%d strings)\n", fn, strCount);
+			msg.Append("Restart REAPER after editing this file!");
+			MessageBox(GetMainHwnd(), msg.Get(), "S&M - Information", MB_OK);
+		}
+#ifndef _SNM_I8N_VIA_SAVEINISECTION
+		else
+			MessageBox(GetMainHwnd(), "Unable to write to file!", "S&M - Error", MB_OK);
+#endif
 	}
 }
 
@@ -812,6 +887,15 @@ void UpgradeLangPack(COMMAND_T* _ct)
 	}
 
 	WDL_FastString langpack;
+#ifndef _SNM_I8N_VIA_SAVEINISECTION
+	// get the current langpack name 
+	langpack.Append(SNM_I8N_DEF_LANGPACK_NAME);
+	WDL_FastString nameStr;
+	if (LoadChunk(fnStr->Get(), &nameStr, true, 512) && !strncmp(nameStr.Get(), "#NAME:", 6))
+		if (const char* p = strchr(nameStr.Get(), '\n'))
+			langpack.Set(nameStr.Get(), (int)(p-nameStr.Get())+1);
+	langpack.AppendFormatted(128, "; NOTE: as you translate a string, remove %s from the beginning of the line.\n\n", SNM_I8N_NEW_STR_TAG);
+#endif
 	int upToDate=0, newStrCount=0;
 	WDL_StringKeyedArray<WDL_FastString*> orderedStrings(true, deletefaststrptr); // just to sort things
 
@@ -827,7 +911,9 @@ void UpgradeLangPack(COMMAND_T* _ct)
 			}
 	}
 	AppendToLangPackStr(SNM_I8N_SWS_ACTION_SEC, &orderedStrings, &langpack, false);
+#ifdef _SNM_I8N_VIA_SAVEINISECTION
 	SaveIniSection(SNM_I8N_SWS_ACTION_SEC, &langpack, fnStr->Get());
+#endif
 	orderedStrings.DeleteAll();
 
 	// 2) add all actions of the s&m action section
@@ -842,20 +928,36 @@ void UpgradeLangPack(COMMAND_T* _ct)
 		i++;
 	}
 	AppendToLangPackStr(SNM_I8N_SNM_ACTION_SEC, &orderedStrings, &langpack, false);
+#ifdef _SNM_I8N_VIA_SAVEINISECTION
 	SaveIniSection(SNM_I8N_SNM_ACTION_SEC, &langpack, fnStr->Get());
+#endif
 	orderedStrings.DeleteAll();
 
-	// 3) msg
-	// note: the langpack cache is not cleared here (simple upgrade)
+	// 3) write the LangPack file (if something upgraded) + msg
+	// note: do not clear the langpack cache: simple upgrade
 	WDL_FastString msg;
 	if (newStrCount)
 	{
-		msg.SetFormatted(BUFFER_SIZE, "Upgraded %s (%d new strings)\n", fnStr->Get(), newStrCount);
-		msg.Append("Restart REAPER after editing this file!");
-		MessageBox(GetMainHwnd(), msg.Get(), "S&M - Information", MB_OK);
+#ifndef _SNM_I8N_VIA_SAVEINISECTION
+		if (FILE* f = fopenUTF8(fnStr->Get(), "w"))
+#endif
+		{
+#ifndef _SNM_I8N_VIA_SAVEINISECTION
+			fputs(langpack.Get(), f);
+			fclose(f);
+			msg.SetFormatted(BUFFER_SIZE, "Upgraded %s\n", fnStr->Get());
+#else
+			msg.SetFormatted(BUFFER_SIZE, "Upgraded %s (%d new strings)\n", fnStr->Get(), newStrCount);
+#endif
+			msg.Append("Restart REAPER after editing this file!");
+			MessageBox(GetMainHwnd(), msg.Get(), "S&M - Information", MB_OK);
+		}
+#ifndef _SNM_I8N_VIA_SAVEINISECTION
+		else
+			MessageBox(GetMainHwnd(), "Unable to write to file!", "S&M - Error", MB_OK);
+#endif
 	}
-	else
-	{
+	else {
 		msg.SetFormatted(BUFFER_SIZE, "%s is up to date!", fnStr->Get());
 		MessageBox(GetMainHwnd(), msg.Get(), "S&M - Information", MB_OK);
 	}
@@ -1104,7 +1206,7 @@ bool LearnAction(char* _idstrOut, int _idStrSz, const char* _expectedSection)
 {
 	char section[SNM_MAX_SECTION_NAME_LEN] = "";
 	int actionId, selItem = GetSelectedAction(section, SNM_MAX_SECTION_NAME_LEN, &actionId, _idstrOut, _idStrSz);
-	if (_expectedSection && strcmp(section, _expectedSection))
+	if (_expectedSection && strcmp(section, _expectedSection)) //JFB!!! localization!
 		selItem = -1;
 	switch (selItem)
 	{

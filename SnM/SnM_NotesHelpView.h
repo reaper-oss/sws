@@ -35,7 +35,7 @@ enum {
   SNM_NOTES_PROJECT=0,
   SNM_NOTES_ITEM,
   SNM_NOTES_TRACK,
-#ifdef _MARKER_REGION_NAME
+#ifdef _SNM_MARKER_REGION_NAME
   SNM_NOTES_REGION_NAME,
 #endif
   SNM_NOTES_REGION_SUBTITLES,
@@ -67,6 +67,7 @@ public:
 	void CSurfSetTrackTitle();
 	void CSurfSetTrackListChange();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
+	void ToggleLock();
 
 	void saveCurrentText(int _type);
 	void saveCurrentPrjNotes();
@@ -92,6 +93,7 @@ protected:
 	void OnTimer(WPARAM wParam=0);
 	void OnResize();
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
+	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
 	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
 
 	WDL_VirtualComboBox m_cbType;

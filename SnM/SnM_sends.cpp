@@ -57,8 +57,9 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 	if (_type == 3)
 	{
 		SNM_ChunkParserPatcher p1(_srcTr, false);
-		if (p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 4, 0, 1, vol, NULL, "MUTESOLO") > 0 &&
-			p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 4, 0, 2, pan, NULL, "MUTESOLO") > 0)
+		p1.GetChunk()->Get();
+		if (p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", -1, 0, 1, vol, NULL, "MUTESOLO") > 0 &&
+			p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", -1, 0, 2, pan, NULL, "MUTESOLO") > 0)
 		{
 			update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
 		}
@@ -74,9 +75,8 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 	return update;
 }
 
-// _type:   reaper's type
-//          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
-// _undoMsg NULL=no undo
+// _type: 0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
+// _undoMsg: NULL=no undo
 bool cueTrack(const char* _busName, int _type, const char* _undoMsg, 
 			  bool _showRouting, int _soloDefeat, 
 			  char* _trTemplatePath, 
@@ -111,7 +111,7 @@ bool cueTrack(const char* _busName, int _type, const char* _undoMsg,
 				GetSetMediaTrackInfo(cueTr, "P_NAME", (void*)_busName);
 				p = new SNM_SendPatcher(cueTr);
 				if (tmpltChunk.GetLength())
-					applyTrackTemplate(cueTr, &tmpltChunk, true, p);
+					applyTrackTemplate(cueTr, &tmpltChunk, true, p, false, false);
 				updated = true;
 			}
 

@@ -719,7 +719,7 @@ int XenakiosInit()
 				char cID[BUFFER_SIZE];
 				char cDesc[BUFFER_SIZE];
 				_snprintf(cID, BUFFER_SIZE, "XENAKIOS_LOADPROJTEMPL%d", iNum);
-				_snprintf(cDesc, BUFFER_SIZE, "Xenakios/SWS: Load project template %d", iNum);
+				_snprintf(cDesc, BUFFER_SIZE, "Xenakios/SWS: [Deprecated] Load project template %d", iNum);
 				SWSRegisterCommandExt(DoOpenProjectTemplate, cID, cDesc, iNum);
 			}
 		}

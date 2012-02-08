@@ -30,7 +30,7 @@
 using namespace std;
 
 //#define _XEN_LOG
-#define XEN_CMD_SHORTNAME(_ct) (_ct->accel.desc + 14) // +14 to skip "Xenakios/SWS: "
+#define XEN_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 14) // +14 to skip "Xenakios/SWS: "
 
 //===========================================================
 // AutoRename.cpp

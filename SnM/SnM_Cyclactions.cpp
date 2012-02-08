@@ -25,6 +25,9 @@
 /
 ******************************************************************************/
 
+//JFB TODO?
+// - storage: use native macro format?
+//   (cycle actions have their own format for "historical" reasons)
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
@@ -42,12 +45,10 @@
 WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cyclactions[SNM_MAX_CYCLING_SECTIONS];
 char g_cyclactionCustomIds[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_ACTION_CUSTID_LEN] = {"S&M_CYCLACTION_", "S&M_ME_LIST_CYCLACTION", "S&M_ME_PIANO_CYCLACTION"};
 char g_cyclactionIniSections[SNM_MAX_CYCLING_SECTIONS][64] = {"Main_Cyclactions", "ME_List_Cyclactions", "ME_Piano_Cyclactions"};
+//JFB no localization for section names yet (confirmed by Cockos: http://forum.cockos.com/showpost.php?p=894702&postcount=117)
 char g_cyclactionSections[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN] = {"Main", "MIDI Event List Editor", "MIDI Editor"}; //JFB must == native section names!
 
-#ifdef _SNM_CYCLACTION_OSX
 static SNM_CyclactionWnd* g_pCyclactionWnd = NULL;
-#endif
-HWND g_cyclactionsHwnd = NULL; //JFB!!! to be removed when transfer to DockWnd done
 bool g_undos = true;
 
 // for subbtle "recursive cycle action" cases
@@ -138,24 +139,19 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 			done = true;
 		}
 
-		// add the actions (checks done at perform time, i.e. best effort)
+		// add actions (checks done at perform time, i.e. best effort)
 		if (*cmd != '!') {
 			actions.Add(new WDL_FastString(cmd));
-			if (!hasCustomIds && !atoi(cmd)) // Custom, extension !?
+			if (!hasCustomIds && !atoi(cmd)) // macro, extension !?
 				hasCustomIds = true;
 		}
 
-		// if "!" followed by some text (or cycling back to 1st action, if needed)
+		// dynamic action renaming if "!" followed by some text (or cycling back to 1st action)
 		if (*buf)
 		{
-			// Dynamic action renaming
-			if (SWSUnregisterCommand(_ct->accel.accel.cmd) && 
-				RegisterCyclation(buf, action->IsToggle(), _section, (int)_ct->user, _ct->accel.accel.cmd))
-			{
-				free((void*)_ct->accel.desc); // alloc'ed with strdup
-				free((void*)_ct->id);
-				DELETE_NULL(_ct);
-			}
+			int cmdId = _ct->accel.accel.cmd;
+			SWSFreeUnregisterDynamicCmd(cmdId);
+			RegisterCyclation(buf, action->IsToggle(), _section, cycleId, cmdId);
 		}
 		if (done)
 			break;
@@ -163,14 +159,14 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 
 	if (actions.GetSize() && !g_bReentrancyCheck)
 	{
+		// note: I "skip whilst respecting" (!) the SWS reentrance test - see hookCommandProc() in sws_entension.cpp -
+		// thanks to scheduled actions that are performed a 50 ms later (or so)
+		// we include macros too as they can contain SWS stuff..
 		ScheduledActions* job = new ScheduledActions(50, _section, cycleId, name.Get(), &actions);
-		// note: I "skip whilst respecting" (!) the SWS re-entrance test - see hookCommandProc() in sws_entension.cpp -
-		// thanks to scheduled actions that performed 50ms later (or so). we include macros too (can contain SWS stuff..)
 		if (hasCustomIds)
 			AddOrReplaceScheduledJob(job);
 		// perform immedialtely
-		else
-		{
+		else {
 			job->Perform();
 			delete job;
 		}
@@ -193,10 +189,8 @@ bool IsMEPianoCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(2, _
 
 bool CheckEditableCyclaction(const char* _actionStr, WDL_FastString* _errMsg, bool _allowEmpty = true)
 {
-	if (!(_actionStr && *_actionStr && *_actionStr != ',' && strcmp(_actionStr, "#,")))
-	{
-		if (_errMsg)
-			_errMsg->AppendFormatted(256, "Error: invalid cycle action '%s'\n\n", _actionStr ? _actionStr : "NULL");
+	if (!(_actionStr && *_actionStr && *_actionStr != ',' && _strnicmp(_actionStr, "#,", 2))) {
+		if (_errMsg) _errMsg->AppendFormatted(256, "Error: invalid cycle action '%s'\n\n", _actionStr ? _actionStr : "NULL");
 		return false;
 	}
 	if (!_allowEmpty && !strcmp(EMPTY_CYCLACTION, _actionStr))
@@ -212,10 +206,8 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 		for (int i=0; i < _a->GetCmdSize(); i++)
 		{
 			const char* cmd = _a->GetCmd(i);
-			if (strstr(cmd, "_CYCLACTION"))
-			{
-				if (_errMsg) 
-					_errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: recursive cycle action (i.e. uses another cycle action)\n\n", _a->GetName(), g_cyclactionSections[_section]);
+			if (strstr(cmd, "_CYCLACTION")) {
+				if (_errMsg) _errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: recursive cycle action (i.e. uses another cycle action)\n\n", _a->GetName(), g_cyclactionSections[_section]);
 				return false;
 			}
 			else if (*cmd == '!')
@@ -224,33 +216,25 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 				noop++;
 			else if (!_section) // main section?
 			{
-				if (atoi(cmd) >= g_iFirstCommand)
-				{
-					if (_errMsg) 
-						_errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: for extensions' actions, you must use custom ids (e.g. _SWS_ABOUT),\nnot command ids (e.g. 47145)\n\n", _a->GetName(), g_cyclactionSections[_section]);
+				if (atoi(cmd) >= g_iFirstCommand) {
+					if (_errMsg) _errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: for extensions' actions, you must use custom ids (e.g. _SWS_ABOUT),\nnot command ids (e.g. 47145)\n\n", _a->GetName(), g_cyclactionSections[_section]);
 					return false;
 				}
 				// API LIMITATION: NamedCommandLookup() KO in other sections than the main one
 				// => all cyclactions belong to the main section although they can target other sections..
-				if(_checkCmdIds && !NamedCommandLookup(cmd))
-				{
-					if (_errMsg) 
-						_errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: command id (or custom id) '%s' not found\n\n", _a->GetName(), g_cyclactionSections[_section], cmd);
+				if(_checkCmdIds && !NamedCommandLookup(cmd)) {
+					if (_errMsg) _errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: command id (or custom id) '%s' not found\n\n", _a->GetName(), g_cyclactionSections[_section], cmd);
 					return false;
 				}
 			}
 		}
-
-		if ((steps + noop) == _a->GetCmdSize())
-		{
-			if (_errMsg && !_a->IsEmpty()) 
-				_errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: : no valid command id (or custom id) found\n\n", _a->GetName(), g_cyclactionSections[_section]);
+		if ((steps + noop) == _a->GetCmdSize()) {
+			if (_errMsg && !_a->IsEmpty()) _errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: : no valid command id (or custom id) found\n\n", _a->GetName(), g_cyclactionSections[_section]);
 			return false;
 		}
 	}
 	else {
-		if (_errMsg) 
-			_errMsg->AppendFormatted(256, "Error: invalid cycle action (section '%s')\n\n", g_cyclactionSections[_section]);
+		if (_errMsg) _errMsg->AppendFormatted(256, "Error: invalid cycle action (section '%s')\n\n", g_cyclactionSections[_section]);
 		return false;
 	}
 	return true;
@@ -280,10 +264,11 @@ int RegisterCyclation(const char* _name, bool _toggle, int _section, int _cycleI
 	{
 		char cID[SNM_MAX_ACTION_CUSTID_LEN];
 		_snprintf(cID, SNM_MAX_ACTION_CUSTID_LEN, "%s%d", g_cyclactionCustomIds[_section], _cycleId);
-		return SWSRegisterCommandExt3(
+
+		return SWSCreateRegisterDynamicCmd(_cmdId,
 			!_section ? RunMainCyclaction : _section == 1 ? RunMEListCyclaction : RunMEPianoCyclaction, 
-			!_toggle ? NULL : (!_section ? IsMainCyclactionEnabled : _section == 1 ? IsMEListCyclactionEnabled : IsMEPianoCyclactionEnabled), 
-			_cmdId, cID, _name, _cycleId, __FILE__);
+			!_toggle ? NULL : (!_section ? IsMainCyclactionEnabled : _section == 1 ? IsMEListCyclactionEnabled : IsMEPianoCyclactionEnabled),
+			cID, _name, _cycleId, __FILE__, false); // no localization for cycle actions (name defined by the user) !
 	}
 	return 0;
 }
@@ -294,14 +279,7 @@ void FlushCyclactions(int _section)
 	{
 		char custCmdId[SNM_MAX_ACTION_CUSTID_LEN] = "";
 		_snprintf(custCmdId, SNM_MAX_ACTION_CUSTID_LEN, "_%s%d", g_cyclactionCustomIds[_section], i+1);		
-		int cmd = NamedCommandLookup(custCmdId);
-		COMMAND_T* ct = NULL;
-		if (cmd && (ct = SWSUnregisterCommand(cmd)))
-		{
-			free((void*)ct->accel.desc); // alloc'ed with strdup
-			free((void*)ct->id);
-			DELETE_NULL(ct);
-		}
+		SWSFreeUnregisterDynamicCmd(NamedCommandLookup(custCmdId));
 	}
 	g_cyclactions[_section].EmptySafe(true);
 }
@@ -316,7 +294,7 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 {
 	char buf[32] = "";
 	char actionBuf[MAX_CYCLATION_LEN] = "";
-	WDL_FastString msg, actionStr;
+	WDL_FastString msg;
 	for (int sec=0; sec < SNM_MAX_CYCLING_SECTIONS; sec++)
 	{
 		if (_section == sec || _section == -1)
@@ -330,23 +308,22 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 			{
 				_snprintf(buf, 32, "Action%d", j+1);
 				GetPrivateProfileString(g_cyclactionIniSections[sec], buf, EMPTY_CYCLACTION, actionBuf, MAX_CYCLATION_LEN, _iniFn ? _iniFn : g_SNMCyclactionIniFn.Get());
-				actionStr.Set(actionBuf);
 
 				// import into _cyclactions
 				if (_cyclactions)
 				{
-					if (CheckEditableCyclaction(actionStr.Get(), _errMsg ? &msg : NULL, false))
-						_cyclactions[sec].Add(new Cyclaction(actionStr.Get(), true));
+					if (CheckEditableCyclaction(actionBuf, _errMsg ? &msg : NULL, false))
+						_cyclactions[sec].Add(new Cyclaction(actionBuf, true));
 				}
 				// main model update + action register
-				else if (!CreateCyclaction(sec, actionStr.Get(), _errMsg ? &msg : NULL, _checkCmdIds))
+				else if (!CreateCyclaction(sec, actionBuf, _errMsg ? &msg : NULL, _checkCmdIds))
 					CreateCyclaction(sec, EMPTY_CYCLACTION, NULL, false);  // +no-op in order to preserve cycle actions' ids
 			}
 		}
 	}
 
 	if (_errMsg && msg.GetLength())
-		SNM_ShowMsg(msg.Get(), "S&M - Cycle Action editor - Warning(s)", g_cyclactionsHwnd);
+		SNM_ShowMsg(msg.Get(), "S&M - Cycle Action editor - Warning(s)", g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd());
 }
 
 // NULL _cyclactions => update main model
@@ -525,8 +502,8 @@ int CountEditedActions() {
 void UpdateEditedStatus(bool _edited) {
 	g_edited = _edited;
 #ifdef _SNM_MFC
-	if (g_cyclactionsHwnd)
-		EnableWindow(GetDlgItem(g_cyclactionsHwnd, IDC_APPLY), g_edited);
+	if (g_pCyclactionWnd)
+		EnableWindow(GetDlgItem(g_pCyclactionWnd->GetHWND(), IDC_APPLY), g_edited);
 #else
 	if (g_pCyclactionWnd)
 		g_pCyclactionWnd->Update(false);
@@ -536,14 +513,6 @@ void UpdateEditedStatus(bool _edited) {
 void UpdateListViews() {
 	if (g_lvL) g_lvL->Update();
 	if (g_lvR) g_lvR->Update();
-}
-
-void UpdateSection(int _newSection) {
-	if (_newSection != g_editedSection) {
-		g_editedSection = _newSection;
-		g_editedAction = NULL;
-		UpdateListViews();
-	}
 }
 
 void AllEditListItemEnd(bool _save) {
@@ -575,11 +544,7 @@ void EditModelInit()
 void Apply()
 {
 	// consolidated undo points
-#ifdef _SNM_CYCLACTION_OSX
 	g_undos = (g_pCyclactionWnd && g_pCyclactionWnd->IsConsolidatedUndo());
-#else
-	g_undos = (g_cyclactionsHwnd && IsDlgButtonChecked(g_cyclactionsHwnd, IDC_CHECK1) == BST_CHECKED);
-#endif
 	WritePrivateProfileString("Cyclactions", "Undos", g_undos ? "1" : "0", g_SNMIniFn.Get()); // in main S&M.ini file (local property)
 
 	// cycle actions
@@ -600,7 +565,7 @@ void Cancel(bool _checkSave)
 {
 	AllEditListItemEnd(false);
 	if (_checkSave && g_edited && 
-			IDYES == MessageBox(g_cyclactionsHwnd?g_cyclactionsHwnd:GetMainHwnd(),
+			IDYES == MessageBox(g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd(),
 				"Save cycle actions before quitting editor ?",
 				"S&M - Cycle Action editor - Warning", MB_YESNO))
 	{
@@ -668,8 +633,8 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 //JFB cancel cell editing on error would be great.. SWS_ListView mod?
 void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
-	if (const char* p = strchr(_str, ',')) {
-		MessageBox(GetMainHwnd(), "The comma character is not allowed in cycle action names!", "S&M - Error", MB_OK);
+	if (strchr(_str, ',') || strchr(_str, '\"') || strchr(_str, '\'') || strchr(_str, '#')) {
+		MessageBox(GetMainHwnd(), "Cycle action names cannot contain any of the following characters: # , \" '", "S&M - Cycle Action editor - Error", MB_OK);
 		return;
 	}
 
@@ -680,7 +645,7 @@ void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char
 		if (!CheckEditableCyclaction(_str, &errMsg) && strcmp(a->GetName(), _str)) 
 		{
 			if (errMsg.GetLength())
-				MessageBox(g_cyclactionsHwnd?g_cyclactionsHwnd:GetMainHwnd(), errMsg.Get(), "S&M - Cycle Action editor - Error", MB_OK);
+				MessageBox(g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd(), errMsg.Get(), "S&M - Cycle Action editor - Error", MB_OK);
 		}
 		else
 		{
@@ -753,12 +718,13 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 					lstrcpyn(str, "Step -----", iStrMax);
 					return;
 				}
-				// API LIMITATION: only for main section..
-				if (g_editedAction && !g_editedSection) {
-					if (atoi(pItem->Get()) >= g_iFirstCommand)
-						return;
-					int cmd = NamedCommandLookup(pItem->Get());
-					if (cmd)
+				// API LIMITATION: only for the main section..
+				if (g_editedAction && !g_editedSection)
+				{
+					int cmd = atoi(pItem->Get());
+					if (cmd >= g_iFirstCommand && cmd <= g_iLastCommand)
+						return; // user has entered a cmd id instead of a custom id for an SWS action..
+					if (cmd = NamedCommandLookup(pItem->Get()))
 						lstrcpyn(str, kbd_getTextFromCmd(cmd, NULL), iStrMax); 
 				}
 				break;
@@ -876,8 +842,7 @@ void SNM_CommandsView::OnItemSelChanged(SWS_ListItem* item, int iState) {
 // SNM_CyclactionWnd
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef _SNM_CYCLACTION_OSX
-
+// commands
 #define ADD_CYCLACTION_MSG				0xF001
 #define DEL_CYCLACTION_MSG				0xF002
 #define RUN_CYCLACTION_MSG				0xF003
@@ -928,8 +893,6 @@ void SNM_CyclactionWnd::Update(bool _updateListViews)
 
 void SNM_CyclactionWnd::OnInitDlg()
 {
-	g_cyclactionsHwnd = m_hwnd;
-
 	g_lvL = new SNM_CyclactionsView(GetDlgItem(m_hwnd, IDC_LIST1), GetDlgItem(m_hwnd, IDC_EDIT));
 	m_pLists.Add(g_lvL);
 	SNM_ThemeListView(g_lvL);
@@ -1033,7 +996,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 						Main_OnCommand(id, 0);
 						break;
 					}
-					MessageBox(m_hwnd, "This action is not registered yet !", "S&M - Cycle Action editor - Error", MB_OK);
+					MessageBox(m_hwnd, "This action is not registered yet!", "S&M - Cycle Action editor - Error", MB_OK);
 				}
 			}
 			break;
@@ -1048,28 +1011,13 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case LEARN_CMD_MSG:
 		{
-			char section[SNM_MAX_SECTION_NAME_LEN] = "", idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
-			int actionId, selItem = GetSelectedAction(section, SNM_MAX_SECTION_NAME_LEN, &actionId, idstr, SNM_MAX_ACTION_CUSTID_LEN);
-			if (strcmp(section, g_cyclactionSections[g_editedSection]))
-				selItem = -1;
-			switch (selItem)
+			char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
+			if (LearnAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, g_cyclactionSections[g_editedSection]))
 			{
-				case -2:
-					MessageBox(m_hwnd, "The column 'Custom ID' is not displayed in the 'Actions' window !\n(to display it: Actions window > Context menu > Show action IDs)", "S&M - Cycle Action editor - Error", MB_OK);
-					break;
-				case -1: {
-					char bufMsg[256] = "";
-					_snprintf(bufMsg, 256, "Actions window not opened or section '%s' not selected or no selected action !", g_cyclactionSections[g_editedSection]);
-					MessageBox(m_hwnd, bufMsg, "S&M - Cycle Action editor - Error", MB_OK);
-					break;
-				}
-				default: {
-					WDL_FastString* newCmd = g_editedAction->AddCmd(idstr);
-					g_lvR->Update();
-					UpdateEditedStatus(true);
-					g_lvR->SelectByItem((SWS_ListItem*)newCmd);
-					break;
-				}
+				WDL_FastString* newCmd = g_editedAction->AddCmd(idstr);
+				g_lvR->Update();
+				UpdateEditedStatus(true);
+				g_lvR->SelectByItem((SWS_ListItem*)newCmd);
 			}
 			break;
 		}
@@ -1294,7 +1242,7 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y)
 		{
 			AddToMenu(hMenu, "Add command", ADD_CMD_MSG);
 #ifdef _WIN32
-			AddToMenu(hMenu, "Add/learn from 'Actions' window", LEARN_CMD_MSG);
+			AddToMenu(hMenu, "Add/learn from Actions window", LEARN_CMD_MSG);
 #endif
 			if (cmd && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R)
 				AddToMenu(hMenu, "Remove selected command(s)", DEL_CMD_MSG);
@@ -1319,437 +1267,51 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y)
 	return hMenu;
 }
 
-
-#else
-
-
-////////////////////
-// Wnd
-////////////////////
-
-INT_PTR WINAPI CyclactionsWndProc(HWND _hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+int SNM_CyclactionWnd::OnKey(MSG* _msg, int _iKeyState) 
 {
-	switch (uMsg)
+	if (_msg->message == WM_KEYDOWN && !_iKeyState)
 	{
-		case WM_INITDIALOG:
+		if (HWND h = GetFocus())
 		{
-			SetWindowLongPtr(GetDlgItem(_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b); //JFB needed !?
-			RestoreWindowPos(_hwnd, CYCLACTIONWND_POS_KEY);
+			int focusedList = -1;
+			if (h == m_pLists.Get(0)->GetHWND()) focusedList = 0;
+			else if (h == m_pLists.Get(1)->GetHWND()) focusedList = 1;
+			else return 0;
 
-			CheckDlgButton(_hwnd, IDC_CHECK1, g_undos ? BST_CHECKED : BST_UNCHECKED);
-
-			int x, x0; 
-			for(int i=0; i < SNM_MAX_CYCLING_SECTIONS; i++) {
-				x = (int)SendDlgItemMessage(_hwnd,IDC_COMBO,CB_ADDSTRING,0,(LPARAM)g_cyclactionSections[i]);
-				if (!i) x0 = x;
-			}
-			g_editedSection = 0;
-			SendDlgItemMessage(_hwnd,IDC_COMBO,CB_SETCURSEL,x0,g_editedSection);
-
-			HWND hListL = GetDlgItem(_hwnd, IDC_LIST1);
-			HWND hListR = GetDlgItem(_hwnd, IDC_LIST2);
-			g_lvL = new SNM_CyclactionsView(hListL, GetDlgItem(_hwnd, IDC_EDIT));
-			g_lvR = new SNM_CommandsView(hListR, GetDlgItem(_hwnd, IDC_EDIT));
-			g_edited = false;
-			EnableWindow(GetDlgItem(_hwnd, IDC_APPLY), g_edited);
-			EditModelInit();
-		}
-		return 0;
-		case WM_CONTEXTMENU:
-		{
-			AllEditListItemEnd(true);
-
-			int x = LOWORD(lParam), y = HIWORD(lParam);
-			if (g_lvL->DoColumnMenu(x, y) || g_lvR->DoColumnMenu(x, y))
-				return 0;
-
-			// which list view?
-			bool left=false, right=false;
+			switch(_msg->wParam)
 			{
-				POINT pt;
-				pt.x = x; pt.y = y;
-				HWND h = GetDlgItem(_hwnd, IDC_LIST1);
-				RECT r;	GetWindowRect(h, &r);
-				left = PtInRect(&r, pt) ? true : false;
-				h = GetDlgItem(_hwnd, IDC_LIST2);
-				GetWindowRect(h, &r);
-				right = PtInRect(&r,pt) ? true : false;
+				case VK_F2:
+				{
+					int x=0;
+					if (SWS_ListItem* item = m_pLists.Get(focusedList)->EnumSelected(&x)) {
+						m_pLists.Get(focusedList)->EditListItem(item, !focusedList ? 1 : 0);
+						return 1;
+					}
+				}
+				case VK_DELETE:
+					if (focusedList == 0) {
+						OnCommand(DEL_CYCLACTION_MSG, 0);
+						return 1;
+					}
+					else if (focusedList == 1) {
+						OnCommand(DEL_CMD_MSG, 0);
+						return 1;
+					}
 			}
-
-			if (left || right)
-			{
-				SWS_ListView* lv = (left ? (SWS_ListView*)g_lvL : (SWS_ListView*)g_lvR);
-				HMENU menu = CreatePopupMenu();
-				Cyclaction* action = (Cyclaction*)g_lvL->GetHitItem(x, y, NULL);
-				WDL_FastString* cmd = (WDL_FastString*)g_lvR->GetHitItem(x, y, NULL);
-				if (left) // reminder: no multi sel in this one
-				{
-					AddToMenu(menu, "Add cycle action", 1000);
-					if (action && action != &g_DEFAULT_L)
-					{
-						AddToMenu(menu, "Remove selected cycle action(s)", 1001); 
-						AddToMenu(menu, SWS_SEPARATOR, 0);
-						AddToMenu(menu, "Run", 1002, -1, false, action->m_added ? MF_GRAYED : MF_ENABLED); 
-					}
-				}
-				else if (g_editedAction && g_editedAction != &g_DEFAULT_L)
-				{
-					AddToMenu(menu, "Add command", 1010);
-#ifdef _WIN32
-					AddToMenu(menu, "Add/learn from 'Actions' window", 1011);
-#endif
-					if (cmd && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R)
-						AddToMenu(menu, "Remove selected command(s)", 1012);
-				}
-
-				int iCmd = TrackPopupMenu(menu,TPM_LEFTALIGN|TPM_TOPALIGN|TPM_RETURNCMD|TPM_NONOTIFY,x,y,0,_hwnd,NULL);
-				if (iCmd > 0)
-				{
-					switch (iCmd)
-					{
-						// add cyclaction
-						case 1000: {
-							Cyclaction* a = new Cyclaction("Untitled");
-							a->m_added = true;
-							g_editedActions[g_editedSection].Add(a);
-							UpdateListViews();
-							UpdateEditedStatus(true);
-							g_lvL->SelectByItem((SWS_ListItem*)a);
-							g_lvL->EditListItem((SWS_ListItem*)a, 1);
-						}
-						break;
-						// remove cyclaction (for the user.. in fact in clears)
-						case 1001:
-						{
-							// keep pointers (may be used in a listview: delete after listview update)
-							int x=0; WDL_PtrList_DeleteOnDestroy<WDL_FastString> cmdsToDelete;
-							while(Cyclaction* a = (Cyclaction*)g_lvL->EnumSelected(&x)) {
-								for (int i=0; i < a->GetCmdSize(); i++)
-									cmdsToDelete.Add(a->GetCmdString(i));
-								a->Update(EMPTY_CYCLACTION);
-							}
-//no!							if (cmdsToDelete.GetSize()) 
-							{
-								g_editedAction = NULL;
-								UpdateListViews();
-								UpdateEditedStatus(true);
-							}
-						} // + cmdsToDelete auto clean-up
-						break;
-
-						// run
-						case 1002:
-							if (action) {
-								int cycleId = g_editedActions[g_editedSection].Find(action);
-								if (cycleId >= 0)
-								{
-									char custCmdId[SNM_MAX_ACTION_CUSTID_LEN] = "";
-									_snprintf(custCmdId, SNM_MAX_ACTION_CUSTID_LEN, "_%s%d", g_cyclactionCustomIds[g_editedSection], cycleId+1);
-									int id = NamedCommandLookup(custCmdId);
-									if (id) {
-										Main_OnCommand(id, 0);
-										break;
-									}
-									MessageBox(_hwnd, "This action is not registered !", "S&M - Cycle Action editor - Error", MB_OK);
-								}
-							}
-							break;
-						// Add cmd
-						case 1010:
-							if (g_editedAction) {
-								WDL_FastString* newCmd = g_editedAction->AddCmd("!");
-								g_lvR->Update();
-								UpdateEditedStatus(true);
-								g_lvR->EditListItem((SWS_ListItem*)newCmd, 0);
-							}
-							break;
-						// learn cmd
-						case 1011: {
-							char section[SNM_MAX_SECTION_NAME_LEN] = "", idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
-							int actionId, selItem = GetSelectedAction(section, SNM_MAX_SECTION_NAME_LEN, &actionId, idstr, SNM_MAX_ACTION_CUSTID_LEN);
-							if (strcmp(section, g_cyclactionSections[g_editedSection]))
-								selItem = -1;
-							switch (selItem)
-							{
-								case -2:
-									MessageBox(_hwnd, "The column 'Custom ID' is not displayed in the 'Actions' window !\n(to display it: Actions window > Context menu > Show action IDs)", "S&M - Cycle Action editor - Error", MB_OK);
-									break;
-								case -1: {
-									char bufMsg[256] = "";
-									_snprintf(bufMsg, 256, "Actions window not opened or section '%s' not selected or no selected action !", g_cyclactionSections[g_editedSection]);
-									MessageBox(_hwnd, bufMsg, "S&M - Cycle Action editor - Error", MB_OK);
-									break;
-								}
-								default: {
-									WDL_FastString* newCmd = g_editedAction->AddCmd(idstr);
-									g_lvR->Update();
-									UpdateEditedStatus(true);
-									g_lvR->SelectByItem((SWS_ListItem*)newCmd);
-									break;
-								}
-							}
-							break;
-						}
-						// remove sel cmds
-						case 1012:
-							if (g_lvR && g_editedAction)
-							{
-								// keep pointers (may be used in a listview: delete after listview update)
-								int x=0; WDL_PtrList_DeleteOnDestroy<WDL_FastString> cmdsToDelete;
-								while(WDL_FastString* delcmd = (WDL_FastString*)g_lvR->EnumSelected(&x)) {
-									cmdsToDelete.Add(delcmd);
-									g_editedAction->RemoveCmd(delcmd, false);
-								}
-								if (cmdsToDelete.GetSize()) {
-									g_lvR->Update();
-									UpdateEditedStatus(true);
-								}
-							} // + cmdsToDelete auto clean-up
-							break;
-					}
-				}
-				DestroyMenu(menu);
-			}
-		}
-		break;
-		case WM_NOTIFY:
-		{
-			NMHDR* hdr = (NMHDR*)lParam;
-			if (hdr && g_lvL && hdr->hwndFrom == g_lvL->GetHWND())
-				return g_lvL->OnNotify(wParam, lParam);
-			if (hdr && g_lvR && hdr->hwndFrom == g_lvR->GetHWND())
-				return g_lvR->OnNotify(wParam, lParam);
-		}
-		break;
-		case WM_CLOSE:
-			Cancel(false); //JFB false: painful check for mods (?)
-			SaveWindowPos(_hwnd, CYCLACTIONWND_POS_KEY);
-			g_cyclactionsHwnd = NULL; // for proper toggle state report, see openCyclactionsWnd()
-			break;
-		case WM_COMMAND:
-			switch (LOWORD(wParam))
-			{
-				case IDC_COMBO: 
-					if(HIWORD(wParam) == CBN_SELCHANGE) {
-						AllEditListItemEnd(false);
-						UpdateSection((int)SendDlgItemMessage(_hwnd,IDC_COMBO,CB_GETCURSEL,0,0));
-					}
-					break;
-				case IDC_COMMAND: // show action list
-					AllEditListItemEnd(false);
-					Main_OnCommand(40605, 0);
-					break;
-				case IDOK:
-				case IDC_APPLY:
-					Apply();
-					if (LOWORD(wParam) == IDC_APPLY)
-						break;
-					g_cyclactionsHwnd = NULL; // for proper toggle state report, see openCyclactionsWnd()
-					SaveWindowPos(_hwnd, CYCLACTIONWND_POS_KEY);
-					ShowWindow(_hwnd, SW_HIDE);
-//JFB r525			EndDialog(_hwnd,0);
-					break;
-				case IDCANCEL:
-					Cancel(false);
-					g_cyclactionsHwnd = NULL; // for proper toggle state report, see openCyclactionsWnd()
-					SaveWindowPos(_hwnd, CYCLACTIONWND_POS_KEY);
-					ShowWindow(_hwnd, SW_HIDE);
-//JFB r525			EndDialog(_hwnd,0);
-					break;
-				case IDC_BROWSE:
-				{
-					AllEditListItemEnd(true);
-					HMENU menu=CreatePopupMenu();
-					AddToMenu(menu, "Import in current section...", 1020);
-					AddToMenu(menu, "Import all sections...", 1021);
-					AddToMenu(menu, SWS_SEPARATOR, 0);
-					AddToMenu(menu, "Export selected cycle actions...", 1022);
-					AddToMenu(menu, "Export current section...", 1023);
-					AddToMenu(menu, "Export all sections...", 1024);
-
-					POINT p={0,}; RECT r;
-					GetWindowRect(GetDlgItem(_hwnd, IDC_BROWSE), &r);
-					ScreenToClient(_hwnd,(LPPOINT)&r); ScreenToClient(_hwnd,((LPPOINT)&r)+1);
-					p.x=r.left;	p.y=r.bottom;
-				    ClientToScreen(_hwnd,&p);				    
-					int iCmd = TrackPopupMenu(menu,TPM_LEFTALIGN|TPM_TOPALIGN|TPM_RETURNCMD|TPM_NONOTIFY,p.x,p.y,0,_hwnd,NULL);
-					if (iCmd > 0)
-					{
-						switch (iCmd)
-						{
-							// import in current section
-							case 1020:
-								if (char* fn = BrowseForFiles("S&M - Import cycle actions", g_lastImportFn, NULL, false, SNM_INI_EXT_LIST)) {
-									LoadCyclactions(true, false, g_editedActions, g_editedSection, fn);
-									lstrcpyn(g_lastImportFn, fn, BUFFER_SIZE);
-									free(fn);
-									g_editedAction = NULL;
-									UpdateListViews();
-									UpdateEditedStatus(true);
-								}
-								break;
-							// import all sections
-							case 1021:
-								if (char* fn = BrowseForFiles("S&M - Import cycle actions", g_lastImportFn, NULL, false, SNM_INI_EXT_LIST)) {
-									LoadCyclactions(true, false, g_editedActions, -1, fn);
-									lstrcpyn(g_lastImportFn, fn, BUFFER_SIZE);
-									free(fn);
-									g_editedAction = NULL;
-									UpdateListViews();
-									UpdateEditedStatus(true);
-								}
-								break;
-
-							// export selected cycle actions
-							case 1022:
-							{
-								int x=0; WDL_PtrList_DeleteOnDestroy<Cyclaction> actions[SNM_MAX_CYCLING_SECTIONS];
-								while(Cyclaction* a = (Cyclaction*)g_lvL->EnumSelected(&x))
-									actions[g_editedSection].Add(new Cyclaction(a));
-								if (actions[g_editedSection].GetSize()) {
-									char fn[BUFFER_SIZE] = "";
-									if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
-										SaveCyclactions(actions, g_editedSection, fn);
-										strcpy(g_lastExportFn, fn);
-									}
-								}
-							}
-							break;
-							// export current section
-							case 1023:
-							{
-								WDL_PtrList_DeleteOnDestroy<Cyclaction> actions[SNM_MAX_CYCLING_SECTIONS];
-								for (int i=0; i < g_editedActions[g_editedSection].GetSize(); i++)
-									actions[g_editedSection].Add(new Cyclaction(g_editedActions[g_editedSection].Get(i)));
-								if (actions[g_editedSection].GetSize()) {
-									char fn[BUFFER_SIZE] = "";
-									if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
-										SaveCyclactions(actions, g_editedSection, fn);
-										strcpy(g_lastExportFn, fn);
-									}
-								}
-							}
-								break;
-							// export all sections
-							case 1024:
-								if (g_editedActions[0].GetSize() || g_editedActions[1].GetSize() || g_editedActions[2].GetSize()) { // yeah.., i know..
-									char fn[BUFFER_SIZE] = "";
-									if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
-										SaveCyclactions(g_editedActions, -1, fn);
-										strcpy(g_lastExportFn, fn);
-									}
-								}
-								break;
-						}
-					}
-					DestroyMenu(menu);
-				}
-				break;
-				case IDC_REMOVE:
-				{
-					AllEditListItemEnd(true);
-				    HMENU menu=CreatePopupMenu();
-					AddToMenu(menu, "Reset current section", 1030);
-					AddToMenu(menu, "Reset all sections", 1031);
-
-					POINT p={0,}; RECT r;
-					GetWindowRect(GetDlgItem(_hwnd, IDC_REMOVE), &r);
-					ScreenToClient(_hwnd,(LPPOINT)&r); ScreenToClient(_hwnd,((LPPOINT)&r)+1);
-					p.x=r.left;	p.y=r.bottom;
-				    ClientToScreen(_hwnd,&p);				    
-					int iCmd = TrackPopupMenu(menu,TPM_LEFTALIGN|TPM_TOPALIGN|TPM_RETURNCMD|TPM_NONOTIFY,p.x,p.y,0,_hwnd,NULL);
-					if (iCmd > 0) {
-						switch (iCmd) {
-							case 1030:
-								ResetSection(g_editedSection);
-								break;
-							case 1031:
-								for (int sec=0; sec < SNM_MAX_CYCLING_SECTIONS; sec++) ResetSection(sec);
-								break;
-						}
-					}
-					DestroyMenu(menu);
-				}
-				break;
-				case IDC_HELPTEXT:
-					ShellExecute(_hwnd, "open", "http://wiki.cockos.com/wiki/index.php/ALR_Main_S%26M_CREATE_CYCLACTION" , NULL, NULL, SW_SHOWNORMAL);
-					break;
-				case IDC_CHECK1:
-					UpdateEditedStatus(true);
-					break;
-			}
-			return 0;
-			case WM_MOUSEMOVE:
-				if (GetCapture() == _hwnd) {
-					if (g_lvR)
-						g_lvR->OnDrag();
-					return 1;
-				}
-				break;
-			case WM_LBUTTONUP:
-				if (GetCapture() == _hwnd) {
-					ReleaseCapture();
-					return 1;
-				}
-				break;
-			case WM_DRAWITEM:
-				{
-					DRAWITEMSTRUCT *di = (DRAWITEMSTRUCT *)lParam;
-					if (di->CtlType == ODT_BUTTON) 
-					{
-						SetTextColor(di->hDC, (di->itemState & ODS_SELECTED) ? RGB(0,0,0) : RGB(0,0,220));
-						RECT r = di->rcItem;
-						char buf[512];
-						GetWindowText(di->hwndItem, buf, sizeof(buf));
-						DrawText(di->hDC, buf, -1, &r, DT_NOPREFIX | DT_LEFT | DT_VCENTER);
-					}
-				}
-				break;
-		case WM_DESTROY:
-			Cancel(false); // JFB false: removed check on close (painful)
-			g_lvL->OnDestroy();
-			delete g_lvL;
-			g_lvL = NULL;
-			g_lvR->OnDestroy();
-			delete g_lvR;
-			g_lvR = NULL;
-			break;
-	}
-	return 0;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-static int translateAccel(MSG *msg, accelerator_register_t *ctx)
-{
-	if (msg->message == WM_KEYDOWN)
-	{
-		SWS_ListView* lv = NULL;
-		if (g_lvL && g_lvL->IsActive(true))
-			lv = g_lvL;
-		else if (g_lvR && g_lvR->IsActive(true))
-			lv = g_lvR;
-
-		if (SNM_IsActiveWindow(g_cyclactionsHwnd) || lv)
-		{
-			if (lv)
-			{
-				int iRet = lv->EditingKeyHandler(msg);
-				if (iRet) return iRet;
-				iRet = lv->LVKeyHandler(msg, SWS_GetModifiers());
-				if (iRet) return iRet;
-			}
-			return -1;
 		}
 	}
 	return 0;
 }
 
-static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
-
-
-#endif
-
+void SNM_CyclactionWnd::UpdateSection(int _newSection)
+{
+	if (_newSection != g_editedSection)
+	{
+		g_editedSection = _newSection;
+		g_editedAction = NULL;
+		UpdateListViews();
+	}
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1781,20 +1343,14 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 					if (success) state = lp.gettoken_int(2, &success);
 					if (success && g_cyclactions[sec].Get(cycleId) && g_cyclactions[sec].Get(cycleId)->m_performState != state)
 					{
-						// Dynamic action renaming
 						char custCmdId[SNM_MAX_ACTION_CUSTID_LEN] = "";
 						_snprintf(custCmdId, SNM_MAX_ACTION_CUSTID_LEN, "_%s%d", g_cyclactionCustomIds[sec], cycleId+1);
-						int cmdId = NamedCommandLookup(custCmdId);
-						if (cmdId)
+						if (int cmdId = NamedCommandLookup(custCmdId))
 						{
-							COMMAND_T* c = SWSGetCommandByID(cmdId);
-							if (c && SWSUnregisterCommand(cmdId) && 
-								RegisterCyclation(g_cyclactions[sec].Get(cycleId)->GetStepName(state), g_cyclactions[sec].Get(cycleId)->IsToggle(), sec, cycleId+1, cmdId))
-							{
-								free((void*)c->accel.desc); // alloc'ed with strdup
-								free((void*)c->id);
-								DELETE_NULL(c);
-							}
+							// dynamic action renaming
+							SWSFreeUnregisterDynamicCmd(cmdId);
+							RegisterCyclation(g_cyclactions[sec].Get(cycleId)->GetStepName(state), g_cyclactions[sec].Get(cycleId)->IsToggle(), sec, cycleId+1, cmdId);
+
 							g_cyclactions[sec].Get(cycleId)->m_performState = state; // before refreshing toolbars!
 							RefreshToolbar(cmdId);
 						}
@@ -1823,7 +1379,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			if (!g_cyclactions[i].Get(j)->IsEmpty())
 				confStr.AppendFormatted(128,"%d %d %d\n", i, j, g_cyclactions[i].Get(j)->m_performState);
 	if (confStr.GetLength() > iHeaderLen)
-	{	// SWS only write out line if there's cycle actions present
+	{
 		confStr.Append(">\n");
 		StringToExtensionConfig(&confStr, ctx);
 	}
@@ -1836,72 +1392,7 @@ static project_config_extension_t g_projectconfig = {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef _SNM_CYCLACTION_OSX
-
-int CyclactionsInit()
-{
-	_snprintf(g_lastExportFn, BUFFER_SIZE, SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
-	_snprintf(g_lastImportFn, BUFFER_SIZE, SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
-
-	// load undo pref (default == enabled for ascendant compatibility)
-	g_undos = (GetPrivateProfileInt("Cyclactions", "Undos", 1, g_SNMIniFn.Get()) == 1 ? true : false); // in main S&M.ini file (local property)
-
-	// load cycle actions
-	LoadCyclactions(false, false); // do not check cmd ids (may not have been registered yet)
-
-	if (!plugin_register("accelerator",&g_ar) || !plugin_register("projectconfig",&g_projectconfig))
-		return 0;
-	return 1;
-}
-
-void openCyclactionsWnd(COMMAND_T* _ct)
-{
-#ifdef _WIN32
-	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CYCLACTION), GetMainHwnd(), CyclactionsWndProc);
-
-	// Toggle
-	if (g_cyclactionsHwnd && (g_editedSection == (int)_ct->user))
-	{
-		Cancel(true);
-		g_cyclactionsHwnd = NULL;
-		ShowWindow(hwnd, SW_HIDE);
-	}
-	else
-	{
-		g_cyclactionsHwnd = hwnd;
-		ShowWindow(hwnd, SW_SHOW);
-		SetFocus(hwnd);
-		AllEditListItemEnd(false);
-		SendDlgItemMessage(hwnd,IDC_COMBO,CB_SETCURSEL,(int)_ct->user,0); // ok: won't lead to a WM_COMMAND
-		UpdateSection((int)_ct->user);
-	}
-#else
-	char reply[4096]= "";
-	char question[BUFFER_SIZE]= "Name (#name: toggle action):,Command:";
-	for (int i=2; i < SNM_MAX_CYCLING_ACTIONS; i++)
-		strcat(question, ",Command (or ! or !new name):");
-
-	char title[128]= "S&M - ";
-	strcat(title, SNM_CMD_SHORTNAME(_ct));
-	if (GetUserInputs(title, SNM_MAX_CYCLING_ACTIONS, question, reply, 4096))
-	{
-		WDL_FastString msg;
-		if (CreateCyclaction((int)_ct->user, reply, &msg, true))
-			SaveCyclactions();
-		else if (msg.GetLength())
-			SNM_ShowMsg(msg.Get(), "S&M - Cycle Actions - Warning(s)", GetMainHwnd());
-	}
-#endif
-}
-
-bool isCyclationsWndDisplayed(COMMAND_T* _ct) {
-	return (g_cyclactionsHwnd && IsWindow(g_cyclactionsHwnd) && IsWindowVisible(g_cyclactionsHwnd) ? true : false);
-}
-
-
-#else
-
-int CyclactionViewInit()
+int CyclactionInit()
 {
 	_snprintf(g_lastExportFn, BUFFER_SIZE, SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
 	_snprintf(g_lastImportFn, BUFFER_SIZE, SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
@@ -1926,46 +1417,19 @@ int CyclactionViewInit()
 	return 1;
 }
 
-void CyclactionViewExit() {
-	delete g_pCyclactionWnd;
-	g_pCyclactionWnd = NULL;
+void CyclactionExit() {
+	DELETE_NULL(g_pCyclactionWnd);
 }
 
 void OpenCyclactionView(COMMAND_T* _ct)
 {
-	if (g_SNMbeta)
-	{
-		if (g_pCyclactionWnd) 
-		{
-			int prevType = g_editedSection;
-			if (g_editedSection < 0)
-				g_editedSection = (int)_ct->user;
-			g_pCyclactionWnd->Show((prevType == (int)_ct->user) /* i.e toggle */, true);
-		}
-	}
-	else
-	{
-		char reply[4096]= "";
-		char question[BUFFER_SIZE]= "Name (#name: toggle action):,Command:";
-		for (int i=2; i < SNM_MAX_CYCLING_ACTIONS; i++)
-			strcat(question, ",Command (or ! or !new name):");
-
-		char title[128]= "S&M - ";
-		strcat(title, SNM_CMD_SHORTNAME(_ct));
-		if (GetUserInputs(title, SNM_MAX_CYCLING_ACTIONS, question, reply, 4096))
-		{
-			WDL_FastString msg;
-			if (CreateCyclaction((int)_ct->user, reply, &msg, true))
-				SaveCyclactions();
-			else if (msg.GetLength())
-				SNM_ShowMsg(msg.Get(), "S&M - Cycle Actions - Warning(s)", GetMainHwnd());
-		}
+	if (g_pCyclactionWnd) {
+		g_pCyclactionWnd->Show((g_editedSection == (int)_ct->user) /* i.e toggle */, true);
+		g_pCyclactionWnd->SetType((int)_ct->user);
 	}
 }
 
 bool IsCyclactionViewDisplayed(COMMAND_T*){
 	return (g_pCyclactionWnd && g_pCyclactionWnd->IsValidWindow());
 }
-
-#endif
 

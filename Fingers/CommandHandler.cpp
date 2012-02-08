@@ -131,14 +131,14 @@ void RprCommandManager::addCommand(const char *description, const char *id, RprC
 {
     RprCommandManager *me = RprCommandManager::Instance();
     me->mSWSCommands.push_back(createSWSCommand(description, id, command));
-    SWSRegisterCommand2(&me->mSWSCommands.back(), __FILE__);
+    SWSRegisterCmd(&me->mSWSCommands.back(), __FILE__);
 }
 
 void RprCommandManager::addToggleCommand(const char *description, const char *id, RprToggleCommand *command)
 {
     RprCommandManager *me = RprCommandManager::Instance();
     me->mSWSCommands.push_back(createSWSToggleCommand(description, id, command));
-    SWSRegisterCommand2(&me->mSWSCommands.back(), __FILE__);
+    SWSRegisterCmd(&me->mSWSCommands.back(), __FILE__);
 }
 
 static COMMAND_T 

@@ -164,12 +164,12 @@ HWND GetReaWindowByTitle(const char* _title, int _nComp)
 	return NULL;
 }
 
-HWND GetActionListBox(char* _currentSection, int _sectionMaxSize)
+HWND GetActionListBox(char* _currentSection, int _sectionSz)
 {
-	HWND actionsWnd = GetReaWindowByTitle("Actions");
+	HWND actionsWnd = GetReaWindowByTitle(GetLocalizedString("REAPER", "DLG_274", "744B2F6CFBA0A242", "Actions"));
 	if (actionsWnd && _currentSection)
 		if (HWND cbSection = GetDlgItem(actionsWnd, 0x525))
-			GetWindowText(cbSection, _currentSection, _sectionMaxSize);
+			GetWindowText(cbSection, _currentSection, _sectionSz);
 	return (actionsWnd ? GetDlgItem(actionsWnd, 0x52B) : NULL);
 }
 
@@ -830,11 +830,11 @@ void ShowThemeHelper(COMMAND_T* _ct)
 	if ((int)_ct->user != 1 && report.GetLength())
 		report.Append("\n");
 
-	HWND w = GetReaWindowByTitle("Mixer Master");
+	HWND w = GetReaWindowByTitle(GetLocalizedString("REAPER", "mixer", "63F6D385957D048A", "Mixer Master"));
 	if (w && IsWindowVisible(w)) 
 		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
-	
-	w = GetReaWindowByTitle("Mixer");
+
+	w = GetReaWindowByTitle(GetLocalizedString("REAPER", "common", "D66D409D600C2D04", "Mixer"));
 	if (w && IsWindowVisible(w)) 
 		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
 

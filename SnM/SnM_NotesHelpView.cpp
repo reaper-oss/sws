@@ -30,9 +30,9 @@
 //   * SaveExtensionConfig() that is not called if no proj mods but notes may have been added..
 //   * missing updates on project switches
 // - take changed => title not updated
-// - action_help_t (even if not used yet ?)
 // - drag-drop text
 // - undo does not restore caret pos.
+// - use action_help_t ? ("WIP" according to Cockos)
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
@@ -67,8 +67,8 @@ SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTrackNotes;
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_RegionSubtitle> > g_pRegionSubtitles; // for markers too..
 SWSProjConfig<WDL_FastString> g_prjNotes;
 
-int g_notesType = -1; //JFB!!! wtf!? cannot use "g_notesType": linker conflict with SnM_FXChainView's g_type
-int g_previousNotesType = -1;
+int g_notesViewType = -1;
+int g_prevNotesViewType = -1;
 bool g_locked = 1;
 char g_lastText[MAX_HELP_LENGTH] = "";
 char g_lastImportSubFn[BUFFER_SIZE] = "";
@@ -127,7 +127,7 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	m_cbType.AddItem("Project notes");
 	m_cbType.AddItem("Item notes");
 	m_cbType.AddItem("Track notes");
-#ifdef _MARKER_REGION_NAME
+#ifdef _SNM_MARKER_REGION_NAME
 	m_cbType.AddItem("Marker/Region names");
 #endif
 	m_cbType.AddItem("Marker/Region subtitles");
@@ -152,8 +152,8 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	m_btnExportSub.SetID(BUTTONID_EXPORT_SUB);
 	m_parentVwnd.AddChild(&m_btnExportSub);
 
-	g_previousNotesType = -1; // will force refresh
-	SetType(BOUNDED(g_notesType, 0, m_cbType.GetCount()-1)); // + Update() and timer init
+	g_prevNotesViewType = -1; // will force refresh
+	SetType(BOUNDED(g_notesViewType, 0, m_cbType.GetCount()-1)); // + Update() and timer init
 
 	SetTimer(m_hwnd, UPDATE_TIMER, UPDATE_FREQ, NULL);
 }
@@ -161,21 +161,21 @@ void SNM_NotesHelpWnd::OnInitDlg()
 void SNM_NotesHelpWnd::OnDestroy() 
 {
 	KillTimer(m_hwnd, UPDATE_TIMER);
-	g_previousNotesType = -1;
+	g_prevNotesViewType = -1;
 	m_cbType.Empty();
 }
 
 // note: no diff with current type! (init would fail otherwise)
 void SNM_NotesHelpWnd::SetType(int _type)
 {
-	int prev = g_notesType;
-	g_notesType = _type;
-	m_cbType.SetCurSel(g_notesType);
+	int prev = g_notesViewType;
+	g_notesViewType = _type;
+	m_cbType.SetCurSel(g_notesViewType);
 	SendMessage(m_hwnd, WM_SIZE, 0, 0); // to update the bottom of the GUI
 
 	// force an initial refresh (when IDC_EDIT has the focus, re-enabling the timer 
 	// isn't enough: Update() is skipped, see OnTimer() & IsActive()
-	Update(); // <- g_previousNotesType gets updated here
+	Update(); // <- g_prevNotesViewType gets updated here
 }
 
 void SNM_NotesHelpWnd::SetText(const char* _str) {
@@ -191,7 +191,7 @@ void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes)
 		SetText("");
 
 	bool bHide = true;
-	switch(g_notesType)
+	switch(g_notesViewType)
 	{
 		case SNM_NOTES_PROJECT:
 			bHide = false;
@@ -204,7 +204,7 @@ void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes)
 			if (g_trNote)
 				bHide = false;
 			break;
-#ifdef _MARKER_REGION_NAME
+#ifdef _SNM_MARKER_REGION_NAME
 		case SNM_NOTES_REGION_NAME:
 #endif
 		case SNM_NOTES_REGION_SUBTITLES:
@@ -217,16 +217,16 @@ void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes)
 			break;
 	}
 	ShowWindow(GetDlgItem(m_hwnd, IDC_EDIT), bHide || g_locked ? SW_HIDE : SW_SHOW);
-	m_parentVwnd.RequestRedraw(NULL); // WDL refresh
+	m_parentVwnd.RequestRedraw(NULL);
 }
 
 void SNM_NotesHelpWnd::CSurfSetTrackTitle() {
-	if (g_notesType == SNM_NOTES_TRACK)
+	if (g_notesViewType == SNM_NOTES_TRACK)
 		RefreshGUI();
 }
 
-//JFB TODO? replace "timer-ish track sel change tracking" with this notif?
-//JFB TODO? test on g_notesType?
+//JFB TODO? replace "timer-ish track sel change tracking" with this notif ?
+//JFB TODO? more test (on g_notesViewType) ?
 void SNM_NotesHelpWnd::CSurfSetTrackListChange() 
 {
 	// this is our only notification of active project tab change, so update everything
@@ -245,27 +245,14 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	{
 		case IDC_EDIT:
 			if (HIWORD(wParam)==EN_CHANGE)
-				saveCurrentText(g_notesType); // + undos
+				saveCurrentText(g_notesViewType); // + undos
 			break;
 		case SET_ACTION_HELP_FILE_MSG:
 			SetActionHelpFilename(NULL);
 			break;
 		case BUTTONID_LOCK:
 			if (!HIWORD(wParam))
-			{
-				g_locked = !g_locked;
-//				if (!g_locked)
-//					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
-				RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
-				if (g_notesType == SNM_NOTES_REGION_SUBTITLES
-#ifdef _MARKER_REGION_NAME
-					|| g_notesType == SNM_NOTES_REGION_NAME
-#endif
-					)
-					Update(true); // play vs edit cursor when unlocking
-				else
-					 RefreshGUI();
-			}
+				ToggleLock();
 			break;
 		case BUTTONID_ALR:
 			if (!HIWORD(wParam) && *g_lastActionCustId && _strnicmp(g_lastActionDesc, "Custom:", 7))
@@ -293,8 +280,8 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (HIWORD(wParam)==CBN_SELCHANGE)
 			{
 				SetType(m_cbType.GetCurSel());
-//				if (!g_locked)
-//					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
+				if (!g_locked)
+					SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 			}
 			break;
 		default:
@@ -311,7 +298,7 @@ bool SNM_NotesHelpWnd::IsActive(bool bWantEdit) {
 
 HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y)
 {
-	if (g_notesType == SNM_NOTES_ACTION_HELP)
+	if (g_notesViewType == SNM_NOTES_ACTION_HELP)
 	{
 		HMENU hMenu = CreatePopupMenu();
 		AddToMenu(hMenu, "Set action help file...", SET_ACTION_HELP_FILE_MSG);
@@ -342,16 +329,16 @@ int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState)
 
 void SNM_NotesHelpWnd::OnTimer(WPARAM wParam)
 {
-	if (wParam == UPDATE_TIMER && g_notesType != SNM_NOTES_PROJECT)
+	if (wParam == UPDATE_TIMER && g_notesViewType != SNM_NOTES_PROJECT)
 	{
 		// no update when the user edits & when the view is hidden (e.g. inactive docker tab)
 		// but when the view is active: update only for markers and if the view is locked 
 		//(=> updates during playback, in other cases -e.g. item selection change- the main window 
 		// *will* be the active one)
 		if (IsWindowVisible(m_hwnd) && 
-			(!IsActive() || (g_locked && (g_notesType == SNM_NOTES_REGION_SUBTITLES
-#ifdef _MARKER_REGION_NAME
-			|| g_notesType == SNM_NOTES_REGION_NAME
+			(!IsActive() || (g_locked && (g_notesViewType == SNM_NOTES_REGION_SUBTITLES
+#ifdef _SNM_MARKER_REGION_NAME
+			|| g_notesViewType == SNM_NOTES_REGION_NAME
 #endif			
 			))))
 		{
@@ -362,9 +349,9 @@ void SNM_NotesHelpWnd::OnTimer(WPARAM wParam)
 
 void SNM_NotesHelpWnd::OnResize()
 {
-	if (g_notesType != g_previousNotesType)
+	if (g_notesViewType != g_prevNotesViewType)
 	{
-		if (g_notesType == SNM_NOTES_REGION_SUBTITLES || g_notesType == SNM_NOTES_ACTION_HELP)
+		if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES || g_notesViewType == SNM_NOTES_ACTION_HELP)
 			m_resize.get_item(IDC_EDIT)->orig.bottom = m_resize.get_item(IDC_EDIT)->real_orig.bottom - 30;
 		else
 			memcpy(&m_resize.get_item(IDC_EDIT)->orig, &m_resize.get_item(IDC_EDIT)->real_orig, sizeof(RECT));
@@ -387,8 +374,8 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 		GetDlgItemText(m_hwnd, IDC_EDIT, buf, MAX_HELP_LENGTH);
 		if (*buf)
 		{
-#ifdef _MARKER_REGION_NAME
-			if (g_notesType == SNM_NOTES_REGION_NAME)
+#ifdef _SNM_MARKER_REGION_NAME
+			if (g_notesViewType == SNM_NOTES_REGION_NAME)
 				ShortenStringToFirstRN(buf);
 #endif
 			int numlines=1, maxlinelen=-1;
@@ -464,7 +451,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 		{
 			// label
 			char str[512] = "No selection!";
-			switch(g_notesType)
+			switch(g_notesViewType)
 			{
 				case SNM_NOTES_PROJECT:
 					EnumProjects(-1, str, 512);
@@ -487,7 +474,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 							strcpy(str, "[MASTER]");
 					}
 					break;
-#ifdef _MARKER_REGION_NAME
+#ifdef _SNM_MARKER_REGION_NAME
 				case SNM_NOTES_REGION_NAME:
 #endif
 				case SNM_NOTES_REGION_SUBTITLES:
@@ -502,7 +489,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 								char timeStr1[32]="", timeStr2[32]="";
 								format_timestr_pos(pos, timeStr1, 32, -1);
 								format_timestr_pos(end, timeStr2, 32, -1);
-								if (g_notesType == SNM_NOTES_REGION_SUBTITLES)
+								if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
 									_snprintf(str, 512, "[%d] \"%s\" (%s -> %s)", num, name, timeStr1, timeStr2);
 								else
 									_snprintf(str, 512, "[%d] %s -> %s", num, timeStr1, timeStr2);
@@ -511,7 +498,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 							{
 								char timeStr[32] = "";
 								format_timestr_pos(pos, timeStr, 32, -1);
-								if (g_notesType == SNM_NOTES_REGION_SUBTITLES)
+								if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
 									_snprintf(str, 512, "[%d] \"%s\" (%s)", num, name, timeStr);
 								else
 									_snprintf(str, 512, "[%d] %s", num, timeStr);
@@ -548,7 +535,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	int y0 = _r->bottom-h;
 
 	// import/export buttons
-	if (g_notesType == SNM_NOTES_REGION_SUBTITLES)
+	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
 	{
 		SNM_SkinToolbarButton(&m_btnImportSub, "Import...");
 		if (!SNM_AutoVWndPosition(&m_btnImportSub, NULL, _r, &x0, y0, h))
@@ -560,7 +547,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	}
 
 	// online help & action list buttons
-	if (g_notesType == SNM_NOTES_ACTION_HELP)
+	if (g_notesViewType == SNM_NOTES_ACTION_HELP)
 	{
 		SNM_SkinToolbarButton(&m_btnActionList, "Action list...");
 		if (!SNM_AutoVWndPosition(&m_btnActionList, NULL, _r, &x0, y0, h))
@@ -571,6 +558,23 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 			return;
 	}
 
+}
+
+bool SNM_NotesHelpWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
+{
+	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1))
+	{
+		switch (v->GetID())
+		{
+			case BUTTONID_LOCK:
+				return (lstrcpyn(_bufOut, g_locked ? "Text locked ('Big font' mode)" : "Text unlocked", _bufOutSz) != NULL);
+			case COMBOID_TYPE:
+				return (lstrcpyn(_bufOut, "Notes type", _bufOutSz) != NULL);
+			case TXTID_LABEL:
+				return (lstrcpyn(_bufOut, ((WDL_VirtualStaticText*)v)->GetText(), _bufOutSz) != NULL);
+		}
+	}
+	return false;
 }
 
 HBRUSH SNM_NotesHelpWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
@@ -584,6 +588,23 @@ HBRUSH SNM_NotesHelpWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
 		return SNM_GetThemeBrush(bg);
 	}
 	return 0;
+}
+
+void SNM_NotesHelpWnd::ToggleLock()
+{
+	g_locked = !g_locked;
+	RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
+	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES
+#ifdef _SNM_MARKER_REGION_NAME
+		|| g_notesViewType == SNM_NOTES_REGION_NAME
+#endif
+		)
+		Update(true); // play vs edit cursor when unlocking
+	else
+		 RefreshGUI();
+
+	if (!g_locked)
+		SetFocus(GetDlgItem(m_hwnd, IDC_EDIT));
 }
 
 
@@ -604,7 +625,7 @@ void SNM_NotesHelpWnd::saveCurrentText(int _type)
 		case SNM_NOTES_TRACK:
 			saveCurrentTrackNotes();
 			break;
-#ifdef _MARKER_REGION_NAME
+#ifdef _SNM_MARKER_REGION_NAME
 		case SNM_NOTES_REGION_NAME:
 #endif
 		case SNM_NOTES_REGION_SUBTITLES:
@@ -753,9 +774,9 @@ void SNM_NotesHelpWnd::Update(bool _force)
 		updateReentrance = true; 
 
 		// force refresh if needed
-		if (_force || g_notesType != g_previousNotesType)
+		if (_force || g_notesViewType != g_prevNotesViewType)
 		{
-			g_previousNotesType = g_notesType;
+			g_prevNotesViewType = g_notesViewType;
 			g_lastActionListSel = -1;
 			*g_lastActionCustId = '\0';
 			*g_lastActionDesc = '\0';
@@ -769,7 +790,7 @@ void SNM_NotesHelpWnd::Update(bool _force)
 
 		// update
 		int refreshType = NO_REFRESH;
-		switch(g_notesType)
+		switch(g_notesViewType)
 		{
 			case SNM_NOTES_PROJECT:
 				SetText(g_prjNotes.Get()->Get());
@@ -795,11 +816,11 @@ void SNM_NotesHelpWnd::Update(bool _force)
 			case SNM_NOTES_TRACK:
 				refreshType = updateTrackNotes();
 				break;
-#ifdef _MARKER_REGION_NAME
+#ifdef _SNM_MARKER_REGION_NAME
 			case SNM_NOTES_REGION_NAME:
 #endif
 			case SNM_NOTES_REGION_SUBTITLES:
-				refreshType = updateMkrRgnNameOrNotes(g_notesType != SNM_NOTES_REGION_SUBTITLES);
+				refreshType = updateMkrRgnNameOrNotes(g_notesViewType != SNM_NOTES_REGION_SUBTITLES);
 				break;
 			case SNM_NOTES_ACTION_HELP:
 				refreshType = updateActionHelp();
@@ -1087,9 +1108,9 @@ void NoteHelp_UpdateJob::Perform() {
 
 void NoteHelp_MarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags)
 {
-	if (g_pNotesHelpWnd && g_notesType == SNM_NOTES_REGION_SUBTITLES
-#ifdef _MARKER_REGION_NAME
-		|| g_notesType == SNM_NOTES_REGION_NAME
+	if (g_pNotesHelpWnd && g_notesViewType == SNM_NOTES_REGION_SUBTITLES
+#ifdef _SNM_MARKER_REGION_NAME
+		|| g_notesViewType == SNM_NOTES_REGION_NAME
 #endif
 		)
 	{
@@ -1228,26 +1249,29 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	g_pRegionSubtitles.Get()->Empty(true);
 
 	// init S&M project notes with REAPER's ones
-	char buf[BUFFER_SIZE] = "";
-	EnumProjects(-1, buf, BUFFER_SIZE);
-
-	// SWS - It's possible at this point that we're not reading an RPP file (eg during import), check to be sure!
-	// If so, just ignore the possibility that there might be project notes.
-	if (strlen(buf) > 3 && _stricmp(buf+strlen(buf)-3, "RPP") == 0)
+	if (!isUndo)
 	{
-		WDL_FastString startOfrpp;
+		char buf[BUFFER_SIZE] = "";
+		EnumProjects(-1, buf, BUFFER_SIZE);
 
-		// jut read the very begining of the file (where notes are, no-op if notes are longer)
-		// => much faster REAPER startup (based on the parser tolerance..)
-		if (LoadChunk(buf, &startOfrpp, true, MAX_HELP_LENGTH+128) && startOfrpp.GetLength())
+		// SWS - It's possible at this point that we're not reading an RPP file (eg during import), check to be sure!
+		// If so, just ignore the possibility that there might be project notes.
+		if (strlen(buf) > 3 && _stricmp(buf+strlen(buf)-3, "RPP") == 0)
 		{
-			SNM_ChunkParserPatcher p(&startOfrpp);
-			WDL_FastString notes;
-			if (p.GetSubChunk("NOTES", 2, 0, &notes, "RIPPLE") >= 0)
+			WDL_FastString startOfrpp;
+
+			// jut read the very begining of the file (where notes are, no-op if notes are longer)
+			// => much faster REAPER startup (based on the parser tolerance..)
+			if (LoadChunk(buf, &startOfrpp, true, MAX_HELP_LENGTH+128) && startOfrpp.GetLength())
 			{
-				char bufNotes[MAX_HELP_LENGTH] = "";
-				if (GetStringFromNotesChunk(&notes, bufNotes, MAX_HELP_LENGTH))
-					g_prjNotes.Get()->Set(bufNotes);
+				SNM_ChunkParserPatcher p(&startOfrpp);
+				WDL_FastString notes;
+				if (p.GetSubChunk("NOTES", 2, 0, &notes, "RIPPLE") >= 0)
+				{
+					char bufNotes[MAX_HELP_LENGTH] = "";
+					if (GetStringFromNotesChunk(&notes, bufNotes, MAX_HELP_LENGTH))
+						g_prjNotes.Get()->Set(bufNotes);
+				}
 			}
 		}
 	}
@@ -1337,7 +1361,7 @@ void ImportSubTitleFile(COMMAND_T* _ct)
 		lstrcpyn(g_lastImportSubFn, fn, BUFFER_SIZE);
 		if (ImportSubRipFile(fn))
 			//JFB hard coded undo label: _ct might be NULL (when called from button)
-			//    + avoid trailing "..." in undo point name (when called from for action)
+			//    + avoid trailing "..." in undo point name (when called from action)
 			Undo_OnStateChangeEx("Import subtitle file", UNDO_STATE_ALL, -1);
 		else
 			MessageBox(GetMainHwnd(), "Invalid subtitle file!", "S&M - Error", MB_OK);
@@ -1414,7 +1438,7 @@ int NotesHelpViewInit()
 	lstrcpyn(g_lastExportSubFn, GetResourcePath(), BUFFER_SIZE);
 
 	// load prefs 
-	g_notesType = GetPrivateProfileInt("NOTES_HELP_VIEW", "Type", 0, g_SNMIniFn.Get());
+	g_notesViewType = GetPrivateProfileInt("NOTES_HELP_VIEW", "Type", 0, g_SNMIniFn.Get());
 	g_locked = (GetPrivateProfileInt("NOTES_HELP_VIEW", "Lock", 0, g_SNMIniFn.Get()) == 1);
 	GetPrivateProfileString("NOTES_HELP_VIEW", "BigFontName", SWSDLG_TYPEFACE, g_bigFontName, 64, g_SNMIniFn.Get());
 
@@ -1433,7 +1457,7 @@ void NotesHelpViewExit()
 {
 	// save prefs
 	char tmp[2] = "";
-	_snprintf(tmp, 2, "%d", g_notesType);
+	_snprintf(tmp, 2, "%d", g_notesViewType);
 	WritePrivateProfileString("NOTES_HELP_VIEW", "Type", tmp, g_SNMIniFn.Get()); 
 	_snprintf(tmp, 2, "%d", g_locked);
 	WritePrivateProfileString("NOTES_HELP_VIEW", "Lock", tmp, g_SNMIniFn.Get()); 
@@ -1451,8 +1475,12 @@ void OpenNotesHelpView(COMMAND_T* _ct)
 {
 	if (g_pNotesHelpWnd)
 	{
-		g_pNotesHelpWnd->Show(g_notesType == (int)_ct->user /* i.e toggle */, true);
-		g_pNotesHelpWnd->SetType((int)_ct->user);
+		int newType = (int)_ct->user; // -1 means toggle current type
+		if (newType == -1)
+			newType = g_notesViewType;
+
+		g_pNotesHelpWnd->Show(g_notesViewType == newType /* i.e toggle */, true);
+		g_pNotesHelpWnd->SetType(newType);
 		if (!g_locked)
 			SetFocus(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT));
 	}
@@ -1463,21 +1491,8 @@ bool IsNotesHelpViewDisplayed(COMMAND_T* _ct) {
 }
 
 void ToggleNotesHelpLock(COMMAND_T*) {
-
-	g_locked = !g_locked;
 	if (g_pNotesHelpWnd)
-	{
-		if (g_notesType == SNM_NOTES_REGION_SUBTITLES
-#ifdef _MARKER_REGION_NAME
-			|| g_notesType == SNM_NOTES_REGION_NAME
-#endif
-			)
-				g_pNotesHelpWnd->Update(true); // play vs edit cursor when unlocking
-			else
-				g_pNotesHelpWnd->RefreshGUI();
-//		if (!g_locked)
-//			SetFocus(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT));
-	}
+		g_pNotesHelpWnd->ToggleLock();
 }
 
 bool IsNotesHelpLocked(COMMAND_T*) {

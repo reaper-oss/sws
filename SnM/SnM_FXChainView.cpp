@@ -41,10 +41,11 @@
 //#include "../../WDL/projectcontext.h"
 
 
-// Commands
-#define AUTO_FILL_DIR_MSG			0xF001 // common cmds
-#define AUTO_FILL_PRJ_MSG			0xF002
-#define AUTO_FILL_DEFAULT_MSG		0xF003
+// commands
+#define AUTOFILL_MSG				0xF000 // common cmds
+#define AUTOFILL_DIR_MSG			0xF001
+#define AUTOFILL_PRJ_MSG			0xF002
+#define AUTOFILL_DEFAULT_MSG		0xF003
 #define CLEAR_SLOTS_MSG				0xF004
 #define DEL_SLOTS_MSG				0xF005
 #define DEL_FILES_MSG				0xF006
@@ -61,25 +62,34 @@
 #define FILTER_BY_PATH_MSG			0xF011
 #define FILTER_BY_COMMENT_MSG		0xF012
 #define RENAME_MSG					0xF013
-#define FXC_APPLY_TR_MSG			0xF020 // fx chains cmds
-#define FXC_APPLY_TAKE_MSG			0xF021
-#define FXC_APPLY_ALLTAKES_MSG		0xF022
-#define FXC_COPY_MSG				0xF023
-#define FXC_PASTE_TR_MSG			0xF024
-#define FXC_PASTE_TAKE_MSG			0xF025
-#define FXC_PASTE_ALLTAKES_MSG		0xF026
-#define FXC_AUTOSAVE_INPUT_FX		0xF027
-#define FXC_AUTOSAVE_TR_MSG			0xF028
-#define FXC_AUTOSAVE_ITEM_MSG		0xF029
-#define FXC_AUTOSAVE_DEFNAME_MSG	0xF02A
-#define FXC_AUTOSAVE_FX1NAME_MSG	0xF02B
+#define ADD_BOOKMARK_MSG			0xF014
+#define DEL_BOOKMARK_MSG			0xF015
+#define REN_BOOKMARK_MSG			0xF016
+#define NEW_BOOKMARK_FXC_MSG		0xF017
+#define NEW_BOOKMARK_TR_MSG			0xF018
+#define NEW_BOOKMARK_PRJ_MSG		0xF019
+#define NEW_BOOKMARK_MED_MSG		0xF01A
+#define NEW_BOOKMARK_IMG_MSG		0xF01B
+#define NEW_BOOKMARK_THM_MSG		0xF01C  // ..leave some room here! as much as default slot types..
+#define FXC_APPLY_TR_MSG			0xF030 // fx chains cmds
+#define FXC_APPLY_TAKE_MSG			0xF031
+#define FXC_APPLY_ALLTAKES_MSG		0xF032
+#define FXC_COPY_MSG				0xF033
+#define FXC_PASTE_TR_MSG			0xF034
+#define FXC_PASTE_TAKE_MSG			0xF035
+#define FXC_PASTE_ALLTAKES_MSG		0xF036
+#define FXC_AUTOSAVE_INPUTFX_MSG	0xF037
+#define FXC_AUTOSAVE_TR_MSG			0xF038
+#define FXC_AUTOSAVE_ITEM_MSG		0xF039
+#define FXC_AUTOSAVE_DEFNAME_MSG	0xF03A
+#define FXC_AUTOSAVE_FX1NAME_MSG	0xF03B
 #define TRT_APPLY_MSG				0xF040 // track template cmds
-#define TRT_APPLY_WITEMS_MSG		0xF041
+#define TRT_APPLY_WITH_ENV_ITEM_MSG	0xF041
 #define TRT_IMPORT_MSG				0xF042
 #define TRT_REPLACE_ITEMS_MSG		0xF043
 #define TRT_PASTE_ITEMS_MSG			0xF044
 #define TRT_AUTOSAVE_WITEMS_MSG		0xF045
-
+#define TRT_AUTOSAVE_WENVS_MSG		0xF046
 #define PRJ_OPEN_SELECT_MSG			0xF050 // project template cmds
 #define PRJ_OPEN_SELECT_TAB_MSG		0xF051
 #define PRJ_AUTOFILL_RECENTS_MSG	0xF052
@@ -99,43 +109,46 @@
 #endif
 
 // labels for undo points and popup menu items
-#define FXC_APPLY_TR_STR		"Paste (replace) FX chain to selected tracks"
-#define FXCIN_APPLY_TR_STR		"Paste (replace) input FX chain to selected tracks"
-#define FXC_APPLY_TAKE_STR		"Paste (replace) FX chain to selected items"
-#define FXC_APPLY_ALLTAKES_STR	"Paste (replace) FX chain to selected items, all takes"
-#define FXC_PASTE_TR_STR		"Paste FX chain to selected tracks"
-#define FXCIN_PASTE_TR_STR		"Paste input FX chain to selected tracks"
-#define FXC_PASTE_TAKE_STR		"Paste FX chain to selected items"
-#define FXC_PASTE_ALLTAKES_STR	"Paste FX chain to selected items, all takes"
-#define TRT_APPLY_STR			"Apply track template to selected tracks (w/o items)"
-#define TRT_APPLY_WITEMS_STR	"Apply track template to selected tracks (w/ items)"
-#define TRT_IMPORT_STR			"Import tracks from track template"
-#define TRT_APPLY_ITEMS_STR		"Replace items of selected tracks"
-#define TRT_PASTE_ITEMS_STR		"Paste items to selected tracks"
-#define PRJ_SELECT_LOAD_STR		"Open/select project"
-#define PRJ_SELECT_LOAD_TAB_STR	"Open/select project (new tab)"
-#define MED_PLAY_STR			"Play media file in selected tracks (toggle)"
-#define MED_LOOP_STR			"Loop media file in selected tracks (toggle)"
-#define MED_PLAYLOOP_STR		"Play/loop media file"
-#define MED_ADD_STR				"Insert media"
-#define IMG_SHOW_STR			"Show image"
-#define IMG_TRICON_STR			"Set track icon for selected tracks"
+#define FXC_APPLY_TR_STR			"Paste (replace) FX chain to selected tracks"
+#define FXCIN_APPLY_TR_STR			"Paste (replace) input FX chain to selected tracks"
+#define FXC_APPLY_TAKE_STR			"Paste (replace) FX chain to selected items"
+#define FXC_APPLY_ALLTAKES_STR		"Paste (replace) FX chain to selected items, all takes"
+#define FXC_PASTE_TR_STR			"Paste FX chain to selected tracks"
+#define FXCIN_PASTE_TR_STR			"Paste input FX chain to selected tracks"
+#define FXC_PASTE_TAKE_STR			"Paste FX chain to selected items"
+#define FXC_PASTE_ALLTAKES_STR		"Paste FX chain to selected items, all takes"
+#define TRT_APPLY_STR				"Apply track template to selected tracks"
+#define TRT_APPLY_WITH_ENV_ITEM_STR	"Apply track template (+envelopes/items) to selected tracks"
+#define TRT_IMPORT_STR				"Import tracks from track template"
+#define TRT_REPLACE_ITEMS_STR		"Replace items of selected tracks"
+#define TRT_PASTE_ITEMS_STR			"Paste items to selected tracks"
+#define PRJ_SELECT_LOAD_STR			"Open/select project"
+#define PRJ_SELECT_LOAD_TAB_STR		"Open/select project (new tab)"
+#define MED_PLAY_STR				"Play media file in selected tracks (toggle)"
+#define MED_LOOP_STR				"Loop media file in selected tracks (toggle)"
+#define MED_PLAYLOOP_STR			"Play/loop media file"
+#define MED_ADD_STR					"Insert media"
+#define IMG_SHOW_STR				"Show image"
+#define IMG_TRICON_STR				"Set track icon for selected tracks"
 #ifdef _WIN32
-#define THM_LOAD_STR			"Load theme"
+#define THM_LOAD_STR				"Load theme"
 #endif
 
 #define DRAGDROP_EMPTY_SLOT		">Empty<"
 #define FILTER_DEFAULT_STR		"Filter"
-#define AUTO_SAVE_ERR_STR		"Probable cause: no selection, cannot write file, invalid filename, empty chunk, etc..."
-#define AUTO_FILL_ERR_STR		"Probable cause: all files are already present, empty/invalid directory, etc..."
+#define AUTOSAVE_ERR_STR		"Probable cause: no selection, cannot write file, invalid filename, empty chunk, etc..."
+#define AUTOFILL_ERR_STR		"Probable cause: all files are already present, empty/not found directory, etc..."
+#define NO_SLOT_ERR_STR			"No %s slot defined in the Resources view!"
 
 enum {
-  BUTTONID_AUTO_SAVE=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+  BUTTONID_AUTOFILL=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+  BUTTONID_AUTOSAVE,
   COMBOID_TYPE,
   CONTAINER_ADD_DEL,
   BUTTONID_ADD_BOOKMARK,
   BUTTONID_DEL_BOOKMARK,
   BUTTONID_TIED_ACTIONS,
+  BUTTONID_OFFSET_TR_TEMPLATE,
   TXTID_DBL_TYPE,
   COMBOID_DBLCLICK_TYPE,
   TXTID_DBL_TO,
@@ -160,7 +173,7 @@ WDL_PtrList<PathSlotItem> g_dragPathSlotItems;
 WDL_PtrList<FileSlotList> g_slots;
 
 // prefs
-int g_type = -1;
+int g_resViewType = -1;
 
 int g_tiedSlotActions[SNM_NUM_DEFAULT_SLOTS]; // slot actions of default type/idx are tied to type/value
 int g_dblClickPrefs[SNM_MAX_SLOT_TYPES]; // flags, loword: dbl-click type, hiword: dbl-click to (only for fx chains, atm)
@@ -170,27 +183,27 @@ int g_filterPref = 1; // bitmask: &1 = filter by name, &2 = filter by path, &4 =
 
 int g_prjLoaderStartPref = -1; // 1-based
 int g_prjLoaderEndPref = -1; // 1-based
-bool g_autoSaveTrTmpltWithItemsPref = true;
+int g_autoSaveTrTmpltPref = 3; // &1: with items, &2: with envs
 int g_autoSaveFXChainPref = FXC_AUTOSAVE_PREF_TRACK;
 int g_autoSaveFXChainNamePref = 0;
 
 // helper funcs
 FileSlotList* GetCurList() {
-	return g_slots.Get(g_type);
+	return g_slots.Get(g_resViewType);
 }
 
 WDL_FastString* GetAutoSaveDir(int _type = -1) {
-	if (_type < 0) _type = g_type;
+	if (_type < 0) _type = g_resViewType;
 	return g_autoSaveDirs.Get(_type);
 }
 
 WDL_FastString* GetAutoFillDir(int _type = -1) {
-	if (_type < 0) _type = g_type;
+	if (_type < 0) _type = g_resViewType;
 	return g_autoFillDirs.Get(_type);
 }
 
 int GetTypeForUser(int _type = -1) {
-	if (_type < 0) _type = g_type;
+	if (_type < 0) _type = g_resViewType;
 	if (_type >= SNM_NUM_DEFAULT_SLOTS)
 		for (int i=0; i < SNM_NUM_DEFAULT_SLOTS; i++)
 			if (!_stricmp(g_slots.Get(_type)->GetFileExt(), g_slots.Get(i)->GetFileExt()))
@@ -198,34 +211,31 @@ int GetTypeForUser(int _type = -1) {
 	return _type;
 }
 
+int GetTypeFromSlotList(FileSlotList* _l) {
+	for (int i=0; i < g_slots.GetSize(); i++)
+		if (g_slots.Get(i) == _l)
+			return i;
+	return -1;
+}
+
 bool IsMultiType(int _type = -1) {
-	if (_type < 0) _type = g_type;
+	if (_type < 0) _type = g_resViewType;
 	for (int i=0; i < g_slots.GetSize(); i++)
 		if (i != _type && GetTypeForUser(i) == GetTypeForUser(_type))
 				return true;
 	return false;
 }
 
-int GetFirstCustomSlotType() {
-	return SNM_NUM_DEFAULT_SLOTS;
-}
-
-bool IsCustomSlotType(int _type = -1) {
-	if (_type < 0) _type = g_type;
-	return (_type >= GetFirstCustomSlotType());
-}
-
 const char* GetMenuDesc(int _type = -1) {
-	if (_type < 0) _type = g_type;
+	if (_type < 0) _type = g_resViewType;
 	if (_type >= SNM_NUM_DEFAULT_SLOTS)
 		return g_slots.Get(_type)->GetDesc();
 	return g_slots.Get(_type)->GetMenuDesc();
 }
 
 void GetIniSectionName(int _type, char* _bufOut, int _bufOutSz) {
-	int custType1 = GetFirstCustomSlotType();
-	if (_type >= custType1) {
-		_snprintf(_bufOut, _bufOutSz, "CustomSlotType%d", _type-custType1+1);
+	if (_type >= SNM_NUM_DEFAULT_SLOTS) {
+		_snprintf(_bufOut, _bufOutSz, "CustomSlotType%d", _type-SNM_NUM_DEFAULT_SLOTS+1);
 		return;
 	}
 	lstrcpyn(_bufOut, g_slots.Get(_type)->GetResourceDir(),_bufOutSz);
@@ -332,10 +342,10 @@ void FileSlotList::ClearSlot(int _slot, bool _guiUpdate) {
 void FileSlotList::ClearSlotPrompt(COMMAND_T* _ct)
 {
 	if (!GetSize()) {
-		MessageBox(GetMainHwnd(), "No slot defined in the Resources view!", "S&M - Error", MB_OK);
+		WDL_FastString msg; msg.SetFormatted(128, NO_SLOT_ERR_STR, g_slots.Get(GetTypeForUser(GetTypeFromSlotList(this)))->GetDesc());
+		MessageBox(GetMainHwnd(), msg.Get(), "S&M - Error", MB_OK);
 		return;
 	}
-
 	int slot = PromptForInteger(SNM_CMD_SHORTNAME(_ct), "Slot", 1, GetSize()); //loops on err
 	if (slot == -1) return; // user has cancelled
 	else ClearSlot(slot);
@@ -382,25 +392,38 @@ bool FileSlotList::GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg
 // returns NULL if failed, otherwise it's up to the caller to free the returned string
 WDL_FastString* FileSlotList::GetOrPromptOrBrowseSlot(const char* _title, int _slot)
 {
-	if (!GetSize()) {
-		MessageBox(GetMainHwnd(), "No slot defined in the Resources view!", "S&M - Error", MB_OK);
-		return NULL;
+	// prompt for slot if needed
+	if (_slot == -1)
+	{
+		if (GetSize())
+			_slot = PromptForInteger(_title, "Slot", 1, GetSize()); // loops on err
+		else {
+			WDL_FastString msg; msg.SetFormatted(128, NO_SLOT_ERR_STR, g_slots.Get(GetTypeForUser(GetTypeFromSlotList(this)))->GetDesc());
+			MessageBox(GetMainHwnd(), msg.Get(), "S&M - Error", MB_OK);
+		}
+	}
+	if (_slot == -1) // user has cancelled or empty
+		return NULL; 
+
+	// adds the needed number of slots (more macro friendly)
+	if (_slot >= GetSize())
+	{
+		int idx=0;
+		for (int i=GetSize(); i <= _slot; i++)
+			Add(new PathSlotItem());
+		if (g_pResourcesWnd) {
+			g_pResourcesWnd->Update();
+			g_pResourcesWnd->SelectBySlot(_slot);
+		}
 	}
 
-	WDL_FastString* fnStr = NULL;
-	if (_slot < 0 || _slot < GetSize())
+	if (_slot < GetSize())
 	{
-		// prompt for slot if needed
-		if (_slot == -1)
-			_slot = PromptForInteger(_title, "Slot", 1, GetSize()); // loops on err
-		if (_slot == -1)
-			return NULL; // user has cancelled
-
 		char fn[BUFFER_SIZE]="";
 		if (GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _slot < 0 || !Get(_slot)->IsDefault()))
-			fnStr = new WDL_FastString(fn);
+			return new WDL_FastString(fn);
 	}
-	return fnStr;
+	return NULL;
 }
 
 void FileSlotList::EditSlot(int _slot)
@@ -451,7 +474,7 @@ void SNM_ResourceView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 				if (slot >= 0)
 				{
 					slot++;
-					if (g_type == SNM_SLOT_PRJ && isProjectLoaderConfValid()) // no GetTypeForUser() here: only one loader/selecter config atm..
+					if (g_resViewType == SNM_SLOT_PRJ && isProjectLoaderConfValid()) // no GetTypeForUser() here: only one loader/selecter config atm..
 						_snprintf(str, iStrMax, "%5.d %s", slot, 
 							slot<g_prjLoaderStartPref || slot>g_prjLoaderEndPref ? "  " : 
 							g_prjLoaderStartPref==slot ? "->" : g_prjLoaderEndPref==slot ? "<-" :  "--");
@@ -519,9 +542,9 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 					_snprintf(newFn, BUFFER_SIZE, "%s%c%s.%s", newFn, PATH_SLASH_CHAR, str, ext);
 					if (FileExists(newFn)) 
 					{
-						char buf[BUFFER_SIZE];
+						char buf[BUFFER_SIZE]="";
 						_snprintf(buf, BUFFER_SIZE, "File already exists. Overwrite ?\n%s", newFn);
-						int res = MessageBox(GetMainHwnd(), buf, "S&M - Warning", MB_YESNO);
+						int res = MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), buf, "S&M - Warning", MB_YESNO);
 						if (res == IDYES) {
 							if (!SNM_DeleteFile(newFn, false))
 								break;
@@ -661,24 +684,24 @@ void SNM_ResourceView::Perform()
 	if (pItem && slot >= 0) 
 	{
 		bool wasDefaultSlot = pItem->IsDefault();
-		int dblClickType = LOWORD(g_dblClickPrefs[g_type]);
-		int dblClickTo = HIWORD(g_dblClickPrefs[g_type]);
+		int dblClickType = LOWORD(g_dblClickPrefs[g_resViewType]);
+		int dblClickTo = HIWORD(g_dblClickPrefs[g_resViewType]);
 		switch(GetTypeForUser())
 		{
 			case SNM_SLOT_FXC:
 				switch(dblClickTo)
 				{
 					case 0:
-						applyTracksFXChainSlot(g_type, !dblClickType?FXC_APPLY_TR_STR:FXC_PASTE_TR_STR, slot, !dblClickType, false);
+						applyTracksFXChainSlot(g_resViewType, !dblClickType?FXC_APPLY_TR_STR:FXC_PASTE_TR_STR, slot, !dblClickType, false);
 						break;
 					case 1:
-						applyTracksFXChainSlot(g_type, !dblClickType?FXCIN_APPLY_TR_STR:FXCIN_PASTE_TR_STR, slot, !dblClickType, g_bv4);
+						applyTracksFXChainSlot(g_resViewType, !dblClickType?FXCIN_APPLY_TR_STR:FXCIN_PASTE_TR_STR, slot, !dblClickType, g_bv4);
 						break;
 					case 2:
-						applyTakesFXChainSlot(g_type, !dblClickType?FXC_APPLY_TAKE_STR:FXC_PASTE_TAKE_STR, slot, true, !dblClickType);
+						applyTakesFXChainSlot(g_resViewType, !dblClickType?FXC_APPLY_TAKE_STR:FXC_PASTE_TAKE_STR, slot, true, !dblClickType);
 						break;
 					case 3:
-						applyTakesFXChainSlot(g_type, !dblClickType?FXC_APPLY_ALLTAKES_STR:FXC_PASTE_ALLTAKES_STR, slot, false, !dblClickType);
+						applyTakesFXChainSlot(g_resViewType, !dblClickType?FXC_APPLY_ALLTAKES_STR:FXC_PASTE_ALLTAKES_STR, slot, false, !dblClickType);
 						break;
 				}
 				break;
@@ -686,19 +709,19 @@ void SNM_ResourceView::Perform()
 				switch(dblClickType)
 				{
 					case 0:
-						applyOrImportTrackSlot(g_type, TRT_APPLY_STR, slot, false, false, false);
+						ImportTrackTemplateSlot(g_resViewType, TRT_IMPORT_STR, slot);
 						break;
 					case 1:
-						applyOrImportTrackSlot(g_type, TRT_APPLY_WITEMS_STR, slot, false, true, false);
+						ApplyTrackTemplateSlot(g_resViewType, TRT_APPLY_STR, slot, false, false);
 						break;
 					case 2:
-						applyOrImportTrackSlot(g_type, TRT_IMPORT_STR, slot, true, false, false);
+						ApplyTrackTemplateSlot(g_resViewType, TRT_APPLY_WITH_ENV_ITEM_STR, slot, true, true);
 						break;
 					case 3:
-						replaceOrPasteItemsFromTrackSlot(g_type, TRT_PASTE_ITEMS_STR, slot, true);
+						ReplacePasteItemsTrackTemplateSlot(g_resViewType, TRT_PASTE_ITEMS_STR, slot, true);
 						break;
 					case 4:
-						replaceOrPasteItemsFromTrackSlot(g_type, TRT_APPLY_ITEMS_STR, slot, false);
+						ReplacePasteItemsTrackTemplateSlot(g_resViewType, TRT_REPLACE_ITEMS_STR, slot, false);
 						break;
 				}
 				break;
@@ -706,10 +729,10 @@ void SNM_ResourceView::Perform()
 				switch(dblClickType)
 				{
 					case 0:
-						loadOrSelectProjectSlot(g_type, PRJ_SELECT_LOAD_STR, slot, false);
+						loadOrSelectProjectSlot(g_resViewType, PRJ_SELECT_LOAD_STR, slot, false);
 						break;
 					case 1:
-						loadOrSelectProjectSlot(g_type, PRJ_SELECT_LOAD_TAB_STR, slot, true);
+						loadOrSelectProjectSlot(g_resViewType, PRJ_SELECT_LOAD_TAB_STR, slot, true);
 						break;
 				}
 				break;
@@ -718,26 +741,26 @@ void SNM_ResourceView::Perform()
 				int insertMode = -1;
 				switch(dblClickType) 
 				{
-					case 0: TogglePlaySelTrackMediaSlot(g_type, MED_PLAY_STR, slot, false, false); break;
-					case 1: TogglePlaySelTrackMediaSlot(g_type, MED_LOOP_STR, slot, false, true); break;
+					case 0: TogglePlaySelTrackMediaSlot(g_resViewType, MED_PLAY_STR, slot, false, false); break;
+					case 1: TogglePlaySelTrackMediaSlot(g_resViewType, MED_LOOP_STR, slot, false, true); break;
 					case 2: insertMode = 0; break;
 					case 3: insertMode = 1; break;
 					case 4: insertMode = 3; break;
 				}
 				if (insertMode >= 0)
-					InsertMediaSlot(g_type, MED_ADD_STR, slot, insertMode);
+					InsertMediaSlot(g_resViewType, MED_ADD_STR, slot, insertMode);
 				break;
 			}
 			case SNM_SLOT_IMG:
 				switch(dblClickType) {
-					case 0: ShowImageSlot(g_type, IMG_SHOW_STR, slot); break;
-					case 1: SetSelTrackIconSlot(g_type, IMG_TRICON_STR, slot); break;
-					case 2: InsertMediaSlot(g_type, MED_ADD_STR, slot, 0); break;
+					case 0: ShowImageSlot(g_resViewType, IMG_SHOW_STR, slot); break;
+					case 1: SetSelTrackIconSlot(g_resViewType, IMG_TRICON_STR, slot); break;
+					case 2: InsertMediaSlot(g_resViewType, MED_ADD_STR, slot, 0); break;
 				}
 				break;
 #ifdef _WIN32
 	 		case SNM_SLOT_THM:
-				LoadThemeSlot(g_type, THM_LOAD_STR, slot);
+				LoadThemeSlot(g_resViewType, THM_LOAD_STR, slot);
 				break;
 #endif
 		}
@@ -756,8 +779,6 @@ void SNM_ResourceView::Perform()
 SNM_ResourceWnd::SNM_ResourceWnd()
 	: SWS_DockWnd(IDD_SNM_FXCHAINLIST, "Resources", "SnMResources", 30006, SWSGetCommandID(OpenResourceView))
 {
-	m_previousType = g_type;
-
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
 }
@@ -786,7 +807,10 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_cbDblClickTo);
 	FillDblClickCombos();
 
-	m_btnAutoSave.SetID(BUTTONID_AUTO_SAVE);
+	m_btnAutoFill.SetID(BUTTONID_AUTOFILL);
+	m_parentVwnd.AddChild(&m_btnAutoFill);
+
+	m_btnAutoSave.SetID(BUTTONID_AUTOSAVE);
 	m_parentVwnd.AddChild(&m_btnAutoSave);
 
 	m_txtDblClickType.SetID(TXTID_DBL_TYPE);
@@ -802,6 +826,9 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_txtDblClickTo.SetID(TXTID_DBL_TO);
 	m_txtDblClickTo.SetText("To sel.:");
 	m_parentVwnd.AddChild(&m_txtDblClickTo);
+
+	m_btnOffsetTrTemplate.SetID(BUTTONID_OFFSET_TR_TEMPLATE);
+	m_parentVwnd.AddChild(&m_btnOffsetTrTemplate);
 
 	// restores the text filter when docking/undocking + indirect call to Update() !
 	SetDlgItemText(GetHWND(), IDC_FILTER, g_filter.Get());
@@ -828,10 +855,10 @@ INT_PTR SNM_ResourceWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 void SNM_ResourceWnd::SetType(int _type)
 {
-	m_previousType = g_type;
-	g_type = _type;
+	int prevType = g_resViewType;
+	g_resViewType = _type;
 	m_cbType.SetCurSel(_type);
-	if (m_previousType != g_type)
+	if (prevType != g_resViewType)
 	{
 		FillDblClickCombos();
 		Update();
@@ -850,10 +877,9 @@ void SNM_ResourceWnd::FillTypeCombo()
 	m_cbType.Empty();
 	for (int i=0; i < g_slots.GetSize(); i++)
 		m_cbType.AddItem(GetMenuDesc(i));
-	m_cbType.SetCurSel(g_type < g_slots.GetSize() ? g_type : SNM_SLOT_FXC);
+	m_cbType.SetCurSel((g_resViewType>0 && g_resViewType<g_slots.GetSize()) ? g_resViewType : SNM_SLOT_FXC);
 }
 
-//JFB hard coded labels..
 void SNM_ResourceWnd::FillDblClickCombos()
 {
 	int typeForUser = GetTypeForUser();
@@ -871,10 +897,10 @@ void SNM_ResourceWnd::FillDblClickCombos()
 			m_cbDblClickTo.AddItem("Items (all takes)");
 			break;
 		case SNM_SLOT_TR:
-			m_cbDblClickType.AddItem("Apply to sel tracks (w/o items)");
-			m_cbDblClickType.AddItem("Apply to sel tracks (w/ items)");
 			m_cbDblClickType.AddItem("Import tracks");
-			m_cbDblClickType.AddItem("Paste items to sel tracks");
+			m_cbDblClickType.AddItem("Apply to sel tracks");
+			m_cbDblClickType.AddItem("Apply to sel tracks (+items, envs)");
+			m_cbDblClickType.AddItem("Paste template items to sel tracks");
 			m_cbDblClickType.AddItem("Replace items of sel tracks");
 			break;
 		case SNM_SLOT_PRJ:
@@ -899,8 +925,8 @@ void SNM_ResourceWnd::FillDblClickCombos()
 			break;
 #endif
 	}
-	m_cbDblClickType.SetCurSel(LOWORD(g_dblClickPrefs[g_type]));
-	m_cbDblClickTo.SetCurSel(HIWORD(g_dblClickPrefs[g_type]));
+	m_cbDblClickType.SetCurSel(LOWORD(g_dblClickPrefs[g_resViewType]));
+	m_cbDblClickTo.SetCurSel(HIWORD(g_dblClickPrefs[g_resViewType]));
 }
 
 void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -972,37 +998,43 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				}
 			break;
 		}
-		case AUTO_FILL_DIR_MSG:
+		// auto-fill
+		case BUTTONID_AUTOFILL:
+		case AUTOFILL_MSG:
+			AutoFill(g_resViewType);
+			break;
+		case AUTOFILL_DIR_MSG:
 		{
-			char startPath[BUFFER_SIZE] = "";
-			if (BrowseForDirectory("S&M - Auto-fill directory", GetAutoFillDir()->Get(), startPath, BUFFER_SIZE)) {
-				GetAutoFillDir()->Set(startPath);
-				AutoFill(g_type, startPath);
-			}
+			char path[BUFFER_SIZE] = "";
+			if (BrowseForDirectory("S&&M - Set auto-fill directory", GetAutoFillDir()->Get(), path, BUFFER_SIZE))
+				GetAutoFillDir()->Set(path);
 			break;
 		}
-		case AUTO_FILL_PRJ_MSG:
+		case AUTOFILL_PRJ_MSG:
 		{
-			char startPath[BUFFER_SIZE] = "";
-			GetProjectPath(startPath, BUFFER_SIZE);
-			AutoFill(g_type, startPath); // will look for sub-directories
+			char path[BUFFER_SIZE] = "";
+			GetProjectPath(path, BUFFER_SIZE);
+			GetAutoFillDir()->Set(path);
 			break;
 		}
-		case AUTO_FILL_DEFAULT_MSG:
+		case AUTOFILL_DEFAULT_MSG:
 		{
-			char startPath[BUFFER_SIZE] = "";
-			_snprintf(startPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, GetCurList()->GetResourceDir());
-			AutoFill(g_type, startPath);
+			char path[BUFFER_SIZE] = "";
+			_snprintf(path, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, GetCurList()->GetResourceDir());
+			if (!FileExists(path))
+				CreateDirectory(path, NULL);
+			GetAutoFillDir()->Set(path);
 			break;
 		}
-		case BUTTONID_AUTO_SAVE:
+		// auto-save
+		case BUTTONID_AUTOSAVE:
 		case AUTOSAVE_MSG:
-			AutoSave(g_type, g_autoSaveFXChainPref, g_autoSaveTrTmpltWithItemsPref);
+			AutoSave(g_resViewType, GetTypeForUser()==SNM_SLOT_TR ? g_autoSaveTrTmpltPref : GetTypeForUser()==SNM_SLOT_FXC ? g_autoSaveFXChainPref : 0);
 			break;
 		case AUTOSAVE_DIR_MSG:
 		{
 			char path[BUFFER_SIZE] = "";
-			if (BrowseForDirectory("S&M - Set auto-save directory", GetAutoSaveDir()->Get(), path, BUFFER_SIZE))
+			if (BrowseForDirectory("S&&M - Set auto-save directory", GetAutoSaveDir()->Get(), path, BUFFER_SIZE))
 				GetAutoSaveDir()->Set(path);
 			break;
 		}
@@ -1010,10 +1042,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		{
 			char prjPath[BUFFER_SIZE] = "", path[BUFFER_SIZE] = "";
 			GetProjectPath(prjPath, BUFFER_SIZE);
-			if (!strstr(prjPath, GetResourcePath()))
-				_snprintf(path, BUFFER_SIZE, "%s%c%s", prjPath, PATH_SLASH_CHAR, GetCurList()->GetResourceDir());
-			else
-				_snprintf(path, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, GetCurList()->GetResourceDir());
+			_snprintf(path, BUFFER_SIZE, "%s%c%s", prjPath, PATH_SLASH_CHAR, GetFileRelativePath(GetCurList()->GetResourceDir())); // see GetFileRelativePath
 			if (!FileExists(path))
 				CreateDirectory(path, NULL);
 			GetAutoSaveDir()->Set(path);
@@ -1053,65 +1082,23 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, 1);
 			}
 			break;
+		case REN_BOOKMARK_MSG:
+			RenameBookmark(g_resViewType);
+			break;
 		case BUTTONID_ADD_BOOKMARK:
-			if (g_slots.GetSize() < SNM_MAX_SLOT_TYPES)
-			{
-				char name[256] = "";
-				_snprintf(name, 256, "My %s", GetMenuDesc());
-				if (PromptUserForString(GetMainHwnd(), "S&M - Add resource slot bookmark", name, 256) && *name)
-				{
-					int newType = g_slots.GetSize();
-
-					g_slots.Add(new FileSlotList(
-						GetCurList()->GetResourceDir(), name, GetCurList()->GetFileExt(), 
-						GetCurList()->HasNotepad(), GetCurList()->HasAutoSave(), GetCurList()->HasDblClick()));
-
-					for (int i=0; i < GetCurList()->GetSize(); i++)
-						if (PathSlotItem* slotItem = GetCurList()->Get(i))
-							g_slots.Get(newType)->AddSlot(slotItem->m_shortPath.Get(), slotItem->m_comment.Get());
-
-					g_autoSaveDirs.Add(new WDL_FastString(GetAutoSaveDir()->Get()));
-					g_autoFillDirs.Add(new WDL_FastString(GetAutoFillDir()->Get()));
-					g_dblClickPrefs[newType] = g_dblClickPrefs[g_type];
-//					ClearDeleteSlots(8, true); // true: avoid displayed vs deleted items issues
-					FillTypeCombo();
-					SetType(newType); // + GUI update
-					// ... custom slot type definitions are saved when exiting
-				}
-			}
-			else
-				MessageBox(m_hwnd, "Too many resource slot types!", "S&M - Error", MB_OK);
+		case ADD_BOOKMARK_MSG:
+			NewBookmark(g_resViewType, true);
 			break;
 		case BUTTONID_DEL_BOOKMARK:
-			if (IsCustomSlotType())
-			{
-				int reply;
-				if (GetCurList()->GetSize())
-					reply = MessageBox(m_hwnd, "Delete files too ?", "S&M - Delete resource slot bookmark", MB_YESNOCANCEL);
-				else
-					reply = MessageBox(m_hwnd, "Are you sure you want to delete this bookmark ?", "S&M - Delete resource slot bookmark", MB_OKCANCEL);
-				if (reply != IDCANCEL)
-				{
-					// cleanup ini file (types may not be contiguous anymore..)
-					FlushCustomTypesIniFile();
-					// remove current slot type
-					int oldType = g_type;
-					int oldTypeForUser = GetTypeForUser();
-					ClearDeleteSlots(reply==IDYES ? 8|4 : 8, true);  // true: avoid displayed vs deleted items issues
-					SetType(SNM_SLOT_FXC); // + GUI update
-					g_dblClickPrefs[oldType] = 0;
-					if (g_tiedSlotActions[oldTypeForUser] == oldType)
-						g_tiedSlotActions[oldTypeForUser] = oldTypeForUser;
-					g_autoSaveDirs.Delete(oldType, true);
-					g_autoFillDirs.Delete(oldType, true);
-					g_slots.Delete(oldType, true);
-					FillTypeCombo();
-				}
-			}
+		case DEL_BOOKMARK_MSG:
+			DeleteBookmark(g_resViewType);
 			break;
+
+		// new bookmark cmds are in an interval of cmds: see "default" case below..
+
 		case BUTTONID_TIED_ACTIONS:
 			if (!HIWORD(wParam) || HIWORD(wParam)==600)
-				g_tiedSlotActions[GetTypeForUser()] = g_type;
+				g_tiedSlotActions[GetTypeForUser()] = g_resViewType;
 			break;
 
 		// ***** FX chain *****
@@ -1121,7 +1108,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case FXC_APPLY_TR_MSG:
 		case FXC_PASTE_TR_MSG:
 			if (item && slot >= 0) {
-				applyTracksFXChainSlot(g_type, LOWORD(wParam)==FXC_APPLY_TR_MSG?FXC_APPLY_TR_STR:FXC_PASTE_TR_STR, slot, LOWORD(wParam)==FXC_APPLY_TR_MSG, false);
+				applyTracksFXChainSlot(g_resViewType, LOWORD(wParam)==FXC_APPLY_TR_MSG?FXC_APPLY_TR_STR:FXC_PASTE_TR_STR, slot, LOWORD(wParam)==FXC_APPLY_TR_MSG, false);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -1129,7 +1116,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case FXC_APPLY_TAKE_MSG:
 		case FXC_PASTE_TAKE_MSG:
 			if (item && slot >= 0) {
-				applyTakesFXChainSlot(g_type, LOWORD(wParam)==FXC_APPLY_TAKE_MSG?FXC_APPLY_TAKE_STR:FXC_PASTE_TAKE_STR, slot, true, LOWORD(wParam)==FXC_APPLY_TAKE_MSG);
+				applyTakesFXChainSlot(g_resViewType, LOWORD(wParam)==FXC_APPLY_TAKE_MSG?FXC_APPLY_TAKE_STR:FXC_PASTE_TAKE_STR, slot, true, LOWORD(wParam)==FXC_APPLY_TAKE_MSG);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -1137,12 +1124,12 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case FXC_APPLY_ALLTAKES_MSG:
 		case FXC_PASTE_ALLTAKES_MSG:
 			if (item && slot >= 0) {
-				applyTakesFXChainSlot(g_type, LOWORD(wParam)==FXC_APPLY_ALLTAKES_MSG?FXC_APPLY_ALLTAKES_STR:FXC_PASTE_ALLTAKES_STR, slot, false, LOWORD(wParam)==FXC_APPLY_ALLTAKES_MSG);
+				applyTakesFXChainSlot(g_resViewType, LOWORD(wParam)==FXC_APPLY_ALLTAKES_MSG?FXC_APPLY_ALLTAKES_STR:FXC_PASTE_ALLTAKES_STR, slot, false, LOWORD(wParam)==FXC_APPLY_ALLTAKES_MSG);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
 			break;
-		case FXC_AUTOSAVE_INPUT_FX:
+		case FXC_AUTOSAVE_INPUTFX_MSG:
 			g_autoSaveFXChainPref = FXC_AUTOSAVE_PREF_INPUT_FX;
 			break;
 		case FXC_AUTOSAVE_TR_MSG:
@@ -1158,16 +1145,22 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 		// ***** Track template *****
 		case TRT_APPLY_MSG:
-		case TRT_APPLY_WITEMS_MSG:
 			if (item && slot >= 0) {
-				applyOrImportTrackSlot(g_type, LOWORD(wParam)==TRT_APPLY_MSG?TRT_APPLY_STR:TRT_APPLY_WITEMS_STR, slot, false, LOWORD(wParam)==TRT_APPLY_WITEMS_MSG, false);
+				ApplyTrackTemplateSlot(g_resViewType, TRT_APPLY_STR, slot, false, false);
+				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
+					Update();
+			}
+			break;
+		case TRT_APPLY_WITH_ENV_ITEM_MSG:
+			if (item && slot >= 0) {
+				ApplyTrackTemplateSlot(g_resViewType, TRT_APPLY_WITH_ENV_ITEM_STR, slot, true, true);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
 			break;
 		case TRT_IMPORT_MSG:
 			if (item && slot >= 0) {
-				applyOrImportTrackSlot(g_type, TRT_IMPORT_STR, slot, true, false, false);
+				ImportTrackTemplateSlot(g_resViewType, TRT_IMPORT_STR, slot);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -1175,19 +1168,30 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case TRT_REPLACE_ITEMS_MSG:
 		case TRT_PASTE_ITEMS_MSG:
 			if (item && slot >= 0) {
-				replaceOrPasteItemsFromTrackSlot(g_type, LOWORD(wParam)==TRT_REPLACE_ITEMS_MSG?TRT_APPLY_ITEMS_STR:TRT_PASTE_ITEMS_STR, slot, LOWORD(wParam)==TRT_PASTE_ITEMS_MSG);
+				ReplacePasteItemsTrackTemplateSlot(g_resViewType, LOWORD(wParam)==TRT_REPLACE_ITEMS_MSG?TRT_REPLACE_ITEMS_STR:TRT_PASTE_ITEMS_STR, slot, LOWORD(wParam)==TRT_PASTE_ITEMS_MSG);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
 			break;
+		case BUTTONID_OFFSET_TR_TEMPLATE:
+			if (int* offsPref = (int*)GetConfigVar("templateditcursor")) { // >= REAPER v4.15
+				if (*offsPref) *offsPref = 0;
+				else *offsPref = 1;
+			}
+			break;
 		case TRT_AUTOSAVE_WITEMS_MSG:
-			g_autoSaveTrTmpltWithItemsPref = !g_autoSaveTrTmpltWithItemsPref;
+			if (g_autoSaveTrTmpltPref & 1) g_autoSaveTrTmpltPref &= 0xE;
+			else g_autoSaveTrTmpltPref |= 1;
+			break;
+		case TRT_AUTOSAVE_WENVS_MSG:
+			if (g_autoSaveTrTmpltPref & 2) g_autoSaveTrTmpltPref &= 0xD;
+			else g_autoSaveTrTmpltPref |= 2;
 			break;
 
 		// ***** Project template *****
 		case PRJ_OPEN_SELECT_MSG:
 			if (item && slot >= 0) {
-				loadOrSelectProjectSlot(g_type, PRJ_SELECT_LOAD_STR, slot, false);
+				loadOrSelectProjectSlot(g_resViewType, PRJ_SELECT_LOAD_STR, slot, false);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -1198,7 +1202,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			while(item) {
 				slot = GetCurList()->Find(item);
 				wasDefaultSlot = item->IsDefault();
-				loadOrSelectProjectSlot(g_type, PRJ_SELECT_LOAD_TAB_STR, slot, true);
+				loadOrSelectProjectSlot(g_resViewType, PRJ_SELECT_LOAD_TAB_STR, slot, true);
 				updt |= (wasDefaultSlot && !item->IsDefault()); // slot has been filled ?
 				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
 			}
@@ -1228,8 +1232,11 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				Update();
 				SelectBySlot(startSlot, GetCurList()->GetSize());
 			}
-			else
-				MessageBox(GetMainHwnd(), "No valid recent projects found!", "S&M - Warning", MB_OK);
+			else {
+				char msg[BUFFER_SIZE] = "";
+				_snprintf(msg, BUFFER_SIZE, "No new recent projects found!\n%s", AUTOFILL_ERR_STR);
+				MessageBox(m_hwnd, msg, "S&M - Warning", MB_OK);
+			}
 			break;
 		}
 		case PRJ_LOADER_CONF_MSG:
@@ -1262,7 +1269,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			while(item) {
 				slot = GetCurList()->Find(item);
 				wasDefaultSlot = item->IsDefault();
-				TogglePlaySelTrackMediaSlot(g_type, MED_PLAYLOOP_STR, slot, false, LOWORD(wParam)==MED_LOOP_MSG);
+				TogglePlaySelTrackMediaSlot(g_resViewType, MED_PLAYLOOP_STR, slot, false, LOWORD(wParam)==MED_LOOP_MSG);
 				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
 			}
 			break;
@@ -1272,7 +1279,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			while(item) {
 				slot = GetCurList()->Find(item);
 				wasDefaultSlot = item->IsDefault();
-				InsertMediaSlot(g_type, MED_ADD_STR, slot, LOWORD(wParam)==MED_ADD_CURTR_MSG ? 0 : LOWORD(wParam)==MED_ADD_NEWTR_MSG ? 1 : 3);
+				InsertMediaSlot(g_resViewType, MED_ADD_STR, slot, LOWORD(wParam)==MED_ADD_CURTR_MSG ? 0 : LOWORD(wParam)==MED_ADD_NEWTR_MSG ? 1 : 3);
 				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
 			}
 			break;
@@ -1280,16 +1287,16 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		// ***** theme *****
 #ifdef _WIN32
 		case THM_LOAD_MSG:
-			LoadThemeSlot(g_type, THM_LOAD_STR, slot);
+			LoadThemeSlot(g_resViewType, THM_LOAD_STR, slot);
 			break;
 #endif
 
 		// ***** image *****
 		case IMG_SHOW_MSG:
-			ShowImageSlot(g_type, IMG_SHOW_STR, slot);
+			ShowImageSlot(g_resViewType, IMG_SHOW_STR, slot);
 			break;
 		case IMG_TRICON_MSG:
-			SetSelTrackIconSlot(g_type, IMG_TRICON_STR, slot);
+			SetSelTrackIconSlot(g_resViewType, IMG_TRICON_STR, slot);
 			break;
 
 			// ***** WDL GUI & others *****
@@ -1299,33 +1306,115 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				// stop cell editing (changing the list content would be ignored otherwise
 				// => dropdown box & list box unsynchronized)
 				m_pLists.Get(0)->EditListItemEnd(false);
-
 				SetType(m_cbType.GetCurSel());
 			}
 			break;
 		case COMBOID_DBLCLICK_TYPE:
 			if (HIWORD(wParam)==CBN_SELCHANGE) {
-				int hi = HIWORD(g_dblClickPrefs[g_type]);
-				g_dblClickPrefs[g_type] = m_cbDblClickType.GetCurSel();
-				g_dblClickPrefs[g_type] |= hi<<16;
+				int hi = HIWORD(g_dblClickPrefs[g_resViewType]);
+				g_dblClickPrefs[g_resViewType] = m_cbDblClickType.GetCurSel();
+				g_dblClickPrefs[g_resViewType] |= hi<<16;
 			}
 			break;
 		case COMBOID_DBLCLICK_TO:
 			if (HIWORD(wParam)==CBN_SELCHANGE) {
-				g_dblClickPrefs[g_type] = LOWORD(g_dblClickPrefs[g_type]);
-				g_dblClickPrefs[g_type] |= m_cbDblClickTo.GetCurSel()<<16;
+				g_dblClickPrefs[g_resViewType] = LOWORD(g_dblClickPrefs[g_resViewType]);
+				g_dblClickPrefs[g_resViewType] |= m_cbDblClickTo.GetCurSel()<<16;
 			}
 			break;
 		default:
-			Main_OnCommand((int)wParam, (int)lParam);
+			if (LOWORD(wParam) >= NEW_BOOKMARK_FXC_MSG && LOWORD(wParam) < (NEW_BOOKMARK_FXC_MSG+SNM_NUM_DEFAULT_SLOTS))
+				NewBookmark(LOWORD(wParam)-NEW_BOOKMARK_FXC_MSG);
+			else
+				Main_OnCommand((int)wParam, (int)lParam);
 			break;
 	}
 }
 
-//JFB some hard coded labels..
+void SNM_ResourceWnd::AutoSaveContextMenu(HMENU _menu, bool _saveItem)
+{
+	int typeForUser = GetTypeForUser();
+	char autoPath[BUFFER_SIZE] = "";
+	_snprintf(autoPath, BUFFER_SIZE, "[Current auto-save path: %s]", GetAutoSaveDir()->Get());
+	AddToMenu(_menu, autoPath, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
+	if (_saveItem) {
+		AddToMenu(_menu, SWS_SEPARATOR, 0);
+		AddToMenu(_menu, "Auto-save", AUTOSAVE_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
+	}
+
+	AddToMenu(_menu, SWS_SEPARATOR, 0);
+	AddToMenu(_menu, "Set auto-save directory...", AUTOSAVE_DIR_MSG);
+	AddToMenu(_menu, "Set auto-save directory to default resource path", AUTOSAVE_DIR_DEFAULT_MSG);
+	switch(typeForUser)
+	{
+		case SNM_SLOT_FXC:
+			AddToMenu(_menu, "Set auto-save directory to project path (/FXChains)", AUTOSAVE_DIR_PRJ_MSG);
+			AddToMenu(_menu, SWS_SEPARATOR, 0);
+			AddToMenu(_menu, "Auto-save FX chains from track selection", FXC_AUTOSAVE_TR_MSG, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_TRACK ? MFS_CHECKED : MFS_UNCHECKED);
+			AddToMenu(_menu, "Auto-save FX chains from item selection", FXC_AUTOSAVE_ITEM_MSG, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_ITEM ? MFS_CHECKED : MFS_UNCHECKED);
+			if (g_bv4) AddToMenu(_menu, "Auto-save input FX chains from track selection", FXC_AUTOSAVE_INPUTFX_MSG, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? MFS_CHECKED : MFS_UNCHECKED);
+			AddToMenu(_menu, SWS_SEPARATOR, 0);
+			AddToMenu(_menu, "Create filename from track/item name", FXC_AUTOSAVE_DEFNAME_MSG, -1, false, !g_autoSaveFXChainNamePref ? MFS_CHECKED : MFS_UNCHECKED);
+			AddToMenu(_menu, "Create filename from 1st FX name", FXC_AUTOSAVE_FX1NAME_MSG, -1, false, g_autoSaveFXChainNamePref ? MFS_CHECKED : MFS_UNCHECKED);
+			break;
+		case SNM_SLOT_TR:
+			AddToMenu(_menu, "Set auto-save directory to project path (/TrackTemplates)", AUTOSAVE_DIR_PRJ_MSG);
+			AddToMenu(_menu, SWS_SEPARATOR, 0);
+			AddToMenu(_menu, "Include track items in templates", TRT_AUTOSAVE_WITEMS_MSG, -1, false, (g_autoSaveTrTmpltPref&1) ? MFS_CHECKED : MFS_UNCHECKED);
+			AddToMenu(_menu, "Include envelopes in templates", TRT_AUTOSAVE_WENVS_MSG, -1, false, (g_autoSaveTrTmpltPref&2) ? MFS_CHECKED : MFS_UNCHECKED);
+			break;
+		case SNM_SLOT_PRJ:
+			AddToMenu(_menu, "Set auto-save directory to project path (/ProjectTemplates)", AUTOSAVE_DIR_PRJ_MSG);
+			break;
+	}
+}
+
+//JFB!!! need to be so "complicated"?
+void SNM_ResourceWnd::AutoFillContextMenu(HMENU _menu, bool _fillItem)
+{
+	int typeForUser = GetTypeForUser();
+	char autoPath[BUFFER_SIZE] = "";
+	_snprintf(autoPath, BUFFER_SIZE, "[Current auto-fill path: %s]", GetAutoFillDir()->Get());
+	AddToMenu(_menu, autoPath, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
+	
+	if (_fillItem) {
+		AddToMenu(_menu, SWS_SEPARATOR, 0);
+		AddToMenu(_menu, "Auto-fill", AUTOFILL_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
+	}
+	if (typeForUser == SNM_SLOT_PRJ) {
+		if (!_fillItem) AddToMenu(_menu, SWS_SEPARATOR, 0);
+		AddToMenu(_menu, "Auto-fill with recent projects", PRJ_AUTOFILL_RECENTS_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
+	}
+	AddToMenu(_menu, SWS_SEPARATOR, 0);
+	AddToMenu(_menu, "Set auto-fill directory...", AUTOFILL_DIR_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
+	AddToMenu(_menu, "Set auto-fill directory to default resource path", AUTOFILL_DEFAULT_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
+	AddToMenu(_menu, "Set auto-fill directory to project path", AUTOFILL_PRJ_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
+}
+
 HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 {
 	HMENU hMenu = CreatePopupMenu();
+
+	// specific context menu for auto-fill/auto-save buttons
+	POINT p; GetCursorPos(&p);
+	ScreenToClient(m_hwnd,&p);
+	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(p.x,p.y,1))
+	{
+		switch (v->GetID())
+		{
+			case BUTTONID_AUTOFILL:
+				AutoFillContextMenu(hMenu, false);
+				return hMenu;
+			case BUTTONID_AUTOSAVE:
+				if (GetCurList()->HasAutoSave()) {
+					AutoSaveContextMenu(hMenu, false);
+					return hMenu;
+				}
+				break;
+		}
+	}
+
+	// general context menu
 	int iCol;
 	PathSlotItem* pItem = (PathSlotItem*)m_pLists.Get(0)->GetHitItem(x, y, &iCol);
 	UINT enabled = (pItem && !pItem->IsDefault()) ? MF_ENABLED : MF_GRAYED;
@@ -1342,24 +1431,24 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 				AddToMenu(hMenu, FXC_APPLY_ALLTAKES_STR, FXC_APPLY_ALLTAKES_MSG, -1, false, enabled);
 				AddToMenu(hMenu, FXC_PASTE_TAKE_STR, FXC_PASTE_TAKE_MSG, -1, false, enabled);
 				AddToMenu(hMenu, FXC_PASTE_ALLTAKES_STR, FXC_PASTE_ALLTAKES_MSG, -1, false, enabled);
-/*JFB seems confusing: it is not a "copy slot" thingy!
+/*JFB seems confusing, commented: it is not a "copy slot" thingy!
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				AddToMenu(hMenu, "Copy", FXC_COPY_MSG, -1, false, enabled);
 */
 				break;
 			case SNM_SLOT_TR:
-				AddToMenu(hMenu, TRT_APPLY_STR, TRT_APPLY_MSG, -1, false, enabled);
-				AddToMenu(hMenu, TRT_APPLY_WITEMS_STR, TRT_APPLY_WITEMS_MSG, -1, false, enabled);
 				AddToMenu(hMenu, TRT_IMPORT_STR, TRT_IMPORT_MSG, -1, false, enabled);
+				AddToMenu(hMenu, TRT_APPLY_STR, TRT_APPLY_MSG, -1, false, enabled);
+				AddToMenu(hMenu, TRT_APPLY_WITH_ENV_ITEM_STR, TRT_APPLY_WITH_ENV_ITEM_MSG, -1, false, enabled);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, TRT_APPLY_ITEMS_STR, TRT_REPLACE_ITEMS_MSG, -1, false, enabled);
+				AddToMenu(hMenu, TRT_REPLACE_ITEMS_STR, TRT_REPLACE_ITEMS_MSG, -1, false, enabled);
 				AddToMenu(hMenu, TRT_PASTE_ITEMS_STR, TRT_PASTE_ITEMS_MSG, -1, false, enabled);
 				break;
 			case SNM_SLOT_PRJ:
 			{
 				AddToMenu(hMenu, PRJ_SELECT_LOAD_STR, PRJ_OPEN_SELECT_MSG, -1, false, enabled);
 				AddToMenu(hMenu, PRJ_SELECT_LOAD_TAB_STR, PRJ_OPEN_SELECT_TAB_MSG, -1, false, enabled);
-				if (g_type == typeForUser)  // no GetTypeForUser() here: only one loader/selecter config atm..
+				if (g_resViewType == typeForUser)  // no GetTypeForUser() here: only one loader/selecter config atm..
 				{
 					AddToMenu(hMenu, SWS_SEPARATOR, 0);
 					int x=0, nbsel=0; while(m_pLists.Get(0)->EnumSelected(&x))nbsel++;
@@ -1415,50 +1504,33 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 		AddToMenu(hMenu, "Show path in explorer/finder...", EXPLORE_MSG, -1, false, enabled);
 	}
 
+	// auto-fill
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	HMENU hAutoFillSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hAutoFillSubMenu, "Auto-fill");
-	AddToMenu(hAutoFillSubMenu, "Auto-fill...", AUTO_FILL_DIR_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
-	AddToMenu(hAutoFillSubMenu, "Auto-fill from default resource path", AUTO_FILL_DEFAULT_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
-	AddToMenu(hAutoFillSubMenu, "Auto-fill from project path", AUTO_FILL_PRJ_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
-	if (typeForUser == SNM_SLOT_PRJ)
-		AddToMenu(hAutoFillSubMenu, "Auto-fill with recent projects", PRJ_AUTOFILL_RECENTS_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
+	AutoFillContextMenu(hAutoFillSubMenu, true);
 
+	// auto-save
 	if (GetCurList()->HasAutoSave())
 	{
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
-
 		HMENU hAutoSaveSubMenu = CreatePopupMenu();
-		AddToMenu(hMenu, "Auto-save", AUTOSAVE_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
-		AddSubMenu(hMenu, hAutoSaveSubMenu, "Auto-save configuration");
-		char autoSavePath[BUFFER_SIZE] = "";
-		_snprintf(autoSavePath, BUFFER_SIZE, "(Current path: %s)", GetAutoSaveDir()->Get());
-		AddToMenu(hAutoSaveSubMenu, autoSavePath, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
-		AddToMenu(hAutoSaveSubMenu, "Set auto-save directory...", AUTOSAVE_DIR_MSG);
-		AddToMenu(hAutoSaveSubMenu, "Set auto-save directory to default resource path", AUTOSAVE_DIR_DEFAULT_MSG);
-		switch(typeForUser)
-		{
-			case SNM_SLOT_FXC:
-				AddToMenu(hAutoSaveSubMenu, "Set auto-save directory to project path (/FXChains)", AUTOSAVE_DIR_PRJ_MSG);
-				AddToMenu(hAutoSaveSubMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hAutoSaveSubMenu, "Auto-save FX chains from track selection", FXC_AUTOSAVE_TR_MSG, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_TRACK ? MFS_CHECKED : MFS_UNCHECKED);
-				AddToMenu(hAutoSaveSubMenu, "Auto-save FX chains from item selection", FXC_AUTOSAVE_ITEM_MSG, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_ITEM ? MFS_CHECKED : MFS_UNCHECKED);
-				if (g_bv4) AddToMenu(hAutoSaveSubMenu, "Auto-save input FX chains from track selection", FXC_AUTOSAVE_INPUT_FX, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? MFS_CHECKED : MFS_UNCHECKED);
-				AddToMenu(hAutoSaveSubMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hAutoSaveSubMenu, "Create filename from track/item name", FXC_AUTOSAVE_DEFNAME_MSG, -1, false, g_autoSaveFXChainNamePref==0 ? MFS_CHECKED : MFS_UNCHECKED);
-				AddToMenu(hAutoSaveSubMenu, "Create filename from 1st FX name", FXC_AUTOSAVE_FX1NAME_MSG, -1, false, g_autoSaveFXChainNamePref ? MFS_CHECKED : MFS_UNCHECKED);
-				break;
-			case SNM_SLOT_TR:
-				AddToMenu(hAutoSaveSubMenu, "Set auto-save directory to project path (/TrackTemplates)", AUTOSAVE_DIR_PRJ_MSG);
-				AddToMenu(hAutoSaveSubMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hAutoSaveSubMenu, "Auto-save track templates with items", TRT_AUTOSAVE_WITEMS_MSG, -1, false, g_autoSaveTrTmpltWithItemsPref ? MFS_CHECKED : MFS_UNCHECKED);
-				break;
-			case SNM_SLOT_PRJ:
-				AddToMenu(hAutoSaveSubMenu, "Set auto-save directory to project path (/ProjectTemplates)", AUTOSAVE_DIR_PRJ_MSG);
-				break;
-		}
+		AddSubMenu(hMenu, hAutoSaveSubMenu, "Auto-save");
+		AutoSaveContextMenu(hAutoSaveSubMenu, true);
 	}
 
+	// bookmarks
+//	AddToMenu(hMenu, SWS_SEPARATOR, 0);
+	HMENU hBookmarkSubMenu = CreatePopupMenu();
+	AddSubMenu(hMenu, hBookmarkSubMenu, "Bookmarks");
+	HMENU hNewBookmarkSubMenu = CreatePopupMenu();
+	AddSubMenu(hBookmarkSubMenu, hNewBookmarkSubMenu, "New bookmark");
+	for (int i=0; i < SNM_NUM_DEFAULT_SLOTS; i++)
+		AddToMenu(hNewBookmarkSubMenu, GetMenuDesc(i), NEW_BOOKMARK_FXC_MSG+i);
+	AddToMenu(hBookmarkSubMenu, "New bookmark (copy current)", ADD_BOOKMARK_MSG);
+	AddToMenu(hBookmarkSubMenu, "Delete", DEL_BOOKMARK_MSG, -1, false, g_resViewType >= SNM_NUM_DEFAULT_SLOTS ? MF_ENABLED : MF_GRAYED);
+	AddToMenu(hBookmarkSubMenu, "Rename", REN_BOOKMARK_MSG, -1, false, g_resViewType >= SNM_NUM_DEFAULT_SLOTS ? MF_ENABLED : MF_GRAYED);
+
+	// filter prefs
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	HMENU hFilterSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hFilterSubMenu, "Filter on");
@@ -1479,6 +1551,9 @@ int SNM_ResourceWnd::OnKey(MSG* _msg, int _iKeyState)
 				return 1;
 			case VK_DELETE:
 				ClearDeleteSlots(1, true);
+				return 1;
+			case VK_INSERT:
+				InsertAtSelectedSlot(true);
 				return 1;
 			case VK_RETURN:
 				((SNM_ResourceView*)m_pLists.Get(0))->Perform();
@@ -1604,35 +1679,39 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 
 	LICE_CachedFont* font = SNM_GetThemeFont();
 	IconTheme* it = SNM_GetIconTheme();
+	int typeForUser = GetTypeForUser();
 
-	// "auto-save" button
-	m_btnAutoSave.SetGrayed(!GetCurList()->HasAutoSave());
-	SNM_SkinButton(&m_btnAutoSave, it ? &(it->toolbar_save) : NULL, "Auto-save");
-	if (SNM_AutoVWndPosition(&m_btnAutoSave, NULL, _r, &x0, _r->top, h))
+	// "auto-fill" button
+	SNM_SkinButton(&m_btnAutoFill, it ? &(it->toolbar_open) : NULL, "Auto-fill");
+	if (SNM_AutoVWndPosition(&m_btnAutoFill, NULL, _r, &x0, _r->top, h, 0))
 	{
-		// type dropdown
-		m_cbType.SetFont(font);
-		if (SNM_AutoVWndPosition(&m_cbType, NULL, _r, &x0, _r->top, h, 4))
+		// "auto-save" button
+		m_btnAutoSave.SetGrayed(!GetCurList()->HasAutoSave());
+		SNM_SkinButton(&m_btnAutoSave, it ? &(it->toolbar_save) : NULL, "Auto-save");
+		if (SNM_AutoVWndPosition(&m_btnAutoSave, NULL, _r, &x0, _r->top, h))
 		{
-			// add & del bookmark buttons
-			((SNM_AddDelButton*)m_parentVwnd.GetChildByID(BUTTONID_DEL_BOOKMARK))->SetEnabled(IsCustomSlotType());
-			if (SNM_AutoVWndPosition(&m_btnsAddDel, NULL, _r, &x0, _r->top, h))
+			// type dropdown
+			m_cbType.SetFont(font);
+			if (SNM_AutoVWndPosition(&m_cbType, NULL, _r, &x0, _r->top, h, 4))
 			{
-				if (IsMultiType())
+				// add & del bookmark buttons
+				((SNM_AddDelButton*)m_parentVwnd.GetChildByID(BUTTONID_DEL_BOOKMARK))->SetEnabled(g_resViewType >= SNM_NUM_DEFAULT_SLOTS);
+				if (SNM_AutoVWndPosition(&m_btnsAddDel, NULL, _r, &x0, _r->top, h))
 				{
-					int typeForUser = GetTypeForUser();
-					m_btnTiedActions.SetCheckState(g_tiedSlotActions[typeForUser] == g_type);
-					char buf[64] = ""; _snprintf(buf, 64, "Tie %s slot actions", g_slots.Get(typeForUser)->GetDesc());
-					m_btnTiedActions.SetTextLabel(buf, -1, font);
-					if (SNM_AutoVWndPosition(&m_btnTiedActions, NULL, _r, &x0, _r->top, h, 5))
+					if (IsMultiType())
+					{
+						m_btnTiedActions.SetCheckState(g_tiedSlotActions[typeForUser] == g_resViewType);
+						char buf[64] = ""; _snprintf(buf, 64, "Tie %s slot actions", g_slots.Get(typeForUser)->GetDesc());
+						m_btnTiedActions.SetTextLabel(buf, -1, font);
+						if (SNM_AutoVWndPosition(&m_btnTiedActions, NULL, _r, &x0, _r->top, h, 5))
+							SNM_AddLogo(_bm, _r, x0, h);
+					}
+					else
 						SNM_AddLogo(_bm, _r, x0, h);
 				}
-				else
-					SNM_AddLogo(_bm, _r, x0, h);
 			}
 		}
 	}
-
 
 	// 2nd row of controls
 	x0 = _r->left+8; h=39;
@@ -1656,15 +1735,27 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 		if (!SNM_AutoVWndPosition(&m_cbDblClickType, &m_txtDblClickType, &r, &x0, y0, h))
 			return;
 
-		// "to selected" (fx chain only)
-		if (GetTypeForUser() == SNM_SLOT_FXC)
+		switch (typeForUser)
 		{
-			m_txtDblClickTo.SetFont(font);
-			if (!SNM_AutoVWndPosition(&m_txtDblClickTo, NULL, &r, &x0, y0, h, 5))
-				return;
-			m_cbDblClickTo.SetFont(font);
-			if (!SNM_AutoVWndPosition(&m_cbDblClickTo, &m_txtDblClickTo, &r, &x0, y0, h))
-				return;
+			// "to selected" (fx chain only)
+			case SNM_SLOT_FXC:
+				m_txtDblClickTo.SetFont(font);
+				if (!SNM_AutoVWndPosition(&m_txtDblClickTo, NULL, &r, &x0, y0, h, 5))
+					return;
+				m_cbDblClickTo.SetFont(font);
+				if (!SNM_AutoVWndPosition(&m_cbDblClickTo, &m_txtDblClickTo, &r, &x0, y0, h))
+					return;
+				break;
+			// offset items & envs (tr template only)
+			case SNM_SLOT_TR:
+				if (int* offsPref = (int*)GetConfigVar("templateditcursor")) // >= REAPER v4.15
+				{
+					m_btnOffsetTrTemplate.SetCheckState(*offsPref);
+					m_btnOffsetTrTemplate.SetTextLabel("Offset template items/envs by edit cusor", -1, font);
+					if (!SNM_AutoVWndPosition(&m_btnOffsetTrTemplate, NULL, &r, &x0, y0, h, 5))
+						return;
+				}
+				break;
 		}
 	}
 }
@@ -1677,26 +1768,30 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 		int typeForUser = GetTypeForUser();
 		switch (v->GetID())
 		{
-			case BUTTONID_AUTO_SAVE:
-				if (g_slots.Get(g_type)->HasAutoSave())
+			case BUTTONID_AUTOFILL:
+				return (_snprintf(_bufOut, _bufOutSz, "Auto-fill %s slots\nfrom %s (right-click for options)", 
+					g_slots.Get(typeForUser)->GetDesc(), 
+					g_autoFillDirs.Get(g_resViewType)->GetLength() ? g_autoFillDirs.Get(g_resViewType)->Get() : "?") > 0);
+			case BUTTONID_AUTOSAVE:
+				if (g_slots.Get(g_resViewType)->HasAutoSave())
 				{
 					switch (typeForUser)
 					{
 						case SNM_SLOT_FXC:
-							return (_snprintf(_bufOut, _bufOutSz, "%s\nCurrent path: %s", 
+							return (_snprintf(_bufOut, _bufOutSz, "%s\nto %s (right-click for options)", 
 								g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_TRACK ? "Auto-save FX chain slots for selected tracks" :
 								g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_ITEM ? "Auto-save FX chain slots for selected items" :
 								g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? "Auto-save input FX chain slots for selected tracks" : "Auto-save FX chain slots",
-								g_autoSaveDirs.Get(g_type)->Get()) > 0);
+								g_autoSaveDirs.Get(g_resViewType)->GetLength() ? g_autoSaveDirs.Get(g_resViewType)->Get() : "?") > 0);
 						case SNM_SLOT_TR:
-							return (_snprintf(_bufOut, _bufOutSz, "Auto-save track templates slots%s\nCurrent path: %s",
-								g_autoSaveTrTmpltWithItemsPref ? " (with items)" : "",
-								g_autoSaveDirs.Get(g_type)->Get()) > 0);
-						case SNM_SLOT_MEDIA:
-							return (_snprintf(_bufOut, _bufOutSz, "Auto-save media file slots for selected items\nCurrent path: %s",
-								g_autoSaveDirs.Get(g_type)->Get()) > 0);
+							return (_snprintf(_bufOut, _bufOutSz, "Auto-save track templates slots%s%s for selected tracks\nto %s (right-click for options)",
+								(g_autoSaveTrTmpltPref&1) ? " (w/ items)" : "",
+								(g_autoSaveTrTmpltPref&2) ? " (w/ envs)" : "",
+								g_autoSaveDirs.Get(g_resViewType)->GetLength() ? g_autoSaveDirs.Get(g_resViewType)->Get() : "?") > 0);
 						default:
-							return (_snprintf(_bufOut, _bufOutSz, "Auto-save %s slot(s)\nCurrent path: %s", g_slots.Get(typeForUser)->GetDesc(), g_autoSaveDirs.Get(g_type)->Get()) > 0);
+							return (_snprintf(_bufOut, _bufOutSz, "Auto-save %s slots\nto %s (right-click for options)", 
+								g_slots.Get(typeForUser)->GetDesc(), 
+								g_autoSaveDirs.Get(g_resViewType)->GetLength() ? g_autoSaveDirs.Get(g_resViewType)->Get() : "?") > 0);
 					}
 				}
 				break;
@@ -1875,63 +1970,67 @@ void SNM_ResourceWnd::ClearDeleteSlots(int _mode, bool _update)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void AutoSave(int _type, int _whichFXChain, bool _trTmpltWithItems)
+bool CheckSetAutoDirectory(const char* _title, WDL_FastString* _dir)
 {
-	const char* autoSaveDir = g_autoSaveDirs.Get(_type)->Get();
-	if (!FileExists(autoSaveDir))
+	if (!FileExists(_dir->Get()))
 	{
-		char msg[BUFFER_SIZE] = "No auto-save directory defined.\nDo you want to select a new one ?";
-		if (*autoSaveDir) // e.g. "My Computer" on windows
-			_snprintf(msg, BUFFER_SIZE, "Auto-save directory not found:\n%s\n\nDo you want to select a new one ?", autoSaveDir);
-		switch(MessageBox(GetMainHwnd(), msg, "S&M - Error", MB_YESNO)) {
+		char buf[BUFFER_SIZE] = "";
+		_snprintf(buf, BUFFER_SIZE, "%s directory not found!\n%s%sDo you want to define one ?", _title, _dir->GetLength()?_dir->Get():"", _dir->GetLength()?"\n":"");
+		switch(MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), buf, "S&M - Warning", MB_YESNO))
+		{
 			case IDYES: 
-			{
-				char path[BUFFER_SIZE] = "";
-				if (BrowseForDirectory("S&M - Set auto-save directory", autoSaveDir, path, BUFFER_SIZE)) {
-					g_autoSaveDirs.Get(_type)->Set(path);
-					autoSaveDir = g_autoSaveDirs.Get(_type)->Get(); // may have been realloc'd just above..
-				}
+				if (BrowseForDirectory("S&&M - Set directory", GetResourcePath(), buf, BUFFER_SIZE))
+					_dir->Set(buf);
 				break;
-			}
 			case IDNO:
-				return;
+				return false;
 		}
-		if (!FileExists(autoSaveDir)) // re-check for cancel..
-			return;
+		if (!FileExists(_dir->Get())) // re-check (cancel, etc..)
+			return false;
 	}
+	return true;
+}
+
+// _flags:
+//   for track templates: _flags&1 save template with items, _flags&2 save template with envs
+//   for fx chains: enum FXC_AUTOSAVE_PREF_INPUT_FX, FXC_AUTOSAVE_PREF_TRACK and FXC_AUTOSAVE_PREF_ITEM
+void AutoSave(int _type, int _flags)
+{
+	if (!CheckSetAutoDirectory("Auto-save", g_autoSaveDirs.Get(_type)))
+		return;
 
 	int slotStart = g_slots.Get(_type)->GetSize();
 	char fn[BUFFER_SIZE] = "";
 	switch(GetTypeForUser(_type))
 	{
 		case SNM_SLOT_FXC:
-			switch (_whichFXChain)
+			switch (_flags)
 			{
 				case FXC_AUTOSAVE_PREF_INPUT_FX:
-					autoSaveTrackFXChainSlots(_type, autoSaveDir, fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, g_bv4);
+					autoSaveTrackFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, g_bv4); //JFB!!! merge g_autoSaveFXChainNamePref & _flags ???
 					break;
 				case FXC_AUTOSAVE_PREF_TRACK:
-					autoSaveTrackFXChainSlots(_type, autoSaveDir, fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, false);
+					autoSaveTrackFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, false);
 					break;
 				case FXC_AUTOSAVE_PREF_ITEM:
-					autoSaveItemFXChainSlots(_type, autoSaveDir, fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1);
+					autoSaveItemFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1);
 					break;
 			}
 			break;
 		case SNM_SLOT_TR:
-			autoSaveTrackSlots(_type, autoSaveDir, fn, BUFFER_SIZE, !_trTmpltWithItems, true /*JFB? manage envelopes?*/);
+			autoSaveTrackSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, (_flags&1)?false:true, (_flags&2)?false:true);
 			break;
 		case SNM_SLOT_PRJ:
-			autoSaveProjectSlot(_type, autoSaveDir, fn, BUFFER_SIZE, true);
+			autoSaveProjectSlot(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, true);
 			break;
 		case SNM_SLOT_MEDIA:
-			autoSaveMediaSlot(_type, autoSaveDir, fn, BUFFER_SIZE);
+			autoSaveMediaSlot(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE);
 			break;
 	}
 
 	if (slotStart != g_slots.Get(_type)->GetSize())
 	{
-		if (g_pResourcesWnd && g_type==_type) {
+		if (g_pResourcesWnd && g_resViewType==_type) {
 			g_pResourcesWnd->Update();
 			g_pResourcesWnd->SelectBySlot(slotStart, g_slots.Get(_type)->GetSize());
 		}
@@ -1939,37 +2038,132 @@ void AutoSave(int _type, int _whichFXChain, bool _trTmpltWithItems)
 	else
 	{
 		char msg[BUFFER_SIZE];
-		if (fn && *fn) _snprintf(msg, BUFFER_SIZE, "Auto-save failed: %s\n%s", fn, AUTO_SAVE_ERR_STR);
-		else _snprintf(msg, BUFFER_SIZE, "Auto-save failed!\n%s", AUTO_SAVE_ERR_STR);
-		MessageBox(GetMainHwnd(), msg, "S&M - Error", MB_OK);
+		if (fn && *fn) _snprintf(msg, BUFFER_SIZE, "Auto-save failed: %s\n%s", fn, AUTOSAVE_ERR_STR);
+		else _snprintf(msg, BUFFER_SIZE, "Auto-save failed!\n%s", AUTOSAVE_ERR_STR);
+		MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), msg, "S&M - Error", MB_OK);
 	}
 }
 
-void AutoFill(int _type, const char* _startPath)
+// recursive from _path
+void AutoFill(int _type)
 {
+	if (!CheckSetAutoDirectory("Auto-fill", g_autoFillDirs.Get(_type)))
+		return;
+
 	int startSlot = g_slots.Get(_type)->GetSize();
-	if (_startPath && *_startPath)
-	{
-		WDL_PtrList_DeleteOnDestroy<WDL_String> files; 
-		ScanFiles(&files, _startPath, g_slots.Get(_type)->GetFileExt(), true);
-		if (int sz = files.GetSize())
-			for (int i=0; i < sz; i++)
-				if (g_slots.Get(_type)->FindByResFulltPath(files.Get(i)->Get()) < 0) // skip if already present
-					g_slots.Get(_type)->AddSlot(files.Get(i)->Get());
-	}
+	WDL_PtrList_DeleteOnDestroy<WDL_String> files; 
+	ScanFiles(&files, g_autoFillDirs.Get(_type)->Get(), g_slots.Get(_type)->GetFileExt(), true);
+	if (int sz = files.GetSize())
+		for (int i=0; i < sz; i++)
+			if (g_slots.Get(_type)->FindByResFulltPath(files.Get(i)->Get()) < 0) // skip if already present
+				g_slots.Get(_type)->AddSlot(files.Get(i)->Get());
+
 	if (startSlot != g_slots.Get(_type)->GetSize())
 	{
-		if (g_pResourcesWnd && g_type==_type) {
+		if (g_pResourcesWnd && g_resViewType==_type) {
 			g_pResourcesWnd->Update();
 			g_pResourcesWnd->SelectBySlot(startSlot, g_slots.Get(_type)->GetSize());
 		}
 	}
 	else
 	{
-		char msg[BUFFER_SIZE*2];
-		if (_startPath && *_startPath) _snprintf(msg, BUFFER_SIZE*2, "No slot added from: %s\n%s", _startPath, AUTO_FILL_ERR_STR);
-		else _snprintf(msg, BUFFER_SIZE, "No slot added!\n%s", AUTO_FILL_ERR_STR);
-		MessageBox(GetMainHwnd(), msg, "S&M - Warning", MB_OK);
+		const char* path = g_autoFillDirs.Get(_type)->Get();
+		char msg[BUFFER_SIZE]="";
+		if (path && *path) _snprintf(msg, BUFFER_SIZE, "No slot added from: %s\n%s", path, AUTOFILL_ERR_STR);
+		else _snprintf(msg, BUFFER_SIZE, "No slot added!\n%s", AUTOFILL_ERR_STR);
+		MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), msg, "S&M - Warning", MB_OK);
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+void NewBookmark(int _type, bool _copyCurrent)
+{
+	if (g_slots.GetSize() < SNM_MAX_SLOT_TYPES)
+	{
+		// consistency update (just in case..)
+		// when making a brand new bookmark (i.e. no explicit copy)
+		// we copy the conf of the related default slot type
+		_type = (_copyCurrent ? g_resViewType : GetTypeForUser(_type));
+
+		char name[256] = "";
+		_snprintf(name, 256, "My %s", g_slots.Get(GetTypeForUser(_type))->GetMenuDesc());
+		if (PromptUserForString(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), "S&M - Add resource slot bookmark", name, 256) && *name)
+		{
+			int newType = g_slots.GetSize();
+
+			g_slots.Add(new FileSlotList(
+				g_slots.Get(_type)->GetResourceDir(), name, g_slots.Get(_type)->GetFileExt(), 
+				g_slots.Get(_type)->HasNotepad(), g_slots.Get(_type)->HasAutoSave(), g_slots.Get(_type)->HasDblClick()));
+
+			g_autoSaveDirs.Add(new WDL_FastString(_copyCurrent ? GetAutoSaveDir()->Get() : ""));
+			g_autoFillDirs.Add(new WDL_FastString(_copyCurrent ? GetAutoFillDir()->Get() : ""));
+			g_dblClickPrefs[newType] = g_dblClickPrefs[_type];
+
+			if (_copyCurrent)
+				for (int i=0; i < GetCurList()->GetSize(); i++)
+					if (PathSlotItem* slotItem = GetCurList()->Get(i))
+						g_slots.Get(newType)->AddSlot(slotItem->m_shortPath.Get(), slotItem->m_comment.Get());
+
+			if (g_pResourcesWnd) {
+				g_pResourcesWnd->FillTypeCombo();
+				g_pResourcesWnd->SetType(newType); // + GUI update
+			}
+
+			// ... custom slot type definitions are saved when exiting
+		}
+	}
+	else
+		MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), "Too many resource slot types!", "S&M - Error", MB_OK);
+}
+
+void DeleteBookmark(int _bookmarkType)
+{
+	if (_bookmarkType >= SNM_NUM_DEFAULT_SLOTS)
+	{
+		int reply;
+		if (g_slots.Get(_bookmarkType)->GetSize())
+			reply = MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), "Delete files too ?", "S&M - Delete resource slot bookmark", MB_YESNOCANCEL);
+		else
+			reply = MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), "Are you sure you want to delete this bookmark ?", "S&M - Delete resource slot bookmark", MB_OKCANCEL);
+		if (reply != IDCANCEL)
+		{
+			// cleanup ini file (types may not be contiguous anymore..)
+			FlushCustomTypesIniFile();
+
+			// remove current slot type
+			int oldType = _bookmarkType;
+			int oldTypeForUser = GetTypeForUser(oldType);
+			g_dblClickPrefs[oldType] = 0;
+			if (g_tiedSlotActions[oldTypeForUser] == oldType)
+				g_tiedSlotActions[oldTypeForUser] = oldTypeForUser;
+			g_autoSaveDirs.Delete(oldType, true);
+			g_autoFillDirs.Delete(oldType, true);
+			g_slots.Delete(oldType, true);
+
+			if (g_pResourcesWnd) {
+				g_pResourcesWnd->FillTypeCombo();
+				g_pResourcesWnd->SetType(oldType-1); // + GUI update
+			}
+		}
+	}
+}
+
+void RenameBookmark(int _bookmarkType)
+{
+	if (_bookmarkType >= SNM_NUM_DEFAULT_SLOTS)
+	{
+		char newName[256] = "";
+		lstrcpyn(newName, g_slots.Get(_bookmarkType)->GetDesc(), 256);
+		if (PromptUserForString(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), "S&M - Rename bookmark", newName, 256) && *newName)
+		{
+			g_slots.Get(_bookmarkType)->SetDesc(newName);
+			if (g_pResourcesWnd) {
+				g_pResourcesWnd->FillTypeCombo();
+				g_pResourcesWnd->Update();
+			}
+		}
 	}
 }
 
@@ -1979,7 +2173,7 @@ void AutoFill(int _type, const char* _startPath)
 void FlushCustomTypesIniFile()
 {
 	char iniSec[64]="";
-	for (int i=GetFirstCustomSlotType(); i < g_slots.GetSize(); i++)
+	for (int i=SNM_NUM_DEFAULT_SLOTS; i < g_slots.GetSize(); i++)
 	{
 		if (FileSlotList* list = g_slots.Get(i))
 		{
@@ -2023,9 +2217,7 @@ void AddCustomTypesFromIniFile()
 			if (tok = strtok(NULL, ","))
 			{
 				tokenStrs[1].Set(tok);
-
-				// no NULL test here (special case for media files..)
-				tok = strtok(NULL, ",");
+				tok = strtok(NULL, ","); // no NULL test here (special case for media files..)
 				g_slots.Add(new FileSlotList(tokenStrs[0].Get(), tokenStrs[1].Get(), tok?tok:"", false, false, false));
 
 				// known slot type?
@@ -2065,13 +2257,13 @@ int ResourceViewInit()
 	AddCustomTypesFromIniFile();
 
 	// load general prefs
-	g_type = BOUNDED((int)GetPrivateProfileInt(
-		"RESOURCE_VIEW", "Type", SNM_SLOT_FXC, g_SNMIniFn.Get()), 0, g_slots.GetSize()-1); // bounded for safety (some custom slot types may have been removed..)
+	g_resViewType = BOUNDED((int)GetPrivateProfileInt(
+		"RESOURCE_VIEW", "Type", SNM_SLOT_FXC, g_SNMIniFn.Get()), SNM_SLOT_FXC, g_slots.GetSize()-1); // bounded for safety (some custom slot types may have been removed..)
 
 	g_filterPref = GetPrivateProfileInt("RESOURCE_VIEW", "Filter", 1, g_SNMIniFn.Get());
 	g_autoSaveFXChainPref = GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveFXChain", FXC_AUTOSAVE_PREF_TRACK, g_SNMIniFn.Get());
 	g_autoSaveFXChainNamePref = GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveFXChainName", 0, g_SNMIniFn.Get());
-	g_autoSaveTrTmpltWithItemsPref = (GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", 1, g_SNMIniFn.Get()) == 1);
+	g_autoSaveTrTmpltPref = GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveTrTemplate", 3, g_SNMIniFn.Get());
 	g_prjLoaderStartPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderStartSlot", -1, g_SNMIniFn.Get());
 	g_prjLoaderEndPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderEndSlot", -1, g_SNMIniFn.Get());
 
@@ -2144,14 +2336,14 @@ void ResourceViewExit()
 	// save custom slot type definitions
 	for (int i=0; i < g_slots.GetSize(); i++)
 	{
-		if (IsCustomSlotType(i)) {
+		if (i >= SNM_NUM_DEFAULT_SLOTS) {
 			WDL_FastString str;
 			str.SetFormatted(BUFFER_SIZE, "%s,%s,%s", g_slots.Get(i)->GetResourceDir(), g_slots.Get(i)->GetDesc(), g_slots.Get(i)->GetFileExt());
 			makeEscapedConfigString(str.Get(), &escapedStr);
 			iniStr.AppendFormatted(BUFFER_SIZE, "%s=%s\n", iniSections.Get(i)->Get(), escapedStr.Get());
 		}
 	}
-	iniStr.AppendFormatted(BUFFER_SIZE, "Type=%d\n", g_type);
+	iniStr.AppendFormatted(BUFFER_SIZE, "Type=%d\n", g_resViewType);
 	iniStr.AppendFormatted(BUFFER_SIZE, "Filter=%d\n", g_filterPref);
 
 	// save slot type prefs
@@ -2181,7 +2373,7 @@ void ResourceViewExit()
 				iniStr.AppendFormatted(BUFFER_SIZE, "AutoSaveFXChainName=%d\n", g_autoSaveFXChainNamePref);
 				break;
 			case SNM_SLOT_TR:
-				iniStr.AppendFormatted(BUFFER_SIZE, "AutoSaveTrTemplateWithItems=%s\n", g_autoSaveTrTmpltWithItemsPref ? "1" : "0", g_SNMIniFn.Get());
+				iniStr.AppendFormatted(BUFFER_SIZE, "AutoSaveTrTemplate=%d\n", g_autoSaveTrTmpltPref, g_SNMIniFn.Get());
 				break;
 			case SNM_SLOT_PRJ:
 				iniStr.AppendFormatted(BUFFER_SIZE, "ProjectLoaderStartSlot=%d\n", g_prjLoaderStartPref);
@@ -2220,11 +2412,11 @@ void OpenResourceView(COMMAND_T* _ct)
 {
 	if (g_pResourcesWnd) 
 	{
-		int prevType = g_type;
-		if (g_type < 0)
-			g_type = (int)_ct->user;
-		g_pResourcesWnd->Show((prevType == (int)_ct->user) /* i.e toggle */, true);
-		g_pResourcesWnd->SetType((int)_ct->user);
+		int newType = (int)_ct->user; // -1 means toggle current type
+		if (newType == -1)
+			newType = g_resViewType;
+		g_pResourcesWnd->Show((g_resViewType == newType) /* i.e toggle */, true);
+		g_pResourcesWnd->SetType(newType);
 //		SetFocus(GetDlgItem(g_pResourcesWnd->GetHWND(), IDC_FILTER));
 	}
 }
@@ -2278,19 +2470,19 @@ void ResViewClearThemeSlot(COMMAND_T* _ct) {
 
 // specific auto-save for fx chains
 void ResViewAutoSaveFXChain(COMMAND_T* _ct) {
-	AutoSave(g_tiedSlotActions[SNM_SLOT_FXC], (int)_ct->user, g_autoSaveTrTmpltWithItemsPref); // 3rd param ignored
+	AutoSave(g_tiedSlotActions[SNM_SLOT_FXC], (int)_ct->user);
 }
 
 // specific auto-save for track templates
 void ResViewAutoSaveTrTemplate(COMMAND_T* _ct) {
-	AutoSave(g_tiedSlotActions[SNM_SLOT_TR], g_autoSaveFXChainPref, ((int)_ct->user == 1)); // 2nd param ignored
+	AutoSave(g_tiedSlotActions[SNM_SLOT_TR], (int)_ct->user);
 }
 
 // auto-save for all other types..
 void ResViewAutoSave(COMMAND_T* _ct) {
 	int type = (int)_ct->user;
 	if (g_slots.Get(type)->HasAutoSave()) {
-		AutoSave(g_tiedSlotActions[type], g_autoSaveFXChainPref, g_autoSaveTrTmpltWithItemsPref); // 2nd & 3rd params ignored
+		AutoSave(g_tiedSlotActions[type], 0);
 	}
 }
 

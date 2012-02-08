@@ -214,6 +214,10 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		case WM_CONTEXTMENU:
 		{
+			KillTooltip(true);
+			for (int i = 0; i < m_pLists.GetSize(); i++)
+				m_pLists.Get(i)->EditListItemEnd(true);
+
 			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
 			// Are we over the column header?
 			for (int i = 0; i < m_pLists.GetSize(); i++)
@@ -237,7 +241,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if ((m_state.state & 2))
 				CheckMenuItem(hMenu, DOCK_MSG, MF_BYCOMMAND | MF_CHECKED);
 			AddToMenu(hMenu, "Close Window", IDCANCEL);
-
+			
 			if (x == -1 || y == -1)
 			{
 				RECT r;
@@ -249,7 +253,6 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			kbd_reprocessMenu(hMenu, NULL);
 			TrackPopupMenu(hMenu, 0, x, y, 0, m_hwnd, NULL);
 			DestroyMenu(hMenu);
-
 			break;
 		}
 		case WM_COMMAND:
@@ -278,6 +281,17 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					m_resize.onResize();
 					bRecurseCheck = false;
 				}
+			}
+			break;
+		// define a min size (+ fix flickering when of docked views)
+		case WM_GETMINMAXINFO:
+			if (lParam)
+			{
+				int w, h;
+				GetMinSize(&w, &h);
+				LPMINMAXINFO l = (LPMINMAXINFO)lParam;
+				l->ptMinTrackSize.x = w;
+				l->ptMinTrackSize.y = h;
 			}
 			break;
 		case WM_DROPFILES:
@@ -1155,6 +1169,8 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 	SWS_ListItem* item = GetHitItem(x, y, &iCol);
 	if (!item && iCol != -1)
 	{
+		EditListItemEnd(true); // fix possible crash
+
 		HMENU hMenu = CreatePopupMenu();
 		AddToMenu(hMenu, "Visible columns", 0);
 		EnableMenuItem(hMenu, 0, MF_BYPOSITION | MF_GRAYED);
@@ -1246,7 +1262,7 @@ SWS_ListItem* SWS_ListView::GetHitItem(int x, int y, int* iCol)
 #endif
 	{
 		if (iCol)
-			*iCol = ht.iSubItem != -1 ? ht.iSubItem : 0; // iCol != -1 means "header", set 0 for "unknown column"
+			*iCol = ht.iSubItem != -1 ? DisplayToDataCol(ht.iSubItem) : 0; // iCol != -1 means "header", set 0 for "unknown column"
 		return NULL;
 	}
 	else if (iItem >= 0 
@@ -1256,7 +1272,7 @@ SWS_ListItem* SWS_ListView::GetHitItem(int x, int y, int* iCol)
 		)
 	{
 		if (iCol)
-			*iCol = ht.iSubItem;
+			*iCol = DisplayToDataCol(ht.iSubItem);
 		return GetListItem(iItem);
 	}
 	if (iCol)
@@ -1306,10 +1322,14 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 	// clamp to list view width
 	GetWindowRect(m_hwndList, &r);
 #ifdef _WIN32
+	sr.left = max(r.left+(GetSystemMetrics(SM_CXEDGE)*2), sr.left);
 	sr.right = min(r.right-(GetSystemMetrics(SM_CXEDGE)*2), sr.right);
+	sr.top += 1; // do not hide top grid line
 #else
-/* JFB commented: can't test.. needed on OSX too ?
+/* JFB!!! commented: needed on OSX too? cannot test..
+	sr.left = max(r.left+2, sr.left);
 	sr.right = min(r.right-2, sr.right);
+	sr.top += 1; // do not hide top grid line
 */
 #endif
 
@@ -1319,11 +1339,6 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 
 	// Create a new edit control to go over that rect
 	int lOffset = -1;
-#ifdef _WIN32
-	if (iDispCol)
-		lOffset += GetSystemMetrics(SM_CXEDGE) * 2;
-#endif
-
 	SetWindowPos(m_hwndEdit, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	SetWindowPos(m_hwndEdit, HWND_TOP, sr.left+lOffset, sr.top, sr.right-sr.left, sr.bottom-sr.top, SWP_SHOWWINDOW | SWP_NOZORDER);
 	ShowWindow(m_hwndEdit, SW_SHOW);
@@ -1519,17 +1534,18 @@ int SWS_ListView::sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam
 ///////////////////////////////////////////////////////////////////////////////
 
 // From Justin: http://askjf.com/index.php?q=1609s
-// JFB mod: clamp grid lines to nb of displayed rows, 
-//   it also fixes this glitch: http://stash.reaper.fm/11297/fixed_glitch.gif
-//   (after mod: http://stash.reaper.fm/11298/fixed_glitch2.gif)
+// JFB mod: clamp grid lines to nb of displayed rows + GUI glitch fix for SWS_ListView 
+//          before mod: http://stash.reaper.fm/11297/fixed_glitch.gif
+//          after mod:  http://stash.reaper.fm/11298/fixed_glitch2.gif
 #ifdef _WIN32
 void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
 {
-// JFB mod --->
-//  int i;
-  int i, cnt = ListView_GetItemCount(hwnd);
+// JFB added --->
+  int cnt = ListView_GetItemCount(hwnd);
   if (!cnt) return;
 // <---
+
+  int i;
   HPEN pen = CreatePen(PS_SOLID,0,color);
   HGDIOBJ oldObj = SelectObject(hdc,pen);
   for(i=0;i<ncol;i++)
@@ -1541,7 +1557,7 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
     if (!i)
     {
       int h =r.bottom-r.top;
-/* JFB commented: cnt cannot be 0 here, i.e. no line when the list is empty --->
+/* JFB commented: cannot be 0 here, no grid lines when the list is empty --->
       if (!ListView_GetItemCount(hwnd)) 
       {
         r.top = 0;
@@ -1556,7 +1572,7 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
 <--- */
       if (h>0)
       {
- //JFB mod --->
+//JFB mod --->
         int row=0;
         while (r.top < br.bottom && row++ <= cnt)
 //        while (r.top < br.bottom)
@@ -1573,18 +1589,23 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
     }
     else if (r.right >= br.left && r.left < br.right)
     {
+/*JFB commented: i==NULL is impossible here
       if (i)
+*/
       {
+/*JFB commented: fix for missing grid lines (i.e. paint both right & left vertical lines in case some columns have been moved/hidden)
+//               could be improved using SWS_ListView..
         if (i==1)
+*/
         {
           MoveToEx(hdc,r.left,br.top,NULL);
-//JFB mod: clamp vertical lines height (prevents a GUI glitch with SWS_ListView) --->
+//JFB mod --->
           LineTo(hdc,r.left,min(br.bottom, r.top+(r.bottom-r.top)*cnt));
 //          LineTo(hdc,r.left,br.bottom);
 // <---
         }
-        MoveToEx(hdc,r.right,br.top,NULL);
-//JFB mod: clamp vertical lines height --->
+		MoveToEx(hdc,r.right,br.top,NULL);
+//JFB mod --->
         LineTo(hdc,r.right,min(br.bottom, r.top+(r.bottom-r.top)*cnt));
 //        LineTo(hdc,r.right,br.bottom);
 // <---
@@ -1788,10 +1809,10 @@ void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char
     }
     tmpfont.SetBkMode(TRANSPARENT);
     LICE_pixel col1 = LICE_RGBA(0,0,0,255);
-/*JFB mod: same tooltip color than REAPER
+//JFB mod: same tooltip color than REAPER --->
+//    LICE_pixel col2 = LICE_RGBA(255,255,192,255);
     LICE_pixel col2 = LICE_RGBA(255,255,225,255);
-*/
-    LICE_pixel col2 = LICE_RGBA(255,255,192,255);
+// <---
 
     tmpfont.SetTextColor(col1);
     RECT r={0,};
@@ -1807,8 +1828,9 @@ void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char
       else
         yo = wndr->bottom - 4 - r.bottom;
 
-//JFB added: try to prevent hidden tooltip behind the mouse pointer (clamped below..)
+//JFB added: (try to) prevent hidden tooltip behind the mouse pointer --->
       xo += 15;
+// <---
     }
 
     if (xo + r.right > wndr->right - 4)

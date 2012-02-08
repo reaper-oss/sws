@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_util.h
 /
-/ Copyright (c) 2011 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -43,7 +43,7 @@
 #define UTF8_CIRCLE "\xE2\x97\xA6"
 #define UTF8_BOX "\xE2\x96\xA1"
 #define UTF8_BBOX "\xE2\x96\xA0"
-#define SWS_CMD_SHORTNAME(_ct) (_ct->accel.desc + 5) // +5 to skip "SWS: "
+#define SWS_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 5) // +5 to skip "SWS: "
 #define __ARRAY_SIZE(x) sizeof(x) / sizeof(x[0])
 // For checking to see if items are adjacent
 // Found one case of items after split having diff edges 5e-11 apart, 1e-9 (still much greater than one sample)
@@ -140,6 +140,7 @@ extern bool g_bTrue;
 extern bool g_bFalse;
 extern bool g_bv4;
 extern int g_iFirstCommand;
+extern int g_iLastCommand;
 
 // Stuff to do in swell someday
 #ifndef _WIN32
@@ -172,15 +173,17 @@ void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwEx
 #endif
 
 // Command/action handling, sws_extension.cpp
-#define SWSRegisterCommand(c) SWSRegisterCommand2(c, __FILE__)
-#define SWSRegisterCommands(c) SWSRegisterCommands2(c, __FILE__)
-#define SWSRegisterCommandExt(a, b, c, d) SWSRegisterCommandExt2(a, b, c, d, __FILE__)
-int SWSRegisterCommand2(COMMAND_T* pCommand, const char* cFile);   // One command
-int SWSRegisterCommands2(COMMAND_T* pCommands, const char* cFile); // Multiple commands in a table, terminated with LAST_COMMAND
-int SWSRegisterCommandExt2(void (*doCommand)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile);
-int SWSRegisterCommandExt3(void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), int cmdId, const char* cID, const char* cDesc, INT_PTR user, const char* cFile);
+int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId = 0, bool _localize = true); // One command
+COMMAND_T* SWSUnregisterCmd(int id);
+
+int SWSRegisterCmds(COMMAND_T* pCommands, const char* cFile, bool _localize); // Multiple commands in a table, terminated with LAST_COMMAND
+#define SWSRegisterCommands(c) SWSRegisterCmds(c, __FILE__, true)
+
+int SWSCreateRegisterDynamicCmd(int cmdId, void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile, bool _localize);
+#define SWSRegisterCommandExt(a, b, c, d) SWSCreateRegisterDynamicCmd(0, a, NULL, b, c, d, __FILE__, true)
+void SWSFreeUnregisterDynamicCmd(int id);
+
 void ActionsList(COMMAND_T*);
-COMMAND_T* SWSUnregisterCommand(int id);
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, const char** pMenuText = NULL);
 COMMAND_T* SWSGetCommandByID(int cmdId);
 HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);
@@ -218,3 +221,13 @@ int SWS_GetModifiers();
 void WinSpawnNotepad(const char* pFilename);
 //JFB: temp function (until WDL's ProjectContext does not use WDL_FastString)
 void makeEscapedConfigString(const char *in, WDL_FastString *out);
+
+// Localization
+// note: always tagged with "sws_" in case SWS' langpack == REAPER's langpack
+#define SNM_I8N_SWS_COMMON_SEC		"sws_common"
+#define SNM_I8N_SWS_ACTION_SEC		"sws_actions"
+#define SNM_I8N_SNM_ACTION_SEC		"s&m_action_section"
+
+// Localization functions (in SnM_Misc.cpp, temp?)
+const char* GetLocalizedString(const char* _langpack, const char* _section, const char* _key, const char* _defaultStr);
+const char* GetLocalizedActionName(const char* _custId, const char* _defaultStr, const char* _section = SNM_I8N_SWS_ACTION_SEC);

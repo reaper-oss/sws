@@ -40,16 +40,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 //#define _SNM_MISC
-//#define _MARKER_REGION_NAME
-#define _SNM_CYCLACTION_OSX
+//#define _SNM_MARKER_REGION_NAME
 #ifdef _WIN32
 #define _SNM_PRESETS
-//#define _SNM_LIST_THEMABLE1
-//#define _SNM_EDIT_THEMABLE
 #endif
 
 
-#define SNM_CMD_SHORTNAME(_ct) (_ct->accel.desc + 9) // +9 to skip "SWS/S&M: "
+#define SNM_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 9) // +9 to skip "SWS/S&M: "
 
 #ifdef _WIN32
 #define SNM_FORMATED_INI_FILE		"%s\\S&M.ini"
@@ -71,20 +68,24 @@
 #define SNM_FONT_HEIGHT				12
 #endif
 
-#define SNM_INI_FILE_VERSION		3
+#define SNM_INI_FILE_VERSION		4
+#define SNM_LIVECFG_NB_CONFIGS		8
+#define SNM_LIVECFG_NB_CONFIGS_STR	"8"
+#define SNM_MAX_TRACK_GROUPS		32
+#define SNM_MAX_TRACK_GROUPS_STR	"32"
 #define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
 #define SNM_SUB_EXT_LIST			"SubRip subtitle files (*.SRT)\0*.SRT\0"
+#define SNM_TXT_EXT_LIST			"Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0"
 #define SNM_MAX_SECTION_NAME_LEN	64
 #define SNM_MAX_SECTION_ACTIONS		128
 #define SNM_MAX_ACTION_CUSTID_LEN	128
 #define SNM_MAX_ACTION_NAME_LEN		128
 #define SNM_MAX_MARKER_NAME_LEN		64     // + regions
-#define SNM_MAX_TRACK_GROUPS		32
-#define SNM_MAX_TRACK_GROUPS_STR	"32"
 #define SNM_MAX_TRACK_NAME_LEN		128
 #define SNM_MAX_HW_OUTS				8
 #define SNM_MAX_TAKES				128
 #define SNM_MAX_FX					128
+#define SNM_MAX_FX_NAME_LEN			128
 #define SNM_MAX_INI_SECTION			0xFFFF // definitive limit for WritePrivateProfileSection
 #define SNM_MAX_DYNAMIC_ACTIONS		99     // if > 99 the display of action names should be updated
 #define SNM_MAX_CYCLING_ACTIONS		8
@@ -93,21 +94,22 @@
 #define SNM_MAX_SLOT_TYPES			16
 #define MAX_CC_LANE_ID				133
 #define MAX_CC_LANES_LEN			4096
-#define SNM_LET_BREATHE_MS			10
+#define SNM_I8N_DEF_STR_LEN			4096
+#define SNM_I8N_NEW_STR_TAG			"_"
+#define SNM_I8N_DEF_LANGPACK_NAME	"#NAME:SWS English (generated language pack)\n"
 #define SNM_3D_COLORS_DELTA			25
 #define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average I monitored)
 #define SNM_DEF_TOOLBAR_RFRSH_FREQ	300    // default frequency in ms for the "auto-refresh toolbars" option 
 #define SNM_SCHEDJOB_DEFAULT_DELAY	250
 #define SNM_DEF_VWND_X_STEP			12
 
-// Scheduled job *RESERVED* ids
+// scheduled jobs ids
 // note: [0..7] are reserved for Live Configs MIDI CC actions
 #define SNM_SCHEDJOB_LIVECFG_TLCHANGE	8
 #define SNM_SCHEDJOB_NOTEHLP_TLCHANGE	9
 #define SNM_SCHEDJOB_SEL_PRJ			10
 #define SNM_SCHEDJOB_TRIG_PRESET		11
 #define SNM_SCHEDJOB_CYCLACTION			12
-
 
 enum {
   SNM_ITEM_SEL_LEFT=0,
@@ -118,6 +120,7 @@ enum {
 
 static void freecharptr(char* _p) { FREE_NULL(_p); }
 static void deleteintptr(int* _p) { DELETE_NULL(_p); }
+static void deletefaststrptr(WDL_FastString* _p) { DELETE_NULL(_p); }
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -191,7 +194,6 @@ typedef struct MIDI_COMMAND_T {
 	const char* menuText;
 	INT_PTR user;
 	bool (*getEnabled)(MIDI_COMMAND_T*);
-	int excecCount;
 } MIDI_COMMAND_T;
 
 class SNM_ImageVWnd : public WDL_VWnd {
@@ -271,6 +273,7 @@ public:
 // *** SnM_Actions.cpp ***
 extern WDL_FastString g_SNMIniFn;
 extern WDL_FastString g_SNMCyclactionIniFn;
+extern MIDI_COMMAND_T g_SNMSection_cmdTable[];
 extern int g_SNMIniFileVersion;
 extern int g_SNMbeta;
 extern int g_SNMMediaFlags;
@@ -280,7 +283,7 @@ void RefreshToolbars();
 void FakeToggle(COMMAND_T*);
 bool FakeIsToggleAction(COMMAND_T*);
 #ifdef _SNM_MISC
-bool FakeIsToggleMidiAction(MIDI_COMMAND_T*);
+bool FakeIsToggleAction(MIDI_COMMAND_T*);
 #endif
 void SNM_ShowActionList(COMMAND_T*);
 int SNMRegisterDynamicCommands(COMMAND_T* _pCommands);
@@ -296,16 +299,10 @@ void SnMCSurfSetTrackListChange();
 
 // *** SnM_Cyclactions.cpp
 int RegisterCyclation(const char* _name, bool _toggle, int _type, int _cycleId, int _cmdId);
-#ifdef _SNM_CYCLACTION_OSX
-int CyclactionViewInit();
-void CyclactionViewExit();
+int CyclactionInit();
+void CyclactionExit();
 void OpenCyclactionView(COMMAND_T*);
 bool IsCyclactionViewDisplayed(COMMAND_T*);
-#else
-int CyclactionsInit();
-void openCyclactionsWnd(COMMAND_T*);
-bool isCyclationsWndDisplayed(COMMAND_T*);
-#endif
 
 // *** SnM_Dlg.cpp ***
 ColorTheme* SNM_GetColorTheme(bool _checkForSize = false);
@@ -330,9 +327,6 @@ void SNM_ShowMsg(const char* _msg, const char* _title = "", HWND _hParent = NULL
 int PromptForInteger(const char* _title, const char* _what, int _min, int _max);
 void openCueBussWnd(COMMAND_T*);
 bool isCueBussWndDisplayed(COMMAND_T*);
-#ifdef _SNM_MISC
-WDL_DLGRET WaitDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
-#endif
 
 // *** SnM_FindView.cpp ***
 int FindViewInit();
@@ -498,6 +492,8 @@ void LiveConfigViewExit();
 void OpenLiveConfigView(COMMAND_T*);
 bool IsLiveConfigViewDisplayed(COMMAND_T*);
 void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
+void NextLiveConfig(COMMAND_T*);
+void PreviousLiveConfig(COMMAND_T*);
 void ToggleEnableLiveConfig(COMMAND_T*);
 bool IsLiveConfigEnabled(COMMAND_T*);
 
@@ -508,9 +504,11 @@ void MESetCCLanes(COMMAND_T*);
 void MESaveCCLanes(COMMAND_T*);
 
 // *** SnM_Misc.cpp ***
+const char* GetFileRelativePath(const char* _fn);
 const char* GetFileExtension(const char* _fn);
 void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz);
 const char* GetFilenameWithExt(const char* _fullFn);
+void Filenamize(char* _fnInOut);
 bool FileExistsErrMsg(const char* _fn, bool _errMsg=true);
 bool SNM_DeleteFile(const char* _filename, bool _recycleBin);
 bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
@@ -524,13 +522,28 @@ bool SaveBin(const char* _fn, const WDL_HeapBuf* _hb);
 bool TranscodeFileToFile64(const char* _outFn, const char* _inFn);
 WDL_HeapBuf* TranscodeStr64ToHeapBuf(const char* _str64);
 void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
+void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs);
 void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx);
 void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, const char* _iniFn);
 void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn, const char* _newIniFn = NULL);
 void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn = NULL);
 void SNM_UpgradeIniFiles();
-void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs);
+/*JFB moved to sws_util.h
+// Ini section names for SWS langpack files
+// note: always tagged with "sws_" in case SWS' langpack == REAPER's langpack
+#define SNM_I8N_SWS_COMMON_SEC		"sws_common"
+#define SNM_I8N_SWS_ACTION_SEC		"sws_actions"
+#define SNM_I8N_SNM_ACTION_SEC		"s&m_action_section"
+const char* GetLocalizedString(const char* _langpack, const char* _section, const char* _key, const char* _defaultStr, bool _swsAction = false);
+const char* GetLocalizedActionName(const char* _custId, const char* _defaultStr, const char* _section = SNM_I8N_SWS_ACTION_SEC);
+*/
+bool IsLangPackUsed(const char* _langpack);
+WDL_FastString* GetCurLangPackFn(const char* _langpack);
+void ResetLangPack(COMMAND_T* _ct);
+void LoadAssignLangPack(COMMAND_T* _ct);
+void GenerateLangPack(COMMAND_T*);
+void UpgradeLangPack(COMMAND_T*);
 int FindMarkerRegion(double _pos, int* _idOut = NULL);
 int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn);
 int GetMarkerRegionIdFromIndex(int _idx);
@@ -541,15 +554,7 @@ void makeUnformatedConfigString(const char* _in, WDL_FastString* _out);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 void ShortenStringToFirstRN(char* _str);
 void ReplaceStringFormat(char* _str, char _replaceCh);
-bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
-bool WaitForTrackMute(DWORD* _muteTime);
-#ifdef _SNM_MISC
-void LetREAPERBreathe(COMMAND_T*);
-#endif
-void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
-void SimulateMouseClick(COMMAND_T*);
-void DumpWikiActionList2(COMMAND_T*);
-void DumpActionList(COMMAND_T*);
+int IsSwsAction(const char* _actionName);
 #ifdef _WIN32
 void LoadThemeSlot(int _slotType, const char* _title, int _slot);
 void LoadThemeSlot(COMMAND_T*);
@@ -558,12 +563,14 @@ void ShowImageSlot(int _slotType, const char* _title, int _slot);
 void ShowImageSlot(COMMAND_T*);
 void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot);
 void SetSelTrackIconSlot(COMMAND_T*);
-#ifdef _SNM_MISC
-void ShowTakeEnvPadreTest(COMMAND_T*);
-void dumpWikiActionList(COMMAND_T*);
-void OpenStuff(COMMAND_T*);
-void TestWDLString(COMMAND_T*);
-#endif
+WDL_UINT64 FNV1Hash64(const char* _data);
+bool LearnAction(char* _idstrOut, int _idStrSz = SNM_MAX_ACTION_CUSTID_LEN, const char* _expectedSection = NULL);
+bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
+bool WaitForTrackMute(DWORD* _muteTime);
+void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
+void SimulateMouseClick(COMMAND_T*);
+void DumpWikiActionList(COMMAND_T*);
+void DumpActionList(COMMAND_T*);
 
 // *** SnM_NotesHelpView.cpp ***
 extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTrackNotes;
@@ -661,11 +668,13 @@ void SNM_ClearSelectedTracks(ReaProject* _proj);
 bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz);
 void SetTrackIcon(MediaTrack* _tr, const char* _fn);
 void SetSelTrackIcon(const char* _fn);
-bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _rawChunk, SNM_ChunkParserPatcher* _p = NULL, bool _itemsFromTmplt = false, bool _envsFromTmplt = false);
-void applyOrImportTrackSlot(int _slotType, const char* _title, int _slot, bool _import, bool _itemsFromTmplt, bool _envsFromTmplt);
-void replaceOrPasteItemsFromTrackSlot(int _slotType, const char* _title, int _slot, bool _paste);
-void loadSetTrackTemplate(COMMAND_T*);
-void loadImportTrackTemplate(COMMAND_T*);
+bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _isRawTmpltChunk, SNM_ChunkParserPatcher* _p, bool _itemsFromTmplt, bool _envsFromTmplt);
+void ImportTrackTemplateSlot(int _slotType, const char* _title, int _slot);
+void ApplyTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _itemsFromTmplt, bool _envsFromTmplt);
+void ReplacePasteItemsTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _paste);
+void LoadApplyTrackTemplateSlot(COMMAND_T*);
+void LoadApplyTrackTemplateSlotWithItemsEnvs(COMMAND_T*);
+void LoadImportTrackTemplateSlot(COMMAND_T*);
 bool autoSaveTrackSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _delItems, bool _delEnvs);
 void setMIDIInputChannel(COMMAND_T*);
 void remapMIDIInputChannel(COMMAND_T*);
@@ -683,7 +692,7 @@ void CC123SelTracks(COMMAND_T*);
 bool SNM_IsActiveWindow(HWND _h);
 bool IsChildOf(HWND _hChild, const char* _title, int _nComp = -1);
 HWND GetReaWindowByTitle(const char* _title, int _nComp = -1);
-HWND GetActionListBox(char* _currentSection = NULL, int _sectionMaxSize = 0);
+HWND GetActionListBox(char* _currentSection = NULL, int _sectionSz = SNM_MAX_SECTION_NAME_LEN);
 int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc = NULL, int _descSize = -1);
 void showFXChain(COMMAND_T*);
 void hideFXChain(COMMAND_T*);

@@ -199,19 +199,19 @@ bool autoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, in
 			{
 				RemoveAllIds(&fxChain);
 
-				WDL_FastString name;
+				char name[SNM_MAX_FX_NAME_LEN] = "";
 				if (_nameFromFx)
 				{
 					SNM_FXSummaryParser p(&fxChain);
 					WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
 					SNM_FXSummary* sum = summaries ? summaries->Get(0) : NULL;
-					if (sum)
-						name.Set(sum->m_name.Get());
+					if (sum) lstrcpyn(name, sum->m_name.Get(), SNM_MAX_FX_NAME_LEN);
 				}
 				else if (GetName(item))
-					name.Set(GetName(item));
+					lstrcpyn(name, GetName(item), SNM_MAX_FX_NAME_LEN);
 
-				GenerateFilename(_dirPath, (!name.GetLength()) ? "Untitled" : name.Get(), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
+				Filenamize(name);
+				GenerateFilename(_dirPath, !*name ? "Untitled" : name, g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
 				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
 			}
 		}
@@ -433,19 +433,24 @@ bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, i
 				nbChStr.SetFormatted(32, "#NCHAN %d\n", *(int*)GetSetMediaTrackInfo(tr, "I_NCHAN", NULL));
 				fxChain.Insert(nbChStr.Get(), 0);
 
-				WDL_FastString name;
+				char name[SNM_MAX_FX_NAME_LEN] = "";
+				bool master = false;
 				if (_nameFromFx)
 				{
 					SNM_FXSummaryParser p(&fxChain);
 					WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
 					SNM_FXSummary* sum = summaries ? summaries->Get(0) : NULL;
-					if (sum)
-						name.Set(sum->m_name.Get());
+					if (sum) lstrcpyn(name, sum->m_name.Get(), SNM_MAX_FX_NAME_LEN);
 				}
-				else if (GetSetMediaTrackInfo(tr, "P_NAME", NULL))
-					name.Set((char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL));
+				else
+				{
+					char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
+					if (trName) lstrcpyn(name, trName, SNM_MAX_FX_NAME_LEN);
+					else master = true;
+				}
 
-				GenerateFilename(_dirPath, !name.GetLength() ? "Untitled" : name.Get(), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
+				Filenamize(name);
+				GenerateFilename(_dirPath, master ? "Master" : (!*name ? "Untitled" : name), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
 				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
 			}
 		}

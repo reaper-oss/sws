@@ -49,10 +49,12 @@
 #define SNM_LIVECFG_EDIT_DESC_MSG				0xF007
 #define SNM_LIVECFG_CLEAR_DESC_MSG				0xF008
 #define SNM_LIVECFG_EDIT_ON_ACTION_MSG			0xF009
-#define SNM_LIVECFG_CLEAR_ON_ACTION_MSG			0xF00A
-#define SNM_LIVECFG_EDIT_OFF_ACTION_MSG			0xF00B
-#define SNM_LIVECFG_CLEAR_OFF_ACTION_MSG		0xF00C 
-#define SNM_LIVECFG_SET_TRACK_MSG				0xF00D // => 243 track max.
+#define SNM_LIVECFG_LEARN_ON_ACTION_MSG			0xF00A
+#define SNM_LIVECFG_CLEAR_ON_ACTION_MSG			0xF00B
+#define SNM_LIVECFG_EDIT_OFF_ACTION_MSG			0xF00C
+#define SNM_LIVECFG_LEARN_OFF_ACTION_MSG		0xF00D
+#define SNM_LIVECFG_CLEAR_OFF_ACTION_MSG		0xF00E 
+#define SNM_LIVECFG_SET_TRACK_MSG				0xF00F // => 241 track max
 #define SNM_LIVECFG_CLEAR_TRACK_MSG				0xF100
 #define SNM_LIVECFG_SET_PRESETS_MSG				0xF101 // => theorically 3838 preset max, but see SNM_LIVECFG_MAX_PRESET_COUNT
 #define SNM_LIVECFG_CLEAR_PRESETS_MSG			0xFFFF
@@ -125,17 +127,17 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 				lstrcpyn(str, pItem->m_desc.Get(), iStrMax);
 				break;
 			case COL_TR:
-			{
 				if (pItem->m_track)
 					if (char* name = (char*)GetSetMediaTrackInfo(pItem->m_track, "P_NAME", NULL))
 						_snprintf(str, iStrMax, "[%d] \"%s\"", CSurf_TrackToID(pItem->m_track, false), name);
 				break;
-			}
 			case COL_TRT:
-				lstrcpyn(str, pItem->m_trTemplate.Get(), iStrMax);
+//				lstrcpyn(str, pItem->m_trTemplate.Get(), iStrMax);
+				GetFilenameNoExt(pItem->m_trTemplate.Get(), str, iStrMax);
 				break;
 			case COL_FXC:
-				lstrcpyn(str, pItem->m_fxChain.Get(), iStrMax);
+//				lstrcpyn(str, pItem->m_fxChain.Get(), iStrMax);
+				GetFilenameNoExt(pItem->m_fxChain.Get(), str, iStrMax);
 				break;
 #ifdef _SNM_PRESETS
 			case COL_PRESET:
@@ -147,7 +149,7 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 				break;
 			}
 #endif
-			//JFB TODO? actions: kbd_getTextFromCmd, tooltip?
+			//JFB text edition pb with kbd_getTextFromCmd - tooltips: display pb, bugs, ..
 			case COL_ACTION_ON:
 				lstrcpyn(str, pItem->m_onAction.Get(), iStrMax);
 				break;
@@ -277,6 +279,35 @@ int SNM_LiveConfigsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2)
 #endif
 }
 
+/*tooltips commented: not per column, no '\n' support, bug after sort (sws_wnd), etc..
+void SNM_LiveConfigsView::GetItemTooltip(SWS_ListItem* item, char* str, int iStrMax)
+{
+	*str = '\0';
+	if (item)
+	{
+		WDL_FastString tooltip;
+		MidiLiveItem* pItem = (MidiLiveItem*)item;
+		if (pItem->m_onAction.GetLength())
+		{
+			// API LIMITATION: only for the main section..
+			if (int cmd = NamedCommandLookup(pItem->m_onAction.Get()))
+				tooltip.Append(kbd_getTextFromCmd(cmd, NULL));
+		}
+		if (pItem->m_offAction.GetLength())
+		{
+			// API LIMITATION: only for the main section..
+			if (int cmd = NamedCommandLookup(pItem->m_offAction.Get()))
+			{
+				if (tooltip.GetLength())
+					tooltip.Append("\n");
+				tooltip.Append(kbd_getTextFromCmd(cmd, NULL));
+			}
+		}
+		if (tooltip.GetLength())
+			lstrcpyn(str, tooltip.Get(), iStrMax); 
+	}
+}
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_LiveConfigsWnd
@@ -295,10 +326,10 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_pLists.Add(new SNM_LiveConfigsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
 	SNM_ThemeListView(m_pLists.Get(0));
 
-	// Load prefs 
+	// load prefs 
 	g_approxDelayMsCC = GetPrivateProfileInt("LIVE_CONFIGS", "CC_DELAY", 250, g_SNMIniFn.Get());
 
-	// WDL GUI init
+	// WDL UI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 
@@ -442,7 +473,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case SNM_LIVECFG_EDIT_DESC_MSG:
 			if (item) 
-				m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, 1);
+				m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, COL_COMMENT);
 			break;
 		case SNM_LIVECFG_CLEAR_DESC_MSG:
 		{
@@ -464,7 +495,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (item)
 			{
 				char filename[BUFFER_SIZE];
-				if (BrowseResourcePath("S&M - Load track template", "TrackTemplates", "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0", filename, BUFFER_SIZE))
+				if (BrowseResourcePath("S&M - Set track template", "TrackTemplates", "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0", filename, BUFFER_SIZE))
 				{
 					while(item) {
 						item->m_trTemplate.Set(filename);
@@ -533,32 +564,43 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		case SNM_LIVECFG_EDIT_ON_ACTION_MSG:
+		case SNM_LIVECFG_EDIT_OFF_ACTION_MSG:
 			if (item) 
-				m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, 5);
+				m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, LOWORD(wParam)==SNM_LIVECFG_EDIT_ON_ACTION_MSG ? COL_ACTION_ON : COL_ACTION_OFF);
 			break;
-		case SNM_LIVECFG_CLEAR_ON_ACTION_MSG:
+		case SNM_LIVECFG_LEARN_ON_ACTION_MSG:
+		case SNM_LIVECFG_LEARN_OFF_ACTION_MSG:
 		{
-			bool updt = false;
-			while(item) {
-				item->m_onAction.Set("");
-				updt = true;
-				item = (MidiLiveItem*)m_pLists.Get(0)->EnumSelected(&x);
-			}
-			if (updt) {
-				Update();
-				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+			char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
+			if (LearnAction(idstr))
+			{
+				bool updt = false;
+				while(item)
+				{
+					if (LOWORD(wParam)==SNM_LIVECFG_LEARN_ON_ACTION_MSG)
+						item->m_onAction.Set(idstr);
+					else
+						item->m_offAction.Set(idstr);
+					updt = true;
+					item = (MidiLiveItem*)m_pLists.Get(0)->EnumSelected(&x);
+				}
+				if (updt) {
+					Update();
+					Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+				}
 			}
 			break;
 		}
-		case SNM_LIVECFG_EDIT_OFF_ACTION_MSG:
-			if (item) 
-				m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, 6);
-			break;
+		case SNM_LIVECFG_CLEAR_ON_ACTION_MSG:
 		case SNM_LIVECFG_CLEAR_OFF_ACTION_MSG:
 		{
 			bool updt = false;
-			while(item) {
-				item->m_offAction.Set("");
+			while(item)
+			{
+				if (LOWORD(wParam)==SNM_LIVECFG_CLEAR_ON_ACTION_MSG)
+					item->m_onAction.Set("");
+				else
+					item->m_offAction.Set("");
 				updt = true;
 				item = (MidiLiveItem*)m_pLists.Get(0)->EnumSelected(&x);
 			}
@@ -722,7 +764,7 @@ void AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf)
 				if (presetCount)
 				{
 					int curSel = GetPresetFromConf(i, _curPresetConf, presetCount);
-					AddToMenu(fxSubMenu, "None (unchanged)", SNM_LIVECFG_SET_PRESETS_MSG + msgCpt, -1, false, !curSel ? MFS_CHECKED : MFS_UNCHECKED);
+					AddToMenu(fxSubMenu, "None", SNM_LIVECFG_SET_PRESETS_MSG + msgCpt, -1, false, !curSel ? MFS_CHECKED : MFS_UNCHECKED);
 					g_pLiveConfigsWnd->m_lastFXPresetMsg[0][msgCpt] = i; 
 					g_pLiveConfigsWnd->m_lastFXPresetMsg[1][msgCpt++] = 0; 
 					for(int j = 0; j < presetCount; j++) {
@@ -732,7 +774,7 @@ void AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf)
 					}
 				}
 				WDL_FastString fxNameId;
-				fxNameId.SetFormatted(512, "FX %d - %s", i+1, fxName);
+				fxNameId.SetFormatted(512, "FX%d: %s", i+1, fxName);
 				AddSubMenu(*_menu, fxSubMenu, fxNameId.Get(), -1, presetCount ? MFS_ENABLED : MF_GRAYED);
 			}
 		}
@@ -750,22 +792,16 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
 		switch(iCol)
 		{
 			case COL_CC:
-			{
 				hMenu = CreatePopupMenu();
-				AddToMenu(hMenu, "Perform", SNM_LIVECFG_PERFORM_MSG);
+				AddToMenu(hMenu, "Activate", SNM_LIVECFG_PERFORM_MSG);
 				break;
-			}
 			case COL_COMMENT:
-			{
 				hMenu = CreatePopupMenu();
-				AddToMenu(hMenu, "Clear", SNM_LIVECFG_CLEAR_DESC_MSG);
-				AddToMenu(hMenu, "Edit", SNM_LIVECFG_EDIT_DESC_MSG);
+				AddToMenu(hMenu, "Edit comment", SNM_LIVECFG_EDIT_DESC_MSG);
+				AddToMenu(hMenu, "Clear comment(s)", SNM_LIVECFG_CLEAR_DESC_MSG);
 				break;
-			}
 			case COL_TR:
-			{
 				hMenu = CreatePopupMenu();
-				AddToMenu(hMenu, "Clear", SNM_LIVECFG_CLEAR_TRACK_MSG);
 				for (int i=1; i <= GetNumTracks(); i++)
 				{
 					char str[SNM_MAX_TRACK_NAME_LEN] = "";
@@ -773,64 +809,66 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
 					_snprintf(str, SNM_MAX_TRACK_NAME_LEN, "[%d] \"%s\"", i, name);
 					AddToMenu(hMenu, str, SNM_LIVECFG_SET_TRACK_MSG + i);
 				}
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hMenu, "Clear track(s)", SNM_LIVECFG_CLEAR_TRACK_MSG);
 				break;
-			}
 			case COL_TRT:
-			{
 				hMenu = CreatePopupMenu();
 				if (item->m_track) {
-					AddToMenu(hMenu, "Clear", SNM_LIVECFG_CLEAR_TRACK_TEMPLATE_MSG);
-					AddToMenu(hMenu, "Load track template...", SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG);
+					if (item->m_fxChain.GetLength())
+						AddToMenu(hMenu, "(FX Chain overrides)", 0, -1, false, MFS_GRAYED);
+					else {
+						AddToMenu(hMenu, "Set track template...", SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG);
+						AddToMenu(hMenu, "Clear track template(s)", SNM_LIVECFG_CLEAR_TRACK_TEMPLATE_MSG);
+					}
 				}
 				else AddToMenu(hMenu, "(No track)", 0, -1, false, MF_GRAYED);
 				break;
-			}
 			case COL_FXC:
-			{
 				hMenu = CreatePopupMenu();
 				if (item->m_track) {
 					if (!item->m_trTemplate.GetLength()) {
-						AddToMenu(hMenu, "Clear", SNM_LIVECFG_CLEAR_FXCHAIN_MSG);
-						AddToMenu(hMenu, "Load FX Chain...", SNM_LIVECFG_LOAD_FXCHAIN_MSG);
+						AddToMenu(hMenu, "Set FX Chain...", SNM_LIVECFG_LOAD_FXCHAIN_MSG);
+						AddToMenu(hMenu, "Clear FX Chain(s)", SNM_LIVECFG_CLEAR_FXCHAIN_MSG);
 					}
 					else AddToMenu(hMenu, "(Track template overrides)", 0, -1, false, MF_GRAYED);
 				}
 				else AddToMenu(hMenu, "(No track)", 0, -1, false, MF_GRAYED);
 				break;
-			}
 #ifdef _SNM_PRESETS
 			case COL_PRESET:
-			{
 				hMenu = CreatePopupMenu();
-				if (item->m_track) {
+				if (item->m_track)
+				{
 					if (item->m_trTemplate.GetLength() && !item->m_fxChain.GetLength())
 						AddToMenu(hMenu, "(Track template overrides)", 0, -1, false, MFS_GRAYED);
 					else if (item->m_fxChain.GetLength())
 						AddToMenu(hMenu, "(FX Chain overrides)", 0, -1, false, MFS_GRAYED);
 					else {
-						AddToMenu(hMenu, "Clear all presets (unchanged)", SNM_LIVECFG_CLEAR_PRESETS_MSG);
-						AddToMenu(hMenu, SWS_SEPARATOR, 0);
 						AddFXSubMenu(&hMenu, item->m_track, &(item->m_presets));
+						AddToMenu(hMenu, SWS_SEPARATOR, 0);
+						AddToMenu(hMenu, "Clear preset(s)", SNM_LIVECFG_CLEAR_PRESETS_MSG);
 					}
 				}
 				else AddToMenu(hMenu, "(No track)", 0, -1, false, MFS_GRAYED);
 				break;
-			}
 #endif
 			case COL_ACTION_ON:
-			{
 				hMenu = CreatePopupMenu();
-				AddToMenu(hMenu, "Clear", SNM_LIVECFG_CLEAR_ON_ACTION_MSG);
-				AddToMenu(hMenu, "Edit", SNM_LIVECFG_EDIT_ON_ACTION_MSG);
+#ifdef _WIN32
+				AddToMenu(hMenu, "Learn from Actions window", SNM_LIVECFG_LEARN_ON_ACTION_MSG);
+#endif
+				AddToMenu(hMenu, "Edit action/macro", SNM_LIVECFG_EDIT_ON_ACTION_MSG);
+				AddToMenu(hMenu, "Clear action/macro(s)", SNM_LIVECFG_CLEAR_ON_ACTION_MSG);
 				break;
-			}
 			case COL_ACTION_OFF:
-			{
 				hMenu = CreatePopupMenu();
-				AddToMenu(hMenu, "Clear", SNM_LIVECFG_CLEAR_OFF_ACTION_MSG);
-				AddToMenu(hMenu, "Edit", SNM_LIVECFG_EDIT_OFF_ACTION_MSG);
+#ifdef _WIN32
+				AddToMenu(hMenu, "Learn from Actions window", SNM_LIVECFG_LEARN_OFF_ACTION_MSG);
+#endif
+				AddToMenu(hMenu, "Edit action/macro", SNM_LIVECFG_EDIT_OFF_ACTION_MSG);
+				AddToMenu(hMenu, "Clear action/macro(s)", SNM_LIVECFG_CLEAR_OFF_ACTION_MSG);
 				break;
-			}
 		}
 	}
 	return hMenu;
@@ -842,13 +880,20 @@ int SNM_LiveConfigsWnd::OnKey(MSG* _msg, int _iKeyState)
 	{
 		switch(_msg->wParam)
 		{
+			case VK_F2:
+				OnCommand(SNM_LIVECFG_EDIT_DESC_MSG, 0);
+				return 1;
 			case VK_RETURN:
 				OnCommand(SNM_LIVECFG_PERFORM_MSG, 0);
 				return 1;
 			case VK_DELETE:
 				OnCommand(SNM_LIVECFG_CLEAR_CC_ROW_MSG, 0);
 				return 1;
-		}
+			case VK_INSERT:
+				if (Insert())
+					return 1;
+				break;
+			}
 	}
 	return 0;
 }
@@ -914,6 +959,27 @@ HBRUSH SNM_LiveConfigsWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
 		return SNM_GetThemeBrush(bg);
 	}
 	return 0;
+}
+
+bool SNM_LiveConfigsWnd::Insert()
+{
+	if (WDL_PtrList<MidiLiveItem>* configs = g_liveCCConfigs.Get()->Get(g_configId))
+	{
+		int pos=0;
+		if (MidiLiveItem* item = (MidiLiveItem*)m_pLists.Get(0)->EnumSelected(&pos))
+		{
+			pos--;
+			for(int i=pos; i < configs->GetSize(); i++) configs->Get(i)->m_cc++;
+			configs->Insert(pos, new MidiLiveItem(pos));
+			item = configs->Get(configs->GetSize()-1);
+			configs->Delete(configs->GetSize()-1, false); // do not delete now (still displayed..)
+			Update();
+			Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+			DELETE_NULL(item); // ok to del now that the update is done
+			return true;
+		}
+	}
+	return false;
 }
 
 
@@ -1108,17 +1174,18 @@ bool IsLiveConfigViewDisplayed(COMMAND_T*) {
 // val=[0..127] and valhw=-1 (midi CC),
 // valhw >=0 (midi pitch (valhw | val<<7)),
 // relmode absolute (0) or 1/2/3 for relative adjust modes
-void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) 
+void ApplyLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd) 
 {
-	// Absolute CC only
+	// asolute CC only
 	if (!_relmode && _valhw < 0)
 	{
+		// scheduled jobs ids == config id!
+		// scheduled jobs ids [0..7] are reserved for Live Configs MIDI CC actions
 		SNM_MidiLiveScheduledJob* job = 
-			new SNM_MidiLiveScheduledJob((int)_ct->user, g_approxDelayMsCC, (int)_ct->user, _val, _valhw, _relmode, _hwnd);
+			new SNM_MidiLiveScheduledJob(_cfgId, g_approxDelayMsCC, _cfgId, _val, _valhw, _relmode, _hwnd);
 
-		// delay:
-		// Avoid to stuck REPAER when a bunch of CCs are received (which is the standard case with HW knobs, faders, ..) 
-		// but just process the last "stable" one => we do this thanks to SNM_ScheduledJob
+		// delay: avoid to stuck REPAER when a bunch of CCs are received (which is the standard case with 
+		// HW knobs, faders, ..) but just process the last "stable" one
 		if (g_approxDelayMsCC) {
 			AddOrReplaceScheduledJob(job);
 		}
@@ -1130,7 +1197,27 @@ void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HW
 	}
 }
 
-// Here we go
+void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
+	ApplyLiveConfig((int)_ct->user, _val, _valhw, _relmode, _hwnd);
+}
+
+void NextLiveConfig(COMMAND_T* _ct)
+{
+	int cfgId = (int)_ct->user;
+	if (MidiLiveConfig* lc = g_liveConfigs.Get())
+		if (lc->m_lastMIDIVal[cfgId] < 128)
+			ApplyLiveConfig(cfgId, lc->m_lastMIDIVal[cfgId]+1, -1, 0, GetMainHwnd());
+}
+
+void PreviousLiveConfig(COMMAND_T* _ct)
+{
+	int cfgId = (int)_ct->user;
+	if (MidiLiveConfig* lc = g_liveConfigs.Get())
+		if (lc->m_lastMIDIVal[cfgId] >0)
+			ApplyLiveConfig(cfgId, lc->m_lastMIDIVal[cfgId]-1, -1, 0, GetMainHwnd());
+}
+
+// here we go!
 void SNM_MidiLiveScheduledJob::Perform()
 {
 	MidiLiveConfig* lc = g_liveConfigs.Get();
@@ -1217,7 +1304,7 @@ void SNM_MidiLiveScheduledJob::Perform()
 					char filename[BUFFER_SIZE];
 					GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), filename, BUFFER_SIZE);
 					if (LoadChunk(filename, &chunk) && chunk.GetLength())
-						applyTrackTemplate(cfg->m_track, &chunk, true, p);
+						applyTrackTemplate(cfg->m_track, &chunk, true, p, false, false);
 				}
 				else if (cfg->m_fxChain.GetLength())
 				{

@@ -85,7 +85,7 @@ protected:
 	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void OnInitDlg();
 	void OnDestroy();
-	HMENU OnContextMenu(int x, int y);
+	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	int OnKey(MSG* msg, int iKeyState);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);

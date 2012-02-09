@@ -181,7 +181,7 @@ protected:
 
 	virtual void OnInitDlg() {}
 	virtual int OnNotify(WPARAM wParam, LPARAM lParam) { return 0; }
-	virtual HMENU OnContextMenu(int x, int y) { return NULL; }
+	virtual HMENU OnContextMenu(int x, int y, bool* wantDefaultItems) { return NULL; }
 	virtual void OnPaint() {}
 	virtual void OnResize() {}
 	virtual void OnDestroy() {}

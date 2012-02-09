@@ -573,7 +573,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y)
+HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU contextMenu = CreatePopupMenu();
 	SWS_ListItem* item = m_pLists.Get(0)->GetHitItem(x, y, NULL);

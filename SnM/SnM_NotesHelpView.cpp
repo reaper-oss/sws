@@ -296,7 +296,7 @@ bool SNM_NotesHelpWnd::IsActive(bool bWantEdit) {
 }
 */
 
-HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y)
+HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	if (g_notesViewType == SNM_NOTES_ACTION_HELP)
 	{

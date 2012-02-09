@@ -215,44 +215,50 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_CONTEXTMENU:
 		{
 			KillTooltip(true);
-			for (int i = 0; i < m_pLists.GetSize(); i++)
-				m_pLists.Get(i)->EditListItemEnd(true);
-
 			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-			// Are we over the column header?
 			for (int i = 0; i < m_pLists.GetSize(); i++)
+			{
+				m_pLists.Get(i)->EditListItemEnd(true);
+				// Are we over the column header?
 				if (m_pLists.Get(i)->DoColumnMenu(x, y))
 					return 0;
+			}
 			
 			// SWS issue 373 - removed code from here that removed all but one selection on right click on OSX
 
-			HMENU hMenu = OnContextMenu(x, y);
-			if (!hMenu)
-				hMenu = CreatePopupMenu();
-			else
-				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-
-			// Add std menu items
-			char str[100];
-			if (_snprintf(str, 100, "Dock %s in Docker", m_cWndTitle) > 0)
-				AddToMenu(hMenu, str, DOCK_MSG);
-
-			// Check dock state
-			if ((m_state.state & 2))
-				CheckMenuItem(hMenu, DOCK_MSG, MF_BYCOMMAND | MF_CHECKED);
-			AddToMenu(hMenu, "Close Window", IDCANCEL);
-			
-			if (x == -1 || y == -1)
+			bool wantDefaultItems = true;
+			HMENU hMenu = OnContextMenu(x, y, &wantDefaultItems);
+			if (wantDefaultItems)
 			{
-				RECT r;
-				GetWindowRect(m_hwnd, &r);
-				x = r.left;
-				y = r.top;
-			}
+				if (!hMenu)
+					hMenu = CreatePopupMenu();
+				else
+					AddToMenu(hMenu, SWS_SEPARATOR, 0);
 
-			kbd_reprocessMenu(hMenu, NULL);
-			TrackPopupMenu(hMenu, 0, x, y, 0, m_hwnd, NULL);
-			DestroyMenu(hMenu);
+				// Add std menu items
+				char str[100];
+				if (_snprintf(str, 100, "Dock %s in Docker", m_cWndTitle) > 0)
+					AddToMenu(hMenu, str, DOCK_MSG);
+
+				// Check dock state
+				if ((m_state.state & 2))
+					CheckMenuItem(hMenu, DOCK_MSG, MF_BYCOMMAND | MF_CHECKED);
+				AddToMenu(hMenu, "Close Window", IDCANCEL);
+			}
+			
+			if (hMenu)
+			{
+				if (x == -1 || y == -1)
+				{
+					RECT r;
+					GetWindowRect(m_hwnd, &r);
+					x = r.left;
+					y = r.top;
+				}
+				kbd_reprocessMenu(hMenu, NULL);
+				TrackPopupMenu(hMenu, 0, x, y, 0, m_hwnd, NULL);
+				DestroyMenu(hMenu);
+			}
 			break;
 		}
 		case WM_COMMAND:

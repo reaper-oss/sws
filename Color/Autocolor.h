@@ -77,7 +77,7 @@ protected:
 	void OnDestroy();
 #endif
 	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
-	HMENU OnContextMenu(int x, int y);
+	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	int OnKey(MSG* msg, int iKeyState);
 	SWS_AutoColorView* m_pView;
 };

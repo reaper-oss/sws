@@ -298,7 +298,7 @@ void SWS_TrackListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-HMENU SWS_TrackListWnd::OnContextMenu(int x, int y)
+HMENU SWS_TrackListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU contextMenu = CreatePopupMenu();
 

@@ -783,12 +783,13 @@ void AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf)
 		AddToMenu(*_menu, "(Unknown FX on track)", 0, -1, false, MF_GRAYED);
 }
 
-HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y)
+HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU hMenu = NULL;
 	int iCol;
 	if (MidiLiveItem* item = (MidiLiveItem*)m_pLists.Get(0)->GetHitItem(x, y, &iCol))
 	{
+		*wantDefaultItems = (iCol < 0);
 		switch(iCol)
 		{
 			case COL_CC:

@@ -48,7 +48,7 @@ public:
 protected:
 	void OnInitDlg();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	HMENU OnContextMenu(int x, int y);
+	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	int OnKey(MSG* msg, int iKeyState);
 };
 

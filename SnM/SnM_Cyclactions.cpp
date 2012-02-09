@@ -1208,7 +1208,7 @@ HBRUSH SNM_CyclactionWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
 	return 0;
 }
 
-HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y)
+HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU hMenu = CreatePopupMenu();
 
@@ -1225,6 +1225,7 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y)
 
 	if (left || right)
 	{
+		*wantDefaultItems = false;
 		Cyclaction* action = (Cyclaction*)g_lvL->GetHitItem(x, y, NULL);
 		WDL_FastString* cmd = (WDL_FastString*)g_lvR->GetHitItem(x, y, NULL);
 		if (left)
@@ -1232,11 +1233,10 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y)
 			AddToMenu(hMenu, "Add cycle action", ADD_CYCLACTION_MSG);
 			if (action && action != &g_DEFAULT_L)
 			{
-				AddToMenu(hMenu, "Remove selected cycle action(s)", DEL_CYCLACTION_MSG); 
+				AddToMenu(hMenu, "Remove cycle action(s)", DEL_CYCLACTION_MSG); 
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				AddToMenu(hMenu, "Run", RUN_CYCLACTION_MSG, -1, false, action->m_added ? MF_GRAYED : MF_ENABLED); 
 			}
-			AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		}
 		else if (g_editedAction && g_editedAction != &g_DEFAULT_L)
 		{
@@ -1245,25 +1245,29 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y)
 			AddToMenu(hMenu, "Add/learn from Actions window", LEARN_CMD_MSG);
 #endif
 			if (cmd && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R)
-				AddToMenu(hMenu, "Remove selected command(s)", DEL_CMD_MSG);
-			AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				AddToMenu(hMenu, "Remove command(s)", DEL_CMD_MSG);
 		}
 	}
+	else
+	{
+		char buf[128] = "";
+		HMENU hImpExpSubMenu = CreatePopupMenu();
+		AddSubMenu(hMenu, hImpExpSubMenu, "Import/export...");
+		_snprintf(buf, 128, "Import in section '%s'...", g_cyclactionSections[g_editedSection]);
+		AddToMenu(hImpExpSubMenu, buf, IMPORT_CUR_SECTION_MSG);
+		AddToMenu(hImpExpSubMenu, "Import all sections...", IMPORT_ALL_SECTIONS_MSG);
+		AddToMenu(hImpExpSubMenu, SWS_SEPARATOR, 0);
+		AddToMenu(hImpExpSubMenu, "Export selected cycle actions...", EXPORT_SEL_MSG);
+		_snprintf(buf, 128, "Export section '%s'...", g_cyclactionSections[g_editedSection]);
+		AddToMenu(hImpExpSubMenu, buf, EXPORT_CUR_SECTION_MSG);
+		AddToMenu(hImpExpSubMenu, "Export all sections...", EXPORT_ALL_SECTIONS_MSG);
 
-	HMENU hImpExpSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hImpExpSubMenu, "Import/export...");
-	AddToMenu(hImpExpSubMenu, "Import in current section...", IMPORT_CUR_SECTION_MSG);
-	AddToMenu(hImpExpSubMenu, "Import all sections...", IMPORT_ALL_SECTIONS_MSG);
-	AddToMenu(hImpExpSubMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hImpExpSubMenu, "Export selected cycle actions...", EXPORT_SEL_MSG);
-	AddToMenu(hImpExpSubMenu, "Export current section...", EXPORT_CUR_SECTION_MSG);
-	AddToMenu(hImpExpSubMenu, "Export all sections...", EXPORT_ALL_SECTIONS_MSG);
-
-	HMENU hResetSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hResetSubMenu, "Reset");
-	AddToMenu(hResetSubMenu, "Reset current section", RESET_CUR_SECTION_MSG);
-	AddToMenu(hResetSubMenu, "Reset all sections", RESET_ALL_SECTIONS_MSG);
-
+		HMENU hResetSubMenu = CreatePopupMenu();
+		AddSubMenu(hMenu, hResetSubMenu, "Reset");
+		_snprintf(buf, 128, "Reset section '%s'...", g_cyclactionSections[g_editedSection]);
+		AddToMenu(hResetSubMenu, buf, RESET_CUR_SECTION_MSG);
+		AddToMenu(hResetSubMenu, "Reset all sections", RESET_ALL_SECTIONS_MSG);
+	}
 	return hMenu;
 }
 

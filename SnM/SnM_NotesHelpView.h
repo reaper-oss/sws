@@ -88,7 +88,7 @@ protected:
 /*JFB r376	
 	bool IsActive(bool bWantEdit = false);
 */
-	HMENU OnContextMenu(int x, int y);
+	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	int OnKey(MSG* msg, int iKeyState);
 	void OnTimer(WPARAM wParam=0);
 	void OnResize();

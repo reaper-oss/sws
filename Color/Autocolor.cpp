@@ -446,7 +446,7 @@ INT_PTR SWS_AutoColorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam
 	return 0;
 }
 
-HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y)
+HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	int iCol;
 	SWS_ListItem* item = m_pLists.Get(0)->GetHitItem(x, y, &iCol);

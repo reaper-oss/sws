@@ -115,7 +115,7 @@ void SWS_ProjectListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	Main_OnCommand((int)wParam, (int)lParam);
 }
 
-HMENU SWS_ProjectListWnd::OnContextMenu(int x, int y)
+HMENU SWS_ProjectListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU hMenu = CreatePopupMenu();
 	AddToMenu(hMenu, g_projMgrCmdTable[0].menuText, g_projMgrCmdTable[0].accel.accel.cmd);

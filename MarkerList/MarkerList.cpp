@@ -340,7 +340,7 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y)
+HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU hMenu = CreatePopupMenu();
 	AddToMenu(hMenu, "Rename", RENAME_MSG);

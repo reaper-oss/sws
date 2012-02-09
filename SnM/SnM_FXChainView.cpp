@@ -1335,7 +1335,7 @@ void SNM_ResourceWnd::AutoSaveContextMenu(HMENU _menu, bool _saveItem)
 {
 	int typeForUser = GetTypeForUser();
 	char autoPath[BUFFER_SIZE] = "";
-	_snprintf(autoPath, BUFFER_SIZE, "[Current auto-save path: %s]", GetAutoSaveDir()->Get());
+	_snprintf(autoPath, BUFFER_SIZE, "[Current auto-save path: %s]", GetAutoSaveDir()->GetLength() ? GetAutoSaveDir()->Get() : "undefined");
 	AddToMenu(_menu, autoPath, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
 	if (_saveItem) {
 		AddToMenu(_menu, SWS_SEPARATOR, 0);
@@ -1374,7 +1374,7 @@ void SNM_ResourceWnd::AutoFillContextMenu(HMENU _menu, bool _fillItem)
 {
 	int typeForUser = GetTypeForUser();
 	char autoPath[BUFFER_SIZE] = "";
-	_snprintf(autoPath, BUFFER_SIZE, "[Current auto-fill path: %s]", GetAutoFillDir()->Get());
+	_snprintf(autoPath, BUFFER_SIZE, "[Current auto-fill path: %s]", GetAutoFillDir()->GetLength() ? GetAutoFillDir()->Get() : "undefined");
 	AddToMenu(_menu, autoPath, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
 	
 	if (_fillItem) {
@@ -1391,7 +1391,7 @@ void SNM_ResourceWnd::AutoFillContextMenu(HMENU _menu, bool _fillItem)
 	AddToMenu(_menu, "Set auto-fill directory to project path", AUTOFILL_PRJ_MSG, -1, false, !IsFiltered() ? MF_ENABLED : MF_GRAYED);
 }
 
-HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
+HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU hMenu = CreatePopupMenu();
 
@@ -1403,10 +1403,12 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 		switch (v->GetID())
 		{
 			case BUTTONID_AUTOFILL:
+				*wantDefaultItems = false;
 				AutoFillContextMenu(hMenu, false);
 				return hMenu;
 			case BUTTONID_AUTOSAVE:
 				if (GetCurList()->HasAutoSave()) {
+					*wantDefaultItems = false;
 					AutoSaveContextMenu(hMenu, false);
 					return hMenu;
 				}
@@ -1421,6 +1423,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 	int typeForUser = GetTypeForUser();
 	if (pItem && iCol >= 0)
 	{
+		*wantDefaultItems = false;
 		switch(typeForUser)
 		{
 			case SNM_SLOT_FXC:
@@ -1503,40 +1506,42 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y)
 #endif
 		AddToMenu(hMenu, "Show path in explorer/finder...", EXPLORE_MSG, -1, false, enabled);
 	}
-
-	// auto-fill
-	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	HMENU hAutoFillSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hAutoFillSubMenu, "Auto-fill");
-	AutoFillContextMenu(hAutoFillSubMenu, true);
-
-	// auto-save
-	if (GetCurList()->HasAutoSave())
+	else
 	{
-		HMENU hAutoSaveSubMenu = CreatePopupMenu();
-		AddSubMenu(hMenu, hAutoSaveSubMenu, "Auto-save");
-		AutoSaveContextMenu(hAutoSaveSubMenu, true);
+		// auto-fill
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+		HMENU hAutoFillSubMenu = CreatePopupMenu();
+		AddSubMenu(hMenu, hAutoFillSubMenu, "Auto-fill");
+		AutoFillContextMenu(hAutoFillSubMenu, true);
+
+		// auto-save
+		if (GetCurList()->HasAutoSave())
+		{
+			HMENU hAutoSaveSubMenu = CreatePopupMenu();
+			AddSubMenu(hMenu, hAutoSaveSubMenu, "Auto-save");
+			AutoSaveContextMenu(hAutoSaveSubMenu, true);
+		}
+
+		// bookmarks
+	//	AddToMenu(hMenu, SWS_SEPARATOR, 0);
+		HMENU hBookmarkSubMenu = CreatePopupMenu();
+		AddSubMenu(hMenu, hBookmarkSubMenu, "Bookmarks");
+		HMENU hNewBookmarkSubMenu = CreatePopupMenu();
+		AddSubMenu(hBookmarkSubMenu, hNewBookmarkSubMenu, "New bookmark");
+		for (int i=0; i < SNM_NUM_DEFAULT_SLOTS; i++)
+			AddToMenu(hNewBookmarkSubMenu, GetMenuDesc(i), NEW_BOOKMARK_FXC_MSG+i);
+		AddToMenu(hBookmarkSubMenu, "New bookmark (copy current)", ADD_BOOKMARK_MSG);
+		AddToMenu(hBookmarkSubMenu, "Delete", DEL_BOOKMARK_MSG, -1, false, g_resViewType >= SNM_NUM_DEFAULT_SLOTS ? MF_ENABLED : MF_GRAYED);
+		AddToMenu(hBookmarkSubMenu, "Rename", REN_BOOKMARK_MSG, -1, false, g_resViewType >= SNM_NUM_DEFAULT_SLOTS ? MF_ENABLED : MF_GRAYED);
+
+		// filter prefs
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+		HMENU hFilterSubMenu = CreatePopupMenu();
+		AddSubMenu(hMenu, hFilterSubMenu, "Filter on");
+		AddToMenu(hFilterSubMenu, "Name", FILTER_BY_NAME_MSG, -1, false, (g_filterPref&1) ? MFS_CHECKED : MFS_UNCHECKED);
+		AddToMenu(hFilterSubMenu, "Path", FILTER_BY_PATH_MSG, -1, false, (g_filterPref&2) ? MFS_CHECKED : MFS_UNCHECKED);
+		AddToMenu(hFilterSubMenu, "Comment", FILTER_BY_COMMENT_MSG, -1, false, (g_filterPref&4) ? MFS_CHECKED : MFS_UNCHECKED);
 	}
-
-	// bookmarks
-//	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	HMENU hBookmarkSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hBookmarkSubMenu, "Bookmarks");
-	HMENU hNewBookmarkSubMenu = CreatePopupMenu();
-	AddSubMenu(hBookmarkSubMenu, hNewBookmarkSubMenu, "New bookmark");
-	for (int i=0; i < SNM_NUM_DEFAULT_SLOTS; i++)
-		AddToMenu(hNewBookmarkSubMenu, GetMenuDesc(i), NEW_BOOKMARK_FXC_MSG+i);
-	AddToMenu(hBookmarkSubMenu, "New bookmark (copy current)", ADD_BOOKMARK_MSG);
-	AddToMenu(hBookmarkSubMenu, "Delete", DEL_BOOKMARK_MSG, -1, false, g_resViewType >= SNM_NUM_DEFAULT_SLOTS ? MF_ENABLED : MF_GRAYED);
-	AddToMenu(hBookmarkSubMenu, "Rename", REN_BOOKMARK_MSG, -1, false, g_resViewType >= SNM_NUM_DEFAULT_SLOTS ? MF_ENABLED : MF_GRAYED);
-
-	// filter prefs
-	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	HMENU hFilterSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hFilterSubMenu, "Filter on");
-	AddToMenu(hFilterSubMenu, "Name", FILTER_BY_NAME_MSG, -1, false, (g_filterPref&1) ? MFS_CHECKED : MFS_UNCHECKED);
-	AddToMenu(hFilterSubMenu, "Path", FILTER_BY_PATH_MSG, -1, false, (g_filterPref&2) ? MFS_CHECKED : MFS_UNCHECKED);
-	AddToMenu(hFilterSubMenu, "Comment", FILTER_BY_COMMENT_MSG, -1, false, (g_filterPref&4) ? MFS_CHECKED : MFS_UNCHECKED);
 	return hMenu;
 }
 
@@ -1771,7 +1776,7 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 			case BUTTONID_AUTOFILL:
 				return (_snprintf(_bufOut, _bufOutSz, "Auto-fill %s slots\nfrom %s (right-click for options)", 
 					g_slots.Get(typeForUser)->GetDesc(), 
-					g_autoFillDirs.Get(g_resViewType)->GetLength() ? g_autoFillDirs.Get(g_resViewType)->Get() : "?") > 0);
+					g_autoFillDirs.Get(g_resViewType)->GetLength() ? g_autoFillDirs.Get(g_resViewType)->Get() : "undefined") > 0);
 			case BUTTONID_AUTOSAVE:
 				if (g_slots.Get(g_resViewType)->HasAutoSave())
 				{
@@ -1782,16 +1787,16 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 								g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_TRACK ? "Auto-save FX chain slots for selected tracks" :
 								g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_ITEM ? "Auto-save FX chain slots for selected items" :
 								g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? "Auto-save input FX chain slots for selected tracks" : "Auto-save FX chain slots",
-								g_autoSaveDirs.Get(g_resViewType)->GetLength() ? g_autoSaveDirs.Get(g_resViewType)->Get() : "?") > 0);
+								g_autoSaveDirs.Get(g_resViewType)->GetLength() ? g_autoSaveDirs.Get(g_resViewType)->Get() : "undefined") > 0);
 						case SNM_SLOT_TR:
 							return (_snprintf(_bufOut, _bufOutSz, "Auto-save track templates slots%s%s for selected tracks\nto %s (right-click for options)",
 								(g_autoSaveTrTmpltPref&1) ? " (w/ items)" : "",
 								(g_autoSaveTrTmpltPref&2) ? " (w/ envs)" : "",
-								g_autoSaveDirs.Get(g_resViewType)->GetLength() ? g_autoSaveDirs.Get(g_resViewType)->Get() : "?") > 0);
+								g_autoSaveDirs.Get(g_resViewType)->GetLength() ? g_autoSaveDirs.Get(g_resViewType)->Get() : "undefined") > 0);
 						default:
 							return (_snprintf(_bufOut, _bufOutSz, "Auto-save %s slots\nto %s (right-click for options)", 
 								g_slots.Get(typeForUser)->GetDesc(), 
-								g_autoSaveDirs.Get(g_resViewType)->GetLength() ? g_autoSaveDirs.Get(g_resViewType)->Get() : "?") > 0);
+								g_autoSaveDirs.Get(g_resViewType)->GetLength() ? g_autoSaveDirs.Get(g_resViewType)->Get() : "undefined") > 0);
 					}
 				}
 				break;
@@ -2528,7 +2533,7 @@ void SNM_ImageWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-HMENU SNM_ImageWnd::OnContextMenu(int x, int y)
+HMENU SNM_ImageWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU hMenu = CreatePopupMenu();
 	AddToMenu(hMenu, "Stretch to fit", 0xF001, -1, false, m_stretch?MFS_CHECKED:MFS_UNCHECKED);

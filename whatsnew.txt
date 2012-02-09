@@ -11,7 +11,6 @@ Example: sharing a single language file for REAPER and the SWS extension (althou
 2) Main menu > Extensions > SWS Language file > Load LangPack file: choose the same file than above
 3) Main menu > Extensions > SWS Language file > Upgrade LangPack file: all SWS strings will be added to the shared file
 4) Quit REAPER, translate/customize strings in the LangPack file and restart REAPER
-<b>Please submit your SWS LangPack files!</b> We will host them on the SWS google website for larger distribution. Thanks!
 
 Live Configs:
 +Added "Learn actions/macro from Actions window" (in the context menu of columns "Activate action/macro" and "Deactivate action/macro") - Windows OS only
@@ -21,14 +20,14 @@ Added actions (useful to switch configs without MIDI CC controller, e.g. +/- ped
 +SWS/S&M: Live Config #n - Previous (where 'n' is in [1; 8])
 
 Resources view:
-+More "macro friendly" slots actions: when the view is empty, add the needed slots and browse for file (rather than displaying an error message)
-+Consistency: Auto-fill now hehaves like Auto-save (new top left button for auto-fill too, same context menu, etc.. Issue 436)
-+Added Bookmark commands in the context menu (new, delete and rename bookmarks, Issue 436)
++More "macro friendly" slots actions: when the view is empty, add the needed number of slots and browse for file (rather than displaying an error message)
++Auto-fill now hehaves like Auto-save: new top left button for auto-fill too, same context menu, etc.. (Issue 436, indirectly)
++Added Bookmark commands in the context menu: new, delete and rename bookmarks (Issue 436)
 +Auto-save: fixed automatic building of filenames (strip forbidden characters)
-+Right-click buttons! Context menu for auto-fill and auto-save buttons (faster access to options)
-+Support for INSERT key (insert empty slot)
++Dedicated context menus for auto-fill and auto-save buttons (faster access to options, http://stash.reaper.fm/11693/S%26M_ResourcesView_ContextMenu.gif|demo|)
++Tweaks: support for INSERT key (insert empty slot), better tooltips, etc..
 Track templates slots:
-+New auto-save option to retain envelopes in templates (the option to retain items was already tere)
++Issue 441: new auto-save option to retain envelopes in templates (the option to retain items was already tere)
 +Added tick box for the new REAPER v4.15 option "Offset template items/envelopes by edit cusor"
 +Added actions "SWS/S&M: Apply track template (+envelopes/items) to selected tracks, slot n" , where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
 
@@ -37,15 +36,16 @@ Cycle action editor:
 +Support for DELETE and F2 keys (remove/renames cycle actions and commands)
 
 Fixed support for REAPER 3.x
-Support REAPER localization (pre-release at the moment, see http://forum.cockos.com/showthread.php?t=92845|this thread|): fixed broken actions/features when localized
+Fixed broken actions/features when REAPER is localized (pre-release at the moment, see http://forum.cockos.com/showthread.php?t=92845|this thread|)
 Issue 449: fixed cue buss actions not copying track levels to buss' receives when in pre-fader mode
 All S&M track group actions now also support the master track
 Faster undos (UNDO_STATE_MISCCFG & UNDO_STATE_ALL)
-Fixed flickering of docked SWS/S&M views when resizing them
+Fixed extreme flickering of docked SWS and S&M views when resizing them (http://stash.reaper.fm/11694/ShakeThisOut.gif|before fix|, http://stash.reaper.fm/11695/ShakeThisOut_fixed.gif|after|)
 List views: fixed wrong context menu when columns were hidden/moved (Auto Color/Icon, Live Configs, etc...)
 List views (Windows OS): fixed missing vertical grid lines + better grid display vs cell edition
 
 House cleaning:
++All S&M views: better/tighter context menus
 +Tagged "Xenakios/SWS: Load project template" actions as deprecated (you can use "SWS/S&M: Open/select project template, slot n" instead: these new actions are not tied to paths/filenames)
 +Renamed all toggle actions "SWS/S&M: Open [...] window" into "SWS/S&M: Open/close [...] window"
 +Renamed all actions "[...]Notes/Subtitles/Help[...]" into "[...]Notes[...]"

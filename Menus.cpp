@@ -216,8 +216,11 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMarkerSubMenu, "Select prev region", NamedCommandLookup("_SWS_SELPREVREG"));
 	AddToMenu(hMarkerSubMenu, "Delete all markers", NamedCommandLookup("_SWSMARKERLIST9"));
 	AddToMenu(hMarkerSubMenu, "Delete all regions", NamedCommandLookup("_SWSMARKERLIST10"));
-
+#ifdef _WIN32
 	AddToMenu(hMenu, "Notes/Subtitles/Help", NamedCommandLookup("_S&M_SHOW_NOTES_VIEW"));
+#else
+	AddToMenu(hMenu, "Notes/Subtitles", NamedCommandLookup("_S&M_SHOW_NOTES_VIEW"));
+#endif
 	AddToMenu(hMenu, "Project List", NamedCommandLookup("_SWS_PROJLIST_OPEN"));
 
 	HMENU hPrjMgmtSubMenu = CreatePopupMenu();
@@ -236,12 +239,15 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMenu, "Zoom preferences", NamedCommandLookup("_SWS_ZOOMPREFS"));
 
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
+
+#ifdef _SNM_LOCALIZATION
 	HMENU hLangPackSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hLangPackSubMenu, "SWS Language file");
 	AddToMenu(hLangPackSubMenu, "Load LangPack file...", NamedCommandLookup("_S&M_LOAD_LANGPACK"));
 	AddToMenu(hLangPackSubMenu, "Generate LangPack file...", NamedCommandLookup("_S&M_GEN_LANGPACK"));
 	AddToMenu(hLangPackSubMenu, "Upgrade current LangPack file", NamedCommandLookup("_S&M_UPGRADE_LANGPACK"));
 	AddToMenu(hLangPackSubMenu, "Reset to factory settings (English)", NamedCommandLookup("_S&M_RESET_LANGPACK"));
+#endif
 
 	HMENU hOptionsSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hOptionsSubMenu, "SWS Options");

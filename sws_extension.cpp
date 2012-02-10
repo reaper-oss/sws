@@ -103,22 +103,25 @@ bool hookCommandProc(int command, int flag)
 
 // 1) Get command ID from Reaper
 // 2) Add keyboard accelerator (with localized action name) and add to the "action" list
-int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool _localize)
+int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool localize)
 {
 	if (pCommand->doCommand)
 	{
-		if (!cmdId && !(cmdId = plugin_register("command_id", (void*)pCommand->id))) return 0;
+		if (!cmdId && !(cmdId = plugin_register("command_id", (void*)pCommand->id)))
+			return 0;
+
 		pCommand->accel.accel.cmd = cmdId;
 
 		// localized action name, if needed
 		const char* defaultName = pCommand->accel.desc;
-		if (_localize)
+		if (localize)
 			// no-op when no LangPack file is defined + no alloc here
 			pCommand->accel.desc = GetLocalizedActionName(pCommand->id, pCommand->accel.desc);
 
-		if (!plugin_register("gaccel", &pCommand->accel)) return 0;
+		if (!plugin_register("gaccel", &pCommand->accel))
+			return 0;
 
-		// now that it is registered, restore the default SWS action name
+		// now that it is registered, restore the default action name
 		if (pCommand->accel.desc != defaultName)
 			pCommand->accel.desc = defaultName;
 
@@ -130,22 +133,22 @@ int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool _loca
 		g_commands.Insert(cmdId, pCommand);
 		g_cmdFiles.Insert(cmdId, new WDL_String(cFile));
 	}
-	return cmdId;
+	return pCommand->accel.accel.cmd;
 }
 
 // For each item in table call SWSRegisterCommand
-int SWSRegisterCmds(COMMAND_T* pCommands, const char* cFile, bool _localize)
+int SWSRegisterCmds(COMMAND_T* pCommands, const char* cFile, bool localize)
 {
 	int i = 0;
 	while(pCommands[i].id != LAST_COMMAND)
-		SWSRegisterCmd(&pCommands[i++], cFile, 0, _localize);
+		SWSRegisterCmd(&pCommands[i++], cFile, 0, localize);
 	return 1;
 }
 
 // Make and register a dynamic action (created at runtime)
 // If cmdId==0, get command ID from Reaper (use the provided cmdId otherwise)
 // Note: SWSFreeUnregisterDynamicCmd() can be used to free/unregister such an action
-int SWSCreateRegisterDynamicCmd(int cmdId, void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile, bool _localize)
+int SWSCreateRegisterDynamicCmd(int cmdId, void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile, bool localize)
 {
 	COMMAND_T* ct = new COMMAND_T;
 	memset(ct, 0, sizeof(COMMAND_T));
@@ -154,7 +157,7 @@ int SWSCreateRegisterDynamicCmd(int cmdId, void (*doCommand)(COMMAND_T*), bool (
 	ct->doCommand = doCommand;
 	ct->getEnabled = getEnabled;
 	ct->user = user;
-	return SWSRegisterCmd(ct, cFile, cmdId, _localize);
+	return SWSRegisterCmd(ct, cFile, cmdId, localize);
 }
 
 void SWSFreeUnregisterDynamicCmd(int id)

@@ -494,8 +494,21 @@ void SNM_UpgradeIniFiles()
 		WritePrivateProfileString("RESOURCE_VIEW", "DblClick_To", NULL, g_SNMIniFn.Get()); // remove key
 		UpdatePrivateProfileString("RESOURCE_VIEW", "FilterByPath", "Filter", g_SNMIniFn.Get());
 	}
-	if (g_SNMIniFileVersion < 4) // i.e. sws version < v2.1.0 #28
+	if (g_SNMIniFileVersion < 4) // i.e. sws version < v2.2.0
+	{
 		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", "AutoSaveTrTemplateFlags", g_SNMIniFn.Get());
+#ifdef _WIN32
+		UpdatePrivateProfileSection("data\\track_icons", "Track_icons", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirdata\\track_icons", "AutoFillDirTrack_icons", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "TiedActionsdata\\track_icons", "TiedActionsTrack_icons", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClickdata\\track_icons", "DblClickTrack_icons", g_SNMIniFn.Get());
+#else
+		UpdatePrivateProfileSection("data/track_icons", "Track_icons", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirdata/track_icons", "AutoFillDirTrack_icons", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "TiedActionsdata/track_icons", "TiedActionsTrack_icons", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClickdata/track_icons", "DblClickTrack_icons", g_SNMIniFn.Get());
+#endif
+	}
 }
 
 
@@ -527,12 +540,21 @@ void ClearLangPackCache(const char* _langpack)
 }
 
 bool IsLangPackUsed(const char* _langpack) {
+#ifdef _SNM_LOCALIZATION
 	return (GetCurLangPackFn(_langpack)->GetLength() > 0);
+#else
+	return false;
+#endif
 }
 
 // same langpack for SWS & REPAER?
 bool IsLangPackShared() {
-	return (_stricmp(GetCurLangPackFn("SWS")->Get(), GetCurLangPackFn("REAPER")->Get()) == 0);
+#ifdef _SNM_LOCALIZATION
+	return (IsLangPackUsed("SWS") && IsLangPackUsed("REAPER") && 
+		_stricmp(GetCurLangPackFn("SWS")->Get(), GetCurLangPackFn("REAPER")->Get()) == 0);
+#else
+	return false;
+#endif
 }
 
 // lazy init: "" means initialized but no langpack defined
@@ -612,11 +634,19 @@ const char* GetFromI8NCache(const char* _langpack, const char* _section, const c
 }
 
 const char* GetLocalizedString(const char* _langpack, const char* _section, const char* _key, const char* _defaultStr) {
+#ifdef _SNM_LOCALIZATION
 	return GetFromI8NCache(_langpack, _section, _key, _defaultStr, false);
+#else
+	return _defaultStr;
+#endif
 }
 
 const char* GetLocalizedActionName(const char* _custId, const char* _defaultStr, const char* _section) {
+#ifdef _SNM_LOCALIZATION
 	return GetFromI8NCache("SWS", _section, _custId, _defaultStr, true);
+#else
+	return _defaultStr;
+#endif
 }
 
 // just for code factorization..

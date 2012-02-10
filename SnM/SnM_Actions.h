@@ -41,6 +41,7 @@
 
 //#define _SNM_MISC
 //#define _SNM_MARKER_REGION_NAME
+//#define _SNM_LOCALIZATION
 #ifdef _WIN32
 #define _SNM_PRESETS
 #endif

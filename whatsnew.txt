@@ -1,19 +1,13 @@
-<b>SWS extension localization!</b>  (i.e. language file support)
-The localization of the SWS extension will be an on-going work.. We start with action names: they can be translated (or customized)
-+Added Main menu > Extensions > SWS Language file: load, generate, upgrade and reset LangPack files, see below
-Added actions:
-+SWS/S&M: LangPack file - Load... - Use this action to load/assign a LangPack file for the SWS extension.
-+SWS/S&M: LangPack file - Generate... - This action automatically generates/assigns a default SWS LangPack file. Run this action, translate/customize strings in the created file and restart REAPER.
-+SWS/S&M: LangPack file - Upgrade - Use this action to upgrade your current LangPack file. All new SWS action names, GUI strings, etc.. will be automatically added and tagged as such: new lines start with _
-+SWS/S&M: LangPack file - Reset to factory settings - This action rollbacks the SWS extension to default strings (English).
-Example: sharing a single language file for REAPER and the SWS extension (although keeping things separated is not a bad idea)
-1) Define the REAPER LangPack file you want (Preferences > General)
-2) Main menu > Extensions > SWS Language file > Load LangPack file: choose the same file than above
-3) Main menu > Extensions > SWS Language file > Upgrade LangPack file: all SWS strings will be added to the shared file
-4) Quit REAPER, translate/customize strings in the LangPack file and restart REAPER
+Fixed support for REAPER 3.x
+Issue 449: fixed cue buss actions not copying track levels to buss' receives when in pre-fader mode
+Faster undos (UNDO_STATE_MISCCFG & UNDO_STATE_ALL)
+Fixed flickering of docked SWS and S&M views when resizing them (http://stash.reaper.fm/11694/ShakeThisOut.gif|before fix|, http://stash.reaper.fm/11695/ShakeThisOut_fixed.gif|after|)
+List views: fixed wrong context menu when columns were hidden/moved (Auto Color/Icon, Live Configs, etc...)
+List views (Windows OS): fixed possible missing vertical grid lines + better grid display vs cell edition
+All S&M track group actions now also support the master track
 
 Live Configs:
-+Added "Learn actions/macro from Actions window" (in the context menu of columns "Activate action/macro" and "Deactivate action/macro") - Windows OS only
++Added "Learn actions/macro from Actions window" (in the context menu of columns "Activate action" and "Deactivate action") - Windows OS only
 +GUI fixes and tweaks: fixed FX 1st preset display, "Edit" menu items, support for INSERT and F2 keys, etc..
 Added actions (useful to switch configs without MIDI CC controller, e.g. +/- pedals sending MIDI note messages)
 +SWS/S&M: Live Config #n - Next (where 'n' is in [1; 8])
@@ -27,22 +21,13 @@ Resources view:
 +Dedicated context menus for auto-fill and auto-save buttons (faster access to options, http://stash.reaper.fm/11693/S%26M_ResourcesView_ContextMenu.gif|demo|)
 +Tweaks: support for INSERT key (insert empty slot), better tooltips, etc..
 Track templates slots:
-+Issue 441: new auto-save option to retain envelopes in templates (the option to retain items was already tere)
++Issue 441: new auto-save option to retain envelopes in templates (the option to retain items was already there)
 +Added tick box for the new REAPER v4.15 option "Offset template items/envelopes by edit cusor"
 +Added actions "SWS/S&M: Apply track template (+envelopes/items) to selected tracks, slot n" , where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
 
 Cycle action editor:
 +Additional consistency checks before aplying/registering cycle actions
 +Support for DELETE and F2 keys (remove/renames cycle actions and commands)
-
-Fixed support for REAPER 3.x
-Fixed broken actions/features when REAPER is localized (pre-release at the moment, see http://forum.cockos.com/showthread.php?t=92845|this thread|)
-Issue 449: fixed cue buss actions not copying track levels to buss' receives when in pre-fader mode
-All S&M track group actions now also support the master track
-Faster undos (UNDO_STATE_MISCCFG & UNDO_STATE_ALL)
-Fixed extreme flickering of docked SWS and S&M views when resizing them (http://stash.reaper.fm/11694/ShakeThisOut.gif|before fix|, http://stash.reaper.fm/11695/ShakeThisOut_fixed.gif|after|)
-List views: fixed wrong context menu when columns were hidden/moved (Auto Color/Icon, Live Configs, etc...)
-List views (Windows OS): fixed missing vertical grid lines + better grid display vs cell edition
 
 House cleaning:
 +All S&M views: better/tighter context menus

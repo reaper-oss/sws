@@ -173,13 +173,13 @@ void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwEx
 #endif
 
 // Command/action handling, sws_extension.cpp
-int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId = 0, bool _localize = true); // One command
+int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId = 0, bool localize = true); // One command
 COMMAND_T* SWSUnregisterCmd(int id);
 
-int SWSRegisterCmds(COMMAND_T* pCommands, const char* cFile, bool _localize); // Multiple commands in a table, terminated with LAST_COMMAND
+int SWSRegisterCmds(COMMAND_T* pCommands, const char* cFile, bool localize); // Multiple commands in a table, terminated with LAST_COMMAND
 #define SWSRegisterCommands(c) SWSRegisterCmds(c, __FILE__, true)
 
-int SWSCreateRegisterDynamicCmd(int cmdId, void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile, bool _localize);
+int SWSCreateRegisterDynamicCmd(int cmdId, void (*doCommand)(COMMAND_T*), bool (*getEnabled)(COMMAND_T*), const char* cID, const char* cDesc, INT_PTR user, const char* cFile, bool localize);
 #define SWSRegisterCommandExt(a, b, c, d) SWSCreateRegisterDynamicCmd(0, a, NULL, b, c, d, __FILE__, true)
 void SWSFreeUnregisterDynamicCmd(int id);
 

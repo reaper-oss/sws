@@ -532,11 +532,12 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 16" }, "S&M_MAP_MIDI_INPUT_CH16", remapMIDIInputChannel, NULL, 16},
 
 	// Localization
+#ifdef _SNM_LOCALIZATION
 	{ { DEFACCEL, "SWS/S&M: LangPack file - Load..." }, "S&M_LOAD_LANGPACK", LoadAssignLangPack, NULL, },
 	{ { DEFACCEL, "SWS/S&M: LangPack file - Generate..." }, "S&M_GEN_LANGPACK", GenerateLangPack, NULL, },
 	{ { DEFACCEL, "SWS/S&M: LangPack file - Upgrade" }, "S&M_UPGRADE_LANGPACK", UpgradeLangPack, NULL, },
 	{ { DEFACCEL, "SWS/S&M: LangPack file - Reset to factory settings" }, "S&M_RESET_LANGPACK", ResetLangPack, NULL, },
-
+#endif
 	// Other, misc ------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageView, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Clear image window" }, "S&M_CLR_IMAGEVIEW", ClearImageView, NULL, },

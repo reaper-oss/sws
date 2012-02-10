@@ -238,7 +238,9 @@ void GetIniSectionName(int _type, char* _bufOut, int _bufOutSz) {
 		_snprintf(_bufOut, _bufOutSz, "CustomSlotType%d", _type-SNM_NUM_DEFAULT_SLOTS+1);
 		return;
 	}
-	lstrcpyn(_bufOut, g_slots.Get(_type)->GetResourceDir(),_bufOutSz);
+	// relative path needed, for ex: data\track_icons
+	lstrcpyn(_bufOut, GetFileRelativePath(g_slots.Get(_type)->GetResourceDir()), _bufOutSz);
+	*_bufOut = toupper(*_bufOut);
 }
 
 // note: it is up to the caller to free things.. 
@@ -2190,6 +2192,8 @@ void FlushCustomTypesIniFile()
 			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
 			str.SetFormatted(BUFFER_SIZE, "AutoSaveDir%s", iniSec);
 			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
+			str.SetFormatted(BUFFER_SIZE, "TiedActions%s", iniSec);
+			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
 			str.SetFormatted(BUFFER_SIZE, "DblClick%s", iniSec);
 			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
 		}
@@ -2250,9 +2254,9 @@ int ResourceViewInit()
 	g_slots.Add(new FileSlotList("ProjectTemplates", "project", "RPP", true, true, true));
 	g_slots.Add(new FileSlotList("MediaFiles", "media file", "", false, true, true)); // "" means "all supported media files"
 #ifdef _WIN32
-	g_slots.Add(new FileSlotList("data\\track_icons", "image", "png", false, false, true));
+	g_slots.Add(new FileSlotList("Data\\track_icons", "image", "png", false, false, true));
 #else
-	g_slots.Add(new FileSlotList("data/track_icons", "image", "png", false, false, true));
+	g_slots.Add(new FileSlotList("Data/track_icons", "image", "png", false, false, true));
 #endif
 	// etc..
 // <---------------------------------------------------------------------------

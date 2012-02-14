@@ -1811,7 +1811,7 @@ void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char
           14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
           OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
       };
-      tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);                 
+      tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);                 
     }
     tmpfont.SetBkMode(TRANSPARENT);
     LICE_pixel col1 = LICE_RGBA(0,0,0,255);

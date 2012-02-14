@@ -46,8 +46,8 @@ void TogOnRecStopMoveCursor(COMMAND_T*) { int* p = (int*)GetConfigVar("itemclick
 void TogSeekMode(COMMAND_T* ct)	{ int* p = (int*)GetConfigVar("seekmodes"); if (p) *p ^= ct->user; }
 bool IsSeekMode(COMMAND_T* ct)	{ int* p = (int*)GetConfigVar("seekmodes"); return p && (*p & ct->user); }
 
-void TogAutoAddEnvs(COMMAND_T*) { int* p = (int*)GetConfigVar("env_autoadd"); if (p) *p = *p ? 0 : 1; }
-bool IsAutoAddEnvs(COMMAND_T*)  { int* p = (int*)GetConfigVar("env_autoadd"); return p && *p; }
+void TogAutoAddEnvs(COMMAND_T*) { int* p = (int*)GetConfigVar("env_autoadd"); if (p) *p ^= 1; }
+bool IsAutoAddEnvs(COMMAND_T*)  { int* p = (int*)GetConfigVar("env_autoadd"); return p && (*p & 1); }
 
 void TogGridOverUnder(COMMAND_T*) { int* p = (int*)GetConfigVar("gridinbg"); if (p) *p = *p == 2 ? 0 : 2; UpdateArrange(); }
 bool IsGridOver(COMMAND_T*)  { int* p = (int*)GetConfigVar("gridinbg"); return p && !*p; }

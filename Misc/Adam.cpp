@@ -2889,7 +2889,7 @@ void AWSplitXFadeLeft(COMMAND_T* t)
     
     int numGroups = AWCountItemGroups();
     int item1group;
-    int lastGroup;
+    int lastGroup = -1;
     int groupAdd = 0;
     
     

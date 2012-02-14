@@ -245,7 +245,7 @@ bool FileExists(const char* file)
 	{
 		if (char* fn = _strdup(file))
 		{
-			int len = strlen(fn);
+			int len = (int)strlen(fn);
 			if (fn[len-1] == PATH_SLASH_CHAR) // bug fix for directories
 				fn[len-1] = '\0';
 

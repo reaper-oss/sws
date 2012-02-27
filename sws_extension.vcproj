@@ -3139,6 +3139,18 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="IX"
+			>
+			<File
+				RelativePath=".\IX\Label.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\IX\Label.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath=".\whatsnew.txt"
 			>

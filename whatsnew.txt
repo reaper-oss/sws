@@ -1,3 +1,5 @@
++Added label processor. Automatic labelling of selected items using various parameters.
+
 <b>Lots of changes from 2.1 -> 2.2.  The fine details are below, but the major changes are:</b>
 +Snapshots fully working with v4 - pans, frozen tracks, all envelopes, etc.
 +Markerlist supports region/marker colors

@@ -27,5 +27,25 @@
 
 #pragma once
 
+#define SWS_RMS_KEY "RMS normalize params"
+
+// Data passing to/from the Analyze functions.
+// All array pointers are caller alloc'ed and optional (NULL)
+typedef struct ANALYZE_PCM
+{
+	PCM_source* pcm;		// in  Pointer to zero-based PCM source (required)
+	int iChannels;			// in  Dimension of the channel arrays.  This can be zero to disable, or < number of actual item channels
+	double* dPeakVals;		// i/o Array of channel peaks, caller alloc, iChannel size (optional)
+	double dPeakVal;		// out Maximum peak valume over all channels
+	double* dRMSs;			// i/o Array of channel RMS values
+	double dRMS;			// out RMS of all channels
+	INT64* peakSamples;		// i/o Array of channel peak locations (not calculated if dPeakVals is omitted)
+	INT64 peakSample;		// out Position of max peak
+	double dProgress;		// out Analysis progress, 0.0-1.0 for 0-100%
+	INT64 sampleCount;		// out # of samples analyzed
+	double dWindowSize;		// RMS window in seconds.  If this is != 0.0, then RMS is calculated/returned as max within window
+} ANALYZE_PCM;
+
 int AnalysisInit();
 
+bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a);

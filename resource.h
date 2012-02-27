@@ -69,6 +69,7 @@
 #define IDC_ZOOMDRAG                    160
 #define IDD_SNM_CYCLACTION              161
 #define IDD_SNM_IMAGE                   162
+#define IDD_IX_LABELDLG					163
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502

@@ -196,6 +196,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hItemTkSubMenu, "Select items to end of track", NamedCommandLookup("_XENAKIOS_SELITEMSTOENDOFTRACK"));
 	AddToMenu(hItemTkSubMenu, "Select first items of selected tracks", NamedCommandLookup("_XENAKIOS_SELFIRSTITEMSOFTRACKS"));
 */
+	AddToMenu(hMenu, "Label processor", NamedCommandLookup("_IX_LABEL_PROC"));
 	AddToMenu(hMenu, "LFO generator...", NamedCommandLookup("_PADRE_ENVLFO"));
 	AddToMenu(hMenu, "Live Configs", NamedCommandLookup("_S&M_SHOWMIDILIVE"));
 	AddToMenu(hMenu, "MarkerList", NamedCommandLookup("_SWSMARKERLIST1"));

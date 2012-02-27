@@ -48,6 +48,7 @@
 #include "Padre/padreActions.h"
 #include "Fingers/FNG_client.h"
 #include "Autorender/Autorender.h"
+#include "IX/Label.h"
 
 
 // Globals
@@ -514,6 +515,7 @@ extern "C"
 		IMPAPI(GetMediaItemTake_Source);
 		IMPAPI(GetMediaItemTake_Track);
 		IMPAPI(GetMediaItemTakeInfo_Value);
+		IMPAPI(GetMediaSourceFileName);
 		IMPAPI(GetMediaTrackInfo_Value);
 		IMPAPI(GetNumTracks);
 		IMPAPI(GetOutputChannelName);
@@ -706,6 +708,8 @@ extern "C"
 			ERR_RETURN("About box init error\n")
 		if (!AutorenderInit())
 			ERR_RETURN("Autorender init error\n")
+		if (!IxInit())
+			ERR_RETURN("IX init error\n")
 		if (!SnMInit(rec)) // last init (for cyle actions)
 			ERR_RETURN("S&M init error\n")
 

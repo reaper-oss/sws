@@ -12,7 +12,7 @@ private:
 	void OnInitDlg();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	int  OnKey(MSG* msg, int iKeyState);
-	HMENU OnContextMenu(int x, int y);
+	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 
 	void OnGrooveList(WORD wParam, LPARAM lParam);
 	void OnGrooveFolderButton(WORD wParam, LPARAM lParam);

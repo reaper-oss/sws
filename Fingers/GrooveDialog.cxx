@@ -51,7 +51,7 @@ GrooveDialog::GrooveDialog()
 	Init();
 }
 
-HMENU GrooveDialog::OnContextMenu(int x, int y)
+HMENU GrooveDialog::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU contextMenu = CreatePopupMenu();
 	AddToMenu(contextMenu, "Select groove folder...", FNG_OPEN_FOLDER);

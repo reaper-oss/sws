@@ -30,19 +30,19 @@
 #include "../Misc/Analysis.h"
 
 #define IXLABELPROCSTRING	"Label processor"
-#define IXLABELPROCID		"IX: "IXLABELPROCSTRING
+#define IXLABELPROCID		"SWS/IX: "IXLABELPROCSTRING // SWS 3/6/12 need SWS prefix for localization issues
 
 WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	WDL_FastString *pStr = (WDL_FastString*) GetWindowLong(hwnd, DWLP_USER);
+	WDL_FastString *pStr = (WDL_FastString*) GetWindowLong(hwnd, GWLP_USERDATA);
 
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
 		{
 			SetWindowText(hwnd, IXLABELPROCSTRING);
-			SetWindowLong(hwnd, DWLP_USER, (LONG)lParam);
-			pStr = (WDL_FastString*) GetWindowLong(hwnd, DWLP_USER);
+			SetWindowLong(hwnd, GWLP_USERDATA, (LONG)lParam);
+			pStr = (WDL_FastString*) GetWindowLong(hwnd, GWLP_USERDATA);
 
 			LPCSTR info = "All arguments are optional. The following are all valid: /E /E[3] /E[3,9]:\n"
 							"\n\t/E[digits, first]\t\tEnumerate in selection."
@@ -70,8 +70,12 @@ WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				case IDOK:
 					{
+#ifdef _WIN32
 						HWND hEdit = GetDlgItem(hwnd, IDC_EDIT);
 						int max = GetWindowTextLength(hEdit) + 1;
+#else
+						int max = 2048;
+#endif
 						char *buf = new char[max + 1];
 						GetDlgItemText(hwnd, IDC_EDIT, buf, max);
 

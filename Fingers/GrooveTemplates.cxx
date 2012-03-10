@@ -379,16 +379,16 @@ std::string GrooveTemplateHandler::GetGrooveMarkerString(int index)
 
 static int GetMidiBeatPositions(RprMidiTake &midiTake, const RprItem &parent, std::vector<GrooveItem> &vPositions, bool selectedOnly)
 {
-    double endLen = parent.getPosition() + parent.getLength();
+    double takeLength = parent.getPosition() + parent.getLength();
     for(int i = 0; i < midiTake.countNotes(); i++) {
         RprMidiNote *note = midiTake.getNoteAt(i);
         if(selectedOnly && !note->isSelected())
             continue;
         double notePosition = note->getPosition();
-        double noteVelocityNorm = (double)note->getVelocity() / 127.0;
-        if (notePosition < endLen) {
+        double noteAmplitude = (double)note->getVelocity() / 127.0;
+        if (notePosition < takeLength) {
             GrooveItem grooveItem;
-            grooveItem.amplitude = noteVelocityNorm;
+            grooveItem.amplitude = noteAmplitude;
             grooveItem.position = TimeToBeat(notePosition);
             vPositions.push_back(grooveItem);
         }
@@ -408,38 +408,64 @@ static bool isGrooveItemUnique(const GrooveItem &lhs, const GrooveItem &rhs)
 
 static void finalizeGroove(int &beatsInGroove, std::vector<GrooveItem> &grooveInBeats)
 {
-    std::sort(grooveInBeats.begin(), grooveInBeats.end(), sortGrooveItems);
+    if (grooveInBeats.size() == 0)
+    {
+        beatsInGroove = 0;
+        return;
+    }
 
-    /* subtract number of beats up till first measure and work out number of beats in groove, and remove redundant beats */
-    std::vector<GrooveItem>::const_iterator i = grooveInBeats.begin();
+    std::sort(grooveInBeats.begin(), grooveInBeats.end(), sortGrooveItems);
+    /* Subtract number of beats up till the first measure 
+     * and work out number of beats in groove, then remove 
+     * redundant beats. */
+    std::vector<GrooveItem>::iterator i = grooveInBeats.begin();
+
+    /* Sometimes the position sits just behind a measure, so we add a little to the position
+     * and check if the measure changes. If it does we set the 
+     * first position to the start of the measure.
+     * Use 1/960 as the default midi ticks per qn is 960 so the resolution is appropriate. */
+    double fudge = 1.0 / 960.0;
     double beatsTillStartOfGrooveMeasure = BeatsTillMeasure(BeatToMeasure(i->position));
+    double beatsTillStartOfGrooveMeasureWithFudge = BeatsTillMeasure(BeatToMeasure(i->position + fudge));
+    if ((int)beatsTillStartOfGrooveMeasure != (int)beatsTillStartOfGrooveMeasureWithFudge)
+    {
+        i->position = beatsTillStartOfGrooveMeasureWithFudge;
+        beatsTillStartOfGrooveMeasure = beatsTillStartOfGrooveMeasureWithFudge;
+    }
 
     i = grooveInBeats.end() - 1;
     double beatsTillOneAfterEndOfGrooveMeasure = BeatsTillMeasure(BeatToMeasure(i->position) + 1);
 
     double dBeatsInGroove = beatsTillOneAfterEndOfGrooveMeasure - beatsTillStartOfGrooveMeasure;
 
-    beatsInGroove = (int)std::floor(dBeatsInGroove + 0.5);
+    beatsInGroove = (int)(dBeatsInGroove + 0.5);
 
-    for(std::vector<GrooveItem>::iterator j = grooveInBeats.begin(); j != grooveInBeats.end(); ++j) {
+    for(std::vector<GrooveItem>::iterator j = grooveInBeats.begin(); 
+        j != grooveInBeats.end(); ++j) {
         j->position -= beatsTillStartOfGrooveMeasure;
     }
 
-    grooveInBeats = std::vector<GrooveItem>( grooveInBeats.begin(), std::unique(grooveInBeats.begin(), grooveInBeats.end(), isGrooveItemUnique));
-
+    grooveInBeats = std::vector<GrooveItem>( grooveInBeats.begin(), 
+                    std::unique(grooveInBeats.begin(), grooveInBeats.end(), 
+                    isGrooveItemUnique));
 }
 
-void GrooveTemplateHandler::StoreGrooveFromMidiEditor()
+static bool 
+hasSelectedNotes(const RprMidiTakePtr& takePtr)
 {
-    RprMidiTakePtr takePtr = RprMidiTake::createFromMidiEditor(true);
-	bool hasSelectedNotes = false;
 	for(int i = 0; i < takePtr->countNotes(); ++i) {
 		if (takePtr->getNoteAt(i)->isSelected()) {
-			hasSelectedNotes = true;
-			break;
+			return true;
 		}
 	}
-	if(!hasSelectedNotes) {
+    return false;
+}
+
+void GrooveTemplateHandler::GetGrooveFromMidiEditor()
+{
+    RprMidiTakePtr takePtr = RprMidiTake::createFromMidiEditor(true);
+	
+	if(!hasSelectedNotes(takePtr)) {
 		MessageBox(GetMainHwnd(), "No notes selected", "Error", 0);
         return;
 	}
@@ -458,7 +484,7 @@ GrooveItem createGrooveItemFromItem(const RprItem &rprItem)
     return grooveItem;
 }
 
-void GrooveTemplateHandler::StoreGroove()
+void GrooveTemplateHandler::GetGrooveFromItems()
 {
     GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
     RprItemCtrPtr ctr = RprItemCollec::getSelected();

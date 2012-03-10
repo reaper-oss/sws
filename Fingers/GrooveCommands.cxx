@@ -21,16 +21,16 @@ static void ApplyGrooveInMidiEditor(int flags, void *data)
 	me->ApplyGrooveToMidiEditor(*beatDivider, 1.0, 1.0);
 }
 
-static void StoreGroove(int flags, void *data)
+static void GetGrooveFromItems(int flags, void *data)
 {
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
-	me->StoreGroove();
+	me->GetGrooveFromItems();
 }
 
-static void StoreGrooveFromMIDIEditor(int flags, void *data)
+static void GetGrooveFromMIDIEditor(int flags, void *data)
 {
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
-	me->StoreGrooveFromMidiEditor();
+	me->GetGrooveFromMidiEditor();
 }
 
 static void SaveGrooveToFile(int flags, void *data)
@@ -118,9 +118,9 @@ void GrooveCommands::Init()
 	RprCommand::registerCommand("SWS/FNG MIDI: Apply groove to selected MIDI notes in active MIDI editor (within 32nd)", 
 		"FNG_APPLY_MIDI_GROOVE_32", &ApplyGrooveInMidiEditor, 32, UNDO_STATE_ITEMS);
 	RprCommand::registerCommand("SWS/FNG: Get groove from selected media items", 
-		"FNG_GET_GROOVE", &StoreGroove, NO_UNDO);
+		"FNG_GET_GROOVE", &GetGrooveFromItems, NO_UNDO);
 	RprCommand::registerCommand("SWS/FNG: Get groove from selected MIDI notes in active MIDI editor", 
-		"FNG_GET_GROOVE_MIDI", &StoreGrooveFromMIDIEditor, NO_UNDO);
+		"FNG_GET_GROOVE_MIDI", &GetGrooveFromMIDIEditor, NO_UNDO);
 	RprCommand::registerCommand("SWS/FNG: Save groove template to file", 
 		"FNG_SAVE_GROOVE", &SaveGrooveToFile, NO_UNDO);
 	RprCommand::registerCommand("SWS/FNG: Load groove template from file", 

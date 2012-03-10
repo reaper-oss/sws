@@ -31,8 +31,8 @@ public:
 	static GrooveTemplateHandler *Instance();
 
 	static void ClearGroove();
-	static void StoreGroove();
-	static void StoreGrooveFromMidiEditor();
+	static void GetGrooveFromItems();
+	static void GetGrooveFromMidiEditor();
 	static void ApplyGroove(int beatDivider, double posStrength, double velStrength);
 	static void ApplyGrooveToMidiEditor(int beatDivider, double posStrength, double velStrength);
 

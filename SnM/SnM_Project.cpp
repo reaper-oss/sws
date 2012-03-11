@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SnM_FXChainView.h"
+#include "../reaper/localize.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -126,9 +127,14 @@ void projectLoaderConf(COMMAND_T* _ct)
 {
 	bool ok = false;
 	int start, end;
-	char reply[BUFFER_SIZE], question[BUFFER_SIZE] = "Start slot (in Resources view):,End slot:";
+	WDL_FastString question(__LOCALIZE("Start slot (in Resources view):","sws_mbox"));
+	question.Append(",");
+	question.Append(__LOCALIZE("End slot:","sws_mbox"));
+
+	char reply[BUFFER_SIZE]="";
 	_snprintf(reply, BUFFER_SIZE, "%d,%d", g_prjLoaderStartPref, g_prjLoaderEndPref);
-	if (GetUserInputs("S&M - Project loader/selecter", 2, question, reply, 4096))
+
+	if (GetUserInputs(__LOCALIZE("S&M - Project loader/selecter","sws_mbox"), 2, question.Get(), reply, 4096))
 	{
 		if (*reply && *reply != ',' && strlen(reply) > 2)
 		{
@@ -152,7 +158,7 @@ void projectLoaderConf(COMMAND_T* _ct)
 				g_pResourcesWnd->Update();
 		}
 		else
-			MessageBox(GetMainHwnd(), "Invalid start and/or end slot(s) !\nProbable cause: out of bounds, the Resources view is empty, etc...", "S&M - Error", MB_OK);
+			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid start and/or end slot(s) !\nProbable cause: out of bounds, the Resources view is empty, etc...","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 }
 

@@ -50,6 +50,12 @@
 #include "Autorender/Autorender.h"
 #include "IX/Label.h"
 
+#define LOCALIZE_IMPORT_PREFIX "sws_"
+#ifdef LOCALIZE_IMPORT_PREFIX
+#include "./reaper/localize-import.h"
+#endif
+#include "./reaper/localize.h"
+
 
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
@@ -116,9 +122,8 @@ int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool local
 		// localized action name, if needed
 		const char* defaultName = pCommand->accel.desc;
 		if (localize)
-			// no-op when no LangPack file is defined + no alloc here
-			pCommand->accel.desc = GetLocalizedActionName(pCommand->id, pCommand->accel.desc);
-
+			pCommand->accel.desc = GetLocalizedActionName(pCommand->id, pCommand->accel.desc); // no alloc + no-op when no LangPack file is defined
+		
 		if (!plugin_register("gaccel", &pCommand->accel))
 			return 0;
 
@@ -233,6 +238,16 @@ COMMAND_T* SWSGetCommandByID(int cmdId) {
 	if (cmdId >= g_iFirstCommand && cmdId <= g_iLastCommand)
 		return g_commands.Get(cmdId, NULL);
 	return NULL;
+}
+
+int IsSwsAction(const char* _actionName)
+{
+	if (_actionName)
+		if (const char* p = strstr(_actionName, ": ")) // no strchr() here: make sure p[2] is not out of bounds
+			if (const char* tag = stristr(_actionName, "sws")) // make sure it is a sws tag
+				if (tag < p) // make really sure
+					return ((int)(p+2-_actionName));
+	return 0;
 }
 
 HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIndex)
@@ -370,10 +385,14 @@ public:
 	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); UpdateTrackMute(); }
 	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); UpdateTrackSolo(); }
 	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); UpdateTrackArm(); }
+	int Extended(int call, void *parm1, void *parm2, void *parm3) { return SnMCSurfExtended(call, parm1, parm2, parm3); }
 };
 
 // WDL Stuff
 bool WDL_STYLE_GetBackgroundGradient(double *gradstart, double *gradslope) { return false; }
+bool WDL_STYLE_AllowSliderMouseWheel() { return true; }
+LICE_IBitmap *WDL_STYLE_GetSliderBitmap2(bool vert) { return NULL; }
+int WDL_STYLE_GetSliderDynamicCenterPos() { return 500; }
 int WDL_STYLE_GetSysColor(int i) 
 {
 	int col = GSC_mainwnd(i); 
@@ -433,14 +452,14 @@ extern "C"
 			SnMExit();
 			ERR_RETURN("Exiting Reaper.\n")
 		}
+
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)
-		{
 			ERR_RETURN("Wrong REAPER_PLUGIN_VERSION!\n");
-		}
+
 		if (!rec->GetFunc)
-		{
 			ERR_RETURN("Null rec->GetFunc ptr\n")
-		}
+
+		IMPORT_LOCALIZE_RPLUG(rec);
 
 		int errcnt=0;
 		IMPAPI(AddExtensionsMainMenu);
@@ -488,7 +507,8 @@ extern "C"
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);
 		IMPAPI(FreeHeapPtr);
-		IMPAPI(GetActiveTake)
+		IMPAPI(GetActiveTake);
+		*(void**)&GetAppVersion = rec->GetFunc("GetAppVersion"); // > v4.16pre
 		IMPAPI(GetColorThemeStruct);
 		IMPAPI(GetContextMenu);
 		IMPAPI(GetCurrentProjectInLoadSave);
@@ -502,6 +522,7 @@ extern "C"
 		IMPAPI(GetHZoomLevel);
 		IMPAPI(GetIconThemePointer);
 		IMPAPI(GetInputChannelName);
+		*(void**)&GetLastTouchedFX = rec->GetFunc("GetLastTouchedFX"); // > v4.16pre
 		IMPAPI(GetLastTouchedTrack);
 		IMPAPI(GetMainHwnd);
 		IMPAPI(GetMasterMuteSoloFlags);
@@ -616,6 +637,8 @@ extern "C"
 		IMPAPI(SetMediaItemPosition);
 		IMPAPI(SetMediaItemTakeInfo_Value);
 		IMPAPI(SetMediaTrackInfo_Value);
+		*(void**)&SetMixerScroll = rec->GetFunc("SetMixerScroll"); // > v4.16pre
+		*(void**)&SetOnlyTrackSelected = rec->GetFunc("SetOnlyTrackSelected"); // > v4.16pre
 		IMPAPI(SetProjectMarker);
 		IMPAPI(SetProjectMarker2);
 		*(void**)&SetProjectMarker3 = rec->GetFunc("SetProjectMarker3"); // v4 only
@@ -635,13 +658,21 @@ extern "C"
 		IMPAPI(TimeMap2_timeToQN);
 		IMPAPI(TrackFX_FormatParamValue);
 		IMPAPI(TrackFX_GetChainVisible);
+		*(void**)&TrackFX_GetEnabled = rec->GetFunc("TrackFX_GetEnabled"); // > v4.16pre
 		IMPAPI(TrackFX_GetFloatingWindow);
 		IMPAPI(TrackFX_GetCount);
 		IMPAPI(TrackFX_GetFXName);
+		IMPAPI(TrackFX_GetFXGUID);
 		IMPAPI(TrackFX_GetNumParams);
+		*(void**)&TrackFX_GetOpen = rec->GetFunc("TrackFX_GetOpen"); // > v4.16pre
 		IMPAPI(TrackFX_GetParam);
 		IMPAPI(TrackFX_GetParamName);
+		*(void**)&TrackFX_GetPreset = rec->GetFunc("TrackFX_GetPreset"); // > v4.16pre
+		*(void**)&TrackFX_NavigatePresets = rec->GetFunc("TrackFX_NavigatePresets"); // > v4.16pre
+		*(void**)&TrackFX_SetEnabled = rec->GetFunc("TrackFX_SetEnabled"); // > v4.16pre
+		*(void**)&TrackFX_SetOpen = rec->GetFunc("TrackFX_SetOpen"); // > v4.16pre
 		IMPAPI(TrackFX_SetParam);
+		*(void**)&TrackFX_SetPreset = rec->GetFunc("TrackFX_SetPreset"); // > v4.16pre
 		IMPAPI(TrackFX_Show);
 		IMPAPI(TrackList_AdjustWindows);
 		IMPAPI(Undo_BeginBlock);
@@ -672,6 +703,7 @@ extern "C"
 
 		if (!rec->Register("hookcommand",(void*)hookCommandProc))
 			ERR_RETURN("hook command error\n")
+
 		if (!rec->Register("toggleaction", (void*)toggleActionHook))
 			ERR_RETURN("Toggle action hook error\n")
 

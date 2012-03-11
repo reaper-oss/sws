@@ -31,7 +31,7 @@
 #include "SNM_Chunk.h"
 #include "SnM_FXChainView.h"
 #include "../Misc/Context.h"
-#include "../Freeze/ItemSelState.h"
+#include "../reaper/localize.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -177,7 +177,7 @@ void splitMidiAudio(COMMAND_T* _ct)
 		UpdateTimeline();
 		// hard coded undo label: action name too long + consistent 
 		// with the unique native wording (whatever is the split action)
-		Undo_EndBlock("Split selected items", UNDO_STATE_ALL);
+		Undo_EndBlock(__LOCALIZE("Split selected items","sws_undo"), UNDO_STATE_ALL);
 	}
 }
 
@@ -206,10 +206,8 @@ void splitSelectedItems(COMMAND_T* _ct) {
 
 // no undo point created: use native ones
 // (SNM_CMD_SHORTNAME() will not work  "SWS/gofer")
-void goferSplitSelectedItems(COMMAND_T* _ct)
-{
-	if (CountSelectedMediaItems(NULL))
-	{
+void goferSplitSelectedItems(COMMAND_T* _ct) {
+	if (CountSelectedMediaItems(NULL)) {
 		Main_OnCommand(40513, 0); // move edit cursor to mouse cursor (obey snapping)
 		Main_OnCommand(40757, 0); // split at edit cursor (no selection change)
 	}
@@ -252,7 +250,7 @@ void copyCutTake(COMMAND_T* _ct)
 void pasteTake(COMMAND_T* _ct)
 {
 	bool updated = false;
-	for (int i = 1; g_takeClipoard.GetLength() && i <= GetNumTracks(); i++) // skip master
+	for (int i=1; g_takeClipoard.GetLength() && i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
@@ -652,13 +650,13 @@ void moveActiveTake(COMMAND_T* _ct)
 
 void buildLanes(COMMAND_T* _ct) {
 	if (buildLanes(SNM_CMD_SHORTNAME(_ct), (int)_ct->user) < 0)
-		MessageBox(GetMainHwnd(), "Some items were ignored, probable causes:\n- Items not recorded or recorded before REAPER v3.66 (no record pass id)\n- Imploded takes with duplicated record pass ids", "S&M - Build lanes - Warning", MB_OK);
+		MessageBox(GetMainHwnd(), __LOCALIZE("Some items were ignored, probable causes:\n- Items not recorded or recorded before REAPER v3.66 (no record pass id)\n- Imploded takes with duplicated record pass ids","sws_mbox"), __LOCALIZE("S&M - Warning","sws_mbox"), MB_OK);
 }
 
 void activateLaneFromSelItem(COMMAND_T* _ct)
 {
 	bool updated = false;
-	for (int i = 1; i <= GetNumTracks(); i++) // skip master
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
 	{
 		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 		{
@@ -677,7 +675,7 @@ void activateLaneFromSelItem(COMMAND_T* _ct)
 			// activate take for all items
 			if (tr && active >= 0)
 			{
-				for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
+				for (int j=0; j < GetTrackNumMediaItems(tr); j++)
 				{
 					MediaItem* item = GetTrackMediaItem(tr,j);
 					// "active" validity check relies on GetSetMediaItemInfo()
@@ -691,8 +689,7 @@ void activateLaneFromSelItem(COMMAND_T* _ct)
 		}
 	}
 
-	if (_ct && updated)
-	{
+	if (_ct && updated) {
 		UpdateTimeline();
 		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
@@ -753,7 +750,7 @@ bool deleteTakeAndMedia(int _mode)
 					if ((_mode == 1 || _mode == 2 || // all takes
 						((_mode == 3 || _mode == 4) && originalActiveTkIdx == k))) // active take only
 					{
-						char tkDisplayName[BUFFER_SIZE] = "[empty]";
+						char tkDisplayName[BUFFER_SIZE] = "[empty]"; // no localization here..
 						PCM_source* pcm = tk ? (PCM_source*)GetSetMediaItemTakeInfo(tk,"P_SOURCE",NULL) : NULL;
 						if (pcm)
 						{
@@ -772,13 +769,13 @@ bool deleteTakeAndMedia(int _mode)
 								char buf[BUFFER_SIZE*2];
 
 								if (pcm && pcm->GetFileName() && strlen(pcm->GetFileName())) 
-									_snprintf(buf, BUFFER_SIZE*2, "[Track %d, item %d] Delete take %d and its media file %s ?", i, j+1, originalTkIdx+1, tkDisplayName);
+									_snprintf(buf, BUFFER_SIZE*2, __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d and its media file %s ?","sws_mbox"), i, j+1, originalTkIdx+1, tkDisplayName);
 								else if (pcm && pcm->GetFileName() && !strlen(pcm->GetFileName())) 
-									_snprintf(buf, BUFFER_SIZE*2, "[Track %d, item %d] Delete take %d (%s, in-project) ?", i, j+1, originalTkIdx+1, tkDisplayName);
+									_snprintf(buf, BUFFER_SIZE*2, __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d (%s, in-project) ?","sws_mbox"), i, j+1, originalTkIdx+1, tkDisplayName);
 								else 
-									_snprintf(buf, BUFFER_SIZE*2, "[Track %d, item %d] Delete take %d (empty take) ?", i, j+1, originalTkIdx+1); // v3 or v4 empty takes
+									_snprintf(buf, BUFFER_SIZE*2, __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d (empty take) ?","sws_mbox"), i, j+1, originalTkIdx+1); // v3 or v4 empty takes
 
-								rc = MessageBox(GetMainHwnd(), buf, "S&M - Delete take and source files (no undo!)", MB_YESNOCANCEL);
+								rc = MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Delete take and source files (no undo!)","sws_mbox"), MB_YESNOCANCEL);
 								if (rc == IDCANCEL) {
 									cancel = true;
 									break;
@@ -807,7 +804,7 @@ bool deleteTakeAndMedia(int _mode)
 									deleteFileOK = false;
 							}
 
-							// removes the take (can't factorize chunk updates here..)
+							// removes the take (cannot factorize chunk updates here..)
 							int cntTakes = CountTakes(item);
 							SNM_TakeParserPatcher p(item, cntTakes);
 							if (cntTakes > 1 && p.RemoveTake(k)) // > 1 because item removed otherwise
@@ -839,7 +836,7 @@ bool deleteTakeAndMedia(int _mode)
 
 void deleteTakeAndMedia(COMMAND_T* _ct) {
 	if (!deleteTakeAndMedia((int)_ct->user))
-		MessageBox(GetMainHwnd(), "Warning: at least one file couldn't be deleted.\nTips: are you an administrator? used by another process?", "S&M - Delete take and source files", MB_OK);
+		MessageBox(GetMainHwnd(), __LOCALIZE("Warning: at least one file couldn't be deleted.\nTips: are you an administrator? File used by another process?","sws_mbox"), __LOCALIZE("S&M - Delete take and source files","sws_mbox"), MB_OK);
 }
 
 
@@ -1073,7 +1070,7 @@ void saveItemTakeTemplate(COMMAND_T* _ct)
 				char filename[BUFFER_SIZE] = "", defaultPath[BUFFER_SIZE];
 				//JFB TODO: ItemTakeTemplates -> const
 				_snprintf(defaultPath, BUFFER_SIZE, "%s%cItemTakeTemplates", GetResourcePath(), PATH_SLASH_CHAR);
-				if (BrowseForSaveFile("S&M - Save item/take template", defaultPath, NULL, "REAPER item/take template (*.RItemTakeTemplate)\0*.RItemTakeTemplate\0", filename, BUFFER_SIZE))
+				if (BrowseForSaveFile(__LOCALIZE("S&M - Save item/take template","sws_mbox"), defaultPath, NULL, "REAPER item/take template (*.RItemTakeTemplate)\0*.RItemTakeTemplate\0", filename, BUFFER_SIZE))
 				{
 					// Item/take template: keep the active take
 					if (FILE* f = fopenUTF8(filename, "w"))
@@ -1247,17 +1244,20 @@ void scrollToSelItem(MediaItem* _item)
 		SetEditCurPos2(NULL, curPos, false, false);
 
 		// vertical scroll to selected item
-		MediaTrack* tr = GetMediaItem_Track(_item);
-		if (tr)
+		if (MediaTrack* tr = GetMediaItem_Track(_item))
 		{
-			//JFB change restore sel programatically => not cool for controle surfcaes
+			//JFB change restore sel programatically => not cool for controle surfaces
 			WDL_PtrList<MediaTrack> selTrs;
-			SNM_GetSelectedTracks(NULL, &selTrs);
-			SNM_ClearSelectedTracks(NULL);
-			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
-			Main_OnCommand(40913,0); // scroll to selected track
-			SNM_ClearSelectedTracks(NULL);
-			SNM_SetSelectedTracks(NULL, &selTrs);
+			SNM_GetSelectedTracks(NULL, &selTrs, true);
+
+			if (SetOnlyTrackSelected) // new 4.16pre API
+				SetOnlyTrackSelected(tr);
+			else {
+				SNM_ClearSelectedTracks(NULL, true);
+				GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+			}
+			ScrollSelTrack(NULL, true, false);
+			SNM_SetSelectedTracks(NULL, &selTrs, true);
 		}
 		UpdateTimeline();
 	}
@@ -1301,7 +1301,7 @@ void setPan(COMMAND_T* _ct)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Media file slots (Resources view)
-//JFB!!! TODO?: new file SnM_Media.cpp? OSX...
+//JFB!!! TODO?: new file SnM_Media.cpp? but OSX prj update...
 ///////////////////////////////////////////////////////////////////////////////
 
 void PlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop, double _msi) {

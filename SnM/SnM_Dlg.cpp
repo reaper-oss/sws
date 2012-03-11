@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
+#include "../reaper/localize.h"
 #ifndef _WIN32
 #include "../Prompt.h"
 #endif
@@ -151,7 +152,7 @@ LICE_CachedFont* SNM_GetThemeFont()
 			SNM_FONT_HEIGHT, 0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
 		};
-		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
+		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT | (g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
 	}
 	themeFont.SetBkMode(TRANSPARENT);
 	ColorTheme* ct = SNM_GetColorTheme();
@@ -168,7 +169,7 @@ LICE_CachedFont* SNM_GetToolbarFont()
 			SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
 		};
-		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
+		themeFont.SetFromHFont(CreateFontIndirect(&lf), LICE_FONT_FLAG_OWNS_HFONT | (g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
 	}
 	themeFont.SetBkMode(TRANSPARENT);
 	ColorTheme* ct = SNM_GetColorTheme();
@@ -402,10 +403,13 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int
 */
 			}
 		}
-		else  if (!strcmp(_c->GetType(), "SNM_MiniAddDelButtons"))
-		{
+		else  if (!strcmp(_c->GetType(), "SNM_MiniAddDelButtons")) {
 			width=9;
 			height=9*2+1;
+		}
+		else if (!strcmp(_c->GetType(), "SNM_MiniKnob")) {
+			width=21;
+			height=21;
 		}
 
 		if (*_x+width > _r->right-10) // enough horizontal room?
@@ -453,7 +457,7 @@ void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent, bool _clea
 	ShowConsoleMsg(_msg);
 	if (_title) // a little hack..
 	{
-		HWND h = GetReaWindowByTitle(GetLocalizedString("REAPER", "DLG_437", "6C47A20E99E77954", "ReaScript console output"));
+		HWND h = GetReaWindowByTitle(__localizeFunc("ReaScript console output", "DLG_437", 0));
 		if (h)
 			SetWindowText(h, _title);
 		else // already opened?
@@ -489,7 +493,7 @@ int PromptForInteger(const char* _title, const char* _what, int _min, int _max)
 			else {
 				nb = -1;
 				str.SetFormatted(128, "Invalid %s!\nPlease enter a value in [%d; %d].", _what, _min, _max);
-				MessageBox(GetMainHwnd(), str.Get(), "S&M - Error", MB_OK);
+				MessageBox(GetMainHwnd(), str.Get(), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			}
 		}
 		else return -1; // user has cancelled
@@ -504,8 +508,7 @@ int PromptForInteger(const char* _title, const char* _what, int _min, int _max)
 
 int GetComboSendIdxType(int _reaType) 
 {
-	switch(_reaType)
-	{
+	switch(_reaType) {
 		case 0: return 1;
 		case 3: return 2; 
 		case 1: return 3; 
@@ -516,21 +519,20 @@ int GetComboSendIdxType(int _reaType)
 
 const char* GetSendTypeStr(int _type) 
 {
-	switch(_type)
-	{
-		case 1: return "Post-Fader (Post-Pan)";
-		case 2: return "Pre-Fader (Post-FX)";
-		case 3: return "Pre-FX";
-		default: return NULL;
+	switch(_type) {
+		case 1: return __localizeFunc("Post-Fader (Post-Pan)","common",0);
+		case 2: return __localizeFunc("Pre-Fader (Post-FX)","common",0);
+		case 3: return __localizeFunc("Pre-FX","common",0);
+		default: return "";
 	}
 }
 
 void fillHWoutDropDown(HWND _hwnd, int _idc)
 {
-	int x=0, x0=0;
-	char buffer[BUFFER_SIZE] = "<None>";
-	x0 = (int)SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)buffer);
-	SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,x0,0);
+	char buffer[BUFFER_SIZE];
+	lstrcpyn(buffer, __LOCALIZE("None","sws_DLG_149"), BUFFER_SIZE);
+	SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)buffer);
+	SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,0,0);
 	
 	// get mono outputs
 	WDL_PtrList<WDL_FastString> monos;
@@ -554,15 +556,13 @@ void fillHWoutDropDown(HWND _hwnd, int _idc)
 	}
 
 	// fill dropdown
-	for(int i=0; i < stereos.GetSize(); i++)
-	{
-		x = (int)SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)stereos.Get(i)->Get());
-		SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,x,i+1); // +1 for <none>
+	for(int i=0; i < stereos.GetSize(); i++) {
+		SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)stereos.Get(i)->Get());
+		SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,i,i+1); // +1 for <none>
 	}
-	for(int i=0; i < monos.GetSize(); i++)
-	{
-		x = (int)SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)monos.Get(i)->Get());
-		SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,x,i+1); // +1 for <none>
+	for(int i=0; i < monos.GetSize(); i++) {
+		SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)monos.Get(i)->Get());
+		SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,i,i+1); // +1 for <none>
 	}
 
 //	SendDlgItemMessage(_hwnd,_idc,CB_SETCURSEL,x0,0);
@@ -571,45 +571,97 @@ void fillHWoutDropDown(HWND _hwnd, int _idc)
 }
 
 HWND g_cueBussHwnd = NULL;
+int g_cueBussConfId = 0; // not saved in prefs yet
+bool g_cueBussDisableSave = false;
+
+void FillCueBussDlg(HWND _hwnd=NULL)
+{
+	HWND hwnd = _hwnd?_hwnd:g_cueBussHwnd;
+	if (!hwnd)
+		return;
+
+	g_cueBussDisableSave=true;
+	char busName[BUFFER_SIZE]="", trTemplatePath[BUFFER_SIZE]="";
+	int reaType, userType, soloDefeat, hwOuts[8];
+	bool trTemplate, showRouting, sendToMaster;
+	readCueBusIniFile(g_cueBussConfId, busName, &reaType, &trTemplate, trTemplatePath, &showRouting, &soloDefeat, &sendToMaster, hwOuts);
+	userType = GetComboSendIdxType(reaType);
+	SetDlgItemText(hwnd,IDC_SNM_CUEBUS_NAME,busName);
+
+	for(int i=0; i<3; i++) {
+		if (_hwnd) // do it once (WM_INITDIALOG)
+			SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_ADDSTRING,0,(LPARAM)GetSendTypeStr(i+1));
+		if (userType==(i+1)) SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_SETCURSEL,i,0);
+	}
+
+	SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,trTemplatePath);
+	CheckDlgButton(hwnd, IDC_CHECK1, sendToMaster);
+	CheckDlgButton(hwnd, IDC_CHECK2, showRouting);
+	CheckDlgButton(hwnd, IDC_CHECK3, trTemplate);
+	CheckDlgButton(hwnd, IDC_CHECK4, (soloDefeat == 1));
+
+	for(int i=0; i < SNM_MAX_HW_OUTS; i++) {
+		if (_hwnd) // do it once (WM_INITDIALOG)
+			fillHWoutDropDown(hwnd,IDC_SNM_CUEBUS_HWOUT1+i);
+		SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_HWOUT1+i,CB_SETCURSEL,hwOuts[i],0);
+	}
+
+//	SetFocus(GetDlgItem(hwnd, IDC_SNM_CUEBUS_NAME));
+	PostMessage(hwnd, WM_COMMAND, IDC_CHECK3, 0); // enable//disable state
+
+	g_cueBussDisableSave = false;
+}
+
+void SaveCueBussSettings()
+{
+	if (!g_cueBussHwnd || g_cueBussDisableSave)
+		return;
+
+	char cueBusName[BUFFER_SIZE]="";
+	GetDlgItemText(g_cueBussHwnd,IDC_SNM_CUEBUS_NAME,cueBusName,BUFFER_SIZE);
+
+	int userType=2, reaType;
+	int combo = (int)SendDlgItemMessage(g_cueBussHwnd,IDC_SNM_CUEBUS_TYPE,CB_GETCURSEL,0,0);
+	if(combo != CB_ERR)
+		userType = combo+1;
+	switch(userType) {
+		case 1: reaType=0; break;
+		case 2: reaType=3; break;
+		case 3: reaType=1; break;
+		default: reaType=3; break;
+	}
+
+	int sendToMaster = IsDlgButtonChecked(g_cueBussHwnd, IDC_CHECK1);
+	int showRouting = IsDlgButtonChecked(g_cueBussHwnd, IDC_CHECK2);
+	int trTemplate = IsDlgButtonChecked(g_cueBussHwnd, IDC_CHECK3);
+	int soloDefeat = IsDlgButtonChecked(g_cueBussHwnd, IDC_CHECK4);
+
+	char trTemplatePath[BUFFER_SIZE]="";
+	GetDlgItemText(g_cueBussHwnd,IDC_SNM_CUEBUS_TEMPLATE,trTemplatePath,BUFFER_SIZE);
+
+	int hwOuts[SNM_MAX_HW_OUTS];
+	for (int i=0; i<SNM_MAX_HW_OUTS; i++) {
+		hwOuts[i] = (int)SendDlgItemMessage(g_cueBussHwnd,IDC_SNM_CUEBUS_HWOUT1+i,CB_GETCURSEL,0,0);
+		if(hwOuts[i] == CB_ERR)	hwOuts[i] = '\0';
+	}
+
+	saveCueBusIniFile(g_cueBussConfId, cueBusName, reaType, (trTemplate == 1), trTemplatePath, (showRouting == 1), soloDefeat, (sendToMaster == 1), hwOuts);
+}
 
 WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	const char cWndPosKey[] = "CueBus Window Pos"; 
 	switch(Message)
 	{
-        case WM_INITDIALOG :
-		{
-			char busName[BUFFER_SIZE] = "";
-			char trTemplatePath[BUFFER_SIZE] = "";
-			int reaType, userType, soloDefeat, hwOuts[8];
-			bool trTemplate, showRouting, sendToMaster;
-			readCueBusIniFile(busName, &reaType, &trTemplate, trTemplatePath, &showRouting, &soloDefeat, &sendToMaster, hwOuts);
-			userType = GetComboSendIdxType(reaType);
-			SetDlgItemText(hwnd,IDC_SNM_CUEBUS_NAME,busName);
-
-			int x=0;
-			for(int i=1; i<4; i++)
-			{
-				x = (int)SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_ADDSTRING,0,(LPARAM)GetSendTypeStr(i));
-				SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_SETITEMDATA,x,i);
-				if (i==userType) SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_SETCURSEL,x,0);
-			}
-
-			SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,trTemplatePath);
-			CheckDlgButton(hwnd, IDC_CHECK1, sendToMaster);
-			CheckDlgButton(hwnd, IDC_CHECK2, showRouting);
-			CheckDlgButton(hwnd, IDC_CHECK3, trTemplate);
-			CheckDlgButton(hwnd, IDC_CHECK4, (soloDefeat == 1));
-
-			for(int i=0; i < SNM_MAX_HW_OUTS; i++) 
-			{
-				fillHWoutDropDown(hwnd,IDC_SNM_CUEBUS_HWOUT1+i);
-				SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_HWOUT1+i,CB_SETCURSEL,hwOuts[i],0);
-			}
-
+        case WM_INITDIALOG: {
 			RestoreWindowPos(hwnd, cWndPosKey, false);
-			SetFocus(GetDlgItem(hwnd, IDC_SNM_CUEBUS_NAME));
-			PostMessage(hwnd, WM_COMMAND, IDC_CHECK3, 0); // enable//disable state
+			char buf[4] = "";
+			for(int i=0; i < SNM_MAX_CUE_BUSS_CONFS; i++) {
+				_snprintf(buf,4,"%d",i+1);
+				SendDlgItemMessage(hwnd,IDC_COMBO,CB_ADDSTRING,0,(LPARAM)buf);
+			}
+			SendDlgItemMessage(hwnd,IDC_COMBO,CB_SETCURSEL,0,0);
+			FillCueBussDlg(hwnd);
 			return 0;
 		}
 		break;
@@ -619,78 +671,38 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case WM_COMMAND :
-		{
             switch(LOWORD(wParam))
             {
+				case IDC_COMBO:
+					// config id update
+					if(HIWORD(wParam) == CBN_SELCHANGE) {
+						int id = (int)SendDlgItemMessage(hwnd,IDC_COMBO,CB_GETCURSEL,0,0);
+						if (id != CB_ERR) {
+							g_cueBussConfId = id;
+							FillCueBussDlg();
+						}
+					}
+					break;
                 case IDOK:
-				case IDC_SAVE:
-				{
-					char cueBusName[BUFFER_SIZE];
-					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_NAME,cueBusName,BUFFER_SIZE);
-
-					int userType = 2, reaType;
-					int combo = (int)SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_GETCURSEL,0,0);
-					if(combo != CB_ERR)
-						userType = combo+1;
-					switch(userType)
-					{
-						case 1: reaType=0; break;
-						case 2: reaType=3; break;
-						case 3: reaType=1; break;
-						default: break;
-					}
-
-					int sendToMaster = IsDlgButtonChecked(hwnd, IDC_CHECK1);
-					int showRouting = IsDlgButtonChecked(hwnd, IDC_CHECK2);
-					int trTemplate = IsDlgButtonChecked(hwnd, IDC_CHECK3);
-					int soloDefeat = IsDlgButtonChecked(hwnd, IDC_CHECK4);
-
-					char trTemplatePath[BUFFER_SIZE];
-					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,trTemplatePath,BUFFER_SIZE);
-
-					int hwOuts[SNM_MAX_HW_OUTS];
-					for (int i=0; i<SNM_MAX_HW_OUTS; i++)
-					{
-						hwOuts[i] = (int)SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_HWOUT1+i,CB_GETCURSEL,0,0);
-						if(hwOuts[i] == CB_ERR)	hwOuts[i] = 0;
-					}
-
-					// *** Create cue buss ***
-					if (LOWORD(wParam) == IDC_SAVE ||
-						cueTrack(cueBusName, reaType, "Create cue buss",
-							(showRouting == 1), soloDefeat, 
-							trTemplate ? trTemplatePath : NULL, 
-							(sendToMaster == 1), hwOuts))
-					{
-						saveCueBusIniFile(cueBusName, reaType, (trTemplate == 1), trTemplatePath, (showRouting == 1), soloDefeat, (sendToMaster == 1), hwOuts);
-					}
+					cueTrack(__LOCALIZE("Create cue buss from track selection","sws_undo"), g_cueBussConfId);
 					return 0;
-				}
-				break;
-
 				case IDCANCEL:
-				{
+					g_cueBussHwnd = NULL; // for proper toggle state report, see openCueBussWnd()
 					ShowWindow(hwnd, SW_HIDE);
 					return 0;
-				}
-				break;
-
-				case IDC_FILES:
-				{
-					char currentPath[BUFFER_SIZE];
-					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,currentPath,BUFFER_SIZE);
-					if (!strlen(currentPath))
-						_snprintf(currentPath, BUFFER_SIZE, "%s%c%TrackTemplates", GetResourcePath(), PATH_SLASH_CHAR);
-					char* filename = BrowseForFiles("S&M - Load track template", currentPath, NULL, false, "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0");
-					if (filename) {
-						SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,filename);
-						free(filename);
+				case IDC_FILES: {
+					char curPath[BUFFER_SIZE]="";
+					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,curPath,BUFFER_SIZE);
+					if (!*curPath || !FileExists(curPath))
+						_snprintf(curPath, BUFFER_SIZE, "%s%c%TrackTemplates", GetResourcePath(), PATH_SLASH_CHAR);
+					if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Load track template","sws_DLG_149"), curPath, NULL, false, "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0")) {
+						SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,fn);
+						free(fn);
+						SaveCueBussSettings();
 					}
+					break;
 				}
-				break;
-
-				case IDC_CHECK3:
-				{
+				case IDC_CHECK3: {
 					bool templateEnable = (IsDlgButtonChecked(hwnd, IDC_CHECK3) == 1);
 					EnableWindow(GetDlgItem(hwnd, IDC_SNM_CUEBUS_TEMPLATE), templateEnable);
 					EnableWindow(GetDlgItem(hwnd, IDC_FILES), templateEnable);
@@ -699,25 +711,46 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 						EnableWindow(GetDlgItem(hwnd, IDC_SNM_CUEBUS_HWOUT1+k), !templateEnable);
 					EnableWindow(GetDlgItem(hwnd, IDC_CHECK1), !templateEnable);
 					EnableWindow(GetDlgItem(hwnd, IDC_CHECK4), !templateEnable);
-					SetFocus(GetDlgItem(hwnd, templateEnable ? IDC_SNM_CUEBUS_TEMPLATE : IDC_SNM_CUEBUS_NAME));
+//					SetFocus(GetDlgItem(hwnd, templateEnable ? IDC_SNM_CUEBUS_TEMPLATE : IDC_SNM_CUEBUS_NAME));
+					SaveCueBussSettings();
+					break;
 				}
-				break;
+				case IDC_SNM_CUEBUS_SOLOGRP:
+				case IDC_CHECK1:
+				case IDC_CHECK2:
+				case IDC_CHECK4:
+					SaveCueBussSettings();
+					break;
+				case IDC_SNM_CUEBUS_TYPE:
+				case IDC_SNM_CUEBUS_HWOUT1:
+				case IDC_SNM_CUEBUS_HWOUT2:
+				case IDC_SNM_CUEBUS_HWOUT3:
+				case IDC_SNM_CUEBUS_HWOUT4:
+				case IDC_SNM_CUEBUS_HWOUT5:
+				case IDC_SNM_CUEBUS_HWOUT6:
+				case IDC_SNM_CUEBUS_HWOUT7:
+				case IDC_SNM_CUEBUS_HWOUT8:
+					if(HIWORD(wParam) == CBN_SELCHANGE)
+						SaveCueBussSettings();
+					break;
+				case IDC_SNM_CUEBUS_TEMPLATE:
+				case IDC_SNM_CUEBUS_NAME:
+					if (HIWORD(wParam)==EN_CHANGE)
+						SaveCueBussSettings();
+					break;
 			}
-		}
-		break;
+			break;
 
 		case WM_DESTROY:
 			SaveWindowPos(hwnd, cWndPosKey);
 			break; 
 	}
-
 	return 0;
 }
 
-void openCueBussWnd(COMMAND_T* _ct) {
-	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUS), GetMainHwnd(), CueBussDlgProc);
-
-	// Toggle
+void openCueBussWnd(COMMAND_T* _ct)
+{
+	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_CUEBUSS), GetMainHwnd(), CueBussDlgProc);
 	if (g_cueBussHwnd) {
 		g_cueBussHwnd = NULL;
 		ShowWindow(hwnd, SW_HIDE);
@@ -733,3 +766,78 @@ bool isCueBussWndDisplayed(COMMAND_T* _ct) {
 	return (g_cueBussHwnd && IsWindow(g_cueBussHwnd) && IsWindowVisible(g_cueBussHwnd) ? true : false);
 }
 
+
+#ifdef _SNM_MISC // wip
+///////////////////////////////////////////////////////////////////////////////
+// Merge LangPack dialog box
+///////////////////////////////////////////////////////////////////////////////
+
+HWND g_langpackMrgHwnd = NULL;
+
+WDL_DLGRET LangpackMergeDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+	const char cWndPosKey[] = "LangPack Merger Window Pos";
+	switch(Message)
+	{
+        case WM_INITDIALOG :
+			RestoreWindowPos(hwnd, cWndPosKey, false);
+			SetFocus(GetDlgItem(hwnd, IDC_SNM_CUEBUS_NAME));
+			PostMessage(hwnd, WM_COMMAND, IDC_CHECK3, 0); // enable//disable state
+			return 0;
+
+		case WM_CLOSE :
+			g_langpackMrgHwnd = NULL; // for proper toggle state report, see openCueBussWnd()
+			break;
+
+		case WM_COMMAND :
+            switch(LOWORD(wParam))
+            {
+                case IDOK:
+					return 0;
+
+				case IDCANCEL:
+					g_langpackMrgHwnd = NULL; // for proper toggle state report, see openCueBussWnd()
+					ShowWindow(hwnd, SW_HIDE);
+					return 0;
+
+				case IDC_BUTTON1:
+				{
+					char curPath[BUFFER_SIZE]="";
+					GetDlgItemText(hwnd,IDC_EDIT1,curPath,BUFFER_SIZE);
+					if (!*curPath || !FileExists(curPath))
+						_snprintf(curPath, BUFFER_SIZE, "%s%c%LangPack", GetResourcePath(), PATH_SLASH_CHAR);					
+					if (char* fn = BrowseForFiles("S&M - Load LangPack file", curPath, NULL, false, SNM_TXT_EXT_LIST)) {
+						SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,fn);
+						free(fn);
+					}
+					break;
+				}
+			}
+			break;
+
+		case WM_DESTROY:
+			SaveWindowPos(hwnd, cWndPosKey);
+			break; 
+	}
+	return 0;
+}
+
+void openLangpackMrgWnd(COMMAND_T* _ct)
+{
+	static HWND hwnd = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_SNM_MERGE_LANGPACK), GetMainHwnd(), LangpackMergeDlgProc);
+	if (g_langpackMrgHwnd) {
+		g_langpackMrgHwnd = NULL;
+		ShowWindow(hwnd, SW_HIDE);
+	}
+	else {
+		g_langpackMrgHwnd = hwnd;
+		ShowWindow(hwnd, SW_SHOW);
+		SetFocus(hwnd);
+	}
+}
+
+bool isLangpackMrgWndDisplayed(COMMAND_T* _ct) {
+	return (g_langpackMrgHwnd && IsWindow(g_langpackMrgHwnd) && IsWindowVisible(g_langpackMrgHwnd) ? true : false);
+}
+
+#endif

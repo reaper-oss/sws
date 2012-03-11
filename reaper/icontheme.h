@@ -1,3 +1,7 @@
+/************************************************
+** Copyright (C) 2006-2012, Cockos Incorporated
+*/
+
 #ifndef _ICONTHEME_
 #define _ICONTHEME_
 

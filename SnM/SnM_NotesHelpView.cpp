@@ -32,11 +32,12 @@
 // - take changed => title not updated
 // - drag-drop text
 // - undo does not restore caret pos.
-// - use action_help_t ? ("WIP" according to Cockos)
+// - use action_help_t ? (not finished according to Cockos)
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_NotesHelpView.h"
+#include "../reaper/localize.h"
 //#include "../../WDL/projectcontext.h"
 
 
@@ -96,7 +97,7 @@ MediaTrack* g_trNote = NULL;
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_NotesHelpWnd::SNM_NotesHelpWnd()
-	: SWS_DockWnd(IDD_SNM_NOTES_HELP, "Notes/Subtitles/Help", "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
+	: SWS_DockWnd(IDD_SNM_NOTES, "Notes/Subtitles/Help", "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
 {
 	m_internalTLChange = false;
 	RegisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
@@ -124,15 +125,15 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_btnLock);
 
 	m_cbType.SetID(COMBOID_TYPE);
-	m_cbType.AddItem("Project notes");
-	m_cbType.AddItem("Item notes");
-	m_cbType.AddItem("Track notes");
+	m_cbType.AddItem(__LOCALIZE("Project notes","sws_DLG_152"));
+	m_cbType.AddItem(__LOCALIZE("Item notes","sws_DLG_152"));
+	m_cbType.AddItem(__LOCALIZE("Track notes","sws_DLG_152"));
 #ifdef _SNM_MARKER_REGION_NAME
-	m_cbType.AddItem("Marker/Region names");
+	m_cbType.AddItem(__LOCALIZE("Marker/Region names","sws_DLG_152"));
 #endif
-	m_cbType.AddItem("Marker/Region subtitles");
+	m_cbType.AddItem(__LOCALIZE("Marker/Region subtitles","sws_DLG_152"));
 #ifdef _WIN32
-	m_cbType.AddItem("Action help");
+	m_cbType.AddItem(__LOCALIZE("Action help","sws_DLG_152"));
 #endif
 	m_parentVwnd.AddChild(&m_cbType);
 	// ...the selected item is set through SetType() below
@@ -255,7 +256,7 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				ToggleLock();
 			break;
 		case BUTTONID_ALR:
-			if (!HIWORD(wParam) && *g_lastActionCustId && _strnicmp(g_lastActionDesc, "Custom:", 7))
+			if (!HIWORD(wParam) && *g_lastActionCustId && !IsMacro(g_lastActionDesc))
 			{
 				char cLink[256] = "";
 				char sectionURL[SNM_MAX_SECTION_NAME_LEN] = "";
@@ -301,7 +302,7 @@ HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	if (g_notesViewType == SNM_NOTES_ACTION_HELP)
 	{
 		HMENU hMenu = CreatePopupMenu();
-		AddToMenu(hMenu, "Set action help file...", SET_ACTION_HELP_FILE_MSG);
+		AddToMenu(hMenu, __LOCALIZE("Set action help file...","sws_DLG_152"), SET_ACTION_HELP_FILE_MSG);
 		return hMenu;
 	}
 	return NULL;
@@ -398,7 +399,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 			static LICE_CachedFont dynFont;
 
 			// creating fonts is ***super slow***
-			// => use a text width estimation instead
+			// => use a text width estimation
 			int fontHeight = (int)((_bm->getHeight()-h)/numlines + 0.5);
 			while (fontHeight > 5 && (fontHeight*maxlinelen*0.6) > _bm->getWidth()) 
 				fontHeight--;
@@ -408,7 +409,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 				ColorTheme* ct = SNM_GetColorTheme();
 				HFONT lf = CreateFont(fontHeight,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 					OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,g_bigFontName);
-				dynFont.SetFromHFont(lf,LICE_FONT_FLAG_OWNS_HFONT);
+				dynFont.SetFromHFont(lf,LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
 				dynFont.SetBkMode(TRANSPARENT);
 				dynFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
 
@@ -450,7 +451,8 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 		if (SNM_AutoVWndPosition(&m_cbType, NULL, _r, &x0, _r->top, h))
 		{
 			// label
-			char str[512] = "No selection!";
+			char str[512];
+			lstrcpyn(str, __LOCALIZE("No selection!","sws_DLG_152"), 512);
 			switch(g_notesViewType)
 			{
 				case SNM_NOTES_PROJECT:
@@ -471,7 +473,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 						if (id > 0)
 							_snprintf(str, 512, "[%d] \"%s\"", id, (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL));
 						else if (id == 0)
-							strcpy(str, "[MASTER]");
+							strcpy(str, __LOCALIZE("[MASTER]","sws_DLG_152"));
 					}
 					break;
 #ifdef _SNM_MARKER_REGION_NAME
@@ -508,7 +510,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 							*str = '\0';
 					}
 					else
-						strcpy(str, "No marker or region before play/edit cursor position!");
+						strcpy(str, __LOCALIZE("No marker or region before play/edit cursor position!","sws_DLG_152"));
 					break;
 				case SNM_NOTES_ACTION_HELP:
 					if (g_lastActionDesc && *g_lastActionDesc && g_lastActionSection && *g_lastActionSection)
@@ -537,11 +539,11 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	// import/export buttons
 	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
 	{
-		SNM_SkinToolbarButton(&m_btnImportSub, "Import...");
+		SNM_SkinToolbarButton(&m_btnImportSub, __LOCALIZE("Import...","sws_DLG_152"));
 		if (!SNM_AutoVWndPosition(&m_btnImportSub, NULL, _r, &x0, y0, h))
 			return;
 
-		SNM_SkinToolbarButton(&m_btnExportSub, "Export...");
+		SNM_SkinToolbarButton(&m_btnExportSub, __LOCALIZE("Export...","sws_DLG_152"));
 		if (!SNM_AutoVWndPosition(&m_btnExportSub, NULL, _r, &x0, y0, h))
 			return;
 	}
@@ -549,11 +551,11 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	// online help & action list buttons
 	if (g_notesViewType == SNM_NOTES_ACTION_HELP)
 	{
-		SNM_SkinToolbarButton(&m_btnActionList, "Action list...");
+		SNM_SkinToolbarButton(&m_btnActionList, __LOCALIZE("Action list...","sws_DLG_152"));
 		if (!SNM_AutoVWndPosition(&m_btnActionList, NULL, _r, &x0, y0, h))
 			return;
 
-		SNM_SkinToolbarButton(&m_btnAlr, "Online help...");
+		SNM_SkinToolbarButton(&m_btnAlr, __LOCALIZE("Online help...","sws_DLG_152"));
 		if (!SNM_AutoVWndPosition(&m_btnAlr, NULL, _r, &x0, y0, h))
 			return;
 	}
@@ -567,9 +569,9 @@ bool SNM_NotesHelpWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int
 		switch (v->GetID())
 		{
 			case BUTTONID_LOCK:
-				return (lstrcpyn(_bufOut, g_locked ? "Text locked ('Big font' mode)" : "Text unlocked", _bufOutSz) != NULL);
+				return (lstrcpyn(_bufOut, g_locked ? __LOCALIZE("Text locked ('Big font' mode)", "sws_DLG_152") : __LOCALIZE("Text unlocked", "sws_DLG_152"), _bufOutSz) != NULL);
 			case COMBOID_TYPE:
-				return (lstrcpyn(_bufOut, "Notes type", _bufOutSz) != NULL);
+				return (lstrcpyn(_bufOut, __LOCALIZE("Notes type","sws_DLG_152"), _bufOutSz) != NULL);
 			case TXTID_LABEL:
 				return (lstrcpyn(_bufOut, ((WDL_VirtualStaticText*)v)->GetText(), _bufOutSz) != NULL);
 		}
@@ -644,13 +646,13 @@ void SNM_NotesHelpWnd::saveCurrentPrjNotes()
 	GetDlgItemText(m_hwnd, IDC_EDIT, buf, MAX_HELP_LENGTH);
 	if (strncmp(g_lastText, buf, MAX_HELP_LENGTH)) {
 		g_prjNotes.Get()->Set(buf); // CRLF removed only when saving the project..
-		Undo_OnStateChangeEx("Edit project notes", UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx(__LOCALIZE("Edit project notes","sws_undo"), UNDO_STATE_MISCCFG, -1);
 	}
 }
 
 void SNM_NotesHelpWnd::saveCurrentHelp()
 {
-	if (*g_lastActionCustId && _strnicmp(g_lastActionDesc, "Custom:", 7)) // skip custom cmds
+	if (*g_lastActionCustId && !IsMacro(g_lastActionDesc))
 	{
 		char buf[MAX_HELP_LENGTH] = "";
 //		memset(buf, 0, sizeof(buf));
@@ -686,7 +688,7 @@ void SNM_NotesHelpWnd::saveCurrentItemNotes()
 			{
 				UpdateItemInProject(g_mediaItemNote);
 				UpdateTimeline();
-				Undo_OnStateChangeEx("Edit item notes", UNDO_STATE_ALL, -1); //JFB TODO? -1 to remplace? (trackparm)
+				Undo_OnStateChangeEx(__LOCALIZE("Edit item notes","sws_undo"), UNDO_STATE_ALL, -1); //JFB TODO? -1 to remplace? (trackparm)
 			}
 		}
 	}
@@ -713,7 +715,7 @@ void SNM_NotesHelpWnd::saveCurrentTrackNotes()
 			}
 			if (!found)
 				g_pTrackNotes.Get()->Add(new SNM_TrackNotes(g_trNote, buf));
-			Undo_OnStateChangeEx("Edit track notes", UNDO_STATE_MISCCFG, -1); //JFB TODO? -1 to remplace? (trackparm)
+			Undo_OnStateChangeEx(__LOCALIZE("Edit track notes","sws_undo"), UNDO_STATE_MISCCFG, -1); //JFB TODO? -1 to remplace? (trackparm)
 		}
 	}
 }
@@ -738,7 +740,7 @@ void SNM_NotesHelpWnd::saveCurrentMkrRgnNameOrNotes(bool _name)
 					{
 						ShortenStringToFirstRN(buf);
 						if (SetProjectMarker2(NULL, markrgnindexnumber, isRgn, pos, end, buf))
-							Undo_OnStateChangeEx(isRgn ? "Edit region name" : "Edit marker name", UNDO_STATE_ALL, -1);
+							Undo_OnStateChangeEx(isRgn ? __LOCALIZE("Edit region name","sws_undo") : __LOCALIZE("Edit marker name","sws_undo"), UNDO_STATE_ALL, -1);
 					}
 				}
 			}
@@ -757,7 +759,7 @@ void SNM_NotesHelpWnd::saveCurrentMkrRgnNameOrNotes(bool _name)
 				}
 				if (!found)
 					g_pRegionSubtitles.Get()->Add(new SNM_RegionSubtitle(g_lastMarkerRegionId, buf));
-				Undo_OnStateChangeEx(IsRegion(g_lastMarkerRegionId) ? "Edit region subtitle" : "Edit marker subtitle", UNDO_STATE_MISCCFG, -1);
+				Undo_OnStateChangeEx(IsRegion(g_lastMarkerRegionId) ? __LOCALIZE("Edit region subtitle","sws_undo") : __LOCALIZE("Edit marker subtitle","sws_undo"), UNDO_STATE_MISCCFG, -1);
 			}
 		}
 	}
@@ -848,7 +850,7 @@ int SNM_NotesHelpWnd::updateActionHelp()
 			g_lastActionListSel = iSel;
 			if (*g_lastActionCustId && *g_lastActionDesc)
 			{
-				if (!_strnicmp(g_lastActionDesc, "Custom:", 7)) // skip macros
+				if (!IsMacro(g_lastActionDesc)) // skip macros
 					SetText(g_lastActionCustId);
 				else
 				{
@@ -1034,7 +1036,7 @@ void saveHelp(const char* _cmdName, const char* _help)
 }
 
 void SetActionHelpFilename(COMMAND_T*) {
-	if (char* fn = BrowseForFiles("S&M - Set action help file", g_actionHelpFilename, NULL, false, SNM_INI_EXT_LIST)) {
+	if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Set action help file","sws_DLG_152"), g_actionHelpFilename, NULL, false, SNM_INI_EXT_LIST)) {
 		lstrcpyn(g_actionHelpFilename, fn, BUFFER_SIZE);
 		free(fn);
 	}
@@ -1356,15 +1358,15 @@ bool ImportSubRipFile(const char* _fn)
 
 void ImportSubTitleFile(COMMAND_T* _ct)
 {
-	if (char* fn = BrowseForFiles("S&M - Import subtitle file", g_lastImportSubFn, NULL, false, SNM_SUB_EXT_LIST))
+	if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Import subtitle file","sws_DLG_152"), g_lastImportSubFn, NULL, false, SNM_SUB_EXT_LIST))
 	{
 		lstrcpyn(g_lastImportSubFn, fn, BUFFER_SIZE);
 		if (ImportSubRipFile(fn))
 			//JFB hard coded undo label: _ct might be NULL (when called from button)
 			//    + avoid trailing "..." in undo point name (when called from action)
-			Undo_OnStateChangeEx("Import subtitle file", UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx(__LOCALIZE("Import subtitle file","sws_DLG_152"), UNDO_STATE_ALL, -1);
 		else
-			MessageBox(GetMainHwnd(), "Invalid subtitle file!", "S&M - Error", MB_OK);
+			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid subtitle file!","sws_DLG_152"), __LOCALIZE("S&M - Error","sws_DLG_152"), MB_OK);
 		free(fn);
 	}
 }
@@ -1423,7 +1425,7 @@ bool ExportSubRipFile(const char* _fn)
 void ExportSubTitleFile(COMMAND_T* _ct)
 {
 	char fn[BUFFER_SIZE] = "";
-	if (BrowseForSaveFile("S&M - Export subtitle file", g_lastExportSubFn, strrchr(g_lastExportSubFn, '.') ? g_lastExportSubFn : NULL, SNM_SUB_EXT_LIST, fn, BUFFER_SIZE)) {
+	if (BrowseForSaveFile(__LOCALIZE("S&M - Export subtitle file","sws_DLG_152"), g_lastExportSubFn, strrchr(g_lastExportSubFn, '.') ? g_lastExportSubFn : NULL, SNM_SUB_EXT_LIST, fn, BUFFER_SIZE)) {
 		lstrcpyn(g_lastExportSubFn, fn, BUFFER_SIZE);
 		ExportSubRipFile(fn);
 	}

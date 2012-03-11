@@ -35,31 +35,38 @@
 #include "SnM_Actions.h"
 #include "SnM_MidiLiveView.h"
 #include "SnM_Chunk.h"
+#include "../reaper/localize.h"
 
 
-#define SAVEWINDOW_POS_KEY		"S&M - Live Configs List Save Window Position"
-#define NB_CC_VALUES			128
+#define SNM_LIVECFG_VERSION						2 
 
-#define SNM_LIVECFG_CLEAR_CC_ROW_MSG			0xF001
-#define SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG		0xF002
-#define SNM_LIVECFG_CLEAR_TRACK_TEMPLATE_MSG	0xF003
-#define SNM_LIVECFG_LOAD_FXCHAIN_MSG			0xF004
-#define SNM_LIVECFG_CLEAR_FXCHAIN_MSG			0xF005
-#define SNM_LIVECFG_PERFORM_MSG					0xF006 
-#define SNM_LIVECFG_EDIT_DESC_MSG				0xF007
-#define SNM_LIVECFG_CLEAR_DESC_MSG				0xF008
-#define SNM_LIVECFG_EDIT_ON_ACTION_MSG			0xF009
-#define SNM_LIVECFG_LEARN_ON_ACTION_MSG			0xF00A
-#define SNM_LIVECFG_CLEAR_ON_ACTION_MSG			0xF00B
-#define SNM_LIVECFG_EDIT_OFF_ACTION_MSG			0xF00C
-#define SNM_LIVECFG_LEARN_OFF_ACTION_MSG		0xF00D
-#define SNM_LIVECFG_CLEAR_OFF_ACTION_MSG		0xF00E 
-#define SNM_LIVECFG_SET_TRACK_MSG				0xF00F // => 241 track max
-#define SNM_LIVECFG_CLEAR_TRACK_MSG				0xF100
-#define SNM_LIVECFG_SET_PRESETS_MSG				0xF101 // => theorically 3838 preset max, but see SNM_LIVECFG_MAX_PRESET_COUNT
-#define SNM_LIVECFG_CLEAR_PRESETS_MSG			0xFFFF
+#define SNM_LIVECFG_PERFORM_MSG					0xF001 
+#define SNM_LIVECFG_CLEAR_CC_ROW_MSG			0xF002
+#define SNM_LIVECFG_CLEAR_TRACK_MSG				0xF003
+#define SNM_LIVECFG_CLEAR_FXCHAIN_MSG			0xF004
+#define SNM_LIVECFG_CLEAR_TRACK_TEMPLATE_MSG	0xF005
+#define SNM_LIVECFG_CLEAR_DESC_MSG				0xF006
+#define SNM_LIVECFG_CLEAR_PRESETS_MSG			0xF007
+#define SNM_LIVECFG_CLEAR_ON_ACTION_MSG			0xF008
+#define SNM_LIVECFG_CLEAR_OFF_ACTION_MSG		0xF009 
+#define SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG		0xF00A
+#define SNM_LIVECFG_LOAD_FXCHAIN_MSG			0xF00B
+#define SNM_LIVECFG_EDIT_DESC_MSG				0xF00C
+#define SNM_LIVECFG_EDIT_ON_ACTION_MSG			0xF00D
+#define SNM_LIVECFG_EDIT_OFF_ACTION_MSG			0xF00E
+#define SNM_LIVECFG_LEARN_ON_ACTION_MSG			0xF00F
+#define SNM_LIVECFG_LEARN_OFF_ACTION_MSG		0xF010
+#define SNM_LIVECFG_LEARN_PRESETS_START_MSG		0xF100 // 255 fx learn max --> ///JFB!!! hummm.. a verifier!!!
+#define SNM_LIVECFG_LEARN_PRESETS_END_MSG		0xF1FF // <--
+#define SNM_LIVECFG_SET_TRACK_START_MSG			0xF200 // 255 track max -->
+#define SNM_LIVECFG_SET_TRACK_END_MSG			0xF2FF // <--
+#define SNM_LIVECFG_SET_PRESET_START_MSG		0xF300 // 3327 preset max -->
+#define SNM_LIVECFG_SET_PRESET_END_MSG			0xFFFF // <--
 
-#define SNM_LIVECFG_UNDO_STR					"Live configs edition"
+#define SNM_LIVECFG_MAX_PRESET_COUNT			(SNM_LIVECFG_SET_PRESET_END_MSG - SNM_LIVECFG_SET_PRESET_START_MSG)
+#define SAVEWINDOW_POS_KEY						"S&M - Live Configs List Save Window Position"
+#define SNM_LIVECFG_UNDO_STR					__LOCALIZE("Live Configs edition", "sws_undo")
+
 
 enum {
   TXTID_CONFIG=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
@@ -69,6 +76,7 @@ enum {
   COMBOID_INPUT_TRACK,
   BUTTONID_MUTE_OTHERS,
   BUTTONID_AUTO_SELECT,
+  KNOBID_CC_DELAY
 };
 
 enum {
@@ -86,23 +94,194 @@ enum {
 
 
 /*JFB static*/ SNM_LiveConfigsWnd* g_pLiveConfigsWnd = NULL;
-SWSProjConfig<MidiLiveConfig> g_liveConfigs;
-SWSProjConfig<WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<MidiLiveItem> > > g_liveCCConfigs;
-
+SWSProjConfig<WDL_PtrList_DeleteOnDestroy<MidiLiveConfig> > g_liveConfigs;
 int g_configId = 0; // the current *displayed* config id
-int g_approxDelayMsCC = 250;
+int g_approxDelayMsCC = SNM_SCHEDJOB_DEFAULT_DELAY;
+
+
+///////////////////////////////////////////////////////////////////////////////
+// presets configuration helpers
+///////////////////////////////////////////////////////////////////////////////
+
+// updates a preset conf string
+// _presetConf: in & out param
+// _fx: 1-based
+// _preset: new preset name or NULL or "" to remove
+void UpdatePresetConf(WDL_FastString* _presetConf, int _fx, const char* _preset)
+{
+	WDL_FastString newConf, escStr, escPresetName;
+
+	if (_preset)
+		makeEscapedConfigString(_preset, &escPresetName);
+
+	LineParser lp(false);
+	if (_presetConf && !lp.parse(_presetConf->Get()))
+	{
+		bool found = false;
+		char fxBuf[32]="";
+		if (_snprintf(fxBuf, 32, "FX%d:", _fx) > 0)
+		{
+			for (int i=0; i < lp.getnumtokens(); i++)
+			{
+				if (!strcmp(lp.gettoken_str(i), fxBuf))
+				{
+					// set the new preset, if not removed
+					if (_preset && *_preset)
+					{
+						if ((i+1) < lp.getnumtokens())
+						{
+							found = true;
+							if (newConf.GetLength())
+								newConf.Append(" ");
+							newConf.Append(lp.gettoken_str(i));
+							newConf.Append(" ");
+							newConf.Append(escPresetName.Get());
+						}
+					}
+				}
+				else if (!strncmp(lp.gettoken_str(i), "FX", 2))
+				{
+					if ((i+1) < lp.getnumtokens())
+					{
+						if (newConf.GetLength())
+							newConf.Append(" ");
+						newConf.Append(lp.gettoken_str(i));
+						newConf.Append(" ");
+						makeEscapedConfigString(lp.gettoken_str(i+1), &escStr);
+						newConf.Append(escStr.Get());
+					}
+				}
+				i++; // skip next token
+			}
+		}
+
+		if (!found && _preset && *_preset) {
+			if (newConf.GetLength())
+				newConf.Append(" ");
+			newConf.AppendFormatted(256, "FX%d: ", _fx);
+			newConf.Append(escPresetName.Get());
+		}
+	}
+	if (_presetConf)
+		_presetConf->Set(newConf.Get());
+}
+
+int GetPresetFromConfTokenV1(const char* _preset) {
+	if (const char* p = strchr(_preset, '.'))
+		return atoi(p+1);
+	return 0;
+}
+
+// returns the preset number (1-based, 0 if failed) from a preset conf string
+// _fx: 0-based, _presetConf: stored as "fx.preset", both 1-based
+// _presetCount: for check ("optional", i.e. default = 0xFFFF)
+int GetPresetFromConfV1(int _fx, const char* _presetConf, int _presetCount)
+{
+	LineParser lp(false);
+	if (_presetConf && !lp.parse(_presetConf))
+	{
+		for (int i=0; i < lp.getnumtokens(); i++)
+		{
+			int fx = (int)floor(lp.gettoken_float(i));
+			if (_fx == (fx-1)) {
+				int preset = GetPresetFromConfTokenV1(lp.gettoken_str(i));
+				return (preset>_presetCount ? 0 : preset);
+			}
+		}
+	}
+	return 0;
+}
+
+bool GetPresetFromConfV2(int _fx, const char* _presetConf, WDL_FastString* _presetName)
+{
+	if (_presetName)
+		_presetName->Set("");
+
+	LineParser lp(false);
+	if (_presetConf && _presetName && !lp.parse(_presetConf))
+	{
+		char fxBuf[32]="";
+		if (_snprintf(fxBuf, 32, "FX%d:", _fx+1) > 0)
+		{
+			for (int i=0; i < lp.getnumtokens(); i++)
+			{
+				if (!strcmp(lp.gettoken_str(i), fxBuf))
+				{
+					if (i+1 < lp.getnumtokens()) {
+						_presetName->Set(lp.gettoken_str(i+1));
+						return true;
+					}
+					break;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+void UpgradePresetConfV1toV2(MediaTrack* _tr, const char* _confV1, WDL_FastString* _confV2)
+{
+	if (_tr && _confV1 && *_confV1 && _confV2 && TrackFX_GetCount(_tr))
+	{
+		_confV2->Set("");
+
+#ifdef _WIN32 // fx presets were not available on OSX before v2
+		LineParser lp(false);
+		if (!lp.parse(_confV1))
+		{
+			WDL_FastString escStr;
+			for (int i=0; i < lp.getnumtokens(); i++)
+			{
+				if (_confV2->GetLength())
+					_confV2->Append(" ");
+
+				int success, fx = (int)floor(lp.gettoken_float(i, &success)) - 1; // float because token is like "1.3"
+				int preset = success ? GetPresetFromConfTokenV1(lp.gettoken_str(i)) - 1 : -1;
+
+				// avoid parsing as far as possible!
+				SNM_FXSummaryParser p(_tr);
+				WDL_PtrList<SNM_FXSummary>* summaries = (preset >= 0 ? p.GetSummaries() : NULL);
+				SNM_FXSummary* sum = summaries ? summaries->Get(fx) : NULL;
+
+				WDL_PtrList_DeleteOnDestroy<WDL_FastString> names;
+				int presetCount = (sum ? GetUserPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names) : 0);
+				if (presetCount && preset >=0 && preset < presetCount) {
+					makeEscapedConfigString(names.Get(preset)->Get(), &escStr);
+					_confV2->AppendFormatted(256, "FX%d: %s", fx+1, escStr.Get());
+				}
+			}
+		}
+#endif
+	}
+}
+
+// trigger several track fx presets
+// _presetConf: "fx.preset", both 1-based - e.g. "2.9 3.2" => FX2 preset 9, FX3 preset 2 
+bool TriggerFXPresets(MediaTrack* _tr, WDL_FastString* _presetConf)
+{
+	bool updated = false;
+	if (int nbFx = ((_tr&&_presetConf) ? TrackFX_GetCount(_tr) : 0))
+	{
+		WDL_FastString presetName;
+		for (int i=0; i < nbFx; i++)
+			if (GetPresetFromConfV2(i, _presetConf->Get(), &presetName))
+				updated |= TrackFX_SetPreset(_tr, i, presetName.Get());
+	}
+	return updated;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_LiveConfigsView
 ///////////////////////////////////////////////////////////////////////////////
 
+// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_155
 #ifdef _SNM_PRESETS
-static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX user presets"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
+static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX presets"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
 #else
 static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
 #endif
-
+// !WANT_LOCALIZE_STRINGS_END
 
 SNM_LiveConfigsView::SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit)
 #ifdef _SNM_PRESETS
@@ -121,7 +300,7 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 		switch (iCol)
 		{
 			case COL_CC:
-				_snprintf(str, iStrMax, "%03d %c", pItem->m_cc, pItem->m_cc == g_liveConfigs.Get()->m_lastMIDIVal[g_configId] ? '*' : ' ');
+				_snprintf(str, iStrMax, "%03d %c", pItem->m_cc, pItem->m_cc == g_liveConfigs.Get()->Get(g_configId)->m_lastMIDIVal ? '*' : ' ');
 				break;
 			case COL_COMMENT:
 				lstrcpyn(str, pItem->m_desc.Get(), iStrMax);
@@ -132,22 +311,15 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 						_snprintf(str, iStrMax, "[%d] \"%s\"", CSurf_TrackToID(pItem->m_track, false), name);
 				break;
 			case COL_TRT:
-//				lstrcpyn(str, pItem->m_trTemplate.Get(), iStrMax);
 				GetFilenameNoExt(pItem->m_trTemplate.Get(), str, iStrMax);
 				break;
 			case COL_FXC:
-//				lstrcpyn(str, pItem->m_fxChain.Get(), iStrMax);
 				GetFilenameNoExt(pItem->m_fxChain.Get(), str, iStrMax);
 				break;
 #ifdef _SNM_PRESETS
 			case COL_PRESET:
-			{
-				WDL_FastString renderConf;
-//				RenderPresetConf(&(pItem->m_presets), &renderConf);
-				RenderPresetConf2(pItem->m_track, &(pItem->m_presets), &renderConf);
-				lstrcpyn(str, renderConf.Get(), iStrMax);
+				lstrcpyn(str, pItem->m_presets.Get(), iStrMax);
 				break;
-			}
 #endif
 			//JFB text edition pb with kbd_getTextFromCmd - tooltips: display pb, bugs, ..
 			case COL_ACTION_ON:
@@ -160,62 +332,74 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 	}
 }
 
-void SNM_LiveConfigsView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
+void SNM_LiveConfigsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
-	if (MidiLiveItem* pItem = (MidiLiveItem*)item)
+	if (MidiLiveItem* pItem = (MidiLiveItem*)_item)
 	{
-		if (iCol==COL_COMMENT)
+		switch (_iCol)
 		{
-			// limit the comment size (for RPP files)
-			pItem->m_desc.Set(str);
-			pItem->m_desc.Ellipsize(32,32);
-			Update();
-			Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
-		}
-		else if (iCol==COL_ACTION_ON || iCol == COL_ACTION_OFF)
-		{
-			if (*str != 0 && !NamedCommandLookup(str)) {
-				MessageBox(GetParent(m_hwndList), "Error: this action ID (or custom ID) doesn't exists.", "S&M - Live Configs", MB_OK);
-				return;
-			}
+			case COL_COMMENT:
+				// limit the comment size (for RPP files)
+				pItem->m_desc.Set(_str);
+				pItem->m_desc.Ellipsize(32,32);
+				Update();
+				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+				break;
 
-			if (iCol==COL_ACTION_ON)
-				pItem->m_onAction.Set(str);
-			else
-				pItem->m_offAction.Set(str);
-
-			Update();
-			Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+			case COL_ACTION_ON:
+			case COL_ACTION_OFF:
+				if (*_str && !NamedCommandLookup(_str)) {
+					MessageBox(GetParent(m_hwndList), __LOCALIZE("Error: this action ID (or custom ID) doesn't exists!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
+					return;
+				}
+				if (_iCol == COL_ACTION_ON) pItem->m_onAction.Set(_str);
+				else pItem->m_offAction.Set(_str);
+				Update();
+				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+				break;
 		}
 	}
 }
 
 void SNM_LiveConfigsView::GetItemList(SWS_ListItemList* pList)
 {
-	if (WDL_PtrList<MidiLiveItem>* configs = g_liveCCConfigs.Get()->Get(g_configId))
-		for (int i=0; i < configs->GetSize(); i++)
-			pList->Add((SWS_ListItem*)configs->Get(i));
+	if (WDL_PtrList<MidiLiveItem>* ccConfs = &g_liveConfigs.Get()->Get(g_configId)->m_ccConfs)
+		for (int i=0; i < ccConfs->GetSize(); i++)
+			pList->Add((SWS_ListItem*)ccConfs->Get(i));
 }
 
+// gotcha! several calls for one selection change (eg. 3 unselected rows + 1 new selection)
 void SNM_LiveConfigsView::OnItemSelChanged(SWS_ListItem* item, int iState)
 {
-	// can lead to confusion with auto track selection ticked
-	if (!g_liveConfigs.Get()->m_autoSelect[g_configId])
+	bool updated = false;
+	if (iState & LVIS_SELECTED)
 	{
-//JFB!!! restore sel ko, wtf!?? => undos commented
-//		Undo_BeginBlock2(NULL);
-		for (int i=0; i <= GetNumTracks(); i++) {
-			MediaTrack* tr = CSurf_TrackFromID(i, false);
-			if (tr) GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
+		MidiLiveItem* pItem = (MidiLiveItem*)item;
+		if (pItem && pItem->m_track)
+		{
+			for (int i=0; i <= GetNumTracks(); i++)
+			{
+				if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+				{
+					if (tr == pItem->m_track)
+					{
+						if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) == 0) {
+							GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+							updated = true;
+						}
+					}
+					else if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {
+						GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
+						updated = true;
+					}
+				}
+			}
 		}
-		int x=0;
-		while(MidiLiveItem* item = (MidiLiveItem*)EnumSelected(&x))
-			if (item->m_track)
-				GetSetMediaTrackInfo(item->m_track, "I_SELECTED", &g_i1);
-		TrackList_AdjustWindows(false);
-		Main_OnCommand(40913,0); // scroll to selected tracks
-//		Undo_EndBlock2(NULL, "Change Track Selection", UNDO_STATE_ALL);
-//		Undo_OnStateChangeEx("Change Track Selection", , -1);
+	}
+	if (updated) {
+		ScrollSelTrack(NULL, true, true);
+		if ((*(int*)GetConfigVar("undomask")) & 1)
+			Undo_OnStateChangeEx(__localizeFunc("Change Track Selection","undo",0), UNDO_STATE_ALL, -1);
 	}
 }
 
@@ -242,79 +426,12 @@ void SNM_LiveConfigsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 	}
 }
 
-// faster: default SWS_ListItem's sort algo but don't use GetItemText() for presets
-// (so it is a bit biaised for presets: sorted by fx# + preset#)
-int SNM_LiveConfigsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2)
-{
-#ifdef _SNM_PRESETS
-	char str1[64]=""; char str2[64]="";
-
-	if (abs(m_iSortCol)-1 != COL_PRESET)
-		GetItemText(_item1, abs(m_iSortCol)-1, str1, 64);
-	else
-		lstrcpyn(str1, ((MidiLiveItem*)_item1)->m_presets.Get(), 64);
-
-	if (abs(m_iSortCol)-1 != COL_PRESET)
-		GetItemText(_item2, abs(m_iSortCol)-1, str2, 64);
-	else
-		lstrcpyn(str2, ((MidiLiveItem*)_item2)->m_presets.Get(), 64);
-
-	// If strings are purely numbers, sort numerically
-	char* pEnd1, *pEnd2;
-	int i1 = strtol(str1, &pEnd1, 0);
-	int i2 = strtol(str2, &pEnd2, 0);
-	int iRet = 0;
-	if ((i1 || i2) && !*pEnd1 && !*pEnd2) {
-		if (i1 > i2) iRet = 1;
-		else if (i1 < i2) iRet = -1;
-	}
-	else
-		iRet = strcmp(str1, str2);
-	
-	if (m_iSortCol < 0) return -iRet;
-	else return iRet;
-	return 0;
-#else
-	return SWS_ListView::OnItemSort(_item1, _item2);
-#endif
-}
-
-/*tooltips commented: not per column, no '\n' support, bug after sort (sws_wnd), etc..
-void SNM_LiveConfigsView::GetItemTooltip(SWS_ListItem* item, char* str, int iStrMax)
-{
-	*str = '\0';
-	if (item)
-	{
-		WDL_FastString tooltip;
-		MidiLiveItem* pItem = (MidiLiveItem*)item;
-		if (pItem->m_onAction.GetLength())
-		{
-			// API LIMITATION: only for the main section..
-			if (int cmd = NamedCommandLookup(pItem->m_onAction.Get()))
-				tooltip.Append(kbd_getTextFromCmd(cmd, NULL));
-		}
-		if (pItem->m_offAction.GetLength())
-		{
-			// API LIMITATION: only for the main section..
-			if (int cmd = NamedCommandLookup(pItem->m_offAction.Get()))
-			{
-				if (tooltip.GetLength())
-					tooltip.Append("\n");
-				tooltip.Append(kbd_getTextFromCmd(cmd, NULL));
-			}
-		}
-		if (tooltip.GetLength())
-			lstrcpyn(str, tooltip.Get(), iStrMax); 
-	}
-}
-*/
-
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_LiveConfigsWnd
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_LiveConfigsWnd::SNM_LiveConfigsWnd()
-	: SWS_DockWnd(IDD_SNM_MIDI_LIVE, "Live Configs", "SnMLiveConfigs", 30009, SWSGetCommandID(OpenLiveConfigView))
+	: SWS_DockWnd(IDD_SNM_LIVE_CONFIGS, __LOCALIZE("Live Configs","sws_DLG_155"), "SnMLiveConfigs", 30009, SWSGetCommandID(OpenLiveConfigView))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -327,20 +444,19 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	SNM_ThemeListView(m_pLists.Get(0));
 
 	// load prefs 
-	g_approxDelayMsCC = GetPrivateProfileInt("LIVE_CONFIGS", "CC_DELAY", 250, g_SNMIniFn.Get());
+	g_approxDelayMsCC = BOUNDED(GetPrivateProfileInt("LIVE_CONFIGS", "CC_DELAY", SNM_SCHEDJOB_DEFAULT_DELAY, g_SNMIniFn.Get()), 0, 500);
 
 	// WDL UI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_txtConfig.SetID(TXTID_CONFIG);
-	m_txtConfig.SetText("Config:");
+	m_txtConfig.SetText(__LOCALIZE("Config:","sws_DLG_155"));
 	m_parentVwnd.AddChild(&m_txtConfig);
 
 	m_cbConfig.SetID(COMBOID_CONFIG);
-	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++)
-	{
-		char cfg[8] = "";
+	char cfg[8] = "";
+	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++) {
 		_snprintf(cfg, 8, "%d", i+1);
 		m_cbConfig.AddItem(cfg);
 	}
@@ -351,7 +467,7 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_btnEnable);
 
 	m_txtInputTr.SetID(TXTID_INPUT_TRACK);
-	m_txtInputTr.SetText("Input track:");
+	m_txtInputTr.SetText(__LOCALIZE("Input track:","sws_DLG_155"));
 	m_parentVwnd.AddChild(&m_txtInputTr);
 
 	m_cbInputTr.SetID(COMBOID_INPUT_TRACK);
@@ -364,15 +480,19 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_btnAutoSelect.SetID(BUTTONID_AUTO_SELECT);
 	m_parentVwnd.AddChild(&m_btnAutoSelect);
 
+#ifdef _SNM_MISC // wip
+	m_knob.SetID(KNOBID_CC_DELAY);
+	m_parentVwnd.AddChild(&m_knob);
+#endif
 	Update();
 }
 
 void SNM_LiveConfigsWnd::OnDestroy() 
 {
 	// save prefs
-	char cDelay[8];
-	_snprintf(cDelay, 8, "%d", g_approxDelayMsCC);
-	WritePrivateProfileString("LIVE_CONFIGS", "CC_DELAY", cDelay, g_SNMIniFn.Get()); 
+	char cDelay[8]="";
+	if (_snprintf(cDelay, 8, "%d", g_approxDelayMsCC) > 0)
+		WritePrivateProfileString("LIVE_CONFIGS", "CC_DELAY", cDelay, g_SNMIniFn.Get()); 
 
 	m_cbConfig.Empty();
 	m_cbInputTr.Empty();
@@ -399,7 +519,7 @@ void SNM_LiveConfigsWnd::CSurfSetTrackTitle() {
 
 void SNM_LiveConfigsWnd::FillComboInputTrack() {
 	m_cbInputTr.Empty();
-	m_cbInputTr.AddItem("None");
+	m_cbInputTr.AddItem(__LOCALIZE("None","sws_DLG_155"));
 	for (int i=1; i <= GetNumTracks(); i++)
 	{
 		WDL_FastString ellips;
@@ -443,7 +563,10 @@ void SNM_LiveConfigsWnd::Update()
 
 void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
-	MidiLiveConfig* lc = g_liveConfigs.Get();
+	MidiLiveConfig* lc = g_liveConfigs.Get()->Get(g_configId);
+	if (!lc)
+		return;
+
 	int x=0;
 	MidiLiveItem* item = (MidiLiveItem*)m_pLists.Get(0)->EnumSelected(&x);
 
@@ -495,7 +618,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (item)
 			{
 				char filename[BUFFER_SIZE];
-				if (BrowseResourcePath("S&M - Set track template", "TrackTemplates", "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0", filename, BUFFER_SIZE))
+				if (BrowseResourcePath(__LOCALIZE("S&M - Load track template","sws_DLG_155"), "TrackTemplates", "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0", filename, BUFFER_SIZE))
 				{
 					while(item) {
 						item->m_trTemplate.Set(filename);
@@ -532,7 +655,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (item)
 			{
 				char filename[BUFFER_SIZE];
-				if (BrowseResourcePath("S&M - FX Chain", "FXChains", "REAPER FX Chain (*.RfxChain)\0*.RfxChain\0", filename, BUFFER_SIZE))
+				if (BrowseResourcePath(__LOCALIZE("S&M - Load FX Chain","sws_DLG_155"), "FXChains", "REAPER FX Chain (*.RfxChain)\0*.RfxChain\0", filename, BUFFER_SIZE))
 				{
 					while(item) {
 						item->m_fxChain.Set(filename);
@@ -572,7 +695,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case SNM_LIVECFG_LEARN_OFF_ACTION_MSG:
 		{
 			char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
-			if (LearnAction(idstr))
+			if (LearnAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, __localizeFunc("Main","accel_sec",0)))
 			{
 				bool updt = false;
 				while(item)
@@ -614,7 +737,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		{
 			bool updt = false;
 			while(item) {
-				item->m_track= NULL;
+				item->m_track = NULL;
 				item->m_trTemplate.Set("");
 				item->m_fxChain.Set("");
 				item->m_presets.Set("");
@@ -641,29 +764,26 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		}
-
 		case BUTTONID_ENABLE:
 			if (!HIWORD(wParam) || HIWORD(wParam)==600)
 			{
-				lc->m_enable[g_configId] = !(lc->m_enable[g_configId]);
+				lc->m_enable = !(lc->m_enable);
 				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 				// Retreive the related toggle action and refresh toolbars
 				char customCmdId[SNM_MAX_ACTION_CUSTID_LEN];
-				_snprintf(customCmdId, SNM_MAX_ACTION_CUSTID_LEN, "%s%d", "_S&M_TOGGLE_LIVE_CFG", g_configId+1);
-				RefreshToolbar(NamedCommandLookup(customCmdId));
+				if (_snprintf(customCmdId, SNM_MAX_ACTION_CUSTID_LEN, "%s%d", "_S&M_TOGGLE_LIVE_CFG", g_configId+1) > 0)
+					RefreshToolbar(NamedCommandLookup(customCmdId));
 			}
 			break;
 		case BUTTONID_MUTE_OTHERS:
-			if (!HIWORD(wParam) || HIWORD(wParam)==600)
-			{
-				lc->m_muteOthers[g_configId] = !(lc->m_muteOthers[g_configId]);
+			if (!HIWORD(wParam) || HIWORD(wParam)==600) {
+				lc->m_muteOthers = !(lc->m_muteOthers);
 				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 			}
 			break;
 		case BUTTONID_AUTO_SELECT:
-			if (!HIWORD(wParam) || HIWORD(wParam)==600)
-			{
-				lc->m_autoSelect[g_configId] = !(lc->m_autoSelect[g_configId]);
+			if (!HIWORD(wParam) || HIWORD(wParam)==600) {
+				lc->m_autoSelect = !(lc->m_autoSelect);
 				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 			}
 			break;
@@ -671,9 +791,9 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (HIWORD(wParam)==CBN_SELCHANGE)
 			{
 				if (!m_cbInputTr.GetCurSel())
-					lc->m_inputTr[g_configId] = NULL;
+					lc->m_inputTr = NULL;
 				else
-					lc->m_inputTr[g_configId] = CSurf_TrackFromID(m_cbInputTr.GetCurSel(), false);
+					lc->m_inputTr = CSurf_TrackFromID(m_cbInputTr.GetCurSel(), false);
 				m_parentVwnd.RequestRedraw(NULL);
 				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 			}
@@ -690,12 +810,12 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 
 		default:
-			if (wParam >= SNM_LIVECFG_SET_TRACK_MSG && wParam < SNM_LIVECFG_CLEAR_TRACK_MSG) 
+			if (LOWORD(wParam) >= SNM_LIVECFG_SET_TRACK_START_MSG && LOWORD(wParam) <= SNM_LIVECFG_SET_TRACK_END_MSG) 
 			{
 				bool updt = false;
 				while(item)
 				{
-					item->m_track = CSurf_TrackFromID((int)wParam - SNM_LIVECFG_SET_TRACK_MSG, false);
+					item->m_track = CSurf_TrackFromID((int)LOWORD(wParam) - SNM_LIVECFG_SET_TRACK_START_MSG, false);
 					if (!(item->m_track)) {
 						item->m_fxChain.Set("");
 						item->m_trTemplate.Set("");
@@ -710,17 +830,41 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				}
 			}
 #ifdef _SNM_PRESETS
-			else if (wParam >= SNM_LIVECFG_SET_PRESETS_MSG && wParam < SNM_LIVECFG_CLEAR_PRESETS_MSG) 
+			else if (TrackFX_GetPreset && LOWORD(wParam) >= SNM_LIVECFG_LEARN_PRESETS_START_MSG && LOWORD(wParam) <= SNM_LIVECFG_LEARN_PRESETS_END_MSG) 
 			{
 				bool updt = false;
 				while(item)
 				{
-					int fx = m_lastFXPresetMsg[0][(int)wParam - SNM_LIVECFG_SET_PRESETS_MSG];
-					int preset = m_lastFXPresetMsg[1][(int)wParam - SNM_LIVECFG_SET_PRESETS_MSG];
-					UpdatePresetConf(fx+1, preset, &(item->m_presets));
-					item->m_fxChain.Set("");
-					item->m_trTemplate.Set("");
-					updt = true;
+					if (item->m_track)
+					{
+						int fx = (int)LOWORD(wParam)-SNM_LIVECFG_LEARN_PRESETS_START_MSG;
+						char buf[SNM_MAX_PRESET_NAME_LEN] = "";
+						TrackFX_GetPreset(item->m_track, fx, buf, SNM_MAX_PRESET_NAME_LEN);
+						UpdatePresetConf(&item->m_presets, fx+1, buf);
+						item->m_fxChain.Set("");
+						item->m_trTemplate.Set("");
+						updt = true;
+					}
+					item = (MidiLiveItem*)m_pLists.Get(0)->EnumSelected(&x);
+				}
+				if (updt) {
+					Update();
+					Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
+				}
+				break;
+			}
+			else if (LOWORD(wParam) >= SNM_LIVECFG_SET_PRESET_START_MSG && LOWORD(wParam) <= SNM_LIVECFG_SET_PRESET_END_MSG) 
+			{
+				bool updt = false;
+				while(item)
+				{
+					if (PresetMsg* msg = m_lastPresetMsg.Get((int)LOWORD(wParam) - SNM_LIVECFG_SET_PRESET_START_MSG))
+					{
+						UpdatePresetConf(&item->m_presets, msg->m_fx+1, msg->m_preset.Get());
+						item->m_fxChain.Set("");
+						item->m_trTemplate.Set("");
+						updt = true;
+					}
 					item = (MidiLiveItem*)m_pLists.Get(0)->EnumSelected(&x);
 				}
 				if (updt) {
@@ -735,14 +879,13 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-void AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf)
+void SNM_LiveConfigsWnd::AddFXSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf)
 {
-	memset(g_pLiveConfigsWnd->m_lastFXPresetMsg[0], -1, SNM_LIVECFG_MAX_PRESET_COUNT * sizeof(int));
-	memset(g_pLiveConfigsWnd->m_lastFXPresetMsg[1], -1, SNM_LIVECFG_MAX_PRESET_COUNT * sizeof(int));
+	m_lastPresetMsg.Empty(true);
 
 	int fxCount = (_tr ? TrackFX_GetCount(_tr) : 0);
 	if (!fxCount) {
-		AddToMenu(*_menu, "(No FX on track)", 0, -1, false, MF_GRAYED);
+		AddToMenu(_menu, __LOCALIZE("(No FX on track)","sws_DLG_155"), 0, -1, false, MF_GRAYED);
 		return;
 	}
 
@@ -750,37 +893,57 @@ void AddFXSubMenu(HMENU* _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf)
 	WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
 	if (summaries && fxCount == summaries->GetSize())
 	{
-		char fxName[512];
-		int msgCpt = 0;
-		//JFB TODO: check max. msgCpt value..
+		char fxName[SNM_MAX_FX_NAME_LEN] = "";
+		int msgCpt = 0; //JFB TODO? check max. msgCpt value?
 		for(int i = 0; i < fxCount; i++) 
 		{
-			if(TrackFX_GetFXName(_tr, i, fxName, 512))
+			if(TrackFX_GetFXName(_tr, i, fxName, SNM_MAX_FX_NAME_LEN))
 			{
 				HMENU fxSubMenu = CreatePopupMenu();
+				WDL_FastString str;
+
+				// learn
+				if (TrackFX_GetPreset) // new API since 4.16pre
+				{
+					char buf[SNM_MAX_PRESET_NAME_LEN] = "";
+					TrackFX_GetPreset(_tr, i, buf, SNM_MAX_PRESET_NAME_LEN);
+					str.SetFormatted(256, __LOCALIZE_VERFMT("Learn current preset: %s","sws_DLG_155"), *buf?buf:__LOCALIZE("undefined","sws_DLG_155"));
+					AddToMenu(fxSubMenu, str.Get(), SNM_LIVECFG_LEARN_PRESETS_START_MSG + i, -1, false, *buf?0:MF_GRAYED);
+				}
+#ifdef _WIN32
+				// preset list
 				WDL_PtrList_DeleteOnDestroy<WDL_FastString> names;
 				SNM_FXSummary* sum = summaries->Get(i);
-				int presetCount = (sum ? getPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names) : 0);
-				if (presetCount)
+				if (int presetCount = (sum ? GetUserPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names) : 0))
 				{
-					int curSel = GetPresetFromConf(i, _curPresetConf, presetCount);
-					AddToMenu(fxSubMenu, "None", SNM_LIVECFG_SET_PRESETS_MSG + msgCpt, -1, false, !curSel ? MFS_CHECKED : MFS_UNCHECKED);
-					g_pLiveConfigsWnd->m_lastFXPresetMsg[0][msgCpt] = i; 
-					g_pLiveConfigsWnd->m_lastFXPresetMsg[1][msgCpt++] = 0; 
-					for(int j = 0; j < presetCount; j++) {
-						AddToMenu(fxSubMenu, names.Get(j)->Get(), SNM_LIVECFG_SET_PRESETS_MSG + msgCpt, -1, false, ((j+1)==curSel) ? MFS_CHECKED : MFS_UNCHECKED);
-						g_pLiveConfigsWnd->m_lastFXPresetMsg[0][msgCpt] = i; 
-						g_pLiveConfigsWnd->m_lastFXPresetMsg[1][msgCpt++] = j+1; 
+					if (GetMenuItemCount(fxSubMenu))
+						AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
+
+					WDL_FastString curPresetName;
+					GetPresetFromConfV2(i, _curPresetConf->Get(), &curPresetName);
+					AddToMenu(fxSubMenu, __LOCALIZE("None","sws_DLG_155"), SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt, -1, false, !curPresetName.GetLength() ? MFS_CHECKED : MFS_UNCHECKED);
+					m_lastPresetMsg.Add(new PresetMsg(i, ""));
+					msgCpt++;
+
+					for(int j=0; j < presetCount; j++)
+					{
+						if (names.Get(j)->GetLength())
+						{
+							AddToMenu(fxSubMenu, names.Get(j)->Get(), SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt, -1, false, !strcmp(curPresetName.Get(), names.Get(j)->Get()) ? MFS_CHECKED : MFS_UNCHECKED);
+							m_lastPresetMsg.Add(new PresetMsg(i, names.Get(j)->Get()));
+							msgCpt++;
+						}
 					}
 				}
-				WDL_FastString fxNameId;
-				fxNameId.SetFormatted(512, "FX%d: %s", i+1, fxName);
-				AddSubMenu(*_menu, fxSubMenu, fxNameId.Get(), -1, presetCount ? MFS_ENABLED : MF_GRAYED);
+#endif
+				// add fx sub menu
+				str.SetFormatted(512, "FX%d: %s", i+1, fxName);
+				AddSubMenu(_menu, fxSubMenu, str.Get(), -1, GetMenuItemCount(fxSubMenu) ? MFS_ENABLED : MF_GRAYED);
 			}
 		}
 	}
 	else
-		AddToMenu(*_menu, "(Unknown FX on track)", 0, -1, false, MF_GRAYED);
+		AddToMenu(_menu, __LOCALIZE("(Unknown FX on track)","sws_DLG_155"), 0, -1, false, MF_GRAYED);
 }
 
 HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
@@ -794,12 +957,12 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		{
 			case COL_CC:
 				hMenu = CreatePopupMenu();
-				AddToMenu(hMenu, "Activate", SNM_LIVECFG_PERFORM_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Activate","sws_DLG_155"), SNM_LIVECFG_PERFORM_MSG);
 				break;
 			case COL_COMMENT:
 				hMenu = CreatePopupMenu();
-				AddToMenu(hMenu, "Edit comment", SNM_LIVECFG_EDIT_DESC_MSG);
-				AddToMenu(hMenu, "Clear comment(s)", SNM_LIVECFG_CLEAR_DESC_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Edit comment","sws_DLG_155"), SNM_LIVECFG_EDIT_DESC_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Clear comments","sws_DLG_155"), SNM_LIVECFG_CLEAR_DESC_MSG);
 				break;
 			case COL_TR:
 				hMenu = CreatePopupMenu();
@@ -807,34 +970,34 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				{
 					char str[SNM_MAX_TRACK_NAME_LEN] = "";
 					char* name = (char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i,false), "P_NAME", NULL);
-					_snprintf(str, SNM_MAX_TRACK_NAME_LEN, "[%d] \"%s\"", i, name);
-					AddToMenu(hMenu, str, SNM_LIVECFG_SET_TRACK_MSG + i);
+					if (_snprintf(str, SNM_MAX_TRACK_NAME_LEN, "[%d] \"%s\"", i, name) > 0)
+						AddToMenu(hMenu, str, SNM_LIVECFG_SET_TRACK_START_MSG + i);
 				}
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, "Clear track(s)", SNM_LIVECFG_CLEAR_TRACK_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Clear tracks","sws_DLG_155"), SNM_LIVECFG_CLEAR_TRACK_MSG);
 				break;
 			case COL_TRT:
 				hMenu = CreatePopupMenu();
 				if (item->m_track) {
 					if (item->m_fxChain.GetLength())
-						AddToMenu(hMenu, "(FX Chain overrides)", 0, -1, false, MFS_GRAYED);
+						AddToMenu(hMenu, __LOCALIZE("(FX Chain overrides)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
 					else {
-						AddToMenu(hMenu, "Set track template...", SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG);
-						AddToMenu(hMenu, "Clear track template(s)", SNM_LIVECFG_CLEAR_TRACK_TEMPLATE_MSG);
+						AddToMenu(hMenu, __LOCALIZE("Load track template...","sws_DLG_155"), SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG);
+						AddToMenu(hMenu, __LOCALIZE("Clear track templates","sws_DLG_155"), SNM_LIVECFG_CLEAR_TRACK_TEMPLATE_MSG);
 					}
 				}
-				else AddToMenu(hMenu, "(No track)", 0, -1, false, MF_GRAYED);
+				else AddToMenu(hMenu, __LOCALIZE("(No track)","sws_DLG_155"), 0, -1, false, MF_GRAYED);
 				break;
 			case COL_FXC:
 				hMenu = CreatePopupMenu();
 				if (item->m_track) {
 					if (!item->m_trTemplate.GetLength()) {
-						AddToMenu(hMenu, "Set FX Chain...", SNM_LIVECFG_LOAD_FXCHAIN_MSG);
-						AddToMenu(hMenu, "Clear FX Chain(s)", SNM_LIVECFG_CLEAR_FXCHAIN_MSG);
+						AddToMenu(hMenu, __LOCALIZE("Load FX Chain...","sws_DLG_155"), SNM_LIVECFG_LOAD_FXCHAIN_MSG);
+						AddToMenu(hMenu, __LOCALIZE("Clear FX Chains","sws_DLG_155"), SNM_LIVECFG_CLEAR_FXCHAIN_MSG);
 					}
-					else AddToMenu(hMenu, "(Track template overrides)", 0, -1, false, MF_GRAYED);
+					else AddToMenu(hMenu, __LOCALIZE("(Track template overrides)","sws_DLG_155"), 0, -1, false, MF_GRAYED);
 				}
-				else AddToMenu(hMenu, "(No track)", 0, -1, false, MF_GRAYED);
+				else AddToMenu(hMenu, __LOCALIZE("(No track)","sws_DLG_155"), 0, -1, false, MF_GRAYED);
 				break;
 #ifdef _SNM_PRESETS
 			case COL_PRESET:
@@ -842,34 +1005,50 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				if (item->m_track)
 				{
 					if (item->m_trTemplate.GetLength() && !item->m_fxChain.GetLength())
-						AddToMenu(hMenu, "(Track template overrides)", 0, -1, false, MFS_GRAYED);
+						AddToMenu(hMenu, __LOCALIZE("(Track template overrides)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
 					else if (item->m_fxChain.GetLength())
-						AddToMenu(hMenu, "(FX Chain overrides)", 0, -1, false, MFS_GRAYED);
-					else {
-						AddFXSubMenu(&hMenu, item->m_track, &(item->m_presets));
+						AddToMenu(hMenu, __LOCALIZE("(FX Chain overrides)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
+					else {						
+						AddFXSubMenu(hMenu, item->m_track, &item->m_presets);
 						AddToMenu(hMenu, SWS_SEPARATOR, 0);
-						AddToMenu(hMenu, "Clear preset(s)", SNM_LIVECFG_CLEAR_PRESETS_MSG);
+						AddToMenu(hMenu, __LOCALIZE("Clear presets","sws_DLG_155"), SNM_LIVECFG_CLEAR_PRESETS_MSG);
 					}
 				}
-				else AddToMenu(hMenu, "(No track)", 0, -1, false, MFS_GRAYED);
+				else AddToMenu(hMenu, __LOCALIZE("(No track)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
 				break;
 #endif
 			case COL_ACTION_ON:
+			{
 				hMenu = CreatePopupMenu();
+				int cmd = NamedCommandLookup(item->m_onAction.Get());
+				char cur[SNM_MAX_ACTION_NAME_LEN] = "";
+				if (_snprintf(cur, SNM_MAX_ACTION_NAME_LEN, "[%s: %s]", __LOCALIZE("Current","sws_DLG_155"), cmd ? kbd_getTextFromCmd(cmd, NULL) : __LOCALIZE("none","sws_DLG_155")) > 0) { // main section only
+					AddToMenu(hMenu, cur, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
+					AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				}
 #ifdef _WIN32
-				AddToMenu(hMenu, "Learn from Actions window", SNM_LIVECFG_LEARN_ON_ACTION_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Learn from Actions window","sws_DLG_155"), SNM_LIVECFG_LEARN_ON_ACTION_MSG);
 #endif
-				AddToMenu(hMenu, "Edit action/macro", SNM_LIVECFG_EDIT_ON_ACTION_MSG);
-				AddToMenu(hMenu, "Clear action/macro(s)", SNM_LIVECFG_CLEAR_ON_ACTION_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Edit action/macro","sws_DLG_155"), SNM_LIVECFG_EDIT_ON_ACTION_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Clear actions/macros","sws_DLG_155"), SNM_LIVECFG_CLEAR_ON_ACTION_MSG);
 				break;
+			}
 			case COL_ACTION_OFF:
+			{
 				hMenu = CreatePopupMenu();
+				int cmd = NamedCommandLookup(item->m_offAction.Get());
+				char cur[SNM_MAX_ACTION_NAME_LEN] = "";
+				if (_snprintf(cur, SNM_MAX_ACTION_NAME_LEN, "[%s: %s]", __LOCALIZE("Current","sws_DLG_155"), cmd ? kbd_getTextFromCmd(cmd, NULL) : __LOCALIZE("none","sws_DLG_155")) > 0) { // main section only
+					AddToMenu(hMenu, cur, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
+					AddToMenu(hMenu, SWS_SEPARATOR, 0);
+				}
 #ifdef _WIN32
-				AddToMenu(hMenu, "Learn from Actions window", SNM_LIVECFG_LEARN_OFF_ACTION_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Learn from Actions window","sws_DLG_155"), SNM_LIVECFG_LEARN_OFF_ACTION_MSG);
 #endif
-				AddToMenu(hMenu, "Edit action/macro", SNM_LIVECFG_EDIT_OFF_ACTION_MSG);
-				AddToMenu(hMenu, "Clear action/macro(s)", SNM_LIVECFG_CLEAR_OFF_ACTION_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Edit action/macro","sws_DLG_155"), SNM_LIVECFG_EDIT_OFF_ACTION_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Clear actions/macros","sws_DLG_155"), SNM_LIVECFG_CLEAR_OFF_ACTION_MSG);
 				break;
+			}
 		}
 	}
 	return hMenu;
@@ -915,18 +1094,18 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _t
 	if (!SNM_AutoVWndPosition(&m_cbConfig, &m_txtConfig, _r, &x0, _r->top, h))
 		return;
 
-	m_btnEnable.SetCheckState(g_liveConfigs.Get()->m_enable[g_configId]);
-	m_btnEnable.SetTextLabel("Enable", -1, font);
+	m_btnEnable.SetCheckState(g_liveConfigs.Get()->Get(g_configId)->m_enable);
+	m_btnEnable.SetTextLabel(__LOCALIZE("Enable","sws_DLG_155"), -1, font);
 	if (!SNM_AutoVWndPosition(&m_btnEnable, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
-	m_btnMuteOthers.SetCheckState(g_liveConfigs.Get()->m_muteOthers[g_configId]);
-	m_btnMuteOthers.SetTextLabel("Mute all but active track", -1, font);
+	m_btnMuteOthers.SetCheckState(g_liveConfigs.Get()->Get(g_configId)->m_muteOthers);
+	m_btnMuteOthers.SetTextLabel(__LOCALIZE("Mute all but active track","sws_DLG_155"), -1, font);
 	if (!SNM_AutoVWndPosition(&m_btnMuteOthers, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
-	m_btnAutoSelect.SetCheckState(g_liveConfigs.Get()->m_autoSelect[g_configId]);
-	m_btnAutoSelect.SetTextLabel("Auto track selection", -1, font);
+	m_btnAutoSelect.SetCheckState(g_liveConfigs.Get()->Get(g_configId)->m_autoSelect);
+	m_btnAutoSelect.SetTextLabel(__LOCALIZE("Unselect all but active track","sws_DLG_155"), -1, font);
 	if (!SNM_AutoVWndPosition(&m_btnAutoSelect, NULL, _r, &x0, _r->top, h))
 		return;
 
@@ -937,7 +1116,7 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _t
 	m_cbInputTr.SetFont(font);
 	int sel=0;
 	for (int i=1; i <= GetNumTracks(); i++) {
-		if (g_liveConfigs.Get()->m_inputTr[g_configId] == CSurf_TrackFromID(i,false)) {
+		if (g_liveConfigs.Get()->Get(g_configId)->m_inputTr == CSurf_TrackFromID(i,false)) {
 			sel = i;
 			break;
 		}
@@ -946,6 +1125,13 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _t
 	if (!SNM_AutoVWndPosition(&m_cbInputTr, &m_txtInputTr, _r, &x0, _r->top, h))
 		return;
 
+#ifdef _SNM_MISC // wip
+	ColorTheme* ct = SNM_GetColorTheme();
+	LICE_pixel col = ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255);
+	m_knob.SetFGColors(col, col);
+	if (!SNM_AutoVWndPosition(&m_knob, NULL, _r, &x0, _r->top, h))
+		return;
+#endif
 	SNM_AddLogo(_bm, _r, x0, h);
 }
 
@@ -964,16 +1150,16 @@ HBRUSH SNM_LiveConfigsWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
 
 bool SNM_LiveConfigsWnd::Insert()
 {
-	if (WDL_PtrList<MidiLiveItem>* configs = g_liveCCConfigs.Get()->Get(g_configId))
+	if (WDL_PtrList<MidiLiveItem>* ccConfs = &g_liveConfigs.Get()->Get(g_configId)->m_ccConfs)
 	{
 		int pos=0;
 		if (MidiLiveItem* item = (MidiLiveItem*)m_pLists.Get(0)->EnumSelected(&pos))
 		{
 			pos--;
-			for(int i=pos; i < configs->GetSize(); i++) configs->Get(i)->m_cc++;
-			configs->Insert(pos, new MidiLiveItem(pos));
-			item = configs->Get(configs->GetSize()-1);
-			configs->Delete(configs->GetSize()-1, false); // do not delete now (still displayed..)
+			for(int i=pos; i < ccConfs->GetSize(); i++) ccConfs->Get(i)->m_cc++;
+			ccConfs->Insert(pos, new MidiLiveItem(pos));
+			item = ccConfs->Get(ccConfs->GetSize()-1);
+			ccConfs->Delete(ccConfs->GetSize()-1, false); // do not delete now (still displayed..)
 			Update();
 			Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 			DELETE_NULL(item); // ok to del now that the update is done
@@ -989,16 +1175,17 @@ bool SNM_LiveConfigsWnd::Insert()
 void SNM_LiveCfg_TLChangeSchedJob::Perform()
 {
 	// check or model consistency against the track list update
-	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++)
+	for (int i=0; i < g_liveConfigs.Get()->GetSize(); i++)
 	{
-		for (int j = 0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++)
+		MidiLiveConfig* lc = g_liveConfigs.Get()->Get(i);
+		for (int j = 0; lc && j < lc->m_ccConfs.GetSize(); j++)
 		{
-			MidiLiveItem* item = g_liveCCConfigs.Get()->Get(i)->Get(j);
+			MidiLiveItem* item = lc->m_ccConfs.Get(j);
 			if (item && item->m_track && CSurf_TrackToID(item->m_track, false) <= 0) // bad track (or master)
 				item->m_track = NULL;
 		}
-		if (g_liveConfigs.Get()->m_inputTr[i] && CSurf_TrackToID(g_liveConfigs.Get()->m_inputTr[i], false) <= 0)
-			g_liveConfigs.Get()->m_inputTr[i] = NULL;
+		if (lc->m_inputTr && CSurf_TrackToID(g_liveConfigs.Get()->Get(g_configId)->m_inputTr, false) <= 0)
+			lc->m_inputTr = NULL;
 
 //		g_lastPerformedMIDIVal[i] = -1;
 //		g_lastDeactivateCmd[i][0] = -1;
@@ -1025,29 +1212,26 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		GUID g;	
 		int configId = lp.gettoken_int(1) - 1;
 
-		if (MidiLiveConfig* lc = g_liveConfigs.Get())
+		if (MidiLiveConfig* lc = g_liveConfigs.Get()->Get(configId))
 		{
 			int success;
-			lc->m_enable[configId] = lp.gettoken_int(2);
-			lc->m_autoRcv[configId] = lp.gettoken_int(3);
-			lc->m_muteOthers[configId] = lp.gettoken_int(4);
+			lc->m_enable = lp.gettoken_int(2);
+			lc->m_version = lp.gettoken_int(3);
+			lc->m_muteOthers = lp.gettoken_int(4);
 			stringToGuid(lp.gettoken_str(5), &g);
-			lc->m_inputTr[configId] = GuidToTrack(&g);
-			lc->m_autoSelect[configId] = lp.gettoken_int(6, &success);
+			lc->m_inputTr = GuidToTrack(&g);
+			lc->m_autoSelect = lp.gettoken_int(6, &success);
 			if (!success) // for historical reasons..
-				lc->m_autoSelect[configId] = 1;
-		}
+				lc->m_autoSelect = 1;
 
-		if (WDL_PtrList<MidiLiveItem>* ccConfigs = g_liveCCConfigs.Get()->Get(configId))
-		{
-			char linebuf[4096];
+			char linebuf[SNM_MAX_CHUNK_LINE_LENGTH];
 			while(true)
 			{
 				if (!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
 				{
 					if (lp.gettoken_str(0)[0] == '>')
-						break;						
-					else if (MidiLiveItem* item = ccConfigs->Get(lp.gettoken_int(0)))
+						break;
+					else if (MidiLiveItem* item = lc->m_ccConfs.Get(lp.gettoken_int(0)))
 					{
 						item->m_cc = lp.gettoken_int(0);
 						item->m_desc.Set(lp.gettoken_str(1));
@@ -1058,16 +1242,18 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 						item->m_presets.Set(lp.gettoken_str(5));
 						item->m_onAction.Set(lp.gettoken_str(6));
 						item->m_offAction.Set(lp.gettoken_str(7));
+						
+						// upgrade if needed
+						if (lc->m_version < SNM_LIVECFG_VERSION)
+							UpgradePresetConfV1toV2(item->m_track, lp.gettoken_str(5), &item->m_presets);
 					}
 				}
 				else
 					break;
 			}
 		}
-
 		if (g_pLiveConfigsWnd)
 			g_pLiveConfigsWnd->Update();
-
 		return true;
 	}
 	return false;
@@ -1075,34 +1261,34 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
+	WDL_FastString escStrs[6];
 	char strId[128] = "";
 	GUID g; 
-	bool firstCfg = true;
-	for (int i=0; i < g_liveCCConfigs.Get()->GetSize(); i++)
+	bool firstCfg = true; // will avoid useless data in RPP files
+	for (int i=0; i < g_liveConfigs.Get()->GetSize(); i++)
 	{
-	  for (int j=0; j < g_liveCCConfigs.Get()->Get(i)->GetSize(); j++)
-	  {
-			MidiLiveItem* item = g_liveCCConfigs.Get()->Get(i)->Get(j);
-			if (item && !item->IsDefault()) // avoid useless data in RPP files
+		MidiLiveConfig* lc = g_liveConfigs.Get()->Get(i);
+		for (int j=0; lc && j < lc->m_ccConfs.GetSize(); j++)
+		{
+			MidiLiveItem* item = lc->m_ccConfs.Get(j);
+			if (item && !item->IsDefault())
 			{
 				if (firstCfg)
 				{
 					firstCfg = false;
-					if (MidiLiveConfig* lc = g_liveConfigs.Get())
-					{
-						if (lc->m_inputTr[i] && CSurf_TrackToID(lc->m_inputTr[i], false) > 0) 
-							g = *(GUID*)GetSetMediaTrackInfo(lc->m_inputTr[i], "GUID", NULL);
-						else 
-							g = GUID_NULL;
-						guidToString(&g, strId);
-						ctx->AddLine("<S&M_MIDI_LIVE %d %d %d %d \"%s\" %d", 
-							i+1,
-							lc->m_enable[i],
-							lc->m_autoRcv[i],
-							lc->m_muteOthers[i],
-							strId,
-							lc->m_autoSelect[i]);
-					}
+
+					if (lc->m_inputTr && CSurf_TrackToID(lc->m_inputTr, false) > 0) 
+						g = *(GUID*)GetSetMediaTrackInfo(lc->m_inputTr, "GUID", NULL);
+					else 
+						g = GUID_NULL;
+					guidToString(&g, strId);
+					ctx->AddLine("<S&M_MIDI_LIVE %d %d %d %d %s %d", 
+						i+1,
+						lc->m_enable,
+						SNM_LIVECFG_VERSION,
+						lc->m_muteOthers,
+						strId,
+						lc->m_autoSelect);
 				}
 
 				if (item->m_track && CSurf_TrackToID(item->m_track, false) > 0) 
@@ -1110,15 +1296,24 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 				else 
 					g = GUID_NULL;
 				guidToString(&g, strId);
-				ctx->AddLine("%d \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\" \"%s\"", 
+
+				// make sure strings containing " ' etc.. will be properly saved
+				makeEscapedConfigString(item->m_desc.Get(), &escStrs[0]);
+				makeEscapedConfigString(item->m_trTemplate.Get(), &escStrs[1]);
+				makeEscapedConfigString(item->m_fxChain.Get(), &escStrs[2]);
+				makeEscapedConfigString(item->m_presets.Get(), &escStrs[3]);
+				makeEscapedConfigString(item->m_onAction.Get(), &escStrs[4]);
+				makeEscapedConfigString(item->m_offAction.Get(), &escStrs[5]);
+
+				ctx->AddLine("%d %s %s %s %s %s %s %s", 
 					item->m_cc, 
-					item->m_desc.Get(), 
+					escStrs[0].Get(), 
 					strId, 
-					item->m_trTemplate.Get(), 
-					item->m_fxChain.Get(), 
-					item->m_presets.Get(), 
-					item->m_onAction.Get(), 
-					item->m_offAction.Get());
+					escStrs[1].Get(),
+					escStrs[2].Get(), 
+					escStrs[3].Get(), 
+					escStrs[4].Get(), 
+					escStrs[5].Get());
 			}
 		}
 		if (!firstCfg)
@@ -1130,16 +1325,9 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {
 	g_liveConfigs.Cleanup();
-	g_liveConfigs.Get()->Clear();
-
-	g_liveCCConfigs.Cleanup();
-	g_liveCCConfigs.Get()->Empty(true);
+	g_liveConfigs.Get()->Empty(true);
 	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++) 
-	{
-		g_liveCCConfigs.Get()->Add(new WDL_PtrList_DeleteOnDestroy<MidiLiveItem>);
-		for (int j = 0; j < NB_CC_VALUES; j++)
-			g_liveCCConfigs.Get()->Get(i)->Add(new MidiLiveItem(j, "", NULL, "", "", "", "", ""));
-	}
+		g_liveConfigs.Get()->Add(new MidiLiveConfig());
 }
 
 static project_config_extension_t g_projectconfig = {
@@ -1205,46 +1393,44 @@ void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HW
 void NextLiveConfig(COMMAND_T* _ct)
 {
 	int cfgId = (int)_ct->user;
-	if (MidiLiveConfig* lc = g_liveConfigs.Get())
-		if (lc->m_lastMIDIVal[cfgId] < 128)
-			ApplyLiveConfig(cfgId, lc->m_lastMIDIVal[cfgId]+1, -1, 0, GetMainHwnd());
+	if (MidiLiveConfig* lc = g_liveConfigs.Get()->Get(cfgId))
+		if (lc->m_lastMIDIVal < 128)
+			ApplyLiveConfig(cfgId, lc->m_lastMIDIVal+1, -1, 0, GetMainHwnd());
 }
 
 void PreviousLiveConfig(COMMAND_T* _ct)
 {
 	int cfgId = (int)_ct->user;
-	if (MidiLiveConfig* lc = g_liveConfigs.Get())
-		if (lc->m_lastMIDIVal[cfgId] >0)
-			ApplyLiveConfig(cfgId, lc->m_lastMIDIVal[cfgId]-1, -1, 0, GetMainHwnd());
+	if (MidiLiveConfig* lc = g_liveConfigs.Get()->Get(cfgId))
+		if (lc->m_lastMIDIVal > 0)
+			ApplyLiveConfig(cfgId, lc->m_lastMIDIVal-1, -1, 0, GetMainHwnd());
 }
 
 // here we go!
 void SNM_MidiLiveScheduledJob::Perform()
 {
-	MidiLiveConfig* lc = g_liveConfigs.Get();
-	if (!lc || m_val == lc->m_lastMIDIVal[m_cfgId]) 
+	MidiLiveConfig* lc = g_liveConfigs.Get()->Get(m_cfgId);
+	if (!lc || m_val == lc->m_lastMIDIVal) 
 		return;
 	else
-		lc->m_lastMIDIVal[m_cfgId] = m_val;
+		lc->m_lastMIDIVal = m_val;
 
-	MidiLiveItem* cfg = g_liveCCConfigs.Get()->Get(m_cfgId)->Get(m_val);
+	MidiLiveItem* cfg = lc->m_ccConfs.Get(m_val);
 	if (cfg && !cfg->IsDefault())
 	{
-		if (lc->m_enable[m_cfgId])
+		if (lc->m_enable)
 		{
+			// note: a same track can be present in several rows
 			WDL_PtrList<MediaTrack> otherConfigTracks;
-			for (int i=0; i < g_liveCCConfigs.Get()->Get(m_cfgId)->GetSize(); i++)
-			{
-				MidiLiveItem* cfgOther = g_liveCCConfigs.Get()->Get(m_cfgId)->Get(i);
-				// note: a same track can be present in several rows
+			for (int i=0; i < lc->m_ccConfs.GetSize(); i++) {
+				MidiLiveItem* cfgOther = lc->m_ccConfs.Get(i);
 				if (cfgOther && cfgOther->m_track && cfgOther->m_track != cfg->m_track && otherConfigTracks.Find(cfgOther->m_track) == -1)
 					otherConfigTracks.Add(cfgOther->m_track);
 			}
 
-			// save selected tracks, unselect all track
+			// save selected tracks, unselect all tracks
 			WDL_PtrList<MediaTrack> selTracks;
-			if (lc->m_autoSelect[m_cfgId])
-			{
+			if (lc->m_autoSelect)
 				for (int i=0; i <= GetNumTracks(); i++) // include master
 				{
 					MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -1254,29 +1440,28 @@ void SNM_MidiLiveScheduledJob::Perform()
 						GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);	
 					}
 				}
-			}
 
 			// run desactivate action (of the previous config)
-			// if auto-selection is enabled, only the related track is selected while 
+			// if auto-selection is enabled, only the active track is selected while 
 			// performing the action. other tracks selections are restored later
-			if (lc->m_lastDeactivateCmd[m_cfgId][0] > 0)
+			if (lc->m_lastDeactivateCmd[0] > 0)
 			{
-				MediaTrack* deactiveTr = lc->m_lastDeactivateCmd[m_cfgId][4] > 0 ? CSurf_TrackFromID(lc->m_lastDeactivateCmd[m_cfgId][4], false) : NULL;
-				if (deactiveTr && lc->m_autoSelect[m_cfgId])
-					GetSetMediaTrackInfo(deactiveTr, "I_SELECTED", &g_i1); 
-
-				if (!KBD_OnMainActionEx(lc->m_lastDeactivateCmd[m_cfgId][0], lc->m_lastDeactivateCmd[m_cfgId][1], lc->m_lastDeactivateCmd[m_cfgId][2], lc->m_lastDeactivateCmd[m_cfgId][3], GetMainHwnd(), NULL))
-					Main_OnCommand(lc->m_lastDeactivateCmd[m_cfgId][0],0);
-
-				if (deactiveTr && lc->m_autoSelect[m_cfgId])
-					GetSetMediaTrackInfo(deactiveTr, "I_SELECTED", &g_i0); // no track selected after that..
-
-				lc->m_lastDeactivateCmd[m_cfgId][0] = -1;
+				if (lc->m_lastActivatedTr && lc->m_autoSelect)
+					GetSetMediaTrackInfo(lc->m_lastActivatedTr, "I_SELECTED", &g_i1); 
+				if (!KBD_OnMainActionEx(lc->m_lastDeactivateCmd[0], lc->m_lastDeactivateCmd[1], lc->m_lastDeactivateCmd[2], lc->m_lastDeactivateCmd[3], GetMainHwnd(), NULL))
+					Main_OnCommand(lc->m_lastDeactivateCmd[0],0);
+				if (lc->m_lastActivatedTr && lc->m_autoSelect)
+					GetSetMediaTrackInfo(lc->m_lastActivatedTr, "I_SELECTED", &g_i0); // no track selected after that..
+				lc->m_lastDeactivateCmd[0] = -1;
 			}
+
+			// send all notes-off on the deactivated track (if any)
+			if (lc->m_lastActivatedTr)
+				CC123Track(lc->m_lastActivatedTr);
 
 			if (cfg->m_track)
 			{
-				// avoid glitches AFAP: in any case (mute pref ignored), we mute!
+				// avoid glitches AFAP: in any case (even if the option "mute all but active" is enabled), we mute!
 				// we'll restore mute state of the focused track after processing
 				DWORD muteTime = 0;
 				bool mute = *(bool*)GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", NULL);
@@ -1285,30 +1470,27 @@ void SNM_MidiLiveScheduledJob::Perform()
 					muteTime = GetTickCount();
 				}
 
-				// Mute all other tracks of that config
-				if (lc->m_muteOthers[m_cfgId]) {
+				// mute all other tracks of that config
+				if (lc->m_muteOthers)
 					for (int i=0; i < otherConfigTracks.GetSize(); i++) {
 						MediaTrack* cfgOtherTr = otherConfigTracks.Get(i);
 						if (cfgOtherTr) {
 							GetSetMediaTrackInfo(cfgOtherTr, "B_MUTE", &g_bTrue);
-							muteReceives(lc->m_inputTr[m_cfgId], cfgOtherTr, true);
+							muteReceives(lc->m_inputTr, cfgOtherTr, true);
 						}
 					}
-				}
 
 				// track configuration
 				SNM_ChunkParserPatcher* p = NULL;
-				if (cfg->m_trTemplate.GetLength())
-				{
-					p = new SNM_ChunkParserPatcher(cfg->m_track);
+				if (cfg->m_trTemplate.GetLength()) {
+					p = new SNM_SendPatcher(cfg->m_track); // needs SNM_SendPatcher, hot!
 					WDL_FastString chunk;
 					char filename[BUFFER_SIZE];
 					GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), filename, BUFFER_SIZE);
 					if (LoadChunk(filename, &chunk) && chunk.GetLength())
-						applyTrackTemplate(cfg->m_track, &chunk, true, p, false, false);
+						applyTrackTemplate(cfg->m_track, &chunk, false, false, p);
 				}
-				else if (cfg->m_fxChain.GetLength())
-				{
+				else if (cfg->m_fxChain.GetLength()) {
 					p = new SNM_FXChainTrackPatcher(cfg->m_track);
 					WDL_FastString chunk;
 					char filename[BUFFER_SIZE];
@@ -1317,24 +1499,22 @@ void SNM_MidiLiveScheduledJob::Perform()
 						((SNM_FXChainTrackPatcher*)p)->SetFXChain(&chunk);
 				}
 #ifdef _SNM_PRESETS
-				else if (cfg->m_presets.GetLength())
-				{
+				else if (cfg->m_presets.GetLength()) {
 					WaitForTrackMute(&muteTime); // 0 is ignored
-					triggerFXUserPreset(cfg->m_track, &(cfg->m_presets));
+					TriggerFXPresets(cfg->m_track, &(cfg->m_presets));
 				}
 #endif
 				WaitForTrackMute(&muteTime); // 0 is ignored
-				delete p; // + auto commit (if needed)
-
+				if (p) delete p; // + auto commit, if needed
 
 				// select track (the only one selected at this point, if auto-selection is enabled)
-				if (lc->m_autoSelect[m_cfgId])
+				if (lc->m_autoSelect)
 					GetSetMediaTrackInfo(cfg->m_track, "I_SELECTED", &g_i1);
 
 				//	unmute the config track (or restore its mute state)			
-				if (lc->m_muteOthers[m_cfgId]) {
+				if (lc->m_muteOthers) {
 					GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &g_bFalse);
-					muteReceives(lc->m_inputTr[m_cfgId], cfg->m_track, false);
+					muteReceives(lc->m_inputTr, cfg->m_track, false);
 				}
 				else
 					GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &mute);
@@ -1343,35 +1523,33 @@ void SNM_MidiLiveScheduledJob::Perform()
 
 			// perform activate action
 			// if auto-selection is used, only the related track is selected at this point
-			if (cfg->m_onAction.GetLength())
-			{
+			if (cfg->m_onAction.GetLength()) {
 				int cmd = NamedCommandLookup(cfg->m_onAction.Get());
 				if (cmd > 0 && !KBD_OnMainActionEx(cmd, m_val, m_valhw, m_relmode, GetMainHwnd(), NULL))
 					Main_OnCommand(cmd,0);
 			}
 
 			// restore other (i.e. not part of this config) selected tracks
-			if (lc->m_autoSelect[m_cfgId])
+			if (lc->m_autoSelect)
 				for (int k=0; k < selTracks.GetSize(); k++)
 					GetSetMediaTrackInfo(selTracks.Get(k), "I_SELECTED", &g_i1);
 
-			// (just) prepare desactivate action
-			if (cfg->m_offAction.GetLength())
-			{
+			// prepare desactivate action
+			lc->m_lastDeactivateCmd[0] = -1;
+			if (cfg->m_offAction.GetLength()) {
 				int cmd = NamedCommandLookup(cfg->m_offAction.Get());
-				if (cmd > 0)
-				{
-					lc->m_lastDeactivateCmd[m_cfgId][0] = cmd;
-					lc->m_lastDeactivateCmd[m_cfgId][1] = m_val;
-					lc->m_lastDeactivateCmd[m_cfgId][2] = m_valhw;
-					lc->m_lastDeactivateCmd[m_cfgId][3] = m_relmode;
-					lc->m_lastDeactivateCmd[m_cfgId][4] = cfg->m_track ? CSurf_TrackToID(cfg->m_track, false) : -1;
+				if (cmd > 0) {
+					lc->m_lastDeactivateCmd[0] = cmd;
+					lc->m_lastDeactivateCmd[1] = m_val;
+					lc->m_lastDeactivateCmd[2] = m_valhw;
+					lc->m_lastDeactivateCmd[3] = m_relmode;
 				}
 			}
-			else
-				lc->m_lastDeactivateCmd[m_cfgId][0] = -1;
 
-		} // if (lc->m_enable[m_cfgId])
+			// store the last activated track (might be NULL)
+			lc->m_lastActivatedTr = cfg->m_track;
+
+		} // if (lc->m_enable)
 
 	} // if (cfg && !cfg->IsDefault())
 
@@ -1380,11 +1558,12 @@ void SNM_MidiLiveScheduledJob::Perform()
 }
 
 void ToggleEnableLiveConfig(COMMAND_T* _ct) {
-	g_liveConfigs.Get()->m_enable[(int)_ct->user] = !(g_liveConfigs.Get()->m_enable[(int)_ct->user]);
-	if (g_pLiveConfigsWnd && (g_configId == (int)_ct->user))
+	int cfgId = (int)_ct->user;
+	g_liveConfigs.Get()->Get(cfgId)->m_enable = !(g_liveConfigs.Get()->Get(cfgId)->m_enable);
+	if (g_pLiveConfigsWnd && (g_configId == cfgId))
 		g_pLiveConfigsWnd->Update();
 }
 
 bool IsLiveConfigEnabled(COMMAND_T* _ct) {
-	return (g_liveConfigs.Get()->m_enable[(int)_ct->user] == 1);
+	return (g_liveConfigs.Get()->Get((int)_ct->user)->m_enable == 1);
 }

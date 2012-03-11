@@ -28,6 +28,7 @@
 
 #include "stdafx.h"
 #include "../WDL/sha.h"
+#include "reaper/localize.h"
 
 // Globals
 int  g_i0 = 0;
@@ -464,4 +465,15 @@ void makeEscapedConfigString(const char *in, WDL_FastString *out)
       p++;
     }
   }
+}
+
+// Localization
+// "check" that action tags ("SWS: ", "SWS/FNG: ", SWS/S&M: ", etc..) are preserved
+const char* GetLocalizedActionName(const char* _custId, const char* _defaultStr, const char* _section) {
+#ifdef _SWS_LOCALIZATION
+	const char* p = __localizeFunc(_custId, _section, 0);
+	if (IsSwsAction(p))
+		return p;
+#endif
+	return _defaultStr;
 }

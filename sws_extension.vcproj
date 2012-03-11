@@ -217,7 +217,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(REAPER_DIR)&quot;;&quot;$(ProjectDir)&quot;"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;HEAP_DEBUG"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;HEAP_DEBUG;_SWS_DEBUG"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
@@ -304,7 +304,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)&quot;;&quot;$(REAPER_DIR)&quot;;&quot;$(ProjectDir)&quot;"
-				PreprocessorDefinitions="WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="WIN32;_WINDOWS;_CRT_SECURE_NO_WARNINGS;_SWS_DEBUG"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
@@ -652,7 +652,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -690,6 +689,46 @@
 					>
 				</File>
 				<File
+					RelativePath="..\WDL\lice\lice_arc.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							WarningLevel="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							WarningLevel="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Test|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							WarningLevel="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Test|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							WarningLevel="2"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath="..\WDL\lice\lice_image.cpp"
 					>
 					<FileConfiguration
@@ -697,7 +736,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -738,7 +776,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -779,7 +816,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -824,7 +860,6 @@
 						>
 						<Tool
 							Name="VCCLCompilerTool"
-							PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 							UsePrecompiledHeader="0"
 							WarningLevel="2"
 						/>
@@ -869,7 +904,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -921,7 +955,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -965,7 +998,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1009,7 +1041,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1053,7 +1084,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1097,7 +1127,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1141,7 +1170,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1185,7 +1213,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1229,7 +1256,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1273,7 +1299,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1317,7 +1342,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1361,7 +1385,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1405,7 +1428,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1449,7 +1471,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -1493,7 +1514,6 @@
 							<Tool
 								Name="VCCLCompilerTool"
 								AdditionalIncludeDirectories="../WDL/zlib"
-								PreprocessorDefinitions="PNG_USE_PNGVCRD;PNG_LIBPNG_SPECIALBUILD;__MMX__;PNG_HAVE_MMX_COMBINE_ROW;PNG_HAVE_MMX_READ_INTERLACE;PNG_HAVE_MMX_READ_FILTER_ROW"
 								UsePrecompiledHeader="0"
 								WarningLevel="2"
 							/>
@@ -2108,6 +2128,46 @@
 				<File
 					RelativePath="..\WDL\wingui\virtwnd-skin.h"
 					>
+				</File>
+				<File
+					RelativePath="..\WDL\wingui\virtwnd-slider.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							WarningLevel="1"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							WarningLevel="1"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Test|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							WarningLevel="1"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Test|x64"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							UsePrecompiledHeader="0"
+							WarningLevel="1"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\WDL\wingui\virtwnd.cpp"
@@ -2755,6 +2815,14 @@
 				>
 				<File
 					RelativePath=".\reaper\icontheme.h"
+					>
+				</File>
+				<File
+					RelativePath=".\reaper\localize-import.h"
+					>
+				</File>
+				<File
+					RelativePath=".\reaper\localize.h"
 					>
 				</File>
 				<File

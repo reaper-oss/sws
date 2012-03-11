@@ -45,6 +45,8 @@ enum {
   SNM_NUM_DEFAULT_SLOTS
 };
 
+#define SNM_MAX_SLOT_TYPES	32+SNM_NUM_DEFAULT_SLOTS // 32 bookmarks max
+
 enum {
   FXC_AUTOSAVE_PREF_TRACK=0,
   FXC_AUTOSAVE_PREF_INPUT_FX,
@@ -93,6 +95,7 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 	void SetNotepad(bool _notepad) { m_notepad=_notepad; }
 	void SetAutoSave(bool _autoSave) { m_autoSave=_autoSave; }
 	void SetDblClick(bool _dblClick) { m_dblClick=_dblClick; }
+	WDL_FastString m_lastBrowsedFn;
 protected:
 	WDL_FastString m_resDir;	// resource sub-directory name and S&M.ini section/key names
 	WDL_FastString m_desc;		// used in user messages and in main dropdown box menu items

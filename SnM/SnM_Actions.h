@@ -41,12 +41,7 @@
 
 //#define _SNM_MISC
 //#define _SNM_MARKER_REGION_NAME
-//#define _SNM_LOCALIZATION
-#ifdef _WIN32
 #define _SNM_PRESETS
-#endif
-
-
 #define SNM_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 9) // +9 to skip "SWS/S&M: "
 
 #ifdef _WIN32
@@ -69,11 +64,13 @@
 #define SNM_FONT_HEIGHT				12
 #endif
 
-#define SNM_INI_FILE_VERSION		4
+#define SNM_INI_FILE_VERSION		5
 #define SNM_LIVECFG_NB_CONFIGS		8
 #define SNM_LIVECFG_NB_CONFIGS_STR	"8"
 #define SNM_MAX_TRACK_GROUPS		32
 #define SNM_MAX_TRACK_GROUPS_STR	"32"
+#define SNM_MAX_CUE_BUSS_CONFS		8
+#define SNM_MAX_CUE_BUSS_CONFS_STR	"8"
 #define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
 #define SNM_SUB_EXT_LIST			"SubRip subtitle files (*.SRT)\0*.SRT\0"
 #define SNM_TXT_EXT_LIST			"Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0"
@@ -86,18 +83,16 @@
 #define SNM_MAX_HW_OUTS				8
 #define SNM_MAX_TAKES				128
 #define SNM_MAX_FX					128
+#define SNM_MAX_PRESETS				0xFFFF
+#define SNM_MAX_PRESET_NAME_LEN		128
 #define SNM_MAX_FX_NAME_LEN			128
 #define SNM_MAX_INI_SECTION			0xFFFF // definitive limit for WritePrivateProfileSection
 #define SNM_MAX_DYNAMIC_ACTIONS		99     // if > 99 the display of action names should be updated
 #define SNM_MAX_CYCLING_ACTIONS		8
 #define SNM_MAX_CYCLING_SECTIONS	3
 #define SNM_MAX_ENV_SUBCHUNK_NAME	16
-#define SNM_MAX_SLOT_TYPES			16
 #define MAX_CC_LANE_ID				133
 #define MAX_CC_LANES_LEN			4096
-#define SNM_I8N_DEF_STR_LEN			4096
-#define SNM_I8N_NEW_STR_TAG			"_"
-#define SNM_I8N_DEF_LANGPACK_NAME	"#NAME:SWS English (generated language pack)\n"
 #define SNM_3D_COLORS_DELTA			25
 #define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average I monitored)
 #define SNM_DEF_TOOLBAR_RFRSH_FREQ	300    // default frequency in ms for the "auto-refresh toolbars" option 
@@ -168,13 +163,30 @@ public:
 
 class SNM_SndRcv {
 public:
-	SNM_SndRcv() {}
-	SNM_SndRcv(MediaTrack* _src, MediaTrack* _dest, bool _mute, int _phase, int _mono,
-		double _vol, double _pan, double _panl, int _mode, int _srcChan, int _destChan, int _midi)
-		: m_src(_src),m_dest(_dest),m_mute(_mute),m_phase(_phase),m_mono(_mono),
-		m_vol(_vol),m_pan(_pan),m_panl(_panl),m_mode(_mode),m_srcChan(_srcChan),m_destChan(_destChan),m_midi(_midi) {}
+	SNM_SndRcv() {
+		memcpy(&m_src, &GUID_NULL, sizeof(GUID));
+		memcpy(&m_dest, &GUID_NULL, sizeof(GUID));
+	}
 	virtual ~SNM_SndRcv() {}
-	MediaTrack* m_src; MediaTrack* m_dest;
+	bool FillIOFromReaper(MediaTrack* _src, MediaTrack* _dest, int _categ, int _idx) {
+		memcpy(&m_src, CSurf_TrackToID(_src, false)>=0 ? (GUID*)GetSetMediaTrackInfo(_src, "GUID", NULL) : &GUID_NULL, sizeof(GUID));
+		memcpy(&m_dest, CSurf_TrackToID(_dest, false)>=0 ? (GUID*)GetSetMediaTrackInfo(_dest, "GUID", NULL) : &GUID_NULL, sizeof(GUID));
+		if (MediaTrack* tr = (_categ == -1 ? _dest : _src)) {
+			m_mute = *(bool*)GetSetTrackSendInfo(tr, _categ, _idx, "B_MUTE", NULL);
+			m_phase = *(bool*)GetSetTrackSendInfo(tr, _categ, _idx, "B_PHASE", NULL);
+			m_mono = *(bool*)GetSetTrackSendInfo(tr, _categ, _idx, "B_MONO", NULL);
+			m_vol = *(double*)GetSetTrackSendInfo(tr, _categ, _idx, "D_VOL", NULL);
+			m_pan = *(double*)GetSetTrackSendInfo(tr, _categ, _idx, "D_PAN", NULL);
+			m_panl = *(double*)GetSetTrackSendInfo(tr, _categ, _idx, "D_PANLAW", NULL);
+			m_mode = *(int*)GetSetTrackSendInfo(tr, _categ, _idx, "I_SENDMODE", NULL);
+			m_srcChan = *(int*)GetSetTrackSendInfo(tr, _categ, _idx, "I_SRCCHAN", NULL);
+			m_destChan = *(int*)GetSetTrackSendInfo(tr, _categ, _idx, "I_DSTCHAN", NULL);
+			m_midi = *(int*)GetSetTrackSendInfo(tr, _categ, _idx, "I_MIDIFLAGS", NULL);
+			return true;
+		}
+		return false;
+	}
+	GUID m_src, m_dest;
 	bool m_mute;
 	int m_phase, m_mono, m_mode, m_srcChan, m_destChan, m_midi;
 	double m_vol, m_pan, m_panl;
@@ -266,6 +278,12 @@ public:
 	void OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
 };
 
+class SNM_MiniKnob : public WDL_VirtualSlider {
+public:
+	SNM_MiniKnob() : WDL_VirtualSlider() {}
+	const char *GetType() { return "SNM_MiniKnob"; }
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Includes & externs
@@ -277,7 +295,8 @@ extern WDL_FastString g_SNMCyclactionIniFn;
 extern MIDI_COMMAND_T g_SNMSection_cmdTable[];
 extern int g_SNMIniFileVersion;
 extern int g_SNMbeta;
-extern int g_SNMMediaFlags;
+extern bool g_SNMClearType;
+
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 bool IsToolbarsAutoRefeshEnabled(COMMAND_T*);
 void RefreshToolbars();
@@ -297,6 +316,7 @@ void UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
 void SnMCSurfRun();
 void SnMCSurfSetTrackTitle();
 void SnMCSurfSetTrackListChange();
+int SnMCSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3);
 
 // *** SnM_Cyclactions.cpp
 int RegisterCyclation(const char* _name, bool _toggle, int _type, int _cycleId, int _cmdId);
@@ -328,6 +348,10 @@ void SNM_ShowMsg(const char* _msg, const char* _title = "", HWND _hParent = NULL
 int PromptForInteger(const char* _title, const char* _what, int _min, int _max);
 void openCueBussWnd(COMMAND_T*);
 bool isCueBussWndDisplayed(COMMAND_T*);
+#ifdef _SNM_MISC // wip
+void openLangpackMrgWnd(COMMAND_T* _ct);
+bool isLangpackMrgWndDisplayed(COMMAND_T* _ct);
+#endif
 
 // *** SnM_FindView.cpp ***
 int FindViewInit();
@@ -338,6 +362,8 @@ void FindNextPrev(COMMAND_T*);
 
 // *** SnM_fx.cpp ***
 extern int g_buggyPlugSupport;
+
+int GetFXByGUID(MediaTrack* _tr, GUID* _g);
 void toggleFXOfflineSelectedTracks(COMMAND_T*);
 bool isFXOfflineSelectedTracks(COMMAND_T*);
 void toggleFXBypassSelectedTracks(COMMAND_T*);
@@ -357,16 +383,13 @@ void setAllFXsOfflineSelectedItems(COMMAND_T*);
 void setAllFXsBypassSelectedItems(COMMAND_T*);
 void selectTrackFX(COMMAND_T*);
 int getSelectedTrackFX(MediaTrack* _tr);
-int getPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _presetNames);
-void UpdatePresetConf(int _fx, int _preset, WDL_FastString* _presetConf);
-int GetPresetFromConf(int _fx, WDL_FastString* _presetConf, int _presetCount=0xFFFF);
-void RenderPresetConf(WDL_FastString* _presetConf, WDL_FastString* _renderConf);
-void RenderPresetConf2(MediaTrack* _tr, WDL_FastString* _presetConf, WDL_FastString* _renderConf);
-int triggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir = 0, bool _userPreset = false, bool _selTracks = true);
-void triggerFXPreset(int _fxId, int _presetId, int _dir=0);
-void triggerNextPreset(COMMAND_T*);
-void triggerPreviousPreset(COMMAND_T*);
-bool triggerFXUserPreset(MediaTrack* _tr, WDL_FastString* _presetConf);
+#ifdef _WIN32
+int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _presetNames);
+#endif
+bool TriggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir);
+void NextPresetSelTracks(COMMAND_T*);
+void PrevPresetSelTracks(COMMAND_T*);
+void NextPrevPresetLastTouchedFX(COMMAND_T*);
 void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 void moveFX(COMMAND_T*);
 
@@ -424,7 +447,7 @@ void SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, boo
 void SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks = false);
 void splitMidiAudio(COMMAND_T*);
 void smartSplitMidiAudio(COMMAND_T*);
-#ifdef _SNM_MISC // Deprecated (v3.67)
+#ifdef _SNM_MISC // deprecated (v3.67)
 void splitSelectedItems(COMMAND_T*);
 #endif
 void goferSplitSelectedItems(COMMAND_T*);
@@ -436,7 +459,7 @@ int buildLanes(const char* _undoTitle, int _mode);
 bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel);
 bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel = false, bool _itemSel = true);
 void clearTake(COMMAND_T*);
-#ifdef _SNM_MISC // Deprecated (v3.67)
+#ifdef _SNM_MISC // deprecated (v3.67)
 void moveTakes(COMMAND_T*);
 #endif
 void moveActiveTake(COMMAND_T*);
@@ -510,6 +533,7 @@ const char* GetFileExtension(const char* _fn);
 void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz);
 const char* GetFilenameWithExt(const char* _fullFn);
 void Filenamize(char* _fnInOut);
+bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg);
 bool FileExistsErrMsg(const char* _fn, bool _errMsg=true);
 bool SNM_DeleteFile(const char* _filename, bool _recycleBin);
 bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
@@ -530,32 +554,31 @@ void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, co
 void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn, const char* _newIniFn = NULL);
 void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn = NULL);
 void SNM_UpgradeIniFiles();
-/*JFB moved to sws_util.h
-// Ini section names for SWS langpack files
-// note: always tagged with "sws_" in case SWS' langpack == REAPER's langpack
-#define SNM_I8N_SWS_COMMON_SEC		"sws_common"
-#define SNM_I8N_SWS_ACTION_SEC		"sws_actions"
-#define SNM_I8N_SNM_ACTION_SEC		"s&m_action_section"
-const char* GetLocalizedString(const char* _langpack, const char* _section, const char* _key, const char* _defaultStr, bool _swsAction = false);
-const char* GetLocalizedActionName(const char* _custId, const char* _defaultStr, const char* _section = SNM_I8N_SWS_ACTION_SEC);
-*/
-bool IsLangPackUsed(const char* _langpack);
 WDL_FastString* GetCurLangPackFn(const char* _langpack);
+bool IsLangPackUsed(const char* _langpack);
+void LoadAssignLangPack(COMMAND_T*);
 void ResetLangPack(COMMAND_T* _ct);
-void LoadAssignLangPack(COMMAND_T* _ct);
-void GenerateLangPack(COMMAND_T*);
-void UpgradeLangPack(COMMAND_T*);
+#ifdef _SWS_DEBUG // internal action (only available with debug builds)
+void GenerateSwsActionsLangPack(COMMAND_T*);
+#endif
 int FindMarkerRegion(double _pos, int* _idOut = NULL);
 int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn);
 int GetMarkerRegionIdFromIndex(int _idx);
 int GetMarkerRegionIndexFromId(int _id);
 bool IsRegion(int _id);
 void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms = NULL);
+#ifdef _SNM_MISC
 void makeUnformatedConfigString(const char* _in, WDL_FastString* _out);
+#endif
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 void ShortenStringToFirstRN(char* _str);
 void ReplaceStringFormat(char* _str, char _replaceCh);
-int IsSwsAction(const char* _actionName);
+bool IsMacro(const char* _actionName);
+bool LearnAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSection);
+bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
+WDL_UINT64 FNV64(WDL_UINT64 h, const unsigned char* data, int sz);
+bool FNV64(const char* _strIn, char* _strOut);
+bool WaitForTrackMute(DWORD* _muteTime);
 #ifdef _WIN32
 void LoadThemeSlot(int _slotType, const char* _title, int _slot);
 void LoadThemeSlot(COMMAND_T*);
@@ -564,10 +587,6 @@ void ShowImageSlot(int _slotType, const char* _title, int _slot);
 void ShowImageSlot(COMMAND_T*);
 void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot);
 void SetSelTrackIconSlot(COMMAND_T*);
-WDL_UINT64 FNV1Hash64(const char* _data);
-bool LearnAction(char* _idstrOut, int _idStrSz = SNM_MAX_ACTION_CUSTID_LEN, const char* _expectedSection = NULL);
-bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
-bool WaitForTrackMute(DWORD* _muteTime);
 void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500);
 void SimulateMouseClick(COMMAND_T*);
 void DumpWikiActionList(COMMAND_T*);
@@ -575,6 +594,7 @@ void DumpActionList(COMMAND_T*);
 
 // *** SnM_NotesHelpView.cpp ***
 extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTrackNotes;
+
 void SetActionHelpFilename(COMMAND_T*);
 int NotesHelpViewInit();
 void NotesHelpViewExit();
@@ -622,10 +642,13 @@ void ClearImageView(COMMAND_T*);
 bool IsImageViewDisplayed(COMMAND_T*);
 
 // *** SnM_Sends.cpp ***
-bool cueTrack(const char* _busName, int _type, const char* _undoMsg, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
+bool cueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
+bool cueTrack(const char* _undoMsg, int _confId);
 void cueTrack(COMMAND_T*);
-void readCueBusIniFile(char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
-void saveCueBusIniFile(const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
+void readCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
+void saveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
+void copySendsReceives(bool _cut, WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends,  WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs);
+bool pasteSendsReceives(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends,  WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs, bool _rcvReset, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
 void copyWithIOs(COMMAND_T*);
 void cutWithIOs(COMMAND_T*);
 void pasteWithIOs(COMMAND_T*);
@@ -638,12 +661,18 @@ void pasteSends(COMMAND_T*);
 void copyReceives(COMMAND_T*);
 void cutReceives(COMMAND_T*);
 void pasteReceives(COMMAND_T*);
+bool removeSnd(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
 void removeSends(COMMAND_T*);
+bool removeRcv(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
 void removeReceives(COMMAND_T*);
 void removeRouting(COMMAND_T*);
 void muteReceives(MediaTrack* _source, MediaTrack* _dest, bool _mute);
 
 // *** SnM_Track.cpp ***
+extern int g_SNMMediaFlags;
+
+void ScrollSelTrack(const char* _undoTitle, bool _tcp, bool _mcp);
+void ScrollSelTrack(COMMAND_T*);
 void copyCutTrackGrouping(COMMAND_T*);
 void pasteTrackGrouping(COMMAND_T*);
 void removeTrackGrouping(COMMAND_T*);
@@ -662,14 +691,14 @@ int SNM_GetNumTracks(ReaProject* _proj);
 MediaTrack* SNM_GetTrack(ReaProject* _proj, int _idx);
 int SNM_GetTrackId(ReaProject* _proj, MediaTrack* _tr);
 int SNM_CountSelectedTracks(ReaProject* _proj, bool _master);
-MediaTrack* SNM_GetSelectedTrack(ReaProject* _proj, int _idx, bool _master);
-void SNM_GetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs);
-void SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs);
-void SNM_ClearSelectedTracks(ReaProject* _proj);
+MediaTrack* SNM_GetSelectedTrack(ReaProject* _proj, int _idx, bool _withMaster);
+void SNM_GetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, bool _withMaster);
+void SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, bool _unselOthers);
+void SNM_ClearSelectedTracks(ReaProject* _proj, bool _withMaster);
 bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz);
 void SetTrackIcon(MediaTrack* _tr, const char* _fn);
 void SetSelTrackIcon(const char* _fn);
-bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _isRawTmpltChunk, SNM_ChunkParserPatcher* _p, bool _itemsFromTmplt, bool _envsFromTmplt);
+bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_ChunkParserPatcher* _p = NULL, bool _isRawTmpltChunk = true);
 void ImportTrackTemplateSlot(int _slotType, const char* _title, int _slot);
 void ApplyTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _itemsFromTmplt, bool _envsFromTmplt);
 void ReplacePasteItemsTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _paste);
@@ -686,6 +715,7 @@ void SNM_PlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, double _
 bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, double _msi = -1.0);
 void StopTrackPreviews(bool _selTracksOnly);
 void StopTrackPreviews(COMMAND_T*);
+void CC123Track(MediaTrack* _tr);
 void CC123Tracks(WDL_PtrList<void>* _trs);
 void CC123SelTracks(COMMAND_T*);
 

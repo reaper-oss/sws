@@ -32,6 +32,7 @@
 #include "SnM_NotesHelpView.h"
 #include "SnM_MidiLiveView.h"
 #include "../Misc/Adam.h"
+#include "../reaper/localize.h"
 
 
 void QuickTest(COMMAND_T* _ct) {}
@@ -39,30 +40,25 @@ void QuickTest(COMMAND_T* _ct) {}
 
 ///////////////////////////////////////////////////////////////////////////////
 // S&M "static" actions (main section)
+// Beware! S&M actions expect "SWS/S&M: " in their names 
+// (removed from undo point names)
 ///////////////////////////////////////////////////////////////////////////////
 
 static COMMAND_T g_SNM_cmdTable[] = 
 {
-	// Beware! S&M actions expect "SWS/S&M: " in their names (tag removed from undo messages)
-
 //	{ { DEFACCEL, "SWS/S&M: QuickTest" }, "S&M_QUICKTEST", QuickTest, NULL, },
 
 	// Routing & cue buss -----------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (use last settings)" }, "S&M_CUEBUS", cueTrack, NULL, -1},
-#ifdef _SNM_MISC // the previous action is enough
-	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (pre-fader/post-FX)" }, "S&M_SENDS1", cueTrack, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (post-fader)" }, "S&M_SENDS2", cueTrack, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (pre-FX)" }, "S&M_SENDS3", cueTrack, NULL, 1},
-#endif
 	{ { DEFACCEL, "SWS/S&M: Open/close Cue Buss generator" }, "S&M_SENDS4", openCueBussWnd, "S&&M Cue Buss generator", NULL, isCueBussWndDisplayed},
 
 	{ { DEFACCEL, "SWS/S&M: Remove receives from selected tracks" }, "S&M_SENDS5", removeReceives, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Remove sends from selected tracks" }, "S&M_SENDS6", removeSends, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Remove routing from selected tracks" }, "S&M_SENDS7", removeRouting, NULL, },
 
-	{ { DEFACCEL, "SWS/S&M: Copy tracks (with routing)" }, "S&M_COPYSNDRCV1", copyWithIOs, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Paste items or tracks with routing" }, "S&M_PASTSNDRCV1", pasteWithIOs, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Cut tracks (with routing)" }, "S&M_CUTSNDRCV1", cutWithIOs, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Copy selected tracks (with routing)" }, "S&M_COPYSNDRCV1", copyWithIOs, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Paste tracks (with routing) or items" }, "S&M_PASTSNDRCV1", pasteWithIOs, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Cut selected tracks (with routing)" }, "S&M_CUTSNDRCV1", cutWithIOs, NULL, },
 
 	{ { DEFACCEL, "SWS/S&M: Copy selected tracks routings" }, "S&M_COPYSNDRCV2", copyRoutings, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Paste routings to selected tracks" }, "S&M_PASTSNDRCV2", pasteRoutings, NULL, },
@@ -198,9 +194,9 @@ static COMMAND_T g_SNM_cmdTable[] =
 	
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX bypass for selected tracks" }, "S&M_FXBYPALL", toggleAllFXsBypassSelectedTracks, NULL, -666, FakeIsToggleAction},
 
+	// note: related online/offline actions exist natively
 	{ { DEFACCEL, "SWS/S&M: Bypass all FX for selected tracks" }, "S&M_FXBYPALL2", setAllFXsBypassSelectedTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Unbypass all FX for selected tracks" }, "S&M_FXBYPALL3", setAllFXsBypassSelectedTracks, NULL, 0},
-	// ..equivalent online/offline actions exist natively
 
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) online/offline for selected tracks" }, "S&M_FXOFFEXCPTSEL", toggleExceptFXOfflineSelectedTracks, NULL, 0, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) bypass for selected tracks" }, "S&M_FXBYPEXCPTSEL", toggleExceptFXBypassSelectedTracks, NULL, 0, FakeIsToggleAction},
@@ -337,8 +333,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// FX presets -------------------------------------------------------------
 #ifdef _SNM_PRESETS
-	{ { DEFACCEL, "SWS/S&M: Trigger next preset for selected FX of selected tracks" }, "S&M_NEXT_SELFX_PRESET", triggerNextPreset, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for selected FX of selected tracks" }, "S&M_PREVIOUS_SELFX_PRESET", triggerPreviousPreset, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Trigger next preset for selected FX of selected tracks" }, "S&M_NEXT_SELFX_PRESET", NextPresetSelTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for selected FX of selected tracks" }, "S&M_PREVIOUS_SELFX_PRESET", PrevPresetSelTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Trigger next preset for last touched FX" }, "S&M_NEXT_FOCFX_PRESET", NextPrevPresetLastTouchedFX, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for last touched FX" }, "S&M_PREV_FOCFX_PRESET", NextPrevPresetLastTouchedFX, NULL, -1},
 #endif
 	
 	// MIDI learn -------------------------------------------------------------
@@ -532,11 +530,15 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 16" }, "S&M_MAP_MIDI_INPUT_CH16", remapMIDIInputChannel, NULL, 16},
 
 	// Localization
-#ifdef _SNM_LOCALIZATION
-	{ { DEFACCEL, "SWS/S&M: LangPack file - Load..." }, "S&M_LOAD_LANGPACK", LoadAssignLangPack, NULL, },
-	{ { DEFACCEL, "SWS/S&M: LangPack file - Generate..." }, "S&M_GEN_LANGPACK", GenerateLangPack, NULL, },
-	{ { DEFACCEL, "SWS/S&M: LangPack file - Upgrade" }, "S&M_UPGRADE_LANGPACK", UpgradeLangPack, NULL, },
-	{ { DEFACCEL, "SWS/S&M: LangPack file - Reset to factory settings" }, "S&M_RESET_LANGPACK", ResetLangPack, NULL, },
+#ifdef _SWS_LOCALIZATION
+	{ { DEFACCEL, "SWS/S&M: Load LangPack file..." }, "S&M_LOAD_LANGPACK", LoadAssignLangPack, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Reset LangPack file to factory settings" }, "S&M_RESET_LANGPACK", ResetLangPack, NULL, },
+#ifdef _SNM_MISC // wip
+	{ { DEFACCEL, "SWS/S&M: Open/close LangPack files merger" }, "S&M_MERGE_LANGPACK", openLangpackMrgWnd, "S&&M LangPack files merger", NULL, isLangpackMrgWndDisplayed},
+#endif
+#ifdef _SWS_DEBUG
+	{ { DEFACCEL, "SWS/S&M: [Internal] Generate actions LangPack file..." }, "S&M_GEN_LANGPACK", GenerateSwsActionsLangPack, NULL, },
+#endif
 #endif
 	// Other, misc ------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageView, NULL, },
@@ -555,7 +557,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 #ifdef _SWS_MENU
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, }, // for main "Extensions" menu
 #endif
-	{ {}, LAST_COMMAND, }, // Denote end of table
+	{ {}, LAST_COMMAND, }, // denote end of table
 };
 
 
@@ -588,6 +590,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 static COMMAND_T g_SNM_dynamicCmdTable[] =
 {
+	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection, settings %02d" }, "S&M_CUEBUS", cueTrack, SNM_MAX_CUE_BUSS_CONFS_STR, SNM_MAX_CUE_BUSS_CONFS},
+
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot %02d" }, "S&M_CLRFXCHAINSLOT", ResViewClearFXChainSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, slot %02d" }, "S&M_TAKEFXCHAIN", loadSetTakeFXChain, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Paste FX chain to selected items, slot %02d" }, "S&M_PASTE_TAKEFXCHAIN", loadPasteTakeFXChain, NULL, 4},
@@ -638,8 +642,8 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 #endif
 
 #ifdef _SNM_PRESETS
-	{ { DEFACCEL, "SWS/S&M: Trigger next preset for FX %02d of selected tracks" }, "S&M_NEXT_PRESET_FX", triggerNextPreset, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for FX %02d of selected tracks" }, "S&M_PREVIOUS_PRESET_FX", triggerPreviousPreset, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Trigger next preset for FX %02d of selected tracks" }, "S&M_NEXT_PRESET_FX", NextPresetSelTracks, NULL, 4},
+	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for FX %02d of selected tracks" }, "S&M_PREVIOUS_PRESET_FX", PrevPresetSelTracks, NULL, 4},
 #endif
 	{ { DEFACCEL, "SWS/S&M: Select FX %02d for selected tracks" }, "S&M_SELFX", selectTrackFX, NULL, 8},
 
@@ -794,6 +798,8 @@ int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)
 	if (!_rec)
 		return 0;
 
+	g_SNMSection.name = __LOCALIZE("S&M Extension","sws_accel_sec");
+
 	// Register commands in specific section
 	int i = 0;
 	while(g_SNMSection_cmdTable[i].id != LAST_COMMAND)
@@ -825,7 +831,7 @@ int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)
 	for (i=0; i < nbCmds; i++)
 	{
 		MIDI_COMMAND_T* ct = &g_SNMSection_cmdTable[i];
-		g_SNMSection.action_list[i].text = GetLocalizedActionName(ct->id, ct->accel.desc, SNM_I8N_SNM_ACTION_SEC);
+		g_SNMSection.action_list[i].text = GetLocalizedActionName(ct->id, ct->accel.desc, SNM_I8N_ACTION_SEC);
 		g_SNMSection.action_list[i].cmd = g_SNMSection.def_keys[i].cmd = ct->accel.accel.cmd;
 		g_SNMSection.def_keys[i].key = ct->accel.accel.key;
 		g_SNMSection.def_keys[i].flags = ct->accel.accel.fVirt;
@@ -878,7 +884,7 @@ void SNMSaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 	if (IsLangPackUsed("SWS")) {
 		iniSection.AppendFormatted(BUFFER_SIZE, 
 			"; Note: the name of each action generated here can be updated/localized in the section [%s] of the current LangPack file (%s)\n", 
-			SNM_I8N_SWS_ACTION_SEC, GetCurLangPackFn("SWS")->Get());
+			SWS_I8N_ACTION_SEC, GetCurLangPackFn("SWS")->Get());
 	}
 
 	WDL_String nameStr; // no fast string here: the buffer gets mangeled..
@@ -918,7 +924,7 @@ WDL_FastString g_SNMIniFn;
 WDL_FastString g_SNMCyclactionIniFn;
 int g_SNMIniFileVersion = 0;
 int g_SNMbeta = 0;
-int g_SNMMediaFlags = 0;
+bool g_SNMClearType = false;
 
 void IniFileInit()
 {
@@ -932,16 +938,16 @@ void IniFileInit()
 		MoveFile(fn.Get(), g_SNMIniFn.Get()); // no check: use the new file whatever happens
 
 	// ini files upgrade, if needed
-	g_SNMIniFileVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNMIniFn.Get());
 	SNM_UpgradeIniFiles();
-	fn.SetFormatted(64, "%p", SWSGetCommandByID); WritePrivateProfileString("General", "Magic", fn.Get() , g_SNMIniFn.Get());
-	g_SNMIniFileVersion = SNM_INI_FILE_VERSION;
 
 	// load general prefs
 	g_SNMMediaFlags |= (GetPrivateProfileInt("General", "MediaFileLockAudio", 0, g_SNMIniFn.Get()) ? 1:0);
 	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNMIniFn.Get()) == 1);
 	g_toolbarsAutoRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, g_SNMIniFn.Get()), 100, 5000);
 	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNMIniFn.Get());
+#ifdef _WIN32
+	g_SNMClearType = (GetPrivateProfileInt("General", "ClearTypeFont", 0, g_SNMIniFn.Get()) == 1);
+#endif
 //	g_SNMbeta = GetPrivateProfileInt("General", "Beta", 0, g_SNMIniFn.Get());
 }
 
@@ -949,13 +955,18 @@ void IniFileExit()
 {
 	// save general prefs & info
 	WDL_FastString iniSection;
-	iniSection.SetFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build %d\n; ", SWS_VERSION); 
+	if (GetAppVersion)
+		iniSection.AppendFormatted(128, "; REAPER v%s\n", GetAppVersion()); 
+	iniSection.AppendFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build %d\n; ", SWS_VERSION); 
 	iniSection.Append(g_SNMIniFn.Get()); 
 	iniSection.AppendFormatted(128, "\nIniFileUpgrade=%d\n", g_SNMIniFileVersion); 
 	iniSection.AppendFormatted(128, "MediaFileLockAudio=%d\n", g_SNMMediaFlags&1 ? 1:0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_toolbarsAutoRefreshFreq);
-	iniSection.AppendFormatted(128, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1 : 0); 
+	iniSection.AppendFormatted(128, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1 : 0);
+#ifdef _WIN32
+	iniSection.AppendFormatted(128, "ClearTypeFont=%d\n", g_SNMClearType ? 1 : 0); 
+#endif
 //	iniSection.AppendFormatted(128, "Beta=%d\n", g_SNMbeta); 
 	SaveIniSection("General", &iniSection, g_SNMIniFn.Get());
 
@@ -1179,3 +1190,17 @@ void SnMCSurfSetTrackListChange() {
 	if (g_pLiveConfigsWnd) g_pLiveConfigsWnd->CSurfSetTrackListChange();
 }
 
+int SnMCSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3)
+{
+#ifdef _SNM_MISC
+	char fn[BUFFER_SIZE] = "";
+	_snprintf(fn, BUFFER_SIZE, "%s%cSNM_Extended.log", GetExePath(), PATH_SLASH_CHAR);
+	if (FILE* f = fopenUTF8(fn, "a")) {
+		char buf[BUFFER_SIZE] = "";
+		_snprintf(buf, BUFFER_SIZE, "call: %d\t%p\t%p\t%p\n", _call, _parm1, _parm2, _parm3);
+		fputs(buf, f);
+		fclose(f);
+	}
+#endif
+	return 0; // return 0 if unsupported
+}

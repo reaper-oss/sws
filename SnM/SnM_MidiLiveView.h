@@ -32,7 +32,12 @@
 #define _SNM_LIVECFGVIEW_H_
 
 
-#define SNM_LIVECFG_MAX_PRESET_COUNT	2048 //JFB would be ideal: (SNM_LIVECFG_CLEAR_PRESETS_MSG - SNM_LIVECFG_SET_PRESETS_MSG)
+class PresetMsg {
+public:
+	PresetMsg(int _fx=-1, const char* _preset="") : m_fx(_fx), m_preset(_preset) {}
+	int m_fx;
+	WDL_FastString m_preset;
+};
 
 
 class MidiLiveItem {
@@ -48,33 +53,28 @@ public:
 };
 
 
-//JFB TODO [] -> WDL_PtrList
 class MidiLiveConfig {
 public:
-	MidiLiveConfig() {Clear();}
-	void Clear()
-	{
-		for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++)
-		{
-			m_enable[i] = 1;
-			m_autoRcv[i] = 0; //JFB not released
-			m_muteOthers[i] = 1;
-			m_autoSelect[i] = 1;
-			m_inputTr[i] = NULL;
-			m_lastMIDIVal[i] = -1;
-			m_lastDeactivateCmd[i][0] = -1;
-		}
+	MidiLiveConfig()
+	{ 
+		m_version = 0;
+		m_enable = 1;
+		m_muteOthers = 1;
+		m_autoSelect = 1;
+		m_inputTr = NULL;
+		m_lastActivatedTr = NULL;
+		m_lastMIDIVal = -1;
+		m_lastDeactivateCmd[0] = -1;
+		for (int j=0; j < 128; j++)
+			m_ccConfs.Add(new MidiLiveItem(j, "", NULL, "", "", "", "", ""));
 	}
+	~MidiLiveConfig() { m_ccConfs.Empty(true); }
 
-	int m_enable[SNM_LIVECFG_NB_CONFIGS];
-	int m_autoRcv[SNM_LIVECFG_NB_CONFIGS];
-	int m_muteOthers[SNM_LIVECFG_NB_CONFIGS];
-	int m_autoSelect[SNM_LIVECFG_NB_CONFIGS];
-	MediaTrack* m_inputTr[SNM_LIVECFG_NB_CONFIGS];
-	int m_lastMIDIVal[SNM_LIVECFG_NB_CONFIGS];
-
-	// [0] = cmd, [1] = val, [2] = valhw, [3] = relmode, [4] = track index
-	int m_lastDeactivateCmd[SNM_LIVECFG_NB_CONFIGS][5];
+	WDL_PtrList<MidiLiveItem> m_ccConfs;
+	int m_version, m_enable, m_muteOthers, m_autoSelect;
+	MediaTrack* m_inputTr, *m_lastActivatedTr;
+	int m_lastMIDIVal;
+	int m_lastDeactivateCmd[4]; // [0]=cmd,[1]=val,[2]=valhw,[3]=relmode
 };
 
 
@@ -87,8 +87,6 @@ protected:
 	void GetItemList(SWS_ListItemList* pList);
 	void OnItemSelChanged(SWS_ListItem* item, int iState);
 	void OnItemDblClk(SWS_ListItem* item, int iCol);
-	int OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2);
-//	void GetItemTooltip(SWS_ListItem* item, char* str, int iStrMax);
 };
 
 
@@ -101,21 +99,25 @@ public:
 	void CSurfSetTrackListChange();
 	void FillComboInputTrack();
 	void SelectByCCValue(int _configId, int _cc);
-
-	int m_lastFXPresetMsg[2][SNM_LIVECFG_MAX_PRESET_COUNT];
 protected:
 	void OnInitDlg();
 	void OnDestroy();
 	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	void AddFXSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf);
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	int OnKey(MSG* msg, int iKeyState);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
 	bool Insert();
 
+	WDL_PtrList_DeleteOnDestroy<PresetMsg> m_lastPresetMsg;
+
 	WDL_VirtualComboBox m_cbConfig, m_cbInputTr;
 	WDL_VirtualIconButton m_btnEnable, m_btnMuteOthers, m_btnAutoSelect;
 	WDL_VirtualStaticText m_txtConfig, m_txtInputTr;
+#ifdef _SNM_MISC // wip
+	SNM_MiniKnob m_knob;
+#endif
 };
 
 

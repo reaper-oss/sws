@@ -32,6 +32,7 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SnM_Cyclactions.h"
+#include "../reaper/localize.h"
 //#include "../../WDL/projectcontext.h"
 
 //#define _SNM_MFC
@@ -45,8 +46,7 @@
 WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cyclactions[SNM_MAX_CYCLING_SECTIONS];
 char g_cyclactionCustomIds[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_ACTION_CUSTID_LEN] = {"S&M_CYCLACTION_", "S&M_ME_LIST_CYCLACTION", "S&M_ME_PIANO_CYCLACTION"};
 char g_cyclactionIniSections[SNM_MAX_CYCLING_SECTIONS][64] = {"Main_Cyclactions", "ME_List_Cyclactions", "ME_Piano_Cyclactions"};
-//JFB no localization for section names yet (confirmed by Cockos: http://forum.cockos.com/showpost.php?p=894702&postcount=117)
-char g_cyclactionSections[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN] = {"Main", "MIDI Event List Editor", "MIDI Editor"}; //JFB must == native section names!
+char g_cyclactionSections[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN]; // init & localization in CyclactionInit()
 
 static SNM_CyclactionWnd* g_pCyclactionWnd = NULL;
 bool g_undos = true;
@@ -85,8 +85,8 @@ public:
 		// refresh toolbar button
 		{
 			char custCmdId[SNM_MAX_ACTION_CUSTID_LEN] = "";
-			_snprintf(custCmdId, SNM_MAX_ACTION_CUSTID_LEN, "_%s%d", g_cyclactionCustomIds[m_section], m_cycleId);
-			RefreshToolbar(NamedCommandLookup(custCmdId));
+			if (_snprintf(custCmdId, SNM_MAX_ACTION_CUSTID_LEN, "_%s%d", g_cyclactionCustomIds[m_section], m_cycleId) > 0)
+				RefreshToolbar(NamedCommandLookup(custCmdId));
 		}
 
 		if (g_undos)
@@ -179,7 +179,7 @@ void RunMEPianoCyclaction(COMMAND_T* _ct) {if (g_bv4) RunCycleAction(2, _ct);}
 
 bool IsCyclactionEnabled(int _type, COMMAND_T* _ct) {
 	int cycleId = (int)_ct->user;
-	Cyclaction* action = g_cyclactions[_type].Get(cycleId-1); // cycle action id is 1-based (for user display) !
+	Cyclaction* action = g_cyclactions[_type].Get(cycleId-1); // cycle action id is 1-based (for user display)
 	return (action && /*action->IsToggle() &&*/ (action->m_performState % 2) != 0);
 }
 
@@ -190,7 +190,10 @@ bool IsMEPianoCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(2, _
 bool CheckEditableCyclaction(const char* _actionStr, WDL_FastString* _errMsg, bool _allowEmpty = true)
 {
 	if (!(_actionStr && *_actionStr && *_actionStr != ',' && _strnicmp(_actionStr, "#,", 2))) {
-		if (_errMsg) _errMsg->AppendFormatted(256, "Error: invalid cycle action '%s'\n\n", _actionStr ? _actionStr : "NULL");
+		if (_errMsg) {
+			_errMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Error: invalid cycle action '%s'","sws_DLG_161"), _actionStr ? _actionStr : "NULL");
+			_errMsg->Append("\n\n");
+		}
 		return false;
 	}
 	if (!_allowEmpty && !strcmp(EMPTY_CYCLACTION, _actionStr))
@@ -207,7 +210,12 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 		{
 			const char* cmd = _a->GetCmd(i);
 			if (strstr(cmd, "_CYCLACTION")) {
-				if (_errMsg) _errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: recursive cycle action (i.e. uses another cycle action)\n\n", _a->GetName(), g_cyclactionSections[_section]);
+				if (_errMsg) {
+					_errMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Warning: cycle action '%s' (section '%s') was added but not registered","sws_DLG_161"), _a->GetName(), g_cyclactionSections[_section]);
+					_errMsg->Append("\n");
+					_errMsg->Append(__LOCALIZE("Details: recursive cycle action (i.e. uses another cycle action)","sws_DLG_161"));
+					_errMsg->Append("\n\n");
+				}
 				return false;
 			}
 			else if (*cmd == '!')
@@ -217,24 +225,42 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 			else if (!_section) // main section?
 			{
 				if (atoi(cmd) >= g_iFirstCommand) {
-					if (_errMsg) _errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: for extensions' actions, you must use custom ids (e.g. _SWS_ABOUT),\nnot command ids (e.g. 47145)\n\n", _a->GetName(), g_cyclactionSections[_section]);
+					if (_errMsg) {
+						_errMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Warning: cycle action '%s' (section '%s') was added but not registered","sws_DLG_161"), _a->GetName(), g_cyclactionSections[_section]);
+						_errMsg->Append("\n");
+						_errMsg->Append(__LOCALIZE("Details: for extensions' actions, you must use custom ids (e.g. _SWS_ABOUT), not command ids (e.g. 47145)","sws_DLG_161"));
+						_errMsg->Append("\n\n");
+					}
 					return false;
 				}
 				// API LIMITATION: NamedCommandLookup() KO in other sections than the main one
 				// => all cyclactions belong to the main section although they can target other sections..
 				if(_checkCmdIds && !NamedCommandLookup(cmd)) {
-					if (_errMsg) _errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: command id (or custom id) '%s' not found\n\n", _a->GetName(), g_cyclactionSections[_section], cmd);
+					if (_errMsg) {
+						_errMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Warning: cycle action '%s' (section '%s') was added but not registered","sws_DLG_161"), _a->GetName(), g_cyclactionSections[_section]);
+						_errMsg->Append("\n");
+						_errMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Details: command id (or custom id) '%s' not found","sws_DLG_161"), cmd);
+						_errMsg->Append("\n\n");
+					}
 					return false;
 				}
 			}
 		}
 		if ((steps + noop) == _a->GetCmdSize()) {
-			if (_errMsg && !_a->IsEmpty()) _errMsg->AppendFormatted(256, "Warning: cycle action '%s' (section '%s') was added but not registered\nDetails: : no valid command id (or custom id) found\n\n", _a->GetName(), g_cyclactionSections[_section]);
+			if (_errMsg && !_a->IsEmpty()) {
+				_errMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Warning: cycle action '%s' (section '%s') was added but not registered","sws_DLG_161"), _a->GetName(), g_cyclactionSections[_section]);
+				_errMsg->Append("\n");
+				_errMsg->Append(__LOCALIZE("Details: no valid command id (or custom id) found","sws_DLG_161"));
+				_errMsg->Append("\n\n");
+			}
 			return false;
 		}
 	}
 	else {
-		if (_errMsg) _errMsg->AppendFormatted(256, "Error: invalid cycle action (section '%s')\n\n", g_cyclactionSections[_section]);
+		if (_errMsg) {
+			_errMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Error: invalid cycle action in section '%s'","sws_DLG_161"), g_cyclactionSections[_section]);
+			_errMsg->Append("\n\n");
+		}
 		return false;
 	}
 	return true;
@@ -262,13 +288,12 @@ int RegisterCyclation(const char* _name, bool _toggle, int _section, int _cycleI
 {
 	if (!SWSGetCommandID(!_section ? RunMainCyclaction : _section == 1 ? RunMEListCyclaction : RunMEPianoCyclaction, _cycleId))
 	{
-		char cID[SNM_MAX_ACTION_CUSTID_LEN];
-		_snprintf(cID, SNM_MAX_ACTION_CUSTID_LEN, "%s%d", g_cyclactionCustomIds[_section], _cycleId);
-
-		return SWSCreateRegisterDynamicCmd(_cmdId,
-			!_section ? RunMainCyclaction : _section == 1 ? RunMEListCyclaction : RunMEPianoCyclaction, 
-			!_toggle ? NULL : (!_section ? IsMainCyclactionEnabled : _section == 1 ? IsMEListCyclactionEnabled : IsMEPianoCyclactionEnabled),
-			cID, _name, _cycleId, __FILE__, false); // no localization for cycle actions (name defined by the user) !
+		char cID[SNM_MAX_ACTION_CUSTID_LEN]="";
+		if (_snprintf(cID, SNM_MAX_ACTION_CUSTID_LEN, "%s%d", g_cyclactionCustomIds[_section], _cycleId) > 0)
+			return SWSCreateRegisterDynamicCmd(_cmdId,
+				!_section ? RunMainCyclaction : _section == 1 ? RunMEListCyclaction : RunMEPianoCyclaction, 
+				!_toggle ? NULL : (!_section ? IsMainCyclactionEnabled : _section == 1 ? IsMEListCyclactionEnabled : IsMEPianoCyclactionEnabled),
+				cID, _name, _cycleId, __FILE__, false); // no localization for cycle actions (name defined by the user) !
 	}
 	return 0;
 }
@@ -323,7 +348,7 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 	}
 
 	if (_errMsg && msg.GetLength())
-		SNM_ShowMsg(msg.Get(), "S&M - Cycle Action editor - Warning(s)", g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd());
+		SNM_ShowMsg(msg.Get(), __LOCALIZE("S&M - Warning","sws_DLG_161"), g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd());
 }
 
 // NULL _cyclactions => update main model
@@ -340,7 +365,7 @@ void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NUL
 		if (_section == sec || _section == -1)
 		{
 			WDL_PtrList_DeleteOnDestroy<int> freeCycleIds;
-			WDL_FastString iniSection("; Do not tweak by hand! Use the Cycle Action editor instead\n"), escapedStr;
+			WDL_FastString iniSection("; Do not tweak by hand! Use the Cycle Action editor instead\n"), escapedStr; // no localization for ini files
 
 			// prepare "compression" (i.e. will re-assign ids of new actions for the next load)
 			for (int j=0; j < _cyclactions[sec].GetSize(); j++)
@@ -445,7 +470,7 @@ void Cyclaction::UpdateNameAndCmds()
 		// "#name" = toggle action, "name" = normal action
 		m_name.Set(*tok == '#' ? (const char*)tok+1 : tok);
 		while (tok = strtok(NULL, ","))
-				m_cmds.Add(new WDL_FastString(tok));
+			m_cmds.Add(new WDL_FastString(tok));
 	}
 	m_empty = (strcmp(EMPTY_CYCLACTION, m_desc.Get()) == 0);
 }
@@ -471,17 +496,21 @@ void Cyclaction::UpdateFromCmd()
 #define CYCLACTION_STATE_KEY	"CyclactionsState"
 #define CYCLACTIONWND_POS_KEY	"CyclactionsWndPos"
 
+// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_161
 static SWS_LVColumn g_cyclactionsCols[] = { { 50, 0, "Id" }, { 260, 1, "Cycle action name" }, { 50, 2, "Toggle" } };
 static SWS_LVColumn g_commandsCols[] = { { 180, 1, "Command" }, { 180, 0, "Name (main section only)" } };
+// !WANT_LOCALIZE_STRINGS_END
 
 // we need these because of cross-calls between both list views
 static SNM_CyclactionsView* g_lvL = NULL;
 static SNM_CommandsView* g_lvR = NULL;
 
 // fake list views' contents
+// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_161
 static Cyclaction g_DEFAULT_L("Right click here to add cycle actions");
 static WDL_FastString g_EMPTY_R("<- Select a cycle action");
 static WDL_FastString g_DEFAULT_R("Right click here to add commands");
+// !WANT_LOCALIZE_STRINGS_END
 
 WDL_PtrList_DeleteOnDestroy<Cyclaction> g_editedActions[SNM_MAX_CYCLING_SECTIONS];
 Cyclaction* g_editedAction = NULL;
@@ -550,7 +579,7 @@ void Apply()
 	// cycle actions
 	AllEditListItemEnd(true);
 	bool wasEdited = g_edited;
-	UpdateEditedStatus(false); // ok, apply: eof edition, note: g_edited=false here!
+	UpdateEditedStatus(false); // ok, apply: eof edition, g_edited=false here!
 	SaveCyclactions(g_editedActions);
 #ifdef _WIN32
 	// force ini file cache refresh: fix for the strange issue 397 (?)
@@ -566,8 +595,8 @@ void Cancel(bool _checkSave)
 	AllEditListItemEnd(false);
 	if (_checkSave && g_edited && 
 			IDYES == MessageBox(g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd(),
-				"Save cycle actions before quitting editor ?",
-				"S&M - Cycle Action editor - Warning", MB_YESNO))
+				__LOCALIZE("Save cycle actions before quitting editor ?","sws_DLG_161"),
+				__LOCALIZE("S&M - Warning","sws_DLG_161"), MB_YESNO))
 	{
 		SaveCyclactions(g_editedActions);
 		LoadCyclactions(true, true); // + flush, unregister, re-register
@@ -634,7 +663,9 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
 	if (strchr(_str, ',') || strchr(_str, '\"') || strchr(_str, '\'') || strchr(_str, '#')) {
-		MessageBox(GetMainHwnd(), "Cycle action names cannot contain any of the following characters: # , \" '", "S&M - Cycle Action editor - Error", MB_OK);
+		WDL_FastString msg(__LOCALIZE("Cycle action names cannot contain any of the following characters:","sws_DLG_161"));
+		msg.Append(" # , \" '");
+		MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
 		return;
 	}
 
@@ -642,13 +673,11 @@ void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char
 	if (a && a != &g_DEFAULT_L && _iCol == 1)
 	{
 		WDL_FastString errMsg;
-		if (!CheckEditableCyclaction(_str, &errMsg) && strcmp(a->GetName(), _str)) 
-		{
+		if (!CheckEditableCyclaction(_str, &errMsg) && strcmp(a->GetName(), _str)) {
 			if (errMsg.GetLength())
-				MessageBox(g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd(), errMsg.Get(), "S&M - Cycle Action editor - Error", MB_OK);
+				MessageBox(g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd(), errMsg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
 		}
-		else
-		{
+		else {
 			a->SetName(_str);
 			UpdateEditedStatus(true);
 		}
@@ -715,7 +744,7 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 				break;
 			case 1:
 				if (pItem->GetLength() && pItem->Get()[0] == '!') {
-					lstrcpyn(str, "Step -----", iStrMax);
+					lstrcpyn(str, __LOCALIZE("Step -----","sws_DLG_161"), iStrMax);
 					return;
 				}
 				// API LIMITATION: only for the main section..
@@ -769,7 +798,7 @@ void SNM_CommandsView::GetItemList(SWS_ListItemList* pList)
 }
 
 // special sort criteria
-// (so that the order of commands can't be altered when sorting the list)
+// (so that the order of commands can not be altered when sorting the list)
 int SNM_CommandsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2) 
 {
 	if (g_editedAction) {
@@ -783,8 +812,7 @@ int SNM_CommandsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2)
 	return 0;
 }
 
-void SNM_CommandsView::OnBeginDrag(SWS_ListItem* item)
-{
+void SNM_CommandsView::OnBeginDrag(SWS_ListItem* item) {
 	AllEditListItemEnd(true);
 	SetCapture(GetParent(m_hwndList));
 }
@@ -815,8 +843,7 @@ void SNM_CommandsView::OnDrag()
 			// remove the dragged items and then re-add them
 			// switch order of add based on direction of drag
 			bool bDir = iNewPriority > iSelPriority;
-			for (int i = bDir ? 0 : draggedItems.GetSize()-1; bDir ? i < draggedItems.GetSize() : i >= 0; bDir ? i++ : i--)
-			{
+			for (int i = bDir ? 0 : draggedItems.GetSize()-1; bDir ? i < draggedItems.GetSize() : i >= 0; bDir ? i++ : i--) {
 				g_editedAction->RemoveCmd((WDL_FastString*)draggedItems.Get(i));
 				g_editedAction->InsertCmd(iNewPriority, (WDL_FastString*)draggedItems.Get(i));
 			}
@@ -867,8 +894,9 @@ enum
   BUTTONID_ACTIONLIST
 };
 
-SNM_CyclactionWnd::SNM_CyclactionWnd()
-	: SWS_DockWnd(IDD_SNM_CYCLACTION, "Cycle action editor", "SnMCyclaction", 30011, SWSGetCommandID(OpenCyclactionView))
+SNM_CyclactionWnd::SNM_CyclactionWnd() : SWS_DockWnd(IDD_SNM_CYCLACTION,
+		__LOCALIZE("S&M - Cycle Action editor","sws_DLG_161"),
+		"SnMCyclaction", 30011, SWSGetCommandID(OpenCyclactionView))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -958,7 +986,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	{
 		case ADD_CYCLACTION_MSG: 
 		{
-			Cyclaction* a = new Cyclaction("Untitled");
+			Cyclaction* a = new Cyclaction(__LOCALIZE("Untitled","sws_DLG_161"));
 			a->m_added = true;
 			g_editedActions[g_editedSection].Add(a);
 			UpdateListViews();
@@ -996,7 +1024,9 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 						Main_OnCommand(id, 0);
 						break;
 					}
-					MessageBox(m_hwnd, "This action is not registered yet!", "S&M - Cycle Action editor - Error", MB_OK);
+					MessageBox(m_hwnd,
+						__LOCALIZE("This action is not registered yet!","sws_DLG_161"),
+						__LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
 				}
 			}
 			break;
@@ -1037,7 +1067,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			} // + cmdsToDelete auto clean-up
 			break;
 		case IMPORT_CUR_SECTION_MSG:
-			if (char* fn = BrowseForFiles("S&M - Import cycle actions", g_lastImportFn, NULL, false, SNM_INI_EXT_LIST))
+			if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Import cycle actions","sws_DLG_161"), g_lastImportFn, NULL, false, SNM_INI_EXT_LIST))
 			{
 				LoadCyclactions(true, false, g_editedActions, g_editedSection, fn);
 				lstrcpyn(g_lastImportFn, fn, BUFFER_SIZE);
@@ -1048,7 +1078,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			}
 			break;
 		case IMPORT_ALL_SECTIONS_MSG:
-			if (char* fn = BrowseForFiles("S&M - Import cycle actions", g_lastImportFn, NULL, false, SNM_INI_EXT_LIST))
+			if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Import cycle actions","sws_DLG_161"), g_lastImportFn, NULL, false, SNM_INI_EXT_LIST))
 			{
 				LoadCyclactions(true, false, g_editedActions, -1, fn);
 				lstrcpyn(g_lastImportFn, fn, BUFFER_SIZE);
@@ -1065,7 +1095,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				actions[g_editedSection].Add(new Cyclaction(a));
 			if (actions[g_editedSection].GetSize()) {
 				char fn[BUFFER_SIZE] = "";
-				if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
+				if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
 					SaveCyclactions(actions, g_editedSection, fn);
 					lstrcpyn(g_lastExportFn, fn, BUFFER_SIZE);
 				}
@@ -1079,7 +1109,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				actions[g_editedSection].Add(new Cyclaction(g_editedActions[g_editedSection].Get(i)));
 			if (actions[g_editedSection].GetSize()) {
 				char fn[BUFFER_SIZE] = "";
-				if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
+				if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
 					SaveCyclactions(actions, g_editedSection, fn);
 					lstrcpyn(g_lastExportFn, fn, BUFFER_SIZE);
 				}
@@ -1090,7 +1120,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (g_editedActions[0].GetSize() || g_editedActions[1].GetSize() || g_editedActions[2].GetSize()) // yeah, i know..
 			{
 				char fn[BUFFER_SIZE] = "";
-				if (BrowseForSaveFile("S&M - Export cycle actions", g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
+				if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
 					SaveCyclactions(g_editedActions, -1, fn);
 					lstrcpyn(g_lastExportFn, fn, BUFFER_SIZE);
 				}
@@ -1165,7 +1195,7 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 /*no! remains a GUI only info only until applied..
 			m_btnUndo.SetCheckState(g_undos);
 */
-			m_btnUndo.SetTextLabel("Consolidated undo points", -1, font);
+			m_btnUndo.SetTextLabel(__LOCALIZE("Consolidated undo points","sws_DLG_161"), -1, font);
 			if (SNM_AutoVWndPosition(&m_btnUndo, NULL, _r, &x0, _r->top, h))
 				SNM_AddLogo(_bm, _r, x0, h);
 		}
@@ -1175,14 +1205,14 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 	x0 = _r->left+8; h=39;
 	int y0 = _r->bottom-h;
 
-	SNM_SkinToolbarButton(&m_btnApply, "Apply");
+	SNM_SkinToolbarButton(&m_btnApply, __LOCALIZE("Apply","sws_DLG_161"));
 	m_btnApply.SetGrayed(!g_edited);
 	if (SNM_AutoVWndPosition(&m_btnApply, NULL, _r, &x0, y0, h, 1))
 	{
-		SNM_SkinToolbarButton(&m_btnCancel, "Cancel");
+		SNM_SkinToolbarButton(&m_btnCancel, __LOCALIZE("Cancel","sws_DLG_161"));
 		if (SNM_AutoVWndPosition(&m_btnCancel, NULL, _r, &x0, y0, h, 1))
 		{
-			SNM_SkinToolbarButton(&m_btnActionList, "Action list...");
+			SNM_SkinToolbarButton(&m_btnActionList, __LOCALIZE("Action list...","sws_DLG_161"));
 			SNM_AutoVWndPosition(&m_btnActionList, NULL, _r, &x0, y0, h, 0);
 
 			// right re-align
@@ -1230,43 +1260,43 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		WDL_FastString* cmd = (WDL_FastString*)g_lvR->GetHitItem(x, y, NULL);
 		if (left)
 		{
-			AddToMenu(hMenu, "Add cycle action", ADD_CYCLACTION_MSG);
+			AddToMenu(hMenu, __LOCALIZE("Add cycle action","sws_DLG_161"), ADD_CYCLACTION_MSG);
 			if (action && action != &g_DEFAULT_L)
 			{
-				AddToMenu(hMenu, "Remove cycle action(s)", DEL_CYCLACTION_MSG); 
+				AddToMenu(hMenu, __LOCALIZE("Remove cycle action(s)","sws_DLG_161"), DEL_CYCLACTION_MSG); 
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, "Run", RUN_CYCLACTION_MSG, -1, false, action->m_added ? MF_GRAYED : MF_ENABLED); 
+				AddToMenu(hMenu, __LOCALIZE("Run","sws_DLG_161"), RUN_CYCLACTION_MSG, -1, false, action->m_added ? MF_GRAYED : MF_ENABLED); 
 			}
 		}
 		else if (g_editedAction && g_editedAction != &g_DEFAULT_L)
 		{
-			AddToMenu(hMenu, "Add command", ADD_CMD_MSG);
+			AddToMenu(hMenu, __LOCALIZE("Add command","sws_DLG_161"), ADD_CMD_MSG);
 #ifdef _WIN32
-			AddToMenu(hMenu, "Add/learn from Actions window", LEARN_CMD_MSG);
+			AddToMenu(hMenu, __LOCALIZE("Add/learn from Actions window","sws_DLG_161"), LEARN_CMD_MSG);
 #endif
 			if (cmd && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R)
-				AddToMenu(hMenu, "Remove command(s)", DEL_CMD_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Remove command(s)","sws_DLG_161"), DEL_CMD_MSG);
 		}
 	}
 	else
 	{
 		char buf[128] = "";
 		HMENU hImpExpSubMenu = CreatePopupMenu();
-		AddSubMenu(hMenu, hImpExpSubMenu, "Import/export...");
-		_snprintf(buf, 128, "Import in section '%s'...", g_cyclactionSections[g_editedSection]);
-		AddToMenu(hImpExpSubMenu, buf, IMPORT_CUR_SECTION_MSG);
-		AddToMenu(hImpExpSubMenu, "Import all sections...", IMPORT_ALL_SECTIONS_MSG);
+		AddSubMenu(hMenu, hImpExpSubMenu, __LOCALIZE("Import/export...","sws_DLG_161"));
+		if (_snprintf(buf, 128, __LOCALIZE_VERFMT("Import in section '%s'...","sws_DLG_161"), g_cyclactionSections[g_editedSection]) > 0)
+			AddToMenu(hImpExpSubMenu, buf, IMPORT_CUR_SECTION_MSG);
+		AddToMenu(hImpExpSubMenu, __LOCALIZE("Import all sections...","sws_DLG_161"), IMPORT_ALL_SECTIONS_MSG);
 		AddToMenu(hImpExpSubMenu, SWS_SEPARATOR, 0);
-		AddToMenu(hImpExpSubMenu, "Export selected cycle actions...", EXPORT_SEL_MSG);
-		_snprintf(buf, 128, "Export section '%s'...", g_cyclactionSections[g_editedSection]);
-		AddToMenu(hImpExpSubMenu, buf, EXPORT_CUR_SECTION_MSG);
-		AddToMenu(hImpExpSubMenu, "Export all sections...", EXPORT_ALL_SECTIONS_MSG);
+		AddToMenu(hImpExpSubMenu, __LOCALIZE("Export selected cycle actions...","sws_DLG_161"), EXPORT_SEL_MSG);
+		if (_snprintf(buf, 128, __LOCALIZE_VERFMT("Export section '%s'...","sws_DLG_161"), g_cyclactionSections[g_editedSection]) > 0)
+			AddToMenu(hImpExpSubMenu, buf, EXPORT_CUR_SECTION_MSG);
+		AddToMenu(hImpExpSubMenu, __LOCALIZE("Export all sections...","sws_DLG_161"), EXPORT_ALL_SECTIONS_MSG);
 
 		HMENU hResetSubMenu = CreatePopupMenu();
-		AddSubMenu(hMenu, hResetSubMenu, "Reset");
-		_snprintf(buf, 128, "Reset section '%s'...", g_cyclactionSections[g_editedSection]);
-		AddToMenu(hResetSubMenu, buf, RESET_CUR_SECTION_MSG);
-		AddToMenu(hResetSubMenu, "Reset all sections", RESET_ALL_SECTIONS_MSG);
+		AddSubMenu(hMenu, hResetSubMenu, __LOCALIZE("Reset","sws_DLG_161"));
+		if (_snprintf(buf, 128, __LOCALIZE_VERFMT("Reset section '%s'...","sws_DLG_161"), g_cyclactionSections[g_editedSection]) > 0)
+			AddToMenu(hResetSubMenu, buf, RESET_CUR_SECTION_MSG);
+		AddToMenu(hResetSubMenu, __LOCALIZE("Reset all sections","sws_DLG_161"), RESET_ALL_SECTIONS_MSG);
 	}
 	return hMenu;
 }
@@ -1329,7 +1359,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	if (lp.parse(line) || lp.getnumtokens() < 1)
 		return false;
 
-	// Load cycle actions' states
+	// load cycle actions' states
 	if (!strcmp(lp.gettoken_str(0), "<S&M_CYCLACTIONS"))
 	{
 		char linebuf[128];
@@ -1398,6 +1428,11 @@ static project_config_extension_t g_projectconfig = {
 
 int CyclactionInit()
 {
+	// init section names
+	lstrcpyn(g_cyclactionSections[0], __localizeFunc("Main","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
+	lstrcpyn(g_cyclactionSections[1], __localizeFunc("MIDI Event List Editor","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
+	lstrcpyn(g_cyclactionSections[2], __localizeFunc("MIDI Editor","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
+
 	_snprintf(g_lastExportFn, BUFFER_SIZE, SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
 	_snprintf(g_lastImportFn, BUFFER_SIZE, SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
 

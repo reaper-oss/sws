@@ -121,7 +121,7 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 				m_sndRcv->m_destChan,
 				m_sndRcv->m_panl,
 				m_sndRcv->m_midi,
-				-1, //JFB: can't get -send/rcv- automation!
+				-1, //JFB: cannot get -send/rcv- automation!
 				_parsedLine);
 			_newChunk->Append(bufline,n);
 			update = true;
@@ -273,7 +273,7 @@ bool SNM_FXChainTakePatcher::SetFXChain(WDL_FastString* _fxChain, bool _activeTa
 	m_fxChain = _fxChain;
 	m_removingTakeFx = false;
 	m_activeTake = (*(int*)GetSetMediaItemInfo((MediaItem*)m_reaObject, "I_CURTAKE", NULL) == 0);
-	// ParsePatch(): we can't specify more parameters, the parser has to go in depth
+	// ParsePatch(): cannot specify more parameters, the parser has to go in depth
 	return (ParsePatch((_activeTakeOnly && GetMediaItemNumTakes((MediaItem*)m_reaObject) > 1) ? -2 : -1) > 0);
 	return false;
 }
@@ -283,8 +283,8 @@ WDL_FastString* SNM_FXChainTakePatcher::GetFXChain()
 	m_activeTake = (*(int*)GetSetMediaItemInfo((MediaItem*)m_reaObject, "I_CURTAKE", NULL) == 0);
 	m_copiedFXChain.Set("");
 	m_copyingTakeFx = false;
-	// Parse(): we can't specify more parameters, the parser has to go in depth
-	if (Parse(-3) >= 0 && // We can't check  "> 0" as usual due to *READ-ONLY* custom negative mode..
+	// Parse(): cannot specify more parameters, the parser has to go in depth
+	if (Parse(-3) >= 0 && // cannot check > 0 as usual due to *READ-ONLY* custom negative mode
 		m_copiedFXChain.GetLength()) // .. here's the check
 	{
 		return &m_copiedFXChain;
@@ -368,7 +368,7 @@ bool SNM_FXChainTrackPatcher::SetFXChain(WDL_FastString* _fxChain, bool _inputFX
 	m_fxChain = _fxChain;
 	m_removingFxChain = false;
 
-	// Parse(): we can't specify more parameters, the parser has to go in depth
+	// Parse(): cannot specify more parameters, the parser has to go in depth
 	return (ParsePatch(_inputFX ? -2 : -1) > 0); 
 }
 
@@ -851,9 +851,13 @@ bool SNM_FXSummaryParser::NotifyStartElement(int _mode,
 {
 	if (_mode == -1)
 	{
-		if (_lp->getnumtokens() >= 3) //JFB!!! && _parsedParents->GetSize() == 3)
+		if (_lp->getnumtokens() >= 3
+/*JFB commented for .RFXChain file support
+			&& _parsedParents->GetSize() == 3
+*/
+			)
 		{
-			if (!strcmp(_lp->gettoken_str(0), "<VST") || !strcmp(_lp->gettoken_str(0), "<AU")) //JFB! theorical AU stuff, can't test..
+			if (!strcmp(_lp->gettoken_str(0), "<VST") || !strcmp(_lp->gettoken_str(0), "<AU")) //JFB theorical AU stuff, cannot test..
 				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(1), _lp->gettoken_str(2)));
 			else if (!strcmp(_lp->gettoken_str(0), "<JS") || !strcmp(_lp->gettoken_str(0), "<DX"))
 				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(1), _lp->gettoken_str(1)));

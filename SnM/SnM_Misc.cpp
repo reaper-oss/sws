@@ -30,6 +30,7 @@
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
 #include "SNM_FXChainView.h"
+#include "../reaper/localize.h"
 #include "../../WDL/projectcontext.h"
 
 
@@ -87,18 +88,33 @@ void Filenamize(char* _fnInOut)
 	}
 }
 
+bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg)
+{
+	bool ko = (!_fn || !*_fn
+		|| strchr(_fn, ':') || strchr(_fn, '/') || strchr(_fn, '\\')
+		|| strchr(_fn, '*') || strchr(_fn, '?') || strchr(_fn, '\"')
+		|| strchr(_fn, '>') || strchr(_fn, '<') || strchr(_fn, '\'')
+		|| strchr(_fn, '|'));
+
+	if (ko && _errMsg)
+	{
+		char buf[BUFFER_SIZE];
+		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), BUFFER_SIZE);
+		if (!*_fn || _snprintf(buf, BUFFER_SIZE, __LOCALIZE_VERFMT("Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | :","sws_mbox"), _fn) > 0)
+			MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+	}
+	return !ko;
+}
+
 bool FileExistsErrMsg(const char* _fn, bool _errMsg)
 {
-	bool exists = false;
-	if (_fn && *_fn)
+	bool exists = FileExists(_fn);
+	if (!exists && _errMsg)
 	{
-		exists = FileExists(_fn);
-		if (!exists && _errMsg)
-		{
-			char buf[BUFFER_SIZE];
-			_snprintf(buf, BUFFER_SIZE, "File not found:\n%s", _fn);
-			MessageBox(GetMainHwnd(), buf, "S&M - Error", MB_OK);
-		}
+		char buf[BUFFER_SIZE];
+		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), BUFFER_SIZE);
+		if (!_fn || !*_fn || _snprintf(buf, BUFFER_SIZE, __LOCALIZE_VERFMT("File not found: %s","sws_mbox"), _fn) > 0)
+			MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 	return exists;
 }
@@ -136,7 +152,6 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 	bool ok = false;
 	char defaultPath[BUFFER_SIZE] = "";
 	_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
-
 	if (char* filename = BrowseForFiles(_title, defaultPath, NULL, false, _fileFilters)) 
 	{
 		if(!_wantFullPath)
@@ -376,11 +391,12 @@ void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx)
 {
 	if (_str && _ctx)
 	{
-		// see http://code.google.com/p/sws-extension/issues/detail?id=358
-		WDL_FastString unformatedStr;
-		makeUnformatedConfigString(_str->Get(), &unformatedStr);
-
-		const char* pEOL = unformatedStr.Get()-1;
+/* see better/faster fix below via _ctx->AddLine("%s", ...)
+		WDL_FastString tmpStr;
+		makeUnformatedConfigString(_str->Get(), &tmpStr);
+		const char* pEOL = tmpStr.Get()-1;
+*/
+		const char* pEOL = _str->Get()-1;
 		char curLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 		for(;;) 
 		{
@@ -389,9 +405,12 @@ void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx)
 			if (!pEOL)
 				break;
 			int curLineLength = (int)(pEOL-pLine);
-			memcpy(curLine, pLine, curLineLength);
-			curLine[curLineLength] = '\0'; // min(SNM_MAX_CHUNK_LINE_LENGTH-1, curLineLength) ?
-			_ctx->AddLine(curLine);
+			if (curLineLength < SNM_MAX_CHUNK_LINE_LENGTH) // drop long lines
+			{
+				memcpy(curLine, pLine, curLineLength);
+				curLine[curLineLength] = '\0';
+				_ctx->AddLine("%s", curLine); // "%s" needed see http://code.google.com/p/sws-extension/issues/detail?id=358
+			}
 		}
 	}
 }
@@ -462,6 +481,8 @@ void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const
 
 void SNM_UpgradeIniFiles()
 {
+	g_SNMIniFileVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNMIniFn.Get());
+
 	if (g_SNMIniFileVersion < 1) // i.e. sws version < v2.1.0 #18
 	{
 		// upgrade deprecated section names 
@@ -509,53 +530,18 @@ void SNM_UpgradeIniFiles()
 		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClickdata/track_icons", "DblClickTrack_icons", g_SNMIniFn.Get());
 #endif
 	}
+	if (g_SNMIniFileVersion < 5)
+		UpdatePrivateProfileSection("LAST_CUEBUS", "CueBuss1", g_SNMIniFn.Get());
+
+	g_SNMIniFileVersion = SNM_INI_FILE_VERSION;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// string localization stuff
-// remarks:
-// - *if* a langpack file is defined, we use a cache so that localized string
-//   getters can return const char* (getters are somehow "no-op" otherwise)
-// - strings that can change dynamically must not be localized (typically cycle
-//   action names which can change although their cache ids remain the same..
-//   fortunately, localizating a cycle action name does not make sense: it is
-//   defined by the user)
+// localization stuff
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_StringKeyedArray<WDL_FastString*> g_langpackFns(false, deletefaststrptr);
-WDL_StringKeyedArray<WDL_FastString*> g_i8nCache(false, deletefaststrptr);
-
-void ClearLangPackCache(const char* _langpack)
-{
-	if (WDL_FastString* fnStr = g_langpackFns.Get(_langpack, NULL))
-	{
-#ifdef _WIN32
-		// force ini file cache refresh: see http://support.microsoft.com/kb/68827
-		// and http://code.google.com/p/sws-extension/issues/detail?id=397
-		WritePrivateProfileString(NULL, NULL, NULL, fnStr->Get());
-#endif
-		g_langpackFns.Delete(_langpack);
-	}
-}
-
-bool IsLangPackUsed(const char* _langpack) {
-#ifdef _SNM_LOCALIZATION
-	return (GetCurLangPackFn(_langpack)->GetLength() > 0);
-#else
-	return false;
-#endif
-}
-
-// same langpack for SWS & REPAER?
-bool IsLangPackShared() {
-#ifdef _SNM_LOCALIZATION
-	return (IsLangPackUsed("SWS") && IsLangPackUsed("REAPER") && 
-		_stricmp(GetCurLangPackFn("SWS")->Get(), GetCurLangPackFn("REAPER")->Get()) == 0);
-#else
-	return false;
-#endif
-}
 
 // lazy init: "" means initialized but no langpack defined
 // note: this function never returns NULL
@@ -581,140 +567,25 @@ WDL_FastString* GetCurLangPackFn(const char* _langpack)
 	return fnStr;
 }
 
-void GetLocalizedProfileString(const char* _langpack, const char* _section, const char* _key, const char* _defaultStr, char* _bufOut, int _bufOutSz)
-{
-	// langpack exists? 
-	WDL_FastString* fnStr = GetCurLangPackFn(_langpack);
-	if (fnStr->GetLength())
-	{
-		GetPrivateProfileString(_section, _key, "", _bufOut, _bufOutSz, fnStr->Get()); 
-		// not found => 2nd try in the common section of the langpack file
-		if (!*_bufOut)
-		{
-			if (!_stricmp(_langpack, "SWS"))
-				GetPrivateProfileString(SNM_I8N_SWS_COMMON_SEC, _key, _defaultStr, _bufOut, _bufOutSz, fnStr->Get());
-			    //JFB TODO? 3rd try?
-			else
-				GetPrivateProfileString("common", _key, _defaultStr, _bufOut, _bufOutSz, fnStr->Get());
-		}
-	}
-}
-
-// this function never returns NULL
-// note: nothing is instanciated if no langpack file is defined (lazy init otherwise)
-const char* GetFromI8NCache(const char* _langpack, const char* _section, const char* _key, const char* _defaultStr, bool _swsAction)
-{
-	// langpack exists? 
-	WDL_FastString* fnStr = GetCurLangPackFn(_langpack);
-	if (fnStr->GetLength())
-	{
-		// make the key (most significant ids first)
-		WDL_FastString cacheKeyStr(_key);
-		cacheKeyStr.Append(_section);
-		cacheKeyStr.Append(_langpack);
-		WDL_FastString* str = g_i8nCache.Get(cacheKeyStr.Get(), NULL);
-		if (!str)
-		{
-			char buf[SNM_I8N_DEF_STR_LEN] = "";
-			GetLocalizedProfileString(_langpack, _section, _key, _defaultStr, buf, SNM_I8N_DEF_STR_LEN); 
-			str = new WDL_FastString(buf);
-
-			// special case: SWS action tags (SWS:, SWS/S&M:, etc..) are removed from langpack files 
-			// because the extension code expects such tags (the user must not customize them!)
-			// => bring them back
-			if (_swsAction && !IsSwsAction(str->Get()))
-					if (int len = IsSwsAction(_defaultStr))
-						str->Insert(_defaultStr, 0, len);
-
-			g_i8nCache.Insert(cacheKeyStr.Get(), str);
-		}
-		return str->Get();
-	}
-	return _defaultStr;
-}
-
-const char* GetLocalizedString(const char* _langpack, const char* _section, const char* _key, const char* _defaultStr) {
-#ifdef _SNM_LOCALIZATION
-	return GetFromI8NCache(_langpack, _section, _key, _defaultStr, false);
+bool IsLangPackUsed(const char* _langpack) {
+#ifdef _SWS_LOCALIZATION
+	return (GetCurLangPackFn(_langpack)->GetLength() > 0);
 #else
-	return _defaultStr;
-#endif
-}
-
-const char* GetLocalizedActionName(const char* _custId, const char* _defaultStr, const char* _section) {
-#ifdef _SNM_LOCALIZATION
-	return GetFromI8NCache("SWS", _section, _custId, _defaultStr, true);
-#else
-	return _defaultStr;
-#endif
-}
-
-// just for code factorization..
-bool IsDupLangPackKeyErrMsg(const char* _key, WDL_StringKeyedArray<WDL_FastString*>* _strings)
-{
-	if (_strings->Get(_key, NULL))
-	{
-		WDL_FastString msg("LangPack file generation/upgrade aborted!\nDuplicated string: \"");
-		msg.Append(_key);
-		msg.Append("\"");
-		MessageBox(GetMainHwnd(), msg.Get(), "S&M - Error", MB_OK);
-		return true;
-	}
 	return false;
+#endif
 }
 
-// just for code factorization..
-// note: multiples Append() are faster than AppendFormatted()
-void AppendToLangPackStr(const char* _section, WDL_StringKeyedArray<WDL_FastString*>* _strings, WDL_FastString* _strOut, bool _isNew)
-{
-	_strOut->SetFormatted(128, "; NOTE: as you translate a string, remove the %s from the beginning of the line.\n", SNM_I8N_NEW_STR_TAG);
-	for (int i=0; i < _strings->GetSize(); i++)
-	{
-		const char* name = "";
-		if (WDL_FastString* id = _strings->Enumerate(i, &name, NULL))
-			if (name)
-			{
-				if (_isNew) _strOut->Append(SNM_I8N_NEW_STR_TAG);
-				_strOut->Append(id->Get());
-				_strOut->Append("=");
-				_strOut->Append(name);
-				_strOut->Append("\n");
-			}
-	}
+// same langpack for SWS & REPAER?
+bool IsLangPackShared() {
+#ifdef _SWS_LOCALIZATION
+	return (IsLangPackUsed("SWS") && IsLangPackUsed("REAPER") && !_stricmp(GetCurLangPackFn("SWS")->Get(), GetCurLangPackFn("REAPER")->Get()));
+#else
+	return false;
+#endif
 }
 
-// returns 1 if upgrade done, 0 if already present , -1 on error
-int UpgradeLangPackAction(const char* _section, const char* _customId, const char* _defActionName, WDL_StringKeyedArray<WDL_FastString*>* _strings)
-{
-	char buf[SNM_I8N_DEF_STR_LEN] = "";
-	GetLocalizedProfileString("SWS", _section, _customId, "", buf, SNM_I8N_DEF_STR_LEN);
-	const char* name = (*buf ? buf+IsSwsAction(buf) : (const char*)(_defActionName+IsSwsAction(_defActionName)));
-
-	if (IsDupLangPackKeyErrMsg(name, _strings))
-		return -1; // err
-
-	if (*buf)
-	{
-		_strings->Insert(name, new WDL_FastString(_customId));
-		return 0;
-	}
-	else
-	{
-		WDL_FastString* idStr = new WDL_FastString(SNM_I8N_NEW_STR_TAG);
-		idStr->Append(_customId);
-		GetLocalizedProfileString("SWS", _section, idStr->Get(), "", buf, SNM_I8N_DEF_STR_LEN);
-
-		// already tagged as new?
-		if (*buf) {
-			_strings->Insert((const char*)(buf+IsSwsAction(buf)), idStr);
-			return 0;
-		}
-		// new!
-		else {
-			_strings->Insert(name, idStr); // sort behind the scene..
-			return 1; 
-		}
-	}
+bool IsSwsActionLocalizable(const char* _customId) {
+	return (!strstr(_customId, "_CYCLACTION") && !strstr(_customId, "_SWSCONSOLE_CUST"));
 }
 
 bool ConfirmNewLangPackMsg()
@@ -722,27 +593,15 @@ bool ConfirmNewLangPackMsg()
 	WDL_FastString* fnStr = GetCurLangPackFn("SWS");
 	if (fnStr->GetLength())
 	{
-		WDL_FastString msg("A LangPack file is already defined: ");
+		WDL_FastString msg(__LOCALIZE("A LangPack file is already defined:","sws_mbox"));
+		msg.Append(" ");
 		msg.Append(fnStr->Get());
-		msg.Append("\nAre you sure you want to assign a new LangPack (the current file will not be deleted) ?");
-		if (IDYES != MessageBox(GetMainHwnd(), msg.Get(), "S&M - Error", MB_YESNO))
+		msg.Append("\n");
+		msg.Append(__LOCALIZE("Are you sure you want to assign a new LangPack (the current file will not be deleted) ?","sws_mbox"));
+		if (IDYES != MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_mbox"), MB_YESNO))
 			return false;
 	}
 	return true;
-}
-
-void ResetLangPack(COMMAND_T* _ct)
-{
-	// langpack exists? 
-	WDL_FastString* fnStr = GetCurLangPackFn("SWS");
-	if (fnStr->GetLength())
-	{
-		WritePrivateProfileString("SWS", "langpack", NULL, get_ini_file());
-		ClearLangPackCache("SWS"); // done after: fnStr is used above..
-		MessageBox(GetMainHwnd(), "Undefined SWS LangPack file\nRestart REAPER to complete the operation!", "S&M - Information", MB_OK);
-	}
-	else
-		MessageBox(GetMainHwnd(), "No SWS LangPack file is defined!", "S&M - Error", MB_OK);
 }
 
 void LoadAssignLangPack(COMMAND_T* _ct)
@@ -752,145 +611,154 @@ void LoadAssignLangPack(COMMAND_T* _ct)
 
 	WDL_FastString resPath;
 	resPath.SetFormatted(BUFFER_SIZE, "%s%cLangPack%c", GetResourcePath(), PATH_SLASH_CHAR, PATH_SLASH_CHAR);
-	if (char* fn = BrowseForFiles("S&M - Load SWS LangPack file", resPath.Get(), NULL, false, SNM_TXT_EXT_LIST))
+	if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Load SWS LangPack file","sws_mbox"), resPath.Get(), NULL, false, SNM_TXT_EXT_LIST))
 	{
 		WritePrivateProfileString("SWS", "langpack", strstr(fn, resPath.Get()) ? GetFilenameWithExt(fn) : fn, get_ini_file());
-		ClearLangPackCache("SWS");
+		g_langpackFns.Delete("SWS");
 
-		WDL_FastString msg("Defined new SWS LangPack file: ");
+		WDL_FastString msg(__LOCALIZE("Defined new SWS LangPack file:","sws_mbox"));
+		msg.Append(" ");
 		msg.Append(fn);
-		msg.Append("\nRestart REAPER to complete the operation!");
-		MessageBox(GetMainHwnd(), msg.Get(), "S&M - Information", MB_OK);
+		msg.Append("\n");
+		msg.Append(__LOCALIZE("Restart REAPER to complete the operation!","sws_mbox"));
+		MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Information","sws_mbox"), MB_OK);
 		free(fn);
 	}
 }
 
-void GenerateLangPack(COMMAND_T* _ct)
+void ResetLangPack(COMMAND_T* _ct)
 {
-	if (!ConfirmNewLangPackMsg())
-		return;
-
-	WDL_FastString resPath, defaultFn;
-	resPath.SetFormatted(BUFFER_SIZE, "%s%cLangPack%c", GetResourcePath(), PATH_SLASH_CHAR, PATH_SLASH_CHAR);
-	defaultFn.Append(resPath.Get());
-	defaultFn.Append("sws_english.txt");
-
-	char fn[BUFFER_SIZE] = "";
-	if (BrowseForSaveFile("S&M - Generate default SWS LangPack file", defaultFn.Get(), defaultFn.Get(), SNM_TXT_EXT_LIST, fn, BUFFER_SIZE))
+	WDL_FastString* fnStr = GetCurLangPackFn("SWS"); // langpack exists?
+	if (fnStr->GetLength())
 	{
-		WDL_FastString langpack;
+		WritePrivateProfileString("SWS", "langpack", NULL, get_ini_file());
+		g_langpackFns.Delete("SWS"); // done after: fnStr is used above..
+		MessageBox(GetMainHwnd(), __LOCALIZE("Restart REAPER to complete the operation!","sws_mbox"), __LOCALIZE("S&M - Information","sws_mbox"), MB_OK);
+	}
+	else
+		MessageBox(GetMainHwnd(), __LOCALIZE("No SWS LangPack file is defined!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+}
+
+#ifdef _SWS_DEBUG // internal action (only available with debug builds)
+
+// just for code factorization..
+bool IsDupLangPackKeyErrMsg(const char* _key, WDL_StringKeyedArray<WDL_FastString*>* _strings)
+{
+	if (_strings->Get(_key, NULL))
+	{
+		WDL_FastString msg(__LOCALIZE("LangPack file generation/upgrade aborted!","sws_mbox"));
+		msg.Append("\n");
+		msg.Append(__LOCALIZE("Duplicated string:","sws_mbox"));
+		msg.Append(" \"");
+		msg.Append(_key);
+		msg.Append("\"");
+		MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+		return true;
+	}
+	return false;
+}
+
+// just for code factorization..
+// note: multiples Append() are faster than AppendFormatted()
+bool AppendSwsActionsLangPack(const char* _section, WDL_StringKeyedArray<WDL_FastString*>* _strings, WDL_FastString* _strOut)
+{
+	_strOut->Append("[");
+	_strOut->Append(_section);
+	_strOut->Append("]\n");
+	_strOut->Append("; NOTE: do not remove/change action tags (SWS:, SWS/S&M:, etc..)\n");
+	_strOut->Append("; Such translations will be ignored.\n");
+
+	char h[65];
+	for (int i=0; i < _strings->GetSize(); i++)
+	{
+		const char* name = "";
+		if (WDL_FastString* id = _strings->Enumerate(i, &name, NULL))
+		{
+			if (name && *name && id->GetLength())
+			{
+				if (FNV64(id->Get(), h))
+				{
+					_strOut->Append(";");
+					_strOut->Append(h);
+					_strOut->Append("=");
+					_strOut->Append(name);
+					_strOut->Append("\n");
+				}
+				else return false;
+			}
+			else return false;
+		}
+		else return false;
+	}
+	_strOut->Append("\n");
+	return true;
+}
+
+void GenerateSwsActionsLangPack(COMMAND_T* _ct)
+{
+	WDL_FastString defaultFn;
+	defaultFn.SetFormatted(BUFFER_SIZE, "%s%cLangPack%csws_actions.txt", GetResourcePath(), PATH_SLASH_CHAR, PATH_SLASH_CHAR);
+	char fn[BUFFER_SIZE] = "";
+	if (BrowseForSaveFile(__LOCALIZE("S&M - Generate SWS actions LangPack file","sws_mbox"), defaultFn.Get(), defaultFn.Get(), SNM_TXT_EXT_LIST, fn, BUFFER_SIZE))
+	{
+		WDL_FastString langpack("\n");
 		WDL_StringKeyedArray<WDL_FastString*> orderedStrings(true, deletefaststrptr); // just to sort things
 		int strCount = 0;
 
-		// 1) add all sws actions of the main action section (except cycle actions)
+		// 1) add all "localizable" sws actions of the main action section
 		for (int i=g_iFirstCommand; i <= g_iLastCommand; i++)
 			if (COMMAND_T* ct = SWSGetCommandByID(i))
-				if (!strstr(ct->id, "_CYCLACTION")) {						
-					// remove action tags (SWS:, SWS/S&M:, etc..)
-					char* name = (char*)(ct->accel.desc+IsSwsAction(ct->accel.desc));
+				if (IsSwsActionLocalizable(ct->id)) {						
+/* remove action tags (SWS:, SWS/S&M:, etc..)
+					const char* name = ct->accel.desc+IsSwsAction(ct->accel.desc);
+*/
+					const char* name = ct->accel.desc;
 					if (IsDupLangPackKeyErrMsg(name, &orderedStrings)) return;
 					orderedStrings.Insert(name, new WDL_FastString(ct->id));
 				}
-		AppendToLangPackStr(SNM_I8N_SWS_ACTION_SEC, &orderedStrings, &langpack, true);
-		SaveIniSection(SNM_I8N_SWS_ACTION_SEC, &langpack, fn);
-		strCount += orderedStrings.GetSize();
-		orderedStrings.DeleteAll();
+		if (AppendSwsActionsLangPack(SWS_I8N_ACTION_SEC, &orderedStrings, &langpack)) {
+			strCount += orderedStrings.GetSize();
+			orderedStrings.DeleteAll();
+		}
+		else
+			MessageBox(GetMainHwnd(), __LOCALIZE("Error in main action section!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 
 		// 2) add all actions of the "s&m extension" action section
 		int i=0;
 		while(g_SNMSection_cmdTable[i].id != LAST_COMMAND)
 		{
 			MIDI_COMMAND_T* ct = &g_SNMSection_cmdTable[i];
-			char* name = (char*)(ct->accel.desc+IsSwsAction(ct->accel.desc));
+/* remove action tags (SWS:, SWS/S&M:, etc..)
+			const char* name = ct->accel.desc+IsSwsAction(ct->accel.desc);
+*/
+			const char* name = ct->accel.desc;
 			if (IsDupLangPackKeyErrMsg(name, &orderedStrings)) return;
 			orderedStrings.Insert(name, new WDL_FastString(ct->id));
 			i++;
 		}
-		AppendToLangPackStr(SNM_I8N_SNM_ACTION_SEC, &orderedStrings, &langpack, true);
-		SaveIniSection(SNM_I8N_SNM_ACTION_SEC, &langpack, fn);
-		strCount += orderedStrings.GetSize();
-		orderedStrings.DeleteAll();
-
-		// update REAPER.ini + reset localized strings cache
-		WritePrivateProfileString("SWS", "langpack", strstr(fn, resPath.Get()) ? GetFilenameWithExt(fn) : fn, get_ini_file());
-		ClearLangPackCache("SWS");
-
-		// add langpack name if needed (after the cache has been cleared)
-		if (!IsLangPackShared() && LoadChunk(fn, &langpack, true) && strncmp(langpack.Get(), "#NAME:", 6)) 
-		{
-			langpack.Insert(SNM_I8N_DEF_LANGPACK_NAME, 0);
-			if (FILE* f = fopenUTF8(fn, "w")) {
-				fputs(langpack.Get(), f);
-				fclose(f);
-			}
+		if (AppendSwsActionsLangPack(SNM_I8N_ACTION_SEC, &orderedStrings, &langpack)) {
+			strCount += orderedStrings.GetSize();
+			orderedStrings.DeleteAll();
 		}
+		else
+			MessageBox(GetMainHwnd(), __LOCALIZE("Error in the 'S&M Extension' section!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 
-		// msg
-		WDL_FastString msg;
-		msg.SetFormatted(BUFFER_SIZE, "Wrote %s (%d strings)\n", fn, strCount);
-		msg.Append("Restart REAPER after editing this file!");
-		MessageBox(GetMainHwnd(), msg.Get(), "S&M - Information", MB_OK);
+		// 3) write langpack file
+		if (FILE* f = fopenUTF8(fn, "w"))
+		{
+			fputs(langpack.Get(), f);
+			fclose(f);
+
+			WDL_FastString msg;
+			msg.SetFormatted(BUFFER_SIZE, __LOCALIZE_VERFMT("Wrote %s (%d strings)","sws_mbox"), fn, strCount);
+			MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Information","sws_mbox"), MB_OK);
+		}
+		else
+			MessageBox(GetMainHwnd(), __LOCALIZE("Cannot write LangPack file!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 }
 
-void UpgradeLangPack(COMMAND_T* _ct)
-{
-	WDL_FastString* fnStr = GetCurLangPackFn("SWS"); // cache may have changed..
-	if (!fnStr->GetLength()) {
-		GenerateLangPack(NULL); // null is ok: no undo point, etc..
-		return;
-	}
-
-	WDL_FastString langpack;
-	int upToDate=0, newStrCount=0;
-	WDL_StringKeyedArray<WDL_FastString*> orderedStrings(true, deletefaststrptr); // just to sort things
-
-	// 1) upgrade all sws actions of the main action section (except cycle actions)
-	for (int i=g_iFirstCommand; i <= g_iLastCommand; i++)
-	{
-		if (COMMAND_T* ct = SWSGetCommandByID(i))
-			if (!strstr(ct->id, "_CYCLACTION"))
-			{
-				int r = UpgradeLangPackAction(SNM_I8N_SWS_ACTION_SEC, ct->id, ct->accel.desc, &orderedStrings);
-				if (r < 0) return; // err
-				newStrCount += r;
-			}
-	}
-	AppendToLangPackStr(SNM_I8N_SWS_ACTION_SEC, &orderedStrings, &langpack, false);
-	SaveIniSection(SNM_I8N_SWS_ACTION_SEC, &langpack, fnStr->Get());
-	orderedStrings.DeleteAll();
-
-	// 2) add all actions of the s&m action section
-	upToDate=0;
-	int i=0;
-	while(g_SNMSection_cmdTable[i].id != LAST_COMMAND)
-	{
-		MIDI_COMMAND_T* ct = &g_SNMSection_cmdTable[i];
-		int r = UpgradeLangPackAction(SNM_I8N_SNM_ACTION_SEC, ct->id, ct->accel.desc, &orderedStrings);
-		if (r < 0) return; // err
-		newStrCount += r;
-		i++;
-	}
-	AppendToLangPackStr(SNM_I8N_SNM_ACTION_SEC, &orderedStrings, &langpack, false);
-	SaveIniSection(SNM_I8N_SNM_ACTION_SEC, &langpack, fnStr->Get());
-	orderedStrings.DeleteAll();
-
-	// 3) msg
-	// note: the langpack cache is not cleared here (simple upgrade)
-	WDL_FastString msg;
-	if (newStrCount)
-	{
-		msg.SetFormatted(BUFFER_SIZE, "Upgraded %s (%d new strings)\n", fnStr->Get(), newStrCount);
-		msg.Append("Restart REAPER after editing this file!");
-		MessageBox(GetMainHwnd(), msg.Get(), "S&M - Information", MB_OK);
-	}
-	else
-	{
-		msg.SetFormatted(BUFFER_SIZE, "%s is up to date!", fnStr->Get());
-		MessageBox(GetMainHwnd(), msg.Get(), "S&M - Information", MB_OK);
-	}
-}
-
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // marker/region helpers
@@ -983,7 +851,8 @@ void TranslatePos(double _pos, int* _h, int* _m, int* _s, int* _ms)
 // string helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-void makeUnformatedConfigString(const char* _in, WDL_FastString* _out)
+#ifdef _SNM_MISC
+ void makeUnformatedConfigString(const char* _in, WDL_FastString* _out)
 {
 	if (_in && _out)
 	{
@@ -997,6 +866,7 @@ void makeUnformatedConfigString(const char* _in, WDL_FastString* _out)
 		}
 	}
 }
+#endif
 
 bool GetStringWithRN(const char* _bufIn, char* _bufOut, int _bufOutSz)
 {
@@ -1045,13 +915,135 @@ void ReplaceStringFormat(char* _str, char _replaceCh) {
 		}
 }
 
-int IsSwsAction(const char* _actionName)
+
+///////////////////////////////////////////////////////////////////////////////
+// action helpers
+///////////////////////////////////////////////////////////////////////////////
+
+bool IsMacro(const char* _cmdName) {
+	const char* custom = __localizeFunc("Custom","actions",0);
+	int len = strlen(custom);
+	return (_cmdName && (int)strlen(_cmdName)>len && strncmp(_cmdName, custom, len) && _cmdName[len] == ':');
+}
+
+// _expectedSection: no check if NULL
+bool LearnAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSection)
 {
-	if (const char* p = strstr(_actionName, ": ")) // no strchr() here: make sure p[2] is not out of bounds
-		if (const char* tag = stristr(_actionName, "sws")) // make sure it is a sws tag
-			if (tag < p) // make really sure
-				return ((int)(p+2-_actionName));
-	return 0;
+	char section[SNM_MAX_SECTION_NAME_LEN] = "";
+	int actionId, selItem = GetSelectedAction(section, SNM_MAX_SECTION_NAME_LEN, &actionId, _idstrOut, _idStrSz);
+	if (strcmp(section, _expectedLocalizedSection))
+		selItem = -1;
+	switch (selItem)
+	{
+		case -2:
+			MessageBox(GetMainHwnd(), __LOCALIZE("The column 'Custom ID' is not displayed in the Actions window!\n(to display it, right click on its table header > show action IDs)","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			return false;
+		case -1: {
+			char msg[256];
+			lstrcpyn(msg, __LOCALIZE("Actions window not opened or no selected action!","sws_mbox"), 256);
+			if (_snprintf(msg, 256, __LOCALIZE_VERFMT("Actions window not opened or section '%s' not selected or no selected action!","sws_mbox"), _expectedLocalizedSection)>0)
+				MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			return false;
+		}
+	}
+	return true;
+}
+
+bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize)
+{
+	if (!_section || !_sectionURL)
+		return false;
+
+	if (_alr)
+	{
+		if (!_stricmp(_section, __localizeFunc("Main","accel_sec",0)) || !strcmp(_section, __localizeFunc("Main (alt recording)","accel_sec",0)))
+			lstrcpyn(_sectionURL, "ALR_Main", _sectionURLSize);
+		else if (!_stricmp(_section, __localizeFunc("Media explorer","accel_sec",0)))
+			lstrcpyn(_sectionURL, "ALR_MediaExplorer", _sectionURLSize);
+		else if (!_stricmp(_section, __localizeFunc("MIDI Editor","accel_sec",0)))
+			lstrcpyn(_sectionURL, "ALR_MIDIEditor", _sectionURLSize);
+		else if (!_stricmp(_section, __localizeFunc("MIDI Event List Editor","accel_sec",0)))
+			lstrcpyn(_sectionURL, "ALR_MIDIEvtList", _sectionURLSize);
+		else if (!_stricmp(_section, __localizeFunc("MIDI Inline Editor","accel_sec",0)))
+			lstrcpyn(_sectionURL, "ALR_MIDIInline", _sectionURLSize);
+		else
+			return false;
+	}
+	else
+		lstrcpyn(_sectionURL, _section, _sectionURLSize);
+	return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// other util funcs
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef _WIN32
+#define FNV64_IV ((WDL_UINT64)(0xCBF29CE484222325i64))
+#else
+#define FNV64_IV ((WDL_UINT64)(0xCBF29CE484222325LL))
+#endif
+
+WDL_UINT64 FNV64(WDL_UINT64 h, const unsigned char* data, int sz)
+{
+  int i;
+  for (i=0; i < sz; ++i)
+  {
+#ifdef _WIN32
+    h *= (WDL_UINT64)0x00000100000001B3i64;
+#else
+    h *= (WDL_UINT64)0x00000100000001B3LL;
+#endif
+    h ^= data[i];
+  }
+  return h;
+}
+
+// _strOut[65] by definition..
+bool FNV64(const char* _strIn, char* _strOut)
+{
+	WDL_UINT64 h = FNV64_IV;
+	const char *p=_strIn;
+	while (*p)
+	{
+		char c = *p++;
+		if (c == '\\')
+		{
+			if (*p == '\\'||*p == '"' || *p == '\'') h=FNV64(h,(unsigned char *)p,1);
+			else if (*p == 'n') h=FNV64(h,(unsigned char *)"\n",1);
+			else if (*p == 'r') h=FNV64(h,(unsigned char *)"\r",1);
+			else if (*p == 't') h=FNV64(h,(unsigned char *)"\t",1);
+			else if (*p == '0') h=FNV64(h,(unsigned char *)"",1);
+			else return false;
+			p++;
+		}
+		else
+			h=FNV64(h,(unsigned char *)&c,1);
+	}
+	h=FNV64(h,(unsigned char *)"",1);
+	return (_snprintf(_strOut, 64, "%08X%08X",(int)(h>>32),(int)(h&0xffffffff)) > 0);
+}
+
+bool WaitForTrackMute(DWORD* _muteTime)
+{
+	if (_muteTime && *_muteTime)
+	{
+		unsigned int fade = int(*(int*)GetConfigVar("mutefadems10") / 10 + 0.5);
+		while ((GetTickCount() - *_muteTime) < fade)
+		{
+#ifdef _WIN32
+			// keep the UI updating
+			MSG msg;
+			while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+				DispatchMessage(&msg);
+#endif
+			Sleep(1);
+		}
+		*_muteTime = 0;
+		return true;
+	}
+	return false;
 }
 
 
@@ -1105,101 +1097,6 @@ void SetSelTrackIconSlot(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// other misc helpers
-///////////////////////////////////////////////////////////////////////////////
-
-// FNV-1 hash
-/*JFB example
-	WDL_FastString keyStr;
-	WDL_UINT64 h = FNV1Hash64(_defaultStr);
-	keyStr.AppendFormatted(32, "%X", h>>32);
-	keyStr.AppendFormatted(32, "%X", h);
-	cacheKeyStr.Append(keyStr.Get());
-*/
-WDL_UINT64 FNV1Hash64(const char* _data)
-{
-	int len = strlen(_data)+1;
-	const unsigned char* p = (const unsigned char*)_data;
-	WDL_UINT64 h = 0xcbf29ce484222325ull;
-	for (; len; --len) {
-		h *= 0x100000001b3ull;
-		h ^= *p++;
-	}
-	return h;
-}
-
-// _expectedSection: no check if NULL
-//JFB no localization for section names yet (confirmed by Cockos: http://forum.cockos.com/showpost.php?p=894702&postcount=117)
-bool LearnAction(char* _idstrOut, int _idStrSz, const char* _expectedSection)
-{
-	char section[SNM_MAX_SECTION_NAME_LEN] = "";
-	int actionId, selItem = GetSelectedAction(section, SNM_MAX_SECTION_NAME_LEN, &actionId, _idstrOut, _idStrSz);
-	if (_expectedSection && strcmp(section, _expectedSection))
-		selItem = -1;
-	switch (selItem)
-	{
-		case -2:
-			MessageBox(GetMainHwnd(), "The column 'Custom ID' is not displayed in the Actions window!\n(to display it, right click on its table header > show action IDs)", "S&M - Cycle Action editor - Error", MB_OK);
-			return false;
-		case -1:
-		{
-			char bufMsg[256] = "Actions window not opened or no selected action!";
-			if (_expectedSection)
-				_snprintf(bufMsg, 256, "Actions window not opened or section '%s' not selected or no selected action!", _expectedSection);
-			MessageBox(GetMainHwnd(), bufMsg, "S&M - Cycle Action editor - Error", MB_OK);
-			return false;
-		}
-	}
-	return true;
-}
-
-bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize)
-{
-	if (!_section || !_sectionURL)
-		return false;
-
-	if (_alr)
-	{
-		if (!_stricmp(_section, "Main") || !strcmp(_section, "Main (alt recording)"))
-			lstrcpyn(_sectionURL, "ALR_Main", _sectionURLSize);
-		else if (!_stricmp(_section, "Media explorer"))
-			lstrcpyn(_sectionURL, "ALR_MediaExplorer", _sectionURLSize);
-		else if (!_stricmp(_section, "MIDI Editor"))
-			lstrcpyn(_sectionURL, "ALR_MIDIEditor", _sectionURLSize);
-		else if (!_stricmp(_section, "MIDI Event List Editor"))
-			lstrcpyn(_sectionURL, "ALR_MIDIEvtList", _sectionURLSize);
-		else if (!_stricmp(_section, "MIDI Inline Editor"))
-			lstrcpyn(_sectionURL, "ALR_MIDIInline", _sectionURLSize);
-		else
-			return false;
-	}
-	else
-		lstrcpyn(_sectionURL, _section, _sectionURLSize);
-	return true;
-}
-
-bool WaitForTrackMute(DWORD* _muteTime)
-{
-	if (_muteTime && *_muteTime) {
-		unsigned int fade = int(*(int*)GetConfigVar("mutefadems10") / 10 + 0.5);
-		while ((GetTickCount() - *_muteTime) < fade)
-		{
-#ifdef _WIN32
-			// keep the UI updating
-			MSG msg;
-			while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-				DispatchMessage(&msg);
-#endif
-			Sleep(1);
-		}
-		*_muteTime = 0;
-		return true;
-	}
-	return false;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // misc	actions
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1244,7 +1141,7 @@ void SimulateMouseClick(COMMAND_T* _ct)
 bool DumpActionList(int _type, const char* _title, const char* _lineFormat, const char* _heading, const char* _ending)
 {
 	if (IsLangPackUsed("SWS")) {
-		MessageBox(GetMainHwnd(), "Dump failed: a SWS LangPack file is being used,\nplease restore factory settings first!", "S&M - Error", MB_OK);
+		MessageBox(GetMainHwnd(), __LOCALIZE("Dump failed: a SWS LangPack file is being used,\nplease restore factory settings first!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 		return false;
 	}
 
@@ -1255,7 +1152,7 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 		char sectionURL[SNM_MAX_SECTION_NAME_LEN] = ""; 
 		if (!GetSectionNameAsURL(_type == 1 || _type == 2, currentSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
 		{
-			MessageBox(GetMainHwnd(), "Dump failed: unknown section!", _title, MB_OK);
+			MessageBox(GetMainHwnd(), __LOCALIZE("Dump failed: unknown section!","sws_mbox"), _title, MB_OK);
 			return false;
 		}
 
@@ -1292,8 +1189,8 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 				ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, customId, SNM_MAX_ACTION_CUSTID_LEN);
 
 				int isSws = IsSwsAction(cmdName);
-				if (strncmp(cmdName, "Custom:", 7) &&
-					((_type%2 && !isSws) || (!(_type%2) && isSws && !strstr(customId, "_CYCLACTION"))))
+				if (!IsMacro(cmdName) &&
+					((_type%2 && !isSws) || (!(_type%2) && isSws && IsSwsActionLocalizable(customId))))
 				{
 					if (!*customId) // for native actions..
 						_snprintf(customId, SNM_MAX_ACTION_CUSTID_LEN, "%d", cmdId);
@@ -1306,15 +1203,15 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 			fclose(f);
 
 			char msg[BUFFER_SIZE] = "";
-			_snprintf(msg, BUFFER_SIZE, "Wrote %s", fn); 
+			_snprintf(msg, BUFFER_SIZE, __LOCALIZE_VERFMT("Wrote %s","sws_mbox"), fn); 
 			MessageBox(GetMainHwnd(), msg, _title, MB_OK);
 			return true;
 		}
 		else
-			MessageBox(GetMainHwnd(), "Dump failed: unable to write to file!", _title, MB_OK);
+			MessageBox(GetMainHwnd(), __LOCALIZE("Dump failed: unable to write to file!","sws_mbox"), _title, MB_OK);
 	}
 	else
-		MessageBox(GetMainHwnd(), "Dump failed: action window not opened!", _title, MB_OK);
+		MessageBox(GetMainHwnd(), __LOCALIZE("Dump failed: action window not opened!","sws_mbox"), _title, MB_OK);
 	return false;
 }
 
@@ -1322,12 +1219,12 @@ void DumpWikiActionList(COMMAND_T* _ct)
 {
 	DumpActionList(
 		(int)_ct->user, 
-		"S&M - Save ALR Wiki summary", 
+		__LOCALIZE("S&M - Save ALR Wiki summary","sws_mbox"),
 		"|-\n| [[%s_%s|%s]] || %s\n",
 		"{| class=\"wikitable\"\n|-\n! Action name !! Cmd ID\n",
 		"|}\n");
 }
 
 void DumpActionList(COMMAND_T* _ct) {
-	DumpActionList((int)_ct->user, "S&M - Dump action list", "%s\t%s\t%s\n", "Section\tId\tAction\n", NULL);
+	DumpActionList((int)_ct->user, __LOCALIZE("S&M - Dump action list","sws_mbox"), "%s\t%s\t%s\n", "Section\tId\tAction\n", NULL);
 }

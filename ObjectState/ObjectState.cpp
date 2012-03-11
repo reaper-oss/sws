@@ -56,8 +56,9 @@ void ObjectStateCache::WriteCache()
 	{
 		if (m_str.Get(i)->GetLength() && m_orig.Get(i) && strcmp(m_str.Get(i)->Get(), m_orig.Get(i)))
 		{
-			RemoveAllIds(m_str.Get(i));
+			SNM_PreObjectState(m_str.Get(i), false);
 			GetSetObjectState(m_obj.Get(i), m_str.Get(i)->Get());
+			SNM_PostObjectState();
 #ifdef GOS_DEBUG
 			iCount++;
 #endif
@@ -77,7 +78,7 @@ void ObjectStateCache::EmptyCache()
 	m_orig.Empty(true, FreeHeapPtr);
 }
 
-const char* ObjectStateCache::GetSetObjState(void* obj, const char* str)
+const char* ObjectStateCache::GetSetObjState(void* obj, const char* str, bool wantsMinimalState)
 {
 	int i = m_obj.Find(obj);
 	if (i < 0)
@@ -88,7 +89,12 @@ const char* ObjectStateCache::GetSetObjState(void* obj, const char* str)
 		if (str && str[0])
 			m_orig.Add(NULL);
 		else
-			m_orig.Add(GetSetObjectState(obj, NULL));
+		{
+			SNM_PreObjectState(NULL, wantsMinimalState);
+			char* p = GetSetObjectState(obj, NULL);
+			SNM_PostObjectState();
+			m_orig.Add(p);
+		}
 	}
 	if (str && str[0])
 	{
@@ -104,17 +110,17 @@ const char* ObjectStateCache::GetSetObjState(void* obj, const char* str)
 
 ObjectStateCache* g_objStateCache = NULL;
 
-const char* SWS_GetSetObjectState(void* obj, WDL_FastString* str)
+const char* SWS_GetSetObjectState(void* obj, WDL_FastString* str, bool wantsMinimalState)
 {
 	const char* ret;
 	
 	if (g_objStateCache)
-		ret = g_objStateCache->GetSetObjState(obj, str ? str->Get() : NULL);
+		ret = g_objStateCache->GetSetObjState(obj, str ? str->Get() : NULL, wantsMinimalState);
 	else
 	{
-		if (str)
-			RemoveAllIds(str);
+		SNM_PreObjectState(str, wantsMinimalState);
 		ret = GetSetObjectState(obj, str ? str->Get() : NULL);
+		SNM_PostObjectState();
 	}
 
 #ifdef GOS_DEBUG

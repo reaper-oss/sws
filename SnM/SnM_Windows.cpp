@@ -28,6 +28,7 @@
 
 #include "stdafx.h"
 #include "SnM_Actions.h"
+#include "../reaper/localize.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -153,12 +154,9 @@ HWND GetReaWindowByTitle(const char* _title, int _nComp)
 		if (!strcmp(_title, buf))
 			return w;
 		// in a floating docker ?
-		else if (!strcmp("Docker", buf))
-		{
-			w = GetReaChildWindowByTitle(w, _title, _nComp);
-			if (w) 
+		else if (!strcmp(__localizeFunc("Docker", "DLG_222", 0), buf))
+			if (w = GetReaChildWindowByTitle(w, _title, _nComp)) 
 				return w;
-		}
 	}
 #endif
 	return NULL;
@@ -166,7 +164,7 @@ HWND GetReaWindowByTitle(const char* _title, int _nComp)
 
 HWND GetActionListBox(char* _currentSection, int _sectionSz)
 {
-	HWND actionsWnd = GetReaWindowByTitle(GetLocalizedString("REAPER", "DLG_274", "744B2F6CFBA0A242", "Actions"));
+	HWND actionsWnd = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0));
 	if (actionsWnd && _currentSection)
 		if (HWND cbSection = GetDlgItem(actionsWnd, 0x525))
 			GetWindowText(cbSection, _currentSection, _sectionSz);
@@ -203,16 +201,15 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 				if (_id && _idSize > 0)
 				{
 					// SWS action? => get the custom id in a reliable way
-					if (COMMAND_T* ct = SWSGetCommandByID(cmdId)) {						
-						_snprintf(_id, _idSize, "_%s", ct->id);
-						return i;
-					}
+					if (!_section || (_section && !strcmp(_section,__localizeFunc("Main","accel_sec",0))))
+						if (COMMAND_T* ct = SWSGetCommandByID(cmdId))
+							return (_snprintf(_id, _idSize, "_%s", ct->id)>0 ? i : -1);
+
 					// best effort to get the custom id (relies on displayed columns..)
 					ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
-					if (!*_id)
-					{
-						if (_strnicmp(actionName, "Custom:", 7))
-							_snprintf(_id, _idSize, "%d", (int)li.lParam);
+					if (!*_id) {
+						if (!IsMacro(actionName))
+							return (_snprintf(_id, _idSize, "%d", (int)li.lParam)>0 ? i : -1);
 						else
 							return -2;
 					}
@@ -321,7 +318,7 @@ void toggleFloatFX(MediaTrack* _tr, int _fx)
 
 // _all=true: all FXs for all tracks, false: selected tracks + given _fx
 // _fx=-1: current selected FX. Ignored when _all == true.
-// showflag=0 for toggle, =2 for hide floating window (index valid), =3 for show floating window (index valid)
+// showflag=0 for toggle, =2 for hide floating window (valid index), =3 for show floating window (valid index)
 void floatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _selTracks) 
 {
 	bool matchTrack = (_tr && (!_selTracks || (_selTracks && *(int*)GetSetMediaTrackInfo(_tr, "I_SELECTED", NULL))));
@@ -486,7 +483,7 @@ bool cycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTrack
 				if (j >= fxCount || j < 0)
 					break; // implies track cycle
 
-				// *** Perform custom stuff ***
+				// *** perform custom stuff ***
 				if (job(tr, j, _selectedTracks))
 				   return true;
 
@@ -657,7 +654,8 @@ void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 				int focusedPrevious = getFocusedFX(tr, dir);
 
 				// specific case: make it work even no FX window is focused
-				// (e.g. classic pitfall: when the action list is focused, http://forum.cockos.com/showpost.php?p=708536&postcount=305)
+				// (classic pitfall: when the action list is focused, see
+				// http://forum.cockos.com/showpost.php?p=708536&postcount=305)
 				if (focusedPrevious < 0)
 					focusedPrevious = getFirstFloatingFX(tr, dir);
 
@@ -707,14 +705,14 @@ void cycleFocusHideOthersWnd(COMMAND_T * _ct)
 	EnumWindows(EnumReaWindows, 0);
 	AddUniqueHnwd(GetMainHwnd(), g_hwnds, &g_hwndsCount);
 
-	// Sort & filter windows
+	// sort & filter windows
 	WDL_PtrList<HWND> hwndList;
 	for (int i =0; i < g_hwndsCount && i < MAX_ENUM_HWNDS; i++)
 	{
 		char buf[512] = "";
 		GetWindowText(g_hwnds[i], buf, 512);
-		if (strcmp("Item/track info", buf) && // wtf !?
-			strcmp("Docker", buf)) // "closed" floating dockers are in fact hidden (and not redrawn => issue)
+		if (strcmp(__localizeFunc("Item/track info","sws_DLG_131",0), buf) && // wtf !?
+			strcmp(__localizeFunc("Docker", "DLG_222", 0), buf)) // "closed" floating dockers are in fact hidden (and not redrawn => issue)
 		{
 			int j = 0;
 			for (j=0; j < hwndList.GetSize(); j++)
@@ -728,7 +726,7 @@ void cycleFocusHideOthersWnd(COMMAND_T * _ct)
 		}
 	}
 
-	// Compute window to be displayed
+	// compute window to be displayed
 	g_lastFocusHideOthers += (int)_ct->user; // not a % !
 	if (g_lastFocusHideOthers < 0)
 		g_lastFocusHideOthers = hwndList.GetSize();
@@ -773,7 +771,7 @@ void focusMainWindowCloseOthers(COMMAND_T* _ct)
 	g_hwndsCount = 0;
 	EnumWindows(EnumReaWindows, 0); 
 	for (int i=0; i < g_hwndsCount && i < MAX_ENUM_HWNDS; i++)
-		if (g_hwnds[i] != GetMainHwnd())
+		if (g_hwnds[i] != GetMainHwnd() && IsWindowVisible(g_hwnds[i]))
 			SendMessage(g_hwnds[i], WM_SYSCOMMAND, SC_CLOSE, 0);
 #endif
 	SetForegroundWindow(GetMainHwnd()); 
@@ -807,7 +805,7 @@ void ShowThemeHelper(WDL_FastString* _report, HWND _hwnd, bool _mcp, bool _sel)
 		HWND w = g_childHwnds[i];
 		if (IsWindowVisible(w))
 		{
-			bool mcpChild = IsChildOf(w, "Mixer", -1);
+			bool mcpChild = IsChildOf(w, __localizeFunc("Mixer", "DLG_151", 0), -1);
 			if ((_mcp && mcpChild) || (!_mcp && !mcpChild))
 			{
 				MediaTrack* tr = (MediaTrack*)GetWindowLongPtr(w, GWLP_USERDATA);
@@ -830,11 +828,11 @@ void ShowThemeHelper(COMMAND_T* _ct)
 	if ((int)_ct->user != 1 && report.GetLength())
 		report.Append("\n");
 
-	HWND w = GetReaWindowByTitle(GetLocalizedString("REAPER", "mixer", "63F6D385957D048A", "Mixer Master"));
+	HWND w = GetReaWindowByTitle(__localizeFunc("Mixer Master", "mixer", 0));
 	if (w && IsWindowVisible(w)) 
 		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
 
-	w = GetReaWindowByTitle(GetLocalizedString("REAPER", "common", "D66D409D600C2D04", "Mixer"));
+	w = GetReaWindowByTitle(__localizeFunc("Mixer", "DLG_151", 0));
 	if (w && IsWindowVisible(w)) 
 		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
 
@@ -854,7 +852,7 @@ void GetVisibleTCPTracks(WDL_PtrList<void>* _trList)
 	for (int i=0; i < g_childHwndsCount && i < MAX_ENUM_CHILD_HWNDS; i++)
 	{
 		HWND w = g_childHwnds[i];
-		if (IsWindowVisible(w) && !IsChildOf(w, "Mixer", -1))
+		if (IsWindowVisible(w) && !IsChildOf(w, __localizeFunc("Mixer", "DLG_151", 0), -1))
 			_trList->Add((void*)GetWindowLongPtr(w, GWLP_USERDATA));
 	}
 #endif

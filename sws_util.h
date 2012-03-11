@@ -186,7 +186,9 @@ void SWSFreeUnregisterDynamicCmd(int id);
 void ActionsList(COMMAND_T*);
 int SWSGetCommandID(void (*cmdFunc)(COMMAND_T*), INT_PTR user = 0, const char** pMenuText = NULL);
 COMMAND_T* SWSGetCommandByID(int cmdId);
-HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);
+int IsSwsAction(const char* _actionName);
+
+HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu = NULL, int* iIndex = NULL);;
 
 // Utility functions, sws_util.cpp
 BOOL IsCommCtrlVersion6();
@@ -219,15 +221,11 @@ void SWS_GetSelectedMediaItems(WDL_TypedBuf<MediaItem*>* buf);
 void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack* tr);
 int SWS_GetModifiers();
 void WinSpawnNotepad(const char* pFilename);
-//JFB: temp function (until WDL's ProjectContext does not use WDL_FastString)
-void makeEscapedConfigString(const char *in, WDL_FastString *out);
+void makeEscapedConfigString(const char *in, WDL_FastString *out); //JFB: temp (WDL's ProjectContext does not use WDL_FastString yet)
 
 // Localization
-// note: always tagged with "sws_" in case SWS' langpack == REAPER's langpack
-#define SNM_I8N_SWS_COMMON_SEC		"sws_common"
-#define SNM_I8N_SWS_ACTION_SEC		"sws_actions"
-#define SNM_I8N_SNM_ACTION_SEC		"s&m_action_section"
-
-// Localization functions (in SnM_Misc.cpp, temp?)
-const char* GetLocalizedString(const char* _langpack, const char* _section, const char* _key, const char* _defaultStr);
-const char* GetLocalizedActionName(const char* _custId, const char* _defaultStr, const char* _section = SNM_I8N_SWS_ACTION_SEC);
+//#define _SWS_LOCALIZATION
+#define SWS_I8N_ACTION_SEC		"sws_actions"
+#define SWS_I8N_UNDO_SEC		"sws_undo"
+#define SNM_I8N_ACTION_SEC		"s&m_section_actions"
+const char* GetLocalizedActionName(const char* _custId, const char* _defaultStr, const char* _section = SWS_I8N_ACTION_SEC);

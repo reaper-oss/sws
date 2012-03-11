@@ -1,37 +1,76 @@
++<b>All S&M "Apply track template" actions now preserve receives</b> (i.e. use track templates a bit like snapsshots).
+Notes: the same goes with "Apply track template" commands in the Resources window (on double-click or ENTER key). Track sends were already preserved.
++Support for the global preference "Disable saving full plugin states" (fixes possible truncated snapshots, FX chains, etc...)
++All S&M windows: optional Windows-rendered fonts (ClearType) - To enable this option set ClearTypeFont to 1 in the section [General] of the S&M.ini file
++Many actions run faster
+
+Live Configs:
++OSX: FX presets support like on Windows OS
++Added "Learn current preset" (in the context menu of the column "FX presets")
++<b>All FX presets are now supported via the Learn command</b>: VST patches (.fxp), AU factory/user Presets (.aupreset), etc.. Note: support was limited to user presets (.rpl) before this version.
++Send all notes-off when deactivating a track (if one defined)
+
+Resources window:
++New option to sync auto-save and auto-fill directories (right click the auto-save/fill buttons): updating one updates the other
++Maximum number of bookmarks raised to 32
++Issue 450: loading slots (or double-licking an empty slot) browses the last used path
+
+Cue buss generator:
++Up to 8 different cue buss settings can be defined: new dropdown box "Cue buss settings" (bottom right)
++Added actions "SWS/S&M: Create cue buss from track selection, settings n" where 'n' is in [1; 8]
++Tweaks: removed confusing "save properties" button (settings are now saved on the fly), better OSX display, added file error messages, etc..
+
+FX presets actions improvements: OSX support + improved on Windows OS (new dedicated API)
+Added in the main section of the action list (new on OSX):
++SWS/S&M: Trigger next preset for FX n of selected tracks - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Trigger previous preset for FX n of selected tracks - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Trigger next preset for selected FX of selected tracks
++SWS/S&M: Trigger previous preset for selected FX of selected tracks
+Added in the "S&M extension" of the action list (new on OSX):
++SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC absolute only)" }, "S&M_SELFX_PRESET", TriggerFXPreset, NULL, -1},
++SWS/S&M: Trigger preset for FX n of selected tracks (MIDI CC absolute only)- where 'n' is in [1; 4]
+Added new FX preset actions in the main section (new on OSX and Windows OS):
++SWS/S&M: Trigger next preset for last touched FX
++SWS/S&M: Trigger previous preset for last touched FX
+
+Fixed all S&M copy/cut/paste sends/receives/routings actions (fixed issue vs multi track selection, see issue 174).
+It also fixes SWS smart copy/paste actions:
++SWS: Copy items/tracks/env, obeying time sel
++SWS: Cut items/tracks/env, obeying time sel
+
 !v2.2.0 #2 (March 7, 2012)
 Fixed groove tool context menu
 Added label processor (Extensions->Label processor). Automatic labelling of selected items using various parameters.  <= Thanks IXix!
 
-
+!v2.2.0 #1 (February 13, 2012)
 <b>Lots of changes from 2.1 -> 2.2.  The fine details are below, but the major changes are:</b>
 +Snapshots fully working with v4 - pans, frozen tracks, all envelopes, etc.
 +Markerlist supports region/marker colors
 +S&M windows are themed to match Reaper
 +Cycle action editor for OSX
 +Item normalizing to RMS
-+Too many resource view/live config updates to list here
++Too many Resources window/Live Config updates to list here
 +Notes/help subtitle support
 +Lots of stability and performance improvements.  We <b>strongly</b> recommend you update to v2.2 if you're still running SWS v2.1.0.
 
-!v2.2.0 #1 (February 13, 2012)
 Fixed support for REAPER 3.x
 Issue 449: fixed cue buss actions not copying track levels to buss' receives when in pre-fader mode
 Faster undos (UNDO_STATE_MISCCFG & UNDO_STATE_ALL)
-Fixed flickering of docked SWS and S&M views when resizing them (http://stash.reaper.fm/11694/ShakeThisOut.gif|before fix|, http://stash.reaper.fm/11695/ShakeThisOut_fixed.gif|after|)
+Fixed flickering of docked SWS and S&M windows when resizing them (http://stash.reaper.fm/11694/ShakeThisOut.gif|before fix|, http://stash.reaper.fm/11695/ShakeThisOut_fixed.gif|after|)
 List views: fixed wrong context menu when columns were hidden/moved (Auto Color/Icon, Live Configs, etc...)
-List views (Windows OS): fixed possible missing vertical grid lines + better grid display vs cell edition
+List views (Windows OS): fixed possible missing vertical grid lines and better grid display vs cell edition
 All S&M track group actions now also support the master track
 Issue 256: Fixed "SWS: Toggle auto add envelopes when tweaking in write mode" also affecting other preferences
 
 Live Configs:
-+Added "Learn actions/macro from Actions window" (in the context menu of columns "Activate action" and "Deactivate action") - Windows OS only
++Added "Learn from Actions window" (in the context menu of columns "Activate action" and "Deactivate action") - Windows OS only
 +GUI fixes and tweaks: fixed FX 1st preset display, "Edit" menu items, support for INSERT and F2 keys, etc..
-Added actions (useful to switch configs without MIDI CC controller, e.g. +/- pedals sending MIDI note messages)
+Added actions (useful to switch configs without MIDI CC controller, e.g. plus/minus pedals sending MIDI note messages)
 +SWS/S&M: Live Config #n - Next (where 'n' is in [1; 8])
 +SWS/S&M: Live Config #n - Previous (where 'n' is in [1; 8])
 
-Resources view:
-+More "macro friendly" slots actions: when the view is empty, add the needed number of slots and browse for file (rather than displaying an error message)
+Resources window:
++More "macro friendly" slots actions: when the list view is empty, add the needed number of slots and browse for file (rather than displaying an error message)
 +Auto-fill now hehaves like Auto-save: new top left button for auto-fill too, same context menu, etc.. (Issue 436, indirectly)
 +Added Bookmark commands in the context menu: new, delete and rename bookmarks (Issue 436)
 +Auto-save: fixed automatic building of filenames (strip forbidden characters)
@@ -40,14 +79,14 @@ Resources view:
 Track templates slots:
 +Issue 441: new auto-save option to retain envelopes in templates (the option to retain items was already there)
 +Added tick box for the new REAPER v4.15 option "Offset template items/envelopes by edit cusor"
-+Added actions "SWS/S&M: Apply track template (+envelopes/items) to selected tracks, slot n" , where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
++Added actions "SWS/S&M: Apply track template (with envelopes/items) to selected tracks, slot n" where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
 
 Cycle action editor:
 +Additional consistency checks before aplying/registering cycle actions
 +Support for DELETE and F2 keys (remove/renames cycle actions and commands)
 
 House cleaning:
-+All S&M views: better/tighter context menus
++All S&M windows: better/tighter context menus
 +Tagged "Xenakios/SWS: Load project template" actions as deprecated (you can use "SWS/S&M: Open/select project template, slot n" instead: these new actions are not tied to paths/filenames)
 +Renamed all toggle actions "SWS/S&M: Open [...] window" into "SWS/S&M: Open/close [...] window"
 +Renamed all actions "[...]Notes/Subtitles/Help[...]" into "[...]Notes[...]"
@@ -73,19 +112,19 @@ On Windows OS: all S&M list views now support grid lines, i.e. they use the colo
 OSX: Fixed "beachball" when running cycle actions
 
 !v2.1.0 #25 (January 1, 2012)
-OSX cleanup/fixes (thanks to Kundalinguist and CaptainHook!)
+Cycle actions: OSX cleanup/fixes (thanks to Kundalinguist and CaptainHook!)
 +Fixed import and edition of cycle actions
 +Added "Cycle Action Editor" in main menu > extensions (like on Windows OS)
 +Cycle Action Editor it is now available out of the box
 
-Resources view:
+Resources window:
 +New auto-save preferences for FX chains: Context menu > Auto-save configuration > "Create filename from track/item name" (default) and "Create filename from 1st FX name" (useful to create FX libraries)
 New option and actions for playback synchronization
 +SWS/S&M: Play media file in selected tracks (sync with next measure), slot n - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
 +SWS/S&M: Loop media file in selected tracks (sync with next measure), slot n - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
 +Added "advanced" option in the S&M.ini file to synchroneously play/stop/pause/etc.. media files across tracks (see details in http://code.google.com/p/sws-extension/issues/detail?id=435|issue 435|)
 
-Notes/Subtitles/Help view:
+Notes/Subtitles/Help window:
 +Fixed refresh problem introduced in v2.1.0 #23
 +The "big font" name can be customized in the S&M.ini file: "BigFontName" in the section [NOTES_HELP_VIEW]
 +House cleaning: removed "Region/marker names" deprecated since v2.1.0 #23 (added marker and region subtitles/notes)
@@ -99,13 +138,13 @@ Image window:
 +Fixed alpha channel problem
 +Added stretch option in the context menu
 
-Resources view: bookmark names as defined by the user
+Resources window: bookmark names as defined by the user
 
 !v2.1.0 #23 (December 15, 2011)
-Notes/Help view -> Notes/Subtitles/Help
+Notes/Help window -> Notes/Subtitles/Help
 +Subtitles support: new mode "Marker/Region subtitles" in the top left dropdown box.
 You can edit notes for regions and/or markers. Such notes are saved in project files. 
-When the view/text edition is locked, notes are displayed with a dynamic sized font (display à la "Big clock") and they follow the play cursor position (i.e. subtitles!).
+When the view/text edition is locked, notes are displayed with a dynamic sized font (display &agrave; la "Big clock") and they follow the play cursor position (i.e. subtitles!).
 Useful for lyrics, video stuff (you can display subttiles or even to edit them in REAPER), etc...
 Also added new buttons and actions to import/export SubRip subtitle files (.srt files, this format is supported by most video players) :
 +SWS/S&M: Notes/Subtitles/Help - Import subtitle file... - It adds a region with notes for each subtitle of the loaded file
@@ -121,7 +160,7 @@ Added actions with pause:
 <b>IMPORTANT:</b> due to its scary name, the folowing action is hidden by default (i.e. 0 slot in the S&M.ini file but it is customizable there: up to 99 slots)
 +SWS/S&M: Loop media file in selected tracks (toggle pause), slot n - Infinite looping! To be stopped!
 
-Resources view updates:
+Resources window updates:
 +Fixed few slot actions that could not be tied to bookmarks (they were not obeying the tick box "Tie slot actions")
 Added clear/delete slot actions (Issue 431):
 +SWS/S&M: Delete all FX chain slots
@@ -138,10 +177,10 @@ Added clear/delete slot actions (Issue 431):
 +SWS/S&M: Clear image slot n
 +SWS/S&M: Clear theme slot n - On Windows OS only
 
-New "Images" slot type in the Resources view: manage slots for PNG files (Issue 418)
-+Reminder: you can switch the Resources view to "Images" in the top left dropdown box
-+External drag-drop (e.g. drag a bunch of PNG files from an external tool -> drop them into the Resources view)
-+Internal drag-drop (e.g. re-order slots, drag a slot from the Resources view -> drop it into a track) - Windows OS only
+New "Images" slot type in the Resources window: manage slots for PNG files (Issue 418)
++Reminder: you can switch the Resources window to "Images" in the top left dropdown box
++External drag-drop (e.g. drag a bunch of PNG files from an external tool -> drop them into the Resources window)
++Internal drag-drop (e.g. re-order slots, drag a slot from the Resources window -> drop it into a track) - Windows OS only
 +Context menu: show image, set as track icon, etc.. various "auto-fill slots" features, insert/add/clear/etc..
 In this view, double-click and the ENTER key can be customized to:
 +Show an image (in a dedicated dockable/resizable "S&M - Image" window)
@@ -162,10 +201,10 @@ Issue 433: fixed creation of cycle actions broken in v2.1.0 #22
 House cleaning:
 +Renamed all actions "SWS/S&M: Select/load project template [...]" into "Open/select project template [...]"
 +Renamed all actions "SWS/S&M: Play/loop media file [...]" into "Loop media file [...]"
-+Removed Media Pool dialog - replaced natively plus with Resource view "play" actions
++Removed Media Pool dialog - replaced natively plus with Resource window "play" actions
 
 !v2.1.0 #22 (December 12, 2011)
-Resources view updates:
+Resources window updates:
 Issue 408: added resource slot bookmarks
 +New tiny add/delete bookmark buttons
 +New tick box: slots actions can be tied to bookmarks instead of default resource types (FX chains, Track templates, etc..)
@@ -184,7 +223,7 @@ Other:
 
 Cycle action editor: re-fixed drag-drop of commands in the right list view re-broken in v2.1.0 #21
 Live Configs: the ENTER key activates the selected config
-Notes/help view: less flickering
+Notes/help window: less flickering
 Properly keep marker/region colors when renumbering
 
 !v2.1.0 #21 (November 28, 2011)
@@ -200,7 +239,7 @@ Live Configs:
 +Fixed possible crash on Win 7 (when switching projects)
 +Fixed possible loss of the "Input track" dropdown box (with veeeery long track names)
 
-Resources view:
+Resources window:
 +Track templates: new double click option, better context menu item names, etc..
 +Fixed possible crash when removing a custom resource type from the S&M.ini file
 +<b>Limited "spam" in the action list: all slot actions now only have 4 instances by default</b> (cutomizable at the end of the S&M.ini file, up to 99 slots per action)
@@ -208,8 +247,8 @@ Note: your current slot actions are preserved, of course!
 
 Notes/help: do not update region/marker names when playing and editing (but only when the view is locked)
 
-S&M views theming:
-S&M views now use themed buttons (i.e. toolbar_blank.png and composite_toolbar_overlay.png, if it exists)
+S&M windows theming:
+S&M windows now use themed buttons (i.e. toolbar_blank.png and composite_toolbar_overlay.png, if it exists)
 List views also obey following colors of the Theme Editor (REAPER > v4.11, on Windows OS and OSX!) :
 +Window list selection bg
 +Window list selection fg
@@ -226,7 +265,7 @@ The following media item actions will work whatever is the current track selecti
 Added action:
 +SWS/S&M: Send all notes off to selected tracks
 
-Resources view:
+Resources window:
 +Custom resource types !? Details http://forum.cockos.com/showpost.php?p=851041&postcount=690|here|.
 +More REAPER-ish text filter (by name, by path and/or by comment, configurable in the context menu)
 Auto-save for media file slots:
@@ -239,7 +278,7 @@ Issue 411, fixes for S&M media files slot actions (thanks Anton9!):
 
 House cleaning:
 +Renamed all "SWS/S&M: Apply FX chain [...]" actions into "Paste (replace) FX chain [...]"
-+Notes/help view (in "Action help" mode): renamed the button "Wiki ALR" into "Online help..."
++Notes/help window (in "Action help" mode): renamed the button "Wiki ALR" into "Online help..."
 +Windows OS: do not systematically send deleted files to the recycle bin (hard delete for temp files)
 +OSX: S&M logos like on Windows OS
 
@@ -250,18 +289,18 @@ Issue 400: Fixed marker set paste in Reaper v4.x
 Issue 375: Fixed "SWS: Nudge master output 1 volume -1db" action
 
 !v2.1.0 #18 (November 14, 2011)
-Resources view: two new slot types, Media files and Themes!
+Resources window: two new slot types, Media files and Themes!
 
-New "Media files" slot type in the Resources view:
+New "Media files" slot type in the Resources window:
 Manage slots for all media file types supported by REAPER (WAV, MIDI, etc..).
-+Reminder: you can switch the Resources view to "Media files" in the top left dropdown box
-+External drag-drop (e.g. drag a bunch of files from an external tool -> drop them into the Resources view)
-+Internal drag-drop (e.g. re-order slots, drag a bunch of slots from the Resources view -> drop them into the arrange) - Windows OS only
++Reminder: you can switch the Resources window to "Media files" in the top left dropdown box
++External drag-drop (e.g. drag a bunch of files from an external tool -> drop them into the Resources window)
++Internal drag-drop (e.g. re-order slots, drag a bunch of slots from the Resources window -> drop them into the arrange) - Windows OS only
 Context menu: 
 +Various "auto-fill slots" features, rename & delete file(s), insert/add/clear/etc.. slot, show path in explorer/finder, etc..
 +Bulk-add multiple selected media file slots to current track, to new tracks or to selected items as takes
 +Bulk-play or loop multiple media file slots
-In this view the double-click can be customized to:
+In the list view the double-click can be customized to:
 +Toggle play or loop in selected tracks
 +Add media file to current track, to new track or to selected items as takes
 Added slot actions for media files:
@@ -280,11 +319,11 @@ Added slot actions for media files:
 +SWS/S&M: Stop playing media files
 +SWS/S&M: Stop playing media files in selected tracks
 
-New "Themes" slot type in the Resources view (on Windows OS only):
+New "Themes" slot type in the Resources window (on Windows OS only):
 Manage slots for themes, i.e. slots for ReaperthemeZip files (unpacked themes are not supported).
-+Reminder: you can switch the Resources view to "Themes" in the top left dropdown box
-+External drag-drop (e.g. drag a bunch of .ReaperthemeZip files -> drop them into the Resources view)
-+Internal drag-drop (e.g. re-order slots, drag a slot from the Resources view -> drop it into the arrange)
++Reminder: you can switch the Resources window to "Themes" in the top left dropdown box
++External drag-drop (e.g. drag a bunch of .ReaperthemeZip files -> drop them into the Resources window)
++Internal drag-drop (e.g. re-order slots, drag a slot from the Resources window -> drop it into the arrange)
 +Context menu: load theme, various "auto-fill slots" features, insert/add/clear/etc..
 Added slot actions for themes:
 +SWS/S&M: Open Resources window (Themes)
@@ -300,7 +339,7 @@ Issue 375: Added actions to control the master track hardware output:
 +SWS: Set master output 1 volume to 0db
 
 Fixed issue 409: bad theming colors when REAPER version was < v4.11
-Many Xenakios actions now have consistent undo names (vs action names) + removed a log file
+Many Xenakios actions now have consistent undo names (vs action names), removed a log file
 S&M.ini file: better presentation of configurable slot actions
 
 !v2.1.0 #17 (November 2, 2011)
@@ -313,11 +352,11 @@ Cycle action editor:
 +Action learn: now, SWS actions can be learned whatever are the displayed columns in the action list
 +Macro learn: a clear error message is displayed when the column "Custom ID" is not displayed in the action list
 
-Notes/Help view: region names can be edited too (they are edited/displayed according to edit/play cursor position)
+Notes/Help window: region names can be edited too (they are edited/displayed according to edit/play cursor position)
 
-Resources view: the context menu item "Select/load project templates (new tab)" now also opens multiple selected projects in separate tabs (issue 369)
+Resources window: the context menu item "Select/load project templates (new tab)" now also opens multiple selected projects in separate tabs (issue 369)
 
-All S&M themable views use the following configurable colors of the Theme Editor (on Windows & REAPER v4.11):
+All S&M themable windows use the following configurable colors of the Theme Editor (on Windows & REAPER v4.11):
 +Window background
 +Window text
 +Window edit background
@@ -333,9 +372,9 @@ House cleaning:
 +Removed buggy/deprecated "Xenakios/SWS: Save current contents of actions list to file" (issue 311)
 
 !v2.1.0 #16 (October 14, 2011)
-S&M themable views: fixed 3D highlight/shadow colors
+S&M themable windows: fixed 3D highlight/shadow colors
 
-Resource view: Project Loader/Selecter overhauled
+Resource window: Project Loader/Selecter overhauled
 +Added context menu items "Set project loader/selecter from selection" and "Clear project loader/selecter configuration"
 +Slots that are part of the configuration are now displayed as such (in the 1st column)
 +The current opened project slot is automatically selected
@@ -354,9 +393,9 @@ Added actions:
 
 Cue Buss Generator & Live Configs: track templates improvements (same as Issue 376)
 
-Resources view: saved FX chains and track templates are now indented
+Resources window: saved FX chains and track templates are now indented
 
-Notes/Help view: better resizing, improved "big font" display (less flickering)
+Notes/Help window: better resizing, improved "big font" display (less flickering)
 
 Faster REAPER startup, especially with large projects (for real this time!)
 
@@ -403,8 +442,8 @@ Issue 372:
 +Fixed naming with in-project MIDI items
 
 !v2.1.0 #11 (September 15, 2011)
-Resources view / track templates: auto-save now fully mimics the way track templates are saved natively (details in http://code.google.com/p/sws-extension/issues/detail?id=376|Issue 376|)
-Resources view / FX Chains: auto-save now fully mimics the way FX Chains are saved natively (Issue 376)
+Resources window / track templates: auto-save now fully mimics the way track templates are saved natively (details in http://code.google.com/p/sws-extension/issues/detail?id=376|Issue 376|)
+Resources window / FX Chains: auto-save now fully mimics the way FX Chains are saved natively (Issue 376)
 
 Optimization: faster SWS init / REAPER startup
 
@@ -415,10 +454,10 @@ REAPER v4.03pre's track freeze: some actions won't have any effect on frozen tra
 Live configs:
 +Smoother switching between configs: now respects the native "track mute fade" preference (more to come..)
 +Auto track selection: make sure that only configured tracks are selected while performing "Activate" and "Deactivate" actions (and restore selection just after)
-+Live configs view: now displays user preset names (rather than ids)
++Live configs window: now displays user preset names (rather than ids)
 +Fixed ignored FX presets switches (when "Auto track selection" was not ticked)
 
-Resources view:
+Resources window:
 +Context menu (Issue 373): added menu items "Auto-save", "Auto-fill from project path" and "Auto-fill..."
 +OSX (Issue 373): multiple selection of slots
 +Text filter: added "Name" criteria, filtering by path now ignores trailing filenames
@@ -444,10 +483,10 @@ Cycle action editor: fixed corrupted "Right click here..." cycle action introduc
 
 Marker list now supports save/restore and changing of colors ("Set color..." in the context menu), including en masse with ctrl-click - requires Reaper v4.03
 
-Resources view: "Auto-fill" (context menu) now adds slots rather than inserting them (i.e. do not change existing slot numbers)
-Resources view/FX Chains: support for track channels when FX Chains are saved in the Resources view (Issue 363)
-Resources view/Projects: added "Add recent projects" in the context menu (it adds all recent projects as listed in Main menu>File>Recent projects)
-Resources view/Projects: added project loader/selecter actions (useful for live performance):
+Resources window: "Auto-fill" (context menu) now adds slots rather than inserting them (i.e. do not change existing slot numbers)
+Resources window/FX Chains: support for track channels when FX Chains are saved in the Resources view (Issue 363)
+Resources window/Projects: added "Add recent projects" in the context menu (it adds all recent projects as listed in Main menu>File>Recent projects)
+Resources window/Projects: added project loader/selecter actions (useful for live performance):
 +SWS/S&M: Project loader/selecter: configuration - This one allows you defining start/end slots (empty slot gaps are ignored)
 +SWS/S&M: Project loader/selecter: next (cycle)
 +SWS/S&M: Project loader/selecter: previous (cycle)
@@ -533,7 +572,7 @@ Issue 319: Fixed double-click renaming of fields on OSX
 Issue 323: Fixed duplicated "Recall snapshot" actions
 Issue 326: Renamed "set/unset/toggle master send" actions to "master outputs", added toggles to 12
 
-S&M Resources view:
+S&M Resources window:
 The number of slot actions can now be customized in the S&M.ini file, in the new section "NbOfActions".
 This section is automatically created for you. *Quit REAPER* then just change the number of slots/actions (none: 0, max: 99).
 An example (w/ the list of current configurable actions and their default numbers) is http://reaper.mj-s.com/NbOfActions.txt|here|.
@@ -613,7 +652,7 @@ Added actions:
 +SWS/S&M: Set active take pan envelopes to center
 +SWS/S&M: Scroll to selected item (no undo)
 
-S&M Resources view:
+S&M Resources window:
 +Fixed grayed "Add slot" and "Insert slot" popup menu items (since v2.0.0 #26)
 +Track templates: auto save now also works with the master track (saving a "master track template" is not possible natively)
 +Track templates: applying track templates to the master track is now possible
@@ -626,7 +665,7 @@ Merged tiny extension (2 new actions that can help WALTERing themes, see the dis
 +SWS/S&M: Show theme helper (all tracks) - Windows OS only
 +SWS/S&M: Show theme helper (selected track) - Windows OS only
 
-Theming updates for all S&M views (Find, Resources, Notes/help and Live Configs):
+Theming updates for all S&M windows (Find, Resources, Notes/help and Live Configs):
 +Dynamic positioning of themed dropdowns, buttons, etc.. (i.e. no more truncated texts, no more unaligned components)
 +Windows OS: more use of themes' background colors (instead of "white backgrounds")
 +Fonts are now updated when switching themes
@@ -637,8 +676,8 @@ Added actions:
 +Issue 291: SWS/S&M: Map selected tracks MIDI input to source channel
 +Issue 291: SWS/S&M: Map selected tracks MIDI input to channel n - where 'n' is in [1; 16]
 
-S&M Resource view updates:
-+New option (in popup menu) to filter the view by comments or paths
+S&M Resource window updates:
++New option (in popup menu) to filter the list view by comments or paths
 +Switch to "fast listview" mode only if there are more than 500 slots
 
 S&M Find updates: 
@@ -668,8 +707,8 @@ Zoom updates:
 +Option to seek play when moving the edit cursor on zoom in
 +Mouse cursor doesn't move in Y when drag zooming, more Abelton Live like (Windows OS only)
 
-S&M Resource view updates:
-+Fixed drag-drop of slots within the view (comments were lost)
+S&M Resource window updates:
++Fixed drag-drop of slots within the list view (comments were lost)
 +Fixed text editing when some columns are hidden/moved
 
 !v2.0.0 #23 (May 17, 2011)
@@ -758,7 +797,7 @@ Added FX preset actions (v4 only, see implementation remarks http://forum.cockos
 +SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC absolute only)
 +SWS/S&M: Trigger preset for FX n of selected tracks (MIDI CC absolute only) - where 'n' is in [1; 4]
 Remarks: these 2 last MIDI actions are present in the "S&M Extension" section (see top right dropdown in the action dialog box). They are a bit different from the native "Link to PG change" feature: they work with any type of FX (e.g. JS). Bonus: since v4, "Program Change" MIDI events can be learned.
-+S&M Live config view: the "User preset" column is back !
++S&M Live config window: the "User preset" column is back !
 
 Added other actions:
 +SWS/S&M: Pan active takes of selected items to 100% right
@@ -769,11 +808,11 @@ Note: "pan takes" not "pan cakes".
 +SWS/S&M: Dump action list (w/ SWS extension) - Windows OS only!
 Note: dumped files are formatted (openable in Excel for example). See how to use these 2 actions http://wiki.cockos.com/wiki/index.php/S%26M_Dump_action_list|here|.
 
-Find view:
+Find window:
 +SWS/S&M: Find next
 +SWS/S&M: Find previous
 +Preserve the searched string (when closing, undocking, etc.)
-+Added shortcuts when the view is focused (F3 = find next, shift-F3 = find previous)
++Added shortcuts when the window is focused (F3 = find next, shift-F3 = find previous)
 
 Fixes, tweaks, house cleaning:
 +Fixed issue 287 (Unexpected behavior of "SWS/S&M: focus next floating fx for selected tracks (cycle)")
@@ -817,7 +856,7 @@ New actions from Adam Wathan:
 +SWS/AW: Set project timebase to beats (position only)
 +SWS/AW: Set project timebase to beats (position, length, rate)
 
-S&M Notes/help view: optimizations, fixed issue 204 (actions were not refreshed when the view was docked)
+S&M Notes/help window: optimizations, fixed issue 204 (actions were not refreshed when the view was docked)
 S&M GUI tweaks
 Bug fixes for "Fill Gaps" and "AW Fade" actions
 
@@ -842,7 +881,7 @@ Added actions (issue 268):
 +SWS/S&M: Reassign MIDI learned channels of all FX to input channel for selected tracks
 
 Fixes:
-+Some v4 empty take lanes management in S&M actions & views
++Some v4 empty take lanes management in S&M actions
 +"Load/apply and Load/paste fx chain to selected tracks" actions that were adding input-fx-chains instead of standard track-fx-chains
 
 Shift-click in marker list now makes a time selection
@@ -852,7 +891,7 @@ Performance improvments (REAPER startup, S&M actions related to notes, FX, FX ch
 S&M FX chains actions now properly manage FX comments
 
 +v4 input FX chains support
-Added input FX chain features in the S&M Resources view (see below)
+Added input FX chain features in the S&M Resources window (see below)
 Added actions:
 - SWS/S&M: Clear input FX chain for selected tracks
 - SWS/S&M: Copy input FX chain from selected track
@@ -863,7 +902,7 @@ Remark:
 - with S&M FX chain actions, you can copy a FX chain from a track, an item and paste it as an *input* FX chain and vice et versa (shared FX chain clipboard)
 - v4 only (those actions are visible in v3 but are nop)
 
-+S&M Resources view updates:
++S&M Resources window updates:
 - Auto save button (top right) now *adds* new slots. Note: before, a new slot was inserted before the selected one but this could mess slot actions (because all following slot ids were changed..)
 - Auto save button now proposes to define the auto save directory when needed
 - Tweaks (better undo wordings, few user prefs were not saved, popup menu clean-up, etc.)
@@ -912,8 +951,8 @@ Autorender:
 +Added limited support to append duplicate numbers to rendered files that would otherwise overwrite each other (This Song(2).mp3)
 +Added auto-calculation of track pad length (for projects with large numbers of regions to be rendered)
 
-Fixed crash when running some of the S&M Resources view's slot actions (applying, importing, pasting, etc. track templates or FX chains from unexisting slots)
-Fixed corner case GUI refresh issue in S&M Resources view
+Fixed crash when running some of the S&M Resources window's slot actions (applying, importing, pasting, etc. track templates or FX chains from unexisting slots)
+Fixed corner case GUI refresh issue in S&M Resources window
 Issue 250: Added action "SWS: Toggle auto fades for new items"
 Added action "SWS: Toolbar mute toggle"
 Fixed directory scan for grooves on OSX
@@ -976,7 +1015,7 @@ Added actions:
 +SWS/S&M: Cut selected tracks grouping
 +SWS/S&M: Paste grouping to selected tracks
 
-Notes/help view fixes:
+Notes/help window fixes:
 +Pass keystrokes to the main window when locked (i.e. lock button)
 +Properly init S&M project notes with REAPER ones when possible
 
@@ -998,14 +1037,14 @@ FNG Groove Tool Updates:
 +Removed "passthrough" action/keyboard section workaround
 
 S&M updates:
-+Resources view:
++Resources window:
 - Performance improvments: REAPER start-up & shutdown, show/hide, auto fill, all editions features, filtering, etc.
 - Track templates: added "Paste items to sel. tracks" and "Replace items of sel. tracks" as customizable double-click behaviours
 - Track templates: added toggle popup menu item "Save track templates with items" (so that track templates can be auto-saved w/ or w/o items)
-+Notes/help view:
++Notes/help window:
 - Project notes: now displays the related RPP filename
 - Project notes: initialize S&M project notes with REAPER's ones when possible (i.e. when S&M ones don't exist but REAPER's ones exist)
-Reminder: due to an API limitation, for the moment the "project notes" displayed in the Notes/help view are different from REAPER's one
+Reminder: due to an API limitation, for the moment the "project notes" displayed in the Notes/help window are different from REAPER's one
 +Other:
 - Performance improvments for all cue buss & routing actions
 - Fixed corner case Cue buss crash
@@ -1032,7 +1071,7 @@ Fixed some screenset loading issues
 
 Auto color/icon fixes from really broken build #2.
 Auto color/icon information is stored in a new file sws-autocoloricon.ini for easy sharing (old settings copied for you)
-Issue 225: Fixed selected text in Notes/help view when switching between docker tabs
+Issue 225: Fixed selected text in Notes/help window when switching between docker tabs
 Fix for toggle actions to focus SWS views when docked
 
 !v2.0.0 #2 (January 21, 2011)
@@ -1053,15 +1092,15 @@ So a backup of the "official" S&M.ini might be a good idea (or sticking with the
 <b>Short changelog:</b>
 
 +PiP support
-+Many S&M updates (including new http://reaper.mj-s.com/resourceview.jpg|"Resources" view|: FX chains + Track templates + goodies). See details below.
++Many S&M updates (including new http://reaper.mj-s.com/resourceview.jpg|"Resources" window|: FX chains + Track templates + goodies). See details below.
 +Updated SWS Autocolor view: now also features auto track icon. Demo http://reaper.mj-s.com/autoicon.gif|here|.
 +Preliminary V4 updates (S&M, Padre, Xenakios)
 +House cleaning, fixes
 
 <b>Changelog details:</b>
 
-Added S&M http://reaper.mj-s.com/resourceview.jpg|Resources view|
-+The "FX chains" view turned into a "Resources" view: FX chains + Track templates + goodies
+Added S&M http://reaper.mj-s.com/resourceview.jpg|Resources window|
++The "FX chains" view turned into a "Resources" window: FX chains + Track templates + goodies
 Abstract:
 The same features that exist for FX chains are now available for track templates too. A cool thing now is that we can patch existing tracks with track templates (and not only  "add track template as new track"). Well, some other sort of snapshots..
 Also, saving track templates and FX chains is eased thanks to the "auto-save" feature, see below. A new feature "Auto-fill" also allows creating slots automatically.

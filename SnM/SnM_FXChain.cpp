@@ -29,6 +29,7 @@
 #include "SnM_Actions.h"
 #include "SNM_Chunk.h"
 #include "SNM_FXChainView.h"
+#include "../reaper/localize.h"
 
 
 WDL_FastString g_fXChainClipboard;
@@ -318,7 +319,7 @@ void pasteTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX
 				{
 					patch = true;
 					p.GetChunk()->Insert(_chain->Get(), pos + currentFXChain.GetLength() - 2); // -2: before ">\n"
-					p.SetUpdates(1);
+					p.IncUpdates();
 				}
 				// create fx chain
 				else 
@@ -450,7 +451,7 @@ bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, i
 				}
 
 				Filenamize(name);
-				GenerateFilename(_dirPath, master ? "Master" : (!*name ? "Untitled" : name), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
+				GenerateFilename(_dirPath, master ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
 				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
 			}
 		}
@@ -582,7 +583,7 @@ void reassignLearntMIDICh(COMMAND_T* _ct)
 	switch(prm) {
 		case -1:
 		case -2:
-			ch = PromptForInteger(SNM_CMD_SHORTNAME(_ct), "MIDI channel", 1, 16); // loops on err
+			ch = PromptForInteger(SNM_CMD_SHORTNAME(_ct), __LOCALIZE("MIDI channel","sws_mbox"), 1, 16); // loops on err
 			if (ch == -1) return; // user has cancelled
 			break;
 	}

@@ -29,6 +29,8 @@
 // for the SWS extension.
 
 #include "stdafx.h"
+#include "./reaper/localize.h"
+
 
 // *************************** UTILITY FUNCTIONS ***************************
 
@@ -152,110 +154,89 @@ int SWSGetMenuPosFromID(HMENU hMenu, UINT id)
 
 // *************************** MENU CREATION ***************************
 
+// important both __LOCALIZE() parameters MUST remain literal strings 
+// (used by the build_sample_langpack tool)
 void SWSCreateExtensionsMenu(HMENU hMenu)
 {
 	if (GetMenuItemCount(hMenu))
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 
 	// Create the common "Extensions" menu 
-	AddToMenu(hMenu, "About SWS Extensions", NamedCommandLookup("_SWS_ABOUT"));
-	AddToMenu(hMenu, "Auto Color/Icon", NamedCommandLookup("_SWSAUTOCOLOR_OPEN"));
+	AddToMenu(hMenu, __LOCALIZE("About SWS Extensions", "sws_ext_menu"), NamedCommandLookup("_SWS_ABOUT"));
+	AddToMenu(hMenu, __LOCALIZE("Auto Color/Icon", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_OPEN"));
 
 	HMENU hAutoRenderSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hAutoRenderSubMenu, "Autorender");
-	AddToMenu(hAutoRenderSubMenu, "Batch render regions", NamedCommandLookup("_AUTORENDER"));
-	AddToMenu(hAutoRenderSubMenu, "Edit project metadata", NamedCommandLookup("_AUTORENDER_METADATA"));
-	AddToMenu(hAutoRenderSubMenu, "Open render path", NamedCommandLookup("_AUTORENDER_OPEN_RENDER_PATH"));
-	AddToMenu(hAutoRenderSubMenu, "Show help", NamedCommandLookup("_AUTORENDER_HELP"));
-	AddToMenu(hAutoRenderSubMenu, "Global preferences", NamedCommandLookup("_AUTORENDER_PREFERENCES"));
+	AddSubMenu(hMenu, hAutoRenderSubMenu, __LOCALIZE("Autorender", "sws_ext_menu"));
+	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Batch render regions", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER"));
+	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Edit project metadata", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_METADATA"));
+	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Open render path", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_OPEN_RENDER_PATH"));
+	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Show help", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_HELP"));
+	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Global preferences", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_PREFERENCES"));
 
-	AddToMenu(hMenu, "Command parameters", NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));
-	AddToMenu(hMenu, "Cue Buss generator", NamedCommandLookup("_S&M_SENDS4"));
-	AddToMenu(hMenu, "Cycle Action editor...", NamedCommandLookup("_S&M_CYCLEDITOR"));
-	AddToMenu(hMenu, "Envelope processor...", NamedCommandLookup("_PADRE_ENVPROC"));
-	AddToMenu(hMenu, "Fill gaps...", NamedCommandLookup("_SWS_AWFILLGAPSADV"));
-	AddToMenu(hMenu, "Find", NamedCommandLookup("_S&M_SHOWFIND"));
-	AddToMenu(hMenu, "Groove tool...", NamedCommandLookup("_FNG_GROOVE_TOOL"));
-/*JFB: commented
-	HMENU hItemTkSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hItemTkSubMenu, "Item/Take");
-	AddToMenu(hItemTkSubMenu, "Repeat Paste...", NamedCommandLookup("_XENAKIOS_REPEATPASTE"));
-	AddToMenu(hItemTkSubMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hItemTkSubMenu, "Randomize item positions...", NamedCommandLookup("_XENAKIOS_RANDOMIZE_ITEMPOS"));
-	AddToMenu(hItemTkSubMenu, "Move selected items to edit cursor", NamedCommandLookup("_XENAKIOS_MOVEITEMSTOEDITCURSOR"));
-	AddToMenu(hItemTkSubMenu, "Move selected items left by item length", NamedCommandLookup("_XENAKIOS_MOVEITEMSLEFTBYLEN"));
-	AddToMenu(hItemTkSubMenu, "Trim/untrim item left edge to edit cursor", NamedCommandLookup("_XENAKIOS_TRIM_LEFTEDGETO_EDCURSOR"));
-	AddToMenu(hItemTkSubMenu, "Trim/untrim item right edge to edit cursor", NamedCommandLookup("_XENAKIOS_TRIM_RIGHTEDGETO_EDCURSOR"));
-	AddToMenu(hItemTkSubMenu, "Reposition selected items...", NamedCommandLookup("_XENAKIOS_REPOSITION_ITEMS"));
-	AddToMenu(hItemTkSubMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hItemTkSubMenu, "Rename selected takes...", NamedCommandLookup("_XENAKIOS_RENAMEMULTIPLETAKES"));
-	AddToMenu(hItemTkSubMenu, "Auto-rename selected takes...", NamedCommandLookup("_XENAKIOS_AUTORENAMETAKES"));
-	AddToMenu(hItemTkSubMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hItemTkSubMenu, "Invert item selection", NamedCommandLookup("_XENAKIOS_INVERTITEMSELECTION"));
-	AddToMenu(hItemTkSubMenu, "Select items to start of track", NamedCommandLookup("_XENAKIOS_SELITEMSTOSTARTOFTRACK"));
-	AddToMenu(hItemTkSubMenu, "Select items to end of track", NamedCommandLookup("_XENAKIOS_SELITEMSTOENDOFTRACK"));
-	AddToMenu(hItemTkSubMenu, "Select first items of selected tracks", NamedCommandLookup("_XENAKIOS_SELFIRSTITEMSOFTRACKS"));
-*/
-	AddToMenu(hMenu, "Label processor", NamedCommandLookup("_IX_LABEL_PROC"));
-	AddToMenu(hMenu, "LFO generator...", NamedCommandLookup("_PADRE_ENVLFO"));
-	AddToMenu(hMenu, "Live Configs", NamedCommandLookup("_S&M_SHOWMIDILIVE"));
-	AddToMenu(hMenu, "MarkerList", NamedCommandLookup("_SWSMARKERLIST1"));
+	AddToMenu(hMenu, __LOCALIZE("Command parameters", "sws_ext_menu"), NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));
+	AddToMenu(hMenu, __LOCALIZE("Cue Buss generator", "sws_ext_menu"), NamedCommandLookup("_S&M_SENDS4"));
+	AddToMenu(hMenu, __LOCALIZE("Cycle Action editor...", "sws_ext_menu"), NamedCommandLookup("_S&M_CYCLEDITOR"));
+	AddToMenu(hMenu, __LOCALIZE("Envelope processor...", "sws_ext_menu"), NamedCommandLookup("_PADRE_ENVPROC"));
+	AddToMenu(hMenu, __LOCALIZE("Fill gaps...", "sws_ext_menu"), NamedCommandLookup("_SWS_AWFILLGAPSADV"));
+	AddToMenu(hMenu, __LOCALIZE("Find", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOWFIND"));
+	AddToMenu(hMenu, __LOCALIZE("Groove tool...", "sws_ext_menu"), NamedCommandLookup("_FNG_GROOVE_TOOL"));
+	AddToMenu(hMenu, __LOCALIZE("Label processor", "sws_ext_menu"), NamedCommandLookup("_IX_LABEL_PROC"));
+	AddToMenu(hMenu, __LOCALIZE("LFO generator...", "sws_ext_menu"), NamedCommandLookup("_PADRE_ENVLFO"));
+	AddToMenu(hMenu, __LOCALIZE("Live Configs", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOWMIDILIVE"));
+	AddToMenu(hMenu, __LOCALIZE("MarkerList", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST1"));
 
 	HMENU hMarkerSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hMarkerSubMenu, "Marker utilites");
-	AddToMenu(hMarkerSubMenu, "Load marker set...", NamedCommandLookup("_SWSMARKERLIST2"));
-	AddToMenu(hMarkerSubMenu, "Save marker set...", NamedCommandLookup("_SWSMARKERLIST3"));
-	AddToMenu(hMarkerSubMenu, "Delete marker set...", NamedCommandLookup("_SWSMARKERLIST4"));
+	AddSubMenu(hMenu, hMarkerSubMenu, __LOCALIZE("Marker utilites", "sws_ext_menu"));
+	AddToMenu(hMarkerSubMenu, __LOCALIZE("Load marker set...", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST2"));
+	AddToMenu(hMarkerSubMenu, __LOCALIZE("Save marker set...", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST3"));
+	AddToMenu(hMarkerSubMenu, __LOCALIZE("Delete marker set...", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST4"));
 	AddToMenu(hMarkerSubMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hMarkerSubMenu, "Copy marker set to clipboard", NamedCommandLookup("_SWSMARKERLIST5"));
-	AddToMenu(hMarkerSubMenu, "Paste marker set from clipboard", NamedCommandLookup("_SWSMARKERLIST6"));
+	AddToMenu(hMarkerSubMenu, __LOCALIZE("Copy marker set to clipboard", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST5"));
+	AddToMenu(hMarkerSubMenu, __LOCALIZE("Paste marker set from clipboard", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST6"));
 	AddToMenu(hMarkerSubMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hMarkerSubMenu, "Reorder marker IDs", NamedCommandLookup("_SWSMARKERLIST7"));
-	AddToMenu(hMarkerSubMenu, "Reorder region IDs", NamedCommandLookup("_SWSMARKERLIST8"));
+	AddToMenu(hMarkerSubMenu, __LOCALIZE("Reorder marker IDs", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST7"));
+	AddToMenu(hMarkerSubMenu, __LOCALIZE("Reorder region IDs", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST8"));
 	AddToMenu(hMarkerSubMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hMarkerSubMenu, "Select next region", NamedCommandLookup("_SWS_SELNEXTREG"));
-	AddToMenu(hMarkerSubMenu, "Select prev region", NamedCommandLookup("_SWS_SELPREVREG"));
-	AddToMenu(hMarkerSubMenu, "Delete all markers", NamedCommandLookup("_SWSMARKERLIST9"));
-	AddToMenu(hMarkerSubMenu, "Delete all regions", NamedCommandLookup("_SWSMARKERLIST10"));
-#ifdef _WIN32
-	AddToMenu(hMenu, "Notes/Subtitles/Help", NamedCommandLookup("_S&M_SHOW_NOTES_VIEW"));
-#else
-	AddToMenu(hMenu, "Notes/Subtitles", NamedCommandLookup("_S&M_SHOW_NOTES_VIEW"));
-#endif
-	AddToMenu(hMenu, "Project List", NamedCommandLookup("_SWS_PROJLIST_OPEN"));
+	AddToMenu(hMarkerSubMenu, __LOCALIZE("Select next region", "sws_ext_menu"), NamedCommandLookup("_SWS_SELNEXTREG"));
+	AddToMenu(hMarkerSubMenu, __LOCALIZE("Select prev region", "sws_ext_menu"), NamedCommandLookup("_SWS_SELPREVREG"));
+	AddToMenu(hMarkerSubMenu, __LOCALIZE("Delete all markers", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST9"));
+	AddToMenu(hMarkerSubMenu, __LOCALIZE("Delete all regions", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST10"));
+	AddToMenu(hMenu, __LOCALIZE("Notes/Subtitles/Help", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOW_NOTES_VIEW"));
+	AddToMenu(hMenu, __LOCALIZE("Project List", "sws_ext_menu"), NamedCommandLookup("_SWS_PROJLIST_OPEN"));
 
 	HMENU hPrjMgmtSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hPrjMgmtSubMenu, "Project Management");
-	AddToMenu(hPrjMgmtSubMenu, "Open projects from list...", NamedCommandLookup("_SWS_PROJLISTSOPEN"));
-	AddToMenu(hPrjMgmtSubMenu, "Save list of open projects...", NamedCommandLookup("_SWS_PROJLISTSAVE"));
-	AddToMenu(hPrjMgmtSubMenu, "Add related project(s)...", NamedCommandLookup("_SWS_ADDRELATEDPROJ"));
-	AddToMenu(hPrjMgmtSubMenu, "Delete related project...", NamedCommandLookup("_SWS_DELRELATEDPROJ"));
+	AddSubMenu(hMenu, hPrjMgmtSubMenu, __LOCALIZE("Project Management", "sws_ext_menu"));
+	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("Open projects from list...", "sws_ext_menu"), NamedCommandLookup("_SWS_PROJLISTSOPEN"));
+	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("Save list of open projects...", "sws_ext_menu"), NamedCommandLookup("_SWS_PROJLISTSAVE"));
+	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("Add related project(s)...", "sws_ext_menu"), NamedCommandLookup("_SWS_ADDRELATEDPROJ"));
+	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("Delete related project...", "sws_ext_menu"), NamedCommandLookup("_SWS_DELRELATEDPROJ"));
 	AddToMenu(hPrjMgmtSubMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hPrjMgmtSubMenu, "(related projects list)", NamedCommandLookup("_SWS_OPENRELATED1"));
+	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("(related projects list)", "sws_ext_menu"), NamedCommandLookup("_SWS_OPENRELATED1"));
 
-	AddToMenu(hMenu, "ReaConsole...", NamedCommandLookup("_SWSCONSOLE"));
-	AddToMenu(hMenu, "Resources", NamedCommandLookup("_S&M_SHOW_RESOURCES_VIEW"));
-	AddToMenu(hMenu, "Snapshots", NamedCommandLookup("_SWSSNAPSHOT_OPEN"));
-	AddToMenu(hMenu, "Tracklist", NamedCommandLookup("_SWSTL_OPEN"));
-	AddToMenu(hMenu, "Zoom preferences", NamedCommandLookup("_SWS_ZOOMPREFS"));
+	AddToMenu(hMenu, __LOCALIZE("ReaConsole...", "sws_ext_menu"), NamedCommandLookup("_SWSCONSOLE"));
+	AddToMenu(hMenu, __LOCALIZE("Resources", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOW_RESOURCES_VIEW"));
+	AddToMenu(hMenu, __LOCALIZE("Snapshots", "sws_ext_menu"), NamedCommandLookup("_SWSSNAPSHOT_OPEN"));
+	AddToMenu(hMenu, __LOCALIZE("Tracklist", "sws_ext_menu"), NamedCommandLookup("_SWSTL_OPEN"));
+	AddToMenu(hMenu, __LOCALIZE("Zoom preferences", "sws_ext_menu"), NamedCommandLookup("_SWS_ZOOMPREFS"));
 
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 
-#ifdef _SNM_LOCALIZATION
+#ifdef _SWS_LOCALIZATION
 	HMENU hLangPackSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hLangPackSubMenu, "SWS Language file");
-	AddToMenu(hLangPackSubMenu, "Load LangPack file...", NamedCommandLookup("_S&M_LOAD_LANGPACK"));
-	AddToMenu(hLangPackSubMenu, "Generate LangPack file...", NamedCommandLookup("_S&M_GEN_LANGPACK"));
-	AddToMenu(hLangPackSubMenu, "Upgrade current LangPack file", NamedCommandLookup("_S&M_UPGRADE_LANGPACK"));
-	AddToMenu(hLangPackSubMenu, "Reset to factory settings (English)", NamedCommandLookup("_S&M_RESET_LANGPACK"));
+	AddSubMenu(hMenu, hLangPackSubMenu, __LOCALIZE("SWS Language file", "sws_ext_menu"));
+	AddToMenu(hLangPackSubMenu, __LOCALIZE("Load LangPack file...", "sws_ext_menu"), NamedCommandLookup("_S&M_LOAD_LANGPACK"));
+	AddToMenu(hLangPackSubMenu, __LOCALIZE("Reset to factory settings (English)", "sws_ext_menu"), NamedCommandLookup("_S&M_RESET_LANGPACK"));
+#ifdef _SWS_DEBUG
+	AddToMenu(hLangPackSubMenu, __LOCALIZE("[Internal] Generate actions LangPack file...", "sws_ext_menu"), NamedCommandLookup("_S&M_GEN_LANGPACK"));
+#endif
 #endif
 
 	HMENU hOptionsSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hOptionsSubMenu, "SWS Options");
-	AddToMenu(hOptionsSubMenu, "Enable auto coloring", NamedCommandLookup("_SWSAUTOCOLOR_ENABLE"));
-	AddToMenu(hOptionsSubMenu, "Enable auto icon", NamedCommandLookup("_S&MAUTOICON_ENABLE"));
-	AddToMenu(hOptionsSubMenu, "Enable marker actions", NamedCommandLookup("_SWSMA_TOGGLE"));
-	AddToMenu(hOptionsSubMenu, "Enable record input check", NamedCommandLookup("_SWS_TOGRECINCHECK"));
-	AddToMenu(hOptionsSubMenu, "Enable red ruler while recording", NamedCommandLookup("_SWS_RECREDRULER"));
-	AddToMenu(hOptionsSubMenu, "Enable toolbars auto refresh", NamedCommandLookup("_S&M_TOOLBAR_REFRESH_ENABLE"));
+	AddSubMenu(hMenu, hOptionsSubMenu, __LOCALIZE("SWS Options", "sws_ext_menu"));
+	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto coloring", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_ENABLE"));
+	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto icon", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOICON_ENABLE"));
+	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable marker actions", "sws_ext_menu"), NamedCommandLookup("_SWSMA_TOGGLE"));
+	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable record input check", "sws_ext_menu"), NamedCommandLookup("_SWS_TOGRECINCHECK"));
+	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable red ruler while recording", "sws_ext_menu"), NamedCommandLookup("_SWS_RECREDRULER"));
+	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable toolbars auto refresh", "sws_ext_menu"), NamedCommandLookup("_S&M_TOOLBAR_REFRESH_ENABLE"));
 }

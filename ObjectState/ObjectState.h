@@ -35,7 +35,7 @@ public:
 	~ObjectStateCache();
 	void WriteCache();
 	void EmptyCache();
-	const char* GetSetObjState(void* obj, const char* str);
+	const char* GetSetObjState(void* obj, const char* str, bool wantsMinimalState = false);
 	int m_iUseCount;
 private:
 	WDL_PtrList<void> m_obj;
@@ -43,7 +43,7 @@ private:
 	WDL_PtrList<char> m_orig;
 };
 
-const char* SWS_GetSetObjectState(void* obj, WDL_FastString* str);
+const char* SWS_GetSetObjectState(void* obj, WDL_FastString* str, bool wantsMinimalState = false);
 void SWS_FreeHeapPtr(void* ptr);
 void SWS_FreeHeapPtr(const char* ptr);
 void SWS_CacheObjectState(bool bStart);

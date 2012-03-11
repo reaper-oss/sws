@@ -558,7 +558,7 @@ bool SNM_FindWnd::FindTrack(int _dir, bool (*job)(MediaTrack*,const char*))
 
 		UpdateNotFoundMsg(found);	
 		if (found)
-			Main_OnCommand(40913,0); // scroll to selected tracks
+			ScrollSelTrack(NULL, true, true);
 	}
 
 	if (update)

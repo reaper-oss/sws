@@ -33,6 +33,7 @@
 #include "SNM_FXChainView.h"
 #include "SnM_NotesHelpView.h"
 #include "SnM_MidiLiveView.h"
+#include "SnM_RgnPlaylistView.h"
 #include "../Misc/Adam.h"
 #include "../reaper/localize.h"
 
@@ -531,7 +532,12 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 15" }, "S&M_MAP_MIDI_INPUT_CH15", remapMIDIInputChannel, NULL, 15},
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 16" }, "S&M_MAP_MIDI_INPUT_CH16", remapMIDIInputChannel, NULL, 16},
 
-	// Localization
+	// Region playlist --------------------------------------------------------
+#ifdef _SNM_MISC // wip
+	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_RGN_PLAYLIST", OpenRegionPlaylist, "S&&M Region Playlist", NULL, IsRegionPlaylistDisplayed},
+#endif
+
+	// Localization -----------------------------------------------------------
 #ifdef _SWS_LOCALIZATION
 	{ { DEFACCEL, "SWS/S&M: Load LangPack file..." }, "S&M_LOAD_LANGPACK", LoadAssignLangPack, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Reset LangPack file to factory settings" }, "S&M_RESET_LANGPACK", ResetLangPack, NULL, },
@@ -1021,6 +1027,7 @@ int SnMInit(reaper_plugin_info_t* _rec)
 	NotesHelpViewInit();
 	FindViewInit();
 	ImageViewInit();
+	RegionPlaylistInit();
 	CyclactionInit(); // keep it as the last one!
 	return 1;
 }
@@ -1032,6 +1039,7 @@ void SnMExit()
 	NotesHelpViewExit();
 	FindViewExit();
 	ImageViewExit();
+	RegionPlaylistExit();
 	CyclactionExit();
 	SNM_UIExit();
 	IniFileExit();

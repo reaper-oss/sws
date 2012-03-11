@@ -96,7 +96,7 @@ MediaTrack* g_trNote = NULL;
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_NotesHelpWnd::SNM_NotesHelpWnd()
-	: SWS_DockWnd(IDD_SNM_NOTES, "Notes/Subtitles/Help", "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
+	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes/Subtitles/Help","sws_DLG_152"), "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
 {
 	m_internalTLChange = false;
 	RegisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);

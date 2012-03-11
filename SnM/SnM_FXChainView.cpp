@@ -2565,7 +2565,7 @@ void ResViewAutoSave(COMMAND_T* _ct) {
 SNM_ImageWnd* g_pImageWnd = NULL;
 
 SNM_ImageWnd::SNM_ImageWnd()
-	: SWS_DockWnd(IDD_SNM_IMAGE, __LOCALIZE("Image","sws_DLG_162"), "SnMImage", 30010, SWSGetCommandID(OpenImageView))
+	: SWS_DockWnd(IDD_SNM_IMAGE, __LOCALIZE("Image","sws_DLG_162"), "SnMImage", 30012, SWSGetCommandID(OpenImageView))
 {
 	m_stretch = false;
 

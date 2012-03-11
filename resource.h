@@ -52,15 +52,15 @@
 #define IDD_PROJLIST                    146
 #define IDD_PADRELFO_GENERATOR          147
 #define IDD_PADRE_ENVPROCESSOR          148
-#define IDD_SNM_CUEBUSS                  149
-#define IDD_SNM_RESOURCES             150
+#define IDD_SNM_CUEBUSS                 149
+#define IDD_SNM_RESOURCES               150
 #define IDD_ZOOMPREFS                   151
-#define IDD_SNM_NOTES              152
+#define IDD_SNM_NOTES                   152
 #define IDC_ZOOMOUT                     152
 #define IDD_SNM_WAIT                    153
 #define IDC_ZOOMUNDO                    153
 #define IDD_SNM_FIND                    154
-#define IDD_SNM_LIVE_CONFIGS               155
+#define IDD_SNM_LIVE_CONFIGS            155
 #define IDD_AW_ITEM_SMOOTHING           156
 #define IDD_GROOVEDIALOG                157
 #define IDD_AUTORENDER_METADATA         158
@@ -71,6 +71,7 @@
 #define IDD_SNM_IMAGE                   162
 #define IDD_IX_LABELDLG                 163
 #define IDD_SNM_MERGE_LANGPACK          164
+#define IDD_SNM_RGNPLAYLIST             165
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
@@ -321,7 +322,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        165
+#define _APS_NEXT_RESOURCE_VALUE        166
 #define _APS_NEXT_COMMAND_VALUE         40000
 #define _APS_NEXT_CONTROL_VALUE         1236
 #define _APS_NEXT_SYMED_VALUE           100

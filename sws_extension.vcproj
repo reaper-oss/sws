@@ -2355,6 +2355,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnM\SnM_RgnPlaylistView.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_RgnPlaylistView.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SnM\SnM_Track.cpp"
 				>
 			</File>

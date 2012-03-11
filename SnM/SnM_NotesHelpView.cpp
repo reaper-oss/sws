@@ -38,7 +38,6 @@
 #include "SnM_Actions.h"
 #include "SNM_NotesHelpView.h"
 #include "../reaper/localize.h"
-//#include "../../WDL/projectcontext.h"
 
 
 #define MAX_HELP_LENGTH				4096 //JFB 4096 rather than MAX_INI_SECTION (too big)

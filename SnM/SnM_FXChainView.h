@@ -187,5 +187,28 @@ protected:
 	SNM_ImageVWnd m_img; bool m_stretch;
 };
 
+int ResourceViewInit();
+void ResourceViewExit();
+void OpenResourceView(COMMAND_T*);
+bool IsResourceViewDisplayed(COMMAND_T*);
+void ResViewDeleteAllSlots(COMMAND_T*);
+void ResViewClearSlotPrompt(COMMAND_T*);
+void ResViewClearFXChainSlot(COMMAND_T*);
+void ResViewClearTrTemplateSlot(COMMAND_T*);
+void ResViewClearPrjTemplateSlot(COMMAND_T*);
+void ResViewClearMediaSlot(COMMAND_T*);
+void ResViewClearImageSlot(COMMAND_T*);
+#ifdef _WIN32
+void ResViewClearThemeSlot(COMMAND_T*);
+#endif
+void ResViewAutoSaveFXChain(COMMAND_T*);
+void ResViewAutoSaveTrTemplate(COMMAND_T*);
+void ResViewAutoSave(COMMAND_T*);
+int ImageViewInit();
+void ImageViewExit();
+void OpenImageView(COMMAND_T*);
+void OpenImageView(const char* _fn);
+void ClearImageView(COMMAND_T*);
+bool IsImageViewDisplayed(COMMAND_T*);
 
 #endif

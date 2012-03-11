@@ -29,6 +29,7 @@
 #include "stdafx.h"
 #include "SnM_Actions.h"
 #include "SNM_FindView.h"
+#include "SNM_NotesHelpView.h"
 #include "../Zoom.h"
 
 #define MAX_SEARCH_STR_LEN		128

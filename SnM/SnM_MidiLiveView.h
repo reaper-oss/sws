@@ -138,5 +138,14 @@ public:
 	void Perform();
 };
 
+int LiveConfigViewInit();
+void LiveConfigViewExit();
+void OpenLiveConfigView(COMMAND_T*);
+bool IsLiveConfigViewDisplayed(COMMAND_T*);
+void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
+void NextLiveConfig(COMMAND_T*);
+void PreviousLiveConfig(COMMAND_T*);
+void ToggleEnableLiveConfig(COMMAND_T*);
+bool IsLiveConfigEnabled(COMMAND_T*);
 
 #endif

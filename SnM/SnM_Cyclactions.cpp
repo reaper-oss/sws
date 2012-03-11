@@ -33,7 +33,7 @@
 #include "SnM_Actions.h"
 #include "SnM_Cyclactions.h"
 #include "../reaper/localize.h"
-//#include "../../WDL/projectcontext.h"
+
 
 //#define _SNM_MFC
 

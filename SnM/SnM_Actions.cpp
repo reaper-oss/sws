@@ -28,6 +28,8 @@
 #include "stdafx.h"
 #include "version.h"
 #include "SnM_Actions.h"
+#include "SnM_Cyclactions.h"
+#include "SnM_FindView.h"
 #include "SNM_FXChainView.h"
 #include "SnM_NotesHelpView.h"
 #include "SnM_MidiLiveView.h"

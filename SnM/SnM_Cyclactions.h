@@ -126,5 +126,10 @@ protected:
 	void OnItemSelChanged(SWS_ListItem* item, int iState);
 };
 
+int RegisterCyclation(const char* _name, bool _toggle, int _type, int _cycleId, int _cmdId);
+int CyclactionInit();
+void CyclactionExit();
+void OpenCyclactionView(COMMAND_T*);
+bool IsCyclactionViewDisplayed(COMMAND_T*);
 
 #endif

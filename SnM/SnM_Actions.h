@@ -318,13 +318,6 @@ void SnMCSurfSetTrackTitle();
 void SnMCSurfSetTrackListChange();
 int SnMCSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3);
 
-// *** SnM_Cyclactions.cpp
-int RegisterCyclation(const char* _name, bool _toggle, int _type, int _cycleId, int _cmdId);
-int CyclactionInit();
-void CyclactionExit();
-void OpenCyclactionView(COMMAND_T*);
-bool IsCyclactionViewDisplayed(COMMAND_T*);
-
 // *** SnM_Dlg.cpp ***
 ColorTheme* SNM_GetColorTheme(bool _checkForSize = false);
 IconTheme* SNM_GetIconTheme(bool _checkForSize = false);
@@ -352,13 +345,6 @@ bool isCueBussWndDisplayed(COMMAND_T*);
 void openLangpackMrgWnd(COMMAND_T* _ct);
 bool isLangpackMrgWndDisplayed(COMMAND_T* _ct);
 #endif
-
-// *** SnM_FindView.cpp ***
-int FindViewInit();
-void FindViewExit();
-void OpenFindView(COMMAND_T*);
-bool IsFindViewDisplayed(COMMAND_T*);
-void FindNextPrev(COMMAND_T*);
 
 // *** SnM_fx.cpp ***
 extern int g_buggyPlugSupport;
@@ -510,17 +496,6 @@ void InsertMediaSlotNewTr(COMMAND_T*);
 void InsertMediaSlotTakes(COMMAND_T*);
 bool autoSaveMediaSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize);
 
-// *** SnM_LiveConfigsView.cpp ***
-int LiveConfigViewInit();
-void LiveConfigViewExit();
-void OpenLiveConfigView(COMMAND_T*);
-bool IsLiveConfigViewDisplayed(COMMAND_T*);
-void ApplyLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
-void NextLiveConfig(COMMAND_T*);
-void PreviousLiveConfig(COMMAND_T*);
-void ToggleEnableLiveConfig(COMMAND_T*);
-bool IsLiveConfigEnabled(COMMAND_T*);
-
 // *** SnM_ME.cpp ***
 void MECreateCCLane(COMMAND_T*);
 void MEHideCCLanes(COMMAND_T*);
@@ -592,19 +567,6 @@ void SimulateMouseClick(COMMAND_T*);
 void DumpWikiActionList(COMMAND_T*);
 void DumpActionList(COMMAND_T*);
 
-// *** SnM_NotesHelpView.cpp ***
-extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTrackNotes;
-
-void SetActionHelpFilename(COMMAND_T*);
-int NotesHelpViewInit();
-void NotesHelpViewExit();
-void ImportSubTitleFile(COMMAND_T*);
-void ExportSubTitleFile(COMMAND_T*);
-void OpenNotesHelpView(COMMAND_T*);
-bool IsNotesHelpViewDisplayed(COMMAND_T*);
-void ToggleNotesHelpLock(COMMAND_T*);
-bool IsNotesHelpLocked(COMMAND_T*);
-
 // *** SnM_Project.cpp ***
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 void loadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab);
@@ -615,31 +577,6 @@ bool isProjectLoaderConfValid();
 void projectLoaderConf(COMMAND_T*);
 void loadOrSelectNextPreviousProject(COMMAND_T*);
 void openProjectPathInExplorerFinder(COMMAND_T*);
-
-// *** SnM_ResourceView.cpp ***
-int ResourceViewInit();
-void ResourceViewExit();
-void OpenResourceView(COMMAND_T*);
-bool IsResourceViewDisplayed(COMMAND_T*);
-void ResViewDeleteAllSlots(COMMAND_T*);
-void ResViewClearSlotPrompt(COMMAND_T*);
-void ResViewClearFXChainSlot(COMMAND_T*);
-void ResViewClearTrTemplateSlot(COMMAND_T*);
-void ResViewClearPrjTemplateSlot(COMMAND_T*);
-void ResViewClearMediaSlot(COMMAND_T*);
-void ResViewClearImageSlot(COMMAND_T*);
-#ifdef _WIN32
-void ResViewClearThemeSlot(COMMAND_T*);
-#endif
-void ResViewAutoSaveFXChain(COMMAND_T*);
-void ResViewAutoSaveTrTemplate(COMMAND_T*);
-void ResViewAutoSave(COMMAND_T*);
-int ImageViewInit();
-void ImageViewExit();
-void OpenImageView(COMMAND_T*);
-void OpenImageView(const char* _fn);
-void ClearImageView(COMMAND_T*);
-bool IsImageViewDisplayed(COMMAND_T*);
 
 // *** SnM_Sends.cpp ***
 bool cueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);

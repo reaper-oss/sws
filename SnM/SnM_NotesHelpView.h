@@ -111,5 +111,16 @@ void saveHelp(const char* _cmdName, const char* _help);
 bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize);
 bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine = NULL);
 
+extern SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SNM_TrackNotes> > g_pTrackNotes;
+
+void SetActionHelpFilename(COMMAND_T*);
+int NotesHelpViewInit();
+void NotesHelpViewExit();
+void ImportSubTitleFile(COMMAND_T*);
+void ExportSubTitleFile(COMMAND_T*);
+void OpenNotesHelpView(COMMAND_T*);
+bool IsNotesHelpViewDisplayed(COMMAND_T*);
+void ToggleNotesHelpLock(COMMAND_T*);
+bool IsNotesHelpLocked(COMMAND_T*);
 
 #endif

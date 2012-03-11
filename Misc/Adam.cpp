@@ -279,7 +279,7 @@ void AWFillGapsAdv(COMMAND_T* t)
 	{
 		char prms[128];
 		ReadFillGapsIniFile(prms);
-		AWFillGapsAdv(SWSAW_CMD_SHORTNAME(t), prms);
+		AWFillGapsAdv(SWS_CMD_SHORTNAME(t), prms);
 	}
 	else
 	{
@@ -696,7 +696,7 @@ void AWFillGapsQuick(COMMAND_T* t)
 	
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
 void AWFillGapsQuickXFade(COMMAND_T* t)
@@ -795,7 +795,7 @@ void AWFillGapsQuickXFade(COMMAND_T* t)
 	
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
 
@@ -851,7 +851,7 @@ void AWFixOverlaps(COMMAND_T* t)
 	
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
 
@@ -885,7 +885,7 @@ void AWRecordConditional(COMMAND_T* t)
 	Main_OnCommand(1013,0); // Transport: Record
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
 
@@ -915,7 +915,7 @@ void AWRecordConditional2(COMMAND_T* t)
 	Main_OnCommand(1013,0); // Transport: Record
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
 
@@ -995,7 +995,7 @@ void AWRecordAutoGroup(COMMAND_T* t)
 	}
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
 void AWRecordConditionalAutoGroup2(COMMAND_T* t)
@@ -1036,7 +1036,7 @@ void AWRecordConditionalAutoGroup2(COMMAND_T* t)
 	}
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
 void AWRecordConditionalAutoGroup(COMMAND_T* t)
@@ -1073,7 +1073,7 @@ void AWRecordConditionalAutoGroup(COMMAND_T* t)
 	}
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
 void AWPlayStopAutoGroup(COMMAND_T* t)
@@ -1094,7 +1094,7 @@ void AWPlayStopAutoGroup(COMMAND_T* t)
 	}
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 }
 
 
@@ -1131,7 +1131,7 @@ void AWSelectToEnd(COMMAND_T* t)
 	Main_OnCommand(40718, 0); // Select all items in time selection on selected tracks
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
 }
 
 
@@ -1176,7 +1176,7 @@ void AWSelectToEnd(COMMAND_T* t)
  }
  
  UpdateTimeline();
- Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
+ Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS | UNDO_STATE_MISCCFG, -1);
  }
  */
 
@@ -1717,7 +1717,7 @@ void AWFadeSelection(COMMAND_T* t)
 	}
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 	
 }
 
@@ -1767,7 +1767,7 @@ void AWTrimCrop(COMMAND_T* t)
 	}
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 	
 }
 
@@ -2006,7 +2006,7 @@ void AWTrimFill(COMMAND_T* t)
 	
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 	
 }
 
@@ -2267,7 +2267,7 @@ void AWStretchFill(COMMAND_T* t)
 	
 	
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 	
 }
 
@@ -2344,7 +2344,7 @@ void AWPaste(COMMAND_T* t)
 	
 	UpdateTimeline();
 	
-	Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL);
 	
 }
 
@@ -2401,7 +2401,7 @@ void AWConsolidateSelection(COMMAND_T* t)
 	
 	RestoreSelected();
 	
-	Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL);
 	
 }
 
@@ -2422,7 +2422,7 @@ void AWSelectStretched(COMMAND_T* t)
 	
 	UpdateArrange();
 	
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ITEMS, -1);
 	
 }
 
@@ -2734,7 +2734,7 @@ void AWInsertClickTrack(COMMAND_T* t)
 	
 	UpdateGridToolbar();
 	
-	Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL);
 }
 
 void AWToggleClickTrack(COMMAND_T*)
@@ -2822,7 +2822,7 @@ void AWCascadeInputs(COMMAND_T* t)
 			SetMediaTrackInfo_Value(track, "I_RECINPUT", iTrack+inputOffset-1);
 		}
 	}
-	Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 
 }
 
@@ -2943,7 +2943,7 @@ void AWSplitXFadeLeft(COMMAND_T* t)
     
     
 	UpdateArrange();
-	Undo_EndBlock(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL);
 }
 
 
@@ -2968,7 +2968,7 @@ void AWSelTracksTimebaseTime(COMMAND_T* t)
         SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 0);
     }
     UpdateTrackTimebaseToolbar();
-    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 
@@ -3005,7 +3005,7 @@ void AWSelTracksTimebaseBeatPos(COMMAND_T* t)
         SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 2);
     }
     UpdateTrackTimebaseToolbar();
-    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 
@@ -3038,7 +3038,7 @@ void AWSelTracksTimebaseBeatAll(COMMAND_T* t)
         SetMediaTrackInfo_Value(tr, "C_BEATATTACHMODE", 1);
     }
     UpdateTrackTimebaseToolbar();
-    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 
@@ -3081,7 +3081,7 @@ void AWSelChilOrSelItems(COMMAND_T* t)
         
     UpdateArrange();
     
-    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 void AWSelTracksPanMode(int mode)
@@ -3111,25 +3111,25 @@ void AWSelTracksPanLaw(int j)
 void AWSelTracksPanBalanceNew(COMMAND_T* t)
 {   
     AWSelTracksPanMode(3);
-    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 void AWSelTracksPanBalanceOld(COMMAND_T* t)
 {   
     AWSelTracksPanMode(0);
-    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 void AWSelTracksPanStereoPan(COMMAND_T* t)
 {   
     AWSelTracksPanMode(5);
-    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 void AWSelTracksPanDualPan(COMMAND_T* t)
 {   
     AWSelTracksPanMode(6);
-    Undo_OnStateChangeEx(SWSAW_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
+    Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL, -1);
 }
 
 

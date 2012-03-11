@@ -77,7 +77,7 @@ void MECreateCCLane(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 bool replaceCCLanes(const char* _newCClanes)
@@ -119,7 +119,7 @@ bool replaceCCLanes(const char* _newCClanes)
 void MEHideCCLanes(COMMAND_T* _ct)
 {
 	if (replaceCCLanes("VELLANE -1 0 0\n")) 
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 
@@ -145,7 +145,7 @@ void MESetCCLanes(COMMAND_T* _ct)
 		laneSlot[i] = 0;
 
 		if (replaceCCLanes(laneSlot)) 
-			Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 

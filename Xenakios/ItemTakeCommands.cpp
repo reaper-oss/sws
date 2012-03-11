@@ -99,7 +99,7 @@ void DoMoveItemsLeftByItemLen(COMMAND_T* ct)
 		GetSetMediaItemInfo(VecItems[i], "D_POSITION", &NewPos);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), 4, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), 4, -1);
 }
 
 void DoToggleTakesNormalize(COMMAND_T*)
@@ -443,7 +443,7 @@ void DoChooseNewSourceFileForSelTakes(COMMAND_T* ct)
 			free(cFileName);
 			Main_OnCommand(40047,0); // Build any missing peaks
 			Main_OnCommand(40439,0); // Selected Media Online
-			Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+			Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 			UpdateTimeline();
 		}
 	}
@@ -767,7 +767,7 @@ void DoShuffleSelectTakesInItems(COMMAND_T* ct)
 			}
 		}
 		delete[] TakeIndexes;
-		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 		UpdateTimeline();
 	}
 	
@@ -785,7 +785,7 @@ void DoMoveItemsToEditCursor(COMMAND_T* ct)
 	}
 	if (CountSelectedMediaItems(0))
 	{
-		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 		UpdateTimeline();
 	}
 }
@@ -801,7 +801,7 @@ void DoRemoveItemFades(COMMAND_T* ct)
 		GetSetMediaItemInfo(item, "D_FADEINLEN_AUTO",  &dFade);
 		GetSetMediaItemInfo(item, "D_FADEOUTLEN_AUTO", &dFade);
 	}
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 
@@ -843,7 +843,7 @@ void DoTrimLeftEdgeToEditCursor(COMMAND_T* ct)
 	}
 	if (modified)
 	{
-		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 		UpdateTimeline();
 	}
 }
@@ -862,7 +862,7 @@ void DoTrimRightEdgeToEditCursor(COMMAND_T* ct)
 	}
 	if (modified)
 	{
-		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 		UpdateTimeline();
 	}
 }
@@ -872,7 +872,7 @@ void DoResetItemRateAndPitch(COMMAND_T* ct)
 	Undo_BeginBlock();
 	Main_OnCommand(40652, 0); // set item rate to 1.0
 	Main_OnCommand(40653, 0); // reset item pitch to 0.0
-	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
 }
 
 void DoApplyTrackFXStereoAndResetVol(COMMAND_T* ct)
@@ -883,7 +883,7 @@ void DoApplyTrackFXStereoAndResetVol(COMMAND_T* ct)
 	for (int i = 0; i < CountSelectedMediaItems(0); i++)
 		GetSetMediaItemInfo(GetSelectedMediaItem(0, i), "D_VOL", &dVol);
 
-	Undo_EndBlock(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS);
 }
 
 void DoApplyTrackFXMonoAndResetVol(COMMAND_T* ct)
@@ -893,7 +893,7 @@ void DoApplyTrackFXMonoAndResetVol(COMMAND_T* ct)
 	double dVol = 1.0;
 	for (int i = 0; i < CountSelectedMediaItems(0); i++)
 		GetSetMediaItemInfo(GetSelectedMediaItem(0, i), "D_VOL", &dVol);
-	Undo_EndBlock(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS);
 }
 
 void DoSelItemsToEndOfTrack(COMMAND_T*)
@@ -961,7 +961,7 @@ void DoPanTakesOfItemSymmetrically()
 void DoPanTakesSymmetricallyWithUndo(COMMAND_T* ct)
 {
 	DoPanTakesOfItemSymmetrically();
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 	UpdateTimeline();
 }
 
@@ -972,7 +972,7 @@ void DoImplodeTakesSetPlaySetSymPans(COMMAND_T* ct)
 	Main_OnCommand(40438,0); // implode items across tracks into takes
 	DoSetAllTakesPlay();
 	DoPanTakesOfItemSymmetrically();
-	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
 	//UpdateTimeline();
 }
 
@@ -1258,7 +1258,7 @@ void DoSpeadSelItemsOverNewTx(COMMAND_T* ct)
 		newDep=-1;
 		GetSetMediaTrackInfo(DestTrack,"I_FOLDERDEPTH",&newDep);
 		TrackList_AdjustWindows(false);
-		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_ALL,-1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ALL,-1);
 
 	} else MessageBox(g_hwndParent,"No or only one item selected!","Error",MB_OK);
 		
@@ -1331,7 +1331,7 @@ void DoMatrixItemImplode(COMMAND_T* ct)
 	}
 	*/
 	//40058 // paste
-	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
 	//Undo_OnStateChangeEx("Matrix implode items",4,-1);
 }
 
@@ -1461,6 +1461,6 @@ void DoDeleteMutedItems(COMMAND_T* ct)
 		}
 	}
 	Main_OnCommand(40006,0);
-	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
 	UpdateTimeline();
 }

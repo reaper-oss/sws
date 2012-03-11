@@ -40,7 +40,6 @@
 
 //! \note I usually keep beta stuff/tests undented
 
-#define PADRE_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 11) // +11 to skip "SWS/PADRE: "
 #define PADRE_FORMATED_INI_FILE "%s\\Plugins\\PADRE.ini"
 
 int PadreInit();

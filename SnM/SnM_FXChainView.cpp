@@ -372,7 +372,7 @@ void FileSlotList::ClearSlotPrompt(COMMAND_T* _ct)
 		MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
 		return;
 	}
-	int slot = PromptForInteger(SNM_CMD_SHORTNAME(_ct), "Slot", 1, GetSize()); //loops on err
+	int slot = PromptForInteger(SWS_CMD_SHORTNAME(_ct), "Slot", 1, GetSize()); //loops on err
 	if (slot == -1) return; // user has cancelled
 	else ClearSlot(slot);
 }

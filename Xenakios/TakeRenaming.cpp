@@ -168,7 +168,7 @@ void DoRenameSourceFileDialog666(COMMAND_T* ct)
 	if (bChanges)
 	{
 		UpdateTimeline();
-		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 	}
 }
 
@@ -237,7 +237,7 @@ void DoRenameTakeAndSourceFileDialog(COMMAND_T* ct)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 }
 
 void DoRenameTakeDialog666(COMMAND_T* ct)
@@ -260,7 +260,7 @@ void DoRenameTakeDialog666(COMMAND_T* ct)
 			break;
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 }
 
 void DoRenameTakeAllDialog666(COMMAND_T* ct)
@@ -281,6 +281,6 @@ void DoRenameTakeAllDialog666(COMMAND_T* ct)
 				GetSetMediaItemTakeInfo(thetakes[i],"P_NAME",(char*)g_renameparams.NewName.c_str());
 		}
 		UpdateTimeline();
-		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 	}
 }

@@ -73,7 +73,7 @@ void DoRenameTakesWithBWAVDesc(COMMAND_T* ct)
 				MessageBox(g_hwndParent,"Take source media has no Broadcast Info Description","Info",MB_OK);
 		}
 	}	
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 

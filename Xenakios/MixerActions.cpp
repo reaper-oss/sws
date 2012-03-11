@@ -122,7 +122,7 @@ void DoTraxPanLaw(COMMAND_T* ct)
 			GetSetMediaTrackInfo(tr, "D_PANLAW", &dLawGain);
 		}
 	}
-	Undo_OnStateChange(XEN_CMD_SHORTNAME(ct));
+	Undo_OnStateChange(SWS_CMD_SHORTNAME(ct));
 }
 
 void DoTraxRecArmed(COMMAND_T* ct)
@@ -148,7 +148,7 @@ void DoBypassFXofSelTrax(COMMAND_T* ct)
 			GetSetMediaTrackInfo(CurTrack, "I_FXEN", &iBypass);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoResetTracksVolPan(COMMAND_T* ct)
@@ -165,7 +165,7 @@ void DoResetTracksVolPan(COMMAND_T* ct)
 			GetSetMediaTrackInfo(CurTrack,"D_VOL",&NewVol);
 		}
 	}
-	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG);
 }
 
 void DoSetSymmetricalpansL2R(COMMAND_T* ct)
@@ -184,7 +184,7 @@ void DoSetSymmetricalpansL2R(COMMAND_T* ct)
 				GetSetMediaTrackInfo(CurTrack, "D_PAN", &newpan);
 			}
 		}
-		Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);	
+		Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);	
 	}
 }
 
@@ -205,7 +205,7 @@ void DoSetSymmetricalpansR2L(COMMAND_T* ct)
 				GetSetMediaTrackInfo(CurTrack, "D_PAN", &newpan);
 			}
 		}
-		Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);	
+		Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);	
 	}
 }
 
@@ -221,7 +221,7 @@ void DoPanTracksRandom(COMMAND_T* ct)
 			GetSetMediaTrackInfo(CurTrack,"D_PAN",&NewPan);
 		}
 	}
-	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG);
 }
 
 void DoSelRandomTrack(COMMAND_T*)
@@ -440,7 +440,7 @@ void DoSetSelectedTrackNormal(COMMAND_T* ct)
 				int foldepth=0;
 				GetSetMediaTrackInfo(TracksToReset[i],"I_FOLDERDEPTH",&foldepth);
 			}
-			Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+			Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 		}
 		
 	}
@@ -470,7 +470,7 @@ void DoSetSelectedTracksAsFolder(COMMAND_T* ct)
 	GetSetMediaTrackInfo(VecSelTracks[0],"I_FOLDERDEPTH",&foldepth);
 	foldepth=-1;
 	GetSetMediaTrackInfo(VecSelTracks[VecSelTracks.size()-1],"I_FOLDERDEPTH",&foldepth);
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 	} else MessageBox(g_hwndParent,"Less than 2 tracks selected!","Error",MB_OK);
 }
 
@@ -572,7 +572,7 @@ void DoRenameTracksDlg(COMMAND_T* ct)
 		}
 	}
 	if (!g_RenaTraxDialogCancelled && VecSelTracks.size()>0)
-		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoSelectFirstOfSelectedTracks(COMMAND_T*)
@@ -616,7 +616,7 @@ void DoLabelTraxDefault(COMMAND_T* ct)
 		strcpy(buf,g_command_params.DefaultTrackLabel.c_str());
 		GetSetMediaTrackInfo(TheTracks[i],"P_NAME",&buf);
 	}
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoTraxLabelPrefix(COMMAND_T* ct)
@@ -638,7 +638,7 @@ void DoTraxLabelPrefix(COMMAND_T* ct)
 		strcpy(buf,NewLabel.c_str());
 		GetSetMediaTrackInfo(TheTracks[i],"P_NAME",&buf);
 	}
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoTraxLabelSuffix(COMMAND_T* ct)
@@ -661,7 +661,7 @@ void DoTraxLabelSuffix(COMMAND_T* ct)
 		strcpy(buf,NewLabel.c_str());
 		GetSetMediaTrackInfo(TheTracks[i],"P_NAME",&buf);
 	}
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoMinMixSendPanelH(COMMAND_T*)
@@ -758,7 +758,7 @@ void DoPanTracksCenter(COMMAND_T* ct)
 		GetSetMediaTrackInfo(TheTracks[i],"D_PAN",&newPan);
 
 	}
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoPanTracksLeft(COMMAND_T* ct)
@@ -772,7 +772,7 @@ void DoPanTracksLeft(COMMAND_T* ct)
 		GetSetMediaTrackInfo(TheTracks[i],"D_PAN",&newPan);
 
 	}
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoPanTracksRight(COMMAND_T* ct)
@@ -786,7 +786,7 @@ void DoPanTracksRight(COMMAND_T* ct)
 		GetSetMediaTrackInfo(TheTracks[i],"D_PAN",&newPan);
 
 	}
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoSetTrackVolumeToZero(COMMAND_T* ct)
@@ -800,7 +800,7 @@ void DoSetTrackVolumeToZero(COMMAND_T* ct)
 		GetSetMediaTrackInfo(TheTracks[i],"D_VOL",&newVol);
 
 	}
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoRenderReceivesAsStems(COMMAND_T*)
@@ -1199,13 +1199,13 @@ void NudgeTrackVolumeDB(int tkIndex,double decibel)
 void DoNudgeMasterVol1dbUp(COMMAND_T* ct)
 {
 	NudgeTrackVolumeDB(0,1.0);
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoNudgeMasterVol1dbDown(COMMAND_T* ct)
 {
 	NudgeTrackVolumeDB(0,-1.0);
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoNudgeSelTrackVolumeUp(COMMAND_T* ct)
@@ -1217,7 +1217,7 @@ void DoNudgeSelTrackVolumeUp(COMMAND_T* ct)
 		int index=CSurf_TrackToID(thetracks[i],false);
 		NudgeTrackVolumeDB(index,g_command_params.TrackVolumeNudge);
 	}
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoNudgeSelTrackVolumeDown(COMMAND_T* ct)
@@ -1229,7 +1229,7 @@ void DoNudgeSelTrackVolumeDown(COMMAND_T* ct)
 		int index=CSurf_TrackToID(thetracks[i],false);
 		NudgeTrackVolumeDB(index,-g_command_params.TrackVolumeNudge);
 	}
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
 
 void DoSetMasterToZeroDb(COMMAND_T* ct)
@@ -1239,6 +1239,6 @@ void DoSetMasterToZeroDb(COMMAND_T* ct)
 	{
 		double newgain=1.0;
 		GetSetMediaTrackInfo(ptk,"D_VOL",&newgain);
-		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 	}
 }

@@ -153,7 +153,7 @@ void ScrollSelTrack(const char* _undoTitle, bool _tcp, bool _mcp)
 //JFB not used yet: SetMixerScroll() seems buggy, see above
 void ScrollSelTrack(COMMAND_T* _ct) {
 	int flags = (int)_ct->user;
-	ScrollSelTrack(SNM_CMD_SHORTNAME(_ct), (flags&1)==1, (flags&2)==2); // == for warning C4800
+	ScrollSelTrack(SWS_CMD_SHORTNAME(_ct), (flags&1)==1, (flags&2)==2); // == for warning C4800
 }
 
 
@@ -186,7 +186,7 @@ void copyCutTrackGrouping(COMMAND_T* _ct)
 		}
 	}
 	if (updates)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 void pasteTrackGrouping(COMMAND_T* _ct)
@@ -209,7 +209,7 @@ void pasteTrackGrouping(COMMAND_T* _ct)
 		}
 	}
 	if (updates)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 void removeTrackGrouping(COMMAND_T* _ct)
@@ -224,7 +224,7 @@ void removeTrackGrouping(COMMAND_T* _ct)
 		}
 	}
 	if (updates)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 bool GetDefaultGroupFlags(WDL_FastString* _line, int _group)
@@ -318,12 +318,12 @@ int FindFirstUnusedGroup()
 
 void SetTrackGroup(COMMAND_T* _ct) {
 	if (SetTrackGroup((int)_ct->user))
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 void SetTrackToFirstUnusedGroup(COMMAND_T* _ct) {
 	if (SetTrackGroup(FindFirstUnusedGroup()))
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 
@@ -373,7 +373,7 @@ void restoreTracksFolderStates(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 void setTracksFolderState(COMMAND_T* _ct)
@@ -390,7 +390,7 @@ void setTracksFolderState(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 // callers must unallocate the returned value, if any
@@ -519,7 +519,7 @@ void toggleArmTrackEnv(COMMAND_T* _ct)
 		}
 	}
 	if (updated) {
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 		FakeToggle(_ct);
 	}
 }
@@ -563,7 +563,7 @@ void toggleWriteEnvExists(COMMAND_T* _ct)
 
 	if (updated)
 	{
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 
 		// in case auto refresh toolbar bar option is off..
 		RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_WRITE_ENV"));
@@ -846,15 +846,15 @@ void ApplyTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _
 }
 
 void LoadApplyTrackTemplateSlot(COMMAND_T* _ct) {
-	ApplyTrackTemplateSlot(g_tiedSlotActions[SNM_SLOT_TR], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
+	ApplyTrackTemplateSlot(g_tiedSlotActions[SNM_SLOT_TR], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
 }
 
 void LoadApplyTrackTemplateSlotWithItemsEnvs(COMMAND_T* _ct) {
-	ApplyTrackTemplateSlot(g_tiedSlotActions[SNM_SLOT_TR], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
+	ApplyTrackTemplateSlot(g_tiedSlotActions[SNM_SLOT_TR], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
 }
 
 void LoadImportTrackTemplateSlot(COMMAND_T* _ct) {
-	ImportTrackTemplateSlot(g_tiedSlotActions[SNM_SLOT_TR], SNM_CMD_SHORTNAME(_ct), (int)_ct->user);
+	ImportTrackTemplateSlot(g_tiedSlotActions[SNM_SLOT_TR], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 
 void ReplacePasteItemsTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _paste)
@@ -1027,7 +1027,7 @@ void setMIDIInputChannel(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 void remapMIDIInputChannel(COMMAND_T* _ct)
@@ -1060,7 +1060,7 @@ void remapMIDIInputChannel(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 

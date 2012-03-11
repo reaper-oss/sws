@@ -1064,7 +1064,7 @@ void LoadThemeSlot(int _slotType, const char* _title, int _slot)
 }
 
 void LoadThemeSlot(COMMAND_T* _ct) {
-	LoadThemeSlot(g_tiedSlotActions[SNM_SLOT_THM], SNM_CMD_SHORTNAME(_ct), (int)_ct->user);
+	LoadThemeSlot(g_tiedSlotActions[SNM_SLOT_THM], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 #endif
 
@@ -1081,7 +1081,7 @@ void ShowImageSlot(int _slotType, const char* _title, int _slot) {
 }
 
 void ShowImageSlot(COMMAND_T* _ct) {
-	ShowImageSlot(g_tiedSlotActions[SNM_SLOT_IMG], SNM_CMD_SHORTNAME(_ct), (int)_ct->user);
+	ShowImageSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 
 void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot) {
@@ -1092,7 +1092,7 @@ void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot) {
 }
 
 void SetSelTrackIconSlot(COMMAND_T* _ct) {
-	SetSelTrackIconSlot(g_tiedSlotActions[SNM_SLOT_IMG], SNM_CMD_SHORTNAME(_ct), (int)_ct->user);
+	SetSelTrackIconSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 
 

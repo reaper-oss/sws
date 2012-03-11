@@ -214,7 +214,7 @@ bool cueTrack(const char* _undoMsg, int _confId)
 }
 
 void cueTrack(COMMAND_T* _ct) {
-	cueTrack(SNM_CMD_SHORTNAME(_ct), (int)_ct->user);
+	cueTrack(SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 
 void readCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts)
@@ -423,7 +423,7 @@ void cutWithIOs(COMMAND_T* _ct) {
 		copySendsReceives(true, &trs, &g_sndTrackClipboard, &g_rcvTrackClipboard);
 		Main_OnCommand(40337, 0); // cut sel tracks
 		RefreshRoutingsUI();
-		if (_ct) Undo_EndBlock2(NULL, SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
+		if (_ct) Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
 	}
 }
 
@@ -438,7 +438,7 @@ void pasteWithIOs(COMMAND_T* _ct) {
 			pasteSendsReceives(&trs, &g_sndTrackClipboard, &g_rcvTrackClipboard, true, NULL);
 		}
 		RefreshRoutingsUI();
-		if (_ct) Undo_EndBlock2(NULL, SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
+		if (_ct) Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
 	}
 }
 
@@ -463,7 +463,7 @@ void cutRoutings(COMMAND_T* _ct) {
 	}
 	if (updated) {
 		RefreshRoutingsUI();
-		if (_ct) Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); // nop if nothing done
+		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); // nop if nothing done
 	}
 }
 
@@ -472,7 +472,7 @@ void pasteRoutings(COMMAND_T* _ct) {
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize() && pasteSendsReceives(&trs, &g_sndClipboard, &g_rcvClipboard, false, NULL)) {
 		RefreshRoutingsUI();
-		if (_ct) Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
@@ -494,7 +494,7 @@ void cutSends(COMMAND_T* _ct) {
 	}
 	if (updated) {
 		RefreshRoutingsUI();
-		if (_ct) Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); // nop if nothing done
+		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); // nop if nothing done
 	}
 }
 
@@ -503,7 +503,7 @@ void pasteSends(COMMAND_T* _ct) {
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize() && pasteSendsReceives(&trs, &g_sndClipboard, NULL, false, NULL)) {
 		RefreshRoutingsUI();
-		if (_ct) Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
@@ -525,7 +525,7 @@ void cutReceives(COMMAND_T* _ct) {
 	}
 	if (updated) {
 		RefreshRoutingsUI();
-		if (_ct) Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); // nop if nothing done
+		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); // nop if nothing done
 	}
 }
 
@@ -534,7 +534,7 @@ void pasteReceives(COMMAND_T* _ct) {
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize() && pasteSendsReceives(&trs, NULL, &g_rcvClipboard, false, NULL)) {
 		RefreshRoutingsUI();
-		if (_ct) Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
@@ -574,7 +574,7 @@ void removeSends(COMMAND_T* _ct)
 		updated = removeSnd(&trs, NULL);
 	if (updated) {
 		RefreshRoutingsUI();
-		if (_ct) Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
@@ -605,7 +605,7 @@ void removeReceives(COMMAND_T* _ct)
 		updated = removeRcv(&trs, NULL);
 	if (updated) {
 		RefreshRoutingsUI();
-		if (_ct) Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
@@ -623,7 +623,7 @@ void removeRouting(COMMAND_T* _ct)
 	}
 	if (updated) {
 		RefreshRoutingsUI();
-		if (_ct) Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); 
+		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); 
 	}
 }
 

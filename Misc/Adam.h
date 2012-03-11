@@ -27,8 +27,6 @@
 
 #pragma once
 
-#define SWSAW_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 8) // +8 to skip "SWS/AW: "
-
 int AdamInit();
 void AWFillGapsAdv(const char* title, char* retVals);
 void UpdateGridToolbar();

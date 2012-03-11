@@ -893,7 +893,7 @@ void SNMSaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 	{
 		COMMAND_T* ct = &_cmds[i++];
 /*no! would look for a localized action name!
-		nameStr.Set(SNM_CMD_SHORTNAME(ct));
+		nameStr.Set(SWS_CMD_SHORTNAME(ct));
 */
 		nameStr.Set((const char*)ct->accel.desc+9); // +9 to skip "SWS/S&M: "
 		ReplaceStringFormat(nameStr.Get(), 'n');

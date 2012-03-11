@@ -99,11 +99,11 @@ bool autoSaveProjectSlot(int _slotType, const char* _dirPath, char* _fn, int _fn
 }
 
 void loadOrSelectProjectSlot(COMMAND_T* _ct) {
-	loadOrSelectProjectSlot(g_tiedSlotActions[SNM_SLOT_PRJ], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false);
+	loadOrSelectProjectSlot(g_tiedSlotActions[SNM_SLOT_PRJ], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false);
 }
 
 void loadOrSelectProjectTabSlot(COMMAND_T* _ct) {
-	loadOrSelectProjectSlot(g_tiedSlotActions[SNM_SLOT_PRJ], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true);
+	loadOrSelectProjectSlot(g_tiedSlotActions[SNM_SLOT_PRJ], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true);
 }
 
 

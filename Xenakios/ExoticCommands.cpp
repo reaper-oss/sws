@@ -85,7 +85,7 @@ void DoSetItemFadesConfLen(COMMAND_T* ct)
 		GetSetMediaItemInfo(items.Get()[i], "D_FADEINLEN_AUTO",  &dZero);
 		GetSetMediaItemInfo(items.Get()[i], "D_FADEOUTLEN_AUTO", &dZero);
 	}
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 

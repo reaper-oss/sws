@@ -221,19 +221,19 @@ bool autoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, in
 }
 
 void loadSetTakeFXChain(COMMAND_T* _ct) {
-	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
+	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
 }
 
 void loadPasteTakeFXChain(COMMAND_T* _ct) {
-	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
+	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
 }
 
 void loadSetAllTakesFXChain(COMMAND_T* _ct) {
-	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
+	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
 }
 
 void loadPasteAllTakesFXChain(COMMAND_T* _ct) {
-	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
+	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
 }
 
 void copyTakeFXChain(COMMAND_T* _ct) {
@@ -242,31 +242,31 @@ void copyTakeFXChain(COMMAND_T* _ct) {
 
 void cutTakeFXChain(COMMAND_T* _ct) {
 	copyTakeFXChain(_ct);
-	setTakeFXChain(SNM_CMD_SHORTNAME(_ct), NULL, true);
+	setTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
 }
 
 void pasteTakeFXChain(COMMAND_T* _ct) {
-	pasteTakeFXChain(SNM_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+	pasteTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
 }
 
 void setTakeFXChain(COMMAND_T* _ct) {
-	setTakeFXChain(SNM_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+	setTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
 }
 
 void pasteAllTakesFXChain(COMMAND_T* _ct) {
-	pasteTakeFXChain(SNM_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+	pasteTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
 void setAllTakesFXChain(COMMAND_T* _ct) {
-	setTakeFXChain(SNM_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+	setTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
 void clearActiveTakeFXChain(COMMAND_T* _ct) {
-	setTakeFXChain(SNM_CMD_SHORTNAME(_ct), NULL, true);
+	setTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
 }
 
 void clearAllTakesFXChain(COMMAND_T* _ct) {
-	setTakeFXChain(SNM_CMD_SHORTNAME(_ct), NULL, false);
+	setTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
 }
 
 
@@ -460,23 +460,23 @@ bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, i
 }
 
 void loadSetTrackFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
+	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
 }
 
 void loadPasteTrackFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
+	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
 }
 
 void loadSetTrackInFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, g_bv4);
+	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, g_bv4);
 }
 
 void loadPasteTrackInFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, g_bv4);
+	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, g_bv4);
 }
 
 void clearTrackFXChain(COMMAND_T* _ct) {
-	setTrackFXChain(SNM_CMD_SHORTNAME(_ct), NULL, false);
+	setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
 }
 
 void copyTrackFXChain(COMMAND_T* _ct) {
@@ -485,23 +485,23 @@ void copyTrackFXChain(COMMAND_T* _ct) {
 
 void cutTrackFXChain(COMMAND_T* _ct) {
 	copyTrackFXChain(&g_fXChainClipboard, false);
-	setTrackFXChain(SNM_CMD_SHORTNAME(_ct), NULL, false);
+	setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
 }
 
 void pasteTrackFXChain(COMMAND_T* _ct) {
-	pasteTrackFXChain(SNM_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+	pasteTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
 // i.e. paste (replace)
 void setTrackFXChain(COMMAND_T* _ct) {
-	setTrackFXChain(SNM_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+	setTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
 // *** Input FX ***
 
 void clearTrackInputFXChain(COMMAND_T* _ct) {
 	if (g_bv4)
-		setTrackFXChain(SNM_CMD_SHORTNAME(_ct), NULL, true);
+		setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
 }
 
 void copyTrackInputFXChain(COMMAND_T* _ct) {
@@ -512,19 +512,19 @@ void copyTrackInputFXChain(COMMAND_T* _ct) {
 void cutTrackInputFXChain(COMMAND_T* _ct) {
 	if (g_bv4) {
 		copyTrackFXChain(&g_fXChainClipboard, true);
-		setTrackFXChain(SNM_CMD_SHORTNAME(_ct), NULL, true);
+		setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
 	}
 }
 
 void pasteTrackInputFXChain(COMMAND_T* _ct) {
 	if (g_bv4)
-		pasteTrackFXChain(SNM_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+		pasteTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
 }
 
 // i.e. paste (replace)
 void setTrackInputFXChain(COMMAND_T* _ct) {
 	if (g_bv4)
-		setTrackFXChain(SNM_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+		setTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
 }
 
 
@@ -548,23 +548,23 @@ void smartCopyFXChain(COMMAND_T* _ct) {
 }
 
 void smartPasteFXChain(COMMAND_T* _ct) {
-	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) pasteTakeFXChain(SNM_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
-	else pasteTrackFXChain(SNM_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) pasteTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+	else pasteTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
 void smartPasteReplaceFXChain(COMMAND_T* _ct) {
-	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) setTakeFXChain(SNM_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
-	else setTrackFXChain(SNM_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) setTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+	else setTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
 void smartCutFXChain(COMMAND_T* _ct) {
 	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) {
 		copyTakeFXChain(_ct);
-		setTakeFXChain(SNM_CMD_SHORTNAME(_ct), NULL, true);
+		setTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
 	}
 	else {
 		copyTrackFXChain(&g_fXChainClipboard, false);
-		setTrackFXChain(SNM_CMD_SHORTNAME(_ct), NULL, false);
+		setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
 	}
 }
 
@@ -583,7 +583,7 @@ void reassignLearntMIDICh(COMMAND_T* _ct)
 	switch(prm) {
 		case -1:
 		case -2:
-			ch = PromptForInteger(SNM_CMD_SHORTNAME(_ct), __LOCALIZE("MIDI channel","sws_mbox"), 1, 16); // loops on err
+			ch = PromptForInteger(SWS_CMD_SHORTNAME(_ct), __LOCALIZE("MIDI channel","sws_mbox"), 1, 16); // loops on err
 			if (ch == -1) return; // user has cancelled
 			break;
 	}
@@ -618,5 +618,5 @@ void reassignLearntMIDICh(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }

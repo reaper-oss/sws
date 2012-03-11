@@ -158,7 +158,7 @@ bool patchSelTracksFXState(int _mode, int _token, int _fxCmdId, const char* _val
 }
 
 void toggleFXOfflineSelectedTracks(COMMAND_T* _ct) { 
-	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 2, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) && 
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 2, (int)_ct->user, NULL, SWS_CMD_SHORTNAME(_ct)) && 
 		SNM_CountSelectedTracks(NULL, true) > 1)
 	{
 		FakeToggle(_ct);
@@ -170,7 +170,7 @@ bool isFXOfflineSelectedTracks(COMMAND_T * _ct) {
 }
 
 void toggleFXBypassSelectedTracks(COMMAND_T* _ct) { 
-	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 1, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)) &&
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT, 1, (int)_ct->user, NULL, SWS_CMD_SHORTNAME(_ct)) &&
 		SNM_CountSelectedTracks(NULL, true) > 1)
 	{
 		FakeToggle(_ct);
@@ -182,48 +182,48 @@ bool isFXBypassedSelectedTracks(COMMAND_T * _ct) {
 }
 
 void toggleExceptFXOfflineSelectedTracks(COMMAND_T* _ct) { 
-	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)))
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, (int)_ct->user, NULL, SWS_CMD_SHORTNAME(_ct)))
 		FakeToggle(_ct);
 } 
   
 void toggleExceptFXBypassSelectedTracks(COMMAND_T* _ct) { 
-	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, (int)_ct->user, NULL, SNM_CMD_SHORTNAME(_ct)))
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, (int)_ct->user, NULL, SWS_CMD_SHORTNAME(_ct)))
 		FakeToggle(_ct);
 } 
   
 void toggleAllFXsOfflineSelectedTracks(COMMAND_T* _ct) { 
 	// We use the "except mode" but with an unreachable fx number 
-	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SWS_CMD_SHORTNAME(_ct)))
 		FakeToggle(_ct);
 } 
   
 void toggleAllFXsBypassSelectedTracks(COMMAND_T* _ct) { 
 	// We use the "except mode" but with an unreachable fx number 
-	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
+	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SWS_CMD_SHORTNAME(_ct)))
 		FakeToggle(_ct);
 } 
 
 void setFXOfflineSelectedTracks(COMMAND_T* _ct) { 
-	patchSelTracksFXState(SNM_SET_CHUNK_CHAR, 2, (int)_ct->user, "1", SNM_CMD_SHORTNAME(_ct)); 
+	patchSelTracksFXState(SNM_SET_CHUNK_CHAR, 2, (int)_ct->user, "1", SWS_CMD_SHORTNAME(_ct)); 
 } 
   
 void setFXBypassSelectedTracks(COMMAND_T* _ct) { 
-	patchSelTracksFXState(SNM_SET_CHUNK_CHAR, 1, (int)_ct->user, "1", SNM_CMD_SHORTNAME(_ct)); 
+	patchSelTracksFXState(SNM_SET_CHUNK_CHAR, 1, (int)_ct->user, "1", SWS_CMD_SHORTNAME(_ct)); 
 } 
 
 void setFXOnlineSelectedTracks(COMMAND_T* _ct) { 
-	patchSelTracksFXState(SNM_SET_CHUNK_CHAR, 2, (int)_ct->user, "0", SNM_CMD_SHORTNAME(_ct)); 
+	patchSelTracksFXState(SNM_SET_CHUNK_CHAR, 2, (int)_ct->user, "0", SWS_CMD_SHORTNAME(_ct)); 
 } 
   
 void setFXUnbypassSelectedTracks(COMMAND_T* _ct) { 
-	patchSelTracksFXState(SNM_SET_CHUNK_CHAR, 1, (int)_ct->user, "0", SNM_CMD_SHORTNAME(_ct)); 
+	patchSelTracksFXState(SNM_SET_CHUNK_CHAR, 1, (int)_ct->user, "0", SWS_CMD_SHORTNAME(_ct)); 
 } 
 
 void setAllFXsBypassSelectedTracks(COMMAND_T* _ct) {
 	char cInt[2] = "";
 	_snprintf(cInt, 2, "%d", (int)_ct->user);
 	// we use the "except mode" but with an unreachable fx number 
-	patchSelTracksFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 1, 0xFFFF, cInt, SNM_CMD_SHORTNAME(_ct)); 
+	patchSelTracksFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 1, 0xFFFF, cInt, SWS_CMD_SHORTNAME(_ct)); 
 }
 
 
@@ -269,13 +269,13 @@ bool patchSelItemsFXState(int _mode, int _token, int _fxId, const char* _value, 
 
 void toggleAllFXsOfflineSelectedItems(COMMAND_T* _ct) { 
 	// "except mode" but with an unreachable fx number 
-	if (patchSelItemsFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
+	if (patchSelItemsFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SWS_CMD_SHORTNAME(_ct)))
 		FakeToggle(_ct);
 } 
   
 void toggleAllFXsBypassSelectedItems(COMMAND_T* _ct) { 
 	// "except mode" but with an unreachable fx number 
-	if (patchSelItemsFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SNM_CMD_SHORTNAME(_ct)))
+	if (patchSelItemsFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SWS_CMD_SHORTNAME(_ct)))
 		FakeToggle(_ct);
 } 
 
@@ -283,14 +283,14 @@ void setAllFXsOfflineSelectedItems(COMMAND_T* _ct) {
 	char cInt[2] = "";
 	_snprintf(cInt, 2, "%d", (int)_ct->user);
 	// "except mode" but with an unreachable fx number 
-	patchSelItemsFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 2, 0xFFFF, cInt, SNM_CMD_SHORTNAME(_ct));
+	patchSelItemsFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 2, 0xFFFF, cInt, SWS_CMD_SHORTNAME(_ct));
 }
 
 void setAllFXsBypassSelectedItems(COMMAND_T* _ct) {
 	char cInt[2] = "";
 	_snprintf(cInt, 2, "%d", (int)_ct->user);
 	// "except mode" but with an unreachable fx number 
-	patchSelItemsFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 1, 0xFFFF, cInt, SNM_CMD_SHORTNAME(_ct));
+	patchSelItemsFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 1, 0xFFFF, cInt, SWS_CMD_SHORTNAME(_ct));
 }
 
 
@@ -361,7 +361,7 @@ void selectTrackFX(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 int getSelectedTrackFX(MediaTrack* _tr)
@@ -589,5 +589,5 @@ void moveFX(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }

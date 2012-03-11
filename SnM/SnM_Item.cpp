@@ -205,7 +205,7 @@ void splitSelectedItems(COMMAND_T* _ct) {
 #endif
 
 // no undo point created: use native ones
-// (SNM_CMD_SHORTNAME() will not work  "SWS/gofer")
+// (SWS_CMD_SHORTNAME() will not work  "SWS/gofer")
 void goferSplitSelectedItems(COMMAND_T* _ct) {
 	if (CountSelectedMediaItems(NULL)) {
 		Main_OnCommand(40513, 0); // move edit cursor to mouse cursor (obey snapping)
@@ -244,7 +244,7 @@ void copyCutTake(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 void pasteTake(COMMAND_T* _ct)
@@ -265,7 +265,7 @@ void pasteTake(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 
@@ -545,7 +545,7 @@ void clearTake(COMMAND_T* _ct)
 	if (updated)
 	{
 		UpdateTimeline();
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
@@ -597,7 +597,7 @@ void moveTakes(COMMAND_T* _ct)
 	if (updated)
 	{
 		UpdateTimeline();
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 #endif
@@ -644,12 +644,12 @@ void moveActiveTake(COMMAND_T* _ct)
 	if (updated)
 	{
 		UpdateTimeline();
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
 void buildLanes(COMMAND_T* _ct) {
-	if (buildLanes(SNM_CMD_SHORTNAME(_ct), (int)_ct->user) < 0)
+	if (buildLanes(SWS_CMD_SHORTNAME(_ct), (int)_ct->user) < 0)
 		MessageBox(GetMainHwnd(), __LOCALIZE("Some items were ignored, probable causes:\n- Items not recorded or recorded before REAPER v3.66 (no record pass id)\n- Imploded takes with duplicated record pass ids","sws_mbox"), __LOCALIZE("S&M - Warning","sws_mbox"), MB_OK);
 }
 
@@ -691,7 +691,7 @@ void activateLaneFromSelItem(COMMAND_T* _ct)
 
 	if (_ct && updated) {
 		UpdateTimeline();
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
@@ -711,19 +711,19 @@ void activateLaneUnderMouse(COMMAND_T* _ct)
 	SNM_SetSelectedItems(NULL, &selItems);
 	UpdateTimeline();
 
-	Undo_EndBlock(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
 }
 
 void removeEmptyTakes(COMMAND_T* _ct) {
-	removeEmptyTakes(SNM_CMD_SHORTNAME(_ct), true, false);
+	removeEmptyTakes(SWS_CMD_SHORTNAME(_ct), true, false);
 }
 
 void removeEmptyMidiTakes(COMMAND_T* _ct) {
-	removeEmptyTakes(SNM_CMD_SHORTNAME(_ct), false, true);
+	removeEmptyTakes(SWS_CMD_SHORTNAME(_ct), false, true);
 }
 
 void removeAllEmptyTakes(COMMAND_T* _ct) {
-	removeEmptyTakes(SNM_CMD_SHORTNAME(_ct), true, true);
+	removeEmptyTakes(SWS_CMD_SHORTNAME(_ct), true, true);
 }
 
 // note: no undo due to file deletion
@@ -963,7 +963,7 @@ void panTakeEnvelope(COMMAND_T* _ct)
 {
 	WDL_FastString defaultPoint("PT 0.000000 ");
 	defaultPoint.AppendFormatted(128, "%d.000000 0", (int)_ct->user);
-	patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", "1", &defaultPoint, true);
+	patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PANENV", "1", &defaultPoint, true);
 }
 
 void showHideTakeVolEnvelope(COMMAND_T* _ct) 
@@ -973,7 +973,7 @@ void showHideTakeVolEnvelope(COMMAND_T* _ct)
 	if (value >= 0)
 		_snprintf(cVis, 2, "%d", value);
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 0");
-	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false) && value < 0) // toggle
+	if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
 }
 
@@ -984,7 +984,7 @@ void showHideTakePanEnvelope(COMMAND_T* _ct)
 	if (value >= 0)
 		_snprintf(cVis, 2, "%d", value);
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
-	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false) && value < 0) // toggle
+	if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
 }
 
@@ -995,7 +995,7 @@ void showHideTakeMuteEnvelope(COMMAND_T* _ct)
 	if (value >= 0)
 		_snprintf(cVis, 2, "%d", value);
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 1");
-	if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false) && value < 0) // toggle
+	if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
 }
 
@@ -1008,7 +1008,7 @@ void showHideTakePitchEnvelope(COMMAND_T* _ct)
 		if (value >= 0)
 			_snprintf(cVis, 2, "%d", value);
 		WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
-		if (patchTakeEnvelopeVis(SNM_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false) && value < 0) // toggle
+		if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false) && value < 0) // toggle
 			FakeToggle(_ct);
 	}
 }
@@ -1213,7 +1213,7 @@ void toggleItemSelExists(COMMAND_T* _ct)
 	if (updated)
 	{
 		UpdateTimeline();
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 
 		// in case auto refresh toolbar bar option is off..
 		char cmdCustId[SNM_MAX_ACTION_CUSTID_LEN] = "";
@@ -1295,7 +1295,7 @@ void setPan(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SNM_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 
@@ -1312,19 +1312,19 @@ void PlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _p
 }
 
 void PlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, -1.0);
+	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, -1.0);
 }
 
 void LoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, -1.0);
+	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, -1.0);
 }
 
 void SyncPlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, 1.0);
+	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, 1.0);
 }
 
 void SyncLoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, 1.0);
+	PlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, 1.0);
 }
 
 // note: no per slot "pause" actions (does not make sense..)
@@ -1342,44 +1342,44 @@ bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, b
 
 // no sync
 void TogglePlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false))
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false))
 		FakeToggle(_ct);
 }
 
 void ToggleLoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true))
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true))
 		FakeToggle(_ct);
 }
 
 void TogglePauseSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, false))
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false))
 		FakeToggle(_ct);
 }
 
 void ToggleLoopPauseSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, true))
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true))
 		FakeToggle(_ct);
 }
 
 // with sync
 #ifdef _SNM_MISC
 void SyncTogglePlaySelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, 1.0))
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false, 1.0))
 		FakeToggle(_ct);
 }
 
 void SyncToggleLoopSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, 1.0))
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true, 1.0))
 		FakeToggle(_ct);
 }
 
 void SyncTogglePauseSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, false, 1.0))
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false, 1.0))
 		FakeToggle(_ct);
 }
 
 void SyncToggleLoopPauseSelTrackMediaSlot(COMMAND_T* _ct) {
-	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, true, true, 1.0))
+	if (TogglePlaySelTrackMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true, 1.0))
 		FakeToggle(_ct);
 }
 #endif
@@ -1393,15 +1393,15 @@ void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMo
 }
 
 void InsertMediaSlotCurTr(COMMAND_T* _ct) {
-	InsertMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, 0);
+	InsertMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, 0);
 }
 
 void InsertMediaSlotNewTr(COMMAND_T* _ct) {
-	InsertMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, 1);
+	InsertMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, 1);
 }
 
 void InsertMediaSlotTakes(COMMAND_T* _ct) {
-	InsertMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SNM_CMD_SHORTNAME(_ct), (int)_ct->user, 3);
+	InsertMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, 3);
 }
 
 bool autoSaveMediaSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize)

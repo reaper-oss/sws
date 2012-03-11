@@ -222,7 +222,7 @@ void DoRoundRobinSelectTakes(COMMAND_T* ct)
 			}
 		}
 	}
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 	UpdateTimeline();
 }
 
@@ -268,14 +268,14 @@ void DoSelectTakeInSelectedItems(int takeIndx) // -1 first -2 last take, otherwi
 void DoSelectFirstTakesInItems(COMMAND_T* ct)
 {
 	DoSelectTakeInSelectedItems(-1);
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 	UpdateTimeline();
 }
 
 void DoSelectLastTakesInItems(COMMAND_T* ct)
 {
 	DoSelectTakeInSelectedItems(-2);
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 	UpdateTimeline();
 }
 
@@ -370,7 +370,7 @@ void DoResampleTakeOneSemitoneDown(COMMAND_T* ct)
 	Undo_BeginBlock();
 	Main_OnCommand(40518, 0);
 	Main_OnCommand(40205, 0);
-	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);	
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);	
 }
 
 void DoResampleTakeOneSemitoneUp(COMMAND_T* ct)
@@ -378,7 +378,7 @@ void DoResampleTakeOneSemitoneUp(COMMAND_T* ct)
 	Undo_BeginBlock();
 	Main_OnCommand(40517, 0);
 	Main_OnCommand(40204, 0);
-	Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
 }
 
 void DoLoopAndPlaySelectedItems(COMMAND_T*)
@@ -616,7 +616,7 @@ void DoRenameMarkersWithAscendingNumbers(COMMAND_T* ct)
 			j++;
 		}
 	}
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),8,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),8,-1);
 }
 
 void DoSetStopAtEndOfTimeSel(int enabled) // -1 toggle 0 unset 1 set

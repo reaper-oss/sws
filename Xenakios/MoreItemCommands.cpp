@@ -617,7 +617,7 @@ void DoRecallSelectedTakes(COMMAND_T* ct)
 		}	
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 }
 
 void DoDeleteItemAndMedia(COMMAND_T*)
@@ -904,7 +904,7 @@ void DoSetFadeToCrossfade(COMMAND_T* ct)
 		GetSetMediaItemInfo(item, "D_FADEOUTLEN", &AutoFadeOut);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 }
 
 void DoSetFadeToDefaultFade(COMMAND_T* ct)
@@ -920,7 +920,7 @@ void DoSetFadeToDefaultFade(COMMAND_T* ct)
 		GetSetMediaItemInfo(item, "D_FADEOUTLEN", pdDefFade);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 }
 
 void DoItemPitch2Playrate(COMMAND_T* ct)
@@ -957,7 +957,7 @@ void DoItemPitch2Playrate(COMMAND_T* ct)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 }
 
 void DoItemPlayrate2Pitch(COMMAND_T* ct)
@@ -1005,7 +1005,7 @@ void DoItemPlayrate2Pitch(COMMAND_T* ct)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);	
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);	
 }
 
 
@@ -1358,7 +1358,7 @@ void DoReverseItemOrder(COMMAND_T* ct)
 		GetSetMediaItemInfo(theitems[i],"D_POSITION",&itempos);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 }
 
 typedef struct t_itemorderstruct
@@ -1401,7 +1401,7 @@ void DoShuffleItemOrder(COMMAND_T* ct)
 		i++;
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 }
 
 void DoShuffleItemOrder2(COMMAND_T* ct)
@@ -1439,7 +1439,7 @@ void DoShuffleItemOrder2(COMMAND_T* ct)
 			i++;
 		}
 		UpdateTimeline();
-		Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 	}
 }
 
@@ -1584,7 +1584,7 @@ void DoNormalizeSelTakesTodB(COMMAND_T* ct)
 				double newgain=DB2VAL(newdb);
 				GetSetMediaItemTakeInfo(seltakes[i],"D_VOL",&newgain);
 			}
-			Undo_EndBlock(XEN_CMD_SHORTNAME(ct),0);
+			Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
 			UpdateTimeline();
 		}
 	}
@@ -1612,7 +1612,7 @@ void DoResetItemsOffsetAndLength(COMMAND_T* ct)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(XEN_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 }
 
 void SetSelItemsFadesToConf(const char *confID)

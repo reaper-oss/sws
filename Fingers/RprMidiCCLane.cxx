@@ -16,8 +16,8 @@ RprMidiCCLane::RprMidiCCLane(RprTake &midiTake, bool readOnly) : RprMidiTemplate
 		if(midiNode->getChild(i)->getValue().substr(0, 7) == "VELLANE") {
 			RprMidiLane midiLane;
 			StringVector velLane(midiNode->getChild(i)->getValue());
-			midiLane.laneId = ::atoi( velLane.atPtr(1));
-			midiLane.height = ::atoi( velLane.atPtr(2));
+			midiLane.laneId = ::atoi( velLane.at(1));
+			midiLane.height = ::atoi( velLane.at(2));
 			mMidiLanes.push_back(midiLane);
 		}
 	}

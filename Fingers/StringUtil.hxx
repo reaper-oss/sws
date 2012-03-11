@@ -7,10 +7,9 @@
 class StringVector {
 public:
 	explicit StringVector(const std::string& inStr);
-	int size() const;
+	unsigned int size() const;
 	bool empty() const;
-	std::string at(int index) const;
-	const char* atPtr(int index) const;
+	const char* at(int index) const;
 private:
 	struct SubStringIndex {
 		std::string::size_type offset;

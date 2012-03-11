@@ -266,7 +266,7 @@ static int getQNValue(RprNode *midiNode)
 {
 	const std::string &qnString = midiNode->getChild(0)->getValue();
 	StringVector tokens(qnString);
-	return ::atoi(tokens.atPtr(2));
+	return ::atoi(tokens.at(2));
 }
 
 static bool sortMidiBase(const RprMidiBase *lhs, const RprMidiBase *rhs)

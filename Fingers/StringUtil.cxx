@@ -4,30 +4,27 @@
 StringVector::StringVector(const std::string& inStr)
 {
 	mString = inStr;
-	std::string::size_type i = inStr.find_first_not_of(' ');
+	std::string::size_type posChar = inStr.find_first_not_of(' ');
 	while(true) {
-		std::string::size_type posSpace = inStr.find_first_of(' ', i);
-		std::string::size_type posChar = inStr.find_first_not_of(' ',i );
-		
+
 		if(posChar == std::string::npos)
 			return;
 
+        std::string::size_type posSpace = inStr.find_first_of(' ', posChar);
+
+        SubStringIndex index;
+		index.offset = posChar;
+		// end of string
 		if(posSpace == std::string::npos) {
-			SubStringIndex index;
-			index.offset = posChar;
 			index.length = inStr.length() - posChar;
 			mIndexes.push_back(index);
 			return;
-		}
-		i = posSpace + 1;
-		if (posSpace < posChar) {
-			continue;
-		}
-		SubStringIndex index;
-		index.offset = posChar;
-		index.length = posSpace - posChar;
-		mString[posSpace] = 0;
-		mIndexes.push_back(index);
+        } else {
+		    index.length = posSpace - posChar;
+		    mString[posSpace] = 0;
+		    mIndexes.push_back(index);
+        }
+        posChar = inStr.find_first_not_of(' ', posSpace + 1);		
 	};
 }
 
@@ -36,18 +33,12 @@ bool StringVector::empty() const
 	return mIndexes.empty();
 }
 
-const char* StringVector::atPtr(int index) const
+const char* StringVector::at(int index) const
 {
-	return &mString.c_str()[mIndexes.at(index).offset];
+    return &mString.c_str()[mIndexes.at(index).offset];
 }
 
-int StringVector::size() const
+unsigned int StringVector::size() const
 {
 	return (int)mIndexes.size();
-}
-
-std::string StringVector::at(int index) const
-{
-	const SubStringIndex &subStringIndex = mIndexes.at(index);
-	return mString.substr(subStringIndex.offset, subStringIndex.length);
 }

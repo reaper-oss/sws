@@ -67,8 +67,8 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 	{
 		SNM_ChunkParserPatcher p1(_srcTr, false);
 		p1.GetChunk()->Get();
-		if (p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", -1, 0, 1, vol, NULL, "MUTESOLO") > 0 &&
-			p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", -1, 0, 2, pan, NULL, "MUTESOLO") > 0)
+		if (p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 0, 1, vol, NULL, "MUTESOLO") > 0 &&
+			p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 0, 2, pan, NULL, "MUTESOLO") > 0)
 		{
 			update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
 		}
@@ -135,7 +135,7 @@ bool cueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showR
 			// solo defeat
 			if (_soloDefeat) {
 				char c1[2] = "1";
-				updated |= (p->ParsePatch(SNM_SET_CHUNK_CHAR, 1, "TRACK", "MUTESOLO", -1, 0, 3, c1) > 0);
+				updated |= (p->ParsePatch(SNM_SET_CHUNK_CHAR, 1, "TRACK", "MUTESOLO", 0, 3, c1) > 0);
 			}
 			
 			// master/parend send

@@ -644,7 +644,7 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bool bFor
 					{
 						SNM_ChunkParserPatcher p(tr); // nothing done yet
 						char pIconLine[BUFFER_SIZE] = "";
-						int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 2, 0, 1, pIconLine, NULL, "TRACKID");
+						int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 0, 1, pIconLine, NULL, "TRACKID");
 						if (strcmp(pIconLine, rule->m_icon.Get()))
 						{
 							// Only overwrite the icon if there's no icon, or we're forcing, or we set it ourselves earlier
@@ -741,7 +741,7 @@ void AutoColorRun(bool bForce)
 
 			// Only remove the icon on the track if we set it ourselves
 			char pIconLine[BUFFER_SIZE] = "";
-			int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 2, 0, 1, pIconLine, NULL, "TRACKID");
+			int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 0, 1, pIconLine, NULL, "TRACKID");
 			if (iconChunkPos && strcmp(pACTrack->m_icon.Get(), pIconLine) == 0)
 				p.ReplaceLine(--iconChunkPos, "");
 

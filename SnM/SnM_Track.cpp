@@ -175,7 +175,7 @@ void copyCutTrackGrouping(COMMAND_T* _ct)
 		{
 			SNM_ChunkParserPatcher p(tr);
 			if (!copyDone)
-				copyDone = (p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "GROUP_FLAGS", -1 , 0, 0, &g_trackGrpClipboard, NULL, "MAINSEND") > 0);
+				copyDone = (p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "GROUP_FLAGS", 0, 0, &g_trackGrpClipboard, NULL, "MAINSEND") > 0);
 
 			// cut (for all selected tracks)
 			if ((int)_ct->user)
@@ -199,7 +199,7 @@ void pasteTrackGrouping(COMMAND_T* _ct)
 		{
 			SNM_ChunkParserPatcher p(tr);
 			updates += p.RemoveLines("GROUP_FLAGS", true); // brutal removing ok: "GROUP_FLAGS" is not part of freeze data
-			int patchPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", -1, 0, 0, NULL, NULL, "MAINSEND"); //JFB strstr instead?
+			int patchPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", 0, 0, NULL, NULL, "MAINSEND"); //JFB strstr instead?
 			if (patchPos > 0)
 			{
 				p.GetChunk()->Insert(g_trackGrpClipboard.Get(), --patchPos);				
@@ -269,7 +269,7 @@ bool SetTrackGroup(int _group)
 			{
 				SNM_ChunkParserPatcher p(tr);
 				updates += p.RemoveLine("TRACK", "GROUP_FLAGS", 1, 0, "TRACKHEIGHT");
-				int pos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", -1, 0, 0, NULL, NULL, "INQ");
+				int pos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKHEIGHT", 0, 0, NULL, NULL, "INQ");
 				if (pos > 0) {
 					pos--; // see SNM_ChunkParserPatcher..
 					p.GetChunk()->Insert(defFlags.Get(), pos);				
@@ -294,7 +294,7 @@ int FindFirstUnusedGroup()
 		{
 			SNM_ChunkParserPatcher p(tr);
 			WDL_FastString grpLine;
-			if (p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "GROUP_FLAGS", -1 , 0, 0, &grpLine, NULL, "TRACKHEIGHT"))
+			if (p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "GROUP_FLAGS", 0, 0, &grpLine, NULL, "TRACKHEIGHT"))
 			{
 				LineParser lp(false);
 				if (!lp.parse(grpLine.Get())) {
@@ -489,13 +489,13 @@ void toggleArmTrackEnv(COMMAND_T* _ct)
 					break;
 				// track vol/pan/mute envs
 				case 3:
-					updated = (p.ParsePatch(SNM_TOGGLE_CHUNK_INT, 2, "VOLENV2", "ARM", 2, 0, 1) > 0);
+					updated = (p.ParsePatch(SNM_TOGGLE_CHUNK_INT, 2, "VOLENV2", "ARM", 0, 1) > 0);
 					break;
 				case 4:
-					updated = (p.ParsePatch(SNM_TOGGLE_CHUNK_INT, 2, "PANENV2", "ARM", 2, 0, 1) > 0);
+					updated = (p.ParsePatch(SNM_TOGGLE_CHUNK_INT, 2, "PANENV2", "ARM", 0, 1) > 0);
 					break;
 				case 5:
-					updated = (p.ParsePatch(SNM_TOGGLE_CHUNK_INT, 2, "MUTEENV", "ARM", 2, 0, 1) > 0);
+					updated = (p.ParsePatch(SNM_TOGGLE_CHUNK_INT, 2, "MUTEENV", "ARM", 0, 1) > 0);
 					break;
 				// receive envs
 				case 6:
@@ -593,7 +593,7 @@ bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz) {
 	if (_tr && _fnOut) {
 		SNM_ChunkParserPatcher p(_tr);
 		p.SetWantsMinimalState(true);
-		return (p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 2, 0, 1, _fnOut, NULL, "TRACKID") > 0);
+		return (p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 0, 1, _fnOut, NULL, "TRACKID") > 0);
 	}
 }
 
@@ -603,7 +603,7 @@ void SetTrackIcon(MediaTrack* _tr, const char* _fn)
 	if (_tr && _fn)
 	{
 		SNM_ChunkParserPatcher p(_tr); // nothing done yet
-		int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 2, 0, 1, NULL, NULL, "TRACKID");
+		int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 0, 1, NULL, NULL, "TRACKID");
 		char pIconLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 		if (_snprintf(pIconLine, SNM_MAX_CHUNK_LINE_LENGTH, "TRACKIMGFN \"%s\"\n", _fn) > 0)
 		{
@@ -936,7 +936,7 @@ void appendSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_FastString* _chu
 	SNM_ChunkParserPatcher p(_chunk);
 	WDL_FastString line;
 	int occurence = 0;
-	int pos = p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "AUXRECV", -1, occurence, 1, &line); 
+	int pos = p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "AUXRECV", occurence, 1, &line); 
 	while (pos > 0)
 	{
 		pos--; // see SNM_ChunkParserPatcher
@@ -973,7 +973,7 @@ void appendSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_FastString* _chu
 			occurence++;
 
 		line.Set("");
-		pos = p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "AUXRECV", -1, occurence, 1, &line);
+		pos = p.Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "AUXRECV", occurence, 1, &line);
 	}
 }
 
@@ -1049,7 +1049,7 @@ void remapMIDIInputChannel(COMMAND_T* _ct)
 			{
 				SNM_ChunkParserPatcher p(tr);
 				char currentCh[3] = "";
-				int chunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "MIDI_INPUT_CHANMAP", 2, 0, 1, currentCh, NULL, "TRACKID");
+				int chunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "MIDI_INPUT_CHANMAP", 0, 1, currentCh, NULL, "TRACKID");
 				if (chunkPos > 0) {
 					if (!ch || atoi(currentCh) != (ch-1))
 						updated |= p.ReplaceLine(--chunkPos, pLine); // pLine may be "", i.e. remove line

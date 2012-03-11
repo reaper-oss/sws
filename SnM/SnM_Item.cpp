@@ -885,7 +885,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 					{
 						SNM_ChunkParserPatcher ptk(&takeChunk);
 						char currentVis[32];
-						if (ptk.Parse(SNM_GET_CHUNK_CHAR, 1, _envKeyword, "VIS", -1, 0, 1, (void*)currentVis) > 0)
+						if (ptk.Parse(SNM_GET_CHUNK_CHAR, 1, _envKeyword, "VIS", 0, 1, (void*)currentVis) > 0)
 						{
 							// skip if visibility is different from 0 or 1
 							if (*currentVis == '1') *vis = '0';

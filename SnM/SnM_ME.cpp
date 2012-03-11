@@ -53,12 +53,12 @@ void MECreateCCLane(COMMAND_T* _ct)
 				int i=0; while(i <= MAX_CC_LANE_ID) lanes[i++]=false;
 				char lastLaneId[4] = ""; //max in v3.6: "133"
 				int tkFirstPos = 0, laneCpt = 0;
-				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", -1, laneCpt, 1, lastLaneId);
+				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", laneCpt, 1, lastLaneId);
 				while (pos > 0) 
 				{
 					if (!tkFirstPos) tkFirstPos = pos;
 					lanes[atoi(lastLaneId)] = true; // atoi: 0 on failure, lane 0 won't be used anyway..
-					pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", -1, ++laneCpt, 1, lastLaneId);
+					pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", ++laneCpt, 1, lastLaneId);
 				}
 
 				if (tkFirstPos > 0)

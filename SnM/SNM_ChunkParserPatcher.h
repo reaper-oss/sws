@@ -197,14 +197,13 @@ int ParsePatch(
 	int _depth = -1,
 	const char* _expectedParent = NULL, 
 	const char* _keyWord = NULL, 
-	int _numTokens = -1, 
 	int _occurence = -1, 
 	int _tokenPos = -1, 
 	void* _value = NULL,
 	void* _valueExcept = NULL,
 	const char* _breakKeyword = NULL)
 {
-	return ParsePatchCore(true, _mode, _depth, _expectedParent, _keyWord, _numTokens, _occurence, _tokenPos, _value,_valueExcept, _breakKeyword);
+	return ParsePatchCore(true, _mode, _depth, _expectedParent, _keyWord, _occurence, _tokenPos, _value,_valueExcept, _breakKeyword);
 }
 
 // See ParsePatchCore() comments
@@ -213,14 +212,13 @@ int Parse(
 	int _depth = -1, 
 	const char* _expectedParent = NULL, 
 	const char* _keyWord = NULL, 
-	int _numTokens = -1, 
 	int _occurence = -1, 
 	int _tokenPos = -1, 
 	void* _value = NULL,
 	void* _valueExcept = NULL,
 	const char* _breakKeyword = NULL)
 {
-	return ParsePatchCore(false, _mode, _depth, _expectedParent, _keyWord, _numTokens, _occurence, _tokenPos, _value,_valueExcept, _breakKeyword);
+	return ParsePatchCore(false, _mode, _depth, _expectedParent, _keyWord, _occurence, _tokenPos, _value,_valueExcept, _breakKeyword);
 }
 
 void* GetObject() {
@@ -359,7 +357,7 @@ int GetSubChunk(const char* _keyword, int _depth, int _occurence, WDL_FastString
 		if (_chunk) _chunk->Set("");
 		WDL_FastString startToken;
 		startToken.SetFormatted((int)strlen(_keyword)+2, "<%s", _keyword);
-		pos = Parse(SNM_GET_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), -1, _occurence, -1, (void*)_chunk, NULL, _breakKeyword);
+		pos = Parse(SNM_GET_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), _occurence, -1, (void*)_chunk, NULL, _breakKeyword);
 		if (pos <= 0) {
 			if (_chunk) _chunk->Set("");
 			pos = -1; // force negative return value if 0 (not found)
@@ -379,7 +377,7 @@ bool ReplaceSubChunk(const char* _keyword, int _depth, int _occurence, const cha
 	{
 		WDL_FastString startToken;
 		startToken.SetFormatted((int)strlen(_keyword)+2, "<%s", _keyword);
-		return (ParsePatch(SNM_REPLACE_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), -1, _occurence, 0, (void*)_newSubChunk, NULL, _breakKeyword) > 0);
+		return (ParsePatch(SNM_REPLACE_SUBCHUNK_OR_LINE, _depth, _keyword, startToken.Get(), _occurence, 0, (void*)_newSubChunk, NULL, _breakKeyword) > 0);
 	}
 	return false;
 }
@@ -414,7 +412,7 @@ bool ReplaceLine(int _pos, const char* _str = NULL)
 bool ReplaceLine(const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _newSubChunk = "", const char* _breakKeyword = NULL)
 {
 	if (_keyword && _depth >= 0) // can be 0, e.g. .rfxchain file
-		return (ParsePatch(SNM_REPLACE_SUBCHUNK_OR_LINE, _depth, _parent, _keyword, -1, _occurence, 0, (void*)_newSubChunk, NULL, _breakKeyword) > 0);
+		return (ParsePatch(SNM_REPLACE_SUBCHUNK_OR_LINE, _depth, _parent, _keyword, _occurence, 0, (void*)_newSubChunk, NULL, _breakKeyword) > 0);
 	return false;
 }
 
@@ -464,7 +462,7 @@ bool InsertAfterBefore(int _dir, const char* _str, const char* _parent, const ch
 // _dir: -1 previous line, 0 current line, +1 next line
 int GetLinePos(int _dir, const char* _parent, const char* _keyword, int _depth, int _occurence, const char* _breakKeyword = NULL)
 {
-	int pos = Parse(SNM_GET_CHUNK_CHAR, _depth, _parent, _keyword, -1, _occurence, 0, NULL, NULL, _breakKeyword);
+	int pos = Parse(SNM_GET_CHUNK_CHAR, _depth, _parent, _keyword, _occurence, 0, NULL, NULL, _breakKeyword);
 	if (pos > 0)
 	{
 		pos--; // See ParsePatchCore()
@@ -621,15 +619,10 @@ bool WriteChunkLine(WDL_FastString* _chunkLine, const char* _value, int _tokenPo
 void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch, 
 		int _expectedDepth, int _parsedDepth,
 		const char* _expectedParent, const char* _parsedParent,
-		const char* _expectedKeyword, const char* _parsedKeyword,
-		int _expectedNumTokens, int _parsedNumTokens)
+		const char* _expectedKeyword, const char* _parsedKeyword)
 {
 	*_tolerantMatch = false;
 	*_strictMatch = false;
-
-//JFB!!! comment this bit? would be more futur proof? => _expectedNumTokens to remove!
-	if (_expectedNumTokens >= 0 && _expectedNumTokens != _parsedNumTokens)
-		return;
 
 	if (_expectedDepth == -1)
 		*_tolerantMatch = true;
@@ -668,7 +661,6 @@ int ParsePatchCore(
 	int _depth,         // usually 1-based but 0 is allowed (e.g. for .rfxchain files that do not start with "<...")
 	const char* _expectedParent, 
 	const char* _keyWord, 
-	int _numTokens,     // 1-based (-1: ignored)
 	int _occurence,     // 0-based (-1: ignored, all occurences notified)
 	int _tokenPos,      // 0-based (-1: ignored, may be mandatory depending on _mode)
 	void* _value,       // value to get/set (NULL: ignored)
@@ -841,8 +833,7 @@ int ParsePatchCore(
 				&tolerantMatch, &strictMatch, 
 				_depth, parents.GetSize(), 
 				_expectedParent, currentParent->Get(), 
-				_keyWord, keyword, 
-				_numTokens, lpNumTokens);
+				_keyWord, keyword);
 
 			if (tolerantMatch && _mode < 0)
 			{

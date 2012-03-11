@@ -98,7 +98,7 @@ bool isFXOfflineOrBypassedSelectedTracks(COMMAND_T * _ct, int _token)
 				char state[2] = "0";
 				SNM_ChunkParserPatcher p(tr);
 				p.SetWantsMinimalState(true);
-				if (p.Parse(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, state) > 0)
+				if (p.Parse(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fxId, _token, state) > 0)
 					return !strcmp(state,"1");
 			}
 		}
@@ -125,7 +125,7 @@ bool patchSelTracksFXState(int _mode, int _token, int _fxCmdId, const char* _val
 			if (fxId >= 0)
 			{
 				SNM_ChunkParserPatcher p(tr);
-				bool updt = (p.ParsePatch(_mode, 2, "FXCHAIN", "BYPASS", 3, fxId, _token, (void*)_value) > 0);
+				bool updt = (p.ParsePatch(_mode, 2, "FXCHAIN", "BYPASS", fxId, _token, (void*)_value) > 0);
 				updated |= updt;
 
 				//JFB!!! close the GUI for buggy plugins
@@ -135,7 +135,7 @@ bool patchSelTracksFXState(int _mode, int _token, int _fxCmdId, const char* _val
 					p.ParsePatch(SNM_SETALL_CHUNK_CHAR_EXCEPT,2,"FXCHAIN","FLOAT",5,0xFFFF,0,(void*)"FLOATPOS"); // unfloat all
 
 					char pIdx[4] = "";
-					int pos = p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",2,0,1,(void*)pIdx);
+					int pos = p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,(void*)pIdx);
 					if (pos > 0)
 					{
 						shownFxId = atoi(pIdx);
@@ -245,7 +245,7 @@ bool patchSelItemsFXState(int _mode, int _token, int _fxId, const char* _value, 
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
 				SNM_ChunkParserPatcher p(item);
-				bool updt = (p.ParsePatch(_mode, 2, "TAKEFX", "BYPASS", 3, _fxId, _token, (void*)_value) > 0);
+				bool updt = (p.ParsePatch(_mode, 2, "TAKEFX", "BYPASS", _fxId, _token, (void*)_value) > 0);
 				updated |= updt;
 
 /*JFB not used: doesn't seem to occur with take FX
@@ -307,14 +307,14 @@ int selectTrackFX(MediaTrack* _tr, int _fx)
 		char pLastSel[4] = ""; // 4 if there're many FXs
 		_snprintf(pLastSel, 4, "%d", _fx);
 		char pShow[4] = ""; // 4 if there're many FXs
-		if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",2,0,1,&pShow) > 0)
+		if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,&pShow) > 0)
 		{
 			// patch the shown FX if the fx chain dlg is opened
 			if (strcmp(pShow, "0")) {
 				_snprintf(pShow, 4, "%d", _fx+1);
-				updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","SHOW",2,0,1,&pShow);
+				updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,&pShow);
 			}
-			updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",2,0,1,&pLastSel);
+			updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",0,1,&pLastSel);
 		}
 	}
 	return updates;
@@ -381,7 +381,7 @@ int getSelectedTrackFX(MediaTrack* _tr)
 		SNM_ChunkParserPatcher p(_tr);
 		p.SetWantsMinimalState(true);
 		char pLastSel[4] = ""; // 4: if there're many, many FXs
-		p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",2,0,1,&pLastSel);
+		p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",0,1,&pLastSel);
 		return atoi(pLastSel); // return 0 (first FX) if failed
 	}
 	return -1;

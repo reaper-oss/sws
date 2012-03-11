@@ -176,7 +176,7 @@ int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr)
 	_snprintf(buf, 32, "AUXRECV %d", srcId-1);
 	return RemoveLines(buf);
 */
-	return (ParsePatch(-2, 1, "TRACK", "AUXRECV", -1, -1, -1, NULL, NULL, "MIDIOUT") > 0);
+	return (ParsePatch(-2, 1, "TRACK", "AUXRECV", -1, -1, NULL, NULL, "MIDIOUT") > 0);
 }
 
 
@@ -373,7 +373,7 @@ bool SNM_FXChainTrackPatcher::SetFXChain(WDL_FastString* _fxChain, bool _inputFX
 }
 
 int SNM_FXChainTrackPatcher::GetInputFXCount() {
-	return Parse(SNM_COUNT_KEYWORD, 2, "FXCHAIN_REC", "WAK", 2, -1, -1, NULL, NULL, "<ITEM");
+	return Parse(SNM_COUNT_KEYWORD, 2, "FXCHAIN_REC", "WAK", -1, -1, NULL, NULL, "<ITEM");
 }
 
 

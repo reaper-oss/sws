@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_extension.cpp
 /
-/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2012 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -334,14 +334,13 @@ public:
 
 	void Run()
 	{
+		SnMCSurfRun();
 		ZoomSlice();
 		MarkerActionSlice();
 		ItemPreviewSlice();
 		PlayItemsOnceSlice();
 		ColorSlice();
 		MiscSlice();
-
-		SnMCSurfRun();
 
 		if (m_bChanged)
 		{
@@ -353,11 +352,12 @@ public:
 		}
 	}
 
-    void SetPlayState(bool play, bool pause, bool rec)
-    {
-        AWDoAutoGroup(rec);
-    }
-    
+	void SetPlayState(bool play, bool pause, bool rec)
+	{
+		SnMCSurfSetPlayState(play, pause, rec);
+		AWDoAutoGroup(rec);
+	}
+
 	// This is our only notification of active project tab change, so update everything
 	void SetTrackListChange()
 	{
@@ -459,17 +459,20 @@ extern "C"
 		if (!rec->GetFunc)
 			ERR_RETURN("Null rec->GetFunc ptr\n")
 
+#ifdef _SWS_LOCALIZATION
 		IMPORT_LOCALIZE_RPLUG(rec);
+#endif
 
 		int errcnt=0;
 		IMPAPI(AddExtensionsMainMenu);
 		IMPAPI(AddMediaItemToTrack);
 		IMPAPI(AddProjectMarker);
-		*(void**)&AddProjectMarker2 = rec->GetFunc("AddProjectMarker2"); // v4 only
+		IMPAPI(AddProjectMarker2);
 		IMPAPI(AddTakeToMediaItem);
 		IMPAPI(adjustZoom);
-		*(void**)&AttachWindowTopmostButton = rec->GetFunc("AttachWindowTopmostButton"); // v4 only
-		*(void**)&AttachWindowResizeGrip    = rec->GetFunc("AttachWindowResizeGrip");    // v4 only
+		IMPAPI(ApplyNudge);
+		IMPAPI(AttachWindowTopmostButton);
+		IMPAPI(AttachWindowResizeGrip);
 		IMPAPI(Audio_RegHardwareHook);
 		IMPAPI(CoolSB_GetScrollInfo);
 		IMPAPI(CoolSB_SetScrollInfo);
@@ -492,23 +495,23 @@ extern "C"
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteTrack);
 		IMPAPI(DeleteTrackMediaItem);
-		*(void**)&Dock_UpdateDockID = rec->GetFunc("Dock_UpdateDockID"); // v4 only
-		*(void**)&DockIsChildOfDock = rec->GetFunc("DockIsChildOfDock"); // v4 only
+		IMPAPI(Dock_UpdateDockID);
+		IMPAPI(DockIsChildOfDock);
 		IMPAPI(DockWindowActivate);
 		IMPAPI(DockWindowAdd);
-		*(void**)&DockWindowAddEx = rec->GetFunc("DockWindowAddEx"); // v4 only
+		IMPAPI(DockWindowAddEx);
 		IMPAPI(DockWindowRefresh);
 		IMPAPI(DockWindowRemove);
 		IMPAPI(EnsureNotCompletelyOffscreen);
 		IMPAPI(EnumProjectMarkers);
 		IMPAPI(EnumProjectMarkers2);
-		*(void**)&EnumProjectMarkers3 = rec->GetFunc("EnumProjectMarkers3"); // v4 only
+		IMPAPI(EnumProjectMarkers3);
 		IMPAPI(EnumProjects);
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);
 		IMPAPI(FreeHeapPtr);
 		IMPAPI(GetActiveTake);
-		*(void**)&GetAppVersion = rec->GetFunc("GetAppVersion"); // > v4.16pre
+		IMPAPI(GetAppVersion);
 		IMPAPI(GetColorThemeStruct);
 		IMPAPI(GetContextMenu);
 		IMPAPI(GetCurrentProjectInLoadSave);
@@ -522,7 +525,7 @@ extern "C"
 		IMPAPI(GetHZoomLevel);
 		IMPAPI(GetIconThemePointer);
 		IMPAPI(GetInputChannelName);
-		*(void**)&GetLastTouchedFX = rec->GetFunc("GetLastTouchedFX"); // > v4.16pre
+		IMPAPI(GetLastTouchedFX);
 		IMPAPI(GetLastTouchedTrack);
 		IMPAPI(GetMainHwnd);
 		IMPAPI(GetMasterMuteSoloFlags);
@@ -559,7 +562,7 @@ extern "C"
 		IMPAPI(GetSetMediaItemTakeInfo);
 		IMPAPI(GetSetMediaTrackInfo);
 		IMPAPI(GetSetObjectState);
-		*(void**)&GetSetObjectState2 = rec->GetFunc("GetSetObjectState2"); // v4 only
+		IMPAPI(GetSetObjectState2);
 		IMPAPI(GetSetRepeat);
 		IMPAPI(GetTakeEnvelopeByName);
 		IMPAPI(GetSetTrackSendInfo);
@@ -578,7 +581,7 @@ extern "C"
 		IMPAPI(GetUserInputs);
 		IMPAPI(get_config_var);
 		IMPAPI(get_ini_file);
-		*(void**)&GR_SelectColor = rec->GetFunc("GR_SelectColor"); // v4 only
+		IMPAPI(GR_SelectColor);
 		IMPAPI(GSC_mainwnd);
 		IMPAPI(guidToString);
 		IMPAPI(Help_Set);
@@ -596,12 +599,12 @@ extern "C"
 		IMPAPI(Main_OnCommand);
 		IMPAPI(Main_OnCommandEx);
 		IMPAPI(Main_openProject);
-		*(void**)&MainThread_LockTracks = rec->GetFunc("MainThread_LockTracks"); // v4 only
-		*(void**)&MainThread_UnlockTracks = rec->GetFunc("MainThread_UnlockTracks"); // v4 only
+		IMPAPI(MainThread_LockTracks);
+		IMPAPI(MainThread_UnlockTracks);
 		IMPAPI(MIDIEditor_GetActive);
 		IMPAPI(MIDIEditor_GetMode);
 		IMPAPI(MIDIEditor_GetTake);
-		*(void**)&MIDIEditor_LastFocused_OnCommand = rec->GetFunc("MIDIEditor_LastFocused_OnCommand"); // v4 only
+		IMPAPI(MIDIEditor_LastFocused_OnCommand);
 		IMPAPI(MIDIEditor_OnCommand);
 		IMPAPI(MIDI_eventlist_Create);
 		IMPAPI(MIDI_eventlist_Destroy);
@@ -610,6 +613,8 @@ extern "C"
 		IMPAPI(mkvolstr);
 		IMPAPI(MoveEditCursor);
 		IMPAPI(MoveMediaItemToTrack);
+		IMPAPI(OnPlayButton);
+		IMPAPI(OnStopButton);
 		IMPAPI(NamedCommandLookup);
 		IMPAPI(parse_timestr_pos);
 		IMPAPI(PCM_Sink_Create);
@@ -619,7 +624,7 @@ extern "C"
 		IMPAPI(PCM_Source_CreateFromType);
 		IMPAPI(PlayPreview);
 		IMPAPI(PlayTrackPreview);
-		*(void**)&PlayTrackPreview2Ex = rec->GetFunc("PlayTrackPreview2Ex"); // v4 only
+		IMPAPI(PlayTrackPreview2Ex);
 		IMPAPI(plugin_getFilterList);
 		IMPAPI(plugin_register);
 		IMPAPI(projectconfig_var_addr);
@@ -627,7 +632,7 @@ extern "C"
 		IMPAPI(RefreshToolbar);
 		IMPAPI(Resampler_Create);
 		IMPAPI(screenset_register);
-		*(void**)&screenset_registerNew = rec->GetFunc("screenset_registerNew"); // v4 only
+		IMPAPI(screenset_registerNew);
 		IMPAPI(ShowConsoleMsg);
 		IMPAPI(SelectProjectInstance);
 		IMPAPI(SetEditCurPos);
@@ -637,13 +642,14 @@ extern "C"
 		IMPAPI(SetMediaItemPosition);
 		IMPAPI(SetMediaItemTakeInfo_Value);
 		IMPAPI(SetMediaTrackInfo_Value);
-		*(void**)&SetMixerScroll = rec->GetFunc("SetMixerScroll"); // > v4.16pre
-		*(void**)&SetOnlyTrackSelected = rec->GetFunc("SetOnlyTrackSelected"); // > v4.16pre
+		IMPAPI(SetMixerScroll);
+		IMPAPI(SetOnlyTrackSelected);
 		IMPAPI(SetProjectMarker);
 		IMPAPI(SetProjectMarker2);
-		*(void**)&SetProjectMarker3 = rec->GetFunc("SetProjectMarker3"); // v4 only
+		IMPAPI(SetProjectMarker3);
 		IMPAPI(SetTrackSelected);
 		IMPAPI(ShowActionList);
+		IMPAPI(SnapToGrid);
 		IMPAPI(SplitMediaItem);
 		IMPAPI(StopPreview);
 		IMPAPI(StopTrackPreview);
@@ -658,21 +664,21 @@ extern "C"
 		IMPAPI(TimeMap2_timeToQN);
 		IMPAPI(TrackFX_FormatParamValue);
 		IMPAPI(TrackFX_GetChainVisible);
-		*(void**)&TrackFX_GetEnabled = rec->GetFunc("TrackFX_GetEnabled"); // > v4.16pre
+		IMPAPI(TrackFX_GetEnabled);
 		IMPAPI(TrackFX_GetFloatingWindow);
 		IMPAPI(TrackFX_GetCount);
 		IMPAPI(TrackFX_GetFXName);
 		IMPAPI(TrackFX_GetFXGUID);
 		IMPAPI(TrackFX_GetNumParams);
-		*(void**)&TrackFX_GetOpen = rec->GetFunc("TrackFX_GetOpen"); // > v4.16pre
+		IMPAPI(TrackFX_GetOpen);
 		IMPAPI(TrackFX_GetParam);
 		IMPAPI(TrackFX_GetParamName);
-		*(void**)&TrackFX_GetPreset = rec->GetFunc("TrackFX_GetPreset"); // > v4.16pre
-		*(void**)&TrackFX_NavigatePresets = rec->GetFunc("TrackFX_NavigatePresets"); // > v4.16pre
-		*(void**)&TrackFX_SetEnabled = rec->GetFunc("TrackFX_SetEnabled"); // > v4.16pre
-		*(void**)&TrackFX_SetOpen = rec->GetFunc("TrackFX_SetOpen"); // > v4.16pre
+		IMPAPI(TrackFX_GetPreset);
+		IMPAPI(TrackFX_NavigatePresets);
+		IMPAPI(TrackFX_SetEnabled);
+		IMPAPI(TrackFX_SetOpen);
 		IMPAPI(TrackFX_SetParam);
-		*(void**)&TrackFX_SetPreset = rec->GetFunc("TrackFX_SetPreset"); // > v4.16pre
+		IMPAPI(TrackFX_SetPreset);
 		IMPAPI(TrackFX_Show);
 		IMPAPI(TrackList_AdjustWindows);
 		IMPAPI(Undo_BeginBlock);
@@ -696,7 +702,7 @@ extern "C"
 
 		if (errcnt)
 		{
-			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper.  You probably have a Reaper version less than 3.74 installed. "
+			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper. You probably have a Reaper version less than 4.20 installed. "
 				"Please install the latest version of Reaper from www.reaper.fm.", "Version Incompatibility", MB_OK);
 			return 0;
 		}

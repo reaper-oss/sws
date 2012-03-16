@@ -365,14 +365,14 @@ bool isEmptyMidi(MediaItem_Take* _take)
 	return emptyMidi;
 }
 
-void setEmptyTakeChunk(WDL_FastString* _chunk, int _recPass, int _color)
+void setEmptyTakeChunk(WDL_FastString* _chunk, int _recPass, int _color, bool _v4style)
 {
 	// v4 empty take (but w/o take color)
-	if (g_bv4) 
+	if (_v4style) 
 	{
 		_chunk->Set("TAKE NULL\n");
 	}
-	// v3 empty take style
+	// v3 empty take style (take with empty source)
 	else
 	{
 		_chunk->Set("TAKE\n");
@@ -577,7 +577,7 @@ void clearTake(COMMAND_T* _ct)
 			{
 				int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
 				// v4 empty take
-				if (g_bv4)
+				if (true)
 				{
 					SNM_TakeParserPatcher p(item, CountTakes(item));
 					int pos, len;
@@ -597,7 +597,7 @@ void clearTake(COMMAND_T* _ct)
 						}
 					}
 				}
-				// v3 empty take
+				// v3 empty take (take with empty source
 				else
 				{
 					SNM_ChunkParserPatcher p(item);
@@ -1059,16 +1059,13 @@ void showHideTakeMuteEnvelope(COMMAND_T* _ct)
 
 void showHideTakePitchEnvelope(COMMAND_T* _ct) 
 {
-	if (g_bv4)
-	{
-		char cVis[2] = ""; //empty means toggle
-		int value = (int)_ct->user;
-		if (value >= 0)
-			_snprintf(cVis, 2, "%d", value);
-		WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
-		if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false) && value < 0) // toggle
-			FakeToggle(_ct);
-	}
+	char cVis[2] = ""; //empty means toggle
+	int value = (int)_ct->user;
+	if (value >= 0)
+		_snprintf(cVis, 2, "%d", value);
+	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
+	if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false) && value < 0) // toggle
+		FakeToggle(_ct);
 }
 
 // *** some wrappers for Padre ***
@@ -1101,12 +1098,8 @@ bool ShowTakeEnvMute(MediaItem_Take* _take) {
 }
 
 bool ShowTakeEnvPitch(MediaItem_Take* _take) {
-	if (g_bv4)
-	{
-		WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
-		return ShowTakeEnv(_take, "PITCHENV", &defaultPoint);
-	}
-	return false;
+	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
+	return ShowTakeEnv(_take, "PITCHENV", &defaultPoint);
 }
 
 

@@ -648,11 +648,7 @@ void AutorenderRegions(COMMAND_T*) {
 
 	ostringstream outRenderProjectPrefixStream;
 	outRenderProjectPrefixStream << queuedRendersDir << PATH_SLASH_CHAR;
-	if( g_bv4 ){
-		 outRenderProjectPrefixStream << "qrender_";
-	} else {
-		outRenderProjectPrefixStream << "render_Autorender";
-	}
+	outRenderProjectPrefixStream << "qrender_";
 	
 	string outRenderProjectPrefix = outRenderProjectPrefixStream.str();
 	
@@ -742,9 +738,7 @@ void AutorenderRegions(COMMAND_T*) {
 		WDL_FastString trackPrjStr(prjStr);
 
 		string outRenderProjectPath = outRenderProjectPrefix;
-		if( g_bv4 ){
-			outRenderProjectPath += GetRenderQueueTimeString() + "_" + GetProjectName() + "_";
-		}
+		outRenderProjectPath += GetRenderQueueTimeString() + "_" + GetProjectName() + "_";
 		outRenderProjectPath += renderTracks[i].getFileName("rpp", trackNumberPad );
 
 		string renderFilePath = g_render_path + PATH_SLASH_CHAR + renderTracks[i].getFileName( renderFileExtension, prependTrackNumberPad );						

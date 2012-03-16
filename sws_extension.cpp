@@ -67,7 +67,6 @@ static WDL_IntKeyedArray<COMMAND_T*> g_commands; // no valdispose (cmds can be a
 
 int g_iFirstCommand = 0;
 int g_iLastCommand = 0;
-bool g_bv4 = false;
 
 bool hookCommandProc(int command, int flag)
 {
@@ -406,7 +405,7 @@ int WDL_STYLE_GetSysColor(int i)
 	{
 		int col3ds,col3dl,bgcol=GSC_mainwnd(COLOR_WINDOW);
 		ColorTheme* ct = SNM_GetColorTheme();
-		if (g_bv4 && ct) {
+		if (ct) {
 			col3dl = ct->io_3d[0];
 			col3ds = ct->io_3d[1];
 			if (i == COLOR_3DSHADOW) col = col3ds;
@@ -696,9 +695,6 @@ extern "C"
 
 		g_hInst = hInstance;
 		g_hwndParent = GetMainHwnd();
-
-		// TODO remove when v4 only:
-		g_bv4 = DockWindowAddEx != NULL;
 
 		if (errcnt)
 		{

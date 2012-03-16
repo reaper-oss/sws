@@ -194,7 +194,7 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 				if (_cmdId) *_cmdId = cmdId;
 
 				char actionName[SNM_MAX_ACTION_NAME_LEN] = "";
-				ListView_GetItemText(hList, i, 1, actionName, SNM_MAX_ACTION_NAME_LEN); //JFB displaytodata? (ok: columns not re-orderable yet)
+				ListView_GetItemText(hList, i, 1, actionName, SNM_MAX_ACTION_NAME_LEN); //JFB!!! displaytodata? (ok: columns not re-orderable yet)
 				if (_desc && _descSize > 0)
 					lstrcpyn(_desc, actionName, _descSize);
 
@@ -206,7 +206,7 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 							return (_snprintf(_id, _idSize, "_%s", ct->id)>0 ? i : -1);
 
 					// best effort to get the custom id (relies on displayed columns..)
-					ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
+					ListView_GetItemText(hList, i, 4, _id, _idSize);  //JFB!!! displaytodata? (ok: columns not re-orderable yet)
 					if (!*_id)
 					{
 						if (!IsMacro(actionName))

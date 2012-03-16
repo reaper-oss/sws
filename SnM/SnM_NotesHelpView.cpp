@@ -658,7 +658,7 @@ void SNM_NotesHelpWnd::saveCurrentItemNotes()
 				// - VOLPAN also exists for empty items
 				update = p.ReplaceSubChunk("NOTES", 2, 0, newNotes.Get(), "VOLPAN"); 
 				if (!update && *buf)
-					update = p.InsertAfterBefore(1, newNotes.Get(), "ITEM", g_bv4 ? "IID" : "IGUID", 1, 0, "VOLPAN");
+					update = p.InsertAfterBefore(1, newNotes.Get(), "ITEM", "IID", 1, 0, "VOLPAN");
 			}
 			if (update)
 			{

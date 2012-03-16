@@ -174,8 +174,8 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 }
 
 void RunMainCyclaction(COMMAND_T* _ct) {RunCycleAction(0, _ct);}
-void RunMEListCyclaction(COMMAND_T* _ct) {if (g_bv4) RunCycleAction(1, _ct);}
-void RunMEPianoCyclaction(COMMAND_T* _ct) {if (g_bv4) RunCycleAction(2, _ct);}
+void RunMEListCyclaction(COMMAND_T* _ct) {RunCycleAction(1, _ct);}
+void RunMEPianoCyclaction(COMMAND_T* _ct) {RunCycleAction(2, _ct);}
 
 bool IsCyclactionEnabled(int _type, COMMAND_T* _ct) {
 	int cycleId = (int)_ct->user;

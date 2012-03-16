@@ -729,7 +729,7 @@ void SNM_ResourceView::Perform()
 						applyTracksFXChainSlot(g_resViewType, !dblClickType?FXC_APPLY_TR_STR:FXC_PASTE_TR_STR, slot, !dblClickType, false);
 						break;
 					case 1:
-						applyTracksFXChainSlot(g_resViewType, !dblClickType?FXCIN_APPLY_TR_STR:FXCIN_PASTE_TR_STR, slot, !dblClickType, g_bv4);
+						applyTracksFXChainSlot(g_resViewType, !dblClickType?FXCIN_APPLY_TR_STR:FXCIN_PASTE_TR_STR, slot, !dblClickType, true);
 						break;
 					case 2:
 						applyTakesFXChainSlot(g_resViewType, !dblClickType?FXC_APPLY_TAKE_STR:FXC_PASTE_TAKE_STR, slot, true, !dblClickType);
@@ -1398,7 +1398,7 @@ void SNM_ResourceWnd::AutoSaveContextMenu(HMENU _menu, bool _saveItem)
 			AddToMenu(_menu, SWS_SEPARATOR, 0);
 			AddToMenu(_menu, __LOCALIZE("Auto-save FX chains from track selection","sws_DLG_150"), FXC_AUTOSAVE_TR_MSG, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_TRACK ? MFS_CHECKED : MFS_UNCHECKED);
 			AddToMenu(_menu, __LOCALIZE("Auto-save FX chains from item selection","sws_DLG_150"), FXC_AUTOSAVE_ITEM_MSG, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_ITEM ? MFS_CHECKED : MFS_UNCHECKED);
-			if (g_bv4) AddToMenu(_menu, __LOCALIZE("Auto-save input FX chains from track selection","sws_DLG_150"), FXC_AUTOSAVE_INPUTFX_MSG, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? MFS_CHECKED : MFS_UNCHECKED);
+			AddToMenu(_menu, __LOCALIZE("Auto-save input FX chains from track selection","sws_DLG_150"), FXC_AUTOSAVE_INPUTFX_MSG, -1, false, g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? MFS_CHECKED : MFS_UNCHECKED);
 			AddToMenu(_menu, SWS_SEPARATOR, 0);
 			AddToMenu(_menu, __LOCALIZE("Create filename from track/item name","sws_DLG_150"), FXC_AUTOSAVE_DEFNAME_MSG, -1, false, !g_autoSaveFXChainNamePref ? MFS_CHECKED : MFS_UNCHECKED);
 			AddToMenu(_menu, __LOCALIZE("Create filename from 1st FX name","sws_DLG_150"), FXC_AUTOSAVE_FX1NAME_MSG, -1, false, g_autoSaveFXChainNamePref ? MFS_CHECKED : MFS_UNCHECKED);
@@ -2062,7 +2062,7 @@ void AutoSave(int _type, int _flags)
 			switch (_flags)
 			{
 				case FXC_AUTOSAVE_PREF_INPUT_FX:
-					autoSaveTrackFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, g_bv4); //JFB!!! merge g_autoSaveFXChainNamePref & _flags ???
+					autoSaveTrackFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, true); //JFB!!! merge g_autoSaveFXChainNamePref & _flags ???
 					break;
 				case FXC_AUTOSAVE_PREF_TRACK:
 					autoSaveTrackFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, false);

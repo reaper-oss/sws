@@ -142,8 +142,7 @@ bool cueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showR
 			WDL_FastString mainSend("MAINSEND 1");
 			if (!_sendToMaster)
 				 mainSend.Set("MAINSEND 0");
-			if (g_bv4)
-				mainSend.Append(" 0"); // add parent track channels (v4)
+			mainSend.Append(" 0"); // add parent track channels (v4)
 
 			// adds HW outputs
 			if (_hwOuts)

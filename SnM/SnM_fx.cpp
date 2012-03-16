@@ -472,7 +472,7 @@ bool TriggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir)
 
 void TriggerFXPresetSelTracks(int _fxId, int _presetId, int _dir)
 {
-	for (int i = 0; g_bv4 && i <= GetNumTracks(); i++) // include master
+	for (int i = 0; i <= GetNumTracks(); i++) // include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -520,7 +520,7 @@ protected:
 // absolute CC only
 void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) 
 {
-	if (!_relmode && _valhw < 0 && g_bv4) {
+	if (!_relmode && _valhw < 0) {
 		SNM_TriggerPresetScheduledJob* job =
 			new SNM_TriggerPresetScheduledJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd, (int)_ct->user);
 		AddOrReplaceScheduledJob(job);

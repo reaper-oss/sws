@@ -445,7 +445,7 @@ void SplitSelectAllItemsInRegion(COMMAND_T*);
 void copyCutTake(COMMAND_T*);
 void pasteTake(COMMAND_T*);
 bool isEmptyMidi(MediaItem_Take* _take);
-void setEmptyTakeChunk(WDL_FastString* _chunk, int _recPass = -1, int _color = -1);
+void setEmptyTakeChunk(WDL_FastString* _chunk, int _recPass = -1, int _color = -1, bool _v4style = true);
 int buildLanes(const char* _undoTitle, int _mode);
 bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel);
 bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel = false, bool _itemSel = true);

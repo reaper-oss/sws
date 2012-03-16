@@ -424,31 +424,8 @@ void AWFillGapsAdv(const char* title, char* retVals)
 							double splitPoint = item1TransPos + presTrans - transFade;
 							
 							// Check for default item fades
-							int fadeStateStore; //V4
-							bool fadeFlag = 0; //V3
-							
-							if (g_bv4)
-							{
-								// V4
-								fadeStateStore = *(int*)(GetConfigVar("splitautoxfade"));
-							
-								*(int*)(GetConfigVar("splitautoxfade")) = 12;
-							}
-							else
-							{
-								// V3
-								double defItemFades = *(double*)(GetConfigVar("deffadelen"));
-							
-							
-								fadeFlag = 0;
-							
-								if (defItemFades > 0)
-								{
-									fadeFlag = 1;
-									Main_OnCommand(41194,0);
-								}
-							}
-							
+							int fadeStateStore = fadeStateStore = *(int*)(GetConfigVar("splitautoxfade"));
+							*(int*)(GetConfigVar("splitautoxfade")) = 12;
 							
 							// Split item1 at the split point
 							MediaItem* item1B = SplitMediaItem(item1, splitPoint);
@@ -458,22 +435,7 @@ void AWFillGapsAdv(const char* title, char* retVals)
                             if (item1Group)
                                 SetMediaItemInfo_Value(item1B, "I_GROUPID", item1Group + maxGroupID);
                             
-							
-							// V4
-							if (g_bv4)
-								*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
-							else
-							{
-								// V3
-								//Revert item fades
-								 if (fadeFlag)
-								 {
-								 Main_OnCommand(41194,0);
-								 }
-							}
-								 
-							
-							
+							*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
 							
 							// Get new item1 length after split
 							item1Length = GetMediaItemInfo_Value(item1, "D_LENGTH") + transFade;
@@ -1290,13 +1252,8 @@ void AWFadeSelection(COMMAND_T* t)
 							
 							else
 							{
-								if (g_bv4)
-									dFadeLen = fabs(*(double*)GetConfigVar("defsplitxfadelen")); // Abs because neg value means "not auto"
-								else
-									dFadeLen = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
-								
+								dFadeLen = fabs(*(double*)GetConfigVar("defsplitxfadelen")); // Abs because neg value means "not auto"
 								dEdgeAdj1 = dFadeLen / 2.0;
-								
 								dEdgeAdj2 = dFadeLen / 2.0;
 								
 								// Need to ensure that there's "room" to move the start of the second item back
@@ -2841,45 +2798,13 @@ void AWSplitXFadeLeft(COMMAND_T* t)
 	double cursorPos = GetCursorPositionEx(0);
 	double dFadeLen;
 	int fadeShape;
-	
-	if (g_bv4)
-	{
-		dFadeLen = fabs(*(double*)GetConfigVar("defsplitxfadelen")); // Abs because neg value means "not auto"
-		fadeShape = *(int*)GetConfigVar("defxfadeshape");
-	}
-	else
-	{
-		dFadeLen = fabs(*(double*)GetConfigVar("deffadelen")); // Abs because neg value means "not auto"
-		fadeShape = *(int*)GetConfigVar("deffadeshape");
-	}
-    
+	dFadeLen = fabs(*(double*)GetConfigVar("defsplitxfadelen")); // Abs because neg value means "not auto"
+	fadeShape = *(int*)GetConfigVar("defxfadeshape");
     
     //turn OFF autocrossfades on split
 	
-	int fadeStateStore; //V4
-	bool fadeFlag = 0; //V3
-	
-	if (g_bv4)
-	{
-		// V4
-		fadeStateStore = *(int*)(GetConfigVar("splitautoxfade"));
-		
-		*(int*)(GetConfigVar("splitautoxfade")) = 12;
-	}
-	else
-	{
-		// V3
-		double defItemFades = *(double*)(GetConfigVar("deffadelen"));
-		
-		
-		fadeFlag = 0;
-		
-		if (defItemFades < 0)
-		{
-			fadeFlag = 1;
-			Main_OnCommand(41194,0);
-		}
-	}
+	int fadeStateStore = *(int*)(GetConfigVar("splitautoxfade"));
+	*(int*)(GetConfigVar("splitautoxfade")) = 12;
     
 	WDL_TypedBuf<MediaItem*> items;
 	SWS_GetSelectedMediaItems(&items);
@@ -2924,23 +2849,8 @@ void AWSplitXFadeLeft(COMMAND_T* t)
         SetMediaItemInfo_Value(items.Get()[i], "B_UISEL", 0);
 	}       
 	
-    
     // restore xfade setting
-	
-	// V4
-	if (g_bv4)
-		*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
-	else
-	{
-		// V3
-		//Revert item fades
-		if (fadeFlag)
-		{
-			Main_OnCommand(41194,0);
-		}
-	}
-    
-    
+	*(int*)(GetConfigVar("splitautoxfade")) = fadeStateStore;
     
 	UpdateArrange();
 	Undo_EndBlock(SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL);

@@ -433,21 +433,6 @@ void CrossfadeSelItems(COMMAND_T* t)
 						// Need a tolerance for "items are adjacent".
 						if (fabs(dEnd1 - dStart2) < SWS_ADJACENT_ITEM_THRESHOLD)
 						{	// Found a matching item
-							// Need to ensure that there's "room" to move the start of the second item back
-							// Check all of the takes' start offset before doing any "work"
-							// (v3 only, v4 edges can go negative)
-							if (!g_bv4)
-							{
-								int iTake;
-								for (iTake = 0; iTake < GetMediaItemNumTakes(item2); iTake++)
-								{
-									MediaItem_Take* take = GetMediaItemTake(item2, iTake);
-									if (take && dEdgeAdj > *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL))
-										break;
-								}
-								if (iTake < GetMediaItemNumTakes(item2))
-									continue;	// Keep looking
-							}
 
 							// We're all good, move the edges around and set the crossfades
 							double dLen1 = dEnd1 - dStart1 + dEdgeAdj;

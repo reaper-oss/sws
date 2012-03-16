@@ -468,11 +468,11 @@ void loadPasteTrackFXChain(COMMAND_T* _ct) {
 }
 
 void loadSetTrackInFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, g_bv4);
+	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
 }
 
 void loadPasteTrackInFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, g_bv4);
+	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
 }
 
 void clearTrackFXChain(COMMAND_T* _ct) {
@@ -500,31 +500,25 @@ void setTrackFXChain(COMMAND_T* _ct) {
 // *** Input FX ***
 
 void clearTrackInputFXChain(COMMAND_T* _ct) {
-	if (g_bv4)
-		setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
+	setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
 }
 
 void copyTrackInputFXChain(COMMAND_T* _ct) {
-	if (g_bv4)
-		copyTrackFXChain(&g_fXChainClipboard, true);
+	copyTrackFXChain(&g_fXChainClipboard, true);
 }
 
 void cutTrackInputFXChain(COMMAND_T* _ct) {
-	if (g_bv4) {
-		copyTrackFXChain(&g_fXChainClipboard, true);
-		setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
-	}
+	copyTrackFXChain(&g_fXChainClipboard, true);
+	setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
 }
 
 void pasteTrackInputFXChain(COMMAND_T* _ct) {
-	if (g_bv4)
-		pasteTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+	pasteTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
 }
 
 // i.e. paste (replace)
 void setTrackInputFXChain(COMMAND_T* _ct) {
-	if (g_bv4)
-		setTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+	setTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
 }
 
 

@@ -195,7 +195,7 @@ void SNM_GetThemeListColors(int* _bg, int* _txt)
 {
 	int bgcol=-1, txtcol=-1;
 	ColorTheme* ct = SNM_GetColorTheme(true); // true: list view colors are recent (v4.11)
-	if (g_bv4 && ct) {
+	if (ct) {
 		bgcol = ct->genlist_bg;
 		txtcol = ct->genlist_fg;
 		// note: grid & selection colors not managed

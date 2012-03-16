@@ -174,19 +174,10 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 	m_iFXEn = *((int*)GetSetMediaTrackInfo(tr, "I_FXEN", NULL));
 	m_iVis  = GetTrackVis(tr);
 	m_iSel  = *((int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL));
-
-	if (g_bv4)
-	{
-		m_iPanMode	= *((int*)GetSetMediaTrackInfo(tr, "I_PANMODE", NULL));
-		m_dPanWidth	= *((double*)GetSetMediaTrackInfo(tr, "D_WIDTH", NULL));
-		m_dPanL		= *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANL", NULL));
-		m_dPanR		= *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANR", NULL));
-	}
-	else
-	{
-		m_iPanMode = -1; // Project default
-		m_dPanWidth = m_dPanL = m_dPanR = 0.0;
-	}	
+	m_iPanMode	= *((int*)GetSetMediaTrackInfo(tr, "I_PANMODE", NULL));
+	m_dPanWidth	= *((double*)GetSetMediaTrackInfo(tr, "D_WIDTH", NULL));
+	m_dPanL		= *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANL", NULL));
+	m_dPanR		= *((double*)GetSetMediaTrackInfo(tr, "D_DUALPANR", NULL));
 	m_dPanLaw = *((double*)GetSetMediaTrackInfo(tr, "D_PANLAW", NULL));
 
 	// Don't bother storing the sends if it's masked
@@ -301,13 +292,10 @@ bool TrackSnapshot::UpdateReaper(int mask, bool bSelOnly, int* fxErr, WDL_PtrLis
 	if (mask & PAN_MASK)
 	{
 		GetSetMediaTrackInfo(tr, "D_PAN", &m_dPan);
-		if (g_bv4)
-		{
-			GetSetMediaTrackInfo(tr, "I_PANMODE", &m_iPanMode);
-			GetSetMediaTrackInfo(tr, "D_WIDTH", &m_dPanWidth);
-			GetSetMediaTrackInfo(tr, "D_DUALPANL", &m_dPanL);
-			GetSetMediaTrackInfo(tr, "D_DUALPANR", &m_dPanR);
-		}
+		GetSetMediaTrackInfo(tr, "I_PANMODE", &m_iPanMode);
+		GetSetMediaTrackInfo(tr, "D_WIDTH", &m_dPanWidth);
+		GetSetMediaTrackInfo(tr, "D_DUALPANL", &m_dPanL);
+		GetSetMediaTrackInfo(tr, "D_DUALPANR", &m_dPanR);
 		if (m_dPanLaw != -100.0)
 			GetSetMediaTrackInfo(tr, "D_PANLAW", &m_dPanLaw);
 		GetSetEnvelope(tr, &m_sPanEnv, "Pan (Pre-FX)", true);
@@ -435,7 +423,7 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 	if (iMask & PAN_MASK)
 	{
 		int iPanMode = m_iPanMode;
-		if (g_bv4 && iPanMode == -1)
+		if (iPanMode == -1)
 			iPanMode = *(int*)GetConfigVar("panmode"); // display pan in project format
 
 		if (iPanMode != 6)

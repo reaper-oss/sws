@@ -1234,7 +1234,7 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 				char customId[SNM_MAX_ACTION_CUSTID_LEN] = "";
 				char cmdName[SNM_MAX_ACTION_NAME_LEN] = "";
 				ListView_GetItemText(hList, i, 1, cmdName, SNM_MAX_ACTION_NAME_LEN);
-				ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, customId, SNM_MAX_ACTION_CUSTID_LEN);
+				ListView_GetItemText(hList, i, 4, customId, SNM_MAX_ACTION_CUSTID_LEN);
 
 				int isSws = IsSwsAction(cmdName);
 				if (!IsMacro(cmdName) &&

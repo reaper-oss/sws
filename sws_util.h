@@ -139,7 +139,6 @@ extern int g_i1;
 extern int g_i2;
 extern bool g_bTrue;
 extern bool g_bFalse;
-extern bool g_bv4;
 extern int g_iFirstCommand;
 extern int g_iLastCommand;
 

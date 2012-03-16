@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Track.cpp
 /
-/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,23 +36,15 @@
 // Track helpers (with ReaProject* parameter)
 ///////////////////////////////////////////////////////////////////////////////
 
-int SNM_GetNumTracks(ReaProject* _proj) {
-	return CountTracks(_proj) + 1;
-}
-
 // get a track from a project by track count (1-based, 0 for master)
-// rmk: to be used with SNM_GetNumTracks() and not the API's CountTracks()
-//      which does not take the master into account..
-MediaTrack* SNM_GetTrack(ReaProject* _proj, int _idx)
-{
-	if (!_idx)
-		return GetMasterTrack(_proj);
+MediaTrack* SNM_GetTrack(ReaProject* _proj, int _idx) {
+	if (!_idx) return GetMasterTrack(_proj);
 	return GetTrack(_proj, _idx-1);
 }
 
 int SNM_GetTrackId(ReaProject* _proj, MediaTrack* _tr)
 {
-	int count = SNM_GetNumTracks(_proj);
+	int count = CountTracks(_proj);
 	for (int i=0; i <= count; i++)
 		if (SNM_GetTrack(_proj, i) == _tr)
 			return i;
@@ -68,8 +60,7 @@ int SNM_GetTrackId(ReaProject* _proj, MediaTrack* _tr)
 int SNM_CountSelectedTracks(ReaProject* _proj, bool _master)
 {
 	int selCnt = CountSelectedTracks(_proj);
-	if (_master)
-	{
+	if (_master) {
 		MediaTrack* mtr = GetMasterTrack(_proj);
 		if (mtr && *(int*)GetSetMediaTrackInfo(mtr, "I_SELECTED", NULL))
 			selCnt++;
@@ -97,8 +88,8 @@ MediaTrack* SNM_GetSelectedTrack(ReaProject* _proj, int _idx, bool _withMaster)
 
 void SNM_GetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, bool _withMaster)
 {
-	int count = SNM_GetNumTracks(_proj);
-	for (int i=(_withMaster?0:1); i <= count; i++)
+	int count = CountTracks(_proj);
+	for (int i=_withMaster?0:1; _trs && i <= count; i++)
 	{
 		MediaTrack* tr = SNM_GetTrack(_proj, i);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -106,29 +97,47 @@ void SNM_GetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, boo
 	}
 }
 
-//JFB!!! see new 4.16pre API
-void SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, bool _unselOthers)
+// note: 4.16pre feature SetOnlyTrackSelected() but there is 
+//       no way to know if something has been updated or not..
+bool SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, bool _unselOthers, bool _withMaster)
 {
-/*
-	for (int i=0; i < _trs->GetSize(); i++)
-		if (MediaTrack* tr = _trs->Get(i))
-			if (SNM_GetTrackId(_proj, tr) >= 0)
-				GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
-*/
-	int count = _trs ? SNM_GetNumTracks(_proj) : 0;
-	for (int i=0; i <= count; i++)
+	bool updated = false;
+	if (_trs && _trs->GetSize())
 	{
-		MediaTrack* tr = SNM_GetTrack(_proj, i);
-		if (_trs->Find(tr) >= 0)
-			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
-		else if (_unselOthers)
-			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
+		int count = CountTracks(_proj);
+		for (int i=_withMaster?0:1; i <= count; i++)
+			if (MediaTrack* tr = SNM_GetTrack(_proj, i))
+				if (_trs->Find(tr) >= 0) {
+					if (!*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {
+						GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
+						updated = true;
+					}
+				}
+				else if (_unselOthers) {
+					if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {
+						GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
+						updated = true;
+					}
+				}
 	}
+	return updated;
 }
 
+// wrapper func..
+bool SNM_SetSelectedTrack(ReaProject* _proj, MediaTrack* _tr, bool _unselOthers, bool _withMaster)
+{
+	if (_tr) {
+		WDL_PtrList<MediaTrack> trs;
+		trs.Add(_tr);
+		return SNM_SetSelectedTracks(_proj, &trs, _unselOthers, _withMaster);
+	}
+	return false;
+}
+
+
 void SNM_ClearSelectedTracks(ReaProject* _proj, bool _withMaster) {
-	int count = SNM_GetNumTracks(_proj);
-	for (int i=(_withMaster?0:1); i <= count; i++)
+	int count = CountTracks(_proj);
+	for (int i=_withMaster?0:1; i <= count; i++)
 		GetSetMediaTrackInfo(SNM_GetTrack(_proj, i), "I_SELECTED", &g_i0);
 }
 
@@ -445,6 +454,31 @@ const char g_trackEnvelopes[][SNM_MAX_ENV_SUBCHUNK_NAME] = {
 	"MASTERPANENV2"
 };
 
+// native assumption: one env selected at a time
+MediaTrack* GetTrackWithSelEnv()
+{
+	if (TrackEnvelope* env = GetSelectedTrackEnvelope(NULL))
+		for (int i=0; i <= GetNumTracks(); i++) // include master
+			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+				for (int j=0; j < CountTrackEnvelopes(tr); j++)
+					if (env == GetTrackEnvelope(tr, j))
+						return tr;
+	return NULL;
+}
+
+void SelOnlyTrackWithSelEnv(COMMAND_T* _ct)
+{
+	bool updated = false;
+	if (MediaTrack* envtr = GetTrackWithSelEnv())
+		for (int i=0; i <= GetNumTracks(); i++) // include master
+			if (envtr == CSurf_TrackFromID(i, false)) {
+				updated = SNM_SetSelectedTrack(NULL, envtr, true);
+				break;
+			}
+	if (updated)
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
 int trackEnvelopesCount() {
 	static int cnt = (int)(sizeof(g_trackEnvelopes) / SNM_MAX_ENV_SUBCHUNK_NAME);
 	return cnt;
@@ -466,7 +500,7 @@ bool trackEnvelopesLookup(const char* _str) {
 void toggleArmTrackEnv(COMMAND_T* _ct)
 {
 	bool updated = false;
-	for (int i = 0; i <= GetNumTracks(); i++) // include master
+	for (int i=0; i <= GetNumTracks(); i++) // include master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false); 
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -655,13 +689,11 @@ bool replacePasteItemsFromTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltI
 	bool updated = false;
 	if (_tr && _tr != GetMasterTrack(NULL) && _tmpltItemsSubChunk) // no items on master
 	{
-		int offsetItem = 0;
-		if (int* offsPref = (int*)GetConfigVar("templateditcursor")) // >= REAPER v4.15
-			offsetItem = *offsPref;
+		int* offsOpt = (int*)GetConfigVar("templateditcursor"); // >= REAPER v4.15
 
 		// prepare paste items relative to edit cursor. store items before any update
 		WDL_PtrList<void> itemsBefore;
-		if (offsetItem && _paste) // no item will remain when replacing
+		if (offsOpt && *offsOpt && _paste) // no item will remain when replacing
 		{					
 			int itemCount = GetTrackNumMediaItems(_tr);
 			for (int j=0; j < itemCount; j++)
@@ -682,22 +714,24 @@ bool replacePasteItemsFromTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltI
 			p->GetChunk()->Insert(_tmpltItemsSubChunk->Get(), p->GetChunk()->GetLength()-2); // -2: before ">\n"
 			updated |= (p->IncUpdates() > 0); // as we directly work on the chunk
 		}
-		p->Commit(); // we have to commit as new items can be offseted below
-		if (!_p) delete p;
+		// we have to commit as new items can be offseted below
+		p->Commit();
+		if (!_p)
+			DELETE_NULL(p);
 
 		// paste items relative to cursor
 		// the track has been patched => move new items according by edit cursor
-		int itemCount = GetTrackNumMediaItems(_tr);
-		if (itemCount && offsetItem)
-		{					
-			double cursorPos = GetCursorPosition();
-			for (int j=0; j < itemCount; j++)
-				if (MediaItem* item = GetTrackMediaItem(_tr, j))
-					if (itemsBefore.Find(item) == -1) {
-						double newPos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL) + cursorPos;
-						GetSetMediaItemInfo(item, "D_POSITION", &newPos);
-					}
-		}
+		if (/*JFB!!!?? updated && */offsOpt && *offsOpt)
+			if (int itemCount = GetTrackNumMediaItems(_tr))
+			{					
+				double cursorPos = GetCursorPositionEx(NULL);
+				for (int j=0; j < itemCount; j++)
+					if (MediaItem* item = GetTrackMediaItem(_tr, j))
+						if (itemsBefore.Find(item) == -1) {
+							double newPos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL) + cursorPos;
+							GetSetMediaItemInfo(item, "D_POSITION", &newPos);
+						}
+			}
 	}
 	return updated;
 }
@@ -712,8 +746,8 @@ bool makeSingleTrackTemplateChunk(WDL_FastString* _inRawChunk, WDL_FastString* _
 		{
 			// remove receives from the template (as we patch a single track)
 			// note: occurs with multiple tracks in a template file (w/ rcv 
-			//   between those tracks), we remove them because -if applied- 
-			//   track ids of the template won't match the project ones
+			//   between those tracks), we remove them because track ids of
+			//   the template won't match the project ones
 			SNM_EnvRemover p2(_out);
 			p2.RemoveLine("TRACK", "AUXRECV", 1, -1, "MIDIOUT"); // check depth & parent (skip frozen AUXRECV)
 
@@ -773,11 +807,12 @@ bool applyTrackTemplateNoIO(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _
 			if (posItems >= 0)
 				newChunk.Insert((char*)(p->GetChunk()->Get()+posItems), newChunk.GetLength()-2, p->GetChunk()->GetLength()-posItems-2); // -2: ">\n"
 
-			// apply to track
 			p->SetChunk(&newChunk, p->GetUpdates()+1);
 			updated = true;
 		}
-		if (!_p) DELETE_NULL(p); // + auto-commit if needed
+
+		if (!_p)
+			DELETE_NULL(p); // + auto-commit if needed
 	}
 	return updated;
 }
@@ -791,17 +826,19 @@ bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _item
 	if (_tr && _tmpltChunk && _tmpltChunk->GetLength())
 	{
 		SNM_ChunkParserPatcher* p = (_p ? _p : new SNM_SendPatcher(_tr));
-
-		// copy routings
+//JFB!!! to check: master track
+		// copy receives
 		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > rcvs;
 		WDL_PtrList<MediaTrack> trs; trs.Add(_tr);
 		copySendsReceives(false, &trs, NULL, &rcvs);
-		// apply tr template
+
+		// apply tr template & restore rcvs
 		if (updated = applyTrackTemplateNoIO(_tr, _tmpltChunk, _itemsFromTmplt, _envsFromTmplt, p, _isRawTmpltChunk)) {
 			WDL_PtrList<SNM_ChunkParserPatcher> ps; ps.Add(p);
-			pasteSendsReceives(&trs, NULL, &rcvs, false, &ps); // restore rcvs
+			pasteSendsReceives(&trs, NULL, &rcvs, false, &ps);
 		}
-		if (!_p) DELETE_NULL(p); // + auto-commit if needed
+		if (!_p)
+			DELETE_NULL(p); // + auto-commit if needed
 	}
 	return updated;
 }
@@ -811,7 +848,7 @@ bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _item
 // Track templates slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
-// Main_openProject() includes undo point!
+// Main_openProject() includes undo point
 void ImportTrackTemplateSlot(int _slotType, const char* _title, int _slot)
 {
 	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
@@ -871,7 +908,6 @@ void ReplacePasteItemsTrackTemplateSlot(int _slotType, const char* _title, int _
 			for (int i = 1; i <= GetNumTracks(); i++) // skip master
 				if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 					if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-						// offset items by edit cirsor if needed
 						updated |= replacePasteItemsFromTrackTemplate(tr, &tmpltItemsSubChunk, _paste);
 		}
 		delete fnStr;

@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_wnd.cpp
 /
-/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2012 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -238,13 +238,13 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				// Add std menu items
 				char str[100];
-				if (_snprintf(str, 100, "Dock %s in Docker", m_cWndTitle) > 0)
+				if (_snprintf(str, 100, __LOCALIZE_VERFMT("Dock %s in Docker","sws_menu"), m_cWndTitle) > 0)
 					AddToMenu(hMenu, str, DOCK_MSG);
 
 				// Check dock state
 				if ((m_state.state & 2))
 					CheckMenuItem(hMenu, DOCK_MSG, MF_BYCOMMAND | MF_CHECKED);
-				AddToMenu(hMenu, "Close Window", IDCANCEL);
+				AddToMenu(hMenu, __LOCALIZE("Close window","sws_menu"), IDCANCEL);
 			}
 			
 			if (hMenu)
@@ -381,7 +381,11 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if (GetCapture() == m_hwnd)
 			{
 				if (!OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)))
+				{
 					m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+					for (int i=0; i < m_pLists.GetSize(); i++)
+						m_pLists.Get(i)->OnEndDrag();
+				}
 				ReleaseCapture();
 			}
 			KillTooltip(true);
@@ -597,9 +601,14 @@ void SWS_DockWnd::KillTooltip(bool doRefresh)
 		InvalidateRect(m_hwnd,NULL,FALSE);
 }
 
-SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips)
+
+///////////////////////////////////////////////////////////////////////////////
+// SWS_ListView
+///////////////////////////////////////////////////////////////////////////////
+
+SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips, bool bDrawArrow)
 :m_hwndList(hwndList), m_hwndEdit(hwndEdit), m_hwndTooltip(NULL), m_iSortCol(1), m_iEditingItem(-1), m_iEditingCol(0),
-  m_iCols(iCols), m_pCols(NULL), m_pDefaultCols(pCols), m_bDisableUpdates(false), m_cINIKey(cINIKey),
+  m_iCols(iCols), m_pCols(NULL), m_pDefaultCols(pCols), m_bDisableUpdates(false), m_cINIKey(cINIKey), m_bDrawArrow(bDrawArrow),
 #ifndef _WIN32
   m_pClickedItem(NULL)
 #else
@@ -719,16 +728,18 @@ SWS_ListItem* SWS_ListView::EnumSelected(int* i)
 	return NULL;
 }
 
-bool SWS_ListView::SelectByItem(SWS_ListItem* _item)
+bool SWS_ListView::SelectByItem(SWS_ListItem* _item, bool bSelectOnly, bool bEnsureVisible)
 {
 	for (int i = 0; i < GetListItemCount(); i++)
 	{
 		SWS_ListItem* item = GetListItem(i);
 		if (item == _item) 
 		{
-			ListView_SetItemState(m_hwndList, -1, 0, LVIS_SELECTED);
-			ListView_SetItemState(m_hwndList, i, LVIS_SELECTED, LVIS_SELECTED); 
-			ListView_EnsureVisible(m_hwndList, i, true);
+			if (bSelectOnly)
+				ListView_SetItemState(m_hwndList, -1, 0, LVIS_SELECTED);
+			ListView_SetItemState(m_hwndList, i, LVIS_SELECTED, LVIS_SELECTED);
+			if (bEnsureVisible)
+				ListView_EnsureVisible(m_hwndList, i, true);
 			return true;
 		}
 	}
@@ -1179,7 +1190,7 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 		EditListItemEnd(true); // fix possible crash
 
 		HMENU hMenu = CreatePopupMenu();
-		AddToMenu(hMenu, "Visible columns", 0);
+		AddToMenu(hMenu, __LOCALIZE("Visible columns","sws_menu"), 0);
 		EnableMenuItem(hMenu, 0, MF_BYPOSITION | MF_GRAYED);
 
 		for (int i = 0; i < m_iCols; i++)
@@ -1189,7 +1200,7 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 				CheckMenuItem(hMenu, i+1, MF_BYPOSITION | MF_CHECKED);
 		}
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
-		AddToMenu(hMenu, "Reset", m_iCols + 1);
+		AddToMenu(hMenu, __LOCALIZE("Reset","sws_menu"), m_iCols + 1);
 
 		int iCol = TrackPopupMenu(hMenu, TPM_RETURNCMD, x, y, 0, m_hwndList, NULL);
 		DestroyMenu(hMenu);
@@ -1468,6 +1479,9 @@ void SWS_ListView::Sort()
 
 void SWS_ListView::SetListviewColumnArrows(int iSortCol)
 {
+	if (!m_bDrawArrow)
+		return;
+
 #ifdef _WIN32
 	// Set the column arrows
 	HWND header = ListView_GetHeader(m_hwndList);
@@ -1531,8 +1545,9 @@ int SWS_ListView::DataToDisplayCol(int iCol)
 
 int SWS_ListView::sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam)
 {
-	SWS_ListView* pLV = (SWS_ListView*)lSortParam;
-	return pLV->OnItemSort((SWS_ListItem*)lParam1, (SWS_ListItem*)lParam2);
+	if (SWS_ListView* pLV = (SWS_ListView*)lSortParam)
+		return pLV->OnItemSort((SWS_ListItem*)lParam1, (SWS_ListItem*)lParam2);
+	return 0;
 }
 
 

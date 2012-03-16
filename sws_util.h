@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_util.h
 /
-/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2012 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -133,6 +133,7 @@ public:
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
 extern HWND g_hwndParent;
+extern double g_d0;
 extern int g_i0;
 extern int g_i1;
 extern int g_i2;

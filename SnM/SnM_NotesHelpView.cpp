@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_NotesHelpView.cpp
 /
-/ Copyright (c) 2010-2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2010-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -96,7 +96,11 @@ MediaTrack* g_trNote = NULL;
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_NotesHelpWnd::SNM_NotesHelpWnd()
+#ifdef _WIN32
 	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes/Subtitles/Help","sws_DLG_152"), "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
+#else
+	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes/Subtitles","sws_DLG_152"), "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
+#endif
 {
 	m_internalTLChange = false;
 	RegisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
@@ -153,7 +157,7 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_btnExportSub);
 
 	g_prevNotesViewType = -1; // will force refresh
-	SetType(BOUNDED(g_notesViewType, 0, m_cbType.GetCount()-1)); // + Update() and timer init
+	SetType(BOUNDED(g_notesViewType, 0, m_cbType.GetCount()-1)); // + Update()
 
 	SetTimer(m_hwnd, UPDATE_TIMER, UPDATE_FREQ, NULL);
 }
@@ -442,7 +446,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	int x0=_r->left+10;
 
 	// lock button
-	SNM_SkinButton(&m_btnLock, it ? &(it->toolbar_lock[!g_locked]) : NULL, g_locked ? "Unlock" : "Lock");
+	SNM_SkinButton(&m_btnLock, it ? &it->toolbar_lock[!g_locked] : NULL, g_locked ? __LOCALIZE("Unlock","sws_DLG_152") : __LOCALIZE("Lock","sws_DLG_152"));
 	if (SNM_AutoVWndPosition(&m_btnLock, NULL, _r, &x0, _r->top, h))
 	{
 		// view type
@@ -480,36 +484,9 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 #endif
 				case SNM_NOTES_REGION_SUBTITLES:
 					if (g_lastMarkerRegionId > 0)
-					{
-						int idx = GetMarkerRegionIndexFromId(g_lastMarkerRegionId);
-						double pos, end; int num; bool isRgn; char* name;
-						if (idx >= 0 && EnumProjectMarkers2(NULL, idx, &isRgn, &pos, &end, &name, &num))
-						{
-							if (isRgn)
-							{
-								char timeStr1[32]="", timeStr2[32]="";
-								format_timestr_pos(pos, timeStr1, 32, -1);
-								format_timestr_pos(end, timeStr2, 32, -1);
-								if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
-									_snprintf(str, 512, "[%d] \"%s\" (%s -> %s)", num, name, timeStr1, timeStr2);
-								else
-									_snprintf(str, 512, "[%d] %s -> %s", num, timeStr1, timeStr2);
-							}
-							else
-							{
-								char timeStr[32] = "";
-								format_timestr_pos(pos, timeStr, 32, -1);
-								if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
-									_snprintf(str, 512, "[%d] \"%s\" (%s)", num, name, timeStr);
-								else
-									_snprintf(str, 512, "[%d] %s", num, timeStr);
-							}
-						}
-						else
-							*str = '\0';
-					}
+						EnumMarkerRegionDesc(GetMarkerRegionIndexFromId(g_lastMarkerRegionId), str, 512, g_notesViewType == SNM_NOTES_REGION_SUBTITLES);
 					else
-						strcpy(str, __LOCALIZE("No marker or region before play/edit cursor position!","sws_DLG_152"));
+						lstrcpyn(str, __LOCALIZE("No marker or region before play/edit cursor position!","sws_DLG_152"), 512);
 					break;
 				case SNM_NOTES_ACTION_HELP:
 					if (g_lastActionDesc && *g_lastActionDesc && g_lastActionSection && *g_lastActionSection)
@@ -936,7 +913,7 @@ int SNM_NotesHelpWnd::updateMkrRgnNameOrNotes(bool _name)
 
 	double dPos;
 	if (g_locked && GetPlayState()) dPos = GetPlayPosition();
-	else dPos = GetCursorPosition();
+	else dPos = GetCursorPositionEx(NULL);
 
 	if (fabs(g_lastMarkerPos-dPos) > 0.1) // 0.1 freq is enough
 	{

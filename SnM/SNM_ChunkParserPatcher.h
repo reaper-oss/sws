@@ -1,6 +1,6 @@
 /******************************************************************************
 ** SNM_ChunkParserPatcher.h - v1.235
-** Copyright (C) 2008-2011, Jeffos
+** Copyright (C) 2008-2012, Jeffos
 **
 **    This software is provided 'as-is', without any express or implied
 **    warranty. In no event will the authors be held liable for any damages
@@ -277,7 +277,6 @@ int SetUpdates(int _updates) {
 }
 
 // no-op if no updates: commit only if needed.
-//JFB!!! TODO: move checks to SNM_GetSetObjectState()
 // when attached to a reaThing*, global protections apply:
 // - no patch while recording 
 // - remove all ids before patching, see SNM_GetSetObjectState()

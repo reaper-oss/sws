@@ -2,7 +2,7 @@
 / SnM_FXChainView.h
 / JFB TODO? now, SnM_Resources.cpp/.h would be better names..
 /
-/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -27,46 +27,73 @@
 
 #pragma once
 
-#ifndef _SNM_PlaylistView_H_
-#define _SNM_PlaylistView_H_
+#ifndef _SNM_PLAYLISTVIEW_H_
+#define _SNM_PLAYLISTVIEW_H_
 
+
+// note: no other attributes (like a comment") because of 
+// the playlist "auto-compacting" feature..
+class SNM_RgnPlaylistItem {
+public:
+	SNM_RgnPlaylistItem(int _rgnId=-1, int _cnt=1, int _playRequested=0)
+		: m_rgnId(_rgnId),m_cnt(_cnt),m_playRequested(_playRequested) {}
+	int m_rgnId, m_cnt, m_playRequested;
+};
 
 class SNM_PlaylistView : public SWS_ListView {
 public:
 	SNM_PlaylistView(HWND hwndList, HWND hwndEdit);
+	void UpdateCompact();
 protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
 	void GetItemList(SWS_ListItemList* pList);
-	bool IsEditListItemAllowed(SWS_ListItem* item, int iCol);
 	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
 	void OnItemDblClk(SWS_ListItem* item, int iCol);
+	int OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2);
+	void OnBeginDrag(SWS_ListItem* item);
+	void OnDrag();
+	void OnEndDrag();
+	WDL_PtrList<SNM_RgnPlaylistItem> m_draggedItems;
 };
-
 
 class SNM_RegionPlaylistWnd : public SWS_DockWnd
 {
 public:
 	SNM_RegionPlaylistWnd();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	bool Find(int _mode);
-	bool FindMediaItem(int _type, bool _allTakes, bool (*jobTake)(MediaItem_Take*,const char*,char*), bool (*jobItem)(MediaItem*,const char*,char*) = NULL);
-	bool FindTrack(int _type, bool (*job)(MediaTrack*,const char*,char*));
-	bool FindMarkerRegion(int _type);
-	bool FindFilename(int _type, bool _withPath, bool (*job)(const char*,const char*,char*));
+	void Update(int _flags = 3);
 protected:
 	void OnInitDlg();
-	void OnDestroy();
+	void OnDestroy() {}
+	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	int OnKey(MSG* msg, int iKeyState) ;
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
-
+	SNM_ToolbarButton m_btnCrop;
 	WDL_VirtualIconButton m_btnPlay, m_btnStop;
 };
+
+class SNM_RgnPlaylistCurNextItems {
+public:
+	SNM_RgnPlaylistCurNextItems(SNM_RgnPlaylistItem* _cur=NULL, SNM_RgnPlaylistItem* _next=NULL)
+		: m_cur(_cur),m_next(_next) {}
+	SNM_RgnPlaylistItem* m_cur;
+	SNM_RgnPlaylistItem* m_next;
+};
+
+
+void PlaylistRun();
+void PlaylistPlay(int _playlistId, bool _errMsg);
+void PlaylistPlay(COMMAND_T*);
+void PlaylistStopped();
+
+void CropProjectToPlaylist();
 
 int RegionPlaylistInit();
 void RegionPlaylistExit();
 void OpenRegionPlaylist(COMMAND_T*);
 bool IsRegionPlaylistDisplayed(COMMAND_T*);
+
 
 #endif

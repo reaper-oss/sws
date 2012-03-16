@@ -2,7 +2,7 @@
 / SnM_Actions.h
 / JFB TODO? split into several .h + a better name would be "SnM.h"
 /
-/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -94,7 +94,7 @@
 #define MAX_CC_LANE_ID				133
 #define MAX_CC_LANES_LEN			4096
 #define SNM_3D_COLORS_DELTA			25
-#define SNM_CSURF_RUN_TICK_MS		27     // 1 tick = 27ms or so (average I monitored)
+#define SNM_CSURF_RUN_TICK_MS		27.0   // 1 tick = 27ms or so (average I monitored)
 #define SNM_DEF_TOOLBAR_RFRSH_FREQ	300    // default frequency in ms for the "auto-refresh toolbars" option 
 #define SNM_SCHEDJOB_DEFAULT_DELAY	250
 #define SNM_DEF_VWND_X_STEP			12
@@ -290,6 +290,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 // *** SnM_Actions.cpp ***
+extern bool g_lastPlayState, g_lastPauseState, g_lastRecState;
 extern WDL_FastString g_SNMIniFn;
 extern WDL_FastString g_SNMCyclactionIniFn;
 extern MIDI_COMMAND_T g_SNMSection_cmdTable[];
@@ -316,6 +317,7 @@ void UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
 void SnMCSurfRun();
 void SnMCSurfSetTrackTitle();
 void SnMCSurfSetTrackListChange();
+void SnMCSurfSetPlayState(bool _play, bool _pause, bool _rec);
 int SnMCSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3);
 
 // *** SnM_Dlg.cpp ***
@@ -431,12 +433,15 @@ bool deleteMediaItemIfNeeded(MediaItem* _item);
 void SNM_GetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks = false);
 void SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks = false);
 void SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks = false);
+bool ItemsInInterval(double _pos1, double _pos2);
 void splitMidiAudio(COMMAND_T*);
 void smartSplitMidiAudio(COMMAND_T*);
 #ifdef _SNM_MISC // deprecated (v3.67)
 void splitSelectedItems(COMMAND_T*);
 #endif
 void goferSplitSelectedItems(COMMAND_T*);
+bool SplitSelectAllItemsInRegion(const char* _undoTitle, int _rgnIdx);
+void SplitSelectAllItemsInRegion(COMMAND_T*);
 void copyCutTake(COMMAND_T*);
 void pasteTake(COMMAND_T*);
 bool isEmptyMidi(MediaItem_Take* _take);
@@ -542,6 +547,8 @@ int GetMarkerRegionIdFromIndex(int _idx);
 int GetMarkerRegionIndexFromId(int _id);
 bool IsRegion(int _id);
 void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms = NULL);
+int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool _wantsName = true);
+void FillMarkerRegionMenu(HMENU _menu, int _msgStart, int _flags);
 #ifdef _SNM_MISC
 void makeUnformatedConfigString(const char* _in, WDL_FastString* _out);
 #endif
@@ -618,19 +625,20 @@ void SetTrackToFirstUnusedGroup(COMMAND_T*);
 void saveTracksFolderStates(COMMAND_T*);
 void restoreTracksFolderStates(COMMAND_T*);
 void setTracksFolderState(COMMAND_T*);
+void SelOnlyTrackWithSelEnv(COMMAND_T*);
 int trackEnvelopesCount();
 const char* trackEnvelope(int _i);
 bool trackEnvelopesLookup(const char* _str);
 void toggleArmTrackEnv(COMMAND_T*);
 void toggleWriteEnvExists(COMMAND_T*);
 bool writeEnvExists(COMMAND_T*);
-int SNM_GetNumTracks(ReaProject* _proj);
 MediaTrack* SNM_GetTrack(ReaProject* _proj, int _idx);
 int SNM_GetTrackId(ReaProject* _proj, MediaTrack* _tr);
 int SNM_CountSelectedTracks(ReaProject* _proj, bool _master);
 MediaTrack* SNM_GetSelectedTrack(ReaProject* _proj, int _idx, bool _withMaster);
 void SNM_GetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, bool _withMaster);
-void SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, bool _unselOthers);
+bool SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, bool _unselOthers, bool _withMaster = true);
+bool SNM_SetSelectedTrack(ReaProject* _proj, MediaTrack* _tr, bool _unselOthers, bool _withMaster = true);
 void SNM_ClearSelectedTracks(ReaProject* _proj, bool _withMaster);
 bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz);
 void SetTrackIcon(MediaTrack* _tr, const char* _fn);

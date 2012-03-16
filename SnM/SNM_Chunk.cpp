@@ -3,7 +3,7 @@
 /
 / Some "SAX-ish like" parser classes inheriting SNM_ChunkParserPatcher
 /
-/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -210,7 +210,7 @@ bool SNM_FXChainTakePatcher::NotifyEndElement(int _mode,
 	bool update = m_removingTakeFx;
 	if ((_mode == -1 || (m_activeTake && _mode == -2)) && !strcmp(GetParent(_parsedParents), "SOURCE")) 
 	{
-		// If there's a chain to add, add it!
+		// if there's a chain to add, add it!
 		if (m_fxChain != NULL)
 		{
 			update=true;
@@ -334,8 +334,8 @@ bool SNM_FXChainTrackPatcher::NotifyChunkLine(int _mode,
 {
 	bool update = m_removingFxChain;
 
-	// Here we rely on REAPER tolerance: we patch right after "MAINSEND" even if track volume
-	// pan, etc.. envelopes are normally defined there first (before FX chains). We also rely 
+	// we rely on REAPER tolerance here: we patch right after "MAINSEND" even if track volume
+	// pan, etc.. envelopes are normally defined there first (before FX chains). also relies
 	// on REAPER's tolerance about input and standard FX chains order.
 	if((_mode == -1 || _mode == -2) && !strcmp(_lp->gettoken_str(0), "MAINSEND"))
 	{
@@ -396,8 +396,7 @@ bool SNM_TakeParserPatcher::GetTakeChunk(int _takeIdx, WDL_FastString* _gettedCh
 	return found;
 }
 
-// Different from the API's CountTakes(MediaItem*), this ones
-// applies on the chunk (which perharps not yet commited !)
+// different from the API's CountTakes(MediaItem*), this method deals with the chunk
 int SNM_TakeParserPatcher::CountTakesInChunk()
 {
 	if (m_currentTakeCount < 0)
@@ -414,8 +413,7 @@ int SNM_TakeParserPatcher::CountTakesInChunk()
 	return m_currentTakeCount;
 }
 
-// different from checking a PCM source: this method can 
-// apply on a chunk that's not committed yet
+// different from checking a PCM source: this method deals with the chunk
 bool SNM_TakeParserPatcher::IsEmpty(int _takeIdx)
 {
 	WDL_FastString tkChunk;
@@ -823,7 +821,7 @@ bool SNM_LearnMIDIChPatcher::NotifyChunkLine(int _mode,
 			int n = _snprintf(bufline, 128, "PARMLEARN %d %d %d\n", _lp->gettoken_int(1), midiMsg, _lp->gettoken_int(3));
 			_newChunk->Append(bufline,n);
 			updated = true;
-/* no! there can be several learned params for that FX..
+/* no! may be there are several learned params for that FX..
 			m_breakParsePatch = (m_fx != -1); // one fx to be patched
 */
 		}
@@ -852,7 +850,7 @@ bool SNM_FXSummaryParser::NotifyStartElement(int _mode,
 	if (_mode == -1)
 	{
 		if (_lp->getnumtokens() >= 3
-/*JFB commented for .RFXChain file support
+/*JFB commented for .RFXChain file support (no "<FXCHAIN" parent)
 			&& _parsedParents->GetSize() == 3
 */
 			)

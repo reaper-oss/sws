@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Actions.cpp
 /
-/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -420,7 +420,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Split selected items at edit or play cursor" }, "S&M_SPLIT8", splitSelectedItems, NULL, 40012},
 	{ { DEFACCEL, "SWS/S&M: Split selected items at edit or play cursor (ignoring grouping)" }, "S&M_SPLIT9", splitSelectedItems, NULL, 40186},
 #endif
-	{ { DEFACCEL, "SWS/gofer: Split selected items at mouse cursor (obey snapping)" }, "S&M_SPLIT10", goferSplitSelectedItems, NULL, },
+	{ { DEFACCEL, "SWS/gofer: Split selected items at mouse cursor (obey snapping)" }, "S&M_SPLIT10", goferSplitSelectedItems, NULL, },//JFB!! AFAIR issue discussed in forums
+	{ { DEFACCEL, "SWS/S&M: Split and select items in region near cursor" }, "S&M_SPLIT11", SplitSelectAllItemsInRegion, NULL, },
 
 	// ME ---------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Hide all CC lanes" }, "S&M_MEHIDECCLANES", MEHideCCLanes, NULL, },
@@ -470,6 +471,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle arming of all receive pan envelopes for selected tracks" }, "S&M_TGLARMAUXPANENV", toggleArmTrackEnv, NULL, 7, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle arming of all receive mute envelopes for selected tracks" }, "S&M_TGLARMAUXMUTEENV", toggleArmTrackEnv, NULL, 8, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle arming of all plugin envelopes for selected tracks" }, "S&M_TGLARMPLUGENV", toggleArmTrackEnv, NULL, 9, FakeIsToggleAction},
+
+	{ { DEFACCEL, "SWS/S&M: Select only track with selected envelope" }, "S&M_SELTR_SELENV", SelOnlyTrackWithSelEnv, NULL, },
 
 	// Toolbar ----------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Toggle toolbars auto refresh enable" },	"S&M_TOOLBAR_REFRESH_ENABLE", EnableToolbarsAutoRefesh, "Enable toolbars auto refresh", 0, IsToolbarsAutoRefeshEnabled},
@@ -533,9 +536,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 16" }, "S&M_MAP_MIDI_INPUT_CH16", remapMIDIInputChannel, NULL, 16},
 
 	// Region playlist --------------------------------------------------------
-#ifdef _SNM_MISC // wip
-	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_RGN_PLAYLIST", OpenRegionPlaylist, "S&&M Region Playlist", NULL, IsRegionPlaylistDisplayed},
-#endif
+//	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_SHOW_RGN_PLAYLIST", OpenRegionPlaylist, "S&&M Region Playlist", NULL, IsRegionPlaylistDisplayed},
+//	{ { DEFACCEL, "SWS/S&M: Play (Region Playlist)" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 0},
 
 	// Localization -----------------------------------------------------------
 #ifdef _SWS_LOCALIZATION
@@ -630,7 +632,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause), slot %02d" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTR", TogglePauseSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause), slot %02d - Infinite looping! To be stopped!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR", ToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
 
-#ifdef _SNM_MISC // not sure it is interesting..
+#ifdef _SNM_MISC // not interesting..
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_PLAYMEDIA_SELTRACK_SYNC", SyncTogglePlaySelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_LOOPMEDIA_SELTRACK_SYNC", SyncToggleLoopSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause, sync with next measure), slot %02d" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTR_SYNC", SyncTogglePauseSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
@@ -1141,6 +1143,9 @@ double g_markerRegionNotifyMsCounter = 0.0;
 
 void SnMCSurfRun()
 {
+	// region playlist
+	PlaylistRun();
+
 	// perform scheduled jobs
 	{
 		SWS_SectionLock lock(&g_jobsMutex);
@@ -1163,9 +1168,10 @@ void SnMCSurfRun()
 		g_markerRegionNotifyMsCounter = 0.0;
 
 		SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
-		if (int updateFlags = MarkerRegionChanged())
-			for (int i=g_mkrRgnSubscribers.GetSize()-1; i >=0; i--)
-				g_mkrRgnSubscribers.Get(i)->NotifyMarkerRegionUpdate(updateFlags);
+		if (int sz=g_mkrRgnSubscribers.GetSize()) //JFB!!! pas de registration par défaut!!
+			if (int updateFlags = MarkerRegionChanged())
+				for (int i=sz-1; i >=0; i--)
+					g_mkrRgnSubscribers.Get(i)->NotifyMarkerRegionUpdate(updateFlags);
 	}
 
 	// stop playing track previews if needed
@@ -1198,6 +1204,22 @@ void SnMCSurfSetTrackTitle() {
 void SnMCSurfSetTrackListChange() {
 	if (g_pNotesHelpWnd) g_pNotesHelpWnd->CSurfSetTrackListChange();
 	if (g_pLiveConfigsWnd) g_pLiveConfigsWnd->CSurfSetTrackListChange();
+}
+
+bool g_lastPlayState=false, g_lastPauseState=false, g_lastRecState=false;
+
+void SnMCSurfSetPlayState(bool _play, bool _pause, bool _rec)
+{
+	if (g_lastPlayState != _play) {
+		if (g_lastPlayState && !_play) PlaylistStopped();
+		g_lastPlayState = _play;
+	}
+	if (g_lastPauseState != _pause) {
+		g_lastPauseState = _pause;
+	}
+	if (g_lastRecState != _rec) {
+		g_lastRecState = _rec;
+	}
 }
 
 int SnMCSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3)

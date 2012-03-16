@@ -1,7 +1,7 @@
 /******************************************************************************
 / Autocolor.cpp
 /
-/ Copyright (c) 2011 Tim Payne (SWS) / Jeffos (S&M)
+/ Copyright (c) 2010-2012 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,6 +29,7 @@
 #include "Color.h"
 #include "Autocolor.h"
 #include "../SnM/SnM_Actions.h"
+#include "../reaper/localize.h"
 #include "../../WDL/projectcontext.h"
 
 #define PRI_UP_MSG		0x10000
@@ -45,10 +46,13 @@
 #define AC_ITEM_KEY		"AutoColor %d"
 
 enum { AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_ANY, AC_MASTER, NUM_TRACKTYPES };
-static const char cTrackTypes[][11] = { "(unnamed)", "(folder)", "(children)", "(receive)", "(any)", "(master)" };
-
 enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, AC_IGNORE, NUM_COLORTYPES };
+
+// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_115
+static const char cTrackTypes[][11] = { "(unnamed)", "(folder)", "(children)", "(receive)", "(any)", "(master)" };
 static const char cColorTypes[][9] = { "Custom", "Gradient", "Random", "None", "Parent", "Ignore" };
+// !WANT_LOCALIZE_STRINGS_END
+
 
 // Globals
 static SWS_AutoColorWnd* g_pACWnd = NULL;
@@ -57,7 +61,9 @@ static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<SWS_RuleTrack> > g_pACTracks;
 static bool g_bACEnabled = false;
 static bool g_bAIEnabled = false;
 static WDL_String g_ACIni;
+// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_115
 static SWS_LVColumn g_cols[] = { {25, 0, "#" }, { 185, 1, "Filter" }, { 70, 1, "Color" }, { 200, 2, "Icon" }};
+// !WANT_LOCALIZE_STRINGS_END
 
 // Prototypes
 void AutoColorSaveState();
@@ -109,7 +115,7 @@ void SWS_AutoColorView::SetItemText(SWS_ListItem* item, int iCol, const char* st
 		for (int i = 0; i < g_pACItems.GetSize(); i++)
 			if (strcmp(g_pACItems.Get(i)->m_str.Get(), str) == 0)
 			{
-				MessageBox(GetParent(m_hwndList), "Autocolor entry with that name already exists.", "Autocolor Error", MB_OK);
+				MessageBox(GetParent(m_hwndList), __LOCALIZE("Autocolor entry with that name already exists.","sws_DLG_115"), __LOCALIZE("SWS - Error","sws_DLG_115"), MB_OK);
 				return;
 			}
 		if (strlen(str))
@@ -184,11 +190,14 @@ void SWS_AutoColorView::OnDrag()
 		}
 
 		g_pACWnd->Update();
+
+		for (int i=0; i < draggedItems.GetSize(); i++)
+			SelectByItem((SWS_ListItem*)draggedItems.Get(i), i==0, i==0);
 	}
 }
 
 SWS_AutoColorWnd::SWS_AutoColorWnd()
-:SWS_DockWnd(IDD_AUTOCOLOR, "Auto Color/Icon", "SWSAutoColor", 30005, SWSGetCommandID(OpenAutoColor))
+:SWS_DockWnd(IDD_AUTOCOLOR, __LOCALIZE("Auto Color/Icon","sws_DLG_115"), "SWSAutoColor", 30005, SWSGetCommandID(OpenAutoColor))
 #ifndef _WIN32
 	,m_bSettingColor(false)
 #endif
@@ -204,7 +213,7 @@ void SWS_AutoColorWnd::Update()
 		// Set the checkbox
 		CheckDlgButton(m_hwnd, IDC_AUTOCOLOR, g_bACEnabled ? BST_CHECKED : BST_UNCHECKED);
 		CheckDlgButton(m_hwnd, IDC_AUTOICON, g_bAIEnabled ? BST_CHECKED : BST_UNCHECKED);
-		SetDlgItemText(m_hwnd, IDC_APPLY, (g_bACEnabled || g_bAIEnabled) ? "Force" : "Apply");
+		SetDlgItemText(m_hwnd, IDC_APPLY, (g_bACEnabled || g_bAIEnabled) ? __LOCALIZE("Force","sws_DLG_115") : __LOCALIZE("Apply","sws_DLG_115"));
 
 		// Redraw the owner drawn button
 #ifdef _WIN32
@@ -243,7 +252,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			AutoColorRun(true);
 			break;
 		case IDC_ADD:
-			g_pACItems.Add(new SWS_RuleItem("(name)", -AC_NONE-1, ""));
+			g_pACItems.Add(new SWS_RuleItem(__LOCALIZE("(name)","sws_DLG_115"), -AC_NONE-1, ""));
 			Update();
 			break;
 		case IDC_REMOVE:
@@ -337,7 +346,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				char filename[BUFFER_SIZE], dir[32];
 				sprintf(dir,"Data%ctrack_icons",PATH_SLASH_CHAR);
-				if (BrowseResourcePath("S&M - Load icon", dir, "PNG files (*.PNG)\0*.PNG\0ICO files (*.ICO)\0*.ICO\0JPEG files (*.JPG)\0*.JPG\0BMP files (*.BMP)\0*.BMP\0PCX files (*.PCX)\0*.PCX\0", 
+				if (BrowseResourcePath(__LOCALIZE("Load icon","sws_DLG_115"), dir, "PNG files (*.PNG)\0*.PNG\0ICO files (*.ICO)\0*.ICO\0JPEG files (*.JPG)\0*.JPG\0BMP files (*.BMP)\0*.BMP\0PCX files (*.PCX)\0*.PCX\0", 
 					filename, BUFFER_SIZE))
 					item->m_icon.Set(filename);
 			}
@@ -363,7 +372,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					for (int i = 0; i < g_pACItems.GetSize(); i++)
 						if (strcmp(g_pACItems.Get(i)->m_str.Get(), cTrackTypes[iType]) == 0)
 						{
-							MessageBox(m_hwnd, "Autocolor entry of that type already exists.", "Autocolor Error", MB_OK);
+							MessageBox(m_hwnd, __LOCALIZE("Autocolor entry of that type already exists.","sws_DLG_115"), __LOCALIZE("SWS - Error","sws_DLG_115"), MB_OK);
 							return;
 						}
 
@@ -460,7 +469,7 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	}
 	else if (item && iCol == 2)
 	{
-		AddToMenu(hMenu, "Set color...", IDC_COLOR);
+		AddToMenu(hMenu, __LOCALIZE("Set color...","sws_DLG_115"), IDC_COLOR);
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		for (int i = 0; i < NUM_COLORTYPES; i++)
 			AddToMenu(hMenu, cColorTypes[i], COLORTYPE_MSG + i);
@@ -468,18 +477,18 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	}
 	else if (item && iCol == 3)
 	{
-		AddToMenu(hMenu, "Load icon...", LOAD_ICON_MSG);
-		AddToMenu(hMenu, "Clear icon", CLEAR_ICON_MSG);
+		AddToMenu(hMenu, __LOCALIZE("Load icon...","sws_DLG_115"), LOAD_ICON_MSG);
+		AddToMenu(hMenu, __LOCALIZE("Clear icon","sws_DLG_115"), CLEAR_ICON_MSG);
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	}
 
 	if (item)
 	{
-		AddToMenu(hMenu, "Up in priority", PRI_UP_MSG);
-		AddToMenu(hMenu, "Down in priority", PRI_DOWN_MSG);
+		AddToMenu(hMenu, __LOCALIZE("Up in priority","sws_DLG_115"), PRI_UP_MSG);
+		AddToMenu(hMenu, __LOCALIZE("Down in priority","sws_DLG_115"), PRI_DOWN_MSG);
 	}
 
-	AddToMenu(hMenu, "Show color management window", SWSGetCommandID(ShowColorDialog));
+	AddToMenu(hMenu, __LOCALIZE("Show color management window","sws_DLG_115"), SWSGetCommandID(ShowColorDialog));
 
 	return hMenu;
 }
@@ -751,7 +760,7 @@ void AutoColorRun(bool bForce)
 	SWS_CacheObjectState(false);
 
 	if (bForce)
-		Undo_OnStateChangeEx("Apply SWS auto color/icon", UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx(__LOCALIZE("Apply auto color/icon","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 	bRecurse = false;
 }
 

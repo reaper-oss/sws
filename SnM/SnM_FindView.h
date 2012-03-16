@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_FindView.h
 /
-/ Copyright (c) 2010-2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2010-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,6 +36,7 @@ class SNM_FindWnd : public SWS_DockWnd
 public:
 	SNM_FindWnd();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
+	void GetMinSize(int* w, int* h) { *w=297; *h=128; }
 
 	bool Find(int _mode);
 	MediaItem* FindPrevNextItem(int _dir, MediaItem* _item);

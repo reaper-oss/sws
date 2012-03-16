@@ -1,24 +1,20 @@
-+<b>All S&M "Apply track template" actions now preserve receives</b> (i.e. use track templates a bit like snapsshots).
-Notes: the same goes with "Apply track template" commands in the Resources window (on double-click or ENTER key). Track sends were already preserved.
-+Support for the global preference "Disable saving full plugin states" (fixes possible truncated snapshots, FX chains, etc...)
-+All S&M windows: optional Windows-rendered fonts (ClearType) - To enable this option set ClearTypeFont to 1 in the section [General] of the S&M.ini file
-+Many actions run faster
+<b>Dropped support for REAPER v3.x, REAPER v4.20 is required!</b>
 
 Live Configs:
 +OSX: FX presets support like on Windows OS
-+Added "Learn current preset" (in the context menu of the column "FX presets")
-+<b>All FX presets are now supported via the Learn command</b>: VST patches (.fxp), AU factory/user Presets (.aupreset), etc.. Note: support was limited to user presets (.rpl) before this version.
++All FX presets are now supported via the new Learn command: VST patches (.fxp), AU factory/user Presets (.aupreset), etc.. Note: support was limited to user presets (.rpl) before this version.
 +Send all notes-off when deactivating a track (if one defined)
-
-Resources window:
-+New option to sync auto-save and auto-fill directories (right click the auto-save/fill buttons): updating one updates the other
-+Maximum number of bookmarks raised to 32
-+Issue 450: loading slots (or double-licking an empty slot) browses the last used path
++Context menu: added "Learn current preset"
 
 Cue buss generator:
-+Up to 8 different cue buss settings can be defined: new dropdown box "Cue buss settings" (bottom right)
++New dropdown box "Cue buss settings": up to 8 different settings can be defined
 +Added actions "SWS/S&M: Create cue buss from track selection, settings n" where 'n' is in [1; 8]
 +Tweaks: removed confusing "save properties" button (settings are now saved on the fly), better OSX display, added file error messages, etc..
+
+Resources window:
++New option to sync auto-save and auto-fill directories: changing one changes the other
++Maximum number of bookmarks raised to 32
++Issue 450: retain the last used path when loading slots
 
 FX presets actions improvements: OSX support + improved on Windows OS (new dedicated API)
 Added in the main section of the action list (new on OSX):
@@ -33,10 +29,19 @@ Added new FX preset actions in the main section (new on OSX and Windows OS):
 +SWS/S&M: Trigger next preset for last touched FX
 +SWS/S&M: Trigger previous preset for last touched FX
 
-Fixed all S&M copy/cut/paste sends/receives/routings actions (fixed issue vs multi track selection, see issue 174).
-It also fixes SWS smart copy/paste actions:
-+SWS: Copy items/tracks/env, obeying time sel
-+SWS: Cut items/tracks/env, obeying time sel
+Other, fixes:
++<b>All S&M "Apply track template" actions now preserve receives</b> this is to use track templates a bit like snapsshots (track sends were already preserved).
+Notes: the same goes with "Apply track template" commands in the Resources window (on double-click or ENTER key).
++Support the global preference "Disable saving full plugin states"
++All S&M windows: optional Windows-rendered fonts (ClearType) - To enable this option set ClearTypeFont to 1 in the section [General] of the S&M.ini file
++Fixed all S&M copy/cut/paste sends/receives/routings actions (issue with multi track selection, see issue 174).
+Note: this also fixes SWS smart copy/paste actions: "SWS: Copy items/tracks/env, obeying time sel" and "SWS: Cut items/tracks/env, obeying time sel"
++Auto Color/Icon: fixed broken drag-drop of rows (i.e. useful to order rule priorities - reminder: drag-drop only works when the sorted column is the 1st one!)
++SWS List views tweaks: multiple rows drag-drop, no sort arrow displayed when not sortable, etc..
+
+Added other actions:
++SWS/S&M: Split and select items in region near cursor
++SWS/S&M: Select only track with selected envelope
 
 !v2.2.0 #2 (March 7, 2012)
 Fixed groove tool context menu

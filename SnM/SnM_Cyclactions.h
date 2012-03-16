@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Cyclactions.h
 /
-/ Copyright (c) 2011 Jeffos, Tim Payne (SWS)
+/ Copyright (c) 2011-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -57,7 +57,7 @@ public:
 	void RemoveCmd(WDL_FastString* _cmd, bool _wantDelete=false){m_cmds.Delete(m_cmds.Find(_cmd), _wantDelete); UpdateFromCmd();}
 	WDL_FastString* GetCmdString(int _i) {return m_cmds.Get(_i);}
 	int FindCmd(WDL_FastString* _cmd) {return m_cmds.Find(_cmd);}
-	
+//JFB!!! protected?
 	WDL_FastString m_desc; 
 	int m_performState;
 	bool m_added;

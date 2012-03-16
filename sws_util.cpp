@@ -31,6 +31,7 @@
 #include "reaper/localize.h"
 
 // Globals
+double g_d0 = 0.0;
 int  g_i0 = 0;
 int  g_i1 = 1;
 int  g_i2 = 2;

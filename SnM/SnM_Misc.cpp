@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Misc.cpp
 /
-/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -757,8 +757,8 @@ void GenerateSwsActionsLangPack(COMMAND_T* _ct)
 			MessageBox(GetMainHwnd(), __LOCALIZE("Cannot write LangPack file!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 }
-
 #endif
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // marker/region helpers
@@ -766,6 +766,7 @@ void GenerateSwsActionsLangPack(COMMAND_T* _ct)
 
 // returns the 1st marker or region index found at _pos
 // note: relies on markers & regions indexed by positions
+//JFB TODO? exclude ended regions?
 int FindMarkerRegion(double _pos, int* _idOut)
 {
 	if (_idOut)
@@ -776,7 +777,6 @@ int FindMarkerRegion(double _pos, int* _idOut)
 	{
 		if (_pos >= dPos && (!isRgn || (isRgn && _pos <= dEnd)))
 		{
-			//JFB TODO? exclude ended regions?
 			if (EnumProjectMarkers2(NULL, x, NULL, &dPos, NULL, NULL, NULL))
 			{
 				if (_pos < dPos) {
@@ -795,9 +795,6 @@ int FindMarkerRegion(double _pos, int* _idOut)
 	return idx;
 }
 
-// API LIMITATION: no way to identify a marker (or a region)
-// => we build an id in "best effort" mode (like region|num)
-// => we would need something like GUIDs for regions & markers..
 int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn)
 {
 	// note: MSB is ignored so that the encoded number is always positive
@@ -819,7 +816,6 @@ int GetMarkerRegionIdFromIndex(int _idx)
 	return -1;
 }
 
-// see MakeMarkerRegionId()'s comments
 int GetMarkerRegionIndexFromId(int _id)
 {
 	if (_id > 0)
@@ -844,6 +840,56 @@ void TranslatePos(double _pos, int* _h, int* _m, int* _s, int* _ms)
 	if (_m) *_m = int((_pos - 3600*int(_pos/3600)) / 60);
 	if (_s) *_s = int(_pos - 3600*int(_pos/3600) - 60*int((_pos-3600*int(_pos/3600))/60));
 	if (_ms) *_ms = int(1000*(_pos-int(_pos)) + 0.5); // rounding
+}
+
+// _flags: &1=marker, &2=region
+// returns next region/marker index (or 0 when no more marker/region) or -1 on error
+// important! the caller must also check !*_descOut (i.e. no marker and/or region found)
+// note: the string formating inspired by the native popup "jump to marker"
+int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool _wantsName)
+{
+	int nextIdx = -1;
+	if (_descOut && _idx>=0)
+	{
+		*_descOut = '\0';
+		double pos, end; int num; bool isRgn; char* name;
+		if (nextIdx = EnumProjectMarkers2(NULL, _idx, &isRgn, &pos, &end, &name, &num))
+		{
+			if (!isRgn && _flags&1) // marker
+			{
+				char timeStr[32] = "";
+				format_timestr_pos(pos, timeStr, 32, -1);
+				if (_wantsName && *name)
+					return (_snprintf(_descOut, _outSz, "%d: %s [%s]", num, name, timeStr) > 0 ? nextIdx : -1);
+				else
+					return (_snprintf(_descOut, _outSz, "%d: [%s]", num, timeStr) > 0 ? nextIdx : -1);
+			}
+			if (isRgn && _flags&2) // region
+			{
+				char timeStr1[32]="", timeStr2[32]="";
+				format_timestr_pos(pos, timeStr1, 32, -1);
+				format_timestr_pos(end, timeStr2, 32, -1);
+				if (_wantsName && *name)
+					return (_snprintf(_descOut, _outSz, "%d: %s [%s -> %s]", num, name, timeStr1, timeStr2) > 0 ? nextIdx : -1);
+				else
+					return (_snprintf(_descOut, _outSz, "%d: [%s -> %s]", num, timeStr1, timeStr2) > 0 ? nextIdx : -1);
+			}
+		}
+	}
+	return nextIdx;
+}
+
+// _flags: &1=marker, &2=region
+void FillMarkerRegionMenu(HMENU _menu, int _msgStart, int _flags)
+{
+	int x=0, y=0;
+	char desc[SNM_MAX_MARKER_NAME_LEN]="";
+	while (y = EnumMarkerRegionDesc(x, desc, SNM_MAX_MARKER_NAME_LEN, _flags, true)) {
+		if (y>=0 && *desc) AddToMenu(_menu, desc, _msgStart+x);
+		x=y;
+	}
+	if (!GetMenuItemCount(_menu))
+		AddToMenu(_menu, __LOCALIZE("(No region!)","sws_menu"), 0, -1, false, MF_GRAYED);
 }
 
 
@@ -920,6 +966,8 @@ void ReplaceStringFormat(char* _str, char _replaceCh) {
 // action helpers
 ///////////////////////////////////////////////////////////////////////////////
 
+// note: corner-case! "Custom: " can be removed after export/tweak-by-hand/re-import
+//       this is not managed as it seems to be a REAPER bug: it leads to other native problems...
 bool IsMacro(const char* _cmdName) {
 	const char* custom = __localizeFunc("Custom","actions",0);
 	int len = strlen(custom);

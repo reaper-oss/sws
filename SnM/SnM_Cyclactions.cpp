@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Cyclactions.cpp
 /
-/ Copyright (c) 2011 Jeffos, Tim Payne (SWS)
+/ Copyright (c) 2011-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -313,7 +313,7 @@ void FlushCyclactions(int _section)
 // _section or -1 for all sections
 // _iniFn: NULL => S&M.ini
 // _checkCmdIds: false to skip some checks - usefull when loading cycle actions (but not when creating 
-//               them with the editor) because all other referenced actions may not have been registered yet..
+//               them with the editor) because referenced actions may not have been registered yet..
 // remark: undo pref ignored, only loads cycle actions so that the user keeps it's own undo pref
 void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
 {
@@ -365,9 +365,9 @@ void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NUL
 		if (_section == sec || _section == -1)
 		{
 			WDL_PtrList_DeleteOnDestroy<int> freeCycleIds;
-			WDL_FastString iniSection("; Do not tweak by hand! Use the Cycle Action editor instead\n"), escapedStr; // no localization for ini files
+			WDL_FastString iniSection("; Do not tweak by hand! Use the Cycle Action editor instead\n"), escapedStr; // no localization for ini files..
 
-			// prepare "compression" (i.e. will re-assign ids of new actions for the next load)
+			// prepare ids "compression" (i.e. will re-assign ids of new actions for the next load)
 			for (int j=0; j < _cyclactions[sec].GetSize(); j++)
 				if (_cyclactions[sec].Get(j)->IsEmpty())
 					freeCycleIds.Add(new int(j));
@@ -505,7 +505,7 @@ static SWS_LVColumn g_commandsCols[] = { { 180, 1, "Command" }, { 180, 0, "Name 
 static SNM_CyclactionsView* g_lvL = NULL;
 static SNM_CommandsView* g_lvR = NULL;
 
-// fake list views' contents
+// fake list views' items
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_161
 static Cyclaction g_DEFAULT_L("Right click here to add cycle actions");
 static WDL_FastString g_EMPTY_R("<- Select a cycle action");
@@ -582,7 +582,7 @@ void Apply()
 	UpdateEditedStatus(false); // ok, apply: eof edition, g_edited=false here!
 	SaveCyclactions(g_editedActions);
 #ifdef _WIN32
-	// force ini file cache refresh: fix for the strange issue 397 (?)
+	// force ini file cache refresh: fix for the strange issue 397
 	// see http://support.microsoft.com/kb/68827 & http://code.google.com/p/sws-extension/issues/detail?id=397
 	WritePrivateProfileString(NULL, NULL, NULL, g_SNMCyclactionIniFn.Get());
 #endif
@@ -727,7 +727,7 @@ void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeySta
 ////////////////////
 
 SNM_CommandsView::SNM_CommandsView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 2, g_commandsCols, "RCyclactionViewState", false)
+:SWS_ListView(hwndList, hwndEdit, 2, g_commandsCols, "RCyclactionViewState", false, false)
 {
 //	SetWindowLongPtr(hwndList, GWL_STYLE, GetWindowLongPtr(hwndList, GWL_STYLE) | LVS_SINGLESEL);
 }
@@ -797,11 +797,12 @@ void SNM_CommandsView::GetItemList(SWS_ListItemList* pList)
 		pList->Add((SWS_ListItem*)&g_EMPTY_R);
 }
 
-// special sort criteria
-// (so that the order of commands can not be altered when sorting the list)
+// "disable" sort
 int SNM_CommandsView::OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2) 
 {
-	if (g_editedAction) {
+	if (g_editedAction)
+	{
+		// not optimized.. but macros are not THAT big anyway
 		int i1 = g_editedAction->FindCmd((WDL_FastString*)_item1);
 		int i2 = g_editedAction->FindCmd((WDL_FastString*)_item2);
 		if (i1 >= 0 && i2 >= 0) {
@@ -821,40 +822,30 @@ void SNM_CommandsView::OnDrag()
 {
 	if (g_editedAction)
 	{
-		POINT p;
-		GetCursorPos(&p);
-		WDL_FastString* hitItem = (WDL_FastString*)GetHitItem(p.x, p.y, NULL);
-		if (hitItem)
+		POINT p; GetCursorPos(&p);
+		if (WDL_FastString* hitItem = (WDL_FastString*)GetHitItem(p.x, p.y, NULL))
 		{
-			WDL_PtrList<SWS_ListItem> draggedItems;
+			WDL_PtrList<WDL_FastString> draggedItems;
 			int iNewPriority = g_editedAction->FindCmd(hitItem);
 			int x=0, iSelPriority;
-			SWS_ListItem* selItem = EnumSelected(&x);
-/*JFB!!! SWS_ListView issue (r539): limit to one item ^^
-			while(SWS_ListItem* selItem = EnumSelected(&x))
-*/
+			while(WDL_FastString* selItem = (WDL_FastString*)EnumSelected(&x))
 			{
-				iSelPriority = g_editedAction->FindCmd((WDL_FastString*)selItem);
-				if (iNewPriority == iSelPriority)
-					return;
+				iSelPriority = g_editedAction->FindCmd(selItem);
+				if (iNewPriority == iSelPriority) return;
 				draggedItems.Add(selItem);
 			}
 
-			// remove the dragged items and then re-add them
-			// switch order of add based on direction of drag
 			bool bDir = iNewPriority > iSelPriority;
 			for (int i = bDir ? 0 : draggedItems.GetSize()-1; bDir ? i < draggedItems.GetSize() : i >= 0; bDir ? i++ : i--) {
-				g_editedAction->RemoveCmd((WDL_FastString*)draggedItems.Get(i));
-				g_editedAction->InsertCmd(iNewPriority, (WDL_FastString*)draggedItems.Get(i));
+				g_editedAction->RemoveCmd(draggedItems.Get(i));
+				g_editedAction->InsertCmd(iNewPriority, draggedItems.Get(i));
 			}
 
-//JFB!!! SWS_ListView issue (r539): simple Update() is KO here
-//       because of the list view's "special" sort criteria
-//       => force GUI refresh 
-			ListView_DeleteAllItems(m_hwndList);
+			ListView_DeleteAllItems(m_hwndList); // because of the special sort criteria ("not sortable" somehow)
 			Update();
-			for (int i = 0; i < draggedItems.GetSize(); i++)
-				SelectByItem(draggedItems.Get(i));
+
+			for (int i=0; i < draggedItems.GetSize(); i++)
+				SelectByItem((SWS_ListItem*)draggedItems.Get(i), i==0, i==0);
 			UpdateEditedStatus(draggedItems.GetSize() > 0);
 		}
 	}
@@ -894,9 +885,9 @@ enum
   BUTTONID_ACTIONLIST
 };
 
-SNM_CyclactionWnd::SNM_CyclactionWnd() : SWS_DockWnd(IDD_SNM_CYCLACTION,
-		__LOCALIZE("Cycle Action editor","sws_DLG_161"),
-		"SnMCyclaction", 30011, SWSGetCommandID(OpenCyclactionView))
+SNM_CyclactionWnd::SNM_CyclactionWnd()
+	: SWS_DockWnd(IDD_SNM_CYCLACTION, __LOCALIZE("Cycle Action editor","sws_DLG_161"),
+	"SnMCyclaction", 30011, SWSGetCommandID(OpenCyclactionView))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -936,12 +927,12 @@ void SNM_CyclactionWnd::OnInitDlg()
 	m_resize.init_item(IDC_ABORT, 0.0, 1.0, 0.0, 1.0);
 	m_resize.init_item(IDC_COMMAND, 1.0, 1.0, 1.0, 1.0);
 #endif
-	// WDL GUI init
+
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
     m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_txtSection.SetID(TXTID_SECTION);
-	m_txtSection.SetText("Section:");
+	m_txtSection.SetText(__LOCALIZE("Section:","sws_DLG_161"));
 	m_parentVwnd.AddChild(&m_txtSection);
 
 	m_cbSection.SetID(COMBOID_SECTION);
@@ -997,7 +988,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		break;
 		case DEL_CYCLACTION_MSG: // remove cyclaction (for the user.. in fact it clears)
 		{
-			// keep pointers (may be used in a listview: delete after listview update)
+			// keep pointers (may be used in a listview, delete once updated)
 			int x=0; WDL_PtrList_DeleteOnDestroy<WDL_FastString> cmdsToDelete;
 			while(Cyclaction* a = (Cyclaction*)g_lvL->EnumSelected(&x)) {
 				for (int i=0; i < a->GetCmdSize(); i++)
@@ -1054,7 +1045,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case DEL_CMD_MSG:
 			if (g_editedAction)
 			{
-				// keep pointers (may be used in a listview: delete after listview update)
+				// keep pointers (may be used in a listview, delete once updated)
 				int x=0; WDL_PtrList_DeleteOnDestroy<WDL_FastString> cmdsToDelete;
 				while(WDL_FastString* delcmd = (WDL_FastString*)g_lvR->EnumSelected(&x)) {
 					cmdsToDelete.Add(delcmd);
@@ -1192,7 +1183,7 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 		m_cbSection.SetFont(font);
 		if (SNM_AutoVWndPosition(&m_cbSection, &m_txtSection, _r, &x0, _r->top, h))
 		{
-/*no! remains a GUI only info only until applied..
+/*no! remains a GUI-only info until applied..
 			m_btnUndo.SetCheckState(g_undos);
 */
 			m_btnUndo.SetTextLabel(__LOCALIZE("Consolidated undo points","sws_DLG_161"), -1, font);
@@ -1230,7 +1221,7 @@ HBRUSH SNM_CyclactionWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
 	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
 	{
 		int bg, txt;
-		SNM_GetThemeListColors(&bg, &txt); // not SNM_GetThemeEditColors (lists' IDC_EDIT)
+		SNM_GetThemeListColors(&bg, &txt); // and not SNM_GetThemeEditColors (lists' IDC_EDIT)
 		SetBkColor(_hdc, bg);
 		SetTextColor(_hdc, txt);
 		return SNM_GetThemeBrush(bg);
@@ -1352,7 +1343,7 @@ void SNM_CyclactionWnd::UpdateSection(int _newSection)
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	if (!isUndo || !g_undos) // undo only (no save)
+	if (!isUndo || !g_undos) // undo only (nothing saved in projects)
 		return false;
 
 	LineParser lp(false);
@@ -1362,7 +1353,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	// load cycle actions' states
 	if (!strcmp(lp.gettoken_str(0), "<S&M_CYCLACTIONS"))
 	{
-		char linebuf[128];
+		char linebuf[SNM_MAX_CHUNK_LINE_LENGTH]="";
 		while(true)
 		{
 			if (!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
@@ -1403,7 +1394,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {
-	if (!isUndo || !g_undos) // undo only (no save)
+	if (!isUndo || !g_undos) // undo only (nothing saved in projects)
 		return;
 
 	WDL_FastString confStr("<S&M_CYCLACTIONS\n");
@@ -1411,7 +1402,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	for (int i=0; i < SNM_MAX_CYCLING_SECTIONS; i++)
 		for (int j=0; j < g_cyclactions[i].GetSize(); j++)
 			if (!g_cyclactions[i].Get(j)->IsEmpty())
-				confStr.AppendFormatted(128,"%d %d %d\n", i, j, g_cyclactions[i].Get(j)->m_performState);
+				confStr.AppendFormatted(256,"%d %d %d\n", i, j, g_cyclactions[i].Get(j)->m_performState);
 	if (confStr.GetLength() > iHeaderLen)
 	{
 		confStr.Append(">\n");

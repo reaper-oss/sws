@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Windows.cpp
 /
-/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -207,7 +207,8 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 
 					// best effort to get the custom id (relies on displayed columns..)
 					ListView_GetItemText(hList, i, g_bv4 ? 4 : 3, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
-					if (!*_id) {
+					if (!*_id)
+					{
 						if (!IsMacro(actionName))
 							return (_snprintf(_id, _idSize, "%d", (int)li.lParam)>0 ? i : -1);
 						else

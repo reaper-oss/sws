@@ -2,7 +2,7 @@
 / SnM_FXChainView.cpp
 / JFB TODO? now, SnM_Resources.cpp/.h would be better names..
 /
-/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -2304,9 +2304,9 @@ int ResourceViewInit()
 	g_slots.Add(new FileSlotList("ProjectTemplates", __LOCALIZE("project","sws_DLG_150"), "RPP", true, true, true));
 	g_slots.Add(new FileSlotList("MediaFiles", __LOCALIZE("media file","sws_DLG_150"), "", false, true, true)); // "" means "all supported media files"
 #ifdef _WIN32
-	g_slots.Add(new FileSlotList("Data\\track_icons", __LOCALIZE("image (.png)","sws_DLG_150"), "png", false, false, true));
+	g_slots.Add(new FileSlotList("Data\\track_icons", __LOCALIZE("PNG image","sws_DLG_150"), "png", false, false, true));
 #else
-	g_slots.Add(new FileSlotList("Data/track_icons", __LOCALIZE("image (.png)","sws_DLG_150"), "png", false, false, true));
+	g_slots.Add(new FileSlotList("Data/track_icons", __LOCALIZE("PNG image","sws_DLG_150"), "png", false, false, true));
 #endif
 	// etc..
 // <---------------------------------------------------------------------------
@@ -2582,7 +2582,7 @@ void SNM_ImageWnd::OnInitDlg()
 	
 	m_img.SetID(2000); //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
 	m_parentVwnd.AddChild(&m_img);
-	m_parentVwnd.RequestRedraw(NULL);
+	RequestRedraw();
 }
 
 void SNM_ImageWnd::OnCommand(WPARAM wParam, LPARAM lParam)

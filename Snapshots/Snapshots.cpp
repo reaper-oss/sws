@@ -31,6 +31,7 @@
 #include "Snapshots.h"
 #include "SnapshotMerge.h"
 #include "../Prompt.h"
+#include "../reaper/localize.h"
 #include "../../WDL/projectcontext.h"
 
 #define SNAP_OPTIONS_KEY "Snapshot Options"
@@ -115,7 +116,7 @@ Snapshot* GetSnapshotFromClipboard()
 				GlobalUnlock(clipBoard);
 				if (!ss->m_tracks.GetSize())
 				{
-					MessageBox(g_hwndParent, "Clipboard does not contain a valid snapshot.", "SWS Snapshot Paste Error", MB_OK);
+					MessageBox(g_hwndParent, __LOCALIZE("Clipboard does not contain a valid snapshot.","sws_DLG_101"), __LOCALIZE("SWS Snapshot Paste Error","sws_DLG_101"), MB_OK);
 					delete ss;
 					ss = NULL;
 				}
@@ -133,7 +134,7 @@ void ExportSnapshot(Snapshot* ss)
 	char cPath[256];
 	GetProjectPath(cPath, 256);
 	lstrcpyn(filename, ss->m_cName, 256);
-	if (BrowseForSaveFile("Export snapshot...", cPath, filename, "SWSSnap files\0*.SWSSnap\0", filename, 256))
+	if (BrowseForSaveFile(__LOCALIZE("Export snapshot...","sws_DLG_101"), cPath, filename, "SWSSnap files\0*.SWSSnap\0", filename, 256))
 	{
 		ProjectStateContext* cfg = ProjectCreateFileWrite(filename);
 		if (cfg)
@@ -147,7 +148,7 @@ void ExportSnapshot(Snapshot* ss)
 			delete cfg;
 		}
 		else
-			MessageBox(g_hwndParent, "Unable to write to file.", "SWS Snaphot Export Error", MB_OK);
+			MessageBox(g_hwndParent, __LOCALIZE("Unable to write to file.","sws_DLG_101"), __LOCALIZE("SWS Snaphot Export Error","sws_DLG_101"), MB_OK);
 	}
 
 }
@@ -156,7 +157,7 @@ void ImportSnapshot()
 {
 	char str[4096];
 	GetProjectPath(str, 256);
-	char* cFile = BrowseForFiles("Import snapshot...", str, NULL, false, "SWSSnap files\0*.SWSSnap\0");
+	char* cFile = BrowseForFiles(__LOCALIZE("Import snapshot...","sws_DLG_101"), str, NULL, false, "SWSSnap files\0*.SWSSnap\0");
 	if (cFile)
 	{
 		ProjectStateContext* cfg = ProjectCreateFileRead(cFile);
@@ -177,7 +178,7 @@ void ImportSnapshot()
 			Snapshot* ss = new Snapshot(chunk.Get());
 			if (!ss->m_tracks.GetSize())
 			{
-				MessageBox(g_hwndParent, "File does not contain a valid snapshot.", "SWS Snapshot Import Error", MB_OK);
+				MessageBox(g_hwndParent, __LOCALIZE("File does not contain a valid snapshot.","sws_DLG_101"), __LOCALIZE("SWS Snapshot Import Error","sws_DLG_101"), MB_OK);
 				delete ss;
 				ss = NULL;
 			}
@@ -185,13 +186,15 @@ void ImportSnapshot()
 				MergeSnapshot(ss); // Handles delete of ss if necessary			
 		}
 		else
-			MessageBox(g_hwndParent, "Unable to open file.", "SWS Snaphot Import Error", MB_OK);
+			MessageBox(g_hwndParent, __LOCALIZE("Unable to open file.","sws_DLG_101"), __LOCALIZE("SWS Snaphot Import Error","sws_DLG_101"), MB_OK);
 		
 		free(cFile);
 	}
 }
 
+// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_101
 static SWS_LVColumn g_cols[] = { { 20, 0, "#" }, { 60, 1, "Name" }, { 60, 0, "Date" }, { 60, 0, "Time" } };
+// !WANT_LOCALIZE_STRINGS_END
 
 SWS_SnapshotsView::SWS_SnapshotsView(HWND hwndList, HWND hwndEdit)
 :SWS_ListView(hwndList, hwndEdit, 4, g_cols, "Snapshots View State", true)
@@ -308,8 +311,8 @@ void SWS_SnapshotsView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState)
 
 		int iSlot = ss->m_iSlot;
 		g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
-		char undoStr[128];
-		sprintf(undoStr, "Delete snapshot %d", iSlot);
+		char undoStr[128]="";
+		_snprintf(undoStr, 128, __LOCALIZE_VERFMT("Delete snapshot %d","sws_DLG_101"), iSlot);
 		Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
 		Update();
 	}
@@ -337,7 +340,7 @@ int SWS_SnapshotsView::GetItemState(SWS_ListItem* item)
 }
 
 SWS_SnapshotsWnd::SWS_SnapshotsWnd()
-:SWS_DockWnd(IDD_SNAPS, "Snapshots", "SWSSnapshots", 30002, SWSGetCommandID(OpenSnapshotsDialog)),m_iSelType(0)
+:SWS_DockWnd(IDD_SNAPS, __LOCALIZE("Snapshots","sws_DLG_101"), "SWSSnapshots", 30002, SWSGetCommandID(OpenSnapshotsDialog)),m_iSelType(0)
 {
 	// Restore state
 	char str[32];
@@ -489,8 +492,8 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			if (ss)
 			{
-				char undoStr[128];
-				sprintf(undoStr, "Delete snapshot %d", ss->m_iSlot);
+				char undoStr[128]="";
+				_snprintf(undoStr, 128, __LOCALIZE_VERFMT("Delete snapshot %d","sws_DLG_101"), ss->m_iSlot);
 				g_ss.Get()->m_snapshots.Delete(g_ss.Get()->m_snapshots.Find(ss), true);
 				g_ss.Get()->m_pCurSnapshot = NULL;
 				Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
@@ -530,7 +533,7 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			Snapshot* ss = (Snapshot*)m_pLists.Get(0)->EnumSelected(NULL);
 			WDL_FastString details;
 			ss->GetDetails(&details);
-			DisplayInfoBox(m_hwnd, "Snapshot Details", details.Get());
+			DisplayInfoBox(m_hwnd, __LOCALIZE("Snapshot Details","sws_DLG_101"), details.Get());
 			break;
 		}
 		case EXPORT_MSG:
@@ -580,17 +583,17 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 
 	if (item)
 	{
-		AddToMenu(contextMenu, "Merge into project...", MERGE_MSG);
-		AddToMenu(contextMenu, "Rename", RENAME_MSG);
+		AddToMenu(contextMenu, __LOCALIZE("Merge into project...","sws_DLG_101"), MERGE_MSG);
+		AddToMenu(contextMenu, __LOCALIZE("Rename","sws_DLG_101"), RENAME_MSG);
 		AddToMenu(contextMenu, SWS_SEPARATOR, 0);
-		AddToMenu(contextMenu, "Show snapshot details", DETAILS_MSG);
-		AddToMenu(contextMenu, "Select tracks in snapshot", SEL_MSG);
-		AddToMenu(contextMenu, "Add selected track(s) to snapshot", ADDSEL_MSG);
-		AddToMenu(contextMenu, "Delete selected track(s) from snapshot", DELSEL_MSG);
-		AddToMenu(contextMenu, "Overwrite snapshot", SAVE_MSG);
-		AddToMenu(contextMenu, "Delete snapshot", DELETE_MSG);
-		AddToMenu(contextMenu, "Copy snapshot", COPY_MSG);
-		AddToMenu(contextMenu, "Export snapshot...", EXPORT_MSG);
+		AddToMenu(contextMenu, __LOCALIZE("Show snapshot details","sws_DLG_101"), DETAILS_MSG);
+		AddToMenu(contextMenu, __LOCALIZE("Select tracks in snapshot","sws_DLG_101"), SEL_MSG);
+		AddToMenu(contextMenu, __LOCALIZE("Add selected track(s) to snapshot","sws_DLG_101"), ADDSEL_MSG);
+		AddToMenu(contextMenu, __LOCALIZE("Delete selected track(s) from snapshot","sws_DLG_101"), DELSEL_MSG);
+		AddToMenu(contextMenu, __LOCALIZE("Overwrite snapshot","sws_DLG_101"), SAVE_MSG);
+		AddToMenu(contextMenu, __LOCALIZE("Delete snapshot","sws_DLG_101"), DELETE_MSG);
+		AddToMenu(contextMenu, __LOCALIZE("Copy snapshot","sws_DLG_101"), COPY_MSG);
+		AddToMenu(contextMenu, __LOCALIZE("Export snapshot...","sws_DLG_101"), EXPORT_MSG);
 	}
 	else
 	{
@@ -598,7 +601,7 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		{
 			int iCmd = SWSGetCommandID(GetSnapshot, i+1);
 			char cName[50];
-			_snprintf(cName, 50, "Recall %s", g_ss.Get()->m_snapshots.Get(i)->m_cName);
+			_snprintf(cName, 50, __LOCALIZE_VERFMT("Recall %s","sws_DLG_101"), g_ss.Get()->m_snapshots.Get(i)->m_cName);
 			if (!iCmd)
 				iCmd = LOAD_MSG + i;
 			AddToMenu(contextMenu, cName, iCmd);
@@ -606,9 +609,9 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				CheckMenuItem(contextMenu, iCmd, MF_CHECKED);
 		}
 	}
-	AddToMenu(contextMenu, "Import snapshot...", IMPORT_MSG);
-	AddToMenu(contextMenu, "New snapshot", SWSGetCommandID(NewSnapshot));
-	AddToMenu(contextMenu, "Paste snapshot", SWSGetCommandID(PasteSnapshot));
+	AddToMenu(contextMenu, __LOCALIZE("Import snapshot...","sws_DLG_101"), IMPORT_MSG);
+	AddToMenu(contextMenu, __LOCALIZE("New snapshot","sws_DLG_101"), SWSGetCommandID(NewSnapshot));
+	AddToMenu(contextMenu, __LOCALIZE("Paste snapshot","sws_DLG_101"), SWSGetCommandID(PasteSnapshot));
 
 	return contextMenu;
 }
@@ -622,7 +625,7 @@ void SWS_SnapshotsWnd::OnResize()
 		memcpy(&m_resize.get_item(IDC_OPTIONS)->orig, &m_resize.get_item(IDC_OPTIONS)->real_orig, sizeof(RECT));
 		m_resize.get_item(IDC_OPTIONS)->scales[0] = 1.0;
 		m_resize.get_item(IDC_OPTIONS)->scales[2] = 1.0;
-		SetDlgItemText(m_hwnd, IDC_OPTIONS, "<- Hide Options");
+		SetDlgItemText(m_hwnd, IDC_OPTIONS, __LOCALIZE("<- Hide Options","sws_DLG_101"));
 	}
 	else
 	{
@@ -635,7 +638,7 @@ void SWS_SnapshotsWnd::OnResize()
 		r->right = r->left + (m_resize.get_item(IDC_OPTIONS)->real_orig.right - m_resize.get_item(IDC_OPTIONS)->real_orig.left);
 		m_resize.get_item(IDC_OPTIONS)->scales[0] = 0.0;
 		m_resize.get_item(IDC_OPTIONS)->scales[2] = 0.0;
-		SetDlgItemText(m_hwnd, IDC_OPTIONS, "Show Options ->");
+		SetDlgItemText(m_hwnd, IDC_OPTIONS, __LOCALIZE("Show Options ->","sws_DLG_101"));
 	}
 	InvalidateRect(m_hwnd, NULL, 0);
 }
@@ -751,7 +754,7 @@ void NewSnapshot(int iMask, bool bSelOnly)
 	{
 		char cName[256];
 		strncpy(cName, pNewSS->m_cName, 256);
-		if (PromptUserForString(g_hwndParent, "Enter Snapshot Name", cName, 256) && strlen(cName))
+		if (PromptUserForString(g_hwndParent, __LOCALIZE("Enter Snapshot Name","sws_DLG_101"), cName, 256) && strlen(cName))
 			pNewSS->SetName(cName);
 	}
 	g_pSSWnd->Update();
@@ -901,13 +904,13 @@ void CopyCurSnapshot(COMMAND_T*)
 
 void CopySelSnapshot(COMMAND_T*)
 {
-	Snapshot ss(1, g_iMask, true, "unnamed");
+	Snapshot ss(1, g_iMask, true, __LOCALIZE("unnamed","sws_DLG_101"));
 	CopySnapshotToClipboard(&ss);
 }
 
 void CopyAllSnapshot(COMMAND_T*)
 {
-	Snapshot ss(1, g_iMask, false, "unnamed");
+	Snapshot ss(1, g_iMask, false, __LOCALIZE("unnamed","sws_DLG_101"));
 	CopySnapshotToClipboard(&ss);
 }
 
@@ -1044,7 +1047,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 	if (strcmp(menustr, "Track control panel context") == 0 && flag == 0)
 	{
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
-		AddSubMenu(hMenu, SWSCreateMenuFromCommandTable(g_commandTable), "SWS Snapshots");
+		AddSubMenu(hMenu, SWSCreateMenuFromCommandTable(g_commandTable), __LOCALIZE("SWS Snapshots","sws_DLG_101"));
 	}
 }
 

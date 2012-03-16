@@ -1,7 +1,7 @@
 /******************************************************************************
 / sws_wnd.h
 /
-/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2012 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -69,16 +69,17 @@ private:
 class SWS_ListView
 {
 public:
-	SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips);
+	SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips, bool bDrawArrow=true);
 	virtual ~SWS_ListView();
 	int GetListItemCount() { return ListView_GetItemCount(m_hwndList); }
 	SWS_ListItem* GetListItem(int iIndex, int* iState = NULL);
 	bool IsSelected(int index);
 	SWS_ListItem* EnumSelected(int* i);
-	bool SelectByItem(SWS_ListItem* item);
+	bool SelectByItem(SWS_ListItem* item, bool bSelectOnly=true, bool bEnsureVisible=true);
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 	void OnDestroy();
 	virtual void OnDrag() {}
+	virtual void OnEndDrag() {}
 	int EditingKeyHandler(MSG *msg);
 	int LVKeyHandler(MSG *msg, int iKeyState);
 	virtual void Update();
@@ -126,6 +127,7 @@ protected:
 	int m_iEditingItem;
 	const int m_iCols;
 	SWS_LVColumn* m_pCols;
+	bool m_bDrawArrow;
 
 #ifndef _WIN32
 	int m_iClickedKeys;

@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_FindView.cpp
 /
-/ Copyright (c) 2010-2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2010-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -576,7 +576,7 @@ bool SNM_FindWnd::FindMarkerRegion(int _dir)
 	bool update = false, found = false;
 	if (g_searchStr && *g_searchStr)
 	{
-		double startPos = GetCursorPosition();
+		double startPos = GetCursorPositionEx(NULL);
 		int id, x = 0;
 		bool bR;
 		double dPos, dRend, dMinMaxPos = _dir < 0 ? -DBL_MAX : DBL_MAX;

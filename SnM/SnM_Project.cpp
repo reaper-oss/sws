@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Project.cpp
 /
-/ Copyright (c) 2011 Jeffos
+/ Copyright (c) 2011-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy

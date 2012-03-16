@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Item.cpp
 /
-/ Copyright (c) 2009-2011 Tim Payne (SWS), Jeffos
+/ Copyright (c) 2009-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -80,7 +80,7 @@ bool deleteMediaItemIfNeeded(MediaItem* _item)
 
 void SNM_GetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks)
 {
-	int count = SNM_GetNumTracks(_proj);
+	int count = _items ? CountTracks(_proj) : 0;
 	for (int i=1; i <= count; i++) // skip master
 		if (MediaTrack* tr = SNM_GetTrack(_proj, i))
 			if (tr && (!_onSelTracks || (_onSelTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
@@ -92,7 +92,7 @@ void SNM_GetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, boo
 
 void SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks)
 {
-	int count = SNM_GetNumTracks(_proj);
+	int count = _items && _items->GetSize() ? CountTracks(_proj) : 0;
 	for (int i=1; i <= count; i++) // skip master
 		if (MediaTrack* tr = SNM_GetTrack(_proj, i))
 			if (!_onSelTracks || (_onSelTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
@@ -105,7 +105,7 @@ void SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, boo
 
 void SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks)
 {
-	int count = SNM_GetNumTracks(_proj);
+	int count = CountTracks(_proj);
 	for (int i=1; i <= count; i++) // skip master
 		if (MediaTrack* tr = SNM_GetTrack(_proj, i))
 			if (tr && (!_onSelTracks || (_onSelTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
@@ -114,9 +114,26 @@ void SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks)
 						GetSetMediaItemInfo(item, "B_UISEL", &g_bFalse);
 }
 
+bool ItemsInInterval(double _pos1, double _pos2)
+{
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
+	if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+		for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++)
+			if (MediaItem* item = GetTrackMediaItem(tr,j))
+			{
+				double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
+				double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
+				if ((pos <= _pos1 && end >= _pos2) || // larger?
+					(pos >= _pos1 && pos <= _pos2) || // starts within?
+					(end >= _pos1 && end <= _pos2))   // ends within?
+					return true;
+			}
+	return false;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
-// Split MIDI/Audio
+// Split
 ///////////////////////////////////////////////////////////////////////////////
 
 void splitMidiAudio(COMMAND_T* _ct)
@@ -132,7 +149,7 @@ void splitMidiAudio(COMMAND_T* _ct)
 			{
 				double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
 				double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
-				bool toBeSplitted = (GetCursorPosition() > pos && GetCursorPosition() < end);
+				bool toBeSplitted = (GetCursorPositionEx(NULL) > pos && GetCursorPositionEx(NULL) < end);
 
 				if (!updated && toBeSplitted)
 					Undo_BeginBlock();
@@ -160,12 +177,12 @@ void splitMidiAudio(COMMAND_T* _ct)
 							if (!split)
 								Main_OnCommand(40792,0);
 							else
-								SplitMediaItem(item, GetCursorPosition());
+								SplitMediaItem(item, GetCursorPositionEx(NULL));
 						}
 					}
 					// v4 empty takes are null
 					else
-						SplitMediaItem(item, GetCursorPosition());
+						SplitMediaItem(item, GetCursorPositionEx(NULL));
 				}
 			}
 		}
@@ -181,7 +198,6 @@ void splitMidiAudio(COMMAND_T* _ct)
 	}
 }
 
-// more than credits to Tim ;)
 void smartSplitMidiAudio(COMMAND_T* _ct)
 {
 	double t1, t2;
@@ -210,6 +226,61 @@ void goferSplitSelectedItems(COMMAND_T* _ct) {
 	if (CountSelectedMediaItems(NULL)) {
 		Main_OnCommand(40513, 0); // move edit cursor to mouse cursor (obey snapping)
 		Main_OnCommand(40757, 0); // split at edit cursor (no selection change)
+	}
+}
+
+// _undoTitle: undo point name  or NULL for no undo point (in this case the call must be surrounded with Undo_Begin/EndBlock2)
+bool SplitSelectAllItemsInRegion(const char* _undoTitle, int _rgnIdx)
+{
+	bool updated = false;
+	if (_rgnIdx>=0)
+	{
+		double rgnpos, rgnend;
+		if (EnumProjectMarkers2(NULL, _rgnIdx, NULL, &rgnpos, &rgnend, NULL, NULL))
+		{
+			if (updated = ItemsInInterval(rgnpos, rgnend)) // we are sure there will will splitted items)
+			{
+				double selpos, selend;
+				GetSet_LoopTimeRange(false, false, &selpos, &selend, false); // store current time sel
+
+				if (_undoTitle)
+					Undo_BeginBlock2(NULL);
+				GetSet_LoopTimeRange(true, false, &rgnpos, &rgnend, false);
+				Main_OnCommand(40182, 0); // select all items
+				Main_OnCommand(40061, 0); // split items at time selection
+				Main_OnCommand(40289, 0); // unselect all items
+
+				for (int i=1; i <= GetNumTracks(); i++) // skip master
+					if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+						for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++)
+							if (MediaItem* item = GetTrackMediaItem(tr,j))
+							{
+								double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
+								double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
+								if (pos >= rgnpos && end <= rgnend)
+									GetSetMediaItemInfo(item,"B_UISEL",&g_bTrue);
+							}
+
+				if (_undoTitle)
+					Undo_EndBlock2(NULL, _undoTitle, UNDO_STATE_ALL);
+
+				// restore (or clear) time sel
+				GetSet_LoopTimeRange(true, false, &selpos, &selend, false);
+			}
+		}
+	}
+	return updated;
+}
+
+void SplitSelectAllItemsInRegion(COMMAND_T* _ct) {
+	double cursorPos = GetCursorPositionEx(NULL);
+	int x=0, y=0; double dPos, dEnd; bool isRgn;
+	while (y = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL)) {
+		if (isRgn && cursorPos >= dPos && cursorPos <= dEnd) {
+			SplitSelectAllItemsInRegion(SWS_CMD_SHORTNAME(_ct), x);
+			return; // !!
+		}
+		x=y;
 	}
 }
 
@@ -425,9 +496,7 @@ int buildLanes(const char* _undoTitle, int _mode)
 			}
 		}
 	}
-
-	if (updates > 0)
-	{
+	if (updates > 0) {
 		UpdateTimeline();
 		if (_undoTitle)
 			Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
@@ -487,10 +556,7 @@ bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool
 	bool updated = false;
 	for (int i = 0; i < GetNumTracks(); i++)
 		updated |= removeEmptyTakes(CSurf_TrackFromID(i+1,false), _empty, _midiEmpty, _trSel, _itemSel);
-
-	// Undo point + UpdateTimeline
-	if (updated)
-	{
+	if (updated) {
 		UpdateTimeline();
 		if (_undoTitle)
 			Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
@@ -541,9 +607,7 @@ void clearTake(COMMAND_T* _ct)
 			}
 		}
 	}
-	// Undo point
-	if (updated)
-	{
+	if (updated) {
 		UpdateTimeline();
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
@@ -592,10 +656,7 @@ void moveTakes(COMMAND_T* _ct)
 			}
 		}
 	}
-
-	// Undo point + UpdateTimeline
-	if (updated)
-	{
+	if (updated) {
 		UpdateTimeline();
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
@@ -640,9 +701,7 @@ void moveActiveTake(COMMAND_T* _ct)
 			}
 		}
 	}
-	// Undo point
-	if (updated)
-	{
+	if (updated) {
 		UpdateTimeline();
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
@@ -688,7 +747,6 @@ void activateLaneFromSelItem(COMMAND_T* _ct)
 			}		
 		}
 	}
-
 	if (_ct && updated) {
 		UpdateTimeline();
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
@@ -1233,13 +1291,13 @@ bool itemSelExists(COMMAND_T* _ct) {
 // Others
 ///////////////////////////////////////////////////////////////////////////////
 
-// Scroll to item, no undo!
+// scroll to item, no undo!
 void scrollToSelItem(MediaItem* _item)
 {
 	if (_item)
 	{
 		// horizontal scroll to selected item
-		double curPos = GetCursorPosition();
+		double curPos = GetCursorPositionEx(NULL);
 		SetEditCurPos2(NULL, *(double*)GetSetMediaItemInfo(_item, "D_POSITION", NULL), true, false);
 		SetEditCurPos2(NULL, curPos, false, false);
 
@@ -1267,16 +1325,16 @@ void scrollToSelItem(COMMAND_T* _ct) {
 	scrollToSelItem(GetSelectedMediaItem(NULL, 0));
 }
 
-// Pan take
+// pan take
 void setPan(COMMAND_T* _ct)
 {
 	bool updated = false;
 	double value = (double)((int)_ct->user/100);
 
-	for (int i = 1; i <= GetNumTracks(); i++) // skip master
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
+		for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++)
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
@@ -1301,7 +1359,6 @@ void setPan(COMMAND_T* _ct)
 
 ///////////////////////////////////////////////////////////////////////////////
 // Media file slots (Resources view)
-//JFB!!! TODO?: new file SnM_Media.cpp? but OSX prj update...
 ///////////////////////////////////////////////////////////////////////////////
 
 void PlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop, double _msi) {

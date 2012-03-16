@@ -201,7 +201,11 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMarkerSubMenu, __LOCALIZE("Select prev region", "sws_ext_menu"), NamedCommandLookup("_SWS_SELPREVREG"));
 	AddToMenu(hMarkerSubMenu, __LOCALIZE("Delete all markers", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST9"));
 	AddToMenu(hMarkerSubMenu, __LOCALIZE("Delete all regions", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST10"));
+#ifdef _WIN32
 	AddToMenu(hMenu, __LOCALIZE("Notes/Subtitles/Help", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOW_NOTES_VIEW"));
+#else
+	AddToMenu(hMenu, __LOCALIZE("Notes/Subtitles", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOW_NOTES_VIEW"));
+#endif
 	AddToMenu(hMenu, __LOCALIZE("Project List", "sws_ext_menu"), NamedCommandLookup("_SWS_PROJLIST_OPEN"));
 
 	HMENU hPrjMgmtSubMenu = CreatePopupMenu();
@@ -214,6 +218,7 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("(related projects list)", "sws_ext_menu"), NamedCommandLookup("_SWS_OPENRELATED1"));
 
 	AddToMenu(hMenu, __LOCALIZE("ReaConsole...", "sws_ext_menu"), NamedCommandLookup("_SWSCONSOLE"));
+//	AddToMenu(hMenu, __LOCALIZE("Region Playlist", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOW_RGN_PLAYLIST"));
 	AddToMenu(hMenu, __LOCALIZE("Resources", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOW_RESOURCES_VIEW"));
 	AddToMenu(hMenu, __LOCALIZE("Snapshots", "sws_ext_menu"), NamedCommandLookup("_SWSSNAPSHOT_OPEN"));
 	AddToMenu(hMenu, __LOCALIZE("Tracklist", "sws_ext_menu"), NamedCommandLookup("_SWSTL_OPEN"));

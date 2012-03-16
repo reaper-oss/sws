@@ -97,8 +97,7 @@ void SNM_GetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, boo
 	}
 }
 
-// note: 4.16pre feature SetOnlyTrackSelected() but there is 
-//       no way to know if something has been updated or not..
+// note: no way to know if something has been updated with SetOnlyTrackSelected()
 bool SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, bool _unselOthers, bool _withMaster)
 {
 	bool updated = false;
@@ -154,12 +153,11 @@ void ScrollSelTrack(const char* _undoTitle, bool _tcp, bool _mcp)
 	{
 		if (_tcp)
 			Main_OnCommand(40913,0); // scroll to selected tracks
-		if (_mcp && SetMixerScroll) // new API in v4.16pre
+		if (_mcp)
 			SetMixerScroll(tr);
 	}
 }
 
-//JFB not used yet: SetMixerScroll() seems buggy, see above
 void ScrollSelTrack(COMMAND_T* _ct) {
 	int flags = (int)_ct->user;
 	ScrollSelTrack(SWS_CMD_SHORTNAME(_ct), (flags&1)==1, (flags&2)==2); // == for warning C4800
@@ -1151,7 +1149,7 @@ void DeleteTrackPreview(void* _prev)
 }
 
 void TrackPreviewLockUnlockTracks(bool _lock) {
-	if (MainThread_LockTracks && MainThread_UnlockTracks && g_SNMMediaFlags&1) {
+	if (g_SNMMediaFlags&1) {
 		if (_lock) MainThread_LockTracks();
 		else MainThread_UnlockTracks();
 	}
@@ -1241,10 +1239,7 @@ bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _pause, bool _
 
 		// go!
 		g_playPreviews.Add(prev);
-		if (PlayTrackPreview2Ex) // v4 only
-			return (PlayTrackPreview2Ex(NULL, prev, _msi>0.0 ? 1:0, _msi>0.0? _msi:0.0) != 0);
-		else
-			return (PlayTrackPreview2(NULL, prev) != 0);
+		return (PlayTrackPreview2Ex(NULL, prev, _msi>0.0 ? 1:0, _msi>0.0? _msi:0.0) != 0);
 	}
 	return false;
 }

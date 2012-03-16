@@ -965,8 +965,7 @@ void IniFileExit()
 {
 	// save general prefs & info
 	WDL_FastString iniSection;
-	if (GetAppVersion)
-		iniSection.AppendFormatted(128, "; REAPER v%s\n", GetAppVersion()); 
+	iniSection.AppendFormatted(128, "; REAPER v%s\n", GetAppVersion()); 
 	iniSection.AppendFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build %d\n; ", SWS_VERSION); 
 	iniSection.Append(g_SNMIniFn.Get()); 
 	iniSection.AppendFormatted(128, "\nIniFileUpgrade=%d\n", g_SNMIniFileVersion); 

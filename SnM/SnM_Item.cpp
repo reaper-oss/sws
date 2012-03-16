@@ -1285,6 +1285,7 @@ bool itemSelExists(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 
 // scroll to item, no undo!
+//JFB!!! SetOnlyTrackSelected() ?
 void scrollToSelItem(MediaItem* _item)
 {
 	if (_item)
@@ -1300,13 +1301,9 @@ void scrollToSelItem(MediaItem* _item)
 			//JFB change restore sel programatically => not cool for controle surfaces
 			WDL_PtrList<MediaTrack> selTrs;
 			SNM_GetSelectedTracks(NULL, &selTrs, true);
-
-			if (SetOnlyTrackSelected) // new 4.16pre API
-				SetOnlyTrackSelected(tr);
-			else {
-				SNM_ClearSelectedTracks(NULL, true);
-				GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
-			}
+			// select only track
+			SNM_ClearSelectedTracks(NULL, true);
+			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
 			ScrollSelTrack(NULL, true, false);
 			SNM_SetSelectedTracks(NULL, &selTrs, true);
 		}

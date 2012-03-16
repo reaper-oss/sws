@@ -830,7 +830,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				}
 			}
 #ifdef _SNM_PRESETS
-			else if (TrackFX_GetPreset && LOWORD(wParam) >= SNM_LIVECFG_LEARN_PRESETS_START_MSG && LOWORD(wParam) <= SNM_LIVECFG_LEARN_PRESETS_END_MSG) 
+			else if (LOWORD(wParam) >= SNM_LIVECFG_LEARN_PRESETS_START_MSG && LOWORD(wParam) <= SNM_LIVECFG_LEARN_PRESETS_END_MSG) 
 			{
 				bool updt = false;
 				while(item)
@@ -903,13 +903,10 @@ void SNM_LiveConfigsWnd::AddFXSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastStri
 				WDL_FastString str;
 
 				// learn
-				if (TrackFX_GetPreset) // new API since 4.16pre
-				{
-					char buf[SNM_MAX_PRESET_NAME_LEN] = "";
-					TrackFX_GetPreset(_tr, i, buf, SNM_MAX_PRESET_NAME_LEN);
-					str.SetFormatted(256, __LOCALIZE_VERFMT("Learn current preset: %s","sws_DLG_155"), *buf?buf:__LOCALIZE("undefined","sws_DLG_155"));
-					AddToMenu(fxSubMenu, str.Get(), SNM_LIVECFG_LEARN_PRESETS_START_MSG + i, -1, false, *buf?0:MF_GRAYED);
-				}
+				char buf[SNM_MAX_PRESET_NAME_LEN] = "";
+				TrackFX_GetPreset(_tr, i, buf, SNM_MAX_PRESET_NAME_LEN);
+				str.SetFormatted(256, __LOCALIZE_VERFMT("Learn current preset: %s","sws_DLG_155"), *buf?buf:__LOCALIZE("undefined","sws_DLG_155"));
+				AddToMenu(fxSubMenu, str.Get(), SNM_LIVECFG_LEARN_PRESETS_START_MSG + i, -1, false, *buf?0:MF_GRAYED);
 #ifdef _WIN32
 				// preset list
 				WDL_PtrList_DeleteOnDestroy<WDL_FastString> names;

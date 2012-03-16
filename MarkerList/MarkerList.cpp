@@ -344,8 +344,7 @@ HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU hMenu = CreatePopupMenu();
 	AddToMenu(hMenu, "Rename", RENAME_MSG);
-	if (SetProjectMarker3) // v4 only
-		AddToMenu(hMenu, "Set color...", COLOR_MSG);
+	AddToMenu(hMenu, "Set color...", COLOR_MSG);
 	AddToMenu(hMenu, "Save marker set...", SWSGetCommandID(SaveMarkerList));
 	AddToMenu(hMenu, "Delete market set...", SWSGetCommandID(DeleteMarkerList));
 

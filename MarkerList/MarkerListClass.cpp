@@ -87,18 +87,12 @@ bool MarkerItem::Compare(MarkerItem* mi)
 
 void MarkerItem::AddToProject()
 {
-	if (AddProjectMarker2)
-		AddProjectMarker2(NULL, m_bReg, m_dPos, m_dRegEnd, GetName(), m_id, m_iColor ? m_iColor | 0x1000000 : 0);
-	else
-		AddProjectMarker(NULL, m_bReg, m_dPos, m_dRegEnd, GetName(), m_id);
+	AddProjectMarker2(NULL, m_bReg, m_dPos, m_dRegEnd, GetName(), m_id, m_iColor ? m_iColor | 0x1000000 : 0);
 }
 
 void MarkerItem::UpdateProject()
 {
-	if (SetProjectMarker3)
-		SetProjectMarker3(NULL, m_id, m_bReg, m_dPos, m_dRegEnd, GetName(), m_iColor ? m_iColor | 0x1000000 : 0);
-	else
-		SetProjectMarker(m_id, m_bReg, m_dPos, m_dRegEnd, GetName());
+	SetProjectMarker3(NULL, m_id, m_bReg, m_dPos, m_dRegEnd, GetName(), m_iColor ? m_iColor | 0x1000000 : 0);
 }
 
 MarkerList::MarkerList(const char* name, bool bGetCurList)
@@ -411,8 +405,5 @@ void MarkerList::CropToTimeSel(bool bOffset)
 // Helper func
 int EnumMarkers(int idx, bool* isrgn, double* pos, double* rgnend, char** name, int* markrgnindexnumber, int* color)
 {
-	if (EnumProjectMarkers3)
-		return EnumProjectMarkers3(NULL, idx, isrgn, pos, rgnend, name, markrgnindexnumber, color);
-	if (color) *color = 0;
-	return EnumProjectMarkers(idx, isrgn, pos, rgnend, name, markrgnindexnumber);
+	return EnumProjectMarkers3(NULL, idx, isrgn, pos, rgnend, name, markrgnindexnumber, color);
 }

@@ -88,7 +88,7 @@ bool isFXOfflineOrBypassedSelectedTracks(COMMAND_T * _ct, int _token)
 		{
 			/////////////////////////////////////////////////
 			// dedicated API for fx bypass since v4.16pre
-			if (_token==1 && TrackFX_GetEnabled)
+			if (_token==1)
 				return TrackFX_GetEnabled(tr, fxId);
 
 			/////////////////////////////////////////////////
@@ -453,18 +453,14 @@ int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL
 // returns true if preset changed
 bool TriggerFXPreset(MediaTrack* _tr, int _fxId, int _presetId, int _dir)
 {
-	// dedicated API since v4.16pre
-	if (TrackFX_NavigatePresets && TrackFX_SetPreset)
+	int nbFx = _tr ? TrackFX_GetCount(_tr) : 0;
+	if (nbFx > 0 && _fxId < nbFx)
 	{
-		int nbFx = _tr ? TrackFX_GetCount(_tr) : 0;
-		if (nbFx > 0 && _fxId < nbFx)
-		{
-			if (_dir)
-				return TrackFX_NavigatePresets(_tr, _fxId, _dir);
-			else if (_presetId) {
-				TrackFX_SetPreset(_tr, _fxId, "");
-				return TrackFX_NavigatePresets(_tr, _fxId, _presetId);
-			}
+		if (_dir)
+			return TrackFX_NavigatePresets(_tr, _fxId, _dir);
+		else if (_presetId) {
+			TrackFX_SetPreset(_tr, _fxId, "");
+			return TrackFX_NavigatePresets(_tr, _fxId, _presetId);
 		}
 	}
 	return false;
@@ -495,12 +491,10 @@ void PrevPresetSelTracks(COMMAND_T* _ct) {
 }
 
 void NextPrevPresetLastTouchedFX(COMMAND_T* _ct) {
-	if (GetLastTouchedFX) { // dedicated API since v4.16pre
-		int trId, fxId;
-		if (GetLastTouchedFX(&trId, &fxId, NULL))
-			if (MediaTrack* tr = CSurf_TrackFromID(trId, false))
-				TriggerFXPreset(tr, fxId, 0, (int)_ct->user);
-	}
+	int trId, fxId;
+	if (GetLastTouchedFX(&trId, &fxId, NULL))
+		if (MediaTrack* tr = CSurf_TrackFromID(trId, false))
+			TriggerFXPreset(tr, fxId, 0, (int)_ct->user);
 }
 
 

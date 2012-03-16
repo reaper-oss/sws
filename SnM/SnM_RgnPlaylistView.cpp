@@ -644,9 +644,7 @@ void CropProjectToPlaylist()
 			if (rgnIdx>=0)
 			{
 				int rgnnum, rgncol=0; double rgnpos, rgnend; char* rgnname;
-				if (EnumProjectMarkers3 ? 
-					EnumProjectMarkers3(NULL, rgnIdx, NULL, &rgnpos, &rgnend, &rgnname, &rgnnum, &rgncol) : 
-					EnumProjectMarkers2(NULL, rgnIdx, NULL, &rgnpos, &rgnend, &rgnname, &rgnnum))
+				if (EnumProjectMarkers3(NULL, rgnIdx, NULL, &rgnpos, &rgnend, &rgnname, &rgnnum, &rgncol))
 				{
 					if (ItemsInInterval(rgnpos, rgnend))
 					{

@@ -48,10 +48,7 @@
 SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iDockOrder, int iCmdID)
 :m_hwnd(NULL), m_iResource(iResource), m_cWndTitle(cWndTitle), m_cId(cId), m_iDockOrder(iDockOrder), m_bUserClosed(false), m_iCmdID(iCmdID), m_bLoadingState(false)
 {
-	if (screenset_registerNew) // v4
-		screenset_registerNew((char*)cId, screensetCallback, this);
-	else
-		screenset_register((char*)cId, (void*)screensetCallbackOld, this);
+	screenset_registerNew((char*)cId, screensetCallback, this);
 
 	memset(&m_state, 0, sizeof(SWS_DockWnd_State));
 	*m_tooltip = '\0';
@@ -147,21 +144,15 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			if ((m_state.state & 2))
 			{
-				if (DockWindowAddEx)
-					DockWindowAddEx(m_hwnd, (char*)m_cWndTitle, (char*)m_cId, true);
-				else
-					DockWindowAdd(m_hwnd, (char*)m_cWndTitle, m_iDockOrder, true); 
+				DockWindowAddEx(m_hwnd, (char*)m_cWndTitle, (char*)m_cId, true);
 			}
 			else
 			{
 				EnsureNotCompletelyOffscreen(&m_state.r);
 				if (m_state.r.left || m_state.r.top || m_state.r.right || m_state.r.bottom)
 					SetWindowPos(m_hwnd, NULL, m_state.r.left, m_state.r.top, m_state.r.right-m_state.r.left, m_state.r.bottom-m_state.r.top, SWP_NOZORDER);
-				if (AttachWindowTopmostButton) // v4 only
-				{
-					AttachWindowTopmostButton(m_hwnd);
-					AttachWindowResizeGrip(m_hwnd);
-				}
+				AttachWindowTopmostButton(m_hwnd);
+				AttachWindowResizeGrip(m_hwnd);
 				ShowWindow(m_hwnd, SW_SHOW);
 			}
 
@@ -530,7 +521,7 @@ int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 		if (!IsDocked())
 			GetWindowRect(m_hwnd, &m_state.r);
 		else
-			m_state.whichdock = DockIsChildOfDock ? DockIsChildOfDock(m_hwnd, NULL) : 0;
+			m_state.whichdock = DockIsChildOfDock(m_hwnd, NULL);
 	}
 	if (!m_bUserClosed & IsWindow(m_hwnd))
 		m_state.state |= 1;
@@ -566,8 +557,7 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 	else
 		m_state.state = 0;
 
-	if (Dock_UpdateDockID) // v4 only!
-		Dock_UpdateDockID((char*)m_cId, m_state.whichdock);
+	Dock_UpdateDockID((char*)m_cId, m_state.whichdock);
 
 	if (m_state.state & 1)
 	{

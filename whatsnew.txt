@@ -16,6 +16,9 @@ Resources window and related "slot actions:
 The same goes with "Apply track template" commands in the Resources window (on double-click or ENTER key).
 +New option to sync auto-save and auto-fill directories: changing one changes the other
 +Maximum number of bookmarks raised to 32
+Added action SWS/IX: Import m3u/pls playlist. Imports local files from playlist to new track (streaming media ignored)
+Added item duration (/D) and source offset (/O) tokens to label processor
+
 +Issue 450: retain the last used path when loading slots
 
 FX presets actions improvements: OSX support + improved on Windows OS (new dedicated API)

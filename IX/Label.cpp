@@ -1,7 +1,7 @@
 /******************************************************************************
 / Label.cpp
 /
-/ Copyright (c) 2011 Philip S. Considine (IX)
+/ Copyright (c) 2012 Philip S. Considine (IX)
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "Label.h"
+#include "IX.h"
 #include "../resource.h"
 #include "../Misc/Analysis.h"
 
@@ -45,14 +45,16 @@ WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			pStr = (WDL_FastString*) GetWindowLong(hwnd, GWLP_USERDATA);
 
 			LPCSTR info = "All arguments are optional. The following are all valid: /E /E[3] /E[3,9]:\n"
+							"\n\t/D\t\t\tDuration."
 							"\n\t/E[digits, first]\t\tEnumerate in selection."
 							"\n\t/e[digits, first]\t\tEnumerate in selection on track."
 							"\n\t/I[digits, last]\t\tInverse enumerate in selection."
 							"\n\t/i[digits, last]\t\tInverse enumerate in selection on track."
 							"\n\t/L[offset, length]\tCurrent label."
+							"\n\t/O\t\t\tSource offset."
+							"\n\t/P[precision]\t\tPeak level."
 							"\n\t/R[precision]\t\tRMS peak level."
 							"\n\t/r[precision]\t\tRMS average level."
-							"\n\t/P[precision]\t\tPeak level."
 							"\n\t/S[offset, length]\tSource media path."
 							"\n\t/T[offset, length]\tTrack name."
 							"\n\t/t[digits]\t\tTrack number.";
@@ -181,7 +183,7 @@ void ExtractValues(const char *&c, int vals[], int maxvals)
 void LabelProcessor(COMMAND_T* ct)
 {
 	WDL_FastString format;
-	char buf[256];
+	char buf[512];
 	GetPrivateProfileString(SWS_INI, IXLABELPROCSTRING, "/L", buf, sizeof(buf), get_ini_file());
 
 	format.Set(buf);
@@ -219,6 +221,15 @@ void LabelProcessor(COMMAND_T* ct)
 					{
 						switch(*(++c))
 						{
+						case 'D' : // Duration
+							{
+								double length = *(double*) GetSetMediaItemInfo(pItem, "D_LENGTH", NULL);
+								format_timestr(length, buf, sizeof(buf));
+								str.AppendFormatted(str.GetLength() + strlen(buf), "%s", buf);
+								++c;
+							}
+							break;
+
 						case 'E' : // Enumerate all
 							{
 								int args[2] = {2,1};
@@ -266,6 +277,24 @@ void LabelProcessor(COMMAND_T* ct)
 							}
 							break;
 
+						case 'O' : // Source offset
+							{
+								double offset = *(double*) GetSetMediaItemTakeInfo(pTake, "D_STARTOFFS", NULL);
+								format_timestr(offset, buf, sizeof(buf));
+								str.AppendFormatted(str.GetLength() + strlen(buf), "%s", buf);
+								++c;
+							}
+							break;
+
+						case 'P' : // Peak
+							{
+								int precision = 1;
+								ExtractValues(++c, &precision, 1);
+								str.Append(GetItemVolString(pItem, 0, precision));
+								++c;
+							}
+							break;
+
 						case 'R' : // RMS Max
 							{
 								int precision = 1;
@@ -284,15 +313,6 @@ void LabelProcessor(COMMAND_T* ct)
 							}
 							break;
 
-						case 'P' : // Peak
-							{
-								int precision = 1;
-								ExtractValues(++c, &precision, 1);
-								str.Append(GetItemVolString(pItem, 0, precision));
-								++c;
-							}
-							break;
-
 						case 'S' : // Source path
 							{
 								int args[2] = {0,0};
@@ -301,9 +321,8 @@ void LabelProcessor(COMMAND_T* ct)
 								PCM_source *pSource = (PCM_source*) GetSetMediaItemTakeInfo(pTake, "P_SOURCE", NULL);
 								if(pSource)
 								{
-									char buf[512] = {0};
-									memset(buf, 0, 512);
-									GetMediaSourceFileName(pSource, buf, 512);
+									memset(buf, 0, sizeof(buf));
+									GetMediaSourceFileName(pSource, buf, sizeof(buf));
 									if(*buf)
 										str.Append(GetSubString(buf, args[0], args[1]));
 								}
@@ -357,7 +376,7 @@ static COMMAND_T g_commandTable[] =
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 
-int IxInit()
+int LabelInit()
 {
 	SWSRegisterCommands(g_commandTable);
 

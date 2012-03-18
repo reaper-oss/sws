@@ -1,7 +1,7 @@
 /******************************************************************************
-/ Label.cpp
+/ IX.cpp
 /
-/ Copyright (c) 2011 Philip S. Considine (IX)
+/ Copyright (c) 2012 Philip S. Considine (IX)
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,14 @@
 /
 ******************************************************************************/
 
-#pragma once
+#include "stdafx.h"
+#include "IX.h"
 
-int IxInit();
+int IXInit()
+{
+	LabelInit();
+	PlaylistImportInit();
+
+	return 1;
+}
+

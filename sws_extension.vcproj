@@ -3219,11 +3219,23 @@
 			Name="IX"
 			>
 			<File
+				RelativePath=".\IX\IX.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\IX\IX.h"
+				>
+			</File>
+			<File
 				RelativePath=".\IX\Label.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\IX\Label.h"
+				RelativePath=".\IX\PlaylistImport.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\IX\todo.txt"
 				>
 			</File>
 		</Filter>

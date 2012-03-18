@@ -48,7 +48,7 @@
 #include "Padre/padreActions.h"
 #include "Fingers/FNG_client.h"
 #include "Autorender/Autorender.h"
-#include "IX/Label.h"
+#include "IX/IX.h"
 
 #define LOCALIZE_IMPORT_PREFIX "sws_"
 #ifdef LOCALIZE_IMPORT_PREFIX
@@ -506,6 +506,7 @@ extern "C"
 		IMPAPI(EnumProjectMarkers2);
 		IMPAPI(EnumProjectMarkers3);
 		IMPAPI(EnumProjects);
+		IMPAPI(file_exists);
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);
 		IMPAPI(FreeHeapPtr);
@@ -648,7 +649,7 @@ extern "C"
 		IMPAPI(SetProjectMarker3);
 		IMPAPI(SetTrackSelected);
 		IMPAPI(ShowActionList);
-		IMPAPI(SnapToGrid);
+		IMPAPI(ShowMessageBox);		IMPAPI(SnapToGrid);
 		IMPAPI(SplitMediaItem);
 		IMPAPI(StopPreview);
 		IMPAPI(StopTrackPreview);
@@ -742,7 +743,7 @@ extern "C"
 			ERR_RETURN("About box init error\n")
 		if (!AutorenderInit())
 			ERR_RETURN("Autorender init error\n")
-		if (!IxInit())
+		if (!IXInit())
 			ERR_RETURN("IX init error\n")
 		if (!SnMInit(rec)) // last init (for cyle actions)
 			ERR_RETURN("S&M init error\n")

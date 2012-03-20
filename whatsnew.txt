@@ -3,7 +3,7 @@
 Live Configs:
 +OSX: FX presets support like on Windows OS
 +All FX presets are now supported via the new Learn command: VST patches (.fxp), AU factory/user Presets (.aupreset), etc.. Note: support was limited to user presets (.rpl) before this version.
-+Send all notes-off when deactivating a track (if one defined)
++Send all notes-off when deactivating a track (if any)
 +Context menu: added "Learn current preset"
 
 Cue buss generator:
@@ -11,15 +11,15 @@ Cue buss generator:
 +Added actions "SWS/S&M: Create cue buss from track selection, settings n" where 'n' is in [1; 8]
 +Tweaks: removed confusing "save properties" button (settings are now saved on the fly), better OSX display, added file error messages, etc..
 
-Resources window and related "slot actions:
-+<b>All "SWS/S&M: Apply track template" actions preserve receives</b> this is to use track templates a bit like snapsshots (track sends were already preserved).
+Resources window and related "slot actions":
++<b>All "SWS/S&M: Apply track template" actions now preserve receives.</b> This is to use track templates a bit like snapsshots (track sends were already preserved).
 The same goes with "Apply track template" commands in the Resources window (on double-click or ENTER key).
 +New option to sync auto-save and auto-fill directories: changing one changes the other
 +Maximum number of bookmarks raised to 32
-Added action SWS/IX: Import m3u/pls playlist. Imports local files from playlist to new track (streaming media ignored)
-Added item duration (/D) and source offset (/O) tokens to label processor
-
 +Issue 450: retain the last used path when loading slots
+
+Label processor:
++Added item duration (/D) and source offset (/O)
 
 FX presets actions improvements: OSX support + improved on Windows OS (new dedicated API)
 Added in the main section of the action list (new on OSX):
@@ -35,14 +35,15 @@ Added new FX preset actions in the main section (new on OSX and Windows OS):
 +SWS/S&M: Trigger previous preset for last touched FX
 
 Other, fixes:
-+Support the global preference "Disable saving full plugin states"
 +All S&M windows: optional Windows-rendered fonts (ClearType) - To enable this option set ClearTypeFont to 1 in the section [General] of the S&M.ini file
++Support the global preference "Disable saving full plugin states"
 +Fixed all S&M copy/cut/paste sends/receives/routings actions (issue with multi track selection, see issue 174).
-Note: this also fixes SWS smart copy/paste actions: "SWS: Copy items/tracks/env, obeying time sel" and "SWS: Cut items/tracks/env, obeying time sel"
+Note: this also fixes SWS smart cut/copy actions: "SWS: Copy items/tracks/env, obeying time sel" and "SWS: Cut items/tracks/env, obeying time sel"
 +Auto Color/Icon: fixed broken drag-drop of rows (i.e. useful to order rule priorities - reminder: drag-drop only works when the sorted column is the 1st one!)
 +SWS List views tweaks: multiple rows drag-drop, no sort arrow displayed when not sortable, etc..
 
 Added other actions:
++SWS/IX: Import m3u/pls playlist. Imports local files from playlist to new track (streaming media ignored)
 +SWS/S&M: Split and select items in region near cursor
 +SWS/S&M: Select only track with selected envelope
 

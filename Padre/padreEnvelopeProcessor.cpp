@@ -674,7 +674,6 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackEnvLfo()
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* take, double dStartPos, double dEndPos, TakeEnvType tTakeEnvType, LfoWaveParams &waveParams, double dPrecision)
 {
-	//TrackEnvelope* envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
 	double dValMin = 0.0;
 	double dValMax = 1.0;
 	bool bNeedUpdate = false;
@@ -700,11 +699,10 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTakeLfo(MediaItem_Take* 
 		break;
 	}
 
-if(bNeedUpdate)
-	UpdateTimeline();
+	if(bNeedUpdate)
+		UpdateTimeline();
 
-TrackEnvelope* envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
-	//envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
+	TrackEnvelope* envelope = SWS_GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
 	if(!envelope)
 		return eERRORCODE_NOENVELOPE;
 
@@ -1080,7 +1078,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processTakeEnv(MediaItem_Take* t
 	if(bNeedUpdate)
 		UpdateTimeline();
 
-	TrackEnvelope* envelope = GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
+	TrackEnvelope* envelope = SWS_GetTakeEnvelopeByName(take, GetTakeEnvelopeStr(tTakeEnvType));
 	if(!envelope)
 		return eERRORCODE_NOENVELOPE;
 

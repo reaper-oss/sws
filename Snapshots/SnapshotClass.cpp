@@ -533,7 +533,7 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 
 void TrackSnapshot::GetSetEnvelope(MediaTrack* tr, WDL_FastString* str, const char* env, bool bSet)
 {
-	TrackEnvelope* te = GetTrackEnvelopeByName(tr, env);
+	TrackEnvelope* te = SWS_GetTrackEnvelopeByName(tr, env);
 	if (!bSet)
 	{	// Get envelope from REAPER
 		if (te)

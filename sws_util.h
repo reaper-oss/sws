@@ -224,8 +224,13 @@ void WinSpawnNotepad(const char* pFilename);
 void makeEscapedConfigString(const char *in, WDL_FastString *out); //JFB: temp (WDL's ProjectContext does not use WDL_FastString yet)
 
 // Localization
-//#define _SWS_LOCALIZATION
+//#define _SWS_LOCALIZATION		// comment this to disable the SWS extension locatization 
+								// note: if REAPER is localized some SWS features will be broken..
+
 #define SWS_I8N_ACTION_SEC		"sws_actions"
 #define SWS_I8N_UNDO_SEC		"sws_undo"
 #define SNM_I8N_ACTION_SEC		"s&m_section_actions"
+
 const char* GetLocalizedActionName(const char* _custId, const char* _defaultStr, const char* _section = SWS_I8N_ACTION_SEC);
+TrackEnvelope* SWS_GetTakeEnvelopeByName(MediaItem_Take* take, const char* envname);
+TrackEnvelope* SWS_GetTrackEnvelopeByName(MediaTrack* track, const char* envname);

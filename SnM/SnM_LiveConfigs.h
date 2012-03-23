@@ -1,6 +1,5 @@
 /******************************************************************************
-/ SnM_MidiLiveView.h
-/ JFB TODO? now, SnM_LiveConfigsView.h would be a better name..
+/ SnM_LiveConfigs.h
 /
 / Copyright (c) 2010-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
@@ -28,8 +27,8 @@
 
 #pragma once
 
-#ifndef _SNM_LIVECFGVIEW_H_
-#define _SNM_LIVECFGVIEW_H_
+#ifndef _SNM_LIVECONFIGS_H_
+#define _SNM_LIVECONFIGS_H_
 
 
 class PresetMsg {

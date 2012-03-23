@@ -2263,11 +2263,11 @@
 			Name="SnM"
 			>
 			<File
-				RelativePath=".\SnM\SnM_Actions.cpp"
+				RelativePath=".\SnM\SnM.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SnM\SnM_Actions.h"
+				RelativePath=".\SnM\SnM.h"
 				>
 			</File>
 			<File
@@ -2295,6 +2295,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnM\SnM_Dlg.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SnM\SnM_FindView.cpp"
 				>
 			</File>
@@ -2307,15 +2311,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnM\SnM_fx.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SnM\SnM_FXChain.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SnM\SnM_FXChainView.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SnM\SnM_FXChainView.h"
+				RelativePath=".\SnM\SnM_FXChain.h"
 				>
 			</File>
 			<File
@@ -2323,19 +2327,31 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnM\SnM_Item.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_LiveConfigs.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_LiveConfigs.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SnM\SnM_ME.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SnM\SnM_MidiLiveView.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\SnM\SnM_MidiLiveView.h"
+				RelativePath=".\SnM\SnM_ME.h"
 				>
 			</File>
 			<File
 				RelativePath=".\SnM\SnM_Misc.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_Misc.h"
 				>
 			</File>
 			<File
@@ -2351,7 +2367,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\SnM\SnM_sends.cpp"
+				RelativePath=".\SnM\SnM_Project.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_Resources.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_Resources.h"
 				>
 			</File>
 			<File
@@ -2363,11 +2387,43 @@
 				>
 			</File>
 			<File
+				RelativePath=".\SnM\SnM_Routing.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_Routing.h"
+				>
+			</File>
+			<File
 				RelativePath=".\SnM\SnM_Track.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\SnM\SnM_Windows.cpp"
+				RelativePath=".\SnM\SnM_Track.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_Util.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_Util.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_VWnd.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_VWnd.h"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_Window.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SnM\SnM_Window.h"
 				>
 			</File>
 		</Filter>

@@ -30,8 +30,6 @@
 //   (cycle actions have their own format for "historical" reasons)
 
 #include "stdafx.h"
-#include "SnM_Actions.h"
-#include "SnM_Cyclactions.h"
 #include "../reaper/localize.h"
 
 

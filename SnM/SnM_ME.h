@@ -1,7 +1,7 @@
 /******************************************************************************
-/ TrackFX.cpp
+/ SnM_ME.h
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ Copyright (c) 2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,28 +25,14 @@
 /
 ******************************************************************************/
 
-#include "stdafx.h"
-#include "TrackFX.h"
+#pragma once
 
-// Functions for getting/setting track FX chains
-void GetFXChain(MediaTrack* tr, WDL_TypedBuf<char>* buf)
-{
-	SNM_ChunkParserPatcher p(tr);
-	WDL_FastString chainChunk;
-	if (p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM") > 0) {
-		buf->Resize(chainChunk.GetLength() + 1);
-		strcpy(buf->Get(), chainChunk.Get());
-	}
-}
+#ifndef _SNM_ME_H_
+#define _SNM_ME_H_
 
-void SetFXChain(MediaTrack* tr, const char* str)
-{
-	SNM_FXChainTrackPatcher p(tr);
-	WDL_FastString chainChunk;
-	// adapt FX chain format (the SNM_FXChainTrackPatcher uses the .RFXChain file format)
-	if (str && !strncmp(str, "<FXCHAIN", 8)) {
-		chainChunk.Set(strchr(str, '\n') + 1); // removes the line starting with "<FXCHAIN"
-		chainChunk.SetLen(chainChunk.GetLength()-2); // remove trailing ">\n"
-	}
-	p.SetFXChain(str ? &chainChunk : NULL);
-}
+void MECreateCCLane(COMMAND_T*);
+void MEHideCCLanes(COMMAND_T*);
+void MESetCCLanes(COMMAND_T*);
+void MESaveCCLanes(COMMAND_T*);
+
+#endif

@@ -27,8 +27,6 @@
 
 
 #include "stdafx.h"
-#include "SnM_Actions.h"
-#include "SnM_RgnPlaylistView.h"
 #include "../Prompt.h"
 #include "../reaper/localize.h"
 #include "../MarkerList/MarkerListClass.h"

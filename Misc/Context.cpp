@@ -29,7 +29,6 @@
 
 #include "stdafx.h"
 #include "Context.h"
-#include "../SnM/SnM_Actions.h"
 
 bool AreThereSelItemsInTimeSel()
 {

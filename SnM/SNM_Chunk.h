@@ -32,6 +32,9 @@
 #ifndef _SNM_CHUNK_H_
 #define _SNM_CHUNK_H_
 
+#include "SnM.h"
+#include "SnM_Routing.h"
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_ChunkIndenter

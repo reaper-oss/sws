@@ -28,7 +28,6 @@
 #include "stdafx.h"
 #include "Color.h"
 #include "Autocolor.h"
-#include "../SnM/SnM_Actions.h"
 #include "../reaper/localize.h"
 #include "../../WDL/projectcontext.h"
 

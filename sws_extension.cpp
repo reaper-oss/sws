@@ -44,7 +44,6 @@
 #include "TrackList/Tracklist.h"
 #include "Projects/ProjectMgr.h"
 #include "Projects/ProjectList.h"
-#include "SnM/SnM_Actions.h"
 #include "Padre/padreActions.h"
 #include "Fingers/FNG_client.h"
 #include "Autorender/Autorender.h"

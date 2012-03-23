@@ -1,6 +1,5 @@
 /******************************************************************************
-/ SnM_FXChainView.cpp
-/ JFB TODO? now, SnM_Resources.cpp/.h would be better names..
+/ SnM_Resources.cpp
 /
 / Copyright (c) 2009-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
@@ -32,8 +31,6 @@
 // combined flags for insert media (dbl click)
 
 #include "stdafx.h"
-#include "SnM_Actions.h"
-#include "SNM_FXChainView.h"
 #include "../Prompt.h"
 #ifdef _WIN32
 #include "../DragDrop.h"

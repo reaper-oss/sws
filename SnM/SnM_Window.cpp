@@ -27,7 +27,6 @@
 
 
 #include "stdafx.h"
-#include "SnM_Actions.h"
 #include "../reaper/localize.h"
 
 

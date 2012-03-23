@@ -32,8 +32,6 @@
 #include "../Snapshots/Snapshots.h"
 #include "TracklistFilter.h"
 #include "Tracklist.h"
-/* Use SnM_Actions for show FX window from Tracklist submenu */
-#include "../SnM/SnM_Actions.h"
 
 #define RENAME_MSG		0x10005
 #define LOADSNAP_MSG	0x10100 // Keep space afterwards

@@ -1,6 +1,5 @@
 /******************************************************************************
-/ SnM_MidiLiveView.cpp
-/ JFB TODO? now, SnM_LiveConfigs.cpp/.h would be better names..
+/ SnM_LiveConfigs.cpp
 /
 / Copyright (c) 2010-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
@@ -32,9 +31,6 @@
 // - full release? auto send creation, etc..
 
 #include "stdafx.h"
-#include "SnM_Actions.h"
-#include "SnM_MidiLiveView.h"
-#include "SnM_Chunk.h"
 #include "../reaper/localize.h"
 
 

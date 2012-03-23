@@ -1,5 +1,5 @@
 /******************************************************************************
-/ SnM_Sends.cpp
+/ SnM_Routing.cpp
 /
 / Copyright (c) 2009-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
@@ -26,10 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "SnM_Actions.h"
-#include "SNM_Chunk.h"
 #include "../reaper/localize.h"
-//#include "../../WDL/projectcontext.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////

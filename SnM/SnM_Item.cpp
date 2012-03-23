@@ -27,9 +27,6 @@
 
 
 #include "stdafx.h"
-#include "SnM_Actions.h"
-#include "SNM_Chunk.h"
-#include "SnM_FXChainView.h"
 #include "../Misc/Context.h"
 #include "../reaper/localize.h"
 

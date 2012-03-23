@@ -35,8 +35,6 @@
 // - use action_help_t ? (not finished according to Cockos)
 
 #include "stdafx.h"
-#include "SnM_Actions.h"
-#include "SNM_NotesHelpView.h"
 #include "../reaper/localize.h"
 
 

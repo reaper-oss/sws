@@ -1,5 +1,5 @@
 /******************************************************************************
-/ SnM_Actions.cpp
+/ SnM.cpp
 /
 / Copyright (c) 2009-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
@@ -27,13 +27,6 @@
 
 #include "stdafx.h"
 #include "version.h"
-#include "SnM_Actions.h"
-#include "SnM_Cyclactions.h"
-#include "SnM_FindView.h"
-#include "SNM_FXChainView.h"
-#include "SnM_NotesHelpView.h"
-#include "SnM_MidiLiveView.h"
-#include "SnM_RgnPlaylistView.h"
 #include "../Misc/Adam.h"
 #include "../reaper/localize.h"
 

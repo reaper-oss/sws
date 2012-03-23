@@ -28,8 +28,6 @@
 ******************************************************************************/
 
 #include "stdafx.h" 
-#include "SnM_Actions.h"
-#include "SNM_Chunk.h"
 
 /*JFB
 reminders:

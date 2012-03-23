@@ -28,7 +28,6 @@
 #include "stdafx.h"
 
 #include "padreEnvelopeProcessor.h"
-#include "../SnM/SnM_Actions.h"
 
 const char* GetEnvTypeStr(EnvType type)
 {

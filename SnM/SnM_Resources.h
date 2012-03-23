@@ -1,6 +1,5 @@
 /******************************************************************************
-/ SnM_FXChainView.h
-/ JFB TODO? now, SnM_Resources.cpp/.h would be better names..
+/ SnM_Resources.h
 /
 / Copyright (c) 2009-2012 Jeffos
 / http://www.standingwaterstudios.com/reaper
@@ -28,8 +27,8 @@
 
 #pragma once
 
-#ifndef _SNM_RESVIEW_H_
-#define _SNM_RESVIEW_H_
+#ifndef _SNM_RESOURCES_H_
+#define _SNM_RESOURCES_H_
 
 
 enum {

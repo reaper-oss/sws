@@ -611,7 +611,7 @@ void LoadAssignLangPack(COMMAND_T* _ct)
 
 	WDL_FastString resPath;
 	resPath.SetFormatted(BUFFER_SIZE, "%s%cLangPack%c", GetResourcePath(), PATH_SLASH_CHAR, PATH_SLASH_CHAR);
-	if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Load SWS LangPack file","sws_mbox"), resPath.Get(), NULL, false, SNM_TXT_EXT_LIST))
+	if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Load SWS LangPack file","sws_mbox"), resPath.Get(), NULL, false, SNM_TXT_EXT_LIST)) //JFB .ReaLangPack or something..
 	{
 		WritePrivateProfileString("SWS", "langpack", strstr(fn, resPath.Get()) ? GetFilenameWithExt(fn) : fn, get_ini_file());
 		g_langpackFns.Delete("SWS");
@@ -772,7 +772,7 @@ int FindMarkerRegion(double _pos, int* _idOut)
 	if (_idOut)
 		*_idOut = -1;
 
-	int x=0, idx=-1, num=-1; double dPos, dEnd; bool isRgn;
+	int idx=-1, x=0, lastx=0, num; double dPos, dEnd; bool isRgn;
 	while (x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, &num))
 	{
 		if (_pos >= dPos && (!isRgn || (isRgn && _pos <= dEnd)))
@@ -780,15 +780,16 @@ int FindMarkerRegion(double _pos, int* _idOut)
 			if (EnumProjectMarkers2(NULL, x, NULL, &dPos, NULL, NULL, NULL))
 			{
 				if (_pos < dPos) {
-					idx = x-1;
+					idx = lastx;
 					break;
 				}
 			}
 			else {
-				idx = x-1;
+				idx = lastx;
 				break;
 			}
 		}
+		lastx=x;
 	}
 	if (idx >= 0 && _idOut)
 		*_idOut = MakeMarkerRegionId(num, isRgn);
@@ -820,12 +821,13 @@ int GetMarkerRegionIndexFromId(int _id)
 {
 	if (_id > 0)
 	{
-		int num = _id & 0x3FFFFFFF;
-		bool isRgn = IsRegion(_id);
-		int x=0, num2; bool isRgn2;
-		while (x = EnumProjectMarkers2(NULL, x, &isRgn2, NULL, NULL, NULL, &num2))
+		int x=0, lastx=0, num=(_id&0x3FFFFFFF), num2; 
+		bool isRgn = IsRegion(_id), isRgn2;
+		while (x = EnumProjectMarkers2(NULL, x, &isRgn2, NULL, NULL, NULL, &num2)) {
 			if (num == num2 && isRgn == isRgn2)
-				return x-1;
+				return lastx;
+			lastx=x;
+		}
 	}
 	return -1;
 }
@@ -846,6 +848,7 @@ void TranslatePos(double _pos, int* _h, int* _m, int* _s, int* _ms)
 // returns next region/marker index (or 0 when no more marker/region) or -1 on error
 // important! the caller must also check !*_descOut (i.e. no marker and/or region found)
 // note: the string formating inspired by the native popup "jump to marker"
+//JFB!!! must return 0 like native Enum...
 int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool _wantsName)
 {
 	int nextIdx = -1;
@@ -880,13 +883,13 @@ int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool 
 }
 
 // _flags: &1=marker, &2=region
-void FillMarkerRegionMenu(HMENU _menu, int _msgStart, int _flags)
+void FillMarkerRegionMenu(HMENU _menu, int _msgStart, int _flags, UINT _uiState)
 {
-	int x=0, y=0;
+	int x=0, lastx=0;
 	char desc[SNM_MAX_MARKER_NAME_LEN]="";
-	while (y = EnumMarkerRegionDesc(x, desc, SNM_MAX_MARKER_NAME_LEN, _flags, true)) {
-		if (y>=0 && *desc) AddToMenu(_menu, desc, _msgStart+x);
-		x=y;
+	while (x = EnumMarkerRegionDesc(x, desc, SNM_MAX_MARKER_NAME_LEN, _flags, true)) {
+		if (x>=0 && *desc) AddToMenu(_menu, desc, _msgStart+lastx, -1, false, _uiState);
+		lastx=x;
 	}
 	if (!GetMenuItemCount(_menu))
 		AddToMenu(_menu, __LOCALIZE("(No region!)","sws_menu"), 0, -1, false, MF_GRAYED);

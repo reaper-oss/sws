@@ -312,8 +312,8 @@ int SnMInit(reaper_plugin_info_t* _rec);
 void SnMExit();
 void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
 void DeleteScheduledJob(int _id);
-void RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub);
-void UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
+bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub);
+bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
 void SnMCSurfRun();
 void SnMCSurfSetTrackTitle();
 void SnMCSurfSetTrackListChange();
@@ -336,7 +336,7 @@ void SNM_SkinButton(WDL_VirtualIconButton* _btn, WDL_VirtualIconButton_SkinConfi
 void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text);
 bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h);
 bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h);
-bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xStep = SNM_DEF_VWND_X_STEP);
+bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoomNextComp = SNM_DEF_VWND_X_STEP);
 void SNM_UIInit();
 void SNM_UIExit();
 void SNM_ShowMsg(const char* _msg, const char* _title = "", HWND _hParent = NULL, bool _clear = true); 
@@ -344,8 +344,8 @@ int PromptForInteger(const char* _title, const char* _what, int _min, int _max);
 void openCueBussWnd(COMMAND_T*);
 bool isCueBussWndDisplayed(COMMAND_T*);
 #ifdef _SNM_MISC // wip
-void openLangpackMrgWnd(COMMAND_T* _ct);
-bool isLangpackMrgWndDisplayed(COMMAND_T* _ct);
+void openLangpackMrgWnd(COMMAND_T*);
+bool isLangpackMrgWndDisplayed(COMMAND_T*);
 #endif
 
 // *** SnM_fx.cpp ***
@@ -537,7 +537,7 @@ void SNM_UpgradeIniFiles();
 WDL_FastString* GetCurLangPackFn(const char* _langpack);
 bool IsLangPackUsed(const char* _langpack);
 void LoadAssignLangPack(COMMAND_T*);
-void ResetLangPack(COMMAND_T* _ct);
+void ResetLangPack(COMMAND_T*);
 #ifdef _SWS_DEBUG // internal action (only available with debug builds)
 void GenerateSwsActionsLangPack(COMMAND_T*);
 #endif
@@ -547,8 +547,8 @@ int GetMarkerRegionIdFromIndex(int _idx);
 int GetMarkerRegionIndexFromId(int _id);
 bool IsRegion(int _id);
 void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms = NULL);
-int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool _wantsName = true);
-void FillMarkerRegionMenu(HMENU _menu, int _msgStart, int _flags);
+int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool _wantsName);
+void FillMarkerRegionMenu(HMENU _menu, int _msgStart, int _flags, UINT _uiState = 0);
 #ifdef _SNM_MISC
 void makeUnformatedConfigString(const char* _in, WDL_FastString* _out);
 #endif

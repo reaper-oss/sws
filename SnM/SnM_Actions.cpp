@@ -536,8 +536,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 16" }, "S&M_MAP_MIDI_INPUT_CH16", remapMIDIInputChannel, NULL, 16},
 
 	// Region playlist --------------------------------------------------------
-//	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_SHOW_RGN_PLAYLIST", OpenRegionPlaylist, "S&&M Region Playlist", NULL, IsRegionPlaylistDisplayed},
-//	{ { DEFACCEL, "SWS/S&M: Play (Region Playlist)" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_SHOW_RGN_PLAYLIST", OpenRegionPlaylist, "S&&M Region Playlist", NULL, IsRegionPlaylistDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Play (Region Playlist)" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 0},
 
 	// Localization -----------------------------------------------------------
 #ifdef _SWS_LOCALIZATION
@@ -563,9 +563,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (SWS extension only)" }, "S&M_ALRSUMMARY2", DumpWikiActionList, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (w/o SWS extension)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (SWS extension only)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 4},
-#endif
-#ifdef _SWS_MENU
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, }, // for main "Extensions" menu
 #endif
 	{ {}, LAST_COMMAND, }, // denote end of table
 };
@@ -993,7 +990,7 @@ void IniFileExit()
 // S&M core stuff
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef _SWS_MENU
+#ifdef _SNM_MISC
 static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
 {
 	if (!strcmp(_menustr, "Main extensions") && !_flag) SWSCreateMenuFromCommandTable(g_SNM_cmdTable, _hMenu);
@@ -1012,7 +1009,7 @@ int SnMInit(reaper_plugin_info_t* _rec)
 
 	IniFileInit();
 
-#ifdef _SWS_MENU
+#ifdef _SNM_MISC
 	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
 		return 0;
 #endif
@@ -1096,24 +1093,28 @@ WDL_PtrList<SNM_MarkerRegionSubscriber> g_mkrRgnSubscribers;
 SWS_Mutex g_mkrRgnSubscribersMutex;
 int g_markerCount=0, g_regionCount=0;
 
-void RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) 
-{
-	if (!_sub) return;
-	SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
-	if (g_mkrRgnSubscribers.Find(_sub) < 0)
-		g_mkrRgnSubscribers.Add(_sub);
+bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
+	if (_sub) {
+		SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
+		if (g_mkrRgnSubscribers.Find(_sub) < 0)
+			return (g_mkrRgnSubscribers.Add(_sub) != NULL);
+	}
+	return false;
 }
 
-void UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) 
-{
-	if (!_sub) return;
-	SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
-	int idx = g_mkrRgnSubscribers.Find(_sub);
-	if (idx > 0)
-		g_mkrRgnSubscribers.Delete(idx, false);
+bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
+	if (_sub) {
+		SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
+		int idx = g_mkrRgnSubscribers.Find(_sub);
+		if (idx >= 0) {
+			g_mkrRgnSubscribers.Delete(idx, false);
+			return true;
+		}
+	}
+	return false;
 }
 
-// returns 0 if nothing changed, 1: marker update, 2: region update, 3: both region & marker updates
+// returns an update flag: 0 if nothing changed, 1: marker, 2: region, 3: both region & marker updates
 // note: just diffs nb of markers/regions (that's enough atm)
 int MarkerRegionChanged()
 {
@@ -1124,10 +1125,8 @@ int MarkerRegionChanged()
 
 	int updateFlags = (markerCount!=g_markerCount ? 1 : 0);
 	updateFlags |= (regionCount!=g_regionCount ? 2 : 0);
-
 	g_regionCount = regionCount;
 	g_markerCount = markerCount;
-
 	return updateFlags;
 }
 
@@ -1167,7 +1166,7 @@ void SnMCSurfRun()
 		g_markerRegionNotifyMsCounter = 0.0;
 
 		SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
-		if (int sz=g_mkrRgnSubscribers.GetSize()) //JFB!!! pas de registration par défaut!!
+		if (int sz=g_mkrRgnSubscribers.GetSize())
 			if (int updateFlags = MarkerRegionChanged())
 				for (int i=sz-1; i >=0; i--)
 					g_mkrRgnSubscribers.Get(i)->NotifyMarkerRegionUpdate(updateFlags);

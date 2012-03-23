@@ -64,7 +64,7 @@
 #define FILTER_BY_PATH_MSG			0xF013
 #define FILTER_BY_COMMENT_MSG		0xF014
 #define RENAME_MSG					0xF015
-#define ADD_BOOKMARK_MSG			0xF016
+#define COPY_BOOKMARK_MSG			0xF016
 #define DEL_BOOKMARK_MSG			0xF017
 #define REN_BOOKMARK_MSG			0xF018
 #define NEW_BOOKMARK_FXC_MSG		0xF019
@@ -154,7 +154,7 @@ enum {
   BUTTONID_AUTOSAVE,
   COMBOID_TYPE,
   CONTAINER_ADD_DEL,
-  BUTTONID_ADD_BOOKMARK,
+  BUTTONID_COPY_BOOKMARK,
   BUTTONID_DEL_BOOKMARK,
   BUTTONID_TIED_ACTIONS,
   BUTTONID_OFFSET_TR_TEMPLATE,
@@ -489,7 +489,6 @@ static SWS_LVColumn g_fxChainListCols[] = { {65,2,"Slot"}, {100,1,"Name"}, {250,
 SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
 	: SWS_ListView(hwndList, hwndEdit, 4, g_fxChainListCols, "Resources View State", false)
 {
-//	ListView_SetExtendedListViewStyleEx(hwndList, ListView_GetExtendedListViewStyle(hwndList), LVS_EX_GRIDLINES);
 }
 
 void SNM_ResourceView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
@@ -659,7 +658,8 @@ void SNM_ResourceView::OnBeginDrag(SWS_ListItem* _item)
 	int iMemNeeded = 0, x=0;
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> fullPaths;
 	PathSlotItem* pItem = (PathSlotItem*)EnumSelected(&x);
-	while(pItem) {
+	while(pItem)
+	{
 		int slot = GetSlotList()->Find(pItem);
 		char fullPath[BUFFER_SIZE] = "";
 		if (GetSlotList()->GetFullPath(slot, fullPath, BUFFER_SIZE))
@@ -851,7 +851,7 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_txtDblClickType.SetText(__LOCALIZE("Dbl-click to:","sws_DLG_150"));
 	m_parentVwnd.AddChild(&m_txtDblClickType);
 
-	m_btnsAddDel.SetIDs(CONTAINER_ADD_DEL, BUTTONID_ADD_BOOKMARK, BUTTONID_DEL_BOOKMARK);
+	m_btnsAddDel.SetIDs(CONTAINER_ADD_DEL, BUTTONID_COPY_BOOKMARK, BUTTONID_DEL_BOOKMARK);
 	m_parentVwnd.AddChild(&m_btnsAddDel);
 
 	m_btnTiedActions.SetID(BUTTONID_TIED_ACTIONS);
@@ -911,6 +911,7 @@ void SNM_ResourceWnd::FillTypeCombo()
 	for (int i=0; i < g_slots.GetSize(); i++)
 		m_cbType.AddItem(GetMenuDesc(i));
 	m_cbType.SetCurSel((g_resViewType>0 && g_resViewType<g_slots.GetSize()) ? g_resViewType : SNM_SLOT_FXC);
+//JFB!!! ??	m_cbType.SetCurSel(BOUNDED(g_resViewType, 0, g_slots.GetSize()-1));
 }
 
 void SNM_ResourceWnd::FillDblClickCombos()
@@ -1129,8 +1130,8 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case REN_BOOKMARK_MSG:
 			RenameBookmark(g_resViewType);
 			break;
-		case BUTTONID_ADD_BOOKMARK:
-		case ADD_BOOKMARK_MSG:
+		case BUTTONID_COPY_BOOKMARK:
+		case COPY_BOOKMARK_MSG:
 			NewBookmark(g_resViewType, true);
 			break;
 		case BUTTONID_DEL_BOOKMARK:
@@ -1347,8 +1348,8 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case COMBOID_TYPE:
 			if (HIWORD(wParam)==CBN_SELCHANGE)
 			{
-				// stop cell editing (changing the list content would be ignored otherwise
-				// => dropdown box & list box unsynchronized)
+				// stop cell editing (changing the list content would be ignored otherwise,
+				// leading to unsynchronized dropdown box vs list view)
 				m_pLists.Get(0)->EditListItemEnd(false);
 				SetType(m_cbType.GetCurSel());
 			}
@@ -1577,9 +1578,9 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		AddSubMenu(hBookmarkSubMenu, hNewBookmarkSubMenu, __LOCALIZE("New bookmark","sws_DLG_150"));
 		for (int i=0; i < SNM_NUM_DEFAULT_SLOTS; i++)
 			AddToMenu(hNewBookmarkSubMenu, GetMenuDesc(i), NEW_BOOKMARK_FXC_MSG+i);
-		AddToMenu(hBookmarkSubMenu, __LOCALIZE("New bookmark (copy current)","sws_DLG_150"), ADD_BOOKMARK_MSG);
+		AddToMenu(hBookmarkSubMenu, __LOCALIZE("Copy bookmark...","sws_DLG_150"), COPY_BOOKMARK_MSG);
+		AddToMenu(hBookmarkSubMenu, __LOCALIZE("Rename...","sws_DLG_150"), REN_BOOKMARK_MSG, -1, false, g_resViewType >= SNM_NUM_DEFAULT_SLOTS ? MF_ENABLED : MF_GRAYED);
 		AddToMenu(hBookmarkSubMenu, __LOCALIZE("Delete","sws_DLG_150"), DEL_BOOKMARK_MSG, -1, false, g_resViewType >= SNM_NUM_DEFAULT_SLOTS ? MF_ENABLED : MF_GRAYED);
-		AddToMenu(hBookmarkSubMenu, __LOCALIZE("Rename","sws_DLG_150"), REN_BOOKMARK_MSG, -1, false, g_resViewType >= SNM_NUM_DEFAULT_SLOTS ? MF_ENABLED : MF_GRAYED);
 
 		// filter prefs
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
@@ -1769,7 +1770,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 	x0 = _r->left+8; h=39;
 	int y0 = _r->bottom-h;
 
-	// defines a new rect 'r' that takes the filter edit box into account (contrary to '_r')
+	// defines a new rect r that takes the filter edit box into account (contrary to _r)
 	RECT r;
 	GetWindowRect(GetDlgItem(m_hwnd, IDC_FILTER), &r);
 	ScreenToClient(m_hwnd, (LPPOINT)&r);
@@ -1850,7 +1851,7 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 				break;
 			case COMBOID_TYPE:
 				return (lstrcpyn(_bufOut, __LOCALIZE("Resource/slot type","sws_DLG_150"), _bufOutSz) != NULL);
-			case BUTTONID_ADD_BOOKMARK:
+			case BUTTONID_COPY_BOOKMARK:
 				return (_snprintf(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Copy as new %s bookmark","sws_DLG_150"), g_slots.Get(typeForUser)->GetDesc()) > 0);
 			case BUTTONID_DEL_BOOKMARK:
 				return (lstrcpyn(_bufOut, __LOCALIZE("Delete bookmark","sws_DLG_150"), _bufOutSz) != NULL);
@@ -2140,9 +2141,9 @@ void NewBookmark(int _type, bool _copyCurrent)
 		// consistency update (just in case..)
 		_type = (_copyCurrent ? g_resViewType : GetTypeForUser(_type));
 
-		char name[256] = "";
-		_snprintf(name, 256, __LOCALIZE_VERFMT("My %s","sws_DLG_150"), g_slots.Get(GetTypeForUser(_type))->GetMenuDesc());
-		if (PromptUserForString(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("S&M - Add resource slot bookmark","sws_DLG_150"), name, 256) && *name)
+		char name[64] = "";
+		_snprintf(name, 64, __LOCALIZE_VERFMT("My %s","sws_DLG_150"), g_slots.Get(GetTypeForUser(_type))->GetMenuDesc());
+		if (PromptUserForString(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("S&M - Add resource bookmark","sws_DLG_150"), name, 64) && *name)
 		{
 			int newType = g_slots.GetSize();
 
@@ -2169,7 +2170,7 @@ void NewBookmark(int _type, bool _copyCurrent)
 		}
 	}
 	else
-		MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Too many resource slot types!","sws_DLG_150"), __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
+		MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Too many resource types!","sws_DLG_150"), __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
 }
 
 void DeleteBookmark(int _bookmarkType)
@@ -2178,9 +2179,9 @@ void DeleteBookmark(int _bookmarkType)
 	{
 		int reply;
 		if (g_slots.Get(_bookmarkType)->GetSize())
-			reply = MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Delete files too ?","sws_DLG_150"), __LOCALIZE("S&M - Delete resource slot bookmark","sws_DLG_150"), MB_YESNOCANCEL);
+			reply = MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Delete files too ?","sws_DLG_150"), __LOCALIZE("S&M - Delete resource bookmark","sws_DLG_150"), MB_YESNOCANCEL);
 		else
-			reply = MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Are you sure you want to delete this bookmark ?","sws_DLG_150"), __LOCALIZE("S&M - Delete resource slot bookmark","sws_DLG_150"), MB_OKCANCEL);
+			reply = MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Are you sure you want to delete this bookmark ?","sws_DLG_150"), __LOCALIZE("S&M - Delete resource bookmark","sws_DLG_150"), MB_OKCANCEL);
 		if (reply != IDCANCEL)
 		{
 			// cleanup ini file (types may not be contiguous anymore..)
@@ -2209,9 +2210,9 @@ void RenameBookmark(int _bookmarkType)
 {
 	if (_bookmarkType >= SNM_NUM_DEFAULT_SLOTS)
 	{
-		char newName[256] = "";
-		lstrcpyn(newName, g_slots.Get(_bookmarkType)->GetDesc(), 256);
-		if (PromptUserForString(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("S&M - Rename bookmark","sws_DLG_150"), newName, 256) && *newName)
+		char newName[64] = "";
+		lstrcpyn(newName, g_slots.Get(_bookmarkType)->GetDesc(), 64);
+		if (PromptUserForString(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("S&M - Rename bookmark","sws_DLG_150"), newName, 64) && *newName)
 		{
 			g_slots.Get(_bookmarkType)->SetDesc(newName);
 			if (g_pResourcesWnd) {
@@ -2613,9 +2614,7 @@ void SNM_ImageWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltip
 		*_tooltipHeight = h;
 
 	m_img.SetVisible(true);
-	if (m_stretch)
-		m_img.SetPosition(_r);
-	else
+	if (!m_stretch)
 	{
 		int x = _r->left + int((_r->right-_r->left)/2 - m_img.GetWidth()/2 + 0.5);
 		int y = _r->top + int((_r->bottom-_r->top)/2 - m_img.GetHeight()/2 + 0.5);
@@ -2623,6 +2622,8 @@ void SNM_ImageWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltip
 		m_img.SetPosition(&tr);
 		SNM_AddLogo(_bm, _r, x0, h);
 	}
+	else
+		m_img.SetPosition(_r);
 }
 
 int ImageViewInit()

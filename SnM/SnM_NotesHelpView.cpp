@@ -85,6 +85,7 @@ char g_lastActionCustId[SNM_MAX_ACTION_CUSTID_LEN] = "";
 char g_lastActionDesc[SNM_MAX_ACTION_NAME_LEN] = ""; 
 
 // other vars for updates tracking
+bool g_subscribedToMrkRgnUpdates = false;
 double g_lastMarkerPos = -1.0;
 int g_lastMarkerRegionId = -1;
 MediaItem* g_mediaItemNote = NULL;
@@ -103,7 +104,6 @@ SNM_NotesHelpWnd::SNM_NotesHelpWnd()
 #endif
 {
 	m_internalTLChange = false;
-	RegisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
 
 	// must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -111,8 +111,6 @@ SNM_NotesHelpWnd::SNM_NotesHelpWnd()
 
 SNM_NotesHelpWnd::~SNM_NotesHelpWnd()
 {
-	UnregisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
-	// + ~SWS_DockWnd()
 }
 
 void SNM_NotesHelpWnd::OnInitDlg()
@@ -159,12 +157,18 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	g_prevNotesViewType = -1; // will force refresh
 	SetType(BOUNDED(g_notesViewType, 0, m_cbType.GetCount()-1)); // + Update()
 
+/* see OnTimer()
+	RegisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
+*/
 	SetTimer(m_hwnd, UPDATE_TIMER, UPDATE_FREQ, NULL);
 }
 
 void SNM_NotesHelpWnd::OnDestroy() 
 {
 	KillTimer(m_hwnd, UPDATE_TIMER);
+/*see OnTimer()
+	UnregisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
+*/
 	g_prevNotesViewType = -1;
 	m_cbType.Empty();
 }
@@ -179,7 +183,7 @@ void SNM_NotesHelpWnd::SetType(int _type)
 
 	// force an initial refresh (when IDC_EDIT has the focus, re-enabling the timer 
 	// isn't enough: Update() is skipped, see OnTimer() & IsActive()
-	Update(); // <- g_prevNotesViewType gets updated here
+	Update(); // <- g_prevNotesViewType is updated here
 }
 
 void SNM_NotesHelpWnd::SetText(const char* _str) {
@@ -229,8 +233,7 @@ void SNM_NotesHelpWnd::CSurfSetTrackTitle() {
 		RefreshGUI();
 }
 
-//JFB TODO? replace "timer-ish track sel change tracking" with this notif ?
-//JFB TODO? more test (on g_notesViewType) ?
+//JFB TODO? replace "timer-ish track sel change tracking" with this notif ? + more test (on g_notesViewType) ?
 void SNM_NotesHelpWnd::CSurfSetTrackListChange() 
 {
 	// this is our only notification of active project tab change, so update everything
@@ -333,20 +336,39 @@ int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState)
 
 void SNM_NotesHelpWnd::OnTimer(WPARAM wParam)
 {
-	if (wParam == UPDATE_TIMER && g_notesViewType != SNM_NOTES_PROJECT)
+	if (wParam == UPDATE_TIMER)
 	{
-		// no update when the user edits & when the view is hidden (e.g. inactive docker tab)
-		// but when the view is active: update only for markers and if the view is locked 
-		//(=> updates during playback, in other cases -e.g. item selection change- the main window 
-		// *will* be the active one)
-		if (IsWindowVisible(m_hwnd) && 
-			(!IsActive() || (g_locked && (g_notesViewType == SNM_NOTES_REGION_SUBTITLES
-#ifdef _SNM_MARKER_REGION_NAME
-			|| g_notesViewType == SNM_NOTES_REGION_NAME
-#endif			
-			))))
+		// register to marker and region updates only whn needed (less stress for REAPER)
+		switch (g_notesViewType)
 		{
-			Update();
+			case SNM_NOTES_REGION_SUBTITLES:
+#ifdef _SNM_MARKER_REGION_NAME
+			case SNM_NOTES_REGION_NAME:
+#endif
+				if (!g_subscribedToMrkRgnUpdates)
+					g_subscribedToMrkRgnUpdates = RegisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);			
+				break;
+			default:
+				if (g_subscribedToMrkRgnUpdates)
+					g_subscribedToMrkRgnUpdates = !UnregisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
+				break;
+		}
+
+		// no update when editing text or when the view is hidden (e.g. inactive docker tab).
+		// when the view is active: update only for markers and if the view is locked 
+		// => updates during playback, in other cases (e.g. item selection change) the main 
+		// window will be the active one
+		if (g_notesViewType != SNM_NOTES_PROJECT)
+		{
+				if (IsWindowVisible(m_hwnd) && (!IsActive() || 
+					(g_locked && (g_notesViewType == SNM_NOTES_REGION_SUBTITLES
+#ifdef _SNM_MARKER_REGION_NAME
+					|| g_notesViewType == SNM_NOTES_REGION_NAME
+#endif			
+					))))
+				{
+					Update();
+				}
 		}
 	}
 }
@@ -484,9 +506,9 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 #endif
 				case SNM_NOTES_REGION_SUBTITLES:
 					if (g_lastMarkerRegionId > 0)
-						EnumMarkerRegionDesc(GetMarkerRegionIndexFromId(g_lastMarkerRegionId), str, 512, g_notesViewType == SNM_NOTES_REGION_SUBTITLES);
+						EnumMarkerRegionDesc(GetMarkerRegionIndexFromId(g_lastMarkerRegionId), str, 512, 3, g_notesViewType == SNM_NOTES_REGION_SUBTITLES);
 					else
-						lstrcpyn(str, __LOCALIZE("No marker or region before play/edit cursor position!","sws_DLG_152"), 512);
+						lstrcpyn(str, __LOCALIZE("No marker or region at play/edit cursor!","sws_DLG_152"), 512);
 					break;
 				case SNM_NOTES_ACTION_HELP:
 					if (g_lastActionDesc && *g_lastActionDesc && g_lastActionSection && *g_lastActionSection)
@@ -701,7 +723,7 @@ void SNM_NotesHelpWnd::saveCurrentMkrRgnNameOrNotes(bool _name)
 	if (g_lastMarkerRegionId > 0)
 	{
 		char buf[MAX_HELP_LENGTH] = ""; // JFB could be limited to SNM_MAX_MARKER_NAME_LEN for marker/region names
-//			memset(buf, 0, sizeof(buf));
+//		memset(buf, 0, sizeof(buf));
 		GetDlgItemText(m_hwnd, IDC_EDIT, buf, MAX_HELP_LENGTH);
 		if (strncmp(g_lastText, buf, MAX_HELP_LENGTH))
 		{
@@ -746,69 +768,70 @@ void SNM_NotesHelpWnd::saveCurrentMkrRgnNameOrNotes(bool _name)
 
 void SNM_NotesHelpWnd::Update(bool _force)
 {
-	static bool updateReentrance;
-	if (!updateReentrance)
+	static bool bRecurseCheck = false;
+	if (bRecurseCheck)
+		return;
+
+	bRecurseCheck = true; 
+
+	// force refresh if needed
+	if (_force || g_notesViewType != g_prevNotesViewType)
 	{
-		updateReentrance = true; 
+		g_prevNotesViewType = g_notesViewType;
+		g_lastActionListSel = -1;
+		*g_lastActionCustId = '\0';
+		*g_lastActionDesc = '\0';
+		g_lastActionListCmd = 0;
+		*g_lastActionSection = '\0';
+		g_mediaItemNote = NULL;
+		g_trNote = NULL;
+		g_lastMarkerPos = -1.0;
+		g_lastMarkerRegionId = -1;
+	}
 
-		// force refresh if needed
-		if (_force || g_notesViewType != g_prevNotesViewType)
-		{
-			g_prevNotesViewType = g_notesViewType;
-			g_lastActionListSel = -1;
-			*g_lastActionCustId = '\0';
-			*g_lastActionDesc = '\0';
-			g_lastActionListCmd = 0;
-			*g_lastActionSection = '\0';
-			g_mediaItemNote = NULL;
-			g_trNote = NULL;
-			g_lastMarkerPos = -1.0;
-			g_lastMarkerRegionId = -1;
-		}
-
-		// update
-		int refreshType = NO_REFRESH;
-		switch(g_notesViewType)
-		{
-			case SNM_NOTES_PROJECT:
-				SetText(g_prjNotes.Get()->Get());
-				refreshType = REQUEST_REFRESH;
-				break;
-			case SNM_NOTES_ITEM:
-				refreshType = updateItemNotes();
+	// update
+	int refreshType = NO_REFRESH;
+	switch(g_notesViewType)
+	{
+		case SNM_NOTES_PROJECT:
+			SetText(g_prjNotes.Get()->Get());
+			refreshType = REQUEST_REFRESH;
+			break;
+		case SNM_NOTES_ITEM:
+			refreshType = updateItemNotes();
 /*JFB commented: kludge..
 #ifdef _WIN32
-				// Concurent item note update ?
-				if (refreshType == NO_REFRESH)
-				{
-					char name[BUFFER_SIZE] = "";
-					MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
-					char* tkName = tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
-					_snprintf(name, BUFFER_SIZE, "Notes for \"%s\"", tkName ? tkName : "Empty Item");
-					if (HWND w = SearchWindow(name))
-						g_mediaItemNote = NULL; //will force refresh
-				}
+			// Concurent item note update ?
+			if (refreshType == NO_REFRESH)
+			{
+				char name[BUFFER_SIZE] = "";
+				MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
+				char* tkName = tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
+				_snprintf(name, BUFFER_SIZE, "Notes for \"%s\"", tkName ? tkName : "Empty Item");
+				if (HWND w = SearchWindow(name))
+					g_mediaItemNote = NULL; //will force refresh
+			}
 #endif
 */
-				break;
-			case SNM_NOTES_TRACK:
-				refreshType = updateTrackNotes();
-				break;
+			break;
+		case SNM_NOTES_TRACK:
+			refreshType = updateTrackNotes();
+			break;
 #ifdef _SNM_MARKER_REGION_NAME
-			case SNM_NOTES_REGION_NAME:
+		case SNM_NOTES_REGION_NAME:
 #endif
-			case SNM_NOTES_REGION_SUBTITLES:
-				refreshType = updateMkrRgnNameOrNotes(g_notesViewType != SNM_NOTES_REGION_SUBTITLES);
-				break;
-			case SNM_NOTES_ACTION_HELP:
-				refreshType = updateActionHelp();
-				break;
-		}
-		
-		if (refreshType != NO_REFRESH)
-			RefreshGUI(refreshType == REQUEST_REFRESH_EMPTY);
+		case SNM_NOTES_REGION_SUBTITLES:
+			refreshType = updateMkrRgnNameOrNotes(g_notesViewType != SNM_NOTES_REGION_SUBTITLES);
+			break;
+		case SNM_NOTES_ACTION_HELP:
+			refreshType = updateActionHelp();
+			break;
 	}
-	updateReentrance = false;
+	
+	if (refreshType != NO_REFRESH)
+		RefreshGUI(refreshType == REQUEST_REFRESH_EMPTY);
+
+	bRecurseCheck = false;
 }
 
 int SNM_NotesHelpWnd::updateActionHelp()
@@ -915,7 +938,7 @@ int SNM_NotesHelpWnd::updateMkrRgnNameOrNotes(bool _name)
 	if (g_locked && GetPlayState()) dPos = GetPlayPosition();
 	else dPos = GetCursorPositionEx(NULL);
 
-	if (fabs(g_lastMarkerPos-dPos) > 0.1) // 0.1 freq is enough
+	if (fabs(g_lastMarkerPos-dPos) > 0.1) // 0.1 is enough
 	{
 		g_lastMarkerPos = dPos;
 
@@ -1114,7 +1137,6 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	{
 		WDL_FastString notes;
 		ExtensionConfigToString(&notes, ctx);
-
 		char buf[MAX_HELP_LENGTH] = "";
 		GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH);
 		g_prjNotes.Get()->Set(buf);
@@ -1130,11 +1152,9 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		{
 			WDL_FastString notes;
 			ExtensionConfigToString(&notes, ctx);
-
 			char buf[MAX_HELP_LENGTH] = "";
 			if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
 				g_pTrackNotes.Get()->Add(new SNM_TrackNotes(tr, buf));
-
 			return true;
 		}
 	}
@@ -1145,11 +1165,9 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		{
 			WDL_FastString notes;
 			ExtensionConfigToString(&notes, ctx);
-
 			char buf[MAX_HELP_LENGTH] = "";
 			if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
 				g_pRegionSubtitles.Get()->Add(new SNM_RegionSubtitle(lp.gettoken_int(1), buf));
-
 			return true;
 		}
 	}

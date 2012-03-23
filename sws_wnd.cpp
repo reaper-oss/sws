@@ -343,7 +343,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 						{
 							POINT p = { m_tooltip_pt.x + xo, m_tooltip_pt.y + yo };
 							RECT rr = { r.left+xo,r.top+yo,r.right+xo,r.bottom+yo };
-							if (h>0) rr.bottom = h+yo; //JFB WIP.. make sure some tooltips are not hidden by MFCs..
+							if (h>0) rr.bottom = h+yo; //JFB make sure some tooltips are not hidden (could be better but it's enough ATM..)
 							DrawTooltipForPoint(bm,p,&rr,m_tooltip);
 						}
 						Help_Set(m_tooltip, true);
@@ -1175,7 +1175,7 @@ bool SWS_ListView::DoColumnMenu(int x, int y)
 {
 	int iCol;
 	SWS_ListItem* item = GetHitItem(x, y, &iCol);
-	if (!item && iCol != -1)
+	if (!item && iCol != -1 && IsWindowVisible(m_hwndList))
 	{
 		EditListItemEnd(true); // fix possible crash
 
@@ -1594,6 +1594,7 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
           {
             MoveToEx(hdc,br.left,r.top,NULL);
             LineTo(hdc,br.right,r.top);
+//JFB use this instead of ^^ ?            LineTo(hdc,r.right,r.top);
           }
           r.top +=h;
         }
@@ -1601,7 +1602,7 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
     }
     else if (r.right >= br.left && r.left < br.right)
     {
-/*JFB commented: i==NULL is impossible here
+/*JFB commented: i==0 is impossible here
       if (i)
 */
       {

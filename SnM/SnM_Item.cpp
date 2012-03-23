@@ -246,6 +246,7 @@ bool SplitSelectAllItemsInRegion(const char* _undoTitle, int _rgnIdx)
 				if (_undoTitle)
 					Undo_BeginBlock2(NULL);
 				GetSet_LoopTimeRange(true, false, &rgnpos, &rgnend, false);
+//JFB!!!
 				Main_OnCommand(40182, 0); // select all items
 				Main_OnCommand(40061, 0); // split items at time selection
 				Main_OnCommand(40289, 0); // unselect all items

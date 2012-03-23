@@ -1,5 +1,17 @@
 <b>Dropped support for REAPER v3.x, REAPER v4.20 is required!</b>
 
+<b>REAPER localization support</b>: fixed broken Snapshots and LFO Generator vs localized envelope names, fixed action learn in S&M windows, Theme helper, etc..
+Note: localization of the SWS extension is coming soon!
+
+Added new "S&M Region Playlist" window (BETA) - http://reaper.mj-s.com/S&M_RegionPlaylist.jpg|Screenshot|
+Useful to preview different song structures (i.e. non-linear play) and apply them to the project via "Crop project to playlist" button.
+Use the context menu to add/remove/etc.. regions, use drag-drop to reorder regions in the playlist. Undo points are created for playlist editions.
+Manage several playlists: top left dropddown box and tiny plus/minus buttons. Playlists are saved in project files.
+Added related actions:
++SWS/S&M: Open/close Region Playlist window
++SWS/S&M: Play (Region Playlist)
+Important note: the play preview is based on "smooth seeking" so <b>regions are played until the next measure</b> (start positions of regions do not matter). Croping a project to a playlist will respect regions boundaries, of course.
+
 Live Configs:
 +OSX: FX presets support like on Windows OS
 +All FX presets are now supported via the new Learn command: VST patches (.fxp), AU factory/user Presets (.aupreset), etc.. Note: support was limited to user presets (.rpl) before this version.
@@ -9,7 +21,7 @@ Live Configs:
 Cue buss generator:
 +New dropdown box "Cue buss settings": up to 8 different settings can be defined
 +Added actions "SWS/S&M: Create cue buss from track selection, settings n" where 'n' is in [1; 8]
-+Tweaks: removed confusing "save properties" button (settings are now saved on the fly), better OSX display, added file error messages, etc..
++Tweaks: removed confusing "save properties" button (settings are now saved on the fly), better OSX display, added error messages, etc..
 
 Resources window and related "slot actions":
 +<b>All "SWS/S&M: Apply track template" actions now preserve receives.</b> This is to use track templates a bit like snapsshots (track sends were already preserved).
@@ -21,7 +33,7 @@ The same goes with "Apply track template" commands in the Resources window (on d
 Label processor:
 +Added item duration (/D) and source offset (/O)
 
-FX presets actions improvements: OSX support + improved on Windows OS (new dedicated API)
+FX presets actions improvements: OSX support + improved on Windows OS (use new dedicated APIs)
 Added in the main section of the action list (new on OSX):
 +SWS/S&M: Trigger next preset for FX n of selected tracks - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
 +SWS/S&M: Trigger previous preset for FX n of selected tracks - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
@@ -40,7 +52,7 @@ Other, fixes:
 +Fixed all S&M copy/cut/paste sends/receives/routings actions (issue with multi track selection, see issue 174).
 Note: this also fixes SWS smart cut/copy actions: "SWS: Copy items/tracks/env, obeying time sel" and "SWS: Cut items/tracks/env, obeying time sel"
 +Auto Color/Icon: fixed broken drag-drop of rows (i.e. useful to order rule priorities - reminder: drag-drop only works when the sorted column is the 1st one!)
-+SWS List views tweaks: multiple rows drag-drop, no sort arrow displayed when not sortable, etc..
++SWS List views tweaks: multiple rows drag-drop, no arrow displayed when not sortable, etc..
 
 Added other actions:
 +SWS/IX: Import m3u/pls playlist. Imports local files from playlist to new track (streaming media ignored)

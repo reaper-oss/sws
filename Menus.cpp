@@ -1,7 +1,7 @@
 /******************************************************************************
 / Menus.cpp
 /
-/ Copyright (c) 2011 Tim Payne (SWS)
+/ Copyright (c) 2011 Tim Payne (SWS), Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -167,20 +167,20 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 
 	HMENU hAutoRenderSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hAutoRenderSubMenu, __LOCALIZE("Autorender", "sws_ext_menu"));
-	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Batch render regions", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER"));
-	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Edit project metadata", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_METADATA"));
+	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Batch render regions...", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER"));
+	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Edit project metadata...", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_METADATA"));
 	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Open render path", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_OPEN_RENDER_PATH"));
-	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Show help", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_HELP"));
-	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Global preferences", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_PREFERENCES"));
+	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Show help...", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_HELP"));
+	AddToMenu(hAutoRenderSubMenu, __LOCALIZE("Global preferences...", "sws_ext_menu"), NamedCommandLookup("_AUTORENDER_PREFERENCES"));
 
-	AddToMenu(hMenu, __LOCALIZE("Command parameters", "sws_ext_menu"), NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));
+	AddToMenu(hMenu, __LOCALIZE("Command parameters...", "sws_ext_menu"), NamedCommandLookup("_XENAKIOS_SHOW_COMMANDPARAMS"));
 	AddToMenu(hMenu, __LOCALIZE("Cue Buss generator", "sws_ext_menu"), NamedCommandLookup("_S&M_SENDS4"));
 	AddToMenu(hMenu, __LOCALIZE("Cycle Action editor...", "sws_ext_menu"), NamedCommandLookup("_S&M_CYCLEDITOR"));
 	AddToMenu(hMenu, __LOCALIZE("Envelope processor...", "sws_ext_menu"), NamedCommandLookup("_PADRE_ENVPROC"));
 	AddToMenu(hMenu, __LOCALIZE("Fill gaps...", "sws_ext_menu"), NamedCommandLookup("_SWS_AWFILLGAPSADV"));
 	AddToMenu(hMenu, __LOCALIZE("Find", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOWFIND"));
 	AddToMenu(hMenu, __LOCALIZE("Groove tool...", "sws_ext_menu"), NamedCommandLookup("_FNG_GROOVE_TOOL"));
-	AddToMenu(hMenu, __LOCALIZE("Label processor", "sws_ext_menu"), NamedCommandLookup("_IX_LABEL_PROC"));
+	AddToMenu(hMenu, __LOCALIZE("Label processor...", "sws_ext_menu"), NamedCommandLookup("_IX_LABEL_PROC"));
 	AddToMenu(hMenu, __LOCALIZE("LFO generator...", "sws_ext_menu"), NamedCommandLookup("_PADRE_ENVLFO"));
 	AddToMenu(hMenu, __LOCALIZE("Live Configs", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOWMIDILIVE"));
 	AddToMenu(hMenu, __LOCALIZE("MarkerList", "sws_ext_menu"), NamedCommandLookup("_SWSMARKERLIST1"));
@@ -218,20 +218,20 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hPrjMgmtSubMenu, __LOCALIZE("(related projects list)", "sws_ext_menu"), NamedCommandLookup("_SWS_OPENRELATED1"));
 
 	AddToMenu(hMenu, __LOCALIZE("ReaConsole...", "sws_ext_menu"), NamedCommandLookup("_SWSCONSOLE"));
-//	AddToMenu(hMenu, __LOCALIZE("Region Playlist", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOW_RGN_PLAYLIST"));
+	AddToMenu(hMenu, __LOCALIZE("Region Playlist", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOW_RGN_PLAYLIST"));
 	AddToMenu(hMenu, __LOCALIZE("Resources", "sws_ext_menu"), NamedCommandLookup("_S&M_SHOW_RESOURCES_VIEW"));
 	AddToMenu(hMenu, __LOCALIZE("Snapshots", "sws_ext_menu"), NamedCommandLookup("_SWSSNAPSHOT_OPEN"));
 	AddToMenu(hMenu, __LOCALIZE("Tracklist", "sws_ext_menu"), NamedCommandLookup("_SWSTL_OPEN"));
-	AddToMenu(hMenu, __LOCALIZE("Zoom preferences", "sws_ext_menu"), NamedCommandLookup("_SWS_ZOOMPREFS"));
+	AddToMenu(hMenu, __LOCALIZE("Zoom preferences...", "sws_ext_menu"), NamedCommandLookup("_SWS_ZOOMPREFS"));
 
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 
+#ifdef _SWS_DEBUG
 #ifdef _SWS_LOCALIZATION
 	HMENU hLangPackSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hLangPackSubMenu, __LOCALIZE("SWS Language file", "sws_ext_menu"));
-	AddToMenu(hLangPackSubMenu, __LOCALIZE("Load LangPack file...", "sws_ext_menu"), NamedCommandLookup("_S&M_LOAD_LANGPACK"));
-	AddToMenu(hLangPackSubMenu, __LOCALIZE("Reset to factory settings (English)", "sws_ext_menu"), NamedCommandLookup("_S&M_RESET_LANGPACK"));
-#ifdef _SWS_DEBUG
+//	AddToMenu(hLangPackSubMenu, __LOCALIZE("Load LangPack file...", "sws_ext_menu"), NamedCommandLookup("_S&M_LOAD_LANGPACK"));
+//	AddToMenu(hLangPackSubMenu, __LOCALIZE("Reset to factory settings (English)", "sws_ext_menu"), NamedCommandLookup("_S&M_RESET_LANGPACK"));
 	AddToMenu(hLangPackSubMenu, __LOCALIZE("[Internal] Generate actions LangPack file...", "sws_ext_menu"), NamedCommandLookup("_S&M_GEN_LANGPACK"));
 #endif
 #endif

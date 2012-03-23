@@ -633,7 +633,6 @@ extern "C"
 		IMPAPI(Resampler_Create);
 		IMPAPI(screenset_register);
 		IMPAPI(screenset_registerNew);
-		IMPAPI(ShowConsoleMsg);
 		IMPAPI(SelectProjectInstance);
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
@@ -649,7 +648,9 @@ extern "C"
 		IMPAPI(SetProjectMarker3);
 		IMPAPI(SetTrackSelected);
 		IMPAPI(ShowActionList);
-		IMPAPI(ShowMessageBox);		IMPAPI(SnapToGrid);
+		IMPAPI(ShowConsoleMsg);
+		IMPAPI(ShowMessageBox);
+		IMPAPI(SnapToGrid);
 		IMPAPI(SplitMediaItem);
 		IMPAPI(StopPreview);
 		IMPAPI(StopTrackPreview);
@@ -699,9 +700,13 @@ extern "C"
 
 		if (errcnt)
 		{
-			MessageBox(g_hwndParent, "The version of SWS extension you have installed is incompatible with your version of Reaper. You probably have a Reaper version less than 4.20 installed. "
-				"Please install the latest version of Reaper from www.reaper.fm.", "Version Incompatibility", MB_OK);
-			return 0;
+			 //JFB: NULL parent so that the message is at least visible in taskbars
+			//      (hidden since REAPER v4 and its "splash 2.0")
+			MessageBox(NULL,
+				"The version of SWS extension you have installed is incompatible with your version of Reaper.\n"
+				"You probably have a Reaper version less than 4.20 installed.\n"
+				"Please install the latest version of Reaper from www.reaper.fm.", "SWS - Version Incompatibility", MB_OK);
+			ERR_RETURN("SWS extension incompatible\n")
 		}
 
 		if (!rec->Register("hookcommand",(void*)hookCommandProc))
@@ -745,7 +750,7 @@ extern "C"
 			ERR_RETURN("Autorender init error\n")
 		if (!IXInit())
 			ERR_RETURN("IX init error\n")
-		if (!SnMInit(rec)) // last init (for cyle actions)
+		if (!SnMInit(rec)) // keep it as the last init (for cyle actions)
 			ERR_RETURN("S&M init error\n")
 
     	if (!rec->Register("hookcustommenu", (void*)swsMenuHook))

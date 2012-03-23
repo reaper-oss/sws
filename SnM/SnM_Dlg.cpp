@@ -338,11 +338,11 @@ bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h)
 // note: by default all components are hidden, see WM_PAINT in sws_wnd.cpp
 // _x: I/O param that gets modified (for the next WDL_VWnd to be placed in the panel)
 // _h: height of the panel
-// returns false if display issue (hidden)
+// returns false if hidden
 // JFB TODO? REMARK: 
 //    ideally, we'd need to mod WDL_VWnd here rather than checking inherited types (!)
 //    e.g. adding a kind of getPreferedWidthHeight(int* _width, int* _height)
-bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xStep)
+bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoomNextComp)
 {
 	if (_c && _h && abs(_r->bottom-_r->top) >= _h)
 	{
@@ -358,7 +358,7 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int
 				width = max(width, tr.right);
 				height = tr.bottom; 
 			}
-/*JFB could be better? InvalidateRect/RequestRedraw issue anyway..
+/*JFB better? InvalidateRect/RequestRedraw issue anyway..
 			RECT tr = {0,0,0,0};
 			cb->GetFont()->DrawText(NULL, cb->GetItem(cb->GetCurSel()), -1, &tr, DT_CALCRECT);
 			width = tr.right;
@@ -426,7 +426,7 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int
 		_y += int(_h/2 - height/2 + 0.5);
 		RECT tr = {*_x, _y, *_x + width, _y+height};
 		_c->SetPosition(&tr);
-		*_x = tr.right+_xStep;
+		*_x = tr.right + _xRoomNextComp;
 		_c->SetVisible(true);
 		return true;
 	}

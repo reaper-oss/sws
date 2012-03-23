@@ -31,13 +31,31 @@
 #define _SNM_PLAYLISTVIEW_H_
 
 
-// note: no other attributes (like a comment") because of 
-// the playlist "auto-compacting" feature..
-class SNM_RgnPlaylistItem {
+class Playlist_MarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
 public:
-	SNM_RgnPlaylistItem(int _rgnId=-1, int _cnt=1, int _playRequested=0)
+	Playlist_MarkerRegionSubscriber() : SNM_MarkerRegionSubscriber() {}
+	void NotifyMarkerRegionUpdate(int _updateFlags);
+};
+
+// note: no other attributes (like a comment) because of
+// the playlist "auto-compacting" feature..
+class SNM_PlaylistItem {
+public:
+	SNM_PlaylistItem(int _rgnId=-1, int _cnt=1, int _playRequested=0)
 		: m_rgnId(_rgnId),m_cnt(_cnt),m_playRequested(_playRequested) {}
 	int m_rgnId, m_cnt, m_playRequested;
+};
+
+class SNM_Playlist : public WDL_PtrList<SNM_PlaylistItem>
+{
+public:
+	SNM_Playlist(const char* _name, SNM_Playlist* _p = NULL) : m_name(_name), WDL_PtrList<SNM_PlaylistItem>() {
+		if (_p)
+			for (int i=0; i < _p->GetSize(); i++)
+				Add(new SNM_PlaylistItem(_p->Get(i)->m_rgnId, _p->Get(i)->m_cnt));
+	}
+	~SNM_Playlist() {}
+	WDL_FastString m_name;
 };
 
 class SNM_PlaylistView : public SWS_ListView {
@@ -53,36 +71,46 @@ protected:
 	void OnBeginDrag(SWS_ListItem* item);
 	void OnDrag();
 	void OnEndDrag();
-	WDL_PtrList<SNM_RgnPlaylistItem> m_draggedItems;
+	WDL_PtrList<SNM_PlaylistItem> m_draggedItems;
 };
 
 class SNM_RegionPlaylistWnd : public SWS_DockWnd
 {
 public:
 	SNM_RegionPlaylistWnd();
+	~SNM_RegionPlaylistWnd() {}
+	void GetMinSize(int* w, int* h) { *w=202; *h=175; }
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void Update(int _flags = 3);
+	void FillPlaylistCombo();
 protected:
 	void OnInitDlg();
-	void OnDestroy() {}
+	void OnDestroy();
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	int OnKey(MSG* msg, int iKeyState) ;
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
+
+	Playlist_MarkerRegionSubscriber m_mkrRgnSubscriber;
+	WDL_VirtualStaticText m_txtPlaylist, m_txtLength;
+	WDL_VirtualComboBox m_cbPlaylist;
+	SNM_MiniAddDelButtons m_btnsAddDel;
 	SNM_ToolbarButton m_btnCrop;
 	WDL_VirtualIconButton m_btnPlay, m_btnStop;
 };
 
-class SNM_RgnPlaylistCurNextItems {
+class SNM_PlaylistCurNextItems {
 public:
-	SNM_RgnPlaylistCurNextItems(SNM_RgnPlaylistItem* _cur=NULL, SNM_RgnPlaylistItem* _next=NULL)
-		: m_cur(_cur),m_next(_next) {}
-	SNM_RgnPlaylistItem* m_cur;
-	SNM_RgnPlaylistItem* m_next;
+	SNM_PlaylistCurNextItems(SNM_PlaylistItem* _cur=NULL, SNM_PlaylistItem* _next=NULL, int _curIdx=-1, int _nextIdx=-1)
+		: m_cur(_cur),m_next(_next), m_curRgnIdx(_curIdx), m_nextRgnIdx(_nextIdx) {}
+	SNM_PlaylistItem* m_cur;
+	SNM_PlaylistItem* m_next;
+	int m_curRgnIdx, m_nextRgnIdx;
 };
 
 
+double GetPlayListLength();
 void PlaylistRun();
 void PlaylistPlay(int _playlistId, bool _errMsg);
 void PlaylistPlay(COMMAND_T*);

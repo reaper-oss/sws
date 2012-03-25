@@ -371,6 +371,9 @@ HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	AddToMenu(hMenu, "Export formatted marker list to clipboard", SWSGetCommandID(ExportToClipboard));
 	AddToMenu(hMenu, "Export format...", SWSGetCommandID(ExportFormat));
+	AddToMenu(hMenu, SWS_SEPARATOR, 0);
+	AddToMenu(hMenu, "Convert markers to regions", SWSGetCommandID(MarkersToRegions));
+	AddToMenu(hMenu, "Convert regions to markers", SWSGetCommandID(RegionsToMarkers));
 	
 	return hMenu;
 }
@@ -654,6 +657,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL,								"SWS: Export formatted marker list to clipboard" },	"SWSMARKERLIST11", ExportToClipboard, "Export formatted marker list to clipboard", },
 	{ { DEFACCEL,								"SWS: Exported marker list format..." },		"SWSMARKERLIST12",	ExportFormat,      "Export format...", },
+	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
+	{ { DEFACCEL,								"SWS: Convert markers to regions" },			"SWSMARKERLIST13",	MarkersToRegions,  "Convert markers to regions", },
+	{ { DEFACCEL,								"SWS: Convert regions to markers" },			"SWSMARKERLIST14",	RegionsToMarkers,  "Convert regions to markers", },
 
 	// no menu
 	{ { DEFACCEL, "SWS: Go to end of project, including markers/regions" },					"SWS_PROJEND",		GotoEndInclMarkers, },

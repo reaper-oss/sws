@@ -43,3 +43,5 @@ void SelPrevRegion(COMMAND_T*);
 void GotoEndInclMarkers(COMMAND_T*);
 void SelNextMarkerOrRegion(COMMAND_T*);
 void SelPrevMarkerOrRegion(COMMAND_T*);
+void MarkersToRegions(COMMAND_T*);
+void RegionsToMarkers(COMMAND_T*);

@@ -46,6 +46,10 @@ Added new FX preset actions in the main section (new on OSX and Windows OS):
 +SWS/S&M: Trigger next preset for last touched FX
 +SWS/S&M: Trigger previous preset for last touched FX
 
+Marker list:
++Convert markers to regions
++Convert regions to markers
+
 Other, fixes:
 +All S&M windows: optional Windows-rendered fonts (ClearType) - To enable this option set ClearTypeFont to 1 in the section [General] of the S&M.ini file
 +Support the global preference "Disable saving full plugin states"

@@ -48,6 +48,7 @@ public:
 	double GetRegEnd() { return m_dRegEnd; }
 	void SetRegEnd(double dEnd) { m_dRegEnd = dEnd; }
 	bool IsRegion() { return m_bReg; }
+	void SetReg(bool bIsReg) {  m_bReg = bIsReg; }
 	int GetID() { return m_id; }
 	void SetID(int id) { m_id = id; }
 	int GetColor() { return m_iColor; }

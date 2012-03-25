@@ -274,3 +274,84 @@ void SelPrevMarkerOrRegion(COMMAND_T*)
 		}
 	}
 }
+
+void MarkersToRegions(COMMAND_T*)
+{
+	MarkerList ml(NULL, true);
+
+	WDL_PtrList<MarkerItem> &markers = ml.m_items;
+
+	if(markers.GetSize() == 0) return; // Bail if there are no markers/regions
+
+	// Find project end. Is there a neater way to do this?
+	double temp = GetCursorPositionEx(NULL);
+	CSurf_GoEnd();
+	double projEnd = GetCursorPositionEx(NULL);
+	SetEditCurPos2(NULL, temp, false, false);
+
+	Undo_BeginBlock2(NULL);
+
+	// Insert dummy marker at project start if necessary
+	if(markers.Get(0)->GetPos() > 0)
+	{
+		markers.Insert(0, new MarkerItem(false, 0, 0, "", 0, 0));
+	}
+
+	// Convert markers to regions
+	for(int i = 0, c = markers.GetSize(); i < c; i++)
+	{
+		MarkerItem *pm = markers.Get(i);
+		if(!pm->IsRegion())
+		{
+			// Find next marker
+			MarkerItem *pNext = NULL;
+			int n = i + 1;
+			do
+			{
+				pNext = markers.Get(n++);
+			}
+			while(pNext && pNext->IsRegion());
+
+			MarkerItem *pm = markers.Get(i);
+
+			double pos = pm->GetPos();
+			double end = pNext ? pNext->GetPos() : projEnd;
+
+			if(pos != end)
+			{
+				pm->SetReg(true);
+				pm->SetRegEnd(end);
+			}
+		}
+	}
+
+	ml.UpdateReaper();
+
+	Undo_EndBlock2(NULL, "Convert markers to regions", UNDO_STATE_MISCCFG);
+}
+
+
+void RegionsToMarkers(COMMAND_T*)
+{
+	MarkerList ml(NULL, true);
+
+	WDL_PtrList<MarkerItem> &markers = ml.m_items;
+
+	if(markers.GetSize() == 0) return; // Bail if there are no markers/regions
+
+	Undo_BeginBlock2(NULL);
+
+	for(int i = 0, c = markers.GetSize(); i < c; i++)
+	{
+		MarkerItem *pm = markers.Get(i);
+		
+		if(pm->IsRegion())
+		{
+			pm->SetReg(false);
+		}
+	}
+
+	ml.UpdateReaper();
+
+	Undo_EndBlock2(NULL, "Convert regions to markers", UNDO_STATE_MISCCFG);
+}

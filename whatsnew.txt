@@ -1,4 +1,4 @@
-<b>Dropped support for REAPER v3.x, REAPER v4.20 is required!</b>
+<b>Dropped support for REAPER v3.x, REAPER >= v4.20 is required!</b>
 
 <b>REAPER localization support</b>: fixed broken Snapshots and LFO Generator vs localized envelope names, fixed action learn in S&M windows, Theme helper, etc..
 Note: localization of the SWS extension is coming soon!
@@ -6,7 +6,7 @@ Note: localization of the SWS extension is coming soon!
 Added new "S&M Region Playlist" window (BETA) - http://reaper.mj-s.com/S&M_RegionPlaylist.jpg|Screenshot|
 Useful to preview different song structures (i.e. non-linear play) and apply them via the button "Crop project to playlist".
 Use the context menu to add/remove/etc.. regions, use drag-drop to reorder regions in the playlist. Undo points are created for playlist editions.
-Manage several playlists: top left dropddown box and tiny plus/minus buttons. Playlists are saved in project files.
+Manage several playlists: top left dropdown box and tiny plus/minus buttons. Playlists are saved in project files.
 Added related actions:
 +SWS/S&M: Open/close Region Playlist window
 +SWS/S&M: Play (Region Playlist)

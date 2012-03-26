@@ -170,6 +170,7 @@ HCURSOR SWS_LoadCursor(int id);
 #define MOUSEEVENTF_RIGHTDOWN   0x0008 /* right button down */
 #define MOUSEEVENTF_RIGHTUP     0x0010 /* right button up */
 void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwExtraInfo);
+#define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 
 // Command/action handling, sws_extension.cpp

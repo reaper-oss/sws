@@ -1,3 +1,4 @@
+!v2.2.0 #3 (March 25, 2012)
 <b>Dropped support for REAPER v3.x, REAPER >= v4.20 is required!</b>
 
 <b>REAPER localization support</b>: fixed broken Snapshots and LFO Generator vs localized envelope names, fixed action learn in S&M windows, Theme helper, etc..

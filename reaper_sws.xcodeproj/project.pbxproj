@@ -7,9 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		220E6F3B13BCD1C900409C44 /* SnM_Cyclactions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 220E6F3913BCD1C900409C44 /* SnM_Cyclactions.cpp */; };
-		220E6F3C13BCD1C900409C44 /* SnM_Cyclactions.h in Headers */ = {isa = PBXBuildFile; fileRef = 220E6F3A13BCD1C900409C44 /* SnM_Cyclactions.h */; };
-		221CEFAA118212A0009245C9 /* SnM_Track.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 221CEFA9118212A0009245C9 /* SnM_Track.cpp */; };
 		22219AFD124AF1CE006CBC5D /* Macros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22219AFB124AF1CE006CBC5D /* Macros.cpp */; };
 		22219AFE124AF1CE006CBC5D /* Macros.h in Headers */ = {isa = PBXBuildFile; fileRef = 22219AFC124AF1CE006CBC5D /* Macros.h */; };
 		22257D87108BDC6B0058CF75 /* AutoRename.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D6F108BDC6B0058CF75 /* AutoRename.cpp */; };
@@ -36,13 +33,10 @@
 		22257D9E108BDC6B0058CF75 /* XenUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D86108BDC6B0058CF75 /* XenUtils.cpp */; };
 		22284D47130C4A65007DC680 /* Menus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22284D45130C4A65007DC680 /* Menus.cpp */; };
 		22284D48130C4A65007DC680 /* Menus.h in Headers */ = {isa = PBXBuildFile; fileRef = 22284D46130C4A65007DC680 /* Menus.h */; };
-		2233C7861187B4A400BB4BCB /* SnM_FXChainView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2233C7841187B4A400BB4BCB /* SnM_FXChainView.cpp */; };
-		2233C7871187B4A400BB4BCB /* SnM_FXChainView.h in Headers */ = {isa = PBXBuildFile; fileRef = 2233C7851187B4A400BB4BCB /* SnM_FXChainView.h */; };
 		2246D05D12F1622400EEDBD5 /* Autorender.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2246D05912F1622400EEDBD5 /* Autorender.cpp */; };
 		2246D05E12F1622400EEDBD5 /* Autorender.h in Headers */ = {isa = PBXBuildFile; fileRef = 2246D05A12F1622400EEDBD5 /* Autorender.h */; };
 		2246D05F12F1622400EEDBD5 /* RenderTrack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2246D05B12F1622400EEDBD5 /* RenderTrack.cpp */; };
 		2246D06012F1622400EEDBD5 /* RenderTrack.h in Headers */ = {isa = PBXBuildFile; fileRef = 2246D05C12F1622400EEDBD5 /* RenderTrack.h */; };
-		22495D7B13A5649800381F53 /* SnM_Project.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22495D7A13A5649800381F53 /* SnM_Project.cpp */; };
 		225130BF116101670028F26A /* padreActions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225130B2116101670028F26A /* padreActions.cpp */; };
 		225130C0116101670028F26A /* padreActions.h in Headers */ = {isa = PBXBuildFile; fileRef = 225130B3116101670028F26A /* padreActions.h */; };
 		225130C1116101670028F26A /* padreEnvelopeProcessor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 225130B4116101670028F26A /* padreEnvelopeProcessor.cpp */; };
@@ -105,13 +99,7 @@
 		229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 229AC80B108FBFCB00E4A962 /* SectionLock.h */; };
 		22A664BB10BC6FE100F0B239 /* sha.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22A664BA10BC6FE100F0B239 /* sha.cpp */; };
 		22A8751F10FEBFA10026F62F /* sws_util.mm in Sources */ = {isa = PBXBuildFile; fileRef = 98E8A0AF0F9123F900FC657D /* sws_util.mm */; };
-		22ABB3871195B91700E4B242 /* SnM_Dlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22ABB3861195B91700E4B242 /* SnM_Dlg.cpp */; };
 		22AC0E0F112A7DE50067BBE3 /* projectcontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22AC0E0E112A7DE50067BBE3 /* projectcontext.cpp */; };
-		22AD269D11545473004ACCC7 /* SnM_Windows.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F910B0F04D00774777 /* SnM_Windows.cpp */; };
-		22AF6DEF12308A350017808F /* SnM_FindView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6DEB12308A350017808F /* SnM_FindView.cpp */; };
-		22AF6DF012308A350017808F /* SnM_FindView.h in Headers */ = {isa = PBXBuildFile; fileRef = 22AF6DEC12308A350017808F /* SnM_FindView.h */; };
-		22AF6DF112308A350017808F /* SnM_MidiLiveView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6DED12308A350017808F /* SnM_MidiLiveView.cpp */; };
-		22AF6DF212308A350017808F /* SnM_MidiLiveView.h in Headers */ = {isa = PBXBuildFile; fileRef = 22AF6DEE12308A350017808F /* SnM_MidiLiveView.h */; };
 		22AF6E1012308B8D0017808F /* virtwnd-controls.h in Headers */ = {isa = PBXBuildFile; fileRef = 22AF6E0912308B8D0017808F /* virtwnd-controls.h */; };
 		22AF6E1112308B8D0017808F /* virtwnd-iconbutton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E0A12308B8D0017808F /* virtwnd-iconbutton.cpp */; };
 		22AF6E1212308B8D0017808F /* virtwnd-listbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22AF6E0B12308B8D0017808F /* virtwnd-listbox.cpp */; };
@@ -183,10 +171,6 @@
 		22C54FE0111B29E10024339F /* SnapshotMerge.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C54FDE111B29E10024339F /* SnapshotMerge.h */; };
 		22C769EB10B0F00800774777 /* TrackFX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769E910B0F00800774777 /* TrackFX.cpp */; };
 		22C769EC10B0F00800774777 /* TrackFX.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C769EA10B0F00800774777 /* TrackFX.h */; };
-		22C769FA10B0F04D00774777 /* SnM_Actions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F510B0F04D00774777 /* SnM_Actions.cpp */; };
-		22C769FB10B0F04D00774777 /* SnM_Actions.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C769F610B0F04D00774777 /* SnM_Actions.h */; };
-		22C769FC10B0F04D00774777 /* SnM_fx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F710B0F04D00774777 /* SnM_fx.cpp */; };
-		22C769FD10B0F04D00774777 /* SnM_sends.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769F810B0F04D00774777 /* SnM_sends.cpp */; };
 		22C77EA112D62F2E002F68D5 /* CommandHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E6B12D62F2E002F68D5 /* CommandHandler.cpp */; };
 		22C77EA212D62F2E002F68D5 /* CommandHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E6C12D62F2E002F68D5 /* CommandHandler.h */; };
 		22C77EA312D62F2E002F68D5 /* Envelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E6D12D62F2E002F68D5 /* Envelope.cpp */; };
@@ -234,18 +218,54 @@
 		22C77ED212D62F2E002F68D5 /* StringUtil.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E9C12D62F2E002F68D5 /* StringUtil.hxx */; };
 		22C77ED312D62F2E002F68D5 /* TimeMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E9D12D62F2E002F68D5 /* TimeMap.cpp */; };
 		22C77ED412D62F2E002F68D5 /* TimeMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E9E12D62F2E002F68D5 /* TimeMap.h */; };
+		22F7AAB615201D8A00CC1481 /* SnM_Chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA8D15201D8A00CC1481 /* SnM_Chunk.cpp */; };
+		22F7AAB715201D8A00CC1481 /* SnM_Chunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA8E15201D8A00CC1481 /* SnM_Chunk.h */; };
+		22F7AAB815201D8A00CC1481 /* SnM_ChunkParserPatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA8F15201D8A00CC1481 /* SnM_ChunkParserPatcher.h */; };
+		22F7AAB915201D8A00CC1481 /* SnM_Cyclactions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA9015201D8A00CC1481 /* SnM_Cyclactions.cpp */; };
+		22F7AABA15201D8A00CC1481 /* SnM_Cyclactions.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9115201D8A00CC1481 /* SnM_Cyclactions.h */; };
+		22F7AABB15201D8A00CC1481 /* SnM_Dlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA9215201D8A00CC1481 /* SnM_Dlg.cpp */; };
+		22F7AABC15201D8A00CC1481 /* SnM_Dlg.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9315201D8A00CC1481 /* SnM_Dlg.h */; };
+		22F7AABD15201D8A00CC1481 /* SnM_FindView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA9415201D8A00CC1481 /* SnM_FindView.cpp */; };
+		22F7AABE15201D8A00CC1481 /* SnM_FindView.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9515201D8A00CC1481 /* SnM_FindView.h */; };
+		22F7AABF15201D8A00CC1481 /* SnM_fx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA9615201D8A00CC1481 /* SnM_fx.cpp */; };
+		22F7AAC015201D8A00CC1481 /* SnM_fx.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9715201D8A00CC1481 /* SnM_fx.h */; };
+		22F7AAC115201D8A00CC1481 /* SnM_FXChain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA9815201D8A00CC1481 /* SnM_FXChain.cpp */; };
+		22F7AAC215201D8A00CC1481 /* SnM_FXChain.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9915201D8A00CC1481 /* SnM_FXChain.h */; };
+		22F7AAC315201D8A00CC1481 /* SnM_Item.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA9A15201D8A00CC1481 /* SnM_Item.cpp */; };
+		22F7AAC415201D8A00CC1481 /* SnM_Item.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9B15201D8A00CC1481 /* SnM_Item.h */; };
+		22F7AAC515201D8A00CC1481 /* SnM_LiveConfigs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA9C15201D8A00CC1481 /* SnM_LiveConfigs.cpp */; };
+		22F7AAC615201D8A00CC1481 /* SnM_LiveConfigs.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9D15201D8A00CC1481 /* SnM_LiveConfigs.h */; };
+		22F7AAC715201D8A00CC1481 /* SnM_ME.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA9E15201D8A00CC1481 /* SnM_ME.cpp */; };
+		22F7AAC815201D8A00CC1481 /* SnM_ME.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9F15201D8A00CC1481 /* SnM_ME.h */; };
+		22F7AAC915201D8A00CC1481 /* SnM_Misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAA015201D8A00CC1481 /* SnM_Misc.cpp */; };
+		22F7AACA15201D8A00CC1481 /* SnM_Misc.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAA115201D8A00CC1481 /* SnM_Misc.h */; };
+		22F7AACB15201D8A00CC1481 /* SnM_NotesHelpView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAA215201D8A00CC1481 /* SnM_NotesHelpView.cpp */; };
+		22F7AACC15201D8A00CC1481 /* SnM_NotesHelpView.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAA315201D8A00CC1481 /* SnM_NotesHelpView.h */; };
+		22F7AACD15201D8A00CC1481 /* SnM_Project.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAA415201D8A00CC1481 /* SnM_Project.cpp */; };
+		22F7AACE15201D8A00CC1481 /* SnM_Project.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAA515201D8A00CC1481 /* SnM_Project.h */; };
+		22F7AACF15201D8A00CC1481 /* SnM_Resources.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAA615201D8A00CC1481 /* SnM_Resources.cpp */; };
+		22F7AAD015201D8A00CC1481 /* SnM_Resources.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAA715201D8A00CC1481 /* SnM_Resources.h */; };
+		22F7AAD115201D8A00CC1481 /* SnM_RgnPlaylistView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAA815201D8A00CC1481 /* SnM_RgnPlaylistView.cpp */; };
+		22F7AAD215201D8A00CC1481 /* SnM_RgnPlaylistView.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAA915201D8A00CC1481 /* SnM_RgnPlaylistView.h */; };
+		22F7AAD315201D8A00CC1481 /* SnM_Routing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAAA15201D8A00CC1481 /* SnM_Routing.cpp */; };
+		22F7AAD415201D8A00CC1481 /* SnM_Routing.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAAB15201D8A00CC1481 /* SnM_Routing.h */; };
+		22F7AAD515201D8A00CC1481 /* SnM_Track.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAAC15201D8A00CC1481 /* SnM_Track.cpp */; };
+		22F7AAD615201D8A00CC1481 /* SnM_Track.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAAD15201D8A00CC1481 /* SnM_Track.h */; };
+		22F7AAD715201D8A00CC1481 /* SnM_Util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAAE15201D8A00CC1481 /* SnM_Util.cpp */; };
+		22F7AAD815201D8A00CC1481 /* SnM_Util.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAAF15201D8A00CC1481 /* SnM_Util.h */; };
+		22F7AAD915201D8A00CC1481 /* SnM_VWnd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAB015201D8A00CC1481 /* SnM_VWnd.cpp */; };
+		22F7AADA15201D8A00CC1481 /* SnM_VWnd.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAB115201D8A00CC1481 /* SnM_VWnd.h */; };
+		22F7AADB15201D8A00CC1481 /* SnM_Window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAB215201D8A00CC1481 /* SnM_Window.cpp */; };
+		22F7AADC15201D8A00CC1481 /* SnM_Window.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAB315201D8A00CC1481 /* SnM_Window.h */; };
+		22F7AADD15201D8A00CC1481 /* SnM.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAB415201D8A00CC1481 /* SnM.cpp */; };
+		22F7AADE15201D8A00CC1481 /* SnM.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAB515201D8A00CC1481 /* SnM.h */; };
+		22F7AAE815201E2600CC1481 /* IX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAE415201E2600CC1481 /* IX.cpp */; };
+		22F7AAE915201E2600CC1481 /* IX.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAE515201E2600CC1481 /* IX.h */; };
+		22F7AAEA15201E2600CC1481 /* Label.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAE615201E2600CC1481 /* Label.cpp */; };
+		22F7AAEB15201E2600CC1481 /* PlaylistImport.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAE715201E2600CC1481 /* PlaylistImport.cpp */; };
 		22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD278114CD8310077F1CA /* Autocolor.cpp */; };
 		22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD279114CD8310077F1CA /* Autocolor.h */; };
-		22FFD289114DB5F10077F1CA /* SNM_Chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD283114DB5F10077F1CA /* SNM_Chunk.cpp */; };
-		22FFD28A114DB5F10077F1CA /* SNM_Chunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD284114DB5F10077F1CA /* SNM_Chunk.h */; };
-		22FFD28B114DB5F10077F1CA /* SNM_ChunkParserPatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD285114DB5F10077F1CA /* SNM_ChunkParserPatcher.h */; };
-		22FFD28C114DB5F10077F1CA /* SnM_FXChain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD286114DB5F10077F1CA /* SnM_FXChain.cpp */; };
-		22FFD28D114DB5F10077F1CA /* SnM_Item.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD287114DB5F10077F1CA /* SnM_Item.cpp */; };
-		22FFD28E114DB5F10077F1CA /* SnM_Misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD288114DB5F10077F1CA /* SnM_Misc.cpp */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
-		33E88A8111EDFD6700B0F4BE /* SnM_ME.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 33E88A7E11EDFD6700B0F4BE /* SnM_ME.cpp */; };
-		33E88A8211EDFD6700B0F4BE /* SnM_NotesHelpView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 33E88A7F11EDFD6700B0F4BE /* SnM_NotesHelpView.cpp */; };
-		33E88A8311EDFD6700B0F4BE /* SnM_NotesHelpView.h in Headers */ = {isa = PBXBuildFile; fileRef = 33E88A8011EDFD6700B0F4BE /* SnM_NotesHelpView.h */; };
 		5A0280AF14216AE300EC8CD1 /* icontheme.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A0280AD14216AE300EC8CD1 /* icontheme.h */; };
 		5A0280B014216AE300EC8CD1 /* sws_rpf_wrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A0280AE14216AE300EC8CD1 /* sws_rpf_wrapper.h */; };
 		980764230F5B23180091104D /* wndsize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 980764220F5B23180091104D /* wndsize.cpp */; };
@@ -291,9 +311,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		220E6F3913BCD1C900409C44 /* SnM_Cyclactions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Cyclactions.cpp; path = SnM/SnM_Cyclactions.cpp; sourceTree = "<group>"; };
-		220E6F3A13BCD1C900409C44 /* SnM_Cyclactions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Cyclactions.h; path = SnM/SnM_Cyclactions.h; sourceTree = "<group>"; };
-		221CEFA9118212A0009245C9 /* SnM_Track.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Track.cpp; path = SnM/SnM_Track.cpp; sourceTree = "<group>"; };
 		22219AFB124AF1CE006CBC5D /* Macros.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Macros.cpp; path = Misc/Macros.cpp; sourceTree = "<group>"; };
 		22219AFC124AF1CE006CBC5D /* Macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Macros.h; path = Misc/Macros.h; sourceTree = "<group>"; };
 		22257D6F108BDC6B0058CF75 /* AutoRename.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AutoRename.cpp; path = Xenakios/AutoRename.cpp; sourceTree = "<group>"; };
@@ -320,13 +337,10 @@
 		22257D86108BDC6B0058CF75 /* XenUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = XenUtils.cpp; path = Xenakios/XenUtils.cpp; sourceTree = "<group>"; };
 		22284D45130C4A65007DC680 /* Menus.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Menus.cpp; sourceTree = "<group>"; };
 		22284D46130C4A65007DC680 /* Menus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Menus.h; sourceTree = "<group>"; };
-		2233C7841187B4A400BB4BCB /* SnM_FXChainView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_FXChainView.cpp; path = SnM/SnM_FXChainView.cpp; sourceTree = "<group>"; };
-		2233C7851187B4A400BB4BCB /* SnM_FXChainView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_FXChainView.h; path = SnM/SnM_FXChainView.h; sourceTree = "<group>"; };
 		2246D05912F1622400EEDBD5 /* Autorender.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autorender.cpp; path = Autorender/Autorender.cpp; sourceTree = "<group>"; };
 		2246D05A12F1622400EEDBD5 /* Autorender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autorender.h; path = Autorender/Autorender.h; sourceTree = "<group>"; };
 		2246D05B12F1622400EEDBD5 /* RenderTrack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RenderTrack.cpp; path = Autorender/RenderTrack.cpp; sourceTree = "<group>"; };
 		2246D05C12F1622400EEDBD5 /* RenderTrack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RenderTrack.h; path = Autorender/RenderTrack.h; sourceTree = "<group>"; };
-		22495D7A13A5649800381F53 /* SnM_Project.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Project.cpp; path = SnM/SnM_Project.cpp; sourceTree = "<group>"; };
 		225130B2116101670028F26A /* padreActions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreActions.cpp; path = Padre/padreActions.cpp; sourceTree = "<group>"; };
 		225130B3116101670028F26A /* padreActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreActions.h; path = Padre/padreActions.h; sourceTree = "<group>"; };
 		225130B4116101670028F26A /* padreEnvelopeProcessor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreEnvelopeProcessor.cpp; path = Padre/padreEnvelopeProcessor.cpp; sourceTree = "<group>"; };
@@ -371,12 +385,7 @@
 		229AC7F5108F985C00E4A962 /* MarkerListActions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MarkerListActions.h; path = MarkerList/MarkerListActions.h; sourceTree = "<group>"; };
 		229AC80B108FBFCB00E4A962 /* SectionLock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SectionLock.h; path = Utility/SectionLock.h; sourceTree = "<group>"; };
 		22A664BA10BC6FE100F0B239 /* sha.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sha.cpp; path = ../WDL/sha.cpp; sourceTree = SOURCE_ROOT; };
-		22ABB3861195B91700E4B242 /* SnM_Dlg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Dlg.cpp; path = SnM/SnM_Dlg.cpp; sourceTree = "<group>"; };
 		22AC0E0E112A7DE50067BBE3 /* projectcontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = projectcontext.cpp; path = ../WDL/projectcontext.cpp; sourceTree = SOURCE_ROOT; };
-		22AF6DEB12308A350017808F /* SnM_FindView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_FindView.cpp; path = SnM/SnM_FindView.cpp; sourceTree = "<group>"; };
-		22AF6DEC12308A350017808F /* SnM_FindView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_FindView.h; path = SnM/SnM_FindView.h; sourceTree = "<group>"; };
-		22AF6DED12308A350017808F /* SnM_MidiLiveView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_MidiLiveView.cpp; path = SnM/SnM_MidiLiveView.cpp; sourceTree = "<group>"; };
-		22AF6DEE12308A350017808F /* SnM_MidiLiveView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_MidiLiveView.h; path = SnM/SnM_MidiLiveView.h; sourceTree = "<group>"; };
 		22AF6E0912308B8D0017808F /* virtwnd-controls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "virtwnd-controls.h"; path = "../WDL/wingui/virtwnd-controls.h"; sourceTree = SOURCE_ROOT; };
 		22AF6E0A12308B8D0017808F /* virtwnd-iconbutton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "virtwnd-iconbutton.cpp"; path = "../WDL/wingui/virtwnd-iconbutton.cpp"; sourceTree = SOURCE_ROOT; };
 		22AF6E0B12308B8D0017808F /* virtwnd-listbox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "virtwnd-listbox.cpp"; path = "../WDL/wingui/virtwnd-listbox.cpp"; sourceTree = SOURCE_ROOT; };
@@ -450,11 +459,6 @@
 		22C54FDE111B29E10024339F /* SnapshotMerge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnapshotMerge.h; path = Snapshots/SnapshotMerge.h; sourceTree = "<group>"; };
 		22C769E910B0F00800774777 /* TrackFX.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrackFX.cpp; path = ObjectState/TrackFX.cpp; sourceTree = "<group>"; };
 		22C769EA10B0F00800774777 /* TrackFX.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TrackFX.h; path = ObjectState/TrackFX.h; sourceTree = "<group>"; };
-		22C769F510B0F04D00774777 /* SnM_Actions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Actions.cpp; path = SnM/SnM_Actions.cpp; sourceTree = "<group>"; };
-		22C769F610B0F04D00774777 /* SnM_Actions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Actions.h; path = SnM/SnM_Actions.h; sourceTree = "<group>"; };
-		22C769F710B0F04D00774777 /* SnM_fx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_fx.cpp; path = SnM/SnM_fx.cpp; sourceTree = "<group>"; };
-		22C769F810B0F04D00774777 /* SnM_sends.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_sends.cpp; path = SnM/SnM_sends.cpp; sourceTree = "<group>"; };
-		22C769F910B0F04D00774777 /* SnM_Windows.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Windows.cpp; path = SnM/SnM_Windows.cpp; sourceTree = "<group>"; };
 		22C77E6B12D62F2E002F68D5 /* CommandHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommandHandler.cpp; path = Fingers/CommandHandler.cpp; sourceTree = "<group>"; };
 		22C77E6C12D62F2E002F68D5 /* CommandHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandHandler.h; path = Fingers/CommandHandler.h; sourceTree = "<group>"; };
 		22C77E6D12D62F2E002F68D5 /* Envelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Envelope.cpp; path = Fingers/Envelope.cpp; sourceTree = "<group>"; };
@@ -502,18 +506,54 @@
 		22C77E9C12D62F2E002F68D5 /* StringUtil.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = StringUtil.hxx; path = Fingers/StringUtil.hxx; sourceTree = "<group>"; };
 		22C77E9D12D62F2E002F68D5 /* TimeMap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TimeMap.cpp; path = Fingers/TimeMap.cpp; sourceTree = "<group>"; };
 		22C77E9E12D62F2E002F68D5 /* TimeMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TimeMap.h; path = Fingers/TimeMap.h; sourceTree = "<group>"; };
+		22F7AA8D15201D8A00CC1481 /* SnM_Chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Chunk.cpp; path = SnM/SnM_Chunk.cpp; sourceTree = "<group>"; };
+		22F7AA8E15201D8A00CC1481 /* SnM_Chunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Chunk.h; path = SnM/SnM_Chunk.h; sourceTree = "<group>"; };
+		22F7AA8F15201D8A00CC1481 /* SnM_ChunkParserPatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_ChunkParserPatcher.h; path = SnM/SnM_ChunkParserPatcher.h; sourceTree = "<group>"; };
+		22F7AA9015201D8A00CC1481 /* SnM_Cyclactions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Cyclactions.cpp; path = SnM/SnM_Cyclactions.cpp; sourceTree = "<group>"; };
+		22F7AA9115201D8A00CC1481 /* SnM_Cyclactions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Cyclactions.h; path = SnM/SnM_Cyclactions.h; sourceTree = "<group>"; };
+		22F7AA9215201D8A00CC1481 /* SnM_Dlg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Dlg.cpp; path = SnM/SnM_Dlg.cpp; sourceTree = "<group>"; };
+		22F7AA9315201D8A00CC1481 /* SnM_Dlg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Dlg.h; path = SnM/SnM_Dlg.h; sourceTree = "<group>"; };
+		22F7AA9415201D8A00CC1481 /* SnM_FindView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_FindView.cpp; path = SnM/SnM_FindView.cpp; sourceTree = "<group>"; };
+		22F7AA9515201D8A00CC1481 /* SnM_FindView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_FindView.h; path = SnM/SnM_FindView.h; sourceTree = "<group>"; };
+		22F7AA9615201D8A00CC1481 /* SnM_fx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_fx.cpp; path = SnM/SnM_fx.cpp; sourceTree = "<group>"; };
+		22F7AA9715201D8A00CC1481 /* SnM_fx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_fx.h; path = SnM/SnM_fx.h; sourceTree = "<group>"; };
+		22F7AA9815201D8A00CC1481 /* SnM_FXChain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_FXChain.cpp; path = SnM/SnM_FXChain.cpp; sourceTree = "<group>"; };
+		22F7AA9915201D8A00CC1481 /* SnM_FXChain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_FXChain.h; path = SnM/SnM_FXChain.h; sourceTree = "<group>"; };
+		22F7AA9A15201D8A00CC1481 /* SnM_Item.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Item.cpp; path = SnM/SnM_Item.cpp; sourceTree = "<group>"; };
+		22F7AA9B15201D8A00CC1481 /* SnM_Item.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Item.h; path = SnM/SnM_Item.h; sourceTree = "<group>"; };
+		22F7AA9C15201D8A00CC1481 /* SnM_LiveConfigs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_LiveConfigs.cpp; path = SnM/SnM_LiveConfigs.cpp; sourceTree = "<group>"; };
+		22F7AA9D15201D8A00CC1481 /* SnM_LiveConfigs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_LiveConfigs.h; path = SnM/SnM_LiveConfigs.h; sourceTree = "<group>"; };
+		22F7AA9E15201D8A00CC1481 /* SnM_ME.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_ME.cpp; path = SnM/SnM_ME.cpp; sourceTree = "<group>"; };
+		22F7AA9F15201D8A00CC1481 /* SnM_ME.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_ME.h; path = SnM/SnM_ME.h; sourceTree = "<group>"; };
+		22F7AAA015201D8A00CC1481 /* SnM_Misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Misc.cpp; path = SnM/SnM_Misc.cpp; sourceTree = "<group>"; };
+		22F7AAA115201D8A00CC1481 /* SnM_Misc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Misc.h; path = SnM/SnM_Misc.h; sourceTree = "<group>"; };
+		22F7AAA215201D8A00CC1481 /* SnM_NotesHelpView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_NotesHelpView.cpp; path = SnM/SnM_NotesHelpView.cpp; sourceTree = "<group>"; };
+		22F7AAA315201D8A00CC1481 /* SnM_NotesHelpView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_NotesHelpView.h; path = SnM/SnM_NotesHelpView.h; sourceTree = "<group>"; };
+		22F7AAA415201D8A00CC1481 /* SnM_Project.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Project.cpp; path = SnM/SnM_Project.cpp; sourceTree = "<group>"; };
+		22F7AAA515201D8A00CC1481 /* SnM_Project.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Project.h; path = SnM/SnM_Project.h; sourceTree = "<group>"; };
+		22F7AAA615201D8A00CC1481 /* SnM_Resources.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Resources.cpp; path = SnM/SnM_Resources.cpp; sourceTree = "<group>"; };
+		22F7AAA715201D8A00CC1481 /* SnM_Resources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Resources.h; path = SnM/SnM_Resources.h; sourceTree = "<group>"; };
+		22F7AAA815201D8A00CC1481 /* SnM_RgnPlaylistView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_RgnPlaylistView.cpp; path = SnM/SnM_RgnPlaylistView.cpp; sourceTree = "<group>"; };
+		22F7AAA915201D8A00CC1481 /* SnM_RgnPlaylistView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_RgnPlaylistView.h; path = SnM/SnM_RgnPlaylistView.h; sourceTree = "<group>"; };
+		22F7AAAA15201D8A00CC1481 /* SnM_Routing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Routing.cpp; path = SnM/SnM_Routing.cpp; sourceTree = "<group>"; };
+		22F7AAAB15201D8A00CC1481 /* SnM_Routing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Routing.h; path = SnM/SnM_Routing.h; sourceTree = "<group>"; };
+		22F7AAAC15201D8A00CC1481 /* SnM_Track.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Track.cpp; path = SnM/SnM_Track.cpp; sourceTree = "<group>"; };
+		22F7AAAD15201D8A00CC1481 /* SnM_Track.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Track.h; path = SnM/SnM_Track.h; sourceTree = "<group>"; };
+		22F7AAAE15201D8A00CC1481 /* SnM_Util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Util.cpp; path = SnM/SnM_Util.cpp; sourceTree = "<group>"; };
+		22F7AAAF15201D8A00CC1481 /* SnM_Util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Util.h; path = SnM/SnM_Util.h; sourceTree = "<group>"; };
+		22F7AAB015201D8A00CC1481 /* SnM_VWnd.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_VWnd.cpp; path = SnM/SnM_VWnd.cpp; sourceTree = "<group>"; };
+		22F7AAB115201D8A00CC1481 /* SnM_VWnd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_VWnd.h; path = SnM/SnM_VWnd.h; sourceTree = "<group>"; };
+		22F7AAB215201D8A00CC1481 /* SnM_Window.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Window.cpp; path = SnM/SnM_Window.cpp; sourceTree = "<group>"; };
+		22F7AAB315201D8A00CC1481 /* SnM_Window.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Window.h; path = SnM/SnM_Window.h; sourceTree = "<group>"; };
+		22F7AAB415201D8A00CC1481 /* SnM.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM.cpp; path = SnM/SnM.cpp; sourceTree = "<group>"; };
+		22F7AAB515201D8A00CC1481 /* SnM.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM.h; path = SnM/SnM.h; sourceTree = "<group>"; };
+		22F7AAE415201E2600CC1481 /* IX.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IX.cpp; path = IX/IX.cpp; sourceTree = "<group>"; };
+		22F7AAE515201E2600CC1481 /* IX.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IX.h; path = IX/IX.h; sourceTree = "<group>"; };
+		22F7AAE615201E2600CC1481 /* Label.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Label.cpp; path = IX/Label.cpp; sourceTree = "<group>"; };
+		22F7AAE715201E2600CC1481 /* PlaylistImport.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PlaylistImport.cpp; path = IX/PlaylistImport.cpp; sourceTree = "<group>"; };
 		22FFD278114CD8310077F1CA /* Autocolor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autocolor.cpp; path = Color/Autocolor.cpp; sourceTree = "<group>"; };
 		22FFD279114CD8310077F1CA /* Autocolor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autocolor.h; path = Color/Autocolor.h; sourceTree = "<group>"; };
-		22FFD283114DB5F10077F1CA /* SNM_Chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SNM_Chunk.cpp; path = SnM/SNM_Chunk.cpp; sourceTree = "<group>"; };
-		22FFD284114DB5F10077F1CA /* SNM_Chunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SNM_Chunk.h; path = SnM/SNM_Chunk.h; sourceTree = "<group>"; };
-		22FFD285114DB5F10077F1CA /* SNM_ChunkParserPatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SNM_ChunkParserPatcher.h; path = SnM/SNM_ChunkParserPatcher.h; sourceTree = "<group>"; };
-		22FFD286114DB5F10077F1CA /* SnM_FXChain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_FXChain.cpp; path = SnM/SnM_FXChain.cpp; sourceTree = "<group>"; };
-		22FFD287114DB5F10077F1CA /* SnM_Item.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Item.cpp; path = SnM/SnM_Item.cpp; sourceTree = "<group>"; };
-		22FFD288114DB5F10077F1CA /* SnM_Misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Misc.cpp; path = SnM/SnM_Misc.cpp; sourceTree = "<group>"; };
 		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		33E88A7E11EDFD6700B0F4BE /* SnM_ME.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_ME.cpp; path = SnM/SnM_ME.cpp; sourceTree = "<group>"; };
-		33E88A7F11EDFD6700B0F4BE /* SnM_NotesHelpView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_NotesHelpView.cpp; path = SnM/SnM_NotesHelpView.cpp; sourceTree = "<group>"; };
-		33E88A8011EDFD6700B0F4BE /* SnM_NotesHelpView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_NotesHelpView.h; path = SnM/SnM_NotesHelpView.h; sourceTree = "<group>"; };
 		5A0280AD14216AE300EC8CD1 /* icontheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icontheme.h; path = reaper/icontheme.h; sourceTree = "<group>"; };
 		5A0280AE14216AE300EC8CD1 /* sws_rpf_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sws_rpf_wrapper.h; path = reaper/sws_rpf_wrapper.h; sourceTree = "<group>"; };
 		5A2C98F412973A41005ACC49 /* sws_extension.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc; sourceTree = "<group>"; };
@@ -597,6 +637,7 @@
 			isa = PBXGroup;
 			children = (
 				22C77E6612D62EE3002F68D5 /* Fingers */,
+				22F7AAE315201E0F00CC1481 /* IX */,
 				225130B11161013E0028F26A /* Padre */,
 				22AC0E0D112A7DAC0067BBE3 /* WDL */,
 				22C769F410B0F03900774777 /* SnM */,
@@ -895,31 +936,47 @@
 		22C769F410B0F03900774777 /* SnM */ = {
 			isa = PBXGroup;
 			children = (
-				22C769F510B0F04D00774777 /* SnM_Actions.cpp */,
-				22C769F610B0F04D00774777 /* SnM_Actions.h */,
-				22FFD283114DB5F10077F1CA /* SNM_Chunk.cpp */,
-				22FFD284114DB5F10077F1CA /* SNM_Chunk.h */,
-				22FFD285114DB5F10077F1CA /* SNM_ChunkParserPatcher.h */,
-				220E6F3913BCD1C900409C44 /* SnM_Cyclactions.cpp */,
-				220E6F3A13BCD1C900409C44 /* SnM_Cyclactions.h */,
-				22ABB3861195B91700E4B242 /* SnM_Dlg.cpp */,
-				22FFD287114DB5F10077F1CA /* SnM_Item.cpp */,
-				22AF6DEB12308A350017808F /* SnM_FindView.cpp */,
-				22AF6DEC12308A350017808F /* SnM_FindView.h */,
-				22C769F710B0F04D00774777 /* SnM_fx.cpp */,
-				22FFD286114DB5F10077F1CA /* SnM_FXChain.cpp */,
-				2233C7841187B4A400BB4BCB /* SnM_FXChainView.cpp */,
-				2233C7851187B4A400BB4BCB /* SnM_FXChainView.h */,
-				22AF6DED12308A350017808F /* SnM_MidiLiveView.cpp */,
-				22AF6DEE12308A350017808F /* SnM_MidiLiveView.h */,
-				22FFD288114DB5F10077F1CA /* SnM_Misc.cpp */,
-				33E88A7E11EDFD6700B0F4BE /* SnM_ME.cpp */,
-				33E88A7F11EDFD6700B0F4BE /* SnM_NotesHelpView.cpp */,
-				33E88A8011EDFD6700B0F4BE /* SnM_NotesHelpView.h */,
-				22495D7A13A5649800381F53 /* SnM_Project.cpp */,
-				22C769F810B0F04D00774777 /* SnM_sends.cpp */,
-				221CEFA9118212A0009245C9 /* SnM_Track.cpp */,
-				22C769F910B0F04D00774777 /* SnM_Windows.cpp */,
+				22F7AA8D15201D8A00CC1481 /* SnM_Chunk.cpp */,
+				22F7AA8E15201D8A00CC1481 /* SnM_Chunk.h */,
+				22F7AA8F15201D8A00CC1481 /* SnM_ChunkParserPatcher.h */,
+				22F7AA9015201D8A00CC1481 /* SnM_Cyclactions.cpp */,
+				22F7AA9115201D8A00CC1481 /* SnM_Cyclactions.h */,
+				22F7AA9215201D8A00CC1481 /* SnM_Dlg.cpp */,
+				22F7AA9315201D8A00CC1481 /* SnM_Dlg.h */,
+				22F7AA9415201D8A00CC1481 /* SnM_FindView.cpp */,
+				22F7AA9515201D8A00CC1481 /* SnM_FindView.h */,
+				22F7AA9615201D8A00CC1481 /* SnM_fx.cpp */,
+				22F7AA9715201D8A00CC1481 /* SnM_fx.h */,
+				22F7AA9815201D8A00CC1481 /* SnM_FXChain.cpp */,
+				22F7AA9915201D8A00CC1481 /* SnM_FXChain.h */,
+				22F7AA9A15201D8A00CC1481 /* SnM_Item.cpp */,
+				22F7AA9B15201D8A00CC1481 /* SnM_Item.h */,
+				22F7AA9C15201D8A00CC1481 /* SnM_LiveConfigs.cpp */,
+				22F7AA9D15201D8A00CC1481 /* SnM_LiveConfigs.h */,
+				22F7AA9E15201D8A00CC1481 /* SnM_ME.cpp */,
+				22F7AA9F15201D8A00CC1481 /* SnM_ME.h */,
+				22F7AAA015201D8A00CC1481 /* SnM_Misc.cpp */,
+				22F7AAA115201D8A00CC1481 /* SnM_Misc.h */,
+				22F7AAA215201D8A00CC1481 /* SnM_NotesHelpView.cpp */,
+				22F7AAA315201D8A00CC1481 /* SnM_NotesHelpView.h */,
+				22F7AAA415201D8A00CC1481 /* SnM_Project.cpp */,
+				22F7AAA515201D8A00CC1481 /* SnM_Project.h */,
+				22F7AAA615201D8A00CC1481 /* SnM_Resources.cpp */,
+				22F7AAA715201D8A00CC1481 /* SnM_Resources.h */,
+				22F7AAA815201D8A00CC1481 /* SnM_RgnPlaylistView.cpp */,
+				22F7AAA915201D8A00CC1481 /* SnM_RgnPlaylistView.h */,
+				22F7AAAA15201D8A00CC1481 /* SnM_Routing.cpp */,
+				22F7AAAB15201D8A00CC1481 /* SnM_Routing.h */,
+				22F7AAAC15201D8A00CC1481 /* SnM_Track.cpp */,
+				22F7AAAD15201D8A00CC1481 /* SnM_Track.h */,
+				22F7AAAE15201D8A00CC1481 /* SnM_Util.cpp */,
+				22F7AAAF15201D8A00CC1481 /* SnM_Util.h */,
+				22F7AAB015201D8A00CC1481 /* SnM_VWnd.cpp */,
+				22F7AAB115201D8A00CC1481 /* SnM_VWnd.h */,
+				22F7AAB215201D8A00CC1481 /* SnM_Window.cpp */,
+				22F7AAB315201D8A00CC1481 /* SnM_Window.h */,
+				22F7AAB415201D8A00CC1481 /* SnM.cpp */,
+				22F7AAB515201D8A00CC1481 /* SnM.h */,
 			);
 			name = SnM;
 			sourceTree = "<group>";
@@ -976,6 +1033,17 @@
 				22C77E9E12D62F2E002F68D5 /* TimeMap.h */,
 			);
 			name = Fingers;
+			sourceTree = "<group>";
+		};
+		22F7AAE315201E0F00CC1481 /* IX */ = {
+			isa = PBXGroup;
+			children = (
+				22F7AAE415201E2600CC1481 /* IX.cpp */,
+				22F7AAE515201E2600CC1481 /* IX.h */,
+				22F7AAE615201E2600CC1481 /* Label.cpp */,
+				22F7AAE715201E2600CC1481 /* PlaylistImport.cpp */,
+			);
+			name = IX;
 			sourceTree = "<group>";
 		};
 		981007040F4768020072D712 /* Products */ = {
@@ -1043,7 +1111,6 @@
 				229AC804108FB3BE00E4A962 /* MarkerListClass.h in Headers */,
 				229AC80D108FBFCB00E4A962 /* SectionLock.h in Headers */,
 				22C769EC10B0F00800774777 /* TrackFX.h in Headers */,
-				22C769FB10B0F04D00774777 /* SnM_Actions.h in Headers */,
 				2264CBC910FEC33200447317 /* swell-dlggen.h in Headers */,
 				2264CBCC10FEC33300447317 /* swell-internal.h in Headers */,
 				2264CBD310FEC33900447317 /* swell.h in Headers */,
@@ -1051,8 +1118,6 @@
 				22C54FD6111B28450024339F /* TrackSends.h in Headers */,
 				22C54FE0111B29E10024339F /* SnapshotMerge.h in Headers */,
 				22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */,
-				22FFD28A114DB5F10077F1CA /* SNM_Chunk.h in Headers */,
-				22FFD28B114DB5F10077F1CA /* SNM_ChunkParserPatcher.h in Headers */,
 				22BEA484115F4A7C00B34AE1 /* ProjectList.h in Headers */,
 				22BEA486115F4A7C00B34AE1 /* ProjectMgr.h in Headers */,
 				225130C0116101670028F26A /* padreActions.h in Headers */,
@@ -1070,10 +1135,6 @@
 				229A7E971165744400325BC2 /* ProjPrefs.h in Headers */,
 				229A7E991165744400325BC2 /* TrackParams.h in Headers */,
 				229A7E9B1165744400325BC2 /* TrackSel.h in Headers */,
-				2233C7871187B4A400BB4BCB /* SnM_FXChainView.h in Headers */,
-				33E88A8311EDFD6700B0F4BE /* SnM_NotesHelpView.h in Headers */,
-				22AF6DF012308A350017808F /* SnM_FindView.h in Headers */,
-				22AF6DF212308A350017808F /* SnM_MidiLiveView.h in Headers */,
 				22AF6E1012308B8D0017808F /* virtwnd-controls.h in Headers */,
 				22AF6E1312308B8D0017808F /* virtwnd-skin.h in Headers */,
 				22AF6E1512308B8D0017808F /* virtwnd.h in Headers */,
@@ -1124,11 +1185,32 @@
 				22C77ED412D62F2E002F68D5 /* TimeMap.h in Headers */,
 				2270FC7212F8551400703F85 /* RecCheck.h in Headers */,
 				22284D48130C4A65007DC680 /* Menus.h in Headers */,
-				220E6F3C13BCD1C900409C44 /* SnM_Cyclactions.h in Headers */,
 				22B22D6413FA575C00D187A9 /* Analysis.h in Headers */,
 				22B22D6D13FA578100D187A9 /* sws_waitdlg.h in Headers */,
 				5A0280AF14216AE300EC8CD1 /* icontheme.h in Headers */,
 				5A0280B014216AE300EC8CD1 /* sws_rpf_wrapper.h in Headers */,
+				22F7AAB715201D8A00CC1481 /* SnM_Chunk.h in Headers */,
+				22F7AAB815201D8A00CC1481 /* SnM_ChunkParserPatcher.h in Headers */,
+				22F7AABA15201D8A00CC1481 /* SnM_Cyclactions.h in Headers */,
+				22F7AABC15201D8A00CC1481 /* SnM_Dlg.h in Headers */,
+				22F7AABE15201D8A00CC1481 /* SnM_FindView.h in Headers */,
+				22F7AAC015201D8A00CC1481 /* SnM_fx.h in Headers */,
+				22F7AAC215201D8A00CC1481 /* SnM_FXChain.h in Headers */,
+				22F7AAC415201D8A00CC1481 /* SnM_Item.h in Headers */,
+				22F7AAC615201D8A00CC1481 /* SnM_LiveConfigs.h in Headers */,
+				22F7AAC815201D8A00CC1481 /* SnM_ME.h in Headers */,
+				22F7AACA15201D8A00CC1481 /* SnM_Misc.h in Headers */,
+				22F7AACC15201D8A00CC1481 /* SnM_NotesHelpView.h in Headers */,
+				22F7AACE15201D8A00CC1481 /* SnM_Project.h in Headers */,
+				22F7AAD015201D8A00CC1481 /* SnM_Resources.h in Headers */,
+				22F7AAD215201D8A00CC1481 /* SnM_RgnPlaylistView.h in Headers */,
+				22F7AAD415201D8A00CC1481 /* SnM_Routing.h in Headers */,
+				22F7AAD615201D8A00CC1481 /* SnM_Track.h in Headers */,
+				22F7AAD815201D8A00CC1481 /* SnM_Util.h in Headers */,
+				22F7AADA15201D8A00CC1481 /* SnM_VWnd.h in Headers */,
+				22F7AADC15201D8A00CC1481 /* SnM_Window.h in Headers */,
+				22F7AADE15201D8A00CC1481 /* SnM.h in Headers */,
+				22F7AAE915201E2600CC1481 /* IX.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1273,9 +1355,6 @@
 				2296249010A3A22500A1090C /* lice.cpp in Sources */,
 				2296249110A3A22500A1090C /* lice_line.cpp in Sources */,
 				22C769EB10B0F00800774777 /* TrackFX.cpp in Sources */,
-				22C769FA10B0F04D00774777 /* SnM_Actions.cpp in Sources */,
-				22C769FC10B0F04D00774777 /* SnM_fx.cpp in Sources */,
-				22C769FD10B0F04D00774777 /* SnM_sends.cpp in Sources */,
 				22A664BB10BC6FE100F0B239 /* sha.cpp in Sources */,
 				22A8751F10FEBFA10026F62F /* sws_util.mm in Sources */,
 				2264CBC810FEC33100447317 /* swell-dlg.mm in Sources */,
@@ -1292,11 +1371,6 @@
 				22C54FDF111B29E10024339F /* SnapshotMerge.cpp in Sources */,
 				22AC0E0F112A7DE50067BBE3 /* projectcontext.cpp in Sources */,
 				22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */,
-				22FFD289114DB5F10077F1CA /* SNM_Chunk.cpp in Sources */,
-				22FFD28C114DB5F10077F1CA /* SnM_FXChain.cpp in Sources */,
-				22FFD28D114DB5F10077F1CA /* SnM_Item.cpp in Sources */,
-				22FFD28E114DB5F10077F1CA /* SnM_Misc.cpp in Sources */,
-				22AD269D11545473004ACCC7 /* SnM_Windows.cpp in Sources */,
 				22BEA483115F4A7C00B34AE1 /* ProjectList.cpp in Sources */,
 				22BEA485115F4A7C00B34AE1 /* ProjectMgr.cpp in Sources */,
 				225130BF116101670028F26A /* padreActions.cpp in Sources */,
@@ -1313,13 +1387,6 @@
 				229A7E961165744400325BC2 /* ProjPrefs.cpp in Sources */,
 				229A7E981165744400325BC2 /* TrackParams.cpp in Sources */,
 				229A7E9A1165744400325BC2 /* TrackSel.cpp in Sources */,
-				221CEFAA118212A0009245C9 /* SnM_Track.cpp in Sources */,
-				2233C7861187B4A400BB4BCB /* SnM_FXChainView.cpp in Sources */,
-				22ABB3871195B91700E4B242 /* SnM_Dlg.cpp in Sources */,
-				33E88A8111EDFD6700B0F4BE /* SnM_ME.cpp in Sources */,
-				33E88A8211EDFD6700B0F4BE /* SnM_NotesHelpView.cpp in Sources */,
-				22AF6DEF12308A350017808F /* SnM_FindView.cpp in Sources */,
-				22AF6DF112308A350017808F /* SnM_MidiLiveView.cpp in Sources */,
 				22AF6E1112308B8D0017808F /* virtwnd-iconbutton.cpp in Sources */,
 				22AF6E1212308B8D0017808F /* virtwnd-listbox.cpp in Sources */,
 				22AF6E1412308B8D0017808F /* virtwnd.cpp in Sources */,
@@ -1382,10 +1449,31 @@
 				22C77ED312D62F2E002F68D5 /* TimeMap.cpp in Sources */,
 				2270FC7112F8551400703F85 /* RecCheck.cpp in Sources */,
 				22284D47130C4A65007DC680 /* Menus.cpp in Sources */,
-				22495D7B13A5649800381F53 /* SnM_Project.cpp in Sources */,
-				220E6F3B13BCD1C900409C44 /* SnM_Cyclactions.cpp in Sources */,
 				22B22D6313FA575C00D187A9 /* Analysis.cpp in Sources */,
 				22B22D6C13FA578100D187A9 /* sws_waitdlg.cpp in Sources */,
+				22F7AAB615201D8A00CC1481 /* SnM_Chunk.cpp in Sources */,
+				22F7AAB915201D8A00CC1481 /* SnM_Cyclactions.cpp in Sources */,
+				22F7AABB15201D8A00CC1481 /* SnM_Dlg.cpp in Sources */,
+				22F7AABD15201D8A00CC1481 /* SnM_FindView.cpp in Sources */,
+				22F7AABF15201D8A00CC1481 /* SnM_fx.cpp in Sources */,
+				22F7AAC115201D8A00CC1481 /* SnM_FXChain.cpp in Sources */,
+				22F7AAC315201D8A00CC1481 /* SnM_Item.cpp in Sources */,
+				22F7AAC515201D8A00CC1481 /* SnM_LiveConfigs.cpp in Sources */,
+				22F7AAC715201D8A00CC1481 /* SnM_ME.cpp in Sources */,
+				22F7AAC915201D8A00CC1481 /* SnM_Misc.cpp in Sources */,
+				22F7AACB15201D8A00CC1481 /* SnM_NotesHelpView.cpp in Sources */,
+				22F7AACD15201D8A00CC1481 /* SnM_Project.cpp in Sources */,
+				22F7AACF15201D8A00CC1481 /* SnM_Resources.cpp in Sources */,
+				22F7AAD115201D8A00CC1481 /* SnM_RgnPlaylistView.cpp in Sources */,
+				22F7AAD315201D8A00CC1481 /* SnM_Routing.cpp in Sources */,
+				22F7AAD515201D8A00CC1481 /* SnM_Track.cpp in Sources */,
+				22F7AAD715201D8A00CC1481 /* SnM_Util.cpp in Sources */,
+				22F7AAD915201D8A00CC1481 /* SnM_VWnd.cpp in Sources */,
+				22F7AADB15201D8A00CC1481 /* SnM_Window.cpp in Sources */,
+				22F7AADD15201D8A00CC1481 /* SnM.cpp in Sources */,
+				22F7AAE815201E2600CC1481 /* IX.cpp in Sources */,
+				22F7AAEA15201E2600CC1481 /* Label.cpp in Sources */,
+				22F7AAEB15201E2600CC1481 /* PlaylistImport.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

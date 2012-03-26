@@ -26,7 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "../SnM/SNM_ChunkParserPatcher.h"
+#include "../SnM/SnM_ChunkParserPatcher.h"
 
 // GetSetObjectState can take a very long time to read and/or write, especially with some FX.
 // To mitigate these issues when dealing with operations that require many reads/writes,

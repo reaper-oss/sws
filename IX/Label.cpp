@@ -235,7 +235,6 @@ void LabelProcessor(COMMAND_T* ct)
 								int args[2] = {2,1};
 								ExtractValues(++c, args, 2);
 								str.AppendFormatted(str.GetLength() + 8, "%0*d", args[0], itemCount + args[1]);
-								++c;
 							}
 							break;
 
@@ -244,7 +243,6 @@ void LabelProcessor(COMMAND_T* ct)
 								int args[2] = {2,1};
 								ExtractValues(++c, args, 2);
 								str.AppendFormatted(str.GetLength() + 8, "%0*d", args[0], i + args[1]);
-								++c;
 							}
 							break;
 
@@ -253,7 +251,6 @@ void LabelProcessor(COMMAND_T* ct)
 								int args[2] = {2,0};
 								ExtractValues(++c, args, 2);
 								str.AppendFormatted(str.GetLength() + 8, "%0*d", args[0], numSel - itemCount + args[1] - 1);
-								++c;
 							}
 							break;
 
@@ -262,7 +259,6 @@ void LabelProcessor(COMMAND_T* ct)
 								int args[2] = {2,0};
 								ExtractValues(++c, args, 2);
 								str.AppendFormatted(str.GetLength() + 8, "%0*d", args[0], numSelOnTrack - i + args[1] - 1);
-								++c;
 							}
 							break;
 
@@ -291,7 +287,6 @@ void LabelProcessor(COMMAND_T* ct)
 								int precision = 1;
 								ExtractValues(++c, &precision, 1);
 								str.Append(GetItemVolString(pItem, 0, precision));
-								++c;
 							}
 							break;
 
@@ -300,7 +295,6 @@ void LabelProcessor(COMMAND_T* ct)
 								int precision = 1;
 								ExtractValues(++c, &precision, 1);
 								str.Append(GetItemVolString(pItem, 2, precision));
-								++c;
 							}
 							break;
 
@@ -309,7 +303,6 @@ void LabelProcessor(COMMAND_T* ct)
 								int precision = 1;
 								ExtractValues(++c, &precision, 1);
 								str.Append(GetItemVolString(pItem, 1, precision));
-								++c;
 							}
 							break;
 
@@ -345,7 +338,6 @@ void LabelProcessor(COMMAND_T* ct)
 								int width = 2;
 								ExtractValues(++c, &width, 1);
 								str.AppendFormatted(str.GetLength() + 8, "%0*d", width, iTrack);
-								++c;
 							}
 							break;
 						}
@@ -353,8 +345,7 @@ void LabelProcessor(COMMAND_T* ct)
 					break;
 
 				default :
-					str.Append(c, 1);
-					c++;
+					str.Append(c++, 1);
 					break;
 				}
 			}

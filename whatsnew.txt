@@ -1,3 +1,5 @@
++Fixed some dropped character bugs in Label processor
+
 !v2.2.0 #3 (March 25, 2012)
 <b>Dropped support for REAPER v3.x, REAPER >= v4.20 is required!</b>
 

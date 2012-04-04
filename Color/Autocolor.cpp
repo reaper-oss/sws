@@ -28,6 +28,8 @@
 #include "stdafx.h"
 #include "Color.h"
 #include "Autocolor.h"
+#include "../SnM/SnM_Util.h"
+#include "../SnM/SnM_ChunkParserPatcher.h"
 #include "../reaper/localize.h"
 #include "../../WDL/projectcontext.h"
 

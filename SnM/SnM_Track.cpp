@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "SnM.h"
 #include "../reaper/localize.h"
 
 
@@ -716,7 +717,7 @@ bool replacePasteItemsFromTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltI
 
 		// paste items relative to cursor
 		// the track has been patched => move new items according by edit cursor
-		if (/*JFB!!!?? updated && */offsOpt && *offsOpt)
+		if (/*JFB!!!? updated && */offsOpt && *offsOpt)
 			if (int itemCount = GetTrackNumMediaItems(_tr))
 			{					
 				double cursorPos = GetCursorPositionEx(NULL);
@@ -1014,20 +1015,21 @@ bool autoSaveTrackSlots(int _slotType, const char* _dirPath, char* _fn, int _fnS
 	appendSelTrackTemplates(_delItems, _delEnvs, &fullChunk);
 	if (fullChunk.GetLength())
 	{
+		// get the 1st valid name
 		char name[SNM_MAX_FX_NAME_LEN] = "";
-		bool master = false;
-		for (int i = 0; i <= GetNumTracks(); i++) // include master
+		int i;
+		for (i=0; i <= GetNumTracks(); i++) // include master
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
-			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {
-				char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-				if (trName) lstrcpyn(name, trName, SNM_MAX_FX_NAME_LEN);
-				else master = true;
+			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+			{
+				if (char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL))
+					lstrcpyn(name, trName, SNM_MAX_FX_NAME_LEN);
 				break;
 			}
 		}
 		Filenamize(name);
-		GenerateFilename(_dirPath, master ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
+		GenerateFilename(_dirPath, !i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
 		return (SaveChunk(_fn, &fullChunk, true) && g_slots.Get(_slotType)->AddSlot(_fn));
 	}
 	return false;
@@ -1371,8 +1373,8 @@ void CC123Tracks(WDL_PtrList<void>* _trs)
 	// lazy init of the "all notes off" PCM_source
 	if (!g_cc123src)
 	{
-/*JFB!!! commented: generating evts from scratch does not work, unfortunately..
-// nailed it down to PCM_Source_CreateFromType("MIDI") which seems to be KO (?)
+/*JFB!!! commented: generating evts from scratch does not work..
+// nailed it down to PCM_Source_CreateFromType("MIDI") which seems to be ko (?)
 // => workaround: write a temp .mid file instead
 
 		// make cc123s

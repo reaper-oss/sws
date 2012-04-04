@@ -1,5 +1,5 @@
 /******************************************************************************
-/ SNM_Chunk.h
+/ SnM_Chunk.h
 / 
 / Some "SAX-ish like" parser classes inheriting SNM_ChunkParserPatcher
 /
@@ -27,13 +27,16 @@
 /
 ******************************************************************************/
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_CHUNK_H_
 #define _SNM_CHUNK_H_
 
-#include "SnM.h"
+//#include "SnM_ChunkParserPatcher.h" 
 #include "SnM_Routing.h"
+
+
+#define SNM_RECPASSPARSER_MAX_TAKES	1024
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -184,9 +187,9 @@ protected:
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_TakeParserPatcher
 // JFB TODO? 
-//  maintain m_activeTakeIdx when updating takes
-//  + GetSetMediaItemInfo((MediaItem*)m_object, "I_CURTAKE", &m_activeTakeIdx)
-//  on commit ? ATM, we let REAPER manage the active take, seems ok so far..
+//  maintain m_activeTakeIdx when updating takes + 
+//  GetSetMediaItemInfo((MediaItem*)m_object, "I_CURTAKE", &m_activeTakeIdx)
+//  on commit ? ATM, REAPER manages the active take, seems ok so far..
 ///////////////////////////////////////////////////////////////////////////////
 
 class SNM_TakeParserPatcher : public SNM_ChunkParserPatcher
@@ -196,7 +199,7 @@ public:
 		m_currentTakeCount = _countTakes; // lazy init through CountTakesInChunk() for optimization
 		m_fakeTake = false;
 	}
-	// Call to Commit(): when a constructor or destructor calls a virtual 
+	// call to Commit(): when a constructor or destructor calls a virtual 
 	// function it calls the function defined for the type whose constructor
 	// or destructor is currently being run
 	~SNM_TakeParserPatcher() {
@@ -246,8 +249,8 @@ protected:
 		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents,
 		WDL_FastString* _newChunk, int _updates);
 	int m_maxRecPass;
-	int m_recPasses[SNM_MAX_TAKES];
-	int m_takeColors[SNM_MAX_TAKES];
+	int m_recPasses[SNM_RECPASSPARSER_MAX_TAKES];
+	int m_takeColors[SNM_RECPASSPARSER_MAX_TAKES];
 private:
 	int m_takeCounter;
 };
@@ -335,8 +338,15 @@ private:
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_FXSummaryParser
+// SNM_FXSummaryParser (+ SNM_FXSummary)
 ///////////////////////////////////////////////////////////////////////////////
+
+class SNM_FXSummary {
+public:
+	SNM_FXSummary(const char* _type, const char* _name, const char* _realName)
+		: m_type(_type),m_name(_name),m_realName(_realName){}
+	WDL_FastString m_type, m_name, m_realName;
+};
 
 class SNM_FXSummaryParser : public SNM_ChunkParserPatcher
 {
@@ -377,6 +387,5 @@ protected:
 private:
 	int m_vis;
 };
-
 
 #endif

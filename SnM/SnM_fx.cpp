@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "SnM.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -70,42 +71,6 @@ int getTrackFXIdFromCmd(MediaTrack* _tr, int _fxCmdId)
 			fxId = TrackFX_GetCount(_tr) + _fxCmdId; 
 	}
 	return fxId;
-}
-
-// Gets a toggle state
-// _token: 1=bypass, 2=offline 
-bool isFXOfflineOrBypassedSelectedTracks(COMMAND_T * _ct, int _token) 
-{
-	int selTrCount = SNM_CountSelectedTracks(NULL, true);
-	// single track selection: we can return a toggle state
-	if (selTrCount == 1)
-	{
-		MediaTrack* tr = SNM_GetSelectedTrack(NULL, 0, true);
-		int fxId = getTrackFXIdFromCmd(tr, (int)_ct->user);
-		if (tr && fxId >= 0)
-		{
-			/////////////////////////////////////////////////
-			// dedicated API for fx bypass since v4.16pre
-			if (_token==1)
-				return TrackFX_GetEnabled(tr, fxId);
-
-			/////////////////////////////////////////////////
-			// chunk parsing otherwise
-			else
-			{
-				char state[2] = "0";
-				SNM_ChunkParserPatcher p(tr);
-				p.SetWantsMinimalState(true);
-				if (p.Parse(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fxId, _token, state) > 0)
-					return !strcmp(state,"1");
-			}
-		}
-	}
-	// several tracks selected: possible mix of different state 
-	// => return a fake toggle state (best effort)
-	else if (selTrCount)
-		return FakeIsToggleAction(_ct);
-	return false;
 }
 
 // *** CORE FUNC ***
@@ -163,8 +128,28 @@ void toggleFXOfflineSelectedTracks(COMMAND_T* _ct) {
 	}
 } 
 
-bool isFXOfflineSelectedTracks(COMMAND_T * _ct) {
-	return isFXOfflineOrBypassedSelectedTracks(_ct, 2);
+bool isFXOfflineSelectedTracks(COMMAND_T * _ct)
+{
+	int selTrCount = SNM_CountSelectedTracks(NULL, true);
+	// single track selection: return a real toggle state
+	if (selTrCount == 1)
+	{
+		MediaTrack* tr = SNM_GetSelectedTrack(NULL, 0, true);
+		int fxId = getTrackFXIdFromCmd(tr, (int)_ct->user);
+		if (tr && fxId >= 0)
+		{
+			char state[2] = "0";
+			SNM_ChunkParserPatcher p(tr);
+			p.SetWantsMinimalState(true);
+			if (p.Parse(SNM_GET_CHUNK_CHAR, 2, "FXCHAIN", "BYPASS", fxId, 2, state) > 0)
+				return !strcmp(state,"1");
+		}
+	}
+	// several selected tracks: possible mix of different states 
+	// => return a fake toggle state (best effort)
+	else if (selTrCount)
+		return FakeIsToggleAction(_ct);
+	return false;
 }
 
 void toggleFXBypassSelectedTracks(COMMAND_T* _ct) { 
@@ -175,8 +160,23 @@ void toggleFXBypassSelectedTracks(COMMAND_T* _ct) {
 	}
 } 
 
-bool isFXBypassedSelectedTracks(COMMAND_T * _ct) {
-	return isFXOfflineOrBypassedSelectedTracks(_ct, 1);
+bool isFXBypassedSelectedTracks(COMMAND_T * _ct)
+{
+	int selTrCount = SNM_CountSelectedTracks(NULL, true);
+
+	// single track selection: return a real toggle state
+	if (selTrCount == 1)
+	{
+		MediaTrack* tr = SNM_GetSelectedTrack(NULL, 0, true);
+		int fxId = getTrackFXIdFromCmd(tr, (int)_ct->user);
+		if (tr && fxId >= 0)
+			return !TrackFX_GetEnabled(tr, fxId);
+	}
+	// several selected tracks: possible mix of different states 
+	// => return a fake toggle state (best effort)
+	else if (selTrCount)
+		return FakeIsToggleAction(_ct);
+	return false;
 }
 
 void toggleExceptFXOfflineSelectedTracks(COMMAND_T* _ct) { 
@@ -190,13 +190,13 @@ void toggleExceptFXBypassSelectedTracks(COMMAND_T* _ct) {
 } 
   
 void toggleAllFXsOfflineSelectedTracks(COMMAND_T* _ct) { 
-	// We use the "except mode" but with an unreachable fx number 
+	// "except mode" with an unreachable fx number 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SWS_CMD_SHORTNAME(_ct)))
 		FakeToggle(_ct);
 } 
   
 void toggleAllFXsBypassSelectedTracks(COMMAND_T* _ct) { 
-	// We use the "except mode" but with an unreachable fx number 
+	// "except mode" with an unreachable fx number 
 	if (patchSelTracksFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SWS_CMD_SHORTNAME(_ct)))
 		FakeToggle(_ct);
 } 
@@ -220,7 +220,7 @@ void setFXUnbypassSelectedTracks(COMMAND_T* _ct) {
 void setAllFXsBypassSelectedTracks(COMMAND_T* _ct) {
 	char cInt[2] = "";
 	_snprintf(cInt, 2, "%d", (int)_ct->user);
-	// we use the "except mode" but with an unreachable fx number 
+	// "except mode" with an unreachable fx number 
 	patchSelTracksFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 1, 0xFFFF, cInt, SWS_CMD_SHORTNAME(_ct)); 
 }
 
@@ -266,13 +266,13 @@ bool patchSelItemsFXState(int _mode, int _token, int _fxId, const char* _value, 
 }
 
 void toggleAllFXsOfflineSelectedItems(COMMAND_T* _ct) { 
-	// "except mode" but with an unreachable fx number 
+	// "except mode" with an unreachable fx number 
 	if (patchSelItemsFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 2, 0xFFFF, NULL, SWS_CMD_SHORTNAME(_ct)))
 		FakeToggle(_ct);
 } 
   
 void toggleAllFXsBypassSelectedItems(COMMAND_T* _ct) { 
-	// "except mode" but with an unreachable fx number 
+	// "except mode" with an unreachable fx number 
 	if (patchSelItemsFXState(SNM_TOGGLE_CHUNK_INT_EXCEPT, 1, 0xFFFF, NULL, SWS_CMD_SHORTNAME(_ct)))
 		FakeToggle(_ct);
 } 
@@ -280,7 +280,7 @@ void toggleAllFXsBypassSelectedItems(COMMAND_T* _ct) {
 void setAllFXsOfflineSelectedItems(COMMAND_T* _ct) {
 	char cInt[2] = "";
 	_snprintf(cInt, 2, "%d", (int)_ct->user);
-	// "except mode" but with an unreachable fx number 
+	// "except mode" with an unreachable fx number 
 	patchSelItemsFXState(SNM_SETALL_CHUNK_CHAR_EXCEPT, 2, 0xFFFF, cInt, SWS_CMD_SHORTNAME(_ct));
 }
 
@@ -302,17 +302,18 @@ int selectTrackFX(MediaTrack* _tr, int _fx)
 	if (_tr && _fx >=0 && _fx < TrackFX_GetCount(_tr))
 	{
 		SNM_ChunkParserPatcher p(_tr);
-		char pLastSel[4] = ""; // 4 if there're many FXs
-		_snprintf(pLastSel, 4, "%d", _fx);
-		char pShow[4] = ""; // 4 if there're many FXs
-		if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,&pShow) > 0)
+		char pLastSel[4]="", pShow[4]=""; // 4 should be enough..
+		if (_snprintf(pLastSel, 4, "%d", _fx) > 0)
 		{
-			// patch the shown FX if the fx chain dlg is opened
-			if (strcmp(pShow, "0")) {
-				_snprintf(pShow, 4, "%d", _fx+1);
-				updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,&pShow);
+			if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,&pShow) > 0)
+			{
+				// patch the shown FX if the fx chain dlg is opened
+				if (strcmp(pShow, "0")) {
+					_snprintf(pShow, 4, "%d", _fx+1);
+					updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,&pShow);
+				}
+				updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",0,1,&pLastSel);
 			}
-			updates = p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",0,1,&pLastSel);
 		}
 	}
 	return updates;

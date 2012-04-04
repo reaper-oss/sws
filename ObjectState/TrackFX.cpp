@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "TrackFX.h"
+#include "../SnM/SnM_Chunk.h"
 
 // Functions for getting/setting track FX chains
 void GetFXChain(MediaTrack* tr, WDL_TypedBuf<char>* buf)

@@ -25,7 +25,7 @@
 /
 ******************************************************************************/
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_WINDOW_H_
 #define _SNM_WINDOW_H_
@@ -33,7 +33,7 @@
 bool SNM_IsActiveWindow(HWND _h);
 bool IsChildOf(HWND _hChild, const char* _title, int _nComp = -1);
 HWND GetReaWindowByTitle(const char* _title, int _nComp = -1);
-HWND GetActionListBox(char* _currentSection = NULL, int _sectionSz = 64); //JFB!!! SNM_MAX_SECTION_NAME_LEN);
+HWND GetActionListBox(char* _currentSection, int _sectionSz);
 int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc = NULL, int _descSize = -1);
 void showFXChain(COMMAND_T*);
 void hideFXChain(COMMAND_T*);

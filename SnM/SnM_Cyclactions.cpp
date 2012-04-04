@@ -30,6 +30,7 @@
 //   (cycle actions have their own format for "historical" reasons)
 
 #include "stdafx.h"
+#include "SnM.h"
 #include "../reaper/localize.h"
 
 
@@ -491,13 +492,23 @@ void Cyclaction::UpdateFromCmd()
 // GUI
 ///////////////////////////////////////////////////////////////////////////////
 
-#define CYCLACTION_STATE_KEY	"CyclactionsState"
-#define CYCLACTIONWND_POS_KEY	"CyclactionsWndPos"
-
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_161
 static SWS_LVColumn g_cyclactionsCols[] = { { 50, 0, "Id" }, { 260, 1, "Cycle action name" }, { 50, 2, "Toggle" } };
 static SWS_LVColumn g_commandsCols[] = { { 180, 1, "Command" }, { 180, 0, "Name (main section only)" } };
 // !WANT_LOCALIZE_STRINGS_END
+
+enum {
+  COL_L_ID=0,
+  COL_L_NAME,
+  COL_L_TOGGLE,
+  COL_L_COUNT
+};
+
+enum {
+  COL_R_CMD=0,
+  COL_R_NAME,
+  COL_R_COUNT
+};
 
 // we need these because of cross-calls between both list views
 static SNM_CyclactionsView* g_lvL = NULL;
@@ -570,7 +581,7 @@ void EditModelInit()
 
 void Apply()
 {
-	// consolidated undo points
+	// consolidate undo points
 	g_undos = (g_pCyclactionWnd && g_pCyclactionWnd->IsConsolidatedUndo());
 	WritePrivateProfileString("Cyclactions", "Undos", g_undos ? "1" : "0", g_SNMIniFn.Get()); // in main S&M.ini file (local property)
 
@@ -627,7 +638,7 @@ void ResetSection(int _section)
 ////////////////////
 
 SNM_CyclactionsView::SNM_CyclactionsView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 3, g_cyclactionsCols, "LCyclactionViewState", false) {}
+:SWS_ListView(hwndList, hwndEdit, COL_L_COUNT, g_cyclactionsCols, "LCyclactionViewState", false) {}
 
 void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
@@ -636,7 +647,7 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 	{
 		switch (iCol)
 		{
-			case 0: 
+			case COL_L_ID: 
 				if (!a->m_added)
 				{
 					int id = g_editedActions[g_editedSection].Find(a);
@@ -646,10 +657,10 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 				else
 					lstrcpyn(str, "*", iStrMax);
 				break;
-			case 1:
+			case COL_L_NAME:
 				lstrcpyn(str, a->GetName(), iStrMax);
 				break;
-			case 2:
+			case COL_L_TOGGLE:
 				if (a->IsToggle())
 					lstrcpyn(str, UTF8_BULLET, iStrMax);
 				break;
@@ -660,27 +671,30 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 //JFB cancel cell editing on error would be great.. SWS_ListView mod?
 void SNM_CyclactionsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
-	if (strchr(_str, ',') || strchr(_str, '\"') || strchr(_str, '\'') || strchr(_str, '#')) {
-		WDL_FastString msg(__LOCALIZE("Cycle action names cannot contain any of the following characters:","sws_DLG_161"));
-		msg.Append(" # , \" '");
-		MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
-		return;
-	}
-
-	Cyclaction* a = (Cyclaction*)_item;
-	if (a && a != &g_DEFAULT_L && _iCol == 1)
+	if (_iCol == COL_L_NAME)
 	{
-		WDL_FastString errMsg;
-		if (!CheckEditableCyclaction(_str, &errMsg) && strcmp(a->GetName(), _str)) {
-			if (errMsg.GetLength())
-				MessageBox(g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd(), errMsg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
+		if (strchr(_str, ',') || strchr(_str, '\"') || strchr(_str, '\'') || strchr(_str, '#')) {
+			WDL_FastString msg(__LOCALIZE("Cycle action names cannot contain any of the following characters:","sws_DLG_161"));
+			msg.Append(" # , \" '");
+			MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
+			return;
 		}
-		else {
-			a->SetName(_str);
-			UpdateEditedStatus(true);
+
+		Cyclaction* a = (Cyclaction*)_item;
+		if (a && a != &g_DEFAULT_L)
+		{
+			WDL_FastString errMsg;
+			if (!CheckEditableCyclaction(_str, &errMsg) && strcmp(a->GetName(), _str)) {
+				if (errMsg.GetLength())
+					MessageBox(g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd(), errMsg.Get(), __LOCALIZE("S&M - Error","sws_DLG_161"), MB_OK);
+			}
+			else {
+				a->SetName(_str);
+				UpdateEditedStatus(true);
+			}
+			// no update on cell editing (disabled)
 		}
 	}
-	// no update on cell editing (disabled)
 }
 
 bool SNM_CyclactionsView::IsEditListItemAllowed(SWS_ListItem* _item, int _iCol) {
@@ -711,7 +725,7 @@ void SNM_CyclactionsView::OnItemSelChanged(SWS_ListItem* item, int iState)
 }
 
 void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState) {
-	if (item && iCol == 2) {
+	if (item && iCol == COL_L_TOGGLE) {
 		Cyclaction* pItem = (Cyclaction*)item;
 		pItem->SetToggle(!pItem->IsToggle());
 		Update();
@@ -725,7 +739,7 @@ void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeySta
 ////////////////////
 
 SNM_CommandsView::SNM_CommandsView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 2, g_commandsCols, "RCyclactionViewState", false, false)
+:SWS_ListView(hwndList, hwndEdit, COL_R_COUNT, g_commandsCols, "RCyclactionViewState", false, false)
 {
 //	SetWindowLongPtr(hwndList, GWL_STYLE, GetWindowLongPtr(hwndList, GWL_STYLE) | LVS_SINGLESEL);
 }
@@ -737,10 +751,10 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 	{
 		switch (iCol)
 		{
-			case 0:
+			case COL_R_CMD:
 				lstrcpyn(str, pItem->Get(), iStrMax);				
 				break;
-			case 1:
+			case COL_R_NAME:
 				if (pItem->GetLength() && pItem->Get()[0] == '!') {
 					lstrcpyn(str, __LOCALIZE("Step -----","sws_DLG_161"), iStrMax);
 					return;
@@ -749,10 +763,16 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 				if (g_editedAction && !g_editedSection)
 				{
 					int cmd = atoi(pItem->Get());
-					if (cmd >= g_iFirstCommand && cmd <= g_iLastCommand)
-						return; // user has entered a cmd id instead of a custom id for an SWS action..
+
+					// user has entered a cmd id instead of a custom id for an SWS action..
+					if (cmd >= g_iFirstCommand && cmd <= g_iLastCommand) {
+						lstrcpyn(str, __LOCALIZE("Unknown (use custom ids for SWS actions!)","sws_DLG_161"), iStrMax); 
+						return;
+					}
 					if (cmd = NamedCommandLookup(pItem->Get()))
-						lstrcpyn(str, kbd_getTextFromCmd(cmd, NULL), iStrMax); 
+						lstrcpyn(str, kbd_getTextFromCmd(cmd, NULL), iStrMax);
+					else
+						lstrcpyn(str, __LOCALIZE("Unknown","sws_DLG_161"), iStrMax); 
 				}
 				break;
 		}
@@ -761,24 +781,27 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 
 void SNM_CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _str)
 {
-	WDL_FastString* cmd = (WDL_FastString*)_item;
-	if (cmd && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R && 
-		_str && g_editedAction && strcmp(cmd->Get(), _str))
+	if (_iCol == COL_R_CMD)
 	{
-		g_editedAction->SetCmd(cmd, _str);
+		WDL_FastString* cmd = (WDL_FastString*)_item;
+		if (cmd && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R && 
+			_str && g_editedAction && strcmp(cmd->Get(), _str))
+		{
+			g_editedAction->SetCmd(cmd, _str);
 
-		char buf[128] = "";
-		GetItemText(_item, 1, buf, 128);
-		ListView_SetItemText(m_hwndList, GetEditingItem(), DisplayToDataCol(1), buf);
-		// ^^ direct GUI update 'cause Update() disabled during cell editing
+			char buf[128] = "";
+			GetItemText(_item, 1, buf, 128);
+			ListView_SetItemText(m_hwndList, GetEditingItem(), DisplayToDataCol(1), buf);
+			// ^^ direct GUI update 'cause Update() disabled during cell editing
 
-		UpdateEditedStatus(true);
+			UpdateEditedStatus(true);
+		}
 	}
 }
 
 bool SNM_CommandsView::IsEditListItemAllowed(SWS_ListItem* _item, int _iCol) {
 	WDL_FastString* cmd = (WDL_FastString*)_item;
-	return (cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R);
+	return (_iCol == COL_R_CMD && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R);
 }
 
 void SNM_CommandsView::GetItemList(SWS_ListItemList* pList)
@@ -894,8 +917,8 @@ SNM_CyclactionWnd::SNM_CyclactionWnd()
 INT_PTR SNM_CyclactionWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE][2];
-	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[0], IDC_LIST1, 0, 3) ||
-		ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[1], IDC_LIST2, 0, 2))
+	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[0], IDC_LIST1, 0, COL_L_COUNT) ||
+		ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[1], IDC_LIST2, 0, COL_R_COUNT))
 		return 1;
 	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }
@@ -981,7 +1004,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			UpdateListViews();
 			UpdateEditedStatus(true);
 			g_lvL->SelectByItem((SWS_ListItem*)a);
-			g_lvL->EditListItem((SWS_ListItem*)a, 1);
+			g_lvL->EditListItem((SWS_ListItem*)a, COL_L_NAME);
 		}
 		break;
 		case DEL_CYCLACTION_MSG: // remove cyclaction (for the user.. in fact it clears)
@@ -1025,7 +1048,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				WDL_FastString* newCmd = g_editedAction->AddCmd("!");
 				g_lvR->Update();
 				UpdateEditedStatus(true);
-				g_lvR->EditListItem((SWS_ListItem*)newCmd, 0);
+				g_lvR->EditListItem((SWS_ListItem*)newCmd, COL_R_CMD);
 			}
 			break;
 		case LEARN_CMD_MSG:
@@ -1184,7 +1207,7 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 /*no! remains a GUI-only info until applied..
 			m_btnUndo.SetCheckState(g_undos);
 */
-			m_btnUndo.SetTextLabel(__LOCALIZE("Consolidated undo points","sws_DLG_161"), -1, font);
+			m_btnUndo.SetTextLabel(__LOCALIZE("Consolidate undo points","sws_DLG_161"), -1, font);
 			if (SNM_AutoVWndPosition(&m_btnUndo, NULL, _r, &x0, _r->top, h))
 				SNM_AddLogo(_bm, _r, x0, h);
 		}
@@ -1303,11 +1326,10 @@ int SNM_CyclactionWnd::OnKey(MSG* _msg, int _iKeyState)
 
 			switch(_msg->wParam)
 			{
-				case VK_F2:
-				{
+				case VK_F2:	{
 					int x=0;
 					if (SWS_ListItem* item = m_pLists.Get(focusedList)->EnumSelected(&x)) {
-						m_pLists.Get(focusedList)->EditListItem(item, !focusedList ? 1 : 0);
+						m_pLists.Get(focusedList)->EditListItem(item, !focusedList ? COL_L_NAME : COL_R_CMD);
 						return 1;
 					}
 				}

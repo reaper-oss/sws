@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "SnM.h"
 #include "../Zoom.h"
 
 #define MAX_SEARCH_STR_LEN		128

@@ -25,11 +25,10 @@
 /
 ******************************************************************************/
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_CYCLACTIONVIEW_H_
 #define _SNM_CYCLACTIONVIEW_H_
-
 
 #define EMPTY_CYCLACTION		"no-op,65535"
 #define MAX_CYCLATION_LEN		4096

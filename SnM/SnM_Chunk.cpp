@@ -1,5 +1,5 @@
 /******************************************************************************
-/ SNM_Chunk.cpp
+/ SnM_Chunk.cpp
 /
 / Some "SAX-ish like" parser classes inheriting SNM_ChunkParserPatcher
 /
@@ -28,6 +28,7 @@
 ******************************************************************************/
 
 #include "stdafx.h" 
+#include "SnM.h"
 
 /*JFB
 reminders:
@@ -169,7 +170,7 @@ int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr)
 	m_srcId = _srcTr ? CSurf_TrackToID(_srcTr, false) : -1;
 	if (m_srcId <= 0)
 		return 0;
-/* can fail since v4.1: freeze support
+/* can fail since v4.1: freeze
 	char buf[32];
 	_snprintf(buf, 32, "AUXRECV %d", srcId-1);
 	return RemoveLines(buf);
@@ -685,14 +686,14 @@ int SNM_RecPassParser::GetMaxRecPass(int* _recPasses, int* _takeColors)
 {
 	m_maxRecPass = -1;
 	m_takeCounter = 0;
-	memset(m_recPasses, 0, SNM_MAX_TAKES*sizeof(int));
-	memset(m_takeColors, 0, SNM_MAX_TAKES*sizeof(int));
+	memset(m_recPasses, 0, SNM_RECPASSPARSER_MAX_TAKES * sizeof(int));
+	memset(m_takeColors, 0, SNM_RECPASSPARSER_MAX_TAKES * sizeof(int));
 	if (Parse(-1, 1, "ITEM") >= 0)
 	{
 		if (_recPasses)
-			memcpy(_recPasses, m_recPasses, SNM_MAX_TAKES*sizeof(int));
+			memcpy(_recPasses, m_recPasses, SNM_RECPASSPARSER_MAX_TAKES * sizeof(int));
 		if (_takeColors)
-			memcpy(_takeColors, m_takeColors, SNM_MAX_TAKES*sizeof(int));
+			memcpy(_takeColors, m_takeColors, SNM_RECPASSPARSER_MAX_TAKES * sizeof(int));
 		return m_maxRecPass;
 	}
 	return -1;
@@ -867,7 +868,7 @@ bool SNM_FXSummaryParser::NotifyEndElement(int _mode,
 	WDL_PtrList<WDL_FastString>* _parsedParents, 
 	WDL_FastString* _newChunk, int _updates)
 {
-	if (_mode == -1 && !strcmp(GetParent(_parsedParents), "FXCHAIN"))
+	if (_mode == -1 && !strcmp(GetParent(_parsedParents), "FXCHAIN")) //JFB!!! "FXCHAIN_REC"
 		m_breakParsePatch = true; // optmization
 	return false; 
 }

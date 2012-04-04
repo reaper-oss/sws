@@ -25,20 +25,19 @@
 /
 ******************************************************************************/
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_H_
 #define _SNM_H_
 
 
-///////////////////////////////////////////////////////////////////////////////
-// Definitions, enums
-///////////////////////////////////////////////////////////////////////////////
+// see eof for includes!
 
+
+// to disable/enable some features..
 //#define _SNM_MISC
 //#define _SNM_MARKER_REGION_NAME
 #define _SNM_PRESETS
-//#define SWS_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 9) // +9 to skip "SWS/S&M: "
 
 #ifdef _WIN32
 #define SNM_FORMATED_INI_FILE		"%s\\S&M.ini"
@@ -77,7 +76,7 @@
 #define SNM_MAX_MARKER_NAME_LEN		64     // + regions
 #define SNM_MAX_TRACK_NAME_LEN		128
 #define SNM_MAX_HW_OUTS				8
-#define SNM_MAX_TAKES				128
+//#define SNM_MAX_TAKES				1024
 #define SNM_MAX_FX					128
 #define SNM_MAX_PRESETS				0xFFFF
 #define SNM_MAX_PRESET_NAME_LEN		128
@@ -94,21 +93,24 @@
 #define SNM_DEF_TOOLBAR_RFRSH_FREQ	300    // default frequency in ms for the "auto-refresh toolbars" option 
 #define SNM_SCHEDJOB_DEFAULT_DELAY	250
 #define SNM_DEF_VWND_X_STEP			12
+#define SNM_FUDGE_FACTOR			0.0000000001
+
+// various bitmask flags
+#define SNM_MARKER_MASK				1
+#define SNM_REGION_MASK				2
 
 // scheduled jobs ids
 // note: [0..7] are reserved for Live Configs MIDI CC actions
 #define SNM_SCHEDJOB_LIVECFG_TLCHANGE	8
-#define SNM_SCHEDJOB_NOTEHLP_TLCHANGE	9
+#define SNM_SCHEDJOB_NOTEHLP_UPDATE		9
 #define SNM_SCHEDJOB_SEL_PRJ			10
 #define SNM_SCHEDJOB_TRIG_PRESET		11
 #define SNM_SCHEDJOB_CYCLACTION			12
+#define SNM_SCHEDJOB_PLAYLIST_UPDATE	13
 
-enum {
-  SNM_ITEM_SEL_LEFT=0,
-  SNM_ITEM_SEL_RIGHT,
-  SNM_ITEM_SEL_UP,
-  SNM_ITEM_SEL_DOWN
-};
+/* replaced with a common SWS_CMD_SHORTNAME
+#define SNM_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 9) // +9 to skip "SWS/S&M: "
+*/
 
 static void freecharptr(char* _p) { FREE_NULL(_p); }
 static void deleteintptr(int* _p) { DELETE_NULL(_p); }
@@ -116,29 +118,6 @@ static void deletefaststrptr(WDL_FastString* _p) { DELETE_NULL(_p); }
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Global types & classes
-///////////////////////////////////////////////////////////////////////////////
-
-class SNM_TrackNotes {
-public:
-	SNM_TrackNotes(MediaTrack* _tr, const char* _notes)
-		: m_tr(_tr),m_notes(_notes ? _notes : "") {}
-	MediaTrack* m_tr; WDL_FastString m_notes;
-};
-
-class SNM_RegionSubtitle {
-public:
-	SNM_RegionSubtitle(int _id, const char* _notes) 
-		: m_id(_id),m_notes(_notes ? _notes : "") {}
-	int m_id; WDL_FastString m_notes;
-};
-
-class SNM_FXSummary {
-public:
-	SNM_FXSummary(const char* _type, const char* _name, const char* _realName)
-		: m_type(_type),m_name(_name),m_realName(_realName){}
-	WDL_FastString m_type, m_name, m_realName;
-};
 
 class SNM_ScheduledJob {
 public:
@@ -157,14 +136,6 @@ public:
 	virtual void NotifyMarkerRegionUpdate(int _updateFlags) {}
 };
 
-class SNM_TrackInt {
-public:
-	SNM_TrackInt(MediaTrack* _tr, int _i) : m_tr(_tr), m_int(_i) {}
-	~SNM_TrackInt() {}
-	MediaTrack* m_tr;
-	int m_int;
-};
-
 typedef struct MIDI_COMMAND_T {
 	gaccel_register_t accel;
 	const char* id;
@@ -173,81 +144,6 @@ typedef struct MIDI_COMMAND_T {
 	INT_PTR user;
 	bool (*getEnabled)(MIDI_COMMAND_T*);
 } MIDI_COMMAND_T;
-
-class SNM_ImageVWnd : public WDL_VWnd {
-public:
-	SNM_ImageVWnd(LICE_IBitmap* _img = NULL) : WDL_VWnd() { SetImage(_img); }
-	virtual const char *GetType() { return "SNM_ImageVWnd"; }
-	virtual int GetWidth();
-	virtual int GetHeight();
-	virtual void SetImage(LICE_IBitmap* _img) { m_img = _img; }
-	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
-protected:
-	LICE_IBitmap* m_img;
-};
-
-LICE_IBitmap* SNM_GetThemeLogo();
-
-class SNM_Logo : public SNM_ImageVWnd {
-public:
-	SNM_Logo() : SNM_ImageVWnd(SNM_GetThemeLogo()) {}
-	virtual const char *GetType() { return "SNM_Logo"; }
-	virtual bool GetToolTipString(int xpos, int ypos, char* bufOut, int bufOutSz) { lstrcpyn(bufOut, "Strong & Mighty", bufOutSz); return true; }
-};
-
-class SNM_AddDelButton : public WDL_VWnd {
-public:
-	SNM_AddDelButton() : WDL_VWnd() { m_add=true; m_en=true; }
-	virtual const char *GetType() { return "SNM_AddDelButton"; }
-	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
-	virtual void SetAdd(bool _add) { m_add=_add; }
-	virtual void SetEnabled(bool _en) { m_en=_en; }
-	virtual int OnMouseDown(int xpos, int ypos) { return m_en?1:0;	}
-	virtual void OnMouseUp(int xpos, int ypos) { if (m_en) SendCommand(WM_COMMAND,GetID(),0,this); }
-protected:
-	bool m_add, m_en;
-};
-
-class SNM_MiniAddDelButtons : public WDL_VWnd {
-public:
-	SNM_MiniAddDelButtons() : WDL_VWnd()
-	{
-		m_btnPlus.SetID(0xF666); // temp ids.. SetIDs() must be used
-		m_btnMinus.SetID(0xF667);
-		m_btnPlus.SetAdd(true);
-		m_btnMinus.SetAdd(false); 
-		AddChild(&m_btnPlus);
-		AddChild(&m_btnMinus);
-	}
-	~SNM_MiniAddDelButtons() { RemoveAllChildren(false); }
-	virtual void SetIDs(int _id, int _addId, int _delId) { SetID(_id); m_btnPlus.SetID(_addId); m_btnMinus.SetID(_delId); }
-	virtual const char *GetType() { return "SNM_MiniAddDelButtons"; }
-	virtual void SetPosition(const RECT *r)
-	{
-		m_position=*r; 
-		RECT rr = {0, 0, 9, 9};
-		m_btnPlus.SetPosition(&rr);
-		RECT rr2 = {0, 10, 9, 19};
-		m_btnMinus.SetPosition(&rr2);
-	}
-protected:
-	SNM_AddDelButton m_btnPlus, m_btnMinus;
-};
-
-class SNM_ToolbarButton : public WDL_VirtualIconButton {
-public:
-	SNM_ToolbarButton() : WDL_VirtualIconButton() {}
-	const char *GetType() { return "SNM_ToolbarButton"; }
-	void SetGrayed(bool grayed) { WDL_VirtualIconButton::SetGrayed(grayed); if (grayed) m_pressed=0; } // avoid stuck overlay when mousedown leads to grayed button
-	void GetPositionPaintOverExtent(RECT *r) { *r=m_position; }
-	void OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
-};
-
-class SNM_MiniKnob : public WDL_VirtualSlider {
-public:
-	SNM_MiniKnob() : WDL_VirtualSlider() {}
-	const char *GetType() { return "SNM_MiniKnob"; }
-};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -258,16 +154,12 @@ extern WDL_FastString g_SNMCyclactionIniFn;
 extern MIDI_COMMAND_T g_SNMSection_cmdTable[];
 extern int g_SNMIniFileVersion;
 extern int g_SNMbeta;
-extern bool g_SNMClearType;
 
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 bool IsToolbarsAutoRefeshEnabled(COMMAND_T*);
 void RefreshToolbars();
 void FakeToggle(COMMAND_T*);
 bool FakeIsToggleAction(COMMAND_T*);
-#ifdef _SNM_MISC
-bool FakeIsToggleAction(MIDI_COMMAND_T*);
-#endif
 void SNM_ShowActionList(COMMAND_T*);
 int SNMRegisterDynamicCommands(COMMAND_T* _pCommands);
 int SnMInit(reaper_plugin_info_t* _rec);
@@ -283,8 +175,6 @@ void SnMCSurfSetPlayState(bool _play, bool _pause, bool _rec);
 int SnMCSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3);
 
 
-///////////////////////////////////////////////////////////////////////////////
-// Base64 stuff
 ///////////////////////////////////////////////////////////////////////////////
 
 #define SNM_CC123_MID_FILE "TVRoZAAAAAYAAAABA8BNVHJrAAAASQCwewACsXsAAbJ7AAGzewACtA==\n\
@@ -325,5 +215,29 @@ TcxV1oa7PxAHvm2t2LHpbDfuyLre8KLLhufkKbP2rfL8mwb/CxHXvQ==\n\
 z64F+VlLOQZ6Dua4dpaajpNwpPDxaQ9twrF7XSHyaDJROqMpYYyy1Q==\n\
 3iwJ0Fssw64SzlIi+8dZ/OISxbhGsZobtpoDrVUq5ZrAYwjPaYw7LQ==\n\
 vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+//#include "SnM_ChunkParserPatcher.h" 
+//#include "SnM_Routing.h"
+#include "SnM_Chunk.h"
+#include "SnM_Dlg.h"
+#include "SnM_VWnd.h"
+#include "SnM_Cyclactions.h" // from this point order does not matter anymore..
+#include "SnM_FindView.h"
+#include "SnM_fx.h"
+#include "SnM_FXChain.h"
+#include "SnM_Item.h"
+#include "SnM_LiveConfigs.h"
+#include "SnM_ME.h"
+#include "SnM_Misc.h"
+#include "SnM_NotesHelpView.h"
+#include "SnM_Project.h"
+#include "SnM_Resources.h"
+#include "SnM_RgnPlaylistView.h"
+#include "SnM_Track.h"
+#include "SnM_Util.h"
+#include "SnM_Window.h"
 
 #endif

@@ -1,5 +1,5 @@
 /******************************************************************************
-** SNM_ChunkParserPatcher.h - v1.235
+** SnM_ChunkParserPatcher.h - v1.235
 ** Copyright (C) 2008-2012, Jeffos
 **
 **    This software is provided 'as-is', without any express or implied
@@ -64,17 +64,15 @@
 // - Performance improvements
 // - Safer commit of chunk updates (ids auto removal)
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_CHUNKPARSERPATCHER_H_
 #define _SNM_CHUNKPARSERPATCHER_H_
-
 
 #pragma warning(disable : 4267) // size_t to int warnings in x64
 
 //#define _SNM_DEBUG
 #define _SWS_EXTENSION
-
 #ifdef _SWS_EXTENSION
 #define SNM_FreeHeapPtr			SWS_FreeHeapPtr
 #else
@@ -101,7 +99,7 @@
 // Misc
 #define SNM_MAX_CHUNK_LINE_LENGTH		4096 // inspired by WDL/projectcontext.h
 #define SNM_MAX_CHUNK_KEYWORD_LENGTH	64
-#define SNM_HEAPBUF_GRANUL				4096
+#define SNM_HEAPBUF_GRANUL				256*1024
 
 
 ///////////////////////////////////////////////////////////////////////////////

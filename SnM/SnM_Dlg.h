@@ -25,10 +25,12 @@
 /
 ******************************************************************************/
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_DLG_H_
 #define _SNM_DLG_H_
+
+extern bool g_SNMClearType;
 
 ColorTheme* SNM_GetColorTheme(bool _checkForSize = false);
 IconTheme* SNM_GetIconTheme(bool _checkForSize = false);
@@ -38,23 +40,16 @@ HBRUSH SNM_GetThemeBrush(int _col=-666);
 void SNM_GetThemeListColors(int* _bg, int* _txt);
 void SNM_GetThemeEditColors(int* _bg, int* _txt);
 void SNM_ThemeListView(SWS_ListView* _lv);
-/* defined on top, see SNM_ImageVWnd
 LICE_IBitmap* SNM_GetThemeLogo();
-*/
-void SNM_SkinButton(WDL_VirtualIconButton* _btn, WDL_VirtualIconButton_SkinConfig* _skin, const char* _text);
-void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text);
-bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h);
-bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h);
-bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoomNextComp = SNM_DEF_VWND_X_STEP);
 void SNM_UIInit();
 void SNM_UIExit();
 void SNM_ShowMsg(const char* _msg, const char* _title = "", HWND _hParent = NULL, bool _clear = true); 
 int PromptForInteger(const char* _title, const char* _what, int _min, int _max);
-void openCueBussWnd(COMMAND_T*);
-bool isCueBussWndDisplayed(COMMAND_T*);
+void OpenCueBussDlg(COMMAND_T*);
+bool IsCueBussDlgDisplayed(COMMAND_T*);
 #ifdef _SNM_MISC // wip
-void openLangpackMrgWnd(COMMAND_T*);
-bool isLangpackMrgWndDisplayed(COMMAND_T*);
+void OpenLangpackMrgDlg(COMMAND_T*);
+bool IsLangpackMrgDlgDisplayed(COMMAND_T*);
 #endif
 
 #endif

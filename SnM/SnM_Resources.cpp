@@ -31,6 +31,7 @@
 // combined flags for insert media (dbl click)
 
 #include "stdafx.h"
+#include "SnM.h"
 #include "../Prompt.h"
 #ifdef _WIN32
 #include "../DragDrop.h"
@@ -161,6 +162,13 @@ enum {
   COMBOID_DBLCLICK_TO
 };
 
+enum {
+  COL_SLOT=0,
+  COL_NAME,
+  COL_PATH,
+  COL_COMMENT,
+  COL_COUNT
+};
 
 /*JFB static*/ SNM_ResourceWnd* g_pResourcesWnd = NULL;
 
@@ -484,7 +492,7 @@ static SWS_LVColumn g_fxChainListCols[] = { {65,2,"Slot"}, {100,1,"Name"}, {250,
 // !WANT_LOCALIZE_STRINGS_END
 
 SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
-	: SWS_ListView(hwndList, hwndEdit, 4, g_fxChainListCols, "Resources View State", false)
+	: SWS_ListView(hwndList, hwndEdit, COL_COUNT, g_fxChainListCols, "ResourcesViewState", false)
 {
 }
 
@@ -495,7 +503,7 @@ void SNM_ResourceView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 	{
 		switch (iCol)
 		{
-			case 0:
+			case COL_SLOT:
 			{
 				int slot = GetSlotList()->Find(pItem);
 				if (slot >= 0)
@@ -510,13 +518,13 @@ void SNM_ResourceView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 				}
 				break;
 			}
-			case 1:
+			case COL_NAME:
 				GetFilenameNoExt(pItem->m_shortPath.Get(), str, iStrMax);
 				break;
-			case 2:
+			case COL_PATH:
 				lstrcpyn(str, pItem->m_shortPath.Get(), iStrMax);
 				break;
-			case 3:
+			case COL_COMMENT:
 				lstrcpyn(str, pItem->m_comment.Get(), iStrMax);
 				break;
 		}
@@ -533,12 +541,11 @@ bool SNM_ResourceView::IsEditListItemAllowed(SWS_ListItem* item, int iCol)
 			if (slot >= 0)
 			{
 				switch (iCol) {
-					case 1: // file renaming
-					{
+					case COL_NAME: { // file renaming
 						char fn[BUFFER_SIZE] = "";
 						return (GetSlotList()->GetFullPath(slot, fn, BUFFER_SIZE) && FileExistsErrMsg(fn, false));
 					}					
-					case 3: // comment
+					case COL_COMMENT:
 						return true;
 				}
 			}
@@ -555,7 +562,7 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 	{
 		switch (iCol)
 		{
-			case 1: // file renaming
+			case COL_NAME: // file renaming
 			{
 				if (!IsValidFilenameErrMsg(str, true))
 					return;
@@ -589,7 +596,7 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 				}
 				break;
 			}
-			case 3: // comment
+			case COL_COMMENT:
 				pItem->m_comment.Set(str);
 				pItem->m_comment.Ellipsize(128,128);
 				Update();
@@ -879,7 +886,7 @@ void SNM_ResourceWnd::OnDestroy()
 INT_PTR SNM_ResourceWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE];
-	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, 4))
+	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, COL_COUNT))
 		return 1;
 	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }
@@ -908,7 +915,6 @@ void SNM_ResourceWnd::FillTypeCombo()
 	for (int i=0; i < g_slots.GetSize(); i++)
 		m_cbType.AddItem(GetMenuDesc(i));
 	m_cbType.SetCurSel((g_resViewType>0 && g_resViewType<g_slots.GetSize()) ? g_resViewType : SNM_SLOT_FXC);
-//JFB!!! ??	m_cbType.SetCurSel(BOUNDED(g_resViewType, 0, g_slots.GetSize()-1));
 }
 
 void SNM_ResourceWnd::FillDblClickCombos()
@@ -1121,7 +1127,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (item) {
 				char fullPath[BUFFER_SIZE] = "";
 				if (GetSlotList()->GetFullPath(slot, fullPath, BUFFER_SIZE) && FileExistsErrMsg(fullPath, true))
-					m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, 1);
+					m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, COL_NAME);
 			}
 			break;
 		case REN_BOOKMARK_MSG:
@@ -1810,7 +1816,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 	}
 }
 
-//JFB hard coded labels.. should be the same than related action names
+//JFB hard coded labels.. ideally it should be the same than related action names
 bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
 {
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1))
@@ -1829,15 +1835,15 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 					{
 						case SNM_SLOT_FXC:
 							return (_snprintf(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("%s (right-click for options)\nto %s","sws_DLG_150"),
-								g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_TRACK ? __LOCALIZE("Auto-save FX chain slots for selected tracks","sws_DLG_150") :
-								g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_ITEM ? __LOCALIZE("Auto-save FX chain slots for selected items","sws_DLG_150") :
-								g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? __LOCALIZE("Auto-save input FX chain slots for selected tracks","sws_DLG_150")
+								g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_TRACK ? __LOCALIZE("Auto-save FX chains for selected tracks","sws_DLG_150") :
+								g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_ITEM ? __LOCALIZE("Auto-save FX chains for selected items","sws_DLG_150") :
+								g_autoSaveFXChainPref == FXC_AUTOSAVE_PREF_INPUT_FX ? __LOCALIZE("Auto-save input FX chains for selected tracks","sws_DLG_150")
 									: __LOCALIZE("Auto-save FX chain slots","sws_DLG_150"),
 								*GetAutoSaveDir() ? GetAutoSaveDir() : __LOCALIZE("undefined","sws_DLG_150")) > 0);
 						case SNM_SLOT_TR:
-							return (_snprintf(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Auto-save track templates slots%s%s for selected tracks (right-click for options)\nto %s","sws_DLG_150"),
-								(g_autoSaveTrTmpltPref&1) ? __LOCALIZE(" (w/ items)","sws_DLG_150") : "",
-								(g_autoSaveTrTmpltPref&2) ? __LOCALIZE(" (w/ envs)","sws_DLG_150") : "",
+							return (_snprintf(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Auto-save track templates%s%s for selected tracks (right-click for options)\nto %s","sws_DLG_150"),
+								(g_autoSaveTrTmpltPref&1) ? __LOCALIZE(" w/ items","sws_DLG_150") : "",
+								(g_autoSaveTrTmpltPref&2) ? __LOCALIZE(" w/ envs","sws_DLG_150") : "",
 								*GetAutoSaveDir() ? GetAutoSaveDir() : __LOCALIZE("undefined","sws_DLG_150")) > 0);
 						default:
 							return (_snprintf(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Auto-save %s slots (right-click for options)\nto %s","sws_DLG_150"), 
@@ -1849,7 +1855,7 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 			case COMBOID_TYPE:
 				return (lstrcpyn(_bufOut, __LOCALIZE("Resource/slot type","sws_DLG_150"), _bufOutSz) != NULL);
 			case BUTTONID_COPY_BOOKMARK:
-				return (_snprintf(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Copy as new %s bookmark","sws_DLG_150"), g_slots.Get(typeForUser)->GetDesc()) > 0);
+				return (_snprintf(_bufOut, _bufOutSz, __LOCALIZE("Copy as new bookmark","sws_DLG_150")) > 0);
 			case BUTTONID_DEL_BOOKMARK:
 				return (lstrcpyn(_bufOut, __LOCALIZE("Delete bookmark","sws_DLG_150"), _bufOutSz) != NULL);
 		}
@@ -2060,10 +2066,8 @@ void AutoSave(int _type, int _flags)
 			switch (_flags)
 			{
 				case FXC_AUTOSAVE_PREF_INPUT_FX:
-					autoSaveTrackFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, true); //JFB!!! merge g_autoSaveFXChainNamePref & _flags ???
-					break;
 				case FXC_AUTOSAVE_PREF_TRACK:
-					autoSaveTrackFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, false);
+					autoSaveTrackFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, _flags==FXC_AUTOSAVE_PREF_INPUT_FX);
 					break;
 				case FXC_AUTOSAVE_PREF_ITEM:
 					autoSaveItemFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1);
@@ -2174,15 +2178,15 @@ void DeleteBookmark(int _bookmarkType)
 {
 	if (_bookmarkType >= SNM_NUM_DEFAULT_SLOTS)
 	{
-		int reply;
-		if (g_slots.Get(_bookmarkType)->GetSize())
+		int reply = IDNO;
+		if (g_slots.Get(_bookmarkType)->GetSize()) // do not ask if empty
 			reply = MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Delete files too ?","sws_DLG_150"), __LOCALIZE("S&M - Delete resource bookmark","sws_DLG_150"), MB_YESNOCANCEL);
-		else
-			reply = MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Are you sure you want to delete this bookmark ?","sws_DLG_150"), __LOCALIZE("S&M - Delete resource bookmark","sws_DLG_150"), MB_OKCANCEL);
 		if (reply != IDCANCEL)
 		{
 			// cleanup ini file (types may not be contiguous anymore..)
 			FlushCustomTypesIniFile();
+			if (g_pResourcesWnd)
+				g_pResourcesWnd->ClearDeleteSlots(8 | (reply==IDYES?4:0), true); // true so that deleted items are not displayed anymore
 
 			// remove current slot type
 			int oldType = _bookmarkType;

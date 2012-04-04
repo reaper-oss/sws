@@ -110,7 +110,7 @@ public:
 		m_projects.Empty(false);
 		m_data.Empty(true); 
 	}
-	void Cleanup(void (*delfunc)(void *)=NULL)
+	void Cleanup()
 	{
 		if (m_projects.GetSize())
 		{
@@ -124,7 +124,7 @@ public:
 				if (!pProj)
 				{
 					m_projects.Delete(i, false);
-					m_data.Delete(i, true, delfunc);
+					m_data.Delete(i, true);
 				}
 			}
 		}

@@ -25,15 +25,16 @@
 /
 ******************************************************************************/
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_PLAYLISTVIEW_H_
 #define _SNM_PLAYLISTVIEW_H_
 
+#include "../MarkerList/MarkerListClass.h"
 
-class Playlist_MarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
+class SNM_Playlist_MarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
 public:
-	Playlist_MarkerRegionSubscriber() : SNM_MarkerRegionSubscriber() {}
+	SNM_Playlist_MarkerRegionSubscriber() : SNM_MarkerRegionSubscriber() {}
 	void NotifyMarkerRegionUpdate(int _updateFlags);
 };
 
@@ -49,13 +50,24 @@ public:
 class SNM_Playlist : public WDL_PtrList<SNM_PlaylistItem>
 {
 public:
-	SNM_Playlist(const char* _name, SNM_Playlist* _p = NULL) : m_name(_name), WDL_PtrList<SNM_PlaylistItem>() {
-		if (_p)
-			for (int i=0; i < _p->GetSize(); i++)
-				Add(new SNM_PlaylistItem(_p->Get(i)->m_rgnId, _p->Get(i)->m_cnt));
+	SNM_Playlist(SNM_Playlist* _p = NULL, const char* _name = NULL)
+		: m_name(_name), WDL_PtrList<SNM_PlaylistItem>() {
+		if (_p) {
+			for (int i=0; i < _p->GetSize(); i++) Add(new SNM_PlaylistItem(_p->Get(i)->m_rgnId, _p->Get(i)->m_cnt));
+			if (!_name) m_name.Set(_p->m_name.Get());
+		}
 	}
+	SNM_Playlist(const char* _name) : m_name(_name), WDL_PtrList<SNM_PlaylistItem>() {}
 	~SNM_Playlist() {}
 	WDL_FastString m_name;
+};
+
+class SNM_Playlists : public WDL_PtrList<SNM_Playlist>
+{
+public:
+	SNM_Playlists() : m_cur(0), WDL_PtrList<SNM_Playlist>() {}
+	~SNM_Playlists() {}
+	int m_cur;
 };
 
 class SNM_PlaylistView : public SWS_ListView {
@@ -83,6 +95,7 @@ public:
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void Update(int _flags = 3);
 	void FillPlaylistCombo();
+	void CSurfSetTrackListChange();
 protected:
 	void OnInitDlg();
 	void OnDestroy();
@@ -90,9 +103,10 @@ protected:
 	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	int OnKey(MSG* msg, int iKeyState) ;
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
+	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
 	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
 
-	Playlist_MarkerRegionSubscriber m_mkrRgnSubscriber;
+	SNM_Playlist_MarkerRegionSubscriber m_mkrRgnSubscriber;
 	WDL_VirtualStaticText m_txtPlaylist, m_txtLength;
 	WDL_VirtualComboBox m_cbPlaylist;
 	SNM_MiniAddDelButtons m_btnsAddDel;
@@ -109,19 +123,22 @@ public:
 	int m_curRgnIdx, m_nextRgnIdx;
 };
 
+class SNM_Playlist_UpdateJob : public SNM_ScheduledJob {
+public:
+	SNM_Playlist_UpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_PLAYLIST_UPDATE, 150) {}
+	void Perform();
+};
 
 double GetPlayListLength();
 void PlaylistRun();
 void PlaylistPlay(int _playlistId, bool _errMsg);
 void PlaylistPlay(COMMAND_T*);
 void PlaylistStopped();
-
-void CropProjectToPlaylist();
-
+void CropProjectToPlaylist(int _flags);
+void CropProjectToPlaylist(COMMAND_T*);
 int RegionPlaylistInit();
 void RegionPlaylistExit();
 void OpenRegionPlaylist(COMMAND_T*);
 bool IsRegionPlaylistDisplayed(COMMAND_T*);
-
 
 #endif

@@ -25,10 +25,18 @@
 /
 ******************************************************************************/
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_TRACK_H_
 #define _SNM_TRACK_H_
+
+class SNM_TrackInt {
+public:
+	SNM_TrackInt(MediaTrack* _tr, int _i) : m_tr(_tr), m_int(_i) {}
+	~SNM_TrackInt() {}
+	MediaTrack* m_tr;
+	int m_int;
+};
 
 extern int g_SNMMediaFlags;
 

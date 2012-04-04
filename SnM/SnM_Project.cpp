@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "SnM.h"
 #include "../reaper/localize.h"
 
 
@@ -206,7 +207,7 @@ void loadOrSelectNextPreviousProject(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Other actions
+// Other
 ///////////////////////////////////////////////////////////////////////////////
 
 void openProjectPathInExplorerFinder(COMMAND_T* _ct)

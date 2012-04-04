@@ -31,6 +31,7 @@
 // - full release? auto send creation, etc..
 
 #include "stdafx.h"
+#include "SnM.h"
 #include "../reaper/localize.h"
 
 
@@ -85,18 +86,19 @@ enum {
   COL_PRESET,
 #endif
   COL_ACTION_ON,
-  COL_ACTION_OFF
+  COL_ACTION_OFF,
+  COL_COUNT
 };
 
 
-/*JFB static*/ SNM_LiveConfigsWnd* g_pLiveConfigsWnd = NULL;
+SNM_LiveConfigsWnd* g_pLiveConfigsWnd = NULL;
 SWSProjConfig<WDL_PtrList_DeleteOnDestroy<MidiLiveConfig> > g_liveConfigs;
 int g_configId = 0; // the current *displayed* config id
 int g_approxDelayMsCC = SNM_SCHEDJOB_DEFAULT_DELAY;
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// presets configuration helpers
+// presets helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 // updates a preset conf string
@@ -281,9 +283,9 @@ static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {
 
 SNM_LiveConfigsView::SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit)
 #ifdef _SNM_PRESETS
-:SWS_ListView(hwndList, hwndEdit, 8, g_midiLiveCols, "Live Configs View State", false)
+:SWS_ListView(hwndList, hwndEdit, COL_COUNT, g_midiLiveCols, "LiveConfigsViewState", false)
 #else
-:SWS_ListView(hwndList, hwndEdit, 7, g_midiLiveCols, "Live Configs View State", false)
+:SWS_ListView(hwndList, hwndEdit, COL_COUNT, g_midiLiveCols, "LiveConfigsViewState", false)
 #endif
 {
 }
@@ -497,7 +499,7 @@ void SNM_LiveConfigsWnd::OnDestroy()
 INT_PTR SNM_LiveConfigsWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE];
-	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, 8))
+	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, COL_COUNT))
 		return 1;
 	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }
@@ -1184,8 +1186,7 @@ void SNM_LiveCfg_TLChangeSchedJob::Perform()
 //		g_lastDeactivateCmd[i][0] = -1;
 	}
 
-	if (g_pLiveConfigsWnd)
-	{
+	if (g_pLiveConfigsWnd) {
 		g_pLiveConfigsWnd->FillComboInputTrack();
 		g_pLiveConfigsWnd->Update();
 	}

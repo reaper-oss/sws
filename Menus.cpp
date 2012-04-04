@@ -225,17 +225,6 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMenu, __LOCALIZE("Zoom preferences...", "sws_ext_menu"), NamedCommandLookup("_SWS_ZOOMPREFS"));
 
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-
-#ifdef _SWS_DEBUG
-#ifdef _SWS_LOCALIZATION
-	HMENU hLangPackSubMenu = CreatePopupMenu();
-	AddSubMenu(hMenu, hLangPackSubMenu, __LOCALIZE("SWS Language file", "sws_ext_menu"));
-//	AddToMenu(hLangPackSubMenu, __LOCALIZE("Load LangPack file...", "sws_ext_menu"), NamedCommandLookup("_S&M_LOAD_LANGPACK"));
-//	AddToMenu(hLangPackSubMenu, __LOCALIZE("Reset to factory settings (English)", "sws_ext_menu"), NamedCommandLookup("_S&M_RESET_LANGPACK"));
-	AddToMenu(hLangPackSubMenu, __LOCALIZE("[Internal] Generate actions LangPack file...", "sws_ext_menu"), NamedCommandLookup("_S&M_GEN_LANGPACK"));
-#endif
-#endif
-
 	HMENU hOptionsSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hOptionsSubMenu, __LOCALIZE("SWS Options", "sws_ext_menu"));
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto coloring", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_ENABLE"));

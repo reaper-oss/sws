@@ -1,4 +1,21 @@
 +Fixed some dropped character bugs in Label processor
++ClearType for tooltips too (optional: set ClearTypeFont to 1 in the section [General] of the S&M.ini file)
++Refresh some S&M views when changing time mode
+
+Region playlist (BETA)
++Tweaks: added tooltips, retain current playlist, etc..
++Fixed playlist refresh issue when swtching projects
++Fixed button refresh issue on transport stop
+Play preview:
++Added options "Play regions until next measure" and "Play regions until next beat" (see the v2.2.0 #3 changelog): right click the play button
++Fixed possible swicth one measure too early
++Hardened play preview at high BPMs
++Fixed possible ordering issue with nested markers in regions
+Added actions (and new context menu items):
++SWS/S&M: Region Playlist - Crop project to playlist
++SWS/S&M: Region Playlist - Crop project to playlist (new project tab)
++SWS/S&M: Region Playlist - Append playlist to project
++SWS/S&M: Region Playlist - Paste playlist at edit cursor
 
 !v2.2.0 #3 (March 25, 2012)
 <b>Dropped support for REAPER v3.x, REAPER >= v4.20 is required!</b>
@@ -56,10 +73,10 @@ Marker list:
 Other, fixes:
 +All S&M windows: optional Windows-rendered fonts (ClearType) - To enable this option set ClearTypeFont to 1 in the section [General] of the S&M.ini file
 +Support the global preference "Disable saving full plugin states"
-+Fixed all S&M copy/cut/paste sends/receives/routings actions (issue with multi track selection, see issue 174).
++Fixed all S&M copy/cut/paste sends/receives/routings actions (possible problem with multi track selection, see issue 174).
 Note: this also fixes SWS smart cut/copy actions: "SWS: Copy items/tracks/env, obeying time sel" and "SWS: Cut items/tracks/env, obeying time sel"
 +Auto Color/Icon: fixed broken drag-drop of rows (i.e. useful to order rule priorities - reminder: drag-drop only works when the sorted column is the 1st one!)
-+SWS List views tweaks: multiple rows drag-drop, no arrow displayed when not sortable, etc..
++SWS List views tweaks: drag-drop of multiple rows, no arrow displayed when not sortable, etc..
 
 Added other actions:
 +SWS/IX: Import m3u/pls playlist. Imports local files from playlist to new track (streaming media ignored)

@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "SnM.h"
 #include "../Misc/Context.h"
 #include "../reaper/localize.h"
 
@@ -111,20 +112,27 @@ void SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks)
 						GetSetMediaItemInfo(item, "B_UISEL", &g_bFalse);
 }
 
+bool ItemInInterval(MediaItem* _item, double _pos1, double _pos2)
+{
+	if (_item)
+	{
+		double pos = *(double*)GetSetMediaItemInfo(_item,"D_POSITION",NULL);
+		double end = pos + *(double*)GetSetMediaItemInfo(_item,"D_LENGTH",NULL);
+		if ((pos <= _pos1 && end >= _pos2) || // larger?
+			(pos >= _pos1 && pos <= _pos2) || // starts within?
+			(end >= _pos1 && end <= _pos2))   // ends within?
+			return true;
+	}
+	return false;
+}
+
 bool ItemsInInterval(double _pos1, double _pos2)
 {
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 	if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 		for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++)
-			if (MediaItem* item = GetTrackMediaItem(tr,j))
-			{
-				double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
-				double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
-				if ((pos <= _pos1 && end >= _pos2) || // larger?
-					(pos >= _pos1 && pos <= _pos2) || // starts within?
-					(end >= _pos1 && end <= _pos2))   // ends within?
-					return true;
-			}
+			if (ItemInInterval(GetTrackMediaItem(tr,j), _pos1, _pos2))
+				return true;
 	return false;
 }
 
@@ -226,59 +234,50 @@ void goferSplitSelectedItems(COMMAND_T* _ct) {
 	}
 }
 
-// _undoTitle: undo point name  or NULL for no undo point (in this case the call must be surrounded with Undo_Begin/EndBlock2)
-bool SplitSelectAllItemsInRegion(const char* _undoTitle, int _rgnIdx)
+// _undoTitle: undo point name (NULL: no arrange refresh and no undo point)
+bool SplitSelectAllItemsInInterval(const char* _undoTitle, double _pos1, double _pos2)
 {
 	bool updated = false;
-	if (_rgnIdx>=0)
-	{
-		double rgnpos, rgnend;
-		if (EnumProjectMarkers2(NULL, _rgnIdx, NULL, &rgnpos, &rgnend, NULL, NULL))
-		{
-			if (updated = ItemsInInterval(rgnpos, rgnend)) // we are sure there will will splitted items)
-			{
-				double selpos, selend;
-				GetSet_LoopTimeRange(false, false, &selpos, &selend, false); // store current time sel
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+			for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++) // new items might be created during the loop!
+				if (MediaItem* item = GetTrackMediaItem(tr,j))
+				{
+					updated |= (SplitMediaItem(item, _pos1) != NULL);
+					updated |= (SplitMediaItem(item, _pos2) != NULL);
 
-				if (_undoTitle)
-					Undo_BeginBlock2(NULL);
-				GetSet_LoopTimeRange(true, false, &rgnpos, &rgnend, false);
-//JFB!!!
-				Main_OnCommand(40182, 0); // select all items
-				Main_OnCommand(40061, 0); // split items at time selection
-				Main_OnCommand(40289, 0); // unselect all items
+					double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
+					double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
+					bool sel = *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL);
+					if ((pos+SNM_FUDGE_FACTOR) >= _pos1 && (end-SNM_FUDGE_FACTOR) <= _pos2) 
+					{
+						if (!sel) {
+							updated = true;
+							GetSetMediaItemInfo(item,"B_UISEL",&g_bTrue);
+						}
+					}
+					else if (sel) {
+						updated = true;
+						GetSetMediaItemInfo(item,"B_UISEL",&g_bFalse);
+					}
+				}
 
-				for (int i=1; i <= GetNumTracks(); i++) // skip master
-					if (MediaTrack* tr = CSurf_TrackFromID(i, false))
-						for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++)
-							if (MediaItem* item = GetTrackMediaItem(tr,j))
-							{
-								double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
-								double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
-								if (pos >= rgnpos && end <= rgnend)
-									GetSetMediaItemInfo(item,"B_UISEL",&g_bTrue);
-							}
-
-				if (_undoTitle)
-					Undo_EndBlock2(NULL, _undoTitle, UNDO_STATE_ALL);
-
-				// restore (or clear) time sel
-				GetSet_LoopTimeRange(true, false, &selpos, &selend, false);
-			}
-		}
+	if (_undoTitle && updated) {
+		UpdateTimeline();
+		Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
 	}
 	return updated;
 }
 
 void SplitSelectAllItemsInRegion(COMMAND_T* _ct) {
 	double cursorPos = GetCursorPositionEx(NULL);
-	int x=0, y=0; double dPos, dEnd; bool isRgn;
-	while (y = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL)) {
+	int x=0, lastx=0; double dPos, dEnd; bool isRgn;
+	while (x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL)) {
 		if (isRgn && cursorPos >= dPos && cursorPos <= dEnd) {
-			SplitSelectAllItemsInRegion(SWS_CMD_SHORTNAME(_ct), x);
+			SplitSelectAllItemsInInterval(SWS_CMD_SHORTNAME(_ct), dPos, dEnd);
 			return; // !!
 		}
-		x=y;
+		lastx=x;
 	}
 }
 
@@ -410,8 +409,8 @@ int buildLanes(const char* _undoTitle, int _mode)
 				MediaItem* item = GetTrackMediaItem(tr,j);
 				if (item && !_mode || (_mode && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))) 
 				{
-					int* recPasses = new int[SNM_MAX_TAKES];
-					int takeColors[SNM_MAX_TAKES];
+					int* recPasses = new int[SNM_RECPASSPARSER_MAX_TAKES];
+					int takeColors[SNM_RECPASSPARSER_MAX_TAKES];
 
 					SNM_RecPassParser p(item, CountTakes(item));
 					int itemMaxRecPass = p.GetMaxRecPass(recPasses, takeColors); 
@@ -419,7 +418,7 @@ int buildLanes(const char* _undoTitle, int _mode)
 
 					// 1st loop to check rec pass ids
 					bool badRecPassItem = false;
-					for (int k=0; !badRecPassItem && k < CountTakes(item); k++)
+					for (int k=0; !badRecPassItem && k < CountTakes(item) && k < SNM_RECPASSPARSER_MAX_TAKES; k++)
 						badRecPassItem = (recPasses[k] == 0);
 
 					badRecPass |= badRecPassItem;
@@ -428,7 +427,7 @@ int buildLanes(const char* _undoTitle, int _mode)
 						items.Add(item);
 						itemRecPasses.Add(recPasses);
 						// 2nd loop to *update* colors by rec pass id
-						for (int k=0; k < CountTakes(item); k++)
+						for (int k=0; k < CountTakes(item) && k < SNM_RECPASSPARSER_MAX_TAKES; k++)
 								recPassColors.Insert(recPasses[k], takeColors[k]);
 					}
 				}
@@ -611,8 +610,7 @@ void clearTake(COMMAND_T* _ct)
 	}
 }
 
-#ifdef _SNM_MISC 
-// Deprecated: native actions "Rotate take lanes forward/backward" added in REAPER v3.67
+#ifdef _SNM_MISC // deprecated: native actions "Rotate take lanes forward/backward" added in REAPER v3.67
 void moveTakes(COMMAND_T* _ct)
 {
 	bool updated = false;

@@ -37,6 +37,7 @@
 */
 
 #include "stdafx.h"
+#include "./SnM/SnM_Dlg.h"
 #include "./reaper/localize.h"
 
 #define CELL_EDIT_TIMER		0x1000
@@ -1543,12 +1544,13 @@ int SWS_ListView::sListCompare(LPARAM lParam1, LPARAM lParam2, LPARAM lSortParam
 
 ///////////////////////////////////////////////////////////////////////////////
 // Code bits courtesy of Cockos. Thank you Cockos!
+// Mods are plainly marked as such.
 ///////////////////////////////////////////////////////////////////////////////
 
-// From Justin: http://askjf.com/index.php?q=1609s
-// JFB mod: clamp grid lines to nb of displayed rows + GUI glitch fix for SWS_ListView 
-//          before mod: http://stash.reaper.fm/11297/fixed_glitch.gif
-//          after mod:  http://stash.reaper.fm/11298/fixed_glitch2.gif
+// From http://askjf.com/index.php?q=1609s
+// mod: clamp grid lines to nb of displayed rows + GUI glitch fix for SWS_ListView 
+//      before mod: http://stash.reaper.fm/11297/fixed_glitch.gif
+//      after mod:  http://stash.reaper.fm/11298/fixed_glitch2.gif
 #ifdef _WIN32
 void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
 {
@@ -1594,7 +1596,7 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
           {
             MoveToEx(hdc,br.left,r.top,NULL);
             LineTo(hdc,br.right,r.top);
-//JFB use this instead of ^^ ?            LineTo(hdc,r.right,r.top);
+//JFB use LineTo(hdc,r.right,r.top) instead of ^^ ?
           }
           r.top +=h;
         }
@@ -1769,7 +1771,7 @@ bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int 
                     }
                     if (s&LVIS_FOCUSED)
                     {
-/*JFB commented
+/*JFB commented (does not compile)
                       // todo: theme option for colors for focus state as well?
                       if (0 && GetFocus()==hdr->hwndFrom)
                       {
@@ -1818,7 +1820,10 @@ void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char
           14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
           OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
       };
-      tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
+//JFB mod: optional ClearType rendering --->
+//      tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
+      tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|(g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
+//JFB <---
     }
     tmpfont.SetBkMode(TRANSPARENT);
     LICE_pixel col1 = LICE_RGBA(0,0,0,255);

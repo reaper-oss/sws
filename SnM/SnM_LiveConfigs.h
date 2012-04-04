@@ -25,11 +25,10 @@
 /
 ******************************************************************************/
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_LIVECONFIGS_H_
 #define _SNM_LIVECONFIGS_H_
-
 
 class PresetMsg {
 public:
@@ -37,7 +36,6 @@ public:
 	int m_fx;
 	WDL_FastString m_preset;
 };
-
 
 class MidiLiveItem {
 public:
@@ -50,7 +48,6 @@ public:
 	MediaTrack* m_track;
 	WDL_FastString m_desc, m_trTemplate, m_fxChain, m_presets, m_onAction, m_offAction;
 };
-
 
 class MidiLiveConfig {
 public:
@@ -76,7 +73,6 @@ public:
 	int m_lastDeactivateCmd[4]; // [0]=cmd,[1]=val,[2]=valhw,[3]=relmode
 };
 
-
 class SNM_LiveConfigsView : public SWS_ListView {
 public:
 	SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit);
@@ -87,7 +83,6 @@ protected:
 	void OnItemSelChanged(SWS_ListItem* item, int iState);
 	void OnItemDblClk(SWS_ListItem* item, int iCol);
 };
-
 
 class SNM_LiveConfigsWnd : public SWS_DockWnd {
 public:
@@ -117,7 +112,6 @@ protected:
 	SNM_MiniKnob m_knob;
 #endif
 };
-
 
 class SNM_MidiLiveScheduledJob : public SNM_ScheduledJob {
 public:

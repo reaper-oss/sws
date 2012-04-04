@@ -35,6 +35,7 @@
 // - use action_help_t ? (not finished according to Cockos)
 
 #include "stdafx.h"
+#include "SnM.h"
 #include "../reaper/localize.h"
 
 
@@ -237,7 +238,7 @@ void SNM_NotesHelpWnd::CSurfSetTrackListChange()
 	// this is our only notification of active project tab change, so update everything
 	// (we use a ScheduledJob because of possible multi-notifs)
 	if (!m_internalTLChange) {
-		NoteHelp_UpdateJob* job = new NoteHelp_UpdateJob();
+		SNM_NoteHelp_UpdateJob* job = new SNM_NoteHelp_UpdateJob();
 		AddOrReplaceScheduledJob(job);
 	}
 	else
@@ -503,9 +504,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 				case SNM_NOTES_REGION_NAME:
 #endif
 				case SNM_NOTES_REGION_SUBTITLES:
-					if (g_lastMarkerRegionId > 0)
-						EnumMarkerRegionDesc(GetMarkerRegionIndexFromId(g_lastMarkerRegionId), str, 512, 3, g_notesViewType == SNM_NOTES_REGION_SUBTITLES);
-					else
+					if (g_lastMarkerRegionId <= 0 || !EnumMarkerRegionDesc(GetMarkerRegionIndexFromId(g_lastMarkerRegionId), str, 512, SNM_MARKER_MASK|SNM_REGION_MASK, g_notesViewType == SNM_NOTES_REGION_SUBTITLES) || !*str)
 						lstrcpyn(str, __LOCALIZE("No marker or region at play/edit cursor!","sws_DLG_152"), 512);
 					break;
 				case SNM_NOTES_ACTION_HELP:
@@ -932,30 +931,29 @@ int SNM_NotesHelpWnd::updateMkrRgnNameOrNotes(bool _name)
 {
 	int refreshType = NO_REFRESH;
 
-	double dPos;
-	if (g_locked && GetPlayState()) dPos = GetPlayPosition();
-	else dPos = GetCursorPositionEx(NULL);
+	double dPos=GetCursorPositionEx(NULL), accuracy=SNM_FUDGE_FACTOR;
+	if (g_locked && GetPlayState()) { // playing & update required?
+		dPos = GetPlayPosition();
+		accuracy = 0.1; // do not stress REAPER
+	}
 
-	if (fabs(g_lastMarkerPos-dPos) > 0.1) // 0.1 is enough
+	if (fabs(g_lastMarkerPos-dPos) > accuracy)
 	{
 		g_lastMarkerPos = dPos;
 
-		int id, idx = FindMarkerRegion(dPos, &id);
+		int id, idx = FindMarkerRegion(dPos, SNM_MARKER_MASK|SNM_REGION_MASK, &id);
 		if (id > 0)
 		{
 			if (id != g_lastMarkerRegionId)
 			{
 				g_lastMarkerRegionId = id;
-				
-				// name
 				if (_name)
 				{
 					char* name = NULL;
 					EnumProjectMarkers2(NULL, idx, NULL, NULL, NULL, &name, NULL);
 					SetText(name ? name : "");
 				}
-				// notes
-				else
+				else // subtitle
 				{
 					for (int i=0; i < g_pRegionSubtitles.Get()->GetSize(); i++)
 					{
@@ -1097,7 +1095,7 @@ bool GetNotesChunkFromString(const char* _bufIn, WDL_FastString* _notesOut, cons
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void NoteHelp_UpdateJob::Perform() {
+void SNM_NoteHelp_UpdateJob::Perform() {
 	if (g_pNotesHelpWnd)
 		g_pNotesHelpWnd->Update(true);
 }
@@ -1105,7 +1103,7 @@ void NoteHelp_UpdateJob::Perform() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void NoteHelp_MarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags)
+void SNM_NoteHelp_MarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags)
 {
 	if (g_pNotesHelpWnd && g_notesViewType == SNM_NOTES_REGION_SUBTITLES
 #ifdef _SNM_MARKER_REGION_NAME
@@ -1113,167 +1111,11 @@ void NoteHelp_MarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags)
 #endif
 		)
 	{
-/*JFB schedule job? humm.. would delay things a bit, again..
-		NoteHelp_UpdateJob* job = new NoteHelp_UpdateJob();
+		// we use a ScheduledJob because of possible multi-notifs during project switch (vs CSurfSetTrackListChange)
+		SNM_NoteHelp_UpdateJob* job = new SNM_NoteHelp_UpdateJob();
 		AddOrReplaceScheduledJob(job);
-*/
-		g_pNotesHelpWnd->Update(true);
 	}
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
-{
-	LineParser lp(false);
-	if (lp.parse(line) || lp.getnumtokens() < 1)
-		return false;
-
-	// load project notes
-	if (!strcmp(lp.gettoken_str(0), "<S&M_PROJNOTES"))
-	{
-		WDL_FastString notes;
-		ExtensionConfigToString(&notes, ctx);
-		char buf[MAX_HELP_LENGTH] = "";
-		GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH);
-		g_prjNotes.Get()->Set(buf);
-		return true;
-	}
-	// load track notes
-	else if (!strcmp(lp.gettoken_str(0), "<S&M_TRACKNOTES"))
-	{
-		GUID g;		
-		stringToGuid(lp.gettoken_str(1), &g);
-		MediaTrack* tr = GuidToTrack(&g);
-		if (tr)
-		{
-			WDL_FastString notes;
-			ExtensionConfigToString(&notes, ctx);
-			char buf[MAX_HELP_LENGTH] = "";
-			if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
-				g_pTrackNotes.Get()->Add(new SNM_TrackNotes(tr, buf));
-			return true;
-		}
-	}
-	// load region/marker notes
-	else if (!strcmp(lp.gettoken_str(0), "<S&M_SUBTITLE"))
-	{
-		if (GetMarkerRegionIndexFromId(lp.gettoken_int(1)) >= 0) // still exists?
-		{
-			WDL_FastString notes;
-			ExtensionConfigToString(&notes, ctx);
-			char buf[MAX_HELP_LENGTH] = "";
-			if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
-				g_pRegionSubtitles.Get()->Add(new SNM_RegionSubtitle(lp.gettoken_int(1), buf));
-			return true;
-		}
-	}
-	return false;
-}
-
-static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
-{
-	// *** cleanup: just saves some RAM (as these things won't be saved below anyway)
-
-	// delete unused tracks
-	for (int i = 0; i < g_pTrackNotes.Get()->GetSize(); i++)
-		if (CSurf_TrackToID(g_pTrackNotes.Get()->Get(i)->m_tr, false) < 0)
-			g_pTrackNotes.Get()->Delete(i--, true);
-
-	// remove non-existant markers & regions
-	for (int i=0; i < g_pRegionSubtitles.Get()->GetSize(); i++)
-		if (GetMarkerRegionIndexFromId(g_pRegionSubtitles.Get()->Get(i)->m_id) < 0)
-			g_pRegionSubtitles.Get()->Delete(i--, true);
-
-
-	// *** the meat
-
-	char startLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-	char strId[128] = "";
-	WDL_FastString formatedNotes;
-
-	// save project notes
-	if (g_prjNotes.Get()->GetLength())
-	{
-		strcpy(startLine, "<S&M_PROJNOTES\n|");
-		if (GetNotesChunkFromString(g_prjNotes.Get()->Get(), &formatedNotes, startLine))
-			StringToExtensionConfig(&formatedNotes, ctx);
-	}
-
-	// save track notes
-	for (int i = 0; i < g_pTrackNotes.Get()->GetSize(); i++)
-	{
-		if (g_pTrackNotes.Get()->Get(i)->m_notes.GetLength())
-		{
-			GUID g;
-			if (CSurf_TrackToID(g_pTrackNotes.Get()->Get(i)->m_tr, false) > 0)
-				g = *(GUID*)GetSetMediaTrackInfo(g_pTrackNotes.Get()->Get(i)->m_tr, "GUID", NULL);
-			else
-				g = GUID_NULL; // master track (thanks to the cleanup made above)
-			guidToString(&g, strId);
-			_snprintf(startLine, SNM_MAX_CHUNK_LINE_LENGTH, "<S&M_TRACKNOTES %s\n|", strId);
-
-			if (GetNotesChunkFromString(g_pTrackNotes.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
-				StringToExtensionConfig(&formatedNotes, ctx);
-		}
-	}
-	// save region/marker notes
-	for (int i = 0; i < g_pRegionSubtitles.Get()->GetSize(); i++)
-	{
-		if (g_pRegionSubtitles.Get()->Get(i)->m_notes.GetLength() &&
-			GetMarkerRegionIndexFromId(g_pRegionSubtitles.Get()->Get(i)->m_id) >= 0)
-		{
-			_snprintf(startLine, SNM_MAX_CHUNK_LINE_LENGTH, "<S&M_SUBTITLE %d\n|", g_pRegionSubtitles.Get()->Get(i)->m_id);
-			if (GetNotesChunkFromString(g_pRegionSubtitles.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
-				StringToExtensionConfig(&formatedNotes, ctx);
-		}
-	}
-}
-
-static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
-{
-	g_prjNotes.Cleanup();
-	g_prjNotes.Get()->Set("");
-
-	g_pTrackNotes.Cleanup();
-	g_pTrackNotes.Get()->Empty(true);
-
-	g_pRegionSubtitles.Cleanup();
-	g_pRegionSubtitles.Get()->Empty(true);
-
-	// init S&M project notes with REAPER's ones
-	if (!isUndo)
-	{
-		char buf[BUFFER_SIZE] = "";
-		EnumProjects(-1, buf, BUFFER_SIZE);
-
-		// SWS - It's possible at this point that we're not reading an RPP file (eg during import), check to be sure!
-		// If so, just ignore the possibility that there might be project notes.
-		if (strlen(buf) > 3 && _stricmp(buf+strlen(buf)-3, "RPP") == 0)
-		{
-			WDL_FastString startOfrpp;
-
-			// jut read the very begining of the file (where notes are, no-op if notes are longer)
-			// => much faster REAPER startup (based on the parser tolerance..)
-			if (LoadChunk(buf, &startOfrpp, true, MAX_HELP_LENGTH+128) && startOfrpp.GetLength())
-			{
-				SNM_ChunkParserPatcher p(&startOfrpp);
-				WDL_FastString notes;
-				if (p.GetSubChunk("NOTES", 2, 0, &notes, "RIPPLE") >= 0)
-				{
-					char bufNotes[MAX_HELP_LENGTH] = "";
-					if (GetStringFromNotesChunk(&notes, bufNotes, MAX_HELP_LENGTH))
-						g_prjNotes.Get()->Set(bufNotes);
-				}
-			}
-		}
-	}
-}
-
-static project_config_extension_t g_projectconfig = {
-	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
-};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1422,6 +1264,160 @@ void ExportSubTitleFile(COMMAND_T* _ct)
 		ExportSubRipFile(fn);
 	}
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
+{
+	LineParser lp(false);
+	if (lp.parse(line) || lp.getnumtokens() < 1)
+		return false;
+
+	// load project notes
+	if (!strcmp(lp.gettoken_str(0), "<S&M_PROJNOTES"))
+	{
+		WDL_FastString notes;
+		ExtensionConfigToString(&notes, ctx);
+		char buf[MAX_HELP_LENGTH] = "";
+		GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH);
+		g_prjNotes.Get()->Set(buf);
+		return true;
+	}
+	// load track notes
+	else if (!strcmp(lp.gettoken_str(0), "<S&M_TRACKNOTES"))
+	{
+		GUID g;		
+		stringToGuid(lp.gettoken_str(1), &g);
+		MediaTrack* tr = GuidToTrack(&g);
+		if (tr)
+		{
+			WDL_FastString notes;
+			ExtensionConfigToString(&notes, ctx);
+			char buf[MAX_HELP_LENGTH] = "";
+			if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
+				g_pTrackNotes.Get()->Add(new SNM_TrackNotes(tr, buf));
+			return true;
+		}
+	}
+	// load region/marker notes
+	else if (!strcmp(lp.gettoken_str(0), "<S&M_SUBTITLE"))
+	{
+		if (GetMarkerRegionIndexFromId(lp.gettoken_int(1)) >= 0) // still exists?
+		{
+			WDL_FastString notes;
+			ExtensionConfigToString(&notes, ctx);
+			char buf[MAX_HELP_LENGTH] = "";
+			if (GetStringFromNotesChunk(&notes, buf, MAX_HELP_LENGTH))
+				g_pRegionSubtitles.Get()->Add(new SNM_RegionSubtitle(lp.gettoken_int(1), buf));
+			return true;
+		}
+	}
+	return false;
+}
+
+static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
+{
+	// cleanup: just saves some RAM (as these things won't be saved below anyway)
+//JFB	if (!isUndo)
+	{
+		// delete unused tracks
+		for (int i = 0; i < g_pTrackNotes.Get()->GetSize(); i++)
+			if (CSurf_TrackToID(g_pTrackNotes.Get()->Get(i)->m_tr, false) < 0)
+				g_pTrackNotes.Get()->Delete(i--, true);
+
+		// remove non-existant markers & regions
+		for (int i=0; i < g_pRegionSubtitles.Get()->GetSize(); i++)
+			if (GetMarkerRegionIndexFromId(g_pRegionSubtitles.Get()->Get(i)->m_id) < 0)
+				g_pRegionSubtitles.Get()->Delete(i--, true);
+	}
+
+	char startLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
+	char strId[128] = "";
+	WDL_FastString formatedNotes;
+
+	// save project notes
+	if (g_prjNotes.Get()->GetLength())
+	{
+		strcpy(startLine, "<S&M_PROJNOTES\n|");
+		if (GetNotesChunkFromString(g_prjNotes.Get()->Get(), &formatedNotes, startLine))
+			StringToExtensionConfig(&formatedNotes, ctx);
+	}
+
+	// save track notes
+	for (int i = 0; i < g_pTrackNotes.Get()->GetSize(); i++)
+	{
+		if (g_pTrackNotes.Get()->Get(i)->m_notes.GetLength())
+		{
+			GUID g;
+			if (CSurf_TrackToID(g_pTrackNotes.Get()->Get(i)->m_tr, false) > 0)
+				g = *(GUID*)GetSetMediaTrackInfo(g_pTrackNotes.Get()->Get(i)->m_tr, "GUID", NULL);
+			else
+				g = GUID_NULL; // master track (thanks to the cleanup made above)
+			guidToString(&g, strId);
+			_snprintf(startLine, SNM_MAX_CHUNK_LINE_LENGTH, "<S&M_TRACKNOTES %s\n|", strId);
+
+			if (GetNotesChunkFromString(g_pTrackNotes.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
+				StringToExtensionConfig(&formatedNotes, ctx);
+		}
+	}
+
+	// save region/marker notes
+	for (int i = 0; i < g_pRegionSubtitles.Get()->GetSize(); i++)
+	{
+		if (g_pRegionSubtitles.Get()->Get(i)->m_notes.GetLength() &&
+			GetMarkerRegionIndexFromId(g_pRegionSubtitles.Get()->Get(i)->m_id) >= 0)
+		{
+			_snprintf(startLine, SNM_MAX_CHUNK_LINE_LENGTH, "<S&M_SUBTITLE %d\n|", g_pRegionSubtitles.Get()->Get(i)->m_id);
+			if (GetNotesChunkFromString(g_pRegionSubtitles.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
+				StringToExtensionConfig(&formatedNotes, ctx);
+		}
+	}
+}
+
+static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
+{
+	g_prjNotes.Cleanup();
+	g_prjNotes.Get()->Set("");
+
+	g_pTrackNotes.Cleanup();
+	g_pTrackNotes.Get()->Empty(true);
+
+	g_pRegionSubtitles.Cleanup();
+	g_pRegionSubtitles.Get()->Empty(true);
+
+	// init S&M project notes with REAPER's ones
+	if (!isUndo)
+	{
+		char buf[BUFFER_SIZE] = "";
+		EnumProjects(-1, buf, BUFFER_SIZE);
+
+		// SWS - It's possible at this point that we're not reading an RPP file (eg during import), check to be sure!
+		// If so, just ignore the possibility that there might be project notes.
+		if (strlen(buf) > 3 && _stricmp(buf+strlen(buf)-3, "RPP") == 0)
+		{
+			WDL_FastString startOfrpp;
+
+			// jut read the very begining of the file (where notes are, no-op if notes are longer)
+			// => much faster REAPER startup (based on the parser tolerance..)
+			if (LoadChunk(buf, &startOfrpp, true, MAX_HELP_LENGTH+128) && startOfrpp.GetLength())
+			{
+				SNM_ChunkParserPatcher p(&startOfrpp);
+				WDL_FastString notes;
+				if (p.GetSubChunk("NOTES", 2, 0, &notes, "RIPPLE") >= 0)
+				{
+					char bufNotes[MAX_HELP_LENGTH] = "";
+					if (GetStringFromNotesChunk(&notes, bufNotes, MAX_HELP_LENGTH))
+						g_prjNotes.Get()->Set(bufNotes);
+				}
+			}
+		}
+	}
+}
+
+static project_config_extension_t g_projectconfig = {
+	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////

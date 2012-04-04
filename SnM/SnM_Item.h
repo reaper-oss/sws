@@ -25,10 +25,17 @@
 /
 ******************************************************************************/
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_ITEM_H_
 #define _SNM_ITEM_H_
+
+enum {
+  SNM_ITEM_SEL_LEFT=0,
+  SNM_ITEM_SEL_RIGHT,
+  SNM_ITEM_SEL_UP,
+  SNM_ITEM_SEL_DOWN
+};
 
 char* GetName(MediaItem* _item);
 int getTakeIndex(MediaItem* _item, MediaItem_Take* _take);
@@ -36,6 +43,7 @@ bool deleteMediaItemIfNeeded(MediaItem* _item);
 void SNM_GetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks = false);
 void SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks = false);
 void SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks = false);
+bool ItemInInterval(MediaItem* _item, double _pos1, double _pos2);
 bool ItemsInInterval(double _pos1, double _pos2);
 void splitMidiAudio(COMMAND_T*);
 void smartSplitMidiAudio(COMMAND_T*);
@@ -43,7 +51,7 @@ void smartSplitMidiAudio(COMMAND_T*);
 void splitSelectedItems(COMMAND_T*);
 #endif
 void goferSplitSelectedItems(COMMAND_T*);
-bool SplitSelectAllItemsInRegion(const char* _undoTitle, int _rgnIdx);
+bool SplitSelectAllItemsInInterval(const char* _undoTitle, double _pos1, double _pos2);
 void SplitSelectAllItemsInRegion(COMMAND_T*);
 void copyCutTake(COMMAND_T*);
 void pasteTake(COMMAND_T*);

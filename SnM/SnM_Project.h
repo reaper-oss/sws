@@ -25,7 +25,7 @@
 /
 ******************************************************************************/
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_PROJECT_H_
 #define _SNM_PROJECT_H_

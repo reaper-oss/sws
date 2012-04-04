@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "SnM.h"
 #include "../reaper/localize.h"
 
 
@@ -415,7 +416,7 @@ void applyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _
 bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _nameFromFx, bool _inputFX)
 {
 	bool slotUpdate = false;
-	for (int i = 0; i <= GetNumTracks(); i++)
+	for (int i=0; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i,false); 
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -432,23 +433,23 @@ bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, i
 				fxChain.Insert(nbChStr.Get(), 0);
 
 				char name[SNM_MAX_FX_NAME_LEN] = "";
-				bool master = false;
 				if (_nameFromFx)
 				{
-					SNM_FXSummaryParser p(&fxChain);
-					WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
-					SNM_FXSummary* sum = summaries ? summaries->Get(0) : NULL;
-					if (sum) lstrcpyn(name, sum->m_name.Get(), SNM_MAX_FX_NAME_LEN);
+					if (_inputFX) // no API for that => parse
+					{
+						SNM_FXSummaryParser p(&fxChain);
+						WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
+						SNM_FXSummary* sum = summaries ? summaries->Get(0) : NULL;
+						if (sum) lstrcpyn(name, sum->m_name.Get(), SNM_MAX_FX_NAME_LEN);
+					}
+					else
+						TrackFX_GetFXName(tr, 0, name, SNM_MAX_FX_NAME_LEN);
 				}
-				else
-				{
-					char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-					if (trName) lstrcpyn(name, trName, SNM_MAX_FX_NAME_LEN);
-					else master = true;
-				}
+				else if (char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL))
+					lstrcpyn(name, trName, SNM_MAX_FX_NAME_LEN);
 
 				Filenamize(name);
-				GenerateFilename(_dirPath, master ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
+				GenerateFilename(_dirPath, !i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
 				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
 			}
 		}

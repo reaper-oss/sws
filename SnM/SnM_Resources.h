@@ -25,11 +25,10 @@
 /
 ******************************************************************************/
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_RESOURCES_H_
 #define _SNM_RESOURCES_H_
-
 
 enum {
   SNM_SLOT_FXC=0,
@@ -135,6 +134,7 @@ public:
 	void ClearListSelection();
 	void SelectBySlot(int _slot1, int _slot2 = -1);
 	void FillTypeCombo();
+	void ClearDeleteSlots(int _mode, bool _update);
 protected:
 	void OnInitDlg();
 	void OnDestroy();
@@ -152,7 +152,6 @@ protected:
 	void FillDblClickCombos();
 	void AddSlot(bool _update);
 	void InsertAtSelectedSlot(bool _update);
-	void ClearDeleteSlots(int _mode, bool _update);
 
 	WDL_VirtualComboBox m_cbType, m_cbDblClickType, m_cbDblClickTo;
 	WDL_VirtualIconButton m_btnAutoFill, m_btnAutoSave, m_btnTiedActions, m_btnOffsetTrTemplate;

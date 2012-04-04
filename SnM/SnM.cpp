@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "SnM.h"
 #include "version.h"
 #include "../Misc/Adam.h"
 #include "../reaper/localize.h"
@@ -35,7 +36,7 @@ void QuickTest(COMMAND_T* _ct) {}
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// S&M "static" actions (main section)
+// S&M actions (main section)
 // Beware! S&M actions expect "SWS/S&M: " in their names 
 // (removed from undo point names)
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,7 +47,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Routing & cue buss -----------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (use last settings)" }, "S&M_CUEBUS", cueTrack, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Open/close Cue Buss generator" }, "S&M_SENDS4", openCueBussWnd, "S&&M Cue Buss generator", NULL, isCueBussWndDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Cue Buss generator" }, "S&M_SENDS4", OpenCueBussDlg, "S&&M Cue Buss generator", NULL, IsCueBussDlgDisplayed},
 
 	{ { DEFACCEL, "SWS/S&M: Remove receives from selected tracks" }, "S&M_SENDS5", removeReceives, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Remove sends from selected tracks" }, "S&M_SENDS6", removeSends, NULL, },
@@ -530,14 +531,20 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Region playlist --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_SHOW_RGN_PLAYLIST", OpenRegionPlaylist, "S&&M Region Playlist", NULL, IsRegionPlaylistDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Play (Region Playlist)" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist" }, "S&M_CROP_RGN_PLAYLIST1", CropProjectToPlaylist, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist (new project tab)" }, "S&M_CROP_RGN_PLAYLIST2", CropProjectToPlaylist, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Append playlist to project" }, "S&M_APPEND_RGN_PLAYLIST", CropProjectToPlaylist, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Paste playlist at edit cursor" }, "S&M_PASTE_RGN_PLAYLIST", CropProjectToPlaylist, NULL, 3},
 
 	// Localization -----------------------------------------------------------
 #ifdef _SWS_LOCALIZATION
+/*JFB!!! later..
 	{ { DEFACCEL, "SWS/S&M: Load LangPack file..." }, "S&M_LOAD_LANGPACK", LoadAssignLangPack, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Reset LangPack file to factory settings" }, "S&M_RESET_LANGPACK", ResetLangPack, NULL, },
+*/
 #ifdef _SNM_MISC // wip
-	{ { DEFACCEL, "SWS/S&M: Open/close LangPack files merger" }, "S&M_MERGE_LANGPACK", openLangpackMrgWnd, "S&&M LangPack files merger", NULL, isLangpackMrgWndDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close LangPack files merger" }, "S&M_MERGE_LANGPACK", OpenLangpackMrgDlg, "S&&M LangPack files merger", NULL, IsLangpackMrgDlgDisplayed},
 #endif
 #ifdef _SWS_DEBUG
 	{ { DEFACCEL, "SWS/S&M: [Internal] Generate actions LangPack file..." }, "S&M_GEN_LANGPACK", GenerateSwsActionsLangPack, NULL, },
@@ -565,7 +572,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 // S&M "dynamic" actions (main section)
 //
 // "dynamic" means that the number of instances of each action can be
-// customized in the S&M.ini file (section "NbOfActions"). 
+// customized in the S&M.ini file (section "NbOfActions").
 // In the folowing table:
 // - items are not real commands but "meta" commands, this table must be 
 //   registered with SNMRegisterDynamicCommands()
@@ -669,7 +676,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 // "S&M extension" section
 ///////////////////////////////////////////////////////////////////////////////
 
-/*static*/ MIDI_COMMAND_T g_SNMSection_cmdTable[] = 
+/*JFB static*/ MIDI_COMMAND_T g_SNMSection_cmdTable[] = 
 {
 	{ { DEFACCEL, "SWS/S&M: Apply Live Config 1 (MIDI CC absolute only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Apply Live Config 2 (MIDI CC absolute only)" }, "S&M_LIVECONFIG2", ApplyLiveConfig, NULL, 1},
@@ -697,7 +704,8 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 // Fake toggle states: used to report toggle states in "best effort mode"
 // (example: when an action deals with several selected tracks, the overall
 // toggle state might be a mix of different other toggle states)
-// note: actions using a fake toggle state must explicitely call FakeToggle()
+// note1: actions using a fake toggle state must explicitely call FakeToggle()
+// note2: no fake toggle for MIDI_COMMAND_T yet (only possible in main section)
 ///////////////////////////////////////////////////////////////////////////////
 
 // store fake toogle states, indexed per cmd id (faster + lazy init)
@@ -711,13 +719,6 @@ void FakeToggle(COMMAND_T* _ct) {
 bool FakeIsToggleAction(COMMAND_T* _ct) {
 	return (_ct && _ct->accel.accel.cmd && *g_fakeToggleStates.Get(_ct->accel.accel.cmd, &g_bFalse));
 }
-
-#ifdef _SNM_MISC
-// not used yet, see comments in the "S&M Extension" action section init..
-bool FakeIsToggleAction(MIDI_COMMAND_T* _ct) {
-	return (_ct && _ct->accel.accel.cmd && ((_ct->excecCount%2) == 1));
-}
-#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -924,7 +925,6 @@ WDL_FastString g_SNMIniFn;
 WDL_FastString g_SNMCyclactionIniFn;
 int g_SNMIniFileVersion = 0;
 int g_SNMbeta = 0;
-bool g_SNMClearType = false;
 
 void IniFileInit()
 {
@@ -1108,9 +1108,16 @@ bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
 }
 
 // returns an update flag: 0 if nothing changed, 1: marker, 2: region, 3: both region & marker updates
-// note: just diffs nb of markers/regions (that's enough atm)
+// note: just detect project time mode updates + discrete markers/regions updates (that's enough atm)
 int MarkerRegionChanged()
 {
+	static int prevTimemode = -1;
+	if (int* timemode = (int*)GetConfigVar("projtimemode"))
+		if (*timemode != prevTimemode) {
+			prevTimemode = *timemode;
+			return 3;
+		}
+
 	int x=0, markerCount=0, regionCount=0; bool isRgn;
 	while (x = EnumProjectMarkers2(NULL, x, &isRgn, NULL, NULL, NULL, NULL))
 		if (isRgn) regionCount++;
@@ -1186,6 +1193,7 @@ void SnMCSurfRun()
 
 extern SNM_NotesHelpWnd* g_pNotesHelpWnd;
 extern SNM_LiveConfigsWnd* g_pLiveConfigsWnd;
+extern SNM_RegionPlaylistWnd* g_pRgnPlaylistWnd;
 
 void SnMCSurfSetTrackTitle() {
 	if (g_pNotesHelpWnd) g_pNotesHelpWnd->CSurfSetTrackTitle();
@@ -1195,6 +1203,7 @@ void SnMCSurfSetTrackTitle() {
 void SnMCSurfSetTrackListChange() {
 	if (g_pNotesHelpWnd) g_pNotesHelpWnd->CSurfSetTrackListChange();
 	if (g_pLiveConfigsWnd) g_pLiveConfigsWnd->CSurfSetTrackListChange();
+	if (g_pRgnPlaylistWnd) g_pRgnPlaylistWnd->CSurfSetTrackListChange();
 }
 
 bool g_lastPlayState=false, g_lastPauseState=false, g_lastRecState=false;
@@ -1213,17 +1222,7 @@ void SnMCSurfSetPlayState(bool _play, bool _pause, bool _rec)
 	}
 }
 
-int SnMCSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3)
-{
-#ifdef _SNM_MISC
-	char fn[BUFFER_SIZE] = "";
-	_snprintf(fn, BUFFER_SIZE, "%s%cSNM_Extended.log", GetExePath(), PATH_SLASH_CHAR);
-	if (FILE* f = fopenUTF8(fn, "a")) {
-		char buf[BUFFER_SIZE] = "";
-		_snprintf(buf, BUFFER_SIZE, "call: %d\t%p\t%p\t%p\n", _call, _parm1, _parm2, _parm3);
-		fputs(buf, f);
-		fclose(f);
-	}
-#endif
+int SnMCSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3) {
 	return 0; // return 0 if unsupported
 }
+

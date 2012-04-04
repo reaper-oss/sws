@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "SnM.h"
 
 
 void MECreateCCLane(COMMAND_T* _ct)

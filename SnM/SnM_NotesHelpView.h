@@ -25,13 +25,13 @@
 /
 ******************************************************************************/
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_NOTESVIEW_H_
 #define _SNM_NOTESVIEW_H_
 
-
-enum {
+enum
+{
   SNM_NOTES_PROJECT=0,
   SNM_NOTES_ITEM,
   SNM_NOTES_TRACK,
@@ -43,15 +43,29 @@ enum {
 };
 
 
-class NoteHelp_UpdateJob : public SNM_ScheduledJob {
+class SNM_TrackNotes {
 public:
-	NoteHelp_UpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_NOTEHLP_TLCHANGE, 150) {}
+	SNM_TrackNotes(MediaTrack* _tr, const char* _notes)
+		: m_tr(_tr),m_notes(_notes ? _notes : "") {}
+	MediaTrack* m_tr; WDL_FastString m_notes;
+};
+
+class SNM_RegionSubtitle {
+public:
+	SNM_RegionSubtitle(int _id, const char* _notes) 
+		: m_id(_id),m_notes(_notes ? _notes : "") {}
+	int m_id; WDL_FastString m_notes;
+};
+
+class SNM_NoteHelp_UpdateJob : public SNM_ScheduledJob {
+public:
+	SNM_NoteHelp_UpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_NOTEHLP_UPDATE, 150) {}
 	void Perform();
 };
 
-class NoteHelp_MarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
+class SNM_NoteHelp_MarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
 public:
-	NoteHelp_MarkerRegionSubscriber() : SNM_MarkerRegionSubscriber() {}
+	SNM_NoteHelp_MarkerRegionSubscriber() : SNM_MarkerRegionSubscriber() {}
 	void NotifyMarkerRegionUpdate(int _updateFlags);
 };
 
@@ -102,7 +116,7 @@ protected:
 	WDL_VirtualStaticText m_txtLabel;
 
 	bool m_internalTLChange;
-	NoteHelp_MarkerRegionSubscriber m_mkrRgnSubscriber;
+	SNM_NoteHelp_MarkerRegionSubscriber m_mkrRgnSubscriber;
 };
 
 

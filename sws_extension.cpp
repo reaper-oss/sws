@@ -44,6 +44,7 @@
 #include "TrackList/Tracklist.h"
 #include "Projects/ProjectMgr.h"
 #include "Projects/ProjectList.h"
+#include "SnM/SnM.h"
 #include "Padre/padreActions.h"
 #include "Fingers/FNG_client.h"
 #include "Autorender/Autorender.h"
@@ -434,6 +435,7 @@ void WDL_STYLE_ScaleImageCoords(int *x, int *y) { }
 #define OK_RETURN(a)  { return 1; }
 //#define ERR_RETURN(a) { FILE* f = fopen("c:\\swserror.txt", "a"); if (f) { fprintf(f, a); fclose(f); } return 0; }
 //#define OK_RETURN(a)  { FILE* f = fopen("c:\\swserror.txt", "a"); if (f) { fprintf(f, a); fclose(f); } return 1; }
+
 extern "C"
 {
 	REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE hInstance, reaper_plugin_info_t *rec)
@@ -481,6 +483,7 @@ extern "C"
 		IMPAPI(CountTracks);
 		IMPAPI(CountTrackMediaItems);
 		IMPAPI(CountTrackEnvelopes);
+		IMPAPI(CreateLocalOscHandler);
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
 		IMPAPI(CSurf_OnMuteChange);
@@ -493,6 +496,7 @@ extern "C"
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteTrack);
 		IMPAPI(DeleteTrackMediaItem);
+		IMPAPI(DestroyLocalOscHandler);	
 		IMPAPI(Dock_UpdateDockID);
 		IMPAPI(DockIsChildOfDock);
 		IMPAPI(DockWindowActivate);
@@ -568,6 +572,7 @@ extern "C"
 		IMPAPI(GetSetTrackState);
 		IMPAPI(GetSet_LoopTimeRange);
 		IMPAPI(GetSet_LoopTimeRange2);
+		IMPAPI(GetSubProjectFromSource);
 		IMPAPI(GetTake);
 		IMPAPI(GetTrack);
 		IMPAPI(GetTrackGUID);
@@ -633,6 +638,8 @@ extern "C"
 		IMPAPI(screenset_register);
 		IMPAPI(screenset_registerNew);
 		IMPAPI(SelectProjectInstance);
+		IMPAPI(SendLocalOscMessage);
+		IMPAPI(SetCurrentBPM);
 		IMPAPI(SetEditCurPos);
 		IMPAPI(SetEditCurPos2);
 		IMPAPI(SetMediaItemInfo_Value);
@@ -655,6 +662,7 @@ extern "C"
 		IMPAPI(StopTrackPreview);
 		IMPAPI(stringToGuid);
 		IMPAPI(TimeMap_GetDividedBpmAtTime);
+		IMPAPI(TimeMap_GetTimeSigAtTime);
 		IMPAPI(TimeMap_QNToTime);
 		IMPAPI(TimeMap_timeToQN);
 		IMPAPI(TimeMap2_beatsToTime);
@@ -683,12 +691,16 @@ extern "C"
 		IMPAPI(TrackList_AdjustWindows);
 		IMPAPI(Undo_BeginBlock);
 		IMPAPI(Undo_BeginBlock2);
+		IMPAPI(Undo_CanRedo2);
+		IMPAPI(Undo_CanUndo2);
+		IMPAPI(Undo_DoUndo2);
 		IMPAPI(Undo_EndBlock);
 		IMPAPI(Undo_EndBlock2);
 		IMPAPI(Undo_OnStateChange);
 		IMPAPI(Undo_OnStateChange_Item);
 		IMPAPI(Undo_OnStateChange2);
 		IMPAPI(Undo_OnStateChangeEx);
+		IMPAPI(Undo_OnStateChangeEx2);
 		IMPAPI(UpdateArrange);
 		IMPAPI(UpdateItemInProject);
 		IMPAPI(UpdateTimeline);
@@ -699,8 +711,8 @@ extern "C"
 
 		if (errcnt)
 		{
-			 //JFB: NULL parent so that the message is at least visible in taskbars
-			//      (hidden since REAPER v4 and its "splash 2.0")
+			//JFB: NULL parent so that the message is at least visible in taskbars
+			//     (hidden since REAPER v4 and its "splash 2.0")
 			MessageBox(NULL,
 				"The version of SWS extension you have installed is incompatible with your version of Reaper.\n"
 				"You probably have a Reaper version less than 4.20 installed.\n"

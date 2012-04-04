@@ -25,11 +25,10 @@
 /
 ******************************************************************************/
 
-#pragma once
+//#pragma once
 
 #ifndef _SNM_FINDVIEW_H_
 #define _SNM_FINDVIEW_H_
-
 
 class SNM_FindWnd : public SWS_DockWnd
 {
@@ -37,14 +36,12 @@ public:
 	SNM_FindWnd();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void GetMinSize(int* w, int* h) { *w=297; *h=128; }
-
 	bool Find(int _mode);
 	MediaItem* FindPrevNextItem(int _dir, MediaItem* _item);
 	bool FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaItem_Take*,const char*), bool (*jobItem)(MediaItem*,const char*) = NULL);
 	bool FindTrack(int _dir, bool (*job)(MediaTrack*,const char*));
 	bool FindMarkerRegion(int _dir);
 	void UpdateNotFoundMsg(bool _found);
-
 protected:
 	void OnInitDlg();
 	void OnDestroy();

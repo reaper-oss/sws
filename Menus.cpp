@@ -161,7 +161,6 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	if (GetMenuItemCount(hMenu))
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 
-	// Create the common "Extensions" menu 
 	AddToMenu(hMenu, __LOCALIZE("About SWS Extensions", "sws_ext_menu"), NamedCommandLookup("_SWS_ABOUT"));
 	AddToMenu(hMenu, __LOCALIZE("Auto Color/Icon", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_OPEN"));
 

@@ -928,7 +928,7 @@ void PlaylistPlay(int _playlistId, bool _errMsg)
 		}
 	}
 	if (_errMsg && !g_playingPlaylist)
-		MessageBox(g_pRgnPlaylistWnd?g_pRgnPlaylistWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Nothing to play!\n(empty playlist, removed regions, etc..)","sws_DLG_165"),  __LOCALIZE("S&M -Error","sws_DLG_165"), MB_OK);
+		MessageBox(g_pRgnPlaylistWnd?g_pRgnPlaylistWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Nothing to play!\n(empty playlist, removed regions, etc..)","sws_DLG_165"),  __LOCALIZE("S&M - Error","sws_DLG_165"), MB_OK);
 }
 
 void PlaylistPlay(COMMAND_T* _ct) {

@@ -811,6 +811,7 @@ void EditCustomCommands(COMMAND_T* = NULL)
 
 static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { { 0, 'C', 0 }, "SWS: Open console" },									"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0 },
@@ -838,6 +839,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int ConsoleInit()
 {

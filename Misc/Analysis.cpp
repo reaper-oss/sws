@@ -380,6 +380,7 @@ void SetRMSOptions(COMMAND_T*)
 	}
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Analyze and display item peak and RMS" },	"SWS_ANALYZEITEM",		DoAnalyzeItem,		NULL, },
@@ -394,6 +395,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int AnalysisInit()
 {

@@ -31,6 +31,7 @@
 #include "padreMidiItemFilters.h"
 #include "padreRmeTotalmix.h"
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS/PADRE: Envelope LFO generator" }, "PADRE_ENVLFO", EnvelopeLfo, "LFO Generator...", 0},
@@ -41,6 +42,12 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/PADRE: Shrink selected items: -512 samples" }, "PADRE_SHRINK_512", ShrinkSelItems, NULL, 512},
 	{ { DEFACCEL, "SWS/PADRE: Shrink selected items: -1024 samples" }, "PADRE_SHRINK_1024", ShrinkSelItems, NULL, 1024},
 	{ { DEFACCEL, "SWS/PADRE: Shrink selected items: -2048 samples" }, "PADRE_SHRINK_2048", ShrinkSelItems, NULL, 2048},
+
+	{ {}, LAST_COMMAND, }, // Denote end of table
+};
+//!WANT_LOCALIZE_1ST_STRING_END
+
+
 
 	//{ { DEFACCEL, "SWS/PADRE: Randomize MIDI Note Positions" }, "PADRE_RANDMIDINOTEPOS", RandomizeMidiNotePos, NULL, },
 
@@ -66,9 +73,8 @@ static COMMAND_T g_commandTable[] =
 	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load Factory Preset 7" }, "PADRE_TOTALMIX_LOADFACT7", RmeTotalmixProc, NULL, eTOTALMIX_LOADFACT7},
 	//{ { DEFACCEL, "SWS/PADRE: RME Totalmix Load Factory Preset 8" }, "PADRE_TOTALMIX_LOADFACT8", RmeTotalmixProc, NULL, eTOTALMIX_LOADFACT8},
 
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, }, // for main "Extensions" menu
-	{ {}, LAST_COMMAND, }, // Denote end of table
-};
+
+
 
 static MidiItemProcessor* midiNoteRandomizer = NULL;
 

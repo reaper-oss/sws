@@ -638,7 +638,7 @@ void ResetSection(int _section)
 ////////////////////
 
 SNM_CyclactionsView::SNM_CyclactionsView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, COL_L_COUNT, g_cyclactionsCols, "LCyclactionViewState", false) {}
+:SWS_ListView(hwndList, hwndEdit, COL_L_COUNT, g_cyclactionsCols, "LCyclactionViewState", false, "sws_DLG_161") {}
 
 void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax)
 {
@@ -739,7 +739,7 @@ void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeySta
 ////////////////////
 
 SNM_CommandsView::SNM_CommandsView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, COL_R_COUNT, g_commandsCols, "RCyclactionViewState", false, false)
+:SWS_ListView(hwndList, hwndEdit, COL_R_COUNT, g_commandsCols, "RCyclactionViewState", false, "sws_DLG_161", false)
 {
 //	SetWindowLongPtr(hwndList, GWL_STYLE, GetWindowLongPtr(hwndList, GWL_STYLE) | LVS_SINGLESEL);
 }

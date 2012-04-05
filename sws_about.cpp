@@ -78,11 +78,13 @@ void OpenAboutBox(COMMAND_T*)
 	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_ABOUT), g_hwndParent, doAbout);
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: About" }, "SWS_ABOUT", OpenAboutBox, "About SWS Extensions", },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int AboutBoxInit()
 {

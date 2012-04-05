@@ -381,6 +381,7 @@ void UnselNotRender(COMMAND_T* = NULL)
 	UpdateTimeline();
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Unselect all items on selected track(s)" },							"SWS_UNSELONTRACKS",	UnselOnTracks,		},
@@ -403,6 +404,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int ItemSelInit()
 {

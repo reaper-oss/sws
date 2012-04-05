@@ -889,6 +889,7 @@ void ItemToTrackCol(COMMAND_T* = NULL)
 	UpdateTimeline();
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Open color management window" },                          "SWSCOLORWND",			ShowColorDialog,	"Show color management", },
@@ -977,7 +978,9 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, NULL }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
+//JFB menu items are not localized here (ideally it should be done through __LOCALIZE() and not with the table command above).
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
 {
 	int menuid = -1;

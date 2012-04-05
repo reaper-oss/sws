@@ -117,6 +117,7 @@ bool IsRecInputChecked(COMMAND_T*)
 	return g_bEnRecInputCheck;
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Enable checking for duplicate inputs when recording" },		"SWS_ENRECINCHECK",		SetRecordInputCheck, NULL, 1, },
@@ -124,6 +125,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle checking for duplicate inputs when recording" },		"SWS_TOGRECINCHECK",	SetRecordInputCheck, NULL, -1, IsRecInputChecked },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int RecordCheckInit()
 {

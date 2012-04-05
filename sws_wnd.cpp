@@ -597,9 +597,9 @@ void SWS_DockWnd::KillTooltip(bool doRefresh)
 // SWS_ListView
 ///////////////////////////////////////////////////////////////////////////////
 
-SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips, bool bDrawArrow)
+SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips, const char* cLocalizeSection, bool bDrawArrow)
 :m_hwndList(hwndList), m_hwndEdit(hwndEdit), m_hwndTooltip(NULL), m_iSortCol(1), m_iEditingItem(-1), m_iEditingCol(0),
-  m_iCols(iCols), m_pCols(NULL), m_pDefaultCols(pCols), m_bDisableUpdates(false), m_cINIKey(cINIKey), m_bDrawArrow(bDrawArrow),
+  m_iCols(iCols), m_pCols(NULL), m_pDefaultCols(NULL), m_bDisableUpdates(false), m_cINIKey(cINIKey), m_cLocalizeSection(cLocalizeSection),m_bDrawArrow(bDrawArrow),
 #ifndef _WIN32
   m_pClickedItem(NULL)
 #else
@@ -612,7 +612,22 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 
 	// Load sort and column data
 	m_pCols = new SWS_LVColumn[m_iCols];
-	memcpy(m_pCols, m_pDefaultCols, sizeof(SWS_LVColumn) * m_iCols);
+	m_pDefaultCols = new SWS_LVColumn[m_iCols];
+	if (m_cLocalizeSection)
+	{
+		for (int i=0; i<m_iCols; i++)
+		{
+			m_pCols[i].iWidth = m_pDefaultCols[i].iWidth = pCols[i].iWidth;
+			m_pCols[i].iType = m_pDefaultCols[i].iType = pCols[i].iType;
+			m_pCols[i].iPos = m_pDefaultCols[i].iPos = pCols[i].iPos;
+			m_pCols[i].cLabel = m_pDefaultCols[i].cLabel = __localizeFunc(pCols[i].cLabel, m_cLocalizeSection, 0);
+		}
+	}
+	else
+	{
+		memcpy(m_pDefaultCols, pCols, sizeof(SWS_LVColumn) * m_iCols);
+		memcpy(m_pCols, m_pDefaultCols, sizeof(SWS_LVColumn) * m_iCols);
+	}
 
 	char cDefaults[256];
 	sprintf(cDefaults, "%d", m_iSortCol);

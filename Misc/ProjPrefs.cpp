@@ -147,6 +147,7 @@ void MetronomeOff(COMMAND_T*)
 		Main_OnCommand(40364, 0);
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Save auto crossfade state" },								"SWS_SAVEXFD",			SaveXFade,			},
@@ -179,6 +180,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int ProjPrefsInit()
 {

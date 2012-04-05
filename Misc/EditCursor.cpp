@@ -132,7 +132,7 @@ void MoveCursorFade(COMMAND_T* ct)
 	SetEditCurPos(dPos, true, false);
 }
 
-
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Undo edit cursor move" },					"SWS_EDITCURUNDO",		UndoEditCursor, },
@@ -150,6 +150,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
 {

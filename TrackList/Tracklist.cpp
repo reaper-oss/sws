@@ -65,11 +65,13 @@ static bool AddFXSubMenu(HMENU *submenu, MediaTrack *track);
 
 enum TL_COLS { COL_NUM, COL_NAME, COL_TCP, COL_MCP, COL_ARM, COL_MUTE, COL_SOLO, /*COL_INPUT, */ NUM_COLS };
 
+// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_108
 static SWS_LVColumn g_cols[] = { { 25, 0, "#" }, { 250, 1, "Name" }, { 40, 2, "TCP" }, { 40, 2, "MCP" },
 	{ 40, 2, "Arm", -1 },  { 40, 2, "Mute", -1 }, { 40, 2, "Solo", -1 } /*, { 40, 1, "Input", -1 } */ };
+// !WANT_LOCALIZE_STRINGS_END
 
 SWS_TrackListView::SWS_TrackListView(HWND hwndList, HWND hwndEdit, SWS_TrackListWnd* pTrackListWnd)
-:SWS_ListView(hwndList, hwndEdit, NUM_COLS, g_cols, "TrackList View State", false), m_pTrackListWnd(pTrackListWnd)
+:SWS_ListView(hwndList, hwndEdit, NUM_COLS, g_cols, "TrackList View State", false, "sws_DLG_108"), m_pTrackListWnd(pTrackListWnd)
 {
 }
 
@@ -809,6 +811,7 @@ static bool TrackListWindowEnabled(COMMAND_T*)
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS: Show Tracklist" },								"SWSTL_OPEN",		OpenTrackList,		"SWS Tracklist", 0, TrackListWindowEnabled },
@@ -845,6 +848,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Snapshot current track visibility" },            "SWSTL_SNAPSHOT",   NewVisSnapshot,		NULL, },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int TrackListInit()
 {

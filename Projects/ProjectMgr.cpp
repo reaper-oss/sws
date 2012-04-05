@@ -332,6 +332,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 COMMAND_T g_projMgrCmdTable[] = 
 {
 	{ { DEFACCEL, "SWS: Save list of open projects" },	"SWS_PROJLISTSAVE",		SaveProjectList,		"Save list of open projects...", },
@@ -356,6 +357,7 @@ COMMAND_T g_projMgrCmdTable[] =
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 static int g_iORPCmdIndex = 0;
 static void menuhook(const char* menustr, HMENU hMenu, int flag)

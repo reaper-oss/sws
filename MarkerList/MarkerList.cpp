@@ -44,10 +44,12 @@ static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<MarkerList> > g_savedLists;
 MarkerList* g_curList = NULL;
 SWS_MarkerListWnd* g_pMarkerList = NULL;
 
+// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_102
 static SWS_LVColumn g_cols[] = { { 75, 0, "Time" }, { 45, 0, "Type" }, { 30, 0, "ID" }, { 170, 1, "Description" },  { 70, 0, "Color", -1 }};
+// !WANT_LOCALIZE_STRINGS_END
 
 SWS_MarkerListView::SWS_MarkerListView(HWND hwndList, HWND hwndEdit, SWS_MarkerListWnd* pList)
-:SWS_ListView(hwndList, hwndEdit, 5, g_cols, "MarkerList View State", false), m_pMarkerList(pList)
+:SWS_ListView(hwndList, hwndEdit, 5, g_cols, "MarkerList View State", false, "sws_DLG_102"), m_pMarkerList(pList)
 {
 }
 
@@ -635,6 +637,7 @@ static bool MarkerListEnabled(COMMAND_T*)
 	return g_pMarkerList->IsValidWindow();
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { { FSHIFT | FCONTROL | FVIRTKEY, 'M', 0 }, "SWS: Open marker list" },				"SWSMARKERLIST1",  OpenMarkerList,    "SWS MarkerList", 0, MarkerListEnabled },
@@ -669,6 +672,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {

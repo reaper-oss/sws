@@ -58,19 +58,9 @@ void DoMoveEditCursor64thRight(COMMAND_T*)
 	SetEditCurPos(TimeMap_QNToTime(newbeats),false,false);
 }
 
-// ***************************************************************************
-// Here's where you define all your commands:
-// 1) accel structure for the keyboard shortcut
-// 2) Text for the action list
-// 3) Text for the register command
-// 4) Function to be called on command hook
-// 5) Menu text
-// If you don't want a command to appear in the menu, set menu text to NULL
-// Set menu text to SWS_SEPARATOR and rest to NULL to add menu separator
-// Can also have SWS_STARTSUBMENU and SWS_ENDSUBMENU
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 COMMAND_T g_XenCommandTable[] = 
-{	//    ACCELL     Name for action list     Unique_Name Function      Menu text/SEPARATOR  Submenu?
-	{ { { 0, 0, 1 }, NULL }, SWS_STARTSUBMENU, NULL, "Item/Take selection", },
+{
 	{ { DEFACCEL, "Xenakios/SWS: Invert item selection" },										"XENAKIOS_INVERTITEMSELECTION",		DoInvertItemSelection,				"Invert item selection", },
 	{ { DEFACCEL, "Xenakios/SWS: Skip select items in selected tracks..." },					"XENAKIOS_SELECT_EVERY_NTH_ITEM",	DoSkipSelectAllItemsOnTracks,		"Skip select items in selected tracks...", },
 	{ { DEFACCEL, "Xenakios/SWS: Skip select items from selected items..." },					"XENAKIOS_SKIP_SELECT_FROM_ITEMS",	DoSkipSelectFromSelectedItems,		"Skip select items from selected items...", },
@@ -84,22 +74,16 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Switch item contents to first cue" },							"XENAKIOS_SWITCHITEMTOFIRSTCUE",	DoSwitchItemToFirstCue,				"Switch item contents to first cue", },
 	{ { DEFACCEL, "Xenakios/SWS: Switch item contents to random cue" },							"XENAKIOS_SWITCHITEMTORNDCUE",		DoSwitchItemToRandomCue,			"Switch item contents to random cue", },
 	{ { DEFACCEL, "Xenakios/SWS: Switch item contents to random cue (preserve item length)" },	"XENAKIOS_SWITCHITEMTORNDCUEPL",	DoSwitchItemToRandomCuePresvLen,	"Switch item contents to random cue (preserve item length)", },
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, "Xenakios/SWS: Select first take in selected items" },				"XENAKIOS_SELECTFIRSTTAKEOFITEMS",	DoSelectFirstTakesInItems,		"Select first take in selected items", },
 	{ { DEFACCEL, "Xenakios/SWS: Select last take in selected items" },					"XENAKIOS_SELECTLASTTAKEOFITEMS",	DoSelectLastTakesInItems,		"Select last take in selected items", },
 	{ { DEFACCEL, "Xenakios/SWS: Select takes in selected items, shuffled random" },	"XENAKIOS_SHUFFLESELECTTAKES",		DoShuffleSelectTakesInItems,	"Select takes in selected items, shuffled random", },
 	{ { DEFACCEL, "Xenakios/SWS: Select takes of selected items cyclically" },			"XENAKIOS_RRSELECTTAKESOFITEMS",	DoRoundRobinSelectTakes,		"Select takes of selected items cyclically", },
 	{ { DEFACCEL, "Xenakios/SWS: Store current selected takes" },						"XENAKIOS_STORECURSELECTEDTAKES",	DoStoreSelectedTakes,			"Store current selected takes", },
 	{ { DEFACCEL, "Xenakios/SWS: Recall selected takes" },								"XENAKIOS_RECALLSELECTEDTAKES",		DoRecallSelectedTakes,			"Recall selected takes", },
-	{ {}, SWS_ENDSUBMENU, },
-//	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
-	{ { { 0, 0, 2 }, NULL }, SWS_STARTSUBMENU, NULL, "Item/Take manipulation", },
 	{ { DEFACCEL, "Xenakios/SWS: Repeat paste..." },					"XENAKIOS_REPEATPASTE", DoRepeatPaste,	"Repeat Paste...", },
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, "Xenakios/SWS: Choose files for random insert..." },	"XENAKIOS_CHOOSE_FILES_FOR_RANDOMINSERT", DoSelectFiles,	"Choose files for random insert...", },
 	{ { DEFACCEL, "Xenakios/SWS: Insert random file" }, "XENAKIOS_INSERT_RANDOMFILE", DoInsertRandom,	"Insert random file", },
 	{ { DEFACCEL, "Xenakios/SWS: Insert shuffled random file" }, "XENAKIOS_INSERTSHUFFLEDRANDOMFILE", DoInsertShuffledRandomFile,	"Insert Shuffled random file", },
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, "Xenakios/SWS: Randomize item positions..." }, "XENAKIOS_RANDOMIZE_ITEMPOS", DoRandomizePositionsDlg,	"Randomize item positions...", },
 	{ { DEFACCEL, "Xenakios/SWS: Nudge item positions left, time based" }, "XENAKIOS_NUDGEITEMPOS_MINUS_SECS", DoNudgeItemsLeftSecsAndConfBased, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Nudge item positions right, time based" }, "XENAKIOS_NUDGEITEMPOS_PLUS_SECS", DoNudgeItemsRightSecsAndConfBased, NULL, },
@@ -113,7 +97,6 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Trim/untrim item right edge to edit cursor" }, "XENAKIOS_TRIM_RIGHTEDGETO_EDCURSOR", DoTrimRightEdgeToEditCursor,	"Trim/Untrim item right edge to edit cursor", },
 	{ { DEFACCEL, "Xenakios/SWS: Scale item positions/lengths by static percentage..." }, "XENAKIOS_SCALEITEMPOS_STATIC", DoScaleItemPosStaticDlg,	"Scale item positions/lengths by static percentage...", },
 	{ { DEFACCEL, "Xenakios/SWS: Reposition selected items..." }, "XENAKIOS_REPOSITION_ITEMS", DoReposItemsDlg,	"Reposition selected items...", },
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, "Xenakios/SWS: Rename selected takes (deprecated)..." }, "XENAKIOS_RENAMEMULTIPLETAKES", DoRenameTakeDlg,	"Rename selected takes...", },
 	{ { DEFACCEL, "Xenakios/SWS: Auto-rename selected takes..." }, "XENAKIOS_AUTORENAMETAKES", DoAutoRename,	"Auto-rename selected takes...", },
 	{ { DEFACCEL, "Xenakios/SWS: Rename selected takes with BWAV description" }, "XENAKIOS_BROADCAST_TAKERENAME", DoRenameTakesWithBWAVDesc,	"Rename selected takes with BWAV description", },
@@ -152,7 +135,6 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Pan takes of item symmetrically" }, "XENAKIOS_PANTAKESOFITEMSYM", DoPanTakesSymmetricallyWithUndo, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Implode items to takes and pan symmetrically" }, "XENAKIOS_IMPLODEITEMSPANSYMMETRICALLY", DoImplodeTakesSetPlaySetSymPans, NULL, },
 
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL, "Xenakios/SWS: Split items at transients" }, "XENAKIOS_SPLIT_ITEMSATRANSIENTS", DoSplitItemsAtTransients, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Apply track FX to items and reset volume" }, "XENAKIOS_APPLYTRACKFXSTEREORESETVOL", DoApplyTrackFXStereoAndResetVol,	"Apply track FX to items and reset volume", },
 	{ { DEFACCEL, "Xenakios/SWS: Apply track FX to items (mono) and reset volume" }, "XENAKIOS_APPLYTRACKFXMONORESETVOL", DoApplyTrackFXMonoAndResetVol,	"Apply track FX to items (mono) and reset volume", },
@@ -160,9 +142,6 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Move cursor to previous transient minus default fade time" }, "XENAKIOS_MOVECURPREV_TRANSMINUSFADE", DoMoveCurPrevTransMinusFade, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Process item with Rubberband..." }, "XENAKIOS_PROCESSRUBBERBAND", DoShowRubberbandDlg, NULL, },
 	
-	{ {}, SWS_ENDSUBMENU, },
-//	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
-	{ { { 0, 0, 3 }, NULL }, SWS_STARTSUBMENU, NULL, "Track/Mixer/Envelopes", },
 	{ { DEFACCEL, "Xenakios/SWS: Reset volume and pan of selected tracks" }, "XENAKIOS_RESETTRACKVOLANDPAN1", DoResetTracksVolPan,	"Reset volume and pan of selected tracks", },
 	{ { DEFACCEL, "Xenakios/SWS: Set volume of selected tracks to 0.0 dB" }, "XENAKIOS_RESETTRACKVOL1", DoSetTrackVolumeToZero,	"Set volume of selected tracks to 0.0 dB", },
 	
@@ -200,9 +179,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Select tracks with no items" }, "XENAKIOS_SELTRAXNOITEMS", DoSelectTracksWithNoItems,	"Select tracks with no items", },
 	{ { DEFACCEL, "Xenakios/SWS: Select tracks with \"BUSS\" in name" }, "XENAKIOS_SELTRAXWITHBUSS", DoSelectTracksContainingBuss,	"Select tracks with \"BUSS\" in name", },
 	{ { DEFACCEL, "Xenakios/SWS: Unselect tracks with \"BUSS\" in name" }, "XENAKIOS_UNSELTRAXWITHBUSS", DoUnSelectTracksContainingBuss,	"Unselect tracks with \"BUSS\" in name", },
-/*JFB "not implemented" ! Issue 284
-	{ { DEFACCEL, "Xenakios/SWS: Select last track of folder" }, "XENAKIOS_SELLASTTRACKOFFOLDER", DoSelectLastTrackOfFolder,	"Select last track of folder", },
-*/
+
 	{ { DEFACCEL, "Xenakios/SWS: Dismantle selected folder" }, "XENAKIOS_SELTRACKTONOTFOLDER", DoSetSelectedTrackNormal,	"Dismantle selected folder", },
 	
 	{ { DEFACCEL, "Xenakios/SWS: Set selected tracks as folder" }, "XENAKIOS_SELTRACKSASFOLDER", DoSetSelectedTracksAsFolder,	"Set selected tracks as folder", },
@@ -211,7 +188,6 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Minimize selected tracks send panel height in mixer" }, "XENAKIOS_MINIZMIXSENDHEIGHT", DoMinMixSendPanelH, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Minimize selected tracks send and FX panel height in mixer" }, "XENAKIOS_MINIZMIXSENDFXHEIGHT", DoMinMixSendAndFxPanelH, NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Maximize selected tracks FX panel height in mixer" }, "XENAKIOS_MAXMIXFXPANHEIGHT", DoMaxMixFxPanHeight, NULL, },
-	{ {}, SWS_ENDSUBMENU, },
 
 	{ { DEFACCEL, "Xenakios/SWS: Save project markers as text..." }, "XENAKIOS_SAVE_MARKERS_AS_TEXT", DoSaveMarkersAsTextFile,	NULL, },
 	{ { DEFACCEL, "Xenakios/SWS: Launch external tool 1" }, "XENAKIOS_LAUNCHEXTTOOL", DoLaunchExtTool,	NULL, 1 },
@@ -373,8 +349,7 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Disk space calculator" }, "XENAKIOS_DISKSPACECALC", DoShowDiskspaceCalc,NULL, },
 
 	{ { DEFACCEL, "Xenakios/SWS: Command parameters" }, "XENAKIOS_SHOW_COMMANDPARAMS", DoShowCommandParameters,	"Command parameters", },
-
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	
 	{ {}, LAST_COMMAND, } // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END

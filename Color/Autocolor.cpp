@@ -70,7 +70,7 @@ static SWS_LVColumn g_cols[] = { {25, 0, "#" }, { 185, 1, "Filter" }, { 70, 1, "
 void AutoColorSaveState();
 
 SWS_AutoColorView::SWS_AutoColorView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "AutoColorViewState", false)
+:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "AutoColorViewState", false, "sws_DLG_115")
 {
 }
 
@@ -856,6 +856,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Open auto color/icon window" },	"SWSAUTOCOLOR_OPEN",	OpenAutoColor,		"SWS Auto color/icon",		0, IsAutoColorOpen },
@@ -864,6 +865,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Apply auto coloring" },			"SWSAUTOCOLOR_APPLY",	ApplyAutoColor,	},
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int AutoColorInit()
 {

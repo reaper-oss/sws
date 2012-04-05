@@ -32,10 +32,12 @@
 // Globals
 SWS_ProjectListWnd* g_pProjList = NULL;
 
+// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_146
 static SWS_LVColumn g_cols[] = { { 30, 0, "#" }, { 100, 0, "Name" }, { 185, 0, "Path", -1 }, };
+// !WANT_LOCALIZE_STRINGS_END
 
 SWS_ProjectListView::SWS_ProjectListView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 3, g_cols, "ProjListViewState", false)
+:SWS_ListView(hwndList, hwndEdit, 3, g_cols, "ProjListViewState", false, "sws_DLG_146")
 {
 }
 

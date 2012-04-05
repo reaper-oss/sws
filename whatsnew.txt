@@ -1,21 +1,20 @@
-+Fixed some dropped character bugs in Label processor
-+ClearType for tooltips too (optional: set ClearTypeFont to 1 in the section [General] of the S&M.ini file)
-+Refresh some S&M views when changing time mode
+SWS localization (BETA)
+The SWS extension now also uses the language pack file defined in the preferences (just like REAPER).
+The SWS template LangPack file is available here: http://code.google.com/p/sws-extension/downloads/list (it will be regulary updated with new SWS releases). This file should be merged with the main REAPER LangPack file as explained http://forum.cockos.com/showpost.php?p=885893&postcount=83|here|.
+All action names can be translated (except SWS/FNG ones). Many dialog boxes and windows can be translated (it will be an on-going work..). Only S&M windows will be dynamically sized according to string lengths
 
-Region playlist (BETA)
-+Tweaks: added tooltips, retain current playlist, etc..
-+Fixed playlist refresh issue when swtching projects
-+Fixed button refresh issue on transport stop
-Play preview:
-+Added options "Play regions until next measure" and "Play regions until next beat" (see the v2.2.0 #3 changelog): right click the play button
-+Fixed possible swicth one measure too early
-+Hardened play preview at high BPMs
-+Fixed possible ordering issue with nested markers in regions
+Region playlist
++Fixes, tweaks (added tooltips, retain current playlist, etc..)
++Added options (right-click the play button): "Play regions until next measure" and "Play regions until next beat" (see the "important note" in the v2.2.0 #3 changelog)
 Added actions (and new context menu items):
 +SWS/S&M: Region Playlist - Crop project to playlist
 +SWS/S&M: Region Playlist - Crop project to playlist (new project tab)
 +SWS/S&M: Region Playlist - Append playlist to project
 +SWS/S&M: Region Playlist - Paste playlist at edit cursor
+
++Fixed some dropped character bugs in Label processor
++ClearType for tooltips too (optional: set ClearTypeFont to 1 in the section [General] of the S&M.ini file)
++Refresh some S&M views when changing time mode
 
 !v2.2.0 #3 (March 25, 2012)
 <b>Dropped support for REAPER v3.x, REAPER >= v4.20 is required!</b>

@@ -43,7 +43,7 @@
 #define UTF8_CIRCLE "\xE2\x97\xA6"
 #define UTF8_BOX "\xE2\x96\xA1"
 #define UTF8_BBOX "\xE2\x96\xA0"
-#define SWS_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + IsSwsAction(_ct->accel.desc)) // +IsSwsAction() to skip "SWS: ", "SWS/S&M: ", "SWS/FNG: ", etc...
+#define SWS_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->accel.desc) + IsSwsAction(_ct->accel.desc)) // +IsSwsAction() to skip "SWS: ", "SWS/S&M: ", "SWS/FNG: ", etc...
 #define __ARRAY_SIZE(x) sizeof(x) / sizeof(x[0])
 // For checking to see if items are adjacent
 // Found one case of items after split having diff edges 5e-11 apart, 1e-9 (still much greater than one sample)
@@ -229,6 +229,6 @@ void makeEscapedConfigString(const char *in, WDL_FastString *out); //JFB: temp (
 #define SWS_I8N_ACTION_SEC		"sws_actions"
 #define SNM_I8N_ACTION_SEC		"s&m_section_actions"
 
-const char* GetLocalizedActionName(const char* _custId, const char* _defaultStr, const char* _section = SWS_I8N_ACTION_SEC);
+const char* GetLocalizedActionName(const char* _defaultStr, int _flags = 0, const char* _section = SWS_I8N_ACTION_SEC);
 TrackEnvelope* SWS_GetTakeEnvelopeByName(MediaItem_Take* take, const char* envname);
 TrackEnvelope* SWS_GetTrackEnvelopeByName(MediaTrack* track, const char* envname);

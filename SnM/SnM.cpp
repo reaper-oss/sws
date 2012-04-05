@@ -41,13 +41,14 @@ void QuickTest(COMMAND_T* _ct) {}
 // (removed from undo point names)
 ///////////////////////////////////////////////////////////////////////////////
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_SNM_cmdTable[] = 
 {
-//	{ { DEFACCEL, "SWS/S&M: QuickTest" }, "S&M_QUICKTEST", QuickTest, NULL, },
+//	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest" }, "S&M_QUICKTEST", QuickTest, NULL, },
 
 	// Routing & cue buss -----------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (use last settings)" }, "S&M_CUEBUS", cueTrack, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Open/close Cue Buss generator" }, "S&M_SENDS4", OpenCueBussDlg, "S&&M Cue Buss generator", NULL, IsCueBussDlgDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Cue Buss generator" }, "S&M_SENDS4", OpenCueBussDlg, NULL, NULL, IsCueBussDlgDisplayed},
 
 	{ { DEFACCEL, "SWS/S&M: Remove receives from selected tracks" }, "S&M_SENDS5", removeReceives, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Remove sends from selected tracks" }, "S&M_SENDS6", removeSends, NULL, },
@@ -89,7 +90,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (cycle)" }, "S&M_WNFOCUS3", cycleFocusFXWndAllTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Focus next floating FX (cycle)" }, "S&M_WNFOCUS4", cycleFocusFXWndAllTracks, NULL, 1},
 #endif
-	// see above comment, used to be "... (+ main window on cycle)" => turned into "... (cycle)"
+	// see above comment, used to be `... (+ main window on cycle)` => turned into `... (cycle)`
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS5", cycleFocusFXMainWndSelTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS6", cycleFocusFXMainWndSelTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (cycle)" }, "S&M_WNFOCUS7", cycleFocusFXMainWndAllTracks, NULL, -1},
@@ -198,7 +199,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) online/offline for selected tracks" }, "S&M_FXOFFEXCPTSEL", toggleExceptFXOfflineSelectedTracks, NULL, 0, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) bypass for selected tracks" }, "S&M_FXBYPEXCPTSEL", toggleExceptFXBypassSelectedTracks, NULL, 0, FakeIsToggleAction},
 #ifdef _SNM_MISC // very specific..
-	//JFB TODO: release as "hidden" dynamic actions (but ct->user needs to be 0-based first)
+	//JFB TODO: release as `hidden` dynamic actions (but ct->user needs to be 0-based first)
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 1) online/offline for selected tracks" }, "S&M_FXOFFEXCPT1", toggleExceptFXOfflineSelectedTracks, NULL, 1, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 2) online/offline for selected tracks" }, "S&M_FXOFFEXCPT2", toggleExceptFXOfflineSelectedTracks, NULL, 2, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 3) online/offline for selected tracks" }, "S&M_FXOFFEXCPT3", toggleExceptFXOfflineSelectedTracks, NULL, 3, FakeIsToggleAction},
@@ -228,10 +229,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Unbypass all take FX for selected items" }, "S&M_TAKEFX_UNBYPASS", setAllFXsBypassSelectedItems, NULL, 0},
 
 	// Resources view
-	{ { DEFACCEL, "SWS/S&M: Open/close Resources window" }, "S&M_SHOW_RESOURCES_VIEW", OpenResourceView, "S&&M Resources", -1, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Resources window" }, "S&M_SHOW_RESOURCES_VIEW", OpenResourceView, NULL, -1, IsResourceViewDisplayed},
 
 	// FX Chains (items & tracks) ---------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (FX chains)" }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, "S&&M Resources", SNM_SLOT_FXC, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (FX chains)" }, "S&M_SHOWFXCHAINSLOTS", OpenResourceView, NULL, SNM_SLOT_FXC, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot..." }, "S&M_CLRFXCHAINSLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_FXC},
 	{ { DEFACCEL, "SWS/S&M: Delete all FX chain slots" }, "S&M_DEL_ALL_FXCHAINSLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_FXC},
 	{ { DEFACCEL, "SWS/S&M: Auto-save FX Chain slots for selected tracks" }, "S&M_SAVE_FXCHAIN_SLOT1", ResViewAutoSaveFXChain, NULL, FXC_AUTOSAVE_PREF_TRACK},
@@ -297,7 +298,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open project path in explorer/finder" }, "S&M_OPEN_PRJ_PATH", openProjectPathInExplorerFinder, NULL, },
 	
 	// Media file slots -------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (media files)" }, "S&M_SHOW_RESVIEW_MEDIA", OpenResourceView, "S&&M Resources", SNM_SLOT_MEDIA, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (media files)" }, "S&M_SHOW_RESVIEW_MEDIA", OpenResourceView, NULL, SNM_SLOT_MEDIA, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear media file slot..." }, "S&M_CLR_MEDIA_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_MEDIA},
 	{ { DEFACCEL, "SWS/S&M: Delete all media file slots" }, "S&M_DEL_ALL_MEDIA_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_MEDIA},
 	{ { DEFACCEL, "SWS/S&M: Auto-save media file slots for selected items" }, "S&M_SAVE_MEDIA_SLOT", ResViewAutoSave, NULL, SNM_SLOT_MEDIA},
@@ -314,7 +315,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Add media file to selected items as takes, prompt for slot" }, "S&M_ADDMEDIA_SELITEMp", InsertMediaSlotTakes, NULL, -1},
 
 	// Image slots ------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (images)" }, "S&M_SHOW_RESVIEW_IMAGE", OpenResourceView, "S&&M Resources", SNM_SLOT_IMG, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (images)" }, "S&M_SHOW_RESVIEW_IMAGE", OpenResourceView, NULL, SNM_SLOT_IMG, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear image slot..." }, "S&M_CLR_IMAGE_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_IMG},
 	{ { DEFACCEL, "SWS/S&M: Delete all image slots" }, "S&M_DEL_ALL_IMAGE_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_IMG},
 	{ { DEFACCEL, "SWS/S&M: Show image, prompt for slot" }, "S&M_SHOW_IMAGEp", ShowImageSlot, NULL, -1},
@@ -322,7 +323,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Theme slots ------------------------------------------------------------
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (themes)" }, "S&M_SHOW_RESVIEW_THEME", OpenResourceView, "S&&M Resources", SNM_SLOT_THM, IsResourceViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (themes)" }, "S&M_SHOW_RESVIEW_THEME", OpenResourceView, NULL, SNM_SLOT_THM, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear theme slot..." }, "S&M_CLR_THEME_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_THM},
 	{ { DEFACCEL, "SWS/S&M: Delete all theme slots" }, "S&M_DEL_ALL_THEME_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_THM},
 	{ { DEFACCEL, "SWS/S&M: Load theme, prompt for slot" }, "S&M_LOAD_THEMEp", LoadThemeSlot, NULL, -1},
@@ -366,7 +367,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 #endif
 	{ { DEFACCEL, "SWS/S&M: Takes - Move active up (cycling) in selected items" }, "S&M_MOVETAKE3", moveActiveTake, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Takes - Move active down (cycling) in selected items" }, "S&M_MOVETAKE4", moveActiveTake, NULL, 1},
-#ifdef _SNM_MISC // deprecated: native actions "Rotate take lanes forward/backward" added in REAPER v3.67
+#ifdef _SNM_MISC // deprecated: native actions `Rotate take lanes forward/backward` added in REAPER v3.67
 	{ { DEFACCEL, "SWS/S&M: Takes - Move all up (cycling) in selected items" }, "S&M_MOVETAKE1", moveTakes, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Takes - Move all down (cycling) in selected items" }, "S&M_MOVETAKE2", moveTakes, NULL, 1},
 #endif
@@ -403,7 +404,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 #ifdef _SNM_MISC
 //  Deprecated: contrary to their native versions, the following actions were spliting selected items *and only them*, 
 //  see http://forum.cockos.com/showthread.php?t=51547.
-//  Due to REAPER v3.67's new native pref "If no items are selected, some split/trim/delete actions affect all items at the edit cursor", 
+//  Due to REAPER v3.67's new native pref `If no items are selected, some split/trim/delete actions affect all items at the edit cursor`, 
 //  those actions are less useful: they would still split only selected items, even if that native pref is ticked. 
 //  Also removed because of the spam in the action list (many split actions).
 	{ { DEFACCEL, "SWS/S&M: Split selected items at play cursor" }, "S&M_SPLIT3", splitSelectedItems, NULL, 40196},
@@ -414,7 +415,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Split selected items at edit or play cursor" }, "S&M_SPLIT8", splitSelectedItems, NULL, 40012},
 	{ { DEFACCEL, "SWS/S&M: Split selected items at edit or play cursor (ignoring grouping)" }, "S&M_SPLIT9", splitSelectedItems, NULL, 40186},
 #endif
-	{ { DEFACCEL, "SWS/gofer: Split selected items at mouse cursor (obey snapping)" }, "S&M_SPLIT10", goferSplitSelectedItems, NULL, },//JFB!! AFAIR issue discussed in forums
+	{ { DEFACCEL, "SWS/gofer: Split selected items at mouse cursor (obey snapping)" }, "S&M_SPLIT10", goferSplitSelectedItems, NULL, },//JFB!! to check: issue discussed in forums AFAIR
 	{ { DEFACCEL, "SWS/S&M: Split and select items in region near cursor" }, "S&M_SPLIT11", SplitSelectAllItemsInRegion, NULL, },
 
 	// ME ---------------------------------------------------------------------
@@ -479,17 +480,17 @@ static COMMAND_T g_SNM_cmdTable[] =
 #endif
 
 	// Find -------------------------------------------------------------------
-	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find" }, "S&M_SHOWFIND", OpenFindView, "S&&M Find", NULL, IsFindViewDisplayed},
+	{ { {FCONTROL | FVIRTKEY, 'F', 0 }, "SWS/S&M: Find" }, "S&M_SHOWFIND", OpenFindView, NULL, NULL, IsFindViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Find next" }, "S&M_FIND_NEXT", FindNextPrev, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Find previous" }, "S&M_FIND_PREVIOUS", FindNextPrev, NULL, -1},
 
 	// Live Configs -----------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Live Configs window" }, "S&M_SHOWMIDILIVE", OpenLiveConfigView, "S&&M Live Configs", NULL, IsLiveConfigViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Live Configs window" }, "S&M_SHOWMIDILIVE", OpenLiveConfigView, NULL, NULL, IsLiveConfigViewDisplayed},
 
 	// Cyclactions ---------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor" }, "S&M_CYCLEDITOR", OpenCyclactionView, "S&&M Cycle Action editor", 0, IsCyclactionViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor (event list)" }, "S&M_CYCLEDITOR_ME_LIST", OpenCyclactionView, "S&&M Cycle Action editor", 1, IsCyclactionViewDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor (piano roll)" }, "S&M_CYCLEDITOR_ME_PIANO", OpenCyclactionView, "S&&M Cycle Action editor", 2, IsCyclactionViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor" }, "S&M_CYCLEDITOR", OpenCyclactionView, NULL, 0, IsCyclactionViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor (event list)" }, "S&M_CYCLEDITOR_ME_LIST", OpenCyclactionView, NULL, 1, IsCyclactionViewDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Cycle Action editor (piano roll)" }, "S&M_CYCLEDITOR_ME_PIANO", OpenCyclactionView, NULL, 2, IsCyclactionViewDisplayed},
 
 	// REC inputs -------------------------------------------------------------
 	//JFB TODO: configurable dynamic actions *with max* (but ct->user needs to be 0-based first)
@@ -530,7 +531,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Map selected tracks MIDI input to channel 16" }, "S&M_MAP_MIDI_INPUT_CH16", remapMIDIInputChannel, NULL, 16},
 
 	// Region playlist --------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_SHOW_RGN_PLAYLIST", OpenRegionPlaylist, "S&&M Region Playlist", NULL, IsRegionPlaylistDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_SHOW_RGN_PLAYLIST", OpenRegionPlaylist, NULL, NULL, IsRegionPlaylistDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist" }, "S&M_CROP_RGN_PLAYLIST1", CropProjectToPlaylist, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist (new project tab)" }, "S&M_CROP_RGN_PLAYLIST2", CropProjectToPlaylist, NULL, 1},
@@ -539,15 +540,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Localization -----------------------------------------------------------
 #ifdef _SWS_LOCALIZATION
-/*JFB!!! later..
-	{ { DEFACCEL, "SWS/S&M: Load LangPack file..." }, "S&M_LOAD_LANGPACK", LoadAssignLangPack, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Reset LangPack file to factory settings" }, "S&M_RESET_LANGPACK", ResetLangPack, NULL, },
-*/
+//	{ { DEFACCEL, "SWS/S&M: Load LangPack file..." }, "S&M_LOAD_LANGPACK", LoadAssignLangPack, NULL, },
+//	{ { DEFACCEL, "SWS/S&M: Reset LangPack file to factory settings" }, "S&M_RESET_LANGPACK", ResetLangPack, NULL, },
 #ifdef _SNM_MISC // wip
-	{ { DEFACCEL, "SWS/S&M: Open/close LangPack files merger" }, "S&M_MERGE_LANGPACK", OpenLangpackMrgDlg, "S&&M LangPack files merger", NULL, IsLangpackMrgDlgDisplayed},
-#endif
-#ifdef _SWS_DEBUG
-	{ { DEFACCEL, "SWS/S&M: [Internal] Generate actions LangPack file..." }, "S&M_GEN_LANGPACK", GenerateSwsActionsLangPack, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open/close LangPack files merger" }, "S&M_MERGE_LANGPACK", OpenLangpackMrgDlg, NULL, NULL, IsLangpackMrgDlgDisplayed},
 #endif
 #endif
 	// Other, misc ------------------------------------------------------------
@@ -566,6 +562,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 #endif
 	{ {}, LAST_COMMAND, }, // denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -595,6 +592,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_SNM_dynamicCmdTable[] =
 {
 	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection, settings %02d" }, "S&M_CUEBUS", cueTrack, SNM_MAX_CUE_BUSS_CONFS_STR, SNM_MAX_CUE_BUSS_CONFS},
@@ -670,12 +668,14 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 
 	{ {}, LAST_COMMAND, }, // denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 
 ///////////////////////////////////////////////////////////////////////////////
 // "S&M extension" section
 ///////////////////////////////////////////////////////////////////////////////
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:s&m_section_actions
 /*JFB static*/ MIDI_COMMAND_T g_SNMSection_cmdTable[] = 
 {
 	{ { DEFACCEL, "SWS/S&M: Apply Live Config 1 (MIDI CC absolute only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
@@ -698,6 +698,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 #endif
 	{ {}, LAST_COMMAND, }, // denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -832,7 +833,7 @@ int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)
 	for (i=0; i < nbCmds; i++)
 	{
 		MIDI_COMMAND_T* ct = &g_SNMSection_cmdTable[i];
-		g_SNMSection.action_list[i].text = GetLocalizedActionName(ct->id, ct->accel.desc, SNM_I8N_ACTION_SEC);
+		g_SNMSection.action_list[i].text = GetLocalizedActionName(ct->accel.desc, 0, SNM_I8N_ACTION_SEC);
 		g_SNMSection.action_list[i].cmd = g_SNMSection.def_keys[i].cmd = ct->accel.accel.cmd;
 		g_SNMSection.def_keys[i].key = ct->accel.accel.key;
 		g_SNMSection.def_keys[i].flags = ct->accel.accel.fVirt;
@@ -867,9 +868,9 @@ int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 		nb = BOUNDED(nb, 0, ct->menuText == NULL ? SNM_MAX_DYNAMIC_ACTIONS : atoi(ct->menuText));
 		for (int j=0; j < nb; j++)
 		{
-			_snprintf(actionName, SNM_MAX_ACTION_NAME_LEN, ct->accel.desc, j+1);
+			_snprintf(actionName, SNM_MAX_ACTION_NAME_LEN, GetLocalizedActionName(ct->accel.desc, LOCALIZE_FLAG_VERIFY_FMTS), j+1);
 			_snprintf(custId, SNM_MAX_ACTION_CUSTID_LEN, "%s%d", ct->id, j+1);
-			if (SWSCreateRegisterDynamicCmd(0, ct->doCommand, ct->getEnabled, custId, actionName, j, __FILE__, true))
+			if (SWSCreateRegisterDynamicCmd(0, ct->doCommand, ct->getEnabled, custId, actionName, j, __FILE__, false)) // already localized 
 				ct->user = nb; // patch the real number of instances
 			else
 				return 0;
@@ -882,21 +883,13 @@ void SNMSaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 {
 	WDL_FastString iniSection, str;
 	iniSection.SetFormatted(128, "; Set the number of slot actions you want below (none/hidden: 0, max: %d, exit REAPER first!)\n", SNM_MAX_DYNAMIC_ACTIONS);
-	if (IsLangPackUsed("SWS")) {
-		iniSection.AppendFormatted(BUFFER_SIZE, 
-			"; Note: the name of each action generated here can be updated/localized in the section [%s] of the current LangPack file (%s)\n", 
-			SWS_I8N_ACTION_SEC, GetCurLangPackFn("SWS")->Get());
-	}
 
 	WDL_String nameStr; // no fast string here: the buffer gets mangeled..
 	int i=0;
 	while(_cmds[i].id != LAST_COMMAND)
 	{
 		COMMAND_T* ct = &_cmds[i++];
-/*no! would look for a localized action name!
 		nameStr.Set(SWS_CMD_SHORTNAME(ct));
-*/
-		nameStr.Set((const char*)ct->accel.desc+9); // +9 to skip "SWS/S&M: "
 		ReplaceStringFormat(nameStr.Get(), 'n');
 		if (ct->menuText != NULL) // is a custom max value specified ?
 		{

@@ -472,14 +472,16 @@ void makeEscapedConfigString(const char *in, WDL_FastString *out)
 // Localization
 
 // check that action tags ("SWS: ", "SWS/FNG: ", SWS/S&M: ", etc..) are preserved
-const char* GetLocalizedActionName(const char* _custId, const char* _defaultStr, const char* _section) {
+const char* GetLocalizedActionName(const char* _defaultStr, int _flags, const char* _section)
+{
 #ifdef _SWS_LOCALIZATION
-	const char* p = __localizeFunc(_custId, _section, 0);
+	const char* p = __localizeFunc(_defaultStr, _section, _flags);
 	if (IsSwsAction(p))
 		return p;
 #endif
 	return _defaultStr;
 }
+
 
 // wrappers to ignore localized envelope names
 TrackEnvelope* SWS_GetTakeEnvelopeByName(MediaItem_Take* take, const char* envname) {

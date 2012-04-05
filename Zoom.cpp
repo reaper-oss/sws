@@ -1440,6 +1440,7 @@ bool IsTogZoomed(COMMAND_T*)
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Set reaper window size to reaper.ini setwndsize" },			"SWS_SETWINDOWSIZE",	SetReaperWndSize,	NULL, },
@@ -1485,6 +1486,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, }, // for main "Extensions" menu
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 void ZoomSlice()
 {

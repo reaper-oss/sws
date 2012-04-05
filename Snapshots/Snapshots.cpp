@@ -197,7 +197,7 @@ static SWS_LVColumn g_cols[] = { { 20, 0, "#" }, { 60, 1, "Name" }, { 60, 0, "Da
 // !WANT_LOCALIZE_STRINGS_END
 
 SWS_SnapshotsView::SWS_SnapshotsView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "Snapshots View State", true)
+:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "Snapshots View State", true, "sws_DLG_101")
 {
 }
 
@@ -950,6 +950,7 @@ void PasteSnapshot(COMMAND_T*)
 	MergeSnapshot(ss);
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Open snapshots window" },						"SWSSNAPSHOT_OPEN",	     OpenSnapshotsDialog,  "Show snapshots list and settings", 0, SnapshotsWindowEnabled },
@@ -1005,6 +1006,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Restore snapshot filter options" },             "SWSSNAPSHOT_RESTFILT",  RestoreFilter,  NULL, },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {

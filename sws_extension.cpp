@@ -121,7 +121,7 @@ int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool local
 		// localized action name, if needed
 		const char* defaultName = pCommand->accel.desc;
 		if (localize)
-			pCommand->accel.desc = GetLocalizedActionName(pCommand->id, pCommand->accel.desc); // no alloc + no-op when no LangPack file is defined
+			pCommand->accel.desc = GetLocalizedActionName(pCommand->accel.desc); // no alloc + no-op when no LangPack file is defined
 		
 		if (!plugin_register("gaccel", &pCommand->accel))
 			return 0;

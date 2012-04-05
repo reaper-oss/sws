@@ -180,6 +180,7 @@ void RegionsFromItems(COMMAND_T* ct)
 	}
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Toggle marker actions enable" },    "SWSMA_TOGGLE",		MarkerActionsToggle,		"Enable SWS marker actions", 0, MarkerActionsEnabled },
@@ -195,6 +196,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 static void RefreshMAToolbar()
 {

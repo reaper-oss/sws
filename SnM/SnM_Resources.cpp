@@ -488,11 +488,11 @@ void FileSlotList::EditSlot(int _slot)
 ///////////////////////////////////////////////////////////////////////////////
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_150
-static SWS_LVColumn g_fxChainListCols[] = { {65,2,"Slot"}, {100,1,"Name"}, {250,2,"Path"}, {200,1,"Comment"} };
+static SWS_LVColumn g_resListCols[] = { {65,2,"Slot"}, {100,1,"Name"}, {250,2,"Path"}, {200,1,"Comment"} };
 // !WANT_LOCALIZE_STRINGS_END
 
 SNM_ResourceView::SNM_ResourceView(HWND hwndList, HWND hwndEdit)
-	: SWS_ListView(hwndList, hwndEdit, COL_COUNT, g_fxChainListCols, "ResourcesViewState", false)
+	: SWS_ListView(hwndList, hwndEdit, COL_COUNT, g_resListCols, "ResourcesViewState", false, "sws_DLG_150")
 {
 }
 

@@ -1088,17 +1088,19 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = {
-	{ { DEFACCEL, "SWS Autorender: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
+	{ { DEFACCEL, "SWS/Shane: Batch Render Regions" },	"AUTORENDER", AutorenderRegions, "Batch Render Regions" },
 	{ { DEFACCEL, "SWS/Shane: Autorender: Edit Project Metadata" }, "AUTORENDER_METADATA", ShowAutorenderMetadata, "Edit Project Metadata" },
 	{ { DEFACCEL, "SWS/Shane: Autorender: Open Render Path" }, "AUTORENDER_OPEN_RENDER_PATH", OpenRenderPath, "Open Render Path" },	
 	{ { DEFACCEL, "SWS/Shane: Autorender: Show Instructions" }, "AUTORENDER_HELP", ShowAutorenderHelp, "Show Instructions" },
 	{ { DEFACCEL, "SWS/Shane: Autorender: Global Preferences" }, "AUTORENDER_PREFERENCES", AutorenderPreferences, "Global Preferences" },
 #ifdef TESTCODE
-	{ { DEFACCEL, "SWS Autorender: TestCode" }, "AUTORENDER_TESTCODE",  TestFunction, "Autorender: TestCode" },
+	{ { DEFACCEL, "SWS Autorender: [Internal] TestCode" }, "AUTORENDER_TESTCODE",  TestFunction, "Autorender: TestCode" },
 #endif
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int AutorenderInit(){
 	SWSRegisterCommands(g_commandTable);

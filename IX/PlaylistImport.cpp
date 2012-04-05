@@ -26,10 +26,8 @@
 
 #include "stdafx.h"
 #include "IX.h"
+#include "../reaper/localize.h"
 
-
-#define IXPLAYLISTSTRING	"Import m3u/pls playlist"
-#define IXPLAYLISTID		"SWS/IX: "IXPLAYLISTSTRING
 
 struct SPlaylistEntry
 {
@@ -213,7 +211,7 @@ void PlaylistImport(COMMAND_T* ct)
 	vector<SPlaylistEntry> filelist;
 
 	GetProjectPath(cPath, 256);
-	string listpath = BrowseForFiles("Import playlist", cPath, NULL, false, "Playlist files (*.m3u,*.pls)\0*.m3u;*.pls\0All Files (*.*)\0*.*\0");
+	string listpath = BrowseForFiles(__LOCALIZE("Import playlist","sws_mbox"), cPath, NULL, false, "Playlist files (*.m3u,*.pls)\0*.m3u;*.pls\0All Files (*.*)\0*.*\0");
 	string ext = ParseFileExtension(listpath);
 
 	// Decide what kind of playlist we have
@@ -228,7 +226,7 @@ void PlaylistImport(COMMAND_T* ct)
 
 	if(filelist.empty())
 	{
-		ShowMessageBox("Failed to import playlist. No files found.", "Import playlist", 0);
+		ShowMessageBox(__LOCALIZE("Failed to import playlist. No files found.","sws_mbox"), __LOCALIZE("Import playlist","sws_mbox"), 0);
 		return;
 	}
 
@@ -248,7 +246,7 @@ void PlaylistImport(COMMAND_T* ct)
 	if(!badfiles.empty())
 	{
 		stringstream ss;
-		ss << "Cannot find some files. Create items anyway?\n";
+		ss << __LOCALIZE("Cannot find some files. Create items anyway?\n","sws_mbox");
 
 		unsigned int limit = min(badfiles.size(), 9); // avoid enormous messagebox
 		for(unsigned int i = 0; i < limit; i++)
@@ -257,10 +255,10 @@ void PlaylistImport(COMMAND_T* ct)
 		}
 		if(badfiles.size() > limit)
 		{
-			ss << "\n +" << badfiles.size() - limit << " more files";
+			ss << "\n +" << badfiles.size() - limit << __LOCALIZE(" more files","sws_mbox");
 		}
 
-		switch(ShowMessageBox(ss.str().c_str(), "Import playlist", 3))
+		switch(ShowMessageBox(ss.str().c_str(), __LOCALIZE("Import playlist","sws_mbox"), 3))
 		{
 		case 6 : // Yes
 			includeMissing = true;
@@ -313,7 +311,7 @@ void PlaylistImport(COMMAND_T* ct)
 		}
 	}
 
-	Undo_EndBlock2(NULL, IXPLAYLISTID, UNDO_STATE_ITEMS|UNDO_STATE_TRACKCFG);
+	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS|UNDO_STATE_TRACKCFG);
 
 	TrackList_AdjustWindows(false);
 	UpdateTimeline();
@@ -321,12 +319,14 @@ void PlaylistImport(COMMAND_T* ct)
 	Main_OnCommand(40047, 0); // Build missing peaks
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, IXPLAYLISTID },	"IX_PLAYLIST_IMPORT",	PlaylistImport,	IXPLAYLISTSTRING, 0},
+	{ { DEFACCEL, "SWS/IX: Import m3u/pls playlist" },	"IX_PLAYLIST_IMPORT",	PlaylistImport,	NULL, 0},
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int PlaylistImportInit()
 {

@@ -445,6 +445,7 @@ void SelectTrack(COMMAND_T* ct)
 		GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_SELECTED", (int)ct->user == i ? &g_i1 : &g_i0);
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Save current track selection" },						"SWS_SAVESEL",			SaveSelTracks,		},
@@ -518,6 +519,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int TrackSelInit()
 {

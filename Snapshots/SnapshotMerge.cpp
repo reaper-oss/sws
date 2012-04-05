@@ -41,10 +41,12 @@ static WDL_PtrList<SWS_SSMergeItem> g_mergeItems;
 static int g_iMask;
 static bool g_bSave = false;
 
+// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_112
 static SWS_LVColumn g_cols[] = { { 120, 0, "Source track" }, { 120, 0, "Destination" }, };
+// !WANT_LOCALIZE_STRINGS_END
 
 SWS_SnapshotMergeView::SWS_SnapshotMergeView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 2, g_cols, "MergeViewState", false)
+:SWS_ListView(hwndList, hwndEdit, 2, g_cols, "MergeViewState", false, "sws_DLG_112")
 {
 }
 

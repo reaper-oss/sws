@@ -73,6 +73,7 @@ void WaitAction(COMMAND_T* t)
 	}
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Wait for next bar (if playing)" },			"SWS_BARWAIT",		WaitAction, NULL, 0 },
@@ -81,6 +82,7 @@ static COMMAND_T g_commandTable[] =
 	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int MacrosInit()
 {

@@ -69,7 +69,7 @@ private:
 class SWS_ListView
 {
 public:
-	SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips, bool bDrawArrow=true);
+	SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips, const char* cLocalizeSection, bool bDrawArrow=true);
 	virtual ~SWS_ListView();
 	int GetListItemCount() { return ListView_GetItemCount(m_hwndList); }
 	SWS_ListItem* GetListItem(int iIndex, int* iState = NULL);
@@ -128,6 +128,7 @@ protected:
 	const int m_iCols;
 	SWS_LVColumn* m_pCols;
 	bool m_bDrawArrow;
+	const char* m_cLocalizeSection;
 
 #ifndef _WIN32
 	int m_iClickedKeys;

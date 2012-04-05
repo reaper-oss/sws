@@ -298,6 +298,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	// ActiveTake.cpp
@@ -355,16 +356,17 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Select item(s) with saved state on selected track(s)" },	"SWS_SELWITHSTATE",		SelItemsWithState,	},
 
 #ifdef TESTCODE
-	{ { DEFACCEL, "SWS: Test" }, "SWS_TEST",  TestFunc, },
-	{ { DEFACCEL, "SWS: Print track GUIDs" }, "SWS_PRINTGUIDS",  PrintGuids, },
-	{ { DEFACCEL, "SWS: Print menu tree" }, "SWS_PRINTMENU",  PrintMenu, },
-	{ { DEFACCEL, "SWS: Run action..." }, "SWS_RUNACTION",  RunAction, },
-	{ { DEFACCEL, "SWS: Print sel items' times" }, "SWS_DUMPITEMS",  DumpItems, },
+	{ { DEFACCEL, "SWS: [Internal] Test" }, "SWS_TEST",  TestFunc, },
+	{ { DEFACCEL, "SWS: [Internal] Print track GUIDs" }, "SWS_PRINTGUIDS",  PrintGuids, },
+	{ { DEFACCEL, "SWS: [Internal] Print menu tree" }, "SWS_PRINTMENU",  PrintMenu, },
+	{ { DEFACCEL, "SWS: [Internal] Run action..." }, "SWS_RUNACTION",  RunAction, },
+	{ { DEFACCEL, "SWS: [Internal] Print sel items' times" }, "SWS_DUMPITEMS",  DumpItems, },
 
 #endif
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int FreezeInit()
 {

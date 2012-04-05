@@ -61,9 +61,6 @@ bool IsLangPackUsed(const char* _langpack);
 bool IsSwsActionLocalizable(const char* _customId);
 void LoadAssignLangPack(COMMAND_T*);
 void ResetLangPack(COMMAND_T*);
-#ifdef _SWS_DEBUG // internal action (only available with debug builds)
-void GenerateSwsActionsLangPack(COMMAND_T*);
-#endif
 int FindMarkerRegion(double _pos, int _flags, int* _idOut = NULL);
 int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn);
 int GetMarkerRegionIdFromIndex(int _idx);

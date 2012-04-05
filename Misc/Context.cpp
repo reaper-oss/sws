@@ -143,6 +143,7 @@ void SafeTiemSel(COMMAND_T*)
 		Main_OnCommand(40290, 0);
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Copy items/tracks/env, obeying time sel" },						"SWS_SMARTCOPY",	SmartCopy, NULL, },
@@ -156,6 +157,7 @@ static COMMAND_T g_commandTable[] =
 	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int ContextInit()
 {

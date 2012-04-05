@@ -3045,7 +3045,7 @@ void AWSelTracksPanDualPan(COMMAND_T* t)
 
 
 
-
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	// Add commands here (copy paste an example from ItemParams.cpp or similar)
@@ -3097,22 +3097,6 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/AW: Disable count-in before recording" },		"SWS_AWCOUNTRECOFF",				AWCountRecOff, },
 	{ { DEFACCEL, "SWS/AW: Toggle count-in before recording" },			"SWS_AWCOUNTRECTOG",				AWCountRecToggle, NULL, 0, IsCountRecOn },
 	
-	// Editing Preferences
-
-	/* Deprecated
-	{ { DEFACCEL, "SWS/AW: Enable relative editing when resizing item edges" },			"SWS_AWRELEDGEON",				AWRelEdgeOn, },
-	{ { DEFACCEL, "SWS/AW: Disable relative editing when resizing item edges" },		"SWS_AWRELEDGEOFF",				AWRelEdgeOff, },
-	{ { DEFACCEL, "SWS/AW: Toggle relative editing when resizing item edges" },			"SWS_AWRELEDGETOG",				AWRelEdgeToggle, NULL, 0, IsRelEdgeOn },
-	
-	{ { DEFACCEL, "SWS/AW: Enable autocrossfade on split" },			"SWS_AWXFADESPLITON",				AWSplitFadeOn, },
-	{ { DEFACCEL, "SWS/AW: Disable autocrossfade on split" },			"SWS_AWXFADESPLITOFF",				AWSplitFadeOff, },
-	{ { DEFACCEL, "SWS/AW: Toggle autocrossfade on split" },			"SWS_AWXFADESPLITTOG",				AWSplitFadeToggle, NULL, 0, IsSplitFadeOn },
-	
-	{ { DEFACCEL, "SWS/AW: Enable automatic item fades" },			"SWS_AWDEFFADEON",				AWDefaultFadeOn, },
-	{ { DEFACCEL, "SWS/AW: Disable automatic item fades" },			"SWS_AWDEFFADEOFF",				AWDefaultFadeOff, },
-	{ { DEFACCEL, "SWS/AW: Toggle automatic item fades" },			"SWS_AWDEFFADETOG",				AWDefaultFadeToggle, NULL, 0, IsDefaultFadeOn },
-	*/
-	
 	{ { DEFACCEL, "SWS/AW: Enable 'link time selection and edit cursor'" },			"SWS_AWCLRTIMESELCLKON",		AWClrTimeSelClkOn, },
 	{ { DEFACCEL, "SWS/AW: Disable 'link time selection and edit cursor'" },		"SWS_AWCLRTIMESELCLKOFF",		AWClrTimeSelClkOff, },
 	{ { DEFACCEL, "SWS/AW: Toggle 'link time selection and edit cursor'" },			"SWS_AWCLRTIMESELCLKTOG",		AWClrTimeSelClkToggle, NULL, 0, IsClrTimeSelClkOn },
@@ -3144,11 +3128,6 @@ static COMMAND_T g_commandTable[] =
     { { DEFACCEL, "SWS/AW: Remove tracks/items/env, obeying time selection and leaving children" },		"SWS_AWBUSDELETE",					AWBusDelete, },
 
 	
-	//{ { DEFACCEL, "SWS/AW: Select Stretched Items" },													"SWS_AWSELSTRETCH",					AWSelectStretched, },
-
-
-	//{ { DEFACCEL, "SWS/AW: Quick Punch Record" },			"SWS_AWQUICKPUNCH",					AWRecordQuickPunch, },
-	
 	{ { DEFACCEL, "SWS/AW: Insert click track" },		"SWS_AWINSERTCLICKTRK",					AWInsertClickTrack, NULL, },
 	{ { DEFACCEL, "SWS/AW: Toggle click track mute" },		"SWS_AWTOGGLECLICKTRACK",					AWToggleClickTrack, NULL, 0, IsClickUnmuted},
 
@@ -3170,13 +3149,9 @@ static COMMAND_T g_commandTable[] =
 
 
     
-    // Sucks because can't figure out how to change cursor context to items
-    //{ { DEFACCEL, "SWS/AW: Select children of selected folder or all items on selected track" },			"SWS_AWSELCHLDORITEMS",		AWSelChilOrSelItems, },
-
-
-	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int AdamInit()
 {

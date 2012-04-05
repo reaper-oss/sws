@@ -501,6 +501,7 @@ void SetItemLen(COMMAND_T* t)
 	}
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Toggle mute of items on selected track(s)" },			"SWS_TOGITEMMUTE",		TogItemMute,			},
@@ -545,6 +546,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int ItemParamsInit()
 {

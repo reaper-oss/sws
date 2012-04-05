@@ -274,19 +274,16 @@ bool TriggerFXPresets(MediaTrack* _tr, WDL_FastString* _presetConf)
 ///////////////////////////////////////////////////////////////////////////////
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_155
+static SWS_LVColumn g_liveCfgListCols[] = { 
+	{95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, 
 #ifdef _SNM_PRESETS
-static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX presets"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
-#else
-static SWS_LVColumn g_midiLiveCols[] = { {95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,1,"Activate action"}, {150,1,"Deactivate action"}};
+	{150,2,"FX presets"}, 
 #endif
+	{150,1,"Activate action"}, {150,1,"Deactivate action"}};
 // !WANT_LOCALIZE_STRINGS_END
 
 SNM_LiveConfigsView::SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit)
-#ifdef _SNM_PRESETS
-:SWS_ListView(hwndList, hwndEdit, COL_COUNT, g_midiLiveCols, "LiveConfigsViewState", false)
-#else
-:SWS_ListView(hwndList, hwndEdit, COL_COUNT, g_midiLiveCols, "LiveConfigsViewState", false)
-#endif
+:SWS_ListView(hwndList, hwndEdit, COL_COUNT, g_liveCfgListCols, "LiveConfigsViewState", false, "sws_DLG_155")
 {
 }
 

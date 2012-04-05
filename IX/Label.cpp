@@ -28,9 +28,9 @@
 #include "IX.h"
 #include "../resource.h"
 #include "../Misc/Analysis.h"
+#include "../reaper/localize.h"
 
 #define IXLABELPROCSTRING	"Label processor"
-#define IXLABELPROCID		"SWS/IX: "IXLABELPROCSTRING // SWS 3/6/12 need SWS prefix for localization issues
 
 WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -40,7 +40,6 @@ WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_INITDIALOG:
 		{
-			SetWindowText(hwnd, IXLABELPROCSTRING);
 			SetWindowLong(hwnd, GWLP_USERDATA, (LONG)lParam);
 			pStr = (WDL_FastString*) GetWindowLong(hwnd, GWLP_USERDATA);
 
@@ -355,17 +354,19 @@ void LabelProcessor(COMMAND_T* ct)
 			++itemCount;
 		}
 	}
-	Undo_EndBlock2(NULL, IXLABELPROCID, UNDO_STATE_ITEMS);
+	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS);
 
 	UpdateTimeline();
 }
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, IXLABELPROCID },	"IX_LABEL_PROC",	LabelProcessor,	IXLABELPROCSTRING, 0},
+	{ { DEFACCEL, "SWS/IX: Label processor" },	"IX_LABEL_PROC",	LabelProcessor,	NULL, 0},
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
+//!WANT_LOCALIZE_1ST_STRING_END
 
 int LabelInit()
 {

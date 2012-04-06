@@ -15,6 +15,7 @@ void CmdMoveItemsToEditCursor(int flag, void *data);
 void CmdDeselectIfNotStartInTimeSelection(int flag, void *data);
 static void CreateMidiItem();
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 void MediaItemCommands::Init()
 {
 	RprCommand::registerCommand("SWS/FNG: expand selected media items", "FNG_EXPAND", new CmdExpandItems(0.005), UNDO_STATE_ITEMS);
@@ -48,6 +49,7 @@ void MediaItemCommands::Init()
 	RprCommand::registerCommand("SWS/FNG: move selected items to edit cursor", "FNG_MOVE_TO_EDIT", &CmdMoveItemsToEditCursor, UNDO_STATE_ITEMS);
 	RprCommand::registerCommand("SWS/FNG: unselect items that do not start in time selection", "FNG_TIME_SEL_NOT_START", &CmdDeselectIfNotStartInTimeSelection,UNDO_STATE_ITEMS);
 }
+//!WANT_LOCALIZE_1ST_STRING_END
 
 void CmdRotateItems::doCommand(int flag)
 {

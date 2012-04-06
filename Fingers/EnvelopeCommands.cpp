@@ -5,6 +5,7 @@
 #include "CommandHandler.h"
 
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 void EnvelopeCommands::Init()
 {
 	  RprCommand::registerCommand("SWS/FNG: Move selected envelope points right (16th)", "FNG_ENVRIGHT_16", new AddToEnvPoints(1.0/16.0, POINTTIME),UNDO_STATE_TRACKCFG);
@@ -28,6 +29,7 @@ void EnvelopeCommands::Init()
 	  RprCommand::registerCommand("SWS/FNG: Time stretch selected envelope points", "FNG_ENV_TIME_STRETCH", new TimeCompressExpandPoints( 0.05),UNDO_STATE_TRACKCFG);
 
 }
+//!WANT_LOCALIZE_1ST_STRING_END
 
 void TimeCompressExpandPoints::doCommand(int flag)
 {

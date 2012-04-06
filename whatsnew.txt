@@ -1,7 +1,11 @@
 SWS localization (BETA)
 The SWS extension now also uses the language pack file defined in the preferences (just like REAPER).
 The SWS template LangPack file is available here: http://code.google.com/p/sws-extension/downloads/list (it will be regulary updated with new SWS releases). This file should be merged with the main REAPER LangPack file as explained http://forum.cockos.com/showpost.php?p=885893&postcount=83|here|.
-All action names can be translated (except SWS/FNG ones). Many dialog boxes and windows can be translated (it will be an on-going work..). Only S&M windows will be dynamically sized according to string lengths
+All action names can be translated (and most of undo point names: same string).
+Many dialog boxes and windows can be translated. Full localization support for (on-going work..):
++Sanpshots
++Auto Color/Icon
++All S&M windows (+dynamically sized according to string lengths)
 
 Region playlist
 +Fixes, tweaks (added tooltips, retain current playlist, etc..)

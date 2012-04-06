@@ -125,10 +125,10 @@
 #define FXC_PASTE_TAKE_STR			__LOCALIZE("Paste FX chain to selected items","sws_DLG_150")
 #define FXC_PASTE_ALLTAKES_STR		__LOCALIZE("Paste FX chain to selected items, all takes","sws_DLG_150")
 #define TRT_APPLY_STR				__LOCALIZE("Apply track template to selected tracks","sws_DLG_150")
-#define TRT_APPLY_WITH_ENV_ITEM_STR	__LOCALIZE("Apply track template (+envelopes/items) to selected tracks","sws_DLG_150")
+#define TRT_APPLY_WITH_ENV_ITEM_STR	__LOCALIZE("Apply track template (+template items/envelopes) to selected tracks","sws_DLG_150")
 #define TRT_IMPORT_STR				__LOCALIZE("Import tracks from track template","sws_DLG_150")
-#define TRT_REPLACE_ITEMS_STR		__LOCALIZE("Replace items of selected tracks","sws_DLG_150")
-#define TRT_PASTE_ITEMS_STR			__LOCALIZE("Paste items to selected tracks","sws_DLG_150")
+#define TRT_REPLACE_ITEMS_STR		__LOCALIZE("Paste (replace) template items to selected tracks","sws_DLG_150")
+#define TRT_PASTE_ITEMS_STR			__LOCALIZE("Paste template items to selected tracks","sws_DLG_150")
 #define PRJ_SELECT_LOAD_STR			__LOCALIZE("Open/select project","sws_DLG_150")
 #define PRJ_SELECT_LOAD_TAB_STR		__LOCALIZE("Open/select project (new tab)","sws_DLG_150")
 #define MED_PLAY_STR				__LOCALIZE("Play media file in selected tracks (toggle)","sws_DLG_150")
@@ -934,11 +934,11 @@ void SNM_ResourceWnd::FillDblClickCombos()
 			m_cbDblClickTo.AddItem(__LOCALIZE("Items (all takes)","sws_DLG_150"));
 			break;
 		case SNM_SLOT_TR:
-			m_cbDblClickType.AddItem(__LOCALIZE("Import tracks","sws_DLG_150"));
+			m_cbDblClickType.AddItem(__LOCALIZE("Import tracks from track template","sws_DLG_150"));
 			m_cbDblClickType.AddItem(__LOCALIZE("Apply to sel tracks","sws_DLG_150"));
-			m_cbDblClickType.AddItem(__LOCALIZE("Apply to sel tracks (+items, envs)","sws_DLG_150"));
+			m_cbDblClickType.AddItem(__LOCALIZE("Apply to sel tracks (+template items/envs)","sws_DLG_150"));
 			m_cbDblClickType.AddItem(__LOCALIZE("Paste template items to sel tracks","sws_DLG_150"));
-			m_cbDblClickType.AddItem(__LOCALIZE("Replace items of sel tracks","sws_DLG_150"));
+			m_cbDblClickType.AddItem(__LOCALIZE("Paste (replace) template items to sel tracks","sws_DLG_150"));
 			break;
 		case SNM_SLOT_PRJ:
 			m_cbDblClickType.AddItem(__LOCALIZE("Open/select project","sws_DLG_150"));
@@ -1362,6 +1362,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				int hi = HIWORD(g_dblClickPrefs[g_resViewType]);
 				g_dblClickPrefs[g_resViewType] = m_cbDblClickType.GetCurSel();
 				g_dblClickPrefs[g_resViewType] |= hi<<16;
+				m_parentVwnd.RequestRedraw(NULL); // some options can be hidden for new sel
 			}
 			break;
 		case COMBOID_DBLCLICK_TO:
@@ -1495,8 +1496,8 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				AddToMenu(hMenu, TRT_APPLY_STR, TRT_APPLY_MSG, -1, false, enabled);
 				AddToMenu(hMenu, TRT_APPLY_WITH_ENV_ITEM_STR, TRT_APPLY_WITH_ENV_ITEM_MSG, -1, false, enabled);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, TRT_REPLACE_ITEMS_STR, TRT_REPLACE_ITEMS_MSG, -1, false, enabled);
 				AddToMenu(hMenu, TRT_PASTE_ITEMS_STR, TRT_PASTE_ITEMS_MSG, -1, false, enabled);
+				AddToMenu(hMenu, TRT_REPLACE_ITEMS_STR, TRT_REPLACE_ITEMS_MSG, -1, false, enabled);
 				break;
 			case SNM_SLOT_PRJ:
 			{
@@ -1804,13 +1805,14 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 				break;
 			// offset items & envs (tr template only)
 			case SNM_SLOT_TR:
-				if (int* offsPref = (int*)GetConfigVar("templateditcursor")) // >= REAPER v4.15
-				{
-					m_btnOffsetTrTemplate.SetCheckState(*offsPref);
-					m_btnOffsetTrTemplate.SetTextLabel(__LOCALIZE("Offset template items/envs by edit cursor","sws_DLG_150"), -1, font);
-					if (!SNM_AutoVWndPosition(&m_btnOffsetTrTemplate, NULL, &r, &x0, y0, h, 5))
-						return;
-				}
+				if (LOWORD(g_dblClickPrefs[g_resViewType]) != 1) // dblClickType != "Apply to sel tracks" (offset do not make sense here)
+					if (int* offsPref = (int*)GetConfigVar("templateditcursor")) // >= REAPER v4.15
+					{
+						m_btnOffsetTrTemplate.SetCheckState(*offsPref);
+						m_btnOffsetTrTemplate.SetTextLabel(__LOCALIZE("Offset template items/envs by edit cursor","sws_DLG_150"), -1, font);
+						if (!SNM_AutoVWndPosition(&m_btnOffsetTrTemplate, NULL, &r, &x0, y0, h, 5))
+							return;
+					}
 				break;
 		}
 	}

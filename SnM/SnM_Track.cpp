@@ -700,7 +700,7 @@ bool replacePasteItemsFromTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltI
 		SNM_ChunkParserPatcher* p = (_p ? _p : new SNM_ChunkParserPatcher(_tr));
 		if (!_paste) // delete items?
 		{
-			int posItemsInTr = p->GetSubChunk("ITEM", 2, 0); // no breakKeyword possible here: chunk ends with items
+			int posItemsInTr = p->GetSubChunk("ITEM", 2, 0); // no breakKeyword possible here: chunks end with items
 			if (posItemsInTr >= 0) {
 				p->GetChunk()->DeleteSub(posItemsInTr, p->GetChunk()->GetLength()-posItemsInTr-2);  // -2: ">\n"
 				updated |= (p->IncUpdates() > 0); // as we directly work on the chunk
@@ -716,7 +716,7 @@ bool replacePasteItemsFromTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltI
 			DELETE_NULL(p);
 
 		// paste items relative to cursor
-		// the track has been patched => move new items according by edit cursor
+		// the track has been patched => move new items by edit cursor
 		if (/*JFB!!!? updated && */offsOpt && *offsOpt)
 			if (int itemCount = GetTrackNumMediaItems(_tr))
 			{					

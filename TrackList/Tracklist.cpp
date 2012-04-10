@@ -32,7 +32,7 @@
 #include "../Snapshots/Snapshots.h"
 #include "TracklistFilter.h"
 #include "Tracklist.h"
-#include "SnM/SnM_Window.h"
+#include "../SnM/SnM_Window.h"
 
 #define RENAME_MSG		0x10005
 #define LOADSNAP_MSG	0x10100 // Keep space afterwards

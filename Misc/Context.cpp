@@ -29,7 +29,7 @@
 
 #include "stdafx.h"
 #include "Context.h"
-#include "SnM/SnM_Routing.h"
+#include "../SnM/SnM_Routing.h"
 
 bool AreThereSelItemsInTimeSel()
 {

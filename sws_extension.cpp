@@ -243,7 +243,7 @@ int IsSwsAction(const char* _actionName)
 {
 	if (_actionName)
 		if (const char* p = strstr(_actionName, ": ")) // no strchr() here: make sure p[2] is not out of bounds
-			if (const char* tag = stristr(_actionName, "sws")) // make sure it is a sws tag
+			if (const char* tag = strstr(_actionName, "SWS")) // make sure it is a sws tag
 				if (tag < p) // make really sure
 					return ((int)(p+2-_actionName));
 	return 0;

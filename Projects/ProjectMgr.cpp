@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 #include "ProjectMgr.h"
 #include "ProjectList.h"
 
@@ -219,9 +220,9 @@ static int GetLoadCommandID(int iSlot, bool bCreateNew)
 		char cID[BUFFER_SIZE];
 		char cDesc[BUFFER_SIZE];
 		_snprintf(cID, BUFFER_SIZE, "SWS_OPENRELATED%d", iSlot+1);
-		_snprintf(cDesc, BUFFER_SIZE, "SWS: Open related project %d", iSlot+1);
+		_snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("SWS: Open related project %d","sws_actions"), iSlot+1);
 		iLastRegistered = iSlot;
-		return SWSRegisterCommandExt(OpenRelatedProject, cID, cDesc, iSlot);
+		return SWSRegisterCommandExt(OpenRelatedProject, cID, cDesc, iSlot, false);
 	}
 
 	return SWSGetCommandID(OpenRelatedProject, iSlot);
@@ -298,8 +299,8 @@ void UpdateOpenProjectTabActions()
 			char cID[BUFFER_SIZE];
 			char cDesc[BUFFER_SIZE];
 			_snprintf(cID, BUFFER_SIZE, "SWS_PROJTAB%d", iActions+1);
-			_snprintf(cDesc, BUFFER_SIZE, "SWS: Switch to project tab %d", iActions+1);
-			SWSRegisterCommandExt(OpenProjectTab, cID, cDesc, iActions);
+			_snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("SWS: Switch to project tab %d","sws_actions"), iActions+1);
+			SWSRegisterCommandExt(OpenProjectTab, cID, cDesc, iActions, false);
 		}
 }
 

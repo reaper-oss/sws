@@ -425,7 +425,7 @@ int RoutedTracks(MediaTrack* tr, WDL_PtrList<void>* pTracks)
 void SelRouted(COMMAND_T*)
 {
 	// First build a list of the initially selected tracks
-	WDL_PtrList<void> pSelTracks = NULL;
+	WDL_PtrList<void> pSelTracks;
 	for (int i = 0; i <= GetNumTracks(); i++)
 		if (*(int*)GetSetMediaTrackInfo(CSurf_TrackFromID(i, false), "I_SELECTED", NULL))
 			pSelTracks.Add(CSurf_TrackFromID(i, false));

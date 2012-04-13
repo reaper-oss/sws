@@ -219,7 +219,6 @@ protected:
 
 private:
 	static INT_PTR WINAPI sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	static LRESULT screensetCallbackOld(int action, char *id, void *param, int param2);
 	static LRESULT screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize);
 	static int keyHandler(MSG *msg, accelerator_register_t *ctx);
 	int SaveState(char* cStateBuf, int iMaxLen);

@@ -125,7 +125,7 @@
 #define FXC_PASTE_TAKE_STR			__LOCALIZE("Paste FX chain to selected items","sws_DLG_150")
 #define FXC_PASTE_ALLTAKES_STR		__LOCALIZE("Paste FX chain to selected items, all takes","sws_DLG_150")
 #define TRT_APPLY_STR				__LOCALIZE("Apply track template to selected tracks","sws_DLG_150")
-#define TRT_APPLY_WITH_ENV_ITEM_STR	__LOCALIZE("Apply track template (+template items/envelopes) to selected tracks","sws_DLG_150")
+#define TRT_APPLY_WITH_ENV_ITEM_STR	__LOCALIZE("Apply track template (+items/envelopes) to selected tracks","sws_DLG_150")
 #define TRT_IMPORT_STR				__LOCALIZE("Import tracks from track template","sws_DLG_150")
 #define TRT_REPLACE_ITEMS_STR		__LOCALIZE("Paste (replace) template items to selected tracks","sws_DLG_150")
 #define TRT_PASTE_ITEMS_STR			__LOCALIZE("Paste template items to selected tracks","sws_DLG_150")
@@ -935,8 +935,8 @@ void SNM_ResourceWnd::FillDblClickCombos()
 			break;
 		case SNM_SLOT_TR:
 			m_cbDblClickType.AddItem(__LOCALIZE("Import tracks from track template","sws_DLG_150"));
-			m_cbDblClickType.AddItem(__LOCALIZE("Apply to sel tracks","sws_DLG_150"));
-			m_cbDblClickType.AddItem(__LOCALIZE("Apply to sel tracks (+template items/envs)","sws_DLG_150"));
+			m_cbDblClickType.AddItem(__LOCALIZE("Apply template to sel tracks","sws_DLG_150"));
+			m_cbDblClickType.AddItem(__LOCALIZE("Apply template to sel tracks (+items/envs)","sws_DLG_150"));
 			m_cbDblClickType.AddItem(__LOCALIZE("Paste template items to sel tracks","sws_DLG_150"));
 			m_cbDblClickType.AddItem(__LOCALIZE("Paste (replace) template items to sel tracks","sws_DLG_150"));
 			break;
@@ -1479,13 +1479,13 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		switch(typeForUser)
 		{
 			case SNM_SLOT_FXC:
-				AddToMenu(hMenu, FXC_APPLY_TR_STR, FXC_APPLY_TR_MSG, -1, false, enabled);
 				AddToMenu(hMenu, FXC_PASTE_TR_STR, FXC_PASTE_TR_MSG, -1, false, enabled);
+				AddToMenu(hMenu, FXC_APPLY_TR_STR, FXC_APPLY_TR_MSG, -1, false, enabled);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				AddToMenu(hMenu, FXC_APPLY_TAKE_STR, FXC_APPLY_TAKE_MSG, -1, false, enabled);
-				AddToMenu(hMenu, FXC_APPLY_ALLTAKES_STR, FXC_APPLY_ALLTAKES_MSG, -1, false, enabled);
 				AddToMenu(hMenu, FXC_PASTE_TAKE_STR, FXC_PASTE_TAKE_MSG, -1, false, enabled);
 				AddToMenu(hMenu, FXC_PASTE_ALLTAKES_STR, FXC_PASTE_ALLTAKES_MSG, -1, false, enabled);
+				AddToMenu(hMenu, FXC_APPLY_TAKE_STR, FXC_APPLY_TAKE_MSG, -1, false, enabled);
+				AddToMenu(hMenu, FXC_APPLY_ALLTAKES_STR, FXC_APPLY_ALLTAKES_MSG, -1, false, enabled);
 /*JFB seems confusing, commented: it is not a "copy slot" thingy!
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				AddToMenu(hMenu, "Copy", FXC_COPY_MSG, -1, false, enabled);

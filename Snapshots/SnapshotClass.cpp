@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 #include "../Utility/Base64.h"
 #include "SnapshotClass.h"
 #include "Snapshots.h"
@@ -912,8 +913,8 @@ void Snapshot::RegisterGetCommand(int iSlot) // Slot is 1-based index.
 		char cID[BUFFER_SIZE];
 		char cDesc[BUFFER_SIZE];
 		_snprintf(cID, BUFFER_SIZE, "SWSSNAPSHOT_GET%d", iSlot);
-		_snprintf(cDesc, BUFFER_SIZE, "SWS: Recall snapshot %d", iSlot);
-		SWSRegisterCommandExt(GetSnapshot, cID, cDesc, iSlot);
+		_snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("SWS: Recall snapshot %d","sws_actions"), iSlot);
+		SWSRegisterCommandExt(GetSnapshot, cID, cDesc, iSlot, false);
 		iLastRegistered = iSlot;
 	}
 }

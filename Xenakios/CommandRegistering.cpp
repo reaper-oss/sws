@@ -177,8 +177,8 @@ COMMAND_T g_XenCommandTable[] =
 	{ { DEFACCEL, "Xenakios/SWS: Store selected tracks heights" }, "XENAKIOS_STORETRACKHEIGHTS", DoStoreSelTraxHeights,	"Store selected tracks heights", },
 	{ { DEFACCEL, "Xenakios/SWS: Recall selected tracks heights" }, "XENAKIOS_RECALLTRACKHEIGHTS", DoRecallSelectedTrackHeights,	"Recall selected tracks heights", },
 	{ { DEFACCEL, "Xenakios/SWS: Select tracks with no items" }, "XENAKIOS_SELTRAXNOITEMS", DoSelectTracksWithNoItems,	"Select tracks with no items", },
-	{ { DEFACCEL, "Xenakios/SWS: Select tracks with \"BUSS\" in name" }, "XENAKIOS_SELTRAXWITHBUSS", DoSelectTracksContainingBuss,	"Select tracks with \"BUSS\" in name", },
-	{ { DEFACCEL, "Xenakios/SWS: Unselect tracks with \"BUSS\" in name" }, "XENAKIOS_UNSELTRAXWITHBUSS", DoUnSelectTracksContainingBuss,	"Unselect tracks with \"BUSS\" in name", },
+	{ { DEFACCEL, "Xenakios/SWS: Select tracks with 'BUSS' in name" }, "XENAKIOS_SELTRAXWITHBUSS", DoSelectTracksContainingBuss,	"Select tracks with \"BUSS\" in name", },
+	{ { DEFACCEL, "Xenakios/SWS: Unselect tracks with 'BUSS' in name" }, "XENAKIOS_UNSELTRAXWITHBUSS", DoUnSelectTracksContainingBuss,	"Unselect tracks with \"BUSS\" in name", },
 
 	{ { DEFACCEL, "Xenakios/SWS: Dismantle selected folder" }, "XENAKIOS_SELTRACKTONOTFOLDER", DoSetSelectedTrackNormal,	"Dismantle selected folder", },
 	

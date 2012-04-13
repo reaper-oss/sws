@@ -427,13 +427,7 @@ void SWS_DockWnd::ToggleDocking()
 	Show(false, true);
 }
 
-// v3 screenset support (delete for v4)
-LRESULT SWS_DockWnd::screensetCallbackOld(int action, char *id, void *param, int param2)
-{
-	return screensetCallback(action, id, param, NULL, param2);
-}
-
-// v4 screenset support
+// screenset support
 LRESULT SWS_DockWnd::screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize)
 {
 	SWS_DockWnd* pObj = (SWS_DockWnd*)param;
@@ -443,13 +437,6 @@ LRESULT SWS_DockWnd::screensetCallback(int action, char *id, void *param, void *
 		return (LRESULT)pObj->m_hwnd;
 	case SCREENSET_ACTION_IS_DOCKED:
 		return (LRESULT)pObj->IsDocked();
-	// *** V3 only (remove for v4)
-	case SCREENSET_ACTION_SHOW:
-		if (IsWindow(pObj->m_hwnd))
-			DestroyWindow(pObj->m_hwnd);
-		if (actionParmSize) pObj->m_state.state |= 2; else pObj->m_state.state &= ~2;
-		pObj->Show(false, true);
-		break;
 	case SCREENSET_ACTION_CLOSE:
 		if (IsWindow(pObj->m_hwnd))
 		{

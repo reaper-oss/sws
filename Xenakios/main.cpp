@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 #include "Parameters.h"
 
 using namespace std;
@@ -693,13 +694,13 @@ int XenakiosInit()
 		if (pFilename && pFilename[1])
 		{
 			int iNum = atol(pFilename+1);
-			if (!SWSGetCommandID(DoOpenTrackTemplate, iNum))
+			if (iNum && !SWSGetCommandID(DoOpenTrackTemplate, iNum))
 			{
 				char cDesc[BUFFER_SIZE];
 				char cID[BUFFER_SIZE];
 				_snprintf(cID, BUFFER_SIZE, "XENAKIOS_LOADTRACKTEMPLATE%d", iNum);
-				_snprintf(cDesc, BUFFER_SIZE, "Xenakios/SWS: [Deprecated] Load track template %d", iNum);
-				SWSRegisterCommandExt(DoOpenTrackTemplate, cID, cDesc, iNum);
+				_snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("Xenakios/SWS: [Deprecated] Load track template %d","sws_actions"), iNum);
+				SWSRegisterCommandExt(DoOpenTrackTemplate, cID, cDesc, iNum, false);
 			}
 		}
 	}
@@ -714,13 +715,13 @@ int XenakiosInit()
 		if (pFilename && pFilename[1])
 		{
 			int iNum = atol(pFilename+1);
-			if (!SWSGetCommandID(DoOpenProjectTemplate, iNum))
+			if (iNum && !SWSGetCommandID(DoOpenProjectTemplate, iNum))
 			{
 				char cID[BUFFER_SIZE];
 				char cDesc[BUFFER_SIZE];
 				_snprintf(cID, BUFFER_SIZE, "XENAKIOS_LOADPROJTEMPL%d", iNum);
-				_snprintf(cDesc, BUFFER_SIZE, "Xenakios/SWS: [Deprecated] Load project template %d", iNum);
-				SWSRegisterCommandExt(DoOpenProjectTemplate, cID, cDesc, iNum);
+				_snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("Xenakios/SWS: [Deprecated] Load project template %d","sws_actions"), iNum);
+				SWSRegisterCommandExt(DoOpenProjectTemplate, cID, cDesc, iNum, false);
 			}
 		}
 	}

@@ -228,7 +228,7 @@ void WriteProjectFile( string filename, WDL_FastString* prjStr ){
 	char line[4096];
 	int pos = 0;	
 	while( GetChunkLine( prjStr->Get(), line, 4096, &pos, false ) ){
-		outProject->AddLine( line );
+		outProject->AddLine("%s",line);
 	}
     delete outProject;
 }
@@ -1011,7 +1011,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 void writeAutorenderSettingInt( ProjectStateContext *ctx, const char* settingName, int setting ){
 	char str[512];
 	sprintf( str, "%s %i", settingName, setting);
-	ctx->AddLine(str);
+	ctx->AddLine("%s",str);
 }
 
 void writeAutorenderSettingString( ProjectStateContext *ctx, const char* settingName, string setting ){
@@ -1022,7 +1022,7 @@ void writeAutorenderSettingString( ProjectStateContext *ctx, const char* setting
 	WDL_FastString str(settingName);
 	str.Append(" ");
 	str.Append(sanitizedStr.Get());
-	ctx->AddLine(str.Get());
+	ctx->AddLine("%s",str.Get());
 }
 
 static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg){

@@ -30,6 +30,8 @@
 #ifndef _SNM_TRACK_H_
 #define _SNM_TRACK_H_
 
+#include "SnM_Chunk.h" 
+
 class SNM_TrackInt {
 public:
 	SNM_TrackInt(MediaTrack* _tr, int _i) : m_tr(_tr), m_int(_i) {}
@@ -68,7 +70,7 @@ void SNM_ClearSelectedTracks(ReaProject* _proj, bool _withMaster);
 bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz);
 void SetTrackIcon(MediaTrack* _tr, const char* _fn);
 void SetSelTrackIcon(const char* _fn);
-bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_ChunkParserPatcher* _p = NULL, bool _isRawTmpltChunk = true);
+bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_SendPatcher* _p = NULL, bool _isRawTmpltChunk = true);
 void ImportTrackTemplateSlot(int _slotType, const char* _title, int _slot);
 void ApplyTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _itemsFromTmplt, bool _envsFromTmplt);
 void ReplacePasteItemsTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _paste);

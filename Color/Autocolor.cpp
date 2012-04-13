@@ -842,7 +842,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 				g = *(GUID*)GetSetMediaTrackInfo(rt->m_pTr, "GUID", NULL);
 			guidToString(&g, str);
 			sprintf(str+strlen(str), " %d \"%s\"", rt->m_col, rt->m_icon.Get());
-			ctx->AddLine(str);
+			ctx->AddLine("%s",str);
 		}
 		ctx->AddLine(">");
 	}

@@ -665,7 +665,7 @@ bool GetItemsSubChunk(WDL_FastString* _inChunk, WDL_FastString* _outSubChunk)
 	if (_inChunk && _outSubChunk)
 	{
 		SNM_ChunkParserPatcher p(_inChunk);
-		//JFB!!! all items in one go???
+		//JFB!!! all items in one go?
 		int posItemsInTmplt = p.GetSubChunk("ITEM", 2, 0); // no breakKeyword possible here: chunk ends with items
 		if (posItemsInTmplt >= 0) {
 			_outSubChunk->Set((const char*)(p.GetChunk()->Get()+posItemsInTmplt), p.GetChunk()->GetLength()-posItemsInTmplt-2);  // -2: ">\n"
@@ -679,7 +679,7 @@ bool GetItemsSubChunk(WDL_FastString* _inChunk, WDL_FastString* _outSubChunk)
 // note: obeys the native pref "Offset template items/envs by edit cusor"
 // _paste==false for replace, paste otherwise
 // _p is optional (can be provided to factorize chunk updates)
-//JFB!!! TODO: would be better to offset items in the chunk rather moving them afterwards (+ update applyTrackTemplate() accordingly)
+//JFB!!! TODO: would be better to offset items in the chunk? (+ update applyTrackTemplate() accordingly?)
 bool replacePasteItemsFromTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltItemsSubChunk, bool _paste, SNM_ChunkParserPatcher* _p = NULL)
 {
 	bool updated = false;
@@ -717,7 +717,7 @@ bool replacePasteItemsFromTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltI
 
 		// paste items relative to cursor
 		// the track has been patched => move new items by edit cursor
-		if (/*JFB!!!? updated && */offsOpt && *offsOpt)
+		if (offsOpt && *offsOpt)
 			if (int itemCount = GetTrackNumMediaItems(_tr))
 			{					
 				double cursorPos = GetCursorPositionEx(NULL);
@@ -760,11 +760,10 @@ bool makeSingleTrackTemplateChunk(WDL_FastString* _inRawChunk, WDL_FastString* _
 	return false;
 }
 
-// apply a track template (primitive)
-// _p & _isRawTmpltChunk are optional (to, respectively, factorize chunk updates and factorize _tmpltChunk updates)
-// note: if _p is provided it must be a SNM_SendPatcher (SNM_ChunkParserPatcher* kept for .h reasons)
-//JFB!!! TODO: envs are not yet offseted by edit cursor + see replacePasteItemsFromTrackTemplate()'s comment
-bool applyTrackTemplateNoIO(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_ChunkParserPatcher* _p, bool _isRawTmpltChunk)
+// apply a track template (primitive: receives get removed)
+// _p & _isRawTmpltChunk are optional (to respectively factorize chunk updates and not to systematically re-build _tmpltChunk)
+//JFB TODO: envs are not yet offseted by edit cursor + see replacePasteItemsFromTrackTemplate()'s comment
+bool applyTrackTemplateNoIO(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_SendPatcher* _p, bool _isRawTmpltChunk)
 {
 	bool updated = false;
 	if (_tr && _tmpltChunk)
@@ -799,7 +798,7 @@ bool applyTrackTemplateNoIO(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _
 		// add current track items, if any (no offset)
 		else
 		{
-			int posItems = p->GetSubChunk("ITEM", 2, 0); //JFB!!! get all in one go !?
+			int posItems = p->GetSubChunk("ITEM", 2, 0); //JFB!!! get all in one go?
 			if (posItems >= 0)
 				newChunk.Insert((char*)(p->GetChunk()->Get()+posItems), newChunk.GetLength()-2, p->GetChunk()->GetLength()-posItems-2); // -2: ">\n"
 
@@ -813,15 +812,14 @@ bool applyTrackTemplateNoIO(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _
 	return updated;
 }
 
-// apply a track template + preserve routings
-// _p & _isRawTmpltChunk are optional (to respectively, factorize chunk updates and make the template once)
-// note: if _p is provided it must be a SNM_SendPatcher (SNM_ChunkParserPatcher* kept for .h reasons)
-bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_ChunkParserPatcher* _p, bool _isRawTmpltChunk)
+// apply a track template (preserve receives)
+// _p & _isRawTmpltChunk are optional (to respectively factorize chunk updates and build the template once)
+bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_SendPatcher* _p, bool _isRawTmpltChunk)
 {
 	bool updated = false;
 	if (_tr && _tmpltChunk && _tmpltChunk->GetLength())
 	{
-		SNM_ChunkParserPatcher* p = (_p ? _p : new SNM_SendPatcher(_tr));
+		SNM_SendPatcher* p = (_p ? _p : new SNM_SendPatcher(_tr));
 //JFB!!! to check: master track
 		// copy receives
 		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > rcvs;

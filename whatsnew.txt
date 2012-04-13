@@ -1,7 +1,9 @@
+Localization: missing few actions, fixed UTF-8 issue (all localized actions could not be seen)
+
 !v2.2.0 #4 (April 9, 2012)
 SWS localization (BETA)
 The SWS extension now also uses the language pack file defined in the preferences (just like REAPER).
-The SWS template LangPack file is available here: http://code.google.com/p/sws-extension/downloads/list (it will be regulary updated with new SWS releases). This file should be merged with the main REAPER LangPack file as explained http://forum.cockos.com/showpost.php?p=885893&postcount=83|here|.
+The SWS template LangPack file is available here: http://code.google.com/p/sws-extension/downloads/list (it will be regulary updated with new SWS releases). This file should be merged with the main REAPER LangPack file as explained http://forum.cockos.com/showpost.php?p=941893&postcount=810|here|.
 All action names can be translated (and most of undo point names: same string).
 Many dialog boxes and windows can be translated. Full localization support for (on-going work..):
 +Sanpshots

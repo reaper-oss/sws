@@ -1450,9 +1450,9 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Horizontal scroll to put play cursor at 50%" },				"SWS_HSCROLLPLAY50",	ScrollToCursor,		NULL, -50, },
 	{ { DEFACCEL, "SWS: Vertical zoom to selected track(s)" },	 					"SWS_VZOOMFIT",			FitSelTracks,		NULL, },
 	{ { DEFACCEL, "SWS: Vertical zoom to selected track(s), minimize others" }, 	"SWS_VZOOMFITMIN",		FitSelTracksMin,	NULL, },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected items(s)" },	 					"SWS_VZOOMIITEMS",		VZoomToSelItems,	NULL, },
-	{ { DEFACCEL, "SWS: Vertical zoom to selected items(s), minimize others" },		"SWS_VZOOMITEMSMIN",	VZoomToSelItemsMin,	NULL, },
-	{ { DEFACCEL, "SWS: Horizontal zoom to selected items(s)" },	 				"SWS_HZOOMITEMS",		HZoomToSelItems,	NULL, },
+	{ { DEFACCEL, "SWS: Vertical zoom to selected item(s)" },	 					"SWS_VZOOMIITEMS",		VZoomToSelItems,	NULL, },
+	{ { DEFACCEL, "SWS: Vertical zoom to selected item(s), minimize others" },		"SWS_VZOOMITEMSMIN",	VZoomToSelItemsMin,	NULL, },
+	{ { DEFACCEL, "SWS: Horizontal zoom to selected item(s)" },	 				"SWS_HZOOMITEMS",		HZoomToSelItems,	NULL, },
 	{ { DEFACCEL, "SWS: Zoom to selected item(s)" },				 				"SWS_ITEMZOOM",			ZoomToSelItems,		NULL, },
 	{ { DEFACCEL, "SWS: Zoom to selected item(s), minimize others" },				"SWS_ITEMZOOMMIN",		ZoomToSelItemsMin,	NULL, },
 	{ { DEFACCEL, "SWS: Zoom to sel item(s) or time sel" },				 			"SWS_ZOOMSIT",			ZoomToSIT,			NULL, },
@@ -1460,13 +1460,13 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel" },					"SWS_TOGZOOMTT",		TogZoomTT,			NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, minimize others" },	"SWS_TOGZOOMTTMIN",		TogZoomTTMin,		NULL, 0, IsTogZoomed },
 	{ { DEFACCEL, "SWS: Toggle zoom to sel track(s) + time sel, hide others" },		"SWS_TOGZOOMTTHIDE",	TogZoomTTHide,		NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s) or time sel" },					"SWS_TOGZOOMI",			TogZoomItems,		NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s) or time sel, minimize other tracks" },"SWS_TOGZOOMIMIN",TogZoomItemsMin,	NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s) or time sel, hide other tracks" },	"SWS_TOGZOOMIHIDE",	TogZoomItemsHide,	NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s)" },								"SWS_TOGZOOMIONLY",		TogZoomItemsOnly,	NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), minimize other tracks" },		"SWS_TOGZOOMIONLYMIN",	TogZoomItemsOnlyMin,NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle zoom to sel items(s), hide other tracks" },			"SWS_TOGZOOMIONLYHIDE",	TogZoomItemsOnlyHide,NULL, 0, IsTogZoomed },
-	{ { DEFACCEL, "SWS: Toggle horizontal zoom to sel items(s) or time sel" },		"SWS_TOGZOOMHORIZ",		TogZoomHoriz,		NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel item(s) or time sel" },					"SWS_TOGZOOMI",			TogZoomItems,		NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel item(s) or time sel, minimize other tracks" },"SWS_TOGZOOMIMIN",TogZoomItemsMin,	NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel item(s) or time sel, hide other tracks" },	"SWS_TOGZOOMIHIDE",	TogZoomItemsHide,	NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel item(s)" },								"SWS_TOGZOOMIONLY",		TogZoomItemsOnly,	NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel item(s), minimize other tracks" },		"SWS_TOGZOOMIONLYMIN",	TogZoomItemsOnlyMin,NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle zoom to sel item(s), hide other tracks" },			"SWS_TOGZOOMIONLYHIDE",	TogZoomItemsOnlyHide,NULL, 0, IsTogZoomed },
+	{ { DEFACCEL, "SWS: Toggle horizontal zoom to sel item(s) or time sel" },		"SWS_TOGZOOMHORIZ",		TogZoomHoriz,		NULL, 0, IsTogZoomed },
 
 	{ { DEFACCEL, "SWS: Scroll left 10%" },											"SWS_SCROLL_L10",		HorizScroll,		NULL, -10 },
 	{ { DEFACCEL, "SWS: Scroll right 10%" },										"SWS_SCROLL_R10",		HorizScroll,		NULL, 10 },
@@ -1483,7 +1483,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Zoom tool (marquee)" },										"SWS_ZOOM",				ZoomTool,			NULL, 0, IsZoomMode },
 	{ { DEFACCEL, "SWS: Zoom preferences" },										"SWS_ZOOMPREFS",		ZoomPrefs,			"SWS Zoom preferences...", },
 
-	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, }, // for main "Extensions" menu
+	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, }, // for main Extensions menu
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 //!WANT_LOCALIZE_1ST_STRING_END

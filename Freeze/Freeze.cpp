@@ -244,40 +244,40 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 
 	for (int i = 0; i < g_tracks.Get()->GetSize(); i++)
 	{
-		ctx->AddLine(g_tracks.Get()->Get(i)->ItemString(str, 4096)); 
+		ctx->AddLine("%s",g_tracks.Get()->Get(i)->ItemString(str, 4096)); 
 		for (int j = 0; j < g_tracks.Get()->Get(i)->m_items.GetSize(); j++)
-			ctx->AddLine(g_tracks.Get()->Get(i)->m_items.Get(j)->ItemString(str, 4096));
+			ctx->AddLine("%s",g_tracks.Get()->Get(i)->m_items.Get(j)->ItemString(str, 4096));
 		ctx->AddLine(">");
 	}
 	bool bDone;
 	for (int i = 0; i < g_muteStates.Get()->GetSize(); i++)
 	{
 		do
-			ctx->AddLine(g_muteStates.Get()->Get(i)->ItemString(str, 4096, &bDone));
+			ctx->AddLine("%s", g_muteStates.Get()->Get(i)->ItemString(str, 4096, &bDone));
 		while (!bDone);
 	}
 	for (int i = 0; i < g_selItemsTrack.Get()->GetSize(); i++)
 	{
 		do
-			ctx->AddLine(g_selItemsTrack.Get()->Get(i)->ItemString(str, 4096, &bDone));
+			ctx->AddLine("%s",g_selItemsTrack.Get()->Get(i)->ItemString(str, 4096, &bDone));
 		while (!bDone);
 	}
 	if (g_selItems.Get()->NumItems())
 	{
 		ctx->AddLine("<ITEMSELSTATE 1");
 		do
-			ctx->AddLine(g_selItems.Get()->ItemString(str, 4096, &bDone));
+			ctx->AddLine("%s",g_selItems.Get()->ItemString(str, 4096, &bDone));
 		while (!bDone);
 	}
 	for (int i = 0; i < g_activeTakeTracks.Get()->GetSize(); i++)
 	{
-		ctx->AddLine(g_activeTakeTracks.Get()->Get(i)->ItemString(str, 4096)); 
+		ctx->AddLine("%s",g_activeTakeTracks.Get()->Get(i)->ItemString(str, 4096)); 
 		for (int j = 0; j < g_activeTakeTracks.Get()->Get(i)->m_items.GetSize(); j++)
-			ctx->AddLine(g_activeTakeTracks.Get()->Get(i)->m_items.Get(j)->ItemString(str, 4096));
+			ctx->AddLine("%s",g_activeTakeTracks.Get()->Get(i)->m_items.Get(j)->ItemString(str, 4096));
 		ctx->AddLine(">");
 	}
 	for (int i = 0; i < g_timeSel.Get()->GetSize(); i++)
-		ctx->AddLine(g_timeSel.Get()->Get(i)->ItemString(str, 4096));
+		ctx->AddLine("%s",g_timeSel.Get()->Get(i)->ItemString(str, 4096));
 }
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)

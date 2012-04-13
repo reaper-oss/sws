@@ -792,7 +792,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	bool bDone;
 	while (g_pList->GetFilter()->Get()->ItemString(str, 4096, &bDone))
 	{
-		ctx->AddLine(str);
+		ctx->AddLine("%s",str);
 		if (bDone)
 			break;
 	}

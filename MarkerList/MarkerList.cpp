@@ -704,7 +704,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	{
 		ctx->AddLine("<MARKERLIST \"%s\"", g_savedLists.Get()->Get(i)->m_name);
 		for (int j = 0; j < g_savedLists.Get()->Get(i)->m_items.GetSize(); j++)
-			ctx->AddLine(g_savedLists.Get()->Get(i)->m_items.Get(j)->ItemString(str, 512));
+			ctx->AddLine("%s",g_savedLists.Get()->Get(i)->m_items.Get(j)->ItemString(str, 512));
 		ctx->AddLine(">");
 	}
 }

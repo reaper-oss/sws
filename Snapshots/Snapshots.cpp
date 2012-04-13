@@ -144,7 +144,7 @@ void ExportSnapshot(Snapshot* ss)
 			char line[4096];
 			int pos = 0;
 			while(GetChunkLine(chunk.Get(), line, 4096, &pos, false))
-				cfg->AddLine(line);
+				cfg->AddLine("%s",line);
 			delete cfg;
 		}
 		else
@@ -1030,7 +1030,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		ss->GetChunk(&chunk);
 		int iPos = 0;
 		while(GetChunkLine(chunk.Get(), line, 4096, &iPos, false))
-			ctx->AddLine(line);
+			ctx->AddLine("%s",line);
 	}
 }
 

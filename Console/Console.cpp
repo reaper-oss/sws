@@ -33,6 +33,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 #include "../Freeze/Freeze.h"
 #include "Console.h"
 
@@ -814,25 +815,25 @@ static accelerator_register_t g_ar = { translateAccel, TRUE, NULL };
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
-	{ { { 0, 'C', 0 }, "SWS: Open console" },									"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0 },
-	{ { DEFACCEL,   "SWS: Open console and copy keystroke" },					"SWSCONSOLE2",      BringKeyCommand, NULL, },
-	{ { DEFACCEL,   "SWS: Open console with 'S' to select track(s)" },			"SWSCONSOLEEXSEL",  ConsoleCommand,  NULL, 'S' },
-	{ { DEFACCEL,   "SWS: Open console with 'n' to name track(s)" },			"SWSCONSOLENAME",   ConsoleCommand,  NULL, 'n' },
-	{ { DEFACCEL,   "SWS: Open console with 'o' to solo track(s)" },			"SWSCONSOLESOLO",   ConsoleCommand,  NULL, 'o' },
-	{ { DEFACCEL,   "SWS: Open console with 'a' to arm track(s)" },				"SWSCONSOLEARM",    ConsoleCommand,  NULL, 'a' },
-	{ { DEFACCEL,   "SWS: Open console with 'm' to mute track(s)" },			"SWSCONSOLEMUTE",   ConsoleCommand,  NULL, 'm' },
-	{ { DEFACCEL,   "SWS: Open console with 'f' to toggle FX enable" },			"SWSCONSOLEFX",     ConsoleCommand,  NULL, 'f' },
-	{ { DEFACCEL,   "SWS: Open console with 'i' to set track(s) input" },		"SWSCONSOLEINPUT",  ConsoleCommand,  NULL, 'i' },
-	{ { DEFACCEL,   "SWS: Open console with 'b' to prefix track(s)" },			"SWSCONSOLEPREFIX", ConsoleCommand,  NULL, 'b' },
-	{ { DEFACCEL,   "SWS: Open console with 'z' to suffix track(s)" },			"SWSCONSOLESUFFIX", ConsoleCommand,  NULL, 'z' },
-	{ { DEFACCEL,   "SWS: Open console with 'c' to color track(s)" },			"SWSCONSOLECOLOR",  ConsoleCommand,  NULL, 'c' },
-	{ { DEFACCEL,   "SWS: Open console with 'h' to flip phase on track(s)" },	"SWSCONSOLEPHASE",  ConsoleCommand,  NULL, 'h' },
-	{ { DEFACCEL,   "SWS: Open console with 'V' to set track(s) volume" },		"SWSCONSOLEVOL",    ConsoleCommand,  NULL, 'V' },
-	{ { DEFACCEL,   "SWS: Open console with 'P' to set track(s) pan" },			"SWSCONSOLEPAN",    ConsoleCommand,  NULL, 'P' },
-	{ { DEFACCEL,   "SWS: Open console with 'v' to trim volume on track(s)" },	"SWSCONSOLEVOLT",   ConsoleCommand,  NULL, 'v' },
-	{ { DEFACCEL,   "SWS: Open console with 'p' to trim pan on track(s)" },		"SWSCONSOLEPANT",   ConsoleCommand,  NULL, 'p' },
-	{ { DEFACCEL,   "SWS: Open console with 'l' to set track(s) # channels" },	"SWSCONSOLECHAN",   ConsoleCommand,  NULL, 'l' },
-	{ { DEFACCEL,   "SWS: Open console with '!' to add action marker" },		"SWSCONSOLEMARKER", ConsoleCommand,  NULL, '!' },
+	{ { { 0, 'C', 0 }, "SWS: Open console" },								"SWSCONSOLE",       ConsoleCommand,  "SWS ReaConsole", 0 },
+	{ { DEFACCEL,   "SWS: Open console and copy keystroke" },				"SWSCONSOLE2",      BringKeyCommand, NULL, },
+	{ { DEFACCEL,   "SWS: Open console with 'S' to select track(s)" },		"SWSCONSOLEEXSEL",  ConsoleCommand,  NULL, 'S' },
+	{ { DEFACCEL,   "SWS: Open console with 'n' to name track(s)" },		"SWSCONSOLENAME",   ConsoleCommand,  NULL, 'n' },
+	{ { DEFACCEL,   "SWS: Open console with 'o' to solo track(s)" },		"SWSCONSOLESOLO",   ConsoleCommand,  NULL, 'o' },
+	{ { DEFACCEL,   "SWS: Open console with 'a' to arm track(s)" },			"SWSCONSOLEARM",    ConsoleCommand,  NULL, 'a' },
+	{ { DEFACCEL,   "SWS: Open console with 'm' to mute track(s)" },		"SWSCONSOLEMUTE",   ConsoleCommand,  NULL, 'm' },
+	{ { DEFACCEL,   "SWS: Open console with 'f' to toggle FX enable" },		"SWSCONSOLEFX",     ConsoleCommand,  NULL, 'f' },
+	{ { DEFACCEL,   "SWS: Open console with 'i' to set track(s) input" },	"SWSCONSOLEINPUT",  ConsoleCommand,  NULL, 'i' },
+	{ { DEFACCEL,   "SWS: Open console with 'b' to prefix track(s)" },		"SWSCONSOLEPREFIX", ConsoleCommand,  NULL, 'b' },
+	{ { DEFACCEL,   "SWS: Open console with 'z' to suffix track(s)" },		"SWSCONSOLESUFFIX", ConsoleCommand,  NULL, 'z' },
+	{ { DEFACCEL,   "SWS: Open console with 'c' to color track(s)" },		"SWSCONSOLECOLOR",  ConsoleCommand,  NULL, 'c' },
+	{ { DEFACCEL,   "SWS: Open console with 'h' to flip phase on track(s)" },"SWSCONSOLEPHASE",  ConsoleCommand,  NULL, 'h' },
+	{ { DEFACCEL,   "SWS: Open console with 'V' to set track(s) volume" },	"SWSCONSOLEVOL",    ConsoleCommand,  NULL, 'V' },
+	{ { DEFACCEL,   "SWS: Open console with 'P' to set track(s) pan" },		"SWSCONSOLEPAN",    ConsoleCommand,  NULL, 'P' },
+	{ { DEFACCEL,   "SWS: Open console with 'v' to trim volume on track(s)" },"SWSCONSOLEVOLT",   ConsoleCommand,  NULL, 'v' },
+	{ { DEFACCEL,   "SWS: Open console with 'p' to trim pan on track(s)" },	"SWSCONSOLEPANT",   ConsoleCommand,  NULL, 'p' },
+	{ { DEFACCEL,   "SWS: Open console with 'l' to set track(s) # channels" },"SWSCONSOLECHAN",   ConsoleCommand,  NULL, 'l' },
+	{ { DEFACCEL,   "SWS: Open console with '!' to add action marker" },	"SWSCONSOLEMARKER", ConsoleCommand,  NULL, '!' },
 #ifdef _WIN32
 	{ { DEFACCEL,   "SWS: Edit console custom commands (restart needed after save)" }, "SWSCONSOLEEDITCUST",  EditCustomCommands,  NULL, },
 #endif
@@ -870,8 +871,8 @@ int ConsoleInit()
 				char cID[BUFFER_SIZE];
 				char cDesc[BUFFER_SIZE];
 				_snprintf(cID, BUFFER_SIZE, "SWSCONSOLE_CUST%d", i++);
-				_snprintf(cDesc, BUFFER_SIZE, "SWS: Run console command: %s", cBuf);
-				SWSRegisterCommandExt(RunCommand, cID, cDesc, (INT_PTR)_strdup(cBuf));
+				_snprintf(cDesc, BUFFER_SIZE, __LOCALIZE_VERFMT("SWS: Run console command: %s","sws_actions"), cBuf);
+				SWSRegisterCommandExt(RunCommand, cID, cDesc, (INT_PTR)_strdup(cBuf), false);
 			}
 		}
 		fclose(f);

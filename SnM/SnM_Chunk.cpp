@@ -863,15 +863,7 @@ bool SNM_FXSummaryParser::NotifyStartElement(int _mode,
 	return false;
 }
 
-bool SNM_FXSummaryParser::NotifyEndElement(int _mode, 
-	LineParser* _lp, const char* _parsedLine, int _linePos,
-	WDL_PtrList<WDL_FastString>* _parsedParents, 
-	WDL_FastString* _newChunk, int _updates)
-{
-	if (_mode == -1 && !strcmp(GetParent(_parsedParents), "FXCHAIN")) //JFB!!! "FXCHAIN_REC"
-		m_breakParsePatch = true; // optmization
-	return false; 
-}
+// no SNM_FXSummaryParser::NotifyEndElement() (sould work for .rfxchain, input fx chain & fx chain)
 
 WDL_PtrList<SNM_FXSummary>* SNM_FXSummaryParser::GetSummaries()
 {

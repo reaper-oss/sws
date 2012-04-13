@@ -219,9 +219,9 @@ vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"
 
 ///////////////////////////////////////////////////////////////////////////////
 
-//#include "SnM_ChunkParserPatcher.h" 
-//#include "SnM_Routing.h"
+#include "SnM_ChunkParserPatcher.h" 
 #include "SnM_Chunk.h"
+#include "SnM_Routing.h"
 #include "SnM_Dlg.h"
 #include "SnM_VWnd.h"
 #include "SnM_Cyclactions.h" // from this point order does not matter anymore..

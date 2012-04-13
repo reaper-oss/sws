@@ -1473,15 +1473,17 @@ void SNM_MidiLiveScheduledJob::Perform()
 
 				// track configuration
 				SNM_ChunkParserPatcher* p = NULL;
-				if (cfg->m_trTemplate.GetLength()) {
-					p = new SNM_SendPatcher(cfg->m_track); // needs SNM_SendPatcher, hot!
+				if (cfg->m_trTemplate.GetLength())
+				{
+					p = new SNM_SendPatcher(cfg->m_track);
 					WDL_FastString chunk;
 					char filename[BUFFER_SIZE];
 					GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), filename, BUFFER_SIZE);
 					if (LoadChunk(filename, &chunk) && chunk.GetLength())
-						applyTrackTemplate(cfg->m_track, &chunk, false, false, p);
+						applyTrackTemplate(cfg->m_track, &chunk, false, false, (SNM_SendPatcher*)p);
 				}
-				else if (cfg->m_fxChain.GetLength()) {
+				else if (cfg->m_fxChain.GetLength())
+				{
 					p = new SNM_FXChainTrackPatcher(cfg->m_track);
 					WDL_FastString chunk;
 					char filename[BUFFER_SIZE];

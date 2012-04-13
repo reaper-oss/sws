@@ -771,7 +771,7 @@ void GrooveTemplateHandler::SaveGrooveMarkers(ProjectStateContext *ctx, bool isU
         ctx->AddLine("<FNGGROOVE");
         ctx->AddLine("<GROOVEMARKERS");
         while(!markerdata.empty()) {
-            ctx->AddLine(markerdata.c_str());
+            ctx->AddLine("%s",markerdata.c_str());
             markerdata = me->GetGrooveMarkerString(i++);
         }
         ctx->AddLine(">");

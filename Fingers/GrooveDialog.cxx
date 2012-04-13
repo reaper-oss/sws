@@ -232,8 +232,7 @@ void GrooveDialog::RefreshGrooveList()
 	SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_RESETCONTENT, 0, 0);
 	SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_ADDSTRING, 0, (LPARAM)"** User Groove **");
 	WDL_DirScan dirScan;
-	WDL_String searchStr;
-	searchStr = currentDir.c_str();
+	WDL_String searchStr(currentDir.c_str());
 /* dirScan doesn't support wildcards on OSX do filtering later */
 #ifdef _WIN32
 	searchStr.Append( PATH_SEP "*.rgt", MAX_PATH);

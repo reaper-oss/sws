@@ -104,7 +104,8 @@ MarkerList::MarkerList(const char* name, bool bGetCurList)
 	}
 	else
 		m_name = NULL;
-	m_items = NULL;
+
+	m_items.Empty(true);
 
 	if (bGetCurList)
 		BuildFromReaper();

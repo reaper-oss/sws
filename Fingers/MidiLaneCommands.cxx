@@ -15,6 +15,7 @@ static void ShowUsedCCLanes(int flag, void *data);
 static void HideUnusedCCLanes(int flag, void *data);
 static void ShowOnlyTopCCLane(int flag, void *data);
 
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 void MidiLaneCommands::Init()
 {
 	RprCommand::registerCommand("SWS/FNG MIDI: cycle through CC lanes", "FNG_CYCLE_CC_LANE", &CycleThroughMidiLanes, 0, UNDO_STATE_ITEMS);
@@ -23,6 +24,7 @@ void MidiLaneCommands::Init()
 	RprCommand::registerCommand("SWS/FNG MIDI: hide unused CC lanes", "FNG_HIDE_UNUSED_CC_LANES", &HideUnusedCCLanes, UNDO_STATE_ITEMS);
 	RprCommand::registerCommand("SWS/FNG MIDI: show only top CC lane", "FNG_TOP_CC_LANE", &ShowOnlyTopCCLane, UNDO_STATE_ITEMS);
 }
+//!WANT_LOCALIZE_1ST_STRING_END
 
 static const struct {
 		RprMidiBase::MessageType messageType;

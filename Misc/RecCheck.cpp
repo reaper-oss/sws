@@ -28,6 +28,7 @@
 // Actions that behave differently based on the cursor context
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 #include "RecCheck.h"
 
 static bool g_bEnRecInputCheck = false;

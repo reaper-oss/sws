@@ -1,11 +1,25 @@
-Localization: missing few actions, fixed UTF-8 issue (all localized actions could not be seen)
+SWS localization (BETA)
++Fixed UTF-8 issue (translated action names could be ignored)
++Added/fixed localization for (few) missing action names
++Fixed many dialog boxes/windows that were ignoring translated strings
+
+Region Playlist
++<b>Play preview: no more constraint on region ends, now exactly follows region boundaries - REAPER v4.23+ is required</b> (pre-release at the moment)
+Consequences: removed play preview options added in v2.2.0 #4 (useless now), added play preview warning when there are nested regions/markers (smooth seeking based on the new v4.23 option "Play to next marker, end of current region or start of region")
++Do not force envelope points recopy/move when pasting or croping a playlist (but obeys the preference "envelope points move with media items" so that both behaviors are possible)
++Issue 461: fixed actions "Paste playlist at edit cursor" and "Append playlist to project" that were unexpectedly splitting items at region boundaries
+
+Other
++Issue 358: now fixed everywhere in the extension
 
 !v2.2.0 #4 (April 9, 2012)
 SWS localization (BETA)
 The SWS extension now also uses the language pack file defined in the preferences (just like REAPER).
-The SWS template LangPack file is available here: http://code.google.com/p/sws-extension/downloads/list (it will be regulary updated with new SWS releases). This file should be merged with the main REAPER LangPack file as explained http://forum.cockos.com/showpost.php?p=941893&postcount=810|here|.
+The SWS template LangPack file is available here: http://code.google.com/p/sws-extension/downloads/list (it will be regulary updated with new SWS releases).
+This file should be merged with the main <u>translated</u> REAPER LangPack file as explained http://forum.cockos.com/showpost.php?p=941893&postcount=810|here|.
 All action names can be translated (and most of undo point names: same string).
-Many dialog boxes and windows can be translated. Full localization support for (on-going work..):
+Many dialog boxes and windows can be translated.
+Full localization support for (on-going work..):
 +Sanpshots
 +Auto Color/Icon
 +All S&M windows (+dynamically sized according to string lengths)
@@ -19,12 +33,13 @@ Added actions (and new context menu items):
 +SWS/S&M: Region Playlist - Append playlist to project
 +SWS/S&M: Region Playlist - Paste playlist at edit cursor
 
+Other
 +Fixed some dropped character bugs in Label processor
 +ClearType for tooltips too (optional: set ClearTypeFont to 1 in the section [General] of the S&M.ini file)
 +Refresh some S&M views when changing time mode
 
 !v2.2.0 #3 (March 25, 2012)
-<b>Dropped support for REAPER v3.x, REAPER >= v4.20 is required!</b>
+<b>Dropped support for REAPER v3.x, REAPER v4.20+ is required!</b>
 
 <b>REAPER localization support</b>: fixed broken Snapshots and LFO Generator vs localized envelope names, fixed action learn in S&M windows, Theme helper, etc..
 Note: localization of the SWS extension is coming soon!

@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "reaper/localize.h"
 #include "ObjectState/TrackEnvelope.h"
 
 #define SUPERCOLLAPSED_VIEW_SIZE 3

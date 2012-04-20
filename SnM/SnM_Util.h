@@ -65,6 +65,7 @@ int FindMarkerRegion(double _pos, int _flags, int* _idOut = NULL);
 int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn);
 int GetMarkerRegionIdFromIndex(int _idx);
 int GetMarkerRegionIndexFromId(int _id);
+int GetMarkerRegionNumFromId(int _id);
 bool IsRegion(int _id);
 int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool _wantsName);
 void FillMarkerRegionMenu(HMENU _menu, int _msgStart, int _flags, UINT _uiState = 0);

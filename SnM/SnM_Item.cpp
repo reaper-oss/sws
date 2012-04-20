@@ -112,28 +112,77 @@ void SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks)
 						GetSetMediaItemInfo(item, "B_UISEL", &g_bFalse);
 }
 
-bool ItemInInterval(MediaItem* _item, double _pos1, double _pos2)
+bool IsItemInInterval(MediaItem* _item, double _pos1, double _pos2, bool _inclusive)
 {
 	if (_item)
 	{
 		double pos = *(double*)GetSetMediaItemInfo(_item,"D_POSITION",NULL);
 		double end = pos + *(double*)GetSetMediaItemInfo(_item,"D_LENGTH",NULL);
-		if ((pos <= _pos1 && end >= _pos2) || // larger?
-			(pos >= _pos1 && pos <= _pos2) || // starts within?
-			(end >= _pos1 && end <= _pos2))   // ends within?
-			return true;
+		if (_inclusive)
+		{
+			if ((pos >= _pos1 && pos <= _pos2) && // starts within?
+				(end >= _pos1 && end <= _pos2))   // ends within?
+				return true;
+		}
+		else
+		{
+			if ((pos <= _pos1 && end >= _pos2) || // larger?
+				(pos >= _pos1 && pos <= _pos2) || // starts within?
+				(end >= _pos1 && end <= _pos2))   // ends within?
+				return true;
+		}
 	}
 	return false;
 }
 
-bool ItemsInInterval(double _pos1, double _pos2)
+bool AreThereItemsInInterval(double _pos1, double _pos2, bool _inclusive)
 {
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
-	if (MediaTrack* tr = CSurf_TrackFromID(i, false))
-		for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++)
-			if (ItemInInterval(GetTrackMediaItem(tr,j), _pos1, _pos2))
-				return true;
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+			for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++)
+				if (IsItemInInterval(GetTrackMediaItem(tr,j), _pos1, _pos2, _inclusive))
+					return true;
 	return false;
+}
+
+bool GetItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, bool _inclusive)
+{
+	if (_items)
+	{
+		_items->Empty(false);
+		for (int i=1; i <= GetNumTracks(); i++) // skip master
+			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+				for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++)
+					if (MediaItem* item = GetTrackMediaItem(tr,j))
+						if (IsItemInInterval(item, _pos1, _pos2, _inclusive))
+							_items->Add(item);
+	}
+	return (_items && _items->GetSize());
+}
+
+void GetAllItemPointers(WDL_PtrList<void>* _items)
+{
+	if (_items)
+	{
+		_items->Empty(false);
+		for (int i=1; i <= GetNumTracks(); i++) // skip master
+			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+				for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++) // new items might be created while looping!
+					if (MediaItem* item = GetTrackMediaItem(tr,j))
+						_items->Add(item);
+	}
+}
+
+void GetNewItemPointers(WDL_PtrList<void>* _oldItemsIn, WDL_PtrList<void>* _newItemsOut)
+{
+	if (_oldItemsIn && _newItemsOut)
+	{
+		GetAllItemPointers(_newItemsOut);
+		for (int j=_newItemsOut->GetSize(); j >= 0; j--)
+			for (int k=0; k < _oldItemsIn->GetSize(); k++)
+				if (_oldItemsIn->Get(k) == _newItemsOut->Get(j))
+					_newItemsOut->Delete(j, false);
+	}
 }
 
 
@@ -240,7 +289,7 @@ bool SplitSelectAllItemsInInterval(const char* _undoTitle, double _pos1, double 
 	bool updated = false;
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
-			for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++) // new items might be created during the loop!
+			for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++) // new items might be created while looping!
 				if (MediaItem* item = GetTrackMediaItem(tr,j))
 				{
 					updated |= (SplitMediaItem(item, _pos1) != NULL);

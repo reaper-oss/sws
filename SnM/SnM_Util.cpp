@@ -715,6 +715,10 @@ int GetMarkerRegionIndexFromId(int _id)
 	return -1;
 }
 
+int GetMarkerRegionNumFromId(int _id) {
+	return _id>0 ? (_id&0x3FFFFFFF) : -1;
+}
+
 bool IsRegion(int _id) {
 	return (_id > 0 && (_id&0x40000000) != 0);
 }

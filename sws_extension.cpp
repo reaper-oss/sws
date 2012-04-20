@@ -484,6 +484,7 @@ extern "C"
 		IMPAPI(CountTrackMediaItems);
 		IMPAPI(CountTrackEnvelopes);
 		IMPAPI(CreateLocalOscHandler);
+		IMPAPI(CreateNewMIDIItemInProj);
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
 		IMPAPI(CSurf_OnMuteChange);
@@ -715,7 +716,7 @@ extern "C"
 			//     (hidden since REAPER v4 and its "splash 2.0")
 			MessageBox(NULL,
 				"The version of SWS extension you have installed is incompatible with your version of Reaper.\n"
-				"You probably have a Reaper version less than 4.20 installed.\n"
+				"You probably have a Reaper version less than 4.23 installed.\n"
 				"Please install the latest version of Reaper from www.reaper.fm.", "SWS - Version Incompatibility", MB_OK);
 			ERR_RETURN("SWS extension incompatible\n")
 		}

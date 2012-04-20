@@ -30,11 +30,27 @@
 #ifndef _SNM_ITEM_H_
 #define _SNM_ITEM_H_
 
+#include "SnM_ChunkParserPatcher.h"
+
+
 enum {
   SNM_ITEM_SEL_LEFT=0,
   SNM_ITEM_SEL_RIGHT,
   SNM_ITEM_SEL_UP,
   SNM_ITEM_SEL_DOWN
+};
+
+class SNM_ItemChunk {
+public:
+	SNM_ItemChunk(MediaItem* _item) : m_item(_item) {
+		if (_item) {
+			SNM_ChunkParserPatcher p(_item);
+			m_chunk.Set(p.GetChunk());
+		}
+	}
+	~SNM_ItemChunk() {}
+	MediaItem* m_item;
+	WDL_FastString m_chunk;
 };
 
 char* GetName(MediaItem* _item);
@@ -43,8 +59,11 @@ bool deleteMediaItemIfNeeded(MediaItem* _item);
 void SNM_GetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks = false);
 void SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks = false);
 void SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks = false);
-bool ItemInInterval(MediaItem* _item, double _pos1, double _pos2);
-bool ItemsInInterval(double _pos1, double _pos2);
+bool IsItemInInterval(MediaItem* _item, double _pos1, double _pos2, bool _inclusive);
+bool AreThereItemsInInterval(double _pos1, double _pos2, bool _inclusive);
+bool GetItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, bool _inclusive);
+void GetAllItemPointers(WDL_PtrList<void>* _items);
+void GetNewItemPointers(WDL_PtrList<void>* _oldItemsIn, WDL_PtrList<void>* _newItemsOut);
 void splitMidiAudio(COMMAND_T*);
 void smartSplitMidiAudio(COMMAND_T*);
 #ifdef _SNM_MISC // deprecated (v3.67)

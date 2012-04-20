@@ -344,14 +344,14 @@ void processCPPfile(FILE *fp)
             // ignore MM_CTX_* since these are internal strings
             first=false;
           }
-          else if (strstr(p+1,": [Internal] "))
+          else if (strstr(p+1,"[Internal]"))
           {
-            //JFB other internal strings
+            //JFB ingore other internal strings
             first=false;
           }
           else if (!first && want1st)
           {
-            //JFB ignore: WANT_LOCALIZE_1ST_*
+            //JFB WANT_LOCALIZE_1ST_*: ignore
           }
           else
           {

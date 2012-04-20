@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 #define LAST_AUTORENAME_STR_KEY "Last autorename string"
 

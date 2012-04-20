@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 #include "Adam.h"
 #include "Context.h"
 #include "TrackSel.h"

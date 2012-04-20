@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 using namespace std;
 

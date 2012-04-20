@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 #include "padreActions.h"
 #include "padreEnvelopeProcessor.h"
 #include "padreMidiItemFilters.h"

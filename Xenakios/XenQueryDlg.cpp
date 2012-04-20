@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 char *g_QueryString;
 int g_QueryMaxChars;

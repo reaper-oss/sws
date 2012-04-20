@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 #include "TrackSends.h"
 
 // Functions for getting/setting track sends

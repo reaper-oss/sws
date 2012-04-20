@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 #include "SnapshotClass.h"
 #include "SnapshotMerge.h"
 #include "../Prompt.h"

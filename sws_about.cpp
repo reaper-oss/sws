@@ -27,6 +27,7 @@
 
 // Display the about box
 #include "stdafx.h"
+#include "reaper/localize.h"
 #include "version.h"
 #include "license.h"
 

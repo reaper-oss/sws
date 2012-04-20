@@ -36,6 +36,7 @@
 
 #include "RenderTrack.h"
 
+#include "../reaper/localize.h"
 #include "../../WDL/projectcontext.h"
 
 #define TAGLIB_STATIC

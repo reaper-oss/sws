@@ -176,7 +176,7 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 			if (!f) return false; //just in case..
 
 			if (_heading)
-				fprintf(f, _heading); 
+				fprintf(f, "%s", _heading); 
 
 			LVITEM li;
 			li.mask = LVIF_STATE | LVIF_PARAM;
@@ -202,7 +202,7 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 				}
 			}
 			if (_ending)
-				fprintf(f, _ending); 
+				fprintf(f, "%s", _ending); 
 
 			fclose(f);
 

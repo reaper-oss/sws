@@ -289,7 +289,7 @@ bool SplitSelectAllItemsInInterval(const char* _undoTitle, double _pos1, double 
 	bool updated = false;
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
-			for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++) // new items might be created while looping!
+			for (int j=0; tr && j < GetTrackNumMediaItems(tr); j++) // new items might be created during the loop!
 				if (MediaItem* item = GetTrackMediaItem(tr,j))
 				{
 					updated |= (SplitMediaItem(item, _pos1) != NULL);
@@ -445,7 +445,7 @@ int buildLanes(const char* _undoTitle, int _mode)
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (tr && _mode || (!_mode && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
+		if (tr && (_mode || (!_mode && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
 		{
 			WDL_PtrList<void> items;
 			WDL_IntKeyedArray<int> recPassColors; 
@@ -456,7 +456,7 @@ int buildLanes(const char* _undoTitle, int _mode)
 			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
 			{
 				MediaItem* item = GetTrackMediaItem(tr,j);
-				if (item && !_mode || (_mode && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))) 
+				if (item && (!_mode || (_mode && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))))
 				{
 					int* recPasses = new int[SNM_RECPASSPARSER_MAX_TAKES];
 					int takeColors[SNM_RECPASSPARSER_MAX_TAKES];
@@ -957,7 +957,7 @@ int getPitchTakeEnvRangeFromPrefs()
 }
 
 // callers must use UpdateTimeline() at some point if it returns true..
-bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, char* _vis, const WDL_FastString* _defaultPoint, bool _reset)
+bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, const char* _vis, const WDL_FastString* _defaultPoint, bool _reset)
 {
 	bool updated = false;
 	if (_item)
@@ -1039,7 +1039,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 	return updated;
 }
 
-bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char* _vis2, const WDL_FastString* _defaultPoint, bool _reset) 
+bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, const char* _vis, const WDL_FastString* _defaultPoint, bool _reset) 
 {
 	bool updated = false;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
@@ -1049,7 +1049,7 @@ bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, char*
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
-				updated |= patchTakeEnvelopeVis(item, *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL), _envKeyword, _vis2, _defaultPoint, _reset);
+				updated |= patchTakeEnvelopeVis(item, *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL), _envKeyword, _vis, _defaultPoint, _reset);
 		}
 	}
 
@@ -1207,7 +1207,7 @@ void itemSelToolbarPoll()
 	for(int i=0; i < SNM_ITEM_SEL_DOWN; i++)
 		g_toolbarItemSel[i].Empty(false);
 
-	if (int countSelItems = CountSelectedMediaItems(NULL))
+	if (CountSelectedMediaItems(NULL))
 	{
 		// left/right item sel.
 		double pos,len,start_time,end_time;

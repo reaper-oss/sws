@@ -175,7 +175,6 @@ void SNM_NotesHelpWnd::OnDestroy()
 // note: no diff with current type! (init would fail otherwise)
 void SNM_NotesHelpWnd::SetType(int _type)
 {
-	int prev = g_notesViewType;
 	g_notesViewType = _type;
 	m_cbType.SetCurSel(g_notesViewType);
 	SendMessage(m_hwnd, WM_SIZE, 0, 0); // to update the bottom of the GUI

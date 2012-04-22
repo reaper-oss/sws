@@ -41,13 +41,13 @@ bool g_SNMClearType = false;
 
 ColorTheme* SNM_GetColorTheme(bool _checkForSize) {
 	int sz; ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);
-	if (ct && (!_checkForSize || _checkForSize && sz >= sizeof(ColorTheme))) return ct;
+	if (ct && (!_checkForSize || (_checkForSize && sz >= sizeof(ColorTheme)))) return ct;
 	return NULL;
 }
 
 IconTheme* SNM_GetIconTheme(bool _checkForSize) {
 	int sz; IconTheme* it = (IconTheme*)GetIconThemeStruct(&sz);
-	if (it && (!_checkForSize || _checkForSize && sz >= sizeof(IconTheme))) return it;
+	if (it && (!_checkForSize || (_checkForSize && sz >= sizeof(IconTheme)))) return it;
 	return NULL;
 }
 
@@ -99,14 +99,15 @@ HBRUSH SNM_GetThemeBrush(int _col)
 	return g_hb;
 }
 
-void SNM_GetThemeListColors(int* _bg, int* _txt)
+void SNM_GetThemeListColors(int* _bg, int* _txt, int* _grid)
 {
-	int bgcol=-1, txtcol=-1;
+	int bgcol=-1, txtcol=-1, gridcol=-1;
 	ColorTheme* ct = SNM_GetColorTheme(true); // true: list view colors are recent (v4.11)
 	if (ct) {
 		bgcol = ct->genlist_bg;
 		txtcol = ct->genlist_fg;
-		// note: grid & selection colors not managed
+		gridcol = ct->genlist_gridlines;
+		// note: selection colors are not managed here
 	}
 	if (bgcol == txtcol) { // safety
 		bgcol = GSC_mainwnd(COLOR_WINDOW);
@@ -114,6 +115,7 @@ void SNM_GetThemeListColors(int* _bg, int* _txt)
 	}
 	if (_bg) *_bg = bgcol;
 	if (_txt) *_txt = txtcol;
+	if (_grid) *_grid = gridcol;
 }
 
 void SNM_GetThemeEditColors(int* _bg, int* _txt)
@@ -136,11 +138,14 @@ void SNM_ThemeListView(SWS_ListView* _lv)
 {
 	if (_lv && _lv->GetHWND())
 	{
-		int bgcol, txtcol;
-		SNM_GetThemeListColors(&bgcol, &txtcol);
+		int bgcol, txtcol, gridcol;
+		SNM_GetThemeListColors(&bgcol, &txtcol, &gridcol);
 		ListView_SetBkColor(_lv->GetHWND(), bgcol);
 		ListView_SetTextColor(_lv->GetHWND(), txtcol);
 		ListView_SetTextBkColor(_lv->GetHWND(), bgcol);
+#ifndef _WIN32
+		ListView_SetGridColor(_lv->GetHWND(), gridcol);
+#endif
 	}
 }
 
@@ -427,7 +432,7 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					char curPath[BUFFER_SIZE]="";
 					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,curPath,BUFFER_SIZE);
 					if (!*curPath || !FileExists(curPath))
-						_snprintf(curPath, BUFFER_SIZE, "%s%c%TrackTemplates", GetResourcePath(), PATH_SLASH_CHAR);
+						_snprintf(curPath, BUFFER_SIZE, "%s%cTrackTemplates", GetResourcePath(), PATH_SLASH_CHAR);
 					if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Load track template","sws_DLG_149"), curPath, NULL, false, "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0")) {
 						SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,fn);
 						free(fn);

@@ -387,7 +387,7 @@ bool FileSlotList::BrowseSlot(int _slot, char* _fn, int _fnSz)
 	bool ok = false;
 	if (_slot >= 0 && _slot < GetSize())
 	{
-		char title[128]="", fn[BUFFER_SIZE]="", fileFilter[512]="", defaultPath[BUFFER_SIZE]="";
+		char title[128]="", fileFilter[512]="", defaultPath[BUFFER_SIZE]="";
 		_snprintf(title, 128, __LOCALIZE_VERFMT("S&M - Load %s (slot %d)","sws_DLG_150"), m_desc.Get(), _slot+1);
 		_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, m_resDir.Get());
 		GetFileFilter(fileFilter, 512);
@@ -442,7 +442,6 @@ WDL_FastString* FileSlotList::GetOrPromptOrBrowseSlot(const char* _title, int _s
 	// adds the needed number of slots (more macro friendly)
 	if (_slot >= GetSize())
 	{
-		int idx=0;
 		for (int i=GetSize(); i <= _slot; i++)
 			Add(new PathSlotItem());
 		if (g_pResourcesWnd) {
@@ -1000,7 +999,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if (*cFilter == '\0') 
 					SetWindowText(hFilt, FILTER_DEFAULT_STR);
 			}
-#endif
+#endif                
 			break;
 
 		// ***** Common *****
@@ -1857,7 +1856,7 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 			case COMBOID_TYPE:
 				return (lstrcpyn(_bufOut, __LOCALIZE("Resource/slot type","sws_DLG_150"), _bufOutSz) != NULL);
 			case BUTTONID_COPY_BOOKMARK:
-				return (_snprintf(_bufOut, _bufOutSz, __LOCALIZE("Copy as new bookmark","sws_DLG_150")) > 0);
+				return (lstrcpyn(_bufOut, __LOCALIZE("Copy as new bookmark","sws_DLG_150"), _bufOutSz) != NULL);
 			case BUTTONID_DEL_BOOKMARK:
 				return (lstrcpyn(_bufOut, __LOCALIZE("Delete bookmark","sws_DLG_150"), _bufOutSz) != NULL);
 		}
@@ -2234,7 +2233,7 @@ void FlushCustomTypesIniFile()
 	char iniSec[64]="";
 	for (int i=SNM_NUM_DEFAULT_SLOTS; i < g_slots.GetSize(); i++)
 	{
-		if (FileSlotList* list = g_slots.Get(i))
+		if (g_slots.Get(i))
 		{
 			GetIniSectionName(i, iniSec, 64);
 			WritePrivateProfileStruct(iniSec, NULL, NULL, 0, g_SNMIniFn.Get()); // flush section
@@ -2448,7 +2447,7 @@ void ResourceViewExit()
 				iniStr.AppendFormatted(BUFFER_SIZE, "AutoSaveFXChainName=%d\n", g_autoSaveFXChainNamePref);
 				break;
 			case SNM_SLOT_TR:
-				iniStr.AppendFormatted(BUFFER_SIZE, "AutoSaveTrTemplate=%d\n", g_autoSaveTrTmpltPref, g_SNMIniFn.Get());
+				iniStr.AppendFormatted(BUFFER_SIZE, "AutoSaveTrTemplate=%d\n", g_autoSaveTrTmpltPref);
 				break;
 			case SNM_SLOT_PRJ:
 				iniStr.AppendFormatted(BUFFER_SIZE, "ProjectLoaderStartSlot=%d\n", g_prjLoaderStartPref);

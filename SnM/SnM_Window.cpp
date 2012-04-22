@@ -31,7 +31,7 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Misc. window actions/helpers
+// Misc window actions/helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 bool SNM_IsActiveWindow(HWND _h) {
@@ -132,12 +132,13 @@ HWND GetReaChildWindowByTitle(HWND _parent, const char* _title, int _nComp)
 
 HWND GetReaWindowByTitle(const char* _title, int _nComp)
 {
+	HWND w = NULL;
 #ifdef _WIN32
 	if (_nComp < 0)
 		_nComp = strlen(_title);
 
 	// docked in main window ?
-	HWND w = GetReaChildWindowByTitle(GetMainHwnd(), _title, _nComp);
+	w = GetReaChildWindowByTitle(GetMainHwnd(), _title, _nComp);
 	if (w)
 		return w;
 
@@ -149,17 +150,46 @@ HWND GetReaWindowByTitle(const char* _title, int _nComp)
 		w = g_hwnds[i];
 		GetWindowText(w, buf, 512);
 
-		// floating window ?
+		// floating window?
 		if (!strcmp(_title, buf))
 			return w;
-		// in a floating docker ?
+		// in a floating docker?
 		else if (!strcmp(__localizeFunc("Docker", "DLG_222", 0), buf))
 			if (w = GetReaChildWindowByTitle(w, _title, _nComp)) 
 				return w;
 	}
+#else //JFB!!! should work on win and osx (requires wdl >= 7cf02d), to test.. 
+	// floating window ?
+	w = FindWindowEx(NULL, NULL, NULL, _title);
+	if (!w)
+	{
+		// in a floating docker?
+		HWND hdock = FindWindowEx(NULL, NULL, NULL, __localizeFunc("Docker", "DLG_222", 0));
+		while(hdock)
+		{
+			HWND hdock2 = FindWindowEx(hdock, NULL, NULL, "REAPER_dock");
+			while(hdock2) {
+				if (w = FindWindowEx(hdock2, NULL, NULL, _title)) return w;
+				hdock2 = FindWindowEx(hdock, hdock2, NULL, "REAPER_dock");
+			}
+			hdock = FindWindowEx(NULL, hdock, NULL, __localizeFunc("Docker", "DLG_222", 0));
+		}
+
+		// docked in main window?
+		hdock = FindWindowEx(GetMainHwnd(), NULL, NULL, "REAPER_dock");
+		while(hdock) {
+			if (w = FindWindowEx(hdock, NULL, NULL, _title)) break;
+			hdock = FindWindowEx(GetMainHwnd(), hdock, NULL, "REAPER_dock");
+		}
+	}
 #endif
-	return NULL;
+	return w;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// List view helpers
+///////////////////////////////////////////////////////////////////////////////
 
 HWND GetActionListBox(char* _currentSection, int _sectionSz)
 {
@@ -170,6 +200,18 @@ HWND GetActionListBox(char* _currentSection, int _sectionSz)
 	return (actionsWnd ? GetDlgItem(actionsWnd, 0x52B) : NULL);
 }
 
+// Overrides some wdl's list view funcs to avoid cast issues on osx
+// (useful with native list views which are SWELL_ListView but that were not instanciated by the extension..)
+#ifdef _WIN32
+#define SNM_ListView_GetSelectedCount ListView_GetSelectedCount
+#define SNM_ListView_GetItemCount ListView_GetItemCount
+#define SNM_ListView_GetItem ListView_GetItem
+#else
+#define SNM_ListView_GetSelectedCount ListView_GetSelectedCountCast
+#define SNM_ListView_GetItemCount ListView_GetItemCountCast
+#define SNM_ListView_GetItem ListView_GetItemCast
+#endif
+
 // returns the list view's selected item, -1 if failed, -2 if the related action's custom id cannot be retrieved (column hidden)
 // note: no multi-selection mgmt here..
 // API LIMITATION: things like kbd_getTextFromCmd() cannot work for other sections than the main one
@@ -177,16 +219,16 @@ HWND GetActionListBox(char* _currentSection, int _sectionSz)
 int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc, int _descSize)
 {
 	HWND hList = GetActionListBox(_section, _secSize);
-	if (hList && ListView_GetSelectedCount(hList))
+	if (hList && SNM_ListView_GetSelectedCount(hList))
 	{
 		LVITEM li;
 		li.mask = LVIF_STATE | LVIF_PARAM;
 		li.stateMask = LVIS_SELECTED;
 		li.iSubItem = 0;
-		for (int i = 0; i < ListView_GetItemCount(hList); i++)
+		for (int i = 0; i < SNM_ListView_GetItemCount(hList); i++)
 		{
 			li.iItem = i;
-			ListView_GetItem(hList, &li);
+			SNM_ListView_GetItem(hList, &li);
 			if (li.state == LVIS_SELECTED)
 			{
 				int cmdId = (int)li.lParam;

@@ -73,7 +73,7 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 	}
 
 	// default volume
-	if (!update && _snprintf(vol, 32, "%.14f", *(double*)GetConfigVar("defsendvol") > 0))
+	if (!update && _snprintf(vol, 32, "%.14f", *(double*)GetConfigVar("defsendvol")) > 0)
 		update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
 	return update;
 }

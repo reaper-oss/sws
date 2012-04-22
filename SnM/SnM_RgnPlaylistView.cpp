@@ -77,7 +77,9 @@ enum {
 SNM_RegionPlaylistWnd* g_pRgnPlaylistWnd = NULL;
 SWSProjConfig<SNM_Playlists> g_pPlaylists;
 SWS_Mutex g_playlistsMutex;
-bool g_smoothSeekBeatsPref = false; // deprecated
+#ifdef SMOOTH_SEEK_BEATS
+bool g_smoothSeekBeatsPref = false;
+#endif
 
 // see PlaylistRun()
 bool g_playingPlaylist = false;
@@ -741,30 +743,27 @@ double GetPlayListLength()
 	return length;
 }
 
-// do not use things like ..->Get(i+1) but this func!
+// never use things like GetPlaylist()->Get(i+1) but this func
 int GetNextValidPlaylistIdx(int _playlistIdx, int* _nextRgnIdx, bool _startWith = false)
 {
 	MUTEX_PLAYLISTS;
 	if (SNM_Playlist* p = GetPlaylist())
 	{
-		if (int sz = p->GetSize())
-		{
-			for (int i=_playlistIdx+(_startWith?0:1); i<sz; i++)
-				if (SNM_PlaylistItem* item = p->Get(i))
-					if (item->m_rgnId>0 && item->m_cnt>0) {
-						*_nextRgnIdx = GetMarkerRegionIndexFromId(item->m_rgnId);
-						if (*_nextRgnIdx >= 0)
-							return i;
-					}
-			// no issue if _playlistIdx==0, it will not match either..
-			for (int i=0; i<=(_playlistIdx-(_startWith?1:0)); i++)
-				if (SNM_PlaylistItem* item = p->Get(i))
-					if (item->m_rgnId>0 && item->m_cnt>0) {
-						*_nextRgnIdx = GetMarkerRegionIndexFromId(item->m_rgnId);
-						if (*_nextRgnIdx >= 0)
-							return i;
-					}
-		}
+		for (int i=_playlistIdx+(_startWith?0:1); i<p->GetSize(); i++)
+			if (SNM_PlaylistItem* item = p->Get(i))
+				if (item->m_rgnId>0 && item->m_cnt>0) {
+					*_nextRgnIdx = GetMarkerRegionIndexFromId(item->m_rgnId);
+					if (*_nextRgnIdx >= 0)
+						return i;
+				}
+		// no issue if _playlistIdx==0, it will not match either..
+		for (int i=0; i<p->GetSize() && i<=(_playlistIdx-(_startWith?1:0)); i++)
+			if (SNM_PlaylistItem* item = p->Get(i))
+				if (item->m_rgnId>0 && item->m_cnt>0) {
+					*_nextRgnIdx = GetMarkerRegionIndexFromId(item->m_rgnId);
+					if (*_nextRgnIdx >= 0)
+						return i;
+				}
 	}
 	*_nextRgnIdx = -1;
 	return -1;
@@ -780,63 +779,60 @@ bool GetPlaylistRunItems(double _pos)
 	MUTEX_PLAYLISTS;
 	if (SNM_Playlist* p = GetPlaylist())
 	{
-		if (int sz = p->GetSize())
+		int id, rgnIdx = p->GetSize() ? FindMarkerRegion(_pos, SNM_REGION_MASK, &id) : 0;
+		if (id>0)
 		{
-			int id, rgnIdx = FindMarkerRegion(_pos, SNM_REGION_MASK, &id);
-			if (id>0)
+			for (int i=g_playId; i<p->GetSize(); i++)
 			{
-				for (int i=g_playId; i<sz; i++)
+				if (SNM_PlaylistItem* item = p->Get(i))
 				{
-					if (SNM_PlaylistItem* item = p->Get(i))
+					// assumption: the case "2 consecutive and identical region ids" is impossible, see SNM_PlaylistView::UpdateCompact()
+					// +no need to test the region consistency since it is provided by FindMarkerRegion()
+					if (item->m_rgnId==id && item->m_cnt>0)
 					{
-						// assumption: the case "2 consecutive and identical region ids" is impossible, see SNM_PlaylistView::UpdateCompact()
-						// +no need to test the region consistency since it is provided by FindMarkerRegion()
-						if (item->m_rgnId==id && item->m_cnt>0)
+						g_playingItems.m_cur = item;
+						g_playingItems.m_curRgnIdx = rgnIdx;
+						g_playId = i;
+						if (g_playingItems.m_cur->m_cnt>1 && (g_playingItems.m_cur->m_playRequested+1) <= g_playingItems.m_cur->m_cnt)
 						{
-							g_playingItems.m_cur = item;
-							g_playingItems.m_curRgnIdx = rgnIdx;
-							g_playId = i;
-							if (g_playingItems.m_cur->m_cnt>1 && (g_playingItems.m_cur->m_playRequested+1) <= g_playingItems.m_cur->m_cnt)
-							{
-								g_playingItems.m_next = g_playingItems.m_cur;
-								g_playingItems.m_nextRgnIdx = g_playingItems.m_curRgnIdx;
-							}
-							else
-							{
-								// "next" is "i" in the worst case
-								int nextRgnIdx, next = GetNextValidPlaylistIdx(i, &nextRgnIdx);
-								if (next>=0) {
-									g_playingItems.m_next = p->Get(next);
-									g_playingItems.m_nextRgnIdx = nextRgnIdx;
-								}
-							}
-							return (g_playingItems.m_next != NULL);
+							g_playingItems.m_next = g_playingItems.m_cur;
+							g_playingItems.m_nextRgnIdx = g_playingItems.m_curRgnIdx;
 						}
+						else
+						{
+							// "next" is "i" in the worst case
+							int nextRgnIdx, next = GetNextValidPlaylistIdx(i, &nextRgnIdx);
+							if (next>=0) {
+								g_playingItems.m_next = p->Get(next);
+								g_playingItems.m_nextRgnIdx = nextRgnIdx;
+							}
+						}
+						return (g_playingItems.m_next != NULL);
 					}
 				}
+			}
 
-				// if we are here, it is a loop!
-				int firstRgnIdx, first = GetNextValidPlaylistIdx(0, &firstRgnIdx, true);
-				if (first>=0)
-				{
-					g_playingItems.m_cur = p->Get(first);
-					g_playingItems.m_curRgnIdx = firstRgnIdx;
-					g_playId = first;
-					if (g_playingItems.m_cur->m_cnt>1 && (g_playingItems.m_cur->m_playRequested+1) <= g_playingItems.m_cur->m_cnt) {
-						g_playingItems.m_next = g_playingItems.m_cur;
-						g_playingItems.m_nextRgnIdx = g_playingItems.m_curRgnIdx;
-					}
-					else
-					{
-						// "next" is "first" in the worst case
-						int nextRgnIdx, next = GetNextValidPlaylistIdx(first, &nextRgnIdx);
-						if (next>=0) {
-							g_playingItems.m_next = p->Get(next);
-							g_playingItems.m_nextRgnIdx = nextRgnIdx;
-						}
-					}
-					return (g_playingItems.m_next != NULL);
+			// if we are here, it is a loop!
+			int firstRgnIdx, first = GetNextValidPlaylistIdx(0, &firstRgnIdx, true);
+			if (first>=0)
+			{
+				g_playingItems.m_cur = p->Get(first);
+				g_playingItems.m_curRgnIdx = firstRgnIdx;
+				g_playId = first;
+				if (g_playingItems.m_cur->m_cnt>1 && (g_playingItems.m_cur->m_playRequested+1) <= g_playingItems.m_cur->m_cnt) {
+					g_playingItems.m_next = g_playingItems.m_cur;
+					g_playingItems.m_nextRgnIdx = g_playingItems.m_curRgnIdx;
 				}
+				else
+				{
+					// "next" is "first" in the worst case
+					int nextRgnIdx, next = GetNextValidPlaylistIdx(first, &nextRgnIdx);
+					if (next>=0) {
+						g_playingItems.m_next = p->Get(next);
+						g_playingItems.m_nextRgnIdx = nextRgnIdx;
+					}
+				}
+				return (g_playingItems.m_next != NULL);
 			}
 		}
 	}
@@ -858,33 +854,15 @@ void PlaylistRun()
 
 	bRecurseCheck = true;
 	bool updateUI = false;
+	double pos = GetPlayPosition2();
 
-//shorcut:
-	double pos = GetPlayPosition2(); // better for high bpms
-
+	// idle
 	if (g_triggerPos >= 0.0)
 	{
 		 if (pos >= g_triggerPos)
-		 {
 			g_triggerPos = -1.0;
-			g_isRegionLooping = false;
-
-			if (SNM_Playlist* p = GetPlaylist())
-				if (p->Find(g_playingItems.m_next) >= 0)// next item still make sense?
-				{
-					g_playingItems.m_next->m_playRequested++;
-
-					// request play for the next item of the playlist
-					double rgnpos;
-					if (EnumProjectMarkers2(NULL, g_playingItems.m_nextRgnIdx, NULL, &rgnpos, NULL, NULL, NULL))
-					{
-						double cursorpos = GetCursorPositionEx(NULL);
-						SetEditCurPos(rgnpos, false, true); // seek play
-						SetEditCurPos(cursorpos, false, false); // restore cursor pos
-					}
-				}
-		}
 	}
+	// position switch
 	else if (GetPlaylistRunItems(pos))
 	{
 		// detect playlist item switching
@@ -908,11 +886,16 @@ void PlaylistRun()
 		// compute next trigger position (i.e. > last measure in the region)
 		if (!g_playingItems.m_next->m_playRequested || g_isRegionLooping)
 		{
-			double rgnend;
-			if (EnumProjectMarkers2(NULL, g_playingItems.m_curRgnIdx, NULL, NULL, &rgnend, NULL, NULL)) {
-				int meas = SNM_SnapToMeasure(rgnend) - 1;
-				g_triggerPos = TimeMap2_beatsToTime(NULL, 0.0, &meas) + SNM_FUDGE_FACTOR;
-//JFB				goto shorcut; // useful at very high BPMs?
+			g_isRegionLooping = false;
+			g_playingItems.m_next->m_playRequested++;
+
+			double rgnpos;
+			if (EnumProjectMarkers2(NULL, g_playingItems.m_nextRgnIdx, NULL, &rgnpos, NULL, NULL, NULL))
+			{
+				double cursorpos = GetCursorPositionEx(NULL);
+				SetEditCurPos(rgnpos, false, true); // seek play
+				SetEditCurPos(cursorpos, false, false); // restore cursor pos
+				g_triggerPos = rgnpos;
 			}
 		}
 	}
@@ -926,7 +909,9 @@ void PlaylistRun()
 }
 
 int g_oldSeekOpt = -1;
+#ifdef SMOOTH_SEEK_BEATS
 int g_oldMeasLen = -1;
+#endif
 
 void PlaylistPlay(int _playlistId, bool _errMsg)
 {
@@ -935,8 +920,8 @@ void PlaylistPlay(int _playlistId, bool _errMsg)
 	int num = HasPlaylistNestedMarkersRegions();
 	if (num>0) {
 		char msg[128] = "";
-		_snprintf(msg, 128, __LOCALIZE_VERFMT("Play preview might not work as expected!\nThe playlist constains nested markers/regions (inside region %d at least)","sws_DLG_165"), num);
-		MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_mbox"),MB_OK);
+		if (_snprintf(msg, 128, __LOCALIZE_VERFMT("Play preview might not work as expected!\nThe playlist constains nested markers/regions (inside region %d at least)","sws_DLG_165"), num)>0)
+			MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_mbox"),MB_OK);
 	}
 
 	g_playingPlaylist = false;

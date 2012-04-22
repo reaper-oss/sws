@@ -344,7 +344,7 @@ void SNM_LiveConfigsView::SetItemText(SWS_ListItem* _item, int _iCol, const char
 			case COL_ACTION_ON:
 			case COL_ACTION_OFF:
 				if (*_str && !NamedCommandLookup(_str)) {
-					MessageBox(GetParent(m_hwndList), __LOCALIZE("Error: this action ID (or custom ID) doesn't exists!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
+					MessageBox(GetParent(m_hwndList), __LOCALIZE("Error: this action ID (or custom ID) does not exist!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
 					return;
 				}
 				if (_iCol == COL_ACTION_ON) pItem->m_onAction.Set(_str);
@@ -889,7 +889,9 @@ void SNM_LiveConfigsWnd::AddFXSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastStri
 	if (summaries && fxCount == summaries->GetSize())
 	{
 		char fxName[SNM_MAX_FX_NAME_LEN] = "";
+#ifdef _WIN32
 		int msgCpt = 0; //JFB TODO? check max. msgCpt value?
+#endif
 		for(int i = 0; i < fxCount; i++) 
 		{
 			if(TrackFX_GetFXName(_tr, i, fxName, SNM_MAX_FX_NAME_LEN))
@@ -1018,7 +1020,7 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 					AddToMenu(hMenu, cur, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
 					AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				}
-#ifdef _WIN32
+#ifdef _SNM_ACTION_LEARN
 				AddToMenu(hMenu, __LOCALIZE("Learn from Actions window","sws_DLG_155"), SNM_LIVECFG_LEARN_ON_ACTION_MSG);
 #endif
 				AddToMenu(hMenu, __LOCALIZE("Edit action/macro","sws_DLG_155"), SNM_LIVECFG_EDIT_ON_ACTION_MSG);
@@ -1034,7 +1036,7 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 					AddToMenu(hMenu, cur, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
 					AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				}
-#ifdef _WIN32
+#ifdef _SNM_ACTION_LEARN
 				AddToMenu(hMenu, __LOCALIZE("Learn from Actions window","sws_DLG_155"), SNM_LIVECFG_LEARN_OFF_ACTION_MSG);
 #endif
 				AddToMenu(hMenu, __LOCALIZE("Edit action/macro","sws_DLG_155"), SNM_LIVECFG_EDIT_OFF_ACTION_MSG);

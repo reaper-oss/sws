@@ -248,7 +248,6 @@ void WDLStringReplaceLine( WDL_FastString *prjStr, int pos, const char *oldLine,
 	int startPos = pos - lineLen;
 	prjStr->DeleteSub( startPos, lineLen );
 	prjStr->Insert( newLine, startPos );
-	int i = 0;
 }
 
 void SetProjectParameter( WDL_FastString *prjStr, string param, string paramValue ){

@@ -37,7 +37,7 @@ IconTheme* SNM_GetIconTheme(bool _checkForSize = false);
 LICE_CachedFont* SNM_GetThemeFont();
 LICE_CachedFont* SNM_GetToolbarFont();
 HBRUSH SNM_GetThemeBrush(int _col=-666);
-void SNM_GetThemeListColors(int* _bg, int* _txt);
+void SNM_GetThemeListColors(int* _bg, int* _txt, int* _grid = NULL);
 void SNM_GetThemeEditColors(int* _bg, int* _txt);
 void SNM_ThemeListView(SWS_ListView* _lv);
 LICE_IBitmap* SNM_GetThemeLogo();

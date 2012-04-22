@@ -1,15 +1,22 @@
+Region Playlist
++<b>Play preview: no more constraint on region ends, playing now exactly follows region boundaries - REAPER v4.23+ is required</b> (pre-release at the moment)
+Consequences: removed play preview options added in v2.2.0 #4 (useless now), added play preview warning when there are nested regions/markers (due to a new smooth seek option added in v4.23)
++Do not force envelope points recopy/move when pasting or cropping a playlist (but obeys the preference "envelope points move with media items" instead: both behaviors are now possible)
++Issue 461: fixed actions "Paste playlist at edit cursor" and "Append playlist to project" that were unexpectedly splitting items at region boundaries
+
+OSX love:
++Fixed broken context menus. Important for the Resources window for example, where right-clicking auto-save and auto-fill buttons for options was impossible on OSX!
++Cycle action editor: added action learn, right-click in the right list view. Note: the editor is now exactly the same as on Windows OS.
++Live Configs: added action learn (right-click in "Activation" and "Deactivation". Note: the Live Configs window is now exactly the same as on Windows OS.
++Better tooltips
+
 SWS localization (BETA)
 +Fixed UTF-8 issue (translated action names could be ignored)
 +Added/fixed localization for (few) missing action names
 +Fixed many dialog boxes/windows that were ignoring translated strings
 
-Region Playlist
-+<b>Play preview: no more constraint on region ends, now exactly follows region boundaries - REAPER v4.23+ is required</b> (pre-release at the moment)
-Consequences: removed play preview options added in v2.2.0 #4 (useless now), added play preview warning when there are nested regions/markers (smooth seeking based on the new v4.23 option "Play to next marker, end of current region or start of region")
-+Do not force envelope points recopy/move when pasting or croping a playlist (but obeys the preference "envelope points move with media items" so that both behaviors are possible)
-+Issue 461: fixed actions "Paste playlist at edit cursor" and "Append playlist to project" that were unexpectedly splitting items at region boundaries
-
 Other
++Fixed possible cue buss volume http://forum.cockos.com/showpost.php?p=949269&postcount=1378|issue|
 +Issue 358: now fixed everywhere in the extension
 
 !v2.2.0 #4 (April 9, 2012)

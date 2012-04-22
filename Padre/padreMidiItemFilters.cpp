@@ -122,7 +122,7 @@ void MidiFilterTranspose::process(MIDI_event_t* evt, MIDI_eventlist* evts, int &
 		case MIDI_CMD_NOTE_ON :
 		case MIDI_CMD_NOTE_OFF :
 		{
-			int note = evt->midi_message[1];
+			//int note = evt->midi_message[1];
 			//int velocity = evt->midi_message[2];
 			evt->midi_message[1] += _offset;
 			if(evt->midi_message[1]>127)
@@ -260,7 +260,6 @@ int MidiMessage::getType()
 
 bool MidiMessage::isEqual(MidiMessage &msg, bool bSameChannel, bool bSameData, bool bSameValue)
 {
-	bool bIsEqual = true;
 	if(bSameChannel && (getChannel() != msg.getChannel()))
 		return false;
 	if(getType() != msg.getType())

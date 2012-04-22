@@ -27,6 +27,8 @@
 #import <Cocoa/Cocoa.h>
 #include "stdafx.h"
 #include "../WDL/swell/swell-internal.h"
+#include "../WDL/swell/swell-dlggen.h"
+
 
 void SWS_GetDateString(int time, char* buf, int bufsize)
 {
@@ -317,5 +319,78 @@ void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwEx
 		CGEventPost(kCGHIDEventTap, e);
 		CFRelease(e);
 	}
+}
+
+
+//JFB List view code here == modified from Cockos WDL!
+// Overrides some wdl's list view funcs to avoid cast issues
+// (useful with native list views which are SWELL_ListView but that were not instanciated by the extension..)
+
+int ListView_GetSelectedCountCast(HWND h)
+{
+    if (!h) return 0;
+    //  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return 0;
+    
+    SWELL_ListView *tv=(SWELL_ListView*)h;
+    return [tv numberOfSelectedRows];
+}
+
+int ListView_GetItemCountCast(HWND h)
+{
+    if (!h) return 0;
+    //  if (![(id)h isKindOfClass:[SWELL_ListView class]]) return 0;
+    
+    SWELL_ListView *tv=(SWELL_ListView*)h;
+    if (tv->m_lbMode || !(tv->style & LVS_OWNERDATA))
+    {
+        if (!tv->m_items) return 0;
+        
+        return tv->m_items->GetSize();
+    }
+    return tv->ownermode_cnt;
+}
+
+bool ListView_GetItemCast(HWND h, LVITEM *item)
+{
+    if (!item) return false;
+    if ((item->mask&LVIF_TEXT)&&item->pszText && item->cchTextMax > 0) item->pszText[0]=0;
+    item->state=0;
+    if (!h) return false;
+    //if (![(id)h isKindOfClass:[SWELL_ListView class]]) return false;
+    
+    
+    SWELL_ListView *tv=(SWELL_ListView*)h;
+    if (tv->m_lbMode || !(tv->style & LVS_OWNERDATA))
+    {
+        if (!tv->m_items) return false;
+        
+        SWELL_ListView_Row *row=tv->m_items->Get(item->iItem);
+        if (!row) return false;  
+        
+        if (item->mask & LVIF_PARAM) item->lParam=row->m_param;
+        if (item->mask & LVIF_TEXT) if (item->pszText && item->cchTextMax>0)
+        {
+            char *p=row->m_vals.Get(item->iSubItem);
+            lstrcpyn(item->pszText,p?p:"",item->cchTextMax);
+        }
+        if (item->mask & LVIF_STATE)
+        {
+            if (item->stateMask & (0xff<<16))
+            {
+                item->state|=row->m_imageidx<<16;
+            }
+        }
+    }
+    else
+    {
+        if (item->iItem <0 || item->iItem >= tv->ownermode_cnt) return false;
+    }
+    if (item->mask & LVIF_STATE)
+    {
+        if ((item->stateMask&LVIS_SELECTED) && [tv isRowSelected:item->iItem]) item->state|=LVIS_SELECTED;
+        if ((item->stateMask&LVIS_FOCUSED) && [tv selectedRow] == item->iItem) item->state|=LVIS_FOCUSED;
+    }
+    
+    return true;
 }
 

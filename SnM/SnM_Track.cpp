@@ -266,7 +266,6 @@ bool SetTrackGroup(int _group)
 	WDL_FastString defFlags;
 	if (GetDefaultGroupFlags(&defFlags, _group))
 	{
-		double grpMask = pow(2.0, _group*1.0);
 		for (int i=0; i <= GetNumTracks(); i++) // incl. master
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -367,8 +366,8 @@ void restoreTracksFolderStates(COMMAND_T* _ct)
 				SNM_TrackInt* savedTF = saveList->Get(j);
 				int current = *(int*)GetSetMediaTrackInfo(tr, strState, NULL);
 				if (savedTF->m_tr == tr && 
-					(!_ct->user && savedTF->m_int != current) ||
-					(_ct->user && *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL) == 1 && savedTF->m_int != current))
+					((!_ct->user && savedTF->m_int != current) ||
+					(_ct->user && *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL) == 1 && savedTF->m_int != current)))
 				{
 					GetSetMediaTrackInfo(tr, strState, &(savedTF->m_int));
 					updated = true;
@@ -570,7 +569,7 @@ void toggleWriteEnvExists(COMMAND_T* _ct)
 		for (int i = 0; i < g_toolbarAutoModeToggles.GetSize(); i++)
 		{
 			SNM_TrackInt* tri = g_toolbarAutoModeToggles.Get(i);
-			*(int*)GetSetMediaTrackInfo(tri->m_tr, "I_AUTOMODE", &(tri->m_int));
+			GetSetMediaTrackInfo(tri->m_tr, "I_AUTOMODE", &(tri->m_int));
 			updated = true;
 		}
 		g_toolbarAutoModeToggles.Empty(true);
@@ -584,7 +583,7 @@ void toggleWriteEnvExists(COMMAND_T* _ct)
 			int autoMode = tr ? *(int*)GetSetMediaTrackInfo(tr, "I_AUTOMODE", NULL) : -1;
 			if (autoMode >= 2 /* touch */ && autoMode <= 4 /* latch */)
 			{
-				*(int*)GetSetMediaTrackInfo(tr, "I_AUTOMODE", &g_i1); // set read mode
+				GetSetMediaTrackInfo(tr, "I_AUTOMODE", &g_i1); // set read mode
 				g_toolbarAutoModeToggles.Add(new SNM_TrackInt(tr, autoMode));
 				updated = true;
 			}
@@ -625,6 +624,7 @@ bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz) {
 		p.SetWantsMinimalState(true);
 		return (p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 0, 1, _fnOut, NULL, "TRACKID") > 0);
 	}
+	return false;
 }
 
 // remove track icon if _fn == ""
@@ -1141,7 +1141,7 @@ void DeleteTrackPreview(void* _prev)
 		if (prev->src!=g_cc123src)
 			DELETE_NULL(prev->src);
 		TrackPreviewInitDeleteMutex(prev, false);
-		DELETE_NULL(_prev);
+		DELETE_NULL(prev);
 	}
 }
 

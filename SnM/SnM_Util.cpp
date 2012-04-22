@@ -873,15 +873,14 @@ void ReplaceStringFormat(char* _str, char _replaceCh) {
 // action helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// note: corner-case! "Custom: " can be removed after export/tweak-by-hand/re-import
-//       this is not managed as it seems to be a REAPER bug: it leads to other native problems...
+// corner-case note: "Custom: " can be removed after export/tweak-by-hand/re-import,
+// this is not managed and leads to native problems anyway..
 bool IsMacro(const char* _cmdName) {
 	const char* custom = __localizeFunc("Custom","actions",0);
 	int len = strlen(custom);
-	return (_cmdName && (int)strlen(_cmdName)>len && strncmp(_cmdName, custom, len) && _cmdName[len] == ':');
+	return (_cmdName && (int)strlen(_cmdName)>len && !strncmp(_cmdName, custom, len) && _cmdName[len] == ':');
 }
 
-// _expectedSection: no check if NULL
 bool LearnAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSection)
 {
 	char section[SNM_MAX_SECTION_NAME_LEN] = "";
@@ -895,7 +894,6 @@ bool LearnAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSe
 			return false;
 		case -1: {
 			char msg[256];
-			lstrcpyn(msg, __LOCALIZE("Actions window not opened or no selected action!","sws_mbox"), 256);
 			if (_snprintf(msg, 256, __LOCALIZE_VERFMT("Actions window not opened or section '%s' not selected or no selected action!","sws_mbox"), _expectedLocalizedSection)>0)
 				MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			return false;

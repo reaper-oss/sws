@@ -1269,7 +1269,7 @@ SWS_ListItem* SWS_ListView::GetHitItem(int x, int y, int* iCol)
 	GetWindowRect(header, &r);
 	if (PtInRect(&r, pt))
 #else
-	if (ht.pt.y < 0)
+	if (ht.pt.y>-15 && ht.pt.y<0) // table header only (todo: system metrics?)
 #endif
 	{
 		if (iCol)
@@ -1638,7 +1638,7 @@ bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int 
 {
 //JFB added --->
 #ifndef _WIN32
-  wantGridForColumns=0; //JFB!!! no grid lines on OSX yet (cannot test!)
+  wantGridForColumns=0; //JFB!!! no grid lines on OSX yet (test KO)
 #endif
   int sz;
   ColorTheme* ctheme = (ColorTheme*)GetColorThemeStruct(&sz);
@@ -1817,13 +1817,30 @@ void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char
     static LICE_CachedFont tmpfont;
     if (!tmpfont.GetHFont())
     {
+//JFB mod: font size/name + optional ClearType rendering --->
+/*
       bool doOutLine = true;
-      LOGFONT lf = {
+      LOGFONT lf = 
+      {
           14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-          OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
+            OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,
+	      #ifdef _WIN32
+          "MS Shell Dlg"
+	      #else
+	      "Arial"
+	      #endif
       };
-//JFB mod: optional ClearType rendering --->
-//      tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
+      tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
+*/
+      LOGFONT lf = {
+#ifdef _WIN32
+        14,
+#else
+        12,
+#endif
+        0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+        OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
+      };
       tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|(g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
 //JFB <---
     }

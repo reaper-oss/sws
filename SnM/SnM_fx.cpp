@@ -546,7 +546,6 @@ void moveFX(COMMAND_T* _ct)
 					WDL_FastString chainChunk;
 					if (p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM") > 0)
 					{
-						int originalChainLen = chainChunk.GetLength();
 						SNM_ChunkParserPatcher pfxc(&chainChunk, false);
 						int p1 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel,0);
 						if (p1>0)

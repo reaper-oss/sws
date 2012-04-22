@@ -726,8 +726,8 @@ int ParsePatchCore(
 		}
 		// skip in-project MIDI data
 		else if (!m_processInProjectMIDI && m_isParsingSource &&
-			(curLineLength>2 && !_strnicmp(pLine, "E ", 2)) ||
-			(curLineLength>3 && !_strnicmp(pLine, "Em ", 3)))
+			((curLineLength>2 && !_strnicmp(pLine, "E ", 2)) ||
+			(curLineLength>3 && !_strnicmp(pLine, "Em ", 3))))
 		{
 			pEOSkippedChunk = strstr(pLine, "GUID {");
 		}

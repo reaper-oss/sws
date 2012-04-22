@@ -130,12 +130,12 @@ void MESetCCLanes(COMMAND_T* _ct)
 	{
 		// recall lanes
 		char laneSlot[MAX_CC_LANES_LEN], slot[32] = "";
-		_snprintf(slot, 32, "CC_LANES_SLOT%d", _ct->user + 1);
+		_snprintf(slot, 32, "CC_LANES_SLOT%d", (int)_ct->user + 1);
 		GetPrivateProfileString("MIDI_EDITOR", slot, "", laneSlot, MAX_CC_LANES_LEN, g_SNMIniFn.Get());
 
 		int i=0; 
 		while (laneSlot[i] && i < (MAX_CC_LANES_LEN-2)) // -2: see string termination
-		{ 
+		{
 			if (laneSlot[i] == '|')
 				laneSlot[i] = '\n';
 			i++;
@@ -193,7 +193,7 @@ void MESaveCCLanes(COMMAND_T* _ct)
 
 					// store lanes
 					char slot[32] = "";
-					_snprintf(slot, 32, "CC_LANES_SLOT%d", _ct->user + 1);
+					_snprintf(slot, 32, "CC_LANES_SLOT%d", (int)_ct->user + 1);
 					WritePrivateProfileString("MIDI_EDITOR", slot, laneSlot, g_SNMIniFn.Get());
 				}
 			}

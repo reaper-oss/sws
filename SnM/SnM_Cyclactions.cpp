@@ -647,7 +647,7 @@ void SNM_CyclactionsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 	{
 		switch (iCol)
 		{
-			case COL_L_ID: 
+			case COL_L_ID:
 				if (!a->m_added)
 				{
 					int id = g_editedActions[g_editedSection].Find(a);
@@ -725,8 +725,8 @@ void SNM_CyclactionsView::OnItemSelChanged(SWS_ListItem* item, int iState)
 }
 
 void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState) {
-	if (item && iCol == COL_L_TOGGLE) {
-		Cyclaction* pItem = (Cyclaction*)item;
+	Cyclaction* pItem = (Cyclaction*)item;
+	if (pItem && pItem != &g_DEFAULT_L && iCol == COL_L_TOGGLE) {
 		pItem->SetToggle(!pItem->IsToggle());
 		Update();
 		UpdateEditedStatus(true);
@@ -755,6 +755,8 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 				lstrcpyn(str, pItem->Get(), iStrMax);				
 				break;
 			case COL_R_NAME:
+				if (pItem == &g_EMPTY_R || pItem == &g_DEFAULT_R)
+					return;
 				if (pItem->GetLength() && pItem->Get()[0] == '!') {
 					lstrcpyn(str, __LOCALIZE("Step -----","sws_DLG_161"), iStrMax);
 					return;
@@ -992,8 +994,6 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	int x=0;
 	Cyclaction* action = (Cyclaction*)g_lvL->EnumSelected(&x);
-	x=0; WDL_FastString* cmd = (WDL_FastString*)g_lvR->EnumSelected(&x);
-
 	switch (LOWORD(wParam))
 	{
 		case ADD_CYCLACTION_MSG: 
@@ -1283,7 +1283,7 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		else if (g_editedAction && g_editedAction != &g_DEFAULT_L)
 		{
 			AddToMenu(hMenu, __LOCALIZE("Add command","sws_DLG_161"), ADD_CMD_MSG);
-#ifdef _WIN32
+#ifdef _SNM_ACTION_LEARN
 			AddToMenu(hMenu, __LOCALIZE("Add/learn from Actions window","sws_DLG_161"), LEARN_CMD_MSG);
 #endif
 			if (cmd && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R)

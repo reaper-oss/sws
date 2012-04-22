@@ -170,6 +170,9 @@ HCURSOR SWS_LoadCursor(int id);
 #define MOUSEEVENTF_RIGHTDOWN   0x0008 /* right button down */
 #define MOUSEEVENTF_RIGHTUP     0x0010 /* right button up */
 void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwExtraInfo);
+int ListView_GetSelectedCountCast(HWND h);
+int ListView_GetItemCountCast(HWND h);
+bool ListView_GetItemCast(HWND h, LVITEM *item);
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 

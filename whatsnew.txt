@@ -1,22 +1,24 @@
 Region Playlist
-+<b>Play preview: no more constraint on region ends, playing now exactly follows region boundaries - REAPER v4.23+ is required</b> (pre-release at the moment)
-Consequences: removed play preview options added in v2.2.0 #4 (useless now), added play preview warning when there are nested regions/markers (due to a new smooth seek option added in v4.23)
-+Do not force envelope points recopy/move when pasting or cropping a playlist (but obeys the preference "envelope points move with media items" instead: both behaviors are now possible)
-+Issue 461: fixed actions "Paste playlist at edit cursor" and "Append playlist to project" that were unexpectedly splitting items at region boundaries
++<b>Play preview: no more constraint on region ends, the play preview now exactly follows region boundaries! REAPER v4.23+ is required</b> (pre-release at the moment)
+Consequences: removed play preview options added in v2.2.0 #4 (useless now), added a warning message when there are nested regions/markers (due to the new smooth seek option)
++Do not force envelope points updates when pasting/cropping a playlist but obeys the preference "envelope points move with media items" instead (so both behaviors are now possible: copy/move envelope points or not)
++Fixed actions "Paste playlist" and "Append playlist" that were ignoring items smaller than region sizes
++Issue 461: fixed actions "Paste playlist" and "Append playlist" that were unexpectedly splitting items at region boundaries
+
+SWS localization (BETA)
++Fixed many dialog boxes/windows that were ignoring translated strings
++Fixed UTF-8 issuess in action names (translations could be ignored)
++Win 7 (x64): fixed UTF-8 issues in list views and dropdown boxes
++Added/fixed localization for (few) missing action names
 
 OSX love:
 +Fixed broken context menus. Important for the Resources window for example, where right-clicking auto-save and auto-fill buttons for options was impossible on OSX!
-+Cycle action editor: added action learn, right-click in the right list view. Note: the editor is now exactly the same as on Windows OS.
-+Live Configs: added action learn (right-click in "Activation" and "Deactivation". Note: the Live Configs window is now exactly the same as on Windows OS.
++Cycle action editor: added action learn (right-click in the right list view). Note: the editor is now exactly the same as on Windows OS.
++Live Configs: added action learn (right-click the columns "Activation" and "Deactivation"). Note: the Live Configs window is now exactly the same as on Windows OS.
 +Better tooltips
 
-SWS localization (BETA)
-+Fixed UTF-8 issue (translated action names could be ignored)
-+Added/fixed localization for (few) missing action names
-+Fixed many dialog boxes/windows that were ignoring translated strings
-
 Other
-+Fixed possible cue buss volume http://forum.cockos.com/showpost.php?p=949269&postcount=1378|issue|
++Fixed possible cue buss volume http://forum.cockos.com/showpost.php?p=949269&postcount=1378|issue| (when no default send gain was defined in the prefs)
 +Issue 358: now fixed everywhere in the extension
 
 !v2.2.0 #4 (April 9, 2012)
@@ -31,7 +33,7 @@ Full localization support for (on-going work..):
 +Auto Color/Icon
 +All S&M windows (+dynamically sized according to string lengths)
 
-Region playlist
+Region playlist (BETA)
 +Fixes, tweaks (added tooltips, retain current playlist, etc..)
 +Added options (right-click the play button): "Play regions until next measure" and "Play regions until next beat" (see the "important note" in the v2.2.0 #3 changelog)
 Added actions (and new context menu items):

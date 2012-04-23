@@ -233,5 +233,6 @@ void makeEscapedConfigString(const char *in, WDL_FastString *out); //JFB: temp (
 #define SNM_I8N_ACTION_SEC		"s&m_section_actions"
 
 const char* GetLocalizedActionName(const char* _defaultStr, int _flags = 0, const char* _section = SWS_I8N_ACTION_SEC);
+bool IsLocalizableAction(const char* _customId);
 TrackEnvelope* SWS_GetTakeEnvelopeByName(MediaItem_Take* take, const char* envname);
 TrackEnvelope* SWS_GetTrackEnvelopeByName(MediaTrack* track, const char* envname);

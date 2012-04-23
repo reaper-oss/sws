@@ -482,6 +482,9 @@ const char* GetLocalizedActionName(const char* _defaultStr, int _flags, const ch
 	return _defaultStr;
 }
 
+bool IsLocalizableAction(const char* _customId) {
+	return (!strstr(_customId, "_CYCLACTION") && !strstr(_customId, "_SWSCONSOLE_CUST"));
+}
 
 // wrappers to ignore localized envelope names
 TrackEnvelope* SWS_GetTakeEnvelopeByName(MediaItem_Take* take, const char* envname) {

@@ -137,18 +137,13 @@ void SimulateMouseClick(COMMAND_T* _ct)
 	WinWaitForEvent(WM_LBUTTONUP);
 }
 
-// dump actions or the wiki ALR summary for the current section displayed in the action dlg 
-// API LIMITATION: the action dlg is used because only the main section could be dumped othewise..
+// dump actions or the wiki ALR summary for the current section *as displayed* in the action dlg 
+// API LIMITATION: the action dlg is hacked because only the main section could be dumped othewise..
 // See http://forum.cockos.com/showthread.php?t=61929 and http://wiki.cockos.com/wiki/index.php/Action_List_Reference
 // _type: 1 & 2 for ALR wiki (1=native actions, 2=SWS)
 // _type: 3 & 4 for basic dump (3=native actions, 4=SWS)
 bool DumpActionList(int _type, const char* _title, const char* _lineFormat, const char* _heading, const char* _ending)
 {
-	if (IsLangPackUsed("SWS")) {
-		MessageBox(GetMainHwnd(), __LOCALIZE("Dump failed: a SWS LangPack file is being used,\nplease restore factory settings first!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
-		return false;
-	}
-
 	char currentSection[SNM_MAX_SECTION_NAME_LEN] = "";
 	HWND hList = GetActionListBox(currentSection, SNM_MAX_SECTION_NAME_LEN);
 	if (hList && currentSection)
@@ -194,7 +189,7 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 
 				int isSws = IsSwsAction(cmdName);
 				if (!IsMacro(cmdName) &&
-					((_type%2 && !isSws) || (!(_type%2) && isSws && IsSwsActionLocalizable(customId))))
+					((_type%2 && !isSws) || (!(_type%2) && isSws && IsLocalizableAction(customId))))
 				{
 					if (!*customId) // for native actions..
 						_snprintf(customId, SNM_MAX_ACTION_CUSTID_LEN, "%d", cmdId);
@@ -207,8 +202,8 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 			fclose(f);
 
 			char msg[BUFFER_SIZE] = "";
-			_snprintf(msg, BUFFER_SIZE, __LOCALIZE_VERFMT("Wrote %s","sws_mbox"), fn); 
-			MessageBox(GetMainHwnd(), msg, _title, MB_OK);
+			if (_snprintf(msg, BUFFER_SIZE, __LOCALIZE_VERFMT("Wrote %s","sws_mbox"), fn) > 0)
+				MessageBox(GetMainHwnd(), msg, _title, MB_OK);
 			return true;
 		}
 		else

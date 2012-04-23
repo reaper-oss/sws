@@ -31,8 +31,9 @@
 #define _SNM_WINDOW_H_
 
 bool SNM_IsActiveWindow(HWND _h);
-bool IsChildOf(HWND _hChild, const char* _title, int _nComp = -1);
-HWND GetReaWindowByTitle(const char* _title, int _nComp = -1);
+bool IsChildOf(HWND _hChild, const char* _title);
+HWND GetReaWindowByTitle(const char* _title);
+void ShowThemeHelper(COMMAND_T*);
 HWND GetActionListBox(char* _currentSection, int _sectionSz);
 int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc = NULL, int _descSize = -1);
 void showFXChain(COMMAND_T*);
@@ -62,7 +63,6 @@ void cycleFocusWnd(COMMAND_T*);
 void cycleFocusHideOthersWnd(COMMAND_T*);
 void focusMainWindow(COMMAND_T*);
 void focusMainWindowCloseOthers(COMMAND_T*);
-void ShowThemeHelper(COMMAND_T*);
 void GetVisibleTCPTracks(WDL_PtrList<void>* _trList);
 
 #endif

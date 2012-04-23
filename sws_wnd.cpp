@@ -647,8 +647,11 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 #ifdef _WIN32
 	ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP);
 
-	// Setup UTF8
+	// Setup UTF8 (see http://forum.cockos.com/showthread.php?t=101547)
 	WDL_UTF8_HookListView(hwndList);
+#if !defined(WDL_NO_SUPPORT_UTF8)
+	if (GetVersion()<0x80000000) SendMessage(hwndList,LVM_SETUNICODEFORMAT,1,0);
+#endif
 
 	// Create the tooltip window (if it's necessary)
 	if (bTooltips)

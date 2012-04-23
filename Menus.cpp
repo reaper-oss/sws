@@ -154,8 +154,7 @@ int SWSGetMenuPosFromID(HMENU hMenu, UINT id)
 
 // *************************** MENU CREATION ***************************
 
-// important both __LOCALIZE() parameters MUST remain literal strings 
-// (used by the build_sample_langpack tool)
+// Important: both __LOCALIZE() parameters MUST remain literal strings (see sws_build_sample_langpack tool)
 void SWSCreateExtensionsMenu(HMENU hMenu)
 {
 	if (GetMenuItemCount(hMenu))

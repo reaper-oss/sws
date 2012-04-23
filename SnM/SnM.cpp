@@ -486,14 +486,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Append playlist to project" }, "S&M_APPEND_RGN_PLAYLIST", CropProjectToPlaylist, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Paste playlist at edit cursor" }, "S&M_PASTE_RGN_PLAYLIST", CropProjectToPlaylist, NULL, 3},
 
-	// Localization -----------------------------------------------------------
-#ifdef _SWS_LOCALIZATION
-//	{ { DEFACCEL, "SWS/S&M: [Internal] Load LangPack file..." }, "S&M_LOAD_LANGPACK", LoadAssignLangPack, NULL, },
-//	{ { DEFACCEL, "SWS/S&M: [Internal] Reset LangPack file to factory settings" }, "S&M_RESET_LANGPACK", ResetLangPack, NULL, },
-#ifdef _SNM_MISC // wip
-	{ { DEFACCEL, "SWS/S&M: [Internal] Open/close LangPack files merger" }, "S&M_MERGE_LANGPACK", OpenLangpackMrgDlg, NULL, NULL, IsLangpackMrgDlgDisplayed},
-#endif
-#endif
 	// Other, misc ------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageView, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Clear image window" }, "S&M_CLR_IMAGEVIEW", ClearImageView, NULL, },

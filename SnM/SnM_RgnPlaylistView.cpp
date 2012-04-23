@@ -856,14 +856,17 @@ void PlaylistRun()
 	bool updateUI = false;
 	double pos = GetPlayPosition2();
 
-	// idle
+	// "idle"
 	if (g_triggerPos >= 0.0)
 	{
 		 if (pos >= g_triggerPos)
 			g_triggerPos = -1.0;
 	}
 	// position switch
+/*no! see below, faster switch for high tempi
 	else if (GetPlaylistRunItems(pos))
+*/
+	if (g_triggerPos < 0.0 && GetPlaylistRunItems(pos))
 	{
 		// detect playlist item switching
 		if (g_lastPlayedItem != g_playingItems.m_cur)
@@ -872,18 +875,16 @@ void PlaylistRun()
 			g_lastPlayPos = -1.0;
 			g_isRegionLooping = false;
 			updateUI = true;
-
 			if (SNM_Playlist* p = GetPlaylist())
-				if (int sz = p->GetSize())
-					for (int i=0; i<sz; i++)
-						if (SNM_PlaylistItem* item = p->Get(i))
-								item->m_playRequested = 0;
+				for (int i=0; i< p->GetSize(); i++)
+					if (SNM_PlaylistItem* item = p->Get(i))
+							item->m_playRequested = 0;
 		}
 		// detect region looping
 		else if (!g_isRegionLooping && pos < g_lastPlayPos)
 			g_isRegionLooping = true;
 
-		// compute next trigger position (i.e. > last measure in the region)
+		// trigger next position
 		if (!g_playingItems.m_next->m_playRequested || g_isRegionLooping)
 		{
 			g_isRegionLooping = false;
@@ -901,10 +902,8 @@ void PlaylistRun()
 	}
 
 	g_lastPlayPos = pos;
-
 	if (updateUI && g_pRgnPlaylistWnd)
 		g_pRgnPlaylistWnd->Update(4);
-
 	bRecurseCheck = false;
 }
 
@@ -1004,20 +1003,18 @@ void PlaylistStopped()
 ///////////////////////////////////////////////////////////////////////////////
 
 // _mode: 0=crop current project, 1=crop to new project tab, 2=append to current project, 3=append at cursor position
+// algo: split, applynudge, unsplit (applynudge to move/copy env items too)  
 void CropProjectToPlaylist(int _mode)
 {
 	MUTEX_PLAYLISTS;
 
-	int sz = GetPlaylist() ? GetPlaylist()->GetSize() : 0;
-	if (!sz)
-		return;
-
+	if (!GetPlaylist() || !GetPlaylist()->GetSize()) return;
 	OnStopButton();
 
 	bool updated = false;
-	double startPos, endPos;
+	double startPos, endPos=-1.0;
 	WDL_PtrList_DeleteOnDestroy<MarkerItem> rgns;
-	for (int i=0; i<sz; i++)
+	for (int i=0; i<GetPlaylist()->GetSize(); i++)
 	{
 		if (SNM_PlaylistItem* plItem = GetPlaylist()->Get(i))
 		{
@@ -1027,8 +1024,8 @@ void CropProjectToPlaylist(int _mode)
 				int rgnnum, rgncol=0; double rgnpos, rgnend; char* rgnname;
 				if (EnumProjectMarkers3(NULL, rgnIdx, NULL, &rgnpos, &rgnend, &rgnname, &rgnnum, &rgncol))
 				{
-					WDL_PtrList<void> itemsInInterval;
-					if (GetItemsInInterval(&itemsInInterval, rgnpos, rgnend, false))
+					WDL_PtrList<void> itemsToKeep;
+					if (GetItemsInInterval(&itemsToKeep, rgnpos, rgnend, false))
 					{
 						if (!updated) // do it once
 						{
@@ -1038,15 +1035,6 @@ void CropProjectToPlaylist(int _mode)
 							startPos = endPos = GetCursorPositionEx(NULL);
 						}
 
-						WDL_PtrList_DeleteOnDestroy<SNM_ItemChunk> itemChunksBefore;
-						for (int j=0; j < itemsInInterval.GetSize(); j++)
-							itemChunksBefore.Add(new SNM_ItemChunk((MediaItem*)itemsInInterval.Get(j)));
-
-						WDL_PtrList<void> oldItems, splitItems;
-						GetAllItemPointers(&oldItems);
-						SplitSelectAllItemsInInterval(NULL, rgnpos, rgnend); // ok, split!
-						GetNewItemPointers(&oldItems, &splitItems);
-
 						// store regions
 						bool found = false;
 						for (int k=0; !found && k<rgns.GetSize(); k++)
@@ -1055,26 +1043,80 @@ void CropProjectToPlaylist(int _mode)
 						if (!found)
 							rgns.Add(new MarkerItem(true, endPos-startPos, endPos+rgnend-rgnpos-startPos, rgnname, rgnnum, rgncol));
 
-						//JFB!!! REAPER bug: the last param of ApplyNudge() is ignored 
-						// although it is used in duplicate mode => use a loop instead
-						for (int j=0; j<plItem->m_cnt; j++) {
-							ApplyNudge(NULL, 1, 5, 1, endPos, false, 1); // append at end of project
-							endPos += (rgnend-rgnpos);
-						}
+						// store data needed to "unsplit" items later on
+						WDL_PtrList_DeleteOnDestroy<SNM_ItemChunk> itemChunksBefore;
+						for (int j=0; j < itemsToKeep.GetSize(); j++)
+							itemChunksBefore.Add(new SNM_ItemChunk((MediaItem*)itemsToKeep.Get(j)));
 
-						// "unsplit" items (a bit tricky since duplicating with ApplyNudge lets original items in place..)
-						for (int j=0; j < splitItems.GetSize(); j++)
-							if (MediaItem* item = (MediaItem*)splitItems.Get(j))
-								if (*(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL) == false) // do not delete nudged items
-									DeleteTrackMediaItem(GetMediaItem_Track(item), item);
-						for (int j=0; j < itemChunksBefore.GetSize(); j++) {
-							SNM_ChunkParserPatcher p(itemChunksBefore.Get(j)->m_item);
-							p.SetChunk(itemChunksBefore.Get(j)->m_chunk.Get(), 1);
-						}
+						WDL_PtrList<void> oldItems, splitItems;
+						GetAllItemPointers(&oldItems);
+						SplitSelectAllItemsInInterval(NULL, rgnpos, rgnend); // ok, split!
+						GetNewItemPointers(&oldItems, &splitItems);
+
+						// append items at end of project
+						Main_OnCommand(40289, 0); // unselect all items
+						WDL_PtrList<void> itemsInInterval;
 						GetItemsInInterval(&itemsInInterval, rgnpos, rgnend, true); // inclusive!
+						for (int j=0; j<itemsInInterval.GetSize(); j++)
+						{
+							if (MediaItem* item = (MediaItem*)itemsInInterval.Get(j))
+							{
+								double itemPos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+								GetSetMediaItemInfo(item, "B_UISEL", &g_bTrue);
+					
+								// REAPER "bug": the last param of ApplyNudge() is ignored although
+								// it is used in duplicate mode => use a loop instead
+								for (int k=0; k<plItem->m_cnt; k++)
+								{
+									WDL_PtrList<void> ndgItems;
+									GetAllItemPointers(&oldItems);
+
+									ApplyNudge(NULL, 1, 5, 1, 
+										endPos + 
+										(itemPos-rgnpos) + /* for items smaller than the region size */
+										k*(rgnend-rgnpos), /* for loops */
+										false, 1);
+
+									MediaItem* selitem = GetSelectedMediaItem(NULL, 0); //JFB!!!
+									if (k==(plItem->m_cnt-1) && itemsToKeep.Find(selitem)<0)
+										itemsToKeep.Add(selitem);
+
+									GetNewItemPointers(&oldItems, &ndgItems);
+									for (int l=0; l<ndgItems.GetSize(); l++)
+										if (MediaItem* ndgitem = (MediaItem*)ndgItems.Get(l))
+										{
+											if (k>0 && itemsToKeep.Find(ndgitem)<0)
+												itemsToKeep.Add(ndgitem);
+											if (/*k==(plItem->m_cnt-1) &&*/ (itemPos-rgnpos)>SNM_FUDGE_FACTOR) {
+												double d = endPos + (itemPos-rgnpos) + k*(rgnend-rgnpos);
+												GetSetMediaItemInfo(ndgitem, "D_POSITION", &d);
+											}
+										}
+								}
+								GetSetMediaItemInfo(item, "B_UISEL", &g_bFalse);
+							}
+						}
+						endPos += plItem->m_cnt*(rgnend-rgnpos);
+
+						GetItemsInInterval(&itemsInInterval, rgnpos, rgnend, true); // inclusive, must be re-done after nudge
 						for (int j=0; j < itemsInInterval.GetSize(); j++)
 							if (MediaItem* item = (MediaItem*)itemsInInterval.Get(j))
+								if (itemsToKeep.Find(item) < 0) {
+									double itemPos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+									if ((itemPos-rgnpos)<=SNM_FUDGE_FACTOR)
+										DeleteTrackMediaItem(GetMediaItem_Track(item), item);
+								}
+
+						for (int j=0; j < splitItems.GetSize(); j++)
+							if (MediaItem* item = (MediaItem*)splitItems.Get(j))
+								if (itemsToKeep.Find(item) < 0)
 									DeleteTrackMediaItem(GetMediaItem_Track(item), item);
+
+						for (int j=0; j < itemChunksBefore.GetSize(); j++)
+							if (SNM_ItemChunk* itchk = itemChunksBefore.Get(j)) {
+									SNM_ChunkParserPatcher p(itchk->m_item);
+									p.SetChunk(itchk->m_chunk.Get(), 1);
+								}
 					}
 				}
 			}
@@ -1085,9 +1127,10 @@ void CropProjectToPlaylist(int _mode)
 		return; // !!
 
 	// append/paste to current project?
-	if (_mode == 2 || _mode == 3) {
+	if (_mode == 2 || _mode == 3)
+	{
 		Main_OnCommand(40289, 0); // unselect all items
-		SetEditCurPos(endPos, true, false);
+		if (endPos > 0.0) SetEditCurPos(endPos, true, false);
 		Undo_EndBlock2(NULL, _mode==2 ? __LOCALIZE("Append playlist to project","sws_undo") : __LOCALIZE("Paste playlist at edit cursor","sws_undo"), UNDO_STATE_ALL);
 		return; // !!
 	}
@@ -1097,8 +1140,7 @@ void CropProjectToPlaylist(int _mode)
 	// remove markers/regions
 	int x=0, lastx=0, num; bool isRgn;
 	while ((x = EnumProjectMarkers2(NULL, x, &isRgn, NULL, NULL, NULL, &num))) {
-		if (DeleteProjectMarker(NULL, num, isRgn))
-			x = lastx;
+		if (DeleteProjectMarker(NULL, num, isRgn)) x = lastx;
 		lastx = x;
 	}
 	// restore regions used in playlist

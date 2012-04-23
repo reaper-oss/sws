@@ -48,11 +48,8 @@ void AddUniqueHnwd(HWND _hAdd, HWND* _hwnds, int* count)
 	_hwnds[(*count)++] = _hAdd;
 }
 
-bool IsChildOf(HWND _hChild, const char* _title, int _nComp)
+bool IsChildOf(HWND _hChild, const char* _title)
 {
-	if (_nComp < 0)
-		_nComp = strlen(_title);
-
 	HWND hCurrent = _hChild;
 	char buf[512] = "";
 	while (hCurrent) 
@@ -73,7 +70,7 @@ bool IsChildOf(HWND _hChild, const char* _title, int _nComp)
 #define MAX_ENUM_CHILD_HWNDS 512
 #define MAX_ENUM_HWNDS 256
 
-//JFB TODO: clean with WDL_PtrList instead
+//JFB TODO: cleanup with WDL_PtrList instead
 static int g_hwndsCount = 0;
 static HWND g_hwnds[MAX_ENUM_CHILD_HWNDS];
 static int g_childHwndsCount = 0;
@@ -113,7 +110,7 @@ static BOOL CALLBACK EnumReaChildWindows(HWND _hwnd, LPARAM _lParam)
 }
 #endif
 
-HWND GetReaChildWindowByTitle(HWND _parent, const char* _title, int _nComp)
+HWND GetReaChildWindowByTitle(HWND _parent, const char* _title)
 {
 #ifdef _WIN32
 	char buf[512] = "";
@@ -123,67 +120,150 @@ HWND GetReaChildWindowByTitle(HWND _parent, const char* _title, int _nComp)
 	{
 		HWND w = g_childHwnds[i];
 		GetWindowText(w, buf, 512);
-		if (!strncmp(buf, _title, _nComp))
+		if (!strcmp(buf, _title))
 			return w;
 	}
 #endif
 	return NULL;
 }
 
-HWND GetReaWindowByTitle(const char* _title, int _nComp)
+#ifndef _WIN32
+// note: _title and _dockerName must be localized
+HWND GetReaWindowByTitleInFloatingDocker(const char* _title, const char* _dockerName)
 {
-	HWND w = NULL;
-#ifdef _WIN32
-	if (_nComp < 0)
-		_nComp = strlen(_title);
+	HWND hdock = FindWindowEx(NULL, NULL, NULL, _dockerName);
+	while(hdock)
+	{
+		HWND hdock2 = FindWindowEx(hdock, NULL, NULL, "REAPER_dock");
+		while(hdock2) {
+			if (HWND w = FindWindowEx(hdock2, NULL, NULL, _title)) return w;
+			hdock2 = FindWindowEx(hdock, hdock2, NULL, "REAPER_dock");
+		}
+		hdock = FindWindowEx(NULL, hdock, NULL, _dockerName);
+	}
+	return NULL;
+}
+#endif
 
-	// docked in main window ?
-	w = GetReaChildWindowByTitle(GetMainHwnd(), _title, _nComp);
-	if (w)
-		return w;
+// note: _title must be localized
+HWND GetReaWindowByTitle(const char* _title)
+{
+#ifdef _WIN32
+	// docked in main window?
+	HWND w = GetReaChildWindowByTitle(GetMainHwnd(), _title);
+	if (w) return w;
 
 	g_hwndsCount = 0;
 	char buf[512] = "";
-	EnumWindows(EnumReaWindows, 0); 
+	EnumWindows(EnumReaWindows, 0);
 	for (int i=0; i < g_hwndsCount && i < MAX_ENUM_HWNDS; i++)
 	{
 		w = g_hwnds[i];
 		GetWindowText(w, buf, 512);
 
-		// floating window?
+		// in floating window?
 		if (!strcmp(_title, buf))
 			return w;
-		// in a floating docker?
-		else if (!strcmp(__localizeFunc("Docker", "DLG_222", 0), buf))
-			if (w = GetReaChildWindowByTitle(w, _title, _nComp)) 
+		// in a floating docker (w/ other hwnds)?
+		else if (!strcmp(__localizeFunc("Docker", "docker", 0), buf)) {
+			if (w = GetReaChildWindowByTitle(w, _title))
+				return w;
+		}
+		// in a floating docker (w/o other hwnds)?
+		else {
+			char dockerName[256]="";
+			if (_snprintf(dockerName, 256, "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0 && !strcmp(dockerName, buf))
+				if (w = GetReaChildWindowByTitle(w, _title))
+					return w;
+		}
+	}
+
+#else // almost works on win + osx (since wdl 7cf02d) but with an utf8 issue on win
+
+	// in a floating window?
+	HWND w = FindWindowEx(NULL, NULL, NULL, _title);
+	if (w) return w;
+
+	// docked in main window?
+	HWND hdock = FindWindowEx(GetMainHwnd(), NULL, NULL, "REAPER_dock");
+	while(hdock) {
+		if (w = FindWindowEx(hdock, NULL, NULL, _title)) return w;
+		hdock = FindWindowEx(GetMainHwnd(), hdock, NULL, "REAPER_dock");
+	}
+	// in a floating docker (w/ other hwnds)?
+	if (w = GetReaWindowByTitleInFloatingDocker(_title, __localizeFunc("Docker", "docker", 0)))
+		return w;
+	// in a floating docker (w/o other hwnds)?
+	{
+		char dockerName[256]="";
+		if (_snprintf(dockerName, 256, "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0)
+			if (w = GetReaWindowByTitleInFloatingDocker(_title, dockerName))
 				return w;
 	}
-#else //JFB!!! should work on win and osx (requires wdl >= 7cf02d), to test.. 
-	// floating window ?
-	w = FindWindowEx(NULL, NULL, NULL, _title);
-	if (!w)
-	{
-		// in a floating docker?
-		HWND hdock = FindWindowEx(NULL, NULL, NULL, __localizeFunc("Docker", "DLG_222", 0));
-		while(hdock)
-		{
-			HWND hdock2 = FindWindowEx(hdock, NULL, NULL, "REAPER_dock");
-			while(hdock2) {
-				if (w = FindWindowEx(hdock2, NULL, NULL, _title)) return w;
-				hdock2 = FindWindowEx(hdock, hdock2, NULL, "REAPER_dock");
-			}
-			hdock = FindWindowEx(NULL, hdock, NULL, __localizeFunc("Docker", "DLG_222", 0));
-		}
+#endif
+	return NULL;
+}
 
-		// docked in main window?
-		hdock = FindWindowEx(GetMainHwnd(), NULL, NULL, "REAPER_dock");
-		while(hdock) {
-			if (w = FindWindowEx(hdock, NULL, NULL, _title)) break;
-			hdock = FindWindowEx(GetMainHwnd(), hdock, NULL, "REAPER_dock");
+
+///////////////////////////////////////////////////////////////////////////////
+// WALTER helpers
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef _WIN32
+static BOOL CALLBACK EnumXCPWindows(HWND _hwnd, LPARAM _lParam)
+{
+	char str[256] = "";
+	GetClassName(_hwnd, str, 256);
+	if (!strcmp(str, "REAPERVirtWndDlgHost"))
+		AddUniqueHnwd(_hwnd, g_childHwnds, &g_childHwndsCount);
+	else 
+		EnumChildWindows(_hwnd, EnumXCPWindows, _lParam);
+	return TRUE;
+}
+#endif
+
+void ShowThemeHelper(WDL_FastString* _report, HWND _hwnd, bool _mcp, bool _sel)
+{
+#ifdef _WIN32
+	g_childHwndsCount = 0;
+	EnumChildWindows(_hwnd, EnumXCPWindows, 0);
+	for (int i=0; i < g_childHwndsCount && i < MAX_ENUM_CHILD_HWNDS; i++)
+	{
+		HWND w = g_childHwnds[i];
+		if (IsWindowVisible(w))
+		{
+			bool mcpChild = IsChildOf(w, __localizeFunc("Mixer", "DLG_151", 0));
+			if ((_mcp && mcpChild) || (!_mcp && !mcpChild))
+			{
+				MediaTrack* tr = (MediaTrack*)GetWindowLongPtr(w, GWLP_USERDATA);
+				int trIdx = (int)GetSetMediaTrackInfo(tr, "IP_TRACKNUMBER", NULL);
+				if (trIdx && (!_sel || (_sel && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
+				{
+					RECT r;	GetClientRect(w, &r);
+					_report->AppendFormatted(512, "%s Track #%d '%s': W=%d, H=%d\n", _mcp ? "MCP" : "TCP", trIdx==-1 ? 0 : trIdx, trIdx==-1 ? "[MASTER]" : (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), r.right-r.left, r.bottom-r.top);
+				}
+			}
 		}
 	}
 #endif
-	return w;
+} 
+
+void ShowThemeHelper(COMMAND_T* _ct)
+{
+	WDL_FastString report("");
+	ShowThemeHelper(&report, GetMainHwnd(), false, (int)_ct->user == 1);
+	if ((int)_ct->user != 1 && report.GetLength())
+		report.Append("\n");
+
+	HWND w = GetReaWindowByTitle(__localizeFunc("Mixer Master", "mixer", 0));
+	if (w && IsWindowVisible(w)) 
+		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
+
+	w = GetReaWindowByTitle(__localizeFunc("Mixer", "DLG_151", 0));
+	if (w && IsWindowVisible(w)) 
+		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
+
+	SNM_ShowMsg(report.Get(), "S&M - Theme Helper");
 }
 
 
@@ -212,10 +292,9 @@ HWND GetActionListBox(char* _currentSection, int _sectionSz)
 #define SNM_ListView_GetItem ListView_GetItemCast
 #endif
 
-// returns the list view's selected item, -1 if failed, -2 if the related action's custom id cannot be retrieved (column hidden)
+// returns the list view's selected item, -1 if failed, -2 if the related action's custom id cannot be retrieved (hidden column)
 // note: no multi-selection mgmt here..
 // API LIMITATION: things like kbd_getTextFromCmd() cannot work for other sections than the main one
-// => TODO: clean-up when we'll be able to access sections properly..
 int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc, int _descSize)
 {
 	HWND hList = GetActionListBox(_section, _secSize);
@@ -753,8 +832,8 @@ void cycleFocusHideOthersWnd(COMMAND_T * _ct)
 	{
 		char buf[512] = "";
 		GetWindowText(g_hwnds[i], buf, 512);
-		if (strcmp(__localizeFunc("Item/track info","sws_DLG_131",0), buf) && // wtf !?
-			strcmp(__localizeFunc("Docker", "DLG_222", 0), buf)) // "closed" floating dockers are in fact hidden (and not redrawn => issue)
+		if (strcmp(__localizeFunc("Item/track info","sws_DLG_131",0), buf) &&
+			strcmp(__localizeFunc("Docker", "docker", 0), buf)) // "closed" floating dockers are in fact hidden (and not redrawn => issue)
 		{
 			int j = 0;
 			for (j=0; j < hwndList.GetSize(); j++)
@@ -821,68 +900,6 @@ void focusMainWindowCloseOthers(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// WALTER helpers
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _WIN32
-static BOOL CALLBACK EnumXCPWindows(HWND _hwnd, LPARAM _lParam)
-{
-	char str[256] = "";
-	GetClassName(_hwnd, str, 256);
-	if (!strcmp(str, "REAPERVirtWndDlgHost"))
-		AddUniqueHnwd(_hwnd, g_childHwnds, &g_childHwndsCount);
-	else 
-		EnumChildWindows(_hwnd, EnumXCPWindows, _lParam);
-	return TRUE;
-}
-#endif
-
-void ShowThemeHelper(WDL_FastString* _report, HWND _hwnd, bool _mcp, bool _sel)
-{
-#ifdef _WIN32
-	g_childHwndsCount = 0;
-	EnumChildWindows(_hwnd, EnumXCPWindows, 0);
-	for (int i=0; i < g_childHwndsCount && i < MAX_ENUM_CHILD_HWNDS; i++)
-	{
-		HWND w = g_childHwnds[i];
-		if (IsWindowVisible(w))
-		{
-			bool mcpChild = IsChildOf(w, __localizeFunc("Mixer", "DLG_151", 0), -1);
-			if ((_mcp && mcpChild) || (!_mcp && !mcpChild))
-			{
-				MediaTrack* tr = (MediaTrack*)GetWindowLongPtr(w, GWLP_USERDATA);
-				int trIdx = (int)GetSetMediaTrackInfo(tr, "IP_TRACKNUMBER", NULL);
-				if (trIdx && (!_sel || (_sel && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
-				{
-					RECT r;	GetClientRect(w, &r);
-					_report->AppendFormatted(512, "%s Track #%d '%s': W=%d, H=%d\n", _mcp ? "MCP" : "TCP", trIdx==-1 ? 0 : trIdx, trIdx==-1 ? "[MASTER]" : (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), r.right-r.left, r.bottom-r.top);
-				}
-			}
-		}
-	}
-#endif
-} 
-
-void ShowThemeHelper(COMMAND_T* _ct)
-{
-	WDL_FastString report("");
-	ShowThemeHelper(&report, GetMainHwnd(), false, (int)_ct->user == 1);
-	if ((int)_ct->user != 1 && report.GetLength())
-		report.Append("\n");
-
-	HWND w = GetReaWindowByTitle(__localizeFunc("Mixer Master", "mixer", 0));
-	if (w && IsWindowVisible(w)) 
-		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
-
-	w = GetReaWindowByTitle(__localizeFunc("Mixer", "DLG_151", 0));
-	if (w && IsWindowVisible(w)) 
-		ShowThemeHelper(&report, w, true, (int)_ct->user == 1);
-
-	SNM_ShowMsg(report.Get(), "S&M - Theme Helper");
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // Other
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -894,7 +911,7 @@ void GetVisibleTCPTracks(WDL_PtrList<void>* _trList)
 	for (int i=0; i < g_childHwndsCount && i < MAX_ENUM_CHILD_HWNDS; i++)
 	{
 		HWND w = g_childHwnds[i];
-		if (IsWindowVisible(w) && !IsChildOf(w, __localizeFunc("Mixer", "DLG_151", 0), -1))
+		if (IsWindowVisible(w) && !IsChildOf(w, __localizeFunc("Mixer", "DLG_151", 0)))
 			_trList->Add((void*)GetWindowLongPtr(w, GWLP_USERDATA));
 	}
 #endif

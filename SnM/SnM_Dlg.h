@@ -47,9 +47,5 @@ void SNM_ShowMsg(const char* _msg, const char* _title = "", HWND _hParent = NULL
 int PromptForInteger(const char* _title, const char* _what, int _min, int _max);
 void OpenCueBussDlg(COMMAND_T*);
 bool IsCueBussDlgDisplayed(COMMAND_T*);
-#ifdef _SNM_MISC // wip
-void OpenLangpackMrgDlg(COMMAND_T*);
-bool IsLangpackMrgDlgDisplayed(COMMAND_T*);
-#endif
 
 #endif

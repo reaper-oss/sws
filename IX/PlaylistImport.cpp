@@ -232,7 +232,7 @@ void PlaylistImport(COMMAND_T* ct)
 
 	// Validate files
 	vector<string> badfiles;
-	for(int i = 0, c = filelist.size(); i < c; i++)
+	for(int i = 0, c = (int)filelist.size(); i < c; i++)
 	{
 		SPlaylistEntry e = filelist[i];
 		if(!file_exists(e.path.c_str()))
@@ -248,7 +248,7 @@ void PlaylistImport(COMMAND_T* ct)
 		stringstream ss;
 		ss << __LOCALIZE("Cannot find some files. Create items anyway?\n","sws_mbox");
 
-		unsigned int limit = min(badfiles.size(), 9); // avoid enormous messagebox
+		unsigned int limit = min((int)badfiles.size(), 9); // avoid enormous messagebox
 		for(unsigned int i = 0; i < limit; i++)
 		{
 			ss << "\n " << badfiles[i];
@@ -287,7 +287,7 @@ void PlaylistImport(COMMAND_T* ct)
 
 	// Add new items to track
 	double pos = 0.0;
-	for(int i = 0, c = filelist.size(); i < c; i++)
+	for(int i = 0, c = (int)filelist.size(); i < c; i++)
 	{
 		SPlaylistEntry e = filelist[i];
 

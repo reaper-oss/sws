@@ -224,7 +224,7 @@ void LabelProcessor(COMMAND_T* ct)
 							{
 								double length = *(double*) GetSetMediaItemInfo(pItem, "D_LENGTH", NULL);
 								format_timestr(length, buf, sizeof(buf));
-								str.AppendFormatted(str.GetLength() + strlen(buf), "%s", buf);
+								str.AppendFormatted(str.GetLength() + (int)strlen(buf), "%s", buf);
 								++c;
 							}
 							break;
@@ -276,7 +276,7 @@ void LabelProcessor(COMMAND_T* ct)
 							{
 								double offset = *(double*) GetSetMediaItemTakeInfo(pTake, "D_STARTOFFS", NULL);
 								format_timestr(offset, buf, sizeof(buf));
-								str.AppendFormatted(str.GetLength() + strlen(buf), "%s", buf);
+								str.AppendFormatted(str.GetLength() + (int)strlen(buf), "%s", buf);
 								++c;
 							}
 							break;

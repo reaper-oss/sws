@@ -484,7 +484,7 @@ extern "C"
 		IMPAPI(CountTrackMediaItems);
 		IMPAPI(CountTrackEnvelopes);
 		IMPAPI(CreateLocalOscHandler);
-		IMPAPI(CreateNewMIDIItemInProj);
+		//IMPAPI(CreateNewMIDIItemInProj);
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
 		IMPAPI(CSurf_OnMuteChange);

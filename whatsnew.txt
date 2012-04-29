@@ -1,3 +1,4 @@
++ Fixed handling of midi events which precede the item start position by resizing the take and adjusting the take offset
 !v2.2.0 #5 (April 23, 2012)
 Region Playlist
 +<b>Play preview: no more constraint on region ends, the play preview now exactly follows region boundaries! REAPER v4.23+ is required</b> (pre-release at the moment)

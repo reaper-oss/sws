@@ -3,30 +3,37 @@
 
 #include <memory>
 
+#include "RprTake.hxx"
+
 class RprTake;
 class RprItem;
 class RprNode;
 
 class RprMidiTemplate {
 public:
-	RprMidiTemplate(const RprTake &take, bool readOnly);
+    RprMidiTemplate(const RprTake &take, bool readOnly);
 
-	RprItem *getParent() {return mParent.get(); }
+    RprItem *getParent() {return mParent.get(); }
 
-	virtual ~RprMidiTemplate();
+    virtual ~RprMidiTemplate();
 protected:
-	RprNode *getMidiSourceNode() { return mMidiSourceNode; }
-	void errorOccurred() { mInErrorState = true; }
-	bool isReadOnly() const { return mReadOnly; }
+    RprNode *getMidiSourceNode() { return mMidiSourceNode; }
+    void errorOccurred() { mInErrorState = true; }
+    bool isReadOnly() const { return mReadOnly; }
+
+    bool mSetNewTakeOffset;
+    double mNewTakeOffset;
+    RprTake mTake;
 private:
 
-	std::auto_ptr<RprItem> mParent;
-	std::auto_ptr<RprNode> mItemNode;
+    std::auto_ptr<RprItem> mParent;
+    std::auto_ptr<RprNode> mItemNode;
 
-	RprNode *mMidiSourceNode;
+    RprNode *mMidiSourceNode;
 
-	bool mReadOnly;
-	bool mInErrorState;
+    bool mReadOnly;
+    bool mInErrorState;
+
 };
 
 #endif /*__RPRMIDITEMPLATE_HXX */

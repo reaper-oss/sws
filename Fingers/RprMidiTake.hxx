@@ -4,7 +4,6 @@
 #include "RprMidiEvent.hxx"
 #include "RprMidiTemplate.hxx"
 
-class RprTake;
 class RprMidiEvent;
 class RprMidiBase;
 class RprMidiContext;
@@ -14,18 +13,19 @@ class RprMidiTake;
 
 typedef std::auto_ptr<RprMidiTake> RprMidiTakePtr;
 
-class RprMidiNote {
+class RprMidiNote 
+{
 public:
-	RprMidiNote(RprMidiContext *context);
-	RprMidiNote(RprMidiBase *noteOn, RprMidiBase *noteOff, RprMidiContext *context);
-	
-	double getPosition() const;
-	void setPosition(double position);
+    RprMidiNote(RprMidiContext *context);
+    RprMidiNote(RprMidiBase *noteOn, RprMidiBase *noteOff, RprMidiContext *context);
 
-	int getChannel() const;
-	void setChannel(int channel);
+    double getPosition() const;
+    void setPosition(double position);
 
-	double getLength() const;
+    int getChannel() const;
+    void setChannel(int channel);
+
+    double getLength() const;
     void setLength(double length);
 
     void setPitch(int pitch);
@@ -34,63 +34,65 @@ public:
     void setVelocity(int velocity);
     int getVelocity() const;
 
-	bool isSelected() const;
-	void setSelected(bool selected);
+    bool isSelected() const;
+    void setSelected(bool selected);
 
-	bool isMuted() const;
-	
-	int getItemPosition() const;
-	int getItemLength() const;
+    bool isMuted() const;
 
-	void setItemLength(int);
+    int getItemPosition() const;
+    int getItemLength() const;
 
-	~RprMidiNote();
+    void setItemLength(int);
+
+    ~RprMidiNote();
 private:
-	friend class RprMidiTake;
-	RprMidiBase *mNoteOn;
-	RprMidiBase *mNoteOff;
-	RprMidiContext *mContext;
+    friend class RprMidiTake;
+    RprMidiBase *mNoteOn;
+    RprMidiBase *mNoteOff;
+    RprMidiContext *mContext;
 };
 
-class RprMidiCC {
+class RprMidiCC 
+{
 public:
-	RprMidiCC(RprMidiContext *context, int controller);
-	RprMidiCC(RprMidiBase *cc, RprMidiContext *context);
-	
-	int getChannel() const;
+    RprMidiCC(RprMidiContext *context, int controller);
+    RprMidiCC(RprMidiBase *cc, RprMidiContext *context);
 
-	int getItemPosition() const;
-	
-	~RprMidiCC();
+    int getChannel() const;
+
+    int getItemPosition() const;
+
+    ~RprMidiCC();
 private:
-	friend class RprMidiTake;
-	RprMidiBase *mCC;
-	RprMidiContext *mContext;
+    friend class RprMidiTake;
+    RprMidiBase *mCC;
+    RprMidiContext *mContext;
 };
 
-class RprMidiTake : public RprMidiTemplate {
+class RprMidiTake : public RprMidiTemplate 
+{
 public:
-	static RprMidiTakePtr createFromMidiEditor(bool readOnly = false);
-	RprMidiTake(const RprTake &take, bool readOnly = false);
+    static RprMidiTakePtr createFromMidiEditor(bool readOnly = false);
+    RprMidiTake(const RprTake &take, bool readOnly = false);
     ~RprMidiTake();
 
-	RprMidiNote *getNoteAt(int index) const;
-	int countNotes() const;
-	RprMidiNote *addNoteAt(int index);
+    RprMidiNote *getNoteAt(int index) const;
+    int countNotes() const;
+    RprMidiNote *addNoteAt(int index);
 
-	int countCCs(int controller) const;
-	
-	bool hasEventType(RprMidiBase::MessageType);
+    int countCCs(int controller) const;
+
+    bool hasEventType(RprMidiBase::MessageType);
 
 private:
-	void cleanup();
-	bool apply();
+    void cleanup();
+    bool apply();
 
-	std::vector<RprMidiNote *> mNotes;
-	std::vector<RprMidiCC *> mCCs[128];
-	std::vector<RprMidiBase *> mOtherEvents;
-	RprMidiContext *mContext;
-	int mMidiEventsOffset;
+    std::vector<RprMidiNote *> mNotes;
+    std::vector<RprMidiCC *> mCCs[128];
+    std::vector<RprMidiBase *> mOtherEvents;
+    RprMidiContext *mContext;
+    int mMidiEventsOffset;
 };
 
 #endif

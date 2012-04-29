@@ -7,38 +7,39 @@ class PCM_source;
 
 class RprTake {
 public:
-	RprTake(MediaItem_Take *take);
+    RprTake(MediaItem_Take *take);
 
-	static PCM_source *createSource(const char *fileName);
+    static PCM_source *createSource(const char *fileName);
 
-	double getPlayRate() const;
-	void setPlayRate(double playRate);
+    double getPlayRate() const;
+    void setPlayRate(double playRate);
 
-	double getStartOffset() const;
+    double getStartOffset() const;
+    void setStartOffset(double offset);
 
-	GUID *getGUID() const;
+    GUID *getGUID() const;
 
-	RprItem getParent() const;
+    RprItem getParent() const;
 
-	PCM_source *getSource();
+    PCM_source *getSource();
 
-	void setSource(PCM_source *source, bool keepOld = false);
+    void setSource(PCM_source *source, bool keepOld = false);
 
-	bool isFile();
-	bool isMIDI();
+    bool isFile();
+    bool isMIDI();
 
-	void openEditor();
+    void openEditor();
 
-	void setName(const char *name);
-	const char *getName();
+    void setName(const char *name);
+    const char *getName();
 
-	static RprTake createFromMidiEditor();
-	
-	/* Conversion */
-	MediaItem_Take *toReaper() const;
+    static RprTake createFromMidiEditor();
+
+    /* Conversion */
+    MediaItem_Take *toReaper() const;
 
 private:
-	MediaItem_Take *mTake;
+    MediaItem_Take *mTake;
 };
 
 #endif /* __RPR_TAKE_HXX */

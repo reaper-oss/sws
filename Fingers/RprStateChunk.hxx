@@ -3,11 +3,11 @@
 
 class RprStateChunk {
 public:
-	RprStateChunk(const char *stateChunk);
-	const char *toReaper();
-	~RprStateChunk();
+    RprStateChunk(const char *stateChunk);
+    const char *toReaper();
+    ~RprStateChunk();
 private:
-	const char *mChunk;
+    const char *mChunk;
 };
 
 

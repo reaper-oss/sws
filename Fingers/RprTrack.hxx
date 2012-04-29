@@ -9,39 +9,39 @@ class RprTrackCtr;
 typedef std::auto_ptr<RprTrackCtr> RprTrackCtrPtr;
 
 namespace RprTrackCollec {
-	RprTrackCtrPtr getSelected();
-	RprTrackCtrPtr getAll();
+    RprTrackCtrPtr getSelected();
+    RprTrackCtrPtr getAll();
 };
 
 class RprTrack {
 public:
-	RprTrack(MediaTrack *track);
-	MediaTrack *toReaper() const;
-	GUID *getGUID();
+    RprTrack(MediaTrack *track);
+    MediaTrack *toReaper() const;
+    GUID *getGUID();
 
-	bool isMuted();
-	bool isSoloed();
-	void setMuted(bool muted);
-	void setSoloed(bool soloed);
-	
-	int getTrackIndex();
+    bool isMuted();
+    bool isSoloed();
+    void setMuted(bool muted);
+    void setSoloed(bool soloed);
 
-	const char *getName();
+    int getTrackIndex();
 
-	unsigned long getColour();
+    const char *getName();
 
-	bool operator==(RprTrack &rhs);
+    unsigned long getColour();
+
+    bool operator==(RprTrack &rhs);
 
 private:
-	MediaTrack *mTrack;
+    MediaTrack *mTrack;
 };
 
 class RprTrackCtr : public RprContainer<RprTrack> {
 public:
-	RprTrackCtr() {}
-	~RprTrackCtr() {}
+    RprTrackCtr() {}
+    ~RprTrackCtr() {}
 private:
-	void doSort() {}
+    void doSort() {}
 };
 
 #endif /* __RPR_TRACK_HXX */

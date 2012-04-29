@@ -4,15 +4,15 @@
 
 RprStateChunk::RprStateChunk(const char *stateChunk)
 {
-	mChunk = stateChunk;
+    mChunk = stateChunk;
 }
 
 const char *RprStateChunk::toReaper()
 {
-	return mChunk;
+    return mChunk;
 }
 
 RprStateChunk::~RprStateChunk()
 {
-	FreeHeapPtr((void *)mChunk);
+    FreeHeapPtr((void *)mChunk);
 }

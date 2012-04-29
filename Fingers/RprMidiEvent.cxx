@@ -313,7 +313,7 @@ RprMidiEventCreator::RprMidiEventCreator(RprNode *node)
 	if(tokens.empty())
 		throw RprMidiBase::RprMidiException("Error parsing MIDI data");
 
-	int delta = ::atoi(tokens.at(1));
+	int delta = (int)strtoul(tokens.at(1), 0, 10);
 	bool selected = isSelected(tokens.at(0));
 	bool muted = isMuted(tokens.at(0));
 

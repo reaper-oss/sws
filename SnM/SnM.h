@@ -64,7 +64,7 @@
 #define SNM_FONT_HEIGHT				12
 #endif
 
-#define SNM_INI_FILE_VERSION		5
+#define SNM_INI_FILE_VERSION		6
 #define SNM_LIVECFG_NB_CONFIGS		8
 #define SNM_LIVECFG_NB_CONFIGS_STR	"8"
 #define SNM_MAX_TRACK_GROUPS		32
@@ -173,6 +173,7 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
 void DeleteScheduledJob(int _id);
 bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub);
 bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
+int EnumMarkerRegionsCache(ReaProject* _proj, int _idx, bool* _isrgn, double* _pos, double* _rgnend, char** _name, int* _num, int* _color);
 void SnMCSurfRun();
 void SnMCSurfSetTrackTitle();
 void SnMCSurfSetTrackListChange();

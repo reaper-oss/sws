@@ -923,7 +923,7 @@ enum
   SCREENSET_ACTION_LOAD_STATE=0x100, // load state from actionParm (of actionParmSize). if both are NULL, hide.
   SCREENSET_ACTION_SAVE_STATE,  // save state to actionParm, max length actionParmSize (will usually be 4k or greater), return length
 };
-typedef LRESULT (*screensetCallbackFunc)(int action, char *id, void *param, int param2);
+typedef LRESULT (*screensetCallbackFunc)(int action, char *id, void *param, int param2); // deprecated in v4
 typedef LRESULT (*screensetNewCallbackFunc)(int action, char *id, void *param, void *actionParm, int actionParmSize);
 
 // This is managed using screenset_registerNew(), screenset_unregister(), etc

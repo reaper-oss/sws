@@ -463,7 +463,7 @@ void floatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _s
 	}
 }
 
-// _all: =true for all FXs/tracks, false for selected tracks + for given the given _fx
+// _all: true for all FXs/tracks, false for selected tracks + for given the given _fx
 // _fx = -1, for current selected FX. Ignored when _all == true.
 // showflag=0 for toggle, =2 for hide floating window (index valid), =3 for show floating window (index valid)
 void floatUnfloatFXs(bool _all, int _showFlag, int _fx, bool _selTracks) 
@@ -775,7 +775,7 @@ void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 				int focusedPrevious = getFocusedFX(tr, dir);
 
 				// specific case: make it work even no FX window is focused
-				// (classic pitfall: when the action list is focused, see
+				// (classic pitfall when the action list is focused, see
 				// http://forum.cockos.com/showpost.php?p=708536&postcount=305)
 				if (focusedPrevious < 0)
 					focusedPrevious = getFirstFloatingFX(tr, dir);
@@ -786,7 +786,7 @@ void cycleFloatFXWndSelTracks(COMMAND_T * _ct)
 			i += dir; // +1, -1
 		}
 
-		// there was no already focused window if we're here..
+		// there was no focused window if we're here..
 		// => float only the 1st found one
 		if (firstTrFound) 
 			floatOnlyJob(firstTrFound, firstFXFound, true);
@@ -847,7 +847,7 @@ void cycleFocusHideOthersWnd(COMMAND_T * _ct)
 		}
 	}
 
-	// compute window to be displayed
+	// find out the window to be displayed
 	g_lastFocusHideOthers += (int)_ct->user; // not a % !
 	if (g_lastFocusHideOthers < 0)
 		g_lastFocusHideOthers = hwndList.GetSize();

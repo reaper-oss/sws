@@ -295,7 +295,7 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 		switch (iCol)
 		{
 			case COL_CC:
-				_snprintf(str, iStrMax, "%03d %c", pItem->m_cc, pItem->m_cc == g_liveConfigs.Get()->Get(g_configId)->m_lastMIDIVal ? '*' : ' ');
+				_snprintf(str, iStrMax, "%03d %s", pItem->m_cc, pItem->m_cc == g_liveConfigs.Get()->Get(g_configId)->m_lastMIDIVal ? UTF8_BULLET : " ");
 				break;
 			case COL_COMMENT:
 				lstrcpyn(str, pItem->m_desc.Get(), iStrMax);
@@ -541,7 +541,7 @@ void SNM_LiveConfigsWnd::SelectByCCValue(int _configId, int _cc)
 					ListView_SetItemState(hList, -1, 0, LVIS_SELECTED);
 					ListView_SetItemState(hList, i, LVIS_SELECTED, LVIS_SELECTED); 
 					ListView_EnsureVisible(hList, i, true);
-					Update(); // just usefull to set the "*" when triggering via dbl-click
+					Update(); // just to set the bullet
 					break;
 				}
 			}

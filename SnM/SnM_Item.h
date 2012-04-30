@@ -60,17 +60,17 @@ void SNM_GetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, boo
 void SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks = false);
 void SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks = false);
 bool IsItemInInterval(MediaItem* _item, double _pos1, double _pos2, bool _inclusive);
-bool AreThereItemsInInterval(double _pos1, double _pos2, bool _inclusive);
 bool GetItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, bool _inclusive);
 void GetAllItemPointers(WDL_PtrList<void>* _items);
-void GetNewItemPointers(WDL_PtrList<void>* _oldItemsIn, WDL_PtrList<void>* _newItemsOut);
+void DiffItemPointers(WDL_PtrList<void>* _oldItemsIn, WDL_PtrList<void>* _newItemsOut);
+bool CopySelItemsWithEnvs(const char* _undoTitle, double _nudgePos, WDL_PtrList<void>* _newItemsOut = NULL);
 void splitMidiAudio(COMMAND_T*);
 void smartSplitMidiAudio(COMMAND_T*);
 #ifdef _SNM_MISC // deprecated (v3.67)
 void splitSelectedItems(COMMAND_T*);
 #endif
 void goferSplitSelectedItems(COMMAND_T*);
-bool SplitSelectAllItemsInInterval(const char* _undoTitle, double _pos1, double _pos2);
+bool SplitSelectAllItemsInInterval(const char* _undoTitle, double _pos1, double _pos2, WDL_PtrList<void>* _newItemsOut = NULL);
 void SplitSelectAllItemsInRegion(COMMAND_T*);
 void copyCutTake(COMMAND_T*);
 void pasteTake(COMMAND_T*);

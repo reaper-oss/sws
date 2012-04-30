@@ -940,7 +940,7 @@ int SNM_NotesHelpWnd::updateMkrRgnNameOrNotes(bool _name)
 	{
 		g_lastMarkerPos = dPos;
 
-		int id, idx = FindMarkerRegion(dPos, SNM_MARKER_MASK|SNM_REGION_MASK, &id);
+		int id, idx = FindMarkerRegion(dPos, SNM_MARKER_MASK|SNM_REGION_MASK, true, &id);
 		if (id > 0)
 		{
 			if (id != g_lastMarkerRegionId)

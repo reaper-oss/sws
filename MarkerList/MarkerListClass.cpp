@@ -32,19 +32,19 @@
 #include "MarkerListClass.h"
 #include "MarkerListActions.h"
 
-MarkerItem::MarkerItem(bool bReg, double dPos, double dRegEnd, const char* cName, int id, int color)
+MarkerItem::MarkerItem(bool bReg, double dPos, double dRegEnd, const char* cName, int num, int color)
 {
 	m_bReg = bReg;
 	m_dPos = dPos;
 	m_dRegEnd = bReg ? dRegEnd : -1.0;
-	m_id = id;
+	m_num = num;
 	SetName(cName);
 	m_iColor = color;
 }
 
 MarkerItem::MarkerItem(LineParser* lp)
 {
-	m_id      = lp->gettoken_int(0);
+	m_num     = lp->gettoken_int(0);
 	m_dPos    = lp->gettoken_float(1);
 	SetName(lp->gettoken_str(2));
 	m_bReg    = lp->gettoken_int(3) ? true : false;
@@ -52,47 +52,32 @@ MarkerItem::MarkerItem(LineParser* lp)
 	m_iColor  = lp->gettoken_int(5);
 }
 
-MarkerItem::~MarkerItem()
-{
-	delete [] m_cName;
-}
-
 char* MarkerItem::ItemString(char* str, int iSize)
 {
 	WDL_String name;
 	makeEscapedConfigString(GetName(), &name);
-	_snprintf(str, iSize, "%d %.14f %s %d %.14f %d", m_id, m_dPos, name.Get(), m_bReg ? 1 : 0, m_dRegEnd, m_iColor);
+	_snprintf(str, iSize, "%d %.14f %s %d %.14f %d", m_num, m_dPos, name.Get(), m_bReg ? 1 : 0, m_dRegEnd, m_iColor);
 	return str;
 }
-void MarkerItem::SetName(const char* newname)
-{
-	if (newname && strlen(newname))
-	{
-		m_cName = new char[strlen(newname)+1];
-		strcpy(m_cName, newname);
-	}
-	else
-		m_cName = NULL;
-}
 
-bool MarkerItem::Compare(bool bReg, double dPos, double dRegEnd, const char* cName, int id, int color)
+bool MarkerItem::Compare(bool bReg, double dPos, double dRegEnd, const char* cName, int num, int color)
 {
-	return (bReg == m_bReg && dPos == m_dPos && strcmp(cName, GetName()) == 0 && id == m_id && (!bReg || dRegEnd == m_dRegEnd) && m_iColor == color);
+	return (bReg == m_bReg && dPos == m_dPos && num == m_num && (!bReg || dRegEnd == m_dRegEnd) && m_iColor == color && strcmp(cName, GetName()) == 0);
 }
 
 bool MarkerItem::Compare(MarkerItem* mi)
 {
-	return Compare(mi->IsRegion(), mi->GetPos(), mi->GetRegEnd(), mi->GetName(), mi->m_id, mi->m_iColor);
+	return Compare(mi->IsRegion(), mi->GetPos(), mi->GetRegEnd(), mi->GetName(), mi->m_num, mi->m_iColor);
 }
 
 void MarkerItem::AddToProject()
 {
-	AddProjectMarker2(NULL, m_bReg, m_dPos, m_dRegEnd, GetName(), m_id, m_iColor ? m_iColor | 0x1000000 : 0);
+	AddProjectMarker2(NULL, m_bReg, m_dPos, m_dRegEnd, GetName(), m_num, m_iColor ? m_iColor | 0x1000000 : 0);
 }
 
 void MarkerItem::UpdateProject()
 {
-	SetProjectMarker3(NULL, m_id, m_bReg, m_dPos, m_dRegEnd, GetName(), m_iColor ? m_iColor | 0x1000000 : 0);
+	SetProjectMarker3(NULL, m_num, m_bReg, m_dPos, m_dRegEnd, GetName(), m_iColor ? m_iColor | 0x1000000 : 0);
 }
 
 MarkerList::MarkerList(const char* name, bool bGetCurList)
@@ -281,7 +266,7 @@ void MarkerList::ExportToClipboard(const char* format)
 					s += sprintf(s, "%d", count++);
 					break;
 				case 'i':
-					s += sprintf(s, "%d", m_items.Get(i)->GetID());
+					s += sprintf(s, "%d", m_items.Get(i)->GetNum());
 					break;
 				case 'l':
 				{

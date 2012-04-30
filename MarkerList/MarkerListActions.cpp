@@ -127,7 +127,7 @@ void RenumberIds(COMMAND_T*)
 		MarkerItem* mi = ml.m_items.Get(i);
 		if (!mi->IsRegion())
 		{
-			mi->SetID(iID++);
+			mi->SetNum(iID++);
 			mi->AddToProject();
 		}
 	}
@@ -145,7 +145,7 @@ void RenumberRegions(COMMAND_T*)
 		MarkerItem* mi = ml.m_items.Get(i);
 		if (mi->IsRegion())
 		{
-			mi->SetID(iID++);
+			mi->SetNum(iID++);
 			mi->AddToProject();
 		}
 	}

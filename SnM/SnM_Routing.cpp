@@ -194,7 +194,6 @@ bool cueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showR
 }
 
 // this var is used by the action "Create cue buss from track selection (use last settings)"
-// (either created via GUI or other cue buss actions)
 int g_cueBusslastSettingsId = 0; // 0 for ascendant compatibility
 
 bool cueTrack(const char* _undoMsg, int _confId)
@@ -606,7 +605,6 @@ void removeReceives(COMMAND_T* _ct)
 	}
 }
 
-// TODO: optimization (a same track can be multi-patched here..)
 void removeRouting(COMMAND_T* _ct)
 {
 	bool updated = false;

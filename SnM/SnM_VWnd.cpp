@@ -175,13 +175,13 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 	}
 	else 
 	{
-		_btn->SetIcon(NULL); // important: could crash when switching theme..
+		_btn->SetIcon(NULL); // important: would crash when switching theme..
 		_btn->SetTextLabel(_text, 0, SNM_GetThemeFont());
 		_btn->SetForceBorder(true);
 	}
 }
 
-//JFB TODO? WDL_VWnd? hyperlink ?
+//JFB TODO? WDL_VWnd? hyperlink?
 bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
 {
 	if (_bm)
@@ -214,12 +214,12 @@ bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h)
 
 // auto position a WDL_VWnd instance
 // note: by default all components are hidden, see WM_PAINT in sws_wnd.cpp
-// _x: I/O param that gets modified (for the next WDL_VWnd to be placed in the panel)
-// _h: height of the panel
+// _x: I/O param that gets modified (for the next component)
+// _h: height of the destination panel
 // returns false if hidden
 // JFB TODO? REMARK: 
-//    ideally, we'd need to mod WDL_VWnd here rather than checking inherited types (!)
-//    e.g. adding a kind of getPreferedWidthHeight(int* _width, int* _height)
+//    ideally, we'd need to mod WDL_VWnd here rather than checking for inherited types (!)
+//    e.g. adding some kind of getPreferedWidthHeight(int* _width, int* _height)
 bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoomNextComp)
 {
 	if (_c && _h && abs(_r->bottom-_r->top) >= _h)

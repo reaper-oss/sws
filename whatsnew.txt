@@ -1,4 +1,12 @@
-+ Fixed handling of midi events which precede the item start position by resizing the take and adjusting the take offset
+Region Playlist
++"Paste playlist at edit cursor" is now inserting playlists (rather than "pasting over"). Demo: http://stash.reaper.fm/12421/S%26M%20Region%20Playlist%20-%20Paste%20plalist%20at%20edit%20cursor.gif|here|
++Context menu: added commands to append/paste selected regions
++Better list view refresh (new region lengths, renamed regions, etc..)
+
+Other
++Fixed handling of midi events which precede the item start position by resizing the take and adjusting the take offset
++Added undo point for "SWS/gofer: Split selected items at mouse cursor (obey snapping)"
+
 !v2.2.0 #5 (April 23, 2012)
 Region Playlist
 +<b>Play preview: no more constraint on region ends, the play preview now exactly follows region boundaries! REAPER v4.23+ is required</b> (pre-release at the moment)
@@ -13,8 +21,8 @@ SWS localization (BETA)
 +Win 7 (x64): fixed UTF-8 issues in list views and dropdown boxes
 +Added/fixed localization for (few) missing action names
 
-OSX love:
-+Fixed broken context menus. Important for the Resources window for example, where right-clicking auto-save and auto-fill buttons for options was impossible on OSX!
+OS X love:
++Fixed broken context menus. Important for the Resources window for example, where right-clicking auto-save and auto-fill buttons for options was impossible on OS X!
 +Cycle action editor: added action learn (right-click in the right list view). Note: the editor is now exactly the same as on Windows OS.
 +Live Configs: added action learn (right-click the columns "Activation" and "Deactivation"). Note: the Live Configs window is now exactly the same as on Windows OS.
 +Better tooltips
@@ -65,7 +73,7 @@ Added related actions:
 Important note: the play preview is based on "smooth seeking" so <b>regions are played until the next measure</b> (start positions of regions do not matter). Croping a project to a playlist will respect regions boundaries, of course.
 
 Live Configs:
-+OSX: FX presets support like on Windows OS
++OS X: FX presets support like on Windows OS
 +All FX presets are now supported via the new Learn command: VST patches (.fxp), AU factory/user Presets (.aupreset), etc.. Note: support was limited to user presets (.rpl) before this version.
 +Send all notes-off when deactivating a track (if any)
 +Context menu: added "Learn current preset"
@@ -73,7 +81,7 @@ Live Configs:
 Cue buss generator:
 +New dropdown box "Cue buss settings": up to 8 different settings can be defined
 +Added actions "SWS/S&M: Create cue buss from track selection, settings n" where 'n' is in [1; 8]
-+Tweaks: removed confusing "save properties" button (settings are now saved on the fly), better OSX display, added error messages, etc..
++Tweaks: removed confusing "save properties" button (settings are now saved on the fly), better OS X display, added error messages, etc..
 
 Resources window and related "slot actions":
 +<b>All "SWS/S&M: Apply track template" actions now preserve receives.</b> This is to use track templates a bit like snapsshots (track sends were already preserved).
@@ -85,16 +93,16 @@ The same goes with "Apply track template" commands in the Resources window (on d
 Label processor:
 +Added item duration (/D) and source offset (/O)
 
-FX presets actions improvements: OSX support + improved on Windows OS (use new dedicated APIs)
-Added in the main section of the action list (new on OSX):
+FX presets actions improvements: OS X support + improved on Windows OS (use new dedicated APIs)
+Added in the main section of the action list (new on OS X):
 +SWS/S&M: Trigger next preset for FX n of selected tracks - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
 +SWS/S&M: Trigger previous preset for FX n of selected tracks - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
 +SWS/S&M: Trigger next preset for selected FX of selected tracks
 +SWS/S&M: Trigger previous preset for selected FX of selected tracks
-Added in the "S&M extension" of the action list (new on OSX):
+Added in the "S&M extension" of the action list (new on OS X):
 +SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC absolute only)" }, "S&M_SELFX_PRESET", TriggerFXPreset, NULL, -1},
 +SWS/S&M: Trigger preset for FX n of selected tracks (MIDI CC absolute only)- where 'n' is in [1; 4]
-Added new FX preset actions in the main section (new on OSX and Windows OS):
+Added new FX preset actions in the main section (new on OS X and Windows OS):
 +SWS/S&M: Trigger next preset for last touched FX
 +SWS/S&M: Trigger previous preset for last touched FX
 
@@ -124,7 +132,7 @@ Added label processor (Extensions->Label processor). Automatic labelling of sele
 +Snapshots fully working with v4 - pans, frozen tracks, all envelopes, etc.
 +Markerlist supports region/marker colors
 +S&M windows are themed to match Reaper
-+Cycle action editor for OSX
++Cycle action editor for OS X
 +Item normalizing to RMS
 +Too many Resources window/Live Config updates to list here
 +Notes/help subtitle support
@@ -186,10 +194,10 @@ Fingers MIDI action fixes:
 
 Issue 426: Fixed snapshots problem with 'frozen' tracks
 On Windows OS: all S&M list views now support grid lines, i.e. they use the color "Window list grid lines" of the Theme Editor
-OSX: Fixed "beachball" when running cycle actions
+OS X: Fixed "beachball" when running cycle actions
 
 !v2.1.0 #25 (January 1, 2012)
-Cycle actions: OSX cleanup/fixes (thanks to Kundalinguist and CaptainHook!)
+Cycle actions: OS X cleanup/fixes (thanks to Kundalinguist and CaptainHook!)
 +Fixed import and edition of cycle actions
 +Added "Cycle Action Editor" in main menu > extensions (like on Windows OS)
 +Cycle Action Editor it is now available out of the box
@@ -310,7 +318,7 @@ Note: import, export and reset features have been moved to the context menu!
 +Cycle actions are now saved in a distinct file S&M_Cyclactions.ini (they were saved in the S&M.ini file before)
 This is to ease REAPER's configurations export/import (ReaperConfigZip or copy/paste): the new S&M_Cyclactions.ini is exchangeable, not the S&M.ini file (which can contain local paths, etc..)
 Auto upgrade: the new S&M_Cyclactions.ini file is automatically created with your current cycle actions (if needed, a S&M_Cyclactions.BAK file is also saved).
-+OSX *Beta* support: to be enabled in the S&M.ini file, details http://code.google.com/p/sws-extension/issues/detail?id=416#c0|here|): same editor than on Windows OS (minus the "action learn" feature)
++OS X *Beta* support: to be enabled in the S&M.ini file, details http://code.google.com/p/sws-extension/issues/detail?id=416#c0|here|): same editor than on Windows OS (minus the "action learn" feature)
 
 Live Configs:
 +Fixed possible crash on Win 7 (when switching projects)
@@ -326,7 +334,7 @@ Notes/help: do not update region/marker names when playing and editing (but only
 
 S&M windows theming:
 S&M windows now use themed buttons (i.e. toolbar_blank.png and composite_toolbar_overlay.png, if it exists)
-List views also obey following colors of the Theme Editor (REAPER > v4.11, on Windows OS and OSX!) :
+List views also obey following colors of the Theme Editor (REAPER > v4.11, on Windows OS and OS X!) :
 +Window list selection bg
 +Window list selection fg
 +Window list selection inactive bg
@@ -357,7 +365,7 @@ House cleaning:
 +Renamed all "SWS/S&M: Apply FX chain [...]" actions into "Paste (replace) FX chain [...]"
 +Notes/help window (in "Action help" mode): renamed the button "Wiki ALR" into "Online help..."
 +Windows OS: do not systematically send deleted files to the recycle bin (hard delete for temp files)
-+OSX: S&M logos like on Windows OS
++OS X: S&M logos like on Windows OS
 
 Fixed toggle states for all actions "SWS/S&M: Toggle arming of [...] envelope for selected tracks" (toggle states were stuck to "off")
 Issue 400: Fixed marker set paste in Reaper v4.x
@@ -425,7 +433,7 @@ Added media file slot actions (details in http://code.google.com/p/sws-extension
 +SWS/S&M: Clear media file slot...
 
 Cycle action editor:
-+Added "Consolidated undo points" tick box. On OSX (with basic cycle action editor), this option can be changed in the S&M.ini file, e.g. [Cyclactions]Undos=0
++Added "Consolidated undo points" tick box. On OS X (with basic cycle action editor), this option can be changed in the S&M.ini file, e.g. [Cyclactions]Undos=0
 +Action learn: now, SWS actions can be learned whatever are the displayed columns in the action list
 +Macro learn: a clear error message is displayed when the column "Custom ID" is not displayed in the action list
 
@@ -495,7 +503,7 @@ SWS list views:
 +Fixed SWS list views not obeying to sort requests (sometimes)
 +Faster sort when clicking on headers
 
-Issue 394: SWS Wait... actions don't work on OSX, removed from OSX release.
+Issue 394: SWS Wait... actions don't work on OS X, removed from OS X release.
 
 Added actions:
 +SWS: Set selected items length...
@@ -504,7 +512,7 @@ Added actions:
 +SWS/AW: Set selected tracks pan mode to stereo pan
 +SWS/AW: Set selected tracks pan mode to dual pan
 
-OSX: Now building with Xcode 3.2, please report any regression issues.
+OS X: Now building with Xcode 3.2, please report any regression issues.
 
 !v2.1.0 #13 (September 23, 2011)
 Issue 385: Fixed slow REAPER startup introduced in v2.1.0 #11
@@ -536,13 +544,13 @@ Live configs:
 
 Resources window:
 +Context menu (Issue 373): added menu items "Auto-save", "Auto-fill from project path" and "Auto-fill..."
-+OSX (Issue 373): multiple selection of slots
++OS X (Issue 373): multiple selection of slots
 +Text filter: added "Name" criteria, filtering by path now ignores trailing filenames
 
 Issue 371: Added action "SWS: Normalize items to overall peak RMS", adjusts all selected items by the same amount (eg adjusting volume of a split/comped line)
 
 !v2.1.0 #9 (September 7, 2011)
-Issue 367: OSX: Fixed issues after opening docked windows
+Issue 367: OS X: Fixed issues after opening docked windows
 
 !v2.1.0 #8 (September 4, 2011)
 Fixed crashing on undo reported in the main reaper forum thread
@@ -616,8 +624,8 @@ Issue 77/Issue 147: Added pan law to pan snapshots
 Offical SWS v2.1 release to coincide with Reaper v4!  Please note this version of SWS will work with both Reaper v3 and v4, but v3 support will be dropped in the future.  Please support Cockos and purchase a v4 license if you do not already own one.
 
 !v2.0.0 #35 (August 8, 2011)
-Issue 332: OSX: Fixed cycle action editor -- now replaced with a basic "create cycle action" modal dialog box. The dialog box can be opened from the actions list (there are 3 "create cycle action" actions) but not from the main "Extensions" menu like on Windows.
-Issue 335: OSX: Fixed crash when starting Reaper with Notes/Help window previously opened
+Issue 332: OS X: Fixed cycle action editor -- now replaced with a basic "create cycle action" modal dialog box. The dialog box can be opened from the actions list (there are 3 "create cycle action" actions) but not from the main "Extensions" menu like on Windows.
+Issue 335: OS X: Fixed crash when starting Reaper with Notes/Help window previously opened
 
 Added actions:
 +SWS/AW: Paste (pastes intelligently obeying "trim behind" mode to include empty space)
@@ -625,10 +633,10 @@ Added actions:
 +SWS/AW: Toggle click track mute (intelligently mutes the click track if it exists, or toggles the built in metronome if there is no click track)
 
 !v2.0.0 #34 (August 3, 2011)
-Fixed cycle actions window context menu on OSX
+Fixed cycle actions window context menu on OS X
 
 !v2.0.0 #33 (August 2, 2011)
-Fixed "stuck" cycle actions window on OSX
+Fixed "stuck" cycle actions window on OS X
 
 !v2.0.0 #31 (July 31, 2011)
 Added configurable slot actions (no slot by default, cutomizable in the S&M.ini file):
@@ -645,7 +653,7 @@ Removed useless action "SWS/S&M: Notes/Help - Disables auto updates"
 Issue 309: Add action "SWS: Open last project"
 Issue 310: Fixed Autorender not working in Reaper v4.0 beta
 Issue 315: Add action "SWS: Toggle between current and saved track selection"
-Issue 319: Fixed double-click renaming of fields on OSX
+Issue 319: Fixed double-click renaming of fields on OS X
 Issue 323: Fixed duplicated "Recall snapshot" actions
 Issue 326: Renamed "set/unset/toggle master send" actions to "master outputs", added toggles to 12
 
@@ -680,7 +688,7 @@ S&M Notes/help:
 
 Issue 308: Fixed "Select/load project template" actions
 Issue 317: Fixed Shorcircuit hang when set online with opened GUI (needs "BuggyPlugsSupport=1" in the S&M.ini file, full story http://code.google.com/p/sws-extension/issues/detail?id=317|here|)
-Tweaks: little unicode fixes, better message boxes on OSX..
+Tweaks: little unicode fixes, better message boxes on OS X..
 
 Added actions:
 +SWS/S&M: Open Resources window (project templates)
@@ -763,7 +771,7 @@ S&M Find updates:
 +Red "Not found!" message
 
 House cleaning:
-+S&M Live Configs: dropped OSX support for user FX presets (=> Windows OS only)
++S&M Live Configs: dropped OS X support for user FX presets (=> Windows OS only)
 +Removed "SWS/S&M: Close all routing windows"
 +Removed "SWS/S&M: Close all envelope windows"
 
@@ -793,7 +801,7 @@ Fixed ruler not moving edit cursor
 
 !v2.0.0 #22 (May 17, 2011)
 SWS Zoom updates:
-+Merged in Boreg's drag zoom plugin http://forum.cockos.com/showthread.php?t=42722.  Open SWS Zoom preferences (Extensions menu) to enable (OSX, too!)
++Merged in Boreg's drag zoom plugin http://forum.cockos.com/showthread.php?t=42722.  Open SWS Zoom preferences (Extensions menu) to enable (OS X, too!)
 +Issue 212: Added options "Move edit cursor when zooming in" and "Set time selection when zooming in"
 
 Snapshot improvements:
@@ -820,7 +828,7 @@ Fixed the following actions/dialog boxes (crash with v4 empty take lanes):
 +Xenakios/SWS: Switch item contents to random cue (preserve item length)
 
 House cleaning:
-+Dropped OSX support for all "SWS/S&M: Trigger preset" actions (=> Windows OS only)
++Dropped OS X support for all "SWS/S&M: Trigger preset" actions (=> Windows OS only)
 +Removed "Xenakios/SWS: Select last track of folder" ("not implemented" message, issue 284)
 +Removed duplicate "Xenakios/SWS: Toggle selected tracks visible in mixer"
 
@@ -993,8 +1001,8 @@ SWS/S&M: Move selected FX down in chain for selected tracks
 SWS/S&M: Select last FX for selected tracks
 
 !v2.0.0 #13 (February 24, 2011)
-Installers updated to include grooves (installed in Reaper resource path\Grooves on Win, manual install for OSX)
-Fixed sws-autocoloricon.ini reading on OSX
+Installers updated to include grooves (installed in Reaper resource path\Grooves on Win, manual install for OS X)
+Fixed sws-autocoloricon.ini reading on OS X
 S&M Find now supports v4 empty take lanes (fixes find in item notes, take names and take filenames)
 Fixed issue 262: pre-FX and post-fader S&M cue buss actions now obey send & HW output default prefs (i.e. prefrences > project > track/send defaults). Note: pre-fader busses still mimic the volume of selected tracks.
 Restored deprecated Xen's "Load track template n" (where n>10) actions
@@ -1032,7 +1040,7 @@ Fixed crash when running some of the S&M Resources window's slot actions (applyi
 Fixed corner case GUI refresh issue in S&M Resources window
 Issue 250: Added action "SWS: Toggle auto fades for new items"
 Added action "SWS: Toolbar mute toggle"
-Fixed directory scan for grooves on OSX
+Fixed directory scan for grooves on OS X
 
  !v2.0.0 #9 (February 4, 2011)
 Autorender:
@@ -1080,7 +1088,7 @@ Issue 50:  SWS: Create regions from sel item(s) named with take
 Issue 126: Warn about recording same inputs on multiple tracks: http://www.standingwaterstudios.com/shup/RecInputCheck.png Also added actions "SWS: Enable/Disable checking for duplicate inputs when recording." 
 Issue 244: Added "SWS: Set selected take(s) to custom color X" actions
 Issue 246: Added toolbar-status only action "SWS: Are any tracks soloed? [no-op, for toolbar]"
-Fixed using Windows generated reaconsole_customcommands.txt files on OSX.
+Fixed using Windows generated reaconsole_customcommands.txt files on OS X.
 
 !v2.0.0 #7 (January 29, 2011)
 NEW: Preliminary version of "Autorender."  Thanks, Shane!  For more information, run Autorender: show instructions from the File->Autorender menu (or actions).

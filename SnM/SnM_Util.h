@@ -30,6 +30,8 @@
 #ifndef _SNM_UTIL_H_
 #define _SNM_UTIL_H_
 
+#include "../MarkerList/MarkerListClass.h"
+
 const char* GetFileRelativePath(const char* _fn);
 const char* GetFileExtension(const char* _fn);
 void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz);
@@ -56,10 +58,10 @@ void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, co
 void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn, const char* _newIniFn = NULL);
 void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn = NULL);
 void SNM_UpgradeIniFiles();
-int FindMarkerRegion(double _pos, int _flags, int* _idOut = NULL);
+int FindMarkerRegion(double _pos, int _flags, bool _fromCache, int* _idOut = NULL);
 int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn);
 int GetMarkerRegionIdFromIndex(int _idx);
-int GetMarkerRegionIndexFromId(int _id);
+int GetMarkerRegionIndexFromId(int _id, bool _fromCache = false);
 int GetMarkerRegionNumFromId(int _id);
 bool IsRegion(int _id);
 int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool _wantsName);
@@ -77,5 +79,14 @@ bool LearnAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSe
 bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
 WDL_UINT64 FNV64(WDL_UINT64 h, const unsigned char* data, int sz);
 bool FNV64(const char* _strIn, char* _strOut);
+
+class MarkerRegion : public MarkerItem {
+public:
+	MarkerRegion(bool _bReg, double _dPos, double _dRegEnd, const char* _cName, int _num, int _color)
+		: MarkerItem(_bReg, _dPos, _dRegEnd, _cName, _num, _color) { m_id = MakeMarkerRegionId(_num, _bReg); }
+	int GetId() { return m_id; }
+protected:
+	int m_id;
+};
 
 #endif

@@ -31,6 +31,66 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// General project helpers
+///////////////////////////////////////////////////////////////////////////////
+
+// note: works with time sig markers too
+double GetProjectLength()
+{
+	double prjlen = 0.0;
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+			for (int j=0; j < GetTrackNumMediaItems(tr); j++)
+				if (MediaItem* item = GetTrackMediaItem(tr,j))
+				{
+					double pos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+					double len = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
+					if ((pos+len)>prjlen)
+						prjlen = pos+len;
+				}
+	return prjlen;
+}
+
+// note: callers must surround this func with Undo_BeginBlock/Undo_EndBlock
+bool InsertSpace(const char* _undoTitle, double _pos, double _len)
+{
+	if (_pos >=0.0 && _len > 0.0 && _pos <GetProjectLength())
+	{
+		if (_undoTitle)
+			Undo_BeginBlock2(NULL);
+
+		double timeSel1, timeSel2, d=_pos+_len;
+		GetSet_LoopTimeRange2(NULL, false, false, &timeSel1, &timeSel2, false);
+		GetSet_LoopTimeRange2(NULL, true, false, &_pos, &d, false);
+		Main_OnCommand(40200, 0); // insert space at time sel
+
+		// restore time sel, enlarge it if needed (mimic native behavior with regions)
+		if (timeSel1>_pos) timeSel1+=_len;
+		if (_pos<timeSel2) timeSel2+=_len;
+		GetSet_LoopTimeRange2(NULL, true, false, &timeSel1, &timeSel2, false);
+
+		if (_undoTitle)
+			Undo_EndBlock2(NULL, _undoTitle, UNDO_STATE_ALL);
+		return true;
+	}
+	return false;
+}
+
+void OpenProjectPathInExplorerFinder(COMMAND_T*)
+{
+	char path[BUFFER_SIZE] = "";
+	GetProjectPath(path, BUFFER_SIZE);
+	if (*path)
+	{
+		if (char* p = strrchr(path, PATH_SLASH_CHAR)) {
+			*(p+1) = '\0'; // ShellExecute() is KO otherwise..
+			ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
+		}
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Select project ("MIDI CC absolute only" actions)
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -205,20 +265,3 @@ void loadOrSelectNextPreviousProject(COMMAND_T* _ct)
 	}
 }
 
-
-///////////////////////////////////////////////////////////////////////////////
-// Other
-///////////////////////////////////////////////////////////////////////////////
-
-void openProjectPathInExplorerFinder(COMMAND_T* _ct)
-{
-	char path[BUFFER_SIZE] = "";
-	GetProjectPath(path, BUFFER_SIZE);
-	if (*path)
-	{
-		if (char* p = strrchr(path, PATH_SLASH_CHAR)) {
-			*(p+1) = '\0'; // ShellExecute() is KO otherwise..
-			ShellExecute(NULL, "open", path, NULL, NULL, SW_SHOWNORMAL);
-		}
-	}
-}

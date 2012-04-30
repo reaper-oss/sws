@@ -68,7 +68,7 @@ void SWS_MarkerListView::GetItemText(SWS_ListItem* item, int iCol, char* str, in
 			_snprintf(str, iStrMax, "%s", mi->IsRegion() ? "Region" : "Marker");
 			break;
 		case 2:
-			_snprintf(str, iStrMax, "%d", mi->GetID());
+			_snprintf(str, iStrMax, "%d", mi->GetNum());
 			break;
 		case 3:
 			lstrcpyn(str, mi->GetName(), iStrMax);
@@ -161,9 +161,9 @@ int SWS_MarkerListView::OnItemSort(SWS_ListItem* item1, SWS_ListItem* item2)
 	}
 	else if (abs(m_iSortCol) == 3)
 	{
-		if (mi1->GetID() > mi2->GetID())
+		if (mi1->GetNum() > mi2->GetNum())
 			iRet = 1;
-		else if (mi1->GetID() < mi2->GetID())
+		else if (mi1->GetNum() < mi2->GetNum())
 			iRet = -1;
 		if (m_iSortCol < 0)
 			return -iRet;
@@ -306,7 +306,7 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				int i = 0;
 				MarkerItem* item;
 				while ((item = (MarkerItem*)m_pLists.Get(0)->EnumSelected(&i)))
-					DeleteProjectMarker(NULL, item->GetID(), item->IsRegion());
+					DeleteProjectMarker(NULL, item->GetNum(), item->IsRegion());
 				Undo_EndBlock("Delete marker(s)", UNDO_STATE_MISCCFG);
 				Update();
 				break;

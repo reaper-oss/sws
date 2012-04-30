@@ -654,7 +654,7 @@ void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch,
 
 int ParsePatchCore(
 	bool _write,        // optimization flag (if false: no re-copy)
-	int _mode,          // can be <0 for custom modes (usefull for inheritance)
+	int _mode,          // can be <0 for custom modes (useful for inheritance)
 	int _depth,         // usually 1-based but 0 is allowed (e.g. for .rfxchain files that do not start with "<...")
 	const char* _expectedParent, 
 	const char* _keyWord, 

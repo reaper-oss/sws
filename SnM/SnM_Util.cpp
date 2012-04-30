@@ -103,7 +103,7 @@ bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg)
 	return !ko;
 }
 
-// the API function file_exists() is a bit different, e.g. it returns false for folder paths, etc..
+// the API function file_exists() is a bit different, it returns false for folder paths, etc..
 bool FileExistsErrMsg(const char* _fn, bool _errMsg)
 {
 	bool exists = FileExists(_fn);
@@ -165,9 +165,9 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 // get a short filename from a full resource path
 // ex: C:\Documents and Settings\<user>\Application Data\REAPER\FXChains\EQ\JS\test.RfxChain -> EQ\JS\test.RfxChain
 // notes: 
-// - *must* work with non existing files (i.e. just some string processing here)
-// - *must* be nop for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
-// - *must* be nop for short resource paths 
+// - *must* work with non existing files (just some string processing here)
+// - *must* be no-op for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
+// - *must* be no-op for short resource paths 
 void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _fnSize)
 {
 	if (_resSubDir && *_resSubDir && _fullFn && *_fullFn)
@@ -187,8 +187,8 @@ void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _sh
 // ex: EQ\JS\test.RfxChain -> C:\Documents and Settings\<user>\Application Data\REAPER\FXChains\EQ\JS\test.RfxChain
 // notes: 
 // - work with non existing files
-// - nop for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
-// - nop for full resource paths 
+// - no-op for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
+// - no-op for full resource paths 
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fnSize)
 {
 	if (_shortFn && _fullFn) 
@@ -352,7 +352,7 @@ void GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 
 // fills a list of filenames for the desired extension
 // if _ext == NULL or '\0', look for media files
-// note: it is up to the caller to free _files (e.g. WDL_PtrList_DeleteOnDestroy)
+// note: it is up to the caller to free _files (WDL_PtrList_DeleteOnDestroy)
 void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs)
 {
 	WDL_DirScan ds;
@@ -481,12 +481,12 @@ void SNM_UpgradeIniFiles()
 {
 	g_SNMIniFileVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNMIniFn.Get());
 
-	if (g_SNMIniFileVersion < 1) // i.e. sws version < v2.1.0 #18
+	if (g_SNMIniFileVersion < 1) // < v2.1.0 #18
 	{
 		// upgrade deprecated section names 
 		UpdatePrivateProfileSection("FXCHAIN", "FXChains", g_SNMIniFn.Get());
 		UpdatePrivateProfileSection("FXCHAIN_VIEW", "RESOURCE_VIEW", g_SNMIniFn.Get());
-		// upgrade deprecated key names (automatically generated now..)
+		// upgrade deprecated key names (automatically generated now)
 		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClick_Type", "DblClickFXChains", g_SNMIniFn.Get());
 		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Tr_Template", "DblClickTrackTemplates", g_SNMIniFn.Get());
 		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Prj_Template", "DblClickProjectTemplates", g_SNMIniFn.Get());
@@ -497,7 +497,7 @@ void SNM_UpgradeIniFiles()
 		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirPrjTemplate", "AutoSaveDirProjectTemplates", g_SNMIniFn.Get());
 		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirPrjTemplate", "AutoFillDirProjectTemplates", g_SNMIniFn.Get());
 	}
-	if (g_SNMIniFileVersion < 2) // i.e. sws version < v2.1.0 #21
+	if (g_SNMIniFileVersion < 2) // < v2.1.0 #21
 	{
 		// move cycle actions to a new dedicated file (+ make backup if it already exists)
 		WDL_FastString fn;
@@ -508,12 +508,12 @@ void SNM_UpgradeIniFiles()
 		UpdatePrivateProfileSection("ME_LIST_CYCLACTIONS", "ME_List_Cyclactions", g_SNMIniFn.Get(), g_SNMCyclactionIniFn.Get());
 		UpdatePrivateProfileSection("ME_PIANO_CYCLACTIONS", "ME_Piano_Cyclactions", g_SNMIniFn.Get(), g_SNMCyclactionIniFn.Get());
 	}
-	if (g_SNMIniFileVersion < 3) // i.e. sws version < v2.1.0 #22
+	if (g_SNMIniFileVersion < 3) // < v2.1.0 #22
 	{
 		WritePrivateProfileString("RESOURCE_VIEW", "DblClick_To", NULL, g_SNMIniFn.Get()); // remove key
 		UpdatePrivateProfileString("RESOURCE_VIEW", "FilterByPath", "Filter", g_SNMIniFn.Get());
 	}
-	if (g_SNMIniFileVersion < 4) // i.e. sws version < v2.2.0
+	if (g_SNMIniFileVersion < 4) // < v2.2.0
 	{
 		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", "AutoSaveTrTemplateFlags", g_SNMIniFn.Get());
 #ifdef _WIN32
@@ -528,8 +528,10 @@ void SNM_UpgradeIniFiles()
 		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClickdata/track_icons", "DblClickTrack_icons", g_SNMIniFn.Get());
 #endif
 	}
-	if (g_SNMIniFileVersion < 5)
+	if (g_SNMIniFileVersion < 5) // < v2.2.0 #3
 		UpdatePrivateProfileSection("LAST_CUEBUS", "CueBuss1", g_SNMIniFn.Get());
+	if (g_SNMIniFileVersion < 6) // < vv2.2.0 #6
+		WritePrivateProfileStruct("RegionPlaylist", NULL, NULL, 0, g_SNMIniFn.Get()); // flush section
 
 	g_SNMIniFileVersion = SNM_INI_FILE_VERSION;
 }
@@ -541,22 +543,25 @@ void SNM_UpgradeIniFiles()
 
 // returns the 1st marker or region index found at _pos
 // note: relies on markers & regions indexed by positions
-// _flags: &1=marker, &2=region
-int FindMarkerRegion(double _pos, int _flags, int* _idOut)
+// _flags: &SNM_MARKER_MASK=marker, &SNM_REGION_MASK=region
+int FindMarkerRegion(double _pos, int _flags, bool _fromCache, int* _idOut)
 {
 	if (_idOut)
 		*_idOut = -1;
 
+	int (*EnumMarkerRegions)(ReaProject*, int, bool*, double*, double*, char**, int*, int*);
+	EnumMarkerRegions = _fromCache ? EnumMarkerRegionsCache : EnumProjectMarkers3;
+
 	int idx=-1, x=0, lastx=0, num; double dPos, dEnd; bool isRgn;
-	while (x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, &num))
+	while (x = EnumMarkerRegions(NULL, x, &isRgn, &dPos, &dEnd, NULL, &num, NULL))
 	{
-		if ((!isRgn && _flags&1) || (isRgn && _flags&2))
+		if ((!isRgn && _flags&SNM_MARKER_MASK) || (isRgn && _flags&SNM_REGION_MASK))
 		{
 			if (_pos >= dPos && (!isRgn || (isRgn && _pos <= dEnd)))
 			{
 				bool isRgn2;
-				if (EnumProjectMarkers2(NULL, x, &isRgn2, &dPos, NULL, NULL, NULL) &&
-					((!isRgn2 && _flags&1) || (isRgn2 && _flags&2)))
+				if (EnumMarkerRegions(NULL, x, &isRgn2, &dPos, NULL, NULL, NULL, NULL) &&
+					((!isRgn2 && _flags&SNM_MARKER_MASK) || (isRgn2 && _flags&SNM_REGION_MASK)))
 				{
 					if (_pos < dPos) {
 						idx = lastx;
@@ -597,13 +602,16 @@ int GetMarkerRegionIdFromIndex(int _idx)
 	return -1;
 }
 
-int GetMarkerRegionIndexFromId(int _id)
+int GetMarkerRegionIndexFromId(int _id, bool _fromCache)
 {
 	if (_id > 0)
 	{
+		int (*EnumMarkerRegions)(ReaProject*, int, bool*, double*, double*, char**, int*, int*);
+		EnumMarkerRegions = _fromCache ? EnumMarkerRegionsCache : EnumProjectMarkers3;
+
 		int x=0, lastx=0, num=(_id&0x3FFFFFFF), num2; 
 		bool isRgn = IsRegion(_id), isRgn2;
-		while (x = EnumProjectMarkers2(NULL, x, &isRgn2, NULL, NULL, NULL, &num2)) {
+		while (x = EnumMarkerRegionsCache(NULL, x, &isRgn2, NULL, NULL, NULL, &num2, NULL)) {
 			if (num == num2 && isRgn == isRgn2)
 				return lastx;
 			lastx=x;

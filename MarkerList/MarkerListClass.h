@@ -32,7 +32,7 @@ class MarkerItem
 public:
 	MarkerItem(bool bReg, double dPos, double dRegEnd, const char* cName, int id, int color);
 	MarkerItem(LineParser* lp);
-	~MarkerItem();
+	~MarkerItem() {}
 	char* ItemString(char* str, int iSize);
 	void SetFromString(LineParser* lp);
 	bool Compare(bool bReg, double dPos, double dRegEnd, const char* cName, int id, int color);
@@ -41,25 +41,25 @@ public:
 	void UpdateProject();
 
 	// Member access	
-	const char* GetName() { return m_cName ? m_cName : ""; }
-	void SetName(const char* newname);
+	char* GetName() { return m_name.Get(); }
+	void SetName(const char* newname) { if (!newname || !*newname) m_name.Set(""); else m_name.Set(newname); }
 	double GetPos() { return m_dPos; }
 	void SetPos(double dPos) { m_dPos = dPos; }
 	double GetRegEnd() { return m_dRegEnd; }
 	void SetRegEnd(double dEnd) { m_dRegEnd = dEnd; }
 	bool IsRegion() { return m_bReg; }
 	void SetReg(bool bIsReg) {  m_bReg = bIsReg; }
-	int GetID() { return m_id; }
-	void SetID(int id) { m_id = id; }
+	int GetNum() { return m_num; }
+	void SetNum(int num) { m_num = num; }
 	int GetColor() { return m_iColor; }
 	void SetColor(int iColor) { m_iColor = iColor; }
 
-private:
-	char* m_cName;
+protected:
+	WDL_String m_name;
 	double m_dPos;
 	bool m_bReg;
 	double m_dRegEnd;
-	int m_id;
+	int m_num;
 	int m_iColor;
 };
 

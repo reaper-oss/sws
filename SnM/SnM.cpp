@@ -270,7 +270,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Project loader/selecter: next (cycle)" }, "S&M_PRJ_LOADER_NEXT", loadOrSelectNextPreviousProject, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Project loader/selecter: previous (cycle)" }, "S&M_PRJ_LOADER_PREV", loadOrSelectNextPreviousProject, NULL, -1},
 
-	{ { DEFACCEL, "SWS/S&M: Open project path in explorer/finder" }, "S&M_OPEN_PRJ_PATH", openProjectPathInExplorerFinder, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open project path in explorer/finder" }, "S&M_OPEN_PRJ_PATH", OpenProjectPathInExplorerFinder, NULL, },
 	
 	// Media file slots -------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (media files)" }, "S&M_SHOW_RESVIEW_MEDIA", OpenResourceView, NULL, SNM_SLOT_MEDIA, IsResourceViewDisplayed},
@@ -367,7 +367,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// Split ------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Split selected items at edit cursor (MIDI) or prior zero crossing (audio)" }, "S&M_SPLIT1", splitMidiAudio, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Split selected items at time selection, edit cursor (MIDI) or prior zero crossing (audio)" }, "S&M_SPLIT2", smartSplitMidiAudio, NULL, },
-	{ { DEFACCEL, "SWS/gofer: Split selected items at mouse cursor (obey snapping)" }, "S&M_SPLIT10", goferSplitSelectedItems, NULL, },//JFB!! to check: issue discussed in forums AFAIR
+	{ { DEFACCEL, "SWS/gofer: Split selected items at mouse cursor (obey snapping)" }, "S&M_SPLIT10", goferSplitSelectedItems, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Split and select items in region near cursor" }, "S&M_SPLIT11", SplitSelectAllItemsInRegion, NULL, },
 
 	// ME ---------------------------------------------------------------------
@@ -481,10 +481,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// Region playlist --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_SHOW_RGN_PLAYLIST", OpenRegionPlaylist, NULL, NULL, IsRegionPlaylistDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist" }, "S&M_CROP_RGN_PLAYLIST1", CropProjectToPlaylist, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist (new project tab)" }, "S&M_CROP_RGN_PLAYLIST2", CropProjectToPlaylist, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Region Playlist - Append playlist to project" }, "S&M_APPEND_RGN_PLAYLIST", CropProjectToPlaylist, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Region Playlist - Paste playlist at edit cursor" }, "S&M_PASTE_RGN_PLAYLIST", CropProjectToPlaylist, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist" }, "S&M_CROP_RGN_PLAYLIST1", AppendPasteCropPlaylist, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist (new project tab)" }, "S&M_CROP_RGN_PLAYLIST2", AppendPasteCropPlaylist, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Append playlist to project" }, "S&M_APPEND_RGN_PLAYLIST", AppendPasteCropPlaylist, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Paste playlist at edit cursor" }, "S&M_PASTE_RGN_PLAYLIST", AppendPasteCropPlaylist, NULL, 3},
 
 	// Other, misc ------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageView, NULL, },
@@ -500,12 +500,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Dump action list (w/o SWS extension)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (SWS extension only)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 4},
 #endif
-	{ {}, LAST_COMMAND, }, // denote end of table
-};
+
 //!WANT_LOCALIZE_1ST_STRING_END
 
-
-// moved for localization reasons..
+	// Deprecated, unreleased, etc... -----------------------------------------
 #ifdef _SNM_MISC
 	//JFB TODO: release as `hidden` dynamic actions (but ct->user needs to be 0-based first)
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 1) online/offline for selected tracks" }, "S&M_FXOFFEXCPT1", toggleExceptFXOfflineSelectedTracks, NULL, 1, FakeIsToggleAction},
@@ -558,6 +556,8 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle show take pan envelope" }, "S&M_TAKEENV8", showHideTakePanEnvelope, NULL, -1, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle show take mute envelope" }, "S&M_TAKEENV9", showHideTakeMuteEnvelope, NULL, -1, FakeIsToggleAction},
 #endif
+	{ {}, LAST_COMMAND, }, // denote end of table
+};
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1070,9 +1070,10 @@ void DeleteScheduledJob(int _id)
 // SNM_MarkerRegionSubscriber (managed in SnMCSurfRun())
 ///////////////////////////////////////////////////////////////////////////////
 
+static void DeleteMkrRgnPtr(MarkerRegion* _p) { DELETE_NULL(_p); }
 WDL_PtrList<SNM_MarkerRegionSubscriber> g_mkrRgnSubscribers;
-SWS_Mutex g_mkrRgnSubscribersMutex;
-int g_markerCount=0, g_regionCount=0;
+WDL_IntKeyedArray<MarkerRegion*> g_mkrRgnCache(DeleteMkrRgnPtr);
+SWS_Mutex g_mkrRgnSubscribersMutex, g_mkrRgnCacheMutex;
 
 bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
 	if (_sub) {
@@ -1097,27 +1098,64 @@ bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
 
 // returns an update mask: 0 if nothing changed, &SNM_MARKER_MASK: marker change, &SNM_REGION_MASK: region change
 // note: just detect project time mode updates + discrete markers/regions updates (that's enough atm)
-int MarkerRegionChanged()
+int UpdateMarkerRegionCache()
 {
-	static int prevTimemode = *(int*)GetConfigVar("projtimemode");
-	if (int* timemode = (int*)GetConfigVar("projtimemode"))
-		if (*timemode != prevTimemode) {
-			prevTimemode = *timemode;
-			return SNM_MARKER_MASK|SNM_REGION_MASK;
+	int updateFlags=0;
+	{
+		SWS_SectionLock lock(&g_mkrRgnCacheMutex);
+
+		// added/updated markers/regions?
+		int x=0, lastx=0, num, col; double pos, rgnend; char* name; bool isRgn;
+		while (x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &rgnend, &name, &num, &col))
+		{
+			MarkerRegion* m = g_mkrRgnCache.Get(lastx);
+			if (!m || !g_mkrRgnCache.Get(lastx)->Compare(isRgn, pos, rgnend, name, num, col))
+			{
+				if (m) g_mkrRgnCache.Delete(lastx);
+				g_mkrRgnCache.Insert(lastx, new MarkerRegion(isRgn, pos, rgnend, name, num, col));
+				updateFlags |= (isRgn ? SNM_REGION_MASK : SNM_MARKER_MASK);
+			}
+			lastx=x;
 		}
+		// removed markers/regions?
+		for (int i=g_mkrRgnCache.GetSize(); i>=0; i--) {
+			MarkerRegion* m = g_mkrRgnCache.Enumerate(i, &x, NULL);
+			if (m && !EnumProjectMarkers3(NULL, x, NULL, NULL, NULL, NULL, NULL, NULL)) {
+				updateFlags |= (m->IsRegion() ? SNM_REGION_MASK : SNM_MARKER_MASK);
+				g_mkrRgnCache.Delete(x);
+			}
+		}
+	}
 
-	int x=0, markerCount=0, regionCount=0; bool isRgn;
-	while (x = EnumProjectMarkers2(NULL, x, &isRgn, NULL, NULL, NULL, NULL))
-		if (isRgn) regionCount++;
-		else markerCount++;
+	// project time mode update?
+	static int prevTimemode = *(int*)GetConfigVar("projtimemode");
+	if (!updateFlags)
+		if (int* timemode = (int*)GetConfigVar("projtimemode"))
+			if (*timemode != prevTimemode) {
+				prevTimemode = *timemode;
+				return SNM_MARKER_MASK|SNM_REGION_MASK;
+			}
 
-	int updateFlags = (markerCount!=g_markerCount ? SNM_MARKER_MASK : 0);
-	updateFlags |= (regionCount!=g_regionCount ? SNM_REGION_MASK : 0);
-	g_regionCount = regionCount;
-	g_markerCount = markerCount;
 	return updateFlags;
 }
 
+int EnumMarkerRegionsCache(ReaProject* _proj, int _idx, bool* _isrgn, double* _pos, double* _rgnend, char** _name, int* _num, int* _color) 
+{
+	SWS_SectionLock lock(&g_mkrRgnCacheMutex);
+	if (MarkerRegion* m = g_mkrRgnCache.Get(_idx))
+	{
+		if (_isrgn) *_isrgn = m->IsRegion();
+		if (_pos) *_pos = m->GetPos();
+		if (_rgnend) *_rgnend = m->GetRegEnd();
+		if (_name) *_name = m->GetName();
+		if (_num) *_num = m->GetNum();
+		if (_color) *_color = m->GetColor();
+		int x, i = g_mkrRgnCache.GetIdx(_idx);
+		if (i>=0 && g_mkrRgnCache.Enumerate(i+1, &x, NULL))
+			return x;
+	}
+	return 0;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // IReaperControlSurface callbacks
@@ -1159,7 +1197,7 @@ void SnMCSurfRun()
 
 		SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
 		if (int sz=g_mkrRgnSubscribers.GetSize())
-			if (int updateFlags = MarkerRegionChanged())
+			if (int updateFlags = UpdateMarkerRegionCache())
 				for (int i=sz-1; i >=0; i--)
 					g_mkrRgnSubscribers.Get(i)->NotifyMarkerRegionUpdate(updateFlags);
 	}

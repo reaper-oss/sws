@@ -129,13 +129,13 @@ public:
 	void Perform();
 };
 
-double GetPlayListLength();
+double GetPlayListLength(SNM_Playlist* _playlist);
 void PlaylistRun();
 void PlaylistPlay(int _playlistId, bool _errMsg);
 void PlaylistPlay(COMMAND_T*);
 void PlaylistStopped();
-void CropProjectToPlaylist(int _flags);
-void CropProjectToPlaylist(COMMAND_T*);
+void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode);
+void AppendPasteCropPlaylist(COMMAND_T*);
 int RegionPlaylistInit();
 void RegionPlaylistExit();
 void OpenRegionPlaylist(COMMAND_T*);

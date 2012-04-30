@@ -30,14 +30,6 @@
 #include "stdafx.h" 
 #include "SnM.h"
 
-/*JFB
-reminders:
-- Parse(-1) >= 0, ParsePatch(-1) > 0
-- requires check on depth: 
-  NotifyStartChunk(), NotifyEndChunk(), NotifyStartElement(), NotifyEndElement(), NotifySkippedSubChunk()
-- AppendFormatted(n+2, etc..); //+2 for OSX
-*/
-
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_ChunkIndenter

@@ -50,8 +50,7 @@ char g_cyclactionSections[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN]; /
 static SNM_CyclactionWnd* g_pCyclactionWnd = NULL;
 bool g_undos = true;
 
-// for subbtle "recursive cycle action" cases
-// (e.g. a cycle action that calls a macro that calls a cycle action..)
+// for subbtle "recursive cycle action" cases (e.g. a cycle action that calls a macro that calls a cycle action..)
 static bool g_bReentrancyCheck = false;
 
 class ScheduledActions : public SNM_ScheduledJob
@@ -102,7 +101,7 @@ public:
 void RunCycleAction(int _section, COMMAND_T* _ct)
 {
 	int cycleId = (int)_ct->user;
-	Cyclaction* action = g_cyclactions[_section].Get(cycleId-1); // cycle action id is 1-based (for user display) !
+	Cyclaction* action = g_cyclactions[_section].Get(cycleId-1); // cycle action id is 1-based (for user display)
 	if (!action)
 		return;
 
@@ -158,9 +157,8 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 
 	if (actions.GetSize() && !g_bReentrancyCheck)
 	{
-		// note: I "skip whilst respecting" (!) the SWS reentrance test - see hookCommandProc() in sws_entension.cpp -
-		// thanks to scheduled actions that are performed a 50 ms later (or so)
-		// we include macros too as they can contain SWS stuff..
+		// note: I "skip whilst respecting" (!) the SWS reentrance test (see hookCommandProc() in sws_entension.cpp)
+		// thanks to ScheduledJobs that are performed 50 ms later (or so), this includes macros too as they can contain SWS stuff
 		ScheduledActions* job = new ScheduledActions(50, _section, cycleId, name.Get(), &actions);
 		if (hasCustomIds)
 			AddOrReplaceScheduledJob(job);
@@ -265,7 +263,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 	return true;
 }
 
-// return true if cyclaction added (but not necesary registered)
+// return true if cyclaction added (not necesary registered though)
 bool CreateCyclaction(int _section, const char* _actionStr, WDL_FastString* _errMsg, bool _checkCmdIds)
 {
 	if (CheckEditableCyclaction(_actionStr, _errMsg))
@@ -282,7 +280,7 @@ bool CreateCyclaction(int _section, const char* _actionStr, WDL_FastString* _err
 
 // _cmdId: id to re-use or 0 to ask for a new cmd id
 // returns the cmd id, or 0 if failed
-// note: we don't use Cyclaction* as prm 'cause of dynamic action renameing
+// note: no Cyclaction* prm because of dynamic action renaming
 int RegisterCyclation(const char* _name, bool _toggle, int _section, int _cycleId, int _cmdId)
 {
 	if (!SWSGetCommandID(!_section ? RunMainCyclaction : _section == 1 ? RunMEListCyclaction : RunMEPianoCyclaction, _cycleId))
@@ -308,10 +306,10 @@ void FlushCyclactions(int _section)
 	g_cyclactions[_section].EmptySafe(true);
 }
 
-// _cyclactions: NULL adds/register to main model, otherwise just imports into _cyclactions
+// _cyclactions: NULL adds/registers to the main model, otherwise just imports into _cyclactions
 // _section or -1 for all sections
 // _iniFn: NULL => S&M.ini
-// _checkCmdIds: false to skip some checks - usefull when loading cycle actions (but not when creating 
+// _checkCmdIds: false to skip some checks - useful when loading cycle actions (but not when creating 
 //               them with the editor) because referenced actions may not have been registered yet..
 // remark: undo pref ignored, only loads cycle actions so that the user keeps it's own undo pref
 void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)

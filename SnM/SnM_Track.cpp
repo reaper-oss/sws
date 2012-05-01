@@ -553,6 +553,19 @@ void toggleArmTrackEnv(COMMAND_T* _ct)
 	}
 }
 
+void RemoveAllEnvsSelTracks(COMMAND_T* _ct)
+{
+	bool updated = false;
+	for (int i=0; i <= GetNumTracks(); i++) // include master
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {
+				SNM_EnvRemover p(tr);
+				updated |= p.RemoveEnvelopes();
+		}
+	if (updated)
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Toolbar track env. write mode toggle
@@ -715,11 +728,10 @@ bool replacePasteItemsFromTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltI
 		if (!_p)
 			DELETE_NULL(p);
 
-		// paste items relative to cursor
-		// the track has been patched => move new items by edit cursor
+		// move new items by edit cursor
 		if (offsOpt && *offsOpt)
 			if (int itemCount = GetTrackNumMediaItems(_tr))
-			{					
+			{
 				double cursorPos = GetCursorPositionEx(NULL);
 				for (int j=0; j < itemCount; j++)
 					if (MediaItem* item = GetTrackMediaItem(_tr, j))

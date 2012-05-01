@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "SnM.h"
+#include "../Prompt.h"
 #include "../reaper/localize.h"
 
 
@@ -52,7 +53,7 @@ double GetProjectLength()
 }
 
 // note: callers must surround this func with Undo_BeginBlock/Undo_EndBlock
-bool InsertSpace(const char* _undoTitle, double _pos, double _len)
+bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 {
 	if (_pos >=0.0 && _len > 0.0 && _pos <GetProjectLength())
 	{
@@ -74,6 +75,36 @@ bool InsertSpace(const char* _undoTitle, double _pos, double _len)
 		return true;
 	}
 	return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+void InsertSilence(COMMAND_T* _ct)
+{
+	char val[64]=""; int modeoverride;
+	switch ((int)_ct->user)
+	{
+		case 0: // s
+			modeoverride = 3;
+			lstrcpyn(val, "10.0", 64);
+			break;
+		case 1: // meas.beat
+			modeoverride = 2;
+			lstrcpyn(val, "1.0", 64);
+			break;
+		case 2: // smp
+			modeoverride = 4;
+			lstrcpyn(val, "512", 64);
+			break;
+	}
+	if (PromptUserForString(GetMainHwnd(), SWS_CMD_SHORTNAME(_ct), val, 64) && *val) {
+		double t = parse_timestr_len(val, 0.0, modeoverride);
+		if (t>0.0)
+			InsertSilence(SWS_CMD_SHORTNAME(_ct), GetCursorPositionEx(NULL), t); // includes undo point
+		else
+			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid input!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+	}
 }
 
 void OpenProjectPathInExplorerFinder(COMMAND_T*)

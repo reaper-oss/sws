@@ -1,7 +1,14 @@
 Region Playlist
-+"Paste playlist at edit cursor" is now inserting playlists (rather than "pasting over"). Demo: http://stash.reaper.fm/12421/S%26M%20Region%20Playlist%20-%20Paste%20plalist%20at%20edit%20cursor.gif|here|
++Fixed append/crop/paste playlist actions and commands
++"Paste playlist at edit cursor" can now insert playlists in the middle of projects (rather than "pasting over"). Demo: http://stash.reaper.fm/12421/S%26M%20Region%20Playlist%20-%20Paste%20plalist%20at%20edit%20cursor.gif|here|
 +Context menu: added commands to append/paste selected regions
 +Better list view refresh (new region lengths, renamed regions, etc..)
+
+Added actions
++SWS/S&M: Remove all envelopes for selected tracks - works with frozen tracks (untouched), master track, fx param envelopes, etc..
++SWS/S&M: Insert silence (seconds)
++SWS/S&M: Insert silence (measures.beats)
++SWS/S&M: Insert silence (samples)
 
 Other
 +Fixed handling of midi events which precede the item start position by resizing the take and adjusting the take offset

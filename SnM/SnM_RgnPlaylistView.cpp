@@ -997,7 +997,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 			}
 			updated = true;
 			Undo_BeginBlock2(NULL);
-			InsertSpace(NULL, startPos, GetPlayListLength(_playlist));
+			InsertSilence(NULL, startPos, GetPlayListLength(_playlist));
 		}
 	}
 

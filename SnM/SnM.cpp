@@ -271,6 +271,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Project loader/selecter: previous (cycle)" }, "S&M_PRJ_LOADER_PREV", loadOrSelectNextPreviousProject, NULL, -1},
 
 	{ { DEFACCEL, "SWS/S&M: Open project path in explorer/finder" }, "S&M_OPEN_PRJ_PATH", OpenProjectPathInExplorerFinder, NULL, },
+
+	{ { DEFACCEL, "SWS/S&M: Insert silence (seconds)" }, "S&M_INSERT_SILENCE_S", InsertSilence, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Insert silence (measures.beats)" }, "S&M_INSERT_SILENCE_MB", InsertSilence, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Insert silence (samples)" }, "S&M_INSERT_SILENCE_SMP", InsertSilence, NULL, 2},
 	
 	// Media file slots -------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (media files)" }, "S&M_SHOW_RESVIEW_MEDIA", OpenResourceView, NULL, SNM_SLOT_MEDIA, IsResourceViewDisplayed},
@@ -404,6 +408,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Hide take pitch envelope" }, "S&M_TAKEENV11", showHideTakePitchEnvelope, NULL, 0},
 
 	// Track envelopes --------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Remove all envelopes for selected tracks" }, "S&M_REMOVE_ALLENVS", RemoveAllEnvsSelTracks, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Toggle arming of all active envelopes for selected tracks" }, "S&M_TGLARMALLENVS", toggleArmTrackEnv, NULL, 0, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Arm all active envelopes for selected tracks" }, "S&M_ARMALLENVS", toggleArmTrackEnv, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Disarm all active envelopes for selected tracks" }, "S&M_DISARMALLENVS", toggleArmTrackEnv, NULL, 2},

@@ -57,6 +57,7 @@ int trackEnvelopesCount();
 const char* trackEnvelope(int _i);
 bool trackEnvelopesLookup(const char* _str);
 void toggleArmTrackEnv(COMMAND_T*);
+void RemoveAllEnvsSelTracks(COMMAND_T*);
 void toggleWriteEnvExists(COMMAND_T*);
 bool writeEnvExists(COMMAND_T*);
 MediaTrack* SNM_GetTrack(ReaProject* _proj, int _idx);

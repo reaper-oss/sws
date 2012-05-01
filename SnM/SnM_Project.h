@@ -31,7 +31,8 @@
 #define _SNM_PROJECT_H_
 
 double GetProjectLength();
-bool InsertSpace(const char* _undoTitle, double _pos, double _len);
+bool InsertSilence(const char* _undoTitle, double _pos, double _len);
+void InsertSilence(COMMAND_T*);
 void OpenProjectPathInExplorerFinder(COMMAND_T* _ct = NULL);
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
 void loadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab);

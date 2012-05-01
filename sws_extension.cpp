@@ -621,6 +621,7 @@ extern "C"
 		IMPAPI(OnPlayButton);
 		IMPAPI(OnStopButton);
 		IMPAPI(NamedCommandLookup);
+		IMPAPI(parse_timestr_len);
 		IMPAPI(parse_timestr_pos);
 		IMPAPI(PCM_Sink_Create);
 		IMPAPI(PCM_Source_CreateFromFile);

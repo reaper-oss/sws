@@ -80,28 +80,26 @@ bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+char g_lastSilenceVal[3][64] = {"10.0", "1.0", "512"};
+
 void InsertSilence(COMMAND_T* _ct)
 {
-	char val[64]=""; int modeoverride;
-	switch ((int)_ct->user)
-	{
-		case 0: // s
-			modeoverride = 3;
-			lstrcpyn(val, "10.0", 64);
-			break;
-		case 1: // meas.beat
-			modeoverride = 2;
-			lstrcpyn(val, "1.0", 64);
-			break;
-		case 2: // smp
-			modeoverride = 4;
-			lstrcpyn(val, "512", 64);
-			break;
+	char val[64]="";
+	lstrcpyn(val, g_lastSilenceVal[(int)_ct->user], 64);
+
+	int modeoverride;
+	switch ((int)_ct->user) {
+		case 0: modeoverride = 3; break; // s
+		case 1: modeoverride = 2; break; // meas.beat
+		case 2: modeoverride = 4; break; // smp
 	}
-	if (PromptUserForString(GetMainHwnd(), SWS_CMD_SHORTNAME(_ct), val, 64) && *val) {
+	if (PromptUserForString(GetMainHwnd(), SWS_CMD_SHORTNAME(_ct), val, 64) && *val)
+	{
 		double t = parse_timestr_len(val, 0.0, modeoverride);
-		if (t>0.0)
+		if (t>0.0) {
+			lstrcpyn(g_lastSilenceVal[(int)_ct->user], val, 64);
 			InsertSilence(SWS_CMD_SHORTNAME(_ct), GetCursorPositionEx(NULL), t); // includes undo point
+		}
 		else
 			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid input!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}

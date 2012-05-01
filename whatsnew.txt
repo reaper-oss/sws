@@ -15,7 +15,7 @@ Other
 +Added undo point for "SWS/gofer: Split selected items at mouse cursor (obey snapping)"
 
 !v2.2.0 #5 (April 23, 2012)
-Region Playlist
+Region Playlist (BETA)
 +<b>Play preview: no more constraint on region ends, the play preview now exactly follows region boundaries! REAPER v4.23+ is required</b> (pre-release at the moment)
 Consequences: removed play preview options added in v2.2.0 #4 (useless now), added a warning message when there are nested regions/markers (due to the new smooth seek option)
 +Do not force envelope points updates when pasting/cropping a playlist but obeys the preference "envelope points move with media items" instead (so both behaviors are now possible: copy/move envelope points or not)

@@ -692,7 +692,7 @@ bool GetItemsSubChunk(WDL_FastString* _inChunk, WDL_FastString* _outSubChunk)
 // note: obeys the native pref "Offset template items/envs by edit cusor"
 // _paste==false for replace, paste otherwise
 // _p is optional (can be provided to factorize chunk updates)
-//JFB!!! TODO: would be better to offset items in the chunk? (+ update applyTrackTemplate() accordingly?)
+//JFB!!! TODO: would be better to offset items/envs in the chunk? (+ update applyTrackTemplate() accordingly?)
 bool replacePasteItemsFromTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltItemsSubChunk, bool _paste, SNM_ChunkParserPatcher* _p = NULL)
 {
 	bool updated = false;
@@ -772,10 +772,10 @@ bool makeSingleTrackTemplateChunk(WDL_FastString* _inRawChunk, WDL_FastString* _
 	return false;
 }
 
-// apply a track template (primitive: receives get removed)
+// apply a track template (primitive: receives are removed)
 // _p & _isRawTmpltChunk are optional (to respectively factorize chunk updates and not to systematically re-build _tmpltChunk)
 //JFB TODO: envs are not yet offseted by edit cursor + see replacePasteItemsFromTrackTemplate()'s comment
-bool applyTrackTemplateNoIO(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_SendPatcher* _p, bool _isRawTmpltChunk)
+bool applyTrackTemplateNoRcv(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_SendPatcher* _p, bool _isRawTmpltChunk)
 {
 	bool updated = false;
 	if (_tr && _tmpltChunk)
@@ -832,14 +832,15 @@ bool applyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _item
 	if (_tr && _tmpltChunk && _tmpltChunk->GetLength())
 	{
 		SNM_SendPatcher* p = (_p ? _p : new SNM_SendPatcher(_tr));
-//JFB!!! to check: master track
-		// copy receives
 		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > rcvs;
 		WDL_PtrList<MediaTrack> trs; trs.Add(_tr);
-		copySendsReceives(false, &trs, NULL, &rcvs);
+
+		// copy receives
+		if (_tr != GetMasterTrack(NULL))
+			copySendsReceives(false, &trs, NULL, &rcvs);
 
 		// apply tr template & restore rcvs
-		if (updated = applyTrackTemplateNoIO(_tr, _tmpltChunk, _itemsFromTmplt, _envsFromTmplt, p, _isRawTmpltChunk)) {
+		if (updated = applyTrackTemplateNoRcv(_tr, _tmpltChunk, _itemsFromTmplt, _envsFromTmplt, p, _isRawTmpltChunk)) {
 			WDL_PtrList<SNM_ChunkParserPatcher> ps; ps.Add(p);
 			pasteSendsReceives(&trs, NULL, &rcvs, false, &ps);
 		}

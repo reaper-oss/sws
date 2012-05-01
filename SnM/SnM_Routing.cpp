@@ -337,7 +337,7 @@ void copySendsReceives(bool _cut, WDL_PtrList<MediaTrack>* _trs,
 bool pasteSendsReceives(WDL_PtrList<MediaTrack>* _trs,
 		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends, 
 		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs, 
-		bool _rcvReset, WDL_PtrList<SNM_ChunkParserPatcher>* _ps)
+		bool _rcvReplace, WDL_PtrList<SNM_ChunkParserPatcher>* _ps)
 {
 	bool updated = false;
 
@@ -345,19 +345,20 @@ bool pasteSendsReceives(WDL_PtrList<MediaTrack>* _trs,
 	// => patch everything in one go thanks to this list
 	WDL_PtrList<SNM_ChunkParserPatcher>* ps = (_ps ? _ps : new WDL_PtrList<SNM_ChunkParserPatcher>);
 
-	// 1st loop to remove the native receives, if needed
-	for (int i=0; _rcvReset && i < _trs->GetSize(); i++) // skip master
-	{
-		SNM_SendPatcher* p = (SNM_SendPatcher*)SNM_FindCPPbyObject(ps, _trs->Get(i));
-		if (!p) {
-			p = new SNM_SendPatcher(_trs->Get(i)); 
-			ps->Add(p);
+	// 1st loop: remove existing receives, if needed
+	for (int i=0; _rcvReplace && i < _trs->GetSize(); i++)
+		if (MediaTrack* tr = _trs->Get(i))
+		{
+			SNM_SendPatcher* p = (SNM_SendPatcher*)SNM_FindCPPbyObject(ps, tr);
+			if (!p) {
+				p = new SNM_SendPatcher(tr); 
+				ps->Add(p);
+			}
+			updated |= (p->RemoveReceives() > 0);
 		}
-		updated |= (p->RemoveReceives() > 0);
-	}
 
 	// 2nd one: to add ours
-	for (int i=0; i < _trs->GetSize(); i++) // skip master
+	for (int i=0; i < _trs->GetSize(); i++)
 	{
 		if (MediaTrack* tr = _trs->Get(i))
 		{

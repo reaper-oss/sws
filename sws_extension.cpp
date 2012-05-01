@@ -113,6 +113,10 @@ int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool local
 {
 	if (pCommand->doCommand)
 	{
+		char pId[128];
+		if (_snprintf(pId, 128, "_%s", pCommand->id)<=0 || NamedCommandLookup(pId))
+			return 0; // duplicated action
+
 		if (!cmdId && !(cmdId = plugin_register("command_id", (void*)pCommand->id)))
 			return 0;
 
@@ -333,7 +337,7 @@ public:
 
 	void Run()
 	{
-		SnMCSurfRun();
+		SNM_CSurfRun();
 		ZoomSlice();
 		MarkerActionSlice();
 		ItemPreviewSlice();
@@ -353,7 +357,7 @@ public:
 
 	void SetPlayState(bool play, bool pause, bool rec)
 	{
-		SnMCSurfSetPlayState(play, pause, rec);
+		SNM_CSurfSetPlayState(play, pause, rec);
 		AWDoAutoGroup(rec);
 	}
 
@@ -362,7 +366,7 @@ public:
 	{
 		m_bChanged = true;
 		AutoColorRun(false);
-		SnMCSurfSetTrackListChange();
+		SNM_CSurfSetTrackListChange();
 		m_iACIgnore = GetNumTracks() + 1;
 	}
 	// For every SetTrackListChange we get NumTracks+1 SetTrackTitle calls, but we only
@@ -374,7 +378,7 @@ public:
 		if (!m_iACIgnore)
 		{
 			AutoColorRun(false);
-			SnMCSurfSetTrackTitle();
+			SNM_CSurfSetTrackTitle();
 		}
 		else
 			m_iACIgnore--;
@@ -384,7 +388,7 @@ public:
 	void SetSurfaceMute(MediaTrack *tr, bool mute)		{ ScheduleTracklistUpdate(); UpdateTrackMute(); }
 	void SetSurfaceSolo(MediaTrack *tr, bool solo)		{ ScheduleTracklistUpdate(); UpdateTrackSolo(); }
 	void SetSurfaceRecArm(MediaTrack *tr, bool arm)		{ ScheduleTracklistUpdate(); UpdateTrackArm(); }
-	int Extended(int call, void *parm1, void *parm2, void *parm3) { return SnMCSurfExtended(call, parm1, parm2, parm3); }
+	int Extended(int call, void *parm1, void *parm2, void *parm3) { return SNM_CSurfExtended(call, parm1, parm2, parm3); }
 };
 
 // WDL Stuff
@@ -449,7 +453,7 @@ extern "C"
 			ProjectListExit();
 			MiscExit();
 			PadreExit();
-			SnMExit();
+			SNM_Exit();
 			ERR_RETURN("Exiting Reaper.\n")
 		}
 
@@ -763,7 +767,7 @@ extern "C"
 			ERR_RETURN("Autorender init error\n")
 		if (!IXInit())
 			ERR_RETURN("IX init error\n")
-		if (!SnMInit(rec)) // keep it as the last init (for cyle actions)
+		if (!SNM_Init(rec)) // keep it as the last init (for cyle actions)
 			ERR_RETURN("S&M init error\n")
 
     	if (!rec->Register("hookcustommenu", (void*)swsMenuHook))

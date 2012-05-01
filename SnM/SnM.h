@@ -99,6 +99,7 @@
 #define SNM_SCHEDJOB_DEFAULT_DELAY	250
 #define SNM_DEF_VWND_X_STEP			12
 #define SNM_FUDGE_FACTOR			0.0000000001
+#define SNM_CSURF_EXT_UNREGISTER	0x00016666
 
 // various bitmask flags
 #define SNM_MARKER_MASK				1
@@ -166,19 +167,21 @@ void RefreshToolbars();
 void FakeToggle(COMMAND_T*);
 bool FakeIsToggleAction(COMMAND_T*);
 void SNM_ShowActionList(COMMAND_T*);
-int SNMRegisterDynamicCommands(COMMAND_T* _pCommands);
-int SnMInit(reaper_plugin_info_t* _rec);
-void SnMExit();
+int SNM_RegisterDynamicCommands(COMMAND_T* _pCommands);
+int SNM_Init(reaper_plugin_info_t* _rec);
+void SNM_Exit();
 void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
 void DeleteScheduledJob(int _id);
 bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub);
 bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
 int EnumMarkerRegionsCache(ReaProject* _proj, int _idx, bool* _isrgn, double* _pos, double* _rgnend, char** _name, int* _num, int* _color);
-void SnMCSurfRun();
-void SnMCSurfSetTrackTitle();
-void SnMCSurfSetTrackListChange();
-void SnMCSurfSetPlayState(bool _play, bool _pause, bool _rec);
-int SnMCSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3);
+void SNM_CSurfRun();
+void SNM_CSurfSetTrackTitle();
+void SNM_CSurfSetTrackListChange();
+void SNM_CSurfSetPlayState(bool _play, bool _pause, bool _rec);
+int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3);
+bool SNM_RegisterCSurf(IReaperControlSurface* _csurf);
+bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf);
 
 
 ///////////////////////////////////////////////////////////////////////////////

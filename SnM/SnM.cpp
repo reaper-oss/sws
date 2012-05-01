@@ -795,7 +795,7 @@ static KbdSectionInfo g_SNMSection = {
   onAction
 };
 
-int SNMSectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)
+int SNM_SectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)
 {
 	if (!_rec)
 		return 0;
@@ -857,7 +857,7 @@ void SNM_ShowActionList(COMMAND_T* _ct) {
 // see g_SNM_dynamicCmdTable's comments
 ///////////////////////////////////////////////////////////////////////////////
 
-int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
+int SNM_RegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 {
 	char actionName[SNM_MAX_ACTION_NAME_LEN]="", custId[SNM_MAX_ACTION_CUSTID_LEN]="";
 	int i = 0;
@@ -879,7 +879,7 @@ int SNMRegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 	return 1;
 }
 
-void SNMSaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
+void SNM_SaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 {
 	WDL_FastString iniSection, str;
 	iniSection.SetFormatted(128, "; Set the number of slot actions you want below (none/hidden: 0, max: %d, exit REAPER first!)\n", SNM_MAX_DYNAMIC_ACTIONS);
@@ -963,7 +963,7 @@ void IniFileExit()
 	SaveIniSection("General", &iniSection, g_SNMIniFn.Get());
 
 	// save dynamic actions
-	SNMSaveDynamicCommands(g_SNM_dynamicCmdTable, g_SNMIniFn.Get());
+	SNM_SaveDynamicCommands(g_SNM_dynamicCmdTable, g_SNMIniFn.Get());
 
 #ifdef _WIN32
 	// force ini file's cache flush, see http://support.microsoft.com/kb/68827
@@ -973,22 +973,100 @@ void IniFileExit()
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// IReaperControlSurface "proxy"
+// note: unalloc is caller's responsability 
+///////////////////////////////////////////////////////////////////////////////
+
+#define CSURFMAP(x) SWS_SectionLock lock(&m_csurfsMutex); for (int i=0; i<m_csurfs.GetSize(); i++) m_csurfs.Get(i)->x;
+
+class SNM_CSurfProxy : public IReaperControlSurface
+{
+public:
+	SNM_CSurfProxy() {}
+	~SNM_CSurfProxy() { RemoveAll(); }
+	const char *GetTypeString() { return ""; }
+	const char *GetDescString() { return ""; }
+	const char *GetConfigString() { return ""; }
+	void Run() { CSURFMAP(Run()) }
+	void CloseNoReset() { CSURFMAP(CloseNoReset()) }
+	void SetTrackListChange() { CSURFMAP(SetTrackListChange()) }
+	void SetSurfaceVolume(MediaTrack *tr, double volume) { CSURFMAP(SetSurfaceVolume(tr, volume)) }
+	void SetSurfacePan(MediaTrack *tr, double pan) { CSURFMAP(SetSurfacePan(tr, pan)) }
+	void SetSurfaceMute(MediaTrack *tr, bool mute) { CSURFMAP(SetSurfaceMute(tr, mute)) }
+	void SetSurfaceSelected(MediaTrack *tr, bool sel) { CSURFMAP(SetSurfaceSelected(tr, sel)) }
+	void SetSurfaceSolo(MediaTrack *tr, bool solo) { CSURFMAP(SetSurfaceSolo(tr, solo)) }
+	void SetSurfaceRecArm(MediaTrack *tr, bool recarm) { CSURFMAP(SetSurfaceRecArm(tr, recarm)) }
+	void SetPlayState(bool play, bool pause, bool rec) { CSURFMAP(SetPlayState(play, pause, rec)) }
+	void SetRepeatState(bool rep) { CSURFMAP(SetRepeatState(rep)) }
+	void SetTrackTitle(MediaTrack *tr, const char *title) { CSURFMAP(SetTrackTitle(tr, title)) }
+	bool GetTouchState(MediaTrack *tr, int isPan) { CSURFMAP(GetTouchState(tr, isPan)) return false; }
+	void SetAutoMode(int mode) { CSURFMAP(SetAutoMode(mode)) }
+	void ResetCachedVolPanStates() { CSURFMAP(ResetCachedVolPanStates()) }
+	void OnTrackSelection(MediaTrack *tr) { CSURFMAP(OnTrackSelection(tr)) }
+	bool IsKeyDown(int key) { CSURFMAP(IsKeyDown(key)) return false; }
+	int Extended(int call, void *parm1, void *parm2, void *parm3) { 
+		SWS_SectionLock lock(&m_csurfsMutex);
+		int ret=0;
+		for (int i=0; i<m_csurfs.GetSize(); i++)
+			ret = m_csurfs.Get(i)->Extended(call, parm1, parm2, parm3) ? 1 : ret;
+		return ret;
+	}
+	void Add(IReaperControlSurface* csurf) {
+		SWS_SectionLock lock(&m_csurfsMutex);
+		if (m_csurfs.Find(csurf)<0)
+			m_csurfs.Add(csurf);
+	}
+	void Remove(IReaperControlSurface* csurf) {
+		SWS_SectionLock lock(&m_csurfsMutex);
+		m_csurfs.Delete(m_csurfs.Find(csurf), false);
+	}
+	void RemoveAll() {
+		SWS_SectionLock lock(&m_csurfsMutex);
+		for (int i=m_csurfs.GetSize(); i>=0; i--)
+			if (IReaperControlSurface* csurf = m_csurfs.Get(i)) {
+				csurf->Extended(SNM_CSURF_EXT_UNREGISTER, NULL, NULL, NULL);
+				m_csurfs.Delete(i, false);
+			}
+	}
+private:
+	WDL_PtrList<IReaperControlSurface> m_csurfs;
+	SWS_Mutex m_csurfsMutex;
+};
+
+SNM_CSurfProxy* g_csurfProxy = NULL;
+
+bool SNM_RegisterCSurf(IReaperControlSurface* _csurf) {
+	if (g_csurfProxy) {
+		g_csurfProxy->Add(_csurf);
+		return true;
+	}
+	return false;
+}
+
+bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf) {
+	if (g_csurfProxy) {
+		g_csurfProxy->Remove(_csurf);
+		return true;
+	}
+	return false;
+}
+
+	
+///////////////////////////////////////////////////////////////////////////////
 // S&M core stuff
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef _SNM_MISC
-static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag)
-{
+static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag) {
 	if (!strcmp(_menustr, "Main extensions") && !_flag) SWSCreateMenuFromCommandTable(g_SNM_cmdTable, _hMenu);
-/*
-	else if (!strcmp(_menustr, "Media item context") && !_flag) {}
-	else if (!strcmp(_menustr, "Track control panel context") && !_flag) {}
-	else if (_flag == 1) {}
-*/
+	//else if (!strcmp(_menustr, "Media item context") && !_flag) {}
+	//else if (!strcmp(_menustr, "Track control panel context") && !_flag) {}
+	//else if (_flag == 1) {}
 }
 #endif
 
-int SnMInit(reaper_plugin_info_t* _rec)
+int SNM_Init(reaper_plugin_info_t* _rec)
+
 {
 	if (!_rec)
 		return 0;
@@ -999,10 +1077,10 @@ int SnMInit(reaper_plugin_info_t* _rec)
 	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
 		return 0;
 #endif
-	// actions should be registered before views
+	// actions must be registered before views
 	if (!SWSRegisterCommands(g_SNM_cmdTable) || 
-		!SNMRegisterDynamicCommands(g_SNM_dynamicCmdTable, g_SNMIniFn.Get()) ||
-		!SNMSectionRegisterCommands(_rec, true))
+		!SNM_RegisterDynamicCommands(g_SNM_dynamicCmdTable, g_SNMIniFn.Get()) ||
+		!SNM_SectionRegisterCommands(_rec, true))
 		return 0;
 
 	SNM_UIInit();
@@ -1013,10 +1091,18 @@ int SnMInit(reaper_plugin_info_t* _rec)
 	ImageViewInit();
 	RegionPlaylistInit();
 	CyclactionInit(); // keep it as the last one!
+
+	g_csurfProxy = new SNM_CSurfProxy();
+	if (!g_csurfProxy || !_rec->Register("csurf_inst", g_csurfProxy))
+		DELETE_NULL(g_csurfProxy)
+	else {
+		_rec->Register("API_SNM_UnregisterCSurf", SNM_UnregisterCSurf);
+		_rec->Register("API_SNM_RegisterCSurf", SNM_RegisterCSurf);
+	}
 	return 1;
 }
 
-void SnMExit()
+void SNM_Exit()
 {
 	LiveConfigViewExit();
 	ResourceViewExit();
@@ -1027,6 +1113,9 @@ void SnMExit()
 	CyclactionExit();
 	SNM_UIExit();
 	IniFileExit();
+	if (g_csurfProxy)
+		g_csurfProxy->RemoveAll();
+	DELETE_NULL(g_csurfProxy);
 }
 
 
@@ -1171,7 +1260,7 @@ double g_itemSelToolbarMsCounter = 0.0;
 double g_markerRegionNotifyMsCounter = 0.0;
 
 // processing order is important here..
-void SnMCSurfRun()
+void SNM_CSurfRun()
 {
 	// region playlist
 	PlaylistRun();
@@ -1227,12 +1316,12 @@ extern SNM_NotesHelpWnd* g_pNotesHelpWnd;
 extern SNM_LiveConfigsWnd* g_pLiveConfigsWnd;
 extern SNM_RegionPlaylistWnd* g_pRgnPlaylistWnd;
 
-void SnMCSurfSetTrackTitle() {
+void SNM_CSurfSetTrackTitle() {
 	if (g_pNotesHelpWnd) g_pNotesHelpWnd->CSurfSetTrackTitle();
 	if (g_pLiveConfigsWnd) g_pLiveConfigsWnd->CSurfSetTrackTitle();
 }
 
-void SnMCSurfSetTrackListChange() {
+void SNM_CSurfSetTrackListChange() {
 	if (g_pNotesHelpWnd) g_pNotesHelpWnd->CSurfSetTrackListChange();
 	if (g_pLiveConfigsWnd) g_pLiveConfigsWnd->CSurfSetTrackListChange();
 	if (g_pRgnPlaylistWnd) g_pRgnPlaylistWnd->CSurfSetTrackListChange();
@@ -1240,7 +1329,7 @@ void SnMCSurfSetTrackListChange() {
 
 bool g_lastPlayState=false, g_lastPauseState=false, g_lastRecState=false;
 
-void SnMCSurfSetPlayState(bool _play, bool _pause, bool _rec)
+void SNM_CSurfSetPlayState(bool _play, bool _pause, bool _rec)
 {
 	if (g_lastPlayState != _play) {
 		if (g_lastPlayState && !_play) PlaylistStopped();
@@ -1254,7 +1343,7 @@ void SnMCSurfSetPlayState(bool _play, bool _pause, bool _rec)
 	}
 }
 
-int SnMCSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3) {
+int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3) {
 	return 0; // return 0 if unsupported
 }
 

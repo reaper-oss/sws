@@ -5,7 +5,7 @@ Region Playlist
 +Better list view refresh (new region lengths, renamed regions, etc..)
 
 Added actions
-+SWS/S&M: Remove all envelopes for selected tracks - works with frozen tracks (untouched), master track, fx param envelopes, etc..
++SWS/S&M: Remove all envelopes for selected tracks - works with frozen tracks (preserved), master track, fx param envelopes, etc..
 +SWS/S&M: Insert silence (seconds)
 +SWS/S&M: Insert silence (measures.beats)
 +SWS/S&M: Insert silence (samples)

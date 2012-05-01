@@ -1,4 +1,4 @@
-; SWS/S&M Template LangPack v2.2.0 Build 3
+; SWS/S&M Template LangPack v2.2.0 Build 5
 ; NOTE: this file should be merged into REAPER LangPack files.
 ; As you translate a string, remove the ; from the beginning of the
 ; line. If the line begins with ;^, then it is an optional string,
@@ -49,7 +49,6 @@
 ;83C05BCE6E0BA462=semitones
 ;A43D5AFECAA46489=Preview
 ;BAC64C1B2E060EE5=Close
-;D9B12705AD844C62=List1
 ;322C3EF25FD8E8CB=Dialog
 ;9F31623C59553158=Path
 ;0B0D7BE74B5FDC8D=Active only
@@ -58,7 +57,6 @@
 ;FCE435FD0C037E2E=Segment:
 ;576D3C1F8C34C670=Strength:
 ;3EBE946EEFDAD3C8=Target:
-;E99EBA7FF6970DBB=...
 ;0FA72D95CADAE6E8=S&M - Error
 ;8C31172F4138BA99=S&M - Load track template
 ;09A01E8714A0B688=Comment
@@ -512,13 +510,11 @@
 ;1F4356DCCB916193=Send selected to Recycle bin
 ;80CAEB83A6C7C1F7=Copy non-project folder media to project folder
 ;^BAC64C1B2E060EE5=Close
-;^D9B12705AD844C62=List1
 
 [sws_DLG_135] ; IDD_MULMATCH
 ;C0CA3E2DA99FF3A8=Multiple matches, which file to use?
 ;^D840E3186B2B9581=OK
 ;^F09E4B5C35AA14B9=Cancel
-;^D9B12705AD844C62=List1
 ;^A43D5AFECAA46489=Preview
 
 [sws_DLG_136] ; IDD_AUTORENAMETAKES
@@ -527,7 +523,6 @@
 ;2A65BC5152BB9B07=Customize presets in SWS-RenamePresets.txt
 ;8409957BC906D0F6=Format:
 ;A19F3A37743261C3=Valid replace tokens to use:\r\n[trackname] [foldername] [takename] [takenamenoext] [tracknum] [GUID] [inctrackorder] [inctimeorder]
-;^D9B12705AD844C62=List1
 ;^D840E3186B2B9581=OK
 ;^F09E4B5C35AA14B9=Cancel
 
@@ -640,6 +635,7 @@
 ;D8ACD3F8FCD62887=Receives type:
 ;AA6E039ED9D1AF3B=Show buss routing
 ;BCA33A34D7B6E352=Create cue buss from track template (/manual)
+;E99EBA7FF6970DBB=...
 ;AD726D394D66AB27=Buss name:
 ;8589205649E86836=HW output 1:
 ;8593225649F0C021=HW output 2:
@@ -655,7 +651,6 @@
 ;8DF38FA90B8D179C=Cue buss settings:
 ;5556E6270EAAE976=Cue buss not created!\nNo track template file defined
 ;A2642DC43FE0F53A=Cue buss not created!\nTrack template not found (or empty): %s
-;^E99EBA7FF6970DBB=...
 ;^BAC64C1B2E060EE5=Close
 ;^3390D94D34F06461=None
 ;^8C31172F4138BA99=S&M - Load track template
@@ -673,7 +668,7 @@
 ;7EB53A0321AC8EB3=Paste FX chain to selected items
 ;F181990757CE484A=Paste FX chain to selected items, all takes
 ;7497D728AD61F3B2=Apply track template to selected tracks
-;1E1E226A7626B286=Apply track template (+template items/envelopes) to selected tracks
+;13865D3165AC38DA=Apply track template (+items/envelopes) to selected tracks
 ;C7DDCF8E12386599=Import tracks from track template
 ;4D1AE13794529689=Paste (replace) template items to selected tracks
 ;278B0B1893E21AB6=Paste template items to selected tracks
@@ -699,8 +694,8 @@
 ;F27CF7B8D27ABA20=Tracks (input FX)
 ;A620AF611680A051=Items
 ;096B29877FA36703=Items (all takes)
-;41C0BFF7FFB49A52=Apply to sel tracks
-;99B7C551986A8D4D=Apply to sel tracks (+template items/envs)
+;B91C8C35B3E428B2=Apply template to sel tracks
+;D6E88607A6968A4D=Apply template to sel tracks (+items/envs)
 ;02A69394F29658D7=Paste template items to sel tracks
 ;598FAFED3ABF1A42=Paste (replace) template items to sel tracks
 ;95D1394E1D31AC02=Open/select project tab
@@ -754,6 +749,7 @@
 ;84C7DA8126B7F058=Copy bookmark...
 ;05FFC47CCDC762D6=Filter on
 ;4FF34696DCB6C124=Tie %s slot actions
+;65CA689C377C5655=Offset template items by edit cursor
 ;912834C76AFB9AF2=Offset template items/envs by edit cursor
 ;73FE3D47B86D2D80=Auto-fill %s slots (right-click for options)\nfrom %s
 ;D493DCBC3CB21E8F=%s (right-click for options)\nto %s
@@ -865,7 +861,7 @@
 ;BCF4D969E7E3DFDD=FX presets
 ;B3A51210422E8A24=Activate action
 ;668F23462089758D=Deactivate action
-;49DC9B617BFD035B=Error: this action ID (or custom ID) doesn't exists!
+;A363117A9F17E678=Error: this action ID (or custom ID) does not exist!
 ;7299ABCFF393ABD5=Config:
 ;4CF9C4BC5FF92854=Input track:
 ;5C1582EFB9F219B5=S&M - Load FX Chain
@@ -1025,19 +1021,10 @@
 ;^D840E3186B2B9581=OK
 ;^F09E4B5C35AA14B9=Cancel
 
-[sws_DLG_164] ; IDD_SNM_MERGE_LANGPACK
-;EE0717E6F64C8D5E=S&M - LangPack files merger
-;132F107E4868A21E=Template LangPack file:
-;35A5BFAB625B27CD=Modified LangPack file:
-;CCFB8EDA6325537E=Output file:
-;808291384A89D955=Merge
-;^E99EBA7FF6970DBB=...
-;^BAC64C1B2E060EE5=Close
-
 [sws_DLG_165] ; IDD_SNM_RGNPLAYLIST
 ;DC55DAA37DC46518=S&M - Region Playlist
 ;830C5FC0E18A9057=Region
-;C941513842A342A6=Count
+;9FB17EBACD9AA956=Loop count
 ;54B465F61B1485A6=Unknown region %d
 ;677258624C7974DD=Unknown region
 ;5799CAC19B81B871=S&M - Add playlist
@@ -1049,10 +1036,7 @@
 ;4CE640A0CD9B1789=Playlist:
 ;C84A1B5AA24D468D=Playlist: None
 ;09A3E92731A691E1=Length: %s
-;BC14899213C54E2C=Crop project
-;FA16BDA9B066EB64=(Playing)
-;B06CAA92EAB42EC5=Play regions until next measure
-;AA49B5FE79BB0A7B=Play regions until next beat
+;496BA2520BE69970=Paste playlist
 ;4CE607A0CD9AB6AE=Playlists
 ;90FB4D6B9FB8F05F=New playlist...
 ;526783EB925E0792=Copy playlist...
@@ -1060,16 +1044,19 @@
 ;D3A0D9121A43DD3A=Add region
 ;285BFDC873E57F46=Crop project to playlist (new project tab)
 ;13964AC07AFECF5E=Insert region
-;EBBD805E76361E10=Delete region(s)
-;9EFA8D17DB3AE893=Play preview (right-click for options)\nSmooth seek option: %s
-;53747A9E8C6604DB=play regions until next beat
-;A6B4F837AEAD8EA5=play regions until next measure
+;3E59E9F66936FB13=Remove region(s)
+;706CFB1C11567AF7=Append region(s)
+;FB66456F179D75CD=Paste region(s) at edit cursor
+;91E1985A84DEB701=Play preview
 ;54AE5669A33DEBCE=Current playlist
 ;32D8693D51BD5A08=Add playlist
 ;7E51E2116DF0F10A=Delete playlist
 ;8BF8D7F607E679A9=Total playlist length
-;D61838FE721CDC34=Crop playlist to new project tab\n(right-click for other append/crop commands)
+;C1C4C8CEC8E78897=Paste playlist at edit cursor\n(right-click for other append/crop commands)
+;3EFE8F0ECA7DB9CE=Play preview might not work as expected!\nThe playlist constains nested markers/regions (inside region %d at least)
 ;5EDA3BBA01D3FE41=Nothing to play!\n(empty playlist, removed regions, etc..)
+;FE5E9D3EC0EDC30A=Aborted: pasting inside a region which is used in the playlist!
+;4272044207011B42=Warning: pasting inside a region which is used in other playlists!\nThis region will be larger and those playlists will change, are you sure you want to continue?
 ;^D9E4C067FEE02BBB=Region Playlist
 ;^49657903B7B9A626=Untitled
 ;^0FA72D95CADAE6E8=S&M - Error
@@ -1079,6 +1066,7 @@
 ;^2504F093844EA941=Crop project to playlist
 ;^DE098B29579EDB65=Append playlist to project
 ;^BDAEE878964B2813=Paste playlist at edit cursor
+;^E4A81E97DC43CB12=S&M - Warning
 
 [sws_accel_sec]
 ;0CE9EB6B942F56E4=S&M Extension
@@ -1091,9 +1079,9 @@
 ;473EF087D02DB5B0=SWS: Horizontal scroll to put play cursor at 50%
 ;FA822931BD2131D8=SWS: Vertical zoom to selected track(s)
 ;56A89EBD5C210BD7=SWS: Vertical zoom to selected track(s), minimize others
-;4C7277BFBBFB4E4D=SWS: Vertical zoom to selected items(s)
-;B5ACEFCB7D9FEAC4=SWS: Vertical zoom to selected items(s), minimize others
-;B3FFA67B79666323=SWS: Horizontal zoom to selected items(s)
+;6F8EBEB6B8C4932A=SWS: Vertical zoom to selected item(s)
+;CCD1F92FCCFD7B39=SWS: Vertical zoom to selected item(s), minimize others
+;8034750A6E194970=SWS: Horizontal zoom to selected item(s)
 ;47098B1B8F3A0C90=SWS: Zoom to selected item(s)
 ;2172B048253863DF=SWS: Zoom to selected item(s), minimize others
 ;76A06ECD2C775237=SWS: Zoom to sel item(s) or time sel
@@ -1101,13 +1089,13 @@
 ;82DB04E59A825CC9=SWS: Toggle zoom to sel track(s) + time sel
 ;AA25E9E4879991C8=SWS: Toggle zoom to sel track(s) + time sel, minimize others
 ;3E9CD92AFDBC8B48=SWS: Toggle zoom to sel track(s) + time sel, hide others
-;101EA263FAE69E66=SWS: Toggle zoom to sel items(s) or time sel
-;BB36BFD5833848D8=SWS: Toggle zoom to sel items(s) or time sel, minimize other tracks
-;20FD325055A52D48=SWS: Toggle zoom to sel items(s) or time sel, hide other tracks
-;26FD39147B67542C=SWS: Toggle zoom to sel items(s)
-;0D56336444F55A42=SWS: Toggle zoom to sel items(s), minimize other tracks
-;C9C921C0397C1702=SWS: Toggle zoom to sel items(s), hide other tracks
-;2A61BF25B0914A06=SWS: Toggle horizontal zoom to sel items(s) or time sel
+;DB6DABA7BF1D9FCB=SWS: Toggle zoom to sel item(s) or time sel
+;2A8A97039C0C4CFF=SWS: Toggle zoom to sel item(s) or time sel, minimize other tracks
+;82D28BA7A8B6FDBF=SWS: Toggle zoom to sel item(s) or time sel, hide other tracks
+;00B4C07523AB0369=SWS: Toggle zoom to sel item(s)
+;6002E00C9B9D76C1=SWS: Toggle zoom to sel item(s), minimize other tracks
+;D94D28BADB854841=SWS: Toggle zoom to sel item(s), hide other tracks
+;DF99F45F6740D56B=SWS: Toggle horizontal zoom to sel item(s) or time sel
 ;DDD833DD3EC04732=SWS: Scroll left 10%
 ;4B8F3C5862D38E47=SWS: Scroll right 10%
 ;DE743340A7DE390C=SWS: Scroll left 1%
@@ -1119,7 +1107,6 @@
 ;3F4BAA6A926498DF=SWS: Redo zoom
 ;D0F817ADFDBA70D4=SWS: Zoom tool (marquee)
 ;0BC0676B7F762F3D=SWS: Zoom preferences
-;3F41C5A887C301E1=Extensions
 ;FC6D012CCCBE8349=SWS: About
 ;6C7A071A34AB7955=SWS/S&M: Create cue buss from track selection (use last settings)
 ;069334D0DEB4198B=SWS/S&M: Open/close Cue Buss generator
@@ -1236,22 +1223,6 @@
 ;CC2E45EBBCC5C9F3=SWS/S&M: Unbypass all FX for selected tracks
 ;0F9DB2DF7EEDF3FE=SWS/S&M: Toggle all FX (except selected) online/offline for selected tracks
 ;DFD0B5DCB9D05599=SWS/S&M: Toggle all FX (except selected) bypass for selected tracks
-;C3B50E78AC02779E=SWS/S&M: Toggle all FX (except 1) online/offline for selected tracks
-;98FAA0B793844F2F=SWS/S&M: Toggle all FX (except 2) online/offline for selected tracks
-;37D9F3733C2E6A28=SWS/S&M: Toggle all FX (except 3) online/offline for selected tracks
-;A9F6030304084F49=SWS/S&M: Toggle all FX (except 4) online/offline for selected tracks
-;DA0F4228B49CCD62=SWS/S&M: Toggle all FX (except 5) online/offline for selected tracks
-;D9FC4B8BFF41B3F3=SWS/S&M: Toggle all FX (except 6) online/offline for selected tracks
-;E10B149EA413641C=SWS/S&M: Toggle all FX (except 7) online/offline for selected tracks
-;70A8EC2D286D786D=SWS/S&M: Toggle all FX (except 8) online/offline for selected tracks
-;E595FE6B9010A8B9=SWS/S&M: Toggle all FX (except 1) bypass for selected tracks
-;5EC2BB18A0A8A4D8=SWS/S&M: Toggle all FX (except 2) bypass for selected tracks
-;366D64C273B8985F=SWS/S&M: Toggle all FX (except 3) bypass for selected tracks
-;50C413E0418D2EE6=SWS/S&M: Toggle all FX (except 4) bypass for selected tracks
-;A0C05D23A181907D=SWS/S&M: Toggle all FX (except 5) bypass for selected tracks
-;ED5F3E375CFB80DC=SWS/S&M: Toggle all FX (except 6) bypass for selected tracks
-;B064AC58977876F3=SWS/S&M: Toggle all FX (except 7) bypass for selected tracks
-;0FADFA7FBCBAC92A=SWS/S&M: Toggle all FX (except 8) bypass for selected tracks
 ;A327E4016630FAF2=SWS/S&M: Toggle all take FX online/offline for selected items
 ;4D88861FB584398E=SWS/S&M: Set all take FX offline for selected items
 ;62C1ED5127050EF4=SWS/S&M: Set all take FX online for selected items
@@ -1311,6 +1282,9 @@
 ;222BD505F880FFBD=SWS/S&M: Project loader/selecter: next (cycle)
 ;16D603EB26966B1D=SWS/S&M: Project loader/selecter: previous (cycle)
 ;20ABAF55C95EC364=SWS/S&M: Open project path in explorer/finder
+;EE28635214568EC9=SWS/S&M: Insert silence (seconds)
+;65F0992213121EB2=SWS/S&M: Insert silence (measures.beats)
+;513ADBF4AAE3F2BF=SWS/S&M: Insert silence (samples)
 ;30FEDF015C5F2041=SWS/S&M: Open/close Resources window (media files)
 ;65AF0B073FE9B958=SWS/S&M: Clear media file slot...
 ;ACEAA139AAE10506=SWS/S&M: Delete all media file slots
@@ -1352,21 +1326,17 @@
 ;6FB15CB5BA9A5477=SWS/S&M: Paste take (after active take)
 ;AD61551D5FC55418=SWS/S&M: Takes - Clear active takes/items
 ;6BE862D645AEAFFD=SWS/S&M: Takes - Build lanes for selected tracks
-;A7A661D7D129FEFD=SWS/S&M: Takes - Activate lanes from selected items
 ;90805EC5A9CF16AF=SWS/S&M: Takes - Build lanes for selected items
+;A7A661D7D129FEFD=SWS/S&M: Takes - Activate lanes from selected items
 ;D41796C4B81CE878=SWS/S&M: Takes - Activate lane under mouse cursor
 ;2ACCDC739C6E1105=SWS/S&M: Takes - Remove empty takes/items among selected items
 ;6931AEC41A24F360=SWS/S&M: Takes - Remove empty MIDI takes/items among selected items
-;6B48AFFBF5944924=SWS/S&M: Takes - Remove all empty takes/items among selected items
 ;C92055163294FFA8=SWS/S&M: Takes - Move active up (cycling) in selected items
 ;466B5EA8011B4EB5=SWS/S&M: Takes - Move active down (cycling) in selected items
-;2CBCF36892732311=SWS/S&M: Takes - Move all up (cycling) in selected items
-;25CBA78343D0C4E8=SWS/S&M: Takes - Move all down (cycling) in selected items
 ;346D0A1C3A312F3B=SWS/S&M: Delete selected items' takes and source files (prompt, no undo)
 ;A641DBBC49F04429=SWS/S&M: Delete selected items' takes and source files (no undo)
 ;4228B5358B74D61D=SWS/S&M: Delete active take and source file in selected items (prompt, no undo)
 ;DF335C7371E0FFC3=SWS/S&M: Delete active take and source file in selected items (no undo)
-;96F7D9F8237B58B5=SWS/S&M: Save selected item as item/take template...
 ;CA88B6AD2C3B82BF=SWS/S&M: Open/close Notes window
 ;2535323224303200=SWS/S&M: Open/close Notes window (project notes)
 ;AE8081B261350134=SWS/S&M: Open/close Notes window (item notes)
@@ -1380,13 +1350,6 @@
 ;DBEFF4564DCF5981=SWS/S&M: Notes - Export subtitle file...
 ;8996DECC4AB22BEB=SWS/S&M: Split selected items at edit cursor (MIDI) or prior zero crossing (audio)
 ;C515EAE1D630EB3E=SWS/S&M: Split selected items at time selection, edit cursor (MIDI) or prior zero crossing (audio)
-;1D8D44772BDDB3EB=SWS/S&M: Split selected items at play cursor
-;A596F2B2E59B84DA=SWS/S&M: Split selected items at time selection
-;6C86E5DECC265D6F=SWS/S&M: Split selected items at edit cursor (no change selection)
-;A68C880595AEE9A6=SWS/S&M: Split selected items at time selection (select left)
-;9D83CB63E5AAAC87=SWS/S&M: Split selected items at time selection (select right)
-;196FD4C20F6C7532=SWS/S&M: Split selected items at edit or play cursor
-;176B92EBC7615F27=SWS/S&M: Split selected items at edit or play cursor (ignoring grouping)
 ;6E8B240595BC5669=SWS/gofer: Split selected items at mouse cursor (obey snapping)
 ;86C90A44111C4055=SWS/S&M: Split and select items in region near cursor
 ;D83EF49C369AFAD4=SWS/S&M: Active MIDI Editor - Hide all CC lanes
@@ -1411,11 +1374,9 @@
 ;4B43178915CC9EDD=SWS/S&M: Set active take pan envelopes to 100% right
 ;7700C9E86D098BE8=SWS/S&M: Set active take pan envelopes to 100% left
 ;89B92ADD8EAE69C0=SWS/S&M: Set active take pan envelopes to center
-;71E60E260530BCD1=SWS/S&M: Toggle show take volume envelope
-;4D5FA1F0088BBCFC=SWS/S&M: Toggle show take pan envelope
-;88FF7D8D97B0D7A4=SWS/S&M: Toggle show take mute envelope
 ;D57C4EE0CCA9B781=SWS/S&M: Show take pitch envelope
 ;C85D76B79D4F8AF4=SWS/S&M: Hide take pitch envelope
+;EBC0DDB556650155=SWS/S&M: Remove all envelopes for selected tracks
 ;A30B8B5AF9A382C2=SWS/S&M: Toggle arming of all active envelopes for selected tracks
 ;BF1BC2E02E7C9F5F=SWS/S&M: Arm all active envelopes for selected tracks
 ;BCCB7D6417FB7719=SWS/S&M: Disarm all active envelopes for selected tracks
@@ -1480,9 +1441,6 @@
 ;5579C91B500F2779=SWS/S&M: Region Playlist - Crop project to playlist (new project tab)
 ;909BCAF6D46E4982=SWS/S&M: Region Playlist - Append playlist to project
 ;F00687BF9E45E96A=SWS/S&M: Region Playlist - Paste playlist at edit cursor
-;3EC24F73485115C4=SWS/S&M: Load LangPack file...
-;B504C7ACE6384D2F=SWS/S&M: Reset LangPack file to factory settings
-;FFFDC281E36F4D78=SWS/S&M: Open/close LangPack files merger
 ;DB5417BAF6691ADF=SWS/S&M: Open/close image window
 ;63144DA9CB708F97=SWS/S&M: Clear image window
 ;CA5DFD5BF376665C=SWS/S&M: Send all notes off to selected tracks
@@ -1646,6 +1604,7 @@
 ;0E7E9E7A7F797950=SWS: Open console with 'l' to set track(s) # channels
 ;DCF217B4D0E5C8C0=SWS: Open console with '!' to add action marker
 ;8EB3F075FC7B3E74=SWS: Edit console custom commands (restart needed after save)
+;7F7482E7E47C4523=SWS: Run console command: %s
 ;23C175C1F8D40DB5=SWS/FNG: Move selected envelope points right (16th)
 ;B56B744C60B9C3EA=SWS/FNG: Move selected envelope points left (16th)
 ;64F837BF5B02B4ED=SWS/FNG: Move selected envelope points right (32nd)
@@ -1706,6 +1665,11 @@
 ;45968F7DDDA23B3D=SWS/FNG: time compress selected items (fine)
 ;83D60D96CF03876B=SWS/FNG: move selected items to edit cursor
 ;320DF9916FCE43C0=SWS/FNG: unselect items that do not start in time selection
+;0BD411E43614F4FF=SWS/FNG MIDI: cycle through CC lanes
+;6F7D1D74D8BBEECF=SWS/FNG MIDI: cycle through CC lanes (keep lane heights constant)
+;1C28700190371702=SWS/FNG MIDI: show only used CC lanes
+;DF7092575BEE6434=SWS/FNG MIDI: hide unused CC lanes
+;1BD00DBDC1CC6C27=SWS/FNG MIDI: show only top CC lane
 ;B3BF96968DE6951C=SWS/FNG: Apply MIDI hardware emulation to selected midi takes
 ;2C63992C984FA24E=SWS/FNG: MIDI hardware emulation settings
 ;BD3A47E668A29EC0=SWS/FNG MIDI: select muted MIDI notes
@@ -2095,6 +2059,8 @@
 ;8101FD85E44F194B=SWS/PADRE: Shrink selected items: -512 samples
 ;CD6414B13B585CD4=SWS/PADRE: Shrink selected items: -1024 samples
 ;96D8909D75B94F29=SWS/PADRE: Shrink selected items: -2048 samples
+;7847C3C14F35F55B=SWS: Open related project %d
+;E0048187F625F15C=SWS: Switch to project tab %d
 ;3E72E47FC9DB9D1E=SWS: Save list of open projects
 ;A0BB96BC4C7E7D7E=SWS: Open projects from list
 ;A4DABF9B13CF98EF=SWS: Add related project(s)
@@ -2113,6 +2079,7 @@
 ;A1B29A4F2C1D7E37=SWS: Switch to project tab 8
 ;A1B2994F2C1D7C84=SWS: Switch to project tab 9
 ;DFDBC587F6035FD4=SWS: Switch to project tab 10
+;B535ABFEB573BD88=SWS: Recall snapshot %d
 ;6E8822C91943E55B=SWS: Open snapshots window
 ;66F631D514C0831D=SWS: Add selected track(s) to current snapshot
 ;A77B3C1FFCC9B7B4=SWS: Add selected track(s) to all snapshots
@@ -2284,8 +2251,8 @@
 ;E24D545213B4F1E1=Xenakios/SWS: Store selected tracks heights
 ;9277B16E4CF917A3=Xenakios/SWS: Recall selected tracks heights
 ;03E399C8B47770F0=Xenakios/SWS: Select tracks with no items
-;C4688DD1426628B8=Xenakios/SWS: Select tracks with \"BUSS\" in name
-;1C593BC78D33F2E9=Xenakios/SWS: Unselect tracks with \"BUSS\" in name
+;3102E0526B7B67A6=Xenakios/SWS: Select tracks with 'BUSS' in name
+;D8CE11B1E2FCB0CB=Xenakios/SWS: Unselect tracks with 'BUSS' in name
 ;8CFCCE063427BF9F=Xenakios/SWS: Dismantle selected folder
 ;752951475682BD04=Xenakios/SWS: Set selected tracks as folder
 ;0AB4E23F1371775E=Xenakios/SWS: Rename selected tracks...
@@ -2442,6 +2409,8 @@
 ;68634FF87FAD16A2=Xenakios/SWS: Move edit cursor 64th note right
 ;BB0908BCE52F5842=Xenakios/SWS: Disk space calculator
 ;E4370342E321540A=Xenakios/SWS: Command parameters
+;4EB44AB3272AF306=Xenakios/SWS: [Deprecated] Load track template %d
+;FA3BF79A14F50328=Xenakios/SWS: [Deprecated] Load project template %d
 
 [sws_ext_menu]
 ;B333B0E1898ED2F3=About SWS Extensions
@@ -2505,16 +2474,16 @@
 ;B9CCB13AC952FA09=[Track %d, item %d] Delete take %d (%s, in-project) ?
 ;E507112BE7893D04=[Track %d, item %d] Delete take %d (empty take) ?
 ;5533B7D30A018C4A=S&M - Delete take and source files (no undo!)
-;8298030E2713668A=Warning: at least one file couldn't be deleted.\nTips: are you an administrator? File used by another process?
+;B0E5A0CF598D66FE=Warning: at least one file could not be deleted.\nTips: are you an administrator? File used by another process?
 ;C99BAAB87EDD4A95=S&M - Delete take and source files
 ;5FFB5C1E74E1AA1E=S&M - Save item/take template
-;DFD415EA821DB033=Dump failed: a SWS LangPack file is being used,\nplease restore factory settings first!
 ;2A240F00982CC5DC=Dump failed: unknown section!
 ;A11C8C1A0AD38794=Wrote %s
 ;DF0367ADF34F7459=Dump failed: unable to write to file!
 ;0BDE9D1046D1157B=Dump failed: action window not opened!
 ;FC4E077FE2C5C652=S&M - Save ALR Wiki summary
 ;59970DC5B890D35E=S&M - Dump action list
+;E31FEFA706546065=Invalid input!
 ;4D223B66C895CAA9=Start slot (in Resources view):
 ;6538AF32D83F4266=End slot:
 ;C69875516F097584=S&M - Project loader/selecter
@@ -2523,15 +2492,7 @@
 ;2FC844F5CACBA1D8=Empty filename!
 ;3D048E8D9878D560=Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | :
 ;6BE054723EBE725A=File not found: %s
-;FFF334468A310ED2=A LangPack file is already defined:
-;5CE27F401B15CF8F=Are you sure you want to assign a new LangPack (the current file will not be deleted) ?
-;4246181B2F051808=S&M - Load SWS LangPack file
-;EE51CC695EA8F96E=Defined new SWS LangPack file:
-;FE58D045C496CF5A=Restart REAPER to complete the operation!
-;7FC4BB32749C48C0=S&M - Information
-;337246D7131A12BE=No SWS LangPack file defined!
 ;8E1F0BC59DC967C2=The column 'Custom ID' is not displayed in the Actions window!\n(to display it, right click on its table header > show action IDs)
-;286F51A61A624DD0=Actions window not opened or no selected action!
 ;AE35E36B88DB8596=Actions window not opened or section '%s' not selected or no selected action!
 ;FDDA4288291C8C3C=Import playlist
 ;BF34DEA5C90F0776=Failed to import playlist. No files found.

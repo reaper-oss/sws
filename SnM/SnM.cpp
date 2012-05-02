@@ -1096,8 +1096,8 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	if (!g_csurfProxy || !_rec->Register("csurf_inst", g_csurfProxy))
 		DELETE_NULL(g_csurfProxy)
 	else {
-		_rec->Register("API_SNM_UnregisterCSurf", SNM_UnregisterCSurf);
-		_rec->Register("API_SNM_RegisterCSurf", SNM_RegisterCSurf);
+		_rec->Register("API_SNM_UnregisterCSurf", (void*)SNM_UnregisterCSurf);
+		_rec->Register("API_SNM_RegisterCSurf", (void*)SNM_RegisterCSurf);
 	}
 	return 1;
 }

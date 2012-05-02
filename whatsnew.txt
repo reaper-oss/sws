@@ -1,3 +1,4 @@
+!v2.2.0 #6 (May 1, 2012)
 Region Playlist
 +Fixed append/crop/paste playlist actions and commands
 +"Paste playlist at edit cursor" can now insert playlists in the middle of projects (rather than "pasting over"). Demo: http://stash.reaper.fm/12421/S%26M%20Region%20Playlist%20-%20Paste%20plalist%20at%20edit%20cursor.gif|here|

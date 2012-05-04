@@ -174,7 +174,6 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
 void DeleteScheduledJob(int _id);
 bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub);
 bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
-int EnumMarkerRegionsCache(ReaProject* _proj, int _idx, bool* _isrgn, double* _pos, double* _rgnend, char** _name, int* _num, int* _color);
 void SNM_CSurfRun();
 void SNM_CSurfSetTrackTitle();
 void SNM_CSurfSetTrackListChange();

@@ -41,10 +41,11 @@ void QuickTest(COMMAND_T* _ct) {}
 // (removed from undo point names)
 ///////////////////////////////////////////////////////////////////////////////
 
-//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_SNM_cmdTable[] = 
 {
 //	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest" }, "S&M_QUICKTEST", QuickTest, NULL, },
+
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 
 	// Routing & cue buss -----------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (use last settings)" }, "S&M_CUEBUS", cueTrack, NULL, -1},
@@ -98,7 +99,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Focus next window (cycle, hide/unhide others)" }, "S&M_WNFOCUS_NEXT", cycleFocusHideOthersWnd, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Focus previous window (cycle, hide/unhide others)" }, "S&M_WNFOCUS_PREV", cycleFocusHideOthersWnd, NULL, -1},
 #endif
-
 	{ { DEFACCEL, "SWS/S&M: Show FX chain for selected tracks (selected FX)" }, "S&M_SHOWFXCHAINSEL", showFXChain, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Hide FX chain windows for selected tracks" }, "S&M_HIDEFXCHAIN", hideFXChain, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Toggle show FX chain windows for selected tracks" }, "S&M_TOGLFXCHAIN", toggleFXChain, NULL, -666, isToggleFXChain},
@@ -108,100 +108,41 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle float selected FX for selected tracks" }, "S&M_TOGLFLOATFXEL", toggleFloatFX, NULL, -1, FakeIsToggleAction},
 
 	// Track FX selection & move up/down---------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Select last FX for selected tracks" }, "S&M_SEL_LAST_FX", selectTrackFX, NULL, -3},
-	{ { DEFACCEL, "SWS/S&M: Select previous FX (cycling) for selected tracks" }, "S&M_SELFXPREV", selectTrackFX, NULL, -2},
-	{ { DEFACCEL, "SWS/S&M: Select next FX (cycling) for selected tracks" }, "S&M_SELFXNEXT", selectTrackFX, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Select last FX for selected tracks" }, "S&M_SEL_LAST_FX", SelectTrackFX, NULL, -3},
+	{ { DEFACCEL, "SWS/S&M: Select previous FX (cycling) for selected tracks" }, "S&M_SELFXPREV", SelectTrackFX, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Select next FX (cycling) for selected tracks" }, "S&M_SELFXNEXT", SelectTrackFX, NULL, -1},
 
-	{ { DEFACCEL, "SWS/S&M: Move selected FX up in chain for selected tracks" }, "S&M_MOVE_FX_UP", moveFX, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Move selected FX down in chain for selected tracks" }, "S&M_MOVE_FX_DOWN", moveFX, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Move selected FX up in chain for selected tracks" }, "S&M_MOVE_FX_UP", MoveFX, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Move selected FX down in chain for selected tracks" }, "S&M_MOVE_FX_DOWN", MoveFX, NULL, 1},
 
 	// Track FX online/offline & bypass/unbypass ------------------------------
-	//JFB TODO: configurable dynamic actions (but ct->user needs to be 0-based first)
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 1 online/offline for selected tracks" }, "S&M_FXOFF1", toggleFXOfflineSelectedTracks, NULL, 1, isFXOfflineSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 2 online/offline for selected tracks" }, "S&M_FXOFF2", toggleFXOfflineSelectedTracks, NULL, 2, isFXOfflineSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 3 online/offline for selected tracks" }, "S&M_FXOFF3", toggleFXOfflineSelectedTracks, NULL, 3, isFXOfflineSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 4 online/offline for selected tracks" }, "S&M_FXOFF4", toggleFXOfflineSelectedTracks, NULL, 4, isFXOfflineSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 5 online/offline for selected tracks" }, "S&M_FXOFF5", toggleFXOfflineSelectedTracks, NULL, 5, isFXOfflineSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 6 online/offline for selected tracks" }, "S&M_FXOFF6", toggleFXOfflineSelectedTracks, NULL, 6, isFXOfflineSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 7 online/offline for selected tracks" }, "S&M_FXOFF7", toggleFXOfflineSelectedTracks, NULL, 7, isFXOfflineSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 8 online/offline for selected tracks" }, "S&M_FXOFF8", toggleFXOfflineSelectedTracks, NULL, 8, isFXOfflineSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle last FX online/offline for selected tracks" }, "S&M_FXOFFLAST", toggleFXOfflineSelectedTracks, NULL, -1, isFXOfflineSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle selected FX online/offline for selected tracks" }, "S&M_FXOFFSEL", toggleFXOfflineSelectedTracks, NULL, 0, isFXOfflineSelectedTracks},
-
-	{ { DEFACCEL, "SWS/S&M: Set FX 1 online for selected tracks" }, "S&M_FXOFF_SETON1", setFXOnlineSelectedTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Set FX 2 online for selected tracks" }, "S&M_FXOFF_SETON2", setFXOnlineSelectedTracks, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Set FX 3 online for selected tracks" }, "S&M_FXOFF_SETON3", setFXOnlineSelectedTracks, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Set FX 4 online for selected tracks" }, "S&M_FXOFF_SETON4", setFXOnlineSelectedTracks, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Set FX 5 online for selected tracks" }, "S&M_FXOFF_SETON5", setFXOnlineSelectedTracks, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Set FX 6 online for selected tracks" }, "S&M_FXOFF_SETON6", setFXOnlineSelectedTracks, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Set FX 7 online for selected tracks" }, "S&M_FXOFF_SETON7", setFXOnlineSelectedTracks, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Set FX 8 online for selected tracks" }, "S&M_FXOFF_SETON8", setFXOnlineSelectedTracks, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Set last FX online for selected tracks" }, "S&M_FXOFF_SETONLAST", setFXOnlineSelectedTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Set selected FX online for selected tracks" }, "S&M_FXOFF_SETONSEL", setFXOnlineSelectedTracks, NULL, 0},
-
-	{ { DEFACCEL, "SWS/S&M: Set FX 1 offline for selected tracks" }, "S&M_FXOFF_SETOFF1", setFXOfflineSelectedTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Set FX 2 offline for selected tracks" }, "S&M_FXOFF_SETOFF2", setFXOfflineSelectedTracks, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Set FX 3 offline for selected tracks" }, "S&M_FXOFF_SETOFF3", setFXOfflineSelectedTracks, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Set FX 4 offline for selected tracks" }, "S&M_FXOFF_SETOFF4", setFXOfflineSelectedTracks, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Set FX 5 offline for selected tracks" }, "S&M_FXOFF_SETOFF5", setFXOfflineSelectedTracks, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Set FX 6 offline for selected tracks" }, "S&M_FXOFF_SETOFF6", setFXOfflineSelectedTracks, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Set FX 7 offline for selected tracks" }, "S&M_FXOFF_SETOFF7", setFXOfflineSelectedTracks, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Set FX 8 offline for selected tracks" }, "S&M_FXOFF_SETOFF8", setFXOfflineSelectedTracks, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Set last FX offline for selected tracks" }, "S&M_FXOFF_SETOFFLAST", setFXOfflineSelectedTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Set selected FX offline for selected tracks" }, "S&M_FXOFF_SETOFFSEL", setFXOfflineSelectedTracks, NULL, 0},
-
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX online/offline for selected tracks" }, "S&M_FXOFFALL", toggleAllFXsOfflineSelectedTracks, NULL, -666, FakeIsToggleAction},
-
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 1 bypass for selected tracks" }, "S&M_FXBYP1", toggleFXBypassSelectedTracks, NULL, 1, isFXBypassedSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 2 bypass for selected tracks" }, "S&M_FXBYP2", toggleFXBypassSelectedTracks, NULL, 2, isFXBypassedSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 3 bypass for selected tracks" }, "S&M_FXBYP3", toggleFXBypassSelectedTracks, NULL, 3, isFXBypassedSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 4 bypass for selected tracks" }, "S&M_FXBYP4", toggleFXBypassSelectedTracks, NULL, 4, isFXBypassedSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 5 bypass for selected tracks" }, "S&M_FXBYP5", toggleFXBypassSelectedTracks, NULL, 5, isFXBypassedSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 6 bypass for selected tracks" }, "S&M_FXBYP6", toggleFXBypassSelectedTracks, NULL, 6, isFXBypassedSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 7 bypass for selected tracks" }, "S&M_FXBYP7", toggleFXBypassSelectedTracks, NULL, 7, isFXBypassedSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle FX 8 bypass for selected tracks" }, "S&M_FXBYP8", toggleFXBypassSelectedTracks, NULL, 8, isFXBypassedSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle last FX bypass for selected tracks" }, "S&M_FXBYPLAST", toggleFXBypassSelectedTracks, NULL, -1, isFXBypassedSelectedTracks},
-	{ { DEFACCEL, "SWS/S&M: Toggle selected FX bypass for selected tracks" }, "S&M_FXBYPSEL", toggleFXBypassSelectedTracks, NULL, 0, isFXBypassedSelectedTracks},
-	
-	{ { DEFACCEL, "SWS/S&M: Bypass FX 1 for selected tracks" }, "S&M_FXBYP_SETON1", setFXBypassSelectedTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Bypass FX 2 for selected tracks" }, "S&M_FXBYP_SETON2", setFXBypassSelectedTracks, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Bypass FX 3 for selected tracks" }, "S&M_FXBYP_SETON3", setFXBypassSelectedTracks, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Bypass FX 4 for selected tracks" }, "S&M_FXBYP_SETON4", setFXBypassSelectedTracks, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Bypass FX 5 for selected tracks" }, "S&M_FXBYP_SETON5", setFXBypassSelectedTracks, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Bypass FX 6 for selected tracks" }, "S&M_FXBYP_SETON6", setFXBypassSelectedTracks, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Bypass FX 7 for selected tracks" }, "S&M_FXBYP_SETON7", setFXBypassSelectedTracks, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Bypass FX 8 for selected tracks" }, "S&M_FXBYP_SETON8", setFXBypassSelectedTracks, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Bypass last FX for selected tracks" }, "S&M_FXBYP_SETONLAST", setFXBypassSelectedTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Bypass selected FX for selected tracks" }, "S&M_FXBYP_SETONSEL", setFXBypassSelectedTracks, NULL, 0},
-	
-	{ { DEFACCEL, "SWS/S&M: Unbypass FX 1 for selected tracks" }, "S&M_FXBYP_SETOFF1", setFXUnbypassSelectedTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Unbypass FX 2 for selected tracks" }, "S&M_FXBYP_SETOFF2", setFXUnbypassSelectedTracks, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Unbypass FX 3 for selected tracks" }, "S&M_FXBYP_SETOFF3", setFXUnbypassSelectedTracks, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Unbypass FX 4 for selected tracks" }, "S&M_FXBYP_SETOFF4", setFXUnbypassSelectedTracks, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Unbypass FX 5 for selected tracks" }, "S&M_FXBYP_SETOFF5", setFXUnbypassSelectedTracks, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Unbypass FX 6 for selected tracks" }, "S&M_FXBYP_SETOFF6", setFXUnbypassSelectedTracks, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Unbypass FX 7 for selected tracks" }, "S&M_FXBYP_SETOFF7", setFXUnbypassSelectedTracks, NULL, 7},
-	{ { DEFACCEL, "SWS/S&M: Unbypass FX 8 for selected tracks" }, "S&M_FXBYP_SETOFF8", setFXUnbypassSelectedTracks, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Unbypass last FX for selected tracks" }, "S&M_FXBYP_SETOFFLAST", setFXUnbypassSelectedTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Unbypass selected FX for selected tracks" }, "S&M_FXBYP_SETOFFSEL", setFXUnbypassSelectedTracks, NULL, 0},
-	
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX bypass for selected tracks" }, "S&M_FXBYPALL", toggleAllFXsBypassSelectedTracks, NULL, -666, FakeIsToggleAction},
-
-	// note: related online/offline actions exist natively
-	{ { DEFACCEL, "SWS/S&M: Bypass all FX for selected tracks" }, "S&M_FXBYPALL2", setAllFXsBypassSelectedTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Unbypass all FX for selected tracks" }, "S&M_FXBYPALL3", setAllFXsBypassSelectedTracks, NULL, 0},
-
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) online/offline for selected tracks" }, "S&M_FXOFFEXCPTSEL", toggleExceptFXOfflineSelectedTracks, NULL, 0, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) bypass for selected tracks" }, "S&M_FXBYPEXCPTSEL", toggleExceptFXBypassSelectedTracks, NULL, 0, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle last FX online/offline for selected tracks" }, "S&M_FXOFFLAST", ToggleFXOfflineSelTracks, NULL, -2, IsFXOfflineSelTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle selected FX online/offline for selected tracks" }, "S&M_FXOFFSEL", ToggleFXOfflineSelTracks, NULL, -1, IsFXOfflineSelTracks},
+	{ { DEFACCEL, "SWS/S&M: Set last FX online for selected tracks" }, "S&M_FXOFF_SETONLAST", SetFXOnlineSelTracks, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Set selected FX online for selected tracks" }, "S&M_FXOFF_SETONSEL", SetFXOnlineSelTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Set last FX offline for selected tracks" }, "S&M_FXOFF_SETOFFLAST", SetFXOfflineSelTracks, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Set selected FX offline for selected tracks" }, "S&M_FXOFF_SETOFFSEL", SetFXOfflineSelTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX online/offline for selected tracks" }, "S&M_FXOFFALL", ToggleAllFXsOfflineSelTracks, NULL, -666, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle last FX bypass for selected tracks" }, "S&M_FXBYPLAST", ToggleFXBypassSelTracks, NULL, -2, IsFXBypassedSelTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle selected FX bypass for selected tracks" }, "S&M_FXBYPSEL", ToggleFXBypassSelTracks, NULL, -1, IsFXBypassedSelTracks},
+	{ { DEFACCEL, "SWS/S&M: Bypass last FX for selected tracks" }, "S&M_FXBYP_SETONLAST", SetFXBypassSelTracks, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Bypass selected FX for selected tracks" }, "S&M_FXBYP_SETONSEL", SetFXBypassSelTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Unbypass last FX for selected tracks" }, "S&M_FXBYP_SETOFFLAST", SetFXUnbypassSelTracks, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Unbypass selected FX for selected tracks" }, "S&M_FXBYP_SETOFFSEL", SetFXUnbypassSelTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX bypass for selected tracks" }, "S&M_FXBYPALL", ToggleAllFXsBypassSelTracks, NULL, -666, FakeIsToggleAction},
+	// note: toggle online/offline actions exist natively ^^
+	{ { DEFACCEL, "SWS/S&M: Bypass all FX for selected tracks" }, "S&M_FXBYPALL2", SetAllFXsBypassSelTracks, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Unbypass all FX for selected tracks" }, "S&M_FXBYPALL3", SetAllFXsBypassSelTracks, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) online/offline for selected tracks" }, "S&M_FXOFFEXCPTSEL", ToggleExceptFXOfflineSelTracks, NULL, -1, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) bypass for selected tracks" }, "S&M_FXBYPEXCPTSEL", ToggleExceptFXBypassSelTracks, NULL, -1, FakeIsToggleAction},
 
 	// Take FX online/offline & bypass/unbypass ------------------------------
-	{ { DEFACCEL, "SWS/S&M: Toggle all take FX online/offline for selected items" }, "S&M_TGL_TAKEFX_ONLINE", toggleAllFXsOfflineSelectedItems, NULL, -666, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Set all take FX offline for selected items" }, "S&M_TAKEFX_OFFLINE", setAllFXsOfflineSelectedItems, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Set all take FX online for selected items" }, "S&M_TAKEFX_ONLINE", setAllFXsOfflineSelectedItems, NULL, 0},
-
-	{ { DEFACCEL, "SWS/S&M: Toggle all take FX bypass for selected items" }, "S&M_TGL_TAKEFX_BYP", toggleAllFXsBypassSelectedItems, NULL, -666, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Bypass all take FX for selected items" }, "S&M_TAKEFX_BYPASS", setAllFXsBypassSelectedItems, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Unbypass all take FX for selected items" }, "S&M_TAKEFX_UNBYPASS", setAllFXsBypassSelectedItems, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Toggle all take FX online/offline for selected items" }, "S&M_TGL_TAKEFX_ONLINE", ToggleAllFXsOfflineSelItems, NULL, -666, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Set all take FX offline for selected items" }, "S&M_TAKEFX_OFFLINE", SetAllFXsOfflineSelItems, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Set all take FX online for selected items" }, "S&M_TAKEFX_ONLINE", SetAllFXsOfflineSelItems, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Toggle all take FX bypass for selected items" }, "S&M_TGL_TAKEFX_BYP", ToggleAllFXsBypassSelItems, NULL, -666, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Bypass all take FX for selected items" }, "S&M_TAKEFX_BYPASS", SetAllFXsBypassSelItems, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Unbypass all take FX for selected items" }, "S&M_TAKEFX_UNBYPASS", SetAllFXsBypassSelItems, NULL, 0},
 
 	// Resources view
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window" }, "S&M_SHOW_RESOURCES_VIEW", OpenResourceView, NULL, -1, IsResourceViewDisplayed},
@@ -510,25 +451,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Deprecated, unreleased, etc... -----------------------------------------
 #ifdef _SNM_MISC
-	//JFB TODO: release as `hidden` dynamic actions (but ct->user needs to be 0-based first)
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 1) online/offline for selected tracks" }, "S&M_FXOFFEXCPT1", toggleExceptFXOfflineSelectedTracks, NULL, 1, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 2) online/offline for selected tracks" }, "S&M_FXOFFEXCPT2", toggleExceptFXOfflineSelectedTracks, NULL, 2, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 3) online/offline for selected tracks" }, "S&M_FXOFFEXCPT3", toggleExceptFXOfflineSelectedTracks, NULL, 3, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 4) online/offline for selected tracks" }, "S&M_FXOFFEXCPT4", toggleExceptFXOfflineSelectedTracks, NULL, 4, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 5) online/offline for selected tracks" }, "S&M_FXOFFEXCPT5", toggleExceptFXOfflineSelectedTracks, NULL, 5, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 6) online/offline for selected tracks" }, "S&M_FXOFFEXCPT6", toggleExceptFXOfflineSelectedTracks, NULL, 6, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 7) online/offline for selected tracks" }, "S&M_FXOFFEXCPT7", toggleExceptFXOfflineSelectedTracks, NULL, 7, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 8) online/offline for selected tracks" }, "S&M_FXOFFEXCPT8", toggleExceptFXOfflineSelectedTracks, NULL, 8, FakeIsToggleAction},
-
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 1) bypass for selected tracks" }, "S&M_FXBYPEXCPT1", toggleExceptFXBypassSelectedTracks, NULL, 1, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 2) bypass for selected tracks" }, "S&M_FXBYPEXCPT2", toggleExceptFXBypassSelectedTracks, NULL, 2, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 3) bypass for selected tracks" }, "S&M_FXBYPEXCPT3", toggleExceptFXBypassSelectedTracks, NULL, 3, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 4) bypass for selected tracks" }, "S&M_FXBYPEXCPT4", toggleExceptFXBypassSelectedTracks, NULL, 4, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 5) bypass for selected tracks" }, "S&M_FXBYPEXCPT5", toggleExceptFXBypassSelectedTracks, NULL, 5, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 6) bypass for selected tracks" }, "S&M_FXBYPEXCPT6", toggleExceptFXBypassSelectedTracks, NULL, 6, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 7) bypass for selected tracks" }, "S&M_FXBYPEXCPT7", toggleExceptFXBypassSelectedTracks, NULL, 7, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except 8) bypass for selected tracks" }, "S&M_FXBYPEXCPT8", toggleExceptFXBypassSelectedTracks, NULL, 8, FakeIsToggleAction},
-
 	// only diff. is that they don't focus the main window on cycle
 	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS1", cycleFocusFXWndSelTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS2", cycleFocusFXWndSelTracks, NULL, 1},
@@ -540,8 +462,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 	// deprecated: native actions `Rotate take lanes forward/backward` added in REAPER v3.67
 	{ { DEFACCEL, "SWS/S&M: Takes - Move all up (cycling) in selected items" }, "S&M_MOVETAKE1", moveTakes, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Takes - Move all down (cycling) in selected items" }, "S&M_MOVETAKE2", moveTakes, NULL, 1},
-
-	{ { DEFACCEL, "SWS/S&M: Save selected item as item/take template..." }, "S&M_SAVEITEMTAKETEMPLATE", saveItemTakeTemplate, NULL, },
 
 //  Deprecated: contrary to their native versions, the following actions were spliting selected items *and only them*, 
 //  see http://forum.cockos.com/showthread.php?t=51547.
@@ -592,10 +512,21 @@ static COMMAND_T g_SNM_cmdTable[] =
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_SNM_dynamicCmdTable[] =
 {
+
+//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
+
 	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection, settings %02d" }, "S&M_CUEBUS", cueTrack, SNM_MAX_CUE_BUSS_CONFS_STR, SNM_MAX_CUE_BUSS_CONFS},
+
+	{ { DEFACCEL, "SWS/S&M: Set FX %02d online for selected tracks" }, "S&M_FXOFF_SETON", SetFXOnlineSelTracks, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Set FX %02d offline for selected tracks" }, "S&M_FXOFF_SETOFF", SetFXOfflineSelTracks, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX %02d online/offline for selected tracks" }, "S&M_FXOFF", ToggleFXOfflineSelTracks, NULL, 8, IsFXOfflineSelTracks},
+	{ { DEFACCEL, "SWS/S&M: Bypass FX %02d for selected tracks" }, "S&M_FXBYP_SETON", SetFXBypassSelTracks, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Unbypass FX %02d for selected tracks" }, "S&M_FXBYP_SETOFF", SetFXUnbypassSelTracks, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Toggle FX %02d bypass for selected tracks" }, "S&M_FXBYP", ToggleFXBypassSelTracks, NULL, 8, IsFXBypassedSelTracks},
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except %02d) online/offline for selected tracks" }, "S&M_FXOFFEXCPT", ToggleExceptFXOfflineSelTracks, NULL, 0, FakeIsToggleAction}, // default: none
+	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except %02d) bypass for selected tracks" }, "S&M_FXBYPEXCPT", ToggleExceptFXBypassSelTracks, NULL, 0, FakeIsToggleAction}, // default: none
 
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain slot %02d" }, "S&M_CLRFXCHAINSLOT", ResViewClearFXChainSlot, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Paste (replace) FX chain to selected items, slot %02d" }, "S&M_TAKEFXCHAIN", loadSetTakeFXChain, NULL, 4},
@@ -627,12 +558,6 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause), slot %02d" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTR", TogglePauseSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause), slot %02d - Infinite looping! To be stopped!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR", ToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
 
-#ifdef _SNM_MISC // not interesting..
-	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_PLAYMEDIA_SELTRACK_SYNC", SyncTogglePlaySelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_LOOPMEDIA_SELTRACK_SYNC", SyncToggleLoopSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause, sync with next measure), slot %02d" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTR_SYNC", SyncTogglePauseSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %02d - Infinite looping! To be stopped!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR_SYNC", SyncToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
-#endif
 	{ { DEFACCEL, "SWS/S&M: Add media file to current track, slot %02d" }, "S&M_ADDMEDIA_CURTRACK", InsertMediaSlotCurTr, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Add media file to new track, slot %02d" }, "S&M_ADDMEDIA_NEWTRACK", InsertMediaSlotNewTr, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Add media file to selected items as takes, slot %02d" }, "S&M_ADDMEDIA_SELITEM", InsertMediaSlotTakes, NULL, 4},
@@ -650,7 +575,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Trigger next preset for FX %02d of selected tracks" }, "S&M_NEXT_PRESET_FX", NextPresetSelTracks, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for FX %02d of selected tracks" }, "S&M_PREVIOUS_PRESET_FX", PrevPresetSelTracks, NULL, 4},
 #endif
-	{ { DEFACCEL, "SWS/S&M: Select FX %02d for selected tracks" }, "S&M_SELFX", selectTrackFX, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Select FX %02d for selected tracks" }, "S&M_SELFX", SelectTrackFX, NULL, 8},
 
 	{ { DEFACCEL, "SWS/S&M: Show FX chain for selected tracks, FX %02d" }, "S&M_SHOWFXCHAIN", showFXChain, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Float FX %02d for selected tracks" }, "S&M_FLOATFX", floatFX, NULL, 8},
@@ -666,9 +591,16 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Next" }, "S&M_NEXT_LIVE_CFG", NextLiveConfig, SNM_LIVECFG_NB_CONFIGS_STR, 8},
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Previous" }, "S&M_PREVIOUS_LIVE_CFG", PreviousLiveConfig, SNM_LIVECFG_NB_CONFIGS_STR, 8},
 
+//!WANT_LOCALIZE_1ST_STRING_END
+
+#ifdef _SNM_MISC // not interesting..
+	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_PLAYMEDIA_SELTRACK_SYNC", SyncTogglePlaySelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_LOOPMEDIA_SELTRACK_SYNC", SyncToggleLoopSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause, sync with next measure), slot %02d" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTR_SYNC", SyncTogglePauseSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %02d - Infinite looping! To be stopped!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR_SYNC", SyncToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
+#endif
 	{ {}, LAST_COMMAND, }, // denote end of table
 };
-//!WANT_LOCALIZE_1ST_STRING_END
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -723,7 +655,7 @@ bool FakeIsToggleAction(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Toolbars auto refresh option
+// Toolbars auto refresh option (see SNM_CSurfRun())
 ///////////////////////////////////////////////////////////////////////////////
 
 bool g_toolbarsAutoRefreshEnabled = false;
@@ -737,7 +669,6 @@ bool IsToolbarsAutoRefeshEnabled(COMMAND_T* _ct) {
 	return g_toolbarsAutoRefreshEnabled;
 }
 
-// see SnMCSurfRun()
 void RefreshToolbars() {
 	// item sel. buttons
 	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_ITEM_SEL0"));
@@ -860,7 +791,7 @@ void SNM_ShowActionList(COMMAND_T* _ct) {
 int SNM_RegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 {
 	char actionName[SNM_MAX_ACTION_NAME_LEN]="", custId[SNM_MAX_ACTION_CUSTID_LEN]="";
-	int i = 0;
+	int ret=1, i=0;
 	while(_cmds[i].id != LAST_COMMAND)
 	{
 		COMMAND_T* ct = &_cmds[i++];
@@ -868,10 +799,14 @@ int SNM_RegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 		nb = BOUNDED(nb, 0, ct->menuText == NULL ? SNM_MAX_DYNAMIC_ACTIONS : atoi(ct->menuText));
 		for (int j=0; j < nb; j++)
 		{
-			_snprintf(actionName, SNM_MAX_ACTION_NAME_LEN, GetLocalizedActionName(ct->accel.desc, LOCALIZE_FLAG_VERIFY_FMTS), j+1);
-			_snprintf(custId, SNM_MAX_ACTION_CUSTID_LEN, "%s%d", ct->id, j+1);
-			if (SWSCreateRegisterDynamicCmd(0, ct->doCommand, ct->getEnabled, custId, actionName, j, __FILE__, false)) // already localized 
-				ct->user = nb; // patch the real number of instances
+			if (_snprintfStrict(actionName, sizeof(actionName), GetLocalizedActionName(ct->accel.desc, LOCALIZE_FLAG_VERIFY_FMTS), j+1) > 0 &&
+				_snprintfStrict(custId, sizeof(custId), "%s%d", ct->id, j+1) > 0)
+			{
+				if (SWSCreateRegisterDynamicCmd(0, ct->doCommand, ct->getEnabled, custId, actionName, j, __FILE__, false)) // already localized 
+					ct->user = nb; // patch the real number of instances
+				else
+					return 0;
+			}
 			else
 				return 0;
 		}
@@ -882,7 +817,7 @@ int SNM_RegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 void SNM_SaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 {
 	WDL_FastString iniSection, str;
-	iniSection.SetFormatted(128, "; Set the number of slot actions you want below (none/hidden: 0, max: %d, exit REAPER first!)\n", SNM_MAX_DYNAMIC_ACTIONS);
+	iniSection.SetFormatted(128, "; Set the number of slot actions you want below (none/hidden: 0, max: %d, quit REAPER first!)\n", SNM_MAX_DYNAMIC_ACTIONS);
 
 	WDL_String nameStr; // no fast string here: the buffer gets mangeled..
 	int i=0;
@@ -974,7 +909,7 @@ void IniFileExit()
 
 ///////////////////////////////////////////////////////////////////////////////
 // IReaperControlSurface "proxy"
-// note: unalloc is caller's responsability 
+// note: it is up to the caller to unalloc things
 ///////////////////////////////////////////////////////////////////////////////
 
 #define CSURFMAP(x) SWS_SectionLock lock(&m_csurfsMutex); for (int i=0; i<m_csurfs.GetSize(); i++) m_csurfs.Get(i)->x;
@@ -1113,6 +1048,7 @@ void SNM_Exit()
 	CyclactionExit();
 	SNM_UIExit();
 	IniFileExit();
+
 	if (g_csurfProxy)
 		g_csurfProxy->RemoveAll();
 	DELETE_NULL(g_csurfProxy);
@@ -1120,7 +1056,7 @@ void SNM_Exit()
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_ScheduledJob (managed in SnMCSurfRun())
+// SNM_ScheduledJob (see SNM_CSurfRun())
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_jobs;
@@ -1161,13 +1097,12 @@ void DeleteScheduledJob(int _id)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_MarkerRegionSubscriber (managed in SnMCSurfRun())
+// SNM_MarkerRegionSubscriber (see SNM_CSurfRun())
 ///////////////////////////////////////////////////////////////////////////////
 
-static void DeleteMkrRgnPtr(MarkerRegion* _p) { DELETE_NULL(_p); }
 WDL_PtrList<SNM_MarkerRegionSubscriber> g_mkrRgnSubscribers;
-WDL_IntKeyedArray<MarkerRegion*> g_mkrRgnCache(DeleteMkrRgnPtr);
-SWS_Mutex g_mkrRgnSubscribersMutex, g_mkrRgnCacheMutex;
+SWS_Mutex g_mkrRgnSubscribersMutex;
+WDL_PtrList<MarkerRegion> g_mkrRgnCache;
 
 bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
 	if (_sub) {
@@ -1195,61 +1130,36 @@ bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
 int UpdateMarkerRegionCache()
 {
 	int updateFlags=0;
+	int i=0, x=0, num, col; double pos, rgnend; char* name; bool isRgn;
+
+	// added/updated markers/regions?
+	while (x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &rgnend, &name, &num, &col))
 	{
-		SWS_SectionLock lock(&g_mkrRgnCacheMutex);
-
-		// added/updated markers/regions?
-		int x=0, lastx=0, num, col; double pos, rgnend; char* name; bool isRgn;
-		while (x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &rgnend, &name, &num, &col))
-		{
-			MarkerRegion* m = g_mkrRgnCache.Get(lastx);
-			if (!m || !g_mkrRgnCache.Get(lastx)->Compare(isRgn, pos, rgnend, name, num, col))
-			{
-				if (m) g_mkrRgnCache.Delete(lastx);
-				g_mkrRgnCache.Insert(lastx, new MarkerRegion(isRgn, pos, rgnend, name, num, col));
-				updateFlags |= (isRgn ? SNM_REGION_MASK : SNM_MARKER_MASK);
-			}
-			lastx=x;
+		MarkerRegion* m = g_mkrRgnCache.Get(i);
+		if (!m || (m && !m->Compare(isRgn, pos, rgnend, name, num, col))) {
+			if (m) g_mkrRgnCache.Delete(i);
+			g_mkrRgnCache.Insert(i, new MarkerRegion(isRgn, pos, rgnend, name, num, col));
+			updateFlags |= (isRgn ? SNM_REGION_MASK : SNM_MARKER_MASK);
 		}
-		// removed markers/regions?
-		for (int i=g_mkrRgnCache.GetSize(); i>=0; i--) {
-			MarkerRegion* m = g_mkrRgnCache.Enumerate(i, &x, NULL);
-			if (m && !EnumProjectMarkers3(NULL, x, NULL, NULL, NULL, NULL, NULL, NULL)) {
-				updateFlags |= (m->IsRegion() ? SNM_REGION_MASK : SNM_MARKER_MASK);
-				g_mkrRgnCache.Delete(x);
-			}
-		}
+		i++;
 	}
-
+	// removed markers/regions?
+	for (int j=g_mkrRgnCache.GetSize()-1; j>=i; j--) {
+		if (MarkerRegion* m = g_mkrRgnCache.Get(j))
+			updateFlags |= (m->IsRegion() ? SNM_REGION_MASK : SNM_MARKER_MASK);
+		g_mkrRgnCache.Delete(j, true);
+	}
 	// project time mode update?
 	static int prevTimemode = *(int*)GetConfigVar("projtimemode");
-	if (!updateFlags)
+	if (updateFlags != (SNM_MARKER_MASK|SNM_REGION_MASK))
 		if (int* timemode = (int*)GetConfigVar("projtimemode"))
 			if (*timemode != prevTimemode) {
 				prevTimemode = *timemode;
 				return SNM_MARKER_MASK|SNM_REGION_MASK;
 			}
-
 	return updateFlags;
 }
 
-int EnumMarkerRegionsCache(ReaProject* _proj, int _idx, bool* _isrgn, double* _pos, double* _rgnend, char** _name, int* _num, int* _color) 
-{
-	SWS_SectionLock lock(&g_mkrRgnCacheMutex);
-	if (MarkerRegion* m = g_mkrRgnCache.Get(_idx))
-	{
-		if (_isrgn) *_isrgn = m->IsRegion();
-		if (_pos) *_pos = m->GetPos();
-		if (_rgnend) *_rgnend = m->GetRegEnd();
-		if (_name) *_name = m->GetName();
-		if (_num) *_num = m->GetNum();
-		if (_color) *_color = m->GetColor();
-		int x, i = g_mkrRgnCache.GetIdx(_idx);
-		if (i>=0 && g_mkrRgnCache.Enumerate(i+1, &x, NULL))
-			return x;
-	}
-	return 0;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // IReaperControlSurface callbacks
@@ -1259,7 +1169,7 @@ double g_toolbarMsCounter = 0.0;
 double g_itemSelToolbarMsCounter = 0.0;
 double g_markerRegionNotifyMsCounter = 0.0;
 
-// processing order is important here..
+// processing order is important here!
 void SNM_CSurfRun()
 {
 	// region playlist
@@ -1275,8 +1185,7 @@ void SNM_CSurfRun()
 		{
 			SNM_ScheduledJob* job = g_jobs.Get(i);
 			job->m_tick--;
-			if (job->m_tick <= 0)
-			{
+			if (job->m_tick <= 0) {
 				job->Perform();
 				g_jobs.Delete(i, true);
 			}
@@ -1292,7 +1201,7 @@ void SNM_CSurfRun()
 		SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
 		if (int sz=g_mkrRgnSubscribers.GetSize())
 			if (int updateFlags = UpdateMarkerRegionCache())
-				for (int i=sz-1; i >=0; i--)
+				for (int i=sz-1; i>=0; i--)
 					g_mkrRgnSubscribers.Get(i)->NotifyMarkerRegionUpdate(updateFlags);
 	}
 

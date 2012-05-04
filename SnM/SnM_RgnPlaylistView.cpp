@@ -127,17 +127,16 @@ void SNM_PlaylistView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 		{
 			case COL_RGN: {
 				char buf[128]="";
-				if (pItem->m_rgnId>0 && EnumMarkerRegionDesc(GetMarkerRegionIndexFromId(pItem->m_rgnId), buf, 128, SNM_REGION_MASK, true) && *buf)
-					if (_snprintf(str, iStrMax, "%s %s", g_lastPlayedItem==pItem ? UTF8_BULLET : " ", buf) > 0)
-						break;
-				int num = pItem->m_rgnId & 0x3FFFFFFF;
-				if (_snprintf(str, iStrMax, __LOCALIZE("Unknown region %d","sws_DLG_165"), num) > 0)
+				if (pItem->m_rgnId>0 && EnumMarkerRegionDesc(GetMarkerRegionIndexFromId(pItem->m_rgnId), buf, 128, SNM_REGION_MASK, true) && *buf) {
+					_snprintfSafe(str, iStrMax, "%s %s", g_lastPlayedItem==pItem ? UTF8_BULLET : " ", buf);
 					break;
-				lstrcpyn(str, __LOCALIZE("Unknown region","sws_DLG_165"), iStrMax);
+				}
+				int num = pItem->m_rgnId & 0x3FFFFFFF;
+				_snprintfSafe(str, iStrMax, __LOCALIZE("Unknown region %d","sws_DLG_165"), num);
 				break;
 			}
 			case COL_RGN_COUNT:
-				_snprintf(str, iStrMax, "%d", pItem->m_cnt);
+				_snprintfSafe(str, iStrMax, "%d", pItem->m_cnt);
 				break;
 		}
 	}
@@ -561,7 +560,7 @@ void SNM_RegionPlaylistWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int*
 							char len[64]="", timeStr[32];
 							format_timestr_pos(playlistLen, timeStr, 32, -1);
 							m_txtLength.SetFont(font);
-							_snprintf(len, 64, __LOCALIZE_VERFMT("Length: %s","sws_DLG_165"), timeStr);
+							_snprintfSafe(len, sizeof(len), __LOCALIZE_VERFMT("Length: %s","sws_DLG_165"), timeStr);
 							m_txtLength.SetText(len);
 							if (SNM_AutoVWndPosition(&m_txtLength, NULL, _r, &x0, _r->top, h)) {
 								SNM_SkinToolbarButton(&m_btnCrop, __LOCALIZE("Paste playlist","sws_DLG_165"));
@@ -621,7 +620,7 @@ HMENU SNM_RegionPlaylistWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultIte
 			FillMarkerRegionMenu(hInsertSubMenu, INSERT_REGION_START_MSG, SNM_REGION_MASK);
 			AddToMenu(hMenu, __LOCALIZE("Remove region(s)","sws_DLG_165"), DELETE_MSG, -1, false, hasSel ? 0 : MF_GRAYED);
 			AddToMenu(hMenu, SWS_SEPARATOR, 0);
-			AddToMenu(hMenu, __LOCALIZE("Append region(s)","sws_DLG_165"), APPEND_SEL_RGN_MSG, -1, false, hasSel ? 0 : MF_GRAYED);
+			AddToMenu(hMenu, __LOCALIZE("Append region(s) to project","sws_DLG_165"), APPEND_SEL_RGN_MSG, -1, false, hasSel ? 0 : MF_GRAYED);
 			AddToMenu(hMenu, __LOCALIZE("Paste region(s) at edit cursor","sws_DLG_165"), PASTE_SEL_RGN_MSG, -1, false, hasSel ? 0 : MF_GRAYED);
 		}
 	}
@@ -634,21 +633,21 @@ bool SNM_RegionPlaylistWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut
 		switch (v->GetID())
 		{
 			case BUTTONID_PLAY:
-				return (_snprintf(_bufOut, _bufOutSz, "%s", __LOCALIZE("Play preview","sws_DLG_165")) > 0);
+				return (_snprintfStrict(_bufOut, _bufOutSz, "%s", __LOCALIZE("Play preview","sws_DLG_165")) > 0);
 			case BUTTONID_STOP:
-				return (_snprintf(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Stop","sws_DLG_165"), "") > 0);
+				return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Stop","sws_DLG_165"), "") > 0);
 //			case TXTID_PLAYLIST:
 //				return false;
 			case COMBOID_PLAYLIST:
-				return (_snprintf(_bufOut, _bufOutSz, "%s", __LOCALIZE("Current playlist","sws_DLG_165")) > 0);
+				return (_snprintfStrict(_bufOut, _bufOutSz, "%s", __LOCALIZE("Current playlist","sws_DLG_165")) > 0);
 			case BUTTONID_NEW_PLAYLIST:
-				return (_snprintf(_bufOut, _bufOutSz, "%s", __LOCALIZE("Add playlist","sws_DLG_165")) > 0);
+				return (_snprintfStrict(_bufOut, _bufOutSz, "%s", __LOCALIZE("Add playlist","sws_DLG_165")) > 0);
 			case BUTTONID_DEL_PLAYLIST:
-				return (_snprintf(_bufOut, _bufOutSz, "%s", __LOCALIZE("Delete playlist","sws_DLG_165")) > 0);
+				return (_snprintfStrict(_bufOut, _bufOutSz, "%s", __LOCALIZE("Delete playlist","sws_DLG_165")) > 0);
 			case TXTID_LENGTH:
-				return (_snprintf(_bufOut, _bufOutSz, "%s", __LOCALIZE("Total playlist length","sws_DLG_165")) > 0);
+				return (_snprintfStrict(_bufOut, _bufOutSz, "%s", __LOCALIZE("Total playlist length","sws_DLG_165")) > 0);
 			case BUTTONID_PASTE:
-				return (_snprintf(_bufOut, _bufOutSz, "%s", __LOCALIZE("Paste playlist at edit cursor\n(right-click for other append/crop commands)","sws_DLG_165")) > 0);
+				return (_snprintfStrict(_bufOut, _bufOutSz, "%s", __LOCALIZE("Paste playlist at edit cursor\n(right-click for other append/crop commands)","sws_DLG_165")) > 0);
 		}
 	}
 	return false;
@@ -754,7 +753,7 @@ int GetNextValidPlaylistIdx(int _playlistIdx, int* _nextRgnIdx, bool _startWith 
 		for (int i=_playlistIdx+(_startWith?0:1); i<p->GetSize(); i++)
 			if (SNM_PlaylistItem* item = p->Get(i))
 				if (item->m_rgnId>0 && item->m_cnt>0) {
-					*_nextRgnIdx = GetMarkerRegionIndexFromId(item->m_rgnId, true);
+					*_nextRgnIdx = GetMarkerRegionIndexFromId(item->m_rgnId);
 					if (*_nextRgnIdx >= 0)
 						return i;
 				}
@@ -762,7 +761,7 @@ int GetNextValidPlaylistIdx(int _playlistIdx, int* _nextRgnIdx, bool _startWith 
 		for (int i=0; i<p->GetSize() && i<=(_playlistIdx-(_startWith?1:0)); i++)
 			if (SNM_PlaylistItem* item = p->Get(i))
 				if (item->m_rgnId>0 && item->m_cnt>0) {
-					*_nextRgnIdx = GetMarkerRegionIndexFromId(item->m_rgnId, true);
+					*_nextRgnIdx = GetMarkerRegionIndexFromId(item->m_rgnId);
 					if (*_nextRgnIdx >= 0)
 						return i;
 				}
@@ -783,7 +782,7 @@ bool GetPlaylistRunItems(double _pos)
 	MUTEX_PLAYLISTS;
 	if (SNM_Playlist* p = GetPlaylist())
 	{
-		int id, rgnIdx = p->GetSize() ? FindMarkerRegion(_pos, SNM_REGION_MASK, true, &id) : 0;
+		int id, rgnIdx = p->GetSize() ? FindMarkerRegion(_pos, SNM_REGION_MASK, &id) : 0;
 		if (id>0)
 		{
 			for (int i=g_playId; i<p->GetSize(); i++)
@@ -904,8 +903,8 @@ void PlaylistPlay(int _playlistId, bool _errMsg)
 	int num = HasPlaylistNestedMarkersRegions();
 	if (num>0) {
 		char msg[128] = "";
-		if (_snprintf(msg, 128, __LOCALIZE_VERFMT("Play preview might not work as expected!\nThe playlist constains nested markers/regions (inside region %d at least)","sws_DLG_165"), num)>0)
-			MessageBox(g_pRgnPlaylistWnd?g_pRgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"),MB_OK);
+		_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Play preview might not work as expected!\nThe playlist constains nested markers/regions (inside region %d at least)","sws_DLG_165"), num);
+		MessageBox(g_pRgnPlaylistWnd?g_pRgnPlaylistWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_DLG_165"),MB_OK);
 	}
 
 	g_playingPlaylist = false;
@@ -1025,7 +1024,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 						// store regions
 						bool found = false;
 						for (int k=0; !found && k<rgns.GetSize(); k++)
-							found |= (rgns.Get(k)->GetNum() == rgnnum);							
+							found |= (rgns.Get(k)->GetNum() == rgnnum);
 						if (!found)
 							rgns.Add(new MarkerRegion(true, endPos-startPos, endPos+rgnend-rgnpos-startPos, rgnname, rgnnum, rgncol));
 

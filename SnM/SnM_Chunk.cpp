@@ -78,12 +78,10 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 			int defSndFlags = *(int*)GetConfigVar("defsendflag");
 			bool audioSnd = ((defSndFlags & 512) != 512);
 			bool midiSnd =  ((defSndFlags & 256) != 256);
-
-			char bufline[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-			int n = _snprintf(bufline, SNM_MAX_CHUNK_LINE_LENGTH,
+			_newChunk->AppendFormatted(
+				SNM_MAX_CHUNK_LINE_LENGTH,
 				"AUXRECV %d %d %s %s 0 0 0 %d 0 -1.00000000000000 %d -1\n%s\n", 
-				m_srcId-1, m_sendType, m_vol, m_pan, audioSnd ? 0 : -1, midiSnd ? 0 : 31, _parsedLine);
-			_newChunk->Append(bufline,n);
+				m_srcId-1, m_sendType, m_vol, m_pan, audioSnd?0:-1, midiSnd?0:31, _parsedLine);
 			update = true;
 			m_breakParsePatch = true;
 		}
@@ -98,8 +96,8 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 		// add "detailed" receive
 		case -3:
 		{
-			char bufline[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-			int n = _snprintf(bufline, SNM_MAX_CHUNK_LINE_LENGTH,
+			_newChunk->AppendFormatted(
+				SNM_MAX_CHUNK_LINE_LENGTH,
 				"AUXRECV %d %d %.14f %.14f %d %d %d %d %d %.14f %d %d\n%s\n", 
 				m_srcId-1, 
 				m_sendType, 
@@ -112,9 +110,8 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 				m_sndRcv->m_destChan,
 				m_sndRcv->m_panl,
 				m_sndRcv->m_midi,
-				-1, //JFB: cannot get -send/rcv- automation!
+				-1, // API LIMITATION: cannot get snd/rcv automation
 				_parsedLine);
-			_newChunk->Append(bufline,n);
 			update = true;
 			m_breakParsePatch = true;
 		}
@@ -164,8 +161,7 @@ int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr)
 		return 0;
 /* can fail since v4.1: freeze
 	char buf[32];
-	_snprintf(buf, 32, "AUXRECV %d", srcId-1);
-	return RemoveLines(buf);
+	return _snprintfStrict(buf, sizeof(buf), "AUXRECV %d", srcId-1)>0 && RemoveLines(buf);
 */
 	return (ParsePatch(-2, 1, "TRACK", "AUXRECV", -1, -1, NULL, NULL, "MIDIOUT") > 0);
 }
@@ -766,9 +762,9 @@ bool SNM_ArmEnvParserPatcher::NotifyChunkLine(int _mode,
 					(_mode == -5 && !strcmp(parent, "PARMENV")))
 				{
 					if (m_newValue == -1)
-						_newChunk->AppendFormatted(5+2, "ARM %d\n", !_lp->gettoken_int(1) ? 1 : 0); //+2 for OSX
+						_newChunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "ARM %d\n", !_lp->gettoken_int(1) ? 1 : 0);
 					else
-						_newChunk->AppendFormatted(5+2, "ARM %d\n", m_newValue); //+2 for OSX
+						_newChunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "ARM %d\n", m_newValue);
 					updated = true;
 				}
 			}
@@ -808,9 +804,7 @@ bool SNM_LearnMIDIChPatcher::NotifyChunkLine(int _mode,
 		{
 			int midiMsg = _lp->gettoken_int(2) & 0xFFF0;
 			midiMsg |= m_newChannel;
-			char bufline[128] = "";
-			int n = _snprintf(bufline, 128, "PARMLEARN %d %d %d\n", _lp->gettoken_int(1), midiMsg, _lp->gettoken_int(3));
-			_newChunk->Append(bufline,n);
+			_newChunk->AppendFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "PARMLEARN %d %d %d\n", _lp->gettoken_int(1), midiMsg, _lp->gettoken_int(3));
 			updated = true;
 /* no! may be there are several learned params for that FX..
 			m_breakParsePatch = (m_fx != -1); // one fx to be patched

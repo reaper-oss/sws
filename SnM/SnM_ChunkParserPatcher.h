@@ -1,5 +1,5 @@
 /******************************************************************************
-** SnM_ChunkParserPatcher.h - v1.235
+** SnM_ChunkParserPatcher.h - v1.3
 ** Copyright (C) 2008-2012, Jeffos
 **
 **    This software is provided 'as-is', without any express or implied
@@ -41,15 +41,16 @@
 // - The code assumes RPP chunks are consistent
 //
 // Changelog:
-// v1.23x
+// v1.3x
 // - TEMPORARY VERSIONS: v2.0 on the way..
+// - Fixed possible crash with veeeeery long lines, new max line length = 8Ko
+// v1.2x
 // - Frozen track support: do not mess with frozen data
 //   note: FREEZE sub-chunks can be optionally processed like base-64 and in-project MIDI data
 // - Fix: when getting, override the native "VST minimal state" preference by default (so that 
 //   chunks are always complete)
 // - Performance improvements: new option to get minimal states, see m_minimalState
 // - Auto-commit when attached to a WDL_FastString* (just like when attached to a reaThing*)
-// v1.22
 // - New helpers, new SNM_COUNT_KEYWORD parsing mode
 // - Inheritance: Commit() & GetChunk() can be overrided
 // - GetSubChunk() now returns the start position of the sub-chunk (or -1 if not found)
@@ -64,7 +65,6 @@
 // - Performance improvements
 // - Safer commit of chunk updates (ids auto removal)
 
-//#pragma once
 
 #ifndef _SNM_CHUNKPARSERPATCHER_H_
 #define _SNM_CHUNKPARSERPATCHER_H_
@@ -97,7 +97,7 @@
 #define SNM_COUNT_KEYWORD				15
 
 // Misc
-#define SNM_MAX_CHUNK_LINE_LENGTH		4096 // inspired by WDL/projectcontext.h
+#define SNM_MAX_CHUNK_LINE_LENGTH		8192 // inspired by WDL's projectcontext
 #define SNM_MAX_CHUNK_KEYWORD_LENGTH	64
 #define SNM_HEAPBUF_GRANUL				256*1024
 
@@ -298,7 +298,7 @@ virtual bool Commit(bool _force = false)
 }
 
 const char* GetInfo() {
-	return "SNM_ChunkParserPatcher - v1.235";
+	return "SNM_ChunkParserPatcher - v1.3";
 }
 
 void SetProcessBase64(bool _enable) {
@@ -531,11 +531,12 @@ const char* SNM_GetSetObjectState(void* _obj, WDL_FastString* _str)
 #endif
 #ifdef _SNM_DEBUG
 	char fn[BUFFER_SIZE] = "";
-	_snprintf(fn, BUFFER_SIZE, "%s%cSNM_CPP_last%s.log", GetExePath(), PATH_SLASH_CHAR, _str ? "Set" : "Get");
-	if (FILE* f = fopenUTF8(fn, "w")) {
-		fputs(_str ? _str->Get() : (p?p:"NULL"), f);
-		fclose(f);
-	}
+	int l = _snprintf(fn, sizeof(fn), "%s%cSNM_CPP_last%s.log", GetExePath(), PATH_SLASH_CHAR, _str ? "Set" : "Get");
+	if (l>0 && l<BUFFER_SIZE)
+		if (FILE* f = fopenUTF8(fn, "w")) {
+			fputs(_str ? _str->Get() : (p?p:"NULL"), f);
+			fclose(f);
+		}
 #endif
 	return p;
 }
@@ -713,27 +714,27 @@ int ParsePatchCore(
 			if (_write) newChunk->Append(pLine);
 			break;
 		}
-		int curLineLength = (int)(pEOL-pLine); // avoids many strlen() calls
+		int curLineLen = (int)(pEOL-pLine); // avoids many strlen() calls
 
 		// *** optimization (optional): skip some data and sub-chunks  ***
 		const char* pEOSkippedChunk = NULL;
 
 		// skip base64 data (e.g. FX states, sysEx events, ..)
 		if (!m_processBase64 &&
-			curLineLength>2 && *(pEOL-1)=='=' && *(pEOL-2)=='=')
+			curLineLen>2 && *(pEOL-1)=='=' && *(pEOL-2)=='=')
 		{
 			pEOSkippedChunk = strstr(pLine, ">\n");
 		}
 		// skip in-project MIDI data
-		else if (!m_processInProjectMIDI && m_isParsingSource &&
-			((curLineLength>2 && !_strnicmp(pLine, "E ", 2)) ||
-			(curLineLength>3 && !_strnicmp(pLine, "Em ", 3))))
+		else if (!m_processInProjectMIDI && m_isParsingSource && (
+			(curLineLen>2 && !_strnicmp(pLine, "E ", 2)) ||
+			(curLineLen>3 && !_strnicmp(pLine, "Em ", 3))))
 		{
 			pEOSkippedChunk = strstr(pLine, "GUID {");
 		}
 		// skip track freeze sub-chunks
 		else if (!m_processFreeze && parents.GetSize()==1 && 
-			curLineLength>8 && GetChunkType()==1 && !strncmp(pLine, "<FREEZE ", 8))
+			curLineLen>8 && GetChunkType()==1 && !strncmp(pLine, "<FREEZE ", 8))
 		{
 			int skippedLen = FindEndOfSubChunk(pLine, 0);
 			while (skippedLen >= 0) // in case of multiple freeze
@@ -757,14 +758,14 @@ int ParsePatchCore(
 
 			pLine = pEOSkippedChunk;
 			pEOL = strchr(pEOSkippedChunk, '\n');
-			curLineLength = (int)(pEOL-pLine);
+			curLineLen = (int)(pEOL-pLine);
 		}
 
 
-		// *** Next line parsing ***
+		// *** next line parsing (trimmed if too long) ***
 		bool alter = false;
-		memcpy(curLine, pLine, curLineLength);
-		curLine[curLineLength] = '\0'; // min(SNM_MAX_CHUNK_LINE_LENGTH-1, curLineLength) ?
+		memcpy(curLine, pLine, curLineLen >= SNM_MAX_CHUNK_LINE_LENGTH ? SNM_MAX_CHUNK_LINE_LENGTH-1 : curLineLen);
+		curLine[curLineLen >= SNM_MAX_CHUNK_LINE_LENGTH ? SNM_MAX_CHUNK_LINE_LENGTH-1 : curLineLen] = '\0';
 		int linePos = (int)(pLine-cData);
 		const char* keyword = NULL;
 
@@ -778,7 +779,7 @@ int ParsePatchCore(
 			keyword = lp.gettoken_str(0);
 			if (*keyword == '<')
 			{
-				m_isParsingSource |= (lpNumTokens == 2 && curLineLength>9 /* e.g. <SOURCE MIDI*/ && !strcmp(keyword+1, "SOURCE"));
+				m_isParsingSource |= (lpNumTokens == 2 && curLineLen>9 /* e.g. <SOURCE MIDI*/ && !strcmp(keyword+1, "SOURCE"));
 
 				// notify & update parent list
 				parents.Add(new WDL_FastString(keyword+1)); // +1 to zap '<'
@@ -870,9 +871,11 @@ int ParsePatchCore(
 							break;
 						case SNM_TOGGLE_CHUNK_INT:
 						{
-							char bufConversion[16] = "";
-							_snprintf(bufConversion, 16, "%d", !lp.gettoken_int(_tokenPos));
-							alter |= WriteChunkLine(newChunk, bufConversion, _tokenPos, &lp); 
+							char bufConv[16] = "";
+							int l = _snprintf(bufConv, sizeof(bufConv), "%d", !lp.gettoken_int(_tokenPos));
+							if (l<=0 || l>=16)
+								return -1;
+							alter |= WriteChunkLine(newChunk, bufConv, _tokenPos, &lp); 
 							m_breakParsePatch = (_occurence != -1);
 						}
 						break; 
@@ -883,8 +886,8 @@ int ParsePatchCore(
 							break;
 						case SNM_GET_SUBCHUNK_OR_LINE:
 						{
+							// faster than AppendFormatted(, "%s\n",);
 							if (_value) {
-								// faster than AppendFormatted(, "%s\n",);
 								((WDL_FastString*)_value)->Append(curLine);
 								((WDL_FastString*)_value)->Append("\n");
 							}
@@ -896,9 +899,8 @@ int ParsePatchCore(
 						}
 						break;
 						case SNM_GET_SUBCHUNK_OR_LINE_EOL:
-						{							
+						{
 							if (_value) {
-								// faster than AppendFormatted(, "%s\n",);
 								((WDL_FastString*)_value)->Append(curLine);
 								((WDL_FastString*)_value)->Append("\n");
 							}
@@ -930,11 +932,13 @@ int ParsePatchCore(
 							break;
 						case SNM_TOGGLE_CHUNK_INT_EXCEPT:
 						{
-							char bufConversion[16] = "";
-							_snprintf(bufConversion, 16, "%d", !lp.gettoken_int(_tokenPos));
-							alter |= WriteChunkLine(newChunk, bufConversion, _tokenPos, &lp); 
+							char bufConv[16] = "";
+							int l = _snprintf(bufConv, sizeof(bufConv), "%d", !lp.gettoken_int(_tokenPos));
+							if (l<=0 || l>=16)
+								return -1;
+							alter |= WriteChunkLine(newChunk, bufConv, _tokenPos, &lp); 
 						}
-						break; 
+						break;
 						default: // for custom _mode (e.g. <0)
 							break;
 					}
@@ -951,7 +955,6 @@ int ParsePatchCore(
 			{
 				alter = (_mode == SNM_REPLACE_SUBCHUNK_OR_LINE);
 				if (_value && (_mode == SNM_GET_SUBCHUNK_OR_LINE || _mode == SNM_GET_SUBCHUNK_OR_LINE_EOL)) {
-					// faster than AppendFormatted(, "%s\n",);
 					((WDL_FastString*)_value)->Append(curLine);
 					((WDL_FastString*)_value)->Append("\n");
 				}
@@ -962,7 +965,6 @@ int ParsePatchCore(
 		// copy current line if RW mode & if it wasn't altered above & if inerited classes 
 		// authorize it (for optimization when using matching criteria: depth, parent,..)
 		if (_write && !alter && lpNumTokens) {
-			// faster than newChunk->AppendFormatted(curLineLength+2, "%s\n", curLine);
 			newChunk->Append(curLine);
 			newChunk->Append("\n");
 		}

@@ -172,7 +172,7 @@ HWND GetReaWindowByTitle(const char* _title)
 		// in a floating docker (w/o other hwnds)?
 		else {
 			char dockerName[256]="";
-			if (_snprintf(dockerName, 256, "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0 && !strcmp(dockerName, buf))
+			if (_snprintfStrict(dockerName, sizeof(dockerName), "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0 && !strcmp(dockerName, buf))
 				if (w = GetReaChildWindowByTitle(w, _title))
 					return w;
 		}
@@ -196,7 +196,7 @@ HWND GetReaWindowByTitle(const char* _title)
 	// in a floating docker (w/o other hwnds)?
 	{
 		char dockerName[256]="";
-		if (_snprintf(dockerName, 256, "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0)
+		if (_snprintfStrict(dockerName, sizeof(dockerName), "%s%s", _title, __localizeFunc(" (docked)", "docker", 0)) > 0)
 			if (w = GetReaWindowByTitleInFloatingDocker(_title, dockerName))
 				return w;
 	}
@@ -280,7 +280,7 @@ HWND GetActionListBox(char* _currentSection, int _sectionSz)
 	return (actionsWnd ? GetDlgItem(actionsWnd, 0x52B) : NULL);
 }
 
-// Overrides some wdl's list view funcs to avoid cast issues on osx
+// overrides some wdl's list view funcs to avoid cast issues on osx
 // (useful with native list views which are SWELL_ListView but that were not instanciated by the extension..)
 #ifdef _WIN32
 #define SNM_ListView_GetSelectedCount ListView_GetSelectedCount
@@ -304,7 +304,7 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 		li.mask = LVIF_STATE | LVIF_PARAM;
 		li.stateMask = LVIS_SELECTED;
 		li.iSubItem = 0;
-		for (int i = 0; i < SNM_ListView_GetItemCount(hList); i++)
+		for (int i=0; i < SNM_ListView_GetItemCount(hList); i++)
 		{
 			li.iItem = i;
 			SNM_ListView_GetItem(hList, &li);
@@ -323,14 +323,14 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 					// SWS action? => get the custom id in a reliable way
 					if (!_section || (_section && !strcmp(_section,__localizeFunc("Main","accel_sec",0))))
 						if (COMMAND_T* ct = SWSGetCommandByID(cmdId))
-							return (_snprintf(_id, _idSize, "_%s", ct->id)>0 ? i : -1);
+							return (_snprintfStrict(_id, _idSize, "_%s", ct->id)>0 ? i : -1);
 
 					// best effort to get the custom id (relies on displayed columns..)
 					ListView_GetItemText(hList, i, 4, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
 					if (!*_id)
 					{
 						if (!IsMacro(actionName))
-							return (_snprintf(_id, _idSize, "%d", (int)li.lParam)>0 ? i : -1);
+							return (_snprintfStrict(_id, _idSize, "%d", (int)li.lParam)>0 ? i : -1);
 						else
 							return -2;
 					}
@@ -344,7 +344,7 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// FX chain windows: show/hide
+// Track FX chain windows: show/hide
 // note: Cockos' TrackFX_GetChainVisible() and my getSelectedFX() are not the
 // exactly the same. Here, TrackFX_GetChainVisible() is used to get a selected 
 // FX in a -visible- chain while getSelectedFX() will always return one.
@@ -353,38 +353,38 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 void showFXChain(COMMAND_T* _ct)
 {
 	int focusedFX = _ct ? (int)_ct->user : -1; // -1: current selected fx
-	for (int i = 0; i <= GetNumTracks(); i++) // include master
+	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		// NULL _ct => all tracks, selected tracks otherwise
 		if (tr && (!_ct || (_ct && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
-			TrackFX_Show(tr, (focusedFX == -1 ? getSelectedTrackFX(tr) : focusedFX), 1);
+			TrackFX_Show(tr, (focusedFX == -1 ? GetSelectedTrackFX(tr) : focusedFX), 1);
 	}
 	// no undo
 }
 
 void hideFXChain(COMMAND_T* _ct) 
 {
-	for (int i = 0; i <= GetNumTracks(); i++) // include master
+	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		// NULL _ct => all tracks, selected tracks otherwise
 		if (tr && (!_ct || (_ct && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
-			TrackFX_Show(tr, getSelectedTrackFX(tr), 0);
+			TrackFX_Show(tr, GetSelectedTrackFX(tr), 0);
 	}
 	// no undo
 }
 
 void toggleFXChain(COMMAND_T* _ct) 
 {
-	for (int i = 0; i <= GetNumTracks(); i++) // include master
+	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		// NULL _ct => all tracks, selected tracks otherwise
 		if (tr && (!_ct || (_ct && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
 		{
 			int currentFX = TrackFX_GetChainVisible(tr);
-			TrackFX_Show(tr, getSelectedTrackFX(tr), (currentFX == -2 || currentFX >= 0) ? 0 : 1);
+			TrackFX_Show(tr, GetSelectedTrackFX(tr), (currentFX == -2 || currentFX >= 0) ? 0 : 1);
 		}
 	}
 	// no undo
@@ -421,7 +421,7 @@ void toggleAllFXChainsWindows(COMMAND_T * _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Floating FX windows: show/hide
+// Floating track FX windows: show/hide
 ///////////////////////////////////////////////////////////////////////////////
 
 // _fx = -1 for selected FX
@@ -429,7 +429,7 @@ void toggleFloatFX(MediaTrack* _tr, int _fx)
 {
 	if (_tr &&  _fx < TrackFX_GetCount(_tr))
 	{
-		int currenSel = getSelectedTrackFX(_tr); // avoids several parsings
+		int currenSel = GetSelectedTrackFX(_tr); // avoids several parsings
 		if (TrackFX_GetFloatingWindow(_tr, (_fx == -1 ? currenSel : _fx)))
 			TrackFX_Show(_tr, (_fx == -1 ? currenSel : _fx), 2);
 		else
@@ -457,9 +457,9 @@ void floatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _s
 	else if (!_all && matchTrack)
 	{
 		if (!_showFlag) 
-			toggleFloatFX(_tr, (_fx == -1 ? getSelectedTrackFX(_tr) : _fx));
+			toggleFloatFX(_tr, (_fx == -1 ? GetSelectedTrackFX(_tr) : _fx));
 		else 
-			TrackFX_Show(_tr, (_fx == -1 ? getSelectedTrackFX(_tr) : _fx), _showFlag); // offline fx is managed
+			TrackFX_Show(_tr, (_fx == -1 ? GetSelectedTrackFX(_tr) : _fx), _showFlag); // offline fx is managed
 	}
 }
 
@@ -468,7 +468,7 @@ void floatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _s
 // showflag=0 for toggle, =2 for hide floating window (index valid), =3 for show floating window (index valid)
 void floatUnfloatFXs(bool _all, int _showFlag, int _fx, bool _selTracks) 
 {
-	for (int i = 0; i <= GetNumTracks(); i++) // include master
+	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && (_all || !_selTracks || (_selTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
@@ -501,7 +501,7 @@ void toggleAllFXWindows(COMMAND_T * _ct) {
 void closeAllFXWindowsExceptFocused(COMMAND_T * _ct)
 {
 	HWND w = GetForegroundWindow();
-	for (int i = 0; i <= GetNumTracks(); i++) // include master
+	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && IsWindow(w))
@@ -520,8 +520,17 @@ void closeAllFXWindowsExceptFocused(COMMAND_T * _ct)
 // returns -1 if none
 int getFocusedFX(MediaTrack* _tr, int _dir, int* _firstFound)
 {
+/*JFB!!!
+	int focused = -1, trIdx, itemIdx, fxIdx;
+	if (GetFocusedFX(&trIdx, &itemIdx, &fxIdx) && trIdx>=0)
+		if (_tr == CSurf_TrackFromID(trIdx, false))
+			return fxIdx;
+*/
 	int focused = -1;
-	if (_firstFound) *_firstFound = -1;
+
+	if (_firstFound)
+		*_firstFound = -1;
+
 	HWND w = GetForegroundWindow();
 	if (_tr && IsWindow(w))
 	{
@@ -531,9 +540,9 @@ int getFocusedFX(MediaTrack* _tr, int _dir, int* _firstFound)
 			HWND w2 = TrackFX_GetFloatingWindow(_tr,j);
 			if (IsWindow(w2))
 			{
-				if (_firstFound && *_firstFound < 0) *_firstFound = j;
-				if (w == w2)	
-				{
+				if (_firstFound && *_firstFound < 0)
+					*_firstFound = j;
+				if (w == w2) {
 					focused = j;
 					break;
 				}
@@ -558,7 +567,7 @@ int getFirstFloatingFX(MediaTrack* _tr, int _dir)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Floating FX windows: cycle focus
+// Floating track FX windows: cycle focus
 ///////////////////////////////////////////////////////////////////////////////
 
 bool cycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTracks,
@@ -631,7 +640,7 @@ bool focusJob(MediaTrack* _tr, int _fx, bool _selectedTracks)
 bool floatOnlyJob(MediaTrack* _tr, int _fx, bool _selectedTracks)
 {
 	// hide others
-	for (int i = 0; i <= GetNumTracks(); i++) // include master
+	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		int fxCount = (tr ? TrackFX_GetCount(tr) : 0);

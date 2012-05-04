@@ -31,7 +31,7 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// theme slots (Resources view)
+// Theme slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef _WIN32
@@ -39,10 +39,14 @@ void LoadThemeSlot(int _slotType, const char* _title, int _slot)
 {
 	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot))
 	{
-		char cmd[BUFFER_SIZE]=""; _snprintf(cmd, BUFFER_SIZE, "%s\\reaper.exe", GetExePath());
-		WDL_FastString fnStr2; fnStr2.SetFormatted(BUFFER_SIZE, " \"%s\"", fnStr->Get());
-		_spawnl(_P_NOWAIT, cmd, fnStr2.Get(), NULL);
-		delete fnStr;
+		char cmd[BUFFER_SIZE]=""; 
+		if (_snprintfStrict(cmd, sizeof(cmd), "%s\\reaper.exe", GetExePath()) > 0)
+		{
+			WDL_FastString prmStr;
+			prmStr.SetFormatted(BUFFER_SIZE, " \"%s\"", fnStr->Get());
+			_spawnl(_P_NOWAIT, cmd, prmStr.Get(), NULL);
+			delete fnStr;
+		}
 	}
 }
 
@@ -53,7 +57,7 @@ void LoadThemeSlot(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// image slots (Resources view)
+// Image slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
 void ShowImageSlot(int _slotType, const char* _title, int _slot) {
@@ -80,7 +84,7 @@ void SetSelTrackIconSlot(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// misc	actions / helpers
+// Misc actions / helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 bool WaitForTrackMute(DWORD* _muteTime)
@@ -156,7 +160,8 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 		}
 
 		char name[SNM_MAX_SECTION_NAME_LEN*2] = "", fn[BUFFER_SIZE] = "";
-		_snprintf(name, SNM_MAX_SECTION_NAME_LEN*2, "%s%s.txt", sectionURL, !(_type % 2) ? "_SWS" : "");
+		if (_snprintfStrict(name, sizeof(name), "%s%s.txt", sectionURL, !(_type % 2) ? "_SWS" : "") <= 0)
+			*name = '\0';
 		if (!BrowseForSaveFile(_title, GetResourcePath(), name, SNM_TXT_EXT_LIST, fn, BUFFER_SIZE))
 			return false;
 
@@ -176,24 +181,26 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 			LVITEM li;
 			li.mask = LVIF_STATE | LVIF_PARAM;
 			li.iSubItem = 0;
-			for (int i = 0; i < ListView_GetItemCount(hList); i++)
+			for (int i=0; i < ListView_GetItemCount(hList); i++)
 			{
 				li.iItem = i;
 				ListView_GetItem(hList, &li);
 				int cmdId = (int)li.lParam;
 
-				char customId[SNM_MAX_ACTION_CUSTID_LEN] = "";
+				char custId[SNM_MAX_ACTION_CUSTID_LEN] = "";
 				char cmdName[SNM_MAX_ACTION_NAME_LEN] = "";
 				ListView_GetItemText(hList, i, 1, cmdName, SNM_MAX_ACTION_NAME_LEN);
-				ListView_GetItemText(hList, i, 4, customId, SNM_MAX_ACTION_CUSTID_LEN);
+				ListView_GetItemText(hList, i, 4, custId, SNM_MAX_ACTION_CUSTID_LEN);
 
 				int isSws = IsSwsAction(cmdName);
 				if (!IsMacro(cmdName) &&
-					((_type%2 && !isSws) || (!(_type%2) && isSws && IsLocalizableAction(customId))))
+					((_type%2 && !isSws) || (!(_type%2) && isSws && IsLocalizableAction(custId))))
 				{
-					if (!*customId) // for native actions..
-						_snprintf(customId, SNM_MAX_ACTION_CUSTID_LEN, "%d", cmdId);
-					fprintf(f, _lineFormat, sectionURL, customId, cmdName, customId);
+					if (!*custId) // for native actions
+						if (_snprintfStrict(custId, sizeof(custId), "%d", cmdId) <= 0)
+							*custId = '\0';
+					if (*custId)
+						fprintf(f, _lineFormat, sectionURL, custId, cmdName, custId);
 				}
 			}
 			if (_ending)
@@ -202,8 +209,8 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 			fclose(f);
 
 			char msg[BUFFER_SIZE] = "";
-			if (_snprintf(msg, BUFFER_SIZE, __LOCALIZE_VERFMT("Wrote %s","sws_mbox"), fn) > 0)
-				MessageBox(GetMainHwnd(), msg, _title, MB_OK);
+			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Wrote %s","sws_mbox"), fn);
+			MessageBox(GetMainHwnd(), msg, _title, MB_OK);
 			return true;
 		}
 		else

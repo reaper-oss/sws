@@ -37,7 +37,7 @@ void MECreateCCLane(COMMAND_T* _ct)
 	if (tk)
 	{
 		MediaItem* item = GetMediaItemTake_Item(tk);
-		int tkIdx = getTakeIndex(item, tk); // NULL item managed
+		int tkIdx = getTakeIndex(item, tk); // null item managed there
 		if (tkIdx >= 0)
 		{
 			SNM_TakeParserPatcher p(item, CountTakes(item));
@@ -47,7 +47,7 @@ void MECreateCCLane(COMMAND_T* _ct)
 			{
 				SNM_ChunkParserPatcher ptk(&takeChunk, false);
 
-				// Check current displayed lanes
+				// check current lanes
 				bool lanes[MAX_CC_LANE_ID+1];
 				int i=0; while(i <= MAX_CC_LANE_ID) lanes[i++]=false;
 				char lastLaneId[4] = ""; //max in v3.6: "133"
@@ -66,10 +66,10 @@ void MECreateCCLane(COMMAND_T* _ct)
 					// find the first unused index
 					i=1; while(lanes[i] && i <= MAX_CC_LANE_ID) i++;
 					char newLane[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-					_snprintf(newLane, SNM_MAX_CHUNK_LINE_LENGTH, "VELLANE %d 50 0\n", i);
-					ptk.GetChunk()->Insert(newLane, tkFirstPos);
+					if (_snprintfStrict(newLane, sizeof(newLane), "VELLANE %d 50 0\n", i) > 0)
+						ptk.GetChunk()->Insert(newLane, tkFirstPos);
 
-					// "Update" take
+					// "update" take
 					updated = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
 				}
 			}
@@ -130,21 +130,23 @@ void MESetCCLanes(COMMAND_T* _ct)
 	{
 		// recall lanes
 		char laneSlot[MAX_CC_LANES_LEN], slot[32] = "";
-		_snprintf(slot, 32, "CC_LANES_SLOT%d", (int)_ct->user + 1);
-		GetPrivateProfileString("MIDI_EDITOR", slot, "", laneSlot, MAX_CC_LANES_LEN, g_SNMIniFn.Get());
-
-		int i=0; 
-		while (laneSlot[i] && i < (MAX_CC_LANES_LEN-2)) // -2: see string termination
+		if (_snprintfStrict(slot, sizeof(slot), "CC_LANES_SLOT%d", (int)_ct->user + 1) > 0)
 		{
-			if (laneSlot[i] == '|')
-				laneSlot[i] = '\n';
-			i++;
-		}
-		laneSlot[i++] = '\n';
-		laneSlot[i] = 0;
+			GetPrivateProfileString("MIDI_EDITOR", slot, "", laneSlot, MAX_CC_LANES_LEN, g_SNMIniFn.Get());
 
-		if (replaceCCLanes(laneSlot)) 
-			Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+			int i=0; 
+			while (laneSlot[i] && i < (MAX_CC_LANES_LEN-2)) // -2: see string termination
+			{
+				if (laneSlot[i] == '|')
+					laneSlot[i] = '\n';
+				i++;
+			}
+			laneSlot[i++] = '\n';
+			laneSlot[i] = 0;
+
+			if (replaceCCLanes(laneSlot)) 
+				Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		}
 	}
 }
 
@@ -193,8 +195,8 @@ void MESaveCCLanes(COMMAND_T* _ct)
 
 					// store lanes
 					char slot[32] = "";
-					_snprintf(slot, 32, "CC_LANES_SLOT%d", (int)_ct->user + 1);
-					WritePrivateProfileString("MIDI_EDITOR", slot, laneSlot, g_SNMIniFn.Get());
+					if (_snprintfStrict(slot, sizeof(slot), "CC_LANES_SLOT%d", (int)_ct->user + 1) > 0)
+						WritePrivateProfileString("MIDI_EDITOR", slot, laneSlot, g_SNMIniFn.Get());
 				}
 			}
 		}

@@ -72,7 +72,7 @@ bool g_locked = 1;
 char g_lastText[MAX_HELP_LENGTH] = "";
 char g_lastImportSubFn[BUFFER_SIZE] = "";
 char g_lastExportSubFn[BUFFER_SIZE] = "";
-char g_actionHelpFilename[BUFFER_SIZE] = "";
+char g_actionHelpFn[BUFFER_SIZE] = "";
 char g_bigFontName[64] = SWSDLG_TYPEFACE;
 
 // used for action help updates tracking
@@ -262,12 +262,11 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case BUTTONID_ALR:
 			if (!HIWORD(wParam) && *g_lastActionCustId && !IsMacro(g_lastActionDesc))
 			{
-				char cLink[256] = "";
+				char link[256] = "";
 				char sectionURL[SNM_MAX_SECTION_NAME_LEN] = "";
-				if (GetSectionNameAsURL(true, g_lastActionSection, sectionURL, SNM_MAX_SECTION_NAME_LEN)) {
-					_snprintf(cLink, 256, "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionCustId);
-					ShellExecute(m_hwnd, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
-				}
+				if (GetSectionNameAsURL(true, g_lastActionSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
+					if (_snprintfStrict(link, sizeof(link), "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionCustId) > 0)
+						ShellExecute(m_hwnd, "open", link , NULL, NULL, SW_SHOWNORMAL);
 			}
 			else
 				ShellExecute(m_hwnd, "open", "http://wiki.cockos.com/wiki/index.php/Action_List_Reference" , NULL, NULL, SW_SHOWNORMAL);
@@ -437,7 +436,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 				dynFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
 
 				int top = (int)(h + (_bm->getHeight()-h)/2 - (fontHeight*numlines)/2 + 0.5);
-				for (int i = 0; i < numlines; ++i)
+				for (int i=0; i < numlines; ++i)
 				{                   
 					RECT tr = {0,0,0,0};
 					dynFont.DrawText(NULL, p, -1, &tr, DT_CALCRECT);
@@ -494,7 +493,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 					{
 						int id = CSurf_TrackToID(g_trNote, false);
 						if (id > 0)
-							_snprintf(str, 512, "[%d] \"%s\"", id, (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL));
+							_snprintfSafe(str, sizeof(str), "[%d] \"%s\"", id, (char*)GetSetMediaTrackInfo(g_trNote, "P_NAME", NULL));
 						else if (id == 0)
 							strcpy(str, __LOCALIZE("[MASTER]","sws_DLG_152"));
 					}
@@ -508,7 +507,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 					break;
 				case SNM_NOTES_ACTION_HELP:
 					if (g_lastActionDesc && *g_lastActionDesc && g_lastActionSection && *g_lastActionSection)
-						_snprintf(str, 512, " [%s] %s", g_lastActionSection, g_lastActionDesc);
+						_snprintfSafe(str, sizeof(str), " [%s] %s", g_lastActionSection, g_lastActionDesc);
 /* API LIMITATION: use smthg like that when we'll be able to access all sections
 						lstrcpyn(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
 */
@@ -699,7 +698,7 @@ void SNM_NotesHelpWnd::saveCurrentTrackNotes()
 		{
 			// CRLF removed only when saving the project..
 			bool found = false;
-			for (int i = 0; i < g_pTrackNotes.Get()->GetSize(); i++) 
+			for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++) 
 			{
 				if (g_pTrackNotes.Get()->Get(i)->m_tr == g_trNote) {
 					g_pTrackNotes.Get()->Get(i)->m_notes.Set(buf);
@@ -743,7 +742,7 @@ void SNM_NotesHelpWnd::saveCurrentMkrRgnNameOrNotes(bool _name)
 			{
 				// CRLF removed only when saving the project..
 				bool found = false;
-				for (int i = 0; i < g_pRegionSubtitles.Get()->GetSize(); i++) 
+				for (int i=0; i < g_pRegionSubtitles.Get()->GetSize(); i++) 
 				{
 					if (g_pRegionSubtitles.Get()->Get(i)->m_id == g_lastMarkerRegionId) {
 						g_pRegionSubtitles.Get()->Get(i)->m_notes.Set(buf);
@@ -803,7 +802,7 @@ void SNM_NotesHelpWnd::Update(bool _force)
 				char name[BUFFER_SIZE] = "";
 				MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
 				char* tkName = tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
-				_snprintf(name, BUFFER_SIZE, "Notes for \"%s\"", tkName ? tkName : "Empty Item");
+				_snprintfSafe(name, sizeof(name), "Notes for \"%s\"", tkName ? tkName : "Empty Item");
 				if (HWND w = SearchWindow(name))
 					g_mediaItemNote = NULL; //will force refresh
 			}
@@ -906,7 +905,7 @@ int SNM_NotesHelpWnd::updateTrackNotes()
 		{
 			g_trNote = selTr;
 
-			for (int i = 0; i < g_pTrackNotes.Get()->GetSize(); i++)
+			for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++)
 			{
 				if (g_pTrackNotes.Get()->Get(i)->m_tr == g_trNote) {
 					SetText(g_pTrackNotes.Get()->Get(i)->m_notes.Get());
@@ -940,7 +939,7 @@ int SNM_NotesHelpWnd::updateMkrRgnNameOrNotes(bool _name)
 	{
 		g_lastMarkerPos = dPos;
 
-		int id, idx = FindMarkerRegion(dPos, SNM_MARKER_MASK|SNM_REGION_MASK, true, &id);
+		int id, idx = FindMarkerRegion(dPos, SNM_MARKER_MASK|SNM_REGION_MASK, &id);
 		if (id > 0)
 		{
 			if (id != g_lastMarkerRegionId)
@@ -991,7 +990,7 @@ void loadHelp(const char* _cmdName, char* _buf, int _bufSize)
 
 		// note: "size" includes trailing '\0', "buf" is double null terminated
 		char buf[MAX_HELP_LENGTH] = "";
-		int j=0, size = GetPrivateProfileSection(_cmdName,buf,MAX_HELP_LENGTH,g_actionHelpFilename);
+		int j=0, size = GetPrivateProfileSection(_cmdName,buf,MAX_HELP_LENGTH,g_actionHelpFn);
 		for (int i=0; i < (size-1) && i < (_bufSize-2); i++) {
 			if (!buf[i]) _buf[j++] = '\n'; // done this way for ascendant compatibilty reasons..
 			else if (buf[i] != '|') _buf[j++] = buf[i]; // oh, well..
@@ -1024,14 +1023,14 @@ void saveHelp(const char* _cmdName, const char* _help)
 				i++;
 			}
 		}
-		WritePrivateProfileStruct(_cmdName, NULL, NULL, 0, g_actionHelpFilename); // flush section
-		WritePrivateProfileSection(_cmdName, buf, g_actionHelpFilename);
+		WritePrivateProfileStruct(_cmdName, NULL, NULL, 0, g_actionHelpFn); // flush section
+		WritePrivateProfileSection(_cmdName, buf, g_actionHelpFn);
 	}
 }
 
 void SetActionHelpFilename(COMMAND_T*) {
-	if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Set action help file","sws_DLG_152"), g_actionHelpFilename, NULL, false, SNM_INI_EXT_LIST)) {
-		lstrcpyn(g_actionHelpFilename, fn, BUFFER_SIZE);
+	if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Set action help file","sws_DLG_152"), g_actionHelpFn, NULL, false, SNM_INI_EXT_LIST)) {
+		lstrcpyn(g_actionHelpFn, fn, BUFFER_SIZE);
 		free(fn);
 	}
 }
@@ -1152,7 +1151,7 @@ bool ImportSubRipFile(const char* _fn)
 						notes.Append(buf);
 					}
 
-					if (_snprintf(buf, sizeof(buf), "Subtitle #%d", num) <= 0)
+					if (_snprintfStrict(buf, sizeof(buf), "Subtitle #%d", num) <= 0)
 						*buf = '\0';
 
 					num = AddProjectMarker(NULL, true, 
@@ -1321,7 +1320,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 //JFB	if (!isUndo)
 	{
 		// delete unused tracks
-		for (int i = 0; i < g_pTrackNotes.Get()->GetSize(); i++)
+		for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++)
 			if (CSurf_TrackToID(g_pTrackNotes.Get()->Get(i)->m_tr, false) < 0)
 				g_pTrackNotes.Get()->Delete(i--, true);
 
@@ -1344,7 +1343,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	}
 
 	// save track notes
-	for (int i = 0; i < g_pTrackNotes.Get()->GetSize(); i++)
+	for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++)
 	{
 		if (g_pTrackNotes.Get()->Get(i)->m_notes.GetLength())
 		{
@@ -1352,24 +1351,23 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			if (CSurf_TrackToID(g_pTrackNotes.Get()->Get(i)->m_tr, false) > 0)
 				g = *(GUID*)GetSetMediaTrackInfo(g_pTrackNotes.Get()->Get(i)->m_tr, "GUID", NULL);
 			else
-				g = GUID_NULL; // master track (thanks to the cleanup made above)
+				g = GUID_NULL;
 			guidToString(&g, strId);
-			_snprintf(startLine, SNM_MAX_CHUNK_LINE_LENGTH, "<S&M_TRACKNOTES %s\n|", strId);
-
-			if (GetNotesChunkFromString(g_pTrackNotes.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
-				StringToExtensionConfig(&formatedNotes, ctx);
+			if (_snprintfStrict(startLine, sizeof(startLine), "<S&M_TRACKNOTES %s\n|", strId) > 0)
+				if (GetNotesChunkFromString(g_pTrackNotes.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
+					StringToExtensionConfig(&formatedNotes, ctx);
 		}
 	}
 
 	// save region/marker notes
-	for (int i = 0; i < g_pRegionSubtitles.Get()->GetSize(); i++)
+	for (int i=0; i < g_pRegionSubtitles.Get()->GetSize(); i++)
 	{
 		if (g_pRegionSubtitles.Get()->Get(i)->m_notes.GetLength() &&
 			GetMarkerRegionIndexFromId(g_pRegionSubtitles.Get()->Get(i)->m_id) >= 0)
 		{
-			_snprintf(startLine, SNM_MAX_CHUNK_LINE_LENGTH, "<S&M_SUBTITLE %d\n|", g_pRegionSubtitles.Get()->Get(i)->m_id);
-			if (GetNotesChunkFromString(g_pRegionSubtitles.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
-				StringToExtensionConfig(&formatedNotes, ctx);
+			if (_snprintfStrict(startLine, sizeof(startLine), "<S&M_SUBTITLE %d\n|", g_pRegionSubtitles.Get()->Get(i)->m_id) > 0)
+				if (GetNotesChunkFromString(g_pRegionSubtitles.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
+					StringToExtensionConfig(&formatedNotes, ctx);
 		}
 	}
 }
@@ -1432,9 +1430,10 @@ int NotesHelpViewInit()
 	GetPrivateProfileString("NOTES_HELP_VIEW", "BigFontName", SWSDLG_TYPEFACE, g_bigFontName, 64, g_SNMIniFn.Get());
 
 	// get the action help filename
-	char defaultHelpPath[BUFFER_SIZE] = "";
-	_snprintf(defaultHelpPath, BUFFER_SIZE, SNM_ACTION_HELP_INI_FILE, GetResourcePath());
-	GetPrivateProfileString("NOTES_HELP_VIEW", "Action_help_file", defaultHelpPath, g_actionHelpFilename, BUFFER_SIZE, g_SNMIniFn.Get());
+	char defaultHelpFn[BUFFER_SIZE] = "";
+	if (_snprintfStrict(defaultHelpFn, sizeof(defaultHelpFn), SNM_ACTION_HELP_INI_FILE, GetResourcePath()) <= 0)
+		*defaultHelpFn = '\0';
+	GetPrivateProfileString("NOTES_HELP_VIEW", "Action_help_file", defaultHelpFn, g_actionHelpFn, BUFFER_SIZE, g_SNMIniFn.Get());
 
 	g_pNotesHelpWnd = new SNM_NotesHelpWnd();
 	if (!g_pNotesHelpWnd || !plugin_register("projectconfig", &g_projectconfig))
@@ -1444,17 +1443,16 @@ int NotesHelpViewInit()
 
 void NotesHelpViewExit()
 {
-	// save prefs
-	char tmp[2] = "";
-	_snprintf(tmp, 2, "%d", g_notesViewType);
-	WritePrivateProfileString("NOTES_HELP_VIEW", "Type", tmp, g_SNMIniFn.Get()); 
-	_snprintf(tmp, 2, "%d", g_locked);
-	WritePrivateProfileString("NOTES_HELP_VIEW", "Lock", tmp, g_SNMIniFn.Get()); 
+	char tmp[4] = "";
+	if (_snprintfStrict(tmp, sizeof(tmp), "%d", g_notesViewType) > 0)
+		WritePrivateProfileString("NOTES_HELP_VIEW", "Type", tmp, g_SNMIniFn.Get()); 
+	if (_snprintfStrict(tmp, sizeof(tmp), "%d", g_locked) > 0)
+		WritePrivateProfileString("NOTES_HELP_VIEW", "Lock", tmp, g_SNMIniFn.Get()); 
 	WritePrivateProfileString("NOTES_HELP_VIEW", "BigFontName", g_bigFontName, g_SNMIniFn.Get());
 
 	// save the action help filename
 	WDL_FastString escapedStr;
-	makeEscapedConfigString(g_actionHelpFilename, &escapedStr);
+	makeEscapedConfigString(g_actionHelpFn, &escapedStr);
 	WritePrivateProfileString("NOTES_HELP_VIEW", "Action_help_file", escapedStr.Get(), g_SNMIniFn.Get());
 
 	DELETE_NULL(g_pNotesHelpWnd);

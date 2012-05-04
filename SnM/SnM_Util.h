@@ -36,7 +36,7 @@ const char* GetFileRelativePath(const char* _fn);
 const char* GetFileExtension(const char* _fn);
 void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz);
 const char* GetFilenameWithExt(const char* _fullFn);
-void Filenamize(char* _fnInOut);
+void Filenamize(char* _fnInOut, int _fnInOutSz);
 bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg);
 bool FileExistsErrMsg(const char* _fn, bool _errMsg=true);
 bool SNM_DeleteFile(const char* _filename, bool _recycleBin);
@@ -50,7 +50,7 @@ WDL_HeapBuf* LoadBin(const char* _fn);
 bool SaveBin(const char* _fn, const WDL_HeapBuf* _hb);
 bool TranscodeFileToFile64(const char* _outFn, const char* _inFn);
 WDL_HeapBuf* TranscodeStr64ToHeapBuf(const char* _str64);
-void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
+bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
 void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs);
 void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx, bool _breakOnGT = true);
@@ -58,19 +58,18 @@ void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, co
 void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn, const char* _newIniFn = NULL);
 void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn = NULL);
 void SNM_UpgradeIniFiles();
-int FindMarkerRegion(double _pos, int _flags, bool _fromCache, int* _idOut = NULL);
+int FindMarkerRegion(double _pos, int _flags, int* _idOut = NULL);
 int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn);
 int GetMarkerRegionIdFromIndex(int _idx);
-int GetMarkerRegionIndexFromId(int _id, bool _fromCache = false);
+int GetMarkerRegionIndexFromId(int _id);
 int GetMarkerRegionNumFromId(int _id);
 bool IsRegion(int _id);
 int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool _wantsName);
 void FillMarkerRegionMenu(HMENU _menu, int _msgStart, int _flags, UINT _uiState = 0);
 int SNM_SnapToMeasure(double _pos);
 void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms = NULL);
-#ifdef _SNM_MISC
-void makeUnformatedConfigString(const char* _in, WDL_FastString* _out);
-#endif
+int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...);
+int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 void ShortenStringToFirstRN(char* _str);
 void ReplaceStringFormat(char* _str, char _replaceCh);
@@ -83,7 +82,7 @@ bool FNV64(const char* _strIn, char* _strOut);
 class MarkerRegion : public MarkerItem {
 public:
 	MarkerRegion(bool _bReg, double _dPos, double _dRegEnd, const char* _cName, int _num, int _color)
-		: MarkerItem(_bReg, _dPos, _dRegEnd, _cName, _num, _color) { m_id = MakeMarkerRegionId(_num, _bReg); }
+		: MarkerItem(_bReg, _dPos, _dRegEnd, _cName, _num, _color) { m_id=MakeMarkerRegionId(_num, _bReg); }
 	int GetId() { return m_id; }
 protected:
 	int m_id;

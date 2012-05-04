@@ -214,7 +214,7 @@ void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent, bool _clea
 }
 
 // _min and _max: 1-based (i.e. as displayed)
-//returns -1 on cancel, 0-based number otherwise
+// returns -1 on cancel, 0-based number otherwise
 int PromptForInteger(const char* _title, const char* _what, int _min, int _max)
 {
 	WDL_String str;
@@ -393,11 +393,10 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	{
         case WM_INITDIALOG: {
 			RestoreWindowPos(hwnd, cWndPosKey, false);
-			char buf[4] = "";
-			for(int i=0; i < SNM_MAX_CUE_BUSS_CONFS; i++) {
-				_snprintf(buf,4,"%d",i+1);
-				SendDlgItemMessage(hwnd,IDC_COMBO,CB_ADDSTRING,0,(LPARAM)buf);
-			}
+			char buf[16] = "";
+			for(int i=0; i < SNM_MAX_CUE_BUSS_CONFS; i++)
+				if (_snprintfStrict(buf,sizeof(buf),"%d",i+1) > 0)
+					SendDlgItemMessage(hwnd,IDC_COMBO,CB_ADDSTRING,0,(LPARAM)buf);
 			SendDlgItemMessage(hwnd,IDC_COMBO,CB_SETCURSEL,0,0);
 			FillCueBussDlg(hwnd);
 			return 0;
@@ -432,7 +431,8 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					char curPath[BUFFER_SIZE]="";
 					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,curPath,BUFFER_SIZE);
 					if (!*curPath || !FileExists(curPath))
-						_snprintf(curPath, BUFFER_SIZE, "%s%cTrackTemplates", GetResourcePath(), PATH_SLASH_CHAR);
+						if (_snprintfStrict(curPath, sizeof(curPath), "%s%cTrackTemplates", GetResourcePath(), PATH_SLASH_CHAR) <= 0)
+							*curPath = '\0';
 					if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Load track template","sws_DLG_149"), curPath, NULL, false, "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0")) {
 						SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,fn);
 						free(fn);

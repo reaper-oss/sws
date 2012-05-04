@@ -635,7 +635,7 @@ bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel
 bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel)
 {
 	bool updated = false;
-	for (int i = 0; i < GetNumTracks(); i++)
+	for (int i=0; i < GetNumTracks(); i++)
 		updated |= removeEmptyTakes(CSurf_TrackFromID(i+1,false), _empty, _midiEmpty, _trSel, _itemSel);
 	if (updated) {
 		UpdateTimeline();
@@ -903,14 +903,13 @@ bool deleteTakeAndMedia(int _mode)
 						{
 							if (_mode == 1 || _mode == 3)
 							{
-								char buf[BUFFER_SIZE*2];
-
+								char buf[BUFFER_SIZE];
 								if (pcm && pcm->GetFileName() && strlen(pcm->GetFileName())) 
-									_snprintf(buf, BUFFER_SIZE*2, __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d and its media file %s ?","sws_mbox"), i, j+1, originalTkIdx+1, tkDisplayName);
+									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d and its media file %s ?","sws_mbox"), i, j+1, originalTkIdx+1, tkDisplayName);
 								else if (pcm && pcm->GetFileName() && !strlen(pcm->GetFileName())) 
-									_snprintf(buf, BUFFER_SIZE*2, __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d (%s, in-project) ?","sws_mbox"), i, j+1, originalTkIdx+1, tkDisplayName);
+									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d (%s, in-project) ?","sws_mbox"), i, j+1, originalTkIdx+1, tkDisplayName);
 								else 
-									_snprintf(buf, BUFFER_SIZE*2, __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d (empty take) ?","sws_mbox"), i, j+1, originalTkIdx+1); // v3 or v4 empty takes
+									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d (empty take) ?","sws_mbox"), i, j+1, originalTkIdx+1); // v3 or v4 empty takes
 
 								rc = MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Delete take and source files (no undo!)","sws_mbox"), MB_YESNOCANCEL);
 								if (rc == IDCANCEL) {
@@ -1107,8 +1106,8 @@ void showHideTakeVolEnvelope(COMMAND_T* _ct)
 {
 	char cVis[2] = ""; //empty means toggle
 	int value = (int)_ct->user;
-	if (value >= 0)
-		_snprintf(cVis, 2, "%d", value);
+	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+		return;
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 0");
 	if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
@@ -1118,8 +1117,8 @@ void showHideTakePanEnvelope(COMMAND_T* _ct)
 {
 	char cVis[2] = ""; //empty means toggle
 	int value = (int)_ct->user;
-	if (value >= 0)
-		_snprintf(cVis, 2, "%d", value);
+	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+		return;
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 	if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
@@ -1129,8 +1128,8 @@ void showHideTakeMuteEnvelope(COMMAND_T* _ct)
 {
 	char cVis[2] = ""; //empty means toggle
 	int value = (int)_ct->user;
-	if (value >= 0)
-		_snprintf(cVis, 2, "%d", value);
+	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+		return;
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 1");
 	if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
@@ -1140,8 +1139,8 @@ void showHideTakePitchEnvelope(COMMAND_T* _ct)
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
-	if (value >= 0)
-		_snprintf(cVis, 2, "%d", value);
+	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
+		return;
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 	if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
@@ -1180,50 +1179,6 @@ bool ShowTakeEnvPitch(MediaItem_Take* _take) {
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
 	return ShowTakeEnv(_take, "PITCHENV", &defaultPoint);
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Item/take template slots
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _SNM_MISC
-void saveItemTakeTemplate(COMMAND_T* _ct)
-{
-	for (int i = 1; i <= GetNumTracks(); i++) // skip master
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
-		{
-			MediaItem* item = GetTrackMediaItem(tr,j);
-			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
-			{
-				char filename[BUFFER_SIZE] = "", defaultPath[BUFFER_SIZE];
-				//JFB TODO: ItemTakeTemplates -> const
-				_snprintf(defaultPath, BUFFER_SIZE, "%s%cItemTakeTemplates", GetResourcePath(), PATH_SLASH_CHAR);
-				if (BrowseForSaveFile(__LOCALIZE("S&M - Save item/take template","sws_mbox"), defaultPath, NULL, "REAPER item/take template (*.RItemTakeTemplate)\0*.RItemTakeTemplate\0", filename, BUFFER_SIZE))
-				{
-					// Item/take template: keep the active take
-					if (FILE* f = fopenUTF8(filename, "w"))
-					{
-						int activeTk = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
-						if (activeTk >= 0)
-						{
-							WDL_FastString tkChunk;
-							SNM_TakeParserPatcher p(item, CountTakes(item));
-							if (p.GetTakeChunk(activeTk, &tkChunk))
-							{
-								fputs(p.GetChunk()->Get(), f);
-								fclose(f);
-							}
-						}
-					}
-					return;
-				}
-			}
-		}
-	}
-}
-#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1346,9 +1301,9 @@ void toggleItemSelExists(COMMAND_T* _ct)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 
 		// in case auto refresh toolbar bar option is off..
-		char cmdCustId[SNM_MAX_ACTION_CUSTID_LEN] = "";
-		if (_snprintf(cmdCustId, SNM_MAX_ACTION_CUSTID_LEN, "_S&M_TOOLBAR_ITEM_SEL%d", dir) > 0)
-			RefreshToolbar(NamedCommandLookup(cmdCustId));
+		char custId[SNM_MAX_ACTION_CUSTID_LEN] = "";
+		_snprintfSafe(custId, sizeof(custId), "_S&M_TOOLBAR_ITEM_SEL%d", dir);
+		RefreshToolbar(NamedCommandLookup(custId));
 	}
 }
 
@@ -1364,7 +1319,7 @@ bool itemSelExists(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 
 // scroll to item, no undo!
-//JFB!!! SetOnlyTrackSelected() ?
+//JFB!!! SetOnlyTrackSelected() todo?
 void scrollToSelItem(MediaItem* _item)
 {
 	if (_item)
@@ -1408,12 +1363,10 @@ void setPan(COMMAND_T* _ct)
 			MediaItem* item = GetTrackMediaItem(tr,j);
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
-				MediaItem_Take* tk = GetActiveTake(item);
-				if (tk)
+				if (MediaItem_Take* tk = GetActiveTake(item))
 				{
 					double curValue = *(double*)GetSetMediaItemTakeInfo(tk, "D_PAN", NULL);
-					if (fabs(curValue - value) > 0.0001)
-					{
+					if (fabs(curValue - value) > 0.0001) {
 						GetSetMediaItemTakeInfo(tk, "D_PAN", &value);
 						updated = true;
 					}
@@ -1545,15 +1498,16 @@ bool autoSaveMediaSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSi
 							char name[SNM_MAX_FX_NAME_LEN] = "";
 							if(*src->GetFileName()) {
 								GetFilenameNoExt(src->GetFileName(), name, SNM_MAX_FX_NAME_LEN);
-								GenerateFilename(_dirPath, name, GetFileExtension(src->GetFileName()), _fn, _fnSize);
-								updated |= (SNM_CopyFile(_fn, src->GetFileName()) && g_slots.Get(_slotType)->AddSlot(_fn));
+								if (GenerateFilename(_dirPath, name, GetFileExtension(src->GetFileName()), _fn, _fnSize))
+									updated |= (SNM_CopyFile(_fn, src->GetFileName()) && g_slots.Get(_slotType)->AddSlot(_fn));
 							}
 							else { // in-project midi
 								GetFilenameNoExt((char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), name, SNM_MAX_FX_NAME_LEN);
-								Filenamize(name);
-								GenerateFilename(_dirPath, name, "mid", _fn, _fnSize);
-								src->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, _fn, NULL, NULL);
-								updated |= (g_slots.Get(_slotType)->AddSlot(_fn) != NULL);
+								Filenamize(name, sizeof(name));
+								if (GenerateFilename(_dirPath, name, "mid", _fn, _fnSize)) {
+									src->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, _fn, NULL, NULL);
+									updated |= (g_slots.Get(_slotType)->AddSlot(_fn) != NULL);
+								}
 							}
 						}
 						// else: v4 empty take

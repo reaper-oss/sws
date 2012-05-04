@@ -33,25 +33,29 @@
 extern int g_buggyPlugSupport;
 
 int GetFXByGUID(MediaTrack* _tr, GUID* _g);
-void toggleFXOfflineSelectedTracks(COMMAND_T*);
-bool isFXOfflineSelectedTracks(COMMAND_T*);
-void toggleFXBypassSelectedTracks(COMMAND_T*);
-bool isFXBypassedSelectedTracks(COMMAND_T*);
-void toggleExceptFXOfflineSelectedTracks(COMMAND_T*);
-void toggleExceptFXBypassSelectedTracks(COMMAND_T*);
-void toggleAllFXsOfflineSelectedTracks(COMMAND_T*);
-void toggleAllFXsBypassSelectedTracks(COMMAND_T*);
-void setFXOfflineSelectedTracks(COMMAND_T*); 
-void setFXBypassSelectedTracks(COMMAND_T*);
-void setFXOnlineSelectedTracks(COMMAND_T*);
-void setFXUnbypassSelectedTracks(COMMAND_T*);
-void setAllFXsBypassSelectedTracks(COMMAND_T*);
-void toggleAllFXsOfflineSelectedItems(COMMAND_T*);
-void toggleAllFXsBypassSelectedItems(COMMAND_T*);
-void setAllFXsOfflineSelectedItems(COMMAND_T*);
-void setAllFXsBypassSelectedItems(COMMAND_T*);
-void selectTrackFX(COMMAND_T*);
-int getSelectedTrackFX(MediaTrack* _tr);
+bool IsFXBypassedSelTracks(COMMAND_T*);
+void ToggleExceptFXBypassSelTracks(COMMAND_T*);
+void ToggleAllFXsBypassSelTracks(COMMAND_T*);
+void ToggleFXBypassSelTracks(COMMAND_T*);
+void SetFXBypassSelTracks(COMMAND_T*);
+void SetFXUnbypassSelTracks(COMMAND_T*);
+void SetAllFXsBypassSelTracks(COMMAND_T*);
+
+bool IsFXOfflineSelTracks(COMMAND_T*);
+void ToggleFXOfflineSelTracks(COMMAND_T*);
+void ToggleExceptFXOfflineSelTracks(COMMAND_T*);
+void ToggleAllFXsOfflineSelTracks(COMMAND_T*);
+void SetFXOfflineSelTracks(COMMAND_T*); 
+void SetFXOnlineSelTracks(COMMAND_T*);
+
+void ToggleAllFXsOfflineSelItems(COMMAND_T*);
+void SetAllFXsOfflineSelItems(COMMAND_T*);
+void ToggleAllFXsBypassSelItems(COMMAND_T*);
+void SetAllFXsBypassSelItems(COMMAND_T*);
+
+void SelectTrackFX(COMMAND_T*);
+int GetSelectedTrackFX(MediaTrack* _tr);
+
 #ifdef _WIN32
 int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _presetNames);
 #endif
@@ -60,6 +64,6 @@ void NextPresetSelTracks(COMMAND_T*);
 void PrevPresetSelTracks(COMMAND_T*);
 void NextPrevPresetLastTouchedFX(COMMAND_T*);
 void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
-void moveFX(COMMAND_T*);
+void MoveFX(COMMAND_T*);
 
 #endif

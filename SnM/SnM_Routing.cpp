@@ -73,7 +73,7 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 	}
 
 	// default volume
-	if (!update && _snprintf(vol, 32, "%.14f", *(double*)GetConfigVar("defsendvol")) > 0)
+	if (!update && _snprintfStrict(vol, sizeof(vol), "%.14f", *(double*)GetConfigVar("defsendvol")) > 0)
 		update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
 	return update;
 }
@@ -91,8 +91,9 @@ bool cueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showR
 	{
 		char msg[BUFFER_SIZE];
 		lstrcpyn(msg, __LOCALIZE("Cue buss not created!\nNo track template file defined","sws_DLG_149"), BUFFER_SIZE);
-		if (!*_trTemplatePath || _snprintf(msg, BUFFER_SIZE, __LOCALIZE_VERFMT("Cue buss not created!\nTrack template not found (or empty): %s","sws_DLG_149"), _trTemplatePath) > 0)
-			MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_149"), MB_OK);
+		if (*_trTemplatePath)
+			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Cue buss not created!\nTrack template not found (or empty): %s","sws_DLG_149"), _trTemplatePath);
+		MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_149"), MB_OK);
 		return false;
 	}
 
@@ -218,7 +219,7 @@ void readCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemp
 	if (_confId>=0 && _confId<SNM_MAX_CUE_BUSS_CONFS && _busName && _reaType && _trTemplate && _trTemplatePath && _showRouting && _soloDefeat && _sendToMaster && _hwOuts)
 	{
 		char iniSection[64]="";
-		if (_snprintf(iniSection, 64, "CueBuss%d", _confId+1) > 0)
+		if (_snprintfStrict(iniSection, sizeof(iniSection), "CueBuss%d", _confId+1) > 0)
 		{
 			char buf[16]="", slot[16]="";
 			GetPrivateProfileString(iniSection,"name","",_busName,BUFFER_SIZE,g_SNMIniFn.Get());
@@ -233,10 +234,12 @@ void readCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemp
 			*_sendToMaster = (atoi(buf) == 1);
 			GetPrivateProfileString(iniSection,"solo_defeat","1",buf,16,g_SNMIniFn.Get());
 			*_soloDefeat = atoi(buf);
-			for (int i=0; i<SNM_MAX_HW_OUTS; i++) {
-				*buf = '\0';
-				if (_snprintf(slot, 16, "hwout%d", i+1) > 0)
+			for (int i=0; i<SNM_MAX_HW_OUTS; i++)
+			{
+				if (_snprintfStrict(slot, sizeof(slot), "hwout%d", i+1) > 0)
 					GetPrivateProfileString(iniSection,slot,"0",buf,BUFFER_SIZE,g_SNMIniFn.Get());
+				else
+					*buf = '\0';
 				_hwOuts[i] = atoi(buf);
 			}
 		}
@@ -248,30 +251,31 @@ void saveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTem
 	if (_confId>=0 && _confId<SNM_MAX_CUE_BUSS_CONFS && _busName && _trTemplatePath && _hwOuts)
 	{
 		char iniSection[64]="";
-		if (_snprintf(iniSection, 64, "CueBuss%d", _confId+1) > 0)
+		if (_snprintfStrict(iniSection, sizeof(iniSection), "CueBuss%d", _confId+1) > 0)
 		{
 			char buf[16]="", slot[16]="";
 			WDL_FastString escapedStr;
 			makeEscapedConfigString(_busName, &escapedStr);
 			WritePrivateProfileString(iniSection,"name",escapedStr.Get(),g_SNMIniFn.Get());
-			if (_snprintf(buf, 16, "%d" ,_type) > 0)
+			if (_snprintfStrict(buf, sizeof(buf), "%d" ,_type) > 0)
 				WritePrivateProfileString(iniSection,"reatype",buf,g_SNMIniFn.Get());
 			WritePrivateProfileString(iniSection,"track_template_enabled",_trTemplate ? "1" : "0",g_SNMIniFn.Get());
 			makeEscapedConfigString(_trTemplatePath, &escapedStr);
 			WritePrivateProfileString(iniSection,"track_template_path",escapedStr.Get(),g_SNMIniFn.Get());
 			WritePrivateProfileString(iniSection,"show_routing",_showRouting ? "1" : "0",g_SNMIniFn.Get());
 			WritePrivateProfileString(iniSection,"send_to_masterparent",_sendToMaster ? "1" : "0",g_SNMIniFn.Get());
-			if (_snprintf(buf, 16, "%d", _soloDefeat) > 0)
+			if (_snprintfStrict(buf, sizeof(buf), "%d", _soloDefeat) > 0)
 				WritePrivateProfileString(iniSection,"solo_defeat",buf,g_SNMIniFn.Get());
 			for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
-				if (_snprintf(slot, 16, "hwout%d", i+1) > 0 && _snprintf(buf, 16, "%d", _hwOuts[i]) > 0)
+				if (_snprintfStrict(slot, sizeof(slot), "hwout%d", i+1) > 0 && _snprintfStrict(buf, sizeof(buf), "%d", _hwOuts[i]) > 0)
 					WritePrivateProfileString(iniSection,slot,_hwOuts[i]?buf:NULL,g_SNMIniFn.Get());
 		}
 	}
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
-// cut/copy/paste routings + track with routings
+// Cut/copy/paste routings + track with routings
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndTrackClipboard;

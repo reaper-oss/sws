@@ -74,7 +74,7 @@ bool TakeFilenameMatch(MediaItem_Take* _tk, const char* _searchStr)
 	if (src) 
 	{
 		const char* takeFilename = src->GetFileName();
-		match = (takeFilename && stristr(takeFilename, _searchStr));
+		match = (takeFilename && strstr(takeFilename, _searchStr)); // no stristr: osx + utf-8
 	}
 	return match;
 }
@@ -189,9 +189,9 @@ void SNM_FindWnd::OnInitDlg()
 void SNM_FindWnd::OnDestroy() 
 {
 	// save prefs
-	char cType[2] = "";
-	_snprintf(cType, 2, "%d", m_type);
-	WritePrivateProfileString("FIND_VIEW", "Type", cType, g_SNMIniFn.Get());
+	char type[4] = "";
+	if (_snprintfStrict(type, sizeof(type), "%d", m_type) > 0)
+		WritePrivateProfileString("FIND_VIEW", "Type", type, g_SNMIniFn.Get());
 	WritePrivateProfileString("FIND_VIEW", "ZoomScrollToFoundItems", m_zoomSrollItems ? "1" : "0", g_SNMIniFn.Get());
 
 	m_cbType.Empty();

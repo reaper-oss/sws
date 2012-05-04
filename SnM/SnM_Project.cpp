@@ -182,8 +182,8 @@ bool autoSaveProjectSlot(int _slotType, const char* _dirPath, char* _fn, int _fn
 	char prjFn[BUFFER_SIZE] = "", name[256] = "";
 	EnumProjects(-1, prjFn, BUFFER_SIZE);
 	GetFilenameNoExt(prjFn, name, 256);
-	GenerateFilename(_dirPath, name, g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
-	return (SNM_CopyFile(_fn, prjFn) && g_slots.Get(_slotType)->AddSlot(_fn));
+	return (GenerateFilename(_dirPath, name, g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize) &&
+		SNM_CopyFile(_fn, prjFn) && g_slots.Get(_slotType)->AddSlot(_fn));
 }
 
 void loadOrSelectProjectSlot(COMMAND_T* _ct) {
@@ -220,7 +220,7 @@ void projectLoaderConf(COMMAND_T* _ct)
 	question.Append(__LOCALIZE("End slot:","sws_mbox"));
 
 	char reply[BUFFER_SIZE]="";
-	_snprintf(reply, BUFFER_SIZE, "%d,%d", g_prjLoaderStartPref, g_prjLoaderEndPref);
+	_snprintfSafe(reply, sizeof(reply), "%d,%d", g_prjLoaderStartPref, g_prjLoaderEndPref);
 
 	if (GetUserInputs(__LOCALIZE("S&M - Project loader/selecter","sws_mbox"), 2, question.Get(), reply, 4096))
 	{

@@ -42,7 +42,7 @@ public:
 
 	// Member access	
 	char* GetName() { return m_name.Get(); }
-	void SetName(const char* newname) { if (!newname || !*newname) m_name.Set(""); else m_name.Set(newname); }
+	void SetName(const char* newname) { m_name.Set(!newname ? "" : newname); }
 	double GetPos() { return m_dPos; }
 	void SetPos(double dPos) { m_dPos = dPos; }
 	double GetRegEnd() { return m_dRegEnd; }

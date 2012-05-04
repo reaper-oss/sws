@@ -86,7 +86,7 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 	const char* GetMenuDesc();
 	const char* GetFileExt() { return m_ext.Get(); }
 	bool IsValidFileExt(const char* _ext);
-	void GetFileFilter(char* _filter, int _maxFilterLength);
+	void GetFileFilter(char* _filter, size_t _filterSz);
 	bool HasNotepad() { return m_notepad; }
 	bool HasAutoSave() { return m_autoSave; }
 	bool HasDblClick() { return m_dblClick; }

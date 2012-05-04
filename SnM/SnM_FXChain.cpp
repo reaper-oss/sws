@@ -209,9 +209,9 @@ bool autoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, in
 				else if (GetName(item))
 					lstrcpyn(name, GetName(item), SNM_MAX_FX_NAME_LEN);
 
-				Filenamize(name);
-				GenerateFilename(_dirPath, !*name ? "Untitled" : name, g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
-				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
+				Filenamize(name, sizeof(name));
+				if (GenerateFilename(_dirPath, !*name ? "Untitled" : name, g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize))
+					slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
 			}
 		}
 	}
@@ -298,7 +298,7 @@ void pasteTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX
 	bool updated = false;
 	if (_chain && _chain->GetLength())
 	{
-		for (int i = 0; i <= GetNumTracks(); i++) // include master
+		for (int i=0; i <= GetNumTracks(); i++) // incl. master
 		{
 			MediaTrack* tr = CSurf_TrackFromID(i, false);
 			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -335,7 +335,7 @@ void pasteTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX
 void setTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX)
 {
 	bool updated = false;
-	for (int i = 0; i <= GetNumTracks(); i++) // include master
+	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -356,7 +356,7 @@ void setTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX)
 // returns the first copied track idx (1-based, 0 = master)
 int copyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr)
 {
-	for (int i = _startTr; i >= 0 && i <= GetNumTracks(); i++) // include master
+	for (int i=_startTr; i >= 0 && i <= GetNumTracks(); i++) // incl. master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -448,9 +448,9 @@ bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, i
 				else if (char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL))
 					lstrcpyn(name, trName, SNM_MAX_FX_NAME_LEN);
 
-				Filenamize(name);
-				GenerateFilename(_dirPath, !i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize);
-				slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
+				Filenamize(name, sizeof(name));
+				if (GenerateFilename(_dirPath, !i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize))
+					slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
 			}
 		}
 	}
@@ -580,7 +580,7 @@ void reassignLearntMIDICh(COMMAND_T* _ct)
 			break;
 	}
 
-	for (int i = 0; i <= GetNumTracks(); i++) // include master
+	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
@@ -589,7 +589,7 @@ void reassignLearntMIDICh(COMMAND_T* _ct)
 			switch(prm)
 			{
 				case -2: {
-					int fx = getSelectedTrackFX(tr);
+					int fx = GetSelectedTrackFX(tr);
 					if (fx > 0)
 						updated |= p.SetChannel(ch, fx);
 					break;

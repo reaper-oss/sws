@@ -101,9 +101,6 @@ bool ShowTakeEnvVol(MediaItem_Take* _take);
 bool ShowTakeEnvPan(MediaItem_Take* _take);
 bool ShowTakeEnvMute(MediaItem_Take* _take);
 bool ShowTakeEnvPitch(MediaItem_Take* _take);
-#ifdef _SNM_MISC
-void saveItemTakeTemplate(COMMAND_T*);
-#endif
 void itemSelToolbarPoll();
 void toggleItemSelExists(COMMAND_T*);
 bool itemSelExists(COMMAND_T*);

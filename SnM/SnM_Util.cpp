@@ -68,12 +68,12 @@ const char* GetFilenameWithExt(const char* _fullFn)
 	return p;
 }
 
-void Filenamize(char* _fnInOut)
+void Filenamize(char* _fnInOut, int _fnInOutSz)
 {
 	if (_fnInOut)
 	{
 		int i=0, j=0;
-		while (_fnInOut[i])
+		while (_fnInOut[i] && i < _fnInOutSz)
 		{
 			if (_fnInOut[i] != ':' && _fnInOut[i] != '/' && _fnInOut[i] != '\\' &&
 				_fnInOut[i] != '*' && _fnInOut[i] != '?' && _fnInOut[i] != '\"' &&
@@ -81,6 +81,8 @@ void Filenamize(char* _fnInOut)
 				_fnInOut[j++] = _fnInOut[i];
 			i++;
 		}
+		if (j>=_fnInOutSz)
+			j = _fnInOutSz-1;
 		_fnInOut[j] = '\0';
 	}
 }
@@ -97,8 +99,8 @@ bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg)
 	{
 		char buf[BUFFER_SIZE];
 		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), BUFFER_SIZE);
-		if (!*_fn || _snprintf(buf, BUFFER_SIZE, __LOCALIZE_VERFMT("Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | :","sws_mbox"), _fn) > 0)
-			MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+		if (_fn && *_fn) _snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | :","sws_mbox"), _fn);
+		MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 	return !ko;
 }
@@ -111,8 +113,8 @@ bool FileExistsErrMsg(const char* _fn, bool _errMsg)
 	{
 		char buf[BUFFER_SIZE];
 		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), BUFFER_SIZE);
-		if (!_fn || !*_fn || _snprintf(buf, BUFFER_SIZE, __LOCALIZE_VERFMT("File not found: %s","sws_mbox"), _fn) > 0)
-			MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+		if (_fn && *_fn) _snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | :","sws_mbox"), _fn);
+		MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 	return exists;
 }
@@ -148,15 +150,16 @@ bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _fn, int _fnSize, bool _wantFullPath)
 {
 	bool ok = false;
-	char defaultPath[BUFFER_SIZE] = "";
-	_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir);
-	if (char* filename = BrowseForFiles(_title, defaultPath, NULL, false, _fileFilters)) 
+	char defaultPath[BUFFER_SIZE];
+	if (_snprintfStrict(defaultPath, sizeof(defaultPath), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir) < 0)
+		*defaultPath = '\0';
+	if (char* fn = BrowseForFiles(_title, defaultPath, NULL, false, _fileFilters)) 
 	{
 		if(!_wantFullPath)
-			GetShortResourcePath(_resSubDir, filename, _fn, _fnSize);
+			GetShortResourcePath(_resSubDir, fn, _fn, _fnSize);
 		else
-			lstrcpyn(_fn, filename, _fnSize);
-		free(filename);
+			lstrcpyn(_fn, fn, _fnSize);
+		free(fn);
 		ok = true;
 	}
 	return ok;
@@ -173,8 +176,9 @@ void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _sh
 	if (_resSubDir && *_resSubDir && _fullFn && *_fullFn)
 	{
 		char defaultPath[BUFFER_SIZE] = "";
-		_snprintf(defaultPath, BUFFER_SIZE, "%s%c%s%c", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR);
-		if(stristr(_fullFn, defaultPath) == _fullFn) 
+		if (_snprintfStrict(defaultPath, sizeof(defaultPath), "%s%c%s%c", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR) < 0)
+			*defaultPath = '\0';
+		if (strstr(_fullFn, defaultPath) == _fullFn) // no stristr: osx + utf-8
 			lstrcpyn(_shortFn, (char*)(_fullFn + strlen(defaultPath)), _fnSize);
 		else
 			lstrcpyn(_shortFn, _fullFn, _fnSize);
@@ -197,15 +201,17 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 			*_fullFn = '\0';
 			return;
 		}
-		if (!stristr(_shortFn, GetResourcePath())) {
-
+		if (!strstr(_shortFn, GetResourcePath())) // no stristr: osx + utf-8
+		{
 			char resFn[BUFFER_SIZE] = "", resDir[BUFFER_SIZE];
-			_snprintf(resFn, BUFFER_SIZE, "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFn);
-			lstrcpyn(resDir, resFn, BUFFER_SIZE);
-			if (char* p = strrchr(resDir, PATH_SLASH_CHAR)) *p = '\0';
-			if (FileExists(resDir)) {
-				lstrcpyn(_fullFn, resFn, _fnSize);
-				return;
+			if (_snprintfStrict(resFn, sizeof(resFn), "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFn) > 0)
+			{
+				lstrcpyn(resDir, resFn, BUFFER_SIZE);
+				if (char* p = strrchr(resDir, PATH_SLASH_CHAR)) *p = '\0';
+				if (FileExists(resDir)) {
+					lstrcpyn(_fullFn, resFn, _fnSize);
+					return;
+				}
 			}
 		}
 		lstrcpyn(_fullFn, _shortFn, _fnSize);
@@ -333,21 +339,35 @@ WDL_HeapBuf* TranscodeStr64ToHeapBuf(const char* _str64)
 }
 
 // use Filenamize() first!
-void GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz)
+bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz)
 {
 	if (_dir && _name && _ext && _updatedFn && *_dir)
 	{
 		char fn[BUFFER_SIZE];
 		bool slash = _dir[strlen(_dir)-1] == PATH_SLASH_CHAR;
-		if (slash) _snprintf(fn, BUFFER_SIZE, "%s%s.%s", _dir, _name, _ext);
-		else _snprintf(fn, BUFFER_SIZE, "%s%c%s.%s", _dir, PATH_SLASH_CHAR, _name, _ext);
+		if (slash) {
+			if (_snprintfStrict(fn, sizeof(fn), "%s%s.%s", _dir, _name, _ext) <= 0)
+				return false;
+		} else {
+			if (_snprintfStrict(fn, sizeof(fn), "%s%c%s.%s", _dir, PATH_SLASH_CHAR, _name, _ext) <= 0)
+				return false;
+		}
 
 		int i=0;
 		while(FileExists(fn))
-			if (slash) _snprintf(fn, BUFFER_SIZE, "%s%s_%03d.%s", _dir, _name, ++i, _ext);
-			else _snprintf(fn, BUFFER_SIZE, "%s%c%s_%03d.%s", _dir, PATH_SLASH_CHAR, _name, ++i, _ext);
+		{
+			if (slash) {
+				if (_snprintfStrict(fn, sizeof(fn), "%s%s_%03d.%s", _dir, _name, ++i, _ext) <= 0)
+					return false;
+			} else {
+				if (_snprintfStrict(fn, sizeof(fn), "%s%c%s_%03d.%s", _dir, PATH_SLASH_CHAR, _name, ++i, _ext) <= 0)
+					return false;
+			}
+		}
 		lstrcpyn(_updatedFn, fn, _updatedSz);
+		return true;
 	}
+	return false;
 }
 
 // fills a list of filenames for the desired extension
@@ -389,11 +409,6 @@ void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx)
 {
 	if (_str && _ctx)
 	{
-/* see better/faster fix below via _ctx->AddLine("%s", ...)
-		WDL_FastString tmpStr;
-		makeUnformatedConfigString(_str->Get(), &tmpStr);
-		const char* pEOL = tmpStr.Get()-1;
-*/
 		const char* pEOL = _str->Get()-1;
 		char curLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 		for(;;) 
@@ -402,13 +417,12 @@ void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx)
 			pEOL = strchr(pLine, '\n');
 			if (!pEOL)
 				break;
-			int curLineLength = (int)(pEOL-pLine);
-			if (curLineLength < SNM_MAX_CHUNK_LINE_LENGTH) // drop long lines
-			{
-				memcpy(curLine, pLine, curLineLength);
-				curLine[curLineLength] = '\0';
-				_ctx->AddLine("%s", curLine); // "%s" needed see http://code.google.com/p/sws-extension/issues/detail?id=358
-			}
+			int curLineLen = (int)(pEOL-pLine);
+			if (curLineLen >= SNM_MAX_CHUNK_LINE_LENGTH)
+				curLineLen = SNM_MAX_CHUNK_LINE_LENGTH-1; // trim long lines
+			memcpy(curLine, pLine, curLineLen);
+			curLine[curLineLen] = '\0';
+			_ctx->AddLine("%s", curLine); // "%s" needed, see http://code.google.com/p/sws-extension/issues/detail?id=358
 		}
 	}
 }
@@ -421,7 +435,7 @@ void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx, bo
 		char linebuf[SNM_MAX_CHUNK_LINE_LENGTH] = "";
 		while(true)
 		{
-			if (!_ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
+			if (!_ctx->GetLine(linebuf, sizeof(linebuf)) && !lp.parse(linebuf))
 			{
 				_str->Append(linebuf);
 				_str->Append("\n");
@@ -436,7 +450,7 @@ void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx, bo
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// ini file helpers
+// Ini file helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 // write a full ini file section in one go
@@ -538,29 +552,26 @@ void SNM_UpgradeIniFiles()
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// marker/region helpers
+// Marker/region helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 // returns the 1st marker or region index found at _pos
 // note: relies on markers & regions indexed by positions
 // _flags: &SNM_MARKER_MASK=marker, &SNM_REGION_MASK=region
-int FindMarkerRegion(double _pos, int _flags, bool _fromCache, int* _idOut)
+int FindMarkerRegion(double _pos, int _flags, int* _idOut)
 {
 	if (_idOut)
 		*_idOut = -1;
 
-	int (*EnumMarkerRegions)(ReaProject*, int, bool*, double*, double*, char**, int*, int*);
-	EnumMarkerRegions = _fromCache ? EnumMarkerRegionsCache : EnumProjectMarkers3;
-
 	int idx=-1, x=0, lastx=0, num; double dPos, dEnd; bool isRgn;
-	while (x = EnumMarkerRegions(NULL, x, &isRgn, &dPos, &dEnd, NULL, &num, NULL))
+	while (x = EnumProjectMarkers3(NULL, x, &isRgn, &dPos, &dEnd, NULL, &num, NULL))
 	{
 		if ((!isRgn && _flags&SNM_MARKER_MASK) || (isRgn && _flags&SNM_REGION_MASK))
 		{
 			if (_pos >= dPos && (!isRgn || (isRgn && _pos <= dEnd)))
 			{
 				bool isRgn2;
-				if (EnumMarkerRegions(NULL, x, &isRgn2, &dPos, NULL, NULL, NULL, NULL) &&
+				if (EnumProjectMarkers3(NULL, x, &isRgn2, &dPos, NULL, NULL, NULL, NULL) &&
 					((!isRgn2 && _flags&SNM_MARKER_MASK) || (isRgn2 && _flags&SNM_REGION_MASK)))
 				{
 					if (_pos < dPos) {
@@ -602,16 +613,13 @@ int GetMarkerRegionIdFromIndex(int _idx)
 	return -1;
 }
 
-int GetMarkerRegionIndexFromId(int _id, bool _fromCache)
+int GetMarkerRegionIndexFromId(int _id)
 {
 	if (_id > 0)
 	{
-		int (*EnumMarkerRegions)(ReaProject*, int, bool*, double*, double*, char**, int*, int*);
-		EnumMarkerRegions = _fromCache ? EnumMarkerRegionsCache : EnumProjectMarkers3;
-
 		int x=0, lastx=0, num=(_id&0x3FFFFFFF), num2; 
 		bool isRgn = IsRegion(_id), isRgn2;
-		while (x = EnumMarkerRegionsCache(NULL, x, &isRgn2, NULL, NULL, NULL, &num2, NULL)) {
+		while (x = EnumProjectMarkers3(NULL, x, &isRgn2, NULL, NULL, NULL, &num2, NULL)) {
 			if (num == num2 && isRgn == isRgn2)
 				return lastx;
 			lastx=x;
@@ -641,24 +649,24 @@ int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool 
 		double pos, end; int num; bool isRgn; char* name;
 		if (nextIdx = EnumProjectMarkers2(NULL, _idx, &isRgn, &pos, &end, &name, &num))
 		{
-			if (!isRgn && _flags&1) // marker
+			if (!isRgn && _flags&SNM_MARKER_MASK)
 			{
 				char timeStr[32] = "";
 				format_timestr_pos(pos, timeStr, 32, -1);
 				if (_wantsName && *name)
-					_snprintf(_descOut, _outSz, "%d: %s [%s]", num, name, timeStr);
+					_snprintfSafe(_descOut, _outSz, "%d: %s [%s]", num, name, timeStr);
 				else
-					_snprintf(_descOut, _outSz, "%d: [%s]", num, timeStr);
+					_snprintfSafe(_descOut, _outSz, "%d: [%s]", num, timeStr);
 			}
-			if (isRgn && _flags&2) // region
+			if (isRgn && _flags&SNM_REGION_MASK)
 			{
 				char timeStr1[32]="", timeStr2[32]="";
 				format_timestr_pos(pos, timeStr1, 32, -1);
 				format_timestr_pos(end, timeStr2, 32, -1);
 				if (_wantsName && *name)
-					_snprintf(_descOut, _outSz, "%d: %s [%s -> %s]", num, name, timeStr1, timeStr2);
+					_snprintfSafe(_descOut, _outSz, "%d: %s [%s -> %s]", num, name, timeStr1, timeStr2);
 				else
-					_snprintf(_descOut, _outSz, "%d: [%s -> %s]", num, timeStr1, timeStr2);
+					_snprintfSafe(_descOut, _outSz, "%d: [%s -> %s]", num, timeStr1, timeStr2);
 			}
 		}
 	}
@@ -706,25 +714,53 @@ void TranslatePos(double _pos, int* _h, int* _m, int* _s, int* _ms)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// string helpers
+// String helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef _SNM_MISC
- void makeUnformatedConfigString(const char* _in, WDL_FastString* _out)
+// a _snprintf that ensures the string is always null terminated (but truncated if needed)
+int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...)
 {
-	if (_in && _out)
-	{
-		_out->Set(_in);
-		const char* p = strchr(_out->Get(), '%');
-		while(p)
-		{
-			int pos = (int)(p - _out->Get());
-			_out->Insert("%", ++pos); // ++pos! but Insert() clamps to length..
-			p = (pos+1 < _out->GetLength()) ? strchr((_out->Get()+pos+1), '%') : NULL;
-		}
-	}
-}
+  va_list va;
+  va_start(va, _fmt);
+  *_buf='\0';
+#if defined(_WIN32) && defined(_MSC_VER)
+  int l = _vsnprintf(_buf, _n, _fmt, va);
+  if (l < 0 || l >= (int)_n) {
+    _buf[_n-1]=0;
+    l = strlen(_buf);
+  }
+#else
+  // vsnprintf() on non-win32, always null terminates
+  int l = vsnprintf(_buf, _n, _fmt, va);
+  if (l>=(int)_n)
+    l=_n-1;
 #endif
+  va_end(va);
+  return l;
+}
+
+// a _snprintf that returns >=0 when the string is null terminated and not truncated
+// => callers must check the returned value
+int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...)
+{
+  va_list va;
+  va_start(va, _fmt);
+  *_buf='\0';
+#if defined(_WIN32) && defined(_MSC_VER)
+  int l = _vsnprintf(_buf, _n, _fmt, va);
+  if (l < 0 || l >= (int)_n) {
+    _buf[_n-1]=0;
+    l = -1;
+  }
+#else
+  // vsnprintf() on non-win32, always null terminates
+  int l = vsnprintf(_buf, _n, _fmt, va);
+  if (l>=(int)_n)
+    l = -1;
+#endif
+  va_end(va);
+  return l;
+}
 
 bool GetStringWithRN(const char* _bufIn, char* _bufOut, int _bufOutSz)
 {
@@ -799,8 +835,8 @@ bool LearnAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSe
 			return false;
 		case -1: {
 			char msg[256];
-			if (_snprintf(msg, 256, __LOCALIZE_VERFMT("Actions window not opened or section '%s' not selected or no selected action!","sws_mbox"), _expectedLocalizedSection)>0)
-				MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Actions window not opened or section '%s' not selected or no selected action!","sws_mbox"), _expectedLocalizedSection);
+			MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			return false;
 		}
 	}
@@ -880,6 +916,6 @@ bool FNV64(const char* _strIn, char* _strOut)
 			h=FNV64(h,(unsigned char *)&c,1);
 	}
 	h=FNV64(h,(unsigned char *)"",1);
-	return (_snprintf(_strOut, 64, "%08X%08X",(int)(h>>32),(int)(h&0xffffffff)) > 0);
+	return (_snprintfStrict(_strOut, 65, "%08X%08X",(int)(h>>32),(int)(h&0xffffffff)) > 0);
 }
 

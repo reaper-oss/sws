@@ -117,7 +117,7 @@ void UpdatePresetConf(WDL_FastString* _presetConf, int _fx, const char* _preset)
 	{
 		bool found = false;
 		char fxBuf[32]="";
-		if (_snprintf(fxBuf, 32, "FX%d:", _fx) > 0)
+		if (_snprintfStrict(fxBuf, sizeof(fxBuf), "FX%d:", _fx) > 0)
 		{
 			for (int i=0; i < lp.getnumtokens(); i++)
 			{
@@ -199,7 +199,7 @@ bool GetPresetFromConfV2(int _fx, const char* _presetConf, WDL_FastString* _pres
 	if (_presetConf && _presetName && !lp.parse(_presetConf))
 	{
 		char fxBuf[32]="";
-		if (_snprintf(fxBuf, 32, "FX%d:", _fx+1) > 0)
+		if (_snprintfStrict(fxBuf, sizeof(fxBuf), "FX%d:", _fx+1) > 0)
 		{
 			for (int i=0; i < lp.getnumtokens(); i++)
 			{
@@ -295,7 +295,7 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 		switch (iCol)
 		{
 			case COL_CC:
-				_snprintf(str, iStrMax, "%03d %s", pItem->m_cc, pItem->m_cc == g_liveConfigs.Get()->Get(g_configId)->m_lastMIDIVal ? UTF8_BULLET : " ");
+				_snprintfSafe(str, iStrMax, "%03d %s", pItem->m_cc, pItem->m_cc == g_liveConfigs.Get()->Get(g_configId)->m_lastMIDIVal ? UTF8_BULLET : " ");
 				break;
 			case COL_COMMENT:
 				lstrcpyn(str, pItem->m_desc.Get(), iStrMax);
@@ -303,7 +303,7 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 			case COL_TR:
 				if (pItem->m_track)
 					if (char* name = (char*)GetSetMediaTrackInfo(pItem->m_track, "P_NAME", NULL))
-						_snprintf(str, iStrMax, "[%d] \"%s\"", CSurf_TrackToID(pItem->m_track, false), name);
+						_snprintfSafe(str, iStrMax, "[%d] \"%s\"", CSurf_TrackToID(pItem->m_track, false), name);
 				break;
 			case COL_TRT:
 				GetFilenameNoExt(pItem->m_trTemplate.Get(), str, iStrMax);
@@ -452,7 +452,7 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_cbConfig.SetID(COMBOID_CONFIG);
 	char cfg[8] = "";
 	for (int i=0; i < SNM_LIVECFG_NB_CONFIGS; i++) {
-		_snprintf(cfg, 8, "%d", i+1);
+		_snprintfSafe(cfg, sizeof(cfg), "%d", i+1);
 		m_cbConfig.AddItem(cfg);
 	}
 	m_cbConfig.SetCurSel(g_configId);
@@ -484,11 +484,9 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 
 void SNM_LiveConfigsWnd::OnDestroy() 
 {
-	// save prefs
-	char cDelay[8]="";
-	if (_snprintf(cDelay, 8, "%d", g_approxDelayMsCC) > 0)
-		WritePrivateProfileString("LIVE_CONFIGS", "CC_DELAY", cDelay, g_SNMIniFn.Get()); 
-
+	char delay[8]="";
+	if (_snprintfStrict(delay, sizeof(delay), "%d", g_approxDelayMsCC) > 0)
+		WritePrivateProfileString("LIVE_CONFIGS", "CC_DELAY", delay, g_SNMIniFn.Get()); 
 	m_cbConfig.Empty();
 	m_cbInputTr.Empty();
 }
@@ -533,7 +531,7 @@ void SNM_LiveConfigsWnd::SelectByCCValue(int _configId, int _cc)
 		HWND hList = lv ? lv->GetHWND() : NULL;
 		if (lv && hList) // this can be called when the view is closed!
 		{
-			for (int i = 0; i < lv->GetListItemCount(); i++)
+			for (int i=0; i < lv->GetListItemCount(); i++)
 			{
 				MidiLiveItem* item = (MidiLiveItem*)lv->GetListItem(i);
 				if (item && item->m_cc == _cc) 
@@ -765,9 +763,9 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				lc->m_enable = !(lc->m_enable);
 				Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 				// Retreive the related toggle action and refresh toolbars
-				char customCmdId[SNM_MAX_ACTION_CUSTID_LEN];
-				if (_snprintf(customCmdId, SNM_MAX_ACTION_CUSTID_LEN, "%s%d", "_S&M_TOGGLE_LIVE_CFG", g_configId+1) > 0)
-					RefreshToolbar(NamedCommandLookup(customCmdId));
+				char custId[SNM_MAX_ACTION_CUSTID_LEN];
+				_snprintfSafe(custId, sizeof(custId), "%s%d", "_S&M_TOGGLE_LIVE_CFG", g_configId+1);
+				RefreshToolbar(NamedCommandLookup(custId));
 			}
 			break;
 		case BUTTONID_MUTE_OTHERS:
@@ -964,8 +962,8 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				{
 					char str[SNM_MAX_TRACK_NAME_LEN] = "";
 					char* name = (char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i,false), "P_NAME", NULL);
-					if (_snprintf(str, SNM_MAX_TRACK_NAME_LEN, "[%d] \"%s\"", i, name) > 0)
-						AddToMenu(hMenu, str, SNM_LIVECFG_SET_TRACK_START_MSG + i);
+					_snprintfSafe(str, sizeof(str), "[%d] \"%s\"", i, name);
+					AddToMenu(hMenu, str, SNM_LIVECFG_SET_TRACK_START_MSG + i);
 				}
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				AddToMenu(hMenu, __LOCALIZE("Clear tracks","sws_DLG_155"), SNM_LIVECFG_CLEAR_TRACK_MSG);
@@ -1016,10 +1014,9 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				hMenu = CreatePopupMenu();
 				int cmd = NamedCommandLookup(item->m_onAction.Get());
 				char cur[SNM_MAX_ACTION_NAME_LEN] = "";
-				if (_snprintf(cur, SNM_MAX_ACTION_NAME_LEN, "[%s: %s]", __LOCALIZE("Current","sws_DLG_155"), cmd ? kbd_getTextFromCmd(cmd, NULL) : __LOCALIZE("none","sws_DLG_155")) > 0) { // main section only
-					AddToMenu(hMenu, cur, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
-					AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				}
+				_snprintfSafe(cur, sizeof(cur), "[%s: %s]", __LOCALIZE("Current","sws_DLG_155"), cmd ? kbd_getTextFromCmd(cmd, NULL) : __LOCALIZE("none","sws_DLG_155"));
+				AddToMenu(hMenu, cur, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 #ifdef _SNM_ACTION_LEARN
 				AddToMenu(hMenu, __LOCALIZE("Learn from Actions window","sws_DLG_155"), SNM_LIVECFG_LEARN_ON_ACTION_MSG);
 #endif
@@ -1032,10 +1029,9 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				hMenu = CreatePopupMenu();
 				int cmd = NamedCommandLookup(item->m_offAction.Get());
 				char cur[SNM_MAX_ACTION_NAME_LEN] = "";
-				if (_snprintf(cur, SNM_MAX_ACTION_NAME_LEN, "[%s: %s]", __LOCALIZE("Current","sws_DLG_155"), cmd ? kbd_getTextFromCmd(cmd, NULL) : __LOCALIZE("none","sws_DLG_155")) > 0) { // main section only
-					AddToMenu(hMenu, cur, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
-					AddToMenu(hMenu, SWS_SEPARATOR, 0);
-				}
+				_snprintfSafe(cur, sizeof(cur), "[%s: %s]", __LOCALIZE("Current","sws_DLG_155"), cmd ? kbd_getTextFromCmd(cmd, NULL) : __LOCALIZE("none","sws_DLG_155"));
+				AddToMenu(hMenu, cur, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
+				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 #ifdef _SNM_ACTION_LEARN
 				AddToMenu(hMenu, __LOCALIZE("Learn from Actions window","sws_DLG_155"), SNM_LIVECFG_LEARN_OFF_ACTION_MSG);
 #endif
@@ -1424,7 +1420,7 @@ void SNM_MidiLiveScheduledJob::Perform()
 			// save selected tracks, unselect all tracks
 			WDL_PtrList<MediaTrack> selTracks;
 			if (lc->m_autoSelect)
-				for (int i=0; i <= GetNumTracks(); i++) // include master
+				for (int i=0; i <= GetNumTracks(); i++) // incl. master
 				{
 					MediaTrack* tr = CSurf_TrackFromID(i, false);
 					if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {

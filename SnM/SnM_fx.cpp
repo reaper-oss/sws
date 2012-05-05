@@ -74,8 +74,6 @@ bool SetOrToggleFXBypassSelTracks(const char * _undoMsg, int _mode, int _fxCmdId
 {
 	bool updated = false;
 
-	if (_undoMsg)
-		Undo_BeginBlock2(NULL);
 
 	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{
@@ -89,16 +87,22 @@ bool SetOrToggleFXBypassSelTracks(const char * _undoMsg, int _mode, int _fxCmdId
 					case 1: // toggle all except
 						for (int j=0; j<TrackFX_GetCount(tr); j++)
 							if (j != fxId) {
+								if (_undoMsg && !updated)
+									Undo_BeginBlock2(NULL);
 								TrackFX_SetEnabled(tr, j, !TrackFX_GetEnabled(tr, j));
 								updated = true;
 							}
 						break;
 					case 2: // toggle
+						if (_undoMsg && !updated)
+							Undo_BeginBlock2(NULL);
 						TrackFX_SetEnabled(tr, fxId, !TrackFX_GetEnabled(tr, fxId));
 						updated = true;
 						break;
 					case 3: // set
 						if (_val != TrackFX_GetEnabled(tr, fxId)) {
+							if (_undoMsg && !updated)
+								Undo_BeginBlock2(NULL);
 							TrackFX_SetEnabled(tr, fxId, _val);
 							updated = true;
 						}
@@ -106,6 +110,8 @@ bool SetOrToggleFXBypassSelTracks(const char * _undoMsg, int _mode, int _fxCmdId
 					case 4: // set all
 						for (int j=0; j<TrackFX_GetCount(tr); j++)
 							if (_val != TrackFX_GetEnabled(tr, j)) {
+								if (_undoMsg && !updated)
+									Undo_BeginBlock2(NULL);
 								TrackFX_SetEnabled(tr, j, _val);
 								updated = true;
 							}
@@ -113,7 +119,7 @@ bool SetOrToggleFXBypassSelTracks(const char * _undoMsg, int _mode, int _fxCmdId
 				}
 		}
 	}
-	if (_undoMsg)
+	if (_undoMsg && updated)
 		Undo_EndBlock2(NULL, _undoMsg, UNDO_STATE_ALL); // using UNDO_STATE_FX crashes 
 	return updated;
 }

@@ -72,40 +72,40 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Cut selected tracks receives" }, "S&M_CUTSNDRCV4", cutReceives, NULL, },
 
 	// Windows ----------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Close all floating FX windows" }, "S&M_WNCLS3", closeAllFXWindows, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Close all FX chain windows" }, "S&M_WNCLS4", closeAllFXChainsWindows, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Close all floating FX windows for selected tracks" }, "S&M_WNCLS5", closeAllFXWindows, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Close all floating FX windows, except focused one" }, "S&M_WNCLS6", closeAllFXWindowsExceptFocused, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Show all floating FX windows (!)" }, "S&M_WNTSHW1", showAllFXWindows, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Show all FX chain windows (!)" }, "S&M_WNTSHW2", showAllFXChainsWindows, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Show all floating FX windows for selected tracks" }, "S&M_WNTSHW3", showAllFXWindows, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Toggle show all floating FX (!)" }, "S&M_WNTGL3", toggleAllFXWindows, NULL, 0, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Toggle show all FX chain windows (!)" }, "S&M_WNTGL4", toggleAllFXChainsWindows, NULL, -666, FakeIsToggleAction},	
-	{ { DEFACCEL, "SWS/S&M: Toggle show all floating FX for selected tracks" }, "S&M_WNTGL5", toggleAllFXWindows, NULL, 1, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Close all floating FX windows" }, "S&M_WNCLS3", CloseAllFXWindows, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Close all FX chain windows" }, "S&M_WNCLS4", CloseAllFXChainsWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Close all floating FX windows for selected tracks" }, "S&M_WNCLS5", CloseAllFXWindows, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Close all floating FX windows, except focused one" }, "S&M_WNCLS6", CloseAllFXWindowsExceptFocused, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Show all floating FX windows (!)" }, "S&M_WNTSHW1", ShowAllFXWindows, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Show all FX chain windows (!)" }, "S&M_WNTSHW2", ShowAllFXChainsWindows, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Show all floating FX windows for selected tracks" }, "S&M_WNTSHW3", ShowAllFXWindows, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Toggle show all floating FX (!)" }, "S&M_WNTGL3", ToggleAllFXWindows, NULL, 0, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Toggle show all FX chain windows (!)" }, "S&M_WNTGL4", ToggleAllFXChainsWindows, NULL, -666, FakeIsToggleAction},	
+	{ { DEFACCEL, "SWS/S&M: Toggle show all floating FX for selected tracks" }, "S&M_WNTGL5", ToggleAllFXWindows, NULL, 1, FakeIsToggleAction},
 
-	{ { DEFACCEL, "SWS/S&M: Float previous FX (and close others) for selected tracks" }, "S&M_WNONLY1", cycleFloatFXWndSelTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Float next FX (and close others) for selected tracks" }, "S&M_WNONLY2", cycleFloatFXWndSelTracks, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Float previous FX (and close others) for selected tracks" }, "S&M_WNONLY1", CycleFloatFXWndSelTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Float next FX (and close others) for selected tracks" }, "S&M_WNONLY2", CycleFloatFXWndSelTracks, NULL, 1},
 
 	// see above comment, used to be `... (+ main window on cycle)` => turned into `... (cycle)`
-	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS5", cycleFocusFXMainWndSelTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS6", cycleFocusFXMainWndSelTracks, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (cycle)" }, "S&M_WNFOCUS7", cycleFocusFXMainWndAllTracks, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Focus next floating FX (cycle)" }, "S&M_WNFOCUS8", cycleFocusFXMainWndAllTracks, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS5", CycleFocusFXMainWndSelTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Focus next floating FX for selected tracks (cycle)" }, "S&M_WNFOCUS6", CycleFocusFXMainWndSelTracks, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Focus previous floating FX (cycle)" }, "S&M_WNFOCUS7", CycleFocusFXMainWndAllTracks, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Focus next floating FX (cycle)" }, "S&M_WNFOCUS8", CycleFocusFXMainWndAllTracks, NULL, 1},
 
-	{ { DEFACCEL, "SWS/S&M: Focus main window" }, "S&M_WNMAIN", focusMainWindow, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Focus main window" }, "S&M_WNMAIN", FocusMainWindow, NULL, },
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Focus main window (close others)" }, "S&M_WNMAIN_HIDE_OTHERS", focusMainWindowCloseOthers, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Cycle focused window" }, "S&M_WNFOCUS9", cycleFocusWnd, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Focus next window (cycle, hide/unhide others)" }, "S&M_WNFOCUS_NEXT", cycleFocusHideOthersWnd, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Focus previous window (cycle, hide/unhide others)" }, "S&M_WNFOCUS_PREV", cycleFocusHideOthersWnd, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Focus main window (close others)" }, "S&M_WNMAIN_HIDE_OTHERS", FocusMainWindowCloseOthers, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Cycle focused window" }, "S&M_WNFOCUS9", CycleFocusWnd, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Focus next window (cycle, hide/unhide others)" }, "S&M_WNFOCUS_NEXT", CycleFocusHideOthersWnd, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Focus previous window (cycle, hide/unhide others)" }, "S&M_WNFOCUS_PREV", CycleFocusHideOthersWnd, NULL, -1},
 #endif
-	{ { DEFACCEL, "SWS/S&M: Show FX chain for selected tracks (selected FX)" }, "S&M_SHOWFXCHAINSEL", showFXChain, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Hide FX chain windows for selected tracks" }, "S&M_HIDEFXCHAIN", hideFXChain, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Toggle show FX chain windows for selected tracks" }, "S&M_TOGLFXCHAIN", toggleFXChain, NULL, -666, isToggleFXChain},
+	{ { DEFACCEL, "SWS/S&M: Show FX chain for selected tracks (selected FX)" }, "S&M_SHOWFXCHAINSEL", ShowFXChain, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Hide FX chain windows for selected tracks" }, "S&M_HIDEFXCHAIN", HideFXChain, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Toggle show FX chain windows for selected tracks" }, "S&M_TOGLFXCHAIN", ToggleFXChain, NULL, -666, IsToggleFXChain},
 
-	{ { DEFACCEL, "SWS/S&M: Float selected FX for selected tracks" }, "S&M_FLOATFXEL", floatFX, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Unfloat selected FX for selected tracks" }, "S&M_UNFLOATFXEL", unfloatFX, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Toggle float selected FX for selected tracks" }, "S&M_TOGLFLOATFXEL", toggleFloatFX, NULL, -1, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Float selected FX for selected tracks" }, "S&M_FLOATFXEL", FloatFX, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Unfloat selected FX for selected tracks" }, "S&M_UNFLOATFXEL", UnfloatFX, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Toggle float selected FX for selected tracks" }, "S&M_TOGLFLOATFXEL", ToggleFloatFX, NULL, -1, FakeIsToggleAction},
 
 	// Track FX selection & move up/down---------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Select last FX for selected tracks" }, "S&M_SEL_LAST_FX", SelectTrackFX, NULL, -3},
@@ -577,10 +577,10 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 #endif
 	{ { DEFACCEL, "SWS/S&M: Select FX %02d for selected tracks" }, "S&M_SELFX", SelectTrackFX, NULL, 8},
 
-	{ { DEFACCEL, "SWS/S&M: Show FX chain for selected tracks, FX %02d" }, "S&M_SHOWFXCHAIN", showFXChain, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Float FX %02d for selected tracks" }, "S&M_FLOATFX", floatFX, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Unfloat FX %02d for selected tracks" }, "S&M_UNFLOATFX", unfloatFX, NULL, 8},
-	{ { DEFACCEL, "SWS/S&M: Toggle float FX %02d for selected tracks" }, "S&M_TOGLFLOATFX", toggleFloatFX, NULL, 8, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Show FX chain for selected tracks, FX %02d" }, "S&M_SHOWFXCHAIN", ShowFXChain, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Float FX %02d for selected tracks" }, "S&M_FLOATFX", FloatFX, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Unfloat FX %02d for selected tracks" }, "S&M_UNFLOATFX", UnfloatFX, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Toggle float FX %02d for selected tracks" }, "S&M_TOGLFLOATFX", ToggleFloatFX, NULL, 8, FakeIsToggleAction},
 
 	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Restore displayed CC lanes, slot %02d" }, "S&M_MESETCCLANES", MESetCCLanes, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Save displayed CC lanes, slot %02d" }, "S&M_MESAVECCLANES", MESaveCCLanes, NULL, 4},

@@ -526,13 +526,14 @@ extern "C"
 		IMPAPI(GetCursorContext);
 		IMPAPI(GetCursorPosition);
 		IMPAPI(GetCursorPositionEx);
-		IMPAPI(GetIconThemeStruct);
-		IMPAPI(GetItemEditingTime2);
 		IMPAPI(GetEnvelopeName);
 		IMPAPI(GetExePath);
+		IMPAPI(GetFocusedFX);
 		IMPAPI(GetHZoomLevel);
 		IMPAPI(GetIconThemePointer);
+		IMPAPI(GetIconThemeStruct);
 		IMPAPI(GetInputChannelName);
+		IMPAPI(GetItemEditingTime2);
 		IMPAPI(GetLastTouchedFX);
 		IMPAPI(GetLastTouchedTrack);
 		IMPAPI(GetMainHwnd);

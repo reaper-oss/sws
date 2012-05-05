@@ -879,7 +879,7 @@ static bool AddFXSubMenu(HMENU *submenu, MediaTrack *track)
 	char fxName[512];
 	for(int i = 0; i < fxCount; i++) {
 		if(TrackFX_GetFXName(track, i, fxName, 512))
-			AddToMenu(*submenu, fxName, SWSGetCommandID(showFXChain, i));
+			AddToMenu(*submenu, fxName, SWSGetCommandID(ShowFXChain, i));
 	}
 	return true;
 }

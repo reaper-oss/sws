@@ -1,5 +1,5 @@
-; SWS/S&M Template LangPack v2.2.0 Build 6
-; NOTE: this file should be merged into REAPER LangPack files.
+; SWS/S&M Template LangPack v2.2.0 Build 7
+; NOTE: See http://forum.cockos.com/showpost.php?p=941893&postcount=810.
 ; As you translate a string, remove the ; from the beginning of the
 ; line. If the line begins with ;^, then it is an optional string,
 ; and you should only modify that line if the definition in [common]

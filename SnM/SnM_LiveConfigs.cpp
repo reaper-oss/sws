@@ -1070,6 +1070,9 @@ int SNM_LiveConfigsWnd::OnKey(MSG* _msg, int _iKeyState)
 
 void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
+	if (!g_liveConfigs.Get()->Get(g_configId))
+		return;
+
 	int x0=_r->left+10, h=35;
 	if (_tooltipHeight)
 		*_tooltipHeight = h;

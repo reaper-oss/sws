@@ -1,9 +1,8 @@
 Issue 466: fixed "add all regions" and related issues in Region Playlist window (broken in v2.2.0 #6)
 Issue 467: fixed possible crash when pasting text in the Notes window
-Fixed little leak for some "Focus next/previous FX window" actions
 More UTF-8 fixes
 
-Improved track all S&M track FX actions especially bypass/unbypass and online/offline actions: use new native APIs + configurable number of actions in the S&M.ini file (up to 99 FX)
+Improved track all S&M track FX actions: use new native APIs + configurable bypass/unbypass and online/offline actions actions (in the S&M.ini file, up to 99 FX)
 Added very specific track FX actions (hidden by default, i.e. the default number of actions is set to 0 in the S&M.ini file)
 +SWS/S&M: Toggle all FX (except n) online/offline for selected tracks
 +SWS/S&M: Toggle all FX (except n) bypass for selected tracks

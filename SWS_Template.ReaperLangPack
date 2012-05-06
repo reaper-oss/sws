@@ -1,4 +1,4 @@
-; SWS/S&M Template LangPack v2.2.0 Build 5
+; SWS/S&M Template LangPack v2.2.0 Build 6
 ; NOTE: this file should be merged into REAPER LangPack files.
 ; As you translate a string, remove the ; from the beginning of the
 ; line. If the line begins with ;^, then it is an optional string,
@@ -749,8 +749,8 @@
 ;84C7DA8126B7F058=Copy bookmark...
 ;05FFC47CCDC762D6=Filter on
 ;4FF34696DCB6C124=Tie %s slot actions
-;65CA689C377C5655=Offset template items by edit cursor
 ;912834C76AFB9AF2=Offset template items/envs by edit cursor
+;65CA689C377C5655=Offset template items by edit cursor
 ;73FE3D47B86D2D80=Auto-fill %s slots (right-click for options)\nfrom %s
 ;D493DCBC3CB21E8F=%s (right-click for options)\nto %s
 ;4B951DEDCFC57616=Auto-save FX chains for selected tracks
@@ -1026,7 +1026,6 @@
 ;830C5FC0E18A9057=Region
 ;9FB17EBACD9AA956=Loop count
 ;54B465F61B1485A6=Unknown region %d
-;677258624C7974DD=Unknown region
 ;5799CAC19B81B871=S&M - Add playlist
 ;8D0BD33F9F60E997=Are you sure you want to delete this playlist ?
 ;C9B93F97844712AD=S&M - Delete playlist
@@ -1045,7 +1044,7 @@
 ;285BFDC873E57F46=Crop project to playlist (new project tab)
 ;13964AC07AFECF5E=Insert region
 ;3E59E9F66936FB13=Remove region(s)
-;706CFB1C11567AF7=Append region(s)
+;8B6CD2B1531B40B1=Append region(s) to project
 ;FB66456F179D75CD=Paste region(s) at edit cursor
 ;91E1985A84DEB701=Play preview
 ;54AE5669A33DEBCE=Current playlist
@@ -1157,65 +1156,17 @@
 ;E47C1454060B597A=SWS/S&M: Select next FX (cycling) for selected tracks
 ;6CC4726E4276279A=SWS/S&M: Move selected FX up in chain for selected tracks
 ;1C8A902AA42761FD=SWS/S&M: Move selected FX down in chain for selected tracks
-;2F13C45FD59E2173=SWS/S&M: Toggle FX 1 online/offline for selected tracks
-;E3102EDE4BD5E828=SWS/S&M: Toggle FX 2 online/offline for selected tracks
-;548AEFDF1B41AD11=SWS/S&M: Toggle FX 3 online/offline for selected tracks
-;4013A2C3F407AFFE=SWS/S&M: Toggle FX 4 online/offline for selected tracks
-;854080C222ED7A77=SWS/S&M: Toggle FX 5 online/offline for selected tracks
-;8446679C0A582E0C=SWS/S&M: Toggle FX 6 online/offline for selected tracks
-;ADFDCD9761A08E85=SWS/S&M: Toggle FX 7 online/offline for selected tracks
-;165E14CB32466B82=SWS/S&M: Toggle FX 8 online/offline for selected tracks
 ;4ED204EA9983D38C=SWS/S&M: Toggle last FX online/offline for selected tracks
 ;76AF21ACE014065D=SWS/S&M: Toggle selected FX online/offline for selected tracks
-;CF8E29B5E7A49479=SWS/S&M: Set FX 1 online for selected tracks
-;36B7AFD25FE6928A=SWS/S&M: Set FX 2 online for selected tracks
-;E209844FA3D25827=SWS/S&M: Set FX 3 online for selected tracks
-;DD8CE413655EE748=SWS/S&M: Set FX 4 online for selected tracks
-;CB8386B9E696EACD=SWS/S&M: Set FX 5 online for selected tracks
-;0D68D2115D0A670E=SWS/S&M: Set FX 6 online for selected tracks
-;DA1B67FB56208D0B=SWS/S&M: Set FX 7 online for selected tracks
-;B78B2FBDD2AEB68C=SWS/S&M: Set FX 8 online for selected tracks
 ;F593866ACFF12D2A=SWS/S&M: Set last FX online for selected tracks
 ;EB66C8287D3538FB=SWS/S&M: Set selected FX online for selected tracks
-;C33C210B6488116D=SWS/S&M: Set FX 1 offline for selected tracks
-;85BB9F359234CFCC=SWS/S&M: Set FX 2 offline for selected tracks
-;F9923086340B8963=SWS/S&M: Set FX 3 offline for selected tracks
-;379575909C7EE302=SWS/S&M: Set FX 4 offline for selected tracks
-;AE671663CC1236E1=SWS/S&M: Set FX 5 offline for selected tracks
-;1C0A9CBDED949FC0=SWS/S&M: Set FX 6 offline for selected tracks
-;4197E1F28B9A9607=SWS/S&M: Set FX 7 offline for selected tracks
-;C483C046A2036826=SWS/S&M: Set FX 8 offline for selected tracks
 ;FE58A538196B60EC=SWS/S&M: Set last FX offline for selected tracks
 ;10A9254EA9ADCB97=SWS/S&M: Set selected FX offline for selected tracks
 ;DEF0FC867FC98005=SWS/S&M: Toggle all FX online/offline for selected tracks
-;13FB576244593E5C=SWS/S&M: Toggle FX 1 bypass for selected tracks
-;BFA1956D83FC565F=SWS/S&M: Toggle FX 2 bypass for selected tracks
-;A0AC9EBC88DBE41E=SWS/S&M: Toggle FX 3 bypass for selected tracks
-;A314D67E464A9199=SWS/S&M: Toggle FX 4 bypass for selected tracks
-;461B9512B2411DF0=SWS/S&M: Toggle FX 5 bypass for selected tracks
-;0FD1CE851D1ABE63=SWS/S&M: Toggle FX 6 bypass for selected tracks
-;7BB695149F71C2F2=SWS/S&M: Toggle FX 7 bypass for selected tracks
-;DF99DB32C6C9FE1D=SWS/S&M: Toggle FX 8 bypass for selected tracks
 ;80DEF0F8C210B3E3=SWS/S&M: Toggle last FX bypass for selected tracks
 ;3200D4F6310C029A=SWS/S&M: Toggle selected FX bypass for selected tracks
-;122DEFED4DA9FBDC=SWS/S&M: Bypass FX 1 for selected tracks
-;BB3133AE64DA46ED=SWS/S&M: Bypass FX 2 for selected tracks
-;5B1ACD4D3B646356=SWS/S&M: Bypass FX 3 for selected tracks
-;6FC76A3ADB8E71FF=SWS/S&M: Bypass FX 4 for selected tracks
-;6FD05DC04B386D38=SWS/S&M: Bypass FX 5 for selected tracks
-;71FC9D3F04DEEA19=SWS/S&M: Bypass FX 6 for selected tracks
-;D538D6BC9FBF7B82=SWS/S&M: Bypass FX 7 for selected tracks
-;19280D48F04E4EEB=SWS/S&M: Bypass FX 8 for selected tracks
 ;457FA3BD58B48119=SWS/S&M: Bypass last FX for selected tracks
 ;25AEDB9E6AAD93AA=SWS/S&M: Bypass selected FX for selected tracks
-;1103969F525413F1=SWS/S&M: Unbypass FX 1 for selected tracks
-;77A999BC2E7A5410=SWS/S&M: Unbypass FX 2 for selected tracks
-;1283AC04346BEA17=SWS/S&M: Unbypass FX 3 for selected tracks
-;05D0B796D431556E=SWS/S&M: Unbypass FX 4 for selected tracks
-;E1CE53F3FC2ADA45=SWS/S&M: Unbypass FX 5 for selected tracks
-;1886EF884D4EF674=SWS/S&M: Unbypass FX 6 for selected tracks
-;F90A1ED402AE3A7B=SWS/S&M: Unbypass FX 7 for selected tracks
-;C1774EC32E735212=SWS/S&M: Unbypass FX 8 for selected tracks
 ;54209592C85A86AA=SWS/S&M: Unbypass last FX for selected tracks
 ;65D7695DFDBB6625=SWS/S&M: Unbypass selected FX for selected tracks
 ;0F8BD130E4F38472=SWS/S&M: Toggle all FX bypass for selected tracks
@@ -1453,6 +1404,14 @@
 ;F234431EEC150C17=SWS/S&M: Dump action list (w/o SWS extension)
 ;3C3EE4C1CECD4BF2=SWS/S&M: Dump action list (SWS extension only)
 ;172796C51E10724C=SWS/S&M: Create cue buss from track selection, settings %02d
+;35782726571DEADF=SWS/S&M: Set FX %02d online for selected tracks
+;A291F8BB061FB5FB=SWS/S&M: Set FX %02d offline for selected tracks
+;0C39E4D0D9B6EF05=SWS/S&M: Toggle FX %02d online/offline for selected tracks
+;F779717EE68B1BF2=SWS/S&M: Bypass FX %02d for selected tracks
+;18F17D61758AFD51=SWS/S&M: Unbypass FX %02d for selected tracks
+;7AD4FFE645D91372=SWS/S&M: Toggle FX %02d bypass for selected tracks
+;712B39294DCDF89C=SWS/S&M: Toggle all FX (except %02d) online/offline for selected tracks
+;F0098DFDA0C57B73=SWS/S&M: Toggle all FX (except %02d) bypass for selected tracks
 ;6BE0457418078218=SWS/S&M: Clear FX chain slot %02d
 ;3C3E455B4CD02905=SWS/S&M: Paste (replace) FX chain to selected items, slot %02d
 ;1F0E7CA752A0E962=SWS/S&M: Paste FX chain to selected items, slot %02d
@@ -1478,10 +1437,6 @@
 ;80F2BF02DC224A39=SWS/S&M: Loop media file in selected tracks (toggle), slot %02d
 ;0EDE9EEA2255EB83=SWS/S&M: Play media file in selected tracks (toggle pause), slot %02d
 ;D375DF0E1EA369C9=SWS/S&M: Loop media file in selected tracks (toggle pause), slot %02d - Infinite looping! To be stopped!
-;4C91499BED45197B=SWS/S&M: Play media file in selected tracks (toggle, sync with next measure), slot %02d
-;06DFB04EE72EF1F3=SWS/S&M: Loop media file in selected tracks (toggle, sync with next measure), slot %02d
-;F85D349D6F277641=SWS/S&M: Play media file in selected tracks (toggle pause, sync with next measure), slot %02d
-;FD6532F8C95342C7=SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %02d - Infinite looping! To be stopped!
 ;D1E4BE565DF61926=SWS/S&M: Add media file to current track, slot %02d
 ;C164CC34533620BF=SWS/S&M: Add media file to new track, slot %02d
 ;0C8E0F8BFB104489=SWS/S&M: Add media file to selected items as takes, slot %02d
@@ -2476,7 +2431,6 @@
 ;5533B7D30A018C4A=S&M - Delete take and source files (no undo!)
 ;B0E5A0CF598D66FE=Warning: at least one file could not be deleted.\nTips: are you an administrator? File used by another process?
 ;C99BAAB87EDD4A95=S&M - Delete take and source files
-;5FFB5C1E74E1AA1E=S&M - Save item/take template
 ;2A240F00982CC5DC=Dump failed: unknown section!
 ;A11C8C1A0AD38794=Wrote %s
 ;DF0367ADF34F7459=Dump failed: unable to write to file!
@@ -2491,7 +2445,6 @@
 ;4C73325B01A2176F=File already exists. Overwrite ?\n%s
 ;2FC844F5CACBA1D8=Empty filename!
 ;3D048E8D9878D560=Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | :
-;6BE054723EBE725A=File not found: %s
 ;8E1F0BC59DC967C2=The column 'Custom ID' is not displayed in the Actions window!\n(to display it, right click on its table header > show action IDs)
 ;AE35E36B88DB8596=Actions window not opened or section '%s' not selected or no selected action!
 ;FDDA4288291C8C3C=Import playlist

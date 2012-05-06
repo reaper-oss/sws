@@ -453,7 +453,7 @@ int main(int argc, char **argv)
 	if (GetSWSVersion(version))
 		printf(" v%d.%d.%d Build %d\n", version[0], version[1], version[2], version[3]); 
     printf(
-      "; NOTE: this file should be merged into REAPER LangPack files.\n"
+      "; NOTE: See http://forum.cockos.com/showpost.php?p=941893&postcount=810.\n"
       "; As you translate a string, remove the ; from the beginning of the\n"
       "; line. If the line begins with ;^, then it is an optional string,\n"
       "; and you should only modify that line if the definition in [common]\n"

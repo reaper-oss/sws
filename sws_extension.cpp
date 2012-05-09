@@ -113,11 +113,10 @@ int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool local
 {
 	if (pCommand->doCommand)
 	{
-		char pId[128];
+/*
 		if (_snprintf(pId, 128, "_%s", pCommand->id)<=0 || NamedCommandLookup(pId))
 			return 0; // duplicated action
-
-		if (!cmdId && !(cmdId = plugin_register("command_id", (void*)pCommand->id)))
+*/
 			return 0;
 
 		pCommand->accel.accel.cmd = cmdId;
@@ -488,7 +487,7 @@ extern "C"
 		IMPAPI(CountTrackMediaItems);
 		IMPAPI(CountTrackEnvelopes);
 		IMPAPI(CreateLocalOscHandler);
-		//IMPAPI(CreateNewMIDIItemInProj);
+		IMPAPI(CreateNewMIDIItemInProj);
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
 		IMPAPI(CSurf_OnMuteChange);

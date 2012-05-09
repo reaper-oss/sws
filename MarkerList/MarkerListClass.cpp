@@ -1,7 +1,7 @@
 /******************************************************************************
 / MarkerListClass.cpp
 /
-/ Copyright (c) 2011 Tim Payne (SWS)
+/ Copyright (c) 2012 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -227,9 +227,8 @@ void MarkerList::ClipboardToList()
 	}
 }
 
-void MarkerList::ExportToClipboard(const char* format)
+char* MarkerList::GetFormattedList(const char* format) // Must delete [] returned string
 {
-#ifdef _WIN32
 	SWS_SectionLock lock(&m_mutex);
 	int iLen = ApproxSize()*2;
 	char* str = new char[iLen];
@@ -309,8 +308,16 @@ void MarkerList::ExportToClipboard(const char* format)
 			s += 2;
 		}
 	}
+	return str;
+}
 
-	if (!strlen(str) || !OpenClipboard(g_hwndParent))
+
+void MarkerList::ExportToClipboard(const char* format)
+{
+#ifdef _WIN32
+	char* str = GetFormattedList(format);
+	
+	if (!str || !strlen(str) || !OpenClipboard(g_hwndParent))
 	{
 		delete [] str;
 		return;
@@ -341,6 +348,23 @@ void MarkerList::ExportToClipboard(const char* format)
 #else
 	MessageBox(g_hwndParent, "Not supported on OSX, sorry!", "Unsupported", MB_OK);
 #endif
+}
+
+void MarkerList::ExportToFile(const char* format)
+{
+	// Note - UTF8 untested
+	char cFilename[512];
+	if (BrowseForSaveFile("Choose text file to save markers to", NULL, NULL, "TXT files\0*.txt\0", cFilename, 512))
+	{
+		char* str = GetFormattedList(format);
+		FILE* f = fopen(cFilename, "w");
+		if (f)
+		{
+			fputs(str, f);
+			fclose(f);
+		}
+		delete [] str;
+	}
 }
 
 int MarkerList::ApproxSize()

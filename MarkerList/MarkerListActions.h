@@ -1,7 +1,7 @@
 /******************************************************************************
 / MarkerListActions.h
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2012 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,6 +32,7 @@ void ListToClipboard(COMMAND_T* = NULL);
 void ListToClipboardTimeSel(COMMAND_T* = NULL);
 void ClipboardToList(COMMAND_T* = NULL);
 void ExportToClipboard(COMMAND_T* = NULL);
+void ExportToFile(COMMAND_T* = NULL);
 void DeleteAllMarkers();
 void DeleteAllMarkers(COMMAND_T*);
 void DeleteAllRegions();

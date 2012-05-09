@@ -1,7 +1,7 @@
 /******************************************************************************
 / MarkerListClass.h
 /
-/ Copyright (c) 2009 Tim Payne (SWS)
+/ Copyright (c) 2012 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -73,12 +73,16 @@ public:
 	void ListToClipboard();
 	void ClipboardToList();
 	void ExportToClipboard(const char* format);
+	void ExportToFile(const char* format);
 	int ApproxSize();
 	void CropToTimeSel(bool bOffset);
 
 	char* m_name;
 	WDL_PtrList<MarkerItem> m_items;
 	SWS_Mutex m_mutex;
+
+private:
+	char* GetFormattedList(const char* format); // Must delete [] returned string
 };
 
 int EnumMarkers(int idx, bool* isrgn, double* pos, double* rgnend, char** name, int* markrgnindexnumber, int* color);

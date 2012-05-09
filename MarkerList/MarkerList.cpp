@@ -1,7 +1,7 @@
 /******************************************************************************
 / MarkerList.cpp
 /
-/ Copyright (c) 2011 Tim Payne (SWS)
+/ Copyright (c) 2012 Tim Payne (SWS)
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -373,6 +373,7 @@ HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	AddToMenu(hMenu, "Delete all regions", SWSGetCommandID(DeleteAllRegions));
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	AddToMenu(hMenu, "Export formatted marker list to clipboard", SWSGetCommandID(ExportToClipboard));
+	AddToMenu(hMenu, "Export formatted marker list to file", SWSGetCommandID(ExportToFile));
 	AddToMenu(hMenu, "Export format...", SWSGetCommandID(ExportFormat));
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	AddToMenu(hMenu, "Convert markers to regions", SWSGetCommandID(MarkersToRegions));
@@ -660,6 +661,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL,								"SWS: Delete all regions" },				"SWSMARKERLIST10", DeleteAllRegions,  "Delete all regions", },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL,								"SWS: Export formatted marker list to clipboard" },	"SWSMARKERLIST11", ExportToClipboard, "Export formatted marker list to clipboard", },
+	{ { DEFACCEL,								"SWS: Export formatted marker list to file" },	"SWSML_EXPORTFILE", ExportToFile, },
 	{ { DEFACCEL,								"SWS: Exported marker list format..." },		"SWSMARKERLIST12",	ExportFormat,      "Export format...", },
 	{ { DEFACCEL, NULL }, NULL, NULL, SWS_SEPARATOR, },
 	{ { DEFACCEL,								"SWS: Convert markers to regions" },			"SWSMARKERLIST13",	MarkersToRegions,  "Convert markers to regions", },

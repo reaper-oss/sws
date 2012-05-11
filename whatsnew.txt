@@ -1,3 +1,4 @@
+!v2.2.0 #8 (May 11, 2012)
 Fixed lost actions (reported http://forum.cockos.com/showpost.php?p=957863&postcount=823|here|)
 Issue 469: fixed playlist loop
 

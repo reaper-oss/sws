@@ -1,3 +1,6 @@
+Fixed lost actions (reported http://forum.cockos.com/showpost.php?p=957863&postcount=823|here|)
+Issue 469: fixed playlist loop
+
 !v2.2.0 #7 (May 8, 2012)
 Issue 466: fixed "add all regions" and related issues in Region Playlist window (broken in v2.2.0 #6)
 Issue 467: fixed possible crash when pasting text in the Notes window
@@ -10,7 +13,7 @@ Added very specific track FX actions (hidden by default, i.e. the default number
 +SWS/S&M: Toggle all FX (except n) bypass for selected tracks
 
 !v2.2.0 #6 (May 1, 2012)
-Region Playlist
+Region Playlist (BETA)
 +Fixed append/crop/paste playlist actions and commands
 +"Paste playlist at edit cursor" can now insert playlists in the middle of projects (rather than "pasting over"). Demo: http://stash.reaper.fm/12421/S%26M%20Region%20Playlist%20-%20Paste%20plalist%20at%20edit%20cursor.gif|here|
 +Context menu: added commands to append/paste selected regions

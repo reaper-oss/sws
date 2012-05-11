@@ -42,9 +42,8 @@ public:
 // the playlist "auto-compacting" feature..
 class SNM_PlaylistItem {
 public:
-	SNM_PlaylistItem(int _rgnId=-1, int _cnt=1, int _playRequested=0)
-		: m_rgnId(_rgnId),m_cnt(_cnt),m_playRequested(_playRequested) {}
-	int m_rgnId, m_cnt, m_playRequested;
+	SNM_PlaylistItem(int _rgnId=-1, int _cnt=1, int _playReq=0) : m_rgnId(_rgnId),m_cnt(_cnt),m_playReq(_playReq) {}
+	int m_rgnId, m_cnt, m_playReq;
 };
 
 class SNM_Playlist : public WDL_PtrList<SNM_PlaylistItem>
@@ -112,15 +111,6 @@ protected:
 	SNM_MiniAddDelButtons m_btnsAddDel;
 	SNM_ToolbarButton m_btnCrop;
 	WDL_VirtualIconButton m_btnPlay, m_btnStop;
-};
-
-class SNM_PlaylistCurNextItems {
-public:
-	SNM_PlaylistCurNextItems(SNM_PlaylistItem* _cur=NULL, SNM_PlaylistItem* _next=NULL, int _curIdx=-1, int _nextIdx=-1)
-		: m_cur(_cur),m_next(_next), m_curRgnIdx(_curIdx), m_nextRgnIdx(_nextIdx) {}
-	SNM_PlaylistItem* m_cur;
-	SNM_PlaylistItem* m_next;
-	int m_curRgnIdx, m_nextRgnIdx;
 };
 
 class SNM_Playlist_UpdateJob : public SNM_ScheduledJob {

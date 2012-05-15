@@ -54,7 +54,8 @@ WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							"\n\t/P[precision]\t\tPeak level."
 							"\n\t/R[precision]\t\tRMS peak level."
 							"\n\t/r[precision]\t\tRMS average level."
-							"\n\t/S[offset, length]\tSource media path."
+							"\n\t/S[offset, length]\tSource media full path."
+							"\n\t/s[offset, length]\tSource media filename."
 							"\n\t/T[offset, length]\tTrack name."
 							"\n\t/t[digits]\t\tTrack number.";
 
@@ -305,7 +306,7 @@ void LabelProcessor(COMMAND_T* ct)
 							}
 							break;
 
-						case 'S' : // Source path
+						case 'S' : // Source full path
 							{
 								int args[2] = {0,0};
 								ExtractValues(++c, args, 2);
@@ -317,6 +318,26 @@ void LabelProcessor(COMMAND_T* ct)
 									GetMediaSourceFileName(pSource, buf, sizeof(buf));
 									if(*buf)
 										str.Append(GetSubString(buf, args[0], args[1]));
+								}
+							}
+							break;
+
+						case 's' : // Source filename only
+							{
+								int args[2] = {0,0};
+								ExtractValues(++c, args, 2);
+
+								PCM_source *pSource = (PCM_source*) GetSetMediaItemTakeInfo(pTake, "P_SOURCE", NULL);
+								if(pSource)
+								{
+									memset(buf, 0, sizeof(buf));
+									GetMediaSourceFileName(pSource, buf, sizeof(buf));
+									if(*buf)
+									{
+										const char *f = strrchr(buf, '\\');
+										if(f)
+											str.Append(GetSubString(f + 1, args[0], args[1]));
+									}
 								}
 							}
 							break;

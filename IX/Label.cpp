@@ -9,10 +9,10 @@
 / use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 / of the Software, and to permit persons to whom the Software is furnished to
 / do so, subject to the following conditions:
-/ 
+/
 / The above copyright notice and this permission notice shall be included in all
 / copies or substantial portions of the Software.
-/ 
+/
 / THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 / EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 / OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -93,7 +93,7 @@ WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						delete [] buf;
 					}
 					break;
-				
+
 				case IDCANCEL:
 					EndDialog(hwnd, 0);
 					break;
@@ -334,7 +334,7 @@ void LabelProcessor(COMMAND_T* ct)
 									GetMediaSourceFileName(pSource, buf, sizeof(buf));
 									if(*buf)
 									{
-										const char *f = strrchr(buf, '\\');
+										const char *f = strrchr(buf, PATH_SLASH_CHAR);
 										if(f)
 											str.Append(GetSubString(f + 1, args[0], args[1]));
 									}
@@ -381,7 +381,7 @@ void LabelProcessor(COMMAND_T* ct)
 }
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
-static COMMAND_T g_commandTable[] = 
+static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS/IX: Label processor" },	"IX_LABEL_PROC",	LabelProcessor,	NULL, 0},
 

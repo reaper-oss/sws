@@ -773,7 +773,6 @@ int GetNextValidPlaylistIdx(int _playlistIdx, bool _startWith = false)
 }
 
 // needed to make PlaylistRun() as idle as possible..
-bool g_runTrigger = false;
 bool g_isRunLoop = false;
 int g_playNextId = -1;
 double g_lastRunPos = -1.0;
@@ -796,9 +795,8 @@ void PlaylistRun()
 		if (g_isRunLoop && pos<g_lastRunPos)
 			g_isRunLoop = false;
 
-		if (!g_isRunLoop && g_runTrigger && pos>=g_nextRunPos && pos<=g_nextRunEnd)
+		if (!g_isRunLoop && pos>=g_nextRunPos && pos<=g_nextRunEnd)
 		{
-			g_runTrigger = false;
 			g_playId = g_playNextId;
 			updateUI = true;
 
@@ -821,7 +819,6 @@ void PlaylistRun()
 					double cursorpos = GetCursorPositionEx(NULL);
 					SetEditCurPos(g_nextRunPos, false, true); // seek play
 					SetEditCurPos(cursorpos, false, false); // restore cursor pos
-					g_runTrigger = true;
 				}
 			}
 		}
@@ -865,12 +862,11 @@ void PlaylistPlay(int _playlistId, bool _errMsg)
 				*opt = 3;
 			}
 
-			cur->m_playReq = 1; // (cur->m_cnt>1 && cur->m_playReq<cur->m_cnt) ? 1:0;
+			cur->m_playReq = 1;
 			g_isRunLoop = false;;
 			g_playNextId = idx;
 			g_playId = -1; // important for the 1st playlist item switch
 			g_lastRunPos = g_nextRunPos;
-			g_runTrigger = true;
 
 			double cursorpos = GetCursorPositionEx(NULL);
 			SetEditCurPos(g_nextRunPos, false, true);

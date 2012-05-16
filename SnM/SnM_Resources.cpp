@@ -575,12 +575,14 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 				if (GetSlotList()->GetFullPath(slot, fn, BUFFER_SIZE) && !pItem->IsDefault() && FileExistsErrMsg(fn, true))
 				{
 					const char* ext = GetFileExtension(fn);
-					char newFn[BUFFER_SIZE]="";
-					lstrcpyn(newFn, fn, BUFFER_SIZE);
-					if (char* p = strrchr(newFn, PATH_SLASH_CHAR)) *p = '\0';
-					else break; // safety
+					char newFn[BUFFER_SIZE]="", path[BUFFER_SIZE]="";
+					lstrcpyn(path, fn, BUFFER_SIZE);
+					if (char* p = strrchr(path, PATH_SLASH_CHAR))
+						*p = '\0';
+					else
+						break; // safety
 
-					if (_snprintfStrict(newFn, sizeof(newFn), "%s%c%s.%s", newFn, PATH_SLASH_CHAR, str, ext) > 0)
+					if (_snprintfStrict(newFn, sizeof(newFn), "%s%c%s.%s", path, PATH_SLASH_CHAR, str, ext) > 0)
 					{
 						if (FileExists(newFn)) 
 						{

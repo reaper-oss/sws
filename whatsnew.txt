@@ -1,13 +1,11 @@
 Resources window
 +Pasting template envelopes obeys the option "Offset template items/envelopes by edit cusor" (in previous versions, only items were offseted according to this pref)
 +Fixed "Paste" and "Paste (replace)" template items commands (when template files were containing more than 1 track)
-+The tiny "+" now adds a new bookmark without copying currents slots
-+Creating new bookmarks now sets auto-save and auto-fill directories to the related default REAPER resource path (i.e. you will not be promped for directories anymore)
-+Tweaks
++The tiny "+" button now adds a new bookmark without copying currents slots
++Creating new bookmarks now sets auto-save and auto-fill directories to the default REAPER path (i.e. you will not be promped for directories anymore)
 
 Region playlist: added repeat button
 Notes window: re-added marker/region names edition (and display à la "Big clock" when text edition is locked)
-
 Added actions (for issue 470 & macros based on cue buss actions)
 +SWS/S&M: Save default track send preferences
 +SWS/S&M: Recall default track send preferences

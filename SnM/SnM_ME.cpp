@@ -37,7 +37,7 @@ void MECreateCCLane(COMMAND_T* _ct)
 	if (tk)
 	{
 		MediaItem* item = GetMediaItemTake_Item(tk);
-		int tkIdx = getTakeIndex(item, tk); // null item managed there
+		int tkIdx = GetTakeIndex(item, tk); // null item managed there
 		if (tkIdx >= 0)
 		{
 			SNM_TakeParserPatcher p(item, CountTakes(item));
@@ -87,7 +87,7 @@ bool replaceCCLanes(const char* _newCClanes)
 	if (tk)
 	{
 		MediaItem* item = GetMediaItemTake_Item(tk);
-		int tkIdx = getTakeIndex(item, tk); // NULL item managed
+		int tkIdx = GetTakeIndex(item, tk); // NULL item managed
 		if (tkIdx >= 0)
 		{
 			SNM_TakeParserPatcher p(item, CountTakes(item));
@@ -157,7 +157,7 @@ void MESaveCCLanes(COMMAND_T* _ct)
 	if (tk)
 	{
 		MediaItem* item = GetMediaItemTake_Item(tk);
-		int tkIdx = getTakeIndex(item, tk); // NULL item managed
+		int tkIdx = GetTakeIndex(item, tk); // NULL item managed
 		if (tkIdx >= 0)
 		{
 			SNM_TakeParserPatcher p(item, CountTakes(item));

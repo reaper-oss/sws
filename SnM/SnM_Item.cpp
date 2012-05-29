@@ -44,7 +44,7 @@ char* GetName(MediaItem* _item) {
 }
 
 // returns -1 if not found
-int getTakeIndex(MediaItem* _item, MediaItem_Take* _take) {
+int GetTakeIndex(MediaItem* _item, MediaItem_Take* _take) {
 	if (_item)
 		for (int i=0; i < CountTakes(_item); i++)
 			if (_take == GetTake(_item, i)) // note: NULL take is an empty take since v4
@@ -53,7 +53,7 @@ int getTakeIndex(MediaItem* _item, MediaItem_Take* _take) {
 }
 
 // deletes an item if it's empty or if it's only made of NULL empty takes, returns true if deleted
-bool deleteMediaItemIfNeeded(MediaItem* _item)
+bool DeleteMediaItemIfNeeded(MediaItem* _item)
 {
 	bool deleted = false;
 	MediaTrack* tr = _item ? GetMediaItem_Track(_item) : NULL;
@@ -173,11 +173,11 @@ void DiffItemPointers(WDL_PtrList<void>* _oldItemsIn, WDL_PtrList<void>* _newIte
 	}
 }
 
-// ovverdies ApplyNudge() so that source items remain at their original positions (eases some algo)
+// ovverdies ApplyNudge() so that source items remain at their original positions
 // note: callers must surround this func with Undo_BeginBlockX/Undo_EndBlockX
 // _undoTitle: NULL == no undo point
 // _newItemsOut: optionnal
-bool CopySelItemsWithEnvs(const char* _undoTitle, double _nudgePos, WDL_PtrList<void>* _newItemsOut)
+bool DupSelItems(const char* _undoTitle, double _nudgePos, WDL_PtrList<void>* _newItemsOut)
 {
 	bool updated=false;
 
@@ -221,7 +221,7 @@ bool CopySelItemsWithEnvs(const char* _undoTitle, double _nudgePos, WDL_PtrList<
 // Split
 ///////////////////////////////////////////////////////////////////////////////
 
-void splitMidiAudio(COMMAND_T* _ct)
+void SplitMidiAudio(COMMAND_T* _ct)
 {
 	bool updated = false;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
@@ -279,14 +279,14 @@ void splitMidiAudio(COMMAND_T* _ct)
 	}
 }
 
-void smartSplitMidiAudio(COMMAND_T* _ct)
+void SmartSplitMidiAudio(COMMAND_T* _ct)
 {
 	double t1, t2;
 	GetSet_LoopTimeRange(false, false, &t1, &t2, false);
 	if (AreThereSelItemsInTimeSel() || (t1 != t2 && !CountSelectedMediaItems(NULL)))
 		Main_OnCommand(40061, 0); // split at time sel
 	else
-		splitMidiAudio(_ct);
+		SplitMidiAudio(_ct);
 }
 
 #ifdef _SNM_MISC 
@@ -295,13 +295,13 @@ void smartSplitMidiAudio(COMMAND_T* _ct)
 //  Due to REAPER v3.67's new native pref "If no items are selected, some split/trim/delete actions affect all items at the edit cursor", 
 //  those actions are less useful: they would still split only selected items, even if that native pref is ticked. 
 //  Also removed because of the spam in the action list (many split actions).
-void splitSelectedItems(COMMAND_T* _ct) {
+void SplitSelectedItems(COMMAND_T* _ct) {
 	if (CountSelectedMediaItems(NULL))
 		Main_OnCommand((int)_ct->user, 0);
 }
 #endif
 
-void goferSplitSelectedItems(COMMAND_T* _ct) {
+void GoferSplitSelectedItems(COMMAND_T* _ct) {
 	if (CountSelectedMediaItems(NULL)) {
 		Undo_BeginBlock2(NULL);
 		Main_OnCommand(40513, 0); // move edit cursor to mouse cursor (obey snapping)
@@ -372,7 +372,7 @@ void SplitSelectAllItemsInRegion(COMMAND_T* _ct) {
 
 WDL_FastString g_takeClipoard;
 
-void copyCutTake(COMMAND_T* _ct)
+void CopyCutTake(COMMAND_T* _ct)
 {
 	bool updated = false;
 	g_takeClipoard.Set("");
@@ -399,7 +399,7 @@ void copyCutTake(COMMAND_T* _ct)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
-void pasteTake(COMMAND_T* _ct)
+void PasteTake(COMMAND_T* _ct)
 {
 	bool updated = false;
 	for (int i=1; g_takeClipoard.GetLength() && i <= GetNumTracks(); i++) // skip master
@@ -426,7 +426,7 @@ void pasteTake(COMMAND_T* _ct)
 ///////////////////////////////////////////////////////////////////////////////
 
 //JFB!!! TODO: replace Padre's MidiItemProcessor which has bugs, e.g. slip edited MIDI items
-bool isEmptyMidi(MediaItem_Take* _take)
+bool IsEmptyMidi(MediaItem_Take* _take)
 {
 	bool emptyMidi = false;
 	if (_take) // a v4 empty take isn't a empty *MIDI* take!
@@ -446,7 +446,7 @@ bool isEmptyMidi(MediaItem_Take* _take)
 	return emptyMidi;
 }
 
-void setEmptyTakeChunk(WDL_FastString* _chunk, int _recPass, int _color, bool _v4style)
+void SetEmptyTakeChunk(WDL_FastString* _chunk, int _recPass, int _color, bool _v4style)
 {
 	// v4 empty take (but w/o take color)
 	if (_v4style) 
@@ -473,9 +473,9 @@ void setEmptyTakeChunk(WDL_FastString* _chunk, int _recPass, int _color, bool _v
 
 // !_undoTitle: no undo point
 // _mode: 0=for selected tracks, 1=for selected items
-int buildLanes(const char* _undoTitle, int _mode) 
+int BuildLanes(const char* _undoTitle, int _mode) 
 {
-	int updates = removeEmptyTakes((const char*)NULL, true, false, (_mode==0), (_mode==1));
+	int updates = RemoveEmptyTakes((const char*)NULL, true, false, (_mode==0), (_mode==1));
 	bool badRecPass = false;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
 	{
@@ -554,7 +554,7 @@ int buildLanes(const char* _undoTitle, int _mode)
 					}
 
 					if (!found)
-						setEmptyTakeChunk(chunks.Get(k-1), k, recPassColors.Get(k));
+						SetEmptyTakeChunk(chunks.Get(k-1), k, recPassColors.Get(k));
 				}
 
 				// insert re-ordered takes..
@@ -586,7 +586,7 @@ int buildLanes(const char* _undoTitle, int _mode)
 }
 
 // primitive (no undo)
-bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel)
+bool RemoveEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel)
 {
 	bool updated = false;
 	for (int j = 0; _tr && j < GetTrackNumMediaItems(_tr); j++)
@@ -600,7 +600,7 @@ bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel
 				int k=0, kOriginal=0;
 				while (k < p.CountTakesInChunk())
 				{
-					if ((_empty && p.IsEmpty(k)) ||	(_midiEmpty && isEmptyMidi(GetTake(item, kOriginal))))
+					if ((_empty && p.IsEmpty(k)) ||	(_midiEmpty && IsEmptyMidi(GetTake(item, kOriginal))))
 					{
 						bool removed = p.RemoveTake(k);
 						if (removed) k--; //++ below!
@@ -620,7 +620,7 @@ bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel
 				}
 				// in case we removed empty *MIDI* items but the only remaining takes
 				// are empty (i.e. NULL) ones
-				else if (p.Commit() && deleteMediaItemIfNeeded(item))
+				else if (p.Commit() && DeleteMediaItemIfNeeded(item))
 				{
 					j--;
 					updated = true;
@@ -632,11 +632,11 @@ bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel
 }
 
 // no undo point if !_undoTitle
-bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel)
+bool RemoveEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel)
 {
 	bool updated = false;
 	for (int i=0; i < GetNumTracks(); i++)
-		updated |= removeEmptyTakes(CSurf_TrackFromID(i+1,false), _empty, _midiEmpty, _trSel, _itemSel);
+		updated |= RemoveEmptyTakes(CSurf_TrackFromID(i+1,false), _empty, _midiEmpty, _trSel, _itemSel);
 	if (updated) {
 		UpdateTimeline();
 		if (_undoTitle)
@@ -645,7 +645,7 @@ bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool
 	return updated;
 }
 
-void clearTake(COMMAND_T* _ct)
+void ClearTake(COMMAND_T* _ct)
 {
 	bool updated = false;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
@@ -695,7 +695,7 @@ void clearTake(COMMAND_T* _ct)
 }
 
 #ifdef _SNM_MISC // deprecated: native actions "Rotate take lanes forward/backward" added in REAPER v3.67
-void moveTakes(COMMAND_T* _ct)
+void MoveTakes(COMMAND_T* _ct)
 {
 	bool updated = false;
 	int dir = (int)_ct->user;
@@ -743,7 +743,7 @@ void moveTakes(COMMAND_T* _ct)
 }
 #endif
 
-void moveActiveTake(COMMAND_T* _ct)
+void MoveActiveTake(COMMAND_T* _ct)
 {
 	bool updated = false;
 	int dir = (int)_ct->user;
@@ -787,12 +787,12 @@ void moveActiveTake(COMMAND_T* _ct)
 	}
 }
 
-void buildLanes(COMMAND_T* _ct) {
-	if (buildLanes(SWS_CMD_SHORTNAME(_ct), (int)_ct->user) < 0)
+void BuildLanes(COMMAND_T* _ct) {
+	if (BuildLanes(SWS_CMD_SHORTNAME(_ct), (int)_ct->user) < 0)
 		MessageBox(GetMainHwnd(), __LOCALIZE("Some items were ignored, probable causes:\n- Items not recorded or recorded before REAPER v3.66 (no record pass id)\n- Imploded takes with duplicated record pass ids","sws_mbox"), __LOCALIZE("S&M - Warning","sws_mbox"), MB_OK);
 }
 
-void activateLaneFromSelItem(COMMAND_T* _ct)
+void ActivateLaneFromSelItem(COMMAND_T* _ct)
 {
 	bool updated = false;
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
@@ -833,7 +833,7 @@ void activateLaneFromSelItem(COMMAND_T* _ct)
 	}
 }
 
-void activateLaneUnderMouse(COMMAND_T* _ct)
+void ActivateLaneUnderMouse(COMMAND_T* _ct)
 {
 	Undo_BeginBlock2(NULL);
 
@@ -842,7 +842,7 @@ void activateLaneUnderMouse(COMMAND_T* _ct)
 
 	Main_OnCommand(40528,0); // select item under mouse cursor
 	Main_OnCommand(41342,0); // activate take under mouse cursor
-	activateLaneFromSelItem(NULL);
+	ActivateLaneFromSelItem(NULL);
 
 	SNM_ClearSelectedItems(NULL);
 	SNM_SetSelectedItems(NULL, &selItems);
@@ -851,24 +851,24 @@ void activateLaneUnderMouse(COMMAND_T* _ct)
 	Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
 }
 
-void removeEmptyTakes(COMMAND_T* _ct) {
-	removeEmptyTakes(SWS_CMD_SHORTNAME(_ct), true, false);
+void RemoveEmptyTakes(COMMAND_T* _ct) {
+	RemoveEmptyTakes(SWS_CMD_SHORTNAME(_ct), true, false);
 }
 
-void removeEmptyMidiTakes(COMMAND_T* _ct) {
-	removeEmptyTakes(SWS_CMD_SHORTNAME(_ct), false, true);
+void RemoveEmptyMidiTakes(COMMAND_T* _ct) {
+	RemoveEmptyTakes(SWS_CMD_SHORTNAME(_ct), false, true);
 }
 
-void removeAllEmptyTakes(COMMAND_T* _ct) {
-	removeEmptyTakes(SWS_CMD_SHORTNAME(_ct), true, true);
+void RemoveAllEmptyTakes(COMMAND_T* _ct) {
+	RemoveEmptyTakes(SWS_CMD_SHORTNAME(_ct), true, true);
 }
 
 // note: no undo due to file deletion
-bool deleteTakeAndMedia(int _mode)
+bool DeleteTakeAndMedia(int _mode)
 {
 	bool deleteFileOK = true;
 	WDL_StringKeyedArray<int> removeFiles;
-	for (int i = 1; i <= GetNumTracks(); i++) // skip master
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		WDL_PtrList<void> removedItems; 
@@ -970,8 +970,8 @@ bool deleteTakeAndMedia(int _mode)
 	return deleteFileOK;
 }
 
-void deleteTakeAndMedia(COMMAND_T* _ct) {
-	if (!deleteTakeAndMedia((int)_ct->user))
+void DeleteTakeAndMedia(COMMAND_T* _ct) {
+	if (!DeleteTakeAndMedia((int)_ct->user))
 		MessageBox(GetMainHwnd(), __LOCALIZE("Warning: at least one file could not be deleted.\nTips: are you an administrator? File used by another process?","sws_mbox"), __LOCALIZE("S&M - Delete take and source files","sws_mbox"), MB_OK);
 }
 
@@ -980,7 +980,7 @@ void deleteTakeAndMedia(COMMAND_T* _ct) {
 // Take envs
 ///////////////////////////////////////////////////////////////////////////////
 
-int getPitchTakeEnvRangeFromPrefs()
+int GetPitchTakeEnvRangeFromPrefs()
 {
 	int range = *(int*)GetConfigVar("pitchenvrange");
 	// "snap to semitones" bit set ?
@@ -990,7 +990,7 @@ int getPitchTakeEnvRangeFromPrefs()
 }
 
 // callers must use UpdateTimeline() at some point if it returns true..
-bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, const char* _vis, const WDL_FastString* _defaultPoint, bool _reset)
+bool PatchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeyword, const char* _vis, const WDL_FastString* _defaultPoint, bool _reset)
 {
 	bool updated = false;
 	if (_item)
@@ -1035,7 +1035,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 					// prepare the new visibility (in one go)
 					{
 						SNM_TakeEnvParserPatcher pEnv(&takeChunk);
-						takeUpdate = pEnv.SetVis(_envKeyword, atoi(vis));
+						takeUpdate = pEnv.SetVal(_envKeyword, atoi(vis));
 					}
 				}
 			}
@@ -1072,7 +1072,7 @@ bool patchTakeEnvelopeVis(MediaItem* _item, int _takeIdx, const char* _envKeywor
 	return updated;
 }
 
-bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, const char* _vis, const WDL_FastString* _defaultPoint, bool _reset) 
+bool PatchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, const char* _vis, const WDL_FastString* _defaultPoint, bool _reset) 
 {
 	bool updated = false;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
@@ -1082,7 +1082,7 @@ bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, const
 		{
 			MediaItem* item = GetTrackMediaItem(tr,j);
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
-				updated |= patchTakeEnvelopeVis(item, *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL), _envKeyword, _vis, _defaultPoint, _reset);
+				updated |= PatchTakeEnvelopeVis(item, *(int*)GetSetMediaItemInfo(item,"I_CURTAKE",NULL), _envKeyword, _vis, _defaultPoint, _reset);
 		}
 	}
 
@@ -1095,54 +1095,54 @@ bool patchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, const
 	return updated;
 }
 
-void panTakeEnvelope(COMMAND_T* _ct) 
+void PanTakeEnvelope(COMMAND_T* _ct) 
 {
 	WDL_FastString defaultPoint("PT 0.000000 ");
 	defaultPoint.AppendFormatted(128, "%d.000000 0", (int)_ct->user);
-	patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PANENV", "1", &defaultPoint, true);
+	PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PANENV", "1", &defaultPoint, true);
 }
 
-void showHideTakeVolEnvelope(COMMAND_T* _ct) 
+void ShowHideTakeVolEnvelope(COMMAND_T* _ct) 
 {
 	char cVis[2] = ""; //empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 0");
-	if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false) && value < 0) // toggle
+	if (PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "VOLENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
 }
 
-void showHideTakePanEnvelope(COMMAND_T* _ct) 
+void ShowHideTakePanEnvelope(COMMAND_T* _ct) 
 {
 	char cVis[2] = ""; //empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
-	if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false) && value < 0) // toggle
+	if (PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PANENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
 }
 
-void showHideTakeMuteEnvelope(COMMAND_T* _ct) 
+void ShowHideTakeMuteEnvelope(COMMAND_T* _ct) 
 {
 	char cVis[2] = ""; //empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 1.000000 1");
-	if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false) && value < 0) // toggle
+	if (PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "MUTEENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
 }
 
-void showHideTakePitchEnvelope(COMMAND_T* _ct) 
+void ShowHideTakePitchEnvelope(COMMAND_T* _ct) 
 {
 	char cVis[2] = ""; // empty means toggle
 	int value = (int)_ct->user;
 	if (value >= 0 && _snprintfStrict(cVis, sizeof(cVis), "%d", value) < 0)
 		return;
 	WDL_FastString defaultPoint("PT 0.000000 0.000000 0");
-	if (patchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false) && value < 0) // toggle
+	if (PatchTakeEnvelopeVis(SWS_CMD_SHORTNAME(_ct), "PITCHENV", cVis, &defaultPoint, false) && value < 0) // toggle
 		FakeToggle(_ct);
 }
 
@@ -1153,9 +1153,9 @@ bool ShowTakeEnv(MediaItem_Take* _take, const char* _envKeyword, const WDL_FastS
 	MediaItem* item = (_take ? GetMediaItemTake_Item(_take) : NULL);
 	if (item) 
 	{
-		int idx = getTakeIndex(item, _take);
+		int idx = GetTakeIndex(item, _take);
 		if (idx >= 0) 
-			shown = patchTakeEnvelopeVis(item, idx, _envKeyword , "1", _defaultPoint, false);
+			shown = PatchTakeEnvelopeVis(item, idx, _envKeyword , "1", _defaultPoint, false);
 	}
 	return shown;
 }
@@ -1189,7 +1189,7 @@ WDL_PtrList<void> g_toolbarItemSel[4];
 WDL_PtrList<void> g_toolbarItemSelToggle[4];
 SWS_Mutex g_toolbarItemSelLock;
 
-void itemSelToolbarPoll()
+void ItemSelToolbarPoll()
 {
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
 
@@ -1262,7 +1262,7 @@ void itemSelToolbarPoll()
 }
 
 // deselects items out of the scope and reselects those items -on toggle-
-void toggleItemSelExists(COMMAND_T* _ct)
+void ToggleItemSelExists(COMMAND_T* _ct)
 {
 	bool updated = false, toggle = false;
 	int dir = (int)_ct->user;
@@ -1308,7 +1308,7 @@ void toggleItemSelExists(COMMAND_T* _ct)
 }
 
 // returns the toggle state as fast as possible: background job done in itemSelToolbarPoll() 
-bool itemSelExists(COMMAND_T* _ct) {
+bool ItemSelExists(COMMAND_T* _ct) {
 	SWS_SectionLock lock(&g_toolbarItemSelLock);
 	return (g_toolbarItemSel[(int)_ct->user].GetSize() > 0);
 }
@@ -1319,8 +1319,7 @@ bool itemSelExists(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 
 // scroll to item, no undo!
-//JFB!!! SetOnlyTrackSelected() todo?
-void scrollToSelItem(MediaItem* _item)
+void ScrollToSelItem(MediaItem* _item)
 {
 	if (_item)
 	{
@@ -1332,7 +1331,7 @@ void scrollToSelItem(MediaItem* _item)
 		// vertical scroll to selected item
 		if (MediaTrack* tr = GetMediaItem_Track(_item))
 		{
-			//JFB change restore sel programatically => not cool for controle surfaces
+			//JFB change/restore sel programatically => not cool for controle surfaces
 			WDL_PtrList<MediaTrack> selTrs;
 			SNM_GetSelectedTracks(NULL, &selTrs, true);
 			// select only track
@@ -1345,12 +1344,12 @@ void scrollToSelItem(MediaItem* _item)
 	}
 }
 
-void scrollToSelItem(COMMAND_T* _ct) {
-	scrollToSelItem(GetSelectedMediaItem(NULL, 0));
+void ScrollToSelItem(COMMAND_T* _ct) {
+	ScrollToSelItem(GetSelectedMediaItem(NULL, 0));
 }
 
 // pan take
-void setPan(COMMAND_T* _ct)
+void SetPan(COMMAND_T* _ct)
 {
 	bool updated = false;
 	double value = (double)((int)_ct->user/100);
@@ -1481,7 +1480,7 @@ void InsertMediaSlotTakes(COMMAND_T* _ct) {
 	InsertMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, 3);
 }
 
-bool autoSaveMediaSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize)
+bool AutoSaveMediaSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize)
 {
 	bool updated = false;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master

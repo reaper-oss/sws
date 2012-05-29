@@ -34,13 +34,9 @@
 // General routing helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-void RefreshRoutingsUI()
-{
-	//JFB REAPER bug: there are UI refresh issues when updating routings through the API
-	// see http://forum.cockos.com/project.php?issueid=2642
-/* not enough..
+//JFB REAPER bug:  best effort, see http://forum.cockos.com/project.php?issueid=2642
+void RefreshRoutingsUI() {
 	TrackList_AdjustWindows(true);
-*/
 }
 
 
@@ -54,7 +50,7 @@ void RefreshRoutingsUI()
 // _type:   reaper's type
 //          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
 // _p:      for multi-patch optimization, current destination track's SNM_SendPatcher
-bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, SNM_SendPatcher* _p)
+bool AddReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, SNM_SendPatcher* _p)
 {
 	bool update = false;
 	char vol[32] = "1.00000000000000";
@@ -63,10 +59,10 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 	// if pre-fader, then re-copy track vol/pan
 	if (_type == 3)
 	{
-		SNM_ChunkParserPatcher p1(_srcTr, false);
-		p1.GetChunk()->Get();
-		if (p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 0, 1, vol, NULL, "MUTESOLO") > 0 &&
-			p1.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 0, 2, pan, NULL, "MUTESOLO") > 0)
+		SNM_ChunkParserPatcher p(_srcTr, false);
+		p.SetWantsMinimalState(true);
+		if (p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 0, 1, vol, NULL, "MUTESOLO") > 0 &&
+			p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 0, 2, pan, NULL, "MUTESOLO") > 0)
 		{
 			update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
 		}
@@ -80,7 +76,7 @@ bool addReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 
 // _type: 0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
 // _undoMsg: NULL=no undo
-bool cueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showRouting,
+bool CueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showRouting,
 			  int _soloDefeat, char* _trTemplatePath, bool _sendToMaster, int* _hwOuts) 
 {
 	if (!SNM_CountSelectedTracks(NULL, false))
@@ -116,13 +112,13 @@ bool cueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showR
 				GetSetMediaTrackInfo(cueTr, "P_NAME", (void*)_busName);
 				p = new SNM_SendPatcher(cueTr);
 				if (tmpltChunk.GetLength())
-					applyTrackTemplate(cueTr, &tmpltChunk, true, false, p);
+					ApplyTrackTemplate(cueTr, &tmpltChunk, true, false, p);
 				updated = true;
 			}
 
 			// add a send
 			if (cueTr && p && tr != cueTr)
-				addReceiveWithVolPan(tr, cueTr, _type, p); 
+				AddReceiveWithVolPan(tr, cueTr, _type, p);
 		}
 	}
 
@@ -138,12 +134,10 @@ bool cueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showR
 			}
 			
 			// master/parend send
-			WDL_FastString mainSend("MAINSEND 1");
-			if (!_sendToMaster)
-				 mainSend.Set("MAINSEND 0");
-			mainSend.Append(" 0"); // add parent track channels (v4)
+			WDL_FastString mainSend;
+			mainSend.SetFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "MAINSEND %d 0", _sendToMaster?1:0);
 
-			// adds HW outputs
+			// adds hw outputs
 			if (_hwOuts)
 			{
 				int monoHWCount=0; 
@@ -194,27 +188,26 @@ bool cueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showR
 	return updated;
 }
 
-// this var is used by the action "Create cue buss from track selection (use last settings)"
 int g_cueBusslastSettingsId = 0; // 0 for ascendant compatibility
 
-bool cueTrack(const char* _undoMsg, int _confId)
+bool CueTrack(const char* _undoMsg, int _confId)
 {
 	if (_confId<0 || _confId>=SNM_MAX_CUE_BUSS_CONFS)
 		_confId = g_cueBusslastSettingsId;
 	char busName[BUFFER_SIZE]="", trTemplatePath[BUFFER_SIZE]="";
 	int reaType, soloGrp, hwOuts[8];
 	bool trTemplate,showRouting,sendToMaster;
-	readCueBusIniFile(_confId, busName, &reaType, &trTemplate, trTemplatePath, &showRouting, &soloGrp, &sendToMaster, hwOuts);
-	bool updated = cueTrack(_undoMsg, busName, reaType, showRouting, soloGrp, trTemplate?trTemplatePath:NULL, sendToMaster, hwOuts);
+	ReadCueBusIniFile(_confId, busName, &reaType, &trTemplate, trTemplatePath, &showRouting, &soloGrp, &sendToMaster, hwOuts);
+	bool updated = CueTrack(_undoMsg, busName, reaType, showRouting, soloGrp, trTemplate?trTemplatePath:NULL, sendToMaster, hwOuts);
 	g_cueBusslastSettingsId = _confId;
 	return updated;
 }
 
-void cueTrack(COMMAND_T* _ct) {
-	cueTrack(SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
+void CueTrack(COMMAND_T* _ct) {
+	CueTrack(SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 
-void readCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts)
+void ReadCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts)
 {
 	if (_confId>=0 && _confId<SNM_MAX_CUE_BUSS_CONFS && _busName && _reaType && _trTemplate && _trTemplatePath && _showRouting && _soloDefeat && _sendToMaster && _hwOuts)
 	{
@@ -246,7 +239,7 @@ void readCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemp
 	}
 }
 
-void saveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts)
+void SaveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts)
 {
 	if (_confId>=0 && _confId<SNM_MAX_CUE_BUSS_CONFS && _busName && _trTemplatePath && _hwOuts)
 	{
@@ -283,17 +276,17 @@ WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvTrack
 WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_sndClipboard;
 WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> > g_rcvClipboard;
 
-void flushClipboard(WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _clipboard) {
+void FlushClipboard(WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _clipboard) {
 	if (_clipboard) _clipboard->Empty(true);
 }
 
-void copySendsReceives(bool _cut, WDL_PtrList<MediaTrack>* _trs,
+void CopySendsReceives(bool _cut, WDL_PtrList<MediaTrack>* _trs,
 		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends, 
 		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs)
 {
 	// clear the "clipboards" if needed
-	flushClipboard(_sends);
-	flushClipboard(_rcvs);
+	FlushClipboard(_sends);
+	FlushClipboard(_rcvs);
 
 	for (int i=0; i < _trs->GetSize(); i++)
 	{
@@ -338,7 +331,7 @@ void copySendsReceives(bool _cut, WDL_PtrList<MediaTrack>* _trs,
 	}
 }
 
-bool pasteSendsReceives(WDL_PtrList<MediaTrack>* _trs,
+bool PasteSendsReceives(WDL_PtrList<MediaTrack>* _trs,
 		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends, 
 		WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs, 
 		bool _rcvReplace, WDL_PtrList<SNM_ChunkParserPatcher>* _ps)
@@ -407,28 +400,28 @@ bool pasteSendsReceives(WDL_PtrList<MediaTrack>* _trs,
 	return updated;
 }
 
-void copyWithIOs(COMMAND_T* _ct) {
+void CopyWithIOs(COMMAND_T* _ct) {
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize()) {
-		copySendsReceives(false, &trs, &g_sndTrackClipboard, &g_rcvTrackClipboard);
+		CopySendsReceives(false, &trs, &g_sndTrackClipboard, &g_rcvTrackClipboard);
 		Main_OnCommand(40210, 0); // copy sel tracks
 	}
 }
 
-void cutWithIOs(COMMAND_T* _ct) {
+void CutWithIOs(COMMAND_T* _ct) {
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize()) {
 		Undo_BeginBlock2(NULL);
-		copySendsReceives(true, &trs, &g_sndTrackClipboard, &g_rcvTrackClipboard);
+		CopySendsReceives(true, &trs, &g_sndTrackClipboard, &g_rcvTrackClipboard);
 		Main_OnCommand(40337, 0); // cut sel tracks
 		RefreshRoutingsUI();
 		if (_ct) Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
 	}
 }
 
-void pasteWithIOs(COMMAND_T* _ct) {
+void PasteWithIOs(COMMAND_T* _ct) {
 	if (int iTracks = GetNumTracks())
 	{
 		Undo_BeginBlock2(NULL);
@@ -436,30 +429,30 @@ void pasteWithIOs(COMMAND_T* _ct) {
 		if (iTracks != GetNumTracks()) { // see if tracks were pasted
 			WDL_PtrList<MediaTrack> trs;
 			SNM_GetSelectedTracks(NULL, &trs, false);
-			pasteSendsReceives(&trs, &g_sndTrackClipboard, &g_rcvTrackClipboard, true, NULL);
+			PasteSendsReceives(&trs, &g_sndTrackClipboard, &g_rcvTrackClipboard, true, NULL);
 		}
 		RefreshRoutingsUI();
 		if (_ct) Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL);
 	}
 }
 
-// ** routing cut copy/paste **
-void copyRoutings(COMMAND_T* _ct) {
+// routing cut copy/paste
+void CopyRoutings(COMMAND_T* _ct) {
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize())
-		copySendsReceives(false, &trs, &g_sndClipboard, &g_rcvClipboard);
+		CopySendsReceives(false, &trs, &g_sndClipboard, &g_rcvClipboard);
 }
 
-void cutRoutings(COMMAND_T* _ct) {
+void CutRoutings(COMMAND_T* _ct) {
 	bool updated = false;
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize()) {
 		WDL_PtrList<SNM_ChunkParserPatcher> ps;
-		copySendsReceives(false, &trs, &g_sndClipboard, &g_rcvClipboard);
-		updated |= removeSnd(&trs, &ps);
-		updated |= removeRcv(&trs, &ps);
+		CopySendsReceives(false, &trs, &g_sndClipboard, &g_rcvClipboard);
+		updated |= RemoveSnd(&trs, &ps);
+		updated |= RemoveRcv(&trs, &ps);
 		ps.Empty(true); // auto-commit, if needed
 	}
 	if (updated) {
@@ -468,30 +461,30 @@ void cutRoutings(COMMAND_T* _ct) {
 	}
 }
 
-void pasteRoutings(COMMAND_T* _ct) {
+void PasteRoutings(COMMAND_T* _ct) {
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
-	if (trs.GetSize() && pasteSendsReceives(&trs, &g_sndClipboard, &g_rcvClipboard, false, NULL)) {
+	if (trs.GetSize() && PasteSendsReceives(&trs, &g_sndClipboard, &g_rcvClipboard, false, NULL)) {
 		RefreshRoutingsUI();
 		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
-// ** sends cut copy/paste **
-void copySends(COMMAND_T* _ct) {
+// sends cut copy/paste
+void CopySends(COMMAND_T* _ct) {
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize())
-		copySendsReceives(false, &trs, &g_sndClipboard, NULL);
+		CopySendsReceives(false, &trs, &g_sndClipboard, NULL);
 }
 
-void cutSends(COMMAND_T* _ct) {
+void CutSends(COMMAND_T* _ct) {
 	bool updated = false;
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize()) {
-		copySendsReceives(false, &trs, &g_sndClipboard, NULL);
-		updated |= removeSnd(&trs, NULL);
+		CopySendsReceives(false, &trs, &g_sndClipboard, NULL);
+		updated |= RemoveSnd(&trs, NULL);
 	}
 	if (updated) {
 		RefreshRoutingsUI();
@@ -499,30 +492,30 @@ void cutSends(COMMAND_T* _ct) {
 	}
 }
 
-void pasteSends(COMMAND_T* _ct) {
+void PasteSends(COMMAND_T* _ct) {
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
-	if (trs.GetSize() && pasteSendsReceives(&trs, &g_sndClipboard, NULL, false, NULL)) {
+	if (trs.GetSize() && PasteSendsReceives(&trs, &g_sndClipboard, NULL, false, NULL)) {
 		RefreshRoutingsUI();
 		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
-// ** receives cut copy/paste **
-void copyReceives(COMMAND_T* _ct) {
+// receives cut copy/paste
+void CopyReceives(COMMAND_T* _ct) {
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize())
-		copySendsReceives(false, &trs, NULL, &g_rcvClipboard);
+		CopySendsReceives(false, &trs, NULL, &g_rcvClipboard);
 }
 
-void cutReceives(COMMAND_T* _ct) {
+void CutReceives(COMMAND_T* _ct) {
 	bool updated = false;
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize()) {
-		copySendsReceives(false, &trs, NULL, &g_rcvClipboard);
-		updated |= removeRcv(&trs, NULL);
+		CopySendsReceives(false, &trs, NULL, &g_rcvClipboard);
+		updated |= RemoveRcv(&trs, NULL);
 	}
 	if (updated) {
 		RefreshRoutingsUI();
@@ -530,10 +523,10 @@ void cutReceives(COMMAND_T* _ct) {
 	}
 }
 
-void pasteReceives(COMMAND_T* _ct) {
+void PasteReceives(COMMAND_T* _ct) {
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
-	if (trs.GetSize() && pasteSendsReceives(&trs, NULL, &g_rcvClipboard, false, NULL)) {
+	if (trs.GetSize() && PasteSendsReceives(&trs, NULL, &g_rcvClipboard, false, NULL)) {
 		RefreshRoutingsUI();
 		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
@@ -541,10 +534,10 @@ void pasteReceives(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Common
+// Remove routing
 ///////////////////////////////////////////////////////////////////////////////
 
-bool removeSnd(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps)
+bool RemoveSnd(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps)
 {
 	bool updated = false;
 	WDL_PtrList<SNM_ChunkParserPatcher>* ps = (_ps ? _ps : new WDL_PtrList<SNM_ChunkParserPatcher>);
@@ -566,20 +559,20 @@ bool removeSnd(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher
 	return updated;
 }
 
-void removeSends(COMMAND_T* _ct)
+void RemoveSends(COMMAND_T* _ct)
 {
 	bool updated = false;
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize())
-		updated = removeSnd(&trs, NULL);
+		updated = RemoveSnd(&trs, NULL);
 	if (updated) {
 		RefreshRoutingsUI();
 		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
-bool removeRcv(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps)
+bool RemoveRcv(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps)
 {
 	bool updated = false;
 	WDL_PtrList<SNM_ChunkParserPatcher>* ps = (_ps ? _ps : new WDL_PtrList<SNM_ChunkParserPatcher>);
@@ -597,28 +590,28 @@ bool removeRcv(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher
 	return updated;
 }
 
-void removeReceives(COMMAND_T* _ct)
+void RemoveReceives(COMMAND_T* _ct)
 {
 	bool updated = false;
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize())
-		updated = removeRcv(&trs, NULL);
+		updated = RemoveRcv(&trs, NULL);
 	if (updated) {
 		RefreshRoutingsUI();
 		if (_ct) Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
-void removeRouting(COMMAND_T* _ct)
+void RemoveRouting(COMMAND_T* _ct)
 {
 	bool updated = false;
 	WDL_PtrList<MediaTrack> trs;
 	SNM_GetSelectedTracks(NULL, &trs, false);
 	if (trs.GetSize()) {
 		WDL_PtrList<SNM_ChunkParserPatcher> ps;
-		updated |= removeSnd(&trs, &ps);
-		updated |= removeRcv(&trs, &ps);
+		updated |= RemoveSnd(&trs, &ps);
+		updated |= RemoveRcv(&trs, &ps);
 		ps.Empty(true); // auto-commit, if needed
 	}
 	if (updated) {
@@ -627,7 +620,36 @@ void removeRouting(COMMAND_T* _ct)
 	}
 }
 
-void muteReceives(MediaTrack* _source, MediaTrack* _dest, bool _mute)
+
+///////////////////////////////////////////////////////////////////////////////
+// Other routing funcs/commands
+///////////////////////////////////////////////////////////////////////////////
+
+int g_defSndFlags = -1;
+
+void SaveDefaultTrackSendPrefs(COMMAND_T*) {
+	if (int* flags = (int*)GetConfigVar("defsendflag"))
+		g_defSndFlags = *flags;
+}
+
+void RecallDefaultTrackSendPrefs(COMMAND_T*) {
+	if (g_defSndFlags>=0)
+		if (int* flags = (int*)GetConfigVar("defsendflag"))
+			*flags = g_defSndFlags;
+}
+
+// flags != _ct->user because of the weird state of midi+audio which is not 0x300 but 0 (!)
+void SetDefaultTrackSendPrefs(COMMAND_T* _ct) {
+	if (int* flags = (int*)GetConfigVar("defsendflag")) {
+		switch((int)_ct->user) {
+			case 0: *flags&=0xFF; break; // both
+			case 1: *flags&=0xF0FF; *flags|=0x100; break; // audio
+			case 2: *flags&=0xF0FF; *flags|=0x200; break; // midi
+		}
+	}
+}
+
+void MuteReceives(MediaTrack* _source, MediaTrack* _dest, bool _mute)
 {
 	if (_source && _dest && _source != _dest)
 	{
@@ -641,3 +663,4 @@ void muteReceives(MediaTrack* _source, MediaTrack* _dest, bool _mute)
 		}
 	}
 }
+

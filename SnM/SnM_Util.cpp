@@ -228,6 +228,20 @@ bool LoadChunk(const char* _fn, WDL_FastString* _chunk, bool _trim, int _maxlen)
 	_chunk->Set("");
 	if (_fn && *_fn)
 	{
+/*JFB commented: horribly slow!
+		if (ProjectStateContext* ctx = ProjectCreateFileRead(_fn))
+		{
+			char buf[SNM_MAX_CHUNK_LINE_LENGTH];
+			while(!ctx->GetLine(buf, SNM_MAX_CHUNK_LINE_LENGTH))
+			{
+				if (_maxlen && (int)(_chunk->GetLength()+strlen(buf)) > _maxlen)
+					break;
+				_chunk->Append(buf);
+			}
+			delete ctx;
+			return true;
+		}
+*/
 		if (FILE* f = fopenUTF8(_fn, "r"))
 		{
 			char str[SNM_MAX_CHUNK_LINE_LENGTH];
@@ -235,12 +249,11 @@ bool LoadChunk(const char* _fn, WDL_FastString* _chunk, bool _trim, int _maxlen)
 			{
 				if (_maxlen && (int)(_chunk->GetLength()+strlen(str)) > _maxlen)
 					break;
-
 				if (_trim) // left trim + remove empty lines
 				{
 					char* p = str;
 					while(*p && (*p == ' ' || *p == '\t')) p++;
-					if (*p != '\n') // the !*p case is managed in Append()
+					if (*p != '\n' && *p != '\r') // the !*p case is managed in Append()
 						_chunk->Append(p);
 				}
 				else
@@ -257,7 +270,7 @@ bool SaveChunk(const char* _fn, WDL_FastString* _chunk, bool _indent)
 {
 	if (_fn && *_fn && _chunk)
 	{
-		SNM_ChunkIndenter p(_chunk, false); // nothing done yet
+		SNM_ChunkIndenter p(_chunk, false); // no auto-commit, see trick below
 		if (_indent) p.Indent();
 		if (FILE* f = fopenUTF8(_fn, "w"))
 		{
@@ -427,19 +440,19 @@ void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx)
 	}
 }
 
-void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx, bool _breakOnGT)
+void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx)
 {
 	if (_str && _ctx)
 	{
 		LineParser lp(false);
 		char linebuf[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-		while(true)
+		for(;;) 
 		{
 			if (!_ctx->GetLine(linebuf, sizeof(linebuf)) && !lp.parse(linebuf))
 			{
 				_str->Append(linebuf);
 				_str->Append("\n");
-				if (_breakOnGT && lp.gettoken_str(0)[0] == '>')
+				if (lp.gettoken_str(0)[0] == '>')
 					break;
 			}
 			else

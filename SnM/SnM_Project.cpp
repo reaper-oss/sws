@@ -150,7 +150,7 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 // Project template slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
-void loadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab)
+void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab)
 {
 	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot))
 	{
@@ -176,7 +176,7 @@ void loadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool 
 	}
 }
 
-bool autoSaveProjectSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _saveCurPrj)
+bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _saveCurPrj)
 {
 	if (_saveCurPrj) Main_OnCommand(40026,0);
 	char prjFn[BUFFER_SIZE] = "", name[256] = "";
@@ -186,12 +186,12 @@ bool autoSaveProjectSlot(int _slotType, const char* _dirPath, char* _fn, int _fn
 		SNM_CopyFile(_fn, prjFn) && g_slots.Get(_slotType)->AddSlot(_fn));
 }
 
-void loadOrSelectProjectSlot(COMMAND_T* _ct) {
-	loadOrSelectProjectSlot(g_tiedSlotActions[SNM_SLOT_PRJ], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false);
+void LoadOrSelectProjectSlot(COMMAND_T* _ct) {
+	LoadOrSelectProjectSlot(g_tiedSlotActions[SNM_SLOT_PRJ], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false);
 }
 
-void loadOrSelectProjectTabSlot(COMMAND_T* _ct) {
-	loadOrSelectProjectSlot(g_tiedSlotActions[SNM_SLOT_PRJ], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true);
+void LoadOrSelectProjectTabSlot(COMMAND_T* _ct) {
+	LoadOrSelectProjectSlot(g_tiedSlotActions[SNM_SLOT_PRJ], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true);
 }
 
 
@@ -205,13 +205,13 @@ void loadOrSelectProjectTabSlot(COMMAND_T* _ct) {
 extern SNM_ResourceWnd* g_pResourcesWnd; // SNM_ResourceView.cpp
 int g_prjCurSlot = -1; // 0-based
 
-bool isProjectLoaderConfValid() {
+bool IsProjectLoaderConfValid() {
 	return (g_prjLoaderStartPref > 0 && 
 		g_prjLoaderEndPref > g_prjLoaderStartPref && 
 		g_prjLoaderEndPref <= g_slots.Get(SNM_SLOT_PRJ)->GetSize());
 }
 
-void projectLoaderConf(COMMAND_T* _ct)
+void ProjectLoaderConf(COMMAND_T* _ct)
 {
 	bool ok = false;
 	int start, end;
@@ -250,11 +250,11 @@ void projectLoaderConf(COMMAND_T* _ct)
 	}
 }
 
-void loadOrSelectNextPreviousProject(COMMAND_T* _ct)
+void LoadOrSelectNextPreviousProject(COMMAND_T* _ct)
 {
 	// check prefs validity (user configurable..)
 	// reminder: 1-based prefs!
-	if (isProjectLoaderConfValid())
+	if (IsProjectLoaderConfValid())
 	{
 		int dir = (int)_ct->user; // -1 (previous) or +1 (next)
 		int cpt=0, slotCount = g_prjLoaderEndPref-g_prjLoaderStartPref+1;
@@ -287,7 +287,7 @@ void loadOrSelectNextPreviousProject(COMMAND_T* _ct)
 
 		// found one?
 		if (cpt <= slotCount) {
-			loadOrSelectProjectSlot(SNM_SLOT_PRJ, "", g_prjCurSlot, false);
+			LoadOrSelectProjectSlot(SNM_SLOT_PRJ, "", g_prjCurSlot, false);
 			if (g_pResourcesWnd) g_pResourcesWnd->SelectBySlot(g_prjCurSlot);
 		}
 		else g_prjCurSlot = -1;

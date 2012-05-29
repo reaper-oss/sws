@@ -54,8 +54,8 @@ public:
 };
 
 char* GetName(MediaItem* _item);
-int getTakeIndex(MediaItem* _item, MediaItem_Take* _take);
-bool deleteMediaItemIfNeeded(MediaItem* _item);
+int GetTakeIndex(MediaItem* _item, MediaItem_Take* _take);
+bool DeleteMediaItemIfNeeded(MediaItem* _item);
 void SNM_GetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks = false);
 void SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks = false);
 void SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks = false);
@@ -63,50 +63,50 @@ bool IsItemInInterval(MediaItem* _item, double _pos1, double _pos2, bool _inclus
 bool GetItemsInInterval(WDL_PtrList<void>* _items, double _pos1, double _pos2, bool _inclusive);
 void GetAllItemPointers(WDL_PtrList<void>* _items);
 void DiffItemPointers(WDL_PtrList<void>* _oldItemsIn, WDL_PtrList<void>* _newItemsOut);
-bool CopySelItemsWithEnvs(const char* _undoTitle, double _nudgePos, WDL_PtrList<void>* _newItemsOut = NULL);
-void splitMidiAudio(COMMAND_T*);
-void smartSplitMidiAudio(COMMAND_T*);
+bool DupSelItems(const char* _undoTitle, double _nudgePos, WDL_PtrList<void>* _newItemsOut = NULL);
+void SplitMidiAudio(COMMAND_T*);
+void SmartSplitMidiAudio(COMMAND_T*);
 #ifdef _SNM_MISC // deprecated (v3.67)
-void splitSelectedItems(COMMAND_T*);
+void SplitSelectedItems(COMMAND_T*);
 #endif
-void goferSplitSelectedItems(COMMAND_T*);
+void GoferSplitSelectedItems(COMMAND_T*);
 bool SplitSelectAllItemsInInterval(const char* _undoTitle, double _pos1, double _pos2, WDL_PtrList<void>* _newItemsOut = NULL);
 void SplitSelectAllItemsInRegion(COMMAND_T*);
-void copyCutTake(COMMAND_T*);
-void pasteTake(COMMAND_T*);
-bool isEmptyMidi(MediaItem_Take* _take);
-void setEmptyTakeChunk(WDL_FastString* _chunk, int _recPass = -1, int _color = -1, bool _v4style = true);
-int buildLanes(const char* _undoTitle, int _mode);
-bool removeEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel);
-bool removeEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel = false, bool _itemSel = true);
-void clearTake(COMMAND_T*);
+void CopyCutTake(COMMAND_T*);
+void PasteTake(COMMAND_T*);
+bool IsEmptyMidi(MediaItem_Take* _take);
+void SetEmptyTakeChunk(WDL_FastString* _chunk, int _recPass = -1, int _color = -1, bool _v4style = true);
+int BuildLanes(const char* _undoTitle, int _mode);
+bool RemoveEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel);
+bool RemoveEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel = false, bool _itemSel = true);
+void ClearTake(COMMAND_T*);
 #ifdef _SNM_MISC // deprecated (v3.67)
-void moveTakes(COMMAND_T*);
+void MoveTakes(COMMAND_T*);
 #endif
-void moveActiveTake(COMMAND_T*);
-void activateLaneFromSelItem(COMMAND_T*);
-void activateLaneUnderMouse(COMMAND_T*);
-void buildLanes(COMMAND_T*);
-void removeEmptyTakes(COMMAND_T*);
-void removeEmptyMidiTakes(COMMAND_T*);
-void removeAllEmptyTakes(COMMAND_T*);
-void deleteTakeAndMedia(COMMAND_T*);
-int getPitchTakeEnvRangeFromPrefs();
-void panTakeEnvelope(COMMAND_T*);
-void showHideTakeVolEnvelope(COMMAND_T*); 
-void showHideTakePanEnvelope(COMMAND_T*);
-void showHideTakeMuteEnvelope(COMMAND_T*);
-void showHideTakePitchEnvelope(COMMAND_T*);
+void MoveActiveTake(COMMAND_T*);
+void ActivateLaneFromSelItem(COMMAND_T*);
+void ActivateLaneUnderMouse(COMMAND_T*);
+void BuildLanes(COMMAND_T*);
+void RemoveEmptyTakes(COMMAND_T*);
+void RemoveEmptyMidiTakes(COMMAND_T*);
+void RemoveAllEmptyTakes(COMMAND_T*);
+void DeleteTakeAndMedia(COMMAND_T*);
+int GetPitchTakeEnvRangeFromPrefs();
+void PanTakeEnvelope(COMMAND_T*);
+void ShowHideTakeVolEnvelope(COMMAND_T*); 
+void ShowHideTakePanEnvelope(COMMAND_T*);
+void ShowHideTakeMuteEnvelope(COMMAND_T*);
+void ShowHideTakePitchEnvelope(COMMAND_T*);
 bool ShowTakeEnvVol(MediaItem_Take* _take);
 bool ShowTakeEnvPan(MediaItem_Take* _take);
 bool ShowTakeEnvMute(MediaItem_Take* _take);
 bool ShowTakeEnvPitch(MediaItem_Take* _take);
-void itemSelToolbarPoll();
-void toggleItemSelExists(COMMAND_T*);
-bool itemSelExists(COMMAND_T*);
-void scrollToSelItem(MediaItem* _item);
-void scrollToSelItem(COMMAND_T*);
-void setPan(COMMAND_T*);
+void ItemSelToolbarPoll();
+void ToggleItemSelExists(COMMAND_T*);
+bool ItemSelExists(COMMAND_T*);
+void ScrollToSelItem(MediaItem* _item);
+void ScrollToSelItem(COMMAND_T*);
+void SetPan(COMMAND_T*);
 void PlaySelTrackMediaSlot(COMMAND_T*);
 void LoopSelTrackMediaSlot(COMMAND_T*);
 void SyncPlaySelTrackMediaSlot(COMMAND_T*);
@@ -126,6 +126,6 @@ void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMo
 void InsertMediaSlotCurTr(COMMAND_T*);
 void InsertMediaSlotNewTr(COMMAND_T*);
 void InsertMediaSlotTakes(COMMAND_T*);
-bool autoSaveMediaSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize);
+bool AutoSaveMediaSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize);
 
 #endif

@@ -32,30 +32,36 @@
 
 #include "SnM_Chunk.h" 
 
-bool cueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
-bool cueTrack(const char* _undoMsg, int _confId);
-void cueTrack(COMMAND_T*);
-void readCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
-void saveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
-void copySendsReceives(bool _cut, WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends,  WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs);
-bool pasteSendsReceives(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends,  WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs, bool _rcvReplace, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
-void copyWithIOs(COMMAND_T*);
-void cutWithIOs(COMMAND_T*);
-void pasteWithIOs(COMMAND_T*);
-void copyRoutings(COMMAND_T*);
-void cutRoutings(COMMAND_T*);
-void pasteRoutings(COMMAND_T*);
-void copySends(COMMAND_T*);
-void cutSends(COMMAND_T*);
-void pasteSends(COMMAND_T*);
-void copyReceives(COMMAND_T*);
-void cutReceives(COMMAND_T*);
-void pasteReceives(COMMAND_T*);
-bool removeSnd(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
-void removeSends(COMMAND_T*);
-bool removeRcv(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
-void removeReceives(COMMAND_T*);
-void removeRouting(COMMAND_T*);
-void muteReceives(MediaTrack* _source, MediaTrack* _dest, bool _mute);
+bool CueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
+bool CueTrack(const char* _undoMsg, int _confId);
+void CueTrack(COMMAND_T*);
+void ReadCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
+void SaveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
+void CopySendsReceives(bool _cut, WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends,  WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs);
+bool PasteSendsReceives(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends,  WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs, bool _rcvReplace, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
+void CopyWithIOs(COMMAND_T*);
+void CutWithIOs(COMMAND_T*);
+void PasteWithIOs(COMMAND_T*);
+void CopyRoutings(COMMAND_T*);
+void CutRoutings(COMMAND_T*);
+void PasteRoutings(COMMAND_T*);
+void CopySends(COMMAND_T*);
+void CutSends(COMMAND_T*);
+void PasteSends(COMMAND_T*);
+void CopyReceives(COMMAND_T*);
+void CutReceives(COMMAND_T*);
+void PasteReceives(COMMAND_T*);
+
+bool RemoveSnd(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
+void RemoveSends(COMMAND_T*);
+bool RemoveRcv(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
+void RemoveReceives(COMMAND_T*);
+void RemoveRouting(COMMAND_T*);
+
+void SaveDefaultTrackSendPrefs(COMMAND_T*);
+void RecallDefaultTrackSendPrefs(COMMAND_T*);
+void SetDefaultTrackSendPrefs(COMMAND_T*);
+
+void MuteReceives(MediaTrack* _source, MediaTrack* _dest, bool _mute);
 
 #endif

@@ -69,7 +69,7 @@ void SmartCopy(COMMAND_T*)
 	if (GetCursorContext() == 1 && AreThereSelItemsInTimeSel())
 		Main_OnCommand(40060, 0); // Copy sel area of items
 	else if (GetCursorContext() == 0)
-		copyWithIOs(NULL);
+		CopyWithIOs(NULL);
 	else
 		Main_OnCommand(40057, 0); // Std copy
 }
@@ -79,7 +79,7 @@ void SmartCut(COMMAND_T*)
 	if (GetCursorContext() == 1 && AreThereSelItemsInTimeSel())
 		Main_OnCommand(40307, 0); // Cut sel area of items
 	else if (GetCursorContext() == 0)
-		cutWithIOs(NULL);
+		CutWithIOs(NULL);
 	else
 		Main_OnCommand(40059, 0); // Std cut
 }

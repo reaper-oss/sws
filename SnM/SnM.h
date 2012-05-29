@@ -35,14 +35,11 @@
 
 
 // disable/enable some features
-//#define _SNM_MISC
-//#define _SNM_MARKER_REGION_NAME
+//#define _SNM_MISC	// not released, deprecated, tests, etc..
+//#define _SNM_WDL	// if my wdl version is used
+#define _SNM_MARKER_REGION_NAME
 #define _SNM_PRESETS
-#ifdef _WIN32
 #define _SNM_ACTION_LEARN
-#else
-#define _SNM_ACTION_LEARN
-#endif
 
 #ifdef _WIN32
 #define SNM_FORMATED_INI_FILE		"%s\\S&M.ini"

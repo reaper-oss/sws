@@ -287,15 +287,15 @@ void ToggleAllFXsBypassSelItems(COMMAND_T* _ct) {
 } 
 
 void SetAllFXsOfflineSelItems(COMMAND_T* _ct) {
-	char cInt[2] = "";
-	if (_snprintfStrict(cInt, sizeof(cInt), "%d", (int)_ct->user) > 0)
-		PatchSelItemsFXState(SWS_CMD_SHORTNAME(_ct), SNM_SETALL_CHUNK_CHAR_EXCEPT, 2, 0xFFFF, cInt); // trick: unreachable fx number
+	char pInt[4] = "";
+	if (_snprintfStrict(pInt, sizeof(pInt), "%d", (int)_ct->user) > 0)
+		PatchSelItemsFXState(SWS_CMD_SHORTNAME(_ct), SNM_SETALL_CHUNK_CHAR_EXCEPT, 2, 0xFFFF, pInt); // trick: unreachable fx number
 }
 
 void SetAllFXsBypassSelItems(COMMAND_T* _ct) {
-	char cInt[2] = "";
-	if (_snprintfStrict(cInt, sizeof(cInt), "%d", (int)_ct->user) > 0)
-		PatchSelItemsFXState(SWS_CMD_SHORTNAME(_ct), SNM_SETALL_CHUNK_CHAR_EXCEPT, 1, 0xFFFF, cInt); // trick: unreachable fx number
+	char pInt[4] = "";
+	if (_snprintfStrict(pInt, sizeof(pInt), "%d", (int)_ct->user) > 0)
+		PatchSelItemsFXState(SWS_CMD_SHORTNAME(_ct), SNM_SETALL_CHUNK_CHAR_EXCEPT, 1, 0xFFFF, pInt); // trick: unreachable fx number
 }
 
 
@@ -515,11 +515,9 @@ protected:
 // absolute CC only
 void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) 
 {
-	if (!_relmode && _valhw < 0) {
-		SNM_TriggerPresetScheduledJob* job =
-			new SNM_TriggerPresetScheduledJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd, (int)_ct->user);
-		AddOrReplaceScheduledJob(job);
-	}
+	if (!_relmode && _valhw < 0)
+		AddOrReplaceScheduledJob(
+			new SNM_TriggerPresetScheduledJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd, (int)_ct->user));
 }
 
 

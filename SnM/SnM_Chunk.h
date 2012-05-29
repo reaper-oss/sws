@@ -288,18 +288,19 @@ private:
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_EnvRemover
+// SNM_EnvAlterer
 ///////////////////////////////////////////////////////////////////////////////
 
-class SNM_EnvRemover : public SNM_ChunkParserPatcher
+class SNM_EnvAlterer : public SNM_ChunkParserPatcher
 {
 public:
-	SNM_EnvRemover(WDL_FastString* _str, bool _autoCommit = true)
-		: SNM_ChunkParserPatcher(_str, _autoCommit) {m_removingEnv = false; }
-	SNM_EnvRemover(MediaTrack* _tr, bool _autoCommit = true)
-		: SNM_ChunkParserPatcher(_tr, _autoCommit) {m_removingEnv = false; }
-	~SNM_EnvRemover() {}
+	SNM_EnvAlterer(WDL_FastString* _str, bool _autoCommit = true)
+		: SNM_ChunkParserPatcher(_str, _autoCommit) {m_parsingEnv = false; }
+	SNM_EnvAlterer(MediaTrack* _tr, bool _autoCommit = true)
+		: SNM_ChunkParserPatcher(_tr, _autoCommit) {m_parsingEnv = false; }
+	~SNM_EnvAlterer() {}
 	bool RemoveEnvelopes();
+	bool AddToEnvelopes(double _delta);
 protected:
 	bool NotifyStartElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
@@ -314,7 +315,8 @@ protected:
 		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents,
 		WDL_FastString* _newChunk, int _updates);
 private:
-	bool m_removingEnv;
+	bool m_parsingEnv;
+	double m_addDelta;
 };
 
 
@@ -403,16 +405,16 @@ class SNM_TakeEnvParserPatcher : public SNM_ChunkParserPatcher
 {
 public:
 	SNM_TakeEnvParserPatcher(WDL_FastString* _tkChunk, bool _autoCommit = true) 
-		: SNM_ChunkParserPatcher(_tkChunk, _autoCommit) {m_vis = -1;}
+		: SNM_ChunkParserPatcher(_tkChunk, _autoCommit) {m_val = -1;}
 	~SNM_TakeEnvParserPatcher() {}
-	bool SetVis(const char* _envKeyWord, int _vis);
+	bool SetVal(const char* _envKeyWord, int _val);
 protected:
 	bool NotifyChunkLine(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
 		int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents,
 		WDL_FastString* _newChunk, int _updates);
 private:
-	int m_vis;
+	int m_val;
 };
 
 #endif

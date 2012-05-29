@@ -56,9 +56,9 @@ void ObjectStateCache::WriteCache()
 	{
 		if (m_str.Get(i)->GetLength() && m_orig.Get(i) && strcmp(m_str.Get(i)->Get(), m_orig.Get(i)))
 		{
-			SNM_PreObjectState(m_str.Get(i), false);
+			int fxstate = SNM_PreObjectState(m_str.Get(i), false);
 			GetSetObjectState(m_obj.Get(i), m_str.Get(i)->Get());
-			SNM_PostObjectState();
+			SNM_PostObjectState(fxstate);
 #ifdef GOS_DEBUG
 			iCount++;
 #endif
@@ -90,9 +90,9 @@ const char* ObjectStateCache::GetSetObjState(void* obj, const char* str, bool wa
 			m_orig.Add(NULL);
 		else
 		{
-			SNM_PreObjectState(NULL, wantsMinimalState);
+			int fxstate = SNM_PreObjectState(NULL, wantsMinimalState);
 			char* p = GetSetObjectState(obj, NULL);
-			SNM_PostObjectState();
+			SNM_PostObjectState(fxstate);
 			m_orig.Add(p);
 		}
 	}
@@ -118,9 +118,9 @@ const char* SWS_GetSetObjectState(void* obj, WDL_FastString* str, bool wantsMini
 		ret = g_objStateCache->GetSetObjState(obj, str ? str->Get() : NULL, wantsMinimalState);
 	else
 	{
-		SNM_PreObjectState(str, wantsMinimalState);
+		int fxstate = SNM_PreObjectState(str, wantsMinimalState);
 		ret = GetSetObjectState(obj, str ? str->Get() : NULL);
-		SNM_PostObjectState();
+		SNM_PostObjectState(fxstate);
 	}
 
 #ifdef GOS_DEBUG

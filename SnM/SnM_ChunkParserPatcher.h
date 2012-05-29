@@ -1,5 +1,5 @@
 /******************************************************************************
-** SnM_ChunkParserPatcher.h - v1.3
+** SnM_ChunkParserPatcher.h - v1.31
 ** Copyright (C) 2008-2012, Jeffos
 **
 **    This software is provided 'as-is', without any express or implied
@@ -44,6 +44,7 @@
 // v1.3x
 // - TEMPORARY VERSIONS: v2.0 on the way..
 // - Fixed possible crash with veeeeery long lines, new max line length = 8Ko
+// - New SNM_D_ADD and SNM_D_MUL altering modes
 // v1.2x
 // - Frozen track support: do not mess with frozen data
 //   note: FREEZE sub-chunks can be optionally processed like base-64 and in-project MIDI data
@@ -95,6 +96,9 @@
 #define SNM_GET_SUBCHUNK_OR_LINE		13
 #define SNM_GET_SUBCHUNK_OR_LINE_EOL	14
 #define SNM_COUNT_KEYWORD				15
+#define SNM_D_ADD						16
+#define SNM_D_MUL						17
+
 
 // Misc
 #define SNM_MAX_CHUNK_LINE_LENGTH		8192 // inspired by WDL's projectcontext
@@ -116,8 +120,8 @@ static int RemoveChunkLines(WDL_FastString* _chunk, WDL_PtrList<const char>* _se
 							bool _checkBOL = false, int _checkEOLChar = 0);
 static int FindEndOfSubChunk(const char* _chunk, int _startPos);
 
-static void SNM_PreObjectState(WDL_FastString* _str = NULL, bool _wantsMinState = false);
-static void SNM_PostObjectState();
+static int SNM_PreObjectState(WDL_FastString* _str = NULL, bool _wantsMinState = false);
+static void SNM_PostObjectState(int _oldfxstate);
 
 // both preserves POOLEDEVTS ids as well as frozen fx ids (FXID_NEXT)
 static int RemoveAllIds(char* _chunk) {
@@ -248,16 +252,9 @@ virtual WDL_FastString* GetChunk()
 // chunk -OR- you must also 'manually' alter m_updates.
 
 // clearing the cache is allowed
-void SetChunk(const char* _newChunk, int _updates) {
+void SetChunk(const char* _newChunk, int _updates=1) {
 	m_updates = _updates;
 	GetChunk()->Set(_newChunk ? _newChunk : "");
-}
-
-// for facility (hooked to above)
-void SetChunk(WDL_FastString* _newChunk, int _updates) {
-	m_updates = _updates;
-	if (_newChunk) GetChunk()->Set(_newChunk);
-	else GetChunk()->Set("");
 }
 
 int GetUpdates() {
@@ -298,7 +295,7 @@ virtual bool Commit(bool _force = false)
 }
 
 const char* GetInfo() {
-	return "SNM_ChunkParserPatcher - v1.3";
+	return "SNM_ChunkParserPatcher - v1.31";
 }
 
 void SetProcessBase64(bool _enable) {
@@ -541,6 +538,26 @@ const char* SNM_GetSetObjectState(void* _obj, WDL_FastString* _str)
 	return p;
 }
 
+bool WriteChunkLine(WDL_FastString* _chunkLine, const char* _value, int _tokenPos, LineParser* _lp)
+{
+	bool updated = false;
+	if (strcmp(_lp->gettoken_str(_tokenPos), _value) != 0) //update *if* needed
+	{
+		int numtokens = _lp->getnumtokens();
+		for (int i=0; i < numtokens; i++) 
+		{
+			if (i == _tokenPos) {
+				_chunkLine->Append(_value);
+				updated = true;
+			}
+			else _chunkLine->Append(_lp->gettoken_str(i));
+			_chunkLine->Append(i == (numtokens-1) ? "\n" : " ");
+		}
+	}
+	return updated;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // Parsing callbacks (to be implemented for SAX-ish parsing style)
 // Parameters:
@@ -593,25 +610,6 @@ private:
 
 	int m_chunkType; // -1=not initialized yet, 1=track, 2=item, 0=other
 
-
-bool WriteChunkLine(WDL_FastString* _chunkLine, const char* _value, int _tokenPos, LineParser* _lp)
-{
-	bool updated = false;
-	if (strcmp(_lp->gettoken_str(_tokenPos), _value) != 0) //update *if* needed
-	{
-		int numtokens = _lp->getnumtokens();
-		for (int i=0; i < numtokens; i++) 
-		{
-			if (i == _tokenPos) {
-				_chunkLine->Append(_value);
-				updated = true;
-			}
-			else _chunkLine->Append(_lp->gettoken_str(i));
-			_chunkLine->Append(i == (numtokens-1) ? "\n" : " ");
-		}
-	}
-	return updated;
-}
 
 // just to avoid duplicate strcmp() calls in ParsePatchCore()
 void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch, 
@@ -873,8 +871,7 @@ int ParsePatchCore(
 						{
 							char bufConv[16] = "";
 							int l = _snprintf(bufConv, sizeof(bufConv), "%d", !lp.gettoken_int(_tokenPos));
-							if (l<=0 || l>=16)
-								return -1;
+							if (l<=0 || l>=16) break;
 							alter |= WriteChunkLine(newChunk, bufConv, _tokenPos, &lp); 
 							m_breakParsePatch = (_occurence != -1);
 						}
@@ -909,8 +906,21 @@ int ParsePatchCore(
 							else return ((int)(pEOL-cData+1)); // *EOL* position + 1 (0 reserved for "not found")
 						}
 						break;
-						default: // for custom _mode (e.g. <0)
-							break;
+						case SNM_D_ADD:
+						case SNM_D_MUL:
+						{
+							int success; double d = lp.gettoken_float(_tokenPos, &success);
+							if (success) {
+								if (_mode == SNM_D_ADD) d += *(double*)_value;
+								else d *= *(double*)_value;
+								char bufConv[64] = "";
+								int l = _snprintf(bufConv, sizeof(bufConv), "%.14f", d);
+								if (l<=0 || l>=64) break;
+								alter |= WriteChunkLine(newChunk, bufConv, _tokenPos, &lp); 
+								m_breakParsePatch = (_occurence != -1);
+							}
+						}
+						break; 
 					}
 				}
 				// this occurence doesn't match
@@ -934,13 +944,10 @@ int ParsePatchCore(
 						{
 							char bufConv[16] = "";
 							int l = _snprintf(bufConv, sizeof(bufConv), "%d", !lp.gettoken_int(_tokenPos));
-							if (l<=0 || l>=16)
-								return -1;
+							if (l<=0 || l>=16) break;
 							alter |= WriteChunkLine(newChunk, bufConv, _tokenPos, &lp); 
 						}
 						break;
-						default: // for custom _mode (e.g. <0)
-							break;
 					}
 				}
 				occurence++;
@@ -1017,6 +1024,8 @@ int ParsePatchCore(
 		case SNM_TOGGLE_CHUNK_INT:
 		case SNM_TOGGLE_CHUNK_INT_EXCEPT:
 		case SNM_REPLACE_SUBCHUNK_OR_LINE:
+		case SNM_D_ADD:
+		case SNM_D_MUL:
 			retVal = updates;
 			break;
 
@@ -1054,7 +1063,7 @@ static int RemoveChunkLines(char* _chunk, const char* _searchStr, bool _checkBOL
 			(!_checkEOLChar || (_checkEOLChar && *((char*)(eol-1)) == _checkEOLChar)) &&
 			(!_checkBOL || (_checkBOL && idStr == (char*)(bol + ((bol == _chunk ? 0 : 1))))))
 		{
-			updates++; 
+			updates++;
 			if (bol != _chunk) bol++;
 			memset(bol,' ', (int)(eol-bol)); // REAPER supports blank lines, much faster than memmove()
 			idStr = strstr(bol, _searchStr);
@@ -1109,38 +1118,51 @@ static int FindEndOfSubChunk(const char* _chunk, int _startPos)
 	return -1;
 }
 
+// returns to pointer to the next valid keyword in _chunk
+// returns a valid left trimmed line pointers, separators and empty lines are skipped
+static const char* FindKeyword(const char* _chunk) {
+	for(;;) {
+		_chunk++;
+		if (!*_chunk) break;
+		while ((*_chunk==' ' || *_chunk=='\t')) _chunk++;
+		if (!*_chunk) break;
+		else if (*_chunk=='\n' || *_chunk=='\r') { continue; }
+		return _chunk;
+	}
+	return NULL;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Other static helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-static int s_lastVstFullstate = -1;
-
-static void SNM_PreObjectState(WDL_FastString* _str, bool _wantsMinState)
+static int SNM_PreObjectState(WDL_FastString* _str, bool _wantsMinState)
 {
-	// remove all ids when setting
-	if (_str) {
+	// when altering: remove all ids 
+	if (_str)
+	{
 		RemoveAllIds(_str);
 	}
-	// enables/disables the "VST full state" pref (>= REAPER v4) when getting.
-	// also fixes possile incomplete chunk bug (pref overrided when needed)
-	else if (int* vstfullstate = (int*)GetConfigVar("vstfullstate")) {
-		s_lastVstFullstate = *vstfullstate;
-		int tmp = _wantsMinState ? *vstfullstate&0xFFFFFFFE : *vstfullstate|1;
-		if (s_lastVstFullstate != tmp) // prevents useless RW access to REAPER.ini
-			*vstfullstate = tmp;
+	// when getting: enables/disables the "VST full state" pref (that also minimize AU states, if REAPER >= v4)
+	// it also fixes possile incomplete chunk bug (pref overrided when needed)
+	else if (int* fxstate = (int*)GetConfigVar("vstfullstate")) {
+		int old = *fxstate;
+		int tmp = _wantsMinState ? *fxstate&0xFFFFFFFE : *fxstate|1;
+		if (old != tmp) // prevents useless RW access to REAPER.ini
+			*fxstate = tmp;
+		return old;
 	}
+	return -1;
 }
 
-static void SNM_PostObjectState()
+static void SNM_PostObjectState(int _oldfxstate)
 {
 	// restore the "VST full state" pref, if needed
-	if (s_lastVstFullstate >= 0)
-		if (int* vstfullstate = (int*)GetConfigVar("vstfullstate"))
-			if (*vstfullstate != s_lastVstFullstate) {
-				*vstfullstate = s_lastVstFullstate;
-				s_lastVstFullstate = -1;
-			}
+	if (_oldfxstate >= 0)
+		if (int* fxstate = (int*)GetConfigVar("vstfullstate"))
+			if (*fxstate != _oldfxstate)
+				*fxstate = _oldfxstate;
 }
 
 static SNM_ChunkParserPatcher* SNM_FindCPPbyObject(WDL_PtrList<SNM_ChunkParserPatcher>* _list, void* _object)

@@ -202,7 +202,7 @@ bool SNM_FXChainTakePatcher::NotifyEndElement(int _mode,
 		{
 			update=true;
 			_newChunk->Append(">\n");// ie write eof "SOURCE"
-			makeChunkTakeFX(_newChunk, m_fxChain);
+			MakeChunkTakeFX(_newChunk, m_fxChain);
 		}
 	}
 	else if (m_removingTakeFx && 
@@ -689,49 +689,71 @@ int SNM_RecPassParser::GetMaxRecPass(int* _recPasses, int* _takeColors)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_EnvRemover
+// SNM_EnvAlterer
+// _mode==-1: remove all envs, _mode==-2: add to point positions
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SNM_EnvRemover::NotifyStartElement(int _mode, 
+bool SNM_EnvAlterer::NotifyStartElement(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
 	WDL_PtrList<WDL_FastString>* _parsedParents, 
 	WDL_FastString* _newChunk, int _updates)
 {
-	if (_mode == -1 && trackEnvelopesLookup((char*)(_lp->gettoken_str(0)+1)))
-	{
-			const char* grandpa = GetParent(_parsedParents, 2);
-			// don't scratch item env for ex.
-			m_removingEnv = (!strcmp(grandpa, "TRACK") || !strcmp(grandpa, "FXCHAIN"));
+	bool update = (_mode == -1 ? m_parsingEnv : false);
+	if (!m_parsingEnv && LookupTrackEnvName(GetParent(_parsedParents))) {
+		const char* grandpa = GetParent(_parsedParents, 2);
+		m_parsingEnv = (!strcmp(grandpa, "TRACK") || !strcmp(grandpa, "FXCHAIN")); // do not deal with take env for ex.
 	}
-	return m_removingEnv;
+	if (_mode == -1)
+		update = m_parsingEnv;
+	return update;
 }
 
-bool SNM_EnvRemover::NotifyEndElement(int _mode, 
+bool SNM_EnvAlterer::NotifyEndElement(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
 	WDL_PtrList<WDL_FastString>* _parsedParents, 
 	WDL_FastString* _newChunk, int _updates)
 {
-	bool update = m_removingEnv;
-	if (_mode == -1 && m_removingEnv) 
-	{
-		m_removingEnv = false; // re-enable copy
-		// note: "update" stays true if m_removingEnv was initially true, 
-		// i.e. we don't copy the end of chunk ">"
+	bool update = (_mode == -1 ? m_parsingEnv : false);
+	if (m_parsingEnv && LookupTrackEnvName(GetParent(_parsedParents))) {
+		const char* grandpa = GetParent(_parsedParents, 2);
+		m_parsingEnv = !(!strcmp(grandpa, "TRACK") || !strcmp(grandpa, "FXCHAIN")); // do not deal with take env for ex.
+		// note: with _mode==-1, "update" stays true if m_parsingEnv was initially true, i.e. do not copy the end of chunk ">"
 	}
 	return update;
 }
 
-bool SNM_EnvRemover::NotifyChunkLine(int _mode, 
+bool SNM_EnvAlterer::NotifyChunkLine(int _mode, 
 	LineParser* _lp, const char* _parsedLine, int _linePos,
 	int _parsedOccurence, WDL_PtrList<WDL_FastString>* _parsedParents, 
 	WDL_FastString* _newChunk, int _updates)
 {
-	return m_removingEnv;
+	bool update = (_mode == -1 ? m_parsingEnv : false);
+	if (_mode == -2)
+	{
+		if (m_parsingEnv && !strcmp(_lp->gettoken_str(0), "PT") && strcmp(_lp->gettoken_str(1), "0.000000")) // do not move very first points
+		{
+			int success; double d = _lp->gettoken_float(1, &success);
+			if (success) {
+				d += m_addDelta;
+				char buf[64] = "";
+				int l = _snprintf(buf, sizeof(buf), "%.6f", d);
+				if (l<=0 || l>=64) return update;
+				update |= WriteChunkLine(_newChunk, buf, 1, _lp); 
+			}
+		}
+	}
+	return update;
 }
 
-bool SNM_EnvRemover::RemoveEnvelopes() {
-	m_removingEnv = false;
+bool SNM_EnvAlterer::RemoveEnvelopes() {
+	m_parsingEnv = false;
 	return (ParsePatch(-1) > 0);
+}
+
+bool SNM_EnvAlterer::AddToEnvelopes(double _delta) {
+	m_parsingEnv = false;
+	m_addDelta = _delta;
+	return (ParsePatch(-2) > 0);
 }
 
 
@@ -755,7 +777,7 @@ bool SNM_ArmEnvParserPatcher::NotifyChunkLine(int _mode,
 			{
 				const char* parent = GetParent(_parsedParents);
 				// most "frequent" first!
-				if ((_mode == -1 && trackEnvelopesLookup(parent)) || 
+				if ((_mode == -1 && LookupTrackEnvName(parent)) || 
 					(_mode == -2 && !strcmp(parent, "AUXVOLENV")) ||
 					(_mode == -3 && !strcmp(parent, "AUXPANENV")) ||
 					(_mode == -4 && !strcmp(parent, "AUXMUTEENV")) ||
@@ -840,7 +862,11 @@ bool SNM_FXSummaryParser::NotifyStartElement(int _mode,
 */
 			)
 		{
-			if (!strcmp(_lp->gettoken_str(0), "<VST") || !strcmp(_lp->gettoken_str(0), "<AU")) //JFB theorical AU stuff, cannot test..
+			if (!strcmp(_lp->gettoken_str(0), "<VST")
+#ifndef _WIN32
+				|| !strcmp(_lp->gettoken_str(0), "<AU") //JFB theorical AU stuff, cannot test..
+#endif
+				)
 				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(1), _lp->gettoken_str(2)));
 			else if (!strcmp(_lp->gettoken_str(0), "<JS") || !strcmp(_lp->gettoken_str(0), "<DX"))
 				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(1), _lp->gettoken_str(1)));
@@ -877,15 +903,15 @@ bool SNM_TakeEnvParserPatcher::NotifyChunkLine(int _mode,
 		arm = (strcmp(_lp->gettoken_str(0), "ARM") == 0);
 		updated |= arm;
 		if (updated) {
-			_newChunk->AppendFormatted(32, "%s %d\n", _lp->gettoken_str(0), m_vis); // 32 for OSX
+			_newChunk->AppendFormatted(32, "%s %d\n", _lp->gettoken_str(0), m_val); // 32 for OSX
 			m_breakParsePatch = arm;
 		}
 	}
 	return updated;
 }
 
-bool SNM_TakeEnvParserPatcher::SetVis(const char* _envKeyWord, int _vis) {
-	m_vis = _vis;
+bool SNM_TakeEnvParserPatcher::SetVal(const char* _envKeyWord, int _val) {
+	m_val = _val;
 	return (ParsePatch(-1, 1, _envKeyWord) > 0);
 }
 

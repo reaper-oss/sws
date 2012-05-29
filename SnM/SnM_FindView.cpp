@@ -486,12 +486,9 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaI
 			}
 		}
 		UpdateNotFoundMsg(found);
-		if (found && m_zoomSrollItems)
-		{
-			if (!_dir)
-				 ZoomToSelItems();
-			else if (item)
-				scrollToSelItem(item);
+		if (found && m_zoomSrollItems) {
+			if (!_dir) ZoomToSelItems();
+			else if (item) ScrollToSelItem(item);
 		}
 	}
 	if (update)

@@ -38,7 +38,7 @@ extern SNM_ResourceWnd* g_pResourcesWnd;
 // Take FX chains
 ///////////////////////////////////////////////////////////////////////////////
 
-void makeChunkTakeFX(WDL_FastString* _outTakeFX, const WDL_FastString* _inRfxChain)
+void MakeChunkTakeFX(WDL_FastString* _outTakeFX, const WDL_FastString* _inRfxChain)
 {
 	if (_outTakeFX && _inRfxChain)
 	{
@@ -48,7 +48,7 @@ void makeChunkTakeFX(WDL_FastString* _outTakeFX, const WDL_FastString* _inRfxCha
 	}
 }
 
-int copyTakeFXChain(WDL_FastString* _fxChain, int _startSelItem)
+int CopyTakeFXChain(WDL_FastString* _fxChain, int _startSelItem)
 {
 	WDL_PtrList<MediaItem> items;
 	SNM_GetSelectedItems(NULL, &items);
@@ -57,8 +57,7 @@ int copyTakeFXChain(WDL_FastString* _fxChain, int _startSelItem)
 		if (MediaItem* item = items.Get(i))
 		{
 			SNM_FXChainTakePatcher p(item);
-			WDL_FastString* fxChain = p.GetFXChain();
-			if (fxChain) 
+			if (WDL_FastString* fxChain = p.GetFXChain()) 
 			{
 				WDL_PtrList<const char> removedKeywords;
 				removedKeywords.Add("WNDRECT");
@@ -67,15 +66,20 @@ int copyTakeFXChain(WDL_FastString* _fxChain, int _startSelItem)
 				removedKeywords.Add("LASTSEL");
 				removedKeywords.Add("DOCKED");
 				RemoveChunkLines(fxChain, &removedKeywords, true);
-				_fxChain->Set(fxChain);
-				return i;
+
+				// check fx chain consistency 
+				// note: testing the length is not enough since RemoveChunkLines() does not delete but blanks lines
+				if (FindKeyword(fxChain->Get())) {
+					_fxChain->Set(fxChain);
+					return i;
+				}
 			}
 		}
 	}
 	return -1;
 }
 
-void pasteTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly)
+void PasteTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly)
 {
 	bool updated = false;
 	if (_chain && _chain->GetLength())
@@ -99,27 +103,24 @@ void pasteTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOn
 						{
 							SNM_ChunkParserPatcher ptk(&takeChunk, false);
 
-							// already a FX chain for this take?
+							// fx chain exists for this take?
+							// note: eolTakeFx is '\n' position + 1
 							int eolTkFx = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE_EOL, 1, "TAKEFX", "<TAKEFX", 0, 1);
 
-							// paste FX chain (just before the end of the current TAKEFX)
-							if (eolTkFx > 0) 
-							{
+							// paste fx chain (just before the end of the current TAKEFX)
+							if (eolTkFx > 0) {
 								ptk.GetChunk()->Insert(_chain->Get(), eolTkFx-2); //-2: before ">\n"
 							}
-							// set/create FX chain (after SOURCE)
+							// set/create fx chain (after SOURCE)
 							else 
 							{
 								int eolSrc = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE_EOL, 1, "SOURCE", "<SOURCE", 0, 1);
-								if (eolSrc > 0)
-								{
-									// no need of eolTakeFx-- (eolTakeFx is the previous '\n' position)
+								if (eolSrc > 0) {
 									WDL_FastString newTakeFx;
-									makeChunkTakeFX(&newTakeFx, _chain);
+									MakeChunkTakeFX(&newTakeFx, _chain);
 									ptk.GetChunk()->Insert(newTakeFx.Get(), eolSrc);
 								}
 							}
-							// Update take
 							updated = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
 						}
 						else done = true;
@@ -136,7 +137,7 @@ void pasteTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOn
 }
 
 // _chain: NULL clears the FX chain
-void setTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly)
+void SetTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly)
 {
 	bool updated = false;
 	for (int i = 1; i <= GetNumTracks(); i++) // skip master
@@ -163,7 +164,7 @@ void setTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly
 
 // _slot: 0-based, -1 will prompt for slot
 // _set=false: paste, _set=true: set
-void applyTakesFXChainSlot(int _slotType, const char* _title, int _slot, bool _activeOnly, bool _set)
+void ApplyTakesFXChainSlot(int _slotType, const char* _title, int _slot, bool _activeOnly, bool _set)
 {
 	WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot);
 	if (fnStr && CountSelectedMediaItems(NULL))
@@ -177,14 +178,14 @@ void applyTakesFXChainSlot(int _slotType, const char* _title, int _slot, bool _a
 				SNM_ChunkParserPatcher p(&chain);
 				p.RemoveSubChunk("PARMENV", 1, -1);
 			}
-			if (_set) setTakeFXChain(_title, &chain, _activeOnly);
-			else pasteTakeFXChain(_title, &chain, _activeOnly);
+			if (_set) SetTakeFXChain(_title, &chain, _activeOnly);
+			else PasteTakeFXChain(_title, &chain, _activeOnly);
 		}
 		delete fnStr;
 	}
 }
 
-bool autoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _nameFromFx)
+bool AutoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _nameFromFx)
 {
 	bool slotUpdate = false;
 	WDL_PtrList<MediaItem> items;
@@ -194,7 +195,7 @@ bool autoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, in
 		if (MediaItem* item = items.Get(i))
 		{
 			WDL_FastString fxChain("");
-			if (copyTakeFXChain(&fxChain, i) == i)
+			if (CopyTakeFXChain(&fxChain, i) == i)
 			{
 				RemoveAllIds(&fxChain);
 
@@ -218,53 +219,53 @@ bool autoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, in
 	return slotUpdate;
 }
 
-void loadSetTakeFXChain(COMMAND_T* _ct) {
-	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
+void LoadSetTakeFXChain(COMMAND_T* _ct) {
+	ApplyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
 }
 
-void loadPasteTakeFXChain(COMMAND_T* _ct) {
-	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
+void LoadPasteTakeFXChain(COMMAND_T* _ct) {
+	ApplyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
 }
 
-void loadSetAllTakesFXChain(COMMAND_T* _ct) {
-	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
+void LoadSetAllTakesFXChain(COMMAND_T* _ct) {
+	ApplyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
 }
 
-void loadPasteAllTakesFXChain(COMMAND_T* _ct) {
-	applyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
+void LoadPasteAllTakesFXChain(COMMAND_T* _ct) {
+	ApplyTakesFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
 }
 
-void copyTakeFXChain(COMMAND_T* _ct) {
-	copyTakeFXChain(&g_fXChainClipboard);
+void CopyTakeFXChain(COMMAND_T* _ct) {
+	CopyTakeFXChain(&g_fXChainClipboard);
 }
 
-void cutTakeFXChain(COMMAND_T* _ct) {
-	copyTakeFXChain(_ct);
-	setTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
+void CutTakeFXChain(COMMAND_T* _ct) {
+	CopyTakeFXChain(_ct);
+	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
 }
 
-void pasteTakeFXChain(COMMAND_T* _ct) {
-	pasteTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+void PasteTakeFXChain(COMMAND_T* _ct) {
+	PasteTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
 }
 
-void setTakeFXChain(COMMAND_T* _ct) {
-	setTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+void SetTakeFXChain(COMMAND_T* _ct) {
+	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
 }
 
-void pasteAllTakesFXChain(COMMAND_T* _ct) {
-	pasteTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+void PasteAllTakesFXChain(COMMAND_T* _ct) {
+	PasteTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
-void setAllTakesFXChain(COMMAND_T* _ct) {
-	setTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+void SetAllTakesFXChain(COMMAND_T* _ct) {
+	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
-void clearActiveTakeFXChain(COMMAND_T* _ct) {
-	setTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
+void ClearActiveTakeFXChain(COMMAND_T* _ct) {
+	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
 }
 
-void clearAllTakesFXChain(COMMAND_T* _ct) {
-	setTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
+void ClearAllTakesFXChain(COMMAND_T* _ct) {
+	SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
 }
 
 
@@ -293,7 +294,7 @@ bool SetTrackChannelsForFXChain(MediaTrack* _tr, WDL_FastString* _chain)
 	return false;
 }
 
-void pasteTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX)
+void PasteTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX)
 {
 	bool updated = false;
 	if (_chain && _chain->GetLength())
@@ -332,7 +333,7 @@ void pasteTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX
 }
 
 // _chain: NULL to clear
-void setTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX)
+void SetTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX)
 {
 	bool updated = false;
 	for (int i=0; i <= GetNumTracks(); i++) // incl. master
@@ -354,7 +355,7 @@ void setTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX)
 }
 
 // returns the first copied track idx (1-based, 0 = master)
-int copyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr)
+int CopyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr)
 {
 	for (int i=_startTr; i >= 0 && i <= GetNumTracks(); i++) // incl. master
 	{
@@ -362,15 +363,16 @@ int copyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr)
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			SNM_ChunkParserPatcher p(tr);
-			if (p.GetSubChunk(_inputFX ? "FXCHAIN_REC" : "FXCHAIN", 2, 0, _fxChain, "<ITEM") >= 0)
+			WDL_FastString fxChain;
+			if (p.GetSubChunk(_inputFX ? "FXCHAIN_REC" : "FXCHAIN", 2, 0, &fxChain, "<ITEM") >= 0)
 			{
 				// remove all fx param envelopes
 				{
-					SNM_ChunkParserPatcher p2(_fxChain);
+					SNM_ChunkParserPatcher p2(&fxChain);
 					p2.RemoveSubChunk("PARMENV", 2, -1);
 				}
 
-				// brutal removal ok here (it only deals with a fx chain chunk)
+				// brutal removal via RemoveChunkLines() is ok here
 				WDL_PtrList<const char> removedKeywords;
 				removedKeywords.Add(_inputFX ? "<FXCHAIN_REC" : "<FXCHAIN");
 				removedKeywords.Add("WNDRECT");
@@ -378,9 +380,15 @@ int copyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr)
 				removedKeywords.Add("FLOATPOS");
 				removedKeywords.Add("LASTSEL");
 				removedKeywords.Add("DOCKED");
-				RemoveChunkLines(_fxChain, &removedKeywords, true);			
-				_fxChain->DeleteSub(_fxChain->GetLength()-2, 2); // remove last ">\n" 
-				return i;
+				RemoveChunkLines(&fxChain, &removedKeywords, true);
+				fxChain.DeleteSub(fxChain.GetLength()-2, 2); // remove last ">\n" 
+
+				// check fx chain consistency 
+				// note: testing the length is not enough since RemoveChunkLines() does not delete but blanks lines
+				if (FindKeyword(fxChain.Get())) {
+					_fxChain->Set(&fxChain);
+					return i;
+				}
 			}
 		}
 	}
@@ -392,7 +400,7 @@ int copyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr)
 ///////////////////////////////////////////////////////////////////////////////
 
 // _set=false => paste
-void applyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _set, bool _inputFX)
+void ApplyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _set, bool _inputFX)
 {
 	WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot);
 	if (fnStr && SNM_CountSelectedTracks(NULL, true))
@@ -406,14 +414,14 @@ void applyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _
 				SNM_ChunkParserPatcher p(&chain);
 				p.RemoveSubChunk("PARMENV", 1, -1);
 			}
-			if (_set) setTrackFXChain(_title, &chain, _inputFX);
-			else  pasteTrackFXChain(_title, &chain, _inputFX);
+			if (_set) SetTrackFXChain(_title, &chain, _inputFX);
+			else  PasteTrackFXChain(_title, &chain, _inputFX);
 		}
 		delete fnStr;
 	}
 }
 
-bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _nameFromFx, bool _inputFX)
+bool AutoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _nameFromFx, bool _inputFX)
 {
 	bool slotUpdate = false;
 	for (int i=0; i <= GetNumTracks(); i++)
@@ -422,11 +430,11 @@ bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, i
 		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
 			WDL_FastString fxChain("");
-			if (copyTrackFXChain(&fxChain, _inputFX, i) == i)
+			if (CopyTrackFXChain(&fxChain, _inputFX, i) == i)
 			{
 				RemoveAllIds(&fxChain);
 
-				// add track channels (as a comment so that it does not bother REAPER)
+				// add track channels as a comment (so that it does not bother REAPER)
 				// i.e. best effort for http://code.google.com/p/sws-extension/issues/detail?id=363
 				WDL_FastString nbChStr;
 				nbChStr.SetFormatted(32, "#NCHAN %d\n", *(int*)GetSetMediaTrackInfo(tr, "I_NCHAN", NULL));
@@ -435,7 +443,7 @@ bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, i
 				char name[SNM_MAX_FX_NAME_LEN] = "";
 				if (_nameFromFx)
 				{
-					if (_inputFX) // no API for that => parse
+					if (_inputFX) // no API yet => parse
 					{
 						SNM_FXSummaryParser p(&fxChain);
 						WDL_PtrList<SNM_FXSummary>* summaries = p.GetSummaries();
@@ -457,66 +465,66 @@ bool autoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, i
 	return slotUpdate;
 }
 
-void loadSetTrackFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
+void LoadSetTrackFXChain(COMMAND_T* _ct) {
+	ApplyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, false);
 }
 
-void loadPasteTrackFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
+void LoadPasteTrackFXChain(COMMAND_T* _ct) {
+	ApplyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, false);
 }
 
-void loadSetTrackInFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
+void LoadSetTrackInFXChain(COMMAND_T* _ct) {
+	ApplyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, true, true);
 }
 
-void loadPasteTrackInFXChain(COMMAND_T* _ct) {
-	applyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
+void LoadPasteTrackInFXChain(COMMAND_T* _ct) {
+	ApplyTracksFXChainSlot(g_tiedSlotActions[SNM_SLOT_FXC], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, false, true);
 }
 
-void clearTrackFXChain(COMMAND_T* _ct) {
-	setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
+void ClearTrackFXChain(COMMAND_T* _ct) {
+	SetTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
 }
 
-void copyTrackFXChain(COMMAND_T* _ct) {
-	copyTrackFXChain(&g_fXChainClipboard, false);
+void CopyTrackFXChain(COMMAND_T* _ct) {
+	CopyTrackFXChain(&g_fXChainClipboard, false);
 }
 
-void cutTrackFXChain(COMMAND_T* _ct) {
-	copyTrackFXChain(&g_fXChainClipboard, false);
-	setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
+void CutTrackFXChain(COMMAND_T* _ct) {
+	CopyTrackFXChain(&g_fXChainClipboard, false);
+	SetTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
 }
 
-void pasteTrackFXChain(COMMAND_T* _ct) {
-	pasteTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+void PasteTrackFXChain(COMMAND_T* _ct) {
+	PasteTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
 // i.e. paste (replace)
-void setTrackFXChain(COMMAND_T* _ct) {
-	setTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+void SetTrackFXChain(COMMAND_T* _ct) {
+	SetTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
 // *** Input FX ***
 
-void clearTrackInputFXChain(COMMAND_T* _ct) {
-	setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
+void ClearTrackInputFXChain(COMMAND_T* _ct) {
+	SetTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
 }
 
-void copyTrackInputFXChain(COMMAND_T* _ct) {
-	copyTrackFXChain(&g_fXChainClipboard, true);
+void CopyTrackInputFXChain(COMMAND_T* _ct) {
+	CopyTrackFXChain(&g_fXChainClipboard, true);
 }
 
-void cutTrackInputFXChain(COMMAND_T* _ct) {
-	copyTrackFXChain(&g_fXChainClipboard, true);
-	setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
+void CutTrackInputFXChain(COMMAND_T* _ct) {
+	CopyTrackFXChain(&g_fXChainClipboard, true);
+	SetTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
 }
 
-void pasteTrackInputFXChain(COMMAND_T* _ct) {
-	pasteTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+void PasteTrackInputFXChain(COMMAND_T* _ct) {
+	PasteTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
 }
 
 // i.e. paste (replace)
-void setTrackInputFXChain(COMMAND_T* _ct) {
-	setTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+void SetTrackInputFXChain(COMMAND_T* _ct) {
+	SetTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
 }
 
 
@@ -524,7 +532,7 @@ void setTrackInputFXChain(COMMAND_T* _ct) {
 // Common to take & track FX chain
 ///////////////////////////////////////////////////////////////////////////////
 
-void copyFXChainSlotToClipBoard(int _slot)
+void CopyFXChainSlotToClipBoard(int _slot)
 {
 	if (_slot >= 0 && _slot < g_slots.Get(g_tiedSlotActions[SNM_SLOT_FXC])->GetSize()) 
 	{
@@ -534,29 +542,29 @@ void copyFXChainSlotToClipBoard(int _slot)
 	}
 }
 
-void smartCopyFXChain(COMMAND_T* _ct) {
-	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) copyTakeFXChain(&g_fXChainClipboard);
-	else copyTrackFXChain(&g_fXChainClipboard, false);
+void SmartCopyFXChain(COMMAND_T* _ct) {
+	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) CopyTakeFXChain(&g_fXChainClipboard);
+	else CopyTrackFXChain(&g_fXChainClipboard, false);
 }
 
-void smartPasteFXChain(COMMAND_T* _ct) {
-	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) pasteTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
-	else pasteTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+void SmartPasteFXChain(COMMAND_T* _ct) {
+	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) PasteTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+	else PasteTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
-void smartPasteReplaceFXChain(COMMAND_T* _ct) {
-	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) setTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
-	else setTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
+void SmartPasteReplaceFXChain(COMMAND_T* _ct) {
+	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, true);
+	else SetTrackFXChain(SWS_CMD_SHORTNAME(_ct), &g_fXChainClipboard, false);
 }
 
-void smartCutFXChain(COMMAND_T* _ct) {
+void SmartCutFXChain(COMMAND_T* _ct) {
 	if (GetCursorContext() == 1 && CountSelectedMediaItems(NULL)) {
-		copyTakeFXChain(_ct);
-		setTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
+		CopyTakeFXChain(_ct);
+		SetTakeFXChain(SWS_CMD_SHORTNAME(_ct), NULL, true);
 	}
 	else {
-		copyTrackFXChain(&g_fXChainClipboard, false);
-		setTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
+		CopyTrackFXChain(&g_fXChainClipboard, false);
+		SetTrackFXChain(SWS_CMD_SHORTNAME(_ct), NULL, false);
 	}
 }
 
@@ -565,7 +573,7 @@ void smartCutFXChain(COMMAND_T* _ct) {
 // Other
 ///////////////////////////////////////////////////////////////////////////////
 
-void reassignLearntMIDICh(COMMAND_T* _ct)
+void ReassignLearntMIDICh(COMMAND_T* _ct)
 {
 	bool updated = false;
 	int ch = (int)_ct->user;

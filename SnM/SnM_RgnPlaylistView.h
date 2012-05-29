@@ -110,7 +110,7 @@ protected:
 	WDL_VirtualComboBox m_cbPlaylist;
 	SNM_MiniAddDelButtons m_btnsAddDel;
 	SNM_ToolbarButton m_btnCrop;
-	WDL_VirtualIconButton m_btnPlay, m_btnStop;
+	WDL_VirtualIconButton m_btnPlay, m_btnStop, m_btnRepeat;
 };
 
 class SNM_Playlist_UpdateJob : public SNM_ScheduledJob {

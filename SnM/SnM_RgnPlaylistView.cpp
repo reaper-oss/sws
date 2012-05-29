@@ -57,6 +57,7 @@
 enum {
   BUTTONID_PLAY=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
   BUTTONID_STOP,
+  BUTTONID_REPEAT,
   TXTID_PLAYLIST,
   COMBOID_PLAYLIST,
   CONTAINER_ADD_DEL,
@@ -77,8 +78,8 @@ SNM_RegionPlaylistWnd* g_pRgnPlaylistWnd = NULL;
 SWSProjConfig<SNM_Playlists> g_pls;
 SWS_Mutex g_plsMutex;
 
-// see PlaylistRun()
 bool g_playingPlaylist = false;
+bool g_repeatPlaylist = false;
 int g_playId = -1;
 
 SNM_Playlist* GetPlaylist(int _id = -1)
@@ -260,6 +261,8 @@ void SNM_RegionPlaylistWnd::OnInitDlg()
 	m_parentVwnd.AddChild(&m_btnPlay);
 	m_btnStop.SetID(BUTTONID_STOP);
 	m_parentVwnd.AddChild(&m_btnStop);
+	m_btnRepeat.SetID(BUTTONID_REPEAT);
+	m_parentVwnd.AddChild(&m_btnRepeat);
 
 	m_txtPlaylist.SetID(TXTID_PLAYLIST);
 	m_parentVwnd.AddChild(&m_txtPlaylist);
@@ -295,10 +298,9 @@ INT_PTR SNM_RegionPlaylistWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }
 
+// ScheduledJob used because of possible multi-notifs
 void SNM_RegionPlaylistWnd::CSurfSetTrackListChange() {
-	// ScheduledJob used because of possible multi-notifs
-	SNM_Playlist_UpdateJob* job = new SNM_Playlist_UpdateJob();
-	AddOrReplaceScheduledJob(job);
+	AddOrReplaceScheduledJob(new SNM_Playlist_UpdateJob());
 }
 
 void SNM_RegionPlaylistWnd::Update(int _flags)
@@ -405,6 +407,9 @@ void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case BUTTONID_STOP:
 			OnStopButton();
+			break;
+		case BUTTONID_REPEAT:
+			g_repeatPlaylist = !g_repeatPlaylist;
 			break;
 		case CROP_PRJ_MSG:
 			AppendPasteCropPlaylist(GetPlaylist(), 0);
@@ -546,38 +551,44 @@ void SNM_RegionPlaylistWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int*
 	
 	bool hasPlaylists = (g_pls.Get()->GetSize()>0);
 	double playlistLen = hasPlaylists ? GetPlayListLength(GetPlaylist()) : 0.0;
+
 	SNM_SkinButton(&m_btnPlay, it ? &it->gen_play[g_playingPlaylist?1:0] : NULL, __LOCALIZE("Play","sws_DLG_165"));
 	m_btnPlay.SetGrayed(!hasPlaylists || playlistLen < 0.01);
 	if (SNM_AutoVWndPosition(&m_btnPlay, NULL, _r, &x0, _r->top, h, 0))
 	{
 		SNM_SkinButton(&m_btnStop, it ? &(it->gen_stop) : NULL, __LOCALIZE("Stop","sws_DLG_165"));
 		m_btnStop.SetGrayed(!hasPlaylists || playlistLen < 0.01);
-		if (SNM_AutoVWndPosition(&m_btnStop, NULL, _r, &x0, _r->top, h))
+		if (SNM_AutoVWndPosition(&m_btnStop, NULL, _r, &x0, _r->top, h, 0))
 		{
-			m_txtPlaylist.SetFont(font);
-			m_txtPlaylist.SetText(hasPlaylists ? __LOCALIZE("Playlist:","sws_DLG_165") : __LOCALIZE("Playlist: None","sws_DLG_165"));
-			if (SNM_AutoVWndPosition(&m_txtPlaylist, NULL, _r, &x0, _r->top, h, hasPlaylists?4:SNM_DEF_VWND_X_STEP))
+			SNM_SkinButton(&m_btnRepeat, it ? &it->gen_repeat[g_repeatPlaylist?1:0] : NULL, __LOCALIZE("Repeat","sws_DLG_165"));
+			m_btnRepeat.SetGrayed(!hasPlaylists || playlistLen < 0.01);
+			if (SNM_AutoVWndPosition(&m_btnRepeat, NULL, _r, &x0, _r->top, h))
 			{
-				m_cbPlaylist.SetFont(font);
-				if (!hasPlaylists || (hasPlaylists && SNM_AutoVWndPosition(&m_cbPlaylist, NULL, _r, &x0, _r->top, h, 4)))
+				m_txtPlaylist.SetFont(font);
+				m_txtPlaylist.SetText(hasPlaylists ? __LOCALIZE("Playlist:","sws_DLG_165") : __LOCALIZE("Playlist: None","sws_DLG_165"));
+				if (SNM_AutoVWndPosition(&m_txtPlaylist, NULL, _r, &x0, _r->top, h, hasPlaylists?4:SNM_DEF_VWND_X_STEP))
 				{
-					((SNM_AddDelButton*)m_parentVwnd.GetChildByID(BUTTONID_DEL_PLAYLIST))->SetEnabled(hasPlaylists);
-					if (SNM_AutoVWndPosition(&m_btnsAddDel, NULL, _r, &x0, _r->top, h))
-						if (playlistLen > 0.01)
-						{
-							char len[64]="", timeStr[32];
-							format_timestr_pos(playlistLen, timeStr, 32, -1);
-							m_txtLength.SetFont(font);
-							_snprintfSafe(len, sizeof(len), __LOCALIZE_VERFMT("Length: %s","sws_DLG_165"), timeStr);
-							m_txtLength.SetText(len);
-							if (SNM_AutoVWndPosition(&m_txtLength, NULL, _r, &x0, _r->top, h)) {
-								SNM_SkinToolbarButton(&m_btnCrop, __LOCALIZE("Paste playlist","sws_DLG_165"));
-								if (SNM_AutoVWndPosition(&m_btnCrop, NULL, _r, &x0, _r->top, h))
-									SNM_AddLogo(_bm, _r, x0, h);
+					m_cbPlaylist.SetFont(font);
+					if (!hasPlaylists || (hasPlaylists && SNM_AutoVWndPosition(&m_cbPlaylist, NULL, _r, &x0, _r->top, h, 4)))
+					{
+						((SNM_AddDelButton*)m_parentVwnd.GetChildByID(BUTTONID_DEL_PLAYLIST))->SetEnabled(hasPlaylists);
+						if (SNM_AutoVWndPosition(&m_btnsAddDel, NULL, _r, &x0, _r->top, h))
+							if (playlistLen > 0.01)
+							{
+								char len[64]="", timeStr[32];
+								format_timestr_pos(playlistLen, timeStr, 32, -1);
+								m_txtLength.SetFont(font);
+								_snprintfSafe(len, sizeof(len), __LOCALIZE_VERFMT("Length: %s","sws_DLG_165"), timeStr);
+								m_txtLength.SetText(len);
+								if (SNM_AutoVWndPosition(&m_txtLength, NULL, _r, &x0, _r->top, h)) {
+									SNM_SkinToolbarButton(&m_btnCrop, __LOCALIZE("Paste playlist","sws_DLG_165"));
+									if (SNM_AutoVWndPosition(&m_btnCrop, NULL, _r, &x0, _r->top, h))
+										SNM_AddLogo(_bm, _r, x0, h);
+								}
 							}
-						}
-						else
-							SNM_AddLogo(_bm, _r, x0, h);
+							else
+								SNM_AddLogo(_bm, _r, x0, h);
+					}
 				}
 			}
 		}
@@ -644,6 +655,8 @@ bool SNM_RegionPlaylistWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut
 				return (_snprintfStrict(_bufOut, _bufOutSz, "%s", __LOCALIZE("Play preview","sws_DLG_165")) > 0);
 			case BUTTONID_STOP:
 				return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Stop","sws_DLG_165"), "") > 0);
+			case BUTTONID_REPEAT:
+				return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Toggle repeat","sws_DLG_165"), "") > 0);
 //			case TXTID_PLAYLIST:
 //				return false;
 			case COMBOID_PLAYLIST:
@@ -778,6 +791,7 @@ int g_playNextId = -1;
 double g_lastRunPos = -1.0;
 double g_nextRunPos;
 double g_nextRunEnd;
+int g_oldSeekOpt = -1;
 
 void PlaylistRun()
 {
@@ -797,28 +811,33 @@ void PlaylistRun()
 
 		if (!g_isRunLoop && pos>=g_nextRunPos && pos<=g_nextRunEnd)
 		{
-			g_playId = g_playNextId;
-			updateUI = true;
-
-			SNM_PlaylistItem* cur = pl->Get(g_playId);
-			g_isRunLoop = (cur && cur->m_cnt>1 && cur->m_playReq<cur->m_cnt); // region looping?
-			if (!g_isRunLoop)
-				for (int i=0; i<pl->GetSize(); i++)
-					pl->Get(i)->m_playReq = 0;
-
-			int inext = GetNextValidPlaylistIdx(g_playId, g_isRunLoop);
-			if (SNM_PlaylistItem* next = pl->Get(inext))
+			if (!g_repeatPlaylist && g_playNextId>=0 && g_playNextId<g_playId)
+				OnStopButton();
+			else
 			{
-				if (cur && cur->m_rgnId==next->m_rgnId && g_playId!=inext)
-					g_isRunLoop = true;
+				g_playId = g_playNextId;
+				updateUI = true;
 
-				g_playNextId = inext;
-				next->m_playReq++;
-				if (EnumProjectMarkers2(NULL, GetMarkerRegionIndexFromId(next->m_rgnId), NULL, &g_nextRunPos, &g_nextRunEnd, NULL, NULL))
+				SNM_PlaylistItem* cur = pl->Get(g_playId);
+				g_isRunLoop = (cur && cur->m_cnt>1 && cur->m_playReq<cur->m_cnt); // region looping?
+				if (!g_isRunLoop)
+					for (int i=0; i<pl->GetSize(); i++)
+						pl->Get(i)->m_playReq = 0;
+
+				int inext = GetNextValidPlaylistIdx(g_playId, g_isRunLoop);
+				if (SNM_PlaylistItem* next = pl->Get(inext))
 				{
-					double cursorpos = GetCursorPositionEx(NULL);
-					SetEditCurPos(g_nextRunPos, false, true); // seek play
-					SetEditCurPos(cursorpos, false, false); // restore cursor pos
+					if (cur && cur->m_rgnId==next->m_rgnId && g_playId!=inext)
+						g_isRunLoop = true;
+
+					g_playNextId = inext;
+					next->m_playReq++;
+					if (EnumProjectMarkers2(NULL, GetMarkerRegionIndexFromId(next->m_rgnId), NULL, &g_nextRunPos, &g_nextRunEnd, NULL, NULL))
+					{
+						double cursorpos = GetCursorPositionEx(NULL);
+						SetEditCurPos(g_nextRunPos, false, true);
+						SetEditCurPos(cursorpos, false, false);
+					}
 				}
 			}
 		}
@@ -830,8 +849,6 @@ void PlaylistRun()
 
 	bRecurseCheck = false;
 }
-
-int g_oldSeekOpt = -1;
 
 void PlaylistPlay(int _playlistId, bool _errMsg)
 {
@@ -983,9 +1000,9 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 
 						// REAPER "bug": the last param of ApplyNudge() is ignored although
 						// it is used in duplicate mode => use a loop instead
-						// note: CopySelItemsWithEnvs() is an override of ApplyNudge()
+						// note: DupSelItems() is an override of ApplyNudge()
 						for (int k=0; k<plItem->m_cnt; k++) {
-							CopySelItemsWithEnvs(NULL, endPos-rgnpos, &itemsToKeep);
+							DupSelItems(NULL, endPos-rgnpos, &itemsToKeep);
 							endPos += (rgnend-rgnpos);
 						}
 
@@ -993,7 +1010,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 						for (int j=0; j < itemSates.GetSize(); j++)
 							if (SNM_ItemChunk* ic = itemSates.Get(j)) {
 									SNM_ChunkParserPatcher p(ic->m_item);
-									p.SetChunk(ic->m_chunk.Get(), 1);
+									p.SetChunk(ic->m_chunk.Get());
 								}
 						for (int j=0; j < splitItems.GetSize(); j++)
 							if (MediaItem* item = (MediaItem*)splitItems.Get(j))
@@ -1048,7 +1065,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 	}
 	g_pls.Get()->m_cur = newIdx;
 
-	// crop current project!
+	// crop current project
 	GetSet_LoopTimeRange(true, false, &startPos, &endPos, false);
 	Main_OnCommand(40049, 0); // crop project to time sel
 	Main_OnCommand(40289, 0); // unselect all items
@@ -1080,7 +1097,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 	WDL_FastString mstrStates;
 	if (MediaTrack* tr = CSurf_TrackFromID(0, false)) {
 		SNM_ChunkParserPatcher p(tr);
-		mstrStates.Set(p.GetChunk()->Get());
+		mstrStates.Set(p.GetChunk());
 	}
 
 	Main_OnCommand(40296, 0); // select all tracks
@@ -1101,7 +1118,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 	}
 	if (MediaTrack* tr = CSurf_TrackFromID(0, false)) {
 		SNM_ChunkParserPatcher p(tr);
-		p.SetChunk(mstrStates.Get(), 1);
+		p.SetChunk(mstrStates.Get());
 	}
 	// restore regions (in new project, new tab)
 	for (int i=0; i<rgns.GetSize(); i++)
@@ -1136,10 +1153,9 @@ void SNM_Playlist_UpdateJob::Perform()
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// ScheduledJob used because of possible multi-notifs during project switch (vs CSurfSetTrackListChange)
 void SNM_Playlist_MarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags) {
-	// ScheduledJob used because of possible multi-notifs during project switch (vs CSurfSetTrackListChange)
-	SNM_Playlist_UpdateJob* job = new SNM_Playlist_UpdateJob();
-	AddOrReplaceScheduledJob(job);
+	AddOrReplaceScheduledJob(new SNM_Playlist_UpdateJob());
 }
 
 

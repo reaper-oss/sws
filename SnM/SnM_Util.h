@@ -53,7 +53,7 @@ WDL_HeapBuf* TranscodeStr64ToHeapBuf(const char* _str64);
 bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
 void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs);
 void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx);
-void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx, bool _breakOnGT = true);
+void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx);
 void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, const char* _iniFn);
 void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn, const char* _newIniFn = NULL);
 void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn = NULL);

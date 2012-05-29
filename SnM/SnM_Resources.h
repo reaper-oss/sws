@@ -164,7 +164,7 @@ void FlushCustomTypesIniFile();
 void AutoSave(int _type, int _flags = 0);
 void AutoFill(int _type);
 
-void NewBookmark(int _type, bool _copyCurrent = false);
+void NewBookmark(int _type, bool _copyCurrent);
 void DeleteBookmark(int _bookmarkType);
 void RenameBookmark(int _bookmarkType);
 

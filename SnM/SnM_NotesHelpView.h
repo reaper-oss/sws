@@ -76,25 +76,25 @@ public:
 	~SNM_NotesHelpWnd();
 
 	void SetType(int _type);
-	void SetText(const char* _str);
+	void SetText(const char* _str, bool _addRN=true);
 	void RefreshGUI(bool _emtpyNotes = false);
 	void CSurfSetTrackTitle();
 	void CSurfSetTrackListChange();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void ToggleLock();
 
-	void saveCurrentText(int _type);
-	void saveCurrentPrjNotes();
-	void saveCurrentHelp();
-	void saveCurrentItemNotes();
-	void saveCurrentTrackNotes();
-	void saveCurrentMkrRgnNameOrNotes(bool _name);
+	void SaveCurrentText(int _type);
+	void SaveCurrentPrjNotes();
+	void SaveCurrentHelp();
+	void SaveCurrentItemNotes();
+	void SaveCurrentTrackNotes();
+	void SaveCurrentMkrRgnNameOrNotes(bool _name);
 
 	void Update(bool _force = false);
-	int updateActionHelp();
-	int updateItemNotes();
-	int updateTrackNotes();
-	int updateMkrRgnNameOrNotes(bool _name);
+	int UpdateActionHelp();
+	int UpdateItemNotes();
+	int UpdateTrackNotes();
+	int UpdateMkrRgnNameOrNotes(bool _name);
 
 protected:
 	void OnInitDlg();
@@ -115,13 +115,12 @@ protected:
 	SNM_ToolbarButton m_btnAlr, m_btnActionList, m_btnImportSub, m_btnExportSub;
 	WDL_VirtualStaticText m_txtLabel;
 
-	bool m_internalTLChange;
 	SNM_NoteHelp_MarkerRegionSubscriber m_mkrRgnSubscriber;
 };
 
 
-void loadHelp(const char* _cmdName, char* _buf, int _bufSize);
-void saveHelp(const char* _cmdName, const char* _help);
+void LoadHelp(const char* _cmdName, char* _buf, int _bufSize);
+void SaveHelp(const char* _cmdName, const char* _help);
 bool GetStringFromNotesChunk(WDL_FastString* _notes, char* _buf, int _bufMaxSize);
 bool GetNotesChunkFromString(const char* _buf, WDL_FastString* _notes, const char* _startLine = NULL);
 

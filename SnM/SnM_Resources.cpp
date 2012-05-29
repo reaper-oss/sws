@@ -152,7 +152,7 @@ enum {
   BUTTONID_AUTOSAVE,
   COMBOID_TYPE,
   CONTAINER_ADD_DEL,
-  BUTTONID_COPY_BOOKMARK,
+  BUTTONID_ADD_BOOKMARK,
   BUTTONID_DEL_BOOKMARK,
   BUTTONID_TIED_ACTIONS,
   BUTTONID_OFFSET_TR_TEMPLATE,
@@ -513,7 +513,7 @@ void SNM_ResourceView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 				if (slot >= 0)
 				{
 					slot++;
-					if (g_resViewType == SNM_SLOT_PRJ && isProjectLoaderConfValid()) // no GetTypeForUser() here: only one loader/selecter config atm..
+					if (g_resViewType == SNM_SLOT_PRJ && IsProjectLoaderConfValid()) // no GetTypeForUser() here: only one loader/selecter config atm..
 						_snprintfSafe(str, iStrMax, "%5.d %s", slot, 
 							slot<g_prjLoaderStartPref || slot>g_prjLoaderEndPref ? "  " : 
 							g_prjLoaderStartPref==slot ? "->" : g_prjLoaderEndPref==slot ? "<-" :  "--");
@@ -738,16 +738,16 @@ void SNM_ResourceView::Perform()
 				switch(dblClickTo)
 				{
 					case 0:
-						applyTracksFXChainSlot(g_resViewType, !dblClickType?FXC_APPLY_TR_STR:FXC_PASTE_TR_STR, slot, !dblClickType, false);
+						ApplyTracksFXChainSlot(g_resViewType, !dblClickType?FXC_APPLY_TR_STR:FXC_PASTE_TR_STR, slot, !dblClickType, false);
 						break;
 					case 1:
-						applyTracksFXChainSlot(g_resViewType, !dblClickType?FXCIN_APPLY_TR_STR:FXCIN_PASTE_TR_STR, slot, !dblClickType, true);
+						ApplyTracksFXChainSlot(g_resViewType, !dblClickType?FXCIN_APPLY_TR_STR:FXCIN_PASTE_TR_STR, slot, !dblClickType, true);
 						break;
 					case 2:
-						applyTakesFXChainSlot(g_resViewType, !dblClickType?FXC_APPLY_TAKE_STR:FXC_PASTE_TAKE_STR, slot, true, !dblClickType);
+						ApplyTakesFXChainSlot(g_resViewType, !dblClickType?FXC_APPLY_TAKE_STR:FXC_PASTE_TAKE_STR, slot, true, !dblClickType);
 						break;
 					case 3:
-						applyTakesFXChainSlot(g_resViewType, !dblClickType?FXC_APPLY_ALLTAKES_STR:FXC_PASTE_ALLTAKES_STR, slot, false, !dblClickType);
+						ApplyTakesFXChainSlot(g_resViewType, !dblClickType?FXC_APPLY_ALLTAKES_STR:FXC_PASTE_ALLTAKES_STR, slot, false, !dblClickType);
 						break;
 				}
 				break;
@@ -775,10 +775,10 @@ void SNM_ResourceView::Perform()
 				switch(dblClickType)
 				{
 					case 0:
-						loadOrSelectProjectSlot(g_resViewType, PRJ_SELECT_LOAD_STR, slot, false);
+						LoadOrSelectProjectSlot(g_resViewType, PRJ_SELECT_LOAD_STR, slot, false);
 						break;
 					case 1:
-						loadOrSelectProjectSlot(g_resViewType, PRJ_SELECT_LOAD_TAB_STR, slot, true);
+						LoadOrSelectProjectSlot(g_resViewType, PRJ_SELECT_LOAD_TAB_STR, slot, true);
 						break;
 				}
 				break;
@@ -863,7 +863,7 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_txtDblClickType.SetText(__LOCALIZE("Dbl-click to:","sws_DLG_150"));
 	m_parentVwnd.AddChild(&m_txtDblClickType);
 
-	m_btnsAddDel.SetIDs(CONTAINER_ADD_DEL, BUTTONID_COPY_BOOKMARK, BUTTONID_DEL_BOOKMARK);
+	m_btnsAddDel.SetIDs(CONTAINER_ADD_DEL, BUTTONID_ADD_BOOKMARK, BUTTONID_DEL_BOOKMARK);
 	m_parentVwnd.AddChild(&m_btnsAddDel);
 
 	m_btnTiedActions.SetID(BUTTONID_TIED_ACTIONS);
@@ -1145,7 +1145,9 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case REN_BOOKMARK_MSG:
 			RenameBookmark(g_resViewType);
 			break;
-		case BUTTONID_COPY_BOOKMARK:
+		case BUTTONID_ADD_BOOKMARK:
+			NewBookmark(g_resViewType, false);
+			break;
 		case COPY_BOOKMARK_MSG:
 			NewBookmark(g_resViewType, true);
 			break;
@@ -1163,12 +1165,12 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 		// ***** FX chain *****
 		case FXC_COPY_MSG:
-			if (item) copyFXChainSlotToClipBoard(slot);
+			if (item) CopyFXChainSlotToClipBoard(slot);
 			break;
 		case FXC_APPLY_TR_MSG:
 		case FXC_PASTE_TR_MSG:
 			if (item && slot >= 0) {
-				applyTracksFXChainSlot(g_resViewType, LOWORD(wParam)==FXC_APPLY_TR_MSG?FXC_APPLY_TR_STR:FXC_PASTE_TR_STR, slot, LOWORD(wParam)==FXC_APPLY_TR_MSG, false);
+				ApplyTracksFXChainSlot(g_resViewType, LOWORD(wParam)==FXC_APPLY_TR_MSG?FXC_APPLY_TR_STR:FXC_PASTE_TR_STR, slot, LOWORD(wParam)==FXC_APPLY_TR_MSG, false);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -1176,7 +1178,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case FXC_APPLY_TAKE_MSG:
 		case FXC_PASTE_TAKE_MSG:
 			if (item && slot >= 0) {
-				applyTakesFXChainSlot(g_resViewType, LOWORD(wParam)==FXC_APPLY_TAKE_MSG?FXC_APPLY_TAKE_STR:FXC_PASTE_TAKE_STR, slot, true, LOWORD(wParam)==FXC_APPLY_TAKE_MSG);
+				ApplyTakesFXChainSlot(g_resViewType, LOWORD(wParam)==FXC_APPLY_TAKE_MSG?FXC_APPLY_TAKE_STR:FXC_PASTE_TAKE_STR, slot, true, LOWORD(wParam)==FXC_APPLY_TAKE_MSG);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -1184,7 +1186,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case FXC_APPLY_ALLTAKES_MSG:
 		case FXC_PASTE_ALLTAKES_MSG:
 			if (item && slot >= 0) {
-				applyTakesFXChainSlot(g_resViewType, LOWORD(wParam)==FXC_APPLY_ALLTAKES_MSG?FXC_APPLY_ALLTAKES_STR:FXC_PASTE_ALLTAKES_STR, slot, false, LOWORD(wParam)==FXC_APPLY_ALLTAKES_MSG);
+				ApplyTakesFXChainSlot(g_resViewType, LOWORD(wParam)==FXC_APPLY_ALLTAKES_MSG?FXC_APPLY_ALLTAKES_STR:FXC_PASTE_ALLTAKES_STR, slot, false, LOWORD(wParam)==FXC_APPLY_ALLTAKES_MSG);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -1251,7 +1253,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		// ***** Project template *****
 		case PRJ_OPEN_SELECT_MSG:
 			if (item && slot >= 0) {
-				loadOrSelectProjectSlot(g_resViewType, PRJ_SELECT_LOAD_STR, slot, false);
+				LoadOrSelectProjectSlot(g_resViewType, PRJ_SELECT_LOAD_STR, slot, false);
 				if (wasDefaultSlot && !item->IsDefault()) // slot has been filled ?
 					Update();
 			}
@@ -1262,7 +1264,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			while(item) {
 				slot = GetSlotList()->Find(item);
 				wasDefaultSlot = item->IsDefault();
-				loadOrSelectProjectSlot(g_resViewType, PRJ_SELECT_LOAD_TAB_STR, slot, true);
+				LoadOrSelectProjectSlot(g_resViewType, PRJ_SELECT_LOAD_TAB_STR, slot, true);
 				updt |= (wasDefaultSlot && !item->IsDefault()); // slot has been filled ?
 				item = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
 			}
@@ -1301,7 +1303,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		case PRJ_LOADER_CONF_MSG:
-			projectLoaderConf(NULL);
+			ProjectLoaderConf(NULL);
 			break;
 		case PRJ_LOADER_SET_MSG:
 		{
@@ -1386,7 +1388,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		default:
 			if (LOWORD(wParam) >= NEW_BOOKMARK_FXC_MSG && LOWORD(wParam) < (NEW_BOOKMARK_FXC_MSG+SNM_NUM_DEFAULT_SLOTS))
-				NewBookmark(LOWORD(wParam)-NEW_BOOKMARK_FXC_MSG);
+				NewBookmark(LOWORD(wParam)-NEW_BOOKMARK_FXC_MSG, false);
 			else
 				Main_OnCommand((int)wParam, (int)lParam);
 			break;
@@ -1522,7 +1524,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 					int x=0, nbsel=0; while(m_pLists.Get(0)->EnumSelected(&x))nbsel++;
 					AddToMenu(hMenu, __LOCALIZE("Project loader/selecter configuration...","sws_DLG_150"), PRJ_LOADER_CONF_MSG);
 					AddToMenu(hMenu, __LOCALIZE("Set project loader/selecter from selection","sws_DLG_150"), PRJ_LOADER_SET_MSG, -1, false, nbsel>1 ? MF_ENABLED : MF_GRAYED);
-					AddToMenu(hMenu, __LOCALIZE("Clear project loader/selecter configuration","sws_DLG_150"), PRJ_LOADER_CLEAR_MSG, -1, false, isProjectLoaderConfValid() ? MF_ENABLED : MF_GRAYED);
+					AddToMenu(hMenu, __LOCALIZE("Clear project loader/selecter configuration","sws_DLG_150"), PRJ_LOADER_CLEAR_MSG, -1, false, IsProjectLoaderConfValid() ? MF_ENABLED : MF_GRAYED);
 				}
 				break;
 			}
@@ -1819,38 +1821,29 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 				break;
 			// offset items & envs (tr template only)
 			case SNM_SLOT_TR:
-				if (LOWORD(g_dblClickPrefs[g_resViewType]) != 1) // dblClickType != "Apply to sel tracks" (offset do not make sense here)
-					if (int* offsPref = (int*)GetConfigVar("templateditcursor")) // >= REAPER v4.15
-					{
+				if (int* offsPref = (int*)GetConfigVar("templateditcursor")) // >= REAPER v4.15
+				{
+					int dblClickPrefs = LOWORD(g_dblClickPrefs[g_resViewType]);
+					bool showOffsOption = true;
+					switch(dblClickPrefs) {
+						case 1: // apply to sel tracks
+							showOffsOption = false; // no offset option
+							break;
+						case 3: // paste template items
+						case 4: // paste (replace) template items
+							m_btnOffsetTrTemplate.SetTextLabel(__LOCALIZE("Offset template items by edit cursor","sws_DLG_150"), -1, font);
+							break;
+						default: // other dbl-click prefs
+							m_btnOffsetTrTemplate.SetTextLabel(__LOCALIZE("Offset template items/envs by edit cursor","sws_DLG_150"), -1, font);
+							break;
+					}
+					if (showOffsOption) {
 						m_btnOffsetTrTemplate.SetCheckState(*offsPref);
-						m_btnOffsetTrTemplate.SetTextLabel(__LOCALIZE("Offset template items/envs by edit cursor","sws_DLG_150"), -1, font);
 						if (!SNM_AutoVWndPosition(&m_btnOffsetTrTemplate, NULL, &r, &x0, y0, h, 5))
 							return;
 					}
+				}
 				break;
-/*JFB!!!
-			{
-				int dblClickPrefs = LOWORD(g_dblClickPrefs[g_resViewType]);
-				if (dblClickPrefs != 1 && dblClickPrefs != 2) // no offset for "apply to sel tracks" options
-					if (int* offsPref = (int*)GetConfigVar("templateditcursor")) // >= REAPER v4.15
-					{
-						m_btnOffsetTrTemplate.SetCheckState(*offsPref);
-						switch(dblClickPrefs)
-						{
-							case 3: // paste template items
-							case 4: // paste (replace) template items
-								m_btnOffsetTrTemplate.SetTextLabel(__LOCALIZE("Offset template items by edit cursor","sws_DLG_150"), -1, font);
-								break;
-							default:
-								m_btnOffsetTrTemplate.SetTextLabel(__LOCALIZE("Offset template items/envs by edit cursor","sws_DLG_150"), -1, font);
-								break;
-						}
-						if (!SNM_AutoVWndPosition(&m_btnOffsetTrTemplate, NULL, &r, &x0, y0, h, 5))
-							return;
-					}
-				break;
-			}
-*/
 		}
 	}
 }
@@ -1893,10 +1886,10 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 				break;
 			case COMBOID_TYPE:
 				return (lstrcpyn(_bufOut, __LOCALIZE("Resource/slot type","sws_DLG_150"), _bufOutSz) != NULL);
-			case BUTTONID_COPY_BOOKMARK:
-				return (lstrcpyn(_bufOut, __LOCALIZE("Copy as new bookmark","sws_DLG_150"), _bufOutSz) != NULL);
+			case BUTTONID_ADD_BOOKMARK:
+				return (lstrcpyn(_bufOut, __LOCALIZE("New bookmark","sws_DLG_150"), _bufOutSz) != NULL);
 			case BUTTONID_DEL_BOOKMARK:
-				return (lstrcpyn(_bufOut, __LOCALIZE("Delete bookmark","sws_DLG_150"), _bufOutSz) != NULL);
+				return (lstrcpyn(_bufOut, __LOCALIZE("Delete bookmark (and files, if confirmed)","sws_DLG_150"), _bufOutSz) != NULL);
 		}
 	}
 	return false;
@@ -2104,21 +2097,21 @@ void AutoSave(int _type, int _flags)
 			{
 				case FXC_AUTOSAVE_PREF_INPUT_FX:
 				case FXC_AUTOSAVE_PREF_TRACK:
-					autoSaveTrackFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, _flags==FXC_AUTOSAVE_PREF_INPUT_FX);
+					AutoSaveTrackFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1, _flags==FXC_AUTOSAVE_PREF_INPUT_FX);
 					break;
 				case FXC_AUTOSAVE_PREF_ITEM:
-					autoSaveItemFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1);
+					AutoSaveItemFXChainSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, g_autoSaveFXChainNamePref==1);
 					break;
 			}
 			break;
 		case SNM_SLOT_TR:
-			autoSaveTrackSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, (_flags&1)?false:true, (_flags&2)?false:true);
+			AutoSaveTrackSlots(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, (_flags&1)?false:true, (_flags&2)?false:true);
 			break;
 		case SNM_SLOT_PRJ:
-			autoSaveProjectSlot(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, true);
+			AutoSaveProjectSlot(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE, true);
 			break;
 		case SNM_SLOT_MEDIA:
-			autoSaveMediaSlot(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE);
+			AutoSaveMediaSlot(_type, g_autoSaveDirs.Get(_type)->Get(), fn, BUFFER_SIZE);
 			break;
 	}
 
@@ -2189,8 +2182,22 @@ void NewBookmark(int _type, bool _copyCurrent)
 				g_slots.Get(_type)->GetResourceDir(), name, g_slots.Get(_type)->GetFileExt(), 
 				g_slots.Get(_type)->HasNotepad(), g_slots.Get(_type)->HasAutoSave(), g_slots.Get(_type)->HasDblClick()));
 
-			g_autoSaveDirs.Add(new WDL_FastString(_copyCurrent ? GetAutoSaveDir(_type) : ""));
-			g_autoFillDirs.Add(new WDL_FastString(_copyCurrent ? GetAutoFillDir(_type) : ""));
+			if (_copyCurrent)
+			{
+				g_autoSaveDirs.Add(new WDL_FastString(GetAutoSaveDir(_type)));
+				g_autoFillDirs.Add(new WDL_FastString(GetAutoFillDir(_type)));
+			}
+			else
+			{
+				char path[BUFFER_SIZE] = "";
+				if (_snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, g_slots.Get(_type)->GetResourceDir()) > 0) {
+					if (!FileExists(path))
+						CreateDirectory(path, NULL);
+				}
+				else *path = '\0';
+				g_autoSaveDirs.Add(new WDL_FastString(path));
+				g_autoFillDirs.Add(new WDL_FastString(path));
+			}
 			g_syncAutoDirPrefs[newType] = _copyCurrent ? g_syncAutoDirPrefs[_type] : true;
 			g_dblClickPrefs[newType] = _copyCurrent ? g_dblClickPrefs[_type] : 0;
 

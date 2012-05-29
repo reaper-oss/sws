@@ -161,7 +161,7 @@ void UpdatePresetConf(WDL_FastString* _presetConf, int _fx, const char* _preset)
 		}
 	}
 	if (_presetConf)
-		_presetConf->Set(newConf.Get());
+		_presetConf->Set(&newConf);
 }
 
 int GetPresetFromConfTokenV1(const char* _preset) {
@@ -499,10 +499,9 @@ INT_PTR SNM_LiveConfigsWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }
 
+// ScheduledJob because of possible multi-notifs
 void SNM_LiveConfigsWnd::CSurfSetTrackListChange() {
-	// we use a ScheduledJob because of possible multi-notifs
-	SNM_LiveCfg_TLChangeSchedJob* job = new SNM_LiveCfg_TLChangeSchedJob();
-	AddOrReplaceScheduledJob(job);
+	AddOrReplaceScheduledJob(new SNM_LiveCfg_TLChangeSchedJob());
 }
 
 void SNM_LiveConfigsWnd::CSurfSetTrackTitle() {
@@ -517,7 +516,7 @@ void SNM_LiveConfigsWnd::FillComboInputTrack() {
 	{
 		WDL_FastString ellips;
 		char* name = (char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i,false), "P_NAME", NULL);
-		ellips.SetFormatted(SNM_MAX_TRACK_NAME_LEN, "[%d] \"%s\"", i, name);
+		ellips.SetFormatted(SNM_MAX_TRACK_NAME_LEN, "[%d] \"%s\"", i, name?name:"");
 		ellips.Ellipsize(24, 24);
 		m_cbInputTr.AddItem(ellips.Get());
 	}
@@ -962,7 +961,7 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				{
 					char str[SNM_MAX_TRACK_NAME_LEN] = "";
 					char* name = (char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i,false), "P_NAME", NULL);
-					_snprintfSafe(str, sizeof(str), "[%d] \"%s\"", i, name);
+					_snprintfSafe(str, sizeof(str), "[%d] \"%s\"", i, name?name:"");
 					AddToMenu(hMenu, str, SNM_LIVECFG_SET_TRACK_START_MSG + i);
 				}
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
@@ -1468,7 +1467,7 @@ void SNM_MidiLiveScheduledJob::Perform()
 						MediaTrack* cfgOtherTr = otherConfigTracks.Get(i);
 						if (cfgOtherTr) {
 							GetSetMediaTrackInfo(cfgOtherTr, "B_MUTE", &g_bTrue);
-							muteReceives(lc->m_inputTr, cfgOtherTr, true);
+							MuteReceives(lc->m_inputTr, cfgOtherTr, true);
 						}
 					}
 
@@ -1481,7 +1480,7 @@ void SNM_MidiLiveScheduledJob::Perform()
 					char filename[BUFFER_SIZE];
 					GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), filename, BUFFER_SIZE);
 					if (LoadChunk(filename, &chunk) && chunk.GetLength())
-						applyTrackTemplate(cfg->m_track, &chunk, false, false, (SNM_SendPatcher*)p);
+						ApplyTrackTemplate(cfg->m_track, &chunk, false, false, (SNM_SendPatcher*)p);
 				}
 				else if (cfg->m_fxChain.GetLength())
 				{
@@ -1508,7 +1507,7 @@ void SNM_MidiLiveScheduledJob::Perform()
 				//	unmute the config track (or restore its mute state)			
 				if (lc->m_muteOthers) {
 					GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &g_bFalse);
-					muteReceives(lc->m_inputTr, cfg->m_track, false);
+					MuteReceives(lc->m_inputTr, cfg->m_track, false);
 				}
 				else
 					GetSetMediaTrackInfo(cfg->m_track, "B_MUTE", &mute);

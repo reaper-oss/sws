@@ -35,13 +35,13 @@ bool InsertSilence(const char* _undoTitle, double _pos, double _len);
 void InsertSilence(COMMAND_T*);
 void OpenProjectPathInExplorerFinder(COMMAND_T* _ct = NULL);
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
-void loadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab);
-bool autoSaveProjectSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _saveCurPrj);
-void loadOrSelectProjectSlot(COMMAND_T*);
-void loadOrSelectProjectTabSlot(COMMAND_T*);
-bool isProjectLoaderConfValid();
-void projectLoaderConf(COMMAND_T*);
-void loadOrSelectNextPreviousProject(COMMAND_T*);
+void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab);
+bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _saveCurPrj);
+void LoadOrSelectProjectSlot(COMMAND_T*);
+void LoadOrSelectProjectTabSlot(COMMAND_T*);
+bool IsProjectLoaderConfValid();
+void ProjectLoaderConf(COMMAND_T*);
+void LoadOrSelectNextPreviousProject(COMMAND_T*);
 
 #endif
 

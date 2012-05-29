@@ -322,7 +322,7 @@ void FillCueBussDlg(HWND _hwnd=NULL)
 	char busName[BUFFER_SIZE]="", trTemplatePath[BUFFER_SIZE]="";
 	int reaType, userType, soloDefeat, hwOuts[8];
 	bool trTemplate, showRouting, sendToMaster;
-	readCueBusIniFile(g_cueBussConfId, busName, &reaType, &trTemplate, trTemplatePath, &showRouting, &soloDefeat, &sendToMaster, hwOuts);
+	ReadCueBusIniFile(g_cueBussConfId, busName, &reaType, &trTemplate, trTemplatePath, &showRouting, &soloDefeat, &sendToMaster, hwOuts);
 	userType = GetComboSendIdxType(reaType);
 	SetDlgItemText(hwnd,IDC_SNM_CUEBUS_NAME,busName);
 
@@ -382,8 +382,7 @@ void SaveCueBussSettings()
 		hwOuts[i] = (int)SendDlgItemMessage(g_cueBussHwnd,IDC_SNM_CUEBUS_HWOUT1+i,CB_GETCURSEL,0,0);
 		if(hwOuts[i] == CB_ERR)	hwOuts[i] = '\0';
 	}
-
-	saveCueBusIniFile(g_cueBussConfId, cueBusName, reaType, (trTemplate == 1), trTemplatePath, (showRouting == 1), soloDefeat, (sendToMaster == 1), hwOuts);
+	SaveCueBusIniFile(g_cueBussConfId, cueBusName, reaType, (trTemplate == 1), trTemplatePath, (showRouting == 1), soloDefeat, (sendToMaster == 1), hwOuts);
 }
 
 WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -391,7 +390,7 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	const char cWndPosKey[] = "CueBus Window Pos"; 
 	switch(Message)
 	{
-        case WM_INITDIALOG: {
+		case WM_INITDIALOG: {
 			RestoreWindowPos(hwnd, cWndPosKey, false);
 			char buf[16] = "";
 			for(int i=0; i < SNM_MAX_CUE_BUSS_CONFS; i++)
@@ -408,8 +407,8 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case WM_COMMAND :
-            switch(LOWORD(wParam))
-            {
+			switch(LOWORD(wParam))
+			{
 				case IDC_COMBO:
 					// config id update
 					if(HIWORD(wParam) == CBN_SELCHANGE) {
@@ -420,8 +419,8 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 						}
 					}
 					break;
-                case IDOK:
-					cueTrack(__LOCALIZE("Create cue buss from track selection","sws_undo"), g_cueBussConfId);
+				case IDOK:
+					CueTrack(__LOCALIZE("Create cue buss from track selection","sws_undo"), g_cueBussConfId);
 					return 0;
 				case IDCANCEL:
 					g_cueBussHwnd = NULL; // for proper toggle state report, see openCueBussWnd()

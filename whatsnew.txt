@@ -1,3 +1,4 @@
+!v2.2.0 #10 (May 29, 2012)
 Resources window
 +Pasting template envelopes obeys the option "Offset template items/envelopes by edit cusor" (in previous versions, only items were offseted according to this pref)
 +Fixed "Paste" and "Paste (replace)" template items commands (when template files were containing more than 1 track)

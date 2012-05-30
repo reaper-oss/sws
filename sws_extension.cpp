@@ -113,11 +113,12 @@ int SWSRegisterCmd(COMMAND_T* pCommand, const char* cFile, int cmdId, bool local
 {
 	if (pCommand->doCommand)
 	{
-/*
-		char pId[128];
-		if (_snprintf(pId, 128, "_%s", pCommand->id)<=0 || NamedCommandLookup(pId))
-			return 0; // duplicated action
-*/
+		// SWS - Unfortunately can't check for duplicate actions here because when commands are used in the mouse editor
+		//   they have a command ID (53000+) assigned before SWS is even loaded.
+		// char pId[128];
+		// if (_snprintf(pId, 128, "_%s", pCommand->id)<=0 || NamedCommandLookup(pId))
+		//	return 0; // duplicated action
+
 		if (!cmdId && !(cmdId = plugin_register("command_id", (void*)pCommand->id)))
 			return 0;
 

@@ -94,7 +94,6 @@
 #define SNM_CSURF_RUN_TICK_MS		27.0   // 1 tick = 27ms or so (average I monitored)
 #define SNM_DEF_TOOLBAR_RFRSH_FREQ	300    // default frequency in ms for the "auto-refresh toolbars" option 
 #define SNM_SCHEDJOB_DEFAULT_DELAY	250
-#define SNM_DEF_VWND_X_STEP			12
 #define SNM_FUDGE_FACTOR			0.0000000001
 #define SNM_CSURF_EXT_UNREGISTER	0x00016666
 
@@ -154,6 +153,7 @@ typedef struct MIDI_COMMAND_T {
 extern bool g_lastPlayState, g_lastPauseState, g_lastRecState;
 extern WDL_FastString g_SNMIniFn;
 extern WDL_FastString g_SNMCyclactionIniFn;
+extern WDL_FastString g_SNMDiffToolFn;
 extern MIDI_COMMAND_T g_SNMSection_cmdTable[];
 extern int g_SNMIniFileVersion;
 extern int g_SNMbeta;
@@ -229,7 +229,8 @@ vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"
 #include "SnM_Routing.h"
 #include "SnM_Dlg.h"
 #include "SnM_VWnd.h"
-#include "SnM_Cyclactions.h" // from this point order does not matter anymore..
+#include "SnM_Resources.h"
+#include "SnM_Cyclactions.h" // from this point order does not matter
 #include "SnM_FindView.h"
 #include "SnM_fx.h"
 #include "SnM_FXChain.h"
@@ -239,7 +240,6 @@ vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"
 #include "SnM_Misc.h"
 #include "SnM_NotesHelpView.h"
 #include "SnM_Project.h"
-#include "SnM_Resources.h"
 #include "SnM_RgnPlaylistView.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"

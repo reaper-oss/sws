@@ -30,13 +30,18 @@
 #ifndef _SNM_RESOURCES_H_
 #define _SNM_RESOURCES_H_
 
+#include "SnM_VWnd.h"
+
+
 enum {
   SNM_SLOT_FXC=0,
   SNM_SLOT_TR,
   SNM_SLOT_PRJ,
   SNM_SLOT_MEDIA,
   SNM_SLOT_IMG,
-  // etc..
+
+  //JFB -> add new resource types here..
+
 #ifdef _WIN32
   SNM_SLOT_THM,
 #endif
@@ -132,7 +137,8 @@ public:
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void ClearListSelection();
-	void SelectBySlot(int _slot1, int _slot2 = -1);
+	void SelectBySlot(int _slot1, int _slot2 = -1, bool _selectOnly = true);
+	int GetSelectedSlots(WDL_PtrList<PathSlotItem>* _selSlots);
 	void FillTypeCombo();
 	void ClearDeleteSlots(int _mode, bool _update);
 protected:
@@ -161,7 +167,12 @@ protected:
 
 
 void FlushCustomTypesIniFile();
-void AutoSave(int _type, int _flags = 0);
+bool AutoSaveChunkSlot(const void* _obj, const char* _fn);
+bool AutoSaveSlot(int _slotType, const char* _dirPath,
+				const char* _name, const char* _ext,
+				WDL_PtrList<PathSlotItem>* _owSlots, int* _owIdx,
+				bool (*SaveSlot)(const void*, const char*)=NULL, const void* _obj=NULL);
+void AutoSave(int _type, bool _allowOverwrite, int _flags = 0);
 void AutoFill(int _type);
 
 void NewBookmark(int _type, bool _copyCurrent);

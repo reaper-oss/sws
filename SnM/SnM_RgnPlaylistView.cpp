@@ -791,7 +791,10 @@ int g_playNextId = -1;
 double g_lastRunPos = -1.0;
 double g_nextRunPos;
 double g_nextRunEnd;
-int g_oldSeekOpt = -1;
+
+int g_oldSeekPref = -1;
+int g_oldStopprojlenPref = -1;
+int g_oldRepeatState = -1;
 
 void PlaylistRun()
 {
@@ -811,34 +814,38 @@ void PlaylistRun()
 
 		if (!g_isRunLoop && pos>=g_nextRunPos && pos<=g_nextRunEnd)
 		{
-			if (!g_repeatPlaylist && g_playNextId>=0 && g_playNextId<g_playId)
-				OnStopButton();
-			else
+			g_playId = g_playNextId;
+			updateUI = true;
+
+			SNM_PlaylistItem* cur = pl->Get(g_playId);
+			g_isRunLoop = (cur && cur->m_cnt>1 && cur->m_playReq<cur->m_cnt); // region looping?
+			if (!g_isRunLoop)
+				for (int i=0; i<pl->GetSize(); i++)
+					pl->Get(i)->m_playReq = 0;
+
+			int inext = GetNextValidPlaylistIdx(g_playId, g_isRunLoop);
+			if (SNM_PlaylistItem* next = pl->Get(inext))
 			{
-				g_playId = g_playNextId;
-				updateUI = true;
+				if (cur && cur->m_rgnId==next->m_rgnId && g_playId!=inext)
+					g_isRunLoop = true;
 
-				SNM_PlaylistItem* cur = pl->Get(g_playId);
-				g_isRunLoop = (cur && cur->m_cnt>1 && cur->m_playReq<cur->m_cnt); // region looping?
-				if (!g_isRunLoop)
-					for (int i=0; i<pl->GetSize(); i++)
-						pl->Get(i)->m_playReq = 0;
+				g_playNextId = inext;
+				next->m_playReq++;
 
-				int inext = GetNextValidPlaylistIdx(g_playId, g_isRunLoop);
-				if (SNM_PlaylistItem* next = pl->Get(inext))
+				// trick to stop the playlist in sync: smooth seek to the end of the project
+				if (!g_repeatPlaylist && inext<g_playId)
 				{
-					if (cur && cur->m_rgnId==next->m_rgnId && g_playId!=inext)
-						g_isRunLoop = true;
-
-					g_playNextId = inext;
-					next->m_playReq++;
-					if (EnumProjectMarkers2(NULL, GetMarkerRegionIndexFromId(next->m_rgnId), NULL, &g_nextRunPos, &g_nextRunEnd, NULL, NULL))
-					{
-						double cursorpos = GetCursorPositionEx(NULL);
-						SetEditCurPos(g_nextRunPos, false, true);
-						SetEditCurPos(cursorpos, false, false);
+					// temp override of the "stop play at project and" option
+					if (int* opt = (int*)GetConfigVar("stopprojlen")) {
+						g_oldStopprojlenPref = *opt;
+						*opt = 1;
 					}
+					g_nextRunPos = GetProjectLength()+1.0;
+					g_nextRunEnd = g_nextRunPos+0.5;
+					SeekPlay(g_nextRunPos);
 				}
+				else if (EnumProjectMarkers2(NULL, GetMarkerRegionIndexFromId(next->m_rgnId), NULL, &g_nextRunPos, &g_nextRunEnd, NULL, NULL))
+					SeekPlay(g_nextRunPos);
 			}
 		}
 	}
@@ -875,8 +882,13 @@ void PlaylistPlay(int _playlistId, bool _errMsg)
 		{
 			// temp override of the "smooth seek" option
 			if (int* opt = (int*)GetConfigVar("smoothseek")) {
-				g_oldSeekOpt = *opt;
+				g_oldSeekPref = *opt;
 				*opt = 3;
+			}
+			// temp override of the repeat/loop state option
+			if (GetSetRepeat(-1) == 1) {
+				g_oldRepeatState = 1;
+				GetSetRepeat(0);
 			}
 
 			cur->m_playReq = 1;
@@ -885,12 +897,8 @@ void PlaylistPlay(int _playlistId, bool _errMsg)
 			g_playId = -1; // important for the 1st playlist item switch
 			g_lastRunPos = g_nextRunPos;
 
-			double cursorpos = GetCursorPositionEx(NULL);
-			SetEditCurPos(g_nextRunPos, false, true);
-			OnPlayButton();
-			SetEditCurPos(cursorpos, false, false);
-
 			// go! (indirect UI update)
+			SeekPlay(g_nextRunPos, false);
 			g_playingPlaylist=true;
 		}
 
@@ -912,12 +920,21 @@ void PlaylistStopped()
 		g_playingPlaylist = false;
 		g_playId = -1;
 
-		// restore the smooth seek option
-		if (g_oldSeekOpt >= 0)
+		// restore options
+		if (g_oldSeekPref >= 0)
 			if (int* opt = (int*)GetConfigVar("smoothseek")) {
-				*opt = g_oldSeekOpt;
-				g_oldSeekOpt = -1;
+				*opt = g_oldSeekPref;
+				g_oldSeekPref = -1;
 			}
+		if (g_oldStopprojlenPref >= 0)
+			if (int* opt = (int*)GetConfigVar("stopprojlen")) {
+				*opt = g_oldStopprojlenPref;
+				g_oldStopprojlenPref = -1;
+			}
+		if (g_oldRepeatState >=0 ) {
+			GetSetRepeat(g_oldRepeatState);
+			g_oldRepeatState = -1;
+		}
 
 		if (g_pRgnPlaylistWnd)
 			g_pRgnPlaylistWnd->Update();

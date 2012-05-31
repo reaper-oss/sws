@@ -1,9 +1,13 @@
+Issue 475: fixed region playlist being stopped a bit in sync
+Issue 473, Resources window: the auto-save button now prompts to overwrite selected slots/files
+Fixed "file not found" label
+
 !v2.2.0 #10 (May 29, 2012)
 Resources window
 +Pasting template envelopes obeys the option "Offset template items/envelopes by edit cusor" (in previous versions, only items were offseted according to this pref)
 +Fixed "Paste" and "Paste (replace)" template items commands (when template files were containing more than 1 track)
 +The tiny "+" button now adds a new bookmark without copying currents slots
-+Creating new bookmarks now sets auto-save and auto-fill directories to the default REAPER path (i.e. you will not be promped for directories anymore)
++Creating new bookmarks now sets auto-save and auto-fill directories to the default resource path (i.e. you will not be promped for directories anymore)
 
 Region playlist: added repeat button
 Notes window: re-added marker/region names edition (and display à la "Big clock" when text edition is locked)

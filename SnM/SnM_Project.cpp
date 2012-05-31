@@ -176,14 +176,13 @@ void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool 
 	}
 }
 
-bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _saveCurPrj)
+bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _saveCurPrj)
 {
+	int owIdx = 0;
 	if (_saveCurPrj) Main_OnCommand(40026,0);
-	char prjFn[BUFFER_SIZE] = "", name[256] = "";
+	char prjFn[BUFFER_SIZE] = "";
 	EnumProjects(-1, prjFn, BUFFER_SIZE);
-	GetFilenameNoExt(prjFn, name, 256);
-	return (GenerateFilename(_dirPath, name, g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize) &&
-		SNM_CopyFile(_fn, prjFn) && g_slots.Get(_slotType)->AddSlot(_fn));
+	return AutoSaveSlot(_slotType, _dirPath, prjFn, "RPP", _owSlots, &owIdx);
 }
 
 void LoadOrSelectProjectSlot(COMMAND_T* _ct) {

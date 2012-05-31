@@ -113,7 +113,7 @@ bool FileExistsErrMsg(const char* _fn, bool _errMsg)
 	{
 		char buf[BUFFER_SIZE];
 		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), BUFFER_SIZE);
-		if (_fn && *_fn) _snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | :","sws_mbox"), _fn);
+		if (_fn && *_fn) _snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("File not found: %s","sws_mbox"), _fn);
 		MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 	return exists;
@@ -190,7 +190,7 @@ void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _sh
 // get a full resource path from a short filename
 // ex: EQ\JS\test.RfxChain -> C:\Documents and Settings\<user>\Application Data\REAPER\FXChains\EQ\JS\test.RfxChain
 // notes: 
-// - work with non existing files
+// - work with non existing files //JFB!!!
 // - no-op for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
 // - no-op for full resource paths 
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fnSize)
@@ -327,7 +327,7 @@ bool TranscodeFileToFile64(const char* _outFn, const char* _inFn)
 		ProjectStateContext* ctx = ProjectCreateFileWrite(_outFn);
 		cfg_encode_binary(ctx, hb->Get(), hb->GetSize());
 		delete ctx;
-		ok = FileExistsErrMsg(_outFn, false);
+		ok = FileExists(_outFn);
 	}
 	delete hb;
 	return ok;
@@ -352,9 +352,9 @@ WDL_HeapBuf* TranscodeStr64ToHeapBuf(const char* _str64)
 }
 
 // use Filenamize() first!
-bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz)
+bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _outFn, int _outSz)
 {
-	if (_dir && _name && _ext && _updatedFn && *_dir)
+	if (_dir && _name && _ext && _outFn && *_dir)
 	{
 		char fn[BUFFER_SIZE];
 		bool slash = _dir[strlen(_dir)-1] == PATH_SLASH_CHAR;
@@ -377,7 +377,7 @@ bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 					return false;
 			}
 		}
-		lstrcpyn(_updatedFn, fn, _updatedSz);
+		lstrcpyn(_outFn, fn, _outSz);
 		return true;
 	}
 	return false;
@@ -702,7 +702,7 @@ void FillMarkerRegionMenu(HMENU _menu, int _msgStart, int _flags, UINT _uiState)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Time helpers
+// Time/play helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 // note: the API's SnapToGrid() requires snap options to be enabled..
@@ -723,6 +723,15 @@ void TranslatePos(double _pos, int* _h, int* _m, int* _s, int* _ms)
 	if (_m) *_m = int((_pos - 3600*int(_pos/3600)) / 60);
 	if (_s) *_s = int(_pos - 3600*int(_pos/3600) - 60*int((_pos-3600*int(_pos/3600))/60));
 	if (_ms) *_ms = int(1000*(_pos-int(_pos)) + 0.5); // rounding
+}
+
+double SeekPlay(double _pos, bool _seek, bool _moveView)
+{
+	double cursorpos = GetCursorPositionEx(NULL);
+	SetEditCurPos2(NULL, _pos, _moveView, _seek);
+	if (!_seek) OnPlayButton();
+	SetEditCurPos2(NULL, cursorpos, false, false);
+	return cursorpos;
 }
 
 
@@ -824,7 +833,7 @@ void ReplaceStringFormat(char* _str, char _replaceCh) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// action helpers
+// Action helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 // corner-case note: "Custom: " can be removed after export/tweak-by-hand/re-import,
@@ -883,7 +892,7 @@ bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// other util funcs
+// Other util funcs
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef _WIN32

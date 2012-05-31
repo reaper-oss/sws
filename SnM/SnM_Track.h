@@ -78,7 +78,7 @@ void ReplacePasteItemsTrackTemplateSlot(int _slotType, const char* _title, int _
 void LoadApplyTrackTemplateSlot(COMMAND_T*);
 void LoadApplyTrackTemplateSlotWithItemsEnvs(COMMAND_T*);
 void LoadImportTrackTemplateSlot(COMMAND_T*);
-bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _delItems, bool _delEnvs);
+bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _delItems, bool _delEnvs);
 void SetMIDIInputChannel(COMMAND_T*);
 void RemapMIDIInputChannel(COMMAND_T*);
 void StopTrackPreviewsRun();

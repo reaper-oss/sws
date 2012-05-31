@@ -601,12 +601,9 @@ void ToggleWriteEnvExists(COMMAND_T* _ct)
 		}
 	}
 
-	if (updated)
-	{
+	if (updated) {
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-
-		// in case auto refresh toolbar bar option is off..
-		RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_WRITE_ENV"));
+		RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_WRITE_ENV")); // in case auto refresh toolbar bar option is off..
 	}
 }
 
@@ -671,7 +668,6 @@ void SetSelTrackIcon(const char* _fn)
 // Track templates
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB!!! a virer avec with SNM_ChunkParserPatcher v1.4
 bool GetItemsSubChunk(WDL_FastString* _inChunk, WDL_FastString* _outSubChunk)
 {
 	if (_inChunk && _outSubChunk)
@@ -690,7 +686,6 @@ bool GetItemsSubChunk(WDL_FastString* _inChunk, WDL_FastString* _outSubChunk)
 }
 
 // replace or paste items sub-chunk _tmpltItemsSubChunk
-// note: obeys the native pref "Offset template items/envs by edit cusor"
 // _paste==false for replace, paste otherwise
 // _p is optional (can be provided to factorize chunk updates)
 bool ReplacePasteItemsFromTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltItemsSubChunk, bool _paste, SNM_ChunkParserPatcher* _p = NULL)
@@ -830,6 +825,7 @@ bool ApplyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _item
 			WDL_PtrList<SNM_ChunkParserPatcher> ps; ps.Add(p);
 			PasteSendsReceives(&trs, NULL, &rcvs, false, &ps);
 		}
+
 		if (!_p)
 			DELETE_NULL(p); // + auto-commit if needed
 	}
@@ -1005,28 +1001,26 @@ void AppendSelTrackTemplates(bool _delItems, bool _delEnvs, WDL_FastString* _chu
 	}
 }
 
-bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _delItems, bool _delEnvs)
+bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _delItems, bool _delEnvs)
 {
+	int owIdx = 0;
 	WDL_FastString fullChunk;
 	AppendSelTrackTemplates(_delItems, _delEnvs, &fullChunk);
 	if (fullChunk.GetLength())
 	{
 		// get the 1st valid name
-		char name[SNM_MAX_FX_NAME_LEN] = "";
-		int i;
+		int i; char name[256] = "";
 		for (i=0; i <= GetNumTracks(); i++) // incl. master
-		{
-			MediaTrack* tr = CSurf_TrackFromID(i, false);
-			if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-			{
-				if (char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL))
-					lstrcpyn(name, trName, SNM_MAX_FX_NAME_LEN);
-				break;
-			}
-		}
-		Filenamize(name, sizeof(name));
-		return (GenerateFilename(_dirPath, !i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize) &&
-			SaveChunk(_fn, &fullChunk, true) && g_slots.Get(_slotType)->AddSlot(_fn));
+			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+				if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)) {
+					if (char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL))
+						lstrcpyn(name, trName, 256);
+					break;
+				}
+
+		return AutoSaveSlot(_slotType, _dirPath, 
+			!i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name),
+			"RTrackTemplate", _owSlots, &owIdx, AutoSaveChunkSlot, &fullChunk);
 	}
 	return false;
 }

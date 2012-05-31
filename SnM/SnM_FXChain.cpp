@@ -185,9 +185,10 @@ void ApplyTakesFXChainSlot(int _slotType, const char* _title, int _slot, bool _a
 	}
 }
 
-bool AutoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _nameFromFx)
+bool AutoSaveItemFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _nameFromFx)
 {
-	bool slotUpdate = false;
+	bool saved = false;
+	int owIdx = 0;
 	WDL_PtrList<MediaItem> items;
 	SNM_GetSelectedItems(NULL, &items);
 	for (int i=0; i < items.GetSize(); i++)
@@ -210,13 +211,13 @@ bool AutoSaveItemFXChainSlots(int _slotType, const char* _dirPath, char* _fn, in
 				else if (GetName(item))
 					lstrcpyn(name, GetName(item), SNM_MAX_FX_NAME_LEN);
 
-				Filenamize(name, sizeof(name));
-				if (GenerateFilename(_dirPath, !*name ? "Untitled" : name, g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize))
-					slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
+				saved |= AutoSaveSlot(_slotType, _dirPath, 
+					!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name, 
+					"RfxChain", _owSlots, &owIdx, AutoSaveChunkSlot, &fxChain);
 			}
 		}
 	}
-	return slotUpdate;
+	return saved;
 }
 
 void LoadSetTakeFXChain(COMMAND_T* _ct) {
@@ -421,9 +422,10 @@ void ApplyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _
 	}
 }
 
-bool AutoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, int _fnSize, bool _nameFromFx, bool _inputFX)
+bool AutoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _nameFromFx, bool _inputFX)
 {
-	bool slotUpdate = false;
+	bool saved = false;
+	int owIdx = 0;
 	for (int i=0; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i,false); 
@@ -456,13 +458,13 @@ bool AutoSaveTrackFXChainSlots(int _slotType, const char* _dirPath, char* _fn, i
 				else if (char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL))
 					lstrcpyn(name, trName, SNM_MAX_FX_NAME_LEN);
 
-				Filenamize(name, sizeof(name));
-				if (GenerateFilename(_dirPath, !i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name), g_slots.Get(_slotType)->GetFileExt(), _fn, _fnSize))
-					slotUpdate |= (SaveChunk(_fn, &fxChain, true) && g_slots.Get(_slotType)->AddSlot(_fn));
+				saved |= AutoSaveSlot(_slotType, _dirPath, 
+					!i ? __LOCALIZE("Master","sws_DLG_150") : (!*name ? __LOCALIZE("Untitled","sws_DLG_150") : name), 
+					"RfxChain", _owSlots, &owIdx, AutoSaveChunkSlot, &fxChain);
 			}
 		}
 	}
-	return slotUpdate;
+	return saved;
 }
 
 void LoadSetTrackFXChain(COMMAND_T* _ct) {

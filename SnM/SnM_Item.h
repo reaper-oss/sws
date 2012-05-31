@@ -31,6 +31,7 @@
 #define _SNM_ITEM_H_
 
 #include "SnM_ChunkParserPatcher.h"
+#include "SnM_Resources.h"
 
 
 enum {
@@ -126,6 +127,6 @@ void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMo
 void InsertMediaSlotCurTr(COMMAND_T*);
 void InsertMediaSlotNewTr(COMMAND_T*);
 void InsertMediaSlotTakes(COMMAND_T*);
-bool AutoSaveMediaSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize);
+bool AutoSaveMediaSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots);
 
 #endif

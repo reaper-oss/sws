@@ -30,6 +30,11 @@
 #ifndef _SNM_VWND_H_
 #define _SNM_VWND_H_
 
+#include "SnM_Dlg.h"
+
+#define SNM_DEF_VWND_X_STEP			12
+
+
 class SNM_ImageVWnd : public WDL_VWnd {
 public:
 	SNM_ImageVWnd(LICE_IBitmap* _img = NULL) : WDL_VWnd() { SetImage(_img); }

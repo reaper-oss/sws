@@ -68,6 +68,7 @@ int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool 
 void FillMarkerRegionMenu(HMENU _menu, int _msgStart, int _flags, UINT _uiState = 0);
 int SNM_SnapToMeasure(double _pos);
 void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms = NULL);
+double SeekPlay(double _pos, bool _seek = true, bool _moveView = false);
 int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...);
 int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);

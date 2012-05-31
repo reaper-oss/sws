@@ -224,51 +224,45 @@ bool DupSelItems(const char* _undoTitle, double _nudgePos, WDL_PtrList<void>* _n
 void SplitMidiAudio(COMMAND_T* _ct)
 {
 	bool updated = false;
-	for (int i = 1; i <= GetNumTracks(); i++) // skip master
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false); 
-		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
-		{
-			MediaItem* item = GetTrackMediaItem(tr,j);
-			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
-			{
-				double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
-				double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
-				bool toBeSplitted = (GetCursorPositionEx(NULL) > pos && GetCursorPositionEx(NULL) < end);
-
-				if (!updated && toBeSplitted)
-					Undo_BeginBlock();
-
-				updated |= toBeSplitted;
-
-				if (toBeSplitted)
-				{
-					bool split=false;
-					MediaItem_Take* tk = GetActiveTake(item);
-					if (tk)
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+			for (int j=0; j < GetTrackNumMediaItems(tr); j++)
+				if (MediaItem* item = GetTrackMediaItem(tr,j))
+					if (*(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 					{
-						PCM_source* pcm = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL);
-						if (pcm)
-						{
-							if (pcm->GetFileName()) // valid src ? (rmk: "" for in-project)
-								split = (!strcmp(pcm->GetType(), "MIDI") || !strcmp(pcm->GetType(), "MIDIPOOL"));
-							else // empty take
-								split = true;
+						double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
+						double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
+						bool toBeSplitted = (GetCursorPositionEx(NULL) > pos && GetCursorPositionEx(NULL) < end);
 
-							// "split prior zero crossing" in all other cases
-							// => includes all sources: "WAVE", "VORBIS", "SECTION",..
-							if (!split)
-								Main_OnCommand(40792,0);
-							else
+						if (!updated && toBeSplitted)
+							Undo_BeginBlock();
+
+						updated |= toBeSplitted;
+
+						if (toBeSplitted)
+						{
+							bool split=false;
+							if (MediaItem_Take* tk = GetActiveTake(item))
+							{
+								if (PCM_source* pcm = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL))
+								{
+									if (pcm->GetFileName()) // valid src ? (rmk: "" for in-project)
+										split = (!strcmp(pcm->GetType(), "MIDI") || !strcmp(pcm->GetType(), "MIDIPOOL"));
+									else // v3 empty take
+										split = true;
+
+									// "split prior zero crossing" in all other cases
+									// => includes all sources: "WAVE", "VORBIS", "SECTION",..
+									if (!split)
+										Main_OnCommand(40792,0);
+									else
+										SplitMediaItem(item, GetCursorPositionEx(NULL));
+								}
+							}
+							else // v4 empty takes are null
 								SplitMediaItem(item, GetCursorPositionEx(NULL));
 						}
 					}
-					else // v4 empty takes are null
-						SplitMediaItem(item, GetCursorPositionEx(NULL));
-				}
-			}
-		}
-	}
 
 	if (updated)
 	{
@@ -1480,37 +1474,27 @@ void InsertMediaSlotTakes(COMMAND_T* _ct) {
 	InsertMediaSlot(g_tiedSlotActions[SNM_SLOT_MEDIA], SWS_CMD_SHORTNAME(_ct), (int)_ct->user, 3);
 }
 
-bool AutoSaveMediaSlot(int _slotType, const char* _dirPath, char* _fn, int _fnSize)
+bool AutoSaveMidiSlot(const void* _obj, const char* _fn) {
+	((PCM_source*)_obj)->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, (void*)_fn, NULL, NULL);
+	return true;
+}
+
+bool AutoSaveMediaSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots)
 {
-	bool updated = false;
-	for (int i = 1; i <= GetNumTracks(); i++) // skip master
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false); 
-		for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
-		{
-			MediaItem* item = GetTrackMediaItem(tr,j);
-			if (item && *(bool*)GetSetMediaItemInfo(item, "B_UISEL", NULL))
-				if (MediaItem_Take* tk = GetActiveTake(item))
-					if (PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL))
-						if (src->GetFileName())
-						{
-							char name[SNM_MAX_FX_NAME_LEN] = "";
-							if(*src->GetFileName()) {
-								GetFilenameNoExt(src->GetFileName(), name, SNM_MAX_FX_NAME_LEN);
-								if (GenerateFilename(_dirPath, name, GetFileExtension(src->GetFileName()), _fn, _fnSize))
-									updated |= (SNM_CopyFile(_fn, src->GetFileName()) && g_slots.Get(_slotType)->AddSlot(_fn));
-							}
-							else { // in-project midi
-								GetFilenameNoExt((char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), name, SNM_MAX_FX_NAME_LEN);
-								Filenamize(name, sizeof(name));
-								if (GenerateFilename(_dirPath, name, "mid", _fn, _fnSize)) {
-									src->Extended(PCM_SOURCE_EXT_EXPORTTOFILE, _fn, NULL, NULL);
-									updated |= (g_slots.Get(_slotType)->AddSlot(_fn) != NULL);
+	bool saved = false;
+	int owIdx = 0;
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+			for (int j=0; j < GetTrackNumMediaItems(tr); j++)
+				if (MediaItem* item = GetTrackMediaItem(tr,j))
+					if (*(bool*)GetSetMediaItemInfo(item, "B_UISEL", NULL))
+						if (MediaItem_Take* tk = GetActiveTake(item))
+							if (PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(tk, "P_SOURCE", NULL))
+								if (src->GetFileName()) {
+									if(*src->GetFileName()) // ext file
+										saved |= AutoSaveSlot(_slotType, _dirPath, src->GetFileName(), GetFileExtension(src->GetFileName()), _owSlots, &owIdx);
+									else // in-project midi
+										saved |= AutoSaveSlot(_slotType, _dirPath, (const char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL), "mid", _owSlots, &owIdx, AutoSaveMidiSlot, src);
 								}
-							}
-						}
-						// else: v4 empty take
-		}
-	}
-	return updated;
+	return saved;
 }

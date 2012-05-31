@@ -857,6 +857,7 @@ void SNM_SaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 
 WDL_FastString g_SNMIniFn;
 WDL_FastString g_SNMCyclactionIniFn;
+WDL_FastString g_SNMDiffToolFn;
 int g_SNMIniFileVersion = 0;
 int g_SNMbeta = 0;
 
@@ -866,7 +867,7 @@ void IniFileInit()
 	g_SNMCyclactionIniFn.SetFormatted(BUFFER_SIZE, SNM_CYCLACTION_INI_FILE, GetResourcePath());
 
 	// move from old location if needed/possible
-	WDL_FastString fn;
+	WDL_String fn;
 	fn.SetFormatted(BUFFER_SIZE, SNM_OLD_FORMATED_INI_FILE, GetExePath());
 	if (FileExists(fn.Get()))
 		MoveFile(fn.Get(), g_SNMIniFn.Get()); // no check: use the new file whatever happens
@@ -881,6 +882,8 @@ void IniFileInit()
 	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNMIniFn.Get());
 #ifdef _WIN32
 	g_SNMClearType = (GetPrivateProfileInt("General", "ClearTypeFont", 0, g_SNMIniFn.Get()) == 1);
+	fn.SetLen(BUFFER_SIZE); GetPrivateProfileString("General", "DiffTool", "", fn.Get(), BUFFER_SIZE, g_SNMIniFn.Get());
+	g_SNMDiffToolFn.Set(fn.Get());
 #endif
 //	g_SNMbeta = GetPrivateProfileInt("General", "Beta", 0, g_SNMIniFn.Get());
 }
@@ -894,11 +897,12 @@ void IniFileExit()
 	iniSection.Append(g_SNMIniFn.Get()); 
 	iniSection.AppendFormatted(128, "\nIniFileUpgrade=%d\n", g_SNMIniFileVersion); 
 	iniSection.AppendFormatted(128, "MediaFileLockAudio=%d\n", g_SNMMediaFlags&1 ? 1:0); 
-	iniSection.AppendFormatted(128, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1 : 0); 
+	iniSection.AppendFormatted(128, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1:0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_toolbarsAutoRefreshFreq);
-	iniSection.AppendFormatted(128, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1 : 0);
+	iniSection.AppendFormatted(128, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1:0);
 #ifdef _WIN32
-	iniSection.AppendFormatted(128, "ClearTypeFont=%d\n", g_SNMClearType ? 1 : 0); 
+	iniSection.AppendFormatted(128, "ClearTypeFont=%d\n", g_SNMClearType ? 1:0);
+	iniSection.AppendFormatted(BUFFER_SIZE, "DiffTool=\"%s\"\n", g_SNMDiffToolFn.Get());
 #endif
 //	iniSection.AppendFormatted(128, "Beta=%d\n", g_SNMbeta); 
 	SaveIniSection("General", &iniSection, g_SNMIniFn.Get());

@@ -2105,7 +2105,7 @@ bool CheckSetAutoDirectory(const char* _title, int _type, bool _autoSave)
 		char buf[BUFFER_SIZE] = "";
 		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("%s directory not found!\n%s%sDo you want to define one ?","sws_DLG_150"), _title, dir->Get(), dir->GetLength()?"\n":"");
 		if (IDYES == MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), buf, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_YESNO)) {
-			if (BrowseForDirectory(__LOCALIZE("Set directory","sws_DLG_150"), GetResourcePath(), buf, BUFFER_SIZE)) {
+			if (BrowseForDirectory(_autoSave ? __LOCALIZE("Set auto-save directory","sws_DLG_150") : __LOCALIZE("Set auto-fill directory","sws_DLG_150"), GetResourcePath(), buf, BUFFER_SIZE)) {
 				if (_autoSave) SetAutoSaveDir(buf, _type);
 				else SetAutoFillDir(buf, _type);
 			}

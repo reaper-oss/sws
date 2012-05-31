@@ -1,4 +1,4 @@
-Issue 475: fixed region playlist being stopped a bit in sync
+Issue 475: region playlist stops in sync
 Issue 473, Resources window: the auto-save button now prompts to overwrite selected slots/files
 Fixed "file not found" label
 

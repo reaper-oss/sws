@@ -58,6 +58,7 @@ void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, co
 void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn, const char* _newIniFn = NULL);
 void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn = NULL);
 void SNM_UpgradeIniFiles();
+bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color = 0);
 int FindMarkerRegion(double _pos, int _flags, int* _idOut = NULL);
 int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn);
 int GetMarkerRegionIdFromIndex(int _idx);

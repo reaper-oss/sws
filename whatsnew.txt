@@ -1,3 +1,7 @@
+Notes window
++Fixed marker/region name that could not be emptied
++On Windows OS: the text field now obeys to Ctrl+A (select all text)
+
 !v2.2.0 #11 (May 31, 2012)
 Issue 475: region playlist stops in sync
 Issue 473, Resources window: the auto-save button now prompts to overwrite selected slots/files

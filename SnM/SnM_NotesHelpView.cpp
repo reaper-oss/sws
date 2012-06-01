@@ -304,22 +304,26 @@ HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	return NULL;
 }
 
-// we don't check iKeyState in order to catch (almost) everything
-// some key masks won't pass here though (e.g. Ctrl+Shift)
-// returns:
-// -1 -> catch and send to the control
-//  0 -> pass-thru to main window (then -666 in SWS_DockWnd::keyHandler())
-//  1 -> eat
+// returns: 
+// -1: catch and send to the control, 
+//  0: pass-thru to main window (then -666 in SWS_DockWnd::keyHandler())
+//  1: eat
 int SNM_NotesHelpWnd::OnKey(MSG* msg, int iKeyState) 
 {
 	if (GetDlgItem(m_hwnd, IDC_EDIT) == msg->hwnd)
 	{
 		if (g_locked) {
 			msg->hwnd = m_hwnd; // redirect to main window
-			return 0; // pass-thru to main window
+			return 0;
 		}
 		else if ((msg->message == WM_KEYDOWN || msg->message == WM_CHAR) && msg->wParam == VK_RETURN)
-			return -1; // catch the return and send to edit control for multi-line
+			return -1; // send the return key to the edit control
+#ifdef _WIN32
+		else if ((msg->message == WM_KEYDOWN || msg->message == WM_CHAR) && msg->wParam == 'A' && iKeyState == LVKF_CONTROL) {
+			SendMessage(msg->hwnd, EM_SETSEL, 0, -1); // ctrl+A => select all
+			return 1;
+		}
+#endif
 	}
 	return 0; 
 }
@@ -701,15 +705,16 @@ void SNM_NotesHelpWnd::SaveCurrentMkrRgnNameOrNotes(bool _name)
 				int idx = GetMarkerRegionIndexFromId(g_lastMarkerRegionId);
 				if (idx >= 0)
 				{
-					double pos, end; int markrgnindexnumber; bool isRgn;
-					if (EnumProjectMarkers2(NULL, idx, &isRgn, &pos, &end, NULL, &markrgnindexnumber))
+					double pos, end; int num, color; bool isRgn;
+					if (EnumProjectMarkers3(NULL, idx, &isRgn, &pos, &end, NULL, &num, &color))
 					{
 						ShortenStringToFirstRN(buf);
 
-						// marker/region name updates lead to SNM_MarkerRegionSubscriber.NotifyMarkerRegionUpdate() notif (reentrance)
+						// marker/region name updates will lead to reentrance notif
+						// via SNM_MarkerRegionSubscriber.NotifyMarkerRegionUpdate() 
 						g_internalMkrRgnChange = true;
 
-						if (SetProjectMarker2(NULL, markrgnindexnumber, isRgn, pos, end, buf))
+						if (SNM_SetProjectMarker(NULL, num, isRgn, pos, end, buf, color))
 							Undo_OnStateChangeEx(isRgn ? __LOCALIZE("Edit region name","sws_undo") : __LOCALIZE("Edit marker name","sws_undo"), UNDO_STATE_ALL, -1);
 					}
 				}

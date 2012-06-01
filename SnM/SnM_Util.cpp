@@ -568,6 +568,30 @@ void SNM_UpgradeIniFiles()
 // Marker/region helpers
 ///////////////////////////////////////////////////////////////////////////////
 
+// overrides the API's SetProjectMarker3() which cannot set an empty name ""
+// see http://code.google.com/p/sws-extension/issues/detail?id=476
+bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color)
+{
+	if (_name && !*_name)
+	{
+		int color = _color;
+		if (!_color) // dang! it means we have to preserve the current color..
+		{
+			int x=0, num; bool isrgn, found=false;
+			while (x = EnumProjectMarkers3(NULL, x, &isrgn, NULL, NULL, NULL, &num, &color))
+				if (found = (isrgn==_isrgn && num==_num))
+					break;
+			if (!found)
+				return false;
+		}
+		if (DeleteProjectMarker(_proj, _num, _isrgn))
+			return (AddProjectMarker2(_proj, _isrgn, _pos, _rgnend, _name, _num, color) == _num);
+	}
+	else
+		return SetProjectMarker3(_proj, _num, _isrgn, _pos, _rgnend, _name, _color);
+	return false;
+}
+
 // returns the 1st marker or region index found at _pos
 // note: relies on markers & regions indexed by positions
 // _flags: &SNM_MARKER_MASK=marker, &SNM_REGION_MASK=region

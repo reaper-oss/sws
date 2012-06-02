@@ -240,8 +240,7 @@ void ShowThemeHelper(WDL_FastString* _report, HWND _hwnd, bool _mcp, bool _sel)
 				if (trIdx && (!_sel || (_sel && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
 				{
 					RECT r;	GetClientRect(w, &r);
-					char* trName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-					_report->AppendFormatted(512, "%s Track #%d '%s': W=%d, H=%d\n", _mcp ? "MCP" : "TCP", trIdx==-1 ? 0 : trIdx, trIdx==-1 ? "[MASTER]" : (trName?trName:""), r.right-r.left, r.bottom-r.top);
+					_report->AppendFormatted(512, "%s Track #%d '%s': W=%d, H=%d\n", _mcp ? "MCP" : "TCP", trIdx==-1 ? 0 : trIdx, trIdx==-1 ? "[MASTER]" : (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL), r.right-r.left, r.bottom-r.top);
 				}
 			}
 		}
@@ -287,10 +286,12 @@ HWND GetActionListBox(char* _currentSection, int _sectionSz)
 #define SNM_ListView_GetSelectedCount ListView_GetSelectedCount
 #define SNM_ListView_GetItemCount ListView_GetItemCount
 #define SNM_ListView_GetItem ListView_GetItem
+#define SNM_ListView_GetItemText ListView_GetItemText
 #else
 #define SNM_ListView_GetSelectedCount ListView_GetSelectedCountCast
 #define SNM_ListView_GetItemCount ListView_GetItemCountCast
 #define SNM_ListView_GetItem ListView_GetItemCast
+#define SNM_ListView_GetItemText ListView_GetItemTextCast
 #endif
 
 // returns the list view's selected item, -1 if failed, -2 if the related action's custom id cannot be retrieved (hidden column)
@@ -315,7 +316,7 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 				if (_cmdId) *_cmdId = cmdId;
 
 				char actionName[SNM_MAX_ACTION_NAME_LEN] = "";
-				ListView_GetItemText(hList, i, 1, actionName, SNM_MAX_ACTION_NAME_LEN); //JFB displaytodata? (ok: columns not re-orderable yet)
+				SNM_ListView_GetItemText(hList, i, 1, actionName, SNM_MAX_ACTION_NAME_LEN); //JFB displaytodata? (ok: columns not re-orderable yet)
 				if (_desc && _descSize > 0)
 					lstrcpyn(_desc, actionName, _descSize);
 
@@ -327,7 +328,7 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 							return (_snprintfStrict(_id, _idSize, "_%s", ct->id)>0 ? i : -1);
 
 					// best effort to get the custom id (relies on displayed columns..)
-					ListView_GetItemText(hList, i, 4, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
+					SNM_ListView_GetItemText(hList, i, 4, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
 					if (!*_id)
 					{
 						if (!IsMacro(actionName))

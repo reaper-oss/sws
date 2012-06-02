@@ -85,17 +85,17 @@ int GetCustomColors(COLORREF custColors[])
 {
 	NSColorPanel* cp = [NSColorPanel sharedColorPanel];
 	[[cp valueForKey:@"_colorSwatch"] readColors];
-	
+
 	// Get the NSColorSwatch's internal mutable array of NSColors
 	NSMutableArray *colors = [[cp valueForKey:@"_colorSwatch"] valueForKey:@"colors"];
 	for (int i = 0; i < 16; i++)
 	{
 		NSColor* col = [colors objectAtIndex:i*10];
 		col = [col colorUsingColorSpaceName:@"NSCalibratedRGBColorSpace"];
-		
+
 		custColors[i] = RGBfromNSColor(col);
 	}
-		
+
 	return 0;
 }
 
@@ -103,7 +103,7 @@ void SetCustomColors(COLORREF custColors[])
 {
 	NSColorPanel* cp = [NSColorPanel sharedColorPanel];
 	[[cp valueForKey:@"_colorSwatch"] readColors];
-	
+
 	// Get the NSColorSwatch's internal mutable array of NSColors
 	NSMutableArray *colors = [[cp valueForKey:@"_colorSwatch"] valueForKey:@"colors"];
 	for (int i = 0; i < 16; i++)
@@ -136,7 +136,7 @@ bool GetChosenColor(COLORREF* pColor)
 	}
 	return false;
 }
-		
+
 void HideColorChooser()
 {
 	ShowWindow((HWND)[NSColorPanel sharedColorPanel], SW_HIDE);
@@ -305,7 +305,7 @@ void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwEx
 {
 	CGEventRef e = NULL;
 	int h = CGDisplayPixelsHigh(CGMainDisplayID());
-	
+
 	switch(dwFlags)
 	{
 		case MOUSEEVENTF_LEFTDOWN:  e = CGEventCreateMouseEvent(NULL, kCGEventLeftMouseDown,  CGPointMake(dx, h-dy), kCGMouseButtonLeft);  break;
@@ -313,7 +313,7 @@ void mouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData, ULONG_PTR dwEx
 		case MOUSEEVENTF_RIGHTDOWN: e = CGEventCreateMouseEvent(NULL, kCGEventRightMouseDown, CGPointMake(dx, h-dy), kCGMouseButtonRight); break;
 		case MOUSEEVENTF_RIGHTUP:   e = CGEventCreateMouseEvent(NULL, kCGEventRightMouseUp,   CGPointMake(dx, h-dy), kCGMouseButtonRight); break;
 	}
-		
+
 	if (e)
 	{
 		CGEventPost(kCGHIDEventTap, e);
@@ -392,5 +392,11 @@ bool ListView_GetItemCast(HWND h, LVITEM *item)
     }
     
     return true;
+}
+
+void ListView_GetItemTextCast(HWND hwnd, int item, int subitem, char *text, int textmax)
+{
+    LVITEM it={LVIF_TEXT,item,subitem,0,0,text,textmax,};
+    ListView_GetItemCast(hwnd,&it);
 }
 

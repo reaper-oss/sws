@@ -2,7 +2,9 @@ Notes window
 +Fixed marker/region name that could not be emptied
 +On Windows OS: the text field now obeys to Ctrl+A (select all text)
 
-OSX: fixed custom macro learn (in Cycle action editor & Live Configs)
+OSX: fixed macro learn (Cycle Action editor and Live Configs)
+OSX: list view selections behave like on Winows OS
+Fixed a few localized strings that were ignored
 
 !v2.2.0 #11 (May 31, 2012)
 Issue 475: region playlist stops in sync

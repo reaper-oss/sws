@@ -1,7 +1,6 @@
-Notes window
-+Fixed marker/region name that could not be emptied
-+On Windows OS: the text field now obeys to Ctrl+A (select all text)
-
+!v2.2.0 #12 (June 3, 2012)
+Issue 476: Fix deleting of descriptions in MarkerList, Notes window too
+Notes window: now can select all text with Ctrl-A (windows only)
 OSX: fixed macro learn (Cycle Action editor and Live Configs)
 OSX: list view selections behave like on Winows OS
 Fixed a few localized strings that were ignored

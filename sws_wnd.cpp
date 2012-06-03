@@ -764,8 +764,12 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		SetWindowLongPtr(GetParent(m_hwndList), DWLP_MSGRESULT, iRet);
 		return iRet;
 	}
-#endif
+
 	if (!m_bDisableUpdates && s->hdr.code == LVN_ITEMCHANGED && s->iItem >= 0)
+#else
+	//JFB no test on s->iItem for OSX: needed this to detect emptied selections
+	if (!m_bDisableUpdates && s->hdr.code == LVN_ITEMCHANGED)
+#endif
 	{
 		if (s->uChanged & LVIF_STATE && (s->uNewState ^ s->uOldState) & LVIS_SELECTED)
 			OnItemSelChanged(GetListItem(s->iItem), s->uNewState);

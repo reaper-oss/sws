@@ -515,11 +515,10 @@ static SNM_CyclactionsView* g_lvL = NULL;
 static SNM_CommandsView* g_lvR = NULL;
 
 // fake list views' items (help items)
-// !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_161
+// note: localization with !WANT_LOCALIZE_STRINGS... or __LOCALIZE() would fail => done in CyclactionInit()
 static Cyclaction g_DEFAULT_L("Right click here to add cycle actions");
 static WDL_FastString g_EMPTY_R("<- Select a cycle action");
 static WDL_FastString g_DEFAULT_R("Right click here to add commands");
-// !WANT_LOCALIZE_STRINGS_END
 
 WDL_PtrList_DeleteOnDestroy<Cyclaction> g_editedActions[SNM_MAX_CYCLING_SECTIONS];
 Cyclaction* g_editedAction = NULL;
@@ -720,7 +719,16 @@ void SNM_CyclactionsView::GetItemList(SWS_ListItemList* pList)
 void SNM_CyclactionsView::OnItemSelChanged(SWS_ListItem* item, int iState)
 {
 	AllEditListItemEnd(true);
-	g_editedAction = (item && iState ? (Cyclaction*)item : NULL);
+
+	Cyclaction* action = (Cyclaction*)item;
+/*JFB fails on OSX due to "notifications" order
+	g_editedAction = (item && iState ? action : NULL);
+*/
+    if (iState && action != g_editedAction)
+        g_editedAction = action;
+    else if (!iState && action == g_editedAction)
+        g_editedAction = NULL;
+
 	g_lvR->Update();
 }
 
@@ -1439,7 +1447,10 @@ static project_config_extension_t g_projectconfig = {
 
 int CyclactionInit()
 {
-	// init section names
+	// localization init
+    g_DEFAULT_L.Update(__LOCALIZE("Right click here to add cycle actions","sws_DLG_161"));
+    g_EMPTY_R.Set(__LOCALIZE("<- Select a cycle action","sws_DLG_161"));
+    g_DEFAULT_R.Set(__LOCALIZE("Right click here to add commands","sws_DLG_161"));
 	lstrcpyn(g_cyclactionSections[0], __localizeFunc("Main","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
 	lstrcpyn(g_cyclactionSections[1], __localizeFunc("MIDI Event List Editor","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
 	lstrcpyn(g_cyclactionSections[2], __localizeFunc("MIDI Editor","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);

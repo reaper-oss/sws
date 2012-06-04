@@ -25,10 +25,6 @@
 /
 ******************************************************************************/
 
-//JFB TODO?
-// ShellExecute("edit", .. ?
-// import/export slots
-// combined flags for insert media (dbl click)
 
 #include "stdafx.h"
 #include "SnM.h"
@@ -191,7 +187,7 @@ WDL_PtrList<FileSlotList> g_slots;
 int g_resViewType = -1;
 int g_tiedSlotActions[SNM_NUM_DEFAULT_SLOTS]; // slot actions of default type/idx are tied to type/value
 int g_dblClickPrefs[SNM_MAX_SLOT_TYPES]; // flags, loword: dbl-click type, hiword: dbl-click to (only for fx chains, atm)
-WDL_FastString g_filter(FILTER_DEFAULT_STR);
+WDL_FastString g_filter; // see init + localization in ResourceViewInit()
 int g_filterPref = 1; // bitmask: &1 = filter by name, &2 = filter by path, &4 = filter by comment
 WDL_PtrList<WDL_FastString> g_autoSaveDirs;
 WDL_PtrList<WDL_FastString> g_autoFillDirs;
@@ -2186,7 +2182,7 @@ void AutoSave(int _type, bool _allowOverwrite, int _flags)
 	// are there *non empty* selected slots?
 	if (_allowOverwrite && g_pResourcesWnd && g_pResourcesWnd->GetSelectedSlots(&owSlots) && 
 		IDNO == MessageBox(g_pResourcesWnd->GetHWND(),
-			__LOCALIZE("Overwrite selected file(s)?","sws_DLG_150"),
+			__LOCALIZE("Overwrite selected file(s)?","sws_DLG_150"), 
 			__LOCALIZE("S&M - Confirmation","sws_DLG_150"), MB_YESNO))
 	{
 		owSlots.Empty(false);
@@ -2449,6 +2445,9 @@ void AddCustomTypesFromIniFile()
 
 int ResourceViewInit()
 {
+	// localization
+	g_filter.Set(FILTER_DEFAULT_STR);
+
  	g_slots.Empty(true);
 	g_slots.Add(new FileSlotList("FXChains", __LOCALIZE("FX chain","sws_DLG_150"), "RfxChain", true, true, true));
 	g_slots.Add(new FileSlotList("TrackTemplates", __LOCALIZE("track template","sws_DLG_150"), "RTrackTemplate", true, true, true));

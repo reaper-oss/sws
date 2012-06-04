@@ -1,8 +1,10 @@
+Fixed broken Resources window with non-English LangPacks
+
 !v2.2.0 #12 (June 3, 2012)
 Issue 476: Fix deleting of descriptions in MarkerList, Notes window too
-Notes window: now can select all text with Ctrl-A (windows only)
+Notes window: now can select all text with Ctrl-A (Windows only)
 OSX: fixed macro learn (Cycle Action editor and Live Configs)
-OSX: list view selections behave like on Winows OS
+OSX: list view selections behave like on Windows OS
 Fixed a few localized strings that were ignored
 
 !v2.2.0 #11 (May 31, 2012)

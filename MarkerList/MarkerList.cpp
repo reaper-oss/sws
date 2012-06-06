@@ -65,7 +65,7 @@ void SWS_MarkerListView::GetItemText(SWS_ListItem* item, int iCol, char* str, in
 			format_timestr_pos(mi->GetPos(), str, iStrMax, -1);
 			break;
 		case 1:
-			_snprintf(str, iStrMax, "%s", mi->IsRegion() ? "Region" : "Marker");
+			_snprintf(str, iStrMax, "%s", mi->IsRegion() ? __LOCALIZE("Region","sws_DLG_102") : __LOCALIZE("Marker","sws_DLG_102"));
 			break;
 		case 2:
 			_snprintf(str, iStrMax, "%d", mi->GetNum());
@@ -79,7 +79,7 @@ void SWS_MarkerListView::GetItemText(SWS_ListItem* item, int iCol, char* str, in
 #else
 			_snprintf(str, iStrMax, "0x%06x", mi->GetColor());
 #endif
-		break;
+			break;
 		}
 	}
 }
@@ -212,7 +212,7 @@ int SWS_MarkerListView::GetItemState(SWS_ListItem* item)
 }
 
 SWS_MarkerListWnd::SWS_MarkerListWnd()
-:SWS_DockWnd(IDD_MARKERLIST, "Marker List", "SWSMarkerList", 30001, SWSGetCommandID(OpenMarkerList)), m_dCurPos(DBL_MAX)
+:SWS_DockWnd(IDD_MARKERLIST, __LOCALIZE("Marker List","sws_DLG_102"), "SWSMarkerList", 30001, SWSGetCommandID(OpenMarkerList)), m_dCurPos(DBL_MAX)
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -307,7 +307,7 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				MarkerItem* item;
 				while ((item = (MarkerItem*)m_pLists.Get(0)->EnumSelected(&i)))
 					DeleteProjectMarker(NULL, item->GetNum(), item->IsRegion());
-				Undo_EndBlock("Delete marker(s)", UNDO_STATE_MISCCFG);
+				Undo_EndBlock(__LOCALIZE("Delete marker(s)","sws_undo"), UNDO_STATE_MISCCFG);
 				Update();
 				break;
 			}
@@ -346,10 +346,10 @@ void SWS_MarkerListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU hMenu = CreatePopupMenu();
-	AddToMenu(hMenu, "Rename", RENAME_MSG);
-	AddToMenu(hMenu, "Set color...", COLOR_MSG);
-	AddToMenu(hMenu, "Save marker set...", SWSGetCommandID(SaveMarkerList));
-	AddToMenu(hMenu, "Delete market set...", SWSGetCommandID(DeleteMarkerList));
+	AddToMenu(hMenu, __LOCALIZE("Rename","sws_DLG_102"), RENAME_MSG);
+	AddToMenu(hMenu, __LOCALIZE("Set color...","sws_DLG_102"), COLOR_MSG);
+	AddToMenu(hMenu, __LOCALIZE("Save marker set...","sws_DLG_102"), SWSGetCommandID(SaveMarkerList));
+	AddToMenu(hMenu, __LOCALIZE("Delete market set...","sws_DLG_102"), SWSGetCommandID(DeleteMarkerList));
 
 	if (g_savedLists.Get()->GetSize())
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
@@ -357,27 +357,27 @@ HMENU SWS_MarkerListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	char str[256];
 	for (int i = 0; i < g_savedLists.Get()->GetSize(); i++)
 	{
-		sprintf(str, "Load %s", g_savedLists.Get()->Get(i)->m_name);
+		sprintf(str, __LOCALIZE_VERFMT("Load %s","sws_DLG_102"), g_savedLists.Get()->Get(i)->m_name);
 		AddToMenu(hMenu, str, FIRST_LOAD_MSG+i);
 	}
 
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hMenu, "Copy marker set to clipboard", SWSGetCommandID(ListToClipboard));
-	AddToMenu(hMenu, "Paste marker set from clipboard", SWSGetCommandID(ClipboardToList));
+	AddToMenu(hMenu, __LOCALIZE("Copy marker set to clipboard","sws_DLG_102"), SWSGetCommandID(ListToClipboard));
+	AddToMenu(hMenu, __LOCALIZE("Paste marker set from clipboard","sws_DLG_102"), SWSGetCommandID(ClipboardToList));
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hMenu, "Reorder marker IDs", SWSGetCommandID(RenumberIds));
-	AddToMenu(hMenu, "Reorder region IDs", SWSGetCommandID(RenumberRegions));
+	AddToMenu(hMenu, __LOCALIZE("Reorder marker IDs","sws_DLG_102"), SWSGetCommandID(RenumberIds));
+	AddToMenu(hMenu, __LOCALIZE("Reorder region IDs","sws_DLG_102"), SWSGetCommandID(RenumberRegions));
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hMenu, "Delete selected marker(s)", DELETE_MSG);
-	AddToMenu(hMenu, "Delete all markers", SWSGetCommandID(DeleteAllMarkers));
-	AddToMenu(hMenu, "Delete all regions", SWSGetCommandID(DeleteAllRegions));
+	AddToMenu(hMenu, __LOCALIZE("Delete selected marker(s)","sws_DLG_102"), DELETE_MSG);
+	AddToMenu(hMenu, __LOCALIZE("Delete all markers","sws_DLG_102"), SWSGetCommandID(DeleteAllMarkers));
+	AddToMenu(hMenu, __LOCALIZE("Delete all regions","sws_DLG_102"), SWSGetCommandID(DeleteAllRegions));
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hMenu, "Export formatted marker list to clipboard", SWSGetCommandID(ExportToClipboard));
-	AddToMenu(hMenu, "Export formatted marker list to file", SWSGetCommandID(ExportToFile));
-	AddToMenu(hMenu, "Export format...", SWSGetCommandID(ExportFormat));
+	AddToMenu(hMenu, __LOCALIZE("Export formatted marker list to clipboard","sws_DLG_102"), SWSGetCommandID(ExportToClipboard));
+	AddToMenu(hMenu, __LOCALIZE("Export formatted marker list to file","sws_DLG_102"), SWSGetCommandID(ExportToFile));
+	AddToMenu(hMenu, __LOCALIZE("Export format...","sws_DLG_102"), SWSGetCommandID(ExportFormat));
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	AddToMenu(hMenu, "Convert markers to regions", SWSGetCommandID(MarkersToRegions));
-	AddToMenu(hMenu, "Convert regions to markers", SWSGetCommandID(RegionsToMarkers));
+	AddToMenu(hMenu, __LOCALIZE("Convert markers to regions","sws_DLG_102"), SWSGetCommandID(MarkersToRegions));
+	AddToMenu(hMenu, __LOCALIZE("Convert regions to markers","sws_DLG_102"), SWSGetCommandID(RegionsToMarkers));
 	
 	return hMenu;
 }
@@ -490,7 +490,7 @@ INT_PTR WINAPI doLoadDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			for (int i = 0; i < g_savedLists.Get()->GetSize(); i++)
 				SendMessage(list, CB_ADDSTRING, 0, (LPARAM)g_savedLists.Get()->Get(i)->m_name);
             SendMessage(list, CB_SETCURSEL, 0, 0);
-			SetWindowText(hwndDlg, "Load Marker Set");
+			SetWindowText(hwndDlg, __LOCALIZE("Load Marker Set","sws_DLG_102"));
 			RestoreWindowPos(hwndDlg, SAVEWINDOW_POS_KEY, false);
 			return 0;
 		}
@@ -526,7 +526,7 @@ static INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 			for (int i = 0; i < g_savedLists.Get()->GetSize(); i++)
 				SendMessage(list, CB_ADDSTRING, 0, (LPARAM)g_savedLists.Get()->Get(i)->m_name);
             SendMessage(list, CB_SETCURSEL, 0, 0);
-			SetWindowText(hwndDlg, "Delete Marker Set");
+			SetWindowText(hwndDlg, __LOCALIZE("Delete Marker Set","sws_DLG_102"));
 			RestoreWindowPos(hwndDlg, SAVEWINDOW_POS_KEY, false);
 			return 0;
 		}
@@ -562,23 +562,25 @@ INT_PTR WINAPI doFormatDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			char str[256];
 			GetPrivateProfileString(SWS_INI, EXPORT_FORMAT_KEY, EXPORT_FORMAT_DEFAULT, str, 256, get_ini_file());
 			SetWindowText(format, str);
-			SetWindowText(desc,
-				"Export marker list format string:\r\n"
-				"First char one of a/r/m\r\n"
-				"  (all / only regions / only markers)\r\n"
-				"Then, in any order, n, i, l, d, t, s, p\r\n"
-				"n = number (count), starts at 1\r\n"
-				"i = ID\r\n"
-				"l = Length in H:M:S\r\n"
-				"d = Description\r\n"
-				"t = Absolute time in H:M:S\r\n"
-				"s = Absolute time in project samples\r\n"
-				"p = Absolute time in proj ruler format\r\n"
-				"\r\n"
-				"You can include normal text in the format.\r\n"
-				"If you want to use one of the above\r\n"
-				"characters in normal text, preface it with \\"
-				);
+
+			WDL_FastString helpStr;
+			helpStr.Append(__LOCALIZE("Export marker list format string:\r\n","sws_DLG_102"));
+			helpStr.Append(__LOCALIZE("First char one of a/r/m\r\n","sws_DLG_102"));
+			helpStr.Append("  ");
+			helpStr.Append(__LOCALIZE("(all / only regions / only markers)\r\n","sws_DLG_102"));
+			helpStr.Append(__LOCALIZE("Then, in any order, n, i, l, d, t, s, p\r\n","sws_DLG_102"));
+			helpStr.Append(__LOCALIZE("n = number (count), starts at 1\r\n","sws_DLG_102"));
+			helpStr.Append(__LOCALIZE("i = ID\r\n","sws_DLG_102"));
+			helpStr.Append(__LOCALIZE("l = Length in H:M:S\r\n","sws_DLG_102"));
+			helpStr.Append(__LOCALIZE("d = Description\r\n","sws_DLG_102"));
+			helpStr.Append(__LOCALIZE("t = Absolute time in H:M:S\r\n","sws_DLG_102"));
+			helpStr.Append(__LOCALIZE("s = Absolute time in project samples\r\n","sws_DLG_102"));
+			helpStr.Append(__LOCALIZE("p = Absolute time in proj ruler format\r\n","sws_DLG_102"));
+			helpStr.Append("\r\n");
+			helpStr.Append(__LOCALIZE("You can include normal text in the format.\r\n","sws_DLG_102"));
+			helpStr.Append(__LOCALIZE("If you want to use one of the above\r\n","sws_DLG_102"));
+			helpStr.Append(__LOCALIZE("characters in normal text, preface it with \\","sws_DLG_102"));
+			SetWindowText(desc, helpStr.Get());
 			return 0;
 		}
 		case WM_COMMAND:
@@ -611,7 +613,7 @@ void OpenMarkerList(COMMAND_T*)
 void LoadMarkerList(COMMAND_T*)
 {
 	if (!g_savedLists.Get()->GetSize())
-		MessageBox(g_hwndParent, "No marker sets available to load.", "Error", MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("No marker sets available to load.","sws_DLG_102"), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);
 	else
 		DialogBox(g_hInst,MAKEINTRESOURCE(IDD_LOAD),g_hwndParent,doLoadDialog);
 }
@@ -624,7 +626,7 @@ void SaveMarkerList(COMMAND_T*)
 void DeleteMarkerList(COMMAND_T*)
 {
 	if (!g_savedLists.Get()->GetSize())
-		MessageBox(g_hwndParent, "No marker sets available to delete.", "Error", MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("No marker sets available to delete.","sws_DLG_102"), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);
 	else
 		DialogBox(g_hInst,MAKEINTRESOURCE(IDD_LOAD),g_hwndParent,doDeleteDialog);
 }

@@ -26,22 +26,23 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 const char* GetWaveShapeStr(WaveShape shape)
 {
 	switch(shape)
 	{
-		case eWAVSHAPE_SINE			: return "Sine";		break;
-		case eWAVSHAPE_TRIANGLE		: return "Triangle";	break;
-		case eWAVSHAPE_SQUARE		: return "Square";		break;
-		case eWAVSHAPE_RANDOM		: return "Random";		break;
-		case eWAVSHAPE_SAWUP		: return "Saw Up";		break;
-		case eWAVSHAPE_SAWDOWN		: return "Saw Down";	break;
+		case eWAVSHAPE_SINE			: return __LOCALIZE("Sine","sws_mbox");		break;
+		case eWAVSHAPE_TRIANGLE		: return __LOCALIZE("Triangle","sws_mbox");	break;
+		case eWAVSHAPE_SQUARE		: return __LOCALIZE("Square","sws_mbox");	break;
+		case eWAVSHAPE_RANDOM		: return __LOCALIZE("Random","sws_mbox");	break;
+		case eWAVSHAPE_SAWUP		: return __LOCALIZE("Saw Up","sws_mbox");	break;
+		case eWAVSHAPE_SAWDOWN		: return __LOCALIZE("Saw Down","sws_mbox");	break;
 
-		case eWAVSHAPE_TRIANGLE_BEZIER		: return "Triangle (Bezier)";	break;
-		case eWAVSHAPE_RANDOM_BEZIER		: return "Random (Bezier)";		break;
-		case eWAVSHAPE_SAWUP_BEZIER			: return "Saw Up (Bezier)";		break;
-		case eWAVSHAPE_SAWDOWN_BEZIER		: return "Saw Down (Bezier)";	break;
+		case eWAVSHAPE_TRIANGLE_BEZIER		: return __LOCALIZE("Triangle (Bezier)","sws_mbox");	break;
+		case eWAVSHAPE_RANDOM_BEZIER		: return __LOCALIZE("Random (Bezier)","sws_mbox");		break;
+		case eWAVSHAPE_SAWUP_BEZIER			: return __LOCALIZE("Saw Up (Bezier)","sws_mbox");		break;
+		case eWAVSHAPE_SAWDOWN_BEZIER		: return __LOCALIZE("Saw Down (Bezier)","sws_mbox");	break;
 
 		default								: return "???";			break;
 	}
@@ -51,7 +52,7 @@ const char* GetGridDivisionStr(GridDivision grid)
 {
 	switch(grid)
 	{
-		case eGRID_OFF		: return "<sync off>";	break;
+		case eGRID_OFF		: return __LOCALIZE("<sync off>","sws_mbox");	break;
 		case eGRID_128_1	: return "128/1";		break;
 		case eGRID_128T_1	: return "128T/1";		break;
 		case eGRID_64_1		: return "64/1";		break;
@@ -128,10 +129,10 @@ const char* GetTakeEnvelopeStr(TakeEnvType type)
 {
 	switch(type)
 	{
-		case eTAKEENV_VOLUME	: return "Volume";	break;
-		case eTAKEENV_PAN		: return "Pan";		break;
-		case eTAKEENV_MUTE		: return "Mute";	break;
-		case eTAKEENV_PITCH		: return "Pitch";	break;
+		case eTAKEENV_VOLUME	: return __LOCALIZE("Volume","sws_mbox");	break;
+		case eTAKEENV_PAN		: return __LOCALIZE("Pan","sws_mbox");		break;
+		case eTAKEENV_MUTE		: return __LOCALIZE("Mute","sws_mbox");		break;
+		case eTAKEENV_PITCH		: return __LOCALIZE("Pitch","sws_mbox");	break;
 		default					: return NULL;		break;
 	}
 }
@@ -246,17 +247,15 @@ char* PadresGetEnvelopeState(TrackEnvelope* envelope)
 		bool bRes = GetSetEnvelopeState(envelope, envState, iEnvStateSize);
 		if(bRes && (strlen(envState)!=iEnvStateSize-1))
 			break;
-
 		if (!bRes || (iEnvStateSize>=iEnvStateMaxSize))
 		{
 			free(envState);
 			return NULL;
 		}
-
 		iEnvStateSize *= 2;
 	}
-
 	return envState;
+
 }
 
 void ShowConsoleMsgEx(const char* format, ...)
@@ -331,12 +330,12 @@ const char* GetTimeSegmentStr(TimeSegment timeSegment)
 {
 	switch(timeSegment)
 	{
-		case eTIMESEGMENT_TIMESEL			: return "Time selection";		break;
-		case eTIMESEGMENT_PROJECT			: return "Project";				break;
-		case eTIMESEGMENT_SELITEM			: return "Selected item";		break;
-		case eTIMESEGMENT_LOOP				: return "Loop";				break;
-		//case eTIMESEGMENT_CURRENTMEASURE	: return "Current measure";		break;
-		default								: return "???";					break;
+		case eTIMESEGMENT_TIMESEL			: return __LOCALIZE("Time selection","sws_mbox");	break;
+		case eTIMESEGMENT_PROJECT			: return __LOCALIZE("Project","sws_mbox");			break;
+		case eTIMESEGMENT_SELITEM			: return __LOCALIZE("Selected item","sws_mbox");	break;
+		case eTIMESEGMENT_LOOP				: return __LOCALIZE("Loop","sws_mbox");				break;
+		//case eTIMESEGMENT_CURRENTMEASURE	: return __LOCALIZE("Current measure","sws_mbox");	break;
+		default								: return "???";										break;
 	}
 }
 

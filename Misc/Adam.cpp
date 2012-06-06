@@ -135,8 +135,10 @@ WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	const char cWndPosKey[] = "Fill gaps Window Pos"; 
 	switch(Message)
 	{
-        case WM_INITDIALOG :
-		{		
+		case WM_INITDIALOG :
+		{
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_FADE_SHAPE));
+
 			char triggerPad[128], fadeLength[128], maxGap[128], maxStretch[128], presTrans[128], transFade[128];
 			int fadeShape, markErrors, stretch, trans;
 			ReadFillGapsIniFile(NULL, triggerPad, fadeLength, maxGap, maxStretch, presTrans, transFade, &fadeShape, &markErrors, &stretch, &trans);

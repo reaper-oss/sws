@@ -29,5 +29,21 @@
 #pragma once
 #include "stdafx.h"
 
+class MarkerAction
+{
+public:
+	MarkerAction(int id, const char* action = "") : m_id(id), m_action(action) {}
+	~MarkerAction() {}
+	int m_id;
+	WDL_FastString m_action;
+};
+
+int GetMarkerActionsCount();
+MarkerAction* GetMarkerAction(int i);
+MarkerAction* GetMarkerActionById(int id);
+MarkerAction* AddMarkerAction(int id, const char* actionDesc = "");
+bool DeleteMarkerAction(int id);
+void CleanUpMarkerActions();
 int MarkerActionsInit();
 void MarkerActionSlice();
+

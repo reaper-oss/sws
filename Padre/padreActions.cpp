@@ -100,8 +100,13 @@ WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 	{
         case WM_INITDIALOG :
 		{
-			//const char* args = (const char*)lParam;
-			//EnvelopeProcessor::getInstance()->_parameters.envType = (EnvType)atoi(args);
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADRELFO_TARGET));
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADRELFO_TIMESEGMENT));
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADRELFO_LFOSHAPE));
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADRELFO_SYNCFREQUENCY));
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADRELFO_SYNCDELAY));
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADRELFO_TAKEENV));
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADRELFO_MIDICC));
 
 			for(int i=eENVTYPE_TRACK; i<=eENVTYPE_MIDICC; i++)
 			{
@@ -406,6 +411,11 @@ WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 	{
         case WM_INITDIALOG :
 		{
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADREENVPROC_TYPE));
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADREENVPROC_TARGET));
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADREENVPROC_TIMESEGMENT));
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADREENVPROC_TAKEENV));
+
 			for(int i=eENVTYPE_TRACK; i<eENVTYPE_MIDICC; i++)
 			{
 				int x = (int)SendDlgItemMessage(hwnd,IDC_PADREENVPROC_TARGET,CB_ADDSTRING,0,(LPARAM)GetEnvTypeStr((EnvType)i));

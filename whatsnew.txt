@@ -1,4 +1,9 @@
-Fixed broken Resources window with non-English LangPacks
+Localization
++Fixed broken Resources window with non-English LangPacks
++Fixed UTF-8 issues in the Cue Buss Generator, Envelope Processor, LFO Generator and Fills Gaps window
++Full localization for the MarkerList (context menus, messages, etc..)
++Full localization for IX's Label Processor
+Note: a new SWS template LangPack will be released with the next official SWS version!
 
 !v2.2.0 #12 (June 3, 2012)
 Issue 476: Fix deleting of descriptions in MarkerList, Notes window too
@@ -79,7 +84,7 @@ SWS localization (BETA)
 +Added/fixed localization for (few) missing action names
 
 OS X love:
-+Fixed broken context menus. Important for the Resources window for example, where right-clicking auto-save and auto-fill buttons for options was impossible on OS X!
++Fixed broken context menus. Important for the Resources window for example, where right-clicking auto-save and auto-fill buttons was impossible on OS X!
 +Cycle action editor: added action learn (right-click in the right list view). Note: the editor is now exactly the same as on Windows OS.
 +Live Configs: added action learn (right-click the columns "Activation" and "Deactivation"). Note: the Live Configs window is now exactly the same as on Windows OS.
 +Better tooltips
@@ -121,7 +126,7 @@ Other
 Note: localization of the SWS extension is coming soon!
 
 Added new "S&M Region Playlist" window (BETA) - http://reaper.mj-s.com/S&M_RegionPlaylist.jpg|Screenshot|
-Useful to preview different song structures (i.e. non-linear play) and apply them via the button "Crop project to playlist".
+Useful to preview different song structures (i.e. non-linear play) and apply them via the command "Crop project to playlist".
 Use the context menu to add/remove/etc.. regions, use drag-drop to reorder regions in the playlist. Undo points are created for playlist editions.
 Manage several playlists: top left dropdown box and tiny plus/minus buttons. Playlists are saved in project files.
 Added related actions:
@@ -131,8 +136,8 @@ Important note: the play preview is based on "smooth seeking" so <b>regions are 
 
 Live Configs:
 +OS X: FX presets support like on Windows OS
-+All FX presets are now supported via the new Learn command: VST patches (.fxp), AU factory/user Presets (.aupreset), etc.. Note: support was limited to user presets (.rpl) before this version.
-+Send all notes-off when deactivating a track (if any)
++All FX presets are now supported via the new Learn command: VST patches (.fxp), AU factory/user Presets (.aupreset), etc.. Note: support was limited to user presets (.rpl files) before this version.
++Send all notes-off when deactivating a track
 +Context menu: added "Learn current preset"
 
 Cue buss generator:
@@ -191,7 +196,7 @@ Added label processor (Extensions->Label processor). Automatic labelling of sele
 +S&M windows are themed to match Reaper
 +Cycle action editor for OS X
 +Item normalizing to RMS
-+Too many Resources window/Live Config updates to list here
++Too many Resources window/Live Configs updates to list here
 +Notes/help subtitle support
 +Lots of stability and performance improvements.  We <b>strongly</b> recommend you update to v2.2 if you're still running SWS v2.1.0.
 

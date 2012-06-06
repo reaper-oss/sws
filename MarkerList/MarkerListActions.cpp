@@ -30,6 +30,7 @@
 #include "MarkerListClass.h"
 #include "MarkerList.h"
 #include "MarkerListActions.h"
+#include "../reaper/localize.h"
 
 void ListToClipboard(COMMAND_T*)
 {
@@ -101,7 +102,7 @@ void DeleteAllMarkers(COMMAND_T*)
 {
 	Undo_BeginBlock();
 	DeleteAllMarkers();
-	Undo_EndBlock("Delete all markers", UNDO_STATE_MISCCFG);
+	Undo_EndBlock(__LOCALIZE("Delete all markers","sws_undo"), UNDO_STATE_MISCCFG);
 	g_pMarkerList->Update();
 }
 
@@ -126,7 +127,7 @@ void DeleteAllRegions(COMMAND_T*)
 {
 	Undo_BeginBlock();
 	DeleteAllRegions();
-	Undo_EndBlock("Delete all regions", UNDO_STATE_MISCCFG);
+	Undo_EndBlock(__LOCALIZE("Delete all regions","sws_undo"), UNDO_STATE_MISCCFG);
 	g_pMarkerList->Update();
 }
 
@@ -340,7 +341,7 @@ void MarkersToRegions(COMMAND_T*)
 
 	ml.UpdateReaper();
 
-	Undo_EndBlock2(NULL, "Convert markers to regions", UNDO_STATE_MISCCFG);
+	Undo_EndBlock2(NULL, __LOCALIZE("Convert markers to regions","sws_undo"), UNDO_STATE_MISCCFG);
 }
 
 
@@ -366,5 +367,5 @@ void RegionsToMarkers(COMMAND_T*)
 
 	ml.UpdateReaper();
 
-	Undo_EndBlock2(NULL, "Convert regions to markers", UNDO_STATE_MISCCFG);
+	Undo_EndBlock2(NULL, __LOCALIZE("Convert regions to markers","sws_undo"), UNDO_STATE_MISCCFG);
 }

@@ -28,16 +28,17 @@
 #include "stdafx.h"
 
 #include "padreEnvelopeProcessor.h"
+#include "../reaper/localize.h"
 #include "../SnM/SnM_Item.h"
 
 const char* GetEnvTypeStr(EnvType type)
 {
 	switch(type)
 	{
-		case eENVTYPE_TRACK			: return "Selected Track Envelope";		break;
-		case eENVTYPE_TAKE			: return "Selected Take(s)";			break;
-		case eENVTYPE_MIDICC		: return "Selected Take(s) (MIDI)";		break;
-		default						: return NULL;							break;
+		case eENVTYPE_TRACK			: return __LOCALIZE("Selected track envelope","sws_DLG_148");	break;
+		case eENVTYPE_TAKE			: return __LOCALIZE("Selected take(s)","sws_DLG_148");			break;
+		case eENVTYPE_MIDICC		: return __LOCALIZE("Selected take(s) (MIDI)","sws_DLG_148");	break;
+		default						: return NULL;													break;
 	}
 }
 
@@ -45,10 +46,10 @@ const char* GetEnvModTypeStr(EnvModType type)
 {
 	switch(type)
 	{
-		case eENVMOD_FADEIN			: return "Fade In";		break;
-		case eENVMOD_FADEOUT		: return "Fade Out";	break;
-		case eENVMOD_AMPLIFY		: return "Amplify";		break;
-		default						: return NULL;			break;
+		case eENVMOD_FADEIN			: return __LOCALIZE("Fade in","sws_DLG_148");	break;
+		case eENVMOD_FADEOUT		: return __LOCALIZE("Fade out","sws_DLG_148");	break;
+		case eENVMOD_AMPLIFY		: return __LOCALIZE("Amplify","sws_DLG_148");	break;
+		default						: return NULL;									break;
 	}
 }
 
@@ -115,7 +116,7 @@ EnvelopeProcessor::EnvelopeProcessor()
 : _parameters(), _envModParams()
 {
 	_midiProcessor = new MidiItemProcessor("MIDI Item LFO Generator");
-_midiProcessor->addFilter(new MidiCcRemover(&_parameters.midiCc));
+	_midiProcessor->addFilter(new MidiCcRemover(&_parameters.midiCc));
 	_midiProcessor->addGenerator(new MidiCcLfo(&_parameters));
 }
 
@@ -129,19 +130,19 @@ void EnvelopeProcessor::errorHandlerDlg(HWND hwnd, ErrorCode err)
 	switch(err)
 	{
 		case EnvelopeProcessor::eERRORCODE_NOENVELOPE:
-			MessageBox(hwnd, "No envelope selected!", "Error", MB_OK);
+			MessageBox(hwnd, __LOCALIZE("No envelope selected!","sws_DLG_148"), __LOCALIZE("SWS/Padre - Error","sws_DLG_148"), MB_OK);
 		break;
 		case EnvelopeProcessor::eERRORCODE_NULLTIMESELECTION:
-			MessageBox(hwnd, "No time selection!", "Error", MB_OK);
+			MessageBox(hwnd, __LOCALIZE("No time selection!","sws_DLG_148"), __LOCALIZE("SWS/Padre - Error","sws_DLG_148"), MB_OK);
 		break;
 		case EnvelopeProcessor::eERRORCODE_NOITEMSELECTED:
-			MessageBox(hwnd, "No item selected!", "Error", MB_OK);
+			MessageBox(hwnd, __LOCALIZE("No item selected!","sws_DLG_148"), __LOCALIZE("SWS/Padre - Error","sws_DLG_148"), MB_OK);
 		break;
 		case EnvelopeProcessor::eERRORCODE_NOOBJSTATE:
-			MessageBox(hwnd, "Could not retrieve envelope object state!", "Error", MB_OK);
+			MessageBox(hwnd, __LOCALIZE("Could not retrieve envelope object state!","sws_DLG_148"), __LOCALIZE("SWS/Padre - Error","sws_DLG_148"), MB_OK);
 		break;
 		case EnvelopeProcessor::eERRORCODE_UNKNOWN:
-			MessageBox(hwnd, "Could not generate envelope! (Unknown Error)", "Error", MB_OK);
+			MessageBox(hwnd, __LOCALIZE("Could not generate envelope!","sws_DLG_148"), __LOCALIZE("SWS/Padre - Error","sws_DLG_148"), MB_OK);
 		break;
 		default:
 		break;
@@ -451,7 +452,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processPoints(char* envState, st
 		return eERRORCODE_NOOBJSTATE;
 
 	//string newState;
-newState.clear();
+	newState.clear();
 	char cPtValue[128];
 
 	double position, value;
@@ -627,8 +628,8 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateTrackLfo(TrackEnvelope* 
 	if(GetSetObjectState(envelope, newState.c_str()))
 		return eERRORCODE_UNKNOWN;
 
-/* JFB leads to "recursive" undo point, enabled at top level
-Undo_OnStateChangeEx("Track Envelope LFO", UNDO_STATE_ALL, -1);
+/* JFB commented: leads to "recursive" undo point, enabled at top level
+	Undo_OnStateChangeEx("Track Envelope LFO", UNDO_STATE_ALL, -1);
 */
 	return eERRORCODE_OK;
 }
@@ -668,7 +669,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTrackEnvLfo()
 	ErrorCode res = generateTrackLfo(envelope, dStartPos, dEndPos, _parameters.waveParams, _parameters.precision);
 //UpdateTimeline();
 
-	Undo_EndBlock2(NULL, "Track Envelope LFO", UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, __LOCALIZE("Track envelope LFO","sws_undo"), UNDO_STATE_ALL);
 	return res;
 }
 
@@ -791,7 +792,7 @@ writeLfoPoints(newState, dStartPos, dEndPos, dValMin, dValMax, dFreq, dStrength,
 	if(!newState.size() || !GetSetEnvelopeState(envelope, (char*)newState.c_str(), (int)newState.size()))
 		return eERRORCODE_UNKNOWN;
 
-/* JFB "recursive" undo point, enabled at top level
+/* JFB commented: "recursive" undo point, enabled at top level
 	Undo_OnStateChangeEx("Take Envelope LFO", UNDO_STATE_ALL, -1);
 */
 	return eERRORCODE_OK;
@@ -845,7 +846,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::generateSelectedTakesLfo()
 
 	//Undo_OnStateChangeEx("Item Envelope LFO", UNDO_STATE_ALL, -1);
 //	UpdateTimeline();
-	Undo_EndBlock2(NULL, "Take Envelope LFO", UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, __LOCALIZE("Take envelope LFO","sws_undo"), UNDO_STATE_ALL);
 
 	return eERRORCODE_OK;
 }
@@ -990,13 +991,13 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processSelectedTrackEnv()
 /* JFB "recursive" undo point, enabled at top level
 	Undo_OnStateChangeEx("Envelope Processor", UNDO_STATE_ALL, -1);
 */
-	Undo_EndBlock2(NULL, "Track Envelope Processor", UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, __LOCALIZE("Track envelope processor","sws_undo"), UNDO_STATE_ALL);
 	return res;
 }
 
 EnvelopeProcessor::ErrorCode EnvelopeProcessor::processSelectedTakes()
 {
-    ErrorCode res =	eERRORCODE_OK;
+	ErrorCode res = eERRORCODE_OK;
 	list<MediaItem*> items;
 	GetSelectedMediaItems(items);
 	if(items.empty())
@@ -1022,7 +1023,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processSelectedTakes()
 
 	//Undo_OnStateChangeEx("Item Envelope LFO", UNDO_STATE_ALL, -1);
 //	UpdateTimeline();
-	Undo_EndBlock2(NULL, "Take Envelope Processor", UNDO_STATE_ALL);
+	Undo_EndBlock2(NULL, __LOCALIZE("Take envelope processor","sws_undo"), UNDO_STATE_ALL);
 
 	return eERRORCODE_OK;
 }
@@ -1085,7 +1086,7 @@ EnvelopeProcessor::ErrorCode EnvelopeProcessor::processTakeEnv(MediaItem_Take* t
 	char* envState = PadresGetEnvelopeState(envelope);
 	string newState;
 	ErrorCode res = processPoints(envState, newState, dStartPos, dEndPos, dValMin, dValMax, envModType, dStrength, dOffset);
-    free(envState);
+	free(envState);
 
 	if(!newState.size() || !GetSetEnvelopeState(envelope, (char*)newState.c_str(), (int)newState.size()))
 		res = eERRORCODE_UNKNOWN;

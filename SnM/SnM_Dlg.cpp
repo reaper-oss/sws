@@ -154,7 +154,7 @@ LICE_IBitmap* SNM_GetThemeLogo()
 	static LICE_IBitmap* snmLogo;
 	if (!snmLogo)
 	{
-/*JFB commented: load from resources, KO for OSX (looks for REAPER's resources..)
+/*JFB commented: load from resources KO for OSX (it looks for REAPER's resources..)
 #ifdef _WIN32
 		snmLogo = LICE_LoadPNGFromResource(g_hInst,IDB_SNM,NULL);
 #else
@@ -327,8 +327,7 @@ void FillCueBussDlg(HWND _hwnd=NULL)
 	SetDlgItemText(hwnd,IDC_SNM_CUEBUS_NAME,busName);
 
 	for(int i=0; i<3; i++) {
-		if (_hwnd) // do it once (WM_INITDIALOG)
-			SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_ADDSTRING,0,(LPARAM)GetSendTypeStr(i+1));
+		if (_hwnd) SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_ADDSTRING,0,(LPARAM)GetSendTypeStr(i+1)); // do it once (WM_INITDIALOG)
 		if (userType==(i+1)) SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_TYPE,CB_SETCURSEL,i,0);
 	}
 
@@ -339,8 +338,7 @@ void FillCueBussDlg(HWND _hwnd=NULL)
 	CheckDlgButton(hwnd, IDC_CHECK4, (soloDefeat == 1));
 
 	for(int i=0; i < SNM_MAX_HW_OUTS; i++) {
-		if (_hwnd) // do it once (WM_INITDIALOG)
-			FillHWoutDropDown(hwnd,IDC_SNM_CUEBUS_HWOUT1+i);
+		if (_hwnd) FillHWoutDropDown(hwnd,IDC_SNM_CUEBUS_HWOUT1+i); // do it once (WM_INITDIALOG)
 		SendDlgItemMessage(hwnd,IDC_SNM_CUEBUS_HWOUT1+i,CB_SETCURSEL,hwOuts[i],0);
 	}
 
@@ -390,7 +388,13 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 	const char cWndPosKey[] = "CueBus Window Pos"; 
 	switch(Message)
 	{
-		case WM_INITDIALOG: {
+		case WM_INITDIALOG:
+		{
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_SNM_CUEBUS_TYPE));
+			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_COMBO));
+			for(int i=0; i < SNM_MAX_HW_OUTS; i++)
+				WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_SNM_CUEBUS_HWOUT1+i));
+
 			RestoreWindowPos(hwnd, cWndPosKey, false);
 			char buf[16] = "";
 			for(int i=0; i < SNM_MAX_CUE_BUSS_CONFS; i++)
@@ -410,8 +414,8 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			switch(LOWORD(wParam))
 			{
 				case IDC_COMBO:
-					// config id update
-					if(HIWORD(wParam) == CBN_SELCHANGE) {
+					if(HIWORD(wParam) == CBN_SELCHANGE) // config id update?
+					{ 
 						int id = (int)SendDlgItemMessage(hwnd,IDC_COMBO,CB_GETCURSEL,0,0);
 						if (id != CB_ERR) {
 							g_cueBussConfId = id;

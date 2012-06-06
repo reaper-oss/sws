@@ -27,22 +27,72 @@
 
 
 #include "stdafx.h"
+#include "MarkerActions.h"
+#include "../SnM/SnM_Util.h"
 
+static SWSProjConfig<WDL_PtrList_DeleteOnDestroy<MarkerAction> > g_markerActions;
 static bool g_bMAEnabled = true;
 static bool g_bIgnoreNext = false;
 static void RefreshMAToolbar();
 
-void RunActionMarker(const char* cName)
+int GetMarkerActionsCount() {
+	return g_markerActions.Get()->GetSize();
+}
+
+MarkerAction* GetMarkerAction(int i) {
+	return g_markerActions.Get()->Get(i);
+}
+
+MarkerAction* GetMarkerActionById(int id)
 {
-	if (cName && cName[0] == '!')
+	if (id>0)
+		for (int i=0; i < g_markerActions.Get()->GetSize(); i++)
+			if (g_markerActions.Get()->Get(i)->m_id == id)
+				return g_markerActions.Get()->Get(i);
+	return NULL;
+}
+
+MarkerAction* AddMarkerAction(int id, const char* actionDesc) {
+	if (id>0) return g_markerActions.Get()->Add(new MarkerAction(id, actionDesc));
+	return NULL;
+}
+
+bool DeleteMarkerAction(int id) {
+	if (id>0)
+		for (int i=0; i < g_markerActions.Get()->GetSize(); i++)
+			if (g_markerActions.Get()->Get(i)->m_id == id) {
+				g_markerActions.Get()->Delete(i, true);
+				return true;
+			}
+	return false;
+}
+
+
+void CleanUpMarkerActions() {
+	g_markerActions.Get()->Empty(true);
+	g_markerActions.Cleanup();
+}
+
+void RunActionMarker(const char* cName, bool isrgn, int num)
+{
+	const char* cmd = NULL;
+
+	int id = MakeMarkerRegionId(num, isrgn);
+	if (MarkerAction* a = GetMarkerActionById(id)) {
+		if (g_bIgnoreNext) g_bIgnoreNext = false;
+		else cmd = a->m_action.Get();
+	}
+
+	// Second try: marker/region names that begin with "!" (asc. compatibility for older marker actions)
+	if (!cmd && cName && cName[0] == '!') {
+		if (g_bIgnoreNext) g_bIgnoreNext = false;
+		else cmd = &cName[1];
+	}
+
+	if (cmd && *cmd)
 	{
-		if (g_bIgnoreNext)
-		{	// Ignore the entire marker action
-			g_bIgnoreNext = false;
-			return;
-		}
 		LineParser lp(false);
-		lp.parse(&cName[1]);
+		lp.parse(cmd);
 		for (int i = 0; i < lp.getnumtokens(); i++)
 		{
 			int iCommand = lp.gettoken_int(i);
@@ -74,13 +124,14 @@ void MarkerActionSlice()
 		{
 			// Quick and dirty IIR
 			dUsualPosDelta = dUsualPosDelta * 0.99 + dDelta * 0.01;
-			int x = 0;
+			int x=0, num; 
+			bool isrgn;
 			char* cName;
 			double dMarkerPos;
-			// Look for markers with '!' as the first char with the right time
-			while ((x = EnumProjectMarkers(x, NULL, &dMarkerPos, NULL, &cName, NULL)))
+			// Look for markers with the right time
+			while ((x = EnumProjectMarkers(x, &isrgn, &dMarkerPos, NULL, &cName, &num)))
 				if (dMarkerPos >= dLastPos && dMarkerPos < dPlayPos)
-					RunActionMarker(cName);
+					RunActionMarker(cName, isrgn, num);
 		}			
 		dLastPos = dPlayPos;
 	}
@@ -117,14 +168,15 @@ void MarkerActionRunUnderCursor(COMMAND_T*)
 	if (!g_bMAEnabled)
 		return;
 
-	int x = 0;
+	int x = 0, num;
+	bool isrgn;
 	char* cName;
 	double dMarkerPos;
 	double dCurPos = GetCursorPosition();
-	// Look for markers with '!' as the first char with the right time
-	while ((x = EnumProjectMarkers(x, NULL, &dMarkerPos, NULL, &cName, NULL)))
+	// Look for markers with the right time
+	while ((x = EnumProjectMarkers(x, &isrgn, &dMarkerPos, NULL, &cName, &num)))
 		if (dMarkerPos == dCurPos)
-			RunActionMarker(cName);
+			RunActionMarker(cName, isrgn, num);
 }
 
 void MarkerActionIgnoreNext(COMMAND_T*)

@@ -29,6 +29,7 @@
 #include "stdafx.h"
 #include "../Utility/SectionLock.h"
 #include "../../WDL/projectcontext.h"
+#include "../reaper/localize.h"
 #include "MarkerListClass.h"
 #include "MarkerListActions.h"
 #include "../SnM/SnM_Util.h"
@@ -356,7 +357,7 @@ void MarkerList::ExportToFile(const char* format)
 {
 	// Note - UTF8 untested
 	char cFilename[512];
-	if (BrowseForSaveFile("Choose text file to save markers to", NULL, NULL, "TXT files\0*.txt\0", cFilename, 512))
+	if (BrowseForSaveFile(__LOCALIZE("Choose text file to save markers to","sws_DLG_102"), NULL, NULL, "TXT files\0*.txt\0", cFilename, 512))
 	{
 		char* str = GetFormattedList(format);
 		FILE* f = fopen(cFilename, "w");

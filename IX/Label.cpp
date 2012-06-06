@@ -43,23 +43,23 @@ WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SetWindowLong(hwnd, GWLP_USERDATA, (LONG)lParam);
 			pStr = (WDL_FastString*) GetWindowLong(hwnd, GWLP_USERDATA);
 
-			LPCSTR info = "All arguments are optional. The following are all valid: /E /E[3] /E[3,9]:\n"
-							"\n\t/D\t\t\tDuration."
-							"\n\t/E[digits, first]\t\tEnumerate in selection."
-							"\n\t/e[digits, first]\t\tEnumerate in selection on track."
-							"\n\t/I[digits, last]\t\tInverse enumerate in selection."
-							"\n\t/i[digits, last]\t\tInverse enumerate in selection on track."
-							"\n\t/L[offset, length]\tCurrent label."
-							"\n\t/O\t\t\tSource offset."
-							"\n\t/P[precision]\t\tPeak level."
-							"\n\t/R[precision]\t\tRMS peak level."
-							"\n\t/r[precision]\t\tRMS average level."
-							"\n\t/S[offset, length]\tSource media full path."
-							"\n\t/s[offset, length]\tSource media filename."
-							"\n\t/T[offset, length]\tTrack name."
-							"\n\t/t[digits]\t\tTrack number.";
-
-			SetWindowText(GetDlgItem(hwnd, IDC_HELPTEXT), info);
+			WDL_FastString helpStr;
+			helpStr.Append(__LOCALIZE("All arguments are optional. The following are all valid: /E /E[3] /E[3,9]:\n","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/D\t\t\tDuration.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/E[digits, first]\t\tEnumerate in selection.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/e[digits, first]\t\tEnumerate in selection on track.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/I[digits, last]\t\tInverse enumerate in selection.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/i[digits, last]\t\tInverse enumerate in selection on track.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/L[offset, length]\tCurrent label.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/O\t\t\tSource offset.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/P[precision]\t\tPeak level.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/R[precision]\t\tRMS peak level.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/r[precision]\t\tRMS average level.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/S[offset, length]\tSource media full path.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/s[offset, length]\tSource media filename.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/T[offset, length]\tTrack name.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/t[digits]\t\tTrack number.","sws_DLG_163"));
+			SetWindowText(GetDlgItem(hwnd, IDC_HELPTEXT), helpStr.Get());
 
 			if(pStr)
 				SetDlgItemText(hwnd, IDC_EDIT, pStr->Get());

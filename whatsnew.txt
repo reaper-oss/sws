@@ -1,3 +1,4 @@
+!v2.2.0 #13 (June 6, 2012)
 Localization
 +Fixed broken Resources window with non-English LangPacks
 +Fixed UTF-8 issues in the Cue Buss Generator, Envelope Processor, LFO Generator and Fills Gaps window

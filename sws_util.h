@@ -199,6 +199,8 @@ HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu = NULL, i
 BOOL IsCommCtrlVersion6();
 void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
+void SetWindowPosAtMouse(HWND hwnd);
+
 MediaTrack* GetFirstSelectedTrack();
 int NumSelTracks();
 void SaveSelected();

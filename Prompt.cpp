@@ -35,6 +35,7 @@ static const char* g_cTitle;
 static char* g_cString;
 static int g_iMax;
 static bool g_bOK = false;
+static bool g_bAtMouse = false;
 
 INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -45,7 +46,10 @@ INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 			SetWindowText(hwndDlg, g_cTitle);
 			HWND hEdit = GetDlgItem(hwndDlg, IDC_EDIT);
 			SetWindowText(hEdit, g_cString);
-			RestoreWindowPos(hwndDlg, PROMPTWND_KEY, false);
+			if (g_bAtMouse)
+				SetWindowPosAtMouse(hwndDlg);
+			else
+				RestoreWindowPos(hwndDlg, PROMPTWND_KEY, false);
 			return 0;
 		}
 		case WM_COMMAND:
@@ -56,7 +60,8 @@ INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 					g_bOK = true;
 				// Fall through to cancel to save/end
 				case IDCANCEL:
-					SaveWindowPos(hwndDlg, PROMPTWND_KEY);
+					if (!g_bAtMouse)
+						SaveWindowPos(hwndDlg, PROMPTWND_KEY);
 					EndDialog(hwndDlg, 0);
 					break;
 			}
@@ -102,12 +107,13 @@ INT_PTR WINAPI doInfoDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 }
 
 
-bool PromptUserForString(HWND hParent, const char* cTitle, char* cString, int iMaxChars)
+bool PromptUserForString(HWND hParent, const char* cTitle, char* cString, int iMaxChars, bool bAtMouse)
 {
 	g_cTitle = cTitle;
 	g_cString = cString;
 	g_iMax = iMaxChars;
 	g_bOK = false;
+	g_bAtMouse = bAtMouse;
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_PROMPT), hParent, doPromptDialog);
 	return g_bOK;
 }

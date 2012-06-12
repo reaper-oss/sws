@@ -25,5 +25,5 @@
 /
 ******************************************************************************/
 
-bool PromptUserForString(HWND hParent, const char* cTitle, char* cString, int iMaxChars);
+bool PromptUserForString(HWND hParent, const char* cTitle, char* cString, int iMaxChars, bool bAtMouse = false);
 void DisplayInfoBox(HWND hParent, const char* cTitle, const char* cInfo);

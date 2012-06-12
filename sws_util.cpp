@@ -105,6 +105,20 @@ void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize)
 	}
 }
 
+void SetWindowPosAtMouse(HWND hwnd)
+{
+	RECT r;
+	GetWindowRect(hwnd, &r);
+	POINT p;
+	GetCursorPos(&p);
+	r.right = p.x + abs(r.right-r.left);
+	r.bottom = p.y + abs(r.bottom-r.top);
+	r.left = p.x;
+	r.top = p.y;
+	EnsureNotCompletelyOffscreen(&r);
+	SetWindowPos(hwnd, NULL, r.left, r.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+}
+
 MediaTrack* GetFirstSelectedTrack()
 {
 	for (int j = 0; j <= GetNumTracks(); j++)

@@ -282,7 +282,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 			}
 			break;
-		// define a min size (+ fix flickering when of docked views)
+		// define a min size (+ fix flickering when docked)
 		case WM_GETMINMAXINFO:
 			if (lParam)
 			{
@@ -767,7 +767,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 
 	if (!m_bDisableUpdates && s->hdr.code == LVN_ITEMCHANGED && s->iItem >= 0)
 #else
-	//JFB no test on s->iItem for OSX: needed this to detect emptied selections
+	//JFB no test on s->iItem for OSX: needed to detect empty selections
 	if (!m_bDisableUpdates && s->hdr.code == LVN_ITEMCHANGED)
 #endif
 	{
@@ -1276,7 +1276,7 @@ SWS_ListItem* SWS_ListView::GetHitItem(int x, int y, int* iCol)
 	GetWindowRect(header, &r);
 	if (PtInRect(&r, pt))
 #else
-	if (ht.pt.y>-15 && ht.pt.y<0) // table header only (todo: system metrics?)
+	if (ht.pt.y>(-1*SWELL_GetListViewHeaderHeight(m_hwndList)) && ht.pt.y<0)
 #endif
 	{
 		if (iCol)

@@ -35,9 +35,7 @@ enum
   SNM_NOTES_PROJECT=0,
   SNM_NOTES_ITEM,
   SNM_NOTES_TRACK,
-#ifdef _SNM_MARKER_REGION_NAME
   SNM_NOTES_REGION_NAME,
-#endif
   SNM_NOTES_REGION_SUBTITLES,
   SNM_NOTES_ACTION_HELP // must remain the last item: no OSX support yet 
 };
@@ -76,8 +74,8 @@ public:
 	~SNM_NotesHelpWnd();
 
 	void SetType(int _type);
-	void SetText(const char* _str, bool _addRN=true);
-	void RefreshGUI(bool _emtpyNotes = false);
+	void SetText(const char* _str, bool _addRN = true);
+	void RefreshGUI();
 	void CSurfSetTrackTitle();
 	void CSurfSetTrackListChange();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
@@ -99,9 +97,7 @@ public:
 protected:
 	void OnInitDlg();
 	void OnDestroy();
-/*JFB r376	
 	bool IsActive(bool bWantEdit = false);
-*/
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	int OnKey(MSG* msg, int iKeyState);
 	void OnTimer(WPARAM wParam=0);

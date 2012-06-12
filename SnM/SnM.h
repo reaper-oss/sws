@@ -37,9 +37,6 @@
 // disable/enable some features
 //#define _SNM_MISC	// not released, deprecated, tests, etc..
 //#define _SNM_WDL	// if my wdl version is used
-#define _SNM_MARKER_REGION_NAME
-#define _SNM_PRESETS
-#define _SNM_ACTION_LEARN
 
 #ifdef _WIN32
 #define SNM_FORMATED_INI_FILE		"%s\\S&M.ini"
@@ -87,7 +84,7 @@
 #define SNM_MAX_DYNAMIC_ACTIONS		99     // if > 99 the display of action names should be updated
 #define SNM_MAX_CYCLING_ACTIONS		8
 #define SNM_MAX_CYCLING_SECTIONS	3
-#define SNM_MAX_ENV_SUBCHUNK_NAME	16
+#define SNM_MAX_ENV_SUBCHUNK_NAME	32
 #define MAX_CC_LANE_ID				133
 #define MAX_CC_LANES_LEN			4096
 #define SNM_3D_COLORS_DELTA			25

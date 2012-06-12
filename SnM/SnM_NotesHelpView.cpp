@@ -26,12 +26,14 @@
 ******************************************************************************/
 
 //JFB TODO?
-// - atm, undo on each key stroke (!) *but* it fixes:
-//   * SaveExtensionConfig() that is not called if no proj mods but notes may have been added..
+// - atm, undo on each key stroke (!) but it fixes:
+//   * SaveExtensionConfig() that is not called when there is no proj mods but
+       some notes have been entered..
 //   * missing updates on project switches
+// - clicking the empty area of the tcp does not remove focus (important for refresh)
+// - undo does not restore caret pos
 // - take changed => title not updated
 // - drag-drop text
-// - undo does not restore caret pos.
 // - use action_help_t ? (not finished according to Cockos)
 
 #include "stdafx.h"
@@ -39,10 +41,10 @@
 #include "../reaper/localize.h"
 
 
-#define MAX_HELP_LENGTH				4096 //JFB 4096 rather than MAX_INI_SECTION (too big)
+#define MAX_HELP_LENGTH				4096 //JFB instead of MAX_INI_SECTION (too large)
 #define SET_ACTION_HELP_FILE_MSG	0xF001
 #define UPDATE_TIMER				1
-#define UPDATE_FREQ					125
+#define UPDATE_FREQ					150
 
 enum {
   BUTTONID_LOCK=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
@@ -56,7 +58,6 @@ enum {
 
 enum {
   REQUEST_REFRESH=0,
-  REQUEST_REFRESH_EMPTY,
   NO_REFRESH
 };
 
@@ -128,9 +129,7 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	m_cbType.AddItem(__LOCALIZE("Project notes","sws_DLG_152"));
 	m_cbType.AddItem(__LOCALIZE("Item notes","sws_DLG_152"));
 	m_cbType.AddItem(__LOCALIZE("Track notes","sws_DLG_152"));
-#ifdef _SNM_MARKER_REGION_NAME
 	m_cbType.AddItem(__LOCALIZE("Marker/Region names","sws_DLG_152"));
-#endif
 	m_cbType.AddItem(__LOCALIZE("Marker/Region subtitles","sws_DLG_152"));
 #ifdef _WIN32
 	m_cbType.AddItem(__LOCALIZE("Action help","sws_DLG_152"));
@@ -181,7 +180,7 @@ void SNM_NotesHelpWnd::SetType(int _type)
 
 	// force an initial refresh (when IDC_EDIT has the focus, re-enabling the timer 
 	// isn't enough: Update() is skipped, see OnTimer() & IsActive()
-	Update(); // <- g_prevNotesViewType is updated here
+	Update();
 }
 
 void SNM_NotesHelpWnd::SetText(const char* _str, bool _addRN) {
@@ -192,11 +191,8 @@ void SNM_NotesHelpWnd::SetText(const char* _str, bool _addRN) {
 	}
 }
 
-void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes) 
+void SNM_NotesHelpWnd::RefreshGUI() 
 {
-	if (_emtpyNotes)
-		SetText("");
-
 	bool bHide = true;
 	switch(g_notesViewType)
 	{
@@ -211,9 +207,7 @@ void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes)
 			if (g_trNote)
 				bHide = false;
 			break;
-#ifdef _SNM_MARKER_REGION_NAME
 		case SNM_NOTES_REGION_NAME:
-#endif
 		case SNM_NOTES_REGION_SUBTITLES:
 			if (g_lastMarkerRegionId > 0)
 				bHide = false;
@@ -224,7 +218,7 @@ void SNM_NotesHelpWnd::RefreshGUI(bool _emtpyNotes)
 			break;
 	}
 	ShowWindow(GetDlgItem(m_hwnd, IDC_EDIT), bHide || g_locked ? SW_HIDE : SW_SHOW);
-	m_parentVwnd.RequestRedraw(NULL);
+	m_parentVwnd.RequestRedraw(NULL); // the meat!
 }
 
 void SNM_NotesHelpWnd::CSurfSetTrackTitle() {
@@ -287,11 +281,10 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	}
 }
 
-/*JFB r376
+// bWantEdit ignored: no list view in there
 bool SNM_NotesHelpWnd::IsActive(bool bWantEdit) {
-	return (bWantEdit || GetForegroundWindow() == m_hwnd || GetFocus() == GetDlgItem(m_hwnd, IDC_EDIT));
+	return (GetForegroundWindow() == m_hwnd || GetFocus() == GetDlgItem(m_hwnd, IDC_EDIT));
 }
-*/
 
 HMENU SNM_NotesHelpWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
@@ -336,9 +329,7 @@ void SNM_NotesHelpWnd::OnTimer(WPARAM wParam)
 		switch (g_notesViewType)
 		{
 			case SNM_NOTES_REGION_SUBTITLES:
-#ifdef _SNM_MARKER_REGION_NAME
 			case SNM_NOTES_REGION_NAME:
-#endif
 				RegisterToMarkerRegionUpdates(&m_mkrRgnSubscriber); // no-op if alreday registered
 				break;
 			default:
@@ -350,17 +341,10 @@ void SNM_NotesHelpWnd::OnTimer(WPARAM wParam)
 		// when the view is active: update only for markers and if the view is locked 
 		// => updates during playback, in other cases (e.g. item selection change) the main 
 		// window will be the active one
-		if (g_notesViewType != SNM_NOTES_PROJECT)
+		if (g_notesViewType != SNM_NOTES_PROJECT && IsWindowVisible(m_hwnd) && (!IsActive() || 
+			(g_locked && (g_notesViewType == SNM_NOTES_REGION_SUBTITLES || g_notesViewType == SNM_NOTES_REGION_NAME))))
 		{
-				if (IsWindowVisible(m_hwnd) && (!IsActive() || 
-					(g_locked && (g_notesViewType == SNM_NOTES_REGION_SUBTITLES
-#ifdef _SNM_MARKER_REGION_NAME
-					|| g_notesViewType == SNM_NOTES_REGION_NAME
-#endif			
-					))))
-				{
-					Update();
-				}
+			Update();
 		}
 	}
 }
@@ -392,10 +376,9 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 		GetDlgItemText(m_hwnd, IDC_EDIT, buf, MAX_HELP_LENGTH);
 		if (*buf)
 		{
-#ifdef _SNM_MARKER_REGION_NAME
 			if (g_notesViewType == SNM_NOTES_REGION_NAME)
 				ShortenStringToFirstRN(buf);
-#endif
+
 			int numlines=1, maxlinelen=-1;
 			char* p = strchr(buf, '\n');
 			char* p2 = buf;
@@ -432,7 +415,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 
 				int top = (int)(h + (_bm->getHeight()-h)/2 - (fontHeight*numlines)/2 + 0.5);
 				for (int i=0; i < numlines; ++i)
-				{                   
+				{
 					RECT tr = {0,0,0,0};
 					dynFont.DrawText(NULL, p, -1, &tr, DT_CALCRECT);
 					int txtw = tr.right - tr.left;
@@ -495,9 +478,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 							strcpy(str, __LOCALIZE("[MASTER]","sws_DLG_152"));
 					}
 					break;
-#ifdef _SNM_MARKER_REGION_NAME
 				case SNM_NOTES_REGION_NAME:
-#endif
 				case SNM_NOTES_REGION_SUBTITLES:
 					if (g_lastMarkerRegionId <= 0 || !EnumMarkerRegionDesc(GetMarkerRegionIndexFromId(g_lastMarkerRegionId), str, 512, SNM_MARKER_MASK|SNM_REGION_MASK, g_notesViewType == SNM_NOTES_REGION_SUBTITLES) || !*str)
 						lstrcpyn(str, __LOCALIZE("No marker or region at play/edit cursor!","sws_DLG_152"), 512);
@@ -505,7 +486,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 				case SNM_NOTES_ACTION_HELP:
 					if (g_lastActionDesc && *g_lastActionDesc && g_lastActionSection && *g_lastActionSection)
 						_snprintfSafe(str, sizeof(str), " [%s] %s", g_lastActionSection, g_lastActionDesc);
-/* API LIMITATION: use smthg like that when we'll be able to access all sections
+/* API LIMITATION: use smthg like that when we will be able to access all sections
 						lstrcpyn(str, kbd_getTextFromCmd(g_lastActionListCmd, NULL), 512);
 */
 					break;
@@ -586,11 +567,7 @@ void SNM_NotesHelpWnd::ToggleLock()
 {
 	g_locked = !g_locked;
 	RefreshToolbar(NamedCommandLookup("_S&M_ACTIONHELPTGLOCK"));
-	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES
-#ifdef _SNM_MARKER_REGION_NAME
-		|| g_notesViewType == SNM_NOTES_REGION_NAME
-#endif
-		)
+	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES || g_notesViewType == SNM_NOTES_REGION_NAME)
 		Update(true); // play vs edit cursor when unlocking
 	else
 		 RefreshGUI();
@@ -615,9 +592,7 @@ void SNM_NotesHelpWnd::SaveCurrentText(int _type)
 		case SNM_NOTES_TRACK:
 			SaveCurrentTrackNotes();
 			break;
-#ifdef _SNM_MARKER_REGION_NAME
 		case SNM_NOTES_REGION_NAME:
-#endif
 		case SNM_NOTES_REGION_SUBTITLES:
 			SaveCurrentMkrRgnNameOrNotes(_type != SNM_NOTES_REGION_SUBTITLES);
 			break;
@@ -629,22 +604,16 @@ void SNM_NotesHelpWnd::SaveCurrentText(int _type)
 
 void SNM_NotesHelpWnd::SaveCurrentPrjNotes()
 {
-	char buf[MAX_HELP_LENGTH] = "";
-	GetDlgItemText(m_hwnd, IDC_EDIT, buf, MAX_HELP_LENGTH);
-	if (strncmp(g_lastText, buf, MAX_HELP_LENGTH)) {
-		g_prjNotes.Get()->Set(buf); // CRLF removed only when saving the project..
-		Undo_OnStateChangeEx(__LOCALIZE("Edit project notes","sws_undo"), UNDO_STATE_MISCCFG, -1);
-	}
+	GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
+	g_prjNotes.Get()->Set(g_lastText); // CRLF removed only when saving the project..
+	Undo_OnStateChangeEx(__LOCALIZE("Edit project notes","sws_undo"), UNDO_STATE_MISCCFG, -1);
 }
 
 void SNM_NotesHelpWnd::SaveCurrentHelp()
 {
-	if (*g_lastActionCustId && !IsMacro(g_lastActionDesc))
-	{
-		char buf[MAX_HELP_LENGTH] = "";
-		GetDlgItemText(m_hwnd, IDC_EDIT, buf, MAX_HELP_LENGTH);
-		if (strncmp(g_lastText, buf, MAX_HELP_LENGTH))
-			SaveHelp(g_lastActionCustId, buf);
+	if (*g_lastActionCustId && !IsMacro(g_lastActionDesc)) {
+		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
+		SaveHelp(g_lastActionCustId, g_lastText);
 	}
 }
 
@@ -652,16 +621,12 @@ void SNM_NotesHelpWnd::SaveCurrentItemNotes()
 {
 	if (g_mediaItemNote && GetMediaItem_Track(g_mediaItemNote))
 	{
-		char buf[MAX_HELP_LENGTH] = "";
-		GetDlgItemText(m_hwnd, IDC_EDIT, buf, MAX_HELP_LENGTH);
-		if (strncmp(g_lastText, buf, MAX_HELP_LENGTH))
+		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
+		if (GetSetMediaItemInfo(g_mediaItemNote, "P_NOTES", g_lastText))
 		{
-			if (GetSetMediaItemInfo(g_mediaItemNote, "P_NOTES", buf))
-			{
 //				UpdateItemInProject(g_mediaItemNote);
-				UpdateTimeline(); // for the item's note button 
-				Undo_OnStateChangeEx(__LOCALIZE("Edit item notes","sws_undo"), UNDO_STATE_ALL, -1); //JFB TODO? -1 to replace? UNDO_STATE_ITEMS?
-			}
+			UpdateTimeline(); // for the item's note button 
+			Undo_OnStateChangeEx(__LOCALIZE("Edit item notes","sws_undo"), UNDO_STATE_ALL, -1); //JFB TODO? -1 to replace? UNDO_STATE_ITEMS?
 		}
 	}
 }
@@ -670,24 +635,19 @@ void SNM_NotesHelpWnd::SaveCurrentTrackNotes()
 {
 	if (g_trNote && CSurf_TrackToID(g_trNote, false) >= 0)
 	{
-		char buf[MAX_HELP_LENGTH] = "";
-		GetDlgItemText(m_hwnd, IDC_EDIT, buf, MAX_HELP_LENGTH);
-		if (strncmp(g_lastText, buf, MAX_HELP_LENGTH))
+		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
+		bool found = false;
+		for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++) 
 		{
-			// CRLF removed only when saving the project..
-			bool found = false;
-			for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++) 
-			{
-				if (g_pTrackNotes.Get()->Get(i)->m_tr == g_trNote) {
-					g_pTrackNotes.Get()->Get(i)->m_notes.Set(buf);
-					found = true;
-					break;
-				}
+			if (g_pTrackNotes.Get()->Get(i)->m_tr == g_trNote) {
+				g_pTrackNotes.Get()->Get(i)->m_notes.Set(g_lastText); // CRLF removed only when saving the project..
+				found = true;
+				break;
 			}
-			if (!found)
-				g_pTrackNotes.Get()->Add(new SNM_TrackNotes(g_trNote, buf));
-			Undo_OnStateChangeEx(__LOCALIZE("Edit track notes","sws_undo"), UNDO_STATE_MISCCFG, -1); //JFB TODO? -1 to replace?
 		}
+		if (!found)
+			g_pTrackNotes.Get()->Add(new SNM_TrackNotes(g_trNote, g_lastText));
+		Undo_OnStateChangeEx(__LOCALIZE("Edit track notes","sws_undo"), UNDO_STATE_MISCCFG, -1); //JFB TODO? -1 to replace?
 	}
 }
 
@@ -695,47 +655,44 @@ void SNM_NotesHelpWnd::SaveCurrentMkrRgnNameOrNotes(bool _name)
 {
 	if (g_lastMarkerRegionId > 0)
 	{
-		char buf[MAX_HELP_LENGTH] = ""; // JFB could be limited to SNM_MAX_MARKER_NAME_LEN for marker/region names
-		GetDlgItemText(m_hwnd, IDC_EDIT, buf, MAX_HELP_LENGTH);
-		if (strncmp(g_lastText, buf, MAX_HELP_LENGTH))
+		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
+		if (_name)
 		{
-			// name
-			if (_name)
+			int idx = GetMarkerRegionIndexFromId(g_lastMarkerRegionId);
+			if (idx >= 0)
 			{
-				int idx = GetMarkerRegionIndexFromId(g_lastMarkerRegionId);
-				if (idx >= 0)
+				double pos, end; int num, color; bool isRgn;
+				if (EnumProjectMarkers3(NULL, idx, &isRgn, &pos, &end, NULL, &num, &color))
 				{
-					double pos, end; int num, color; bool isRgn;
-					if (EnumProjectMarkers3(NULL, idx, &isRgn, &pos, &end, NULL, &num, &color))
-					{
-						ShortenStringToFirstRN(buf);
+					ShortenStringToFirstRN(g_lastText);
 
-						// marker/region name updates will lead to reentrance notif
-						// via SNM_MarkerRegionSubscriber.NotifyMarkerRegionUpdate() 
-						g_internalMkrRgnChange = true;
+					// track marker/region name updates that will lead to reentrance notifs
+					// via SNM_MarkerRegionSubscriber.NotifyMarkerRegionUpdate()
+					g_internalMkrRgnChange = true;
 
-						if (SNM_SetProjectMarker(NULL, num, isRgn, pos, end, buf, color))
-							Undo_OnStateChangeEx(isRgn ? __LOCALIZE("Edit region name","sws_undo") : __LOCALIZE("Edit marker name","sws_undo"), UNDO_STATE_ALL, -1);
+					if (SNM_SetProjectMarker(NULL, num, isRgn, pos, end, g_lastText, color)) {
+						UpdateTimeline();
+						Undo_OnStateChangeEx(isRgn ? __LOCALIZE("Edit region name","sws_undo") : __LOCALIZE("Edit marker name","sws_undo"), UNDO_STATE_ALL, -1);
 					}
 				}
 			}
-			// subs
-			else
+		}
+		// subtitles
+		else
+		{
+			// CRLF removed only when saving the project..
+			bool found = false;
+			for (int i=0; i < g_pRegionSubtitles.Get()->GetSize(); i++) 
 			{
-				// CRLF removed only when saving the project..
-				bool found = false;
-				for (int i=0; i < g_pRegionSubtitles.Get()->GetSize(); i++) 
-				{
-					if (g_pRegionSubtitles.Get()->Get(i)->m_id == g_lastMarkerRegionId) {
-						g_pRegionSubtitles.Get()->Get(i)->m_notes.Set(buf);
-						found = true;
-						break;
-					}
+				if (g_pRegionSubtitles.Get()->Get(i)->m_id == g_lastMarkerRegionId) {
+					g_pRegionSubtitles.Get()->Get(i)->m_notes.Set(g_lastText);
+					found = true;
+					break;
 				}
-				if (!found)
-					g_pRegionSubtitles.Get()->Add(new SNM_RegionSubtitle(g_lastMarkerRegionId, buf));
-				Undo_OnStateChangeEx(IsRegion(g_lastMarkerRegionId) ? __LOCALIZE("Edit region subtitle","sws_undo") : __LOCALIZE("Edit marker subtitle","sws_undo"), UNDO_STATE_MISCCFG, -1);
 			}
+			if (!found)
+				g_pRegionSubtitles.Get()->Add(new SNM_RegionSubtitle(g_lastMarkerRegionId, g_lastText));
+			Undo_OnStateChangeEx(IsRegion(g_lastMarkerRegionId) ? __LOCALIZE("Edit region subtitle","sws_undo") : __LOCALIZE("Edit marker subtitle","sws_undo"), UNDO_STATE_MISCCFG, -1);
 		}
 	}
 }
@@ -764,6 +721,7 @@ void SNM_NotesHelpWnd::Update(bool _force)
 		g_trNote = NULL;
 		g_lastMarkerPos = -1.0;
 		g_lastMarkerRegionId = -1;
+		_force = true; // trick for RefreshGUI() below..
 	}
 
 	// update
@@ -776,26 +734,11 @@ void SNM_NotesHelpWnd::Update(bool _force)
 			break;
 		case SNM_NOTES_ITEM:
 			refreshType = UpdateItemNotes();
-/*JFB commented: manages concurent item note updates but kludgy..
-#ifdef _WIN32
-			if (refreshType == NO_REFRESH)
-			{
-				char name[BUFFER_SIZE] = "";
-				MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
-				char* tkName = tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
-				_snprintfSafe(name, sizeof(name), "Notes for \"%s\"", tkName ? tkName : "Empty Item");
-				if (HWND w = SearchWindow(name))
-					g_mediaItemNote = NULL; //will force refresh
-			}
-#endif
-*/
 			break;
 		case SNM_NOTES_TRACK:
 			refreshType = UpdateTrackNotes();
 			break;
-#ifdef _SNM_MARKER_REGION_NAME
 		case SNM_NOTES_REGION_NAME:
-#endif
 		case SNM_NOTES_REGION_SUBTITLES:
 			refreshType = UpdateMkrRgnNameOrNotes(g_notesViewType != SNM_NOTES_REGION_SUBTITLES);
 			break;
@@ -804,8 +747,8 @@ void SNM_NotesHelpWnd::Update(bool _force)
 			break;
 	}
 	
-	if (refreshType != NO_REFRESH)
-		RefreshGUI(refreshType == REQUEST_REFRESH_EMPTY);
+	if (_force || refreshType == REQUEST_REFRESH)
+		RefreshGUI();
 
 	bRecurseCheck = false;
 }
@@ -825,7 +768,7 @@ int SNM_NotesHelpWnd::UpdateActionHelp()
 			g_lastActionListSel = iSel;
 			if (*g_lastActionCustId && *g_lastActionDesc)
 			{
-				if (!IsMacro(g_lastActionDesc)) // skip macros
+				if (IsMacro(g_lastActionDesc))
 					SetText(g_lastActionCustId);
 				else
 				{
@@ -837,14 +780,15 @@ int SNM_NotesHelpWnd::UpdateActionHelp()
 			}
 		}
 	}
-	else // if (g_lastActionListSel >= 0)
+	else if (g_lastActionListSel>=0 || *g_lastText) // *g_lastText: when switching note types w/o nothing selected for the new type
 	{
 		g_lastActionListSel = -1;
 		*g_lastActionCustId = '\0';
 		*g_lastActionDesc = '\0';
 		g_lastActionListCmd = 0;
 		*g_lastActionSection = '\0';
-		refreshType = REQUEST_REFRESH_EMPTY;
+		SetText("");
+		refreshType = REQUEST_REFRESH;
 	}
 	return refreshType;
 }
@@ -852,9 +796,8 @@ int SNM_NotesHelpWnd::UpdateActionHelp()
 int SNM_NotesHelpWnd::UpdateItemNotes()
 {
 	int refreshType = NO_REFRESH;
-	if (CountSelectedMediaItems(NULL))
+	if (MediaItem* selItem = GetSelectedMediaItem(NULL, 0))
 	{
-		MediaItem* selItem = GetSelectedMediaItem(NULL, 0);
 		if (selItem != g_mediaItemNote)
 		{
 			g_mediaItemNote = selItem;
@@ -863,40 +806,54 @@ int SNM_NotesHelpWnd::UpdateItemNotes()
 			refreshType = REQUEST_REFRESH;
 		} 
 	}
-	else // if (g_mediaItemNote)
+	else if (g_mediaItemNote || *g_lastText)
 	{
 		g_mediaItemNote = NULL;
-		refreshType = REQUEST_REFRESH_EMPTY;
+		SetText("");
+		refreshType = REQUEST_REFRESH;
 	}
+
+/*JFB commented: manages concurent item note updates but kludgy..
+#ifdef _WIN32
+	if (refreshType == NO_REFRESH)
+	{
+		char name[BUFFER_SIZE] = "";
+		MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
+		char* tkName = tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
+		_snprintfSafe(name, sizeof(name), "%s \"%s\"", __localizeFunc("Notes for", "notes", 0), tkName ? tkName : __localizeFunc("Empty Item", "common", 0));
+		if (HWND w = GetReaWindowByTitle(name))
+			g_mediaItemNote = NULL; // will force refresh
+	}
+#endif
+*/
 	return refreshType;
 }
 
 int SNM_NotesHelpWnd::UpdateTrackNotes()
 {
 	int refreshType = NO_REFRESH;
-	if (SNM_CountSelectedTracks(NULL, true))
+	if (MediaTrack* selTr = SNM_GetSelectedTrack(NULL, 0, true))
 	{
-		MediaTrack* selTr = SNM_GetSelectedTrack(NULL, 0, true);
 		if (selTr != g_trNote)
 		{
 			g_trNote = selTr;
 
 			for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++)
-			{
 				if (g_pTrackNotes.Get()->Get(i)->m_tr == g_trNote) {
 					SetText(g_pTrackNotes.Get()->Get(i)->m_notes.Get());
 					return REQUEST_REFRESH;
 				}
-			}
+
 			g_pTrackNotes.Get()->Add(new SNM_TrackNotes(g_trNote, ""));
 			SetText("");
 			refreshType = REQUEST_REFRESH;
 		} 
 	}
-	else // if (g_trNote)
+	else if (g_trNote || *g_lastText)
 	{
 		g_trNote = NULL;
-		refreshType = REQUEST_REFRESH_EMPTY;
+		SetText("");
+		refreshType = REQUEST_REFRESH;
 	}
 	return refreshType;
 }
@@ -942,11 +899,12 @@ int SNM_NotesHelpWnd::UpdateMkrRgnNameOrNotes(bool _name)
 				refreshType = REQUEST_REFRESH;
 			}
 		}
-		else // if (g_lastMarkerRegionId > 0)
+		else if (g_lastMarkerRegionId>0 || *g_lastText)
 		{
 			g_lastMarkerPos = -1.0;
 			g_lastMarkerRegionId = -1;
-			refreshType = REQUEST_REFRESH_EMPTY;
+			SetText("");
+			refreshType = REQUEST_REFRESH;
 		}
 	}
 	return refreshType;
@@ -1082,7 +1040,6 @@ void SNM_NoteHelp_MarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFl
 {
 	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
 		AddOrReplaceScheduledJob(new SNM_NoteHelp_UpdateJob());
-#ifdef _SNM_MARKER_REGION_NAME
 	else if (g_notesViewType == SNM_NOTES_REGION_NAME)
 	{
 		if (g_internalMkrRgnChange)
@@ -1090,7 +1047,6 @@ void SNM_NoteHelp_MarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFl
 		else
 			AddOrReplaceScheduledJob(new SNM_NoteHelp_UpdateJob());
 	}
-#endif
 }
 
 
@@ -1262,7 +1218,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	// load track notes
 	else if (!strcmp(lp.gettoken_str(0), "<S&M_TRACKNOTES"))
 	{
-		GUID g;		
+		GUID g;
 		stringToGuid(lp.gettoken_str(1), &g);
 		MediaTrack* tr = GuidToTrack(&g);
 		if (tr)
@@ -1445,6 +1401,7 @@ void OpenNotesHelpView(COMMAND_T* _ct)
 
 		g_pNotesHelpWnd->Show(g_notesViewType == newType /* i.e toggle */, true);
 		g_pNotesHelpWnd->SetType(newType);
+
 		if (!g_locked)
 			SetFocus(GetDlgItem(g_pNotesHelpWnd->GetHWND(), IDC_EDIT));
 	}

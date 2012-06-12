@@ -86,8 +86,9 @@ void SNM_GetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, boo
 							_items->Add(item);
 }
 
-void SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks)
+bool SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, bool _onSelTracks)
 {
+	bool updated = false;
 	int count = _items && _items->GetSize() ? CountTracks(_proj) : 0;
 	for (int i=1; i <= count; i++) // skip master
 		if (MediaTrack* tr = SNM_GetTrack(_proj, i))
@@ -96,18 +97,27 @@ void SNM_SetSelectedItems(ReaProject* _proj, WDL_PtrList<MediaItem>* _items, boo
 					if (MediaItem* item = GetTrackMediaItem(tr, j))
 						for (int k=0; k < _items->GetSize(); k++)
 							if (_items->Get(k) == item)
-								GetSetMediaItemInfo(item, "B_UISEL", &g_bTrue);
+								if (*(bool*)GetSetMediaItemInfo(item, "B_UISEL", NULL) == false) {
+									GetSetMediaItemInfo(item, "B_UISEL", &g_bTrue);
+									updated = true;
+								}
+	return updated;
 }
 
-void SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks)
+bool SNM_ClearSelectedItems(ReaProject* _proj, bool _onSelTracks)
 {
+	bool updated = false;
 	int count = CountTracks(_proj);
 	for (int i=1; i <= count; i++) // skip master
 		if (MediaTrack* tr = SNM_GetTrack(_proj, i))
 			if (!_onSelTracks || (_onSelTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
 				for (int j=0; j < GetTrackNumMediaItems(tr); j++)
 					if (MediaItem* item = GetTrackMediaItem(tr, j))
-						GetSetMediaItemInfo(item, "B_UISEL", &g_bFalse);
+						if (*(bool*)GetSetMediaItemInfo(item, "B_UISEL", NULL)) {
+							GetSetMediaItemInfo(item, "B_UISEL", &g_bFalse);
+							updated = true;
+						}
+	return updated;
 }
 
 bool IsItemInInterval(MediaItem* _item, double _pos1, double _pos2, bool _inclusive)
@@ -304,42 +314,52 @@ void GoferSplitSelectedItems(COMMAND_T* _ct) {
 	}
 }
 
-// !_undoTitle: no undo point, no arrange refresh
-bool SplitSelectAllItemsInInterval(const char* _undoTitle, double _pos1, double _pos2, WDL_PtrList<void>* _newItemsOut)
+// primitive (no undo point)
+bool SplitSelectItemsInInterval(MediaTrack* _tr, double _pos1, double _pos2, WDL_PtrList<void>* _newItemsOut)
+{
+	bool updated = false;
+	if (_tr)
+		for (int j=0; j < GetTrackNumMediaItems(_tr); j++) // new items might be created during the loop!
+			if (MediaItem* item = GetTrackMediaItem(_tr, j))
+			{
+				if (MediaItem* newItem = SplitMediaItem(item, _pos1)) {
+					updated=true;
+					if (_newItemsOut)
+						_newItemsOut->Add(newItem);
+				}
+				if (MediaItem* newItem = SplitMediaItem(item, _pos2)) {
+					updated=true;
+					if (_newItemsOut)
+						_newItemsOut->Add(newItem);
+				}
+
+				double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
+				double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
+				bool sel = *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL);
+				if ((pos+SNM_FUDGE_FACTOR) >= _pos1 && (end-SNM_FUDGE_FACTOR) <= _pos2) 
+				{
+					if (!sel) {
+						updated = true;
+						GetSetMediaItemInfo(item,"B_UISEL",&g_bTrue);
+					}
+				}
+				else if (sel) {
+					updated = true;
+					GetSetMediaItemInfo(item,"B_UISEL",&g_bFalse);
+				}
+			}
+	return updated;
+}
+
+// !_undoTitle: use as a primitive (no undo point, no arrange refresh)
+// _selTracks: true split in sel tracks only, false: split all tracks
+bool SplitSelectItemsInInterval(const char* _undoTitle, double _pos1, double _pos2, bool _selTracks, WDL_PtrList<void>* _newItemsOut)
 {
 	bool updated = false;
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
-			for (int j=0; j < GetTrackNumMediaItems(tr); j++) // new items might be created during the loop!
-				if (MediaItem* item = GetTrackMediaItem(tr,j))
-				{
-					if (MediaItem* newItem = SplitMediaItem(item, _pos1)) {
-						updated=true;
-						if (_newItemsOut)
-							_newItemsOut->Add(newItem);
-					}
-					if (MediaItem* newItem = SplitMediaItem(item, _pos2)) {
-						updated=true;
-						if (_newItemsOut)
-							_newItemsOut->Add(newItem);
-					}
-
-					double pos = *(double*)GetSetMediaItemInfo(item,"D_POSITION",NULL);
-					double end = pos + *(double*)GetSetMediaItemInfo(item,"D_LENGTH",NULL);
-					bool sel = *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL);
-					if ((pos+SNM_FUDGE_FACTOR) >= _pos1 && (end-SNM_FUDGE_FACTOR) <= _pos2) 
-					{
-						if (!sel) {
-							updated = true;
-							GetSetMediaItemInfo(item,"B_UISEL",&g_bTrue);
-						}
-					}
-					else if (sel) {
-						updated = true;
-						GetSetMediaItemInfo(item,"B_UISEL",&g_bFalse);
-					}
-				}
-
+			if (!_selTracks || (_selTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
+				updated |= SplitSelectItemsInInterval(tr, _pos1, _pos2, _newItemsOut);
 	if (_undoTitle && updated) {
 		UpdateTimeline();
 		Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
@@ -352,7 +372,7 @@ void SplitSelectAllItemsInRegion(COMMAND_T* _ct) {
 	int x=0, lastx=0; double dPos, dEnd; bool isRgn;
 	while (x = EnumProjectMarkers2(NULL, x, &isRgn, &dPos, &dEnd, NULL, NULL)) {
 		if (isRgn && cursorPos >= dPos && cursorPos <= dEnd) {
-			SplitSelectAllItemsInInterval(SWS_CMD_SHORTNAME(_ct), dPos, dEnd);
+			SplitSelectItemsInInterval(SWS_CMD_SHORTNAME(_ct), dPos, dEnd);
 			return;
 		}
 		lastx=x;

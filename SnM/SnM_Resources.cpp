@@ -272,7 +272,7 @@ void GetIniSectionName(int _type, char* _bufOut, size_t _bufOutSz) {
 	*_bufOut = toupper(*_bufOut);
 }
 
-// note: it is up to the caller to free things.. 
+// it is up to the caller to unalloc.. 
 void GetIniSectionNames(WDL_PtrList<WDL_FastString>* _iniSections) {
 	char iniSec[64]="";
 	for (int i=0; i < g_slots.GetSize(); i++) {
@@ -2182,7 +2182,7 @@ void AutoSave(int _type, bool _allowOverwrite, int _flags)
 	// are there *non empty* selected slots?
 	if (_allowOverwrite && g_pResourcesWnd && g_pResourcesWnd->GetSelectedSlots(&owSlots) && 
 		IDNO == MessageBox(g_pResourcesWnd->GetHWND(),
-			__LOCALIZE("Overwrite selected file(s)?","sws_DLG_150"), 
+		__LOCALIZE("Overwrite selected files?\nNote: replying \"No\" will add new slots/files.","sws_DLG_150"),
 			__LOCALIZE("S&M - Confirmation","sws_DLG_150"), MB_YESNO))
 	{
 		owSlots.Empty(false);
@@ -2276,7 +2276,7 @@ void NewBookmark(int _type, bool _copyCurrent)
 
 		char name[64] = "";
 		_snprintfSafe(name, sizeof(name), __LOCALIZE_VERFMT("My %s","sws_DLG_150"), g_slots.Get(GetTypeForUser(_type))->GetMenuDesc());
-		if (PromptUserForString(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("S&M - Add resource bookmark","sws_DLG_150"), name, 64) && *name)
+		if (PromptUserForString(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("S&M - Add bookmark","sws_DLG_150"), name, 64, true) && *name)
 		{
 			int newType = g_slots.GetSize();
 
@@ -2326,7 +2326,11 @@ void DeleteBookmark(int _bookmarkType)
 	{
 		int reply = IDNO;
 		if (g_slots.Get(_bookmarkType)->GetSize()) // do not ask if empty
-			reply = MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Delete files too ?","sws_DLG_150"), __LOCALIZE("S&M - Delete resource bookmark","sws_DLG_150"), MB_YESNOCANCEL);
+		{
+			char title[128] = "";
+			_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("S&M - Delete bookmark \"%s\"","sws_DLG_150"), g_slots.Get(_bookmarkType)->GetDesc());
+			reply = MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Delete files too?","sws_DLG_150"), title, MB_YESNOCANCEL);
+		}
 		if (reply != IDCANCEL)
 		{
 			// cleanup ini file (types may not be contiguous anymore..)
@@ -2359,7 +2363,7 @@ void RenameBookmark(int _bookmarkType)
 	{
 		char newName[64] = "";
 		lstrcpyn(newName, g_slots.Get(_bookmarkType)->GetDesc(), 64);
-		if (PromptUserForString(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("S&M - Rename bookmark","sws_DLG_150"), newName, 64) && *newName)
+		if (PromptUserForString(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("S&M - Rename bookmark","sws_DLG_150"), newName, 64, true) && *newName)
 		{
 			g_slots.Get(_bookmarkType)->SetDesc(newName);
 			if (g_pResourcesWnd) {
@@ -2558,11 +2562,10 @@ void ResourceViewExit()
 {
 	WDL_FastString iniStr, escapedStr;
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> iniSections;
-
 	GetIniSectionNames(&iniSections);
 
 
-	// *** save the "RESOURCE_VIEW" ini section
+	// *** save the main ini section
 
 	iniStr.Set("");
 

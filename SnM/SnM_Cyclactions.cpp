@@ -44,7 +44,7 @@
 WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cyclactions[SNM_MAX_CYCLING_SECTIONS];
 char g_cyclactionCustomIds[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_ACTION_CUSTID_LEN] = {"S&M_CYCLACTION_", "S&M_ME_LIST_CYCLACTION", "S&M_ME_PIANO_CYCLACTION"};
 char g_cyclactionIniSections[SNM_MAX_CYCLING_SECTIONS][64] = {"Main_Cyclactions", "ME_List_Cyclactions", "ME_Piano_Cyclactions"};
-char g_cyclactionSections[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN]; // init & localization in CyclactionInit()
+char g_cyclactionSections[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN]; // see init + localization in CyclactionInit()
 
 static SNM_CyclactionWnd* g_pCyclactionWnd = NULL;
 bool g_undos = true;
@@ -340,7 +340,7 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 					}
 					// main model update + action register
 					else if (!CreateCyclaction(sec, actionBuf, _errMsg ? &msg : NULL, _checkCmdIds))
-						CreateCyclaction(sec, EMPTY_CYCLACTION, NULL, false);  // +no-op in order to preserve cycle action ids
+						CreateCyclaction(sec, EMPTY_CYCLACTION, NULL, false); // failed => adds a no-op cycle action in order to preserve cycle action ids
 				}
 			}
 		}
@@ -460,7 +460,7 @@ WDL_FastString* Cyclaction::AddCmd(const char* _cmd) {
 
 void Cyclaction::UpdateNameAndCmds()
 {
-	m_cmds.EmptySafe(false); // no delete (pointers may still be used in a ListView: to be deleted by callers)
+	m_cmds.EmptySafe(false); // to be deleted by callers (might be used in a list view)
 
 	char actionStr[MAX_CYCLATION_LEN] = "";
 	lstrcpyn(actionStr, m_desc.Get(), MAX_CYCLATION_LEN);
@@ -514,11 +514,10 @@ enum {
 static SNM_CyclactionsView* g_lvL = NULL;
 static SNM_CommandsView* g_lvR = NULL;
 
-// fake list views' items (help items)
-// note: localization with !WANT_LOCALIZE_STRINGS... or __LOCALIZE() would fail => done in CyclactionInit()
-static Cyclaction g_DEFAULT_L("Right click here to add cycle actions");
-static WDL_FastString g_EMPTY_R("<- Select a cycle action");
-static WDL_FastString g_DEFAULT_R("Right click here to add commands");
+// fake list views' items (help items), see init + localization in CyclactionInit()
+static Cyclaction g_DEFAULT_L;
+static WDL_FastString g_EMPTY_R;
+static WDL_FastString g_DEFAULT_R;
 
 WDL_PtrList_DeleteOnDestroy<Cyclaction> g_editedActions[SNM_MAX_CYCLING_SECTIONS];
 Cyclaction* g_editedAction = NULL;
@@ -590,7 +589,7 @@ void Apply()
 	UpdateEditedStatus(false); // ok, apply: eof edition, g_edited=false here!
 	SaveCyclactions(g_editedActions);
 #ifdef _WIN32
-	// force ini file cache refresh: fix for the strange issue 397
+	// force ini file cache refresh
 	// see http://support.microsoft.com/kb/68827 & http://code.google.com/p/sws-extension/issues/detail?id=397
 	WritePrivateProfileString(NULL, NULL, NULL, g_SNMCyclactionIniFn.Get());
 #endif
@@ -1062,7 +1061,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case LEARN_CMD_MSG:
 		{
 			char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
-			if (LearnAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, g_cyclactionSections[g_editedSection]))
+			if (g_editedAction && LearnAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, g_cyclactionSections[g_editedSection]))
 			{
 				WDL_FastString* newCmd = g_editedAction->AddCmd(idstr);
 				g_lvR->Update();
@@ -1291,15 +1290,17 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		else if (g_editedAction && g_editedAction != &g_DEFAULT_L)
 		{
 			AddToMenu(hMenu, __LOCALIZE("Add command","sws_DLG_161"), ADD_CMD_MSG);
-#ifdef _SNM_ACTION_LEARN
 			AddToMenu(hMenu, __LOCALIZE("Add/learn from Actions window","sws_DLG_161"), LEARN_CMD_MSG);
-#endif
 			if (cmd && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R)
 				AddToMenu(hMenu, __LOCALIZE("Remove command(s)","sws_DLG_161"), DEL_CMD_MSG);
 		}
 	}
-	else
+
+	if (!right)
 	{
+		if (GetMenuItemCount(hMenu))
+			AddToMenu(hMenu, SWS_SEPARATOR, 0);
+
 		char buf[128] = "";
 		HMENU hImpExpSubMenu = CreatePopupMenu();
 		AddSubMenu(hMenu, hImpExpSubMenu, __LOCALIZE("Import/export...","sws_DLG_161"));
@@ -1386,7 +1387,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		{
 			if (!ctx->GetLine(linebuf,sizeof(linebuf)) && !lp.parse(linebuf))
 			{
-				if (lp.getnumtokens() && lp.gettoken_str(0)[0] == '>')
+				if (lp.getnumtokens()>0 && lp.gettoken_str(0)[0] == '>')
 					break;
 				else if (lp.getnumtokens() == 3)
 				{
@@ -1448,9 +1449,9 @@ static project_config_extension_t g_projectconfig = {
 int CyclactionInit()
 {
 	// localization init
-    g_DEFAULT_L.Update(__LOCALIZE("Right click here to add cycle actions","sws_DLG_161"));
-    g_EMPTY_R.Set(__LOCALIZE("<- Select a cycle action","sws_DLG_161"));
-    g_DEFAULT_R.Set(__LOCALIZE("Right click here to add commands","sws_DLG_161"));
+	g_DEFAULT_L.Update(__LOCALIZE("Right click here to add cycle actions","sws_DLG_161"));
+	g_EMPTY_R.Set(__LOCALIZE("<- Select a cycle action","sws_DLG_161"));
+	g_DEFAULT_R.Set(__LOCALIZE("Right click here to add commands","sws_DLG_161"));
 	lstrcpyn(g_cyclactionSections[0], __localizeFunc("Main","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
 	lstrcpyn(g_cyclactionSections[1], __localizeFunc("MIDI Event List Editor","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);
 	lstrcpyn(g_cyclactionSections[2], __localizeFunc("MIDI Editor","accel_sec",0), SNM_MAX_SECTION_NAME_LEN);

@@ -254,12 +254,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 #endif
 
 	// FX presets -------------------------------------------------------------
-#ifdef _SNM_PRESETS
 	{ { DEFACCEL, "SWS/S&M: Trigger next preset for selected FX of selected tracks" }, "S&M_NEXT_SELFX_PRESET", NextPresetSelTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for selected FX of selected tracks" }, "S&M_PREVIOUS_SELFX_PRESET", PrevPresetSelTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Trigger next preset for last touched FX" }, "S&M_NEXT_FOCFX_PRESET", NextPrevPresetLastTouchedFX, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for last touched FX" }, "S&M_PREV_FOCFX_PRESET", NextPrevPresetLastTouchedFX, NULL, -1},
-#endif
 	
 	// MIDI learn -------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Reassign MIDI learned channels of all FX for selected tracks (prompt)" }, "S&M_ALL_FX_LEARN_CHp", ReassignLearntMIDICh, NULL, -1},
@@ -301,9 +299,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (project notes)" }, "S&M_SHOWNOTESHELP", OpenNotesHelpView, NULL, SNM_NOTES_PROJECT, IsNotesHelpViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (item notes)" }, "S&M_ITEMNOTES", OpenNotesHelpView, NULL, SNM_NOTES_ITEM, IsNotesHelpViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (track notes)" }, "S&M_TRACKNOTES", OpenNotesHelpView, NULL, SNM_NOTES_TRACK, IsNotesHelpViewDisplayed},
-#ifdef _SNM_MARKER_REGION_NAME
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker/region names)" }, "S&M_MARKERNAMES", OpenNotesHelpView, NULL, SNM_NOTES_REGION_NAME, IsNotesHelpViewDisplayed},
-#endif
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (marker/region subtitles)" }, "S&M_MARKERSUBTITLES", OpenNotesHelpView, NULL, SNM_NOTES_REGION_SUBTITLES, IsNotesHelpViewDisplayed},
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Open/close Notes window (action help)" }, "S&M_ACTIONHELP", OpenNotesHelpView, NULL, SNM_NOTES_ACTION_HELP, IsNotesHelpViewDisplayed},
@@ -430,11 +426,14 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Region playlist --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_SHOW_RGN_PLAYLIST", OpenRegionPlaylist, NULL, NULL, IsRegionPlaylistDisplayed},
-	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist" }, "S&M_CROP_RGN_PLAYLIST1", AppendPasteCropPlaylist, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist (new project tab)" }, "S&M_CROP_RGN_PLAYLIST2", AppendPasteCropPlaylist, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Append playlist to project" }, "S&M_APPEND_RGN_PLAYLIST", AppendPasteCropPlaylist, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Paste playlist at edit cursor" }, "S&M_PASTE_RGN_PLAYLIST", AppendPasteCropPlaylist, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Set repeat off" }, "S&M_PLAYLIST_REPEAT_ON", SetPlaylistRepeat, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Set repeat on" }, "S&M_PLAYLIST_REPEAT_OFF", SetPlaylistRepeat, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Toggle repeat" }, "S&M_PLAYLIST_TGL_REPEAT", SetPlaylistRepeat, NULL, -1, IsPlaylistRepeat},
 
 	// Other, misc ------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageView, NULL, },
@@ -576,10 +575,9 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Load theme, slot %02d" }, "S&M_LOAD_THEME", LoadThemeSlot, NULL, 4},
 #endif
 
-#ifdef _SNM_PRESETS
 	{ { DEFACCEL, "SWS/S&M: Trigger next preset for FX %02d of selected tracks" }, "S&M_NEXT_PRESET_FX", NextPresetSelTracks, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Trigger previous preset for FX %02d of selected tracks" }, "S&M_PREVIOUS_PRESET_FX", PrevPresetSelTracks, NULL, 4},
-#endif
+
 	{ { DEFACCEL, "SWS/S&M: Select FX %02d for selected tracks" }, "S&M_SELFX", SelectTrackFX, NULL, 8},
 
 	{ { DEFACCEL, "SWS/S&M: Show FX chain for selected tracks, FX %02d" }, "S&M_SHOWFXCHAIN", ShowFXChain, NULL, 8},
@@ -595,6 +593,8 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle Live Config %02d enable" }, "S&M_TOGGLE_LIVE_CFG", ToggleEnableLiveConfig, SNM_LIVECFG_NB_CONFIGS_STR, 8, IsLiveConfigEnabled},
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Next" }, "S&M_NEXT_LIVE_CFG", NextLiveConfig, SNM_LIVECFG_NB_CONFIGS_STR, 8},
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Previous" }, "S&M_PREVIOUS_LIVE_CFG", PreviousLiveConfig, SNM_LIVECFG_NB_CONFIGS_STR, 8},
+
+	{ { DEFACCEL, "SWS/S&M: Region Playlist %02d - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 8},
 
 //!WANT_LOCALIZE_1ST_STRING_END
 
@@ -627,13 +627,12 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Select project (MIDI CC absolute only)" }, "S&M_SELECT_PROJECT", SelectProject, NULL, 0},
 
-#ifdef _SNM_PRESETS
 	{ { DEFACCEL, "SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC absolute only)" }, "S&M_SELFX_PRESET", TriggerFXPreset, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 1 of selected tracks (MIDI CC absolute only)" }, "S&M_PRESET_FX1", TriggerFXPreset, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 2 of selected tracks (MIDI CC absolute only)" }, "S&M_PRESET_FX2", TriggerFXPreset, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 3 of selected tracks (MIDI CC absolute only)" }, "S&M_PRESET_FX3", TriggerFXPreset, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 4 of selected tracks (MIDI CC absolute only)" }, "S&M_PRESET_FX4", TriggerFXPreset, NULL, 3},
-#endif
+
 	{ {}, LAST_COMMAND, }, // denote end of table
 };
 //!WANT_LOCALIZE_1ST_STRING_END

@@ -236,6 +236,9 @@ void ShowThemeHelper(WDL_FastString* _report, HWND _hwnd, bool _mcp, bool _sel)
 			if ((_mcp && mcpChild) || (!_mcp && !mcpChild))
 			{
 				MediaTrack* tr = (MediaTrack*)GetWindowLongPtr(w, GWLP_USERDATA);
+
+				// CSurf_TrackToID() would fail here but it is ok atm: win only
+				// (IP_TRACKNUMBER is a casting nightmare on OSX)
 				int trIdx = (int)GetSetMediaTrackInfo(tr, "IP_TRACKNUMBER", NULL);
 				if (trIdx && (!_sel || (_sel && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
 				{

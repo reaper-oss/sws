@@ -82,9 +82,7 @@ enum {
   COL_TR,
   COL_TRT,
   COL_FXC,
-#ifdef _SNM_PRESETS
   COL_PRESET,
-#endif
   COL_ACTION_ON,
   COL_ACTION_OFF,
   COL_COUNT
@@ -275,11 +273,7 @@ bool TriggerFXPresets(MediaTrack* _tr, WDL_FastString* _presetConf)
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_155
 static SWS_LVColumn g_liveCfgListCols[] = { 
-	{95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, 
-#ifdef _SNM_PRESETS
-	{150,2,"FX presets"}, 
-#endif
-	{150,1,"Activate action"}, {150,1,"Deactivate action"}};
+	{95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX presets"}, {150,0,"Activate action"}, {150,0,"Deactivate action"}};
 // !WANT_LOCALIZE_STRINGS_END
 
 SNM_LiveConfigsView::SNM_LiveConfigsView(HWND hwndList, HWND hwndEdit)
@@ -311,18 +305,17 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 			case COL_FXC:
 				GetFilenameNoExt(pItem->m_fxChain.Get(), str, iStrMax);
 				break;
-#ifdef _SNM_PRESETS
 			case COL_PRESET:
 				lstrcpyn(str, pItem->m_presets.Get(), iStrMax);
 				break;
-#endif
-			//JFB text edition pb with kbd_getTextFromCmd - tooltips: display pb, bugs, ..
 			case COL_ACTION_ON:
-				lstrcpyn(str, pItem->m_onAction.Get(), iStrMax);
+			case COL_ACTION_OFF: 
+			if (iCol==COL_ACTION_ON ? pItem->m_onAction.GetLength()>0 : pItem->m_offAction.GetLength()>0)
+			{
+				int cmd = NamedCommandLookup(iCol==COL_ACTION_ON ? pItem->m_onAction.Get() : pItem->m_offAction.Get());
+				lstrcpyn(str, cmd>0 ? kbd_getTextFromCmd(cmd, NULL) : "?", iStrMax);
 				break;
-			case COL_ACTION_OFF:
-				lstrcpyn(str, pItem->m_offAction.Get(), iStrMax);
-				break;
+			}
 		}
 	}
 }
@@ -420,6 +413,7 @@ void SNM_LiveConfigsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 		}
 	}
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_LiveConfigsWnd
@@ -687,7 +681,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case SNM_LIVECFG_LEARN_OFF_ACTION_MSG:
 		{
 			char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
-			if (LearnAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, __localizeFunc("Main","accel_sec",0)))
+			if (item && LearnAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, __localizeFunc("Main","accel_sec",0)))
 			{
 				bool updt = false;
 				while(item)
@@ -821,7 +815,6 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 				}
 			}
-#ifdef _SNM_PRESETS
 			else if (LOWORD(wParam) >= SNM_LIVECFG_LEARN_PRESETS_START_MSG && LOWORD(wParam) <= SNM_LIVECFG_LEARN_PRESETS_END_MSG) 
 			{
 				bool updt = false;
@@ -864,7 +857,6 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 				}
 			}
-#endif
 			else
 				Main_OnCommand((int)wParam, (int)lParam);
 			break;
@@ -990,7 +982,6 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				}
 				else AddToMenu(hMenu, __LOCALIZE("(No track)","sws_DLG_155"), 0, -1, false, MF_GRAYED);
 				break;
-#ifdef _SNM_PRESETS
 			case COL_PRESET:
 				hMenu = CreatePopupMenu();
 				if (item->m_track)
@@ -999,7 +990,7 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 						AddToMenu(hMenu, __LOCALIZE("(Track template overrides)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
 					else if (item->m_fxChain.GetLength())
 						AddToMenu(hMenu, __LOCALIZE("(FX Chain overrides)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
-					else {						
+					else {
 						AddFXSubMenu(hMenu, item->m_track, &item->m_presets);
 						AddToMenu(hMenu, SWS_SEPARATOR, 0);
 						AddToMenu(hMenu, __LOCALIZE("Clear presets","sws_DLG_155"), SNM_LIVECFG_CLEAR_PRESETS_MSG);
@@ -1007,34 +998,17 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				}
 				else AddToMenu(hMenu, __LOCALIZE("(No track)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
 				break;
-#endif
 			case COL_ACTION_ON:
 			{
 				hMenu = CreatePopupMenu();
-				int cmd = NamedCommandLookup(item->m_onAction.Get());
-				char cur[SNM_MAX_ACTION_NAME_LEN] = "";
-				_snprintfSafe(cur, sizeof(cur), "[%s: %s]", __LOCALIZE("Current","sws_DLG_155"), cmd ? kbd_getTextFromCmd(cmd, NULL) : __LOCALIZE("none","sws_DLG_155"));
-				AddToMenu(hMenu, cur, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
-				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-#ifdef _SNM_ACTION_LEARN
 				AddToMenu(hMenu, __LOCALIZE("Learn from Actions window","sws_DLG_155"), SNM_LIVECFG_LEARN_ON_ACTION_MSG);
-#endif
-				AddToMenu(hMenu, __LOCALIZE("Edit action/macro","sws_DLG_155"), SNM_LIVECFG_EDIT_ON_ACTION_MSG);
 				AddToMenu(hMenu, __LOCALIZE("Clear actions/macros","sws_DLG_155"), SNM_LIVECFG_CLEAR_ON_ACTION_MSG);
 				break;
 			}
 			case COL_ACTION_OFF:
 			{
 				hMenu = CreatePopupMenu();
-				int cmd = NamedCommandLookup(item->m_offAction.Get());
-				char cur[SNM_MAX_ACTION_NAME_LEN] = "";
-				_snprintfSafe(cur, sizeof(cur), "[%s: %s]", __LOCALIZE("Current","sws_DLG_155"), cmd ? kbd_getTextFromCmd(cmd, NULL) : __LOCALIZE("none","sws_DLG_155"));
-				AddToMenu(hMenu, cur, 0, -1, false, MF_DISABLED); // different from MFS_DISABLED! more readable (and more REAPER-ish)
-				AddToMenu(hMenu, SWS_SEPARATOR, 0);
-#ifdef _SNM_ACTION_LEARN
 				AddToMenu(hMenu, __LOCALIZE("Learn from Actions window","sws_DLG_155"), SNM_LIVECFG_LEARN_OFF_ACTION_MSG);
-#endif
-				AddToMenu(hMenu, __LOCALIZE("Edit action/macro","sws_DLG_155"), SNM_LIVECFG_EDIT_OFF_ACTION_MSG);
 				AddToMenu(hMenu, __LOCALIZE("Clear actions/macros","sws_DLG_155"), SNM_LIVECFG_CLEAR_OFF_ACTION_MSG);
 				break;
 			}
@@ -1397,7 +1371,7 @@ void PreviousLiveConfig(COMMAND_T* _ct)
 			ApplyLiveConfig(cfgId, lc->m_lastMIDIVal-1, -1, 0, GetMainHwnd());
 }
 
-// here we go!
+// the meat!
 void SNM_MidiLiveScheduledJob::Perform()
 {
 	MidiLiveConfig* lc = g_liveConfigs.Get()->Get(m_cfgId);
@@ -1476,11 +1450,15 @@ void SNM_MidiLiveScheduledJob::Perform()
 				if (cfg->m_trTemplate.GetLength())
 				{
 					p = new SNM_SendPatcher(cfg->m_track);
-					WDL_FastString chunk;
-					char filename[BUFFER_SIZE];
-					GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), filename, BUFFER_SIZE);
-					if (LoadChunk(filename, &chunk) && chunk.GetLength())
+					WDL_FastString tmplt;
+					char fn[BUFFER_SIZE] = "";
+					GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), fn, BUFFER_SIZE);
+					if (LoadChunk(fn, &tmplt) && tmplt.GetLength())
+					{
+						WDL_FastString chunk;
+						MakeSingleTrackTemplateChunk(&tmplt, &chunk, true, true, false);
 						ApplyTrackTemplate(cfg->m_track, &chunk, false, false, (SNM_SendPatcher*)p);
+					}
 				}
 				else if (cfg->m_fxChain.GetLength())
 				{
@@ -1491,12 +1469,11 @@ void SNM_MidiLiveScheduledJob::Perform()
 					if (LoadChunk(filename, &chunk) && chunk.GetLength())
 						((SNM_FXChainTrackPatcher*)p)->SetFXChain(&chunk);
 				}
-#ifdef _SNM_PRESETS
 				else if (cfg->m_presets.GetLength()) {
 					WaitForTrackMute(&muteTime); // 0 is ignored
 					TriggerFXPresets(cfg->m_track, &(cfg->m_presets));
 				}
-#endif
+
 				WaitForTrackMute(&muteTime); // 0 is ignored
 				if (p) delete p; // + auto commit, if needed
 

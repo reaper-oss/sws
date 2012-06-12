@@ -44,7 +44,7 @@ bool SNM_CopyFile(const char* _destFn, const char* _srcFn);
 bool BrowseResourcePath(const char* _title, const char* _dir, const char* _fileFilters, char* _fn, int _fnSize, bool _wantFullPath = false);
 void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _fnSize);
 void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fnSize);
-bool LoadChunk(const char* _fn, WDL_FastString* _chunk, bool _trim = true, int _maxlen = 0);
+bool LoadChunk(const char* _fn, WDL_FastString* _chunkOut, bool _trim = true, int _approxMaxlen = 0);
 bool SaveChunk(const char* _fn, WDL_FastString* _chunk, bool _indent);
 WDL_HeapBuf* LoadBin(const char* _fn);
 bool SaveBin(const char* _fn, const WDL_HeapBuf* _hb);

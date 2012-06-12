@@ -288,19 +288,20 @@ private:
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_EnvAlterer
+// SNM_TrackEnvParserPatcher
 ///////////////////////////////////////////////////////////////////////////////
 
-class SNM_EnvAlterer : public SNM_ChunkParserPatcher
+class SNM_TrackEnvParserPatcher : public SNM_ChunkParserPatcher
 {
 public:
-	SNM_EnvAlterer(WDL_FastString* _str, bool _autoCommit = true)
+	SNM_TrackEnvParserPatcher(WDL_FastString* _str, bool _autoCommit = true)
 		: SNM_ChunkParserPatcher(_str, _autoCommit) {m_parsingEnv = false; }
-	SNM_EnvAlterer(MediaTrack* _tr, bool _autoCommit = true)
+	SNM_TrackEnvParserPatcher(MediaTrack* _tr, bool _autoCommit = true)
 		: SNM_ChunkParserPatcher(_tr, _autoCommit) {m_parsingEnv = false; }
-	~SNM_EnvAlterer() {}
+	~SNM_TrackEnvParserPatcher() {}
 	bool RemoveEnvelopes();
-	bool AddToEnvelopes(double _delta);
+	bool OffsetEnvelopes(double _delta);
+	const char* GetTrackEnvelopes();
 protected:
 	bool NotifyStartElement(int _mode, 
 		LineParser* _lp, const char* _parsedLine, int _linePos,
@@ -317,6 +318,7 @@ protected:
 private:
 	bool m_parsingEnv;
 	double m_addDelta;
+	WDL_FastString m_envs;
 };
 
 

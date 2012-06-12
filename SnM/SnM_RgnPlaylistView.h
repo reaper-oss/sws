@@ -52,8 +52,10 @@ public:
 	SNM_Playlist(SNM_Playlist* _p = NULL, const char* _name = NULL)
 		: m_name(_name), WDL_PtrList<SNM_PlaylistItem>() {
 		if (_p) {
-			for (int i=0; i < _p->GetSize(); i++) Add(new SNM_PlaylistItem(_p->Get(i)->m_rgnId, _p->Get(i)->m_cnt));
-			if (!_name) m_name.Set(_p->m_name.Get());
+			for (int i=0; i < _p->GetSize(); i++)
+				Add(new SNM_PlaylistItem(_p->Get(i)->m_rgnId, _p->Get(i)->m_cnt));
+			if (!_name)
+				m_name.Set(_p->m_name.Get());
 		}
 	}
 	SNM_Playlist(const char* _name) : m_name(_name), WDL_PtrList<SNM_PlaylistItem>() {}
@@ -121,9 +123,11 @@ public:
 
 double GetPlayListLength(SNM_Playlist* _playlist);
 void PlaylistRun();
-void PlaylistPlay(int _playlistId, bool _errMsg);
+void PlaylistPlay(int _playlistId, int _itemId = 0);
 void PlaylistPlay(COMMAND_T*);
 void PlaylistStopped();
+void SetPlaylistRepeat(COMMAND_T*);
+bool IsPlaylistRepeat(COMMAND_T*);
 void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode);
 void AppendPasteCropPlaylist(COMMAND_T*);
 int RegionPlaylistInit();

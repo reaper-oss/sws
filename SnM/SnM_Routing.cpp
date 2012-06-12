@@ -82,8 +82,8 @@ bool CueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showR
 	if (!SNM_CountSelectedTracks(NULL, false))
 		return false;
 
-	WDL_FastString tmpltChunk;
-	if (_trTemplatePath && (!FileExists(_trTemplatePath) || !LoadChunk(_trTemplatePath, &tmpltChunk) || !tmpltChunk.GetLength()))
+	WDL_FastString tmplt;
+	if (_trTemplatePath && (!FileExists(_trTemplatePath) || !LoadChunk(_trTemplatePath, &tmplt) || !tmplt.GetLength()))
 	{
 		char msg[BUFFER_SIZE];
 		lstrcpyn(msg, __LOCALIZE("Cue buss not created!\nNo track template file defined","sws_DLG_149"), BUFFER_SIZE);
@@ -103,16 +103,22 @@ bool CueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showR
 		{
 			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
 
-			// add the buss track (if not already done)
+			// add the buss track, done once!
 			if (!cueTr)
 			{
 				InsertTrackAtIndex(GetNumTracks(), false);
 				TrackList_AdjustWindows(false);
 				cueTr = CSurf_TrackFromID(GetNumTracks(), false);
 				GetSetMediaTrackInfo(cueTr, "P_NAME", (void*)_busName);
+
 				p = new SNM_SendPatcher(cueTr);
-				if (tmpltChunk.GetLength())
-					ApplyTrackTemplate(cueTr, &tmpltChunk, true, false, p);
+
+				if (tmplt.GetLength())
+				{
+					WDL_FastString chunk;
+					MakeSingleTrackTemplateChunk(&tmplt, &chunk, true, true, false);
+					ApplyTrackTemplate(cueTr, &chunk, false, false, p);
+				}
 				updated = true;
 			}
 
@@ -125,7 +131,7 @@ bool CueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showR
 	if (cueTr && p)
 	{
 		// send to master/parent init
-		if (!tmpltChunk.GetLength())
+		if (!tmplt.GetLength())
 		{
 			// solo defeat
 			if (_soloDefeat) {
@@ -143,7 +149,7 @@ bool CueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showR
 				int monoHWCount=0; 
 				while (GetOutputChannelName(monoHWCount)) monoHWCount++;
 
-				bool cr = false;			
+				bool cr = false;
 				for(int i=0; i<SNM_MAX_HW_OUTS; i++)
 				{
 					if (_hwOuts[i])

@@ -71,11 +71,19 @@ void ShowImageSlot(COMMAND_T* _ct) {
 	ShowImageSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 
-void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot) {
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
-		SetSelTrackIcon(fnStr->Get());
+void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot)
+{
+	bool updated = false;
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot))
+	{
+		for (int j=0; j <= GetNumTracks(); j++)
+			if (MediaTrack* tr = CSurf_TrackFromID(j, false))
+				if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+					updated |= SetTrackIcon(tr, fnStr->Get());
 		delete fnStr;
 	}
+	if (updated && _title)
+		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
 }
 
 void SetSelTrackIconSlot(COMMAND_T* _ct) {

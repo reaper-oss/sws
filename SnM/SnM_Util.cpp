@@ -220,44 +220,35 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 		*_fullFn = '\0';
 }
 
-bool LoadChunk(const char* _fn, WDL_FastString* _chunk, bool _trim, int _maxlen)
+// _trim: if true, remove empty lines + left trim
+// _approxMaxlen: 0=full file, n=truncate arround n bytes (well, a bit more)
+// note: WDL's ProjectCreateFileRead() not used: seems horribly slow..
+bool LoadChunk(const char* _fn, WDL_FastString* _chunkOut, bool _trim, int _approxMaxlen)
 {
-	if (!_chunk)
+	if (!_chunkOut)
 		return false;
 
-	_chunk->Set("");
+	_chunkOut->Set("");
 	if (_fn && *_fn)
 	{
-/*JFB commented: horribly slow!
-		if (ProjectStateContext* ctx = ProjectCreateFileRead(_fn))
-		{
-			char buf[SNM_MAX_CHUNK_LINE_LENGTH];
-			while(!ctx->GetLine(buf, SNM_MAX_CHUNK_LINE_LENGTH))
-			{
-				if (_maxlen && (int)(_chunk->GetLength()+strlen(buf)) > _maxlen)
-					break;
-				_chunk->Append(buf);
-			}
-			delete ctx;
-			return true;
-		}
-*/
 		if (FILE* f = fopenUTF8(_fn, "r"))
 		{
 			char str[SNM_MAX_CHUNK_LINE_LENGTH];
 			while(fgets(str, SNM_MAX_CHUNK_LINE_LENGTH, f) && *str)
 			{
-				if (_maxlen && (int)(_chunk->GetLength()+strlen(str)) > _maxlen)
-					break;
-				if (_trim) // left trim + remove empty lines
+				//JFB!!! useless with SNM_ChunkParserPatcher v2
+				if (_trim) 
 				{
 					char* p = str;
 					while(*p && (*p == ' ' || *p == '\t')) p++;
 					if (*p != '\n' && *p != '\r') // the !*p case is managed in Append()
-						_chunk->Append(p);
+						_chunkOut->Append(p);
 				}
 				else
-					_chunk->Append(str);
+					_chunkOut->Append(str);
+
+				if (_approxMaxlen && _chunkOut->GetLength() > _approxMaxlen)
+					break;
 			}
 			fclose(f);
 			return true;
@@ -266,6 +257,7 @@ bool LoadChunk(const char* _fn, WDL_FastString* _chunk, bool _trim, int _maxlen)
 	return false;
 }
 
+// note: WDL's ProjectCreateFileWrite() not used: seems horribly slow..
 bool SaveChunk(const char* _fn, WDL_FastString* _chunk, bool _indent)
 {
 	if (_fn && *_fn && _chunk)
@@ -274,7 +266,7 @@ bool SaveChunk(const char* _fn, WDL_FastString* _chunk, bool _indent)
 		if (_indent) p.Indent();
 		if (FILE* f = fopenUTF8(_fn, "w"))
 		{
-			fputs(p.GetUpdates() ? p.GetChunk()->Get() : _chunk->Get(), f); // avoid parser commit: faster
+			fputs(p.GetUpdates() ? p.GetChunk()->Get() : _chunk->Get(), f); // avoids p.Commit(), faster
 			fclose(f);
 			return true;
 		}
@@ -764,48 +756,54 @@ double SeekPlay(double _pos, bool _seek, bool _moveView)
 ///////////////////////////////////////////////////////////////////////////////
 
 // a _snprintf that ensures the string is always null terminated (but truncated if needed)
+// also see _snprintfStrict()
+// note: use this instead of WDL_snprintf includes not break other members' code
+//       (WDL_snprintf return value cannot be trusted, see wdlcstring.h)
 int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...)
 {
-  va_list va;
-  va_start(va, _fmt);
-  *_buf='\0';
+	va_list va;
+	va_start(va, _fmt);
+	*_buf='\0';
 #if defined(_WIN32) && defined(_MSC_VER)
-  int l = _vsnprintf(_buf, _n, _fmt, va);
-  if (l < 0 || l >= (int)_n) {
-    _buf[_n-1]=0;
-    l = strlen(_buf);
-  }
+	int l = _vsnprintf(_buf, _n, _fmt, va);
+	if (l < 0 || l >= (int)_n) {
+		_buf[_n-1]=0;
+		l = strlen(_buf);
+	}
 #else
-  // vsnprintf() on non-win32, always null terminates
-  int l = vsnprintf(_buf, _n, _fmt, va);
-  if (l>=(int)_n)
-    l=_n-1;
+	// vsnprintf() on non-win32, always null terminates
+	int l = vsnprintf(_buf, _n, _fmt, va);
+	if (l>=(int)_n)
+		l=_n-1;
 #endif
-  va_end(va);
-  return l;
+	va_end(va);
+	return l;
 }
 
 // a _snprintf that returns >=0 when the string is null terminated and not truncated
-// => callers must check the returned value
+// => callers must check the returned value 
+// also see _snprintfSafe()
+// note: use this instead of WDL_snprintf includes not break other members' code
+//       (WDL_snprintf return value cannot be trusted, see wdlcstring.h)
 int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...)
 {
-  va_list va;
-  va_start(va, _fmt);
-  *_buf='\0';
+	va_list va;
+	va_start(va, _fmt);
+	*_buf='\0';
 #if defined(_WIN32) && defined(_MSC_VER)
-  int l = _vsnprintf(_buf, _n, _fmt, va);
-  if (l < 0 || l >= (int)_n) {
-    _buf[_n-1]=0;
-    l = -1;
-  }
+	int l = _vsnprintf(_buf, _n, _fmt, va);
+	if (l < 0 || l >= (int)_n) {
+		_buf[_n-1]=0;
+		l = -1;
+	}
 #else
-  // vsnprintf() on non-win32, always null terminates
-  int l = vsnprintf(_buf, _n, _fmt, va);
-  if (l>=(int)_n)
-    l = -1;
+	// vsnprintf() on non-win32, always null terminates
+	int l = vsnprintf(_buf, _n, _fmt, va);
+	if (l>=(int)_n)
+		l = -1;
 #endif
-  va_end(va);
-  return l;
+	va_end(va);
+	return l;
 }
 
 bool GetStringWithRN(const char* _bufIn, char* _bufOut, int _bufOutSz)
@@ -877,11 +875,11 @@ bool LearnAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSe
 	switch (selItem)
 	{
 		case -2:
-			MessageBox(GetMainHwnd(), __LOCALIZE("The column 'Custom ID' is not displayed in the Actions window!\n(to display it, right click on its table header > show action IDs)","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			MessageBox(GetMainHwnd(), __LOCALIZE("Action learn failed!\nAction IDs are not displayed in the Actions window (right-click on the table header: Show action IDs).","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			return false;
 		case -1: {
 			char msg[256];
-			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Actions window not opened or section '%s' not selected or no selected action!","sws_mbox"), _expectedLocalizedSection);
+			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Action learn failed!\nActions window not opened, section '%s' not selected or no selected action!","sws_mbox"), _expectedLocalizedSection);
 			MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			return false;
 		}

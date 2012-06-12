@@ -53,9 +53,7 @@ void SaveTracksFolderStates(COMMAND_T*);
 void RestoreTracksFolderStates(COMMAND_T*);
 void SetTracksFolderState(COMMAND_T*);
 void SelOnlyTrackWithSelEnv(COMMAND_T*);
-int GetTrackEnvCount();
-const char* GetTrackEnvName(int _i);
-bool LookupTrackEnvName(const char* _str);
+bool LookupTrackEnvName(const char* _str, bool _allEnvs);
 void ToggleArmTrackEnv(COMMAND_T*);
 void RemoveAllEnvsSelTracks(COMMAND_T*);
 void ToggleWriteEnvExists(COMMAND_T*);
@@ -69,12 +67,17 @@ bool SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, boo
 bool SNM_SetSelectedTrack(ReaProject* _proj, MediaTrack* _tr, bool _unselOthers, bool _withMaster = true);
 void SNM_ClearSelectedTracks(ReaProject* _proj, bool _withMaster);
 bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz);
-void SetTrackIcon(MediaTrack* _tr, const char* _fn);
-void SetSelTrackIcon(const char* _fn);
-bool ApplyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmpltChunk, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_SendPatcher* _p = NULL, bool _isRawTmpltChunk = true);
+bool SetTrackIcon(MediaTrack* _tr, const char* _fn);
+bool MakeSingleTrackTemplateChunk(WDL_FastString* _in, WDL_FastString* _out, bool _delItems, bool _delEnvs, int _tmpltIdx = 0, bool _obeyOffset = true);
+bool GetItemsSubChunk(WDL_FastString* _in, WDL_FastString* _out, int _tmpltIdx = 0);
+//bool ApplyTrackTemplatePrimitive(MediaTrack* _tr, WDL_FastString* _tmplt, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_SendPatcher* _p = NULL);
+bool ApplyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmplt, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_SendPatcher* _p = NULL);
 void ImportTrackTemplateSlot(int _slotType, const char* _title, int _slot);
 void ApplyTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _itemsFromTmplt, bool _envsFromTmplt);
 void ReplacePasteItemsTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _paste);
+#ifdef _SNM_MISC
+void ReplaceItemsInIntervalTrackTemplateSlot(int _slotType, const char* _title, int _slot, double _pos1, double _pos2);
+#endif
 void LoadApplyTrackTemplateSlot(COMMAND_T*);
 void LoadApplyTrackTemplateSlotWithItemsEnvs(COMMAND_T*);
 void LoadImportTrackTemplateSlot(COMMAND_T*);

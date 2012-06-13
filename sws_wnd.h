@@ -171,6 +171,7 @@ public:
 	virtual bool IsActive(bool bWantEdit = false);
 	bool IsValidWindow() { return IsWindow(m_hwnd) ? true : false; }
 	HWND GetHWND() { return m_hwnd; }
+	WDL_VWnd* GetParentVWnd() { return &m_parentVwnd; }
 	virtual void OnCommand(WPARAM wParam, LPARAM lParam) {}
 
 	static const int DOCK_MSG = 0xFF0000;

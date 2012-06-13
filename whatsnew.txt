@@ -21,6 +21,7 @@ Live Configs
 Notes window: better refresh, fixed broken helper to copy/paste custom macro IDs (ex: copy IDs like _75ad85992781fe44aec59ca91f80b9e8)
 Cue buss generator: fix for track template files containing more than 1 track
 Added undo points for track icon actions
+Issue 458: Fixed zoom actions that "hide others"
 
 !v2.2.0 #13 (June 6, 2012)
 Localization

@@ -269,8 +269,8 @@ void VertZoomSelTracks(int iOthers)
 
 	// Hide tracks from TCP only after making sure there's actually something selected 
 	if (iOthers == 2)
-		for (int i = 1; i <= GetNumTracks(); i++)
-			if (!hbSelected.Get()[i-1])
+		for (int i = 0; i <= GetNumTracks(); i++)
+			if (!hbSelected.Get()[i])
 			{
 				MediaTrack* tr = CSurf_TrackFromID(i, false);
 				SetTrackVis(tr, GetTrackVis(tr) & 1);

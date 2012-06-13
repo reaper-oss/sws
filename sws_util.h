@@ -51,6 +51,8 @@
 #define BOUNDED(x,lo,hi) ((x) < (lo) ? (lo) : (x) > (hi) ? (hi) : (x))
 #define FREE_NULL(p) {free(p);p=0;}
 #define DELETE_NULL(p) {delete(p); p=0;}
+#define STR_HELPER(x) #x
+#define STR(x) STR_HELPER(x)
 
 #ifdef _WIN32
 #define PATH_SLASH_CHAR '\\'

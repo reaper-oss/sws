@@ -490,7 +490,7 @@ extern "C"
 		IMPAPI(CountTrackMediaItems);
 		IMPAPI(CountTrackEnvelopes);
 		IMPAPI(CreateLocalOscHandler);
-		//IMPAPI(CreateNewMIDIItemInProj);
+//		IMPAPI(CreateNewMIDIItemInProj);
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
 		IMPAPI(CSurf_OnMuteChange);
@@ -582,6 +582,7 @@ extern "C"
 		IMPAPI(GetSet_LoopTimeRange2);
 		IMPAPI(GetSubProjectFromSource);
 		IMPAPI(GetTake);
+//		IMPAPI(GetToggleCommandState);
 		IMPAPI(GetTrack);
 		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);

@@ -80,7 +80,7 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 	bool GetFullPath(int _slot, char* _fullFn, int _fullFnSz);
 	bool SetFromFullPath(int _slot, const char* _fullPath);
 	bool GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg=false);
-	WDL_FastString* GetOrPromptOrBrowseSlot(const char* _title, int _slot);
+	WDL_FastString* GetOrPromptOrBrowseSlot(const char* _title, int* _slot);
 	bool BrowseSlot(int _slot, char* _fn=NULL, int _fnSz=0);
 	void EditSlot(int _slot);
 	void ClearSlot(int _slot, bool _guiUpdate=true);
@@ -216,7 +216,7 @@ void ResViewAutoSave(COMMAND_T*);
 int ImageViewInit();
 void ImageViewExit();
 void OpenImageView(COMMAND_T*);
-void OpenImageView(const char* _fn);
+bool OpenImageView(const char* _fn);
 void ClearImageView(COMMAND_T*);
 bool IsImageViewDisplayed(COMMAND_T*);
 

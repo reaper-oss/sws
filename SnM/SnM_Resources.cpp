@@ -430,38 +430,40 @@ bool FileSlotList::GetOrBrowseSlot(int _slot, char* _fn, int _fnSz, bool _errMsg
 }
 
 // returns NULL if failed, otherwise it's up to the caller to free the returned string
-WDL_FastString* FileSlotList::GetOrPromptOrBrowseSlot(const char* _title, int _slot)
+// _slot: in/out param
+WDL_FastString* FileSlotList::GetOrPromptOrBrowseSlot(const char* _title, int* _slot)
 {
 	// prompt for slot if needed
-	if (_slot == -1)
+	if (*_slot == -1)
 	{
 		if (GetSize())
-			_slot = PromptForInteger(_title, "Slot", 1, GetSize()); // loops on err
+			*_slot = PromptForInteger(_title, "Slot", 1, GetSize()); // loops on err
 		else {
 			WDL_FastString msg; msg.SetFormatted(128, NO_SLOT_ERR_STR, g_slots.Get(GetTypeForUser(GetTypeFromSlotList(this)))->GetDesc());
 			MessageBox(GetMainHwnd(), msg.Get(), __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
 		}
 	}
-	if (_slot == -1) // user has cancelled or empty
+	if (*_slot == -1) // user has cancelled or empty
 		return NULL; 
 
 	// adds the needed number of slots (more macro friendly)
-	if (_slot >= GetSize())
+	if (*_slot >= GetSize())
 	{
-		for (int i=GetSize(); i <= _slot; i++)
+		for (int i=GetSize(); i <= *_slot; i++)
 			Add(new PathSlotItem());
 		if (g_pResourcesWnd) {
 			g_pResourcesWnd->Update();
-			g_pResourcesWnd->SelectBySlot(_slot);
+			g_pResourcesWnd->SelectBySlot(*_slot);
 		}
 	}
 
-	if (_slot < GetSize())
+	if (*_slot < GetSize())
 	{
 		char fn[BUFFER_SIZE]="";
-		if (GetOrBrowseSlot(_slot, fn, BUFFER_SIZE, _slot < 0 || !Get(_slot)->IsDefault()))
+		if (GetOrBrowseSlot(*_slot, fn, BUFFER_SIZE, *_slot < 0 || !Get(*_slot)->IsDefault()))
 			return new WDL_FastString(fn);
 	}
+	*_slot = -1;
 	return NULL;
 }
 
@@ -2821,8 +2823,9 @@ void OpenImageView(COMMAND_T* _ct) {
 
 WDL_FastString g_lastImageFn;
 
-void OpenImageView(const char* _fn)
+bool OpenImageView(const char* _fn)
 {
+	bool ok = false;
 	if (g_pImageWnd)
 	{
 		WDL_FastString g_prevFn(g_lastImageFn.Get());
@@ -2831,14 +2834,18 @@ void OpenImageView(const char* _fn)
 			if (LICE_IBitmap* img = LICE_LoadPNG(_fn, NULL)) {
 				g_pImageWnd->SetImage(img);
 				g_lastImageFn.Set(_fn);
+				ok = true;
 			}
 		}
-		else
+		else {
 			g_pImageWnd->SetImage(NULL);
+			ok = true;
+		}
 
 		g_pImageWnd->Show(!strcmp(g_prevFn.Get(), _fn) /* i.e toggle */, true);
 		g_pImageWnd->RequestRedraw();
 	}
+	return ok;
 }
 
 void ClearImageView(COMMAND_T*) {

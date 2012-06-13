@@ -152,7 +152,7 @@ void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND
 
 void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab)
 {
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot))
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
 	{
 		char fn2[BUFFER_SIZE] = "";
 		ReaProject* prj = NULL;

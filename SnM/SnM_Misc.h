@@ -36,6 +36,7 @@ void LoadThemeSlot(COMMAND_T*);
 #endif
 void ShowImageSlot(int _slotType, const char* _title, int _slot);
 void ShowImageSlot(COMMAND_T*);
+void ShowNextPreviousImageSlot(COMMAND_T*);
 void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot);
 void SetSelTrackIconSlot(COMMAND_T*);
 bool WaitForTrackMute(DWORD* _muteTime);

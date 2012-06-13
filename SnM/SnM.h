@@ -60,11 +60,8 @@
 
 #define SNM_INI_FILE_VERSION		6
 #define SNM_LIVECFG_NB_CONFIGS		8
-#define SNM_LIVECFG_NB_CONFIGS_STR	"8"
 #define SNM_MAX_TRACK_GROUPS		32
-#define SNM_MAX_TRACK_GROUPS_STR	"32"
 #define SNM_MAX_CUE_BUSS_CONFS		8
-#define SNM_MAX_CUE_BUSS_CONFS_STR	"8"
 #define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
 #define SNM_SUB_EXT_LIST			"SubRip subtitle files (*.SRT)\0*.SRT\0"
 #define SNM_TXT_EXT_LIST			"Text files (*.txt)\0*.txt\0All files (*.*)\0*.*\0"
@@ -160,7 +157,7 @@ bool IsToolbarsAutoRefeshEnabled(COMMAND_T*);
 void RefreshToolbars();
 void FakeToggle(COMMAND_T*);
 bool FakeIsToggleAction(COMMAND_T*);
-void SNM_ShowActionList(COMMAND_T*);
+void Stuff(COMMAND_T*);
 int SNM_RegisterDynamicCommands(COMMAND_T* _pCommands);
 int SNM_Init(reaper_plugin_info_t* _rec);
 void SNM_Exit();

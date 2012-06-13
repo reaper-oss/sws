@@ -166,7 +166,7 @@ void SetTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly
 // _set=false: paste, _set=true: set
 void ApplyTakesFXChainSlot(int _slotType, const char* _title, int _slot, bool _activeOnly, bool _set)
 {
-	WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot);
+	WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot);
 	if (fnStr && CountSelectedMediaItems(NULL))
 	{
 		WDL_FastString chain;
@@ -403,7 +403,7 @@ int CopyTrackFXChain(WDL_FastString* _fxChain, bool _inputFX, int _startTr)
 // _set=false => paste
 void ApplyTracksFXChainSlot(int _slotType, const char* _title, int _slot, bool _set, bool _inputFX)
 {
-	WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot);
+	WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot);
 	if (fnStr && SNM_CountSelectedTracks(NULL, true))
 	{
 		WDL_FastString chain;

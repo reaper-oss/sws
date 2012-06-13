@@ -878,7 +878,7 @@ bool ApplyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmplt, bool _itemsFrom
 
 void ImportTrackTemplateSlot(int _slotType, const char* _title, int _slot)
 {
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
 		Main_openProject((char*)fnStr->Get()); // already includes an undo point
 		delete fnStr;
 	}
@@ -887,7 +887,7 @@ void ImportTrackTemplateSlot(int _slotType, const char* _title, int _slot)
 void ApplyTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _itemsFromTmplt, bool _envsFromTmplt)
 {
 	bool updated = false;
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot))
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
 	{
 		// patch selected tracks with 1st track found in template
 		WDL_FastString tmpltFile;
@@ -943,7 +943,7 @@ void LoadImportTrackTemplateSlot(COMMAND_T* _ct) {
 void ReplacePasteItemsTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _paste)
 {
 	bool updated = false;
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot))
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
 	{
 		WDL_FastString tmpltFile;
 		if (CountSelectedTracks(NULL) && LoadChunk(fnStr->Get(), &tmpltFile) && tmpltFile.GetLength())

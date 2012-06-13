@@ -1,11 +1,10 @@
 Resources window and related slots actions
-+Applying a track template file that contains several tracks now obeys multi-track selection, see Drums track folder use-case/discussion http://forum.cockos.com/showthread.php?t=104140|here|.
-+"Paste" and "Paste (replace)" items from a track template file that contains several tracks now obeys multi-track selection
-Note: the behavior remains the same with multi-track selection and "normal" track templates (i.e. files that contain a single track): the same file is applied to all selected tracks
-Reminder: when auto-saving several selected tracks (or the parent track of a folder) all those tracks (or parent + child tracks) get saved together in a signle track template file
-+Applying track templates now preserves track envelopes (well, except FX parameter envelopes since FX Chains are replaced with template files' ones)
++Applying a track template file that contains several tracks now obeys multi-track selection
+http://forum.cockos.com/showthread.php?t=104140|Example|: applying a folder track to other projects
++Applying track templates now preserves all existing track envelopes (well, except FX parameter envelopes since FX Chains are replaced with templates' ones)
 +Applying track templates now preserves folder states
 Note: in previous versions, only items and receives were preserved when applying a track template file to an existing track
++"Paste" and "Paste (replace)" items from a track template file that contains several tracks now obeys multi-track selection
 
 Region Playlist
 +The playlist being played can be different from the displayed one
@@ -18,10 +17,11 @@ Live Configs
 +Activation/Deactivation columns: totally hide action IDs stuff for the user (action names are displayed instead, to edit: context menu > learn action)
 +Fix for track template files containing more than 1 track
 
-Notes window: better refresh, fixed broken helper to copy/paste custom macro IDs (ex: copy IDs like _75ad85992781fe44aec59ca91f80b9e8)
+Notes window: better refresh, fixed broken helper to copy/paste custom macro IDs
 Cue buss generator: fix for track template files containing more than 1 track
 Added undo points for track icon actions
 Issue 458: Fixed zoom actions that "hide others"
+Issue 486: added actions SWS/S&M: Show next/previous image slot
 
 !v2.2.0 #13 (June 6, 2012)
 Localization
@@ -86,7 +86,7 @@ Region Playlist (BETA)
 +Better list view refresh (new region lengths, renamed regions, etc..)
 
 Added actions
-+SWS/S&M: Remove all envelopes for selected tracks - works with frozen tracks (preserved), master track, fx param envelopes, etc..
++Issue 345: SWS/S&M: Remove all envelopes for selected tracks - works with frozen tracks (preserved), master track, fx param envelopes, etc..
 +SWS/S&M: Insert silence (seconds)
 +SWS/S&M: Insert silence (measures.beats)
 +SWS/S&M: Insert silence (samples)

@@ -37,7 +37,7 @@
 #ifdef _WIN32
 void LoadThemeSlot(int _slotType, const char* _title, int _slot)
 {
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot))
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
 	{
 		char cmd[BUFFER_SIZE]=""; 
 		if (_snprintfStrict(cmd, sizeof(cmd), "%s\\reaper.exe", GetExePath()) > 0)
@@ -60,9 +60,12 @@ void LoadThemeSlot(COMMAND_T* _ct) {
 // Image slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
+int g_lastImgSlot = -1;
+
 void ShowImageSlot(int _slotType, const char* _title, int _slot) {
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
-		OpenImageView(fnStr->Get());
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
+		if (OpenImageView(fnStr->Get()))
+			g_lastImgSlot = _slot;
 		delete fnStr;
 	}
 }
@@ -71,10 +74,21 @@ void ShowImageSlot(COMMAND_T* _ct) {
 	ShowImageSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 
+void ShowNextPreviousImageSlot(COMMAND_T* _ct)
+{
+	int sz = g_slots.Get(g_tiedSlotActions[SNM_SLOT_IMG])->GetSize();
+	if (sz) {
+		g_lastImgSlot += (int)_ct->user;
+		if (g_lastImgSlot<0) g_lastImgSlot = sz-1;
+		else if (g_lastImgSlot>=sz) g_lastImgSlot = 0;
+	}
+	ShowImageSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), sz ? g_lastImgSlot : -1); // -1: err msg (empty list)
+}
+
 void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot)
 {
 	bool updated = false;
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot))
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
 	{
 		for (int j=0; j <= GetNumTracks(); j++)
 			if (MediaTrack* tr = CSurf_TrackFromID(j, false))

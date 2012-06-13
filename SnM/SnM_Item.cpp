@@ -1398,7 +1398,7 @@ void SetPan(COMMAND_T* _ct)
 ///////////////////////////////////////////////////////////////////////////////
 
 void PlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop, double _msi) {
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
 		SNM_PlaySelTrackPreviews(fnStr->Get(), _pause, _loop, _msi);
 		delete fnStr;
 	}
@@ -1423,7 +1423,7 @@ void SyncLoopSelTrackMediaSlot(COMMAND_T* _ct) {
 bool TogglePlaySelTrackMediaSlot(int _slotType, const char* _title, int _slot, bool _pause, bool _loop, double _msi)
 {
 	bool done = false;
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
 		done = SNM_TogglePlaySelTrackPreviews(fnStr->Get(), _pause, _loop, _msi);
 		delete fnStr;
 	}
@@ -1476,7 +1476,7 @@ void SyncToggleLoopPauseSelTrackMediaSlot(COMMAND_T* _ct) {
 
 // _insertMode: 0=add to current track, 1=add new track, 3=add to selected items as takes, &4=stretch/loop to fit time sel, &8=try to match tempo 1x, &16=try to match tempo 0.5x, &32=try to match tempo 2x
 void InsertMediaSlot(int _slotType, const char* _title, int _slot, int _insertMode) {
-	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, _slot)) {
+	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
 		InsertMedia((char*)fnStr->Get(), _insertMode); //JFB includes undo => _title not used..
 		delete fnStr;
 	}

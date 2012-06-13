@@ -178,7 +178,7 @@ HWND GetReaWindowByTitle(const char* _title)
 		}
 	}
 
-#else // almost works on win + osx (since wdl 7cf02d) but with an utf8 issue on win
+#else // almost works on win + osx (since wdl 7cf02d) but utf8 issue on win
 
 	// in a floating window?
 	HWND w = FindWindowEx(NULL, NULL, NULL, _title);
@@ -351,9 +351,9 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 
 ///////////////////////////////////////////////////////////////////////////////
 // Track FX chain windows: show/hide
-// note: Cockos' TrackFX_GetChainVisible() and my getSelectedFX() are not the
+// note: Cockos' TrackFX_GetChainVisible() and GetSelectedTrackFX() are not the
 // exactly the same. Here, TrackFX_GetChainVisible() is used to get a selected 
-// FX in a -visible- chain while getSelectedFX() will always return one.
+// FX in a -visible- chain, GetSelectedTrackFX() will always return one.
 ///////////////////////////////////////////////////////////////////////////////
 
 void ShowFXChain(COMMAND_T* _ct)

@@ -28,7 +28,7 @@
 //JFB TODO?
 // - atm, undo on each key stroke (!) but it fixes:
 //   * SaveExtensionConfig() that is not called when there is no proj mods but
-       some notes have been entered..
+//     some notes have been entered..
 //   * missing updates on project switches
 // - clicking the empty area of the tcp does not remove focus (important for refresh)
 // - undo does not restore caret pos

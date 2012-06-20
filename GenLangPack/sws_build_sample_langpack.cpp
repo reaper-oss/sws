@@ -280,7 +280,7 @@ void processCPPfile(FILE *fp)
 {
   char clocsec[512];
   clocsec[0]=0;
-  bool want1st=false;
+  bool want1st=false,wantSwsCmds=false;
   for (;;)
   {
     char buf[8192];
@@ -332,7 +332,7 @@ void processCPPfile(FILE *fp)
 
     if (clocsec[0])
     {
-      bool first=true;
+      int cnt=0;
       p=buf;
       while (*p)
       {
@@ -342,23 +342,25 @@ void processCPPfile(FILE *fp)
           if (l >= 7 && !strncmp(p+1,"MM_CTX_",7))
           {
             // ignore MM_CTX_* since these are internal strings
-            first=false;
           }
           else if (strstr(p+1,"[Internal]"))
           {
             //JFB ingore other internal strings
-            first=false;
           }
-          else if (!first && want1st)
+          else if (want1st && cnt)
           {
-            //JFB WANT_LOCALIZE_1ST_*: ignore
+            //JFB WANT_LOCALIZE_1ST_STRING*: ignore
+          }
+          else if (wantSwsCmds && cnt==1)
+          {
+            //JFB WANT_LOCALIZE_SWS_CMD_TABLE*: ignore
           }
           else
           {
-            first=false;
             gotString(p+1,l,clocsec);
           }
           p += l+2;
+          cnt++;
         }
         else
         {
@@ -376,9 +378,18 @@ void processCPPfile(FILE *fp)
       strcpy(clocsec,strstr(p2,":")+1);
       want1st=true;
     }
-    else if (commentp && (strstr(commentp,"!WANT_LOCALIZE_1ST_STRING_END"))) {
+    else if (commentp && strstr(commentp,"!WANT_LOCALIZE_1ST_STRING_END")) {
       clocsec[0]=0;
       want1st=false;
+    }
+
+    if (commentp && (p2=strstr(commentp,"!WANT_LOCALIZE_SWS_CMD_TABLE_BEGIN:"))) {
+      strcpy(clocsec,strstr(p2,":")+1);
+      wantSwsCmds=true;
+    }
+    else if (commentp && strstr(commentp,"!WANT_LOCALIZE_SWS_CMD_TABLE_END")) {
+      clocsec[0]=0;
+      wantSwsCmds=false;
     }
   }
 }
@@ -446,20 +457,22 @@ int main(int argc, char **argv)
 
   if (casemode==3) 
   {
-    // no #NAME: the SWS Template LangPack file has to be merged
-	printf("; SWS/S&M Template LangPack"); 
+    // no #NAME: SWS LangPack files have to be merged with the main REAPER one
+    printf("; SWS/S&M Template LangPack"); 
 
-	int version[4];
-	if (GetSWSVersion(version))
-		printf(" v%d.%d.%d Build %d\n", version[0], version[1], version[2], version[3]); 
-    printf(
-      "; NOTE: See http://forum.cockos.com/showpost.php?p=941893&postcount=810.\n"
-      "; As you translate a string, remove the ; from the beginning of the\n"
-      "; line. If the line begins with ;^, then it is an optional string,\n"
+  int version[4];
+  if (GetSWSVersion(version))
+    printf(" v%d.%d.%d Build %d", version[0], version[1], version[2], version[3]); 
+
+  printf(
+      "\n\n; NOTE: As you translate a string, remove the ; from the beginning of\n"
+      "; the line. If the line begins with ;^, then it is an optional string,\n"
       "; and you should only modify that line if the definition in [common]\n"
       "; is not accurate for that context.\n"
-      "; Do not change action tags (SWS:, SWS/S&M:, etc..), such names\n"
-	  "; would be ignored.\n\n");
+      "; Do not change action tags like SWS:, SWS/S&M:, etc.. (such strings\n"
+      "; would be ignored).\n"
+      "; Once translated, the SWS LangPack has to be merged with the main REAPER one:\n"
+      "; see http://forum.cockos.com/showpost.php?p=941893&postcount=810.\n\n");
   }
   else
   {

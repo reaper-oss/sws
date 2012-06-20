@@ -950,7 +950,7 @@ void PasteSnapshot(COMMAND_T*)
 	MergeSnapshot(ss);
 }
 
-//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
+//!WANT_LOCALIZE_SWS_CMD_TABLE_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Open snapshots window" },						"SWSSNAPSHOT_OPEN",	     OpenSnapshotsDialog,  "Show snapshots list and settings", 0, SnapshotsWindowEnabled },
@@ -1006,7 +1006,7 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Restore snapshot filter options" },             "SWSSNAPSHOT_RESTFILT",  RestoreFilter,  NULL, },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
-//!WANT_LOCALIZE_1ST_STRING_END
+//!WANT_LOCALIZE_SWS_CMD_TABLE_END
 
 static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
 {

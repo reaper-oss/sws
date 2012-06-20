@@ -266,16 +266,18 @@ HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIn
 
 	while (pCommands[i].id != LAST_COMMAND && pCommands[i].id != SWS_ENDSUBMENU)
 	{
-		if (pCommands[i].id == SWS_STARTSUBMENU)
+		if (pCommands[i].menuText)
 		{
-			const char* subMenuName = pCommands[i].menuText;
-			i++;
-			HMENU hSubMenu = SWSCreateMenuFromCommandTable(pCommands, NULL, &i);
-			AddSubMenu(hMenu, hSubMenu, subMenuName);
+			if (pCommands[i].id == SWS_STARTSUBMENU)
+			{
+				const char* subMenuName = pCommands[i].menuText;
+				i++;
+				HMENU hSubMenu = SWSCreateMenuFromCommandTable(pCommands, NULL, &i);
+				AddSubMenu(hMenu, hSubMenu, __localizeFunc(subMenuName,"sws_actions",0));
+			}
+			else
+				AddToMenu(hMenu, __localizeFunc(pCommands[i].menuText,"sws_actions",0), pCommands[i].accel.accel.cmd);
 		}
-		else
-			AddToMenu(hMenu, pCommands[i].menuText, pCommands[i].accel.accel.cmd);
-
 		i++;
 	}
 	

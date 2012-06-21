@@ -100,7 +100,7 @@ int g_approxDelayMsCC = SNM_SCHEDJOB_DEFAULT_DELAY;
 ///////////////////////////////////////////////////////////////////////////////
 
 // updates a preset conf string
-// _presetConf: in & out param
+// _presetConf: in/out param
 // _fx: 1-based
 // _preset: new preset name or NULL or "" to remove
 void UpdatePresetConf(WDL_FastString* _presetConf, int _fx, const char* _preset)
@@ -188,7 +188,7 @@ int GetPresetFromConfV1(int _fx, const char* _presetConf, int _presetCount)
 	return 0;
 }
 
-bool GetPresetFromConfV2(int _fx, const char* _presetConf, WDL_FastString* _presetName)
+bool GetPresetConf(int _fx, const char* _presetConf, WDL_FastString* _presetName)
 {
 	if (_presetName)
 		_presetName->Set("");
@@ -260,7 +260,7 @@ bool TriggerFXPresets(MediaTrack* _tr, WDL_FastString* _presetConf)
 	{
 		WDL_FastString presetName;
 		for (int i=0; i < nbFx; i++)
-			if (GetPresetFromConfV2(i, _presetConf->Get(), &presetName))
+			if (GetPresetConf(i, _presetConf->Get(), &presetName))
 				updated |= TrackFX_SetPreset(_tr, i, presetName.Get());
 	}
 	return updated;
@@ -309,11 +309,12 @@ void SNM_LiveConfigsView::GetItemText(SWS_ListItem* item, int iCol, char* str, i
 				lstrcpyn(str, pItem->m_presets.Get(), iStrMax);
 				break;
 			case COL_ACTION_ON:
-			case COL_ACTION_OFF: 
-			if (iCol==COL_ACTION_ON ? pItem->m_onAction.GetLength()>0 : pItem->m_offAction.GetLength()>0)
-			{
-				int cmd = NamedCommandLookup(iCol==COL_ACTION_ON ? pItem->m_onAction.Get() : pItem->m_offAction.Get());
-				lstrcpyn(str, cmd>0 ? kbd_getTextFromCmd(cmd, NULL) : "?", iStrMax);
+			case COL_ACTION_OFF: {
+				const char* custId = (iCol==COL_ACTION_ON ? pItem->m_onAction.Get() : pItem->m_offAction.Get());
+				if (*custId) {
+					int cmd = NamedCommandLookup(custId);
+					lstrcpyn(str, cmd>0 ? kbd_getTextFromCmd(cmd, NULL) : custId, iStrMax);
+				}
 				break;
 			}
 		}
@@ -493,7 +494,7 @@ INT_PTR SNM_LiveConfigsWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }
 
-// ScheduledJob because of possible multi-notifs
+// ScheduledJob because of multi-notifs
 void SNM_LiveConfigsWnd::CSurfSetTrackListChange() {
 	AddOrReplaceScheduledJob(new SNM_LiveCfg_TLChangeSchedJob());
 }
@@ -796,7 +797,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 
 		default:
-			if (LOWORD(wParam) >= SNM_LIVECFG_SET_TRACK_START_MSG && LOWORD(wParam) <= SNM_LIVECFG_SET_TRACK_END_MSG) 
+			if (LOWORD(wParam)>=SNM_LIVECFG_SET_TRACK_START_MSG && LOWORD(wParam)<=SNM_LIVECFG_SET_TRACK_END_MSG) 
 			{
 				bool updt = false;
 				while(item)
@@ -815,44 +816,28 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 				}
 			}
-			else if (LOWORD(wParam) >= SNM_LIVECFG_LEARN_PRESETS_START_MSG && LOWORD(wParam) <= SNM_LIVECFG_LEARN_PRESETS_END_MSG) 
+			else if (item && LOWORD(wParam)>=SNM_LIVECFG_LEARN_PRESETS_START_MSG && LOWORD(wParam)<=SNM_LIVECFG_LEARN_PRESETS_END_MSG) 
 			{
-				bool updt = false;
-				while(item)
+				if (item->m_track)
 				{
-					if (item->m_track)
-					{
-						int fx = (int)LOWORD(wParam)-SNM_LIVECFG_LEARN_PRESETS_START_MSG;
-						char buf[SNM_MAX_PRESET_NAME_LEN] = "";
-						TrackFX_GetPreset(item->m_track, fx, buf, SNM_MAX_PRESET_NAME_LEN);
-						UpdatePresetConf(&item->m_presets, fx+1, buf);
-						item->m_fxChain.Set("");
-						item->m_trTemplate.Set("");
-						updt = true;
-					}
-					item = (MidiLiveItem*)m_pLists.Get(0)->EnumSelected(&x);
-				}
-				if (updt) {
+					int fx = (int)LOWORD(wParam)-SNM_LIVECFG_LEARN_PRESETS_START_MSG;
+					char buf[SNM_MAX_PRESET_NAME_LEN] = "";
+					TrackFX_GetPreset(item->m_track, fx, buf, SNM_MAX_PRESET_NAME_LEN);
+					UpdatePresetConf(&item->m_presets, fx+1, buf);
+					item->m_fxChain.Set("");
+					item->m_trTemplate.Set("");
 					Update();
 					Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 				}
 				break;
 			}
-			else if (LOWORD(wParam) >= SNM_LIVECFG_SET_PRESET_START_MSG && LOWORD(wParam) <= SNM_LIVECFG_SET_PRESET_END_MSG) 
+			else if (item && LOWORD(wParam) >= SNM_LIVECFG_SET_PRESET_START_MSG && LOWORD(wParam) <= SNM_LIVECFG_SET_PRESET_END_MSG) 
 			{
-				bool updt = false;
-				while(item)
+				if (PresetMsg* msg = m_lastPresetMsg.Get((int)LOWORD(wParam) - SNM_LIVECFG_SET_PRESET_START_MSG))
 				{
-					if (PresetMsg* msg = m_lastPresetMsg.Get((int)LOWORD(wParam) - SNM_LIVECFG_SET_PRESET_START_MSG))
-					{
-						UpdatePresetConf(&item->m_presets, msg->m_fx+1, msg->m_preset.Get());
-						item->m_fxChain.Set("");
-						item->m_trTemplate.Set("");
-						updt = true;
-					}
-					item = (MidiLiveItem*)m_pLists.Get(0)->EnumSelected(&x);
-				}
-				if (updt) {
+					UpdatePresetConf(&item->m_presets, msg->m_fx+1, msg->m_preset.Get());
+					item->m_fxChain.Set("");
+					item->m_trTemplate.Set("");
 					Update();
 					Undo_OnStateChangeEx(SNM_LIVECFG_UNDO_STR, UNDO_STATE_MISCCFG, -1);
 				}
@@ -878,49 +863,55 @@ void SNM_LiveConfigsWnd::AddFXSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastStri
 	if (summaries && fxCount == summaries->GetSize())
 	{
 		char fxName[SNM_MAX_FX_NAME_LEN] = "";
-#ifdef _WIN32
-		int msgCpt = 0; //JFB TODO? check max. msgCpt value?
-#endif
-		for(int i = 0; i < fxCount; i++) 
+		int msgCpt = 0;
+		for(int fx=0; fx<fxCount; fx++) 
 		{
-			if(TrackFX_GetFXName(_tr, i, fxName, SNM_MAX_FX_NAME_LEN))
+			if(TrackFX_GetFXName(_tr, fx, fxName, SNM_MAX_FX_NAME_LEN))
 			{
 				HMENU fxSubMenu = CreatePopupMenu();
-				WDL_FastString str;
+				WDL_FastString str, curPresetName;
+				GetPresetConf(fx, _curPresetConf->Get(), &curPresetName);
 
-				// learn
-				char buf[SNM_MAX_PRESET_NAME_LEN] = "";
-				TrackFX_GetPreset(_tr, i, buf, SNM_MAX_PRESET_NAME_LEN);
-				str.SetFormatted(256, __LOCALIZE_VERFMT("Learn current preset: %s","sws_DLG_155"), *buf?buf:__LOCALIZE("undefined","sws_DLG_155"));
-				AddToMenu(fxSubMenu, str.Get(), SNM_LIVECFG_LEARN_PRESETS_START_MSG + i, -1, false, *buf?0:MF_GRAYED);
-#ifdef _WIN32
-				// preset list
-				WDL_PtrList_DeleteOnDestroy<WDL_FastString> names;
-				SNM_FXSummary* sum = summaries->Get(i);
-				if (int presetCount = (sum ? GetUserPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names) : 0))
+				// clear current fx preset
+				if ((SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt) <= SNM_LIVECFG_SET_PRESET_END_MSG)
 				{
-					if (GetMenuItemCount(fxSubMenu))
-						AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
-
-					WDL_FastString curPresetName;
-					GetPresetFromConfV2(i, _curPresetConf->Get(), &curPresetName);
 					AddToMenu(fxSubMenu, __LOCALIZE("None","sws_DLG_155"), SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt, -1, false, !curPresetName.GetLength() ? MFS_CHECKED : MFS_UNCHECKED);
-					m_lastPresetMsg.Add(new PresetMsg(i, ""));
+					m_lastPresetMsg.Add(new PresetMsg(fx, ""));
 					msgCpt++;
-
-					for(int j=0; j < presetCount; j++)
-					{
-						if (names.Get(j)->GetLength())
-						{
-							AddToMenu(fxSubMenu, names.Get(j)->Get(), SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt, -1, false, !strcmp(curPresetName.Get(), names.Get(j)->Get()) ? MFS_CHECKED : MFS_UNCHECKED);
-							m_lastPresetMsg.Add(new PresetMsg(i, names.Get(j)->Get()));
-							msgCpt++;
-						}
-					}
 				}
-#endif
+
+				if (GetMenuItemCount(fxSubMenu))
+					AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
+
+				// learn current preset
+				if ((SNM_LIVECFG_LEARN_PRESETS_START_MSG + fx) <= SNM_LIVECFG_LEARN_PRESETS_END_MSG)
+				{
+					char buf[SNM_MAX_PRESET_NAME_LEN] = "";
+					TrackFX_GetPreset(_tr, fx, buf, SNM_MAX_PRESET_NAME_LEN);
+					str.SetFormatted(256, __LOCALIZE_VERFMT("Learn current preset (%s)","sws_DLG_155"), *buf?buf:__LOCALIZE("undefined","sws_DLG_155"));
+					AddToMenu(fxSubMenu, str.Get(), SNM_LIVECFG_LEARN_PRESETS_START_MSG + fx, -1, false, *buf?0:MF_GRAYED);
+				}
+
+				// user preset list
+				WDL_PtrList_DeleteOnDestroy<WDL_FastString> names;
+				SNM_FXSummary* sum = summaries->Get(fx);
+				int usrPrstCount = (sum ? GetUserPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names) : 0);
+
+				if (GetMenuItemCount(fxSubMenu))
+					AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
+
+				str.SetFormatted(256, __LOCALIZE_VERFMT("[User presets%s]","sws_DLG_155"), usrPrstCount?"":__LOCALIZE(": no imported .rpl file","sws_DLG_155"));
+				AddToMenu(fxSubMenu, str.Get(), 0, -1, false, usrPrstCount?MF_DISABLED:MF_GRAYED);
+
+				for(int j=0; j < usrPrstCount && (SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt) <= SNM_LIVECFG_SET_PRESET_END_MSG; j++)
+					if (names.Get(j)->GetLength()) {
+						AddToMenu(fxSubMenu, names.Get(j)->Get(), SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt, -1, false, !strcmp(curPresetName.Get(), names.Get(j)->Get()) ? MFS_CHECKED : MFS_UNCHECKED);
+						m_lastPresetMsg.Add(new PresetMsg(fx, names.Get(j)->Get()));
+						msgCpt++;
+					}
+
 				// add fx sub menu
-				str.SetFormatted(512, "FX%d: %s", i+1, fxName);
+				str.SetFormatted(512, "FX%d: %s", fx+1, fxName);
 				AddSubMenu(_menu, fxSubMenu, str.Get(), -1, GetMenuItemCount(fxSubMenu) ? MFS_ENABLED : MF_GRAYED);
 			}
 		}
@@ -993,25 +984,21 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 					else {
 						AddFXSubMenu(hMenu, item->m_track, &item->m_presets);
 						AddToMenu(hMenu, SWS_SEPARATOR, 0);
-						AddToMenu(hMenu, __LOCALIZE("Clear presets","sws_DLG_155"), SNM_LIVECFG_CLEAR_PRESETS_MSG);
+						AddToMenu(hMenu, __LOCALIZE("Clear all FX presets","sws_DLG_155"), SNM_LIVECFG_CLEAR_PRESETS_MSG);
 					}
 				}
 				else AddToMenu(hMenu, __LOCALIZE("(No track)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
 				break;
 			case COL_ACTION_ON:
-			{
 				hMenu = CreatePopupMenu();
 				AddToMenu(hMenu, __LOCALIZE("Learn from Actions window","sws_DLG_155"), SNM_LIVECFG_LEARN_ON_ACTION_MSG);
 				AddToMenu(hMenu, __LOCALIZE("Clear actions/macros","sws_DLG_155"), SNM_LIVECFG_CLEAR_ON_ACTION_MSG);
 				break;
-			}
 			case COL_ACTION_OFF:
-			{
 				hMenu = CreatePopupMenu();
 				AddToMenu(hMenu, __LOCALIZE("Learn from Actions window","sws_DLG_155"), SNM_LIVECFG_LEARN_OFF_ACTION_MSG);
 				AddToMenu(hMenu, __LOCALIZE("Clear actions/macros","sws_DLG_155"), SNM_LIVECFG_CLEAR_OFF_ACTION_MSG);
 				break;
-			}
 		}
 	}
 	return hMenu;

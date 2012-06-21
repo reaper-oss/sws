@@ -389,8 +389,6 @@ int GetSelectedTrackFX(MediaTrack* _tr)
 // Track FX presets
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef _WIN32
-
 // _fxType: as defined in FX chunk ("VST", "AU", etc..)
 // _fxName: as defined in FX chunk ("foo.dll", etc..)
 int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL_FastString>* _presetNames)
@@ -400,18 +398,26 @@ int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL
 	{
 		char iniFn[BUFFER_SIZE]="", buf[256]="";
 
-		// *** get ini filename ***
+		// *** build ini filename ***
 		lstrcpyn(buf, _fxName, 256);
 
-		// remove ".dll"
-#ifdef _WIN32
+		// remove some file extensions
 		if (!_stricmp(_fxType, "VST"))
-			if (const char* p = stristr(buf,".dll"))
-				buf[(int)(p-buf)] = '\0';
+		{
+			const char* p = NULL;
+#ifdef _WIN32
+			p = stristr(buf, ".dll");
 #else
-		//JFB TODO w/o stristr
+			p = stristr(buf, ".vst"); // standard vst or ".vst.dylib" (e.g. reaeq)
 #endif
+			if (p)
+				buf[(int)(p-buf)] = '\0';
+		}
+
 		// replace special chars
+		// would have been better to use something like Filenamize() here
+		// but the following code mimics REAPER's behavior => can lead to 
+		// invalid/non-crossplatform filenames, e.g. filenames containing "/"
 		int i=0;
 		while (buf[i]) {
 			if (buf[i] == '.' || buf[i] == '/') buf[i] = '_';
@@ -419,7 +425,7 @@ int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL
 		}
 
 		char* fxType = _strdup(_fxType);
-		for (i=0; i < (int)strlen(fxType); i++)
+		for (int i=0; i < (int)strlen(fxType); i++)
 			fxType[i] = tolower(fxType[i]);
 		_snprintfSafe(iniFn, sizeof(iniFn), "%s%cpresets%c%s-%s.ini", GetResourcePath(), PATH_SLASH_CHAR, PATH_SLASH_CHAR, fxType, buf);
 
@@ -445,7 +451,7 @@ int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL
 	}
 	return nbPresets;
 }
-#endif
+
 
 ///////////////////////////////////////////////////////////////////////////////
 

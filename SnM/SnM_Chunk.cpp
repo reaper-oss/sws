@@ -870,6 +870,7 @@ bool SNM_LearnMIDIChPatcher::SetChannel(int _newValue, int _fx)
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_FXSummaryParser
+// works with .rfxchain, input fx chain and std fx chain
 ///////////////////////////////////////////////////////////////////////////////
 
 bool SNM_FXSummaryParser::NotifyStartElement(int _mode, 
@@ -879,17 +880,10 @@ bool SNM_FXSummaryParser::NotifyStartElement(int _mode,
 {
 	if (_mode == -1)
 	{
-		if (_lp->getnumtokens() >= 3
-/*JFB commented for .RFXChain file support (no "<FXCHAIN" parent)
-			&& _parsedParents->GetSize() == 3
-*/
-			)
+		if (_lp->getnumtokens() >= 3)
 		{
-			if (!strcmp(_lp->gettoken_str(0), "<VST")
-#ifndef _WIN32
-				|| !strcmp(_lp->gettoken_str(0), "<AU") //JFB theorical AU stuff, cannot test..
-#endif
-				)
+			// process all fx types (in case rpp files were exchanged osx <-> win)
+			if (!strcmp(_lp->gettoken_str(0), "<VST") || !strcmp(_lp->gettoken_str(0), "<AU"))
 				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(1), _lp->gettoken_str(2)));
 			else if (!strcmp(_lp->gettoken_str(0), "<JS") || !strcmp(_lp->gettoken_str(0), "<DX"))
 				m_summaries.Add(new SNM_FXSummary(_lp->gettoken_str(0)+1, _lp->gettoken_str(1), _lp->gettoken_str(1)));
@@ -897,8 +891,6 @@ bool SNM_FXSummaryParser::NotifyStartElement(int _mode,
 	}
 	return false;
 }
-
-// no SNM_FXSummaryParser::NotifyEndElement() (sould work for .rfxchain, input fx chain & fx chain)
 
 WDL_PtrList<SNM_FXSummary>* SNM_FXSummaryParser::GetSummaries()
 {

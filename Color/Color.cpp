@@ -190,7 +190,7 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					{
 						char cFilename[512];
 						UpdateCustomColors();
-						if (BrowseForSaveFile("Save color theme", cPath, NULL, cExt, cFilename, 512))
+						if (BrowseForSaveFile(__LOCALIZE("Save color theme","sws_color"), cPath, NULL, cExt, cFilename, 512))
 						{
 							char key[32];
 							char val[32];
@@ -209,12 +209,12 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					else if (wParam == IDC_LOADCOL || wParam == IDC_LOADFROMTHEME)
 					{
 #ifndef _WIN32
-						if (MessageBox(hwndDlg, "WARNING: Loading colors from file will overwrite your global personalized color choices.  If these are important to you, press press cancel to abort the loading of new colors!", "OSX Color Load WARNING", MB_OKCANCEL) == IDCANCEL)
+						if (MessageBox(hwndDlg, __LOCALIZE("WARNING: Loading colors from file will overwrite your global personalized color choices.\nIf these are important to you, press press cancel to abort the loading of new colors!","sws_color"), __LOCALIZE("OSX Color Load WARNING","sws_color"), MB_OKCANCEL) == IDCANCEL)
 							break;
 #endif
 						if (wParam == IDC_LOADCOL)
 						{
-							char* cFile = BrowseForFiles("Choose color theme file", cPath, NULL, false, cExt);
+							char* cFile = BrowseForFiles(__LOCALIZE("Choose color theme file","sws_color"), cPath, NULL, false, cExt);
 							if (cFile)
 							{
 								lstrcpyn(cPath, cFile, 512);
@@ -244,8 +244,8 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 							if (!bFound)
 							{
 								char cMsg[512];
-								_snprintf(cMsg, 512, "No SWS custom colors found in %s.", cPath);
-								MessageBox(hwndDlg, cMsg, "SWS Color Load", MB_OK);
+								_snprintf(cMsg, 512, __LOCALIZE_VERFMT("No SWS custom colors found in %s.","sws_color"), cPath);
+								MessageBox(hwndDlg, cMsg, __LOCALIZE("SWS Color Load","sws_color"), MB_OK);
 							}
 
 							g_crGradStart = GetPrivateProfileInt("SWS Color", "gradientStart", g_crGradStart, cPath);
@@ -314,7 +314,7 @@ void ColorChildren(COMMAND_T* = NULL)
 		if (iType + iFolder <= iParentDepth)
 			bSelected = false;
 	}
-	Undo_OnStateChangeEx("Set track(s) children to same color", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) children to same color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 
@@ -331,7 +331,7 @@ void WhiteItem(COMMAND_T* = NULL)
 				GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &iWhite);
 		}
 	}
-	Undo_OnStateChange("Set item(s) color white");
+	Undo_OnStateChange(__LOCALIZE("Set item(s) color white","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -348,7 +348,7 @@ void BlackItem(COMMAND_T* = NULL)
 				GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &iBlack);
 		}
 	}
-	Undo_OnStateChange("Set item(s) color black");
+	Undo_OnStateChange(__LOCALIZE("Set item(s) color black","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -361,7 +361,7 @@ void WhiteTrack(COMMAND_T* = NULL)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &iWhite);
 	}
-	Undo_OnStateChangeEx("Set track(s) color white", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) color white","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void BlackTrack(COMMAND_T* = NULL)
@@ -373,7 +373,7 @@ void BlackTrack(COMMAND_T* = NULL)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &iBlack);
 	}
-	Undo_OnStateChangeEx("Set track(s) color black", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) color black","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ColorTrackPrev(COMMAND_T* = NULL)
@@ -386,7 +386,7 @@ void ColorTrackPrev(COMMAND_T* = NULL)
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", GetSetMediaTrackInfo(prevTr, "I_CUSTOMCOLOR", NULL));
 		prevTr = tr;
 	}
-	Undo_OnStateChangeEx("Set track(s) to previous track's color", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) to previous track's color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ColorTrackNext(COMMAND_T* = NULL)
@@ -397,7 +397,7 @@ void ColorTrackNext(COMMAND_T* = NULL)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", GetSetMediaTrackInfo(CSurf_TrackFromID(i+1, false), "I_CUSTOMCOLOR", NULL));
 	}
-	Undo_OnStateChangeEx("Set track(s) to previous track's color", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) to previous track's color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 
@@ -435,7 +435,7 @@ void ColorTrackNextCust(COMMAND_T* = NULL)
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
 		}
 	}
-	Undo_OnStateChangeEx("Set track(s) to next custom color", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) to next custom color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ColorItemNextCust(COMMAND_T* = NULL)
@@ -457,7 +457,7 @@ void ColorItemNextCust(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange("Set item(s) to next custom color");
+	Undo_OnStateChange(__LOCALIZE("Set item(s) to next custom color","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -475,7 +475,7 @@ void TrackRandomCol(COMMAND_T* = NULL)
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
 	}
-	Undo_OnStateChangeEx("Set track(s) to one random custom color", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) to one random custom color","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void TrackRandomCols(COMMAND_T* = NULL)
@@ -494,7 +494,7 @@ void TrackRandomCols(COMMAND_T* = NULL)
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
 		}
 	}
-	Undo_OnStateChangeEx("Set track(s) to random custom color(s)", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) to random custom color(s)","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ItemRandomCol(COMMAND_T* = NULL)
@@ -515,7 +515,7 @@ void ItemRandomCol(COMMAND_T* = NULL)
 				GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &cr);
 		}
 	}
-	Undo_OnStateChange("Set item(s) to one random custom color");
+	Undo_OnStateChange(__LOCALIZE("Set item(s) to one random custom color","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -539,7 +539,7 @@ void ItemRandomCols(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange("Set item(s) to random custom color(s)");
+	Undo_OnStateChange(__LOCALIZE("Set item(s) to random custom color(s)","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -555,7 +555,7 @@ void TrackCustomColor(int iCustColor)
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
 	}
 	char cUndoText[100];
-	sprintf(cUndoText, "Set track(s) to custom color %d", iCustColor+1);
+	sprintf(cUndoText, __LOCALIZE_VERFMT("Set track(s) to custom color %d","sws_undo"), iCustColor+1);
 	Undo_OnStateChangeEx(cUndoText, UNDO_STATE_TRACKCFG, -1);
 }
 
@@ -575,7 +575,7 @@ void ItemCustomColor(int iCustColor)
 		}
 	}
 	char cUndoText[100];
-	sprintf(cUndoText, "Set item(s) to custom color %d", iCustColor+1);
+	sprintf(cUndoText, __LOCALIZE_VERFMT("Set item(s) to custom color %d","sws_undo"), iCustColor+1);
 	Undo_OnStateChange(cUndoText);
 	UpdateTimeline();
 }
@@ -600,7 +600,7 @@ void TakeCustomColor(int iCustColor)
 		}
 	}
 	char cUndoText[100];
-	sprintf(cUndoText, "Set take(s) to custom color %d", iCustColor+1);
+	sprintf(cUndoText, __LOCALIZE_VERFMT("Set take(s) to custom color %d","sws_undo"), iCustColor+1);
 	Undo_OnStateChange(cUndoText);
 	UpdateTimeline();
 }
@@ -631,7 +631,7 @@ void RandomColorAll(COMMAND_T*)
 				}
 			}
 			UpdateTimeline();
-			Undo_EndBlock("Set selected track(s)/item(s) to one random color", UNDO_STATE_ALL);
+			Undo_EndBlock(__LOCALIZE("Set selected track(s)/item(s) to one random color","sws_undo"), UNDO_STATE_ALL);
 			return;
 		}
 	}
@@ -662,7 +662,7 @@ void CustomColorAll(COMMAND_T*)
 				}
 			}
 			UpdateTimeline();
-			Undo_EndBlock("Set selected track(s)/item(s) to custom color", UNDO_STATE_ALL);
+			Undo_EndBlock(__LOCALIZE("Set selected track(s)/item(s) to custom color","sws_undo"), UNDO_STATE_ALL);
 			return;
 		}
 	}
@@ -740,7 +740,7 @@ void TrackGradient(COMMAND_T* = NULL)
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
 		}
 	}
-	Undo_OnStateChangeEx("Set tracks to color gradient", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set tracks to color gradient","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void TrackOrderedCol(COMMAND_T* = NULL)
@@ -756,7 +756,7 @@ void TrackOrderedCol(COMMAND_T* = NULL)
 			GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &cr);
 		}
 	}
-	Undo_OnStateChangeEx("Set track(s) to ordered custom color color(s)", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set track(s) to ordered custom color color(s)","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void ItemTrackGrad(COMMAND_T* = NULL)
@@ -796,7 +796,7 @@ void ItemTrackGrad(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange("Set selected item(s) to color gradient per track");
+	Undo_OnStateChange(__LOCALIZE("Set selected item(s) to color gradient per track","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -826,7 +826,7 @@ void ItemGradient(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange("Set selected item(s) to color gradient");
+	Undo_OnStateChange(__LOCALIZE("Set selected item(s) to color gradient","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -847,7 +847,7 @@ void ItemOrdColTrack(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange("Set selected item(s) to ordered custom colors");
+	Undo_OnStateChange(__LOCALIZE("Set selected item(s) to ordered custom colors","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -868,7 +868,7 @@ void ItemOrderedCol(COMMAND_T* = NULL)
 			}
 		}
 	}
-	Undo_OnStateChange("Set selected item(s) to ordered custom colors");
+	Undo_OnStateChange(__LOCALIZE("Set selected item(s) to ordered custom colors","sws_undo"));
 	UpdateTimeline();
 }
 
@@ -886,11 +886,11 @@ void ItemToTrackCol(COMMAND_T* = NULL)
 				GetSetMediaItemInfo(mi, "I_CUSTOMCOLOR", &cr);
 		}
 	}
-	Undo_OnStateChange("Set selected item(s) to respective track color");
+	Undo_OnStateChange(__LOCALIZE("Set selected item(s) to respective track color","sws_undo"));
 	UpdateTimeline();
 }
 
-//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
+//!WANT_LOCALIZE_SWS_CMD_TABLE_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
 	{ { DEFACCEL, "SWS: Open color management window" },                          "SWSCOLORWND",			ShowColorDialog,	"Show color management", },
@@ -979,7 +979,7 @@ static COMMAND_T g_commandTable[] =
 
 	{ {}, LAST_COMMAND, NULL }, // Denote end of table
 };
-//!WANT_LOCALIZE_1ST_STRING_END
+//!WANT_LOCALIZE_SWS_CMD_TABLE_END
 
 //JFB menu items are not localized here (ideally it should be done through __LOCALIZE() and not with the table command above).
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
@@ -1011,18 +1011,18 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 			i++;
 		do
 		{
-			AddToMenu(hSubMenu, g_commandTable[i].menuText, g_commandTable[i].accel.accel.cmd);
+			AddToMenu(hSubMenu, __localizeFunc(g_commandTable[i].menuText,"sws_menu",0), g_commandTable[i].accel.accel.cmd);
 			i++;
 		}
 		while (!(g_commandTable[i-1].doCommand == pLastCommand && g_commandTable[i-1].user == 15));
 
 		// Finish with color dialog
-		AddToMenu(hSubMenu, g_commandTable[0].menuText, g_commandTable[0].accel.accel.cmd);
+		AddToMenu(hSubMenu, __localizeFunc(g_commandTable[0].menuText,"sws_menu",0), g_commandTable[0].accel.accel.cmd);
 
 		if (menuid == 0)
-			AddSubMenu(hMenu, hSubMenu, "SWS track color", 40359);
+			AddSubMenu(hMenu, hSubMenu, __LOCALIZE("SWS track color","sws_menu"), 40359);
 		else
-			AddSubMenu(hMenu, hSubMenu, "SWS item color", 40707);
+			AddSubMenu(hMenu, hSubMenu, __LOCALIZE("SWS item color","sws_menu"), 40707);
 	}
 #ifdef _WIN32
 	else if (flag == 1)

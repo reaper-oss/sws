@@ -257,7 +257,6 @@ int IsSwsAction(const char* _actionName)
 
 HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIndex)
 {
-	// Add menu items
 	if (!hMenu)
 		hMenu = CreatePopupMenu();
 	int i = 0;
@@ -266,17 +265,16 @@ HMENU SWSCreateMenuFromCommandTable(COMMAND_T pCommands[], HMENU hMenu, int* iIn
 
 	while (pCommands[i].id != LAST_COMMAND && pCommands[i].id != SWS_ENDSUBMENU)
 	{
-		if (pCommands[i].menuText)
+		if (const char* name = pCommands[i].menuText)
 		{
 			if (pCommands[i].id == SWS_STARTSUBMENU)
 			{
-				const char* subMenuName = pCommands[i].menuText;
 				i++;
 				HMENU hSubMenu = SWSCreateMenuFromCommandTable(pCommands, NULL, &i);
-				AddSubMenu(hMenu, hSubMenu, __localizeFunc(subMenuName,"sws_actions",0));
+				AddSubMenu(hMenu, hSubMenu, __localizeFunc(name,"sws_menu",0));
 			}
 			else
-				AddToMenu(hMenu, __localizeFunc(pCommands[i].menuText,"sws_actions",0), pCommands[i].accel.accel.cmd);
+				AddToMenu(hMenu, __localizeFunc(name,"sws_menu",0), pCommands[i].accel.accel.cmd);
 		}
 		i++;
 	}
@@ -406,9 +404,9 @@ int WDL_STYLE_GetSysColor(int i)
 
 	// check & "fix" 3D colors that aren't distinguished in many themes..
 #ifdef _WIN32
-	if (i == COLOR_3DSHADOW || i == COLOR_3DLIGHT || i == COLOR_3DHILIGHT)	
+	if (i == COLOR_3DSHADOW || i == COLOR_3DLIGHT || i == COLOR_3DHILIGHT)
 #else
-	if (i == COLOR_3DSHADOW || i == COLOR_3DHILIGHT)	
+	if (i == COLOR_3DSHADOW || i == COLOR_3DHILIGHT)
 #endif
 	{
 		int col3ds,col3dl,bgcol=GSC_mainwnd(COLOR_WINDOW);
@@ -723,13 +721,15 @@ extern "C"
 
 		if (errcnt)
 		{
-			//JFB: NULL parent so that the message is at least visible in taskbars
-			//     (hidden since REAPER v4 and its "splash 2.0")
-			MessageBox(NULL,
-				"The version of SWS extension you have installed is incompatible with your version of Reaper.\n"
-				"You probably have a Reaper version less than 4.20 installed.\n"
-				"Please install the latest version of Reaper from www.reaper.fm.", "SWS - Version Incompatibility", MB_OK);
-			ERR_RETURN("SWS extension incompatible\n")
+			char msg[512]="";
+			_snprintf(msg, sizeof(msg),
+				// keep the following message on a single line (for the LangPack generator) 
+				__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
+				"4.20"); // <- update compatible version here
+
+			//JFB: NULL parent so that the message is at least visible in taskbars (hidden since REAPER v4 and its "splash 2.0")
+			MessageBox(NULL, msg, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);
+			ERR_RETURN("SWS version incompatibility\n")
 		}
 
 		if (!rec->Register("hookcommand",(void*)hookCommandProc))

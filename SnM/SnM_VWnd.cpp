@@ -73,7 +73,6 @@ void SNM_ToolbarButton::OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int orig
 			font->DrawText(drawbm,m_textlbl.Get(),-1,&r2,f);
 		}
 	}
-
 }
 
 
@@ -164,9 +163,9 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 		skin.olimage = it->toolbar_overlay;
 		WDL_VirtualIconButton_PreprocessSkinConfig(&skin);
 
-		//JFB!!! most stupid hack since WDL 65568bc (overlay == main image size)
-		for (int i=0; i<4 ; i++)
-			skin.image_ltrb_ol[i]=0;
+		//JFB!!! most stupid hack since WDL 65568bc (overlay = main image size)
+		for (int i=0; i<4; i++)
+			skin.image_ltrb_ol[i] = 0;
 
 		_btn->SetIcon(&skin);
 		_btn->SetForceBorder(false);
@@ -214,22 +213,26 @@ bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h)
 
 // auto position a WDL_VWnd instance
 // note: by default all components are hidden, see WM_PAINT in sws_wnd.cpp
-// _x: I/O param that gets modified (for the next component)
+// _x: in/out param that gets modified (for the next component to be displayed)
 // _h: height of the destination panel
 // returns false if hidden
-// JFB TODO? REMARK: 
-//    ideally, we'd need to mod WDL_VWnd here rather than checking for inherited types (!)
-//    e.g. adding some kind of getPreferedWidthHeight(int* _width, int* _height)
-bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoomNextComp)
+// TODO? WDL_VWnd inheritance rather than checking for inherited types
+//       e.g. adding some kind of getPreferedWidthHeight(int* _width, int* _height)
+bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoom)
 {
-	if (_c && _h && abs(_r->bottom-_r->top) >= _h)
+	if (_comp && _h && abs(_r->bottom-_r->top) >= _h)
 	{
 		int width=0, height=_h;
-
-		// see top remark..
-		if (!strcmp(_c->GetType(), "vwnd_combobox"))
+		if (!strcmp(_comp->GetType(), "vwnd_statictext"))
 		{
-			WDL_VirtualComboBox* cb = (WDL_VirtualComboBox*)_c;
+			WDL_VirtualStaticText* txt = (WDL_VirtualStaticText*)_comp;
+			RECT tr = {0,0,0,0};
+			txt->GetFont()->DrawText(NULL, txt->GetText(), -1, &tr, DT_CALCRECT);
+			width = tr.right;
+		}
+		else if (!strcmp(_comp->GetType(), "vwnd_combobox"))
+		{
+			WDL_VirtualComboBox* cb = (WDL_VirtualComboBox*)_comp;
 			for (int i=0; i < cb->GetCount(); i++) {
 				RECT tr = {0,0,0,0};
 				cb->GetFont()->DrawText(NULL, cb->GetItem(i), -1, &tr, DT_CALCRECT);
@@ -245,22 +248,15 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int
 			height = height + int(height/2 + 0.5);
 			width += 2*height; // 2*height for the arrow zone (square)
 		}
-		else if (!strcmp(_c->GetType(), "vwnd_statictext"))
+		else if (!strcmp(_comp->GetType(), "vwnd_iconbutton") || !strcmp(_comp->GetType(), "SNM_ToolbarButton"))
 		{
-			WDL_VirtualStaticText* txt = (WDL_VirtualStaticText*)_c;
-			RECT tr = {0,0,0,0};
-			txt->GetFont()->DrawText(NULL, txt->GetText(), -1, &tr, DT_CALCRECT);
-			width = tr.right;
-		}
-		else if (!strcmp(_c->GetType(), "vwnd_iconbutton") || !strcmp(_c->GetType(), "SNM_ToolbarButton"))
-		{
-			WDL_VirtualIconButton* btn = (WDL_VirtualIconButton*)_c;
+			WDL_VirtualIconButton* btn = (WDL_VirtualIconButton*)_comp;
 			WDL_VirtualIconButton_SkinConfig* skin = btn->GetIcon();
 			if (skin && skin->image)
 			{
 				width = skin->image->getWidth() / 3;
 				height = skin->image->getHeight();
-				if (!strcmp(_c->GetType(), "SNM_ToolbarButton")) {
+				if (!strcmp(_comp->GetType(), "SNM_ToolbarButton")) {
 					width = int(2.6*width); // larger toolbar buttons!
 					height = int(0.75*height + 0.5) + 1; // +1 for text vertical alignment
 				}
@@ -275,17 +271,13 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int
 					width += tr.bottom; // for the tick zone
 					height -= 2;
 				}
-/*JFB -= 2 above.. glitch but looks better/aligned
-				// workaround for paint glitch with odd (i.e. not even) heights
-				if (height%2 == 1) { height--; _y++; }
-*/
 			}
 		}
-		else  if (!strcmp(_c->GetType(), "SNM_MiniAddDelButtons")) {
+		else  if (!strcmp(_comp->GetType(), "SNM_MiniAddDelButtons")) {
 			width=9;
 			height=9*2+1;
 		}
-		else if (!strcmp(_c->GetType(), "SNM_MiniKnob")) {
+		else if (!strcmp(_comp->GetType(), "SNM_MiniKnob")) {
 			width=21;
 			height=21;
 		}
@@ -303,9 +295,9 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int
 
 		_y += int(_h/2 - height/2 + 0.5);
 		RECT tr = {*_x, _y, *_x + width, _y+height};
-		_c->SetPosition(&tr);
-		*_x = tr.right + _xRoomNextComp;
-		_c->SetVisible(true);
+		_comp->SetPosition(&tr);
+		*_x = tr.right + _xRoom;
+		_comp->SetVisible(true);
 		return true;
 	}
 

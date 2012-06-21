@@ -60,12 +60,12 @@ void LoadThemeSlot(COMMAND_T* _ct) {
 // Image slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
-int g_lastImgSlot = -1;
+int g_lastShowImgSlot = -1;
 
 void ShowImageSlot(int _slotType, const char* _title, int _slot) {
 	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
 		if (OpenImageView(fnStr->Get()))
-			g_lastImgSlot = _slot;
+			g_lastShowImgSlot = _slot;
 		delete fnStr;
 	}
 }
@@ -78,11 +78,11 @@ void ShowNextPreviousImageSlot(COMMAND_T* _ct)
 {
 	int sz = g_slots.Get(g_tiedSlotActions[SNM_SLOT_IMG])->GetSize();
 	if (sz) {
-		g_lastImgSlot += (int)_ct->user;
-		if (g_lastImgSlot<0) g_lastImgSlot = sz-1;
-		else if (g_lastImgSlot>=sz) g_lastImgSlot = 0;
+		g_lastShowImgSlot += (int)_ct->user;
+		if (g_lastShowImgSlot<0) g_lastShowImgSlot = sz-1;
+		else if (g_lastShowImgSlot>=sz) g_lastShowImgSlot = 0;
 	}
-	ShowImageSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), sz ? g_lastImgSlot : -1); // -1: err msg (empty list)
+	ShowImageSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), sz ? g_lastShowImgSlot : -1); // -1: err msg (empty list)
 }
 
 void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot)

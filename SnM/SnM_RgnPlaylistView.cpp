@@ -314,7 +314,7 @@ INT_PTR SNM_RegionPlaylistWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }
 
-// ScheduledJob used because of possible multi-notifs
+// ScheduledJob used because of multi-notifs
 void SNM_RegionPlaylistWnd::CSurfSetTrackListChange() {
 	AddOrReplaceScheduledJob(new SNM_Playlist_UpdateJob());
 }
@@ -1228,7 +1228,7 @@ void SNM_Playlist_UpdateJob::Perform() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// ScheduledJob used because of possible multi-notifs during project switch (vs CSurfSetTrackListChange)
+// ScheduledJob used because of multi-notifs during project switches (vs CSurfSetTrackListChange)
 void SNM_Playlist_MarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags) {
 	AddOrReplaceScheduledJob(new SNM_Playlist_UpdateJob());
 }

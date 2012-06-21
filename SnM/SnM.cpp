@@ -794,7 +794,7 @@ int SNM_SectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)
 int SNM_RegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 {
 	char actionName[SNM_MAX_ACTION_NAME_LEN]="", custId[SNM_MAX_ACTION_CUSTID_LEN]="";
-	int ret=1, i=0;
+	int i=0;
 	while(_cmds[i].id != LAST_COMMAND)
 	{
 		COMMAND_T* ct = &_cmds[i++];

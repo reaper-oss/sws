@@ -38,6 +38,7 @@
 class SNM_ImageVWnd : public WDL_VWnd {
 public:
 	SNM_ImageVWnd(LICE_IBitmap* _img = NULL) : WDL_VWnd() { SetImage(_img); }
+	virtual ~SNM_ImageVWnd() {}
 	virtual const char *GetType() { return "SNM_ImageVWnd"; }
 	virtual int GetWidth();
 	virtual int GetHeight();
@@ -50,6 +51,7 @@ protected:
 class SNM_Logo : public SNM_ImageVWnd {
 public:
 	SNM_Logo() : SNM_ImageVWnd(SNM_GetThemeLogo()) {}
+	virtual ~SNM_Logo() {}
 	virtual const char *GetType() { return "SNM_Logo"; }
 	virtual bool GetToolTipString(int xpos, int ypos, char* bufOut, int bufOutSz) { lstrcpyn(bufOut, "Strong & Mighty", bufOutSz); return true; }
 };
@@ -57,6 +59,7 @@ public:
 class SNM_AddDelButton : public WDL_VWnd {
 public:
 	SNM_AddDelButton() : WDL_VWnd() { m_add=true; m_en=true; }
+	virtual ~SNM_AddDelButton() {}
 	virtual const char *GetType() { return "SNM_AddDelButton"; }
 	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
 	virtual void SetAdd(bool _add) { m_add=_add; }
@@ -78,9 +81,9 @@ public:
 		AddChild(&m_btnPlus);
 		AddChild(&m_btnMinus);
 	}
-	~SNM_MiniAddDelButtons() { RemoveAllChildren(false); }
-	virtual void SetIDs(int _id, int _addId, int _delId) { SetID(_id); m_btnPlus.SetID(_addId); m_btnMinus.SetID(_delId); }
+	virtual ~SNM_MiniAddDelButtons() { RemoveAllChildren(false); }
 	virtual const char *GetType() { return "SNM_MiniAddDelButtons"; }
+	virtual void SetIDs(int _id, int _addId, int _delId) { SetID(_id); m_btnPlus.SetID(_addId); m_btnMinus.SetID(_delId); }
 	virtual void SetPosition(const RECT *r)
 	{
 		m_position=*r; 
@@ -96,22 +99,24 @@ protected:
 class SNM_ToolbarButton : public WDL_VirtualIconButton {
 public:
 	SNM_ToolbarButton() : WDL_VirtualIconButton() {}
-	const char *GetType() { return "SNM_ToolbarButton"; }
-	void SetGrayed(bool grayed) { WDL_VirtualIconButton::SetGrayed(grayed); if (grayed) m_pressed=0; } // avoid stuck overlay when mousedown leads to grayed button
-	void GetPositionPaintOverExtent(RECT *r) { *r=m_position; }
-	void OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+	virtual ~SNM_ToolbarButton() {}
+	virtual const char *GetType() { return "SNM_ToolbarButton"; }
+	virtual void SetGrayed(bool grayed) { WDL_VirtualIconButton::SetGrayed(grayed); if (grayed) m_pressed=0; } // avoid stuck overlay when mousedown leads to grayed button
+	virtual void GetPositionPaintOverExtent(RECT *r) { *r=m_position; }
+	virtual void OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
 };
 
 class SNM_MiniKnob : public WDL_VirtualSlider {
 public:
 	SNM_MiniKnob() : WDL_VirtualSlider() {}
-	const char *GetType() { return "SNM_MiniKnob"; }
+	virtual ~SNM_MiniKnob() {}
+	virtual const char *GetType() { return "SNM_MiniKnob"; }
 };
 
 void SNM_SkinButton(WDL_VirtualIconButton* _btn, WDL_VirtualIconButton_SkinConfig* _skin, const char* _text);
 void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text);
 bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h);
 bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h);
-bool SNM_AutoVWndPosition(WDL_VWnd* _c, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoomNextComp = SNM_DEF_VWND_X_STEP);
+bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoom = SNM_DEF_VWND_X_STEP);
 
 #endif

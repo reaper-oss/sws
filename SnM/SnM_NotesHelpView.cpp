@@ -164,14 +164,14 @@ void SNM_NotesHelpWnd::OnInitDlg()
 void SNM_NotesHelpWnd::OnDestroy() 
 {
 	KillTimer(m_hwnd, UPDATE_TIMER);
-/*see OnTimer()
+/* see OnTimer()
 	UnregisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
 */
 	g_prevNotesViewType = -1;
 	m_cbType.Empty();
 }
 
-// note: no diff with current type! (init would fail otherwise)
+// note: no diff with current type, init would fail otherwise
 void SNM_NotesHelpWnd::SetType(int _type)
 {
 	g_notesViewType = _type;
@@ -185,7 +185,7 @@ void SNM_NotesHelpWnd::SetType(int _type)
 
 void SNM_NotesHelpWnd::SetText(const char* _str, bool _addRN) {
 	if (_str) {
-		if (_addRN) GetStringWithRN(_str, g_lastText, MAX_HELP_LENGTH); // + store lasr text as g_lastText
+		if (_addRN) GetStringWithRN(_str, g_lastText, MAX_HELP_LENGTH);
 		else lstrcpyn(g_lastText, _str, MAX_HELP_LENGTH);
 		SetDlgItemText(m_hwnd, IDC_EDIT, g_lastText);
 	}
@@ -226,8 +226,8 @@ void SNM_NotesHelpWnd::CSurfSetTrackTitle() {
 		RefreshGUI();
 }
 
-// this is our only notification of active project tab change, so update everything 
-// (ScheduledJob because of possible multi-notifs)
+// this is our only notification of active project tab change, so update everything
+// (ScheduledJob because of multi-notifs)
 void SNM_NotesHelpWnd::CSurfSetTrackListChange() {
 	AddOrReplaceScheduledJob(new SNM_NoteHelp_UpdateJob());
 }
@@ -238,7 +238,7 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 	{
 		case IDC_EDIT:
 			if (HIWORD(wParam)==EN_CHANGE)
-				SaveCurrentText(g_notesViewType); // + undos
+				SaveCurrentText(g_notesViewType); // + undo
 			break;
 		case SET_ACTION_HELP_FILE_MSG:
 			SetActionHelpFilename(NULL);
@@ -398,7 +398,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 
 			static LICE_CachedFont dynFont;
 
-			// creating fonts is ***super slow***
+			// creating fonts is *super slow*
 			// => use a text width estimation
 			int fontHeight = (int)((_bm->getHeight()-h)/numlines + 0.5);
 			while (fontHeight > 5 && (fontHeight*maxlinelen*0.6) > _bm->getWidth()) 
@@ -914,7 +914,7 @@ int SNM_NotesHelpWnd::UpdateMkrRgnNameOrNotes(bool _name)
 ///////////////////////////////////////////////////////////////////////////////
 
 // load/save action help (from/to ini file)
-// note: WDL's cfg_encode/decode_textblock() do not help here..
+// note: WDL's cfg_encode_textblock() & decode_textblock() will not help here..
 
 void LoadHelp(const char* _cmdName, char* _buf, int _bufSize)
 {
@@ -1035,7 +1035,7 @@ void SNM_NoteHelp_UpdateJob::Perform() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// ScheduledJob because of possible multi-notifs during project switch (vs CSurfSetTrackListChange)
+// ScheduledJob because of multi-notifs during project switches (vs CSurfSetTrackListChange)
 void SNM_NoteHelp_MarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags)
 {
 	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
@@ -1052,8 +1052,7 @@ void SNM_NoteHelp_MarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFl
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// import/export subtitle files 
-// SubRip (.srt) files only, atm
+// import/export subtitle files, only SubRip (.srt) files atm
 // see http://en.wikipedia.org/wiki/SubRip#Specifications
 
 bool ImportSubRipFile(const char* _fn)
@@ -1205,7 +1204,6 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	if (lp.parse(line) || lp.getnumtokens() < 1)
 		return false;
 
-	// load project notes
 	if (!strcmp(lp.gettoken_str(0), "<S&M_PROJNOTES"))
 	{
 		WDL_FastString notes;
@@ -1215,7 +1213,6 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 		g_prjNotes.Get()->Set(buf);
 		return true;
 	}
-	// load track notes
 	else if (!strcmp(lp.gettoken_str(0), "<S&M_TRACKNOTES"))
 	{
 		GUID g;
@@ -1231,7 +1228,6 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 			return true;
 		}
 	}
-	// load region/marker notes
 	else if (!strcmp(lp.gettoken_str(0), "<S&M_SUBTITLE"))
 	{
 		if (GetMarkerRegionIndexFromId(lp.gettoken_int(1)) >= 0) // still exists?
@@ -1328,7 +1324,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 		{
 			WDL_FastString startOfrpp;
 
-			// jut read the very begining of the file (where notes are, no-op if notes are longer)
+			// just read the very begining of the file (where prj notes are, no-op if notes are bigger)
 			// => much faster REAPER startup (based on the parser tolerance..)
 			if (LoadChunk(buf, &startOfrpp, true, MAX_HELP_LENGTH+128) && startOfrpp.GetLength())
 			{

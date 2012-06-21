@@ -1,11 +1,17 @@
+OSX / Live Configs
++Browse FX presets like on Windows OS
++Support for AU user presets
+
+Localization for item/track color and snapshot context menus
+
 !v2.2.0 #14 (June 14, 2012)
 Resources window and related slots actions
-+Applying a track template file that contains several tracks now obeys multi-track selection
-http://forum.cockos.com/showthread.php?t=104140|Example|: applying a folder track to other projects
-+Applying track templates now preserves all existing track envelopes (well, except FX parameter envelopes since FX Chains are replaced with templates' ones)
-+Applying track templates now preserves folder states
-Note: in previous versions, only items and receives were preserved when applying a track template file to an existing track
 +"Paste" and "Paste (replace)" items from a track template file that contains several tracks now obeys multi-track selection
++Applying a track template file that contains several tracks now obeys multi-track selection - http://forum.cockos.com/showthread.php?t=104140|Example|: applying folder tracks to other projects
+Track templates can be applied in 2 different ways: either use items/envelopes present in template files or preserve existing items/envelopes, see details http://forum.cockos.com/showpost.php?p=979823&postcount=16|here|
+The following updates deal with the latter option:
++Applying track templates now preserves all existing track envelopes (except FX parameter envelopes since FX Chains are replaced with templates' ones)
++Applying track templates now preserves folder states
 
 Region Playlist
 +The playlist being played can be different from the displayed one
@@ -87,7 +93,7 @@ Region Playlist (BETA)
 +Better list view refresh (new region lengths, renamed regions, etc..)
 
 Added actions
-+Issue 345: SWS/S&M: Remove all envelopes for selected tracks - works with frozen tracks (preserved), master track, fx param envelopes, etc..
++Issue 345: SWS/S&M: Remove all envelopes for selected tracks - works with frozen tracks (i.e. "frozen envelopes" are preserved), master track, fx param envelopes, etc..
 +SWS/S&M: Insert silence (seconds)
 +SWS/S&M: Insert silence (measures.beats)
 +SWS/S&M: Insert silence (samples)

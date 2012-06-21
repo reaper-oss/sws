@@ -275,6 +275,8 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (!bRecurseCheck)
 				{
 					bRecurseCheck = true;
+					for (int i = 0; i < m_pLists.GetSize(); i++)
+						m_pLists.Get(i)->EditListItemEnd(true);
 					KillTooltip();
 					OnResize();
 					m_resize.onResize();
@@ -325,11 +327,10 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			RefreshToolbar(m_iCmdID);
 			break;
 		case WM_PAINT:
-			OnPaint();
-			if (m_parentVwnd.GetNumChildren())
+			if (!OnPaint() && m_parentVwnd.GetNumChildren())
 			{
 				int xo, yo; RECT r;
-				GetClientRect(m_hwnd,&r);		
+				GetClientRect(m_hwnd,&r);
 				m_parentVwnd.SetPosition(&r);
 				m_vwnd_painter.PaintBegin(m_hwnd, WDL_STYLE_GetSysColor(COLOR_WINDOW));
 				if (LICE_IBitmap* bm = m_vwnd_painter.GetBuffer(&xo, &yo))

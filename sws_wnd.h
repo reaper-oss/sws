@@ -172,6 +172,7 @@ public:
 	bool IsValidWindow() { return IsWindow(m_hwnd) ? true : false; }
 	HWND GetHWND() { return m_hwnd; }
 	WDL_VWnd* GetParentVWnd() { return &m_parentVwnd; }
+	WDL_VWnd_Painter* GetVWndPainter() { return &m_vwnd_painter; }
 	virtual void OnCommand(WPARAM wParam, LPARAM lParam) {}
 
 	static const int DOCK_MSG = 0xFF0000;
@@ -186,7 +187,7 @@ protected:
 	virtual void OnInitDlg() {}
 	virtual int OnNotify(WPARAM wParam, LPARAM lParam) { return 0; }
 	virtual HMENU OnContextMenu(int x, int y, bool* wantDefaultItems) { return NULL; }
-	virtual void OnPaint() {}
+	virtual bool OnPaint() { return false; } // return true if implemented
 	virtual void OnResize() {}
 	virtual void OnDestroy() {}
 	virtual void OnTimer(WPARAM wParam=0) {}

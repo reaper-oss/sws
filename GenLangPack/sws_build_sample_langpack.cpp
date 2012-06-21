@@ -353,11 +353,12 @@ void processCPPfile(FILE *fp)
           }
           else if (wantSwsCmds && cnt==1)
           {
-            //JFB WANT_LOCALIZE_SWS_CMD_TABLE*: ignore
+            //JFB WANT_LOCALIZE_SWS_CMD_TABLE*: ignore 2nd strings (custom action ids)
           }
           else
           {
-            gotString(p+1,l,clocsec);
+            //JFB WANT_LOCALIZE_SWS_CMD_TABLE*: force context for 3rd strings (menu items)
+            gotString(p+1, l, wantSwsCmds && cnt==2 ? "sws_menu" : clocsec);
           }
           p += l+2;
           cnt++;

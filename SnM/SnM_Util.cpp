@@ -68,6 +68,7 @@ const char* GetFilenameWithExt(const char* _fullFn)
 	return p;
 }
 
+// check the most retrictive OS forbidden chars (so that filenames are crossplatform)
 void Filenamize(char* _fnInOut, int _fnInOutSz)
 {
 	if (_fnInOut)
@@ -77,7 +78,8 @@ void Filenamize(char* _fnInOut, int _fnInOutSz)
 		{
 			if (_fnInOut[i] != ':' && _fnInOut[i] != '/' && _fnInOut[i] != '\\' &&
 				_fnInOut[i] != '*' && _fnInOut[i] != '?' && _fnInOut[i] != '\"' &&
-				_fnInOut[i] != '>' && _fnInOut[i] != '<' && _fnInOut[i] != '\'' && _fnInOut[i] != '|')
+				_fnInOut[i] != '>' && _fnInOut[i] != '<' && _fnInOut[i] != '\'' && 
+				_fnInOut[i] != '|' && _fnInOut[i] != '^' /* ^ is forbidden on FAT */)
 				_fnInOut[j++] = _fnInOut[i];
 			i++;
 		}
@@ -87,13 +89,14 @@ void Filenamize(char* _fnInOut, int _fnInOutSz)
 	}
 }
 
+// check the most retrictive OS forbidden chars (so that filenames are crossplatform)
 bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg)
 {
 	bool ko = (!_fn || !*_fn
 		|| strchr(_fn, ':') || strchr(_fn, '/') || strchr(_fn, '\\')
 		|| strchr(_fn, '*') || strchr(_fn, '?') || strchr(_fn, '\"')
 		|| strchr(_fn, '>') || strchr(_fn, '<') || strchr(_fn, '\'')
-		|| strchr(_fn, '|'));
+		|| strchr(_fn, '|') || strchr(_fn, '^'));
 
 	if (ko && _errMsg)
 	{
@@ -757,8 +760,8 @@ double SeekPlay(double _pos, bool _seek, bool _moveView)
 
 // a _snprintf that ensures the string is always null terminated (but truncated if needed)
 // also see _snprintfStrict()
-// note: use this instead of WDL_snprintf includes not break other members' code
-//       (WDL_snprintf return value cannot be trusted, see wdlcstring.h)
+// note: WDL_snprintf's return value cannot be trusted, see wdlcstring.h
+//       (using it could break other sws members' code)
 int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...)
 {
 	va_list va;
@@ -783,8 +786,8 @@ int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...)
 // a _snprintf that returns >=0 when the string is null terminated and not truncated
 // => callers must check the returned value 
 // also see _snprintfSafe()
-// note: use this instead of WDL_snprintf includes not break other members' code
-//       (WDL_snprintf return value cannot be trusted, see wdlcstring.h)
+// note: WDL_snprintf's return value cannot be trusted, see wdlcstring.h
+//       (using it could break other sws members' code)
 int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...)
 {
 	va_list va;

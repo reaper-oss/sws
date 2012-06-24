@@ -843,16 +843,13 @@ void ShortenStringToFirstRN(char* _str) {
 	}
 }
 
-// replace "%blabla " with "_replaceCh " in _str
-void ReplaceStringFormat(char* _str, char _replaceCh) {
+// replace "%02d " with _replaceCh in _str
+void Replace02d(char* _str, char _replaceCh) {
 	if (_str && *_str)
-		if (char* p = strchr(_str, '%')) {
-			if (p[1]) {
-				p[0] = _replaceCh;
-				if (char* p2 = strchr((char*)(p+1), ' ')) memmove((char*)(p+1), p2, strlen(p2)+1);
-				else p[1] = '\0';
-			}
-			else p[0] = '\0';
+		if (char* p = strstr(_str, "%02d")) {
+			p[0] = _replaceCh;
+			if (p[4]) memmove((char*)(p+1), p+4, strlen(p+4)+1);
+			else p[1] = '\0';
 		}
 }
 

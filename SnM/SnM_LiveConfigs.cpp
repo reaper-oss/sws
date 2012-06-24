@@ -431,7 +431,6 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_pLists.Add(new SNM_LiveConfigsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
-	SNM_ThemeListView(m_pLists.Get(0));
 
 	// load prefs 
 	g_approxDelayMsCC = BOUNDED(GetPrivateProfileInt("LIVE_CONFIGS", "CC_DELAY", SNM_SCHEDJOB_DEFAULT_DELAY, g_SNMIniFn.Get()), 0, 500);
@@ -484,14 +483,6 @@ void SNM_LiveConfigsWnd::OnDestroy()
 		WritePrivateProfileString("LIVE_CONFIGS", "CC_DELAY", delay, g_SNMIniFn.Get()); 
 	m_cbConfig.Empty();
 	m_cbInputTr.Empty();
-}
-
-INT_PTR SNM_LiveConfigsWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE];
-	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, COL_COUNT))
-		return 1;
-	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }
 
 // ScheduledJob because of multi-notifs
@@ -1086,19 +1077,6 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _t
 		return;
 #endif
 	SNM_AddLogo(_bm, _r, x0, h);
-}
-
-HBRUSH SNM_LiveConfigsWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
-{
-	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
-	{
-		int bg, txt;
-		SNM_GetThemeListColors(&bg, &txt); // not SNM_GetThemeEditColors (list's IDC_EDIT)
-		SetBkColor(_hdc, bg);
-		SetTextColor(_hdc, txt);
-		return SNM_GetThemeBrush(bg);
-	}
-	return 0;
 }
 
 bool SNM_LiveConfigsWnd::Insert()

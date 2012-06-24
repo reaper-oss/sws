@@ -74,7 +74,7 @@ int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...);
 int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 void ShortenStringToFirstRN(char* _str);
-void ReplaceStringFormat(char* _str, char _replaceCh);
+void Replace02d(char* _str, char _replaceCh);
 bool IsMacro(const char* _actionName);
 bool LearnAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSection);
 bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);

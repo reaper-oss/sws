@@ -820,7 +820,10 @@ int SNM_RegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 void SNM_SaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 {
 	WDL_FastString iniSection, str;
-	iniSection.SetFormatted(128, "; Set the number of slot actions you want below (none/hidden: 0, max: %d, quit REAPER first!)\n", SNM_MAX_DYNAMIC_ACTIONS);
+	iniSection.Set("; Set the number of actions you want below. Quit REAPER first!\n");
+	iniSection.AppendFormatted(256, 
+		"; Unless specified (e.g. \"[n <= 32!]\"), the maximum number of actions is %d. To hide/remove actions: 0.\n", 
+		SNM_MAX_DYNAMIC_ACTIONS);
 
 	WDL_String nameStr; // no fast string here: the buffer gets mangeled..
 	int i=0;
@@ -828,12 +831,12 @@ void SNM_SaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 	{
 		COMMAND_T* ct = &_cmds[i++];
 		nameStr.Set(SWS_CMD_SHORTNAME(ct));
-		ReplaceStringFormat(nameStr.Get(), 'n');
+		Replace02d(nameStr.Get(), 'n');
 		if (ct->menuText != NULL) // is a custom max value specified ?
 		{
-			nameStr.Append(" (n <= ");
+			nameStr.Append(" [n <= ");
 			nameStr.Append(ct->menuText);
-			nameStr.Append("!)");
+			nameStr.Append("!]");
 		}
 
 		// indent things (note: a \t solution would suck here!
@@ -864,7 +867,7 @@ void IniFileInit()
 	g_SNMCyclactionIniFn.SetFormatted(BUFFER_SIZE, SNM_CYCLACTION_INI_FILE, GetResourcePath());
 
 	// move from old location if needed/possible
-	WDL_String fn;
+	WDL_String fn;  // no fast string here: the buffer gets mangeled..
 	fn.SetFormatted(BUFFER_SIZE, SNM_OLD_FORMATED_INI_FILE, GetExePath());
 	if (FileExists(fn.Get()))
 		MoveFile(fn.Get(), g_SNMIniFn.Get()); // no check: use the new file whatever happens
@@ -879,7 +882,8 @@ void IniFileInit()
 	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNMIniFn.Get());
 #ifdef _WIN32
 	g_SNMClearType = (GetPrivateProfileInt("General", "ClearTypeFont", 0, g_SNMIniFn.Get()) == 1);
-	fn.SetLen(BUFFER_SIZE); GetPrivateProfileString("General", "DiffTool", "", fn.Get(), BUFFER_SIZE, g_SNMIniFn.Get());
+	fn.SetLen(BUFFER_SIZE);
+	GetPrivateProfileString("General", "DiffTool", "", fn.Get(), BUFFER_SIZE, g_SNMIniFn.Get());
 	g_SNMDiffToolFn.Set(fn.Get());
 #endif
 //	g_SNMbeta = GetPrivateProfileInt("General", "Beta", 0, g_SNMIniFn.Get());

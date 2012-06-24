@@ -316,19 +316,6 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 	SNM_AutoVWndPosition(&m_txtResult, NULL, _r, &x0, y0, h);
 }
 
-HBRUSH SNM_FindWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
-{
-	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
-	{
-		int bg, txt;
-		SNM_GetThemeEditColors(&bg, &txt);
-		SetBkColor(_hdc, bg);
-		SetTextColor(_hdc, txt);
-		return SNM_GetThemeBrush(bg);
-	}
-	return 0;
-}
-
 
 ///////////////////////////////////////////////////////////////////////////////
 

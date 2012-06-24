@@ -54,6 +54,9 @@ SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, 
 	memset(&m_state, 0, sizeof(SWS_DockWnd_State));
 	*m_tooltip = '\0';
 
+	for (int i=0; i<BRUSH_COUNT; i++)
+		m_brushes[i] = NULL;
+
 	m_ar.translateAccel = keyHandler;
 	m_ar.isLocal = true;
 	m_ar.user = this;
@@ -127,7 +130,16 @@ INT_PTR WINAPI SWS_DockWnd::sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 		pObj->m_hwnd = hwndDlg;
 	}
 	if (pObj)
+	{
+		// theme list views (optional)
+		if (pObj->IsThemed())
+			for (int i=0; i < pObj->m_pLists.GetSize(); i++)
+				if (SWS_ListView* lv = pObj->m_pLists.Get(i))
+					if (ListView_HookThemeColorsMessage(pObj->GetHWND(), uMsg, lParam, lv->GetOldColors(), GetWindowLong(lv->GetHWND(),GWL_ID), 0, lv->GetColumnCount()))
+						return 1;
+		// the meat
 		return pObj->WndProc(uMsg, wParam, lParam);
+	}
 	else
 		return 0;
 }
@@ -142,6 +154,16 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			// Call derived class initialization
 			OnInitDlg();
+			
+			if (IsThemed())
+				for (int i=0; i<m_pLists.GetSize(); i++) {
+#ifndef _WIN32
+					// override list view props for grid line theming
+					ListView_SetExtendedListViewStyleEx(m_pLists.Get(i)->GetHWND(), 
+						LVS_EX_GRIDLINES|LVS_EX_HEADERDRAGDROP, LVS_EX_GRIDLINES|LVS_EX_HEADERDRAGDROP);
+#endif
+					SNM_ThemeListView(m_pLists.Get(i)); // initial list view theming, then ListView_HookThemeColorsMessage() does the job
+				}
 
 			if ((m_state.state & 2))
 			{
@@ -156,7 +178,6 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				AttachWindowResizeGrip(m_hwnd);
 				ShowWindow(m_hwnd, SW_SHOW);
 			}
-
 			break;
 		}
 		case WM_TIMER:
@@ -197,13 +218,6 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 					return m_pLists.Get(i)->OnNotify(wParam, lParam);
 
 			return OnNotify(wParam, lParam);
-
-			/* for future coloring	if (s->hdr.code == LVN_ITEMCHANGING)
-			{
-				SetWindowLong(hwndDlg, DWL_MSGRESULT, TRUE);
-				return TRUE;
-			} 
-			break;*/
 		}
 		case WM_CONTEXTMENU:
 		{
@@ -308,8 +322,14 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			m_parentVwnd.RemoveAllChildren(false);
 			m_parentVwnd.SetRealParent(NULL);
 
-			for (int i = 0; i < m_pLists.GetSize(); i++)
+			for (int i=0; i < m_pLists.GetSize(); i++)
 				m_pLists.Get(i)->OnDestroy();
+
+			for (int i=0; i < BRUSH_COUNT; i++)
+				if (m_brushes[i]) {
+					DeleteObject(m_brushes[i]);
+					m_brushes[i] = NULL;
+				}
 
 			char cState[256];
 			int iLen = SaveState(cState, 256);
@@ -327,7 +347,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			RefreshToolbar(m_iCmdID);
 			break;
 		case WM_PAINT:
-			if (!OnPaint() && m_parentVwnd.GetNumChildren())
+			if (!OnPaint() && IsThemed())
 			{
 				int xo, yo; RECT r;
 				GetClientRect(m_hwnd,&r);
@@ -408,9 +428,46 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				SetTimer(m_hwnd, TOOLTIP_TIMER, TOOLTIP_TIMEOUT, NULL);
 			}
 			break;
+		case WM_CTLCOLORSTATIC:
+		case WM_CTLCOLORDLG:
+		case WM_CTLCOLORBTN:
+			if (IsThemed()) {
+				SetBkColor((HDC)wParam, GSC_mainwnd(COLOR_WINDOW));
+				SetTextColor((HDC)wParam, GSC_mainwnd(COLOR_BTNTEXT));
+				return (INT_PTR)GetBrush(BRUSH_BG);
+			}
+			return 0;
+		case WM_CTLCOLORLISTBOX:
+			if (IsThemed()) {
+				int bg, txt; 
+				SNM_GetThemeListColors(&bg, &txt);
+				SetBkColor((HDC)wParam, bg);
+				SetTextColor((HDC)wParam, txt);
+				return (INT_PTR)GetBrush(BRUSH_LIST, bg);
+			}
+			return 0;
 #ifdef _WIN32
 		case WM_CTLCOLOREDIT:
-			return (INT_PTR)OnColorEdit((HWND)lParam, (HDC)wParam);
+			if (IsThemed())
+			{
+				HWND hwnd = (HWND)lParam;
+				HDC hdc = (HDC)wParam;
+				int bg, txt; 
+				SNM_GetThemeEditColors(&bg, &txt);
+
+				// color override for list views' cell edition?
+				for (int i=0; i<m_pLists.GetSize(); i++)
+					if (SWS_ListView* lv = m_pLists.Get(i))
+						if (hwnd == lv->GetEditHWND()) {
+							SNM_GetThemeListColors(&bg, &txt);
+							break;
+						}
+
+				SetBkColor(hdc, bg);
+				SetTextColor(hdc, txt);
+				return (INT_PTR)GetBrush(BRUSH_EDIT, bg);
+			}
+			return 0;
 #endif
 		default:
 			return OnUnhandledMsg(uMsg, wParam, lParam);
@@ -580,6 +637,18 @@ void SWS_DockWnd::KillTooltip(bool doRefresh)
 		InvalidateRect(m_hwnd,NULL,FALSE);
 }
 
+HBRUSH SWS_DockWnd::GetBrush(int id, int col)
+{
+	if (id>=0 && id<BRUSH_COUNT)
+	{
+		// recreate the HBRUSH to handle color theme swtiches
+		if (m_brushes[id])
+			DeleteObject(m_brushes[id]);
+		return (m_brushes[id] = (HBRUSH)CreateSolidBrush(col==-666 ? GSC_mainwnd(COLOR_WINDOW) : col));
+	}
+	return NULL;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // SWS_ListView
@@ -648,10 +717,11 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 #ifdef _WIN32
 	ListView_SetExtendedListViewStyle(hwndList, LVS_EX_FULLROWSELECT | LVS_EX_HEADERDRAGDROP);
 
-	// Setup UTF8 (see http://forum.cockos.com/showthread.php?t=101547)
+	// Setup UTF-8 (see http://forum.cockos.com/showthread.php?t=101547)
 	WDL_UTF8_HookListView(hwndList);
 #if !defined(WDL_NO_SUPPORT_UTF8)
-	if (GetVersion()<0x80000000) SendMessage(hwndList,LVM_SETUNICODEFORMAT,1,0);
+	if (GetVersion()<0x80000000)
+		SendMessage(hwndList,LVM_SETUNICODEFORMAT,1,0);
 #endif
 
 	// Create the tooltip window (if it's necessary)
@@ -663,14 +733,12 @@ SWS_ListView::SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn
 	}
 #else
 	EnableColumnResize(hwndList);
+
+	// default list view props (might be overrided in SWS_DockWnd::WndProc() for optional grid line theming)
+	ListView_SetExtendedListViewStyleEx(hwndList, LVS_EX_HEADERDRAGDROP, LVS_EX_HEADERDRAGDROP);
 #endif
 	
 	ShowColumns();
-
-	// Set colors
-	//ListView_SetBkColor(hwndList, GSC_mainwnd(COLOR_WINDOW));
-	//ListView_SetTextBkColor(hwndList, GSC_mainwnd(COLOR_WINDOW));
-	//ListView_SetTextColor(hwndList, GSC_mainwnd(COLOR_BTNTEXT));
 
 	// Need to call Update(); when ready elsewhere
 }
@@ -909,26 +977,6 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 		EditListItemEnd(true);
 		OnBeginDrag(GetListItem(s->iItem));
 	}
-	/*else if (s->hdr.code == NM_CUSTOMDRAW) // TODO for coloring of the listview
-	{
-		LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)lParam;
-
-		switch(lplvcd->nmcd.dwDrawStage) 
-		{
-			case CDDS_PREPAINT : //Before the paint cycle begins
-				SetWindowLong(hwndDlg, DWL_MSGRESULT, CDRF_NOTIFYITEMDRAW);
-				return 1;
-			case CDDS_ITEMPREPAINT: //Before an item is drawn
-				lplvcd->clrText = GSC_mainwnd(COLOR_BTNTEXT);
-				lplvcd->clrTextBk = GSC_mainwnd(COLOR_WINDOW);
-				lplvcd->clrFace = RGB(0,0,0);
-				SetWindowLong(hwndDlg, DWL_MSGRESULT, CDRF_NEWFONT);
-				return 1;
-			default:
-				SetWindowLong(hwndDlg, DWL_MSGRESULT, CDRF_DODEFAULT);
-				return 1;
-		}
-	}*/
 	return 0;
 }
 
@@ -944,13 +992,13 @@ void SWS_ListView::OnDestroy()
 	for (int i = 0; i < m_iCols; i++)
 		if (m_pCols[i].iPos != -1)
 			iCols++;
+
 #ifdef _WIN32
-	HWND header = ListView_GetHeader(m_hwndList);
-	Header_GetOrderArray(header, iCols, &cols);
+	ListView_GetColumnOrderArray(m_hwndList, iCols, &cols);
 #else
-	for (int i = 0; i < iCols; i++)
-		cols[i] = i;
+	ListView_GetColumnOrderArray(m_hwndList, iCols, cols);
 #endif
+
 	iCols = 0;
 
 	for (int i = 0; i < m_iCols; i++)
@@ -1343,13 +1391,10 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 #ifdef _WIN32
 	sr.left = max(r.left+(GetSystemMetrics(SM_CXEDGE)*2), sr.left);
 	sr.right = min(r.right-(GetSystemMetrics(SM_CXEDGE)*2), sr.right);
-	sr.top += 1; // do not hide top grid line
+	sr.top += 1; // do not hide the top grid line
 #else
-/* JFB!!! commented: needed on OSX too? cannot test..
-	sr.left = max(r.left+2, sr.left);
-	sr.right = min(r.right-2, sr.right);
-	sr.top += 1; // do not hide top grid line
-*/
+	sr.left = max(r.left, sr.left);
+	sr.right = min(r.right, sr.right);
 #endif
 
 	HWND hDlg = GetParent(m_hwndEdit);
@@ -1462,9 +1507,11 @@ void SWS_ListView::ShowColumns()
 	for (int i = 0; i < m_iCols; i++)
 		if (m_pCols[i].iPos != -1)
 			cols[iCols++] = m_pCols[i].iPos;
+
 #ifdef _WIN32
-	HWND header = ListView_GetHeader(m_hwndList);
-	Header_SetOrderArray(header, iCols, &cols);
+	ListView_SetColumnOrderArray(m_hwndList, iCols, &cols);
+#else
+	ListView_SetColumnOrderArray(m_hwndList, iCols, cols);
 #endif
 }
 
@@ -1645,9 +1692,6 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
 bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int cstate[LISTVIEW_COLORHOOK_STATESIZE], int listID, int whichTheme, int wantGridForColumns)
 {
 //JFB added --->
-#ifndef _WIN32
-  wantGridForColumns=0; //JFB!!! no grid lines on OSX yet (test KO)
-#endif
   int sz;
   ColorTheme* ctheme = (ColorTheme*)GetColorThemeStruct(&sz);
   if (!ctheme || sz < sizeof(ColorTheme))
@@ -1795,7 +1839,7 @@ bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int 
                     return true;
                   }
                 break;
-                case CDDS_POSTPAINT:                  
+                case CDDS_POSTPAINT:
                   if (wantGridForColumns)
                   {
                     int c1 = ctheme->genlist_gridlines;
@@ -1806,7 +1850,7 @@ bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int 
                     }
                   }
                   SetWindowLongPtr(hwndDlg,DWLP_MSGRESULT,0);
-                return true;          
+                return true;
               }
             }
           break;
@@ -1820,7 +1864,8 @@ bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int 
 // From Justin: "this should likely go into WDL"
 void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char *text)
 {
-  if (!bm || !text || !text[0]) return;
+  if (!bm || !text || !text[0])
+    return;
 
     static LICE_CachedFont tmpfont;
     if (!tmpfont.GetHFont())
@@ -1828,15 +1873,15 @@ void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char
 //JFB mod: font size/name + optional ClearType rendering --->
 /*
       bool doOutLine = true;
-      LOGFONT lf = 
+      LOGFONT lf =
       {
           14,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
             OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,
-	      #ifdef _WIN32
+        #ifdef _WIN32
           "MS Shell Dlg"
-	      #else
-	      "Arial"
-	      #endif
+        #else
+        "Arial"
+        #endif
       };
       tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
 */

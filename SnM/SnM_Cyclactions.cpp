@@ -923,15 +923,6 @@ SNM_CyclactionWnd::SNM_CyclactionWnd()
 	Init();
 }
 
-INT_PTR SNM_CyclactionWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE][2];
-	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[0], IDC_LIST1, 0, COL_L_COUNT) ||
-		ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors[1], IDC_LIST2, 0, COL_R_COUNT))
-		return 1;
-	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
-}
-
 void SNM_CyclactionWnd::Update(bool _updateListViews)
 {
 	if (_updateListViews)
@@ -944,11 +935,9 @@ void SNM_CyclactionWnd::OnInitDlg()
 {
 	g_lvL = new SNM_CyclactionsView(GetDlgItem(m_hwnd, IDC_LIST1), GetDlgItem(m_hwnd, IDC_EDIT));
 	m_pLists.Add(g_lvL);
-	SNM_ThemeListView(g_lvL);
 
 	g_lvR = new SNM_CommandsView(GetDlgItem(m_hwnd, IDC_LIST2), GetDlgItem(m_hwnd, IDC_EDIT));
 	m_pLists.Add(g_lvR);
-	SNM_ThemeListView(g_lvR);
 
 	m_resize.init_item(IDC_LIST1, 0.0, 0.0, 0.5, 1.0);
 	m_resize.init_item(IDC_LIST2, 0.5, 0.0, 1.0, 1.0);
@@ -1242,19 +1231,6 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 			m_btnActionList.SetPosition(&r);
 		}
 	}
-}
-
-HBRUSH SNM_CyclactionWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
-{
-	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
-	{
-		int bg, txt;
-		SNM_GetThemeListColors(&bg, &txt); // and not SNM_GetThemeEditColors (lists' IDC_EDIT)
-		SetBkColor(_hdc, bg);
-		SetTextColor(_hdc, txt);
-		return SNM_GetThemeBrush(bg);
-	}
-	return 0;
 }
 
 HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)

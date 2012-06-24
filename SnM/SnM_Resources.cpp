@@ -838,7 +838,6 @@ void SNM_ResourceWnd::OnInitDlg()
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
 
 	m_pLists.Add(new SNM_ResourceView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
-	SNM_ThemeListView(m_pLists.Get(0));
 
 	// WDL GUI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
@@ -890,14 +889,6 @@ void SNM_ResourceWnd::OnDestroy()
 	m_cbType.Empty();
 	m_cbDblClickType.Empty();
 	m_cbDblClickTo.Empty();
-}
-
-INT_PTR SNM_ResourceWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE];
-	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, COL_COUNT))
-		return 1;
-	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }
 
 void SNM_ResourceWnd::SetType(int _type)
@@ -1918,26 +1909,6 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 		}
 	}
 	return false;
-}
-
-HBRUSH SNM_ResourceWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
-{
-	int bg, txt; bool match=false;
-	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT)) {
-		match = true;
-		SNM_GetThemeListColors(&bg, &txt);
-	}
-	else if (_hwnd == GetDlgItem(m_hwnd, IDC_FILTER)) {
-		match = true;
-		SNM_GetThemeEditColors(&bg, &txt);
-	}
-
-	if (match) {
-		SetBkColor(_hdc, bg);
-		SetTextColor(_hdc, txt);
-		return SNM_GetThemeBrush(bg);
-	}
-	return 0;
 }
 
 void SNM_ResourceWnd::ClearListSelection()

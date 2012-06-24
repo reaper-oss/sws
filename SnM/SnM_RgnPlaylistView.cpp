@@ -268,7 +268,6 @@ void SNM_RegionPlaylistWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
 	m_pLists.Add(new SNM_PlaylistView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
-	SNM_ThemeListView(m_pLists.Get(0));
 
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
     m_parentVwnd.SetRealParent(m_hwnd);
@@ -304,14 +303,6 @@ void SNM_RegionPlaylistWnd::OnInitDlg()
 void SNM_RegionPlaylistWnd::OnDestroy() {
 	UnregisterToMarkerRegionUpdates(&m_mkrRgnSubscriber);
 	m_cbPlaylist.Empty();
-}
-
-INT_PTR SNM_RegionPlaylistWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	static int sListOldColors[LISTVIEW_COLORHOOK_STATESIZE];
-	if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, sListOldColors, IDC_LIST, 0, COL_COUNT))
-		return 1;
-	return SWS_DockWnd::WndProc(uMsg, wParam, lParam);
 }
 
 // ScheduledJob used because of multi-notifs
@@ -702,19 +693,6 @@ bool SNM_RegionPlaylistWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut
 		}
 	}
 	return false;
-}
-
-HBRUSH SNM_RegionPlaylistWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
-{
-	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
-	{
-		int bg, txt;
-		SNM_GetThemeListColors(&bg, &txt); // and not SNM_GetThemeEditColors (lists' IDC_EDIT!)
-		SetBkColor(_hdc, bg);
-		SetTextColor(_hdc, txt);
-		return SNM_GetThemeBrush(bg);
-	}
-	return 0;
 }
 
 

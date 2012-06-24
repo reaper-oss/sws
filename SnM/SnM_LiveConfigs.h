@@ -96,12 +96,10 @@ public:
 protected:
 	void OnInitDlg();
 	void OnDestroy();
-	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void AddFXSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastString* _curPresetConf);
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	int OnKey(MSG* msg, int iKeyState);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
-	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
 	bool Insert();
 
 	WDL_PtrList_DeleteOnDestroy<PresetMsg> m_lastPresetMsg;

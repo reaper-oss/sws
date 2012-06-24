@@ -1,6 +1,18 @@
+The following windows are now themable:
++Snapshots
++MarkerList
++TrackList
++ProjectList
++Groove Tool
+
 OSX / Live Configs
 +Browse FX presets like on Windows OS
 +Support for AU user presets
+
+List views
++OSX: themable grid lines (almost like on Windows OS)
++OSX: column reordering (drag-drop column headers like on Windows OS)
++Little fixes
 
 Localization for item/track color and snapshot context menus
 

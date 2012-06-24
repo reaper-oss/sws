@@ -550,19 +550,6 @@ bool SNM_NotesHelpWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int
 	return false;
 }
 
-HBRUSH SNM_NotesHelpWnd::OnColorEdit(HWND _hwnd, HDC _hdc)
-{
-	if (_hwnd == GetDlgItem(m_hwnd, IDC_EDIT))
-	{
-		int bg, txt;
-		SNM_GetThemeEditColors(&bg, &txt);
-		SetBkColor(_hdc, bg);
-		SetTextColor(_hdc, txt);
-		return SNM_GetThemeBrush(bg);
-	}
-	return 0;
-}
-
 void SNM_NotesHelpWnd::ToggleLock()
 {
 	g_locked = !g_locked;

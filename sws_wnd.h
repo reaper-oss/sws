@@ -38,6 +38,7 @@
 #define LISTVIEW_COLORHOOK_STATESIZE (3+4)
 #endif
 
+
 typedef struct SWS_LVColumn
 {
 	int iWidth;
@@ -71,11 +72,12 @@ class SWS_ListView
 public:
 	SWS_ListView(HWND hwndList, HWND hwndEdit, int iCols, SWS_LVColumn* pCols, const char* cINIKey, bool bTooltips, const char* cLocalizeSection, bool bDrawArrow=true);
 	virtual ~SWS_ListView();
+	int GetColumnCount() { return m_iCols; }
 	int GetListItemCount() { return ListView_GetItemCount(m_hwndList); }
 	SWS_ListItem* GetListItem(int iIndex, int* iState = NULL);
 	bool IsSelected(int index);
 	SWS_ListItem* EnumSelected(int* i);
-	bool SelectByItem(SWS_ListItem* item, bool bSelectOnly=true, bool bEnsureVisible=true);
+	bool SelectByItem(SWS_ListItem* item, bool bSelectOnly = true, bool bEnsureVisible = true);
 	int OnNotify(WPARAM wParam, LPARAM lParam);
 	void OnDestroy();
 	virtual void OnDrag() {}
@@ -92,11 +94,13 @@ public:
 	const char* GetINIKey() { return m_cINIKey; }
 	int DisplayToDataCol(int iCol);
 	int DataToDisplayCol(int iCol);
+	int* GetOldColors() { return m_oldColors; }
 	
 	bool IsActive(bool bWantEdit) { return GetFocus() == m_hwndList || (bWantEdit && m_iEditingItem != -1); }
 	void DisableUpdates(bool bDisable) { m_bDisableUpdates = bDisable; }
 	bool UpdatesDisabled() { return m_bDisableUpdates; }
 	HWND GetHWND() { return m_hwndList; }
+	HWND GetEditHWND() { return m_hwndEdit; }
 
 protected:
 	void EditListItem(int iIndex, int iCol);
@@ -129,6 +133,7 @@ protected:
 	SWS_LVColumn* m_pCols;
 	bool m_bDrawArrow;
 	const char* m_cLocalizeSection;
+	int m_oldColors[LISTVIEW_COLORHOOK_STATESIZE];
 
 #ifndef _WIN32
 	int m_iClickedKeys;
@@ -183,6 +188,8 @@ protected:
 	bool IsDocked() { return (m_state.state & 2) == 2; }
 	void ToggleDocking();
 	virtual void GetMinSize(int* w, int* h) { *w=MIN_DOCKWND_WIDTH; *h=MIN_DOCKWND_HEIGHT; }
+	virtual HBRUSH GetBrush(int id, int col = -666);
+	virtual bool IsThemed() { return true; }
 
 	virtual void OnInitDlg() {}
 	virtual int OnNotify(WPARAM wParam, LPARAM lParam) { return 0; }
@@ -197,7 +204,6 @@ protected:
 	virtual bool OnMouseDblClick(int xpos, int ypos) { return false; }
 	virtual bool OnMouseMove(int xpos, int ypos) { return false; }
 	virtual bool OnMouseUp(int xpos, int ypos) { return false; }
-	virtual HBRUSH OnColorEdit(HWND hwnd, HDC hdc) { return 0; }
 	virtual INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam) { return 0; }
 
 	// Functions for derived classes to load/save some view information (for startup/screensets)
@@ -209,6 +215,13 @@ protected:
 	virtual bool GetToolTipString(int xpos, int ypos, char* bufOut, int bufOutSz) { return false; }
 	virtual void KillTooltip(bool doRefresh=false);
 
+	enum {
+		BRUSH_BG=0,
+		BRUSH_LIST,
+		BRUSH_EDIT,
+		BRUSH_COUNT
+	};
+
 	HWND m_hwnd;
 	bool m_bUserClosed;
 	bool m_bLoadingState;
@@ -218,6 +231,7 @@ protected:
 	WDL_VWnd m_parentVwnd; // owns all children windows
 	char m_tooltip[TOOLTIP_MAX_LEN];
 	POINT m_tooltip_pt;
+	HBRUSH m_brushes[BRUSH_COUNT];
 
 private:
 	static INT_PTR WINAPI sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

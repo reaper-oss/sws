@@ -85,20 +85,6 @@ LICE_CachedFont* SNM_GetToolbarFont()
 	return &themeFont;
 }
 
-HBRUSH g_hb = NULL;
-int g_lastThemeBrushColor = -1;
-
-HBRUSH SNM_GetThemeBrush(int _col)
-{
-	if (g_hb) {
-		DeleteObject(g_hb);
-		g_hb = NULL;
-	}
-	g_lastThemeBrushColor = (_col==-666 ? GSC_mainwnd(COLOR_WINDOW) : _col);
-	g_hb = (HBRUSH)CreateSolidBrush(g_lastThemeBrushColor);
-	return g_hb;
-}
-
 void SNM_GetThemeListColors(int* _bg, int* _txt, int* _grid)
 {
 	int bgcol=-1, txtcol=-1, gridcol=-1;
@@ -174,10 +160,7 @@ LICE_IBitmap* SNM_GetThemeLogo()
 
 void SNM_UIInit() {}
 
-void SNM_UIExit()
-{
-	if (g_hb)
-		DeleteObject(g_hb);
+void SNM_UIExit() {
 	if (LICE_IBitmap* logo = SNM_GetThemeLogo())
 		DELETE_NULL(logo);
 }

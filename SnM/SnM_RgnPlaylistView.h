@@ -101,11 +101,9 @@ protected:
 	void OnInitDlg();
 	void OnDestroy();
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
-	INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	int OnKey(MSG* msg, int iKeyState) ;
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
-	HBRUSH OnColorEdit(HWND _hwnd, HDC _hdc);
 
 	SNM_Playlist_MarkerRegionSubscriber m_mkrRgnSubscriber;
 	WDL_VirtualStaticText m_txtPlaylist, m_txtLength;

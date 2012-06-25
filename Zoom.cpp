@@ -576,10 +576,6 @@ void TogZoomHoriz(COMMAND_T* = NULL)		{ TogZoom(3, 0); }
 void SaveArngView(COMMAND_T* = NULL)		{ g_stdAS.Get()->Save(true, true); }
 void RestoreArngView(COMMAND_T* = NULL)		{ g_stdAS.Get()->Restore(); }
 
-bool g_bSmoothScroll = false;
-void TogSmoothScroll(COMMAND_T*)	{ g_bSmoothScroll = !g_bSmoothScroll; }
-bool IsSmoothScroll(COMMAND_T*)		{ return g_bSmoothScroll; }
-
 // Returns the track at a point on the track view window
 // Point is in client coords
 MediaTrack* TrackAtPoint(HWND hTrackView, int iY, int* iOffset, int* iYMin, int* iYMax)
@@ -1477,8 +1473,6 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Save current arrange view" },				 				"SWS_SAVEVIEW",			SaveArngView,		NULL, },
 	{ { DEFACCEL, "SWS: Restore arrange view" },				 					"SWS_RESTOREVIEW",		RestoreArngView,	NULL, },
 
-	{ { DEFACCEL, "SWS: Toggle experimental smooth scroll" },						"SWS_SMOOTHSCROLL",		TogSmoothScroll,	NULL, 0, IsSmoothScroll },
-
 	{ { DEFACCEL, "SWS: Undo zoom" },												"SWS_UNDOZOOM",			UndoZoom,			NULL, },
 	{ { DEFACCEL, "SWS: Redo zoom" },												"SWS_REDOZOOM",			RedoZoom,			NULL, },
 	{ { DEFACCEL, "SWS: Zoom tool (marquee)" },										"SWS_ZOOM",				ZoomTool,			NULL, 0, IsZoomMode },
@@ -1495,9 +1489,6 @@ void ZoomSlice()
 	if (!bRecurseCheck)
 	{
 		bRecurseCheck = true;
-		if (g_bSmoothScroll && GetPlayState() & 1)
-			SetHorizPos(GetTrackWnd(), GetPlayPosition(), 0.5);
-
 		SaveZoomSlice(false);
 		bRecurseCheck = false;
 	}

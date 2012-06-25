@@ -1,3 +1,4 @@
+!v2.2.0 #15 (June 25, 2012)
 The following windows are now themable:
 +Snapshots
 +MarkerList
@@ -15,6 +16,7 @@ List views
 +Little fixes
 
 Localization for item/track color and snapshot context menus
+Removed smooth scroll, please use native version
 
 !v2.2.0 #14 (June 14, 2012)
 Resources window and related slots actions

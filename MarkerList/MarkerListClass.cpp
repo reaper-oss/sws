@@ -235,6 +235,7 @@ char* MarkerList::GetFormattedList(const char* format) // Must delete [] returne
 	SWS_SectionLock lock(&m_mutex);
 	int iLen = ApproxSize()*2;
 	char* str = new char[iLen];
+	str[0] = 0;
 
 	// Get end of project
 	double dSavedCur = GetCursorPosition();

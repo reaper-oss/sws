@@ -158,7 +158,7 @@ LICE_IBitmap* SNM_GetThemeLogo()
 	return snmLogo;
 }
 
-HBRUSH g_brushes[BRUSH_COUNT] = {NULL, NULL, NULL};
+HBRUSH g_brushes[BRUSH_COUNT];
 
 HBRUSH GetBrush(int id, int col = -666)
 {
@@ -211,7 +211,11 @@ WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LP
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SNM_UIInit() {}
+void SNM_UIInit()
+{
+	for (int i=0; i<BRUSH_COUNT; i++)
+		g_brushes[i] = NULL;
+}
 
 void SNM_UIExit()
 {

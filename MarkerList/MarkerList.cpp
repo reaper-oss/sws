@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "../reaper/localize.h"
+#include "../SnM/SnM_Dlg.h"
 #include "../../WDL/projectcontext.h"
 #include "MarkerListClass.h"
 #include "MarkerList.h"
@@ -436,6 +437,9 @@ int SWS_MarkerListWnd::OnKey(MSG* msg, int iKeyState)
 
 INT_PTR WINAPI doSaveDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
@@ -481,6 +485,9 @@ INT_PTR WINAPI doSaveDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 INT_PTR WINAPI doLoadDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
@@ -517,6 +524,9 @@ INT_PTR WINAPI doLoadDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 static INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
@@ -553,6 +563,9 @@ static INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 
 INT_PTR WINAPI doFormatDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:

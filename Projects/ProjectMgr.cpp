@@ -28,6 +28,7 @@
 
 #include "stdafx.h"
 #include "../reaper/localize.h"
+#include "../SnM/SnM_Dlg.h"
 #include "ProjectMgr.h"
 #include "ProjectList.h"
 
@@ -230,6 +231,9 @@ static int GetLoadCommandID(int iSlot, bool bCreateNew)
 
 static INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:

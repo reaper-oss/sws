@@ -45,7 +45,7 @@
 int PadreInit();
 void PadreExit();
 
-WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void EnvelopeLfo(COMMAND_T* _ct);
 
 //! \note Quick one to fix Reaper MIDI bug in loop mode
@@ -57,6 +57,6 @@ void RandomizeMidiNotePos(COMMAND_T* _ct);
 
 void DoEnvelopeProcessor(COMMAND_T* _ct);
 
-WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void RmeTotalmixProc(COMMAND_T* _ct);

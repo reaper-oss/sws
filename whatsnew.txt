@@ -1,6 +1,22 @@
+The following dialog boxes are now themed:
++Cue Buss Generator
++ReaConsole
++LFO Generator
++Envelope processor
++Fill Gaps
++Label processor
++Zoom preferences
++Command parameters
++Color management
++Autorender
++Various prompt/info dialog boxes
+
+Full localization for "Fill gaps" and "Snapshots merge" tools
+
 !v2.2.0 #15 (June 25, 2012)
-The following windows are now themable:
+The following windows are now themed:
 +Snapshots
++Auto Color/Icon
 +MarkerList
 +TrackList
 +ProjectList

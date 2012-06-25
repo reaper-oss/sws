@@ -27,16 +27,22 @@
 
 // Display the about box
 #include "stdafx.h"
-#include "reaper/localize.h"
+#include "./reaper/localize.h"
+#include "./SnM/SnM_Dlg.h"
 #include "version.h"
 #include "license.h"
+#include "Prompt.h"
+
 
 INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
+
 	if (uMsg == WM_INITDIALOG)
 	{
 		char cVersion[256];
-		sprintf(cVersion, "Version %d.%d.%d Build #%d, built on %s", SWS_VERSION, __DATE__);
+		sprintf(cVersion, __LOCALIZE_VERFMT("Version %d.%d.%d Build #%d, built on %s","sws_DLG_109"), SWS_VERSION, __DATE__);
 		SetWindowText(GetDlgItem(hwndDlg, IDC_VERSION), cVersion);
 #ifdef _WIN64
 		SetDlgItemText(hwndDlg, IDC_LATESTVER, "http://www.standingwaterstudios.com/reaper/sws_extension_x64.exe");
@@ -67,7 +73,7 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ShellExecute(hwndDlg, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
 		}
 		else if (wParam == IDC_LICENSE)
-			MessageBox(hwndDlg, LICENSE_TEXT, "SWS License", MB_OK);
+			DisplayInfoBox(hwndDlg, __LOCALIZE("SWS License","sws_DLG_109"), LICENSE_TEXT);
 		else if (wParam == IDCANCEL)
 			EndDialog(hwndDlg, 0);
 	}

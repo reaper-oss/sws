@@ -158,9 +158,69 @@ LICE_IBitmap* SNM_GetThemeLogo()
 	return snmLogo;
 }
 
+HBRUSH g_brushes[BRUSH_COUNT] = {NULL, NULL, NULL};
+
+HBRUSH GetBrush(int id, int col = -666)
+{
+	if (id>=0 && id<BRUSH_COUNT)
+	{
+#ifdef SUPPORT_THEME_SWITCHES
+		// re-create the HBRUSH to handle color theme swtiches
+		if (g_brushes[id])
+			DeleteObject(g_brushes[id]);
+		g_brushes[id] = (HBRUSH)CreateSolidBrush(col==-666 ? GSC_mainwnd(COLOR_WINDOW) : col);
+#else
+		if (!g_brushes[id])
+			g_brushes[id] = (HBRUSH)CreateSolidBrush(col==-666 ? GSC_mainwnd(COLOR_WINDOW) : col);
+#endif
+		return g_brushes[id];
+	}
+	return NULL;
+}
+
+WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam)
+{
+	switch(_uMsg)
+	{
+		case WM_CTLCOLORSTATIC:
+		case WM_CTLCOLORDLG:
+		case WM_CTLCOLORBTN:
+			SetBkColor((HDC)_wParam, GSC_mainwnd(COLOR_WINDOW));
+			SetTextColor((HDC)_wParam, GSC_mainwnd(COLOR_BTNTEXT));
+			return (INT_PTR)GetBrush(BRUSH_BG);
+		case WM_CTLCOLORLISTBOX: {
+			int bg, txt;
+			SNM_GetThemeListColors(&bg, &txt);
+			SetBkColor((HDC)_wParam, bg);
+			SetTextColor((HDC)_wParam, txt);
+			return (INT_PTR)GetBrush(BRUSH_LIST, bg);
+		}
+#ifdef _WIN32
+		case WM_CTLCOLOREDIT: {
+			int bg, txt;
+			SNM_GetThemeEditColors(&bg, &txt);
+			SetBkColor((HDC)_wParam, bg);
+			SetTextColor((HDC)_wParam, txt);
+			return (INT_PTR)GetBrush(BRUSH_EDIT, bg);
+		}
+#endif
+	}
+	return 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
 void SNM_UIInit() {}
 
-void SNM_UIExit() {
+void SNM_UIExit()
+{
+	for (int i=0; i<BRUSH_COUNT; i++)
+		if (g_brushes[i]) {
+			DeleteObject(g_brushes[i]);
+			g_brushes[i] = NULL;
+		}
+
 	if (LICE_IBitmap* logo = SNM_GetThemeLogo())
 		DELETE_NULL(logo);
 }
@@ -295,7 +355,7 @@ HWND g_cueBussHwnd = NULL;
 int g_cueBussConfId = 0; // not saved in prefs yet
 bool g_cueBussDisableSave = false;
 
-void FillCueBussDlg(HWND _hwnd=NULL)
+void FillCueBussDlg(HWND _hwnd = NULL)
 {
 	HWND hwnd = _hwnd?_hwnd:g_cueBussHwnd;
 	if (!hwnd)
@@ -366,25 +426,28 @@ void SaveCueBussSettings()
 	SaveCueBusIniFile(g_cueBussConfId, cueBusName, reaType, (trTemplate == 1), trTemplatePath, (showRouting == 1), soloDefeat, (sendToMaster == 1), hwOuts);
 }
 
-WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET CueBussDlgProc(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam)
 {
-	const char cWndPosKey[] = "CueBus Window Pos"; 
-	switch(Message)
+	if (INT_PTR r = SNM_HookThemeColorsMessage(_hwnd, _uMsg, _wParam, _lParam))
+		return r;
+
+	const char cWndPosKey[] = "CueBus Window Pos";
+	switch(_uMsg)
 	{
 		case WM_INITDIALOG:
 		{
-			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_SNM_CUEBUS_TYPE));
-			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_COMBO));
+			WDL_UTF8_HookComboBox(GetDlgItem(_hwnd, IDC_SNM_CUEBUS_TYPE));
+			WDL_UTF8_HookComboBox(GetDlgItem(_hwnd, IDC_COMBO));
 			for(int i=0; i < SNM_MAX_HW_OUTS; i++)
-				WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_SNM_CUEBUS_HWOUT1+i));
+				WDL_UTF8_HookComboBox(GetDlgItem(_hwnd, IDC_SNM_CUEBUS_HWOUT1+i));
 
-			RestoreWindowPos(hwnd, cWndPosKey, false);
+			RestoreWindowPos(_hwnd, cWndPosKey, false);
 			char buf[16] = "";
 			for(int i=0; i < SNM_MAX_CUE_BUSS_CONFS; i++)
 				if (_snprintfStrict(buf,sizeof(buf),"%d",i+1) > 0)
-					SendDlgItemMessage(hwnd,IDC_COMBO,CB_ADDSTRING,0,(LPARAM)buf);
-			SendDlgItemMessage(hwnd,IDC_COMBO,CB_SETCURSEL,0,0);
-			FillCueBussDlg(hwnd);
+					SendDlgItemMessage(_hwnd,IDC_COMBO,CB_ADDSTRING,0,(LPARAM)buf);
+			SendDlgItemMessage(_hwnd,IDC_COMBO,CB_SETCURSEL,0,0);
+			FillCueBussDlg(_hwnd);
 			return 0;
 		}
 		break;
@@ -394,12 +457,12 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case WM_COMMAND :
-			switch(LOWORD(wParam))
+			switch(LOWORD(_wParam))
 			{
 				case IDC_COMBO:
-					if(HIWORD(wParam) == CBN_SELCHANGE) // config id update?
+					if(HIWORD(_wParam) == CBN_SELCHANGE) // config id update?
 					{ 
-						int id = (int)SendDlgItemMessage(hwnd,IDC_COMBO,CB_GETCURSEL,0,0);
+						int id = (int)SendDlgItemMessage(_hwnd, IDC_COMBO, CB_GETCURSEL, 0, 0);
 						if (id != CB_ERR) {
 							g_cueBussConfId = id;
 							FillCueBussDlg();
@@ -411,31 +474,31 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 					return 0;
 				case IDCANCEL:
 					g_cueBussHwnd = NULL; // for proper toggle state report, see openCueBussWnd()
-					ShowWindow(hwnd, SW_HIDE);
+					ShowWindow(_hwnd, SW_HIDE);
 					return 0;
 				case IDC_FILES: {
 					char curPath[BUFFER_SIZE]="";
-					GetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,curPath,BUFFER_SIZE);
+					GetDlgItemText(_hwnd, IDC_SNM_CUEBUS_TEMPLATE, curPath, BUFFER_SIZE);
 					if (!*curPath || !FileExists(curPath))
 						if (_snprintfStrict(curPath, sizeof(curPath), "%s%cTrackTemplates", GetResourcePath(), PATH_SLASH_CHAR) <= 0)
 							*curPath = '\0';
 					if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Load track template","sws_DLG_149"), curPath, NULL, false, "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0")) {
-						SetDlgItemText(hwnd,IDC_SNM_CUEBUS_TEMPLATE,fn);
+						SetDlgItemText(_hwnd,IDC_SNM_CUEBUS_TEMPLATE,fn);
 						free(fn);
 						SaveCueBussSettings();
 					}
 					break;
 				}
 				case IDC_CHECK3: {
-					bool templateEnable = (IsDlgButtonChecked(hwnd, IDC_CHECK3) == 1);
-					EnableWindow(GetDlgItem(hwnd, IDC_SNM_CUEBUS_TEMPLATE), templateEnable);
-					EnableWindow(GetDlgItem(hwnd, IDC_FILES), templateEnable);
-					EnableWindow(GetDlgItem(hwnd, IDC_SNM_CUEBUS_NAME), !templateEnable);
+					bool templateEnable = (IsDlgButtonChecked(_hwnd, IDC_CHECK3) == 1);
+					EnableWindow(GetDlgItem(_hwnd, IDC_SNM_CUEBUS_TEMPLATE), templateEnable);
+					EnableWindow(GetDlgItem(_hwnd, IDC_FILES), templateEnable);
+					EnableWindow(GetDlgItem(_hwnd, IDC_SNM_CUEBUS_NAME), !templateEnable);
 					for(int k=0; k < SNM_MAX_HW_OUTS ; k++)
-						EnableWindow(GetDlgItem(hwnd, IDC_SNM_CUEBUS_HWOUT1+k), !templateEnable);
-					EnableWindow(GetDlgItem(hwnd, IDC_CHECK1), !templateEnable);
-					EnableWindow(GetDlgItem(hwnd, IDC_CHECK4), !templateEnable);
-//					SetFocus(GetDlgItem(hwnd, templateEnable ? IDC_SNM_CUEBUS_TEMPLATE : IDC_SNM_CUEBUS_NAME));
+						EnableWindow(GetDlgItem(_hwnd, IDC_SNM_CUEBUS_HWOUT1+k), !templateEnable);
+					EnableWindow(GetDlgItem(_hwnd, IDC_CHECK1), !templateEnable);
+					EnableWindow(GetDlgItem(_hwnd, IDC_CHECK4), !templateEnable);
+//					SetFocus(GetDlgItem(_hwnd, templateEnable ? IDC_SNM_CUEBUS_TEMPLATE : IDC_SNM_CUEBUS_NAME));
 					SaveCueBussSettings();
 					break;
 				}
@@ -454,20 +517,20 @@ WDL_DLGRET CueBussDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				case IDC_SNM_CUEBUS_HWOUT6:
 				case IDC_SNM_CUEBUS_HWOUT7:
 				case IDC_SNM_CUEBUS_HWOUT8:
-					if(HIWORD(wParam) == CBN_SELCHANGE)
+					if(HIWORD(_wParam) == CBN_SELCHANGE)
 						SaveCueBussSettings();
 					break;
 				case IDC_SNM_CUEBUS_TEMPLATE:
 				case IDC_SNM_CUEBUS_NAME:
-					if (HIWORD(wParam)==EN_CHANGE)
+					if (HIWORD(_wParam)==EN_CHANGE)
 						SaveCueBussSettings();
 					break;
 			}
 			break;
 
 		case WM_DESTROY:
-			SaveWindowPos(hwnd, cWndPosKey);
-			break; 
+			SaveWindowPos(_hwnd, cWndPosKey);
+			break;
 	}
 	return 0;
 }

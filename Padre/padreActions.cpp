@@ -27,10 +27,12 @@
 
 #include "stdafx.h"
 #include "../reaper/localize.h"
+#include "../SnM/SnM_Dlg.h"
 #include "padreActions.h"
 #include "padreEnvelopeProcessor.h"
 #include "padreMidiItemFilters.h"
 #include "padreRmeTotalmix.h"
+
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
@@ -93,12 +95,16 @@ void PadreExit()
 	delete midiNoteRandomizer;
 }
 
-WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	const char cWndPosKey[] = "LFO Window Pos";
-	switch(Message)
+
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
+		return r;
+
+	switch(uMsg)
 	{
-        case WM_INITDIALOG :
+		case WM_INITDIALOG :
 		{
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADRELFO_TARGET));
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADRELFO_TIMESEGMENT));
@@ -403,13 +409,16 @@ void DoEnvelopeProcessor(COMMAND_T* _ct)
 	ShowWindow(hwnd, SW_SHOW);
 }
 
-WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	const char cWndPosKey[] = "EnvProc Window Pos";
 
-	switch(Message)
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
+		return r;
+
+	switch(uMsg)
 	{
-        case WM_INITDIALOG :
+		case WM_INITDIALOG :
 		{
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADREENVPROC_TYPE));
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_PADREENVPROC_TARGET));

@@ -35,6 +35,7 @@
 #include "stdafx.h"
 #include "../reaper/localize.h"
 #include "../Freeze/Freeze.h"
+#include "../SnM/SnM_Dlg.h"
 #include "Console.h"
 
 // Globals, g_foo
@@ -675,6 +676,9 @@ INT_PTR WINAPI doConsole(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	static char* pTrackId = strCommand;
 	static char* pArgs = strCommand;
 	static CONSOLE_COMMAND command = UNKNOWN_COMMAND;
+
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
 
 	switch (uMsg)
 	{

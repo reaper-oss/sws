@@ -450,6 +450,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case WM_CTLCOLOREDIT:
 			if (IsThemed())
 			{
+				int brushId = BRUSH_EDIT;
 				HWND hwnd = (HWND)lParam;
 				HDC hdc = (HDC)wParam;
 				int bg, txt; 
@@ -459,13 +460,14 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				for (int i=0; i<m_pLists.GetSize(); i++)
 					if (SWS_ListView* lv = m_pLists.Get(i))
 						if (hwnd == lv->GetEditHWND()) {
+							brushId = BRUSH_EDIT_LIST;
 							SNM_GetThemeListColors(&bg, &txt);
 							break;
 						}
 
 				SetBkColor(hdc, bg);
 				SetTextColor(hdc, txt);
-				return (INT_PTR)GetBrush(BRUSH_EDIT, bg);
+				return (INT_PTR)GetBrush(brushId, bg);
 			}
 			return 0;
 #endif
@@ -641,11 +643,18 @@ HBRUSH SWS_DockWnd::GetBrush(int id, int col)
 {
 	if (id>=0 && id<BRUSH_COUNT)
 	{
-		// recreate the HBRUSH to handle color theme swtiches
+#ifdef SUPPORT_THEME_SWITCHES
+		// re-create the HBRUSH to handle color theme swtiches
 		if (m_brushes[id])
 			DeleteObject(m_brushes[id]);
-		return (m_brushes[id] = (HBRUSH)CreateSolidBrush(col==-666 ? GSC_mainwnd(COLOR_WINDOW) : col));
+		m_brushes[id] = (HBRUSH)CreateSolidBrush(col==-666 ? GSC_mainwnd(COLOR_WINDOW) : col);
+#else
+		if (!m_brushes[id])
+			m_brushes[id] = (HBRUSH)CreateSolidBrush(col==-666 ? GSC_mainwnd(COLOR_WINDOW) : col);
+#endif
+		return m_brushes[id];
 	}
+
 	return NULL;
 }
 

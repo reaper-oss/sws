@@ -33,6 +33,7 @@
 #include "TrackSel.h"
 #include "ProjPrefs.h"
 #include "../Xenakios/XenakiosExts.h"
+#include "../SnM/SnM_Dlg.h"
 
 
 //#include "Context.cpp"
@@ -130,10 +131,13 @@ void SaveFillGapsIniFile(char* triggerPad, char* fadeLength, char* maxGap,
 
 HWND g_strtchHFader = 0;
 double g_strtchHFaderValue = 0.5f;
-WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
+		return r;
+
 	const char cWndPosKey[] = "Fill gaps Window Pos"; 
-	switch(Message)
+	switch(uMsg)
 	{
 		case WM_INITDIALOG :
 		{
@@ -169,19 +173,19 @@ WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 				SendMessage(g_strtchHFader,TBM_SETPOS,1,(LPARAM)(atof(maxStretch)*1000));
 			}
 
-			int x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)"Equal Gain");
+			int x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)__LOCALIZE("Equal Gain","sws_DLG_156"));
 			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,0);
-			x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)"Equal Power");
+			x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)__LOCALIZE("Equal Power","sws_DLG_156"));
 			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,1);
 			
 			//experimental starts here
-			x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)"Reverse Equal Power");
+			x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)__LOCALIZE("Reverse Equal Power","sws_DLG_156"));
 			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,2);
-			x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)"Steep Curve");
+			x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)__LOCALIZE("Steep Curve","sws_DLG_156"));
 			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,3);
-		    x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)"Reverse Steep Curve");
+		    x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)__LOCALIZE("Reverse Steep Curve","sws_DLG_156"));
 			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,4);
-			x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)"S-Curve");
+			x = (int)SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_ADDSTRING,0,(LPARAM)__LOCALIZE("S-Curve","sws_DLG_156"));
 			SendDlgItemMessage(hwnd,IDC_FADE_SHAPE,CB_SETITEMDATA,x,5);
 			//experimental ends here
 			
@@ -236,7 +240,7 @@ WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 						_snprintf(prms, 128, "%s,%s,%s,%s,%s,%s,%d,%d", 
 							triggerPad, fadeLength, maxGap, !stretch ? "1.0" : maxStretch, (!stretch || !trans) ? "0" : presTrans, 
 							transFade, fadeShape, markErrors);
-						AWFillGapsAdv("Fill gaps between selected items", prms);
+						AWFillGapsAdv(__LOCALIZE("Fill gaps between selected items","sws_DLG_156"), prms);
 					}
 					return 0;
 				}
@@ -326,7 +330,7 @@ void AWFillGapsAdv(const char* title, char* retVals)
 	if ((triggerPad < 0) || (fadeLength < 0) || (maxGap < 0) || (maxStretch < 0) || (maxStretch > 1) || (presTrans < 0) || (transFade < 0) || (fadeShape < 0) || (fadeShape > 5))
 	{
 		//ShowMessageBox("Don't use such stupid values, try again.","Invalid Input",0);
-		MessageBox(g_hwndParent, "All values must be non-negative", "Input Error", MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("All values must be non-negative","sws_DLG_156"), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);
 		return;
 	}
 	
@@ -527,7 +531,7 @@ void AWFillGapsAdv(const char* title, char* retVals)
 						// If gap is big and mark errors is enabled, add a marker
 						if (markErrors == 1)
 						{
-							AddProjectMarker(NULL, false, item1End, NULL, "Possible Artifact", NULL);
+							AddProjectMarker(NULL, false, item1End, NULL, __LOCALIZE("Possible Artifact","sws_DLG_156"), NULL);
 						}
 						
 					}
@@ -2772,7 +2776,7 @@ void AWCascadeInputs(COMMAND_T* t)
 	//int numTracks = CountSelectedTracks(0);
 	char returnString[128] = "1";
 	
-	if (GetUserInputs("Cascade Selected Track Inputs",1,"Start at input:", returnString, 128))
+	if (GetUserInputs(__LOCALIZE("Cascade Selected Track Inputs","sws_mbox"),1,__LOCALIZE("Start at input:","sws_mbox"), returnString, 128))
 	{
 		MediaTrack* track;
 		int inputOffset = atoi(returnString);

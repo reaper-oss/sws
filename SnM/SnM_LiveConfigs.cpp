@@ -931,14 +931,17 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 				break;
 			case COL_TR:
 				hMenu = CreatePopupMenu();
-				for (int i=1; i <= GetNumTracks(); i++)
+				if (GetNumTracks() > 0)
 				{
-					char str[SNM_MAX_TRACK_NAME_LEN] = "";
-					char* name = (char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i,false), "P_NAME", NULL);
-					_snprintfSafe(str, sizeof(str), "[%d] \"%s\"", i, name?name:"");
-					AddToMenu(hMenu, str, SNM_LIVECFG_SET_TRACK_START_MSG + i);
+					for (int i=1; i <= GetNumTracks(); i++)
+					{
+						char str[SNM_MAX_TRACK_NAME_LEN] = "";
+						char* name = (char*)GetSetMediaTrackInfo(CSurf_TrackFromID(i,false), "P_NAME", NULL);
+						_snprintfSafe(str, sizeof(str), "[%d] \"%s\"", i, name?name:"");
+						AddToMenu(hMenu, str, SNM_LIVECFG_SET_TRACK_START_MSG + i);
+					}
+					AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				}
-				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				AddToMenu(hMenu, __LOCALIZE("Clear tracks","sws_DLG_155"), SNM_LIVECFG_CLEAR_TRACK_MSG);
 				break;
 			case COL_TRT:

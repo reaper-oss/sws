@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "../reaper/localize.h"
 #include "../Freeze/Freeze.h"
+#include "../SnM/SnM_Dlg.h"
 #include "Color.h"
 
 #define COLORDLG_WINDOWPOS_KEY "ColorDlgPos"
@@ -75,6 +76,8 @@ INT_PTR WINAPI doColorDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #ifndef _WIN32
 	static int iSettingColor = -1;
 #endif
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
 	
 	switch (uMsg)
 	{

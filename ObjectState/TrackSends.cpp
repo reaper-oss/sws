@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "../reaper/localize.h"
+#include "../SnM/SnM_Dlg.h"
 #include "TrackSends.h"
 
 // Functions for getting/setting track sends
@@ -41,6 +42,9 @@ static int g_iResolveRet;
 
 INT_PTR WINAPI doResolve(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:

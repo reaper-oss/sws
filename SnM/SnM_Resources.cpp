@@ -1790,7 +1790,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 					{
 						m_btnTiedActions.SetCheckState(g_tiedSlotActions[typeForUser] == g_resViewType);
 						char buf[64] = "";
-						_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Tie %s slot actions","sws_DLG_150"), g_slots.Get(typeForUser)->GetDesc());
+						_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Tie %s slot actions to this bookmark","sws_DLG_150"), g_slots.Get(typeForUser)->GetDesc());
 						m_btnTiedActions.SetTextLabel(buf, -1, font);
 						if (SNM_AutoVWndPosition(&m_btnTiedActions, NULL, _r, &x0, _r->top, h, 5))
 							SNM_AddLogo(_bm, _r, x0, h);

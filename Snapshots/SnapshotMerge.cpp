@@ -28,6 +28,7 @@
 
 #include "stdafx.h"
 #include "../reaper/localize.h"
+#include "../SnM/SnM_Dlg.h"
 #include "SnapshotClass.h"
 #include "SnapshotMerge.h"
 #include "../Prompt.h"
@@ -91,7 +92,7 @@ void SWS_SnapshotMergeView::GetItemText(SWS_ListItem* item, int iCol, char* str,
 	{
 	case 0:
 		if (GuidsEqual(&mi->m_ts->m_guid, &GUID_NULL))
-			lstrcpyn(str, "(master)", iStrMax);
+			lstrcpyn(str, __LOCALIZE("(master)","sws_DLG_112"), iStrMax);
 		else if (mi->m_ts->m_sName.GetLength())
 			_snprintf(str, iStrMax, "%d: %s", mi->m_ts->m_iTrackNum, mi->m_ts->m_sName.Get());
 		else
@@ -101,7 +102,7 @@ void SWS_SnapshotMergeView::GetItemText(SWS_ListItem* item, int iCol, char* str,
 		{
 			int iTrack = CSurf_TrackToID(mi->m_destTr, false);
 			if (iTrack == 0)
-				lstrcpyn(str, "(master)", iStrMax);
+				lstrcpyn(str, __LOCALIZE("(master)","sws_DLG_112"), iStrMax);
 			else if (iTrack > 0)
 			{
 				char* cName = (char*)GetSetMediaTrackInfo(mi->m_destTr, "P_NAME", NULL);
@@ -111,9 +112,9 @@ void SWS_SnapshotMergeView::GetItemText(SWS_ListItem* item, int iCol, char* str,
 					_snprintf(str, iStrMax, "%d", iTrack);
 			}
 			else if (mi->m_destTr == NULL)
-				lstrcpyn(str, "(none)", iStrMax);
+				lstrcpyn(str, __LOCALIZE("(none)","sws_DLG_112"), iStrMax);
 			else if (mi->m_destTr == CREATETRACK)
-				lstrcpyn(str, "(create new)", iStrMax);
+				lstrcpyn(str, __LOCALIZE("(create new)","sws_DLG_112"), iStrMax);
 			break;
 		}
 	}
@@ -129,6 +130,10 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 {
 	static WDL_WndSizer resize;
 	static SWS_SnapshotMergeView* mv = NULL;
+
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
@@ -178,19 +183,19 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 			{
 				HMENU contextMenu = CreatePopupMenu();
 
-				AddToMenu(contextMenu, "Examine track snapshot", 1000);
+				AddToMenu(contextMenu, __LOCALIZE("Examine track snapshot","sws_DLG_112"), 1000);
 				AddToMenu(contextMenu, SWS_SEPARATOR, 0);
 
 				if (iCol == 0)
 				{
-					AddToMenu(contextMenu, "Select source track", 0, -1, false, MF_GRAYED);
+					AddToMenu(contextMenu, __LOCALIZE("Select source track","sws_DLG_112"), 0, -1, false, MF_GRAYED);
 
 					char menuText[80];
 					for (int i = 0; i < g_ss->m_tracks.GetSize(); i++)
 					{
 						TrackSnapshot* ts = g_ss->m_tracks.Get(i);
 						if (GuidsEqual(&ts->m_guid, &GUID_NULL))
-							strcpy(menuText, "(master)");
+							strcpy(menuText, __LOCALIZE("(master)","sws_DLG_112"));
 						else if (ts->m_sName.GetLength())
 							_snprintf(menuText, 80, "%d: %s", i, ts->m_sName.Get());
 						else
@@ -201,10 +206,10 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 				else // iCol == 1
 				{
-					AddToMenu(contextMenu, "Select destination track", 0, -1, false, MF_GRAYED);
-					AddToMenu(contextMenu, "(create new)", 1);
-					AddToMenu(contextMenu, "(none)", 2);
-					AddToMenu(contextMenu, "(master)", 3);
+					AddToMenu(contextMenu, __LOCALIZE("Select destination track","sws_DLG_112"), 0, -1, false, MF_GRAYED);
+					AddToMenu(contextMenu, __LOCALIZE("(create new)","sws_DLG_112"), 1);
+					AddToMenu(contextMenu, __LOCALIZE("(none)","sws_DLG_112"), 2);
+					AddToMenu(contextMenu, __LOCALIZE("(master)","sws_DLG_112"), 3);
 					char menuText[80];
 					for (int i = 1; i <= GetNumTracks(); i++)
 					{
@@ -224,7 +229,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 					{
 						WDL_FastString details;
 						mi->m_ts->GetDetails(&details, g_ss->m_iMask);
-						DisplayInfoBox(hwndDlg, "Track Snapshot Details", details.Get());
+						DisplayInfoBox(hwndDlg, __LOCALIZE("Track Snapshot Details","sws_DLG_112"), details.Get());
 					}
 					else if (iCol == 0)
 					{
@@ -315,7 +320,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 							for (int j = i+1; j < g_mergeItems.GetSize(); j++)
 								if (g_mergeItems.Get(i)->m_destTr == g_mergeItems.Get(j)->m_destTr)
 								{
-									MessageBox(hwndDlg, "Cannot have multiple sources with the same destination!", "Snapshot Recall Error", MB_OK);
+									MessageBox(hwndDlg, __LOCALIZE("Cannot have multiple sources with the same destination!","sws_DLG_112"), __LOCALIZE("Snapshot Recall Error","sws_DLG_112"), MB_OK);
 									return 0;
 								}
 					}

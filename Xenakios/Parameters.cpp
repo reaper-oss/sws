@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "../reaper/localize.h"
+#include "../SnM/SnM_Dlg.h"
 #include "Parameters.h"
 
 using namespace std;
@@ -233,12 +234,14 @@ void UpdateINIfile()
 	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELSUFFIX",g_command_params.TrackLabelSuffix.c_str(),g_XenIniFilename.Get());
 }
 
-WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
+		return r;
 	
-	switch(Message)
+	switch(uMsg)
     {
-        case WM_INITDIALOG:
+		case WM_INITDIALOG:
 		{
 			ReadINIfile();
 			char textBuf[100];

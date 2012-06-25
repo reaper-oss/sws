@@ -27,6 +27,7 @@
 
 #include "stdafx.h"
 #include "Prompt.h"
+#include "./SnM/SnM_Dlg.h"
 
 #define PROMPTWND_KEY "PromptWindowPos"
 #define INFOWND_KEY "InfoWindowPos"
@@ -39,6 +40,9 @@ static bool g_bAtMouse = false;
 
 INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
@@ -73,6 +77,10 @@ INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
 INT_PTR WINAPI doInfoDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static WDL_WndSizer resize;
+
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:

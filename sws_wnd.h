@@ -27,17 +27,27 @@
 
 #pragma once
 
-#define TOOLTIP_MAX_LEN		512
-#define MIN_DOCKWND_WIDTH	147
-#define MIN_DOCKWND_HEIGHT	175
+#define SUPPORT_THEME_SWITCHES
+
+#define TOOLTIP_MAX_LEN					512
+#define MIN_DOCKWND_WIDTH				147
+#define MIN_DOCKWND_HEIGHT				175
+
 #ifdef _WIN32
-#define SWSDLG_TYPEFACE "MS Shell Dlg"
-#define LISTVIEW_COLORHOOK_STATESIZE 3
+#define SWSDLG_TYPEFACE					"MS Shell Dlg"
+#define LISTVIEW_COLORHOOK_STATESIZE	3
 #else
-#define SWSDLG_TYPEFACE "Arial"
-#define LISTVIEW_COLORHOOK_STATESIZE (3+4)
+#define SWSDLG_TYPEFACE					"Arial"
+#define LISTVIEW_COLORHOOK_STATESIZE	(3+4)
 #endif
 
+enum {
+	BRUSH_BG=0,
+	BRUSH_LIST,
+	BRUSH_EDIT,
+	BRUSH_EDIT_LIST,
+	BRUSH_COUNT
+};
 
 typedef struct SWS_LVColumn
 {
@@ -214,13 +224,6 @@ protected:
 	virtual void DrawControls(LICE_IBitmap* bm, const RECT* r, int* tooltipHeight = NULL) {}
 	virtual bool GetToolTipString(int xpos, int ypos, char* bufOut, int bufOutSz) { return false; }
 	virtual void KillTooltip(bool doRefresh=false);
-
-	enum {
-		BRUSH_BG=0,
-		BRUSH_LIST,
-		BRUSH_EDIT,
-		BRUSH_COUNT
-	};
 
 	HWND m_hwnd;
 	bool m_bUserClosed;

@@ -29,13 +29,16 @@
 #include "../resource.h"
 #include "../Misc/Analysis.h"
 #include "../reaper/localize.h"
+#include "../SnM/SnM_Dlg.h"
 
 #define IXLABELPROCSTRING	"Label processor"
 
 WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	WDL_FastString *pStr = (WDL_FastString*) GetWindowLong(hwnd, GWLP_USERDATA);
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
+		return r;
 
+	WDL_FastString *pStr = (WDL_FastString*) GetWindowLong(hwnd, GWLP_USERDATA);
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:

@@ -26,8 +26,10 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "reaper/localize.h"
-#include "ObjectState/TrackEnvelope.h"
+#include "./reaper/localize.h"
+#include "./ObjectState/TrackEnvelope.h"
+#include "./SnM/SnM_Dlg.h"
+
 
 #define SUPERCOLLAPSED_VIEW_SIZE 3
 #define COLLAPSED_VIEW_SIZE 24
@@ -1314,6 +1316,9 @@ bool IsZoomMode(COMMAND_T*)
 #define ZOOMPREFS_WNDPOS_KEY "ZoomPrefs WndPos"
 static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:

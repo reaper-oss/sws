@@ -37,6 +37,8 @@
 #include "RenderTrack.h"
 
 #include "../reaper/localize.h"
+#include "../SnM/SnM_Dlg.h"
+#include "../Prompt.h"
 #include "../../WDL/projectcontext.h"
 
 #define TAGLIB_STATIC
@@ -363,20 +365,19 @@ void SanitizeFilename( string *fn ){
 
 
 void ShowAutorenderHelp(COMMAND_T*) {
-	string helpText = "This is how it's done:\n\n";
-	helpText.append("1. Create and name regions to be rendered\n");
-	helpText.append("    and tagged.\n");
-	helpText.append("2. [Optional] Select Edit Project Metadata\n");
-	helpText.append("    and set tag metadata and render path.\n");
-	helpText.append("3. Batch Render Regions!\n\n\n");
-	helpText.append("Notes:\n\n");
-	helpText.append("Autorender uses the last used render settings.\n");
-	helpText.append("If you need to set your render format, run a dummy\n");
-	helpText.append("render the normal way before batch rendering.\n\n");
-	helpText.append("If no regions are present, the entire project\n");
-	helpText.append("will be rendered and tagged.\n\n");
-
-	MessageBox( GetMainHwnd(), helpText.c_str(), "Autorender Usage", MB_OK );
+	string helpText = "This is how it's done:\r\n\r\n";
+	helpText.append("1. Create and name regions to be rendered\r\n");
+	helpText.append("    and tagged.\r\n");
+	helpText.append("2. [Optional] Select Edit Project Metadata\r\n");
+	helpText.append("    and set tag metadata and render path.\r\n");
+	helpText.append("3. Batch Render Regions!\r\n\r\n\r\n");
+	helpText.append("Notes:\r\n\r\n");
+	helpText.append("Autorender uses the last used render settings.\r\n");
+	helpText.append("If you need to set your render format, run a dummy\r\n");
+	helpText.append("render the normal way before batch rendering.\r\n\r\n");
+	helpText.append("If no regions are present, the entire project\r\n");
+	helpText.append("will be rendered and tagged.\r\n\r\n");
+	DisplayInfoBox(GetMainHwnd(), "Autorender Usage", helpText.c_str());
 }
 
 
@@ -851,9 +852,12 @@ void loadPrefs(){
 }
 
 
-INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam){
-	bool hasChanged = false;
+INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
 
+	bool hasChanged = false;
 	switch (uMsg){
             case WM_INITDIALOG:
 				RestoreWindowPos(hwndDlg, PREFS_WINDOWPOS_KEY, false);
@@ -912,9 +916,12 @@ const char* bool_to_char( bool b){
 	return b ? "1" : "0";
 }
 
-INT_PTR WINAPI doAutorenderPreferences(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam){
-	bool hasChangedDontCare = false;
+INT_PTR WINAPI doAutorenderPreferences(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+		return r;
 
+	bool hasChangedDontCare = false;
     switch (uMsg){
             case WM_INITDIALOG:
 				loadPrefs();

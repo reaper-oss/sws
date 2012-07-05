@@ -272,7 +272,7 @@ void ShowThemeHelper(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// List view helpers
+// Action list helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 HWND GetActionListBox(char* _currentSection, int _sectionSz)
@@ -346,6 +346,46 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 		}
 	}
 	return -1;
+}
+
+// assumes the actions dlg is already opened with the right section!
+bool SuckyLearnAction(int _cmdId)
+{
+	if (HWND h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0)))
+	{
+		char oldFilter[128] = "";
+		GetWindowText(GetDlgItem(h, 0x52C), oldFilter, sizeof(oldFilter));
+		SendMessage(h, WM_COMMAND, 0xB, 0); // clr filter
+
+		if (HWND hList = (h ? GetDlgItem(h, 0x52B) : NULL))
+		{
+			ListView_SetItemState(hList, -1, 0, LVIS_SELECTED); //JFB!!! OSX // clr current sel
+
+			LVITEM li;
+			li.mask = LVIF_PARAM;
+			li.stateMask = LVIS_SELECTED;
+			li.iSubItem = 0;
+			bool found = false;
+			for (int i=0; i < SNM_ListView_GetItemCount(hList); i++)
+			{
+				li.iItem = i;
+				SNM_ListView_GetItem(hList, &li);
+				if (_cmdId == (int)li.lParam) {
+					ListView_SetItemState(hList, i, LVIS_SELECTED, LVIS_SELECTED); //JFB!!! OSX
+					found = true;
+				}
+			}
+
+			// trigger the add (learn) button
+			if (found)
+			{
+				SendMessage(h, WM_COMMAND, 0x8, 0);
+				SetWindowText(GetDlgItem(h, 0x52C), oldFilter); // restore filter
+				SendMessage(h, WM_CLOSE, 0, 0);
+			}
+		}
+	}
+	return false;
 }
 
 

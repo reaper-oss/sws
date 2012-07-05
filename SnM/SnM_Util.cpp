@@ -834,13 +834,21 @@ bool GetStringWithRN(const char* _bufIn, char* _bufOut, int _bufOutSz)
 	return (j < _bufOutSz);
 }
 
-void ShortenStringToFirstRN(char* _str) {
+const char* FindFirstRN(const char* _str) {
 	if (_str) {
-		char* p = strchr(_str, '\r');
-		if (p) *p = '\0';
-		p = strchr(_str, '\n');
-		if (p) *p = '\0';
+		const char* p = strchr(_str, '\r');
+		if (!p) p = strchr(_str, '\n');
+		return p;
 	}
+	return NULL;
+}
+
+char* ShortenStringToFirstRN(char* _str) {
+	if (char* p = (char*)FindFirstRN(_str)) {
+		*p = '\0'; 
+		return p;
+	}
+	return NULL;
 }
 
 // replace "%02d " with _replaceCh in _str

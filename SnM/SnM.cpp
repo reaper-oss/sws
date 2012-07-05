@@ -46,7 +46,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 
 	// Routing & cue buss -----------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (use last settings)" }, "S&M_CUEBUS", CueTrack, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (use last settings)" }, "S&M_CUEBUS", CueBuss, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Open/close Cue Buss generator" }, "S&M_SENDS4", OpenCueBussDlg, NULL, NULL, IsCueBussDlgDisplayed},
 
 	{ { DEFACCEL, "SWS/S&M: Remove receives from selected tracks" }, "S&M_SENDS5", RemoveReceives, NULL, },
@@ -181,7 +181,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Paste input FX chain to selected tracks" }, "S&M_PASTE_INFXCHAIN", PasteTrackInputFXChain, NULL, }, 
 
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected items" },  "S&M_CLRFXCHAIN1", ClearActiveTakeFXChain, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected items, all takes" },  "S&M_CLRFXCHAIN2", ClearAllTakesFXChain, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected items, all takes" }, "S&M_CLRFXCHAIN2", ClearAllTakesFXChain, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Clear FX chain for selected tracks" }, "S&M_CLRFXCHAIN3", ClearTrackFXChain, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Clear input FX chain for selected tracks" }, "S&M_CLR_INFXCHAIN", ClearTrackInputFXChain, NULL, },
 
@@ -492,38 +492,26 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// S&M "dynamic" actions (main section)
-//
-// "dynamic" means that the number of instances of each action can be
-// customized in the S&M.ini file (section "NbOfActions").
-// In the folowing table:
-// - items are not real commands but "meta" commands, this table must be 
-//   registered with SNMRegisterDynamicCommands()
+// S&M dynamic actions: "dynamic" means that the number of instances of these actions can be customized in the S&M.ini file (section [NbOfActions]).
+// The following table must be registered with SNMRegisterDynamicCommands(), in this table:
+// - items are not real commands but "meta" commands
 // - COMMAND_T.user is used to specify the default number of actions to create
-// - COMMAND_T.menuText is used to specify a custom max number of actions 
-//   (NULL means max = 99)
-// - a function doCommand(COMMAND_T*) or getEnabled(COMMAND_T*) will be 
-//   trigered with 0-based COMMAND_T.user
-// - action names are formated strings, they must contain "%02d" (better sort 
-//   in the action list, 2 digits for max = 99)
-// - custom command ids aren't formated strings, but final ids will end with 
-//   slot numbers (1-based for display reasons)
-//
-// example: 
+// - COMMAND_T.menuText is used to specify a custom max number of actions (NULL means max = 99, atm)
+// - a function doCommand(COMMAND_T*) or getEnabled(COMMAND_T*) will be triggered with 0-based COMMAND_T.user
+// - action names are formatted strings, they *must* contain "%02d" (for better sort in the action list, 2 digits because max=99 atm)
+// - custom command ids aren't formated strings, but final ids will end with slot numbers (1-based for display reasons)
+// Example: 
 // { { DEFACCEL, "Do stuff %02d" }, "DO_STUFF", doStuff, NULL, 2}
-// if not overrided in the S&M.ini file (e.g. "DO_STUFF=32"), 2 actions will 
-// be created: "Do stuff 01" and "Do stuff 02" both calling doStuff(c) with 
-// c->user=0 and c->user=1, respectively. 
+// if not overrided in the S&M.ini file (e.g. "DO_STUFF=32"), 2 actions will be created: "Do stuff 01" and "Do stuff 02" 
+// both calling doStuff(c) with c->user=0 and c->user=1, respectively. 
 // custom ids will be "_DO_STUFF1" and "_DO_STUFF2", repectively.
-//
 ///////////////////////////////////////////////////////////////////////////////
 
 static COMMAND_T g_SNM_dynamicCmdTable[] =
 {
-
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 
-	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection, settings %02d" }, "S&M_CUEBUS", CueTrack, STR(SNM_MAX_CUE_BUSS_CONFS), SNM_MAX_CUE_BUSS_CONFS},
+	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection, settings %02d" }, "S&M_CUEBUS", CueBuss, STR(SNM_MAX_CUE_BUSS_CONFS), SNM_MAX_CUE_BUSS_CONFS},
 
 	{ { DEFACCEL, "SWS/S&M: Set FX %02d online for selected tracks" }, "S&M_FXOFF_SETON", SetFXOnlineSelTracks, NULL, 8},
 	{ { DEFACCEL, "SWS/S&M: Set FX %02d offline for selected tracks" }, "S&M_FXOFF_SETOFF", SetFXOfflineSelTracks, NULL, 8},
@@ -592,11 +580,11 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Set selected tracks to group %02d (default flags)" }, "S&M_SET_TRACK_GROUP", SetTrackGroup, STR(SNM_MAX_TRACK_GROUPS), 8}, // 8 is hard-coded: not all the 32 groups!
 
-	{ { DEFACCEL, "SWS/S&M: Toggle Live Config %02d enable" }, "S&M_TOGGLE_LIVE_CFG", ToggleEnableLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS, IsLiveConfigEnabled},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Next" }, "S&M_NEXT_LIVE_CFG", NextLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Previous" }, "S&M_PREVIOUS_LIVE_CFG", PreviousLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS},
+	{ { DEFACCEL, "SWS/S&M: Toggle Live Config %02d enable" }, "S&M_TOGGLE_LIVE_CFG", ToggleEnableLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Next" }, "S&M_NEXT_LIVE_CFG", NextLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Previous" }, "S&M_PREVIOUS_LIVE_CFG", PreviousLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
 
-	{ { DEFACCEL, "SWS/S&M: Region Playlist %02d - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 8},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist %02d - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 4},
 
 //!WANT_LOCALIZE_1ST_STRING_END
 
@@ -605,6 +593,21 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_LOOPMEDIA_SELTRACK_SYNC", SyncToggleLoopSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause, sync with next measure), slot %02d" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTR_SYNC", SyncTogglePauseSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %02d - Infinite looping! To be stopped!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR_SYNC", SyncToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
+
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Preload" }, "S&M_PRELOAD_LIVE_CFG", PreloadLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Mute all but active track'" }, "S&M_LIVECFG_MUTEBUTACTIVE_ON", EnableMuteOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Mute all but active track'" }, "S&M_LIVECFG_MUTEBUTACTIVE_OFF", DisableMuteOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Mute all but active track'" }, "S&M_LIVECFG_MUTEBUTACTIVE_TGL", ToggleMuteOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsMuteOthersLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Unselect all but active track'" }, "S&M_LIVECFG_UNSELBUTACTIVE_ON", EnableUnselOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Unselect all but active track'" }, "S&M_LIVECFG_UNSELBUTACTIVE_OFF", DisableUnselOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Unselect all but active track'" }, "S&M_LIVECFG_UNSELBUTACTIVE_TGL", ToggleUnselOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsUnselOthersLiveConfigEnabled},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Offline all but active track (requires preload)'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE1_ON", EnableOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Offline all but active track (requires preload)'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE1_OFF", DisableOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Offline all but active track (requires preload)'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE1_TGL", ToggleOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsOfflineOthersLiveConfigEnabled},
+
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Offline all but active/near config tracks'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE2_ON", EnableOfflineNearLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Offline all but active/near config tracks'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE2_OFF", DisableOfflineNearLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Offline all but active/near config tracks'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE2_TGL", ToggleOfflineNearLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsOfflineNearLiveConfigEnabled},
 #endif
 
 	{ {}, LAST_COMMAND, }, // denote end of table
@@ -618,6 +621,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:s&m_section_actions
 /*JFB static*/ MIDI_COMMAND_T g_SNMSection_cmdTable[] = 
 {
+	// keep these as first actions (the live configs' learn feature is tied to these cmd ids, staring with SNM_SNM_SECTION_1ST_CMD_ID)
 	{ { DEFACCEL, "SWS/S&M: Apply Live Config 1 (MIDI CC absolute only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Apply Live Config 2 (MIDI CC absolute only)" }, "S&M_LIVECONFIG2", ApplyLiveConfig, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Apply Live Config 3 (MIDI CC absolute only)" }, "S&M_LIVECONFIG3", ApplyLiveConfig, NULL, 2},
@@ -645,10 +649,10 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 // (example: when an action deals with several selected tracks, the overall
 // toggle state might be a mix of different other toggle states)
 // note1: actions using a fake toggle state must explicitely call FakeToggle()
-// note2: no fake toggle for MIDI_COMMAND_T yet (only possible in main section)
+// note2: no fake toggle for MIDI_COMMAND_T (only possible in main section atm)
 ///////////////////////////////////////////////////////////////////////////////
 
-// store fake toogle states, indexed per cmd id (faster + lazy init)
+// store fake toggle states, indexed per cmd id (faster + lazy init)
 static WDL_IntKeyedArray<bool*> g_fakeToggleStates;
 
 void FakeToggle(COMMAND_T* _ct) {
@@ -662,7 +666,7 @@ bool FakeIsToggleAction(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Toolbars auto refresh option (see SNM_CSurfRun())
+// Toolbars auto refresh option, see SNM_CSurfRun()
 ///////////////////////////////////////////////////////////////////////////////
 
 bool g_toolbarsAutoRefreshEnabled = false;
@@ -704,7 +708,7 @@ KbdCmd g_SNMSection_kbdCmds[SNM_MAX_SECTION_ACTIONS];
 KbdKeyBindingInfo g_SNMSection_defKeys[SNM_MAX_SECTION_ACTIONS];
 int g_SNMSection_minCmdId = 0;
 int g_SNMSection_maxCmdId = 0;
-static int g_SNMSection_CmdId_gen = 40000;
+static int g_SNMSection_CmdId_gen = SNM_SNM_SECTION_1ST_CMD_ID;
 
 bool onAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 {
@@ -726,7 +730,7 @@ bool onAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 	return false;
 }
 
-static KbdSectionInfo g_SNMSection = {
+/*JFB static*/ KbdSectionInfo g_SNMSection = {
   0x10000101, "S&M Extension",
   g_SNMSection_kbdCmds, 0,
   g_SNMSection_defKeys, 0,
@@ -747,7 +751,7 @@ int SNM_SectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)
 		MIDI_COMMAND_T* ct = &g_SNMSection_cmdTable[i]; 
 		if (ct->doCommand)
 		{
-/*JFB no more used (cmd ids are now generated rather than registered in the main section)
+/*JFB no more used
 			if (!(ct->accel.accel.cmd = plugin_register("command_id", (void*)ct->id)))
 				return 0;
 */
@@ -771,7 +775,7 @@ int SNM_SectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)
 	for (i=0; i < nbCmds; i++)
 	{
 		MIDI_COMMAND_T* ct = &g_SNMSection_cmdTable[i];
-		g_SNMSection.action_list[i].text = GetLocalizedActionName(ct->accel.desc, 0, SNM_I8N_ACTION_SEC);
+		g_SNMSection.action_list[i].text = GetLocalizedActionName(ct->accel.desc, 0, "s&m_section_actions");
 		g_SNMSection.action_list[i].cmd = g_SNMSection.def_keys[i].cmd = ct->accel.accel.cmd;
 		g_SNMSection.def_keys[i].key = ct->accel.accel.key;
 		g_SNMSection.def_keys[i].flags = ct->accel.accel.fVirt;
@@ -787,8 +791,7 @@ int SNM_SectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// "Dynamic" actions
-// see g_SNM_dynamicCmdTable's comments
+// "Dynamic" actions, see g_SNM_dynamicCmdTable's comments
 ///////////////////////////////////////////////////////////////////////////////
 
 int SNM_RegisterDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
@@ -832,16 +835,16 @@ void SNM_SaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 		COMMAND_T* ct = &_cmds[i++];
 		nameStr.Set(SWS_CMD_SHORTNAME(ct));
 		Replace02d(nameStr.Get(), 'n');
-		if (ct->menuText != NULL) // is a custom max value specified ?
+		if (ct->menuText != NULL) // is a specific max value defined?
 		{
 			nameStr.Append(" [n <= ");
 			nameStr.Append(ct->menuText);
 			nameStr.Append("!]");
 		}
 
-		// indent things (note: a \t solution would suck here!
+		// indent things (a \t solution would suck here!)
 		str.SetFormatted(BUFFER_SIZE, "%s=%d", ct->id, (int)ct->user);
-		while (str.GetLength() < 32) str.Append(" ");
+		while (str.GetLength() < 40) str.Append(" ");
 		str.Append(" ; ");
 		iniSection.Append(str.Get());
 		iniSection.Append(nameStr.Get());
@@ -867,7 +870,7 @@ void IniFileInit()
 	g_SNMCyclactionIniFn.SetFormatted(BUFFER_SIZE, SNM_CYCLACTION_INI_FILE, GetResourcePath());
 
 	// move from old location if needed/possible
-	WDL_String fn;  // no fast string here: the buffer gets mangeled..
+	WDL_String fn; // no fast string here: the buffer gets mangeled..
 	fn.SetFormatted(BUFFER_SIZE, SNM_OLD_FORMATED_INI_FILE, GetExePath());
 	if (FileExists(fn.Get()))
 		MoveFile(fn.Get(), g_SNMIniFn.Get()); // no check: use the new file whatever happens
@@ -997,7 +1000,7 @@ bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf) {
 	return false;
 }
 
-	
+
 ///////////////////////////////////////////////////////////////////////////////
 // S&M core stuff
 ///////////////////////////////////////////////////////////////////////////////
@@ -1067,7 +1070,7 @@ void SNM_Exit()
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_ScheduledJob (see SNM_CSurfRun())
+// SNM_ScheduledJob, see SNM_CSurfRun()
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_PtrList_DeleteOnDestroy<SNM_ScheduledJob> g_jobs;
@@ -1108,7 +1111,7 @@ void DeleteScheduledJob(int _id)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_MarkerRegionSubscriber (see SNM_CSurfRun())
+// SNM_MarkerRegionSubscriber, see SNM_CSurfRun()
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_PtrList<SNM_MarkerRegionSubscriber> g_mkrRgnSubscribers;
@@ -1137,7 +1140,6 @@ bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
 }
 
 // returns an update mask: 0 if nothing changed, &SNM_MARKER_MASK: marker change, &SNM_REGION_MASK: region change
-// note: just detect project time mode updates + discrete markers/regions updates (that's enough atm)
 int UpdateMarkerRegionCache()
 {
 	int updateFlags=0;

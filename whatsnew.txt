@@ -1,17 +1,7 @@
-The following dialog boxes are now themed:
-+Cue Buss Generator
-+ReaConsole
-+LFO Generator
-+Envelope processor
-+Fill Gaps
-+Label processor
-+Zoom preferences
-+Command parameters
-+Color management
-+Autorender
-+Various prompt/info dialog boxes
-
-Full localization for "Fill gaps" and "Snapshots merge" tools
+Full localization for "Fill gaps", "Snapshots merge" and "ReaConsole" tools
+Main dialog boxes are now themed
+Fixed actions "SWS/S&M: Move selected FX up/down in chain for selected tracks" (broken in vv2.2.0 #3}
+Fixed actions "SWS/S&M: Active MIDI Editor - Save/Restore displayed CC lanes, slot %02d" (broken in vv2.2.0 #3}
 
 !v2.2.0 #15 (June 25, 2012)
 The following windows are now themed:
@@ -23,15 +13,15 @@ The following windows are now themed:
 +Groove Tool
 
 OSX / Live Configs
-+Browse FX presets like on Windows OS
++Browse FX user presets like on Windows OS
 +Support for AU user presets
 
 List views
-+OSX: themable grid lines (almost like on Windows OS)
++OSX: themed grid lines (almost like on Windows OS)
 +OSX: column reordering (drag-drop column headers like on Windows OS)
 +Little fixes
 
-Localization for item/track color and snapshot context menus
+Localization for item/track color and snapshot context menus (thanks neilerua!)
 Removed smooth scroll, please use native version
 
 !v2.2.0 #14 (June 14, 2012)
@@ -45,7 +35,7 @@ The following updates deal with the latter option:
 
 Region Playlist
 +The playlist being played can be different from the displayed one
-+SWS/S&M: Region Playlist #n - Play (where 'n' is in [1; 8], customizable in the S&M.ini file, up to 99 playlists)
++SWS/S&M: Region Playlist #n - Play (where 'n' is in [1; 4], customizable in the S&M.ini file, up to 99 playlists)
 +SWS/S&M: Region Playlist - Set repeat off
 +SWS/S&M: Region Playlist - Set repeat on
 +SWS/S&M: Region Playlist - Toggle repeat

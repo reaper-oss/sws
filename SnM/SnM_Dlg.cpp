@@ -474,7 +474,7 @@ WDL_DLGRET CueBussDlgProc(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam
 					}
 					break;
 				case IDOK:
-					CueTrack(__LOCALIZE("Create cue buss from track selection","sws_undo"), g_cueBussConfId);
+					CueBuss(__LOCALIZE("Create cue buss from track selection","sws_undo"), g_cueBussConfId);
 					return 0;
 				case IDCANCEL:
 					g_cueBussHwnd = NULL; // for proper toggle state report, see openCueBussWnd()

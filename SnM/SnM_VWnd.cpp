@@ -30,6 +30,90 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// SNM_DynamicText
+///////////////////////////////////////////////////////////////////////////////
+
+// split the text into lines (not to do that in OnPaint()) and store them
+void SNM_DynamicSizedText::SetText(const char* _txt, unsigned char _alpha)
+{ 
+	m_lines.Empty(true);
+	m_maxlinelen = -1;
+	m_alpha = _alpha;
+
+	if (_txt && *_txt)
+	{
+		const char* p=_txt, *p2=NULL;
+		while (p2 = FindFirstRN(p))
+		{
+			m_maxlinelen = max(m_maxlinelen, (int)(p2-p)+1); // +1 to get room
+			WDL_FastString* line = new WDL_FastString;
+			line->Append(p, (int)(p2-p));
+			m_lines.Add(line);
+			p = p2+1;
+			if (*p == '\n') p++;
+			if (*p == '\0') break;
+		}
+
+		if (p && *p && !p2) {
+			m_maxlinelen = max(m_maxlinelen, (int)strlen(p)+1); // +1 to get room
+			m_lines.Add(new WDL_FastString(p));
+		}
+	}
+	RequestRedraw(NULL);
+} 
+
+void SNM_DynamicSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
+{
+	RECT r = m_position;
+	r.left += origin_x;
+	r.right += origin_x;
+	r.top += origin_y;
+	r.bottom += origin_y;
+
+	int h = r.bottom-r.top;
+	int w = r.right-r.left;
+	int col = LICE_RGBA(255,255,255, m_alpha);
+	if (ColorTheme* ct = SNM_GetColorTheme())
+		col = LICE_RGBA_FROMNATIVE(ct->main_text, m_alpha);
+
+	if (m_wantBorder)
+		LICE_DrawRect(drawbm,r.left,r.top,w,h,col);
+
+	if (!m_lines.GetSize())
+		return;
+
+	// creating fonts is *super slow* => use a text width estimation
+	int fontHeight = int(h/m_lines.GetSize() + 0.5);
+	while (fontHeight > 5 && (fontHeight*m_maxlinelen*0.55) > w) 
+		fontHeight--;
+
+	if (fontHeight>5)
+	{
+		HFONT lf = CreateFont(fontHeight,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,m_fontName);
+		m_font.SetFromHFont(lf, LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
+		m_font.SetBkMode(TRANSPARENT);
+		m_font.SetTextColor(col);
+
+		int top = r.top + int(h/2 - (fontHeight*m_lines.GetSize())/2 + 0.5);
+		for (int i=0; i < m_lines.GetSize(); i++)
+		{
+			RECT tr = {0,0,0,0};
+			m_font.DrawText(NULL, m_lines.Get(i)->Get(), -1, &tr, DT_CALCRECT);
+			int txtw = tr.right - tr.left;
+			tr.top = top + i*fontHeight;
+			tr.bottom = tr.top+fontHeight;
+			tr.left = r.left + int(w/2 - txtw/2 + 0.5);
+			tr.right = tr.left + txtw;
+			m_font.DrawText(drawbm, m_lines.Get(i)->Get(), -1, &tr, m_alpha<255 ? LICE_DT_USEFGALPHA : 0); // workaround: no ClearType w/ LICE_DT_USEFGALPHA
+		}
+		m_font.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
+		DeleteObject(lf);
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // SNM_ToolbarButton
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -153,14 +237,10 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 {
 	static WDL_VirtualIconButton_SkinConfig skin;
 	IconTheme* it = SNM_GetIconTheme(true); // true: blank & overlay images are recent (v4)
-	if (it && it->toolbar_blank
-/*JFB no! (lazy init behind the scene?)
-		&& it->toolbar_overlay
-*/
-		)
+	if (it && it->toolbar_blank)
 	{
 		skin.image = it->toolbar_blank;
-		skin.olimage = it->toolbar_overlay;
+		skin.olimage = it->toolbar_overlay; // might be NULL!
 		WDL_VirtualIconButton_PreprocessSkinConfig(&skin);
 
 		//JFB!!! most stupid hack since WDL 65568bc (overlay = main image size)
@@ -278,8 +358,7 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, 
 			height=9*2+1;
 		}
 		else if (!strcmp(_comp->GetType(), "SNM_MiniKnob")) {
-			width=21;
-			height=21;
+			width=height=27;
 		}
 
 		if (*_x+width > _r->right-10) // enough horizontal room?
@@ -294,7 +373,7 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, 
 		}
 
 		_y += int(_h/2 - height/2 + 0.5);
-		RECT tr = {*_x, _y, *_x + width, _y+height};
+		RECT tr = {*_x, _y, *_x + width, _y + height};
 		_comp->SetPosition(&tr);
 		*_x = tr.right + _xRoom;
 		_comp->SetVisible(true);

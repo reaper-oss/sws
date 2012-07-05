@@ -60,6 +60,7 @@
 
 #define SNM_INI_FILE_VERSION		6
 #define SNM_LIVECFG_NB_CONFIGS		8
+#define SNM_SNM_SECTION_1ST_CMD_ID	40000
 #define SNM_MAX_TRACK_GROUPS		32
 #define SNM_MAX_CUE_BUSS_CONFS		8
 #define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
@@ -144,6 +145,7 @@ typedef struct MIDI_COMMAND_T {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+extern KbdSectionInfo g_SNMSection;
 extern bool g_lastPlayState, g_lastPauseState, g_lastRecState;
 extern WDL_FastString g_SNMIniFn;
 extern WDL_FastString g_SNMCyclactionIniFn;

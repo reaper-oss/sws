@@ -34,7 +34,7 @@
 // General routing helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB REAPER bug:  best effort, see http://forum.cockos.com/project.php?issueid=2642
+//JFB REAPER bug: best effort, see http://forum.cockos.com/project.php?issueid=2642
 void RefreshRoutingsUI() {
 	TrackList_AdjustWindows(true);
 }
@@ -76,8 +76,8 @@ bool AddReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, 
 
 // _type: 0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
 // _undoMsg: NULL=no undo
-bool CueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showRouting,
-			  int _soloDefeat, char* _trTemplatePath, bool _sendToMaster, int* _hwOuts) 
+bool CueBuss(const char* _undoMsg, const char* _busName, int _type, bool _showRouting,
+			 int _soloDefeat, char* _trTemplatePath, bool _sendToMaster, int* _hwOuts) 
 {
 	if (!SNM_CountSelectedTracks(NULL, false))
 		return false;
@@ -194,23 +194,23 @@ bool CueTrack(const char* _undoMsg, const char* _busName, int _type, bool _showR
 	return updated;
 }
 
-int g_cueBusslastSettingsId = 0; // 0 for ascendant compatibility
+int g_cueBussLastSettingsId = 0; // 0 for ascendant compatibility
 
-bool CueTrack(const char* _undoMsg, int _confId)
+bool CueBuss(const char* _undoMsg, int _confId)
 {
 	if (_confId<0 || _confId>=SNM_MAX_CUE_BUSS_CONFS)
-		_confId = g_cueBusslastSettingsId;
+		_confId = g_cueBussLastSettingsId;
 	char busName[BUFFER_SIZE]="", trTemplatePath[BUFFER_SIZE]="";
 	int reaType, soloGrp, hwOuts[8];
 	bool trTemplate,showRouting,sendToMaster;
 	ReadCueBusIniFile(_confId, busName, &reaType, &trTemplate, trTemplatePath, &showRouting, &soloGrp, &sendToMaster, hwOuts);
-	bool updated = CueTrack(_undoMsg, busName, reaType, showRouting, soloGrp, trTemplate?trTemplatePath:NULL, sendToMaster, hwOuts);
-	g_cueBusslastSettingsId = _confId;
+	bool updated = CueBuss(_undoMsg, busName, reaType, showRouting, soloGrp, trTemplate?trTemplatePath:NULL, sendToMaster, hwOuts);
+	g_cueBussLastSettingsId = _confId;
 	return updated;
 }
 
-void CueTrack(COMMAND_T* _ct) {
-	CueTrack(SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
+void CueBuss(COMMAND_T* _ct) {
+	CueBuss(SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 
 void ReadCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts)

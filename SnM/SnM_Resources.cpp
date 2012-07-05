@@ -551,7 +551,7 @@ bool SNM_ResourceView::IsEditListItemAllowed(SWS_ListItem* item, int iCol)
 					case COL_NAME: { // file renaming
 						char fn[BUFFER_SIZE] = "";
 						return (GetSlotList()->GetFullPath(slot, fn, BUFFER_SIZE) && FileExists(fn));
-					}					
+					}
 					case COL_COMMENT:
 						return true;
 				}
@@ -596,7 +596,7 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 								if (!SNM_DeleteFile(newFn, false))
 									break;
 							}
-							else 
+							else
 								break;
 						}
 
@@ -1000,7 +1000,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				if (*cFilter == '\0') 
 					SetWindowText(hFilt, FILTER_DEFAULT_STR);
 			}
-#endif                
+#endif
 			break;
 
 		// ***** Common *****
@@ -1036,7 +1036,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					GetSlotList()->GetFullPath(GetSlotList()->Find(item2), fn2, BUFFER_SIZE))
 				{
 					WDL_FastString prmStr;
-					prmStr.SetFormatted(BUFFER_SIZE*3, " \"%s\"  \"%s\"", fn1, fn2);
+					prmStr.SetFormatted(BUFFER_SIZE*3, " \"%s\" \"%s\"", fn1, fn2);
 					_spawnl(_P_NOWAIT, g_SNMDiffToolFn.Get(), prmStr.Get(), NULL);
 				}
 			}
@@ -1864,7 +1864,6 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 	}
 }
 
-//JFB hard coded labels.. ideally it should be the same than related action names
 bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
 {
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1))
@@ -2439,7 +2438,8 @@ int ResourceViewInit()
 	//JFB -> add new resource types here..
 
 #ifdef _WIN32
-	g_slots.Add(new FileSlotList("ColorThemes", __LOCALIZE("theme","sws_DLG_150"), "ReaperthemeZip", false, false, true)); // keep this item as the last one!
+	// keep this item as the last one!
+	g_slots.Add(new FileSlotList("ColorThemes", __LOCALIZE("theme","sws_DLG_150"), "ReaperthemeZip", false, false, true));
 #endif
 	AddCustomTypesFromIniFile();
 

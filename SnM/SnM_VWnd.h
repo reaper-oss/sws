@@ -35,6 +35,25 @@
 #define SNM_DEF_VWND_X_STEP			12
 
 
+class SNM_DynamicSizedText : public WDL_VWnd {
+public:
+	SNM_DynamicSizedText(const char* _fontName=SWSDLG_TYPEFACE, bool _wantBorder=false) : WDL_VWnd() { 
+		m_fontName=_fontName; m_alpha=255; m_maxlinelen=-1; m_wantBorder=_wantBorder;
+	}
+	virtual ~SNM_DynamicSizedText() {}
+	virtual const char *GetType() { return "SNM_DynamicText"; }
+	virtual void SetText(const char* _txt, unsigned char _alpha = 255);
+	virtual void OnPaint(LICE_IBitmap* _drawbm, int _origin_x, int _origin_y, RECT* _cliprect);
+	virtual void SetBorder(bool _b) { m_wantBorder = _b; }
+protected:
+	LICE_CachedFont m_font;
+	const char* m_fontName;
+	unsigned char m_alpha;
+	WDL_PtrList_DeleteOnDestroy<WDL_FastString> m_lines;
+	int m_maxlinelen;
+	bool m_wantBorder;
+};
+
 class SNM_ImageVWnd : public WDL_VWnd {
 public:
 	SNM_ImageVWnd(LICE_IBitmap* _img = NULL) : WDL_VWnd() { SetImage(_img); }
@@ -84,13 +103,13 @@ public:
 	virtual ~SNM_MiniAddDelButtons() { RemoveAllChildren(false); }
 	virtual const char *GetType() { return "SNM_MiniAddDelButtons"; }
 	virtual void SetIDs(int _id, int _addId, int _delId) { SetID(_id); m_btnPlus.SetID(_addId); m_btnMinus.SetID(_delId); }
-	virtual void SetPosition(const RECT *r)
+	virtual void SetPosition(const RECT* _r)
 	{
-		m_position=*r; 
-		RECT rr = {0, 0, 9, 9};
-		m_btnPlus.SetPosition(&rr);
-		RECT rr2 = {0, 10, 9, 19};
-		m_btnMinus.SetPosition(&rr2);
+		m_position = *_r; 
+		RECT r1 = {0, 0, 9, 9};
+		m_btnPlus.SetPosition(&r1);
+		RECT r2 = {0, 10, 9, 19};
+		m_btnMinus.SetPosition(&r2);
 	}
 protected:
 	SNM_AddDelButton m_btnPlus, m_btnMinus;
@@ -108,7 +127,10 @@ public:
 
 class SNM_MiniKnob : public WDL_VirtualSlider {
 public:
-	SNM_MiniKnob() : WDL_VirtualSlider() {}
+	SNM_MiniKnob() : WDL_VirtualSlider() {
+		SetKnobBias(1); // force knob
+		SetScrollMessage(WM_VSCROLL);
+	}
 	virtual ~SNM_MiniKnob() {}
 	virtual const char *GetType() { return "SNM_MiniKnob"; }
 };

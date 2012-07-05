@@ -265,7 +265,7 @@ BEGIN
     DEFPUSHBUTTON   "&OK",IDOK,198,55,50,14
     PUSHBUTTON      "&Ignore",IDCANCEL,145,55,50,14
     COMBOBOX        IDC_TRACK,5,37,243,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Static",IDC_TEXT,5,3,243,15
+    LTEXT           "",IDC_TEXT,5,3,243,15
     LTEXT           "Select a new receive track:",IDC_STATIC,5,24,243,8
     PUSHBUTTON      "&Delete Send",IDC_DELETE,92,55,50,14
 END
@@ -312,7 +312,7 @@ BEGIN
     LTEXT           "Take",IDC_STATIC,5,5,75,8
     LTEXT           "Source media file",IDC_STATIC,5,40,55,8
     EDITTEXT        IDC_FILENAME_EDIT,5,55,165,14,ES_AUTOHSCROLL
-    CONTROL         "Static",IDC_FULLFILENAME,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,5,75,215,10
+    CONTROL         "",IDC_FULLFILENAME,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,5,75,215,10
     LTEXT           "Please note! Renaming source media files is currently not undoable in REAPER! Also other projects may use the same media.",IDC_STATIC,5,155,200,30
     PUSHBUTTON      "Rename source file",IDC_RENAMEMEDIA,5,130,125,14
 END
@@ -474,7 +474,7 @@ BEGIN
     EDITTEXT        IDC_EDIT2,72,78,24,14,ES_AUTOHSCROLL
     LTEXT           "Disk space required for PCM audio :",IDC_STATIC,6,102,120,8
     EDITTEXT        IDC_EDIT3,54,132,40,14,ES_AUTOHSCROLL | NOT WS_VISIBLE
-    LTEXT           "Static",IDC_STATIC7,6,114,60,8
+    LTEXT           "",IDC_STATIC7,6,114,60,8
 END
 
 IDD_CSPVOC_CONF DIALOGEX 0, 0, 186, 95
@@ -580,7 +580,7 @@ BEGIN
     LTEXT           "seconds",IDC_STATIC,95,55,28,8
     CONTROL         "Item end",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,10,30,43,10
     GROUPBOX        "Add time interval to",IDC_STATIC,5,5,85,40
-    CONTROL         "Radio3",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON | NOT WS_VISIBLE,75,20,39,10
+    CONTROL         "",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON | NOT WS_VISIBLE,75,20,39,10
 END
 
 IDD_TAKEFINDER DIALOGEX 0, 0, 186, 95
@@ -595,7 +595,7 @@ BEGIN
     CONTROL         "Search take names",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,41,77,10
     CONTROL         "Only active takes",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,85,41,71,10
     CONTROL         "Search source media file names",IDC_CHECK3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,5,55,116,10
-    LTEXT           "Static",IDC_STATIC1,5,5,170,8
+    LTEXT           "",IDC_STATIC1,5,5,170,8
 END
 
 IDD_ITEM_INSPECTOR DIALOGEX 0, 0, 319, 11
@@ -604,7 +604,7 @@ EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "Item/track info"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    LTEXT           "Static",IDC_IISTATIC1,0,0,318,8
+    LTEXT           "",IDC_IISTATIC1,0,0,318,8
 END
 
 IDD_ITEMPOSREMAP DIALOGEX 0, 0, 192, 52
@@ -692,7 +692,7 @@ CAPTION "Drive scan in progress..."
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     PUSHBUTTON      "Abort",IDC_ABORT,5,20,50,14
-    LTEXT           "Static",IDC_SCANFILE,5,5,370,8
+    LTEXT           "",IDC_SCANFILE,5,5,370,8
 END
 
 IDD_SPREADITEMS DIALOGEX 0, 0, 177, 65
@@ -913,7 +913,7 @@ BEGIN
     CONTROL         "Solo defeat",IDC_CHECK4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,150,186,52,10
     DEFPUSHBUTTON   "Create cue buss",IDOK,5,206,60,14
     PUSHBUTTON      "Close",IDCANCEL,69,206,60,14
-    LTEXT           "Cue buss settings:",IDC_STATIC,215,206,60,14,SS_CENTERIMAGE
+    LTEXT           "Cue buss settings:",IDC_STATIC,210,206,60,14,SS_CENTERIMAGE | SS_RIGHT
     COMBOBOX        IDC_COMBO,275,207,40,13,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -1025,7 +1025,7 @@ BEGIN
     LTEXT           "Crossfade length:",IDC_STATIC,140,74,60,8
     EDITTEXT        IDC_XFADE_LEN2,197,72,31,13,ES_AUTOHSCROLL
     LTEXT           "ms",IDC_STATIC,234,74,10,8
-    LTEXT           "Fade shapes:",IDC_STATIC,132,100,48,8
+    LTEXT           "Fade shapes:",IDC_STATIC,132,100,48,8,SS_CENTERIMAGE | SS_RIGHT
     COMBOBOX        IDC_FADE_SHAPE,179,98,77,13,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "OK",IDOK,6,98,34,14
     PUSHBUTTON      "Save",IDC_SAVE,45,98,34,14

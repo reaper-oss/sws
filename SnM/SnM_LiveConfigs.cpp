@@ -352,9 +352,10 @@ void SNM_LiveConfigsView::SetItemText(SWS_ListItem* _item, int _iCol, const char
 
 void SNM_LiveConfigsView::GetItemList(SWS_ListItemList* pList)
 {
-	if (WDL_PtrList<MidiLiveItem>* ccConfs = &g_liveConfigs.Get()->Get(g_configId)->m_ccConfs)
-		for (int i=0; i < ccConfs->GetSize(); i++)
-			pList->Add((SWS_ListItem*)ccConfs->Get(i));
+	if (MidiLiveConfig* lc = g_liveConfigs.Get()->Get(g_configId))
+		if (WDL_PtrList<MidiLiveItem>* ccConfs = &lc->m_ccConfs)
+			for (int i=0; i < ccConfs->GetSize(); i++)
+				pList->Add((SWS_ListItem*)ccConfs->Get(i));
 }
 
 // gotcha! several calls for one selection change (eg. 3 unselected rows + 1 new selection)
@@ -399,10 +400,6 @@ void SNM_LiveConfigsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 	{
 		switch(iCol)
 		{
-			case COL_CC:
-				if (g_pLiveConfigsWnd)
-					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_PERFORM_MSG, 0);
-				break;
 			case COL_TRT:
 				if (g_pLiveConfigsWnd && pItem->m_track)
 					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_LOAD_TRACK_TEMPLATE_MSG, 0);
@@ -410,6 +407,10 @@ void SNM_LiveConfigsView::OnItemDblClk(SWS_ListItem* item, int iCol)
 			case COL_FXC:
 				if (g_pLiveConfigsWnd && pItem->m_track)
 					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_LOAD_FXCHAIN_MSG, 0);
+				break;
+			default:
+				if (g_pLiveConfigsWnd)
+					g_pLiveConfigsWnd->OnCommand(SNM_LIVECFG_PERFORM_MSG, 0);
 				break;
 		}
 	}

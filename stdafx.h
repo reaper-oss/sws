@@ -92,8 +92,6 @@
 #include "reaper/sws_rpf_wrapper.h"	// Must be before lice.h
 #include "reaper/icontheme.h"		// Must be after sws_rpf_wrapper (reaper_plugin_functions.h) because it includes lice.h
 
-#include "../WDL/lice/lice.h"
-
 // Headers that are used "enough" to be worth of being precompiled,
 // at the expense of needing recompile of the headers on change
 #include "Utility/SectionLock.h"

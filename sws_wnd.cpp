@@ -376,6 +376,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		case WM_LBUTTONDBLCLK:
 			if (!OnMouseDblClick(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) &&
+				!m_parentVwnd.OnMouseDblClick(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) &&
 				m_parentVwnd.OnMouseDown(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam)) > 0)
 			{
 				m_parentVwnd.OnMouseUp(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));

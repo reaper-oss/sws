@@ -97,7 +97,7 @@ bool replaceCCLanes(const char* _newCClanes)
 			if (p.GetTakeChunk(tkIdx, &takeChunk, &tkPos, &tklen))
 			{
 				SNM_ChunkParserPatcher ptk(&takeChunk, false);
-				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", 4, 0, 0);
+				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", 0, 0);
 				if (pos > 0)
 				{
 					pos--; // see SNM_ChunkParserPatcher
@@ -168,12 +168,12 @@ void MESaveCCLanes(COMMAND_T* _ct)
 
 				// check start/end position of lanes in the chunk
 				int firstPos = 0, lastPos = 0, laneCpt = 0;
-				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", -1, laneCpt, 0);
+				int pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", laneCpt, 0);
 				while (pos > 0) 
 				{
 					lastPos = pos;
 					if (!firstPos) firstPos = pos;
-					pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", -1, ++laneCpt, 0);
+					pos = ptk.Parse(SNM_GET_CHUNK_CHAR, 1, "SOURCE", "VELLANE", ++laneCpt, 0);
 				}
 
 				if (firstPos > 0)

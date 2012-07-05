@@ -263,8 +263,8 @@ bool PatchSelItemsFXState(const char * _undoMsg, int _mode, int _token, int _fxI
 				// API LIMITATION: cannot restore shown FX here (contrary to track FX)
 				if (updt && g_buggyPlugSupport && _token == 2)
 				{
-					p.ParsePatch(SNM_SETALL_CHUNK_CHAR_EXCEPT,2,"TAKEFX","FLOAT",5,255,0,(void*)"FLOATPOS"); // unfloat all
-					p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "TAKEFX", "SHOW",2,0,1,(void*)"0"); // no FX shown..
+					p.ParsePatch(SNM_SETALL_CHUNK_CHAR_EXCEPT,2,"TAKEFX","FLOAT",255,0,(void*)"FLOATPOS"); // unfloat all
+					p.ParsePatch(SNM_SET_CHUNK_CHAR, 2, "TAKEFX", "SHOW",0,1,(void*)"0"); // no FX shown..
 				}
 */
 			}
@@ -553,13 +553,13 @@ void MoveFX(COMMAND_T* _ct)
 					if (p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM") > 0)
 					{
 						SNM_ChunkParserPatcher pfxc(&chainChunk, false);
-						int p1 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel,0);
+						int p1 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",sel,0);
 						if (p1>0)
 						{
 							p1--;
 
 							// locate end of fx
-							int p2 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel+1,0);
+							int p2 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",sel+1,0);
 							if (p2 > 0)	p2--;
 							else p2 = pfxc.GetChunk()->GetLength()-2; // -2 for ">\n"
 
@@ -569,7 +569,7 @@ void MoveFX(COMMAND_T* _ct)
 							pfxc.GetChunk()->DeleteSub(p1, p2-p1);
 							
 							// move fx
-							int p3 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",3,sel+dir,0);
+							int p3 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",sel+dir,0);
 							if (p3>0) pfxc.GetChunk()->Insert(fxChunk.Get(), --p3);
 							else if (dir == 1) pfxc.GetChunk()->Insert(fxChunk.Get(), pfxc.GetChunk()->GetLength()-2);
 

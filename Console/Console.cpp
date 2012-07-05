@@ -61,6 +61,7 @@ typedef struct CUSTOM_COMMAND
 
 WDL_PtrList<CUSTOM_COMMAND> g_customCommands;
 
+//!WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_100
 static console_COMMAND_T g_commands[NUM_COMMANDS] = 
 {
 	{ SOLO_ENABLE,    '+', 'o',  0, "Enable solo on " ,      0 },
@@ -101,6 +102,7 @@ static console_COMMAND_T g_commands[NUM_COMMANDS] =
 	{ HELP_CMD,         0, '?', -1, "http://www.standingwaterstudios.com/reaconsole.php", 0 },
 	{ UNKNOWN_COMMAND,  0,   0, -1, "Enter a command...", 0 },
 };
+//!WANT_LOCALIZE_STRINGS_END
 
 // Split into various categories, independent of actually having a correct and/or finished command string
 // Basically just a fancy tokenizer
@@ -236,7 +238,7 @@ void ParseTrackId(char* strId, bool bReset)
 	}
 
 	// If the string is "all" or exactly "*", select all tracks.
-	if (_stricmp(strId,"all") == 0 || strcmp(strId, "*") == 0)
+	if (_stricmp(strId, __LOCALIZE("all","sws_DLG_100")) == 0 || strcmp(strId, "*") == 0)
 		for (track = 0; track < GetNumTracks(); track++)
 			g_selTracks.Get()[track] = 1;
 
@@ -530,25 +532,25 @@ void ProcessCommand(CONSOLE_COMMAND command, const char* args)
 				i = -1;
 				if (_stricmp(args, "red") == 0)
 					i = RGB(255, 0, 0);
-				else if (_stricmp(args, "blue") == 0)
+				else if (_stricmp(args, __LOCALIZE("blue","sws_DLG_100")) == 0)
 					i = RGB(0, 0, 255);
-				else if (_stricmp(args, "green") == 0)
+				else if (_stricmp(args, __LOCALIZE("green","sws_DLG_100")) == 0)
 					i = RGB(0, 255, 0);
-				else if (_stricmp(args, "grey") == 0 || _stricmp(args, "gray") == 0)
+				else if (_stricmp(args, __LOCALIZE("grey","sws_DLG_100")) == 0 || _stricmp(args, __LOCALIZE("gray","sws_DLG_100")) == 0)
 					i = RGB(128, 128, 128);
-				else if (_stricmp(args, "black") == 0)
+				else if (_stricmp(args, __LOCALIZE("black","sws_DLG_100")) == 0)
 					i = RGB(0, 0, 0);
-				else if (_stricmp(args, "white") == 0)
+				else if (_stricmp(args, __LOCALIZE("white","sws_DLG_100")) == 0)
 					i = RGB(255, 255, 255);
-				else if (_stricmp(args, "yellow") == 0)
+				else if (_stricmp(args, __LOCALIZE("yellow","sws_DLG_100")) == 0)
 					i = RGB(255, 255, 0);
-				else if (_stricmp(args, "cyan") == 0)
+				else if (_stricmp(args, __LOCALIZE("cyan","sws_DLG_100")) == 0)
 					i = RGB(0, 255, 255);
-				else if (_stricmp(args, "purple") == 0 || _stricmp(args, "violet") == 0)
+				else if (_stricmp(args, __LOCALIZE("purple","sws_DLG_100")) == 0 || _stricmp(args, "violet") == 0)
 					i = RGB(255, 0, 255);
-				else if (_stricmp(args, "orange") == 0)
+				else if (_stricmp(args, __LOCALIZE("orange","sws_DLG_100")) == 0)
 					i = RGB(255, 128, 0);
-				else if (_stricmp(args, "magenta") == 0)
+				else if (_stricmp(args, __LOCALIZE("magenta","sws_DLG_100")) == 0)
 					i = RGB(255, 0, 128);
 				else if (strstr(args, "0x"))
 				{
@@ -618,9 +620,15 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args)
 {
 	static char status[512];
 	if (command >= NUM_COMMANDS)
-		return "Internal error, contact SWS";
+		return __LOCALIZE("Internal error, contact SWS","sws_DLG_100");
 
-	int n = sprintf(status, g_commands[command].cHelpPrefix);
+	int n = sprintf(status, __localizeFunc(g_commands[command].cHelpPrefix, "sws_DLG_100", 0));
+	// add space if localized (trailing ' ' cannot be retrieved from LangPack files)
+	if (n>0 && n<(sizeof(status)-1) && status[n] != ' ')
+	{
+		strcat(status, " ");
+		n++;
+	}
 
 	if (g_commands[command].iNumArgs < 0)
 		return status;
@@ -655,7 +663,7 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args)
 				}
 
 			if (n == previous_n)
-				n += sprintf(status + n, "nothing");
+				n += sprintf(status + n, __LOCALIZE("nothing","sws_DLG_100"));
 			else
 			{
 				status[n-2] = 0; // take off last ", "
@@ -665,7 +673,7 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args)
 	}
 
 	if (args && args[0] && g_commands[command].iNumArgs > 0)
-		n += sprintf(status + n, g_commands[command].cHelpSuffix, args);
+		n += sprintf(status + n, __localizeFunc(g_commands[command].cHelpSuffix, "sws_DLG_100", LOCALIZE_FLAG_VERIFY_FMTS), args);
 
 	return status;
 }
@@ -720,7 +728,7 @@ INT_PTR WINAPI doConsole(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			case IDOK:
 				ProcessCommand(command, pArgs);
 				char cUndo[256];
-				_snprintf(cUndo, 256, "ReaConsole command %s", strCommand);
+				_snprintf(cUndo, 256, __LOCALIZE("ReaConsole command %s","sws_undo"), strCommand);
 				Undo_OnStateChangeEx(cUndo, UNDO_STATE_TRACKCFG, -1);
 				// Don't close the window if ctrl-enter was pressed
 				if (GetAsyncKeyState(VK_CONTROL) & 0x8000)
@@ -773,7 +781,7 @@ void RunCommand(COMMAND_T* ct)
 	ParseTrackId(pTrackId);
 	ProcessCommand(command, pArgs);
 	char cUndo[256];
-	_snprintf(cUndo, 256, "ReaConsole custom command %s", strCommand);
+	_snprintf(cUndo, 256, __LOCALIZE("ReaConsole custom command %s","sws_undo"), strCommand);
 	Undo_OnStateChangeEx(cUndo, UNDO_STATE_TRACKCFG, -1);
 
 }

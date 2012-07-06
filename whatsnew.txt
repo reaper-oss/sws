@@ -1,7 +1,7 @@
 Full localization for "Fill gaps", "Snapshots merge" and "ReaConsole" tools
 Main dialog boxes are now themed
-Fixed actions "SWS/S&M: Move selected FX up/down in chain for selected tracks" (broken in vv2.2.0 #3}
-Fixed actions "SWS/S&M: Active MIDI Editor - Save/Restore displayed CC lanes, slot %02d" (broken in vv2.2.0 #3}
+Fixed actions "SWS/S&M: Move selected FX up/down in chain for selected tracks" (broken in v2.2.0 #3}
+Fixed actions "SWS/S&M: Active MIDI Editor - Save/Restore displayed CC lanes, slot n" (broken in v2.2.0 #3}
 
 !v2.2.0 #15 (June 25, 2012)
 The following windows are now themed:

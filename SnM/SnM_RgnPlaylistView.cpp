@@ -1295,13 +1295,19 @@ static project_config_extension_t g_projectconfig = {
 
 int RegionPlaylistInit()
 {
+	// load prefs
+	g_repeatPlaylist = (GetPrivateProfileInt("RegionPlaylist", "Repeat", 0, g_SNMIniFn.Get()) == 1);
+
 	g_pRgnPlaylistWnd = new SNM_RegionPlaylistWnd();
 	if (!g_pRgnPlaylistWnd || !plugin_register("projectconfig", &g_projectconfig))
 		return 0;
 	return 1;
 }
 
-void RegionPlaylistExit() {
+void RegionPlaylistExit()
+{
+	// save prefs
+	WritePrivateProfileString("RegionPlaylist", "Repeat", g_repeatPlaylist?"1":"0", g_SNMIniFn.Get()); 
 	DELETE_NULL(g_pRgnPlaylistWnd);
 }
 

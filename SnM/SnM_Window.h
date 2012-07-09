@@ -36,7 +36,6 @@ HWND GetReaWindowByTitle(const char* _title);
 void ShowThemeHelper(COMMAND_T*);
 HWND GetActionListBox(char* _currentSection, int _sectionSz);
 int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc = NULL, int _descSize = -1);
-bool SuckyLearnAction(int _cmdId);
 void ShowFXChain(COMMAND_T*);
 void HideFXChain(COMMAND_T*);
 void ToggleFXChain(COMMAND_T*);

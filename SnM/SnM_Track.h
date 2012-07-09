@@ -75,9 +75,6 @@ bool ApplyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmplt, bool _itemsFrom
 void ImportTrackTemplateSlot(int _slotType, const char* _title, int _slot);
 void ApplyTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _itemsFromTmplt, bool _envsFromTmplt);
 void ReplacePasteItemsTrackTemplateSlot(int _slotType, const char* _title, int _slot, bool _paste);
-#ifdef _SNM_MISC
-void ReplaceItemsInIntervalTrackTemplateSlot(int _slotType, const char* _title, int _slot, double _pos1, double _pos2);
-#endif
 void LoadApplyTrackTemplateSlot(COMMAND_T*);
 void LoadApplyTrackTemplateSlotWithItemsEnvs(COMMAND_T*);
 void LoadImportTrackTemplateSlot(COMMAND_T*);

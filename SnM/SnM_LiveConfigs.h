@@ -106,9 +106,6 @@ protected:
 	WDL_VirtualComboBox m_cbConfig, m_cbInputTr;
 	WDL_VirtualIconButton m_btnEnable, m_btnMuteOthers, m_btnAutoSelect;
 	WDL_VirtualStaticText m_txtConfig, m_txtInputTr;
-#ifdef _SNM_MISC // wip
-	SNM_MiniKnob m_knob;
-#endif
 };
 
 class SNM_MidiLiveScheduledJob : public SNM_ScheduledJob {

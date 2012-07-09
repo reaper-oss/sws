@@ -773,8 +773,9 @@ extern "C"
 			ERR_RETURN("Autorender init error\n")
 		if (!IXInit())
 			ERR_RETURN("IX init error\n")
-		if (!SNM_Init(rec)) // keep it as the last init (for cyle actions)
-			ERR_RETURN("S&M init error\n")
+		if (!SNM_HasExtension())
+			if (!SNM_Init(rec)) // keep it as the last init (for cyle actions)
+				ERR_RETURN("S&M init error\n")
 
     	if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
 			ERR_RETURN("Menu hook error\n")

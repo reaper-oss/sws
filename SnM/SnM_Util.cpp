@@ -313,21 +313,6 @@ bool SaveBin(const char* _fn, const WDL_HeapBuf* _hb)
 	return ok;
 }
 
-bool TranscodeFileToFile64(const char* _outFn, const char* _inFn)
-{
-	bool ok = false;
-	WDL_HeapBuf* hb = LoadBin(_inFn); 
-	if (hb && hb->GetSize())
-	{
-		ProjectStateContext* ctx = ProjectCreateFileWrite(_outFn);
-		cfg_encode_binary(ctx, hb->Get(), hb->GetSize());
-		delete ctx;
-		ok = FileExists(_outFn);
-	}
-	delete hb;
-	return ok;
-}
-
 // returns NULL if failed, otherwise it's up to the caller to free the returned buffer
 WDL_HeapBuf* TranscodeStr64ToHeapBuf(const char* _str64)
 {

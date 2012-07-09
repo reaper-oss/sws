@@ -436,7 +436,7 @@ void PasteTake(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Take lanes: clear take, build lanes, ...
+// Take lanes: clear take, activate lanes, ...
 ///////////////////////////////////////////////////////////////////////////////
 
 //JFB!!! TODO: replace Padre's MidiItemProcessor which has bugs, e.g. slip edited MIDI items
@@ -483,120 +483,6 @@ void SetEmptyTakeChunk(WDL_FastString* _chunk, int _recPass, int _color, bool _v
 		_chunk->Append("<SOURCE EMPTY\n");
 		_chunk->Append(">\n");
 	}
-}
-
-// !_undoTitle: no undo point
-// _mode: 0=for selected tracks, 1=for selected items
-int BuildLanes(const char* _undoTitle, int _mode) 
-{
-	int updates = RemoveEmptyTakes((const char*)NULL, true, false, (_mode==0), (_mode==1));
-	bool badRecPass = false;
-	for (int i = 1; i <= GetNumTracks(); i++) // skip master
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (tr && (_mode || (!_mode && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
-		{
-			WDL_PtrList<void> items;
-			WDL_IntKeyedArray<int> recPassColors; 
-			WDL_PtrList_DeleteOnDestroy<int> itemRecPasses(free);
-			int maxRecPass = -1;
-
-			// Get items, record pass ids & take colors in one go
-			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
-			{
-				MediaItem* item = GetTrackMediaItem(tr,j);
-				if (item && (!_mode || (_mode && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))))
-				{
-					int* recPasses = new int[SNM_RECPASSPARSER_MAX_TAKES];
-					int takeColors[SNM_RECPASSPARSER_MAX_TAKES];
-
-					SNM_RecPassParser p(item, CountTakes(item));
-					int itemMaxRecPass = p.GetMaxRecPass(recPasses, takeColors); 
-					maxRecPass = max(itemMaxRecPass, maxRecPass);
-
-					// 1st loop to check rec pass ids
-					bool badRecPassItem = false;
-					for (int k=0; !badRecPassItem && k < CountTakes(item) && k < SNM_RECPASSPARSER_MAX_TAKES; k++)
-						badRecPassItem = (recPasses[k] == 0);
-
-					badRecPass |= badRecPassItem;
-					if (!badRecPassItem)
-					{
-						items.Add(item);
-						itemRecPasses.Add(recPasses);
-						// 2nd loop to *update* colors by rec pass id
-						for (int k=0; k < CountTakes(item) && k < SNM_RECPASSPARSER_MAX_TAKES; k++)
-								recPassColors.Insert(recPasses[k], takeColors[k]);
-					}
-				}
-			}
-
-			WDL_PtrList_DeleteOnDestroy<SNM_TakeParserPatcher> ps; // auto commit on destroy!
-			for (int j = 0; j < items.GetSize(); j++)
-			{
-				MediaItem* item = (MediaItem*)items.Get(j);
-				SNM_TakeParserPatcher* p = new SNM_TakeParserPatcher(item, CountTakes(item));
-				ps.Add(p);
-
-				WDL_PtrList_DeleteOnDestroy<WDL_FastString> chunks;
-				for (int k=0; k < maxRecPass; k++)
-					chunks.Add(new WDL_FastString());
-
-				// Optimz: use a cache for take chunks
-				WDL_IntKeyedArray<char*> oldChunks(freecharptr);
-				int tkIdx = 0;					
-				while (tkIdx < CountTakes(item)) {
-					WDL_FastString c;
-					oldChunks.Insert(tkIdx, _strdup(p->GetTakeChunk(tkIdx, &c) ? c.Get() : ""));
-					tkIdx++;
-				}
-
-				// Create 'maxRecPass' take chunks (ordered, stuffing with empty takes)
-				int* recPasses = itemRecPasses.Get(j);
-				for (int k=1; k <= maxRecPass; k++)
-				{
-					tkIdx = 0;					
-					bool found = false;
-					while (tkIdx < CountTakes(item)) 
-					{
-						if (recPasses[tkIdx] == k) {
-							chunks.Get(k-1)->Set(oldChunks.Get(tkIdx));
-							found = true;
-							break;
-						}
-						tkIdx++;
-					}
-
-					if (!found)
-						SetEmptyTakeChunk(chunks.Get(k-1), k, recPassColors.Get(k));
-				}
-
-				// insert re-ordered takes..
-				int insertPos=-1, k2=0;
-				for (int k=0; k < chunks.GetSize(); k++) 
-				{
-					if (recPassColors.Get(k+1, -1) != -1) //.. but skip empty lanes
-					{
-						insertPos = p->InsertTake(k2, chunks.Get(k), insertPos);
-						if (insertPos > 0)	{
-							updates++;
-							k2++;
-						}
-					}
-				}
-
-				// remove old takes
-				if (updates)
-					p->GetChunk()->DeleteSub(insertPos, strlen((char*)ps.Get(j)->GetChunk()->Get()+insertPos) - 2); //-2 for >\n
-			}
-		}
-	}
-	if (updates > 0) {
-		UpdateTimeline();
-		if (_undoTitle)
-			Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
-	}
-	return (badRecPass ? -1 : updates);
 }
 
 // primitive (no undo)
@@ -708,55 +594,6 @@ void ClearTake(COMMAND_T* _ct)
 	}
 }
 
-#ifdef _SNM_MISC // deprecated: native actions "Rotate take lanes forward/backward" added in REAPER v3.67
-void MoveTakes(COMMAND_T* _ct)
-{
-	bool updated = false;
-	int dir = (int)_ct->user;
-	for (int i = 1; i <= GetNumTracks(); i++) // skip master
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-		{
-			for (int j = 0; tr && j < GetTrackNumMediaItems(tr); j++)
-			{
-				MediaItem* item = GetTrackMediaItem(tr,j);
-				int newActive = 0;
-				if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
-				{		
-					SNM_TakeParserPatcher p(item, CountTakes(item));
-					int active = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
-					int nbTakes = CountTakes(item);
-					if (dir == 1)
-					{
-						newActive = (active == (nbTakes-1) ? 0 : (active+1));
-						// Remove last take and re-add it as 1st one
-						WDL_FastString chunk;
-						updated = p.RemoveTake(nbTakes-1, &chunk);
-						if (updated)
-							p.InsertTake(0, &chunk);
-					}
-					else if (dir == -1)
-					{
-						newActive = (!active ? (nbTakes-1) : (active-1));
-						// Remove 1st take and re-add it as last one
-						WDL_FastString chunk;
-						updated = p.RemoveTake(0, &chunk);
-						if (updated)
-							p.AddLastTake(&chunk);
-					}
-				}
-				GetSetMediaItemInfo(item, "I_CURTAKE", &newActive);
-			}
-		}
-	}
-	if (updated) {
-		UpdateTimeline();
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
-	}
-}
-#endif
-
 void MoveActiveTake(COMMAND_T* _ct)
 {
 	bool updated = false;
@@ -799,11 +636,6 @@ void MoveActiveTake(COMMAND_T* _ct)
 		UpdateTimeline();
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
-}
-
-void BuildLanes(COMMAND_T* _ct) {
-	if (BuildLanes(SWS_CMD_SHORTNAME(_ct), (int)_ct->user) < 0)
-		MessageBox(GetMainHwnd(), __LOCALIZE("Some items were ignored, probable causes:\n- Items not recorded or recorded before REAPER v3.66 (no record pass id)\n- Imploded takes with duplicated record pass ids","sws_mbox"), __LOCALIZE("S&M - Warning","sws_mbox"), MB_OK);
 }
 
 void ActivateLaneFromSelItem(COMMAND_T* _ct)

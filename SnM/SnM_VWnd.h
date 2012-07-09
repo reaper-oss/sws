@@ -34,26 +34,6 @@
 
 #define SNM_DEF_VWND_X_STEP			12
 
-
-class SNM_DynamicSizedText : public WDL_VWnd {
-public:
-	SNM_DynamicSizedText(const char* _fontName=SWSDLG_TYPEFACE, bool _wantBorder=false) : WDL_VWnd() { 
-		m_fontName=_fontName; m_alpha=255; m_maxlinelen=-1; m_wantBorder=_wantBorder;
-	}
-	virtual ~SNM_DynamicSizedText() {}
-	virtual const char *GetType() { return "SNM_DynamicText"; }
-	virtual void SetText(const char* _txt, unsigned char _alpha = 255);
-	virtual void OnPaint(LICE_IBitmap* _drawbm, int _origin_x, int _origin_y, RECT* _cliprect);
-	virtual void SetBorder(bool _b) { m_wantBorder = _b; }
-protected:
-	LICE_CachedFont m_font;
-	const char* m_fontName;
-	unsigned char m_alpha;
-	WDL_PtrList_DeleteOnDestroy<WDL_FastString> m_lines;
-	int m_maxlinelen;
-	bool m_wantBorder;
-};
-
 class SNM_ImageVWnd : public WDL_VWnd {
 public:
 	SNM_ImageVWnd(LICE_IBitmap* _img = NULL) : WDL_VWnd() { SetImage(_img); }
@@ -65,14 +45,6 @@ public:
 	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
 protected:
 	LICE_IBitmap* m_img;
-};
-
-class SNM_Logo : public SNM_ImageVWnd {
-public:
-	SNM_Logo() : SNM_ImageVWnd(SNM_GetThemeLogo()) {}
-	virtual ~SNM_Logo() {}
-	virtual const char *GetType() { return "SNM_Logo"; }
-	virtual bool GetToolTipString(int xpos, int ypos, char* bufOut, int bufOutSz) { lstrcpyn(bufOut, "Strong & Mighty", bufOutSz); return true; }
 };
 
 class SNM_AddDelButton : public WDL_VWnd {
@@ -125,20 +97,9 @@ public:
 	virtual void OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
 };
 
-class SNM_MiniKnob : public WDL_VirtualSlider {
-public:
-	SNM_MiniKnob() : WDL_VirtualSlider() {
-		SetKnobBias(1); // force knob
-		SetScrollMessage(WM_VSCROLL);
-	}
-	virtual ~SNM_MiniKnob() {}
-	virtual const char *GetType() { return "SNM_MiniKnob"; }
-};
-
 void SNM_SkinButton(WDL_VirtualIconButton* _btn, WDL_VirtualIconButton_SkinConfig* _skin, const char* _text);
 void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text);
 bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h);
-bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h);
 bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoom = SNM_DEF_VWND_X_STEP);
 
 #endif

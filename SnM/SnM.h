@@ -45,6 +45,7 @@
 #define SNM_CYCLACTION_INI_FILE		"%s\\S&M_Cyclactions.ini"
 #define SNM_CYCLACTION_BAK_FILE		"%s\\S&M_Cyclactions.bak"
 #define SNM_CYCLACTION_EXPORT_FILE	"%s\\S&M_Cyclactions_export.ini"
+#define SNM_EXTENSION_FILE			"%s\\Plugins\\reaper_snm.dll"
 #define SNM_FONT_NAME				"MS Shell Dlg"
 #define SNM_FONT_HEIGHT				14
 #else
@@ -54,6 +55,7 @@
 #define SNM_CYCLACTION_INI_FILE		"%s/S&M_Cyclactions.ini"
 #define SNM_CYCLACTION_BAK_FILE		"%s/S&M_Cyclactions.bak"
 #define SNM_CYCLACTION_EXPORT_FILE	"%s/S&M_Cyclactions_export.ini"
+#define SNM_EXTENSION_FILE			"%s/UserPlugins/reaper_snm.dylib"
 #define SNM_FONT_NAME				"Arial"
 #define SNM_FONT_HEIGHT				12
 #endif
@@ -161,6 +163,7 @@ void FakeToggle(COMMAND_T*);
 bool FakeIsToggleAction(COMMAND_T*);
 void Stuff(COMMAND_T*);
 int SNM_RegisterDynamicCommands(COMMAND_T* _pCommands);
+bool SNM_HasExtension();
 int SNM_Init(reaper_plugin_info_t* _rec);
 void SNM_Exit();
 void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);

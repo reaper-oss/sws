@@ -25,16 +25,17 @@
 /
 ******************************************************************************/
 
-//JFB TODO?
+//JFB
 // - atm, undo on each key stroke (!) but it fixes:
 //   * SaveExtensionConfig() that is not called when there is no proj mods but
 //     some notes have been entered..
 //   * missing updates on project switches
 // - clicking the empty area of the tcp does not remove focus (important for refresh)
 // - undo does not restore caret pos
+// TODO?
 // - take changed => title not updated
-// - drag-drop text
-// - use action_help_t ? (not finished according to Cockos)
+// - drag-drop text?
+// - use action_help_t? (not finished according to Cockos)
 
 #include "stdafx.h"
 #include "SnM.h"

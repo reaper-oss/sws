@@ -278,10 +278,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Paste take (after active take)" }, "S&M_PASTE_TAKE_AFTER", PasteTake, NULL, 1},
 
 	{ { DEFACCEL, "SWS/S&M: Takes - Clear active takes/items" }, "S&M_CLRTAKE1", ClearTake, NULL, },
-//#ifdef _SNM_MISC // deprecated since v4
-	{ { DEFACCEL, "SWS/S&M: Takes - Build lanes for selected tracks" }, "S&M_LANETAKE1", BuildLanes, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Takes - Build lanes for selected items" }, "S&M_LANETAKE3", BuildLanes, NULL, 1},
-//#endif
 	{ { DEFACCEL, "SWS/S&M: Takes - Activate lanes from selected items" }, "S&M_LANETAKE2", ActivateLaneFromSelItem, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Takes - Activate lane under mouse cursor" }, "S&M_LANETAKE4", ActivateLaneUnderMouse, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Takes - Remove empty takes/items among selected items" }, "S&M_DELEMPTYTAKE", RemoveAllEmptyTakes /*RemoveEmptyTakes*/, NULL, },
@@ -464,9 +460,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// seems confusing, "SWS/S&M: Takes - Remove empty MIDI takes/items among selected items" is fine..
 	{ { DEFACCEL, "SWS/S&M: Takes - Remove all empty takes/items among selected items" }, "S&M_DELEMPTYTAKE3", RemoveAllEmptyTakes, NULL, },
-	// deprecated: native actions `Rotate take lanes forward/backward` added in REAPER v3.67
-	{ { DEFACCEL, "SWS/S&M: Takes - Move all up (cycling) in selected items" }, "S&M_MOVETAKE1", MoveTakes, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Takes - Move all down (cycling) in selected items" }, "S&M_MOVETAKE2", MoveTakes, NULL, 1},
 
 //  Deprecated: contrary to their native versions, the following actions were spliting selected items *and only them*, 
 //  see http://forum.cockos.com/showthread.php?t=51547.
@@ -593,21 +586,6 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_LOOPMEDIA_SELTRACK_SYNC", SyncToggleLoopSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause, sync with next measure), slot %02d" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTR_SYNC", SyncTogglePauseSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %02d - Infinite looping! To be stopped!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR_SYNC", SyncToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
-
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Preload" }, "S&M_PRELOAD_LIVE_CFG", PreloadLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Mute all but active track'" }, "S&M_LIVECFG_MUTEBUTACTIVE_ON", EnableMuteOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Mute all but active track'" }, "S&M_LIVECFG_MUTEBUTACTIVE_OFF", DisableMuteOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Mute all but active track'" }, "S&M_LIVECFG_MUTEBUTACTIVE_TGL", ToggleMuteOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsMuteOthersLiveConfigEnabled},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Unselect all but active track'" }, "S&M_LIVECFG_UNSELBUTACTIVE_ON", EnableUnselOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Unselect all but active track'" }, "S&M_LIVECFG_UNSELBUTACTIVE_OFF", DisableUnselOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Unselect all but active track'" }, "S&M_LIVECFG_UNSELBUTACTIVE_TGL", ToggleUnselOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsUnselOthersLiveConfigEnabled},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Offline all but active track (requires preload)'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE1_ON", EnableOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Offline all but active track (requires preload)'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE1_OFF", DisableOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Offline all but active track (requires preload)'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE1_TGL", ToggleOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsOfflineOthersLiveConfigEnabled},
-
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Offline all but active/near config tracks'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE2_ON", EnableOfflineNearLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Offline all but active/near config tracks'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE2_OFF", DisableOfflineNearLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Offline all but active/near config tracks'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE2_TGL", ToggleOfflineNearLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsOfflineNearLiveConfigEnabled},
 #endif
 
 	{ {}, LAST_COMMAND, }, // denote end of table
@@ -922,110 +900,27 @@ void IniFileExit()
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// IReaperControlSurface "proxy"
-// note: it is up to the caller to unalloc things
-///////////////////////////////////////////////////////////////////////////////
-
-#define CSURFMAP(x) SWS_SectionLock lock(&m_csurfsMutex); for (int i=0; i<m_csurfs.GetSize(); i++) m_csurfs.Get(i)->x;
-
-class SNM_CSurfProxy : public IReaperControlSurface
-{
-public:
-	SNM_CSurfProxy() {}
-	~SNM_CSurfProxy() { RemoveAll(); }
-	const char *GetTypeString() { return ""; }
-	const char *GetDescString() { return ""; }
-	const char *GetConfigString() { return ""; }
-	void Run() { CSURFMAP(Run()) }
-	void CloseNoReset() { CSURFMAP(CloseNoReset()) }
-	void SetTrackListChange() { CSURFMAP(SetTrackListChange()) }
-	void SetSurfaceVolume(MediaTrack *tr, double volume) { CSURFMAP(SetSurfaceVolume(tr, volume)) }
-	void SetSurfacePan(MediaTrack *tr, double pan) { CSURFMAP(SetSurfacePan(tr, pan)) }
-	void SetSurfaceMute(MediaTrack *tr, bool mute) { CSURFMAP(SetSurfaceMute(tr, mute)) }
-	void SetSurfaceSelected(MediaTrack *tr, bool sel) { CSURFMAP(SetSurfaceSelected(tr, sel)) }
-	void SetSurfaceSolo(MediaTrack *tr, bool solo) { CSURFMAP(SetSurfaceSolo(tr, solo)) }
-	void SetSurfaceRecArm(MediaTrack *tr, bool recarm) { CSURFMAP(SetSurfaceRecArm(tr, recarm)) }
-	void SetPlayState(bool play, bool pause, bool rec) { CSURFMAP(SetPlayState(play, pause, rec)) }
-	void SetRepeatState(bool rep) { CSURFMAP(SetRepeatState(rep)) }
-	void SetTrackTitle(MediaTrack *tr, const char *title) { CSURFMAP(SetTrackTitle(tr, title)) }
-	bool GetTouchState(MediaTrack *tr, int isPan) { CSURFMAP(GetTouchState(tr, isPan)) return false; }
-	void SetAutoMode(int mode) { CSURFMAP(SetAutoMode(mode)) }
-	void ResetCachedVolPanStates() { CSURFMAP(ResetCachedVolPanStates()) }
-	void OnTrackSelection(MediaTrack *tr) { CSURFMAP(OnTrackSelection(tr)) }
-	bool IsKeyDown(int key) { CSURFMAP(IsKeyDown(key)) return false; }
-	int Extended(int call, void *parm1, void *parm2, void *parm3) { 
-		SWS_SectionLock lock(&m_csurfsMutex);
-		int ret=0;
-		for (int i=0; i<m_csurfs.GetSize(); i++)
-			ret = m_csurfs.Get(i)->Extended(call, parm1, parm2, parm3) ? 1 : ret;
-		return ret;
-	}
-	void Add(IReaperControlSurface* csurf) {
-		SWS_SectionLock lock(&m_csurfsMutex);
-		if (m_csurfs.Find(csurf)<0)
-			m_csurfs.Add(csurf);
-	}
-	void Remove(IReaperControlSurface* csurf) {
-		SWS_SectionLock lock(&m_csurfsMutex);
-		m_csurfs.Delete(m_csurfs.Find(csurf), false);
-	}
-	void RemoveAll() {
-		SWS_SectionLock lock(&m_csurfsMutex);
-		for (int i=m_csurfs.GetSize(); i>=0; i--)
-			if (IReaperControlSurface* csurf = m_csurfs.Get(i)) {
-				csurf->Extended(SNM_CSURF_EXT_UNREGISTER, NULL, NULL, NULL);
-				m_csurfs.Delete(i, false);
-			}
-	}
-private:
-	WDL_PtrList<IReaperControlSurface> m_csurfs;
-	SWS_Mutex m_csurfsMutex;
-};
-
-SNM_CSurfProxy* g_csurfProxy = NULL;
-
-bool SNM_RegisterCSurf(IReaperControlSurface* _csurf) {
-	if (g_csurfProxy) {
-		g_csurfProxy->Add(_csurf);
-		return true;
-	}
-	return false;
-}
-
-bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf) {
-	if (g_csurfProxy) {
-		g_csurfProxy->Remove(_csurf);
-		return true;
-	}
-	return false;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
 // S&M core stuff
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef _SNM_MISC
-static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag) {
-	if (!strcmp(_menustr, "Main extensions") && !_flag) SWSCreateMenuFromCommandTable(g_SNM_cmdTable, _hMenu);
-	//else if (!strcmp(_menustr, "Media item context") && !_flag) {}
-	//else if (!strcmp(_menustr, "Track control panel context") && !_flag) {}
-	//else if (_flag == 1) {}
-}
+bool SNM_HasExtension() {
+	WDL_FastString fn;
+	fn.SetFormatted(BUFFER_SIZE, SNM_EXTENSION_FILE,
+#ifdef _WIN32
+		GetExePath());
+#else
+		GetResourcePath());
 #endif
+	return FileExists(fn.Get());
+}
 
 int SNM_Init(reaper_plugin_info_t* _rec)
-
 {
 	if (!_rec)
 		return 0;
 
 	IniFileInit();
 
-#ifdef _SNM_MISC
-	if (!plugin_register("hookcustommenu", (void*)SNM_Menuhook))
-		return 0;
-#endif
 	// actions must be registered before views
 	if (!SWSRegisterCommands(g_SNM_cmdTable) || 
 		!SNM_RegisterDynamicCommands(g_SNM_dynamicCmdTable, g_SNMIniFn.Get()) ||
@@ -1041,13 +936,6 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	RegionPlaylistInit();
 	CyclactionInit(); // keep it as the last one!
 
-	g_csurfProxy = new SNM_CSurfProxy();
-	if (!g_csurfProxy || !_rec->Register("csurf_inst", g_csurfProxy))
-		DELETE_NULL(g_csurfProxy)
-	else {
-		_rec->Register("API_SNM_UnregisterCSurf", (void*)SNM_UnregisterCSurf);
-		_rec->Register("API_SNM_RegisterCSurf", (void*)SNM_RegisterCSurf);
-	}
 	return 1;
 }
 
@@ -1062,10 +950,6 @@ void SNM_Exit()
 	CyclactionExit();
 	SNM_UIExit();
 	IniFileExit();
-
-	if (g_csurfProxy)
-		g_csurfProxy->RemoveAll();
-	DELETE_NULL(g_csurfProxy);
 }
 
 

@@ -470,10 +470,6 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_btnAutoSelect.SetID(BUTTONID_AUTO_SELECT);
 	m_parentVwnd.AddChild(&m_btnAutoSelect);
 
-#ifdef _SNM_MISC // wip
-	m_knob.SetID(KNOBID_CC_DELAY);
-	m_parentVwnd.AddChild(&m_knob);
-#endif
 	Update();
 }
 
@@ -1073,13 +1069,6 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _t
 	if (!SNM_AutoVWndPosition(&m_cbInputTr, &m_txtInputTr, _r, &x0, _r->top, h))
 		return;
 
-#ifdef _SNM_MISC // wip
-	ColorTheme* ct = SNM_GetColorTheme();
-	LICE_pixel col = ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255);
-	m_knob.SetFGColors(col, col);
-	if (!SNM_AutoVWndPosition(&m_knob, NULL, _r, &x0, _r->top, h))
-		return;
-#endif
 	SNM_AddLogo(_bm, _r, x0, h);
 }
 

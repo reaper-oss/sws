@@ -78,17 +78,12 @@ void CopyCutTake(COMMAND_T*);
 void PasteTake(COMMAND_T*);
 bool IsEmptyMidi(MediaItem_Take* _take);
 void SetEmptyTakeChunk(WDL_FastString* _chunk, int _recPass = -1, int _color = -1, bool _v4style = true);
-int BuildLanes(const char* _undoTitle, int _mode);
 bool RemoveEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel);
 bool RemoveEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel = false, bool _itemSel = true);
 void ClearTake(COMMAND_T*);
-#ifdef _SNM_MISC // deprecated (v3.67)
-void MoveTakes(COMMAND_T*);
-#endif
 void MoveActiveTake(COMMAND_T*);
 void ActivateLaneFromSelItem(COMMAND_T*);
 void ActivateLaneUnderMouse(COMMAND_T*);
-void BuildLanes(COMMAND_T*);
 void RemoveEmptyTakes(COMMAND_T*);
 void RemoveEmptyMidiTakes(COMMAND_T*);
 void RemoveAllEmptyTakes(COMMAND_T*);

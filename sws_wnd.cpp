@@ -54,9 +54,6 @@ SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, 
 	memset(&m_state, 0, sizeof(SWS_DockWnd_State));
 	*m_tooltip = '\0';
 
-	for (int i=0; i<BRUSH_COUNT; i++)
-		m_brushes[i] = NULL;
-
 	m_ar.translateAccel = keyHandler;
 	m_ar.isLocal = true;
 	m_ar.user = this;
@@ -325,12 +322,6 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			for (int i=0; i < m_pLists.GetSize(); i++)
 				m_pLists.Get(i)->OnDestroy();
 
-			for (int i=0; i < BRUSH_COUNT; i++)
-				if (m_brushes[i]) {
-					DeleteObject(m_brushes[i]);
-					m_brushes[i] = NULL;
-				}
-
 			char cState[256];
 			int iLen = SaveState(cState, 256);
 			WritePrivateProfileStruct(SWS_INI, m_cId, cState, iLen, get_ini_file());
@@ -429,49 +420,28 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				SetTimer(m_hwnd, TOOLTIP_TIMER, TOOLTIP_TIMEOUT, NULL);
 			}
 			break;
-		case WM_CTLCOLORSTATIC:
-		case WM_CTLCOLORDLG:
-		case WM_CTLCOLORBTN:
-			if (IsThemed()) {
-				SetBkColor((HDC)wParam, GSC_mainwnd(COLOR_WINDOW));
-				SetTextColor((HDC)wParam, GSC_mainwnd(COLOR_BTNTEXT));
-				return (INT_PTR)GetBrush(BRUSH_BG);
-			}
-			return 0;
-		case WM_CTLCOLORLISTBOX:
-			if (IsThemed()) {
-				int bg, txt; 
-				SNM_GetThemeListColors(&bg, &txt);
-				SetBkColor((HDC)wParam, bg);
-				SetTextColor((HDC)wParam, txt);
-				return (INT_PTR)GetBrush(BRUSH_LIST, bg);
-			}
-			return 0;
-#ifdef _WIN32
 		case WM_CTLCOLOREDIT:
 			if (IsThemed())
 			{
-				int brushId = BRUSH_EDIT;
-				HWND hwnd = (HWND)lParam;
-				HDC hdc = (HDC)wParam;
-				int bg, txt; 
-				SNM_GetThemeEditColors(&bg, &txt);
-
 				// color override for list views' cell edition?
+				HWND hwnd = (HWND)lParam;
 				for (int i=0; i<m_pLists.GetSize(); i++)
 					if (SWS_ListView* lv = m_pLists.Get(i))
 						if (hwnd == lv->GetEditHWND()) {
-							brushId = BRUSH_EDIT_LIST;
-							SNM_GetThemeListColors(&bg, &txt);
+							uMsg = WM_CTLCOLORLISTBOX;
 							break;
 						}
-
-				SetBkColor(hdc, bg);
-				SetTextColor(hdc, txt);
-				return (INT_PTR)GetBrush(brushId, bg);
+				return SendMessage(GetMainHwnd(),uMsg,wParam,lParam);
 			}
 			return 0;
-#endif
+		case WM_CTLCOLORLISTBOX:
+		case WM_CTLCOLORBTN:
+		case WM_CTLCOLORDLG:
+		case WM_CTLCOLORSTATIC :
+/* commented for custom impl.
+		case WM_DRAWITEM:
+*/
+			return IsThemed() ? SendMessage(GetMainHwnd(),uMsg,wParam,lParam) : 0;
 		default:
 			return OnUnhandledMsg(uMsg, wParam, lParam);
 	}
@@ -638,25 +608,6 @@ void SWS_DockWnd::KillTooltip(bool doRefresh)
 	*m_tooltip='\0';
 	if (had && doRefresh)
 		InvalidateRect(m_hwnd,NULL,FALSE);
-}
-
-HBRUSH SWS_DockWnd::GetBrush(int id, int col)
-{
-	if (id>=0 && id<BRUSH_COUNT)
-	{
-#ifdef SUPPORT_THEME_SWITCHES
-		// re-create the HBRUSH to handle color theme swtiches
-		if (m_brushes[id])
-			DeleteObject(m_brushes[id]);
-		m_brushes[id] = (HBRUSH)CreateSolidBrush(col==-666 ? GSC_mainwnd(COLOR_WINDOW) : col);
-#else
-		if (!m_brushes[id])
-			m_brushes[id] = (HBRUSH)CreateSolidBrush(col==-666 ? GSC_mainwnd(COLOR_WINDOW) : col);
-#endif
-		return m_brushes[id];
-	}
-
-	return NULL;
 }
 
 
@@ -1401,7 +1352,9 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 #ifdef _WIN32
 	sr.left = max(r.left+(GetSystemMetrics(SM_CXEDGE)*2), sr.left);
 	sr.right = min(r.right-(GetSystemMetrics(SM_CXEDGE)*2), sr.right);
-	sr.top += 1; // do not hide the top grid line
+	// make sure left/top grid lines are visible
+	sr.left += 1;
+	sr.top += 1;
 #else
 	sr.left = max(r.left, sr.left);
 	sr.right = min(r.right, sr.right);

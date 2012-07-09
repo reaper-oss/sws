@@ -41,10 +41,13 @@ void SNM_GetThemeEditColors(int* _bg, int* _txt);
 void SNM_ThemeListView(SWS_ListView* _lv);
 LICE_IBitmap* SNM_GetThemeLogo();
 WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam);
+
 void SNM_UIInit();
 void SNM_UIExit();
+
 void SNM_ShowMsg(const char* _msg, const char* _title = "", HWND _hParent = NULL, bool _clear = true); 
 int PromptForInteger(const char* _title, const char* _what, int _min, int _max);
+
 void OpenCueBussDlg(COMMAND_T*);
 bool IsCueBussDlgDisplayed(COMMAND_T*);
 

@@ -41,14 +41,6 @@
 #define LISTVIEW_COLORHOOK_STATESIZE	(3+4)
 #endif
 
-enum {
-	BRUSH_BG=0,
-	BRUSH_LIST,
-	BRUSH_EDIT,
-	BRUSH_EDIT_LIST,
-	BRUSH_COUNT
-};
-
 typedef struct SWS_LVColumn
 {
 	int iWidth;
@@ -198,7 +190,6 @@ protected:
 	bool IsDocked() { return (m_state.state & 2) == 2; }
 	void ToggleDocking();
 	virtual void GetMinSize(int* w, int* h) { *w=MIN_DOCKWND_WIDTH; *h=MIN_DOCKWND_HEIGHT; }
-	virtual HBRUSH GetBrush(int id, int col = -666);
 	virtual bool IsThemed() { return true; }
 
 	virtual void OnInitDlg() {}
@@ -234,7 +225,6 @@ protected:
 	WDL_VWnd m_parentVwnd; // owns all children windows
 	char m_tooltip[TOOLTIP_MAX_LEN];
 	POINT m_tooltip_pt;
-	HBRUSH m_brushes[BRUSH_COUNT];
 
 private:
 	static INT_PTR WINAPI sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);

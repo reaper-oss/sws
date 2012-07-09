@@ -158,52 +158,19 @@ LICE_IBitmap* SNM_GetThemeLogo()
 	return snmLogo;
 }
 
-HBRUSH g_brushes[BRUSH_COUNT];
-
-HBRUSH GetBrush(int id, int col = -666)
-{
-	if (id>=0 && id<BRUSH_COUNT)
-	{
-#ifdef SUPPORT_THEME_SWITCHES
-		// re-create the HBRUSH to handle color theme swtiches
-		if (g_brushes[id])
-			DeleteObject(g_brushes[id]);
-		g_brushes[id] = (HBRUSH)CreateSolidBrush(col==-666 ? GSC_mainwnd(COLOR_WINDOW) : col);
-#else
-		if (!g_brushes[id])
-			g_brushes[id] = (HBRUSH)CreateSolidBrush(col==-666 ? GSC_mainwnd(COLOR_WINDOW) : col);
-#endif
-		return g_brushes[id];
-	}
-	return NULL;
-}
-
 WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam)
 {
 	switch(_uMsg)
 	{
-		case WM_CTLCOLORSTATIC:
-		case WM_CTLCOLORDLG:
+		case WM_CTLCOLOREDIT:
+		case WM_CTLCOLORLISTBOX:
 		case WM_CTLCOLORBTN:
-			SetBkColor((HDC)_wParam, GSC_mainwnd(COLOR_WINDOW));
-			SetTextColor((HDC)_wParam, GSC_mainwnd(COLOR_BTNTEXT));
-			return (INT_PTR)GetBrush(BRUSH_BG);
-		case WM_CTLCOLORLISTBOX: {
-			int bg, txt;
-			SNM_GetThemeListColors(&bg, &txt);
-			SetBkColor((HDC)_wParam, bg);
-			SetTextColor((HDC)_wParam, txt);
-			return (INT_PTR)GetBrush(BRUSH_LIST, bg);
-		}
-#ifdef _WIN32
-		case WM_CTLCOLOREDIT: {
-			int bg, txt;
-			SNM_GetThemeEditColors(&bg, &txt);
-			SetBkColor((HDC)_wParam, bg);
-			SetTextColor((HDC)_wParam, txt);
-			return (INT_PTR)GetBrush(BRUSH_EDIT, bg);
-		}
-#endif
+		case WM_CTLCOLORDLG:
+		case WM_CTLCOLORSTATIC:
+/* commented for custom impl.
+		case WM_DRAWITEM:
+*/
+			return SendMessage(GetMainHwnd(),_uMsg,_wParam,_lParam);
 	}
 	return 0;
 }
@@ -211,20 +178,9 @@ WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LP
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SNM_UIInit()
-{
-	for (int i=0; i<BRUSH_COUNT; i++)
-		g_brushes[i] = NULL;
-}
+void SNM_UIInit() {}
 
-void SNM_UIExit()
-{
-	for (int i=0; i<BRUSH_COUNT; i++)
-		if (g_brushes[i]) {
-			DeleteObject(g_brushes[i]);
-			g_brushes[i] = NULL;
-		}
-
+void SNM_UIExit() {
 	if (LICE_IBitmap* logo = SNM_GetThemeLogo())
 		DELETE_NULL(logo);
 }

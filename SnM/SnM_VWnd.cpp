@@ -192,6 +192,11 @@ bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
 	return false;
 }
 
+// SWS: My OSX has a problem with max() sometimes.  I don't know why.
+#ifndef _WIN32
+#define max(x,y) ((x)>(y)?(x):(y))
+#endif
+
 // auto position a WDL_VWnd instance
 // note: by default all components are hidden, see WM_PAINT in sws_wnd.cpp
 // _x: in/out param that gets modified (for the next component to be displayed)

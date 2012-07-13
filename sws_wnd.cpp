@@ -153,14 +153,17 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			OnInitDlg();
 			
 			if (IsThemed())
-				for (int i=0; i<m_pLists.GetSize(); i++) {
+			{
+				for (int i=0; i<m_pLists.GetSize(); i++)
+				{
 #ifndef _WIN32
 					// override list view props for grid line theming
 					ListView_SetExtendedListViewStyleEx(m_pLists.Get(i)->GetHWND(), 
 						LVS_EX_GRIDLINES|LVS_EX_HEADERDRAGDROP, LVS_EX_GRIDLINES|LVS_EX_HEADERDRAGDROP);
 #endif
-					SNM_ThemeListView(m_pLists.Get(i)); // initial list view theming, then ListView_HookThemeColorsMessage() does the job
+					SNM_ThemeListView(m_pLists.Get(i)); // initial theming, then ListView_HookThemeColorsMessage() does the job
 				}
+			}
 
 			if ((m_state.state & 2))
 			{
@@ -193,9 +196,8 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				RECT r; GetClientRect(m_hwnd,&r);
 				char buf[TOOLTIP_MAX_LEN] = "";
 				if (PtInRect(&r,p))
-					if (!m_parentVwnd.GetToolTipString(p.x,p.y,buf,sizeof(buf)))
-						if (!GetToolTipString(p.x,p.y,buf,sizeof(buf)))
-							*buf='\0';
+					if (!m_parentVwnd.GetToolTipString(p.x,p.y,buf,sizeof(buf)) && !GetToolTipString(p.x,p.y,buf,sizeof(buf)))
+						*buf='\0';
 
 				if (strcmp(buf, m_tooltip))
 				{
@@ -338,7 +340,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			RefreshToolbar(m_iCmdID);
 			break;
 		case WM_PAINT:
-			if (!OnPaint() && IsThemed())
+			if (!OnPaint() && m_parentVwnd.GetNumChildren())
 			{
 				int xo, yo; RECT r;
 				GetClientRect(m_hwnd,&r);
@@ -347,9 +349,15 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				if (LICE_IBitmap* bm = m_vwnd_painter.GetBuffer(&xo, &yo))
 				{
 					bm->resize(r.right-r.left,r.bottom-r.top);
-					int x=0; while (WDL_VWnd* w = m_parentVwnd.EnumChildren(x++)) w->SetVisible(false);
-					int h=0; DrawControls(bm, &r, &h);
+
+					int x=0;
+					while (WDL_VWnd* w = m_parentVwnd.EnumChildren(x++))
+						w->SetVisible(false); // just a setter, no redraw
+
+					int h=0;
+					DrawControls(bm, &r, &h);
 					m_vwnd_painter.PaintVirtWnd(&m_parentVwnd);
+
 					if (*m_tooltip)
 					{
 						if (!(*(int*)GetConfigVar("tooltips")&2)) // obeys the "Tooltip for UI elements" pref
@@ -418,8 +426,20 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				KillTooltip(true);
 				SetTimer(m_hwnd, TOOLTIP_TIMER, TOOLTIP_TIMEOUT, NULL);
+#ifdef _WIN32
+				// request WM_MOUSELEAVE message
+				TRACKMOUSEEVENT e = { sizeof(TRACKMOUSEEVENT), TME_LEAVE, m_hwnd, HOVER_DEFAULT };
+				TrackMouseEvent(&e);
+#endif
 			}
 			break;
+#ifdef _WIN32
+		// fixes possible stuck tooltips and VWnds stuck on hover state
+		case WM_MOUSELEAVE:
+			KillTooltip(true);
+			m_parentVwnd.OnMouseMove(GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam));
+			break;
+#endif
 		case WM_CTLCOLOREDIT:
 			if (IsThemed())
 			{
@@ -434,11 +454,12 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				return SendMessage(GetMainHwnd(),uMsg,wParam,lParam);
 			}
 			return 0;
+		case WM_CTLCOLORSCROLLBAR: // not managed yet, just in case..
 		case WM_CTLCOLORLISTBOX:
 		case WM_CTLCOLORBTN:
 		case WM_CTLCOLORDLG:
 		case WM_CTLCOLORSTATIC :
-/* commented for custom impl.
+/* commented for custom implementations via OnUnhandledMsg()
 		case WM_DRAWITEM:
 */
 			return IsThemed() ? SendMessage(GetMainHwnd(),uMsg,wParam,lParam) : 0;

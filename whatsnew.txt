@@ -2,12 +2,14 @@ Label processor:
 +Added option to process all takes
 +Added take count (/K) and take number (/k)
 
+Windows OS: fixed possible stuck tooltips and buttons stuck on hover state
+
 !v2.2.0 #16 (July 9, 2012)
 Full localization for "Fill gaps", "Snapshots merge" and "ReaConsole" tools
 Main dialog boxes are now themed
 Fixed actions "SWS/S&M: Move selected FX up/down in chain for selected tracks" (broken in v2.2.0 #3}
 Fixed actions "SWS/S&M: Active MIDI Editor - Save/Restore displayed CC lanes, slot n" (broken in v2.2.0 #3}
-House cleaning: removed actions "SWS/S&M: Takes - Build lanes for selected tracks/items" (those glorious actions are useless now: REAPER features native take alignment)
+House cleaning: removed actions "SWS/S&M: Takes - Build lanes for selected tracks/items" (those glorious actions are useless now: REAPER features take alignment)
 
 !v2.2.0 #15 (June 25, 2012)
 The following windows are now themed:
@@ -34,7 +36,7 @@ Removed smooth scroll, please use native version
 Resources window and related slots actions
 +"Paste" and "Paste (replace)" items from a track template file that contains several tracks now obeys multi-track selection
 +Applying a track template file that contains several tracks now obeys multi-track selection - http://forum.cockos.com/showthread.php?t=104140|Example|: applying folder tracks to other projects
-Track templates can be applied in 2 different ways: either use items/envelopes present in template files or preserve existing items/envelopes, see details http://forum.cockos.com/showpost.php?p=979823&postcount=16|here|
+Reminder: track template files can be applied in 2 different ways, either use items/envelopes present in template files or preserve existing items/envelopes, see details http://forum.cockos.com/showpost.php?p=979823&postcount=16|here|
 The following updates deal with the latter option:
 +Applying track templates now preserves all existing track envelopes (except FX parameter envelopes since FX Chains are replaced with templates' ones)
 +Applying track templates now preserves folder states

@@ -78,8 +78,6 @@ void Replace02d(char* _str, char _replaceCh);
 bool IsMacro(const char* _actionName);
 bool LearnAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSection);
 bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
-WDL_UINT64 FNV64(WDL_UINT64 h, const unsigned char* data, int sz);
-bool FNV64(const char* _strIn, char* _strOut);
 
 class MarkerRegion : public MarkerItem {
 public:

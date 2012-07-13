@@ -162,6 +162,7 @@ WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LP
 {
 	switch(_uMsg)
 	{
+		case WM_CTLCOLORSCROLLBAR: // not managed yet, just in case..
 		case WM_CTLCOLOREDIT:
 		case WM_CTLCOLORLISTBOX:
 		case WM_CTLCOLORBTN:

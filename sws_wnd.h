@@ -27,8 +27,6 @@
 
 #pragma once
 
-#define SUPPORT_THEME_SWITCHES
-
 #define TOOLTIP_MAX_LEN					512
 #define MIN_DOCKWND_WIDTH				147
 #define MIN_DOCKWND_HEIGHT				175
@@ -160,7 +158,7 @@ private:
 };
 
 #pragma pack(push, 4)
-typedef struct SWS_DockWnd_State // Coverted to little endian on store
+typedef struct SWS_DockWnd_State // Converted to little endian on store
 {
 	RECT r;
 	int state;
@@ -222,7 +220,7 @@ protected:
 	WDL_WndSizer m_resize;
 	WDL_PtrList<SWS_ListView> m_pLists;
 	WDL_VWnd_Painter m_vwnd_painter;
-	WDL_VWnd m_parentVwnd; // owns all children windows
+	WDL_VWnd m_parentVwnd; // owns all children VWnds
 	char m_tooltip[TOOLTIP_MAX_LEN];
 	POINT m_tooltip_pt;
 
@@ -242,5 +240,5 @@ private:
 };
 
 
-bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int cstate[LISTVIEW_COLORHOOK_STATESIZE], int listID, int whichTheme, int wantGridForColumns); // if returns value, return 1
+bool ListView_HookThemeColorsMessage(HWND hwndDlg, int uMsg, LPARAM lParam, int cstate[LISTVIEW_COLORHOOK_STATESIZE], int listID, int whichTheme, int wantGridForColumns);
 void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char *text);

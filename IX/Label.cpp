@@ -31,7 +31,10 @@
 #include "../reaper/localize.h"
 #include "../SnM/SnM_Dlg.h"
 
-#define IXLABELPROCSTRING	"Label processor"
+#define IX_LABELPROC_TEXT_KEY	"Label processor"
+#define IX_LABELPROC_ALLTAKES_KEY	IX_LABELPROC_TEXT_KEY" all takes"
+
+bool bAllTakes;
 
 WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -53,6 +56,8 @@ WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			helpStr.Append(__LOCALIZE("\n\t/e[digits, first]\t\tEnumerate in selection on track.","sws_DLG_163"));
 			helpStr.Append(__LOCALIZE("\n\t/I[digits, last]\t\tInverse enumerate in selection.","sws_DLG_163"));
 			helpStr.Append(__LOCALIZE("\n\t/i[digits, last]\t\tInverse enumerate in selection on track.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/K[digits]\t\tTake count.","sws_DLG_163"));
+			helpStr.Append(__LOCALIZE("\n\t/k[digits]\t\tTake number.","sws_DLG_163"));
 			helpStr.Append(__LOCALIZE("\n\t/L[offset, length]\tCurrent label.","sws_DLG_163"));
 			helpStr.Append(__LOCALIZE("\n\t/O\t\t\tSource offset.","sws_DLG_163"));
 			helpStr.Append(__LOCALIZE("\n\t/P[precision]\t\tPeak level.","sws_DLG_163"));
@@ -67,12 +72,20 @@ WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			if(pStr)
 				SetDlgItemText(hwnd, IDC_EDIT, pStr->Get());
 
+			bAllTakes = GetPrivateProfileInt(SWS_INI, IX_LABELPROC_ALLTAKES_KEY, 0, get_ini_file()) > 0;
+			SendMessage(GetDlgItem(hwnd, IDC_CHECK1), BM_SETCHECK, bAllTakes ? BST_CHECKED : BST_UNCHECKED, 0);
+
 			return 0;
 		}
 
 		case WM_COMMAND:
 			switch (LOWORD(wParam))
 			{
+				case IDC_CHECK1 :
+					if(HIWORD(wParam) == BN_CLICKED)
+						bAllTakes = SendMessage(GetDlgItem(hwnd, IDC_CHECK1), BM_GETCHECK, 0, 0) == BST_CHECKED;
+					break;
+
 				case IDOK:
 					{
 #ifdef _WIN32
@@ -187,7 +200,7 @@ void LabelProcessor(COMMAND_T* ct)
 {
 	WDL_FastString format;
 	char buf[512];
-	GetPrivateProfileString(SWS_INI, IXLABELPROCSTRING, "/L", buf, sizeof(buf), get_ini_file());
+	GetPrivateProfileString(SWS_INI, IX_LABELPROC_TEXT_KEY, "/L", buf, sizeof(buf), get_ini_file());
 
 	format.Set(buf);
 
@@ -196,7 +209,8 @@ void LabelProcessor(COMMAND_T* ct)
 		return;
 	}
 
-	WritePrivateProfileString(SWS_INI, IXLABELPROCSTRING, format.Get(), get_ini_file());
+	WritePrivateProfileString(SWS_INI, IX_LABELPROC_TEXT_KEY, format.Get(), get_ini_file());
+	WritePrivateProfileString(SWS_INI, IX_LABELPROC_ALLTAKES_KEY, bAllTakes ? "1" : "0", get_ini_file());
 
 	Undo_BeginBlock2(NULL);
 	int itemCount = 0;
@@ -209,171 +223,210 @@ void LabelProcessor(COMMAND_T* ct)
 		for (int i = 0; i < numSelOnTrack; i++)
 		{
 			MediaItem* pItem = items.Get()[i];
-			MediaItem_Take* pTake = GetActiveTake(pItem);
 
-			WDL_FastString str;
-
-			const char *c = format.Get();
-			const char *end = strchr(c, 0);
-
-			while(c < end)
+			// Build take list
+			WDL_TypedBuf<MediaItem_Take*> takes;
+			if(bAllTakes)
 			{
-				switch(*c)
+				for(int t = 0, tc = GetMediaItemNumTakes(pItem); t < tc; t++)
 				{
-				case '/' :
-					{
-						switch(*(++c))
-						{
-						case 'D' : // Duration
-							{
-								double length = *(double*) GetSetMediaItemInfo(pItem, "D_LENGTH", NULL);
-								format_timestr(length, buf, sizeof(buf));
-								str.AppendFormatted(str.GetLength() + (int)strlen(buf), "%s", buf);
-								++c;
-							}
-							break;
-
-						case 'E' : // Enumerate all
-							{
-								int args[2] = {2,1};
-								ExtractValues(++c, args, 2);
-								str.AppendFormatted(str.GetLength() + 8, "%0*d", args[0], itemCount + args[1]);
-							}
-							break;
-
-						case 'e' : // Enumerate on track
-							{
-								int args[2] = {2,1};
-								ExtractValues(++c, args, 2);
-								str.AppendFormatted(str.GetLength() + 8, "%0*d", args[0], i + args[1]);
-							}
-							break;
-
-						case 'I' : // Inverse enumerate all
-							{
-								int args[2] = {2,0};
-								ExtractValues(++c, args, 2);
-								str.AppendFormatted(str.GetLength() + 8, "%0*d", args[0], numSel - itemCount + args[1] - 1);
-							}
-							break;
-
-						case 'i' : // Inverse enumerate on track
-							{
-								int args[2] = {2,0};
-								ExtractValues(++c, args, 2);
-								str.AppendFormatted(str.GetLength() + 8, "%0*d", args[0], numSelOnTrack - i + args[1] - 1);
-							}
-							break;
-
-						case 'L' : // Current label
-							{
-								int args[2] = {0,0};
-								ExtractValues(++c, args, 2);
-
-								const char *label = (const char*) GetSetMediaItemTakeInfo(pTake, "P_NAME", NULL);
-								if(label)
-									str.Append(GetSubString(label, args[0], args[1]));
-							}
-							break;
-
-						case 'O' : // Source offset
-							{
-								double offset = *(double*) GetSetMediaItemTakeInfo(pTake, "D_STARTOFFS", NULL);
-								format_timestr(offset, buf, sizeof(buf));
-								str.AppendFormatted(str.GetLength() + (int)strlen(buf), "%s", buf);
-								++c;
-							}
-							break;
-
-						case 'P' : // Peak
-							{
-								int precision = 1;
-								ExtractValues(++c, &precision, 1);
-								str.Append(GetItemVolString(pItem, 0, precision));
-							}
-							break;
-
-						case 'R' : // RMS Max
-							{
-								int precision = 1;
-								ExtractValues(++c, &precision, 1);
-								str.Append(GetItemVolString(pItem, 2, precision));
-							}
-							break;
-
-						case 'r' : // RMS Avg
-							{
-								int precision = 1;
-								ExtractValues(++c, &precision, 1);
-								str.Append(GetItemVolString(pItem, 1, precision));
-							}
-							break;
-
-						case 'S' : // Source full path
-							{
-								int args[2] = {0,0};
-								ExtractValues(++c, args, 2);
-
-								PCM_source *pSource = (PCM_source*) GetSetMediaItemTakeInfo(pTake, "P_SOURCE", NULL);
-								if(pSource)
-								{
-									memset(buf, 0, sizeof(buf));
-									GetMediaSourceFileName(pSource, buf, sizeof(buf));
-									if(*buf)
-										str.Append(GetSubString(buf, args[0], args[1]));
-								}
-							}
-							break;
-
-						case 's' : // Source filename only
-							{
-								int args[2] = {0,0};
-								ExtractValues(++c, args, 2);
-
-								PCM_source *pSource = (PCM_source*) GetSetMediaItemTakeInfo(pTake, "P_SOURCE", NULL);
-								if(pSource)
-								{
-									memset(buf, 0, sizeof(buf));
-									GetMediaSourceFileName(pSource, buf, sizeof(buf));
-									if(*buf)
-									{
-										const char *f = strrchr(buf, PATH_SLASH_CHAR);
-										if(f)
-											str.Append(GetSubString(f + 1, args[0], args[1]));
-									}
-								}
-							}
-							break;
-
-						case 'T' : // Track name
-							{
-								int args[2] = {0,0};
-								ExtractValues(++c, args, 2);
-
-								const char *label = (const char*) GetSetMediaTrackInfo(GetMediaItem_Track(pItem), "P_NAME", NULL);
-								if(label)
-									str.Append(GetSubString(label, args[0], args[1]));
-							}
-							break;
-
-						case 't' : // Track index
-							{
-								int width = 2;
-								ExtractValues(++c, &width, 1);
-								str.AppendFormatted(str.GetLength() + 8, "%0*d", width, iTrack);
-							}
-							break;
-						}
-					}
-					break;
-
-				default :
-					str.Append(c++, 1);
-					break;
+					takes.Add(GetMediaItemTake(pItem, t));
 				}
 			}
+			else
+			{
+				takes.Add(GetActiveTake(pItem));
+			}
 
-			GetSetMediaItemTakeInfo(pTake, "P_NAME", (void*) str.Get());
+			// Do the work
+			for(int t = 0, tc = takes.GetSize(); t < tc; t++)
+			{
+				MediaItem_Take* pTake = takes.Get()[t];
+
+				WDL_FastString str;
+
+				const char *c = format.Get();
+				const char *end = strchr(c, 0);
+
+				while(c < end)
+				{
+					switch(*c)
+					{
+					case '/' :
+						{
+							switch(*(++c))
+							{
+							default :
+								str.Append("/");
+								break;
+
+							case 'D' : // Duration
+								{
+									double length = *(double*) GetSetMediaItemInfo(pItem, "D_LENGTH", NULL);
+									format_timestr(length, buf, sizeof(buf));
+									str.AppendFormatted(str.GetLength() + (int)strlen(buf), "%s", buf);
+									++c;
+								}
+								break;
+
+							case 'E' : // Enumerate all
+								{
+									int args[2] = {2,1};
+									ExtractValues(++c, args, 2);
+									str.AppendFormatted(str.GetLength() + 8, "%0*d", args[0], itemCount + args[1]);
+								}
+								break;
+
+							case 'e' : // Enumerate on track
+								{
+									int args[2] = {2,1};
+									ExtractValues(++c, args, 2);
+									str.AppendFormatted(str.GetLength() + 8, "%0*d", args[0], i + args[1]);
+								}
+								break;
+
+							case 'I' : // Inverse enumerate all
+								{
+									int args[2] = {2,0};
+									ExtractValues(++c, args, 2);
+									str.AppendFormatted(str.GetLength() + 8, "%0*d", args[0], numSel - itemCount + args[1] - 1);
+								}
+								break;
+
+							case 'i' : // Inverse enumerate on track
+								{
+									int args[2] = {2,0};
+									ExtractValues(++c, args, 2);
+									str.AppendFormatted(str.GetLength() + 8, "%0*d", args[0], numSelOnTrack - i + args[1] - 1);
+								}
+								break;
+
+							case 'K' : // Take count
+								{
+									int digits = 1;
+									ExtractValues(++c, &digits, 1);
+									str.AppendFormatted(str.GetLength() + digits, "%0*d", digits, tc);
+								}
+								break;
+
+							case 'k' : // Take number
+								{
+									int digits = 1;
+									ExtractValues(++c, &digits, 1);
+									str.AppendFormatted(str.GetLength() + digits, "%0*d", digits, t + 1);
+								}
+								break;
+
+							case 'L' : // Current label
+								{
+									int args[2] = {0,0};
+									ExtractValues(++c, args, 2);
+
+									const char *label = (const char*) GetSetMediaItemTakeInfo(pTake, "P_NAME", NULL);
+									if(label)
+										str.Append(GetSubString(label, args[0], args[1]));
+								}
+								break;
+
+							case 'O' : // Source offset
+								{
+									double offset = *(double*) GetSetMediaItemTakeInfo(pTake, "D_STARTOFFS", NULL);
+									format_timestr(offset, buf, sizeof(buf));
+									str.AppendFormatted(str.GetLength() + (int)strlen(buf), "%s", buf);
+									++c;
+								}
+								break;
+
+							case 'P' : // Peak
+								{
+									int precision = 1;
+									ExtractValues(++c, &precision, 1);
+									str.Append(GetItemVolString(pItem, 0, precision));
+								}
+								break;
+
+							case 'R' : // RMS Max
+								{
+									int precision = 1;
+									ExtractValues(++c, &precision, 1);
+									str.Append(GetItemVolString(pItem, 2, precision));
+								}
+								break;
+
+							case 'r' : // RMS Avg
+								{
+									int precision = 1;
+									ExtractValues(++c, &precision, 1);
+									str.Append(GetItemVolString(pItem, 1, precision));
+								}
+								break;
+
+							case 'S' : // Source full path
+								{
+									int args[2] = {0,0};
+									ExtractValues(++c, args, 2);
+
+									PCM_source *pSource = (PCM_source*) GetSetMediaItemTakeInfo(pTake, "P_SOURCE", NULL);
+									if(pSource)
+									{
+										memset(buf, 0, sizeof(buf));
+										GetMediaSourceFileName(pSource, buf, sizeof(buf));
+										if(*buf)
+											str.Append(GetSubString(buf, args[0], args[1]));
+									}
+								}
+								break;
+
+							case 's' : // Source filename only
+								{
+									int args[2] = {0,0};
+									ExtractValues(++c, args, 2);
+
+									PCM_source *pSource = (PCM_source*) GetSetMediaItemTakeInfo(pTake, "P_SOURCE", NULL);
+									if(pSource)
+									{
+										memset(buf, 0, sizeof(buf));
+										GetMediaSourceFileName(pSource, buf, sizeof(buf));
+										if(*buf)
+										{
+											const char *f = strrchr(buf, PATH_SLASH_CHAR);
+											if(f)
+												str.Append(GetSubString(f + 1, args[0], args[1]));
+										}
+									}
+								}
+								break;
+
+							case 'T' : // Track name
+								{
+									int args[2] = {0,0};
+									ExtractValues(++c, args, 2);
+
+									const char *label = (const char*) GetSetMediaTrackInfo(GetMediaItem_Track(pItem), "P_NAME", NULL);
+									if(label)
+										str.Append(GetSubString(label, args[0], args[1]));
+								}
+								break;
+
+							case 't' : // Track index
+								{
+									int width = 2;
+									ExtractValues(++c, &width, 1);
+									str.AppendFormatted(str.GetLength() + 8, "%0*d", width, iTrack);
+								}
+								break;
+							}
+						}
+						break;
+
+					default :
+						str.Append(c++, 1);
+						break;
+					}
+				}
+
+				GetSetMediaItemTakeInfo(pTake, "P_NAME", (void*) str.Get());
+			}
 
 			++itemCount;
 		}

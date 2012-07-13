@@ -1,3 +1,7 @@
+Label processor:
++Added option to process all takes
++Added take count (/K) and take number (/k)
+
 !v2.2.0 #16 (July 9, 2012)
 Full localization for "Fill gaps", "Snapshots merge" and "ReaConsole" tools
 Main dialog boxes are now themed

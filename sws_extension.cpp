@@ -475,7 +475,7 @@ extern "C"
 		IMPAPI(AddProjectMarker);
 		IMPAPI(AddProjectMarker2);
 		IMPAPI(AddTakeToMediaItem);
-//		IMPAPI(AddTempoTimeSigMarker);
+		IMPAPI(AddTempoTimeSigMarker);
 		IMPAPI(adjustZoom);
 		IMPAPI(ApplyNudge);
 		IMPAPI(AttachWindowTopmostButton);
@@ -491,7 +491,7 @@ extern "C"
 		IMPAPI(CountTrackMediaItems);
 		IMPAPI(CountTrackEnvelopes);
 		IMPAPI(CreateLocalOscHandler);
-//		IMPAPI(CreateNewMIDIItemInProj);
+		IMPAPI(CreateNewMIDIItemInProj);
 		IMPAPI(CSurf_FlushUndo);
 		IMPAPI(CSurf_GoEnd);
 		IMPAPI(CSurf_OnMuteChange);
@@ -583,7 +583,7 @@ extern "C"
 		IMPAPI(GetSet_LoopTimeRange2);
 		IMPAPI(GetSubProjectFromSource);
 		IMPAPI(GetTake);
-//		IMPAPI(GetToggleCommandState);
+		IMPAPI(GetToggleCommandState);
 		IMPAPI(GetTrack);
 		IMPAPI(GetTrackGUID);
 		IMPAPI(GetTrackEnvelope);
@@ -726,7 +726,7 @@ extern "C"
 			_snprintf(msg, sizeof(msg),
 				// keep the following message on a single line (for the LangPack generator) 
 				__LOCALIZE_VERFMT("The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.","sws_mbox"),
-				"4.20"); // <- update compatible version here
+				"4.25"); // <- update compatible version here
 
 			//JFB: NULL parent so that the message is at least visible in taskbars (hidden since REAPER v4 and its "splash 2.0")
 			MessageBox(NULL, msg, __LOCALIZE("SWS - Version Incompatibility","sws_mbox"), MB_OK);

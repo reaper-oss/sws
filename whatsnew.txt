@@ -1,3 +1,5 @@
+<b>REAPER v4.25+ is required</b>
+
 !v2.2.0 #17 (July 13, 2012)
 Label processor:
 +Added option to process all takes

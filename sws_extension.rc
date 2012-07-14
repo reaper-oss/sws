@@ -1134,19 +1134,18 @@ BEGIN
 END
 
 IDD_IX_LABELDLG DIALOGEX 0, 0, 263, 203
-STYLE DS_CENTER | DS_MODALFRAME | DS_SHELLFONT | WS_CAPTION | WS_POPUP | WS_SYSMENU
-EXSTYLE WS_EX_WINDOWEDGE | WS_EX_TOOLWINDOW
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_TOOLWINDOW | WS_EX_WINDOWEDGE
 CAPTION "Label processor"
-FONT 8, "Ms Shell Dlg", 0, 0, 1
+FONT 8, "Ms Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "", IDC_HELPTEXT, 5, 5, 253, 147, SS_LEFT
-    LTEXT           "Enter text for new label(s):", IDC_STATIC, 5, 160, 103, 8, SS_LEFT
-    AUTOCHECKBOX    "Process all takes", IDC_CHECK1, 192, 160, 69, 8, BS_LEFTTEXT | BS_RIGHT
-    EDITTEXT        IDC_EDIT, 2, 170, 259, 15, ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK", IDOK, 80, 187, 50, 14
-    PUSHBUTTON      "Cancel", IDCANCEL, 132, 187, 50, 14
+    LTEXT           "",IDC_HELPTEXT,5,5,253,147
+    LTEXT           "Enter text for new label(s):",IDC_STATIC,5,160,103,8
+    CONTROL         "Process all takes",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | BS_LEFTTEXT | BS_RIGHT | WS_TABSTOP,192,160,69,8
+    EDITTEXT        IDC_EDIT,2,170,259,15,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,80,187,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,132,187,50,14
 END
-
 
 IDD_SNM_RGNPLAYLIST DIALOGEX 0, 0, 200, 137
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
@@ -1165,7 +1164,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO
+GUIDELINES DESIGNINFO 
 BEGIN
     IDD_CONSOLE, DIALOG
     BEGIN
@@ -1685,8 +1684,7 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
-
+#include "version.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

@@ -1,8 +1,10 @@
+!v2.2.0 #17 (July 13, 2012)
 Label processor:
 +Added option to process all takes
 +Added take count (/K) and take number (/k)
 
 Windows OS: fixed possible stuck tooltips and buttons stuck on hover state
+Fix for OSX ini files
 
 !v2.2.0 #16 (July 9, 2012)
 Full localization for "Fill gaps", "Snapshots merge" and "ReaConsole" tools

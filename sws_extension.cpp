@@ -475,6 +475,7 @@ extern "C"
 		IMPAPI(AddProjectMarker);
 		IMPAPI(AddProjectMarker2);
 		IMPAPI(AddTakeToMediaItem);
+//		IMPAPI(AddTempoTimeSigMarker);
 		IMPAPI(adjustZoom);
 		IMPAPI(ApplyNudge);
 		IMPAPI(AttachWindowTopmostButton);

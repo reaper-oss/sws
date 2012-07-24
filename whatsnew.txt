@@ -1,3 +1,4 @@
+!v2.3.0 #1 (July 22, 2012)
 <b>REAPER v4.25+ is required</b>
 
 !v2.2.0 #17 (July 13, 2012)

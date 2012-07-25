@@ -26,12 +26,14 @@
 ******************************************************************************/
 
 #pragma once
+
 #define IMPAPI(x) if (!((*((void **)&(x)) = (void *)rec->GetFunc(#x)))) errcnt++;
 #define IMPVAR(x,nm) if (!((*(void **)&(x)) = get_config_var(nm,&sztmp)) || sztmp != sizeof(*x)) errcnt++;
 
 // Use this macro to include the ReaProject* cast.  Try to get cockos to fix in the gen header
 #define Enum_Projects(idx, name, namelen) ((ReaProject*)EnumProjects(idx, name, namelen))
 
+#define SWS_THEMING true
 #define SWS_INI "SWS"
 #define SWS_SEPARATOR "SEPARATOR"
 #define LAST_COMMAND ((char*)(INT_PTR)-1)
@@ -202,6 +204,8 @@ BOOL IsCommCtrlVersion6();
 void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
 void SetWindowPosAtMouse(HWND hwnd);
+void DropXPStyle(HWND parent, const int idcs[], int rm = 1);
+
 
 MediaTrack* GetFirstSelectedTrack();
 int NumSelTracks();
@@ -232,9 +236,9 @@ int SWS_GetModifiers();
 void WinSpawnNotepad(const char* pFilename);
 void makeEscapedConfigString(const char *in, WDL_FastString *out); //JFB: temp (WDL's ProjectContext does not use WDL_FastString yet)
 
+
 // Localization
 #define _SWS_LOCALIZATION
-
 const char* GetLocalizedActionName(const char* _defaultStr, int _flags = 0, const char* _section = "sws_actions");
 bool IsLocalizableAction(const char* _customId);
 TrackEnvelope* SWS_GetTakeEnvelopeByName(MediaItem_Take* take, const char* envname);

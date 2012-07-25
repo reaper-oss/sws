@@ -645,6 +645,9 @@ extern "C"
 		IMPAPI(projectconfig_var_addr);
 		IMPAPI(projectconfig_var_getoffs);
 		IMPAPI(RefreshToolbar);
+#ifdef _WIN32
+		IMPAPI(RemoveXPStyle);
+#endif
 		IMPAPI(Resampler_Create);
 		IMPAPI(screenset_register);
 		IMPAPI(screenset_registerNew);

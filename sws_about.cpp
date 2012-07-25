@@ -57,7 +57,12 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		DRAWITEMSTRUCT *di = (DRAWITEMSTRUCT *)lParam;
 		if (di->CtlType == ODT_BUTTON) 
 		{
+/*JFB commented: looks bad with dark bg themes, see below
 			SetTextColor(di->hDC, (di->itemState & ODS_SELECTED) ? RGB(0,0,0) : RGB(0,0,220));
+*/
+			if (di->itemState & ODS_SELECTED)
+				SetTextColor(di->hDC, RGB(0,0,0));
+
 			RECT r = di->rcItem;
 			char buf[512];
 			GetWindowText(di->hwndItem, buf, sizeof(buf));

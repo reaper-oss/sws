@@ -411,6 +411,13 @@ void SWS_SnapshotsWnd::RenameCurrent()
 	m_pLists.Get(0)->EditListItem((SWS_ListItem*)g_ss.Get()->m_snapshots.Get(i), 1);
 }
 
+const int cRmXPs[] = { 
+	IDC_FILTERGROUP, IDC_MIX, IDC_CURVIS, 
+	IDC_VOL, IDC_PAN, IDC_MUTE, IDC_SOLO, IDC_SENDS, IDC_VISIBILITY, IDC_SELECTION, IDC_FXCHAIN, 
+	IDC_CUSTOM, IDC_APPLYRECALL, IDC_SELECTEDONLY_SAVE, IDC_SELECTEDONLY_RECALL, IDC_SHOWSELONLY, IDC_NAMEPROMPT, IDC_HIDENEW, 
+	-1
+};
+
 void SWS_SnapshotsWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
@@ -429,6 +436,9 @@ void SWS_SnapshotsWnd::OnInitDlg()
 	m_resize.init_item(IDC_NAMEPROMPT, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_HIDENEW, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_OPTIONS, 1.0, 1.0, 1.0, 1.0);
+
+	DropXPStyle(m_hwnd, cRmXPs);
+
 #ifndef _WIN32
 	SetWindowText(GetDlgItem(m_hwnd, IDC_HELPTEXT), "Del: Alt-click\nSave: Cmd-click");
 #endif

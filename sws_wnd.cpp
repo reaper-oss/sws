@@ -1612,7 +1612,7 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
     if (!i)
     {
       int h =r.bottom-r.top;
-/* JFB commented: cannot be 0 here, no grid lines when the list is empty --->
+/* JFB commented: cannot be 0 here, i.e. no grid lines when the list is empty --->
       if (!ListView_GetItemCount(hwnd)) 
       {
         r.top = 0;
@@ -1637,7 +1637,7 @@ void DrawListCustomGridLines(HWND hwnd, HDC hdc, RECT br, int color, int ncol)
           {
             MoveToEx(hdc,br.left,r.top,NULL);
             LineTo(hdc,br.right,r.top);
-//JFB use LineTo(hdc,r.right,r.top) instead of ^^ ?
+//JFB? use LineTo(hdc,r.right,r.top) instead? ^^
           }
           r.top +=h;
         }

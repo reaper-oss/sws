@@ -35,6 +35,7 @@
 // Not included in reaper_plugin_functions.h, so include here:
 void (WINAPI *AttachWindowTopmostButton)(HWND hwnd);
 void (WINAPI *AttachWindowResizeGrip)(HWND hwnd);
+void (WINAPI *RemoveXPStyle)(HWND hwnd, int rm);
 BOOL (WINAPI *CoolSB_GetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi);
 int (WINAPI *CoolSB_SetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi, BOOL fRedraw);
 void (WINAPI *MainThread_LockTracks)();

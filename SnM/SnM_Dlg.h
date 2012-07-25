@@ -40,7 +40,7 @@ void SNM_GetThemeListColors(int* _bg, int* _txt, int* _grid = NULL);
 void SNM_GetThemeEditColors(int* _bg, int* _txt);
 void SNM_ThemeListView(SWS_ListView* _lv);
 LICE_IBitmap* SNM_GetThemeLogo();
-WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam);
+WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam, const int _rmXPStyles[] = NULL);
 
 void SNM_UIInit();
 void SNM_UIExit();

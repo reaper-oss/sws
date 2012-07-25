@@ -5,6 +5,7 @@
 #include "CommandHandler.h"
 #include "FNG_Settings.h"
 #include "RprException.hxx"
+#include "../reaper/localize.h"
 #include "../../WDL/dirscan.h"
 
 #ifndef PATH_SEP
@@ -39,7 +40,7 @@ static const int FNG_REFRESH     = 0xFF01;
 void ShowGrooveDialog(int flags, void *data);
 
 GrooveDialog::GrooveDialog()
-:SWS_DockWnd(IDD_GROOVEDIALOG, "Groove", "FNGGroove", 30010, RprCommandManager::getCommandId("FNG_GROOVE_TOOL"))
+:SWS_DockWnd(IDD_GROOVEDIALOG, __LOCALIZE("Groove","sws_DLG_157"), "FNGGroove", 30010, RprCommandManager::getCommandId("FNG_GROOVE_TOOL"))
 {
 #ifdef _WIN32
 	CoInitializeEx(NULL, 0);
@@ -54,9 +55,9 @@ GrooveDialog::GrooveDialog()
 HMENU GrooveDialog::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU contextMenu = CreatePopupMenu();
-	AddToMenu(contextMenu, "Select groove folder...", FNG_OPEN_FOLDER);
-	AddToMenu(contextMenu, "Save groove...", NamedCommandLookup("_FNG_SAVE_GROOVE"));
-	AddToMenu(contextMenu, "Refresh", FNG_REFRESH);
+	AddToMenu(contextMenu, __LOCALIZE("Select groove folder...","sws_DLG_157"), FNG_OPEN_FOLDER);
+	AddToMenu(contextMenu, __LOCALIZE("Save groove...","sws_DLG_157"), NamedCommandLookup("_FNG_SAVE_GROOVE"));
+	AddToMenu(contextMenu, __LOCALIZE("Refresh","sws_DLG_157"), FNG_REFRESH);
 	return contextMenu;
 }
 
@@ -219,7 +220,7 @@ void GrooveDialog::OnGrooveFolderButton(WORD wParam, LPARAM lParam)
 		return;
 	char cDir[256];
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
-	if (BrowseForDirectory("Select folder containing grooves", me->GetGrooveDir().c_str(), cDir, 256))
+	if (BrowseForDirectory(__LOCALIZE("Select folder containing grooves","sws_DLG_157"), me->GetGrooveDir().c_str(), cDir, 256))
 	{
 		currentDir = cDir;
 		me->SetGrooveDir(currentDir);
@@ -230,7 +231,7 @@ void GrooveDialog::OnGrooveFolderButton(WORD wParam, LPARAM lParam)
 void GrooveDialog::RefreshGrooveList()
 {
 	SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_RESETCONTENT, 0, 0);
-	SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_ADDSTRING, 0, (LPARAM)"** User Groove **");
+	SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_ADDSTRING, 0, (LPARAM)__LOCALIZE("** User Groove **","sws_DLG_157"));
 	WDL_DirScan dirScan;
 	WDL_String searchStr(currentDir.c_str());
 /* dirScan doesn't support wildcards on OSX do filtering later */
@@ -261,7 +262,7 @@ void GrooveDialog::RefreshGrooveList()
 void GrooveDialog::ApplySelectedGroove()
 {
 	int index = (int)SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_GETCURSEL, 0, 0);
-	std::string grooveName = "** User Groove **";
+	std::string grooveName = __LOCALIZE("** User Groove **","sws_DLG_157");
 	GrooveTemplateMemento memento = GrooveTemplateHandler::GetMemento();
 	
 	if(index > 0) {
@@ -279,7 +280,7 @@ void GrooveDialog::ApplySelectedGroove()
 		
 		std::string errMessage;
 		if(!me->LoadGroove(itemLocation, errMessage))
-			MessageBox(GetMainHwnd(), errMessage.c_str(), "Error", 0);
+			MessageBox(GetMainHwnd(), errMessage.c_str(), __LOCALIZE("FNG - Error","sws_DLG_157"), 0);
 	}
 	if(index >= 0) {
 		
@@ -295,7 +296,7 @@ void GrooveDialog::ApplySelectedGroove()
 		editControl = GetDlgItem(m_hwnd, IDC_VELSTRENGTH);
 		GetWindowText(editControl, percentage, 16);
 		double velStrength = (double)atoi(percentage) / 100.0;
-		std::string undoMessage = "FNG: load and apply groove - " + grooveName;
+		std::string undoMessage = __LOCALIZE("FNG: load and apply groove - ","sws_DLG_157") + grooveName;
 		
 		try {
 			if(midiEditorTarget)
@@ -305,19 +306,25 @@ void GrooveDialog::ApplySelectedGroove()
 			Undo_OnStateChange2(0, undoMessage.c_str());
 		} catch(RprLibException &e) {
 			if(e.notify()) {
-				MessageBox(GetMainHwnd(), e.what(), "Error", 0);
+				MessageBox(GetMainHwnd(), e.what(), __LOCALIZE("FNG - Error","sws_DLG_157"), 0);
 			}
 		}
 	}
 	GrooveTemplateHandler::SetMemento(memento);
 }
 
+const int cRmXPs[] = {
+	IDC_SENS_GROUP, IDC_SENS_4TH, IDC_SENS_8TH, IDC_SENS_16TH, IDC_SENS_32ND,
+	IDC_STRENGTH_GROUP, IDC_TARG_GROUP, IDC_TARG_ITEMS, IDC_TARG_NOTES,
+	-1
+};
+
 void GrooveDialog::OnInitDlg()
 {
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 	currentDir = me->GetGrooveDir();
 	
-	SetWindowText(m_hwnd, "Groove tool");
+	SetWindowText(m_hwnd, __LOCALIZE("Groove tool","sws_DLG_157"));
 	SetDlgItemInt(m_hwnd, IDC_STRENGTH, me->GetGrooveStrength(), true);
 	SetDlgItemInt(m_hwnd, IDC_VELSTRENGTH, me->GetGrooveVelStrength(), true);
 	
@@ -325,6 +332,8 @@ void GrooveDialog::OnInitDlg()
 	setTarget(m_hwnd, me->GetGrooveTarget() == TARGET_ITEMS);
 
 	m_resize.init_item(IDC_GROOVELIST, 0.0, 0.0, 0.0, 1.0);
+
+	DropXPStyle(m_hwnd, cRmXPs);
 
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_STRENGTH), GWLP_USERDATA, 0xdeadf00b);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_VELSTRENGTH), GWLP_USERDATA, 0xdeadf00b);

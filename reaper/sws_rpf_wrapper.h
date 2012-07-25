@@ -31,11 +31,13 @@
 
 extern void (WINAPI *AttachWindowTopmostButton)(HWND hwnd); // v4 only
 extern void (WINAPI *AttachWindowResizeGrip)(HWND hwnd); // v4 only
+extern void (WINAPI *RemoveXPStyle)(HWND hwnd, int rm);
 extern BOOL (WINAPI *CoolSB_GetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi);
 extern int (WINAPI *CoolSB_SetScrollInfo)(HWND hwnd, int nBar, LPSCROLLINFO lpsi, BOOL fRedraw);
 extern void (WINAPI *MainThread_LockTracks)();
 extern void (WINAPI *MainThread_UnlockTracks)();
 
+// Avoid VWnd collisions!
 #define WDL_VirtualWnd_ScaledBlitBG WDL_VirtualWnd_ScaledBlitBG_fptr
 #define WDL_VirtualWnd_BGCfg WDL_VirtualWnd_BGCfg_stub
 
@@ -45,7 +47,6 @@ extern void (WINAPI *MainThread_UnlockTracks)();
 #define LICE_PutPixel REAPER_LICE_PutPixel
 #define LICE_GetPixel REAPER_LICE_GetPixel
 #define LICE_Copy REAPER_LICE_Copy
-#define LICE_Blit REAPER_LICE_Blit
 #define LICE_Blit REAPER_LICE_Blit
 #define LICE_Blur REAPER_LICE_Blur
 #define LICE_ScaledBlit REAPER_LICE_ScaledBlit
@@ -79,7 +80,6 @@ extern void (WINAPI *MainThread_UnlockTracks)();
 #undef LICE_PutPixel
 #undef LICE_GetPixel
 #undef LICE_Copy
-#undef LICE_Blit
 #undef LICE_Blit
 #undef LICE_Blur
 #undef LICE_ScaledBlit

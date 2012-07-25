@@ -36,9 +36,11 @@
 
 bool bAllTakes;
 
+const int cRmXPs[] = { IDC_CHECK1, -1 };
+
 WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam, cRmXPs))
 		return r;
 
 	WDL_FastString *pStr = (WDL_FastString*) GetWindowLong(hwnd, GWLP_USERDATA);

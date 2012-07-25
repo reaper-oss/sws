@@ -1314,9 +1314,17 @@ bool IsZoomMode(COMMAND_T*)
 }
 
 #define ZOOMPREFS_WNDPOS_KEY "ZoomPrefs WndPos"
+const int cRmXPs[] = {
+	IDC_GROUP1, IDC_GROUP2, IDC_GROUP3,
+	IDC_MMZOOM, IDC_ITEMZOOM, IDC_UNDOZOOM, IDC_DRAGUP_ZOOM, IDC_DRAGUP_UNDO, IDC_DRAGUP_UNZOOM,
+	IDC_MOVECUR, IDC_SEEKPLAY, IDC_SETTIMESEL, IDC_DRAGUPPER, IDC_DRAGLOWER, IDC_UNDOSWSONLY, IDC_LASTUNDOPROJ,
+	-1
+};
+
+
 static INT_PTR WINAPI ZoomPrefsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam, cRmXPs))
 		return r;
 
 	switch (uMsg)

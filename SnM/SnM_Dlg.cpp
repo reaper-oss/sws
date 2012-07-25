@@ -158,20 +158,26 @@ LICE_IBitmap* SNM_GetThemeLogo()
 	return snmLogo;
 }
 
-WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam)
+WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam, const int _rmXPStyles[])
 {
-	switch(_uMsg)
+	if (SWS_THEMING)
 	{
-		case WM_CTLCOLORSCROLLBAR: // not managed yet, just in case..
-		case WM_CTLCOLOREDIT:
-		case WM_CTLCOLORLISTBOX:
-		case WM_CTLCOLORBTN:
-		case WM_CTLCOLORDLG:
-		case WM_CTLCOLORSTATIC:
+		switch(_uMsg)
+		{
+			case WM_INITDIALOG :
+				DropXPStyle(_hwnd, _rmXPStyles, 1);
+				return 0;
+			case WM_CTLCOLORSCROLLBAR: // not managed yet, just in case..
+			case WM_CTLCOLOREDIT:
+			case WM_CTLCOLORLISTBOX:
+			case WM_CTLCOLORBTN:
+			case WM_CTLCOLORDLG:
+			case WM_CTLCOLORSTATIC:
 /* commented for custom impl.
-		case WM_DRAWITEM:
+			case WM_DRAWITEM:
 */
-			return SendMessage(GetMainHwnd(),_uMsg,_wParam,_lParam);
+				return SendMessage(GetMainHwnd(),_uMsg,_wParam,_lParam);
+		}
 	}
 	return 0;
 }
@@ -387,9 +393,11 @@ void SaveCueBussSettings()
 	SaveCueBusIniFile(g_cueBussConfId, cueBusName, reaType, (trTemplate == 1), trTemplatePath, (showRouting == 1), soloDefeat, (sendToMaster == 1), hwOuts);
 }
 
+const int cRmXPs[] = { IDC_FILTERGROUP, IDC_CHECK1, IDC_CHECK2, IDC_CHECK3, IDC_CHECK4, -1 };
+
 WDL_DLGRET CueBussDlgProc(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam)
 {
-	if (INT_PTR r = SNM_HookThemeColorsMessage(_hwnd, _uMsg, _wParam, _lParam))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(_hwnd, _uMsg, _wParam, _lParam, cRmXPs))
 		return r;
 
 	const char cWndPosKey[] = "CueBus Window Pos";

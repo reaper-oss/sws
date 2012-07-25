@@ -126,12 +126,18 @@ void SWS_SnapshotMergeView::GetItemList(SWS_ListItemList* pList)
 		pList->Add((SWS_ListItem*)g_mergeItems.Get(i));
 }
 
+const int cRmXPs[] = {
+	IDC_PAN, IDC_VOL, IDC_MUTE, IDC_FXCHAIN, IDC_SOLO, IDC_SENDS, IDC_VISIBILITY,
+	IDC_SELECTION, IDC_FILTERGROUP, IDC_SAVE, IDC_UPDATE,
+	-1
+};
+
 INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	static WDL_WndSizer resize;
 	static SWS_SnapshotMergeView* mv = NULL;
 
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam, cRmXPs))
 		return r;
 
 	switch (uMsg)

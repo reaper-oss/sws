@@ -234,9 +234,11 @@ void UpdateINIfile()
 	WritePrivateProfileString("XENAKIOSCOMMANDS","TRACKLABELSUFFIX",g_command_params.TrackLabelSuffix.c_str(),g_XenIniFilename.Get());
 }
 
+const int cRmXPs[] = { IDC_GROUP1, IDC_GROUP2, IDC_GROUP3, IDC_GROUP4, -1 };
+
 WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam, cRmXPs))
 		return r;
 	
 	switch(uMsg)

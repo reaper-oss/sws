@@ -851,10 +851,11 @@ void loadPrefs(){
 	g_pref_default_render_path = def_render_path;
 }
 
+const int cRmXPs[] = { IDC_REMOVE_PREFIX_FROM_TRACK_NAME, IDC_PREPEND_TRACK_NUMBER, -1 };
 
 INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam, cRmXPs))
 		return r;
 
 	bool hasChanged = false;
@@ -870,8 +871,6 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 				SetDlgItemText(hwndDlg, IDC_REGION_PREFIX, g_region_prefix.c_str() );
 				CheckDlgButton(hwndDlg, IDC_REMOVE_PREFIX_FROM_TRACK_NAME, g_remove_region_prefix);
 				CheckDlgButton(hwndDlg, IDC_PREPEND_TRACK_NUMBER, g_prepend_track_number);
-				
-
 				return 0;
             case WM_COMMAND:
 				switch (LOWORD(wParam)){
@@ -916,9 +915,11 @@ const char* bool_to_char( bool b){
 	return b ? "1" : "0";
 }
 
+const int cRmXPPrefs[] = { IDC_ALLOW_STEMS, -1 };
+
 INT_PTR WINAPI doAutorenderPreferences(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam, cRmXPPrefs))
 		return r;
 
 	bool hasChangedDontCare = false;

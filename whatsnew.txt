@@ -1,3 +1,6 @@
++Fixed possible theming issues on Windows XP/7 (reported http://forum.cockos.com/showpost.php?p=1003969&postcount=918|here|)
++More localization for the Groove tool
+
 !v2.3.0 #1 (July 22, 2012)
 <b>REAPER v4.25+ is required</b>
 

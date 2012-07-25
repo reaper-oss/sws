@@ -252,6 +252,8 @@ void SWS_MarkerListWnd::Update(bool bForce)
 	}
 }
 
+const int cRmXPs[] = { IDC_PLAY, IDC_SCROLL, -1 };
+
 void SWS_MarkerListWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
@@ -260,6 +262,9 @@ void SWS_MarkerListWnd::OnInitDlg()
 	m_resize.init_item(IDC_CLEAR, 0.0, 1.0, 0.0, 1.0);
 	m_resize.init_item(IDC_PLAY, 0.0, 1.0, 0.0, 1.0);
 	m_resize.init_item(IDC_SCROLL, 0.0, 1.0, 0.0, 1.0);
+
+	DropXPStyle(m_hwnd, cRmXPs);
+
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);
 
 	m_pLists.Add(new SWS_MarkerListView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT), this));

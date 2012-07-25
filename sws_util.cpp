@@ -119,6 +119,17 @@ void SetWindowPosAtMouse(HWND hwnd)
 	SetWindowPos(hwnd, NULL, r.left, r.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
+void DropXPStyle(HWND parent, const int idcs[], int rm)
+{
+	if (RemoveXPStyle && // no-op on OSX
+		SWS_THEMING && parent && idcs)
+	{
+		int i=0;
+		while (idcs[i] != -1)
+			RemoveXPStyle(GetDlgItem(parent, idcs[i++]), rm);
+	}
+}
+
 MediaTrack* GetFirstSelectedTrack()
 {
 	for (int j = 0; j <= GetNumTracks(); j++)

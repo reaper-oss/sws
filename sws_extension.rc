@@ -117,7 +117,7 @@ BEGIN
 END
 
 IDD_SNAPS DIALOGEX 0, 0, 229, 228
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME   
 EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "SWS Snapshots"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -409,7 +409,7 @@ BEGIN
     LTEXT           "Item pitch nudge A",IDC_STATIC,230,62,60,8
     LTEXT           "semitones",IDC_STATIC,330,62,32,8
     LTEXT           "Configuration A",IDC_STATIC,10,15,49,8
-    GROUPBOX        "Fades",IDC_STATIC,5,5,180,120
+    GROUPBOX        "Fades",IDC_GROUP1,5,5,180,120
     LTEXT           "Random Item Select Probability",IDC_STATIC,10,165,99,8
     LTEXT           "%",IDC_STATIC,156,165,8,8
     LTEXT           "Item/Take volume nudge",IDC_STATIC,209,102,81,8
@@ -423,8 +423,8 @@ BEGIN
     LTEXT           "Fade In Shape",IDC_STATIC,15,105,48,8
     LTEXT           "Fade Out Shape",IDC_STATIC,95,105,53,8
     LTEXT           "Fade In Time",IDC_STATIC,15,86,42,8
-    GROUPBOX        "Randomization",IDC_STATIC,5,130,180,56
-    GROUPBOX        "Nudges",IDC_STATIC,192,6,198,198
+    GROUPBOX        "Randomization",IDC_GROUP2,5,130,180,56
+    GROUPBOX        "Nudges",IDC_GROUP3,192,6,198,198
     EDITTEXT        IDC_EXTTOOLPATH1,75,275,120,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_TABSTOP
     EDITTEXT        IDC_EXTTOOLPATH2,75,295,120,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_TABSTOP
     LTEXT           "Item pitch nudge B",IDC_STATIC,230,82,60,8
@@ -433,7 +433,7 @@ BEGIN
     EDITTEXT        IDC_EXTEDITPATH2,270,295,120,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_TABSTOP
     LTEXT           "Pixels (edit cursor)",IDC_STATIC,232,141,58,8
     LTEXT           "Seconds (edit cursor)",IDC_STATIC,222,161,68,8
-    GROUPBOX        "Tracks",IDC_STATIC,6,210,275,55
+    GROUPBOX        "Tracks",IDC_GROUP4,6,210,275,55
     LTEXT           "Track height A",IDC_STATIC,16,228,48,8
     LTEXT           "Track height B",IDC_STATIC,106,228,48,8
     LTEXT           "Labels : default",IDC_STATIC,16,247,49,8
@@ -969,7 +969,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSM
 CAPTION "SWS Zoom Preferences"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    GROUPBOX        "Zoom tool",IDC_STATIC,7,5,229,154
+    GROUPBOX        "Zoom tool",IDC_GROUP1,7,5,229,154
     CONTROL         "Zoom with middle mouse button (overrides Reaper prefs)",IDC_MMZOOM,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,18,206,10
     LTEXT           "Modifier:",IDC_STATIC,27,33,29,8
@@ -977,15 +977,15 @@ BEGIN
     CONTROL         "No-drag click zooms to item under cursor",IDC_ITEMZOOM,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,48,206,10
     CONTROL         "No-drag click to undo zoom",IDC_UNDOZOOM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,61,206,10
-    GROUPBOX        "Drag upwards:",IDC_STATIC,14,74,102,51
+    GROUPBOX        "Drag upwards:",IDC_GROUP2,14,74,102,51
     CONTROL         "Zooms in",IDC_DRAGUP_ZOOM,"Button",BS_AUTORADIOBUTTON,21,84,44,10
     CONTROL         "Zoom undo",IDC_DRAGUP_UNDO,"Button",BS_AUTORADIOBUTTON,21,96,51,10
     CONTROL         "Unzoom mode",IDC_DRAGUP_UNZOOM,"Button",BS_AUTORADIOBUTTON,21,108,61,10
     CONTROL         "Move edit cursor when zooming in",IDC_MOVECUR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,129,129,10
-    CONTROL         "Seek play",IDC_SEEKPLAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,149,129,87,10
+    CONTROL         "Seek play",IDC_SEEKPLAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,149,129,60,10
     CONTROL         "Set time selection when zooming in",IDC_SETTIMESEL,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,142,206,10
-    GROUPBOX        "Drag Zoom",IDC_STATIC,7,162,229,42
+    GROUPBOX        "Drag Zoom",IDC_GROUP3,7,162,229,42
     CONTROL         "Upper half of ruler",IDC_DRAGUPPER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,174,93,10
     CONTROL         "Lower half of ruler (disrupts time selection)",IDC_DRAGLOWER,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,187,179,10
@@ -1684,7 +1684,8 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

@@ -247,6 +247,8 @@ void SWS_TrackListWnd::ClearFilter()
 	}
 }
 
+const int cRmXPs[] = { IDC_HIDE, IDC_LINK, -1 };
+
 void SWS_TrackListWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST, 0.0, 0.0, 1.0, 1.0);
@@ -255,6 +257,8 @@ void SWS_TrackListWnd::OnInitDlg()
 	m_resize.init_item(IDC_CLEAR, 0.0, 1.0, 0.0, 1.0);
 	m_resize.init_item(IDC_HIDE, 0.0, 1.0, 0.0, 1.0);
 	m_resize.init_item(IDC_LINK, 0.0, 1.0, 0.0, 1.0);
+
+	DropXPStyle(m_hwnd, cRmXPs);
 
 	m_pLists.Add(new SWS_TrackListView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT), this));
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_FILTER), GWLP_USERDATA, 0xdeadf00b);

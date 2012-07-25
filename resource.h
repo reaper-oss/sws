@@ -317,6 +317,10 @@
 #define IDC_PROGRES                     1234
 #define IDC_PROGRESS                    1234 // JFB: duplicated.. normal?
 #define IDC_BUTTON3                     1235
+#define IDC_GROUP1                      1236
+#define IDC_GROUP2                      1237
+#define IDC_GROUP3                      1238
+#define IDC_GROUP4                      1239
 
 // Next default values for new objects
 // 
@@ -324,7 +328,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        166
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1236
+#define _APS_NEXT_CONTROL_VALUE         1240
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

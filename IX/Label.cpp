@@ -46,8 +46,8 @@ WDL_DLGRET doLabelProcDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_INITDIALOG:
 		{
-			SetWindowLong(hwnd, GWLP_USERDATA, (LONG)lParam);
-			pStr = (WDL_FastString*) GetWindowLong(hwnd, GWLP_USERDATA);
+			SetWindowLongPtr(hwnd, GWLP_USERDATA, lParam);
+			pStr = (WDL_FastString*)lParam;
 
 			WDL_FastString helpStr;
 			helpStr.Append(__LOCALIZE("All arguments are optional. The following are all valid: /E /E[3] /E[3,9]:\n","sws_DLG_163"));

@@ -231,8 +231,6 @@ void SWS_AutoColorWnd::Update()
 	}
 }
 
-const int cRmXPs[] = { IDC_AUTOCOLOR, IDC_AUTOICON, -1 };
-
 void SWS_AutoColorWnd::OnInitDlg()
 {
 	m_resize.init_item(IDC_LIST,      0.0, 0.0, 1.0, 1.0);
@@ -242,7 +240,6 @@ void SWS_AutoColorWnd::OnInitDlg()
 	m_resize.init_item(IDC_AUTOCOLOR, 0.0, 1.0, 0.0, 1.0);
 	m_resize.init_item(IDC_AUTOICON,  0.0, 1.0, 0.0, 1.0);
 	m_resize.init_item(IDC_APPLY,     1.0, 1.0, 1.0, 1.0);
-	DropXPStyle(m_hwnd, cRmXPs);
 	m_pView = new SWS_AutoColorView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT));
 	m_pLists.Add(m_pView);
 	Update();

@@ -851,11 +851,9 @@ void loadPrefs(){
 	g_pref_default_render_path = def_render_path;
 }
 
-const int cRmXPs[] = { IDC_REMOVE_PREFIX_FROM_TRACK_NAME, IDC_PREPEND_TRACK_NUMBER, -1 };
-
 INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam, cRmXPs))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
 		return r;
 
 	bool hasChanged = false;
@@ -915,11 +913,9 @@ const char* bool_to_char( bool b){
 	return b ? "1" : "0";
 }
 
-const int cRmXPPrefs[] = { IDC_ALLOW_STEMS, -1 };
-
 INT_PTR WINAPI doAutorenderPreferences(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam, cRmXPPrefs))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
 		return r;
 
 	bool hasChangedDontCare = false;

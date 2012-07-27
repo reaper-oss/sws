@@ -158,25 +158,62 @@ LICE_IBitmap* SNM_GetThemeLogo()
 	return snmLogo;
 }
 
-WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam, const int _rmXPStyles[])
+
+#ifdef _WIN32
+
+#define MAX_THEMED_CTRLS 256
+
+// calling RemoveXPStyle() straight in there would crash!
+static BOOL CALLBACK EnumRemoveXPStyles(HWND _hwnd, LPARAM _ids)
+{
+	int i=0;
+	LONG style = GetWindowLong(_hwnd, GWL_STYLE);
+	if ((style & BS_AUTOCHECKBOX) == BS_AUTOCHECKBOX ||
+		(style & BS_AUTORADIOBUTTON) == BS_AUTORADIOBUTTON ||
+		(style & BS_GROUPBOX) == BS_GROUPBOX)
+	{
+		int* ids = (int*)_ids;
+		int i=0; while (ids[i]!=-1 && i<MAX_THEMED_CTRLS) i++;
+		if (i<MAX_THEMED_CTRLS)
+			ids[i] = (int)GetWindowLong(_hwnd, GWL_ID);
+		else
+			return FALSE;
+	}
+	return TRUE;
+}
+
+#endif
+
+WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam, bool _wantColorEdit)
 {
 	if (SWS_THEMING)
 	{
 		switch(_uMsg)
 		{
+#ifdef _WIN32
 			case WM_INITDIALOG :
-				DropXPStyle(_hwnd, _rmXPStyles, 1);
+			{
+				// remove XP style on some child ctrls (cannot be themed otherwise)
+				int ids[MAX_THEMED_CTRLS];
+				memset(ids, -1, sizeof(int)*MAX_THEMED_CTRLS);
+				EnumChildWindows(_hwnd, EnumRemoveXPStyles, (LPARAM)ids);
+				int i=0;
+				while (i<MAX_THEMED_CTRLS && ids[i]!=-1)
+					RemoveXPStyle(GetDlgItem(_hwnd, ids[i++]), 1);
 				return 0;
-			case WM_CTLCOLORSCROLLBAR: // not managed yet, just in case..
+			}
+#endif
 			case WM_CTLCOLOREDIT:
+				if (!_wantColorEdit) return 0;
+			case WM_CTLCOLORSCROLLBAR: // not managed yet, just in case..
 			case WM_CTLCOLORLISTBOX:
 			case WM_CTLCOLORBTN:
 			case WM_CTLCOLORDLG:
 			case WM_CTLCOLORSTATIC:
-/* commented for custom impl.
+/* commented (allow custom implementations)
 			case WM_DRAWITEM:
 */
-				return SendMessage(GetMainHwnd(),_uMsg,_wParam,_lParam);
+				return SendMessage(GetMainHwnd(), _uMsg,_wParam,_lParam);
 		}
 	}
 	return 0;
@@ -393,11 +430,9 @@ void SaveCueBussSettings()
 	SaveCueBusIniFile(g_cueBussConfId, cueBusName, reaType, (trTemplate == 1), trTemplatePath, (showRouting == 1), soloDefeat, (sendToMaster == 1), hwOuts);
 }
 
-const int cRmXPs[] = { IDC_FILTERGROUP, IDC_CHECK1, IDC_CHECK2, IDC_CHECK3, IDC_CHECK4, -1 };
-
 WDL_DLGRET CueBussDlgProc(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam)
 {
-	if (INT_PTR r = SNM_HookThemeColorsMessage(_hwnd, _uMsg, _wParam, _lParam, cRmXPs))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(_hwnd, _uMsg, _wParam, _lParam))
 		return r;
 
 	const char cWndPosKey[] = "CueBus Window Pos";

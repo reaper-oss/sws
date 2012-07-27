@@ -188,7 +188,6 @@ protected:
 	bool IsDocked() { return (m_state.state & 2) == 2; }
 	void ToggleDocking();
 	virtual void GetMinSize(int* w, int* h) { *w=MIN_DOCKWND_WIDTH; *h=MIN_DOCKWND_HEIGHT; }
-	virtual bool IsThemed() { return SWS_THEMING; }
 
 	virtual void OnInitDlg() {}
 	virtual int OnNotify(WPARAM wParam, LPARAM lParam) { return 0; }

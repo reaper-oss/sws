@@ -129,13 +129,12 @@ void SaveFillGapsIniFile(char* triggerPad, char* fadeLength, char* maxGap,
 	WritePrivateProfileString("SWS","FillGapsMarkErr",tmp,get_ini_file());
 }
 
-const int cRmXPs[] = { IDC_CHECK1, IDC_CHECK2, IDC_CHECK3, -1 };
 HWND g_strtchHFader = 0;
 double g_strtchHFaderValue = 0.5f;
 
 WDL_DLGRET AWFillGapsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam, cRmXPs))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
 		return r;
 
 	const char cWndPosKey[] = "Fill gaps Window Pos"; 

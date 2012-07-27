@@ -313,12 +313,6 @@ void GrooveDialog::ApplySelectedGroove()
 	GrooveTemplateHandler::SetMemento(memento);
 }
 
-const int cRmXPs[] = {
-	IDC_SENS_GROUP, IDC_SENS_4TH, IDC_SENS_8TH, IDC_SENS_16TH, IDC_SENS_32ND,
-	IDC_STRENGTH_GROUP, IDC_TARG_GROUP, IDC_TARG_ITEMS, IDC_TARG_NOTES,
-	-1
-};
-
 void GrooveDialog::OnInitDlg()
 {
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
@@ -332,8 +326,6 @@ void GrooveDialog::OnInitDlg()
 	setTarget(m_hwnd, me->GetGrooveTarget() == TARGET_ITEMS);
 
 	m_resize.init_item(IDC_GROOVELIST, 0.0, 0.0, 0.0, 1.0);
-
-	DropXPStyle(m_hwnd, cRmXPs);
 
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_STRENGTH), GWLP_USERDATA, 0xdeadf00b);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_VELSTRENGTH), GWLP_USERDATA, 0xdeadf00b);

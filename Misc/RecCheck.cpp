@@ -33,13 +33,12 @@
 #include "RecCheck.h"
 
 static bool g_bEnRecInputCheck = false;
-const int cRmXPs[] = { IDC_DONTSHOW, -1 };
 #define RECINPUTCHECK_KEY "Record input check"
 #define RECINPUTWNDPOS_KEY "RecInputCheckWndPos"
 
 INT_PTR WINAPI doRecInputDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam, cRmXPs))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwndDlg, uMsg, wParam, lParam))
 		return r;
 
 	switch(uMsg)

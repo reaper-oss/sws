@@ -95,13 +95,11 @@ void PadreExit()
 	delete midiNoteRandomizer;
 }
 
-const int cRmXPs[] = { IDC_PADRELFO_ACTIVETAKES, -1 };
-
 WDL_DLGRET EnvelopeLfoDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	const char cWndPosKey[] = "LFO Window Pos";
 
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam, cRmXPs))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
 		return r;
 
 	switch(uMsg)
@@ -411,13 +409,11 @@ void DoEnvelopeProcessor(COMMAND_T* _ct)
 	ShowWindow(hwnd, SW_SHOW);
 }
 
-const int cRmXPEnvs[] = { IDC_PADREENVPROC_ACTIVETAKES, -1 };
-
 WDL_DLGRET EnvelopeProcessorDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	const char cWndPosKey[] = "EnvProc Window Pos";
 
-	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam, cRmXPEnvs))
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
 		return r;
 
 	switch(uMsg)

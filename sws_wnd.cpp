@@ -126,33 +126,33 @@ INT_PTR WINAPI SWS_DockWnd::sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 		pObj = (SWS_DockWnd*)lParam;
 		pObj->m_hwnd = hwndDlg;
 	}
-	if (pObj)
-	{
-		// theme list views (optional)
-		if (pObj->IsThemed())
-			for (int i=0; i < pObj->m_pLists.GetSize(); i++)
-				if (SWS_ListView* lv = pObj->m_pLists.Get(i))
-					if (ListView_HookThemeColorsMessage(pObj->GetHWND(), uMsg, lParam, lv->GetOldColors(), GetWindowLong(lv->GetHWND(),GWL_ID), 0, lv->GetColumnCount()))
-						return 1;
-		// the meat
-		return pObj->WndProc(uMsg, wParam, lParam);
-	}
-	else
-		return 0;
+	return pObj ? pObj->WndProc(uMsg, wParam, lParam) : 0;
 }
 
 INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	if (SWS_THEMING)
+	{
+		// theme list views
+		for (int i=0; i < m_pLists.GetSize(); i++)
+			if (SWS_ListView* lv = m_pLists.Get(i))
+				if (ListView_HookThemeColorsMessage(m_hwnd, uMsg, lParam, lv->GetOldColors(), GetWindowLong(lv->GetHWND(),GWL_ID), 0, lv->GetColumnCount()))
+					return 1;
+		// theme other ctrls
+		if (INT_PTR r = SNM_HookThemeColorsMessage(m_hwnd, uMsg, wParam, lParam, false))
+			return r;
+	}
+
 	switch (uMsg)
 	{
 		case WM_INITDIALOG:
 		{
-	        m_resize.init(m_hwnd);
+			m_resize.init(m_hwnd);
 
 			// Call derived class initialization
 			OnInitDlg();
 			
-			if (IsThemed())
+			if (SWS_THEMING)
 			{
 				for (int i=0; i<m_pLists.GetSize(); i++)
 				{
@@ -441,9 +441,9 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 #endif
 		case WM_CTLCOLOREDIT:
-			if (IsThemed())
+			if (SWS_THEMING)
 			{
-				// color override for list views' cell edition?
+				// color override for list views' cell edition
 				HWND hwnd = (HWND)lParam;
 				for (int i=0; i<m_pLists.GetSize(); i++)
 					if (SWS_ListView* lv = m_pLists.Get(i))
@@ -454,15 +454,6 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 				return SendMessage(GetMainHwnd(),uMsg,wParam,lParam);
 			}
 			return 0;
-		case WM_CTLCOLORSCROLLBAR: // not managed yet, just in case..
-		case WM_CTLCOLORLISTBOX:
-		case WM_CTLCOLORBTN:
-		case WM_CTLCOLORDLG:
-		case WM_CTLCOLORSTATIC :
-/* commented for custom implementations via OnUnhandledMsg()
-		case WM_DRAWITEM:
-*/
-			return IsThemed() ? SendMessage(GetMainHwnd(),uMsg,wParam,lParam) : 0;
 		default:
 			return OnUnhandledMsg(uMsg, wParam, lParam);
 	}

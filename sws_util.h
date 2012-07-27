@@ -204,8 +204,6 @@ BOOL IsCommCtrlVersion6();
 void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
 void SetWindowPosAtMouse(HWND hwnd);
-void DropXPStyle(HWND parent, const int idcs[], int rm = 1);
-
 
 MediaTrack* GetFirstSelectedTrack();
 int NumSelTracks();

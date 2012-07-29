@@ -1,3 +1,4 @@
+!v2.3.0 #2 (July 28, 2012)
 +Fixed theming issues on Windows XP/7 (reported http://forum.cockos.com/showpost.php?p=1003969&postcount=918|here|)
 +Fixed Label processor crash (reported http://forum.cockos.com/showpost.php?p=1004406&postcount=926|here|)
 +More localization for the Groove tool

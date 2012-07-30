@@ -1,11 +1,13 @@
-; SWS/S&M Template LangPack v2.2.0 Build 7
-; NOTE: See http://forum.cockos.com/showpost.php?p=941893&postcount=810.
-; As you translate a string, remove the ; from the beginning of the
-; line. If the line begins with ;^, then it is an optional string,
+; SWS/S&M Template LangPack v2.3.0 Build 2
+
+; NOTE: As you translate a string, remove the ; from the beginning of
+; the line. If the line begins with ;^, then it is an optional string,
 ; and you should only modify that line if the definition in [common]
 ; is not accurate for that context.
-; Do not change action tags (SWS:, SWS/S&M:, etc..), such names
-; would be ignored.
+; Do not change action tags like SWS:, SWS/S&M:, etc.. (such strings
+; would be ignored).
+; Once translated, the SWS LangPack has to be merged with the main REAPER one:
+; see http://forum.cockos.com/showpost.php?p=941893&postcount=810.
 
 [common]
 ;D840E3186B2B9581=OK
@@ -16,6 +18,8 @@
 ;61946358B1034B76=Mute
 ;DCEF2B4D03DE723C=Name
 ;96E5C67E1437194E=Pan
+;B8E9E8402ED408CA=Paste snapshot
+;D7B51CFC5837E755=Rename
 ;89B473D8A650A4CB=Selection
 ;4A47B5FB012F8EBE=Sends
 ;31FEA07601981CDC=Snapshots
@@ -25,8 +29,19 @@
 ;8FC86C263760ACB9=Volume
 ;F10F4B1B4D6DC250=Clear
 ;8BEB3C381FB2F1CE=Color
+;EB86AAFEF35C0E6B=Convert markers to regions
+;E7E40CCC77CC12FB=Convert regions to markers
+;7551CD82B209BA83=Copy marker set to clipboard
+;FE52885EB65C3114=Delete all markers
+;05EB98D88DB76722=Delete all regions
 ;D43B88702E996ED9=Filter:
+;2A3B3F7271D33AF2=Paste marker set from clipboard
+;830C5FC0E18A9057=Region
+;7CC58A2F20B1F2EA=Reorder marker IDs
+;4FBB69056DA6FA14=Reorder region IDs
+;03C3F149C055CBBA=Save marker set...
 ;20C6688B61A5F167=Seek play
+;941DEA15C4817EEC=Set color...
 ;F09E4B5C35AA14B9=Cancel
 ;C5531D0DEE1F0D0D=Input
 ;5C048676E8CE02CB=Info
@@ -35,12 +50,14 @@
 ;FB13D526673DCE9D=&Cancel
 ;2F1DE5801E02E9B5=&OK
 ;4A107F989831EA67=&Remove
-;2ACDE9B48ED97A15=Static
+;65B4F91BF1A84DBE=(master)
 ;D7323C887B0A2951=Apply
 ;AA43832937FD7FFD=Auto Color/Icon
 ;3F3735351AB6BE38=Enable auto coloring
 ;CD4B96631531EE18=Enable auto icon
 ;3390D94D34F06461=None
+;DF988AFE75B5D570=Random
+;B4F87C534AD2A68F=SWS - Error
 ;0832A307B4EB9DCE=%
 ;EFB157313B1D42C8=Randomization
 ;89325B4900977A87=Tracks
@@ -49,6 +66,7 @@
 ;83C05BCE6E0BA462=semitones
 ;A43D5AFECAA46489=Preview
 ;BAC64C1B2E060EE5=Close
+;3890BE5EE2B48715=Loop
 ;322C3EF25FD8E8CB=Dialog
 ;9F31623C59553158=Path
 ;0B0D7BE74B5FDC8D=Active only
@@ -96,6 +114,61 @@
 [sws_DLG_100] ; IDD_CONSOLE
 ;736B3BDA5AF8D59B=SWS ReaConsole
 ;56868184838397C5=http://www.standingwaterstudios.com/reaper \rEnter a command...\r...
+;939A69CAE6569740=Enable solo on 
+;534682D23CA56CBF=Disable solo on 
+;8EC20E50FB082B11=Toggle solo on 
+;D419D6781343D36E=Solo only 
+;2EAD1C8B5EA42BDA=Enable mute on 
+;3D815602B201E2E5=Disable mute on 
+;5E13AE69BB7BA253=Toggle mute on 
+;327B7474C031DD8C=Mute only 
+;691FA885465E19DD=Enable arm on 
+;68B9B213B9F122EC=Disable arm on 
+;2B3033E4B78C9992=Toggle arm on 
+;0306D0D8D0214CFD=Arm only 
+;FC0EAE2C4151CADB=Invert phase on 
+;7E3B82D6D51AFB58=Normal phase on 
+;D2688F75701C7464=Flip phase on 
+;025CAC88AA620E4F=Invert phase on only 
+;CC1F3FAD0966B99D=Select 
+;067A8A2E2DCB3FA8=Unselect 
+;B8F1E05B22AD60BA=Toggle select on 
+;BBB3B01EECED43FD=Select only 
+;A43711AFB5135991=Enable FX on 
+;4DCABAE85CC6F66E=Disable FX on 
+;3AFAA8008ABD70A1=Toggle FX enable on 
+;95171672BFB402B1=Enable FX on only 
+;E1C0D381FF838242=Set volume on 
+;2BAF948B7585F585= %s dB
+;514911BB3D3B7078=Trim volume on 
+;F04885315C9ADB1B=Set pan on  
+;CE323EE47092023C= %s%
+;7B4B7E8E4800F835=Trim pan on  
+;48D8AFDD92FBE594=Name 
+;C235C6DC24F661B0= to %s
+;4815F9ABE0847C99= with prefix %s
+;4FEB2309EDAE0422= with suffix %s
+;F4B0C784A8EA1E2F=Set # channels on 
+;5307E8A241CF0CF6=Set input on 
+;CA79FD79ED1179AF=Change color on 
+;B55A82C43233563E=Insert action marker 
+;5A298A8036517F9A=!%s
+;505D8026083B20AF=http://www.standingwaterstudios.com/reaconsole.php
+;E830312ACF82DC9D=Enter a command...
+;2ED22F7EFB7E2C2A=all
+;DBD431BE616DBA2B=blue
+;CF22722003B0C856=green
+;3555C594F72E3AD8=grey
+;3562CD94F738D2CC=gray
+;602AB27FC91DFB86=black
+;83E51177011AB188=white
+;CC7CB8ADD4A8609B=yellow
+;8A8991B3638EAB04=cyan
+;F2CD9A24F6C38235=purple
+;1919CC81C911E1C5=orange
+;0811A65E917D9606=magenta
+;ACC358AD1417DA97=Internal error, contact SWS
+;E6FD80D3561437A0=nothing
 ;^D840E3186B2B9581=OK
 
 [sws_DLG_101] ; IDD_SNAPS
@@ -125,7 +198,6 @@
 ;32E7D0368E749EA1=Delete snapshot %d
 ;D0991B5FEDB5D9E5=Snapshot Details
 ;3113036F9CEB500A=Merge into project...
-;D7B51CFC5837E755=Rename
 ;D3D50E1E33F68384=Show snapshot details
 ;EA84380CDB6E9B88=Select tracks in snapshot
 ;F4DF05D977BE85CF=Add selected track(s) to snapshot
@@ -135,7 +207,6 @@
 ;54BAC276410E15C6=Copy snapshot
 ;4FA44F0887429606=Recall %s
 ;0F8C69AAC78140E5=New snapshot
-;B8E9E8402ED408CA=Paste snapshot
 ;6D68A3838F709953=Show Options ->
 ;E41BB9B130BB9068=Enter Snapshot Name
 ;DCE189D5064DE575=unnamed
@@ -153,6 +224,8 @@
 ;^DCEF2B4D03DE723C=Name
 ;^B98A031D9BEEF64E=Time
 ;^31FEA07601981CDC=Snapshots
+;^D7B51CFC5837E755=Rename
+;^B8E9E8402ED408CA=Paste snapshot
 
 [sws_DLG_102] ; IDD_MARKERLIST
 ;2AE01E934C7C2028=SWS Marker List
@@ -160,11 +233,50 @@
 ;2D126F1D4BD6B8C7=Type
 ;D854C0186B3C0312=ID
 ;7DA8EA3426CA11D3=Description
+;90AF657379F9511D=Marker
+;15240CFCAE127DEF=Marker List
+;B6FAAE1CF0D62E5A=Delete market set...
+;509B0D4671855999=Load %s
+;1A5D047A8EE44F7F=Delete selected marker(s)
+;E81628D2CEA2FB3A=Export formatted marker list to clipboard
+;6AECAE05CAC32C2A=Export formatted marker list to file
+;C9E98D982D4FE606=Export format...
+;A756448251FA1283=Load Marker Set
+;02917567542221DA=Delete Marker Set
+;D82C10703EF6968C=Export marker list format string:\r\n
+;96ACBF4C4A400FDF=First char one of a/r/m\r\n
+;9F2FF2ADA73D35FA=(all / only regions / only markers)\r\n
+;DB9E5544A3D6183C=Then, in any order, n, i, l, d, t, s, p\r\n
+;D4C2FCA2425A450B=n = number (count), starts at 1\r\n
+;43EC55127FFBE2D9=i = ID\r\n
+;CDA97B77521C5BA0=l = Length in H:M:S\r\n
+;DD90824E740F51E7=d = Description\r\n
+;4F51A020A1F08E52=t = Absolute time in H:M:S\r\n
+;141C8F647B10F29D=s = Absolute time in project samples\r\n
+;2DDE3161223DD63E=p = Absolute time in proj ruler format\r\n
+;E4FDDB6D7EF0B812=You can include normal text in the format.\r\n
+;10EB112AC9DC3209=If you want to use one of the above\r\n
+;8664EE72D661FCFB=characters in normal text, preface it with \\
+;DD10FCBE3C988A8B=No marker sets available to load.
+;CCA575B024070926=No marker sets available to delete.
+;3D807C292F03DB85=Choose text file to save markers to
 ;^D43B88702E996ED9=Filter:
 ;^F10F4B1B4D6DC250=Clear
 ;^20C6688B61A5F167=Seek play
 ;^B98A031D9BEEF64E=Time
 ;^8BEB3C381FB2F1CE=Color
+;^830C5FC0E18A9057=Region
+;^D7B51CFC5837E755=Rename
+;^941DEA15C4817EEC=Set color...
+;^03C3F149C055CBBA=Save marker set...
+;^7551CD82B209BA83=Copy marker set to clipboard
+;^2A3B3F7271D33AF2=Paste marker set from clipboard
+;^7CC58A2F20B1F2EA=Reorder marker IDs
+;^4FBB69056DA6FA14=Reorder region IDs
+;^FE52885EB65C3114=Delete all markers
+;^05EB98D88DB76722=Delete all regions
+;^EB86AAFEF35C0E6B=Convert markers to regions
+;^E7E40CCC77CC12FB=Convert regions to markers
 
 [sws_DLG_103] ; IDD_SAVE
 ;5360C4036D9DC564=Save Marker Set
@@ -218,13 +330,15 @@
 ;DB63B3750AE8C9B2=About SWS Extension
 ;D6236B5DB614B401=&Close
 ;66237C1DF849FB0A=&License
-;87D1B9C629A3877D=Copyright (C) 2011 Tim Payne of Standing Water Studios\r\tJF Bédague (S&&M actions)\r\tFingers (FNG/Groove actions)\r\tShane StClair (Autorender)\rCopyright (C) 2010 P Bourdon (Padre actions)\rCopyright (C) 2009 Xenakios
+;C203E8BE2F35587F=Copyright (C) 2012 Tim Payne of Standing Water Studios\r\tJ.F. Bédague (S&&M)\r\tFingers (FNG)\r\tPhilip S. Considine (IX)\rCopyright (C) 2011 Shane StClair (Autorender)\rCopyright (C) 2010 P. Bourdon (Padre)\rCopyright (C) 2009 Xenakios
 ;A09F3B03C26FB456=Version String
 ;0088DE3A7C432153=SWS Extension, a REAPER plugin.\rMerged with Xenakios Command Extensions, October 2009
 ;5F7E36C814A094A3=Download the latest version:
 ;F380AF88D70C5B88=http://www.standingwaterstudios.com/reaper/
 ;81E9E8C75EC2E3A7=http://www.standingwaterstudios.com/reaper/sws_extension.exe
 ;3C48B54EE72084FC=Documentation is available at the SWS website:
+;3AE8EC2360A3E407=Version %d.%d.%d Build #%d, built on %s
+;54076EBFD82375B5=SWS License
 
 [sws_DLG_110] ; IDD_PROMPT
 ;A3FAE16E6B2F9235=Prompt
@@ -246,6 +360,14 @@
 ;C2C0CFA6021DAF5B=Update Project
 ;C542CCD8C427A8BD=Source track
 ;77CE6F2068DEC3D5=Destination
+;30EF57A27EDFC686=(none)
+;FF570B4B024B6E9A=(create new)
+;926BB85FF0551A57=Examine track snapshot
+;B40BD29CA2F7DA87=Select source track
+;0C0628849FDC604C=Select destination track
+;233E5531BAFE46B0=Track Snapshot Details
+;EF34B62A5711817A=Cannot have multiple sources with the same destination!
+;AC7D8C782C25C596=Snapshot Recall Error
 ;^2F1DE5801E02E9B5=&OK
 ;^FB13D526673DCE9D=&Cancel
 ;^4492D1B31A97562E=&Add
@@ -260,6 +382,7 @@
 ;^89B473D8A650A4CB=Selection
 ;^C499FEFB8CC28F79=Filter
 ;^DCEF2B4D03DE723C=Name
+;^65B4F91BF1A84DBE=(master)
 
 [sws_DLG_113] ; IDD_INFO
 ;^5C048676E8CE02CB=Info
@@ -270,7 +393,6 @@
 ;71FDC2D218828DA6=Select a new receive track:
 ;7C94E6057F59C7F6=&Delete Send
 ;^2F1DE5801E02E9B5=&OK
-;^2ACDE9B48ED97A15=Static
 
 [sws_DLG_115] ; IDD_AUTOCOLOR
 ;3302408639F03E25=SWS/S&M Auto Color/Icon
@@ -280,19 +402,15 @@
 ;AD33F3AA2052E471=(children)
 ;54334700B0797761=(receive)
 ;25B13CF8C510AE9C=(any)
-;65B4F91BF1A84DBE=(master)
 ;026D6D8EAF5E7903=Gradient
-;DF988AFE75B5D570=Random
 ;0D80B0BBF79C562F=Parent
 ;44C7D9889FEBDAE5=Ignore
 ;FE94E276B467DA8E=Icon
 ;8FFF3BF9C3372077=Autocolor entry with that name already exists.
-;B4F87C534AD2A68F=SWS - Error
 ;48F4CAFF1A39018A=Force
 ;C109D62BB122600D=(name)
 ;39EBBE4E99FEBC00=Load icon
 ;51CB527B395AC04D=Autocolor entry of that type already exists.
-;941DEA15C4817EEC=Set color...
 ;98E6171820F1C406=Load icon...
 ;F182470DAA529171=Clear icon
 ;B9964F142111ACDB=Up in priority
@@ -303,12 +421,16 @@
 ;^8BEB3C381FB2F1CE=Color
 ;^3F3735351AB6BE38=Enable auto coloring
 ;^CD4B96631531EE18=Enable auto icon
+;^65B4F91BF1A84DBE=(master)
 ;^1A236FDD7E5FF32C=Custom
+;^DF988AFE75B5D570=Random
 ;^3390D94D34F06461=None
 ;^0832A507B4EBA134=#
 ;^C499FEFB8CC28F79=Filter
+;^B4F87C534AD2A68F=SWS - Error
 ;^AA43832937FD7FFD=Auto Color/Icon
 ;^D7323C887B0A2951=Apply
+;^941DEA15C4817EEC=Set color...
 
 [sws_DLG_116] ; IDD_RENAMETAKEDLG
 ;D9701466ECF245AA=Rename take/source file
@@ -319,7 +441,6 @@
 ;3EC868AF44198EF5=Please note! Renaming source media files is currently not undoable in REAPER! Also other projects may use the same media.
 ;A8BFBFCA6C6AAD58=Rename source file
 ;^F09E4B5C35AA14B9=Cancel
-;^2ACDE9B48ED97A15=Static
 
 [sws_DLG_117] ; IDD_ITEMPANVOLDIALOG
 ;324B2BD1B1906185=Set Vol/Pan Of Takes
@@ -399,7 +520,6 @@
 ;DEA023F867AAB9A6=Minutes to record
 ;82A95350926D07FE=Disk space required for PCM audio :
 ;^D840E3186B2B9581=OK
-;^2ACDE9B48ED97A15=Static
 
 [sws_DLG_123] ; IDD_CSPVOC_CONF
 ;027E8EB078571742=Process Item With Phase Vocoder
@@ -463,7 +583,6 @@
 ;CB4A9CA71E592EDF=Time interval
 ;B67527171C8EE38D=Item end
 ;941A7C88D7688161=Add time interval to
-;3AB5D1CA3B7D357B=Radio3
 ;^D840E3186B2B9581=OK
 ;^F09E4B5C35AA14B9=Cancel
 ;^1616D990C579771C=seconds
@@ -475,11 +594,9 @@
 ;F5DAB5BC2528539A=Search source media file names
 ;^D840E3186B2B9581=OK
 ;^F09E4B5C35AA14B9=Cancel
-;^2ACDE9B48ED97A15=Static
 
 [sws_DLG_131] ; IDD_ITEM_INSPECTOR
 ;C4A363311CEA4818=Item/track info
-;^2ACDE9B48ED97A15=Static
 
 [sws_DLG_132] ; IDD_ITEMPOSREMAP
 ;04AD86A94E0930E3=Remap Item Positions
@@ -529,7 +646,6 @@
 [sws_DLG_137] ; IDD_SCANPROGR
 ;BE666894FEAE3C7E=Drive scan in progress...
 ;437E90FEB5D03933=Abort
-;^2ACDE9B48ED97A15=Static
 
 [sws_DLG_138] ; IDD_SPREADITEMS
 ;E5BE059839F082BE=Spread items over tracks
@@ -549,13 +665,13 @@
 ;EBBDB757F8C8BEEE=Item property interpolator
 ;C62CEAA07F6140D0=Property :
 ;F573B486E4957A6D=Reset env
-;3890BE5EE2B48715=Loop
 ;2B5CBE69101DB72D=Solo item tracks
 ;6EE75A28D2A2AB99=Compensate item length
 ;4EF17D2653AD6AC6=Reset all env
 ;^D840E3186B2B9581=OK
 ;^F09E4B5C35AA14B9=Cancel
 ;^3D9CBC3C216900AD=Play
+;^3890BE5EE2B48715=Loop
 
 [sws_DLG_141] ; IDD_SWINGITEMPOS
 ;B2CA2ABC1F2B544A=Swing item positions
@@ -622,6 +738,18 @@
 ;C87A83B1C688588A=(-100 to +100%)
 ;3C7E2848E48690C4=(0 to 200%)
 ;270D8C3D35B73337=Process!
+;15CFA775F386E597=Selected track envelope
+;6848357293FCDA33=Selected take(s)
+;796015BB879A3729=Selected take(s) (MIDI)
+;8D194AAA7BC88080=Fade in
+;9C962BB0602D4005=Fade out
+;296C5462CD43F291=Amplify
+;C643133F6AF22DA8=No envelope selected!
+;5C3B48F480B24784=SWS/Padre - Error
+;AF8628D35D39E456=No time selection!
+;EC674A82883E70FB=No item selected!
+;395B7B0B996B45C8=Could not retrieve envelope object state!
+;13A86FE5530D739F=Could not generate envelope!
 ;^CD8E5674E18FBCBA=Offset:
 ;^576D3C1F8C34C670=Strength:
 ;^BAC64C1B2E060EE5=Close
@@ -633,7 +761,7 @@
 [sws_DLG_149] ; IDD_SNM_CUEBUSS
 ;6FA49FB22DC1F8FD=S&M - Create cue buss from track selection
 ;D8ACD3F8FCD62887=Receives type:
-;AA6E039ED9D1AF3B=Show buss routing
+;6DDDB6ED10F62234=Show routing window
 ;BCA33A34D7B6E352=Create cue buss from track template (/manual)
 ;E99EBA7FF6970DBB=...
 ;AD726D394D66AB27=Buss name:
@@ -681,8 +809,8 @@
 ;CD5C2646D86E8B7B=Show image
 ;29140F9196FDC8AB=Set track icon for selected tracks
 ;265C63288E799FC2=Load theme
-;2D66ED8D29548887=Probable cause: no selection, nothing to save, cannot write file, invalid filename, etc...
-;A7B3A14039F1B80E=Probable cause: all files are already present, empty directory, directory not found , etc...
+;2A5194A9699887BF=Probable cause: no selection, nothing to save, cannot write file, file in use, invalid filename, etc...
+;486807D18912807A=Probable cause: all files are already present, empty directory, directory not found, etc...
 ;3DE17A9EF471C9BE=No %s slot defined in the Resources view!
 ;90CAB942550D19CE=S&M - Load %s (slot %d)
 ;437E1157513D9F92=S&M - %s (slot %d)
@@ -705,8 +833,8 @@
 ;0790793985F6AE5E=Add to new track
 ;BFAC6C521747F5AD=Add to sel items as takes
 ;FB17763737E4EF6E=Add to current track as item
-;D803A62CB2D30F1C=S&&M - Set auto-fill directory
-;62F6990CDC039204=S&&M - Set auto-save directory
+;41EB9499B73C958D=Set auto-fill directory
+;DD183675D3038729=Set auto-save directory
 ;BDD5C8ECED505E1E=No new recent projects found!\n%s
 ;65323030286FAFCE=[Current auto-save path: %s]
 ;444085514605E381=Sync auto-save and auto-fill paths
@@ -717,8 +845,8 @@
 ;1379227A0744BCDB=Auto-save FX chains from track selection
 ;CC813562333DF20B=Auto-save FX chains from item selection
 ;6EB204A95897D58B=Auto-save input FX chains from track selection
-;346004CE3758B30E=Create filename from track/item name
-;8441E11884949505=Create filename from 1st FX name
+;93BC0492E8483AD9=Generate filename from track/item name
+;8005F69BB7360B60=Generate filename from first FX name
 ;97C322BB265EE150=Set auto-save directory to project path (/TrackTemplates)
 ;6AF0184E081EC65A=Include track items in templates
 ;A2B7F39F5A83AFB8=Include envelopes in templates
@@ -729,6 +857,7 @@
 ;3F6AFB7D13A2C301=Set auto-fill directory...
 ;3915091754235964=Set auto-fill directory to default resource path
 ;D0ED5E61B6030E66=Set auto-fill directory to project path
+;83CEDDAC8FB7324E=Copy
 ;C588DFC7CFD5A0D5=Project loader/selecter configuration...
 ;67B4EE990F8BC743=Set project loader/selecter from selection
 ;F411F8839B55D1F4=Clear project loader/selecter configuration
@@ -741,16 +870,17 @@
 ;F423AB5EF950EA62=Load slot/file...
 ;FE4CE665107826A3=Delete files
 ;736AE85776D5FB21=Rename file
-;B81B4B77547CD16B=Edit file...
 ;02DAF765BFB8020F=Display file...
+;E6E83D1BBC047C87=Diff files...
+;B81B4B77547CD16B=Edit file...
 ;534FCA595664CB6A=Show path in explorer/finder...
 ;F56EAD8064972CE0=Bookmarks
 ;79FE605ED9CF5311=New bookmark
 ;84C7DA8126B7F058=Copy bookmark...
 ;05FFC47CCDC762D6=Filter on
-;4FF34696DCB6C124=Tie %s slot actions
-;912834C76AFB9AF2=Offset template items/envs by edit cursor
+;770F0F908F138031=Tie %s slot actions to this bookmark
 ;65CA689C377C5655=Offset template items by edit cursor
+;912834C76AFB9AF2=Offset template items/envs by edit cursor
 ;73FE3D47B86D2D80=Auto-fill %s slots (right-click for options)\nfrom %s
 ;D493DCBC3CB21E8F=%s (right-click for options)\nto %s
 ;4B951DEDCFC57616=Auto-save FX chains for selected tracks
@@ -762,18 +892,18 @@
 ;3DD3A3534684F291= w/ envs
 ;90DA57C7A852EF8B=Auto-save %s slots (right-click for options)\nto %s
 ;2FE20A98FB53CD98=Resource/slot type
-;826E0628E3A86CCC=Copy as new bookmark
-;3794245E4281EC2C=Delete bookmark
+;4F87FC05B525E983=Delete bookmark (and files, if confirmed)
 ;C6C71558AEB0EFAB=%s directory not found!\n%s%sDo you want to define one ?
-;A03081EC1CE58791=Auto-save failed: %s\n%s
+;3CD103F652136FC0=Overwrite selected files?\nNote: replying \"No\" will add new slots/files.
+;5CAF42B0F32898DF=S&M - Confirmation
 ;45470B54695C8608=Auto-save failed!\n%s
 ;F89D11A4117D9242=No slot added from: %s\n%s
 ;5A0E4F31866A9D15=No slot added!\n%s
 ;BA21C9190DFD76AF=My %s
-;3CBF36F5DABD36E5=S&M - Add resource bookmark
+;1E979438D7924D6B=S&M - Add bookmark
 ;32B1D12EE389B486=Too many resource types!
-;D9FE029D2E4D04A0=Delete files too ?
-;8A9A61EC05A6EA79=S&M - Delete resource bookmark
+;1B4DD3927B6CF1B1=S&M - Delete bookmark \"%s\"
+;CDA08903E4727C8E=Delete files too?
 ;476464BB2D0C9198=S&M - Rename bookmark
 ;90F06D85BD777AC0=FX chain
 ;7AB68CADD59E7A8C=track template
@@ -866,7 +996,9 @@
 ;4CF9C4BC5FF92854=Input track:
 ;5C1582EFB9F219B5=S&M - Load FX Chain
 ;45B81A96C950B909=(No FX on track)
-;7260C7E7941BF0D3=Learn current preset: %s
+;C0ADE3C24B9EB89C=Learn current preset (%s)
+;BDD6B6770AD7B24E=[User presets%s]
+;85F7F09B9D76BFD8=: no imported .rpl file
 ;D31B7A60ECC57554=(Unknown FX on track)
 ;8CFA21E35F72FC3A=Activate
 ;2EA19CC9DD40DD1A=Edit comment
@@ -879,11 +1011,8 @@
 ;9781A15EAC17ABF8=Load FX Chain...
 ;886B0236406A689C=Clear FX Chains
 ;E7288F43EF24987E=(Track template overrides)
-;BC3A3E513CDC37E4=Clear presets
-;A6280B8D8BB7D590=Current
-;5E1EDA593660D841=none
+;094AD5DC34475C5F=Clear all FX presets
 ;1044725A41004ED6=Learn from Actions window
-;D5D691FBF4C19058=Edit action/macro
 ;5F5D2B92D9A12FE1=Clear actions/macros
 ;B79DC956C1D89568=Enable
 ;60078CDBD887FAFF=Mute all but active track
@@ -909,6 +1038,15 @@
 ;1E05B60EA41AE739=Transient length:
 ;4F95DF731EE735E5=Fade shapes:
 ;CE00C3235E535EAA=Save
+;782EF3059D0F8638=Equal Gain
+;6ED82B8DF80DCF70=Equal Power
+;6524A7512772DB12=Reverse Equal Power
+;3DCC9C008689E091=Steep Curve
+;8924492671BA345F=Reverse Steep Curve
+;B4B4ADB1B82E53AA=S-Curve
+;F04B1FD800C99A08=Fill gaps between selected items
+;9F2835D664259FDF=All values must be non-negative
+;1BEBB24E78341CB6=Possible Artifact
 ;^D840E3186B2B9581=OK
 ;^BAC64C1B2E060EE5=Close
 
@@ -927,6 +1065,14 @@
 ;FCB6A065AA82EC7F=Selected notes
 ;FE8EF526CB544DC5=Apply groove
 ;3C5FB110BDAA90D6=Get user groove
+;ADCCCE555F6C1099=Groove
+;6D9CE1CC01E63D9D=Select groove folder...
+;18292909DF5B140E=Save groove...
+;116837B8515EE702=Refresh
+;B08B1C53FD383A90=Select folder containing grooves
+;D7108D8D1C4C5804=** User Groove **
+;0F39A21CE008FD99=FNG - Error
+;8917FB51F83F36E0=FNG: load and apply groove - 
 ;^0832A307B4EB9DCE=%
 
 [sws_DLG_158] ; IDD_AUTORENDER_METADATA
@@ -973,9 +1119,6 @@
 ;33B714FC28A7A0F3=Toggle
 ;E6057A870030CABC=Command
 ;C1E2CD611BC701F7=Name (main section only)
-;D2563B1043109BC6=Right click here to add cycle actions
-;6F7258FB465EAEC9=<- Select a cycle action
-;C344BFD561892133=Right click here to add commands
 ;A71EFA284A1D01CB=Save cycle actions before quitting editor ?
 ;A2079DC8CF0D9B1B=Cycle action names cannot contain any of the following characters:
 ;442BE6387030250A=Step -----
@@ -1001,6 +1144,9 @@
 ;8536F7379FE448FC=Export all sections...
 ;73C5E0A987504B95=Reset section '%s'...
 ;A69AA2E73FC2785F=Reset all sections
+;D2563B1043109BC6=Right click here to add cycle actions
+;6F7258FB465EAEC9=<- Select a cycle action
+;C344BFD561892133=Right click here to add commands
 ;^E4A81E97DC43CB12=S&M - Warning
 ;^0FA72D95CADAE6E8=S&M - Error
 ;^49657903B7B9A626=Untitled
@@ -1015,24 +1161,41 @@
 ;FAC97F2DD71B564E=Stretch to fit
 
 [sws_DLG_163] ; IDD_IX_LABELDLG
-;C000A25BC966DB9C=IX Label processor
+;D3405D0157B94207=Label processor
 ;435E958DBA6E27A7=Enter text for new label(s):
-;360EAAA31FFA7DD1=<help text set in code>
+;121AD4DEF893E1C7=Process all takes
+;5334D782885EC882=All arguments are optional. The following are all valid: /E /E[3] /E[3,9]:\n
+;FF1367624F86A07C=\n\t/D\t\t\tDuration.
+;87E1FB26BE439199=\n\t/E[digits, first]\t\tEnumerate in selection.
+;2F1C3720A422A8B1=\n\t/e[digits, first]\t\tEnumerate in selection on track.
+;5B2A1864C88E6219=\n\t/I[digits, last]\t\tInverse enumerate in selection.
+;CFE3BD8F3009DA31=\n\t/i[digits, last]\t\tInverse enumerate in selection on track.
+;6B7BE902E92BDAAE=\n\t/K[digits]\t\tTake count.
+;BCB995AB629CC52A=\n\t/k[digits]\t\tTake number.
+;D1A305E7B39E01BC=\n\t/L[offset, length]\tCurrent label.
+;5CB9E5E7EA227DFF=\n\t/O\t\t\tSource offset.
+;D07C2F9277A0F904=\n\t/P[precision]\t\tPeak level.
+;D7A9B690DF175130=\n\t/R[precision]\t\tRMS peak level.
+;464149A4CBF13DD6=\n\t/r[precision]\t\tRMS average level.
+;0E61335208E827F9=\n\t/S[offset, length]\tSource media full path.
+;6D9520F7624AEC54=\n\t/s[offset, length]\tSource media filename.
+;55DF32218B365071=\n\t/T[offset, length]\tTrack name.
+;ED248A65490A19BD=\n\t/t[digits]\t\tTrack number.
 ;^D840E3186B2B9581=OK
 ;^F09E4B5C35AA14B9=Cancel
 
 [sws_DLG_165] ; IDD_SNM_RGNPLAYLIST
 ;DC55DAA37DC46518=S&M - Region Playlist
-;830C5FC0E18A9057=Region
 ;9FB17EBACD9AA956=Loop count
 ;54B465F61B1485A6=Unknown region %d
 ;5799CAC19B81B871=S&M - Add playlist
-;8D0BD33F9F60E997=Are you sure you want to delete this playlist ?
+;7F8876B4E0429722=Are you sure you want to delete the playlist #%d \"%s\"?
 ;C9B93F97844712AD=S&M - Delete playlist
 ;7A0B0B0CC67DDE46=S&M - Rename playlist
 ;FEAA423291739449=No region found in project!
 ;2F799723962762C7=Stop
-;4CE640A0CD9B1789=Playlist:
+;3E38EF62B047CD38=Repeat
+;46357B3D5E6C4F78=Playlist #
 ;C84A1B5AA24D468D=Playlist: None
 ;09A3E92731A691E1=Length: %s
 ;496BA2520BE69970=Paste playlist
@@ -1046,16 +1209,21 @@
 ;3E59E9F66936FB13=Remove region(s)
 ;8B6CD2B1531B40B1=Append region(s) to project
 ;FB66456F179D75CD=Paste region(s) at edit cursor
+;81CB650A6FF2C1E3=Playing playlist #%d
 ;91E1985A84DEB701=Play preview
+;23DA165DDE2CAEB6=Toggle repeat
 ;54AE5669A33DEBCE=Current playlist
 ;32D8693D51BD5A08=Add playlist
 ;7E51E2116DF0F10A=Delete playlist
 ;8BF8D7F607E679A9=Total playlist length
-;C1C4C8CEC8E78897=Paste playlist at edit cursor\n(right-click for other append/crop commands)
-;3EFE8F0ECA7DB9CE=Play preview might not work as expected!\nThe playlist constains nested markers/regions (inside region %d at least)
-;5EDA3BBA01D3FE41=Nothing to play!\n(empty playlist, removed regions, etc..)
+;E35C43EB6FF1B870=Paste playlist at edit cursor\n(right-click for other paste/crop commands)
+;F401C5DEBF142261=No playlist defined!\nUse the tiny button \"+\" to add one.
+;12E783E6552C28A2=Unknown playlist #%d!
+;8EE68A4E21B3634E=Play preview might not work as expected!\nThe playlist #%d constains nested markers/regions (inside region %d at least)
+;42418E891FA46BA5=Playlist #%d: nothing to play!\n(empty playlist, removed regions, etc..)
 ;FE5E9D3EC0EDC30A=Aborted: pasting inside a region which is used in the playlist!
 ;4272044207011B42=Warning: pasting inside a region which is used in other playlists!\nThis region will be larger and those playlists will change, are you sure you want to continue?
+;^830C5FC0E18A9057=Region
 ;^D9E4C067FEE02BBB=Region Playlist
 ;^49657903B7B9A626=Untitled
 ;^0FA72D95CADAE6E8=S&M - Error
@@ -1101,7 +1269,6 @@
 ;4664A4AADEAED2E7=SWS: Scroll right 1%
 ;F8BCE802A6E4721D=SWS: Save current arrange view
 ;480B79AEB9CCE00B=SWS: Restore arrange view
-;DB459AE0D257BC5D=SWS: Toggle experimental smooth scroll
 ;7D096EF55E1F8345=SWS: Undo zoom
 ;3F4BAA6A926498DF=SWS: Redo zoom
 ;D0F817ADFDBA70D4=SWS: Zoom tool (marquee)
@@ -1124,6 +1291,11 @@
 ;D233B407E7DA37B1=SWS/S&M: Copy selected tracks receives
 ;19E51FF0A942E2BA=SWS/S&M: Paste receives to selected tracks
 ;6434F2019E42C284=SWS/S&M: Cut selected tracks receives
+;D964BB33BDDB4D58=SWS/S&M: Save default track send preferences
+;6431215006D03CA8=SWS/S&M: Recall default track send preferences
+;56EE633C78755757=SWS/S&M: Set default track sends to audio and MIDI
+;E5CABFE98D0C5C93=SWS/S&M: Set default track sends to audio only
+;E76957194358186C=SWS/S&M: Set default track sends to MIDI only
 ;92AA81B98A3371CB=SWS/S&M: Close all floating FX windows
 ;14676E0CCF58F300=SWS/S&M: Close all FX chain windows
 ;1AF5E1B0B9F53AD7=SWS/S&M: Close all floating FX windows for selected tracks
@@ -1276,8 +1448,6 @@
 ;A4AB74DEA2EE904D=SWS/S&M: Paste take
 ;6FB15CB5BA9A5477=SWS/S&M: Paste take (after active take)
 ;AD61551D5FC55418=SWS/S&M: Takes - Clear active takes/items
-;6BE862D645AEAFFD=SWS/S&M: Takes - Build lanes for selected tracks
-;90805EC5A9CF16AF=SWS/S&M: Takes - Build lanes for selected items
 ;A7A661D7D129FEFD=SWS/S&M: Takes - Activate lanes from selected items
 ;D41796C4B81CE878=SWS/S&M: Takes - Activate lane under mouse cursor
 ;2ACCDC739C6E1105=SWS/S&M: Takes - Remove empty takes/items among selected items
@@ -1392,10 +1562,14 @@
 ;5579C91B500F2779=SWS/S&M: Region Playlist - Crop project to playlist (new project tab)
 ;909BCAF6D46E4982=SWS/S&M: Region Playlist - Append playlist to project
 ;F00687BF9E45E96A=SWS/S&M: Region Playlist - Paste playlist at edit cursor
+;59589353191C6E4E=SWS/S&M: Region Playlist - Set repeat off
+;AC289BC5EDD072B4=SWS/S&M: Region Playlist - Set repeat on
+;60B70B8C775C4687=SWS/S&M: Region Playlist - Toggle repeat
 ;DB5417BAF6691ADF=SWS/S&M: Open/close image window
 ;63144DA9CB708F97=SWS/S&M: Clear image window
+;3593E34B7245D246=SWS/S&M: Show next image slot
+;A097979C169AA706=SWS/S&M: Show previous image slot
 ;CA5DFD5BF376665C=SWS/S&M: Send all notes off to selected tracks
-;B452FC7100B74795=SWS/S&M: Show action list (S&M Extension section)
 ;EA6F883023F9405B=SWS/S&M: Show theme helper (all tracks)
 ;32982393E2365BEE=SWS/S&M: Show theme helper (selected track)
 ;4BBB6EC2F5C927CD=SWS/S&M: Left mouse click at cursor position (use w/o modifier)
@@ -1458,6 +1632,7 @@
 ;B13C98B2A2D20E5D=SWS/S&M: Toggle Live Config %02d enable
 ;892BB84F3EA43B0C=SWS/S&M: Live Config %02d - Next
 ;F03FDF7FBF097864=SWS/S&M: Live Config %02d - Previous
+;ED31297561758909=SWS/S&M: Region Playlist %02d - Play
 ;C2685F99E768EAE9=SWS/Shane: Batch Render Regions
 ;634B65CF0258FC45=SWS/Shane: Autorender: Edit Project Metadata
 ;B0B24C4FC053612E=SWS/Shane: Autorender: Open Render Path
@@ -1698,6 +1873,7 @@
 ;9D3D9BEFBC55EC97=SWS: Delete all markers
 ;E73F224A5C93C851=SWS: Delete all regions
 ;98D6E1C2168D6D6F=SWS: Export formatted marker list to clipboard
+;4A750422EEDB97F9=SWS: Export formatted marker list to file
 ;91B17BE70C9F9976=SWS: Exported marker list format...
 ;35C2B305DC056648=SWS: Convert markers to regions
 ;6C760210FBC2A58C=SWS: Convert regions to markers
@@ -2367,6 +2543,14 @@
 ;4EB44AB3272AF306=Xenakios/SWS: [Deprecated] Load track template %d
 ;FA3BF79A14F50328=Xenakios/SWS: [Deprecated] Load project template %d
 
+[sws_color]
+;F1022BA9C289EFEC=Save color theme
+;9672E373099A9943=WARNING: Loading colors from file will overwrite your global personalized color choices.\nIf these are important to you, press press cancel to abort the loading of new colors!
+;2C5E0D2614909A84=OSX Color Load WARNING
+;B1DA3BDE6D0ED6C2=Choose color theme file
+;793DD099B1E5E187=No SWS custom colors found in %s.
+;574E9BC745C6B33F=SWS Color Load
+
 [sws_ext_menu]
 ;B333B0E1898ED2F3=About SWS Extensions
 ;DDAB6253F0B71B7C=Autorender
@@ -2387,16 +2571,9 @@
 ;EA46BF72F9364DF9=MarkerList
 ;91B8469CA64ADF76=Marker utilites
 ;23BE9C74A40B40EF=Load marker set...
-;03C3F149C055CBBA=Save marker set...
 ;8A20BC33A8F53408=Delete marker set...
-;7551CD82B209BA83=Copy marker set to clipboard
-;2A3B3F7271D33AF2=Paste marker set from clipboard
-;7CC58A2F20B1F2EA=Reorder marker IDs
-;4FBB69056DA6FA14=Reorder region IDs
 ;F8E931A96FA91B04=Select next region
 ;AED20F2E11082AAC=Select prev region
-;FE52885EB65C3114=Delete all markers
-;05EB98D88DB76722=Delete all regions
 ;754FA8890746E6DC=Project List
 ;B1BD8B4D8893DE7F=Project Management
 ;16C69F77AA50AF87=Open projects from list...
@@ -2414,6 +2591,13 @@
 ;E991E6DF3DF8C034=Enable toolbars auto refresh
 ;^AA43832937FD7FFD=Auto Color/Icon
 ;^70D4753314A4DF9A=Live Configs
+;^03C3F149C055CBBA=Save marker set...
+;^7551CD82B209BA83=Copy marker set to clipboard
+;^2A3B3F7271D33AF2=Paste marker set from clipboard
+;^7CC58A2F20B1F2EA=Reorder marker IDs
+;^4FBB69056DA6FA14=Reorder region IDs
+;^FE52885EB65C3114=Delete all markers
+;^05EB98D88DB76722=Delete all regions
 ;^D618D4C722885FBC=Notes/Subtitles/Help
 ;^9AC504ED6FEBBBBA=Notes/Subtitles
 ;^D9E4C067FEE02BBB=Region Playlist
@@ -2423,8 +2607,9 @@
 ;^CD4B96631531EE18=Enable auto icon
 
 [sws_mbox]
+;EC812353F0735B24=The version of SWS extension you have installed is incompatible with your version of REAPER.\nYou probably have a REAPER version less than v%s installed.\nPlease install the latest version of REAPER from www.reaper.fm.
+;5A11C995C752AD40=SWS - Version Incompatibility
 ;9A29BB9498167835=MIDI channel
-;9817F31D5B1179B6=Some items were ignored, probable causes:\n- Items not recorded or recorded before REAPER v3.66 (no record pass id)\n- Imploded takes with duplicated record pass ids
 ;7F8CDCBD3D943CF6=[Track %d, item %d] Delete take %d and its media file %s ?
 ;B9CCB13AC952FA09=[Track %d, item %d] Delete take %d (%s, in-project) ?
 ;E507112BE7893D04=[Track %d, item %d] Delete take %d (empty take) ?
@@ -2445,21 +2630,85 @@
 ;4C73325B01A2176F=File already exists. Overwrite ?\n%s
 ;2FC844F5CACBA1D8=Empty filename!
 ;3D048E8D9878D560=Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | :
-;8E1F0BC59DC967C2=The column 'Custom ID' is not displayed in the Actions window!\n(to display it, right click on its table header > show action IDs)
-;AE35E36B88DB8596=Actions window not opened or section '%s' not selected or no selected action!
+;6BE054723EBE725A=File not found: %s
+;5DDA744B7A2FFA7C=Action learn failed!\nAction IDs are not displayed in the Actions window (right-click on the table header: Show action IDs).
+;9DBFA28E4F234561=Action learn failed!\nActions window not opened, section '%s' not selected or no selected action!
 ;FDDA4288291C8C3C=Import playlist
 ;BF34DEA5C90F0776=Failed to import playlist. No files found.
 ;09A5BAC092105EAC=Cannot find some files. Create items anyway?\n
 ;7AF64CADB47EDCA7= more files
+;EF67C65218FC1D24=Cascade Selected Track Inputs
+;5E257E697221F018=Start at input:
+;162B2B238803D81A=Sine
+;2AF10D61DA454203=Triangle
+;AF908AD98D533548=Square
+;F6AC46ED9BA5BE15=Saw Up
+;A7426AD3290C2334=Saw Down
+;2728F715AA3665FB=Triangle (Bezier)
+;975B3C3E126516F2=Random (Bezier)
+;29004D5B15F4F30D=Saw Up (Bezier)
+;07F18CC2AF437D5E=Saw Down (Bezier)
+;7BEFB7B2CC4BCF73=<sync off>
+;57F28E456CC0FEEB=Pitch
+;97D6D411868C112C=Time selection
+;A2BF58A6DFD853DC=Project
+;E8DC5CAF594E0A81=Selected item
 ;^0FA72D95CADAE6E8=S&M - Error
-;^E4A81E97DC43CB12=S&M - Warning
+;^B4F87C534AD2A68F=SWS - Error
+;^DF988AFE75B5D570=Random
+;^8FC86C263760ACB9=Volume
+;^96E5C67E1437194E=Pan
+;^61946358B1034B76=Mute
+;^3890BE5EE2B48715=Loop
 
 [sws_menu]
 ;B10DD5D989FB13A9=Dock %s in Docker
 ;82EE5475CB6FCE9F=Close window
 ;A91295546C060170=Visible columns
 ;F7D33B05D4CEA448=(No region!)
+;0D34F7E59404AB70=Show color management
+;1D68FA8E1047A90F=Enable red ruler while recording (SWS)
+;589C06E69FD23923=Set to one random custom color
+;2A7681F7A0922A51=Set to random custom color(s)
+;F0F0C5BFDB4872DF=Set to color gradient
+;59EB9BBDAC72BF4A=Set to ordered custom colors
+;02EAF30C660279E6=Set children to same color
+;8D6C29D1418BDA61=Set to custom color 1
+;8D6C26D1418BD548=Set to custom color 2
+;8D6C27D1418BD6FB=Set to custom color 3
+;8D6C2CD1418BDF7A=Set to custom color 4
+;8D6C2DD1418BE12D=Set to custom color 5
+;8D6C2AD1418BDC14=Set to custom color 6
+;8D6C2BD1418BDDC7=Set to custom color 7
+;8D6C20D1418BCB16=Set to custom color 8
+;8D6C21D1418BCCC9=Set to custom color 9
+;DAA55F9260A3F7A3=Set to custom color 10
+;DAA55E9260A3F5F0=Set to custom color 11
+;DAA5619260A3FB09=Set to custom color 12
+;DAA5609260A3F956=Set to custom color 13
+;DAA5639260A3FE6F=Set to custom color 14
+;DAA5629260A3FCBC=Set to custom color 15
+;DAA5659260A401D5=Set to custom color 16
+;7C08F723D7EAE4CB=Set to color gradient per track
+;CF12CAA5DDBCC656=Set to ordered custom colors per track
+;0ABBF29413B8EF76=Set to track color
+;B96C908B62490DFA=SWS track color
+;7D45F0AD5E6DA672=SWS item color
+;41155A7527AE7B6D=Show snapshots list and settings
+;1D063C6B31A1635C=Add selected track(s) to current snapshot
+;533A53F54825035B=Add selected track(s) to all snapshots
+;365A34454650D849=Delete selected track(s) from current snapshot
+;2ABEFE31CA3FE008=Delete selected track(s) from all snapshots
+;E9067E0D74EE1B85=Select current snapshot's track(s)
+;80790E40783C926B=New snapshot (all tracks)
+;66CB27F97177361C=New snapshot (selected track(s))
+;54611F0EBC09FFBB=Save over current snapshot
+;BDCB6345EC38008D=Recall current snapshot
+;8176F6CE7634CAD1=Copy current snapshot
+;EFF78D090D2C5561=Copy new snapshot (selected track(s))
+;CF4FBFD563F54F33=Copy new snapshot (all track(s))
 ;^28450354F52CB7AE=Reset
+;^B8E9E8402ED408CA=Paste snapshot
 
 [sws_undo]
 ;1C7CD3652398405C=Create cue buss from track selection
@@ -2474,6 +2723,40 @@
 ;35B14A49AAEEEB1D=Edit marker subtitle
 ;0E1B5B8B32228ABD=Region Playlist edition
 ;634ABF6074988291=Apply auto color/icon
+;34B975C6E20958AF=Set track(s) children to same color
+;D9610929E456AA86=Set item(s) color white
+;55E5664D486F8A64=Set item(s) color black
+;0EE8F490439B1680=Set track(s) color white
+;E3216F3EEBA4C01E=Set track(s) color black
+;AA107F28FD70460A=Set track(s) to previous track's color
+;6FC31BF392596A44=Set track(s) to next custom color
+;13B0549A28A7E546=Set item(s) to next custom color
+;301D166C2EB948A6=Set track(s) to one random custom color
+;DF88EAA8B5854FBE=Set track(s) to random custom color(s)
+;622A784F90B01F90=Set item(s) to one random custom color
+;276083E47A323748=Set item(s) to random custom color(s)
+;7567A7816C8AFF3E=Set track(s) to custom color %d
+;42C2C3709A79CEC4=Set item(s) to custom color %d
+;843664CF90A272C0=Set take(s) to custom color %d
+;79CAABC07AC860CE=Set selected track(s)/item(s) to one random color
+;556557F28C5A83B6=Set selected track(s)/item(s) to custom color
+;7E545E088B1E4CC1=Set tracks to color gradient
+;031829E0932BB78B=Set track(s) to ordered custom color color(s)
+;B72D919005F55551=Set selected item(s) to color gradient per track
+;E695F7C9B294074D=Set selected item(s) to color gradient
+;E24F27EA053F580C=Set selected item(s) to ordered custom colors
+;B1F3DE652AC484E8=Set selected item(s) to respective track color
+;4532FD742FF408B1=ReaConsole command %s
+;EE5160BA9C762EF0=ReaConsole custom command %s
+;FD113EB11B2A995E=Delete marker(s)
+;FB5AF543B1A35D3D=Track envelope LFO
+;DAA453C798AD6FE3=Take envelope LFO
+;A0E5716C409705A2=Track envelope processor
+;BBDDDA8DDE4A54A4=Take envelope processor
 ;^DE098B29579EDB65=Append playlist to project
 ;^BDAEE878964B2813=Paste playlist at edit cursor
 ;^2504F093844EA941=Crop project to playlist
+;^FE52885EB65C3114=Delete all markers
+;^05EB98D88DB76722=Delete all regions
+;^EB86AAFEF35C0E6B=Convert markers to regions
+;^E7E40CCC77CC12FB=Convert regions to markers

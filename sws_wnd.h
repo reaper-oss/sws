@@ -174,7 +174,7 @@ public:
 
 	void Show(bool bToggle, bool bActivate);
 	virtual bool IsActive(bool bWantEdit = false);
-	bool IsValidWindow() { return IsWindow(m_hwnd) ? true : false; }
+	bool IsValidWindow() { return SWS_IsWindow(m_hwnd) ? true : false; }
 	HWND GetHWND() { return m_hwnd; }
 	WDL_VWnd* GetParentVWnd() { return &m_parentVwnd; }
 	WDL_VWnd_Painter* GetVWndPainter() { return &m_vwnd_painter; }

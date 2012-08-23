@@ -139,7 +139,7 @@ void SWS_MarkerListView::OnItemDblClk(SWS_ListItem* item, int iCol)
 			GetSet_LoopTimeRange(true, true, &d1, &d2, m_pMarkerList->m_bPlayOnSel);
 		}
 	}
-	else if (g_pMarkerList && IsWindow(g_pMarkerList->GetHWND()))
+	else if (g_pMarkerList && SWS_IsWindow(g_pMarkerList->GetHWND()))
 		SendMessage(g_pMarkerList->GetHWND(), WM_COMMAND, COLOR_MSG, 0);
 }
 

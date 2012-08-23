@@ -83,7 +83,7 @@ SWS_DockWnd::~SWS_DockWnd()
 
 void SWS_DockWnd::Show(bool bToggle, bool bActivate)
 {
-	if (!IsWindow(m_hwnd))
+	if (!SWS_IsWindow(m_hwnd))
 	{
 		CreateDialogParam(g_hInst, MAKEINTRESOURCE(m_iResource), g_hwndParent, SWS_DockWnd::sWndProc, (LPARAM)this);
 		if (IsDocked() && bActivate)
@@ -481,14 +481,14 @@ LRESULT SWS_DockWnd::screensetCallback(int action, char *id, void *param, void *
 	case SCREENSET_ACTION_IS_DOCKED:
 		return (LRESULT)pObj->IsDocked();
 	case SCREENSET_ACTION_CLOSE:
-		if (IsWindow(pObj->m_hwnd))
+		if (SWS_IsWindow(pObj->m_hwnd))
 		{
 			pObj->m_bUserClosed = true;
 			DestroyWindow(pObj->m_hwnd);
 		}
 		break;
 	case SCREENSET_ACTION_SWITCH_DOCK:
-		if (IsWindow(pObj->m_hwnd))
+		if (SWS_IsWindow(pObj->m_hwnd))
 			pObj->ToggleDocking();
 		break;
 	case SCREENSET_ACTION_LOAD_STATE:
@@ -547,14 +547,14 @@ int SWS_DockWnd::SaveState(char* cStateBuf, int iMaxLen)
 		return 0;
 
 	int iLen = sizeof(SWS_DockWnd_State);
-	if (IsWindow(m_hwnd))
+	if (SWS_IsWindow(m_hwnd))
 	{
 		if (!IsDocked())
 			GetWindowRect(m_hwnd, &m_state.r);
 		else
 			m_state.whichdock = DockIsChildOfDock(m_hwnd, NULL);
 	}
-	if (!m_bUserClosed & IsWindow(m_hwnd))
+	if (!m_bUserClosed & SWS_IsWindow(m_hwnd))
 		m_state.state |= 1;
 	else
 		m_state.state &= ~1;
@@ -592,7 +592,7 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 
 	if (m_state.state & 1)
 	{
-		if (IsWindow(m_hwnd) && bDocked != ((m_state.state & 2) == 2) ||
+		if (SWS_IsWindow(m_hwnd) && bDocked != ((m_state.state & 2) == 2) ||
 			(bDocked && DockIsChildOfDock(m_hwnd, NULL) != m_state.whichdock))
 			// If the window's already open, but the dock state or docker # has changed,
 			// destroy and reopen.
@@ -600,7 +600,7 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 
 		Show(false, false);
 	}
-	else if (IsWindow(m_hwnd))
+	else if (SWS_IsWindow(m_hwnd))
 		DestroyWindow(m_hwnd);
 
 	if (iLen > sizeof(SWS_DockWnd_State))
@@ -1394,7 +1394,7 @@ void SWS_ListView::EditListItem(int iIndex, int iCol)
 bool SWS_ListView::EditListItemEnd(bool bSave, bool bResort)
 {
 	bool updated = false;
-	if (m_iEditingItem != -1 && IsWindow(m_hwndList) && IsWindow(m_hwndEdit))
+	if (m_iEditingItem != -1 && SWS_IsWindow(m_hwndList) && SWS_IsWindow(m_hwndEdit))
 	{
 		KillTimer(GetParent(m_hwndList), CELL_EDIT_TIMER);
 		if (bSave)

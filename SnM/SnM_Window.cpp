@@ -35,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 bool SNM_IsActiveWindow(HWND _h) {
-	if (!_h || !IsWindow(_h))
+	if (!_h || !SWS_IsWindow(_h))
 		return false;
 	return (GetFocus() == _h || IsChild(_h, GetFocus()));
 }
@@ -498,13 +498,13 @@ void CloseAllFXWindowsExceptFocused(COMMAND_T * _ct)
 	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (tr && IsWindow(w))
+		if (tr && SWS_IsWindow(w))
 		{
 			int fxCount = TrackFX_GetCount(tr);
 			for (int j = 0; j < fxCount; j++)
 			{
 				HWND w2 = TrackFX_GetFloatingWindow(tr,j);
-				if (!IsWindow(w2) || w != w2)	
+				if (!SWS_IsWindow(w2) || w != w2)	
 					FloatUnfloatFXs(tr, false, 2, j, false); // close
 			}
 		}
@@ -527,7 +527,7 @@ int GetFirstTrackFXWnd(MediaTrack* _tr, int _dir)
 	if (_tr)
 		if (int fxCount = TrackFX_GetCount(_tr))
 			for (int j = (_dir > 0 ? 0 : (fxCount-1)); (j < fxCount) && (j>=0); j+=_dir)
-				if (IsWindow(TrackFX_GetFloatingWindow(_tr, j)))
+				if (SWS_IsWindow(TrackFX_GetFloatingWindow(_tr, j)))
 					return j;
 	return -1;
 }
@@ -581,7 +581,7 @@ bool CycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTrack
 bool FocusJob(MediaTrack* _tr, int _fx, bool _selectedTracks)
 {
     HWND w2 = TrackFX_GetFloatingWindow(_tr,_fx);
-	if (IsWindow(w2)) {
+	if (SWS_IsWindow(w2)) {
 		SetForegroundWindow(w2);
 		return true;
 	}
@@ -681,7 +681,7 @@ void CycleFocusFXMainWnd(int _dir, bool _selectedTracks, bool _showmain)
 					for (int j = (_dir > 0 ? 0 : (fxCount-1)); (j < fxCount) && (j>=0); j+=_dir)
 					{
 						HWND w = TrackFX_GetFloatingWindow(tr, j);
-						if (IsWindow(w)) { // store ids (to show it back later) and hide it
+						if (SWS_IsWindow(w)) { // store ids (to show it back later) and hide it
 							g_hiddenFloatingWindows.Add(new SNM_TrackInt(tr, j));
 							FloatUnfloatFXs(tr, false, 2, j, _selectedTracks);
 						}

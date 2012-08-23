@@ -233,7 +233,7 @@ void SWS_GetSelectedMediaItemsOnTrack(WDL_TypedBuf<MediaItem*>* buf, MediaTrack*
 int SWS_GetModifiers();
 void WinSpawnNotepad(const char* pFilename);
 void makeEscapedConfigString(const char *in, WDL_FastString *out); //JFB: temp (WDL's ProjectContext does not use WDL_FastString yet)
-
+bool SWS_IsWindow(HWND hwnd);
 
 // Localization
 #define _SWS_LOCALIZATION

@@ -482,6 +482,22 @@ void makeEscapedConfigString(const char *in, WDL_FastString *out)
   }
 }
 
+bool SWS_IsWindow(HWND hwnd)
+{
+#ifdef _WIN32
+	return IsWindow(hwnd) ? true : false;
+#else
+	// ISSUE 498: OSX IsWindow is broken for docked windows!
+	//   Justin recommends not using IsWindow at all, but there are a lot of cases
+	//   where we rely on it for error checking.  Instead of removing all calls and
+	//   doing internal window state handling I replaced all IsWindow calls with
+	//   this function that checks for docked windows on OSX.  It's a bit of a
+	//   hack, but less risky IMO than rewriting tons of window handling code.
+	//	
+	//   Maybe could replace with return hwnd != NULL;
+	return (bool)IsWindow(hwnd) ? true : (DockIsChildOfDock(hwnd, NULL) != -1);
+#endif
+}
 
 // Localization
 

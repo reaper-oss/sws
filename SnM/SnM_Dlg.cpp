@@ -554,6 +554,6 @@ void OpenCueBussDlg(COMMAND_T* _ct)
 }
 
 bool IsCueBussDlgDisplayed(COMMAND_T* _ct) {
-	return (g_cueBussHwnd && IsWindow(g_cueBussHwnd) && IsWindowVisible(g_cueBussHwnd) ? true : false);
+	return (g_cueBussHwnd && SWS_IsWindow(g_cueBussHwnd) && IsWindowVisible(g_cueBussHwnd) ? true : false);
 }
 

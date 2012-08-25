@@ -487,6 +487,7 @@ extern "C"
 		IMPAPI(CountSelectedMediaItems);
 		IMPAPI(CountSelectedTracks);
 		IMPAPI(CountTakes);
+		IMPAPI(CountTempoTimeSigMarkers);
 		IMPAPI(CountTracks);
 		IMPAPI(CountTrackMediaItems);
 		IMPAPI(CountTrackEnvelopes);
@@ -576,6 +577,7 @@ extern "C"
 		IMPAPI(GetSetObjectState);
 		IMPAPI(GetSetObjectState2);
 		IMPAPI(GetSetRepeat);
+		IMPAPI(GetTempoTimeSigMarker);
 		IMPAPI(GetTakeEnvelopeByName);
 		IMPAPI(GetSetTrackSendInfo);
 		IMPAPI(GetSetTrackState);
@@ -666,6 +668,7 @@ extern "C"
 		IMPAPI(SetProjectMarker);
 		IMPAPI(SetProjectMarker2);
 		IMPAPI(SetProjectMarker3);
+		IMPAPI(SetTempoTimeSigMarker);
 		IMPAPI(SetTrackSelected);
 		IMPAPI(ShowActionList);
 		IMPAPI(ShowConsoleMsg);
@@ -681,6 +684,7 @@ extern "C"
 		IMPAPI(TimeMap_timeToQN);
 		IMPAPI(TimeMap2_beatsToTime);
 		IMPAPI(TimeMap2_GetDividedBpmAtTime);
+		IMPAPI(TimeMap2_GetNextChangeTime);
 		IMPAPI(TimeMap2_QNToTime);
 		IMPAPI(TimeMap2_timeToBeats);
 		IMPAPI(TimeMap2_timeToQN);

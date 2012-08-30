@@ -37,6 +37,7 @@
 // disable/enable some features
 //#define _SNM_MISC	// not released, deprecated, tests, etc..
 //#define _SNM_WDL	// if my wdl version is used
+//#define _SNM_STANDALONE
 
 #ifdef _WIN32
 #define SNM_FORMATED_INI_FILE		"%s\\S&M.ini"
@@ -60,7 +61,11 @@
 #define SNM_FONT_HEIGHT				12
 #endif
 
+#ifndef _SNM_STANDALONE
 #define SNM_INI_FILE_VERSION		6
+#else
+#define SNM_INI_FILE_VERSION		7
+#endif
 #define SNM_LIVECFG_NB_CONFIGS		8
 #define SNM_SNM_SECTION_1ST_CMD_ID	40000
 #define SNM_MAX_TRACK_GROUPS		32
@@ -180,6 +185,28 @@ bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf);
 
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// make sure the last MIDI event in a state is a (dummy) CC123!
+#define SNM_CC123_MID_STATE "HASDATA 1 960 QN\n\
+E 0 b0 7b 00\n\
+E 1 b1 7b 00\n\
+E 1 b2 7b 00\n\
+E 1 b3 7b 00\n\
+E 1 b4 7b 00\n\
+E 1 b5 7b 00\n\
+E 1 b6 7b 00\n\
+E 1 b7 7b 00\n\
+E 1 b8 7b 00\n\
+E 1 b9 7b 00\n\
+E 1 ba 7b 00\n\
+E 1 bb 7b 00\n\
+E 1 bc 7b 00\n\
+E 1 bd 7b 00\n\
+E 1 be 7b 00\n\
+E 1 bf 7b 00\n\
+E 1 b0 7b 00\n\
+IGNTEMPO 0 120.00000000 4 4\n\
+>\n"
 
 #define SNM_CC123_MID_FILE "TVRoZAAAAAYAAAABA8BNVHJrAAAASQCwewACsXsAAbJ7AAGzewACtA==\n\
 ewABtXsAAbZ7AAK3ewABuHsAAbl7AAK6ewABu3sAAbx7AAK9ewABvg==\n\

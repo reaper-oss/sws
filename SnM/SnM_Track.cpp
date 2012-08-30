@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "SnM.h"
 #include "../reaper/localize.h"
+#include "../../WDL/projectcontext.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -285,9 +286,7 @@ bool SetTrackGroup(int _group)
 int FindFirstUnusedGroup()
 {
 	bool grp[SNM_MAX_TRACK_GROUPS];
-//	memset(&grp, 0, sizeof(bool) * SNM_MAX_TRACK_GROUPS);
-	for (int i=0; i < SNM_MAX_TRACK_GROUPS; i++)
-		grp[i] = false;
+	memset(grp, 0, sizeof(bool)*SNM_MAX_TRACK_GROUPS);
 
 	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{
@@ -1434,56 +1433,40 @@ void CC123Tracks(WDL_PtrList<void>* _trs)
 	if (!_trs || !_trs->GetSize())
 		return;
 
-	// lazy init of the "all notes off" PCM_source
+	// lazy init of the "all notes off" PCM_source: 1st try (loading source state)
 	if (!g_cc123src)
 	{
-/*JFB!!! commented: generating evts from scratch does not work..
-// nailed it down to PCM_Source_CreateFromType("MIDI") which seems to be ko (?)
-// => workaround: write a temp .mid file instead
-
-		// make cc123s
-		MIDI_eventlist* evts = MIDI_eventlist_Create();
-		for (int i=0; i < 16; i++)
+		WDL_HeapBuf hb;
+		int len = strlen(SNM_CC123_MID_STATE);
+		void* p = hb.Resize(len, false);
+		if (p && hb.GetSize()==len)
 		{
-			MIDI_event_t cc123;
-			memset(&cc123, 0, sizeof(MIDI_event_t));
-			cc123.frame_offset = i;
-			cc123.size = 3;
-			cc123.midi_message[0] = i | MIDI_CMD_CONTROL_CHANGE;
-			cc123.midi_message[1] = 123;
-			cc123.midi_message[2] = 0;
-			evts->AddItem(&cc123);
+			if (g_cc123src = PCM_Source_CreateFromType("MIDI"))
+			{
+				memcpy(p, SNM_CC123_MID_STATE, len);
+				ProjectStateContext* ctx = ProjectCreateMemCtx(&hb);
+				if (g_cc123src->LoadState("<SOURCE MIDI\n", ctx) < 0)
+					DELETE_NULL(g_cc123src);
+				delete ctx;
+			}
 		}
-		// make a source with those events
-		midi_realtime_write_struct_t t;
-		memset(&t, 0, sizeof(midi_realtime_write_struct_t));
-		t.global_time       = 0.0;
-		t.global_item_time  = 0.0;
-		t.srate             = 48000.0;
-		t.length            = int(t.srate); // 1s
-		t.overwritemode     = 1; // replace flag
-		t.events            = evts;
-		t.item_playrate     = 1.0;
-		t.latency           = 0.0;
-		t.overwrite_actives = NULL;
-		g_cc123src = PCM_Source_CreateFromType("MIDI");
-		g_cc123src->Extended(PCM_SOURCE_EXT_ADDMIDIEVENTS, &t, NULL, NULL);
-		MIDI_eventlist_Destroy(evts);
-*/
-		// workaround: save & re-import (as in-project so that we can delete the temp file)
+	}
+
+	// lazy init of the "all notes off" PCM_source: 2nd try (via temp .mid file)
+	if (!g_cc123src)
+	{
 		if (WDL_HeapBuf* hb = TranscodeStr64ToHeapBuf(SNM_CC123_MID_FILE))
 		{
 			WDL_FastString cc123fn;
 			cc123fn.SetFormatted(BUFFER_SIZE, "%s%cS&M_CC123.mid", GetResourcePath(), PATH_SLASH_CHAR);
 			if (SaveBin(cc123fn.Get(), hb)) {
-				g_cc123src = PCM_Source_CreateFromFileEx(cc123fn.Get(), false);
+				g_cc123src = PCM_Source_CreateFromFileEx(cc123fn.Get(), false); // "false" so that the src is imported as in-project data (to delete the temp file) 
 				SNM_DeleteFile(cc123fn.Get(), false);
 			}
 			delete hb;
 		}
 	}
 
-	// play cc123s
 	if (g_cc123src)
 		for (int i=0; i < _trs->GetSize(); i++)
 			SNM_PlayTrackPreview((MediaTrack*)_trs->Get(i), g_cc123src, false, false, -1.0);

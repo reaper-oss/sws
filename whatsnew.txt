@@ -1,3 +1,14 @@
+<b>REAPER v4.26+ is required</b>
+
+Added actions (thanks Breeder!):
++SWS/BR: Move edit cursor to next tempo marker
++SWS/BR: Move edit cursor to previous tempo marker
+
+External MIDI file support + MIDI source offset support (Padre's LFO generator, action "SWS/S&M: Takes - Remove empty MIDI takes/items among selected items", etc..)
+Improved "All notes off" handling (Live Configs tool + "All notes off" actions)
+Fixed "Xenakios/SWS: Create markers from selected items" (issue reported http://forum.cockos.com/showpost.php?p=1022691&postcount=961|here|) + much faster + added undo point
+OSX/Resources window: better text filter behavior
+
 !v2.3.0 #3 (August 22, 2012)
 Issue 498: OSX - Fixed docked SWS window close issues
 

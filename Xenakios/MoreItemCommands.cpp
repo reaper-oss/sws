@@ -1451,54 +1451,36 @@ bool MySortItemsByTimeFunc (MediaItem* i,MediaItem* j)
 	return (timea<timeb);
 }
 
-void DoCreateMarkersFromSelItems1(COMMAND_T*)
+void DoCreateMarkersFromSelItems1(COMMAND_T* ct)
 {
 	vector<MediaItem*> theitems;
 	XenGetProjectItems(theitems,true,false);
 	if (theitems.size()>0)
 	{
 		sort(theitems.begin(),theitems.end(),MySortItemsByTimeFunc);
-		vector<double> itemposs;
-		// first we create markers, we can't yet know what we've created and change the names etc :(
-		// get around by storing the positions so we can later compare
-		int i;
-		for (i=0;i<(int)theitems.size();i++)
+
+		if (PreventUIRefresh)
+			PreventUIRefresh(1);
+
+		Undo_BeginBlock2(NULL);
+
+		for (int i=0;i<(int)theitems.size();i++)
 		{
 			double itempos=*(double*)GetSetMediaItemInfo(theitems[i],"D_POSITION",0);
-			SetEditCurPos(itempos,false,false);
-			itemposs.push_back(itempos);
-			Main_OnCommand( 40157,0); // insert marker at cursor
+
+			vector<string> fncomps;
+			if (MediaItem_Take* ptake = GetMediaItemTake(theitems[i], -1))
+				if (PCM_source* src = (PCM_source*)GetSetMediaItemTakeInfo(ptake,"P_SOURCE",0))
+					if (src->GetFileName())
+						SplitFileNameComponents(src->GetFileName(),fncomps);
+			AddProjectMarker(NULL, false, itempos, 0.0, fncomps.size()>1 ? fncomps[1].c_str() : "", -1);
 		}
-		// now we have the new markers, enumerate and compare against the stored time positions
-		int x=0;
-		bool isrgn;
-		double pos, rgnend;
-		char *name;
-		int number;
-		while ((x=EnumProjectMarkers(x,&isrgn,&pos,&rgnend,&name,&number)))
-		{
-			//look_at_values; rgnend only valid if isrgn=true.
-			if (!isrgn)
-			{
-				for (i=0;i<(int)itemposs.size();i++)
-				{
-					if (itemposs[i]==pos)
-					{
-						// match found, rename the marker
-						MediaItem_Take* ptake=GetMediaItemTake(theitems[i],-1);
-						//char *takename=(char*)GetSetMediaItemTakeInfo(ptake,"P_NAME",0);
-						// int markrgnindexnumber, bool isrgn, double pos, double rgnend, const char* name);
-						PCM_source *src=(PCM_source*)GetSetMediaItemTakeInfo(ptake,"P_SOURCE",0);
-						if (src && src->GetFileName())
-						{
-							vector<string> fncomps;
-							SplitFileNameComponents(src->GetFileName(),fncomps);
-							SetProjectMarker(number,false,pos,pos,fncomps[1].c_str());
-						}
-					}
-				}
-			}
-		}
+
+		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
+
+		if (PreventUIRefresh)
+			PreventUIRefresh(-1);
+
 		UpdateTimeline();
 	}
 }

@@ -141,21 +141,19 @@ void MidiItemProcessor::clear()
 	clearFilters();
 }
 
+//JFB TODO: support for playrate, forced source BPM, etc..
 bool MidiItemProcessor::getMidiEventsList(MediaItem_Take* take, MIDI_eventlist* evts)
 {
 	PCM_source* source = take ? GetMediaItemTake_Source(take) : NULL;
-	if(!source)
+	MediaItem* item = take ? GetMediaItemTake_Item(take) : NULL;
+	if(!source || !item)
 		return false;
 
-	MediaItem* item = GetMediaItemTake_Item(take);
-
 	double itemLength = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
-	//double length = source->GetLength();
-//double takePitch = *(double*)GetSetMediaItemTakeInfo(take, "D_PITCH", NULL);
+	double startOffs = *(double*)GetSetMediaItemTakeInfo(take, "D_STARTOFFS", NULL);
 
 	PCM_source_transfer_t transferBlock;
-	//PCM_source_transfer_t transferBlock = {0,};
-	transferBlock.time_s						= 0.0;
+	transferBlock.time_s						= startOffs;
 	transferBlock.samplerate					= MIDIITEMPROC_DEFAULT_SAMPLERATE;
 	transferBlock.nch							= 2;
 	transferBlock.length						= (int)(transferBlock.samplerate * itemLength);
@@ -167,8 +165,6 @@ bool MidiItemProcessor::getMidiEventsList(MediaItem_Take* take, MIDI_eventlist* 
 	transferBlock.force_bpm						= 0.0;
 
 	source->Extended(PCM_SOURCE_EXT_GETRAWMIDIEVENTS, &transferBlock, NULL, NULL);
-	//source->GetSamples(&transferBlock);
-
 	return true;
 }
 

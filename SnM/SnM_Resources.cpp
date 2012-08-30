@@ -140,8 +140,13 @@
 #define THM_LOAD_STR				__LOCALIZE("Load theme","sws_DLG_150")
 #endif
 
-#define DRAGDROP_EMPTY_SLOT		">Empty<" // no localization: internal stuff
+// no default filter text on OSX (cannot catch EN_SETFOCUS/EN_KILLFOCUS)
+#ifdef _WIN32
 #define FILTER_DEFAULT_STR		__LOCALIZE("Filter","sws_DLG_150")
+#else
+#define FILTER_DEFAULT_STR		""
+#endif
+#define DRAGDROP_EMPTY_SLOT		">Empty<" // no localization: internal stuff
 #define AUTOSAVE_ERR_STR		__LOCALIZE("Probable cause: no selection, nothing to save, cannot write file, file in use, invalid filename, etc...","sws_DLG_150")
 #define AUTOFILL_ERR_STR		__LOCALIZE("Probable cause: all files are already present, empty directory, directory not found, etc...","sws_DLG_150")
 #define NO_SLOT_ERR_STR			__LOCALIZE("No %s slot defined in the Resources view!","sws_DLG_150")

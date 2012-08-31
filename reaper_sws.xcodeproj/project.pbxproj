@@ -62,6 +62,8 @@
 		2264CBD110FEC33700447317 /* swell-wnd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764250F5B233C0091104D /* swell-wnd.mm */; };
 		2264CBD210FEC33800447317 /* swell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B408A20F5B544A00865A09 /* swell.cpp */; };
 		2264CBD310FEC33900447317 /* swell.h in Headers */ = {isa = PBXBuildFile; fileRef = 9870F77F0F5B461C0007258C /* swell.h */; };
+		2266B2BC15F069CC006F2A0D /* Breeder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2266B2BA15F069CC006F2A0D /* Breeder.cpp */; };
+		2266B2BD15F069CC006F2A0D /* Breeder.h in Headers */ = {isa = PBXBuildFile; fileRef = 2266B2BB15F069CC006F2A0D /* Breeder.h */; };
 		2270FC7112F8551400703F85 /* RecCheck.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2270FC6F12F8551400703F85 /* RecCheck.cpp */; };
 		2270FC7212F8551400703F85 /* RecCheck.h in Headers */ = {isa = PBXBuildFile; fileRef = 2270FC7012F8551400703F85 /* RecCheck.h */; };
 		2273566712910ABF001A1570 /* EditCursor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2273566512910ABF001A1570 /* EditCursor.cpp */; };
@@ -354,6 +356,8 @@
 		225130BC116101670028F26A /* padreMidiItemProcBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreMidiItemProcBase.h; path = Padre/padreMidiItemProcBase.h; sourceTree = "<group>"; };
 		225130BD116101670028F26A /* padreUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreUtils.cpp; path = Padre/padreUtils.cpp; sourceTree = "<group>"; };
 		225130BE116101670028F26A /* padreUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreUtils.h; path = Padre/padreUtils.h; sourceTree = "<group>"; };
+		2266B2BA15F069CC006F2A0D /* Breeder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Breeder.cpp; path = Misc/Breeder.cpp; sourceTree = "<group>"; };
+		2266B2BB15F069CC006F2A0D /* Breeder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Breeder.h; path = Misc/Breeder.h; sourceTree = "<group>"; };
 		2270FC6F12F8551400703F85 /* RecCheck.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RecCheck.cpp; path = Misc/RecCheck.cpp; sourceTree = "<group>"; };
 		2270FC7012F8551400703F85 /* RecCheck.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RecCheck.h; path = Misc/RecCheck.h; sourceTree = "<group>"; };
 		2273566512910ABF001A1570 /* EditCursor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EditCursor.cpp; path = Misc/EditCursor.cpp; sourceTree = "<group>"; };
@@ -811,6 +815,8 @@
 				22C31F22125EF71A0072434F /* Adam.h */,
 				22B22D6113FA575C00D187A9 /* Analysis.cpp */,
 				22B22D6213FA575C00D187A9 /* Analysis.h */,
+				2266B2BA15F069CC006F2A0D /* Breeder.cpp */,
+				2266B2BB15F069CC006F2A0D /* Breeder.h */,
 				229A7E7C1165744400325BC2 /* Context.cpp */,
 				229A7E7D1165744400325BC2 /* Context.h */,
 				2273566512910ABF001A1570 /* EditCursor.cpp */,
@@ -1211,6 +1217,7 @@
 				22F7AADC15201D8A00CC1481 /* SnM_Window.h in Headers */,
 				22F7AADE15201D8A00CC1481 /* SnM.h in Headers */,
 				22F7AAE915201E2600CC1481 /* IX.h in Headers */,
+				2266B2BD15F069CC006F2A0D /* Breeder.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1474,6 +1481,7 @@
 				22F7AAE815201E2600CC1481 /* IX.cpp in Sources */,
 				22F7AAEA15201E2600CC1481 /* Label.cpp in Sources */,
 				22F7AAEB15201E2600CC1481 /* PlaylistImport.cpp in Sources */,
+				2266B2BC15F069CC006F2A0D /* Breeder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

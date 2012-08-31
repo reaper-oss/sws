@@ -3163,6 +3163,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Misc\Breeder.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Misc\Breeder.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Misc\Context.cpp"
 				>
 			</File>

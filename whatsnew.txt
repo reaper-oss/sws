@@ -1,6 +1,7 @@
+!v2.3.0 #4 (August 30, 2012)
 <b>REAPER v4.26+ is required</b>
 
-Added actions (thanks Breeder!):
+A big welcome to our latest developer, Breeder!  He added actions:
 +SWS/BR: Move edit cursor to next tempo marker
 +SWS/BR: Move edit cursor to previous tempo marker
 

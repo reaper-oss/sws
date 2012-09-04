@@ -1,3 +1,6 @@
++SWS/BR: Convert project markers to tempo markers
++SWS/BR: Split selected items at tempo markers
+
 !v2.3.0 #4 (August 30, 2012)
 <b>REAPER v4.26+ is required</b>
 

@@ -72,6 +72,7 @@
 #define IDD_IX_LABELDLG                 163
 #define IDD_SNM_MERGE_LANGPACK          164
 #define IDD_SNM_RGNPLAYLIST             165
+#define IDD_BR_MARKERS_TO_TEMPO         166
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
@@ -321,14 +322,19 @@
 #define IDC_GROUP2                      1237
 #define IDC_GROUP3                      1238
 #define IDC_GROUP4                      1239
+#define IDC_BR_NUM                      1240
+#define IDC_BR_DEN                      1241
+#define IDC_BR_MARKERS                  1242
+#define IDC_BR_TIMESEL                  1243
+#define IDC_BR_REMOVE                   1244
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        166
+#define _APS_NEXT_RESOURCE_VALUE        167
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1240
+#define _APS_NEXT_CONTROL_VALUE         1245
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

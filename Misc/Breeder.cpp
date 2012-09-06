@@ -150,6 +150,7 @@ void BRConvertProjectMarkersToTempoMarkers(int num, int den, int measure, int ti
 					markerPositions.push_back(mPos);
 					++markerCount;
 				}	
+				
 				if (timeSelection == 1)
 				{
 					if (mPos > tEnd)
@@ -231,16 +232,15 @@ void BRConvertProjectMarkersToTempoMarkers(int num, int den, int measure, int ti
 		{ 
 			length = markerPositions[i+1] - markerPositions[i];
 			bpm = (60 * 4/den*num) / (measure * length);
-			SetTempoTimeSigMarker (NULL, -1, markerPositions[i], -1, -1, 0, 0, den, NULL);
+			SetTempoTimeSigMarker (NULL, -1, markerPositions[i], -1, -1, bpm, 0, 0, NULL);
 			++i;
+			
 		}
 		UpdateTimeline();
 
 	Undo_EndBlock2 (NULL, __LOCALIZE("Convert project markers to tempo markers","sws_undo"), UNDO_STATE_ALL);
 
 	// Remove markers
-	
-	
 	if (removeMarkers == 1)
 	{
 		Undo_BeginBlock2(NULL);

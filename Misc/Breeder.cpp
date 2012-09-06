@@ -98,7 +98,7 @@ void BRSplitSelectedItemsAtTempoMarkers(COMMAND_T*)
 					item = split;
 			
 				tPos = TimeMap2_GetNextChangeTime(NULL, tPos);
-				if (tPos > iEnd)
+				if (tPos > iEnd || tPos == -1 )
 					break;
 			}
 		}

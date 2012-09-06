@@ -29,6 +29,7 @@
 #include "stdafx.h"
 #include "./reaper/localize.h"
 #include "./SnM/SnM_Dlg.h"
+#include "./SnM/SnM_Misc.h"
 #include "version.h"
 #include "license.h"
 #include "Prompt.h"
@@ -49,8 +50,8 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #endif
 #ifndef _WIN32
 		SetDlgItemText(hwndDlg, IDC_LATESTVER, "http://www.standingwaterstudios.com/reaper/sws_osx.dmg");
+		ShowWindow(GetDlgItem(hwndDlg, IDC_INFO), SW_HIDE); // whatsnew not yet supported on OSX
 #endif
-		
 	}
 	else if (uMsg == WM_DRAWITEM)
 	{
@@ -79,8 +80,10 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			GetDlgItemText(hwndDlg, (int)wParam, cLink, 512);
 			ShellExecute(hwndDlg, "open", cLink , NULL, NULL, SW_SHOWNORMAL);
 		}
+		else if (wParam == IDC_INFO)
+			WhatsNew(NULL);
 		else if (wParam == IDC_LICENSE)
-			DisplayInfoBox(hwndDlg, __LOCALIZE("SWS License","sws_DLG_109"), LICENSE_TEXT);
+			DisplayInfoBox(hwndDlg, __LOCALIZE("SWS/S&M Extension - License","sws_DLG_109"), LICENSE_TEXT);
 		else if (wParam == IDCANCEL)
 			EndDialog(hwndDlg, 0);
 	}

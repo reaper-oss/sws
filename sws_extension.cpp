@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "Reascript.h"
 #include "Console/Console.h"
 #include "Freeze/Freeze.h"
 #include "MarkerActions/MarkerActions.h"
@@ -424,7 +425,7 @@ int WDL_STYLE_GetSysColor(int i)
 
 		if (col3ds == col3dl || col3ds == bgcol || col3dl == bgcol) {
 			int colDelta = SNM_3D_COLORS_DELTA * (i == COLOR_3DSHADOW ? -1 : 1);
-		    col = RGB(
+			col = RGB(
 				BOUNDED(LICE_GETR(bgcol) + colDelta, 0, 0xFF),
 				BOUNDED(LICE_GETG(bgcol) + colDelta, 0, 0xFF),
 				BOUNDED(LICE_GETB(bgcol) + colDelta, 0, 0xFF));
@@ -456,6 +457,9 @@ extern "C"
 			MiscExit();
 			PadreExit();
 			SNM_Exit();
+
+			FreeReascriptExport();
+
 			ERR_RETURN("Exiting Reaper.\n")
 		}
 
@@ -644,7 +648,7 @@ extern "C"
 		IMPAPI(PlayTrackPreview2Ex);
 		IMPAPI(plugin_getFilterList);
 		IMPAPI(plugin_register);
-		 *(void**)&PreventUIRefresh = rec->GetFunc("PreventUIRefresh");
+		*(void**)&PreventUIRefresh = rec->GetFunc("PreventUIRefresh");
 		IMPAPI(projectconfig_var_addr);
 		IMPAPI(projectconfig_var_getoffs);
 		IMPAPI(RefreshToolbar);
@@ -786,9 +790,12 @@ extern "C"
 			if (!SNM_Init(rec)) // keep it as the last init (for cyle actions)
 				ERR_RETURN("S&M init error\n")
 
-    	if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
+		if (!rec->Register("hookcustommenu", (void*)swsMenuHook))
 			ERR_RETURN("Menu hook error\n")
 		AddExtensionsMainMenu();
+
+		if (!ExportReascript(rec))
+			ERR_RETURN("Reascript export failed\n");
 
 		SWSTimeSlice* ts = new SWSTimeSlice();
 		if (!rec->Register("csurf_inst", ts))

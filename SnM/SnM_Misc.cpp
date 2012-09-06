@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "SnM.h"
 #include "../reaper/localize.h"
+#include "../Prompt.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -102,6 +103,56 @@ void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot)
 
 void SetSelTrackIconSlot(COMMAND_T* _ct) {
 	SetSelTrackIconSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Reascript export
+///////////////////////////////////////////////////////////////////////////////
+
+bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type)
+{
+	if (_srcTr && _destTr && _srcTr!=_destTr && _type>=0 && _type<=3)
+	{
+		SNM_SendPatcher p = SNM_SendPatcher(_destTr);
+		char vol[32] = "1.00000000000000";
+		char pan[32] = "0.00000000000000";
+		_snprintfSafe(vol, sizeof(vol), "%.14f", *(double*)GetConfigVar("defsendvol"));
+		return (p.AddReceive(_srcTr, _type, vol, pan) > 0);
+	}
+	return false;
+}
+
+int SNM_GetIntConfigVar(const char* _varName, int _errVal)
+{
+	if (int* pVar = (int*)(GetConfigVar(_varName)))
+		return *pVar;
+	return _errVal;
+}
+
+bool SNM_SetIntConfigVar(const char* _varName, int _newVal)
+{
+	if (int* pVar = (int*)(GetConfigVar(_varName))) {
+		*pVar = _newVal;
+		return true;
+	}
+	return false;
+}
+
+double SNM_GetDoubleConfigVar(const char* _varName, double _errVal)
+{
+	if (double* pVar = (double*)(GetConfigVar(_varName)))
+		return *pVar;
+	return _errVal;
+}
+
+bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal)
+{
+	if (double* pVar = (double*)(GetConfigVar(_varName))) {
+		*pVar = _newVal;
+		return true;
+	}
+	return false;
 }
 
 
@@ -255,4 +306,32 @@ void DumpWikiActionList(COMMAND_T* _ct)
 
 void DumpActionList(COMMAND_T* _ct) {
 	DumpActionList((int)_ct->user, __LOCALIZE("S&M - Dump action list","sws_mbox"), "%s\t%s\t%s\n", "Section\tId\tAction\n", NULL);
+}
+
+void WhatsNew(COMMAND_T* _ct)
+{
+	WDL_FastString fn;
+	fn.SetFormatted(BUFFER_SIZE, SNM_WHATSNEW_FILE, GetExePath());
+	if (FILE* f = fopenUTF8(fn.Get(), "r"))
+	{
+		int lineCnt=0;
+		WDL_FastString whatsnew;
+		char str[2048];
+		while(fgets(str, sizeof(str), f) && *str) {
+			whatsnew.Append(str);
+			lineCnt++;
+		}
+		fclose(f);
+
+//JFB!!! TODO: tests OSX
+#ifdef _WIN32
+		WDL_String whatsnewRN;
+		int newLen = whatsnew.GetLength() + 2*lineCnt; // *2 for \r\n
+		whatsnewRN.SetLen(newLen);
+		GetStringWithRN(whatsnew.Get(), whatsnewRN.Get(), newLen);
+		DisplayInfoBox(GetMainHwnd(), __LOCALIZE("SWS/S&M Extension - What's new?","sws_DLG_109"), whatsnewRN.Get());
+#else
+		DisplayInfoBox(GetMainHwnd(), __LOCALIZE("SWS/S&M Extension - What's new?","sws_DLG_109"), whatsnew.Get());
+#endif
+	}
 }

@@ -1,5 +1,35 @@
+Issue 432 (BETA): Export functions to ReaScripters and/or to other extensions
+Check out "Help > HTML Lists > ReaScript documentation" for details, parameters and return values:
++SNM_AddReceive()
++SNM_GetIntConfigVar()
++SNM_SetIntConfigVar()
++SNM_GetDoubleConfigVar()
++SNM_SetDoubleConfigVar()
+Important remarks:
++Although these first functions can be useful, the real goal here is to beta test things => feedback is welcome!
++Larger plan = exporting easier/fast/reliable functions to process state chunks, MIDI data, etc..
++Windows x64: not tested (but it "should" be fine..)
++OSX: incomplete ATM (reaper_sws.py has to be created by hand, quite advanced stuff!)
+ReaScript example:<i>
+from reaper_sws import * # reaper_sws also imports re and reaper_python
+# The SWS/S&M extension's functions do not require the prefix "RPR_",
+# they have their own prefix (this is to distinguish native vs extension functions).
+# Example SNM_AddReceive(...): here the prefix is "SNM" ("SNM" stands for "S&M") but
+# other prefixes like "FNG_", "SWS_", etc.. will probably appear in the future.
+SNM_AddReceive(RPR_GetSelectedTrack(0, 0), RPR_GetSelectedTrack(0, 1), 0) # min. 2 selected tracks for this to work!
+RPR_ShowConsoleMsg("Ticks: %d\n" % SNM_GetIntConfigVar("miditicksperbeat", -666))
+</i>
+
+Windows OS: added "What's new?"
++The installer now creates a "sws-whatsnew.txt" file in REAPER installation directory
++Added action "SWS/S&M - What's new?"
++Added shortcut in the "About" box
+
+Added actions:
 +SWS/BR: Convert project markers to tempo markers
 +SWS/BR: Split selected items at tempo markers
+
+Issue 504: (re-)added horizontal scrollbar in the Notes window
 
 !v2.3.0 #4 (August 30, 2012)
 <b>REAPER v4.26+ is required</b>
@@ -10,7 +40,7 @@ A big welcome to our latest developer, Breeder!  He added actions:
 
 External MIDI file support + MIDI source offset support (Padre's LFO generator, action "SWS/S&M: Takes - Remove empty MIDI takes/items among selected items", etc..)
 Improved "All notes off" handling (Live Configs tool + "All notes off" actions)
-Fixed "Xenakios/SWS: Create markers from selected items" (issue reported http://forum.cockos.com/showpost.php?p=1022691&postcount=961|here|) + much faster + added undo point
+Fixed/improved "Xenakios/SWS: Create markers from selected items" (issue reported http://forum.cockos.com/showpost.php?p=1022691&postcount=961|here|)
 OSX/Resources window: better text filter behavior
 
 !v2.3.0 #3 (August 22, 2012)

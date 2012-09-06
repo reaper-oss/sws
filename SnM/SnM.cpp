@@ -439,6 +439,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Send all notes off to selected tracks" }, "S&M_CC123_SEL_TRACKS", CC123SelTracks, NULL, },
 #ifdef _WIN32
+	{ { DEFACCEL, "SWS/S&M: What's new?" }, "S&M_WHATSNEW", WhatsNew, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (all tracks)" }, "S&M_THEME_HELPER_ALL", ShowThemeHelper, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (selected track)" }, "S&M_THEME_HELPER_SEL", ShowThemeHelper, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (use w/o modifier)" }, "S&M_MOUSE_L_CLICK", SimulateMouseClick, NULL, 0},
@@ -480,7 +481,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle show take mute envelope" }, "S&M_TAKEENV9", ShowHideTakeMuteEnvelope, NULL, -1, FakeIsToggleAction},
 #endif
 
-	{ {}, LAST_COMMAND, }, // denote end of table
+	{ {}, LAST_COMMAND, } // denote end of table
 };
 
 

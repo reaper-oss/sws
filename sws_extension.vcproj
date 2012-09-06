@@ -99,7 +99,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Building installer... (created in Install/output)"
-				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&quot;&#x0D;&#x0A;if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName).nsi&quot;&#x0D;&#x0A;"
+				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&quot; &amp;&amp; reascript_python.pl &gt; &quot;$(OutDir)\reaper_sws.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\reaper_sws.py&quot; &quot;$(REAPER_DIR)\plugins&quot; &amp;&amp; if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName).nsi&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -183,7 +183,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Building x64 installer... (created in Install/output)"
-				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName)_x64.nsi&quot;&#x0D;&#x0A;"
+				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot; &amp;&amp; reascript_python.pl -x64 &gt; &quot;$(OutDir)\reaper_sws.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\reaper_sws.py&quot; &quot;$(REAPER64_DIR)\plugins&quot; &amp;&amp; if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName)_x64.nsi&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -271,7 +271,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying to REAPER\Plugins..."
-				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&#x0D;&quot;"
+				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&quot; &amp;&amp; reascript_python.pl &gt; &quot;$(OutDir)\reaper_sws.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\reaper_sws.py&quot; &quot;$(REAPER_DIR)\plugins&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -357,7 +357,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying to REAPER\Plugins..."
-				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;"
+				CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot; &amp;&amp; reascript_python.pl -x64 &gt; &quot;$(OutDir)\reaper_sws.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\reaper_sws.py&quot; &quot;$(REAPER64_DIR)\plugins&quot;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -2812,6 +2812,14 @@
 			>
 			<File
 				RelativePath=".\license.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Reascript.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Reascript.h"
 				>
 			</File>
 			<File

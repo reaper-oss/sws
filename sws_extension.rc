@@ -181,14 +181,15 @@ END
 
 IDD_ABOUT DIALOGEX 0, 0, 255, 195
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About SWS Extension"
+CAPTION "About SWS/S&M Extension"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "&Close",IDCANCEL,103,174,50,14
-    PUSHBUTTON      "&License",IDC_LICENSE,195,70,46,14
+    PUSHBUTTON      "&License",IDC_LICENSE,195,70,52,14
+    PUSHBUTTON      "&What's new?",IDC_INFO,195,89,52,14
     LTEXT           "Copyright (C) 2012 Tim Payne of Standing Water Studios\r\tJ.F. Bédague (S&&M)\r\tFingers (FNG)\r\tPhilip S. Considine (IX)\rCopyright (C) 2011 Shane StClair (Autorender)\rCopyright (C) 2010 P. Bourdon (Padre)\rCopyright (C) 2009 Xenakios",IDC_STATIC,7,45,187,64
     LTEXT           "Version String",IDC_VERSION,7,30,241,8
-    LTEXT           "SWS Extension, a REAPER plugin.\rMerged with Xenakios Command Extensions, October 2009",IDC_STATIC,7,7,241,19
+    LTEXT           "SWS/S&&M Extension, a REAPER plugin.\rMerged with Xenakios Command Extensions, October 2009",IDC_STATIC,7,7,241,19
     LTEXT           "Download the latest version:",IDC_STATIC,7,142,92,9
     CONTROL         "http://www.standingwaterstudios.com/reaper/",IDC_WEBSITE,
                     "Button",BS_OWNERDRAW | WS_TABSTOP,7,126,241,11
@@ -254,7 +255,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTI
 CAPTION "Info"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_EDIT,7,7,311,260,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
+    EDITTEXT        IDC_EDIT,7,7,311,260,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL
 END
 
 IDD_RECVMISSING DIALOGEX 0, 0, 253, 74
@@ -934,7 +935,7 @@ EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "S&M - Notes/Subtitles/Help"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_EDIT,6,22,269,96,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL | NOT WS_TABSTOP
+    EDITTEXT        IDC_EDIT,6,22,269,96,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | WS_HSCROLL | WS_VSCROLL | NOT WS_TABSTOP
 END
 
 IDD_SNM_FIND DIALOGEX 0, 0, 260, 65
@@ -1712,7 +1713,8 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

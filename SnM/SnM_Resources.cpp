@@ -2429,7 +2429,7 @@ int ResourceViewInit()
 	// localization
 	g_filter.Set(FILTER_DEFAULT_STR);
 
- 	g_slots.Empty(true);
+	g_slots.Empty(true);
 	g_slots.Add(new FileSlotList("FXChains", __LOCALIZE("FX chain","sws_DLG_150"), "RfxChain", true, true, true));
 	g_slots.Add(new FileSlotList("TrackTemplates", __LOCALIZE("track template","sws_DLG_150"), "RTrackTemplate", true, true, true));
 	g_slots.Add(new FileSlotList("ProjectTemplates", __LOCALIZE("project","sws_DLG_150"), "RPP", true, true, true));

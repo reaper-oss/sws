@@ -39,6 +39,7 @@
 //#define _SNM_WDL	// if my wdl version is used
 //#define _SNM_STANDALONE
 
+
 #ifdef _WIN32
 #define SNM_FORMATED_INI_FILE		"%s\\S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE	"%s\\Plugins\\S&M.ini"
@@ -49,6 +50,7 @@
 #define SNM_EXTENSION_FILE			"%s\\Plugins\\reaper_snm.dll"
 #define SNM_FONT_NAME				"MS Shell Dlg"
 #define SNM_FONT_HEIGHT				14
+#define SNM_WHATSNEW_FILE			"%s\\sws-whatsnew.txt"
 #else
 #define SNM_FORMATED_INI_FILE		"%s/S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE	"%s/Plugins/S&M.ini"
@@ -59,6 +61,7 @@
 #define SNM_EXTENSION_FILE			"%s/UserPlugins/reaper_snm.dylib"
 #define SNM_FONT_NAME				"Arial"
 #define SNM_FONT_HEIGHT				12
+#define SNM_WHATSNEW_FILE			"%s/sws-whatsnew.txt"
 #endif
 
 #ifndef _SNM_STANDALONE
@@ -189,21 +192,21 @@ bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf);
 // make sure the last MIDI event in a state is a (dummy) CC123!
 #define SNM_CC123_MID_STATE "HASDATA 1 960 QN\n\
 E 0 b0 7b 00\n\
-E 1 b1 7b 00\n\
-E 1 b2 7b 00\n\
-E 1 b3 7b 00\n\
-E 1 b4 7b 00\n\
-E 1 b5 7b 00\n\
-E 1 b6 7b 00\n\
-E 1 b7 7b 00\n\
-E 1 b8 7b 00\n\
-E 1 b9 7b 00\n\
-E 1 ba 7b 00\n\
-E 1 bb 7b 00\n\
-E 1 bc 7b 00\n\
-E 1 bd 7b 00\n\
-E 1 be 7b 00\n\
-E 1 bf 7b 00\n\
+E 0 b1 7b 00\n\
+E 0 b2 7b 00\n\
+E 0 b3 7b 00\n\
+E 0 b4 7b 00\n\
+E 0 b5 7b 00\n\
+E 0 b6 7b 00\n\
+E 0 b7 7b 00\n\
+E 0 b8 7b 00\n\
+E 0 b9 7b 00\n\
+E 0 ba 7b 00\n\
+E 0 bb 7b 00\n\
+E 0 bc 7b 00\n\
+E 0 bd 7b 00\n\
+E 0 be 7b 00\n\
+E 0 bf 7b 00\n\
 E 1 b0 7b 00\n\
 IGNTEMPO 0 120.00000000 4 4\n\
 >\n"

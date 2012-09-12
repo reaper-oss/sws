@@ -4,7 +4,7 @@
 class RprStateChunk {
 public:
     RprStateChunk(const char *stateChunk);
-    const char *toReaper();
+    const char *get();
     ~RprStateChunk();
 private:
     const char *mChunk;

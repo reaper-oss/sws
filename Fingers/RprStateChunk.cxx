@@ -7,7 +7,7 @@ RprStateChunk::RprStateChunk(const char *stateChunk)
     mChunk = stateChunk;
 }
 
-const char *RprStateChunk::toReaper()
+const char *RprStateChunk::get()
 {
     return mChunk;
 }

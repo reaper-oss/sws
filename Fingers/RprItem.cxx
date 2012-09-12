@@ -76,7 +76,7 @@ RprStateChunkPtr RprItem::getReaperState() const
 
 void RprItem::setReaperState(const RprStateChunkPtr &stateChunk)
 {
-	setReaperState(stateChunk->toReaper());
+	setReaperState(stateChunk->get());
 }
 
 void RprItem::setReaperState(const char *stateChunk)

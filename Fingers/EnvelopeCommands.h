@@ -7,25 +7,6 @@ namespace EnvelopeCommands {
 	void Init();
 };
 
-class TestEnvCommand : public RprCommand
-{
-public:
-	TestEnvCommand() {}
-private:
-	virtual void doCommand(int flag);
-};
-
-class PulseEnvCommand : public RprCommand
-{
-public:
-	enum PulseType {SQUARE, BEZIER_1};
-	PulseEnvCommand(int nDivisor) : m_nDivisor(nDivisor)
-	{}
-private:
-	virtual void doCommand(int flag);
-	int m_nDivisor;
-};
-
 class TimeCompressExpandPoints : public RprCommand
 {
 public:
@@ -34,15 +15,6 @@ public:
 private:
 	void doCommand(int flag);
 	double m_dAmount;
-};
-
-class SineEnvCommand : public RprCommand
-{
-public:
-	SineEnvCommand(int nDivisor) : m_nDivisor(nDivisor)	{}
-private:
-	virtual void doCommand(int flag);
-	int m_nDivisor;
 };
 
 enum PointProperty { POINTPOSITION, POINTTIME };

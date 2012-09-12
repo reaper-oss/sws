@@ -1,69 +1,65 @@
 #ifndef _ENVELOPE_H_
 #define _ENVELOPE_H_
 
-class CEnvelope;
+#include <vector>
+#include <string>
 
-class CEnvelopePoint
+
+class RprEnvelope;
+
+class RprEnvelopePoint
 {
 public:
     enum EnvShape { Linear, Square, Slow, FastStart, FastEnd, Bezier };
 
-    CEnvelopePoint(CEnvelope *parent = NULL) : 
-    dTime(0.0), dParameterValue(0.0), nEnvShape(Linear),
-        nSelUnknown(0), nSelected(0), nBezUnknown(0),
-        dBezierTension(0.0), pParent(parent)
-    {}
+    RprEnvelopePoint(RprEnvelope *parent = NULL);
 
-    void SetTime(double time) { dTime = time; }
-    static bool ComparePointPos(const CEnvelopePoint &left, const CEnvelopePoint &right) { return left.dTime < right.dTime; }
-    double GetTime() { return dTime; }
+    void setTime(double time);
+    double time() const;
 
-    void SetValue(double value);
-    double GetValue() { return dParameterValue; }
+    void setValue(double value);
+    double value() const { return m_parameterValue; }
 
-    void SetShape(EnvShape shape) { nEnvShape = shape; }
-    EnvShape GetShape() { return nEnvShape; }
-
-    bool IsSelected() { return nSelected == 1;}
-
-    double GetBezierTension() { return dBezierTension; }
-
-    void SetParent(CEnvelope *parent) { pParent = parent;}
-
-    void FromString(char *stateData);
-    std::string ToString();
+    EnvShape shape() const { return m_envelopeShape; }
+    bool selected() const { return m_selected ; }
+    double bezierTension() const { return m_bezierTension; }
+    
+    bool operator<(const RprEnvelopePoint& rhs) const;
+    
+    void fromString(const char *stateData);
+    std::string toString() const;
 
 private:
-    double dTime;
-    double dParameterValue;
-    EnvShape nEnvShape;
-    int nSelUnknown;
-    int nSelected;
-    int nBezUnknown;
-    double dBezierTension;
-    CEnvelope *pParent;
+    double m_time;
+    double m_parameterValue;
+    EnvShape m_envelopeShape;
+    int m_selUnknown;
+    bool m_selected;
+    int m_bezierUnknown;
+    double m_bezierTension;
+    RprEnvelope *m_parent;
 };
 
-class CEnvelopePointOp;
-class CEnvelope
+class RprEnvelopePointOp;
+class RprEnvelope
 {
 public:
 
-    CEnvelope(TrackEnvelope* env);
+    RprEnvelope(TrackEnvelope* env);
     void Write();
     template <typename T>
     void ApplyToPoints(T &op)
     { std::for_each(vPoints.begin(), vPoints.end(), op); }
-    std::vector<CEnvelopePoint>& GetPoints()
+    std::vector<RprEnvelopePoint>& GetPoints()
     { return vPoints; }
 
-    void Add(CEnvelopePoint &point);
+    void Add(RprEnvelopePoint &point);
 
     double GetMax() { return dParamMax; }
     double GetMin() { return dParamMin; }
 
 
-    ~CEnvelope();
+    ~RprEnvelope();
 private:
 
     TrackEnvelope* m_env;
@@ -86,71 +82,7 @@ private:
     int nArm;  /* 1 or 0 */
     /* DEFSHAPE */
     int nDefaultShape; /* 0 -> 5 */
-    std::vector<CEnvelopePoint> vPoints;
-};
-
-typedef std::vector<CEnvelopePoint> EnvPoints;
-typedef std::vector<CEnvelopePoint>::iterator EnvPointsIter;
-
-class CEnvelopePointOp {
-public:
-    void operator() (CEnvelopePoint &p)
-    {Do(p);}
-private:
-    virtual void Do(CEnvelopePoint &p) = 0;
-};
-
-class AddToPointPosition : public CEnvelopePointOp
-{
-public:
-    AddToPointPosition(double amt)
-    { m_dAmt = amt;} 
-
-private:
-    void Do(CEnvelopePoint &p)
-    {
-        if (p.IsSelected())
-            p.SetTime( p.GetTime() + m_dAmt);
-    }
-
-    double m_dAmt;
-};
-
-class AddToValue : public CEnvelopePointOp
-{
-public:
-    AddToValue(double amt)
-    { m_db = amt; m_dm = 0.0; } 
-
-    AddToValue(double m, double b)
-    { m_dm = m; m_db = b; } 
-
-private:
-    void Do(CEnvelopePoint &p)
-    {
-        if (p.IsSelected())
-            p.SetValue( p.GetValue() + p.GetTime() * m_dm + m_db); 
-    }
-
-    double m_dm;
-    double m_db;
-};
-
-class ScaleValueAroundDifference : public CEnvelopePointOp
-{
-public:
-    ScaleValueAroundDifference(double amt, double diffArg)
-    { m_dk = amt; m_dda = diffArg; }
-
-private:
-    virtual void Do(CEnvelopePoint &p)
-    {
-        if (p.IsSelected())
-            p.SetValue( p.GetValue() + m_dk * (p.GetValue() - m_dda));
-    }
-
-    double m_dk;
-    double m_dda;
+    std::vector<RprEnvelopePoint> vPoints;
 };
 
 #endif /* _ENVELOPE_H_ */

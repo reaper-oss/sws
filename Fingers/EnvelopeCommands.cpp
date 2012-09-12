@@ -31,99 +31,185 @@ void EnvelopeCommands::Init()
 }
 //!WANT_LOCALIZE_1ST_STRING_END
 
+typedef std::vector<RprEnvelopePoint> EnvPoints;
+typedef std::vector<RprEnvelopePoint>::iterator EnvPointsIter;
+
+class RprEnvelopePointOp {
+public:
+    void operator() (RprEnvelopePoint &p)
+    {Do(p);}
+private:
+    virtual void Do(RprEnvelopePoint &p) = 0;
+};
+
+class AddToPointPosition : public RprEnvelopePointOp
+{
+public:
+    AddToPointPosition(double amt)
+    { m_dAmt = amt;} 
+    
+private:
+    void Do(RprEnvelopePoint &p)
+    {
+        if (p.selected())
+        {
+            p.setTime( p.time() + m_dAmt);
+        }
+    }
+    
+    double m_dAmt;
+};
+
+class AddToValue : public RprEnvelopePointOp
+{
+public:
+    AddToValue(double amt)
+    { m_db = amt; m_dm = 0.0; } 
+    
+    AddToValue(double m, double b)
+    { m_dm = m; m_db = b; } 
+    
+private:
+    void Do(RprEnvelopePoint &p)
+    {
+        if (p.selected())
+        {
+            p.setValue( p.value() + p.time() * m_dm + m_db); 
+        }
+    }
+    
+    double m_dm;
+    double m_db;
+};
+
 void TimeCompressExpandPoints::doCommand(int flag)
 {
-	TrackEnvelope *env = GetSelectedTrackEnvelope(0);
-	if(env == NULL)
+	TrackEnvelope *trackEnvelope = GetSelectedTrackEnvelope(0);
+	if (trackEnvelope == NULL)
+    {
 		return;
-	CEnvelope Cenv(env);
-	EnvPoints &points = Cenv.GetPoints();
-	bool firstPointFound = false;
-	double firstPointTime = 0.0f;
-	for(EnvPointsIter i = points.begin(); i != points.end(); i++) {
-		if (i->IsSelected()) {
-			if(firstPointFound)
-				i->SetTime( i->GetTime() + (i->GetTime() - firstPointTime) * m_dAmount);
-			else {
+    }
+	
+    RprEnvelope envelope(trackEnvelope);
+	EnvPoints &points = envelope.GetPoints();
+	
+    bool firstPointFound = false;
+	double firstPointTime = 0.0;
+    
+	for (EnvPointsIter i = points.begin(); i != points.end(); i++) 
+    {
+		if (i->selected()) 
+        {
+			if (firstPointFound)
+            {
+				i->setTime( i->time() + (i->time() - firstPointTime) * m_dAmount);
+            }
+			else 
+            {
 				firstPointFound = true;
-				firstPointTime = i->GetTime();
+				firstPointTime = i->time();
 			}
 		}
 	}
-	Cenv.Write();
+    
+	envelope.Write();
 }
 
 void AddToEnvPoints::doCommand(int flag)
 {
-	TrackEnvelope *env = GetSelectedTrackEnvelope(0);
-	if(env == NULL)
+	TrackEnvelope *trackEnvelope = GetSelectedTrackEnvelope(0);
+	if (trackEnvelope == NULL)
+    {
 		return;
+    }
+    RprEnvelope envelope(trackEnvelope);
+    
 	double cursorPos = GetCursorPosition();
-	CEnvelope Cenv(env);
-	if( m_pp == POINTTIME)
+
+    if( m_pp == POINTTIME)
 	{
 		double beat = (240.0 / TimeMap2_GetDividedBpmAtTime(0, cursorPos));
 		AddToPointPosition op(beat * m_dAmount);
-		Cenv.ApplyToPoints(op);
+		envelope.ApplyToPoints(op);
 	}
 	else
 	{
-		double amt = (Cenv.GetMax() - Cenv.GetMin()) / 100 * m_dAmount;
+		double amt = (envelope.GetMax() - envelope.GetMin()) / 100 * m_dAmount;
 		AddToValue op(amt);
-		Cenv.ApplyToPoints(op);
+		envelope.ApplyToPoints(op);
 	}
-	Cenv.Write();
+	envelope.Write();
 }
 
-bool isSelected(CEnvelopePoint &p)
-{ return p.IsSelected();}
+bool selected(RprEnvelopePoint &p)
+{ return p.selected();}
 
 
 void LinearShiftAmplitude::doCommand(int flag)
 {
-	TrackEnvelope *env = GetSelectedTrackEnvelope(0);
-	if(env == NULL)
+	TrackEnvelope *trackEnvelope = GetSelectedTrackEnvelope(0);
+	if (trackEnvelope == NULL)
+    {
 		return;
-	CEnvelope Cenv(env);
-	std::vector<CEnvelopePoint> &points = Cenv.GetPoints();
-	std::vector<CEnvelopePoint>::iterator it = std::find_if(points.begin(),
-		points.end(), isSelected);
+    }
+    RprEnvelope envelope(trackEnvelope);
+    
+	std::vector<RprEnvelopePoint> &points = envelope.GetPoints();
+	std::vector<RprEnvelopePoint>::iterator it = std::find_if(points.begin(),
+		points.end(), selected);
 
-	if(it == points.end()) return;
+	if (it == points.end())
+    {
+        return;
+    }
 
-	double amt = (Cenv.GetMax() - Cenv.GetMin()) / 100 * m_dAmount;
+	double amt = (envelope.GetMax() - envelope.GetMin()) / 100 * m_dAmount;
 
-	double p0 = it->GetTime();
-	std::vector<CEnvelopePoint>::reverse_iterator rit;
-	rit = std::find_if(points.rbegin(), points.rend(), isSelected);
-	double pN = rit->GetTime();
+	double p0 = it->time();
+	std::vector<RprEnvelopePoint>::reverse_iterator rit;
+	rit = std::find_if(points.rbegin(), points.rend(), selected);
+	double pN = rit->time();
 	if (p0 == pN)
+    {
 		return; // same point in time
+    }
 
 	double m = amt / (pN - p0);
 	double b;
 	
-	if(m_bReverse) 
+	if (m_bReverse)
+    {
 		m *= -1.0;
+    }
 
-	if(m_bReverse)
+	if (m_bReverse)
+    {
 		b = amt - m *p0;
+    }
 	else
+    {
 		b = -m * p0;
+    }
 
 	AddToValue op(m, b);
-	Cenv.ApplyToPoints(op);
-	Cenv.Write();
+	envelope.ApplyToPoints(op);
+	envelope.Write();
 }
 
 void BoundsOfSelectedPoints(EnvPoints &points, double *min, double *max)
 {
-	for(std::vector<CEnvelopePoint>::iterator i = points.begin(); i != points.end(); i++) {
-		if( i->IsSelected()) {
-			if( i->GetValue() > *max)
-				*max = i->GetValue();
-			if( i->GetValue() < *min)
-				*min = i->GetValue();
+	for(std::vector<RprEnvelopePoint>::iterator i = points.begin(); i != points.end(); i++) 
+    {
+		if( i->selected()) 
+        {
+			if( i->value() > *max)
+            {
+				*max = i->value();
+            }
+			if( i->value() < *min)
+            {
+				*min = i->value();
+            }
 		}
 	}
 }
@@ -133,10 +219,10 @@ void CompressExpandPoints::doCommand(int flag)
 	TrackEnvelope *env = GetSelectedTrackEnvelope(0);
 	if(env == NULL)
 		return;
-	CEnvelope Cenv(env);
-	std::vector<CEnvelopePoint> &points = Cenv.GetPoints();
-	std::vector<CEnvelopePoint>::iterator it = std::find_if(points.begin(),
-		points.end(), isSelected);
+	RprEnvelope Cenv(env);
+	std::vector<RprEnvelopePoint> &points = Cenv.GetPoints();
+	std::vector<RprEnvelopePoint>::iterator it = std::find_if(points.begin(),
+		points.end(), selected);
 
 	if(it == points.end()) return;
 
@@ -145,28 +231,37 @@ void CompressExpandPoints::doCommand(int flag)
 	BoundsOfSelectedPoints(points, &minVal, &maxVal);
 	double midPoint = (maxVal + minVal) / 2;
 
-	double p0 = it->GetTime();
-	std::vector<CEnvelopePoint>::reverse_iterator rit;
-	rit = std::find_if(points.rbegin(), points.rend(), isSelected);
-	double pN = rit->GetTime();
+	double p0 = it->time();
+	std::vector<RprEnvelopePoint>::reverse_iterator rit;
+	rit = std::find_if(points.rbegin(), points.rend(), selected);
+	double pN = rit->time();
 	if(p0 == pN)
 		return;
 
 	double m = m_dGradientFactor * (m_dAmount - 1) * (pN - p0);
 
-	for(std::vector<CEnvelopePoint>::iterator i = points.begin(); i != points.end(); i++) {
-		if( i->IsSelected()) {
-			if( i->GetValue() == midPoint)
+	for(std::vector<RprEnvelopePoint>::iterator i = points.begin(); i != points.end(); i++)
+    {
+		if (i->selected()) 
+        {
+			if (i->value() == midPoint)
+            {
 				continue;
+            }
+            
 			double extremePoint;
-			if( i->GetValue() > midPoint)
+			if( i->value() > midPoint)
+            {
 				extremePoint = maxVal;
+            }
 			else
+            {
 				extremePoint = minVal;
+            }
 			
-			double normalized = (i->GetValue() - midPoint) / (extremePoint - midPoint);
-			normalized *= m * (i->GetTime() - p0) + m_dAmount;
-			(*i).SetValue(normalized * ( extremePoint - midPoint) + midPoint);
+			double normalized = (i->value() - midPoint) / (extremePoint - midPoint);
+			normalized *= m * (i->time() - p0) + m_dAmount;
+			i->setValue(normalized * ( extremePoint - midPoint) + midPoint);
 		}
 	}
 	Cenv.Write();

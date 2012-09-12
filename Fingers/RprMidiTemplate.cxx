@@ -32,7 +32,7 @@ RprMidiTemplate::RprMidiTemplate(const RprTake &take, bool readOnly)
     mInErrorState = false;
     mParent.reset(new RprItem(take.getParent()));
     RprStateChunkPtr chunk = mParent->getReaperState();
-    mItemNode.reset(RprParentNode::createItemStateTree(chunk->toReaper()));
+    mItemNode.reset(RprParentNode::createItemStateTree(chunk->get()));
     char guid[256];
     guidToString(take.getGUID(), guid);
     mMidiSourceNode = findTakeSource(mItemNode.get(), guid);

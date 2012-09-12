@@ -50,7 +50,6 @@
 #define SNM_EXTENSION_FILE			"%s\\Plugins\\reaper_snm.dll"
 #define SNM_FONT_NAME				"MS Shell Dlg"
 #define SNM_FONT_HEIGHT				14
-#define SNM_WHATSNEW_FILE			"%s\\sws-whatsnew.txt"
 #else
 #define SNM_FORMATED_INI_FILE		"%s/S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE	"%s/Plugins/S&M.ini"
@@ -61,7 +60,6 @@
 #define SNM_EXTENSION_FILE			"%s/UserPlugins/reaper_snm.dylib"
 #define SNM_FONT_NAME				"Arial"
 #define SNM_FONT_HEIGHT				12
-#define SNM_WHATSNEW_FILE			"%s/sws-whatsnew.txt"
 #endif
 
 #ifndef _SNM_STANDALONE

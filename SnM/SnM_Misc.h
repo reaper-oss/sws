@@ -41,6 +41,8 @@ void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot);
 void SetSelTrackIconSlot(COMMAND_T*);
 
 // reascript export
+MediaItem_Take* SNM_GetMediaItemTakeByGUID(ReaProject* _project, const char* _guid);
+bool SNM_GetSetSourceState(MediaItem* _item, int takeIdx, char* _state, bool _setnewvalue);
 bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type);
 int SNM_GetIntConfigVar(const char* _varName, int _errVal);
 bool SNM_SetIntConfigVar(const char* _varName, int _newVal);
@@ -51,6 +53,5 @@ bool WaitForTrackMute(DWORD* _muteTime);
 void SimulateMouseClick(COMMAND_T*);
 void DumpWikiActionList(COMMAND_T*);
 void DumpActionList(COMMAND_T*);
-void WhatsNew(COMMAND_T*);
 
 #endif

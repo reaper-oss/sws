@@ -27,7 +27,6 @@
 
 
 #include "stdafx.h"
-#include "Reascript.h"
 #include "Console/Console.h"
 #include "Freeze/Freeze.h"
 #include "MarkerActions/MarkerActions.h"
@@ -457,9 +456,7 @@ extern "C"
 			MiscExit();
 			PadreExit();
 			SNM_Exit();
-
 			FreeReascriptExport();
-
 			ERR_RETURN("Exiting Reaper.\n")
 		}
 
@@ -557,6 +554,7 @@ extern "C"
 		IMPAPI(GetMediaItemTake_Track);
 		IMPAPI(GetMediaItemTakeInfo_Value);
 		IMPAPI(GetMediaSourceFileName);
+		IMPAPI(GetMediaSourceType);
 		IMPAPI(GetMediaTrackInfo_Value);
 		IMPAPI(GetNumTracks);
 		IMPAPI(GetOutputChannelName);

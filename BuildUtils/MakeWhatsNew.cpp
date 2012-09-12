@@ -4,7 +4,10 @@
 / A little win32 console application to parse a What's New file (.txt) and
 / create a formatted HTML file.
 /
-/ Copyright (c) 2010 Tim Payne (SWS)
+/ JFB: this source file is also used in the main SWS project so the code must
+/      be compatible with OSX
+/
+/ Copyright (c) 2010-2012 Tim Payne (SWS), Jeffos
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
 / of this software and associated documentation files (the "Software"), to deal
@@ -38,44 +41,36 @@ class IntStack
 {
 public:
 	WDL_PtrList<void> m_stack;
-	int Top() { if (m_stack.GetSize()) return (int)m_stack.Get(m_stack.GetSize()-1); else return 0; }
-	void Push(int i) { m_stack.Add((void*)i); }
-	int Pop() { int i = (int)m_stack.Get(m_stack.GetSize()-1); m_stack.Delete(m_stack.GetSize()-1); return i; }
+	INT_PTR Top() { if (m_stack.GetSize()) return (INT_PTR)m_stack.Get(m_stack.GetSize()-1); else return 0; }
+	void Push(INT_PTR i) { m_stack.Add((void*)i); }
+	INT_PTR Pop() { INT_PTR i = (INT_PTR)m_stack.Get(m_stack.GetSize()-1); m_stack.Delete(m_stack.GetSize()-1); return i; }
 	int Size() { return m_stack.GetSize(); }
 };
 
-int main(int argc, char* argv[])
+int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML)
 {
-	if (argc < 2)
-	{
-		fprintf(stderr, "Usage: MakeWhatsNew [-h] whatsnew.txt [new.html]\n\n");
-		fprintf(stderr, "Creates an HTML text file from a whatsnew.txt.  Use -h to write full html header/footer tags.\n");
-		return 1;
-	}
-
-	bool bFullHTML = false;
-	int iNextArg = 1;
-	if (argc > 2 && strcmp(argv[1], "-h") == 0)
-	{
-		bFullHTML = true;
-		iNextArg++;
-	}
-
 	FILE* pIn;
 	FILE* pOut;
-	fopen_s(&pIn, argv[iNextArg], "r");
+#ifdef _WIN32
+	fopen_s(&pIn, fnIn, "r");
+#else
+	pIn = fopen(fnIn, "r");
+#endif
 	if (!pIn)
 	{
-		fprintf(stderr, "Input file %s not found.\n", argv[iNextArg]);
+		fprintf(stderr, "Input file %s not found.\n", fnIn);
 		return 2;
 	}
-	iNextArg++;
-	if (argc == iNextArg + 1)
+	if (*fnOut)
 	{
-		fopen_s(&pOut, argv[iNextArg], "w");
+#ifdef _WIN32
+		fopen_s(&pOut, fnOut, "w");
+#else
+		pOut = fopen(fnOut, "w");
+#endif
 		if (!pOut)
 		{
-			fprintf(stderr, "Output file %s not found.\n", argv[iNextArg]);
+			fprintf(stderr, "Output file %s not found.\n", fnOut);
 			return 3;
 		}
 	}
@@ -95,12 +90,30 @@ int main(int argc, char* argv[])
 	cBuf[iSize] = 0;
 
 	int iPos = 0;
-	const int NO_SECTION	= 0;
-	const int HEADER		= 1;
-	const int URL			= 2;
-	const int URL_STRING	= 3;
-	const int BULLET		= 4;
-	const int PARAGRAPH		= 6;
+#ifndef _WIN32
+	// get rid of '\r' on OSX
+	int iPos2 = 0;
+	char* cBuf2 = new char[iSize+2];
+	while (cBuf[iPos] && iPos < iSize) {
+		if (cBuf[iPos] != '\r') {
+			cBuf2[iPos2] = cBuf[iPos];
+			iPos2++;
+		}
+		iPos++;
+	}
+	iSize = iPos2;
+	cBuf2[iSize] = 0;
+	delete [] cBuf;
+	cBuf = cBuf2;
+	iPos = 0;
+#endif
+
+	const INT_PTR NO_SECTION	= 0;
+	const INT_PTR HEADER		= 1;
+	const INT_PTR URL			= 2;
+	const INT_PTR URL_STRING	= 3;
+	const INT_PTR BULLET		= 4;
+	const INT_PTR PARAGRAPH		= 6;
 	IntStack curSection;
 	WDL_String url;
 
@@ -117,8 +130,8 @@ int main(int argc, char* argv[])
 	{
 		fputs("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n", pOut);
 		fputs("<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n", pOut);
-		fputs("<head><title>SWS/S&M Extension What's New</title></head>\n", pOut);
-		fputs("<body>\n", pOut);
+		fputs("<head><title>SWS/S&M Extension - What's new?</title></head>\n", pOut);
+		fputs("<body>\n<h1>SWS/S&M Extension - What's new?</title></h1>\n", pOut);
 	}
 
 	while (cBuf[iPos] && iPos < iSize)
@@ -130,23 +143,24 @@ int main(int argc, char* argv[])
 			{
 				if (cBuf[iPos] == '!')
 				{
+					if (bFullHTML && iPos)
+						fputs("<hr />", pOut);
 					fputs("<h3>", pOut);
 					curSection.Push(HEADER);
 					iPos++;
 				}
-				else if (cBuf[iPos] == '+')
+				else if (cBuf[iPos] == '+'
+					&& (iPos == 0 || cBuf[iPos-1] == '\n')) // '+' at start of file/line?
 				{
-					fputs("<ul>\n", pOut);
+					fputs("<ul style=\"margin-top:0px;margin-bottom:0px;\">\n", pOut);
 					curSection.Push(BULLET);
 				}
 				else
-				{
-					fputs("<p>", pOut);
 					curSection.Push(PARAGRAPH);
-				}
 			}
 			
-			if (curSection.Top() == BULLET && cBuf[iPos] == '+')
+			if (curSection.Top() == BULLET && cBuf[iPos] == '+'
+				&& (iPos == 0 || cBuf[iPos-1] == '\n'))  // '+' at start of file/line?
 			{
 				fputs("    <li>", pOut);
 				iPos++;
@@ -157,7 +171,11 @@ int main(int argc, char* argv[])
 				curSection.Push(URL);
 				url.SetLen(0);
 			}
+#ifdef _WIN32
 			else if (_strnicmp(&cBuf[iPos], "issue ", 6) == 0)
+#else
+			else if (strncasecmp(&cBuf[iPos], "issue ", 6) == 0)
+#endif
 			{
 				int iIssue = atol(&cBuf[iPos+6]);
 				if (iIssue != 0)
@@ -205,17 +223,20 @@ int main(int argc, char* argv[])
 					curSection.Pop();
 					break;
 				case BULLET:
-					if (cBuf[iPos+1] != '\n' && cBuf[iPos+1] != '+')
-						fputs("<br />\n", pOut);
-					else
+					if (cBuf[iPos+1] != ' ')
 					{
 						fputs("</li>\n", pOut);
 						if (cBuf[iPos+1] != '+')
 						{
 							fputs("</ul>\n", pOut);
+							if (cBuf[iPos+1] == '\n')
+								fputs("<br />", pOut);
+							fputs("\n", pOut);
 							curSection.Pop();
 						}
 					}
+					else
+						fputs("<br />\n", pOut);
 					bContinue = true;
 					break;
 				case URL:
@@ -224,18 +245,20 @@ int main(int argc, char* argv[])
 					curSection.Pop();
 					break;
 				case PARAGRAPH:
+					fputs("<br />\n", pOut);
 					if (cBuf[iPos+1] == '\n' || cBuf[iPos+1] == '+' || cBuf[iPos+1] == 0)
 					{
-						fputs("</p>\n", pOut);
+						if (cBuf[iPos+1] != '+')
+							fputs("<br />\n", pOut);
 						curSection.Pop();
 						if (cBuf[iPos+1] != '+')
 							iPos++;
 					}
 					else
 					{
-						fputs("<br />\n", pOut);
 						bContinue = true;
 					}
+					break;
 				}
 			}
 		}
@@ -254,7 +277,7 @@ int main(int argc, char* argv[])
 			if (curSection.Top() == URL)
 				url.AppendFormatted(500, "%c", cBuf[iPos]);
 		}
-		
+
 		iPos++;
 	}
 
@@ -267,3 +290,32 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+
+#ifdef _WIN32
+int main(int argc, char* argv[])
+{
+	if (argc < 2)
+	{
+		fprintf(stderr, "Usage: MakeWhatsNew [-h] whatsnew.txt [new.html]\n\n");
+		fprintf(stderr, "Creates an HTML text file from a whatsnew.txt.  Use -h to write full html header/footer tags.\n");
+		return 1;
+	}
+
+	bool bFullHTML = false;
+	int iNextArg = 1;
+	if (argc > 2 && strcmp(argv[1], "-h") == 0)
+	{
+		bFullHTML = true;
+		iNextArg++;
+	}
+
+	char fnIn[2048]="", fnOut[2048]="";
+	lstrcpyn(fnIn, argv[iNextArg], sizeof(fnIn));
+	iNextArg++;
+
+	if (argc == iNextArg + 1)
+		lstrcpyn(fnOut, argv[iNextArg], sizeof(fnOut));
+
+	return GenHtmlWhatsNew(fnIn, fnOut, bFullHTML);
+}
+#endif

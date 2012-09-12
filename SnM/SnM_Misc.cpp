@@ -29,6 +29,7 @@
 #include "SnM.h"
 #include "../reaper/localize.h"
 #include "../Prompt.h"
+#include "../../WDL/projectcontext.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -110,6 +111,72 @@ void SetSelTrackIconSlot(COMMAND_T* _ct) {
 // Reascript export
 ///////////////////////////////////////////////////////////////////////////////
 
+MediaItem_Take* SNM_GetMediaItemTakeByGUID(ReaProject* _project, const char* _guid)
+{
+	if (_guid && *_guid)
+	{
+		GUID g;
+		stringToGuid(_guid, &g);
+		return GetMediaItemTakeByGUID(_project, &g);
+	}
+	return NULL;
+}
+
+// note: using PCM_source.Load/SaveState() won't always work
+//       e.g. getting an empty take src, turning wav src into midi, etc..
+bool SNM_GetSetSourceState(MediaItem* _item, int _takeIdx, char* _state, bool _setnewvalue)
+{
+	bool ok = false;
+	if (_item && _state)
+	{
+		if (_takeIdx<0)
+			_takeIdx = *(int*)GetSetMediaItemInfo(_item, "I_CURTAKE", NULL);
+
+		int tkPos, tklen;
+		WDL_FastString takeChunk;
+		SNM_TakeParserPatcher p(_item, CountTakes(_item));
+		if (p.GetTakeChunk(_takeIdx, &takeChunk, &tkPos, &tklen))
+		{
+			SNM_ChunkParserPatcher ptk(&takeChunk, false);
+
+			// set
+			if (_setnewvalue)
+			{
+				// standard case: a source is there
+				if (ptk.ReplaceSubChunk("SOURCE", 1, 0, _state)) // no break keyword here: we're already at the end of the item..
+					ok = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
+				// replacing an empty take
+				else
+				{
+					WDL_FastString newTkChunk("TAKE\n");
+					newTkChunk.Append(_state);
+					ok = p.ReplaceTake(tkPos, tklen, &newTkChunk);
+				}
+			}
+			// get
+			else
+			{
+				WDL_FastString state;
+				if (ptk.GetSubChunk("SOURCE", 1, 0, &state))
+					strcpy(_state, state.Get());
+				// empty take
+				else
+					*_state = '\0';
+				ok = true;
+			}
+		}
+	}
+	return ok;
+}
+/*
+bool SNM_GetSetSourceState(MediaItem_Take* _tk, char* _state, bool _setnewvalue)
+{
+	if (_tk)
+		if (MediaItem* item = GetMediaItemTake_Item(_tk))
+			return SNM_GetSetSourceState(item, GetTakeIndex(item, _tk), _state, _setnewvalue)
+	return false;
+}
+*/
 bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type)
 {
 	if (_srcTr && _destTr && _srcTr!=_destTr && _type>=0 && _type<=3)
@@ -306,32 +373,4 @@ void DumpWikiActionList(COMMAND_T* _ct)
 
 void DumpActionList(COMMAND_T* _ct) {
 	DumpActionList((int)_ct->user, __LOCALIZE("S&M - Dump action list","sws_mbox"), "%s\t%s\t%s\n", "Section\tId\tAction\n", NULL);
-}
-
-void WhatsNew(COMMAND_T* _ct)
-{
-	WDL_FastString fn;
-	fn.SetFormatted(BUFFER_SIZE, SNM_WHATSNEW_FILE, GetExePath());
-	if (FILE* f = fopenUTF8(fn.Get(), "r"))
-	{
-		int lineCnt=0;
-		WDL_FastString whatsnew;
-		char str[2048];
-		while(fgets(str, sizeof(str), f) && *str) {
-			whatsnew.Append(str);
-			lineCnt++;
-		}
-		fclose(f);
-
-//JFB!!! TODO: tests OSX
-#ifdef _WIN32
-		WDL_String whatsnewRN;
-		int newLen = whatsnew.GetLength() + 2*lineCnt; // *2 for \r\n
-		whatsnewRN.SetLen(newLen);
-		GetStringWithRN(whatsnew.Get(), whatsnewRN.Get(), newLen);
-		DisplayInfoBox(GetMainHwnd(), __LOCALIZE("SWS/S&M Extension - What's new?","sws_DLG_109"), whatsnewRN.Get());
-#else
-		DisplayInfoBox(GetMainHwnd(), __LOCALIZE("SWS/S&M Extension - What's new?","sws_DLG_109"), whatsnew.Get());
-#endif
-	}
 }

@@ -26,12 +26,12 @@
 ******************************************************************************/
 
 #include "stdafx.h"
-#include "Reascript.h"
 #include "SnM/SnM_Misc.h"
 
 
-// Important: keep APIFUNC() and the four first fields of the struct "APIdef" as they are defined:
-// the script reascript_python.pl needs those to parse the exported REAPER functions and generate 
+// Important: 
+// keep APIFUNC() and the four first fields of the struct "APIdef" as they are defined:
+// the script reascript_python.pl needs those to parse the exported functions and generate 
 // reaper_python.py at compile-time. 
 // "Yes, that is a Perl script reading C++ to generate Python." - schwa, dec. 2011
 // See http://code.google.com/p/sws-extension/issues/detail?id=432
@@ -62,6 +62,8 @@ typedef struct APIdef
 APIdef g_apidefs[] =
 {
 	// S&M stuff
+	{ APIFUNC(SNM_GetMediaItemTakeByGUID), "MediaItem_Take*", "ReaProject*,const char*", "project,guid", "[S&M extension] Gets a take by GUID as string.", },
+	{ APIFUNC(SNM_GetSetSourceState), "bool", "MediaItem*,int,char*,bool", "item,takeIdx,state,setnewvalue", "[S&M extension] Gets or sets a take's source state. Use takeIdx=-1 to get/alter the active take. Note: this func does not use a MediaItem_Take* param in order to manage empty takes (i.e. takes with MediaItem_Take*==NULL).", },
 	{ APIFUNC(SNM_AddReceive), "bool", "MediaTrack*,MediaTrack*,int", "src,dest,type", "[S&M extension] Adds a receive, type 0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)", },
 	{ APIFUNC(SNM_GetIntConfigVar), "int", "const char*,int", "varName,errVal", "[S&M extension] Returns an integer preference (look in project prefs first, then in general prefs). Returns errVal if it fails (e.g. varName not found).", },
 	{ APIFUNC(SNM_SetIntConfigVar), "bool", "const char*,int", "varName,newVal", "[S&M extension] Sets an integer preference (look in project prefs first, then in general prefs). Returns false if it fails (e.g. varName not found).", },

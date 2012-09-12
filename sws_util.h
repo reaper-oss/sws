@@ -235,9 +235,16 @@ void WinSpawnNotepad(const char* pFilename);
 void makeEscapedConfigString(const char *in, WDL_FastString *out); //JFB: temp (WDL's ProjectContext does not use WDL_FastString yet)
 bool SWS_IsWindow(HWND hwnd);
 
-// Localization
+// Localization, sws_util.cpp
 #define _SWS_LOCALIZATION
 const char* GetLocalizedActionName(const char* _defaultStr, int _flags = 0, const char* _section = "sws_actions");
 bool IsLocalizableAction(const char* _customId);
 TrackEnvelope* SWS_GetTakeEnvelopeByName(MediaItem_Take* take, const char* envname);
 TrackEnvelope* SWS_GetTrackEnvelopeByName(MediaTrack* track, const char* envname);
+
+// Generate html whatsnew, makewhatsnew.cpp
+int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML);
+
+// Functions export to reascript and c++ plugins, Reascript.cpp
+bool ExportReascript(reaper_plugin_info_t*);
+void FreeReascriptExport();

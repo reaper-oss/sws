@@ -18,11 +18,11 @@ public:
     double time() const;
 
     void setValue(double value);
-    double value() const { return m_parameterValue; }
+    double value() const;
 
-    EnvShape shape() const { return m_envelopeShape; }
-    bool selected() const { return m_selected ; }
-    double bezierTension() const { return m_bezierTension; }
+    EnvShape shape() const;
+    bool selected() const;
+    double bezierTension() const;
     
     bool operator<(const RprEnvelopePoint& rhs) const;
     

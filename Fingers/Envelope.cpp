@@ -21,12 +21,38 @@ RprEnvelopePoint::time() const
     return m_time;
 }
 
-bool RprEnvelopePoint::operator<(const RprEnvelopePoint& rhs) const
+double 
+RprEnvelopePoint::value() const
+{ 
+    return m_parameterValue; 
+}
+
+RprEnvelopePoint::EnvShape
+RprEnvelopePoint::shape() const 
+{ 
+    return m_envelopeShape; 
+}
+
+bool 
+RprEnvelopePoint::selected() const
+{ 
+    return m_selected;
+}
+
+double 
+RprEnvelopePoint::bezierTension() const
+{ 
+    return m_bezierTension; 
+}
+
+bool 
+RprEnvelopePoint::operator<(const RprEnvelopePoint& rhs) const
 {
     return m_time < rhs.m_time;
 }
 
-std::string RprEnvelopePoint::toString() const
+std::string 
+RprEnvelopePoint::toString() const
 {
     std::ostringstream oss;
     oss << "PT" << " " << time() << " " << value() << " " << shape();
@@ -49,7 +75,8 @@ std::string RprEnvelopePoint::toString() const
     return oss.str();
 }
 
-void RprEnvelopePoint::fromString(const char *stateData)
+void
+RprEnvelopePoint::fromString(const char *stateData)
 {
     sscanf(stateData, "PT %lf %lf %d %d %d %d %lf", &m_time,
         &m_parameterValue, &m_envelopeShape, &m_selUnknown,
@@ -148,7 +175,8 @@ nParamIndex(0)
     }
 }
 
-void RprEnvelope::Write()
+void
+RprEnvelope::Write()
 {
     std::sort(vPoints.begin(), vPoints.end());
 
@@ -201,7 +229,8 @@ void RprEnvelope::Write()
     GetSetObjectState(m_env, envelopeState.c_str());
 }
 
-void RprEnvelopePoint::setValue(double value)
+void
+RprEnvelopePoint::setValue(double value)
 {
     m_parameterValue = value;
     if (m_parent) 
@@ -220,7 +249,8 @@ void RprEnvelopePoint::setValue(double value)
     }
 }
 
-void RprEnvelope::Add(RprEnvelopePoint &point)
+void
+RprEnvelope::Add(RprEnvelopePoint &point)
 {
     vPoints.push_back(point);
 }

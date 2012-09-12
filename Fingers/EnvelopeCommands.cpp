@@ -91,12 +91,11 @@ void TimeCompressExpandPoints::doCommand(int flag)
     }
 	
     RprEnvelope envelope(trackEnvelope);
-	EnvPoints &points = envelope.GetPoints();
 	
     bool firstPointFound = false;
 	double firstPointTime = 0.0;
     
-	for (EnvPointsIter i = points.begin(); i != points.end(); i++) 
+	for (RprEnvelope::iterator i = envelope.begin(); i != envelope.end(); i++) 
     {
 		if (i->selected()) 
         {
@@ -154,11 +153,10 @@ void LinearShiftAmplitude::doCommand(int flag)
     }
     RprEnvelope envelope(trackEnvelope);
     
-	std::vector<RprEnvelopePoint> &points = envelope.GetPoints();
-	std::vector<RprEnvelopePoint>::iterator it = std::find_if(points.begin(),
-		points.end(), selected);
+	std::vector<RprEnvelopePoint>::iterator it = std::find_if(envelope.begin(),
+		envelope.end(), selected);
 
-	if (it == points.end())
+	if (it == envelope.end())
     {
         return;
     }
@@ -167,7 +165,7 @@ void LinearShiftAmplitude::doCommand(int flag)
 
 	double p0 = it->time();
 	std::vector<RprEnvelopePoint>::reverse_iterator rit;
-	rit = std::find_if(points.rbegin(), points.rend(), selected);
+	rit = std::find_if(envelope.rbegin(), envelope.rend(), selected);
 	double pN = rit->time();
 	if (p0 == pN)
     {
@@ -196,9 +194,9 @@ void LinearShiftAmplitude::doCommand(int flag)
 	envelope.Write();
 }
 
-void BoundsOfSelectedPoints(EnvPoints &points, double *min, double *max)
+void BoundsOfSelectedPoints(RprEnvelope::iterator start, RprEnvelope::iterator end, double *min, double *max)
 {
-	for(std::vector<RprEnvelopePoint>::iterator i = points.begin(); i != points.end(); i++) 
+	for(RprEnvelope::iterator i = start; i != end; ++i) 
     {
 		if( i->selected()) 
         {
@@ -220,27 +218,26 @@ void CompressExpandPoints::doCommand(int flag)
 	if(env == NULL)
 		return;
 	RprEnvelope Cenv(env);
-	std::vector<RprEnvelopePoint> &points = Cenv.GetPoints();
-	std::vector<RprEnvelopePoint>::iterator it = std::find_if(points.begin(),
-		points.end(), selected);
+	std::vector<RprEnvelopePoint>::iterator it = std::find_if(Cenv.begin(),
+		Cenv.end(), selected);
 
-	if(it == points.end()) return;
+	if(it == Cenv.end()) return;
 
 	double maxVal = Cenv.GetMin();
 	double minVal = Cenv.GetMax();
-	BoundsOfSelectedPoints(points, &minVal, &maxVal);
+	BoundsOfSelectedPoints(Cenv.begin(), Cenv.end(), &minVal, &maxVal);
 	double midPoint = (maxVal + minVal) / 2;
 
 	double p0 = it->time();
 	std::vector<RprEnvelopePoint>::reverse_iterator rit;
-	rit = std::find_if(points.rbegin(), points.rend(), selected);
+	rit = std::find_if(Cenv.rbegin(), Cenv.rend(), selected);
 	double pN = rit->time();
 	if(p0 == pN)
 		return;
 
 	double m = m_dGradientFactor * (m_dAmount - 1) * (pN - p0);
 
-	for(std::vector<RprEnvelopePoint>::iterator i = points.begin(); i != points.end(); i++)
+	for(RprEnvelope::iterator i = Cenv.begin(); i != Cenv.end(); i++)
     {
 		if (i->selected()) 
         {

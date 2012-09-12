@@ -40,7 +40,6 @@ private:
     RprEnvelope *m_parent;
 };
 
-class RprEnvelopePointOp;
 class RprEnvelope
 {
 public:
@@ -50,14 +49,35 @@ public:
     template <typename T>
     void ApplyToPoints(T &op)
     { std::for_each(vPoints.begin(), vPoints.end(), op); }
-    std::vector<RprEnvelopePoint>& GetPoints()
-    { return vPoints; }
 
     void Add(RprEnvelopePoint &point);
 
     double GetMax() { return dParamMax; }
     double GetMin() { return dParamMin; }
+    
+    typedef std::vector<RprEnvelopePoint>::iterator iterator;
+    typedef std::vector<RprEnvelopePoint>::reverse_iterator reverse_iterator;
 
+    
+    iterator begin()
+    {
+        return vPoints.begin();
+    }
+    
+    iterator end()
+    {
+        return vPoints.end();
+    }
+    
+    reverse_iterator rbegin()
+    {
+        return vPoints.rbegin();
+    }
+    
+    reverse_iterator rend()
+    {
+        return vPoints.rend();
+    }
 
     ~RprEnvelope();
 private:

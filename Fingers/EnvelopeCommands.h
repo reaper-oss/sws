@@ -3,7 +3,8 @@
 
 #include "CommandHandler.h"
 
-namespace EnvelopeCommands {
+namespace EnvelopeCommands 
+{
 	void Init();
 };
 

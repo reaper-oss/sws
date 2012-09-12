@@ -268,6 +268,8 @@
 		22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD278114CD8310077F1CA /* Autocolor.cpp */; };
 		22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD279114CD8310077F1CA /* Autocolor.h */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
+		38B8AD441601269E001F3F3C /* ReaScript.h in Headers */ = {isa = PBXBuildFile; fileRef = 38B8AD421601269E001F3F3C /* ReaScript.h */; };
+		38B8AD451601269E001F3F3C /* ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B8AD431601269E001F3F3C /* ReaScript.cpp */; };
 		5A0280AF14216AE300EC8CD1 /* icontheme.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A0280AD14216AE300EC8CD1 /* icontheme.h */; };
 		5A0280B014216AE300EC8CD1 /* sws_rpf_wrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A0280AE14216AE300EC8CD1 /* sws_rpf_wrapper.h */; };
 		980764230F5B23180091104D /* wndsize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 980764220F5B23180091104D /* wndsize.cpp */; };
@@ -558,6 +560,8 @@
 		22FFD278114CD8310077F1CA /* Autocolor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autocolor.cpp; path = Color/Autocolor.cpp; sourceTree = "<group>"; };
 		22FFD279114CD8310077F1CA /* Autocolor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autocolor.h; path = Color/Autocolor.h; sourceTree = "<group>"; };
 		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		38B8AD421601269E001F3F3C /* ReaScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ReaScript.h; sourceTree = "<group>"; };
+		38B8AD431601269E001F3F3C /* ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ReaScript.cpp; sourceTree = "<group>"; };
 		5A0280AD14216AE300EC8CD1 /* icontheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icontheme.h; path = reaper/icontheme.h; sourceTree = "<group>"; };
 		5A0280AE14216AE300EC8CD1 /* sws_rpf_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sws_rpf_wrapper.h; path = reaper/sws_rpf_wrapper.h; sourceTree = "<group>"; };
 		5A2C98F412973A41005ACC49 /* sws_extension.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc; sourceTree = "<group>"; };
@@ -693,6 +697,8 @@
 				229AC7DD108F880800E4A962 /* reaper.cpp */,
 				9879B7340F489BE4004D98EB /* reaper_plugin.h */,
 				9879B3D80F48977C004D98EB /* reaper_plugin_functions.h */,
+				38B8AD421601269E001F3F3C /* ReaScript.h */,
+				38B8AD431601269E001F3F3C /* ReaScript.cpp */,
 				981007030F4768020072D712 /* reaper_sws.xcodeproj */,
 				981006FF0F4768020072D712 /* resource.h */,
 				229AC80B108FBFCB00E4A962 /* SectionLock.h */,
@@ -1218,6 +1224,7 @@
 				22F7AADE15201D8A00CC1481 /* SnM.h in Headers */,
 				22F7AAE915201E2600CC1481 /* IX.h in Headers */,
 				2266B2BD15F069CC006F2A0D /* Breeder.h in Headers */,
+				38B8AD441601269E001F3F3C /* ReaScript.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1482,6 +1489,7 @@
 				22F7AAEA15201E2600CC1481 /* Label.cpp in Sources */,
 				22F7AAEB15201E2600CC1481 /* PlaylistImport.cpp in Sources */,
 				2266B2BC15F069CC006F2A0D /* Breeder.cpp in Sources */,
+				38B8AD451601269E001F3F3C /* ReaScript.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

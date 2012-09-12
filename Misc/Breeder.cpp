@@ -25,7 +25,8 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
-
+// TODO: Finish move tempo marker actions
+//	   : Finish Select and adjust tempo markers dialog and actions
 #include "stdafx.h"
 #include "Breeder.h"
 
@@ -33,38 +34,22 @@
 #include "../reaper/localize.h"
 #include "../SnM/SnM_Dlg.h"
 
+//Globals
+bool ConvertProjectMarkersVisible = false;
+bool SelectAdjustTempoPointsVisible = false;
 
 
-void BRMoveEditNextTempo (COMMAND_T*)
-{
-	double ePos = GetCursorPosition();
-	double tPos = TimeMap2_GetNextChangeTime(NULL, ePos);
-	
-	if (tPos!=-1)
-		SetEditCurPos (tPos, NULL, NULL);
-};
+//Prototypes
+void BRConvertProjectMarkersToTempoMarkers(int num, int den, int measure, int timeSelection, int removeMarkers);
+void BRSelectTempoPoints (int time, int BPM, double BPMStart, double BPMEnd, int shape, int sig, int sigNum, int sigDen);
+vector<int> BRGetSelectedTempoPoints();
+WDL_DLGRET BRConvertProjectMarkersToTempoMarkersProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+WDL_DLGRET BRSelectAdjustTempoPointsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 
-void BRMoveEditPrevTempo (COMMAND_T*)
-{
-	double ePos = GetCursorPosition();
-	int tCount = CountTempoTimeSigMarkers(NULL) - 1;
-	
-	while (tCount != -1)
-	{
-		double tPos;
-		GetTempoTimeSigMarker(NULL, tCount, &tPos, NULL, NULL, NULL, NULL, NULL, NULL);
-		
-		if (tPos < ePos)
-		{
-			SetEditCurPos (tPos, NULL, NULL);
-			break;
-		}
-		--tCount;
-	}
-};
-
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//								  			ACTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 void BRSplitSelectedItemsAtTempoMarkers(COMMAND_T*)
 {
 	// Get selected items
@@ -107,7 +92,177 @@ void BRSplitSelectedItemsAtTempoMarkers(COMMAND_T*)
 	}
 };
 
+bool IsConvertProjectMarkerVisible(COMMAND_T* = NULL)
+{
+	return ConvertProjectMarkersVisible;
+};
+void BRConvertProjectMarkersToTempoMarkersAction(COMMAND_T* = NULL)
+{	
+	// Detect timebase
+	if (*(int*)GetConfigVar("itemtimelock") != 0)
+	{	
+		int answer = MessageBox(g_hwndParent, __LOCALIZE("Project timebase is not set to time. Do you want to set it now?","sws_DLG_166"), __LOCALIZE("SWS - Warning","sws_mbox"), MB_YESNOCANCEL);
+		if (answer == 2)
+			return;
+		if (answer == 6)
+			*(int*)GetConfigVar("itemtimelock") = 0;
+	}	
 
+	// Call dialog
+	static HWND hwnd = CreateDialog (g_hInst, MAKEINTRESOURCE(IDD_BR_MARKERS_TO_TEMPO), g_hwndParent, BRConvertProjectMarkersToTempoMarkersProc);
+
+	if (ConvertProjectMarkersVisible)
+	{	ConvertProjectMarkersVisible = false;
+		
+		ShowWindow(hwnd, SW_HIDE);
+	}
+	else
+	{
+		ConvertProjectMarkersVisible = true;
+		ShowWindow(hwnd, SW_SHOW);
+		SetFocus(hwnd);
+	}
+};
+
+
+
+/*
+void BRMoveSelTempoPoint(COMMAND_T* t ) 
+{ 
+	double timeDiff = (int)t->user;
+	timeDiff = timeDiff/1000;
+	
+		
+	// Get selected points' ID into vector
+	vector<int> selectedTempoPoints = BRGetSelectedTempoPoints();
+	
+	// Check number of selected points
+	int user;
+	if (selectedTempoPoints.size()== 0)
+		return;
+	if (selectedTempoPoints.size() > 1)
+	{
+		user = ShowMessageBox("More than one point selected. Continue?", "Multiple points selected", 4);
+		if (user == 7)
+			return;
+	}
+
+	// Declare needed variables
+	double pTime, pBeat, pBPM, 
+		   cTime, cBeat, cBPM, 
+		   nTime, nBeat, nBPM;
+	
+	int pMeasure, pNum, pDen, pEffNum, pEffDen,
+		cMeasure, cNum, cDen, cEffNum, cEffDen,
+		nMeasure, nNum, nDen, nEffNum, nEffDen;
+		
+	bool pShape, 
+		 cShape,
+		 nShape; 
+		 
+	double measureLengthPC, measureLengthCN;
+
+	double pNewBPM, cNewBPM;
+
+	// Loop through selected points and perform BPM calculations
+	for (size_t i = 0; i < selectedTempoPoints.size(); ++i)
+	{
+		// Get current time position of all points
+		GetTempoTimeSigMarker(NULL, selectedTempoPoints[i] -1 , &pTime, &pMeasure, &pBeat, &pBPM, &pNum, &pDen, &pShape);
+		GetTempoTimeSigMarker(NULL, selectedTempoPoints[i], &cTime, &cMeasure, &cBeat, &cBPM, &cNum, &cDen, &cShape);
+		GetTempoTimeSigMarker(NULL, selectedTempoPoints[i] + 1 , &nTime, &nMeasure, &nBeat, &nBPM, &nNum, &nDen, &nShape);
+
+		if (pNum == 0)
+			TimeMap_GetTimeSigAtTime(NULL, pTime, &pEffNum, &pEffDen, NULL);
+		else
+			pEffNum = pNum, pEffDen = pDen; 
+		if (cNum == 0)
+			TimeMap_GetTimeSigAtTime(NULL, cTime, &cEffNum, &cEffDen, NULL);
+		else
+			cEffNum = cNum, cEffDen = cDen;
+
+		// Calculate needed BPM values
+
+		// If previous point's shape is square...
+		if (pShape == 0)
+		{
+			measureLengthPC = (pBPM * pEffDen * (cTime - pTime)) / (240 * pEffNum);
+			pNewBPM = (240 * pEffNum * measureLengthPC) / (pEffDen * (cTime - pTime + timeDiff));
+			
+			// If current point's shape is square...
+			if (cShape == 0)
+			{
+			   	measureLengthCN = (cBPM * cEffDen * (nTime - cTime)) / (240 * cEffNum);
+				cNewBPM = (240 * cEffNum * measureLengthCN) / (cEffDen * (nTime - cTime - timeDiff));
+			}
+		
+			// If current point's shape is linear...
+			if (cShape == 1)
+			{
+				measureLengthCN = (cEffDen * (nTime - cTime) * (cBPM + nBPM)) / (480 * cEffNum);
+				cNewBPM = ((480 * cEffNum * measureLengthCN) / (cEffDen * (nTime - cTime - timeDiff))) - nBPM;
+			}
+		}
+
+		// If previous point's shape is linear
+		if (pShape == 1)
+		{
+			// If current point's shape is square...
+			if (cShape == 0)
+			{
+			}
+
+			// If current point's shape is linear...
+			if (cShape == 1)
+			{
+			}
+		}
+
+
+
+		// Set BPM values. IF statement acts as a safety net for illogical calculations and reaper dislikes (it hates BPM over 960) 
+		if (pNewBPM >= 0.001 && cNewBPM > 0.001 && pNewBPM <=960 && cNewBPM <= 960 &&(cTime+timeDiff) > pTime && (cTime+timeDiff) < nTime)
+				{
+					SetTempoTimeSigMarker(NULL, selectedTempoPoints[i] - 1, pTime, -1, -1, pNewBPM, pNum, pDen, pShape);
+					SetTempoTimeSigMarker(NULL, selectedTempoPoints[i], (cTime + timeDiff), -1, -1, cNewBPM, cNum, cDen, cShape);
+				}
+	}
+	UpdateTimeline();
+};
+
+
+bool IsSelectAdjustTempoPointsVisible(COMMAND_T* = NULL)
+{
+	return SelectAdjustTempoPointsVisible;
+};
+void BRSelectAdjustTempoPointsAction(COMMAND_T* = NULL)
+{	
+	static HWND hwnd = CreateDialog (g_hInst, MAKEINTRESOURCE(IDD_BR_SELECT_ADJUST_TEMPO), g_hwndParent, BRSelectAdjustTempoPointsProc);
+
+	if (SelectAdjustTempoPointsVisible)
+	{	
+		SelectAdjustTempoPointsVisible = false;
+		
+		KillTimer(hwnd, 1);	
+		ShowWindow(hwnd, SW_HIDE);
+	}
+
+	else
+	{
+		SelectAdjustTempoPointsVisible = true;
+		
+		SetTimer(hwnd, 1, 500, NULL);
+		ShowWindow(hwnd, SW_SHOW);
+		SetFocus(hwnd);
+	}
+};
+*/
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//								  		VARIOUS FUNCTIONS
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 void BRConvertProjectMarkersToTempoMarkers(int num, int den, int measure, int timeSelection, int removeMarkers)
 {
 	// Get time selection
@@ -185,7 +340,7 @@ void BRConvertProjectMarkersToTempoMarkers(int num, int den, int measure, int ti
 	}
 	
 
-	// Check if there are existing tempo markers after the first tempo marker
+	// Check if there are existing tempo markers after the first project marker
 	int tCount = CountTempoTimeSigMarkers(NULL);
 	
 	if (tCount > 0)
@@ -255,16 +410,104 @@ void BRConvertProjectMarkersToTempoMarkers(int num, int den, int measure, int ti
 			Undo_EndBlock2 (NULL, __LOCALIZE("Delete project markers within time selection","sws_undo"), UNDO_STATE_ALL);
 		}
 	}
-	
-			
 };
 
 
+vector<int> BRGetSelectedTempoPoints()
+{	
+	vector<int> selectedTempoPoints;
+	LineParser lp(false);
+	int ID = -1;
+		
+	TrackEnvelope* envelope = SWS_GetTrackEnvelopeByName(CSurf_TrackFromID(0, false), "Tempo map" );
+	char* envState = GetSetObjectState(envelope, "");
+	char* token = strtok(envState, "\n");
+	
+	while(token != NULL)
+	{
+		lp.parse(token);
+		if (strcmp(lp.gettoken_str(0),  "PT") == 0)
+		{	
+			++ID;
+			if (lp.gettoken_int(5) == 1)
+				selectedTempoPoints.push_back(ID);
+		}
+		token = strtok(NULL, "\n");	
+	}
+		
+	FreeHeapPtr(envState);
+	return selectedTempoPoints;
+};
 
-// Dialog box procedure - lots of code shamelessly stolen from a lot 
+ /*
+void BRSelectTempoPoints (int mode, // 0 to clear and 1 to invert selection, 2 to set new and 3 to add to existing selection
+						  int time,									// 0 for all, 1 for time selection, 2 to exclude time selection
+						  int BPM, double BpmStart, double BpmEnd,	// 0 to ignore BPM, if 1 BpmStart and BpmEnd need to be specified
+						  int shape,								// 0 for all, 1 for square, 2 for linear
+						  int sig, int sigNum, int sigDen,			// 0 to ignore sig, if 1 sigNum and sigDen need to be specified
+						  int type)									// 0 for all, 1 for tempo markers only, 2 for time signature only
+{	
+	string newState;
+	double qTime, qBPM, tStart, tEnd;
+	int qShape, qSig, qSelected, qPartial;
+
+	// Get time selection
+	if (time != 0)
+		GetSet_LoopTimeRange2 (NULL, false, false, &tStart, &tEnd, false);
+	
+	// Get tempo chunk
+	TrackEnvelope* envelope = SWS_GetTrackEnvelopeByName(CSurf_TrackFromID(0, false), "Tempo map" );
+	char* envState = GetSetObjectState(envelope, "");
+	char* token = strtok(envState, "\n");
+	
+	// Loop tempo chunk searching for tempo markers
+	LineParser lp(false);
+	while(token != NULL)
+	{
+		lp.parse(token);
+
+		if (strcmp(lp.gettoken_str(0),  "PT") == 0)
+		{	
+			
+
+
+
+		}
+		
+		else
+		{
+			
+				newState.append(token);
+				newState.append("\n");
+			
+		}
+		token = strtok(NULL, "\n");	
+	}
+	
+	
+	
+	// Update tempo chunk
+	newState[newState.size() - 1] = '\0';
+	const char * newEnvState = newState.c_str();
+	FreeHeapPtr(envState);
+	
+	
+	
+	
+	
+};
+
+*/
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//								  		DIALOG BOX PROCEDURES
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Lots of code shamelessly stolen from a lot 
 // of places. :) My excuse is one of the educational nature :) If 
 // somebody finds anything that sucks here - please do correct.
-WDL_DLGRET BRProjectMarkersToTempoMarkersProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+WDL_DLGRET BRConvertProjectMarkersToTempoMarkersProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
 		return r;
@@ -393,10 +636,14 @@ WDL_DLGRET BRProjectMarkersToTempoMarkersProc(HWND hwnd, UINT uMsg, WPARAM wPara
 				break;
 			
 				case IDCANCEL:
+				{
+					ConvertProjectMarkersVisible = false;
 					ShowWindow(hwnd, SW_HIDE);
-					break;
+				}	
+				break;
 			}
 		}
+		break;
 		
 		case WM_DESTROY:
 			SaveWindowPos(hwnd, cWndPosKey);
@@ -405,34 +652,152 @@ WDL_DLGRET BRProjectMarkersToTempoMarkersProc(HWND hwnd, UINT uMsg, WPARAM wPara
 	return 0;
 };
 
-void BRProjectMarkersToTempoMarkers(COMMAND_T* t)
-{	
-	// Detect timebase
-	if (*(int*)GetConfigVar("itemtimelock") != 0)
-	{	
-		int answer = MessageBox(g_hwndParent, __LOCALIZE("Project timebase is not set to time. Do you want to set it now?","sws_DLG_166"), __LOCALIZE("SWS - Warning","sws_mbox"), MB_YESNOCANCEL);
-		if (answer == 2)
-			return;
-		if (answer == 6)
-			*(int*)GetConfigVar("itemtimelock") = 0;
-	}	
+/*
+WDL_DLGRET BRSelectAdjustTempoPointsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
+		return r;
 
-	// Call dialog
-	static HWND hwnd = CreateDialog (g_hInst, MAKEINTRESOURCE(IDD_BR_MARKERS_TO_TEMPO), g_hwndParent, BRProjectMarkersToTempoMarkersProc);
-	ShowWindow(hwnd, SW_SHOW);
-	SetFocus(hwnd);
+	const char cWndPosKey[] = "AdjSelTemp WndPos";
+	switch(uMsg)
+	{
+		case WM_INITDIALOG :
+		{
+			
+			int eTimeRange = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Project","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_SETITEMDATA, eTimeRange, 0);
+			eTimeRange = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE,CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Time selection","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_SETITEMDATA, eTimeRange, 1);
+			eTimeRange = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Ignore time selection","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_SETITEMDATA, eTimeRange, 2);
+			
+			int eShape = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("All","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_SETITEMDATA, eShape, 0);
+			eShape = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Square","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_SETITEMDATA, eShape, 1);
+			eShape = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Linear","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_SETITEMDATA, eShape, 2);
+
+			int eType = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE_DEF, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("All","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE_DEF, CB_SETITEMDATA, eType, 0);
+			eType = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE_DEF, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Tempo markers","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE_DEF, CB_SETITEMDATA, eType, 1);
+			eType = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE_DEF, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Time signature markers","sws_DLG_167"));
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE_DEF, CB_SETITEMDATA, eType, 2);
+
+			int eBpm = 1, eSig = 0, eAdd = 0;
+			double BpmStart = 100, BpmEnd = 150;
+			int sigNum = 4, sigDen = 4;
+
+			char eBpmStart[128] = {0}, eBpmEnd[128] = {0}, eSigNum[128] = {0}, eSigDen[128] = {0} ;				
+			sprintf(eBpmStart, "%.2lf", BpmStart);
+			sprintf(eBpmEnd, "%.2lf", BpmEnd);
+			sprintf(eSigNum, "%d", sigNum);
+			sprintf(eSigDen, "%d", sigDen);
+
+			/// SET CONTROLS ///
+			eTimeRange = eShape = eType = 0;
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_SETCURSEL, eTimeRange, 0);
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_SHAPE, CB_SETCURSEL, eShape, 0);
+			SendDlgItemMessage(hwnd, IDC_BR_SEL_TYPE_DEF, CB_SETCURSEL, eType, 0);
+			
+			CheckDlgButton(hwnd, IDC_BR_SEL_BPM, !!eBpm);
+			CheckDlgButton(hwnd, IDC_BR_SEL_SIG, !!eSig);
+			CheckDlgButton(hwnd, IDC_BR_SEL_ADD, !!eAdd);
+
+			SetDlgItemText(hwnd, IDC_BR_SEL_BPM_START, eBpmStart);
+			SetDlgItemText(hwnd, IDC_BR_SEL_BPM_END, eBpmEnd);
+			SetDlgItemText(hwnd, IDC_BR_SEL_SIG_NUM, eSigNum);
+			SetDlgItemText(hwnd, IDC_BR_SEL_SIG_DEN, eSigDen);
+				EnableWindow(GetDlgItem(hwnd, IDC_BR_SEL_SIG_NUM), eSig);
+				EnableWindow(GetDlgItem(hwnd, IDC_BR_SEL_SIG_DEN), eSig);
+			
+
+			
+			
+			
+		}
+		break;
+        
+		case WM_COMMAND :
+		{
+            switch(LOWORD(wParam))
+            {
+				case IDOK:
+				{	
+					BRSelectTempoPoints (0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+				}
+				break;
+
+				case IDC_BR_SEL_BPM:
+				{				
+					int eBPM = IsDlgButtonChecked(hwnd, IDC_BR_SEL_BPM);
+					EnableWindow(GetDlgItem(hwnd, IDC_BR_SEL_BPM_START), eBPM);
+					EnableWindow(GetDlgItem(hwnd, IDC_BR_SEL_BPM_END), eBPM);
+				}
+				break;
+				
+				case IDC_BR_SEL_SIG:
+				{				
+					int eSig = IsDlgButtonChecked(hwnd, IDC_BR_SEL_SIG);
+					EnableWindow(GetDlgItem(hwnd, IDC_BR_SEL_SIG_NUM), eSig);
+					EnableWindow(GetDlgItem(hwnd, IDC_BR_SEL_SIG_DEN), eSig);
+				}
+				break;
+
+				case IDCANCEL:
+				{
+					KillTimer(hwnd, 1);
+					SelectAdjustTempoPointsVisible = false;
+					ShowWindow(hwnd, SW_HIDE);
+				}				
+					break;
+			} 
+		}
+		break;
+
+		case WM_TIMER:
+		{  
+			// Get number of selected points
+			vector<int> selectedPoints = BRGetSelectedTempoPoints();
+			char pointCount [128] = {0};
+			sprintf(pointCount, "SWS Select and adjust tempo markers (%d of %d points selected)", selectedPoints.size(), CountTempoTimeSigMarkers(NULL) );
+			SetWindowText(hwnd,pointCount);
+		}
+		break;
+
+		case WM_DESTROY:
+			SaveWindowPos(hwnd, cWndPosKey);
+			break; 
+	}
+	return 0;
 };
 
+*/
 
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+//											EXTENSIONS STUFF
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to next tempo marker" },													"SWS_BRMOVEEDITNEXTTEMPO",				BRMoveEditNextTempo, },
-	{ { DEFACCEL, "SWS/BR: Move edit cursor to previous tempo marker" },												"SWS_BRMOVEEDITPREVTEMPO",				BRMoveEditPrevTempo, },
-	{ { DEFACCEL, "SWS/BR: Convert project markers to tempo markers" },													"SWS_BRCONVERTMARKERSTOTEMPO",			BRProjectMarkersToTempoMarkers, },
+	{ { DEFACCEL, "SWS/BR: Convert project markers to tempo markers" },													"SWS_BRCONVERTMARKERSTOTEMPO",			BRConvertProjectMarkersToTempoMarkersAction, NULL, 0, IsConvertProjectMarkerVisible },
 	{ {	DEFACCEL, "SWS/BR: Split selected items at tempo markers" },													"SWS_BRSPLITSELECTEDTEMPO",				BRSplitSelectedItemsAtTempoMarkers, },
+	/*
+	{ {	DEFACCEL, "SWS/BR: Move selected tempo point forward 1 ms (preserve unselected points' position)" },			"SWS_BRMOVETEMPOFORWARD1",				BRMoveSelTempoPoint, NULL, 1},
+	{ {	DEFACCEL, "SWS/BR: Move selected tempo point forward 10 ms (preserve unselected points' position)"},			"SWS_BRMOVETEMPOFORWARD10",				BRMoveSelTempoPoint, NULL, 10},
+	{ {	DEFACCEL, "SWS/BR: Move selected tempo point forward 100 ms (preserve unselected points' position)"},			"SWS_BRMOVETEMPOFORWARD100",			BRMoveSelTempoPoint, NULL, 100},
+	{ {	DEFACCEL, "SWS/BR: Move selected tempo point forward 1000 ms (preserve unselected points' position)" },			"SWS_BRMOVETEMPOFORWARD1000",			BRMoveSelTempoPoint, NULL, 1000},
+	{ {	DEFACCEL, "SWS/BR: Move selected tempo point back 1 ms (preserve unselected points' position)"},				"SWS_BRMOVETEMPOBACK1",					BRMoveSelTempoPoint, NULL, -1},
+	{ {	DEFACCEL, "SWS/BR: Move selected tempo point back 10 ms (preserve unselected points' position)"},				"SWS_BRMOVETEMPOBACK10",				BRMoveSelTempoPoint, NULL, -10},
+	{ {	DEFACCEL, "SWS/BR: Move selected tempo point back 100 ms (preserve unselected points' position)"},				"SWS_BRMOVETEMPOBACK100",				BRMoveSelTempoPoint, NULL, -100},
+	{ {	DEFACCEL, "SWS/BR: Move selected tempo point back 1000 ms (preserve unselected points' position)"},				"SWS_BRMOVETEMPOBACK1000",				BRMoveSelTempoPoint, NULL, -1000},
+	
+	{ {	DEFACCEL, "SWS/BR: Select and adjust tempo markers" },															"SWS_BRADJUSTSELTEMPO",					BRSelectAdjustTempoPointsAction, NULL, 0, IsSelectAdjustTempoPointsVisible },
+	*/
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };

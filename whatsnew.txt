@@ -1,3 +1,9 @@
+Removed actions (were already available - use native actions):
+-SWS/BR: Move edit cursor to next tempo marker
+-SWS/BR: Move edit cursor to previous tempo marker
+
++Convert project Markers dialog is now toggleable and has a state
+
 Issue 432 (BETA): Export functions to ReaScript and/or to other extensions, see documentation http://code.google.com/p/sws-extension/wiki/Functions_export_to_ReaScript|here|.
 Added functions:
 +<b>SNM_GetSetSourceState()</b>

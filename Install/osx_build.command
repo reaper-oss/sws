@@ -20,14 +20,14 @@ mv sws_osx/universal.dylib sws_osx/reaper_sws.dylib
 #
 # Make Reascript wrappers
 #
-perl reascript_python.pl > sws_python.py
+perl reascript_python.pl > sws_python32.py
 perl reascript_python.pl -x64 > sws_python64.py
 #
 # Make installer
 #
 # Uses the pkg-dmg script available here: https://github.com/opichals/osx-pkg-dmg
 if [ -f Install/pkg-dmg ]; then
-  Install/pkg-dmg --volname "SWS_Extension" --source sws_osx --copy Install/sws_osx_install.dsstore:/.DS_Store --copy Install/maclicense.txt:license.txt --copy FingersExtras/Grooves:/ --copy sws_python.py:.sws_python.py --copy sws_python64.py:.sws_python64.py --copy whatsnew.txt:.whatsnew.txt --copy Install/sws_osx_install.command:Install.command --license Install/maclicense.txt --target Install/output/sws_osx.dmg --mkdir .background --copy Install/sws_osx_install.jpg:.background/backgroundImage.jpg --attribute V:.background
+  Install/pkg-dmg --volname "SWS_Extension" --source sws_osx --copy Install/sws_osx_install.dsstore:/.DS_Store --copy Install/maclicense.txt:license.txt --copy FingersExtras/Grooves:/ --copy Install/sws_osx_install.py:.sws_python.py --copy sws_python32.py:.sws_python32.py --copy sws_python64.py:.sws_python64.py --copy whatsnew.txt:.whatsnew.txt --copy Install/sws_osx_install.command:Install.command --license Install/maclicense.txt --target Install/output/sws_osx.dmg --mkdir .background --copy Install/sws_osx_install.jpg:.background/backgroundImage.jpg --attribute V:.background
 fi  
 #
 # Upload (optional)

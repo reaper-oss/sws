@@ -1,32 +1,31 @@
-Removed actions (were already available - use native actions):
--SWS/BR: Move edit cursor to next tempo marker
--SWS/BR: Move edit cursor to previous tempo marker
-
-+Convert project Markers dialog is now toggleable and has a state
-
-Issue 432 (BETA): Export functions to ReaScript and/or to other extensions, see documentation http://code.google.com/p/sws-extension/wiki/Functions_export_to_ReaScript|here|.
+<b>Issue 432: Export functions to ReaScript and/or to other extensions, see documentation http://code.google.com/p/sws-extension/wiki/Functions_export_to_ReaScript|here|</b>.
 Added functions:
-+<b>SNM_GetSetSourceState()</b>
++SNM_GetSetSourceState()
 +SNM_GetMediaItemTakeByGUID()
 +SNM_AddReceive()
 +SNM_GetIntConfigVar()
 +SNM_SetIntConfigVar()
 +SNM_GetDoubleConfigVar()
 +SNM_SetDoubleConfigVar()
-Important remarks:
+Remarks:
 +Although these first functions can be useful, the idea here is to beta test things => feedback is welcome!
 +Larger plan = exporting easy/fast/reliable functions to process state chunks, MIDI data, etc..
+
+Convert project Markers dialog is now toggleable and has a state
+Issue 504: (re-)added horizontal scrollbar in the Notes window
+Issue 512: improved http://stash.reaper.fm/13968/sws_dmg.jpg|OSX install disk| (added a script that does all the job, just double-click on it!)
 
 Added "What's new?" (via HTML file generation)
 +Added a button "What's new?" in the About box
 +Added action "SWS/S&M - What's new?"
 
-Issue 504: (re-)added horizontal scrollbar in the Notes window
-Issue 512: improved http://stash.reaper.fm/13968/sws_dmg.jpg|OSX install disk| (added a script that does all the job, just double-click on it!)
-
 Added actions:
 +SWS/BR: Convert project markers to tempo markers
 +SWS/BR: Split selected items at tempo markers
+
+Removed actions (were already available - use native actions):
++SWS/BR: Move edit cursor to next tempo marker
++SWS/BR: Move edit cursor to previous tempo marker
 
 !v2.3.0 #4 (August 30, 2012)
 <b>REAPER v4.26+ is required</b>
@@ -91,10 +90,10 @@ Removed smooth scroll, please use native version
 Resources window and related slots actions
 +"Paste" and "Paste (replace)" items from a track template file that contains several tracks now obeys multi-track selection
 +Applying a track template file that contains several tracks now obeys multi-track selection - http://forum.cockos.com/showthread.php?t=104140|Example|: applying folder tracks to other projects
-Reminder: track template files can be applied in 2 different ways, either use items/envelopes present in template files or preserve existing items/envelopes, see details http://forum.cockos.com/showpost.php?p=979823&postcount=16|here|
-The following updates deal with the latter option:
-+Applying track templates now preserves all existing track envelopes (except FX parameter envelopes since FX Chains are replaced with templates' ones)
-+Applying track templates now preserves folder states
+ Reminder: track template files can be applied in 2 different ways, either use items/envelopes present in template files or preserve existing items/envelopes, see details http://forum.cockos.com/showpost.php?p=979823&postcount=16|here|
+ The following updates deal with the latter option:
+ - Applying track templates now preserves all existing track envelopes (except FX parameter envelopes since FX Chains are replaced with templates' ones)
+ - Applying track templates now preserves folder states
 
 Region Playlist
 +The playlist being played can be different from the displayed one
@@ -244,7 +243,7 @@ Note: localization of the SWS extension is coming soon!
 Useful to preview different song structures (i.e. non-linear play) and apply them via the command "Crop project to playlist".
 Use the context menu to add/remove/etc.. regions, use drag-drop to reorder regions in the playlist. Undo points are created for playlist editions.
 Manage several playlists: top left dropdown box and tiny plus/minus buttons. Playlists are saved in project files.
-Note: the play preview is based on "smooth seeking" so <b>regions are played until the next measure</b> (start positions of regions do not matter). Croping a project to a playlist will respect regions boundaries, of course.
+Note: the play preview is based on "smooth seeking" so regions are played until the next measure (start positions of regions do not matter). Croping a project to a playlist will respect regions boundaries, of course.
 Added related actions:
 +SWS/S&M: Open/close Region Playlist window
 +SWS/S&M: Play (Region Playlist)

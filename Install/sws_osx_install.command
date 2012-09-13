@@ -12,4 +12,5 @@ if [ ! -d ~/Library/Application\ Support/REAPER/Scripts ]; then
 fi
 cd /Volumes/SWS_Extension
 cp .sws_python.py ~/Library/Application\ Support/REAPER/Scripts/sws_python.py
+cp .sws_python32.py ~/Library/Application\ Support/REAPER/Scripts/sws_python32.py
 cp .sws_python64.py ~/Library/Application\ Support/REAPER/Scripts/sws_python64.py

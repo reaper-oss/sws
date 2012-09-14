@@ -1,3 +1,4 @@
+!v2.3.0 #5 (September 13, 2012)
 <b>Issue 432: Export functions to ReaScript and/or to other extensions, see documentation http://code.google.com/p/sws-extension/wiki/Functions_export_to_ReaScript|here|</b>.
 Added functions:
 +SNM_GetSetSourceState()

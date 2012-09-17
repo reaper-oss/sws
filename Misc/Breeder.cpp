@@ -332,7 +332,7 @@ void BRMoveSelTempoPoint(COMMAND_T* t )
 			// Fix for partial measures		
 			if (partialTime.size() != 0)
 			{
-				for (size_t x = partialTime.size() - 1; x >=0; --x)
+				for (int x = partialTime.size() - 1; x >=0; --x)
 				{
 					GetTempoTimeSigMarker(NULL, partialID[x], NULL, NULL, NULL, &cBPM, &cNum, &cDen, &cShape);
 					SetTempoTimeSigMarker(NULL, partialID[x], partialTime[x], -1, -1, cBPM, cNum, cDen, cShape);

@@ -149,7 +149,7 @@ void BRMoveSelTempoPoint(COMMAND_T* t )
 	int envClickSegMode = *(int*)GetConfigVar("envclicksegmode");
 	*(int*)GetConfigVar("envclicksegmode") = 1;
 	
-	
+	Undo_BeginBlock2(NULL);
 	int skipped	= 0;
 	// Loop through selected points and perform BPM calculations
 	for (size_t i = 0; i < selectedTempoPoints.size(); ++i)
@@ -348,6 +348,7 @@ void BRMoveSelTempoPoint(COMMAND_T* t )
 
 	// DONE!
 	UpdateTimeline();
+	Undo_EndBlock2 (NULL, __LOCALIZE("Move selected tempo points","sws_undo"), UNDO_STATE_ALL);
 
 	// but not yet...warn user if some points weren't moved
 	static bool g_pointsNoMovedNoWarning;

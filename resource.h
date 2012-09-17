@@ -335,7 +335,7 @@
 #define IDC_BR_SEL_TYPE_DEF             1249
 #define IDC_BR_SEL_GROUP                1250
 #define IDC_BR_ADJ_GROUP                1251
-#define IDC_BR_ADJ_BPM_PER              1252
+#define IDC_BR_ADJ_BPM_TAR_1            1252
 #define IDC_BR_SEL_SIG_NUM              1253
 #define IDC_BR_SEL_SIG_DEN              1254
 #define IDC_BR_SEL_BPM                  1255
@@ -345,6 +345,16 @@
 #define IDC_BR_SEL_SELECT               1259
 #define IDC_BR_SEL_INVERT               1260
 #define IDC_BR_SEL_CLEAR                1261
+#define IDC_BR_ADJ_SHAPE                1262
+#define IDC_BR_ADJ_BPM_CUR_1            1263
+#define IDC_BR_ADJ_BPM_PERC             1264
+#define IDC_BR_ADJ_BPM_CUR_3            1265
+#define IDC_BR_ADJ_BPM_TAR_3            1266
+#define IDC_BR_ADJ_BPM_CUR_2            1267
+#define IDC_BR_ADJ_BPM_TAR_2            1268
+#define IDC_BR_ADJ_APPLY                1269
+#define IDC_BR_ADJ_BPM_VAL_ENB          1270
+#define IDC_BR_ADJ_BPM_PERC_ENB         1271
 
 // Next default values for new objects
 // 
@@ -352,7 +362,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        168
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1262
+#define _APS_NEXT_CONTROL_VALUE         1272
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

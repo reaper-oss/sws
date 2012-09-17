@@ -1,3 +1,12 @@
+Added actions:
++SWS/BR: Move selected tempo points forward
++SWS/BR: Move selected tempo points back
++SWS/BR: Move selected tempo points forward X ms
++SWS/BR: Move selected tempo points back X ms
+Note: These actions don't screw with unselected points positions. Ideal for extensive tempo manipulation. First two actions move points depending on zoom, more zoom means less movement - recommended for keybinding. Others move points by predetermined values in milliseconds
+ 
++ Minor fix in warning dialog for SWS/BR: Convert project markers to tempo markers
+ 
 !v2.3.0 #5 (September 13, 2012)
 <b>Issue 432: Export functions to ReaScript and/or to other extensions, see documentation http://code.google.com/p/sws-extension/wiki/Functions_export_to_ReaScript|here|</b>.
 Added functions:

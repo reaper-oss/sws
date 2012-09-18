@@ -51,44 +51,44 @@ WDL_DLGRET BRConvertProjectMarkersToTempoMarkersProc(HWND hwnd, UINT uMsg, WPARA
 
 void BRSplitSelectedItemsAtTempoMarkers(COMMAND_T*)
 {
-	// Get selected items
+	// Get selected items count
 	int itemCount = CountSelectedMediaItems(NULL);
+	if (itemCount == 0)
+		return;	
+	
+	// Get selected items
 	vector<MediaItem*> selectedItems;
+	for (int i = 0; i < itemCount; ++i)
+		selectedItems.push_back(GetSelectedMediaItem(NULL, i));
 	
-	if (itemCount != 0)
-	{	
-		Undo_BeginBlock2(NULL);
+	// Loop through selected items 
+	MediaItem* split;
+	MediaItem* item;
+	double iStart, iEnd, tPos;
 
-		for (int i = 0; i < itemCount; ++i)
-			selectedItems.push_back(GetSelectedMediaItem(NULL, i));
+	Undo_BeginBlock2(NULL);
 	
-		// Loop through selected items 
-		MediaItem* split;
-		MediaItem* item;
-		double iStart, iEnd, tPos;
-	
-		for (int i = 0; i < itemCount; ++i)
+	for (int i = 0; i < itemCount; ++i)
+	{	
+		item = selectedItems[i];
+		iStart = GetMediaItemInfo_Value(item, "D_POSITION");
+		iEnd = iStart + GetMediaItemInfo_Value(item, "D_LENGTH");
+		tPos = iStart - 1;
+		
+		// Split item currently in the loop
+		while (true)
 		{	
-			item = selectedItems[i];
-			iStart = GetMediaItemInfo_Value(item, "D_POSITION");
-			iEnd = iStart + GetMediaItemInfo_Value(item, "D_LENGTH");
-			tPos = iStart - 1;
-			
-			// Split item currently in the loop
-			while (true)
-			{	
-				split = SplitMediaItem(item, tPos);
-				if (split !=0)
-					item = split;
-			
-				tPos = TimeMap2_GetNextChangeTime(NULL, tPos);
-				if (tPos > iEnd || tPos == -1 )
-					break;
-			}
+			split = SplitMediaItem(item, tPos);
+			if (split !=0)
+				item = split;
+		
+			tPos = TimeMap2_GetNextChangeTime(NULL, tPos);
+			if (tPos > iEnd || tPos == -1 )
+				break;
 		}
-		UpdateArrange();
-		Undo_EndBlock2 (NULL, __LOCALIZE("Split selected items at temo markers","sws_undo"), UNDO_STATE_ALL);
 	}
+	UpdateArrange();
+	Undo_EndBlock2 (NULL, __LOCALIZE("Split selected items at tempo markers","sws_undo"), UNDO_STATE_ALL);
 };
 
 
@@ -124,7 +124,7 @@ void BRConvertProjectMarkersToTempoMarkersAction(COMMAND_T* = NULL)
 };
 
 
-void BRMoveSelTempoPoint(COMMAND_T* t ) 
+void BRMoveSelTempoPoints(COMMAND_T* t ) 
 { 
 	// Get amount of movement to be performed on the selected tempo points
 	double timeDiff = (int)t->user;
@@ -135,7 +135,7 @@ void BRMoveSelTempoPoint(COMMAND_T* t )
 	else
 			timeDiff = timeDiff/1000;
 	
-	// Get selected points' ID, remove first tempo markers in the project from the vector and check vector size
+	// Get selected points' ID, remove first tempo marker in the project from the vector and check vector size
 	vector<int> selectedTempoPoints = BRGetSelectedTempoPoints();
 	if (selectedTempoPoints.size() != 0)
 	{
@@ -150,6 +150,7 @@ void BRMoveSelTempoPoint(COMMAND_T* t )
 	*(int*)GetConfigVar("envclicksegmode") = 1;
 	
 	Undo_BeginBlock2(NULL);
+	
 	int skipped	= 0;
 	// Loop through selected points and perform BPM calculations
 	for (size_t i = 0; i < selectedTempoPoints.size(); ++i)
@@ -200,9 +201,6 @@ void BRMoveSelTempoPoint(COMMAND_T* t )
 			{
 			   	measureLengthCN = (cBPM * cEffDen * (nTime - cTime)) / (240 * cEffNum);
 				cNewBPM = (240 * cEffNum * measureLengthCN) / (cEffDen * (nTime - cTime - timeDiff));
-				// fix for the last tempo point
-				if ( selectedTempoPoints[i] + 1 == CountTempoTimeSigMarkers(NULL))
-					cNewBPM = cBPM;
 			}
 		
 			// If current point's shape is linear...
@@ -210,10 +208,11 @@ void BRMoveSelTempoPoint(COMMAND_T* t )
 			{
 				measureLengthCN = (cEffDen * (nTime - cTime) * (cBPM + nBPM)) / (480 * cEffNum);
 				cNewBPM = (480 * cEffNum * measureLengthCN) / (cEffDen * (nTime - cTime - timeDiff)) - nBPM;
-				// fix for the last tempo point
-				if ( selectedTempoPoints[i] + 1 == CountTempoTimeSigMarkers(NULL))
-					cNewBPM = cBPM;
 			}
+
+			// Fix for the last tempo point
+			if (selectedTempoPoints[i] + 1 == CountTempoTimeSigMarkers(NULL)) 
+					cNewBPM = cBPM;
 		}
 		
 		// If previous point's shape is linear...
@@ -225,39 +224,37 @@ void BRMoveSelTempoPoint(COMMAND_T* t )
 			if (cShape == 0)
 			{
 				measureLengthCN = (cBPM * cEffDen * (nTime - cTime)) / (240 * cEffNum);
-				
 				cNewBPM = (240 * cEffNum * measureLengthCN) / (cEffDen * (nTime - cTime - timeDiff));
-				// fix for the last tempo point
-				if ( selectedTempoPoints[i] + 1 == CountTempoTimeSigMarkers(NULL))
-					cNewBPM = cBPM;
-				pNewBPM = (480 * pEffNum * measureLengthPC) / (pEffDen * (cTime - pTime + timeDiff)) - cNewBPM;
 			}
 				
 			// If current point's shape is linear...
 			if (cShape == 1)
 			{
 				measureLengthCN = (cEffDen * (nTime - cTime) * (cBPM + nBPM)) / (480 * cEffNum);
-				cNewBPM = (480 * cEffNum * measureLengthCN) / (cEffDen * (nTime - cTime - timeDiff)) - nBPM;
-				// fix for the last tempo point
-				if ( selectedTempoPoints[i] + 1 == CountTempoTimeSigMarkers(NULL))
+				cNewBPM = (480 * cEffNum * measureLengthCN) / (cEffDen * (nTime - cTime - timeDiff)) - nBPM;				
+			}
+			
+			// Fix for the last tempo point
+			if (selectedTempoPoints[i] + 1 == CountTempoTimeSigMarkers(NULL)) 
 					cNewBPM = cBPM;
 
-				pNewBPM = (480 * pEffNum * measureLengthPC) / (pEffDen * (cTime - pTime + timeDiff)) - cNewBPM;
-			}
-		
+			pNewBPM = (480 * pEffNum * measureLengthPC) / (pEffDen * (cTime - pTime + timeDiff)) - cNewBPM;
 		}
 
 		
-		///// Check points behind previous point (to see if new BPM values are possible) ///////
+		///// Check points behind previous point /////
 		double ppTime, ppBPM;
 		int ppNum, ppDen;
 		int pp = selectedTempoPoints[i] - 2, changeDirection = 1;
 		bool ppShape, ppDo = true, ppPossible = true; 
 		
 		// Check that the point behind previous point exists
-		if (pp >= 0)
+		if (pp < 0)
+			ppDo = false;
+
+		else
 		{
-			// Get the first point behind previous point - If square change ppDo var so later we can skip the process of adjusting previous points
+			// Get the first point behind previous point - If square, change ppDo var so later we can skip the process of adjusting previous points
 			GetTempoTimeSigMarker(NULL, pp, &ppTime, NULL, NULL, &ppBPM, &ppNum, &ppDen, &ppShape);
 			if (ppShape == 0)
 				ppDo = false;
@@ -277,7 +274,8 @@ void BRMoveSelTempoPoint(COMMAND_T* t )
 						if ((ppBPM - changeDirection * (pNewBPM - pBPM)) <= 960 && (ppBPM - changeDirection * (pNewBPM - pBPM)) >= 0.001)
 						{		
 							changeDirection = changeDirection * -1;
-							// If possible, also add any point with time signature for later correction of partial points
+							
+							// Add any point with time signature to vector for later correction of partial points
 							if (ppNum != 0)
 							{
 								partialID.push_back (pp);
@@ -295,20 +293,18 @@ void BRMoveSelTempoPoint(COMMAND_T* t )
 				pp++; //corret ID due to the nature of while loop
 			}
 		}
-		else
-			ppDo = false;
 
 		
 		///// Set BPM values /////
 
 		// Fix to the nTime var (so it can pass next IF statement) in case the last tempo point is selected 
-		if ( selectedTempoPoints[i] + 1 == CountTempoTimeSigMarkers(NULL))
+		if (selectedTempoPoints[i] + 1 == CountTempoTimeSigMarkers(NULL))
 			nTime = cTime+timeDiff + 1;
 		
 				
-		//IF statement acts as a safety net for illogical calculations and reaper dislikes (it hates BPM over 960)
-		// The flow of changes must go from the later points to earliner (one of the reasons is the bug in the API that screws things up when using musical position
-		// instead of time postion).
+		// IF statement acts as a safety net for illogical calculations and reaper dislikes (it hates BPM over 960)
+		// The flow of changes must go from the later points to earlier (one of the reasons is the bug in the API that screws things up when using musical position
+		// instead of time position).
 		if (pNewBPM > 0.001 && pNewBPM <=960 && cNewBPM > 0.001 && cNewBPM <= 960 && (cTime+timeDiff) > pTime && (cTime+timeDiff) < nTime && ppPossible == true)
 		{	
 			// Set current point
@@ -324,7 +320,7 @@ void BRMoveSelTempoPoint(COMMAND_T* t )
 				for (int x = selectedTempoPoints[i] - 2 ; x >= pp ; --x)
 				{
 					GetTempoTimeSigMarker(NULL, x, &ppTime, NULL, NULL, &ppBPM, &ppNum, &ppDen, &ppShape);
-					SetTempoTimeSigMarker(NULL, x, ppTime, -1, -1,(ppBPM - changeDirection * (pNewBPM - pBPM)), ppNum, ppDen, ppShape);
+					SetTempoTimeSigMarker(NULL, x, ppTime, -1, -1, (ppBPM - changeDirection * (pNewBPM - pBPM)), ppNum, ppDen, ppShape);
 					changeDirection = changeDirection * -1;
 				}
 			}
@@ -332,15 +328,19 @@ void BRMoveSelTempoPoint(COMMAND_T* t )
 			// Fix for partial measures		
 			if (partialTime.size() != 0)
 			{
-				for (int x = partialTime.size() - 1; x >=0; --x)
+				for (size_t x = partialTime.size() - 1; x > 0; --x)
 				{
 					GetTempoTimeSigMarker(NULL, partialID[x], NULL, NULL, NULL, &cBPM, &cNum, &cDen, &cShape);
 					SetTempoTimeSigMarker(NULL, partialID[x], partialTime[x], -1, -1, cBPM, cNum, cDen, cShape);
 				}
+				GetTempoTimeSigMarker(NULL, partialID[0], NULL, NULL, NULL, &cBPM, &cNum, &cDen, &cShape);
+				SetTempoTimeSigMarker(NULL, partialID[0], partialTime[0], -1, -1, cBPM, cNum, cDen, cShape);
 			}
 		}
+		
 		else
 			++skipped;
+	
 	} // end of the for loop that goes through all of the selected points
 
 	// Restore preferences back to the previous state
@@ -355,13 +355,13 @@ void BRMoveSelTempoPoint(COMMAND_T* t )
 	
 	if (selectedTempoPoints.size() > 1 && skipped != 0 && (!g_pointsNoMovedNoWarning))
 	{
-		char buffer[1024] = {0};
+		char buffer[512] = {0};
 		if (skipped == 1)
-			_snprintf(buffer, sizeof(buffer), __LOCALIZE("%d point wasn't moved because some of the required BPM manipulations are impossible. Would you like to be warned if it happens again?" , "sws_mbox"), skipped);
+			_snprintf(buffer, sizeof(buffer), __LOCALIZE("%d point wasn't moved because some of the required BPM manipulations are impossible. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
 		else
-			_snprintf(buffer, sizeof(buffer), __LOCALIZE("%d points weren't moved because some of the required BPM manipulations are impossible. Would you like to be warned again if the same thing happens?" , "sws_mbox"), skipped);
+			_snprintf(buffer, sizeof(buffer), __LOCALIZE("%d points weren't moved because some of the required BPM manipulations are impossible. Would you like to be warned if it happens again?","sws_mbox"), skipped);
 		
-		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning","sws_mbox"), 4);
+		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
 		if (userAnswer == 7)
 			g_pointsNoMovedNoWarning = true;
 	
@@ -393,8 +393,8 @@ void BRSelectAdjustTempoPointsAction(COMMAND_T* = NULL)
 		SetFocus(hwnd);
 	}
 };
-
 */
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -410,7 +410,7 @@ void BRConvertProjectMarkersToTempoMarkers(int num, int den, int measure, int ti
 		GetSet_LoopTimeRange2 (NULL, false, false, &tStart, &tEnd, false);
 		if (tStart == tEnd)
 			{	
-				MessageBox(g_hwndParent, __LOCALIZE("To convert only within time selection please create one.","sws_DLG_166"), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);	
+				MessageBox(g_hwndParent, __LOCALIZE("To convert only within time selection please create one.", "sws_DLG_166"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);	
 				return;
 			}
 	}
@@ -459,12 +459,12 @@ void BRConvertProjectMarkersToTempoMarkers(int num, int den, int measure, int ti
 	{	
 		if (timeSelection == 0)
 		{
-			MessageBox(g_hwndParent, __LOCALIZE("Not enough project markers in the project to perform conversion.","sws_DLG_166"), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);	
+			MessageBox(g_hwndParent, __LOCALIZE("Not enough project markers in the project to perform conversion.", "sws_DLG_166"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);	
 			return;
 		}
 		if (timeSelection == 1)
 		{	
-			MessageBox(g_hwndParent, __LOCALIZE("Not enough project markers in the time selection to perform conversion.","sws_DLG_166"), __LOCALIZE("SWS - Error","sws_mbox"), MB_OK);	
+			MessageBox(g_hwndParent, __LOCALIZE("Not enough project markers in the time selection to perform conversion.", "sws_DLG_166"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);	
 			return;
 		}
 	}
@@ -538,14 +538,15 @@ void BRConvertProjectMarkersToTempoMarkers(int num, int den, int measure, int ti
 			Undo_EndBlock2 (NULL, __LOCALIZE("Delete project markers within time selection","sws_undo"), UNDO_STATE_ALL);
 		}
 	}
+
 	// Warn user if there were tempo markers created with a BPM over 960
 	if (exceed !=0)
 	{
-		char buffer[1024] = {0};
+		char buffer[512] = {0};
 		if (exceed == 1)
-			_snprintf(buffer, sizeof(buffer), __LOCALIZE("%d of created tempo markers has a BPM over 960. If you try to edit it, it will revert back to 960 or lower.\n\nIt is recommended that you undo, edit project markers and try again." ,"sws_DLG_166"), exceed);
+			_snprintf(buffer, sizeof(buffer), __LOCALIZE("%d of the created tempo markers has a BPM over 960. If you try to edit it, it will revert back to 960 or lower.\n\nIt is recommended that you undo, edit project markers and try again.", "sws_DLG_166"), exceed);
 		else
-			_snprintf(buffer, sizeof(buffer), __LOCALIZE("%d of created tempo markers have a BPM over 960. If you try to edit them, they will revert back to 960 or lower.\n\nIt is recommended that you undo, edit project markers and try again." ,"sws_DLG_166"), exceed);
+			_snprintf(buffer, sizeof(buffer), __LOCALIZE("%d of the created tempo markers have a BPM over 960. If you try to edit them, they will revert back to 960 or lower.\n\nIt is recommended that you undo, edit project markers and try again.", "sws_DLG_166"), exceed);
 		ShowMessageBox(buffer,__LOCALIZE("SWS - Warning", "sws_mbox"), 0);
 	}
 
@@ -573,8 +574,8 @@ vector<int> BRGetSelectedTempoPoints()
 		}
 		token = strtok(NULL, "\n");	
 	}
-	FreeHeapPtr(envState);
 	
+	FreeHeapPtr(envState);
 	return selectedTempoPoints;
 };
 
@@ -635,8 +636,8 @@ void BRSelectTempoPoints (int mode, // 0 to clear and 1 to invert selection, 2 t
 	
 	FreeHeapPtr(envState);	
 };
-
 */
+
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -968,29 +969,28 @@ WDL_DLGRET BRSelectAdjustTempoPointsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS/BR: Convert project markers to tempo markers" },			"SWS_BRCONVERTMARKERSTOTEMPO",			BRConvertProjectMarkersToTempoMarkersAction, NULL, 0, IsConvertProjectMarkerVisible },
+	{ { DEFACCEL, "SWS/BR: Convert project markers to tempo markers" },				"SWS_BRCONVERTMARKERSTOTEMPO",			BRConvertProjectMarkersToTempoMarkersAction, NULL, 0, IsConvertProjectMarkerVisible },
 	{ {	DEFACCEL, "SWS/BR: Split selected items at tempo markers" },				"SWS_BRSPLITSELECTEDTEMPO",				BRSplitSelectedItemsAtTempoMarkers, },
 	
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward" },					"SWS_BRMOVETEMPOFORWARD",				BRMoveSelTempoPoint, NULL, 5},
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points back" },						"SWS_BRMOVETEMPOBACK",					BRMoveSelTempoPoint, NULL, -5},
+	{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward" },					"SWS_BRMOVETEMPOFORWARD",				BRMoveSelTempoPoints, NULL, 5},
+	{ {	DEFACCEL, "SWS/BR: Move selected tempo points back" },						"SWS_BRMOVETEMPOBACK",					BRMoveSelTempoPoints, NULL, -5},
 	
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 0.1 ms" },			"SWS_BRMOVETEMPOFORWARD01",				BRMoveSelTempoPoint, NULL, 2},
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 1 ms" },				"SWS_BRMOVETEMPOFORWARD1",				BRMoveSelTempoPoint, NULL, 1},
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 10 ms"},				"SWS_BRMOVETEMPOFORWARD10",				BRMoveSelTempoPoint, NULL, 10},
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 100 ms"},				"SWS_BRMOVETEMPOFORWARD100",			BRMoveSelTempoPoint, NULL, 100},
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 1000 ms" },			"SWS_BRMOVETEMPOFORWARD1000",			BRMoveSelTempoPoint, NULL, 1000},
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 0.1 ms"},				"SWS_BRMOVETEMPOBACK01",				BRMoveSelTempoPoint, NULL, -2},
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 1 ms"},					"SWS_BRMOVETEMPOBACK1",					BRMoveSelTempoPoint, NULL, -1},
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 10 ms"},					"SWS_BRMOVETEMPOBACK10",				BRMoveSelTempoPoint, NULL, -10},
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 100 ms"},				"SWS_BRMOVETEMPOBACK100",				BRMoveSelTempoPoint, NULL, -100},
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 1000 ms"},				"SWS_BRMOVETEMPOBACK1000",				BRMoveSelTempoPoint, NULL, -1000},
+		{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 0.1 ms" },		"SWS_BRMOVETEMPOFORWARD01",				BRMoveSelTempoPoints, NULL, 2},
+		{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 1 ms" },			"SWS_BRMOVETEMPOFORWARD1",				BRMoveSelTempoPoints, NULL, 1},
+		{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 10 ms"},			"SWS_BRMOVETEMPOFORWARD10",				BRMoveSelTempoPoints, NULL, 10},
+		{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 100 ms"},			"SWS_BRMOVETEMPOFORWARD100",			BRMoveSelTempoPoints, NULL, 100},
+		{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 1000 ms" },		"SWS_BRMOVETEMPOFORWARD1000",			BRMoveSelTempoPoints, NULL, 1000},
+		{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 0.1 ms"},			"SWS_BRMOVETEMPOBACK01",				BRMoveSelTempoPoints, NULL, -2},
+		{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 1 ms"},				"SWS_BRMOVETEMPOBACK1",					BRMoveSelTempoPoints, NULL, -1},
+		{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 10 ms"},				"SWS_BRMOVETEMPOBACK10",				BRMoveSelTempoPoints, NULL, -10},
+		{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 100 ms"},			"SWS_BRMOVETEMPOBACK100",				BRMoveSelTempoPoints, NULL, -100},
+		{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 1000 ms"},			"SWS_BRMOVETEMPOBACK1000",				BRMoveSelTempoPoints, NULL, -1000},
 	
 //	{ {	DEFACCEL, "SWS/BR: Select and adjust tempo markers" },						"SWS_BRADJUSTSELTEMPO",					BRSelectAdjustTempoPointsAction, NULL, 0, IsSelectAdjustTempoPointsVisible },
 	
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
-
 //!WANT_LOCALIZE_1ST_STRING_END
 
 

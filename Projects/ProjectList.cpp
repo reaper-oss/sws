@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 #include "ProjectList.h"
 #include "ProjectMgr.h"
 
@@ -93,7 +94,7 @@ void SWS_ProjectListView::GetItemList(SWS_ListItemList* pList)
 }
 
 SWS_ProjectListWnd::SWS_ProjectListWnd()
-:SWS_DockWnd(IDD_PROJLIST, "Project List", "SWSProjectList", 30006, SWSGetCommandID(OpenProjectList))
+:SWS_DockWnd(IDD_PROJLIST, __LOCALIZE("Project List","sws_DLG_157"), "SWSProjectList", 30006, SWSGetCommandID(OpenProjectList))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -120,8 +121,8 @@ void SWS_ProjectListWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 HMENU SWS_ProjectListWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 {
 	HMENU hMenu = CreatePopupMenu();
-	AddToMenu(hMenu, g_projMgrCmdTable[0].menuText, g_projMgrCmdTable[0].accel.accel.cmd);
-	AddToMenu(hMenu, g_projMgrCmdTable[1].menuText, g_projMgrCmdTable[1].accel.accel.cmd);
+	AddToMenu(hMenu, __localizeFunc(g_projMgrCmdTable[0].menuText,"sws_menu",0), g_projMgrCmdTable[0].accel.accel.cmd);
+	AddToMenu(hMenu, __localizeFunc(g_projMgrCmdTable[1].menuText,"sws_menu",0), g_projMgrCmdTable[1].accel.accel.cmd);
 	return hMenu;
 }
 

@@ -365,19 +365,19 @@ void SanitizeFilename( string *fn ){
 
 
 void ShowAutorenderHelp(COMMAND_T*) {
-	string helpText = "This is how it's done:\r\n\r\n";
-	helpText.append("1. Create and name regions to be rendered\r\n");
-	helpText.append("    and tagged.\r\n");
-	helpText.append("2. [Optional] Select Edit Project Metadata\r\n");
-	helpText.append("    and set tag metadata and render path.\r\n");
-	helpText.append("3. Batch Render Regions!\r\n\r\n\r\n");
-	helpText.append("Notes:\r\n\r\n");
-	helpText.append("Autorender uses the last used render settings.\r\n");
-	helpText.append("If you need to set your render format, run a dummy\r\n");
-	helpText.append("render the normal way before batch rendering.\r\n\r\n");
-	helpText.append("If no regions are present, the entire project\r\n");
-	helpText.append("will be rendered and tagged.\r\n\r\n");
-	DisplayInfoBox(GetMainHwnd(), "Autorender Usage", helpText.c_str());
+	string helpText = __LOCALIZE("This is how it's done:\r\n\r\n","sws_DLG_158");
+	helpText.append(__LOCALIZE("1. Create and name regions to be rendered\r\n","sws_DLG_158"));
+	helpText.append(__LOCALIZE("and tagged.\r\n","sws_DLG_158"));
+	helpText.append(__LOCALIZE("2. [Optional] Select Edit Project Metadata\r\n","sws_DLG_158"));
+	helpText.append(__LOCALIZE("and set tag metadata and render path.\r\n","sws_DLG_158"));
+	helpText.append(__LOCALIZE("3. Batch Render Regions!\r\n\r\n\r\n","sws_DLG_158"));
+	helpText.append(__LOCALIZE("Notes:\r\n\r\n","sws_DLG_158"));
+	helpText.append(__LOCALIZE("Autorender uses the last used render settings.\r\n","sws_DLG_158"));
+	helpText.append(__LOCALIZE("If you need to set your render format, run a dummy\r\n","sws_DLG_158"));
+	helpText.append(__LOCALIZE("render the normal way before batch rendering.\r\n\r\n","sws_DLG_158"));
+	helpText.append(__LOCALIZE("If no regions are present, the entire project\r\n","sws_DLG_158"));
+	helpText.append(__LOCALIZE("will be rendered and tagged.\r\n\r\n","sws_DLG_158"));
+	DisplayInfoBox(GetMainHwnd(), __LOCALIZE("Autorender usage","sws_DLG_158"), helpText.c_str());
 }
 
 
@@ -402,7 +402,7 @@ void FixPath( string &path ){
 
 bool BrowseForRenderPath( char *renderPathChar ){
 	bool result;
-	result = BrowseForDirectory( "Select render output directory", NULL, renderPathChar, 1024 );
+	result = BrowseForDirectory(__LOCALIZE("Select render output directory","sws_DLG_158"), NULL, renderPathChar, 1024 );
 	return result;
 }
 
@@ -435,7 +435,7 @@ void OpenRenderPath(COMMAND_T *){
 	if( !g_render_path.empty() && FileExists( g_render_path.c_str() ) ){
 		OpenPathInFindplorer( g_render_path.c_str() );
 	} else {
-		MessageBox( GetMainHwnd(), "Render path not set or invalid. Set render path in Autorender metadata.", "Render Path Not Set", MB_OK );
+		MessageBox( GetMainHwnd(), __LOCALIZE("Render path not set or invalid. Set render path in Autorender metadata.","sws_mbox"), __LOCALIZE("Autorender - Error","sws_mbox"), MB_OK );
 	}
 }
 
@@ -450,7 +450,7 @@ wchar_t* WideCharPlz( const char* inChar ){
 #endif
 
 void ForceSaveAndLoad( WDL_FastString *str ){
-	Undo_OnStateChangeEx("Autorender: Load project data", UNDO_STATE_MISCCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Autorender: Load project data","sws_undo"), UNDO_STATE_MISCCFG, -1);
 	Main_OnCommand( 40026, 0 ); //Save current project
 	GetProjectString( str );
 }
@@ -559,7 +559,7 @@ void MakeMediaFilesAbsolute( WDL_FastString *prjStr ){
 				}
 			} else if( inTrackItemSource ){
 				if( strcmp( lp.gettoken_str(0), "FILE" ) == 0 ){
-					string replacementStr = "FILE ";				
+					string replacementStr = "FILE ";
 					char *mediaPath = (char*) lp.gettoken_str(1);
 					MakePathAbsolute( mediaPath, projPath );
 					WDL_FastString sanitizedMediaFilePath;
@@ -614,9 +614,9 @@ void AutorenderRegions(COMMAND_T*) {
 
 	// render path was specified and doesn't exist
 	if( !g_render_path.empty() && !FileExists( g_render_path.c_str() ) ){
-		string message = "Render path " + g_render_path + " doesn't exist!";
+		string message = (string)__LOCALIZE("Render path","sws_mbox") + " " + g_render_path + " " + (string)__LOCALIZE("does not exist!","sws_mbox");
 		g_render_path.clear();
-		MessageBox( GetMainHwnd(), message.c_str(), "Autorender: Bad Render Path", MB_OK );
+		MessageBox( GetMainHwnd(), message.c_str(), __LOCALIZE("Autorender - Error","sws_mbox"), MB_OK );
 	}
 
 	while( !FileExists( g_render_path.c_str() ) ){
@@ -634,7 +634,7 @@ void AutorenderRegions(COMMAND_T*) {
 	string renderFileExtension = GetCurrentRenderExtension( &prjStr );
 	if( renderFileExtension.empty() ){
 		//have to have a renderFileExtension, show error and exit
-		MessageBox( GetMainHwnd(), "Couldn't get render extension. Manually render a dummy file with the desired settings and run again.", "Autorender: Render Extension Error", MB_OK );
+		MessageBox( GetMainHwnd(), __LOCALIZE("Couldn't get render extension. Manually render a dummy file with the desired settings and run again.","sws_mbox"), __LOCALIZE("Autorender - Error","sws_mbox"), MB_OK );
 		g_doing_render = false;
 		return;
 	}
@@ -670,7 +670,7 @@ void AutorenderRegions(COMMAND_T*) {
 			if( strlen( track_name ) > 0 ){
 				renderTrack.trackName = track_name;
 				// If a region prefix has been specified, check to see if this region has it and skip if not
-				if( !g_region_prefix.empty() ){					
+				if( !g_region_prefix.empty() ){
 					if( !hasPrefix( renderTrack.trackName, g_region_prefix ) ) continue;
 					if( g_remove_region_prefix ){
 						renderTrack.trackName.erase( 0, g_region_prefix.length() );
@@ -686,7 +686,7 @@ void AutorenderRegions(COMMAND_T*) {
 
 			renderTrack.trackNumber = ++track_index;
 			renderTrack.trackStartTime = pos;
-			renderTrack.trackEndTime = rgnend;			
+			renderTrack.trackEndTime = rgnend;
 			renderTracks.push_back( renderTrack );
 		}
 	}
@@ -894,9 +894,9 @@ INT_PTR WINAPI doAutorenderMetadata(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 						processDialogFieldCheck( hwndDlg, IDC_REMOVE_PREFIX_FROM_TRACK_NAME, g_remove_region_prefix, hasChanged );
 						processDialogFieldCheck( hwndDlg, IDC_PREPEND_TRACK_NUMBER, g_prepend_track_number, hasChanged );						
 
-						if( hasChanged ) Undo_OnStateChangeEx("Set autorender metadata", UNDO_STATE_MISCCFG, -1);
-                        // fall through!								
-                    case IDCANCEL:							
+						if( hasChanged ) Undo_OnStateChangeEx(__LOCALIZE("Set autorender metadata","sws_undo"), UNDO_STATE_MISCCFG, -1);
+                        // fall through!
+                    case IDCANCEL:
                         SaveWindowPos(hwndDlg, PREFS_WINDOWPOS_KEY);
                         EndDialog(hwndDlg,0);
                         break;

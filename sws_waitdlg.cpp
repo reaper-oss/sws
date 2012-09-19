@@ -36,6 +36,7 @@
 
 #include "stdafx.h"
 #include "sws_waitdlg.h"
+#include "./reaper/localize.h"
 
 const char SWS_WAITDLG_WNDPOS_KEY[] = "Wait Dialog Position";
 

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 #include <algorithm>
 
@@ -664,12 +665,12 @@ RprMidiTake::RprMidiTake(const RprTake &take, bool readOnly)
 
         if(!getMidiNotes(tempMidiEvents.get(), mNotes, mContext)) 
         {
-            throw RprLibException("Unable to parse MIDI data");
+            throw RprLibException(__LOCALIZE("Unable to parse MIDI data","sws_mbox"));
         }
 
         if(!getMidiCCs(tempMidiEvents.get(), mCCs, mContext)) 
         {
-            throw RprLibException("Unable to parse MIDI data");
+            throw RprLibException(__LOCALIZE("Unable to parse MIDI data","sws_mbox"));
         }
 
         mOtherEvents.reserve(tempMidiEvents.get().size());
@@ -803,7 +804,7 @@ RprMidiTakePtr RprMidiTake::createFromMidiEditor(bool readOnly)
     void *midiEditor = MIDIEditor_GetActive();
     if(midiEditor == NULL)
     {
-        throw RprLibException("No active MIDI editor", true);
+        throw RprLibException(__LOCALIZE("No active MIDI editor","sws_mbox"), true);
     }
 
     RprTake take(MIDIEditor_GetTake(midiEditor));
@@ -813,7 +814,7 @@ RprMidiTakePtr RprMidiTake::createFromMidiEditor(bool readOnly)
         RprMidiTakePtr takePtr(new RprMidiTake(take, readOnly));
         return takePtr;
     }
-    throw RprLibException("Only in-project MIDI can be modified", true);
+    throw RprLibException(__LOCALIZE("Only in-project MIDI can be modified","sws_mbox"), true);
 }
 
 int RprMidiTake::countCCs(int controller) const

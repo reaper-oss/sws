@@ -33,6 +33,132 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Reascript export
+///////////////////////////////////////////////////////////////////////////////
+
+// write C++ API functions header 
+// (same as the native action but w/o export of sws funcs..)
+void GenAPI(COMMAND_T*)
+{
+	UnregisterExportedAPI(g_rec);
+	Main_OnCommand(41064, 0);
+	RegisterExportedAPI(g_rec);
+}
+
+MediaItem_Take* SNM_GetMediaItemTakeByGUID(ReaProject* _project, const char* _guid)
+{
+	if (_guid && *_guid)
+	{
+		GUID g;
+		stringToGuid(_guid, &g);
+		return GetMediaItemTakeByGUID(_project, &g);
+	}
+	return NULL;
+}
+
+// note: using PCM_source.Load/SaveState() won't always work
+//       e.g. getting an empty take src, turning wav src into midi, etc..
+bool SNM_GetSetSourceState(MediaItem* _item, int _takeIdx, char* _state, bool _setnewvalue)
+{
+	bool ok = false;
+	if (_item && _state)
+	{
+		if (_takeIdx<0)
+			_takeIdx = *(int*)GetSetMediaItemInfo(_item, "I_CURTAKE", NULL);
+
+		int tkPos, tklen;
+		WDL_FastString takeChunk;
+		SNM_TakeParserPatcher p(_item, CountTakes(_item));
+		if (p.GetTakeChunk(_takeIdx, &takeChunk, &tkPos, &tklen))
+		{
+			SNM_ChunkParserPatcher ptk(&takeChunk, false);
+
+			// set
+			if (_setnewvalue)
+			{
+				// standard case: a source is there
+				if (ptk.ReplaceSubChunk("SOURCE", 1, 0, _state)) // no break keyword here: we're already at the end of the item..
+					ok = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
+				// replacing an empty take
+				else
+				{
+					WDL_FastString newTkChunk("TAKE\n");
+					newTkChunk.Append(_state);
+					ok = p.ReplaceTake(tkPos, tklen, &newTkChunk);
+				}
+			}
+			// get
+			else
+			{
+				WDL_FastString state;
+				if (ptk.GetSubChunk("SOURCE", 1, 0, &state))
+					lstrcpyn(_state, state.Get(), REASCRIPT_MAX_STRBUF);
+				// empty take
+				else
+					*_state = '\0';
+				ok = true;
+			}
+		}
+	}
+	return ok;
+}
+
+/*
+bool SNM_GetSetTakeSourceState(MediaItem_Take* _tk, WDL_FastString* _state, bool _setnewvalue)
+{
+	if (_tk)
+		if (MediaItem* item = GetMediaItemTake_Item(_tk)) {
+			int tkIdx = GetTakeIndex(item, _tk);
+			if (tkIdx >= 0)
+				return SNM_GetSetSourceState(item, tkIdx, _state, _setnewvalue);
+		}
+	return false;
+}
+*/
+
+bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type)
+{
+	if (_srcTr && _destTr && _srcTr!=_destTr && _type>=0 && _type<=3)
+	{
+		SNM_SendPatcher p = SNM_SendPatcher(_destTr);
+		char vol[32] = "1.00000000000000";
+		char pan[32] = "0.00000000000000";
+		_snprintfSafe(vol, sizeof(vol), "%.14f", *(double*)GetConfigVar("defsendvol"));
+		return (p.AddReceive(_srcTr, _type, vol, pan) > 0);
+	}
+	return false;
+}
+
+int SNM_GetIntConfigVar(const char* _varName, int _errVal) {
+	if (int* pVar = (int*)(GetConfigVar(_varName)))
+		return *pVar;
+	return _errVal;
+}
+
+bool SNM_SetIntConfigVar(const char* _varName, int _newVal) {
+	if (int* pVar = (int*)(GetConfigVar(_varName))) {
+		*pVar = _newVal;
+		return true;
+	}
+	return false;
+}
+
+double SNM_GetDoubleConfigVar(const char* _varName, double _errVal) {
+	if (double* pVar = (double*)(GetConfigVar(_varName)))
+		return *pVar;
+	return _errVal;
+}
+
+bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal) {
+	if (double* pVar = (double*)(GetConfigVar(_varName))) {
+		*pVar = _newVal;
+		return true;
+	}
+	return false;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // Theme slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -104,122 +230,6 @@ void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot)
 
 void SetSelTrackIconSlot(COMMAND_T* _ct) {
 	SetSelTrackIconSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Reascript export
-///////////////////////////////////////////////////////////////////////////////
-
-MediaItem_Take* SNM_GetMediaItemTakeByGUID(ReaProject* _project, const char* _guid)
-{
-	if (_guid && *_guid)
-	{
-		GUID g;
-		stringToGuid(_guid, &g);
-		return GetMediaItemTakeByGUID(_project, &g);
-	}
-	return NULL;
-}
-
-// note: using PCM_source.Load/SaveState() won't always work
-//       e.g. getting an empty take src, turning wav src into midi, etc..
-bool SNM_GetSetSourceState(MediaItem* _item, int _takeIdx, char* _state, bool _setnewvalue)
-{
-	bool ok = false;
-	if (_item && _state)
-	{
-		if (_takeIdx<0)
-			_takeIdx = *(int*)GetSetMediaItemInfo(_item, "I_CURTAKE", NULL);
-
-		int tkPos, tklen;
-		WDL_FastString takeChunk;
-		SNM_TakeParserPatcher p(_item, CountTakes(_item));
-		if (p.GetTakeChunk(_takeIdx, &takeChunk, &tkPos, &tklen))
-		{
-			SNM_ChunkParserPatcher ptk(&takeChunk, false);
-
-			// set
-			if (_setnewvalue)
-			{
-				// standard case: a source is there
-				if (ptk.ReplaceSubChunk("SOURCE", 1, 0, _state)) // no break keyword here: we're already at the end of the item..
-					ok = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
-				// replacing an empty take
-				else
-				{
-					WDL_FastString newTkChunk("TAKE\n");
-					newTkChunk.Append(_state);
-					ok = p.ReplaceTake(tkPos, tklen, &newTkChunk);
-				}
-			}
-			// get
-			else
-			{
-				WDL_FastString state;
-				if (ptk.GetSubChunk("SOURCE", 1, 0, &state))
-					strcpy(_state, state.Get());
-				// empty take
-				else
-					*_state = '\0';
-				ok = true;
-			}
-		}
-	}
-	return ok;
-}
-/*
-bool SNM_GetSetSourceState(MediaItem_Take* _tk, char* _state, bool _setnewvalue)
-{
-	if (_tk)
-		if (MediaItem* item = GetMediaItemTake_Item(_tk))
-			return SNM_GetSetSourceState(item, GetTakeIndex(item, _tk), _state, _setnewvalue)
-	return false;
-}
-*/
-bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type)
-{
-	if (_srcTr && _destTr && _srcTr!=_destTr && _type>=0 && _type<=3)
-	{
-		SNM_SendPatcher p = SNM_SendPatcher(_destTr);
-		char vol[32] = "1.00000000000000";
-		char pan[32] = "0.00000000000000";
-		_snprintfSafe(vol, sizeof(vol), "%.14f", *(double*)GetConfigVar("defsendvol"));
-		return (p.AddReceive(_srcTr, _type, vol, pan) > 0);
-	}
-	return false;
-}
-
-int SNM_GetIntConfigVar(const char* _varName, int _errVal)
-{
-	if (int* pVar = (int*)(GetConfigVar(_varName)))
-		return *pVar;
-	return _errVal;
-}
-
-bool SNM_SetIntConfigVar(const char* _varName, int _newVal)
-{
-	if (int* pVar = (int*)(GetConfigVar(_varName))) {
-		*pVar = _newVal;
-		return true;
-	}
-	return false;
-}
-
-double SNM_GetDoubleConfigVar(const char* _varName, double _errVal)
-{
-	if (double* pVar = (double*)(GetConfigVar(_varName)))
-		return *pVar;
-	return _errVal;
-}
-
-bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal)
-{
-	if (double* pVar = (double*)(GetConfigVar(_varName))) {
-		*pVar = _newVal;
-		return true;
-	}
-	return false;
 }
 
 
@@ -374,3 +384,4 @@ void DumpWikiActionList(COMMAND_T* _ct)
 void DumpActionList(COMMAND_T* _ct) {
 	DumpActionList((int)_ct->user, __LOCALIZE("S&M - Dump action list","sws_mbox"), "%s\t%s\t%s\n", "Section\tId\tAction\n", NULL);
 }
+

@@ -268,9 +268,15 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Scroll to selected item (no undo)" }, "S&M_SCROLL_ITEM", ScrollToSelItem, NULL, },
 
 	// Takes ------------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 100% right" }, "S&M_PAN_TAKES_100R", SetPan, NULL, -100},
-	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 100% left" }, "S&M_PAN_TAKES_100L", SetPan, NULL, 100},
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 100% left" }, "S&M_PAN_TAKES_100L", SetPan, NULL, -100},
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 75% left" }, "S&M_PAN_TAKES_75L", SetPan, NULL, -75},
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 50% left" }, "S&M_PAN_TAKES_50L", SetPan, NULL, -50},
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 25% left" }, "S&M_PAN_TAKES_25L", SetPan, NULL, -25},
 	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to center" }, "S&M_PAN_TAKES_CENTER", SetPan, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 25% right" }, "S&M_PAN_TAKES_25R", SetPan, NULL, 25},
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 50% right" }, "S&M_PAN_TAKES_50R", SetPan, NULL, 50},
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 75% right" }, "S&M_PAN_TAKES_75R", SetPan, NULL, 75},
+	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 100% right" }, "S&M_PAN_TAKES_100R", SetPan, NULL, 100},
 
 	{ { DEFACCEL, "SWS/S&M: Copy active take" }, "S&M_COPY_TAKE", CopyCutTake, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Cut active take" }, "S&M_CUT_TAKE", CopyCutTake, NULL, 1},
@@ -432,6 +438,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Toggle repeat" }, "S&M_PLAYLIST_TGL_REPEAT", SetPlaylistRepeat, NULL, -1, IsPlaylistRepeat},
 
 	// Other, misc ------------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: [developer] Write C++ API functions header" }, "S&M_GEN_API", GenAPI, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageView, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Clear image window" }, "S&M_CLR_IMAGEVIEW", ClearImageView, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Show next image slot" }, "S&M_SHOW_NEXT_IMG", ShowNextPreviousImageSlot, NULL, 1},

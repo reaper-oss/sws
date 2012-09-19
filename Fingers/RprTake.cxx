@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 #include "RprTake.hxx"
 #include "RprItem.hxx"
@@ -9,7 +10,7 @@
 RprTake::RprTake(MediaItem_Take *take)
 {
     if(take == NULL)
-        throw RprLibException("Media Item take is NULL", false);
+        throw RprLibException(__LOCALIZE("Media item take is NULL","sws_mbox"), false);
     mTake = take;
 }
 

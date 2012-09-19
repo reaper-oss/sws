@@ -154,6 +154,7 @@
 enum {
   BUTTONID_AUTOFILL=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
   BUTTONID_AUTOSAVE,
+  TXTID_TYPE,
   COMBOID_TYPE,
   CONTAINER_ADD_DEL,
   BUTTONID_ADD_BOOKMARK,
@@ -259,13 +260,6 @@ bool IsMultiType(int _type = -1) {
 	return false;
 }
 
-const char* GetMenuDesc(int _type = -1) {
-	if (_type < 0) _type = g_resViewType;
-	if (_type >= SNM_NUM_DEFAULT_SLOTS)
-		return g_slots.Get(_type)->GetDesc();
-	return g_slots.Get(_type)->GetMenuDesc();
-}
-
 void GetIniSectionName(int _type, char* _bufOut, size_t _bufOutSz) {
 	if (_type >= SNM_NUM_DEFAULT_SLOTS) {
 		*_bufOut = '\0';
@@ -337,18 +331,6 @@ bool FileSlotList::SetFromFullPath(int _slot, const char* _fullPath) {
 		return true;
 	}
 	return false;
-}
-
-const char* FileSlotList::GetMenuDesc() {
-	if (!m_menuDesc.GetLength()) {
-		if (m_desc.Get()[m_desc.GetLength()-1] == 's') m_menuDesc.Set(m_desc.Get());
-		else m_menuDesc.SetFormatted(m_desc.GetLength()+8, "%ss", m_desc.Get()); // add trailing 's'
-		if (m_menuDesc.GetLength()) {
-			char* p = (char*)m_menuDesc.Get();
-			*p = toupper(*p); // 1st char to upper
-		}
-	}
-	return m_menuDesc.Get();
 }
 
 bool FileSlotList::IsValidFileExt(const char* _ext) {
@@ -848,6 +830,10 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 
+	m_txtSlotsType.SetID(TXTID_TYPE);
+	m_txtSlotsType.SetText(__LOCALIZE("Slots type:","sws_DLG_150"));
+	m_parentVwnd.AddChild(&m_txtSlotsType);
+
 	m_cbType.SetID(COMBOID_TYPE);
 	FillTypeCombo();
 	m_parentVwnd.AddChild(&m_cbType);
@@ -918,7 +904,11 @@ void SNM_ResourceWnd::FillTypeCombo()
 {
 	m_cbType.Empty();
 	for (int i=0; i < g_slots.GetSize(); i++)
-		m_cbType.AddItem(GetMenuDesc(i));
+		if (char* p = _strdup(g_slots.Get(i)->GetDesc())) {
+			*p = toupper(*p); // 1st char to upper
+			m_cbType.AddItem(p);
+			free(p);
+		}
 	m_cbType.SetCurSel((g_resViewType>0 && g_resViewType<g_slots.GetSize()) ? g_resViewType : SNM_SLOT_FXC);
 }
 
@@ -1617,7 +1607,11 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		HMENU hNewBookmarkSubMenu = CreatePopupMenu();
 		AddSubMenu(hBookmarkSubMenu, hNewBookmarkSubMenu, __LOCALIZE("New bookmark","sws_DLG_150"));
 		for (int i=0; i < SNM_NUM_DEFAULT_SLOTS; i++)
-			AddToMenu(hNewBookmarkSubMenu, GetMenuDesc(i), NEW_BOOKMARK_FXC_MSG+i);
+			if (char* p = _strdup(g_slots.Get(i)->GetDesc())) {
+				*p = toupper(*p); // 1st char to upper
+				AddToMenu(hNewBookmarkSubMenu, p, NEW_BOOKMARK_FXC_MSG+i);
+				free(p);
+			}
 		AddToMenu(hBookmarkSubMenu, __LOCALIZE("Copy bookmark...","sws_DLG_150"), COPY_BOOKMARK_MSG);
 		AddToMenu(hBookmarkSubMenu, __LOCALIZE("Rename...","sws_DLG_150"), REN_BOOKMARK_MSG, -1, false, g_resViewType >= SNM_NUM_DEFAULT_SLOTS ? MF_ENABLED : MF_GRAYED);
 		AddToMenu(hBookmarkSubMenu, __LOCALIZE("Delete","sws_DLG_150"), DEL_BOOKMARK_MSG, -1, false, g_resViewType >= SNM_NUM_DEFAULT_SLOTS ? MF_ENABLED : MF_GRAYED);
@@ -1765,7 +1759,10 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 
 void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
-	// 1st row of controls
+	///////////////////////////////////
+	// 1st row of controls (top)
+	///////////////////////////////////
+
 	int x0=_r->left+10, h=35;
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
@@ -1783,31 +1780,38 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 		SNM_SkinButton(&m_btnAutoSave, it ? &(it->toolbar_save) : NULL, __LOCALIZE("Auto-save","sws_DLG_150"));
 		if (SNM_AutoVWndPosition(&m_btnAutoSave, NULL, _r, &x0, _r->top, h))
 		{
-			// type dropdown
-			m_cbType.SetFont(font);
-			if (SNM_AutoVWndPosition(&m_cbType, NULL, _r, &x0, _r->top, h, 4))
+			// type: txt & dropdown
+			m_txtSlotsType.SetFont(font);
+			if (SNM_AutoVWndPosition(&m_txtSlotsType, NULL, _r, &x0, _r->top, h, 5))
 			{
-				// add & del bookmark buttons
-				((SNM_AddDelButton*)m_parentVwnd.GetChildByID(BUTTONID_DEL_BOOKMARK))->SetEnabled(g_resViewType >= SNM_NUM_DEFAULT_SLOTS);
-				if (SNM_AutoVWndPosition(&m_btnsAddDel, NULL, _r, &x0, _r->top, h))
+				m_cbType.SetFont(font);
+				if (SNM_AutoVWndPosition(&m_cbType, &m_txtSlotsType, _r, &x0, _r->top, h, 4))
 				{
-					if (IsMultiType())
+					// add & del bookmark buttons
+					((SNM_AddDelButton*)m_parentVwnd.GetChildByID(BUTTONID_DEL_BOOKMARK))->SetEnabled(g_resViewType >= SNM_NUM_DEFAULT_SLOTS);
+					if (SNM_AutoVWndPosition(&m_btnsAddDel, NULL, _r, &x0, _r->top, h))
 					{
-						m_btnTiedActions.SetCheckState(g_tiedSlotActions[typeForUser] == g_resViewType);
-						char buf[64] = "";
-						_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Tie %s slot actions to this bookmark","sws_DLG_150"), g_slots.Get(typeForUser)->GetDesc());
-						m_btnTiedActions.SetTextLabel(buf, -1, font);
-						if (SNM_AutoVWndPosition(&m_btnTiedActions, NULL, _r, &x0, _r->top, h, 5))
+						if (IsMultiType())
+						{
+							m_btnTiedActions.SetCheckState(g_tiedSlotActions[typeForUser] == g_resViewType);
+							char buf[64] = "";
+							_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Tie %s slot actions to this bookmark","sws_DLG_150"), g_slots.Get(typeForUser)->GetDesc());
+							m_btnTiedActions.SetTextLabel(buf, -1, font);
+							if (SNM_AutoVWndPosition(&m_btnTiedActions, NULL, _r, &x0, _r->top, h, 5))
+								SNM_AddLogo(_bm, _r, x0, h);
+						}
+						else
 							SNM_AddLogo(_bm, _r, x0, h);
 					}
-					else
-						SNM_AddLogo(_bm, _r, x0, h);
 				}
 			}
 		}
 	}
 
-	// 2nd row of controls
+	///////////////////////////////////
+	// 2nd row of controls (bottom)
+	///////////////////////////////////
+
 	x0 = _r->left+8; h=39;
 	int y0 = _r->bottom-h;
 
@@ -1907,7 +1911,7 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 			case COMBOID_TYPE:
 				return (lstrcpyn(_bufOut, __LOCALIZE("Resource/slot type","sws_DLG_150"), _bufOutSz) != NULL);
 			case BUTTONID_ADD_BOOKMARK:
-				return (lstrcpyn(_bufOut, __LOCALIZE("New bookmark","sws_DLG_150"), _bufOutSz) != NULL);
+				return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("New %s bookmark","sws_DLG_150"), g_slots.Get(typeForUser)->GetDesc()) > 0);
 			case BUTTONID_DEL_BOOKMARK:
 				return (lstrcpyn(_bufOut, __LOCALIZE("Delete bookmark (and files, if confirmed)","sws_DLG_150"), _bufOutSz) != NULL);
 		}
@@ -2252,14 +2256,13 @@ void NewBookmark(int _type, bool _copyCurrent)
 		_type = (_copyCurrent ? g_resViewType : GetTypeForUser(_type));
 
 		char name[64] = "";
-		_snprintfSafe(name, sizeof(name), __LOCALIZE_VERFMT("My %s","sws_DLG_150"), g_slots.Get(GetTypeForUser(_type))->GetMenuDesc());
+		_snprintfSafe(name, sizeof(name), __LOCALIZE_VERFMT("My %s slots","sws_DLG_150"), g_slots.Get(GetTypeForUser(_type))->GetDesc());
 		if (PromptUserForString(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("S&M - Add bookmark","sws_DLG_150"), name, 64, true) && *name)
 		{
 			int newType = g_slots.GetSize();
-
 			g_slots.Add(new FileSlotList(
 				g_slots.Get(_type)->GetResourceDir(), name, g_slots.Get(_type)->GetFileExt(), 
-				g_slots.Get(_type)->HasNotepad(), g_slots.Get(_type)->HasAutoSave(), g_slots.Get(_type)->HasDblClick()));
+				g_slots.Get(_type)->GetFlags()));
 
 			if (_copyCurrent)
 			{
@@ -2406,17 +2409,17 @@ void AddCustomTypesFromIniFile()
 			{
 				tokenStrs[1].Set(tok);
 				tok = strtok(NULL, ","); // no NULL test here (special case for media files..)
-				g_slots.Add(new FileSlotList(tokenStrs[0].Get(), tokenStrs[1].Get(), tok?tok:"", false, false, false));
+				g_slots.Add(new FileSlotList(
+					tokenStrs[0].Get(), 
+					tokenStrs[1].Get(), 
+					tok?tok:"", 
+					0));
 
 				// known slot type?
 				int newType = g_slots.GetSize()-1;
 				int typeForUser = GetTypeForUser(newType);
 				if (newType != typeForUser) // this is a known type => enable some stuff
-				{
-					g_slots.Get(newType)->SetNotepad(g_slots.Get(typeForUser)->HasNotepad());
-					g_slots.Get(newType)->SetAutoSave(g_slots.Get(typeForUser)->HasAutoSave());
-					g_slots.Get(newType)->SetDblClick(g_slots.Get(typeForUser)->HasDblClick());
-				}
+					g_slots.Get(newType)->SetFlags(g_slots.Get(typeForUser)->GetFlags());
 			}
 		}
 		iniKeyStr.SetFormatted(32, "CustomSlotType%d", (++i)+1);
@@ -2430,22 +2433,30 @@ int ResourceViewInit()
 	g_filter.Set(FILTER_DEFAULT_STR);
 
 	g_slots.Empty(true);
-	g_slots.Add(new FileSlotList("FXChains", __LOCALIZE("FX chain","sws_DLG_150"), "RfxChain", true, true, true));
-	g_slots.Add(new FileSlotList("TrackTemplates", __LOCALIZE("track template","sws_DLG_150"), "RTrackTemplate", true, true, true));
-	g_slots.Add(new FileSlotList("ProjectTemplates", __LOCALIZE("project","sws_DLG_150"), "RPP", true, true, true));
-	g_slots.Add(new FileSlotList("MediaFiles", __LOCALIZE("media file","sws_DLG_150"), "", false, true, true)); // "" means "all supported media files"
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// slot definitions
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	g_slots.Add(new FileSlotList("FXChains",			__LOCALIZE("FX chain","sws_DLG_150"),		"RfxChain",			MASK_AUTOFILL|MASK_AUTOSAVE|MASK_DBLCLIK|MASK_TEXT));
+	g_slots.Add(new FileSlotList("TrackTemplates",		__LOCALIZE("track template","sws_DLG_150"),	"RTrackTemplate",	MASK_AUTOFILL|MASK_AUTOSAVE|MASK_DBLCLIK|MASK_TEXT));
+	g_slots.Add(new FileSlotList("ProjectTemplates",	__LOCALIZE("project","sws_DLG_150"),		"RPP",				MASK_AUTOFILL|MASK_AUTOSAVE|MASK_DBLCLIK|MASK_TEXT));
+	g_slots.Add(new FileSlotList("MediaFiles",			__LOCALIZE("media file","sws_DLG_150"),		"",					MASK_AUTOFILL|MASK_AUTOSAVE|MASK_DBLCLIK));	// "" means 'all supported media file extensions'
 #ifdef _WIN32
-	g_slots.Add(new FileSlotList("Data\\track_icons", __LOCALIZE("PNG image","sws_DLG_150"), "png", false, false, true));
+	g_slots.Add(new FileSlotList("Data\\track_icons",	__LOCALIZE("PNG image","sws_DLG_150"),		"png",				MASK_AUTOFILL|MASK_DBLCLIK));
 #else
-	g_slots.Add(new FileSlotList("Data/track_icons", __LOCALIZE("PNG image","sws_DLG_150"), "png", false, false, true));
+	g_slots.Add(new FileSlotList("Data/track_icons",	__LOCALIZE("PNG image","sws_DLG_150"),		"png",				MASK_AUTOFILL|MASK_DBLCLIK));
 #endif
-
-	//JFB -> add new resource types here..
-
+	/////////////////////////////////////////////////////////
+	// -> add new resource types here..
+	//    + related enum on top of the .h file
+	// note: the descs MUST be singular and in lower case
+	/////////////////////////////////////////////////////////
 #ifdef _WIN32
-	// keep this item as the last one!
-	g_slots.Add(new FileSlotList("ColorThemes", __LOCALIZE("theme","sws_DLG_150"), "ReaperthemeZip", false, false, true));
+	// keep this item as the last one! (due to win only..)
+	g_slots.Add(new FileSlotList("ColorThemes",			__LOCALIZE("theme","sws_DLG_150"),			"ReaperthemeZip",	MASK_AUTOFILL|MASK_DBLCLIK));
 #endif
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	AddCustomTypesFromIniFile();
 
 	// load general prefs

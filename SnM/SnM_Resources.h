@@ -39,8 +39,10 @@ enum {
   SNM_SLOT_PRJ,
   SNM_SLOT_MEDIA,
   SNM_SLOT_IMG,
-
-  //JFB -> add new resource types here..
+  
+  //////////////////////////////////////
+  // -> add new resource types here..
+  //////////////////////////////////////
 
 #ifdef _WIN32
   SNM_SLOT_THM,
@@ -66,11 +68,19 @@ public:
 };
 
 
+// masks for FileSlotList.m_flags
+enum {
+  MASK_DBLCLIK=1,
+  MASK_TEXT=2,
+  MASK_AUTOSAVE=4,
+  MASK_AUTOFILL=8
+};
+
 class FileSlotList : public WDL_PtrList<PathSlotItem>
 {
   public:
-	FileSlotList(const char* _resDir, const char* _desc, const char* _ext, bool _notepad, bool _autoSave, bool _dblClick) 
-		: m_resDir(_resDir),m_desc(_desc),m_ext(_ext),m_notepad(_notepad),m_autoSave(_autoSave),m_dblClick(_dblClick),
+	FileSlotList(const char* _resDir, const char* _desc, const char* _ext, int _flags)
+		: m_resDir(_resDir),m_desc(_desc),m_ext(_ext),m_flags(_flags),
 		WDL_PtrList<PathSlotItem>() {}
 	~FileSlotList() {}
 
@@ -88,23 +98,21 @@ class FileSlotList : public WDL_PtrList<PathSlotItem>
 	const char* GetResourceDir() {  return m_resDir.Get(); }
 	const char* GetDesc() { return m_desc.Get(); }
 	void SetDesc(const char* _desc) { m_desc.Set(_desc); }
-	const char* GetMenuDesc();
 	const char* GetFileExt() { return m_ext.Get(); }
 	bool IsValidFileExt(const char* _ext);
 	void GetFileFilter(char* _filter, size_t _filterSz);
-	bool HasNotepad() { return m_notepad; }
-	bool HasAutoSave() { return m_autoSave; }
-	bool HasDblClick() { return m_dblClick; }
-	void SetNotepad(bool _notepad) { m_notepad=_notepad; }
-	void SetAutoSave(bool _autoSave) { m_autoSave=_autoSave; }
-	void SetDblClick(bool _dblClick) { m_dblClick=_dblClick; }
+	bool HasNotepad()  { return (m_flags & MASK_TEXT) == MASK_TEXT; }
+	bool HasAutoSave() { return (m_flags & MASK_AUTOSAVE) == MASK_AUTOSAVE; }
+	bool HasDblClick() { return (m_flags & MASK_DBLCLIK) == MASK_DBLCLIK; }
+	bool HasAutoFill() { return (m_flags & MASK_AUTOFILL) == MASK_AUTOFILL; }
+	int GetFlags() { return m_flags; }
+	void SetFlags(int _flags) { m_flags=_flags; }
 	WDL_FastString m_lastBrowsedFn;
 protected:
 	WDL_FastString m_resDir;	// resource sub-directory name and S&M.ini section/key names
-	WDL_FastString m_desc;		// used in user messages and in main dropdown box menu items
-	WDL_FastString m_ext;		// file extension w/o '.' (ex: "rfxchain"), "" means all supported media files
-	WDL_FastString m_menuDesc;	// deduced from m_desc (lazy init)
-	bool m_notepad, m_autoSave, m_dblClick;
+	WDL_FastString m_desc;		// used in user messages, etc..
+	WDL_FastString m_ext;		// file extension w/o '.' (ex: "rfxchain"), "" means all supported media file extensions
+	int m_flags;
 };
 
 
@@ -159,7 +167,7 @@ protected:
 
 	WDL_VirtualComboBox m_cbType, m_cbDblClickType, m_cbDblClickTo;
 	WDL_VirtualIconButton m_btnAutoFill, m_btnAutoSave, m_btnTiedActions, m_btnOffsetTrTemplate;
-	WDL_VirtualStaticText m_txtDblClickType, m_txtDblClickTo;
+	WDL_VirtualStaticText m_txtSlotsType, m_txtDblClickType, m_txtDblClickTo;
 	SNM_MiniAddDelButtons m_btnsAddDel;
 };
 

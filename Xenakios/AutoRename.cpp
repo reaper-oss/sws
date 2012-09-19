@@ -222,12 +222,12 @@ WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			LVCOLUMN col;
 			col.mask=LVCF_TEXT|LVCF_WIDTH;
 			col.cx=242;
-			col.pszText=("Current take name");
+			col.pszText=(char*)__LOCALIZE("Current take name","sws_DLG_136");
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT), 0 , &col);
 			
 			col.mask=LVCF_TEXT|LVCF_WIDTH;
 			col.cx=242;
-			col.pszText="New take name";
+			col.pszText=(char*)__LOCALIZE("New take name","sws_DLG_136");
 			ListView_InsertColumn(GetDlgItem(hwnd,IDC_AUTONAMEOUTPUT), 1 , &col);
 			
 			UpdateSampleNameList(hwnd, buf);
@@ -290,7 +290,7 @@ WDL_DLGRET AutoRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 						TrackItemCounter++;
 					}
 					
-					Undo_OnStateChangeEx("Autorename takes",4,-1);
+					Undo_OnStateChangeEx(__LOCALIZE("Autorename takes","sws_undo"),4,-1);
 					UpdateTimeline();
 
 					EndDialog(hwnd,0);
@@ -332,5 +332,5 @@ void DoAutoRename(COMMAND_T*)
 		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_AUTORENAMETAKES), g_hwndParent, (DLGPROC)AutoRenameDlgProc);
 	}
 	else
-		MessageBox(g_hwndParent, "No selected item!", "Error", MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("No selected item!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 }

@@ -50,13 +50,13 @@ void SaveProjectList(COMMAND_T*)
 			bValid = true;
 	if (!bValid)
 	{
-		MessageBox(g_hwndParent, "No saved projects are open.  Please save your project(s) first.", "SWS Project List Save", MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("No saved projects are open. Please save your project(s) first.","sws_mbox"), __LOCALIZE("SWS Project List Save","sws_mbox"), MB_OK);
 		return;
 	}
 
 	char cPath[256];
 	GetProjectPath(cPath, 256);
-	if (BrowseForSaveFile("Select project list", cPath, NULL, "Reaper Project List (*.RPL)\0*.RPL\0All Files\0*.*\0", filename, 256))
+	if (BrowseForSaveFile(__LOCALIZE("Select project list","sws_mbox"), cPath, NULL, "Reaper Project List (*.RPL)\0*.RPL\0All Files\0*.*\0", filename, 256))
 	{
 		FILE* f = fopenUTF8(filename, "w");
 		if (f)
@@ -73,7 +73,7 @@ void SaveProjectList(COMMAND_T*)
 			fclose(f);
 		}
 		else
-			MessageBox(g_hwndParent, "Unable to write to file.", "SWS Project List Save", MB_OK);
+			MessageBox(g_hwndParent, __LOCALIZE("Unable to write to file.","sws_mbox"), __LOCALIZE("SWS Project List Save","sws_mbox"), MB_OK);
 	}
 }
 
@@ -81,7 +81,7 @@ void OpenProjectsFromList(COMMAND_T*)
 {
 	char cPath[256];
 	GetProjectPath(cPath, 256);
-	char* filename = BrowseForFiles("Select project list", cPath, NULL, false, "Reaper Project List (*.RPL)\0*.RPL\0All Files\0*.*\0");
+	char* filename = BrowseForFiles(__LOCALIZE("Select project list","sws_mbox"), cPath, NULL, false, "Reaper Project List (*.RPL)\0*.RPL\0All Files\0*.*\0");
 	if (filename)
 	{
 		FILE* f = fopenUTF8(filename, "r");
@@ -102,7 +102,7 @@ void OpenProjectsFromList(COMMAND_T*)
 
 			if (iProjects != 1 || cName[0] != 0 || GetNumTracks() != 0)
 			{
-				if (MessageBox(g_hwndParent, "Close active tabs first?", "SWS Project List Open", MB_YESNO) == IDYES)
+				if (MessageBox(g_hwndParent, __LOCALIZE("Close active tabs first?","sws_mbox"), __LOCALIZE("SWS Project List Open","sws_mbox"), MB_YESNO) == IDYES)
 					Main_OnCommand(40886, 0);
 				else
 					i = 1;
@@ -125,7 +125,7 @@ void OpenProjectsFromList(COMMAND_T*)
 			*pNewProjOpts = iNewProjOpts;
 		}
 		else
-			MessageBox(g_hwndParent, "Unable to open file.", "SWS Project List Open", MB_OK);
+			MessageBox(g_hwndParent, __LOCALIZE("Unable to open file.","sws_mbox"), __LOCALIZE("SWS Project List Open","sws_mbox"), MB_OK);
 		
 		free(filename);
 	}
@@ -140,7 +140,7 @@ void AddRelatedProject(COMMAND_T* = NULL)
 	char cPath[256];
 	GetProjectPath(cPath, 256);
 
-	char* filename = BrowseForFiles("Select related project(s)", cPath, NULL, false, "Reaper Project (*.RPP)\0*.RPP");
+	char* filename = BrowseForFiles(__LOCALIZE("Select related project(s)","sws_mbox"), cPath, NULL, false, "Reaper Project (*.RPP)\0*.RPP");
 	char* pBuf = filename;
 	if (pBuf)
 	{
@@ -151,7 +151,7 @@ void AddRelatedProject(COMMAND_T* = NULL)
 		}
 
 		free(pBuf);
-		Undo_OnStateChangeEx("Add related project(s)", UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx(__LOCALIZE("Add related project(s)","sws_mbox"), UNDO_STATE_MISCCFG, -1);
 	}
 }
 
@@ -159,7 +159,7 @@ void OpenRelatedProject(COMMAND_T* pCmd)
 {
 	if ((int)pCmd->user == g_relatedProjects.Get()->GetSize())
 		// Give the user the chance to add a related project if they selected the first open spot
-		if (MessageBox(g_hwndParent, "No related project found.  Add one now?", "SWS Open Related Project", MB_YESNO) == IDYES)
+		if (MessageBox(g_hwndParent, __LOCALIZE("No related project found. Add one now?","sws_mbox"), __LOCALIZE("SWS Open Related Project","sws_mbox"), MB_YESNO) == IDYES)
 			AddRelatedProject();
 
 	if ((int)pCmd->user >= g_relatedProjects.Get()->GetSize())
@@ -243,7 +243,7 @@ static INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 			for (int i = 0; i < g_relatedProjects.Get()->GetSize(); i++)
 				SendMessage(list, CB_ADDSTRING, 0, (LPARAM)g_relatedProjects.Get()->Get(i)->Get());
             SendMessage(list, CB_SETCURSEL, 0, 0);
-			SetWindowText(hwndDlg, "SWS Delete Related Project");
+			SetWindowText(hwndDlg, __LOCALIZE("SWS Delete Related Project","sws_mbox"));
 			RestoreWindowPos(hwndDlg, DELWINDOW_POS_KEY);
 			return 0;
 		}
@@ -256,7 +256,7 @@ static INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 					int iList = (int)SendMessage(list, CB_GETCURSEL, 0, 0);
 					if (iList >= 0 && iList < g_relatedProjects.Get()->GetSize())
 						g_relatedProjects.Get()->Delete(iList, true);
-					Undo_OnStateChangeEx("Delete related project", UNDO_STATE_MISCCFG, -1);
+					Undo_OnStateChangeEx(__LOCALIZE("Delete related project","sws_undo"), UNDO_STATE_MISCCFG, -1);
 				}
 				// Fall through to cancel to save/end
 				case IDCANCEL:
@@ -272,7 +272,7 @@ static INT_PTR WINAPI doDeleteDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPA
 void DelRelatedProject(COMMAND_T*)
 {
 	if (!g_relatedProjects.Get()->GetSize())
-		MessageBox(g_hwndParent, "No related projects to delete", "SWS Delete Related Project", MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("No related projects to delete","sws_mbox"), __LOCALIZE("SWS Delete Related Project","sws_mbox"), MB_OK);
 	else
 		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_LOAD) ,g_hwndParent, doDeleteDialog);
 }
@@ -337,7 +337,7 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 
 static project_config_extension_t g_projectconfig = { ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL };
 
-//!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
+//!WANT_LOCALIZE_SWS_CMD_TABLE_BEGIN:sws_actions
 COMMAND_T g_projMgrCmdTable[] = 
 {
 	{ { DEFACCEL, "SWS: Save list of open projects" },	"SWS_PROJLISTSAVE",		SaveProjectList,		"Save list of open projects...", },
@@ -362,7 +362,7 @@ COMMAND_T g_projMgrCmdTable[] =
 
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
-//!WANT_LOCALIZE_1ST_STRING_END
+//!WANT_LOCALIZE_SWS_CMD_TABLE_END
 
 static int g_iORPCmdIndex = 0;
 static void menuhook(const char* menustr, HMENU hMenu, int flag)
@@ -399,7 +399,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 				mi.fMask = MIIM_TYPE | MIIM_STATE | MIIM_ID;
 				mi.fType = MFT_STRING;
 				mi.fState = MFS_GRAYED;
-				mi.dwTypeData = (char *)g_projMgrCmdTable[g_iORPCmdIndex].menuText;
+				mi.dwTypeData = (char *)__localizeFunc(g_projMgrCmdTable[g_iORPCmdIndex].menuText,"sws_menu",0);
 				mi.wID = g_projMgrCmdTable[g_iORPCmdIndex].accel.accel.cmd;
 				InsertMenuItem(hMenu, iFirstPos, true, &mi);
 			}

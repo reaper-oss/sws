@@ -60,6 +60,7 @@
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
+reaper_plugin_info_t* g_rec = NULL;
 
 void freeCmdFilesValue(WDL_String* p) {delete p;}
 static WDL_IntKeyedArray<WDL_String*> g_cmdFiles(freeCmdFilesValue);
@@ -448,6 +449,7 @@ extern "C"
 	{
 		if (!rec)
 		{
+			g_rec=NULL;
 			SnapshotsExit();
 			TrackListExit();
 			MarkerListExit();
@@ -456,9 +458,10 @@ extern "C"
 			MiscExit();
 			PadreExit();
 			SNM_Exit();
-			FreeReascriptExport();
 			ERR_RETURN("Exiting Reaper.\n")
 		}
+		else
+			g_rec = rec;
 
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)
 			ERR_RETURN("Wrong REAPER_PLUGIN_VERSION!\n");
@@ -792,8 +795,9 @@ extern "C"
 			ERR_RETURN("Menu hook error\n")
 		AddExtensionsMainMenu();
 
-		if (!ExportReascript(rec))
+		if (!RegisterExportedFuncs(rec))
 			ERR_RETURN("Reascript export failed\n");
+		RegisterExportedAPI(rec); // optional: no test on the returned value
 
 		SWSTimeSlice* ts = new SWSTimeSlice();
 		if (!rec->Register("csurf_inst", ts))

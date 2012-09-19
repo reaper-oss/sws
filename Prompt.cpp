@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "Prompt.h"
 #include "./SnM/SnM_Dlg.h"
+#include "./reaper/localize.h"
 
 #define PROMPTWND_KEY "PromptWindowPos"
 #define INFOWND_KEY "InfoWindowPos"

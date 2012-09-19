@@ -439,7 +439,7 @@ void PasteTake(COMMAND_T* _ct)
 // Take lanes: clear take, activate lanes, ...
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB!!! TODO: replace Padre's MidiItemProcessor which has bugs, e.g. slip edited MIDI items
+//JFB!!! TODO: replace Padre's MidiItemProcessor which has bugs, see MidiItemProcessor::getMidiEventsList()
 bool IsEmptyMidi(MediaItem_Take* _take)
 {
 	bool emptyMidi = false;
@@ -557,33 +557,23 @@ void ClearTake(COMMAND_T* _ct)
 			if (item && *(bool*)GetSetMediaItemInfo(item,"B_UISEL",NULL))
 			{
 				int activeTake = *(int*)GetSetMediaItemInfo(item, "I_CURTAKE", NULL);
-				// v4 empty take
-				if (true)
-				{
-					SNM_TakeParserPatcher p(item, CountTakes(item));
-					int pos, len;
-					WDL_FastString emptyTk("TAKE NULL SEL\n");
-					if (p.GetTakeChunkPos(activeTake, &pos, &len))
-					{
-						updated |= p.ReplaceTake(pos, len, &emptyTk);
 
-						// empty takes only => remove the item
-						if (!strstr(p.GetChunk()->Get(), "\nNAME \""))
-						{	
-							p.CancelUpdates(); // prevent a useless SNM_ChunkParserPatcher commit
-							if (DeleteTrackMediaItem(tr, item)) {
-								j--; 
-								updated = true;
-							}
+				SNM_TakeParserPatcher p(item, CountTakes(item));
+				int pos, len;
+				WDL_FastString emptyTk("TAKE NULL SEL\n");
+				if (p.GetTakeChunkPos(activeTake, &pos, &len))
+				{
+					updated |= p.ReplaceTake(pos, len, &emptyTk);
+
+					// empty takes only => remove the item
+					if (!strstr(p.GetChunk()->Get(), "\nNAME \""))
+					{	
+						p.CancelUpdates(); // prevent a useless SNM_ChunkParserPatcher commit
+						if (DeleteTrackMediaItem(tr, item)) {
+							j--; 
+							updated = true;
 						}
 					}
-				}
-				// v3 empty take (take with empty source
-				else
-				{
-					SNM_ChunkParserPatcher p(item);
-					// no break keyword here: we're already at the end of the item..
-					updated |= p.ReplaceSubChunk("SOURCE", 2, activeTake, "<SOURCE EMPTY\n>\n");
 				}
 			}
 		}
@@ -1198,8 +1188,7 @@ void ScrollToSelItem(COMMAND_T* _ct) {
 void SetPan(COMMAND_T* _ct)
 {
 	bool updated = false;
-	double value = (double)((int)_ct->user/100);
-
+	double value = (double)_ct->user/100;
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);

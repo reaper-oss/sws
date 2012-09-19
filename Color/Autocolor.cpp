@@ -90,7 +90,7 @@ void SWS_AutoColorView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 		break;
 	case 2: // Color
 		if (pItem->m_col < 0)
-			lstrcpyn(str, cColorTypes[-pItem->m_col - 1], iStrMax);
+			lstrcpyn(str, __localizeFunc(cColorTypes[-pItem->m_col - 1],"sws_DLG_115",0), iStrMax);
 		else
 #ifdef _WIN32
 			_snprintf(str, iStrMax, "0x%02x%02x%02x", pItem->m_col & 0xFF, (pItem->m_col >> 8) & 0xFF, (pItem->m_col >> 16) & 0xFF);
@@ -371,13 +371,13 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				{
 					int iType = (int)wParam - TRACKTYPE_MSG;
 					for (int i = 0; i < g_pACItems.GetSize(); i++)
-						if (strcmp(g_pACItems.Get(i)->m_str.Get(), cTrackTypes[iType]) == 0)
+						if (strcmp(g_pACItems.Get(i)->m_str.Get(), __localizeFunc(cTrackTypes[iType],"sws_DLG_115",0)) == 0)
 						{
 							MessageBox(m_hwnd, __LOCALIZE("Autocolor entry of that type already exists.","sws_DLG_115"), __LOCALIZE("SWS - Error","sws_DLG_115"), MB_OK);
 							return;
 						}
 
-					item->m_str.Set(cTrackTypes[wParam-TRACKTYPE_MSG]);
+					item->m_str.Set(__localizeFunc(cTrackTypes[wParam-TRACKTYPE_MSG],"sws_DLG_115",0));
 				}
 				Update();
 			}
@@ -465,7 +465,7 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	if (item && iCol == 1)
 	{
 		for (int i = 0; i < NUM_TRACKTYPES; i++)
-			AddToMenu(hMenu, cTrackTypes[i], TRACKTYPE_MSG + i);
+			AddToMenu(hMenu, __localizeFunc(cTrackTypes[i],"sws_DLG_115",0), TRACKTYPE_MSG + i);
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	}
 	else if (item && iCol == 2)
@@ -473,7 +473,7 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		AddToMenu(hMenu, __LOCALIZE("Set color...","sws_DLG_115"), IDC_COLOR);
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		for (int i = 0; i < NUM_COLORTYPES; i++)
-			AddToMenu(hMenu, cColorTypes[i], COLORTYPE_MSG + i);
+			AddToMenu(hMenu, __localizeFunc(cColorTypes[i],"sws_DLG_115",0), COLORTYPE_MSG + i);
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	}
 	else if (item && iCol == 3)
@@ -561,31 +561,31 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bool bFor
 			if (i) // ignore master for most things
 			{
 				// Check "special" rules first:
-				if (strcmp(rule->m_str.Get(), cTrackTypes[AC_FOLDER]) == 0)
+				if (strcmp(rule->m_str.Get(), __localizeFunc(cTrackTypes[AC_FOLDER],"sws_DLG_115",0)) == 0)
 				{
 					int iType;
 					GetFolderDepth(tr, &iType, &temp);
 					if (iType == 1)
 						bMatch = true;
 				}
-				else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_CHILDREN]) == 0)
+				else if (strcmp(rule->m_str.Get(), __localizeFunc(cTrackTypes[AC_CHILDREN],"sws_DLG_115",0)) == 0)
 				{
 					temp = CSurf_TrackFromID(0, false); // JFB fix: 'temp' could be out of sync 
 					if (GetFolderDepth(tr, NULL, &temp) >= 1)
 						bMatch = true;
 				}
-				else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_RECEIVE]) == 0)
+				else if (strcmp(rule->m_str.Get(), __localizeFunc(cTrackTypes[AC_RECEIVE],"sws_DLG_115",0)) == 0)
 				{
 					if (GetSetTrackSendInfo(tr, -1, 0, "P_SRCTRACK", NULL))
 						bMatch = true;
 				}
-				else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_UNNAMED]) == 0)
+				else if (strcmp(rule->m_str.Get(), __localizeFunc(cTrackTypes[AC_UNNAMED],"sws_DLG_115",0)) == 0)
 				{
 					char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 					if (!cName || !cName[0])
 						bMatch = true;
 				}
-				else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_ANY]) == 0)
+				else if (strcmp(rule->m_str.Get(), __localizeFunc(cTrackTypes[AC_ANY],"sws_DLG_115",0)) == 0)
 				{
 					bMatch = true;
 				}
@@ -596,7 +596,7 @@ void ApplyColorRule(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bool bFor
 						bMatch = true;
 				}
 			}
-			else if (strcmp(rule->m_str.Get(), cTrackTypes[AC_MASTER]) == 0)
+			else if (strcmp(rule->m_str.Get(), __localizeFunc(cTrackTypes[AC_MASTER],"sws_DLG_115",0)) == 0)
 			{	// Check master rule
 				bMatch = true;
 			}

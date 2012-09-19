@@ -3,10 +3,31 @@ Added actions:
 +SWS/BR: Move selected tempo points back
 +SWS/BR: Move selected tempo points forward X ms
 +SWS/BR: Move selected tempo points back X ms
-Note: These actions don't screw with unselected points positions. Ideal for extensive tempo manipulation. First two actions move points depending on zoom, more zoom means less movement - recommended for keybinding. Others move points by predetermined values in milliseconds
- 
-+ Minor fix in warning dialog for SWS/BR: Convert project markers to tempo markers
- 
+ Note: These actions don't screw with unselected points positions. Ideal for extensive tempo manipulation.
+ First two actions move points depending on zoom, more zoom means less movement - recommended for keybinding.
+ Others move points by predetermined values in milliseconds
++SWS/S&M: Pan active takes of selected items to 25%, 50%, and 75% left/right
++SWS/S&M: [developer] Write C++ API functions header
+ Internal stuff, for SWS devs only.
+
+Localization fixes/improvements (thanks Mr Data!)
++Full localization for the ProjectList and Autorender tools
++Fixed missing translations (Auto color/icon, Groove tool and various dialog boxes)
++Fixed stupid assumption that plural strings always end with 's'
+Notes for translators:
++A new SWS Template LangPack file will be available with the next official release of the extension
++To avoid useless translations:
+ - The S&M Find tool is not localized (a new version is somewhere in the drawer)
+ - The SWS TrackList is not localized (might be removed at some point: over exceeded by the new native Track Manager)
+
+Export functions to ReaScript
++Hardened SNM_GetSetSourceState()
++Updated API doc (Main menu > Help > HTML Lists > ReaScript documentation)
++<b>To request some functions please use/see issue 513</b> (exported functions wish-list)
+
+Fixed actions SWS/S&M: Pan active takes of selected items to 100% left/right - Left/right were inverted
+Minor fix in warning dialog for SWS/BR: Convert project markers to tempo markers
+
 !v2.3.0 #5 (September 13, 2012)
 <b>Issue 432: Export functions to ReaScript and/or to other extensions, see documentation http://code.google.com/p/sws-extension/wiki/Functions_export_to_ReaScript|here|</b>.
 Added functions:
@@ -44,7 +65,7 @@ A big welcome to our latest developer, Breeder!  He added actions:
 +SWS/BR: Move edit cursor to next tempo marker
 +SWS/BR: Move edit cursor to previous tempo marker
 
-External MIDI file support + MIDI source offset support (Padre's LFO generator, action "SWS/S&M: Takes - Remove empty MIDI takes/items among selected items", etc..)
+External MIDI file support + MIDI source offset support (action "SWS/S&M: Takes - Remove empty MIDI takes/items among selected items", etc..)
 Improved "All notes off" handling (Live Configs tool + "All notes off" actions)
 Fixed/improved "Xenakios/SWS: Create markers from selected items" (bug reported http://forum.cockos.com/showpost.php?p=1022691&postcount=961|here|)
 OSX/Resources window: better text filter behavior
@@ -71,8 +92,8 @@ Fix for OSX ini files
 !v2.2.0 #16 (July 9, 2012)
 Full localization for "Fill gaps", "Snapshots merge" and "ReaConsole" tools
 Main dialog boxes are now themed
-Fixed actions "SWS/S&M: Move selected FX up/down in chain for selected tracks" (broken in v2.2.0 #3}
-Fixed actions "SWS/S&M: Active MIDI Editor - Save/Restore displayed CC lanes, slot n" (broken in v2.2.0 #3}
+Fixed actions "SWS/S&M: Move selected FX up/down in chain for selected tracks" (broken in v2.2.0 #3)
+Fixed actions "SWS/S&M: Active MIDI Editor - Save/Restore displayed CC lanes, slot n" (broken in v2.2.0 #3)
 House cleaning: removed actions "SWS/S&M: Takes - Build lanes for selected tracks/items" (those glorious actions are useless now: REAPER features take alignment)
 
 !v2.2.0 #15 (June 25, 2012)
@@ -647,11 +668,13 @@ S&M themable windows: fixed 3D highlight/shadow colors
 
 Resource window: Project Loader/Selecter overhauled
 +Added context menu items "Set project loader/selecter from selection" and "Clear project loader/selecter configuration"
-+Slots that are part of the configuration are now displayed as such (in the 1st column)
++Slots that are part of the configuration are now surrounded as such (in the 1st column)
++Added actions:
+ - SWS/S&M: Project loader/selecter: next (cycle)
+ - SWS/S&M: Project loader/selecter: previous (cycle)
 +The current opened project slot is automatically selected
-+Reminder: the Project Loader/Selecter allows you opening some projects (or selecting project tabs) with following actions. It is useful for live performance. Details and demo http://forum.cockos.com/showpost.php?p=831103&postcount=655|here|.
-SWS/S&M: Project loader/selecter: next (cycle)
-SWS/S&M: Project loader/selecter: previous (cycle)
++Reminder: the Project Loader/Selecter allows you opening some projects (or selecting project tabs) with following actions. 
+ It is useful for live performance. Details and demo http://forum.cockos.com/showpost.php?p=831103&postcount=655|here|.
 
 Fixed autogrouping broken in 2.1.0 #15
 
@@ -663,18 +686,15 @@ Added actions:
 +SWS/S&M: Remove track grouping for selected tracks
 
 Cue Buss Generator & Live Configs: track templates improvements (same as issue 376)
-
 Resources window: saved FX chains and track templates are now indented
-
 Notes/Help window: better resizing, improved "big font" display (less flickering)
-
 Faster REAPER startup, especially with large projects (for real this time!)
 
 House cleaning:
 +Removed following actions (the action "Create cue buss track from track selection (use last settings)" is enough):
- SWS/S&M: Create cue buss track from track selection (pre-fader/post-FX)
- SWS/S&M: Create cue buss track from track selection (post-fader)
- SWS/S&M: Create cue buss track from track selection (pre-FX)
+ - SWS/S&M: Create cue buss track from track selection (pre-fader/post-FX)
+ - SWS/S&M: Create cue buss track from track selection (post-fader)
+ - SWS/S&M: Create cue buss track from track selection (pre-FX)
 +Some actions were slightly renamed ("ME" -> "MIDI Editor")
 
 !v2.1.0 #14 (October 9, 2011)
@@ -843,7 +863,7 @@ Issue 323: Fixed duplicated "Recall snapshot" actions
 Issue 326: Renamed "set/unset/toggle master send" actions to "master outputs", added toggles to 12
 
 S&M Resources window:
-The number of slot actions can now be customized in the S&M.ini file, in the new section "NbOfActions".
+<b>The number of slot actions can now be customized in the S&M.ini file, in the new section "NbOfActions".</b>
 This section is automatically created for you. *Quit REAPER* then just change the number of slots/actions (none: 0, max: 99).
 An example (w/ the list of current configurable actions and their default numbers) is http://reaper.mj-s.com/NbOfActions.txt|here|.
 This also "unhides" (i.e. 0 slot by default) 2 new actions:
@@ -1021,6 +1041,7 @@ Fixed browsing for folder in Windows when path contains unicode characters
 Fixed opening of groove presets with unicode characters in paths on Windows
 Toolbar auto-refresh option disabled by default
 House cleaning: removed "SWS/S&M: Let REAPER breathe" (see why http://forum.cockos.com/showpost.php?p=737539&postcount=378|here|.)
+
 Cycle action updates:
 +MIDI Editor cycle actions can also run custom macro or ReaScripts
 +Cycle actions can also run SWS actions
@@ -1049,13 +1070,13 @@ Added toolbar actions with "auto-refreshed" button states (if the new option "Ma
 +SWS/S&M: Toolbar left item selection toggle
 +SWS/S&M: Toolbar top item selection toggle - Windows OS only!
 +SWS/S&M: Toolbar bottom item selection toggle - Windows OS only!
-These actions are to prevent user errors: related toolbar buttons will light up when some selected items are not visible in the arrange.
-Clicking related buttons will also deselect items that are out of the current scope and re-selects them on toggle.
-See details, howto and toolbar auto-refresh anim http://forum.cockos.com/showpost.php?p=728774&postcount=315|here|.
+ These actions are to prevent user errors: related toolbar buttons will light up when some selected items are not visible in the arrange.
+ Clicking related buttons will also deselect items that are out of the current scope and re-selects them on toggle.
+ See details, howto and toolbar auto-refresh anim http://forum.cockos.com/showpost.php?p=728774&postcount=315|here|.
 +AW's grid actions button states now reflect the current grid setting (when changed elsewhere in REAPER)
-See grid toolbar auto-refresh anim http://stash.reaper.fm/8523/awGridToolbar.gif|here| and details about Adam's grid actions http://forum.cockos.com/showthread.php?p=706294|here|.
+ See grid toolbar auto-refresh anim http://stash.reaper.fm/8523/awGridToolbar.gif|here| and details about Adam's grid actions http://forum.cockos.com/showthread.php?p=706294|here|.
 +SWS/S&M: Toolbar track envelopes in touch/latch/write mode toggle
-This action sets track envelopes that are in one of the write modes into read mode and re-sets those previous write modes on toggle. Related toolbar buttons will light up if any envelope is in one of the write modes.
+ This action sets track envelopes that are in one of the write modes into read mode and re-sets those previous write modes on toggle. Related toolbar buttons will light up if any envelope is in one of the write modes.
 +SWS/S&M: Toggle toolbars auto refresh enable
 
 Added FX preset actions (v4 only, see implementation remarks http://forum.cockos.com/showpost.php?p=728774&postcount=315|here|). They works with any type of FX and any presets (user or factory presets):
@@ -1065,17 +1086,19 @@ Added FX preset actions (v4 only, see implementation remarks http://forum.cockos
 +SWS/S&M: Trigger previous preset for FX n of selected tracks - where 'n' is in [1; 4]
 +SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC absolute only)
 +SWS/S&M: Trigger preset for FX n of selected tracks (MIDI CC absolute only) - where 'n' is in [1; 4]
-Remarks: these 2 last MIDI actions are present in the "S&M Extension" section (see top right dropdown in the action dialog box). They are a bit different from the native "Link to PG change" feature: they work with any type of FX (e.g. JS). Bonus: since v4, "Program Change" MIDI events can be learned.
+ Remarks: these 2 last MIDI actions are present in the "S&M Extension" section (see top right dropdown in the action dialog box).
+ They are a bit different from the native "Link to PG change" feature: they work with any type of FX (e.g. JS).
+ Bonus: since v4, "Program Change" MIDI events can be learned.
 +S&M Live config window: the "User preset" column is back !
 
 Added other actions:
 +SWS/S&M: Pan active takes of selected items to 100% right
 +SWS/S&M: Pan active takes of selected items to 100% left
 +SWS/S&M: Pan active takes of selected items to center
-Note: "pan takes" not "pan cakes".
+ Note: "pan takes" not "pan cakes".
 +SWS/S&M: Dump action list (w/o SWS extension) - Windows OS only!
 +SWS/S&M: Dump action list (w/ SWS extension) - Windows OS only!
-Note: dumped files are formatted (openable in Excel for example). See how to use these 2 actions http://wiki.cockos.com/wiki/index.php/S%26M_Dump_action_list|here|.
+ Note: dumped files are formatted (readable in Excel for example). See how to use these 2 actions http://wiki.cockos.com/wiki/index.php/S%26M_Dump_action_list|here|.
 
 Find window:
 +SWS/S&M: Find next
@@ -1106,7 +1129,7 @@ Added actions (issue 165, Windows OS only):
 +SWS/S&M: Focus main window (close others)
 +SWS/S&M: Focus next window (cycle, hide/unhide others)
 +SWS/S&M: Focus previous window (cycle, hide/unhide others)
-Remark: for these actions, keyboard shortcuts must use modifiers in order to pass-through to the main window (ex: Ctrl+minus = focus previous, Ctrl+plus = focus next)
+Remark: for these actions to work, keyboard shortcuts must use modifiers in order to pass-through to the main window (ex: Ctrl+minus = focus previous, Ctrl+plus = focus next)
 
 House cleaning, removed "duplicated" actions (remaining focus actions now also focus the main window on cycle):
 +SWS/S&M: Focus previous floating FX for selected tracks (+ main window on cycle)
@@ -1159,35 +1182,35 @@ Shift-click in marker list now makes a time selection
 Performance improvments (REAPER startup, S&M actions related to notes, FX, FX chains and track grouping)
 S&M FX chains actions now properly manage FX comments
 
-+v4 input FX chains support
-Added input FX chain features in the S&M Resources window (see below)
-Added actions:
-- SWS/S&M: Clear input FX chain for selected tracks
-- SWS/S&M: Copy input FX chain from selected track
-- SWS/S&M: Cut input FX chain from selected tracks
-- SWS/S&M: Paste (replace) input FX chain to selected tracks
-- SWS/S&M: Paste input FX chain to selected tracks
+v4 input FX chains support
++Added input FX chain features in the S&M Resources window (see below)
++Added actions:
+ - SWS/S&M: Clear input FX chain for selected tracks
+ - SWS/S&M: Copy input FX chain from selected track
+ - SWS/S&M: Cut input FX chain from selected tracks
+ - SWS/S&M: Paste (replace) input FX chain to selected tracks
+ - SWS/S&M: Paste input FX chain to selected tracks
 Remark:
-- with S&M FX chain actions, you can copy a FX chain from a track, an item and paste it as an *input* FX chain and vice et versa (shared FX chain clipboard)
-- v4 only (those actions are visible in v3 but are nop)
++With S&M FX chain actions, you can copy a FX chain from a track, an item and paste it as an *input* FX chain and vice et versa (shared FX chain clipboard)
++v4 only! (those actions are visible in v3 but are no-op)
 
-+S&M Resources window updates:
-- Auto save button (top right) now *adds* new slots. Note: before, a new slot was inserted before the selected one but this could mess slot actions (because all following slot ids were changed..)
-- Auto save button now proposes to define the auto save directory when needed
-- Tweaks (better undo wordings, few user prefs were not saved, popup menu clean-up, etc.)
+S&M Resources window updates:
++Auto save button (top right) now *adds* new slots. Note: before, a new slot was inserted before the selected one but this could mess slot actions (because all following slot ids were changed..)
++Auto save button now proposes to define the auto save directory when needed
++Tweaks (better undo wordings, few user prefs were not saved, popup menu clean-up, etc.)
 In "FX chain" mode (i.e. "FX chain" selected in the top left dropdown box):
-- Added double click option to apply (or paste) FX chain slots as *input* FX chains (visible but nop in v3, see http://reaper.mj-s.com/S&M_ResourcesView_InputFx.jpg|screenshot|)
-- Auto save FX chain (top right button) can now be configured to save track FX chains, *input* FX chains as well as active takes' FX chains, see http://reaper.mj-s.com/S&M_ResourcesView_popup.jpg|new popup menu|
++Added double click option to apply (or paste) FX chain slots as *input* FX chains (visible but nop in v3, see http://reaper.mj-s.com/S&M_ResourcesView_InputFx.jpg|screenshot|)
++Auto save FX chain (top right button) can now be configured to save track FX chains, *input* FX chains as well as active takes' FX chains, see http://reaper.mj-s.com/S&M_ResourcesView_popup.jpg|new popup menu|
 
-+Added actions (issue 258):
-SWS/S&M: Move selected FX up in chain for selected tracks
-SWS/S&M: Move selected FX down in chain for selected tracks
-SWS/S&M: Select last FX for selected tracks
+Added actions (issue 258):
++SWS/S&M: Move selected FX up in chain for selected tracks
++SWS/S&M: Move selected FX down in chain for selected tracks
++SWS/S&M: Select last FX for selected tracks
 
 !v2.0.0 #13 (February 24, 2011)
 Installers updated to include grooves (installed in Reaper resource path\Grooves on Win, manual install for OS X)
 Fixed sws-autocoloricon.ini reading on OS X
-S&M Find now supports v4 empty take lanes (fixes find in item notes, take names and take filenames)
+S&M Find now supports v4 empty take lanes
 Fixed issue 262: pre-FX and post-fader S&M cue buss actions now obey send & HW output default prefs (i.e. prefrences > project > track/send defaults). Note: pre-fader busses still mimic the volume of selected tracks.
 Restored deprecated Xen's "Load track template n" (where n>10) actions
 
@@ -1202,11 +1225,11 @@ Removed "SWS: Toggle auto fades for new items", use native "Toggle enable/disabl
 !v2.0.0 #10 (February 7, 2011)
 Support for v4 empty take lanes:
 +S&M build lanes actions now turn "take mosaics" into lanes using v4 empty takes (rather than v3 empty takes)
-These actions still useful to create take lanes à la v4 from older project saved with "mosaics", for example.
+ These actions still useful to create take lanes à la v4 from older project saved with "mosaics", for example.
 +The action "S&M Remove empty take/item among selected items" now also removes v4 empty takes
-Remark: this action was limited to v3 empty takes before, i.e. takes with empty source
+ Remark: this action was limited to v3 empty takes before, i.e. takes with empty source
 +The action "S&M Clear active take/items" now clears takes using v4 empty takes (rather than v3 empty takes). If all takes of an item are empty, the item is removed.
-Remark: a v4 empty take can be removed thanks to "S&M Cut active take" (removing a given empty take is not possible natively)
+ Remark: a v4 empty take can be removed thanks to "S&M Cut active take" (removing an empty take is not yet possible natively)
 
 Main "Extensions" menu:
 +Added AW's "Fill gaps..."
@@ -1249,8 +1272,8 @@ Autorender updates:
 +Unicode character support (Windows only? Testing needed)
 
 Support for v4 empty take lanes (more to come):
-+"Fixed" all S&M actions relate to takes
-+"Fixed" take envelope processing in Padre's Envelope LFO Generator and Envelope Processor
++Fixed all S&M actions relate to takes
++Fixed take envelope processing in Padre's Envelope LFO Generator and Envelope Processor
 +Example: with items starting with a v4 empty take, some actions were broken or had no effect..
 
 Added pitch take envelope support for Padre's Envelope LFO Generator and Envelope Processor (v4 only)
@@ -1307,17 +1330,17 @@ FNG Groove Tool Updates:
 
 S&M updates:
 +Resources window:
-- Performance improvments: REAPER start-up & shutdown, show/hide, auto fill, all editions features, filtering, etc.
-- Track templates: added "Paste items to sel. tracks" and "Replace items of sel. tracks" as customizable double-click behaviours
-- Track templates: added toggle popup menu item "Save track templates with items" (so that track templates can be auto-saved w/ or w/o items)
+ - Performance improvments: REAPER start-up & shutdown, show/hide, auto fill, all editions features, filtering, etc.
+ - Track templates: added "Paste items to sel. tracks" and "Replace items of sel. tracks" as customizable double-click behaviours
+ - Track templates: added toggle popup menu item "Save track templates with items" (so that track templates can be auto-saved w/ or w/o items)
 +Notes/help window:
-- Project notes: now displays the related RPP filename
-- Project notes: initialize S&M project notes with REAPER's ones when possible (i.e. when S&M ones don't exist but REAPER's ones exist)
-Reminder: due to an API limitation, for the moment the "project notes" displayed in the Notes/help window are different from REAPER's one
+ - Project notes: now displays the related RPP filename
+ - Project notes: initialize S&M project notes with REAPER's ones when possible (i.e. when S&M ones don't exist but REAPER's ones exist)
+ Reminder: due to an API limitation, for the moment the "project notes" displayed in the Notes/help window are different from REAPER's one
 +Other:
-- Performance improvments for all cue buss & routing actions
-- Fixed corner case Cue buss crash
-- GUI tweaks
+ - Performance improvments for all cue buss & routing actions
+ - Fixed corner case Cue buss crash
+ - GUI tweaks
 
 Fixed bug that "silently" deleted items in SWS lists while renaming (Thanks, Bevosss)
 4 new actions: "SWS: Set all takes to next/prev mono/stereo channel mode"
@@ -1336,7 +1359,7 @@ Fixed some screenset loading issues
 +Issue 238: Groove quantize now supports velocity
 +Issue 234: Added support for unquantize for MIDI for any FNG action modifying MIDI data
 +Update dialog to use SWS-style dockable windows
-+NOTE grooves are not part of the installer, yet.  Download FingersExtras.zip from the beta download area.
++Note: grooves are not part of the installer, yet. Download FingersExtras.zip from the beta download area.
 
 Auto color/icon fixes from really broken build #2.
 Auto color/icon information is stored in a new file sws-autocoloricon.ini for easy sharing (old settings copied for you)
@@ -1369,69 +1392,69 @@ So a backup of the "official" S&M.ini might be a good idea (or sticking with the
 <b>Changelog details:</b>
 
 Added S&M http://reaper.mj-s.com/resourceview.jpg|Resources window|
-+The "FX chains" view turned into a "Resources" window: FX chains + Track templates + goodies
+The "FX chains" view turned into a "Resources" window: FX chains + Track templates + goodies
 Abstract:
 The same features that exist for FX chains are now available for track templates too. A cool thing now is that we can patch existing tracks with track templates (and not only  "add track template as new track"). Well, some other sort of snapshots..
 Also, saving track templates and FX chains is eased thanks to the "auto-save" feature, see below. A new feature "Auto-fill" also allows creating slots automatically.
 Bonus: check out Tallisman's awesome FX Chain library, http://forum.cockos.com/showthread.php?t=35128|here|!
 +Auto-save feature:
-An "Auto-save" button has been added: it automatically saves the selected tracks' FX chains (or track templates) and insert the related files/slots in the resource list.
-It's a one "click feature", i.e. no file browser is displayed: filenames are automatically generated from track names and saved in REAPER's default FX chains (or track templates) resource path.
-This "auto save" directory can be customized (new popup menu items "Set auto save directory") and filenames can now be renamed ("Name" column is editable).
+ An "Auto-save" button has been added: it automatically saves the selected tracks' FX chains (or track templates) and insert the related files/slots in the resource list.
+ It's a one "click feature", i.e. no file browser is displayed: filenames are automatically generated from track names and saved in REAPER's default FX chains (or track templates) resource path.
+ This "auto save" directory can be customized (new popup menu items "Set auto save directory") and filenames can now be renamed ("Name" column is editable).
 +Auto-fill feature:
-If not already present, all FX chain (or track template) files found in the related resource path and its sub-folders are automatically inserted at the selected slot.
+ If not already present, all FX chain (or track template) files found in the related resource path and its sub-folders are automatically inserted at the selected slot.
 +Applying track templates preserves items:
-- if there's no item present in an applied track template file, the current ones are preserved
-- if some items are present in an applied track template file, those ones are used instead
-- if several tracks are present in a track template file, only the first one is used (when *applying*, when importing, all tracks present in the file are added)
+ - if there's no item present in an applied track template file, the current ones are preserved
+ - if some items are present in an applied track template file, those ones are used instead
+ - if several tracks are present in a track template file, only the first one is used (when *applying*, when importing, all tracks present in the file are added)
 +New actions:
-SWS/S&M: Open Resources window (FX chains)... - just renamed (replaces "Open FX chains view...")
-SWS/S&M: Open Resources window (track templates)...
-SWS/S&M: Load/apply track template to selected tracks, slot n - where n is in [1;10]
-SWS/S&M: Load/apply track template to selected tracks, prompt for slot
-SWS/S&M: Load/import tracks from track template, slot n - where n is in [1;10]
-SWS/S&M: Load/import tracks from track template, prompt for slot
-SWS/S&M: Clear track template slot...
-Added actions that paste FX chains slots (exiting ones only "apply", i.e. replace FX Chains):
-SWS/S&M: Load/paste FX chain to selected tracks, slot n - where n is in [1;8]
-SWS/S&M: Load/paste FX chain to selected tracks, prompt for slot
-SWS/S&M: Load/paste FX chain to selected items, slot n - where n is in [1;8]
-SWS/S&M: Load/paste FX chain to selected items, prompt for slot
-SWS/S&M: Load/paste FX chain to selected items, all takes, prompt for slot
+ - SWS/S&M: Open Resources window (FX chains)... - just renamed (replaces "Open FX chains view...")
+ - SWS/S&M: Open Resources window (track templates)...
+ - SWS/S&M: Load/apply track template to selected tracks, slot n - where n is in [1;10]
+ - SWS/S&M: Load/apply track template to selected tracks, prompt for slot
+ - SWS/S&M: Load/import tracks from track template, slot n - where n is in [1;10]
+ - SWS/S&M: Load/import tracks from track template, prompt for slot
+ - SWS/S&M: Clear track template slot...
+ Added actions that paste FX chains slots (exiting ones only "apply", i.e. replace FX Chains):
+ - SWS/S&M: Load/paste FX chain to selected tracks, slot n - where n is in [1;8]
+ - SWS/S&M: Load/paste FX chain to selected tracks, prompt for slot
+ - SWS/S&M: Load/paste FX chain to selected items, slot n - where n is in [1;8]
+ - SWS/S&M: Load/paste FX chain to selected items, prompt for slot
+ - SWS/S&M: Load/paste FX chain to selected items, all takes, prompt for slot
 +New popup menu items:
-- For FX chains and track templates: added "Auto fill (from resource path)"
-- Load/apply track template to selected tracks
-- Load/import tracks from track template
-- Set FX chain auto save directory...
-- Set track template auto save directory...
-- Auto save FX chains and insert slots (from track selection)
-- Auto save track templates and insert slots (from track selection)
--> those 2 last menu items do the same things than the auto-save button, files are saved and inserted at the selected slot
-- Delete slots & files
--> on Win, files are sent to the recycle bin
-- Show path in Explorer/Finder...
+ - For FX chains and track templates: added "Auto fill (from resource path)"
+ - Load/apply track template to selected tracks
+ - Load/import tracks from track template
+ - Set FX chain auto save directory...
+ - Set track template auto save directory...
+ - Auto save FX chains and insert slots (from track selection)
+ - Auto save track templates and insert slots (from track selection)
+ -> those 2 last menu items do the same things than the auto-save button, files are saved and inserted at the selected slot
+ - Delete slots & files
+ -> on Win, files are sent to the recycle bin
+ - Show path in Explorer/Finder...
 +Column "Name" is now editable (file renaming from the view)
 +drag-drop improvments:
-- Internal drag-drop of slots (i.e. now moves slots rather than copying them)
-- More 'natural' + fixed shortcomings: d'n'd of empty slots, selection after d'n'd, d'n'd when the list is empty, etc..
+ - Internal drag-drop of slots (i.e. now moves slots rather than copying them)
+ - More 'natural' + fixed shortcomings: d'n'd of empty slots, selection after d'n'd, d'n'd when the list is empty, etc..
 +On Win, "Display track template/FX chain" (in the popup menu) now launches notepad
 +Paths pointing to unexisting files aren't reseted anymore
 +Tagged "Xenakios/SWS: Load track template n" actions as deprecated
 
 Updated SWS Autocolor view: now also features auto track icon (the view has been renamed into "SWS Auto Color/Icon").
 Demo http://reaper.mj-s.com/autoicon.gif|here|.
-Rmk: current color configurations will be preserved when upgrading..
 +Added a column "Icon" in the view (right-click in this column or double-click it to set an icon filename) and a tick box "Enable auto icon".
 +Also added action "SWS/S&M Toggle auto icon enable".
+Rmk: your current color configurations will be preserved when upgrading..
 
 S&M Notes/help view updates:
 +Action help: now, when selecting custom macros, the related (veeeery long!) custom id is displayed in the text field (i.e. custom notes about macros are no more saved but that eases the copy/paste of custom ids)
 +Action help: added http://reaper.mj-s.com/alrButton.jpg|"ALR" button|, i.e. online help to the http://wiki.cockos.com/wiki/index.php/Action_List_Reference|Action List Reference| wiki
 +Added actions in order to make things clear:
-- SWS/S&M: Open Notes/Help window (project notes)...
-- SWS/S&M: Open Notes/Help window (item notes)...
-- SWS/S&M: Open Notes/Help window (track notes )...
-- SWS/S&M: Open Notes/Help window (action help)...
+ - SWS/S&M: Open Notes/Help window (project notes)...
+ - SWS/S&M: Open Notes/Help window (item notes)...
+ - SWS/S&M: Open Notes/Help window (track notes )...
+ - SWS/S&M: Open Notes/Help window (action help)...
 Remark: here's an http://reaper.mj-s.com/OnlineHelp.gif|anim| showing how to use notes, action help & online help
 
 S&M Live Configs updates:
@@ -1439,7 +1462,7 @@ S&M Live Configs updates:
 +Fixed activate/deactivate actions not obeying the config's "Enable" parameter
 +Added actions (in the main section) "SWS/S&M: Toggle enable live config n" - where n is in [1;8]
 +Added advanced parameter "CC_DELAY" in S&M.ini (in REAPER's resource directory) - to be tweaked manually!
-If this parameter is set to 0, MIDI CC events will trigger their related "Apply live config" action *immediately* but, in this case, when moving a fader on a large scale for example, all configs in between will also be applied. With a delay (e.g. 250ms, the default value) only the last stable CC value will be taken into account.
+ If this parameter is set to 0, MIDI CC events will trigger their related "Apply live config" action *immediately* but, in this case, when moving a fader on a large scale for example, all configs in between will also be applied. With a delay (e.g. 250ms, the default value) only the last stable CC value will be taken into account.
 +Undo points for all controls
 
 S&M Cue buss:
@@ -1448,23 +1471,25 @@ S&M Cue buss:
 
 S&M house cleaning:
 +Cleaned the main "Extensions" menu a bit + added following menu items:
-S&M Cue Buss...
-S&M Find...
-S&M Live Configs...
+ - S&M Cue Buss...
+ - S&M Find...
+ - S&M Live Configs...
 +Removed the following split actions:
-Contrary to their related native versions, the following ones were spliting selected items *and only them*, see http://forum.cockos.com/showthread.php?t=51547|this related thread|.
-Due to REAPER v3.67's new native pref "If no items are selected, some split/trim/delete actions affect all items at the edit cursor", those actions are less useful (well, they would still split only selected items even if that native pref is ticked). Also removed because of the spam in the action list (many split actions).
-SWS/S&M: Split selected items at play cursor
-SWS/S&M: Split selected items at time selection
-SWS/S&M: Split selected items at edit cursor (no change selection)
-SWS/S&M: Split selected items at time selection (select left)
-SWS/S&M: Split selected items at time selection (select right)
-SWS/S&M: Split selected items at edit or play cursor
-SWS/S&M: Split selected items at edit or play cursor
+ Contrary to their related native versions, the following ones were spliting selected items *and only them*, see http://forum.cockos.com/showthread.php?t=51547|this related thread|.
+ Due to REAPER v3.67's new native pref "If no items are selected, some split/trim/delete actions affect all items at the edit cursor", 
+ those actions are less useful (well, they would still split only selected items even if that native pref is ticked). 
+ Also removed because of the spam in the action list (many split actions).
+ - SWS/S&M: Split selected items at play cursor
+ - SWS/S&M: Split selected items at time selection
+ - SWS/S&M: Split selected items at edit cursor (no change selection)
+ - SWS/S&M: Split selected items at time selection (select left)
+ - SWS/S&M: Split selected items at time selection (select right)
+ - SWS/S&M: Split selected items at edit or play cursor
+ - SWS/S&M: Split selected items at edit or play cursor
 +Removed the following take actions:
-Due to native actions "Rotate take lanes forward/backward" added in REAPER v3.67 (move active take up/down actions still there, of course).
-SWS/S&M: Takes - Move all up (cycling) in selected items"
-SWS/S&M: Takes - Move all down (cycling) in selected items"
+ Due to native actions "Rotate take lanes forward/backward" added in REAPER v3.67 (move active take up/down actions still there, of course).
+ - SWS/S&M: Takes - Move all up (cycling) in selected items"
+ - SWS/S&M: Takes - Move all down (cycling) in selected items"
 
 Other S&M updates/fixes:
 +Added action: SWS/S&M: Left mouse click at cursor position (use w/o modifier)

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 #include "RprMidiCCLane.hxx"
 
@@ -116,7 +117,7 @@ RprMidiCCLanePtr RprMidiCCLane::createFromMidiEditor(bool readOnly)
 {
 	void *midiEditor = MIDIEditor_GetActive();
 	if(midiEditor == NULL)
-		throw RprLibException("No active MIDI editor", true);
+		throw RprLibException(__LOCALIZE("No active MIDI editor","sws_mbox"), true);
 	RprTake take(MIDIEditor_GetTake(midiEditor));
 	RprMidiCCLanePtr laneViewPtr(new RprMidiCCLane(take, readOnly));
 	return laneViewPtr;

@@ -81,7 +81,7 @@ BOOL WINAPI RenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		}
 		else
 		{
-			MessageBox(hwnd, "New file name empty", "Error", MB_OK);
+			MessageBox(hwnd, __LOCALIZE("Empty filename!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 			g_renameparams.DialogRC = 1;
 		}
 	}
@@ -272,7 +272,7 @@ void DoRenameTakeAllDialog666(COMMAND_T* ct)
 	g_renameparams.takesToRename=(int)thetakes.size();
 	g_renameparams.mode=0;
 	g_renameparams.batchnaming=true;
-	g_renameparams.OldName.assign("New take name");
+	g_renameparams.OldName.assign(__LOCALIZE("New take name","sws_DLG_144"));
 	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_RENAMEDLG666), g_hwndParent, (DLGPROC)RenameDlgProc);
 	if (g_renameparams.DialogRC==0)
 	{

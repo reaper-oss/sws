@@ -383,7 +383,7 @@ void ShrinkSelectedTakes(int nbSamples, bool bActiveOnly)
 
 		UpdateItemInProject(*item);
 	}
-	Undo_OnStateChangeEx("Item Processor: shrink", UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Item Processor: shrink","sws_undo"), UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 

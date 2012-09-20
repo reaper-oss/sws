@@ -40,8 +40,6 @@
 
 //! \note I usually keep beta stuff/tests undented
 
-#define PADRE_FORMATED_INI_FILE "%s\\Plugins\\PADRE.ini"
-
 int PadreInit();
 void PadreExit();
 

@@ -26,6 +26,8 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
+
 
 MidiNoteKey::MidiNoteKey(int frameOffset, unsigned char status, unsigned char data1)
 : _frameOffset(frameOffset), _status(status), _data1(data1)
@@ -230,6 +232,7 @@ MidiItemProcessor::MidiItemType MidiItemProcessor::getMidiItemType(MediaItem* it
 		return MIDI_ITEM_INPROJECT;
 }
 
+//JFB: not localized, kind of poc/test code..
 void MidiItemProcessor::getSelectedMidiNotes(MediaItem* item, MIDI_eventlist* evts, map<MIDI_event_t*, bool> &selectedNotes)
 {
 	set<MidiNoteKey> objStateSelectedNotes;
@@ -415,14 +418,14 @@ void MidiItemProcessor::processSelectedMidiTakes(bool bActiveOnly)
 			case MIDI_ITEM_IGNTEMPO :
 			{
 				HWND hMainHwnd = GetMainHwnd();
-				MessageBox(hMainHwnd, "Cannot process items with 'ignore project tempo information' option", "Midi Processor error", MB_OK);
+				MessageBox(hMainHwnd, __LOCALIZE("Cannot process MIDI items with 'ignore project tempo information' option","sws_mbox"), __LOCALIZE("Padre - Error","sws_mbox"), MB_OK);
 				continue;
 			}
 			break;
 			case MIDI_ITEM_FILE :
 			{
 				HWND hMainHwnd = GetMainHwnd();
-				MessageBox(hMainHwnd, "Cannot process external MIDI files", "Midi Processor error", MB_OK);
+				MessageBox(hMainHwnd, __LOCALIZE("Cannot process external MIDI files","sws_mbox"), __LOCALIZE("Padre - Error","sws_mbox"), MB_OK);
 				continue;
 			}
 			break;

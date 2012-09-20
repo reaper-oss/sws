@@ -349,40 +349,6 @@ void DoUnSelectTracksContainingBuss(COMMAND_T*)
 	DoSelectTracksContainingString("BUSS",true,false);
 }
 
-void DoSelectLastTrackOfFolder(COMMAND_T*)
-{
-	MessageBox(g_hwndParent,"Not currently implemented!","Sorry!",MB_OK);
-	return;
-	MediaTrack *CurTrack;
-	int i;
-	int IDofFirstSel=-1;
-	for (i=0;i<GetNumTracks();i++)
-	{
-		CurTrack=CSurf_TrackFromID(i+1,false);
-		int isSel=*(int*)GetSetMediaTrackInfo(CurTrack,"I_SELECTED",NULL);
-		if (isSel==1)
-		{
-			IDofFirstSel=i;
-			break;
-		}
-	}
-	if (IDofFirstSel!=-1)
-	{
-		Main_OnCommand(40297,0); // unselect all tracks
-		for (i=IDofFirstSel;i<GetNumTracks();i++)
-		{
-			CurTrack=CSurf_TrackFromID(i+1,false);
-			int folderStatus=*(int*)GetSetMediaTrackInfo(CurTrack,"I_ISFOLDER",NULL);
-			if (folderStatus==2)
-			{
-				int selStat=1;
-				GetSetMediaTrackInfo(CurTrack,"I_SELECTED",&selStat);
-			}
-
-		}
-	} else MessageBox(g_hwndParent,"No tracks selected!","Error",MB_OK);
-}
-
 void DoSetSelectedTrackNormal(COMMAND_T* ct)
 {
 	/*
@@ -430,10 +396,7 @@ void DoSetSelectedTrackNormal(COMMAND_T* ct)
 				foldepAccum+=foldepth;
 				tkIDX++;
 				if (tkIDX>GetNumTracks())
-				{
-					MessageBox(g_hwndParent,"track count sanity check failed when dismantling folder!","ERROR",MB_OK);
 					break;
-				}
 			}
 			int i;
 			for (i=0;i<(int)TracksToReset.size();i++)
@@ -463,16 +426,18 @@ void DoSetSelectedTracksAsFolder(COMMAND_T* ct)
 	}
 	if (VecSelTracks.size()>1)
 	{
-	//int folderstatus=1;
-	//GetSetMediaTrackInfo(VecSelTracks[0],"I_ISFOLDER",&folderstatus);
-	//folderstatus=2;
-	//GetSetMediaTrackInfo(VecSelTracks[VecSelTracks.size()-1],"I_ISFOLDER",&folderstatus);
-	int foldepth=1;
-	GetSetMediaTrackInfo(VecSelTracks[0],"I_FOLDERDEPTH",&foldepth);
-	foldepth=-1;
-	GetSetMediaTrackInfo(VecSelTracks[VecSelTracks.size()-1],"I_FOLDERDEPTH",&foldepth);
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
-	} else MessageBox(g_hwndParent,"Less than 2 tracks selected!","Error",MB_OK);
+		//int folderstatus=1;
+		//GetSetMediaTrackInfo(VecSelTracks[0],"I_ISFOLDER",&folderstatus);
+		//folderstatus=2;
+		//GetSetMediaTrackInfo(VecSelTracks[VecSelTracks.size()-1],"I_ISFOLDER",&folderstatus);
+		int foldepth=1;
+		GetSetMediaTrackInfo(VecSelTracks[0],"I_FOLDERDEPTH",&foldepth);
+		foldepth=-1;
+		GetSetMediaTrackInfo(VecSelTracks[VecSelTracks.size()-1],"I_FOLDERDEPTH",&foldepth);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
+	}
+	else
+		MessageBox(g_hwndParent, __LOCALIZE("Less than 2 selected tracks!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 }
 
 string g_OldTrackName;
@@ -495,7 +460,7 @@ WDL_DLGRET RenameTraxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			EnableWindow(GetDlgItem(hwnd, IDC_CHECK1), g_MultipleSelected);
 			CheckDlgButton(hwnd, IDC_CHECK1, g_RenaTraxDialogSetAutorename ? BST_CHECKED : BST_UNCHECKED);
 			char buf[500];
-			sprintf(buf,"Rename track %d / %d",g_RenaCurTrack,g_RenaSelTrax);
+			sprintf(buf,__LOCALIZE_VERFMT("Rename track %d / %d","sws_DLG_139"),g_RenaCurTrack,g_RenaSelTrax);
 			SetWindowText(hwnd,buf);
 			break;
 		}
@@ -543,7 +508,7 @@ void DoRenameTracksDlg(COMMAND_T* ct)
 	}
 	if (VecSelTracks.size()==0) 
 	{
-		MessageBox(g_hwndParent,"No tracks selected!","Info",MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("No selected track!","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		return;
 	}
 	if (VecSelTracks.size()>1) g_MultipleSelected=true;
@@ -624,7 +589,7 @@ void DoTraxLabelPrefix(COMMAND_T* ct)
 {
 	if (!g_command_params.TrackLabelPrefix.size())
 	{
-		MessageBox(g_hwndParent, "Please enter a prefix in the command parameters window first.", "Missing prefix", MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("Please enter a prefix in the command parameters window first.","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		return;
 	}
 	vector<MediaTrack*> TheTracks;
@@ -646,7 +611,7 @@ void DoTraxLabelSuffix(COMMAND_T* ct)
 {
 	if (!g_command_params.TrackLabelSuffix.size())
 	{
-		MessageBox(g_hwndParent, "Please enter a suffix in the command parameters window first.", "Missing suffix", MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("Please enter a suffix in the command parameters window first.","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		return;
 	}
 	vector<MediaTrack*> TheTracks;
@@ -757,7 +722,6 @@ void DoPanTracksCenter(COMMAND_T* ct)
 	{
 		double newPan=0.0;
 		GetSetMediaTrackInfo(TheTracks[i],"D_PAN",&newPan);
-
 	}
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
@@ -771,7 +735,6 @@ void DoPanTracksLeft(COMMAND_T* ct)
 	{
 		double newPan=-1.0;
 		GetSetMediaTrackInfo(TheTracks[i],"D_PAN",&newPan);
-
 	}
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
@@ -785,7 +748,6 @@ void DoPanTracksRight(COMMAND_T* ct)
 	{
 		double newPan=1.0;
 		GetSetMediaTrackInfo(TheTracks[i],"D_PAN",&newPan);
-
 	}
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
@@ -799,7 +761,6 @@ void DoSetTrackVolumeToZero(COMMAND_T* ct)
 	{
 		double newVol=1.0;
 		GetSetMediaTrackInfo(TheTracks[i],"D_VOL",&newVol);
-
 	}
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_TRACKCFG,-1);
 }
@@ -818,7 +779,6 @@ void DoRenderReceivesAsStems(COMMAND_T*)
 		MediaTrack *SourceTrack=0;
 		for (i=0;i<(int)TheTracks.size();i++)
 		{
-			
 			bool blah=false;
 			
 			Main_OnCommand(40297,0); // unselect all tracks
@@ -852,12 +812,12 @@ void DoRenderReceivesAsStems(COMMAND_T*)
 				int k;
 				for (k=0;k<(int)receiveMutes.size();k++)
 				{
-					
 					if (j!=k)
 					{
 						blah=true;
 						GetSetTrackSendInfo(SourceTrack,-1,k,"B_MUTE",&blah);
-					} else
+					}
+					else
 					{
 						blah=false;
 						GetSetTrackSendInfo(SourceTrack,-1,k,"B_MUTE",&blah);
@@ -903,7 +863,7 @@ void DoRenderReceivesAsStems(COMMAND_T*)
 		}
 	}
 	else
-		MessageBox(g_hwndParent,"Only one selected track supported!","Error",MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("Only one selected track is supported!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 }
 
 void DoSetRenderSpeedToRealtime2(COMMAND_T*)
@@ -916,7 +876,7 @@ void DoSetRenderSpeedToRealtime2(COMMAND_T*)
 		*renderspeedmode=blah.to_ulong();
 	}
 	else
-		MessageBox(g_hwndParent,"Error getting configuration variable from REAPER","Error",MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("Error getting configuration variable from REAPER","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 }
 
 void DoSetRenderSpeedToNonLim(COMMAND_T*)
@@ -929,7 +889,7 @@ void DoSetRenderSpeedToNonLim(COMMAND_T*)
 		*renderspeedmode=blah.to_ulong();
 	}
 	else
-		MessageBox(g_hwndParent,"Error getting configuration variable from REAPER","Error",MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("Error getting configuration variable from REAPER","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 }
 
 int g_renderspeed=-1;
@@ -941,7 +901,8 @@ void DoStoreRenderSpeed(COMMAND_T*)
 	{ 
 		g_renderspeed=*renderspeedmode;
 	}
-	else MessageBox(g_hwndParent,"Error getting configuration variable from REAPER","Error",MB_OK);
+	else
+		MessageBox(g_hwndParent, __LOCALIZE("Error getting configuration variable from REAPER","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 }
 
 void DoRecallRenderSpeed(COMMAND_T*)
@@ -951,8 +912,11 @@ void DoRecallRenderSpeed(COMMAND_T*)
 	{ 
 		if (g_renderspeed>=0)
 			*renderspeedmode=g_renderspeed;
-		else MessageBox(g_hwndParent,"Render speed has not been stored","Info",MB_OK);
-	} else MessageBox(g_hwndParent,"Error getting configuration variable from REAPER","Error",MB_OK);
+		else
+			MessageBox(g_hwndParent, __LOCALIZE("Render speed has not been stored","sws_mbox"),__LOCALIZE("Xenakios - Info","sws_mbox"), MB_OK);
+	} 
+	else
+		MessageBox(g_hwndParent, __LOCALIZE("Error getting configuration variable from REAPER","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 } 
 
 typedef struct
@@ -1012,7 +976,6 @@ void RecallTrackSoloStates()
 void SetAllTrackSolos(int solomode)
 {
 	int i;
-
 	for (i=0;i<GetNumTracks();i++)
 	{
 		MediaTrack *tk=CSurf_TrackFromID(i+1,false);
@@ -1035,41 +998,46 @@ void DoToggleReferenceTrack(COMMAND_T*)
 		reftk=GuidToTrack(&g_RefTrackGUID);
 		if (reftk)
 		{
-		DoStoreProjectSoloStates();
-		SetAllTrackSolos(0);
-		isolo=1;
-		bmute=false;
-		GetSetMediaTrackInfo(reftk,"B_MUTE",&bmute);
-		GetSetMediaTrackInfo(reftk,"I_SOLO",&isolo);
-		MediaTrack* mtk=CSurf_TrackFromID(0,false);
-		ifxen=0;
-		if (mtk)
-		{
-			//GetSetMediaTrackInfo(mtk,"I_FXEN",&ifxen);
-			g_RefMasterVolume=*(double*)GetSetMediaTrackInfo(mtk,"D_VOL",0);
-			double mvol=1.0;
-			GetSetMediaTrackInfo(mtk,"D_VOL",&mvol);
-		}
-		} else MessageBox(g_hwndParent,"Reference track doesn't seem to exist in this project.\nMaybe it's in another project tab?","Error",MB_OK);
-	} else
+			DoStoreProjectSoloStates();
+			SetAllTrackSolos(0);
+			isolo=1;
+			bmute=false;
+			GetSetMediaTrackInfo(reftk,"B_MUTE",&bmute);
+			GetSetMediaTrackInfo(reftk,"I_SOLO",&isolo);
+			MediaTrack* mtk=CSurf_TrackFromID(0,false);
+			ifxen=0;
+			if (mtk)
+			{
+				//GetSetMediaTrackInfo(mtk,"I_FXEN",&ifxen);
+				g_RefMasterVolume=*(double*)GetSetMediaTrackInfo(mtk,"D_VOL",0);
+				double mvol=1.0;
+				GetSetMediaTrackInfo(mtk,"D_VOL",&mvol);
+			}
+		} 
+		else
+			MessageBox(g_hwndParent, __LOCALIZE("Reference track does not exist in this project.\nMaybe it is in another project tab?","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
+	}
+	else
 	{
 		reftk=GuidToTrack(&g_RefTrackGUID);
 		if (reftk)
 		{
-		RecallTrackSoloStates();
-		g_ReferenceTrackSolo=false;
-		isolo=0;
-		bmute=true;
-		GetSetMediaTrackInfo(reftk,"B_MUTE",&bmute);
-		GetSetMediaTrackInfo(reftk,"I_SOLO",&isolo);
-		MediaTrack* mtk=CSurf_TrackFromID(0,false);
-		ifxen=1;
-		if (mtk)
-		{
-			//GetSetMediaTrackInfo(mtk,"I_FXEN",&ifxen);	
-			GetSetMediaTrackInfo(mtk,"D_VOL",&g_RefMasterVolume);
-		}
-		} else MessageBox(g_hwndParent,"Reference track doesn't seem to exist in this project.\nMaybe it's in another project tab?","Error",MB_OK);
+			RecallTrackSoloStates();
+			g_ReferenceTrackSolo=false;
+			isolo=0;
+			bmute=true;
+			GetSetMediaTrackInfo(reftk,"B_MUTE",&bmute);
+			GetSetMediaTrackInfo(reftk,"I_SOLO",&isolo);
+			MediaTrack* mtk=CSurf_TrackFromID(0,false);
+			ifxen=1;
+			if (mtk)
+			{
+				//GetSetMediaTrackInfo(mtk,"I_FXEN",&ifxen);	
+				GetSetMediaTrackInfo(mtk,"D_VOL",&g_RefMasterVolume);
+			}
+		} 
+		else
+			MessageBox(g_hwndParent, __LOCALIZE("Reference track does not exist in this project.\nMaybe it is in another project tab?","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 	}
 }
 

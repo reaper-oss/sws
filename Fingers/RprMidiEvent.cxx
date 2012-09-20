@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 #include <memory>
 
@@ -38,26 +39,26 @@ void RprMidiBase::setOffset(int offset)
 
 
 unsigned char RprMidiBase::getChannel() const
-{ throw RprMidiBase::RprMidiException("Bad API call");}
+{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
 void RprMidiBase::setChannel(unsigned char)
-{ throw RprMidiBase::RprMidiException("Bad API call");}
+{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
 
 
 unsigned char RprMidiBase::getValue1() const
-{ throw RprMidiBase::RprMidiException("Bad API call");}
+{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
 void RprMidiBase::setValue1(unsigned char)
-{ throw RprMidiBase::RprMidiException("Bad API call");}
+{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
 
 unsigned char RprMidiBase::getValue2() const
-{ throw RprMidiBase::RprMidiException("Bad API call");}
+{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
 void RprMidiBase::setValue2(unsigned char)
-{ throw RprMidiBase::RprMidiException("Bad API call");}
+{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
 
 int RprMidiBase::getUnquantizedOffset() const
-{ throw RprMidiBase::RprMidiException("Bad API call");}
+{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
 
 void RprMidiBase::setUnquantizedOffset(int offset)
-{ throw RprMidiBase::RprMidiException("Bad API call");}
+{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
 
 RprMidiBase::MessageType RprMidiBase::getMessageType() const
 {return Unknown; }
@@ -65,7 +66,7 @@ void RprMidiBase::setMessageType(RprMidiBase::MessageType messageType)
 {}
 
 const std::string& RprMidiBase::getExtendedData() const
-{ throw RprMidiBase::RprMidiException("Bad API call");}
+{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
 
 RprMidiBase::RprMidiException::RprMidiException(const char *message) : mMessage(message)
 {}
@@ -246,7 +247,7 @@ RprNode *RprMidiEvent::toReaper()
 static bool isExtended(const char* inStr)
 {
     if(inStr[0] == 0)
-        throw RprMidiBase::RprMidiException("Error parsing MIDI data");
+        throw RprMidiBase::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
     if(inStr[0] == 'x')
         return true;
     if(inStr[0] == 'X')
@@ -257,7 +258,7 @@ static bool isExtended(const char* inStr)
 static bool isSelected(const char* inStr)
 {
     if(inStr[0] == 0)
-        throw RprMidiBase::RprMidiException("Error parsing MIDI data");
+        throw RprMidiBase::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
     if(inStr[0] == 'E')
         return false;
     if(inStr[0] == 'e')
@@ -267,7 +268,7 @@ static bool isSelected(const char* inStr)
     if(inStr[0] == 'X')
         return false;
 
-    throw RprMidiBase::RprMidiException("Error parsing MIDI data");
+    throw RprMidiBase::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
 }
 
 static bool isMuted(const char* inStr)
@@ -277,7 +278,7 @@ static bool isMuted(const char* inStr)
     if(inStr[1] == 'm')
         return true;
 
-    throw RprMidiBase::RprMidiException("Error parsing MIDI data");
+    throw RprMidiBase::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
 }
 
 static unsigned char fromHex(const std::string &inStr)
@@ -311,7 +312,7 @@ RprMidiEventCreator::RprMidiEventCreator(RprNode *node)
     StringVector tokens(node->getValue());
 
     if(tokens.empty())
-        throw RprMidiBase::RprMidiException("Error parsing MIDI data");
+        throw RprMidiBase::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
 
     int delta = (int)strtoul(tokens.at(1), 0, 10);
     bool selected = isSelected(tokens.at(0));
@@ -356,7 +357,7 @@ RprMidiBase *RprMidiEventCreator::collectEvent()
     if (mXEvent.get())
         return mXEvent.release();
 
-    throw RprMidiBase::RprMidiException("Error parsing MIDI data");
+    throw RprMidiBase::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
 }
 
 RprMidiEventCreator::~RprMidiEventCreator()

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 #include "MediaItemCommands.h"
 #include "CommandHandler.h"
@@ -263,8 +264,8 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 	}
 	if(hasMidiFile) {
 		if(MessageBox(GetMainHwnd(),
-			"Current selection has takes with MIDI files.\r\nTo apply this action these takes to be converted to in-project takes.\r\nDo you want to continue?",
-			"Warning", MB_YESNO) == IDNO) {
+			__LOCALIZE("Current selection has takes with MIDI files.\r\nTo apply this action these takes must be converted to in-project takes.\r\nDo you want to continue?","sws_mbox"),
+			__LOCALIZE("FNG - Warning","sws_mbox"), MB_YESNO) == IDNO) {
 			return false;
 		}
 		Main_OnCommandEx(40684, 0 , 0);

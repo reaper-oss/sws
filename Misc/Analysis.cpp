@@ -28,8 +28,9 @@
 #include "stdafx.h"
 #include "Analysis.h"
 #include "../sws_waitdlg.h"
+#include "../reaper/localize.h"
 
-// See above for parameter info
+
 void AnalyzePCMSource(ANALYZE_PCM* a)
 {
 	if (!a->pcm)
@@ -175,7 +176,7 @@ bool AnalyzeItem(MediaItem* mi, ANALYZE_PCM* a)
 	CreateThread(NULL, 0, AnalyzePCMThread, a, 0, NULL);
 
 	WDL_String title;
-	title.AppendFormatted(100, "Please wait, analyzing %s...", cName ? cName : "item");
+	title.AppendFormatted(100, __LOCALIZE_VERFMT("Please wait, analyzing %s...","sws_analysis"), cName ? cName : __LOCALIZE("item","sws_analysis"));
 	SWS_WaitDlg wait(title.Get(), &a->dProgress);
 
 	delete a->pcm;
@@ -203,13 +204,18 @@ void DoAnalyzeItem(COMMAND_T*)
 			if (AnalyzeItem(mi, &a))
 			{
 				WDL_String str;
-				str.Set("Peak level:");
-				for (int i = 0; i < iChannels; i++)
-					str.AppendFormatted(50, " Channel %d = %.2f dB", i+1, VAL2DB(a.dPeakVals[i]));
-				str.Append("\nRMS level:");
-				for (int i = 0; i < iChannels; i++)
-					str.AppendFormatted(50, " Channel %d = %.2f dB", i+1, VAL2DB(a.dRMSs[i]));
-				MessageBox(g_hwndParent, str.Get(), "Item analysis", MB_OK);
+				str.Set(__LOCALIZE("Peak level:","sws_analysis"));
+				for (int i = 0; i < iChannels; i++) {
+					str.Append(" ");
+					str.AppendFormatted(50, __LOCALIZE_VERFMT("Channel %d = %.2f dB","sws_analysis"), i+1, VAL2DB(a.dPeakVals[i]));
+				}
+				str.Append("\n");
+				str.Append(__LOCALIZE("RMS level:","sws_analysis"));
+				for (int i = 0; i < iChannels; i++) {
+					str.Append(" ");
+					str.AppendFormatted(50, __LOCALIZE_VERFMT("Channel %d = %.2f dB","sws_analysis"), i+1, VAL2DB(a.dRMSs[i]));
+				}
+				MessageBox(g_hwndParent, str.Get(), __LOCALIZE("Item analysis","sws_analysis"), MB_OK);
 			}
 			delete [] a.dPeakVals;
 			delete [] a.dRMSs;
@@ -217,7 +223,7 @@ void DoAnalyzeItem(COMMAND_T*)
 	}
 	if (!bDidWork)
 	{
-		MessageBox(NULL, "No items selected to analyze.", "Error", MB_OK);
+		MessageBox(NULL, __LOCALIZE("No items selected to analyze.","sws_analysis"), __LOCALIZE("SWS - Error","sws_analysis"), MB_OK);
 		return;
 	}
 }
@@ -239,7 +245,7 @@ void FindItemPeak(COMMAND_T*)
 		}
 	}
 	else
-		MessageBox(NULL, "No items selected to analyze.", "Error", MB_OK);
+		MessageBox(NULL, __LOCALIZE("No items selected to analyze.","sws_analysis"), __LOCALIZE("SWS - Error","sws_analysis"), MB_OK);
 }
 
 void OrganizeByVol(COMMAND_T* ct)
@@ -315,7 +321,7 @@ void RMSNormalize(double dTargetDb, double dWindowSize)
 	if (bDidWork)
 	{
 		UpdateTimeline();
-		Undo_OnStateChangeEx("Normalize items to RMS", UNDO_STATE_ITEMS, -1);
+		Undo_OnStateChangeEx(__LOCALIZE("Normalize items to RMS","sws_undo"), UNDO_STATE_ITEMS, -1);
 	}
 }
 
@@ -350,7 +356,7 @@ void RMSNormalizeAll(double dTargetDb, double dWindowSize)
 			}
 		}
 		UpdateTimeline();
-		Undo_OnStateChangeEx("Normalize items to RMS", UNDO_STATE_ITEMS, -1);
+		Undo_OnStateChangeEx(__LOCALIZE("Normalize items to RMS","sws_undo"), UNDO_STATE_ITEMS, -1);
 	}
 }
 
@@ -373,7 +379,7 @@ void SetRMSOptions(COMMAND_T*)
 {
 	char reply[100];
 	GetPrivateProfileString(SWS_INI, SWS_RMS_KEY, "-20,0.1", reply, 100, get_ini_file());
-	if (GetUserInputs("SWS RMS options", 2, "Target RMS normalize level (db),Window size for peak RMS (s)", reply, 100))
+	if (GetUserInputs(__LOCALIZE("SWS RMS options","sws_analysis"), 2, __LOCALIZE("Target RMS normalize level (db),Window size for peak RMS (s)","sws_analysis"), reply, 100))
 	{	// Do really basic input check
 		if (strchr(reply, ',') && strlen(reply) > 2)
 			WritePrivateProfileString(SWS_INI, SWS_RMS_KEY, reply, get_ini_file());
@@ -400,6 +406,5 @@ static COMMAND_T g_commandTable[] =
 int AnalysisInit()
 {
 	SWSRegisterCommands(g_commandTable);
-
 	return 1;
 }

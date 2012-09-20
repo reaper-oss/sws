@@ -53,9 +53,11 @@ int GetActiveTakes(WDL_PtrList<MediaItem_Take> *MediaTakes)
 				if (GetMediaItemNumTakes(CurItem))
 				{
 					int currentTakeIndex=*(int*)GetSetMediaItemInfo(CurItem,"I_CURTAKE",NULL);
-					CurTake=GetMediaItemTake(CurItem,currentTakeIndex);
-					MediaTakes->Add(CurTake);
-					TakeCount++;
+					if (CurTake=GetMediaItemTake(CurItem,currentTakeIndex))
+					{
+						MediaTakes->Add(CurTake);
+						TakeCount++;
+					}
 				}
 			}
 		}

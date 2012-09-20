@@ -26,6 +26,7 @@
 ******************************************************************************/
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 using namespace std;
 
@@ -68,7 +69,7 @@ void DoOpenTemplate(int iNum, bool bProject)
 	SearchDirectory(templates, cPath, bProject ? "RPP" : "RTRACKTEMPLATE", true);
 	if (templates.size() == 0)
 	{
-		MessageBox(g_hwndParent,"No templates at all were found!","Error",MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("No templates at all were found!","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		return;
 	}
 	for (int i = 0; i < (int)templates.size(); i++)
@@ -80,7 +81,7 @@ void DoOpenTemplate(int iNum, bool bProject)
 			return;
 		}
 	}
-	MessageBox(g_hwndParent,"No matching template found!  Please name your template starting with a number.","Error",MB_OK);
+	MessageBox(g_hwndParent, __LOCALIZE("No matching template found! Please name your template starting with a number.","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 }
 
 void DoOpenTrackTemplate(COMMAND_T* t)

@@ -134,7 +134,7 @@ WDL_DLGRET ItemPosRemapDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lP
 				{
 					DoRemapItemPositions(false);
 					UpdateTimeline();
-					Undo_OnStateChangeEx("Remap Item Positions", 4, -1);
+					Undo_OnStateChangeEx(__LOCALIZE("Remap item positions","sws_undo"), 4, -1);
 					EndDialog(hwnd, 0);
 					break;
 				}
@@ -205,7 +205,6 @@ t_RubberBandParams g_RubberBandParams;
 
 void DoRubberBandProcessing()
 {
-	//MessageBox(g_hwndParent,"kuhan teen kootin niin toimmiippi","pieru!",MB_OK);
 	char ExeLine[2048];
 	double PitchFactor=pow(2.0,g_RubberBandParams.PitchSemis/12.0);
 	
@@ -227,10 +226,7 @@ void DoRubberBandProcessing()
 	{
 		MunRaita = CSurf_TrackFromID(i+1,FALSE);
 		numItems=GetTrackNumMediaItems(MunRaita);
-		
-		
 
-		
 		for (int j=0;j<numItems;j++)
 		{
 			CurItem = GetTrackMediaItem(MunRaita,j);
@@ -258,12 +254,9 @@ void DoRubberBandProcessing()
 					
 					for (int x = 1; x < 1000; x ++) 
 					{
-						
 						sprintf(RenderOutName,"%s\\%s %03d.wav",ProjectPath, OriginalSourceFileName,x);
 						if (!FileExists(RenderOutName))
-						{ 
 							break;
-						}
 					}
 					
 					sprintf(ExeLine,"%s\\Plugins\\rubberband.exe -c%d -t%f -f%f \"%s\" \"%s\"",GetExePath(),g_RubberBandParams.Mode,
@@ -308,7 +301,7 @@ void DoRubberBandProcessing()
 						Main_OnCommand(40439,0); // set selected media online
 						SetForegroundWindow(g_hwndParent);
 						//Undo_OnStateChangeEx("Process item with RubberBand as new take",4,-1);
-						Undo_EndBlock("Process item with RubberBand",0);
+						Undo_EndBlock(__LOCALIZE("Process item with RubberBand","sws_undo"),0);
 					}
 				}
 			}
@@ -374,7 +367,7 @@ void DoShowRubberbandDlg(COMMAND_T*)
 
 	DialogBox(g_hInst,MAKEINTRESOURCE(IDD_RUBBERBAND), g_hwndParent, RubberBandDlgProc);	
 #else
-	MessageBox(g_hwndParent, "Not supported on OSX (yet), sorry!", "Unsupported", MB_OK);
+	MessageBox(g_hwndParent, __LOCALIZE("Not supported on OSX, sorry!", "sws_mbox"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);
 #endif
 }
 
@@ -448,11 +441,9 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 					//VecItemCues.push_back(NewCueStruct);
 						for (int idiot=1;idiot<(int)VecItemCues.size();idiot++)
 						{
-							
 							if (idiot<(int)VecItemCues.size()-1)
 							VecItemCues[idiot].EndTime=VecItemCues[idiot+1].StartTime;
 								else VecItemCues[idiot].EndTime=TakeSource->GetLength();
-						
 						}
 						
 						int CurrentCueIndex=0;
@@ -504,7 +495,7 @@ void DoItemCueTransform(bool donextcue, int ToCueIndex, bool PreserveItemLen=fal
 			}
 		}
 	}
-	Undo_OnStateChangeEx("Switch item contents based on cue",4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Switch item contents based on cue","sws_undo"),UNDO_STATE_ITEMS,-1);
 	UpdateTimeline();
 	//delete ItemCues;
 }
@@ -574,7 +565,6 @@ void DoStoreSelectedTakes(COMMAND_T*)
 				int CurTakeIndex=*(int*)GetSetMediaItemInfo(CurItem,"I_CURTAKE",NULL);
 				NewItemState.ActiveTake=CurTakeIndex;
 				g_VecItemStates.push_back(NewItemState);
-			
 			//}
 		}
 	}
@@ -644,9 +634,9 @@ void DoDeleteItemAndMedia(COMMAND_T*)
 					if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
 					{
 						char buf[2000];
-						sprintf(buf,"Do you really want to immediately delete file (NO UNDO) %s?",CurPCM->GetFileName());
+						sprintf(buf,__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
 						
-						int rc=MessageBox(g_hwndParent,buf,"Confirm",MB_OKCANCEL);
+						int rc=MessageBox(g_hwndParent,buf,__LOCALIZE("Confirm","sws_mbox"),MB_OKCANCEL);
 						if (rc==IDOK)
 						{
 							DeleteFile(CurPCM->GetFileName());
@@ -749,9 +739,9 @@ void DoNukeTakeAndSourceMedia(COMMAND_T*)
 				if (CurPCM && CurPCM->GetFileName() && FileExists(CurPCM->GetFileName()))
 				{
 					char buf[2000];
-					sprintf(buf,"Do you really want to immediately delete file (NO UNDO) %s?",CurPCM->GetFileName());
+					sprintf(buf,__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
 					
-					int rc=MessageBox(g_hwndParent,buf,"Confirm",MB_OKCANCEL);
+					int rc=MessageBox(g_hwndParent,buf,__LOCALIZE("Confirm","sws_mbox"),MB_OKCANCEL);
 					if (rc==IDOK)
 					{
 						DeleteFile(CurPCM->GetFileName());
@@ -870,7 +860,7 @@ void CycleItemsFadeShape(int whichfade, bool nextshape)
 			}
 		}
 	}
-	Undo_OnStateChangeEx(whichfade ? "Cycle item fade out shape" : "Cycle item fade in shape",4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Cycle item fade shape","sws_undo"),UNDO_STATE_ITEMS,-1);
 	UpdateTimeline();
 }
 
@@ -905,7 +895,7 @@ void DoSetFadeToCrossfade(COMMAND_T* ct)
 		GetSetMediaItemInfo(item, "D_FADEOUTLEN", &AutoFadeOut);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
 }
 
 void DoSetFadeToDefaultFade(COMMAND_T* ct)
@@ -921,7 +911,7 @@ void DoSetFadeToDefaultFade(COMMAND_T* ct)
 		GetSetMediaItemInfo(item, "D_FADEOUTLEN", pdDefFade);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
 }
 
 void DoItemPitch2Playrate(COMMAND_T* ct)
@@ -958,7 +948,7 @@ void DoItemPitch2Playrate(COMMAND_T* ct)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
 }
 
 void DoItemPlayrate2Pitch(COMMAND_T* ct)
@@ -1006,7 +996,7 @@ void DoItemPlayrate2Pitch(COMMAND_T* ct)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);	
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);	
 }
 
 
@@ -1040,17 +1030,15 @@ void DoSpreadItemsOverTracks(int NumTracks, int StartTrack, int Mode)
 	int TargetTrackID;
 	if (Mode==0)
 	{
-	for (i=0;i<(int)VecSelItems.size();i++)
-	{
-		
-		//
-		CurTrack=(MediaTrack*)GetSetMediaItemInfo(VecSelItems[i],"P_TRACK",NULL);
-		TargetTrackID=CSurf_TrackToID(CurTrack,false)+TrackOffset;
-		CurTrack=CSurf_TrackFromID(TargetTrackID,false);
-		MoveMediaItemToTrack(VecSelItems[i],CurTrack);
-		TrackOffset++;
-		if (TrackOffset==NumTracks) TrackOffset=0;
-	}
+		for (i=0;i<(int)VecSelItems.size();i++)
+		{
+			CurTrack=(MediaTrack*)GetSetMediaItemInfo(VecSelItems[i],"P_TRACK",NULL);
+			TargetTrackID=CSurf_TrackToID(CurTrack,false)+TrackOffset;
+			CurTrack=CSurf_TrackFromID(TargetTrackID,false);
+			MoveMediaItemToTrack(VecSelItems[i],CurTrack);
+			TrackOffset++;
+			if (TrackOffset==NumTracks) TrackOffset=0;
+		}
 	}
 	if (Mode==1)
 	{
@@ -1063,8 +1051,7 @@ void DoSpreadItemsOverTracks(int NumTracks, int StartTrack, int Mode)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Spread items over tracks",4,-1);
-
+	Undo_OnStateChangeEx(__LOCALIZE("Spread items over tracks","sws_undo"),UNDO_STATE_ITEMS,-1);
 }
 
 void DoSpreadSelItemsOver4Tracks(COMMAND_T*)
@@ -1198,7 +1185,7 @@ void DoToggleSelectedItemsRndDlg(COMMAND_T*)
 
 void SlipItemKeyUpHandler()
 {
-	Undo_OnStateChangeEx("Nudge item contents (undo test)",4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Nudge item contents (undo test)","sws_undo"),UNDO_STATE_ITEMS,-1);
 	g_KeyUpUndoHandler=0;
 }
 
@@ -1286,8 +1273,7 @@ void ReplaceItemSourceFileFromFolder(bool askforFolder,int mode,int param,bool o
 			{
 				fileindx=j;
 				//break;
-			}
-				
+			}	
 		}
 		if (fileindx>=0)
 		{
@@ -1314,7 +1300,7 @@ void ReplaceItemSourceFileFromFolder(bool askforFolder,int mode,int param,bool o
 	}
 	UpdateTimeline();
 	Main_OnCommand(40047,0); // build missing peaks
-	Undo_OnStateChangeEx("Change source file(s) of item(s)",4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Change source files of items","sws_undo"),UNDO_STATE_ITEMS,-1);
 }
 
 void DoReplaceItemFileWithNextInFolder(COMMAND_T*)
@@ -1359,7 +1345,7 @@ void DoReverseItemOrder(COMMAND_T* ct)
 		GetSetMediaItemInfo(theitems[i],"D_POSITION",&itempos);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
 }
 
 typedef struct t_itemorderstruct
@@ -1402,7 +1388,7 @@ void DoShuffleItemOrder(COMMAND_T* ct)
 		i++;
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
 }
 
 void DoShuffleItemOrder2(COMMAND_T* ct)
@@ -1440,7 +1426,7 @@ void DoShuffleItemOrder2(COMMAND_T* ct)
 			i++;
 		}
 		UpdateTimeline();
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
 	}
 }
 
@@ -1503,7 +1489,7 @@ void DoSaveItemAsFile1(COMMAND_T*)
 			PCM_source *src=(PCM_source*)GetSetMediaItemTakeInfo(ptake,"P_SOURCE",0);
 			if (src && src->GetFileName())
 			{
-				_snprintf(savedlgtitle, 2048, "Save item \"%s\" as", (char*)GetSetMediaItemTakeInfo(ptake, "P_NAME", 0));
+				_snprintf(savedlgtitle, 2048, __LOCALIZE_VERFMT("Save item \"%s\" as","sws_mbox"), (char*)GetSetMediaItemTakeInfo(ptake, "P_NAME", 0));
 				if (BrowseForSaveFile(savedlgtitle, ppath, NULL, "WAV files\0*.wav\0", newfilename, 512))
 				{
 					Main_OnCommand(40440,0); // set selected media offline
@@ -1554,7 +1540,7 @@ void DoNormalizeSelTakesTodB(COMMAND_T* ct)
 	{
 		char buf[100];
 		strcpy(buf,"0.00");
-		if (XenSingleStringQueryDlg(g_hwndParent,"Normalize items to dB value",buf,100)==0)
+		if (XenSingleStringQueryDlg(g_hwndParent,__LOCALIZE("Normalize items to dB value","sws_mbox"),buf,100)==0)
 		{
 			double relgain=atof(buf);
 			Undo_BeginBlock();
@@ -1595,7 +1581,7 @@ void DoResetItemsOffsetAndLength(COMMAND_T* ct)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
 }
 
 void SetSelItemsFadesToConf(const char *confID)
@@ -1621,7 +1607,7 @@ void SetSelItemsFadesToConf(const char *confID)
 		GetSetMediaItemInfo(selitems[i], "C_FADEOUTSHAPE", &fadeoutshape);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Change item fades",4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set item fades","sws_undo"),UNDO_STATE_ITEMS,-1);
 }
 
 void DoFadesOfSelItemsToConfC(COMMAND_T*)

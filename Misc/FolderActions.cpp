@@ -28,6 +28,8 @@
 #include "stdafx.h"
 #include "FolderActions.h"
 #include "TrackSel.h"
+#include "../reaper/localize.h"
+
 
 void MuteChildren(COMMAND_T* = NULL)
 {
@@ -76,7 +78,7 @@ void FolderLikePrev(COMMAND_T* = NULL)
 		prevTr = tr;
 	}
 	if (bUndo)
-		Undo_OnStateChangeEx("Set selected track(s) to same folder as previous track", UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx(__LOCALIZE("Set selected track(s) to same folder as previous track","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
 
 void MakeFolder(COMMAND_T* = NULL)
@@ -107,7 +109,7 @@ void MakeFolder(COMMAND_T* = NULL)
 		tr = nextTr;
 	}
 	if (bUndo)
-		Undo_OnStateChangeEx("Make folder from selected tracks", UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx(__LOCALIZE("Make folder from selected tracks","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
 
 void IndentTracks(COMMAND_T* = NULL)
@@ -133,7 +135,7 @@ void IndentTracks(COMMAND_T* = NULL)
 	}
 
 	if (bUndo)
-		Undo_OnStateChangeEx("Indent selected tracks", UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx(__LOCALIZE("Indent selected tracks","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
 
 void UnindentTracks(COMMAND_T* = NULL)
@@ -161,7 +163,7 @@ void UnindentTracks(COMMAND_T* = NULL)
 	}
 
 	if (bUndo)
-		Undo_OnStateChangeEx("Unindent selected tracks", UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
+		Undo_OnStateChangeEx(__LOCALIZE("Unindent selected tracks","sws_undo"), UNDO_STATE_TRACKCFG | UNDO_STATE_MISCCFG, -1);
 }
 
 void CollapseFolder(COMMAND_T* ct)

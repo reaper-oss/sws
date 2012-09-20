@@ -11,13 +11,13 @@ Added actions:
  Internal stuff, for SWS devs only.
 
 Localization fixes/improvements (thanks Mr Data!)
-+Full localization for the ProjectList and Autorender tools
-+Fixed missing translations (Auto color/icon, Groove tool and various dialog boxes)
++<b>Almost everything is now localized!</b>
++Fixed unused translations (Auto color/icon and various dialog boxes)
 +Fixed stupid assumption that plural strings always end with 's'
 Notes for translators:
 +A new SWS Template LangPack file will be available with the next official release of the extension
 +To avoid useless translations:
- - The S&M Find tool is not localized (a new version is somewhere in the drawer)
+ - The S&M Find tool is not localized (a new version will come at some point)
  - The SWS TrackList is not localized (might be removed at some point: over exceeded by the new native Track Manager)
 
 Export functions to ReaScript
@@ -25,7 +25,9 @@ Export functions to ReaScript
 +Updated API doc (Main menu > Help > HTML Lists > ReaScript documentation)
 +<b>To request some functions please use/see issue 513</b> (exported functions wish-list)
 
-Fixed actions SWS/S&M: Pan active takes of selected items to 100% left/right - Left/right were inverted
+Fixed some Xenakios actions related to takes
+Fixed inverted left/right channels for "SWS/S&M: Pan active takes of selected items to 100% left/right"
+Fixed faulty undo point for "Xenakios/SWS: Toggle selected takes normalized/unity gain"
 Minor fix in warning dialog for SWS/BR: Convert project markers to tempo markers
 
 !v2.3.0 #5 (September 13, 2012)
@@ -74,9 +76,9 @@ OSX/Resources window: better text filter behavior
 Issue 498: OSX - Fixed docked SWS window close issues
 
 !v2.3.0 #2 (July 28, 2012)
-+Fixed theming issues on Windows XP/7 (reported http://forum.cockos.com/showpost.php?p=1003969&postcount=918|here|)
-+Fixed Label processor crash (reported http://forum.cockos.com/showpost.php?p=1004406&postcount=926|here|)
-+More localization for the Groove tool
+Fixed theming issues on Windows XP/7 (reported http://forum.cockos.com/showpost.php?p=1003969&postcount=918|here|)
+Fixed Label processor crash (reported http://forum.cockos.com/showpost.php?p=1004406&postcount=926|here|)
+More localization for the Groove tool
 
 !v2.3.0 #1 (July 22, 2012)
 <b>REAPER v4.25+ is required</b>
@@ -863,9 +865,9 @@ Issue 323: Fixed duplicated "Recall snapshot" actions
 Issue 326: Renamed "set/unset/toggle master send" actions to "master outputs", added toggles to 12
 
 S&M Resources window:
-<b>The number of slot actions can now be customized in the S&M.ini file, in the new section "NbOfActions".</b>
-This section is automatically created for you. *Quit REAPER* then just change the number of slots/actions (none: 0, max: 99).
-An example (w/ the list of current configurable actions and their default numbers) is http://reaper.mj-s.com/NbOfActions.txt|here|.
+<b>The number of slot actions can now be customized in the S&M.ini file, in the new section [NbOfActions].</b>
+*Quit REAPER* before customizing the number of slots/actions (none: 0, max: 99).
+An example (with the current list of configurable actions and their default numbers) is http://reaper.mj-s.com/NbOfActions.txt|here|.
 This also "unhides" (i.e. 0 slot by default) 2 new actions:
 +SWS/S&M: Apply FX chain to selected items, all takes, slot n
 +SWS/S&M: Paste FX chain to selected items, all takes, slot n
@@ -1393,7 +1395,6 @@ So a backup of the "official" S&M.ini might be a good idea (or sticking with the
 
 Added S&M http://reaper.mj-s.com/resourceview.jpg|Resources window|
 The "FX chains" view turned into a "Resources" window: FX chains + Track templates + goodies
-Abstract:
 The same features that exist for FX chains are now available for track templates too. A cool thing now is that we can patch existing tracks with track templates (and not only  "add track template as new track"). Well, some other sort of snapshots..
 Also, saving track templates and FX chains is eased thanks to the "auto-save" feature, see below. A new feature "Auto-fill" also allows creating slots automatically.
 Bonus: check out Tallisman's awesome FX Chain library, http://forum.cockos.com/showthread.php?t=35128|here|!
@@ -1441,8 +1442,7 @@ Bonus: check out Tallisman's awesome FX Chain library, http://forum.cockos.com/s
 +Paths pointing to unexisting files aren't reseted anymore
 +Tagged "Xenakios/SWS: Load track template n" actions as deprecated
 
-Updated SWS Autocolor view: now also features auto track icon (the view has been renamed into "SWS Auto Color/Icon").
-Demo http://reaper.mj-s.com/autoicon.gif|here|.
+Updated SWS Autocolor view: now also features auto track icon (the view has been renamed into "SWS Auto Color/Icon"), demo http://reaper.mj-s.com/autoicon.gif|here|.
 +Added a column "Icon" in the view (right-click in this column or double-click it to set an icon filename) and a tick box "Enable auto icon".
 +Also added action "SWS/S&M Toggle auto icon enable".
 Rmk: your current color configurations will be preserved when upgrading..

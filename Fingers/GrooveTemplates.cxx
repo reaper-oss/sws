@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 #include "GrooveTemplates.hxx"
 
@@ -185,8 +186,8 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
     }
     if(hasMidiFile) {
         if(MessageBox(GetMainHwnd(),
-            "Current selection has takes with midi files.\r\nTo apply this action these takes to be converted to in-project takes.\r\nDo you want to continue?",
-            "Warning", MB_YESNO) == IDNO) {
+			__LOCALIZE("Current selection has takes with MIDI files.\r\nTo apply this action these takes must be converted to in-project takes.\r\nDo you want to continue?","sws_mbox"),
+			__LOCALIZE("FNG - Warning","sws_mbox"), MB_YESNO) == IDNO) {
                 return false;
         }
         Main_OnCommandEx(40684, 0 , 0);
@@ -466,7 +467,7 @@ void GrooveTemplateHandler::GetGrooveFromMidiEditor()
     RprMidiTakePtr takePtr = RprMidiTake::createFromMidiEditor(true);
 	
 	if(!hasSelectedNotes(takePtr)) {
-		MessageBox(GetMainHwnd(), "No notes selected", "Error", 0);
+		MessageBox(GetMainHwnd(), __LOCALIZE("No notes selected","sws_mbox"), __LOCALIZE("FNG - Error","sws_mbox"), 0);
         return;
 	}
     GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
@@ -491,7 +492,7 @@ void GrooveTemplateHandler::GetGrooveFromItems()
 
     if(ctr->size() == 0)
     {
-        MessageBox(GetMainHwnd(), "No items selected", "Error", 0);
+		MessageBox(GetMainHwnd(), __LOCALIZE("No items selected","sws_mbox"), __LOCALIZE("FNG - Error","sws_mbox"), 0);
         return;
     }
     GrooveTemplateHandler::ClearGroove();
@@ -525,7 +526,7 @@ bool GrooveTemplateHandler::LoadGroove(std::string &fileName, std::string &error
         openFileStream(fileName, f);
         if(!f.is_open())
         {
-            errorMessage = "Unable to open file";
+			errorMessage = __LOCALIZE("Unable to open file","sws_mbox");
             return false;
         }
         int nGrooveVersion = 0;
@@ -533,7 +534,7 @@ bool GrooveTemplateHandler::LoadGroove(std::string &fileName, std::string &error
         std::getline(f, szLine);
         if(sscanf(szLine.c_str(), "Version: %d", &nGrooveVersion) <= 0)
         {
-            errorMessage = "Error loading groove from file";
+			errorMessage = __LOCALIZE("Error loading groove from file","sws_mbox");
             return false;
         }
 
@@ -542,14 +543,14 @@ bool GrooveTemplateHandler::LoadGroove(std::string &fileName, std::string &error
             std::getline(f, szLine);
             if(sscanf(szLine.c_str(), "Number of beats in groove: %d", &beatsInGroove)<= 0)
             {
-                errorMessage = "Error loading groove from file";
+				errorMessage = __LOCALIZE("Error loading groove from file","sws_mbox");
                 return false;
             }
             std::getline(f, szLine); /* Groove: x positions */
             int nPosCount = 0;
             if(sscanf(szLine.c_str(), "Groove: %d positions", &nPosCount) <= 0)
             {
-                errorMessage = "Error loading groove from file";
+				errorMessage = __LOCALIZE("Error loading groove from file","sws_mbox");
                 return false;
             }
             int i = 0;
@@ -568,13 +569,13 @@ bool GrooveTemplateHandler::LoadGroove(std::string &fileName, std::string &error
         }
         else
         {
-            errorMessage = "Error loading groove from file";
+			errorMessage = __LOCALIZE("Error loading groove from file","sws_mbox");
             return false;
         }
     }
     catch (std::ifstream::failure e)
     {
-        errorMessage = "Error reading file";
+		errorMessage = __LOCALIZE("Error reading file","sws_mbox");
         return false;
     }
 
@@ -592,7 +593,7 @@ bool GrooveTemplateHandler::SaveGroove(std::string &fileName, std::string &error
     GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
     if(me->grooveInBeats.size() == 0)
     {
-        errorMessage = "No groove stored";
+		errorMessage = __LOCALIZE("No groove stored","sws_mbox");
         return false;
     }
 
@@ -600,7 +601,7 @@ bool GrooveTemplateHandler::SaveGroove(std::string &fileName, std::string &error
     openFileStream(fileName, f);
     if(!f.is_open())
     {
-        errorMessage = "Unable to open file";
+		errorMessage = __LOCALIZE("Unable to open file","sws_mbox");
         return false;
     }
 
@@ -624,7 +625,7 @@ void GrooveTemplateHandler::MarkGroove(int multiple)
     }
     if(me->grooveInBeats.size() == 0)
     {
-        MessageBox(GetMainHwnd(), "No groove stored", "Error",0);
+		MessageBox(GetMainHwnd(), __LOCALIZE("No groove stored","sws_mbox"), __LOCALIZE("FNG - Error","sws_mbox"), 0);
         return;
     }
 

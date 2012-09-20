@@ -27,6 +27,7 @@
 
 
 #include "stdafx.h"
+#include "../reaper/localize.h"
 #include "../Utility/Base64.h"
 #include "ItemSelState.h"
 
@@ -282,7 +283,7 @@ void SaveSelTrackSelItems(int iSlot)
 		}
 	}
 	char cUndoText[256];
-	sprintf(cUndoText, "Save selected item(s) on selected track(s) to slot %d", iSlot+1);
+	sprintf(cUndoText, __LOCALIZE_VERFMT("Save selected item(s) on selected track(s) to slot %d","sws_undo"), iSlot+1);
 	Undo_OnStateChangeEx(cUndoText, UNDO_STATE_MISCCFG, -1);
 }
 
@@ -303,12 +304,12 @@ void RestoreSelTrackSelItems(int iSlot)
 		}
 	}
 	char cUndoText[256];
-	sprintf(cUndoText, "Restore selected track(s) selected item(s), slot %d", iSlot+1);
+	sprintf(cUndoText, __LOCALIZE_VERFMT("Restore selected track(s) selected item(s), slot %d","sws_undo"), iSlot+1);
 	Undo_OnStateChangeEx(cUndoText, UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 
-void RestoreLastSelItemTrack(COMMAND_T*)
+void RestoreLastSelItemTrack(COMMAND_T* ct)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
@@ -324,20 +325,20 @@ void RestoreLastSelItemTrack(COMMAND_T*)
 				}
 		}
 	}
-	Undo_OnStateChangeEx("Restore last item selection on selected track(s)", UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 
-void SaveSelItems(COMMAND_T*)
+void SaveSelItems(COMMAND_T* ct)
 {
 	g_selItems.Get()->Save(NULL);
-	Undo_OnStateChangeEx("Save selected item(s)", UNDO_STATE_MISCCFG, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_MISCCFG, -1);
 }
 
-void RestoreSelItems(COMMAND_T*)
+void RestoreSelItems(COMMAND_T* ct)
 {
 	g_selItems.Get()->Restore(NULL);
-	Undo_OnStateChangeEx("Restore selected item(s)", UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 

@@ -63,7 +63,6 @@ void DoToggleRippleAll(COMMAND_T*)
 
 bool GenerateShuffledRandomTable(int *IntTable,int numItems,int badFirstNumber)
 {
-	//
 	int *CheckTable=new int[1024];
 	bool GoodFound=FALSE;
 	int IterCount=0;
@@ -77,21 +76,18 @@ bool GenerateShuffledRandomTable(int *IntTable,int numItems,int badFirstNumber)
 	
 	for (i=0;i<numItems;i++)
 	{
-		//
 		GoodFound=FALSE;
 		while (!GoodFound)
 		{
 			rndInt=rand() % numItems;
-			if ((CheckTable[rndInt]==0) && (rndInt!=badFirstNumber) && (i==0)) GoodFound=TRUE;
-			if ((CheckTable[rndInt]==0) && (i>0)) GoodFound=TRUE;
-			
-			
+			if ((CheckTable[rndInt]==0) && (rndInt!=badFirstNumber) && (i==0))
+				GoodFound=TRUE;
+			if ((CheckTable[rndInt]==0) && (i>0))
+				GoodFound=TRUE;
+					
 			IterCount++;
 			if (IterCount>10000000) 
-			{
-				MessageBox(g_hwndParent,"Shuffle Random Table Generator Failed, over 10000000 iterations!","Error",MB_OK);
 				break;
-			}
 		}
 		if (GoodFound) 
 		{
@@ -99,14 +95,13 @@ bool GenerateShuffledRandomTable(int *IntTable,int numItems,int badFirstNumber)
 			CheckTable[rndInt]=1;
 		}
 	}
-
 	delete[] CheckTable;
 	return FALSE;
 }
 
 void DoSelectFiles(COMMAND_T*)
 {
-	char* cFiles = BrowseForFiles("Select files", NULL, NULL, true, "WAV Files\0*.wav\0");
+	char* cFiles = BrowseForFiles(__LOCALIZE("Select files","sws_mbox"), NULL, NULL, true, "WAV Files\0*.wav\0");
 	if (cFiles)
 	{
 		g_filenames->Empty(true, free);
@@ -138,36 +133,35 @@ void DoInsRndFileEx(bool RndLen,bool RndOffset,bool UseTimeSel)
 		XenGetProjectTracks(TheTracks,true);
 		if (TheTracks.size()>0)
 		{
-		PCM_source *NewPCM=PCM_Source_CreateFromFile(g_filenames->Get(filenameindex));
-		if (!NewPCM)
-			return;
+			PCM_source *NewPCM=PCM_Source_CreateFromFile(g_filenames->Get(filenameindex));
+			if (!NewPCM)
+				return;
 
-		MediaItem *NewItem=AddMediaItemToTrack(TheTracks[0]);
-		MediaItem_Take *NewTake=AddTakeToMediaItem(NewItem);
-		double TimeSelStart=0.0;
-		double TimeSelEnd=NewPCM->GetLength();
-		GetSet_LoopTimeRange(false,false,&TimeSelStart,&TimeSelEnd,false);
-		double ItemPos=TimeSelStart;
-		double ItemLen=NewPCM->GetLength();
-		double MediaOffset=0.0;
-		if (RndOffset) 
-		{
-			MediaOffset=(NewPCM->GetLength()/RAND_MAX)*rand();
-			ItemLen-=MediaOffset;
-		}
-		if (RndLen) ItemLen=((NewPCM->GetLength()-MediaOffset)/RAND_MAX)*rand();
-		if (UseTimeSel) ItemLen=TimeSelEnd-TimeSelStart;
-		if (!UseTimeSel) ItemPos=GetCursorPosition();
-		GetSetMediaItemTakeInfo(NewTake,"P_SOURCE",NewPCM);
-		GetSetMediaItemTakeInfo(NewTake,"D_STARTOFFS",&MediaOffset);
-		
-		GetSetMediaItemInfo(NewItem,"D_POSITION",&ItemPos);
-		GetSetMediaItemInfo(NewItem,"D_LENGTH",&ItemLen);
-		Main_OnCommand(40047,0); // build any missing peaks
-		SetEditCurPos(ItemPos+ItemLen,false,false);
-		Undo_OnStateChangeEx("Insert random file (Extended)",4,-1);
-		 
-		UpdateTimeline();
+			MediaItem *NewItem=AddMediaItemToTrack(TheTracks[0]);
+			MediaItem_Take *NewTake=AddTakeToMediaItem(NewItem);
+			double TimeSelStart=0.0;
+			double TimeSelEnd=NewPCM->GetLength();
+			GetSet_LoopTimeRange(false,false,&TimeSelStart,&TimeSelEnd,false);
+			double ItemPos=TimeSelStart;
+			double ItemLen=NewPCM->GetLength();
+			double MediaOffset=0.0;
+			if (RndOffset) 
+			{
+				MediaOffset=(NewPCM->GetLength()/RAND_MAX)*rand();
+				ItemLen-=MediaOffset;
+			}
+			if (RndLen) ItemLen=((NewPCM->GetLength()-MediaOffset)/RAND_MAX)*rand();
+			if (UseTimeSel) ItemLen=TimeSelEnd-TimeSelStart;
+			if (!UseTimeSel) ItemPos=GetCursorPosition();
+			GetSetMediaItemTakeInfo(NewTake,"P_SOURCE",NewPCM);
+			GetSetMediaItemTakeInfo(NewTake,"D_STARTOFFS",&MediaOffset);
+			
+			GetSetMediaItemInfo(NewItem,"D_POSITION",&ItemPos);
+			GetSetMediaItemInfo(NewItem,"D_LENGTH",&ItemLen);
+			Main_OnCommand(40047,0); // build any missing peaks
+			SetEditCurPos(ItemPos+ItemLen,false,false);
+			Undo_OnStateChangeEx(__LOCALIZE("Insert random file","sws_undo"),UNDO_STATE_ITEMS,-1);
+			UpdateTimeline();
 		}
 	}	
 }
@@ -194,7 +188,6 @@ void DoInsRndFileRndOffsetAtTimeSel(COMMAND_T*)
 
 void DoRoundRobinSelectTakes(COMMAND_T* ct)
 {
-	//
 	MediaTrack* CurTrack;
 	MediaItem* CurItem;
 	bool ItemSelected;
@@ -230,7 +223,6 @@ void DoRoundRobinSelectTakes(COMMAND_T* ct)
 
 void DoSelectTakeInSelectedItems(int takeIndx) // -1 first -2 last take, otherwise index, if bigger than numtakes in item, the last
 {
-	//
 	MediaTrack* CurTrack;
 	MediaItem* CurItem;
 	bool ItemSelected;
@@ -248,7 +240,6 @@ void DoSelectTakeInSelectedItems(int takeIndx) // -1 first -2 last take, otherwi
 			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
 			if (ItemSelected==TRUE)
 			{
-				//
 				numTakes=GetMediaItemNumTakes(CurItem);
 				if (numTakes>0)
 				{
@@ -291,11 +282,12 @@ void DoInsertShuffledRandomFile(COMMAND_T*)
 	 ShuffledNumbersGenerated++;
 	 if (ShuffledNumbersGenerated==g_filenames->GetSize())
 	 {
-		//
 		GenerateShuffledRandomTable(ShuffledNumbers,g_filenames->GetSize(),FileToChoose);
 		ShuffledNumbersGenerated=0;
 	 }
-	} else MessageBox(g_hwndParent,"Too few files to choose from for random shuffled insert!","Error",MB_OK);
+	}
+	else
+		MessageBox(g_hwndParent, __LOCALIZE("Too few files for random shuffled insert!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 	
 }
 
@@ -661,9 +653,9 @@ int XenakiosInit()
 	if(!plugin_register("projectconfig",&xen_reftrack_pcreg))
 		return 0;
 	// Move Xenakios_commands.ini to a new location
-	char oldIniFilename[512], iniFilename[512];
-	_snprintf(oldIniFilename, 512, XEN_INIFILE_OLD, GetExePath()); // old location
-	_snprintf(iniFilename, 512, XEN_INIFILE_NEW, GetResourcePath());
+	char oldIniFilename[BUFFER_SIZE], iniFilename[BUFFER_SIZE];
+	_snprintf(oldIniFilename, BUFFER_SIZE, XEN_INIFILE_OLD, GetExePath()); // old location
+	_snprintf(iniFilename, BUFFER_SIZE, XEN_INIFILE_NEW, GetResourcePath());
 	if (FileExists(oldIniFilename))
 		MoveFile(oldIniFilename, iniFilename);
 	g_XenIniFilename.Set(iniFilename);

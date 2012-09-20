@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 #include <cstdlib>
 #include <cmath>
@@ -32,8 +33,8 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 	}
 	if(hasMidiFile) {
 		if(MessageBox(GetMainHwnd(),
-			"Current selection has takes with MIDI files.\r\nTo apply this action these takes to be converted to in-project takes.\r\nDo you want to continue?",
-			"Warning", MB_YESNO) == IDNO) {
+			__LOCALIZE("Current selection has takes with MIDI files.\r\nTo apply this action these takes must be converted to in-project takes.\r\nDo you want to continue?","sws_mbox"),
+			__LOCALIZE("FNG - Warning","sws_mbox"), MB_YESNO) == IDNO) {
 			return false;
 		}
 		Main_OnCommandEx(40684, 0 , 0);
@@ -175,7 +176,7 @@ static void GetEmulationSettings(int flag, void *data)
 		std::string temp = delay + "," + jitter;
 		::strcpy(returnStrings, temp.c_str());
 	}
-	if(GetUserInputs("MIDI hardware emulation", 2, "Serial delay (ms),Max jitter (ms)", returnStrings, 512)) {
+	if(GetUserInputs(__LOCALIZE("MIDI hardware emulation","sws_mbox"), 2, __LOCALIZE("Serial delay (ms),Max jitter (ms)","sws_mbox"), returnStrings, 512)) {
 		std::string results(returnStrings);
 		setReaperProperty("midihw_delay", results.substr(0, results.find_first_of(',')));
 		setReaperProperty("midihw_jitter", results.substr(results.find_first_of(',') + 1));

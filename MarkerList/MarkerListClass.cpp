@@ -350,7 +350,7 @@ void MarkerList::ExportToClipboard(const char* format)
 	CloseClipboard();
 	delete [] str;
 #else
-	MessageBox(g_hwndParent, "Not supported on OSX, sorry!", "Unsupported", MB_OK);
+	MessageBox(g_hwndParent, __LOCALIZE("Not supported on OSX, sorry!", "sws_mbox"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);
 #endif
 }
 

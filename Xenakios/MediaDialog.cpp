@@ -614,7 +614,7 @@ void SendSelectedProjFolFilesToRecycleBin()
 	}
 	UpdateProjFolderList(GetDlgItem(g_hMediaDlg,IDC_PROJFOLMEDLIST), IsDlgButtonChecked(g_hMediaDlg,IDC_SHOWUNUS) == BST_CHECKED);
 #else
-	MessageBox(g_hwndParent,"Not implemented for OS-X","Sorry... :,(",MB_OK); // No SendFileToRecycleBin.  TODO find OSX equiv
+	MessageBox(g_hwndParent, __LOCALIZE("Not supported on OSX, sorry!", "sws_mbox"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);
 #endif
 }
 

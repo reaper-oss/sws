@@ -99,7 +99,7 @@ BOOL WINAPI CreateTxDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				GetSetMediaTrackInfo(curt,"I_SELECTED",&issel);
 			}
 		}
-		Undo_EndBlock("Create new tracks",0);
+		Undo_EndBlock(__LOCALIZE("Create tracks","sws_undo"),0);
 		sprintf(buf,"%d",g_newtrackparams.numtracks);
 		WritePrivateProfileString("XENAKIOSCOMMANDS","NTDLG_NUMNEWTRACKS",buf,g_XenIniFilename.Get());
 		WritePrivateProfileString("XENAKIOSCOMMANDS","NTDLG_BASENAME",g_newtrackparams.basename.c_str(),g_XenIniFilename.Get());

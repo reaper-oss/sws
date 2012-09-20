@@ -315,7 +315,7 @@ LRESULT CALLBACK EnveAreaWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 						
 					}
 					else
-						MessageBox(g_hIIdlg, "Cannot remove only point of envelope!", "Error", MB_OK);
+						MessageBox(g_hIIdlg, __LOCALIZE("Cannot remove only point of envelope!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 					
 				}
 				return 0;

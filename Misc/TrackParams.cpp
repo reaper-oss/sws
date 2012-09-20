@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "TrackParams.h"
 #include "TrackSel.h"
+#include "../reaper/localize.h"
 
 void EnableMPSend(COMMAND_T* = NULL)
 {
@@ -296,7 +297,7 @@ void InsertTrkAbove(COMMAND_T* = NULL)
 			TrackList_AdjustWindows(false);
 			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
 			UpdateTimeline();
-			Undo_OnStateChangeEx("Insert track above selected track", UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx(__LOCALIZE("Insert track above selected track","sws_undo"), UNDO_STATE_ALL, -1);
 			return;
 		}
 	}
@@ -313,7 +314,7 @@ void CreateTrack1(COMMAND_T* = NULL)
 
 void DelTracksChild(COMMAND_T* = NULL)
 {
-	int iRet = MessageBox(g_hwndParent, "Delete track(s) children too?", "Delete track(s)", MB_YESNOCANCEL);
+	int iRet = MessageBox(g_hwndParent, __LOCALIZE("Delete track(s) children too?","sws_mbox"), __LOCALIZE("Delete track(s)","sws_mbox"), MB_YESNOCANCEL);
 	if (iRet == IDCANCEL)
 		return;
 	if (iRet == IDYES)
@@ -327,7 +328,7 @@ void DelTracksChild(COMMAND_T* = NULL)
 			i--;
 		}
 	}
-	Undo_OnStateChangeEx("Delete track(s)", UNDO_STATE_TRACKCFG, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Delete track(s)","sws_undo"), UNDO_STATE_TRACKCFG, -1);
 }
 
 void NameTrackLikeItem(COMMAND_T* ct)

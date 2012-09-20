@@ -71,7 +71,7 @@ void DoRenameTakesWithBWAVDesc(COMMAND_T* ct)
 				GetSetMediaItemTakeInfo(curTake, "P_NAME", buf);
 			}
 			else
-				MessageBox(g_hwndParent,"Take source media has no Broadcast Info Description","Info",MB_OK);
+				MessageBox(g_hwndParent, __LOCALIZE("Take source media has no Broadcast Info Description","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"),MB_OK);
 		}
 	}	
 	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
@@ -135,7 +135,7 @@ WDL_DLGRET NewRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				char wintitle[200];
 				SetFocus(GetDlgItem(hwnd, IDC_TAKENAME_EDIT));
 				SendMessage(GetDlgItem(hwnd, IDC_TAKENAME_EDIT), EM_SETSEL, 0, -1);
-				sprintf(wintitle,"Rename take %d / %d",g_takerenameParams.RenameTakeNumber,g_takerenameParams.TakesToRename);
+				sprintf(wintitle, __LOCALIZE_VERFMT("Rename take %d / %d","sws_DLG_116"),g_takerenameParams.RenameTakeNumber,g_takerenameParams.TakesToRename);
 				SetWindowText(hwnd,wintitle);
 				EnableWindow(GetDlgItem(hwnd,ID_TAKEANDSOURCE), 0);
 				EnableWindow(GetDlgItem(hwnd,IDC_RENAMEMEDIA), 0);
@@ -147,9 +147,7 @@ WDL_DLGRET NewRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				{
 					case IDCANCEL:
 						{
-							
 							g_takerenameParams.RenameWasCancelled=true;
-
 							EndDialog(hwnd,0);
 							return 0;
 						}
@@ -203,9 +201,7 @@ WDL_DLGRET NewRenameDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 void ExtractFilePath(const char *FullFileName,char *FilePath)
 {
 	strcpy(FilePath, FullFileName);
-	char* pEnd = strrchr(FilePath, '\\');
-	if (!pEnd)
-		pEnd = strrchr(FilePath, '/');
+	char* pEnd = strrchr(FilePath, PATH_SLASH_CHAR);
 	if (pEnd)
 		*pEnd = 0;
 }
@@ -224,9 +220,7 @@ int ReplaceProjectMedia(char *OldFileName,char *NewFileName)
 	MediaItem *CurItem;
 	MediaItem_Take *CurTake;
 	MediaTrack *CurTrack;
-	int i;
-	int j;
-	int k;
+	int i, j, k;
 	for (i=0;i<GetNumTracks();i++)
 	{
 		CurTrack=CSurf_TrackFromID(i+1,false);
@@ -239,15 +233,9 @@ int ReplaceProjectMedia(char *OldFileName,char *NewFileName)
 				PCM_source *ThePCM=0;
 				ThePCM=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
 				if (ThePCM!=0 && ThePCM->GetFileName())
-				{
 					if (strcmp(ThePCM->GetType(),"SECTION")!=0)
-					{
 						if (strcmp(ThePCM->GetFileName(),OldFileName)==0)
-						{
 							ThePCM->SetFileName(NewFileName);	
-						}
-					}
-				}
 			}
 		}
 	}
@@ -288,7 +276,7 @@ void DoRenameTakeDlg(COMMAND_T*)
 		GetSetMediaItemTakeInfo(VecTakesToRename[i],"P_NAME",(void*)g_takerenameParams.NewTakeName.c_str());
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Rename take(s)",4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Rename take(s)","sws_undo"),4,-1);
 }
 
 void DoOpenRPPofBWAVdesc(COMMAND_T*)
@@ -297,14 +285,14 @@ void DoOpenRPPofBWAVdesc(COMMAND_T*)
 	SWS_GetSelectedMediaItems(&selectedItems);
 	if (selectedItems.GetSize() != 1)
 	{
-		MessageBox(g_hwndParent, "Please select exactly one item.", "Error", MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("Please select exactly one item.","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		return;
 	}
 	
 	MediaItem_Take* take = GetMediaItemTake(selectedItems.Get()[0], -1);
 	if (!take)
 	{
-		MessageBox(g_hwndParent, "Active take is empty.", "Error", MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("Active take is empty.","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		return;
 	}
 	
@@ -325,13 +313,13 @@ void DoOpenRPPofBWAVdesc(COMMAND_T*)
 				char RPPFileNameBuf[1024];
 				sprintf(RPPFileNameBuf,"%s\\reaper.exe \"%s\"", GetExePath(), RPPFileName.c_str());
 				if (!DoLaunchExternalTool(RPPFileNameBuf))
-					MessageBox(g_hwndParent, "Could not launch REAPER.", "Error", MB_OK);
+					MessageBox(g_hwndParent, __LOCALIZE("Could not launch REAPER.","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 			}
 			else
 			{
 				bool bRppFound = false;
 				char RppSearchFolderName[1024];
-				if (BrowseForDirectory("Select folder to with RPP files", NULL, RppSearchFolderName, 1024))
+				if (BrowseForDirectory(__LOCALIZE("Select folder with RPP files","sws_mbox"), NULL, RppSearchFolderName, 1024))
 				{
 					vector<string> FoundRPPs;
 					SearchDirectory(FoundRPPs, RppSearchFolderName, "RPP", true);
@@ -345,21 +333,19 @@ void DoOpenRPPofBWAVdesc(COMMAND_T*)
 							char RPPFileNameBuf[1024];
  							sprintf(RPPFileNameBuf, "%s\\reaper.exe \"%s\"", GetExePath(), FoundRPPs[i].c_str());
 							if (!DoLaunchExternalTool(RPPFileNameBuf))
-								MessageBox(g_hwndParent, "Could not launch REAPER.", "Error", MB_OK);
+								MessageBox(g_hwndParent, __LOCALIZE("Could not launch REAPER.","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 							bRppFound = true;
 							break;
 						}
 
 					}
 					if (!bRppFound)
-					{
-						MessageBox(g_hwndParent, "RPP was not found from selected folder, please try another folder.", "Error", MB_OK);
-					}
+						MessageBox(g_hwndParent, __LOCALIZE("RPP was not found in selected folder.","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 				}
 			}
 		}
 		else
-			MessageBox(g_hwndParent, "No BWAV info found in selected take.", "Error", MB_OK);
+			MessageBox(g_hwndParent, __LOCALIZE("No BWAV info found in the active take.","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 	}
 }
 
@@ -406,38 +392,38 @@ void PerformSectionLoopNudge(int paramToNudge,double nudgeAmount)
 	UpdateTimeline();
 }
 
-void DoNudgeSectionLoopStartPlus(COMMAND_T*)
+void DoNudgeSectionLoopStartPlus(COMMAND_T* c)
 {
 	PerformSectionLoopNudge(0,g_command_params.SectionLoopNudgeSecs); // 1 for section loop len
-	Undo_OnStateChangeEx("Nudge section loop start offset positive",4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(c),4,-1);
 }
 
-void DoNudgeSectionLoopStartMinus(COMMAND_T*)
+void DoNudgeSectionLoopStartMinus(COMMAND_T* c)
 {
 	PerformSectionLoopNudge(0,-g_command_params.SectionLoopNudgeSecs); // 1 for section loop len
-	Undo_OnStateChangeEx("Nudge section loop start offset negative",4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(c),4,-1);
 }
 
-void DoNudgeSectionLoopLenPlus(COMMAND_T*)
+void DoNudgeSectionLoopLenPlus(COMMAND_T* c)
 {
 	PerformSectionLoopNudge(1,g_command_params.SectionLoopNudgeSecs); // 1 for section loop len
-	Undo_OnStateChangeEx("Nudge section loop length positive",4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(c),4,-1);
 }
 
-void DoNudgeSectionLoopLenMinus(COMMAND_T*)
+void DoNudgeSectionLoopLenMinus(COMMAND_T* c)
 {
 	PerformSectionLoopNudge(1,-g_command_params.SectionLoopNudgeSecs); // 1 for section loop len
-	Undo_OnStateChangeEx("Nudge section loop length negative",4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(c),4,-1);
 }
 
-void DoNudgeSectionLoopOlapPlus(COMMAND_T*)
+void DoNudgeSectionLoopOlapPlus(COMMAND_T* c)
 {
 	PerformSectionLoopNudge(2,g_command_params.SectionLoopNudgeSecs); // 2 for section loop overlap
-	Undo_OnStateChangeEx("Nudge section loop overlap positive",4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(c),4,-1);
 }
 
-void DoNudgeSectionLoopOlapMinus(COMMAND_T*)
+void DoNudgeSectionLoopOlapMinus(COMMAND_T* c)
 {
 	PerformSectionLoopNudge(2,-g_command_params.SectionLoopNudgeSecs); // 2 for section loop overlap
-	Undo_OnStateChangeEx("Nudge section loop overlap negative",4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(c),4,-1);
 }

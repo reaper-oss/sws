@@ -178,7 +178,7 @@ void DoNudgeItemsBeatsBased(bool UseConf, bool Positive, double theNudgeAmount)
 		}
 		delete[] MediaItemsOnTrack;
 	}
-	Undo_OnStateChangeEx("Nudge Item Position(s), Beat Based",4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Nudge item position(s), beat based","sws_undo"),4,-1);
 	UpdateTimeline();
 }
 
@@ -193,7 +193,7 @@ void DoNudgeItemsRightBeatsAndConfBased(COMMAND_T*)
 	DoNudgeItemsBeatsBased(true,true,0.0);
 }
 
-void DoNudgeSamples(COMMAND_T* t)
+void DoNudgeSamples(COMMAND_T* ct)
 {
 	double dSrate = (double)(*(int*)GetConfigVar("projsrate"));
 	for (int i = 1; i <= GetNumTracks(); i++)
@@ -205,16 +205,16 @@ void DoNudgeSamples(COMMAND_T* t)
 			if (*(bool*)GetSetMediaItemInfo(mi, "B_UISEL", NULL))
 			{
 				double dPos = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
-				dPos += (double)t->user * 1.0 / dSrate;
+				dPos += (double)ct->user * 1.0 / dSrate;
 				GetSetMediaItemInfo(mi, "D_POSITION", &dPos);
 			}
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChange("Nudge item position by a sample");
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL, -1);
 }
 
-void DoSplitItemsAtTransients(COMMAND_T*)
+void DoSplitItemsAtTransients(COMMAND_T* ct)
 {
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
@@ -223,38 +223,30 @@ void DoSplitItemsAtTransients(COMMAND_T*)
 	int ItemCounter=0;
 	int numItems=CountSelectedMediaItems(NULL);
 	MediaItem** MediaItemsInProject = new MediaItem*[numItems];
-	int i;
-	int j;
+	int i, j;
 	for (i=0;i<GetNumTracks();i++)
 	{
 		MunRaita = CSurf_TrackFromID(i+1,FALSE);
 		int numItemsTrack=GetTrackNumMediaItems(MunRaita);
-		//MediaItem* **MediaItemsOnTrack = new (MediaItem*)[numItems];
-		
-		
+			
 		for (j=0;j<numItemsTrack;j++)
 		{
 			CurItem = GetTrackMediaItem(MunRaita,j);
 			ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
 			if (ItemSelected==TRUE)
 			{
-				
 				//CurrentPos=*(double*)GetSetMediaItemInfo(CurItem,"D_POSITION",NULL);
 				//if (ItemCounter==0) MinTime=CurrentPos;
 				//if (ItemCounter>0 && CurrentPos<MinTime) MinTime=CurrentPos;
 				MediaItemsInProject[ItemCounter]=CurItem;
 				ItemCounter++;
-			}
-			
-			
+			}		
 		}
 	}
-	//MessageBox(g_hwndParent,"min search complete","info",MB_OK);
-	//double yyy;
+
 	Undo_BeginBlock();
 	for (i=0;i<numItems;i++)
 	{
-		//
 		Main_OnCommand(40289,0); // unselect all items
 		CurItem=MediaItemsInProject[i];
 		bool SelStatus=true;
@@ -267,32 +259,23 @@ void DoSplitItemsAtTransients(COMMAND_T*)
 		double LastCurPos;
 		while (CurPos<=(SelItemLen+SelItemPos))
 		{
-			//
-			//if (NumSplits>0) 
 			LastCurPos=CurPos;
 			Main_OnCommand(40375,0); // go to next transient in item
 			Main_OnCommand(40012,0); // split at edit cursor
 			CurPos=GetCursorPosition();
 			
-			if (LastCurPos==CurPos) NumSplits++;
+			if (LastCurPos==CurPos)
+				NumSplits++;
 				
 			if (NumSplits>3) // we will believe after 3 futile iterations that this IS the last transient of the item 
-			{
-				//MessageBox(g_hwndParent,"Too many splits, likely an error!","Warning!",MB_OK);
 				break;
-			}
 		}
-
-
 	}
-	//MessageBox(g_hwndParent,"no joo t‰‰ll‰ ollaan","Warning!",MB_OK);
 	
 	delete[] MediaItemsInProject;
 	//adjustZoom(CurrentHZoom, 0, false, -1);
 	UpdateTimeline();
-	Undo_EndBlock("Split Items At Transients",0);
-	//Undo_OnStateChangeEx("Split Items At Transients",4,-1);
-	
+	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
 }
 
 void DoNudgeItemVols(bool UseConf,bool Positive,double TheNudgeAmount)
@@ -329,7 +312,7 @@ void DoNudgeItemVols(bool UseConf,bool Positive,double TheNudgeAmount)
 			} 
 		}
 	}
-	Undo_OnStateChangeEx("Nudge Item Volume",4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Nudge item volume","sws_undo"),4,-1);
 	UpdateTimeline();
 }
 
@@ -365,7 +348,7 @@ void DoNudgeTakeVols(bool UseConf,bool Positive,double TheNudgeAmount)
 			else NewVolGain=0;					
 		GetSetMediaItemTakeInfo(CurTake,"D_VOL",&NewVolGain);	
 	}
-	Undo_OnStateChangeEx("Nudge Take Volume",4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Nudge take volume","sws_undo"),4,-1);
 	UpdateTimeline();
 }
 
@@ -379,27 +362,24 @@ void DoNudgeTakeVolsUp(COMMAND_T*)
 	DoNudgeTakeVols(true,true,0.0);
 }
 
-void DoResetItemVol(COMMAND_T*)
+void DoResetItemVol(COMMAND_T* ct)
 {
 	double NewVol=1.0;
 	for (int i = 0; i < CountSelectedMediaItems(0); i++)
 		GetSetMediaItemInfo(GetSelectedMediaItem(0, i), "D_VOL", &NewVol);
-
-	Undo_OnStateChangeEx("Reset Item Volume To 0.0", UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 	UpdateTimeline();
 }
 
-void DoResetTakeVol(COMMAND_T*)
+void DoResetTakeVol(COMMAND_T* ct)
 {
 	vector<MediaItem_Take*> ProjectTakes;
 	XenGetProjectTakes(ProjectTakes,true,true);
-	int i;
+	int i; 
+	double NewVol=1.0;
 	for (i=0;i<(int)ProjectTakes.size();i++)
-	{
-		double NewVol=1.0;
 		GetSetMediaItemTakeInfo(ProjectTakes[i],"D_VOL",&NewVol);
-	}
-	Undo_OnStateChangeEx("Reset Take Volume To 0.0",4,-1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
 	UpdateTimeline();
 }
 
@@ -453,8 +433,6 @@ void InitFFTWNDBox(HWND hwnd, char *buf)
 
 void DoCSoundPvoc()
 {
-	//
-	
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	MediaItem_Take* CurTake;
@@ -463,16 +441,11 @@ void DoCSoundPvoc()
 	
 	bool ItemSelected=false;
 	bool FirstSelFound=false;
-	int i;
-	int j;
+	int i, j;
 	for (i=0;i<GetNumTracks();i++)
 	{
 		MunRaita = CSurf_TrackFromID(i+1,FALSE);
 		numItems=GetTrackNumMediaItems(MunRaita);
-		
-		
-
-		
 		for (j=0;j<numItems;j++)
 		{
 			CurItem = GetTrackMediaItem(MunRaita,j);
@@ -485,13 +458,12 @@ void DoCSoundPvoc()
 					ThePCMSource=(PCM_source*)GetSetMediaItemTakeInfo(CurTake,"P_SOURCE",NULL);
 					FirstSelFound = (ThePCMSource && ThePCMSource->GetFileName());				
 				}
-				
 			} 
-
-			if (FirstSelFound) break;
+			if (FirstSelFound)
+				break;
 		}
-		
-		if (FirstSelFound) break;
+		if (FirstSelFound)
+			break;
 	}
 
 	double StretchFact=g_last_PVOC_Params.StretchFact;
@@ -517,13 +489,11 @@ void DoCSoundPvoc()
 	int SourceChans=ThePCMSource->GetNumChannels();
 	double MediaOffset=*(double*)GetSetMediaItemTakeInfo(CurTake,"D_STARTOFFS",NULL);
 	MediaItem_Take *OldTake=CurTake;
-	//MessageBox(g_hwndParent,g_last_PVOC_Params.fftSize,"info",MB_OK);
 	int FFTSize=g_last_PVOC_Params.fftSize;
 	//JFB ThePCMSource->GetFileName() validity checked above..
 	sprintf(CsCMDline,"csound -d -U pvanal -n%d -b%f -d%f \"%s\" \"%s\"",FFTSize, MediaOffset,ItemLen,ThePCMSource->GetFileName(), CsAnalFilePath);
 	bool CsoundSuccesfull=false;
-	//MessageBox(g_hwndParent,CsCMDline,"info",MB_OK);
-	SetWindowText(g_hPVOCconfDlg,"Analyzing sound...");
+	SetWindowText(g_hPVOCconfDlg, __LOCALIZE("Analyzing sound...","sws_DLG_123"));
 
 	if(CreateProcess(0, CsCMDline, 0, 0, FALSE, CREATE_NO_WINDOW, 0, 0, &si, &pi))
 	{
@@ -534,8 +504,7 @@ void DoCSoundPvoc()
 		{
 			CsoundSuccesfull=false;
 		}
-		//MessageBox(g_hwndParent,"csound anal finished!","info",MB_OK);
-		SetWindowText(g_hPVOCconfDlg,"Analyzing finished!");
+		SetWindowText(g_hPVOCconfDlg, __LOCALIZE("Analysis finished!","sws_DLG_123"));
 		CloseHandle(pi.hProcess);
 		CloseHandle(pi.hThread);
 		//CsCMDline="csound --omacro:STRETCHFACT=2.0 --smacro:OUTDUR=12.5 --omacro:PITCHFACT=1.0 -o""C:/ReaperPlugins/koe1.wav"" ""C:/ReaperPlugins/pieru1.csd""";
@@ -558,7 +527,7 @@ void DoCSoundPvoc()
 		sprintf(CSDFileName,"\"%s/Plugins/PVOCStretch.csd\"",GetExePath());
 		sprintf(CsCMDline,"csound --omacro:STRETCHFACT=%f --omacro:INPVFILE=\"%s\" --smacro:NUMINCHANS=%d --smacro:OUTDUR=%f --omacro:PITCHFACT=%f -fo\"%s\" %s",
 			StretchFact,CsAnalFilePath,SourceChans,OutDur,PitchFact,ProjectPath,CSDFileName);
-		SetWindowText(g_hPVOCconfDlg,"Processing sound...");
+		SetWindowText(g_hPVOCconfDlg, __LOCALIZE("Processing sound...","sws_DLG_123"));
 		Sleep(300);
 		if(CreateProcess(0, CsCMDline, 0, 0, FALSE, CREATE_NO_WINDOW, 0, 0, &si, &pi))
 		{
@@ -568,12 +537,11 @@ void DoCSoundPvoc()
 			{
 				CsoundSuccesfull=false;
 			}
-			//MessageBox(g_hwndParent,"csound process finished!","info",MB_OK);
 			CloseHandle(pi.hProcess);
 			CloseHandle(pi.hThread);
 			if (TheResult==WAIT_OBJECT_0)
 			{
-				SetWindowText(g_hPVOCconfDlg,"Processing finished!");
+				SetWindowText(g_hPVOCconfDlg, __LOCALIZE("Processing finished!","sws_DLG_123"));
 					int LastTake=GetMediaItemNumTakes(CurItem);
 				//
 					MediaItem_Take *NewMediaTake=AddTakeToMediaItem(CurItem);
@@ -591,9 +559,10 @@ void DoCSoundPvoc()
 				}
 				Main_OnCommand(40047,0); // build any missing peaks
 				SetForegroundWindow(g_hwndParent);
-				Undo_OnStateChangeEx("Phase Vocode Item As New Take",4,-1);
-			} else MessageBox(g_hwndParent,"Csound processed too long!","Error",MB_OK);
-			//InsertMedia("C:/ReaperPlugins/koe1.wav",0);
+				Undo_OnStateChangeEx(__LOCALIZE("Phase vocode item as new take","sws_undo"),4,-1);
+			} 
+			else
+				MessageBox(g_hwndParent, __LOCALIZE("Csound processed too long!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		}
 	}
 	UpdateTimeline();
@@ -660,7 +629,7 @@ void DoShowPVocDlg(COMMAND_T*)
 
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_CSPVOC_CONF), g_hwndParent, CSPVOCItemDlgProc);
 #else
-	MessageBox(g_hwndParent, "Not supported on OSX, sorry!", "Unsupported", MB_OK);
+	MessageBox(g_hwndParent, __LOCALIZE("Not supported on OSX, sorry!", "sws_mbox"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);
 #endif
 }
 
@@ -885,7 +854,7 @@ void DoRandomizePositions2()
 	}
 
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Randomize Item Positions",4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Randomize item positions","sws_undo"),4,-1);
 }
 
 WDL_DLGRET RandomizeItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -1001,7 +970,8 @@ void CreateAutomationData()
 		j=j+Perse;
 		g_ClipBFullBuf[j+1]='\0';
 		j++;
-		if (j>500000) MessageBox(g_hwndParent,"too much into clipboard buffer!","Error",MB_OK);
+		if (j>500000)
+			MessageBox(g_hwndParent, __LOCALIZE("Too much into clipboard buffer!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		//strncat(FullBuf,LineBuf,256);
 		
 	}
@@ -1303,7 +1273,7 @@ WDL_DLGRET TakeMixerDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 					UpdateTimeline();
 					break;
 				case IDOK:
-					Undo_OnStateChangeEx("Change take vol/pan",4,-1);
+					Undo_OnStateChangeEx(__LOCALIZE("Set take vol/pan","sws_undo"),4,-1);
 					EndDialog(hwnd,0);
 					break;
 				case IDCANCEL:
@@ -1359,7 +1329,7 @@ void DoShowTakeMixerDlg(COMMAND_T*)
 	g_TargetItem = NULL;
 	
 	if (CountSelectedMediaItems(NULL) != 1) {
-		MessageBox(g_hwndParent, "Please select only one item", "Take Mixer Error", MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("Please select only one item","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		return;
 	}
 
@@ -1415,7 +1385,7 @@ void DoSplitAndChangeLen(bool BeatBased)
 
 	Main_OnCommand(40061,0); // split item at time selection
 	Main_OnCommand(40006,0); // remove selected items
-	Undo_EndBlock("Erase time from item",0);
+	Undo_EndBlock(__LOCALIZE("Erase time from item","sws_undo"),0);
 	GetSet_LoopTimeRange(true,false,&StoredTimeSelStart,&StoredTimeSelEnd,false);
 }
 
@@ -1475,7 +1445,7 @@ void DoInsertMediaFromClipBoard(COMMAND_T*)
 		CloseClipboard();
 	}
 #else
-	MessageBox(g_hwndParent, "Not supported on OSX, sorry!", "Unsupported", MB_OK);
+	MessageBox(g_hwndParent, __LOCALIZE("Not supported on OSX, sorry!", "sws_mbox"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);
 #endif
 }
 
@@ -1598,7 +1568,7 @@ WDL_DLGRET TakeFinderDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 			char labtxt[256];
 			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
 			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
-			sprintf(labtxt,"Search from %d items",g_NumProjectItems);
+			sprintf(labtxt,__LOCALIZE_VERFMT("Search from %d items","sws_DLG_130"),g_NumProjectItems);
 			SetDlgItemText(hwnd,IDC_STATIC1,labtxt);
 			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
 			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
@@ -1614,7 +1584,7 @@ WDL_DLGRET TakeFinderDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 				if (len>0)
 				{
 					int NumMatches=PerformTakeSearch(labtxt);
-					sprintf(labtxt,"Found %d matching items",NumMatches);
+					sprintf(labtxt,__LOCALIZE_VERFMT("Found %d matching items","sws_DLG_130"),NumMatches);
 					SetDlgItemText(hwnd,IDC_STATIC1,labtxt);
 					if (NumMatches>0) 
 					{

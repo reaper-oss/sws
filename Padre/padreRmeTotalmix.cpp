@@ -28,6 +28,8 @@
 #include "stdafx.h"
 #include "padreRmeTotalmix.h"
 
+//JFB not localized: related actions are not hooked (personnal stuff?)
+
 void RmeTotalmix(RmeTotalmixCmd cmd)
 {
 	HWND hFirefaceWnd = FindWindow("Fireface Mixer Class 1", NULL);

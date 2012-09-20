@@ -45,12 +45,12 @@ void DoLaunchExtTool(COMMAND_T* t)
 	if (t->user == 1)
 	{
 		if (!DoLaunchExternalTool(g_external_app_paths.PathToTool1))
-			MessageBox(g_hwndParent,"Could not execute external tool!","Error",MB_OK);
+			MessageBox(g_hwndParent, __LOCALIZE("Could not execute external tool!","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 	}
 	else if (t->user == 2)
 	{
 		if (!DoLaunchExternalTool(g_external_app_paths.PathToTool2))
-			MessageBox(g_hwndParent,"Could not execute external tool!","Error",MB_OK);
+			MessageBox(g_hwndParent, __LOCALIZE("Could not execute external tool!","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 	}
 }
 
@@ -392,7 +392,7 @@ WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 				case IDC_EXTTOOL1BUT:
 				{
-					char* cFile = BrowseForFiles("Browse for external tool 1", NULL, NULL, false, "Executables\0*.exe\0");
+					char* cFile = BrowseForFiles(__LOCALIZE("Browse for external tool","sws_mbox"), NULL, NULL, false, "Executables\0*.exe\0");
 					if (cFile)
 					{
 						delete [] g_external_app_paths.PathToTool1;
@@ -411,7 +411,7 @@ WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 				case IDC_EXTTOOL2BUT:
 				{
-					char* cFile = BrowseForFiles("Browse for external tool 2", NULL, NULL, false, "Executables\0*.exe\0");
+					char* cFile = BrowseForFiles(__LOCALIZE("Browse for external tool","sws_mbox"), NULL, NULL, false, "Executables\0*.exe\0");
 					if (cFile)
 					{
 						delete [] g_external_app_paths.PathToTool2;
@@ -430,7 +430,7 @@ WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 				case IDC_EXTEDIT1BUT:
 				{
-					char* cFile = BrowseForFiles("Browse for external editor 1", NULL, NULL, false, "Executables\0*.exe\0");
+					char* cFile = BrowseForFiles(__LOCALIZE("Browse for external editor","sws_mbox"), NULL, NULL, false, "Executables\0*.exe\0");
 					if (cFile)
 					{
 						delete [] g_external_app_paths.PathToAudioEditor1;
@@ -443,7 +443,7 @@ WDL_DLGRET ExoticParamsDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				}
 				case IDC_EXTEDIT2BUT:
 				{
-					char* cFile = BrowseForFiles("Browse for external editor 2", NULL, NULL, false, "Executables\0*.exe\0");
+					char* cFile = BrowseForFiles(__LOCALIZE("Browse for external editor","sws_mbox"), NULL, NULL, false, "Executables\0*.exe\0");
 					if (cFile)
 					{
 						delete [] g_external_app_paths.PathToAudioEditor2;

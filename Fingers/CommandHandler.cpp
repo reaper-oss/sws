@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 #include "CommandHandler.h"
 #include "RprException.hxx"
@@ -88,7 +89,7 @@ void RprCommand::run(int flag)
     {
         if(e.notify())
         {
-            MessageBox(GetMainHwnd(), e.what(), "Error", 0);
+            MessageBox(GetMainHwnd(), e.what(), __LOCALIZE("FNG - Error","sws_mbox"), 0);
         }
     }
 

@@ -100,10 +100,10 @@ void DoMoveItemsLeftByItemLen(COMMAND_T* ct)
 		GetSetMediaItemInfo(VecItems[i], "D_POSITION", &NewPos);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), 4, -1);
+	Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS, -1);
 }
 
-void DoToggleTakesNormalize(COMMAND_T*)
+void DoToggleTakesNormalize(COMMAND_T* ct)
 {
 	WDL_PtrList<MediaItem_Take> *TheTakes=new (WDL_PtrList<MediaItem_Take>);
 	int NumActiveTakes=GetActiveTakes(TheTakes);
@@ -126,14 +126,14 @@ void DoToggleTakesNormalize(COMMAND_T*)
 				GetSetMediaItemTakeInfo(TheTakes->Get(i),"D_VOL",&TheGain);
 			}
 		}
-		Undo_OnStateChangeEx("Set take(s) to unity gain",4,-1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
 		UpdateTimeline();
-
 	}
 	else
 	{
-		Main_OnCommand(40108, 0);
-		Undo_OnStateChangeEx("Normalize take(s)",4,-1);
+		Undo_BeginBlock2(NULL);
+		Main_OnCommand(40108, 0); // normalize items
+		Undo_EndBlock2(NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
 		UpdateTimeline();
 	}
 	delete TheTakes;
@@ -142,7 +142,6 @@ void DoToggleTakesNormalize(COMMAND_T*)
 
 void DoSetVolPan(double Vol, double Pan, bool SetVol, bool SetPan)
 {
-	//
 	vector<MediaItem_Take*> TheTakes;
 	XenGetProjectTakes(TheTakes,true,true);
 	double NewVol=Vol;
@@ -153,7 +152,7 @@ void DoSetVolPan(double Vol, double Pan, bool SetVol, bool SetPan)
 		if (SetPan) GetSetMediaItemTakeInfo(TheTakes[i],"D_PAN",&NewPan);
 
 	}
-	Undo_OnStateChangeEx("Set take volume and pan",4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set take vol/pan","sws_undo"),UNDO_STATE_ITEMS,-1);
 	UpdateTimeline();
 }
 
@@ -169,7 +168,7 @@ void DoSetItemVols(double theVol)
 				GetSetMediaItemInfo(CurItem, "D_VOL", &theVol);
 		}
 	}
-	Undo_OnStateChangeEx("Set item volume", 4, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Set item volume","sws_undo"), 4, -1);
 	UpdateTimeline();
 }
 
@@ -224,7 +223,6 @@ void DoShowItemVolumeDialog(COMMAND_T*)
 
 WDL_DLGRET ItemPanVolDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	//
 	switch(Message)
     {
         case WM_INITDIALOG:
@@ -313,7 +311,7 @@ void PasteMultipletimes(int NumPastes, double TimeIntervalQN, int RepeatMode)
 		if (*pCursorMode & 8) // If "don't move cursor after paste" move the cursor back
 			SetEditCurPos(dStartTime, false, false);
 			
-		Undo_EndBlock("Repeat Paste",0);
+		Undo_EndBlock(__LOCALIZE("Repeat paste","sws_undo"),0);
 	}
 }
 
@@ -407,7 +405,7 @@ void DoChooseNewSourceFileForSelTakes(COMMAND_T* ct)
 	if (NumActiveTakes>0)
 	{
 		MediaItem_Take* CurTake;
-		char* cFileName = BrowseForFiles("Choose new source file", NULL, NULL, false, plugin_getFilterList());
+		char* cFileName = BrowseForFiles(__LOCALIZE("Choose new source file","sws_mbox"), NULL, NULL, false, plugin_getFilterList());
 		if (cFileName)
 		{
 			Main_OnCommand(40440,0); // Selected Media Offline
@@ -444,7 +442,7 @@ void DoChooseNewSourceFileForSelTakes(COMMAND_T* ct)
 			free(cFileName);
 			Main_OnCommand(40047,0); // Build any missing peaks
 			Main_OnCommand(40439,0); // Selected Media Online
-			Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
+			Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
 			UpdateTimeline();
 		}
 	}
@@ -481,7 +479,7 @@ bool DoLaunchExternalTool(const char *ExeFilename)
 	free(cFile);
 	return bRet;
 #else
-	MessageBox(g_hwndParent, "Not supported on OSX (yet), sorry!", "Unsupported", MB_OK);
+	MessageBox(g_hwndParent, __LOCALIZE("Not supported on OSX, sorry!", "sws_mbox"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);
 	return false;
 #endif
 }
@@ -521,7 +519,6 @@ void DoSelectEveryNthItemOnSelectedTracks(int Step,int ItemOffset)
 
 void DoSelectSkipSelectOnSelectedItems(int Step,int ItemOffset)
 {
-	//
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
 	
@@ -529,14 +526,11 @@ void DoSelectSkipSelectOnSelectedItems(int Step,int ItemOffset)
 	
 	//Main_OnCommand(40289,0); // Unselect all items
 	bool NewSelectedStatus=false;
-	int flags; 
-	int i;
-	int j;
+	int flags, i, j;
 	for (i=0;i<GetNumTracks();i++)
 	{
 		GetTrackInfo(i,&flags);
 		//if (flags & 0x02)
-		if (TRUE==TRUE)
 		{ 
 			MunRaita = CSurf_TrackFromID(i+1,FALSE);
 			int ItemCounter=0;
@@ -547,22 +541,19 @@ void DoSelectSkipSelectOnSelectedItems(int Step,int ItemOffset)
 				bool ItemSelected=*(bool*)GetSetMediaItemInfo(CurItem,"B_UISEL",NULL);
 				if (ItemSelected)
 				{
-				if ((ItemCounter % Step)==ItemOffset)
-				{
-					//
-					NewSelectedStatus=TRUE;
-					GetSetMediaItemInfo(CurItem,"B_UISEL",&NewSelectedStatus);
-				} else
-				{
-					NewSelectedStatus=FALSE;
-					GetSetMediaItemInfo(CurItem,"B_UISEL",&NewSelectedStatus);	
+					if ((ItemCounter % Step)==ItemOffset)
+					{
+						NewSelectedStatus=TRUE;
+						GetSetMediaItemInfo(CurItem,"B_UISEL",&NewSelectedStatus);
+					}
+					else
+					{
+						NewSelectedStatus=FALSE;
+						GetSetMediaItemInfo(CurItem,"B_UISEL",&NewSelectedStatus);	
+					}
+					ItemCounter++;
 				}
-
-				ItemCounter++;
-				}
-
-
-		}
+			}
 		}
 	}
 	UpdateTimeline();
@@ -597,7 +588,6 @@ WDL_DLGRET SelEveryNthDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
             {
                 case IDOK:
 					{
-						//MessageBox(g_hwndParent,"LoL","info",MB_OK);
 						char TempString[32];
 						GetDlgItemText(hwnd,IDC_EDIT1,TempString,31);
 						NumSteps=atoi(TempString);
@@ -611,8 +601,7 @@ WDL_DLGRET SelEveryNthDialogProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 						return 0;
 					}
 				case IDCANCEL:
-					{
-				
+					{			
 						EndDialog(hwnd,0);
 						return 0;
 					}
@@ -641,7 +630,6 @@ int *TakeIndexes;
 
 bool GenerateShuffledTakeRandomTable(int *IntTable,int numItems,int badFirstNumber)
 {
-	//
 	int *CheckTable=new int[1024];
 	bool GoodFound=FALSE;
 	int IterCount=0;
@@ -655,53 +643,40 @@ bool GenerateShuffledTakeRandomTable(int *IntTable,int numItems,int badFirstNumb
 	
 	for (i=0;i<numItems;i++)
 	{
-		//
 		GoodFound=FALSE;
 		while (!GoodFound)
 		{
 			rndInt=rand() % numItems;
-			if ((CheckTable[rndInt]==0) && (rndInt!=badFirstNumber) && (i==0)) GoodFound=TRUE;
-			if ((CheckTable[rndInt]==0) && (i>0)) GoodFound=TRUE;
-			
+			if ((CheckTable[rndInt]==0) && (rndInt!=badFirstNumber) && (i==0))
+				GoodFound=TRUE;
+			if ((CheckTable[rndInt]==0) && (i>0))
+				GoodFound=TRUE;
 			
 			IterCount++;
 			if (IterCount>1000000) 
-			{
-				MessageBox(g_hwndParent,"Shuffle Random Table Generator Probably Failed, over 1000000 iterations!","Error",MB_OK);
 				break;
-			}
 		}
 		if (GoodFound) 
 		{
 			IntTable[i]=rndInt;
 			CheckTable[rndInt]=1;
 		}
-		
-
 	}
-
-
 	delete[] CheckTable;
 	return FALSE;
-
 }
 
 void DoShuffleSelectTakesInItems(COMMAND_T* ct)
 {
-	//
 	MediaTrack* MunRaita;
 	MediaItem* CurItem;
-	
-	int numItems;;
-	
-	
+	int numItems, i, j;
 	bool ItemSelected=false;
 	int ValidNumTakesInItems=0;
 	int NumSelectedItemsFound=0;
 	int TestNumTakes=0;
 	bool ValidNumTakes=false;
-	int i;
-	int j;
+
 	for (i=0;i<GetNumTracks();i++)
 	{
 		MunRaita = CSurf_TrackFromID(i+1,FALSE);
@@ -728,15 +703,11 @@ void DoShuffleSelectTakesInItems(COMMAND_T* ct)
 					else
 						ValidNumTakes = true;
 				}
-
 				NumSelectedItemsFound++;
 			}
 		}
 	}
 	int TakeToChoose=0;
-	if (!ValidNumTakes)
-		MessageBox(g_hwndParent,"Non-valid number of takes in items!","Error",MB_OK);
-	
 	if (ValidNumTakes)
 	{
 		TakeIndexes=new int[1024];
@@ -768,7 +739,7 @@ void DoShuffleSelectTakesInItems(COMMAND_T* ct)
 			}
 		}
 		delete[] TakeIndexes;
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),4,-1);
+		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ITEMS,-1);
 		UpdateTimeline();
 	}
 	
@@ -883,7 +854,6 @@ void DoApplyTrackFXStereoAndResetVol(COMMAND_T* ct)
 	double dVol = 1.0;
 	for (int i = 0; i < CountSelectedMediaItems(0); i++)
 		GetSetMediaItemInfo(GetSelectedMediaItem(0, i), "D_VOL", &dVol);
-
 	Undo_EndBlock(SWS_CMD_SHORTNAME(ct), UNDO_STATE_ITEMS);
 }
 
@@ -1078,11 +1048,11 @@ void DoOpenAssociatedRPP(COMMAND_T*)
 			char RPPFileNameBuf[1024];
 			sprintf(RPPFileNameBuf,"%s\\reaper.exe \"%s.RPP\"",GetExePath(), ThePCMSource->GetFileName());
 			if (!DoLaunchExternalTool(RPPFileNameBuf))
-				MessageBox(g_hwndParent,"Could not launch REAPER.","Error",MB_OK);
+				MessageBox(g_hwndParent, __LOCALIZE("Could not launch REAPER!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		}
 	}
 	else
-		MessageBox(g_hwndParent,"None or more than 1 item selected","Error",MB_OK);
+		MessageBox(g_hwndParent, __LOCALIZE("None or more than 1 item selected","sws_mbox"),__LOCALIZE("Xenakios - Error","sws_mbox") ,MB_OK);
 	delete TheTakes;
 }
 
@@ -1143,7 +1113,6 @@ void RepositionItems(double theGap,int ModeA,int ModeB,int ModeC) // ModeA : gap
 						OldPos=*(double*)GetSetMediaItemInfo(MediaItemsOnTrack[PrevSelItemInd],"D_POSITION",NULL);
 						NewPos=OldPos+theGap;
 					}
-				
 				}
 				if (ModeA==1)
 				{
@@ -1197,7 +1166,7 @@ WDL_DLGRET ReposItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 					if (IsDlgButtonChecked(hwnd,IDC_RADIO2) == BST_CHECKED) modeA = 1;
 					RepositionItems(theGap,modeA,0,0);
 					UpdateTimeline();
-					Undo_OnStateChangeEx("Reposition Items",4,-1);
+					Undo_OnStateChangeEx(__LOCALIZE("Reposition items","sws_undo"),UNDO_STATE_ITEMS,-1);
 					g_ReposItemsParams.Gap=theGap;
 					g_ReposItemsParams.ModeA=modeA;
 					g_ReposItemsParams.ModeB=0;
@@ -1216,7 +1185,6 @@ WDL_DLGRET ReposItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
 
 void DoReposItemsDlg(COMMAND_T*)
 {
-	//
 	if (g_FirstReposItemsRun==true)
 	{
 		g_ReposItemsParams.Gap=1.0;
@@ -1225,7 +1193,6 @@ void DoReposItemsDlg(COMMAND_T*)
 		g_ReposItemsParams.ModeC=0; // seconds
 		g_FirstReposItemsRun=false;
 	}
-
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_REPOSITEMS), g_hwndParent, ReposItemsDlgProc);
 }
 
@@ -1261,7 +1228,9 @@ void DoSpeadSelItemsOverNewTx(COMMAND_T* ct)
 		TrackList_AdjustWindows(false);
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(ct),UNDO_STATE_ALL,-1);
 
-	} else MessageBox(g_hwndParent,"No or only one item selected!","Error",MB_OK);
+	}
+	else
+		MessageBox(g_hwndParent, __LOCALIZE("No or only one item selected!","sws_mbox"), __LOCALIZE("Xenakios - Error","sws_mbox"), MB_OK);
 		
 }
 
@@ -1288,7 +1257,6 @@ int OpenInExtEditor(int editorIdx)
 			DoLaunchExternalTool(ExeString);
 		}
 	}
-
 	return -666;	
 }
 
@@ -1333,7 +1301,6 @@ void DoMatrixItemImplode(COMMAND_T* ct)
 	*/
 	//40058 // paste
 	Undo_EndBlock(SWS_CMD_SHORTNAME(ct),0);
-	//Undo_OnStateChangeEx("Matrix implode items",4,-1);
 }
 
 double g_swingBase=1.0/4.0;
@@ -1366,7 +1333,7 @@ void PerformSwingItemPositions(double swingBase,double swingAmt)
 			GetSetMediaItemInfo(TheItems[i],"D_POSITION",&itempos);
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Swing item positions",4,-1);
+	Undo_OnStateChangeEx(__LOCALIZE("Swing item positions","sws_undo"),UNDO_STATE_ITEMS,-1);
 }
 
 WDL_DLGRET SwingItemsDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
@@ -1446,7 +1413,6 @@ void DoTimeSelAdaptDelete(COMMAND_T*)
 
 void DoDeleteMutedItems(COMMAND_T* ct)
 {
-	
 	Undo_BeginBlock();
 	Main_OnCommand(40289,0); // unselect all items
 	vector<MediaItem*> pitems;

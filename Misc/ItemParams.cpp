@@ -29,6 +29,8 @@
 #include "stdafx.h"
 #include "ItemParams.h"
 #include "TrackSel.h"
+#include "../reaper/localize.h"
+
 
 void TogItemMute(COMMAND_T* = NULL)
 {	// Toggle item's mutes on selected tracks
@@ -56,7 +58,7 @@ void DelAllItems(COMMAND_T* = NULL)
 				DeleteTrackMediaItem(tr, GetTrackMediaItem(tr, 0));
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Delete all items on selected track(s)", UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Delete all items on selected tracks","sws_undo"), UNDO_STATE_ITEMS, -1);
 }
 
 // I rarely want to toggle the loop item section, I just want to reset it!
@@ -114,7 +116,7 @@ void MoveItemLeftToCursor(COMMAND_T* = NULL)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Move selected item(s) left edge to edit cursor", UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Move selected items left edge to edit cursor","sws_undo"), UNDO_STATE_ITEMS, -1);
 }
 
 void MoveItemRightToCursor(COMMAND_T* = NULL)
@@ -136,7 +138,7 @@ void MoveItemRightToCursor(COMMAND_T* = NULL)
 		}
 	}
 	UpdateTimeline();
-	Undo_OnStateChangeEx("Move selected item(s) right edge to edit cursor", UNDO_STATE_ITEMS, -1);
+	Undo_OnStateChangeEx(__LOCALIZE("Move selected items right edge to edit cursor","sws_undo"), UNDO_STATE_ITEMS, -1);
 }
 
 void InsertFromTrackName(COMMAND_T*)
@@ -487,7 +489,7 @@ void SetItemLen(COMMAND_T* t)
 	static double dLen = 1.0;
 	char reply[50];
 	sprintf(reply, "%f", dLen);
-	if (GetUserInputs("Set selected items length", 1, "New item length (s)", reply, 50))
+	if (GetUserInputs(__LOCALIZE("Set selected items length","sws_mbox"), 1, __LOCALIZE("New item length (s)","sws_mbox"), reply, 50))
 	{
 		dLen = atof(reply);
 		if (dLen <= 0.0)

@@ -232,7 +232,6 @@ void DoRecallSelectedTrackHeights(COMMAND_T*);
 void DoSelectTracksWithNoItems(COMMAND_T*);
 void DoSelectTracksContainingBuss(COMMAND_T*);
 void DoUnSelectTracksContainingBuss(COMMAND_T*);
-void DoSelectLastTrackOfFolder(COMMAND_T*);
 void DoSetSelectedTrackNormal(COMMAND_T*);
 void DoSetSelectedTracksAsFolder(COMMAND_T*);
 void DoRenameTracksDlg(COMMAND_T*);

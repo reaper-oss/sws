@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../reaper/localize.h"
 
 #include "CommandHandler.h"
 #include "GrooveTemplates.hxx"
@@ -38,18 +39,18 @@ static void SaveGrooveToFile(int flags, void *data)
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 	if(me->isGrooveEmpty())
 	{
-		MessageBox(GetMainHwnd(), "No groove loaded.", "Error", 0);
+		MessageBox(GetMainHwnd(), __LOCALIZE("No groove loaded!","sws_mbox"), __LOCALIZE("FNG - Error","sws_mbox"), 0);
 		return;
 	}
 	
 	char cFilename[256];
-	if (BrowseForSaveFile("Select groove template", me->GetGrooveDir().c_str(), NULL,
+	if (BrowseForSaveFile(__LOCALIZE("Select groove template","sws_mbox"), me->GetGrooveDir().c_str(), NULL,
 						  "Reaper Groove Templates (*.rgt)\0*.rgt\0All Files (*.*)\0*.*\0", cFilename, 256))
 	{
 		std::string errMessage;
 		std::string fName = cFilename;
 		if(!me->SaveGroove(fName, errMessage))
-			MessageBox(GetMainHwnd(), errMessage.c_str(), "Error", 0);
+			MessageBox(GetMainHwnd(), errMessage.c_str(), __LOCALIZE("FNG - Error","sws_mbox"), 0);
 		else
 			me->GetGrooveDialog()->Refresh();
 	}
@@ -65,7 +66,7 @@ static void LoadGrooveFromFile(int flags, void *data)
 		std::string errMessage;
 		std::string fName = cFilename;
 		if(!me->LoadGroove(fName, errMessage))
-			MessageBox(GetMainHwnd(), errMessage.c_str(), "Error", 0);
+			MessageBox(GetMainHwnd(), errMessage.c_str(), __LOCALIZE("FNG - Error","sws_mbox"), 0);
 		free(cFilename);
 	}
 }
@@ -75,10 +76,10 @@ static void ShowGroove(int flags, void *data)
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 	if(me->isGrooveEmpty())
 	{
-		MessageBox(GetMainHwnd(), "No groove loaded.", "Error",0);
+		MessageBox(GetMainHwnd(), __LOCALIZE("No groove loaded!","sws_mbox"), __LOCALIZE("FNG - Error","sws_mbox"),0);
 		return;
 	}
-	MessageBox(GetMainHwnd(),me->GrooveToString().c_str(), "Groove",0);
+	MessageBox(GetMainHwnd(), me->GrooveToString().c_str(), __LOCALIZE("Groove","sws_mbox"), 0);
 }
 
 static void MarkGroove(int flags, void *data)

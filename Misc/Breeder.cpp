@@ -45,42 +45,33 @@ WDL_DLGRET BRConvertProjectMarkersToTempoMarkersProc(HWND hwnd, UINT uMsg, WPARA
 //WDL_DLGRET BRSelectAdjustTempoPointsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 																  
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-//								  		ACTIONS
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//							ACTIONS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void BRSplitSelectedItemsAtTempoMarkers(COMMAND_T*)
+void BRSplitSelectedItemsAtTempoMarkers(COMMAND_T* ct)
 {
-	// Get selected items count
-	int itemCount = CountSelectedMediaItems(NULL);
-	if (itemCount == 0)
-		return;	
-	
-	// Get selected items
-	vector<MediaItem*> selectedItems;
-	for (int i = 0; i < itemCount; ++i)
-		selectedItems.push_back(GetSelectedMediaItem(NULL, i));
-	
-	// Loop through selected items 
-	MediaItem* split;
-	MediaItem* item;
-	double iStart, iEnd, tPos;
+	// Get selected items 	
+	WDL_TypedBuf<MediaItem*> selectedItems;
+	SWS_GetSelectedMediaItems(&selectedItems);
+	if (selectedItems.GetSize() == 0)
+		return;
 
+	// Loop through selected items 
 	Undo_BeginBlock2(NULL);
 	
-	for (int i = 0; i < itemCount; ++i)
+	for (int i = 0; i < selectedItems.GetSize(); ++i)
 	{	
-		item = selectedItems[i];
-		iStart = GetMediaItemInfo_Value(item, "D_POSITION");
-		iEnd = iStart + GetMediaItemInfo_Value(item, "D_LENGTH");
-		tPos = iStart - 1;
+		MediaItem* newItem = selectedItems.Get()[i];
+		double iStart = GetMediaItemInfo_Value(newItem, "D_POSITION");
+		double iEnd = iStart + GetMediaItemInfo_Value(newItem, "D_LENGTH");
+		double tPos = iStart - 1;
 		
 		// Split item currently in the loop
 		while (true)
 		{	
-			split = SplitMediaItem(item, tPos);
-			if (split !=0)
-				item = split;
+			if ((newItem = SplitMediaItem(newItem, tPos)) == 0 )
+				newItem = selectedItems.Get()[i];
 		
 			tPos = TimeMap2_GetNextChangeTime(NULL, tPos);
 			if (tPos > iEnd || tPos == -1 )
@@ -88,7 +79,7 @@ void BRSplitSelectedItemsAtTempoMarkers(COMMAND_T*)
 		}
 	}
 	UpdateArrange();
-	Undo_EndBlock2 (NULL, __LOCALIZE("Split selected items at tempo markers","sws_undo"), UNDO_STATE_ALL);
+	Undo_EndBlock2 (NULL, SWS_CMD_SHORTNAME(ct), UNDO_STATE_ALL);
 };
 
 
@@ -105,6 +96,7 @@ void BRConvertProjectMarkersToTempoMarkersAction(COMMAND_T* = NULL)
 	if (g_convertProjectMarkersDialog)
 	{	
 		g_convertProjectMarkersDialog = false;
+		KillTimer(hwnd, 1);	
 		ShowWindow(hwnd, SW_HIDE);
 	}
 	
@@ -118,6 +110,7 @@ void BRConvertProjectMarkersToTempoMarkersAction(COMMAND_T* = NULL)
 				*(int*)GetConfigVar("itemtimelock") = 0;
 		}	
 		g_convertProjectMarkersDialog = true;
+		SetTimer(hwnd, 1, 100, NULL);
 		ShowWindow(hwnd, SW_SHOW);
 		SetFocus(hwnd);
 	}
@@ -128,12 +121,15 @@ void BRMoveSelTempoPoints(COMMAND_T* t )
 { 
 	// Get amount of movement to be performed on the selected tempo points
 	double timeDiff = (int)t->user;
+	
 	if (t->user == 5 || t->user == -5)
-			timeDiff = 1 / GetHZoomLevel() * timeDiff / 5;
+		timeDiff = 1 / GetHZoomLevel() * timeDiff / 5;
+	
 	else if (t->user == 2 || t->user == -2)
-			timeDiff = 0.0001 * timeDiff / 2;
+		timeDiff = 0.0001 * timeDiff / 2;
+	
 	else
-			timeDiff = timeDiff/1000;
+		timeDiff = timeDiff/1000;
 	
 	// Get selected points' ID, remove first tempo marker in the project from the vector and check vector size
 	vector<int> selectedTempoPoints = BRGetSelectedTempoPoints();
@@ -305,7 +301,7 @@ void BRMoveSelTempoPoints(COMMAND_T* t )
 		// IF statement acts as a safety net for illogical calculations and reaper dislikes (it hates BPM over 960)
 		// The flow of changes must go from the later points to earlier (one of the reasons is the bug in the API that screws things up when using musical position
 		// instead of time position).
-		if (pNewBPM > 0.001 && pNewBPM <=960 && cNewBPM > 0.001 && cNewBPM <= 960 && (cTime+timeDiff) > pTime && (cTime+timeDiff) < nTime && ppPossible == true)
+		if (pNewBPM >= 0.001 && pNewBPM <=960 && cNewBPM >= 0.001 && cNewBPM <= 960 && (cTime+timeDiff) > pTime && (cTime+timeDiff) < nTime && ppPossible == true)
 		{	
 			// Set current point
 			SetTempoTimeSigMarker(NULL, selectedTempoPoints[i], cTime, -1, -1, cNewBPM, cNum, cDen, cShape);
@@ -348,7 +344,7 @@ void BRMoveSelTempoPoints(COMMAND_T* t )
 
 	// DONE!
 	UpdateTimeline();
-	Undo_EndBlock2 (NULL, __LOCALIZE("Move selected tempo points","sws_undo"), UNDO_STATE_ALL);
+	Undo_EndBlock2 (NULL, SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL);
 
 	// but not yet...warn user if some points weren't moved
 	static bool g_pointsNoMovedNoWarning;
@@ -356,11 +352,8 @@ void BRMoveSelTempoPoints(COMMAND_T* t )
 	if (selectedTempoPoints.size() > 1 && skipped != 0 && (!g_pointsNoMovedNoWarning))
 	{
 		char buffer[512] = {0};
-		if (skipped == 1)
-			_snprintf(buffer, sizeof(buffer), __LOCALIZE("%d point wasn't moved because some of the required BPM manipulations are impossible. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
-		else
-			_snprintf(buffer, sizeof(buffer), __LOCALIZE("%d points weren't moved because some of the required BPM manipulations are impossible. Would you like to be warned if it happens again?","sws_mbox"), skipped);
-		
+		_snprintf(buffer, sizeof(buffer), __LOCALIZE_VERFMT("%d of the selected points can't be moved because some of the required BPM manipulations are impossible. Would you like to be warned if it happens again?", "sws_mbox"), skipped);
+			
 		int userAnswer = ShowMessageBox(buffer, __LOCALIZE("SWS - Warning", "sws_mbox"), 4);
 		if (userAnswer == 7)
 			g_pointsNoMovedNoWarning = true;
@@ -368,7 +361,7 @@ void BRMoveSelTempoPoints(COMMAND_T* t )
 	}
 };
 
-/*
+/* 
 bool IsSelectAdjustTempoPointsVisible(COMMAND_T* = NULL)
 {
 	return g_selectAdjustTempoPointsDialog;
@@ -393,27 +386,20 @@ void BRSelectAdjustTempoPointsAction(COMMAND_T* = NULL)
 		SetFocus(hwnd);
 	}
 };
+
 */
 
 
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-//								  	VARIOUS FUNCTIONS
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//							VARIOUS FUNCTIONS
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void BRConvertProjectMarkersToTempoMarkers(int num, int den, int measure, int timeSelection, int removeMarkers)
 {
 	// Get time selection
 	double tStart, tEnd;
 	if (timeSelection == 1)
-	{
 		GetSet_LoopTimeRange2 (NULL, false, false, &tStart, &tEnd, false);
-		if (tStart == tEnd)
-			{	
-				MessageBox(g_hwndParent, __LOCALIZE("To convert only within time selection please create one.", "sws_DLG_166"), __LOCALIZE("SWS - Error", "sws_mbox"), MB_OK);	
-				return;
-			}
-	}
 		
 	// Get markers
 	vector<double> markerPositions;
@@ -541,15 +527,7 @@ void BRConvertProjectMarkersToTempoMarkers(int num, int den, int measure, int ti
 
 	// Warn user if there were tempo markers created with a BPM over 960
 	if (exceed !=0)
-	{
-		char buffer[512] = {0};
-		if (exceed == 1)
-			_snprintf(buffer, sizeof(buffer), __LOCALIZE("%d of the created tempo markers has a BPM over 960. If you try to edit it, it will revert back to 960 or lower.\n\nIt is recommended that you undo, edit project markers and try again.", "sws_DLG_166"), exceed);
-		else
-			_snprintf(buffer, sizeof(buffer), __LOCALIZE("%d of the created tempo markers have a BPM over 960. If you try to edit them, they will revert back to 960 or lower.\n\nIt is recommended that you undo, edit project markers and try again.", "sws_DLG_166"), exceed);
-		ShowMessageBox(buffer,__LOCALIZE("SWS - Warning", "sws_mbox"), 0);
-	}
-
+		ShowMessageBox(__LOCALIZE("Some of the created tempo markers have a BPM over 960. If you try to edit them, they will revert back to 960 or lower.\n\nIt is recommended that you undo, edit project markers and try again.", "sws_DLG_166"),__LOCALIZE("SWS - Warning", "sws_mbox"), 0);
 };
 
 
@@ -636,13 +614,13 @@ void BRSelectTempoPoints (int mode, // 0 to clear and 1 to invert selection, 2 t
 	
 	FreeHeapPtr(envState);	
 };
+
 */
 
 
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-//								  	DIALOG BOX PROCEDURES
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//							DIALOG BOX PROCEDURES
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Lots of code shamelessly stolen from a lot 
 // of places. :) My excuse is one of the educational nature :) If 
@@ -764,7 +742,10 @@ WDL_DLGRET BRConvertProjectMarkersToTempoMarkersProc(HWND hwnd, UINT uMsg, WPARA
 							}
 						}
 					}
-	
+					
+					if (!IsWindowEnabled(GetDlgItem(hwnd, IDC_BR_TIMESEL)))
+						timeSelection = 0;
+
 					// If all went well, start converting
 					if(wParam == IDOK && i == 0)
 					{
@@ -778,12 +759,26 @@ WDL_DLGRET BRConvertProjectMarkersToTempoMarkersProc(HWND hwnd, UINT uMsg, WPARA
 				case IDCANCEL:
 				{
 					g_convertProjectMarkersDialog = false;
+					KillTimer(hwnd, 1);
 					ShowWindow(hwnd, SW_HIDE);
 				}	
 				break;
 			}
 		}
 		break;
+
+		case WM_TIMER:
+		{  
+			double tStart, tEnd;
+			GetSet_LoopTimeRange2 (NULL, false, false, &tStart, &tEnd, false);
+				if (tStart == tEnd)
+					EnableWindow(GetDlgItem(hwnd, IDC_BR_TIMESEL), false);
+				else
+					EnableWindow(GetDlgItem(hwnd, IDC_BR_TIMESEL), true);
+			
+		}
+		break;
+
 		
 		case WM_DESTROY:
 			SaveWindowPos(hwnd, cWndPosKey);
@@ -915,7 +910,7 @@ WDL_DLGRET BRSelectAdjustTempoPointsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 			// Get number of selected points
 			vector<int> selectedPoints = BRGetSelectedTempoPoints();
 			char pointCount[1024] = {0};
-			_snprintf(pointCount, sizeof(pointCount), __LOCALIZE("SWS Select and adjust tempo markers (%d of %d points selected)","sws_DLG_167") , selectedPoints.size(), CountTempoTimeSigMarkers(NULL) );
+			_snprintf(pointCount, sizeof(pointCount), __LOCALIZE_VERFMT("SWS Select and adjust tempo markers (%d of %d points selected)","sws_DLG_167") , selectedPoints.size(), CountTempoTimeSigMarkers(NULL) );
 			SetWindowText(hwnd,pointCount);
 
 			// Set current BPM info
@@ -961,34 +956,33 @@ WDL_DLGRET BRSelectAdjustTempoPointsProc(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 */
 
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-//										EXTENSIONS STUFF
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//							EXTENSIONS STUFF
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 static COMMAND_T g_commandTable[] = 
 {
-	{ { DEFACCEL, "SWS/BR: Convert project markers to tempo markers" },				"SWS_BRCONVERTMARKERSTOTEMPO",			BRConvertProjectMarkersToTempoMarkersAction, NULL, 0, IsConvertProjectMarkerVisible },
-	{ {	DEFACCEL, "SWS/BR: Split selected items at tempo markers" },				"SWS_BRSPLITSELECTEDTEMPO",				BRSplitSelectedItemsAtTempoMarkers, },
-	
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward" },					"SWS_BRMOVETEMPOFORWARD",				BRMoveSelTempoPoints, NULL, 5},
-	{ {	DEFACCEL, "SWS/BR: Move selected tempo points back" },						"SWS_BRMOVETEMPOBACK",					BRMoveSelTempoPoints, NULL, -5},
-	
-		{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 0.1 ms" },		"SWS_BRMOVETEMPOFORWARD01",				BRMoveSelTempoPoints, NULL, 2},
-		{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 1 ms" },			"SWS_BRMOVETEMPOFORWARD1",				BRMoveSelTempoPoints, NULL, 1},
-		{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 10 ms"},			"SWS_BRMOVETEMPOFORWARD10",				BRMoveSelTempoPoints, NULL, 10},
-		{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 100 ms"},			"SWS_BRMOVETEMPOFORWARD100",			BRMoveSelTempoPoints, NULL, 100},
-		{ {	DEFACCEL, "SWS/BR: Move selected tempo points forward 1000 ms" },		"SWS_BRMOVETEMPOFORWARD1000",			BRMoveSelTempoPoints, NULL, 1000},
-		{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 0.1 ms"},			"SWS_BRMOVETEMPOBACK01",				BRMoveSelTempoPoints, NULL, -2},
-		{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 1 ms"},				"SWS_BRMOVETEMPOBACK1",					BRMoveSelTempoPoints, NULL, -1},
-		{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 10 ms"},				"SWS_BRMOVETEMPOBACK10",				BRMoveSelTempoPoints, NULL, -10},
-		{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 100 ms"},			"SWS_BRMOVETEMPOBACK100",				BRMoveSelTempoPoints, NULL, -100},
-		{ {	DEFACCEL, "SWS/BR: Move selected tempo points back 1000 ms"},			"SWS_BRMOVETEMPOBACK1000",				BRMoveSelTempoPoints, NULL, -1000},
-	
-//	{ {	DEFACCEL, "SWS/BR: Select and adjust tempo markers" },						"SWS_BRADJUSTSELTEMPO",					BRSelectAdjustTempoPointsAction, NULL, 0, IsSelectAdjustTempoPointsVisible },
-	
+	{ { DEFACCEL, "SWS/BR: Convert project markers to tempo markers" },					"SWS_BRCONVERTMARKERSTOTEMPO",		BRConvertProjectMarkersToTempoMarkersAction, NULL, 0, IsConvertProjectMarkerVisible },
+	{ { DEFACCEL, "SWS/BR: Split selected items at tempo markers" },					"SWS_BRSPLITSELECTEDTEMPO",			BRSplitSelectedItemsAtTempoMarkers, },
 
+	{ { DEFACCEL, "SWS/BR: Move selected tempo points forward" },						"SWS_BRMOVETEMPOFORWARD",			BRMoveSelTempoPoints, NULL, 5},
+	{ { DEFACCEL, "SWS/BR: Move selected tempo points back" },							"SWS_BRMOVETEMPOBACK",				BRMoveSelTempoPoints, NULL, -5},
+		
+		{ { DEFACCEL, "SWS/BR: Move selected tempo points forward 0.1 ms" },			"SWS_BRMOVETEMPOFORWARD01",			BRMoveSelTempoPoints, NULL, 2},
+		{ { DEFACCEL, "SWS/BR: Move selected tempo points forward 1 ms" },				"SWS_BRMOVETEMPOFORWARD1",			BRMoveSelTempoPoints, NULL, 1},
+		{ { DEFACCEL, "SWS/BR: Move selected tempo points forward 10 ms"},				"SWS_BRMOVETEMPOFORWARD10",			BRMoveSelTempoPoints, NULL, 10},
+		{ { DEFACCEL, "SWS/BR: Move selected tempo points forward 100 ms"},				"SWS_BRMOVETEMPOFORWARD100",		BRMoveSelTempoPoints, NULL, 100},
+		{ { DEFACCEL, "SWS/BR: Move selected tempo points forward 1000 ms" },			"SWS_BRMOVETEMPOFORWARD1000",		BRMoveSelTempoPoints, NULL, 1000},
+		{ { DEFACCEL, "SWS/BR: Move selected tempo points back 0.1 ms"},				"SWS_BRMOVETEMPOBACK01",			BRMoveSelTempoPoints, NULL, -2},
+		{ { DEFACCEL, "SWS/BR: Move selected tempo points back 1 ms"},					"SWS_BRMOVETEMPOBACK1",				BRMoveSelTempoPoints, NULL, -1},
+		{ { DEFACCEL, "SWS/BR: Move selected tempo points back 10 ms"},					"SWS_BRMOVETEMPOBACK10",			BRMoveSelTempoPoints, NULL, -10},
+		{ { DEFACCEL, "SWS/BR: Move selected tempo points back 100 ms"},				"SWS_BRMOVETEMPOBACK100",			BRMoveSelTempoPoints, NULL, -100},
+		{ { DEFACCEL, "SWS/BR: Move selected tempo points back 1000 ms"},				"SWS_BRMOVETEMPOBACK1000",			BRMoveSelTempoPoints, NULL, -1000},
+
+//	{ { DEFACCEL, "SWS/BR: Select and adjust tempo markers" },							"SWS_BRADJUSTSELTEMPO",				BRSelectAdjustTempoPointsAction, NULL, 0, IsSelectAdjustTempoPointsVisible },
+	
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 //!WANT_LOCALIZE_1ST_STRING_END

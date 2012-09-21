@@ -30,17 +30,41 @@
 class SWS_RuleItem
 {
 public:
-	SWS_RuleItem(const char* str, int col, const char* icon):m_str(str),m_col(col),m_icon(icon) {}
-	WDL_String m_str;
-	int m_col;
+    // @param type
+    //     The type of the item that you want to change the color
+    //     Options Track, Region or Marker
+    // @param filter
+    //     The string that is used to filter the different tracks, regions or markers
+    // @param color
+    //     The color of the item
+    // @param icon
+    //     The icon used for this item (tracks only)
+	SWS_RuleItem(const char* type, const char* filter, int _color, const char* icon)
+        :
+    m_str_type(type),
+    m_str_filter(filter),
+    m_color(_color),
+    m_icon(icon) 
+    {}
+	
+    WDL_String m_str_type;
+    WDL_String m_str_filter;
+	int m_color;
 	WDL_String m_icon;
 };
 
 class SWS_RuleTrack
 {
 public:
-	SWS_RuleTrack(MediaTrack* tr):m_pTr(tr), m_col(0), m_bColored(false), m_bIconed(false) {}
-	MediaTrack* m_pTr;
+	SWS_RuleTrack(MediaTrack* tr)
+        :
+    m_pTr(tr), 
+    m_col(0), 
+    m_bColored(false), 
+    m_bIconed(false) 
+    {}
+	
+    MediaTrack* m_pTr;
 	int m_col;
 	bool m_bColored;
 	WDL_String m_icon;

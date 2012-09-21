@@ -796,7 +796,7 @@ void SaveSnapshot(int slot)
 			if (g_ss.Get()->m_snapshots.Get(i)->m_iSlot > slot)
 				break;
 		char str[20];
-		sprintf(str, "Mix %d", slot);
+		sprintf(str, "Mix %d", slot);//JFB!!!
 		g_ss.Get()->m_pCurSnapshot = g_ss.Get()->m_snapshots.Insert(i, new Snapshot(slot, g_iMask, g_bSelOnly_OnSave, str));
 	}
 	else // Overwriting slot

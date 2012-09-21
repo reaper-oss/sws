@@ -196,6 +196,7 @@ TrackSnapshot::TrackSnapshot(MediaTrack* tr, int mask)
 		GetFXChain(tr, &m_sFXChain);
 	
 	// Get the "std" envelopes
+	// JFB note: localized env names are retrieved in GetSetEnvelope()
 	if (mask & VOL_MASK)
 	{
 		GetSetEnvelope(tr, &m_sVolEnv, "Volume (Pre-FX)", false);
@@ -400,26 +401,35 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 	MediaTrack* tr = GuidToTrack(&m_guid);
 
 	if (m_iTrackNum == 0)
-		details->Append("Master Track:\r\n");
+	{
+		details->Append(__LOCALIZE("Master Track","sws_DLG_101"));
+		details->Append(":\r\n");
+	}
 	else if (tr)
 	{
 		char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
 		int iNum = CSurf_TrackToID(tr, false);
 		if (strcmp(cName, m_sName.Get()) == 0 && m_iTrackNum == iNum)
-			details->AppendFormatted(100, "Track #%d \"%s\":\r\n", iNum, cName);
+			details->AppendFormatted(100, __LOCALIZE_VERFMT("Track #%d \"%s\"","sws_DLG_101"), iNum, cName);
 		else
-			details->AppendFormatted(100, "Track #%d \"%s\", originally #%d \"%s\":\r\n", iNum, cName, m_iTrackNum, m_sName.Get());
+			details->AppendFormatted(100, __LOCALIZE_VERFMT("Track #%d \"%s\", originally #%d \"%s\"","sws_DLG_101"), iNum, cName, m_iTrackNum, m_sName.Get());
 	}
 	else
-		details->AppendFormatted(100, "Track #%d \"%s\" (not in current project!):\r\n", m_iTrackNum, m_sName.Get());
+		details->AppendFormatted(100, __LOCALIZE_VERFMT("Track #%d \"%s\" (not in current project!)","sws_DLG_101"), m_iTrackNum, m_sName.Get());
+	details->Append(":\r\n");
 
 	if (iMask & VOL_MASK)
 	{
-		details->AppendFormatted(50, "Volume: %.2fdb\r\n", VAL2DB(m_dVol));
-		if (m_sVolEnv.GetLength())
-			details->AppendFormatted(50, "Volume (Pre-FX) envelope\r\n");
-		if (m_sVolEnv2.GetLength())
-			details->AppendFormatted(50, "Volume envelope\r\n");
+		details->AppendFormatted(50, __LOCALIZE_VERFMT("Volume: %.2fdb","sws_DLG_101"), VAL2DB(m_dVol));
+		details->Append("\r\n");
+		if (m_sVolEnv.GetLength()) {
+			details->AppendFormatted(50, __LOCALIZE("Volume (Pre-FX) envelope","sws_DLG_101"));
+			details->Append("\r\n");
+		}
+		if (m_sVolEnv2.GetLength()) {
+			details->AppendFormatted(50, __LOCALIZE("Volume envelope","sws_DLG_101"));
+			details->Append("\r\n");
+		}
 	}
 	if (iMask & PAN_MASK)
 	{
@@ -430,60 +440,106 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 		if (iPanMode != 6)
 		{
 			if (m_dPan == 0.0)
-				details->Append("Pan: center");
+				details->Append(__LOCALIZE("Pan: center","sws_DLG_101"));
 			else
-				details->AppendFormatted(50, "Pan: %d%% %s", abs((int)(m_dPan * 100.0)), m_dPan < 0.0 ? "left" : "right");
+				details->AppendFormatted(50, __LOCALIZE_VERFMT("Pan: %d%% %s","sws_DLG_101"), abs((int)(m_dPan * 100.0)), m_dPan < 0.0 ? __LOCALIZE("left","sws_DLG_101") : __LOCALIZE("right","sws_DLG_101"));
 		}
 		if (iPanMode == 5) // stereo pan
-			details->AppendFormatted(50, ", width %d%%", (int)(m_dPanWidth * 100.0));
+		{
+			details->Append(", ");
+			details->AppendFormatted(50, __LOCALIZE_VERFMT("width %d%%","sws_DLG_101"), (int)(m_dPanWidth * 100.0));
+		}
 		else if (iPanMode == 6) // dual pan
-			details->AppendFormatted(50, "Left pan: %d%%%c, Right pan: %d%%%c", abs((int)(m_dPanL * 100.0)), m_dPanL == 0.0 ? 'C' : (m_dPanL < 0.0 ? 'L' : 'R'), abs((int)(m_dPanR * 100.0)), m_dPanR == 0.0 ? 'C' : (m_dPanR < 0.0 ? 'L' : 'R'));
+			details->AppendFormatted(50, __LOCALIZE_VERFMT("Left pan: %d%%%s, Right pan: %d%%%s","sws_DLG_101"), abs((int)(m_dPanL * 100.0)), m_dPanL == 0.0 ? __LOCALIZE("C","sws_DLG_101") : (m_dPanL < 0.0 ? __LOCALIZE("L","sws_DLG_101") : __LOCALIZE("R","sws_DLG_101")), abs((int)(m_dPanR * 100.0)), m_dPanR == 0.0 ? __LOCALIZE("C","sws_DLG_101") : (m_dPanR < 0.0 ? __LOCALIZE("L","sws_DLG_101") : __LOCALIZE("R","sws_DLG_101")));
 
 		if (m_dPanLaw == -1.0)
-			details->Append(", default pan law\r\n");
+		{
+			details->Append(", ");
+			details->Append(__LOCALIZE("default pan law","sws_DLG_101"));
+			details->Append("\r\n");
+		}
 		else if (m_dPanLaw != -100.0)
-			details->AppendFormatted(50, ", Pan law %.4f\r\n", m_dPanLaw);
+		{
+			details->Append(", ");
+			details->AppendFormatted(50, __LOCALIZE_VERFMT("Pan law %.4f","sws_DLG_101"), m_dPanLaw);
+			details->Append("\r\n");
+		}
 		else
 			details->Append("\r\n");
 
-		if (m_sPanEnv.GetLength())
-			details->AppendFormatted(50, "Pan (Pre-FX) envelope\r\n");
-		if (m_sPanEnv2.GetLength())
-			details->AppendFormatted(50, "Pan envelope\r\n");
-		if (m_sWidthEnv.GetLength())
-			details->AppendFormatted(50, "Width (Pre-FX) envelope\r\n");
-		if (m_sWidthEnv2.GetLength())
-			details->AppendFormatted(50, "Width envelope\r\n");
+		if (m_sPanEnv.GetLength()) {
+			details->AppendFormatted(50, __LOCALIZE("Pan (Pre-FX) envelope","sws_DLG_101"));
+			details->Append("\r\n");
+		}
+		if (m_sPanEnv2.GetLength()) {
+			details->AppendFormatted(50, __LOCALIZE("Pan envelope","sws_DLG_101"));
+			details->Append("\r\n");
+		}
+		if (m_sWidthEnv.GetLength()) {
+			details->AppendFormatted(50, __LOCALIZE("Width (Pre-FX) envelope","sws_DLG_101"));
+			details->Append("\r\n");
+		}
+		if (m_sWidthEnv2.GetLength()) {
+			details->AppendFormatted(50, __LOCALIZE("Width envelope","sws_DLG_101"));
+			details->Append("\r\n");
+		}
 	}
 	if (iMask & MUTE_MASK)
 	{
-		details->Append(m_bMute ? "Mute: on\r\n" : "Mute: off\r\n");
-		if (m_sMuteEnv.GetLength())
-			details->AppendFormatted(50, "Mute envelope\r\n");
+		details->Append(__LOCALIZE("Mute","sws_DLG_101"));
+		details->Append(": ");
+		details->Append(m_bMute ? __LOCALIZE("on","sws_DLG_101") : __LOCALIZE("off","sws_DLG_101"));
+		details->Append("\r\n");
+
+		if (m_sMuteEnv.GetLength()) {
+			details->AppendFormatted(50, __LOCALIZE("Mute envelope","sws_DLG_101"));
+			details->Append("\r\n");
+		}
 	}
 	if (iMask & SOLO_MASK)
-		details->Append(m_iSolo ? "Solo: on\r\n" : "Solo: off\r\n");
+	{
+		details->Append(__LOCALIZE("Solo","sws_DLG_101"));
+		details->Append(": ");
+		details->Append(m_iSolo ? __LOCALIZE("on","sws_DLG_101") : __LOCALIZE("off","sws_DLG_101"));
+		details->Append("\r\n");
+	}
 	if (iMask & SEL_MASK)
-		details->Append(m_iSel ? "Selected: yes\r\n" : "Selected: no\r\n");
+	{
+		details->Append(__LOCALIZE("Selected","sws_DLG_101"));
+		details->Append(": ");
+		details->Append(m_iSel ? __LOCALIZE("yes","sws_DLG_101") : __LOCALIZE("no","sws_DLG_101"));
+		details->Append("\r\n");
+	}
 	if (iMask & VIS_MASK)
 	{
-		details->Append("Visibility: ");
+		details->Append(__LOCALIZE("Visibility","sws_DLG_101"));
+		details->Append(": ");
 		switch (m_iVis)
 		{
-			case 0: details->Append("invisible\r\n"); break;
-			case 1: details->Append("MCP only\r\n"); break;
-			case 2: details->Append("TCP only\r\n"); break;
-			case 3: details->Append("full\r\n"); break;
+			case 0: details->Append(__LOCALIZE("invisible","sws_DLG_101")); break;
+			case 1: details->Append(__LOCALIZE("MCP only","sws_DLG_101")); break;
+			case 2: details->Append(__LOCALIZE("TCP only","sws_DLG_101")); break;
+			case 3: details->Append(__LOCALIZE("full","sws_DLG_101")); break;
 		}
+		details->Append("\r\n");
 	}
 	if (iMask & FXCHAIN_MASK)
 	{
-		details->Append(m_iFXEn ? "FX bypass: off\r\n" : "FX bypass: on\r\n");
+		details->Append(__LOCALIZE("FX bypass","sws_DLG_101"));
+		details->Append(": ");
+		details->Append(m_iFXEn ? __LOCALIZE("on","sws_DLG_101") : __LOCALIZE("off","sws_DLG_101"));
+		details->Append("\r\n");
+
 		if (!m_sFXChain.GetSize())
-			details->Append("Empty FX chain\r\n");
+		{
+			details->Append(__LOCALIZE("Empty FX chain","sws_DLG_101"));
+			details->Append("\r\n");
+		}
 		else
 		{
-			details->Append("FX chain:\r\n");
+			details->Append(__LOCALIZE("FX chain","sws_DLG_101"));
+			details->Append(":\r\n");
+
 			char line[4096];
 			int pos = 0;
 			LineParser lp(false);
@@ -491,10 +547,13 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 			{
 				if (!lp.parse(line) && lp.getnumtokens() >= 2)
 				{
-					if (strncmp(lp.gettoken_str(0), "<VST", 4) == 0 || strncmp(lp.gettoken_str(0), "<DX", 3) == 0)
+					if (strncmp(lp.gettoken_str(0), "<VST", 4) == 0 || 
+						strncmp(lp.gettoken_str(0), "<AU", 3) == 0 ||
+						strncmp(lp.gettoken_str(0), "<DX", 3) == 0)
 						details->AppendFormatted(50, "\t%s\r\n", lp.gettoken_str(1));
 					else if (strcmp(lp.gettoken_str(0), "<JS") == 0)
 						details->AppendFormatted(50, "\tJS: %s\r\n", lp.gettoken_str(1));
+					details->Append("\r\n");
 				}
 			}
 		}
@@ -503,7 +562,9 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 	{
 		if (m_sends.m_hwSends.GetSize())
 		{
-			details->Append("Hardware outputs:\r\n");
+			details->Append(__LOCALIZE("Hardware outputs","sws_DLG_101"));
+			details->Append(":\r\n");
+
 			LineParser lp(false);
 			for (int i = 0; i < m_sends.m_hwSends.GetSize(); i++)
 			{
@@ -513,22 +574,28 @@ void TrackSnapshot::GetDetails(WDL_FastString* details, int iMask)
 		}
 		if (m_sends.m_sends.GetSize())
 		{
-			details->Append("Sends:\r\n");
+			details->Append(__LOCALIZE("Sends","sws_DLG_101"));
+			details->Append(":\r\n");
+
 			LineParser lp(false);
 			for (int i = 0; i < m_sends.m_sends.GetSize(); i++)
 			{
 				MediaTrack* tr = GuidToTrack(m_sends.m_sends.Get(i)->GetGuid());
+				details->Append("\t");
 				if (tr)
 				{
 					char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-					details->AppendFormatted(100, "\tTo track #%d \"%s\"\r\n", CSurf_TrackToID(tr, false), cName);
+					details->AppendFormatted(100, __LOCALIZE_VERFMT("To track #%d \"%s\"","sws_DLG_101"), CSurf_TrackToID(tr, false), cName);
 				}
 				else
-					details->Append("\tTo unknown track!\r\n");
+					details->Append(__LOCALIZE("To unknown track!","sws_DLG_101"));
+				details->Append("\r\n");
 			}
 		}
-		else
-			details->Append("No sends\r\n");
+		else {
+			details->Append(__LOCALIZE("No sends","sws_DLG_101"));
+			details->Append("\r\n");
+		}
 	}
 }
 
@@ -601,7 +668,7 @@ Snapshot::Snapshot(int slot, int mask, bool bSelOnly, const char* name)
 	SWS_CacheObjectState(false);
 
 	char undoStr[128];
-	sprintf(undoStr, "Save snapshot %d", slot);
+	sprintf(undoStr, __LOCALIZE_VERFMT("Save snapshot %d","sws_undo"), slot);
 	Undo_OnStateChangeEx(undoStr, UNDO_STATE_MISCCFG, -1);
 	RegisterGetCommand(slot);
 }
@@ -770,7 +837,7 @@ bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 		TrackList_AdjustWindows(false);
 		UpdateTimeline();
 	}
-	sprintf(str, "Load snapshot %s", m_cName);
+	sprintf(str, __LOCALIZE_VERFMT("Load snapshot %s","sws_undo"), m_cName);
 	Undo_OnStateChangeEx(str, UNDO_STATE_ALL, -1);
 
 	if (trackErr || fxErr)
@@ -778,11 +845,11 @@ bool Snapshot::UpdateReaper(int mask, bool bSelOnly, bool bHideNewVis)
 		char errString[512];
 		int n = 0;
 		if (trackErr)
-			n += sprintf(errString + n, "%d track(s) from snapshot not found.", trackErr);
+			n += sprintf(errString + n, __LOCALIZE_VERFMT("%d track(s) from snapshot not found.","sws_DLG_101"), trackErr);
 		if (fxErr)
-			n += sprintf(errString + n, "%s%d FX from snapshot not found.", n ? "\n" : "", fxErr);
-		sprintf(errString + n, "\nDelete abandonded items from snapshot?  (You cannot undo this operation!)");
-		if (MessageBox(g_hwndParent, errString, "Snapshot recall error", MB_YESNO) == IDYES)
+			n += sprintf(errString + n, __LOCALIZE_VERFMT("%s%d FX from snapshot not found.","sws_DLG_101"), n ? "\n" : "", fxErr);
+		sprintf(errString + n, __LOCALIZE("\nDelete abandonded items from snapshot? (You cannot undo this operation!)","sws_DLG_101"));
+		if (MessageBox(g_hwndParent, errString, __LOCALIZE("Snapshot recall error","sws_DLG_101"), MB_YESNO) == IDYES)
 		{
 			for (int i = 0; i < m_tracks.GetSize(); i++)
 				if (m_tracks.Get(i)->Cleanup())
@@ -806,29 +873,46 @@ char* Snapshot::Tooltip(char* str, int maxLen)
 			break;
 
 	if (i < m_tracks.GetSize())
-		n = _snprintf(str, maxLen, "Master + %d track%s", m_tracks.GetSize() - 1, m_tracks.GetSize() - 1 > 1 ? "s" : "");
+		n = _snprintf(str, maxLen, __LOCALIZE_VERFMT("Master + %d track(s)","sws_DLG_101"), m_tracks.GetSize() - 1);
 	else
-		n = _snprintf(str + n, maxLen - n, "%d track%s", m_tracks.GetSize(), m_tracks.GetSize() > 1 ? "s" : "");
+		n = _snprintf(str + n, maxLen - n, __LOCALIZE_VERFMT("%d track(s)","sws_DLG_101"), m_tracks.GetSize());
 
-	if (m_iMask & VOL_MASK && n < maxLen)
-		n += _snprintf(str + n, maxLen - n, "%s", ", vol");
-	if (m_iMask & PAN_MASK && n < maxLen)
-		n += _snprintf(str + n, maxLen - n, "%s", ", pan");
-	if (m_iMask & MUTE_MASK && n < maxLen)
-		n += _snprintf(str + n, maxLen - n, "%s", ", mute");
-	if (m_iMask & SOLO_MASK && n < maxLen)
-		n += _snprintf(str + n, maxLen - n, "%s", ", solo");
-	if (m_iMask & FXATM_MASK && n < maxLen)
-		n += _snprintf(str + n, maxLen - n, "%s", ", fx (old style)");
-	if (m_iMask & FXCHAIN_MASK && n < maxLen)
-		n += _snprintf(str + n, maxLen - n, "%s", ", fx");
-	if (m_iMask & SENDS_MASK && n < maxLen)
-		n += _snprintf(str + n, maxLen - n, "%s", ", sends");
-	if (m_iMask & VIS_MASK && n < maxLen)
-		n += _snprintf(str + n, maxLen - n, "%s", ", visibility");
-	if (m_iMask & SEL_MASK && n < maxLen)
-		n += _snprintf(str + n, maxLen - n, "%s", ", selection");
-
+	if (m_iMask & VOL_MASK && n < maxLen) {
+		n += _snprintf(str + n, maxLen - n, "%s", ", ");
+		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("vol","sws_DLG_101"));
+	}
+	if (m_iMask & PAN_MASK && n < maxLen) {
+		n += _snprintf(str + n, maxLen - n, "%s", ", ");
+		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("pan","sws_DLG_101"));
+	}
+	if (m_iMask & MUTE_MASK && n < maxLen) {
+		n += _snprintf(str + n, maxLen - n, "%s", ", ");
+		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("mute","sws_DLG_101"));
+	}
+	if (m_iMask & SOLO_MASK && n < maxLen) {
+		n += _snprintf(str + n, maxLen - n, "%s", ", ");
+		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("solo","sws_DLG_101"));
+	}
+	if (m_iMask & FXATM_MASK && n < maxLen) {
+		n += _snprintf(str + n, maxLen - n, "%s", ", ");
+		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("fx (old style)","sws_DLG_101"));
+	}
+	if (m_iMask & FXCHAIN_MASK && n < maxLen) {
+		n += _snprintf(str + n, maxLen - n, "%s", ", ");
+		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("fx","sws_DLG_101"));
+	}
+	if (m_iMask & SENDS_MASK && n < maxLen) {
+		n += _snprintf(str + n, maxLen - n, "%s", ", ");
+		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("sends","sws_DLG_101"));
+	}
+	if (m_iMask & VIS_MASK && n < maxLen) {
+		n += _snprintf(str + n, maxLen - n, "%s", ", ");
+		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("visibility","sws_DLG_101"));
+	}
+	if (m_iMask & SEL_MASK && n < maxLen) {
+		n += _snprintf(str + n, maxLen - n, "%s", ", ");
+		n += _snprintf(str + n, maxLen - n, "%s", __LOCALIZE("selection","sws_DLG_101"));
+	}
 	return str;
 }
 
@@ -840,16 +924,16 @@ void Snapshot::SetName(const char* name)
 		char newName[20];
 		switch(m_iMask)
 		{
-			case VOL_MASK:		sprintf(newName, "Vol %d", m_iSlot);	break;
-			case PAN_MASK:		sprintf(newName, "Pan %d", m_iSlot);	break;
-			case MUTE_MASK:		sprintf(newName, "Mute %d", m_iSlot);	break;
-			case SOLO_MASK:		sprintf(newName, "Solo %d", m_iSlot);	break;
+			case VOL_MASK:		sprintf(newName, "%s %d", __LOCALIZE("Vol","sws_DLG_101"), m_iSlot);	break;
+			case PAN_MASK:		sprintf(newName, "%s %d", __LOCALIZE("Pan","sws_DLG_101"), m_iSlot);	break;
+			case MUTE_MASK:		sprintf(newName, "%s %d", __LOCALIZE("Mute","sws_DLG_101"), m_iSlot);	break;
+			case SOLO_MASK:		sprintf(newName, "%s %d", __LOCALIZE("Solo","sws_DLG_101"), m_iSlot);	break;
 			case FXATM_MASK: // fallthrough
-			case FXCHAIN_MASK:	sprintf(newName, "FX %d", m_iSlot);		break;
-			case SENDS_MASK:	sprintf(newName, "Sends %d", m_iSlot);	break;
-			case VIS_MASK:		sprintf(newName, "Vis %d", m_iSlot);	break;
-			case SEL_MASK:		sprintf(newName, "Sel %d", m_iSlot);	break;
-			default:			sprintf(newName, "Mix %d", m_iSlot);	break;
+			case FXCHAIN_MASK:	sprintf(newName, "%s %d", __LOCALIZE("FX","sws_DLG_101"), m_iSlot);		break;
+			case SENDS_MASK:	sprintf(newName, "%s %d", __LOCALIZE("Sends","sws_DLG_101"), m_iSlot);	break;
+			case VIS_MASK:		sprintf(newName, "%s %d", __LOCALIZE("Vis","sws_DLG_101"), m_iSlot);	break;
+			case SEL_MASK:		sprintf(newName, "%s %d", __LOCALIZE("Sel","sws_DLG_101"), m_iSlot);	break;
+			default:			sprintf(newName, "%s %d", __LOCALIZE("Mix","sws_DLG_101"), m_iSlot);	break;
 		}
 		m_cName = new char[strlen(newName)+1];
 		strcpy(m_cName, newName);
@@ -967,7 +1051,8 @@ void Snapshot::GetChunk(WDL_FastString* chunk)
 void Snapshot::GetDetails(WDL_FastString* details)
 {
 	char cTemp[100];
-	details->AppendFormatted(100, "Snapshot %d \"%s\", stored ", m_iSlot, m_cName);
+	details->AppendFormatted(100, __LOCALIZE_VERFMT("Snapshot %d \"%s\", stored","sws_DLG_101"), m_iSlot, m_cName);
+	details->Append(" ");
 	GetTimeString(cTemp, 100, true);
 	details->Append(cTemp);
 	details->Append(" ");

@@ -690,7 +690,7 @@ int SNM_RecPassParser::GetMaxRecPass(int* _recPasses, int* _takeColors)
 
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_TrackEnvParserPatcher
-// _mode==-1: remove all envs, _mode==-2: add to point positions
+// _mode: -1=remove all envs, -2=add to point positions, -3: get envs
 ///////////////////////////////////////////////////////////////////////////////
 
 bool SNM_TrackEnvParserPatcher::NotifyStartElement(int _mode, 
@@ -699,7 +699,7 @@ bool SNM_TrackEnvParserPatcher::NotifyStartElement(int _mode,
 	WDL_FastString* _newChunk, int _updates)
 {
 	bool update = (_mode == -1 ? m_parsingEnv : false);
-	if (!m_parsingEnv && LookupTrackEnvName(GetParent(_parsedParents), _mode != -3)) // _mode==-3: ignores PARMENV
+	if (!m_parsingEnv && LookupTrackEnvName(GetParent(_parsedParents), _mode != -3)) // _mode==-3: ignores PARMENV, PROGRAMENV
 	{
 		const char* grandpa = GetParent(_parsedParents, 2);
 		m_parsingEnv = (!strcmp(grandpa, "TRACK") || !strcmp(grandpa, "FXCHAIN")); // do not deal with take env for ex.

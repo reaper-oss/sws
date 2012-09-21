@@ -1,3 +1,13 @@
+<b>Localization is over: everything can now be translated!</b>
+Fixes/improvements (thanks Mr Data!):
++Fixed unused translations in various windows/dialog boxes
++Fixed stupid assumption that plural strings always end with 's'
+Notes for translators:
++A new SWS Template LangPack file will be available with the next official release of the extension
++To avoid useless translations:
+ - The S&M Find tool is not localized (a new version will come at some point)
+ - The SWS TrackList is not localized (might be removed at some point: over exceeded by the new native Track Manager)
+
 Added actions:
 +SWS/BR: Move selected tempo points forward
 +SWS/BR: Move selected tempo points back
@@ -6,19 +16,22 @@ Added actions:
  Note: These actions don't screw with unselected points positions. Ideal for extensive tempo manipulation.
  First two actions move points depending on zoom, more zoom means less movement - recommended for keybinding.
  Others move points by predetermined values in milliseconds
-+SWS/S&M: Pan active takes of selected items to 25%, 50%, and 75% left/right
++SWS/S&M: Pan active takes of selected items to 25%, 50%, and 75% left and right
 +SWS/S&M: [developer] Write C++ API functions header
  Internal stuff, for SWS devs only.
 
-Localization fixes/improvements (thanks Mr Data!)
-+<b>Almost everything is now localized!</b>
-+Fixed unused translations (Auto color/icon and various dialog boxes)
-+Fixed stupid assumption that plural strings always end with 's'
-Notes for translators:
-+A new SWS Template LangPack file will be available with the next official release of the extension
-+To avoid useless translations:
- - The S&M Find tool is not localized (a new version will come at some point)
- - The SWS TrackList is not localized (might be removed at some point: over exceeded by the new native Track Manager)
+Updated actions "Set selected tracks folder states"
++Renamed actions:
+ - "SWS/S&M: Set selected tracks folder states to on"  ->  "[...] to parent"
+ - "SWS/S&M: Set selected tracks folder states to off"  ->  "[...] to nomal"
++Added actions (that were missing for the above ones to make sense..):
+ - SWS/S&M: Set selected tracks folder states to last of all folders
+ - SWS/S&M: Set selected tracks folder states to last in folder
+ Note: if this last action is performed on a track which is already the last one in a folder, 
+ running it again will turn the track into the last in the innermost and next-innermost folders, etc..
+
+Updated action "SWS/S&M: Remove all envelopes for selected tracks":
+This action removes all track envs (pan, volume, etc..) as well as plugin envelopes. Now it also removes all parameter modulation.
 
 Export functions to ReaScript
 +Hardened SNM_GetSetSourceState()

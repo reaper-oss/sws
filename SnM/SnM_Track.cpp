@@ -332,6 +332,18 @@ void SetTrackToFirstUnusedGroup(COMMAND_T* _ct) {
 // Track folders
 ///////////////////////////////////////////////////////////////////////////////
 
+int GetTrackDepth(MediaTrack* _tr)
+{
+	int depth = 0;
+	for (int i=1; i <= GetNumTracks(); i++) // skip master
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false)) {
+			depth += *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL);
+			if (_tr==tr) return depth;
+		}
+	return 0;
+}
+
+
 WDL_PtrList_DeleteOnDestroy<SNM_TrackInt> g_trackFolderStates;
 WDL_PtrList_DeleteOnDestroy<SNM_TrackInt> g_trackFolderCompactStates;
 
@@ -377,17 +389,40 @@ void RestoreTracksFolderStates(COMMAND_T* _ct)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
+// I_FOLDERDEPTH :
+//  0=normal, 1=track is a folder parent, 
+// -1=track is the last in the innermost folder
+// -2=track is the last in the innermost and next-innermost folders, etc
 void SetTracksFolderState(COMMAND_T* _ct)
 {
 	bool updated = false;
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL) &&
-			_ct->user != *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL))
+		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 		{
-			GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", &(_ct->user));
-			updated = true;
+			int newState = (int)_ct->user;
+			int curState = *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL);
+			if ((int)_ct->user == -1) // last in folder?
+			{
+				if (GetTrackDepth(tr)>0)
+					newState = curState<0 ? curState-1 : -1;
+				else
+					newState = curState;
+			}
+			else if ((int)_ct->user == -2) // very last in folder?
+			{
+				int depth = GetTrackDepth(tr);
+				if (depth>0)
+					newState = depth * (-1);
+				else
+					newState = curState;
+			}
+
+			if (curState!=newState) {
+				GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", &newState);
+				updated = true;
+			}
 		}
 	}
 	if (updated)
@@ -425,7 +460,10 @@ WDL_PtrList<MediaTrack>* GetChildTracks(MediaTrack* _tr)
 
 static const char g_trackEnvNames[][SNM_MAX_ENV_SUBCHUNK_NAME] =
 {
-	"PARMENV", // keep as first item, see LookupTrackEnvName()
+	"PARMENV",
+	"PROGRAMENV",
+	// ^^ keep these as first items, see LookupTrackEnvName()
+
 	"VOLENV2",
 	"PANENV2",
 	"WIDTHENV2",
@@ -476,10 +514,10 @@ void SelOnlyTrackWithSelEnv(COMMAND_T* _ct)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
-// _allEnvs: false = track envs only, true = track + fx param envs
+// _allEnvs: true = track + fx param envs, false = track envs only
 bool LookupTrackEnvName(const char* _str, bool _allEnvs)
 {
-	int i = _allEnvs ? 0:1; 
+	int i = _allEnvs ? 0:2; 
 	while (*g_trackEnvNames[i]) {
 		if (!strcmp(_str, g_trackEnvNames[i]))
 			return true;

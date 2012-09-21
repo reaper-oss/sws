@@ -330,8 +330,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Save selected tracks folder states" }, "S&M_SAVEFOLDERSTATE1", SaveTracksFolderStates, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Restore selected tracks folder states" }, "S&M_RESTOREFOLDERSTATE1", RestoreTracksFolderStates, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks folder states to on" }, "S&M_FOLDERON", SetTracksFolderState, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks folder states to off" }, "S&M_FOLDEROFF", SetTracksFolderState, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks folder states to last of all folders" }, "S&M_FOLDER_LAST_ALL", SetTracksFolderState, NULL, -2},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks folder states to last in folder" }, "S&M_FOLDER_LAST", SetTracksFolderState, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks folder states to parent" }, "S&M_FOLDERON", SetTracksFolderState, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks folder states to normal" }, "S&M_FOLDEROFF", SetTracksFolderState, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Save selected tracks folder compact states" }, "S&M_SAVEFOLDERSTATE2", SaveTracksFolderStates, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Restore selected tracks folder compact states" }, "S&M_RESTOREFOLDERSTATE2", RestoreTracksFolderStates, NULL, 1},
 

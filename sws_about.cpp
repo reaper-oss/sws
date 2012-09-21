@@ -28,7 +28,6 @@
 #include "stdafx.h"
 #include "./reaper/localize.h"
 #include "./SnM/SnM_Dlg.h"
-#include "./SnM/SnM_Misc.h"
 #include "./SnM/SnM_Util.h"
 #include "version.h"
 #include "license.h"

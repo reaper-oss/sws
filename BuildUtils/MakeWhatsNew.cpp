@@ -90,8 +90,9 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML)
 	cBuf[iSize] = 0;
 
 	int iPos = 0;
-#ifndef _WIN32
-	// get rid of '\r' on OSX
+
+// #ifndef _WIN32 //JFB commented: needed on Win too
+	// get rid of '\r'
 	int iPos2 = 0;
 	char* cBuf2 = new char[iSize+2];
 	while (cBuf[iPos] && iPos < iSize) {
@@ -106,7 +107,7 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML)
 	delete [] cBuf;
 	cBuf = cBuf2;
 	iPos = 0;
-#endif
+//#endif
 
 	const INT_PTR NO_SECTION	= 0;
 	const INT_PTR HEADER		= 1;

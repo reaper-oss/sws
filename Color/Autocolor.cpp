@@ -35,10 +35,13 @@
 
 #define PRI_UP_MSG		0x10000
 #define PRI_DOWN_MSG	0x10001
-#define TRACKTYPE_MSG	0x10100
+#define TYPETYPE_MSG    0x100F0
+#define FILTERTYPE_MSG	0x10100
+#define RGNFILTERTYPE_MSG	0x100E0
 #define COLORTYPE_MSG	0x10110
 #define LOAD_ICON_MSG	0x110000
 #define CLEAR_ICON_MSG	0x110001
+
 
 // INI params
 #define AC_ENABLE_KEY	"AutoColorEnable"
@@ -46,11 +49,16 @@
 #define AC_COUNT_KEY	"AutoColorCount"
 #define AC_ITEM_KEY		"AutoColor %d"
 
-enum { AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_ANY, AC_MASTER, NUM_TRACKTYPES };
+
+enum { AC_UNNAMED, AC_FOLDER, AC_CHILDREN, AC_RECEIVE, AC_ANY, AC_MASTER, NUM_FILTERTYPES };
+enum { AC_RGNUNNAMED, AC_RGNANY, NUM_RGNFILTERTYPES };
 enum { AC_CUSTOM, AC_GRADIENT, AC_RANDOM, AC_NONE, AC_PARENT, AC_IGNORE, NUM_COLORTYPES };
+enum { AC_TRACK, AC_REGION, AC_MARKER, NUM_TYPETYPES };
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_115
-static const char cTrackTypes[][11] = { "(unnamed)", "(folder)", "(children)", "(receive)", "(any)", "(master)" };
+static const char cTypes[][7] = {"Track", "Region", "Marker" };
+static const char cFilterTypes[][11] = { "(unnamed)", "(folder)", "(children)", "(receive)", "(any)", "(master)" };
+static const char cRgnFilterTypes[][10] = { "(unnamed)", "(any)" };
 static const char cColorTypes[][9] = { "Custom", "Gradient", "Random", "None", "Parent", "Ignore" };
 // !WANT_LOCALIZE_STRINGS_END
 
@@ -63,14 +71,14 @@ static bool g_bACEnabled = false;
 static bool g_bAIEnabled = false;
 static WDL_String g_ACIni;
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_115
-static SWS_LVColumn g_cols[] = { {25, 0, "#" }, { 185, 1, "Filter" }, { 70, 1, "Color" }, { 200, 2, "Icon" }};
+static SWS_LVColumn g_cols[] = { {25, 0, "#" }, {25, 1, "Type"}, { 185, 1, "Filter" }, { 70, 1, "Color" }, { 200, 2, "Icon" }};
 // !WANT_LOCALIZE_STRINGS_END
 
 // Prototypes
 void AutoColorSaveState();
 
 SWS_AutoColorView::SWS_AutoColorView(HWND hwndList, HWND hwndEdit)
-:SWS_ListView(hwndList, hwndEdit, 4, g_cols, "AutoColorViewState", false, "sws_DLG_115")
+:SWS_ListView(hwndList, hwndEdit, 5, g_cols, "AutoColorViewState", false, "sws_DLG_115")
 {
 }
 
@@ -85,20 +93,23 @@ void SWS_AutoColorView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 	case 0: // #
 		_snprintf(str, iStrMax, "%d", g_pACItems.Find(pItem) + 1);
 		break;
-	case 1: // Filter
-		lstrcpyn(str, pItem->m_str.Get(), iStrMax);
+    case 1: // Type
+        lstrcpyn(str, pItem->m_str_type.Get(), iStrMax);
+        break;
+	case 2: // Filter
+		lstrcpyn(str, pItem->m_str_filter.Get(), iStrMax);
 		break;
-	case 2: // Color
-		if (pItem->m_col < 0)
-			lstrcpyn(str, __localizeFunc(cColorTypes[-pItem->m_col - 1],"sws_DLG_115",0), iStrMax);
+	case 3: // Color
+		if (pItem->m_color < 0)
+			lstrcpyn(str, cColorTypes[-pItem->m_color - 1], iStrMax);
 		else
 #ifdef _WIN32
-			_snprintf(str, iStrMax, "0x%02x%02x%02x", pItem->m_col & 0xFF, (pItem->m_col >> 8) & 0xFF, (pItem->m_col >> 16) & 0xFF);
+			_snprintf(str, iStrMax, "0x%02x%02x%02x", pItem->m_color & 0xFF, (pItem->m_color >> 8) & 0xFF, (pItem->m_color >> 16) & 0xFF); // I think this is in reverse. Ini file dec to hex conversion (correct value for color) shows opposite of what this outputs to screen. e.g. 0xFFFF80 instead of 0x80FFFF
 #else
-			_snprintf(str, iStrMax, "0x%06x", pItem->m_col);
+			_snprintf(str, iStrMax, "0x%06x", pItem->m_color);
 #endif
 		break;
-	case 3: // icon
+	case 4: // icon
 		lstrcpyn(str, pItem->m_icon.Get(), iStrMax);
 		break;
 	}
@@ -112,22 +123,39 @@ void SWS_AutoColorView::SetItemText(SWS_ListItem* item, int iCol, const char* st
 
 	switch (iCol)
 	{
-	case 1: // Filter
-		for (int i = 0; i < g_pACItems.GetSize(); i++)
-			if (strcmp(g_pACItems.Get(i)->m_str.Get(), str) == 0)
-			{
-				MessageBox(GetParent(m_hwndList), __LOCALIZE("Autocolor entry with that name already exists.","sws_DLG_115"), __LOCALIZE("SWS - Error","sws_DLG_115"), MB_OK);
-				return;
-			}
-		if (strlen(str))
-			pItem->m_str.Set(str);
+    case 1: // Type
+        {
+            for (int i = 0; i < g_pACItems.GetSize(); i++)
+                if ((strcmp(str, "Region") != 0) && (strcmp(str, "Track") != 0) && (strcmp(str, "Marker") != 0))
+			    {
+				    MessageBox(GetParent(m_hwndList), __LOCALIZE("Type must equal either Track, Region or Marker (CASE SENSITIVE). Please select an option from right click context menu.","sws_DLG_115"), __LOCALIZE("SWS - Error","sws_DLG_115"), MB_OK);
+				    return;
+			    }
+            if (strlen(str))
+            pItem->m_str_type.Set(str);
+        }
+        break;
+	case 2: // Filter
+        {
+		//for (int i = 0; i < g_pACItems.GetSize(); i++)
+		//	if (strcmp(g_pACItems.Get(i)->m_str_filter.Get(), str) == 0)
+		//	{
+  //              MessageBox(GetParent(m_hwndList), __LOCALIZE("Autocolor entry with that name already exists. #set","sws_DLG_115"), __LOCALIZE("SWS - Error","sws_DLG_115"), MB_OK);
+		//		return;
+		//	}
+        if (strlen(str))
+			pItem->m_str_filter.Set(str);
+        }
 		break;
-	case 2: // Color
+	case 3: // Color
 		{
 			int iNewCol = strtol(str, NULL, 0);
-			pItem->m_col = RGB((iNewCol >> 16) & 0xFF, (iNewCol >> 8) & 0xFF, iNewCol & 0xFF);
-			break;
+			pItem->m_color = RGB((iNewCol >> 16) & 0xFF, (iNewCol >> 8) & 0xFF, iNewCol & 0xFF); //This order needs to be checked and maybe changed. See previous comment
+			
 		}
+        break;
+    default:
+        break;
 	}
 
 	g_pACWnd->Update();
@@ -142,7 +170,7 @@ void SWS_AutoColorView::GetItemList(SWS_ListItemList* pList)
 void SWS_AutoColorView::OnItemDblClk(SWS_ListItem* item, int iCol)
 {
 	SWS_RuleItem* pItem = (SWS_RuleItem*)item;
-	if (pItem && iCol == 3)
+	if (pItem && iCol == 4)
 		g_pACWnd->OnCommand(LOAD_ICON_MSG, (LPARAM)pItem);
 }
 
@@ -153,7 +181,7 @@ void SWS_AutoColorView::OnItemSelChanged(SWS_ListItem* item, int iState)
 
 void SWS_AutoColorView::OnBeginDrag(SWS_ListItem* item)
 {
-	if (abs(m_iSortCol) == 1)
+	if (abs(m_iSortCol) == 2)
 		SetCapture(GetParent(m_hwndList));
 }
 
@@ -178,7 +206,7 @@ void SWS_AutoColorView::OnDrag()
 			draggedItems.Add(selItem);
 		}
 
-		// Remove the dragged items and then readd them
+		// Remove the dragged items and then read them
 		// Switch order of add based on direction of drag & sort order
 		bool bDir = iNewPriority > iSelPriority;
 		if (m_iSortCol < 0)
@@ -196,6 +224,7 @@ void SWS_AutoColorView::OnDrag()
 			SelectByItem((SWS_ListItem*)draggedItems.Get(i), i==0, i==0);
 	}
 }
+
 
 SWS_AutoColorWnd::SWS_AutoColorWnd()
 :SWS_DockWnd(IDD_AUTOCOLOR, __LOCALIZE("Auto Color/Icon","sws_DLG_115"), "SWSAutoColor", 30005, SWSGetCommandID(OpenAutoColor))
@@ -249,11 +278,14 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 {
 	switch (wParam)
 	{
-		case IDC_APPLY:
-			AutoColorRun(true);
-			break;
+        case IDC_APPLY:
+            {
+		        AutoColorRun(true);
+            }
+		    break;
 		case IDC_ADD:
-			g_pACItems.Add(new SWS_RuleItem(__LOCALIZE("(name)","sws_DLG_115"), -AC_NONE-1, ""));
+            // default options when we add a new row
+			g_pACItems.Add(new SWS_RuleItem(__LOCALIZE("Track","sws_DLG_115"), __LOCALIZE("(name)","sws_DLG_115"), -AC_NONE-1, ""));
 			Update();
 			break;
 		case IDC_REMOVE:
@@ -291,17 +323,17 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				UpdateCustomColors();
 				cc.lpCustColors = g_custColors;
 				cc.Flags = CC_FULLOPEN | CC_RGBINIT;
-				cc.rgbResult = item->m_col;
+				cc.rgbResult = item->m_color;
 				if (ChooseColor(&cc))
 				{
 					int x = 0;
 					while ((item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
-						item->m_col = cc.rgbResult;
+						item->m_color = cc.rgbResult;
 				}
 				Update();
 #else
 				m_bSettingColor = true;
-				ShowColorChooser(item->m_col);
+				ShowColorChooser(item->m_color);
 				SetTimer(m_hwnd, 1, 50, NULL);
 #endif
 			}
@@ -364,20 +396,28 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 
 		default:
-			if (wParam >= TRACKTYPE_MSG && wParam < TRACKTYPE_MSG + NUM_TRACKTYPES)
+            if (wParam >= TYPETYPE_MSG && wParam < TYPETYPE_MSG + NUM_TYPETYPES)
+            {
+                SWS_RuleItem* item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(NULL);
+                if (item)
+                {
+                    item->m_str_type.Set(cTypes[wParam-TYPETYPE_MSG]);
+                }
+                Update();
+            } else if (wParam >= FILTERTYPE_MSG && wParam < FILTERTYPE_MSG + NUM_FILTERTYPES)
 			{
 				SWS_RuleItem* item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(NULL);
 				if (item)
 				{
-					int iType = (int)wParam - TRACKTYPE_MSG;
+					int iType = (int)wParam - FILTERTYPE_MSG;
 					for (int i = 0; i < g_pACItems.GetSize(); i++)
-						if (strcmp(g_pACItems.Get(i)->m_str.Get(), __localizeFunc(cTrackTypes[iType],"sws_DLG_115",0)) == 0)
+						if (strcmp(g_pACItems.Get(i)->m_str_filter.Get(), cFilterTypes[iType]) == 0)
 						{
-							MessageBox(m_hwnd, __LOCALIZE("Autocolor entry of that type already exists.","sws_DLG_115"), __LOCALIZE("SWS - Error","sws_DLG_115"), MB_OK);
+                            MessageBox(m_hwnd, __LOCALIZE("Autocolor entry of that type already exists. #oncommand","sws_DLG_115"), __LOCALIZE("SWS - Error","sws_DLG_115"), MB_OK); //FIXME : Brad
 							return;
 						}
 
-					item->m_str.Set(__localizeFunc(cTrackTypes[wParam-TRACKTYPE_MSG],"sws_DLG_115",0));
+					item->m_str_filter.Set(cFilterTypes[wParam-FILTERTYPE_MSG]);
 				}
 				Update();
 			}
@@ -386,7 +426,7 @@ void SWS_AutoColorWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				int x = 0;
 				SWS_RuleItem* item;
 				while ((item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
-					item->m_col = -1 - ((int)wParam - COLORTYPE_MSG);
+					item->m_color = -1 - ((int)wParam - COLORTYPE_MSG);
 				Update();
 			}
 			else
@@ -403,7 +443,7 @@ void SWS_AutoColorWnd::OnTimer(WPARAM wParam)
 		int x = 0;
 		SWS_RuleItem* item;
 		while ((item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
-			item->m_col = cr;
+			item->m_color = cr;
 
 		KillTimer(m_hwnd, 1);
 		Update();
@@ -436,8 +476,8 @@ INT_PTR SWS_AutoColorWnd::OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam
 			while ((item = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
 			{
 				if (col < 0)
-					col = item->m_col;
-				else if (col != item->m_col)
+					col = item->m_color;
+				else if (col != item->m_color)
 				{
 					col = -1;
 					break;
@@ -462,25 +502,63 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	SWS_ListItem* item = m_pLists.Get(0)->GetHitItem(x, y, &iCol);
 	HMENU hMenu = CreatePopupMenu();
 
-	if (item && iCol == 1)
-	{
-		for (int i = 0; i < NUM_TRACKTYPES; i++)
-			AddToMenu(hMenu, __localizeFunc(cTrackTypes[i],"sws_DLG_115",0), TRACKTYPE_MSG + i);
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
-	}
+    if (item && iCol == 1)
+    {
+        for (int i = 0; i < NUM_TYPETYPES; i++)
+            AddToMenu(hMenu, cTypes[i], TYPETYPE_MSG + i);
+        AddToMenu(hMenu, SWS_SEPARATOR, 0);
+    }
 	else if (item && iCol == 2)
 	{
-		AddToMenu(hMenu, __LOCALIZE("Set color...","sws_DLG_115"), IDC_COLOR);
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
-		for (int i = 0; i < NUM_COLORTYPES; i++)
-			AddToMenu(hMenu, __localizeFunc(cColorTypes[i],"sws_DLG_115",0), COLORTYPE_MSG + i);
-		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+        // Display a different set of options for Regions and Markers
+        int x = 0;
+		SWS_RuleItem* ICitem;
+		while ((ICitem = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
+        {
+            if(strcmp(ICitem->m_str_type.Get(),"Track") == 0)
+            {
+		        for (int i = 0; i < NUM_FILTERTYPES; i++)
+			        AddToMenu(hMenu, cFilterTypes[i], FILTERTYPE_MSG + i);
+		            AddToMenu(hMenu, SWS_SEPARATOR, 0);
+            }
+            //else
+            //    for (int i = 0; i < NUM_RGNFILTERTYPES; i++)
+		          //  AddToMenu(hMenu, cRgnFilterTypes[i], RGNFILTERTYPE_MSG + i);
+            //        AddToMenu(hMenu, SWS_SEPARATOR, 0);
+        }
 	}
 	else if (item && iCol == 3)
 	{
-		AddToMenu(hMenu, __LOCALIZE("Load icon...","sws_DLG_115"), LOAD_ICON_MSG);
-		AddToMenu(hMenu, __LOCALIZE("Clear icon","sws_DLG_115"), CLEAR_ICON_MSG);
+		AddToMenu(hMenu, __LOCALIZE("Set color...","sws_DLG_115"), IDC_COLOR);
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+
+        // Dont display special color options for Regions and Markers
+        int x = 0;
+		SWS_RuleItem* ICitem;
+		while ((ICitem = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
+        {
+            if(strcmp(ICitem->m_str_type.Get(),"Track") == 0)
+            {
+		        for (int i = 0; i < NUM_COLORTYPES; i++)
+			        AddToMenu(hMenu, cColorTypes[i], COLORTYPE_MSG + i);
+		            AddToMenu(hMenu, SWS_SEPARATOR, 0);
+            }
+        }
+	}
+	else if (item && iCol == 4)
+	{
+        // Do not display icon options if Type column is Region or Marker
+        int x = 0;
+		SWS_RuleItem* ICitem;
+		while ((ICitem = (SWS_RuleItem*)m_pLists.Get(0)->EnumSelected(&x)))
+        {
+			if(strcmp(ICitem->m_str_type.Get(),"Track") == 0)
+            {
+		        AddToMenu(hMenu, __LOCALIZE("Load icon...","sws_DLG_115"), LOAD_ICON_MSG);
+		        AddToMenu(hMenu, __LOCALIZE("Clear icon","sws_DLG_115"), CLEAR_ICON_MSG);
+		        AddToMenu(hMenu, SWS_SEPARATOR, 0);
+            }
+        }
 	}
 
 	if (item)
@@ -502,197 +580,268 @@ int SWS_AutoColorWnd::OnKey(MSG* msg, int iKeyState)
 		return 1;
 	}
 	return 0;
-} 
-
+}
 
 void OpenAutoColor(COMMAND_T*)
 {
 	g_pACWnd->Show(true, true);
 }
 
-void ApplyColorRule(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bool bForce)
+void ApplyColorRuleToRegion(SWS_RuleItem* rule)
 {
-	if (!bDoColors && !bDoIcons)
-		return;
+    double pos, end;
+    int num, color;
+    bool isRegn;
+    char* name;
+    char* itemtype = "Region";
+    int x = 0;
 
-	int iCount = 0;
-	WDL_PtrList<void> gradientTracks;
+    if(strcmp(itemtype, rule->m_str_type.Get()) == 0)
+    {
+        // Go through all markers and find the information for the one we want to change
+        while (EnumProjectMarkers3(NULL, x, NULL, NULL, NULL, NULL, NULL, NULL))
+        {
+                if(EnumProjectMarkers3(NULL, x, &isRegn, &pos, &end, &name, &num, &color))
+                {
+                    // Compare the names to check if we need to recolor
+                    if ((name && stristr(name, rule->m_str_filter.Get())) && isRegn)
+                    {
+                        if(SNM_SetProjectMarker(NULL, num, isRegn, pos, end, name, rule->m_color | 0x1000000))
+                        {
+                            UpdateTimeline();
+                        }
+                    }
+                }
+        x++;
+        }
+    }
+    else
+        return;
+}
 
-	if (rule->m_col == -AC_CUSTOM-1)
-		UpdateCustomColors();
+void ApplyColorRuleToMarker(SWS_RuleItem* rule)
+{
+    double pos, end;
+    int num, color;
+    bool isRegn;
+    char* name;
+    char* itemtype = "Marker";
+    int x = 0;
 
-	// Check all tracks for matching strings/properties
-	MediaTrack* temp = NULL;
-	for (int i = 0; i <= GetNumTracks(); i++)
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		bool bColor = bDoColors;
-		bool bIcon  = bDoIcons;
+    if(strcmp(itemtype, rule->m_str_type.Get()) == 0)
+    {
+        // Go through all markers and find the information for the one we want to change
+        while (EnumProjectMarkers3(NULL, x, NULL, NULL, NULL, NULL, NULL, NULL))
+        {
+            if(EnumProjectMarkers3(NULL, x, &isRegn, &pos, &end, &name, &num, &color))
+            {
+                // Compare the names to check if we need to recolor
+                if ((name && stristr(name, rule->m_str_filter.Get())) && !isRegn)
+                {
+                    if(SNM_SetProjectMarker(NULL, num, isRegn, pos, end, name, rule->m_color | 0x1000000))
+                    {
+                        UpdateTimeline();
+                    }
+                }
+            }
+        x++;
+        }
+    }
+    else
+        return;
+}
 
-		bool bFound = false;
-		SWS_RuleTrack* pACTrack = NULL;
-		for (int j = 0; j < g_pACTracks.Get()->GetSize(); j++)
-		{
-			pACTrack = g_pACTracks.Get()->Get(j);
-			if (pACTrack->m_pTr == tr)
-			{
-				bFound = true;
-				break;
-			}
-		}
-		
-		if (bFound)
-		{
-			// If already colored by a different rule, or ignoring the color ignore this track
-			if (pACTrack->m_bColored || rule->m_col == -AC_IGNORE-1)
-				bColor = false;
-			// If already iconed by a different rule, or the icon field is blank (ignore), ignore
-			if (pACTrack->m_bIconed || !rule->m_icon.Get()[0])
-				bIcon = false;
-		}
-		else
-			pACTrack = g_pACTracks.Get()->Add(new SWS_RuleTrack(tr));
-		
-		// Do the track rule matching
-		if (bColor || bIcon)
-		{
-			bool bMatch = false;
+void ApplyColorRuleToTrack(SWS_RuleItem* rule, bool bDoColors, bool bDoIcons, bool bForce)
+{
+    char* itemtype = "Track";
 
-			if (i) // ignore master for most things
-			{
-				// Check "special" rules first:
-				if (strcmp(rule->m_str.Get(), __localizeFunc(cTrackTypes[AC_FOLDER],"sws_DLG_115",0)) == 0)
-				{
-					int iType;
-					GetFolderDepth(tr, &iType, &temp);
-					if (iType == 1)
-						bMatch = true;
-				}
-				else if (strcmp(rule->m_str.Get(), __localizeFunc(cTrackTypes[AC_CHILDREN],"sws_DLG_115",0)) == 0)
-				{
-					temp = CSurf_TrackFromID(0, false); // JFB fix: 'temp' could be out of sync 
-					if (GetFolderDepth(tr, NULL, &temp) >= 1)
-						bMatch = true;
-				}
-				else if (strcmp(rule->m_str.Get(), __localizeFunc(cTrackTypes[AC_RECEIVE],"sws_DLG_115",0)) == 0)
-				{
-					if (GetSetTrackSendInfo(tr, -1, 0, "P_SRCTRACK", NULL))
-						bMatch = true;
-				}
-				else if (strcmp(rule->m_str.Get(), __localizeFunc(cTrackTypes[AC_UNNAMED],"sws_DLG_115",0)) == 0)
-				{
-					char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-					if (!cName || !cName[0])
-						bMatch = true;
-				}
-				else if (strcmp(rule->m_str.Get(), __localizeFunc(cTrackTypes[AC_ANY],"sws_DLG_115",0)) == 0)
-				{
-					bMatch = true;
-				}
-				else // Check for name match
-				{
-					char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
-					if (cName && stristr(cName, rule->m_str.Get()))
-						bMatch = true;
-				}
-			}
-			else if (strcmp(rule->m_str.Get(), __localizeFunc(cTrackTypes[AC_MASTER],"sws_DLG_115",0)) == 0)
-			{	// Check master rule
-				bMatch = true;
-			}
+    if(strcmp(itemtype, rule->m_str_type.Get()) == 0)
+    {
+	    if (!bDoColors && !bDoIcons)
+		    return;
 
-			if (bMatch)
-			{
-				// Set the color
-				if (bColor)
-				{
-					int iCurColor = *(int*)GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", NULL);
-					if (!(iCurColor & 0x1000000))
-						iCurColor = 0;
-					int newCol = iCurColor;
+	    int iCount = 0;
+	    WDL_PtrList<void> gradientTracks;
 
-					if (rule->m_col == -AC_RANDOM-1)
-					{
-						// Only randomize once
-						if (!(iCurColor & 0x1000000))
-							newCol = RGB(rand() % 256, rand() % 256, rand() % 256) | 0x1000000;
-					}
-					else if (rule->m_col == -AC_CUSTOM-1)
-					{
-						if (!AllBlack())
-							while(!(newCol = g_custColors[iCount++ % 16]));
-						newCol |= 0x1000000;							
-					}
-					else if (rule->m_col == -AC_GRADIENT-1)
-						gradientTracks.Add(tr);
-					else if (rule->m_col == -AC_NONE-1)
-						newCol = 0;
-					else if (rule->m_col == -AC_PARENT-1)
-					{
-						MediaTrack* parent = (MediaTrack*)GetSetMediaTrackInfo(tr, "P_PARTRACK", NULL);
-						if (parent)
-						{
-							int pcol = *(int*)GetSetMediaTrackInfo(parent, "I_CUSTOMCOLOR", NULL);
-							if (pcol & 0x1000000) // Only color like parent if the parent has color (maybe not?)
-								newCol = pcol;
-						}
-					}
-					else
-						newCol = rule->m_col | 0x1000000;
+	    if (rule->m_color == -AC_CUSTOM-1)
+		    UpdateCustomColors();
 
-					// Only set the color if the user hasn't changed the color manually (but record it as being changed)
-					if ((bForce || iCurColor == pACTrack->m_col) && newCol != iCurColor)
-						GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &newCol);
 
-					pACTrack->m_col = newCol;
-					pACTrack->m_bColored = true;
-				}
+        // Check all tracks for matching strings/properties
+        MediaTrack* temp = NULL;
+        for (int i = 0; i <= GetNumTracks(); i++)
+        {
+            MediaTrack* tr = CSurf_TrackFromID(i, false);
+            bool bColor = bDoColors;
+            bool bIcon  = bDoIcons;
 
-				if (bIcon)
-				{
-					if (strcmp(rule->m_icon.Get(), pACTrack->m_icon.Get()))
-					{
-						SNM_ChunkParserPatcher p(tr); // nothing done yet
-						char pIconLine[BUFFER_SIZE] = "";
-						int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 0, 1, pIconLine, NULL, "TRACKID");
-						if (strcmp(pIconLine, rule->m_icon.Get()))
-						{
-							// Only overwrite the icon if there's no icon, or we're forcing, or we set it ourselves earlier
-							if (bForce || iconChunkPos == 0 || strcmp(pIconLine, pACTrack->m_icon.Get()) == 0)
-							{
-								if (rule->m_icon.GetLength())
-									sprintf(pIconLine, "TRACKIMGFN \"%s\"\n", rule->m_icon.Get());	
-								else // The code as written will never hit this case, as empty m_icon means "ignore"
-									*pIconLine = 0;
+            bool bFound = false;
+            SWS_RuleTrack* pACTrack = NULL;
+            for (int j = 0; j < g_pACTracks.Get()->GetSize(); j++)
+            {
+	            pACTrack = g_pACTracks.Get()->Get(j);
+	            if (pACTrack->m_pTr == tr)
+	            {
+		            bFound = true;
+		            break;
+	            }
+            }
+    		
+            if (bFound)
+            {
+	            // If already colored by a different rule, or ignoring the color ignore this track
+	            if (pACTrack->m_bColored || rule->m_color == -AC_IGNORE-1)
+		            bColor = false;
+	            // If already iconed by a different rule, or the icon field is blank (ignore), ignore
+	            if (pACTrack->m_bIconed || !rule->m_icon.Get()[0])
+		            bIcon = false;
+            }
+            else
+	            pACTrack = g_pACTracks.Get()->Add(new SWS_RuleTrack(tr));
+    		
+            // Do the track rule matching
+            if (bColor || bIcon)
+            {
+	            bool bMatch = false;
 
-								if (iconChunkPos > 0)
-									p.ReplaceLine(--iconChunkPos, pIconLine);
-								else 
-									p.InsertAfterBefore(0, pIconLine, "TRACK", "FX", 1, 0, "TRACKID");
-							}
-						}
-						pACTrack->m_icon.Set(rule->m_icon.Get());
-					}
-					pACTrack->m_bIconed = true;
-				}
-			}
-		}
-	}
-	
-	// Handle gradients
-	for (int i = 0; i < gradientTracks.GetSize(); i++)
-	{
-		int newCol = g_crGradStart | 0x1000000;
-		if (i && gradientTracks.GetSize() > 1)
-			newCol = CalcGradient(g_crGradStart, g_crGradEnd, (double)i / (gradientTracks.GetSize()-1)) | 0x1000000;
-		for (int j = 0; j < g_pACTracks.Get()->GetSize(); j++)
-			if (g_pACTracks.Get()->Get(j)->m_pTr == (MediaTrack*)gradientTracks.Get(i))
-			{
-				g_pACTracks.Get()->Get(j)->m_col = newCol;
-				break;
-			}
-		GetSetMediaTrackInfo((MediaTrack*)gradientTracks.Get(i), "I_CUSTOMCOLOR", &newCol);
-	}
+	            if (i) // ignore master for most things
+	            {
+		            // Check "special" rules first:
+		            if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_FOLDER]) == 0)
+		            {
+			            int iType;
+			            GetFolderDepth(tr, &iType, &temp);
+			            if (iType == 1)
+				            bMatch = true;
+		            }
+		            else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_CHILDREN]) == 0)
+		            {
+			            temp = CSurf_TrackFromID(0, false); // JFB fix: 'temp' could be out of sync 
+			            if (GetFolderDepth(tr, NULL, &temp) >= 1)
+				            bMatch = true;
+		            }
+		            else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_RECEIVE]) == 0)
+		            {
+			            if (GetSetTrackSendInfo(tr, -1, 0, "P_SRCTRACK", NULL))
+				            bMatch = true;
+		            }
+		            else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_UNNAMED]) == 0)
+		            {
+			            char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
+			            if (!cName || !cName[0])
+				            bMatch = true;
+		            }
+		            else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_ANY]) == 0)
+		            {
+			            bMatch = true;
+		            }
+		            else // Check for name match
+		            {
+			            char* cName = (char*)GetSetMediaTrackInfo(tr, "P_NAME", NULL);
+			            if (cName && stristr(cName, rule->m_str_filter.Get()))
+				            bMatch = true;
+		            }
+	            }
+	            else if (strcmp(rule->m_str_filter.Get(), cFilterTypes[AC_MASTER]) == 0)
+	            {	// Check master rule
+		            bMatch = true;
+	            }
+
+	            if (bMatch)
+	            {
+		            // Set the color
+		            if (bColor)
+		            {
+			            int iCurColor = *(int*)GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", NULL);
+			            if (!(iCurColor & 0x1000000))
+				            iCurColor = 0;
+			            int newCol = iCurColor;
+
+			            if (rule->m_color == -AC_RANDOM-1)
+			            {
+				            // Only randomize once
+				            if (!(iCurColor & 0x1000000))
+					            newCol = RGB(rand() % 256, rand() % 256, rand() % 256) | 0x1000000;
+			            }
+			            else if (rule->m_color == -AC_CUSTOM-1)
+			            {
+				            if (!AllBlack())
+					            while(!(newCol = g_custColors[iCount++ % 16]));
+				            newCol |= 0x1000000;							
+			            }
+			            else if (rule->m_color == -AC_GRADIENT-1)
+				            gradientTracks.Add(tr);
+			            else if (rule->m_color == -AC_NONE-1)
+				            newCol = 0;
+			            else if (rule->m_color == -AC_PARENT-1)
+			            {
+				            MediaTrack* parent = (MediaTrack*)GetSetMediaTrackInfo(tr, "P_PARTRACK", NULL);
+				            if (parent)
+				            {
+					            int pcol = *(int*)GetSetMediaTrackInfo(parent, "I_CUSTOMCOLOR", NULL);
+					            if (pcol & 0x1000000) // Only color like parent if the parent has color (maybe not?)
+						            newCol = pcol;
+				            }
+			            }
+			            else
+				            newCol = rule->m_color | 0x1000000;
+
+			            // Only set the color if the user hasn't changed the color manually (but record it as being changed)
+			            if ((bForce || iCurColor == pACTrack->m_col) && newCol != iCurColor)
+				            GetSetMediaTrackInfo(tr, "I_CUSTOMCOLOR", &newCol);
+
+			            pACTrack->m_col = newCol;
+			            pACTrack->m_bColored = true;
+		            }
+
+		            if (bIcon)
+		            {
+			            if (strcmp(rule->m_icon.Get(), pACTrack->m_icon.Get()))
+			            {
+				            SNM_ChunkParserPatcher p(tr); // nothing done yet
+				            char pIconLine[BUFFER_SIZE] = "";
+				            int iconChunkPos = p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "TRACKIMGFN", 0, 1, pIconLine, NULL, "TRACKID");
+				            if (strcmp(pIconLine, rule->m_icon.Get()))
+				            {
+					            // Only overwrite the icon if there's no icon, or we're forcing, or we set it ourselves earlier
+					            if (bForce || iconChunkPos == 0 || strcmp(pIconLine, pACTrack->m_icon.Get()) == 0)
+					            {
+						            if (rule->m_icon.GetLength())
+							            sprintf(pIconLine, "TRACKIMGFN \"%s\"\n", rule->m_icon.Get());	
+						            else // The code as written will never hit this case, as empty m_icon means "ignore"
+							            *pIconLine = 0;
+
+						            if (iconChunkPos > 0)
+							            p.ReplaceLine(--iconChunkPos, pIconLine);
+						            else 
+							            p.InsertAfterBefore(0, pIconLine, "TRACK", "FX", 1, 0, "TRACKID");
+					            }
+				            }
+				            pACTrack->m_icon.Set(rule->m_icon.Get());
+			            }
+			            pACTrack->m_bIconed = true;
+		            }
+	            }
+            }
+        }
+    	
+        // Handle gradients
+        for (int i = 0; i < gradientTracks.GetSize(); i++)
+        {
+            int newCol = g_crGradStart | 0x1000000;
+            if (i && gradientTracks.GetSize() > 1)
+	            newCol = CalcGradient(g_crGradStart, g_crGradEnd, (double)i / (gradientTracks.GetSize()-1)) | 0x1000000;
+            for (int j = 0; j < g_pACTracks.Get()->GetSize(); j++)
+	            if (g_pACTracks.Get()->Get(j)->m_pTr == (MediaTrack*)gradientTracks.Get(i))
+	            {
+		            g_pACTracks.Get()->Get(j)->m_col = newCol;
+		            break;
+	            }
+            GetSetMediaTrackInfo((MediaTrack*)gradientTracks.Get(i), "I_CUSTOMCOLOR", &newCol);
+        }
+    }
+    else
+        return;
 }
 
 // Here's the meat and potatoes, apply the colors!
@@ -726,8 +875,13 @@ void AutoColorRun(bool bForce)
 	SWS_CacheObjectState(true);
 	bool bDoColors = g_bACEnabled || bForce;
 	bool bDoIcons  = g_bAIEnabled || bForce;
+
 	for (int i = 0; i < g_pACItems.GetSize(); i++)
-		ApplyColorRule(g_pACItems.Get(i), bDoColors, bDoIcons, bForce);
+    {
+		ApplyColorRuleToTrack(g_pACItems.Get(i), bDoColors, bDoIcons, bForce);
+        ApplyColorRuleToRegion(g_pACItems.Get(i));
+        ApplyColorRuleToMarker(g_pACItems.Get(i));
+    }
 
 	// Remove colors/icons if necessary
 	for (int i = 0; i < g_pACTracks.Get()->GetSize(); i++)
@@ -897,12 +1051,14 @@ int AutoColorInit()
 	{
 		char key[32];
 		_snprintf(key, 32, AC_ITEM_KEY, i+1);
-		GetPrivateProfileString(SWS_INI, key, "", str, BUFFER_SIZE, ini.Get());
+		GetPrivateProfileString(SWS_INI, key, "", str, BUFFER_SIZE, ini.Get()); // Read in AutoColor line (stored in str)
 		if (bUpgrade) // Remove old lines
 			WritePrivateProfileString(SWS_INI, key, NULL, get_ini_file());
 		LineParser lp(false);
-		if (!lp.parse(str) && lp.getnumtokens() == 3)
-			g_pACItems.Add(new SWS_RuleItem(lp.gettoken_str(0), lp.gettoken_int(1), lp.gettoken_str(2)));
+		if (!lp.parse(str) && lp.getnumtokens() == 4)
+			g_pACItems.Add(new SWS_RuleItem(lp.gettoken_str(0), lp.gettoken_str(1), lp.gettoken_int(2), lp.gettoken_str(3)));
+        else if(!lp.parse(str) && lp.getnumtokens() == 3) //Reformat old format Autocolor line to new format
+            g_pACItems.Add(new SWS_RuleItem("Track", lp.gettoken_str(0), lp.gettoken_int(1), lp.gettoken_str(2)));
 	}	
 
 	if (bUpgrade)
@@ -933,10 +1089,11 @@ void AutoColorSaveState()
 	for (int i = 0; i < g_pACItems.GetSize(); i++)
 	{
 		_snprintf(key, 32, AC_ITEM_KEY, i+1);
-		WDL_String str1, str2;
-		makeEscapedConfigString(g_pACItems.Get(i)->m_str.Get(), &str1);
-		makeEscapedConfigString(g_pACItems.Get(i)->m_icon.Get(), &str2);
-		_snprintf(str, BUFFER_SIZE, "\"%s %d %s\"", str1.Get(), g_pACItems.Get(i)->m_col, str2.Get());
+		WDL_String str1, str2, str3;
+        makeEscapedConfigString(g_pACItems.Get(i)->m_str_type.Get(), &str1);
+		makeEscapedConfigString(g_pACItems.Get(i)->m_str_filter.Get(), &str2);
+		makeEscapedConfigString(g_pACItems.Get(i)->m_icon.Get(), &str3);
+		_snprintf(str, BUFFER_SIZE, "\"%s %s %d %s\"", str1.Get(), str2.Get(), g_pACItems.Get(i)->m_color, str3.Get());
 		WritePrivateProfileString(SWS_INI, key, str, g_ACIni.Get());
 	}
 	// Erase the n+1 entry to avoid confusing files

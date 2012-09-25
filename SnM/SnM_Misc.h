@@ -32,9 +32,18 @@
 
 // reascript export
 void GenAPI(COMMAND_T*);
+WDL_FastString* SNM_CreateFastString(const char* _str);
+const char* SNM_GetFastString(WDL_FastString* _str);
+int SNM_GetFastStringLength(WDL_FastString* _str);
+WDL_FastString* SNM_SetFastString(WDL_FastString* _str, const char* _newStr);
+void SNM_DeleteObject(void* obj);
 MediaItem_Take* SNM_GetMediaItemTakeByGUID(ReaProject* _project, const char* _guid);
-bool SNM_GetSetSourceState(MediaItem* _item, int takeIdx, char* _state, bool _setnewvalue);
+bool SNM_GetSourceType(MediaItem_Take* _tk, WDL_FastString* _type);
+bool SNM_GetSetSourceState(MediaItem* _item, int takeIdx, WDL_FastString* _state, bool _setnewvalue);
+bool SNM_GetSetSourceState2(MediaItem_Take* _tk, WDL_FastString* _state, bool _setnewvalue);
+bool SNM_GetSetObjectState(void* _obj, WDL_FastString* _state, bool _setnewvalue, bool _minstate);
 bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type);
+bool SNM_RemoveReceive(MediaTrack* _tr, int _rcvIdx);
 int SNM_GetIntConfigVar(const char* _varName, int _errVal);
 bool SNM_SetIntConfigVar(const char* _varName, int _newVal);
 double SNM_GetDoubleConfigVar(const char* _varName, double _errVal);

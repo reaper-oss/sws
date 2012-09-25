@@ -45,6 +45,27 @@ void GenAPI(COMMAND_T*)
 	RegisterExportedAPI(g_rec);
 }
 
+WDL_FastString* SNM_CreateFastString(const char* _str) {
+	return new WDL_FastString(_str);
+}
+
+const char* SNM_GetFastString(WDL_FastString* _str) {
+	return _str?_str->Get():"";
+}
+
+int SNM_GetFastStringLength(WDL_FastString* _str) {
+	return _str?_str->GetLength():0;
+}
+
+WDL_FastString* SNM_SetFastString(WDL_FastString* _str, const char* _newStr) {
+	if (_str) _str->Set(_newStr?_newStr:"");
+	return _str;
+}
+
+void SNM_DeleteObject(void* obj) { 
+	DELETE_NULL(obj);
+}
+
 MediaItem_Take* SNM_GetMediaItemTakeByGUID(ReaProject* _project, const char* _guid)
 {
 	if (_guid && *_guid)
@@ -56,9 +77,19 @@ MediaItem_Take* SNM_GetMediaItemTakeByGUID(ReaProject* _project, const char* _gu
 	return NULL;
 }
 
-// note: using PCM_source.Load/SaveState() won't always work
+bool SNM_GetSourceType(MediaItem_Take* _tk, WDL_FastString* _type)
+{
+	if (_tk && _type)
+		if (PCM_source* source = GetMediaItemTake_Source(_tk)) {
+			_type->Set(source->GetType());
+			return true;
+		}
+	return false;
+}
+
+// note: PCM_source.Load/SaveState() won't always work
 //       e.g. getting an empty take src, turning wav src into midi, etc..
-bool SNM_GetSetSourceState(MediaItem* _item, int _takeIdx, char* _state, bool _setnewvalue)
+bool SNM_GetSetSourceState(MediaItem* _item, int _takeIdx, WDL_FastString* _state, bool _setnewvalue)
 {
 	bool ok = false;
 	if (_item && _state)
@@ -77,7 +108,7 @@ bool SNM_GetSetSourceState(MediaItem* _item, int _takeIdx, char* _state, bool _s
 			if (_setnewvalue)
 			{
 				// standard case: a source is there
-				if (ptk.ReplaceSubChunk("SOURCE", 1, 0, _state)) // no break keyword here: we're already at the end of the item..
+				if (ptk.ReplaceSubChunk("SOURCE", 1, 0, _state->Get())) // no break keyword here: we're already at the end of the item..
 					ok = p.ReplaceTake(tkPos, tklen, ptk.GetChunk());
 				// replacing an empty take
 				else
@@ -90,12 +121,8 @@ bool SNM_GetSetSourceState(MediaItem* _item, int _takeIdx, char* _state, bool _s
 			// get
 			else
 			{
-				WDL_FastString state;
-				if (ptk.GetSubChunk("SOURCE", 1, 0, &state))
-					lstrcpyn(_state, state.Get(), REASCRIPT_MAX_STRBUF);
-				// empty take
-				else
-					*_state = '\0';
+				if (ptk.GetSubChunk("SOURCE", 1, 0, _state)<0)
+					_state->Set(""); // empty take
 				ok = true;
 			}
 		}
@@ -103,8 +130,7 @@ bool SNM_GetSetSourceState(MediaItem* _item, int _takeIdx, char* _state, bool _s
 	return ok;
 }
 
-/*
-bool SNM_GetSetTakeSourceState(MediaItem_Take* _tk, WDL_FastString* _state, bool _setnewvalue)
+bool SNM_GetSetSourceState2(MediaItem_Take* _tk, WDL_FastString* _state, bool _setnewvalue)
 {
 	if (_tk)
 		if (MediaItem* item = GetMediaItemTake_Item(_tk)) {
@@ -114,7 +140,28 @@ bool SNM_GetSetTakeSourceState(MediaItem_Take* _tk, WDL_FastString* _state, bool
 		}
 	return false;
 }
-*/
+
+bool SNM_GetSetObjectState(void* _obj, WDL_FastString* _state, bool _setnewvalue, bool _minstate)
+{
+	bool ok = false;
+	if (_obj && _state)
+	{
+		int fxstate = SNM_PreObjectState(_setnewvalue ? _state : NULL, _minstate);
+		char* p = GetSetObjectState(_obj, _setnewvalue ? _state->Get() : NULL);
+		if (_setnewvalue)
+		{
+			ok = (p==NULL);
+		}
+		else if (p)
+		{
+			_state->Set(p);
+			FreeHeapPtr((void*)p);
+			ok = true;
+		}
+		SNM_PostObjectState(fxstate);
+	}
+	return ok;
+}
 
 bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type)
 {
@@ -125,6 +172,15 @@ bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type)
 		char pan[32] = "0.00000000000000";
 		_snprintfSafe(vol, sizeof(vol), "%.14f", *(double*)GetConfigVar("defsendvol"));
 		return (p.AddReceive(_srcTr, _type, vol, pan) > 0);
+	}
+	return false;
+}
+
+bool SNM_RemoveReceive(MediaTrack* _tr, int _rcvIdx)
+{
+	if (_tr && _rcvIdx>=0) 	{
+		SNM_ChunkParserPatcher p(_tr);
+		return p.RemoveLine("TRACK", "AUXRECV", 1, _rcvIdx, "MIDIOUT");
 	}
 	return false;
 }

@@ -255,7 +255,11 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTI
 CAPTION "Info"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
+#ifdef _WIN32
     EDITTEXT        IDC_EDIT,7,7,311,260,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL | WS_HSCROLL
+#else
+    EDITTEXT        IDC_EDIT,7,7,311,260,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL
+#endif
 END
 
 IDD_RECVMISSING DIALOGEX 0, 0, 253, 74
@@ -935,7 +939,11 @@ EXSTYLE WS_EX_TOOLWINDOW
 CAPTION "S&M - Notes/Subtitles/Help"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
+#ifdef _WIN32
     EDITTEXT        IDC_EDIT,6,22,269,96,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL | WS_HSCROLL | NOT WS_TABSTOP
+#else
+    EDITTEXT        IDC_EDIT,6,22,269,96,ES_MULTILINE | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN | WS_VSCROLL | NOT WS_TABSTOP
+#endif
 END
 
 IDD_SNM_FIND DIALOGEX 0, 0, 260, 65
@@ -1772,7 +1780,8 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

@@ -179,6 +179,7 @@ int ListView_GetSelectedCountCast(HWND h);
 int ListView_GetItemCountCast(HWND h);
 bool ListView_GetItemCast(HWND h, LVITEM *item);
 void ListView_GetItemTextCast(HWND hwnd, int item, int subitem, char *text, int textmax);
+BOOL IsWindowEnabled(HWND hwnd);
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 

@@ -35,7 +35,6 @@
 
 //Globals
 static bool g_convertProjectMarkersDialog = false;
-static bool g_selectAdjustTempoPointsDialog = false;
 
 //Prototypes
 void BRConvertProjectMarkersToTempoMarkers(int num, int den, int measure, int timeSelection, int removeMarkers);
@@ -742,7 +741,7 @@ WDL_DLGRET BRConvertProjectMarkersToTempoMarkersProc(HWND hwnd, UINT uMsg, WPARA
 							}
 						}
 					}
-					
+                    
 					if (!IsWindowEnabled(GetDlgItem(hwnd, IDC_BR_TIMESEL)))
 						timeSelection = 0;
 

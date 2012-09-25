@@ -400,3 +400,19 @@ void ListView_GetItemTextCast(HWND hwnd, int item, int subitem, char *text, int 
     ListView_GetItemCast(hwnd,&it);
 }
 
+BOOL IsWindowEnabled(HWND hwnd)
+{
+    if (!hwnd) return FALSE;
+    SWELL_BEGIN_TRY
+    id bla=(id)hwnd;
+    
+    if ([bla isKindOfClass:[NSWindow class]]) bla = [bla contentView];
+    
+    if (bla && [bla respondsToSelector:@selector(isEnabled:)])
+    {
+        return [bla isEnabled] == YES ? TRUE : FALSE;
+    }
+    SWELL_END_TRY(;)
+    return FALSE;
+}
+

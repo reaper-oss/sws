@@ -1191,7 +1191,7 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 	LICE_CachedFont* font = SNM_GetThemeFont();
 
 	// 1st row of controls
-	int x0=_r->left+10, h=35;
+	int x0=_r->left+10, h=SNM_TOP_GUI_HEIGHT;
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
 
@@ -1210,7 +1210,7 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 	}
 
 	// 2nd row of controls
-	x0 = _r->left+8; h=39;
+	x0 = _r->left+8; h=SNM_BOT_GUI_HEIGHT;
 	int y0 = _r->bottom-h;
 
 	SNM_SkinToolbarButton(&m_btnApply, __LOCALIZE("Apply","sws_DLG_161"));

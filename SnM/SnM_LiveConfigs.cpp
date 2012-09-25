@@ -1024,7 +1024,7 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _t
 	if (!g_liveConfigs.Get()->Get(g_configId))
 		return;
 
-	int x0=_r->left+10, h=35;
+	int x0=_r->left+10, h=SNM_TOP_GUI_HEIGHT;
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
 	

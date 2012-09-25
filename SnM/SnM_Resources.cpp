@@ -1763,7 +1763,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 	// 1st row of controls (top)
 	///////////////////////////////////
 
-	int x0=_r->left+10, h=35;
+	int x0=_r->left+10, h=SNM_TOP_GUI_HEIGHT;
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
 
@@ -1812,7 +1812,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 	// 2nd row of controls (bottom)
 	///////////////////////////////////
 
-	x0 = _r->left+8; h=39;
+	x0 = _r->left+8; h=SNM_BOT_GUI_HEIGHT;
 	int y0 = _r->bottom-h;
 
 	// defines a new rect r that takes the filter edit box into account (contrary to _r)

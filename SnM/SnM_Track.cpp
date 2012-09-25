@@ -340,7 +340,7 @@ int GetTrackDepth(MediaTrack* _tr)
 			depth += *(int*)GetSetMediaTrackInfo(tr, "I_FOLDERDEPTH", NULL);
 			if (_tr==tr) return depth;
 		}
-	return 0;
+	return depth;
 }
 
 

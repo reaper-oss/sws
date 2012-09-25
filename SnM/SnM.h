@@ -50,6 +50,8 @@
 #define SNM_EXTENSION_FILE			"%s\\Plugins\\reaper_snm.dll"
 #define SNM_FONT_NAME				"MS Shell Dlg"
 #define SNM_FONT_HEIGHT				14
+#define SNM_TOP_GUI_HEIGHT			36
+#define SNM_BOT_GUI_HEIGHT			41
 #else
 #define SNM_FORMATED_INI_FILE		"%s/S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE	"%s/Plugins/S&M.ini"
@@ -59,7 +61,9 @@
 #define SNM_CYCLACTION_EXPORT_FILE	"%s/S&M_Cyclactions_export.ini"
 #define SNM_EXTENSION_FILE			"%s/UserPlugins/reaper_snm.dylib"
 #define SNM_FONT_NAME				"Arial"
-#define SNM_FONT_HEIGHT				12
+#define SNM_FONT_HEIGHT				11
+#define SNM_TOP_GUI_HEIGHT			37
+#define SNM_BOT_GUI_HEIGHT			43
 #endif
 
 #ifndef _SNM_STANDALONE

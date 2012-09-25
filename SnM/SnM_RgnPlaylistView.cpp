@@ -559,7 +559,7 @@ void SNM_RegionPlaylistWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int*
 
 	LICE_CachedFont* font = SNM_GetThemeFont();
 	IconTheme* it = SNM_GetIconTheme();
-	int x0=_r->left+10, h=35;
+	int x0=_r->left+10, h=SNM_TOP_GUI_HEIGHT;
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
 	

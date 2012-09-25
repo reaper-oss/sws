@@ -364,7 +364,7 @@ void SNM_NotesHelpWnd::OnResize()
 
 void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
-	int h=35;
+	int h=SNM_TOP_GUI_HEIGHT;
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
 
@@ -505,7 +505,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	if (g_locked)
 		return;
 
-	x0 = _r->left+8; h=39;
+	x0 = _r->left+8; h=SNM_BOT_GUI_HEIGHT;
 	int y0 = _r->bottom-h;
 
 	// import/export buttons

@@ -238,7 +238,7 @@ void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 int SNM_FindWnd::OnKey(MSG* _msg, int _iKeyState) 
 {
-	if (_msg->message == WM_KEYDOWN && _msg->wParam == VK_F3)
+	if (_msg->message == WM_KEYDOWN && (_msg->wParam == VK_F3 || _msg->wParam == VK_RETURN))
 	{
 		// F3: find next
 		if (!_iKeyState) {
@@ -259,7 +259,7 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 	LICE_CachedFont* font = SNM_GetThemeFont();
 
 	// 1st row of controls
-	int x0=_r->left+10, h=35;
+	int x0=_r->left+10, h=SNM_TOP_GUI_HEIGHT;
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
 	bool drawLogo = false;

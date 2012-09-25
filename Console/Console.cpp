@@ -100,7 +100,7 @@ static console_COMMAND_T g_commands[NUM_COMMANDS] =
 	{ COLOR_SET,		0, 'c',  9, "Change color on ",		 " to %s" },
 	{ MARKER_ADD,		0, '!', 25, "Insert action marker ", "!%s" },
 	{ HELP_CMD,         0, '?', -1, "http://www.standingwaterstudios.com/reaconsole.php", 0 },
-	{ UNKNOWN_COMMAND,  0,   0, -1, "Enter a command...", 0 },
+	{ UNKNOWN_COMMAND,  0,   0, -1, "Enter a command...",    0 },
 };
 //!WANT_LOCALIZE_STRINGS_END
 
@@ -672,7 +672,7 @@ const char* StatusString(CONSOLE_COMMAND command, const char* args)
 		}
 	}
 
-	if (args && args[0] && g_commands[command].iNumArgs > 0)
+	if (args && args[0] && g_commands[command].iNumArgs > 0 && g_commands[command].cHelpSuffix)
 		n += sprintf(status + n, __localizeFunc(g_commands[command].cHelpSuffix, "sws_DLG_100", LOCALIZE_FLAG_VERIFY_FMTS), args);
 
 	return status;

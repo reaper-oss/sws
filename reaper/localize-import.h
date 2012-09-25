@@ -34,7 +34,7 @@ static DLGPROC (*importedLocalizePrepareDialog)(const char *rescat, HINSTANCE hI
 
 const char *__localizeFunc(const char *str, const char *subctx, int flags)
 {
-  if (importedLocalizeFunc) return importedLocalizeFunc(str,subctx,flags);
+  if (str && importedLocalizeFunc) return importedLocalizeFunc(str,subctx,flags);
   return str;
 }
 

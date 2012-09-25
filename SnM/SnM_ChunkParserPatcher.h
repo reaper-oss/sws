@@ -522,9 +522,9 @@ const char* SNM_GetSetObjectState(void* _obj, WDL_FastString* _str)
 #ifdef _SWS_EXTENSION
 	p = SWS_GetSetObjectState(_obj, _str, m_minimalState);
 #else
-	SNM_PreObjectState(_str, m_minimalState);
+	itn fxstate = SNM_PreObjectState(_str, m_minimalState);
 	p = GetSetObjectState(_obj, _str ? _str->Get() : NULL);
-	SNM_PostObjectState();
+	SNM_PostObjectState(fxstate);
 #endif
 #ifdef _SNM_DEBUG
 	char fn[BUFFER_SIZE] = "";

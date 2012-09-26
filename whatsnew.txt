@@ -1,7 +1,7 @@
 <b>Auto color for regions and markers, thanks Brado231!</b> (issue 339)
 +Added column "Type" (type = track, marker or region) in the "Auto color/icon" window's list
 +Reorganized the window/context menus a bit
-+Added options (new actions + new button "Options" + the main menu > extensions > sws options)
++Added options (new actions + new button "Options" + main menu > extensions > sws options)
  - Enable auto marker coloring - Disabled by default!
  - Enable auto marker coloring - Disabled by default!
 
@@ -15,12 +15,13 @@ Notes for translators:
 +The following tools are intentionally not localized (to avoid useless translations):
  - S&M Find (a new version will come at some point)
  - SWS TrackList (might be removed at some point, over exceeded by the new native Track Manager)
+ - A few (exotic) Xenakios tools
 
 Export functions to ReaScript (BETA)
 +Updated API doc (Main menu > Help > HTML Lists > ReaScript documentation)
 +Updated some APIs functions with WDL_FastString* parameters (tighter memory allocation + get rid of string length limitations for ReaScripters)
  Might be temporary, see details & example http://forum.cockos.com/showpost.php?p=1040948&postcount=1016|here|
-+Added functions (more details in REAPER, Main menu > Help > HTML Lists > ReaScript documentation):
++Added functions:
  - SNM_GetSetObjectState()
  - SNM_GetSetSourceState2() - Note that this function cannot deal with empty takes (contrary to SNM_GetSetSourceState())
  - SNM_GetSourceType()
@@ -59,7 +60,7 @@ Other
  This action removes all track/plugin envelopes. Now it also removes parameter modulation
 +Cycle action editor: added button "Import/export..."
 +Issue 515/Find window: RETURN key = find next (reminder: F3/Shift-F3 = find next/previous)
-+All S&M windows: GUI tweaks (things look better, especially on OSX)
++All S&M windows: GUI tweaks
 
 Fixes
 +Issue 459: fixed possible crash when applying grooves

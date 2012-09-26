@@ -13,6 +13,157 @@
 #include "TimeMap.h"
 #include "RprException.hxx"
 
+RprMidiTake* FNG_AllocMidiTake(MediaItem_Take* take)
+{
+    RprTake rprTake(take);
+    if (rprTake.isMIDI() && !rprTake.isFile())
+    {
+        return new RprMidiTake(rprTake);
+    }
+    return 0;
+}
+
+void FNG_FreeMidiTake(RprMidiTake* midiTake)
+{
+    delete midiTake;
+}
+
+// Count how many MIDI notes the take has
+int FNG_CountMidiNotes(RprMidiTake* midiTake)
+{
+    if (midiTake)
+    {
+        return midiTake->countNotes();
+    }
+    
+    return 0;
+}
+
+// Get MIDI note from MIDI take at specified index
+RprMidiNote* FNG_GetMidiNote(RprMidiTake* midiTake, int index)
+{
+    if (index < 0)
+    {
+        return 0;
+    }
+    
+    if (!midiTake)
+    {
+        return 0;
+    }
+    
+    if (index >= midiTake->countNotes())
+    {
+        return 0;
+    }
+    return midiTake->getNoteAt(index);
+}
+
+#define FNG_STRCMP(x, static_y) ( strncmp(x, static_y, sizeof(static_y) - 1 ) == 0)
+
+int FNG_GetMidiNoteIntProperty(RprMidiNote* midiNote, const char* property)
+{
+    if (!midiNote)
+    {
+        return 0;
+    }
+    
+    if (FNG_STRCMP(property, "VELOCITY"))
+    {
+        return midiNote->getVelocity();
+    }
+    
+    if (FNG_STRCMP(property, "PITCH"))
+    {
+        return midiNote->getPitch();
+    }
+    
+    if (FNG_STRCMP(property, "POSITION"))
+    {
+        return midiNote->getItemPosition();
+    }
+    
+    if (FNG_STRCMP(property, "LENGTH"))
+    {
+        return midiNote->getItemLength();
+    }
+    
+    if (FNG_STRCMP(property, "CHANNEL"))
+    {
+        return midiNote->getChannel();
+    }
+    
+    if (FNG_STRCMP(property, "SELECTED"))
+    {
+        return midiNote->isSelected() ? 1 : 0;
+    }
+    
+    if (FNG_STRCMP(property, "MUTED"))
+    {
+        return midiNote->isMuted() ? 1 : 0;
+    }
+    return 0;
+}
+
+void FNG_SetMidiNoteIntProperty(RprMidiNote* midiNote, const char* property, int value)
+{
+    if (!midiNote)
+    {
+        return;
+    }
+    
+    if (FNG_STRCMP(property, "VELOCITY"))
+    {
+        midiNote->setVelocity(value);
+        return;
+    }
+    
+    if (FNG_STRCMP(property, "PITCH"))
+    {
+        midiNote->setPitch(value);
+        return;
+    }
+    
+    if (FNG_STRCMP(property, "POSITION"))
+    {
+        midiNote->setItemPosition(value);
+        return;
+    }
+    
+    if (FNG_STRCMP(property, "LENGTH"))
+    {
+        midiNote->setItemLength(value);
+        return;
+    }
+    
+    if (FNG_STRCMP(property, "CHANNEL"))
+    {
+        midiNote->setChannel(value);
+        return;
+    }
+    
+    if (FNG_STRCMP(property, "SELECTED"))
+    {
+        midiNote->setSelected(value != 0);
+        return;
+    }
+    
+    if (FNG_STRCMP(property, "MUTED"))
+    {
+        midiNote->setMuted(value != 0);
+        return;
+    }
+}
+
+RprMidiNote* FNG_AddMidiNote(RprMidiTake* midiTake)
+{
+    if (midiTake)
+    {
+        return midiTake->addNoteAt(0);
+    }
+    return 0;
+}
+
 typedef std::list<RprMidiBase *> RprMidiEvents;
 typedef std::list<RprMidiBase *>::iterator RprMidiEventsIter;
 typedef std::list<RprMidiBase *>::const_iterator RprMidiEventsCIter;
@@ -158,6 +309,12 @@ bool RprMidiNote::isMuted() const
     return mNoteOn->isMuted();
 }
 
+void RprMidiNote::setMuted(bool muted)
+{
+    mNoteOn->setMuted(muted);
+    mNoteOff->setMuted(muted);
+}
+
 void RprMidiNote::setSelected(bool selected)
 {
     mNoteOn->setSelected(selected);
@@ -167,6 +324,13 @@ void RprMidiNote::setSelected(bool selected)
 int RprMidiNote::getItemPosition() const
 {
     return mNoteOn->getOffset();
+}
+
+void RprMidiNote::setItemPosition(int position)
+{
+    int noteOffPosition = mNoteOff->getOffset() - mNoteOn->getOffset() + position;
+    mNoteOn->setOffset(position);
+    mNoteOff->setOffset(noteOffPosition);
 }
 
 int RprMidiNote::getChannel() const
@@ -524,7 +688,6 @@ static void removeDuplicates(std::vector<RprMidiCC *> *midiCCs)
         for(int ccOffset = 0; (midiCCs[i].begin() + ccOffset) != midiCCs[i].end(); ++ccOffset) 
         {
             std::vector<RprMidiCC *>::iterator j = midiCCs[i].begin() + ccOffset;
-            RprMidiCC *cc = *j;
             for(std::vector<RprMidiCC *>::iterator k = j + 1; k != midiCCs[i].end(); ++k) 
             {
                 if( (*k)->getItemPosition() > (*j)->getItemPosition())
@@ -663,7 +826,7 @@ RprMidiTake::RprMidiTake(const RprTake &take, bool readOnly)
             getParent()->getPosition() - (take.getStartOffset() / take.getPlayRate()),
             getQNValue(sourceNode));
 
-        if(!getMidiNotes(tempMidiEvents.get(), mNotes, mContext)) 
+        if (!getMidiNotes(tempMidiEvents.get(), mNotes, mContext)) 
         {
             throw RprLibException(__LOCALIZE("Unable to parse MIDI data","sws_mbox"));
         }

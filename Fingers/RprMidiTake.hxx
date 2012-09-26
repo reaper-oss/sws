@@ -10,6 +10,30 @@ class RprMidiContext;
 class RprItem;
 class RprNode;
 class RprMidiTake;
+class RprMidiNote;
+
+// Reascript functions
+
+// Allocates a RprMidiTake from a take pointer. Returns
+// 0 if take is not a MIDI take.
+RprMidiTake* FNG_AllocMidiTake(MediaItem_Take* take);
+
+// Deletes and commits any changes to the RprMidiTake
+void FNG_FreeMidiTake(RprMidiTake* midiTake);
+
+// Count how many MIDI notes are in the midi take
+int FNG_CountMidiNotes(RprMidiTake* midiTake);
+
+// Get MIDI note from MIDI take at specified index
+RprMidiNote* FNG_GetMidiNote(RprMidiTake* midiTake, int index);
+
+// Get and set properties on a Midi Note
+int FNG_GetMidiNoteIntProperty(RprMidiNote* midiNote, const char* property);
+void FNG_SetMidiNoteIntProperty(RprMidiNote* midiNote, const char* property, int value);
+
+// Add a midi note to the take
+RprMidiNote* FNG_AddMidiNote(RprMidiTake* midiTake);
+
 
 typedef std::auto_ptr<RprMidiTake> RprMidiTakePtr;
 
@@ -38,15 +62,18 @@ public:
     void setSelected(bool selected);
 
     bool isMuted() const;
+    void setMuted(bool muted);
 
     int getItemPosition() const;
+    void setItemPosition(int position);
+    
     int getItemLength() const;
-
     void setItemLength(int);
 
     ~RprMidiNote();
 private:
     friend class RprMidiTake;
+    
     RprMidiBase *mNoteOn;
     RprMidiBase *mNoteOff;
     RprMidiContext *mContext;

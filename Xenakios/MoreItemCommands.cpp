@@ -636,7 +636,7 @@ void DoDeleteItemAndMedia(COMMAND_T*)
 						char buf[2000];
 						sprintf(buf,__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
 						
-						int rc=MessageBox(g_hwndParent,buf,__LOCALIZE("Confirm","sws_mbox"),MB_OKCANCEL);
+						int rc=MessageBox(g_hwndParent,buf,__LOCALIZE("Xenakios - Info","sws_mbox"),MB_OKCANCEL);
 						if (rc==IDOK)
 						{
 							DeleteFile(CurPCM->GetFileName());
@@ -741,7 +741,7 @@ void DoNukeTakeAndSourceMedia(COMMAND_T*)
 					char buf[2000];
 					sprintf(buf,__LOCALIZE_VERFMT("Do you really want to immediately delete file (NO UNDO) %s?","sws_mbox"),CurPCM->GetFileName());
 					
-					int rc=MessageBox(g_hwndParent,buf,__LOCALIZE("Confirm","sws_mbox"),MB_OKCANCEL);
+					int rc=MessageBox(g_hwndParent,buf,__LOCALIZE("Xenakios - Info","sws_mbox"),MB_OKCANCEL);
 					if (rc==IDOK)
 					{
 						DeleteFile(CurPCM->GetFileName());

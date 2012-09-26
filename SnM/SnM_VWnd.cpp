@@ -208,13 +208,14 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, 
 {
 	if (_comp && _h && abs(_r->bottom-_r->top) >= _h)
 	{
-		int width=0, height=_h;
+		int width=0, height=0; //JFB!!! height used to be _h!
 		if (!strcmp(_comp->GetType(), "vwnd_statictext"))
 		{
 			WDL_VirtualStaticText* txt = (WDL_VirtualStaticText*)_comp;
 			RECT tr = {0,0,0,0};
 			txt->GetFont()->DrawText(NULL, txt->GetText(), -1, &tr, DT_CALCRECT);
 			width = tr.right;
+			height = tr.bottom;
 		}
 		else if (!strcmp(_comp->GetType(), "vwnd_combobox"))
 		{
@@ -246,12 +247,15 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, 
 					width = int(2.6*width); // larger toolbar buttons!
 					height = int(0.75*height + 0.5) + 1; // +1 for text vertical alignment
 				}
+				// .. can be changed below! (i.e. adapt to larger text)
 			}
-			else if (btn->GetFont())
+			if (btn->GetFont())
 			{
 				RECT tr = {0,0,0,0};
 				btn->GetFont()->DrawText(NULL, btn->GetTextLabel(), -1, &tr, DT_CALCRECT);
-				height = tr.bottom + int(tr.bottom/2 + 0.5);
+				if (tr.bottom > height)
+					height = int(tr.bottom + tr.bottom/2 + 0.5); // unlikely to happen..
+				if ((tr.right+int(height/2 + 0.5)) > width)
 				width = int(tr.right + height/2 + 0.5); // +height/2 for some air
 				if (btn->GetCheckState() != -1) {
 					width += tr.bottom; // for the tick zone
@@ -262,6 +266,9 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, 
 		else  if (!strcmp(_comp->GetType(), "SNM_MiniAddDelButtons")) {
 			width=9;
 			height=9*2+1;
+		}
+		else if (!strcmp(_comp->GetType(), "SNM_MiniKnob")) {
+			width=height=25;
 		}
 
 		if (*_x+width > _r->right-10) // enough horizontal room?

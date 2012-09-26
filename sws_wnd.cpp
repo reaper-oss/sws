@@ -37,7 +37,7 @@
 */
 
 #include "stdafx.h"
-#include "./SnM/SnM_Dlg.h"
+#include "./SnM/SnM.h"
 #include "./reaper/localize.h"
 
 #define CELL_EDIT_TIMER		0x1000
@@ -1860,14 +1860,8 @@ void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char
       };
       tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
 */
-      LOGFONT lf = {
-#ifdef _WIN32
-        14,
-#else
-        12,
-#endif
-        0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SWSDLG_TYPEFACE
+      LOGFONT lf = {SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+        OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
       };
       tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|(g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
 //JFB <---

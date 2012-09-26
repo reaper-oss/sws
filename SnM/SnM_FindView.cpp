@@ -299,11 +299,11 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 
 	SNM_SkinToolbarButton(&m_btnFind, "Find all");
 	m_btnFind.SetGrayed(!g_searchStr || !(*g_searchStr) || m_type == TYPE_MARKER_REGION);
-	if (SNM_AutoVWndPosition(&m_btnFind, NULL, _r, &x0, y0, h, 1))
+	if (SNM_AutoVWndPosition(&m_btnFind, NULL, _r, &x0, y0, h, 4))
 	{
 		SNM_SkinToolbarButton(&m_btnPrev, "Previous");
 		m_btnPrev.SetGrayed(!g_searchStr || !(*g_searchStr));
-		if (SNM_AutoVWndPosition(&m_btnPrev, NULL, _r, &x0, y0, h, 1))
+		if (SNM_AutoVWndPosition(&m_btnPrev, NULL, _r, &x0, y0, h, 4))
 		{
 			SNM_SkinToolbarButton(&m_btnNext, "Next");
 			m_btnNext.SetGrayed(!g_searchStr || !(*g_searchStr));

@@ -33,9 +33,6 @@
 #include "../reaper/localize.h"
 
 
-//#define _SNM_MFC
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // Core stuff
 ///////////////////////////////////////////////////////////////////////////////
@@ -537,13 +534,8 @@ int CountEditedActions() {
 
 void UpdateEditedStatus(bool _edited) {
 	g_edited = _edited;
-#ifdef _SNM_MFC
-	if (g_pCyclactionWnd)
-		EnableWindow(GetDlgItem(g_pCyclactionWnd->GetHWND(), IDC_APPLY), g_edited);
-#else
 	if (g_pCyclactionWnd)
 		g_pCyclactionWnd->Update(false);
-#endif
 }
 
 void UpdateListViews() {
@@ -912,6 +904,7 @@ enum
   BUTTONID_UNDO,
   BUTTONID_APPLY,
   BUTTONID_CANCEL,
+  BUTTONID_IMPEXP,
   BUTTONID_ACTIONLIST
 };
 
@@ -941,11 +934,6 @@ void SNM_CyclactionWnd::OnInitDlg()
 
 	m_resize.init_item(IDC_LIST1, 0.0, 0.0, 0.5, 1.0);
 	m_resize.init_item(IDC_LIST2, 0.5, 0.0, 1.0, 1.0);
-#ifdef _SNM_MFC
-	m_resize.init_item(IDC_APPLY, 0.0, 1.0, 0.0, 1.0);
-	m_resize.init_item(IDC_ABORT, 0.0, 1.0, 0.0, 1.0);
-	m_resize.init_item(IDC_COMMAND, 1.0, 1.0, 1.0, 1.0);
-#endif
 
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
     m_parentVwnd.SetRealParent(m_hwnd);
@@ -970,11 +958,12 @@ void SNM_CyclactionWnd::OnInitDlg()
 	m_btnCancel.SetID(BUTTONID_CANCEL);
 	m_parentVwnd.AddChild(&m_btnCancel);
 
+	m_btnImpExp.SetID(BUTTONID_IMPEXP);
+	m_parentVwnd.AddChild(&m_btnImpExp);
+
 	m_btnActionList.SetID(BUTTONID_ACTIONLIST);
 	m_parentVwnd.AddChild(&m_btnActionList);
-#ifdef _SNM_MFC
-	EnableWindow(GetDlgItem(m_hwnd, IDC_APPLY), g_edited);
-#endif
+
 	Update();
 }
 
@@ -1158,25 +1147,20 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				UpdateEditedStatus(true);
 			}
 			break;
-#ifdef _SNM_MFC
-		case IDC_APPLY:
-#else
 		case BUTTONID_APPLY:
-#endif
 			Apply();
 			break;
-#ifdef _SNM_MFC
-		case IDC_ABORT: // and not IDCANCEL which is automatically used when closing (see sws_wnd.cpp)
-#else
 		case BUTTONID_CANCEL:
-#endif
 			Cancel(false);
 			break;
-#ifdef _SNM_MFC
-		case IDC_COMMAND:
-#else
+		case BUTTONID_IMPEXP: {
+				RECT r; m_btnImpExp.GetPositionInTopVWnd(&r);
+				ClientToScreen(m_hwnd, (LPPOINT)&r);
+				ClientToScreen(m_hwnd, ((LPPOINT)&r)+1);
+				SendMessage(m_hwnd, WM_CONTEXTMENU, 0, MAKELPARAM((UINT)(r.left), (UINT)(r.bottom+1)));
+			}
+			break;
 		case BUTTONID_ACTIONLIST:
-#endif
 			AllEditListItemEnd(false);
 			Main_OnCommand(40605, 0);
 			break;
@@ -1215,22 +1199,40 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 
 	SNM_SkinToolbarButton(&m_btnApply, __LOCALIZE("Apply","sws_DLG_161"));
 	m_btnApply.SetGrayed(!g_edited);
-	if (SNM_AutoVWndPosition(&m_btnApply, NULL, _r, &x0, y0, h, 1))
+	if (SNM_AutoVWndPosition(&m_btnApply, NULL, _r, &x0, y0, h, 4))
 	{
 		SNM_SkinToolbarButton(&m_btnCancel, __LOCALIZE("Cancel","sws_DLG_161"));
-		if (SNM_AutoVWndPosition(&m_btnCancel, NULL, _r, &x0, y0, h, 1))
+		if (SNM_AutoVWndPosition(&m_btnCancel, NULL, _r, &x0, y0, h, 4))
 		{
-			SNM_SkinToolbarButton(&m_btnActionList, __LOCALIZE("Action list...","sws_DLG_161"));
-			SNM_AutoVWndPosition(&m_btnActionList, NULL, _r, &x0, y0, h, 0);
-
-			// right re-align
-			RECT r; m_btnActionList.GetPosition(&r);
-			int w = r.right-r.left;
-			r.left = _r->right-w-9;
-			r.right = r.left+w;
-			m_btnActionList.SetPosition(&r);
+			SNM_SkinToolbarButton(&m_btnImpExp, __LOCALIZE("Import/export...","sws_DLG_161"));
+			if (SNM_AutoVWndPosition(&m_btnImpExp, NULL, _r, &x0, y0, h, 4))
+			{
+				SNM_SkinToolbarButton(&m_btnActionList, __LOCALIZE("Action list...","sws_DLG_161"));
+				SNM_AutoVWndPosition(&m_btnActionList, NULL, _r, &x0, y0, h, 4);
+#ifdef _SNM_MISC
+				// right re-align
+				RECT r; m_btnActionList.GetPosition(&r);
+				int w = r.right-r.left;
+				r.left = _r->right-w-9;
+				r.right = r.left+w;
+				m_btnActionList.SetPosition(&r);
+#endif
+			}
 		}
 	}
+}
+
+void SNM_CyclactionWnd::AddImportExportMenu(HMENU _menu)
+{
+	char buf[128] = "";
+	_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Import in section '%s'...","sws_DLG_161"), g_cyclactionSections[g_editedSection]);
+	AddToMenu(_menu, buf, IMPORT_CUR_SECTION_MSG);
+	AddToMenu(_menu, __LOCALIZE("Import all sections...","sws_DLG_161"), IMPORT_ALL_SECTIONS_MSG);
+	AddToMenu(_menu, SWS_SEPARATOR, 0);
+	AddToMenu(_menu, __LOCALIZE("Export selected cycle actions...","sws_DLG_161"), EXPORT_SEL_MSG);
+	_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Export section '%s'...","sws_DLG_161"), g_cyclactionSections[g_editedSection]);
+	AddToMenu(_menu, buf, EXPORT_CUR_SECTION_MSG);
+	AddToMenu(_menu, __LOCALIZE("Export all sections...","sws_DLG_161"), EXPORT_ALL_SECTIONS_MSG);
 }
 
 HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
@@ -1239,7 +1241,18 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 
 	AllEditListItemEnd(true);
 		
-	bool left=false, right=false; // which list view?
+	// specific context menu for the import/export button
+	POINT p; GetCursorPos(&p);
+	ScreenToClient(m_hwnd, &p);
+	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(p.x,p.y,1))
+		if (v->GetID() == BUTTONID_IMPEXP) {
+			*wantDefaultItems = false;
+			AddImportExportMenu(hMenu);
+			return hMenu;
+		}
+
+	// list view context menu?
+	bool left=false, right=false;
 	{
 		POINT pt = {x, y};
 		RECT r;	GetWindowRect(g_lvL->GetHWND(), &r);
@@ -1280,14 +1293,7 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		char buf[128] = "";
 		HMENU hImpExpSubMenu = CreatePopupMenu();
 		AddSubMenu(hMenu, hImpExpSubMenu, __LOCALIZE("Import/export...","sws_DLG_161"));
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Import in section '%s'...","sws_DLG_161"), g_cyclactionSections[g_editedSection]);
-		AddToMenu(hImpExpSubMenu, buf, IMPORT_CUR_SECTION_MSG);
-		AddToMenu(hImpExpSubMenu, __LOCALIZE("Import all sections...","sws_DLG_161"), IMPORT_ALL_SECTIONS_MSG);
-		AddToMenu(hImpExpSubMenu, SWS_SEPARATOR, 0);
-		AddToMenu(hImpExpSubMenu, __LOCALIZE("Export selected cycle actions...","sws_DLG_161"), EXPORT_SEL_MSG);
-		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Export section '%s'...","sws_DLG_161"), g_cyclactionSections[g_editedSection]);
-		AddToMenu(hImpExpSubMenu, buf, EXPORT_CUR_SECTION_MSG);
-		AddToMenu(hImpExpSubMenu, __LOCALIZE("Export all sections...","sws_DLG_161"), EXPORT_ALL_SECTIONS_MSG);
+		AddImportExportMenu(hImpExpSubMenu);
 
 		HMENU hResetSubMenu = CreatePopupMenu();
 		AddSubMenu(hMenu, hResetSubMenu, __LOCALIZE("Reset","sws_DLG_161"));

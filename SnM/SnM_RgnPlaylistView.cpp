@@ -607,11 +607,35 @@ void SNM_RegionPlaylistWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int*
 	}
 }
 
+void SNM_RegionPlaylistWnd::AddPasteContextMenu(HMENU _menu)
+{
+	if (GetMenuItemCount(_menu))
+		AddToMenu(_menu, SWS_SEPARATOR, 0);
+	AddToMenu(_menu, __LOCALIZE("Crop project to playlist","sws_DLG_165"), CROP_PRJ_MSG, -1, false, GetPlaylist() && GetPlaylist()->GetSize() ? 0 : MF_GRAYED);
+	AddToMenu(_menu, __LOCALIZE("Crop project to playlist (new project tab)","sws_DLG_165"), CROP_PRJTAB_MSG, -1, false, GetPlaylist() && GetPlaylist()->GetSize() ? 0 : MF_GRAYED);
+	AddToMenu(_menu, __LOCALIZE("Append playlist to project","sws_DLG_165"), APPEND_PRJ_MSG, -1, false, GetPlaylist() && GetPlaylist()->GetSize() ? 0 : MF_GRAYED);
+	AddToMenu(_menu, __LOCALIZE("Paste playlist at edit cursor","sws_DLG_165"), PASTE_CURSOR_MSG, -1, false, GetPlaylist() && GetPlaylist()->GetSize() ? 0 : MF_GRAYED);
+}
+
 HMENU SNM_RegionPlaylistWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultItems)
 {
 	MUTEX_PLAYLISTS;
 
 	HMENU hMenu = CreatePopupMenu();
+
+	// specific context menu for the paste button
+	POINT p; GetCursorPos(&p);
+	ScreenToClient(m_hwnd,&p);
+	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(p.x,p.y,1))
+	{
+		switch (v->GetID())
+		{
+			case BUTTONID_PASTE:
+				*_wantDefaultItems = false;
+				AddPasteContextMenu(hMenu);
+				return hMenu;
+		}
+	}
 
 	// wnd popup
 	int x=0; bool hasSel = (m_pLists.Get(0)->EnumSelected(&x) != NULL);
@@ -637,13 +661,8 @@ HMENU SNM_RegionPlaylistWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultIte
 		AddSubMenu(hMenu, hAddSubMenu, __LOCALIZE("Add region","sws_DLG_165"));
 		FillMarkerRegionMenu(hAddSubMenu, ADD_REGION_START_MSG, SNM_REGION_MASK);
 
-		if (*_wantDefaultItems) {
-			AddToMenu(hMenu, SWS_SEPARATOR, 0);
-			AddToMenu(hMenu, __LOCALIZE("Crop project to playlist","sws_DLG_165"), CROP_PRJ_MSG, -1, false, GetPlaylist() && GetPlaylist()->GetSize() ? 0 : MF_GRAYED);
-			AddToMenu(hMenu, __LOCALIZE("Crop project to playlist (new project tab)","sws_DLG_165"), CROP_PRJTAB_MSG, -1, false, GetPlaylist() && GetPlaylist()->GetSize() ? 0 : MF_GRAYED);
-			AddToMenu(hMenu, __LOCALIZE("Append playlist to project","sws_DLG_165"), APPEND_PRJ_MSG, -1, false, GetPlaylist() && GetPlaylist()->GetSize() ? 0 : MF_GRAYED);
-			AddToMenu(hMenu, __LOCALIZE("Paste playlist at edit cursor","sws_DLG_165"), PASTE_CURSOR_MSG, -1, false, GetPlaylist() && GetPlaylist()->GetSize() ? 0 : MF_GRAYED);
-		}
+		if (*_wantDefaultItems)
+			AddPasteContextMenu(hMenu);
 		else
 		{
 			HMENU hInsertSubMenu = CreatePopupMenu();
@@ -657,6 +676,7 @@ HMENU SNM_RegionPlaylistWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultIte
 	}
 	return hMenu;
 }
+
 bool SNM_RegionPlaylistWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
 {
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1))
@@ -1206,7 +1226,7 @@ void SNM_Playlist_UpdateJob::Perform() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// ScheduledJob used because of multi-notifs during project switches (vs CSurfSetTrackListChange)
+// ScheduledJob used because of multi-notifs
 void SNM_Playlist_MarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags) {
 	AddOrReplaceScheduledJob(new SNM_Playlist_UpdateJob());
 }

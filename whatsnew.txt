@@ -1,12 +1,36 @@
-<b>Localization is over: everything can now be translated!</b>
+<b>Auto color for regions and markers, thanks Brado231!</b> (issue 339)
++Added column "Type" (type = track, marker or region) in the "Auto color/icon" window's list
++Reorganized the window/context menus a bit
++Added options (new actions + new button "Options" + the main menu > extensions > sws options)
+ - Enable auto marker coloring - Disabled by default!
+ - Enable auto marker coloring - Disabled by default!
+
+<b>Localization: (almost) everything can be translated!</b>
 Fixes/improvements (thanks Mr Data!):
 +Fixed unused translations in various windows/dialog boxes
 +Fixed stupid assumption that plural strings always end with 's'
++Auto-resize some buttons according to string lengths
 Notes for translators:
-+A new SWS Template LangPack file will be available with the next official release of the extension
-+To avoid useless translations:
- - The S&M Find tool is not localized (a new version will come at some point)
- - The SWS TrackList is not localized (might be removed at some point: over exceeded by the new native Track Manager)
++A new SWS Template LangPack file is available http://code.google.com/p/sws-extension/downloads/list|here|
++The following tools are intentionally not localized (to avoid useless translations):
+ - S&M Find (a new version will come at some point)
+ - SWS TrackList (might be removed at some point, over exceeded by the new native Track Manager)
+
+Export functions to ReaScript (BETA)
++Updated API doc (Main menu > Help > HTML Lists > ReaScript documentation)
++Updated some APIs functions with WDL_FastString* parameters (tighter memory allocation + get rid of string length limitations for ReaScripters)
+ Might be temporary, see details & example http://forum.cockos.com/showpost.php?p=1040948&postcount=1016|here|
++Added functions (more details in REAPER, Main menu > Help > HTML Lists > ReaScript documentation):
+ - SNM_GetSetObjectState()
+ - SNM_GetSetSourceState2() - Note that this function cannot deal with empty takes (contrary to SNM_GetSetSourceState())
+ - SNM_GetSourceType()
+ - SNM_RemoveReceive()
+ - SNM_CreateFastString()
+ - SNM_GetFastString()
+ - SNM_GetFastStringLength()
+ - SNM_SetFastString()
+ - SNM_DeleteObject()
++<b>To request some functions please use/see issue 513</b> (exported functions wish-list)
 
 Added actions:
 +SWS/BR: Move selected tempo points forward
@@ -24,27 +48,28 @@ Updated actions "Set selected tracks folder states"
 +Renamed actions:
  - "SWS/S&M: Set selected tracks folder states to on"  ->  "[...] to parent"
  - "SWS/S&M: Set selected tracks folder states to off"  ->  "[...] to nomal"
-+Added actions (that were missing for the above ones to make sense..):
++Added actions (they were missing for the above ones to make sense..):
  - SWS/S&M: Set selected tracks folder states to last of all folders
  - SWS/S&M: Set selected tracks folder states to last in folder
  Note: if this last action is performed on a track which is already the last one in a folder, 
  running it again will turn the track into the last in the innermost and next-innermost folders, etc..
 
-Updated action "SWS/S&M: Remove all envelopes for selected tracks":
-This action removes all track envs (pan, volume, etc..) as well as plugin envelopes. Now it also removes all parameter modulation.
+Other
++Updated action "SWS/S&M: Remove all envelopes for selected tracks":
+ This action removes all track/plugin envelopes. Now it also removes parameter modulation
++Cycle action editor: added button "Import/export..."
++Issue 515/Find window: RETURN key = find next (reminder: F3/Shift-F3 = find next/previous)
++All S&M windows: GUI tweaks (things look better, especially on OSX)
 
-Export functions to ReaScript
-+Hardened SNM_GetSetSourceState()
-+Updated API doc (Main menu > Help > HTML Lists > ReaScript documentation)
-+<b>To request some functions please use/see issue 513</b> (exported functions wish-list)
-
-Fixed some Xenakios actions related to takes
-Fixed inverted left/right channels for "SWS/S&M: Pan active takes of selected items to 100% left/right"
-Fixed faulty undo point for "Xenakios/SWS: Toggle selected takes normalized/unity gain"
-Minor fix in warning dialog for SWS/BR: Convert project markers to tempo markers
+Fixes
++Issue 459: fixed possible crash when applying grooves
++Fixed some Xenakios actions related to takes
++Fixed inverted left/right channels for "SWS/S&M: Pan active takes of selected items to 100% left/right"
++Fixed faulty undo point for "Xenakios/SWS: Toggle selected takes normalized/unity gain"
++Minor fix in warning dialog for SWS/BR: Convert project markers to tempo markers
 
 !v2.3.0 #5 (September 13, 2012)
-<b>Issue 432: Export functions to ReaScript and/or to other extensions, see documentation http://code.google.com/p/sws-extension/wiki/Functions_export_to_ReaScript|here|</b>.
+<b>Issue 432: Export functions to ReaScript and/or to other extensions (BETA). See documentation http://code.google.com/p/sws-extension/wiki/Functions_export_to_ReaScript|here|</b>.
 Added functions:
 +SNM_GetSetSourceState()
 +SNM_GetMediaItemTakeByGUID()

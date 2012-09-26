@@ -84,13 +84,14 @@ protected:
 	void OnInitDlg();
 	void OnDestroy();
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
+	void AddImportExportMenu(HMENU _menu);
 	int OnKey(MSG* msg, int iKeyState);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 
 	WDL_VirtualComboBox m_cbSection;
 	WDL_VirtualIconButton m_btnUndo;
 	WDL_VirtualStaticText m_txtSection;
-	SNM_ToolbarButton m_btnApply, m_btnCancel, m_btnActionList;
+	SNM_ToolbarButton m_btnApply, m_btnCancel, m_btnImpExp, m_btnActionList;
 };
 
 

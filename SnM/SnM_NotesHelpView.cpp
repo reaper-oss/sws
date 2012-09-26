@@ -512,7 +512,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
 	{
 		SNM_SkinToolbarButton(&m_btnImportSub, __LOCALIZE("Import...","sws_DLG_152"));
-		if (!SNM_AutoVWndPosition(&m_btnImportSub, NULL, _r, &x0, y0, h))
+		if (!SNM_AutoVWndPosition(&m_btnImportSub, NULL, _r, &x0, y0, h, 4))
 			return;
 
 		SNM_SkinToolbarButton(&m_btnExportSub, __LOCALIZE("Export...","sws_DLG_152"));
@@ -524,7 +524,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	if (g_notesViewType == SNM_NOTES_ACTION_HELP)
 	{
 		SNM_SkinToolbarButton(&m_btnActionList, __LOCALIZE("Action list...","sws_DLG_152"));
-		if (!SNM_AutoVWndPosition(&m_btnActionList, NULL, _r, &x0, y0, h))
+		if (!SNM_AutoVWndPosition(&m_btnActionList, NULL, _r, &x0, y0, h, 4))
 			return;
 
 		SNM_SkinToolbarButton(&m_btnAlr, __LOCALIZE("Online help...","sws_DLG_152"));

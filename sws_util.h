@@ -248,7 +248,6 @@ TrackEnvelope* SWS_GetTrackEnvelopeByName(MediaTrack* track, const char* envname
 int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML);
 
 // Functions export to reascript and c++ plugins, Reascript.cpp
-#define REASCRIPT_MAX_STRBUF 4*1024*1024 // should match MAX_STRBUF in rpr_packs() of reaper_python.py
 bool RegisterExportedFuncs(reaper_plugin_info_t* _rec);
 bool RegisterExportedAPI(reaper_plugin_info_t* _rec);
 bool UnregisterExportedAPI(reaper_plugin_info_t* _rec);

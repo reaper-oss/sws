@@ -101,6 +101,7 @@ protected:
 	void OnInitDlg();
 	void OnDestroy();
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
+	void AddPasteContextMenu(HMENU _menu);
 	int OnKey(MSG* msg, int iKeyState) ;
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);

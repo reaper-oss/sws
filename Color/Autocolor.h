@@ -27,28 +27,16 @@
 
 #pragma once
 
+#include "../SnM/SnM.h"
+
 class SWS_RuleItem
 {
 public:
-    // @param type
-    //     The type of the item that you want to change the color
-    //     Options Track, Region or Marker
-    // @param filter
-    //     The string that is used to filter the different tracks, regions or markers
-    // @param color
-    //     The color of the item
-    // @param icon
-    //     The icon used for this item (tracks only)
-	SWS_RuleItem(const char* type, const char* filter, int _color, const char* icon)
-        :
-    m_str_type(type),
-    m_str_filter(filter),
-    m_color(_color),
-    m_icon(icon) 
-    {}
-	
-    WDL_String m_str_type;
-    WDL_String m_str_filter;
+	SWS_RuleItem(int type, const char* filter, int color, const char* icon)
+		: m_type(type),m_str_filter(filter),m_color(color),m_icon(icon) {}
+
+	int m_type;
+	WDL_String m_str_filter;
 	int m_color;
 	WDL_String m_icon;
 };
@@ -57,14 +45,9 @@ class SWS_RuleTrack
 {
 public:
 	SWS_RuleTrack(MediaTrack* tr)
-        :
-    m_pTr(tr), 
-    m_col(0), 
-    m_bColored(false), 
-    m_bIconed(false) 
-    {}
-	
-    MediaTrack* m_pTr;
+		:m_pTr(tr),m_col(0),m_bColored(false),m_bIconed(false) {}
+
+	MediaTrack* m_pTr;
 	int m_col;
 	bool m_bColored;
 	WDL_String m_icon;
@@ -102,11 +85,14 @@ protected:
 #endif
 	INT_PTR OnUnhandledMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
+	void AddOptionsMenu(HMENU _menu);
 	int OnKey(MSG* msg, int iKeyState);
+
 	SWS_AutoColorView* m_pView;
 };
 
 int AutoColorInit();
 void AutoColorExit();
 void OpenAutoColor(COMMAND_T* = NULL);
-void AutoColorRun(bool bForce);
+void AutoColorMarkerRegion(bool bForce, int flags = SNM_MARKER_MASK|SNM_REGION_MASK);
+void AutoColorTrack(bool bForce);

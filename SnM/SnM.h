@@ -52,6 +52,7 @@
 #define SNM_FONT_HEIGHT				14
 #define SNM_TOP_GUI_HEIGHT			36
 #define SNM_BOT_GUI_HEIGHT			41
+#define SNM_1PIXEL_Y				1
 #else
 #define SNM_FORMATED_INI_FILE		"%s/S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE	"%s/Plugins/S&M.ini"
@@ -64,6 +65,7 @@
 #define SNM_FONT_HEIGHT				11
 #define SNM_TOP_GUI_HEIGHT			37
 #define SNM_BOT_GUI_HEIGHT			43
+#define SNM_1PIXEL_Y				(-1)
 #endif
 
 #ifndef _SNM_STANDALONE

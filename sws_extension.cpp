@@ -368,7 +368,8 @@ public:
 	void SetTrackListChange()
 	{
 		m_bChanged = true;
-		AutoColorRun(false);
+		AutoColorTrack(false);
+		AutoColorMarkerRegion(false);
 		SNM_CSurfSetTrackListChange();
 		m_iACIgnore = GetNumTracks() + 1;
 	}
@@ -380,7 +381,7 @@ public:
 		ScheduleTracklistUpdate();
 		if (!m_iACIgnore)
 		{
-			AutoColorRun(false);
+			AutoColorTrack(false);
 			SNM_CSurfSetTrackTitle();
 		}
 		else

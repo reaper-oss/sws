@@ -225,10 +225,15 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	HMENU hOptionsSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hOptionsSubMenu, __LOCALIZE("SWS Options", "sws_ext_menu"));
-	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto coloring", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_ENABLE"));
-	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto icon", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOICON_ENABLE"));
+	// the 4 following ones must remain in sync with SWS_AutoColorWnd::AddOptionsMenu()
+	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto track coloring", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_ENABLE"));
+	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto marker coloring", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOCOLOR_MKR_ENABLE"));
+	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto region coloring", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOCOLOR_RGN_ENABLE"));
+	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto track icon", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOICON_ENABLE"));
+	// no constraint for the rest..
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable marker actions", "sws_ext_menu"), NamedCommandLookup("_SWSMA_TOGGLE"));
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable record input check", "sws_ext_menu"), NamedCommandLookup("_SWS_TOGRECINCHECK"));
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable red ruler while recording", "sws_ext_menu"), NamedCommandLookup("_SWS_RECREDRULER"));
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable toolbars auto refresh", "sws_ext_menu"), NamedCommandLookup("_S&M_TOOLBAR_REFRESH_ENABLE"));
 }
+

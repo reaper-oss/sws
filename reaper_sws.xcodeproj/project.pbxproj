@@ -1292,7 +1292,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"$CONFIGURATION\" == \"Debug\" ]\nthen\n  cp $TARGET_BUILD_DIR/reaper_sws.dylib ~/Library/Application\\ Support/REAPER/UserPlugins/\n  perl $SRCROOT/reascript_python.pl > ~/reaper_sws.py\nfi\n";
+			shellScript = "if [ \"$CONFIGURATION\" == \"Debug\" ]\nthen\n  cp $TARGET_BUILD_DIR/reaper_sws.dylib ~/Library/Application\\ Support/REAPER/UserPlugins/\n  perl reascript_python.pl > ~/Library/Application\\ Support/REAPER/Scripts/sws_python32.py\n  perl reascript_python.pl -x64 > ~/Library/Application\\ Support/REAPER/Scripts/sws_python64.py\n  cp Install/sws_osx_install.py ~/Library/Application\\ Support/REAPER/Scripts/sws_python.py\nfi\n";
 		};
 		22C126E6115FE57000663F0C /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;

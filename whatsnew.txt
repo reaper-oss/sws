@@ -44,7 +44,9 @@ Added actions:
 +SWS/S&M: Pan active takes of selected items to 25%, 50%, and 75% left and right
 +SWS/S&M: [developer] Write C++ API functions header
  Internal stuff, for SWS devs only.
-+SWS/BR: Select and adjust tempo markers... 
++SWS/BR: Select and adjust tempo markers...
++SWS/BR: Move edit cursor to next/previous envelope point and select it
+
 
 Updated actions "Set selected tracks folder states"
 +Renamed actions:

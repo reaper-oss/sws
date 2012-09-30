@@ -482,7 +482,9 @@ void BRMoveEditCurSelEnvPoint (COMMAND_T* t)
 	if (found && envelope != 0)
 	{
 		Undo_BeginBlock2(NULL);
-		PreventUIRefresh (1);
+
+		if (PreventUIRefresh)
+			PreventUIRefresh (1);
 		
 		// Get current time selection
 		double tStart, tEnd, nStart, nEnd;
@@ -506,7 +508,9 @@ void BRMoveEditCurSelEnvPoint (COMMAND_T* t)
 		SetEditCurPos(cTime, true, false);
 
 		Undo_EndBlock2 (NULL, SWS_CMD_SHORTNAME(t), UNDO_STATE_ALL);
-		PreventUIRefresh (-1);
+
+		if (PreventUIRefresh)
+			PreventUIRefresh (-1);
 	}
 	
 	FreeHeapPtr(envState);	
@@ -1272,7 +1276,7 @@ WDL_DLGRET BRSelAdjTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				{
 					Undo_BeginBlock2(NULL);
 					BRSelectTempoMarkers (1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-					Undo_EndBlock2 (NULL, __LOCALIZE("Invert selection of tempo markers","sws_DLG_167"), UNDO_STATE_ALL);
+					Undo_EndBlock2 (NULL, __LOCALIZE("Invert selection of tempo markers","sws_undo"), UNDO_STATE_ALL);
 				}
 				break;
 				
@@ -1280,7 +1284,7 @@ WDL_DLGRET BRSelAdjTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				{
 					Undo_BeginBlock2(NULL);
 					BRSelectTempoMarkers (0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-					Undo_EndBlock2 (NULL, __LOCALIZE("Unselect all tempo markers","sws_DLG_167"), UNDO_STATE_ALL);
+					Undo_EndBlock2 (NULL, __LOCALIZE("Unselect all tempo markers","sws_undo"), UNDO_STATE_ALL);
 				}
 				break;
 
@@ -1288,7 +1292,7 @@ WDL_DLGRET BRSelAdjTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 				{
 					Undo_BeginBlock2(NULL);
 					BRSelectTempoMarkersCase (hwnd);
-					Undo_EndBlock2 (NULL, __LOCALIZE("Select tempo markers","sws_DLG_167"), UNDO_STATE_ALL);
+					Undo_EndBlock2 (NULL, __LOCALIZE("Select tempo markers","sws_undo"), UNDO_STATE_ALL);
 				}
 				break;
 				
@@ -1414,7 +1418,7 @@ WDL_DLGRET BRSelAdjTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 					KillTimer(hwnd, 1);	
 					BRModifyTempoMarkersCase (hwnd);
 					SetTimer(hwnd, 1, 500, NULL);
-					Undo_EndBlock2 (NULL, __LOCALIZE("Modify selected tempo markers","sws_DLG_167"), UNDO_STATE_ALL);
+					Undo_EndBlock2 (NULL, __LOCALIZE("Modify selected tempo markers","sws_undo"), UNDO_STATE_ALL);
 
 				}
 				break;

@@ -41,11 +41,15 @@
 #define SWS_ENDSUBMENU ((char*)(INT_PTR)-3)
 #define MINTRACKHEIGHT 24
 #define DEFACCEL { 0, 0, 0 }
-#define UTF8_BULLET "\xE2\x80\xA2"
-#define UTF8_CIRCLE "\xE2\x97\xA6"
-#define UTF8_BOX "\xE2\x96\xA1"
-#define UTF8_BBOX "\xE2\x96\xA0"
-#define SWS_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->accel.desc) + IsSwsAction(_ct->accel.desc)) // +IsSwsAction() to skip "SWS: ", "SWS/S&M: ", "SWS/FNG: ", etc...
+
+#define UTF8_BULLET		"\xE2\x80\xA2"
+#define UTF8_CIRCLE		"\xE2\x97\xA6"
+#define UTF8_BOX		"\xE2\x96\xA1"
+#define UTF8_BBOX		"\xE2\x96\xA0"
+#define UTF8_INFINITY	"\xE2\x88\x9E"
+
+// +IsSwsAction() to skip "SWS: ", "SWS/S&M: ", "SWS/FNG: ", etc...
+#define SWS_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->accel.desc) + IsSwsAction(_ct->accel.desc))
 #define __ARRAY_SIZE(x) sizeof(x) / sizeof(x[0])
 // For checking to see if items are adjacent
 // Found one case of items after split having diff edges 5e-11 apart, 1e-9 (still much greater than one sample)

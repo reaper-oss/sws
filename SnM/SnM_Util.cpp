@@ -537,7 +537,7 @@ void SNM_UpgradeIniFiles()
 	}
 	if (g_SNMIniFileVersion < 5) // < v2.2.0 #3
 		UpdatePrivateProfileSection("LAST_CUEBUS", "CueBuss1", g_SNMIniFn.Get());
-	if (g_SNMIniFileVersion < 6) // < vv2.2.0 #6
+	if (g_SNMIniFileVersion < 6) // < v2.2.0 #6
 		WritePrivateProfileStruct("RegionPlaylist", NULL, NULL, 0, g_SNMIniFn.Get()); // flush section
 
 	g_SNMIniFileVersion = SNM_INI_FILE_VERSION;
@@ -732,9 +732,11 @@ void TranslatePos(double _pos, int* _h, int* _m, int* _s, int* _ms)
 double SeekPlay(double _pos, bool _seek, bool _moveView)
 {
 	double cursorpos = GetCursorPositionEx(NULL);
+	if (PreventUIRefresh) PreventUIRefresh(1);
 	SetEditCurPos2(NULL, _pos, _moveView, _seek);
-	if (!_seek) OnPlayButton();
+	if ((GetPlayState()&1) != 1) OnPlayButton();
 	SetEditCurPos2(NULL, cursorpos, false, false);
+	if (PreventUIRefresh) PreventUIRefresh(-1);
 	return cursorpos;
 }
 
@@ -904,3 +906,4 @@ bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int
 		lstrcpyn(_sectionURL, _section, _sectionURLSize);
 	return true;
 }
+

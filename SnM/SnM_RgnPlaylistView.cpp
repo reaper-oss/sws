@@ -123,7 +123,7 @@ void SNM_PlaylistView::UpdateCompact()
 		for (int i=pl->GetSize()-1; i>=0 ; i--)
 			if (SNM_PlaylistItem* item = pl->Get(i))
 				if ((i-1)>=0 && pl->Get(i-1) && item->m_rgnId == pl->Get(i-1)->m_rgnId) {
-					pl->Get(i-1)->m_cnt++;
+					pl->Get(i-1)->m_cnt += item->m_cnt;
 					pl->Delete(i, true);
 				}
 	Update();
@@ -425,6 +425,12 @@ void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case BUTTONID_REPEAT:
 			SetPlaylistRepeat(NULL);
 			break;
+		case BUTTONID_PASTE:
+			RECT r; m_btnCrop.GetPositionInTopVWnd(&r);
+			ClientToScreen(m_hwnd, (LPPOINT)&r);
+			ClientToScreen(m_hwnd, ((LPPOINT)&r)+1);
+			SendMessage(m_hwnd, WM_CONTEXTMENU, 0, MAKELPARAM((UINT)(r.left), (UINT)(r.bottom+SNM_1PIXEL_Y)));
+			break;
 		case CROP_PRJ_MSG:
 			AppendPasteCropPlaylist(GetPlaylist(), 0);
 			break;
@@ -434,7 +440,6 @@ void SNM_RegionPlaylistWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case APPEND_PRJ_MSG:
 			AppendPasteCropPlaylist(GetPlaylist(), 2);
 			break;
-		case BUTTONID_PASTE:
 		case PASTE_CURSOR_MSG:
 			AppendPasteCropPlaylist(GetPlaylist(), 3);
 			break;
@@ -592,7 +597,7 @@ void SNM_RegionPlaylistWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int*
 								_snprintfSafe(len, sizeof(len), __LOCALIZE_VERFMT("Length: %s","sws_DLG_165"), timeStr);
 								m_txtLength.SetText(len);
 								if (SNM_AutoVWndPosition(&m_txtLength, NULL, _r, &x0, _r->top, h)) {
-									SNM_SkinToolbarButton(&m_btnCrop, __LOCALIZE("Paste playlist","sws_DLG_165"));
+									SNM_SkinToolbarButton(&m_btnCrop, __LOCALIZE("Crop/paste","sws_DLG_165"));
 									if (SNM_AutoVWndPosition(&m_btnCrop, NULL, _r, &x0, _r->top, h))
 										SNM_AddLogo(_bm, _r, x0, h);
 								}
@@ -649,6 +654,12 @@ HMENU SNM_RegionPlaylistWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultIte
 		AddToMenu(hPlaylistSubMenu, __LOCALIZE("Copy playlist...","sws_DLG_165"), COPY_PLAYLIST_MSG, -1, false, GetPlaylist() ? MF_ENABLED : MF_GRAYED);
 		AddToMenu(hPlaylistSubMenu, __LOCALIZE("Rename...","sws_DLG_165"), REN_PLAYLIST_MSG, -1, false, GetPlaylist() ? MF_ENABLED : MF_GRAYED);
 		AddToMenu(hPlaylistSubMenu, __LOCALIZE("Delete","sws_DLG_165"), DEL_PLAYLIST_MSG, -1, false, GetPlaylist() ? MF_ENABLED : MF_GRAYED);
+
+		AddToMenu(hMenu, SWS_SEPARATOR, 0);
+
+		HMENU hCropPasteSubMenu = CreatePopupMenu();
+		AddSubMenu(hMenu, hCropPasteSubMenu, __LOCALIZE("Crop/paste","sws_DLG_165"));
+		AddPasteContextMenu(hCropPasteSubMenu);
 	}
 
 	if (GetPlaylist())
@@ -661,9 +672,7 @@ HMENU SNM_RegionPlaylistWnd::OnContextMenu(int _x, int _y, bool* _wantDefaultIte
 		AddSubMenu(hMenu, hAddSubMenu, __LOCALIZE("Add region","sws_DLG_165"));
 		FillMarkerRegionMenu(hAddSubMenu, ADD_REGION_START_MSG, SNM_REGION_MASK);
 
-		if (*_wantDefaultItems)
-			AddPasteContextMenu(hMenu);
-		else
+		if (!*_wantDefaultItems) 
 		{
 			HMENU hInsertSubMenu = CreatePopupMenu();
 			AddSubMenu(hMenu, hInsertSubMenu, __LOCALIZE("Insert region","sws_DLG_165"), -1, hasSel ? 0 : MF_GRAYED);
@@ -835,7 +844,7 @@ void PlaylistRun()
 			updateUI = (pl==GetPlaylist()); // update only if it is the displayed playlist
 
 			SNM_PlaylistItem* cur = pl->Get(g_playItem);
-			g_isRunLoop = (cur && cur->m_cnt>1 && cur->m_playReq<cur->m_cnt); // region looping?
+			g_isRunLoop = (cur && cur->m_cnt>1 && cur->m_playReq<cur->m_cnt); // region loop?
 			if (!g_isRunLoop)
 				for (int i=0; i<pl->GetSize(); i++)
 					pl->Get(i)->m_playReq = 0;
@@ -852,7 +861,7 @@ void PlaylistRun()
 				// trick to stop the playlist in sync: smooth seek to the end of the project
 				if (!g_repeatPlaylist && inext<g_playItem)
 				{
-					// temp override of the "stop play at project and" option
+					// temp override of the "stop play at project end" option
 					if (int* opt = (int*)GetConfigVar("stopprojlen")) {
 						g_oldStopprojlenPref = *opt;
 						*opt = 1;
@@ -1072,6 +1081,18 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 						WDL_PtrList<void> splitItems;
 						SplitSelectItemsInInterval(NULL, rgnpos, rgnend, false, &splitItems);
 
+						// make sure some envelope options are enabled: move with items + add edge points
+						int oldOpt[2] = {-1,-1};
+						int* options[2] = {NULL,NULL};
+						if (options[0] = (int*)GetConfigVar("envattach")) {
+							oldOpt[0] = *options[0];
+							*options[0] = 1;
+						}
+						if (options[1] = (int*)GetConfigVar("env_reduce")) {
+							oldOpt[1] = *options[1];
+							*options[1] = 2;
+						}
+
 						// REAPER "bug": the last param of ApplyNudge() is ignored although
 						// it is used in duplicate mode => use a loop instead
 						// note: DupSelItems() is an override of ApplyNudge()
@@ -1079,6 +1100,10 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 							DupSelItems(NULL, endPos-rgnpos, &itemsToKeep);
 							endPos += (rgnend-rgnpos);
 						}
+
+						// restore options
+						if (options[0]) *options[0] = oldOpt[0];
+						if (options[1]) *options[1] = oldOpt[1];
 
 						// "unsplit" items
 						for (int j=0; j < itemSates.GetSize(); j++)

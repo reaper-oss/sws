@@ -3,7 +3,7 @@
 +Reorganized the window/context menus a bit
 +Added options (new actions + new button "Options" + main menu > extensions > sws options)
  - Enable auto marker coloring - Disabled by default!
- - Enable auto marker coloring - Disabled by default!
+ - Enable auto region coloring - Disabled by default!
 
 <b>Localization: (almost) everything can be translated!</b>
 Fixes/improvements (thanks Mr Data!):
@@ -18,12 +18,9 @@ Notes for translators:
  - A few (exotic) Xenakios tools
 
 Export functions to ReaScript (BETA)
-+Updated API doc (Main menu > Help > HTML Lists > ReaScript documentation)
-+Updated some APIs functions with WDL_FastString* parameters (tighter memory allocation + get rid of string length limitations for ReaScripters)
- Might be temporary, see details & example http://forum.cockos.com/showpost.php?p=1040948&postcount=1016|here|
-+Added functions:
++Added functions (more details in REAPER > Main menu > Help > HTML Lists > ReaScript documentation):
  - SNM_GetSetObjectState()
- - SNM_GetSetSourceState2() - Note that this function cannot deal with empty takes (contrary to SNM_GetSetSourceState())
+ - SNM_GetSetSourceState2()
  - SNM_GetSourceType()
  - SNM_RemoveReceive()
  - SNM_CreateFastString()
@@ -31,6 +28,15 @@ Export functions to ReaScript (BETA)
  - SNM_GetFastStringLength()
  - SNM_SetFastString()
  - SNM_DeleteObject()
+ - FNG_AllocMidiTake()
+ - FNG_FreeMidiTake()
+ - FNG_CountMidiNotes()
+ - FNG_GetMidiNote()
+ - FNG_GetMidiNoteIntProperty()
+ - FNG_SetMidiNoteIntProperty()
+ - FNG_AddMidiNote()
++Updated some APIs functions with WDL_FastString* parameters (tighter memory allocation + get rid of string length limitations for ReaScripters)
+ Might be temporary, see details & example http://forum.cockos.com/showpost.php?p=1040948&postcount=1016|here|
 +<b>To request some functions please use/see issue 513</b> (exported functions wish-list)
 
 Added actions:
@@ -41,12 +47,11 @@ Added actions:
  Note: These actions don't screw with unselected points positions. Ideal for extensive tempo manipulation.
  First two actions move points depending on zoom, more zoom means less movement - recommended for keybinding.
  Others move points by predetermined values in milliseconds
++SWS/BR: Select and adjust tempo markers...
++SWS/BR: Move edit cursor to next/previous envelope point and select it
 +SWS/S&M: Pan active takes of selected items to 25%, 50%, and 75% left and right
 +SWS/S&M: [developer] Write C++ API functions header
  Internal stuff, for SWS devs only.
-+SWS/BR: Select and adjust tempo markers...
-+SWS/BR: Move edit cursor to next/previous envelope point and select it
-
 
 Updated actions "Set selected tracks folder states"
 +Renamed actions:
@@ -55,15 +60,22 @@ Updated actions "Set selected tracks folder states"
 +Added actions (they were missing for the above ones to make sense..):
  - SWS/S&M: Set selected tracks folder states to last of all folders
  - SWS/S&M: Set selected tracks folder states to last in folder
- Note: if this last action is performed on a track which is already the last one in a folder, 
+ Note: when this last action is performed on a track which is already the last one in a folder, 
  running it again will turn the track into the last in the innermost and next-innermost folders, etc..
+
+Region playlist
++Paste/crop to playlist: make sure envelopes are pasted too 
+ (whatever is the pref. "Envelope points move with media items")
++Avoid "flashy" cursor while playing playlists
++Reorganized the window/context menus a bit
 
 Other
 +Updated action "SWS/S&M: Remove all envelopes for selected tracks":
- This action removes all track/plugin envelopes. Now it also removes parameter modulation
+ This action removes all track/plugin envelopes. Now it also removes parameter modulations.
 +Cycle action editor: added button "Import/export..."
++Issue 516/Resources: auto-save actions now overwrite empty selected slots
 +Issue 515/Find window: RETURN key = find next (reminder: F3/Shift-F3 = find next/previous)
-+All S&M windows: GUI tweaks
++GUI tweaks: smaller fonts on OSX, preserve XP style for list views on Windows OS, etc..
 
 Fixes
 +Issue 459: fixed possible crash when applying grooves

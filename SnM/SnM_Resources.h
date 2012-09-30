@@ -146,7 +146,7 @@ public:
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void ClearListSelection();
 	void SelectBySlot(int _slot1, int _slot2 = -1, bool _selectOnly = true);
-	int GetSelectedSlots(WDL_PtrList<PathSlotItem>* _selSlots);
+	void GetSelectedSlots(WDL_PtrList<PathSlotItem>* _selSlots, WDL_PtrList<PathSlotItem>* _selEmptySlots = NULL);
 	void FillTypeCombo();
 	void ClearDeleteSlots(int _mode, bool _update);
 protected:
@@ -178,7 +178,7 @@ bool AutoSaveSlot(int _slotType, const char* _dirPath,
 				const char* _name, const char* _ext,
 				WDL_PtrList<PathSlotItem>* _owSlots, int* _owIdx,
 				bool (*SaveSlot)(const void*, const char*)=NULL, const void* _obj=NULL);
-void AutoSave(int _type, bool _allowOverwrite, int _flags = 0);
+void AutoSave(int _type, bool _promptOverwrite, int _flags = 0);
 void AutoFill(int _type);
 
 void NewBookmark(int _type, bool _copyCurrent);

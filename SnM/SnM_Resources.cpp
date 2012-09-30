@@ -1969,14 +1969,16 @@ void SNM_ResourceWnd::SelectBySlot(int _slot1, int _slot2, bool _selectOnly)
 }
 
 // gets selected slots and returns the number of non empty slots among them
-int SNM_ResourceWnd::GetSelectedSlots(WDL_PtrList<PathSlotItem>* _selSlots)
+void SNM_ResourceWnd::GetSelectedSlots(WDL_PtrList<PathSlotItem>* _selSlots, WDL_PtrList<PathSlotItem>* _selEmptySlots)
 {
-	int cnt=0, x=0;
-	while (PathSlotItem* pItem = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x)) {
-		if (!pItem->IsDefault()) cnt++;
-		_selSlots->Add(pItem);
+	int x=0;
+	while (PathSlotItem* pItem = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x))
+	{
+		if (_selEmptySlots && pItem->IsDefault())
+			_selEmptySlots->Add(pItem);
+		else
+			_selSlots->Add(pItem);
 	}
-	return cnt;
 }
 
 void SNM_ResourceWnd::AddSlot(bool _update)
@@ -2152,28 +2154,38 @@ bool AutoSaveSlot(int _slotType, const char* _dirPath,
 	return saved;
 }
 
+// _promptOverwrite:
+//    - e.g. false for auto-save *actions*, true for auto-save *button*
 // _flags:
 //    - for track templates: _flags&1 save template with items, _flags&2 save template with envs
 //    - for fx chains: enum FXC_AUTOSAVE_PREF_INPUT_FX, FXC_AUTOSAVE_PREF_TRACK and FXC_AUTOSAVE_PREF_ITEM
 //    - n/a otherwise
-void AutoSave(int _type, bool _allowOverwrite, int _flags)
+void AutoSave(int _type, bool _promptOverwrite, int _flags)
 {
 	WDL_PtrList<PathSlotItem> owSlots; // slots to overwrite
+	WDL_PtrList<PathSlotItem> selFilledSlots;
 
-	// are there *non empty* selected slots?
-	if (_allowOverwrite && g_pResourcesWnd && g_pResourcesWnd->GetSelectedSlots(&owSlots) && 
-		IDNO == MessageBox(g_pResourcesWnd->GetHWND(),
-		__LOCALIZE("Overwrite selected files?\nNote: replying \"No\" will add new slots/files.","sws_DLG_150"),
-			__LOCALIZE("S&M - Confirmation","sws_DLG_150"), MB_YESNO))
+	// overwrite non empty slots?
+	int ow = IDNO;
+	if (g_pResourcesWnd)
+		g_pResourcesWnd->GetSelectedSlots(&selFilledSlots, &owSlots); // &owSlots: empty slots are systematically overwritten
+
+	if (selFilledSlots.GetSize() && _promptOverwrite)
+		ow = MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), __LOCALIZE("Some selected slots are already filled, do you want to overwrite them?\n\nReplying \"Yes\" will overwite filled slots/files.\nReplying \"No\" will add new slots/files.","sws_DLG_150"), __LOCALIZE("S&M - Confirmation","sws_DLG_150"), MB_YESNOCANCEL);
+
+	if (ow == IDYES)
 	{
-		owSlots.Empty(false);
+		for (int i=0; i<selFilledSlots.GetSize(); i++)
+			owSlots.Add(selFilledSlots.Get(i));
 	}
+	else if (ow == IDCANCEL)
+		return;
 
 	if (!CheckSetAutoDirectory(__LOCALIZE("Auto-save","sws_DLG_150"), _type, true))
 		return;
 
 	bool saved = false;
-	int slotStart = g_slots.Get(_type)->GetSize();
+	int oldNbSlots = g_slots.Get(_type)->GetSize();
 	switch(GetTypeForUser(_type))
 	{
 		case SNM_SLOT_FXC:
@@ -2200,10 +2212,25 @@ void AutoSave(int _type, bool _allowOverwrite, int _flags)
 
 	if (saved)
 	{
-		if (g_pResourcesWnd && g_resViewType==_type ) {
+		if (g_pResourcesWnd && g_resViewType==_type )
+		{
 			g_pResourcesWnd->Update();
-			if (slotStart != g_slots.Get(_type)->GetSize()) // select added slots (overwrote slots remain selected)
-				g_pResourcesWnd->SelectBySlot(slotStart, g_slots.Get(_type)->GetSize(), !owSlots.GetSize());
+
+			// sel new slots
+			bool first = true;
+			if (oldNbSlots != g_slots.Get(_type)->GetSize()) {
+				g_pResourcesWnd->SelectBySlot(oldNbSlots, g_slots.Get(_type)->GetSize(), first);
+				first = false;
+			}
+			// sel overwriten slots
+			for (int i=0; i<owSlots.GetSize(); i++)
+			{
+				int slot = g_slots.Get(_type)->Find(owSlots.Get(i));
+				if (slot >= 0) {
+					g_pResourcesWnd->SelectBySlot(slot, slot, first);
+					first = false;
+				}
+			}
 		}
 	}
 	else

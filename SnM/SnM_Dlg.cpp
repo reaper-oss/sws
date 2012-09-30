@@ -167,17 +167,23 @@ LICE_IBitmap* SNM_GetThemeLogo()
 static BOOL CALLBACK EnumRemoveXPStyles(HWND _hwnd, LPARAM _ids)
 {
 	int i=0;
-	LONG style = GetWindowLong(_hwnd, GWL_STYLE);
-	if ((style & BS_AUTOCHECKBOX) == BS_AUTOCHECKBOX ||
-		(style & BS_AUTORADIOBUTTON) == BS_AUTORADIOBUTTON ||
-		(style & BS_GROUPBOX) == BS_GROUPBOX)
+
+	// do not deal with list views & list boxes
+	char className[64] = "";
+	if (GetClassName(_hwnd, className, sizeof(className)) && strcmp(className, WC_LISTVIEW) && strcmp(className, WC_LISTBOX))
 	{
-		int* ids = (int*)_ids;
-		int i=0; while (ids[i]!=-1 && i<MAX_THEMED_CTRLS) i++;
-		if (i<MAX_THEMED_CTRLS)
-			ids[i] = (int)GetWindowLong(_hwnd, GWL_ID);
-		else
-			return FALSE;
+		LONG style = GetWindowLong(_hwnd, GWL_STYLE);
+		if ((style & BS_AUTOCHECKBOX) == BS_AUTOCHECKBOX ||
+			(style & BS_AUTORADIOBUTTON) == BS_AUTORADIOBUTTON ||
+			(style & BS_GROUPBOX) == BS_GROUPBOX)
+		{
+			int* ids = (int*)_ids;
+			int i=0; while (ids[i]!=-1 && i<MAX_THEMED_CTRLS) i++;
+			if (i<MAX_THEMED_CTRLS)
+				ids[i] = (int)GetWindowLong(_hwnd, GWL_ID);
+			else
+				return FALSE;
+		}
 	}
 	return TRUE;
 }

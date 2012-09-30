@@ -60,6 +60,9 @@ bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 		if (_undoTitle)
 			Undo_BeginBlock2(NULL);
 
+		if (PreventUIRefresh)
+			PreventUIRefresh(-1);
+
 		double timeSel1, timeSel2, d=_pos+_len;
 		GetSet_LoopTimeRange2(NULL, false, false, &timeSel1, &timeSel2, false);
 		GetSet_LoopTimeRange2(NULL, true, false, &_pos, &d, false);
@@ -69,6 +72,12 @@ bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 		if (timeSel1>_pos) timeSel1+=_len;
 		if (_pos<timeSel2) timeSel2+=_len;
 		GetSet_LoopTimeRange2(NULL, true, false, &timeSel1, &timeSel2, false);
+
+		if (PreventUIRefresh)
+			PreventUIRefresh(1);
+
+//		UpdateArrange();
+		UpdateTimeline();
 
 		if (_undoTitle)
 			Undo_EndBlock2(NULL, _undoTitle, UNDO_STATE_ALL);

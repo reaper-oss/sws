@@ -1157,7 +1157,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				RECT r; m_btnImpExp.GetPositionInTopVWnd(&r);
 				ClientToScreen(m_hwnd, (LPPOINT)&r);
 				ClientToScreen(m_hwnd, ((LPPOINT)&r)+1);
-				SendMessage(m_hwnd, WM_CONTEXTMENU, 0, MAKELPARAM((UINT)(r.left), (UINT)(r.bottom+1)));
+				SendMessage(m_hwnd, WM_CONTEXTMENU, 0, MAKELPARAM((UINT)(r.left), (UINT)(r.bottom+SNM_1PIXEL_Y)));
 			}
 			break;
 		case BUTTONID_ACTIONLIST:

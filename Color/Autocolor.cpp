@@ -151,7 +151,7 @@ void SWS_AutoColorView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 	case COL_ICON:
 		// hide icon depending on the current rule type
 		// (this type can switch from track (w/ icon) to marker, for ex.)
-		if (pItem->m_type != AC_TRACK)
+		if (pItem->m_type == AC_TRACK)
 			lstrcpyn(str, pItem->m_icon.Get(), iStrMax);
 		break;
 	}

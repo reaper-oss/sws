@@ -179,7 +179,6 @@
 		22C77EA412D62F2E002F68D5 /* Envelope.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E6E12D62F2E002F68D5 /* Envelope.h */; };
 		22C77EA512D62F2E002F68D5 /* EnvelopeCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E6F12D62F2E002F68D5 /* EnvelopeCommands.cpp */; };
 		22C77EA612D62F2E002F68D5 /* EnvelopeCommands.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E7012D62F2E002F68D5 /* EnvelopeCommands.h */; };
-		22C77EA912D62F2E002F68D5 /* FNG.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E7312D62F2E002F68D5 /* FNG.cxx */; };
 		22C77EAA12D62F2E002F68D5 /* FNG_client.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E7412D62F2E002F68D5 /* FNG_client.h */; };
 		22C77EAB12D62F2E002F68D5 /* FNG_Settings.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E7512D62F2E002F68D5 /* FNG_Settings.h */; };
 		22C77EAE12D62F2E002F68D5 /* GrooveDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E7812D62F2E002F68D5 /* GrooveDialog.cxx */; };
@@ -268,6 +267,7 @@
 		389293241601487C00F16794 /* MakeWhatsNew.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389293231601487C00F16794 /* MakeWhatsNew.cpp */; };
 		389A5F41161E33B90043D674 /* GrooveCommands.h in Headers */ = {isa = PBXBuildFile; fileRef = 389A5F3F161E33B90043D674 /* GrooveCommands.h */; };
 		389A5F42161E33B90043D674 /* GrooveCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389A5F40161E33B90043D674 /* GrooveCommands.cpp */; };
+		389A5F65161E36630043D674 /* FNG.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389A5F64161E36630043D674 /* FNG.cpp */; };
 		38B8AD451601269E001F3F3C /* ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B8AD431601269E001F3F3C /* ReaScript.cpp */; };
 		5A0280AF14216AE300EC8CD1 /* icontheme.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A0280AD14216AE300EC8CD1 /* icontheme.h */; };
 		5A0280B014216AE300EC8CD1 /* sws_rpf_wrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A0280AE14216AE300EC8CD1 /* sws_rpf_wrapper.h */; };
@@ -470,7 +470,6 @@
 		22C77E6E12D62F2E002F68D5 /* Envelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Envelope.h; path = Fingers/Envelope.h; sourceTree = "<group>"; };
 		22C77E6F12D62F2E002F68D5 /* EnvelopeCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EnvelopeCommands.cpp; path = Fingers/EnvelopeCommands.cpp; sourceTree = "<group>"; };
 		22C77E7012D62F2E002F68D5 /* EnvelopeCommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EnvelopeCommands.h; path = Fingers/EnvelopeCommands.h; sourceTree = "<group>"; };
-		22C77E7312D62F2E002F68D5 /* FNG.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FNG.cxx; path = Fingers/FNG.cxx; sourceTree = "<group>"; };
 		22C77E7412D62F2E002F68D5 /* FNG_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FNG_client.h; path = Fingers/FNG_client.h; sourceTree = "<group>"; };
 		22C77E7512D62F2E002F68D5 /* FNG_Settings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FNG_Settings.h; path = Fingers/FNG_Settings.h; sourceTree = "<group>"; };
 		22C77E7812D62F2E002F68D5 /* GrooveDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GrooveDialog.cxx; path = Fingers/GrooveDialog.cxx; sourceTree = "<group>"; };
@@ -559,6 +558,7 @@
 		389293231601487C00F16794 /* MakeWhatsNew.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MakeWhatsNew.cpp; path = BuildUtils/MakeWhatsNew.cpp; sourceTree = "<group>"; };
 		389A5F3F161E33B90043D674 /* GrooveCommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrooveCommands.h; path = Fingers/GrooveCommands.h; sourceTree = "<group>"; };
 		389A5F40161E33B90043D674 /* GrooveCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GrooveCommands.cpp; path = Fingers/GrooveCommands.cpp; sourceTree = "<group>"; };
+		389A5F64161E36630043D674 /* FNG.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FNG.cpp; path = Fingers/FNG.cpp; sourceTree = "<group>"; };
 		38B8AD431601269E001F3F3C /* ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ReaScript.cpp; sourceTree = "<group>"; };
 		5A0280AD14216AE300EC8CD1 /* icontheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icontheme.h; path = reaper/icontheme.h; sourceTree = "<group>"; };
 		5A0280AE14216AE300EC8CD1 /* sws_rpf_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sws_rpf_wrapper.h; path = reaper/sws_rpf_wrapper.h; sourceTree = "<group>"; };
@@ -1000,7 +1000,7 @@
 				22C77E6D12D62F2E002F68D5 /* Envelope.cpp */,
 				22C77E6F12D62F2E002F68D5 /* EnvelopeCommands.cpp */,
 				22C77E7012D62F2E002F68D5 /* EnvelopeCommands.h */,
-				22C77E7312D62F2E002F68D5 /* FNG.cxx */,
+				389A5F64161E36630043D674 /* FNG.cpp */,
 				22C77E7412D62F2E002F68D5 /* FNG_client.h */,
 				22C77E7512D62F2E002F68D5 /* FNG_Settings.h */,
 				389A5F40161E33B90043D674 /* GrooveCommands.cpp */,
@@ -1437,7 +1437,6 @@
 				22C77EA112D62F2E002F68D5 /* CommandHandler.cpp in Sources */,
 				22C77EA312D62F2E002F68D5 /* Envelope.cpp in Sources */,
 				22C77EA512D62F2E002F68D5 /* EnvelopeCommands.cpp in Sources */,
-				22C77EA912D62F2E002F68D5 /* FNG.cxx in Sources */,
 				22C77EAE12D62F2E002F68D5 /* GrooveDialog.cxx in Sources */,
 				22C77EB212D62F2E002F68D5 /* GrooveTemplates.cxx in Sources */,
 				22C77EB412D62F2E002F68D5 /* MediaItemCommands.cpp in Sources */,
@@ -1486,6 +1485,7 @@
 				389293241601487C00F16794 /* MakeWhatsNew.cpp in Sources */,
 				384AFFF6161E2E5900190D42 /* RprStateChunk.cpp in Sources */,
 				389A5F42161E33B90043D674 /* GrooveCommands.cpp in Sources */,
+				389A5F65161E36630043D674 /* FNG.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

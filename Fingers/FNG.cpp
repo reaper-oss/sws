@@ -4,7 +4,7 @@
 #include "CommandHandler.h"
 #include "EnvelopeCommands.h"
 #include "MediaItemCommands.h"
-#include "GrooveTemplates.hxx"
+#include "GrooveTemplates.h"
 #include "GrooveCommands.h"
 #include "MiscCommands.hxx"
 #include "MidiLaneCommands.hxx"

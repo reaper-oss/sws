@@ -2,7 +2,7 @@
 #include "../reaper/localize.h"
 
 #include "CommandHandler.h"
-#include "GrooveTemplates.hxx"
+#include "GrooveTemplates.h"
 #include "GrooveCommands.h"
 #include "GrooveDialog.h"
 #include "FNG_Settings.h"

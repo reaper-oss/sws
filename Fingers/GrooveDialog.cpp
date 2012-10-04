@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
 #include "GrooveDialog.h"
-#include "GrooveTemplates.hxx"
+#include "GrooveTemplates.h"
 #include "CommandHandler.h"
 #include "FNG_Settings.h"
 #include "RprException.hxx"

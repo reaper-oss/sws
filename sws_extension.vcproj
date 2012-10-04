@@ -2547,11 +2547,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Fingers\GrooveTemplates.cxx"
+				RelativePath=".\Fingers\GrooveTemplates.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Fingers\GrooveTemplates.hxx"
+				RelativePath=".\Fingers\GrooveTemplates.h"
 				>
 			</File>
 			<File

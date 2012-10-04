@@ -2531,11 +2531,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Fingers\GrooveCommands.cxx"
+				RelativePath=".\Fingers\GrooveCommands.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Fingers\GrooveCommands.hxx"
+				RelativePath=".\Fingers\GrooveCommands.h"
 				>
 			</File>
 			<File

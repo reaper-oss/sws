@@ -1,6 +1,8 @@
 #ifndef _GROOVE_COMMANDS_H_
 #define _GROOVE_COMMANDS_H_
-namespace GrooveCommands {
+
+namespace GrooveCommands 
+{
 	void Init();
 };
 

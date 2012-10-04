@@ -1309,6 +1309,7 @@
 ;7F8876B4E0429722=Are you sure you want to delete the playlist #%d \"%s\"?
 ;C9B93F97844712AD=S&M - Delete playlist
 ;7A0B0B0CC67DDE46=S&M - Rename playlist
+;9F3EE7E8D280672C=Aborted: infinite region loop found in playlist!
 ;FEAA423291739449=No region found in project!
 ;2F799723962762C7=Stop
 ;3E38EF62B047CD38=Repeat
@@ -1340,7 +1341,6 @@
 ;42418E891FA46BA5=Playlist #%d: nothing to play!\n(empty playlist, removed regions, etc..)
 ;FE5E9D3EC0EDC30A=Aborted: pasting inside a region which is used in the playlist!
 ;4272044207011B42=Warning: pasting inside a region which is used in other playlists!\nThis region will be larger and those playlists will change, are you sure you want to continue?
-;496BA2520BE69970=Paste playlist
 ;^830C5FC0E18A9057=Region
 ;^D9E4C067FEE02BBB=Region Playlist
 ;^49657903B7B9A626=Untitled
@@ -1367,8 +1367,6 @@
 ;5F407CF785381A6E=Detected existing tempo markers after the last project marker.\nThey may get moved during the conversion. Are you sure you want to continue?
 ;775052899F0DB989=Some of the created tempo markers have a BPM over 960. If you try to edit them, they will revert back to 960 or lower.\n\nIt is recommended that you undo, edit project markers and try again.
 ;0C84998A4B9733DC=All values have to be positive integers.
-;99CFA685DE86F3CD=To convert only within time selection please create one.
-;9E92E5E43EA3679F=You can't input zero as a value.
 ;^08329907B4EB8CD0=/
 ;^F09E4B5C35AA14B9=Cancel
 
@@ -2159,9 +2157,6 @@
 ;D75687F94E4D9B1F=SWS/BR: Move selected tempo markers back 1000 ms
 ;ED054CA2A8966DEA=SWS/BR: Move edit cursor to next envelope point and select it
 ;392AAE8CCA8C124A=SWS/BR: Move edit cursor to previous envelope point and select it
-;C9155CFAC4F12D03=SWS/BR: Move edit cursor to next tempo marker
-;7F958CD775C92363=SWS/BR: Move edit cursor to previous tempo marker
-;01201632CDB11DD3=SWS/BR: Convert project markers to tempo markers
 ;95A7751286200B8C=SWS: Copy items/tracks/env, obeying time sel
 ;14F7712AFA36EA2B=SWS: Cut items/tracks/env, obeying time sel
 ;1D8D1E7AB33A8103=SWS: Remove items/tracks/env, obeying time sel
@@ -2266,8 +2261,8 @@
 ;F4ED6ED8F711009B=SWS: Restore transport repeat state
 ;18171407910968B1=SWS: Set transport repeat state
 ;C68EB73A0A88C9BA=SWS: Unset transport repeat state
-;7A6B4A2003C055CF=SWS: Show docker
-;74AB8EDE58F12A98=SWS: Hide docker
+;C4A4B0665FD1AE74=SWS: Show dockers
+;30AEAED121CBED51=SWS: Hide dockers
 ;2E934EAB91438035=SWS: Show master track in track control panel
 ;200BAA876F4E2A5C=SWS: Hide master track in track control panel
 ;024E670E11AD674F=SWS: Toggle default fade time to zero
@@ -3076,7 +3071,6 @@
 ;AD390C836C87FB7E=Invert selection of tempo markers
 ;2FA1C2816CC9B2A7=Unselect all tempo markers
 ;C2F2EC9AA9636512=Modify selected tempo markers
-;8C05A2EA748EEDC9=Split selected items at temo markers
 ;C15D1C3C4A47E678=Set selected track(s) to same folder as previous track
 ;2141DB5843F0CCE2=Make folder from selected tracks
 ;5D25345ABC9C2A4E=Indent selected tracks

@@ -4,7 +4,7 @@
 #include "RprNode.hxx"
 #include "RprItem.hxx"
 #include "RprTake.hxx"
-#include "RprStateChunk.hxx"
+#include "RprStateChunk.h"
 
 static RprNode *findTakeSource(RprNode *parent, const std::string &takeGUID )
 {

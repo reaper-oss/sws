@@ -11,7 +11,7 @@
 #include "RprMidiTake.hxx"
 #include "FNG_Settings.h"
 #include "TimeMap.h"
-#include "RprStateChunk.hxx"
+#include "RprStateChunk.h"
 
 static void EmulateMidiHardware(int flag, void *data);
 static void GetEmulationSettings(int flag, void *data);

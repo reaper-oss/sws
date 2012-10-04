@@ -4,7 +4,7 @@
 #include <algorithm>
 
 #include "RprMidiTake.hxx"
-#include "RprStateChunk.hxx"
+#include "RprStateChunk.h"
 #include "RprNode.hxx"
 #include "RprTake.hxx"
 #include "RprMidiEvent.hxx"

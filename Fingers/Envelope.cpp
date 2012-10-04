@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "Envelope.h"
-#include "RprStateChunk.hxx"
+#include "RprStateChunk.h"
 
 RprEnvelopePoint::RprEnvelopePoint(RprEnvelope *parent /* = NULL */) : 
     m_time(0.0), m_parameterValue(0.0), m_envelopeShape(Linear),

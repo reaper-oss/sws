@@ -2639,11 +2639,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Fingers\RprStateChunk.cxx"
+				RelativePath=".\Fingers\RprStateChunk.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Fingers\RprStateChunk.hxx"
+				RelativePath=".\Fingers\RprStateChunk.h"
 				>
 			</File>
 			<File

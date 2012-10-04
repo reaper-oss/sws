@@ -210,8 +210,6 @@
 		22C77EC812D62F2E002F68D5 /* RprMidiTemplate.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E9212D62F2E002F68D5 /* RprMidiTemplate.hxx */; };
 		22C77EC912D62F2E002F68D5 /* RprNode.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E9312D62F2E002F68D5 /* RprNode.cxx */; };
 		22C77ECA12D62F2E002F68D5 /* RprNode.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E9412D62F2E002F68D5 /* RprNode.hxx */; };
-		22C77ECB12D62F2E002F68D5 /* RprStateChunk.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E9512D62F2E002F68D5 /* RprStateChunk.cxx */; };
-		22C77ECC12D62F2E002F68D5 /* RprStateChunk.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E9612D62F2E002F68D5 /* RprStateChunk.hxx */; };
 		22C77ECD12D62F2E002F68D5 /* RprTake.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E9712D62F2E002F68D5 /* RprTake.cxx */; };
 		22C77ECE12D62F2E002F68D5 /* RprTake.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E9812D62F2E002F68D5 /* RprTake.hxx */; };
 		22C77ECF12D62F2E002F68D5 /* RprTrack.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E9912D62F2E002F68D5 /* RprTrack.cxx */; };
@@ -268,6 +266,8 @@
 		22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD278114CD8310077F1CA /* Autocolor.cpp */; };
 		22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD279114CD8310077F1CA /* Autocolor.h */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
+		384AFFF5161E2E5900190D42 /* RprStateChunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 384AFFF3161E2E5900190D42 /* RprStateChunk.h */; };
+		384AFFF6161E2E5900190D42 /* RprStateChunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 384AFFF4161E2E5900190D42 /* RprStateChunk.cpp */; };
 		389293241601487C00F16794 /* MakeWhatsNew.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389293231601487C00F16794 /* MakeWhatsNew.cpp */; };
 		38B8AD451601269E001F3F3C /* ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B8AD431601269E001F3F3C /* ReaScript.cpp */; };
 		5A0280AF14216AE300EC8CD1 /* icontheme.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A0280AD14216AE300EC8CD1 /* icontheme.h */; };
@@ -502,8 +502,6 @@
 		22C77E9212D62F2E002F68D5 /* RprMidiTemplate.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprMidiTemplate.hxx; path = Fingers/RprMidiTemplate.hxx; sourceTree = "<group>"; };
 		22C77E9312D62F2E002F68D5 /* RprNode.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprNode.cxx; path = Fingers/RprNode.cxx; sourceTree = "<group>"; };
 		22C77E9412D62F2E002F68D5 /* RprNode.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprNode.hxx; path = Fingers/RprNode.hxx; sourceTree = "<group>"; };
-		22C77E9512D62F2E002F68D5 /* RprStateChunk.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprStateChunk.cxx; path = Fingers/RprStateChunk.cxx; sourceTree = "<group>"; };
-		22C77E9612D62F2E002F68D5 /* RprStateChunk.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprStateChunk.hxx; path = Fingers/RprStateChunk.hxx; sourceTree = "<group>"; };
 		22C77E9712D62F2E002F68D5 /* RprTake.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprTake.cxx; path = Fingers/RprTake.cxx; sourceTree = "<group>"; };
 		22C77E9812D62F2E002F68D5 /* RprTake.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprTake.hxx; path = Fingers/RprTake.hxx; sourceTree = "<group>"; };
 		22C77E9912D62F2E002F68D5 /* RprTrack.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprTrack.cxx; path = Fingers/RprTrack.cxx; sourceTree = "<group>"; };
@@ -560,6 +558,8 @@
 		22FFD278114CD8310077F1CA /* Autocolor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autocolor.cpp; path = Color/Autocolor.cpp; sourceTree = "<group>"; };
 		22FFD279114CD8310077F1CA /* Autocolor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autocolor.h; path = Color/Autocolor.h; sourceTree = "<group>"; };
 		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		384AFFF3161E2E5900190D42 /* RprStateChunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprStateChunk.h; path = Fingers/RprStateChunk.h; sourceTree = "<group>"; };
+		384AFFF4161E2E5900190D42 /* RprStateChunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprStateChunk.cpp; path = Fingers/RprStateChunk.cpp; sourceTree = "<group>"; };
 		389293231601487C00F16794 /* MakeWhatsNew.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MakeWhatsNew.cpp; path = BuildUtils/MakeWhatsNew.cpp; sourceTree = "<group>"; };
 		38B8AD431601269E001F3F3C /* ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ReaScript.cpp; sourceTree = "<group>"; };
 		5A0280AD14216AE300EC8CD1 /* icontheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icontheme.h; path = reaper/icontheme.h; sourceTree = "<group>"; };
@@ -1033,8 +1033,8 @@
 				22C77E9212D62F2E002F68D5 /* RprMidiTemplate.hxx */,
 				22C77E9312D62F2E002F68D5 /* RprNode.cxx */,
 				22C77E9412D62F2E002F68D5 /* RprNode.hxx */,
-				22C77E9512D62F2E002F68D5 /* RprStateChunk.cxx */,
-				22C77E9612D62F2E002F68D5 /* RprStateChunk.hxx */,
+				384AFFF4161E2E5900190D42 /* RprStateChunk.cpp */,
+				384AFFF3161E2E5900190D42 /* RprStateChunk.h */,
 				22C77E9712D62F2E002F68D5 /* RprTake.cxx */,
 				22C77E9812D62F2E002F68D5 /* RprTake.hxx */,
 				22C77E9912D62F2E002F68D5 /* RprTrack.cxx */,
@@ -1190,7 +1190,6 @@
 				22C77EC612D62F2E002F68D5 /* RprMidiTake.hxx in Headers */,
 				22C77EC812D62F2E002F68D5 /* RprMidiTemplate.hxx in Headers */,
 				22C77ECA12D62F2E002F68D5 /* RprNode.hxx in Headers */,
-				22C77ECC12D62F2E002F68D5 /* RprStateChunk.hxx in Headers */,
 				22C77ECE12D62F2E002F68D5 /* RprTake.hxx in Headers */,
 				22C77ED012D62F2E002F68D5 /* RprTrack.hxx in Headers */,
 				22C77ED212D62F2E002F68D5 /* StringUtil.hxx in Headers */,
@@ -1224,6 +1223,7 @@
 				22F7AADE15201D8A00CC1481 /* SnM.h in Headers */,
 				22F7AAE915201E2600CC1481 /* IX.h in Headers */,
 				2266B2BD15F069CC006F2A0D /* Breeder.h in Headers */,
+				384AFFF5161E2E5900190D42 /* RprStateChunk.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1455,7 +1455,6 @@
 				22C77EC512D62F2E002F68D5 /* RprMidiTake.cxx in Sources */,
 				22C77EC712D62F2E002F68D5 /* RprMidiTemplate.cxx in Sources */,
 				22C77EC912D62F2E002F68D5 /* RprNode.cxx in Sources */,
-				22C77ECB12D62F2E002F68D5 /* RprStateChunk.cxx in Sources */,
 				22C77ECD12D62F2E002F68D5 /* RprTake.cxx in Sources */,
 				22C77ECF12D62F2E002F68D5 /* RprTrack.cxx in Sources */,
 				22C77ED112D62F2E002F68D5 /* StringUtil.cxx in Sources */,
@@ -1490,6 +1489,7 @@
 				2266B2BC15F069CC006F2A0D /* Breeder.cpp in Sources */,
 				38B8AD451601269E001F3F3C /* ReaScript.cpp in Sources */,
 				389293241601487C00F16794 /* MakeWhatsNew.cpp in Sources */,
+				384AFFF6161E2E5900190D42 /* RprStateChunk.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

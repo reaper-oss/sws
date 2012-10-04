@@ -85,15 +85,13 @@ void UnsetRepeat(COMMAND_T* = NULL)	{ GetSetRepeat(0); }
 
 void ShowDock(COMMAND_T* = NULL)
 {
-	int iCurState = GetPrivateProfileInt("REAPER", "dock_vis", 0, get_ini_file());
-	if (!iCurState)
+	if (!GetToggleCommandState(40279))
 		Main_OnCommand(40279, 0);
 }
 
 void HideDock(COMMAND_T* = NULL)
 {
-	int iCurState = GetPrivateProfileInt("REAPER", "dock_vis", 0, get_ini_file());
-	if (iCurState)
+	if (GetToggleCommandState(40279))
 		Main_OnCommand(40279, 0);
 }
 
@@ -169,8 +167,8 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Restore transport repeat state" },							"SWS_RESTREPEAT",		RestRepeat,			},
 	{ { DEFACCEL, "SWS: Set transport repeat state" },								"SWS_SETREPEAT",		SetRepeat,			},
 	{ { DEFACCEL, "SWS: Unset transport repeat state" },							"SWS_UNSETREPEAT",		UnsetRepeat,		},
-	{ { DEFACCEL, "SWS: Show docker" },												"SWS_SHOWDOCK",			ShowDock,			},
-	{ { DEFACCEL, "SWS: Hide docker" },												"SWS_HIDEDOCK",			HideDock,			},
+	{ { DEFACCEL, "SWS: Show dockers" },											"SWS_SHOWDOCK",			ShowDock,			},
+	{ { DEFACCEL, "SWS: Hide dockers" },											"SWS_HIDEDOCK",			HideDock,			},
 	{ { DEFACCEL, "SWS: Show master track in track control panel" },				"SWS_SHOWMASTER",		ShowMaster,			},
 	{ { DEFACCEL, "SWS: Hide master track in track control panel" },				"SWS_HIDEMASTER",		HideMaster,			},
 	{ { DEFACCEL, "SWS: Toggle default fade time to zero" },						"SWS_TOGDEFFADEZERO",	TogDefFadeZero,		NULL, 0, IsDefFadeOverriden },

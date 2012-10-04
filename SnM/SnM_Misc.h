@@ -33,10 +33,10 @@
 // reascript export
 void GenAPI(COMMAND_T*);
 WDL_FastString* SNM_CreateFastString(const char* _str);
+void SNM_DeleteFastString(WDL_FastString* _str);
 const char* SNM_GetFastString(WDL_FastString* _str);
 int SNM_GetFastStringLength(WDL_FastString* _str);
 WDL_FastString* SNM_SetFastString(WDL_FastString* _str, const char* _newStr);
-void SNM_DeleteObject(void* obj);
 MediaItem_Take* SNM_GetMediaItemTakeByGUID(ReaProject* _project, const char* _guid);
 bool SNM_GetSourceType(MediaItem_Take* _tk, WDL_FastString* _type);
 bool SNM_GetSetSourceState(MediaItem* _item, int takeIdx, WDL_FastString* _state, bool _setnewvalue);

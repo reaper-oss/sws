@@ -49,6 +49,10 @@ WDL_FastString* SNM_CreateFastString(const char* _str) {
 	return new WDL_FastString(_str);
 }
 
+void SNM_DeleteFastString(WDL_FastString* _str) { 
+	DELETE_NULL(_str);
+}
+
 const char* SNM_GetFastString(WDL_FastString* _str) {
 	return _str?_str->Get():"";
 }
@@ -60,10 +64,6 @@ int SNM_GetFastStringLength(WDL_FastString* _str) {
 WDL_FastString* SNM_SetFastString(WDL_FastString* _str, const char* _newStr) {
 	if (_str) _str->Set(_newStr?_newStr:"");
 	return _str;
-}
-
-void SNM_DeleteObject(void* obj) { 
-	DELETE_NULL(obj);
 }
 
 MediaItem_Take* SNM_GetMediaItemTakeByGUID(ReaProject* _project, const char* _guid)

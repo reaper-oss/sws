@@ -1,5 +1,5 @@
 # Original script by Cockos (http://landoleet.org/dev/sws/), also see http://code.google.com/p/sws-extension/issues/detail?id=432
-# JFB mods: tailored for the SWS/S&M extension, i.e. process ./Reascript.cpp rather than ../plugin.cpp
+# JFB mods: tailored for the SWS/S&M extension, i.e. process ./ReaScript.cpp rather than ../plugin.cpp
 
 #!/usr/bin/perl
 
@@ -10,7 +10,7 @@ sub ReadAPIFuncs
   %rtype={};
   %ptypes={};
 
-  open INFILE, "Reascript.cpp" or die "Can't read Reascript.cpp";
+  open INFILE, "ReaScript.cpp" or die "Can't read ReaScript.cpp";
   while (<INFILE>)
   {  
     if (/\s*\{\s*APIFUNC/)

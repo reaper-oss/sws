@@ -82,7 +82,7 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML)
 	int iSize = ftell(pIn); // Doesn't subtract out the text conversion, but allocate that size anyway
 	char* cBuf = new char[iSize+2];
 	fseek(pIn, 0L, SEEK_SET);
-	iSize = fread(cBuf, sizeof(char), iSize, pIn);
+	iSize = (int)fread(cBuf, sizeof(char), iSize, pIn);
 	fclose(pIn);
 	// Ensure newline termination
 	if (cBuf[iSize-1] != '\n')

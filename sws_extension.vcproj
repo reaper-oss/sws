@@ -2539,11 +2539,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Fingers\GrooveDialog.cxx"
+				RelativePath=".\Fingers\GrooveDialog.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Fingers\GrooveDialog.hxx"
+				RelativePath=".\Fingers\GrooveDialog.h"
 				>
 			</File>
 			<File

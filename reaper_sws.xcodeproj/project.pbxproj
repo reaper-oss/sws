@@ -181,8 +181,6 @@
 		22C77EA612D62F2E002F68D5 /* EnvelopeCommands.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E7012D62F2E002F68D5 /* EnvelopeCommands.h */; };
 		22C77EAA12D62F2E002F68D5 /* FNG_client.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E7412D62F2E002F68D5 /* FNG_client.h */; };
 		22C77EAB12D62F2E002F68D5 /* FNG_Settings.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E7512D62F2E002F68D5 /* FNG_Settings.h */; };
-		22C77EAE12D62F2E002F68D5 /* GrooveDialog.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E7812D62F2E002F68D5 /* GrooveDialog.cxx */; };
-		22C77EAF12D62F2E002F68D5 /* GrooveDialog.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E7912D62F2E002F68D5 /* GrooveDialog.hxx */; };
 		22C77EB212D62F2E002F68D5 /* GrooveTemplates.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E7C12D62F2E002F68D5 /* GrooveTemplates.cxx */; };
 		22C77EB312D62F2E002F68D5 /* GrooveTemplates.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E7D12D62F2E002F68D5 /* GrooveTemplates.hxx */; };
 		22C77EB412D62F2E002F68D5 /* MediaItemCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E7E12D62F2E002F68D5 /* MediaItemCommands.cpp */; };
@@ -262,6 +260,8 @@
 		22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD278114CD8310077F1CA /* Autocolor.cpp */; };
 		22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD279114CD8310077F1CA /* Autocolor.h */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
+		3838DE16161E3DE30085C20D /* GrooveDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = 3838DE14161E3DE30085C20D /* GrooveDialog.h */; };
+		3838DE17161E3DE30085C20D /* GrooveDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3838DE15161E3DE30085C20D /* GrooveDialog.cpp */; };
 		384AFFF5161E2E5900190D42 /* RprStateChunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 384AFFF3161E2E5900190D42 /* RprStateChunk.h */; };
 		384AFFF6161E2E5900190D42 /* RprStateChunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 384AFFF4161E2E5900190D42 /* RprStateChunk.cpp */; };
 		389293241601487C00F16794 /* MakeWhatsNew.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389293231601487C00F16794 /* MakeWhatsNew.cpp */; };
@@ -472,8 +472,6 @@
 		22C77E7012D62F2E002F68D5 /* EnvelopeCommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EnvelopeCommands.h; path = Fingers/EnvelopeCommands.h; sourceTree = "<group>"; };
 		22C77E7412D62F2E002F68D5 /* FNG_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FNG_client.h; path = Fingers/FNG_client.h; sourceTree = "<group>"; };
 		22C77E7512D62F2E002F68D5 /* FNG_Settings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FNG_Settings.h; path = Fingers/FNG_Settings.h; sourceTree = "<group>"; };
-		22C77E7812D62F2E002F68D5 /* GrooveDialog.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GrooveDialog.cxx; path = Fingers/GrooveDialog.cxx; sourceTree = "<group>"; };
-		22C77E7912D62F2E002F68D5 /* GrooveDialog.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = GrooveDialog.hxx; path = Fingers/GrooveDialog.hxx; sourceTree = "<group>"; };
 		22C77E7C12D62F2E002F68D5 /* GrooveTemplates.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GrooveTemplates.cxx; path = Fingers/GrooveTemplates.cxx; sourceTree = "<group>"; };
 		22C77E7D12D62F2E002F68D5 /* GrooveTemplates.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = GrooveTemplates.hxx; path = Fingers/GrooveTemplates.hxx; sourceTree = "<group>"; };
 		22C77E7E12D62F2E002F68D5 /* MediaItemCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MediaItemCommands.cpp; path = Fingers/MediaItemCommands.cpp; sourceTree = "<group>"; };
@@ -553,6 +551,8 @@
 		22FFD278114CD8310077F1CA /* Autocolor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autocolor.cpp; path = Color/Autocolor.cpp; sourceTree = "<group>"; };
 		22FFD279114CD8310077F1CA /* Autocolor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autocolor.h; path = Color/Autocolor.h; sourceTree = "<group>"; };
 		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		3838DE14161E3DE30085C20D /* GrooveDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrooveDialog.h; path = Fingers/GrooveDialog.h; sourceTree = "<group>"; };
+		3838DE15161E3DE30085C20D /* GrooveDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GrooveDialog.cpp; path = Fingers/GrooveDialog.cpp; sourceTree = "<group>"; };
 		384AFFF3161E2E5900190D42 /* RprStateChunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprStateChunk.h; path = Fingers/RprStateChunk.h; sourceTree = "<group>"; };
 		384AFFF4161E2E5900190D42 /* RprStateChunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprStateChunk.cpp; path = Fingers/RprStateChunk.cpp; sourceTree = "<group>"; };
 		389293231601487C00F16794 /* MakeWhatsNew.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MakeWhatsNew.cpp; path = BuildUtils/MakeWhatsNew.cpp; sourceTree = "<group>"; };
@@ -1005,8 +1005,8 @@
 				22C77E7512D62F2E002F68D5 /* FNG_Settings.h */,
 				389A5F40161E33B90043D674 /* GrooveCommands.cpp */,
 				389A5F3F161E33B90043D674 /* GrooveCommands.h */,
-				22C77E7812D62F2E002F68D5 /* GrooveDialog.cxx */,
-				22C77E7912D62F2E002F68D5 /* GrooveDialog.hxx */,
+				3838DE15161E3DE30085C20D /* GrooveDialog.cpp */,
+				3838DE14161E3DE30085C20D /* GrooveDialog.h */,
 				22C77E7C12D62F2E002F68D5 /* GrooveTemplates.cxx */,
 				22C77E7D12D62F2E002F68D5 /* GrooveTemplates.hxx */,
 				22C77E7E12D62F2E002F68D5 /* MediaItemCommands.cpp */,
@@ -1173,7 +1173,6 @@
 				22C77EA612D62F2E002F68D5 /* EnvelopeCommands.h in Headers */,
 				22C77EAA12D62F2E002F68D5 /* FNG_client.h in Headers */,
 				22C77EAB12D62F2E002F68D5 /* FNG_Settings.h in Headers */,
-				22C77EAF12D62F2E002F68D5 /* GrooveDialog.hxx in Headers */,
 				22C77EB312D62F2E002F68D5 /* GrooveTemplates.hxx in Headers */,
 				22C77EB512D62F2E002F68D5 /* MediaItemCommands.h in Headers */,
 				22C77EB712D62F2E002F68D5 /* MidiLaneCommands.hxx in Headers */,
@@ -1221,6 +1220,7 @@
 				2266B2BD15F069CC006F2A0D /* Breeder.h in Headers */,
 				384AFFF5161E2E5900190D42 /* RprStateChunk.h in Headers */,
 				389A5F41161E33B90043D674 /* GrooveCommands.h in Headers */,
+				3838DE16161E3DE30085C20D /* GrooveDialog.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1437,7 +1437,6 @@
 				22C77EA112D62F2E002F68D5 /* CommandHandler.cpp in Sources */,
 				22C77EA312D62F2E002F68D5 /* Envelope.cpp in Sources */,
 				22C77EA512D62F2E002F68D5 /* EnvelopeCommands.cpp in Sources */,
-				22C77EAE12D62F2E002F68D5 /* GrooveDialog.cxx in Sources */,
 				22C77EB212D62F2E002F68D5 /* GrooveTemplates.cxx in Sources */,
 				22C77EB412D62F2E002F68D5 /* MediaItemCommands.cpp in Sources */,
 				22C77EB612D62F2E002F68D5 /* MidiLaneCommands.cxx in Sources */,
@@ -1486,6 +1485,7 @@
 				384AFFF6161E2E5900190D42 /* RprStateChunk.cpp in Sources */,
 				389A5F42161E33B90043D674 /* GrooveCommands.cpp in Sources */,
 				389A5F65161E36630043D674 /* FNG.cpp in Sources */,
+				3838DE17161E3DE30085C20D /* GrooveDialog.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

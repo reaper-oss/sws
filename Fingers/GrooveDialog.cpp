@@ -1,6 +1,6 @@
 #include "stdafx.h"
 
-#include "GrooveDialog.hxx"
+#include "GrooveDialog.h"
 #include "GrooveTemplates.hxx"
 #include "CommandHandler.h"
 #include "FNG_Settings.h"

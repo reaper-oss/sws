@@ -1,7 +1,7 @@
 #ifndef _GROOVE_TEMPLATES_H_
 #define _GROOVE_TEMPLATES_H_
 
-#include "GrooveDialog.hxx"
+#include "GrooveDialog.h"
 
 
 struct GrooveItem {

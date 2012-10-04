@@ -4,7 +4,7 @@
 #include "CommandHandler.h"
 #include "GrooveTemplates.hxx"
 #include "GrooveCommands.h"
-#include "GrooveDialog.hxx"
+#include "GrooveDialog.h"
 #include "FNG_Settings.h"
 #include "../Xenakios/XenakiosExts.h"
 

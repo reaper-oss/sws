@@ -1,6 +1,8 @@
 Issue 519: fixed "SWS: Hide docker" and "SWS: Show docker" (broken since REAPER v4 and multi-dockers)
 Issue 520/ReaScript: removed SNM_DeleteObject, added SNM_DeleteFastString
 
++Fixed a possible crash in Convert project markers to tempo markers dialog
+
 !v2.3.0 #6 (October 3, 2012)
 <b>Auto color for regions and markers, thanks Brado231!</b> (issue 339)
 +Added column "Type" (type = track, marker or region) in the "Auto color/icon" window's list

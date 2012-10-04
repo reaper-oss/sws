@@ -1013,12 +1013,18 @@ WDL_DLGRET BRConvertProjMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam,
 						check = region;
 					if (currentMarker == 0)
 					{		
-						check = region;
+						check = false;
 						mPos = tStart;
 					}
 				}
+				
 				if (timeSelection == 0)
+				{
 					check = region;
+					if (currentMarker == 0)
+						check = false;
+				}
+
 				++i;
 			}
 			

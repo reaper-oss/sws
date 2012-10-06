@@ -1,7 +1,7 @@
 #ifndef __RPR_TRACK_HXX
 #define __RPR_TRACK_HXX
 
-#include "RprContainer.hxx"
+#include "RprContainer.h"
 
 class MediaTrack;
 class RprTrackCtr;

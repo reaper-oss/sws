@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
-#include "RprItem.hxx"
-#include "RprTrack.hxx"
+#include "RprItem.h"
+#include "RprTrack.h"
 
 
 RprTrack::RprTrack(MediaTrack *track)
@@ -70,8 +70,8 @@ RprTrackCtrPtr RprTrackCollec::getSelected()
 
     RprTrackCtrPtr ctr(new RprTrackCtr);
     for(int i = 0; i < count; i++) {
-        RprTrack track(GetSelectedTrack(0, i));
-        ctr->add(track);		
+	RprTrack track(GetSelectedTrack(0, i));
+	ctr->add(track);
     }
     ctr->sort();
     return ctr;
@@ -83,10 +83,9 @@ RprTrackCtrPtr RprTrackCollec::getAll()
 
     RprTrackCtrPtr ctr(new RprTrackCtr);
     for(int i = 0; i < count; i++) {
-        RprTrack track(GetTrack(0, i));
-        ctr->add(track);		
+	RprTrack track(GetTrack(0, i));
+	ctr->add(track);
     }
     ctr->sort();
     return ctr;
 }
-

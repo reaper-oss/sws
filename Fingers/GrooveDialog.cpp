@@ -4,7 +4,7 @@
 #include "GrooveTemplates.h"
 #include "CommandHandler.h"
 #include "FNG_Settings.h"
-#include "RprException.hxx"
+#include "RprException.h"
 #include "../reaper/localize.h"
 #include "../../WDL/dirscan.h"
 
@@ -264,7 +264,7 @@ void GrooveDialog::ApplySelectedGroove()
 	int index = (int)SendDlgItemMessage(m_hwnd, IDC_GROOVELIST, LB_GETCURSEL, 0, 0);
 	std::string grooveName = __LOCALIZE("** User Groove **","sws_DLG_157");
 	GrooveTemplateMemento memento = GrooveTemplateHandler::GetMemento();
-	
+
 	if(index > 0) {
 		std::string itemLocation;
 		char itemText[MAX_PATH];
@@ -274,21 +274,21 @@ void GrooveDialog::ApplySelectedGroove()
 		itemLocation += PATH_SEP;
 		itemLocation += grooveName;
 		itemLocation += ".rgt";
-		
+
 
 		GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
-		
+
 		std::string errMessage;
 		if(!me->LoadGroove(itemLocation, errMessage))
 			MessageBox(GetMainHwnd(), errMessage.c_str(), __LOCALIZE("FNG - Error","sws_DLG_157"), 0);
 	}
 	if(index >= 0) {
-		
+
 		GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 		int beatDivider = me->GetGrooveTolerance();
 
 		bool midiEditorTarget = SendDlgItemMessage(m_hwnd, IDC_TARG_NOTES, BM_GETCHECK, 0, 0) == BST_CHECKED;
-		
+
 		HWND editControl = GetDlgItem(m_hwnd, IDC_STRENGTH);
 		char percentage[16];
 		GetWindowText(editControl, percentage, 16);
@@ -297,7 +297,7 @@ void GrooveDialog::ApplySelectedGroove()
 		GetWindowText(editControl, percentage, 16);
 		double velStrength = (double)atoi(percentage) / 100.0;
 		std::string undoMessage = __LOCALIZE("FNG: load and apply groove - ","sws_DLG_157") + grooveName;
-		
+
 		try {
 			if(midiEditorTarget)
 				me->ApplyGrooveToMidiEditor(beatDivider, posStrength, velStrength);
@@ -317,11 +317,11 @@ void GrooveDialog::OnInitDlg()
 {
 	GrooveTemplateHandler *me = GrooveTemplateHandler::Instance();
 	currentDir = me->GetGrooveDir();
-	
+
 	SetWindowText(m_hwnd, __LOCALIZE("Groove tool","sws_DLG_157"));
 	SetDlgItemInt(m_hwnd, IDC_STRENGTH, me->GetGrooveStrength(), true);
 	SetDlgItemInt(m_hwnd, IDC_VELSTRENGTH, me->GetGrooveVelStrength(), true);
-	
+
 	setSensitivity(m_hwnd, me->GetGrooveTolerance());
 	setTarget(m_hwnd, me->GetGrooveTarget() == TARGET_ITEMS);
 
@@ -329,6 +329,6 @@ void GrooveDialog::OnInitDlg()
 
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_STRENGTH), GWLP_USERDATA, 0xdeadf00b);
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_VELSTRENGTH), GWLP_USERDATA, 0xdeadf00b);
-	
+
 	RefreshGrooveList();
 }

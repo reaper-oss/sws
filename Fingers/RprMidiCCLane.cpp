@@ -1,13 +1,13 @@
 #include "stdafx.h"
 #include "../reaper/localize.h"
 
-#include "RprMidiCCLane.hxx"
+#include "RprMidiCCLane.h"
 
-#include "RprNode.hxx"
-#include "RprItem.hxx"
-#include "RprTake.hxx"
-#include "RprException.hxx"
-#include "StringUtil.hxx"
+#include "RprNode.h"
+#include "RprItem.h"
+#include "RprTake.h"
+#include "RprException.h"
+#include "StringUtil.h"
 
 RprMidiCCLane::RprMidiCCLane(RprTake &midiTake, bool readOnly) : RprMidiTemplate(midiTake, readOnly)
 {
@@ -39,7 +39,7 @@ RprMidiCCLane::~RprMidiCCLane()
 		if(midiNode->getChild(j)->getValue().find("CFGEDITVIEW ") != std::string::npos)
 			break;
 	}
-		
+
 	if( j < 0) {
 		RprMidiTemplate::errorOccurred();
 		return;
@@ -86,7 +86,7 @@ void RprMidiCCLane::setHeightAt(int index, int height)
 	RprMidiLane &lane = *(mMidiLanes.begin() + index);
 	lane.height = height;
 }
-	
+
 void RprMidiCCLane::remove(int index)
 {
 	mMidiLanes.erase(mMidiLanes.begin() + index);
@@ -130,4 +130,3 @@ int RprMidiCCLane::getHeight(int id) const
 			return i->height;
 	return 0;
 }
-

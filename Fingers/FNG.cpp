@@ -6,12 +6,9 @@
 #include "MediaItemCommands.h"
 #include "GrooveTemplates.h"
 #include "GrooveCommands.h"
-#include "MiscCommands.hxx"
-#include "MidiLaneCommands.hxx"
+#include "MiscCommands.h"
+#include "MidiLaneCommands.h"
 
-#ifdef notfinished
-#include "SFZExport.hxx"
-#endif
 
 int FNGExtensionInit(REAPER_PLUGIN_HINSTANCE hInstance, reaper_plugin_info_t *rec)
 {
@@ -22,8 +19,6 @@ int FNGExtensionInit(REAPER_PLUGIN_HINSTANCE hInstance, reaper_plugin_info_t *re
     GrooveCommands::Init();
 	GrooveTemplateHandler::Init(rec);
 	MidiLaneCommands::Init();
-#ifdef notfinished
-	SFZExporter::Init();
-#endif
+
 	return 1;
 }

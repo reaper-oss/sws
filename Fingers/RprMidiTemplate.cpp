@@ -1,9 +1,9 @@
 #include "stdafx.h"
 
-#include "RprMidiTemplate.hxx"
-#include "RprNode.hxx"
-#include "RprItem.hxx"
-#include "RprTake.hxx"
+#include "RprMidiTemplate.h"
+#include "RprNode.h"
+#include "RprItem.h"
+#include "RprTake.h"
 #include "RprStateChunk.h"
 
 static RprNode *findTakeSource(RprNode *parent, const std::string &takeGUID )
@@ -11,15 +11,15 @@ static RprNode *findTakeSource(RprNode *parent, const std::string &takeGUID )
     std::string guidString = "GUID " + takeGUID;
     int i = 0;
     for(; i < parent->childCount(); i++) {
-        RprNode *childNode = parent->getChild(i);
-        if(childNode->getValue() == guidString)
-            break;
+	RprNode *childNode = parent->getChild(i);
+	if(childNode->getValue() == guidString)
+	    break;
     }
     for(; i < parent->childCount(); i++) {
-        RprNode *childNode = parent->getChild(i);
-        if(childNode->getValue().substr(0,6) == "SOURCE") {
-            return childNode;
-        }
+	RprNode *childNode = parent->getChild(i);
+	if(childNode->getValue().substr(0,6) == "SOURCE") {
+	    return childNode;
+	}
     }
     return NULL;
 }
@@ -41,14 +41,14 @@ RprMidiTemplate::RprMidiTemplate(const RprTake &take, bool readOnly)
 RprMidiTemplate::~RprMidiTemplate()
 {
     if(mItemNode.get() == NULL || mParent.get() == NULL)
-        return;
+	return;
 
     if(!mInErrorState && !mReadOnly) {
-        std::string itemState = mItemNode->toReaper();
-        GetSetObjectState(mParent->toReaper(), itemState.c_str());
-        if (mSetNewTakeOffset)
-        {
-            mTake.setStartOffset(mNewTakeOffset);
-        }
+	std::string itemState = mItemNode->toReaper();
+	GetSetObjectState(mParent->toReaper(), itemState.c_str());
+	if (mSetNewTakeOffset)
+	{
+	    mTake.setStartOffset(mNewTakeOffset);
+	}
     }
 }

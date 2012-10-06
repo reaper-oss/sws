@@ -4,11 +4,11 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "MiscCommands.hxx"
+#include "MiscCommands.h"
 #include "CommandHandler.h"
-#include "RprItem.hxx"
-#include "RprTake.hxx"
-#include "RprMidiTake.hxx"
+#include "RprItem.h"
+#include "RprTake.h"
+#include "RprMidiTake.h"
 #include "FNG_Settings.h"
 #include "TimeMap.h"
 #include "RprStateChunk.h"
@@ -94,7 +94,7 @@ static bool sortMidiPositions(const RprMidiNote *lhs, const RprMidiNote *rhs)
 {
 	if (lhs->getPosition() == rhs->getPosition())
 		return lhs->getPitch() > rhs->getPitch();
-	
+
 	return lhs->getPosition() < rhs->getPosition();
 }
 
@@ -121,7 +121,7 @@ static void EmulateMidiHardware(int flag, void *data)
 	if(!val.empty()) {
 		jitter = (int)(::atof(val.c_str()) * 1000.0 + 0.5);
 	}
-	
+
 	RprItemCtrPtr itemCtr = RprItemCollec::getSelected();
 	if(!convertToInProjectMidi(itemCtr))
 		return;
@@ -135,7 +135,7 @@ static void EmulateMidiHardware(int flag, void *data)
 		RprMidiTake *midiTake = new RprMidiTake(take);
 		midiTakes.push_back(midiTake);
 		for(int j = 0; j < midiTake->countNotes(); ++j) {
-			midiNotes.push_back(midiTake->getNoteAt(j));			
+			midiNotes.push_back(midiTake->getNoteAt(j));
 		}
 	 }
 	midiNotes.sort(sortMidiPositions);
@@ -198,7 +198,7 @@ static void QuanitzeMidi(RprTake &take, double gridSize)
 {
 	RprMidiTake midiTake(take);
 	for(int i = 0; i < midiTake.countNotes(); ++i) {
-		midiTake.getNoteAt(i)->setPosition(getQuantizedPosition(midiTake.getNoteAt(i)->getPosition(), gridSize));		
+		midiTake.getNoteAt(i)->setPosition(getQuantizedPosition(midiTake.getNoteAt(i)->getPosition(), gridSize));
 	}
 }
 
@@ -220,11 +220,9 @@ static void QuantizeAllToGrid(int flag, void *data)
 			QuanitzeMidi(take, gridSize);
 		else
 		{
-			RprItem item = itemCtr->getAt(i); 
+			RprItem item = itemCtr->getAt(i);
 			QuanitzeAudio(item, gridSize);
 		}
 	 }
 
 }
-
-

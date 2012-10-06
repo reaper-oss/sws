@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "RprException.hxx"
+#include "RprException.h"
 
 RprLibException::RprLibException(std::string message, bool notifyUser)
 {

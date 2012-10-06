@@ -173,43 +173,6 @@
 		22C54FE0111B29E10024339F /* SnapshotMerge.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C54FDE111B29E10024339F /* SnapshotMerge.h */; };
 		22C769EB10B0F00800774777 /* TrackFX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C769E910B0F00800774777 /* TrackFX.cpp */; };
 		22C769EC10B0F00800774777 /* TrackFX.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C769EA10B0F00800774777 /* TrackFX.h */; };
-		22C77EA112D62F2E002F68D5 /* CommandHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E6B12D62F2E002F68D5 /* CommandHandler.cpp */; };
-		22C77EA212D62F2E002F68D5 /* CommandHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E6C12D62F2E002F68D5 /* CommandHandler.h */; };
-		22C77EA312D62F2E002F68D5 /* Envelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E6D12D62F2E002F68D5 /* Envelope.cpp */; };
-		22C77EA412D62F2E002F68D5 /* Envelope.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E6E12D62F2E002F68D5 /* Envelope.h */; };
-		22C77EA512D62F2E002F68D5 /* EnvelopeCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E6F12D62F2E002F68D5 /* EnvelopeCommands.cpp */; };
-		22C77EA612D62F2E002F68D5 /* EnvelopeCommands.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E7012D62F2E002F68D5 /* EnvelopeCommands.h */; };
-		22C77EAA12D62F2E002F68D5 /* FNG_client.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E7412D62F2E002F68D5 /* FNG_client.h */; };
-		22C77EAB12D62F2E002F68D5 /* FNG_Settings.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E7512D62F2E002F68D5 /* FNG_Settings.h */; };
-		22C77EB412D62F2E002F68D5 /* MediaItemCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E7E12D62F2E002F68D5 /* MediaItemCommands.cpp */; };
-		22C77EB512D62F2E002F68D5 /* MediaItemCommands.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E7F12D62F2E002F68D5 /* MediaItemCommands.h */; };
-		22C77EB612D62F2E002F68D5 /* MidiLaneCommands.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E8012D62F2E002F68D5 /* MidiLaneCommands.cxx */; };
-		22C77EB712D62F2E002F68D5 /* MidiLaneCommands.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E8112D62F2E002F68D5 /* MidiLaneCommands.hxx */; };
-		22C77EB812D62F2E002F68D5 /* MiscCommand.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E8212D62F2E002F68D5 /* MiscCommand.cxx */; };
-		22C77EB912D62F2E002F68D5 /* MiscCommands.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E8312D62F2E002F68D5 /* MiscCommands.hxx */; };
-		22C77EBC12D62F2E002F68D5 /* RprContainer.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E8612D62F2E002F68D5 /* RprContainer.hxx */; };
-		22C77EBD12D62F2E002F68D5 /* RprException.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E8712D62F2E002F68D5 /* RprException.cxx */; };
-		22C77EBE12D62F2E002F68D5 /* RprException.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E8812D62F2E002F68D5 /* RprException.hxx */; };
-		22C77EBF12D62F2E002F68D5 /* RprItem.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E8912D62F2E002F68D5 /* RprItem.cxx */; };
-		22C77EC012D62F2E002F68D5 /* RprItem.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E8A12D62F2E002F68D5 /* RprItem.hxx */; };
-		22C77EC112D62F2E002F68D5 /* RprMidiCCLane.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E8B12D62F2E002F68D5 /* RprMidiCCLane.cxx */; };
-		22C77EC212D62F2E002F68D5 /* RprMidiCCLane.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E8C12D62F2E002F68D5 /* RprMidiCCLane.hxx */; };
-		22C77EC312D62F2E002F68D5 /* RprMidiEvent.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E8D12D62F2E002F68D5 /* RprMidiEvent.cxx */; };
-		22C77EC412D62F2E002F68D5 /* RprMidiEvent.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E8E12D62F2E002F68D5 /* RprMidiEvent.hxx */; };
-		22C77EC512D62F2E002F68D5 /* RprMidiTake.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E8F12D62F2E002F68D5 /* RprMidiTake.cxx */; };
-		22C77EC612D62F2E002F68D5 /* RprMidiTake.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E9012D62F2E002F68D5 /* RprMidiTake.hxx */; };
-		22C77EC712D62F2E002F68D5 /* RprMidiTemplate.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E9112D62F2E002F68D5 /* RprMidiTemplate.cxx */; };
-		22C77EC812D62F2E002F68D5 /* RprMidiTemplate.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E9212D62F2E002F68D5 /* RprMidiTemplate.hxx */; };
-		22C77EC912D62F2E002F68D5 /* RprNode.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E9312D62F2E002F68D5 /* RprNode.cxx */; };
-		22C77ECA12D62F2E002F68D5 /* RprNode.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E9412D62F2E002F68D5 /* RprNode.hxx */; };
-		22C77ECD12D62F2E002F68D5 /* RprTake.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E9712D62F2E002F68D5 /* RprTake.cxx */; };
-		22C77ECE12D62F2E002F68D5 /* RprTake.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E9812D62F2E002F68D5 /* RprTake.hxx */; };
-		22C77ECF12D62F2E002F68D5 /* RprTrack.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E9912D62F2E002F68D5 /* RprTrack.cxx */; };
-		22C77ED012D62F2E002F68D5 /* RprTrack.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E9A12D62F2E002F68D5 /* RprTrack.hxx */; };
-		22C77ED112D62F2E002F68D5 /* StringUtil.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E9B12D62F2E002F68D5 /* StringUtil.cxx */; };
-		22C77ED212D62F2E002F68D5 /* StringUtil.hxx in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E9C12D62F2E002F68D5 /* StringUtil.hxx */; };
-		22C77ED312D62F2E002F68D5 /* TimeMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22C77E9D12D62F2E002F68D5 /* TimeMap.cpp */; };
-		22C77ED412D62F2E002F68D5 /* TimeMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 22C77E9E12D62F2E002F68D5 /* TimeMap.h */; };
 		22F7AAB615201D8A00CC1481 /* SnM_Chunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA8D15201D8A00CC1481 /* SnM_Chunk.cpp */; };
 		22F7AAB715201D8A00CC1481 /* SnM_Chunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA8E15201D8A00CC1481 /* SnM_Chunk.h */; };
 		22F7AAB815201D8A00CC1481 /* SnM_ChunkParserPatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA8F15201D8A00CC1481 /* SnM_ChunkParserPatcher.h */; };
@@ -258,16 +221,53 @@
 		22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD278114CD8310077F1CA /* Autocolor.cpp */; };
 		22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD279114CD8310077F1CA /* Autocolor.h */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
-		3838DE16161E3DE30085C20D /* GrooveDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = 3838DE14161E3DE30085C20D /* GrooveDialog.h */; };
-		3838DE17161E3DE30085C20D /* GrooveDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3838DE15161E3DE30085C20D /* GrooveDialog.cpp */; };
-		3838DE44161E3F4B0085C20D /* GrooveTemplates.h in Headers */ = {isa = PBXBuildFile; fileRef = 3838DE42161E3F4B0085C20D /* GrooveTemplates.h */; };
-		3838DE45161E3F4B0085C20D /* GrooveTemplates.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3838DE43161E3F4B0085C20D /* GrooveTemplates.cpp */; };
-		384AFFF5161E2E5900190D42 /* RprStateChunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 384AFFF3161E2E5900190D42 /* RprStateChunk.h */; };
-		384AFFF6161E2E5900190D42 /* RprStateChunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 384AFFF4161E2E5900190D42 /* RprStateChunk.cpp */; };
+		387938E516202B1E000948B5 /* CommandHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938B716202B1E000948B5 /* CommandHandler.cpp */; };
+		387938E616202B1E000948B5 /* CommandHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938B816202B1E000948B5 /* CommandHandler.h */; };
+		387938E716202B1E000948B5 /* Envelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938B916202B1E000948B5 /* Envelope.cpp */; };
+		387938E816202B1E000948B5 /* Envelope.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938BA16202B1E000948B5 /* Envelope.h */; };
+		387938E916202B1E000948B5 /* EnvelopeCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938BB16202B1E000948B5 /* EnvelopeCommands.cpp */; };
+		387938EA16202B1E000948B5 /* EnvelopeCommands.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938BC16202B1E000948B5 /* EnvelopeCommands.h */; };
+		387938EB16202B1E000948B5 /* FNG_client.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938BD16202B1E000948B5 /* FNG_client.h */; };
+		387938EC16202B1E000948B5 /* FNG_Settings.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938BE16202B1E000948B5 /* FNG_Settings.h */; };
+		387938ED16202B1E000948B5 /* FNG.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938BF16202B1E000948B5 /* FNG.cpp */; };
+		387938EE16202B1E000948B5 /* GrooveCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938C016202B1E000948B5 /* GrooveCommands.cpp */; };
+		387938EF16202B1E000948B5 /* GrooveCommands.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938C116202B1E000948B5 /* GrooveCommands.h */; };
+		387938F016202B1E000948B5 /* GrooveDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938C216202B1E000948B5 /* GrooveDialog.cpp */; };
+		387938F116202B1E000948B5 /* GrooveDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938C316202B1E000948B5 /* GrooveDialog.h */; };
+		387938F216202B1E000948B5 /* GrooveTemplates.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938C416202B1E000948B5 /* GrooveTemplates.cpp */; };
+		387938F316202B1E000948B5 /* GrooveTemplates.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938C516202B1E000948B5 /* GrooveTemplates.h */; };
+		387938F416202B1E000948B5 /* MediaItemCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938C616202B1E000948B5 /* MediaItemCommands.cpp */; };
+		387938F516202B1E000948B5 /* MediaItemCommands.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938C716202B1E000948B5 /* MediaItemCommands.h */; };
+		387938F616202B1E000948B5 /* MidiLaneCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938C816202B1E000948B5 /* MidiLaneCommands.cpp */; };
+		387938F716202B1E000948B5 /* MidiLaneCommands.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938C916202B1E000948B5 /* MidiLaneCommands.h */; };
+		387938F816202B1E000948B5 /* MiscCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938CA16202B1E000948B5 /* MiscCommands.cpp */; };
+		387938F916202B1E000948B5 /* MiscCommands.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938CB16202B1E000948B5 /* MiscCommands.h */; };
+		387938FA16202B1E000948B5 /* RprContainer.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938CC16202B1E000948B5 /* RprContainer.h */; };
+		387938FB16202B1E000948B5 /* RprException.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938CD16202B1E000948B5 /* RprException.cpp */; };
+		387938FC16202B1E000948B5 /* RprException.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938CE16202B1E000948B5 /* RprException.h */; };
+		387938FD16202B1E000948B5 /* RprItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938CF16202B1E000948B5 /* RprItem.cpp */; };
+		387938FE16202B1E000948B5 /* RprItem.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938D016202B1E000948B5 /* RprItem.h */; };
+		387938FF16202B1E000948B5 /* RprMidiCCLane.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938D116202B1E000948B5 /* RprMidiCCLane.cpp */; };
+		3879390016202B1E000948B5 /* RprMidiCCLane.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938D216202B1E000948B5 /* RprMidiCCLane.h */; };
+		3879390116202B1E000948B5 /* RprMidiEvent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938D316202B1E000948B5 /* RprMidiEvent.cpp */; };
+		3879390216202B1E000948B5 /* RprMidiEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938D416202B1E000948B5 /* RprMidiEvent.h */; };
+		3879390316202B1E000948B5 /* RprMidiTake.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938D516202B1E000948B5 /* RprMidiTake.cpp */; };
+		3879390416202B1E000948B5 /* RprMidiTake.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938D616202B1E000948B5 /* RprMidiTake.h */; };
+		3879390516202B1E000948B5 /* RprMidiTemplate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938D716202B1E000948B5 /* RprMidiTemplate.cpp */; };
+		3879390616202B1E000948B5 /* RprMidiTemplate.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938D816202B1E000948B5 /* RprMidiTemplate.h */; };
+		3879390716202B1E000948B5 /* RprNode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938D916202B1E000948B5 /* RprNode.cpp */; };
+		3879390816202B1E000948B5 /* RprNode.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938DA16202B1E000948B5 /* RprNode.h */; };
+		3879390916202B1E000948B5 /* RprStateChunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938DB16202B1E000948B5 /* RprStateChunk.cpp */; };
+		3879390A16202B1E000948B5 /* RprStateChunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938DC16202B1E000948B5 /* RprStateChunk.h */; };
+		3879390B16202B1E000948B5 /* RprTake.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938DD16202B1E000948B5 /* RprTake.cpp */; };
+		3879390C16202B1E000948B5 /* RprTake.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938DE16202B1E000948B5 /* RprTake.h */; };
+		3879390D16202B1E000948B5 /* RprTrack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938DF16202B1E000948B5 /* RprTrack.cpp */; };
+		3879390E16202B1E000948B5 /* RprTrack.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938E016202B1E000948B5 /* RprTrack.h */; };
+		3879390F16202B1E000948B5 /* StringUtil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938E116202B1E000948B5 /* StringUtil.cpp */; };
+		3879391016202B1E000948B5 /* StringUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938E216202B1E000948B5 /* StringUtil.h */; };
+		3879391116202B1E000948B5 /* TimeMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938E316202B1E000948B5 /* TimeMap.cpp */; };
+		3879391216202B1E000948B5 /* TimeMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938E416202B1E000948B5 /* TimeMap.h */; };
 		389293241601487C00F16794 /* MakeWhatsNew.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389293231601487C00F16794 /* MakeWhatsNew.cpp */; };
-		389A5F41161E33B90043D674 /* GrooveCommands.h in Headers */ = {isa = PBXBuildFile; fileRef = 389A5F3F161E33B90043D674 /* GrooveCommands.h */; };
-		389A5F42161E33B90043D674 /* GrooveCommands.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389A5F40161E33B90043D674 /* GrooveCommands.cpp */; };
-		389A5F65161E36630043D674 /* FNG.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389A5F64161E36630043D674 /* FNG.cpp */; };
 		38B8AD451601269E001F3F3C /* ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B8AD431601269E001F3F3C /* ReaScript.cpp */; };
 		5A0280AF14216AE300EC8CD1 /* icontheme.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A0280AD14216AE300EC8CD1 /* icontheme.h */; };
 		5A0280B014216AE300EC8CD1 /* sws_rpf_wrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A0280AE14216AE300EC8CD1 /* sws_rpf_wrapper.h */; };
@@ -464,43 +464,6 @@
 		22C54FDE111B29E10024339F /* SnapshotMerge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnapshotMerge.h; path = Snapshots/SnapshotMerge.h; sourceTree = "<group>"; };
 		22C769E910B0F00800774777 /* TrackFX.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TrackFX.cpp; path = ObjectState/TrackFX.cpp; sourceTree = "<group>"; };
 		22C769EA10B0F00800774777 /* TrackFX.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TrackFX.h; path = ObjectState/TrackFX.h; sourceTree = "<group>"; };
-		22C77E6B12D62F2E002F68D5 /* CommandHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommandHandler.cpp; path = Fingers/CommandHandler.cpp; sourceTree = "<group>"; };
-		22C77E6C12D62F2E002F68D5 /* CommandHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandHandler.h; path = Fingers/CommandHandler.h; sourceTree = "<group>"; };
-		22C77E6D12D62F2E002F68D5 /* Envelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Envelope.cpp; path = Fingers/Envelope.cpp; sourceTree = "<group>"; };
-		22C77E6E12D62F2E002F68D5 /* Envelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Envelope.h; path = Fingers/Envelope.h; sourceTree = "<group>"; };
-		22C77E6F12D62F2E002F68D5 /* EnvelopeCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EnvelopeCommands.cpp; path = Fingers/EnvelopeCommands.cpp; sourceTree = "<group>"; };
-		22C77E7012D62F2E002F68D5 /* EnvelopeCommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EnvelopeCommands.h; path = Fingers/EnvelopeCommands.h; sourceTree = "<group>"; };
-		22C77E7412D62F2E002F68D5 /* FNG_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FNG_client.h; path = Fingers/FNG_client.h; sourceTree = "<group>"; };
-		22C77E7512D62F2E002F68D5 /* FNG_Settings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FNG_Settings.h; path = Fingers/FNG_Settings.h; sourceTree = "<group>"; };
-		22C77E7E12D62F2E002F68D5 /* MediaItemCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MediaItemCommands.cpp; path = Fingers/MediaItemCommands.cpp; sourceTree = "<group>"; };
-		22C77E7F12D62F2E002F68D5 /* MediaItemCommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MediaItemCommands.h; path = Fingers/MediaItemCommands.h; sourceTree = "<group>"; };
-		22C77E8012D62F2E002F68D5 /* MidiLaneCommands.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MidiLaneCommands.cxx; path = Fingers/MidiLaneCommands.cxx; sourceTree = "<group>"; };
-		22C77E8112D62F2E002F68D5 /* MidiLaneCommands.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = MidiLaneCommands.hxx; path = Fingers/MidiLaneCommands.hxx; sourceTree = "<group>"; };
-		22C77E8212D62F2E002F68D5 /* MiscCommand.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MiscCommand.cxx; path = Fingers/MiscCommand.cxx; sourceTree = "<group>"; };
-		22C77E8312D62F2E002F68D5 /* MiscCommands.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = MiscCommands.hxx; path = Fingers/MiscCommands.hxx; sourceTree = "<group>"; };
-		22C77E8612D62F2E002F68D5 /* RprContainer.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprContainer.hxx; path = Fingers/RprContainer.hxx; sourceTree = "<group>"; };
-		22C77E8712D62F2E002F68D5 /* RprException.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprException.cxx; path = Fingers/RprException.cxx; sourceTree = "<group>"; };
-		22C77E8812D62F2E002F68D5 /* RprException.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprException.hxx; path = Fingers/RprException.hxx; sourceTree = "<group>"; };
-		22C77E8912D62F2E002F68D5 /* RprItem.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprItem.cxx; path = Fingers/RprItem.cxx; sourceTree = "<group>"; };
-		22C77E8A12D62F2E002F68D5 /* RprItem.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprItem.hxx; path = Fingers/RprItem.hxx; sourceTree = "<group>"; };
-		22C77E8B12D62F2E002F68D5 /* RprMidiCCLane.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprMidiCCLane.cxx; path = Fingers/RprMidiCCLane.cxx; sourceTree = "<group>"; };
-		22C77E8C12D62F2E002F68D5 /* RprMidiCCLane.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprMidiCCLane.hxx; path = Fingers/RprMidiCCLane.hxx; sourceTree = "<group>"; };
-		22C77E8D12D62F2E002F68D5 /* RprMidiEvent.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprMidiEvent.cxx; path = Fingers/RprMidiEvent.cxx; sourceTree = "<group>"; };
-		22C77E8E12D62F2E002F68D5 /* RprMidiEvent.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprMidiEvent.hxx; path = Fingers/RprMidiEvent.hxx; sourceTree = "<group>"; };
-		22C77E8F12D62F2E002F68D5 /* RprMidiTake.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprMidiTake.cxx; path = Fingers/RprMidiTake.cxx; sourceTree = "<group>"; };
-		22C77E9012D62F2E002F68D5 /* RprMidiTake.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprMidiTake.hxx; path = Fingers/RprMidiTake.hxx; sourceTree = "<group>"; };
-		22C77E9112D62F2E002F68D5 /* RprMidiTemplate.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprMidiTemplate.cxx; path = Fingers/RprMidiTemplate.cxx; sourceTree = "<group>"; };
-		22C77E9212D62F2E002F68D5 /* RprMidiTemplate.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprMidiTemplate.hxx; path = Fingers/RprMidiTemplate.hxx; sourceTree = "<group>"; };
-		22C77E9312D62F2E002F68D5 /* RprNode.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprNode.cxx; path = Fingers/RprNode.cxx; sourceTree = "<group>"; };
-		22C77E9412D62F2E002F68D5 /* RprNode.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprNode.hxx; path = Fingers/RprNode.hxx; sourceTree = "<group>"; };
-		22C77E9712D62F2E002F68D5 /* RprTake.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprTake.cxx; path = Fingers/RprTake.cxx; sourceTree = "<group>"; };
-		22C77E9812D62F2E002F68D5 /* RprTake.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprTake.hxx; path = Fingers/RprTake.hxx; sourceTree = "<group>"; };
-		22C77E9912D62F2E002F68D5 /* RprTrack.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprTrack.cxx; path = Fingers/RprTrack.cxx; sourceTree = "<group>"; };
-		22C77E9A12D62F2E002F68D5 /* RprTrack.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = RprTrack.hxx; path = Fingers/RprTrack.hxx; sourceTree = "<group>"; };
-		22C77E9B12D62F2E002F68D5 /* StringUtil.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StringUtil.cxx; path = Fingers/StringUtil.cxx; sourceTree = "<group>"; };
-		22C77E9C12D62F2E002F68D5 /* StringUtil.hxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = StringUtil.hxx; path = Fingers/StringUtil.hxx; sourceTree = "<group>"; };
-		22C77E9D12D62F2E002F68D5 /* TimeMap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TimeMap.cpp; path = Fingers/TimeMap.cpp; sourceTree = "<group>"; };
-		22C77E9E12D62F2E002F68D5 /* TimeMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TimeMap.h; path = Fingers/TimeMap.h; sourceTree = "<group>"; };
 		22F7AA8D15201D8A00CC1481 /* SnM_Chunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Chunk.cpp; path = SnM/SnM_Chunk.cpp; sourceTree = "<group>"; };
 		22F7AA8E15201D8A00CC1481 /* SnM_Chunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Chunk.h; path = SnM/SnM_Chunk.h; sourceTree = "<group>"; };
 		22F7AA8F15201D8A00CC1481 /* SnM_ChunkParserPatcher.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_ChunkParserPatcher.h; path = SnM/SnM_ChunkParserPatcher.h; sourceTree = "<group>"; };
@@ -549,16 +512,53 @@
 		22FFD278114CD8310077F1CA /* Autocolor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autocolor.cpp; path = Color/Autocolor.cpp; sourceTree = "<group>"; };
 		22FFD279114CD8310077F1CA /* Autocolor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autocolor.h; path = Color/Autocolor.h; sourceTree = "<group>"; };
 		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		3838DE14161E3DE30085C20D /* GrooveDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrooveDialog.h; path = Fingers/GrooveDialog.h; sourceTree = "<group>"; };
-		3838DE15161E3DE30085C20D /* GrooveDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GrooveDialog.cpp; path = Fingers/GrooveDialog.cpp; sourceTree = "<group>"; };
-		3838DE42161E3F4B0085C20D /* GrooveTemplates.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrooveTemplates.h; path = Fingers/GrooveTemplates.h; sourceTree = "<group>"; };
-		3838DE43161E3F4B0085C20D /* GrooveTemplates.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GrooveTemplates.cpp; path = Fingers/GrooveTemplates.cpp; sourceTree = "<group>"; };
-		384AFFF3161E2E5900190D42 /* RprStateChunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprStateChunk.h; path = Fingers/RprStateChunk.h; sourceTree = "<group>"; };
-		384AFFF4161E2E5900190D42 /* RprStateChunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprStateChunk.cpp; path = Fingers/RprStateChunk.cpp; sourceTree = "<group>"; };
+		387938B716202B1E000948B5 /* CommandHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommandHandler.cpp; path = Fingers/CommandHandler.cpp; sourceTree = "<group>"; };
+		387938B816202B1E000948B5 /* CommandHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandHandler.h; path = Fingers/CommandHandler.h; sourceTree = "<group>"; };
+		387938B916202B1E000948B5 /* Envelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Envelope.cpp; path = Fingers/Envelope.cpp; sourceTree = "<group>"; };
+		387938BA16202B1E000948B5 /* Envelope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Envelope.h; path = Fingers/Envelope.h; sourceTree = "<group>"; };
+		387938BB16202B1E000948B5 /* EnvelopeCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EnvelopeCommands.cpp; path = Fingers/EnvelopeCommands.cpp; sourceTree = "<group>"; };
+		387938BC16202B1E000948B5 /* EnvelopeCommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EnvelopeCommands.h; path = Fingers/EnvelopeCommands.h; sourceTree = "<group>"; };
+		387938BD16202B1E000948B5 /* FNG_client.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FNG_client.h; path = Fingers/FNG_client.h; sourceTree = "<group>"; };
+		387938BE16202B1E000948B5 /* FNG_Settings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FNG_Settings.h; path = Fingers/FNG_Settings.h; sourceTree = "<group>"; };
+		387938BF16202B1E000948B5 /* FNG.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FNG.cpp; path = Fingers/FNG.cpp; sourceTree = "<group>"; };
+		387938C016202B1E000948B5 /* GrooveCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GrooveCommands.cpp; path = Fingers/GrooveCommands.cpp; sourceTree = "<group>"; };
+		387938C116202B1E000948B5 /* GrooveCommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrooveCommands.h; path = Fingers/GrooveCommands.h; sourceTree = "<group>"; };
+		387938C216202B1E000948B5 /* GrooveDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GrooveDialog.cpp; path = Fingers/GrooveDialog.cpp; sourceTree = "<group>"; };
+		387938C316202B1E000948B5 /* GrooveDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrooveDialog.h; path = Fingers/GrooveDialog.h; sourceTree = "<group>"; };
+		387938C416202B1E000948B5 /* GrooveTemplates.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GrooveTemplates.cpp; path = Fingers/GrooveTemplates.cpp; sourceTree = "<group>"; };
+		387938C516202B1E000948B5 /* GrooveTemplates.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrooveTemplates.h; path = Fingers/GrooveTemplates.h; sourceTree = "<group>"; };
+		387938C616202B1E000948B5 /* MediaItemCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MediaItemCommands.cpp; path = Fingers/MediaItemCommands.cpp; sourceTree = "<group>"; };
+		387938C716202B1E000948B5 /* MediaItemCommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MediaItemCommands.h; path = Fingers/MediaItemCommands.h; sourceTree = "<group>"; };
+		387938C816202B1E000948B5 /* MidiLaneCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MidiLaneCommands.cpp; path = Fingers/MidiLaneCommands.cpp; sourceTree = "<group>"; };
+		387938C916202B1E000948B5 /* MidiLaneCommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MidiLaneCommands.h; path = Fingers/MidiLaneCommands.h; sourceTree = "<group>"; };
+		387938CA16202B1E000948B5 /* MiscCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MiscCommands.cpp; path = Fingers/MiscCommands.cpp; sourceTree = "<group>"; };
+		387938CB16202B1E000948B5 /* MiscCommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MiscCommands.h; path = Fingers/MiscCommands.h; sourceTree = "<group>"; };
+		387938CC16202B1E000948B5 /* RprContainer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprContainer.h; path = Fingers/RprContainer.h; sourceTree = "<group>"; };
+		387938CD16202B1E000948B5 /* RprException.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprException.cpp; path = Fingers/RprException.cpp; sourceTree = "<group>"; };
+		387938CE16202B1E000948B5 /* RprException.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprException.h; path = Fingers/RprException.h; sourceTree = "<group>"; };
+		387938CF16202B1E000948B5 /* RprItem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprItem.cpp; path = Fingers/RprItem.cpp; sourceTree = "<group>"; };
+		387938D016202B1E000948B5 /* RprItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprItem.h; path = Fingers/RprItem.h; sourceTree = "<group>"; };
+		387938D116202B1E000948B5 /* RprMidiCCLane.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprMidiCCLane.cpp; path = Fingers/RprMidiCCLane.cpp; sourceTree = "<group>"; };
+		387938D216202B1E000948B5 /* RprMidiCCLane.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprMidiCCLane.h; path = Fingers/RprMidiCCLane.h; sourceTree = "<group>"; };
+		387938D316202B1E000948B5 /* RprMidiEvent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprMidiEvent.cpp; path = Fingers/RprMidiEvent.cpp; sourceTree = "<group>"; };
+		387938D416202B1E000948B5 /* RprMidiEvent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprMidiEvent.h; path = Fingers/RprMidiEvent.h; sourceTree = "<group>"; };
+		387938D516202B1E000948B5 /* RprMidiTake.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprMidiTake.cpp; path = Fingers/RprMidiTake.cpp; sourceTree = "<group>"; };
+		387938D616202B1E000948B5 /* RprMidiTake.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprMidiTake.h; path = Fingers/RprMidiTake.h; sourceTree = "<group>"; };
+		387938D716202B1E000948B5 /* RprMidiTemplate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprMidiTemplate.cpp; path = Fingers/RprMidiTemplate.cpp; sourceTree = "<group>"; };
+		387938D816202B1E000948B5 /* RprMidiTemplate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprMidiTemplate.h; path = Fingers/RprMidiTemplate.h; sourceTree = "<group>"; };
+		387938D916202B1E000948B5 /* RprNode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprNode.cpp; path = Fingers/RprNode.cpp; sourceTree = "<group>"; };
+		387938DA16202B1E000948B5 /* RprNode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprNode.h; path = Fingers/RprNode.h; sourceTree = "<group>"; };
+		387938DB16202B1E000948B5 /* RprStateChunk.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprStateChunk.cpp; path = Fingers/RprStateChunk.cpp; sourceTree = "<group>"; };
+		387938DC16202B1E000948B5 /* RprStateChunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprStateChunk.h; path = Fingers/RprStateChunk.h; sourceTree = "<group>"; };
+		387938DD16202B1E000948B5 /* RprTake.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprTake.cpp; path = Fingers/RprTake.cpp; sourceTree = "<group>"; };
+		387938DE16202B1E000948B5 /* RprTake.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprTake.h; path = Fingers/RprTake.h; sourceTree = "<group>"; };
+		387938DF16202B1E000948B5 /* RprTrack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RprTrack.cpp; path = Fingers/RprTrack.cpp; sourceTree = "<group>"; };
+		387938E016202B1E000948B5 /* RprTrack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RprTrack.h; path = Fingers/RprTrack.h; sourceTree = "<group>"; };
+		387938E116202B1E000948B5 /* StringUtil.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StringUtil.cpp; path = Fingers/StringUtil.cpp; sourceTree = "<group>"; };
+		387938E216202B1E000948B5 /* StringUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StringUtil.h; path = Fingers/StringUtil.h; sourceTree = "<group>"; };
+		387938E316202B1E000948B5 /* TimeMap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TimeMap.cpp; path = Fingers/TimeMap.cpp; sourceTree = "<group>"; };
+		387938E416202B1E000948B5 /* TimeMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TimeMap.h; path = Fingers/TimeMap.h; sourceTree = "<group>"; };
 		389293231601487C00F16794 /* MakeWhatsNew.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MakeWhatsNew.cpp; path = BuildUtils/MakeWhatsNew.cpp; sourceTree = "<group>"; };
-		389A5F3F161E33B90043D674 /* GrooveCommands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GrooveCommands.h; path = Fingers/GrooveCommands.h; sourceTree = "<group>"; };
-		389A5F40161E33B90043D674 /* GrooveCommands.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GrooveCommands.cpp; path = Fingers/GrooveCommands.cpp; sourceTree = "<group>"; };
-		389A5F64161E36630043D674 /* FNG.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = FNG.cpp; path = Fingers/FNG.cpp; sourceTree = "<group>"; };
 		38B8AD431601269E001F3F3C /* ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ReaScript.cpp; sourceTree = "<group>"; };
 		5A0280AD14216AE300EC8CD1 /* icontheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icontheme.h; path = reaper/icontheme.h; sourceTree = "<group>"; };
 		5A0280AE14216AE300EC8CD1 /* sws_rpf_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sws_rpf_wrapper.h; path = reaper/sws_rpf_wrapper.h; sourceTree = "<group>"; };
@@ -994,52 +994,52 @@
 		22C77E6612D62EE3002F68D5 /* Fingers */ = {
 			isa = PBXGroup;
 			children = (
-				22C77E6C12D62F2E002F68D5 /* CommandHandler.h */,
-				22C77E6B12D62F2E002F68D5 /* CommandHandler.cpp */,
-				22C77E6E12D62F2E002F68D5 /* Envelope.h */,
-				22C77E6D12D62F2E002F68D5 /* Envelope.cpp */,
-				22C77E6F12D62F2E002F68D5 /* EnvelopeCommands.cpp */,
-				22C77E7012D62F2E002F68D5 /* EnvelopeCommands.h */,
-				389A5F64161E36630043D674 /* FNG.cpp */,
-				22C77E7412D62F2E002F68D5 /* FNG_client.h */,
-				22C77E7512D62F2E002F68D5 /* FNG_Settings.h */,
-				389A5F40161E33B90043D674 /* GrooveCommands.cpp */,
-				389A5F3F161E33B90043D674 /* GrooveCommands.h */,
-				3838DE15161E3DE30085C20D /* GrooveDialog.cpp */,
-				3838DE14161E3DE30085C20D /* GrooveDialog.h */,
-				3838DE43161E3F4B0085C20D /* GrooveTemplates.cpp */,
-				3838DE42161E3F4B0085C20D /* GrooveTemplates.h */,
-				22C77E7E12D62F2E002F68D5 /* MediaItemCommands.cpp */,
-				22C77E7F12D62F2E002F68D5 /* MediaItemCommands.h */,
-				22C77E8012D62F2E002F68D5 /* MidiLaneCommands.cxx */,
-				22C77E8112D62F2E002F68D5 /* MidiLaneCommands.hxx */,
-				22C77E8212D62F2E002F68D5 /* MiscCommand.cxx */,
-				22C77E8312D62F2E002F68D5 /* MiscCommands.hxx */,
-				22C77E8612D62F2E002F68D5 /* RprContainer.hxx */,
-				22C77E8712D62F2E002F68D5 /* RprException.cxx */,
-				22C77E8812D62F2E002F68D5 /* RprException.hxx */,
-				22C77E8912D62F2E002F68D5 /* RprItem.cxx */,
-				22C77E8A12D62F2E002F68D5 /* RprItem.hxx */,
-				22C77E8B12D62F2E002F68D5 /* RprMidiCCLane.cxx */,
-				22C77E8C12D62F2E002F68D5 /* RprMidiCCLane.hxx */,
-				22C77E8D12D62F2E002F68D5 /* RprMidiEvent.cxx */,
-				22C77E8E12D62F2E002F68D5 /* RprMidiEvent.hxx */,
-				22C77E8F12D62F2E002F68D5 /* RprMidiTake.cxx */,
-				22C77E9012D62F2E002F68D5 /* RprMidiTake.hxx */,
-				22C77E9112D62F2E002F68D5 /* RprMidiTemplate.cxx */,
-				22C77E9212D62F2E002F68D5 /* RprMidiTemplate.hxx */,
-				22C77E9312D62F2E002F68D5 /* RprNode.cxx */,
-				22C77E9412D62F2E002F68D5 /* RprNode.hxx */,
-				384AFFF4161E2E5900190D42 /* RprStateChunk.cpp */,
-				384AFFF3161E2E5900190D42 /* RprStateChunk.h */,
-				22C77E9712D62F2E002F68D5 /* RprTake.cxx */,
-				22C77E9812D62F2E002F68D5 /* RprTake.hxx */,
-				22C77E9912D62F2E002F68D5 /* RprTrack.cxx */,
-				22C77E9A12D62F2E002F68D5 /* RprTrack.hxx */,
-				22C77E9B12D62F2E002F68D5 /* StringUtil.cxx */,
-				22C77E9C12D62F2E002F68D5 /* StringUtil.hxx */,
-				22C77E9D12D62F2E002F68D5 /* TimeMap.cpp */,
-				22C77E9E12D62F2E002F68D5 /* TimeMap.h */,
+				387938B716202B1E000948B5 /* CommandHandler.cpp */,
+				387938B816202B1E000948B5 /* CommandHandler.h */,
+				387938B916202B1E000948B5 /* Envelope.cpp */,
+				387938BA16202B1E000948B5 /* Envelope.h */,
+				387938BB16202B1E000948B5 /* EnvelopeCommands.cpp */,
+				387938BC16202B1E000948B5 /* EnvelopeCommands.h */,
+				387938BD16202B1E000948B5 /* FNG_client.h */,
+				387938BE16202B1E000948B5 /* FNG_Settings.h */,
+				387938BF16202B1E000948B5 /* FNG.cpp */,
+				387938C016202B1E000948B5 /* GrooveCommands.cpp */,
+				387938C116202B1E000948B5 /* GrooveCommands.h */,
+				387938C216202B1E000948B5 /* GrooveDialog.cpp */,
+				387938C316202B1E000948B5 /* GrooveDialog.h */,
+				387938C416202B1E000948B5 /* GrooveTemplates.cpp */,
+				387938C516202B1E000948B5 /* GrooveTemplates.h */,
+				387938C616202B1E000948B5 /* MediaItemCommands.cpp */,
+				387938C716202B1E000948B5 /* MediaItemCommands.h */,
+				387938C816202B1E000948B5 /* MidiLaneCommands.cpp */,
+				387938C916202B1E000948B5 /* MidiLaneCommands.h */,
+				387938CA16202B1E000948B5 /* MiscCommands.cpp */,
+				387938CB16202B1E000948B5 /* MiscCommands.h */,
+				387938CC16202B1E000948B5 /* RprContainer.h */,
+				387938CD16202B1E000948B5 /* RprException.cpp */,
+				387938CE16202B1E000948B5 /* RprException.h */,
+				387938CF16202B1E000948B5 /* RprItem.cpp */,
+				387938D016202B1E000948B5 /* RprItem.h */,
+				387938D116202B1E000948B5 /* RprMidiCCLane.cpp */,
+				387938D216202B1E000948B5 /* RprMidiCCLane.h */,
+				387938D316202B1E000948B5 /* RprMidiEvent.cpp */,
+				387938D416202B1E000948B5 /* RprMidiEvent.h */,
+				387938D516202B1E000948B5 /* RprMidiTake.cpp */,
+				387938D616202B1E000948B5 /* RprMidiTake.h */,
+				387938D716202B1E000948B5 /* RprMidiTemplate.cpp */,
+				387938D816202B1E000948B5 /* RprMidiTemplate.h */,
+				387938D916202B1E000948B5 /* RprNode.cpp */,
+				387938DA16202B1E000948B5 /* RprNode.h */,
+				387938DB16202B1E000948B5 /* RprStateChunk.cpp */,
+				387938DC16202B1E000948B5 /* RprStateChunk.h */,
+				387938DD16202B1E000948B5 /* RprTake.cpp */,
+				387938DE16202B1E000948B5 /* RprTake.h */,
+				387938DF16202B1E000948B5 /* RprTrack.cpp */,
+				387938E016202B1E000948B5 /* RprTrack.h */,
+				387938E116202B1E000948B5 /* StringUtil.cpp */,
+				387938E216202B1E000948B5 /* StringUtil.h */,
+				387938E316202B1E000948B5 /* TimeMap.cpp */,
+				387938E416202B1E000948B5 /* TimeMap.h */,
 			);
 			name = Fingers;
 			sourceTree = "<group>";
@@ -1168,26 +1168,6 @@
 				2273566812910ABF001A1570 /* EditCursor.h in Headers */,
 				2246D05E12F1622400EEDBD5 /* Autorender.h in Headers */,
 				2246D06012F1622400EEDBD5 /* RenderTrack.h in Headers */,
-				22C77EA212D62F2E002F68D5 /* CommandHandler.h in Headers */,
-				22C77EA412D62F2E002F68D5 /* Envelope.h in Headers */,
-				22C77EA612D62F2E002F68D5 /* EnvelopeCommands.h in Headers */,
-				22C77EAA12D62F2E002F68D5 /* FNG_client.h in Headers */,
-				22C77EAB12D62F2E002F68D5 /* FNG_Settings.h in Headers */,
-				22C77EB512D62F2E002F68D5 /* MediaItemCommands.h in Headers */,
-				22C77EB712D62F2E002F68D5 /* MidiLaneCommands.hxx in Headers */,
-				22C77EB912D62F2E002F68D5 /* MiscCommands.hxx in Headers */,
-				22C77EBC12D62F2E002F68D5 /* RprContainer.hxx in Headers */,
-				22C77EBE12D62F2E002F68D5 /* RprException.hxx in Headers */,
-				22C77EC012D62F2E002F68D5 /* RprItem.hxx in Headers */,
-				22C77EC212D62F2E002F68D5 /* RprMidiCCLane.hxx in Headers */,
-				22C77EC412D62F2E002F68D5 /* RprMidiEvent.hxx in Headers */,
-				22C77EC612D62F2E002F68D5 /* RprMidiTake.hxx in Headers */,
-				22C77EC812D62F2E002F68D5 /* RprMidiTemplate.hxx in Headers */,
-				22C77ECA12D62F2E002F68D5 /* RprNode.hxx in Headers */,
-				22C77ECE12D62F2E002F68D5 /* RprTake.hxx in Headers */,
-				22C77ED012D62F2E002F68D5 /* RprTrack.hxx in Headers */,
-				22C77ED212D62F2E002F68D5 /* StringUtil.hxx in Headers */,
-				22C77ED412D62F2E002F68D5 /* TimeMap.h in Headers */,
 				2270FC7212F8551400703F85 /* RecCheck.h in Headers */,
 				22284D48130C4A65007DC680 /* Menus.h in Headers */,
 				22B22D6413FA575C00D187A9 /* Analysis.h in Headers */,
@@ -1217,10 +1197,30 @@
 				22F7AADE15201D8A00CC1481 /* SnM.h in Headers */,
 				22F7AAE915201E2600CC1481 /* IX.h in Headers */,
 				2266B2BD15F069CC006F2A0D /* Breeder.h in Headers */,
-				384AFFF5161E2E5900190D42 /* RprStateChunk.h in Headers */,
-				389A5F41161E33B90043D674 /* GrooveCommands.h in Headers */,
-				3838DE16161E3DE30085C20D /* GrooveDialog.h in Headers */,
-				3838DE44161E3F4B0085C20D /* GrooveTemplates.h in Headers */,
+				387938E616202B1E000948B5 /* CommandHandler.h in Headers */,
+				387938E816202B1E000948B5 /* Envelope.h in Headers */,
+				387938EA16202B1E000948B5 /* EnvelopeCommands.h in Headers */,
+				387938EB16202B1E000948B5 /* FNG_client.h in Headers */,
+				387938EC16202B1E000948B5 /* FNG_Settings.h in Headers */,
+				387938EF16202B1E000948B5 /* GrooveCommands.h in Headers */,
+				387938F116202B1E000948B5 /* GrooveDialog.h in Headers */,
+				387938F316202B1E000948B5 /* GrooveTemplates.h in Headers */,
+				387938F516202B1E000948B5 /* MediaItemCommands.h in Headers */,
+				387938F716202B1E000948B5 /* MidiLaneCommands.h in Headers */,
+				387938F916202B1E000948B5 /* MiscCommands.h in Headers */,
+				387938FA16202B1E000948B5 /* RprContainer.h in Headers */,
+				387938FC16202B1E000948B5 /* RprException.h in Headers */,
+				387938FE16202B1E000948B5 /* RprItem.h in Headers */,
+				3879390016202B1E000948B5 /* RprMidiCCLane.h in Headers */,
+				3879390216202B1E000948B5 /* RprMidiEvent.h in Headers */,
+				3879390416202B1E000948B5 /* RprMidiTake.h in Headers */,
+				3879390616202B1E000948B5 /* RprMidiTemplate.h in Headers */,
+				3879390816202B1E000948B5 /* RprNode.h in Headers */,
+				3879390A16202B1E000948B5 /* RprStateChunk.h in Headers */,
+				3879390C16202B1E000948B5 /* RprTake.h in Headers */,
+				3879390E16202B1E000948B5 /* RprTrack.h in Headers */,
+				3879391016202B1E000948B5 /* StringUtil.h in Headers */,
+				3879391216202B1E000948B5 /* TimeMap.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1434,23 +1434,6 @@
 				2273566712910ABF001A1570 /* EditCursor.cpp in Sources */,
 				2246D05D12F1622400EEDBD5 /* Autorender.cpp in Sources */,
 				2246D05F12F1622400EEDBD5 /* RenderTrack.cpp in Sources */,
-				22C77EA112D62F2E002F68D5 /* CommandHandler.cpp in Sources */,
-				22C77EA312D62F2E002F68D5 /* Envelope.cpp in Sources */,
-				22C77EA512D62F2E002F68D5 /* EnvelopeCommands.cpp in Sources */,
-				22C77EB412D62F2E002F68D5 /* MediaItemCommands.cpp in Sources */,
-				22C77EB612D62F2E002F68D5 /* MidiLaneCommands.cxx in Sources */,
-				22C77EB812D62F2E002F68D5 /* MiscCommand.cxx in Sources */,
-				22C77EBD12D62F2E002F68D5 /* RprException.cxx in Sources */,
-				22C77EBF12D62F2E002F68D5 /* RprItem.cxx in Sources */,
-				22C77EC112D62F2E002F68D5 /* RprMidiCCLane.cxx in Sources */,
-				22C77EC312D62F2E002F68D5 /* RprMidiEvent.cxx in Sources */,
-				22C77EC512D62F2E002F68D5 /* RprMidiTake.cxx in Sources */,
-				22C77EC712D62F2E002F68D5 /* RprMidiTemplate.cxx in Sources */,
-				22C77EC912D62F2E002F68D5 /* RprNode.cxx in Sources */,
-				22C77ECD12D62F2E002F68D5 /* RprTake.cxx in Sources */,
-				22C77ECF12D62F2E002F68D5 /* RprTrack.cxx in Sources */,
-				22C77ED112D62F2E002F68D5 /* StringUtil.cxx in Sources */,
-				22C77ED312D62F2E002F68D5 /* TimeMap.cpp in Sources */,
 				2270FC7112F8551400703F85 /* RecCheck.cpp in Sources */,
 				22284D47130C4A65007DC680 /* Menus.cpp in Sources */,
 				22B22D6313FA575C00D187A9 /* Analysis.cpp in Sources */,
@@ -1481,11 +1464,28 @@
 				2266B2BC15F069CC006F2A0D /* Breeder.cpp in Sources */,
 				38B8AD451601269E001F3F3C /* ReaScript.cpp in Sources */,
 				389293241601487C00F16794 /* MakeWhatsNew.cpp in Sources */,
-				384AFFF6161E2E5900190D42 /* RprStateChunk.cpp in Sources */,
-				389A5F42161E33B90043D674 /* GrooveCommands.cpp in Sources */,
-				389A5F65161E36630043D674 /* FNG.cpp in Sources */,
-				3838DE17161E3DE30085C20D /* GrooveDialog.cpp in Sources */,
-				3838DE45161E3F4B0085C20D /* GrooveTemplates.cpp in Sources */,
+				387938E516202B1E000948B5 /* CommandHandler.cpp in Sources */,
+				387938E716202B1E000948B5 /* Envelope.cpp in Sources */,
+				387938E916202B1E000948B5 /* EnvelopeCommands.cpp in Sources */,
+				387938ED16202B1E000948B5 /* FNG.cpp in Sources */,
+				387938EE16202B1E000948B5 /* GrooveCommands.cpp in Sources */,
+				387938F016202B1E000948B5 /* GrooveDialog.cpp in Sources */,
+				387938F216202B1E000948B5 /* GrooveTemplates.cpp in Sources */,
+				387938F416202B1E000948B5 /* MediaItemCommands.cpp in Sources */,
+				387938F616202B1E000948B5 /* MidiLaneCommands.cpp in Sources */,
+				387938F816202B1E000948B5 /* MiscCommands.cpp in Sources */,
+				387938FB16202B1E000948B5 /* RprException.cpp in Sources */,
+				387938FD16202B1E000948B5 /* RprItem.cpp in Sources */,
+				387938FF16202B1E000948B5 /* RprMidiCCLane.cpp in Sources */,
+				3879390116202B1E000948B5 /* RprMidiEvent.cpp in Sources */,
+				3879390316202B1E000948B5 /* RprMidiTake.cpp in Sources */,
+				3879390516202B1E000948B5 /* RprMidiTemplate.cpp in Sources */,
+				3879390716202B1E000948B5 /* RprNode.cpp in Sources */,
+				3879390916202B1E000948B5 /* RprStateChunk.cpp in Sources */,
+				3879390B16202B1E000948B5 /* RprTake.cpp in Sources */,
+				3879390D16202B1E000948B5 /* RprTrack.cpp in Sources */,
+				3879390F16202B1E000948B5 /* StringUtil.cpp in Sources */,
+				3879391116202B1E000948B5 /* TimeMap.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

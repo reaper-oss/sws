@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "RprContainer.hxx"
+#include "RprContainer.h"
 
 class MediaItem;
 class RprItemCtr;

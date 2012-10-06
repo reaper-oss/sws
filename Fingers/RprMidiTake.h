@@ -1,8 +1,8 @@
 #ifndef __RPRMIDITAKE_H
 #define __RPRMIDITAKE_H
 
-#include "RprMidiEvent.hxx"
-#include "RprMidiTemplate.hxx"
+#include "RprMidiEvent.h"
+#include "RprMidiTemplate.h"
 
 class RprMidiEvent;
 class RprMidiBase;
@@ -37,7 +37,7 @@ RprMidiNote* FNG_AddMidiNote(RprMidiTake* midiTake);
 
 typedef std::auto_ptr<RprMidiTake> RprMidiTakePtr;
 
-class RprMidiNote 
+class RprMidiNote
 {
 public:
     RprMidiNote(RprMidiContext *context);
@@ -66,20 +66,20 @@ public:
 
     int getItemPosition() const;
     void setItemPosition(int position);
-    
+
     int getItemLength() const;
     void setItemLength(int);
 
     ~RprMidiNote();
 private:
     friend class RprMidiTake;
-    
+
     RprMidiBase *mNoteOn;
     RprMidiBase *mNoteOff;
     RprMidiContext *mContext;
 };
 
-class RprMidiCC 
+class RprMidiCC
 {
 public:
     RprMidiCC(RprMidiContext *context, int controller);
@@ -96,7 +96,7 @@ private:
     RprMidiContext *mContext;
 };
 
-class RprMidiTake : public RprMidiTemplate 
+class RprMidiTake : public RprMidiTemplate
 {
 public:
     static RprMidiTakePtr createFromMidiEditor(bool readOnly = false);

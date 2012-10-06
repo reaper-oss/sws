@@ -27,7 +27,7 @@
 
 #include "stdafx.h"
 #include "SnM/SnM_Misc.h"
-#include "Fingers/RprMidiTake.hxx"
+#include "Fingers/RprMidiTake.h"
 
 // Important: 
 // keep APIFUNC() and the 6 first fields of the struct "APIdef" as they are defined:

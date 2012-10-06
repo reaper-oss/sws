@@ -5,10 +5,10 @@
 #include "CommandHandler.h"
 #include "TimeMap.h"
 
-#include "RprItem.hxx"
-#include "RprTake.hxx"
-#include "RprTrack.hxx"
-#include "RprMidiTake.hxx"
+#include "RprItem.h"
+#include "RprTake.h"
+#include "RprTrack.h"
+#include "RprMidiTake.h"
 
 void CmdCleanItemLengths(int flag, void *data);
 void CmdLegatoItemLengths(int flag, void *data);
@@ -58,7 +58,7 @@ void CmdRotateItems::doCommand(int flag)
 
 	if(ctr->size() <= 1)
 		return;
-	
+
 	std::list<double> itemLengths;
 	std::list<double> itemPositions;
 	std::list<RprTrack> itemTracks;
@@ -113,12 +113,12 @@ void CmdExpandItems::doCommand(int flag)
 
 	if(ctr->size() <= 1)
 		return;
-	
+
 	double startPos = ctr->first().getPosition();
 
 	for(int i = 0; i < ctr->size(); i++) {
 		RprItem item = ctr->getAt(i);
-		item.setPosition(item.getPosition() + (item.getPosition() - startPos) * m_dAmount);	
+		item.setPosition(item.getPosition() + (item.getPosition() - startPos) * m_dAmount);
 	}
 }
 
@@ -142,7 +142,7 @@ void CmdExpandItemsToBar::doCommand(int flag)
 			break;
 
 		double dFactor = lastPos * (expandPoint / finalPoint - 1) / (lastPos - startPos);
-		
+
 		for(int i = 0; i < ctr->size(); i++) {
 			RprItem item = ctr->getAt(i);
 			double pos = item.getPosition();
@@ -159,7 +159,7 @@ void CmdCleanItemLengths(int flag, void *data)
 		return;
 
 	ctr->sort();
-	
+
 	for(int i = 0; i < ctr->size() - 1; i++)
 	{
 		RprTrack track1 = ctr->getAt(i).getTrack();
@@ -224,7 +224,7 @@ void CreateMidiItem()
 
 	if(ctr->size() != 1)
 		return;
-	
+
 	RprItem item = ctr->getAt(0);
 	RprMidiTake midiTake(item.getActiveTake());
 	RprMidiNote *note = midiTake.addNoteAt(midiTake.countNotes());
@@ -276,13 +276,13 @@ static bool convertToInProjectMidi(RprItemCtrPtr &ctr)
 void CmdPitchUpMidi::doCommand(int flag)
 {
 	RprItemCtrPtr ctr = RprItemCollec::getSelected();
-	
+
 	if(!convertToInProjectMidi(ctr))
 		return;
 
 	for(int i = 0; i < ctr->size(); i++) {
-        if (!ctr->getAt(i).getActiveTake().isMIDI())
-            continue;
+	if (!ctr->getAt(i).getActiveTake().isMIDI())
+	    continue;
 		RprMidiTake midiItem(ctr->getAt(i).getActiveTake());
 		for(int j = 0; j < midiItem.countNotes(); j++) {
 			RprMidiNote *note = midiItem.getNoteAt(j);
@@ -299,8 +299,8 @@ void CmdSetItemNameMidi::doCommand(int flag)
 		return;
 
 	for(int i = 0; i < ctr->size(); i++) {
-        if (!ctr->getAt(i).getActiveTake().isMIDI())
-            continue;
+	if (!ctr->getAt(i).getActiveTake().isMIDI())
+	    continue;
 		RprMidiTake midiItem(ctr->getAt(i).getActiveTake());
 		if(midiItem.countNotes() > 0) {
 			int pitch = midiItem.getNoteAt(0)->getPitch();
@@ -316,7 +316,7 @@ void CmdSetItemNameMidi::doCommand(int flag)
 			}
 			char name[5];
 			memset(name, 0, 4);
-			strcat(name, noteNames[nameIndex]); 
+			strcat(name, noteNames[nameIndex]);
 			strcat(name, octave);
 			ctr->getAt(i).getActiveTake().setName(name);
 		}
@@ -339,13 +339,13 @@ void CmdIncreaseItemRate::doCommand(int flag)
 void CmdVelChangeMidi::doCommand(int flag)
 {
 	RprItemCtrPtr ctr = RprItemCollec::getSelected();
-	
+
 	if(!convertToInProjectMidi(ctr))
 		return;
 
 	for(int i = 0; i < ctr->size(); i++) {
-        if (!ctr->getAt(i).getActiveTake().isMIDI())
-            continue;
+	if (!ctr->getAt(i).getActiveTake().isMIDI())
+	    continue;
 		RprMidiTake midiItem(ctr->getAt(i).getActiveTake());
 		for(int j = 0; j < midiItem.countNotes(); j++) {
 			RprMidiNote *note = midiItem.getNoteAt(j);

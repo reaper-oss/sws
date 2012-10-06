@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "RprTake.hxx"
+#include "RprTake.h"
 
 class RprTake;
 class RprItem;

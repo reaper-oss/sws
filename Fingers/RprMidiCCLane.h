@@ -1,7 +1,7 @@
 #ifndef __RPRMIDICCLANE_HXX
 #define __RPRMIDICCLANE_HXX
 
-#include "RprMidiTemplate.hxx"
+#include "RprMidiTemplate.h"
 
 class RprNode;
 class RprItem;
@@ -20,19 +20,19 @@ public:
 	int getHeight(int id) const;
 
 	int countShown() const;
-	
+
 	int getIdAt(int index) const;
 	void setIdAt(int index, int id);
 
 	int getHeightAt(int index) const;
 	void setHeightAt(int index, int height);
-	
+
 	void remove(int index);
 	void append(int id, int height);
-	
+
 	void toReaper(RprNode *midiNode);
 	~RprMidiCCLane();
-	
+
 private:
 	class RprMidiLane {
 	public:

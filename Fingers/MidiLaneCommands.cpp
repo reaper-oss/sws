@@ -1,12 +1,12 @@
 #include "stdafx.h"
 
-#include "MidiLaneCommands.hxx"
+#include "MidiLaneCommands.h"
 #include "CommandHandler.h"
-#include "RprItem.hxx"
-#include "RprTake.hxx"
-#include "RprMidiCCLane.hxx"
-#include "RprMidiEvent.hxx"
-#include "RprMidiTake.hxx"
+#include "RprItem.h"
+#include "RprTake.h"
+#include "RprMidiCCLane.h"
+#include "RprMidiEvent.h"
+#include "RprMidiTake.h"
 
 static const int defaultHeight = 67;
 
@@ -29,8 +29,8 @@ void MidiLaneCommands::Init()
 static const struct {
 		RprMidiBase::MessageType messageType;
 		int index;
-	} 
-	eventIndexTable[] = 
+	}
+	eventIndexTable[] =
 	{
 		{RprMidiBase::PitchBend, 128 },
 		{RprMidiBase::ProgramChange, 129 },
@@ -54,9 +54,9 @@ static void CycleThroughMidiLanes(int flag, void *data)
 	int i = laneView->countShown() - 1;
 	tempLaneId = laneView->getIdAt(i);
 	tempHeight = laneView->getHeightAt(i);
-	
+
 	for(; i > 0 ; --i) {
-		
+
 		tempLaneId2 = laneView->getIdAt(i - 1);
 		tempHeight2 = laneView->getHeightAt(i - 1);
 
@@ -105,7 +105,7 @@ static bool hasEventsofType(const RprMidiTakePtr &midiTake, int cc)
 
 static void ShowUsedCCLanes(int flag, void *data)
 {
-	
+
 	RprMidiCCLanePtr laneView = RprMidiCCLane::createFromMidiEditor();
 	RprMidiTakePtr midiTake = RprMidiTake::createFromMidiEditor(true);
 
@@ -121,7 +121,7 @@ static void ShowUsedCCLanes(int flag, void *data)
 	if(midiTake->countNotes() > 0 && !laneView->isShown(-1)) {
 		laneView->append(-1, defaultHeight);
 	}
-	
+
 	for(int i = 0; i < __ARRAY_SIZE(eventIndexTable); ++i) {
 		if (midiTake->hasEventType(eventIndexTable[i].messageType) && !laneView->isShown(eventIndexTable[i].index)) {
 			laneView->append(eventIndexTable[i].index, defaultHeight);
@@ -130,7 +130,7 @@ static void ShowUsedCCLanes(int flag, void *data)
 
     /* Special case: Bank select (CC0) and lane 131 (Program change) */
     if (midiTake->countCCs(0) > 0 && !laneView->isShown(131)) {
-        laneView->append(131, defaultHeight);
+	laneView->append(131, defaultHeight);
     }
 
 	for(int i = 0; i < 120; ++i) {
@@ -147,13 +147,13 @@ static void HideUnusedCCLanes(int flag, void *data)
 	std::list<int> ccIndices;
 	for(int i = 0; i < laneView->countShown(); ++i) {
 		int index = laneView->getIdAt(i);
-        /* Special case for bank-select and program change events */
-        if (index == 131 || index == 0) {
-            if (midiTake->countCCs(0) == 0 && midiTake->hasEventType(RprMidiBase::ProgramChange)) {
-                ccIndices.push_back(index);
-            }
-            continue;
-        }
+	/* Special case for bank-select and program change events */
+	if (index == 131 || index == 0) {
+	    if (midiTake->countCCs(0) == 0 && midiTake->hasEventType(RprMidiBase::ProgramChange)) {
+		ccIndices.push_back(index);
+	    }
+	    continue;
+	}
 
 		for(int j = 0; j < __ARRAY_SIZE(eventIndexTable); ++j) {
 			if(index == eventIndexTable[j].index) {
@@ -162,7 +162,7 @@ static void HideUnusedCCLanes(int flag, void *data)
 			}
 		}
 
-        if( index > 0 && index <= 119) {
+	if( index > 0 && index <= 119) {
 			if(midiTake->countCCs(index) == 0)
 				ccIndices.push_back(index);
 		}
@@ -187,4 +187,3 @@ static void ShowOnlyTopCCLane(int flag, void *data)
 		laneView->remove(1);
 	}
 }
-

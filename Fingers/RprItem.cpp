@@ -1,8 +1,8 @@
 #include "stdafx.h"
 
-#include "RprItem.hxx"
-#include "RprTake.hxx"
-#include "RprTrack.hxx"
+#include "RprItem.h"
+#include "RprTake.h"
+#include "RprTrack.h"
 #include "RprStateChunk.h"
 
 

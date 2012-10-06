@@ -12,10 +12,10 @@ public:
 
 	bool isSelected() const;
 	void setSelected( bool selected);
-	
+
 	bool isMuted() const;
 	void setMuted(bool muted);
-	
+
 	int getDelta() const;
 	void setDelta(int delta);
 
@@ -99,7 +99,7 @@ private:
 class RprMidiEventCreator {
 public:
 	RprMidiEventCreator(RprNode *node);
-	/* Collect midi Event. Once you have collected it you 
+	/* Collect midi Event. Once you have collected it you
 	 * take ownership of it. */
 	RprMidiBase *collectEvent();
 	~RprMidiEventCreator();

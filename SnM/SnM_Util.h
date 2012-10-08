@@ -32,6 +32,7 @@
 
 #include "../MarkerList/MarkerListClass.h"
 
+
 const char* GetFileRelativePath(const char* _fn);
 const char* GetFileExtension(const char* _fn);
 void GetFilenameNoExt(const char* _fullFn, char* _fn, int _fnSz);
@@ -48,6 +49,9 @@ bool LoadChunk(const char* _fn, WDL_FastString* _chunkOut, bool _trim = true, in
 bool SaveChunk(const char* _fn, WDL_FastString* _chunk, bool _indent);
 WDL_HeapBuf* LoadBin(const char* _fn);
 bool SaveBin(const char* _fn, const WDL_HeapBuf* _hb);
+#ifdef _SNM_MISC
+bool TranscodeFileToFile64(const char* _outFn, const char* _inFn);
+#endif
 WDL_HeapBuf* TranscodeStr64ToHeapBuf(const char* _str64);
 bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, char* _updatedFn, int _updatedSz);
 void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs);
@@ -78,6 +82,11 @@ void Replace02d(char* _str, char _replaceCh);
 bool IsMacro(const char* _actionName);
 bool LearnAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSection);
 bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
+#ifdef _SNM_MISC
+WDL_UINT64 FNV64(WDL_UINT64 h, const unsigned char* data, int sz);
+bool FNV64(const char* _strIn, char* _strOut);
+#endif
+
 
 class MarkerRegion : public MarkerItem {
 public:
@@ -87,5 +96,6 @@ public:
 protected:
 	int m_id;
 };
+
 
 #endif

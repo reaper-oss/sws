@@ -30,6 +30,90 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// SNM_DynamicText
+///////////////////////////////////////////////////////////////////////////////
+
+// split the text into lines (not to do that in OnPaint()) and store them
+void SNM_DynamicSizedText::SetText(const char* _txt, unsigned char _alpha)
+{ 
+	m_lines.Empty(true);
+	m_maxlinelen = -1;
+	m_alpha = _alpha;
+
+	if (_txt && *_txt)
+	{
+		const char* p=_txt, *p2=NULL;
+		while (p2 = FindFirstRN(p))
+		{
+			m_maxlinelen = max(m_maxlinelen, (int)(p2-p)+1); // +1 to get room
+			WDL_FastString* line = new WDL_FastString;
+			line->Append(p, (int)(p2-p));
+			m_lines.Add(line);
+			p = p2+1;
+			if (*p == '\n') p++;
+			if (*p == '\0') break;
+		}
+
+		if (p && *p && !p2) {
+			m_maxlinelen = max(m_maxlinelen, (int)strlen(p)+1); // +1 to get room
+			m_lines.Add(new WDL_FastString(p));
+		}
+	}
+	RequestRedraw(NULL);
+} 
+
+void SNM_DynamicSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
+{
+	RECT r = m_position;
+	r.left += origin_x;
+	r.right += origin_x;
+	r.top += origin_y;
+	r.bottom += origin_y;
+
+	int h = r.bottom-r.top;
+	int w = r.right-r.left;
+	int col = LICE_RGBA(255,255,255, m_alpha);
+	if (ColorTheme* ct = SNM_GetColorTheme())
+		col = LICE_RGBA_FROMNATIVE(ct->main_text, m_alpha);
+
+	if (m_wantBorder)
+		LICE_DrawRect(drawbm,r.left,r.top,w,h,col);
+
+	if (!m_lines.GetSize())
+		return;
+
+	// creating fonts is *super slow* => use a text width estimation
+	int fontHeight = int(h/m_lines.GetSize() + 0.5);
+	while (fontHeight > 5 && (fontHeight*m_maxlinelen*0.55) > w) 
+		fontHeight--;
+
+	if (fontHeight>5)
+	{
+		HFONT lf = CreateFont(fontHeight,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,m_fontName.Get());
+		m_font.SetFromHFont(lf, LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
+		m_font.SetBkMode(TRANSPARENT);
+		m_font.SetTextColor(col);
+
+		int top = r.top + int(h/2 - (fontHeight*m_lines.GetSize())/2 + 0.5);
+		for (int i=0; i < m_lines.GetSize(); i++)
+		{
+			RECT tr = {0,0,0,0};
+			m_font.DrawText(NULL, m_lines.Get(i)->Get(), -1, &tr, DT_CALCRECT);
+			int txtw = tr.right - tr.left;
+			tr.top = top + i*fontHeight;
+			tr.bottom = tr.top+fontHeight;
+			tr.left = r.left + int(w/2 - txtw/2 + 0.5);
+			tr.right = tr.left + txtw;
+			m_font.DrawText(drawbm, m_lines.Get(i)->Get(), -1, &tr, m_alpha<255 ? LICE_DT_USEFGALPHA : 0); // workaround: no ClearType w/ LICE_DT_USEFGALPHA
+		}
+		m_font.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
+		DeleteObject(lf);
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // SNM_ToolbarButton
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -192,6 +276,22 @@ bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
 	return false;
 }
 
+#ifdef _SNM_MISC //JFB not used yet
+bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h)
+{
+	if (_x+_logo->GetWidth() < _r->right-8)
+	{
+		int x = _r->right - _logo->GetWidth() - 8;
+		int y = _r->top + int(_h/2 - _logo->GetHeight()/2 + 0.5);
+		RECT tr = {x, y, x + _logo->GetWidth(), y + _logo->GetHeight()};
+		_logo->SetPosition(&tr);
+		_logo->SetVisible(true);
+		return true;
+	}
+	return false;
+}
+#endif
+
 // SWS: My OSX has a problem with max() sometimes.  I don't know why.
 #ifndef _WIN32
 #define max(x,y) ((x)>(y)?(x):(y))
@@ -208,7 +308,7 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, 
 {
 	if (_comp && _h && abs(_r->bottom-_r->top) >= _h)
 	{
-		int width=0, height=0; //JFB!!! height used to be _h!
+		int width=0, height=0;
 		if (!strcmp(_comp->GetType(), "vwnd_statictext"))
 		{
 			WDL_VirtualStaticText* txt = (WDL_VirtualStaticText*)_comp;
@@ -220,18 +320,13 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, 
 		else if (!strcmp(_comp->GetType(), "vwnd_combobox"))
 		{
 			WDL_VirtualComboBox* cb = (WDL_VirtualComboBox*)_comp;
+			//JFB cb->GetCurSel()?
 			for (int i=0; i < cb->GetCount(); i++) {
 				RECT tr = {0,0,0,0};
 				cb->GetFont()->DrawText(NULL, cb->GetItem(i), -1, &tr, DT_CALCRECT);
 				width = max(width, tr.right);
-				height = tr.bottom; 
+				height = tr.bottom;
 			}
-/*JFB better? InvalidateRect/RequestRedraw issue anyway..
-			RECT tr = {0,0,0,0};
-			cb->GetFont()->DrawText(NULL, cb->GetItem(cb->GetCurSel()), -1, &tr, DT_CALCRECT);
-			width = tr.right;
-			height = tr.bottom; 
-*/
 			height = height + int(height/2 + 0.5);
 			width += 2*height; // 2*height for the arrow zone (square)
 		}
@@ -254,9 +349,10 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, 
 				RECT tr = {0,0,0,0};
 				btn->GetFont()->DrawText(NULL, btn->GetTextLabel(), -1, &tr, DT_CALCRECT);
 				if (tr.bottom > height)
-					height = int(tr.bottom + tr.bottom/2 + 0.5); // unlikely to happen..
+					height = int(tr.bottom + tr.bottom/2 + 0.5);
 				if ((tr.right+int(height/2 + 0.5)) > width)
-				width = int(tr.right + height/2 + 0.5); // +height/2 for some air
+					width = int(tr.right + height/2 + 0.5); // +height/2 for some air
+
 				if (btn->GetCheckState() != -1) {
 					width += tr.bottom; // for the tick zone
 					height -= 2;

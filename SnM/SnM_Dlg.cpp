@@ -37,7 +37,13 @@
 // Theming
 ///////////////////////////////////////////////////////////////////////////////
 
-bool g_SNMClearType = false;
+// not configurable on osx, optional on win (.ini file)
+bool g_SNMClearType = 
+#ifdef _WIN32
+	false;
+#else
+	true;
+#endif
 
 ColorTheme* SNM_GetColorTheme(bool _checkForSize) {
 	int sz; ColorTheme* ct = (ColorTheme*)GetColorThemeStruct(&sz);

@@ -351,7 +351,7 @@ void SimulateMouseClick(COMMAND_T* _ct)
 // API LIMITATION: the action dlg is hacked because only the main section could be dumped othewise..
 // See http://forum.cockos.com/showthread.php?t=61929 and http://wiki.cockos.com/wiki/index.php/Action_List_Reference
 // _type: 1 & 2 for ALR wiki (1=native actions, 2=SWS)
-// _type: 3 & 4 for basic dump (3=native actions, 4=SWS)
+// _type: 3, 4 & 5 for basic dump (3=native actions, 4=SWS, 5=user macros)
 bool DumpActionList(int _type, const char* _title, const char* _lineFormat, const char* _heading, const char* _ending)
 {
 	char currentSection[SNM_MAX_SECTION_NAME_LEN] = "";
@@ -359,19 +359,19 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 	if (hList && currentSection)
 	{
 		char sectionURL[SNM_MAX_SECTION_NAME_LEN] = ""; 
-		if (!GetSectionNameAsURL(_type == 1 || _type == 2, currentSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
+		if (!GetSectionNameAsURL(_type==1||_type==2, currentSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
 		{
 			MessageBox(GetMainHwnd(), __LOCALIZE("Dump failed: unknown section!","sws_mbox"), _title, MB_OK);
 			return false;
 		}
 
 		char name[SNM_MAX_SECTION_NAME_LEN*2] = "", fn[BUFFER_SIZE] = "";
-		if (_snprintfStrict(name, sizeof(name), "%s%s.txt", sectionURL, !(_type % 2) ? "_SWS" : "") <= 0)
+		if (_snprintfStrict(name, sizeof(name), "%s_Section%s.txt", sectionURL, (_type==2||_type==4) ? "_SWS" : _type==5 ? "_Macros" : "") <= 0)
 			*name = '\0';
 		if (!BrowseForSaveFile(_title, GetResourcePath(), name, SNM_TXT_EXT_LIST, fn, BUFFER_SIZE))
 			return false;
 
-		//flush
+		// flush
 		FILE* f = fopenUTF8(fn, "w"); 
 		if (f)
 		{
@@ -398,9 +398,12 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 				ListView_GetItemText(hList, i, 1, cmdName, SNM_MAX_ACTION_NAME_LEN);
 				ListView_GetItemText(hList, i, 4, custId, SNM_MAX_ACTION_CUSTID_LEN);
 
+				bool isMacro = IsMacro(cmdName);
 				int isSws = IsSwsAction(cmdName);
-				if (!IsMacro(cmdName) &&
-					((_type%2 && !isSws) || (!(_type%2) && isSws && IsLocalizableAction(custId))))
+				bool isSwsMacro = !IsLocalizableAction(custId);
+				if (((_type==1||_type==3) && !isSws && !isMacro && !isSwsMacro) || 
+					((_type==2||_type==4) && isSws  && !isMacro && !isSwsMacro) ||
+					(_type==5 && (isMacro||isSwsMacro)))
 				{
 					if (!*custId) // for native actions
 						if (_snprintfStrict(custId, sizeof(custId), "%d", cmdId) <= 0)

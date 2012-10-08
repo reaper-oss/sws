@@ -34,17 +34,57 @@
 
 #define SNM_DEF_VWND_X_STEP			12
 
+
+class SNM_DynamicSizedText : public WDL_VWnd {
+public:
+	SNM_DynamicSizedText() : WDL_VWnd() { 
+		m_fontName.Set(SWSDLG_TYPEFACE); m_alpha=255; m_maxlinelen=-1; m_wantBorder=false;
+	}
+	virtual ~SNM_DynamicSizedText() {}
+	virtual const char *GetType() { return "SNM_DynamicText"; }
+	virtual void SetText(const char* _txt, unsigned char _alpha = 255);
+	virtual void OnPaint(LICE_IBitmap* _drawbm, int _origin_x, int _origin_y, RECT* _cliprect);
+	virtual void SetBorder(bool _b) { m_wantBorder = _b; }
+	virtual const char* GetFontName() { return m_fontName.Get(); }
+	virtual void SetFontName(const char* _fontName) { m_fontName.Set(_fontName); }
+protected:
+	LICE_CachedFont m_font;
+	WDL_FastString m_fontName;
+	WDL_PtrList_DeleteOnDestroy<WDL_FastString> m_lines;
+	int m_maxlinelen;
+	bool m_wantBorder;
+	unsigned char m_alpha;
+};
+
 class SNM_ImageVWnd : public WDL_VWnd {
 public:
-	SNM_ImageVWnd(LICE_IBitmap* _img = NULL) : WDL_VWnd() { SetImage(_img); }
+	SNM_ImageVWnd(LICE_IBitmap* _img = NULL) : WDL_VWnd() { m_img = _img; }
 	virtual ~SNM_ImageVWnd() {}
 	virtual const char *GetType() { return "SNM_ImageVWnd"; }
+	virtual const char* GetFilename() { return m_fn.Get(); }
 	virtual int GetWidth();
 	virtual int GetHeight();
-	virtual void SetImage(LICE_IBitmap* _img) { m_img = _img; }
+	virtual void SetImage(const char* _fn) {
+		if (_fn && *_fn)
+			if (m_img = LICE_LoadPNG(_fn, NULL)) {
+				m_fn.Set(_fn);
+				return;
+			}
+		DELETE_NULL(m_img);
+		m_fn.Set("");
+	}
 	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
 protected:
 	LICE_IBitmap* m_img;
+	WDL_FastString m_fn;
+};
+
+class SNM_Logo : public SNM_ImageVWnd {
+public:
+	SNM_Logo() : SNM_ImageVWnd(SNM_GetThemeLogo()) {}
+	virtual ~SNM_Logo() {}
+	virtual const char *GetType() { return "SNM_Logo"; }
+	virtual bool GetToolTipString(int xpos, int ypos, char* bufOut, int bufOutSz) { lstrcpyn(bufOut, "Strong & Mighty", bufOutSz); return true; }
 };
 
 class SNM_AddDelButton : public WDL_VWnd {
@@ -97,9 +137,22 @@ public:
 	virtual void OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
 };
 
+class SNM_MiniKnob : public WDL_VirtualSlider {
+public:
+	SNM_MiniKnob() : WDL_VirtualSlider() {
+		SetKnobBias(1); // force knob
+		SetScrollMessage(WM_VSCROLL);
+	}
+	virtual ~SNM_MiniKnob() {}
+	virtual const char *GetType() { return "SNM_MiniKnob"; }
+};
+
 void SNM_SkinButton(WDL_VirtualIconButton* _btn, WDL_VirtualIconButton_SkinConfig* _skin, const char* _text);
 void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text);
 bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h);
+#ifdef _SNM_MISC
+bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h);
+#endif
 bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoom = SNM_DEF_VWND_X_STEP);
 
 #endif

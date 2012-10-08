@@ -38,6 +38,7 @@
 //#define _SNM_MISC	// not released, deprecated, tests, etc..
 //#define _SNM_WDL	// if my wdl version is used
 //#define _SNM_STANDALONE
+//#define _SNM_CSURF_PROXY
 
 
 #ifdef _WIN32
@@ -61,8 +62,12 @@
 #define SNM_CYCLACTION_BAK_FILE		"%s/S&M_Cyclactions.bak"
 #define SNM_CYCLACTION_EXPORT_FILE	"%s/S&M_Cyclactions_export.ini"
 #define SNM_EXTENSION_FILE			"%s/UserPlugins/reaper_snm.dylib"
-#define SNM_FONT_NAME				"Arial"
+#define SNM_FONT_NAME				"Lucida Grande"
+#ifndef __LP64__ //JFB!!! wtf!? same font, different look on x64!
+#define SNM_FONT_HEIGHT				10
+#else
 #define SNM_FONT_HEIGHT				11
+#endif
 #define SNM_TOP_GUI_HEIGHT			37
 #define SNM_BOT_GUI_HEIGHT			43
 #define SNM_1PIXEL_Y				(-1)
@@ -167,6 +172,8 @@ extern WDL_FastString g_SNMDiffToolFn;
 extern MIDI_COMMAND_T g_SNMSection_cmdTable[];
 extern int g_SNMIniFileVersion;
 extern int g_SNMbeta;
+extern int g_lastShowImgSlot;
+
 
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 bool IsToolbarsAutoRefeshEnabled(COMMAND_T*);

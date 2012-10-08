@@ -313,6 +313,23 @@ bool SaveBin(const char* _fn, const WDL_HeapBuf* _hb)
 	return ok;
 }
 
+#ifdef _SNM_MISC
+bool TranscodeFileToFile64(const char* _outFn, const char* _inFn)
+{
+	bool ok = false;
+	WDL_HeapBuf* hb = LoadBin(_inFn); 
+	if (hb && hb->GetSize())
+	{
+		ProjectStateContext* ctx = ProjectCreateFileWrite(_outFn);
+		cfg_encode_binary(ctx, hb->Get(), hb->GetSize());
+		delete ctx;
+		ok = FileExists(_outFn);
+	}
+	delete hb;
+	return ok;
+}
+#endif
+
 // returns NULL if failed, otherwise it's up to the caller to free the returned buffer
 WDL_HeapBuf* TranscodeStr64ToHeapBuf(const char* _str64)
 {
@@ -539,7 +556,10 @@ void SNM_UpgradeIniFiles()
 		UpdatePrivateProfileSection("LAST_CUEBUS", "CueBuss1", g_SNMIniFn.Get());
 	if (g_SNMIniFileVersion < 6) // < v2.2.0 #6
 		WritePrivateProfileStruct("RegionPlaylist", NULL, NULL, 0, g_SNMIniFn.Get()); // flush section
-
+#ifdef _SNM_STANDALONE
+	if (g_SNMIniFileVersion < 7) // < v2.2.0 #16
+		WritePrivateProfileStruct("LIVE_CONFIGS", NULL, NULL, 0, g_SNMIniFn.Get()); // flush section
+#endif
 	g_SNMIniFileVersion = SNM_INI_FILE_VERSION;
 }
 
@@ -906,4 +926,59 @@ bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int
 		lstrcpyn(_sectionURL, _section, _sectionURLSize);
 	return true;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Other util funcs
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef _SNM_MISC
+
+#ifdef _WIN32
+#define FNV64_IV ((WDL_UINT64)(0xCBF29CE484222325i64))
+#else
+#define FNV64_IV ((WDL_UINT64)(0xCBF29CE484222325LL))
+#endif
+
+WDL_UINT64 FNV64(WDL_UINT64 h, const unsigned char* data, int sz)
+{
+	int i;
+	for (i=0; i < sz; ++i)
+	{
+#ifdef _WIN32
+		h *= (WDL_UINT64)0x00000100000001B3i64;
+#else
+		h *= (WDL_UINT64)0x00000100000001B3LL;
+#endif
+		h ^= data[i];
+	}
+	return h;
+}
+
+// _strOut[65] by definition..
+bool FNV64(const char* _strIn, char* _strOut)
+{
+	WDL_UINT64 h = FNV64_IV;
+	const char *p=_strIn;
+	while (*p)
+	{
+		char c = *p++;
+		if (c == '\\')
+		{
+			if (*p == '\\'||*p == '"' || *p == '\'') h=FNV64(h,(unsigned char *)p,1);
+			else if (*p == 'n') h=FNV64(h,(unsigned char *)"\n",1);
+			else if (*p == 'r') h=FNV64(h,(unsigned char *)"\r",1);
+			else if (*p == 't') h=FNV64(h,(unsigned char *)"\t",1);
+			else if (*p == '0') h=FNV64(h,(unsigned char *)"",1);
+			else return false;
+			p++;
+		}
+		else
+			h=FNV64(h,(unsigned char *)&c,1);
+	}
+	h=FNV64(h,(unsigned char *)"",1);
+	return (_snprintfStrict(_strOut, 65, "%08X%08X",(int)(h>>32),(int)(h&0xffffffff)) > 0);
+}
+
+#endif
 

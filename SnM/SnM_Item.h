@@ -80,6 +80,11 @@ bool IsEmptyMidi(MediaItem_Take* _take);
 void SetEmptyTakeChunk(WDL_FastString* _chunk, int _recPass = -1, int _color = -1, bool _v4style = true);
 bool RemoveEmptyTakes(MediaTrack* _tr, bool _empty, bool _midiEmpty, bool _trSel, bool _itemSel);
 bool RemoveEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool _trSel = false, bool _itemSel = true);
+#ifdef _SNM_MISC
+int BuildLanes(const char* _undoTitle, int _mode);
+void MoveTakes(COMMAND_T*);
+void BuildLanes(COMMAND_T*);
+#endif
 void ClearTake(COMMAND_T*);
 void MoveActiveTake(COMMAND_T*);
 void ActivateLaneFromSelItem(COMMAND_T*);
@@ -104,6 +109,7 @@ bool ItemSelExists(COMMAND_T*);
 void ScrollToSelItem(MediaItem* _item);
 void ScrollToSelItem(COMMAND_T*);
 void SetPan(COMMAND_T*);
+void OpenMediaPathInExplorerFinder(COMMAND_T*);
 void PlaySelTrackMediaSlot(COMMAND_T*);
 void LoopSelTrackMediaSlot(COMMAND_T*);
 void SyncPlaySelTrackMediaSlot(COMMAND_T*);

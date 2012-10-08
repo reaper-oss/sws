@@ -1,6 +1,14 @@
-Issue 519: fixed "SWS: Hide docker" and "SWS: Show docker" (broken since REAPER v4 and multi-dockers)
-Issue 520/ReaScript: removed SNM_DeleteObject, added SNM_DeleteFastString
+Added actions
++Issue 517: SWS/S&M: Open selected item source path in explorer/finder
++SWS/S&M: Dump action list (custom actions only)
 
+Other
++Issue 488: Image window: display image filenames/slot numbers in tooltips
++OSX/S&M windows: better fonts
+
+Fixes
++Issue 519: fixed "SWS: Hide docker" and "SWS: Show docker" (broken since REAPER v4 and multi-dockers)
++Issue 520/ReaScript: removed SNM_DeleteObject, added SNM_DeleteFastString
 +Fixed a possible crash in Convert project markers to tempo markers dialog
 
 !v2.3.0 #6 (October 3, 2012)

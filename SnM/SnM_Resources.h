@@ -191,15 +191,18 @@ class SNM_ImageWnd : public SWS_DockWnd
 public:
 	SNM_ImageWnd();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	void SetImage(LICE_IBitmap* _img) { m_img.SetImage(_img); }
+	void SetImage(const char* _fn) { m_img.SetImage(_fn); }
 	void SetStretch(bool _stretch) { m_stretch = _stretch; }
 	bool IsStretched() { return m_stretch; }
 	void RequestRedraw() { m_parentVwnd.RequestRedraw(NULL); }
+	const char* GetFilename() { return m_img.GetFilename(); }
 protected:
 	void OnInitDlg();
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
-	SNM_ImageVWnd m_img; bool m_stretch;
+	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
+	SNM_ImageVWnd m_img;
+	bool m_stretch;
 };
 
 int ResourceViewInit();

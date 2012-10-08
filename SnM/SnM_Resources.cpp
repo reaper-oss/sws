@@ -1781,11 +1781,12 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 		if (SNM_AutoVWndPosition(&m_btnAutoSave, NULL, _r, &x0, _r->top, h))
 		{
 			// type: txt & dropdown
-			m_txtSlotsType.SetFont(font);
-			if (SNM_AutoVWndPosition(&m_txtSlotsType, NULL, _r, &x0, _r->top, h, 5))
+//			m_txtSlotsType.SetFont(font);
+//			if (SNM_AutoVWndPosition(&m_txtSlotsType, NULL, _r, &x0, _r->top, h, 5))
 			{
 				m_cbType.SetFont(font);
-				if (SNM_AutoVWndPosition(&m_cbType, &m_txtSlotsType, _r, &x0, _r->top, h, 4))
+//				if (SNM_AutoVWndPosition(&m_cbType, &m_txtSlotsType, _r, &x0, _r->top, h, 4))
+				if (SNM_AutoVWndPosition(&m_cbType, NULL,            _r, &x0, _r->top, h, 4))
 				{
 					// add & del bookmark buttons
 					((SNM_AddDelButton*)m_parentVwnd.GetChildByID(BUTTONID_DEL_BOOKMARK))->SetEnabled(g_resViewType >= SNM_NUM_DEFAULT_SLOTS);
@@ -2745,6 +2746,8 @@ void ResViewAutoSave(COMMAND_T* _ct) {
 // SNM_ImageWnd
 ///////////////////////////////////////////////////////////////////////////////
 
+#define IMGID	2000 //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+
 SNM_ImageWnd* g_pImageWnd = NULL;
 
 SNM_ImageWnd::SNM_ImageWnd()
@@ -2763,7 +2766,7 @@ void SNM_ImageWnd::OnInitDlg()
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
 	m_parentVwnd.SetRealParent(m_hwnd);
 	
-	m_img.SetID(2000); //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+	m_img.SetID(IMGID);
 	m_parentVwnd.AddChild(&m_img);
 	RequestRedraw();
 }
@@ -2808,6 +2811,14 @@ void SNM_ImageWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltip
 		m_img.SetPosition(_r);
 }
 
+bool SNM_ImageWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
+{
+	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1))
+		if (v->GetID()==IMGID && g_lastShowImgSlot>=0 && *GetFilename())
+			return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Image slot %d:\n%s","sws_DLG_162"), g_lastShowImgSlot+1, GetFilename()) > 0);
+	return false;
+}
+
 int ImageViewInit()
 {
 	g_pImageWnd = new SNM_ImageWnd();
@@ -2835,28 +2846,15 @@ void OpenImageView(COMMAND_T* _ct) {
 	}
 }
 
-WDL_FastString g_lastImageFn;
-
 bool OpenImageView(const char* _fn)
 {
 	bool ok = false;
 	if (g_pImageWnd)
 	{
-		WDL_FastString g_prevFn(g_lastImageFn.Get());
-		g_lastImageFn.Set("");
-		if (_fn && *_fn) {
-			if (LICE_IBitmap* img = LICE_LoadPNG(_fn, NULL)) {
-				g_pImageWnd->SetImage(img);
-				g_lastImageFn.Set(_fn);
-				ok = true;
-			}
-		}
-		else {
-			g_pImageWnd->SetImage(NULL);
-			ok = true;
-		}
-
-		g_pImageWnd->Show(!strcmp(g_prevFn.Get(), _fn) /* i.e toggle */, true);
+		ok = true;
+		WDL_FastString prevFn(g_pImageWnd->GetFilename());
+		g_pImageWnd->SetImage(_fn && *_fn ? _fn : NULL); // NULL clears the current image
+		g_pImageWnd->Show(!strcmp(prevFn.Get(), _fn) /* i.e toggle */, true);
 		g_pImageWnd->RequestRedraw();
 	}
 	return ok;

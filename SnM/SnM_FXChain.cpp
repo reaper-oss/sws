@@ -105,7 +105,7 @@ void PasteTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOn
 
 							// fx chain exists for this take?
 							// note: eolTakeFx is '\n' position + 1
-							int eolTkFx = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE_EOL, 1, "TAKEFX", "<TAKEFX", 0, 1);
+							int eolTkFx = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE_EOL, 1, "TAKEFX", "<TAKEFX", 0);
 
 							// paste fx chain (just before the end of the current TAKEFX)
 							if (eolTkFx > 0) {
@@ -114,7 +114,7 @@ void PasteTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOn
 							// set/create fx chain (after SOURCE)
 							else 
 							{
-								int eolSrc = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE_EOL, 1, "SOURCE", "<SOURCE", 0, 1);
+								int eolSrc = ptk.Parse(SNM_GET_SUBCHUNK_OR_LINE_EOL, 1, "SOURCE", "<SOURCE", 0);
 								if (eolSrc > 0) {
 									WDL_FastString newTakeFx;
 									MakeChunkTakeFX(&newTakeFx, _chain);

@@ -227,7 +227,7 @@ void DisableMasterFX(COMMAND_T*) { GetSetMediaTrackInfo(CSurf_TrackFromID(0, fal
 
 void MinimizeTracks(COMMAND_T* = NULL)
 {
-	for (int i = 1; i <= GetNumTracks(); i++)
+	for (int i = 0; i <= GetNumTracks(); i++)
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
 		if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))

@@ -38,6 +38,7 @@ static char* g_cString;
 static int g_iMax;
 static bool g_bOK = false;
 static bool g_bAtMouse = false;
+static HWND g_hwndModelessInfo = NULL;
 
 INT_PTR WINAPI doPromptDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -86,10 +87,14 @@ INT_PTR WINAPI doInfoDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 	{
 		case WM_INITDIALOG:
 		{
+			AttachWindowResizeGrip(hwndDlg);
 			resize.init(hwndDlg);
 			resize.init_item(IDC_EDIT);
 			SetWindowText(hwndDlg, g_cTitle);
-			RestoreWindowPos(hwndDlg, INFOWND_KEY);
+			if (g_bAtMouse)
+				SetWindowPosAtMouse(hwndDlg);
+			else
+				RestoreWindowPos(hwndDlg, INFOWND_KEY);
 			HWND hEdit = GetDlgItem(hwndDlg, IDC_EDIT);
 			SetWindowLongPtr(hEdit, GWLP_USERDATA, 0xdeadf00b);
 			SetWindowText(hEdit, g_cString);
@@ -107,7 +112,13 @@ INT_PTR WINAPI doInfoDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 				case IDOK:
 				case IDCANCEL:
 					SaveWindowPos(hwndDlg, INFOWND_KEY);
-					EndDialog(hwndDlg, 0);
+					if (hwndDlg == g_hwndModelessInfo)
+					{
+						DestroyWindow(g_hwndModelessInfo);
+						g_hwndModelessInfo = NULL;
+					}
+					else
+						EndDialog(hwndDlg, 0);
 					break;
 			}
 			break;
@@ -127,9 +138,26 @@ bool PromptUserForString(HWND hParent, const char* cTitle, char* cString, int iM
 	return g_bOK;
 }
 
-void DisplayInfoBox(HWND hParent, const char* cTitle, const char* cInfo)
+void DisplayInfoBox(HWND hParent, const char* cTitle, const char* cInfo, bool bAtMouse, bool bModal)
 {
 	g_cTitle = cTitle;
 	g_cString = (char*)cInfo;
-	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_INFO), hParent, doInfoDialog);
+	g_bAtMouse = !bModal && g_hwndModelessInfo ? false : bAtMouse; // ignored if a modeless info box is already displayed
+
+	if (g_hwndModelessInfo)
+	{
+		SaveWindowPos(g_hwndModelessInfo, INFOWND_KEY);
+		DestroyWindow(g_hwndModelessInfo);
+		g_hwndModelessInfo = NULL;
+	}
+
+	if (bModal)
+	{
+		DialogBox(g_hInst, MAKEINTRESOURCE(IDD_INFO), hParent, doInfoDialog);
+	}
+	else
+	{
+		g_hwndModelessInfo = CreateDialog(g_hInst, MAKEINTRESOURCE(IDD_INFO), hParent, doInfoDialog);
+		ShowWindow(g_hwndModelessInfo, SW_SHOW);
+	}
 }

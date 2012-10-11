@@ -111,13 +111,14 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Unfloat selected FX for selected tracks" }, "S&M_UNFLOATFXEL", UnfloatFX, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Toggle float selected FX for selected tracks" }, "S&M_TOGLFLOATFXEL", ToggleFloatFX, NULL, -1, FakeIsToggleAction},
 
-	// Track FX selection & move up/down---------------------------------------
+	// Track FX: selection, remove fx, move fx up/down in chain ------------------
 	{ { DEFACCEL, "SWS/S&M: Select last FX for selected tracks" }, "S&M_SEL_LAST_FX", SelectTrackFX, NULL, -3},
 	{ { DEFACCEL, "SWS/S&M: Select previous FX (cycling) for selected tracks" }, "S&M_SELFXPREV", SelectTrackFX, NULL, -2},
 	{ { DEFACCEL, "SWS/S&M: Select next FX (cycling) for selected tracks" }, "S&M_SELFXNEXT", SelectTrackFX, NULL, -1},
 
-	{ { DEFACCEL, "SWS/S&M: Move selected FX up in chain for selected tracks" }, "S&M_MOVE_FX_UP", MoveFX, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Move selected FX down in chain for selected tracks" }, "S&M_MOVE_FX_DOWN", MoveFX, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Move selected FX up in chain for selected tracks" }, "S&M_MOVE_FX_UP", MoveOrRemoveTrackFX, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Move selected FX down in chain for selected tracks" }, "S&M_MOVE_FX_DOWN", MoveOrRemoveTrackFX, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Remove selected FX for selected tracks" }, "S&M_REMOVE_FX", MoveOrRemoveTrackFX, NULL, 0},
 
 	// Track FX online/offline & bypass/unbypass ------------------------------
 	{ { DEFACCEL, "SWS/S&M: Toggle last FX online/offline for selected tracks" }, "S&M_FXOFFLAST", ToggleFXOfflineSelTracks, NULL, -2, IsFXOfflineSelTracks},
@@ -231,7 +232,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle), prompt for slot" }, "S&M_TGL_PLAYMEDIA_SELTRACKp", TogglePlaySelTrackMediaSlot, NULL, -1, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle), prompt for slot" }, "S&M_TGL_LOOPMEDIA_SELTRACKp", ToggleLoopSelTrackMediaSlot, NULL, -1, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause), prompt for slot" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTRACKp", TogglePauseSelTrackMediaSlot, NULL, -1, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause), prompt for slot - Infinite looping! To be stopped!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTRACKp", ToggleLoopPauseSelTrackMediaSlot, NULL, -1, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause), prompt for slot - Infinite loop!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTRACKp", ToggleLoopPauseSelTrackMediaSlot, NULL, -1, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Stop all playing media files" }, "S&M_STOPMEDIA_ALLTRACK", StopTrackPreviews, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Stop all playing media files in selected tracks" }, "S&M_STOPMEDIA_SELTRACK", StopTrackPreviews, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Add media file to current track, prompt for slot" }, "S&M_ADDMEDIA_CURTRACKp", InsertMediaSlotCurTr, NULL, -1},
@@ -266,7 +267,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	
 	// Items ------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Scroll to selected item (no undo)" }, "S&M_SCROLL_ITEM", ScrollToSelItem, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Open selected item source path in explorer/finder" }, "S&M_OPEN_ITEM_PATH", OpenMediaPathInExplorerFinder, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Open selected item path in explorer/finder" }, "S&M_OPEN_ITEM_PATH", OpenMediaPathInExplorerFinder, NULL, },
 
 	// Takes ------------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Pan active takes of selected items to 100% left" }, "S&M_PAN_TAKES_100L", SetPan, NULL, -100},
@@ -370,12 +371,12 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Toolbar ----------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Toggle toolbars auto refresh enable" },	"S&M_TOOLBAR_REFRESH_ENABLE", EnableToolbarsAutoRefesh, "Enable toolbars auto refresh", 0, IsToolbarsAutoRefeshEnabled},
-	{ { DEFACCEL, "SWS/S&M: Toolbar track envelopes in touch/latch/write mode toggle" }, "S&M_TOOLBAR_WRITE_ENV", ToggleWriteEnvExists, NULL, 0, WriteEnvExists},
-	{ { DEFACCEL, "SWS/S&M: Toolbar left item selection toggle" }, "S&M_TOOLBAR_ITEM_SEL0", ToggleItemSelExists, NULL, SNM_ITEM_SEL_LEFT, ItemSelExists},
-	{ { DEFACCEL, "SWS/S&M: Toolbar right item selection toggle" },"S&M_TOOLBAR_ITEM_SEL1", ToggleItemSelExists, NULL, SNM_ITEM_SEL_RIGHT, ItemSelExists},
+	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle track envelopes in touch/latch/write" }, "S&M_TOOLBAR_WRITE_ENV", ToggleWriteEnvExists, NULL, 0, WriteEnvExists},
+	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (left)" }, "S&M_TOOLBAR_ITEM_SEL0", ToggleItemSelExists, NULL, SNM_ITEM_SEL_LEFT, ItemSelExists},
+	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (right)" },"S&M_TOOLBAR_ITEM_SEL1", ToggleItemSelExists, NULL, SNM_ITEM_SEL_RIGHT, ItemSelExists},
 #ifdef _WIN32
-	{ { DEFACCEL, "SWS/S&M: Toolbar top item selection toggle" }, "S&M_TOOLBAR_ITEM_SEL2", ToggleItemSelExists, NULL, SNM_ITEM_SEL_UP, ItemSelExists},
-	{ { DEFACCEL, "SWS/S&M: Toolbar bottom item selection toggle" }, "S&M_TOOLBAR_ITEM_SEL3", ToggleItemSelExists, NULL, SNM_ITEM_SEL_DOWN, ItemSelExists},
+	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (top)" }, "S&M_TOOLBAR_ITEM_SEL2", ToggleItemSelExists, NULL, SNM_ITEM_SEL_UP, ItemSelExists},
+	{ { DEFACCEL, "SWS/S&M: Toolbar - Toggle offscreen item selection (bottom)" }, "S&M_TOOLBAR_ITEM_SEL3", ToggleItemSelExists, NULL, SNM_ITEM_SEL_DOWN, ItemSelExists},
 #endif
 
 	// Find -------------------------------------------------------------------
@@ -561,7 +562,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle), slot %02d" }, "S&M_TGL_PLAYMEDIA_SELTRACK", TogglePlaySelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle), slot %02d" }, "S&M_TGL_LOOPMEDIA_SELTRACK", ToggleLoopSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause), slot %02d" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTR", TogglePauseSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause), slot %02d - Infinite looping! To be stopped!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR", ToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause), slot %02d - Infinite loop!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR", ToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
 
 	{ { DEFACCEL, "SWS/S&M: Add media file to current track, slot %02d" }, "S&M_ADDMEDIA_CURTRACK", InsertMediaSlotCurTr, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Add media file to new track, slot %02d" }, "S&M_ADDMEDIA_NEWTRACK", InsertMediaSlotNewTr, NULL, 4},
@@ -605,7 +606,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_PLAYMEDIA_SELTRACK_SYNC", SyncTogglePlaySelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_LOOPMEDIA_SELTRACK_SYNC", SyncToggleLoopSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause, sync with next measure), slot %02d" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTR_SYNC", SyncTogglePauseSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
-	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %02d - Infinite looping! To be stopped!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR_SYNC", SyncToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
+	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %02d - Infinite loop!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR_SYNC", SyncToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
 
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Preload" }, "S&M_PRELOAD_LIVE_CFG", PreloadLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsLiveConfigPreloaded},
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Mute all but active track'" }, "S&M_LIVECFG_MUTEBUTACTIVE_ON", EnableMuteOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},

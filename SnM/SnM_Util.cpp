@@ -578,17 +578,36 @@ bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos,
 		if (!_color) // dang! it means we have to preserve the current color..
 		{
 			int x=0, num; bool isrgn, found=false;
-			while (x = EnumProjectMarkers3(NULL, x, &isrgn, NULL, NULL, NULL, &num, &color))
+			while (x = EnumProjectMarkers3(_proj, x, &isrgn, NULL, NULL, NULL, &num, &color))
 				if (found = (isrgn==_isrgn && num==_num))
 					break;
 			if (!found)
 				return false;
 		}
+
+		bool ok = false;
+		if (PreventUIRefresh)PreventUIRefresh(1);
 		if (DeleteProjectMarker(_proj, _num, _isrgn))
-			return (AddProjectMarker2(_proj, _isrgn, _pos, _rgnend, _name, _num, color) == _num);
+			ok = (AddProjectMarker2(_proj, _isrgn, _pos, _rgnend, _name, _num, color) == _num);
+		if (PreventUIRefresh) PreventUIRefresh(-1);
+		UpdateTimeline();
+		return ok;
 	}
-	else
-		return SetProjectMarker3(_proj, _num, _isrgn, _pos, _rgnend, _name, _color);
+	return SetProjectMarker3(_proj, _num, _isrgn, _pos, _rgnend, _name, _color);
+}
+
+// for reascript (that cannot handle the char** param of EnumProjectMarkers())
+bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_FastString* _name)
+{
+	if (_name)
+	{
+		int x=0, num; char* name; bool isrgn;
+		while (x = EnumProjectMarkers3(_proj, x, &isrgn, NULL, NULL, &name, &num, NULL))
+			if (num==_num && isrgn==_isrgn) {
+				_name->Set(name);
+				return true;
+			}
+	}
 	return false;
 }
 
@@ -629,12 +648,12 @@ int FindMarkerRegion(double _pos, int _flags, int* _idOut)
 	return idx;
 }
 
-int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn)
+int MakeMarkerRegionId(int _num, bool _isRgn)
 {
 	// note: MSB is ignored so that the encoded number is always positive
-	if (_markrgnindexnumber >= 0 && _markrgnindexnumber <= 0x3FFFFFFF) {
-		_markrgnindexnumber |= ((_isRgn?1:0) << 30);
-		return _markrgnindexnumber;
+	if (_num >= 0 && _num <= 0x3FFFFFFF) {
+		_num |= ((_isRgn?1:0) << 30);
+		return _num;
 	}
 	return -1;
 }

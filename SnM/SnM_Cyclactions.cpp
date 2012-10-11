@@ -46,7 +46,8 @@ char g_cyclactionSections[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN]; /
 static SNM_CyclactionWnd* g_pCyclactionWnd = NULL;
 bool g_undos = true;
 
-// for subbtle "recursive cycle action" cases (e.g. a cycle action that calls a macro that calls a cycle action..)
+// for subbtle "recursive cycle action" cases
+// (e.g. a cycle action that calls a macro that calls a cycle action..)
 static bool g_bReentrancyCheck = false;
 
 class ScheduledActions : public SNM_ScheduledJob
@@ -57,7 +58,8 @@ public:
 	{
 		for (int i= 0; _actions && i < _actions->GetSize(); i++)
 			m_actions.Add(new WDL_FastString(_actions->Get(i)->Get()));
-	}	
+	}
+
 	// best effort: ingore unknown actions but goes on..
 	void Perform()
 	{
@@ -70,12 +72,13 @@ public:
 		{
 			if (int cmd = NamedCommandLookup(m_actions.Get(i)->Get()))
 			{
-				if (!m_section && !KBD_OnMainActionEx(cmd, 0, 0, 0, GetMainHwnd(), NULL)) // Main section
+				if (!m_section && !KBD_OnMainActionEx(cmd, 0, 0, 0, GetMainHwnd(), NULL)) // main section
 					break;
-				else if (m_section && !MIDIEditor_LastFocused_OnCommand(cmd, m_section == 1)) // Both ME sections
+				else if (m_section && !MIDIEditor_LastFocused_OnCommand(cmd, m_section == 1)) // both ME sections
 					break;
 			}
 		}
+
 		// refresh toolbar button
 		{
 			char custId[SNM_MAX_ACTION_CUSTID_LEN] = "";
@@ -89,6 +92,7 @@ public:
 		m_actions.Empty(true);
 		g_bReentrancyCheck = false;
 	}
+
 	int m_section, m_cycleId;
 	WDL_FastString m_name;
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> m_actions;
@@ -104,9 +108,11 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 	// process new actions until cycle point
 	WDL_FastString name(action->GetName());
 	int state=0, startIdx=0;
-	while (startIdx < action->GetCmdSize() && state < action->m_performState) {
+	while (startIdx < action->GetCmdSize() && state < action->m_performState)
+	{
 		const char* cmd = action->GetCmd(startIdx++);
-		if (cmd[0] == '!') {
+		if (cmd[0] == '!')
+		{
 			state++;
 			if (cmd[1] && state == action->m_performState)
 				name.Set((const char *)(cmd+1));
@@ -117,28 +123,30 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> actions;
 	for (int i=startIdx; i < action->GetCmdSize(); i++)
 	{
-		const char* cmd = action->GetCmd(i);
 		char buf[256] = ""; 
 		bool done = false;
+		const char* cmd = action->GetCmd(i);
+
 		if (i == (action->GetCmdSize()-1))
 		{
 			action->m_performState = 0;
 			if (strcmp(action->GetName(), _ct->accel.desc))
-				lstrcpyn(buf, action->GetName(), 256);
+				lstrcpyn(buf, action->GetName(), sizeof(buf));
 			done = true;
 		}
 		else if (*cmd == '!') // last ! ignored
 		{
 			action->m_performState++;
 			if (cmd[1])
-				lstrcpyn(buf, (char *)(cmd+1), 256);
+				lstrcpyn(buf, (char *)(cmd+1), sizeof(buf));
 			done = true;
 		}
 
 		// add actions (checks done at perform time, i.e. best effort)
-		if (*cmd != '!') {
+		if (*cmd != '!')
+		{
 			actions.Add(new WDL_FastString(cmd));
-			if (!hasCustomIds && !atoi(cmd)) // macro, extension !?
+			if (!hasCustomIds && !atoi(cmd)) // macro, extension?
 				hasCustomIds = true;
 		}
 
@@ -149,6 +157,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 			SWSFreeUnregisterDynamicCmd(cmdId);
 			RegisterCyclation(buf, action->IsToggle(), _section, cycleId, cmdId);
 		}
+
 		if (done)
 			break;
 	}
@@ -161,7 +170,8 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 		if (hasCustomIds)
 			AddOrReplaceScheduledJob(job);
 		// perform immedialtely
-		else {
+		else 
+		{
 			job->Perform();
 			delete job;
 		}
@@ -172,7 +182,8 @@ void RunMainCyclaction(COMMAND_T* _ct) {RunCycleAction(0, _ct);}
 void RunMEListCyclaction(COMMAND_T* _ct) {RunCycleAction(1, _ct);}
 void RunMEPianoCyclaction(COMMAND_T* _ct) {RunCycleAction(2, _ct);}
 
-bool IsCyclactionEnabled(int _type, COMMAND_T* _ct) {
+bool IsCyclactionEnabled(int _type, COMMAND_T* _ct)
+{
 	int cycleId = (int)_ct->user;
 	Cyclaction* action = g_cyclactions[_type].Get(cycleId-1); // cycle action id is 1-based (for user display)
 	return (action && /*action->IsToggle() &&*/ (action->m_performState % 2) != 0);
@@ -184,7 +195,8 @@ bool IsMEPianoCyclactionEnabled(COMMAND_T* _ct) {return IsCyclactionEnabled(2, _
 
 bool CheckEditableCyclaction(const char* _actionStr, WDL_FastString* _errMsg, bool _allowEmpty = true)
 {
-	if (!(_actionStr && *_actionStr && *_actionStr != ',' && _strnicmp(_actionStr, "#,", 2))) {
+	if (!(_actionStr && *_actionStr && *_actionStr != ',' && _strnicmp(_actionStr, "#,", 2)))
+	{
 		if (_errMsg) {
 			_errMsg->AppendFormatted(256, __LOCALIZE_VERFMT("Error: invalid cycle action '%s'","sws_DLG_161"), _actionStr ? _actionStr : "NULL");
 			_errMsg->Append("\n\n");
@@ -288,7 +300,7 @@ int RegisterCyclation(const char* _name, bool _toggle, int _section, int _cycleI
 			return SWSCreateRegisterDynamicCmd(_cmdId,
 				!_section ? RunMainCyclaction : _section == 1 ? RunMEListCyclaction : RunMEPianoCyclaction, 
 				!_toggle ? NULL : (!_section ? IsMainCyclactionEnabled : _section == 1 ? IsMEListCyclactionEnabled : IsMEPianoCyclactionEnabled),
-				custId, _name, _cycleId, __FILE__, false); // no localization for cycle actions (name defined by the user) !
+				custId, _name, _cycleId, __FILE__, false); // no localization for cycle actions (name defined by the user)
 	}
 	return 0;
 }
@@ -322,7 +334,7 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 			if (!_cyclactions)
 				FlushCyclactions(sec);
 
-			GetPrivateProfileString(g_cyclactionIniSections[sec], "Nb_Actions", "0", buf, 32, _iniFn ? _iniFn : g_SNMCyclactionIniFn.Get()); 
+			GetPrivateProfileString(g_cyclactionIniSections[sec], "Nb_Actions", "0", buf, 32, _iniFn ? _iniFn : g_SNMCyclactionIniFn.Get());
 			int nb = atoi(buf);
 			for (int j=0; j < nb; j++) 
 			{
@@ -488,6 +500,21 @@ void Cyclaction::UpdateFromCmd()
 ///////////////////////////////////////////////////////////////////////////////
 // GUI
 ///////////////////////////////////////////////////////////////////////////////
+
+// commands
+#define ADD_CYCLACTION_MSG				0xF001
+#define DEL_CYCLACTION_MSG				0xF002
+#define RUN_CYCLACTION_MSG				0xF003
+#define ADD_CMD_MSG						0xF010
+#define LEARN_CMD_MSG					0xF011
+#define DEL_CMD_MSG						0xF012
+#define IMPORT_CUR_SECTION_MSG			0xF020
+#define IMPORT_ALL_SECTIONS_MSG			0xF021
+#define EXPORT_SEL_MSG					0xF022
+#define EXPORT_CUR_SECTION_MSG			0xF023
+#define EXPORT_ALL_SECTIONS_MSG			0xF024
+#define RESET_CUR_SECTION_MSG			0xF030
+#define RESET_ALL_SECTIONS_MSG			0xF031
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_161
 static SWS_LVColumn g_cyclactionsCols[] = { { 50, 0, "Id" }, { 260, 1, "Cycle action name" }, { 50, 2, "Toggle" } };
@@ -715,21 +742,30 @@ void SNM_CyclactionsView::OnItemSelChanged(SWS_ListItem* item, int iState)
 /*JFB fails on OSX due to "notifications" order
 	g_editedAction = (item && iState ? action : NULL);
 */
-    if (iState && action != g_editedAction)
-        g_editedAction = action;
-    else if (!iState && action == g_editedAction)
-        g_editedAction = NULL;
+	if (iState && action != g_editedAction)
+		g_editedAction = action;
+	else if (!iState && action == g_editedAction)
+		g_editedAction = NULL;
 
 	g_lvR->Update();
 }
 
-void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState) {
+void SNM_CyclactionsView::OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState)
+{
 	Cyclaction* pItem = (Cyclaction*)item;
-	if (pItem && pItem != &g_DEFAULT_L && iCol == COL_L_TOGGLE) {
+	if (pItem && pItem != &g_DEFAULT_L && iCol == COL_L_TOGGLE)
+	{
 		pItem->SetToggle(!pItem->IsToggle());
 		Update();
 		UpdateEditedStatus(true);
 	}
+}
+
+void SNM_CyclactionsView::OnItemDblClk(SWS_ListItem* item, int iCol)
+{
+	Cyclaction* pItem = (Cyclaction*)item;
+	if (pItem && pItem != &g_DEFAULT_L && iCol == COL_L_ID && g_pCyclactionWnd)
+		g_pCyclactionWnd->OnCommand(RUN_CYCLACTION_MSG, 0);
 }
 
 
@@ -751,7 +787,7 @@ void SNM_CommandsView::GetItemText(SWS_ListItem* item, int iCol, char* str, int 
 		switch (iCol)
 		{
 			case COL_R_CMD:
-				lstrcpyn(str, pItem->Get(), iStrMax);				
+				lstrcpyn(str, pItem->Get(), iStrMax);
 				break;
 			case COL_R_NAME:
 				if (pItem == &g_EMPTY_R || pItem == &g_DEFAULT_R)
@@ -881,21 +917,6 @@ void SNM_CommandsView::OnItemSelChanged(SWS_ListItem* item, int iState) {
 ///////////////////////////////////////////////////////////////////////////////
 // SNM_CyclactionWnd
 ///////////////////////////////////////////////////////////////////////////////
-
-// commands
-#define ADD_CYCLACTION_MSG				0xF001
-#define DEL_CYCLACTION_MSG				0xF002
-#define RUN_CYCLACTION_MSG				0xF003
-#define ADD_CMD_MSG						0xF010
-#define LEARN_CMD_MSG					0xF011
-#define DEL_CMD_MSG						0xF012
-#define IMPORT_CUR_SECTION_MSG			0xF020
-#define IMPORT_ALL_SECTIONS_MSG			0xF021
-#define EXPORT_SEL_MSG					0xF022
-#define EXPORT_CUR_SECTION_MSG			0xF023
-#define EXPORT_ALL_SECTIONS_MSG			0xF024
-#define RESET_CUR_SECTION_MSG			0xF030
-#define RESET_ALL_SECTIONS_MSG			0xF031
 
 enum
 {
@@ -1323,6 +1344,7 @@ int SNM_CyclactionWnd::OnKey(MSG* _msg, int _iKeyState)
 						m_pLists.Get(focusedList)->EditListItem(item, !focusedList ? COL_L_NAME : COL_R_CMD);
 						return 1;
 					}
+					break;
 				}
 				case VK_DELETE:
 					if (focusedList == 0) {
@@ -1333,6 +1355,13 @@ int SNM_CyclactionWnd::OnKey(MSG* _msg, int _iKeyState)
 						OnCommand(DEL_CMD_MSG, 0);
 						return 1;
 					}
+					break;
+				case VK_RETURN:
+					if (focusedList == 0) {
+						OnCommand(RUN_CYCLACTION_MSG, 0);
+						return 1;
+					}
+					break;
 			}
 		}
 	}

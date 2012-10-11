@@ -62,8 +62,9 @@ void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppNam
 void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn = NULL);
 void SNM_UpgradeIniFiles();
 bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color = 0);
+bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_FastString* _name);
 int FindMarkerRegion(double _pos, int _flags, int* _idOut = NULL);
-int MakeMarkerRegionId(int _markrgnindexnumber, bool _isRgn);
+int MakeMarkerRegionId(int _num, bool _isRgn);
 int GetMarkerRegionIdFromIndex(int _idx);
 int GetMarkerRegionIndexFromId(int _id);
 int GetMarkerRegionNumFromId(int _id);

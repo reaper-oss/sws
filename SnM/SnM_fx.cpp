@@ -531,61 +531,84 @@ void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HW
 // Other
 ///////////////////////////////////////////////////////////////////////////////
 
-// http://code.google.com/p/sws-extension/issues/detail?id=258
-// brutal code (we'd need a dedicated parser/patcher here..)
-void MoveFX(COMMAND_T* _ct)
+// primitive func (no undo point)
+// _fxId: fx index in chain or -1 for the selected fx
+// _what: 0 to remove, -1 to move fx up in chain, 1 to move fx down in chain
+// note: brutal code (we'd need a dedicated parser/patcher here..)
+// initially comes from http://code.google.com/p/sws-extension/issues/detail?id=258
+bool SNM_MoveOrRemoveTrackFX(MediaTrack* _tr, int _fxId, int _what)
 {
 	bool updated = false;
-	int dir = (int)_ct->user;
-	for (int i=0; i <= GetNumTracks(); i++) // incl. master
+	if (_tr && _what >= -1 && _what <= 1)
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+		int nbFx = TrackFX_GetCount(_tr);
+		if (nbFx > 0)
 		{
-			int nbFx = TrackFX_GetCount(tr);
-			if (nbFx > 0)
+			int fxId = _fxId<0 ? GetSelectedTrackFX(_tr) : _fxId;
+			if (fxId >= 0 && 
+				((_what == 0  && fxId < nbFx) ||
+				 (_what == 1  && fxId < (nbFx-1)) || 
+				 (_what == -1 && fxId > 0)))
 			{
-				int sel = GetSelectedTrackFX(tr);
-				if (sel >= 0 && ((dir == 1 && sel < (nbFx-1)) || (dir == -1 && sel > 0)))
+				SNM_ChunkParserPatcher p(_tr);
+				WDL_FastString chainChunk;
+				if (p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM") > 0)
 				{
-					SNM_ChunkParserPatcher p(tr);
-					WDL_FastString chainChunk;
-					if (p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM") > 0)
+					SNM_ChunkParserPatcher pfxc(&chainChunk, false);
+					int p1 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",fxId,0);
+					if (p1>0)
 					{
-						SNM_ChunkParserPatcher pfxc(&chainChunk, false);
-						int p1 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",sel,0);
-						if (p1>0)
-						{
-							p1--;
+						p1--;
 
-							// locate end of fx
-							int p2 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",sel+1,0);
-							if (p2 > 0)	p2--;
-							else p2 = pfxc.GetChunk()->GetLength()-2; // -2 for ">\n"
+						// locate end of fx
+						int p2 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",fxId+1,0);
+						if (p2 > 0)
+							p2--;
+						else
+							p2 = pfxc.GetChunk()->GetLength()-2; // -2 for ">\n"
 
-							// store & cut fx
-							WDL_FastString fxChunk;
+						// store fx state (if needed)
+						WDL_FastString fxChunk;
+						if (_what)
 							fxChunk.Set((const char*)(pfxc.GetChunk()->Get()+p1), p2-p1);
-							pfxc.GetChunk()->DeleteSub(p1, p2-p1);
-							
-							// move fx
-							int p3 = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","BYPASS",sel+dir,0);
-							if (p3>0) pfxc.GetChunk()->Insert(fxChunk.Get(), --p3);
-							else if (dir == 1) pfxc.GetChunk()->Insert(fxChunk.Get(), pfxc.GetChunk()->GetLength()-2);
 
-							// patch updated chunk
-							if (p.ReplaceSubChunk("FXCHAIN", 2, 0, pfxc.GetChunk()->Get(), "<ITEM"))
-							{
-								updated = true;
-								p.Commit(true);
-								SelectTrackFX(tr, sel + dir);
-							}
+						// cut fx
+						pfxc.GetChunk()->DeleteSub(p1, p2-p1);
+						
+						// move fx (if needed)
+						if (_what)
+						{
+							int p3 = pfxc.Parse(SNM_GET_CHUNK_CHAR, 1, "FXCHAIN", "BYPASS", fxId + _what, 0);
+							if (p3>0)
+								pfxc.GetChunk()->Insert(fxChunk.Get(), --p3);
+							else if (_what == 1)
+								pfxc.GetChunk()->Insert(fxChunk.Get(), pfxc.GetChunk()->GetLength()-2);
+						}
+
+						// patch updated chunk
+						if (p.ReplaceSubChunk("FXCHAIN", 2, 0, pfxc.GetChunk()->Get(), "<ITEM"))
+						{
+							updated = true;
+							p.Commit(true);
+							if (_what)
+								SelectTrackFX(_tr, fxId + _what);
 						}
 					}
 				}
 			}
 		}
 	}
+	return updated;
+}
+
+void MoveOrRemoveTrackFX(COMMAND_T* _ct)
+{
+	bool updated = false;
+	for (int i=0; i <= GetNumTracks(); i++) // incl. master
+		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+			if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
+				updated |= SNM_MoveOrRemoveTrackFX(tr, -1, (int)_ct->user);
 	if (updated)
 		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
+

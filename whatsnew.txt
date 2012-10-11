@@ -1,15 +1,31 @@
+Export functions to ReaScript (BETA)
++Added functions (more details in REAPER > Main menu > Help > HTML Lists > ReaScript documentation):
+ - SNM_MoveOrRemoveTrackFX
+ - SNM_SetProjectMarker
+ - SNM_GetProjectMarkerName - because ReaScript cannot handle the char** param of RPR_EnumProjectMarkers()
++Issue 520: removed SNM_DeleteObject, added SNM_DeleteFastString
+
 Added actions
-+Issue 517: SWS/S&M: Open selected item source path in explorer/finder
++Issue 517: SWS/S&M: Open selected item path in explorer/finder
++SWS/S&M: Remove selected FX for selected tracks
 +SWS/S&M: Dump action list (custom actions only)
 
 Other
-+Issue 488: Image window: display image filenames/slot numbers in tooltips
++Cycle action editor: double-click in the "Id" column (or pressing the RETURN key) runs the selected cycle action
++Issue 488/Image window: display image filenames/slot numbers in tooltips
++Issue 525: the master track obeys the action "SWS: Minimize selected tracks"
 +OSX/S&M windows: better fonts
 
 Fixes
 +Issue 519: fixed "SWS: Hide docker" and "SWS: Show docker" (broken since REAPER v4 and multi-dockers)
-+Issue 520/ReaScript: removed SNM_DeleteObject, added SNM_DeleteFastString
 +Fixed a possible crash in Convert project markers to tempo markers dialog
+
+House cleaning, renamed action (cryptic names)
++SWS/S&M: Toolbar left item selection toggle -> SWS/S&M: Toolbar - Toggle offscreen item selection (left)
++SWS/S&M: Toolbar right item selection toggle -> SWS/S&M: Toolbar - Toggle offscreen item selection (right)
++SWS/S&M: Toolbar top item selection toggle -> SWS/S&M: Toolbar - Toggle offscreen item selection (top)
++SWS/S&M: Toolbar bottom item selection toggle -> SWS/S&M: Toolbar - Toggle offscreen item selection (bottom)
++SWS/S&M: Toolbar track envelopes in touch/latch/write mode toggle -> SWS/S&M: Toolbar - Toggle track envelopes in touch/latch/write
 
 !v2.3.0 #6 (October 3, 2012)
 <b>Auto color for regions and markers, thanks Brado231!</b> (issue 339)
@@ -1140,8 +1156,9 @@ Added toolbar actions with "auto-refreshed" button states (if the new option "Ma
 +SWS/S&M: Toolbar left item selection toggle
 +SWS/S&M: Toolbar top item selection toggle - Windows OS only!
 +SWS/S&M: Toolbar bottom item selection toggle - Windows OS only!
- These actions are to prevent user errors: related toolbar buttons will light up when some selected items are not visible in the arrange.
- Clicking related buttons will also deselect items that are out of the current scope and re-selects them on toggle.
+ These actions are to prevent user errors with selected items that are offscreen.
+ The idea is to put those actions into a toolbar: they will light up when some selected items are not visible in the arrange (offscreen).
+ Clicking those buttons will deselect offscreen items (and re-selects them on toggle).
  See details, howto and toolbar auto-refresh anim http://forum.cockos.com/showpost.php?p=728774&postcount=315|here|.
 +AW's grid actions button states now reflect the current grid setting (when changed elsewhere in REAPER)
  See grid toolbar auto-refresh anim http://stash.reaper.fm/8523/awGridToolbar.gif|here| and details about Adam's grid actions http://forum.cockos.com/showthread.php?p=706294|here|.

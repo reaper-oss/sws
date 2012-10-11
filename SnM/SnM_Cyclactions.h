@@ -106,6 +106,7 @@ protected:
 	void GetItemList(SWS_ListItemList* pList);
 	void OnItemSelChanged(SWS_ListItem* item, int iState);
 	void OnItemBtnClk(SWS_ListItem* item, int iCol, int iKeyState);
+	void OnItemDblClk(SWS_ListItem* item, int iCol);
 };
 
 

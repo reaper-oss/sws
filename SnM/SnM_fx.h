@@ -62,6 +62,8 @@ void NextPresetSelTracks(COMMAND_T*);
 void PrevPresetSelTracks(COMMAND_T*);
 void NextPrevPresetLastTouchedFX(COMMAND_T*);
 void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
-void MoveFX(COMMAND_T*);
+
+bool SNM_MoveOrRemoveTrackFX(MediaTrack* _tr, int _fxId, int _what);
+void MoveOrRemoveTrackFX(COMMAND_T*);
 
 #endif

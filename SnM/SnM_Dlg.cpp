@@ -28,9 +28,7 @@
 #include "stdafx.h"
 #include "SnM.h"
 #include "../reaper/localize.h"
-#ifndef _WIN32
 #include "../Prompt.h"
-#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -246,30 +244,11 @@ void SNM_UIExit() {
 // Messages, prompt, etc..
 ///////////////////////////////////////////////////////////////////////////////
 
-// GUI for lazy guys
-void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent, bool _clear)
+void SNM_ShowMsg(const char* _msg, const char* _title, HWND _hParent)
 {
-#ifdef _WIN32
-	if (_clear) ShowConsoleMsg("");
-	ShowConsoleMsg(_msg);
-	if (_title) // a little hack..
-	{
-		HWND h = GetReaWindowByTitle(__localizeFunc("ReaScript console output", "DLG_437", 0));
-		if (h)
-			SetWindowText(h, _title);
-		else // already opened?
-			h = GetReaWindowByTitle(_title);
-		if (h)
-			SetForegroundWindow(h);
-	}
-#else
-	//JFB nice but modal..
-	HWND h = _hParent;
-	if (!h) h = GetMainHwnd();
-	char msg[4096] = "";
-	GetStringWithRN(_msg, msg, 4096); // truncates if needed
-	DisplayInfoBox(h, _title, msg);
-#endif
+	char msg[1024*8] = "";
+	GetStringWithRN(_msg, msg, sizeof(msg)); // truncates if needed
+	DisplayInfoBox(_hParent?_hParent:GetMainHwnd(), _title, msg, false, false); // modeless
 }
 
 // _min and _max: 1-based (i.e. as displayed)

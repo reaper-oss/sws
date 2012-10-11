@@ -200,7 +200,7 @@ bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// make sure the last MIDI event in a state is a (dummy) CC123!
+// make sure the last MIDI event is a (dummy) CC123!
 #define SNM_CC123_MID_STATE "HASDATA 1 960 QN\n\
 E 0 b0 7b 00\n\
 E 0 b1 7b 00\n\

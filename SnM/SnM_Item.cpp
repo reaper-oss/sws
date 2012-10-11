@@ -1332,6 +1332,9 @@ void ScrollToSelItem(MediaItem* _item)
 {
 	if (_item)
 	{
+		if (PreventUIRefresh) 
+			PreventUIRefresh(1);
+
 		// horizontal scroll to selected item
 		double curPos = GetCursorPositionEx(NULL);
 		SetEditCurPos2(NULL, *(double*)GetSetMediaItemInfo(_item, "D_POSITION", NULL), true, false);
@@ -1349,6 +1352,10 @@ void ScrollToSelItem(MediaItem* _item)
 			ScrollSelTrack(NULL, true, false);
 			SNM_SetSelectedTracks(NULL, &selTrs, true);
 		}
+
+		if (PreventUIRefresh) 
+			PreventUIRefresh(-1);
+
 		UpdateTimeline();
 	}
 }

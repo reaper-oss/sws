@@ -74,6 +74,7 @@
 #define IDD_SNM_RGNPLAYLIST             165
 #define IDD_BR_MARKERS_TO_TEMPO         166
 #define IDD_BR_SELECT_ADJUST_TEMPO      167
+#define IDD_BR_DESELECT_TEMPO           168
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
@@ -323,11 +324,11 @@
 #define IDC_GROUP2                      1237
 #define IDC_GROUP3                      1238
 #define IDC_GROUP4                      1239
-#define IDC_BR_NUM                      1240
-#define IDC_BR_DEN                      1241
-#define IDC_BR_MARKERS                  1242
-#define IDC_BR_TIMESEL                  1243
-#define IDC_BR_REMOVE                   1244
+#define IDC_BR_CON_NUM                  1240
+#define IDC_BR_CON_DEN                  1241
+#define IDC_BR_CON_MARKERS              1242
+#define IDC_BR_CON_TIMESEL              1243
+#define IDC_BR_CON_REMOVE               1244
 #define IDC_BR_SEL_BPM_END              1245
 #define IDC_BR_SEL_BPM_START            1246
 #define IDC_BR_ADJ_BPM_VAL              1247
@@ -355,14 +356,20 @@
 #define IDC_BR_ADJ_APPLY                1269
 #define IDC_BR_ADJ_BPM_VAL_ENB          1270
 #define IDC_BR_ADJ_BPM_PERC_ENB         1271
+#define IDC_BR_SEL_INVERT_PREF          1272
+#define IDC_BR_SEL_DESELECT             1273
+#define IDC_BR_SEL_DESELECT_NTH         1274
+#define IDC_BR_DESEL_NTH_TEMPO          1276
+#define IDC_BR_DESEL_CRITERIA           1277
+#define IDC_BR_CON_GRADUAL              1278
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        168
+#define _APS_NEXT_RESOURCE_VALUE        169
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1272
+#define _APS_NEXT_CONTROL_VALUE         1279
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

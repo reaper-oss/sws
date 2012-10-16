@@ -9,6 +9,9 @@ Added actions
 +Issue 517: SWS/S&M: Open selected item path in explorer/finder
 +SWS/S&M: Remove selected FX for selected tracks
 +SWS/S&M: Dump action list (custom actions only)
++SWS/BR: Move edit cursor to next/previous envelope point
++SWS/BR: Move edit cursor to next/previous envelope point and add to selection
+ Note: this last action can make tinny changes to the envelope. It's a bug in Reaper, you can read about it http://forum.cockos.com/project.php?issueid=4416|here|
 
 Other
 +Cycle action editor: double-click in the "Id" column (or pressing the RETURN key) runs the selected cycle action
@@ -26,6 +29,14 @@ House cleaning, renamed action (cryptic names)
 +SWS/S&M: Toolbar top item selection toggle -> SWS/S&M: Toolbar - Toggle offscreen item selection (top)
 +SWS/S&M: Toolbar bottom item selection toggle -> SWS/S&M: Toolbar - Toggle offscreen item selection (bottom)
 +SWS/S&M: Toolbar track envelopes in touch/latch/write mode toggle -> SWS/S&M: Toolbar - Toggle track envelopes in touch/latch/write
+
+Tempo manipulation improvements:
++Convert project markers to tempo markers:
+ - Added an option to create gradual tempo changes (aka linear tempo points)
++Select and adjust tempo markers improvements:
+ - Option to invert selection only if marker obeys criteria. (possible usage: invert only within time selection)
+ - Added button for deselecting markers that conform to criteria
+ - Added button that toggles supplementary dialog which lets you deselect every Nth marker selected (possible usage: easier manipulation of linear points)
 
 !v2.3.0 #6 (October 3, 2012)
 <b>Auto color for regions and markers, thanks Brado231!</b> (issue 339)
@@ -70,10 +81,10 @@ Export functions to ReaScript (BETA)
 +<b>To request some functions please use/see issue 513</b> (exported functions wish-list)
 
 Added actions:
-+SWS/BR: Move selected tempo points forward
-+SWS/BR: Move selected tempo points back
-+SWS/BR: Move selected tempo points forward X ms
-+SWS/BR: Move selected tempo points back X ms
++SWS/BR: Move selected tempo markers forward
++SWS/BR: Move selected tempo markers back
++SWS/BR: Move selected tempo markers forward X ms
++SWS/BR: Move selected tempo markers back X ms
  Note: These actions don't screw with unselected points positions. Ideal for extensive tempo manipulation.
  First two actions move points depending on zoom, more zoom means less movement - recommended for keybinding.
  Others move points by predetermined values in milliseconds

@@ -1250,8 +1250,8 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LTEXT           "Deselect every",IDC_STATIC,7,9,49,8
     LTEXT           "selected marker",IDC_STATIC,107,9,52,8
-    PUSHBUTTON      "OK",IDOK,162,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,162,24,50,14
+    PUSHBUTTON      "Deselect",IDOK,162,7,50,14
+    PUSHBUTTON      "Close",IDCANCEL,162,24,50,14
     COMBOBOX        IDC_BR_DESEL_NTH_TEMPO,58,7,45,30,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Process only if within criteria",IDC_BR_DESEL_CRITERIA,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,25,107,10

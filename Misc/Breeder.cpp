@@ -228,9 +228,8 @@ void CursorToEnv (COMMAND_T* t)
 					{
 						found = true;
 						
-						double cValue, cBezier;
-						int cShape, cSig, cPartial;
-						cValue = cBezier = cShape = cSig = cPartial = 0;
+						double cValue = 0, cBezier = 0;
+						int cShape = 0, cSig = 0, cPartial = 0;
 						sscanf(token, "PT %*lf %lf %d %d %*d %d %lf", &cValue, &cShape, &cSig, &cPartial, &cBezier);
 						
 						newState << "PT"		<< " " << setprecision(16) 
@@ -238,7 +237,7 @@ void CursorToEnv (COMMAND_T* t)
 								 << cValue		<< " " 
 						 		 << cShape		<< " " 
 						 		 << cSig		<< " " 
-						 		 << 1    	 	<< " " 
+						 		 << 1			<< " " 
 						 		 << cPartial	<< " "
 								 << cBezier		<< endl;					
 					}
@@ -277,7 +276,7 @@ void CursorToEnv (COMMAND_T* t)
 								 << pValue		<< " " 
 						 		 << pShape		<< " " 
 						 		 << pSig		<< " " 
-						 		 << 1    	 	<< " " 
+						 		 << 1			<< " " 
 						 		 << pPartial	<< " "
 								 << pBezier		<< endl;
 					
@@ -327,7 +326,6 @@ void MoveTempo (COMMAND_T* t)
 		if (selectedTempoPoints[0] == 0)
 			selectedTempoPoints.erase (selectedTempoPoints.begin());
 	}
-
 	if (selectedTempoPoints.size() == 0)
 		return;
 
@@ -335,10 +333,11 @@ void MoveTempo (COMMAND_T* t)
 	int envClickSegMode = *(int*)GetConfigVar("envclicksegmode");
 	*(int*)GetConfigVar("envclicksegmode") = 1;
 	
-	Undo_BeginBlock2(NULL);
 	
-	int skipped	= 0;
+
 	// Loop through selected points and perform BPM calculations
+	Undo_BeginBlock2(NULL);
+	int skipped	= 0;
 	for (size_t i = 0; i < selectedTempoPoints.size(); ++i)
 	{
 		// Declare needed variables... :D
@@ -374,7 +373,7 @@ void MoveTempo (COMMAND_T* t)
 		}
 		
 
-		///// Calculate BPM values /////		
+		///// CALCULATE BPM VALUES /////		
 
 		// If previous point's shape is square...
 		if (pShape == 0)
@@ -390,7 +389,7 @@ void MoveTempo (COMMAND_T* t)
 			}
 		
 			// If current point's shape is linear...
-			if (cShape == 1)
+			else
 			{
 				measureLengthCN = (cEffDen * (nTime - cTime) * (cBPM + nBPM)) / (480 * cEffNum);
 				cNewBPM = (480 * cEffNum * measureLengthCN) / (cEffDen * (nTime - cTime - timeDiff)) - nBPM;
@@ -402,7 +401,7 @@ void MoveTempo (COMMAND_T* t)
 		}
 		
 		// If previous point's shape is linear...
-		if (pShape == 1)
+		else
 		{
 			measureLengthPC =  (pEffDen * (cTime - pTime) * (pBPM + cBPM)) / (480 * pEffNum);
 			
@@ -414,7 +413,7 @@ void MoveTempo (COMMAND_T* t)
 			}
 				
 			// If current point's shape is linear...
-			if (cShape == 1)
+			else
 			{
 				measureLengthCN = (cEffDen * (nTime - cTime) * (cBPM + nBPM)) / (480 * cEffNum);
 				cNewBPM = (480 * cEffNum * measureLengthCN) / (cEffDen * (nTime - cTime - timeDiff)) - nBPM;				
@@ -428,18 +427,22 @@ void MoveTempo (COMMAND_T* t)
 		}
 
 		
-		///// Check points behind previous point /////
-		double ppTime, ppBPM;
-		int ppNum, ppDen;
-		int pp = selectedTempoPoints[i] - 2, changeDirection = 1;
-		bool ppShape, ppDo = true, ppPossible = true; 
+		///// CHECK POINTS BEFORE PREVIOUS POINT /////
 		
 		// Check that the point behind previous point exists
+		int pp = selectedTempoPoints[i] - 2;
+		bool ppDo = true, ppPossible = true; 
+
 		if (pp < 0)
 			ppDo = false;
 
+		// If it does...
 		else
 		{
+			double ppTime, ppBPM;
+			int ppNum, ppDen;
+			bool ppShape;
+
 			// Get the first point behind previous point - If square, change ppDo var so later we can skip the process of adjusting previous points
 			GetTempoTimeSigMarker(NULL, pp, &ppTime, NULL, NULL, &ppBPM, &ppNum, &ppDen, &ppShape);
 			if (ppShape == 0)
@@ -448,12 +451,14 @@ void MoveTempo (COMMAND_T* t)
 			// Otherwise go through points backwards, check their shape and BPM to be applied
 			else
 			{
+				int changeDirection = 1;
 				while (pp >= 0) 
 				{
 					GetTempoTimeSigMarker(NULL, pp, &ppTime, NULL, NULL, &ppBPM, &ppNum, &ppDen, &ppShape);
 					
 					if (ppShape == 0)  // If current points in the loop is square, break
 						break;
+					
 					else
 					{
 						// Check if new BPM is possible...
@@ -476,17 +481,16 @@ void MoveTempo (COMMAND_T* t)
 					}
 					pp--;
 				}
-				pp++; //correct ID due to the nature of a while loop
+				pp++; //correct ID due to the nature of a WHILE loop
 			}
 		}
 
 		
-		///// Set BPM values /////
+		///// SET NEW BPM VALUES /////
 
 		// Fix to the nTime var (so it can pass the next IF statement) in case the last tempo point is selected 
 		if (selectedTempoPoints[i] + 1 == CountTempoTimeSigMarkers(NULL))
-			nTime = cTime+timeDiff + 1;
-		
+			nTime = cTime+timeDiff + 1;		
 				
 		// IF statement acts as a safety net for illogical calculations and reaper dislikes (it hates BPM over 960)
 		// The flow of changes must go from the later points to earlier (one of the reasons is the bug in the API that screws things up when using musical position
@@ -502,9 +506,13 @@ void MoveTempo (COMMAND_T* t)
 			// Readjust points behind previous point
 			if (ppDo == true)
 			{	
-				changeDirection = 1;
+				int changeDirection = 1;
 				for (int x = selectedTempoPoints[i] - 2 ; x >= pp ; --x)
 				{
+					double ppTime, ppBPM;
+					int ppNum, ppDen;
+					bool ppShape;
+					
 					GetTempoTimeSigMarker(NULL, x, &ppTime, NULL, NULL, &ppBPM, &ppNum, &ppDen, &ppShape);
 					SetTempoTimeSigMarker(NULL, x, ppTime, -1, -1, (ppBPM - changeDirection * (pNewBPM - pBPM)), ppNum, ppDen, ppShape);
 					changeDirection = changeDirection * -1;
@@ -526,8 +534,8 @@ void MoveTempo (COMMAND_T* t)
 		
 		else
 			++skipped;
-	
-	} // end of the for loop that goes through all of the selected points
+
+	} // end of the FOR loop that goes through all of the selected points
 
 	// DONE!
 	UpdateTimeline();
@@ -633,7 +641,7 @@ void ConvertMarkersToTempo (int num, int den, int markers, int timeSel, int remo
 	vector<double> markerPositions;
 	bool region, prevRegion;
 	double mPos, prevMPos;
-	int current, previous, markerId, markerCount = 0, i=0;
+	int current, previous, markerId, markerCount = 0, i = 0;
 	
 	while (true)
 	{
@@ -653,7 +661,7 @@ void ConvertMarkersToTempo (int num, int den, int markers, int timeSel, int remo
 					markerPositions.push_back(mPos);
 					++markerCount;
 				}
-				if (timeSel == 1)
+				else
 				{
 					if (mPos > tEnd)
 						break;
@@ -669,7 +677,7 @@ void ConvertMarkersToTempo (int num, int den, int markers, int timeSel, int remo
 	}
 	
 	// Check number of markers
-	if ( markerPositions.size() <=1)
+	if (markerPositions.size() <=1)
 	{	
 		if (timeSel == 0)
 		{
@@ -735,6 +743,7 @@ void ConvertMarkersToTempo (int num, int den, int markers, int timeSel, int remo
 			SetTempoTimeSigMarker (NULL, -1, markerPositions[i], -1, -1, bpm, 0, 0, false);
 		}
 	}
+	
 	else
 	{
 		// Set first tempo marker with time signature
@@ -796,7 +805,7 @@ void ConvertMarkersToTempo (int num, int den, int markers, int timeSel, int remo
 	}
 
 	// Warn user if there were tempo markers created with a BPM over 960
-	if (exceed !=0)
+	if (exceed != 0)
 		ShowMessageBox(__LOCALIZE("Some of the created tempo markers have a BPM over 960. If you try to edit them, they will revert back to 960 or lower.\n\nIt is recommended that you undo, edit project markers and try again.", "sws_DLG_166"),__LOCALIZE("SWS - Warning", "sws_mbox"), 0);
 };
 
@@ -902,11 +911,43 @@ void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStart, doub
 			}
 			
 			// Select/Deselect points by criteria
-			else if (mode > 2)
+			else
 			{
 				bool selectPt = true;
 				
 				//// Check if point conforms to criteria
+
+				// Check BPM
+				if (selectPt)
+				{
+					if (bpm == 0)
+						selectPt = true;
+					
+					else
+					{
+						if(qBpm >= bpmStart && qBpm <= bpmEnd )
+							selectPt = true;
+						else
+							selectPt = false;
+					}
+				}
+
+				// Check time signature
+				if (selectPt)
+				{
+					if (sig == 0)
+						selectPt = true;
+					
+					else
+					{
+						int effNum, effDen;
+						TimeMap_GetTimeSigAtTime(NULL, qTime, &effNum, &effDen, NULL);
+						if (sigNum == effNum && sigDen == effDen)
+							selectPt = true;
+						else
+							selectPt = false;
+					}
+				}
 
 				// Check time
 				if (selectPt)
@@ -931,21 +972,6 @@ void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStart, doub
 					}
 				}
 
-				// Check BPM
-				if (selectPt)
-				{
-					if (bpm == 0)
-						selectPt = true;
-					
-					else
-					{
-						if(qBpm >= bpmStart && qBpm <= bpmEnd )
-							selectPt = true;
-						else
-							selectPt = false;
-					}
-				}
-
 				// Check shape
 				if (selectPt)
 				{
@@ -967,24 +993,7 @@ void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStart, doub
 						else
 							selectPt = false;
 					}					
-				}
-
-				// Check time signature
-				if (selectPt)
-				{
-					if (sig == 0)
-						selectPt = true;
-					
-					else
-					{
-						int effNum, effDen;
-						TimeMap_GetTimeSigAtTime(NULL, qTime, &effNum, &effDen, NULL);
-						if (sigNum == effNum && sigDen == effDen)
-							selectPt = true;
-						else
-							selectPt = false;
-					}
-				}
+				}				
 
 				// Check type
 				if (selectPt)
@@ -1087,13 +1096,13 @@ void SelectTempo (int mode, int Nth, int timeSel, int bpm, double bpmStart, doub
 			}
 
 			// Update stringstream
-			newState << "PT" << " " << setprecision(16) 
-					 << qTime << " " 
-					 << qBpm << " " 
-					 << qShape << " " 
-					 << qSig << " " 
-					 << qSelected << " " 
-					 << qPartial << endl;			
+			newState << "PT"		<< " " << setprecision(16) 
+					 << qTime		<< " " 
+					 << qBpm		<< " " 
+					 << qShape		<< " " 
+					 << qSig		<< " " 
+					 << qSelected	<< " " 
+					 << qPartial	<< endl;			
 		}
 		
 		else
@@ -1162,14 +1171,14 @@ int ModifyTempo (int mode, double bpmVal, double bpmPerc, int shape)
 			bool pShape; 
 			GetTempoTimeSigMarker(NULL, selectedTempoPoints[i] -1, &pTime, NULL, NULL, &pBPM, NULL, NULL, &pShape);
 			
-			if ( pShape == 0)
+			if (pShape == 0)
 				nTime = cTime;
 			else
 			{
 				int effNum, effDen;
 				double measureLength;
+				
 				TimeMap_GetTimeSigAtTime(NULL, pTime, &effNum, &effDen, NULL);
-
 				measureLength =  (effDen * (cTime - pTime) * (pBPM + cBPM)) / (480 * effNum);
 				nTime = (480 * effNum * measureLength) / (effDen * (pBPM + nBPM)) + pTime;
 			}
@@ -1219,7 +1228,7 @@ WDL_DLGRET SelectModifyTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_SEL_SHAPE));
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_SEL_TYPE_DEF));
 			
-			int x = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Project","sws_DLG_167"));
+			int x = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("All","sws_DLG_167"));
 			SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_SETITEMDATA, x, 0);
 			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_ADDSTRING, 0, (LPARAM)__LOCALIZE("Time selection","sws_DLG_167"));
 			SendDlgItemMessage(hwnd, IDC_BR_SEL_TIME_RANGE, CB_SETITEMDATA, x, 1);
@@ -1679,15 +1688,15 @@ void UpdateCurrentBpm (HWND hwnd, vector<int> selectedPoints)
 	
 	// We only update edit boxes if they've changed
 	if (atof(eBpmFirst) != atof(eBpmFirstChk) || atof(eBpmCursor) != atof(eBpmCursorChk) || atof(eBpmLast) != atof(eBpmLastChk))
-		{	
-			// Update current edit boxes
-			SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_1, eBpmFirst);
-			SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_2, eBpmCursor);
-			SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_3, eBpmLast);
-			
-			// Update target edit boxes
-			UpdateTargetBpm(hwnd, 1, 1, 1);
-		}
+	{	
+		// Update current edit boxes
+		SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_1, eBpmFirst);
+		SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_2, eBpmCursor);
+		SetDlgItemText(hwnd, IDC_BR_ADJ_BPM_CUR_3, eBpmLast);
+		
+		// Update target edit boxes
+		UpdateTargetBpm(hwnd, 1, 1, 1);
+	}
 };
 
 void UpdateTargetBpm (HWND hwnd, int doFirst, int doCursor, int doLast)

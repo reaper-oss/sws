@@ -11,7 +11,8 @@ Added actions
 +SWS/S&M: Dump action list (custom actions only)
 +SWS/BR: Move edit cursor to next/previous envelope point
 +SWS/BR: Move edit cursor to next/previous envelope point and add to selection
- Note: this last action can make tinny changes to the envelope. It's a bug in Reaper, you can read about it http://forum.cockos.com/project.php?issueid=4416|here|
+ Note: this last action (that addes points to selection) can make tinny changes to the envelope.
+ It's a bug in Reaper, you can read about it http://forum.cockos.com/project.php?issueid=4416|here|
 
 Other
 +Cycle action editor: double-click in the "Id" column (or pressing the RETURN key) runs the selected cycle action

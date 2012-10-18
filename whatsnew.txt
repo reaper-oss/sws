@@ -1,3 +1,4 @@
+!v2.3.0 #7 (October 17, 2012)
 Export functions to ReaScript (BETA)
 +Added functions (more details in REAPER > Main menu > Help > HTML Lists > ReaScript documentation):
  - SNM_MoveOrRemoveTrackFX

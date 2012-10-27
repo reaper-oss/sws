@@ -52,7 +52,6 @@ double GetProjectLength()
 	return prjlen;
 }
 
-// note: callers must surround this func with Undo_BeginBlock/Undo_EndBlock
 bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 {
 	if (_pos >=0.0 && _len > 0.0 && _pos <GetProjectLength())
@@ -61,7 +60,7 @@ bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 			Undo_BeginBlock2(NULL);
 
 		if (PreventUIRefresh)
-			PreventUIRefresh(-1);
+			PreventUIRefresh(1);
 
 		double timeSel1, timeSel2, d=_pos+_len;
 		GetSet_LoopTimeRange2(NULL, false, false, &timeSel1, &timeSel2, false);
@@ -74,10 +73,9 @@ bool InsertSilence(const char* _undoTitle, double _pos, double _len)
 		GetSet_LoopTimeRange2(NULL, true, false, &timeSel1, &timeSel2, false);
 
 		if (PreventUIRefresh)
-			PreventUIRefresh(1);
+			PreventUIRefresh(-1);
 
-//		UpdateArrange();
-		UpdateTimeline();
+		UpdateTimeline(); // ruler + arrange
 
 		if (_undoTitle)
 			Undo_EndBlock2(NULL, _undoTitle, UNDO_STATE_ALL);

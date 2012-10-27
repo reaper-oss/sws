@@ -553,6 +553,7 @@ extern "C"
 		IMPAPI(GetMediaItemInfo_Value);
 		IMPAPI(GetMediaItemNumTakes);
 		IMPAPI(GetMediaItemTake);
+		IMPAPI(GetMediaItemTakeByGUID);
 		IMPAPI(GetMediaItemTake_Item);
 		IMPAPI(GetMediaItemTake_Source);
 		IMPAPI(GetMediaItemTake_Track);

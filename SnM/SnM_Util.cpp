@@ -586,7 +586,7 @@ bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos,
 		}
 
 		bool ok = false;
-		if (PreventUIRefresh)PreventUIRefresh(1);
+		if (PreventUIRefresh) PreventUIRefresh(1);
 		if (DeleteProjectMarker(_proj, _num, _isrgn))
 			ok = (AddProjectMarker2(_proj, _isrgn, _pos, _rgnend, _name, _num, color) == _num);
 		if (PreventUIRefresh) PreventUIRefresh(-1);
@@ -693,36 +693,48 @@ bool IsRegion(int _id) {
 }
 
 // returns next region/marker index or 0 when finished enumerating
-// ideally the caller should also check !*_descOut
-// _flags: &1=marker, &2=region
-// note: the string formating inspired by the native popup "jump to marker"
-int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool _wantsName)
+// (text formating inspired by the native popup "jump to marker"..)
+// note: when _mask != SNM_MARKER_MASK|SNM_REGION_MASK callers must also check !*_descOut
+int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool _wantsName, bool _wantsTime)
 {
 	int nextIdx = 0;
 	if (_descOut && _idx >= 0)
 	{
 		*_descOut = '\0';
+
 		double pos, end; int num; bool isRgn; char* name;
 		if (nextIdx = EnumProjectMarkers2(NULL, _idx, &isRgn, &pos, &end, &name, &num))
 		{
-			if (!isRgn && _flags&SNM_MARKER_MASK)
+			if ((isRgn && _flags&SNM_REGION_MASK) || (!isRgn && _flags&SNM_MARKER_MASK))
 			{
-				char timeStr[32] = "";
-				format_timestr_pos(pos, timeStr, 32, -1);
+				bool comma = false;
+				WDL_FastString desc;
+				desc.SetFormatted(64, "%d", num);
 				if (_wantsName && *name)
-					_snprintfSafe(_descOut, _outSz, "%d: %s [%s]", num, name, timeStr);
-				else
-					_snprintfSafe(_descOut, _outSz, "%d: [%s]", num, timeStr);
-			}
-			if (isRgn && _flags&SNM_REGION_MASK)
-			{
-				char timeStr1[32]="", timeStr2[32]="";
-				format_timestr_pos(pos, timeStr1, 32, -1);
-				format_timestr_pos(end, timeStr2, 32, -1);
-				if (_wantsName && *name)
-					_snprintfSafe(_descOut, _outSz, "%d: %s [%s -> %s]", num, name, timeStr1, timeStr2);
-				else
-					_snprintfSafe(_descOut, _outSz, "%d: [%s -> %s]", num, timeStr1, timeStr2);
+				{
+					desc.Append(": ");
+					comma = true;
+					desc.Append(name);
+				}
+				if (_wantsTime)
+				{
+					if (!comma)
+						desc.Append(":");
+
+					char timePosStr[64] = "";
+					format_timestr_pos(pos, timePosStr, sizeof(timePosStr), -1);
+					desc.Append(" [");
+					desc.Append(timePosStr);
+					if (isRgn)
+					{
+						desc.Append(" -> ");
+						char timeEndStr[64]="";
+						format_timestr_pos(end, timeEndStr, sizeof(timeEndStr), -1);
+						desc.Append(timeEndStr);
+					}
+					desc.Append("]");
+				}
+				lstrcpyn(_descOut, desc.Get(), _outSz);
 			}
 		}
 	}

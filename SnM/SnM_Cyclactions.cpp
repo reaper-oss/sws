@@ -316,7 +316,7 @@ void FlushCyclactions(int _section)
 	g_cyclactions[_section].EmptySafe(true);
 }
 
-// _cyclactions: NULL adds/registers to the main model, otherwise just imports into _cyclactions
+// _cyclactions: NULL to add/register to the main model, imports into _cyclactions otherwise
 // _section or -1 for all sections
 // _iniFn: NULL => S&M.ini
 // _checkCmdIds: false to skip some checks - useful when loading cycle actions (but not when creating 
@@ -359,9 +359,9 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 		SNM_ShowMsg(msg.Get(), __LOCALIZE("S&M - Warning","sws_DLG_161"), g_pCyclactionWnd?g_pCyclactionWnd->GetHWND():GetMainHwnd());
 }
 
-// NULL _cyclactions => update main model
-//_section or -1 for all sections
-// NULL _iniFn => S&M.ini
+// _cyclactions: NULL to update main model
+// _section: or -1 for all sections
+// _iniFn: NULL means S&M.ini
 // remark: undo pref ignored, only saves cycle actions
 void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NULL, int _section = -1, const char* _iniFn = NULL)
 {

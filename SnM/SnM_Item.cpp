@@ -318,6 +318,10 @@ void GoferSplitSelectedItems(COMMAND_T* _ct) {
 bool SplitSelectItemsInInterval(MediaTrack* _tr, double _pos1, double _pos2, WDL_PtrList<void>* _newItemsOut)
 {
 	bool updated = false;
+
+	if (PreventUIRefresh)
+		PreventUIRefresh(1);
+
 	if (_tr)
 		for (int j=0; j < GetTrackNumMediaItems(_tr); j++) // new items might be created during the loop!
 			if (MediaItem* item = GetTrackMediaItem(_tr, j))
@@ -348,6 +352,10 @@ bool SplitSelectItemsInInterval(MediaTrack* _tr, double _pos1, double _pos2, WDL
 					GetSetMediaItemInfo(item,"B_UISEL",&g_bFalse);
 				}
 			}
+
+	if (PreventUIRefresh)
+		PreventUIRefresh(-1);
+
 	return updated;
 }
 
@@ -360,9 +368,11 @@ bool SplitSelectItemsInInterval(const char* _undoTitle, double _pos1, double _po
 		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 			if (!_selTracks || (_selTracks && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL)))
 				updated |= SplitSelectItemsInInterval(tr, _pos1, _pos2, _newItemsOut);
-	if (_undoTitle && updated) {
+	if (updated)
+	{
 		UpdateTimeline();
-		Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
+		if (_undoTitle)
+			Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
 	}
 	return updated;
 }
@@ -1394,6 +1404,9 @@ void SetPan(COMMAND_T* _ct)
 
 void OpenMediaPathInExplorerFinder(COMMAND_T*)
 {
+	if (!CountSelectedMediaItems(NULL))
+		return;
+
 	char path[BUFFER_SIZE] = "";
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
@@ -1412,6 +1425,11 @@ void OpenMediaPathInExplorerFinder(COMMAND_T*)
 										return;
 									}
 								}
+	// if we are here, it means the above failed
+	MessageBox(GetMainHwnd(), 
+		__LOCALIZE("Cannot show path in explorer/finder!\nProbable cause: empty source, in-project MIDI source, etc...","sws_mbox"), 
+		__LOCALIZE("S&M - Error","sws_mbox"), 
+		MB_OK);
 }
 
 

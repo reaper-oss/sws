@@ -58,16 +58,17 @@ IconTheme* SNM_GetIconTheme(bool _checkForSize) {
 LICE_CachedFont* SNM_GetThemeFont()
 {
 	static LICE_CachedFont themeFont;
-	if (!themeFont.GetHFont())
+	if (!themeFont.GetHFont()) // single lazy init..
 	{
 		LOGFONT lf = {
 			SNM_FONT_HEIGHT, 0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
 		};
 		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT | (g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
+		// others props are set on demand (support theme switches)
 	}
-	themeFont.SetBkMode(TRANSPARENT);
 	ColorTheme* ct = SNM_GetColorTheme();
+	themeFont.SetBkMode(TRANSPARENT);
 	themeFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
 	return &themeFont;
 }
@@ -75,16 +76,17 @@ LICE_CachedFont* SNM_GetThemeFont()
 LICE_CachedFont* SNM_GetToolbarFont()
 {
 	static LICE_CachedFont themeFont;
-	if (!themeFont.GetHFont())
+	if (!themeFont.GetHFont()) // single lazy init..
 	{
 		LOGFONT lf = {
 			SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
 		};
 		themeFont.SetFromHFont(CreateFontIndirect(&lf), LICE_FONT_FLAG_OWNS_HFONT | (g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
+		// others props are set on demand (support theme switches)
 	}
-	themeFont.SetBkMode(TRANSPARENT);
 	ColorTheme* ct = SNM_GetColorTheme();
+	themeFont.SetBkMode(TRANSPARENT);
 	themeFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->toolbar_button_text,255) : LICE_RGBA(255,255,255,255));
 	return &themeFont;
 }
@@ -237,6 +239,13 @@ void SNM_UIInit() {}
 void SNM_UIExit() {
 	if (LICE_IBitmap* logo = SNM_GetThemeLogo())
 		DELETE_NULL(logo);
+}
+
+void SNM_UIRefresh() 
+{
+	UpdateTimeline(); // ruler+arrange
+	TrackList_AdjustWindows(false);
+	DockWindowRefresh();
 }
 
 

@@ -166,16 +166,18 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML)
 				fputs("    <li>", pOut);
 				iPos++;
 			}
-			else if (strncmp(&cBuf[iPos], "http://", 7) == 0)
+
+			if (strncmp(&cBuf[iPos], "http://", 7) == 0)
 			{
 				fputs("<a href=\"", pOut);
 				curSection.Push(URL);
 				url.SetLen(0);
 			}
+
 #ifdef _WIN32
-			else if (_strnicmp(&cBuf[iPos], "issue ", 6) == 0)
+			if (_strnicmp(&cBuf[iPos], "issue ", 6) == 0)
 #else
-			else if (strncasecmp(&cBuf[iPos], "issue ", 6) == 0)
+			if (strncasecmp(&cBuf[iPos], "issue ", 6) == 0)
 #endif
 			{
 				int iIssue = atol(&cBuf[iPos+6]);

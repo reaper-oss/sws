@@ -475,7 +475,11 @@ static int getQNValue(RprNode *midiNode)
 
 static bool sortMidiBase(const RprMidiBase *lhs, const RprMidiBase *rhs)
 {
-    return rhs->getOffset() > lhs->getOffset();
+    if (rhs->getOffset() == lhs->getOffset())
+    {
+        return lhs->getMessageType() < rhs->getMessageType();
+    }
+    return lhs->getOffset() < rhs->getOffset();
 }
 
 static bool isMidiEvent(const std::string &eventStr) {
@@ -778,7 +782,7 @@ static void removeOverlaps(std::vector<RprMidiNote *> &midiNotes)
 	    }
 	    if(lhs->getItemPosition() + lhs->getItemLength() >= rhs->getItemPosition())
 	    {
-		int lhsLength = rhs->getItemPosition() - lhs->getItemPosition() - 1;
+		int lhsLength = rhs->getItemPosition() - lhs->getItemPosition();
 		if(lhsLength <= 0)
 		{
 		    delete lhs;

@@ -18,7 +18,7 @@ RprMidiTake* FNG_AllocMidiTake(MediaItem_Take* take)
     RprTake rprTake(take);
     if (rprTake.isMIDI() && !rprTake.isFile())
     {
-	return new RprMidiTake(rprTake);
+        return new RprMidiTake(rprTake);
     }
     return 0;
 }
@@ -33,7 +33,7 @@ int FNG_CountMidiNotes(RprMidiTake* midiTake)
 {
     if (midiTake)
     {
-	return midiTake->countNotes();
+        return midiTake->countNotes();
     }
 
     return 0;
@@ -44,17 +44,17 @@ RprMidiNote* FNG_GetMidiNote(RprMidiTake* midiTake, int index)
 {
     if (index < 0)
     {
-	return 0;
+        return 0;
     }
 
     if (!midiTake)
     {
-	return 0;
+        return 0;
     }
 
     if (index >= midiTake->countNotes())
     {
-	return 0;
+        return 0;
     }
     return midiTake->getNoteAt(index);
 }
@@ -65,42 +65,42 @@ int FNG_GetMidiNoteIntProperty(RprMidiNote* midiNote, const char* property)
 {
     if (!midiNote)
     {
-	return 0;
+        return 0;
     }
 
     if (FNG_STRCMP(property, "VELOCITY"))
     {
-	return midiNote->getVelocity();
+        return midiNote->getVelocity();
     }
 
     if (FNG_STRCMP(property, "PITCH"))
     {
-	return midiNote->getPitch();
+        return midiNote->getPitch();
     }
 
     if (FNG_STRCMP(property, "POSITION"))
     {
-	return midiNote->getItemPosition();
+        return midiNote->getItemPosition();
     }
 
     if (FNG_STRCMP(property, "LENGTH"))
     {
-	return midiNote->getItemLength();
+        return midiNote->getItemLength();
     }
 
     if (FNG_STRCMP(property, "CHANNEL"))
     {
-	return midiNote->getChannel();
+        return midiNote->getChannel();
     }
 
     if (FNG_STRCMP(property, "SELECTED"))
     {
-	return midiNote->isSelected() ? 1 : 0;
+        return midiNote->isSelected() ? 1 : 0;
     }
 
     if (FNG_STRCMP(property, "MUTED"))
     {
-	return midiNote->isMuted() ? 1 : 0;
+        return midiNote->isMuted() ? 1 : 0;
     }
     return 0;
 }
@@ -109,49 +109,49 @@ void FNG_SetMidiNoteIntProperty(RprMidiNote* midiNote, const char* property, int
 {
     if (!midiNote)
     {
-	return;
+        return;
     }
 
     if (FNG_STRCMP(property, "VELOCITY"))
     {
-	midiNote->setVelocity(value);
-	return;
+        midiNote->setVelocity(value);
+        return;
     }
 
     if (FNG_STRCMP(property, "PITCH"))
     {
-	midiNote->setPitch(value);
-	return;
+        midiNote->setPitch(value);
+        return;
     }
 
     if (FNG_STRCMP(property, "POSITION"))
     {
-	midiNote->setItemPosition(value);
-	return;
+        midiNote->setItemPosition(value);
+        return;
     }
 
     if (FNG_STRCMP(property, "LENGTH"))
     {
-	midiNote->setItemLength(value);
-	return;
+        midiNote->setItemLength(value);
+        return;
     }
 
     if (FNG_STRCMP(property, "CHANNEL"))
     {
-	midiNote->setChannel(value);
-	return;
+        midiNote->setChannel(value);
+        return;
     }
 
     if (FNG_STRCMP(property, "SELECTED"))
     {
-	midiNote->setSelected(value != 0);
-	return;
+        midiNote->setSelected(value != 0);
+        return;
     }
 
     if (FNG_STRCMP(property, "MUTED"))
     {
-	midiNote->setMuted(value != 0);
-	return;
+        midiNote->setMuted(value != 0);
+        return;
     }
 }
 
@@ -159,7 +159,7 @@ RprMidiNote* FNG_AddMidiNote(RprMidiTake* midiTake)
 {
     if (midiTake)
     {
-	return midiTake->addNoteAt(0);
+        return midiTake->addNoteAt(0);
     }
     return 0;
 }
@@ -178,15 +178,15 @@ public:
 
     RprMidiEvents &get()
     {
-	return mEvents;
+        return mEvents;
     }
 
     ~RprTempMidiEvents()
     {
-	for(RprMidiEventsIter i = mEvents.begin(); i != mEvents.end(); ++i)
-	{
-	    delete *i;
-	}
+        for(RprMidiEventsIter i = mEvents.begin(); i != mEvents.end(); ++i)
+        {
+            delete *i;
+        }
     }
 
 private:
@@ -198,11 +198,11 @@ class RprMidiContext
 public:
     static RprMidiContext *createMidiContext(double playRate, double startOffset, int ticksPerQN)
     {
-	RprMidiContext *context = new RprMidiContext;
-	context->mPlayRate = playRate;
-	context->mStartOffset = startOffset;
-	context->mTicksPerQN = ticksPerQN;
-	return context;
+        RprMidiContext *context = new RprMidiContext;
+        context->mPlayRate = playRate;
+        context->mStartOffset = startOffset;
+        context->mTicksPerQN = ticksPerQN;
+        return context;
     }
 
     ~RprMidiContext()
@@ -211,17 +211,17 @@ public:
 
     double getPlayRate() const
     {
-	return mPlayRate;
+        return mPlayRate;
     }
 
     double getStartOffset() const
     {
-	return mStartOffset;
+        return mStartOffset;
     }
 
     int getTicksPerQN() const
     {
-	return mTicksPerQN;
+        return mTicksPerQN;
     }
 
 private:
@@ -347,7 +347,7 @@ void RprMidiNote::setChannel(int channel)
 double RprMidiNote::getLength() const
 {
     return getPositionMidiOffset(mContext, mNoteOff->getOffset()) -
-	getPositionMidiOffset(mContext, mNoteOn->getOffset());
+        getPositionMidiOffset(mContext, mNoteOn->getOffset());
 }
 
 void RprMidiNote::setLength(double length)
@@ -356,7 +356,7 @@ void RprMidiNote::setLength(double length)
     double rightEdgeOffset = TimeToQN(pos + length);
     double leftEdgeOffset = TimeToQN(pos);
     setItemLength( (int)((rightEdgeOffset - leftEdgeOffset) *
-	(double)mContext->getTicksPerQN() + 0.5));
+        (double)mContext->getTicksPerQN() + 0.5));
 }
 
 int RprMidiNote::getItemLength() const
@@ -377,12 +377,12 @@ void RprMidiNote::setPitch(int pitch)
 {
     if (pitch > 127)
     {
-	pitch = 127;
+        pitch = 127;
     }
 
     if (pitch < 0)
     {
-	pitch = 0;
+        pitch = 0;
     }
     mNoteOn->setValue1((unsigned char)pitch);
     mNoteOff->setValue1((unsigned char)pitch);
@@ -397,19 +397,19 @@ void RprMidiNote::setVelocity(int velocity)
 {
     if (velocity > 127)
     {
-	velocity = 127;
+        velocity = 127;
     }
 
     if (velocity < 0)
     {
-	velocity = 0;
+        velocity = 0;
     }
 
     mNoteOn->setValue2((unsigned char)velocity);
     if(mNoteOff->getMessageType() == RprMidiBase::NoteOn &&
        mNoteOff->getValue2() == 0)
     {
-	return;
+        return;
     }
     mNoteOff->setValue2((unsigned char)velocity);
 }
@@ -434,12 +434,12 @@ RprMidiCC::RprMidiCC(RprMidiContext *context, int controller)
     // controller is invalid.
     if(controller > 127)
     {
-	controller = 127;
+        controller = 127;
     }
 
     if(controller < 0)
     {
-	controller = 0;
+        controller = 0;
     }
 
     mCC->setValue1((unsigned char)controller);
@@ -499,30 +499,30 @@ static bool isMidiEvent(const std::string &eventStr) {
 
     switch(eventStr[0])
     {
-	case 'e':
-	case 'x':
-	case 'X':
-	case 'E':
-	    break;
-	default:
-	    return false;
+        case 'e':
+        case 'x':
+        case 'X':
+        case 'E':
+            break;
+        default:
+            return false;
     }
 
     switch(eventStr[1])
     {
-	case ' ':
-	    return true;
-	case 'm':
-	    break;
-	default:
-	    return false;
+        case ' ':
+            return true;
+        case 'm':
+            break;
+        default:
+            return false;
     }
 
     switch(eventStr[2]) {
-	case ' ':
-	    return true;
-	default:
-	    return false;
+        case ' ':
+            return true;
+        default:
+            return false;
     }
     return false;
 }
@@ -532,16 +532,16 @@ static int clearMidiEventsFromMidiNode(RprNode *parent)
     int i = 0;
     for(; i < parent->childCount(); ++i)
     {
-	if(isMidiEvent(parent->getChild(i)->getValue()))
-	{
-	    break;
-	}
+        if(isMidiEvent(parent->getChild(i)->getValue()))
+        {
+            break;
+        }
     }
     int offset = i;
 
     while (isMidiEvent(parent->getChild(i)->getValue()))
     {
-	parent->removeChild(i);
+        parent->removeChild(i);
     }
     return offset;
 }
@@ -550,10 +550,10 @@ static void midiEventsToMidiNode(std::vector< RprMidiBase *> &midiEvents, RprNod
 {
     int index = offset;
     for(std::vector<RprMidiBase *>::iterator i = midiEvents.begin();
-	i != midiEvents.end(); i++)
+        i != midiEvents.end(); i++)
     {
-	RprMidiBase *current = *i;
-	midiNode->addChild(current->toReaper(), index++);
+        RprMidiBase *current = *i;
+        midiNode->addChild(current->toReaper(), index++);
     }
 }
 
@@ -562,16 +562,16 @@ static void getMidiEvents(RprNode *midiNode, RprMidiEvents &midiEvents)
     int offset = 0;
     for(int i = 1; i < midiNode->childCount(); i++)
     {
-	if(!isMidiEvent(midiNode->getChild(i)->getValue()))
-	{
-	    continue;
-	}
+        if(!isMidiEvent(midiNode->getChild(i)->getValue()))
+        {
+            continue;
+        }
 
-	RprMidiEventCreator creator(midiNode->getChild(i));
-	RprMidiBase *midiEvent = creator.collectEvent();
-	offset += midiEvent->getDelta();
-	midiEvent->setOffset(offset);
-	midiEvents.push_back(midiEvent);
+        RprMidiEventCreator creator(midiNode->getChild(i));
+        RprMidiBase *midiEvent = creator.collectEvent();
+        offset += midiEvent->getDelta();
+        midiEvent->setOffset(offset);
+        midiEvents.push_back(midiEvent);
     }
 }
 
@@ -579,46 +579,46 @@ static bool noteEventsMatch(const RprMidiBase *noteOn, const RprMidiBase *noteOf
 {
     if(noteOn->getChannel() != noteOff->getChannel())
     {
-	return false;
+        return false;
     }
 
     if(noteOn->getValue1() != noteOff->getValue1())
     {
-	return false;
+        return false;
     }
 
     if(noteOn->getOffset() > noteOff->getOffset())
     {
-	return false;
+        return false;
     }
     return true;
 }
 
 static bool getMidiCCs(RprMidiEvents &midiEvents,
-		       std::vector<RprMidiCC *> *midiCCs,
-		       RprMidiContext *context)
+                       std::vector<RprMidiCC *> *midiCCs,
+                       RprMidiContext *context)
 {
     RprMidiEvents other;
     for(RprMidiEventsCIter i = midiEvents.begin(); i != midiEvents.end(); ++i)
     {
-	RprMidiBase *current = *i;
+        RprMidiBase *current = *i;
 
-	if(current->getMessageType() == RprMidiBase::CC)
-	{
-	    midiCCs[current->getValue1()].push_back(new RprMidiCC(current, context));
-	}
-	else
-	{
-	    other.push_back(current);
-	}
+        if(current->getMessageType() == RprMidiBase::CC)
+        {
+            midiCCs[current->getValue1()].push_back(new RprMidiCC(current, context));
+        }
+        else
+        {
+            other.push_back(current);
+        }
     }
     midiEvents = other;
     return true;
 }
 
 static bool getMidiNotes(RprMidiEvents &midiEvents,
-			 std::vector<RprMidiNote *> &midiNotes,
-			 RprMidiContext *context)
+                         std::vector<RprMidiNote *> &midiNotes,
+                         RprMidiContext *context)
 {
     RprMidiEvents noteOns;
     RprMidiEvents noteOffs;
@@ -627,21 +627,21 @@ static bool getMidiNotes(RprMidiEvents &midiEvents,
     /* categorize notes into note-ons and note-offs */
     for(RprMidiEventsCIter i = midiEvents.begin(); i != midiEvents.end(); ++i)
     {
-	RprMidiBase *current = *i;
-	if(current->getMessageType() == RprMidiBase::NoteOn && current->getValue2() != 0)
-	{
-	    noteOns.push_back(current);
-	}
-	else if(current->getMessageType() == RprMidiBase::NoteOff ||
-	       (current->getMessageType() == RprMidiBase::NoteOn &&
-		current->getValue2() == 0))
-	{
-	    noteOffs.push_back(current);
-	}
-	else
-	{
-	    other.push_back(current);
-	}
+        RprMidiBase *current = *i;
+        if(current->getMessageType() == RprMidiBase::NoteOn && current->getValue2() != 0)
+        {
+            noteOns.push_back(current);
+        }
+        else if(current->getMessageType() == RprMidiBase::NoteOff ||
+               (current->getMessageType() == RprMidiBase::NoteOn &&
+                current->getValue2() == 0))
+        {
+            noteOffs.push_back(current);
+        }
+        else
+        {
+            other.push_back(current);
+        }
     }
     midiEvents.clear();
 
@@ -649,46 +649,46 @@ static bool getMidiNotes(RprMidiEvents &midiEvents,
     RprMidiEventsIter i = noteOns.begin();
     while(i != noteOns.end())
     {
-	RprMidiEventsIter j = noteOffs.begin();
-	while(j != noteOffs.end() && !noteEventsMatch(*i, *j))
-	{
-	    ++j;
-	}
-	/* no match so add noteOn to other events */
-	if(j == noteOffs.end())
-	{
-	    other.push_back(*i);
-	    ++i;
-	    continue;
-	}
+        RprMidiEventsIter j = noteOffs.begin();
+        while(j != noteOffs.end() && !noteEventsMatch(*i, *j))
+        {
+            ++j;
+        }
+        /* no match so add noteOn to other events */
+        if(j == noteOffs.end())
+        {
+            other.push_back(*i);
+            ++i;
+            continue;
+        }
 
-	RprMidiBase *noteOn = *i;
-	RprMidiBase *noteOff = *j;
-	/* delete zero length notes */
-	if(noteOn->getOffset() == noteOff->getOffset())
-	{
-	    delete noteOn;
-	    delete noteOff;
-	    noteOns.erase(i++);
-	    noteOffs.erase(j);
-	    continue;
-	}
+        RprMidiBase *noteOn = *i;
+        RprMidiBase *noteOff = *j;
+        /* delete zero length notes */
+        if(noteOn->getOffset() == noteOff->getOffset())
+        {
+            delete noteOn;
+            delete noteOff;
+            noteOns.erase(i++);
+            noteOffs.erase(j);
+            continue;
+        }
 
-	RprMidiNote *newNote = new RprMidiNote(noteOn, noteOff, context);
-	midiNotes.push_back(newNote);
-	noteOffs.erase(j);
-	++i;
+        RprMidiNote *newNote = new RprMidiNote(noteOn, noteOff, context);
+        midiNotes.push_back(newNote);
+        noteOffs.erase(j);
+        ++i;
     }
 
     /* put non-note events back onto midiEvents list */
     for(RprMidiEventsCIter j = noteOffs.begin(); j != noteOffs.end(); j++)
     {
-	midiEvents.push_back(*j);
+        midiEvents.push_back(*j);
     }
 
     for(RprMidiEventsCIter j = other.begin(); j != other.end(); j++)
     {
-	midiEvents.push_back(*j);
+        midiEvents.push_back(*j);
     }
     return true;
 }
@@ -697,31 +697,31 @@ static void removeDuplicates(std::vector<RprMidiCC *> *midiCCs)
 {
     for(int i = 0; i < 128; i++)
     {
-	for(int ccOffset = 0; (midiCCs[i].begin() + ccOffset) != midiCCs[i].end(); ++ccOffset)
-	{
-	    std::vector<RprMidiCC *>::iterator j = midiCCs[i].begin() + ccOffset;
-	    for(std::vector<RprMidiCC *>::iterator k = j + 1; k != midiCCs[i].end(); ++k)
-	    {
-		if( (*k)->getItemPosition() > (*j)->getItemPosition())
-		{
-		    break;
-		}
+        for(int ccOffset = 0; (midiCCs[i].begin() + ccOffset) != midiCCs[i].end(); ++ccOffset)
+        {
+            std::vector<RprMidiCC *>::iterator j = midiCCs[i].begin() + ccOffset;
+            for(std::vector<RprMidiCC *>::iterator k = j + 1; k != midiCCs[i].end(); ++k)
+            {
+                if( (*k)->getItemPosition() > (*j)->getItemPosition())
+                {
+                    break;
+                }
 
-		if( (*k)->getItemPosition() != (*j)->getItemPosition())
-		{
-		    continue;
-		}
+                if( (*k)->getItemPosition() != (*j)->getItemPosition())
+                {
+                    continue;
+                }
 
-		if( (*k)->getChannel() != (*j)->getChannel())
-		{
-		    continue;
-		}
+                if( (*k)->getChannel() != (*j)->getChannel())
+                {
+                    continue;
+                }
 
-		delete *k;
-		k = midiCCs[i].erase(k);
-		j = midiCCs[i].begin() + ccOffset;
-	    }
-	}
+                delete *k;
+                k = midiCCs[i].erase(k);
+                j = midiCCs[i].begin() + ccOffset;
+            }
+        }
     }
 }
 
@@ -729,41 +729,41 @@ static void removeDuplicates(std::vector<RprMidiNote *> &midiNotes)
 {
     for(int noteOffset = 0; (midiNotes.begin() + noteOffset) != midiNotes.end(); noteOffset++)
     {
-	std::vector<RprMidiNote *>::iterator i = midiNotes.begin() + noteOffset;
-	RprMidiNote *lhs = *i;
-	for(std::vector<RprMidiNote *>::iterator j = i + 1; j != midiNotes.end(); j++)
-	{
-	    RprMidiNote *rhs = *j;
-	    if (rhs->getItemPosition() > lhs->getItemPosition())
-	    {
-		break;
-	    }
+        std::vector<RprMidiNote *>::iterator i = midiNotes.begin() + noteOffset;
+        RprMidiNote *lhs = *i;
+        for(std::vector<RprMidiNote *>::iterator j = i + 1; j != midiNotes.end(); j++)
+        {
+            RprMidiNote *rhs = *j;
+            if (rhs->getItemPosition() > lhs->getItemPosition())
+            {
+                break;
+            }
 
-	    if(lhs->getItemPosition() != rhs->getItemPosition())
-	    {
-		continue;
-	    }
-	    if(lhs->getPitch() != rhs->getPitch())
-	    {
-		continue;
-	    }
-	    if(lhs->getChannel() != rhs->getChannel())
-	    {
-		continue;
-	    }
-	    if(lhs->getItemLength() > rhs->getItemLength())
-	    {
-		delete rhs;
-		j = midiNotes.erase(j);
-	    }
-	    else
-	    {
-		delete lhs;
-		i = midiNotes.erase(i);
-		noteOffset--;
-		break;
-	    }
-	}
+            if(lhs->getItemPosition() != rhs->getItemPosition())
+            {
+                continue;
+            }
+            if(lhs->getPitch() != rhs->getPitch())
+            {
+                continue;
+            }
+            if(lhs->getChannel() != rhs->getChannel())
+            {
+                continue;
+            }
+            if(lhs->getItemLength() > rhs->getItemLength())
+            {
+                delete rhs;
+                j = midiNotes.erase(j);
+            }
+            else
+            {
+                delete lhs;
+                i = midiNotes.erase(i);
+                noteOffset--;
+                break;
+            }
+        }
     }
 }
 
@@ -771,39 +771,39 @@ static void removeOverlaps(std::vector<RprMidiNote *> &midiNotes)
 {
     for(int noteOffset = 0; (midiNotes.begin() + noteOffset) != midiNotes.end(); ++noteOffset)
     {
-	std::vector<RprMidiNote *>::iterator i = midiNotes.begin() + noteOffset;
-	RprMidiNote *lhs = *i;
-	for(std::vector<RprMidiNote *>::iterator j = i + 1; j != midiNotes.end(); j++)
-	{
-	    RprMidiNote *rhs = *j;
-	    if(rhs->getItemPosition() >= lhs->getItemPosition() + lhs->getItemLength())
-	    {
-		break;
-	    }
-	    if(lhs->getPitch() != rhs->getPitch())
-	    {
-		continue;
-	    }
-	    if(lhs->getChannel() != rhs->getChannel())
-	    {
-		continue;
-	    }
-	    if(lhs->getItemPosition() + lhs->getItemLength() >= rhs->getItemPosition())
-	    {
-		int lhsLength = rhs->getItemPosition() - lhs->getItemPosition();
-		if(lhsLength <= 0)
-		{
-		    delete lhs;
-		    i = midiNotes.erase(i);
-		    noteOffset--;
-		}
-		else
-		{
-		    lhs->setItemLength(lhsLength);
-		}
-		break;
-	    }
-	}
+        std::vector<RprMidiNote *>::iterator i = midiNotes.begin() + noteOffset;
+        RprMidiNote *lhs = *i;
+        for(std::vector<RprMidiNote *>::iterator j = i + 1; j != midiNotes.end(); j++)
+        {
+            RprMidiNote *rhs = *j;
+            if(rhs->getItemPosition() >= lhs->getItemPosition() + lhs->getItemLength())
+            {
+                break;
+            }
+            if(lhs->getPitch() != rhs->getPitch())
+            {
+                continue;
+            }
+            if(lhs->getChannel() != rhs->getChannel())
+            {
+                continue;
+            }
+            if(lhs->getItemPosition() + lhs->getItemLength() >= rhs->getItemPosition())
+            {
+                int lhsLength = rhs->getItemPosition() - lhs->getItemPosition();
+                if(lhsLength <= 0)
+                {
+                    delete lhs;
+                    i = midiNotes.erase(i);
+                    noteOffset--;
+                }
+                else
+                {
+                    lhs->setItemLength(lhsLength);
+                }
+                break;
+            }
+        }
     }
 }
 
@@ -829,38 +829,38 @@ RprMidiTake::RprMidiTake(const RprTake &take, bool readOnly)
 {
     try
     {
-	mContext = NULL;
-	RprNode *sourceNode = RprMidiTemplate::getMidiSourceNode();
+        mContext = NULL;
+        RprNode *sourceNode = RprMidiTemplate::getMidiSourceNode();
 
-	RprTempMidiEvents tempMidiEvents;
-	getMidiEvents(sourceNode, tempMidiEvents.get());
-	mContext = RprMidiContext::createMidiContext(take.getPlayRate(),
-	    getParent()->getPosition() - (take.getStartOffset() / take.getPlayRate()),
-	    getQNValue(sourceNode));
+        RprTempMidiEvents tempMidiEvents;
+        getMidiEvents(sourceNode, tempMidiEvents.get());
+        mContext = RprMidiContext::createMidiContext(take.getPlayRate(),
+            getParent()->getPosition() - (take.getStartOffset() / take.getPlayRate()),
+            getQNValue(sourceNode));
 
-	if (!getMidiNotes(tempMidiEvents.get(), mNotes, mContext))
-	{
-	    throw RprLibException(__LOCALIZE("Unable to parse MIDI data","sws_mbox"));
-	}
+        if (!getMidiNotes(tempMidiEvents.get(), mNotes, mContext))
+        {
+            throw RprLibException(__LOCALIZE("Unable to parse MIDI data","sws_mbox"));
+        }
 
-	if(!getMidiCCs(tempMidiEvents.get(), mCCs, mContext))
-	{
-	    throw RprLibException(__LOCALIZE("Unable to parse MIDI data","sws_mbox"));
-	}
+        if(!getMidiCCs(tempMidiEvents.get(), mCCs, mContext))
+        {
+            throw RprLibException(__LOCALIZE("Unable to parse MIDI data","sws_mbox"));
+        }
 
-	mOtherEvents.reserve(tempMidiEvents.get().size());
-	std::copy(tempMidiEvents.get().begin(), tempMidiEvents.get().end(),
-	    std::back_inserter(mOtherEvents));
-	tempMidiEvents.get().clear();
-	mMidiEventsOffset = clearMidiEventsFromMidiNode(sourceNode);
+        mOtherEvents.reserve(tempMidiEvents.get().size());
+        std::copy(tempMidiEvents.get().begin(), tempMidiEvents.get().end(),
+            std::back_inserter(mOtherEvents));
+        tempMidiEvents.get().clear();
+        mMidiEventsOffset = clearMidiEventsFromMidiNode(sourceNode);
 
     }
     catch (RprMidiBase::RprMidiException &e)
     {
-	cleanup();
-	// Throw RprLibException so we let the user know something bad
-	// happened.
-	throw RprLibException(e.what(), true);
+        cleanup();
+        // Throw RprLibException so we let the user know something bad
+        // happened.
+        throw RprLibException(e.what(), true);
     }
 }
 
@@ -870,7 +870,7 @@ void cleanUpPointers(std::vector<T *> &pointers)
 {
     for(typename std::vector<T *>::iterator i = pointers.begin(); i != pointers.end(); i++)
     {
-	delete *i;
+        delete *i;
     }
     pointers.clear();
 }
@@ -879,40 +879,40 @@ RprMidiTake::~RprMidiTake()
 {
     if (isReadOnly())
     {
-	cleanup();
-	return;
+        cleanup();
+        return;
     }
 
     std::vector<RprMidiBase *> midiEvents;
     std::sort(mNotes.begin(), mNotes.end(), compareMidiPositions<RprMidiNote>);
     for(int i = 0; i < 128; i++)
     {
-	std::sort(mCCs[i].begin(), mCCs[i].end(), compareMidiPositions<RprMidiCC>);
+        std::sort(mCCs[i].begin(), mCCs[i].end(), compareMidiPositions<RprMidiCC>);
     }
     removeDuplicates(mNotes);
     removeDuplicates(mCCs);
     removeOverlaps(mNotes);
     midiEvents.reserve(mNotes.size() * 2 + mOtherEvents.size());
     for(std::vector<RprMidiNote *>::const_iterator i = mNotes.begin();
-	i != mNotes.end(); ++i)
+        i != mNotes.end(); ++i)
     {
-	midiEvents.push_back((*i)->mNoteOn);
-	midiEvents.push_back((*i)->mNoteOff);
+        midiEvents.push_back((*i)->mNoteOn);
+        midiEvents.push_back((*i)->mNoteOff);
     }
 
     for(int j = 0; j < 128; j++)
     {
-	for(std::vector<RprMidiCC *>::const_iterator i = mCCs[j].begin();
-	    i != mCCs[j].end(); ++i)
-	{
-	    midiEvents.push_back((*i)->mCC);
-	}
+        for(std::vector<RprMidiCC *>::const_iterator i = mCCs[j].begin();
+            i != mCCs[j].end(); ++i)
+        {
+            midiEvents.push_back((*i)->mCC);
+        }
     }
 
     for(std::vector<RprMidiBase *>::const_iterator i = mOtherEvents.begin();
-	i != mOtherEvents.end(); ++i)
+        i != mOtherEvents.end(); ++i)
     {
-	midiEvents.push_back(*i);
+        midiEvents.push_back(*i);
     }
 
     std::sort(midiEvents.begin(), midiEvents.end(), sortMidiBase);
@@ -920,40 +920,40 @@ RprMidiTake::~RprMidiTake()
     int firstEventOffset = 0;
     if (!midiEvents.empty())
     {
-	firstEventOffset = (*midiEvents.begin())->getOffset();
+        firstEventOffset = (*midiEvents.begin())->getOffset();
     }
 
     int offset = 0;
     if (firstEventOffset < 0)
     {
-	double takeStartPosition = mTake.getParent().getPosition() -
-	    mTake.getStartOffset() / mContext->getPlayRate();
+        double takeStartPosition = mTake.getParent().getPosition() -
+            mTake.getStartOffset() / mContext->getPlayRate();
 
-	// convert to Quarter notes and subtract first event offset
-	double newTakeQNStartPosition = TimeToQN(takeStartPosition) + ((double)firstEventOffset /
-	    mContext->getTicksPerQN()) / mContext->getPlayRate();
-	//convert back to seconds / playrate
-	mNewTakeOffset = takeStartPosition - QNtoTime(newTakeQNStartPosition) +
-	    mTake.getStartOffset() / mContext->getPlayRate();
-	//convert to seconds
-	mNewTakeOffset *= mContext->getPlayRate();
-	// Hack! Have to set start offset after setting item state so
-	// set a flag to indicate we need a new start offset set
-	mSetNewTakeOffset = true;
-	// set initial offset to -ve value to get rid of -ve deltas
-	offset = firstEventOffset;
+        // convert to Quarter notes and subtract first event offset
+        double newTakeQNStartPosition = TimeToQN(takeStartPosition) + ((double)firstEventOffset /
+            mContext->getTicksPerQN()) / mContext->getPlayRate();
+        //convert back to seconds / playrate
+        mNewTakeOffset = takeStartPosition - QNtoTime(newTakeQNStartPosition) +
+            mTake.getStartOffset() / mContext->getPlayRate();
+        //convert to seconds
+        mNewTakeOffset *= mContext->getPlayRate();
+        // Hack! Have to set start offset after setting item state so
+        // set a flag to indicate we need a new start offset set
+        mSetNewTakeOffset = true;
+        // set initial offset to -ve value to get rid of -ve deltas
+        offset = firstEventOffset;
     }
 
     for(std::vector<RprMidiBase *>::iterator i = midiEvents.begin(); i != midiEvents.end(); ++i)
     {
-	RprMidiBase *current = *i;
-	int delta = current->getOffset() - offset;
-	current->setDelta(delta);
-	offset += delta;
+        RprMidiBase *current = *i;
+        int delta = current->getOffset() - offset;
+        current->setDelta(delta);
+        offset += delta;
     }
 
     midiEventsToMidiNode(midiEvents, RprMidiTemplate::getMidiSourceNode(),
-	mMidiEventsOffset);
+        mMidiEventsOffset);
 
     cleanup();
 }
@@ -962,13 +962,13 @@ void RprMidiTake::cleanup()
 {
     if(mContext)
     {
-	delete mContext;
+        delete mContext;
     }
     mContext = NULL;
 
     for(int j = 0; j < 128; j++)
     {
-	cleanUpPointers(mCCs[j]);
+        cleanUpPointers(mCCs[j]);
     }
     cleanUpPointers(mOtherEvents);
     cleanUpPointers(mNotes);
@@ -979,15 +979,15 @@ RprMidiTakePtr RprMidiTake::createFromMidiEditor(bool readOnly)
     void *midiEditor = MIDIEditor_GetActive();
     if(midiEditor == NULL)
     {
-	throw RprLibException(__LOCALIZE("No active MIDI editor","sws_mbox"), true);
+        throw RprLibException(__LOCALIZE("No active MIDI editor","sws_mbox"), true);
     }
 
     RprTake take(MIDIEditor_GetTake(midiEditor));
     const char *sourceFilename = take.getSource()->GetFileName();
     if(!*sourceFilename)
     {
-	RprMidiTakePtr takePtr(new RprMidiTake(take, readOnly));
-	return takePtr;
+        RprMidiTakePtr takePtr(new RprMidiTake(take, readOnly));
+        return takePtr;
     }
     throw RprLibException(__LOCALIZE("Only in-project MIDI can be modified","sws_mbox"), true);
 }
@@ -1000,13 +1000,13 @@ int RprMidiTake::countCCs(int controller) const
 static bool hasEvent(std::vector<RprMidiBase *> &midiEvents, RprMidiBase::MessageType messageType)
 {
     for(std::vector<RprMidiBase *>::const_iterator i = midiEvents.begin();
-	i != midiEvents.end(); ++i)
+        i != midiEvents.end(); ++i)
     {
-	RprMidiBase *midiEvent = *i;
-	if(midiEvent->getMessageType() == messageType)
-	{
-	    return true;
-	}
+        RprMidiBase *midiEvent = *i;
+        if(midiEvent->getMessageType() == messageType)
+        {
+            return true;
+        }
     }
     return false;
 }
@@ -1015,18 +1015,18 @@ bool RprMidiTake::hasEventType(RprMidiBase::MessageType messageType)
 {
     if(messageType == RprMidiBase::NoteOn || messageType == RprMidiBase::NoteOff)
     {
-	return countNotes() > 0;
+        return countNotes() > 0;
     }
 
     if(messageType == RprMidiBase::CC)
     {
-	for(int i = 0; i < 128; ++i)
-	{
-	    if( countCCs(i) > 0)
-	    {
-		return true;
-	    }
-	}
+        for(int i = 0; i < 128; ++i)
+        {
+            if( countCCs(i) > 0)
+            {
+                return true;
+            }
+        }
     }
     return hasEvent(mOtherEvents, messageType);
 }

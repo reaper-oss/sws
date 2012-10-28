@@ -38,25 +38,25 @@ void RprCommand::setup(void (*command)(int, void *), void *commandData, int comm
 RprCommand::~RprCommand()
 {
     if(mData != NULL)
-	free(mData);
+        free(mData);
 }
 
 void RprCommand::registerCommand(const char *description, const char *id,
-				 void (*command)(int, void *), int undoFlag)
+                                 void (*command)(int, void *), int undoFlag)
 {
     RprCommand *newCmd = new RprCommand(command);
     RprCommand::registerCommand(description, id, newCmd, undoFlag);
 }
 
 void RprCommand::registerCommand(const char *description, const char *id,
-				 void (*command)(int, void *), int commandData, int undoFlag)
+                                 void (*command)(int, void *), int commandData, int undoFlag)
 {
     RprCommand *newCmd = new RprCommand(command, &commandData, sizeof(int));
     RprCommand::registerCommand(description, id, newCmd, undoFlag);
 }
 
 void RprCommand::registerToggleCommand(const char *description, const char *id,
-				       void (*command)(int, void *), bool (*toggleCommand)(void), int undoFlag)
+                                       void (*command)(int, void *), bool (*toggleCommand)(void), int undoFlag)
 {
     RprToggleCommand *newCmd = new RprToggleCommand(command, toggleCommand);
     newCmd->setUndoFlags(undoFlag);
@@ -79,26 +79,26 @@ void RprCommand::setDescription(const char *description)
 void RprCommand::run(int flag)
 {
     if(mUndoFlags != 0 && mUndoFlags != UNDO_STATE_ITEMS)
-	Undo_BeginBlock();
+        Undo_BeginBlock();
 
     try
     {
-	doCommand(flag);
+        doCommand(flag);
     }
     catch(RprLibException &e)
     {
-	if(e.notify())
-	{
-	    MessageBox(GetMainHwnd(), e.what(), __LOCALIZE("FNG - Error","sws_mbox"), 0);
-	}
+        if(e.notify())
+        {
+            MessageBox(GetMainHwnd(), e.what(), __LOCALIZE("FNG - Error","sws_mbox"), 0);
+        }
     }
 
     if(mUndoFlags != 0 && mUndoFlags != UNDO_STATE_ITEMS)
     {
-	Undo_EndBlock(mDescription.c_str(), mUndoFlags);
+        Undo_EndBlock(mDescription.c_str(), mUndoFlags);
     }
     if(mUndoFlags == UNDO_STATE_ITEMS)
-	Undo_OnStateChange(mDescription.c_str());
+        Undo_OnStateChange(mDescription.c_str());
 }
 
 
@@ -108,7 +108,7 @@ RprCommandManager *RprCommandManager::Instance()
 {
     if (_instance == NULL)
     {
-	_instance = new RprCommandManager();
+        _instance = new RprCommandManager();
     }
     return _instance;
 }
@@ -117,8 +117,8 @@ RprCommandManager::~RprCommandManager()
 {}
 
 RprToggleCommand::RprToggleCommand(void (*command)(int, void *),
-				   bool (*toggleCommand)(void), void *commandData , int commandDataSize)
-				   : RprCommand(command, commandData, commandDataSize)
+                                   bool (*toggleCommand)(void), void *commandData , int commandDataSize)
+                                   : RprCommand(command, commandData, commandDataSize)
 {
     mToggleCommand = toggleCommand;
 }
@@ -146,7 +146,7 @@ static COMMAND_T
 createSWSCommand(const char* description, const char* id, RprCommand* command)
 {
     COMMAND_T SWSCommand = { { DEFACCEL, description }, id, onSWSCommand, NULL,
-	(INT_PTR)command, NULL};
+        (INT_PTR)command, NULL};
     return SWSCommand;
 }
 
@@ -154,7 +154,7 @@ static COMMAND_T
 createSWSToggleCommand(const char* description, const char* id, RprToggleCommand* command)
 {
     COMMAND_T SWSCommand = { { DEFACCEL, description }, id, onSWSCommand, NULL,
-	(INT_PTR)command, onToggleCommand};
+        (INT_PTR)command, onToggleCommand};
     return SWSCommand;
 }
 
@@ -177,11 +177,11 @@ int RprCommandManager::getCommandId(const char *id)
     RprCommandManager *me = RprCommandManager::Instance();
 
     std::list<COMMAND_T>::iterator command = std::find_if(me->mSWSCommands.begin(),
-	me->mSWSCommands.end(), SWSCommandFinder(id));
+        me->mSWSCommands.end(), SWSCommandFinder(id));
 
     if (command != me->mSWSCommands.end())
     {
-	return command->accel.accel.cmd;
+        return command->accel.accel.cmd;
     }
     return -1;
 }

@@ -12,13 +12,13 @@
 
 int FNGExtensionInit(REAPER_PLUGIN_HINSTANCE hInstance, reaper_plugin_info_t *rec)
 {
-	std::srand((unsigned int)time(NULL));
-	EnvelopeCommands::Init();
-	MediaItemCommands::Init();
-	MiscCommands::Init();
+    std::srand((unsigned int)time(NULL));
+    EnvelopeCommands::Init();
+    MediaItemCommands::Init();
+    MiscCommands::Init();
     GrooveCommands::Init();
-	GrooveTemplateHandler::Init(rec);
-	MidiLaneCommands::Init();
+    GrooveTemplateHandler::Init(rec);
+    MidiLaneCommands::Init();
 
-	return 1;
+    return 1;
 }

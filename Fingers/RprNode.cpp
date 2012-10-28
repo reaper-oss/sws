@@ -46,9 +46,9 @@ void RprNode::setParent(RprNode *parent)
 RprParentNode::~RprParentNode()
 {
     for(std::vector<RprNode *>::iterator i = mChildren.begin();
-	i != mChildren.end();
-	i++) {
-	    delete *i;
+        i != mChildren.end();
+        i++) {
+            delete *i;
     }
 }
 
@@ -93,7 +93,7 @@ static std::string getTrimmedLine(std::istringstream &iss)
     std::string line;
     int offset = 0;
     if(lineBuffer[0] == '\n')
-	offset++;
+        offset++;
     while(lineBuffer[offset] == ' ') offset++;
     line = std::string(lineBuffer + offset);
     return line;
@@ -105,9 +105,9 @@ void RprParentNode::toReaper(std::ostringstream &oss, int indent)
     oss << strIndent.c_str() << "<";
     oss << getValue().c_str() << std::endl;
     for(std::vector<RprNode *>::iterator i = mChildren.begin();
-	i != mChildren.end();
-	i++) {
-	    (*i)->toReaper(oss, 0);
+        i != mChildren.end();
+        i++) {
+            (*i)->toReaper(oss, 0);
     }
     oss << strIndent.c_str() << ">" << std::endl;
 }
@@ -142,11 +142,11 @@ void RprPropertyNode::removeChild(int index)
 RprNode *RprParentNode::createItemStateTree(const char *itemState)
 {
     if(itemState == NULL)
-	return NULL;
+        return NULL;
 
     /* check if it is an item node */
     if(strncmp(itemState, "<ITEM", 5))
-	return NULL;
+        return NULL;
 
     std::istringstream iss(itemState);
     std::string line = getTrimmedLine(iss);
@@ -156,16 +156,16 @@ RprNode *RprParentNode::createItemStateTree(const char *itemState)
 
     while(!iss.eof()) {
 
-	line = getTrimmedLine(iss);
-	if(line.empty())
-	    continue;
+        line = getTrimmedLine(iss);
+        if(line.empty())
+            continue;
 
-	if(line[0] == '<')
-	    currentNode = addNewChildNode(currentNode, line.substr(1));
-	else if(line[0] == '>')
-	    currentNode = currentNode->getParent();
-	else
-	    addNewPropertyNode(currentNode, line);
+        if(line[0] == '<')
+            currentNode = addNewChildNode(currentNode, line.substr(1));
+        else if(line[0] == '>')
+            currentNode = currentNode->getParent();
+        else
+            addNewPropertyNode(currentNode, line);
     }
 
     return parentNode.release();

@@ -10,7 +10,7 @@
 RprTake::RprTake(MediaItem_Take *take)
 {
     if(take == NULL)
-	throw RprLibException(__LOCALIZE("Media item take is NULL","sws_mbox"), false);
+        throw RprLibException(__LOCALIZE("Media item take is NULL","sws_mbox"), false);
     mTake = take;
 }
 
@@ -85,14 +85,14 @@ void RprTake::setSource(PCM_source *source, bool keepOld)
     PCM_source *oldSource = getSource();
     GetSetMediaItemTakeInfo(mTake, "P_SOURCE", (void *)source);
     if(!keepOld)
-	delete oldSource;
+        delete oldSource;
 }
 
 void RprTake::openEditor()
 {
     void *midiEditor = MIDIEditor_GetActive();
     if(isMIDI() && midiEditor) {
-	getSource()->Extended(PCM_SOURCE_EXT_OPENEDITOR, midiEditor, (void *)getParent().getTrack().getTrackIndex(), (void *)getName());
+        getSource()->Extended(PCM_SOURCE_EXT_OPENEDITOR, midiEditor, (void *)getParent().getTrack().getTrackIndex(), (void *)getName());
     }
 }
 

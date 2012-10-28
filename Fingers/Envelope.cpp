@@ -2,7 +2,7 @@
 #include "Envelope.h"
 #include "RprStateChunk.h"
 
-RprEnvelopePoint::RprEnvelopePoint(RprEnvelope *parent /* = NULL */) : 
+RprEnvelopePoint::RprEnvelopePoint(RprEnvelope *parent /* = NULL */) :
     m_time(0.0), m_parameterValue(0.0), m_envelopeShape(Linear),
     m_selUnknown(0), m_selected(0), m_bezierUnknown(0),
     m_bezierTension(0.0), m_parent(parent)
@@ -11,59 +11,59 @@ RprEnvelopePoint::RprEnvelopePoint(RprEnvelope *parent /* = NULL */) :
 
 void
 RprEnvelopePoint::setTime(double time)
-{ 
-    m_time = time; 
+{
+    m_time = time;
 }
 
 double
 RprEnvelopePoint::time() const
-{ 
+{
     return m_time;
 }
 
-double 
+double
 RprEnvelopePoint::value() const
-{ 
-    return m_parameterValue; 
+{
+    return m_parameterValue;
 }
 
 RprEnvelopePoint::EnvShape
-RprEnvelopePoint::shape() const 
-{ 
-    return m_envelopeShape; 
+RprEnvelopePoint::shape() const
+{
+    return m_envelopeShape;
 }
 
-bool 
+bool
 RprEnvelopePoint::selected() const
-{ 
+{
     return m_selected;
 }
 
-double 
+double
 RprEnvelopePoint::bezierTension() const
-{ 
-    return m_bezierTension; 
+{
+    return m_bezierTension;
 }
 
-bool 
+bool
 RprEnvelopePoint::operator<(const RprEnvelopePoint& rhs) const
 {
     return m_time < rhs.m_time;
 }
 
-std::string 
+std::string
 RprEnvelopePoint::toString() const
 {
     std::ostringstream oss;
     oss << "PT" << " " << time() << " " << value() << " " << shape();
 
     if (m_selected)
-    { 
+    {
         oss << " " << m_selUnknown << " 1";
     }
 
     if (m_bezierTension != 0.0)
-    { 
+    {
         if (!m_selected)
         {
             oss << " " << m_selUnknown << " 0";
@@ -92,14 +92,14 @@ nParamIndex(0)
         return;
     }
     m_env = env;
-    
+
     RprStateChunk chunk(GetSetObjectState(m_env, ""));
     const char *pEnv = chunk.get();
-    
+
     int status;
     const char *envPtr = pEnv;
     char title[256];
-    
+
     status = sscanf(envPtr, "<%s %d %lf %lf %lf", &title, &nParamIndex, &dParamMin,
         &dParamMax, &dNeutralVal);
 
@@ -132,7 +132,7 @@ nParamIndex(0)
     status = sscanf(envPtr, "ACT %d", &nActive);
 
     envPtr = strchr(envPtr, '\n') + 1;
-    
+
     if (envPtr[0] == '\0')
     {
         return;
@@ -141,7 +141,7 @@ nParamIndex(0)
     status = sscanf(envPtr, "VIS %d %d %lf", &nVisible, &nAutomationInLane, &dVISUnknown);
 
     envPtr = strchr(envPtr, '\n') + 1;
-    if (envPtr[0] == '\0') 
+    if (envPtr[0] == '\0')
     {
         return;
     }
@@ -149,7 +149,7 @@ nParamIndex(0)
     status = sscanf(envPtr, "LANEHEIGHT %d %d", &nLaneHeight, &nLHUnknown);
 
     envPtr = strchr(envPtr, '\n') + 1;
-    if(envPtr[0] == '\0') 
+    if(envPtr[0] == '\0')
     {
         return;
     }
@@ -157,7 +157,7 @@ nParamIndex(0)
     status = sscanf(envPtr, "ARM %d", &nArm);
 
     envPtr = strchr(envPtr, '\n') + 1;
-    if(envPtr[0] == '\0') 
+    if(envPtr[0] == '\0')
     {
         return;
     }
@@ -185,7 +185,7 @@ RprEnvelope::Write()
     oss.precision(10);
     if( m_szTitle == "PARAMENV")
     {
-        oss << "<" << m_szTitle 
+        oss << "<" << m_szTitle
             << " " << nParamIndex
             << " " << dParamMin
             << " " << dParamMax
@@ -197,22 +197,22 @@ RprEnvelope::Write()
         oss << "<" << m_szTitle << std::endl;
     }
 
-    oss << "ACT" 
+    oss << "ACT"
         << " " << nActive
         << std::endl;
 
-    oss << "VIS" 
+    oss << "VIS"
         << " " << nVisible
         << " " << nAutomationInLane
         << " " << dVISUnknown
         << std::endl;
 
-    oss << "LANEHEIGHT" 
+    oss << "LANEHEIGHT"
         << " " << nLaneHeight
         << " " << nLHUnknown
         << std::endl;
 
-    oss << "ARM" 
+    oss << "ARM"
         << " " << nArm
         << std::endl;
 
@@ -220,7 +220,7 @@ RprEnvelope::Write()
         << " " << nDefaultShape
         << std::endl;
 
-    for(std::vector<RprEnvelopePoint>::iterator it = vPoints.begin(); it != vPoints.end(); it++)
+    for (std::vector<RprEnvelopePoint>::iterator it = vPoints.begin(); it != vPoints.end(); ++it)
     {
         oss << it->toString();
     }
@@ -233,14 +233,14 @@ void
 RprEnvelopePoint::setValue(double value)
 {
     m_parameterValue = value;
-    if (m_parent) 
+    if (m_parent)
     {
         double maxValue = m_parent->GetMax();
         if (m_parameterValue > maxValue)
         {
             m_parameterValue = maxValue;
         }
-        
+
         double minValue = m_parent->GetMin();
         if(m_parameterValue < minValue)
         {
@@ -257,4 +257,3 @@ RprEnvelope::Add(RprEnvelopePoint &point)
 
 RprEnvelope::~RprEnvelope()
 {}
-

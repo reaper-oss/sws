@@ -477,6 +477,14 @@ static bool sortMidiBase(const RprMidiBase *lhs, const RprMidiBase *rhs)
 {
     if (rhs->getOffset() == lhs->getOffset())
     {
+        if (lhs->getMessageType() == RprMidiBase::NoteOn && 
+            rhs->getMessageType() == RprMidiBase::NoteOn)
+        {
+            // Order by increasing velocity so 0 velocity notes
+            // appear first
+            return lhs->getValue2() < rhs->getValue2();
+        }
+        // Order by message type so note-offs appear first
         return lhs->getMessageType() < rhs->getMessageType();
     }
     return lhs->getOffset() < rhs->getOffset();
@@ -486,7 +494,7 @@ static bool isMidiEvent(const std::string &eventStr) {
 
     if(eventStr.size() <= 3)
     {
-	return false;
+        return false;
     }
 
     switch(eventStr[0])

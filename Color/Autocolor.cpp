@@ -555,7 +555,6 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			case COL_FILTER:
 			{
 				// Display a different set of options for Regions and Markers
-				int x = 0;
 				if(item->m_type == AC_TRACK)
 				{
 					for (int i = 0; i < NUM_FILTERTYPES; i++)
@@ -587,7 +586,6 @@ HMENU SWS_AutoColorWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			}
 			case COL_ICON:
 			{
-				int x = 0;
 				AddToMenu(hMenu, __LOCALIZE("Load icon...","sws_DLG_115"), LOAD_ICON_MSG, -1, false, item->m_type == AC_TRACK ? MF_ENABLED : MF_GRAYED);
 				AddToMenu(hMenu, __LOCALIZE("Clear icon","sws_DLG_115"), CLEAR_ICON_MSG, -1, false, item->m_type == AC_TRACK ? MF_ENABLED : MF_GRAYED);
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);

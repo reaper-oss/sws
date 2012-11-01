@@ -1,3 +1,4 @@
+!v2.3.0 #8 (November 1, 2012)
 <b>Region playlist: new features for live use!</b>
 +Support for infinite region loops, screenshot http://stash.reaper.fm/14468/S%26M_rgnplaylist_infiniteloop.jpg|here|
  Such regions will loop forever unless you switch to another region thanks to the new "Play previous/next region (smooth seek)" actions.

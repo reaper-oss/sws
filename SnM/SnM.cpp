@@ -43,7 +43,9 @@ static COMMAND_T g_SNM_cmdTable[] =
 {
 //	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest" }, "S&M_QUICKTEST", QuickTest, NULL, },
 
+
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
+
 
 	// Routing & cue buss -----------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection (use last settings)" }, "S&M_CUEBUS", CueBuss, NULL, -1},
@@ -458,13 +460,14 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (use w/o modifier)" }, "S&M_MOUSE_L_CLICK", SimulateMouseClick, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (w/o SWS extension)" }, "S&M_ALRSUMMARY1", DumpWikiActionList, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (SWS extension only)" }, "S&M_ALRSUMMARY2", DumpWikiActionList, NULL, 2},
-//JFB!!! could be supported on OSX now..
+#endif
 	{ { DEFACCEL, "SWS/S&M: Dump action list (w/o SWS extension)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (SWS extension only)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (custom actions only)" }, "S&M_DUMP_CUST_ACTION_LIST", DumpActionList, NULL, 5},
-#endif
+
 
 //!WANT_LOCALIZE_1ST_STRING_END
+
 
 	// Deprecated, unreleased, etc... -----------------------------------------
 #ifdef _SNM_MISC
@@ -530,6 +533,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 static COMMAND_T g_SNM_dynamicCmdTable[] =
 {
+
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:sws_actions
 
 	{ { DEFACCEL, "SWS/S&M: Create cue buss from track selection, settings %02d" }, "S&M_CUEBUS", CueBuss, STR(SNM_MAX_CUE_BUSS_CONFS), SNM_MAX_CUE_BUSS_CONFS},
@@ -607,7 +611,9 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Region Playlist %02d - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 4},
 
+
 //!WANT_LOCALIZE_1ST_STRING_END
+
 
 #ifdef _SNM_MISC
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_PLAYMEDIA_SELTRACK_SYNC", SyncTogglePlaySelTrackMediaSlot, NULL, 4, FakeIsToggleAction},

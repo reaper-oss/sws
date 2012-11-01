@@ -662,7 +662,8 @@ bool WriteEnvExists(COMMAND_T* _ct)
 
 // return false if no track icon has been found
 // note: _fnOutSz is ignored atm
-bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz) {
+bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz)
+{
 	if (_tr && _fnOut && _tr!=GetMasterTrack(NULL))  // exclude master (icon not supported yet, v4.13) 
 	{
 		SNM_ChunkParserPatcher p(_tr);
@@ -859,7 +860,7 @@ bool ApplyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmplt, bool _itemsFrom
 		if (_tr != GetMasterTrack(NULL))
 		{
 			CopySendsReceives(false, &trs, NULL, &rcvs);
-			// disctinct parsings but it does not cost much (searching at the very start of the chunk)
+			// parse twice but it does not cost much (search at the very start of the chunk)
 			p->Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "ISBUS", 0, -1, &busLine, NULL, "BUSCOMP");
 			p->Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "BUSCOMP", 0, -1, &compbusLine, NULL, "SHOWINMIX");
 		}
@@ -884,7 +885,7 @@ bool ApplyTrackTemplate(MediaTrack* _tr, WDL_FastString* _tmplt, bool _itemsFrom
 		WDL_FastString rcvs, busLine, compbusLine;
 		if (_tr != GetMasterTrack(NULL))
 		{
-			// disctinct parsings but it does not cost much (searching at the very start of the chunk)
+			// parse twice but it does not cost much (search at the very start of the chunk)
 			p->Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "AUXRECV", -1, -1, &rcvs, NULL, "MIDIOUT");
 			p->Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "ISBUS", 0, -1, &busLine, NULL, "BUSCOMP");
 			p->Parse(SNM_GET_SUBCHUNK_OR_LINE, 1, "TRACK", "BUSCOMP", 0, -1, &compbusLine, NULL, "SHOWINMIX");

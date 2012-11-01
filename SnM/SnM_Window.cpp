@@ -78,23 +78,23 @@ static HWND g_childHwnds[MAX_ENUM_CHILD_HWNDS];
 
 BOOL CALLBACK EnumReaWindows(HWND _hwnd, LPARAM _lParam)
 {
-   HWND hCurrent, hNew;
-   hCurrent = _hwnd;
-   hNew = hCurrent;
-   while (hNew != NULL) {
-	   hNew = GetParent(hCurrent);
-	   if (hNew != NULL)
-		   hCurrent = hNew;
-   }
-   if (hCurrent == GetMainHwnd())
-   {
-	   	char buf[256];
+	HWND hCurrent, hNew;
+	hCurrent = _hwnd;
+	hNew = hCurrent;
+	while (hNew != NULL) {
+		hNew = GetParent(hCurrent);
+		if (hNew != NULL)
+			hCurrent = hNew;
+	}
+	if (hCurrent == GetMainHwnd())
+	{
+		char buf[256];
 		GetClassName(_hwnd, buf, sizeof(buf));
 		if (!strcmp(buf, "#32770"))
 			AddUniqueHnwd(_hwnd, g_hwnds, &g_hwndsCount); 
-   }
-   return TRUE;
-} 
+	}
+	return TRUE;
+}
 
 static BOOL CALLBACK EnumReaChildWindows(HWND _hwnd, LPARAM _lParam)
 {
@@ -108,11 +108,9 @@ static BOOL CALLBACK EnumReaChildWindows(HWND _hwnd, LPARAM _lParam)
 	}
 	return TRUE;
 }
-#endif
 
 HWND GetReaChildWindowByTitle(HWND _parent, const char* _title)
 {
-#ifdef _WIN32
 	char buf[512] = "";
 	g_childHwndsCount = 0;
 	EnumChildWindows(_parent, EnumReaChildWindows, 0); 
@@ -123,11 +121,11 @@ HWND GetReaChildWindowByTitle(HWND _parent, const char* _title)
 		if (!strcmp(buf, _title))
 			return w;
 	}
-#endif
 	return NULL;
 }
 
-#ifndef _WIN32
+#else
+
 // note: _title and _dockerName must be localized
 HWND GetReaWindowByTitleInFloatingDocker(const char* _title, const char* _dockerName)
 {
@@ -143,6 +141,7 @@ HWND GetReaWindowByTitleInFloatingDocker(const char* _title, const char* _docker
 	}
 	return NULL;
 }
+
 #endif
 
 // note: _title must be localized
@@ -273,7 +272,7 @@ void ShowThemeHelper(COMMAND_T* _ct)
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// Action list helpers
+// Action list actions/helpers
 ///////////////////////////////////////////////////////////////////////////////
 
 HWND GetActionListBox(char* _currentSection, int _sectionSz)
@@ -360,7 +359,7 @@ bool SuckyLearnAction(int _cmdId)
 
 		if (HWND hList = (h ? GetDlgItem(h, 0x52B) : NULL))
 		{
-			ListView_SetItemState(hList, -1, 0, LVIS_SELECTED); //JFB!!! OSX // clr current sel
+			ListView_SetItemState(hList, -1, 0, LVIS_SELECTED); //JFB!!! OSX ko // clr current sel
 
 			LVITEM li;
 			li.mask = LVIF_PARAM;
@@ -372,7 +371,7 @@ bool SuckyLearnAction(int _cmdId)
 				li.iItem = i;
 				SNM_ListView_GetItem(hList, &li);
 				if (_cmdId == (int)li.lParam) {
-					ListView_SetItemState(hList, i, LVIS_SELECTED, LVIS_SELECTED); //JFB!!! OSX
+					ListView_SetItemState(hList, i, LVIS_SELECTED, LVIS_SELECTED); //JFB!!! OSX ko
 					found = true;
 				}
 			}
@@ -388,6 +387,118 @@ bool SuckyLearnAction(int _cmdId)
 	}
 	return false;
 }
+
+// dump actions or the wiki ALR summary for the current section *as displayed* in the action dlg 
+// API LIMITATION: the action dlg is hacked because only the main section could be dumped othewise..
+// See http://forum.cockos.com/showthread.php?t=61929 and http://wiki.cockos.com/wiki/index.php/Action_List_Reference
+// _type: 1 & 2 for ALR wiki (1=native actions, 2=SWS)
+// _type: 3, 4 & 5 for basic dump (3=native actions, 4=SWS, 5=user macros)
+bool DumpActionList(int _type, const char* _title, const char* _lineFormat, const char* _heading, const char* _ending)
+{
+	// keep the help text on a signle line (for the gen langpack tool..)
+	const char* help = __LOCALIZE("Note: this action needs the action window to be opened (with the section you want to dump).\nIt obeys the action list filter, so to get the full list you need a clear filter.\nExample: to dump a MIDI editor action list the easiest way is to assign a keyboard shortcut or\ntoolbar button, open the MIDI editor section of the action list and fire the shortcut/dump action.","sws_mbox");
+	char currentSection[SNM_MAX_SECTION_NAME_LEN] = "";
+	HWND hList = GetActionListBox(currentSection, SNM_MAX_SECTION_NAME_LEN);
+	if (hList && currentSection)
+	{
+		char sectionURL[SNM_MAX_SECTION_NAME_LEN] = ""; 
+		if (!GetSectionNameAsURL(_type==1||_type==2, currentSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
+		{
+			MessageBox(GetMainHwnd(), __LOCALIZE("Dump failed: unknown section!","sws_mbox"), _title, MB_OK);
+			return false;
+		}
+
+		char name[SNM_MAX_SECTION_NAME_LEN*2] = "", fn[BUFFER_SIZE] = "";
+		if (_snprintfStrict(name, sizeof(name), "%s_Section%s.txt", sectionURL, (_type==2||_type==4) ? "_SWS" : _type==5 ? "_Macros" : "") <= 0)
+			*name = '\0';
+		if (!BrowseForSaveFile(_title, GetResourcePath(), name, SNM_TXT_EXT_LIST, fn, BUFFER_SIZE))
+			return false;
+
+		if (FILE* f = fopenUTF8(fn, "w"))
+		{
+			// flush
+			fputs("\n", f);
+			fclose(f);
+
+			f = fopenUTF8(fn, "a"); 
+			if (!f)
+				return false; // just in case..
+
+			if (_heading)
+				fprintf(f, "%s", _heading); 
+
+			int nbWrote = 0;
+			LVITEM li;
+			li.mask = LVIF_STATE | LVIF_PARAM;
+			li.iSubItem = 0;
+			for (int i=0; i < SNM_ListView_GetItemCount(hList); i++)
+			{
+				li.iItem = i;
+				SNM_ListView_GetItem(hList, &li);
+				int cmdId = (int)li.lParam;
+
+				char custId[SNM_MAX_ACTION_CUSTID_LEN] = "";
+				char cmdName[SNM_MAX_ACTION_NAME_LEN] = "";
+				SNM_ListView_GetItemText(hList, i, 1, cmdName, SNM_MAX_ACTION_NAME_LEN);
+				SNM_ListView_GetItemText(hList, i, 4, custId, SNM_MAX_ACTION_CUSTID_LEN);
+
+				bool isMacro = IsMacro(cmdName);
+				int isSws = IsSwsAction(cmdName);
+				bool isSwsMacro = !IsLocalizableAction(custId);
+				if (((_type==1||_type==3) && !isSws && !isMacro && !isSwsMacro) || 
+					((_type==2||_type==4) && isSws  && !isMacro && !isSwsMacro) ||
+					(_type==5 && (isMacro||isSwsMacro)))
+				{
+					if (!*custId && _snprintfStrict(custId, sizeof(custId), "%d", cmdId) <= 0) // for native actions
+						*custId = '\0';
+					if (*custId) {
+						fprintf(f, _lineFormat, sectionURL, custId, cmdName, custId);
+						nbWrote++;
+					}
+				}
+			}
+			if (_ending)
+				fprintf(f, "%s", _ending); 
+
+			fclose(f);
+
+			WDL_FastString msg;
+			msg.SetFormatted(BUFFER_SIZE, nbWrote ? __LOCALIZE_VERFMT("Wrote %s","sws_mbox") : __LOCALIZE_VERFMT("No action wrote in %s!\nProbable cause: filtered action list, no matching actions, etc...","sws_mbox"), fn);
+			msg.AppendFormatted(BUFFER_SIZE, "\n\n%s", help);
+			MessageBox(GetMainHwnd(), msg.Get(), _title, MB_OK);
+			return true;
+		}
+		else
+			MessageBox(GetMainHwnd(), __LOCALIZE("Dump failed: unable to write to file!","sws_mbox"), _title, MB_OK);
+	}
+	else
+	{
+		WDL_FastString msg(__LOCALIZE("Dump failed: action window not opened!","sws_mbox"));
+		msg.AppendFormatted(BUFFER_SIZE, "\n\n%s", help);
+		MessageBox(GetMainHwnd(), msg.Get(), _title, MB_OK);
+	}
+	return false;
+}
+
+void DumpWikiActionList(COMMAND_T* _ct)
+{
+	DumpActionList(
+		(int)_ct->user, 
+		__LOCALIZE("S&M - Save ALR Wiki summary","sws_mbox"),
+		"|-\n| [[%s_%s|%s]] || %s\n",
+		"{| class=\"wikitable\"\n|-\n! Action name !! Cmd ID\n",
+		"|}\n");
+}
+
+void DumpActionList(COMMAND_T* _ct) {
+	DumpActionList((int)_ct->user, __LOCALIZE("S&M - Dump action list","sws_mbox"), "%s\t%s\t%s\n", "Section\tId\tAction\n", NULL);
+}
+
+
+#undef SNM_ListView_GetSelectedCount
+#undef SNM_ListView_GetItemCount
+#undef SNM_ListView_GetItem
+#undef SNM_ListView_GetItemText
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -580,13 +691,13 @@ int GetFirstTrackFXWnd(MediaTrack* _tr, int _dir)
 ///////////////////////////////////////////////////////////////////////////////
 
 bool CycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTracks,
-     bool (*job)(MediaTrack*,int,bool), bool* _cycled) // see 2 "jobs" below..
+		bool (*job)(MediaTrack*,int,bool), bool* _cycled) // see 2 "jobs" below..
 {
 	int cpt1 = 0;
 	int i = _trStart;
 	while (cpt1 <= GetNumTracks())
 	{
-		if (i > GetNumTracks())  {
+		if (i > GetNumTracks()) {
 			i = 0;
 			*_cycled = (cpt1 > 0); // ie not the first loop
 		}
@@ -885,7 +996,7 @@ void CycleFocusHideOthersWnd(COMMAND_T * _ct)
 }
 
 void FocusMainWindow(COMMAND_T* _ct) {
-	SetForegroundWindow(GetMainHwnd()); 
+	SetForegroundWindow(GetMainHwnd());
 }
 
 void FocusMainWindowCloseOthers(COMMAND_T* _ct) 

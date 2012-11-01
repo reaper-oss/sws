@@ -33,10 +33,15 @@
 bool SNM_IsActiveWindow(HWND _h);
 bool IsChildOf(HWND _hChild, const char* _title);
 HWND GetReaWindowByTitle(const char* _title);
+
 void ShowThemeHelper(COMMAND_T*);
+
 HWND GetActionListBox(char* _currentSection, int _sectionSz);
 int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc = NULL, int _descSize = -1);
 bool SuckyLearnAction(int _cmdId);
+void DumpWikiActionList(COMMAND_T*);
+void DumpActionList(COMMAND_T*);
+
 void ShowFXChain(COMMAND_T*);
 void HideFXChain(COMMAND_T*);
 void ToggleFXChain(COMMAND_T*);
@@ -44,6 +49,7 @@ bool IsToggleFXChain(COMMAND_T*);
 void ShowAllFXChainsWindows(COMMAND_T*);
 void CloseAllFXChainsWindows(COMMAND_T*);
 void ToggleAllFXChainsWindows(COMMAND_T*);
+
 void FloatUnfloatFXs(MediaTrack* _tr, bool _all, int _showFlag, int _fx, bool _selTracks);
 void FloatFX(COMMAND_T*);
 void UnfloatFX(COMMAND_T*);
@@ -61,6 +67,7 @@ void CycleFocusFXWndAllTracks(COMMAND_T*);
 void CycleFloatFXWndSelTracks(COMMAND_T*);
 void CycleFocusFXMainWndAllTracks(COMMAND_T*);
 void CycleFocusFXMainWndSelTracks(COMMAND_T*);
+
 void CycleFocusWnd(COMMAND_T*);
 void CycleFocusHideOthersWnd(COMMAND_T*);
 void FocusMainWindow(COMMAND_T*);

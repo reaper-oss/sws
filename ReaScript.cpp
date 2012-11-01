@@ -122,8 +122,7 @@ bool RegisterExportedAPI(reaper_plugin_info_t* _rec)
 }
 
 // REAPER bug? unfortunately _rec->Register("-APIdef_myfunc",..) does not work
-// => trick: we re-register definitions as empty strings so that exported funcs
-//           won't be part of the generated reaper_plugin_functions.h
+// => trick: re-register empty definitions so that exported funcs won't be part of the generated reaper_plugin_functions.h
 bool UnregisterExportedAPI(reaper_plugin_info_t* _rec)
 {
 	bool ok = (_rec!=NULL);

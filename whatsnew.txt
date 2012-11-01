@@ -1,9 +1,14 @@
+OSX: added actions (already there on Windows OS)
++SWS/S&M: Dump action list (w/o SWS extension)
++SWS/S&M: Dump action list (SWS extension only)
++SWS/S&M: Dump action list (custom actions only)
+
 !v2.3.0 #8 (November 1, 2012)
 <b>Region playlist: new features for live use!</b>
 +Support for infinite region loops, screenshot http://stash.reaper.fm/14468/S%26M_rgnplaylist_infiniteloop.jpg|here|
- Such regions will loop forever unless you switch to another region thanks to the new "Play previous/next region (smooth seek)" actions.
+ Such regions will loop forever unless you switch to another region thanks to the new actions "Play previous/next region (smooth seek)".
 +Added "Monitoring" mode, i.e. displays current/next regions with a "big font", screenshot http://stash.reaper.fm/14469/S%26M_rgnplaylist_monitoring.jpg|here|
- Click the new lock button to toggle monitoring/edition modes (or use the above action).
+ Click the new lock button to toggle monitoring/edition modes (or use the new related action).
  Note: the "big font" name can be customized in the S&M.ini file ("BigFontName" in the section [RegionPlaylist])
 +Added actions:
  - SWS/S&M: Region Playlist - Play previous region (smooth seek)
@@ -12,7 +17,7 @@
 +Seek play when switching regions/playlists
 +Project edition:
  - Improved append/paste playlist/regions commands and actions (faster)
- - Fixed possible undo unstability for crop project to playlist commands/actions
+ - Fixed possible undo unstability for "crop project to playlist" commands/actions
 
 Export functions to ReaScript (BETA)
 +Issue 531: fixed MIDI notes shrinking bug

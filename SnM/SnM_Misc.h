@@ -63,7 +63,5 @@ void SetSelTrackIconSlot(COMMAND_T*);
 // misc
 bool WaitForTrackMute(DWORD* _muteTime);
 void SimulateMouseClick(COMMAND_T*);
-void DumpWikiActionList(COMMAND_T*);
-void DumpActionList(COMMAND_T*);
 
 #endif

@@ -1,6 +1,6 @@
 <b>Region playlist: new features for live use!</b>
 +Support for infinite region loops, screenshot http://stash.reaper.fm/14468/S%26M_rgnplaylist_infiniteloop.jpg|here|
- Such regions will loop forever unless you switch to another region thanks to the new "Play previous/next region" actions.
+ Such regions will loop forever unless you switch to another region thanks to the new "Play previous/next region (smooth seek)" actions.
 +Added "Monitoring" mode, i.e. displays current/next regions with a "big font", screenshot http://stash.reaper.fm/14469/S%26M_rgnplaylist_monitoring.jpg|here|
  Click the new lock button to toggle monitoring/edition modes (or use the above action).
  Note: the "big font" name can be customized in the S&M.ini file ("BigFontName" in the section [RegionPlaylist])

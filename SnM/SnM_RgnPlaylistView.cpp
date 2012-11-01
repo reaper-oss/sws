@@ -392,7 +392,7 @@ void SNM_RegionPlaylistWnd::UpdateMonitoring()
 	{
 		if (SNM_Playlist* curpl = GetPlaylist(g_playPlaylist))
 		{
-			_snprintfSafe(bufPl, sizeof(bufPl), "#%d - %s", g_playPlaylist+1, curpl->m_name);
+			_snprintfSafe(bufPl, sizeof(bufPl), "#%d - %s", g_playPlaylist+1, curpl->m_name.Get());
 
 			if (SNM_PlaylistItem* pItem = curpl->Get(g_playItem)) {
 				EnumMarkerRegionDesc(GetMarkerRegionIndexFromId(pItem->m_rgnId), bufCur, sizeof(bufCur), SNM_REGION_MASK, true, false);

@@ -670,7 +670,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case SNM_LIVECFG_LEARN_OFF_ACTION_MSG:
 		{
 			char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
-			if (item && LearnAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, __localizeFunc("Main","accel_sec",0)))
+			if (item && GetSelectedAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, __localizeFunc("Main","accel_sec",0)))
 			{
 				bool updt = false;
 				while(item)

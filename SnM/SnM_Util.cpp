@@ -912,27 +912,6 @@ bool IsMacro(const char* _cmdName) {
 	return (_cmdName && (int)strlen(_cmdName)>len && !strncmp(_cmdName, custom, len) && _cmdName[len] == ':');
 }
 
-bool LearnAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSection)
-{
-	char section[SNM_MAX_SECTION_NAME_LEN] = "";
-	int actionId, selItem = GetSelectedAction(section, SNM_MAX_SECTION_NAME_LEN, &actionId, _idstrOut, _idStrSz);
-	if (strcmp(section, _expectedLocalizedSection))
-		selItem = -1;
-	switch (selItem)
-	{
-		case -2:
-			MessageBox(GetMainHwnd(), __LOCALIZE("Action learn failed!\nAction IDs are not displayed in the Actions window (right-click on the table header: Show action IDs).","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
-			return false;
-		case -1: {
-			char msg[256];
-			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Action learn failed!\nActions window not opened, section '%s' not selected or no selected action!","sws_mbox"), _expectedLocalizedSection);
-			MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
-			return false;
-		}
-	}
-	return true;
-}
-
 bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize)
 {
 	if (!_section || !_sectionURL)

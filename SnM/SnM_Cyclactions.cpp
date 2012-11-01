@@ -1060,7 +1060,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case LEARN_CMD_MSG:
 		{
 			char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
-			if (g_editedAction && LearnAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, g_cyclactionSections[g_editedSection]))
+			if (g_editedAction && GetSelectedAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, g_cyclactionSections[g_editedSection]))
 			{
 				WDL_FastString* newCmd = g_editedAction->AddCmd(idstr);
 				g_lvR->Update();

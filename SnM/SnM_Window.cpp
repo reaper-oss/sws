@@ -284,6 +284,7 @@ HWND GetActionListBox(char* _currentSection, int _sectionSz)
 	return (actionsWnd ? GetDlgItem(actionsWnd, 0x52B) : NULL);
 }
 
+
 // overrides some wdl's list view funcs to avoid cast issues on osx
 // (useful with native list views which are SWELL_ListView but that were not instanciated by the extension..)
 #ifdef _WIN32
@@ -291,12 +292,15 @@ HWND GetActionListBox(char* _currentSection, int _sectionSz)
 #define SNM_ListView_GetItemCount ListView_GetItemCount
 #define SNM_ListView_GetItem ListView_GetItem
 #define SNM_ListView_GetItemText ListView_GetItemText
+#define SNM_ListView_SetItemState ListView_SetItemState
 #else
 #define SNM_ListView_GetSelectedCount ListView_GetSelectedCountCast
 #define SNM_ListView_GetItemCount ListView_GetItemCountCast
 #define SNM_ListView_GetItem ListView_GetItemCast
 #define SNM_ListView_GetItemText ListView_GetItemTextCast
+#define SNM_ListView_SetItemState ListView_SetItemStateCast
 #endif
+
 
 // returns the list view's selected item, -1 if failed, -2 if the related action's custom id cannot be retrieved (hidden column)
 // note: no multi-selection mgmt here..
@@ -348,8 +352,29 @@ int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int 
 	return -1;
 }
 
+bool GetSelectedAction(char* _idstrOut, int _idStrSz, const char* _expectedLocalizedSection)
+{
+	char section[SNM_MAX_SECTION_NAME_LEN] = "";
+	int actionId, selItem = GetSelectedAction(section, SNM_MAX_SECTION_NAME_LEN, &actionId, _idstrOut, _idStrSz);
+	if (strcmp(section, _expectedLocalizedSection))
+		selItem = -1;
+	switch (selItem)
+	{
+		case -2:
+			MessageBox(GetMainHwnd(), __LOCALIZE("Action learn failed!\nAction IDs are not displayed in the Actions window (right-click on the table header: Show action IDs).","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			return false;
+		case -1: {
+			char msg[256];
+			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Action learn failed!\nActions window not opened, section '%s' not selected or no selected action!","sws_mbox"), _expectedLocalizedSection);
+			MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			return false;
+		}
+	}
+	return true;
+}
+
 // assumes the actions dlg is already opened with the right section!
-bool SuckyLearnAction(int _cmdId)
+bool LearnAction(int _cmdId)
 {
 	if (HWND h = GetReaWindowByTitle(__localizeFunc("Actions", "DLG_274", 0)))
 	{
@@ -359,7 +384,7 @@ bool SuckyLearnAction(int _cmdId)
 
 		if (HWND hList = (h ? GetDlgItem(h, 0x52B) : NULL))
 		{
-			ListView_SetItemState(hList, -1, 0, LVIS_SELECTED); //JFB!!! OSX ko // clr current sel
+			SNM_ListView_SetItemState(hList, -1, 0, LVIS_SELECTED); // clr current sel
 
 			LVITEM li;
 			li.mask = LVIF_PARAM;
@@ -371,7 +396,7 @@ bool SuckyLearnAction(int _cmdId)
 				li.iItem = i;
 				SNM_ListView_GetItem(hList, &li);
 				if (_cmdId == (int)li.lParam) {
-					ListView_SetItemState(hList, i, LVIS_SELECTED, LVIS_SELECTED); //JFB!!! OSX ko
+					SNM_ListView_SetItemState(hList, i, LVIS_SELECTED, LVIS_SELECTED);
 					found = true;
 				}
 			}
@@ -499,6 +524,7 @@ void DumpActionList(COMMAND_T* _ct) {
 #undef SNM_ListView_GetItemCount
 #undef SNM_ListView_GetItem
 #undef SNM_ListView_GetItemText
+#undef SNM_ListView_SetItemState
 
 
 ///////////////////////////////////////////////////////////////////////////////

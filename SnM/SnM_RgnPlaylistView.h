@@ -68,7 +68,7 @@ class SNM_Playlists : public WDL_PtrList<SNM_Playlist>
 public:
 	SNM_Playlists() : m_cur(0), WDL_PtrList<SNM_Playlist>() {}
 	~SNM_Playlists() {}
-	int m_cur;
+	int m_cur; // *edited* playlist id
 };
 
 class SNM_PlaylistView : public SWS_ListView {
@@ -95,8 +95,10 @@ public:
 	void GetMinSize(int* w, int* h) { *w=202; *h=175; }
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void Update(int _flags = 3);
+	void UpdateMonitoring();
 	void FillPlaylistCombo();
 	void CSurfSetTrackListChange();
+	void ToggleLock();
 protected:
 	void OnInitDlg();
 	void OnDestroy();
@@ -107,11 +109,14 @@ protected:
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
 
 	SNM_Playlist_MarkerRegionSubscriber m_mkrRgnSubscriber;
+
+	WDL_VirtualIconButton m_btnLock;
 	WDL_VirtualStaticText m_txtPlaylist, m_txtLength;
 	WDL_VirtualComboBox m_cbPlaylist;
 	SNM_MiniAddDelButtons m_btnsAddDel;
 	SNM_ToolbarButton m_btnCrop;
 	WDL_VirtualIconButton m_btnPlay, m_btnStop, m_btnRepeat;
+	SNM_DynamicSizedText m_monPl, m_monCur, m_monNext;
 };
 
 class SNM_Playlist_UpdateJob : public SNM_ScheduledJob {
@@ -121,9 +126,13 @@ public:
 };
 
 double GetPlayListLength(SNM_Playlist* _playlist);
+int GetNextValidItem(int _playlistId, int _itemId, bool _ignoreLoops, bool _startWith);
+int GetPrevValidItem(int _playlistId, int _itemId, bool _ignoreLoops, bool _startWith);
 void PlaylistRun();
-void PlaylistPlay(int _playlistId, int _itemId = 0);
+void PlaylistPlay(int _playlistId, int _itemId, bool _smoothSeek = true);
 void PlaylistPlay(COMMAND_T*);
+void PlaylistSeekPrevNext(COMMAND_T*);
+void PlaylistStop();
 void PlaylistStopped();
 void SetPlaylistRepeat(COMMAND_T*);
 bool IsPlaylistRepeat(COMMAND_T*);
@@ -133,5 +142,7 @@ int RegionPlaylistInit();
 void RegionPlaylistExit();
 void OpenRegionPlaylist(COMMAND_T*);
 bool IsRegionPlaylistDisplayed(COMMAND_T*);
+void ToggleRegionPlaylistMode(COMMAND_T*);
+bool IsRegionPlaylistMonitoring(COMMAND_T*);
 
 #endif

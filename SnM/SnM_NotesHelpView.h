@@ -109,6 +109,7 @@ protected:
 	WDL_VirtualIconButton m_btnLock;
 	SNM_ToolbarButton m_btnAlr, m_btnActionList, m_btnImportSub, m_btnExportSub;
 	WDL_VirtualStaticText m_txtLabel;
+	SNM_DynamicSizedText m_bigNotes;
 
 	SNM_NoteHelp_MarkerRegionSubscriber m_mkrRgnSubscriber;
 };

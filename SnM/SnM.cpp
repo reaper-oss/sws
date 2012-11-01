@@ -51,7 +51,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	{ { DEFACCEL, "SWS/S&M: Remove receives from selected tracks" }, "S&M_SENDS5", RemoveReceives, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Remove sends from selected tracks" }, "S&M_SENDS6", RemoveSends, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Remove routing from selected tracks" }, "S&M_SENDS7", RemoveRouting, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Remove routing from selected tracks" }, "S&M_SENDS7", RemoveRoutings, NULL, },
 
 	{ { DEFACCEL, "SWS/S&M: Copy selected tracks (with routing)" }, "S&M_COPYSNDRCV1", CopyWithIOs, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Paste tracks (with routing) or items" }, "S&M_PASTSNDRCV1", PasteWithIOs, NULL, },
@@ -243,8 +243,13 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (images)" }, "S&M_SHOW_RESVIEW_IMAGE", OpenResourceView, NULL, SNM_SLOT_IMG, IsResourceViewDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Clear image slot..." }, "S&M_CLR_IMAGE_SLOT", ResViewClearSlotPrompt, NULL, SNM_SLOT_IMG},
 	{ { DEFACCEL, "SWS/S&M: Delete all image slots" }, "S&M_DEL_ALL_IMAGE_SLOT", ResViewDeleteAllSlots, NULL, SNM_SLOT_IMG},
+	{ { DEFACCEL, "SWS/S&M: Show next image slot" }, "S&M_SHOW_NEXT_IMG", ShowNextPreviousImageSlot, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Show previous image slot" }, "S&M_SHOW_PREV_IMG", ShowNextPreviousImageSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Show image, prompt for slot" }, "S&M_SHOW_IMAGEp", ShowImageSlot, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Set track icon for selected tracks, prompt for slot" }, "S&M_SET_TRACK_ICONp", SetSelTrackIconSlot, NULL, -1},
+
+	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageView, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Clear image window" }, "S&M_CLR_IMAGEVIEW", ClearImageView, NULL, },
 
 	// Theme slots ------------------------------------------------------------
 #ifdef _WIN32
@@ -432,7 +437,10 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Region playlist --------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close Region Playlist window" }, "S&M_SHOW_RGN_PLAYLIST", OpenRegionPlaylist, NULL, NULL, IsRegionPlaylistDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Toggle monitoring/edition mode" }, "S&M_TGL_RGN_PLAYLIST_MODE", ToggleRegionPlaylistMode, NULL, NULL, IsRegionPlaylistMonitoring},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play previous region (smooth seek)" }, "S&M_PLAY_PREV_RGN_PLAYLIST", PlaylistSeekPrevNext, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Region Playlist - Play next region (smooth seek)" }, "S&M_PLAY_NEXT_RGN_PLAYLIST", PlaylistSeekPrevNext, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist" }, "S&M_CROP_RGN_PLAYLIST1", AppendPasteCropPlaylist, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Crop project to playlist (new project tab)" }, "S&M_CROP_RGN_PLAYLIST2", AppendPasteCropPlaylist, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Append playlist to project" }, "S&M_APPEND_RGN_PLAYLIST", AppendPasteCropPlaylist, NULL, 2},
@@ -443,11 +451,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 	// Other, misc ------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: [developer] Write C++ API functions header" }, "S&M_GEN_API", GenAPI, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Open/close image window" }, "S&M_OPEN_IMAGEVIEW", OpenImageView, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Clear image window" }, "S&M_CLR_IMAGEVIEW", ClearImageView, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Show next image slot" }, "S&M_SHOW_NEXT_IMG", ShowNextPreviousImageSlot, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Show previous image slot" }, "S&M_SHOW_PREV_IMG", ShowNextPreviousImageSlot, NULL, -1},
-
 	{ { DEFACCEL, "SWS/S&M: Send all notes off to selected tracks" }, "S&M_CC123_SEL_TRACKS", CC123SelTracks, NULL, },
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (all tracks)" }, "S&M_THEME_HELPER_ALL", ShowThemeHelper, NULL, 0},
@@ -455,6 +458,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (use w/o modifier)" }, "S&M_MOUSE_L_CLICK", SimulateMouseClick, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (w/o SWS extension)" }, "S&M_ALRSUMMARY1", DumpWikiActionList, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (SWS extension only)" }, "S&M_ALRSUMMARY2", DumpWikiActionList, NULL, 2},
+//JFB!!! could be supported on OSX now..
 	{ { DEFACCEL, "SWS/S&M: Dump action list (w/o SWS extension)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (SWS extension only)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (custom actions only)" }, "S&M_DUMP_CUST_ACTION_LIST", DumpActionList, NULL, 5},
@@ -497,6 +501,11 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Toggle show take volume envelope" }, "S&M_TAKEENV7", ShowHideTakeVolEnvelope, NULL, -1, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle show take pan envelope" }, "S&M_TAKEENV8", ShowHideTakePanEnvelope, NULL, -1, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Toggle show take mute envelope" }, "S&M_TAKEENV9", ShowHideTakeMuteEnvelope, NULL, -1, FakeIsToggleAction},
+
+	// macros seem to use this already (?)
+	{ { DEFACCEL, "SWS/S&M: UI refresh" }, "S&M_UIREFRESH", SNM_UIRefresh, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Disable UI refresh" }, "S&M_UIREFRESH_OFF", SNM_SetUIRefresh, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Enable UI refresh" }, "S&M_UIREFRESH_ON", SNM_SetUIRefresh, NULL, -1},
 #endif
 
 	{ {}, LAST_COMMAND, } // denote end of table
@@ -597,8 +606,6 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Previous" }, "S&M_PREVIOUS_LIVE_CFG", PreviousLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
 
 	{ { DEFACCEL, "SWS/S&M: Region Playlist %02d - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 4},
-//	{ { DEFACCEL, "SWS/S&M: Region Playlist %02d - Play previous region (smooth seek)" }, "S&M_PLAY_PREV_RGN_PLAYLIST", PlaylistSeekPrev, NULL, 4},
-//	{ { DEFACCEL, "SWS/S&M: Region Playlist %02d - Play next region (smooth seek)" }, "S&M_PLAY_NEXT_RGN_PLAYLIST", PlaylistSeekNext, NULL, 4},
 
 //!WANT_LOCALIZE_1ST_STRING_END
 

@@ -37,7 +37,7 @@ bool CueBuss(const char* _undoMsg, int _confId);
 void CueBuss(COMMAND_T*);
 void ReadCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
 void SaveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
-void CopySendsReceives(bool _cut, WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends,  WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs);
+void CopySendsReceives(bool _noIntra, WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends,  WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs);
 bool PasteSendsReceives(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends,  WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs, bool _rcvReplace, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
 void CopyWithIOs(COMMAND_T*);
 void CutWithIOs(COMMAND_T*);
@@ -56,7 +56,7 @@ bool RemoveSnd(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher
 void RemoveSends(COMMAND_T*);
 bool RemoveRcv(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
 void RemoveReceives(COMMAND_T*);
-void RemoveRouting(COMMAND_T*);
+void RemoveRoutings(COMMAND_T*);
 
 void SaveDefaultTrackSendPrefs(COMMAND_T*);
 void RecallDefaultTrackSendPrefs(COMMAND_T*);

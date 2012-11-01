@@ -72,7 +72,6 @@
 
 #pragma warning(disable : 4267) // size_t to int warnings in x64
 
-//#define _SNM_DEBUG
 #define _SWS_EXTENSION
 #ifdef _SWS_EXTENSION
 #define SNM_FreeHeapPtr			SWS_FreeHeapPtr

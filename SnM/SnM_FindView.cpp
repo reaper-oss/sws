@@ -265,11 +265,11 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 	bool drawLogo = false;
 
 	m_txtScope.SetFont(font);
-	if (!SNM_AutoVWndPosition(&m_txtScope, NULL, _r, &x0, _r->top, h, 5))
+	if (!SNM_AutoVWndPosition(DT_LEFT, &m_txtScope, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
 	m_cbType.SetFont(font);
-	if (SNM_AutoVWndPosition(&m_cbType, &m_txtScope, _r, &x0, _r->top, h))
+	if (SNM_AutoVWndPosition(DT_LEFT, &m_cbType, &m_txtScope, _r, &x0, _r->top, h))
 	{
 		switch (m_type)
 		{
@@ -280,7 +280,7 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 			case TYPE_ITEM_NOTES:
 				m_btnEnableZommScroll.SetCheckState(m_zoomSrollItems);
 				m_btnEnableZommScroll.SetTextLabel("Zoom/Scroll", -1, font);
-				drawLogo = SNM_AutoVWndPosition(&m_btnEnableZommScroll, NULL, _r, &x0, _r->top, h);
+				drawLogo = SNM_AutoVWndPosition(DT_LEFT, &m_btnEnableZommScroll, NULL, _r, &x0, _r->top, h);
 				break;
 			default:
 				drawLogo = true;
@@ -299,21 +299,21 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 
 	SNM_SkinToolbarButton(&m_btnFind, "Find all");
 	m_btnFind.SetGrayed(!g_searchStr || !(*g_searchStr) || m_type == TYPE_MARKER_REGION);
-	if (SNM_AutoVWndPosition(&m_btnFind, NULL, _r, &x0, y0, h, 4))
+	if (SNM_AutoVWndPosition(DT_LEFT, &m_btnFind, NULL, _r, &x0, y0, h, 4))
 	{
 		SNM_SkinToolbarButton(&m_btnPrev, "Previous");
 		m_btnPrev.SetGrayed(!g_searchStr || !(*g_searchStr));
-		if (SNM_AutoVWndPosition(&m_btnPrev, NULL, _r, &x0, y0, h, 4))
+		if (SNM_AutoVWndPosition(DT_LEFT, &m_btnPrev, NULL, _r, &x0, y0, h, 4))
 		{
 			SNM_SkinToolbarButton(&m_btnNext, "Next");
 			m_btnNext.SetGrayed(!g_searchStr || !(*g_searchStr));
-			SNM_AutoVWndPosition(&m_btnNext, NULL, _r, &x0, y0, h);
+			SNM_AutoVWndPosition(DT_LEFT, &m_btnNext, NULL, _r, &x0, y0, h);
 		}
 	}
 
 	m_txtResult.SetFont(font);
 	m_txtResult.SetText(g_notFound ? "Not found!" : "");
-	SNM_AutoVWndPosition(&m_txtResult, NULL, _r, &x0, y0, h);
+	SNM_AutoVWndPosition(DT_LEFT, &m_txtResult, NULL, _r, &x0, y0, h);
 }
 
 

@@ -64,22 +64,22 @@ bool AreThereItemsUnderCursor(bool bSel)
 	return false;
 }
 
-void SmartCopy(COMMAND_T*)
+void SmartCopy(COMMAND_T* ct)
 {
 	if (GetCursorContext() == 1 && AreThereSelItemsInTimeSel())
 		Main_OnCommand(40060, 0); // Copy sel area of items
 	else if (GetCursorContext() == 0)
-		CopyWithIOs(NULL);
+		CopyWithIOs(ct);
 	else
 		Main_OnCommand(40057, 0); // Std copy
 }
 
-void SmartCut(COMMAND_T*)
+void SmartCut(COMMAND_T* ct)
 {
 	if (GetCursorContext() == 1 && AreThereSelItemsInTimeSel())
 		Main_OnCommand(40307, 0); // Cut sel area of items
 	else if (GetCursorContext() == 0)
-		CutWithIOs(NULL);
+		CutWithIOs(ct);
 	else
 		Main_OnCommand(40059, 0); // Std cut
 }

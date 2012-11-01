@@ -314,7 +314,7 @@ void GoferSplitSelectedItems(COMMAND_T* _ct) {
 	}
 }
 
-// primitive (no undo point)
+// primitive (no undo point, no ui refresh)
 bool SplitSelectItemsInInterval(MediaTrack* _tr, double _pos1, double _pos2, WDL_PtrList<void>* _newItemsOut)
 {
 	bool updated = false;

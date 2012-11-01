@@ -1,3 +1,26 @@
+<b>Region playlist: new features for live use!</b>
++Support for infinite region loops, screenshot http://stash.reaper.fm/14468/S%26M_rgnplaylist_infiniteloop.jpg|here|
+ Such regions will loop forever unless you switch to another region thanks to the new "Play previous/next region" actions.
++Added "Monitoring" mode, i.e. displays current/next regions with a "big font", screenshot http://stash.reaper.fm/14469/S%26M_rgnplaylist_monitoring.jpg|here|
+ Click the new lock button to toggle monitoring/edition modes (or use the above action).
+ Note: the "big font" name can be customized in the S&M.ini file ("BigFontName" in the section [RegionPlaylist])
++Added actions:
+ - SWS/S&M: Region Playlist - Play previous region (smooth seek)
+ - SWS/S&M: Region Playlist - Play next region (smooth seek)
+ - SWS/S&M: Region Playlist - Toggle monitoring/edition mode
++Seek play when switching regions/playlists
++Project edition:
+ - Improved append/paste playlist/regions commands and actions (faster)
+ - Fixed possible undo unstability for crop project to playlist commands/actions
+
+Export functions to ReaScript (BETA)
++Issue 531: fixed MIDI notes shrinking bug
++Fixed SNM_GetMediaItemTakeByGUID() crash
+
+Other
++Issue 174: improved S&M cut/copy/paste sends/receives/routings actions as detailed http://forum.cockos.com/showpost.php?p=1061214&postcount=1529|here|
++Notes window: improved "big font" rendering (now uses all the available width)
+
 !v2.3.0 #7 (October 17, 2012)
 Export functions to ReaScript (BETA)
 +Added functions (more details in REAPER > Main menu > Help > HTML Lists > ReaScript documentation):
@@ -259,7 +282,7 @@ Fixed a few localized strings that were ignored
 
 !v2.2.0 #11 (May 31, 2012)
 Issue 475: region playlist stops in sync
-Issue 473, Resources window: the auto-save button now prompts to overwrite selected slots/files
+Issue 473/Resources window: the auto-save button now prompts to overwrite selected slots/files
 Fixed "file not found" label
 
 !v2.2.0 #10 (May 29, 2012)

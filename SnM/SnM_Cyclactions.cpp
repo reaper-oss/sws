@@ -1201,15 +1201,15 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 		*_tooltipHeight = h;
 
 	m_txtSection.SetFont(font);
-	if (SNM_AutoVWndPosition(&m_txtSection, NULL, _r, &x0, _r->top, h, 5)) {
+	if (SNM_AutoVWndPosition(DT_LEFT, &m_txtSection, NULL, _r, &x0, _r->top, h, 5)) {
 		m_cbSection.SetFont(font);
-		if (SNM_AutoVWndPosition(&m_cbSection, &m_txtSection, _r, &x0, _r->top, h))
+		if (SNM_AutoVWndPosition(DT_LEFT, &m_cbSection, &m_txtSection, _r, &x0, _r->top, h))
 		{
 /*no! remains a GUI-only info until applied..
 			m_btnUndo.SetCheckState(g_undos);
 */
 			m_btnUndo.SetTextLabel(__LOCALIZE("Consolidate undo points","sws_DLG_161"), -1, font);
-			if (SNM_AutoVWndPosition(&m_btnUndo, NULL, _r, &x0, _r->top, h))
+			if (SNM_AutoVWndPosition(DT_LEFT, &m_btnUndo, NULL, _r, &x0, _r->top, h))
 				SNM_AddLogo(_bm, _r, x0, h);
 		}
 	}
@@ -1220,16 +1220,16 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 
 	SNM_SkinToolbarButton(&m_btnApply, __LOCALIZE("Apply","sws_DLG_161"));
 	m_btnApply.SetGrayed(!g_edited);
-	if (SNM_AutoVWndPosition(&m_btnApply, NULL, _r, &x0, y0, h, 4))
+	if (SNM_AutoVWndPosition(DT_LEFT, &m_btnApply, NULL, _r, &x0, y0, h, 4))
 	{
 		SNM_SkinToolbarButton(&m_btnCancel, __LOCALIZE("Cancel","sws_DLG_161"));
-		if (SNM_AutoVWndPosition(&m_btnCancel, NULL, _r, &x0, y0, h, 4))
+		if (SNM_AutoVWndPosition(DT_LEFT, &m_btnCancel, NULL, _r, &x0, y0, h, 4))
 		{
 			SNM_SkinToolbarButton(&m_btnImpExp, __LOCALIZE("Import/export...","sws_DLG_161"));
-			if (SNM_AutoVWndPosition(&m_btnImpExp, NULL, _r, &x0, y0, h, 4))
+			if (SNM_AutoVWndPosition(DT_LEFT, &m_btnImpExp, NULL, _r, &x0, y0, h, 4))
 			{
 				SNM_SkinToolbarButton(&m_btnActionList, __LOCALIZE("Action list...","sws_DLG_161"));
-				SNM_AutoVWndPosition(&m_btnActionList, NULL, _r, &x0, y0, h, 4);
+				SNM_AutoVWndPosition(DT_LEFT, &m_btnActionList, NULL, _r, &x0, y0, h, 4);
 #ifdef _SNM_MISC
 				// right re-align
 				RECT r; m_btnActionList.GetPosition(&r);

@@ -34,7 +34,7 @@
 // see eof for includes!
 
 
-// disable/enable some features
+//#define _SNM_DEBUG
 //#define _SNM_MISC	// not released, deprecated, tests, etc..
 //#define _SNM_WDL	// if my wdl version is used
 //#define _SNM_STANDALONE

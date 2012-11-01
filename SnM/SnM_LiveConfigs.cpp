@@ -1031,30 +1031,30 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _t
 	LICE_CachedFont* font = SNM_GetThemeFont();
 
 	m_txtConfig.SetFont(font);
-	if (!SNM_AutoVWndPosition(&m_txtConfig, NULL, _r, &x0, _r->top, h, 5))
+	if (!SNM_AutoVWndPosition(DT_LEFT, &m_txtConfig, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
 	m_cbConfig.SetFont(font);
-	if (!SNM_AutoVWndPosition(&m_cbConfig, &m_txtConfig, _r, &x0, _r->top, h))
+	if (!SNM_AutoVWndPosition(DT_LEFT, &m_cbConfig, &m_txtConfig, _r, &x0, _r->top, h))
 		return;
 
 	m_btnEnable.SetCheckState(g_liveConfigs.Get()->Get(g_configId)->m_enable);
 	m_btnEnable.SetTextLabel(__LOCALIZE("Enable","sws_DLG_155"), -1, font);
-	if (!SNM_AutoVWndPosition(&m_btnEnable, NULL, _r, &x0, _r->top, h, 5))
+	if (!SNM_AutoVWndPosition(DT_LEFT, &m_btnEnable, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
 	m_btnMuteOthers.SetCheckState(g_liveConfigs.Get()->Get(g_configId)->m_muteOthers);
 	m_btnMuteOthers.SetTextLabel(__LOCALIZE("Mute all but active track","sws_DLG_155"), -1, font);
-	if (!SNM_AutoVWndPosition(&m_btnMuteOthers, NULL, _r, &x0, _r->top, h, 5))
+	if (!SNM_AutoVWndPosition(DT_LEFT, &m_btnMuteOthers, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
 	m_btnAutoSelect.SetCheckState(g_liveConfigs.Get()->Get(g_configId)->m_autoSelect);
 	m_btnAutoSelect.SetTextLabel(__LOCALIZE("Unselect all but active track","sws_DLG_155"), -1, font);
-	if (!SNM_AutoVWndPosition(&m_btnAutoSelect, NULL, _r, &x0, _r->top, h))
+	if (!SNM_AutoVWndPosition(DT_LEFT, &m_btnAutoSelect, NULL, _r, &x0, _r->top, h))
 		return;
 
 	m_txtInputTr.SetFont(font);
-	if (!SNM_AutoVWndPosition(&m_txtInputTr, NULL, _r, &x0, _r->top, h, 5))
+	if (!SNM_AutoVWndPosition(DT_LEFT, &m_txtInputTr, NULL, _r, &x0, _r->top, h, 5))
 		return;
 
 	m_cbInputTr.SetFont(font);
@@ -1066,7 +1066,7 @@ void SNM_LiveConfigsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _t
 		}
 	}
 	m_cbInputTr.SetCurSel(sel);
-	if (!SNM_AutoVWndPosition(&m_cbInputTr, &m_txtInputTr, _r, &x0, _r->top, h))
+	if (!SNM_AutoVWndPosition(DT_LEFT, &m_cbInputTr, &m_txtInputTr, _r, &x0, _r->top, h))
 		return;
 
 	SNM_AddLogo(_bm, _r, x0, h);

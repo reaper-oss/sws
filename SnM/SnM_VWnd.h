@@ -38,22 +38,27 @@
 class SNM_DynamicSizedText : public WDL_VWnd {
 public:
 	SNM_DynamicSizedText() : WDL_VWnd() { 
-		m_fontName.Set(SWSDLG_TYPEFACE); m_alpha=255; m_maxlinelen=-1; m_wantBorder=false;
+		m_fontName.Set(SWSDLG_TYPEFACE); m_alpha=255; m_maxLineIdx=m_lastFontH=-1; m_wantBorder=false; m_dtFlags=DT_CENTER;
 	}
 	virtual ~SNM_DynamicSizedText() {}
 	virtual const char *GetType() { return "SNM_DynamicText"; }
 	virtual void SetText(const char* _txt, unsigned char _alpha = 255);
+	virtual void SetTitle(const char* _txt);
 	virtual void OnPaint(LICE_IBitmap* _drawbm, int _origin_x, int _origin_y, RECT* _cliprect);
 	virtual void SetBorder(bool _b) { m_wantBorder = _b; }
+	virtual void SetFlags(UINT _f) { m_dtFlags = _f; } // only DT_LEFT and DT_CENTER are supported atm..
 	virtual const char* GetFontName() { return m_fontName.Get(); }
 	virtual void SetFontName(const char* _fontName) { m_fontName.Set(_fontName); }
 protected:
+	void DrawLines(LICE_IBitmap* _drawbm, RECT* _r, int _fontHeight);
 	LICE_CachedFont m_font;
-	WDL_FastString m_fontName;
+	WDL_FastString m_title, m_fontName, m_lastText;
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> m_lines;
-	int m_maxlinelen;
+	int m_maxLineIdx, m_lastFontH;
 	bool m_wantBorder;
 	unsigned char m_alpha;
+	SWS_Mutex m_mutex;
+	UINT m_dtFlags;
 };
 
 class SNM_ImageVWnd : public WDL_VWnd {
@@ -79,6 +84,7 @@ protected:
 	WDL_FastString m_fn;
 };
 
+//JFB TODO: hyperlink
 class SNM_Logo : public SNM_ImageVWnd {
 public:
 	SNM_Logo() : SNM_ImageVWnd(SNM_GetThemeLogo()) {}
@@ -150,9 +156,6 @@ public:
 void SNM_SkinButton(WDL_VirtualIconButton* _btn, WDL_VirtualIconButton_SkinConfig* _skin, const char* _text);
 void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text);
 bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h);
-#ifdef _SNM_MISC
-bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h);
-#endif
-bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoom = SNM_DEF_VWND_X_STEP);
+bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoom = SNM_DEF_VWND_X_STEP);
 
 #endif

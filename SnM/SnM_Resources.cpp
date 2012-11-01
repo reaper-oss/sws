@@ -1773,24 +1773,24 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 
 	// "auto-fill" button
 	SNM_SkinButton(&m_btnAutoFill, it ? &(it->toolbar_open) : NULL, __LOCALIZE("Auto-fill","sws_DLG_150"));
-	if (SNM_AutoVWndPosition(&m_btnAutoFill, NULL, _r, &x0, _r->top, h, 0))
+	if (SNM_AutoVWndPosition(DT_LEFT, &m_btnAutoFill, NULL, _r, &x0, _r->top, h, 0))
 	{
 		// "auto-save" button
 		m_btnAutoSave.SetGrayed(!GetSlotList()->HasAutoSave());
 		SNM_SkinButton(&m_btnAutoSave, it ? &(it->toolbar_save) : NULL, __LOCALIZE("Auto-save","sws_DLG_150"));
-		if (SNM_AutoVWndPosition(&m_btnAutoSave, NULL, _r, &x0, _r->top, h))
+		if (SNM_AutoVWndPosition(DT_LEFT, &m_btnAutoSave, NULL, _r, &x0, _r->top, h))
 		{
 			// type: txt & dropdown
 //			m_txtSlotsType.SetFont(font);
-//			if (SNM_AutoVWndPosition(&m_txtSlotsType, NULL, _r, &x0, _r->top, h, 5))
+//			if (SNM_AutoVWndPosition(DT_LEFT, &m_txtSlotsType, NULL, _r, &x0, _r->top, h, 5))
 			{
 				m_cbType.SetFont(font);
-//				if (SNM_AutoVWndPosition(&m_cbType, &m_txtSlotsType, _r, &x0, _r->top, h, 4))
-				if (SNM_AutoVWndPosition(&m_cbType, NULL,            _r, &x0, _r->top, h, 4))
+//				if (SNM_AutoVWndPosition(DT_LEFT, &m_cbType, &m_txtSlotsType, _r, &x0, _r->top, h, 4))
+				if (SNM_AutoVWndPosition(DT_LEFT, &m_cbType, NULL, _r, &x0, _r->top, h, 4))
 				{
 					// add & del bookmark buttons
 					((SNM_AddDelButton*)m_parentVwnd.GetChildByID(BUTTONID_DEL_BOOKMARK))->SetEnabled(g_resViewType >= SNM_NUM_DEFAULT_SLOTS);
-					if (SNM_AutoVWndPosition(&m_btnsAddDel, NULL, _r, &x0, _r->top, h))
+					if (SNM_AutoVWndPosition(DT_LEFT, &m_btnsAddDel, NULL, _r, &x0, _r->top, h))
 					{
 						if (IsMultiType())
 						{
@@ -1798,7 +1798,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 							char buf[64] = "";
 							_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Tie %s slot actions to this bookmark","sws_DLG_150"), g_slots.Get(typeForUser)->GetDesc());
 							m_btnTiedActions.SetTextLabel(buf, -1, font);
-							if (SNM_AutoVWndPosition(&m_btnTiedActions, NULL, _r, &x0, _r->top, h, 5))
+							if (SNM_AutoVWndPosition(DT_LEFT, &m_btnTiedActions, NULL, _r, &x0, _r->top, h, 5))
 								SNM_AddLogo(_bm, _r, x0, h);
 						}
 						else
@@ -1828,10 +1828,10 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 	if (GetSlotList()->HasDblClick())
 	{
 		m_txtDblClickType.SetFont(font);
-		if (!SNM_AutoVWndPosition(&m_txtDblClickType, NULL, &r, &x0, y0, h, 5))
+		if (!SNM_AutoVWndPosition(DT_LEFT, &m_txtDblClickType, NULL, &r, &x0, y0, h, 5))
 			return;
 		m_cbDblClickType.SetFont(font);
-		if (!SNM_AutoVWndPosition(&m_cbDblClickType, &m_txtDblClickType, &r, &x0, y0, h))
+		if (!SNM_AutoVWndPosition(DT_LEFT, &m_cbDblClickType, &m_txtDblClickType, &r, &x0, y0, h))
 			return;
 
 		switch (typeForUser)
@@ -1839,10 +1839,10 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 			// "to selected" (fx chain only)
 			case SNM_SLOT_FXC:
 				m_txtDblClickTo.SetFont(font);
-				if (!SNM_AutoVWndPosition(&m_txtDblClickTo, NULL, &r, &x0, y0, h, 5))
+				if (!SNM_AutoVWndPosition(DT_LEFT, &m_txtDblClickTo, NULL, &r, &x0, y0, h, 5))
 					return;
 				m_cbDblClickTo.SetFont(font);
-				if (!SNM_AutoVWndPosition(&m_cbDblClickTo, &m_txtDblClickTo, &r, &x0, y0, h))
+				if (!SNM_AutoVWndPosition(DT_LEFT, &m_cbDblClickTo, &m_txtDblClickTo, &r, &x0, y0, h))
 					return;
 				break;
 			// offset items & envs (tr template only)
@@ -1865,7 +1865,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 					}
 					if (showOffsOption) {
 						m_btnOffsetTrTemplate.SetCheckState(*offsPref);
-						if (!SNM_AutoVWndPosition(&m_btnOffsetTrTemplate, NULL, &r, &x0, y0, h, 5))
+						if (!SNM_AutoVWndPosition(DT_LEFT, &m_btnOffsetTrTemplate, NULL, &r, &x0, y0, h, 5))
 							return;
 					}
 				}

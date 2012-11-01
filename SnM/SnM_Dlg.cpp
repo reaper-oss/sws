@@ -31,6 +31,26 @@
 #include "../Prompt.h"
 
 
+void SNM_UIInit() {}
+
+void SNM_UIExit() {
+	if (LICE_IBitmap* logo = SNM_GetThemeLogo())
+		DELETE_NULL(logo);
+}
+
+void SNM_UIRefresh(COMMAND_T* _ct) 
+{
+	UpdateTimeline(); // ruler+arrange
+	TrackList_AdjustWindows(false);
+	DockWindowRefresh();
+}
+
+void SNM_SetUIRefresh(COMMAND_T* _ct) {
+	if (PreventUIRefresh)
+		PreventUIRefresh((int)_ct->user);
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // Theming
 ///////////////////////////////////////////////////////////////////////////////
@@ -229,23 +249,6 @@ WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LP
 		}
 	}
 	return 0;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-
-void SNM_UIInit() {}
-
-void SNM_UIExit() {
-	if (LICE_IBitmap* logo = SNM_GetThemeLogo())
-		DELETE_NULL(logo);
-}
-
-void SNM_UIRefresh() 
-{
-	UpdateTimeline(); // ruler+arrange
-	TrackList_AdjustWindows(false);
-	DockWindowRefresh();
 }
 
 

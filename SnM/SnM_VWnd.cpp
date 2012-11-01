@@ -33,37 +33,76 @@
 // SNM_DynamicText
 ///////////////////////////////////////////////////////////////////////////////
 
-// split the text into lines (not to do that in OnPaint()) and store them
+// split the text into lines and store them (not to do that in OnPaint())
 void SNM_DynamicSizedText::SetText(const char* _txt, unsigned char _alpha)
 { 
+	SWS_SectionLock lock(&m_mutex);
+
+	if (!strcmp(m_lastText.Get(), _txt?_txt:"")) return;
+
+	m_lastText.Set(_txt?_txt:"");
 	m_lines.Empty(true);
-	m_maxlinelen = -1;
+	m_maxLineIdx = -1;
 	m_alpha = _alpha;
 
 	if (_txt && *_txt)
 	{
+		int maxLineLen=0;
 		const char* p=_txt, *p2=NULL;
 		while (p2 = FindFirstRN(p))
 		{
-			m_maxlinelen = max(m_maxlinelen, (int)(p2-p)+1); // +1 to get room
+			int len = (int)(p2-p);
+			if (len > maxLineLen) {
+				maxLineLen = len;
+				m_maxLineIdx = m_lines.GetSize();
+			}
+
 			WDL_FastString* line = new WDL_FastString;
-			line->Append(p, (int)(p2-p));
+			line->Append(p, len);
 			m_lines.Add(line);
 			p = p2+1;
+			if (*p == '\r') p++;
 			if (*p == '\n') p++;
 			if (*p == '\0') break;
 		}
-
-		if (p && *p && !p2) {
-			m_maxlinelen = max(m_maxlinelen, (int)strlen(p)+1); // +1 to get room
-			m_lines.Add(new WDL_FastString(p));
+		if (p && *p && !p2)
+		{
+			WDL_FastString* s = new WDL_FastString(p);
+			if (s->GetLength() > maxLineLen)
+				m_maxLineIdx = m_lines.GetSize();
+			m_lines.Add(s);
 		}
 	}
-	RequestRedraw(NULL);
+	if (m_visible) RequestRedraw(NULL);
 } 
+
+void SNM_DynamicSizedText::DrawLines(LICE_IBitmap* _drawbm, RECT* _r, int _fontHeight)
+{
+	RECT tr;
+	tr.top = _r->top + int((_r->bottom-_r->top)/2 - (_fontHeight*m_lines.GetSize())/2 + 0.5);
+	tr.left = _r->left;
+	tr.right = _r->right;
+	for (int i=0; i < m_lines.GetSize(); i++)
+	{
+		tr.bottom = tr.top+_fontHeight;
+		// ClearType not supported w/ LICE_DT_USEFGALPHA
+		m_font.DrawText(_drawbm, m_lines.Get(i)->Get(), -1, &tr, m_dtFlags|(m_alpha<255?LICE_DT_USEFGALPHA:0));
+		tr.top = tr.bottom;
+	}
+}
+
+void SNM_DynamicSizedText::SetTitle(const char* _txt)
+{
+	SWS_SectionLock lock(&m_mutex);
+	if (!strcmp(m_title.Get(), _txt?_txt:"")) return;
+	m_title.Set(_txt?_txt:"");
+	if (m_visible) RequestRedraw(NULL);
+}
 
 void SNM_DynamicSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
 {
+	SWS_SectionLock lock(&m_mutex);
+
 	RECT r = m_position;
 	r.left += origin_x;
 	r.right += origin_x;
@@ -72,44 +111,137 @@ void SNM_DynamicSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origi
 
 	int h = r.bottom-r.top;
 	int w = r.right-r.left;
+
 	int col = LICE_RGBA(255,255,255, m_alpha);
 	if (ColorTheme* ct = SNM_GetColorTheme())
 		col = LICE_RGBA_FROMNATIVE(ct->main_text, m_alpha);
 
 	if (m_wantBorder)
-		LICE_DrawRect(drawbm,r.left,r.top,w,h,col);
+		LICE_DrawRect(drawbm,r.left,r.top,w,h,col,0.2f);
 
-	if (!m_lines.GetSize())
+	// title
+	int bandHeight = SNM_FONT_HEIGHT+2;
+	if (m_title.GetLength() && h>4*bandHeight) // hide if too small
+	{
+		if (m_wantBorder)
+			LICE_Line(drawbm, r.left,r.top+bandHeight-1,r.right,r.top+bandHeight-1,col,0.2f);
+
+		// title's band coloring (works for all themes)
+		LICE_FillRect(drawbm,r.left,r.top,r.right-r.left,bandHeight,col,1.0f,LICE_BLIT_MODE_OVERLAY);
+		LICE_FillRect(drawbm,r.left,r.top,r.right-r.left,bandHeight,col,1.0f,LICE_BLIT_MODE_OVERLAY);
+
+		static LICE_CachedFont font;
+		if (!font.GetHFont()) // single lazy init..
+		{
+			LOGFONT lf = {
+				SNM_FONT_HEIGHT, 0,0,0,FW_BOLD,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+				OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
+			};
+			font.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
+			// others props are set on demand (support theme switches)
+		}
+		font.SetBkMode(TRANSPARENT);
+		font.SetTextColor(WDL_STYLE_GetSysColor(COLOR_WINDOW));
+
+		RECT tr = {r.left,r.top,r.right,r.top+bandHeight};
+		font.DrawText(drawbm, m_title.Get(), -1, &tr, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+	}
+
+
+	// ok, now the meat: render lines with a dynamic sized text
+	if (!m_lines.GetSize() || !m_lines.Get(m_maxLineIdx))
 		return;
 
-	// creating fonts is *super slow* => use a text width estimation
+
+///////////////////////////////////////////////////////////////////////////////
+#ifndef _SNM_MISC // 1st sol.: use full width but several fonts can be tried
+
+
+	// initial font height estimation
+	// touchy: the better estimation, the less cpu use!
+	int estimFontH = int((w*2.65)/m_lines.Get(m_maxLineIdx)->GetLength()); // 2.625 = average from tests..
+	if (estimFontH > int(h/m_lines.GetSize())+0.5)
+		estimFontH = int(h/m_lines.GetSize()+0.5);
+
+	// check if the current font can do the job
+	if (m_lastFontH>=SNM_FONT_HEIGHT && abs(estimFontH-m_lastFontH) < 2) // tolerance: 2 pixels
+	{
+#ifdef _SNM_DEBUG
+		OutputDebugString("skip font creation\n");
+#endif
+		DrawLines(drawbm, &r, m_lastFontH);
+	}
+	else
+	{
+		m_lastFontH = estimFontH;
+#ifdef _SNM_DEBUG
+		int dbgTries=0;
+#endif
+		while(m_lastFontH>SNM_FONT_HEIGHT)
+		{
+			HFONT lf = CreateFont(m_lastFontH,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+				OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,m_fontName.Get());
+			m_font.SetFromHFont(lf, LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
+			m_font.SetBkMode(TRANSPARENT);
+			m_font.SetTextColor(col);
+
+			RECT tr = {0,0,0,0};
+			m_font.DrawText(NULL, m_lines.Get(m_maxLineIdx)->Get(), -1, &tr, DT_CALCRECT);
+			
+			if ((tr.right - tr.left) > (w-int(w*0.02+0.5)) // room: 2% of w
+/*JFB ensures no top/bottom truncation but much more font creations => clamp to h/m_lines.GetSize() instead, see above..
+				|| (tr.bottom - tr.top) > (h-int(h*0.02+0.5)) // room: 2% of h
+*/
+				)
+			{
+				m_font.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
+				DeleteObject(lf);
+				m_lastFontH--;
+#ifdef _SNM_DEBUG
+				dbgTries++;
+#endif
+			}
+			else
+			{
+				DrawLines(drawbm, &r, m_lastFontH);
+				// no font deletion: we will try to re-use it..
+				break;
+			}
+		}
+#ifdef _SNM_DEBUG
+		char dbgStr[256];
+		_snprintf(dbgStr, sizeof(dbgStr), "-> %d tries, estim: %d - reall: %d\n", dbgTries, estimFontH, m_lastFontH);
+		OutputDebugString(dbgStr);
+#endif
+	}
+
+
+///////////////////////////////////////////////////////////////////////////////
+#else // 2nd sol.: render text in best effort, single font creation
+
+
+/*JFB commented: truncated text..
+	int fontHeight = int((w*2.65)/m_lines.Get(m_maxLineIdx)->GetLength()); // 2.625 = average from tests..
+	if (fontHeight > int(h/m_lines.GetSize())+0.5)
+		fontHeight = int(h/m_lines.GetSize()+0.5);
+*/
+	// font height estimation (safe but it does not use all the available width/height)
 	int fontHeight = int(h/m_lines.GetSize() + 0.5);
-	while (fontHeight > 5 && (fontHeight*m_maxlinelen*0.55) > w) 
+	while (fontHeight>SNM_FONT_HEIGHT && (fontHeight*m_lines.Get(m_maxLineIdx)->GetLength()*0.55) > w) // 0.55: h/w factor
 		fontHeight--;
 
-	if (fontHeight>5)
+	if (fontHeight>=SNM_FONT_HEIGHT)
 	{
 		HFONT lf = CreateFont(fontHeight,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
 			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,m_fontName.Get());
 		m_font.SetFromHFont(lf, LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
 		m_font.SetBkMode(TRANSPARENT);
 		m_font.SetTextColor(col);
-
-		int top = r.top + int(h/2 - (fontHeight*m_lines.GetSize())/2 + 0.5);
-		for (int i=0; i < m_lines.GetSize(); i++)
-		{
-			RECT tr = {0,0,0,0};
-			m_font.DrawText(NULL, m_lines.Get(i)->Get(), -1, &tr, DT_CALCRECT);
-			int txtw = tr.right - tr.left;
-			tr.top = top + i*fontHeight;
-			tr.bottom = tr.top+fontHeight;
-			tr.left = r.left + int(w/2 - txtw/2 + 0.5);
-			tr.right = tr.left + txtw;
-			m_font.DrawText(drawbm, m_lines.Get(i)->Get(), -1, &tr, m_alpha<255 ? LICE_DT_USEFGALPHA : 0); // workaround: no ClearType w/ LICE_DT_USEFGALPHA
-		}
+		DrawLines(drawbm, &r, fontHeight);
 		m_font.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
 		DeleteObject(lf);
 	}
+#endif
 }
 
 
@@ -260,7 +392,6 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 	}
 }
 
-//JFB TODO? WDL_VWnd? hyperlink?
 bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
 {
 	if (_bm)
@@ -276,38 +407,36 @@ bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
 	return false;
 }
 
-#ifdef _SNM_MISC //JFB not used yet
-bool SNM_AddLogo2(SNM_Logo* _logo, const RECT* _r, int _x, int _h)
+bool SNM_HasLeftVWnd(WDL_VWnd* _comp, int _left, int _top, int _bottom)
 {
-	if (_x+_logo->GetWidth() < _r->right-8)
+	if (_comp)
 	{
-		int x = _r->right - _logo->GetWidth() - 8;
-		int y = _r->top + int(_h/2 - _logo->GetHeight()/2 + 0.5);
-		RECT tr = {x, y, x + _logo->GetWidth(), y + _logo->GetHeight()};
-		_logo->SetPosition(&tr);
-		_logo->SetVisible(true);
-		return true;
+		int x=0, leftWithRoom=_left-SNM_DEF_VWND_X_STEP-1;
+		while (WDL_VWnd* w = _comp->GetParent()->EnumChildren(x++))
+			if (w != _comp && w->IsVisible() && w->GetUserData() == DT_LEFT)
+			{
+				RECT r; w->GetPosition(&r);
+				if (r.top>=_top && r.bottom<=_bottom && (r.right >= _left || (leftWithRoom>0 ? r.right>=leftWithRoom : true)))
+					return true;
+			}
 	}
 	return false;
 }
-#endif
-
-// SWS: My OSX has a problem with max() sometimes.  I don't know why.
-#ifndef _WIN32
-#define max(x,y) ((x)>(y)?(x):(y))
-#endif
 
 // auto position a WDL_VWnd instance
-// note: by default all components are hidden, see WM_PAINT in sws_wnd.cpp
-// _x: in/out param that gets modified (for the next component to be displayed)
-// _h: height of the destination panel
+// assumes all components are hidden by default, see WM_PAINT in sws_wnd.cpp
+// _align: only DT_LEFT and DT_RIGHT are supported atm
+//         note: right aligned comps have lower priority (i.e. hidden if a left aligned comp is already there)
+// _x:     in/out param that gets modified (for the next component to be displayed)
+// _h:     height of the destination panel
 // returns false if hidden
 // TODO? WDL_VWnd inheritance rather than checking for inherited types
 //       e.g. adding some kind of getPreferedWidthHeight(int* _width, int* _height)
-bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoom)
+bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoom)
 {
 	if (_comp && _h && abs(_r->bottom-_r->top) >= _h)
 	{
+		// *** compute needed width/height ***
 		int width=0, height=0;
 		if (!strcmp(_comp->GetType(), "vwnd_statictext"))
 		{
@@ -321,10 +450,12 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, 
 		{
 			WDL_VirtualComboBox* cb = (WDL_VirtualComboBox*)_comp;
 			//JFB cb->GetCurSel()?
-			for (int i=0; i < cb->GetCount(); i++) {
+			for (int i=0; i < cb->GetCount(); i++)
+			{
 				RECT tr = {0,0,0,0};
 				cb->GetFont()->DrawText(NULL, cb->GetItem(i), -1, &tr, DT_CALCRECT);
-				width = max(width, tr.right);
+				if (tr.right > width)
+					width = tr.right;
 				height = tr.bottom;
 			}
 			height = height + int(height/2 + 0.5);
@@ -351,7 +482,7 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, 
 				if (tr.bottom > height)
 					height = int(tr.bottom + tr.bottom/2 + 0.5);
 				if ((tr.right+int(height/2 + 0.5)) > width)
-					width = int(tr.right + height/2 + 0.5); // +height/2 for some air
+					width = int(tr.right + height/2 + 0.5); // +height/2 for some room
 
 				if (btn->GetCheckState() != -1) {
 					width += tr.bottom; // for the tick zone
@@ -363,31 +494,63 @@ bool SNM_AutoVWndPosition(WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, 
 			width=9;
 			height=9*2+1;
 		}
-		else if (!strcmp(_comp->GetType(), "SNM_MiniKnob")) {
+		else if (!strcmp(_comp->GetType(), "SNM_MiniKnob"))
 			width=height=25;
-		}
 
-		if (*_x+width > _r->right-10) // enough horizontal room?
-		{
-			if (*_x+20 > (_r->right-10)) // ensures a minimum width
-			{
-				if (_tiedComp && _tiedComp->IsVisible())
-					_tiedComp->SetVisible(false);
-				return false;
-			}
-			width = _r->right - 10 - *_x; // force width
-		}
 
+		// *** set position/visibility ***
+
+		// vertical alignment not manget yet (always vcenter)
 		_y += int(_h/2 - height/2 + 0.5);
-		RECT tr = {*_x, _y, *_x + width, _y + height};
-		_comp->SetPosition(&tr);
-		*_x = tr.right + _xRoom;
+
+		// horizontal alignment
+		switch(_align)
+		{
+			case DT_LEFT:
+			{
+				_comp->SetUserData(DT_LEFT);
+				if (*_x+width > _r->right-10) // enough horizontal room?
+				{
+					if (*_x+20 > (_r->right-10)) // ensures a minimum width
+					{
+						if (_tiedComp && _tiedComp->IsVisible())
+							_tiedComp->SetVisible(false);
+						return false;
+					}
+					width = _r->right - 10 - *_x; // force width
+				}
+				RECT tr = {*_x, _y, *_x+width, _y+height};
+				_comp->SetPosition(&tr);
+				*_x = tr.right + _xRoom;
+				break;
+			}
+			case DT_RIGHT:
+			{
+				_comp->SetUserData(DT_RIGHT);
+				if ((*_x-width) > (_r->left+10) &&
+/*JFB does not *always* work, replaced with SNM_HasLeftVWnd()
+					!_comp->GetParent()->VirtWndFromPoint(*_x-width, int((_y+_h)/2+0.5))
+*/
+					!SNM_HasLeftVWnd(_comp, *_x-width, _y, _y+_h))
+				{
+					RECT tr = {*_x-width, _y, *_x, _y+height};
+					_comp->SetPosition(&tr);
+					*_x = tr.left - _xRoom;
+				}
+				else
+				{
+					if (_tiedComp && _tiedComp->IsVisible())
+						_tiedComp->SetVisible(false);
+					return false;
+				}
+				break;
+			}
+		}
 		_comp->SetVisible(true);
 		return true;
 	}
 
 	if (_tiedComp && _tiedComp->IsVisible())
 		_tiedComp->SetVisible(false);
-
 	return false;
 }

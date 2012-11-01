@@ -54,7 +54,8 @@ enum {
   BUTTONID_ALR,
   BUTTONID_ACTIONLIST,
   BUTTONID_IMPORT_SUB,
-  BUTTONID_EXPORT_SUB
+  BUTTONID_EXPORT_SUB,
+  TXTID_BIG_NOTES
 };
 
 enum {
@@ -70,12 +71,12 @@ SWSProjConfig<WDL_FastString> g_prjNotes;
 
 int g_notesViewType = -1;
 int g_prevNotesViewType = -1;
-bool g_locked = 1;
+bool g_locked = false;
 char g_lastText[MAX_HELP_LENGTH] = "";
 char g_lastImportSubFn[BUFFER_SIZE] = "";
 char g_lastExportSubFn[BUFFER_SIZE] = "";
 char g_actionHelpFn[BUFFER_SIZE] = "";
-char g_bigFontName[64] = SWSDLG_TYPEFACE;
+char g_notesBigFontName[64] = SWSDLG_TYPEFACE;
 
 // used for action help updates tracking
 //JFB TODO: cleanup when we'll be able to access all sections & custom ids
@@ -152,6 +153,10 @@ void SNM_NotesHelpWnd::OnInitDlg()
 
 	m_btnExportSub.SetID(BUTTONID_EXPORT_SUB);
 	m_parentVwnd.AddChild(&m_btnExportSub);
+
+	m_bigNotes.SetID(TXTID_BIG_NOTES);
+	m_bigNotes.SetFontName(g_notesBigFontName);
+	m_parentVwnd.AddChild(&m_bigNotes);
 
 	g_prevNotesViewType = -1; // will force refresh
 	SetType(BOUNDED(g_notesViewType, 0, m_cbType.GetCount()-1)); // + Update()
@@ -380,59 +385,14 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 			if (g_notesViewType == SNM_NOTES_REGION_NAME)
 				ShortenStringToFirstRN(buf);
 
-			int numlines=1, maxlinelen=-1;
-			char* p = strchr(buf, '\n');
-			char* p2 = buf;
-			while (p)
-			{
-			  maxlinelen = max(maxlinelen, (int)(p-p2));
-			  p2 = p+1;
-			  *p=0;
-			  p = strchr(p+1, '\n');
-			  ++numlines;
-			}
-
-			if (maxlinelen < 1) maxlinelen = strlen(buf);
-			else maxlinelen--; // lines in CRLF
-
-			p=buf;
-
-			static LICE_CachedFont dynFont;
-
-			// creating fonts is *super slow*
-			// => use a text width estimation
-			int fontHeight = (int)((_bm->getHeight()-h)/numlines + 0.5);
-			while (fontHeight > 5 && (fontHeight*maxlinelen*0.6) > _bm->getWidth()) 
-				fontHeight--;
-
-			if (fontHeight > 5)
-			{
-				ColorTheme* ct = SNM_GetColorTheme();
-				HFONT lf = CreateFont(fontHeight,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
-					OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,g_bigFontName);
-				dynFont.SetFromHFont(lf,LICE_FONT_FLAG_OWNS_HFONT|LICE_FONT_FLAG_FORCE_NATIVE);
-				dynFont.SetBkMode(TRANSPARENT);
-				dynFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
-
-				int top = (int)(h + (_bm->getHeight()-h)/2 - (fontHeight*numlines)/2 + 0.5);
-				for (int i=0; i < numlines; ++i)
-				{
-					RECT tr = {0,0,0,0};
-					dynFont.DrawText(NULL, p, -1, &tr, DT_CALCRECT);
-					int txtw = tr.right - tr.left;
-					tr.top = top + i*fontHeight;
-					tr.bottom = tr.top+fontHeight;
-					tr.left = (int)(_bm->getWidth()/2 - txtw/2 + 0.5);
-					tr.right = tr.left + txtw;
-					dynFont.DrawText(_bm, p, -1, &tr, 0);
-					p += strlen(p)+1;
-				}
-				dynFont.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
-				DeleteObject(lf); 
-			}
+			RECT r = *_r;
+			r.top += h;
+			m_bigNotes.SetPosition(&r);
+			m_bigNotes.SetText(buf);
+			m_bigNotes.SetVisible(true);
 		}
 	}
-	// clear last "big" notes
+	// clear last "big notes"
 	else
 		LICE_FillRect(_bm,0,h,_bm->getWidth(),_bm->getHeight()-h,WDL_STYLE_GetSysColor(COLOR_WINDOW),0.0,LICE_BLIT_MODE_COPY);
 
@@ -445,11 +405,11 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 
 	// lock button
 	SNM_SkinButton(&m_btnLock, it ? &it->toolbar_lock[!g_locked] : NULL, g_locked ? __LOCALIZE("Unlock","sws_DLG_152") : __LOCALIZE("Lock","sws_DLG_152"));
-	if (SNM_AutoVWndPosition(&m_btnLock, NULL, _r, &x0, _r->top, h))
+	if (SNM_AutoVWndPosition(DT_LEFT, &m_btnLock, NULL, _r, &x0, _r->top, h))
 	{
 		// view type
 		m_cbType.SetFont(font);
-		if (SNM_AutoVWndPosition(&m_cbType, NULL, _r, &x0, _r->top, h))
+		if (SNM_AutoVWndPosition(DT_LEFT, &m_cbType, NULL, _r, &x0, _r->top, h))
 		{
 			// label
 			char str[512];
@@ -495,7 +455,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 
 			m_txtLabel.SetFont(font);
 			m_txtLabel.SetText(str);
-			if (SNM_AutoVWndPosition(&m_txtLabel, NULL, _r, &x0, _r->top, h))
+			if (SNM_AutoVWndPosition(DT_LEFT, &m_txtLabel, NULL, _r, &x0, _r->top, h))
 				SNM_AddLogo(_bm, _r, x0, h);
 		}
 	}
@@ -512,11 +472,11 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
 	{
 		SNM_SkinToolbarButton(&m_btnImportSub, __LOCALIZE("Import...","sws_DLG_152"));
-		if (!SNM_AutoVWndPosition(&m_btnImportSub, NULL, _r, &x0, y0, h, 4))
+		if (!SNM_AutoVWndPosition(DT_LEFT, &m_btnImportSub, NULL, _r, &x0, y0, h, 4))
 			return;
 
 		SNM_SkinToolbarButton(&m_btnExportSub, __LOCALIZE("Export...","sws_DLG_152"));
-		if (!SNM_AutoVWndPosition(&m_btnExportSub, NULL, _r, &x0, y0, h))
+		if (!SNM_AutoVWndPosition(DT_LEFT, &m_btnExportSub, NULL, _r, &x0, y0, h))
 			return;
 	}
 
@@ -524,14 +484,13 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	if (g_notesViewType == SNM_NOTES_ACTION_HELP)
 	{
 		SNM_SkinToolbarButton(&m_btnActionList, __LOCALIZE("Action list...","sws_DLG_152"));
-		if (!SNM_AutoVWndPosition(&m_btnActionList, NULL, _r, &x0, y0, h, 4))
+		if (!SNM_AutoVWndPosition(DT_LEFT, &m_btnActionList, NULL, _r, &x0, y0, h, 4))
 			return;
 
 		SNM_SkinToolbarButton(&m_btnAlr, __LOCALIZE("Online help...","sws_DLG_152"));
-		if (!SNM_AutoVWndPosition(&m_btnAlr, NULL, _r, &x0, y0, h))
+		if (!SNM_AutoVWndPosition(DT_LEFT, &m_btnAlr, NULL, _r, &x0, y0, h))
 			return;
 	}
-
 }
 
 bool SNM_NotesHelpWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
@@ -1344,7 +1303,7 @@ int NotesHelpViewInit()
 	// load prefs 
 	g_notesViewType = GetPrivateProfileInt("NOTES_HELP_VIEW", "Type", 0, g_SNMIniFn.Get());
 	g_locked = (GetPrivateProfileInt("NOTES_HELP_VIEW", "Lock", 0, g_SNMIniFn.Get()) == 1);
-	GetPrivateProfileString("NOTES_HELP_VIEW", "BigFontName", SWSDLG_TYPEFACE, g_bigFontName, 64, g_SNMIniFn.Get());
+	GetPrivateProfileString("NOTES_HELP_VIEW", "BigFontName", SWSDLG_TYPEFACE, g_notesBigFontName, sizeof(g_notesBigFontName), g_SNMIniFn.Get());
 
 	// get the action help filename
 	char defaultHelpFn[BUFFER_SIZE] = "";
@@ -1363,9 +1322,8 @@ void NotesHelpViewExit()
 	char tmp[4] = "";
 	if (_snprintfStrict(tmp, sizeof(tmp), "%d", g_notesViewType) > 0)
 		WritePrivateProfileString("NOTES_HELP_VIEW", "Type", tmp, g_SNMIniFn.Get()); 
-	if (_snprintfStrict(tmp, sizeof(tmp), "%d", g_locked) > 0)
-		WritePrivateProfileString("NOTES_HELP_VIEW", "Lock", tmp, g_SNMIniFn.Get()); 
-	WritePrivateProfileString("NOTES_HELP_VIEW", "BigFontName", g_bigFontName, g_SNMIniFn.Get());
+	WritePrivateProfileString("NOTES_HELP_VIEW", "Lock", g_locked?"1":"0", g_SNMIniFn.Get()); 
+	WritePrivateProfileString("NOTES_HELP_VIEW", "BigFontName", g_notesBigFontName, g_SNMIniFn.Get());
 
 	// save the action help filename
 	WDL_FastString escapedStr;
@@ -1401,5 +1359,5 @@ void ToggleNotesHelpLock(COMMAND_T*) {
 }
 
 bool IsNotesHelpLocked(COMMAND_T*) {
-	return (g_locked == 1 ? true : false); // for warning C4800
+	return g_locked;
 }

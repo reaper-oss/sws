@@ -119,6 +119,33 @@ void SetWindowPosAtMouse(HWND hwnd)
 	SetWindowPos(hwnd, NULL, r.left, r.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
 }
 
+#ifndef _WIN32
+int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT uFlag)
+{
+	if (hMenu && lpString)
+	{
+		MENUITEMINFO xInfo;
+		xInfo.cbSize = sizeof(MENUITEMINFO);
+/* On Win OS
+		xInfo.fMask = MIIM_STRING;
+*/
+		xInfo.fMask = MIIM_TYPE; // ok on OSX/SWELL
+		xInfo.fType = MFT_STRING;
+		xInfo.fState = 0;
+		xInfo.wID = 0;
+		xInfo.hSubMenu = NULL;
+		xInfo.hbmpChecked = NULL;
+		xInfo.hbmpUnchecked = NULL;
+		xInfo.dwItemData = 0;
+		xInfo.dwTypeData = lpString;
+		xInfo.cch = nMaxCount;
+		if (GetMenuItemInfo(hMenu, uIDItem, (uFlag&MF_BYPOSITION) == MF_BYPOSITION, &xInfo))
+			return strlen(lpString);
+	}
+	return 0;
+}
+#endif
+
 MediaTrack* GetFirstSelectedTrack()
 {
 	for (int j = 0; j <= GetNumTracks(); j++)
@@ -499,7 +526,43 @@ bool SWS_IsWindow(HWND hwnd)
 #endif
 }
 
+
 // Localization
+
+WDL_FastString* g_LangPack = NULL;;
+
+// Never returns NULL ("" means no langpack defined)
+WDL_FastString* GetLangPack()
+{
+	// lazy init, works because swtching LangPacks requires REAPER restart
+	if (!g_LangPack)
+	{
+		g_LangPack = new WDL_FastString;
+#ifdef _SWS_LOCALIZATION
+		char fn[BUFFER_SIZE] = ""; 
+		GetPrivateProfileString("REAPER", "langpack", "", fn, sizeof(fn), get_ini_file());
+		if (*fn && strcmp(fn, "<>"))
+		{
+			g_LangPack->Set(fn);
+			if (!FileExists(fn)) // retry with fn as "short name"
+			{
+				g_LangPack->SetFormatted(BUFFER_SIZE, "%s%cLangPack%c%s", GetResourcePath(), PATH_SLASH_CHAR, PATH_SLASH_CHAR, fn);
+				if (!FileExists(g_LangPack->Get())) // does not exist either..
+					g_LangPack->Set("");
+			}
+		}
+#endif
+	}
+	return g_LangPack;
+}
+
+bool IsLocalized() {
+#ifdef _SWS_LOCALIZATION
+	return (GetLangPack()->GetLength() > 0);
+#else
+	return false;
+#endif
+}
 
 // check that action tags ("SWS: ", "SWS/FNG: ", SWS/S&M: ", etc..) are preserved
 const char* GetLocalizedActionName(const char* _defaultStr, int _flags, const char* _section)
@@ -518,8 +581,8 @@ bool IsLocalizableAction(const char* _customId) {
 
 // wrappers to ignore localized envelope names
 TrackEnvelope* SWS_GetTakeEnvelopeByName(MediaItem_Take* take, const char* envname) {
-  return GetTakeEnvelopeByName(take, __localizeFunc(envname, "item", 0));
+	return GetTakeEnvelopeByName(take, __localizeFunc(envname, "item", 0));
 }
 TrackEnvelope* SWS_GetTrackEnvelopeByName(MediaTrack* track, const char* envname) {
-  return GetTrackEnvelopeByName(track,  __localizeFunc(envname, "envname", 0));
+	return GetTrackEnvelopeByName(track,  __localizeFunc(envname, "envname", 0));
 }

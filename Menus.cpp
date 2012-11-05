@@ -75,6 +75,37 @@ void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPo
 	}
 }
 
+// This version "auto sort" menu items
+// Note: could be used as default AddToMenu (when no insert position is
+// requested) but this func is only used when the extension is localized ATM..
+void AddToMenu(HMENU hMenu, const char* text, int id, UINT uiSate)
+{
+	if (!text)
+		return;
+
+	if(!IsLocalized()) {
+		AddToMenu(hMenu, text, id, -1, false, uiSate);
+		return;
+	}
+
+	MENUITEMINFO mi={sizeof(MENUITEMINFO),};
+	if (strcmp(text, SWS_SEPARATOR) == 0)
+	{
+		mi.fType = MFT_SEPARATOR;
+		mi.fMask = MIIM_TYPE;
+		InsertMenuItem(hMenu, GetMenuItemCount(hMenu), true, &mi);
+	}
+	else
+	{
+		mi.fMask = MIIM_TYPE | MIIM_ID | MIIM_STATE;
+		mi.fState = uiSate;
+		mi.fType = MFT_STRING;
+		mi.dwTypeData = (char*)text;
+		mi.wID = id;
+		InsertMenuItem(hMenu, FindSortedPos(hMenu, text), true, &mi);
+	}
+}
+
 void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, UINT uiSate)
 {
 	int iPos = GetMenuItemCount(hMenu);
@@ -101,6 +132,55 @@ void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, 
 	mi.hSubMenu = subMenu;
 	mi.dwTypeData = (LPSTR)text;
 	InsertMenuItem(hMenu, iPos, true, &mi);
+}
+
+// This version "auto sort" sub menu items
+// Note: could be as default AddSubMenu (when no insert position is
+// requested) but this func is only used when the extension is localized ATM..
+void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, UINT uiSate)
+{
+	if(!IsLocalized()) {
+		AddSubMenu(hMenu, subMenu, text, -1, uiSate);
+		return;
+	}
+
+	MENUITEMINFO mi={sizeof(MENUITEMINFO),};
+	mi.fMask = MIIM_SUBMENU | MIIM_TYPE | MIIM_STATE;
+	mi.fState = uiSate;
+	mi.fType = MFT_STRING;
+	mi.hSubMenu = subMenu;
+	mi.dwTypeData = (LPSTR)text;
+	InsertMenuItem(hMenu, FindSortedPos(hMenu, text), true, &mi);
+}
+
+// find sorted position after the last separator
+int FindSortedPos(HMENU hMenu, const char* text)
+{
+	int pos = -1, nbItems = GetMenuItemCount(hMenu);
+#ifdef _WIN32
+	wchar_t widetext[4096], widebuf[4096];
+	MultiByteToWideChar(CP_UTF8, 0, text, -1, widetext, 4096);
+#else
+	char buf[4096] = "";
+#endif
+	MENUITEMINFO mi = {sizeof(MENUITEMINFO),};
+	mi.fMask = MIIM_TYPE;
+	for (int i=nbItems-1; i>=0 ; i--)
+	{
+		GetMenuItemInfo(hMenu, i, true, &mi);
+		if (mi.fType == MFT_SEPARATOR)
+			break;
+#ifdef _WIN32
+		GetMenuStringW(hMenu, i, widebuf, 4096, MF_BYPOSITION);
+		if (_wcsnicoll(widetext, widebuf, 4096) < 0) // requires setLocale(), see sws_extension.cpp
+			pos = i;
+#else
+		GetMenuString(hMenu, i, buf, sizeof(buf), MF_BYPOSITION);
+		if (strcasecmp(text, buf) < 0) // not as good as on Win OS, e.g. French "Sélectionner" vs "Supprimer"
+			pos = i;
+#endif
+	}
+	return pos<0 ? nbItems : pos;
 }
 
 HMENU FindMenuItem(HMENU hMenu, int iCmd, int* iPos)
@@ -151,6 +231,7 @@ int SWSGetMenuPosFromID(HMENU hMenu, UINT id)
 	}
 	return -1;
 }
+
 
 // *************************** MENU CREATION ***************************
 
@@ -225,12 +306,12 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hMenu, SWS_SEPARATOR, 0);
 	HMENU hOptionsSubMenu = CreatePopupMenu();
 	AddSubMenu(hMenu, hOptionsSubMenu, __LOCALIZE("SWS Options", "sws_ext_menu"));
-	// the 4 following ones must remain in sync with SWS_AutoColorWnd::AddOptionsMenu()
+
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto track coloring", "sws_ext_menu"), NamedCommandLookup("_SWSAUTOCOLOR_ENABLE"));
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto marker coloring", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOCOLOR_MKR_ENABLE"));
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto region coloring", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOCOLOR_RGN_ENABLE"));
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable auto track icon", "sws_ext_menu"), NamedCommandLookup("_S&MAUTOICON_ENABLE"));
-	// no constraint for the rest..
+
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable marker actions", "sws_ext_menu"), NamedCommandLookup("_SWSMA_TOGGLE"));
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable record input check", "sws_ext_menu"), NamedCommandLookup("_SWS_TOGRECINCHECK"));
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable red ruler while recording", "sws_ext_menu"), NamedCommandLookup("_SWS_RECREDRULER"));

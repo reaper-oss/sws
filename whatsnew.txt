@@ -1,3 +1,5 @@
+Localization: sorted menus (like default English menus)
+
 OSX: added actions (already there on Windows OS)
 +SWS/S&M: Dump action list (w/o SWS extension)
 +SWS/S&M: Dump action list (SWS extension only)

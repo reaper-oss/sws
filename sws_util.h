@@ -212,6 +212,9 @@ BOOL IsCommCtrlVersion6();
 void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
 void SetWindowPosAtMouse(HWND hwnd);
+#ifndef _WIN32
+int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT uFlag);
+#endif
 
 MediaTrack* GetFirstSelectedTrack();
 int NumSelTracks();
@@ -245,6 +248,8 @@ bool SWS_IsWindow(HWND hwnd);
 
 // Localization, sws_util.cpp
 #define _SWS_LOCALIZATION
+WDL_FastString* GetLangPack();
+bool IsLocalized();
 const char* GetLocalizedActionName(const char* _defaultStr, int _flags = 0, const char* _section = "sws_actions");
 bool IsLocalizableAction(const char* _customId);
 TrackEnvelope* SWS_GetTakeEnvelopeByName(MediaItem_Take* take, const char* envname);

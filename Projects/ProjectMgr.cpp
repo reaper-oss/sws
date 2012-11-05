@@ -406,7 +406,7 @@ static void menuhook(const char* menustr, HMENU hMenu, int flag)
 			else
 			{
 				for (int i = 0; i < g_relatedProjects.Get()->GetSize(); i++)
-					AddToMenu(hMenu, g_relatedProjects.Get()->Get(i)->Get(), GetLoadCommandID(i, true), iFirstPos++, true);
+					AddToMenu(hMenu, g_relatedProjects.Get()->Get(i)->Get(), GetLoadCommandID(i, true), iFirstPos++, true, MFS_UNCHECKED);
 			}
 		}
 	}

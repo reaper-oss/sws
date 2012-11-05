@@ -906,14 +906,14 @@ bool DeleteTakeAndMedia(int _mode)
 					if ((_mode == 1 || _mode == 2 || // all takes
 						((_mode == 3 || _mode == 4) && originalActiveTkIdx == k))) // active take only
 					{
-						char tkDisplayName[BUFFER_SIZE] = "[empty]"; // no localization here..
+						char tkDisplayName[SNM_MAX_PATH] = "[empty]"; // no localization here..
 						PCM_source* pcm = tk ? (PCM_source*)GetSetMediaItemTakeInfo(tk,"P_SOURCE",NULL) : NULL;
 						if (pcm)
 						{
 							if (pcm->GetFileName() && *(pcm->GetFileName()))
-								lstrcpyn(tkDisplayName, pcm->GetFileName(), BUFFER_SIZE);
+								lstrcpyn(tkDisplayName, pcm->GetFileName(), sizeof(tkDisplayName));
 							else if (pcm->GetFileName() && !strlen(pcm->GetFileName()))
-								lstrcpyn(tkDisplayName, (char*)GetSetMediaItemTakeInfo(tk,"P_NAME",NULL), BUFFER_SIZE);
+								lstrcpyn(tkDisplayName, (char*)GetSetMediaItemTakeInfo(tk,"P_NAME",NULL), sizeof(tkDisplayName));
 						}
 
 						// not already removed ?
@@ -922,7 +922,7 @@ bool DeleteTakeAndMedia(int _mode)
 						{
 							if (_mode == 1 || _mode == 3)
 							{
-								char buf[BUFFER_SIZE];
+								char buf[SNM_MAX_PATH];
 								if (pcm && pcm->GetFileName() && strlen(pcm->GetFileName())) 
 									_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("[Track %d, item %d] Delete take %d and its media file %s ?","sws_mbox"), i, j+1, originalTkIdx+1, tkDisplayName);
 								else if (pcm && pcm->GetFileName() && !strlen(pcm->GetFileName())) 
@@ -950,8 +950,8 @@ bool DeleteTakeAndMedia(int _mode)
 								Main_OnCommand(40100,0); 
 								if (SNM_DeleteFile(pcm->GetFileName(), true))
 								{
-									char peakFn[BUFFER_SIZE] = "";
-									GetPeakFileName(pcm->GetFileName(), peakFn, BUFFER_SIZE);
+									char peakFn[SNM_MAX_PATH] = "";
+									GetPeakFileName(pcm->GetFileName(), peakFn, sizeof(peakFn));
 									if (peakFn && *peakFn != '\0')
 										SNM_DeleteFile(peakFn, true); // no delete check (peaks files can be absent)
 								}
@@ -1407,7 +1407,7 @@ void OpenMediaPathInExplorerFinder(COMMAND_T*)
 	if (!CountSelectedMediaItems(NULL))
 		return;
 
-	char path[BUFFER_SIZE] = "";
+	char path[SNM_MAX_PATH] = "";
 	for (int i=1; i <= GetNumTracks(); i++) // skip master
 		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
 			for (int j=0; j < GetTrackNumMediaItems(tr); j++)

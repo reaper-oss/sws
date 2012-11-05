@@ -29,8 +29,6 @@
 
 using namespace std;
 
-#define BUFFER_SIZE		2048
-
 #define		MIDIITEMPROC_DEFAULT_SAMPLERATE		48000.0
 #define		MIDIITEMPROC_DEFAULT_NBCHANNELS		2
 

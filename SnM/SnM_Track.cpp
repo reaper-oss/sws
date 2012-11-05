@@ -1497,7 +1497,7 @@ void CC123Tracks(WDL_PtrList<void>* _trs)
 		if (WDL_HeapBuf* hb = TranscodeStr64ToHeapBuf(SNM_CC123_MID_FILE))
 		{
 			WDL_FastString cc123fn;
-			cc123fn.SetFormatted(BUFFER_SIZE, "%s%cS&M_CC123.mid", GetResourcePath(), PATH_SLASH_CHAR);
+			cc123fn.SetFormatted(SNM_MAX_PATH, "%s%cS&M_CC123.mid", GetResourcePath(), PATH_SLASH_CHAR);
 			if (SaveBin(cc123fn.Get(), hb)) {
 				g_cc123src = PCM_Source_CreateFromFileEx(cc123fn.Get(), false); // "false" so that the src is imported as in-project data (to delete the temp file) 
 				SNM_DeleteFile(cc123fn.Get(), false);

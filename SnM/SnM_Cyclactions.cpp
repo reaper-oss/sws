@@ -547,8 +547,8 @@ WDL_PtrList_DeleteOnDestroy<Cyclaction> g_editedActions[SNM_MAX_CYCLING_SECTIONS
 Cyclaction* g_editedAction = NULL;
 int g_editedSection = 0; // main section action, 1 = ME event list section action, 2 = ME piano roll section action
 bool g_edited = false;
-char g_lastExportFn[BUFFER_SIZE] = "";
-char g_lastImportFn[BUFFER_SIZE] = "";
+char g_lastExportFn[SNM_MAX_PATH] = "";
+char g_lastImportFn[SNM_MAX_PATH] = "";
 
 
 int CountEditedActions() {
@@ -1088,7 +1088,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Import cycle actions","sws_DLG_161"), g_lastImportFn, NULL, false, SNM_INI_EXT_LIST))
 			{
 				LoadCyclactions(true, false, g_editedActions, g_editedSection, fn);
-				lstrcpyn(g_lastImportFn, fn, BUFFER_SIZE);
+				lstrcpyn(g_lastImportFn, fn, sizeof(g_lastImportFn));
 				free(fn);
 				g_editedAction = NULL;
 				UpdateListViews();
@@ -1099,7 +1099,7 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Import cycle actions","sws_DLG_161"), g_lastImportFn, NULL, false, SNM_INI_EXT_LIST))
 			{
 				LoadCyclactions(true, false, g_editedActions, -1, fn);
-				lstrcpyn(g_lastImportFn, fn, BUFFER_SIZE);
+				lstrcpyn(g_lastImportFn, fn, sizeof(g_lastImportFn));
 				free(fn);
 				g_editedAction = NULL;
 				UpdateListViews();
@@ -1112,10 +1112,10 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			while(Cyclaction* a = (Cyclaction*)g_lvL->EnumSelected(&x))
 				actions[g_editedSection].Add(new Cyclaction(a));
 			if (actions[g_editedSection].GetSize()) {
-				char fn[BUFFER_SIZE] = "";
-				if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
+				char fn[SNM_MAX_PATH] = "";
+				if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, sizeof(fn))) {
 					SaveCyclactions(actions, g_editedSection, fn);
-					lstrcpyn(g_lastExportFn, fn, BUFFER_SIZE);
+					lstrcpyn(g_lastExportFn, fn, sizeof(g_lastExportFn));
 				}
 			}
 			break;
@@ -1126,10 +1126,10 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			for (int i=0; i < g_editedActions[g_editedSection].GetSize(); i++)
 				actions[g_editedSection].Add(new Cyclaction(g_editedActions[g_editedSection].Get(i)));
 			if (actions[g_editedSection].GetSize()) {
-				char fn[BUFFER_SIZE] = "";
-				if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
+				char fn[SNM_MAX_PATH] = "";
+				if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, strrchr(g_lastExportFn, '.') ? g_lastExportFn : NULL, SNM_INI_EXT_LIST, fn, sizeof(fn))) {
 					SaveCyclactions(actions, g_editedSection, fn);
-					lstrcpyn(g_lastExportFn, fn, BUFFER_SIZE);
+					lstrcpyn(g_lastExportFn, fn, sizeof(g_lastExportFn));
 				}
 			}
 			break;
@@ -1137,10 +1137,10 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case EXPORT_ALL_SECTIONS_MSG:
 			if (g_editedActions[0].GetSize() || g_editedActions[1].GetSize() || g_editedActions[2].GetSize()) // yeah, i know..
 			{
-				char fn[BUFFER_SIZE] = "";
-				if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, BUFFER_SIZE)) {
+				char fn[SNM_MAX_PATH] = "";
+				if (BrowseForSaveFile(__LOCALIZE("S&M - Export cycle actions","sws_DLG_161"), g_lastExportFn, g_lastExportFn, SNM_INI_EXT_LIST, fn, sizeof(fn))) {
 					SaveCyclactions(g_editedActions, -1, fn);
-					lstrcpyn(g_lastExportFn, fn, BUFFER_SIZE);
+					lstrcpyn(g_lastExportFn, fn, sizeof(g_lastExportFn));
 				}
 			}
 			break;

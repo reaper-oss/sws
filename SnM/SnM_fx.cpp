@@ -396,10 +396,10 @@ int GetUserPresetNames(const char* _fxType, const char* _fxName, WDL_PtrList<WDL
 	int nbPresets = 0;
 	if (_fxType && _fxName && _presetNames)
 	{
-		char iniFn[BUFFER_SIZE]="", buf[256]="";
+		char iniFn[SNM_MAX_PATH]="", buf[256]="";
 
 		// *** build ini filename ***
-		lstrcpyn(buf, _fxName, 256);
+		lstrcpyn(buf, _fxName, sizeof(buf));
 
 		// remove some file extensions
 		if (!_stricmp(_fxType, "VST"))

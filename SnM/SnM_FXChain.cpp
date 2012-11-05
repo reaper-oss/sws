@@ -538,8 +538,8 @@ void CopyFXChainSlotToClipBoard(int _slot)
 {
 	if (_slot >= 0 && _slot < g_slots.Get(g_tiedSlotActions[SNM_SLOT_FXC])->GetSize()) 
 	{
-		char fullPath[BUFFER_SIZE] = "";
-		if (g_slots.Get(g_tiedSlotActions[SNM_SLOT_FXC])->GetFullPath(_slot, fullPath, BUFFER_SIZE))
+		char fullPath[SNM_MAX_PATH] = "";
+		if (g_slots.Get(g_tiedSlotActions[SNM_SLOT_FXC])->GetFullPath(_slot, fullPath, sizeof(fullPath)))
 			LoadChunk(fullPath, &g_fXChainClipboard);
 	}
 }

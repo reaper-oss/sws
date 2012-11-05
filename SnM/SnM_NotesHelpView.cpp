@@ -73,9 +73,9 @@ int g_notesViewType = -1;
 int g_prevNotesViewType = -1;
 bool g_locked = false;
 char g_lastText[MAX_HELP_LENGTH] = "";
-char g_lastImportSubFn[BUFFER_SIZE] = "";
-char g_lastExportSubFn[BUFFER_SIZE] = "";
-char g_actionHelpFn[BUFFER_SIZE] = "";
+char g_lastImportSubFn[SNM_MAX_PATH] = "";
+char g_lastExportSubFn[SNM_MAX_PATH] = "";
+char g_actionHelpFn[SNM_MAX_PATH] = "";
 char g_notesBigFontName[64] = SWSDLG_TYPEFACE;
 
 // used for action help updates tracking
@@ -764,7 +764,7 @@ int SNM_NotesHelpWnd::UpdateItemNotes()
 #ifdef _WIN32
 	if (refreshType == NO_REFRESH)
 	{
-		char name[BUFFER_SIZE] = "";
+		char name[SNM_MAX_PATH] = "";
 		MediaItem_Take* tk = GetActiveTake(g_mediaItemNote);
 		char* tkName = tk ? (char*)GetSetMediaItemTakeInfo(tk, "P_NAME", NULL) : NULL;
 		_snprintfSafe(name, sizeof(name), "%s \"%s\"", __localizeFunc("Notes for", "notes", 0), tkName ? tkName : __localizeFunc("Empty Item", "common", 0));
@@ -911,7 +911,7 @@ void SaveHelp(const char* _cmdName, const char* _help)
 
 void SetActionHelpFilename(COMMAND_T*) {
 	if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Set action help file","sws_DLG_152"), g_actionHelpFn, NULL, false, SNM_INI_EXT_LIST)) {
-		lstrcpyn(g_actionHelpFn, fn, BUFFER_SIZE);
+		lstrcpyn(g_actionHelpFn, fn, sizeof(g_actionHelpFn));
 		free(fn);
 	}
 }
@@ -1071,7 +1071,7 @@ void ImportSubTitleFile(COMMAND_T* _ct)
 {
 	if (char* fn = BrowseForFiles(__LOCALIZE("S&M - Import subtitle file","sws_DLG_152"), g_lastImportSubFn, NULL, false, SNM_SUB_EXT_LIST))
 	{
-		lstrcpyn(g_lastImportSubFn, fn, BUFFER_SIZE);
+		lstrcpyn(g_lastImportSubFn, fn, sizeof(g_lastImportSubFn));
 		if (ImportSubRipFile(fn))
 			//JFB hard-coded undo label: _ct might be NULL (when called from a button)
 			//    + avoid trailing "..." in undo point name (when called from an action)
@@ -1135,9 +1135,9 @@ bool ExportSubRipFile(const char* _fn)
 
 void ExportSubTitleFile(COMMAND_T* _ct)
 {
-	char fn[BUFFER_SIZE] = "";
-	if (BrowseForSaveFile(__LOCALIZE("S&M - Export subtitle file","sws_DLG_152"), g_lastExportSubFn, strrchr(g_lastExportSubFn, '.') ? g_lastExportSubFn : NULL, SNM_SUB_EXT_LIST, fn, BUFFER_SIZE)) {
-		lstrcpyn(g_lastExportSubFn, fn, BUFFER_SIZE);
+	char fn[SNM_MAX_PATH] = "";
+	if (BrowseForSaveFile(__LOCALIZE("S&M - Export subtitle file","sws_DLG_152"), g_lastExportSubFn, strrchr(g_lastExportSubFn, '.') ? g_lastExportSubFn : NULL, SNM_SUB_EXT_LIST, fn, sizeof(fn))) {
+		lstrcpyn(g_lastExportSubFn, fn, sizeof(g_lastExportSubFn));
 		ExportSubRipFile(fn);
 	}
 }
@@ -1262,8 +1262,8 @@ static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t
 	// init S&M project notes with REAPER's ones
 	if (!isUndo)
 	{
-		char buf[BUFFER_SIZE] = "";
-		EnumProjects(-1, buf, BUFFER_SIZE);
+		char buf[SNM_MAX_PATH] = "";
+		EnumProjects(-1, buf, sizeof(buf));
 
 		// SWS - It's possible at this point that we're not reading an RPP file (eg during import), check to be sure!
 		// If so, just ignore the possibility that there might be project notes.
@@ -1297,8 +1297,8 @@ static project_config_extension_t g_projectconfig = {
 
 int NotesHelpViewInit()
 {
-	lstrcpyn(g_lastImportSubFn, GetResourcePath(), BUFFER_SIZE);
-	lstrcpyn(g_lastExportSubFn, GetResourcePath(), BUFFER_SIZE);
+	lstrcpyn(g_lastImportSubFn, GetResourcePath(), sizeof(g_lastImportSubFn));
+	lstrcpyn(g_lastExportSubFn, GetResourcePath(), sizeof(g_lastExportSubFn));
 
 	// load prefs 
 	g_notesViewType = GetPrivateProfileInt("NOTES_HELP_VIEW", "Type", 0, g_SNMIniFn.Get());
@@ -1306,10 +1306,10 @@ int NotesHelpViewInit()
 	GetPrivateProfileString("NOTES_HELP_VIEW", "BigFontName", SWSDLG_TYPEFACE, g_notesBigFontName, sizeof(g_notesBigFontName), g_SNMIniFn.Get());
 
 	// get the action help filename
-	char defaultHelpFn[BUFFER_SIZE] = "";
+	char defaultHelpFn[SNM_MAX_PATH] = "";
 	if (_snprintfStrict(defaultHelpFn, sizeof(defaultHelpFn), SNM_ACTION_HELP_INI_FILE, GetResourcePath()) <= 0)
 		*defaultHelpFn = '\0';
-	GetPrivateProfileString("NOTES_HELP_VIEW", "Action_help_file", defaultHelpFn, g_actionHelpFn, BUFFER_SIZE, g_SNMIniFn.Get());
+	GetPrivateProfileString("NOTES_HELP_VIEW", "Action_help_file", defaultHelpFn, g_actionHelpFn, sizeof(g_actionHelpFn), g_SNMIniFn.Get());
 
 	g_pNotesHelpWnd = new SNM_NotesHelpWnd();
 	if (!g_pNotesHelpWnd || !plugin_register("projectconfig", &g_projectconfig))

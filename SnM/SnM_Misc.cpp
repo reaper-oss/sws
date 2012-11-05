@@ -223,11 +223,11 @@ void LoadThemeSlot(int _slotType, const char* _title, int _slot)
 {
 	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
 	{
-		char cmd[BUFFER_SIZE]=""; 
+		char cmd[SNM_MAX_PATH]=""; 
 		if (_snprintfStrict(cmd, sizeof(cmd), "%s\\reaper.exe", GetExePath()) > 0)
 		{
 			WDL_FastString prmStr;
-			prmStr.SetFormatted(BUFFER_SIZE, " \"%s\"", fnStr->Get());
+			prmStr.SetFormatted(SNM_MAX_PATH, " \"%s\"", fnStr->Get());
 			_spawnl(_P_NOWAIT, cmd, prmStr.Get(), NULL);
 			delete fnStr;
 		}

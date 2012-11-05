@@ -78,6 +78,7 @@
 #else
 #define SNM_INI_FILE_VERSION		7
 #endif
+#define SNM_MAX_PATH				2048
 #define SNM_LIVECFG_NB_CONFIGS		8
 #define SNM_SNM_SECTION_1ST_CMD_ID	40000
 #define SNM_MAX_TRACK_GROUPS		32
@@ -270,7 +271,7 @@ vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"
 #include "SnM_Dlg.h"
 #include "SnM_VWnd.h"
 #include "SnM_Resources.h"
-#include "SnM_Cyclactions.h" // from this point order does not matter
+#include "SnM_Cyclactions.h"
 #include "SnM_FindView.h"
 #include "SnM_fx.h"
 #include "SnM_FXChain.h"

@@ -526,9 +526,9 @@ const char* SNM_GetSetObjectState(void* _obj, WDL_FastString* _str)
 	SNM_PostObjectState(fxstate);
 #endif
 #ifdef _SNM_DEBUG
-	char fn[BUFFER_SIZE] = "";
+	char fn[SNM_MAX_PATH] = "";
 	int l = _snprintf(fn, sizeof(fn), "%s%cSNM_CPP_last%s.log", GetExePath(), PATH_SLASH_CHAR, _str ? "Set" : "Get");
-	if (l>0 && l<BUFFER_SIZE)
+	if (l>0 && l<SNM_MAX_PATH)
 		if (FILE* f = fopenUTF8(fn, "w")) {
 			fputs(_str ? _str->Get() : (p?p:"NULL"), f);
 			fclose(f);

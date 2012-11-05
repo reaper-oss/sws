@@ -35,7 +35,7 @@
 bool CueBuss(const char* _undoMsg, const char* _busName, int _type, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
 bool CueBuss(const char* _undoMsg, int _confId);
 void CueBuss(COMMAND_T*);
-void ReadCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
+void ReadCueBusIniFile(int _confId, char* _busName, int _busNameSz, int* _reaType, bool* _trTemplate, char* _trTemplatePath, int _trTemplatePathSz, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
 void SaveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
 void CopySendsReceives(bool _noIntra, WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends,  WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs);
 bool PasteSendsReceives(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _sends,  WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs, bool _rcvReplace, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);

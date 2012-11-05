@@ -85,8 +85,8 @@ bool CueBuss(const char* _undoMsg, const char* _busName, int _type, bool _showRo
 	WDL_FastString tmplt;
 	if (_trTemplatePath && (!FileExists(_trTemplatePath) || !LoadChunk(_trTemplatePath, &tmplt) || !tmplt.GetLength()))
 	{
-		char msg[BUFFER_SIZE];
-		lstrcpyn(msg, __LOCALIZE("Cue buss not created!\nNo track template file defined","sws_DLG_149"), BUFFER_SIZE);
+		char msg[SNM_MAX_PATH] = "";
+		lstrcpyn(msg, __LOCALIZE("Cue buss not created!\nNo track template file defined","sws_DLG_149"), sizeof(msg));
 		if (*_trTemplatePath)
 			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Cue buss not created!\nTrack template not found (or empty): %s","sws_DLG_149"), _trTemplatePath);
 		MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_149"), MB_OK);
@@ -200,10 +200,10 @@ bool CueBuss(const char* _undoMsg, int _confId)
 {
 	if (_confId<0 || _confId>=SNM_MAX_CUE_BUSS_CONFS)
 		_confId = g_cueBussLastSettingsId;
-	char busName[BUFFER_SIZE]="", trTemplatePath[BUFFER_SIZE]="";
+	char busName[64]="", trTemplatePath[SNM_MAX_PATH]="";
 	int reaType, soloGrp, hwOuts[8];
 	bool trTemplate,showRouting,sendToMaster;
-	ReadCueBusIniFile(_confId, busName, &reaType, &trTemplate, trTemplatePath, &showRouting, &soloGrp, &sendToMaster, hwOuts);
+	ReadCueBusIniFile(_confId, busName, sizeof(busName), &reaType, &trTemplate, trTemplatePath, sizeof(trTemplatePath), &showRouting, &soloGrp, &sendToMaster, hwOuts);
 	bool updated = CueBuss(_undoMsg, busName, reaType, showRouting, soloGrp, trTemplate?trTemplatePath:NULL, sendToMaster, hwOuts);
 	g_cueBussLastSettingsId = _confId;
 	return updated;
@@ -213,7 +213,7 @@ void CueBuss(COMMAND_T* _ct) {
 	CueBuss(SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
 }
 
-void ReadCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemplate, char* _trTemplatePath, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts)
+void ReadCueBusIniFile(int _confId, char* _busName, int _busNameSz, int* _reaType, bool* _trTemplate, char* _trTemplatePath, int _trTemplatePathSz, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts)
 {
 	if (_confId>=0 && _confId<SNM_MAX_CUE_BUSS_CONFS && _busName && _reaType && _trTemplate && _trTemplatePath && _showRouting && _soloDefeat && _sendToMaster && _hwOuts)
 	{
@@ -221,12 +221,12 @@ void ReadCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemp
 		if (_snprintfStrict(iniSection, sizeof(iniSection), "CueBuss%d", _confId+1) > 0)
 		{
 			char buf[16]="", slot[16]="";
-			GetPrivateProfileString(iniSection,"name","",_busName,BUFFER_SIZE,g_SNMIniFn.Get());
+			GetPrivateProfileString(iniSection,"name","",_busName,_busNameSz,g_SNMIniFn.Get());
 			GetPrivateProfileString(iniSection,"reatype","3",buf,16,g_SNMIniFn.Get());
 			*_reaType = atoi(buf); // 0 if failed 
 			GetPrivateProfileString(iniSection,"track_template_enabled","0",buf,16,g_SNMIniFn.Get());
 			*_trTemplate = (atoi(buf) == 1);
-			GetPrivateProfileString(iniSection,"track_template_path","",_trTemplatePath,BUFFER_SIZE,g_SNMIniFn.Get());
+			GetPrivateProfileString(iniSection,"track_template_path","",_trTemplatePath,_trTemplatePathSz,g_SNMIniFn.Get());
 			GetPrivateProfileString(iniSection,"show_routing","1",buf,16,g_SNMIniFn.Get());
 			*_showRouting = (atoi(buf) == 1);
 			GetPrivateProfileString(iniSection,"send_to_masterparent","0",buf,16,g_SNMIniFn.Get());
@@ -236,7 +236,7 @@ void ReadCueBusIniFile(int _confId, char* _busName, int* _reaType, bool* _trTemp
 			for (int i=0; i<SNM_MAX_HW_OUTS; i++)
 			{
 				if (_snprintfStrict(slot, sizeof(slot), "hwout%d", i+1) > 0)
-					GetPrivateProfileString(iniSection,slot,"0",buf,BUFFER_SIZE,g_SNMIniFn.Get());
+					GetPrivateProfileString(iniSection,slot,"0",buf,sizeof(buf),g_SNMIniFn.Get());
 				else
 					*buf = '\0';
 				_hwOuts[i] = atoi(buf);

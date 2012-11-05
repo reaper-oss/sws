@@ -592,11 +592,11 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			bool updt = false;
 			if (item)
 			{
-				char filename[BUFFER_SIZE];
-				if (BrowseResourcePath(__LOCALIZE("S&M - Load track template","sws_DLG_155"), "TrackTemplates", "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0", filename, BUFFER_SIZE))
+				char fn[SNM_MAX_PATH]="";
+				if (BrowseResourcePath(__LOCALIZE("S&M - Load track template","sws_DLG_155"), "TrackTemplates", "REAPER Track Template (*.RTrackTemplate)\0*.RTrackTemplate\0", fn, sizeof(fn)))
 				{
 					while(item) {
-						item->m_trTemplate.Set(filename);
+						item->m_trTemplate.Set(fn);
 						item->m_fxChain.Set("");
 						item->m_presets.Set("");
 						updt = true;
@@ -629,11 +629,11 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			bool updt = false;
 			if (item)
 			{
-				char filename[BUFFER_SIZE];
-				if (BrowseResourcePath(__LOCALIZE("S&M - Load FX Chain","sws_DLG_155"), "FXChains", "REAPER FX Chain (*.RfxChain)\0*.RfxChain\0", filename, BUFFER_SIZE))
+				char fn[SNM_MAX_PATH]="";
+				if (BrowseResourcePath(__LOCALIZE("S&M - Load FX Chain","sws_DLG_155"), "FXChains", "REAPER FX Chain (*.RfxChain)\0*.RfxChain\0", fn, sizeof(fn)))
 				{
 					while(item) {
-						item->m_fxChain.Set(filename);
+						item->m_fxChain.Set(fn);
 						item->m_trTemplate.Set("");
 						item->m_presets.Set("");
 						updt = true;
@@ -1409,8 +1409,8 @@ void SNM_MidiLiveScheduledJob::Perform()
 				{
 					p = new SNM_SendPatcher(cfg->m_track);
 					WDL_FastString tmplt;
-					char fn[BUFFER_SIZE] = "";
-					GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), fn, BUFFER_SIZE);
+					char fn[SNM_MAX_PATH] = "";
+					GetFullResourcePath("TrackTemplates", cfg->m_trTemplate.Get(), fn, sizeof(fn));
 					if (LoadChunk(fn, &tmplt) && tmplt.GetLength())
 					{
 						WDL_FastString chunk;
@@ -1422,9 +1422,9 @@ void SNM_MidiLiveScheduledJob::Perform()
 				{
 					p = new SNM_FXChainTrackPatcher(cfg->m_track);
 					WDL_FastString chunk;
-					char filename[BUFFER_SIZE];
-					GetFullResourcePath("FXChains", cfg->m_fxChain.Get(), filename, BUFFER_SIZE);
-					if (LoadChunk(filename, &chunk) && chunk.GetLength())
+					char fn[SNM_MAX_PATH]="";
+					GetFullResourcePath("FXChains", cfg->m_fxChain.Get(), fn, sizeof(fn));
+					if (LoadChunk(fn, &chunk) && chunk.GetLength())
 						((SNM_FXChainTrackPatcher*)p)->SetFXChain(&chunk);
 				}
 				else if (cfg->m_presets.GetLength()) {

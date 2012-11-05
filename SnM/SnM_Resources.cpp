@@ -291,16 +291,16 @@ bool IsFiltered() {
 
 // _path: short resource path or full path
 PathSlotItem* FileSlotList::AddSlot(const char* _path, const char* _desc) {
-	char shortPath[BUFFER_SIZE] = "";
-	GetShortResourcePath(m_resDir.Get(), _path, shortPath, BUFFER_SIZE);
+	char shortPath[SNM_MAX_PATH] = "";
+	GetShortResourcePath(m_resDir.Get(), _path, shortPath, sizeof(shortPath));
 	return Add(new PathSlotItem(shortPath, _desc));
 }
 
 // _path: short resource path or full path
 PathSlotItem* FileSlotList::InsertSlot(int _slot, const char* _path, const char* _desc) {
 	PathSlotItem* item = NULL;
-	char shortPath[BUFFER_SIZE] = "";
-	GetShortResourcePath(m_resDir.Get(), _path, shortPath, BUFFER_SIZE);
+	char shortPath[SNM_MAX_PATH] = "";
+	GetShortResourcePath(m_resDir.Get(), _path, shortPath, sizeof(shortPath));
 	if (_slot >=0 && _slot < GetSize()) item = Insert(_slot, new PathSlotItem(shortPath, _desc));
 	else item = Add(new PathSlotItem(shortPath, _desc));
 	return item;
@@ -325,8 +325,8 @@ bool FileSlotList::GetFullPath(int _slot, char* _fullFn, int _fullFnSz) {
 
 bool FileSlotList::SetFromFullPath(int _slot, const char* _fullPath) {
 	if (PathSlotItem* item = Get(_slot)) {
-		char shortPath[BUFFER_SIZE] = "";
-		GetShortResourcePath(m_resDir.Get(), _fullPath, shortPath, BUFFER_SIZE);
+		char shortPath[SNM_MAX_PATH] = "";
+		GetShortResourcePath(m_resDir.Get(), _fullPath, shortPath, sizeof(shortPath));
 		item->m_shortPath.Set(shortPath);
 		return true;
 	}
@@ -379,7 +379,7 @@ bool FileSlotList::BrowseSlot(int _slot, char* _fn, int _fnSz)
 	bool ok = false;
 	if (_slot >= 0 && _slot < GetSize())
 	{
-		char title[128]="", fileFilter[512]="", defaultPath[BUFFER_SIZE]="";
+		char title[128]="", fileFilter[512]="", defaultPath[SNM_MAX_PATH]="";
 		_snprintfSafe(title, sizeof(title), __LOCALIZE_VERFMT("S&M - Load %s (slot %d)","sws_DLG_150"), m_desc.Get(), _slot+1);
 		if (_snprintfStrict(defaultPath, sizeof(defaultPath), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, m_resDir.Get()) <= 0)
 			*defaultPath = '\0';
@@ -446,8 +446,8 @@ WDL_FastString* FileSlotList::GetOrPromptOrBrowseSlot(const char* _title, int* _
 
 	if (*_slot < GetSize())
 	{
-		char fn[BUFFER_SIZE]="";
-		if (GetOrBrowseSlot(*_slot, fn, BUFFER_SIZE, *_slot < 0 || !Get(*_slot)->IsDefault()))
+		char fn[SNM_MAX_PATH]="";
+		if (GetOrBrowseSlot(*_slot, fn, sizeof(fn), *_slot < 0 || !Get(*_slot)->IsDefault()))
 			return new WDL_FastString(fn);
 	}
 	*_slot = -1;
@@ -458,8 +458,8 @@ void FileSlotList::EditSlot(int _slot)
 {
 	if (_slot >= 0 && _slot < GetSize())
 	{
-		char fullPath[BUFFER_SIZE] = "";
-		if (GetFullPath(_slot, fullPath, BUFFER_SIZE) && FileExistsErrMsg(fullPath))
+		char fullPath[SNM_MAX_PATH] = "";
+		if (GetFullPath(_slot, fullPath, sizeof(fullPath)) && FileExistsErrMsg(fullPath))
 		{
 #ifdef _WIN32
 			WinSpawnNotepad(fullPath);
@@ -536,8 +536,8 @@ bool SNM_ResourceView::IsEditListItemAllowed(SWS_ListItem* item, int iCol)
 			{
 				switch (iCol) {
 					case COL_NAME: { // file renaming
-						char fn[BUFFER_SIZE] = "";
-						return (GetSlotList()->GetFullPath(slot, fn, BUFFER_SIZE) && FileExists(fn));
+						char fn[SNM_MAX_PATH] = "";
+						return (GetSlotList()->GetFullPath(slot, fn, sizeof(fn)) && FileExists(fn));
 					}
 					case COL_COMMENT:
 						return true;
@@ -561,12 +561,12 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 				if (!IsValidFilenameErrMsg(str, true))
 					return;
 
-				char fn[BUFFER_SIZE] = "";
-				if (GetSlotList()->GetFullPath(slot, fn, BUFFER_SIZE) && !pItem->IsDefault() && FileExistsErrMsg(fn))
+				char fn[SNM_MAX_PATH] = "";
+				if (GetSlotList()->GetFullPath(slot, fn, sizeof(fn)) && !pItem->IsDefault() && FileExistsErrMsg(fn))
 				{
 					const char* ext = GetFileExtension(fn);
-					char newFn[BUFFER_SIZE]="", path[BUFFER_SIZE]="";
-					lstrcpyn(path, fn, BUFFER_SIZE);
+					char newFn[SNM_MAX_PATH]="", path[SNM_MAX_PATH]="";
+					lstrcpyn(path, fn, sizeof(path));
 					if (char* p = strrchr(path, PATH_SLASH_CHAR))
 						*p = '\0';
 					else
@@ -576,7 +576,7 @@ void SNM_ResourceView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 					{
 						if (FileExists(newFn)) 
 						{
-							char msg[BUFFER_SIZE]="";
+							char msg[SNM_MAX_PATH]="";
 							_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("File already exists. Overwrite ?\n%s","sws_mbox"), newFn);
 							int res = MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_YESNO);
 							if (res == IDYES) {
@@ -611,7 +611,7 @@ void SNM_ResourceView::GetItemList(SWS_ListItemList* pList)
 {
 	if (IsFiltered())
 	{
-		char buf[BUFFER_SIZE] = "";
+		char buf[SNM_MAX_PATH] = "";
 		LineParser lp(false);
 		if (!lp.parse(g_filter.Get()))
 		{
@@ -624,12 +624,12 @@ void SNM_ResourceView::GetItemList(SWS_ListItemList* pList)
 					{
 						if (g_filterPref&1) // name
 						{
-							GetFilenameNoExt(item->m_shortPath.Get(), buf, BUFFER_SIZE);
+							GetFilenameNoExt(item->m_shortPath.Get(), buf, sizeof(buf));
 							match |= (stristr(buf, lp.gettoken_str(j)) != NULL);
 						}
 						if (!match && (g_filterPref&2)) // path
 						{
-							if (GetSlotList()->GetFullPath(i, buf, BUFFER_SIZE))
+							if (GetSlotList()->GetFullPath(i, buf, sizeof(buf)))
 								if (char* p = strrchr(buf, PATH_SLASH_CHAR)) {
 									*p = '\0';
 									match |= (stristr(buf, lp.gettoken_str(j)) != NULL);
@@ -662,8 +662,8 @@ void SNM_ResourceView::OnBeginDrag(SWS_ListItem* _item)
 	while (PathSlotItem* pItem = (PathSlotItem*)EnumSelected(&x))
 	{
 		int slot = GetSlotList()->Find(pItem);
-		char fullPath[BUFFER_SIZE] = "";
-		if (GetSlotList()->GetFullPath(slot, fullPath, BUFFER_SIZE))
+		char fullPath[SNM_MAX_PATH] = "";
+		if (GetSlotList()->GetFullPath(slot, fullPath, sizeof(fullPath)))
 		{
 			bool empty = (pItem->IsDefault() || *fullPath == '\0');
 			iMemNeeded += (int)((empty ? strlen(DRAGDROP_EMPTY_SLOT) : strlen(fullPath)) + 1);
@@ -1026,12 +1026,12 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			PathSlotItem* item2 = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
 			if (item && item2 && g_SNMDiffToolFn.GetLength())
 			{
-				char fn1[BUFFER_SIZE]="", fn2[BUFFER_SIZE]="";
-				if (GetSlotList()->GetFullPath(GetSlotList()->Find(item), fn1, BUFFER_SIZE) &&
-					GetSlotList()->GetFullPath(GetSlotList()->Find(item2), fn2, BUFFER_SIZE))
+				char fn1[SNM_MAX_PATH]="", fn2[SNM_MAX_PATH]="";
+				if (GetSlotList()->GetFullPath(GetSlotList()->Find(item), fn1, sizeof(fn1)) &&
+					GetSlotList()->GetFullPath(GetSlotList()->Find(item2), fn2, sizeof(fn2)))
 				{
 					WDL_FastString prmStr;
-					prmStr.SetFormatted(BUFFER_SIZE*3, " \"%s\" \"%s\"", fn1, fn2);
+					prmStr.SetFormatted(sizeof(fn1)*3, " \"%s\" \"%s\"", fn1, fn2);
 					_spawnl(_P_NOWAIT, g_SNMDiffToolFn.Get(), prmStr.Get(), NULL);
 				}
 			}
@@ -1040,8 +1040,8 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 #endif
 		case EXPLORE_MSG:
 		{
-			char fullPath[BUFFER_SIZE] = "";
-			if (GetSlotList()->GetFullPath(slot, fullPath, BUFFER_SIZE))
+			char fullPath[SNM_MAX_PATH] = "";
+			if (GetSlotList()->GetFullPath(slot, fullPath, sizeof(fullPath)))
 				if (char* p = strrchr(fullPath, PATH_SLASH_CHAR)) {
 					*(p+1) = '\0'; // ShellExecute() is KO otherwie..
 					ShellExecute(NULL, "open", fullPath, NULL, NULL, SW_SHOWNORMAL);
@@ -1055,21 +1055,21 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case AUTOFILL_DIR_MSG:
 		{
-			char path[BUFFER_SIZE] = "";
-			if (BrowseForDirectory(__LOCALIZE("Set auto-fill directory","sws_DLG_150"), GetAutoFillDir(), path, BUFFER_SIZE))
+			char path[SNM_MAX_PATH] = "";
+			if (BrowseForDirectory(__LOCALIZE("Set auto-fill directory","sws_DLG_150"), GetAutoFillDir(), path, sizeof(path)))
 				SetAutoFillDir(path);
 			break;
 		}
 		case AUTOFILL_PRJ_MSG:
 		{
-			char path[BUFFER_SIZE] = "";
-			GetProjectPath(path, BUFFER_SIZE);
+			char path[SNM_MAX_PATH] = "";
+			GetProjectPath(path, sizeof(path));
 			SetAutoFillDir(path);
 			break;
 		}
 		case AUTOFILL_DEFAULT_MSG:
 		{
-			char path[BUFFER_SIZE] = "";
+			char path[SNM_MAX_PATH] = "";
 			if (_snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, GetSlotList()->GetResourceDir()) > 0) {
 				if (!FileExists(path))
 					CreateDirectory(path, NULL);
@@ -1089,15 +1089,15 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case AUTOSAVE_DIR_MSG:
 		{
-			char path[BUFFER_SIZE] = "";
-			if (BrowseForDirectory(__LOCALIZE("Set auto-save directory","sws_DLG_150"), GetAutoSaveDir(), path, BUFFER_SIZE))
+			char path[SNM_MAX_PATH] = "";
+			if (BrowseForDirectory(__LOCALIZE("Set auto-save directory","sws_DLG_150"), GetAutoSaveDir(), path, sizeof(path)))
 				SetAutoSaveDir(path);
 			break;
 		}
 		case AUTOSAVE_DIR_PRJ_MSG:
 		{
-			char prjPath[BUFFER_SIZE] = "", path[BUFFER_SIZE] = "";
-			GetProjectPath(prjPath, BUFFER_SIZE);
+			char prjPath[SNM_MAX_PATH] = "", path[SNM_MAX_PATH] = "";
+			GetProjectPath(prjPath, sizeof(prjPath));
 			// see GetFileRelativePath..
 			if (_snprintfStrict(path, sizeof(path), "%s%c%s", prjPath, PATH_SLASH_CHAR, GetFileRelativePath(GetSlotList()->GetResourceDir())) > 0) {
 				if (!FileExists(path))
@@ -1108,7 +1108,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		}
 		case AUTOSAVE_DIR_DEFAULT_MSG:
 		{
-			char path[BUFFER_SIZE] = "";
+			char path[SNM_MAX_PATH] = "";
 			if (_snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, GetSlotList()->GetResourceDir()) > 0) {
 				if (!FileExists(path))
 					CreateDirectory(path, NULL);
@@ -1142,8 +1142,8 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		case RENAME_MSG:
 			if (item) {
-				char fullPath[BUFFER_SIZE] = "";
-				if (GetSlotList()->GetFullPath(slot, fullPath, BUFFER_SIZE) && FileExistsErrMsg(fullPath))
+				char fullPath[SNM_MAX_PATH] = "";
+				if (GetSlotList()->GetFullPath(slot, fullPath, sizeof(fullPath)) && FileExistsErrMsg(fullPath))
 					m_pLists.Get(0)->EditListItem((SWS_ListItem*)item, COL_NAME);
 			}
 			break;
@@ -1283,11 +1283,11 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			nbRecents = min(98, nbRecents); // just in case: 2 digits max..
 			if (nbRecents)
 			{
-				char key[16], path[BUFFER_SIZE];
+				char key[16], path[SNM_MAX_PATH];
 				WDL_PtrList_DeleteOnDestroy<WDL_FastString> prjs;
 				for (int i=0; i < nbRecents; i++) {
 					if (_snprintfStrict(key, sizeof(key), "recent%02d", i+1) > 0) {
-						GetPrivateProfileString("Recent", key, "", path, BUFFER_SIZE, get_ini_file());
+						GetPrivateProfileString("Recent", key, "", path, sizeof(path), get_ini_file());
 						if (*path)
 							prjs.Add(new WDL_FastString(path));
 					}
@@ -1301,7 +1301,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				SelectBySlot(startSlot, GetSlotList()->GetSize());
 			}
 			else {
-				char msg[BUFFER_SIZE] = "";
+				char msg[SNM_MAX_PATH] = "";
 				_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("No new recent projects found!\n%s","sws_DLG_150"), AUTOFILL_ERR_STR);
 				MessageBox(m_hwnd, msg, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_OK);
 			}
@@ -1403,7 +1403,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 void SNM_ResourceWnd::AutoSaveContextMenu(HMENU _menu, bool _saveItem)
 {
 	int typeForUser = GetTypeForUser();
-	char autoPath[BUFFER_SIZE] = "";
+	char autoPath[SNM_MAX_PATH] = "";
 	_snprintfSafe(autoPath, sizeof(autoPath), __LOCALIZE_VERFMT("[Current auto-save path: %s]","sws_DLG_150"), *GetAutoSaveDir() ? GetAutoSaveDir() : __LOCALIZE("undefined","sws_DLG_150"));
 	AddToMenu(_menu, autoPath, 0, -1, false, MF_DISABLED); // different from MF_GRAYED
 	AddToMenu(_menu, __LOCALIZE("Sync auto-save and auto-fill paths","sws_DLG_150"), AUTOFILL_SYNC_MSG, -1, false, g_syncAutoDirPrefs[g_resViewType] ? MFS_CHECKED : MFS_UNCHECKED);
@@ -1443,7 +1443,7 @@ void SNM_ResourceWnd::AutoSaveContextMenu(HMENU _menu, bool _saveItem)
 void SNM_ResourceWnd::AutoFillContextMenu(HMENU _menu, bool _fillItem)
 {
 	int typeForUser = GetTypeForUser();
-	char autoPath[BUFFER_SIZE] = "";
+	char autoPath[SNM_MAX_PATH] = "";
 	_snprintfSafe(autoPath, sizeof(autoPath), __LOCALIZE_VERFMT("[Current auto-fill path: %s]","sws_DLG_150"), *GetAutoFillDir() ? GetAutoFillDir() : __LOCALIZE("undefined","sws_DLG_150"));
 	AddToMenu(_menu, autoPath, 0, -1, false, MF_DISABLED); // different from MF_GRAYED
 	if (GetSlotList()->HasAutoSave())
@@ -1654,11 +1654,11 @@ int SNM_ResourceWnd::GetValidDroppedFilesCount(HDROP _h)
 {
 	int validCnt=0;
 	int iFiles = DragQueryFile(_h, 0xFFFFFFFF, NULL, 0);
-	char cFile[BUFFER_SIZE];
+	char fn[SNM_MAX_PATH] = "";
 	for (int i=0; i < iFiles; i++) 
 	{
-		DragQueryFile(_h, i, cFile, BUFFER_SIZE);
-		if (!strcmp(cFile, DRAGDROP_EMPTY_SLOT) || g_slots.Get(GetTypeForUser())->IsValidFileExt(GetFileExtension(cFile)))
+		DragQueryFile(_h, i, fn, sizeof(fn));
+		if (!strcmp(fn, DRAGDROP_EMPTY_SLOT) || g_slots.Get(GetTypeForUser())->IsValidFileExt(GetFileExtension(fn)))
 			validCnt++;
 	}
 	return validCnt;
@@ -1709,12 +1709,12 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 	pItem = GetSlotList()->Get(dropSlot); 
 
 	// Patch added/inserted slots from dropped data
-	char cFile[BUFFER_SIZE];
+	char fn[SNM_MAX_PATH] = "";
 	int slot;
 	for (int i=0; pItem && i < iFiles; i++)
 	{
 		slot = GetSlotList()->Find(pItem);
-		DragQueryFile(_h, i, cFile, BUFFER_SIZE);
+		DragQueryFile(_h, i, fn, sizeof(fn));
 
 		// internal d'n'd ?
 		if (g_dragPathSlotItems.GetSize())
@@ -1728,8 +1728,9 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 			}
 		}
 		// .rfxchain? .rTrackTemplate? etc..
-		else if (g_slots.Get(GetTypeForUser())->IsValidFileExt(GetFileExtension(cFile))) {
-			if (GetSlotList()->SetFromFullPath(slot, cFile)) {
+		else if (g_slots.Get(GetTypeForUser())->IsValidFileExt(GetFileExtension(fn)))
+		{
+			if (GetSlotList()->SetFromFullPath(slot, fn)) {
 				dropped++;
 				pItem = GetSlotList()->Get(slot+1); 
 			}
@@ -2039,7 +2040,7 @@ void SNM_ResourceWnd::ClearDeleteSlots(int _mode, bool _update)
 	x=GetSlotList()->GetSize();
 	while(x >= 0 && slots.Get(--x) == &g_i1) endSelSlot=x;
 
-	char fullPath[BUFFER_SIZE] = "";
+	char fullPath[SNM_MAX_PATH] = "";
 	WDL_PtrList_DeleteOnDestroy<PathSlotItem> delItems; // DeleteOnDestroy: keep (displayed!) pointers until the list view is updated
 	for (int slot=slots.GetSize()-1; slot >=0 ; slot--)
 	{
@@ -2048,7 +2049,7 @@ void SNM_ResourceWnd::ClearDeleteSlots(int _mode, bool _update)
 			if (PathSlotItem* item = GetSlotList()->Get(slot))
 			{
 				if (_mode&4) {
-					GetFullResourcePath(GetSlotList()->GetResourceDir(), item->m_shortPath.Get(), fullPath, BUFFER_SIZE);
+					GetFullResourcePath(GetSlotList()->GetResourceDir(), item->m_shortPath.Get(), fullPath, sizeof(fullPath));
 					SNM_DeleteFile(fullPath, true);
 				}
 
@@ -2082,10 +2083,10 @@ bool CheckSetAutoDirectory(const char* _title, int _type, bool _autoSave)
 	WDL_FastString* dir = _autoSave ? g_autoSaveDirs.Get(_type) : g_autoFillDirs.Get(_type);
 	if (!FileExists(dir->Get()))
 	{
-		char buf[BUFFER_SIZE] = "";
+		char buf[SNM_MAX_PATH] = "";
 		_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("%s directory not found!\n%s%sDo you want to define one ?","sws_DLG_150"), _title, dir->Get(), dir->GetLength()?"\n":"");
 		if (IDYES == MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), buf, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_YESNO)) {
-			if (BrowseForDirectory(_autoSave ? __LOCALIZE("Set auto-save directory","sws_DLG_150") : __LOCALIZE("Set auto-fill directory","sws_DLG_150"), GetResourcePath(), buf, BUFFER_SIZE)) {
+			if (BrowseForDirectory(_autoSave ? __LOCALIZE("Set auto-save directory","sws_DLG_150") : __LOCALIZE("Set auto-fill directory","sws_DLG_150"), GetResourcePath(), buf, sizeof(buf))) {
 				if (_autoSave) SetAutoSaveDir(buf, _type);
 				else SetAutoFillDir(buf, _type);
 			}
@@ -2110,13 +2111,13 @@ bool AutoSaveSlot(int _slotType, const char* _dirPath,
 				  bool (*SaveSlot)(const void*, const char*), const void* _obj) // see AutoSaveChunkSlot() example
 {
 	bool saved = false;
-	char fn[BUFFER_SIZE] = "";
+	char fn[SNM_MAX_PATH] = "";
 	int todo = 1; // 0: nothing, 1: gen filename + add slot, 2: gen filename + replace slot
 
 	if (*_owIdx < _owSlots->GetSize() && _owSlots->Get(*_owIdx))
 	{
 		// gets the filename to overwrite
-		GetFullResourcePath(g_slots.Get(_slotType)->GetResourceDir(), _owSlots->Get(*_owIdx)->m_shortPath.Get(), fn, BUFFER_SIZE);
+		GetFullResourcePath(g_slots.Get(_slotType)->GetResourceDir(), _owSlots->Get(*_owIdx)->m_shortPath.Get(), fn, sizeof(fn));
 		if (!*fn)
 			todo=2;
 		else
@@ -2126,8 +2127,8 @@ bool AutoSaveSlot(int _slotType, const char* _dirPath,
 				if (char* p = strrchr(fn, '.'))
 				{
 					strcpy(p+1, _ext);
-					char shortPath[BUFFER_SIZE] = "";
-					GetShortResourcePath(g_slots.Get(_slotType)->GetResourceDir(), fn, shortPath, BUFFER_SIZE);
+					char shortPath[SNM_MAX_PATH] = "";
+					GetShortResourcePath(g_slots.Get(_slotType)->GetResourceDir(), fn, shortPath, sizeof(shortPath));
 					_owSlots->Get(*_owIdx)->m_shortPath.Set(shortPath);
 				}
 			saved = (SaveSlot ? SaveSlot(_obj, fn) : SNM_CopyFile(fn, _name));
@@ -2137,17 +2138,17 @@ bool AutoSaveSlot(int _slotType, const char* _dirPath,
 
 	if (todo)
 	{
-		char fnNoExt[BUFFER_SIZE] = "";
-		GetFilenameNoExt(_name, fnNoExt, BUFFER_SIZE);
-		Filenamize(fnNoExt, BUFFER_SIZE);
-		if (GenerateFilename(_dirPath, fnNoExt, _ext, fn, BUFFER_SIZE) && (SaveSlot ? SaveSlot(_obj, fn) : SNM_CopyFile(fn, _name)))
+		char fnNoExt[SNM_MAX_PATH] = "";
+		GetFilenameNoExt(_name, fnNoExt, sizeof(fnNoExt));
+		Filenamize(fnNoExt, sizeof(fnNoExt));
+		if (GenerateFilename(_dirPath, fnNoExt, _ext, fn, sizeof(fn)) && (SaveSlot ? SaveSlot(_obj, fn) : SNM_CopyFile(fn, _name)))
 		{
 			saved = true;
 			if (todo==1)
 				g_slots.Get(_slotType)->AddSlot(fn);
 			else  {
-				char shortPath[BUFFER_SIZE] = "";
-				GetShortResourcePath(g_slots.Get(_slotType)->GetResourceDir(), fn, shortPath, BUFFER_SIZE);
+				char shortPath[SNM_MAX_PATH] = "";
+				GetShortResourcePath(g_slots.Get(_slotType)->GetResourceDir(), fn, shortPath, sizeof(shortPath));
 				_owSlots->Get(*_owIdx-1)->m_shortPath.Set(shortPath);
 			}
 		}
@@ -2236,7 +2237,7 @@ void AutoSave(int _type, bool _promptOverwrite, int _flags)
 	}
 	else
 	{
-		char msg[BUFFER_SIZE];
+		char msg[SNM_MAX_PATH];
 		_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Auto-save failed!\n%s","sws_DLG_150"), AUTOSAVE_ERR_STR);
 		MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_150"), MB_OK);
 	}
@@ -2266,7 +2267,7 @@ void AutoFill(int _type)
 	else
 	{
 		const char* path = g_autoFillDirs.Get(_type)->Get();
-		char msg[BUFFER_SIZE]="";
+		char msg[SNM_MAX_PATH]="";
 		if (path && *path) _snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("No slot added from: %s\n%s","sws_DLG_150"), path, AUTOFILL_ERR_STR);
 		else _snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("No slot added!\n%s","sws_DLG_150"), AUTOFILL_ERR_STR);
 		MessageBox(g_pResourcesWnd?g_pResourcesWnd->GetHWND():GetMainHwnd(), msg, __LOCALIZE("S&M - Warning","sws_DLG_150"), MB_OK);
@@ -2299,7 +2300,7 @@ void NewBookmark(int _type, bool _copyCurrent)
 			}
 			else
 			{
-				char path[BUFFER_SIZE] = "";
+				char path[SNM_MAX_PATH] = "";
 				if (_snprintfStrict(path, sizeof(path), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, g_slots.Get(_type)->GetResourceDir()) > 0) {
 					if (!FileExists(path))
 						CreateDirectory(path, NULL);
@@ -2396,15 +2397,15 @@ void FlushCustomTypesIniFile()
 			WritePrivateProfileStruct(iniSec, NULL, NULL, 0, g_SNMIniFn.Get()); // flush section
 			WritePrivateProfileString("RESOURCE_VIEW", iniSec, NULL, g_SNMIniFn.Get());
 			WDL_FastString str;
-			str.SetFormatted(BUFFER_SIZE, "AutoFillDir%s", iniSec);
+			str.SetFormatted(64, "AutoFillDir%s", iniSec);
 			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
-			str.SetFormatted(BUFFER_SIZE, "AutoSaveDir%s", iniSec);
+			str.SetFormatted(64, "AutoSaveDir%s", iniSec);
 			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
-			str.SetFormatted(BUFFER_SIZE, "SyncAutoDirs%s", iniSec);
+			str.SetFormatted(64, "SyncAutoDirs%s", iniSec);
 			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
-			str.SetFormatted(BUFFER_SIZE, "TiedActions%s", iniSec);
+			str.SetFormatted(64, "TiedActions%s", iniSec);
 			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
-			str.SetFormatted(BUFFER_SIZE, "DblClick%s", iniSec);
+			str.SetFormatted(64, "DblClick%s", iniSec);
 			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
 		}
 	}
@@ -2424,9 +2425,10 @@ void ReadSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, ch
 // CustomSlotType2="TextFiles,text file,txt"
 void AddCustomTypesFromIniFile()
 {
-	int i=0; char buf[BUFFER_SIZE]=""; 
+	int i=0;
+	char buf[SNM_MAX_PATH]=""; // can be used with paths..
 	WDL_String iniKeyStr("CustomSlotType1"), tokenStrs[2];
-	GetPrivateProfileString("RESOURCE_VIEW", iniKeyStr.Get(), "", buf, BUFFER_SIZE, g_SNMIniFn.Get());
+	GetPrivateProfileString("RESOURCE_VIEW", iniKeyStr.Get(), "", buf, sizeof(buf), g_SNMIniFn.Get());
 	while (*buf && i < SNM_MAX_SLOT_TYPES)
 	{
 		if (char* tok = strtok(buf, ","))
@@ -2451,7 +2453,7 @@ void AddCustomTypesFromIniFile()
 			}
 		}
 		iniKeyStr.SetFormatted(32, "CustomSlotType%d", (++i)+1);
-		GetPrivateProfileString("RESOURCE_VIEW", iniKeyStr.Get(), "", buf, BUFFER_SIZE, g_SNMIniFn.Get());
+		GetPrivateProfileString("RESOURCE_VIEW", iniKeyStr.Get(), "", buf, sizeof(buf), g_SNMIniFn.Get());
 	}
 }
 
@@ -2504,7 +2506,7 @@ int ResourceViewInit()
 	memset(g_dblClickPrefs, 0, SNM_MAX_SLOT_TYPES*sizeof(int));
 //	for (int i=0; i < SNM_NUM_DEFAULT_SLOTS; i++) g_tiedSlotActions[i]=i;
 
-	char defaultPath[BUFFER_SIZE]="", path[BUFFER_SIZE]="", iniSec[64]="", iniKey[64]="";
+	char defaultPath[SNM_MAX_PATH]="", path[SNM_MAX_PATH]="", iniSec[64]="", iniKey[64]="";
 	for (int i=0; i < g_slots.GetSize(); i++)
 	{
 		GetIniSectionName(i, iniSec, sizeof(iniSec));
@@ -2514,7 +2516,7 @@ int ResourceViewInit()
 		// g_autoFillDirs & g_autoSaveDirs must always be filled (even if auto-save is grayed for the user)
 		WDL_FastString *fillPath, *savePath;
 		if (_snprintfStrict(iniKey, sizeof(iniKey), "AutoSaveDir%s", iniSec) > 0) {
-			GetPrivateProfileString("RESOURCE_VIEW", iniKey, defaultPath, path, BUFFER_SIZE, g_SNMIniFn.Get());
+			GetPrivateProfileString("RESOURCE_VIEW", iniKey, defaultPath, path, sizeof(path), g_SNMIniFn.Get());
 			savePath = new WDL_FastString(path);
 		}
 		else
@@ -2522,7 +2524,7 @@ int ResourceViewInit()
 		g_autoSaveDirs.Add(savePath);
 
 		if (_snprintfStrict(iniKey, sizeof(iniKey), "AutoFillDir%s", iniSec) > 0) {
-			GetPrivateProfileString("RESOURCE_VIEW", iniKey, defaultPath, path, BUFFER_SIZE, g_SNMIniFn.Get());
+			GetPrivateProfileString("RESOURCE_VIEW", iniKey, defaultPath, path, sizeof(path), g_SNMIniFn.Get());
 			fillPath = new WDL_FastString(path);
 		}
 		else
@@ -2562,7 +2564,7 @@ int ResourceViewInit()
 			list->EmptySafe(true);
 			int slotCount = atoi(maxSlotCount);
 			for (int j=0; j < slotCount; j++) {
-				ReadSlotIniFile(iniSec, j, path, BUFFER_SIZE, desc, 128);
+				ReadSlotIniFile(iniSec, j, path, sizeof(path), desc, 128);
 				list->Add(new PathSlotItem(path, desc));
 			}
 		}
@@ -2589,15 +2591,16 @@ void ResourceViewExit()
 	// save custom slot type definitions
 	for (int i=0; i < g_slots.GetSize(); i++)
 	{
-		if (i >= SNM_NUM_DEFAULT_SLOTS) {
+		if (i >= SNM_NUM_DEFAULT_SLOTS)
+		{
 			WDL_FastString str;
-			str.SetFormatted(BUFFER_SIZE, "%s,%s,%s", g_slots.Get(i)->GetResourceDir(), g_slots.Get(i)->GetDesc(), g_slots.Get(i)->GetFileExt());
+			str.SetFormatted(SNM_MAX_PATH, "%s,%s,%s", g_slots.Get(i)->GetResourceDir(), g_slots.Get(i)->GetDesc(), g_slots.Get(i)->GetFileExt());
 			makeEscapedConfigString(str.Get(), &escapedStr);
-			iniStr.AppendFormatted(BUFFER_SIZE, "%s=%s\n", iniSections.Get(i)->Get(), escapedStr.Get());
+			iniStr.AppendFormatted(SNM_MAX_PATH, "%s=%s\n", iniSections.Get(i)->Get(), escapedStr.Get());
 		}
 	}
-	iniStr.AppendFormatted(BUFFER_SIZE, "Type=%d\n", g_resViewType);
-	iniStr.AppendFormatted(BUFFER_SIZE, "Filter=%d\n", g_filterPref);
+	iniStr.AppendFormatted(256, "Type=%d\n", g_resViewType);
+	iniStr.AppendFormatted(256, "Filter=%d\n", g_filterPref);
 
 	// save slot type prefs
 	for (int i=0; i < g_slots.GetSize(); i++)
@@ -2605,34 +2608,34 @@ void ResourceViewExit()
 		// save auto-fill & auto-save paths
 		if (g_autoFillDirs.Get(i)->GetLength()) {
 			makeEscapedConfigString(g_autoFillDirs.Get(i)->Get(), &escapedStr);
-			iniStr.AppendFormatted(BUFFER_SIZE, "AutoFillDir%s=%s\n", iniSections.Get(i)->Get(), escapedStr.Get());
+			iniStr.AppendFormatted(SNM_MAX_PATH, "AutoFillDir%s=%s\n", iniSections.Get(i)->Get(), escapedStr.Get());
 		}
 		if (g_autoSaveDirs.Get(i)->GetLength() && g_slots.Get(i)->HasAutoSave()) {
 			makeEscapedConfigString(g_autoSaveDirs.Get(i)->Get(), &escapedStr);
-			iniStr.AppendFormatted(BUFFER_SIZE, "AutoSaveDir%s=%s\n", iniSections.Get(i)->Get(), escapedStr.Get());
+			iniStr.AppendFormatted(SNM_MAX_PATH, "AutoSaveDir%s=%s\n", iniSections.Get(i)->Get(), escapedStr.Get());
 		}
-		iniStr.AppendFormatted(BUFFER_SIZE, "SyncAutoDirs%s=%d\n", iniSections.Get(i)->Get(), g_syncAutoDirPrefs[i]);
+		iniStr.AppendFormatted(256, "SyncAutoDirs%s=%d\n", iniSections.Get(i)->Get(), g_syncAutoDirPrefs[i]);
 
 		// save tied actions for default types (fx chains, track templates, etc...)
 		if (i < SNM_NUM_DEFAULT_SLOTS)
-			iniStr.AppendFormatted(BUFFER_SIZE, "TiedActions%s=%d\n", iniSections.Get(i)->Get(), g_tiedSlotActions[i]);
+			iniStr.AppendFormatted(256, "TiedActions%s=%d\n", iniSections.Get(i)->Get(), g_tiedSlotActions[i]);
 
 		// dbl-click pref
 		if (g_slots.Get(i)->HasDblClick())
-			iniStr.AppendFormatted(BUFFER_SIZE, "DblClick%s=%d\n", iniSections.Get(i)->Get(), g_dblClickPrefs[i]);
+			iniStr.AppendFormatted(256, "DblClick%s=%d\n", iniSections.Get(i)->Get(), g_dblClickPrefs[i]);
 
 		// specific options (saved here for the ini file ordering..)
 		switch (i) {
 			case SNM_SLOT_FXC:
-				iniStr.AppendFormatted(BUFFER_SIZE, "AutoSaveFXChain=%d\n", g_asFXChainPref);
-				iniStr.AppendFormatted(BUFFER_SIZE, "AutoSaveFXChainName=%d\n", g_asFXChainNamePref);
+				iniStr.AppendFormatted(256, "AutoSaveFXChain=%d\n", g_asFXChainPref);
+				iniStr.AppendFormatted(256, "AutoSaveFXChainName=%d\n", g_asFXChainNamePref);
 				break;
 			case SNM_SLOT_TR:
-				iniStr.AppendFormatted(BUFFER_SIZE, "AutoSaveTrTemplate=%d\n", g_asTrTmpltPref);
+				iniStr.AppendFormatted(256, "AutoSaveTrTemplate=%d\n", g_asTrTmpltPref);
 				break;
 			case SNM_SLOT_PRJ:
-				iniStr.AppendFormatted(BUFFER_SIZE, "ProjectLoaderStartSlot=%d\n", g_prjLoaderStartPref);
-				iniStr.AppendFormatted(BUFFER_SIZE, "ProjectLoaderEndSlot=%d\n", g_prjLoaderEndPref);
+				iniStr.AppendFormatted(256, "ProjectLoaderStartSlot=%d\n", g_prjLoaderStartPref);
+				iniStr.AppendFormatted(256, "ProjectLoaderEndSlot=%d\n", g_prjLoaderEndPref);
 				break;
 		}
 	}
@@ -2643,16 +2646,16 @@ void ResourceViewExit()
 
 	for (int i=0; i < g_slots.GetSize(); i++)
 	{
-		iniStr.SetFormatted(BUFFER_SIZE, "Max_slot=%d\n", g_slots.Get(i)->GetSize());
+		iniStr.SetFormatted(256, "Max_slot=%d\n", g_slots.Get(i)->GetSize());
 		for (int j=0; j < g_slots.Get(i)->GetSize(); j++) {
 			if (PathSlotItem* item = g_slots.Get(i)->Get(j)) {
 				if (item->m_shortPath.GetLength()) {
 					makeEscapedConfigString(item->m_shortPath.Get(), &escapedStr);
-					iniStr.AppendFormatted(BUFFER_SIZE, "Slot%d=%s\n", j+1, escapedStr.Get());
+					iniStr.AppendFormatted(SNM_MAX_PATH, "Slot%d=%s\n", j+1, escapedStr.Get());
 				}
 				if (item->m_comment.GetLength()) {
 					makeEscapedConfigString(item->m_comment.Get(), &escapedStr);
-					iniStr.AppendFormatted(BUFFER_SIZE, "Desc%d=%s\n", j+1, escapedStr.Get());
+					iniStr.AppendFormatted(256, "Desc%d=%s\n", j+1, escapedStr.Get());
 				}
 			}
 		}

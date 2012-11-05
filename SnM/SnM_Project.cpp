@@ -114,8 +114,8 @@ void InsertSilence(COMMAND_T* _ct)
 
 void OpenProjectPathInExplorerFinder(COMMAND_T*)
 {
-	char path[BUFFER_SIZE] = "";
-	GetProjectPath(path, BUFFER_SIZE);
+	char path[SNM_MAX_PATH] = "";
+	GetProjectPath(path, sizeof(path));
 	if (*path)
 	{
 		if (char* p = strrchr(path, PATH_SLASH_CHAR)) {
@@ -161,19 +161,20 @@ void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool 
 {
 	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot))
 	{
-		char fn2[BUFFER_SIZE] = "";
+		char fn[SNM_MAX_PATH] = "";
 		ReaProject* prj = NULL;
 		int i=0;
 		bool found = false;
-		while (!found && (prj = Enum_Projects(i++, fn2, BUFFER_SIZE)))
-			if (!strcmp(fnStr->Get(), fn2))
+		while (!found && (prj = Enum_Projects(i++, fn, sizeof(fn))))
+			if (!strcmp(fnStr->Get(), fn))
 				found = true;
 
 		if (found)
 			SelectProjectInstance(prj);
 		else
 		{
-			if (_newTab) Main_OnCommand(40859,0);
+			if (_newTab)
+				Main_OnCommand(40859,0);
 			Main_openProject((char*)fnStr->Get());
 /* API LIMITATION: would be great to set the project as "not saved" here (like native project templates)
 	See http://code.google.com/p/sws-extension/issues/detail?id=321
@@ -186,9 +187,10 @@ void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool 
 bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _saveCurPrj)
 {
 	int owIdx = 0;
-	if (_saveCurPrj) Main_OnCommand(40026,0);
-	char prjFn[BUFFER_SIZE] = "";
-	EnumProjects(-1, prjFn, BUFFER_SIZE);
+	if (_saveCurPrj)
+		Main_OnCommand(40026,0);
+	char prjFn[SNM_MAX_PATH] = "";
+	EnumProjects(-1, prjFn, sizeof(prjFn));
 	return AutoSaveSlot(_slotType, _dirPath, prjFn, "RPP", _owSlots, &owIdx);
 }
 
@@ -225,10 +227,10 @@ void ProjectLoaderConf(COMMAND_T* _ct)
 	question.Append(",");
 	question.Append(__LOCALIZE("End slot:","sws_mbox"));
 
-	char reply[BUFFER_SIZE]="";
+	char reply[64]="";
 	_snprintfSafe(reply, sizeof(reply), "%d,%d", g_prjLoaderStartPref, g_prjLoaderEndPref);
 
-	if (GetUserInputs(__LOCALIZE("S&M - Project loader/selecter","sws_mbox"), 2, question.Get(), reply, 4096))
+	if (GetUserInputs(__LOCALIZE("S&M - Project loader/selecter","sws_mbox"), 2, question.Get(), reply, sizeof(reply)))
 	{
 		if (*reply && *reply != ',' && strlen(reply) > 2)
 		{
@@ -268,8 +270,8 @@ void LoadOrSelectNextPreviousProject(COMMAND_T* _ct)
 		// (try to) find the current project in the slot range defined in the prefs
 		if (g_prjCurSlot < 0)
 		{
-			char pCurPrj[BUFFER_SIZE] = "";
-			EnumProjects(-1, pCurPrj, BUFFER_SIZE);
+			char pCurPrj[SNM_MAX_PATH] = "";
+			EnumProjects(-1, pCurPrj, sizeof(pCurPrj));
 			if (pCurPrj && *pCurPrj)
 				for (int i=g_prjLoaderStartPref-1; g_prjCurSlot < 0 && i < g_prjLoaderEndPref-1; i++)
 					if (!g_slots.Get(SNM_SLOT_PRJ)->Get(i)->IsDefault() && strstr(pCurPrj, g_slots.Get(SNM_SLOT_PRJ)->Get(i)->m_shortPath.Get()))

@@ -100,9 +100,10 @@ bool IsValidFilenameErrMsg(const char* _fn, bool _errMsg)
 
 	if (ko && _errMsg)
 	{
-		char buf[BUFFER_SIZE];
-		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), BUFFER_SIZE);
-		if (_fn && *_fn) _snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | :","sws_mbox"), _fn);
+		char buf[SNM_MAX_PATH] = "";
+		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), sizeof(buf));
+		if (_fn && *_fn)
+			_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Invalid filename: %s\nFilenames cannot contain any of the following characters: / \\ * ? \" < > ' | :","sws_mbox"), _fn);
 		MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 	return !ko;
@@ -114,9 +115,10 @@ bool FileExistsErrMsg(const char* _fn, bool _errMsg)
 	bool exists = FileExists(_fn);
 	if (!exists && _errMsg)
 	{
-		char buf[BUFFER_SIZE];
-		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), BUFFER_SIZE);
-		if (_fn && *_fn) _snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("File not found: %s","sws_mbox"), _fn);
+		char buf[SNM_MAX_PATH] = "";
+		lstrcpyn(buf, __LOCALIZE("Empty filename!","sws_mbox"), sizeof(buf));
+		if (_fn && *_fn)
+			_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("File not found: %s","sws_mbox"), _fn);
 		MessageBox(GetMainHwnd(), buf, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 	}
 	return exists;
@@ -153,7 +155,7 @@ bool SNM_CopyFile(const char* _destFn, const char* _srcFn)
 bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* _fileFilters, char* _fn, int _fnSize, bool _wantFullPath)
 {
 	bool ok = false;
-	char defaultPath[BUFFER_SIZE];
+	char defaultPath[SNM_MAX_PATH] = "";
 	if (_snprintfStrict(defaultPath, sizeof(defaultPath), "%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir) < 0)
 		*defaultPath = '\0';
 	if (char* fn = BrowseForFiles(_title, defaultPath, NULL, false, _fileFilters)) 
@@ -174,17 +176,17 @@ bool BrowseResourcePath(const char* _title, const char* _resSubDir, const char* 
 // - *must* work with non existing files (just some string processing here)
 // - *must* be no-op for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
 // - *must* be no-op for short resource paths 
-void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _fnSize)
+void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _shortFn, int _shortFnSize)
 {
 	if (_resSubDir && *_resSubDir && _fullFn && *_fullFn)
 	{
-		char defaultPath[BUFFER_SIZE] = "";
+		char defaultPath[SNM_MAX_PATH] = "";
 		if (_snprintfStrict(defaultPath, sizeof(defaultPath), "%s%c%s%c", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR) < 0)
 			*defaultPath = '\0';
 		if (strstr(_fullFn, defaultPath) == _fullFn) // no stristr: osx + utf-8
-			lstrcpyn(_shortFn, (char*)(_fullFn + strlen(defaultPath)), _fnSize);
+			lstrcpyn(_shortFn, (char*)(_fullFn + strlen(defaultPath)), _shortFnSize);
 		else
-			lstrcpyn(_shortFn, _fullFn, _fnSize);
+			lstrcpyn(_shortFn, _fullFn, _shortFnSize);
 	}
 	else if (_shortFn)
 		*_shortFn = '\0';
@@ -196,7 +198,7 @@ void GetShortResourcePath(const char* _resSubDir, const char* _fullFn, char* _sh
 // - work with non existing files //JFB!!!
 // - no-op for non resource paths (c:\temp\test.RfxChain -> c:\temp\test.RfxChain)
 // - no-op for full resource paths 
-void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fnSize)
+void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fullFn, int _fullFnSize)
 {
 	if (_shortFn && _fullFn) 
 	{
@@ -206,18 +208,18 @@ void GetFullResourcePath(const char* _resSubDir, const char* _shortFn, char* _fu
 		}
 		if (!strstr(_shortFn, GetResourcePath())) // no stristr: osx + utf-8
 		{
-			char resFn[BUFFER_SIZE] = "", resDir[BUFFER_SIZE];
+			char resFn[SNM_MAX_PATH] = "", resDir[SNM_MAX_PATH];
 			if (_snprintfStrict(resFn, sizeof(resFn), "%s%c%s%c%s", GetResourcePath(), PATH_SLASH_CHAR, _resSubDir, PATH_SLASH_CHAR, _shortFn) > 0)
 			{
-				lstrcpyn(resDir, resFn, BUFFER_SIZE);
+				lstrcpyn(resDir, resFn, sizeof(resDir));
 				if (char* p = strrchr(resDir, PATH_SLASH_CHAR)) *p = '\0';
 				if (FileExists(resDir)) {
-					lstrcpyn(_fullFn, resFn, _fnSize);
+					lstrcpyn(_fullFn, resFn, _fullFnSize);
 					return;
 				}
 			}
 		}
-		lstrcpyn(_fullFn, _shortFn, _fnSize);
+		lstrcpyn(_fullFn, _shortFn, _fullFnSize);
 	}
 	else if (_fullFn)
 		*_fullFn = '\0';
@@ -353,7 +355,7 @@ bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 {
 	if (_dir && _name && _ext && _outFn && *_dir)
 	{
-		char fn[BUFFER_SIZE];
+		char fn[SNM_MAX_PATH] = "";
 		bool slash = _dir[strlen(_dir)-1] == PATH_SLASH_CHAR;
 		if (slash) {
 			if (_snprintfStrict(fn, sizeof(fn), "%s%s.%s", _dir, _name, _ext) <= 0)
@@ -494,8 +496,8 @@ void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppNam
 
 void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn)
 {
-	char buf[BUFFER_SIZE]="";
-	GetPrivateProfileString(_appName, _oldKey, "", buf, BUFFER_SIZE, _iniFn);
+	char buf[SNM_MAX_PATH] = "";
+	GetPrivateProfileString(_appName, _oldKey, "", buf, sizeof(buf), _iniFn);
 	WritePrivateProfileString(_appName, _oldKey, NULL, _iniFn); // remove key
 	if (*buf)
 		WritePrivateProfileString(_appName, _newKey, buf, _newIniFn ? _newIniFn : _iniFn);
@@ -525,7 +527,7 @@ void SNM_UpgradeIniFiles()
 	{
 		// move cycle actions to a new dedicated file (+ make backup if it already exists)
 		WDL_FastString fn;
-		fn.SetFormatted(BUFFER_SIZE, SNM_CYCLACTION_BAK_FILE, GetResourcePath());
+		fn.SetFormatted(SNM_MAX_PATH, SNM_CYCLACTION_BAK_FILE, GetResourcePath());
 		if (FileExists(g_SNMCyclactionIniFn.Get()))
 			MoveFile(g_SNMCyclactionIniFn.Get(), fn.Get());
 		UpdatePrivateProfileSection("MAIN_CYCLACTIONS", "Main_Cyclactions", g_SNMIniFn.Get(), g_SNMCyclactionIniFn.Get());

@@ -870,7 +870,7 @@ void SNM_SaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 		}
 
 		// indent things (a \t solution would suck here!)
-		str.SetFormatted(BUFFER_SIZE, "%s=%d", ct->id, (int)ct->user);
+		str.SetFormatted(256, "%s=%d", ct->id, (int)ct->user);
 		while (str.GetLength() < 40) str.Append(" ");
 		str.Append(" ; ");
 		iniSection.Append(str.Get());
@@ -893,12 +893,12 @@ int g_SNMbeta = 0;
 
 void IniFileInit()
 {
-	g_SNMIniFn.SetFormatted(BUFFER_SIZE, SNM_FORMATED_INI_FILE, GetResourcePath());
-	g_SNMCyclactionIniFn.SetFormatted(BUFFER_SIZE, SNM_CYCLACTION_INI_FILE, GetResourcePath());
+	g_SNMIniFn.SetFormatted(SNM_MAX_PATH, SNM_FORMATED_INI_FILE, GetResourcePath());
+	g_SNMCyclactionIniFn.SetFormatted(SNM_MAX_PATH, SNM_CYCLACTION_INI_FILE, GetResourcePath());
 
 	// move from old location if needed/possible
 	WDL_String fn; // no fast string here: the buffer gets mangeled..
-	fn.SetFormatted(BUFFER_SIZE, SNM_OLD_FORMATED_INI_FILE, GetExePath());
+	fn.SetFormatted(SNM_MAX_PATH, SNM_OLD_FORMATED_INI_FILE, GetExePath());
 	if (FileExists(fn.Get()))
 		MoveFile(fn.Get(), g_SNMIniFn.Get()); // no check: use the new file whatever happens
 
@@ -912,8 +912,8 @@ void IniFileInit()
 	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNMIniFn.Get());
 #ifdef _WIN32
 	g_SNMClearType = (GetPrivateProfileInt("General", "ClearTypeFont", 0, g_SNMIniFn.Get()) == 1);
-	fn.SetLen(BUFFER_SIZE);
-	GetPrivateProfileString("General", "DiffTool", "", fn.Get(), BUFFER_SIZE, g_SNMIniFn.Get());
+	fn.SetLen(SNM_MAX_PATH);
+	GetPrivateProfileString("General", "DiffTool", "", fn.Get(), SNM_MAX_PATH, g_SNMIniFn.Get());
 	g_SNMDiffToolFn.Set(fn.Get());
 #endif
 //	g_SNMbeta = GetPrivateProfileInt("General", "Beta", 0, g_SNMIniFn.Get());
@@ -933,7 +933,7 @@ void IniFileExit()
 	iniSection.AppendFormatted(128, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1:0);
 #ifdef _WIN32
 	iniSection.AppendFormatted(128, "ClearTypeFont=%d\n", g_SNMClearType ? 1:0);
-	iniSection.AppendFormatted(BUFFER_SIZE, "DiffTool=\"%s\"\n", g_SNMDiffToolFn.Get());
+	iniSection.AppendFormatted(SNM_MAX_PATH, "DiffTool=\"%s\"\n", g_SNMDiffToolFn.Get());
 #endif
 //	iniSection.AppendFormatted(128, "Beta=%d\n", g_SNMbeta); 
 	SaveIniSection("General", &iniSection, g_SNMIniFn.Get());
@@ -1045,7 +1045,7 @@ static void SNM_Menuhook(const char* _menustr, HMENU _hMenu, int _flag) {
 
 bool SNM_HasExtension() {
 	WDL_FastString fn;
-	fn.SetFormatted(BUFFER_SIZE, SNM_EXTENSION_FILE,
+	fn.SetFormatted(SNM_MAX_PATH, SNM_EXTENSION_FILE,
 #ifdef _WIN32
 		GetExePath());
 #else

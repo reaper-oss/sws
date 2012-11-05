@@ -272,8 +272,8 @@ int PromptForInteger(const char* _title, const char* _what, int _min, int _max)
 	while (nb == -1)
 	{
 		str.SetFormatted(128, "%s (%d-%d):", _what, _min, _max);
-		char reply[8]= ""; // no default
-		if (GetUserInputs(_title, 1, str.Get(), reply, 8))
+		char reply[32]= ""; // no default
+		if (GetUserInputs(_title, 1, str.Get(), reply, sizeof(reply)))
 		{
 			nb = atoi(reply); // 0 on error
 			if (nb >= _min && nb <= _max)
@@ -317,16 +317,15 @@ const char* GetSendTypeStr(int _type)
 
 void FillHWoutDropDown(HWND _hwnd, int _idc)
 {
-	char buffer[BUFFER_SIZE];
-	lstrcpyn(buffer, __LOCALIZE("None","sws_DLG_149"), BUFFER_SIZE);
-	SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)buffer);
+	char buf[128] = "";
+	lstrcpyn(buf, __LOCALIZE("None","sws_DLG_149"), sizeof(buf));
+	SendDlgItemMessage(_hwnd,_idc,CB_ADDSTRING,0,(LPARAM)buf);
 	SendDlgItemMessage(_hwnd,_idc,CB_SETITEMDATA,0,0);
 	
 	// get mono outputs
 	WDL_PtrList<WDL_FastString> monos;
 	int monoIdx=0;
-	while (GetOutputChannelName(monoIdx))
-	{
+	while (GetOutputChannelName(monoIdx)) {
 		monos.Add(new WDL_FastString(GetOutputChannelName(monoIdx)));
 		monoIdx++;
 	}
@@ -369,10 +368,10 @@ void FillCueBussDlg(HWND _hwnd = NULL)
 		return;
 
 	g_cueBussDisableSave=true;
-	char busName[BUFFER_SIZE]="", trTemplatePath[BUFFER_SIZE]="";
+	char busName[64]="", trTemplatePath[SNM_MAX_PATH]="";
 	int reaType, userType, soloDefeat, hwOuts[8];
 	bool trTemplate, showRouting, sendToMaster;
-	ReadCueBusIniFile(g_cueBussConfId, busName, &reaType, &trTemplate, trTemplatePath, &showRouting, &soloDefeat, &sendToMaster, hwOuts);
+	ReadCueBusIniFile(g_cueBussConfId, busName, sizeof(busName), &reaType, &trTemplate, trTemplatePath, sizeof(trTemplatePath), &showRouting, &soloDefeat, &sendToMaster, hwOuts);
 	userType = GetComboSendIdxType(reaType);
 	SetDlgItemText(hwnd,IDC_SNM_CUEBUS_NAME,busName);
 
@@ -403,8 +402,8 @@ void SaveCueBussSettings()
 	if (!g_cueBussHwnd || g_cueBussDisableSave)
 		return;
 
-	char cueBusName[BUFFER_SIZE]="";
-	GetDlgItemText(g_cueBussHwnd,IDC_SNM_CUEBUS_NAME,cueBusName,BUFFER_SIZE);
+	char busName[64]="";
+	GetDlgItemText(g_cueBussHwnd,IDC_SNM_CUEBUS_NAME,busName,sizeof(busName));
 
 	int userType=2, reaType;
 	int combo = (int)SendDlgItemMessage(g_cueBussHwnd,IDC_SNM_CUEBUS_TYPE,CB_GETCURSEL,0,0);
@@ -422,15 +421,15 @@ void SaveCueBussSettings()
 	int trTemplate = IsDlgButtonChecked(g_cueBussHwnd, IDC_CHECK3);
 	int soloDefeat = IsDlgButtonChecked(g_cueBussHwnd, IDC_CHECK4);
 
-	char trTemplatePath[BUFFER_SIZE]="";
-	GetDlgItemText(g_cueBussHwnd,IDC_SNM_CUEBUS_TEMPLATE,trTemplatePath,BUFFER_SIZE);
+	char trTemplatePath[SNM_MAX_PATH]="";
+	GetDlgItemText(g_cueBussHwnd,IDC_SNM_CUEBUS_TEMPLATE,trTemplatePath,sizeof(trTemplatePath));
 
 	int hwOuts[SNM_MAX_HW_OUTS];
 	for (int i=0; i<SNM_MAX_HW_OUTS; i++) {
 		hwOuts[i] = (int)SendDlgItemMessage(g_cueBussHwnd,IDC_SNM_CUEBUS_HWOUT1+i,CB_GETCURSEL,0,0);
 		if(hwOuts[i] == CB_ERR)	hwOuts[i] = '\0';
 	}
-	SaveCueBusIniFile(g_cueBussConfId, cueBusName, reaType, (trTemplate == 1), trTemplatePath, (showRouting == 1), soloDefeat, (sendToMaster == 1), hwOuts);
+	SaveCueBusIniFile(g_cueBussConfId, busName, reaType, (trTemplate == 1), trTemplatePath, (showRouting == 1), soloDefeat, (sendToMaster == 1), hwOuts);
 }
 
 WDL_DLGRET CueBussDlgProc(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam)
@@ -484,8 +483,8 @@ WDL_DLGRET CueBussDlgProc(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LPARAM _lParam
 					ShowWindow(_hwnd, SW_HIDE);
 					return 0;
 				case IDC_FILES: {
-					char curPath[BUFFER_SIZE]="";
-					GetDlgItemText(_hwnd, IDC_SNM_CUEBUS_TEMPLATE, curPath, BUFFER_SIZE);
+					char curPath[SNM_MAX_PATH]="";
+					GetDlgItemText(_hwnd, IDC_SNM_CUEBUS_TEMPLATE, curPath, sizeof(curPath));
 					if (!*curPath || !FileExists(curPath))
 						if (_snprintfStrict(curPath, sizeof(curPath), "%s%cTrackTemplates", GetResourcePath(), PATH_SLASH_CHAR) <= 0)
 							*curPath = '\0';

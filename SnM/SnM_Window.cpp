@@ -433,10 +433,10 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 			return false;
 		}
 
-		char name[SNM_MAX_SECTION_NAME_LEN*2] = "", fn[BUFFER_SIZE] = "";
+		char name[SNM_MAX_SECTION_NAME_LEN*2] = "", fn[SNM_MAX_PATH] = "";
 		if (_snprintfStrict(name, sizeof(name), "%s_Section%s.txt", sectionURL, (_type==2||_type==4) ? "_SWS" : _type==5 ? "_Macros" : "") <= 0)
 			*name = '\0';
-		if (!BrowseForSaveFile(_title, GetResourcePath(), name, SNM_TXT_EXT_LIST, fn, BUFFER_SIZE))
+		if (!BrowseForSaveFile(_title, GetResourcePath(), name, SNM_TXT_EXT_LIST, fn, sizeof(fn)))
 			return false;
 
 		if (FILE* f = fopenUTF8(fn, "w"))
@@ -488,8 +488,9 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 			fclose(f);
 
 			WDL_FastString msg;
-			msg.SetFormatted(BUFFER_SIZE, nbWrote ? __LOCALIZE_VERFMT("Wrote %s","sws_mbox") : __LOCALIZE_VERFMT("No action wrote in %s!\nProbable cause: filtered action list, no matching actions, etc...","sws_mbox"), fn);
-			msg.AppendFormatted(BUFFER_SIZE, "\n\n%s", help);
+			msg.SetFormatted(SNM_MAX_PATH, nbWrote ? __LOCALIZE_VERFMT("Wrote %s","sws_mbox") : __LOCALIZE_VERFMT("No action wrote in %s!\nProbable cause: filtered action list, no matching actions, etc...","sws_mbox"), fn);
+			msg.Append("\n\n");
+			msg.Append(help);
 			MessageBox(GetMainHwnd(), msg.Get(), _title, MB_OK);
 			return true;
 		}
@@ -499,7 +500,8 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 	else
 	{
 		WDL_FastString msg(__LOCALIZE("Dump failed: action window not opened!","sws_mbox"));
-		msg.AppendFormatted(BUFFER_SIZE, "\n\n%s", help);
+		msg.Append("\n\n");
+		msg.Append(help);
 		MessageBox(GetMainHwnd(), msg.Get(), _title, MB_OK);
 	}
 	return false;

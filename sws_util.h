@@ -187,6 +187,7 @@ void ListView_GetItemTextCast(HWND hwnd, int item, int subitem, char *text, int 
 void ListView_RedrawItemsCast(HWND h, int startitem, int enditem);
 bool ListView_SetItemStateCast(HWND h, int ipos, int state, int statemask);
 BOOL IsWindowEnabled(HWND hwnd);
+int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT uFlag);
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 
@@ -213,9 +214,6 @@ BOOL IsCommCtrlVersion6();
 void SaveWindowPos(HWND hwnd, const char* cKey);
 void RestoreWindowPos(HWND hwnd, const char* cKey, bool bRestoreSize = true);
 void SetWindowPosAtMouse(HWND hwnd);
-#ifndef _WIN32
-int GetMenuString(HMENU hMenu, UINT uIDItem, char* lpString, int nMaxCount, UINT uFlag);
-#endif
 
 MediaTrack* GetFirstSelectedTrack();
 int NumSelTracks();

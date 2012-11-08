@@ -349,7 +349,7 @@ bool TrackMatchesGuid(MediaTrack* tr, const GUID* g)
 
 const char* stristr(const char* str1, const char* str2)
 {
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(WDL_NO_SUPPORT_UTF8)
 	// Don't mess with UTF8, TODO fix!
 	if (WDL_HasUTF8(str1) || WDL_HasUTF8(str2))
 		return strstr(str1, str2);

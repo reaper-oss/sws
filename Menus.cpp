@@ -135,7 +135,7 @@ void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, 
 }
 
 // This version "auto sort" sub menu items
-// Note: could be as default AddSubMenu (when no insert position is
+// Note: could be used as default AddSubMenu (when no insert position is
 // requested) but this func is only used when the extension is localized ATM..
 void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, UINT uiSate)
 {

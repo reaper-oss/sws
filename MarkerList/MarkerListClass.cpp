@@ -327,22 +327,24 @@ void MarkerList::ExportToClipboard(const char* format)
 		return;
 	}
 
-    EmptyClipboard();
+	EmptyClipboard();
 	HGLOBAL hglbCopy;
 
+#if !defined(WDL_NO_SUPPORT_UTF8)
 	if (WDL_HasUTF8(str))
 	{
 		DWORD size;
 		WCHAR* wc = WDL_UTF8ToWC(str, false, 0, &size);
-	    hglbCopy = GlobalAlloc(GMEM_MOVEABLE, size*sizeof(WCHAR)); 
+		hglbCopy = GlobalAlloc(GMEM_MOVEABLE, size*sizeof(WCHAR)); 
 		memcpy(GlobalLock(hglbCopy), wc, size*sizeof(WCHAR));
 		free(wc);
 		GlobalUnlock(hglbCopy);
 		SetClipboardData(CF_UNICODETEXT, hglbCopy);
 	}
 	else
+#endif
 	{
-	    hglbCopy = GlobalAlloc(GMEM_MOVEABLE, strlen(str)+1); 
+		hglbCopy = GlobalAlloc(GMEM_MOVEABLE, strlen(str)+1); 
 		memcpy(GlobalLock(hglbCopy), str, strlen(str)+1);
 		GlobalUnlock(hglbCopy);
 		SetClipboardData(CF_TEXT, hglbCopy);

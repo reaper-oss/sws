@@ -6,7 +6,7 @@ OSX: added actions (already there on Windows OS)
 +SWS/S&M: Dump action list (custom actions only)
 
 !v2.3.0 #8 (November 1, 2012)
-<b>Region playlist: new features for live use!</b>
+<b>Region playlist: http://forum.cockos.com/showpost.php?p=1063758&postcount=10|new features for live use!|</b>
 +Support for infinite region loops, screenshot http://stash.reaper.fm/14468/S%26M_rgnplaylist_infiniteloop.jpg|here|
  Such regions will loop forever unless you switch to another region thanks to the new actions "Play previous/next region (smooth seek)".
 +Added "Monitoring" mode, i.e. displays current/next regions with a "big font", screenshot http://stash.reaper.fm/14469/S%26M_rgnplaylist_monitoring.jpg|here|

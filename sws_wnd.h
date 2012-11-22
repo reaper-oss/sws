@@ -171,7 +171,7 @@ class SWS_DockWnd
 {
 public:
 	// Unless you need the default contructor (new SWS_DockWnd()), you must provide all parameters
-	SWS_DockWnd(int iResource=0, const char* cWndTitle="", const char* cId="", int iDockOrder=0, int iCmdID=0);//JFB!!!!!!!!!!!!!!!!!
+	SWS_DockWnd(int iResource=0, const char* cWndTitle="", const char* cId="", int iDockOrder=0, int iCmdID=0);
 	virtual ~SWS_DockWnd();
 
 	void Show(bool bToggle, bool bActivate);

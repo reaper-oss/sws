@@ -1142,6 +1142,15 @@ BEGIN
     EDITTEXT        IDC_EDIT,40,40,59,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | NOT WS_BORDER
 END
 
+IDD_SNM_LIVE_CONFIG_MON DIALOGEX 0, 0, 260, 65
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+CAPTION "S&M - Live Config Monitor"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT,40,40,59,12,ES_AUTOHSCROLL | NOT WS_VISIBLE | NOT WS_BORDER
+END
+
 IDD_IX_LABELDLG DIALOGEX 0, 0, 263, 203
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_TOOLWINDOW | WS_EX_WINDOWEDGE
@@ -1808,7 +1817,8 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

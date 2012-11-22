@@ -75,6 +75,7 @@
 #define IDD_BR_MARKERS_TO_TEMPO         166
 #define IDD_BR_SELECT_ADJUST_TEMPO      167
 #define IDD_BR_DESELECT_TEMPO           168
+#define IDD_SNM_LIVE_CONFIG_MON         169
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
@@ -367,7 +368,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        169
+#define _APS_NEXT_RESOURCE_VALUE        170
 #define _APS_NEXT_COMMAND_VALUE         40000
 #define _APS_NEXT_CONTROL_VALUE         1279
 #define _APS_NEXT_SYMED_VALUE           100

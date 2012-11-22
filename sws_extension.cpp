@@ -661,6 +661,7 @@ extern "C"
 		IMPAPI(Resampler_Create);
 		IMPAPI(screenset_register);
 		IMPAPI(screenset_registerNew);
+		IMPAPI(screenset_unregister);
 		IMPAPI(SelectProjectInstance);
 		IMPAPI(SendLocalOscMessage);
 		IMPAPI(SetCurrentBPM);

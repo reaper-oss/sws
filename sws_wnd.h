@@ -95,6 +95,7 @@ public:
 	int DisplayToDataCol(int iCol);
 	int DataToDisplayCol(int iCol);
 	int* GetOldColors() { return m_oldColors; }
+	int GetSortColumn() { return m_iSortCol; }
 	
 	bool IsActive(bool bWantEdit) { return GetFocus() == m_hwndList || (bWantEdit && m_iEditingItem != -1); }
 	void DisableUpdates(bool bDisable) { m_bDisableUpdates = bDisable; }
@@ -169,7 +170,8 @@ typedef struct SWS_DockWnd_State // Converted to little endian on store
 class SWS_DockWnd
 {
 public:
-	SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iDockOrder, int iCmdID);
+	// Unless you need the default contructor (new SWS_DockWnd()), you must provide all parameters
+	SWS_DockWnd(int iResource=0, const char* cWndTitle="", const char* cId="", int iDockOrder=0, int iCmdID=0);//JFB!!!!!!!!!!!!!!!!!
 	virtual ~SWS_DockWnd();
 
 	void Show(bool bToggle, bool bActivate);
@@ -183,6 +185,8 @@ public:
 	static const int DOCK_MSG = 0xFF0000;
 
 protected:
+	static LRESULT screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize);
+
 	virtual INT_PTR WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
 	void Init(); // call from derived constructor!!
 	bool IsDocked() { return (m_state.state & 2) == 2; }
@@ -214,6 +218,13 @@ protected:
 	virtual void KillTooltip(bool doRefresh=false);
 
 	HWND m_hwnd;
+	int m_iCmdID;
+	int m_iResource;
+	WDL_FastString m_cWndTitle;
+	WDL_FastString m_cId;
+	int m_iDockOrder; // v4 TODO delete me
+	accelerator_register_t m_ar;
+	SWS_DockWnd_State m_state;
 	bool m_bUserClosed;
 	bool m_bLoadingState;
 	WDL_WndSizer m_resize;
@@ -225,17 +236,9 @@ protected:
 
 private:
 	static INT_PTR WINAPI sWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	static LRESULT screensetCallback(int action, char *id, void *param, void *actionParm, int actionParmSize);
 	static int keyHandler(MSG *msg, accelerator_register_t *ctx);
 	int SaveState(char* cStateBuf, int iMaxLen);
 	void LoadState(const char* cStateBuf, int iLen);
-	int m_iCmdID;
-	const int m_iResource;
-	const char* m_cWndTitle;
-	const char* m_cId;
-	const int m_iDockOrder; // v4 TODO delete me
-	accelerator_register_t m_ar;
-	SWS_DockWnd_State m_state;
 };
 
 

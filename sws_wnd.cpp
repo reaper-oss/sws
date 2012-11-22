@@ -49,7 +49,8 @@
 SWS_DockWnd::SWS_DockWnd(int iResource, const char* cWndTitle, const char* cId, int iDockOrder, int iCmdID)
 :m_hwnd(NULL), m_iResource(iResource), m_cWndTitle(cWndTitle), m_cId(cId), m_iDockOrder(iDockOrder), m_bUserClosed(false), m_iCmdID(iCmdID), m_bLoadingState(false)
 {
-	screenset_registerNew((char*)cId, screensetCallback, this);
+	if (cId && *cId) // e.g. default constructor
+		screenset_registerNew((char*)cId, screensetCallback, this);
 
 	memset(&m_state, 0, sizeof(SWS_DockWnd_State));
 	*m_tooltip = '\0';
@@ -71,7 +72,7 @@ void SWS_DockWnd::Init()
 	char* cState = new char[iLen];
 	memset(cState, 0, iLen);
 	// Then load the state from the INI
-	GetPrivateProfileStruct(SWS_INI, m_cId, cState, iLen, get_ini_file());
+	GetPrivateProfileStruct(SWS_INI, m_cId.Get(), cState, iLen, get_ini_file());
 	LoadState(cState, iLen);
 	delete [] cState;
 }
@@ -79,6 +80,8 @@ void SWS_DockWnd::Init()
 SWS_DockWnd::~SWS_DockWnd()
 {
 	plugin_register("-accelerator", &m_ar);
+	if (m_cId.GetLength())
+		screenset_unregister((char*)m_cId.Get());
 }
 
 void SWS_DockWnd::Show(bool bToggle, bool bActivate)
@@ -167,7 +170,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			if ((m_state.state & 2))
 			{
-				DockWindowAddEx(m_hwnd, (char*)m_cWndTitle, (char*)m_cId, true);
+				DockWindowAddEx(m_hwnd, (char*)m_cWndTitle.Get(), (char*)m_cId.Get(), true);
 			}
 			else
 			{
@@ -243,7 +246,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				// Add std menu items
 				char str[100];
-				if (_snprintf(str, 100, __LOCALIZE_VERFMT("Dock %s in Docker","sws_menu"), m_cWndTitle) > 0)
+				if (_snprintf(str, 100, __LOCALIZE_VERFMT("Dock %s in Docker","sws_menu"), m_cWndTitle.Get()) > 0)
 					AddToMenu(hMenu, str, DOCK_MSG);
 
 				// Check dock state
@@ -326,7 +329,7 @@ INT_PTR SWS_DockWnd::WndProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			char cState[256];
 			int iLen = SaveState(cState, 256);
-			WritePrivateProfileStruct(SWS_INI, m_cId, cState, iLen, get_ini_file());
+			WritePrivateProfileStruct(SWS_INI, m_cId.Get(), cState, iLen, get_ini_file());
 			m_bUserClosed = false;
 			
 			DockWindowRemove(m_hwnd); // Always safe to call even if the window isn't docked
@@ -588,7 +591,7 @@ void SWS_DockWnd::LoadState(const char* cStateBuf, int iLen)
 	else
 		m_state.state = 0;
 
-	Dock_UpdateDockID((char*)m_cId, m_state.whichdock);
+	Dock_UpdateDockID((char*)m_cId.Get(), m_state.whichdock);
 
 	if (m_state.state & 1)
 	{

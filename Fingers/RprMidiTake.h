@@ -5,7 +5,6 @@
 #include "RprMidiTemplate.h"
 
 class RprMidiEvent;
-class RprMidiBase;
 class RprMidiContext;
 class RprItem;
 class RprNode;
@@ -41,7 +40,7 @@ class RprMidiNote
 {
 public:
     RprMidiNote(RprMidiContext *context);
-    RprMidiNote(RprMidiBase *noteOn, RprMidiBase *noteOff, RprMidiContext *context);
+    RprMidiNote(RprMidiEvent *noteOn, RprMidiEvent *noteOff, RprMidiContext *context);
 
     double getPosition() const;
     void setPosition(double position);
@@ -74,8 +73,8 @@ public:
 private:
     friend class RprMidiTake;
 
-    RprMidiBase *mNoteOn;
-    RprMidiBase *mNoteOff;
+    RprMidiEvent *mNoteOn;
+    RprMidiEvent *mNoteOff;
     RprMidiContext *mContext;
 };
 
@@ -83,7 +82,7 @@ class RprMidiCC
 {
 public:
     RprMidiCC(RprMidiContext *context, int controller);
-    RprMidiCC(RprMidiBase *cc, RprMidiContext *context);
+    RprMidiCC(RprMidiEvent *cc, RprMidiContext *context);
 
     int getChannel() const;
 
@@ -92,7 +91,7 @@ public:
     ~RprMidiCC();
 private:
     friend class RprMidiTake;
-    RprMidiBase *mCC;
+    RprMidiEvent *mCC;
     RprMidiContext *mContext;
 };
 
@@ -109,7 +108,7 @@ public:
 
     int countCCs(int controller) const;
 
-    bool hasEventType(RprMidiBase::MessageType);
+    bool hasEventType(RprMidiEvent::MessageType);
 
 private:
     void cleanup();
@@ -117,7 +116,7 @@ private:
 
     std::vector<RprMidiNote *> mNotes;
     std::vector<RprMidiCC *> mCCs[128];
-    std::vector<RprMidiBase *> mOtherEvents;
+    std::vector<RprMidiEvent *> mOtherEvents;
     RprMidiContext *mContext;
     int mMidiEventsOffset;
 };

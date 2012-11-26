@@ -27,17 +27,17 @@ void MidiLaneCommands::Init()
 //!WANT_LOCALIZE_1ST_STRING_END
 
 static const struct {
-        RprMidiBase::MessageType messageType;
+        RprMidiEvent::MessageType messageType;
         int index;
     }
     eventIndexTable[] =
     {
-        {RprMidiBase::PitchBend, 128 },
-        {RprMidiBase::ProgramChange, 129 },
-        {RprMidiBase::ChannelPressure, 130 },
-        {RprMidiBase::ProgramChange, 131 },
-        {RprMidiBase::Sysex, 133 },
-        {RprMidiBase::TextEvent, 132 },
+        {RprMidiEvent::PitchBend, 128 },
+        {RprMidiEvent::ProgramChange, 129 },
+        {RprMidiEvent::ChannelPressure, 130 },
+        {RprMidiEvent::ProgramChange, 131 },
+        {RprMidiEvent::Sysex, 133 },
+        {RprMidiEvent::TextEvent, 132 },
     };
 
 static void CycleThroughMidiLanes(int flag, void *data)
@@ -149,7 +149,7 @@ static void HideUnusedCCLanes(int flag, void *data)
         int index = laneView->getIdAt(i);
     /* Special case for bank-select and program change events */
     if (index == 131 || index == 0) {
-        if (midiTake->countCCs(0) == 0 && midiTake->hasEventType(RprMidiBase::ProgramChange)) {
+        if (midiTake->countCCs(0) == 0 && midiTake->hasEventType(RprMidiEvent::ProgramChange)) {
         ccIndices.push_back(index);
         }
         continue;

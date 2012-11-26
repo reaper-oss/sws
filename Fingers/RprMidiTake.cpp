@@ -164,11 +164,11 @@ RprMidiNote* FNG_AddMidiNote(RprMidiTake* midiTake)
     return 0;
 }
 
-typedef std::list<RprMidiBase *> RprMidiEvents;
-typedef std::list<RprMidiBase *>::iterator RprMidiEventsIter;
-typedef std::list<RprMidiBase *>::const_iterator RprMidiEventsCIter;
+typedef std::list<RprMidiEvent *> RprMidiEvents;
+typedef std::list<RprMidiEvent *>::iterator RprMidiEventsIter;
+typedef std::list<RprMidiEvent *>::const_iterator RprMidiEventsCIter;
 
-/* Class to auto cleanup pointers to RprMidiBase objects stored in a list */
+/* Class to auto cleanup pointers to RprMidiEvent objects stored in a list */
 class RprTempMidiEvents
 {
 public:
@@ -245,16 +245,16 @@ static bool compareMidiPositions(T *lhs, T *rhs)
 RprMidiNote::RprMidiNote(RprMidiContext *context)
 {
     RprMidiEvent *noteOnEvent = new RprMidiEvent();
-    noteOnEvent->setMessageType(RprMidiBase::NoteOn);
+    noteOnEvent->setMessageType(RprMidiEvent::NoteOn);
     mNoteOn = noteOnEvent;
 
     RprMidiEvent *noteOffEvent = new RprMidiEvent();
-    noteOffEvent->setMessageType(RprMidiBase::NoteOff);
+    noteOffEvent->setMessageType(RprMidiEvent::NoteOff);
     mNoteOff = noteOffEvent;
     mContext = context;
 }
 
-RprMidiNote::RprMidiNote(RprMidiBase *noteOn, RprMidiBase *noteOff, RprMidiContext *context)
+RprMidiNote::RprMidiNote(RprMidiEvent *noteOn, RprMidiEvent *noteOff, RprMidiContext *context)
 {
     mNoteOn = noteOn;
     mNoteOff = noteOff;
@@ -406,7 +406,7 @@ void RprMidiNote::setVelocity(int velocity)
     }
 
     mNoteOn->setValue2((unsigned char)velocity);
-    if(mNoteOff->getMessageType() == RprMidiBase::NoteOn &&
+    if(mNoteOff->getMessageType() == RprMidiEvent::NoteOn &&
        mNoteOff->getValue2() == 0)
     {
         return;
@@ -428,7 +428,7 @@ RprMidiNote::~RprMidiNote()
 RprMidiCC::RprMidiCC(RprMidiContext *context, int controller)
 {
     mCC = new RprMidiEvent();
-    mCC->setMessageType(RprMidiBase::CC);
+    mCC->setMessageType(RprMidiEvent::CC);
 
     // Probably should throw an exception here if
     // controller is invalid.
@@ -445,7 +445,7 @@ RprMidiCC::RprMidiCC(RprMidiContext *context, int controller)
     mCC->setValue1((unsigned char)controller);
     mContext = context;
 }
-RprMidiCC::RprMidiCC(RprMidiBase *cc, RprMidiContext *context)
+RprMidiCC::RprMidiCC(RprMidiEvent *cc, RprMidiContext *context)
 {
     mCC = cc;
     mContext = context;
@@ -473,12 +473,12 @@ static int getQNValue(RprNode *midiNode)
     return ::atoi(tokens.at(2));
 }
 
-static bool sortMidiBase(const RprMidiBase *lhs, const RprMidiBase *rhs)
+static bool sortMidiBase(const RprMidiEvent *lhs, const RprMidiEvent *rhs)
 {
     if (rhs->getOffset() == lhs->getOffset())
     {
-        if (lhs->getMessageType() == RprMidiBase::NoteOn && 
-            rhs->getMessageType() == RprMidiBase::NoteOn)
+        if (lhs->getMessageType() == RprMidiEvent::NoteOn && 
+            rhs->getMessageType() == RprMidiEvent::NoteOn)
         {
             // Order by increasing velocity so 0 velocity notes
             // appear first
@@ -546,13 +546,13 @@ static int clearMidiEventsFromMidiNode(RprNode *parent)
     return offset;
 }
 
-static void midiEventsToMidiNode(std::vector< RprMidiBase *> &midiEvents, RprNode *midiNode, int offset)
+static void midiEventsToMidiNode(std::vector< RprMidiEvent *> &midiEvents, RprNode *midiNode, 
+                                 int offset)
 {
     int index = offset;
-    for(std::vector<RprMidiBase *>::iterator i = midiEvents.begin();
-        i != midiEvents.end(); i++)
+    for(std::vector<RprMidiEvent *>::iterator i = midiEvents.begin(); i != midiEvents.end(); i++)
     {
-        RprMidiBase *current = *i;
+        RprMidiEvent *current = *i;
         midiNode->addChild(current->toReaper(), index++);
     }
 }
@@ -568,14 +568,14 @@ static void getMidiEvents(RprNode *midiNode, RprMidiEvents &midiEvents)
         }
 
         RprMidiEventCreator creator(midiNode->getChild(i));
-        RprMidiBase *midiEvent = creator.collectEvent();
+        RprMidiEvent *midiEvent = creator.collectEvent();
         offset += midiEvent->getDelta();
         midiEvent->setOffset(offset);
         midiEvents.push_back(midiEvent);
     }
 }
 
-static bool noteEventsMatch(const RprMidiBase *noteOn, const RprMidiBase *noteOff)
+static bool noteEventsMatch(const RprMidiEvent *noteOn, const RprMidiEvent *noteOff)
 {
     if(noteOn->getChannel() != noteOff->getChannel())
     {
@@ -601,9 +601,9 @@ static bool getMidiCCs(RprMidiEvents &midiEvents,
     RprMidiEvents other;
     for(RprMidiEventsCIter i = midiEvents.begin(); i != midiEvents.end(); ++i)
     {
-        RprMidiBase *current = *i;
+        RprMidiEvent *current = *i;
 
-        if(current->getMessageType() == RprMidiBase::CC)
+        if(current->getMessageType() == RprMidiEvent::CC)
         {
             midiCCs[current->getValue1()].push_back(new RprMidiCC(current, context));
         }
@@ -627,13 +627,13 @@ static bool getMidiNotes(RprMidiEvents &midiEvents,
     /* categorize notes into note-ons and note-offs */
     for(RprMidiEventsCIter i = midiEvents.begin(); i != midiEvents.end(); ++i)
     {
-        RprMidiBase *current = *i;
-        if(current->getMessageType() == RprMidiBase::NoteOn && current->getValue2() != 0)
+        RprMidiEvent *current = *i;
+        if(current->getMessageType() == RprMidiEvent::NoteOn && current->getValue2() != 0)
         {
             noteOns.push_back(current);
         }
-        else if(current->getMessageType() == RprMidiBase::NoteOff ||
-               (current->getMessageType() == RprMidiBase::NoteOn &&
+        else if(current->getMessageType() == RprMidiEvent::NoteOff ||
+               (current->getMessageType() == RprMidiEvent::NoteOn &&
                 current->getValue2() == 0))
         {
             noteOffs.push_back(current);
@@ -662,8 +662,8 @@ static bool getMidiNotes(RprMidiEvents &midiEvents,
             continue;
         }
 
-        RprMidiBase *noteOn = *i;
-        RprMidiBase *noteOff = *j;
+        RprMidiEvent *noteOn = *i;
+        RprMidiEvent *noteOff = *j;
         /* delete zero length notes */
         if(noteOn->getOffset() == noteOff->getOffset())
         {
@@ -855,7 +855,7 @@ RprMidiTake::RprMidiTake(const RprTake &take, bool readOnly)
         mMidiEventsOffset = clearMidiEventsFromMidiNode(sourceNode);
 
     }
-    catch (RprMidiBase::RprMidiException &e)
+    catch (RprMidiEvent::RprMidiException &e)
     {
         cleanup();
         // Throw RprLibException so we let the user know something bad
@@ -883,7 +883,7 @@ RprMidiTake::~RprMidiTake()
         return;
     }
 
-    std::vector<RprMidiBase *> midiEvents;
+    std::vector<RprMidiEvent *> midiEvents;
     std::sort(mNotes.begin(), mNotes.end(), compareMidiPositions<RprMidiNote>);
     for(int i = 0; i < 128; i++)
     {
@@ -909,7 +909,7 @@ RprMidiTake::~RprMidiTake()
         }
     }
 
-    for(std::vector<RprMidiBase *>::const_iterator i = mOtherEvents.begin();
+    for(std::vector<RprMidiEvent *>::const_iterator i = mOtherEvents.begin();
         i != mOtherEvents.end(); ++i)
     {
         midiEvents.push_back(*i);
@@ -944,9 +944,9 @@ RprMidiTake::~RprMidiTake()
         offset = firstEventOffset;
     }
 
-    for(std::vector<RprMidiBase *>::iterator i = midiEvents.begin(); i != midiEvents.end(); ++i)
+    for(std::vector<RprMidiEvent *>::iterator i = midiEvents.begin(); i != midiEvents.end(); ++i)
     {
-        RprMidiBase *current = *i;
+        RprMidiEvent *current = *i;
         int delta = current->getOffset() - offset;
         current->setDelta(delta);
         offset += delta;
@@ -997,12 +997,12 @@ int RprMidiTake::countCCs(int controller) const
     return (int)mCCs[controller].size();
 }
 
-static bool hasEvent(std::vector<RprMidiBase *> &midiEvents, RprMidiBase::MessageType messageType)
+static bool hasEvent(std::vector<RprMidiEvent *> &midiEvents, RprMidiEvent::MessageType messageType)
 {
-    for(std::vector<RprMidiBase *>::const_iterator i = midiEvents.begin();
+    for(std::vector<RprMidiEvent *>::const_iterator i = midiEvents.begin();
         i != midiEvents.end(); ++i)
     {
-        RprMidiBase *midiEvent = *i;
+        RprMidiEvent *midiEvent = *i;
         if(midiEvent->getMessageType() == messageType)
         {
             return true;
@@ -1011,14 +1011,14 @@ static bool hasEvent(std::vector<RprMidiBase *> &midiEvents, RprMidiBase::Messag
     return false;
 }
 
-bool RprMidiTake::hasEventType(RprMidiBase::MessageType messageType)
+bool RprMidiTake::hasEventType(RprMidiEvent::MessageType messageType)
 {
-    if(messageType == RprMidiBase::NoteOn || messageType == RprMidiBase::NoteOff)
+    if(messageType == RprMidiEvent::NoteOn || messageType == RprMidiEvent::NoteOff)
     {
         return countNotes() > 0;
     }
 
-    if(messageType == RprMidiBase::CC)
+    if(messageType == RprMidiEvent::CC)
     {
         for(int i = 0; i < 128; ++i)
         {

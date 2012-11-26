@@ -10,88 +10,80 @@
 
 static std::string toHex(unsigned char hex);
 
-RprMidiBase::RprMidiBase() : mSelected(false), mMuted(false), mDelta(0)
-{}
+RprMidiEvent::RprMidiEvent()
+    : mSelected(false), mMuted(false), mDelta(0), mOffset(0), mQuantizeOffset(0)
+{
+    mMidiMessage.resize(3);
+}
 
-bool RprMidiBase::isSelected() const
-{ return mSelected; }
+bool RprMidiEvent::isSelected() const
+{
+    return mSelected;
+}
 
-void RprMidiBase::setSelected( bool selected)
-{ mSelected = selected; }
+void RprMidiEvent::setSelected(bool selected)
+{
+    mSelected = selected;
+}
 
-bool RprMidiBase::isMuted() const
-{ return mMuted; }
+bool RprMidiEvent::isMuted() const
+{
+    return mMuted;
+}
 
-void RprMidiBase::setMuted(bool muted)
-{ mMuted = muted; }
+void RprMidiEvent::setMuted(bool muted)
+{
+    mMuted = muted;
+}
 
-int RprMidiBase::getDelta() const
-{ return mDelta; }
+int RprMidiEvent::getDelta() const
+{
+    return mDelta;
+}
 
-void RprMidiBase::setDelta(int delta)
-{ mDelta = delta; }
+void RprMidiEvent::setDelta(int delta)
+{
+    mDelta = delta;
+}
 
-int RprMidiBase::getOffset() const
-{ return mOffset; }
+int RprMidiEvent::getOffset() const
+{
+    return mOffset;
+}
 
-void RprMidiBase::setOffset(int offset)
-{ mOffset = offset; }
+void RprMidiEvent::setOffset(int offset)
+{
+    mOffset = offset;
+}
 
+RprMidiEvent::RprMidiException::RprMidiException(const char *message) : mMessage(message)
+{
+}
 
-unsigned char RprMidiBase::getChannel() const
-{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
-void RprMidiBase::setChannel(unsigned char)
-{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
+const char *RprMidiEvent::RprMidiException::what()
+{
+    return mMessage.c_str();
+}
 
+RprMidiEvent::RprMidiException::~RprMidiException() throw()
+{
+}
 
-unsigned char RprMidiBase::getValue1() const
-{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
-void RprMidiBase::setValue1(unsigned char)
-{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
-
-unsigned char RprMidiBase::getValue2() const
-{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
-void RprMidiBase::setValue2(unsigned char)
-{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
-
-int RprMidiBase::getUnquantizedOffset() const
-{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
-
-void RprMidiBase::setUnquantizedOffset(int offset)
-{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
-
-RprMidiBase::MessageType RprMidiBase::getMessageType() const
-{return Unknown; }
-void RprMidiBase::setMessageType(RprMidiBase::MessageType messageType)
-{}
-
-const std::string& RprMidiBase::getExtendedData() const
-{ throw RprMidiBase::RprMidiException(__LOCALIZE("Bad API call","sws_mbox"));}
-
-RprMidiBase::RprMidiException::RprMidiException(const char *message) : mMessage(message)
-{}
-const char *RprMidiBase::RprMidiException::what()
-{ return mMessage.c_str(); }
-
-RprMidiBase::RprMidiException::~RprMidiException() throw()
-{}
-
-
-
-RprExtendedMidiEvent::RprExtendedMidiEvent() : RprMidiBase()
-{}
+RprExtendedMidiEvent::RprExtendedMidiEvent() : RprMidiEvent()
+{
+}
 
 void RprExtendedMidiEvent::addExtendedData(const std::string &data)
 {
     mExtendedData.push_back(data);
 }
 
-RprMidiBase::MessageType RprExtendedMidiEvent::getMessageType() const
+RprMidiEvent::MessageType RprExtendedMidiEvent::getMessageType() const
 {
     if (mExtendedData.front().substr(0, 2) == "/w")
-        return RprMidiBase::TextEvent;
+        return RprMidiEvent::TextEvent;
     else
-        return RprMidiBase::Sysex;
+        return RprMidiEvent::Sysex;
 }
 
 RprNode *RprExtendedMidiEvent::toReaper()
@@ -107,23 +99,20 @@ RprNode *RprExtendedMidiEvent::toReaper()
     oss << " ";
     oss << getDelta() << " 0";
     std::auto_ptr<RprNode> node(new RprParentNode(oss.str().c_str()));
-    for(std::list<std::string>::const_iterator i = mExtendedData.begin(); i != mExtendedData.end(); ++i) {
+    for(std::list<std::string>::const_iterator i = mExtendedData.begin();
+        i != mExtendedData.end(); ++i)
+    {
         std::auto_ptr<RprNode> childNode(new RprPropertyNode(*i));
         node->addChild(childNode.release());
     }
     return node.release();
 }
 
-RprMidiEvent::RprMidiEvent() : RprMidiBase()
-{
-    mMidiMessage.resize(3);
-    mQuantizeOffset = 0;
-}
-
 void RprMidiEvent::setMidiMessage(const std::vector<unsigned char> message)
 {
     mMidiMessage = message;
 }
+
 const std::vector<unsigned char>& RprMidiEvent::getMidiMessage()
 {
     return mMidiMessage;
@@ -139,35 +128,35 @@ void RprMidiEvent::setValue1(unsigned char value)
     mMidiMessage[1] = value;
 }
 
-static RprMidiBase::MessageType getMessageType(unsigned char message)
+static RprMidiEvent::MessageType getMessageType(unsigned char message)
 {
     message = (message & 0xF0) >> 4;
     switch(message) {
         case 8:
-            return RprMidiBase::NoteOff;
+            return RprMidiEvent::NoteOff;
         case 9:
-            return RprMidiBase::NoteOn;
+            return RprMidiEvent::NoteOn;
         case 0xA:
-            return RprMidiBase::KeyPressure;
+            return RprMidiEvent::KeyPressure;
         case 0xB:
-            return RprMidiBase::CC;
+            return RprMidiEvent::CC;
         case 0xC:
-            return RprMidiBase::ProgramChange;
+            return RprMidiEvent::ProgramChange;
         case 0xD:
-            return RprMidiBase::ChannelPressure;
+            return RprMidiEvent::ChannelPressure;
         case 0xE:
-            return RprMidiBase::PitchBend;
+            return RprMidiEvent::PitchBend;
         default:
-            return RprMidiBase::Unknown;
+            return RprMidiEvent::Unknown;
     }
 }
 
-RprMidiBase::MessageType RprMidiEvent::getMessageType() const
+RprMidiEvent::MessageType RprMidiEvent::getMessageType() const
 {
     return ::getMessageType(mMidiMessage[0]);
 }
 
-void RprMidiEvent::setMessageType(RprMidiBase::MessageType messageType)
+void RprMidiEvent::setMessageType(RprMidiEvent::MessageType messageType)
 {
     unsigned char messageNibble = 0x0;
     switch(messageType) {
@@ -212,7 +201,9 @@ void RprMidiEvent::setUnquantizedOffset(int offset)
 }
 
 unsigned char RprMidiEvent::getChannel() const
-{ return (mMidiMessage[0] & 0x0F);}
+{ 
+    return (mMidiMessage[0] & 0x0F);
+}
 
 void RprMidiEvent::setChannel(unsigned char channel)
 {
@@ -247,7 +238,7 @@ RprNode *RprMidiEvent::toReaper()
 static bool isExtended(const char* inStr)
 {
     if(inStr[0] == 0)
-        throw RprMidiBase::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
+        throw RprMidiEvent::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
     if(inStr[0] == 'x')
         return true;
     if(inStr[0] == 'X')
@@ -258,7 +249,7 @@ static bool isExtended(const char* inStr)
 static bool isSelected(const char* inStr)
 {
     if(inStr[0] == 0)
-        throw RprMidiBase::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
+        throw RprMidiEvent::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
     if(inStr[0] == 'E')
         return false;
     if(inStr[0] == 'e')
@@ -268,7 +259,7 @@ static bool isSelected(const char* inStr)
     if(inStr[0] == 'X')
         return false;
 
-    throw RprMidiBase::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
+    throw RprMidiEvent::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
 }
 
 static bool isMuted(const char* inStr)
@@ -278,7 +269,7 @@ static bool isMuted(const char* inStr)
     if(inStr[1] == 'm')
         return true;
 
-    throw RprMidiBase::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
+    throw RprMidiEvent::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
 }
 
 static unsigned char fromHex(const std::string &inStr)
@@ -300,9 +291,9 @@ static bool isNote(std::vector<unsigned char> &midiMessage)
 {
     if(midiMessage.empty())
         return false;
-    if(getMessageType(midiMessage[0]) == RprMidiBase::NoteOn)
+    if(getMessageType(midiMessage[0]) == RprMidiEvent::NoteOn)
         return true;
-    if(getMessageType(midiMessage[0]) == RprMidiBase::NoteOff)
+    if(getMessageType(midiMessage[0]) == RprMidiEvent::NoteOff)
         return true;
     return false;
 }
@@ -312,7 +303,7 @@ RprMidiEventCreator::RprMidiEventCreator(RprNode *node)
     StringVector tokens(node->getValue());
 
     if(tokens.empty())
-        throw RprMidiBase::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
+        throw RprMidiEvent::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
 
     int delta = (int)strtoul(tokens.at(1), 0, 10);
     bool selected = isSelected(tokens.at(0));
@@ -349,7 +340,7 @@ RprMidiEventCreator::RprMidiEventCreator(RprNode *node)
     mEvent->setMidiMessage(midiMessage);
 }
 
-RprMidiBase *RprMidiEventCreator::collectEvent()
+RprMidiEvent *RprMidiEventCreator::collectEvent()
 {
     if (mEvent.get())
         return mEvent.release();
@@ -357,8 +348,9 @@ RprMidiBase *RprMidiEventCreator::collectEvent()
     if (mXEvent.get())
         return mXEvent.release();
 
-    throw RprMidiBase::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
+    throw RprMidiEvent::RprMidiException(__LOCALIZE("Error parsing MIDI data","sws_mbox"));
 }
 
 RprMidiEventCreator::~RprMidiEventCreator()
-{}
+{
+}

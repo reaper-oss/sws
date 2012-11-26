@@ -5,107 +5,93 @@
 
 class RprNode;
 
-class RprMidiBase {
+class RprMidiEvent {
 public:
-	enum MessageType {NoteOff, NoteOn, KeyPressure, CC, ProgramChange, ChannelPressure, PitchBend, Sysex, TextEvent, Unknown};
-	RprMidiBase();
+    enum MessageType { NoteOff, NoteOn, KeyPressure, CC, ProgramChange, ChannelPressure, PitchBend,
+                       Sysex, TextEvent, Unknown };
+    RprMidiEvent();
 
-	bool isSelected() const;
-	void setSelected( bool selected);
+    bool isSelected() const;
+    void setSelected( bool selected);
 
-	bool isMuted() const;
-	void setMuted(bool muted);
+    bool isMuted() const;
+    void setMuted(bool muted);
 
-	int getDelta() const;
-	void setDelta(int delta);
+    int getDelta() const;
+    void setDelta(int delta);
 
-	virtual MessageType getMessageType() const;
-	virtual void setMessageType(MessageType messageType);
+    virtual MessageType getMessageType() const;
+    virtual void setMessageType(MessageType messageType);
 
-	int getOffset() const;
-	void setOffset(int offset);
+    int getOffset() const;
+    void setOffset(int offset);
 
-	virtual void setChannel(unsigned char channel);
-	virtual unsigned char getChannel() const;
+    virtual void setChannel(unsigned char channel);
+    virtual unsigned char getChannel() const;
 
-	virtual unsigned char getValue1() const;
-	virtual void setValue1(unsigned char value);
+    virtual unsigned char getValue1() const;
+    virtual void setValue1(unsigned char value);
 
-	virtual unsigned char getValue2() const;
-	virtual void setValue2(unsigned char value);
+    virtual unsigned char getValue2() const;
+    virtual void setValue2(unsigned char value);
 
-	virtual int getUnquantizedOffset() const;
-	virtual void setUnquantizedOffset(int offset);
+    virtual int getUnquantizedOffset() const;
+    virtual void setUnquantizedOffset(int offset);
 
-	const std::string& getExtendedData() const;
+    void setMidiMessage(const std::vector<unsigned char> message);
+    const std::vector<unsigned char>& getMidiMessage();
 
-	virtual RprNode *toReaper() = 0;
+    const std::string& getExtendedData() const;
 
-	virtual ~RprMidiBase() {}
+    virtual RprNode *toReaper();
 
-	class RprMidiException {
-	public:
-		RprMidiException(const char *message);
-		const char *what();
-		virtual ~RprMidiException() throw();
-	private:
-		std::string mMessage;
-	};
+    virtual ~RprMidiEvent() {}
+
+    class RprMidiException {
+    public:
+        RprMidiException(const char *message);
+        const char *what();
+        virtual ~RprMidiException() throw();
+    private:
+        std::string mMessage;
+    };
 
 private:
-	int mDelta;
-	int mOffset;
-	bool mMuted;
-	bool mSelected;
+
+    std::vector<unsigned char> mMidiMessage;
+    int mQuantizeOffset;
+
+    int mDelta;
+    int mOffset;
+    bool mMuted;
+    bool mSelected;
 };
 
-class RprExtendedMidiEvent : public RprMidiBase {
+class RprExtendedMidiEvent : public RprMidiEvent
+{
 public:
-	RprExtendedMidiEvent();
-	void addExtendedData(const std::string &data);
-	MessageType getMessageType() const;
-	RprNode *toReaper();
+    RprExtendedMidiEvent();
+
+    void addExtendedData(const std::string &data);
+    MessageType getMessageType() const;
+
+    RprNode *toReaper();
+
 private:
-	std::list<std::string> mExtendedData;
+    std::list<std::string> mExtendedData;
 };
 
-class RprMidiEvent : public RprMidiBase {
+class RprMidiEventCreator
+{
 public:
-	RprMidiEvent();
-	void setMidiMessage(const std::vector<unsigned char> message);
-	const std::vector<unsigned char>& getMidiMessage();
-
-	MessageType getMessageType() const;
-	void setMessageType(MessageType messageType);
-
-	unsigned char getValue1() const;
-	void setValue1(unsigned char value);
-	unsigned char getValue2() const;
-	void setValue2(unsigned char value);
-
-	int getUnquantizedOffset() const;
-	void setUnquantizedOffset(int offset);
-
-	unsigned char getChannel() const;
-	void setChannel(unsigned char channel);
-
-	RprNode *toReaper();
-
+    RprMidiEventCreator(RprNode *node);
+    /* Collect midi Event. Once you have collected it you
+     * take ownership of it. */
+    RprMidiEvent *collectEvent();
+    ~RprMidiEventCreator();
 private:
-	std::vector<unsigned char> mMidiMessage;
-	int mQuantizeOffset;
-};
-
-class RprMidiEventCreator {
-public:
-	RprMidiEventCreator(RprNode *node);
-	/* Collect midi Event. Once you have collected it you
-	 * take ownership of it. */
-	RprMidiBase *collectEvent();
-	~RprMidiEventCreator();
-private:
-	std::auto_ptr<RprMidiEvent> mEvent;
-	std::auto_ptr<RprExtendedMidiEvent> mXEvent;
+    std::auto_ptr<RprMidiEvent> mEvent;
+    std::auto_ptr<RprExtendedMidiEvent> mXEvent;
 };
 
 #endif /*__RPRMIDIEVENT_HXX */

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1FD9691D1661424E00DECB50 /* virtwnd-slider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD9691C1661424E00DECB50 /* virtwnd-slider.cpp */; };
+		1FD96920166142CC00DECB50 /* lice_arc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD9691F166142CC00DECB50 /* lice_arc.cpp */; };
 		22219AFD124AF1CE006CBC5D /* Macros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22219AFB124AF1CE006CBC5D /* Macros.cpp */; };
 		22219AFE124AF1CE006CBC5D /* Macros.h in Headers */ = {isa = PBXBuildFile; fileRef = 22219AFC124AF1CE006CBC5D /* Macros.h */; };
 		22257D87108BDC6B0058CF75 /* AutoRename.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D6F108BDC6B0058CF75 /* AutoRename.cpp */; };
@@ -314,6 +316,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1FD9691C1661424E00DECB50 /* virtwnd-slider.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "virtwnd-slider.cpp"; path = "../WDL/wingui/virtwnd-slider.cpp"; sourceTree = "<group>"; };
+		1FD9691F166142CC00DECB50 /* lice_arc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice_arc.cpp; path = "../../wdl-ol/WDL/lice/lice_arc.cpp"; sourceTree = "<group>"; };
 		22219AFB124AF1CE006CBC5D /* Macros.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Macros.cpp; path = Misc/Macros.cpp; sourceTree = "<group>"; };
 		22219AFC124AF1CE006CBC5D /* Macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Macros.h; path = Misc/Macros.h; sourceTree = "<group>"; };
 		22257D6F108BDC6B0058CF75 /* AutoRename.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AutoRename.cpp; path = Xenakios/AutoRename.cpp; sourceTree = "<group>"; };
@@ -864,6 +868,7 @@
 		22AF6E0812308B550017808F /* wingui */ = {
 			isa = PBXGroup;
 			children = (
+				1FD9691C1661424E00DECB50 /* virtwnd-slider.cpp */,
 				22AF6E0912308B8D0017808F /* virtwnd-controls.h */,
 				22AF6E0A12308B8D0017808F /* virtwnd-iconbutton.cpp */,
 				22AF6E0B12308B8D0017808F /* virtwnd-listbox.cpp */,
@@ -879,6 +884,7 @@
 		22AF6E1912308BB90017808F /* lice */ = {
 			isa = PBXGroup;
 			children = (
+				1FD9691F166142CC00DECB50 /* lice_arc.cpp */,
 				2296248E10A3A22500A1090C /* lice.cpp */,
 				22AF6E1A12308BEE0017808F /* lice.h */,
 				22AF6E1B12308BEE0017808F /* lice_image.cpp */,
@@ -1486,6 +1492,8 @@
 				3879390D16202B1E000948B5 /* RprTrack.cpp in Sources */,
 				3879390F16202B1E000948B5 /* StringUtil.cpp in Sources */,
 				3879391116202B1E000948B5 /* TimeMap.cpp in Sources */,
+				1FD9691D1661424E00DECB50 /* virtwnd-slider.cpp in Sources */,
+				1FD96920166142CC00DECB50 /* lice_arc.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

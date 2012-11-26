@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		1FD9691D1661424E00DECB50 /* virtwnd-slider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD9691C1661424E00DECB50 /* virtwnd-slider.cpp */; };
-		1FD96920166142CC00DECB50 /* lice_arc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD9691F166142CC00DECB50 /* lice_arc.cpp */; };
 		22219AFD124AF1CE006CBC5D /* Macros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22219AFB124AF1CE006CBC5D /* Macros.cpp */; };
 		22219AFE124AF1CE006CBC5D /* Macros.h in Headers */ = {isa = PBXBuildFile; fileRef = 22219AFC124AF1CE006CBC5D /* Macros.h */; };
 		22257D87108BDC6B0058CF75 /* AutoRename.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D6F108BDC6B0058CF75 /* AutoRename.cpp */; };
@@ -223,6 +222,7 @@
 		22FFD27A114CD8310077F1CA /* Autocolor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22FFD278114CD8310077F1CA /* Autocolor.cpp */; };
 		22FFD27B114CD8310077F1CA /* Autocolor.h in Headers */ = {isa = PBXBuildFile; fileRef = 22FFD279114CD8310077F1CA /* Autocolor.h */; };
 		3327DE920E955E14001FCE4E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3327DE910E955E14001FCE4E /* Cocoa.framework */; };
+		387407D01664177E008626AA /* lice_arc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387407CF1664177E008626AA /* lice_arc.cpp */; };
 		387938E516202B1E000948B5 /* CommandHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938B716202B1E000948B5 /* CommandHandler.cpp */; };
 		387938E616202B1E000948B5 /* CommandHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938B816202B1E000948B5 /* CommandHandler.h */; };
 		387938E716202B1E000948B5 /* Envelope.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 387938B916202B1E000948B5 /* Envelope.cpp */; };
@@ -317,7 +317,6 @@
 
 /* Begin PBXFileReference section */
 		1FD9691C1661424E00DECB50 /* virtwnd-slider.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "virtwnd-slider.cpp"; path = "../WDL/wingui/virtwnd-slider.cpp"; sourceTree = "<group>"; };
-		1FD9691F166142CC00DECB50 /* lice_arc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice_arc.cpp; path = "../../wdl-ol/WDL/lice/lice_arc.cpp"; sourceTree = "<group>"; };
 		22219AFB124AF1CE006CBC5D /* Macros.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Macros.cpp; path = Misc/Macros.cpp; sourceTree = "<group>"; };
 		22219AFC124AF1CE006CBC5D /* Macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Macros.h; path = Misc/Macros.h; sourceTree = "<group>"; };
 		22257D6F108BDC6B0058CF75 /* AutoRename.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AutoRename.cpp; path = Xenakios/AutoRename.cpp; sourceTree = "<group>"; };
@@ -516,6 +515,7 @@
 		22FFD278114CD8310077F1CA /* Autocolor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Autocolor.cpp; path = Color/Autocolor.cpp; sourceTree = "<group>"; };
 		22FFD279114CD8310077F1CA /* Autocolor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Autocolor.h; path = Color/Autocolor.h; sourceTree = "<group>"; };
 		3327DE910E955E14001FCE4E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		387407CF1664177E008626AA /* lice_arc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lice_arc.cpp; path = ../WDL/lice/lice_arc.cpp; sourceTree = SOURCE_ROOT; };
 		387938B716202B1E000948B5 /* CommandHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CommandHandler.cpp; path = Fingers/CommandHandler.cpp; sourceTree = "<group>"; };
 		387938B816202B1E000948B5 /* CommandHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandHandler.h; path = Fingers/CommandHandler.h; sourceTree = "<group>"; };
 		387938B916202B1E000948B5 /* Envelope.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Envelope.cpp; path = Fingers/Envelope.cpp; sourceTree = "<group>"; };
@@ -884,9 +884,9 @@
 		22AF6E1912308BB90017808F /* lice */ = {
 			isa = PBXGroup;
 			children = (
-				1FD9691F166142CC00DECB50 /* lice_arc.cpp */,
 				2296248E10A3A22500A1090C /* lice.cpp */,
 				22AF6E1A12308BEE0017808F /* lice.h */,
+				387407CF1664177E008626AA /* lice_arc.cpp */,
 				22AF6E1B12308BEE0017808F /* lice_image.cpp */,
 				2296248F10A3A22500A1090C /* lice_line.cpp */,
 				22AF6E1C12308BEE0017808F /* lice_png.cpp */,
@@ -1493,7 +1493,7 @@
 				3879390F16202B1E000948B5 /* StringUtil.cpp in Sources */,
 				3879391116202B1E000948B5 /* TimeMap.cpp in Sources */,
 				1FD9691D1661424E00DECB50 /* virtwnd-slider.cpp in Sources */,
-				1FD96920166142CC00DECB50 /* lice_arc.cpp in Sources */,
+				387407D01664177E008626AA /* lice_arc.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -9,8 +9,6 @@ class RprTake {
 public:
     RprTake(MediaItem_Take *take);
 
-    static PCM_source *createSource(const char *fileName);
-
     double getPlayRate() const;
     void setPlayRate(double playRate);
 
@@ -22,8 +20,6 @@ public:
     RprItem getParent() const;
 
     PCM_source *getSource();
-
-    void setSource(PCM_source *source, bool keepOld = false);
 
     bool isFile();
     bool isMIDI();

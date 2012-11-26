@@ -9,8 +9,6 @@
 
 RprTake::RprTake(MediaItem_Take *take)
 {
-    if(take == NULL)
-        throw RprLibException(__LOCALIZE("Media item take is NULL","sws_mbox"), false);
     mTake = take;
 }
 
@@ -59,6 +57,10 @@ GUID *RprTake::getGUID() const
 bool RprTake::isFile()
 {
     PCM_source *source = getSource();
+    if (!source)
+    {
+        return false;
+    }
     std::string fileName(source->GetFileName());
     return !fileName.empty();
 }
@@ -66,6 +68,10 @@ bool RprTake::isFile()
 bool RprTake::isMIDI()
 {
     PCM_source *source = getSource();
+    if (!source)
+    {
+        return false;
+    }
     std::string takeType(source->GetType());
     return takeType == "MIDI" || takeType == "MIDIPOOL";
 }
@@ -73,27 +79,6 @@ bool RprTake::isMIDI()
 void RprTake::setName(const char *name)
 {
     GetSetMediaItemTakeInfo(mTake, "P_NAME", (void *)name);
-}
-
-PCM_source *RprTake::createSource(const char *fileName)
-{
-    return PCM_Source_CreateFromFile(fileName);
-}
-
-void RprTake::setSource(PCM_source *source, bool keepOld)
-{
-    PCM_source *oldSource = getSource();
-    GetSetMediaItemTakeInfo(mTake, "P_SOURCE", (void *)source);
-    if(!keepOld)
-        delete oldSource;
-}
-
-void RprTake::openEditor()
-{
-    void *midiEditor = MIDIEditor_GetActive();
-    if(isMIDI() && midiEditor) {
-        getSource()->Extended(PCM_SOURCE_EXT_OPENEDITOR, midiEditor, (void *)getParent().getTrack().getTrackIndex(), (void *)getName());
-    }
 }
 
 const char *RprTake::getName()

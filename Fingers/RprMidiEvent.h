@@ -21,22 +21,22 @@ public:
     void setDelta(int delta);
 
     virtual MessageType getMessageType() const;
-    virtual void setMessageType(MessageType messageType);
+    void setMessageType(MessageType messageType);
 
     int getOffset() const;
     void setOffset(int offset);
 
-    virtual void setChannel(unsigned char channel);
-    virtual unsigned char getChannel() const;
+    void setChannel(unsigned char channel);
+    unsigned char getChannel() const;
 
-    virtual unsigned char getValue1() const;
-    virtual void setValue1(unsigned char value);
+    unsigned char getValue1() const;
+    void setValue1(unsigned char value);
 
-    virtual unsigned char getValue2() const;
-    virtual void setValue2(unsigned char value);
+    unsigned char getValue2() const;
+    void setValue2(unsigned char value);
 
-    virtual int getUnquantizedOffset() const;
-    virtual void setUnquantizedOffset(int offset);
+    int getUnquantizedOffset() const;
+    void setUnquantizedOffset(int offset);
 
     void setMidiMessage(const std::vector<unsigned char> message);
     const std::vector<unsigned char>& getMidiMessage();
@@ -73,9 +73,10 @@ public:
     RprExtendedMidiEvent();
 
     void addExtendedData(const std::string &data);
-    MessageType getMessageType() const;
 
-    RprNode *toReaper();
+    virtual MessageType getMessageType() const;
+
+    virtual RprNode *toReaper();
 
 private:
     std::list<std::string> mExtendedData;

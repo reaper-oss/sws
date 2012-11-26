@@ -23,9 +23,7 @@ public:
 
     bool isFile();
     bool isMIDI();
-
-    void openEditor();
-
+    
     void setName(const char *name);
     const char *getName();
 

@@ -32,18 +32,9 @@
 
 #include "SnM_Chunk.h" 
 
-class SNM_TrackInt {
-public:
-	SNM_TrackInt(MediaTrack* _tr, int _i) : m_tr(_tr), m_int(_i) {}
-	~SNM_TrackInt() {}
-	MediaTrack* m_tr;
-	int m_int;
-};
 
 extern int g_SNMMediaFlags;
 
-void ScrollSelTrack(const char* _undoTitle, bool _tcp, bool _mcp);
-void ScrollSelTrack(COMMAND_T*);
 void CopyCutTrackGrouping(COMMAND_T*);
 void PasteTrackGrouping(COMMAND_T*);
 void RemoveTrackGrouping(COMMAND_T*);
@@ -58,6 +49,7 @@ void ToggleArmTrackEnv(COMMAND_T*);
 void RemoveAllEnvsSelTracks(COMMAND_T*);
 void ToggleWriteEnvExists(COMMAND_T*);
 bool WriteEnvExists(COMMAND_T*);
+
 MediaTrack* SNM_GetTrack(ReaProject* _proj, int _idx);
 int SNM_GetTrackId(ReaProject* _proj, MediaTrack* _tr);
 int SNM_CountSelectedTracks(ReaProject* _proj, bool _master);
@@ -66,8 +58,10 @@ void SNM_GetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, boo
 bool SNM_SetSelectedTracks(ReaProject* _proj, WDL_PtrList<MediaTrack>* _trs, bool _unselOthers, bool _withMaster = true);
 bool SNM_SetSelectedTrack(ReaProject* _proj, MediaTrack* _tr, bool _unselOthers, bool _withMaster = true);
 void SNM_ClearSelectedTracks(ReaProject* _proj, bool _withMaster);
+
 bool GetTrackIcon(MediaTrack* _tr, char* _fnOut, int _fnOutSz);
 bool SetTrackIcon(MediaTrack* _tr, const char* _fn);
+
 bool MakeSingleTrackTemplateChunk(WDL_FastString* _in, WDL_FastString* _out, bool _delItems, bool _delEnvs, int _tmpltIdx = 0, bool _obeyOffset = true);
 bool GetItemsSubChunk(WDL_FastString* _in, WDL_FastString* _out, int _tmpltIdx = 0);
 //bool ApplyTrackTemplatePrimitive(MediaTrack* _tr, WDL_FastString* _tmplt, bool _itemsFromTmplt, bool _envsFromTmplt, SNM_SendPatcher* _p = NULL);
@@ -79,17 +73,26 @@ void LoadApplyTrackTemplateSlot(COMMAND_T*);
 void LoadApplyTrackTemplateSlotWithItemsEnvs(COMMAND_T*);
 void LoadImportTrackTemplateSlot(COMMAND_T*);
 bool AutoSaveTrackSlots(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _delItems, bool _delEnvs);
+
 void SetMIDIInputChannel(COMMAND_T*);
 void RemapMIDIInputChannel(COMMAND_T*);
+
 void StopTrackPreviewsRun();
+bool TrackPreviewsHasAllNotesOff();
 bool SNM_PlayTrackPreview(MediaTrack* _tr, PCM_source* _src, bool _pause, bool _loop, double _msi);
 bool SNM_PlayTrackPreview(MediaTrack* _tr, const char* _fn, bool _pause, bool _loop, double _msi);
 void SNM_PlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, double _msi);
 bool SNM_TogglePlaySelTrackPreviews(const char* _fn, bool _pause, bool _loop, double _msi = -1.0);
 void StopTrackPreviews(bool _selTracksOnly);
 void StopTrackPreviews(COMMAND_T*);
-void CC123Track(MediaTrack* _tr);
-void CC123Tracks(WDL_PtrList<void>* _trs);
-void CC123SelTracks(COMMAND_T*);
+
+bool SendAllNotesOff(MediaTrack* _tr);
+bool SendAllNotesOff(WDL_PtrList<void>* _trs);
+void SendAllNotesOff(COMMAND_T*);
+
+void ScrollSelTrack(bool _tcp, bool _mcp);
+void ScrollSelTrack(COMMAND_T*);
+void ScrollTrack(MediaTrack* _tr, bool _tcp, bool _mcp);
+void ShowTrackRoutingWindow(MediaTrack* _tr);
 
 #endif

@@ -76,7 +76,7 @@ void MECreateCCLane(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 bool replaceCCLanes(const char* _newCClanes)
@@ -118,7 +118,7 @@ bool replaceCCLanes(const char* _newCClanes)
 void MEHideCCLanes(COMMAND_T* _ct)
 {
 	if (replaceCCLanes("VELLANE -1 0 0\n")) 
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 
@@ -130,9 +130,9 @@ void MESetCCLanes(COMMAND_T* _ct)
 	{
 		// recall lanes
 		char laneSlot[MAX_CC_LANES_LEN], slot[32] = "";
-		if (_snprintfStrict(slot, sizeof(slot), "CC_LANES_SLOT%d", (int)_ct->user + 1) > 0)
+		if (_snprintfStrict(slot, sizeof(slot), "cc_lanes_slot%d", (int)_ct->user + 1) > 0)
 		{
-			GetPrivateProfileString("MIDI_EDITOR", slot, "", laneSlot, MAX_CC_LANES_LEN, g_SNMIniFn.Get());
+			GetPrivateProfileString("MidiEditor", slot, "", laneSlot, MAX_CC_LANES_LEN, g_SNMIniFn.Get());
 
 			int i=0; 
 			while (laneSlot[i] && i < (MAX_CC_LANES_LEN-2)) // -2: see string termination
@@ -145,7 +145,7 @@ void MESetCCLanes(COMMAND_T* _ct)
 			laneSlot[i] = 0;
 
 			if (replaceCCLanes(laneSlot)) 
-				Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 		}
 	}
 }
@@ -195,8 +195,8 @@ void MESaveCCLanes(COMMAND_T* _ct)
 
 					// store lanes
 					char slot[32] = "";
-					if (_snprintfStrict(slot, sizeof(slot), "CC_LANES_SLOT%d", (int)_ct->user + 1) > 0)
-						WritePrivateProfileString("MIDI_EDITOR", slot, laneSlot, g_SNMIniFn.Get());
+					if (_snprintfStrict(slot, sizeof(slot), "cc_lanes_slot%d", (int)_ct->user + 1) > 0)
+						WritePrivateProfileString("MidiEditor", slot, laneSlot, g_SNMIniFn.Get());
 				}
 			}
 		}

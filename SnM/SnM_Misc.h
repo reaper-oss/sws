@@ -44,6 +44,7 @@ bool SNM_GetSetSourceState2(MediaItem_Take* _tk, WDL_FastString* _state, bool _s
 bool SNM_GetSetObjectState(void* _obj, WDL_FastString* _state, bool _setnewvalue, bool _minstate);
 bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type);
 bool SNM_RemoveReceive(MediaTrack* _tr, int _rcvIdx);
+bool SNM_RemoveReceivesFrom(MediaTrack* _tr, MediaTrack* _srcTr);
 int SNM_GetIntConfigVar(const char* _varName, int _errVal);
 bool SNM_SetIntConfigVar(const char* _varName, int _newVal);
 double SNM_GetDoubleConfigVar(const char* _varName, double _errVal);
@@ -61,7 +62,6 @@ void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot);
 void SetSelTrackIconSlot(COMMAND_T*);
 
 // misc
-bool WaitForTrackMute(DWORD* _muteTime);
 void SimulateMouseClick(COMMAND_T*);
 
 #endif

@@ -279,7 +279,7 @@ virtual bool Commit(bool _force = false)
 	if ((m_updates || _force) && GetChunk()->GetLength())
 	{
 		if (m_reaObject) {
-			if (!(GetPlayState() & 4) && !SNM_GetSetObjectState(m_reaObject, m_chunk)) {
+			if (!(GetPlayStateEx(NULL) & 4) && !SNM_GetSetObjectState(m_reaObject, m_chunk)) {
 				SetChunk("", 0);
 				return true;
 			}

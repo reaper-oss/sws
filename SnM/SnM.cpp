@@ -41,6 +41,7 @@ void QuickTest(COMMAND_T* _ct) {}
 
 static COMMAND_T g_SNM_cmdTable[] = 
 {
+
 //	{ { DEFACCEL, "SWS/S&M: [Internal] QuickTest" }, "S&M_QUICKTEST", QuickTest, NULL, },
 
 
@@ -137,7 +138,7 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Unbypass last FX for selected tracks" }, "S&M_FXBYP_SETOFFLAST", SetFXUnbypassSelTracks, NULL, -2},
 	{ { DEFACCEL, "SWS/S&M: Unbypass selected FX for selected tracks" }, "S&M_FXBYP_SETOFFSEL", SetFXUnbypassSelTracks, NULL, -1},
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX bypass for selected tracks" }, "S&M_FXBYPALL", ToggleAllFXsBypassSelTracks, NULL, -666, FakeIsToggleAction},
-	// note: toggle online/offline actions exist natively ^^
+	// note: set all fx online/offline actions exist natively ^^
 	{ { DEFACCEL, "SWS/S&M: Bypass all FX for selected tracks" }, "S&M_FXBYPALL2", SetAllFXsBypassSelTracks, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Unbypass all FX for selected tracks" }, "S&M_FXBYPALL3", SetAllFXsBypassSelTracks, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Toggle all FX (except selected) online/offline for selected tracks" }, "S&M_FXOFFEXCPTSEL", ToggleExceptFXOfflineSelTracks, NULL, -1, FakeIsToggleAction},
@@ -451,16 +452,20 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Set repeat on" }, "S&M_PLAYLIST_REPEAT_OFF", SetPlaylistRepeat, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Region Playlist - Toggle repeat" }, "S&M_PLAYLIST_TGL_REPEAT", SetPlaylistRepeat, NULL, -1, IsPlaylistRepeat},
 
+	// Markers & regions ------------------------------------------------------
+	{ { DEFACCEL, "SWS/S&M: Insert marker at edit cursor" }, "S&M_INS_MARKER_EDIT", InsertMarker, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Insert marker at play cursor" }, "S&M_INS_MARKER_PLAY", InsertMarker, NULL, 1},
+
 	// Other, misc ------------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: [developer] Write C++ API functions header" }, "S&M_GEN_API", GenAPI, NULL, },
-	{ { DEFACCEL, "SWS/S&M: Send all notes off to selected tracks" }, "S&M_CC123_SEL_TRACKS", CC123SelTracks, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Send all notes off to selected tracks" }, "S&M_CC123_SEL_TRACKS", SendAllNotesOff, NULL, },
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (all tracks)" }, "S&M_THEME_HELPER_ALL", ShowThemeHelper, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (selected track)" }, "S&M_THEME_HELPER_SEL", ShowThemeHelper, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Left mouse click at cursor position (use w/o modifier)" }, "S&M_MOUSE_L_CLICK", SimulateMouseClick, NULL, 0},
+#endif
 	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (w/o SWS extension)" }, "S&M_ALRSUMMARY1", DumpWikiActionList, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Dump ALR Wiki summary (SWS extension only)" }, "S&M_ALRSUMMARY2", DumpWikiActionList, NULL, 2},
-#endif
 	{ { DEFACCEL, "SWS/S&M: Dump action list (w/o SWS extension)" }, "S&M_DUMP_ACTION_LIST", DumpActionList, NULL, 3},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (SWS extension only)" }, "S&M_DUMP_SWS_ACTION_LIST", DumpActionList, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Dump action list (custom actions only)" }, "S&M_DUMP_CUST_ACTION_LIST", DumpActionList, NULL, 5},
@@ -603,14 +608,28 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Restore displayed CC lanes, slot %02d" }, "S&M_MESETCCLANES", MESetCCLanes, NULL, 4},
 	{ { DEFACCEL, "SWS/S&M: Active MIDI Editor - Save displayed CC lanes, slot %02d" }, "S&M_MESAVECCLANES", MESaveCCLanes, NULL, 4},
 
-	{ { DEFACCEL, "SWS/S&M: Set selected tracks to group %02d (default flags)" }, "S&M_SET_TRACK_GROUP", SetTrackGroup, STR(SNM_MAX_TRACK_GROUPS), 8}, // 8 is hard-coded: not all the 32 groups!
+	{ { DEFACCEL, "SWS/S&M: Set selected tracks to group %02d (default flags)" }, "S&M_SET_TRACK_GROUP", SetTrackGroup, STR(SNM_MAX_TRACK_GROUPS), 8}, // not all the 32 groups by default!
 
-	{ { DEFACCEL, "SWS/S&M: Toggle Live Config %02d enable" }, "S&M_TOGGLE_LIVE_CFG", ToggleEnableLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsLiveConfigEnabled},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Next" }, "S&M_NEXT_LIVE_CFG", NextLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Previous" }, "S&M_PREVIOUS_LIVE_CFG", PreviousLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Open/close monitoring window" }, "S&M_OPEN_LIVECFG_MONITOR", OpenLiveConfigMonitorWnd, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS, IsLiveConfigMonitorWndDisplayed},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Apply next config" }, "S&M_NEXT_LIVE_CFG", NextLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Apply previous config" }, "S&M_PREVIOUS_LIVE_CFG", PreviousLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS},
+
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable" }, "S&M_LIVECFG_ON", EnableLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable" }, "S&M_LIVECFG_OFF", DisableLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle enable" }, "S&M_LIVECFG_TGL", ToggleEnableLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS, IsLiveConfigEnabled},
+
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Mute all but active track'" }, "S&M_LIVECFG_MUTEBUT_ON", EnableMuteOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Mute all but active track'" }, "S&M_LIVECFG_MUTEBUT_OFF", DisableMuteOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Mute all but active track'" }, "S&M_LIVECFG_MUTEBUT_TGL", ToggleMuteOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS, IsMuteOthersLiveConfigEnabled},
+
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Offline all but active/preloaded tracks'" }, "S&M_LIVECFG_OFFLINEBUT_ON", EnableOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Offline all but active/preloaded tracks'" }, "S&M_LIVECFG_OFFLINEBUT_OFF", DisableOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Offline all but active/preloaded tracks'" }, "S&M_LIVECFG_OFFLINEBUT_TGL", ToggleOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS, IsOfflineOthersLiveConfigEnabled},
 
 	{ { DEFACCEL, "SWS/S&M: Region Playlist %02d - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 4},
 
+	{ { DEFACCEL, "SWS/S&M: Go to marker %02d (obeys smooth seek)" }, "S&M_GOTO_MARKER", GotoMarker, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Go to region %02d (obeys smooth seek)" }, "S&M_GOTO_REGION", GotoRegion, NULL, 0},
 
 //!WANT_LOCALIZE_1ST_STRING_END
 
@@ -620,21 +639,6 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle, sync with next measure), slot %02d" }, "S&M_TGL_LOOPMEDIA_SELTRACK_SYNC", SyncToggleLoopSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Play media file in selected tracks (toggle pause, sync with next measure), slot %02d" }, "S&M_TGLPAUSE_PLAYMEDIA_SELTR_SYNC", SyncTogglePauseSelTrackMediaSlot, NULL, 4, FakeIsToggleAction},
 	{ { DEFACCEL, "SWS/S&M: Loop media file in selected tracks (toggle pause, sync with next measure), slot %02d - Infinite loop!" }, "S&M_TGLPAUSE_LOOPMEDIA_SELTR_SYNC", SyncToggleLoopPauseSelTrackMediaSlot, NULL, 0, FakeIsToggleAction},
-
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Preload" }, "S&M_PRELOAD_LIVE_CFG", PreloadLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsLiveConfigPreloaded},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Mute all but active track'" }, "S&M_LIVECFG_MUTEBUTACTIVE_ON", EnableMuteOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Mute all but active track'" }, "S&M_LIVECFG_MUTEBUTACTIVE_OFF", DisableMuteOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Mute all but active track'" }, "S&M_LIVECFG_MUTEBUTACTIVE_TGL", ToggleMuteOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsMuteOthersLiveConfigEnabled},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Unselect all but active track'" }, "S&M_LIVECFG_UNSELBUTACTIVE_ON", EnableUnselOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Unselect all but active track'" }, "S&M_LIVECFG_UNSELBUTACTIVE_OFF", DisableUnselOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Unselect all but active track'" }, "S&M_LIVECFG_UNSELBUTACTIVE_TGL", ToggleUnselOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsUnselOthersLiveConfigEnabled},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Offline all but active track (requires preload)'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE1_ON", EnableOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Offline all but active track (requires preload)'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE1_OFF", DisableOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Offline all but active track (requires preload)'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE1_TGL", ToggleOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsOfflineOthersLiveConfigEnabled},
-
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Offline all but active/near config tracks'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE2_ON", EnableOfflineNearLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Offline all but active/near config tracks'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE2_OFF", DisableOfflineNearLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2},
-	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Offline all but active/near config tracks'" }, "S&M_LIVECFG_OFFLINEBUTACTIVE2_TGL", ToggleOfflineNearLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 2, IsOfflineNearLiveConfigEnabled},
 #endif
 
 	{ {}, LAST_COMMAND, }, // denote end of table
@@ -653,10 +657,10 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Apply Live Config 2 (MIDI CC absolute only)" }, "S&M_LIVECONFIG2", ApplyLiveConfig, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Apply Live Config 3 (MIDI CC absolute only)" }, "S&M_LIVECONFIG3", ApplyLiveConfig, NULL, 2},
 	{ { DEFACCEL, "SWS/S&M: Apply Live Config 4 (MIDI CC absolute only)" }, "S&M_LIVECONFIG4", ApplyLiveConfig, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Apply Live Config 5 (MIDI CC absolute only)" }, "S&M_LIVECONFIG5", ApplyLiveConfig, NULL, 4},
-	{ { DEFACCEL, "SWS/S&M: Apply Live Config 6 (MIDI CC absolute only)" }, "S&M_LIVECONFIG6", ApplyLiveConfig, NULL, 5},
-	{ { DEFACCEL, "SWS/S&M: Apply Live Config 7 (MIDI CC absolute only)" }, "S&M_LIVECONFIG7", ApplyLiveConfig, NULL, 6},
-	{ { DEFACCEL, "SWS/S&M: Apply Live Config 8 (MIDI CC absolute only)" }, "S&M_LIVECONFIG8", ApplyLiveConfig, NULL, 7},
+	{ { DEFACCEL, "SWS/S&M: Preload Live Config 1 (MIDI CC absolute only)" }, "S&M_PRE_LIVECONFIG1", PreloadLiveConfig, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Preload Live Config 2 (MIDI CC absolute only)" }, "S&M_PRE_LIVECONFIG2", PreloadLiveConfig, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Preload Live Config 3 (MIDI CC absolute only)" }, "S&M_PRE_LIVECONFIG3", PreloadLiveConfig, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Preload Live Config 4 (MIDI CC absolute only)" }, "S&M_PRE_LIVECONFIG4", PreloadLiveConfig, NULL, 3},
 
 	{ { DEFACCEL, "SWS/S&M: Select project (MIDI CC absolute only)" }, "S&M_SELECT_PROJECT", SelectProject, NULL, 0},
 
@@ -735,7 +739,7 @@ KbdCmd g_SNMSection_kbdCmds[SNM_MAX_SECTION_ACTIONS];
 KbdKeyBindingInfo g_SNMSection_defKeys[SNM_MAX_SECTION_ACTIONS];
 int g_SNMSection_minCmdId = 0;
 int g_SNMSection_maxCmdId = 0;
-static int g_SNMSection_CmdId_gen = SNM_SNM_SECTION_1ST_CMD_ID;
+static int g_SNMSection_CmdId_gen = SNM_SECTION_1ST_CMD_ID;
 
 bool onAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 {
@@ -771,7 +775,7 @@ int SNM_SectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)
 
 	g_SNMSection.name = __LOCALIZE("S&M Extension","sws_accel_sec");
 
-	// Register commands in specific section
+	// register commands in specific section
 	int i = 0;
 	while(g_SNMSection_cmdTable[i].id != LAST_COMMAND)
 	{
@@ -1121,34 +1125,44 @@ SWS_Mutex g_jobsMutex;
 
 void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job) 
 {
-	if (!_job) return;
 	SWS_SectionLock lock(&g_jobsMutex);
+	if (!_job) return;
 	bool found = false;
 	for (int i=0; i<g_jobs.GetSize(); i++)
-	{
-		SNM_ScheduledJob* job = g_jobs.Get(i);
-		if (job->m_id == _job->m_id)
-		{
-			found = true;
-			g_jobs.Set(i, _job);
-			delete job;
-			break;
-		}
-	}
-	if (!found)
-		g_jobs.Add(_job);
-}
+		if (SNM_ScheduledJob* job = g_jobs.Get(i))
+			if (job->m_id == _job->m_id)
+			{
+				found = true;
+				if (!job->m_isPerforming)
+				{
+					g_jobs.Set(i, _job);
+#ifdef _SNM_DEBUG
+					char dbg[256]="";
+					_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Replaced SNM_ScheduledJob id: %d\n", _job->m_id);
+					OutputDebugString(dbg);
+#endif
+					DELETE_NULL(job);
+				}
+				else
+				{
+#ifdef _SNM_DEBUG
+					char dbg[256]="";
+					_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Ignored SNM_ScheduledJob id: %d\n", _job->m_id);
+					OutputDebugString(dbg);
+#endif
+					DELETE_NULL(_job);
+				}
+				break;
+			}
 
-void DeleteScheduledJob(int _id) 
-{
-	SWS_SectionLock lock(&g_jobsMutex);
-	for (int i=0; i<g_jobs.GetSize(); i++)
+	if (!found)
 	{
-		SNM_ScheduledJob* job = g_jobs.Get(i);
-		if (job->m_id == _id) {
-			g_jobs.Delete(i, true);
-			break;
-		}
+		g_jobs.Add(_job);
+#ifdef _SNM_DEBUG
+		char dbg[256]="";
+		_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Added SNM_ScheduledJob id: %d\n", _job->m_id);
+		OutputDebugString(dbg);
+#endif
 	}
 }
 
@@ -1162,22 +1176,18 @@ SWS_Mutex g_mkrRgnSubscribersMutex;
 WDL_PtrList<MarkerRegion> g_mkrRgnCache;
 
 bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
-	if (_sub) {
-		SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
-		if (g_mkrRgnSubscribers.Find(_sub) < 0)
-			return (g_mkrRgnSubscribers.Add(_sub) != NULL);
-	}
+	SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
+	if (_sub && g_mkrRgnSubscribers.Find(_sub) < 0)
+		return (g_mkrRgnSubscribers.Add(_sub) != NULL);
 	return false;
 }
 
 bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) {
-	if (_sub) {
-		SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
-		int idx = g_mkrRgnSubscribers.Find(_sub);
-		if (idx >= 0) {
-			g_mkrRgnSubscribers.Delete(idx, false);
-			return true;
-		}
+	SWS_SectionLock lock(&g_mkrRgnSubscribersMutex);
+	int idx = _sub ? g_mkrRgnSubscribers.Find(_sub) : -1;
+	if (idx >= 0) {
+		g_mkrRgnSubscribers.Delete(idx, false);
+		return true;
 	}
 	return false;
 }
@@ -1192,8 +1202,9 @@ int UpdateMarkerRegionCache()
 	while (x = EnumProjectMarkers3(NULL, x, &isRgn, &pos, &rgnend, &name, &num, &col))
 	{
 		MarkerRegion* m = g_mkrRgnCache.Get(i);
-		if (!m || (m && !m->Compare(isRgn, pos, rgnend, name, num, col))) {
-			if (m) g_mkrRgnCache.Delete(i);
+		if (!m || (m && !m->Compare(isRgn, pos, rgnend, name, num, col)))
+		{
+			if (m) g_mkrRgnCache.Delete(i, true);
 			g_mkrRgnCache.Insert(i, new MarkerRegion(isRgn, pos, rgnend, name, num, col));
 			updateFlags |= (isRgn ? SNM_REGION_MASK : SNM_MARKER_MASK);
 		}
@@ -1239,11 +1250,32 @@ void SNM_CSurfRun()
 		SWS_SectionLock lock(&g_jobsMutex);
 		for (int i=g_jobs.GetSize()-1; i >=0; i--)
 		{
-			SNM_ScheduledJob* job = g_jobs.Get(i);
-			job->m_tick--;
-			if (job->m_tick <= 0) {
-				job->Perform();
-				g_jobs.Delete(i, true);
+			if (SNM_ScheduledJob* job = g_jobs.Get(i))
+			{
+				job->m_tick--;
+				if (job->m_tick <= 0)
+				{
+					if (!job->m_isPerforming)
+					{
+						job->m_isPerforming = true;
+						job->Perform();
+#ifdef _SNM_DEBUG
+						char dbg[256]="";
+						_snprintfSafe(dbg, sizeof(dbg), "SNM_CSurfRun() - Performed SNM_ScheduledJob id: %d\n", job->m_id);
+						OutputDebugString(dbg);
+#endif
+						g_jobs.Delete(i, false);
+						DELETE_NULL(job);
+					}
+					else
+					{
+#ifdef _SNM_DEBUG
+						char dbg[256]="";
+						_snprintfSafe(dbg, sizeof(dbg), "SNM_CSurfRun() - Ignored SNM_ScheduledJob id: %d\n", job->m_id);
+						OutputDebugString(dbg);
+#endif
+					}
+				}
 			}
 		}
 	}

@@ -133,7 +133,7 @@ void PasteTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOn
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, _title, UNDO_STATE_ALL, -1);
 }
 
 // _chain: NULL clears the FX chain
@@ -154,7 +154,7 @@ void SetTakeFXChain(const char* _title, WDL_FastString* _chain, bool _activeOnly
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, _title, UNDO_STATE_ALL, -1);
 }
 
 
@@ -330,7 +330,7 @@ void PasteTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, _title, UNDO_STATE_ALL, -1);
 }
 
 // _chain: NULL to clear
@@ -352,7 +352,7 @@ void SetTrackFXChain(const char* _title, WDL_FastString* _chain, bool _inputFX)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, _title, UNDO_STATE_ALL, -1);
 }
 
 // returns the first copied track idx (1-based, 0 = master)
@@ -620,5 +620,5 @@ void ReassignLearntMIDICh(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }

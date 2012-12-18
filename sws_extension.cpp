@@ -413,18 +413,21 @@ int WDL_STYLE_GetSysColor(int i)
 	{
 		int col3ds,col3dl,bgcol=GSC_mainwnd(COLOR_WINDOW);
 		ColorTheme* ct = SNM_GetColorTheme();
-		if (ct) {
+		if (ct)
+		{
 			col3dl = ct->io_3d[0];
 			col3ds = ct->io_3d[1];
 			if (i == COLOR_3DSHADOW) col = col3ds;
 			else col = col3dl;
 		}
-		else {
+		else
+		{
 			col3dl = GSC_mainwnd(COLOR_3DHILIGHT);
 			col3ds = GSC_mainwnd(COLOR_3DSHADOW);
 		}
 
-		if (col3ds == col3dl || col3ds == bgcol || col3dl == bgcol) {
+		if (col3ds == col3dl || col3ds == bgcol || col3dl == bgcol)
+		{
 			int colDelta = SNM_3D_COLORS_DELTA * (i == COLOR_3DSHADOW ? -1 : 1);
 			col = RGB(
 				BOUNDED(LICE_GETR(bgcol) + colDelta, 0, 0xFF),
@@ -526,6 +529,7 @@ extern "C"
 		IMPAPI(file_exists);
 		IMPAPI(format_timestr);
 		IMPAPI(format_timestr_pos);
+		IMPAPI(format_timestr_len);	
 		IMPAPI(FreeHeapPtr);
 		IMPAPI(GetActiveTake);
 		IMPAPI(GetAppVersion);
@@ -570,6 +574,7 @@ extern "C"
 		IMPAPI(GetPlayPositionEx);
 		IMPAPI(GetPlayPosition2Ex);
 		IMPAPI(GetPlayState);
+		IMPAPI(GetPlayStateEx);
 		IMPAPI(GetProjectPath);
 		IMPAPI(GetProjectTimeSignature2);
 		IMPAPI(GetResourcePath);

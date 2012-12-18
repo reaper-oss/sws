@@ -83,6 +83,7 @@ public:
 protected:
 	void OnInitDlg();
 	void OnDestroy();
+	void OnResize();
 	HMENU OnContextMenu(int x, int y, bool* wantDefaultItems);
 	void AddImportExportMenu(HMENU _menu);
 	int OnKey(MSG* msg, int iKeyState);
@@ -92,6 +93,9 @@ protected:
 	WDL_VirtualIconButton m_btnUndo;
 	WDL_VirtualStaticText m_txtSection;
 	SNM_ToolbarButton m_btnApply, m_btnCancel, m_btnImpExp, m_btnActionList;
+	SNM_TwoTinyButtons m_tinyLRbtns;
+	SNM_TinyLeftButton m_btnLeft;
+	SNM_TinyRightButton m_btnRight;
 };
 
 

@@ -33,15 +33,15 @@
 // Use this macro to include the ReaProject* cast.  Try to get cockos to fix in the gen header
 #define Enum_Projects(idx, name, namelen) ((ReaProject*)EnumProjects(idx, name, namelen))
 
-#define BUFFER_SIZE 2048
-#define SWS_THEMING true
-#define SWS_INI "SWS"
-#define SWS_SEPARATOR "SEPARATOR"
-#define LAST_COMMAND ((char*)(INT_PTR)-1)
-#define SWS_STARTSUBMENU ((char*)(INT_PTR)-2)
-#define SWS_ENDSUBMENU ((char*)(INT_PTR)-3)
-#define MINTRACKHEIGHT 24
-#define DEFACCEL { 0, 0, 0 }
+#define BUFFER_SIZE			2048
+#define SWS_THEMING			true
+#define SWS_INI				"SWS"
+#define SWS_SEPARATOR		"SEPARATOR"
+#define LAST_COMMAND		((char*)(INT_PTR)-1)
+#define SWS_STARTSUBMENU	((char*)(INT_PTR)-2)
+#define SWS_ENDSUBMENU		((char*)(INT_PTR)-3)
+#define MINTRACKHEIGHT		24
+#define DEFACCEL			{ 0, 0, 0 }
 
 #define UTF8_BULLET		"\xE2\x80\xA2"
 #define UTF8_CIRCLE		"\xE2\x97\xA6"

@@ -55,15 +55,15 @@ public:
 	int m_id; WDL_FastString m_notes;
 };
 
-class SNM_NoteHelp_UpdateJob : public SNM_ScheduledJob {
+class NotesUpdateJob : public SNM_ScheduledJob {
 public:
-	SNM_NoteHelp_UpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_NOTEHLP_UPDATE, 150) {}
+	NotesUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_NOTEHLP_UPDATE, 150) {}
 	void Perform();
 };
 
-class SNM_NoteHelp_MarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
+class NotesMarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
 public:
-	SNM_NoteHelp_MarkerRegionSubscriber() : SNM_MarkerRegionSubscriber() {}
+	NotesMarkerRegionSubscriber() : SNM_MarkerRegionSubscriber() {}
 	void NotifyMarkerRegionUpdate(int _updateFlags);
 };
 
@@ -109,9 +109,9 @@ protected:
 	WDL_VirtualIconButton m_btnLock;
 	SNM_ToolbarButton m_btnAlr, m_btnActionList, m_btnImportSub, m_btnExportSub;
 	WDL_VirtualStaticText m_txtLabel;
-	SNM_DynamicSizedText m_bigNotes;
+	SNM_DynSizedText m_bigNotes;
 
-	SNM_NoteHelp_MarkerRegionSubscriber m_mkrRgnSubscriber;
+	NotesMarkerRegionSubscriber m_mkrRgnSubscriber;
 };
 
 

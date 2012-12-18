@@ -165,13 +165,13 @@ bool SNM_GetSetObjectState(void* _obj, WDL_FastString* _state, bool _setnewvalue
 
 bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type)
 {
-	if (_srcTr && _destTr && _srcTr!=_destTr && _type>=0 && _type<=3)
+	if (_srcTr && _destTr && _srcTr!=_destTr && _type<=3)
 	{
 		SNM_SendPatcher p = SNM_SendPatcher(_destTr);
 		char vol[32] = "1.00000000000000";
 		char pan[32] = "0.00000000000000";
 		_snprintfSafe(vol, sizeof(vol), "%.14f", *(double*)GetConfigVar("defsendvol"));
-		return (p.AddReceive(_srcTr, _type, vol, pan) > 0);
+		return (p.AddReceive(_srcTr, _type<0 ? *(int*)GetConfigVar("defsendflag")&0xFF : _type, vol, pan) > 0);
 	}
 	return false;
 }
@@ -181,6 +181,15 @@ bool SNM_RemoveReceive(MediaTrack* _tr, int _rcvIdx)
 	if (_tr && _rcvIdx>=0) 	{
 		SNM_ChunkParserPatcher p(_tr);
 		return p.RemoveLine("TRACK", "AUXRECV", 1, _rcvIdx, "MIDIOUT");
+	}
+	return false;
+}
+
+bool SNM_RemoveReceivesFrom(MediaTrack* _tr, MediaTrack* _srcTr)
+{
+	if (_tr && _srcTr) {
+		SNM_SendPatcher p(_tr); 
+		return (p.RemoveReceivesFrom(_srcTr) > 0);
 	}
 	return false;
 }
@@ -281,7 +290,7 @@ void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot)
 		delete fnStr;
 	}
 	if (updated && _title)
-		Undo_OnStateChangeEx(_title, UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, _title, UNDO_STATE_ALL, -1);
 }
 
 void SetSelTrackIconSlot(COMMAND_T* _ct) {
@@ -292,27 +301,6 @@ void SetSelTrackIconSlot(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 // Misc actions / helpers
 ///////////////////////////////////////////////////////////////////////////////
-
-bool WaitForTrackMute(DWORD* _muteTime)
-{
-	if (_muteTime && *_muteTime)
-	{
-		unsigned int fade = int(*(int*)GetConfigVar("mutefadems10") / 10 + 0.5);
-		while ((GetTickCount() - *_muteTime) < fade)
-		{
-#ifdef _WIN32
-			// keep the UI updating
-			MSG msg;
-			while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-				DispatchMessage(&msg);
-#endif
-			Sleep(1);
-		}
-		*_muteTime = 0;
-		return true;
-	}
-	return false;
-}
 
 void WinWaitForEvent(DWORD _event, DWORD _timeOut=500, DWORD _minReTrigger=500)
 {

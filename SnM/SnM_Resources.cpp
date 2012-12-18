@@ -25,7 +25,6 @@
 /
 ******************************************************************************/
 
-
 #include "stdafx.h"
 #include "SnM.h"
 #include "../Prompt.h"
@@ -34,6 +33,8 @@
 #endif
 #include "../reaper/localize.h"
 
+
+#define RES_INI_SEC					"Resources"
 
 // common cmds
 #define AUTOFILL_MSG				0xF000
@@ -61,15 +62,16 @@
 #define FILTER_BY_PATH_MSG			0xF014
 #define FILTER_BY_COMMENT_MSG		0xF015
 #define RENAME_MSG					0xF016
-#define COPY_BOOKMARK_MSG			0xF017
-#define DEL_BOOKMARK_MSG			0xF018
-#define REN_BOOKMARK_MSG			0xF019
-#define NEW_BOOKMARK_FXC_MSG		0xF01A
-#define NEW_BOOKMARK_TR_MSG			0xF01B
-#define NEW_BOOKMARK_PRJ_MSG		0xF01C
-#define NEW_BOOKMARK_MED_MSG		0xF01D
-#define NEW_BOOKMARK_IMG_MSG		0xF01E
-#define NEW_BOOKMARK_THM_MSG		0xF01F // leave some room here at least as much as default slot types) -->
+#define TIE_BOOKMARK_MSG			0xF017
+#define COPY_BOOKMARK_MSG			0xF018
+#define DEL_BOOKMARK_MSG			0xF019
+#define REN_BOOKMARK_MSG			0xF01A
+#define NEW_BOOKMARK_FXC_MSG		0xF01B
+#define NEW_BOOKMARK_TR_MSG			0xF01C
+#define NEW_BOOKMARK_PRJ_MSG		0xF01D
+#define NEW_BOOKMARK_MED_MSG		0xF01E
+#define NEW_BOOKMARK_IMG_MSG		0xF01F
+#define NEW_BOOKMARK_THM_MSG		0xF020 // leave some room here, at least as much as default slot types) -->
 #define NEW_BOOKMARK_END_MSG		0xF02F // <--
 // fx chains cmds
 #define FXC_APPLY_TR_MSG			0xF030
@@ -152,19 +154,21 @@
 #define NO_SLOT_ERR_STR			__LOCALIZE("No %s slot defined in the Resources view!","sws_DLG_150")
 
 enum {
-  BUTTONID_AUTOFILL=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
-  BUTTONID_AUTOSAVE,
+  BTNID_AUTOFILL=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+  BTNID_AUTOSAVE,
   TXTID_TYPE,
-  COMBOID_TYPE,
-  CONTAINER_ADD_DEL,
-  BUTTONID_ADD_BOOKMARK,
-  BUTTONID_DEL_BOOKMARK,
-  BUTTONID_TIED_ACTIONS,
-  BUTTONID_OFFSET_TR_TEMPLATE,
+  CMBID_TYPE,
+  WNDID_ADD_DEL,
+  BTNID_ADD_BOOKMARK,
+  BTNID_DEL_BOOKMARK,
+#ifdef _SNM_MISC // moved to context menu
+  BTNID_TIED_ACTIONS,
+#endif
+  BTNID_OFFSET_TR_TEMPLATE,
   TXTID_DBL_TYPE,
-  COMBOID_DBLCLICK_TYPE,
+  CMBID_DBLCLICK_TYPE,
   TXTID_DBL_TO,
-  COMBOID_DBLCLICK_TO
+  CMBID_DBLCLICK_TO
 };
 
 enum {
@@ -834,37 +838,43 @@ void SNM_ResourceWnd::OnInitDlg()
 	m_txtSlotsType.SetText(__LOCALIZE("Slots type:","sws_DLG_150"));
 	m_parentVwnd.AddChild(&m_txtSlotsType);
 
-	m_cbType.SetID(COMBOID_TYPE);
+	m_cbType.SetID(CMBID_TYPE);
 	FillTypeCombo();
 	m_parentVwnd.AddChild(&m_cbType);
 
-	m_cbDblClickType.SetID(COMBOID_DBLCLICK_TYPE);
+	m_cbDblClickType.SetID(CMBID_DBLCLICK_TYPE);
 	m_parentVwnd.AddChild(&m_cbDblClickType);
-	m_cbDblClickTo.SetID(COMBOID_DBLCLICK_TO);
+	m_cbDblClickTo.SetID(CMBID_DBLCLICK_TO);
 	m_parentVwnd.AddChild(&m_cbDblClickTo);
 	FillDblClickCombos();
 
-	m_btnAutoFill.SetID(BUTTONID_AUTOFILL);
+	m_btnAutoFill.SetID(BTNID_AUTOFILL);
 	m_parentVwnd.AddChild(&m_btnAutoFill);
 
-	m_btnAutoSave.SetID(BUTTONID_AUTOSAVE);
+	m_btnAutoSave.SetID(BTNID_AUTOSAVE);
 	m_parentVwnd.AddChild(&m_btnAutoSave);
 
 	m_txtDblClickType.SetID(TXTID_DBL_TYPE);
 	m_txtDblClickType.SetText(__LOCALIZE("Dbl-click to:","sws_DLG_150"));
 	m_parentVwnd.AddChild(&m_txtDblClickType);
 
-	m_btnsAddDel.SetIDs(CONTAINER_ADD_DEL, BUTTONID_ADD_BOOKMARK, BUTTONID_DEL_BOOKMARK);
+	m_btnAdd.SetID(BTNID_ADD_BOOKMARK);
+	m_btnsAddDel.AddChild(&m_btnAdd);
+	m_btnDel.SetID(BTNID_DEL_BOOKMARK);
+	m_btnsAddDel.AddChild(&m_btnDel);
+	m_btnsAddDel.SetID(WNDID_ADD_DEL);
 	m_parentVwnd.AddChild(&m_btnsAddDel);
 
-	m_btnTiedActions.SetID(BUTTONID_TIED_ACTIONS);
+#ifdef _SNM_MISC // moved to context menu
+	m_btnTiedActions.SetID(BTNID_TIED_ACTIONS);
 	m_parentVwnd.AddChild(&m_btnTiedActions);
+#endif
 
 	m_txtDblClickTo.SetID(TXTID_DBL_TO);
 	m_txtDblClickTo.SetText(__LOCALIZE("To sel.:","sws_DLG_150"));
 	m_parentVwnd.AddChild(&m_txtDblClickTo);
 
-	m_btnOffsetTrTemplate.SetID(BUTTONID_OFFSET_TR_TEMPLATE);
+	m_btnOffsetTrTemplate.SetID(BTNID_OFFSET_TR_TEMPLATE);
 	m_parentVwnd.AddChild(&m_btnOffsetTrTemplate);
 
 	// restores the text filter when docking/undocking + indirect call to Update() !
@@ -880,6 +890,7 @@ void SNM_ResourceWnd::OnDestroy()
 	m_cbType.Empty();
 	m_cbDblClickType.Empty();
 	m_cbDblClickTo.Empty();
+	m_btnsAddDel.RemoveAllChildren(false);
 }
 
 void SNM_ResourceWnd::SetType(int _type)
@@ -891,6 +902,17 @@ void SNM_ResourceWnd::SetType(int _type)
 		FillDblClickCombos();
 		Update();
 	}
+}
+
+int SNM_ResourceWnd::SetType(const char* _name)
+{
+	if (_name)
+		for (int i=0; i<m_cbType.GetCount(); i++)
+			if (!_stricmp(_name, m_cbType.GetItem(i))) {
+				SetType(i);
+				return i;
+			}
+	return -1;
 }
 
 void SNM_ResourceWnd::Update()
@@ -1049,7 +1071,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 		}
 		// auto-fill
-		case BUTTONID_AUTOFILL:
+		case BTNID_AUTOFILL:
 		case AUTOFILL_MSG:
 			AutoFill(g_resViewType);
 			break;
@@ -1083,7 +1105,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				g_autoFillDirs.Get(g_resViewType)->Set(GetAutoSaveDir());  // do not use SetAutoFillDir() here!
 			break;
 		// auto-save
-		case BUTTONID_AUTOSAVE:
+		case BTNID_AUTOSAVE:
 		case AUTOSAVE_MSG:
 			AutoSave(g_resViewType, true, GetTypeForUser()==SNM_SLOT_TR ? g_asTrTmpltPref : GetTypeForUser()==SNM_SLOT_FXC ? g_asFXChainPref : 0);
 			break;
@@ -1150,22 +1172,27 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case REN_BOOKMARK_MSG:
 			RenameBookmark(g_resViewType);
 			break;
-		case BUTTONID_ADD_BOOKMARK:
+		case BTNID_ADD_BOOKMARK:
 			NewBookmark(g_resViewType, false);
 			break;
 		case COPY_BOOKMARK_MSG:
 			NewBookmark(g_resViewType, true);
 			break;
-		case BUTTONID_DEL_BOOKMARK:
+		case BTNID_DEL_BOOKMARK:
 		case DEL_BOOKMARK_MSG:
 			DeleteBookmark(g_resViewType);
 			break;
 
 		// new bookmark cmds are in an interval of cmds: see "default" case below..
 
-		case BUTTONID_TIED_ACTIONS:
+#ifdef _SNM_MISC // moved to context menu
+		case BTNID_TIED_ACTIONS:
 			if (!HIWORD(wParam) || HIWORD(wParam)==600)
 				g_tiedSlotActions[GetTypeForUser()] = g_resViewType;
+			break;
+#endif
+		case TIE_BOOKMARK_MSG:
+			g_tiedSlotActions[GetTypeForUser()] = g_resViewType;
 			break;
 
 		// ***** FX chain *****
@@ -1240,7 +1267,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 					Update();
 			}
 			break;
-		case BUTTONID_OFFSET_TR_TEMPLATE:
+		case BTNID_OFFSET_TR_TEMPLATE:
 			if (int* offsPref = (int*)GetConfigVar("templateditcursor")) { // >= REAPER v4.15
 				if (*offsPref) *offsPref = 0;
 				else *offsPref = 1;
@@ -1368,7 +1395,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			break;
 
 			// ***** WDL GUI & others *****
-		case COMBOID_TYPE:
+		case CMBID_TYPE:
 			if (HIWORD(wParam)==CBN_SELCHANGE)
 			{
 				// stop cell editing (changing the list content would be ignored otherwise,
@@ -1377,7 +1404,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				SetType(m_cbType.GetCurSel());
 			}
 			break;
-		case COMBOID_DBLCLICK_TYPE:
+		case CMBID_DBLCLICK_TYPE:
 			if (HIWORD(wParam)==CBN_SELCHANGE) {
 				int hi = HIWORD(g_dblClickPrefs[g_resViewType]);
 				g_dblClickPrefs[g_resViewType] = m_cbDblClickType.GetCurSel();
@@ -1385,7 +1412,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				m_parentVwnd.RequestRedraw(NULL); // some options can be hidden for new sel
 			}
 			break;
-		case COMBOID_DBLCLICK_TO:
+		case CMBID_DBLCLICK_TO:
 			if (HIWORD(wParam)==CBN_SELCHANGE) {
 				g_dblClickPrefs[g_resViewType] = LOWORD(g_dblClickPrefs[g_resViewType]);
 				g_dblClickPrefs[g_resViewType] |= m_cbDblClickTo.GetCurSel()<<16;
@@ -1474,11 +1501,11 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	{
 		switch (v->GetID())
 		{
-			case BUTTONID_AUTOFILL:
+			case BTNID_AUTOFILL:
 				*wantDefaultItems = false;
 				AutoFillContextMenu(hMenu, false);
 				return hMenu;
-			case BUTTONID_AUTOSAVE:
+			case BTNID_AUTOSAVE:
 				if (GetSlotList()->HasAutoSave()) {
 					*wantDefaultItems = false;
 					AutoSaveContextMenu(hMenu, false);
@@ -1623,6 +1650,15 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		AddToMenu(hFilterSubMenu, __LOCALIZE("Name","sws_DLG_150"), FILTER_BY_NAME_MSG, -1, false, (g_filterPref&1) ? MFS_CHECKED : MFS_UNCHECKED);
 		AddToMenu(hFilterSubMenu, __LOCALIZE("Path","sws_DLG_150"), FILTER_BY_PATH_MSG, -1, false, (g_filterPref&2) ? MFS_CHECKED : MFS_UNCHECKED);
 		AddToMenu(hFilterSubMenu, __LOCALIZE("Comment","sws_DLG_150"), FILTER_BY_COMMENT_MSG, -1, false, (g_filterPref&4) ? MFS_CHECKED : MFS_UNCHECKED);
+
+		// tie slot actions pref
+		if (IsMultiType())
+		{
+			AddToMenu(hMenu, SWS_SEPARATOR, 0);
+			char buf[128] = "";
+			_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Tie %s slot actions to this bookmark","sws_DLG_150"), g_slots.Get(typeForUser)->GetDesc());
+			AddToMenu(hMenu, buf, TIE_BOOKMARK_MSG, -1, false, g_tiedSlotActions[typeForUser] == g_resViewType ? MFS_CHECKED : MFS_UNCHECKED);
+		}
 	}
 	return hMenu;
 }
@@ -1760,11 +1796,9 @@ void SNM_ResourceWnd::OnDroppedFiles(HDROP _h)
 
 void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
-	///////////////////////////////////
 	// 1st row of controls (top)
-	///////////////////////////////////
 
-	int x0=_r->left+10, h=SNM_TOP_GUI_HEIGHT;
+	int x0=_r->left+SNM_GUI_X_MARGIN, h=SNM_GUI_TOP_H;
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
 
@@ -1790,9 +1824,10 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 				if (SNM_AutoVWndPosition(DT_LEFT, &m_cbType, NULL, _r, &x0, _r->top, h, 4))
 				{
 					// add & del bookmark buttons
-					((SNM_AddDelButton*)m_parentVwnd.GetChildByID(BUTTONID_DEL_BOOKMARK))->SetEnabled(g_resViewType >= SNM_NUM_DEFAULT_SLOTS);
+					m_btnDel.SetEnabled(g_resViewType >= SNM_NUM_DEFAULT_SLOTS);
 					if (SNM_AutoVWndPosition(DT_LEFT, &m_btnsAddDel, NULL, _r, &x0, _r->top, h))
 					{
+#ifdef _SNM_MISC // moved to context menu
 						if (IsMultiType())
 						{
 							m_btnTiedActions.SetCheckState(g_tiedSlotActions[typeForUser] == g_resViewType);
@@ -1803,6 +1838,7 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 								SNM_AddLogo(_bm, _r, x0, h);
 						}
 						else
+#endif
 							SNM_AddLogo(_bm, _r, x0, h);
 					}
 				}
@@ -1810,11 +1846,9 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 		}
 	}
 
-	///////////////////////////////////
 	// 2nd row of controls (bottom)
-	///////////////////////////////////
 
-	x0 = _r->left+8; h=SNM_BOT_GUI_HEIGHT;
+	x0 = _r->left+SNM_GUI_X_MARGIN; h=SNM_GUI_BOT_H;
 	int y0 = _r->bottom-h;
 
 	// defines a new rect r that takes the filter edit box into account (contrary to _r)
@@ -1822,8 +1856,10 @@ void SNM_ResourceWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tool
 	GetWindowRect(GetDlgItem(m_hwnd, IDC_FILTER), &r);
 	ScreenToClient(m_hwnd, (LPPOINT)&r);
 	ScreenToClient(m_hwnd, ((LPPOINT)&r)+1);
-	r.top = _r->top; r.bottom = _r->bottom;
-	r.right = r.left; r.left = _r->left;
+	r.top = _r->top;
+	r.bottom = _r->bottom;
+	r.right = r.left;
+	r.left = _r->left;
 
 	// "dbl-click to"
 	if (GetSlotList()->HasDblClick())
@@ -1882,11 +1918,11 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 		int typeForUser = GetTypeForUser();
 		switch (v->GetID())
 		{
-			case BUTTONID_AUTOFILL:
+			case BTNID_AUTOFILL:
 				return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Auto-fill %s slots (right-click for options)\nfrom %s","sws_DLG_150"), 
 					g_slots.Get(typeForUser)->GetDesc(), 
 					*GetAutoFillDir() ? GetAutoFillDir() : __LOCALIZE("undefined","sws_DLG_150")) > 0);
-			case BUTTONID_AUTOSAVE:
+			case BTNID_AUTOSAVE:
 				if (g_slots.Get(g_resViewType)->HasAutoSave())
 				{
 					switch (typeForUser)
@@ -1910,11 +1946,11 @@ bool SNM_ResourceWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int 
 					}
 				}
 				break;
-			case COMBOID_TYPE:
+			case CMBID_TYPE:
 				return (lstrcpyn(_bufOut, __LOCALIZE("Resource/slot type","sws_DLG_150"), _bufOutSz) != NULL);
-			case BUTTONID_ADD_BOOKMARK:
+			case BTNID_ADD_BOOKMARK:
 				return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("New %s bookmark","sws_DLG_150"), g_slots.Get(typeForUser)->GetDesc()) > 0);
-			case BUTTONID_DEL_BOOKMARK:
+			case BTNID_DEL_BOOKMARK:
 				return (lstrcpyn(_bufOut, __LOCALIZE("Delete bookmark (and files, if confirmed)","sws_DLG_150"), _bufOutSz) != NULL);
 		}
 	}
@@ -1929,7 +1965,7 @@ void SNM_ResourceWnd::ClearListSelection()
 		ListView_SetItemState(hList, -1, 0, LVIS_SELECTED);
 }
 
-// select a range of slots or a single slot (when _slot2 < 0)
+// select a range of slots (contiguous, when the list view is not sorted) or a single slot (when _slot2 < 0)
 void SNM_ResourceWnd::SelectBySlot(int _slot1, int _slot2, bool _selectOnly)
 {
 	SWS_ListView* lv = m_pLists.Get(0);
@@ -2395,18 +2431,18 @@ void FlushCustomTypesIniFile()
 		{
 			GetIniSectionName(i, iniSec, sizeof(iniSec));
 			WritePrivateProfileStruct(iniSec, NULL, NULL, 0, g_SNMIniFn.Get()); // flush section
-			WritePrivateProfileString("RESOURCE_VIEW", iniSec, NULL, g_SNMIniFn.Get());
+			WritePrivateProfileString(RES_INI_SEC, iniSec, NULL, g_SNMIniFn.Get());
 			WDL_FastString str;
 			str.SetFormatted(64, "AutoFillDir%s", iniSec);
-			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
+			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNMIniFn.Get());
 			str.SetFormatted(64, "AutoSaveDir%s", iniSec);
-			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
+			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNMIniFn.Get());
 			str.SetFormatted(64, "SyncAutoDirs%s", iniSec);
-			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
+			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNMIniFn.Get());
 			str.SetFormatted(64, "TiedActions%s", iniSec);
-			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
+			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNMIniFn.Get());
 			str.SetFormatted(64, "DblClick%s", iniSec);
-			WritePrivateProfileString("RESOURCE_VIEW", str.Get(), NULL, g_SNMIniFn.Get());
+			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNMIniFn.Get());
 		}
 	}
 }
@@ -2428,7 +2464,7 @@ void AddCustomTypesFromIniFile()
 	int i=0;
 	char buf[SNM_MAX_PATH]=""; // can be used with paths..
 	WDL_String iniKeyStr("CustomSlotType1"), tokenStrs[2];
-	GetPrivateProfileString("RESOURCE_VIEW", iniKeyStr.Get(), "", buf, sizeof(buf), g_SNMIniFn.Get());
+	GetPrivateProfileString(RES_INI_SEC, iniKeyStr.Get(), "", buf, sizeof(buf), g_SNMIniFn.Get());
 	while (*buf && i < SNM_MAX_SLOT_TYPES)
 	{
 		if (char* tok = strtok(buf, ","))
@@ -2453,7 +2489,7 @@ void AddCustomTypesFromIniFile()
 			}
 		}
 		iniKeyStr.SetFormatted(32, "CustomSlotType%d", (++i)+1);
-		GetPrivateProfileString("RESOURCE_VIEW", iniKeyStr.Get(), "", buf, sizeof(buf), g_SNMIniFn.Get());
+		GetPrivateProfileString(RES_INI_SEC, iniKeyStr.Get(), "", buf, sizeof(buf), g_SNMIniFn.Get());
 	}
 }
 
@@ -2491,14 +2527,14 @@ int ResourceViewInit()
 
 	// load general prefs
 	g_resViewType = BOUNDED((int)GetPrivateProfileInt(
-		"RESOURCE_VIEW", "Type", SNM_SLOT_FXC, g_SNMIniFn.Get()), SNM_SLOT_FXC, g_slots.GetSize()-1); // bounded for safety (some custom slot types may have been removed..)
+		RES_INI_SEC, "Type", SNM_SLOT_FXC, g_SNMIniFn.Get()), SNM_SLOT_FXC, g_slots.GetSize()-1); // bounded for safety (some custom slot types may have been removed..)
 
-	g_filterPref = GetPrivateProfileInt("RESOURCE_VIEW", "Filter", 1, g_SNMIniFn.Get());
-	g_asFXChainPref = GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveFXChain", FXC_AUTOSAVE_PREF_TRACK, g_SNMIniFn.Get());
-	g_asFXChainNamePref = GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveFXChainName", 0, g_SNMIniFn.Get());
-	g_asTrTmpltPref = GetPrivateProfileInt("RESOURCE_VIEW", "AutoSaveTrTemplate", 3, g_SNMIniFn.Get());
-	g_prjLoaderStartPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderStartSlot", -1, g_SNMIniFn.Get());
-	g_prjLoaderEndPref = GetPrivateProfileInt("RESOURCE_VIEW", "ProjectLoaderEndSlot", -1, g_SNMIniFn.Get());
+	g_filterPref = GetPrivateProfileInt(RES_INI_SEC, "Filter", 1, g_SNMIniFn.Get());
+	g_asFXChainPref = GetPrivateProfileInt(RES_INI_SEC, "AutoSaveFXChain", FXC_AUTOSAVE_PREF_TRACK, g_SNMIniFn.Get());
+	g_asFXChainNamePref = GetPrivateProfileInt(RES_INI_SEC, "AutoSaveFXChainName", 0, g_SNMIniFn.Get());
+	g_asTrTmpltPref = GetPrivateProfileInt(RES_INI_SEC, "AutoSaveTrTemplate", 3, g_SNMIniFn.Get());
+	g_prjLoaderStartPref = GetPrivateProfileInt(RES_INI_SEC, "ProjectLoaderStartSlot", -1, g_SNMIniFn.Get());
+	g_prjLoaderEndPref = GetPrivateProfileInt(RES_INI_SEC, "ProjectLoaderEndSlot", -1, g_SNMIniFn.Get());
 
 	// auto-save, auto-fill directories, etc..
 	g_autoSaveDirs.Empty(true);
@@ -2516,7 +2552,7 @@ int ResourceViewInit()
 		// g_autoFillDirs & g_autoSaveDirs must always be filled (even if auto-save is grayed for the user)
 		WDL_FastString *fillPath, *savePath;
 		if (_snprintfStrict(iniKey, sizeof(iniKey), "AutoSaveDir%s", iniSec) > 0) {
-			GetPrivateProfileString("RESOURCE_VIEW", iniKey, defaultPath, path, sizeof(path), g_SNMIniFn.Get());
+			GetPrivateProfileString(RES_INI_SEC, iniKey, defaultPath, path, sizeof(path), g_SNMIniFn.Get());
 			savePath = new WDL_FastString(path);
 		}
 		else
@@ -2524,7 +2560,7 @@ int ResourceViewInit()
 		g_autoSaveDirs.Add(savePath);
 
 		if (_snprintfStrict(iniKey, sizeof(iniKey), "AutoFillDir%s", iniSec) > 0) {
-			GetPrivateProfileString("RESOURCE_VIEW", iniKey, defaultPath, path, sizeof(path), g_SNMIniFn.Get());
+			GetPrivateProfileString(RES_INI_SEC, iniKey, defaultPath, path, sizeof(path), g_SNMIniFn.Get());
 			fillPath = new WDL_FastString(path);
 		}
 		else
@@ -2532,7 +2568,7 @@ int ResourceViewInit()
 		g_autoFillDirs.Add(fillPath);
 
 		if (_snprintfStrict(iniKey, sizeof(iniKey), "SyncAutoDirs%s", iniSec) > 0)
-			g_syncAutoDirPrefs[i] = (GetPrivateProfileInt("RESOURCE_VIEW", iniKey, 0, g_SNMIniFn.Get()) == 1);
+			g_syncAutoDirPrefs[i] = (GetPrivateProfileInt(RES_INI_SEC, iniKey, 0, g_SNMIniFn.Get()) == 1);
 		else
 			g_syncAutoDirPrefs[i] = false;
 		if (g_syncAutoDirPrefs[i]) // consistency check (e.g. after sws upgrade)
@@ -2540,14 +2576,14 @@ int ResourceViewInit()
 
 		if (g_slots.Get(i)->HasDblClick()) {
 			if (_snprintfStrict(iniKey, sizeof(iniKey), "DblClick%s", iniSec) > 0)
-				g_dblClickPrefs[i] = GetPrivateProfileInt("RESOURCE_VIEW", iniKey, 0, g_SNMIniFn.Get());
+				g_dblClickPrefs[i] = GetPrivateProfileInt(RES_INI_SEC, iniKey, 0, g_SNMIniFn.Get());
 			else
 				g_dblClickPrefs[i] = 0;
 		}
 		// load tied actions for default types (fx chains, track templates, etc...)
 		if (i < SNM_NUM_DEFAULT_SLOTS) {
 			if (_snprintfStrict(iniKey, sizeof(iniKey), "TiedActions%s", iniSec) > 0)
-				g_tiedSlotActions[i] = GetPrivateProfileInt("RESOURCE_VIEW", iniKey, i, g_SNMIniFn.Get());
+				g_tiedSlotActions[i] = GetPrivateProfileInt(RES_INI_SEC, iniKey, i, g_SNMIniFn.Get());
 			else
 				g_tiedSlotActions[i] = i;
 		}
@@ -2639,7 +2675,7 @@ void ResourceViewExit()
 				break;
 		}
 	}
-	SaveIniSection("RESOURCE_VIEW", &iniStr, g_SNMIniFn.Get());
+	SaveIniSection(RES_INI_SEC, &iniStr, g_SNMIniFn.Get());
 
 
 	// *** save slots ini sections
@@ -2742,6 +2778,21 @@ void ResViewAutoSave(COMMAND_T* _ct) {
 	if (g_slots.Get(type)->HasAutoSave()) {
 		AutoSave(g_tiedSlotActions[type], false, 0);
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ReaScript export
+///////////////////////////////////////////////////////////////////////////////
+
+int SNM_SelectResourceBookmark(const char* _name)
+{
+	if (g_pResourcesWnd)
+		return g_pResourcesWnd->SetType(_name);
+	return -1;
+}
+
+void SNM_TieResourceSlotActions(int _bookmarkId) {
+	g_tiedSlotActions[GetTypeForUser(_bookmarkId)] = _bookmarkId;
 }
 
 

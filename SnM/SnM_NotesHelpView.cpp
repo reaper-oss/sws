@@ -27,8 +27,7 @@
 
 //JFB
 // - atm, undo on each key stroke (!) but it fixes:
-//   * SaveExtensionConfig() that is not called when there is no proj mods but
-//     some notes have been entered..
+//   * SaveExtensionConfig() that is not called when there is no proj mods but some notes have been entered..
 //   * missing updates on project switches
 // - clicking the empty area of the tcp does not remove focus (important for refresh)
 // - undo does not restore caret pos
@@ -42,19 +41,20 @@
 #include "../reaper/localize.h"
 
 
+#define NOTES_INI_SEC				"Notes"
 #define MAX_HELP_LENGTH				4096 //JFB instead of MAX_INI_SECTION (too large)
 #define SET_ACTION_HELP_FILE_MSG	0xF001
 #define UPDATE_TIMER				1
 #define UPDATE_FREQ					150
 
 enum {
-  BUTTONID_LOCK=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
-  COMBOID_TYPE,
+  BTNID_LOCK=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+  CMBID_TYPE,
   TXTID_LABEL,
-  BUTTONID_ALR,
-  BUTTONID_ACTIONLIST,
-  BUTTONID_IMPORT_SUB,
-  BUTTONID_EXPORT_SUB,
+  BTNID_ALR,
+  BTNID_ACTIONLIST,
+  BTNID_IMPORT_SUB,
+  BTNID_EXPORT_SUB,
   TXTID_BIG_NOTES
 };
 
@@ -76,7 +76,7 @@ char g_lastText[MAX_HELP_LENGTH] = "";
 char g_lastImportSubFn[SNM_MAX_PATH] = "";
 char g_lastExportSubFn[SNM_MAX_PATH] = "";
 char g_actionHelpFn[SNM_MAX_PATH] = "";
-char g_notesBigFontName[64] = SWSDLG_TYPEFACE;
+char g_notesBigFontName[64] = SNM_DYN_FONT_NAME;
 
 // used for action help updates tracking
 //JFB TODO: cleanup when we'll be able to access all sections & custom ids
@@ -122,12 +122,12 @@ void SNM_NotesHelpWnd::OnInitDlg()
 
 	// WDL GUI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
-    m_parentVwnd.SetRealParent(m_hwnd);
+	m_parentVwnd.SetRealParent(m_hwnd);
 
-	m_btnLock.SetID(BUTTONID_LOCK);
+	m_btnLock.SetID(BTNID_LOCK);
 	m_parentVwnd.AddChild(&m_btnLock);
 
-	m_cbType.SetID(COMBOID_TYPE);
+	m_cbType.SetID(CMBID_TYPE);
 	m_cbType.AddItem(__LOCALIZE("Project notes","sws_DLG_152"));
 	m_cbType.AddItem(__LOCALIZE("Item notes","sws_DLG_152"));
 	m_cbType.AddItem(__LOCALIZE("Track notes","sws_DLG_152"));
@@ -142,16 +142,16 @@ void SNM_NotesHelpWnd::OnInitDlg()
 	m_txtLabel.SetID(TXTID_LABEL);
 	m_parentVwnd.AddChild(&m_txtLabel);
 
-	m_btnAlr.SetID(BUTTONID_ALR);
+	m_btnAlr.SetID(BTNID_ALR);
 	m_parentVwnd.AddChild(&m_btnAlr);
 
-	m_btnActionList.SetID(BUTTONID_ACTIONLIST);
+	m_btnActionList.SetID(BTNID_ACTIONLIST);
 	m_parentVwnd.AddChild(&m_btnActionList);
 
-	m_btnImportSub.SetID(BUTTONID_IMPORT_SUB);
+	m_btnImportSub.SetID(BTNID_IMPORT_SUB);
 	m_parentVwnd.AddChild(&m_btnImportSub);
 
-	m_btnExportSub.SetID(BUTTONID_EXPORT_SUB);
+	m_btnExportSub.SetID(BTNID_EXPORT_SUB);
 	m_parentVwnd.AddChild(&m_btnExportSub);
 
 	m_bigNotes.SetID(TXTID_BIG_NOTES);
@@ -235,7 +235,7 @@ void SNM_NotesHelpWnd::CSurfSetTrackTitle() {
 // this is our only notification of active project tab change, so update everything
 // (ScheduledJob because of multi-notifs)
 void SNM_NotesHelpWnd::CSurfSetTrackListChange() {
-	AddOrReplaceScheduledJob(new SNM_NoteHelp_UpdateJob());
+	AddOrReplaceScheduledJob(new NotesUpdateJob());
 }
 
 void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -249,11 +249,11 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case SET_ACTION_HELP_FILE_MSG:
 			SetActionHelpFilename(NULL);
 			break;
-		case BUTTONID_LOCK:
+		case BTNID_LOCK:
 			if (!HIWORD(wParam))
 				ToggleLock();
 			break;
-		case BUTTONID_ALR:
+		case BTNID_ALR:
 			if (!HIWORD(wParam) && *g_lastActionCustId && !IsMacro(g_lastActionDesc))
 			{
 				char link[256] = "";
@@ -265,16 +265,16 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			else
 				ShellExecute(m_hwnd, "open", "http://wiki.cockos.com/wiki/index.php/Action_List_Reference" , NULL, NULL, SW_SHOWNORMAL);
 			break;
-		case BUTTONID_ACTIONLIST:
+		case BTNID_ACTIONLIST:
 			Main_OnCommand(40605, 0);
 			break;
-		case BUTTONID_IMPORT_SUB:
+		case BTNID_IMPORT_SUB:
 			ImportSubTitleFile(NULL);
 			break;
-		case BUTTONID_EXPORT_SUB:
+		case BTNID_EXPORT_SUB:
 			ExportSubTitleFile(NULL);
 			break;
-		case COMBOID_TYPE:
+		case CMBID_TYPE:
 			if (HIWORD(wParam)==CBN_SELCHANGE) {
 				SetType(m_cbType.GetCurSel());
 				if (!g_locked)
@@ -360,16 +360,16 @@ void SNM_NotesHelpWnd::OnResize()
 	if (g_notesViewType != g_prevNotesViewType)
 	{
 		if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES || g_notesViewType == SNM_NOTES_ACTION_HELP)
-			m_resize.get_item(IDC_EDIT)->orig.bottom = m_resize.get_item(IDC_EDIT)->real_orig.bottom - 30;
+			m_resize.get_item(IDC_EDIT)->orig.bottom = m_resize.get_item(IDC_EDIT)->real_orig.bottom - 41; // 41 is tied to the current .rc!
 		else
-			memcpy(&m_resize.get_item(IDC_EDIT)->orig, &m_resize.get_item(IDC_EDIT)->real_orig, sizeof(RECT));
+			m_resize.get_item(IDC_EDIT)->orig = m_resize.get_item(IDC_EDIT)->real_orig;
 		InvalidateRect(m_hwnd, NULL, 0);
 	}
 }
 
 void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
 {
-	int h=SNM_TOP_GUI_HEIGHT;
+	int h=SNM_GUI_TOP_H;
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
 
@@ -401,13 +401,13 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 
 	LICE_CachedFont* font = SNM_GetThemeFont();
 	IconTheme* it = SNM_GetIconTheme();
-	int x0=_r->left+10;
+	int x0=_r->left+SNM_GUI_X_MARGIN;
 
 	// lock button
 	SNM_SkinButton(&m_btnLock, it ? &it->toolbar_lock[!g_locked] : NULL, g_locked ? __LOCALIZE("Unlock","sws_DLG_152") : __LOCALIZE("Lock","sws_DLG_152"));
 	if (SNM_AutoVWndPosition(DT_LEFT, &m_btnLock, NULL, _r, &x0, _r->top, h))
 	{
-		// view type
+		// notes type
 		m_cbType.SetFont(font);
 		if (SNM_AutoVWndPosition(DT_LEFT, &m_cbType, NULL, _r, &x0, _r->top, h))
 		{
@@ -441,7 +441,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 					break;
 				case SNM_NOTES_REGION_NAME:
 				case SNM_NOTES_REGION_SUBTITLES:
-					if (g_lastMarkerRegionId <= 0 || !EnumMarkerRegionDesc(GetMarkerRegionIndexFromId(g_lastMarkerRegionId), str, 512, SNM_MARKER_MASK|SNM_REGION_MASK, g_notesViewType == SNM_NOTES_REGION_SUBTITLES) || !*str)
+					if (g_lastMarkerRegionId <= 0 || !EnumMarkerRegionDescById(NULL, g_lastMarkerRegionId, str, 512, SNM_MARKER_MASK|SNM_REGION_MASK, true, g_notesViewType == SNM_NOTES_REGION_SUBTITLES, true) || !*str)
 						lstrcpyn(str, __LOCALIZE("No marker or region at play/edit cursor!","sws_DLG_152"), 512);
 					break;
 				case SNM_NOTES_ACTION_HELP:
@@ -465,7 +465,7 @@ void SNM_NotesHelpWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _too
 	if (g_locked)
 		return;
 
-	x0 = _r->left+8; h=SNM_BOT_GUI_HEIGHT;
+	x0 = _r->left+SNM_GUI_X_MARGIN; h=SNM_GUI_BOT_H;
 	int y0 = _r->bottom-h;
 
 	// import/export buttons
@@ -499,9 +499,9 @@ bool SNM_NotesHelpWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int
 	{
 		switch (v->GetID())
 		{
-			case BUTTONID_LOCK:
+			case BTNID_LOCK:
 				return (lstrcpyn(_bufOut, g_locked ? __LOCALIZE("Text locked ('Big font' mode)", "sws_DLG_152") : __LOCALIZE("Text unlocked", "sws_DLG_152"), _bufOutSz) != NULL);
-			case COMBOID_TYPE:
+			case CMBID_TYPE:
 				return (lstrcpyn(_bufOut, __LOCALIZE("Notes type","sws_DLG_152"), _bufOutSz) != NULL);
 			case TXTID_LABEL:
 				return (lstrcpyn(_bufOut, ((WDL_VirtualStaticText*)v)->GetText(), _bufOutSz) != NULL);
@@ -553,7 +553,7 @@ void SNM_NotesHelpWnd::SaveCurrentPrjNotes()
 {
 	GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
 	g_prjNotes.Get()->Set(g_lastText); // CRLF removed only when saving the project..
-	Undo_OnStateChangeEx(__LOCALIZE("Edit project notes","sws_undo"), UNDO_STATE_MISCCFG, -1);
+	Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit project notes","sws_undo"), UNDO_STATE_MISCCFG, -1);
 }
 
 void SNM_NotesHelpWnd::SaveCurrentHelp()
@@ -573,7 +573,7 @@ void SNM_NotesHelpWnd::SaveCurrentItemNotes()
 		{
 //				UpdateItemInProject(g_mediaItemNote);
 			UpdateTimeline(); // for the item's note button 
-			Undo_OnStateChangeEx(__LOCALIZE("Edit item notes","sws_undo"), UNDO_STATE_ALL, -1); //JFB TODO? -1 to replace? UNDO_STATE_ITEMS?
+			Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit item notes","sws_undo"), UNDO_STATE_ALL, -1); //JFB TODO? -1 to replace? UNDO_STATE_ITEMS?
 		}
 	}
 }
@@ -594,7 +594,7 @@ void SNM_NotesHelpWnd::SaveCurrentTrackNotes()
 		}
 		if (!found)
 			g_pTrackNotes.Get()->Add(new SNM_TrackNotes(g_trNote, g_lastText));
-		Undo_OnStateChangeEx(__LOCALIZE("Edit track notes","sws_undo"), UNDO_STATE_MISCCFG, -1); //JFB TODO? -1 to replace?
+		Undo_OnStateChangeEx2(NULL, __LOCALIZE("Edit track notes","sws_undo"), UNDO_STATE_MISCCFG, -1); //JFB TODO? -1 to replace?
 	}
 }
 
@@ -605,22 +605,18 @@ void SNM_NotesHelpWnd::SaveCurrentMkrRgnNameOrNotes(bool _name)
 		GetDlgItemText(m_hwnd, IDC_EDIT, g_lastText, MAX_HELP_LENGTH);
 		if (_name)
 		{
-			int idx = GetMarkerRegionIndexFromId(g_lastMarkerRegionId);
-			if (idx >= 0)
+			double pos, end; int num, color; bool isRgn;
+			if (EnumMarkerRegionById(NULL, g_lastMarkerRegionId, &isRgn, &pos, &end, NULL, &num, &color))
 			{
-				double pos, end; int num, color; bool isRgn;
-				if (EnumProjectMarkers3(NULL, idx, &isRgn, &pos, &end, NULL, &num, &color))
-				{
-					ShortenStringToFirstRN(g_lastText);
+				ShortenStringToFirstRN(g_lastText);
 
-					// track marker/region name updates that will lead to reentrance notifs
-					// via SNM_MarkerRegionSubscriber.NotifyMarkerRegionUpdate()
-					g_internalMkrRgnChange = true;
+				// track marker/region name updates that will lead to reentrance notifs
+				// via SNM_MarkerRegionSubscriber.NotifyMarkerRegionUpdate()
+				g_internalMkrRgnChange = true;
 
-					if (SNM_SetProjectMarker(NULL, num, isRgn, pos, end, g_lastText, color)) {
-						UpdateTimeline();
-						Undo_OnStateChangeEx(isRgn ? __LOCALIZE("Edit region name","sws_undo") : __LOCALIZE("Edit marker name","sws_undo"), UNDO_STATE_ALL, -1);
-					}
+				if (SNM_SetProjectMarker(NULL, num, isRgn, pos, end, g_lastText, color)) {
+					UpdateTimeline();
+					Undo_OnStateChangeEx2(NULL, isRgn ? __LOCALIZE("Edit region name","sws_undo") : __LOCALIZE("Edit marker name","sws_undo"), UNDO_STATE_ALL, -1);
 				}
 			}
 		}
@@ -639,7 +635,7 @@ void SNM_NotesHelpWnd::SaveCurrentMkrRgnNameOrNotes(bool _name)
 			}
 			if (!found)
 				g_pRegionSubtitles.Get()->Add(new SNM_RegionSubtitle(g_lastMarkerRegionId, g_lastText));
-			Undo_OnStateChangeEx(IsRegion(g_lastMarkerRegionId) ? __LOCALIZE("Edit region subtitle","sws_undo") : __LOCALIZE("Edit marker subtitle","sws_undo"), UNDO_STATE_MISCCFG, -1);
+			Undo_OnStateChangeEx2(NULL, IsRegion(g_lastMarkerRegionId) ? __LOCALIZE("Edit region subtitle","sws_undo") : __LOCALIZE("Edit marker subtitle","sws_undo"), UNDO_STATE_MISCCFG, -1);
 		}
 	}
 }
@@ -810,8 +806,8 @@ int SNM_NotesHelpWnd::UpdateMkrRgnNameOrNotes(bool _name)
 	int refreshType = NO_REFRESH;
 
 	double dPos=GetCursorPositionEx(NULL), accuracy=SNM_FUDGE_FACTOR;
-	if (g_locked && GetPlayState()) { // playing & update required?
-		dPos = GetPlayPosition();
+	if (g_locked && GetPlayStateEx(NULL)) { // playing & update required?
+		dPos = GetPlayPositionEx(NULL);
 		accuracy = 0.1; // do not stress REAPER
 	}
 
@@ -819,7 +815,7 @@ int SNM_NotesHelpWnd::UpdateMkrRgnNameOrNotes(bool _name)
 	{
 		g_lastMarkerPos = dPos;
 
-		int id, idx = FindMarkerRegion(dPos, SNM_MARKER_MASK|SNM_REGION_MASK, &id);
+		int id, idx = FindMarkerRegion(NULL, dPos, SNM_MARKER_MASK|SNM_REGION_MASK, &id);
 		if (id > 0)
 		{
 			if (id != g_lastMarkerRegionId)
@@ -834,12 +830,10 @@ int SNM_NotesHelpWnd::UpdateMkrRgnNameOrNotes(bool _name)
 				else // subtitle
 				{
 					for (int i=0; i < g_pRegionSubtitles.Get()->GetSize(); i++)
-					{
 						if (g_pRegionSubtitles.Get()->Get(i)->m_id == id) {
 							SetText(g_pRegionSubtitles.Get()->Get(i)->m_notes.Get());
 							return REQUEST_REFRESH;
 						}
-					}
 					g_pRegionSubtitles.Get()->Add(new SNM_RegionSubtitle(id, ""));
 					SetText("");
 				}
@@ -865,44 +859,60 @@ int SNM_NotesHelpWnd::UpdateMkrRgnNameOrNotes(bool _name)
 
 void LoadHelp(const char* _cmdName, char* _buf, int _bufSize)
 {
-	if (_cmdName && *_cmdName && _buf)
+	if (_cmdName && *_cmdName && _buf && _bufSize>0)
 	{
-		memset(_buf, 0, _bufSize);
-
-		// note: "size" includes trailing '\0', "buf" is double null terminated
+		// "buf" filled with null-terminated strings, double null-terminated
 		char buf[MAX_HELP_LENGTH] = "";
-		int j=0, size = GetPrivateProfileSection(_cmdName,buf,MAX_HELP_LENGTH,g_actionHelpFn);
-		for (int i=0; i < (size-1) && i < (_bufSize-2); i++) {
-			if (!buf[i]) _buf[j++] = '\n'; // done this way for ascendant compatibilty reasons..
-			else if (buf[i] != '|') _buf[j++] = buf[i]; // oh, well..
+		if (int sz = GetPrivateProfileSection(_cmdName,buf,sizeof(buf),g_actionHelpFn))
+		{
+//			memset(_buf, 0, _bufSize);
+
+			// GetPrivateProfileSection() sucks: "sz" does not include the very final '\0' (why not)
+			// *but* it does not include the final "\0\0" when it truncates either (inconsistent)
+			// => do not use "sz"
+
+			int i=-1, j=0;
+			while (++i<sizeof(buf) && j<_bufSize)
+			{
+				if (!buf[i])
+				{
+					if ((i+1)>=sizeof(buf) || !buf[i+1]) // check double null-terminated
+						break;
+					_buf[j++] = '\n'; // done this way for ascendant compatibilty
+				}
+				else if (buf[i] != '|')
+					_buf[j++] = buf[i];
+			}
+			_buf[j<_bufSize?j:_bufSize-1] = '\0';
 		}
 	}
 }
 
-// adds '|' at start of line 
+// adds '|' at start of lines
 // (allows empty lines which would be scratched by GetPrivateProfileSection() otherwise)
 void SaveHelp(const char* _cmdName, const char* _help)
 {
 	if (_cmdName && *_cmdName && _help) 
 	{
 		char buf[MAX_HELP_LENGTH] = "";
-		memset(buf, 0, MAX_HELP_LENGTH);
-
+//		memset(buf, 0, MAX_HELP_LENGTH);
 		if (*_help)
 		{
 			*buf = '|';
-
-			int i=0, j=1;
-			while (_help[i] && j < (MAX_HELP_LENGTH-2))
+			int i=-1;
+			int j=1; // 1 because '|' was inserted above
+			while (_help[++i] && j<sizeof(buf))
 			{
-				if (_help[i] != '\r') // skip
+				if (_help[i] != '\r')
 				{
 					buf[j++] = _help[i];
-					if (_help[i] == '\n')
+					if (_help[i] == '\n' && j<sizeof(buf))
 						buf[j++] = '|';
 				}
-				i++;
 			}
+			j = j>MAX_HELP_LENGTH-2 ? MAX_HELP_LENGTH-2 : j; // if truncated, clamp for double null-termination
+			buf[j] = '\0';
+			buf[j+1] = '\0';
 		}
 		WritePrivateProfileStruct(_cmdName, NULL, NULL, 0, g_actionHelpFn); // flush section
 		WritePrivateProfileSection(_cmdName, buf, g_actionHelpFn);
@@ -973,26 +983,30 @@ bool GetNotesChunkFromString(const char* _bufIn, WDL_FastString* _notesOut, cons
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// NotesUpdateJob
+///////////////////////////////////////////////////////////////////////////////
 
-void SNM_NoteHelp_UpdateJob::Perform() {
+void NotesUpdateJob::Perform() {
 	if (g_pNotesHelpWnd)
 		g_pNotesHelpWnd->Update(true);
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// NotesMarkerRegionSubscriber
+///////////////////////////////////////////////////////////////////////////////
 
 // ScheduledJob because of multi-notifs during project switches (vs CSurfSetTrackListChange)
-void SNM_NoteHelp_MarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags)
+void NotesMarkerRegionSubscriber::NotifyMarkerRegionUpdate(int _updateFlags)
 {
 	if (g_notesViewType == SNM_NOTES_REGION_SUBTITLES)
-		AddOrReplaceScheduledJob(new SNM_NoteHelp_UpdateJob());
+		AddOrReplaceScheduledJob(new NotesUpdateJob());
 	else if (g_notesViewType == SNM_NOTES_REGION_NAME)
 	{
 		if (g_internalMkrRgnChange)
 			g_internalMkrRgnChange = false;
 		else
-			AddOrReplaceScheduledJob(new SNM_NoteHelp_UpdateJob());
+			AddOrReplaceScheduledJob(new NotesUpdateJob());
 	}
 }
 
@@ -1075,7 +1089,7 @@ void ImportSubTitleFile(COMMAND_T* _ct)
 		if (ImportSubRipFile(fn))
 			//JFB hard-coded undo label: _ct might be NULL (when called from a button)
 			//    + avoid trailing "..." in undo point name (when called from an action)
-			Undo_OnStateChangeEx(__LOCALIZE("Import subtitle file","sws_DLG_152"), UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, __LOCALIZE("Import subtitle file","sws_DLG_152"), UNDO_STATE_ALL, -1);
 		else
 			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid subtitle file!","sws_DLG_152"), __LOCALIZE("S&M - Error","sws_DLG_152"), MB_OK);
 		free(fn);
@@ -1177,7 +1191,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 	}
 	else if (!strcmp(lp.gettoken_str(0), "<S&M_SUBTITLE"))
 	{
-		if (GetMarkerRegionIndexFromId(lp.gettoken_int(1)) >= 0) // still exists?
+		if (GetMarkerRegionIndexFromId(NULL, lp.gettoken_int(1)) >= 0) // still exists?
 		{
 			WDL_FastString notes;
 			ExtensionConfigToString(&notes, ctx);
@@ -1197,13 +1211,15 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	{
 		// delete unused tracks
 		for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++)
-			if (CSurf_TrackToID(g_pTrackNotes.Get()->Get(i)->m_tr, false) < 0)
-				g_pTrackNotes.Get()->Delete(i--, true);
+			if (SNM_TrackNotes* tn = g_pTrackNotes.Get()->Get(i))
+				if (CSurf_TrackToID(tn->m_tr, false) < 0)
+					g_pTrackNotes.Get()->Delete(i--, true);
 
 		// remove non-existant markers & regions
 		for (int i=0; i < g_pRegionSubtitles.Get()->GetSize(); i++)
-			if (GetMarkerRegionIndexFromId(g_pRegionSubtitles.Get()->Get(i)->m_id) < 0)
-				g_pRegionSubtitles.Get()->Delete(i--, true);
+			if (SNM_RegionSubtitle* sub = g_pRegionSubtitles.Get()->Get(i))
+				if (GetMarkerRegionIndexFromId(NULL, sub->m_id) < 0)
+					g_pRegionSubtitles.Get()->Delete(i--, true);
 	}
 
 	char startLine[SNM_MAX_CHUNK_LINE_LENGTH] = "";
@@ -1221,31 +1237,28 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 	// save track notes
 	for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++)
 	{
-		if (g_pTrackNotes.Get()->Get(i)->m_notes.GetLength())
-		{
-			GUID g;
-			if (CSurf_TrackToID(g_pTrackNotes.Get()->Get(i)->m_tr, false) > 0)
-				g = *(GUID*)GetSetMediaTrackInfo(g_pTrackNotes.Get()->Get(i)->m_tr, "GUID", NULL);
-			else
-				g = GUID_NULL;
-			guidToString(&g, strId);
-			if (_snprintfStrict(startLine, sizeof(startLine), "<S&M_TRACKNOTES %s\n|", strId) > 0)
-				if (GetNotesChunkFromString(g_pTrackNotes.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
-					StringToExtensionConfig(&formatedNotes, ctx);
-		}
+		if (SNM_TrackNotes* tn = g_pTrackNotes.Get()->Get(i))
+			if (tn->m_notes.GetLength())
+			{
+				GUID g;
+				if (CSurf_TrackToID(tn->m_tr, false) > 0)
+					g = *(GUID*)GetSetMediaTrackInfo(tn->m_tr, "GUID", NULL);
+				else
+					g = GUID_NULL;
+				guidToString(&g, strId);
+				if (_snprintfStrict(startLine, sizeof(startLine), "<S&M_TRACKNOTES %s\n|", strId) > 0)
+					if (GetNotesChunkFromString(tn->m_notes.Get(), &formatedNotes, startLine))
+						StringToExtensionConfig(&formatedNotes, ctx);
+			}
 	}
 
-	// save region/marker notes
+	// save region/marker subs
 	for (int i=0; i < g_pRegionSubtitles.Get()->GetSize(); i++)
-	{
-		if (g_pRegionSubtitles.Get()->Get(i)->m_notes.GetLength() &&
-			GetMarkerRegionIndexFromId(g_pRegionSubtitles.Get()->Get(i)->m_id) >= 0)
-		{
-			if (_snprintfStrict(startLine, sizeof(startLine), "<S&M_SUBTITLE %d\n|", g_pRegionSubtitles.Get()->Get(i)->m_id) > 0)
-				if (GetNotesChunkFromString(g_pRegionSubtitles.Get()->Get(i)->m_notes.Get(), &formatedNotes, startLine))
-					StringToExtensionConfig(&formatedNotes, ctx);
-		}
-	}
+		if (SNM_RegionSubtitle* sub = g_pRegionSubtitles.Get()->Get(i))
+			if (sub->m_notes.GetLength() && GetMarkerRegionIndexFromId(NULL, sub->m_id) >= 0)
+				if (_snprintfStrict(startLine, sizeof(startLine), "<S&M_SUBTITLE %d\n|", sub->m_id) > 0)
+					if (GetNotesChunkFromString(sub->m_notes.Get(), &formatedNotes, startLine))
+						StringToExtensionConfig(&formatedNotes, ctx);
 }
 
 static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg)
@@ -1301,15 +1314,15 @@ int NotesHelpViewInit()
 	lstrcpyn(g_lastExportSubFn, GetResourcePath(), sizeof(g_lastExportSubFn));
 
 	// load prefs 
-	g_notesViewType = GetPrivateProfileInt("NOTES_HELP_VIEW", "Type", 0, g_SNMIniFn.Get());
-	g_locked = (GetPrivateProfileInt("NOTES_HELP_VIEW", "Lock", 0, g_SNMIniFn.Get()) == 1);
-	GetPrivateProfileString("NOTES_HELP_VIEW", "BigFontName", SWSDLG_TYPEFACE, g_notesBigFontName, sizeof(g_notesBigFontName), g_SNMIniFn.Get());
+	g_notesViewType = GetPrivateProfileInt(NOTES_INI_SEC, "Type", 0, g_SNMIniFn.Get());
+	g_locked = (GetPrivateProfileInt(NOTES_INI_SEC, "Lock", 0, g_SNMIniFn.Get()) == 1);
+	GetPrivateProfileString(NOTES_INI_SEC, "BigFontName", SNM_DYN_FONT_NAME, g_notesBigFontName, sizeof(g_notesBigFontName), g_SNMIniFn.Get());
 
 	// get the action help filename
 	char defaultHelpFn[SNM_MAX_PATH] = "";
 	if (_snprintfStrict(defaultHelpFn, sizeof(defaultHelpFn), SNM_ACTION_HELP_INI_FILE, GetResourcePath()) <= 0)
 		*defaultHelpFn = '\0';
-	GetPrivateProfileString("NOTES_HELP_VIEW", "Action_help_file", defaultHelpFn, g_actionHelpFn, sizeof(g_actionHelpFn), g_SNMIniFn.Get());
+	GetPrivateProfileString(NOTES_INI_SEC, "Action_help_file", defaultHelpFn, g_actionHelpFn, sizeof(g_actionHelpFn), g_SNMIniFn.Get());
 
 	g_pNotesHelpWnd = new SNM_NotesHelpWnd();
 	if (!g_pNotesHelpWnd || !plugin_register("projectconfig", &g_projectconfig))
@@ -1321,14 +1334,14 @@ void NotesHelpViewExit()
 {
 	char tmp[4] = "";
 	if (_snprintfStrict(tmp, sizeof(tmp), "%d", g_notesViewType) > 0)
-		WritePrivateProfileString("NOTES_HELP_VIEW", "Type", tmp, g_SNMIniFn.Get()); 
-	WritePrivateProfileString("NOTES_HELP_VIEW", "Lock", g_locked?"1":"0", g_SNMIniFn.Get()); 
-	WritePrivateProfileString("NOTES_HELP_VIEW", "BigFontName", g_notesBigFontName, g_SNMIniFn.Get());
+		WritePrivateProfileString(NOTES_INI_SEC, "Type", tmp, g_SNMIniFn.Get()); 
+	WritePrivateProfileString(NOTES_INI_SEC, "Lock", g_locked?"1":"0", g_SNMIniFn.Get()); 
+	WritePrivateProfileString(NOTES_INI_SEC, "BigFontName", g_notesBigFontName, g_SNMIniFn.Get());
 
 	// save the action help filename
 	WDL_FastString escapedStr;
 	makeEscapedConfigString(g_actionHelpFn, &escapedStr);
-	WritePrivateProfileString("NOTES_HELP_VIEW", "Action_help_file", escapedStr.Get(), g_SNMIniFn.Get());
+	WritePrivateProfileString(NOTES_INI_SEC, "Action_help_file", escapedStr.Get(), g_SNMIniFn.Get());
 
 	DELETE_NULL(g_pNotesHelpWnd);
 }

@@ -35,49 +35,69 @@
 #define SNM_DEF_VWND_X_STEP			12
 
 
-class SNM_DynamicSizedText : public WDL_VWnd {
+class SNM_DynSizedText : public WDL_VWnd {
 public:
-	SNM_DynamicSizedText() : WDL_VWnd() { 
-		m_fontName.Set(SWSDLG_TYPEFACE); m_alpha=255; m_maxLineIdx=m_lastFontH=-1; m_wantBorder=false; m_dtFlags=DT_CENTER;
+	SNM_DynSizedText() : WDL_VWnd()
+	{
+		m_fontName.Set("Arial"); // very default font, ok on osx/win..
+		m_alpha=255;
+		m_col=0;
+		m_maxLineIdx=m_lastFontH=-1; 
+		m_wantBorder=false;
+		m_wantTitleLane=true;
+		m_align=m_titleAlign=DT_CENTER;
 	}
-	virtual ~SNM_DynamicSizedText() {}
-	virtual const char *GetType() { return "SNM_DynamicText"; }
-	virtual void SetText(const char* _txt, unsigned char _alpha = 255);
-	virtual void SetTitle(const char* _txt);
+	virtual const char *GetType() { return "SNM_DynSizedText"; }
 	virtual void OnPaint(LICE_IBitmap* _drawbm, int _origin_x, int _origin_y, RECT* _cliprect);
+	virtual void SetText(const char* _txt, int _col = 0, unsigned char _alpha = 255);
+	virtual void SetTitle(const char* _txt);
 	virtual void SetBorder(bool _b) { m_wantBorder = _b; }
-	virtual void SetFlags(UINT _f) { m_dtFlags = _f; } // only DT_LEFT and DT_CENTER are supported atm..
+	virtual void SetAlign(UINT _mainAlign, UINT _titleAlign = DT_CENTER) { m_align=_mainAlign; m_titleAlign=_titleAlign; }
 	virtual const char* GetFontName() { return m_fontName.Get(); }
 	virtual void SetFontName(const char* _fontName) { m_fontName.Set(_fontName); }
+	virtual bool HasTitleLane();
+	virtual bool WantTitleLane() { return m_wantTitleLane; }
+	virtual void SetWantTitleLane(bool _want) { m_wantTitleLane=_want; }
+
 protected:
+	virtual int GetTitleLaneHeight();
 	void DrawLines(LICE_IBitmap* _drawbm, RECT* _r, int _fontHeight);
+
 	LICE_CachedFont m_font;
 	WDL_FastString m_title, m_fontName, m_lastText;
 	WDL_PtrList_DeleteOnDestroy<WDL_FastString> m_lines;
-	int m_maxLineIdx, m_lastFontH;
-	bool m_wantBorder;
+	int m_maxLineIdx, m_lastFontH, m_col;
+	bool m_wantBorder, m_wantTitleLane;
 	unsigned char m_alpha;
 	SWS_Mutex m_mutex;
-	UINT m_dtFlags;
+	UINT m_align, m_titleAlign;
+};
+
+class SNM_FiveMonitors : public WDL_VWnd {
+public:
+	SNM_FiveMonitors() : WDL_VWnd(), m_nbRows(2) {}
+	virtual const char *GetType() { return "SNM_FiveMonitors"; }
+	virtual void AddMonitors(SNM_DynSizedText* _m0, SNM_DynSizedText* _m1, SNM_DynSizedText* _m2, SNM_DynSizedText* _m3, SNM_DynSizedText* _m4);
+	virtual bool HasValidChildren();
+	virtual void OnPaint(LICE_IBitmap* _drawbm, int _origin_x, int _origin_y, RECT* _cliprect);
+	virtual void SetText(int _monNum, const char* _txt, int _col = 0, unsigned char _alpha = 255);
+	virtual void SetTitles(const char* _title1="1", const char* _title2="2", const char* _title3="3", const char* _title4="4");
+	virtual void SetPosition(const RECT* _r);
+	virtual void SetFontName(const char* _fontName);
+	virtual void SetRows(int _nbRows);
+	virtual int GetRows() { return m_nbRows; }
+protected:
+	int m_nbRows;
 };
 
 class SNM_ImageVWnd : public WDL_VWnd {
 public:
-	SNM_ImageVWnd(LICE_IBitmap* _img = NULL) : WDL_VWnd() { m_img = _img; }
-	virtual ~SNM_ImageVWnd() {}
+	SNM_ImageVWnd(LICE_IBitmap* _img = NULL) : WDL_VWnd(), m_img(_img) {}
 	virtual const char *GetType() { return "SNM_ImageVWnd"; }
 	virtual const char* GetFilename() { return m_fn.Get(); }
 	virtual int GetWidth();
 	virtual int GetHeight();
-	virtual void SetImage(const char* _fn) {
-		if (_fn && *_fn)
-			if (m_img = LICE_LoadPNG(_fn, NULL)) {
-				m_fn.Set(_fn);
-				return;
-			}
-		DELETE_NULL(m_img);
-		m_fn.Set("");
-	}
+	virtual void SetImage(const char* _fn);
 	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
 protected:
 	LICE_IBitmap* m_img;
@@ -88,74 +108,105 @@ protected:
 class SNM_Logo : public SNM_ImageVWnd {
 public:
 	SNM_Logo() : SNM_ImageVWnd(SNM_GetThemeLogo()) {}
-	virtual ~SNM_Logo() {}
 	virtual const char *GetType() { return "SNM_Logo"; }
 	virtual bool GetToolTipString(int xpos, int ypos, char* bufOut, int bufOutSz) { lstrcpyn(bufOut, "Strong & Mighty", bufOutSz); return true; }
 };
 
-class SNM_AddDelButton : public WDL_VWnd {
+class SNM_TinyButton : public WDL_VWnd {
 public:
-	SNM_AddDelButton() : WDL_VWnd() { m_add=true; m_en=true; }
-	virtual ~SNM_AddDelButton() {}
-	virtual const char *GetType() { return "SNM_AddDelButton"; }
-	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
-	virtual void SetAdd(bool _add) { m_add=_add; }
+	SNM_TinyButton() : WDL_VWnd(), m_en(true) {}
+	virtual const char *GetType() { return "SNM_TinyButton"; }
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect) {}
 	virtual void SetEnabled(bool _en) { m_en=_en; }
 	virtual int OnMouseDown(int xpos, int ypos) { return m_en?1:0;	}
 	virtual void OnMouseUp(int xpos, int ypos) { if (m_en) SendCommand(WM_COMMAND,GetID(),0,this); }
 protected:
-	bool m_add, m_en;
+	bool m_en;
 };
 
-class SNM_MiniAddDelButtons : public WDL_VWnd {
+class SNM_TinyPlusButton : public SNM_TinyButton {
 public:
-	SNM_MiniAddDelButtons() : WDL_VWnd()
-	{
-		m_btnPlus.SetID(0xF666); // temp ids.. SetIDs() must be used
-		m_btnMinus.SetID(0xF667);
-		m_btnPlus.SetAdd(true);
-		m_btnMinus.SetAdd(false); 
-		AddChild(&m_btnPlus);
-		AddChild(&m_btnMinus);
-	}
-	virtual ~SNM_MiniAddDelButtons() { RemoveAllChildren(false); }
-	virtual const char *GetType() { return "SNM_MiniAddDelButtons"; }
-	virtual void SetIDs(int _id, int _addId, int _delId) { SetID(_id); m_btnPlus.SetID(_addId); m_btnMinus.SetID(_delId); }
-	virtual void SetPosition(const RECT* _r)
-	{
-		m_position = *_r; 
-		RECT r1 = {0, 0, 9, 9};
-		m_btnPlus.SetPosition(&r1);
-		RECT r2 = {0, 10, 9, 19};
-		m_btnMinus.SetPosition(&r2);
-	}
+	SNM_TinyPlusButton() : SNM_TinyButton() {}
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+};
+
+class SNM_TinyMinusButton : public SNM_TinyButton {
+public:
+	SNM_TinyMinusButton() : SNM_TinyButton() {}
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+};
+
+class SNM_TinyLeftButton : public SNM_TinyButton {
+public:
+	SNM_TinyLeftButton() : SNM_TinyButton() {}
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+};
+
+class SNM_TinyRightButton : public SNM_TinyButton {
+public:
+	SNM_TinyRightButton() : SNM_TinyButton() {}
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+};
+
+class SNM_TinyTickBox : public SNM_TinyButton {
+public:
+	SNM_TinyTickBox() : SNM_TinyButton(), m_checkstate(0) {}
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+	void SetCheckState(char _state); // to mimic WDL_VirtualIconButton (eases replacement), 0=unchecked, 1=checked, -1 is unsupported
+	char GetCheckState() { return m_checkstate; }
 protected:
-	SNM_AddDelButton m_btnPlus, m_btnMinus;
+	char m_checkstate;
+};
+
+class SNM_TwoTinyButtons : public WDL_VWnd {
+public:
+	SNM_TwoTinyButtons() : WDL_VWnd() {}
+	virtual const char *GetType() { return "SNM_TwoTinyButtons"; }
+	virtual void SetPosition(const RECT* _r);
 };
 
 class SNM_ToolbarButton : public WDL_VirtualIconButton {
 public:
 	SNM_ToolbarButton() : WDL_VirtualIconButton() {}
-	virtual ~SNM_ToolbarButton() {}
 	virtual const char *GetType() { return "SNM_ToolbarButton"; }
 	virtual void SetGrayed(bool grayed) { WDL_VirtualIconButton::SetGrayed(grayed); if (grayed) m_pressed=0; } // avoid stuck overlay when mousedown leads to grayed button
 	virtual void GetPositionPaintOverExtent(RECT *r) { *r=m_position; }
 	virtual void OnPaintOver(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
 };
 
-class SNM_MiniKnob : public WDL_VirtualSlider {
+class SNM_Knob : public WDL_VirtualSlider {
 public:
-	SNM_MiniKnob() : WDL_VirtualSlider() {
+	SNM_Knob() : WDL_VirtualSlider(), m_factor(1.0) {
 		SetKnobBias(1); // force knob
 		SetScrollMessage(WM_VSCROLL);
 	}
-	virtual ~SNM_MiniKnob() {}
-	virtual const char *GetType() { return "SNM_MiniKnob"; }
+	virtual const char *GetType() { return "SNM_Knob"; }
+	virtual void SetRangeFactor(int _minr, int _maxr, int _center, double _factor) { m_factor=_factor; m_minr=int(_factor*_minr+0.5); m_maxr=int(_factor*_maxr+0.5); m_center=int(_factor*_center+0.5); }
+	virtual int GetSliderPosition() { return int(WDL_VirtualSlider::GetSliderPosition()/m_factor + 0.5); }
+	virtual void SetSliderPosition(int _pos) { WDL_VirtualSlider::SetSliderPosition(int(_pos*m_factor + 0.5)); }
+protected:
+	double m_factor; // for knob usability (especially with short ranges)
 };
 
+class SNM_KnobCaption : public WDL_VWnd {
+public:
+	SNM_KnobCaption() : WDL_VWnd(), m_value(-666) {}
+	virtual void SetPosition(const RECT* _r);
+	virtual void OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect);
+	virtual const char *GetType() { return "SNM_KnobCaption"; }
+	virtual void SetTitle(const char* _txt) { m_title.Set(_txt); }
+	virtual void SetSuffix(const char* _txt) { m_suffix.Set(_txt); }
+	virtual void SetZeroText(const char* _txt) { m_zeroTxt.Set(_txt); }
+	virtual void SetValue(int _value);
+protected:
+	int m_value;
+	WDL_FastString m_title, m_suffix, m_zeroTxt;
+};
+
+// helpers
 void SNM_SkinButton(WDL_VirtualIconButton* _btn, WDL_VirtualIconButton_SkinConfig* _skin, const char* _text);
 void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text);
-bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h);
+bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x = -1, int _h = -1);
 bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, const RECT* _r, int* _x, int _y, int _h, int _xRoom = SNM_DEF_VWND_X_STEP);
 
 #endif

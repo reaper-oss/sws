@@ -30,20 +30,23 @@
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_DynamicText
+// SNM_DynSizedText
 ///////////////////////////////////////////////////////////////////////////////
 
 // split the text into lines and store them (not to do that in OnPaint())
-void SNM_DynamicSizedText::SetText(const char* _txt, unsigned char _alpha)
+// _col: 0 to use the default theme text color
+void SNM_DynSizedText::SetText(const char* _txt, int _col, unsigned char _alpha)
 { 
 	SWS_SectionLock lock(&m_mutex);
 
-	if (!strcmp(m_lastText.Get(), _txt?_txt:"")) return;
+	if (m_col==_col && m_alpha==_alpha && !strcmp(m_lastText.Get(), _txt?_txt:""))
+		return;
 
 	m_lastText.Set(_txt?_txt:"");
 	m_lines.Empty(true);
 	m_maxLineIdx = -1;
 	m_alpha = _alpha;
+	m_col = _col ? LICE_RGBA_FROMNATIVE(_col, m_alpha) : 0;
 
 	if (_txt && *_txt)
 	{
@@ -73,10 +76,10 @@ void SNM_DynamicSizedText::SetText(const char* _txt, unsigned char _alpha)
 			m_lines.Add(s);
 		}
 	}
-	if (m_visible) RequestRedraw(NULL);
+	RequestRedraw(NULL);
 } 
 
-void SNM_DynamicSizedText::DrawLines(LICE_IBitmap* _drawbm, RECT* _r, int _fontHeight)
+void SNM_DynSizedText::DrawLines(LICE_IBitmap* _drawbm, RECT* _r, int _fontHeight)
 {
 	RECT tr;
 	tr.top = _r->top + int((_r->bottom-_r->top)/2 - (_fontHeight*m_lines.GetSize())/2 + 0.5);
@@ -85,21 +88,29 @@ void SNM_DynamicSizedText::DrawLines(LICE_IBitmap* _drawbm, RECT* _r, int _fontH
 	for (int i=0; i < m_lines.GetSize(); i++)
 	{
 		tr.bottom = tr.top+_fontHeight;
-		// ClearType not supported w/ LICE_DT_USEFGALPHA
-		m_font.DrawText(_drawbm, m_lines.Get(i)->Get(), -1, &tr, m_dtFlags|(m_alpha<255?LICE_DT_USEFGALPHA:0));
+		m_font.DrawText(_drawbm, m_lines.Get(i)->Get(), -1, &tr, m_align | (m_alpha<255?LICE_DT_USEFGALPHA:0)); // cleartype not supported w/ LICE_DT_USEFGALPHA
 		tr.top = tr.bottom;
 	}
 }
 
-void SNM_DynamicSizedText::SetTitle(const char* _txt)
+void SNM_DynSizedText::SetTitle(const char* _txt)
 {
 	SWS_SectionLock lock(&m_mutex);
 	if (!strcmp(m_title.Get(), _txt?_txt:"")) return;
 	m_title.Set(_txt?_txt:"");
-	if (m_visible) RequestRedraw(NULL);
+	RequestRedraw(NULL);
 }
 
-void SNM_DynamicSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
+int SNM_DynSizedText::GetTitleLaneHeight() { // it is here because of some .h hassle..
+	return SNM_FONT_HEIGHT+2;
+}
+
+bool SNM_DynSizedText::HasTitleLane() {
+	return (m_visible && m_title.GetLength() && (m_position.bottom-m_position.top) > 4*GetTitleLaneHeight());
+}
+
+// note: with big, BIG fonts LICE_FONT_FLAG_FORCE_NATIVE seems ignored..
+void SNM_DynSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
 {
 	SWS_SectionLock lock(&m_mutex);
 
@@ -112,23 +123,24 @@ void SNM_DynamicSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origi
 	int h = r.bottom-r.top;
 	int w = r.right-r.left;
 
-	int col = LICE_RGBA(255,255,255, m_alpha);
-	if (ColorTheme* ct = SNM_GetColorTheme())
-		col = LICE_RGBA_FROMNATIVE(ct->main_text, m_alpha);
+	ColorTheme* ct = SNM_GetColorTheme();
+	int col = m_col;
+	if (!col)
+		col = ct ? LICE_RGBA_FROMNATIVE(ct->main_text, m_alpha) : LICE_RGBA(255,255,255,255);
 
 	if (m_wantBorder)
 		LICE_DrawRect(drawbm,r.left,r.top,w,h,col,0.2f);
 
-	// title
-	int bandHeight = SNM_FONT_HEIGHT+2;
-	if (m_title.GetLength() && h>4*bandHeight) // hide if too small
+	// title lane
+	int laneHeight = GetTitleLaneHeight();
+	if (WantTitleLane() && HasTitleLane())
 	{
 		if (m_wantBorder)
-			LICE_Line(drawbm, r.left,r.top+bandHeight-1,r.right,r.top+bandHeight-1,col,0.2f);
+			LICE_Line(drawbm, r.left,r.top+laneHeight-1,r.right,r.top+laneHeight-1,col,0.2f);
 
 		// title's band coloring (works for all themes)
-		LICE_FillRect(drawbm,r.left,r.top,r.right-r.left,bandHeight,col,1.0f,LICE_BLIT_MODE_OVERLAY);
-		LICE_FillRect(drawbm,r.left,r.top,r.right-r.left,bandHeight,col,1.0f,LICE_BLIT_MODE_OVERLAY);
+		LICE_FillRect(drawbm,r.left,r.top,r.right-r.left,laneHeight,col,1.0f,LICE_BLIT_MODE_OVERLAY);
+		LICE_FillRect(drawbm,r.left,r.top,r.right-r.left,laneHeight,col,1.0f,LICE_BLIT_MODE_OVERLAY);
 
 		static LICE_CachedFont font;
 		if (!font.GetHFont()) // single lazy init..
@@ -141,10 +153,18 @@ void SNM_DynamicSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origi
 			// others props are set on demand (support theme switches)
 		}
 		font.SetBkMode(TRANSPARENT);
-		font.SetTextColor(WDL_STYLE_GetSysColor(COLOR_WINDOW));
+		font.SetTextColor(LICE_RGBA_FROMNATIVE(WDL_STYLE_GetSysColor(COLOR_WINDOW), 255));
 
-		RECT tr = {r.left,r.top,r.right,r.top+bandHeight};
-		font.DrawText(drawbm, m_title.Get(), -1, &tr, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+		{
+			RECT tr = {r.left,r.top,r.right,r.top+laneHeight};
+			char buf[64] = "";
+			_snprintfSafe(buf, sizeof(buf), " %s ", m_title.Get()); // trick for better display when left/right align
+			font.DrawText(drawbm, buf, -1, &tr, DT_SINGLELINE|DT_VCENTER|m_titleAlign);
+		}
+
+		// resize draw rect: take band into account
+		r.top += laneHeight;
+		h = r.bottom-r.top;
 	}
 
 
@@ -166,15 +186,16 @@ void SNM_DynamicSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origi
 	// check if the current font can do the job
 	if (m_lastFontH>=SNM_FONT_HEIGHT && abs(estimFontH-m_lastFontH) < 2) // tolerance: 2 pixels
 	{
-#ifdef _SNM_DEBUG
-		OutputDebugString("skip font creation\n");
+#ifdef _SNM_DYN_FONT_DEBUG
+		OutputDebugString("SNM_DynSizedText::OnPaint() - Skip font creation\n");
 #endif
+		m_font.SetTextColor(col);
 		DrawLines(drawbm, &r, m_lastFontH);
 	}
 	else
 	{
 		m_lastFontH = estimFontH;
-#ifdef _SNM_DEBUG
+#ifdef _SNM_DYN_FONT_DEBUG
 		int dbgTries=0;
 #endif
 		while(m_lastFontH>SNM_FONT_HEIGHT)
@@ -195,9 +216,9 @@ void SNM_DynamicSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origi
 				)
 			{
 				m_font.SetFromHFont(NULL,LICE_FONT_FLAG_OWNS_HFONT);
-				DeleteObject(lf);
+//				DeleteObject(lf);
 				m_lastFontH--;
-#ifdef _SNM_DEBUG
+#ifdef _SNM_DYN_FONT_DEBUG
 				dbgTries++;
 #endif
 			}
@@ -208,10 +229,10 @@ void SNM_DynamicSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origi
 				break;
 			}
 		}
-#ifdef _SNM_DEBUG
-		char dbgStr[256];
-		_snprintf(dbgStr, sizeof(dbgStr), "-> %d tries, estim: %d - reall: %d\n", dbgTries, estimFontH, m_lastFontH);
-		OutputDebugString(dbgStr);
+#ifdef _SNM_DYN_FONT_DEBUG
+		char dbg[256];
+		_snprintfSafe(dbg, sizeof(dbg), "SNM_DynSizedText::OnPaint() - %d tries, estim: %d, real: %d\n", dbgTries, estimFontH, m_lastFontH);
+		OutputDebugString(dbg);
 #endif
 	}
 
@@ -242,6 +263,194 @@ void SNM_DynamicSizedText::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origi
 		DeleteObject(lf);
 	}
 #endif
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_FiveMonitors
+///////////////////////////////////////////////////////////////////////////////
+
+// default alignements = just the ones I need ATM..
+void SNM_FiveMonitors::AddMonitors(SNM_DynSizedText* _m0, SNM_DynSizedText* _m1, SNM_DynSizedText* _m2, SNM_DynSizedText* _m3, SNM_DynSizedText* _m4)
+{
+	_m0->SetFontName(SNM_DYN_FONT_NAME);
+	AddChild(_m0);
+
+	_m1->SetAlign(DT_CENTER, DT_LEFT);
+	_m1->SetFontName(SNM_DYN_FONT_NAME);
+	_m1->SetBorder(true);
+	AddChild(_m1);
+
+	_m2->SetAlign(DT_CENTER, DT_RIGHT);
+	_m2->SetFontName(SNM_DYN_FONT_NAME);
+	_m2->SetBorder(true);
+	AddChild(_m2);
+
+	_m3->SetAlign(DT_CENTER, DT_LEFT);
+	_m3->SetFontName(SNM_DYN_FONT_NAME);
+	_m3->SetBorder(true);
+	AddChild(_m3);
+
+	_m4->SetAlign(DT_CENTER, DT_RIGHT);
+	_m4->SetFontName(SNM_DYN_FONT_NAME);
+	_m4->SetBorder(true);
+	AddChild(_m4);
+}
+
+// all 5 monitors were added?
+bool SNM_FiveMonitors::HasValidChildren()
+{
+	int ok = 0;
+	if (m_children && m_children->GetSize()==5)
+		for (int i=0; i<5; i++)
+			if (WDL_VWnd* vwnd = m_children->Get(i))
+				if (!strcmp(vwnd->GetType(), "SNM_DynSizedText"))
+					ok++;
+	return (ok==5);
+}
+
+void SNM_FiveMonitors::SetText(int _num, const char* _txt, int _col, unsigned char _alpha) {
+	if (_num>=0 && _num<5 && HasValidChildren()) ((SNM_DynSizedText*)m_children->Get(_num))->SetText(_txt, _col, _alpha);
+}
+
+void SNM_FiveMonitors::SetTitles(const char* _title1, const char* _title2, const char* _title3, const char* _title4)
+{
+	if (!HasValidChildren()) return; // no NULL check required thanks to this
+	((SNM_DynSizedText*)m_children->Get(1))->SetTitle(_title1);
+	((SNM_DynSizedText*)m_children->Get(2))->SetTitle(_title2);
+	((SNM_DynSizedText*)m_children->Get(3))->SetTitle(_title3);
+	((SNM_DynSizedText*)m_children->Get(4))->SetTitle(_title4);
+}
+
+void SNM_FiveMonitors::SetPosition(const RECT* _r)
+{
+	m_position = *_r;
+
+	if (!HasValidChildren()) return; // no NULL check required thanks to this
+
+	RECT r = *_r;
+	int monHeight = r.bottom - r.top;
+	int monWidth = r.right - r.left;
+
+	m_children->Get(0)->SetPosition(&r);
+	if (m_nbRows<=0) return;
+
+	// show all 4 monitors if enough room
+	if (monWidth>400)
+	{
+		r.bottom = r.top + int((m_nbRows>=2 ? 0.6 : 1.0) * monHeight + 0.5);
+		r.right = r.left + int(0.25*monWidth + 0.5);
+		m_children->Get(1)->SetPosition(&r);
+
+		r.left = r.right;
+		r.right = _r->right-1;
+		m_children->Get(2)->SetPosition(&r);
+
+		if (m_nbRows>=2)
+		{
+			r.top = r.bottom;
+			r.left = _r->left;
+			r.bottom = _r->bottom-1;
+			r.right = r.left + int(0.25*monWidth + 0.5);
+			m_children->Get(3)->SetPosition(&r);
+
+			r.left = r.right;
+			r.right = _r->right-1;
+			m_children->Get(4)->SetPosition(&r);
+		}
+	}
+	// displays the 2 most important monitors otherwise
+	else
+	{
+		RECT r0 = {0,0,0,0};
+		m_children->Get(2)->SetPosition(&r0);
+		m_children->Get(4)->SetPosition(&r0);
+
+		// vertical display
+		if (2*monHeight > monWidth)
+		{
+			r.bottom = r.top + int((m_nbRows>=2 ? 0.6 : 1.0) * monHeight + 0.5);
+			m_children->Get(1)->SetPosition(&r);
+			if (m_nbRows>=2)
+			{
+				r.top = r.bottom;
+				r.bottom = r.top + int(0.4*monHeight + 0.5);
+				m_children->Get(3)->SetPosition(&r);
+			}
+		}
+		// horizontal display
+		else
+		{
+			r.right = r.left + int((m_nbRows>=2 ? 0.6 : 1.0) * monWidth + 0.5);
+			m_children->Get(1)->SetPosition(&r);
+			if (m_nbRows>=2)
+			{
+				r.left = r.right;
+				r.right = r.left + int(0.4*monWidth + 0.5);
+				m_children->Get(3)->SetPosition(&r);
+			}
+		}
+	}
+}
+
+// show/hide title lane for all monitors *together* (assumes mon3 and mon4 are smaller than mon1 and mon2)
+void SNM_FiveMonitors::OnPaint(LICE_IBitmap* _drawbm, int _origin_x, int _origin_y, RECT* _cliprect)
+{
+	if (m_nbRows>=2)
+	{
+		if (!HasValidChildren()) return; // no NULL check required thanks to this
+		bool smallerHasLane = (((SNM_DynSizedText*)m_children->Get(3))->HasTitleLane() || ((SNM_DynSizedText*)m_children->Get(4))->HasTitleLane());
+		((SNM_DynSizedText*)m_children->Get(1))->SetWantTitleLane(smallerHasLane);
+		((SNM_DynSizedText*)m_children->Get(2))->SetWantTitleLane(smallerHasLane);
+	}
+	WDL_VWnd::OnPaint(_drawbm, _origin_x, _origin_y, _cliprect);
+}
+
+void SNM_FiveMonitors::SetFontName(const char* _fontName) {
+	if (!HasValidChildren()) return; // no NULL check required thanks to this
+	for (int i=0; i<5; i++) ((SNM_DynSizedText*)m_children->Get(i))->SetFontName(_fontName);
+}
+
+void SNM_FiveMonitors::SetRows(int _nbRows) 
+{
+	if (m_nbRows!=_nbRows)
+	{
+		m_nbRows=_nbRows;
+		if (HasValidChildren())
+		{
+			((SNM_DynSizedText*)m_children->Get(1))->SetVisible(m_nbRows>=1);
+			((SNM_DynSizedText*)m_children->Get(2))->SetVisible(m_nbRows>=1);
+			((SNM_DynSizedText*)m_children->Get(3))->SetVisible(m_nbRows>=2);
+			((SNM_DynSizedText*)m_children->Get(4))->SetVisible(m_nbRows>=2);
+		}
+		RequestRedraw(NULL);
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_TwoTinyButtons
+///////////////////////////////////////////////////////////////////////////////
+
+void SNM_TwoTinyButtons::SetPosition(const RECT* _r)
+{
+	m_position = *_r;
+	if (m_children) 
+	{
+		if (WDL_VWnd* a = m_children->Get(0)) {
+			RECT r = {0,0,0,0};
+			r.right = _r->right-_r->left;
+			r.bottom = int((_r->bottom-_r->top)/2); // no rounding!
+			a->SetPosition(&r);
+		}
+		if (WDL_VWnd* b = m_children->Get(1)) {
+			RECT r = {0,0,0,0};
+			r.right = _r->right-_r->left;
+			r.top = int((_r->bottom-_r->top)/2) + 1; // no rounding!
+			r.bottom = _r->bottom-_r->top;
+			b->SetPosition(&r);
+		}
+	}
 }
 
 
@@ -306,6 +515,18 @@ int SNM_ImageVWnd::GetHeight() {
 	return 0;
 }
 
+void SNM_ImageVWnd::SetImage(const char* _fn)
+{
+	if (_fn && *_fn)
+		if (m_img = LICE_LoadPNG(_fn, NULL)) {
+			m_fn.Set(_fn);
+			return;
+		}
+	DELETE_NULL(m_img);
+	m_fn.Set("");
+}
+
+
 void SNM_ImageVWnd::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect) {
 	if (m_img)
 	{
@@ -319,14 +540,86 @@ void SNM_ImageVWnd::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RE
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// SNM_AddDelButton
+// SNM_TinyButton
 ///////////////////////////////////////////////////////////////////////////////
 
-void SNM_AddDelButton::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
+void OnPaintPlusOrMinus(RECT *_position, bool _en, bool _plus, LICE_IBitmap* _drawbm, int _origin_x, int _origin_y, RECT* _cliprect)
+{
+	RECT r = *_position;
+	r.left += _origin_x;
+	r.right += _origin_x;
+	r.top += _origin_y;
+	r.bottom += _origin_y;
+
+	ColorTheme* ct = SNM_GetColorTheme();
+	int col = ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255);
+	float alpha = _en ? 0.8f : 0.4f;
+
+	// border
+	LICE_Line(_drawbm,r.left,r.bottom-1,r.left,r.top,col,alpha,0,false);
+	LICE_Line(_drawbm,r.left,r.top,r.right-1,r.top,col,alpha,0,false);
+	LICE_Line(_drawbm,r.right-1,r.top,r.right-1,r.bottom-1,col,alpha,0,false);
+	LICE_Line(_drawbm,r.left,r.bottom-1,r.right-1,r.bottom-1,col,alpha,0,false);
+
+	// + or -
+	int delta = _plus ? 2:3;
+	LICE_Line(_drawbm,r.left+delta,int(r.top+((r.bottom-r.top)/2)+0.5),r.right-(delta+1),int(r.top+((r.bottom-r.top)/2)+0.5),col,alpha,0,false);
+	if (_plus)
+		LICE_Line(_drawbm,int(r.left+((r.right-r.left)/2)+0.5), r.top+delta,int(r.left+((r.right-r.left)/2)+0.5),r.bottom-(delta+1),col,alpha,0,false);
+}
+
+void SNM_TinyPlusButton::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect) {
+	OnPaintPlusOrMinus(&m_position, m_en, true, drawbm, origin_x, origin_y, cliprect);
+}
+
+void SNM_TinyMinusButton::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect) {
+	OnPaintPlusOrMinus(&m_position, m_en, false, drawbm, origin_x, origin_y, cliprect);
+}
+
+void SNM_TinyRightButton::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
 {
 	RECT r = m_position;
-	r.left+=origin_x;
-	r.right+=origin_x;
+	r.left += origin_x;
+	r.right += origin_x;
+	r.top += origin_y;
+	r.bottom += origin_y;
+
+	ColorTheme* ct = SNM_GetColorTheme();
+	int col = ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255);
+	float alpha = m_en ? 0.8f : 0.4f;
+
+	LICE_FillTriangle(drawbm, r.left, r.top, r.right-1, r.top+int((r.bottom-r.top)/2 +0.5), r.left, r.bottom-1, col, alpha);
+	// borders needed (the above ^^ draws w/o aa..)
+	LICE_Line(drawbm, r.left, r.top, r.right-1, r.top+int((r.bottom-r.top)/2 +0.5), col, alpha, 0, true);
+	LICE_Line(drawbm, r.right-1, r.top+int((r.bottom-r.top)/2 +0.5), r.left, r.bottom-1, col, alpha, 0, true);
+	LICE_Line(drawbm, r.left, r.bottom-1, r.left, r.top, col, alpha, 0, true);
+
+}
+
+void SNM_TinyLeftButton::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
+{
+	RECT r = m_position;
+	r.left += origin_x;
+	r.right += origin_x;
+	r.top += origin_y;
+	r.bottom += origin_y;
+
+	ColorTheme* ct = SNM_GetColorTheme();
+	int col = ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255);
+	float alpha = m_en ? 0.8f : 0.4f;
+
+	LICE_FillTriangle(drawbm, r.right-1, r.top, r.left, r.top+int((r.bottom-r.top)/2 +0.5), r.right-1, r.bottom-1, col, alpha);
+	// borders needed (the above ^^ draws w/o aa..)
+	LICE_Line(drawbm, r.right-1, r.top, r.left, r.top+int((r.bottom-r.top)/2 +0.5), col, alpha, 0, true);
+	LICE_Line(drawbm, r.left, r.top+int((r.bottom-r.top)/2 +0.5), r.right-1, r.bottom-1, col, alpha, 0, true);
+	LICE_Line(drawbm, r.right-1, r.bottom-1, r.right-1, r.top, col, alpha, 0, true);
+}
+
+void SNM_TinyTickBox::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
+{
+	RECT r = m_position;
+	r.left += origin_x;
+	r.right += origin_x;
 	r.top += origin_y;
 	r.bottom += origin_y;
 
@@ -340,11 +633,77 @@ void SNM_AddDelButton::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y,
 	LICE_Line(drawbm,r.right-1,r.top,r.right-1,r.bottom-1,col,alpha,0,false);
 	LICE_Line(drawbm,r.left,r.bottom-1,r.right-1,r.bottom-1,col,alpha,0,false);
 
-	// + or -
-	int delta = m_add?2:3;
-	LICE_Line(drawbm,r.left+delta,int(r.top+((r.bottom-r.top)/2)+0.5),r.right-(delta+1),int(r.top+((r.bottom-r.top)/2)+0.5),col,alpha,0,false);
-	if (m_add)
-		LICE_Line(drawbm,int(r.left+((r.right-r.left)/2)+0.5), r.top+delta,int(r.left+((r.right-r.left)/2)+0.5),r.bottom-(delta+1),col,alpha,0,false);
+	if (m_checkstate)
+		LICE_FillRect(drawbm, r.left+2, r.top+2, r.right-r.left-4, r.bottom-r.top-4, col, alpha);
+}
+
+void SNM_TinyTickBox::SetCheckState(char _state)
+{
+	if (_state != m_checkstate) {
+		m_checkstate=_state;
+		RequestRedraw(NULL);
+	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_KnobCaption
+///////////////////////////////////////////////////////////////////////////////
+
+void SNM_KnobCaption::SetPosition(const RECT* _r)
+{
+	m_position = *_r;
+	if (m_children) 
+	{
+		WDL_VWnd* knob = m_children ? m_children->Get(0) : NULL;
+		if (knob && !strcmp(knob->GetType(), "SNM_Knob"))
+		{
+			RECT r = {0,0,0,0};
+			r.right = r.bottom = SNM_GUI_W_KNOB;
+			knob->SetPosition(&r);
+		}
+	}
+ }
+
+void SNM_KnobCaption::SetValue(int _value)
+{
+	if (m_value != _value)
+	{
+		m_value = _value;
+		WDL_VWnd* knob = m_children ? m_children->Get(0) : NULL;
+		if (knob && !strcmp(knob->GetType(), "SNM_Knob"))
+			((SNM_Knob*)knob)->SetSliderPosition(_value);
+		RequestRedraw(NULL);
+	}
+}
+
+void SNM_KnobCaption::OnPaint(LICE_IBitmap *drawbm, int origin_x, int origin_y, RECT *cliprect)
+{
+	WDL_VWnd::OnPaint(drawbm, origin_x, origin_y, cliprect);
+
+	RECT r = m_position;
+	r.left += origin_x;
+	r.right += origin_x;
+	r.top += origin_y;
+	r.bottom += origin_y;
+
+	if (LICE_CachedFont* font = 
+#ifdef _WIN32
+			SNM_GetThemeFont()
+#else
+			SNM_GetFont() //JFB!!! SWELL issue: LICE_FONT_FLAG_FORCE_NATIVE won't draw multiple lines
+#endif
+		)
+	{
+		char buf[64] = "";
+		if (m_value || !m_zeroTxt.GetLength())
+			_snprintfSafe(buf, sizeof(buf), "%s\n%d %s", m_title.Get(), m_value, m_suffix.Get());
+		else
+			_snprintfSafe(buf, sizeof(buf), "%s\n%s", m_title.Get(), m_zeroTxt.Get());
+
+		RECT tr = {r.left+SNM_GUI_W_KNOB,r.top,r.right,r.bottom};
+		font->DrawText(drawbm, buf, -1, &tr, DT_VCENTER);
+	}
 }
 
 
@@ -394,13 +753,22 @@ void SNM_SkinToolbarButton(SNM_ToolbarButton* _btn, const char* _text)
 
 bool SNM_AddLogo(LICE_IBitmap* _bm, const RECT* _r, int _x, int _h)
 {
-	if (_bm)
+	LICE_IBitmap* logo = SNM_GetThemeLogo();
+	if (_bm && logo && _r)
 	{
-		LICE_IBitmap* logo = SNM_GetThemeLogo();
-		if (logo && (_x + logo->getWidth() < _r->right - 5))
+		// top right display (if no overlap with left controls)
+		if (_x>=0 && _h>=0)
 		{
-			int y = _r->top + int(_h/2 - logo->getHeight()/2 + 0.5);
-			LICE_Blit(_bm,logo,_r->right-logo->getWidth()-8,y,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+			if ((_x+logo->getWidth()) < (_r->right+SNM_GUI_X_MARGIN_LOGO))
+			{
+				int y = _r->top + int(_h/2 - logo->getHeight()/2 + 0.5);
+				LICE_Blit(_bm,logo,_r->right-(logo->getWidth()+SNM_GUI_X_MARGIN_LOGO),y,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
+				return true;
+			}
+		}
+		// bottom right display
+		else if (((_r->right-_r->left)-SNM_GUI_X_MARGIN_LOGO) > logo->getWidth() && (_r->bottom-_r->top-SNM_GUI_Y_MARGIN) > logo->getHeight()) {
+			LICE_Blit(_bm,logo,_r->right-(logo->getWidth()+SNM_GUI_X_MARGIN_LOGO),_r->bottom-_r->top-logo->getHeight()-SNM_GUI_Y_MARGIN,NULL,0.125f,LICE_BLIT_MODE_ADD|LICE_BLIT_USE_ALPHA);
 			return true;
 		}
 	}
@@ -470,7 +838,7 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 				width = skin->image->getWidth() / 3;
 				height = skin->image->getHeight();
 				if (!strcmp(_comp->GetType(), "SNM_ToolbarButton")) {
-					width = int(2.6*width); // larger toolbar buttons!
+					width = int(2.3*width); // larger toolbar buttons!
 					height = int(0.75*height + 0.5) + 1; // +1 for text vertical alignment
 				}
 				// .. can be changed below! (i.e. adapt to larger text)
@@ -484,18 +852,24 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 				if ((tr.right+int(height/2 + 0.5)) > width)
 					width = int(tr.right + height/2 + 0.5); // +height/2 for some room
 
-				if (btn->GetCheckState() != -1) {
+				if (btn->GetCheckState() == -1) // basic button
+					width = width<55 ? 55 : width; // ensure a min width
+				else { // tick box
 					width += tr.bottom; // for the tick zone
 					height -= 2;
 				}
 			}
 		}
-		else  if (!strcmp(_comp->GetType(), "SNM_MiniAddDelButtons")) {
+		else  if (!strcmp(_comp->GetType(), "SNM_KnobCaption")) {
+			width=SNM_GUI_W_KNOB*3;
+			height=SNM_GUI_W_KNOB;
+		}
+		else  if (!strcmp(_comp->GetType(), "SNM_TwoTinyButtons")) {
 			width=9;
 			height=9*2+1;
 		}
-		else if (!strcmp(_comp->GetType(), "SNM_MiniKnob"))
-			width=height=25;
+		else if (!strcmp(_comp->GetType(), "SNM_Knob"))
+			width=height=SNM_GUI_W_KNOB;
 
 
 		// *** set position/visibility ***
@@ -509,15 +883,15 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 			case DT_LEFT:
 			{
 				_comp->SetUserData(DT_LEFT);
-				if (*_x+width > _r->right-10) // enough horizontal room?
+				if (*_x+width > _r->right-SNM_GUI_X_MARGIN) // enough horizontal room?
 				{
-					if (*_x+20 > (_r->right-10)) // ensures a minimum width
+					if (*_x+25 > (_r->right-SNM_GUI_X_MARGIN)) // ensures a minimum width (25 pix)
 					{
 						if (_tiedComp && _tiedComp->IsVisible())
 							_tiedComp->SetVisible(false);
 						return false;
 					}
-					width = _r->right - 10 - *_x; // force width
+					width = _r->right - SNM_GUI_X_MARGIN - *_x; // force width
 				}
 				RECT tr = {*_x, _y, *_x+width, _y+height};
 				_comp->SetPosition(&tr);
@@ -527,7 +901,7 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 			case DT_RIGHT:
 			{
 				_comp->SetUserData(DT_RIGHT);
-				if ((*_x-width) > (_r->left+10) &&
+				if ((*_x-width) > (_r->left+SNM_GUI_X_MARGIN) &&
 /*JFB does not *always* work, replaced with SNM_HasLeftVWnd()
 					!_comp->GetParent()->VirtWndFromPoint(*_x-width, int((_y+_h)/2+0.5))
 */

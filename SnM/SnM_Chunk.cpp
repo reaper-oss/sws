@@ -116,9 +116,6 @@ bool SNM_SendPatcher::NotifyChunkLine(int _mode,
 			m_breakParsePatch = true;
 		}
 		break;
-
-		default:
-			break;
 	}
 	return update; 
 }
@@ -148,7 +145,7 @@ bool SNM_SendPatcher::AddReceive(MediaTrack* _srcTr, SNM_SndRcv* _io)
 }
 
 int SNM_SendPatcher::RemoveReceives() {
-/* can fail since v4.1: freeze support
+/* can fail since v4.1: freeze
 	return RemoveLines("AUXRECV");
 */
 	return RemoveLine("TRACK", "AUXRECV", 1, -1, "MIDIOUT");
@@ -163,7 +160,7 @@ int SNM_SendPatcher::RemoveReceivesFrom(MediaTrack* _srcTr)
 	char buf[32];
 	return _snprintfStrict(buf, sizeof(buf), "AUXRECV %d", srcId-1)>0 && RemoveLines(buf);
 */
-	return (ParsePatch(-2, 1, "TRACK", "AUXRECV", -1, -1, NULL, NULL, "MIDIOUT") > 0);
+	return ParsePatch(-2, 1, "TRACK", "AUXRECV", -1, -1, NULL, NULL, "MIDIOUT");
 }
 
 
@@ -540,7 +537,7 @@ WDL_FastString* SNM_TakeParserPatcher::GetChunk()
 // GetChunk() comments. Also see important comments for SNM_ChunkParserPatcher::Commit()
 bool SNM_TakeParserPatcher::Commit(bool _force)
 {
-	if (m_reaObject && (m_updates || _force) && m_chunk->GetLength() && !(GetPlayState() & 4))
+	if (m_reaObject && (m_updates || _force) && m_chunk->GetLength() && !(GetPlayStateEx(NULL) & 4))
 	{
 // SNM_ChunkParserPatcher::Commit() mod ----->
 		if (m_fakeTake)

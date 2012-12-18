@@ -35,20 +35,31 @@
 // General project helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-// note: works with time sig markers too
-double GetProjectLength()
+double GetProjectLength(bool _items, bool _inclRgnsMkrs)
 {
-	double prjlen = 0.0;
-	for (int i=1; i <= GetNumTracks(); i++) // skip master
-		if (MediaTrack* tr = CSurf_TrackFromID(i, false))
-			for (int j=0; j < GetTrackNumMediaItems(tr); j++)
-				if (MediaItem* item = GetTrackMediaItem(tr,j))
-				{
-					double pos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
-					double len = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
-					if ((pos+len)>prjlen)
-						prjlen = pos+len;
-				}
+	double prjlen = 0.0, pos, end;
+	if (_inclRgnsMkrs)
+	{
+		int x=0; bool isRgn;
+		while (x = EnumProjectMarkers2(NULL, x, &isRgn, &pos, &end, NULL, NULL)) {
+			if (isRgn) { if (end > prjlen) prjlen = end; }
+			else { if (pos > prjlen) prjlen = pos; }
+		}
+	}
+	if (_items)
+	{
+		double len;
+		for (int i=1; i <= GetNumTracks(); i++) // skip master
+			if (MediaTrack* tr = CSurf_TrackFromID(i, false))
+				for (int j=0; j < GetTrackNumMediaItems(tr); j++)
+					if (MediaItem* item = GetTrackMediaItem(tr,j))
+					{
+						pos = *(double*)GetSetMediaItemInfo(item, "D_POSITION", NULL);
+						len = *(double*)GetSetMediaItemInfo(item, "D_LENGTH", NULL);
+						if ((pos+len)>prjlen)
+							prjlen = pos+len;
+					}
+	}
 	return prjlen;
 }
 
@@ -92,20 +103,42 @@ char g_lastSilenceVal[3][64] = {"10.0", "1.0", "512"};
 void InsertSilence(COMMAND_T* _ct)
 {
 	char val[64]="";
-	lstrcpyn(val, g_lastSilenceVal[(int)_ct->user], 64);
+	lstrcpyn(val, g_lastSilenceVal[(int)_ct->user], sizeof(val));
 
-	int modeoverride;
-	switch ((int)_ct->user) {
-		case 0: modeoverride = 3; break; // s
-		case 1: modeoverride = 2; break; // meas.beat
-		case 2: modeoverride = 4; break; // smp
-	}
-	if (PromptUserForString(GetMainHwnd(), SWS_CMD_SHORTNAME(_ct), val, 64) && *val)
+	if (PromptUserForString(GetMainHwnd(), SWS_CMD_SHORTNAME(_ct), val, sizeof(val)) && *val)
 	{
-		double t = parse_timestr_len(val, 0.0, modeoverride);
-		if (t>0.0) {
-			lstrcpyn(g_lastSilenceVal[(int)_ct->user], val, 64);
-			InsertSilence(SWS_CMD_SHORTNAME(_ct), GetCursorPositionEx(NULL), t); // includes undo point
+		double pos = GetCursorPositionEx(NULL), len = 0.0;
+		switch ((int)_ct->user)
+		{
+			case 0: // s
+				len = parse_timestr_len(val, pos, 3);
+				break;
+			case 1: // meas.beat
+/*no! would not take get tempo markers into account since 'val' is not inserted yet
+				len = parse_timestr_len(val, pos, 2);
+				break;
+*/
+				if (char* p = strchr(val, '.'))
+				{
+					*p = '\0';
+					int in_meas = atoi(val);
+					double in_beats = p[1] ? atof(p+1) : 0.0;
+
+					double bpm; int num, den;
+					TimeMap_GetTimeSigAtTime(NULL, pos, &num, &den, &bpm);
+					len = in_beats*(60.0/bpm) + in_meas*((240.0*num/den)/bpm);
+
+					*p = '.'; // restore val (used below)
+				}
+				break;
+			case 2: // smp
+				len = parse_timestr_len(val, pos, 4);
+				break;
+		}
+
+		if (len>0.0) {
+			lstrcpyn(g_lastSilenceVal[(int)_ct->user], val, sizeof(val));
+			InsertSilence(SWS_CMD_SHORTNAME(_ct), pos, len); // includes undo point
 		}
 		else
 			MessageBox(GetMainHwnd(), __LOCALIZE("Invalid input!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
@@ -130,24 +163,21 @@ void OpenProjectPathInExplorerFinder(COMMAND_T*)
 // Select project ("MIDI CC absolute only" actions)
 ///////////////////////////////////////////////////////////////////////////////
 
-class SNM_SelectProjectScheduledJob : public SNM_ScheduledJob
+class SelectProjectJob : public SNM_MidiActionJob
 {
 public:
-	SNM_SelectProjectScheduledJob(int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd) 
-		: SNM_ScheduledJob(SNM_SCHEDJOB_SEL_PRJ, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd) {}
+	SelectProjectJob(int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd) 
+		: SNM_MidiActionJob(SNM_SCHEDJOB_SEL_PRJ,_approxDelayMs,_val,_valhw,_relmode,_hwnd) {}
 	void Perform() {
-		if (ReaProject* proj = Enum_Projects(m_val, NULL, 0))
+		if (ReaProject* proj = Enum_Projects(m_val, NULL, 0)) // project number is 0-based
 			SelectProjectInstance(proj);
 	}
-protected:
-	int m_val, m_valhw, m_relmode;
-	HWND m_hwnd;
 };
 
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
 	if (!_relmode && _valhw < 0) { // Absolute CC only
-		SNM_SelectProjectScheduledJob* job = 
-			new SNM_SelectProjectScheduledJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd);
+		SelectProjectJob* job = 
+			new SelectProjectJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd);
 		AddOrReplaceScheduledJob(job);
 	}
 }

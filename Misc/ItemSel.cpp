@@ -25,9 +25,11 @@
 /
 ******************************************************************************/
 
+//JFB most of actions in there do not set undo points: normal?
 
 #include "stdafx.h"
 #include "ItemSel.h"
+
 
 void UnselOnTracks(COMMAND_T* = NULL)
 {
@@ -201,7 +203,7 @@ void SelPrevItem(COMMAND_T* ctx)
 	}
 }
 
-void SelMutedItems(COMMAND_T* = NULL)
+void SelMutedItems(COMMAND_T* ct)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
@@ -209,13 +211,15 @@ void SelMutedItems(COMMAND_T* = NULL)
 		for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
 		{
 			MediaItem* mi = GetTrackMediaItem(tr, j);
-			GetSetMediaItemInfo(mi, "B_UISEL", (bool*)GetSetMediaItemInfo(mi, "B_MUTE", NULL));
+			bool sel = *(bool*)GetSetMediaItemInfo(mi, "B_MUTE", NULL);
+			if ((int)ct->user == 0) sel = !sel;
+			GetSetMediaItemInfo(mi, "B_UISEL", &sel);
 		}
 	}
 	UpdateTimeline();
 }
 
-void SelMutedItemsSel(COMMAND_T* = NULL)
+void SelMutedItemsSel(COMMAND_T* ct)
 {
 	for (int i = 1; i <= GetNumTracks(); i++)
 	{
@@ -224,7 +228,9 @@ void SelMutedItemsSel(COMMAND_T* = NULL)
 			for (int j = 0; j < GetTrackNumMediaItems(tr); j++)
 			{
 				MediaItem* mi = GetTrackMediaItem(tr, j);
-				GetSetMediaItemInfo(mi, "B_UISEL", (bool*)GetSetMediaItemInfo(mi, "B_MUTE", NULL));
+				bool sel = *(bool*)GetSetMediaItemInfo(mi, "B_MUTE", NULL);
+				if ((int)ct->user == 0) sel = !sel;
+				GetSetMediaItemInfo(mi, "B_UISEL", &sel);
 			}
 	}
 	UpdateTimeline();
@@ -389,8 +395,10 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS: Select upper-leftmost item on selected track(s)" },					"SWS_SELULI",			SelULItem,			},
 	{ { DEFACCEL, "SWS: Unselect upper-leftmost item on selected track(s)" },				"SWS_UNSELULI",			UnselULItem,		},
 	{ { DEFACCEL, "SWS: Toggle selection of items on selected track(s)" },					"SWS_TOGITEMSEL",		TogItemSel,			},
-	{ { DEFACCEL, "SWS: Select muted items" },												"SWS_SELMUTEDITEMS",	SelMutedItems,		},
-	{ { DEFACCEL, "SWS: Select muted items on selected track(s)" },							"SWS_SELMUTEDITEMS2",	SelMutedItemsSel,	},
+	{ { DEFACCEL, "SWS: Select muted items" },												"SWS_SELMUTEDITEMS",	SelMutedItems,		NULL, 1, },
+	{ { DEFACCEL, "SWS: Select unmuted items" },											"SWS_SELUNMUTEDITEMS",	SelMutedItems,		NULL, 0, },
+	{ { DEFACCEL, "SWS: Select muted items on selected track(s)" },							"SWS_SELMUTEDITEMS2",	SelMutedItemsSel,	NULL, 1, },
+	{ { DEFACCEL, "SWS: Select unmuted items on selected track(s)" },						"SWS_SELUNMUTEDITEMS2",	SelMutedItemsSel,	NULL, 0, },
 	{ { DEFACCEL, "SWS: Select next item (across tracks)" },								"SWS_SELNEXTITEM",		SelNextItem,		NULL, 0, },
 	{ { DEFACCEL, "SWS: Select previous item (across tracks)" },							"SWS_SELPREVITEM",		SelPrevItem,		NULL, 0, },
 	{ { DEFACCEL, "SWS: Select next item, keeping current selection (across tracks)" },		"SWS_SELNEXTITEM2",		SelNextItem,		NULL, 1 },

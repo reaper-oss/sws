@@ -302,52 +302,60 @@ HWND GetActionListBox(char* _currentSection, int _sectionSz)
 #endif
 
 
-// returns the list view's selected item, -1 if failed, -2 if the related action's custom id cannot be retrieved (hidden column)
+// returns the list view's selected item, or:
+// -1 if the action wnd is not opened
+// -2 if the custom id cannot be retrieved (hidden column)
+// -3 if there is no selected action
 // note: no multi-selection mgmt here..
 // API LIMITATION: things like kbd_getTextFromCmd() cannot work for other sections than the main one
 int GetSelectedAction(char* _section, int _secSize, int* _cmdId, char* _id, int _idSize, char* _desc, int _descSize)
 {
 	HWND hList = GetActionListBox(_section, _secSize);
-	if (hList && SNM_ListView_GetSelectedCount(hList))
+	if (hList)
 	{
-		LVITEM li;
-		li.mask = LVIF_STATE | LVIF_PARAM;
-		li.stateMask = LVIS_SELECTED;
-		li.iSubItem = 0;
-		for (int i=0; i < SNM_ListView_GetItemCount(hList); i++)
+		if (SNM_ListView_GetSelectedCount(hList))
 		{
-			li.iItem = i;
-			SNM_ListView_GetItem(hList, &li);
-			if (li.state == LVIS_SELECTED)
+			LVITEM li;
+			li.mask = LVIF_STATE | LVIF_PARAM;
+			li.stateMask = LVIS_SELECTED;
+			li.iSubItem = 0;
+			for (int i=0; i < SNM_ListView_GetItemCount(hList); i++)
 			{
-				int cmdId = (int)li.lParam;
-				if (_cmdId) *_cmdId = cmdId;
-
-				char actionName[SNM_MAX_ACTION_NAME_LEN] = "";
-				SNM_ListView_GetItemText(hList, i, 1, actionName, SNM_MAX_ACTION_NAME_LEN); //JFB displaytodata? (ok: columns not re-orderable yet)
-				if (_desc && _descSize > 0)
-					lstrcpyn(_desc, actionName, _descSize);
-
-				if (_id && _idSize > 0)
+				li.iItem = i;
+				SNM_ListView_GetItem(hList, &li);
+				if (li.state == LVIS_SELECTED)
 				{
-					// SWS action? => get the custom id in a reliable way
-					if (!_section || (_section && !strcmp(_section,__localizeFunc("Main","accel_sec",0))))
-						if (COMMAND_T* ct = SWSGetCommandByID(cmdId))
-							return (_snprintfStrict(_id, _idSize, "_%s", ct->id)>0 ? i : -1);
+					int cmdId = (int)li.lParam;
+					if (_cmdId) *_cmdId = cmdId;
 
-					// best effort to get the custom id (relies on displayed columns..)
-					SNM_ListView_GetItemText(hList, i, 4, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
-					if (!*_id)
+					char actionName[SNM_MAX_ACTION_NAME_LEN] = "";
+					SNM_ListView_GetItemText(hList, i, 1, actionName, SNM_MAX_ACTION_NAME_LEN); //JFB displaytodata? (ok: columns not re-orderable yet)
+					if (_desc && _descSize > 0)
+						lstrcpyn(_desc, actionName, _descSize);
+
+					if (_id && _idSize > 0)
 					{
-						if (!IsMacro(actionName))
-							return (_snprintfStrict(_id, _idSize, "%d", (int)li.lParam)>0 ? i : -1);
-						else
-							return -2;
+						// SWS action? => get the custom id in a reliable way
+						if (!_section || (_section && !strcmp(_section,__localizeFunc("Main","accel_sec",0))))
+							if (COMMAND_T* ct = SWSGetCommandByID(cmdId))
+								return (_snprintfStrict(_id, _idSize, "_%s", ct->id)>0 ? i : -1);
+
+						// best effort to get the custom id (relies on displayed columns..)
+						SNM_ListView_GetItemText(hList, i, 4, _id, _idSize);  //JFB displaytodata? (ok: columns not re-orderable yet)
+						if (!*_id)
+						{
+							if (!IsMacro(actionName))
+								return (_snprintfStrict(_id, _idSize, "%d", (int)li.lParam)>0 ? i : -1);
+							else
+								return -2;
+						}
 					}
+					return i;
 				}
-				return i;
 			}
 		}
+		else
+			return -3;
 	}
 	return -1;
 }
@@ -356,19 +364,26 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, const char* _expectedLocal
 {
 	char section[SNM_MAX_SECTION_NAME_LEN] = "";
 	int actionId, selItem = GetSelectedAction(section, SNM_MAX_SECTION_NAME_LEN, &actionId, _idstrOut, _idStrSz);
-	if (strcmp(section, _expectedLocalizedSection))
-		selItem = -1;
+	if (selItem>=0 && strcmp(section, _expectedLocalizedSection))
+		selItem = -4;
 	switch (selItem)
 	{
-		case -2:
-			MessageBox(GetMainHwnd(), __LOCALIZE("Action learn failed!\nAction IDs are not displayed in the Actions window (right-click on the table header: Show action IDs).","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
-			return false;
-		case -1: {
-			char msg[256];
-			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Action learn failed!\nActions window not opened, section '%s' not selected or no selected action!","sws_mbox"), _expectedLocalizedSection);
+		case -4: {
+			char msg[256]="";
+			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Section \"%s\" is not selected in the \"Actions\" window!","sws_mbox"), _expectedLocalizedSection);
 			MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			return false;
 		}
+		case -3:
+			MessageBox(GetMainHwnd(), __LOCALIZE("There is no selected action in the \"Actions\" window!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			return false;
+		case -2:
+			MessageBox(GetMainHwnd(), __LOCALIZE("Action IDs are not available in the \"Actions\" window!\nRight-click on the table header > Show action IDs.","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			return false;
+		case -1:
+			if (IDYES == MessageBox(GetMainHwnd(), __LOCALIZE("\"Actions\" window not opened!\nDo you want to open it?","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_YESNO))
+				ShowActionList(NULL, NULL);
+			return false;
 	}
 	return true;
 }
@@ -406,7 +421,7 @@ bool LearnAction(int _cmdId)
 			{
 				SendMessage(h, WM_COMMAND, 0x8, 0);
 				SetWindowText(GetDlgItem(h, 0x52C), oldFilter); // restore filter
-				SendMessage(h, WM_CLOSE, 0, 0);
+//				SendMessage(h, WM_CLOSE, 0, 0);
 			}
 		}
 	}
@@ -499,7 +514,7 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 	}
 	else
 	{
-		WDL_FastString msg(__LOCALIZE("Dump failed: action window not opened!","sws_mbox"));
+		WDL_FastString msg(__LOCALIZE("Dump failed: \"Actions\" window not opened!","sws_mbox"));
 		msg.Append("\n\n");
 		msg.Append(help);
 		MessageBox(GetMainHwnd(), msg.Get(), _title, MB_OK);

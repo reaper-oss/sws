@@ -34,12 +34,16 @@
 // see eof for includes!
 
 
+// compil flags
 //#define _SNM_DEBUG
+//#define _SNM_DYN_FONT_DEBUG
 //#define _SNM_MISC	// not released, deprecated, tests, etc..
 //#define _SNM_WDL	// if my wdl version is used
 //#define _SNM_STANDALONE
 //#define _SNM_CSURF_PROXY
 
+
+#define SNM_INI_FILE_VERSION		7
 
 #ifdef _WIN32
 #define SNM_FORMATED_INI_FILE		"%s\\S&M.ini"
@@ -51,9 +55,11 @@
 #define SNM_EXTENSION_FILE			"%s\\Plugins\\reaper_snm.dll"
 #define SNM_FONT_NAME				"MS Shell Dlg"
 #define SNM_FONT_HEIGHT				14
-#define SNM_TOP_GUI_HEIGHT			36
-#define SNM_BOT_GUI_HEIGHT			41
+#define SNM_DYN_FONT_NAME			"Arial" // good default for UTF8
 #define SNM_1PIXEL_Y				1
+#define SNM_GUI_TOP_H				36
+#define SNM_GUI_BOT_H				41
+#define SNM_COL_RED_MONITOR			0x0000BE
 #else
 #define SNM_FORMATED_INI_FILE		"%s/S&M.ini"
 #define SNM_OLD_FORMATED_INI_FILE	"%s/Plugins/S&M.ini"
@@ -63,24 +69,27 @@
 #define SNM_CYCLACTION_EXPORT_FILE	"%s/S&M_Cyclactions_export.ini"
 #define SNM_EXTENSION_FILE			"%s/UserPlugins/reaper_snm.dylib"
 #define SNM_FONT_NAME				"Lucida Grande"
-#ifndef __LP64__ //JFB!!! wtf!? same font, different look on x64!
+#ifndef __LP64__					//JFB!!! wtf!? same font, different look on x64!
 #define SNM_FONT_HEIGHT				10
 #else
 #define SNM_FONT_HEIGHT				11
 #endif
-#define SNM_TOP_GUI_HEIGHT			37
-#define SNM_BOT_GUI_HEIGHT			43
+#define SNM_DYN_FONT_NAME			"Arial" // good default for UTF8
 #define SNM_1PIXEL_Y				(-1)
+#define SNM_GUI_TOP_H				37
+#define SNM_GUI_BOT_H				43
+#define SNM_COL_RED_MONITOR			0xBE0000
 #endif
 
-#ifndef _SNM_STANDALONE
-#define SNM_INI_FILE_VERSION		6
-#else
-#define SNM_INI_FILE_VERSION		7
-#endif
+#define SNM_GUI_X_MARGIN			6
+#define SNM_GUI_X_MARGIN_OLD		8
+#define SNM_GUI_X_MARGIN_LOGO		SNM_GUI_X_MARGIN-4
+#define SNM_GUI_Y_MARGIN			5
+#define SNM_GUI_W_KNOB				26
 #define SNM_MAX_PATH				2048
-#define SNM_LIVECFG_NB_CONFIGS		8
-#define SNM_SNM_SECTION_1ST_CMD_ID	40000
+#define SNM_LIVECFG_NB_CONFIGS		4
+#define SNM_SECTION_1ST_CMD_ID		40000
+
 #define SNM_MAX_TRACK_GROUPS		32
 #define SNM_MAX_CUE_BUSS_CONFS		8
 #define SNM_INI_EXT_LIST			"INI files (*.INI)\0*.INI\0All Files\0*.*\0"
@@ -116,16 +125,22 @@
 #define SNM_MARKER_MASK				1
 #define SNM_REGION_MASK				2
 
-// scheduled jobs ids
-// note: [0..7] are reserved for Live Configs MIDI CC actions
-#define SNM_SCHEDJOB_LIVECFG_TLCHANGE	8
-#define SNM_SCHEDJOB_NOTEHLP_UPDATE		9
-#define SNM_SCHEDJOB_SEL_PRJ			10
-#define SNM_SCHEDJOB_TRIG_PRESET		11
-#define SNM_SCHEDJOB_CYCLACTION			12
-#define SNM_SCHEDJOB_PLAYLIST_UPDATE	13
+// scheduled job ids
+// note: [0 .. SNM_LIVECFG_NB_CONFIGS-1] are reserved for "apply live config" actions
+//       [SNM_LIVECFG_NB_CONFIGS .. 2*SNM_LIVECFG_NB_CONFIGS-1] are reserved for "preload live config" actions
+#define SNM_SCHEDJOB_LIVECFG_APPLY			0
+#define SNM_SCHEDJOB_LIVECFG_PRELOAD		SNM_SCHEDJOB_LIVECFG_APPLY + SNM_LIVECFG_NB_CONFIGS
+#define SNM_SCHEDJOB_LIVECFG_UPDATE			SNM_SCHEDJOB_LIVECFG_PRELOAD + SNM_LIVECFG_NB_CONFIGS
+#define SNM_SCHEDJOB_LIVECFG_FADE_UPDATE	SNM_SCHEDJOB_LIVECFG_UPDATE + 1
+#define SNM_SCHEDJOB_LIVECFG_UNDO			SNM_SCHEDJOB_LIVECFG_FADE_UPDATE + 1
+#define SNM_SCHEDJOB_NOTEHLP_UPDATE			SNM_SCHEDJOB_LIVECFG_UNDO + 1
+#define SNM_SCHEDJOB_SEL_PRJ				SNM_SCHEDJOB_NOTEHLP_UPDATE + 1
+#define SNM_SCHEDJOB_TRIG_PRESET			SNM_SCHEDJOB_SEL_PRJ + 1
+#define SNM_SCHEDJOB_CYCLACTION				SNM_SCHEDJOB_TRIG_PRESET + 1
+#define SNM_SCHEDJOB_PLAYLIST_UPDATE		SNM_SCHEDJOB_CYCLACTION + 1
 
-/* replaced with a common SWS_CMD_SHORTNAME
+
+/*JFB replaced with a common SWS_CMD_SHORTNAME
 #define SNM_CMD_SHORTNAME(_ct) (GetLocalizedActionName(_ct->id, _ct->accel.desc) + 9) // +9 to skip "SWS/S&M: "
 */
 
@@ -139,10 +154,21 @@ static void deletefaststrptr(WDL_FastString* _p) { DELETE_NULL(_p); }
 class SNM_ScheduledJob {
 public:
 	SNM_ScheduledJob(int _id, int _approxDelayMs)
-		: m_id(_id), m_tick((int)floor((_approxDelayMs/SNM_CSURF_RUN_TICK_MS) + 0.5)) {}
+		: m_id(_id), m_tick((int)floor((_approxDelayMs/SNM_CSURF_RUN_TICK_MS) + 0.5)),m_isPerforming(false) {}
 	virtual ~SNM_ScheduledJob() {}
 	virtual void Perform() {}
 	int m_id, m_tick;
+	bool m_isPerforming;
+};
+
+class SNM_MidiActionJob : public SNM_ScheduledJob {
+public:
+	SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd) 
+		: SNM_ScheduledJob(_jobId, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd) {}
+	virtual void Perform() {}
+protected:
+	int m_val, m_valhw, m_relmode;
+	HWND m_hwnd;
 };
 
 class SNM_MarkerRegionSubscriber {
@@ -151,6 +177,14 @@ public:
 	virtual ~SNM_MarkerRegionSubscriber() {}
 	// _updateFlags: 1 marker update, 2 region update, 3 both region & marker updates
 	virtual void NotifyMarkerRegionUpdate(int _updateFlags) {}
+};
+
+class SNM_TrackInt {
+public:
+	SNM_TrackInt(MediaTrack* _tr, int _i) : m_tr(_tr), m_int(_i) {}
+	~SNM_TrackInt() {}
+	MediaTrack* m_tr;
+	int m_int;
 };
 
 typedef struct MIDI_COMMAND_T {
@@ -182,14 +216,17 @@ void RefreshToolbars();
 void FakeToggle(COMMAND_T*);
 bool FakeIsToggleAction(COMMAND_T*);
 void Stuff(COMMAND_T*);
+
 int SNM_RegisterDynamicCommands(COMMAND_T* _pCommands);
 bool SNM_HasExtension();
 int SNM_Init(reaper_plugin_info_t* _rec);
 void SNM_Exit();
+
 void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
-void DeleteScheduledJob(int _id);
+
 bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub);
 bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
+
 void SNM_CSurfRun();
 void SNM_CSurfSetTrackTitle();
 void SNM_CSurfSetTrackListChange();

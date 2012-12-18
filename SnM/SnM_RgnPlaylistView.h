@@ -30,55 +30,56 @@
 #ifndef _SNM_PLAYLISTVIEW_H_
 #define _SNM_PLAYLISTVIEW_H_
 
-#include "../MarkerList/MarkerListClass.h"
+#include "SnM_Util.h"
 
-class SNM_Playlist_MarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
+
+class PlaylistMarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {
 public:
-	SNM_Playlist_MarkerRegionSubscriber() : SNM_MarkerRegionSubscriber() {}
+	PlaylistMarkerRegionSubscriber() : SNM_MarkerRegionSubscriber() {}
 	void NotifyMarkerRegionUpdate(int _updateFlags);
 };
 
-// note: no other attributes (like a comment) because of
-// the playlist "auto-compacting" feature..
+// no other attributes (like a comment) because of the "auto-compacting" feature..
 class SNM_PlaylistItem {
 public:
-	SNM_PlaylistItem(int _rgnId=-1, int _cnt=1, int _playReq=0) : m_rgnId(_rgnId),m_cnt(_cnt),m_playReq(_playReq) {}
-	int m_rgnId, m_cnt, m_playReq;
+	SNM_PlaylistItem(int _rgnId=-1, int _cnt=1) : m_rgnId(_rgnId),m_cnt(_cnt) {}
+	bool IsValidIem() { return (m_rgnId>0 && m_cnt!=0 && GetMarkerRegionIndexFromId(NULL, m_rgnId)>=0); }
+	double GetPos() { if (m_rgnId>0) { double pos; if (EnumMarkerRegionById(NULL, m_rgnId, NULL, &pos, NULL, NULL, NULL, NULL)) return pos; } return 0.0; }
+	int m_rgnId, m_cnt;
 };
 
-class SNM_Playlist : public WDL_PtrList<SNM_PlaylistItem>
-{
+class SNM_Playlist : public WDL_PtrList<SNM_PlaylistItem> {
 public:
-	SNM_Playlist(SNM_Playlist* _p = NULL, const char* _name = NULL)
-		: m_name(_name), WDL_PtrList<SNM_PlaylistItem>() {
-		if (_p) {
-			for (int i=0; i < _p->GetSize(); i++)
-				Add(new SNM_PlaylistItem(_p->Get(i)->m_rgnId, _p->Get(i)->m_cnt));
-			if (!_name)
-				m_name.Set(_p->m_name.Get());
-		}
-	}
+	SNM_Playlist(SNM_Playlist* _pl = NULL, const char* _name = NULL);
 	SNM_Playlist(const char* _name) : m_name(_name), WDL_PtrList<SNM_PlaylistItem>() {}
 	~SNM_Playlist() {}
+	bool IsValidIem(int _i);
+	int IsInPlaylist(double _pos, bool _repeat, int _startWith);
+	int IsInfinite();
+	double GetLength();
+	int GetNestedMarkerRegion();
+	int GetGreaterMarkerRegion(double _pos);
 	WDL_FastString m_name;
 };
 
 class SNM_Playlists : public WDL_PtrList<SNM_Playlist>
 {
 public:
-	SNM_Playlists() : m_cur(0), WDL_PtrList<SNM_Playlist>() {}
+	SNM_Playlists() : m_editId(0), WDL_PtrList<SNM_Playlist>() {}
 	~SNM_Playlists() {}
-	int m_cur; // *edited* playlist id
+	int m_editId; // edited playlist id
 };
 
 class SNM_PlaylistView : public SWS_ListView {
 public:
 	SNM_PlaylistView(HWND hwndList, HWND hwndEdit);
+	void Update();
 	void UpdateCompact();
 protected:
 	void GetItemText(SWS_ListItem* item, int iCol, char* str, int iStrMax);
 	void GetItemList(SWS_ListItemList* pList);
 	void SetItemText(SWS_ListItem* item, int iCol, const char* str);
+	void OnItemClk(SWS_ListItem* item, int iCol, int iKeyState);
 	void OnItemDblClk(SWS_ListItem* item, int iCol);
 	int OnItemSort(SWS_ListItem* _item1, SWS_ListItem* _item2);
 	void OnBeginDrag(SWS_ListItem* item);
@@ -94,7 +95,7 @@ public:
 	~SNM_RegionPlaylistWnd() {}
 	void GetMinSize(int* w, int* h) { *w=202; *h=175; }
 	void OnCommand(WPARAM wParam, LPARAM lParam);
-	void Update(int _flags = 3);
+	void Update(int _flags = 0);
 	void UpdateMonitoring();
 	void FillPlaylistCombo();
 	void CSurfSetTrackListChange();
@@ -108,36 +109,42 @@ protected:
 	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
 	bool GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz);
 
-	SNM_Playlist_MarkerRegionSubscriber m_mkrRgnSubscriber;
+	PlaylistMarkerRegionSubscriber m_mkrRgnSubscriber;
 
-	WDL_VirtualIconButton m_btnLock;
-	WDL_VirtualStaticText m_txtPlaylist, m_txtLength;
+	WDL_VirtualStaticText m_txtPlaylist;
 	WDL_VirtualComboBox m_cbPlaylist;
-	SNM_MiniAddDelButtons m_btnsAddDel;
+	SNM_TwoTinyButtons m_btnsAddDel;
+	SNM_TinyPlusButton m_btnAdd;
+	SNM_TinyMinusButton m_btnDel;
 	SNM_ToolbarButton m_btnCrop;
-	WDL_VirtualIconButton m_btnPlay, m_btnStop, m_btnRepeat;
-	SNM_DynamicSizedText m_monPl, m_monCur, m_monNext;
+	WDL_VirtualIconButton m_btnLock, m_btnPlay, m_btnStop, m_btnRepeat;
+	SNM_DynSizedText m_monPl;
+	SNM_FiveMonitors m_mons;
+	SNM_DynSizedText m_txtMon[5];
 };
 
-class SNM_Playlist_UpdateJob : public SNM_ScheduledJob {
+class PlaylistUpdateJob : public SNM_ScheduledJob {
 public:
-	SNM_Playlist_UpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_PLAYLIST_UPDATE, 150) {}
+	PlaylistUpdateJob() : SNM_ScheduledJob(SNM_SCHEDJOB_PLAYLIST_UPDATE, 150) {}
 	void Perform();
 };
 
-double GetPlayListLength(SNM_Playlist* _playlist);
-int GetNextValidItem(int _playlistId, int _itemId, bool _ignoreLoops, bool _startWith);
-int GetPrevValidItem(int _playlistId, int _itemId, bool _ignoreLoops, bool _startWith);
+int GetNextValidItem(int _playlistId, int _itemId, bool _startWith, bool _repeat);
+int GetPrevValidItem(int _playlistId, int _itemId, bool _startWith, bool _repeat);
+bool SeekItem(int _plId, int _nextItemId, int _curItemId);
 void PlaylistRun();
-void PlaylistPlay(int _playlistId, int _itemId, bool _smoothSeek = true);
+void PlaylistPlay(int _playlistId, int _itemId);
 void PlaylistPlay(COMMAND_T*);
 void PlaylistSeekPrevNext(COMMAND_T*);
 void PlaylistStop();
 void PlaylistStopped();
+void PlaylistResync();
 void SetPlaylistRepeat(COMMAND_T*);
 bool IsPlaylistRepeat(COMMAND_T*);
+
 void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode);
 void AppendPasteCropPlaylist(COMMAND_T*);
+
 int RegionPlaylistInit();
 void RegionPlaylistExit();
 void OpenRegionPlaylist(COMMAND_T*);

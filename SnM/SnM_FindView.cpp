@@ -25,20 +25,23 @@
 /
 ******************************************************************************/
 
+//JFB intentionally not localized (better version in a drawer..)
 
 #include "stdafx.h"
 #include "SnM.h"
 #include "../Zoom.h"
 
+
+#define FIND_INI_SEC			"Find"
 #define MAX_SEARCH_STR_LEN		128
 
 enum {
   TXTID_SCOPE=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
-  BUTTONID_FIND,
-  BUTTONID_PREV,
-  BUTTONID_NEXT,
-  BUTTONID_ZOOM_SCROLL_EN,
-  COMBOID_TYPE,
+  BTNID_FIND,
+  BTNID_PREV,
+  BTNID_NEXT,
+  BTNID_ZOOM_SCROLL_EN,
+  CMBID_TYPE,
   TXTID_RESULT
 //  ,LOGOID
 };
@@ -136,31 +139,31 @@ void SNM_FindWnd::OnInitDlg()
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
 
 	// Load prefs 
-	m_type = GetPrivateProfileInt("FIND_VIEW", "Type", 0, g_SNMIniFn.Get());
-	m_zoomSrollItems = (GetPrivateProfileInt("FIND_VIEW", "ZoomScrollToFoundItems", 0, g_SNMIniFn.Get()) == 1);
+	m_type = GetPrivateProfileInt(FIND_INI_SEC, "Type", 0, g_SNMIniFn.Get());
+	m_zoomSrollItems = (GetPrivateProfileInt(FIND_INI_SEC, "ZoomScrollToFoundItems", 0, g_SNMIniFn.Get()) == 1);
 
 	// WDL GUI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
-    m_parentVwnd.SetRealParent(m_hwnd);
+	m_parentVwnd.SetRealParent(m_hwnd);
 	
 	m_txtScope.SetID(TXTID_SCOPE);
 	m_txtScope.SetText("Find in:");
 	m_parentVwnd.AddChild(&m_txtScope);
 
-	m_btnEnableZommScroll.SetID(BUTTONID_ZOOM_SCROLL_EN);
+	m_btnEnableZommScroll.SetID(BTNID_ZOOM_SCROLL_EN);
 	m_btnEnableZommScroll.SetCheckState(m_zoomSrollItems);
 	m_parentVwnd.AddChild(&m_btnEnableZommScroll);
 
-	m_btnFind.SetID(BUTTONID_FIND);
+	m_btnFind.SetID(BTNID_FIND);
 	m_parentVwnd.AddChild(&m_btnFind);
 
-	m_btnPrev.SetID(BUTTONID_PREV);
+	m_btnPrev.SetID(BTNID_PREV);
 	m_parentVwnd.AddChild(&m_btnPrev);
 
-	m_btnNext.SetID(BUTTONID_NEXT);
+	m_btnNext.SetID(BTNID_NEXT);
 	m_parentVwnd.AddChild(&m_btnNext);
 
-	m_cbType.SetID(COMBOID_TYPE);
+	m_cbType.SetID(CMBID_TYPE);
 	m_cbType.AddItem("Item names");
 	m_cbType.AddItem("Item names (all takes)");
 	m_cbType.AddItem("Media filenames");
@@ -191,8 +194,8 @@ void SNM_FindWnd::OnDestroy()
 	// save prefs
 	char type[4] = "";
 	if (_snprintfStrict(type, sizeof(type), "%d", m_type) > 0)
-		WritePrivateProfileString("FIND_VIEW", "Type", type, g_SNMIniFn.Get());
-	WritePrivateProfileString("FIND_VIEW", "ZoomScrollToFoundItems", m_zoomSrollItems ? "1" : "0", g_SNMIniFn.Get());
+		WritePrivateProfileString(FIND_INI_SEC, "Type", type, g_SNMIniFn.Get());
+	WritePrivateProfileString(FIND_INI_SEC, "ZoomScrollToFoundItems", m_zoomSrollItems ? "1" : "0", g_SNMIniFn.Get());
 
 	m_cbType.Empty();
 	g_notFound = false;
@@ -210,20 +213,20 @@ void SNM_FindWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				UpdateNotFoundMsg(true);
 			}
 			break;
-		case BUTTONID_ZOOM_SCROLL_EN:
+		case BTNID_ZOOM_SCROLL_EN:
 			if (!HIWORD(wParam) ||  HIWORD(wParam)==600)
 				m_zoomSrollItems = !m_zoomSrollItems;
 			break;
-		case BUTTONID_FIND:
+		case BTNID_FIND:
 			Find(0);
 			break;
-		case BUTTONID_PREV:
+		case BTNID_PREV:
 			Find(-1);
 			break;
-		case BUTTONID_NEXT:
+		case BTNID_NEXT:
 			Find(1);
 			break;
-		case COMBOID_TYPE:
+		case CMBID_TYPE:
 			if (HIWORD(wParam)==CBN_SELCHANGE) {
 				m_type = m_cbType.GetCurSel();
 				UpdateNotFoundMsg(true); // + redraw
@@ -259,7 +262,8 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 	LICE_CachedFont* font = SNM_GetThemeFont();
 
 	// 1st row of controls
-	int x0=_r->left+10, h=SNM_TOP_GUI_HEIGHT;
+	int x0 = _r->left + SNM_GUI_X_MARGIN_OLD;
+	int h = SNM_GUI_TOP_H;
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
 	bool drawLogo = false;
@@ -294,8 +298,8 @@ void SNM_FindWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipH
 
 	// 2nd row of controls
 	h = 45;
-	x0 = _r->left+8; 
-	int y0 = _r->top+60;
+	x0 = _r->left + SNM_GUI_X_MARGIN_OLD;
+	int y0 = _r->top+56;
 
 	SNM_SkinToolbarButton(&m_btnFind, "Find all");
 	m_btnFind.SetGrayed(!g_searchStr || !(*g_searchStr) || m_type == TYPE_MARKER_REGION);
@@ -408,7 +412,7 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaI
 
 		if (clearCurrentSelection)
 		{
-			Undo_BeginBlock();
+			Undo_BeginBlock2(NULL);
 			Main_OnCommand(40289,0); // unselect all items
 			update = true;
 		}
@@ -441,7 +445,7 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaI
 					{
 						if (jobItem(item, g_searchStr))
 						{
-							if (!update) Undo_BeginBlock();
+							if (!update) Undo_BeginBlock2(NULL);
 							update = found = true;
 							GetSetMediaItemInfo(item, "B_UISEL", &sel);
 							if (_dir) breakSelection = true;
@@ -458,7 +462,7 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaI
 							{
 								if (jobTake(tk, g_searchStr))
 								{
-									if (!update) Undo_BeginBlock();
+									if (!update) Undo_BeginBlock2(NULL);
 									update = found = true;
 									GetSetMediaItemInfo(item, "B_UISEL", &sel);
 									if (_dir) {
@@ -481,7 +485,7 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaI
 	if (update)
 	{
 		UpdateTimeline();
-		Undo_EndBlock("Find: change media item selection", UNDO_STATE_ALL);
+		Undo_EndBlock2(NULL, "Find: change media item selection", UNDO_STATE_ALL);
 	}
 	return update;
 }
@@ -516,7 +520,7 @@ bool SNM_FindWnd::FindTrack(int _dir, bool (*job)(MediaTrack*,const char*))
 
 		if (clearCurrentSelection)
 		{
-			Undo_BeginBlock();
+			Undo_BeginBlock2(NULL);
 			Main_OnCommand(40297,0); // unselect all tracks
 			update = true;
 		}
@@ -529,7 +533,7 @@ bool SNM_FindWnd::FindTrack(int _dir, bool (*job)(MediaTrack*,const char*))
 				if (tr && job(tr, g_searchStr))
 				{
 					if (!update)
-						Undo_BeginBlock();
+						Undo_BeginBlock2(NULL);
 
 					update = found = true;
 					GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
@@ -541,11 +545,11 @@ bool SNM_FindWnd::FindTrack(int _dir, bool (*job)(MediaTrack*,const char*))
 
 		UpdateNotFoundMsg(found);	
 		if (found)
-			ScrollSelTrack(NULL, true, true);
+			ScrollSelTrack(true, true);
 	}
 
 	if (update)
-		Undo_EndBlock("Find: change track selection", UNDO_STATE_ALL);
+		Undo_EndBlock2(NULL, "Find: change track selection", UNDO_STATE_ALL);
 
 	return update;
 }
@@ -585,7 +589,7 @@ bool SNM_FindWnd::FindMarkerRegion(int _dir)
 		}
 	}
 	if (update)
-		Undo_OnStateChangeEx("Find: change edit cursor position", UNDO_STATE_ALL, -1); // in case the pref "undo pt for edit cursor positions" is enabled..
+		Undo_OnStateChangeEx2(NULL, "Find: change edit cursor position", UNDO_STATE_ALL, -1); // in case the pref "undo pt for edit cursor positions" is enabled..
 	return update;
 }
 

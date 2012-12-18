@@ -30,7 +30,7 @@
 #ifndef _SNM_PROJECT_H_
 #define _SNM_PROJECT_H_
 
-double GetProjectLength();
+double GetProjectLength(bool _items = true, bool _inclRgnsMkrs = false);
 bool InsertSilence(const char* _undoTitle, double _pos, double _len);
 void InsertSilence(COMMAND_T*);
 void OpenProjectPathInExplorerFinder(COMMAND_T* _ct = NULL);

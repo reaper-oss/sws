@@ -57,29 +57,39 @@ bool GenerateFilename(const char* _dir, const char* _name, const char* _ext, cha
 void ScanFiles(WDL_PtrList<WDL_String>* _files, const char* _initDir, const char* _ext, bool _subdirs);
 void StringToExtensionConfig(WDL_FastString* _str, ProjectStateContext* _ctx);
 void ExtensionConfigToString(WDL_FastString* _str, ProjectStateContext* _ctx);
+
 void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, const char* _iniFn);
 void UpdatePrivateProfileSection(const char* _oldAppName, const char* _newAppName, const char* _iniFn, const char* _newIniFn = NULL);
 void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const char* _newKey, const char* _iniFn, const char* _newIniFn = NULL);
 void SNM_UpgradeIniFiles();
+
 bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color = 0);
 bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_FastString* _name);
-int FindMarkerRegion(double _pos, int _flags, int* _idOut = NULL);
+int FindMarkerRegion(ReaProject* _proj, double _pos, int _flags, int* _idOut = NULL);
 int MakeMarkerRegionId(int _num, bool _isRgn);
-int GetMarkerRegionIdFromIndex(int _idx);
-int GetMarkerRegionIndexFromId(int _id);
+int GetMarkerRegionIdFromIndex(ReaProject* _proj, int _idx);
+int GetMarkerRegionIndexFromId(ReaProject* _proj, int _id);
 int GetMarkerRegionNumFromId(int _id);
 bool IsRegion(int _id);
-int EnumMarkerRegionDesc(int _idx, char* _descOut, int _outSz, int _flags, bool _wantsName, bool _wantsTime = true);
-void FillMarkerRegionMenu(HMENU _menu, int _msgStart, int _flags, UINT _uiState = 0);
+int EnumMarkerRegionById(ReaProject* _proj, int _id, bool* _isrgn, double* _pos, double* _end, char** _name, int* _num, int* _color);
+int EnumMarkerRegionDescById(ReaProject* _proj, int _id, char* _descOut, int _outSz, int _flags, bool _wantNum, bool _wantName, bool _wantTime = true);
+int EnumMarkerRegionDesc(ReaProject* _proj, int _idx, char* _descOut, int _outSz, int _flags, bool _wantNum, bool _wantName, bool _wantTime = true);
+void FillMarkerRegionMenu(ReaProject* _proj, HMENU _menu, int _msgStart, int _flags, UINT _uiState = 0);
+void GotoMarker(COMMAND_T*);
+void GotoRegion(COMMAND_T*);
+void InsertMarker(COMMAND_T*);
+
 int SNM_SnapToMeasure(double _pos);
 void TranslatePos(double _pos, int* _h, int* _m = NULL, int* _s = NULL, int* _ms = NULL);
-double SeekPlay(double _pos, bool _seek = true, bool _moveView = false);
+double SeekPlay(double _pos, bool _moveView = false);
+
 int _snprintfSafe(char* _buf, size_t _n, const char* _fmt, ...);
 int _snprintfStrict(char* _buf, size_t _n, const char* _fmt, ...);
 bool GetStringWithRN(const char* _bufSrc, char* _buf, int _bufSize);
 const char* FindFirstRN(const char* _str);
 char* ShortenStringToFirstRN(char* _str);
 void Replace02d(char* _str, char _replaceCh);
+
 bool IsMacro(const char* _actionName);
 bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize);
 #ifdef _SNM_MISC

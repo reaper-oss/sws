@@ -93,6 +93,25 @@ LICE_CachedFont* SNM_GetThemeFont()
 	return &themeFont;
 }
 
+// non native version
+LICE_CachedFont* SNM_GetFont()
+{
+	static LICE_CachedFont themeFont;
+	if (!themeFont.GetHFont()) // single lazy init..
+	{
+		LOGFONT lf = {
+			SNM_FONT_HEIGHT, 0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
+			OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
+		};
+		themeFont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT);
+		// others props are set on demand (support theme switches)
+	}
+	ColorTheme* ct = SNM_GetColorTheme();
+	themeFont.SetBkMode(TRANSPARENT);
+	themeFont.SetTextColor(ct ? LICE_RGBA_FROMNATIVE(ct->main_text,255) : LICE_RGBA(255,255,255,255));
+	return &themeFont;
+}
+
 LICE_CachedFont* SNM_GetToolbarFont()
 {
 	static LICE_CachedFont themeFont;

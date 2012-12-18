@@ -192,7 +192,7 @@ bool DupSelItems(const char* _undoTitle, double _nudgePos, WDL_PtrList<void>* _n
 	bool updated=false;
 
 	if (_undoTitle)
-		Undo_BeginBlock2(NULL); // cannot use Undo_OnStateChangeEx() because of ApplyNudge()
+		Undo_BeginBlock2(NULL); // cannot use Undo_OnStateChangeEx2(NULL, ) because of ApplyNudge()
 
 	WDL_PtrList<MediaItem> items;
 	SNM_GetSelectedItems(NULL, &items);
@@ -245,7 +245,7 @@ void SplitMidiAudio(COMMAND_T* _ct)
 						bool toBeSplitted = (GetCursorPositionEx(NULL) > pos && GetCursorPositionEx(NULL) < end);
 
 						if (!updated && toBeSplitted)
-							Undo_BeginBlock();
+							Undo_BeginBlock2(NULL);
 
 						updated |= toBeSplitted;
 
@@ -279,7 +279,7 @@ void SplitMidiAudio(COMMAND_T* _ct)
 		UpdateTimeline();
 		// hard coded undo label: action name too long + consistent with
 		// the unique native wording (whatever is the split action)
-		Undo_EndBlock(__LOCALIZE("Split selected items","sws_undo"), UNDO_STATE_ALL);
+		Undo_EndBlock2(NULL, __LOCALIZE("Split selected items","sws_undo"), UNDO_STATE_ALL);
 	}
 }
 
@@ -372,7 +372,7 @@ bool SplitSelectItemsInInterval(const char* _undoTitle, double _pos1, double _po
 	{
 		UpdateTimeline();
 		if (_undoTitle)
-			Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, _undoTitle, UNDO_STATE_ALL, -1);
 	}
 	return updated;
 }
@@ -420,7 +420,7 @@ void CopyCutTake(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 void PasteTake(COMMAND_T* _ct)
@@ -441,7 +441,7 @@ void PasteTake(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 
@@ -453,7 +453,7 @@ void PasteTake(COMMAND_T* _ct)
 bool IsEmptyMidi(MediaItem_Take* _take)
 {
 	bool emptyMidi = false;
-	if (_take) // a v4 empty take isn't a empty *MIDI* take!
+	if (_take) // a v4 empty take isn't a empty midi take!
 	{
 		MidiItemProcessor p("S&M");
 		if (_take && p.isMidiTake(_take))
@@ -605,7 +605,7 @@ int BuildLanes(const char* _undoTitle, int _mode)
 	if (updates > 0) {
 		UpdateTimeline();
 		if (_undoTitle)
-			Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, _undoTitle, UNDO_STATE_ALL, -1);
 	}
 	return (badRecPass ? -1 : updates);
 }
@@ -666,7 +666,7 @@ bool RemoveEmptyTakes(const char* _undoTitle, bool _empty, bool _midiEmpty, bool
 	if (updated) {
 		UpdateTimeline();
 		if (_undoTitle)
-			Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, _undoTitle, UNDO_STATE_ALL, -1);
 	}
 	return updated;
 }
@@ -706,7 +706,7 @@ void ClearTake(COMMAND_T* _ct)
 	}
 	if (updated) {
 		UpdateTimeline();
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
@@ -754,7 +754,7 @@ void MoveTakes(COMMAND_T* _ct)
 	}
 	if (updated) {
 		UpdateTimeline();
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 #endif
@@ -799,7 +799,7 @@ void MoveActiveTake(COMMAND_T* _ct)
 	}
 	if (updated) {
 		UpdateTimeline();
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
@@ -848,7 +848,7 @@ void ActivateLaneFromSelItem(COMMAND_T* _ct)
 	}
 	if (_ct && updated) {
 		UpdateTimeline();
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 	}
 }
 
@@ -1109,7 +1109,7 @@ bool PatchTakeEnvelopeVis(const char* _undoTitle, const char* _envKeyword, const
 	{
 		UpdateTimeline();
 		if (_undoTitle)
-			Undo_OnStateChangeEx(_undoTitle, UNDO_STATE_ALL, -1);
+			Undo_OnStateChangeEx2(NULL, _undoTitle, UNDO_STATE_ALL, -1);
 	}
 	return updated;
 }
@@ -1317,7 +1317,7 @@ void ToggleItemSelExists(COMMAND_T* _ct)
 	if (updated)
 	{
 		UpdateTimeline();
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 
 		// in case auto refresh toolbar bar option is off..
 		char custId[SNM_MAX_ACTION_CUSTID_LEN] = "";
@@ -1352,16 +1352,7 @@ void ScrollToSelItem(MediaItem* _item)
 
 		// vertical scroll to selected item
 		if (MediaTrack* tr = GetMediaItem_Track(_item))
-		{
-			//JFB change/restore sel programatically => not cool for controle surfaces
-			WDL_PtrList<MediaTrack> selTrs;
-			SNM_GetSelectedTracks(NULL, &selTrs, true);
-			// select only track
-			SNM_ClearSelectedTracks(NULL, true);
-			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i1);
-			ScrollSelTrack(NULL, true, false);
-			SNM_SetSelectedTracks(NULL, &selTrs, true);
-		}
+			ScrollTrack(tr, true, false);
 
 		if (PreventUIRefresh) 
 			PreventUIRefresh(-1);
@@ -1399,7 +1390,7 @@ void SetPan(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 void OpenMediaPathInExplorerFinder(COMMAND_T*)

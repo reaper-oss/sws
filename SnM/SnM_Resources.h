@@ -142,6 +142,7 @@ class SNM_ResourceWnd : public SWS_DockWnd
 public:
 	SNM_ResourceWnd();
 	void SetType(int _type);
+	int SetType(const char* _name);
 	void Update();
 	void OnCommand(WPARAM wParam, LPARAM lParam);
 	void ClearListSelection();
@@ -166,9 +167,14 @@ protected:
 	void InsertAtSelectedSlot(bool _update);
 
 	WDL_VirtualComboBox m_cbType, m_cbDblClickType, m_cbDblClickTo;
-	WDL_VirtualIconButton m_btnAutoFill, m_btnAutoSave, m_btnTiedActions, m_btnOffsetTrTemplate;
+	WDL_VirtualIconButton m_btnAutoFill, m_btnAutoSave, m_btnOffsetTrTemplate;
+#ifdef _SNM_MISC // moved to context menu
+	WDL_VirtualIconButton m_btnTiedActions;
+#endif
 	WDL_VirtualStaticText m_txtSlotsType, m_txtDblClickType, m_txtDblClickTo;
-	SNM_MiniAddDelButtons m_btnsAddDel;
+	SNM_TwoTinyButtons m_btnsAddDel;
+	SNM_TinyPlusButton m_btnAdd;
+	SNM_TinyMinusButton m_btnDel;
 };
 
 
@@ -222,6 +228,10 @@ void ResViewClearThemeSlot(COMMAND_T*);
 void ResViewAutoSaveFXChain(COMMAND_T*);
 void ResViewAutoSaveTrTemplate(COMMAND_T*);
 void ResViewAutoSave(COMMAND_T*);
+
+int SNM_SelectResourceBookmark(const char* _name);
+void SNM_TieResourceSlotActions(int _bookmarkId);
+
 int ImageViewInit();
 void ImageViewExit();
 void OpenImageView(COMMAND_T*);

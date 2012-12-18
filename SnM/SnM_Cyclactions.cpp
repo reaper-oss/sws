@@ -535,8 +535,10 @@ enum {
 };
 
 // we need these because of cross-calls between both list views
-static SNM_CyclactionsView* g_lvL = NULL;
-static SNM_CommandsView* g_lvR = NULL;
+SNM_CyclactionsView* g_lvL = NULL;
+SNM_CommandsView* g_lvR = NULL;
+RECT g_origRectL = {0,0,0,0};
+RECT g_origRectR = {0,0,0,0};
 
 // fake list views' items (help items), see init + localization in CyclactionInit()
 static Cyclaction g_DEFAULT_L;
@@ -549,6 +551,8 @@ int g_editedSection = 0; // main section action, 1 = ME event list section actio
 bool g_edited = false;
 char g_lastExportFn[SNM_MAX_PATH] = "";
 char g_lastImportFn[SNM_MAX_PATH] = "";
+
+int g_lvLastState = 0, g_lvState = 0; // 0=display both list views, 1=left only, -1=right only
 
 
 int CountEditedActions() {
@@ -827,7 +831,7 @@ void SNM_CommandsView::SetItemText(SWS_ListItem* _item, int _iCol, const char* _
 			g_editedAction->SetCmd(cmd, _str);
 
 			char buf[128] = "";
-			GetItemText(_item, 1, buf, 128);
+			GetItemText(_item, 1, buf, sizeof(buf));
 			ListView_SetItemText(m_hwndList, GetEditingItem(), DisplayToDataCol(1), buf);
 			// ^^ direct GUI update 'cause Update() disabled during cell editing
 
@@ -920,13 +924,16 @@ void SNM_CommandsView::OnItemSelChanged(SWS_ListItem* item, int iState) {
 
 enum
 {
-  COMBOID_SECTION=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
+  CMBID_SECTION=2000, //JFB would be great to have _APS_NEXT_CONTROL_VALUE *always* defined
   TXTID_SECTION,
-  BUTTONID_UNDO,
-  BUTTONID_APPLY,
-  BUTTONID_CANCEL,
-  BUTTONID_IMPEXP,
-  BUTTONID_ACTIONLIST
+  BTNID_UNDO,
+  BTNID_APPLY,
+  BTNID_CANCEL,
+  BTNID_IMPEXP,
+  BTNID_ACTIONLIST,
+  WNDID_LR,
+  BTNID_L,
+  BTNID_R
 };
 
 SNM_CyclactionWnd::SNM_CyclactionWnd()
@@ -955,35 +962,45 @@ void SNM_CyclactionWnd::OnInitDlg()
 
 	m_resize.init_item(IDC_LIST1, 0.0, 0.0, 0.5, 1.0);
 	m_resize.init_item(IDC_LIST2, 0.5, 0.0, 1.0, 1.0);
+	g_origRectL = m_resize.get_item(IDC_LIST1)->real_orig;
+	g_origRectR = m_resize.get_item(IDC_LIST2)->real_orig;
+	g_lvState = g_lvLastState = 0; // resync those vars: both list views are displayed (g_lvState not persisted yet..)
 
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
-    m_parentVwnd.SetRealParent(m_hwnd);
+	m_parentVwnd.SetRealParent(m_hwnd);
 
 	m_txtSection.SetID(TXTID_SECTION);
 	m_txtSection.SetText(__LOCALIZE("Section:","sws_DLG_161"));
 	m_parentVwnd.AddChild(&m_txtSection);
 
-	m_cbSection.SetID(COMBOID_SECTION);
+	m_cbSection.SetID(CMBID_SECTION);
 	for (int i=0; i < SNM_MAX_CYCLING_SECTIONS; i++)
 		m_cbSection.AddItem(g_cyclactionSections[i]);
 	m_cbSection.SetCurSel(g_editedSection);
 	m_parentVwnd.AddChild(&m_cbSection);
 
-	m_btnUndo.SetID(BUTTONID_UNDO);
+	m_btnUndo.SetID(BTNID_UNDO);
 	m_btnUndo.SetCheckState(g_undos);
 	m_parentVwnd.AddChild(&m_btnUndo);
 
-	m_btnApply.SetID(BUTTONID_APPLY);
+	m_btnApply.SetID(BTNID_APPLY);
 	m_parentVwnd.AddChild(&m_btnApply);
 
-	m_btnCancel.SetID(BUTTONID_CANCEL);
+	m_btnCancel.SetID(BTNID_CANCEL);
 	m_parentVwnd.AddChild(&m_btnCancel);
 
-	m_btnImpExp.SetID(BUTTONID_IMPEXP);
+	m_btnImpExp.SetID(BTNID_IMPEXP);
 	m_parentVwnd.AddChild(&m_btnImpExp);
 
-	m_btnActionList.SetID(BUTTONID_ACTIONLIST);
+	m_btnActionList.SetID(BTNID_ACTIONLIST);
 	m_parentVwnd.AddChild(&m_btnActionList);
+
+	m_btnLeft.SetID(BTNID_L);
+	m_tinyLRbtns.AddChild(&m_btnLeft);
+	m_btnRight.SetID(BTNID_R);
+	m_tinyLRbtns.AddChild(&m_btnRight);
+	m_tinyLRbtns.SetID(WNDID_LR);
+	m_parentVwnd.AddChild(&m_tinyLRbtns);
 
 	Update();
 }
@@ -994,6 +1011,49 @@ void SNM_CyclactionWnd::OnDestroy()
 	Cancel(true);
 */
 	m_cbSection.Empty();
+	m_tinyLRbtns.RemoveAllChildren(false);
+}
+
+void SNM_CyclactionWnd::OnResize() 
+{
+	if (g_lvState != g_lvLastState)
+	{
+		g_lvLastState = g_lvState;
+		switch(g_lvState)
+		{
+			case -1: // right list view only
+				m_resize.remove_item(IDC_LIST1);
+				m_resize.remove_item(IDC_LIST2);
+				m_resize.init_item(IDC_LIST1, 0.0, 0.0, 0.0, 0.0);
+				m_resize.init_item(IDC_LIST2, 0.0, 0.0, 1.0, 1.0);
+				m_resize.get_item(IDC_LIST2)->orig =  g_origRectR;
+				m_resize.get_item(IDC_LIST2)->orig.left = g_origRectL.left;
+				ShowWindow(GetDlgItem(m_hwnd, IDC_LIST1), SW_HIDE);
+				break;
+			case 0: // default: both list views
+				m_resize.remove_item(IDC_LIST1);
+				m_resize.remove_item(IDC_LIST2);
+				m_resize.init_item(IDC_LIST1, 0.0, 0.0, 0.5, 1.0);
+				m_resize.init_item(IDC_LIST2, 0.5, 0.0, 1.0, 1.0);
+				m_resize.get_item(IDC_LIST1)->orig = g_origRectL;
+				m_resize.get_item(IDC_LIST2)->orig = g_origRectR;
+				ShowWindow(GetDlgItem(m_hwnd, IDC_LIST1), SW_SHOW);
+				ShowWindow(GetDlgItem(m_hwnd, IDC_LIST2), SW_SHOW);
+				break;
+			case 1: // left list view only
+				int right = m_resize.get_item(IDC_LIST2)->real_orig.right;
+				int bottom = m_resize.get_item(IDC_LIST1)->real_orig.bottom;
+				m_resize.remove_item(IDC_LIST1);
+				m_resize.remove_item(IDC_LIST2);
+				m_resize.init_item(IDC_LIST1, 0.0, 0.0, 1.0, 1.0);
+				m_resize.init_item(IDC_LIST2, 0.0, 0.0, 0.0, 0.0);
+				m_resize.get_item(IDC_LIST1)->orig = g_origRectL;
+				m_resize.get_item(IDC_LIST1)->orig.right = g_origRectR.right;
+				ShowWindow(GetDlgItem(m_hwnd, IDC_LIST2), SW_HIDE);
+				break;
+		}
+		InvalidateRect(m_hwnd, NULL, 0);
+	}
 }
 
 void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
@@ -1156,34 +1216,46 @@ void SNM_CyclactionWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			ShellExecute(m_hwnd, "open", "http://wiki.cockos.com/wiki/index.php/ALR_Main_S%26M_CREATE_CYCLACTION" , NULL, NULL, SW_SHOWNORMAL);
 			break;
 */
-		case COMBOID_SECTION:
+		case CMBID_SECTION:
 			if (HIWORD(wParam)==CBN_SELCHANGE) {
 				AllEditListItemEnd(false);
 				UpdateSection(m_cbSection.GetCurSel());
 			}
 			break;
-		case BUTTONID_UNDO:
+		case BTNID_UNDO:
 			if (!HIWORD(wParam) || HIWORD(wParam)==600) {
 				m_btnUndo.SetCheckState(!m_btnUndo.GetCheckState()?1:0);
 				UpdateEditedStatus(true);
 			}
 			break;
-		case BUTTONID_APPLY:
+		case BTNID_APPLY:
 			Apply();
 			break;
-		case BUTTONID_CANCEL:
+		case BTNID_CANCEL:
 			Cancel(false);
 			break;
-		case BUTTONID_IMPEXP: {
+		case BTNID_IMPEXP: {
 				RECT r; m_btnImpExp.GetPositionInTopVWnd(&r);
 				ClientToScreen(m_hwnd, (LPPOINT)&r);
 				ClientToScreen(m_hwnd, ((LPPOINT)&r)+1);
 				SendMessage(m_hwnd, WM_CONTEXTMENU, 0, MAKELPARAM((UINT)(r.left), (UINT)(r.bottom+SNM_1PIXEL_Y)));
 			}
 			break;
-		case BUTTONID_ACTIONLIST:
+		case BTNID_ACTIONLIST:
 			AllEditListItemEnd(false);
 			Main_OnCommand(40605, 0);
+			break;
+		case BTNID_R:
+			if (g_lvState<1) {
+				g_lvState++;
+				SendMessage(m_hwnd, WM_SIZE, 0, 0);
+			}
+			break;
+		case BTNID_L:
+			if (g_lvState>-1) {
+				g_lvState--;
+				SendMessage(m_hwnd, WM_SIZE, 0, 0);
+			}
 			break;
 		default:
 			Main_OnCommand((int)wParam, (int)lParam);
@@ -1196,7 +1268,8 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 	LICE_CachedFont* font = SNM_GetThemeFont();
 
 	// 1st row of controls
-	int x0=_r->left+10, h=SNM_TOP_GUI_HEIGHT;
+	int x0 = _r->left + SNM_GUI_X_MARGIN_OLD;
+	int h = SNM_GUI_TOP_H;
 	if (_tooltipHeight)
 		*_tooltipHeight = h;
 
@@ -1215,7 +1288,8 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 	}
 
 	// 2nd row of controls
-	x0 = _r->left+8; h=SNM_BOT_GUI_HEIGHT;
+	x0 = _r->left + SNM_GUI_X_MARGIN_OLD;
+	h = SNM_GUI_BOT_H;
 	int y0 = _r->bottom-h;
 
 	SNM_SkinToolbarButton(&m_btnApply, __LOCALIZE("Apply","sws_DLG_161"));
@@ -1225,7 +1299,7 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 		SNM_SkinToolbarButton(&m_btnCancel, __LOCALIZE("Cancel","sws_DLG_161"));
 		if (SNM_AutoVWndPosition(DT_LEFT, &m_btnCancel, NULL, _r, &x0, y0, h, 4))
 		{
-			SNM_SkinToolbarButton(&m_btnImpExp, __LOCALIZE("Import/export...","sws_DLG_161"));
+			SNM_SkinToolbarButton(&m_btnImpExp, __LOCALIZE("Import/export","sws_DLG_161"));
 			if (SNM_AutoVWndPosition(DT_LEFT, &m_btnImpExp, NULL, _r, &x0, y0, h, 4))
 			{
 				SNM_SkinToolbarButton(&m_btnActionList, __LOCALIZE("Action list...","sws_DLG_161"));
@@ -1241,6 +1315,31 @@ void SNM_CyclactionWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _to
 			}
 		}
 	}
+
+	// tiny left/right buttons
+	RECT r;
+	if (IsWindowVisible(GetDlgItem(m_hwnd, IDC_LIST1))) // left list view is displayed: add tiny buttons on its right
+	{
+		GetWindowRect(GetDlgItem(m_hwnd, IDC_LIST1), &r);
+		ScreenToClient(m_hwnd, (LPPOINT)&r);
+		ScreenToClient(m_hwnd, ((LPPOINT)&r)+1);
+		r.top = _r->top + h; 
+		r.bottom = _r->top + h + (9*2 +1);
+		r.left = r.right + 1;
+		r.right = r.left + 5;
+	}
+	else // add tiny buttons on the left
+	{
+		r.top = _r->top + h; 
+		r.bottom = _r->top + h + (9*2 +1);
+		r.left = 1;
+		r.right = r.left + 5;
+	}
+
+	m_btnLeft.SetEnabled(g_lvState>-1);
+	m_btnRight.SetEnabled(g_lvState<1);
+	m_tinyLRbtns.SetPosition(&r);
+	m_tinyLRbtns.SetVisible(true);
 }
 
 void SNM_CyclactionWnd::AddImportExportMenu(HMENU _menu)
@@ -1266,7 +1365,7 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	POINT p; GetCursorPos(&p);
 	ScreenToClient(m_hwnd, &p);
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(p.x,p.y,1))
-		if (v->GetID() == BUTTONID_IMPEXP) {
+		if (v->GetID() == BTNID_IMPEXP) {
 			*wantDefaultItems = false;
 			AddImportExportMenu(hMenu);
 			return hMenu;
@@ -1277,9 +1376,9 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 	{
 		POINT pt = {x, y};
 		RECT r;	GetWindowRect(g_lvL->GetHWND(), &r);
-		left = PtInRect(&r, pt) ? true : false;
+		left = IsWindowVisible(g_lvL->GetHWND()) && PtInRect(&r, pt) ? true : false;
 		GetWindowRect(g_lvR->GetHWND(), &r);
-		right = PtInRect(&r,pt) ? true : false;
+		right = IsWindowVisible(g_lvR->GetHWND()) && PtInRect(&r,pt) ? true : false;
 	}
 
 	if (left || right)
@@ -1292,7 +1391,7 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			AddToMenu(hMenu, __LOCALIZE("Add cycle action","sws_DLG_161"), ADD_CYCLACTION_MSG);
 			if (action && action != &g_DEFAULT_L)
 			{
-				AddToMenu(hMenu, __LOCALIZE("Remove cycle action(s)","sws_DLG_161"), DEL_CYCLACTION_MSG); 
+				AddToMenu(hMenu, __LOCALIZE("Remove cycle actions","sws_DLG_161"), DEL_CYCLACTION_MSG); 
 				AddToMenu(hMenu, SWS_SEPARATOR, 0);
 				AddToMenu(hMenu, __LOCALIZE("Run","sws_DLG_161"), RUN_CYCLACTION_MSG, -1, false, action->m_added ? MF_GRAYED : MF_ENABLED); 
 			}
@@ -1300,9 +1399,9 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		else if (g_editedAction && g_editedAction != &g_DEFAULT_L)
 		{
 			AddToMenu(hMenu, __LOCALIZE("Add command","sws_DLG_161"), ADD_CMD_MSG);
-			AddToMenu(hMenu, __LOCALIZE("Add/learn from Actions window","sws_DLG_161"), LEARN_CMD_MSG);
+			AddToMenu(hMenu, __LOCALIZE("Add selected action (in the \"Actions\" window)","sws_DLG_161"), LEARN_CMD_MSG);
 			if (cmd && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R)
-				AddToMenu(hMenu, __LOCALIZE("Remove command(s)","sws_DLG_161"), DEL_CMD_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Remove commands","sws_DLG_161"), DEL_CMD_MSG);
 		}
 	}
 
@@ -1332,8 +1431,8 @@ int SNM_CyclactionWnd::OnKey(MSG* _msg, int _iKeyState)
 		if (HWND h = GetFocus())
 		{
 			int focusedList = -1;
-			if (h == m_pLists.Get(0)->GetHWND()) focusedList = 0;
-			else if (h == m_pLists.Get(1)->GetHWND()) focusedList = 1;
+			if (h == g_lvL->GetHWND() && IsWindowVisible(g_lvL->GetHWND())) focusedList = 0;
+			else if (h == g_lvR->GetHWND() && IsWindowVisible(g_lvR->GetHWND())) focusedList = 1;
 			else return 0;
 
 			switch(_msg->wParam)
@@ -1347,17 +1446,10 @@ int SNM_CyclactionWnd::OnKey(MSG* _msg, int _iKeyState)
 					break;
 				}
 				case VK_DELETE:
-					if (focusedList == 0) {
-						OnCommand(DEL_CYCLACTION_MSG, 0);
-						return 1;
-					}
-					else if (focusedList == 1) {
-						OnCommand(DEL_CMD_MSG, 0);
-						return 1;
-					}
-					break;
+					OnCommand(!focusedList ? DEL_CYCLACTION_MSG : DEL_CMD_MSG, 0);
+					return 1;
 				case VK_RETURN:
-					if (focusedList == 0) {
+					if (!focusedList) {
 						OnCommand(RUN_CYCLACTION_MSG, 0);
 						return 1;
 					}

@@ -207,8 +207,12 @@ bool PatchSelTracksFXOnline(const char * _undoMsg, int _mode, int _fxCmdId, cons
 			} // chunk auto commit
 		}
 	}
-	if (updated && _undoMsg)
-		Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL, -1); // using UNDO_STATE_FX crashes 
+	if (updated)
+	{
+		Main_OnCommand(41204, 0); // fully unload unloaded VSTs
+		if (_undoMsg)
+			Undo_OnStateChangeEx2(NULL, _undoMsg, UNDO_STATE_ALL, -1); // using UNDO_STATE_FX crashes 
+	}
 	return updated;
 }
 
@@ -271,8 +275,12 @@ bool PatchSelItemsFXState(const char * _undoMsg, int _mode, int _token, int _fxI
 		}
 	}
 
-	if (updated && _undoMsg)
-		Undo_OnStateChangeEx(_undoMsg, UNDO_STATE_ALL, -1);
+	if (updated)
+	{
+		Main_OnCommand(41204, 0); // fully unload unloaded VSTs
+		if (_undoMsg)
+			Undo_OnStateChangeEx2(NULL, _undoMsg, UNDO_STATE_ALL, -1);
+	}
 	return updated;
 }
 
@@ -312,12 +320,12 @@ int SelectTrackFX(MediaTrack* _tr, int _fx)
 		char pLastSel[4]="", pShow[4]=""; // 4 should be enough..
 		if (_snprintfStrict(pLastSel, sizeof(pLastSel), "%d", _fx) > 0)
 		{
-			if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,&pShow) > 0)
+			if (p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,pShow) > 0)
 			{
 				// patch the shown FX if the fx chain dlg is opened
 				if (strcmp(pShow, "0") && _snprintfStrict(pShow, sizeof(pShow), "%d", _fx+1) > 0)
-					updates += (p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,&pShow) > 0 ? 1:0);
-				updates += (p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",0,1,&pLastSel) > 0 ? 1:0);
+					updates += (p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","SHOW",0,1,pShow) > 0 ? 1:0);
+				updates += (p.ParsePatch(SNM_SET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",0,1,pLastSel) > 0 ? 1:0);
 			}
 		}
 	}
@@ -358,7 +366,7 @@ void SelectTrackFX(COMMAND_T* _ct)
 		}
 	}
 	if (updated)
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 
 int GetSelectedTrackFX(MediaTrack* _tr)
@@ -377,7 +385,7 @@ int GetSelectedTrackFX(MediaTrack* _tr)
 		// the 2 attempts above failed => no choice: parse to get the selected FX
 		SNM_ChunkParserPatcher p(_tr);
 		p.SetWantsMinimalState(true);
-		char pLastSel[4] = ""; // 4: if there're many, many FXs
+		char pLastSel[4] = ""; // 4: if there are many, many FXs
 		p.Parse(SNM_GET_CHUNK_CHAR,2,"FXCHAIN","LASTSEL",0,1,&pLastSel);
 		return atoi(pLastSel); // return 0 (first FX) if failed
 	}
@@ -508,14 +516,12 @@ void NextPrevPresetLastTouchedFX(COMMAND_T* _ct) {
 ///////////////////////////////////////////////////////////////////////////////
 
 // trigger preset through MIDI CC action
-class SNM_TriggerPresetScheduledJob : public SNM_ScheduledJob {
+class TriggerPresetJob : public SNM_MidiActionJob {
 public:
-	SNM_TriggerPresetScheduledJob(int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd, int _fxId) 
-		: SNM_ScheduledJob(SNM_SCHEDJOB_TRIG_PRESET, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd),m_fxId(_fxId) {}
+	TriggerPresetJob(int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd, int _fxId) 
+		: SNM_MidiActionJob(SNM_SCHEDJOB_TRIG_PRESET,_approxDelayMs,_val,_valhw,_relmode,_hwnd), m_fxId(_fxId) {}
 	void Perform() {TriggerFXPresetSelTracks(m_fxId, m_val, 0);}
-protected:
-	int m_val, m_valhw, m_relmode, m_fxId;
-	HWND m_hwnd;
+	int m_fxId;
 };
 
 // absolute CC only
@@ -523,7 +529,7 @@ void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HW
 {
 	if (!_relmode && _valhw < 0)
 		AddOrReplaceScheduledJob(
-			new SNM_TriggerPresetScheduledJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd, (int)_ct->user));
+			new TriggerPresetJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd, (int)_ct->user));
 }
 
 
@@ -609,6 +615,6 @@ void MoveOrRemoveTrackFX(COMMAND_T* _ct)
 			if (*(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
 				updated |= SNM_MoveOrRemoveTrackFX(tr, -1, (int)_ct->user);
 	if (updated)
-		Undo_OnStateChangeEx(SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1);
 }
 

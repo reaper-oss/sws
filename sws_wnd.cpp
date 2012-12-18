@@ -39,6 +39,10 @@
 #include "stdafx.h"
 #include "./SnM/SnM.h"
 #include "./reaper/localize.h"
+#ifndef _WIN32
+#include "../WDL/swell/swell-dlggen.h"
+#endif
+
 
 #define CELL_EDIT_TIMER		0x1000
 #define CELL_EDIT_TIMEOUT	50
@@ -821,7 +825,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 
 #ifndef _WIN32
 		// See OSX comments in NM_CLICK below
-
+/*JFB!!! to be discussed with Tim..
 		// Send the full compliment of OnItemSelChange messges, either from the saved array or the curent state
 		if (m_pSavedSel.GetSize() && m_pSavedSel.GetSize() == ListView_GetItemCount(m_hwndList))
 		{	// Restore the "correct" selection
@@ -830,6 +834,7 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 			m_pSavedSel.Resize(0, false);
 		}
 		else
+*/
 		{
 			// Send OnItemSelChange messages for everything on the list
 			for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
@@ -1047,16 +1052,17 @@ int SWS_ListView::LVKeyHandler(MSG* msg, int iKeyState)
 	// Catch a few keys that are handled natively by the list view
 	if (msg->message == WM_KEYDOWN)
 	{
-		if (msg->wParam == VK_UP || msg->wParam == VK_DOWN || msg->wParam == VK_TAB)
+		if (msg->wParam == VK_UP || msg->wParam == VK_DOWN || msg->wParam == VK_TAB ||
+			msg->wParam == VK_HOME || msg->wParam == VK_END || msg->wParam == VK_PRIOR || msg->wParam == VK_NEXT)
+		{
 			return -1;
-#ifdef _WIN32
+		}
 		else if (msg->wParam == 'A' && iKeyState == LVKF_CONTROL && !(GetWindowLongPtr(m_hwndList, GWL_STYLE) & LVS_SINGLESEL))
 		{
 			for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)
 				ListView_SetItemState(m_hwndList, i, LVIS_SELECTED, LVIS_SELECTED);
 			return 1;
 		}
-#endif
 	}
 	return 0;
 }
@@ -1067,7 +1073,9 @@ void SWS_ListView::Update()
 	if (m_iEditingItem == -1 && !m_bDisableUpdates)
 	{
 		m_bDisableUpdates = true;
+
 		char str[256];
+		bool bRemovedItems = false;
 
 		bool bResort = false;
 		static int iLastSortCol = -999;
@@ -1098,6 +1106,7 @@ void SWS_ListView::Update()
 				{
 					// Delete items from listview that aren't in the item list
 					ListView_DeleteItem(m_hwndList, i);
+					bRemovedItems = true;
 					i--;
 					lvItemCount--;
 					newIndex--;
@@ -1200,7 +1209,12 @@ void SWS_ListView::Update()
 				SendMessage(m_hwndTooltip, TTM_ADDTOOL, 0, (LPARAM)&ti);
 			}
 		}
+
+		// Fixes a grid line redraw glitch when removing items, eek
+		if (SWS_THEMING && bRemovedItems)
+			InvalidateRect(GetHWND(), NULL, TRUE);
 #endif
+
 		m_bDisableUpdates = false;
 	}
 }
@@ -1866,7 +1880,11 @@ void DrawTooltipForPoint(LICE_IBitmap *bm, POINT mousePt, RECT *wndr, const char
       LOGFONT lf = {SNM_FONT_HEIGHT,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,DEFAULT_CHARSET,
         OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,DEFAULT_QUALITY,DEFAULT_PITCH,SNM_FONT_NAME
       };
-      tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|(g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
+#ifdef _WIN32
+     tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT|(g_SNMClearType?LICE_FONT_FLAG_FORCE_NATIVE:0));
+#else
+     tmpfont.SetFromHFont(CreateFontIndirect(&lf),LICE_FONT_FLAG_OWNS_HFONT); //JFB!!! SWELL issue: LICE_FONT_FLAG_FORCE_NATIVE won't draw multiple lines
+#endif
 //JFB <---
     }
     tmpfont.SetBkMode(TRANSPARENT);

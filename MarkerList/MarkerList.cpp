@@ -414,6 +414,7 @@ int SWS_MarkerListWnd::OnKey(MSG* msg, int iKeyState)
 				return 1;
 			}
 		}
+/* JFB commented: generic impl. in sws_wnd.cpp
 		else if (msg->wParam == VK_HOME)
 		{
 			for (int i = 0; i < ListView_GetItemCount(m_pLists.Get(0)->GetHWND()); i++)
@@ -427,6 +428,7 @@ int SWS_MarkerListWnd::OnKey(MSG* msg, int iKeyState)
 				ListView_SetItemState(m_pLists.Get(0)->GetHWND(), i, i == count-1 ? LVIS_SELECTED : 0, LVIS_SELECTED);
 			return 1;
 		}
+*/
 		else if (msg->wParam == VK_F2)
 		{
 			OnCommand(RENAME_MSG, 0);

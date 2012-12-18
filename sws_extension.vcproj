@@ -62,9 +62,11 @@
 	    <Tool
 		Name="VCResourceCompilerTool"
 	    />
-	    <Tool
-		Name="VCPreLinkEventTool"
-	    />
+		<Tool
+			Name="VCPreLinkEventTool"
+			Description="Generating sws_python.py..."
+			CommandLine="perl &lt; nul&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;reascript_python.pl &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER_DIR)\plugins&quot;&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;goto end&#x0D;&#x0A;:errperl&#x0D;&#x0A;verify &gt; nul&#x0D;&#x0A;echo Warning: sws_python.py generation failed (Perl installed?)&#x0D;&#x0A;:end"
+		/>
 	    <Tool
 		Name="VCLinkerTool"
 		AdditionalDependencies="comctl32.lib lib/tag32.lib shlwapi.lib"
@@ -99,7 +101,7 @@
 	    <Tool
 		Name="VCPostBuildEventTool"
 		Description="Building installer... (created in Install/output)"
-		CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&quot; &amp;&amp; reascript_python.pl &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER_DIR)\plugins&quot; &amp;&amp; if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName).nsi&quot;"
+		CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&quot; &amp;&amp; if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName).nsi&quot;"
 	    />
 	</Configuration>
 	<Configuration
@@ -146,9 +148,11 @@
 	    <Tool
 		Name="VCResourceCompilerTool"
 	    />
-	    <Tool
-		Name="VCPreLinkEventTool"
-	    />
+		<Tool
+			Name="VCPreLinkEventTool"
+			Description="Generating sws_python.py..."
+			CommandLine="perl &lt; nul&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;reascript_python.pl -x64 &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;goto end&#x0D;&#x0A;:errperl&#x0D;&#x0A;verify &gt; nul&#x0D;&#x0A;echo Warning: sws_python.py generation failed (Perl installed?)&#x0D;&#x0A;:end"
+		/>
 	    <Tool
 		Name="VCLinkerTool"
 		AdditionalDependencies="comctl32.lib lib/tag64.lib shlwapi.lib"
@@ -183,7 +187,7 @@
 	    <Tool
 		Name="VCPostBuildEventTool"
 		Description="Building x64 installer... (created in Install/output)"
-		CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot; &amp;&amp; reascript_python.pl -x64 &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER64_DIR)\plugins&quot; &amp;&amp; if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName)_x64.nsi&quot;"
+		CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot; &amp;&amp; if exist &quot;c:\bin\nsis\makensis.exe&quot; &quot;c:\bin\nsis\makensis.exe&quot; /v2  &quot;$(SolutionDir)\Install\$(SolutionName)_x64.nsi&quot;"
 	    />
 	</Configuration>
 	<Configuration
@@ -230,9 +234,11 @@
 	    <Tool
 		Name="VCResourceCompilerTool"
 	    />
-	    <Tool
-		Name="VCPreLinkEventTool"
-	    />
+		<Tool
+			Name="VCPreLinkEventTool"
+			Description="Generating sws_python.py..."
+			CommandLine="perl &lt; nul&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;reascript_python.pl &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER_DIR)\plugins&quot;&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;goto end&#x0D;&#x0A;:errperl&#x0D;&#x0A;verify &gt; nul&#x0D;&#x0A;echo Warning: sws_python.py generation failed (Perl installed?)&#x0D;&#x0A;:end"
+		/>
 	    <Tool
 		Name="VCLinkerTool"
 		AdditionalDependencies="comctl32.lib lib/tag32.lib shlwapi.lib"
@@ -271,7 +277,7 @@
 	    <Tool
 		Name="VCPostBuildEventTool"
 		Description="Copying to REAPER\Plugins..."
-		CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&quot; &amp;&amp; reascript_python.pl &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER_DIR)\plugins&quot;"
+		CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER_DIR)\plugins&quot;"
 	    />
 	</Configuration>
 	<Configuration
@@ -317,9 +323,11 @@
 	    <Tool
 		Name="VCResourceCompilerTool"
 	    />
-	    <Tool
-		Name="VCPreLinkEventTool"
-	    />
+		<Tool
+			Name="VCPreLinkEventTool"
+			Description="Generating sws_python.py..."
+			CommandLine="perl &lt; nul&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;reascript_python.pl -x64 &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;goto end&#x0D;&#x0A;:errperl&#x0D;&#x0A;verify &gt; nul&#x0D;&#x0A;echo Warning: sws_python.py generation failed (Perl installed?)&#x0D;&#x0A;:end"
+		/>
 	    <Tool
 		Name="VCLinkerTool"
 		AdditionalDependencies="comctl32.lib lib/tag64.lib shlwapi.lib"
@@ -357,7 +365,7 @@
 	    <Tool
 		Name="VCPostBuildEventTool"
 		Description="Copying to REAPER\Plugins..."
-		CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot; &amp;&amp; reascript_python.pl -x64 &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER64_DIR)\plugins&quot;"
+		CommandLine="copy /y &quot;$(OutDir)\$(TargetFilename)&quot; &quot;$(REAPER64_DIR)\plugins&quot;"
 	    />
 	</Configuration>
     </Configurations>

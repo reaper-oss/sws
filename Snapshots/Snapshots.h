@@ -27,6 +27,12 @@
 
 #pragma once
 
+#define _SNAP_TINY_BUTTONS //JFB if disabled, IDC_OPTIONS must be made visible in the .rc
+
+#ifdef _SNAP_TINY_BUTTONS
+#include "../SnM/SnM_VWnd.h"
+#endif
+
 class SWS_SnapshotsView : public SWS_ListView
 {
 public:
@@ -61,9 +67,17 @@ protected:
 	int OnKey(MSG* msg, int iKeyState);
 	void GetOptions();
 	void ShowControls(bool bShow);
-
+#ifdef _SNAP_TINY_BUTTONS
+	void GetMinSize(int* w, int* h) { *w=200; *h=MIN_DOCKWND_HEIGHT; }
+	void DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight = NULL);
+#endif
 private:
 	int m_iSelType;
+#ifdef _SNAP_TINY_BUTTONS
+	SNM_TwoTinyButtons m_tinyLRbtns;
+	SNM_TinyLeftButton m_btnLeft;
+	SNM_TinyRightButton m_btnRight;
+#endif
 };
 
 

@@ -25,7 +25,6 @@
 /
 ******************************************************************************/
 
-
 #include "stdafx.h"
 #include "SnapshotClass.h"
 #include "Snapshots.h"
@@ -33,6 +32,7 @@
 #include "../Prompt.h"
 #include "../reaper/localize.h"
 #include "../../WDL/projectcontext.h"
+
 
 #define SNAP_OPTIONS_KEY "Snapshot Options"
 #define RENAME_MSG	0x10001
@@ -48,6 +48,13 @@
 #define EXPORT_MSG	0x1000B
 #define IMPORT_MSG	0x1000C
 #define LOAD_MSG	0x100F0 // leave space!!
+
+enum
+{
+  WNDID_LR = 2000,
+  BTNID_L,
+  BTNID_R
+};
 
 class ProjSnapshot
 {
@@ -428,13 +435,27 @@ void SWS_SnapshotsWnd::OnInitDlg()
 	m_resize.init_item(IDC_APPLYRECALL, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_NAMEPROMPT, 1.0, 0.0, 1.0, 0.0);
 	m_resize.init_item(IDC_HIDENEW, 1.0, 0.0, 1.0, 0.0);
+#ifndef _SNAP_TINY_BUTTONS
 	m_resize.init_item(IDC_OPTIONS, 1.0, 1.0, 1.0, 1.0);
+#endif
 
 #ifndef _WIN32
-	SetWindowText(GetDlgItem(m_hwnd, IDC_HELPTEXT), "Del: Alt-click\nSave: Cmd-click");
+	SetWindowText(GetDlgItem(m_hwnd, IDC_HELPTEXT), __LOCALIZE("Del: Alt-click\nSave: Cmd-click","sws_DLG_101"));
 #endif
 
 	m_pLists.Add(new SWS_SnapshotsView(GetDlgItem(m_hwnd, IDC_LIST), GetDlgItem(m_hwnd, IDC_EDIT)));
+
+#ifdef _SNAP_TINY_BUTTONS
+	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
+	m_parentVwnd.SetRealParent(m_hwnd);
+
+	m_btnLeft.SetID(BTNID_L);
+	m_tinyLRbtns.AddChild(&m_btnLeft);
+	m_btnRight.SetID(BTNID_R);
+	m_tinyLRbtns.AddChild(&m_btnRight);
+	m_tinyLRbtns.SetID(WNDID_LR);
+	m_parentVwnd.AddChild(&m_tinyLRbtns);
+#endif
 
 	Update();
 }
@@ -464,10 +485,21 @@ void SWS_SnapshotsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case IDC_SAVE:
 			NewSnapshot();
 			break;
+#ifdef _SNAP_TINY_BUTTONS
+		case BTNID_R:
+			g_bHideOptions=true;
+			SendMessage(m_hwnd, WM_SIZE, 0, 0);
+			break;
+		case BTNID_L:
+			g_bHideOptions=false;
+			SendMessage(m_hwnd, WM_SIZE, 0, 0);
+			break;
+#else
 		case IDC_OPTIONS:
 			g_bHideOptions = !g_bHideOptions;
 			SendMessage(m_hwnd, WM_SIZE, 0, 0);
 			break;
+#endif
 		case RENAME_MSG:
 			m_pLists.Get(0)->EditListItem(m_pLists.Get(0)->EnumSelected(NULL), 1);
 			break;
@@ -619,6 +651,7 @@ HMENU SWS_SnapshotsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 
 void SWS_SnapshotsWnd::OnResize()
 {
+#ifndef _SNAP_TINY_BUTTONS
 	if (!g_bHideOptions)
 	{
 		ShowControls(true);
@@ -641,6 +674,19 @@ void SWS_SnapshotsWnd::OnResize()
 		m_resize.get_item(IDC_OPTIONS)->scales[2] = 0.0;
 		SetDlgItemText(m_hwnd, IDC_OPTIONS, __LOCALIZE("Show Options ->","sws_DLG_101"));
 	}
+#else
+	if (!g_bHideOptions)
+	{
+		ShowControls(true);
+		m_resize.get_item(IDC_LIST)->orig = m_resize.get_item(IDC_LIST)->real_orig;
+	}
+	else
+	{
+		ShowControls(false);
+		RECT* r = &m_resize.get_item(IDC_LIST)->orig;
+		r->right = m_resize.get_orig_rect().right - r->left;
+	}
+#endif
 	InvalidateRect(m_hwnd, NULL, 0);
 }
 
@@ -660,6 +706,10 @@ void SWS_SnapshotsWnd::OnDestroy()
 		g_bSelOnly_OnRecall ? 1 : 0,
 		g_bShowSelOnly ? 1 : 0);
 	WritePrivateProfileString(SWS_INI, SNAP_OPTIONS_KEY, str, get_ini_file());
+
+#ifdef _SNAP_TINY_BUTTONS
+	m_tinyLRbtns.RemoveAllChildren(false);
+#endif
 }
 
 int SWS_SnapshotsWnd::OnKey(MSG* msg, int iKeyState)
@@ -730,6 +780,25 @@ void SWS_SnapshotsWnd::ShowControls(bool bShow)
 	ShowWindow(GetDlgItem(m_hwnd, IDC_NAMEPROMPT), bShow);
 	ShowWindow(GetDlgItem(m_hwnd, IDC_HIDENEW), bShow);
 }
+
+#ifdef _SNAP_TINY_BUTTONS
+void SWS_SnapshotsWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltipHeight)
+{
+	RECT r;
+	GetWindowRect(GetDlgItem(m_hwnd, IDC_LIST), &r);
+	ScreenToClient(m_hwnd, (LPPOINT)&r);
+	ScreenToClient(m_hwnd, ((LPPOINT)&r)+1);
+	r.top = r.bottom - (9*2+1+1); 
+	r.bottom = r.top + (9*2+1);
+	r.left = r.right + 1;
+	r.right = r.left + 5;
+
+	m_btnLeft.SetEnabled(g_bHideOptions);
+	m_btnRight.SetEnabled(!g_bHideOptions);
+	m_tinyLRbtns.SetPosition(&r);
+	m_tinyLRbtns.SetVisible(true);
+}
+#endif
 
 Snapshot* GetSnapshotPtr(int i)
 {

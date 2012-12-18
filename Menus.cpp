@@ -34,7 +34,7 @@
 
 // *************************** UTILITY FUNCTIONS ***************************
 
-void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPos, UINT uiSate)
+void AddToMenuOld(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPos, UINT uiSate)
 {
 	if (!text)
 		return;
@@ -78,13 +78,13 @@ void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPo
 // This version "auto sort" menu items
 // Note: could be used as default AddToMenu (when no insert position is
 // requested) but this func is only used when the extension is localized ATM..
-void AddToMenu(HMENU hMenu, const char* text, int id, UINT uiSate)
+void AddToMenu(HMENU hMenu, const char* text, int id, int iInsertAfter, bool bPos, UINT uiSate)
 {
 	if (!text)
 		return;
 
-	if(!IsLocalized()) {
-		AddToMenu(hMenu, text, id, -1, false, uiSate);
+	if(!IsLocalized() || bPos || iInsertAfter != -1) {
+		AddToMenuOld(hMenu, text, id, iInsertAfter, bPos, uiSate);
 		return;
 	}
 
@@ -106,7 +106,7 @@ void AddToMenu(HMENU hMenu, const char* text, int id, UINT uiSate)
 	}
 }
 
-void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, UINT uiSate)
+void AddSubMenuOld(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, UINT uiSate)
 {
 	int iPos = GetMenuItemCount(hMenu);
 	if (iInsertAfter < 0)
@@ -137,10 +137,10 @@ void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, 
 // This version "auto sort" sub menu items
 // Note: could be used as default AddSubMenu (when no insert position is
 // requested) but this func is only used when the extension is localized ATM..
-void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, UINT uiSate)
+void AddSubMenu(HMENU hMenu, HMENU subMenu, const char* text, int iInsertAfter, UINT uiSate)
 {
-	if(!IsLocalized()) {
-		AddSubMenu(hMenu, subMenu, text, -1, uiSate);
+	if(!IsLocalized() || iInsertAfter != -1) {
+		AddSubMenuOld(hMenu, subMenu, text, iInsertAfter, uiSate);
 		return;
 	}
 

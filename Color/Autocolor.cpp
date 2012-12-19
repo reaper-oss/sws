@@ -244,7 +244,7 @@ void SWS_AutoColorView::OnDrag()
 }
 
 SWS_AutoColorWnd::SWS_AutoColorWnd()
-:SWS_DockWnd(IDD_AUTOCOLOR, __LOCALIZE("Auto Color/Icon","sws_DLG_115"), "SWSAutoColor", 30005, SWSGetCommandID(OpenAutoColor))
+:SWS_DockWnd(IDD_AUTOCOLOR, __LOCALIZE("Auto Color/Icon","sws_DLG_115"), "SWSAutoColor", SWSGetCommandID(OpenAutoColor))
 #ifndef _WIN32
 	,m_bSettingColor(false)
 #endif

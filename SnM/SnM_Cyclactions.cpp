@@ -937,8 +937,7 @@ enum
 };
 
 SNM_CyclactionWnd::SNM_CyclactionWnd()
-	: SWS_DockWnd(IDD_SNM_CYCLACTION, __LOCALIZE("Cycle Action editor","sws_DLG_161"),
-	"SnMCyclaction", 30011, SWSGetCommandID(OpenCyclactionView))
+	: SWS_DockWnd(IDD_SNM_CYCLACTION, __LOCALIZE("Cycle Action editor","sws_DLG_161"), "SnMCyclaction", SWSGetCommandID(OpenCyclactionView))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();

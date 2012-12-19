@@ -631,7 +631,7 @@ void SNM_LiveConfigView::OnItemDblClk(SWS_ListItem* item, int iCol)
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_LiveConfigsWnd::SNM_LiveConfigsWnd()
-	: SWS_DockWnd(IDD_SNM_LIVE_CONFIGS, __LOCALIZE("Live Configs","sws_DLG_155"), "SnMLiveConfigs", 30009, SWSGetCommandID(OpenLiveConfigView))
+	: SWS_DockWnd(IDD_SNM_LIVE_CONFIGS, __LOCALIZE("Live Configs","sws_DLG_155"), "SnMLiveConfigs", SWSGetCommandID(OpenLiveConfigView))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -2516,9 +2516,8 @@ SNM_LiveConfigMonitorWnd::SNM_LiveConfigMonitorWnd(int _cfgId)
 	// see SWS_DockWnd()
 	m_hwnd=NULL;
 	m_iResource=IDD_SNM_LIVE_CONFIG_MON;
-	m_cWndTitle.Set(title);
-	m_cId.Set(dockName);
-	m_iDockOrder = 30014+_cfgId;
+	m_wndTitle.Set(title);
+	m_id.Set(dockName);
 	m_bUserClosed = false;
 	m_iCmdID = SWSGetCommandID(OpenLiveConfigMonitorWnd, (INT_PTR)_cfgId);
 	m_bLoadingState = false;

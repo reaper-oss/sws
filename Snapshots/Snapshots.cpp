@@ -347,7 +347,7 @@ int SWS_SnapshotsView::GetItemState(SWS_ListItem* item)
 }
 
 SWS_SnapshotsWnd::SWS_SnapshotsWnd()
-:SWS_DockWnd(IDD_SNAPS, __LOCALIZE("Snapshots","sws_DLG_101"), "SWSSnapshots", 30002, SWSGetCommandID(OpenSnapshotsDialog)),m_iSelType(0)
+:SWS_DockWnd(IDD_SNAPS, __LOCALIZE("Snapshots","sws_DLG_101"), "SWSSnapshots", SWSGetCommandID(OpenSnapshotsDialog)),m_iSelType(0)
 {
 	// Restore state
 	char str[32];

@@ -441,7 +441,7 @@ void SNM_PlaylistView::OnEndDrag()
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_RegionPlaylistWnd::SNM_RegionPlaylistWnd()
-	: SWS_DockWnd(IDD_SNM_RGNPLAYLIST, __LOCALIZE("Region Playlist","sws_DLG_165"), "SnMRgnPlaylist", 30013, SWSGetCommandID(OpenRegionPlaylist))
+	: SWS_DockWnd(IDD_SNM_RGNPLAYLIST, __LOCALIZE("Region Playlist","sws_DLG_165"), "SnMRgnPlaylist", SWSGetCommandID(OpenRegionPlaylist))
 {
 	// must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();

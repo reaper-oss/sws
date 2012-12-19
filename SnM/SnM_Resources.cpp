@@ -815,7 +815,7 @@ void SNM_ResourceView::Perform()
 ///////////////////////////////////////////////////////////////////////////////
 
 SNM_ResourceWnd::SNM_ResourceWnd()
-	: SWS_DockWnd(IDD_SNM_RESOURCES, __LOCALIZE("Resources","sws_DLG_150"), "SnMResources", 30006, SWSGetCommandID(OpenResourceView))
+	: SWS_DockWnd(IDD_SNM_RESOURCES, __LOCALIZE("Resources","sws_DLG_150"), "SnMResources", SWSGetCommandID(OpenResourceView))
 {
 	// Must call SWS_DockWnd::Init() to restore parameters and open the window if necessary
 	Init();
@@ -2805,7 +2805,7 @@ void SNM_TieResourceSlotActions(int _bookmarkId) {
 SNM_ImageWnd* g_pImageWnd = NULL;
 
 SNM_ImageWnd::SNM_ImageWnd()
-	: SWS_DockWnd(IDD_SNM_IMAGE, __LOCALIZE("Image","sws_DLG_162"), "SnMImage", 30012, SWSGetCommandID(OpenImageView))
+	: SWS_DockWnd(IDD_SNM_IMAGE, __LOCALIZE("Image","sws_DLG_162"), "SnMImage", SWSGetCommandID(OpenImageView))
 {
 	m_stretch = false;
 

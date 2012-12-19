@@ -102,9 +102,9 @@ bool g_internalMkrRgnChange = false;
 
 SNM_NotesHelpWnd::SNM_NotesHelpWnd()
 #ifdef _WIN32
-	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes/Subtitles/Help","sws_DLG_152"), "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
+	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes/Subtitles/Help","sws_DLG_152"), "SnMNotesHelp", SWSGetCommandID(OpenNotesHelpView))
 #else
-	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes/Subtitles","sws_DLG_152"), "SnMNotesHelp", 30007, SWSGetCommandID(OpenNotesHelpView))
+	: SWS_DockWnd(IDD_SNM_NOTES, __LOCALIZE("Notes/Subtitles","sws_DLG_152"), "SnMNotesHelp", SWSGetCommandID(OpenNotesHelpView))
 #endif
 {
 	// must call SWS_DockWnd::Init() to restore parameters and open the window if necessary

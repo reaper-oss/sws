@@ -55,7 +55,7 @@ public:
 	SWS_ListItemList() {}
 	~SWS_ListItemList() {}
 	int GetSize() { return m_list.GetSize(); }
-	void Add(SWS_ListItem* item) { m_list.InsertSorted((INT_PTR*)item, ILIComp); }
+	void Add(SWS_ListItem* item, bool sort = true) { if (sort) m_list.InsertSorted((INT_PTR*)item, ILIComp); else m_list.Add((INT_PTR*)item); }
 	SWS_ListItem* Get(int iIndex) { return (SWS_ListItem*)m_list.Get(iIndex); }
 	int Find(SWS_ListItem* item) { return m_list.FindSorted((INT_PTR*)item, ILIComp); }
 	void Delete(int iIndex) { m_list.Delete(iIndex); }
@@ -171,7 +171,7 @@ class SWS_DockWnd
 {
 public:
 	// Unless you need the default contructor (new SWS_DockWnd()), you must provide all parameters
-	SWS_DockWnd(int iResource=0, const char* cWndTitle="", const char* cId="", int iDockOrder=0, int iCmdID=0);
+	SWS_DockWnd(int iResource=0, const char* cWndTitle="", const char* cId="", int iCmdID=0);
 	virtual ~SWS_DockWnd();
 
 	void Show(bool bToggle, bool bActivate);
@@ -220,9 +220,8 @@ protected:
 	HWND m_hwnd;
 	int m_iCmdID;
 	int m_iResource;
-	WDL_FastString m_cWndTitle;
-	WDL_FastString m_cId;
-	int m_iDockOrder; // v4 TODO delete me
+	WDL_FastString m_wndTitle;
+	WDL_FastString m_id;
 	accelerator_register_t m_ar;
 	SWS_DockWnd_State m_state;
 	bool m_bUserClosed;

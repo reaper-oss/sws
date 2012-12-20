@@ -370,18 +370,18 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, const char* _expectedLocal
 	{
 		case -4: {
 			char msg[256]="";
-			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Section \"%s\" is not selected in the \"Actions\" window!","sws_mbox"), _expectedLocalizedSection);
+			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Section \"%s\" is not selected in the Actions window!","sws_mbox"), _expectedLocalizedSection);
 			MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			return false;
 		}
 		case -3:
-			MessageBox(GetMainHwnd(), __LOCALIZE("There is no selected action in the \"Actions\" window!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			MessageBox(GetMainHwnd(), __LOCALIZE("There is no selected action in the Actions window!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			return false;
 		case -2:
-			MessageBox(GetMainHwnd(), __LOCALIZE("Action IDs are not available in the \"Actions\" window!\nRight-click on the table header > Show action IDs.","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			MessageBox(GetMainHwnd(), __LOCALIZE("Action IDs are not available in the Actions window!\nRight-click on the table header > Show action IDs.","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			return false;
 		case -1:
-			if (IDYES == MessageBox(GetMainHwnd(), __LOCALIZE("\"Actions\" window not opened!\nDo you want to open it?","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_YESNO))
+			if (IDYES == MessageBox(GetMainHwnd(), __LOCALIZE("Actions window not opened!\nDo you want to open it?","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_YESNO))
 				ShowActionList(NULL, NULL);
 			return false;
 	}
@@ -514,7 +514,7 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 	}
 	else
 	{
-		WDL_FastString msg(__LOCALIZE("Dump failed: \"Actions\" window not opened!","sws_mbox"));
+		WDL_FastString msg(__LOCALIZE("Dump failed: Actions window not opened!","sws_mbox"));
 		msg.Append("\n\n");
 		msg.Append(help);
 		MessageBox(GetMainHwnd(), msg.Get(), _title, MB_OK);

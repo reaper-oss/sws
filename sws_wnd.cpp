@@ -775,17 +775,20 @@ SWS_ListItem* SWS_ListView::EnumSelected(int* i)
 
 bool SWS_ListView::SelectByItem(SWS_ListItem* _item, bool bSelectOnly, bool bEnsureVisible)
 {
-	for (int i = 0; i < GetListItemCount(); i++)
+	if (_item)
 	{
-		SWS_ListItem* item = GetListItem(i);
-		if (item == _item) 
+		for (int i = 0; i < GetListItemCount(); i++)
 		{
-			if (bSelectOnly)
-				ListView_SetItemState(m_hwndList, -1, 0, LVIS_SELECTED);
-			ListView_SetItemState(m_hwndList, i, LVIS_SELECTED, LVIS_SELECTED);
-			if (bEnsureVisible)
-				ListView_EnsureVisible(m_hwndList, i, true);
-			return true;
+			SWS_ListItem* item = GetListItem(i);
+			if (item == _item) 
+			{
+				if (bSelectOnly)
+					ListView_SetItemState(m_hwndList, -1, 0, LVIS_SELECTED);
+				ListView_SetItemState(m_hwndList, i, LVIS_SELECTED, LVIS_SELECTED);
+				if (bEnsureVisible)
+					ListView_EnsureVisible(m_hwndList, i, true);
+				return true;
+			}
 		}
 	}
 	return false;

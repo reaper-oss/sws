@@ -50,7 +50,7 @@ public:
 	int GetCmdSize() {return m_cmds.GetSize();}
 	const char* GetCmd(int _i) {return m_cmds.Get(_i)->Get();}
 	void SetCmd(WDL_FastString* _cmd, const char* _newCmd);
-	WDL_FastString* AddCmd(const char* _cmd);
+	WDL_FastString* AddCmd(const char* _cmd, int _pos = -1);
 	void InsertCmd(int _pos, WDL_FastString* _cmd) {m_cmds.Insert(_pos, _cmd); UpdateFromCmd();}
 	void RemoveCmd(WDL_FastString* _cmd, bool _wantDelete=false){m_cmds.Delete(m_cmds.Find(_cmd), _wantDelete); UpdateFromCmd();}
 	WDL_FastString* GetCmdString(int _i) {return m_cmds.Get(_i);}

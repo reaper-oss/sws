@@ -1461,11 +1461,11 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 					AddToMenu(hMenu, __LOCALIZE("(No track)","sws_DLG_155"), 0, -1, false, MFS_GRAYED);
 				break;
 			case COL_ACTION_ON:
-				AddToMenu(hMenu, __LOCALIZE("Set selected action (in the \"Actions\" window)","sws_DLG_155"), SNM_LIVECFG_LEARN_ON_ACTION_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Set selected action (in the Actions window)","sws_DLG_155"), SNM_LIVECFG_LEARN_ON_ACTION_MSG);
 				AddToMenu(hMenu, __LOCALIZE("Clear actions","sws_DLG_155"), SNM_LIVECFG_CLEAR_ON_ACTION_MSG);
 				break;
 			case COL_ACTION_OFF:
-				AddToMenu(hMenu, __LOCALIZE("Set selected action (in the \"Actions\" window)","sws_DLG_155"), SNM_LIVECFG_LEARN_OFF_ACTION_MSG);
+				AddToMenu(hMenu, __LOCALIZE("Set selected action (in the Actions window)","sws_DLG_155"), SNM_LIVECFG_LEARN_OFF_ACTION_MSG);
 				AddToMenu(hMenu, __LOCALIZE("Clear actions","sws_DLG_155"), SNM_LIVECFG_CLEAR_OFF_ACTION_MSG);
 				break;
 		}

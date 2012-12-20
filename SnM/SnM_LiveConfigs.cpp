@@ -1602,7 +1602,7 @@ bool SNM_LiveConfigsWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, i
 			case WNDID_FADE:
 			case KNBID_FADE:
 				// keep messages on a single line (for the langpack generator)
-				lstrcpyn(_bufOut, __LOCALIZE("Optional fades-in/out when activating/deactivating tracks\n(ensure smooth switches)","sws_DLG_155"), _bufOutSz);
+				lstrcpyn(_bufOut, __LOCALIZE("Optional fades-in/out when activating/deactivating configs\n(ensure smooth switches)","sws_DLG_155"), _bufOutSz);
 				return true;
 		}
 	}

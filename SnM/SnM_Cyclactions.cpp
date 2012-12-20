@@ -270,6 +270,7 @@ void RunMainCyclaction(COMMAND_T* _ct) {RunCycleAction(0, _ct);}
 void RunMEListCyclaction(COMMAND_T* _ct) {RunCycleAction(1, _ct);}
 void RunMEPianoCyclaction(COMMAND_T* _ct) {RunCycleAction(2, _ct);}
 
+//JFB!!! todo: take IF ito account
 bool IsCyclactionEnabled(int _type, COMMAND_T* _ct)
 {
 	int cycleId = (int)_ct->user;
@@ -334,7 +335,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 {
 	if (_a)
 	{
-		int steps=0, noop=0, expressions=0;
+		int steps=0, noop=0, instructions=0;
 		for (int i=0; i<_a->GetCmdSize(); i++)
 		{
 			const char* cmd = _a->GetCmd(i);
@@ -352,7 +353,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 				noop++;
 			else if (IsLogicCmd(cmd))
 			{
-				expressions++;
+				instructions++;
 				if (!_stricmp(LOGIC_CMD_IF, cmd) || !_stricmp(LOGIC_CMD_IFNOT, cmd))
 				{
 					if (_section)
@@ -435,7 +436,7 @@ bool CheckRegisterableCyclaction(int _section, Cyclaction* _a, WDL_FastString* _
 				}
 			}
 		}
-		if ((steps + noop + expressions) == _a->GetCmdSize())
+		if ((steps + noop + instructions) == _a->GetCmdSize())
 		{
 			if (_errMsg && !_a->IsEmpty()) {
 				AppendToErrMsg(_section, _a, _errMsg);
@@ -1636,10 +1637,10 @@ HMENU SNM_CyclactionWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		{
 			AddToMenu(hMenu, __LOCALIZE("Add/insert command","sws_DLG_161"), ADD_CMD_MSG);
 			AddToMenu(hMenu, __LOCALIZE("Add/insert step","sws_DLG_161"), ADD_STEP_CMD_MSG);
-			HMENU hExpressionSubMenu = CreatePopupMenu();
-			AddSubMenu(hMenu, hExpressionSubMenu, __LOCALIZE("Add/insert expression","sws_DLG_161"));
+			HMENU hInstructionSubMenu = CreatePopupMenu();
+			AddSubMenu(hMenu, hInstructionSubMenu, __LOCALIZE("Add/insert instruction","sws_DLG_161"));
 			for (int i=0; i<NB_LOGIC_CMDS; i++)
-				AddToMenu(hExpressionSubMenu, g_logicCmds[i], ADD_LOGIC_CMD_MSG+i);
+				AddToMenu(hInstructionSubMenu, g_logicCmds[i], ADD_LOGIC_CMD_MSG+i);
 			AddToMenu(hMenu, __LOCALIZE("Add/insert selected action (in the Actions window)","sws_DLG_161"), LEARN_CMD_MSG);
 
 			if (cmd && cmd != &g_EMPTY_R && cmd != &g_DEFAULT_R)

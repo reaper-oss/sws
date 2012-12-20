@@ -1,9 +1,104 @@
-Localization: sorted menus (like default English menus)
+<b>Live Configs: big overhaul</b>
+Lots of changes: merged a dedicated extension plugin.
+The fine details will be posted in this http://forum.cockos.com/showthread.php?p=1079515#post1079515|thread/PDF|, not up-to-date yet!
+In the meantime the major changes are:
++New "core" to ensure smooth/glitch-free config switches, new "All notes off" logic (now optional)
++Added Preload feature: you can prepare an instrument/effect while playing another
+ This can be done with a second controller or, on OSX via multi-touch gesture
++Added Monitoring windows, <b>demo http://stash.reaper.fm/14847/S%26M_LiveConfigMonitor.gif|here|</b>
+ - Allows monitoring the current/preloaded configs far away from the screen (useful when you have no visual feedback for controllers)
+ - OSX/Trackpad: support config switch/preload via 2 fingers scroll over Current/Preload areas
+   Note: this is available on Windows OS too, but requires the mouse wheel (not really live-performance-proof)
+ - Up to 4 Monitors can be used simultaneously, i.e. one per Live Config
++Added options (per config):
+ - "Offline all but active/preloaded tracks (RAM savings)"
+   This new option comes in handy with the new preload feature: the only loaded instruments/effects will be those of the active and preloaded tracks.
+   Other tracks that are not part of the config will remain as they are, of course. This will work without preload too but switches will be slower.
+   Note: handle with care! Do not use <del>this option with</del> buggy instruments/effects!
+ - "Ignore switches to empty configs"
+   Especially useful with "Apply next/previous" actions: automatically switch to next/previous configs whatever is the gap in between.
+ - "Send all notes off when switching configs"
+ - "Select/scroll to track on list view click"
++Added "Tiny fades" knob 
+ It tweaks lengths of tiny fades-out/in when deactivating/activating configs, disabling is allowed but instrument/effect switches be glitchy!
++New logic for "Activation" and "Deactivation" actions/macros:
+ - If a track is defined for a config, only this track will be selected when the "Activation" (or "Deactivation") action is performed - Useful since many actions deal with "selected track(s)"
+ - If no track is defined for a config, no track will be selected when the "Activation" (or "Deactivation") action is performed - Useful to master the current selection state
++Added helpers for newcomers:
+ - Added "Create input track" in the context menu (creates a track with needed properties and sends)
+ - Added option "Automatically update sends from the input track"
+ - Added "Learn" button: direct action learn for "Apply" and "Preload" actions.
+   This is to ease controller bindings (due to some technical constraints, apply/preload actions have to be buried in a section "S&M Extension" of the action list..).
+ - Added "CC delay" knob (no more S&M.ini file tweaks needed). One "CC delay" per config.
++Added a bunch of actions (preload, toggle options on/off, open/close monitoring windows, etc..): filter the action list with "Live Config"!
+ Note: some of the new actions are hidden by default (number of actions = 0 in the S&M.ini file)
++New context menu items:
+ - Copy/cut/paste configs (rows)
+ - Insert config (shift rows up/down) + obey INSERT key
+ - Apply/preload configs
+ - Shortcuts: "Show FX chain..." and "Show routing window..." in the Track column and the Input track context menus
 
-OSX: added actions (already there on Windows OS)
-+SWS/S&M: Dump action list (w/o SWS extension)
-+SWS/S&M: Dump action list (SWS extension only)
-+SWS/S&M: Dump action list (custom actions only)
+Region Playlist
++<b>Playlist re-synchronization when seeking by hand or via actions</b> (issue 532)
+ Use-case example: now, you can also use actions like "Regions: Go to region #n" to switch regions defined in a playlist
+ Note: when seeking to a position that is not part of the playlist, the extension will switch back ASAP to the region it was supposed to play
++Re-synchronize the playlist when editing it while playing (or when its regions are edited)
++Fixed various corner cases: audio block rounding, possible issues with unknown (e.g. deleted) regions, etc..
++Improved monitoring mode (separate region numbers and region names, display number of remaining loops, new red "sync loss" status, etc..)
++Added options (in the context menu): "Seek play" and "Scroll view when selecting regions"
++Reorganized the window a bit: added columns, moved playlist length as tooltip, etc..
+
+Cycle actions
++<b>Added basic instructions, see why and details http://forum.cockos.com/showpost.php?p=1090262&postcount=1136|here|</b>
+ Supported instructions are: IF, IF NOT, and LOOP n
++Toggle cycle actions now report real toggle states (i.e. the state of the first relevant action)
++Cycle action editor
+ - Added "Add/insert instruction" in the right view context menu
+ - Insert commands at selection (just avoid to drag commands that were always added at the end before this version)
+ - Various tweaks, including new tiny buttons to enlarge list views
+
+Export functions to ReaScript (BETA)
++Fixed possible FNG function crash
++Added functions:
+ - SNM_RemoveReceivesFrom()
+ - SNM_SelectResourceBookmark() - untested!
+ - SNM_TieResourceSlotActions() - untested!
++Updated API, updated SNM_AddReceive() to obey routing preferences
+
+Added actions
++Added "go to" marker/region actions (just meant to target up to 99 regions/markers)
+ The number of actions is customizable in the S&M.ini file, 0 by default (i.e. <b>hidden!</b>)
+ Note: comes in handy with the new Region Playlist "re-synchronization" feature, see above
+ - SWS/S&M: Go to marker n (obeys smooth seek)
+ - SWS/S&M: Go to region n (obeys smooth seek)
++Issue 528:
+ - SWS/S&M: Insert marker at edit cursor
+ - SWS/S&M: Insert marker at play cursor
++Issue 535:
+ - SWS: Select unmuted items
+ - SWS: Select unmuted items on selected tracks
++New on OSX (were already there on Windows OS):
+ - SWS/S&M: Dump action list (w/o SWS extension)
+ - SWS/S&M: Dump action list (SWS extension only)
+ - SWS/S&M: Dump action list (custom actions only)
+
+All list views:
++Obey to HOME, END, PAGE UP and PAGE DOWN keys
++OSX: obey to CMD-A like on Windows OS (select all)
++OSX: fixed "crazy selection" bug
++Windows OS: fixed a themed grid line glitch
+
+Other:
++Fixed possible Auto color/icon crash when exiting REAPER
++Fixed possible crash with FX selection actions
++OSX: directory browsers allow directory creation (issue 511)
++OSX: fixed single line tooltips
++The action "SWS/S&M: Insert silence (measures.beats)" now supports tempo/time signature markers
++Offline FX actions now fully unload VST plugins
++Localization: sorted menus like default English menus
++Snapshot window: replaced the button "show/hide options" with 2 tiny buttons, i.e. fixes http://forum.cockos.com/showpost.php?p=1034735&postcount=969|this report|
++Resources window: moved the tick box "Tie slot actions to this bookmark" to the context menu ("advanced" stuff)
++Updated all S&M windows: removed margins when possible, every pixel counts!
 
 !v2.3.0 #8 (November 1, 2012)
 <b>Region playlist: http://forum.cockos.com/showpost.php?p=1063758&postcount=10|new features for live use!|</b>

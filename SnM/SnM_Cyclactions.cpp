@@ -52,7 +52,7 @@ char g_logicCmds[][8] = { LOGIC_CMD_IF, LOGIC_CMD_IFNOT, LOGIC_CMD_ENDIF, LOGIC_
 // [0] = main section action, [1] = ME event list section action, [2] = ME piano roll section action
 WDL_PtrList_DeleteOnDestroy<Cyclaction> g_cyclactions[SNM_MAX_CYCLING_SECTIONS];
 char g_cyclactionCustomIds[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_ACTION_CUSTID_LEN] = {"S&M_CYCLACTION_", "S&M_ME_LIST_CYCLACTION", "S&M_ME_PIANO_CYCLACTION"};
-char g_cyclactionIniSections[SNM_MAX_CYCLING_SECTIONS][64] = {"Main_Cyclactions", "ME_List_Cyclactions", "ME_Piano_Cyclactions"};
+char g_cyclactionIniSections[SNM_MAX_CYCLING_SECTIONS][32] = {"Main_Cyclactions", "ME_List_Cyclactions", "ME_Piano_Cyclactions"};
 char g_cyclactionSections[SNM_MAX_CYCLING_SECTIONS][SNM_MAX_SECTION_NAME_LEN]; // see init + localization in CyclactionInit()
 
 static SNM_CyclactionWnd* g_pCyclactionWnd = NULL;
@@ -116,7 +116,7 @@ public:
 				{
 					bool on = (_stricmp(LOGIC_CMD_IF, cmdStr) == 0);
 					cmdStr = m_actions.Get(++i)->Get(); //++i !
-					if (!m_section) // REAPER API LIMITATION: GetToggleCommandState() is only available for the main section atm
+					if (!m_section) // API LIMITATION: NamedCommandLookup() & GetToggleCommandState() is only available for the main section atm
 					{
 						int tgl = GetToggleCommandState(NamedCommandLookup(cmdStr));
 						if (tgl>=0 && (on ? tgl==0 : tgl==1))
@@ -193,7 +193,7 @@ void RunCycleAction(int _section, COMMAND_T* _ct)
 	if (!action)
 		return;
 
-	// process new actions until cycle point
+	// goto current cycle point
 	WDL_FastString name(action->GetName());
 	int state=0, startIdx=0;
 	while (startIdx < action->GetCmdSize() && state < action->m_performState)
@@ -270,12 +270,11 @@ void RunMainCyclaction(COMMAND_T* _ct) {RunCycleAction(0, _ct);}
 void RunMEListCyclaction(COMMAND_T* _ct) {RunCycleAction(1, _ct);}
 void RunMEPianoCyclaction(COMMAND_T* _ct) {RunCycleAction(2, _ct);}
 
-//JFB!!! todo: take IF ito account
-bool IsCyclactionEnabled(int _type, COMMAND_T* _ct)
+bool IsCyclactionEnabled(int _section, COMMAND_T* _ct)
 {
 	int cycleId = (int)_ct->user;
-	Cyclaction* action = g_cyclactions[_type].Get(cycleId-1); // cycle action id is 1-based
-	if (action)
+	Cyclaction* action = g_cyclactions[_section].Get(cycleId-1); // cycle action id is 1-based
+	if (action && !_section) //JFB API LIMITATION: NamedCommandLookup() & GetToggleCommandState() only available the the main section
 	{
 		// goto the current cycle point
 		int state=0, startIdx=0;
@@ -283,20 +282,24 @@ bool IsCyclactionEnabled(int _type, COMMAND_T* _ct)
 			if (action->GetCmd(startIdx++)[0] == '!')
 				state++;
 
-		// find the first toggle action in there and report its state, if any
+		while (action->GetCmd(startIdx)[0] == '!') startIdx++;
+
+		// find the first toggle action in there and report its state
 		while (startIdx<action->GetCmdSize())
 		{
-			if (action->GetCmd(startIdx)[0] != '!')
-				if (int cmd = NamedCommandLookup(action->GetCmd(startIdx))) {
-					int state = GetToggleCommandState(cmd);
-					if (state >= 0)
-						return (state==1);
-				}
-			startIdx++;
+			const char* c = action->GetCmd(startIdx++);
+			if (c[0] == '!')
+				break;
+			else if (int cmd=NamedCommandLookup(c)) // logic commands are stripped out
+			{
+				int state = GetToggleCommandState(cmd);
+				if (state >= 0)
+					return (state==1);
+			}
 		}
-
 		// default case: fall through
 	}
+	// default = fake toggle state
 	return (action && /*action->IsToggle() &&*/ (action->m_performState % 2) != 0);
 }
 

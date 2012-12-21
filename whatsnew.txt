@@ -5,17 +5,18 @@ In the meantime the major changes are:
 +Added Preload feature: you can prepare an instrument/effect while playing another
  This can be done with a second controller (click the new "Learn" button) or, on OSX, via the trackpad
 +Added Monitoring windows, <b>demo http://stash.reaper.fm/14847/S%26M_LiveConfigMonitor.gif|here|</b>
- - Useful when controllers do not provide visual feedback
- - OSX: config switch/preload via 2 fingers gesture over Current/Preload areas (i.e. switch instruments/effects with the trackpad) + click on the Preload area to swap preloaded/current configs 
-   Note: this is available on Windows OS too, but it requires the mouse wheel (not really live-performance-proof)
+ - Useful with controllers that do not provide visual feedback
+ - OSX: support 2 fingers gesture over "Current" and "Preload" areas, i.e. switch instruments/effects with the trackpad
+   Note: this is available on Windows OS too but via the mouse wheel..
+ - Click on the "Preload" area to swap preloaded/current configs
  - Up to 4 Monitors can be used simultaneously, i.e. one per Live Config
 +Added options (per config):
  - "Offline all but active/preloaded tracks (RAM savings)"
-   This new option comes in handy with the new preload feature: the only loaded instruments/effects will be those of the active and preloaded tracks.
-   Other tracks that are not part of the config will remain as they are, of course. This will work without preload too but switches will be slower.
+   This new option comes in handy with the new preload feature: the only loaded instruments/effects will be those of the current and preloaded tracks.
+   Other tracks that are not part of the config will remain as they are, of course. This option works without preload too, switches will be slower though.
    Note: handle with care! Do not use <del>this option with</del> buggy instruments/effects!
  - "Ignore switches to empty configs"
-   Especially useful with "Apply next/previous" actions: automatically switch to next/previous configs whatever is the gap in between.
+   Especially useful for "Apply next/previous config" actions: switch to the next/previous valid config whatever is the gap (of empty configs) in between.
  - "Send all notes off when switching configs"
  - "Select/scroll to track on list view click"
 +Added "Tiny fades" knob 
@@ -30,7 +31,7 @@ In the meantime the major changes are:
  - Added option "Automatically update sends from the input track"
  - Added "CC delay" knob (no more S&M.ini file tweaks needed). One "CC delay" per config.
 +Added a bunch of actions (preload, toggle options on/off, open/close monitoring windows, etc..): filter the action list with "Live Config"!
- Note: some of the new actions are hidden by default (number of actions = 0 in the S&M.ini file)
+ Note: some of the new actions are specific and thus hidden by default (number of actions = 0 in the S&M.ini file)
 +New context menu items:
  - Copy/cut/paste configs (rows)
  - Insert config (shift rows up/down) + obey INSERT key

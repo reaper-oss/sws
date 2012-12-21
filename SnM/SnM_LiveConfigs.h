@@ -187,6 +187,7 @@ void PreloadLiveConfig(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, 
 
 void NextLiveConfig(COMMAND_T*);
 void PreviousLiveConfig(COMMAND_T*);
+void SwapCurrentPreloadLiveConfigs(COMMAND_T*);
 
 bool IsLiveConfigEnabled(COMMAND_T*);
 void UpdateEnableLiveConfig(int _cfgId, int _val);
@@ -203,5 +204,15 @@ bool IsOfflineOthersLiveConfigEnabled(COMMAND_T*);
 void EnableOfflineOthersLiveConfig(COMMAND_T*);
 void DisableOfflineOthersLiveConfig(COMMAND_T*);
 void ToggleOfflineOthersLiveConfig(COMMAND_T*);
+
+bool IsAllNotesOffLiveConfigEnabled(COMMAND_T* _ct);
+void EnableAllNotesOffLiveConfig(COMMAND_T* _ct);
+void DisableAllNotesOffLiveConfig(COMMAND_T* _ct);
+void ToggleAllNotesOffLiveConfig(COMMAND_T* _ct);
+
+bool IsTinyFadesLiveConfigEnabled(COMMAND_T* _ct);
+void EnableTinyFadesLiveConfig(COMMAND_T* _ct);
+void DisableTinyFadesLiveConfig(COMMAND_T* _ct);
+void ToggleTinyFadesLiveConfig(COMMAND_T* _ct);
 
 #endif

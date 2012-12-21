@@ -773,7 +773,7 @@ void SNM_LiveConfigsWnd::Update()
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId)) {
 		m_vwndCC.SetValue(lc->m_ccDelay);
 		m_vwndFade.SetValue(lc->m_fade);
-		AddOrReplaceScheduledJob(new LiveConfigsUpdateFadeJob(lc->m_fade)); // so that it works for undo..
+//JFB!!!		AddOrReplaceScheduledJob(new LiveConfigsUpdateFadeJob(lc->m_fade)); // so that it works for undo..
 	}
 	m_parentVwnd.RequestRedraw(NULL);
 }
@@ -2769,6 +2769,13 @@ void PreviousLiveConfig(COMMAND_T* _ct)
 	}
 }
 
+void SwapCurrentPreloadLiveConfigs(COMMAND_T* _ct)
+{
+	int cfgId = (int)_ct->user;
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get(cfgId))
+		ApplyLiveConfig(cfgId, lc->m_preloadMidiVal, -1, 0, SNM_APPLY_PRELOAD_HWND, true); // immediate
+}
+
 /////
 
 bool IsLiveConfigEnabled(COMMAND_T* _ct) {
@@ -2792,9 +2799,7 @@ void UpdateEnableLiveConfig(int _cfgId, int _val)
 		if (g_monitorWnds[_cfgId])
 			g_monitorWnds[_cfgId]->Update(SNM_APPLY_MASK|SNM_PRELOAD_MASK, 0);
 
-		char custId[SNM_MAX_ACTION_CUSTID_LEN];
-		_snprintfSafe(custId, sizeof(custId), "%s%d", "_S&M_TOGGLE_LIVE_CFG", _cfgId+1);
-		RefreshToolbar(NamedCommandLookup(custId));
+		// RefreshToolbar()) not required..
 	}
 }
 
@@ -2825,6 +2830,7 @@ void UpdateMuteOthers(COMMAND_T* _ct, int _val)
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user)) {
 		lc->m_muteOthers = _val<0 ? !lc->m_muteOthers : _val;
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
+		// RefreshToolbar()) not required..
 	}
 }
 
@@ -2853,8 +2859,9 @@ bool IsOfflineOthersLiveConfigEnabled(COMMAND_T* _ct) {
 void UpdateOfflineOthers(COMMAND_T* _ct, int _val)
 {
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user)) {
-		lc->m_offlineOthers = _val<0 ? !lc->m_offlineOthers : _val;	
+		lc->m_offlineOthers = _val<0 ? !lc->m_offlineOthers : _val;
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
+		// RefreshToolbar()) not required..
 	}
 }
 
@@ -2869,3 +2876,74 @@ void DisableOfflineOthersLiveConfig(COMMAND_T* _ct) {
 void ToggleOfflineOthersLiveConfig(COMMAND_T* _ct) {
 	UpdateOfflineOthers(_ct, -1);
 }
+
+/////
+
+bool IsAllNotesOffLiveConfigEnabled(COMMAND_T* _ct) {
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
+		return (lc->m_cc123 == 1);
+	return false;
+}
+
+// _val: 0, 1 or <0 to toggle
+// gui refresh not needed (only in ctx menu)
+void UpdateAllNotesOff(COMMAND_T* _ct, int _val)
+{
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user)) {
+		lc->m_cc123 = _val<0 ? !lc->m_cc123 : _val;
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
+		// RefreshToolbar()) not required..
+	}
+}
+
+void EnableAllNotesOffLiveConfig(COMMAND_T* _ct) {
+	UpdateAllNotesOff(_ct, 1);
+}
+
+void DisableAllNotesOffLiveConfig(COMMAND_T* _ct) {
+	UpdateAllNotesOff(_ct, 0);
+}
+
+void ToggleAllNotesOffLiveConfig(COMMAND_T* _ct) {
+	UpdateAllNotesOff(_ct, -1);
+}
+
+/////
+
+bool IsTinyFadesLiveConfigEnabled(COMMAND_T* _ct) {
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
+		return (lc->m_fade > 0);
+	return false;
+}
+
+// _val: 0, 1 or <0 to toggle
+// gui refresh not needed (only in ctx menu)
+void UpdateTinyFadesLiveConfig(COMMAND_T* _ct, int _val)
+{
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user)) {
+		lc->m_fade = _val<0 ? (lc->m_fade>0 ? 0 : SNM_LIVECFG_DEF_FADE) : _val;
+		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
+
+		LiveConfigsUpdateFadeJob* job = new LiveConfigsUpdateFadeJob(lc->m_fade);
+		job->Perform();	delete job;
+		if (g_pLiveConfigsWnd) g_pLiveConfigsWnd->Update();
+		// RefreshToolbar()) not required..
+	}
+}
+
+void EnableTinyFadesLiveConfig(COMMAND_T* _ct) {
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
+		if (lc->m_fade <= 0)
+			UpdateTinyFadesLiveConfig(_ct, SNM_LIVECFG_DEF_FADE);
+}
+
+void DisableTinyFadesLiveConfig(COMMAND_T* _ct) {
+	if (LiveConfig* lc = g_liveConfigs.Get()->Get((int)_ct->user))
+		if (lc->m_fade > 0)
+			UpdateTinyFadesLiveConfig(_ct, 0);
+}
+
+void ToggleTinyFadesLiveConfig(COMMAND_T* _ct) {
+	UpdateTinyFadesLiveConfig(_ct, -1);
+}
+

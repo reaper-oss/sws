@@ -1,14 +1,13 @@
 <b>Live Configs: big overhaul</b>
-Lots of changes: merged a dedicated extension plugin.
-The fine details will be posted in this http://forum.cockos.com/showthread.php?p=1079515#post1079515|thread/PDF|, not up-to-date yet!
+Lots of changes: merged a dedicated extension plugin. The fine details will be posted in this http://forum.cockos.com/showthread.php?p=1079515#post1079515|thread/PDF| (not up-to-date yet!). 
 In the meantime the major changes are:
 +New "core" to ensure smooth/glitch-free config switches, new "All notes off" logic (now optional)
 +Added Preload feature: you can prepare an instrument/effect while playing another
- This can be done with a second controller or, on OSX via multi-touch gesture
+ This can be done with a second controller (click the new "Learn" button) or, on OSX, via the trackpad
 +Added Monitoring windows, <b>demo http://stash.reaper.fm/14847/S%26M_LiveConfigMonitor.gif|here|</b>
- - Allows monitoring the current/preloaded configs far away from the screen (useful when you have no visual feedback for controllers)
- - OSX/Trackpad: support config switch/preload via 2 fingers scroll over Current/Preload areas
-   Note: this is available on Windows OS too, but requires the mouse wheel (not really live-performance-proof)
+ - Useful when controllers do not provide visual feedback
+ - OSX: config switch/preload via 2 fingers gesture over Current/Preload areas (i.e. switch instruments/effects with the trackpad) + click on the Preload area to swap preloaded/current configs 
+   Note: this is available on Windows OS too, but it requires the mouse wheel (not really live-performance-proof)
  - Up to 4 Monitors can be used simultaneously, i.e. one per Live Config
 +Added options (per config):
  - "Offline all but active/preloaded tracks (RAM savings)"
@@ -20,15 +19,15 @@ In the meantime the major changes are:
  - "Send all notes off when switching configs"
  - "Select/scroll to track on list view click"
 +Added "Tiny fades" knob 
- It tweaks lengths of tiny fades-out/in when deactivating/activating configs, disabling is allowed but instrument/effect switches be glitchy!
+ It tweaks lengths of tiny fades-out/in when deactivating/activating configs, disabling fades is allowed but instrument/effect switches be glitchy!
 +New logic for "Activation" and "Deactivation" actions/macros:
  - If a track is defined for a config, only this track will be selected when the "Activation" (or "Deactivation") action is performed - Useful since many actions deal with "selected track(s)"
  - If no track is defined for a config, no track will be selected when the "Activation" (or "Deactivation") action is performed - Useful to master the current selection state
 +Added helpers for newcomers:
+ - Added "Learn" button: direct action learn for "Apply" and "Preload" MIDI actions
+   This is to ease controller bindings (due to some technical constraints, apply/preload actions have to be buried in a section "S&M Extension" of the action list..)
  - Added "Create input track" in the context menu (creates a track with needed properties and sends)
  - Added option "Automatically update sends from the input track"
- - Added "Learn" button: direct action learn for "Apply" and "Preload" actions.
-   This is to ease controller bindings (due to some technical constraints, apply/preload actions have to be buried in a section "S&M Extension" of the action list..).
  - Added "CC delay" knob (no more S&M.ini file tweaks needed). One "CC delay" per config.
 +Added a bunch of actions (preload, toggle options on/off, open/close monitoring windows, etc..): filter the action list with "Live Config"!
  Note: some of the new actions are hidden by default (number of actions = 0 in the S&M.ini file)
@@ -85,7 +84,6 @@ Added actions
 All list views:
 +Obey to HOME, END, PAGE UP and PAGE DOWN keys
 +OSX: obey to CMD-A like on Windows OS (select all)
-+OSX: fixed "crazy selection" bug
 +Windows OS: fixed a themed grid line glitch
 
 Other:

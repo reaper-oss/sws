@@ -613,6 +613,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Open/close monitoring window" }, "S&M_OPEN_LIVECFG_MONITOR", OpenLiveConfigMonitorWnd, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS, IsLiveConfigMonitorWndDisplayed},
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Apply next config" }, "S&M_NEXT_LIVE_CFG", NextLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS},
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Apply previous config" }, "S&M_PREVIOUS_LIVE_CFG", PreviousLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS},
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Apply preloaded config (swap current/preload)" }, "S&M_PRELOAD_LIVE_CFG", SwapCurrentPreloadLiveConfigs, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS},
 
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable" }, "S&M_LIVECFG_ON", EnableLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable" }, "S&M_LIVECFG_OFF", DisableLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
@@ -625,6 +626,14 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Offline all but active/preloaded tracks'" }, "S&M_LIVECFG_OFFLINEBUT_ON", EnableOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Offline all but active/preloaded tracks'" }, "S&M_LIVECFG_OFFLINEBUT_OFF", DisableOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
 	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Offline all but active/preloaded tracks'" }, "S&M_LIVECFG_OFFLINEBUT_TGL", ToggleOfflineOthersLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS, IsOfflineOthersLiveConfigEnabled},
+
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable option 'Send all notes off when switching configs'" }, "S&M_LIVECFG_CC123_ON", EnableAllNotesOffLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable option 'Send all notes off when switching configs'" }, "S&M_LIVECFG_CC123_OFF", DisableAllNotesOffLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle option 'Send all notes off when switching configs'" }, "S&M_LIVECFG_CC123_TGL", ToggleAllNotesOffLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS, IsAllNotesOffLiveConfigEnabled},
+
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Enable tiny fades" }, "S&M_LIVECFG_FADES_ON", EnableTinyFadesLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Disable tiny fades" }, "S&M_LIVECFG_FADES_OFF", DisableTinyFadesLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), 0}, // hidden!
+	{ { DEFACCEL, "SWS/S&M: Live Config %02d - Toggle enable tiny fades" }, "S&M_LIVECFG_FADES_TGL", ToggleTinyFadesLiveConfig, STR(SNM_LIVECFG_NB_CONFIGS), SNM_LIVECFG_NB_CONFIGS, IsTinyFadesLiveConfigEnabled},
 
 	{ { DEFACCEL, "SWS/S&M: Region Playlist %02d - Play" }, "S&M_PLAY_RGN_PLAYLIST", PlaylistPlay, NULL, 4},
 

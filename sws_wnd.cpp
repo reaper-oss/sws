@@ -828,7 +828,6 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 
 #ifndef _WIN32
 		// See OSX comments in NM_CLICK below
-/*JFB!!! to be discussed with Tim..
 		// Send the full compliment of OnItemSelChange messges, either from the saved array or the curent state
 		if (m_pSavedSel.GetSize() && m_pSavedSel.GetSize() == ListView_GetItemCount(m_hwndList))
 		{	// Restore the "correct" selection
@@ -837,7 +836,6 @@ int SWS_ListView::OnNotify(WPARAM wParam, LPARAM lParam)
 			m_pSavedSel.Resize(0, false);
 		}
 		else
-*/
 		{
 			// Send OnItemSelChange messages for everything on the list
 			for (int i = 0; i < ListView_GetItemCount(m_hwndList); i++)

@@ -1,3 +1,4 @@
+!v2.3.0 #9 (December 23, 2012)
 <b>Live Configs: big overhaul</b>
 Lots of changes: merged a dedicated extension plugin. The fine details will be posted in this http://forum.cockos.com/showthread.php?p=1079515#post1079515|thread/PDF| (not up-to-date yet!). 
 In the meantime the major changes are:

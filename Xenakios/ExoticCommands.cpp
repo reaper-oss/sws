@@ -839,20 +839,59 @@ typedef struct
 } t_itemposrandparams;
 
 t_itemposrandparams g_last_RandomizeItemPosParams;
-
+int g_last_RandomizeItemsPosGroup;
 bool g_RandItemPosFirstRun = true;
 
-void DoRandomizePositions2()
+void DoRandomizePositions2(int obeyGroup)
 {
 	double dSpread = g_last_RandomizeItemPosParams.RandRange;
-	for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+	
+	if (obeyGroup == 0)
 	{
-		MediaItem* mi = GetSelectedMediaItem(NULL, i);
-		double dItemPos = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
-		dItemPos += -dSpread + (2.0/RAND_MAX)*rand()*dSpread;
-		GetSetMediaItemInfo(mi, "D_POSITION", &dItemPos);
+		for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+		{		
+			MediaItem* mi = GetSelectedMediaItem(NULL, i);
+			double dItemPos = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
+			dItemPos += -dSpread + (2.0/RAND_MAX)*rand()*dSpread;
+			GetSetMediaItemInfo(mi, "D_POSITION", &dItemPos);
+		}
 	}
 
+	else
+	{
+		WDL_TypedBuf <int> processed;
+		for (int i = 0; i < CountSelectedMediaItems(NULL); i++)
+		{	
+			MediaItem* mi = GetSelectedMediaItem(NULL, i);
+			double posDiff = -dSpread + (2.0/RAND_MAX)*rand()*dSpread;
+			int group = *(int*)GetSetMediaItemInfo(mi, "I_GROUPID", NULL);
+			bool done = false;
+			
+			if (group != 0 && processed.Find(group) == -1)
+			{
+				for (int j = 0; j < CountMediaItems(NULL); j++)
+				{
+					MediaItem* mi = GetMediaItem(NULL, j);
+					if (group == *(int*)GetSetMediaItemInfo(mi, "I_GROUPID", NULL))
+					{
+						double dItemPos = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
+						dItemPos += posDiff;
+						GetSetMediaItemInfo(mi, "D_POSITION", &dItemPos);
+					}
+				}
+				int pos = processed.GetSize();
+				processed.Resize(pos + 1);
+				processed.Get()[pos] = group;
+			}
+	
+			else if (group == 0)
+			{
+				double dItemPos = *(double*)GetSetMediaItemInfo(mi, "D_POSITION", NULL);
+				dItemPos += posDiff;
+				GetSetMediaItemInfo(mi, "D_POSITION", &dItemPos);
+			}
+		}
+	}
 	UpdateTimeline();
 	Undo_OnStateChangeEx(__LOCALIZE("Randomize item positions","sws_undo"),4,-1);
 }
@@ -867,6 +906,7 @@ WDL_DLGRET RandomizeItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 			
 			sprintf(TextBuf,"%.2f",g_last_RandomizeItemPosParams.RandRange);
 			SetDlgItemText(hwnd, IDC_EDIT1, TextBuf);
+			CheckDlgButton(hwnd, IDC_CHECK1, !!g_last_RandomizeItemsPosGroup);
 			SetFocus(GetDlgItem(hwnd, IDC_EDIT1));
 			SendMessage(GetDlgItem(hwnd, IDC_EDIT1), EM_SETSEL, 0, -1);
 			break;
@@ -879,7 +919,11 @@ WDL_DLGRET RandomizeItemPosDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 					char textbuf[100];
 					GetDlgItemText(hwnd,IDC_EDIT1,textbuf,100);
 					g_last_RandomizeItemPosParams.RandRange=atof(textbuf);
-					DoRandomizePositions2();
+					g_last_RandomizeItemsPosGroup = IsDlgButtonChecked(hwnd, IDC_CHECK1); 
+					if (g_last_RandomizeItemsPosGroup == 0)
+						DoRandomizePositions2(0);
+					else
+						DoRandomizePositions2(1);
 					EndDialog(hwnd,0);
 					break;
 				}
@@ -897,7 +941,9 @@ void DoRandomizePositionsDlg(COMMAND_T*)
 	if (g_RandItemPosFirstRun)
 	{
 		g_last_RandomizeItemPosParams.RandRange=0.1;
+		g_last_RandomizeItemsPosGroup = 1;
 		g_RandItemPosFirstRun=false;
+
 		
 	}
 	DialogBox(g_hInst, MAKEINTRESOURCE(IDD_RANDTEMPOS), g_hwndParent, RandomizeItemPosDlgProc);

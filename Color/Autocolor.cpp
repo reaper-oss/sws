@@ -57,12 +57,13 @@ enum { COL_ID=0, COL_TYPE, COL_FILTER, COL_COLOR, COL_ICON, COL_COUNT };
 enum { AC_TRACK=0, AC_MARKER, AC_REGION, NUM_TYPETYPES }; // keep this order and 2^ values 
                                                           // (values used as masks => adding a 4th type would require another solution)
 
+// Larger allocs for localized string..
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_115
 static SWS_LVColumn g_cols[] = { {25, 0, "#" }, {25, 0, "Type"}, { 185, 1, "Filter" }, { 70, 1, "Color" }, { 200, 2, "Icon" }};
-static const char cTypes[][7] = {"Track", "Marker", "Region" }; // keep this order, see above
-static const char cFilterTypes[][11] = { "(unnamed)", "(folder)", "(children)", "(receive)", "(any)", "(master)" };
-static const char cRgnFilterTypes[][10] = { "(unnamed)", "(any)" };
-static const char cColorTypes[][9] = { "Custom", "Gradient", "Random", "None", "Parent", "Ignore" };
+static const char cTypes[][32] = {"Track", "Marker", "Region" }; // keep this order, see above
+static const char cFilterTypes[][32] = { "(unnamed)", "(folder)", "(children)", "(receive)", "(any)", "(master)" };
+static const char cRgnFilterTypes[][32] = { "(unnamed)", "(any)" };
+static const char cColorTypes[][32] = { "Custom", "Gradient", "Random", "None", "Parent", "Ignore" };
 // !WANT_LOCALIZE_STRINGS_END
 
 
@@ -157,25 +158,32 @@ void SWS_AutoColorView::GetItemText(SWS_ListItem* item, int iCol, char* str, int
 	}
 }
 
-//JFB: COL_TYPE & COL_COLOR must be edited via context menu, not by hand (mismatch between internal/localized strings)
+//JFB: COL_TYPE must be edited via context menu, not by hand (mismatch between internal/localized strings)
 void SWS_AutoColorView::SetItemText(SWS_ListItem* item, int iCol, const char* str)
 {
 	SWS_RuleItem* pItem = (SWS_RuleItem*)item;
 	if (!pItem)
 		return;
 
-	if(iCol == COL_FILTER)
+	switch(iCol)
 	{
-		for (int i = 0; i < g_pACItems.GetSize(); i++)
-			if (g_pACItems.Get(i) != pItem)
-				if (g_pACItems.Get(i)->m_type == pItem->m_type && !strcmp(g_pACItems.Get(i)->m_str_filter.Get(), str)){
-					MessageBox(GetParent(m_hwndList), __LOCALIZE("Autocolor entry with that name already exists.","sws_DLG_115"), __LOCALIZE("SWS - Error","sws_DLG_115"), MB_OK);
-					return;
-				}
-		if (strlen(str))
-			pItem->m_str_filter.Set(str);
+			case COL_FILTER:
+				for (int i = 0; i < g_pACItems.GetSize(); i++)
+					if (g_pACItems.Get(i) != pItem)
+						if (g_pACItems.Get(i)->m_type == pItem->m_type && !strcmp(g_pACItems.Get(i)->m_str_filter.Get(), str)){
+							MessageBox(GetParent(m_hwndList), __LOCALIZE("Autocolor entry with that name already exists.","sws_DLG_115"), __LOCALIZE("SWS - Error","sws_DLG_115"), MB_OK);
+							return;
+						}
+				if (strlen(str))
+					pItem->m_str_filter.Set(str);
+				break;
+			case COL_COLOR:
+			{
+				int iNewCol = strtol(str, NULL, 0);
+				pItem->m_color = RGB((iNewCol >> 16) & 0xFF, (iNewCol >> 8) & 0xFF, iNewCol & 0xFF);
+			}
+			break;
 	}
-
 	g_pACWnd->Update();
 }
 

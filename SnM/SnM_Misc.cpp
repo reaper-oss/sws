@@ -36,15 +36,6 @@
 // Reascript export
 ///////////////////////////////////////////////////////////////////////////////
 
-// write C++ API functions header 
-// (same as the native action but w/o export of sws funcs..)
-void GenAPI(COMMAND_T*)
-{
-	UnregisterExportedAPI(g_rec);
-	Main_OnCommand(41064, 0);
-	RegisterExportedAPI(g_rec);
-}
-
 WDL_FastString* SNM_CreateFastString(const char* _str) {
 	return new WDL_FastString(_str);
 }

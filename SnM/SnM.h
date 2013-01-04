@@ -87,7 +87,7 @@
 #define SNM_GUI_Y_MARGIN			5
 #define SNM_GUI_W_KNOB				26
 #define SNM_MAX_PATH				2048
-#define SNM_LIVECFG_NB_CONFIGS		4
+#define SNM_LIVECFG_NB_CONFIGS		4		//JFB do not commit a new value w/o my approval, plz thx!
 #define SNM_SECTION_1ST_CMD_ID		40000
 
 #define SNM_MAX_TRACK_GROUPS		32
@@ -163,11 +163,52 @@ public:
 
 class SNM_MidiActionJob : public SNM_ScheduledJob {
 public:
-	SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd) 
-		: SNM_ScheduledJob(_jobId, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd) {}
+	SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, HWND _hwnd) 
+		: SNM_ScheduledJob(_jobId, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd)
+	{
+		// very default (but valid!) value
+		m_absval = 0;
+
+		// osc & pitch midi events
+		// to support both osc & pitch, osc values must be negative floats, e.g. /blabla/f/-103.0 to trigger the live config 103
+		if (_valhw>=0)
+		{
+			m_absval = BOUNDED(_valhw | _val<<7, 0, 16383);
+		}
+		// cc midi events
+		else if (_valhw==-1 && _val>=0 && _val<=127)
+		{
+			int delta = 0;
+			_curval = BOUNDED(_curval,0,127);
+			switch (_relmode)
+			{
+				case 0: // absolute CC
+					m_absval = BOUNDED(_val, 0, 127);
+					break;
+				case 1: // 127=-1, 1=+1
+					if (_val>=1 && _val<=64) delta = _val;
+					else if (_val>=65 && _val<=127) delta = _val - 128;
+					m_absval = BOUNDED(_curval+delta, 0, 127);
+					break;
+				case 2: // 63=-1, 65=+1
+					delta = _val - 64;
+					m_absval = BOUNDED(_curval+delta, 0, 127);
+					break;
+				case 3: // 65=-1, 1=+1
+					if (_val>=1 && _val<=63) delta = _val;
+					else if (_val>=65 && _val<=127) delta = _val - 64;
+					m_absval = BOUNDED(_curval+delta, 0, 127);
+					break;
+				default: // unknown relative mode
+					break;
+			}
+		}
+	}
 	virtual void Perform() {}
+	virtual int GetAbsoluteValue() { return m_absval; }
 protected:
-	int m_val, m_valhw, m_relmode;
+	int m_val, m_valhw, m_relmode; // values from the controller
+	int m_absval; // internal absolute value (deduced from the above)
 	HWND m_hwnd;
 };
 

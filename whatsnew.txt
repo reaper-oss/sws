@@ -1,6 +1,31 @@
+Live Configs: support OSC and rotary controllers
++Improved the "learnability" of the following actions of the "S&M Extension" section, they have been renamed accordingly:
+ - SWS/S&M: Apply Live Config n (MIDI CC absolute only)  ->  SWS/S&M: Apply Live Config n (MIDI CC/OSC only)
+ - SWS/S&M: Preload Live Config n (MIDI CC absolute only) ->  SWS/S&M: Preload Live Config n (MIDI CC/OSC only)
++Support all types of MIDI CC controllers (like endless rotary encoders)
+ - In addition to the "Absolute" mode, all "Relative" modes of the Learn dialog box are now supported too
+ - Acceleration is also supported
++Support OSC learn:
+ - OSC values must be floats, using negative values is recommended ATM
+ - Example: say you have learned the action "SWS/S&M: Apply Live Config 3 (MIDI CC/OSC only)" with the OSC message "/blabla",
+   sending "/blabla/f/-107.0" will switch to the instrument/effect #107 of the Live Config #3
+   Note: if you want to send a positive value, you have to send 16384.0-107.0
+
+Auto color/icon:
++Fixed color edition in place in the list view
++Fixed possible crash when the extension is localized
+
 Other:
-+ Updated action "Xenakios/SWS: Randomize item positions...":
++Updated action "Xenakios/SWS: Randomize item positions...":
  - Added an option to move all grouped items by the same amount
++The following actions of the "S&M Extension" section now support OSC and rotary controllers, they have been slightly renamed too:
+ - SWS/S&M: Select project (MIDI CC/OSC only)
+ - SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC/OSC only)
+ - SWS/S&M: Trigger preset for FX 1 of selected tracks (MIDI CC/OSC only)
+ - SWS/S&M: Trigger preset for FX 2 of selected tracks (MIDI CC/OSC only)
+ - SWS/S&M: Trigger preset for FX 3 of selected tracks (MIDI CC/OSC only)
+ - SWS/S&M: Trigger preset for FX 4 of selected tracks (MIDI CC/OSC only)
++ReaScript: hardened SNM_TieResourceSlotActions()
 
 !v2.3.0 #9 (December 23, 2012)
 <b>Live Configs: big overhaul</b>
@@ -9,15 +34,15 @@ In the meantime the major changes are:
 +New "core" to ensure smooth/glitch-free config switches, new "All notes off" logic (now optional)
 +Added Preload feature: you can prepare an instrument/effect while playing another
  This can be done with a second controller (click the new "Learn" button) or, on OSX, via the trackpad
+ Preload comes in handy when switching FX chains, or Track Templates or with the new option "Offline all but active/preloaded tracks" (see below)
 +Added Monitoring windows, <b>demo http://stash.reaper.fm/14847/S%26M_LiveConfigMonitor.gif|here|</b>
  - Useful with controllers that do not provide visual feedback
- - OSX: support 2 fingers gesture over "Current" and "Preload" areas, i.e. switch instruments/effects with the trackpad
-   Note: this is available on Windows OS too but via the mouse wheel..
+ - Support 2 fingers gesture over "Current" and "Preload" areas, e.g. switch instruments/effects with a trackpad
  - Click on the "Preload" area to swap preloaded/current configs
  - Up to 4 Monitors can be used simultaneously, i.e. one per Live Config
 +Added options (per config):
  - "Offline all but active/preloaded tracks (RAM savings)"
-   This new option comes in handy with the new preload feature: the only loaded instruments/effects will be those of the current and preloaded tracks.
+   The only loaded instruments/effects will be those of the current and preloaded tracks.
    Other tracks that are not part of the config will remain as they are, of course. This option works without preload too, switches will be slower though.
    Note: handle with care! Do not use <del>this option with</del> buggy instruments/effects!
  - "Ignore switches to empty configs"
@@ -34,7 +59,7 @@ In the meantime the major changes are:
    This is to ease controller bindings (due to some technical constraints, apply/preload actions have to be buried in a section "S&M Extension" of the action list..)
  - Added "Create input track" in the context menu (creates a track with needed properties and sends)
  - Added option "Automatically update sends from the input track"
- - Added "CC delay" knob (no more S&M.ini file tweaks needed). One "CC delay" per config.
+ - Added "Switch delay" knob (no more S&M.ini file tweaks needed). One "Switch delay" per config.
 +Added a bunch of actions (preload, toggle options on/off, open/close monitoring windows, etc..): filter the action list with "Live Config"!
  Note: some of the new actions are specific and thus hidden by default (number of actions = 0 in the S&M.ini file)
 +New context menu items:
@@ -48,18 +73,18 @@ Region Playlist
  Use-case example: now, you can also use actions like "Regions: Go to region #n" to switch regions defined in a playlist
  Note: when seeking to a position that is not part of the playlist, the extension will switch back ASAP to the region it was supposed to play
 +Re-synchronize the playlist when editing it while playing (or when its regions are edited)
-+Fixed various corner cases: audio block rounding, possible issues with unknown (e.g. deleted) regions, etc..
++Fixed various corner cases: audio block rounding, possible issues with unknown regions (e.g. deleted), etc..
 +Improved monitoring mode (separate region numbers and region names, display number of remaining loops, new red "sync loss" status, etc..)
 +Added options (in the context menu): "Seek play" and "Scroll view when selecting regions"
 +Reorganized the window a bit: added columns, moved playlist length as tooltip, etc..
 
 Cycle actions
-+<b>Added basic instructions, see why and details http://forum.cockos.com/showpost.php?p=1090262&postcount=1136|here|</b>
- Supported instructions are: IF, IF NOT, and LOOP n
++<b>Added basic instructions: IF, IF NOT, and LOOP n</b>
+ This is mainly to ensure consistent toggle states for cycle actions, see details http://forum.cockos.com/showpost.php?p=1090262&postcount=1136|here|
 +Toggle cycle actions now report real toggle states (i.e. the state of the first relevant action)
 +Cycle action editor
- - Added "Add/insert instruction" in the right view context menu
- - Insert commands at selection (just avoid to drag commands that were always added at the end before this version)
+ - Right list view: insert commands rather than adding them (avoids to systematically drag new commands)
+ - Right list view: added "Add/insert instruction" in the context menu
  - Various tweaks, including new tiny buttons to enlarge list views
 
 Export functions to ReaScript (BETA)
@@ -68,7 +93,7 @@ Export functions to ReaScript (BETA)
  - SNM_RemoveReceivesFrom()
  - SNM_SelectResourceBookmark() - untested!
  - SNM_TieResourceSlotActions() - untested!
-+Updated API, updated SNM_AddReceive() to obey routing preferences
++Updated API, updated SNM_AddReceive() to obey preferences
 
 Added actions
 +Added "go to" marker/region actions (just meant to target up to 99 regions/markers)

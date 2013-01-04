@@ -31,7 +31,6 @@
 #define _SNM_MISC_H_
 
 // reascript export
-void GenAPI(COMMAND_T*);
 WDL_FastString* SNM_CreateFastString(const char* _str);
 void SNM_DeleteFastString(WDL_FastString* _str);
 const char* SNM_GetFastString(WDL_FastString* _str);

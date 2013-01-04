@@ -60,7 +60,6 @@
 // Globals
 REAPER_PLUGIN_HINSTANCE g_hInst = NULL;
 HWND g_hwndParent = NULL;
-reaper_plugin_info_t* g_rec = NULL;
 
 void freeCmdFilesValue(WDL_String* p) {delete p;}
 static WDL_IntKeyedArray<WDL_String*> g_cmdFiles(freeCmdFilesValue);
@@ -453,7 +452,6 @@ extern "C"
 	{
 		if (!rec)
 		{
-			g_rec=NULL;
 			SnapshotsExit();
 			TrackListExit();
 			MarkerListExit();
@@ -464,8 +462,6 @@ extern "C"
 			SNM_Exit();
 			ERR_RETURN("Exiting Reaper.\n")
 		}
-		else
-			g_rec = rec;
 
 		if (rec->caller_version != REAPER_PLUGIN_VERSION)
 			ERR_RETURN("Wrong REAPER_PLUGIN_VERSION!\n");

@@ -2780,19 +2780,19 @@ void ResViewAutoSave(COMMAND_T* _ct) {
 	}
 }
 
+
 ///////////////////////////////////////////////////////////////////////////////
 // ReaScript export
 ///////////////////////////////////////////////////////////////////////////////
 
-int SNM_SelectResourceBookmark(const char* _name)
-{
-	if (g_pResourcesWnd)
-		return g_pResourcesWnd->SetType(_name);
-	return -1;
+int SNM_SelectResourceBookmark(const char* _name) {
+		return g_pResourcesWnd ? g_pResourcesWnd->SetType(_name) : -1;
 }
 
 void SNM_TieResourceSlotActions(int _bookmarkId) {
-	g_tiedSlotActions[GetTypeForUser(_bookmarkId)] = _bookmarkId;
+	int typeForUser = _bookmarkId>=0 ? GetTypeForUser(_bookmarkId) : -1;
+	if (typeForUser>=0 && typeForUser<SNM_NUM_DEFAULT_SLOTS)
+		g_tiedSlotActions[typeForUser] = _bookmarkId;
 }
 
 

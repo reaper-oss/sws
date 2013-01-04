@@ -423,7 +423,7 @@ int LiveConfig::SetInputTrack(MediaTrack* _newInputTr, bool _updateSends)
 		// list used to factorize chunk state updates, auto-destroy => auto-commit when exiting!
 		WDL_PtrList_DeleteOnDestroy<SNM_ChunkParserPatcher> ps;
 
-		// remove sends from the current input track
+		// remove sends of the current input track
 		if (m_inputTr && CSurf_TrackToID(m_inputTr, false) > 0 && 
 			m_inputTr != _newInputTr) // do not re-create sends (i.e. do not scratch the user's send tweaks!)
 		{
@@ -495,7 +495,7 @@ bool LiveConfig::IsLastConfiguredTrack(MediaTrack* _tr)
 
 // !WANT_LOCALIZE_STRINGS_BEGIN:sws_DLG_155
 static SWS_LVColumn g_liveCfgListCols[] = { 
-	{95,2,"CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX presets"}, {150,0,"Activate action"}, {150,0,"Deactivate action"}};
+	{95,2,"OSC/CC value"}, {150,1,"Comment"}, {150,2,"Track"}, {175,2,"Track template"}, {175,2,"FX Chain"}, {150,2,"FX presets"}, {150,0,"Activate action"}, {150,0,"Deactivate action"}};
 // !WANT_LOCALIZE_STRINGS_END
 
 SNM_LiveConfigView::SNM_LiveConfigView(HWND hwndList, HWND hwndEdit)
@@ -680,9 +680,9 @@ void SNM_LiveConfigsWnd::OnInitDlg()
 	m_vwndCC.AddChild(&m_knobCC);
 
 	m_vwndCC.SetID(WNDID_CC_DELAY);
-	m_vwndCC.SetTitle(__LOCALIZE("CC delay:","sws_DLG_155"));
+	m_vwndCC.SetTitle(__LOCALIZE("Switch delay:","sws_DLG_155"));
 	m_vwndCC.SetSuffix(__LOCALIZE("ms","sws_DLG_155"));
-	m_vwndCC.SetZeroText(__LOCALIZE("disabled","sws_DLG_155"));
+	m_vwndCC.SetZeroText(__LOCALIZE("immediate","sws_DLG_155"));
 	m_parentVwnd.AddChild(&m_vwndCC);
 
 	m_knobFade.SetID(KNBID_FADE);
@@ -822,9 +822,9 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 
 				char msg[256] = "";
 				if (nbSends > 0) 
-					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\" (%d sends, record armed, monitoring enabled, no master sends).\nPlease select an audio or MIDI input!","sws_DLG_155"), trName, nbSends);
+					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\" (%d sends, record armed, monitoring enabled, no master sends).\nPlease select a MIDI or audio input!","sws_DLG_155"), trName, nbSends);
 				else
-					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\" (record armed, monitoring enabled, no master sends).\nPlease select an audio or MIDI input!","sws_DLG_155"), trName);
+					_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Created track \"%s\" (record armed, monitoring enabled, no master sends).\nPlease select a MIDI or audio input!","sws_DLG_155"), trName);
 				MessageBox(GetHWND(), msg, __LOCALIZE("S&M - Create input track","sws_DLG_155"), MB_OK);
 			}
 			break;
@@ -893,7 +893,7 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				int sortCol = m_pLists.Get(0)->GetSortColumn();
 				if (sortCol && sortCol!=1) {
 					//JFB lazy here.. better than confusing the user..
-					MessageBox(GetHWND(), __LOCALIZE("The list view must be sorted by ascending CC values!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
+					MessageBox(GetHWND(), __LOCALIZE("The list view must be sorted by ascending OSC/CC values!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
 					break;
 				}
 				bool updt = false, firstSel = true;
@@ -1491,9 +1491,7 @@ HMENU SNM_LiveConfigsWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 		AddToMenu(hMenu, SWS_SEPARATOR, 0);
 		AddLearnMenu(hMenu, true);
 		AddOptionsMenu(hMenu, true);
-/*JFB!!! pdf not up to date
 		AddToMenu(hMenu, __LOCALIZE("Online help...","sws_DLG_155"), SNM_LIVECFG_HELP_MSG);
-*/
 	}
 	return hMenu;
 }
@@ -1602,7 +1600,7 @@ bool SNM_LiveConfigsWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, i
 			case WNDID_FADE:
 			case KNBID_FADE:
 				// keep messages on a single line (for the langpack generator)
-				lstrcpyn(_bufOut, __LOCALIZE("Optional fades-in/out when activating/deactivating configs\n(ensure smooth switches)","sws_DLG_155"), _bufOutSz);
+				lstrcpyn(_bufOut, __LOCALIZE("Optional fades out/in when deactivating/activating configs\n(ensure smooth switches)","sws_DLG_155"), _bufOutSz);
 				return true;
 		}
 	}
@@ -1614,7 +1612,7 @@ bool SNM_LiveConfigsWnd::Insert(int _dir)
 	int sortCol = m_pLists.Get(0)->GetSortColumn();
 	if (sortCol && sortCol!=1) {
 		//JFB lazy here.. better than confusing the user..
-		MessageBox(GetHWND(), __LOCALIZE("The list view must be sorted by ascending CC values!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
+		MessageBox(GetHWND(), __LOCALIZE("The list view must be sorted by ascending OSC/CC values!","sws_DLG_155"), __LOCALIZE("S&M - Error","sws_DLG_155"), MB_OK);
 		return false;
 	}
 	if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId))
@@ -2340,32 +2338,26 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 // Apply configs
 ///////////////////////////////////////////////////////////////////////////////
 
-// val/valhw are used for midi stuff.
-// val=[0..127] and valhw=-1 (midi CC),
-// valhw >=0 (midi pitch (valhw | val<<7)),
-// relmode absolute (0) or 1/2/3 for relative adjust modes
 void ApplyLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd, bool _immediate)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId);
-	if (lc && lc->m_enable &&
-		!_relmode && _valhw<0 && // asolute CC only atm
-		_val>=0 && _val<=127)
+	if (lc && lc->m_enable) 
 	{
-		lc->m_curMidiVal = _val;
-		if (g_monitorWnds[_cfgId])
-			g_monitorWnds[_cfgId]->Update(SNM_APPLY_MASK, 0);
-
-		ApplyLiveConfigJob* job = 
-			new ApplyLiveConfigJob(SNM_SCHEDJOB_LIVECFG_APPLY+_cfgId, lc->m_ccDelay, _val, _valhw, _relmode, _hwnd, _cfgId);
-
-		if (!_immediate && lc->m_ccDelay)
+		if (ApplyLiveConfigJob* job = new ApplyLiveConfigJob(SNM_SCHEDJOB_LIVECFG_APPLY+_cfgId, lc->m_ccDelay, lc->m_curMidiVal, _val, _valhw, _relmode, _hwnd, _cfgId))
 		{
-			AddOrReplaceScheduledJob(job); // cc "smoothing": avoid to stuck REPAER when a bunch of CCs are received
-		}
-		else 
-		{
-			job->Perform();
-			delete job;
+			lc->m_curMidiVal = job->GetAbsoluteValue();
+			if (g_monitorWnds[_cfgId])
+				g_monitorWnds[_cfgId]->Update(SNM_APPLY_MASK, 0);
+
+			if (!_immediate && lc->m_ccDelay)
+			{
+				AddOrReplaceScheduledJob(job);
+			}
+			else 
+			{
+				job->Perform();
+				delete job;
+			}
 		}
 	}
 }
@@ -2375,12 +2367,12 @@ void ApplyLiveConfigJob::Perform()
 	LiveConfig* lc = g_liveConfigs.Get()->Get(m_cfgId);
 	if (!lc) return;
 
-	LiveConfigItem* cfg = lc->m_ccConfs.Get(m_val);
-	if (cfg && lc->m_enable && m_val!=lc->m_activeMidiVal &&
+	LiveConfigItem* cfg = lc->m_ccConfs.Get(m_absval);
+	if (cfg && lc->m_enable && m_absval!=lc->m_activeMidiVal &&
 		(!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !cfg->IsDefault(true)))) // ignore switches to empty configs
 	{
 		LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
-		lc->m_activeMidiVal = m_val;
+		lc->m_activeMidiVal = m_absval;
 
 		if (!lastCfg || (lastCfg && !lastCfg->Equals(cfg, true)))
 		{
@@ -2389,14 +2381,14 @@ void ApplyLiveConfigJob::Perform()
 			if (PreventUIRefresh)
 				PreventUIRefresh(1);
 
-			ApplyPreloadLiveConfig(true, m_cfgId, m_val, lastCfg);
+			ApplyPreloadLiveConfig(true, m_cfgId, m_absval, lastCfg);
 
 			if (PreventUIRefresh)
 				PreventUIRefresh(-1);
 
 			{
 				char buf[SNM_MAX_ACTION_NAME_LEN]="";
-				_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d (CC %d)","sws_undo"), m_cfgId+1, m_val);
+				_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Apply Live Config %d (OSC/CC %d)","sws_undo"), m_cfgId+1, m_absval);
 				Undo_EndBlock2(NULL, buf, UNDO_STATE_ALL);
 			}
 		} 
@@ -2419,25 +2411,23 @@ void ApplyLiveConfigJob::Perform()
 void PreloadLiveConfig(int _cfgId, int _val, int _valhw, int _relmode, HWND _hwnd, bool _immediate)
 {
 	LiveConfig* lc = g_liveConfigs.Get()->Get(_cfgId);
-	if (lc && lc->m_enable && 
-		!_relmode && _valhw<0 && // asolute CC only atm
-		_val>=0 && _val<=127)
+	if (lc && lc->m_enable)
 	{
-		lc->m_curPreloadMidiVal = _val;
-		if (g_monitorWnds[_cfgId])
-			g_monitorWnds[_cfgId]->Update(SNM_PRELOAD_MASK, 0);
-
-		PreloadLiveConfigJob* job = 
-			new PreloadLiveConfigJob(SNM_SCHEDJOB_LIVECFG_PRELOAD+_cfgId, lc->m_ccDelay, _val, _valhw, _relmode, _hwnd, _cfgId);
-
-		if (!_immediate && lc->m_ccDelay)
+		if (PreloadLiveConfigJob* job = new PreloadLiveConfigJob(SNM_SCHEDJOB_LIVECFG_PRELOAD+_cfgId, lc->m_ccDelay, lc->m_curPreloadMidiVal, _val, _valhw, _relmode, _hwnd, _cfgId))
 		{
-			AddOrReplaceScheduledJob(job); // cc "smoothing": avoid to stuck REPAER when a bunch of CCs are received
-		}
-		else
-		{
-			job->Perform();
-			delete job;
+			lc->m_curPreloadMidiVal = job->GetAbsoluteValue();
+			if (g_monitorWnds[_cfgId])
+				g_monitorWnds[_cfgId]->Update(SNM_PRELOAD_MASK, 0);
+
+			if (!_immediate && lc->m_ccDelay)
+			{
+				AddOrReplaceScheduledJob(job);
+			}
+			else
+			{
+				job->Perform();
+				delete job;
+			}
 		}
 	}
 }
@@ -2447,13 +2437,13 @@ void PreloadLiveConfigJob::Perform()
 	LiveConfig* lc = g_liveConfigs.Get()->Get(m_cfgId);
 	if (!lc) return;
 
-	LiveConfigItem* cfg = lc->m_ccConfs.Get(m_val);
-	if (cfg && lc->m_enable && m_val!=lc->m_preloadMidiVal &&
+	LiveConfigItem* cfg = lc->m_ccConfs.Get(m_absval);
+	if (cfg && lc->m_enable && m_absval!=lc->m_preloadMidiVal &&
 		(!lc->m_ignoreEmpty || (lc->m_ignoreEmpty && !cfg->IsDefault(true)))) //ignore empty configs preload
 	{
 		LiveConfigItem* lastCfg = lc->m_ccConfs.Get(lc->m_activeMidiVal); // can be <0
 		LiveConfigItem* lastPreloadCfg = lc->m_ccConfs.Get(lc->m_preloadMidiVal); // can be <0
-		lc->m_preloadMidiVal = m_val;
+		lc->m_preloadMidiVal = m_absval;
 
 		if (cfg->m_track && 
 /*JFB no, always obey!
@@ -2468,14 +2458,14 @@ void PreloadLiveConfigJob::Perform()
 			if (PreventUIRefresh)
 				PreventUIRefresh(1);
 
-			ApplyPreloadLiveConfig(false, m_cfgId, m_val, lastCfg);
+			ApplyPreloadLiveConfig(false, m_cfgId, m_absval, lastCfg);
 
 			if (PreventUIRefresh)
 				PreventUIRefresh(-1);
 
 			{
 				char buf[SNM_MAX_ACTION_NAME_LEN]="";
-				_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d (CC %d)","sws_undo"), m_cfgId+1, m_val);
+				_snprintfSafe(buf, sizeof(buf), __LOCALIZE_VERFMT("Preload Live Config %d (OSC/CC %d)","sws_undo"), m_cfgId+1, m_absval);
 				Undo_EndBlock2(NULL, buf, UNDO_STATE_ALL);
 			}
 		}

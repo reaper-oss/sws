@@ -514,22 +514,26 @@ void NextPrevPresetLastTouchedFX(COMMAND_T* _ct) {
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// Trigger preset through MIDI CC action
+///////////////////////////////////////////////////////////////////////////////
 
-// trigger preset through MIDI CC action
+int g_curPresetMidiVal = -1;
+
 class TriggerPresetJob : public SNM_MidiActionJob {
 public:
-	TriggerPresetJob(int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd, int _fxId) 
-		: SNM_MidiActionJob(SNM_SCHEDJOB_TRIG_PRESET,_approxDelayMs,_val,_valhw,_relmode,_hwnd), m_fxId(_fxId) {}
-	void Perform() {TriggerFXPresetSelTracks(m_fxId, m_val, 0);}
+	TriggerPresetJob(int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, HWND _hwnd, int _fxId) 
+		: SNM_MidiActionJob(SNM_SCHEDJOB_TRIG_PRESET,_approxDelayMs,_curval,_val,_valhw,_relmode,_hwnd), m_fxId(_fxId) {}
+	void Perform() {TriggerFXPresetSelTracks(m_fxId, m_absval, 0);}
 	int m_fxId;
 };
 
-// absolute CC only
 void TriggerFXPreset(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) 
 {
-	if (!_relmode && _valhw < 0)
-		AddOrReplaceScheduledJob(
-			new TriggerPresetJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd, (int)_ct->user));
+	if (TriggerPresetJob* job = new TriggerPresetJob(SNM_SCHEDJOB_DEFAULT_DELAY, g_curPresetMidiVal, _val, _valhw, _relmode, _hwnd, (int)_ct->user))
+	{
+		g_curPresetMidiVal = job->GetAbsoluteValue();
+		AddOrReplaceScheduledJob(job);
+	}
 }
 
 

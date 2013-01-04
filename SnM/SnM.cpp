@@ -457,7 +457,6 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Insert marker at play cursor" }, "S&M_INS_MARKER_PLAY", InsertMarker, NULL, 1},
 
 	// Other, misc ------------------------------------------------------------
-	{ { DEFACCEL, "SWS/S&M: [developer] Write C++ API functions header" }, "S&M_GEN_API", GenAPI, NULL, },
 	{ { DEFACCEL, "SWS/S&M: Send all notes off to selected tracks" }, "S&M_CC123_SEL_TRACKS", SendAllNotesOff, NULL, },
 #ifdef _WIN32
 	{ { DEFACCEL, "SWS/S&M: Show theme helper (all tracks)" }, "S&M_THEME_HELPER_ALL", ShowThemeHelper, NULL, 0},
@@ -662,22 +661,22 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 /*JFB static*/ MIDI_COMMAND_T g_SNMSection_cmdTable[] = 
 {
 	// keep these as first actions (the live configs' learn feature is tied to these cmd ids, staring with SNM_SNM_SECTION_1ST_CMD_ID)
-	{ { DEFACCEL, "SWS/S&M: Apply Live Config 1 (MIDI CC absolute only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Apply Live Config 2 (MIDI CC absolute only)" }, "S&M_LIVECONFIG2", ApplyLiveConfig, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Apply Live Config 3 (MIDI CC absolute only)" }, "S&M_LIVECONFIG3", ApplyLiveConfig, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Apply Live Config 4 (MIDI CC absolute only)" }, "S&M_LIVECONFIG4", ApplyLiveConfig, NULL, 3},
-	{ { DEFACCEL, "SWS/S&M: Preload Live Config 1 (MIDI CC absolute only)" }, "S&M_PRE_LIVECONFIG1", PreloadLiveConfig, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Preload Live Config 2 (MIDI CC absolute only)" }, "S&M_PRE_LIVECONFIG2", PreloadLiveConfig, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Preload Live Config 3 (MIDI CC absolute only)" }, "S&M_PRE_LIVECONFIG3", PreloadLiveConfig, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Preload Live Config 4 (MIDI CC absolute only)" }, "S&M_PRE_LIVECONFIG4", PreloadLiveConfig, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Apply Live Config 1 (MIDI CC/OSC only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Apply Live Config 2 (MIDI CC/OSC only)" }, "S&M_LIVECONFIG2", ApplyLiveConfig, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Apply Live Config 3 (MIDI CC/OSC only)" }, "S&M_LIVECONFIG3", ApplyLiveConfig, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Apply Live Config 4 (MIDI CC/OSC only)" }, "S&M_LIVECONFIG4", ApplyLiveConfig, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Preload Live Config 1 (MIDI CC/OSC only)" }, "S&M_PRE_LIVECONFIG1", PreloadLiveConfig, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Preload Live Config 2 (MIDI CC/OSC only)" }, "S&M_PRE_LIVECONFIG2", PreloadLiveConfig, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Preload Live Config 3 (MIDI CC/OSC only)" }, "S&M_PRE_LIVECONFIG3", PreloadLiveConfig, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Preload Live Config 4 (MIDI CC/OSC only)" }, "S&M_PRE_LIVECONFIG4", PreloadLiveConfig, NULL, 3},
 
-	{ { DEFACCEL, "SWS/S&M: Select project (MIDI CC absolute only)" }, "S&M_SELECT_PROJECT", SelectProject, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Select project (MIDI CC/OSC only)" }, "S&M_SELECT_PROJECT", SelectProject, NULL, 0},
 
-	{ { DEFACCEL, "SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC absolute only)" }, "S&M_SELFX_PRESET", TriggerFXPreset, NULL, -1},
-	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 1 of selected tracks (MIDI CC absolute only)" }, "S&M_PRESET_FX1", TriggerFXPreset, NULL, 0},
-	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 2 of selected tracks (MIDI CC absolute only)" }, "S&M_PRESET_FX2", TriggerFXPreset, NULL, 1},
-	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 3 of selected tracks (MIDI CC absolute only)" }, "S&M_PRESET_FX3", TriggerFXPreset, NULL, 2},
-	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 4 of selected tracks (MIDI CC absolute only)" }, "S&M_PRESET_FX4", TriggerFXPreset, NULL, 3},
+	{ { DEFACCEL, "SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC/OSC only)" }, "S&M_SELFX_PRESET", TriggerFXPreset, NULL, -1},
+	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 1 of selected tracks (MIDI CC/OSC only)" }, "S&M_PRESET_FX1", TriggerFXPreset, NULL, 0},
+	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 2 of selected tracks (MIDI CC/OSC only)" }, "S&M_PRESET_FX2", TriggerFXPreset, NULL, 1},
+	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 3 of selected tracks (MIDI CC/OSC only)" }, "S&M_PRESET_FX3", TriggerFXPreset, NULL, 2},
+	{ { DEFACCEL, "SWS/S&M: Trigger preset for FX 4 of selected tracks (MIDI CC/OSC only)" }, "S&M_PRESET_FX4", TriggerFXPreset, NULL, 3},
 
 	{ {}, LAST_COMMAND, }, // denote end of table
 };
@@ -750,7 +749,7 @@ int g_SNMSection_minCmdId = 0;
 int g_SNMSection_maxCmdId = 0;
 static int g_SNMSection_CmdId_gen = SNM_SECTION_1ST_CMD_ID;
 
-bool onAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
+bool SNM_OnMidiAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 {
 	static bool bReentrancyCheck = false;
 	if (bReentrancyCheck)
@@ -774,7 +773,7 @@ bool onAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
   0x10000101, "S&M Extension",
   g_SNMSection_kbdCmds, 0,
   g_SNMSection_defKeys, 0,
-  onAction
+  SNM_OnMidiAction
 };
 
 int SNM_SectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)

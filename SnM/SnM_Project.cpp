@@ -163,21 +163,23 @@ void OpenProjectPathInExplorerFinder(COMMAND_T*)
 // Select project ("MIDI CC absolute only" actions)
 ///////////////////////////////////////////////////////////////////////////////
 
+int g_curPrjMidiVal = -1;
+
 class SelectProjectJob : public SNM_MidiActionJob
 {
 public:
-	SelectProjectJob(int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd) 
-		: SNM_MidiActionJob(SNM_SCHEDJOB_SEL_PRJ,_approxDelayMs,_val,_valhw,_relmode,_hwnd) {}
+	SelectProjectJob(int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, HWND _hwnd) 
+		: SNM_MidiActionJob(SNM_SCHEDJOB_SEL_PRJ,_approxDelayMs,_curval,_val,_valhw,_relmode,_hwnd) {}
 	void Perform() {
-		if (ReaProject* proj = Enum_Projects(m_val, NULL, 0)) // project number is 0-based
+		if (ReaProject* proj = Enum_Projects(m_absval, NULL, 0)) // project number is 0-based
 			SelectProjectInstance(proj);
 	}
 };
 
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd) {
-	if (!_relmode && _valhw < 0) { // Absolute CC only
-		SelectProjectJob* job = 
-			new SelectProjectJob(SNM_SCHEDJOB_DEFAULT_DELAY, _val, _valhw, _relmode, _hwnd);
+	if (SelectProjectJob* job = new SelectProjectJob(SNM_SCHEDJOB_DEFAULT_DELAY, g_curPrjMidiVal, _val, _valhw, _relmode, _hwnd))
+	{
+		g_curPrjMidiVal = job->GetAbsoluteValue();
 		AddOrReplaceScheduledJob(job);
 	}
 }

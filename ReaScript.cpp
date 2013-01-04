@@ -124,25 +124,3 @@ bool RegisterExportedAPI(reaper_plugin_info_t* _rec)
 	return ok;
 }
 
-// REAPER bug? unfortunately _rec->Register("-APIdef_myfunc",..) does not work
-// => trick: re-register empty definitions so that exported funcs won't be part of the generated reaper_plugin_functions.h
-bool UnregisterExportedAPI(reaper_plugin_info_t* _rec)
-{
-	bool ok = (_rec!=NULL);
-	int i=-1;
-	while (ok && g_apidefs[++i].func)
-	{
-/*JFB commented: does not work, see remark above..
-		char tmp[2048];
-		_snprintf(tmp, sizeof(tmp), "-%s", g_apidefs[i].regkey_def);
-		ok &= (_rec->Register(tmp, (void*)g_apidefs[i].dyn_def) != 0);
-*/
-// => trick:
-		char* oldDef = g_apidefs[i].dyn_def;
-		g_apidefs[i].dyn_def = _strdup("");
-		ok &= (_rec->Register(g_apidefs[i].regkey_def, g_apidefs[i].dyn_def) != 0);
-		free(oldDef);
-	}
-	return ok;
-}
-

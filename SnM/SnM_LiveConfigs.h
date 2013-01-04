@@ -134,8 +134,8 @@ protected:
 
 class ApplyLiveConfigJob : public SNM_MidiActionJob {
 public:
-	ApplyLiveConfigJob(int _jobId, int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd, int _cfgId) 
-		: SNM_MidiActionJob(_jobId,_approxDelayMs,_val,_valhw,_relmode,_hwnd), m_cfgId(_cfgId) {}
+	ApplyLiveConfigJob(int _jobId, int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, HWND _hwnd, int _cfgId) 
+		: SNM_MidiActionJob(_jobId,_approxDelayMs,_curval,_val,_valhw,_relmode,_hwnd), m_cfgId(_cfgId) {}
 	void Perform();
 	int m_cfgId;
 };
@@ -143,8 +143,8 @@ public:
 
 class PreloadLiveConfigJob : public SNM_MidiActionJob {
 public:
-	PreloadLiveConfigJob(int _jobId, int _approxDelayMs, int _val, int _valhw, int _relmode, HWND _hwnd, int _cfgId) 
-		: SNM_MidiActionJob(_jobId,_approxDelayMs,_val,_valhw,_relmode,_hwnd), m_cfgId(_cfgId)  {}
+	PreloadLiveConfigJob(int _jobId, int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, HWND _hwnd, int _cfgId) 
+		: SNM_MidiActionJob(_jobId,_approxDelayMs,_curval,_val,_valhw,_relmode,_hwnd), m_cfgId(_cfgId)  {}
 	void Perform();
 	int m_cfgId;
 };

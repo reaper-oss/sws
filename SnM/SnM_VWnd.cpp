@@ -658,6 +658,7 @@ void SNM_KnobCaption::SetPosition(const RECT* _r)
 		WDL_VWnd* knob = m_children ? m_children->Get(0) : NULL;
 		if (knob && !strcmp(knob->GetType(), "SNM_Knob"))
 		{
+			// fixed knob size atm..
 			RECT r = {0,0,0,0};
 			r.right = r.bottom = SNM_GUI_W_KNOB;
 			knob->SetPosition(&r);
@@ -861,7 +862,7 @@ bool SNM_AutoVWndPosition(UINT _align, WDL_VWnd* _comp, WDL_VWnd* _tiedComp, con
 			}
 		}
 		else  if (!strcmp(_comp->GetType(), "SNM_KnobCaption")) {
-			width=SNM_GUI_W_KNOB*3;
+			width=int(SNM_GUI_W_KNOB*3.5);
 			height=SNM_GUI_W_KNOB;
 		}
 		else  if (!strcmp(_comp->GetType(), "SNM_TwoTinyButtons")) {

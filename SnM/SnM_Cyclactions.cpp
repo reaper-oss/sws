@@ -270,6 +270,8 @@ void RunMainCyclaction(COMMAND_T* _ct) {RunCycleAction(0, _ct);}
 void RunMEListCyclaction(COMMAND_T* _ct) {RunCycleAction(1, _ct);}
 void RunMEPianoCyclaction(COMMAND_T* _ct) {RunCycleAction(2, _ct);}
 
+// important: this works because recursive cycle actions are forbidden
+// (getting toggle states could be recursive otherwise..)
 bool IsCyclactionEnabled(int _section, COMMAND_T* _ct)
 {
 	int cycleId = (int)_ct->user;
@@ -299,7 +301,7 @@ bool IsCyclactionEnabled(int _section, COMMAND_T* _ct)
 		}
 		// default case: fall through
 	}
-	// default = fake toggle state
+	// default = fake toggle state (%2)
 	return (action && /*action->IsToggle() &&*/ (action->m_performState % 2) != 0);
 }
 

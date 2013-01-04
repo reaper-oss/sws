@@ -141,7 +141,6 @@ public:
 };
 
 extern REAPER_PLUGIN_HINSTANCE g_hInst;
-extern reaper_plugin_info_t* g_rec;
 extern HWND g_hwndParent;
 extern double g_d0;
 extern int g_i0;
@@ -260,4 +259,3 @@ int GenHtmlWhatsNew(const char* fnIn, const char* fnOut, bool bFullHTML);
 // Functions export to reascript and c++ plugins, Reascript.cpp
 bool RegisterExportedFuncs(reaper_plugin_info_t* _rec);
 bool RegisterExportedAPI(reaper_plugin_info_t* _rec);
-bool UnregisterExportedAPI(reaper_plugin_info_t* _rec);

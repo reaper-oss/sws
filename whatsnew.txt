@@ -33,13 +33,7 @@ Auto color/icon:
 Other:
 +Updated action "Xenakios/SWS: Randomize item positions...":
  - Added an option to move all grouped items by the same amount
-+The following actions of the "S&M Extension" section now support OSC and rotary controllers, they have been slightly renamed too:
- - SWS/S&M: Select project (MIDI CC/OSC only)
- - SWS/S&M: Trigger preset for selected FX of selected tracks (MIDI CC/OSC only)
- - SWS/S&M: Trigger preset for FX 1 of selected tracks (MIDI CC/OSC only)
- - SWS/S&M: Trigger preset for FX 2 of selected tracks (MIDI CC/OSC only)
- - SWS/S&M: Trigger preset for FX 3 of selected tracks (MIDI CC/OSC only)
- - SWS/S&M: Trigger preset for FX 4 of selected tracks (MIDI CC/OSC only)
++All actions of the "S&M Extension" section now support OSC and rotary controllers
 
 !v2.3.0 #9 (December 23, 2012)
 <b>Live Configs: big overhaul</b>
@@ -79,7 +73,7 @@ Lots of changes: merged a dedicated extension plugin. The fine details will be p
    If an "Input track" is defined, this option will automatically create/update sends from this track to all configured tracks (and each time a new track is added/removed from the editor's list view)
  - Added "Switch delay" knob (no more S&M.ini file tweaks needed). One "Switch delay" per config.
 +Added a bunch of actions (preload, toggle options or tiny fades on/off, open/close monitoring windows, etc..): filter the action list with "Live Config"!
- Note: some of the new actions are very specific and thus hidden by default (number of actions = 0 in the S&M.ini file)
+ Note: some of the new actions are very specific and thus hidden by default (http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|)
 +New context menu items in the Live Configs editor:
  - Copy/cut/paste configs (rows)
    With "faulty" controllers, it is useful to copy/paste the same config several times (e.g. too sensitive to set accurate values, etc..)
@@ -99,8 +93,8 @@ Region Playlist
 
 Cycle actions
 +<b>Added basic instructions: IF, IF NOT, and LOOP n</b>
- This is mainly to ensure consistent toggle states for cycle actions (see details http://forum.cockos.com/showpost.php?p=1090262&postcount=1136|here|) 
- but this also introduces "conditional macros", ex: if playing: do this, otherwise: do that
+ This is mainly to ensure consistent toggle states for cycle actions (see details http://forum.cockos.com/showpost.php?p=1090262&postcount=1136|here|) but this also introduces conditional macros
+ This is a "basic" support because you cannot yet have nested LOOPs or nested IFs. However you can have an IF in a LOOP or a LOOP in an IF.
 +Toggle cycle actions now report real toggle states (i.e. the state of the first relevant action)
 +Cycle action editor
  - Right list view: insert commands rather than adding them (avoids to systematically drag new commands)

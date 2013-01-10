@@ -48,6 +48,7 @@ int SNM_GetIntConfigVar(const char* _varName, int _errVal);
 bool SNM_SetIntConfigVar(const char* _varName, int _newVal);
 double SNM_GetDoubleConfigVar(const char* _varName, double _errVal);
 bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal);
+bool SNM_AddTCPFXParm(MediaTrack* _tr, int _fxId, int _prmId);
 
 // exotic resources slots
 #ifdef _WIN32

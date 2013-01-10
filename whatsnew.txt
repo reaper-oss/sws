@@ -5,11 +5,26 @@ Live Configs: support OSC and rotary controllers
 +Support all types of MIDI CC controllers (like endless rotary encoders)
  - In addition to the "Absolute" mode, all "Relative" modes of the Learn dialog box are now supported too
  - Acceleration is also supported
-+Support OSC learn:
- - OSC values must be floats, using negative values is recommended ATM
++Support OSC learn (OSC messages with float parameters)
  - Example: say you have learned the action "SWS/S&M: Apply Live Config 3 (MIDI CC/OSC only)" with the OSC message "/blabla",
-   sending "/blabla/f/-107.0" will switch to the instrument/effect #107 of the Live Config #3
-   Note: if you want to send a positive value, you have to send 16384.0-107.0
+   sending "/blabla/f/107" will switch to the instrument/effect #107 of the Live Config #3
+
+Added actions (http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|):
++SWS/S&M: Bypass all FX (except n) for selected tracks - where 'n' is in [1; 8] by default
+ - Might be useful for FX comparisons (A/B)
++SWS/S&M: Set all FX (except n) offline for selected tracks - where 'n' is in [1; 8] by default
+ - Might be useful for live applications
+The following new actions are a bit specific, so they are <b>hidden by default</b> (n=0 in the S&M.ini file)
++SWS/S&M: Unbypass all FX (except n) for selected tracks
++SWS/S&M: Set all FX (except n) online for selected tracks
++SWS/S&M: Dummy toggle n
+ - These actions just report a toggle state
++SWS/S&M: Exclusive toggle n
+ - These actions just report a toggle state, only one of these is ON at a time (all others are automatically turned OFF)
+
+ReaScript:
++Added function SNM_AddTCPFXParm()
++Hardened SNM_TieResourceSlotActions()
 
 Auto color/icon:
 +Fixed color edition in place in the list view
@@ -25,45 +40,49 @@ Other:
  - SWS/S&M: Trigger preset for FX 2 of selected tracks (MIDI CC/OSC only)
  - SWS/S&M: Trigger preset for FX 3 of selected tracks (MIDI CC/OSC only)
  - SWS/S&M: Trigger preset for FX 4 of selected tracks (MIDI CC/OSC only)
-+ReaScript: hardened SNM_TieResourceSlotActions()
 
 !v2.3.0 #9 (December 23, 2012)
 <b>Live Configs: big overhaul</b>
-Lots of changes: merged a dedicated extension plugin. The fine details will be posted in this http://forum.cockos.com/showthread.php?p=1079515#post1079515|thread/PDF| (not up-to-date yet!). 
-In the meantime the major changes are:
+Lots of changes: merged a dedicated extension plugin. The fine details will be posted in this http://forum.cockos.com/showthread.php?p=1079515#post1079515|thread/PDF| (not up-to-date yet!), in the meantime the major changes are:
 +New "core" to ensure smooth/glitch-free config switches, new "All notes off" logic (now optional)
 +Added Preload feature: you can prepare an instrument/effect while playing another
- This can be done with a second controller (click the new "Learn" button) or, on OSX, via the trackpad
+ This can be done with a second controller (click the new "Learn" button) or multi-touch gesture (see below)
+ Once a config is preloaded, you can switch/switch back between preloaded/current configs with new actions "SWS/S&M: Live Config n - Apply preloaded config (swap current/preload)"
  Preload comes in handy when switching FX chains, or Track Templates or with the new option "Offline all but active/preloaded tracks" (see below)
 +Added Monitoring windows, <b>demo http://stash.reaper.fm/14847/S%26M_LiveConfigMonitor.gif|here|</b>
  - Useful with controllers that do not provide visual feedback
- - Support 2 fingers gesture over "Current" and "Preload" areas, e.g. switch instruments/effects with a trackpad
+ - Support 2 fingers scroll gesture over "Current" and "Preload" areas, e.g. switch or preload instruments/effects with a trackpad
  - Click on the "Preload" area to swap preloaded/current configs
  - Up to 4 Monitors can be used simultaneously, i.e. one per Live Config
 +Added options (per config):
  - "Offline all but active/preloaded tracks (RAM savings)"
    The only loaded instruments/effects will be those of the current and preloaded tracks.
-   Other tracks that are not part of the config will remain as they are, of course. This option works without preload too, switches will be slower though.
+   Other tracks that are not part of the config will remain as they are, of course. This option works without preload too (switches will be slower though).
    Note: handle with care! Do not use <del>this option with</del> buggy instruments/effects!
  - "Ignore switches to empty configs"
-   Especially useful for "Apply next/previous config" actions: switch to the next/previous valid config whatever is the gap (of empty configs) in between.
+   Especially useful for "Apply next/previous config" actions: switch to the next/previous valid config whatever is the gap (of empty configs) in between
  - "Send all notes off when switching configs"
  - "Select/scroll to track on list view click"
-+Added "Tiny fades" knob 
- It tweaks lengths of tiny fades-out/in when deactivating/activating configs, disabling fades is allowed but instrument/effect switches be glitchy!
-+New logic for "Activation" and "Deactivation" actions/macros:
- - If a track is defined for a config, only this track will be selected when the "Activation" (or "Deactivation") action is performed - Useful since many actions deal with "selected track(s)"
- - If no track is defined for a config, no track will be selected when the "Activation" (or "Deactivation") action is performed - Useful to master the current selection state
-+Added helpers for newcomers:
- - Added "Learn" button: direct action learn for "Apply" and "Preload" MIDI actions
-   This is to ease controller bindings (due to some technical constraints, apply/preload actions have to be buried in a section "S&M Extension" of the action list..)
++Added "Tiny fades" knob
+ It tweaks lengths of tiny fades-out/in when deactivating/activating configs. Disabling fades is allowed but instrument/effect switches might be glitchy!
+ Note: when a config is made of trailing effects (delay, verb, etc..), you can either disable tiny fades or, better: route the (tiny faded) audio to a track which is not used by the Live Configs
++New logic for "Activation" and "Deactivation" actions/macros/scripts:
+ - If a track is defined for a config, only this track will be selected when the "Activation" (or "Deactivation") action is performed, track selection is restored right after
+   => Useful since many actions deal with "selected track(s)". Note: this type of action also avoids to tie things to track numbers, etc..(i.e. things still work if you move/delete tracks)
+ - If no track is defined for a config, no track will be selected when the "Activation" (or "Deactivation") action is performed, track selection is restored right after
+   => Useful to master the current selection state when performing actions
++Added helpers:
+ - Added "Learn" button: direct action learn for "Apply" and "Preload" actions
+   This is to ease controller bindings (due to some technical constraints, apply/preload actions have to be buried in a section "S&M Extension" of the action list ATM..)
  - Added "Create input track" in the context menu (creates a track with needed properties and sends)
  - Added option "Automatically update sends from the input track"
+   If an "Input track" is defined, this option will automatically create/update sends from this track to all configured tracks (and each time a new track is added/removed from the editor's list view)
  - Added "Switch delay" knob (no more S&M.ini file tweaks needed). One "Switch delay" per config.
-+Added a bunch of actions (preload, toggle options on/off, open/close monitoring windows, etc..): filter the action list with "Live Config"!
- Note: some of the new actions are specific and thus hidden by default (number of actions = 0 in the S&M.ini file)
-+New context menu items:
++Added a bunch of actions (preload, toggle options or tiny fades on/off, open/close monitoring windows, etc..): filter the action list with "Live Config"!
+ Note: some of the new actions are very specific and thus hidden by default (number of actions = 0 in the S&M.ini file)
++New context menu items in the Live Configs editor:
  - Copy/cut/paste configs (rows)
+   With "faulty" controllers, it is useful to copy/paste the same config several times (e.g. too sensitive to set accurate values, etc..)
  - Insert config (shift rows up/down) + obey INSERT key
  - Apply/preload configs
  - Shortcuts: "Show FX chain..." and "Show routing window..." in the Track column and the Input track context menus
@@ -80,7 +99,8 @@ Region Playlist
 
 Cycle actions
 +<b>Added basic instructions: IF, IF NOT, and LOOP n</b>
- This is mainly to ensure consistent toggle states for cycle actions, see details http://forum.cockos.com/showpost.php?p=1090262&postcount=1136|here|
+ This is mainly to ensure consistent toggle states for cycle actions (see details http://forum.cockos.com/showpost.php?p=1090262&postcount=1136|here|) 
+ but this also introduces "conditional macros", ex: if playing: do this, otherwise: do that
 +Toggle cycle actions now report real toggle states (i.e. the state of the first relevant action)
 +Cycle action editor
  - Right list view: insert commands rather than adding them (avoids to systematically drag new commands)
@@ -97,7 +117,7 @@ Export functions to ReaScript (BETA)
 
 Added actions
 +Added "go to" marker/region actions (just meant to target up to 99 regions/markers)
- The number of actions is customizable in the S&M.ini file, 0 by default (i.e. <b>hidden!</b>)
+ The number of actions is http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, 0 by default (i.e. <b>hidden!</b>)
  Note: comes in handy with the new Region Playlist "re-synchronization" feature, see above
  - SWS/S&M: Go to marker n (obeys smooth seek)
  - SWS/S&M: Go to region n (obeys smooth seek)
@@ -382,7 +402,7 @@ Resources window and related slots actions
 
 Region Playlist
 +The playlist being played can be different from the displayed one
-+SWS/S&M: Region Playlist #n - Play (where 'n' is in [1; 4], customizable in the S&M.ini file, up to 99 playlists)
++SWS/S&M: Region Playlist #n - Play (where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|, up to 99 playlists)
 +SWS/S&M: Region Playlist - Set repeat off
 +SWS/S&M: Region Playlist - Set repeat on
 +SWS/S&M: Region Playlist - Toggle repeat
@@ -556,8 +576,8 @@ Label processor:
 
 FX presets actions improvements: OS X support + improved on Windows OS (use new dedicated APIs)
 Added in the main section of the action list (new on OS X):
-+SWS/S&M: Trigger next preset for FX n of selected tracks - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
-+SWS/S&M: Trigger previous preset for FX n of selected tracks - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Trigger next preset for FX n of selected tracks - where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file| (up to 99 slots)
++SWS/S&M: Trigger previous preset for FX n of selected tracks - where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file| (up to 99 slots)
 +SWS/S&M: Trigger next preset for selected FX of selected tracks
 +SWS/S&M: Trigger previous preset for selected FX of selected tracks
 Added in the "S&M extension" of the action list (new on OS X):
@@ -625,7 +645,7 @@ Resources window:
 Resources/Track templates slots:
 +Issue 441: new auto-save option to retain envelopes in templates (the option to retain items was already there)
 +Added tick box for the new REAPER v4.15 option "Offset template items/envelopes by edit cusor"
-+Added actions "SWS/S&M: Apply track template (with envelopes/items) to selected tracks, slot n" where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
++Added actions "SWS/S&M: Apply track template (with envelopes/items) to selected tracks, slot n" where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file| (up to 99 slots)
 
 Cycle action editor:
 +Additional consistency checks before aplying/registering cycle actions
@@ -666,8 +686,8 @@ Cycle actions: OS X cleanup/fixes (thanks to Kundalinguist and CaptainHook!)
 Resources window:
 +New auto-save preferences for FX chains: Context menu > Auto-save configuration > "Create filename from track/item name" (default) and "Create filename from 1st FX name" (useful to create FX libraries)
 Resources/Media file slots: new option and actions for playback synchronization
-+SWS/S&M: Play media file in selected tracks (sync with next measure), slot n - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
-+SWS/S&M: Loop media file in selected tracks (sync with next measure), slot n - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Play media file in selected tracks (sync with next measure), slot n - where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file| (up to 99 slots)
++SWS/S&M: Loop media file in selected tracks (sync with next measure), slot n - where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file| (up to 99 slots)
 +Added "advanced" option in the S&M.ini file to synchroneously play/stop/pause/etc.. media files across tracks (see details in issue 435)
 
 Notes/Subtitles/Help window:
@@ -705,7 +725,7 @@ Added clear/delete slot actions (Issue 431):
 +SWS/S&M: Delete all media file slots
 +SWS/S&M: Delete all image slots
 +SWS/S&M: Delete all theme slots - On Windows OS only
- <b>Important:</b> a bit specific, so the following actions are hidden by default (i.e. 0 slot in the S&M.ini file but it is customizable there: up to 99 slots)
+ <b>Important:</b> a bit specific, so the following actions are hidden by default (i.e. 0 slot in the S&M.ini file but this is http://forum.cockos.com/showthread.php?p=984786#post984786|customizable|: up to 99 slots)
 +SWS/S&M: Clear FX chain slot n
 +SWS/S&M: Clear track template slot n
 +SWS/S&M: Clear project template slot n
@@ -717,10 +737,10 @@ Resources/Media file slots improvements:
 +Only send all notes off when MIDI files are stopped (i.e. no extra CC123 MIDI messages when MIDI files are played until the end). Useful for MIDI hardware outputs.
 +Other improvements when stopping media files (better fix for issue 411)
 Added actions with pause:
-+SWS/S&M: Play media file in selected tracks (toggle pause), slot n - where 'n' is in [1; 4], customizable in the S&M.ini file (up to 99 slots)
++SWS/S&M: Play media file in selected tracks (toggle pause), slot n - where 'n' is in [1; 4], http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file| (up to 99 slots)
 +SWS/S&M: Play media file in selected tracks (toggle pause), prompt for slot
 +SWS/S&M: Loop media file in selected tracks (toggle pause), prompt for slot - Infinite looping! To be stopped!
- <b>Important:</b> due to its scary name, the folowing action is hidden by default (i.e. 0 slot in the S&M.ini file but it is customizable there: up to 99 slots)
+ <b>Important:</b> due to its scary name, the folowing action is hidden by default (i.e. 0 slot in the S&M.ini file but this is http://forum.cockos.com/showthread.php?p=984786#post984786|customizable|: up to 99 slots)
 +SWS/S&M: Loop media file in selected tracks (toggle pause), slot n - Infinite looping! To be stopped!
 
 New "Images" slot type in the Resources window: manage slots for PNG files (Issue 418)

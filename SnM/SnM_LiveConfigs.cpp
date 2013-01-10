@@ -1273,17 +1273,6 @@ void SNM_LiveConfigsWnd::AddFXSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastStri
 				WDL_FastString str, curPresetName;
 				GetPresetConf(fx, _curPresetConf->Get(), &curPresetName);
 
-				// clear current fx preset
-				if ((SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt) <= SNM_LIVECFG_SET_PRESET_END_MSG)
-				{
-					AddToMenu(fxSubMenu, __LOCALIZE("None","sws_DLG_155"), SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt, -1, false, !curPresetName.GetLength() ? MFS_CHECKED : MFS_UNCHECKED);
-					m_lastPresetMsg.Add(new PresetMsg(fx, ""));
-					msgCpt++;
-				}
-
-				if (GetMenuItemCount(fxSubMenu))
-					AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
-
 				// learn current preset
 				if ((SNM_LIVECFG_LEARN_PRESETS_START_MSG + fx) <= SNM_LIVECFG_LEARN_PRESETS_END_MSG)
 				{
@@ -1293,15 +1282,15 @@ void SNM_LiveConfigsWnd::AddFXSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastStri
 					AddToMenu(fxSubMenu, str.Get(), SNM_LIVECFG_LEARN_PRESETS_START_MSG + fx, -1, false, *buf?0:MF_GRAYED);
 				}
 
+				if (GetMenuItemCount(fxSubMenu))
+					AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
+
 				// user preset list
 				WDL_PtrList_DeleteOnDestroy<WDL_FastString> names;
 				SNM_FXSummary* sum = summaries->Get(fx);
 				int usrPrstCount = (sum ? GetUserPresetNames(sum->m_type.Get(), sum->m_realName.Get(), &names) : 0);
 
-				if (GetMenuItemCount(fxSubMenu))
-					AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
-
-				str.SetFormatted(256, __LOCALIZE_VERFMT("[User presets%s]","sws_DLG_155"), usrPrstCount?"":__LOCALIZE(": no imported .rpl file","sws_DLG_155"));
+				str.SetFormatted(256, __LOCALIZE_VERFMT("[User presets (.rpl)%s]","sws_DLG_155"), usrPrstCount?"":__LOCALIZE(": no .rpl file loaded","sws_DLG_155"));
 				AddToMenu(fxSubMenu, str.Get(), 0, -1, false, usrPrstCount?MF_DISABLED:MF_GRAYED);
 
 				for(int j=0; j < usrPrstCount && (SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt) <= SNM_LIVECFG_SET_PRESET_END_MSG; j++)
@@ -1310,6 +1299,17 @@ void SNM_LiveConfigsWnd::AddFXSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastStri
 						m_lastPresetMsg.Add(new PresetMsg(fx, names.Get(j)->Get()));
 						msgCpt++;
 					}
+
+				if (GetMenuItemCount(fxSubMenu))
+					AddToMenu(fxSubMenu, SWS_SEPARATOR, 0);
+
+				// clear current fx preset
+				if ((SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt) <= SNM_LIVECFG_SET_PRESET_END_MSG)
+				{
+					AddToMenu(fxSubMenu, __LOCALIZE("None","sws_DLG_155"), SNM_LIVECFG_SET_PRESET_START_MSG + msgCpt, -1, false, !curPresetName.GetLength() ? MFS_CHECKED : MFS_UNCHECKED);
+					m_lastPresetMsg.Add(new PresetMsg(fx, ""));
+					msgCpt++;
+				}
 
 				// add fx sub menu
 				str.SetFormatted(512, "FX%d: %s", fx+1, fxName);
@@ -1993,12 +1993,12 @@ void MuteAndInitCC123(LiveConfig* _lc, MediaTrack* _tr, DWORD* _muteTime, WDL_Pt
 }
 
 // just to simplify ApplyPreloadLiveConfig()
-void MuteConfigAndInitCC123(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks, WDL_PtrList<bool>* _muteStates)
+void MuteAndInitCC123AllConfigs(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<void>* _muteTracks, WDL_PtrList<void>* _cc123Tracks, WDL_PtrList<bool>* _muteStates)
 {
 	for (int i=0; i<_lc->m_ccConfs.GetSize(); i++)
 		if (LiveConfigItem* item = _lc->m_ccConfs.Get(i))
 			if (item->m_track && _muteTracks->Find(item->m_track) < 0)
-				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates, true); // always mute
+				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates); //JFB!!!, true); // always mute
 }
 
 // just to simplify ApplyPreloadLiveConfig()
@@ -2054,7 +2054,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 		}
 
 		// --------------------------------------------------------------------
-		// mute things
+		// mute things (according to user options)
 
 		DWORD muteTime=0;
 		WDL_PtrList<void> muteTracks, cc123Tracks;
@@ -2092,7 +2092,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 			// first activation: cleanup *everything* as we do not know the initial state
 			if (!_lastCfg)
 			{
-				MuteConfigAndInitCC123(lc, &muteTime, &muteTracks, &cc123Tracks, &muteStates);
+				MuteAndInitCC123AllConfigs(lc, &muteTime, &muteTracks, &cc123Tracks, &muteStates);
 			}
 			else
 			{
@@ -2109,7 +2109,7 @@ void ApplyPreloadLiveConfig(bool _apply, int _cfgId, int _val, LiveConfigItem* _
 					if (!lc->m_inputTr || (lc->m_inputTr && _lastCfg->m_track != lc->m_inputTr))
 						MuteAndInitCC123(lc, _lastCfg->m_track, &muteTime, &muteTracks, &cc123Tracks, &muteStates);
 					else if (lc->m_inputTr && _lastCfg->m_track == lc->m_inputTr) // corner case fix
-						MuteConfigAndInitCC123(lc, &muteTime, &muteTracks, &cc123Tracks, &muteStates);
+						MuteAndInitCC123AllConfigs(lc, &muteTime, &muteTracks, &cc123Tracks, &muteStates);
 				}
 			}
 

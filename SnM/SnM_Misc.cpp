@@ -34,6 +34,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // Reascript export
+// => funcs must be made dumb-proof!
 ///////////////////////////////////////////////////////////////////////////////
 
 WDL_FastString* SNM_CreateFastString(const char* _str) {
@@ -211,6 +212,43 @@ bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal) {
 		return true;
 	}
 	return false;
+}
+
+bool SNM_AddTCPFXParm(MediaTrack* _tr, int _fxId, int _prmId)
+{
+	bool updated = false;
+	if (_tr && _fxId>=0 && _prmId>=0 && _fxId<TrackFX_GetCount(_tr) && _prmId<TrackFX_GetNumParams(_tr, _fxId))
+	{
+		// already exists?
+		int fxId, prmId;
+		for (int i=0; i<CountTCPFXParms(NULL, _tr); i++)
+			if (GetTCPFXParm(NULL, _tr, i, &fxId, &prmId))
+				if (fxId==_fxId && prmId==_prmId)
+					return false;
+
+		SNM_ChunkParserPatcher p(_tr);
+
+		// first get the fx chain: a straight search for the fx would fail (possible mismatch with frozen track, item fx, etc..)
+		WDL_FastString chainChunk;
+		if (p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM") > 0)
+		{
+			SNM_ChunkParserPatcher pfxc(&chainChunk, false);
+			int pos = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","WAK",_fxId,0);
+			if (pos>0)
+			{
+				char line[SNM_MAX_CHUNK_LINE_LENGTH] = "";
+				if (_snprintfStrict(line, sizeof(line), "PARM_TCP %d\n", _prmId) > 0)
+				{
+					pfxc.GetChunk()->Insert(line, --pos);
+					if (p.ReplaceSubChunk("FXCHAIN", 2, 0, pfxc.GetChunk()->Get(), "<ITEM")) {
+						updated = true;
+						p.Commit(true);
+					}
+				}
+			}
+		}
+	}
+	return updated;
 }
 
 

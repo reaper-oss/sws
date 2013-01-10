@@ -65,7 +65,7 @@ bool IsFXBypassedSelTracks(COMMAND_T * _ct)
 	// several selected tracks: possible mix of different states 
 	// => return a fake toggle state (best effort)
 	else if (selTrCount)
-		return FakeIsToggleAction(_ct);
+		return GetFakeToggleState(_ct);
 	return false;
 }
 
@@ -73,8 +73,6 @@ bool IsFXBypassedSelTracks(COMMAND_T * _ct)
 bool SetOrToggleFXBypassSelTracks(const char * _undoMsg, int _mode, int _fxCmdId, bool _val = false)
 {
 	bool updated = false;
-
-
 	for (int i=0; i <= GetNumTracks(); i++) // incl. master
 	{
 		MediaTrack* tr = CSurf_TrackFromID(i, false);
@@ -107,14 +105,23 @@ bool SetOrToggleFXBypassSelTracks(const char * _undoMsg, int _mode, int _fxCmdId
 							updated = true;
 						}
 						break;
-					case 4: // set all
+					case 4: // set all, set all except
 						for (int j=0; j<TrackFX_GetCount(tr); j++)
-							if (_val != TrackFX_GetEnabled(tr, j)) {
-								if (_undoMsg && !updated)
-									Undo_BeginBlock2(NULL);
-								TrackFX_SetEnabled(tr, j, _val);
-								updated = true;
+							if (j != fxId)
+							{
+								if (_val != TrackFX_GetEnabled(tr, j)) {
+									if (_undoMsg && !updated)
+										Undo_BeginBlock2(NULL);
+									TrackFX_SetEnabled(tr, j, _val);
+									updated = true;
+								}
 							}
+							else if (_val == TrackFX_GetEnabled(tr, j)) {
+									if (_undoMsg && !updated)
+										Undo_BeginBlock2(NULL);
+									TrackFX_SetEnabled(tr, j, !_val);
+									updated = true;
+								}
 						break;
 				}
 		}
@@ -139,16 +146,24 @@ void ToggleFXBypassSelTracks(COMMAND_T* _ct) {
 		FakeToggle(_ct);
 } 
 
-void SetFXBypassSelTracks(COMMAND_T* _ct) { 
+void BypassFXSelTracks(COMMAND_T* _ct) { 
 	SetOrToggleFXBypassSelTracks(SWS_CMD_SHORTNAME(_ct), 3, (int)_ct->user, false); 
 }
 
-void SetFXUnbypassSelTracks(COMMAND_T* _ct) { 
+void UnbypassFXSelTracks(COMMAND_T* _ct) { 
 	SetOrToggleFXBypassSelTracks(SWS_CMD_SHORTNAME(_ct), 3, (int)_ct->user, true); 
 }
 
-void SetAllFXsBypassSelTracks(COMMAND_T* _ct) {
+void UpdateAllFXsBypassSelTracks(COMMAND_T* _ct) {
 	SetOrToggleFXBypassSelTracks(SWS_CMD_SHORTNAME(_ct), 4, 0xFFFF, ((int)_ct->user) ? true : false); // trick: unreachable fx number
+}
+
+void BypassAllFXsExceptSelTracks(COMMAND_T* _ct) {
+	SetOrToggleFXBypassSelTracks(SWS_CMD_SHORTNAME(_ct), 4, (int)_ct->user, false);
+}
+
+void UnypassAllFXsExceptSelTracks(COMMAND_T* _ct) {
+	SetOrToggleFXBypassSelTracks(SWS_CMD_SHORTNAME(_ct), 4, (int)_ct->user, true);
 }
 
 
@@ -179,12 +194,12 @@ bool IsFXOfflineSelTracks(COMMAND_T * _ct)
 	// several selected tracks: possible mix of different states 
 	// => return a fake toggle state (best effort)
 	else if (selTrCount)
-		return FakeIsToggleAction(_ct);
+		return GetFakeToggleState(_ct);
 	return false;
 }
 
-// core func (no dedicated API yet)
-bool PatchSelTracksFXOnline(const char * _undoMsg, int _mode, int _fxCmdId, const char* _val = NULL)
+// core func (no dedicated API yet => state chunk update)
+bool PatchSelTracksFXOnline(const char * _undoMsg, int _mode, int _fxCmdId, const char* _val = NULL, const char* _valExcept = NULL)
 {
 	bool updated = false;
 	for (int i=0; i <= GetNumTracks(); i++) // incl. master
@@ -196,7 +211,7 @@ bool PatchSelTracksFXOnline(const char * _undoMsg, int _mode, int _fxCmdId, cons
 			if (fxId >= 0)
 			{
 				SNM_ChunkParserPatcher p(tr);
-				bool updt = (p.ParsePatch(_mode, 2, "FXCHAIN", "BYPASS", fxId, 2, (void*)_val) > 0);
+				bool updt = (p.ParsePatch(_mode, 2, "FXCHAIN", "BYPASS", fxId, 2, (void*)_val, (void*)_valExcept) > 0);
 				updated |= updt;
 
 				// close the GUI for buggy plugins (before chunk update)
@@ -204,7 +219,7 @@ bool PatchSelTracksFXOnline(const char * _undoMsg, int _mode, int _fxCmdId, cons
 				if (updt && g_buggyPlugSupport)
 					TrackFX_SetOpen(tr, fxId, false);
 
-			} // chunk auto commit
+			} // => auto commit
 		}
 	}
 	if (updated)
@@ -238,7 +253,15 @@ void SetFXOfflineSelTracks(COMMAND_T* _ct) {
 void SetFXOnlineSelTracks(COMMAND_T* _ct) { 
 	PatchSelTracksFXOnline(SWS_CMD_SHORTNAME(_ct), SNM_SET_CHUNK_CHAR, (int)_ct->user, "0"); 
 }
-  
+
+void SetAllFXsOfflineExceptSelTracks(COMMAND_T* _ct) {
+	PatchSelTracksFXOnline(SWS_CMD_SHORTNAME(_ct), SNM_SETALL_CHUNK_CHAR_EXCEPT, (int)_ct->user, "1", "0"); 
+}
+
+void SetAllFXsOnlineExceptSelTracks(COMMAND_T* _ct) {
+	PatchSelTracksFXOnline(SWS_CMD_SHORTNAME(_ct), SNM_SETALL_CHUNK_CHAR_EXCEPT, (int)_ct->user, "0", "1"); 
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // Take fx online/offline, bypass/unbypass
@@ -294,13 +317,13 @@ void ToggleAllFXsBypassSelItems(COMMAND_T* _ct) {
 		FakeToggle(_ct);
 } 
 
-void SetAllFXsOfflineSelItems(COMMAND_T* _ct) {
+void UpdateAllFXsOfflineSelItems(COMMAND_T* _ct) {
 	char pInt[4] = "";
 	if (_snprintfStrict(pInt, sizeof(pInt), "%d", (int)_ct->user) > 0)
 		PatchSelItemsFXState(SWS_CMD_SHORTNAME(_ct), SNM_SETALL_CHUNK_CHAR_EXCEPT, 2, 0xFFFF, pInt); // trick: unreachable fx number
 }
 
-void SetAllFXsBypassSelItems(COMMAND_T* _ct) {
+void UpdateAllFXsBypassSelItems(COMMAND_T* _ct) {
 	char pInt[4] = "";
 	if (_snprintfStrict(pInt, sizeof(pInt), "%d", (int)_ct->user) > 0)
 		PatchSelItemsFXState(SWS_CMD_SHORTNAME(_ct), SNM_SETALL_CHUNK_CHAR_EXCEPT, 1, 0xFFFF, pInt); // trick: unreachable fx number

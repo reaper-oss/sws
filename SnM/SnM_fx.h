@@ -37,9 +37,11 @@ bool IsFXBypassedSelTracks(COMMAND_T*);
 void ToggleExceptFXBypassSelTracks(COMMAND_T*);
 void ToggleAllFXsBypassSelTracks(COMMAND_T*);
 void ToggleFXBypassSelTracks(COMMAND_T*);
-void SetFXBypassSelTracks(COMMAND_T*);
-void SetFXUnbypassSelTracks(COMMAND_T*);
-void SetAllFXsBypassSelTracks(COMMAND_T*);
+void BypassFXSelTracks(COMMAND_T*);
+void UnbypassFXSelTracks(COMMAND_T*);
+void UpdateAllFXsBypassSelTracks(COMMAND_T*);
+void BypassAllFXsExceptSelTracks(COMMAND_T*);
+void UnypassAllFXsExceptSelTracks(COMMAND_T*);
 
 bool IsFXOfflineSelTracks(COMMAND_T*);
 void ToggleFXOfflineSelTracks(COMMAND_T*);
@@ -47,11 +49,13 @@ void ToggleExceptFXOfflineSelTracks(COMMAND_T*);
 void ToggleAllFXsOfflineSelTracks(COMMAND_T*);
 void SetFXOfflineSelTracks(COMMAND_T*); 
 void SetFXOnlineSelTracks(COMMAND_T*);
+void SetAllFXsOfflineExceptSelTracks(COMMAND_T* _ct);
+void SetAllFXsOnlineExceptSelTracks(COMMAND_T* _ct);
 
 void ToggleAllFXsOfflineSelItems(COMMAND_T*);
-void SetAllFXsOfflineSelItems(COMMAND_T*);
+void UpdateAllFXsOfflineSelItems(COMMAND_T*);
 void ToggleAllFXsBypassSelItems(COMMAND_T*);
-void SetAllFXsBypassSelItems(COMMAND_T*);
+void UpdateAllFXsBypassSelItems(COMMAND_T*);
 
 void SelectTrackFX(COMMAND_T*);
 int GetSelectedTrackFX(MediaTrack* _tr);

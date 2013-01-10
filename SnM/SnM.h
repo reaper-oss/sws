@@ -69,7 +69,7 @@
 #define SNM_CYCLACTION_EXPORT_FILE	"%s/S&M_Cyclactions_export.ini"
 #define SNM_EXTENSION_FILE			"%s/UserPlugins/reaper_snm.dylib"
 #define SNM_FONT_NAME				"Lucida Grande"
-#ifndef __LP64__					//JFB!!! wtf!? same font, different look on x64!
+#ifndef __LP64__					//JFB!!! SWELL issue: wtf!? same font, different look on x64!
 #define SNM_FONT_HEIGHT				10
 #else
 #define SNM_FONT_HEIGHT				11
@@ -161,46 +161,42 @@ public:
 	bool m_isPerforming;
 };
 
+//JFB!!! learn with pitch is not supported atm: dunno how to distinguish pitch vs osc..
 class SNM_MidiActionJob : public SNM_ScheduledJob {
 public:
-	SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curval, int _val, int _valhw, int _relmode, HWND _hwnd) 
+	SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd) 
 		: SNM_ScheduledJob(_jobId, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd)
 	{
-		// very default (but valid!) value
-		m_absval = 0;
-
-		// osc & pitch midi events
-		// to support both osc & pitch, osc values must be negative floats, e.g. /blabla/f/-103.0 to trigger the live config 103
-		if (_valhw>=0)
+		m_absval = 0; // very default (but valid) value
+		if (_valhw>=0) // osc & pitch midi events
 		{
-			m_absval = BOUNDED(_valhw | _val<<7, 0, 16383);
+//			m_absval = BOUNDED(_valhw|_val<<7, 0, 16383); // for pitch
+			m_absval = _valhw && _val ? BOUNDED(16384 - (_valhw|_val<<7), 0, 16383) : 0; // for osc
 		}
-		// cc midi events
-		else if (_valhw==-1 && _val>=0 && _val<=127)
+		else if (_valhw==-1 && _val>=0 && _val<=127) // cc midi events
 		{
-			int delta = 0;
-			_curval = BOUNDED(_curval,0,127);
 			switch (_relmode)
-			{
-				case 0: // absolute CC
-					m_absval = BOUNDED(_val, 0, 127);
+			{ 
+				case 0: // absolute cc
+					m_absval = _val;
 					break;
-				case 1: // 127=-1, 1=+1
+				case 1: { // relative cc, 127=-1, 1=+1
+					int delta = 0;
 					if (_val>=1 && _val<=64) delta = _val;
 					else if (_val>=65 && _val<=127) delta = _val - 128;
-					m_absval = BOUNDED(_curval+delta, 0, 127);
+					m_absval = BOUNDED(BOUNDED(_curCC,0,127)+delta, 0, 127);
 					break;
-				case 2: // 63=-1, 65=+1
-					delta = _val - 64;
-					m_absval = BOUNDED(_curval+delta, 0, 127);
+				}
+				case 2: // relative cc, 63=-1, 65=+1
+					m_absval = BOUNDED(BOUNDED(_curCC,0,127) + (_val-64), 0, 127);
 					break;
-				case 3: // 65=-1, 1=+1
+				case 3: { // relative cc, 65=-1, 1=+1
+					int delta = 0;
 					if (_val>=1 && _val<=63) delta = _val;
 					else if (_val>=65 && _val<=127) delta = _val - 64;
-					m_absval = BOUNDED(_curval+delta, 0, 127);
+					m_absval = BOUNDED(BOUNDED(_curCC,0,127)+delta, 0, 127);
 					break;
-				default: // unknown relative mode
-					break;
+				}
 			}
 		}
 	}
@@ -254,9 +250,11 @@ extern int g_lastShowImgSlot;
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 bool IsToolbarsAutoRefeshEnabled(COMMAND_T*);
 void RefreshToolbars();
+
 void FakeToggle(COMMAND_T*);
-bool FakeIsToggleAction(COMMAND_T*);
-void Stuff(COMMAND_T*);
+bool GetFakeToggleState(COMMAND_T*);
+void DummyToggle(COMMAND_T*);
+void ExclusiveToggle(COMMAND_T*);
 
 int SNM_RegisterDynamicCommands(COMMAND_T* _pCommands);
 bool SNM_HasExtension();

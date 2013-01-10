@@ -491,6 +491,7 @@ extern "C"
 		IMPAPI(CountSelectedMediaItems);
 		IMPAPI(CountSelectedTracks);
 		IMPAPI(CountTakes);
+		IMPAPI(CountTCPFXParms);
 		IMPAPI(CountTempoTimeSigMarkers);
 		IMPAPI(CountTracks);
 		IMPAPI(CountTrackMediaItems);
@@ -509,7 +510,7 @@ extern "C"
 		IMPAPI(DeleteProjectMarker);
 		IMPAPI(DeleteTrack);
 		IMPAPI(DeleteTrackMediaItem);
-		IMPAPI(DestroyLocalOscHandler);	
+		IMPAPI(DestroyLocalOscHandler);
 		IMPAPI(Dock_UpdateDockID);
 		IMPAPI(DockIsChildOfDock);
 		IMPAPI(DockWindowActivate);
@@ -593,6 +594,7 @@ extern "C"
 		IMPAPI(GetSet_LoopTimeRange2);
 		IMPAPI(GetSubProjectFromSource);
 		IMPAPI(GetTake);
+		IMPAPI(GetTCPFXParm);
 		IMPAPI(GetToggleCommandState);
 		IMPAPI(GetTrack);
 		IMPAPI(GetTrackGUID);

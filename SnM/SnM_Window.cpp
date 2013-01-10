@@ -375,10 +375,10 @@ bool GetSelectedAction(char* _idstrOut, int _idStrSz, const char* _expectedLocal
 			return false;
 		}
 		case -3:
-			MessageBox(GetMainHwnd(), __LOCALIZE("There is no selected action in the Actions window!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			MessageBox(GetMainHwnd(), __LOCALIZE("There is no selected action, macro, or script in the Actions window!","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			return false;
 		case -2:
-			MessageBox(GetMainHwnd(), __LOCALIZE("Action IDs are not available in the Actions window!\nRight-click on the table header > Show action IDs.","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
+			MessageBox(GetMainHwnd(), __LOCALIZE("Action IDs are not displayed in the Actions window!\nRight-click on the table header > Show action IDs.","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_OK);
 			return false;
 		case -1:
 			if (IDYES == MessageBox(GetMainHwnd(), __LOCALIZE("Actions window not opened!\nDo you want to open it?","sws_mbox"), __LOCALIZE("S&M - Error","sws_mbox"), MB_YESNO))
@@ -600,7 +600,7 @@ bool IsToggleFXChain(COMMAND_T * _ct)
 	// several tracks selected: possible mix of different states 
 	// => return a fake toggle state (best effort)
 	else if (selTrCount)
-		return FakeIsToggleAction(_ct);
+		return GetFakeToggleState(_ct);
 	return false;
 }
 

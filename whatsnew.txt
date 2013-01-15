@@ -1,3 +1,6 @@
+!v2.3.0 #11 (January 15, 2013)
+Fix for snapshot merge crash
+
 !v2.3.0 #10 (January 11, 2013)
 Live Configs: support OSC and rotary controllers
 +Improved the "learnability" of the following actions of the "S&M Extension" section, they have been renamed accordingly:

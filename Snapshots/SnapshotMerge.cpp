@@ -369,7 +369,7 @@ INT_PTR WINAPI mergeWndProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 										pDest = g_mergeItems.Get(k)->m_destTr;
 										iMatches++;
 									}
-								if (iMatches == 1) // Must be an exact 1:1 match
+								if (iMatches == 1 && pDest) // Must be an exact 1:1 match
 									pSends->Get(j)->SetGuid((GUID*)GetSetMediaTrackInfo(pDest, "GUID", NULL));
 							}
 					}

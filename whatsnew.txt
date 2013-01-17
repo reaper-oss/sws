@@ -1,3 +1,9 @@
+Added actions:
++SWS/S&M: Set project startup action
++SWS/S&M: Clear project startup action
+
+Fix for OSC & MIDI CC relative "mode 3" learn
+
 !v2.3.0 #11 (January 15, 2013)
 Fix for snapshot merge crash
 
@@ -51,7 +57,7 @@ Lots of changes: merged a dedicated extension plugin. The fine details will be p
  - Useful with controllers that do not provide visual feedback
  - Support 2 fingers scroll gesture over "Current" and "Preload" areas, e.g. switch or preload instruments/effects with a trackpad
  - Click on the "Preload" area to swap preloaded/current configs
- - Up to 4 Monitors can be used simultaneously, i.e. one per Live Config
+ - Up to 4 Monitor Windowss can be used simultaneously, i.e. one per Live Config/controller
 +Added options (per config):
  - "Offline all but active/preloaded tracks (RAM savings)"
    The only loaded instruments/effects will be those of the current and preloaded tracks.
@@ -63,7 +69,7 @@ Lots of changes: merged a dedicated extension plugin. The fine details will be p
  - "Select/scroll to track on list view click"
 +Added "Tiny fades" knob
  It tweaks lengths of tiny fades-out/in when deactivating/activating configs. Disabling fades is allowed but instrument/effect switches might be glitchy!
- Note: when a config is made of trailing effects (delay, verb, etc..), you can either disable tiny fades or, better: route the (tiny faded) audio to a track which is not used by the Live Configs
+ Note: when a config is made of trailing effects (delay, verb, etc..), you can either disable tiny fades or, better, route the (tiny faded) audio to a track which is not used by the Live Configs
 +New logic for "Activation" and "Deactivation" actions/macros/scripts:
  - If a track is defined for a config, only this track will be selected when the "Activation" (or "Deactivation") action is performed, track selection is restored right after
    => Useful since many actions deal with "selected track(s)". Note: this type of action also avoids to tie things to track numbers, etc..(i.e. things still work if you move/delete tracks)
@@ -80,7 +86,6 @@ Lots of changes: merged a dedicated extension plugin. The fine details will be p
  Note: some of the new actions are very specific and thus hidden by default (http://forum.cockos.com/showthread.php?p=984786#post984786|customizable in the S&M.ini file|)
 +New context menu items in the Live Configs editor:
  - Copy/cut/paste configs (rows)
-   With "faulty" controllers, it is useful to copy/paste the same config several times (e.g. too sensitive to set accurate values, etc..)
  - Insert config (shift rows up/down) + obey INSERT key
  - Apply/preload configs
  - Shortcuts: "Show FX chain..." and "Show routing window..." in the Track column and the Input track context menus

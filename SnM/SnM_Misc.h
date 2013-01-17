@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Misc.h
 /
-/ Copyright (c) 2012 Jeffos
+/ Copyright (c) 2012-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -41,14 +41,10 @@ bool SNM_GetSourceType(MediaItem_Take* _tk, WDL_FastString* _type);
 bool SNM_GetSetSourceState(MediaItem* _item, int takeIdx, WDL_FastString* _state, bool _setnewvalue);
 bool SNM_GetSetSourceState2(MediaItem_Take* _tk, WDL_FastString* _state, bool _setnewvalue);
 bool SNM_GetSetObjectState(void* _obj, WDL_FastString* _state, bool _setnewvalue, bool _minstate);
-bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type);
-bool SNM_RemoveReceive(MediaTrack* _tr, int _rcvIdx);
-bool SNM_RemoveReceivesFrom(MediaTrack* _tr, MediaTrack* _srcTr);
 int SNM_GetIntConfigVar(const char* _varName, int _errVal);
 bool SNM_SetIntConfigVar(const char* _varName, int _newVal);
 double SNM_GetDoubleConfigVar(const char* _varName, double _errVal);
 bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal);
-bool SNM_AddTCPFXParm(MediaTrack* _tr, int _fxId, int _prmId);
 
 // exotic resources slots
 #ifdef _WIN32

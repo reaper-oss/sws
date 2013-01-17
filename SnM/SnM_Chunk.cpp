@@ -3,7 +3,7 @@
 /
 / Some "SAX-ish like" parser classes inheriting SNM_ChunkParserPatcher
 /
-/ Copyright (c) 2009-2012 Jeffos
+/ Copyright (c) 2009-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -842,7 +842,9 @@ bool SNM_LearnMIDIChPatcher::NotifyChunkLine(int _mode,
 		{
 			m_currentFx++;
 		}
-		else if ((m_fx == -1 || m_fx == m_currentFx) && _lp->getnumtokens() == 4 && !strcmp(_lp->gettoken_str(0), "PARMLEARN"))
+		else if ((m_fx == -1 || m_fx == m_currentFx) && 
+			_lp->getnumtokens() == 4 && // indirectly exclude params learned with osc (5 tokens)
+			!strcmp(_lp->gettoken_str(0), "PARMLEARN"))
 		{
 			int midiMsg = _lp->gettoken_int(2) & 0xFFF0;
 			midiMsg |= m_newChannel;

@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Item.cpp
 /
-/ Copyright (c) 2009-2012 Jeffos
+/ Copyright (c) 2009-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -1255,14 +1255,13 @@ void ItemSelToolbarPoll()
 					if (vertical)
 					{
 						int minVis=0xFFFF, maxVis=-1;
-						for (int k=0; k < trList.GetSize(); k++) 
-						{
-							// TRP changed to CSurf_TrackToID from GetSetMediaTrackInfo(, "IP_TRACKNUMBER") as it's a casting nightmare on OSX
-							//     and CSurf_TrackToID is what's used everywhere else in the project
-							int trIdx = CSurf_TrackToID((MediaTrack*)trList.Get(k), false);
-							if (trIdx > 0 && trIdx < minVis) minVis = trIdx;
-							if (trIdx > 0 && trIdx > maxVis) maxVis = trIdx;
-						}
+						for (int k=0; k < trList.GetSize(); k++)
+							if (MediaTrack* tr2 = (MediaTrack*)trList.Get(k))
+							{
+								int trIdx = CSurf_TrackToID(tr2, false);
+								if (trIdx > 0 && trIdx < minVis) minVis = trIdx;
+								if (trIdx > 0 && trIdx > maxVis) maxVis = trIdx;
+							}
 
 						MediaTrack* tr = GetMediaItem_Track(item);
 						if (tr && trList.Find((void*)tr) == -1)

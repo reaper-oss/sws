@@ -3,7 +3,7 @@
 / 
 / Some "SAX-ish like" parser classes inheriting SNM_ChunkParserPatcher
 /
-/ Copyright (c) 2009-2012 Jeffos
+/ Copyright (c) 2009-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -70,8 +70,8 @@ public:
 	}
 	virtual ~SNM_SndRcv() {}
 	bool FillIOFromReaper(MediaTrack* _src, MediaTrack* _dest, int _categ, int _idx) {
-		memcpy(&m_src, CSurf_TrackToID(_src, false)>=0 ? (GUID*)GetSetMediaTrackInfo(_src, "GUID", NULL) : &GUID_NULL, sizeof(GUID));
-		memcpy(&m_dest, CSurf_TrackToID(_dest, false)>=0 ? (GUID*)GetSetMediaTrackInfo(_dest, "GUID", NULL) : &GUID_NULL, sizeof(GUID));
+		memcpy(&m_src, _src && CSurf_TrackToID(_src, false)>=0 ? (GUID*)GetSetMediaTrackInfo(_src, "GUID", NULL) : &GUID_NULL, sizeof(GUID));
+		memcpy(&m_dest, _dest && CSurf_TrackToID(_dest, false)>=0 ? (GUID*)GetSetMediaTrackInfo(_dest, "GUID", NULL) : &GUID_NULL, sizeof(GUID));
 		if (MediaTrack* tr = (_categ == -1 ? _dest : _src)) {
 			m_mute = *(bool*)GetSetTrackSendInfo(tr, _categ, _idx, "B_MUTE", NULL);
 			m_phase = *(bool*)GetSetTrackSendInfo(tr, _categ, _idx, "B_PHASE", NULL);

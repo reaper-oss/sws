@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Resources.cpp
 /
-/ Copyright (c) 2009-2012 Jeffos
+/ Copyright (c) 2009-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -1046,7 +1046,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 		case DIFF_MSG:
 		{
 			PathSlotItem* item2 = (PathSlotItem*)m_pLists.Get(0)->EnumSelected(&x);
-			if (item && item2 && g_SNMDiffToolFn.GetLength())
+			if (item && item2 && g_SNM_DiffToolFn.GetLength())
 			{
 				char fn1[SNM_MAX_PATH]="", fn2[SNM_MAX_PATH]="";
 				if (GetSlotList()->GetFullPath(GetSlotList()->Find(item), fn1, sizeof(fn1)) &&
@@ -1054,7 +1054,7 @@ void SNM_ResourceWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				{
 					WDL_FastString prmStr;
 					prmStr.SetFormatted(sizeof(fn1)*3, " \"%s\" \"%s\"", fn1, fn2);
-					_spawnl(_P_NOWAIT, g_SNMDiffToolFn.Get(), prmStr.Get(), NULL);
+					_spawnl(_P_NOWAIT, g_SNM_DiffToolFn.Get(), prmStr.Get(), NULL);
 				}
 			}
 			break;
@@ -1602,7 +1602,7 @@ HMENU SNM_ResourceWnd::OnContextMenu(int x, int y, bool* wantDefaultItems)
 			AddToMenu(hMenu, __LOCALIZE("Display file...","sws_DLG_150"), EDIT_MSG, -1, false, enabled);
 #else
 		{
-			if (g_SNMDiffToolFn.GetLength()) {
+			if (g_SNM_DiffToolFn.GetLength()) {
 				int x=0, nbsel=0; while(m_pLists.Get(0)->EnumSelected(&x)) nbsel++;
 				AddToMenu(hMenu, __LOCALIZE("Diff files...","sws_DLG_150"), DIFF_MSG, -1, false, nbsel==2 && enabled==MF_ENABLED ? MF_ENABLED:MF_GRAYED);
 			}
@@ -2430,19 +2430,19 @@ void FlushCustomTypesIniFile()
 		if (g_slots.Get(i))
 		{
 			GetIniSectionName(i, iniSec, sizeof(iniSec));
-			WritePrivateProfileStruct(iniSec, NULL, NULL, 0, g_SNMIniFn.Get()); // flush section
-			WritePrivateProfileString(RES_INI_SEC, iniSec, NULL, g_SNMIniFn.Get());
+			WritePrivateProfileStruct(iniSec, NULL, NULL, 0, g_SNM_IniFn.Get()); // flush section
+			WritePrivateProfileString(RES_INI_SEC, iniSec, NULL, g_SNM_IniFn.Get());
 			WDL_FastString str;
 			str.SetFormatted(64, "AutoFillDir%s", iniSec);
-			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNMIniFn.Get());
+			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNM_IniFn.Get());
 			str.SetFormatted(64, "AutoSaveDir%s", iniSec);
-			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNMIniFn.Get());
+			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNM_IniFn.Get());
 			str.SetFormatted(64, "SyncAutoDirs%s", iniSec);
-			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNMIniFn.Get());
+			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNM_IniFn.Get());
 			str.SetFormatted(64, "TiedActions%s", iniSec);
-			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNMIniFn.Get());
+			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNM_IniFn.Get());
 			str.SetFormatted(64, "DblClick%s", iniSec);
-			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNMIniFn.Get());
+			WritePrivateProfileString(RES_INI_SEC, str.Get(), NULL, g_SNM_IniFn.Get());
 		}
 	}
 }
@@ -2451,9 +2451,9 @@ void ReadSlotIniFile(const char* _key, int _slot, char* _path, int _pathSize, ch
 {
 	char buf[32];
 	if (_snprintfStrict(buf, sizeof(buf), "Slot%d", _slot+1) > 0)
-		GetPrivateProfileString(_key, buf, "", _path, _pathSize, g_SNMIniFn.Get());
+		GetPrivateProfileString(_key, buf, "", _path, _pathSize, g_SNM_IniFn.Get());
 	if (_snprintfStrict(buf, sizeof(buf), "Desc%d", _slot+1) > 0)
-		GetPrivateProfileString(_key, buf, "", _desc, _descSize, g_SNMIniFn.Get());
+		GetPrivateProfileString(_key, buf, "", _desc, _descSize, g_SNM_IniFn.Get());
 }
 
 // adds bookmarks and custom slot types from the S&M.ini file, example: 
@@ -2464,7 +2464,7 @@ void AddCustomTypesFromIniFile()
 	int i=0;
 	char buf[SNM_MAX_PATH]=""; // can be used with paths..
 	WDL_String iniKeyStr("CustomSlotType1"), tokenStrs[2];
-	GetPrivateProfileString(RES_INI_SEC, iniKeyStr.Get(), "", buf, sizeof(buf), g_SNMIniFn.Get());
+	GetPrivateProfileString(RES_INI_SEC, iniKeyStr.Get(), "", buf, sizeof(buf), g_SNM_IniFn.Get());
 	while (*buf && i < SNM_MAX_SLOT_TYPES)
 	{
 		if (char* tok = strtok(buf, ","))
@@ -2489,7 +2489,7 @@ void AddCustomTypesFromIniFile()
 			}
 		}
 		iniKeyStr.SetFormatted(32, "CustomSlotType%d", (++i)+1);
-		GetPrivateProfileString(RES_INI_SEC, iniKeyStr.Get(), "", buf, sizeof(buf), g_SNMIniFn.Get());
+		GetPrivateProfileString(RES_INI_SEC, iniKeyStr.Get(), "", buf, sizeof(buf), g_SNM_IniFn.Get());
 	}
 }
 
@@ -2527,14 +2527,14 @@ int ResourceViewInit()
 
 	// load general prefs
 	g_resViewType = BOUNDED((int)GetPrivateProfileInt(
-		RES_INI_SEC, "Type", SNM_SLOT_FXC, g_SNMIniFn.Get()), SNM_SLOT_FXC, g_slots.GetSize()-1); // bounded for safety (some custom slot types may have been removed..)
+		RES_INI_SEC, "Type", SNM_SLOT_FXC, g_SNM_IniFn.Get()), SNM_SLOT_FXC, g_slots.GetSize()-1); // bounded for safety (some custom slot types may have been removed..)
 
-	g_filterPref = GetPrivateProfileInt(RES_INI_SEC, "Filter", 1, g_SNMIniFn.Get());
-	g_asFXChainPref = GetPrivateProfileInt(RES_INI_SEC, "AutoSaveFXChain", FXC_AUTOSAVE_PREF_TRACK, g_SNMIniFn.Get());
-	g_asFXChainNamePref = GetPrivateProfileInt(RES_INI_SEC, "AutoSaveFXChainName", 0, g_SNMIniFn.Get());
-	g_asTrTmpltPref = GetPrivateProfileInt(RES_INI_SEC, "AutoSaveTrTemplate", 3, g_SNMIniFn.Get());
-	g_prjLoaderStartPref = GetPrivateProfileInt(RES_INI_SEC, "ProjectLoaderStartSlot", -1, g_SNMIniFn.Get());
-	g_prjLoaderEndPref = GetPrivateProfileInt(RES_INI_SEC, "ProjectLoaderEndSlot", -1, g_SNMIniFn.Get());
+	g_filterPref = GetPrivateProfileInt(RES_INI_SEC, "Filter", 1, g_SNM_IniFn.Get());
+	g_asFXChainPref = GetPrivateProfileInt(RES_INI_SEC, "AutoSaveFXChain", FXC_AUTOSAVE_PREF_TRACK, g_SNM_IniFn.Get());
+	g_asFXChainNamePref = GetPrivateProfileInt(RES_INI_SEC, "AutoSaveFXChainName", 0, g_SNM_IniFn.Get());
+	g_asTrTmpltPref = GetPrivateProfileInt(RES_INI_SEC, "AutoSaveTrTemplate", 3, g_SNM_IniFn.Get());
+	g_prjLoaderStartPref = GetPrivateProfileInt(RES_INI_SEC, "ProjectLoaderStartSlot", -1, g_SNM_IniFn.Get());
+	g_prjLoaderEndPref = GetPrivateProfileInt(RES_INI_SEC, "ProjectLoaderEndSlot", -1, g_SNM_IniFn.Get());
 
 	// auto-save, auto-fill directories, etc..
 	g_autoSaveDirs.Empty(true);
@@ -2552,7 +2552,7 @@ int ResourceViewInit()
 		// g_autoFillDirs & g_autoSaveDirs must always be filled (even if auto-save is grayed for the user)
 		WDL_FastString *fillPath, *savePath;
 		if (_snprintfStrict(iniKey, sizeof(iniKey), "AutoSaveDir%s", iniSec) > 0) {
-			GetPrivateProfileString(RES_INI_SEC, iniKey, defaultPath, path, sizeof(path), g_SNMIniFn.Get());
+			GetPrivateProfileString(RES_INI_SEC, iniKey, defaultPath, path, sizeof(path), g_SNM_IniFn.Get());
 			savePath = new WDL_FastString(path);
 		}
 		else
@@ -2560,7 +2560,7 @@ int ResourceViewInit()
 		g_autoSaveDirs.Add(savePath);
 
 		if (_snprintfStrict(iniKey, sizeof(iniKey), "AutoFillDir%s", iniSec) > 0) {
-			GetPrivateProfileString(RES_INI_SEC, iniKey, defaultPath, path, sizeof(path), g_SNMIniFn.Get());
+			GetPrivateProfileString(RES_INI_SEC, iniKey, defaultPath, path, sizeof(path), g_SNM_IniFn.Get());
 			fillPath = new WDL_FastString(path);
 		}
 		else
@@ -2568,7 +2568,7 @@ int ResourceViewInit()
 		g_autoFillDirs.Add(fillPath);
 
 		if (_snprintfStrict(iniKey, sizeof(iniKey), "SyncAutoDirs%s", iniSec) > 0)
-			g_syncAutoDirPrefs[i] = (GetPrivateProfileInt(RES_INI_SEC, iniKey, 0, g_SNMIniFn.Get()) == 1);
+			g_syncAutoDirPrefs[i] = (GetPrivateProfileInt(RES_INI_SEC, iniKey, 0, g_SNM_IniFn.Get()) == 1);
 		else
 			g_syncAutoDirPrefs[i] = false;
 		if (g_syncAutoDirPrefs[i]) // consistency check (e.g. after sws upgrade)
@@ -2576,14 +2576,14 @@ int ResourceViewInit()
 
 		if (g_slots.Get(i)->HasDblClick()) {
 			if (_snprintfStrict(iniKey, sizeof(iniKey), "DblClick%s", iniSec) > 0)
-				g_dblClickPrefs[i] = GetPrivateProfileInt(RES_INI_SEC, iniKey, 0, g_SNMIniFn.Get());
+				g_dblClickPrefs[i] = GetPrivateProfileInt(RES_INI_SEC, iniKey, 0, g_SNM_IniFn.Get());
 			else
 				g_dblClickPrefs[i] = 0;
 		}
 		// load tied actions for default types (fx chains, track templates, etc...)
 		if (i < SNM_NUM_DEFAULT_SLOTS) {
 			if (_snprintfStrict(iniKey, sizeof(iniKey), "TiedActions%s", iniSec) > 0)
-				g_tiedSlotActions[i] = GetPrivateProfileInt(RES_INI_SEC, iniKey, i, g_SNMIniFn.Get());
+				g_tiedSlotActions[i] = GetPrivateProfileInt(RES_INI_SEC, iniKey, i, g_SNM_IniFn.Get());
 			else
 				g_tiedSlotActions[i] = i;
 		}
@@ -2596,7 +2596,7 @@ int ResourceViewInit()
 		if (FileSlotList* list = g_slots.Get(i))
 		{
 			GetIniSectionName(i, iniSec, sizeof(iniSec));
-			GetPrivateProfileString(iniSec, "Max_slot", "0", maxSlotCount, 16, g_SNMIniFn.Get()); 
+			GetPrivateProfileString(iniSec, "Max_slot", "0", maxSlotCount, 16, g_SNM_IniFn.Get()); 
 			list->EmptySafe(true);
 			int slotCount = atoi(maxSlotCount);
 			for (int j=0; j < slotCount; j++) {
@@ -2675,7 +2675,7 @@ void ResourceViewExit()
 				break;
 		}
 	}
-	SaveIniSection(RES_INI_SEC, &iniStr, g_SNMIniFn.Get());
+	SaveIniSection(RES_INI_SEC, &iniStr, g_SNM_IniFn.Get());
 
 
 	// *** save slots ini sections
@@ -2696,7 +2696,7 @@ void ResourceViewExit()
 			}
 		}
 		// write things in one go (avoid to slow down REAPER shutdown)
-		SaveIniSection(iniSections.Get(i)->Get(), &iniStr, g_SNMIniFn.Get());
+		SaveIniSection(iniSections.Get(i)->Get(), &iniStr, g_SNM_IniFn.Get());
 	}
 
 	DELETE_NULL(g_pResourcesWnd);
@@ -2868,8 +2868,8 @@ void SNM_ImageWnd::DrawControls(LICE_IBitmap* _bm, const RECT* _r, int* _tooltip
 bool SNM_ImageWnd::GetToolTipString(int _xpos, int _ypos, char* _bufOut, int _bufOutSz)
 {
 	if (WDL_VWnd* v = m_parentVwnd.VirtWndFromPoint(_xpos,_ypos,1))
-		if (v->GetID()==IMGID && g_lastShowImgSlot>=0 && *GetFilename())
-			return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Image slot %d:\n%s","sws_DLG_162"), g_lastShowImgSlot+1, GetFilename()) > 0);
+		if (v->GetID()==IMGID && g_SNM_LastImgSlot>=0 && *GetFilename())
+			return (_snprintfStrict(_bufOut, _bufOutSz, __LOCALIZE_VERFMT("Image slot %d:\n%s","sws_DLG_162"), g_SNM_LastImgSlot+1, GetFilename()) > 0);
 	return false;
 }
 
@@ -2880,7 +2880,7 @@ int ImageViewInit()
 		return 0;
 
 	// load prefs
-	g_pImageWnd->SetStretch(!!GetPrivateProfileInt("ImageView", "Stretch", 0, g_SNMIniFn.Get()));
+	g_pImageWnd->SetStretch(!!GetPrivateProfileInt("ImageView", "Stretch", 0, g_SNM_IniFn.Get()));
 
 	return 1;
 }
@@ -2889,7 +2889,7 @@ void ImageViewExit()
 {
 	// save prefs
 	if (g_pImageWnd)
-		WritePrivateProfileString("ImageView", "Stretch", g_pImageWnd->IsStretched()?"1":"0", g_SNMIniFn.Get()); 
+		WritePrivateProfileString("ImageView", "Stretch", g_pImageWnd->IsStretched()?"1":"0", g_SNM_IniFn.Get()); 
 	DELETE_NULL(g_pImageWnd);
 }
 

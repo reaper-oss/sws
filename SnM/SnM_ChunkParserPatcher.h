@@ -1,6 +1,6 @@
 /******************************************************************************
-** SnM_ChunkParserPatcher.h - v1.31
-** Copyright (C) 2008-2012, Jeffos
+** SnM_ChunkParserPatcher.h - v1.32
+** Copyright (C) 2008-2013, Jeffos
 **
 **    This software is provided 'as-is', without any express or implied
 **    warranty. In no event will the authors be held liable for any damages
@@ -156,7 +156,6 @@ SNM_ChunkParserPatcher(void* _reaObject, bool _autoCommit=true,
 	m_processBase64 = _processBase64;
 	m_processInProjectMIDI = _processInProjectMIDI;
 	m_processFreeze = _processFreeze;
-	m_chunkType = -1;
 	m_minimalState = false;
 }
 
@@ -177,7 +176,6 @@ SNM_ChunkParserPatcher(WDL_FastString* _chunk, bool _autoCommit=true,
 	m_processBase64 = _processBase64;
 	m_processInProjectMIDI = _processInProjectMIDI;
 	m_processFreeze = _processFreeze;
-	m_chunkType = -1;
 	m_minimalState = false;
 }
 
@@ -311,23 +309,6 @@ void SetProcessFreeze(bool _enable) {
 
 void SetWantsMinimalState(bool _enable) {
 	m_minimalState = _enable;
-}
-
-// returns 1 for track, 2 for item, 0 for other (e.g. envelope)
-// note: we cannot rely on m_reaObject in case this instance is a string parser
-int GetChunkType() {
-	if (m_chunkType < 0) {
-		int len = GetChunk()->GetLength(); // cache if needed
-		if (len >= 7 && (!strncmp(m_chunk->Get(), "<TRACK\n", 7) || !strncmp(m_chunk->Get(), "<TRACK ", 7)))
-			m_chunkType = 1;
-/*JFB not used yet
-		else if (len >= 6 && (!strncmp(m_chunk->Get(), "<ITEM\n", 6) || !strncmp(m_chunk->Get(), "<ITEM ", 6)))
-			m_chunkType = 2;
-*/
-		else
-			m_chunkType = 0;
-	}
-	return m_chunkType;
 }
 
 
@@ -607,9 +588,6 @@ virtual bool NotifySkippedSubChunk(int _mode,
 ///////////////////////////////////////////////////////////////////////////////
 private:
 
-	int m_chunkType; // -1=not initialized yet, 1=track, 2=item, 0=other
-
-
 // just to avoid duplicate strcmp() calls in ParsePatchCore()
 void IsMatchingParsedLine(bool* _tolerantMatch, bool* _strictMatch, 
 		int _expectedDepth, int _parsedDepth,
@@ -731,7 +709,7 @@ int ParsePatchCore(
 		}
 		// skip track freeze sub-chunks
 		else if (!m_processFreeze && parents.GetSize()==1 && 
-			curLineLen>8 && GetChunkType()==1 && !strncmp(pLine, "<FREEZE ", 8))
+			curLineLen>8 && !strncmp(pLine, "<FREEZE ", 8))
 		{
 			int skippedLen = FindEndOfSubChunk(pLine, 0);
 			while (skippedLen >= 0) // in case of multiple freeze

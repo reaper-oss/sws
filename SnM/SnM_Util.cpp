@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Util.cpp
 /
-/ Copyright (c) 2012 Jeffos
+/ Copyright (c) 2012-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -472,12 +472,11 @@ void SaveIniSection(const char* _iniSectionName, WDL_FastString* _iniSection, co
 {
 	if (_iniSectionName && _iniSection && _iniFn)
 	{
-		if (char* buf = (char*)calloc(_iniSection->GetLength()+1, sizeof(char)))
+		if (char* buf = (char*)calloc(_iniSection->GetLength()+1, sizeof(char)))  // +1 for dbl-null termination
 		{
 			memcpy(buf, _iniSection->Get(), _iniSection->GetLength());
 			for (int j=0; j < _iniSection->GetLength(); j++)
-				if (buf[j] == '\n') 
-					buf[j] = '\0';
+				if (buf[j] == '\n') buf[j] = '\0';
 			WritePrivateProfileStruct(_iniSectionName, NULL, NULL, 0, _iniFn); // flush section
 			WritePrivateProfileSection(_iniSectionName, buf, _iniFn);
 			free(buf);
@@ -505,337 +504,74 @@ void UpdatePrivateProfileString(const char* _appName, const char* _oldKey, const
 
 void SNM_UpgradeIniFiles()
 {
-	g_SNMIniFileVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNMIniFn.Get());
+	g_SNM_IniVersion = GetPrivateProfileInt("General", "IniFileUpgrade", 0, g_SNM_IniFn.Get());
 
-	if (g_SNMIniFileVersion < 1) // < v2.1.0 #18
+	if (g_SNM_IniVersion < 1) // < v2.1.0 #18
 	{
 		// upgrade deprecated section names 
-		UpdatePrivateProfileSection("FXCHAIN", "FXChains", g_SNMIniFn.Get());
-		UpdatePrivateProfileSection("FXCHAIN_VIEW", "RESOURCE_VIEW", g_SNMIniFn.Get());
+		UpdatePrivateProfileSection("FXCHAIN", "FXChains", g_SNM_IniFn.Get());
+		UpdatePrivateProfileSection("FXCHAIN_VIEW", "RESOURCE_VIEW", g_SNM_IniFn.Get());
 		// upgrade deprecated key names (automatically generated now)
-		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClick_Type", "DblClickFXChains", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Tr_Template", "DblClickTrackTemplates", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Prj_Template", "DblClickProjectTemplates", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirFXChain", "AutoSaveDirFXChains", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirFXChain", "AutoFillDirFXChains", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirTrTemplate", "AutoSaveDirTrackTemplates", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirTrTemplate", "AutoFillDirTrackTemplates", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirPrjTemplate", "AutoSaveDirProjectTemplates", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirPrjTemplate", "AutoFillDirProjectTemplates", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClick_Type", "DblClickFXChains", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Tr_Template", "DblClickTrackTemplates", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClick_Type_Prj_Template", "DblClickProjectTemplates", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirFXChain", "AutoSaveDirFXChains", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirFXChain", "AutoFillDirFXChains", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirTrTemplate", "AutoSaveDirTrackTemplates", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirTrTemplate", "AutoFillDirTrackTemplates", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveDirPrjTemplate", "AutoSaveDirProjectTemplates", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirPrjTemplate", "AutoFillDirProjectTemplates", g_SNM_IniFn.Get());
 	}
-	if (g_SNMIniFileVersion < 2) // < v2.1.0 #21
+	if (g_SNM_IniVersion < 2) // < v2.1.0 #21
 	{
 		// move cycle actions to a new dedicated file (+ make backup if it already exists)
 		WDL_FastString fn;
 		fn.SetFormatted(SNM_MAX_PATH, SNM_CYCLACTION_BAK_FILE, GetResourcePath());
-		if (FileExists(g_SNMCyclactionIniFn.Get()))
-			MoveFile(g_SNMCyclactionIniFn.Get(), fn.Get());
-		UpdatePrivateProfileSection("MAIN_CYCLACTIONS", "Main_Cyclactions", g_SNMIniFn.Get(), g_SNMCyclactionIniFn.Get());
-		UpdatePrivateProfileSection("ME_LIST_CYCLACTIONS", "ME_List_Cyclactions", g_SNMIniFn.Get(), g_SNMCyclactionIniFn.Get());
-		UpdatePrivateProfileSection("ME_PIANO_CYCLACTIONS", "ME_Piano_Cyclactions", g_SNMIniFn.Get(), g_SNMCyclactionIniFn.Get());
+		if (FileExists(g_SNM_CyclactionIniFn.Get()))
+			MoveFile(g_SNM_CyclactionIniFn.Get(), fn.Get());
+		UpdatePrivateProfileSection("MAIN_CYCLACTIONS", "Main_Cyclactions", g_SNM_IniFn.Get(), g_SNM_CyclactionIniFn.Get());
+		UpdatePrivateProfileSection("ME_LIST_CYCLACTIONS", "ME_List_Cyclactions", g_SNM_IniFn.Get(), g_SNM_CyclactionIniFn.Get());
+		UpdatePrivateProfileSection("ME_PIANO_CYCLACTIONS", "ME_Piano_Cyclactions", g_SNM_IniFn.Get(), g_SNM_CyclactionIniFn.Get());
 	}
-	if (g_SNMIniFileVersion < 3) // < v2.1.0 #22
+	if (g_SNM_IniVersion < 3) // < v2.1.0 #22
 	{
-		WritePrivateProfileString("RESOURCE_VIEW", "DblClick_To", NULL, g_SNMIniFn.Get()); // remove key
-		UpdatePrivateProfileString("RESOURCE_VIEW", "FilterByPath", "Filter", g_SNMIniFn.Get());
+		WritePrivateProfileString("RESOURCE_VIEW", "DblClick_To", NULL, g_SNM_IniFn.Get()); // remove key
+		UpdatePrivateProfileString("RESOURCE_VIEW", "FilterByPath", "Filter", g_SNM_IniFn.Get());
 	}
-	if (g_SNMIniFileVersion < 4) // < v2.2.0
+	if (g_SNM_IniVersion < 4) // < v2.2.0
 	{
-		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", "AutoSaveTrTemplateFlags", g_SNMIniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoSaveTrTemplateWithItems", "AutoSaveTrTemplateFlags", g_SNM_IniFn.Get());
 #ifdef _WIN32
-		UpdatePrivateProfileSection("data\\track_icons", "Track_icons", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirdata\\track_icons", "AutoFillDirTrack_icons", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "TiedActionsdata\\track_icons", "TiedActionsTrack_icons", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClickdata\\track_icons", "DblClickTrack_icons", g_SNMIniFn.Get());
+		UpdatePrivateProfileSection("data\\track_icons", "Track_icons", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirdata\\track_icons", "AutoFillDirTrack_icons", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "TiedActionsdata\\track_icons", "TiedActionsTrack_icons", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClickdata\\track_icons", "DblClickTrack_icons", g_SNM_IniFn.Get());
 #else
-		UpdatePrivateProfileSection("data/track_icons", "Track_icons", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirdata/track_icons", "AutoFillDirTrack_icons", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "TiedActionsdata/track_icons", "TiedActionsTrack_icons", g_SNMIniFn.Get());
-		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClickdata/track_icons", "DblClickTrack_icons", g_SNMIniFn.Get());
+		UpdatePrivateProfileSection("data/track_icons", "Track_icons", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "AutoFillDirdata/track_icons", "AutoFillDirTrack_icons", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "TiedActionsdata/track_icons", "TiedActionsTrack_icons", g_SNM_IniFn.Get());
+		UpdatePrivateProfileString("RESOURCE_VIEW", "DblClickdata/track_icons", "DblClickTrack_icons", g_SNM_IniFn.Get());
 #endif
 	}
-	if (g_SNMIniFileVersion < 5) // < v2.2.0 #3
-		UpdatePrivateProfileSection("LAST_CUEBUS", "CueBuss1", g_SNMIniFn.Get());
-	if (g_SNMIniFileVersion < 6) // < v2.2.0 #6
-		WritePrivateProfileStruct("RegionPlaylist", NULL, NULL, 0, g_SNMIniFn.Get()); // flush section
-	if (g_SNMIniFileVersion < 7) // < v2.2.0 #16
+	if (g_SNM_IniVersion < 5) // < v2.2.0 #3
+		UpdatePrivateProfileSection("LAST_CUEBUS", "CueBuss1", g_SNM_IniFn.Get());
+	if (g_SNM_IniVersion < 6) // < v2.2.0 #6
+		WritePrivateProfileStruct("RegionPlaylist", NULL, NULL, 0, g_SNM_IniFn.Get()); // flush section
+	if (g_SNM_IniVersion < 7) // < v2.2.0 #16
 	{
-		UpdatePrivateProfileSection("RESOURCE_VIEW", "Resources", g_SNMIniFn.Get());
-		UpdatePrivateProfileSection("NOTES_HELP_VIEW", "Notes", g_SNMIniFn.Get());
-		UpdatePrivateProfileSection("FIND_VIEW", "Find", g_SNMIniFn.Get());
-		UpdatePrivateProfileSection("MIDI_EDITOR", "MidiEditor", g_SNMIniFn.Get());
-		WritePrivateProfileStruct("LIVE_CONFIGS", NULL, NULL, 0, g_SNMIniFn.Get()); // flush section, everything moved to rpp
+		UpdatePrivateProfileSection("RESOURCE_VIEW", "Resources", g_SNM_IniFn.Get());
+		UpdatePrivateProfileSection("NOTES_HELP_VIEW", "Notes", g_SNM_IniFn.Get());
+		UpdatePrivateProfileSection("FIND_VIEW", "Find", g_SNM_IniFn.Get());
+		UpdatePrivateProfileSection("MIDI_EDITOR", "MidiEditor", g_SNM_IniFn.Get());
+		WritePrivateProfileStruct("LIVE_CONFIGS", NULL, NULL, 0, g_SNM_IniFn.Get()); // flush section, everything moved to rpp
 
 		// update nb of default actions (SNM_LIVECFG_NB_CONFIGS changed)
-		WritePrivateProfileString("NbOfActions", "S&M_TOGGLE_LIVE_CFG", STR(SNM_LIVECFG_NB_CONFIGS), g_SNMIniFn.Get());
-		WritePrivateProfileString("NbOfActions", "S&M_NEXT_LIVE_CFG", STR(SNM_LIVECFG_NB_CONFIGS), g_SNMIniFn.Get());
-		WritePrivateProfileString("NbOfActions", "S&M_PREVIOUS_LIVE_CFG", STR(SNM_LIVECFG_NB_CONFIGS), g_SNMIniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_TOGGLE_LIVE_CFG", STR(SNM_LIVECFG_NB_CONFIGS), g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_NEXT_LIVE_CFG", STR(SNM_LIVECFG_NB_CONFIGS), g_SNM_IniFn.Get());
+		WritePrivateProfileString("NbOfActions", "S&M_PREVIOUS_LIVE_CFG", STR(SNM_LIVECFG_NB_CONFIGS), g_SNM_IniFn.Get());
 	}
 
-	g_SNMIniFileVersion = SNM_INI_FILE_VERSION;
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Marker/region helpers
-///////////////////////////////////////////////////////////////////////////////
-
-// overrides the API's SetProjectMarker3() which cannot set an empty name ""
-// see http://code.google.com/p/sws-extension/issues/detail?id=476
-bool SNM_SetProjectMarker(ReaProject* _proj, int _num, bool _isrgn, double _pos, double _rgnend, const char* _name, int _color)
-{
-	if (_name && !*_name)
-	{
-		int color = _color;
-		if (!_color) // dang! it means we have to preserve the current color..
-		{
-			int x=0, num; bool isrgn, found=false;
-			while (x = EnumProjectMarkers3(_proj, x, &isrgn, NULL, NULL, NULL, &num, &color))
-				if (found = (isrgn==_isrgn && num==_num))
-					break;
-			if (!found)
-				return false;
-		}
-
-		bool ok = false;
-		if (PreventUIRefresh) PreventUIRefresh(1);
-		if (DeleteProjectMarker(_proj, _num, _isrgn))
-			ok = (AddProjectMarker2(_proj, _isrgn, _pos, _rgnend, _name, _num, color) == _num);
-		if (PreventUIRefresh) PreventUIRefresh(-1);
-		UpdateTimeline();
-		return ok;
-	}
-	return SetProjectMarker3(_proj, _num, _isrgn, _pos, _rgnend, _name, _color);
-}
-
-// for reascript (that cannot handle the char** param of EnumProjectMarkers())
-bool SNM_GetProjectMarkerName(ReaProject* _proj, int _num, bool _isrgn, WDL_FastString* _name)
-{
-	if (_name)
-	{
-		int x=0, num; char* name; bool isrgn;
-		while (x = EnumProjectMarkers3(_proj, x, &isrgn, NULL, NULL, &name, &num, NULL))
-			if (num==_num && isrgn==_isrgn) {
-				_name->Set(name);
-				return true;
-			}
-	}
-	return false;
-}
-
-// returns the 1st marker or region index found at _pos
-// note: relies on markers & regions indexed by positions
-// _flags: &SNM_MARKER_MASK=marker, &SNM_REGION_MASK=region
-int FindMarkerRegion(ReaProject* _proj, double _pos, int _flags, int* _idOut)
-{
-	if (_idOut)
-		*_idOut = -1;
-
-	int idx=-1, x=0, lastx=0, num; double dPos, dEnd; bool isRgn;
-	while (x = EnumProjectMarkers3(_proj, x, &isRgn, &dPos, &dEnd, NULL, &num, NULL))
-	{
-		if ((!isRgn && _flags&SNM_MARKER_MASK) || (isRgn && _flags&SNM_REGION_MASK))
-		{
-			if (_pos >= dPos && (!isRgn || (isRgn && _pos <= dEnd)))
-			{
-				bool isRgn2;
-				if (EnumProjectMarkers3(_proj, x, &isRgn2, &dPos, NULL, NULL, NULL, NULL) &&
-					((!isRgn2 && _flags&SNM_MARKER_MASK) || (isRgn2 && _flags&SNM_REGION_MASK)))
-				{
-					if (_pos < dPos) {
-						idx = lastx;
-						break;
-					}
-				}
-				else {
-					idx = lastx;
-					break;
-				}
-			}
-		}
-		lastx=x;
-	}
-	if (idx >= 0 && _idOut)
-		*_idOut = MakeMarkerRegionId(num, isRgn);
-	return idx;
-}
-
-int MakeMarkerRegionId(int _num, bool _isrgn)
-{
-	// note: MSB is ignored so that the encoded number is always positive
-	if (_num >= 0 && _num <= 0x3FFFFFFF) {
-		_num |= ((_isrgn?1:0) << 30);
-		return _num;
-	}
-	return -1;
-}
-
-int GetMarkerRegionIdFromIndex(ReaProject* _proj, int _idx)
-{
-	if (_idx >= 0)
-	{
-		int num; bool isrgn;
-		if (EnumProjectMarkers2(_proj, _idx, &isrgn, NULL, NULL, NULL, &num))
-			return MakeMarkerRegionId(num, isrgn);
-	}
-	return -1;
-}
-
-//JFB!!! removeme (->EnumMarkerRegionById())
-int GetMarkerRegionIndexFromId(ReaProject* _proj, int _id) 
-{
-	if (_id > 0)
-	{
-		int x=0, lastx=0, num=(_id&0x3FFFFFFF), num2; 
-		bool isrgn = IsRegion(_id), isrgn2;
-		while (x = EnumProjectMarkers3(_proj, x, &isrgn2, NULL, NULL, NULL, &num2, NULL)) {
-			if (num == num2 && isrgn == isrgn2)
-				return lastx;
-			lastx=x;
-		}
-	}
-	return -1;
-}
-
-int GetMarkerRegionNumFromId(int _id) {
-	return _id>0 ? (_id&0x3FFFFFFF) : -1;
-}
-
-bool IsRegion(int _id) {
-	return (_id > 0 && (_id&0x40000000) != 0);
-}
-
-int EnumMarkerRegionById(ReaProject* _proj, int _id, bool* _isrgn, double* _pos, double* _end, char** _name, int* _num, int* _color)
-{
-	if (_id > 0)
-	{
-		char* name2;
-		double pos2, end2;
-		bool isrgn = IsRegion(_id), isrgn2;
-		int  num=(_id&0x3FFFFFFF), x=0, num2, col2; 
-		while (x = EnumProjectMarkers3(_proj, x, &isrgn2, &pos2, &end2, &name2, &num2, &col2))
-		{
-			if (num == num2 && isrgn == isrgn2)
-			{
-				if (_isrgn)	*_isrgn = isrgn2;
-				if (_pos)	*_pos = pos2;
-				if (_end)	*_end = end2;
-				if (_name)	*_name = name2;
-				if (_num)	*_num = num2;
-				if (_color)	*_color = col2;
-				return x;
-			}
-		}
-	}
-	return 0;
-}
-
-bool GetMarkerRegionDesc(const char* _name, bool _isrgn, int _num, double _pos, double _end, int _flags, bool _wantNum, bool _wantName, bool _wantTime, char* _descOut, int _outSz)
-{
-	if (_descOut && _outSz &&
-		(_isrgn && _flags&SNM_REGION_MASK) || (!_isrgn && _flags&SNM_MARKER_MASK))
-	{
-		WDL_FastString desc;
-		bool comma = !_wantNum;
-
-		if (_wantNum)
-			desc.SetFormatted(64, "%d", _num);
-
-		if (_wantName && _name && *_name)
-		{
-			if (!comma) { desc.Append(": "); comma = true; }
-			desc.Append(_name);
-		}
-
-		if (_wantTime)
-		{
-			if (!comma) { desc.Append(": "); comma = true; }
-			char timeStr[64] = "";
-			format_timestr_pos(_pos, timeStr, sizeof(timeStr), -1);
-			desc.Append(" [");
-			desc.Append(timeStr);
-			if (_isrgn)
-			{
-				desc.Append(" -> ");
-				format_timestr_pos(_end, timeStr, sizeof(timeStr), -1);
-				desc.Append(timeStr);
-			}
-			desc.Append("]");
-		}
-		lstrcpyn(_descOut, desc.Get(), _outSz);
-		return true;
-	}
-	return false;
-}
-
-// enumerates by id, returns next region/marker index or 0 when finished enumerating
-// (text formating inspired by the native popup "jump to marker"..)
-// note: when _mask != SNM_MARKER_MASK|SNM_REGION_MASK callers must also check !*_descOut
-int EnumMarkerRegionDescById(ReaProject* _proj, int _id, char* _descOut, int _outSz, int _flags, bool _wantNum, bool _wantName, bool _wantTime)
-{
-	if (_descOut && _outSz && _id > 0)
-	{
-		*_descOut = '\0';
-		double pos, end; int num; bool isrgn; char* name;
-		int idx = EnumMarkerRegionById(_proj, _id, &isrgn, &pos, &end, &name, &num, NULL);
-		if (idx>0) GetMarkerRegionDesc(name, isrgn, num, pos, end, _flags, _wantNum, _wantName, _wantTime, _descOut, _outSz);
-		return idx;
-	}
-	return 0;
-}
-
-// enumerates by index, see remarks above
-int EnumMarkerRegionDesc(ReaProject* _proj, int _idx, char* _descOut, int _outSz, int _flags, bool _wantNum, bool _wantName, bool _wantTime)
-{
-	if (_descOut && _outSz && _idx >= 0)
-	{
-		*_descOut = '\0';
-		double pos, end; int num; bool isrgn; char* name;
-		int nextIdx = EnumProjectMarkers2(_proj, _idx, &isrgn, &pos, &end, &name, &num);
-		if (nextIdx>0) GetMarkerRegionDesc(name, isrgn, num, pos, end, _flags, _wantNum, _wantName, _wantTime, _descOut, _outSz);
-		return nextIdx;
-	}
-	return 0;
-}
-
-// _flags: &1=marker, &2=region
-void FillMarkerRegionMenu(ReaProject* _proj, HMENU _menu, int _msgStart, int _flags, UINT _uiState)
-{
-	int x=0, lastx=0;
-	char desc[SNM_MAX_MARKER_NAME_LEN]="";
-	while (x = EnumMarkerRegionDesc(_proj, x, desc, SNM_MAX_MARKER_NAME_LEN, _flags, true, true, true)) {
-		if (*desc) AddToMenu(_menu, desc, _msgStart+lastx, -1, false, _uiState);
-		lastx=x;
-	}
-	if (!GetMenuItemCount(_menu))
-		AddToMenu(_menu, __LOCALIZE("(No region!)","sws_menu"), 0, -1, false, MF_GRAYED);
-}
-
-bool GotoMarkerRegion(ReaProject* _proj, int _num, int _flags)
-{
-	bool isrgn; double pos;
-	int x=0, n; 
-	while (x = EnumProjectMarkers3(_proj, x, &isrgn, &pos, NULL, NULL, &n, NULL))
-		if (n == _num && ((!isrgn && _flags&SNM_MARKER_MASK) || (isrgn && _flags&SNM_REGION_MASK))) {
-			int* opt = (int*)GetConfigVar("smoothseek"); // obeys smooth seek
-			SetEditCurPos2(_proj, pos, true, opt && *opt); // incl. undo point if enabled in prefs
-			return true;
-		}
-	return false;
-}
-
-void GotoMarker(COMMAND_T* _ct) {
-	GotoMarkerRegion(NULL, ((int)_ct->user)+1, SNM_MARKER_MASK);
-}
-
-void GotoRegion(COMMAND_T* _ct) {
-	GotoMarkerRegion(NULL, ((int)_ct->user)+1, SNM_REGION_MASK);
-}
-
-void InsertMarker(COMMAND_T* _ct) {
-	AddProjectMarker2(NULL, false, (int)_ct->user && (GetPlayStateEx(NULL)&1) ? GetPlayPositionEx(NULL) : GetCursorPositionEx(NULL), 0.0, "", -1, 0);
-	UpdateTimeline();
-	Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
+	g_SNM_IniVersion = SNM_INI_FILE_VERSION;
 }
 
 
@@ -1000,7 +736,7 @@ bool IsMacro(const char* _cmdName) {
 	return (_cmdName && (int)strlen(_cmdName)>len && !strncmp(_cmdName, custom, len) && _cmdName[len] == ':');
 }
 
-bool GetSectionNameAsURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize)
+bool GetSectionURL(bool _alr, const char* _section, char* _sectionURL, int _sectionURLSize)
 {
 	if (!_section || !_sectionURL)
 		return false;

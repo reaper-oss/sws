@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Routing.h
 /
-/ Copyright (c) 2012 Jeffos
+/ Copyright (c) 2012-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -34,12 +34,6 @@
 
 void RefreshRoutingsUI();
 
-bool CueBuss(const char* _undoMsg, const char* _busName, int _type, bool _showRouting = true, int _soloDefeat = 1, char* _trTemplatePath = NULL, bool _sendToMaster = false, int* _hwOuts = NULL);
-bool CueBuss(const char* _undoMsg, int _confId);
-void CueBuss(COMMAND_T*);
-void ReadCueBusIniFile(int _confId, char* _busName, int _busNameSz, int* _reaType, bool* _trTemplate, char* _trTemplatePath, int _trTemplatePathSz, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts);
-void SaveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts);
-
 void CopySendsReceives(bool _noIntra, WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _snds,  WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs);
 bool PasteSendsReceives(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _snds,  WDL_PtrList_DeleteOnDestroy<WDL_PtrList_DeleteOnDestroy<SNM_SndRcv> >* _rcvs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
 void CopyWithIOs(COMMAND_T*);
@@ -60,6 +54,10 @@ void RemoveSends(COMMAND_T*);
 bool RemoveReceives(WDL_PtrList<MediaTrack>* _trs, WDL_PtrList<SNM_ChunkParserPatcher>* _ps);
 void RemoveReceives(COMMAND_T*);
 void RemoveRoutings(COMMAND_T*);
+
+bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type);
+bool SNM_RemoveReceive(MediaTrack* _tr, int _rcvIdx);
+bool SNM_RemoveReceivesFrom(MediaTrack* _tr, MediaTrack* _srcTr);
 
 void SaveDefaultTrackSendPrefs(COMMAND_T*);
 void RecallDefaultTrackSendPrefs(COMMAND_T*);

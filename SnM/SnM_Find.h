@@ -1,7 +1,7 @@
 /******************************************************************************
-/ SnM_FindView.h
+/ SnM_Find.h
 /
-/ Copyright (c) 2010-2012 Jeffos
+/ Copyright (c) 2010-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,8 +27,8 @@
 
 //#pragma once
 
-#ifndef _SNM_FINDVIEW_H_
-#define _SNM_FINDVIEW_H_
+#ifndef _SNM_FIND_H_
+#define _SNM_FIND_H_
 
 class SNM_FindWnd : public SWS_DockWnd
 {

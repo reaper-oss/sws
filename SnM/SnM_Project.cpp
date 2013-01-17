@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Project.cpp
 /
-/ Copyright (c) 2011-2012 Jeffos
+/ Copyright (c) 2011-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -334,3 +334,96 @@ void LoadOrSelectNextPreviousProject(COMMAND_T* _ct)
 	}
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+// Project startup action
+///////////////////////////////////////////////////////////////////////////////
+
+SWSProjConfig<WDL_FastString> g_prjActions;
+
+void SetProjectStartupAction(COMMAND_T* _ct)
+{
+	char prjFn[SNM_MAX_PATH] = "";
+	EnumProjects(-1, prjFn, sizeof(prjFn));
+
+	WDL_FastString msg;
+	msg.SetFormatted(SNM_MAX_PATH, __LOCALIZE("To define a startup action (launched on project load) ","sws_mbox"), prjFn);
+	if (*prjFn) msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_mbox"), prjFn);
+	msg.Append("\n");
+	msg.Append(__LOCALIZE("please select an action, macro, or script in the Actions window and click OK.","sws_mbox"));
+	if (g_prjActions.Get()->GetLength())
+		if (int cmdId = NamedCommandLookup(g_prjActions.Get()->Get())) {
+			msg.Append("\n"); // for translators..
+			msg.AppendFormatted(256, __LOCALIZE_VERFMT("Note: this will override the current startup action '%s'","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
+		}
+
+	ShowActionList(NULL, NULL);
+	if (IDOK == MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OKCANCEL))
+	{
+		char idstr[SNM_MAX_ACTION_CUSTID_LEN] = "";
+		if (GetSelectedAction(idstr, SNM_MAX_ACTION_CUSTID_LEN, __localizeFunc("Main","accel_sec",0)))
+		{
+			g_prjActions.Get()->Set(idstr);
+			Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
+
+			msg.SetFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("'%s' is defined as startup action ","sws_mbox"), kbd_getTextFromCmd(NamedCommandLookup(idstr), NULL));
+			if (*prjFn) msg.AppendFormatted(SNM_MAX_PATH, __LOCALIZE_VERFMT("for %s","sws_mbox"), prjFn);
+			MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OK);
+		}
+	}
+}
+
+void ClearProjectStartupAction(COMMAND_T* _ct)
+{
+	if (g_prjActions.Get()->GetLength())
+		if (int cmdId = NamedCommandLookup(g_prjActions.Get()->Get()))
+		{
+			WDL_FastString msg;
+			msg.AppendFormatted(256, __LOCALIZE_VERFMT("Are you sure you want to clear the current startup action '%s'?","sws_mbox"), kbd_getTextFromCmd(cmdId, NULL));
+			if (IDOK == MessageBox(GetMainHwnd(), msg.Get(), SWS_CMD_SHORTNAME(_ct), MB_OKCANCEL)) {
+				g_prjActions.Get()->Set("");
+				Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_MISCCFG, -1);
+			}
+		}
+}
+
+static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
+{
+	LineParser lp(false);
+	if (lp.parse(line) || lp.getnumtokens() < 1)
+		return false;
+
+	if (!strcmp(lp.gettoken_str(0), "S&M_PROJACTION"))
+	{
+		g_prjActions.Get()->Set(lp.gettoken_str(1));
+		if (!isUndo)
+			if (int cmdId = NamedCommandLookup(lp.gettoken_str(1)))
+			{
+//				AddOrReplaceScheduledJob(new ProjectActionJob(cmdId)); // ~1s delay
+				Main_OnCommand(cmdId, 0);
+			}
+		return true;
+	}
+	return false;
+}
+
+static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct project_config_extension_t *reg)
+{
+	char line[SNM_MAX_CHUNK_LINE_LENGTH] = "";
+	if (ctx && g_prjActions.Get()->GetLength())
+		if (_snprintfStrict(line, sizeof(line), "S&M_PROJACTION %s", g_prjActions.Get()->Get()) > 0)
+			ctx->AddLine("%s", line);
+}
+
+static void BeginLoadProjectState(bool isUndo, struct project_config_extension_t *reg) {
+	g_prjActions.Cleanup();
+	g_prjActions.Get()->Set("");
+}
+
+static project_config_extension_t g_projectconfig = {
+	ProcessExtensionLine, SaveExtensionConfig, BeginLoadProjectState, NULL
+};
+
+int ReaProjectInit() {
+	return plugin_register("projectconfig", &g_projectconfig);
+}

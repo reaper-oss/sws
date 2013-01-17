@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Misc.cpp
 /
-/ Copyright (c) 2009-2012 Jeffos
+/ Copyright (c) 2009-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -155,37 +155,6 @@ bool SNM_GetSetObjectState(void* _obj, WDL_FastString* _state, bool _setnewvalue
 	return ok;
 }
 
-bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type)
-{
-	if (_srcTr && _destTr && _srcTr!=_destTr && _type<=3)
-	{
-		SNM_SendPatcher p = SNM_SendPatcher(_destTr);
-		char vol[32] = "1.00000000000000";
-		char pan[32] = "0.00000000000000";
-		_snprintfSafe(vol, sizeof(vol), "%.14f", *(double*)GetConfigVar("defsendvol"));
-		return (p.AddReceive(_srcTr, _type<0 ? *(int*)GetConfigVar("defsendflag")&0xFF : _type, vol, pan) > 0);
-	}
-	return false;
-}
-
-bool SNM_RemoveReceive(MediaTrack* _tr, int _rcvIdx)
-{
-	if (_tr && _rcvIdx>=0) 	{
-		SNM_ChunkParserPatcher p(_tr);
-		return p.RemoveLine("TRACK", "AUXRECV", 1, _rcvIdx, "MIDIOUT");
-	}
-	return false;
-}
-
-bool SNM_RemoveReceivesFrom(MediaTrack* _tr, MediaTrack* _srcTr)
-{
-	if (_tr && _srcTr) {
-		SNM_SendPatcher p(_tr); 
-		return (p.RemoveReceivesFrom(_srcTr) > 0);
-	}
-	return false;
-}
-
 int SNM_GetIntConfigVar(const char* _varName, int _errVal) {
 	if (int* pVar = (int*)(GetConfigVar(_varName)))
 		return *pVar;
@@ -212,43 +181,6 @@ bool SNM_SetDoubleConfigVar(const char* _varName, double _newVal) {
 		return true;
 	}
 	return false;
-}
-
-bool SNM_AddTCPFXParm(MediaTrack* _tr, int _fxId, int _prmId)
-{
-	bool updated = false;
-	if (_tr && _fxId>=0 && _prmId>=0 && _fxId<TrackFX_GetCount(_tr) && _prmId<TrackFX_GetNumParams(_tr, _fxId))
-	{
-		// already exists?
-		int fxId, prmId;
-		for (int i=0; i<CountTCPFXParms(NULL, _tr); i++)
-			if (GetTCPFXParm(NULL, _tr, i, &fxId, &prmId))
-				if (fxId==_fxId && prmId==_prmId)
-					return false;
-
-		SNM_ChunkParserPatcher p(_tr);
-
-		// first get the fx chain: a straight search for the fx would fail (possible mismatch with frozen track, item fx, etc..)
-		WDL_FastString chainChunk;
-		if (p.GetSubChunk("FXCHAIN", 2, 0, &chainChunk, "<ITEM") > 0)
-		{
-			SNM_ChunkParserPatcher pfxc(&chainChunk, false);
-			int pos = pfxc.Parse(SNM_GET_CHUNK_CHAR,1,"FXCHAIN","WAK",_fxId,0);
-			if (pos>0)
-			{
-				char line[SNM_MAX_CHUNK_LINE_LENGTH] = "";
-				if (_snprintfStrict(line, sizeof(line), "PARM_TCP %d\n", _prmId) > 0)
-				{
-					pfxc.GetChunk()->Insert(line, --pos);
-					if (p.ReplaceSubChunk("FXCHAIN", 2, 0, pfxc.GetChunk()->Get(), "<ITEM")) {
-						updated = true;
-						p.Commit(true);
-					}
-				}
-			}
-		}
-	}
-	return updated;
 }
 
 
@@ -282,12 +214,12 @@ void LoadThemeSlot(COMMAND_T* _ct) {
 // Image slots (Resources view)
 ///////////////////////////////////////////////////////////////////////////////
 
-int g_lastShowImgSlot = -1;
+int g_SNM_LastImgSlot = -1;
 
 void ShowImageSlot(int _slotType, const char* _title, int _slot) {
 	if (WDL_FastString* fnStr = g_slots.Get(_slotType)->GetOrPromptOrBrowseSlot(_title, &_slot)) {
 		if (OpenImageView(fnStr->Get()))
-			g_lastShowImgSlot = _slot;
+			g_SNM_LastImgSlot = _slot;
 		delete fnStr;
 	}
 }
@@ -300,11 +232,11 @@ void ShowNextPreviousImageSlot(COMMAND_T* _ct)
 {
 	int sz = g_slots.Get(g_tiedSlotActions[SNM_SLOT_IMG])->GetSize();
 	if (sz) {
-		g_lastShowImgSlot += (int)_ct->user;
-		if (g_lastShowImgSlot<0) g_lastShowImgSlot = sz-1;
-		else if (g_lastShowImgSlot>=sz) g_lastShowImgSlot = 0;
+		g_SNM_LastImgSlot += (int)_ct->user;
+		if (g_SNM_LastImgSlot<0) g_SNM_LastImgSlot = sz-1;
+		else if (g_SNM_LastImgSlot>=sz) g_SNM_LastImgSlot = 0;
 	}
-	ShowImageSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), sz ? g_lastShowImgSlot : -1); // -1: err msg (empty list)
+	ShowImageSlot(g_tiedSlotActions[SNM_SLOT_IMG], SWS_CMD_SHORTNAME(_ct), sz ? g_SNM_LastImgSlot : -1); // -1: err msg (empty list)
 }
 
 void SetSelTrackIconSlot(int _slotType, const char* _title, int _slot)

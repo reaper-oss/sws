@@ -1,7 +1,7 @@
 /******************************************************************************
-/ SnM_FindView.cpp
+/ SnM_Find.cpp
 /
-/ Copyright (c) 2010-2012 Jeffos
+/ Copyright (c) 2010-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -139,8 +139,8 @@ void SNM_FindWnd::OnInitDlg()
 	SetWindowLongPtr(GetDlgItem(m_hwnd, IDC_EDIT), GWLP_USERDATA, 0xdeadf00b);
 
 	// Load prefs 
-	m_type = GetPrivateProfileInt(FIND_INI_SEC, "Type", 0, g_SNMIniFn.Get());
-	m_zoomSrollItems = (GetPrivateProfileInt(FIND_INI_SEC, "ZoomScrollToFoundItems", 0, g_SNMIniFn.Get()) == 1);
+	m_type = GetPrivateProfileInt(FIND_INI_SEC, "Type", 0, g_SNM_IniFn.Get());
+	m_zoomSrollItems = (GetPrivateProfileInt(FIND_INI_SEC, "ZoomScrollToFoundItems", 0, g_SNM_IniFn.Get()) == 1);
 
 	// WDL GUI init
 	m_vwnd_painter.SetGSC(WDL_STYLE_GetSysColor);
@@ -194,8 +194,8 @@ void SNM_FindWnd::OnDestroy()
 	// save prefs
 	char type[4] = "";
 	if (_snprintfStrict(type, sizeof(type), "%d", m_type) > 0)
-		WritePrivateProfileString(FIND_INI_SEC, "Type", type, g_SNMIniFn.Get());
-	WritePrivateProfileString(FIND_INI_SEC, "ZoomScrollToFoundItems", m_zoomSrollItems ? "1" : "0", g_SNMIniFn.Get());
+		WritePrivateProfileString(FIND_INI_SEC, "Type", type, g_SNM_IniFn.Get());
+	WritePrivateProfileString(FIND_INI_SEC, "ZoomScrollToFoundItems", m_zoomSrollItems ? "1" : "0", g_SNM_IniFn.Get());
 
 	m_cbType.Empty();
 	g_notFound = false;
@@ -363,22 +363,26 @@ MediaItem* SNM_FindWnd::FindPrevNextItem(int _dir, MediaItem* _item)
 	MediaItem* previous = NULL;
 	int startTrIdx = (_dir == -1 ? CountTracks(NULL) : 1);
 	if (_item)
-		startTrIdx = CSurf_TrackToID(GetMediaItem_Track(_item), false);
+		if (MediaTrack* trItem = GetMediaItem_Track(_item))
+			startTrIdx = CSurf_TrackToID(trItem, false);
 
-	bool found = (_item == NULL);
-	for (int i = startTrIdx; !previous && i <= CountTracks(NULL) && i >= 1; i+=_dir)
+	if (startTrIdx>=0)
 	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false); 
-		int nbItems = GetTrackNumMediaItems(tr);
-		for (int j = (_dir > 0 ? 0 : (nbItems-1)); j < nbItems && j >= 0; j+=_dir)
+		bool found = (_item == NULL);
+		for (int i = startTrIdx; !previous && i <= CountTracks(NULL) && i >= 1; i+=_dir)
 		{
-			MediaItem* item = GetTrackMediaItem(tr,j);
-			if (found && item) {
-				previous = item;
-				break;
+			MediaTrack* tr = CSurf_TrackFromID(i, false); 
+			int nbItems = GetTrackNumMediaItems(tr);
+			for (int j = (_dir > 0 ? 0 : (nbItems-1)); j < nbItems && j >= 0; j+=_dir)
+			{
+				MediaItem* item = GetTrackMediaItem(tr,j);
+				if (found && item) {
+					previous = item;
+					break;
+				}
+				if (_item && item == _item)
+					found = true;
 			}
-			if (_item && item == _item)
-				found = true;
 		}
 	}
 	return previous;
@@ -418,18 +422,17 @@ bool SNM_FindWnd::FindMediaItem(int _dir, bool _allTakes, bool (*jobTake)(MediaI
 		}
 
 		MediaItem* item = NULL;
-		if (startItem)
+		MediaTrack* startTr = startItem ? GetMediaItem_Track(startItem) : NULL;
+		int startTrIdx = startTr ? CSurf_TrackToID(startTr, false) : -1;
+		if (startTr && startItem && startTrIdx>=0)
 		{
-			MediaTrack* startTr = GetMediaItem_Track(startItem);
-			int startTrIdx = CSurf_TrackToID(startTr, false);
-
 			// find startItem idx
 			int startItemIdx=-1;
 			while (item != startItem) 
 				item = GetTrackMediaItem(startTr,++startItemIdx);
 
-			bool firstItem = true, breakSelection = false;
-			for (int i = startTrIdx; !breakSelection && i <= CountTracks(NULL) && i>=1; i += (!_dir ? 1 : _dir))
+			bool firstItem=true, breakSelection=false;
+			for (int i=startTrIdx; !breakSelection && i <= CountTracks(NULL) && i>=1; i += (!_dir ? 1 : _dir))
 			{
 				MediaTrack* tr = CSurf_TrackFromID(i, false); 
 				int nbItems = GetTrackNumMediaItems(tr);
@@ -501,12 +504,14 @@ bool SNM_FindWnd::FindTrack(int _dir, bool (*job)(MediaTrack*,const char*))
 		{
 			if (int selTracksCount = SNM_CountSelectedTracks(NULL, true))
 			{
-				MediaTrack* startTr = SNM_GetSelectedTrack(NULL, _dir > 0 ? 0 : selTracksCount-1, true);
-				int id = CSurf_TrackToID(startTr, false);
-				if ((_dir > 0 && id < CountTracks(NULL)) || (_dir < 0 && id >0))
+				if (MediaTrack* startTr = SNM_GetSelectedTrack(NULL, _dir > 0 ? 0 : selTracksCount-1, true))
 				{
-					startTrIdx = id + _dir;
-					clearCurrentSelection = true;
+					int id = CSurf_TrackToID(startTr, false);
+					if ((_dir > 0 && id < CountTracks(NULL)) || (_dir < 0 && id >0))
+					{
+						startTrIdx = id + _dir;
+						clearCurrentSelection = true;
+					}
 				}
 			}
 			else
@@ -584,7 +589,7 @@ bool SNM_FindWnd::FindMarkerRegion(int _dir)
 		}
 		UpdateNotFoundMsg(found);	
 		if (found) {
-			SetEditCurPos(dMinMaxPos, true, false);
+			SetEditCurPos2(NULL, dMinMaxPos, true, false);
 			update = true;
 		}
 	}

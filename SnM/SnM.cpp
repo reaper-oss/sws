@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM.cpp
 /
-/ Copyright (c) 2009-2012 Jeffos
+/ Copyright (c) 2009-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,8 +28,10 @@
 #include "stdafx.h"
 #include "SnM.h"
 #include "version.h"
-#include "../Misc/Adam.h"
 #include "../reaper/localize.h"
+#ifdef _SNM_HOST_AW
+#include "../Misc/Adam.h"
+#endif
 
 
 void QuickTest(COMMAND_T* _ct) {}
@@ -224,6 +226,9 @@ static COMMAND_T g_SNM_cmdTable[] =
 	{ { DEFACCEL, "SWS/S&M: Insert silence (seconds)" }, "S&M_INSERT_SILENCE_S", InsertSilence, NULL, 0},
 	{ { DEFACCEL, "SWS/S&M: Insert silence (measures.beats)" }, "S&M_INSERT_SILENCE_MB", InsertSilence, NULL, 1},
 	{ { DEFACCEL, "SWS/S&M: Insert silence (samples)" }, "S&M_INSERT_SILENCE_SMP", InsertSilence, NULL, 2},
+
+	{ { DEFACCEL, "SWS/S&M: Set project startup action" }, "S&M_SET_PRJ_ACTION", SetProjectStartupAction, NULL, },
+	{ { DEFACCEL, "SWS/S&M: Clear project startup action" }, "S&M_CLR_PRJ_ACTION", ClearProjectStartupAction, NULL, },
 	
 	// Media file slots -------------------------------------------------------
 	{ { DEFACCEL, "SWS/S&M: Open/close Resources window (media files)" }, "S&M_SHOW_RESVIEW_MEDIA", OpenResourceView, NULL, SNM_SLOT_MEDIA, IsResourceViewDisplayed},
@@ -520,18 +525,25 @@ static COMMAND_T g_SNM_cmdTable[] =
 
 
 ///////////////////////////////////////////////////////////////////////////////
-// S&M dynamic actions: "dynamic" means that the number of instances of these actions can be customized in the S&M.ini file (section [NbOfActions]).
-// The following table must be registered with SNMRegisterDynamicCommands(), in this table:
+// S&M dynamic actions: "dynamic" means that the number of instances of these
+// actions can be customized in the S&M.ini file (section [NbOfActions]).
+// The following table must be registered with SNMRegisterDynamicCommands(), 
+// in this table:
 // - items are not real commands but "meta" commands
 // - COMMAND_T.user is used to specify the default number of actions to create
-// - COMMAND_T.menuText is used to specify a custom max number of actions (NULL means max = 99, atm)
-// - a function doCommand(COMMAND_T*) or getEnabled(COMMAND_T*) will be triggered with 0-based COMMAND_T.user
-// - action names are formatted strings, they *must* contain "%02d" (for better sort in the action list, 2 digits because max=99 atm)
-// - custom command ids are not formated strings, but final ids will end with slot numbers (1-based for display reasons)
+// - COMMAND_T.menuText is used to specify a custom max number of actions
+//   (NULL means max = 99, atm)
+// - a function doCommand(COMMAND_T*) or getEnabled(COMMAND_T*) will be 
+//   triggered with 0-based COMMAND_T.user
+// - action names are formatted strings, they *must* contain "%02d"
+//   (for better sort in the action list, 2 digits because max=99 atm)
+// - custom command ids are not formated strings, but final ids will end with 
+//   slot numbers (1-based for display reasons)
 // Example: 
 // { { DEFACCEL, "Do stuff %02d" }, "DO_STUFF", doStuff, NULL, 2}
-// if not overrided in the S&M.ini file (e.g. "DO_STUFF=32"), 2 actions will be created: "Do stuff 01" and "Do stuff 02" 
-// both calling doStuff(c) with c->user=0 and c->user=1, respectively. 
+// if not overrided in the S&M.ini file (e.g. "DO_STUFF=32"), 2 actions will 
+// be created: "Do stuff 01" and "Do stuff 02" both calling doStuff(c) with 
+// c->user=0 and c->user=1, respectively. 
 // custom ids will be "_DO_STUFF1" and "_DO_STUFF2", repectively.
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -659,7 +671,7 @@ static COMMAND_T g_SNM_dynamicCmdTable[] =
 ///////////////////////////////////////////////////////////////////////////////
 
 //!WANT_LOCALIZE_1ST_STRING_BEGIN:s&m_section_actions
-/*JFB static*/ MIDI_COMMAND_T g_SNMSection_cmdTable[] = 
+/*JFB static*/ MIDI_COMMAND_T g_SNM_Section_cmdTable[] = 
 {
 	// keep these as first actions (the live configs' learn feature is tied to these cmd ids, staring with SNM_SNM_SECTION_1ST_CMD_ID)
 	{ { DEFACCEL, "SWS/S&M: Apply Live Config 1 (MIDI CC/OSC only)" }, "S&M_LIVECONFIG1", ApplyLiveConfig, NULL, 0},
@@ -736,7 +748,8 @@ bool IsToolbarsAutoRefeshEnabled(COMMAND_T* _ct) {
 	return g_toolbarsAutoRefreshEnabled;
 }
 
-void RefreshToolbars() {
+void RefreshToolbars()
+{
 	// item sel. buttons
 	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_ITEM_SEL0"));
 	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_ITEM_SEL1"));
@@ -747,9 +760,11 @@ void RefreshToolbars() {
 	// write automation button
 	RefreshToolbar(NamedCommandLookup("_S&M_TOOLBAR_WRITE_ENV"));
 
+#ifdef _SNM_HOST_AW
 	// host AW's grid toolbar buttons auto refresh and track timebase auto refresh
 	UpdateGridToolbar();
 	UpdateTrackTimebaseToolbar();
+#endif
 }
 
 
@@ -759,12 +774,11 @@ void RefreshToolbars() {
 //                 sections than the main one..
 ///////////////////////////////////////////////////////////////////////////////
 
-static WDL_IntKeyedArray<MIDI_COMMAND_T*> g_SNMSection_midiCmds;
-KbdCmd g_SNMSection_kbdCmds[SNM_MAX_SECTION_ACTIONS];
-KbdKeyBindingInfo g_SNMSection_defKeys[SNM_MAX_SECTION_ACTIONS];
-int g_SNMSection_minCmdId = 0;
-int g_SNMSection_maxCmdId = 0;
-static int g_SNMSection_CmdId_gen = SNM_SECTION_1ST_CMD_ID;
+static WDL_IntKeyedArray<MIDI_COMMAND_T*> g_SNM_Section_midiCmds;
+KbdCmd g_SNM_Section_kbdCmds[SNM_MAX_SECTION_ACTIONS];
+KbdKeyBindingInfo g_SNM_Section_defKeys[SNM_MAX_SECTION_ACTIONS];
+int g_SNM_Section_minCmdId=0, g_SNM_Section_maxCmdId=0;
+static int g_SNM_Section_CmdIdGen = SNM_SECTION_1ST_CMD_ID;
 
 bool SNM_OnMidiAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 {
@@ -772,11 +786,11 @@ bool SNM_OnMidiAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 	if (bReentrancyCheck)
 		return false;
 
-	// Ignore commands that don't have anything to do with us from this point forward
-	if (_cmd < g_SNMSection_minCmdId || _cmd > g_SNMSection_maxCmdId)
+	// ignore commands that don't have anything to do with us from this point forward
+	if (_cmd < g_SNM_Section_minCmdId || _cmd > g_SNM_Section_maxCmdId)
 		return false;
 	
-	if (MIDI_COMMAND_T* ct = g_SNMSection_midiCmds.Get(_cmd, NULL))
+	if (MIDI_COMMAND_T* ct = g_SNM_Section_midiCmds.Get(_cmd, NULL))
 	{
 		bReentrancyCheck = true;
 		ct->doCommand(ct, _val, _valhw, _relmode, _hwnd);
@@ -786,10 +800,10 @@ bool SNM_OnMidiAction(int _cmd, int _val, int _valhw, int _relmode, HWND _hwnd)
 	return false;
 }
 
-/*JFB static*/ KbdSectionInfo g_SNMSection = {
+/*JFB static*/ KbdSectionInfo g_SNM_Section = {
   0x10000101, "S&M Extension",
-  g_SNMSection_kbdCmds, 0,
-  g_SNMSection_defKeys, 0,
+  g_SNM_Section_kbdCmds, 0,
+  g_SNM_Section_defKeys, 0,
   SNM_OnMidiAction
 };
 
@@ -798,27 +812,27 @@ int SNM_SectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)
 	if (!_rec)
 		return 0;
 
-	g_SNMSection.name = __LOCALIZE("S&M Extension","sws_accel_sec");
+	g_SNM_Section.name = __LOCALIZE("S&M Extension","sws_accel_sec");
 
 	// register commands in specific section
 	int i = 0;
-	while(g_SNMSection_cmdTable[i].id != LAST_COMMAND)
+	while(g_SNM_Section_cmdTable[i].id != LAST_COMMAND)
 	{
-		MIDI_COMMAND_T* ct = &g_SNMSection_cmdTable[i]; 
+		MIDI_COMMAND_T* ct = &g_SNM_Section_cmdTable[i]; 
 		if (ct->doCommand)
 		{
-/*JFB no more used
+/*JFB no more used, see below
 			if (!(ct->accel.accel.cmd = plugin_register("command_id", (void*)ct->id)))
 				return 0;
 */
-			ct->accel.accel.cmd = g_SNMSection_CmdId_gen++;
+			ct->accel.accel.cmd = g_SNM_Section_CmdIdGen++;
 
-			if (!g_SNMSection_minCmdId || g_SNMSection_minCmdId > ct->accel.accel.cmd)
-				g_SNMSection_minCmdId = ct->accel.accel.cmd;
-			if (ct->accel.accel.cmd > g_SNMSection_maxCmdId)
-				g_SNMSection_maxCmdId = ct->accel.accel.cmd;
+			if (!g_SNM_Section_minCmdId || g_SNM_Section_minCmdId > ct->accel.accel.cmd)
+				g_SNM_Section_minCmdId = ct->accel.accel.cmd;
+			if (ct->accel.accel.cmd > g_SNM_Section_maxCmdId)
+				g_SNM_Section_maxCmdId = ct->accel.accel.cmd;
 
-			g_SNMSection_midiCmds.Insert(ct->accel.accel.cmd, ct);
+			g_SNM_Section_midiCmds.Insert(ct->accel.accel.cmd, ct);
 		}
 		i++;
 	}
@@ -828,18 +842,17 @@ int SNM_SectionRegisterCommands(reaper_plugin_info_t* _rec, bool _localize)
 		return 0;
 
 	// map MIDI_COMMAND_T[] to the section's KbdCmd[] & KbdKeyBindingInfo[]
-	for (i=0; i < nbCmds; i++)
+	for (i=0; i<nbCmds; i++)
 	{
-		MIDI_COMMAND_T* ct = &g_SNMSection_cmdTable[i];
-		g_SNMSection.action_list[i].text = GetLocalizedActionName(ct->accel.desc, 0, "s&m_section_actions");
-		g_SNMSection.action_list[i].cmd = g_SNMSection.def_keys[i].cmd = ct->accel.accel.cmd;
-		g_SNMSection.def_keys[i].key = ct->accel.accel.key;
-		g_SNMSection.def_keys[i].flags = ct->accel.accel.fVirt;
+		MIDI_COMMAND_T* ct = &g_SNM_Section_cmdTable[i];
+		g_SNM_Section.action_list[i].text = GetLocalizedActionName(ct->accel.desc, 0, "s&m_section_actions");
+		g_SNM_Section.action_list[i].cmd = g_SNM_Section.def_keys[i].cmd = ct->accel.accel.cmd;
+		g_SNM_Section.def_keys[i].key = ct->accel.accel.key;
+		g_SNM_Section.def_keys[i].flags = ct->accel.accel.fVirt;
 	}
-	g_SNMSection.action_list_cnt = g_SNMSection.def_keys_cnt = nbCmds;
+	g_SNM_Section.action_list_cnt = g_SNM_Section.def_keys_cnt = nbCmds;
 
-	// register the S&M section
-	if (!(_rec->Register("accel_section",&g_SNMSection)))
+	if (!(_rec->Register("accel_section",&g_SNM_Section)))
 		return 0;
 
 	return 1;
@@ -914,38 +927,38 @@ void SNM_SaveDynamicCommands(COMMAND_T* _cmds, const char* _inifn)
 // S&M.ini file
 ///////////////////////////////////////////////////////////////////////////////
 
-WDL_FastString g_SNMIniFn;
-WDL_FastString g_SNMCyclactionIniFn;
-WDL_FastString g_SNMDiffToolFn;
-int g_SNMIniFileVersion = 0;
+WDL_FastString g_SNM_IniFn;
+WDL_FastString g_SNM_CyclactionIniFn;
+WDL_FastString g_SNM_DiffToolFn;
+int g_SNM_IniVersion = 0;
 int g_SNMbeta = 0;
 
 void IniFileInit()
 {
-	g_SNMIniFn.SetFormatted(SNM_MAX_PATH, SNM_FORMATED_INI_FILE, GetResourcePath());
-	g_SNMCyclactionIniFn.SetFormatted(SNM_MAX_PATH, SNM_CYCLACTION_INI_FILE, GetResourcePath());
+	g_SNM_IniFn.SetFormatted(SNM_MAX_PATH, SNM_FORMATED_INI_FILE, GetResourcePath());
+	g_SNM_CyclactionIniFn.SetFormatted(SNM_MAX_PATH, SNM_CYCLACTION_INI_FILE, GetResourcePath());
 
 	// move from old location if needed/possible
 	WDL_String fn; // no fast string here: the buffer gets mangeled..
 	fn.SetFormatted(SNM_MAX_PATH, SNM_OLD_FORMATED_INI_FILE, GetExePath());
 	if (FileExists(fn.Get()))
-		MoveFile(fn.Get(), g_SNMIniFn.Get()); // no check: use the new file whatever happens
+		MoveFile(fn.Get(), g_SNM_IniFn.Get()); // no check: use the new file whatever happens
 
 	// ini files upgrade, if needed
 	SNM_UpgradeIniFiles();
 
 	// load general prefs
-	g_SNMMediaFlags |= (GetPrivateProfileInt("General", "MediaFileLockAudio", 0, g_SNMIniFn.Get()) ? 1:0);
-	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNMIniFn.Get()) == 1);
-	g_toolbarsAutoRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, g_SNMIniFn.Get()), 100, 5000);
-	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNMIniFn.Get());
+	g_SNMMediaFlags |= (GetPrivateProfileInt("General", "MediaFileLockAudio", 0, g_SNM_IniFn.Get()) ? 1:0);
+	g_toolbarsAutoRefreshEnabled = (GetPrivateProfileInt("General", "ToolbarsAutoRefresh", 1, g_SNM_IniFn.Get()) == 1);
+	g_toolbarsAutoRefreshFreq = BOUNDED(GetPrivateProfileInt("General", "ToolbarsAutoRefreshFreq", SNM_DEF_TOOLBAR_RFRSH_FREQ, g_SNM_IniFn.Get()), 100, 5000);
+	g_buggyPlugSupport = GetPrivateProfileInt("General", "BuggyPlugsSupport", 0, g_SNM_IniFn.Get());
 #ifdef _WIN32
-	g_SNMClearType = (GetPrivateProfileInt("General", "ClearTypeFont", 0, g_SNMIniFn.Get()) == 1);
+	g_SNMClearType = (GetPrivateProfileInt("General", "ClearTypeFont", 0, g_SNM_IniFn.Get()) == 1);
 	fn.SetLen(SNM_MAX_PATH);
-	GetPrivateProfileString("General", "DiffTool", "", fn.Get(), SNM_MAX_PATH, g_SNMIniFn.Get());
-	g_SNMDiffToolFn.Set(fn.Get());
+	GetPrivateProfileString("General", "DiffTool", "", fn.Get(), SNM_MAX_PATH, g_SNM_IniFn.Get());
+	g_SNM_DiffToolFn.Set(fn.Get());
 #endif
-//	g_SNMbeta = GetPrivateProfileInt("General", "Beta", 0, g_SNMIniFn.Get());
+//	g_SNMbeta = GetPrivateProfileInt("General", "Beta", 0, g_SNM_IniFn.Get());
 }
 
 void IniFileExit()
@@ -954,109 +967,27 @@ void IniFileExit()
 	WDL_FastString iniSection;
 	iniSection.AppendFormatted(128, "; REAPER v%s\n", GetAppVersion()); 
 	iniSection.AppendFormatted(128, "; SWS/S&M Extension v%d.%d.%d Build %d\n; ", SWS_VERSION); 
-	iniSection.Append(g_SNMIniFn.Get()); 
-	iniSection.AppendFormatted(128, "\nIniFileUpgrade=%d\n", g_SNMIniFileVersion); 
+	iniSection.Append(g_SNM_IniFn.Get()); 
+	iniSection.AppendFormatted(128, "\nIniFileUpgrade=%d\n", g_SNM_IniVersion); 
 	iniSection.AppendFormatted(128, "MediaFileLockAudio=%d\n", g_SNMMediaFlags&1 ? 1:0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefresh=%d\n", g_toolbarsAutoRefreshEnabled ? 1:0); 
 	iniSection.AppendFormatted(128, "ToolbarsAutoRefreshFreq=%d ; in ms (min: 100, max: 5000)\n", g_toolbarsAutoRefreshFreq);
 	iniSection.AppendFormatted(128, "BuggyPlugsSupport=%d\n", g_buggyPlugSupport ? 1:0);
 #ifdef _WIN32
 	iniSection.AppendFormatted(128, "ClearTypeFont=%d\n", g_SNMClearType ? 1:0);
-	iniSection.AppendFormatted(SNM_MAX_PATH, "DiffTool=\"%s\"\n", g_SNMDiffToolFn.Get());
+	iniSection.AppendFormatted(SNM_MAX_PATH, "DiffTool=\"%s\"\n", g_SNM_DiffToolFn.Get());
 #endif
 //	iniSection.AppendFormatted(128, "Beta=%d\n", g_SNMbeta); 
-	SaveIniSection("General", &iniSection, g_SNMIniFn.Get());
+	SaveIniSection("General", &iniSection, g_SNM_IniFn.Get());
 
 	// save dynamic actions
-	SNM_SaveDynamicCommands(g_SNM_dynamicCmdTable, g_SNMIniFn.Get());
+	SNM_SaveDynamicCommands(g_SNM_dynamicCmdTable, g_SNM_IniFn.Get());
 
 #ifdef _WIN32
 	// force ini file's cache flush, see http://support.microsoft.com/kb/68827
-	WritePrivateProfileString(NULL, NULL, NULL, g_SNMIniFn.Get());
+	WritePrivateProfileString(NULL, NULL, NULL, g_SNM_IniFn.Get());
 #endif
 }
-
-
-///////////////////////////////////////////////////////////////////////////////
-// IReaperControlSurface "proxy"
-// note: it is up to the caller to unalloc things
-///////////////////////////////////////////////////////////////////////////////
-
-#ifdef _SNM_CSURF_PROXY
-#define CSURFMAP(x) SWS_SectionLock lock(&m_csurfsMutex); for (int i=0; i<m_csurfs.GetSize(); i++) m_csurfs.Get(i)->x;
-
-class SNM_CSurfProxy : public IReaperControlSurface
-{
-public:
-	SNM_CSurfProxy() {}
-	~SNM_CSurfProxy() { RemoveAll(); }
-	const char *GetTypeString() { return ""; }
-	const char *GetDescString() { return ""; }
-	const char *GetConfigString() { return ""; }
-	void Run() { CSURFMAP(Run()) }
-	void CloseNoReset() { CSURFMAP(CloseNoReset()) }
-	void SetTrackListChange() { CSURFMAP(SetTrackListChange()) }
-	void SetSurfaceVolume(MediaTrack *tr, double volume) { CSURFMAP(SetSurfaceVolume(tr, volume)) }
-	void SetSurfacePan(MediaTrack *tr, double pan) { CSURFMAP(SetSurfacePan(tr, pan)) }
-	void SetSurfaceMute(MediaTrack *tr, bool mute) { CSURFMAP(SetSurfaceMute(tr, mute)) }
-	void SetSurfaceSelected(MediaTrack *tr, bool sel) { CSURFMAP(SetSurfaceSelected(tr, sel)) }
-	void SetSurfaceSolo(MediaTrack *tr, bool solo) { CSURFMAP(SetSurfaceSolo(tr, solo)) }
-	void SetSurfaceRecArm(MediaTrack *tr, bool recarm) { CSURFMAP(SetSurfaceRecArm(tr, recarm)) }
-	void SetPlayState(bool play, bool pause, bool rec) { CSURFMAP(SetPlayState(play, pause, rec)) }
-	void SetRepeatState(bool rep) { CSURFMAP(SetRepeatState(rep)) }
-	void SetTrackTitle(MediaTrack *tr, const char *title) { CSURFMAP(SetTrackTitle(tr, title)) }
-	bool GetTouchState(MediaTrack *tr, int isPan) { CSURFMAP(GetTouchState(tr, isPan)) return false; }
-	void SetAutoMode(int mode) { CSURFMAP(SetAutoMode(mode)) }
-	void ResetCachedVolPanStates() { CSURFMAP(ResetCachedVolPanStates()) }
-	void OnTrackSelection(MediaTrack *tr) { CSURFMAP(OnTrackSelection(tr)) }
-	bool IsKeyDown(int key) { CSURFMAP(IsKeyDown(key)) return false; }
-	int Extended(int call, void *parm1, void *parm2, void *parm3) { 
-		SWS_SectionLock lock(&m_csurfsMutex);
-		int ret=0;
-		for (int i=0; i<m_csurfs.GetSize(); i++)
-			ret = m_csurfs.Get(i)->Extended(call, parm1, parm2, parm3) ? 1 : ret;
-		return ret;
-	}
-	void Add(IReaperControlSurface* csurf) {
-		SWS_SectionLock lock(&m_csurfsMutex);
-		if (m_csurfs.Find(csurf)<0)
-			m_csurfs.Add(csurf);
-	}
-	void Remove(IReaperControlSurface* csurf) {
-		SWS_SectionLock lock(&m_csurfsMutex);
-		m_csurfs.Delete(m_csurfs.Find(csurf), false);
-	}
-	void RemoveAll() {
-		SWS_SectionLock lock(&m_csurfsMutex);
-		for (int i=m_csurfs.GetSize(); i>=0; i--)
-			if (IReaperControlSurface* csurf = m_csurfs.Get(i)) {
-				csurf->Extended(SNM_CSURF_EXT_UNREGISTER, NULL, NULL, NULL);
-				m_csurfs.Delete(i, false);
-			}
-	}
-private:
-	WDL_PtrList<IReaperControlSurface> m_csurfs;
-	SWS_Mutex m_csurfsMutex;
-};
-
-SNM_CSurfProxy* g_csurfProxy = NULL;
-
-bool SNM_RegisterCSurf(IReaperControlSurface* _csurf) {
-	if (g_csurfProxy) {
-		g_csurfProxy->Add(_csurf);
-		return true;
-	}
-	return false;
-}
-
-bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf) {
-	if (g_csurfProxy) {
-		g_csurfProxy->Remove(_csurf);
-		return true;
-	}
-	return false;
-}
-#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1096,7 +1027,7 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 #endif
 	// actions must be registered before views
 	if (!SWSRegisterCommands(g_SNM_cmdTable) || 
-		!SNM_RegisterDynamicCommands(g_SNM_dynamicCmdTable, g_SNMIniFn.Get()) ||
+		!SNM_RegisterDynamicCommands(g_SNM_dynamicCmdTable, g_SNM_IniFn.Get()) ||
 		!SNM_SectionRegisterCommands(_rec, true))
 		return 0;
 
@@ -1107,12 +1038,13 @@ int SNM_Init(reaper_plugin_info_t* _rec)
 	FindViewInit();
 	ImageViewInit();
 	RegionPlaylistInit();
+	ReaProjectInit();
 	CyclactionInit(); // keep it as the last one!
 
 #ifdef _SNM_CSURF_PROXY
-	g_csurfProxy = new SNM_CSurfProxy();
-	if (!g_csurfProxy || !_rec->Register("csurf_inst", g_csurfProxy))
-		DELETE_NULL(g_csurfProxy)
+	g_SNM_CSurfProxy = new SNM_CSurfProxy();
+	if (!g_SNM_CSurfProxy || !_rec->Register("csurf_inst", g_SNM_CSurfProxy))
+		DELETE_NULL(g_SNM_CSurfProxy)
 	else {
 		_rec->Register("API_SNM_UnregisterCSurf", (void*)SNM_UnregisterCSurf);
 		_rec->Register("API_SNM_RegisterCSurf", (void*)SNM_RegisterCSurf);
@@ -1139,9 +1071,9 @@ void SNM_Exit()
 	IniFileExit();
 
 #ifdef _SNM_CSURF_PROXY
-	if (g_csurfProxy)
-		g_csurfProxy->RemoveAll();
-	DELETE_NULL(g_csurfProxy);
+	if (g_SNM_CSurfProxy)
+		g_SNM_CSurfProxy->RemoveAll();
+	DELETE_NULL(g_SNM_CSurfProxy);
 #endif
 }
 
@@ -1193,6 +1125,39 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job)
 		_snprintfSafe(dbg, sizeof(dbg), "AddOrReplaceScheduledJob() - Added SNM_ScheduledJob id: %d\n", _job->m_id);
 		OutputDebugString(dbg);
 #endif
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// SNM_MidiActionJob
+///////////////////////////////////////////////////////////////////////////////
+
+//JFB!!! learn with midi pitch is not supported atm (dunno how to distinguish pitch vs osc)
+// see http://forum.cockos.com/showthread.php?t=116377
+SNM_MidiActionJob::SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd) 
+	: SNM_ScheduledJob(_jobId, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd)
+{
+	m_absval = 0; // very default init
+
+	// osc & pitch midi events
+	if (_valhw>=0)
+	{
+//		m_absval = BOUNDED(_valhw|_val<<7, 0, 16383); // for pitch
+		m_absval = _valhw || _val ? BOUNDED(16384 - (_valhw|_val<<7), 0, 16383) : 0; // for osc
+	}
+	// cc midi events
+	else if (_valhw==-1 && _val>=0 && _val<128)
+	{
+		// absolute
+		if (!_relmode) 
+			m_absval = _val;
+		// relative, http://forum.cockos.com/project.php?issueid=4576
+		else { 
+			if (_relmode==1)      { if (_val >= 0x40) _val|=~0x3f; } // sign extend if 0x40 set
+			else if (_relmode==2) { _val-=0x40; } // offset by 0x40
+			else if (_relmode==3) { if (_val&0x40) _val=-(_val&0x3f); } // 0x40 is sign bit
+			m_absval = BOUNDED(BOUNDED(_curCC,0,127)+_val, 0, 127);
+		}
 	}
 }
 
@@ -1256,6 +1221,34 @@ int UpdateMarkerRegionCache()
 			}
 	return updateFlags;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+// IReaperControlSurface "proxy"
+// note: it is up to the caller to unalloc things
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef _SNM_CSURF_PROXY
+
+SNM_CSurfProxy* g_SNM_CSurfProxy = NULL;
+
+bool SNM_RegisterCSurf(IReaperControlSurface* _csurf) {
+	if (g_SNM_CSurfProxy) {
+		g_SNM_CSurfProxy->Add(_csurf);
+		return true;
+	}
+	return false;
+}
+
+bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf) {
+	if (g_SNM_CSurfProxy) {
+		g_SNM_CSurfProxy->Remove(_csurf);
+		return true;
+	}
+	return false;
+}
+
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////////

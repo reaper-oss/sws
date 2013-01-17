@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Routing.cpp
 /
-/ Copyright (c) 2009-2012 Jeffos
+/ Copyright (c) 2009-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -34,243 +34,10 @@
 // General routing helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-//JFB REAPER bug: best effort, see http://forum.cockos.com/project.php?issueid=2642
-// (for easy relacement the day it will work..)
+//JFB REAPER bug: tcp/mcp refresh is buggy, see http://forum.cockos.com/project.php?issueid=2642
+// (for easy replacement the day we can manage that..)
 void RefreshRoutingsUI() {
 	TrackList_AdjustWindows(true);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////
-// Cue buss 
-///////////////////////////////////////////////////////////////////////////////
-
-// adds a receive (with vol & pan from source track for pre-fader)
-// _srcTr:  source track (unchanged)
-// _destTr: destination track
-// _type:   reaper's type
-//          0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
-// _p:      for multi-patch optimization, current destination track's SNM_SendPatcher
-bool AddReceiveWithVolPan(MediaTrack * _srcTr, MediaTrack * _destTr, int _type, SNM_SendPatcher* _p)
-{
-	bool update = false;
-	char vol[32] = "1.00000000000000";
-	char pan[32] = "0.00000000000000";
-
-	// if pre-fader, then re-copy track vol/pan
-	if (_type == 3)
-	{
-		SNM_ChunkParserPatcher p(_srcTr, false);
-		p.SetWantsMinimalState(true);
-		if (p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 0, 1, vol, NULL, "MUTESOLO") > 0 &&
-			p.Parse(SNM_GET_CHUNK_CHAR, 1, "TRACK", "VOLPAN", 0, 2, pan, NULL, "MUTESOLO") > 0)
-		{
-			update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
-		}
-	}
-
-	// default volume
-	if (!update && _snprintfStrict(vol, sizeof(vol), "%.14f", *(double*)GetConfigVar("defsendvol")) > 0)
-		update = (_p->AddReceive(_srcTr, _type, vol, pan) > 0);
-	return update;
-}
-
-// _type: 0=Post-Fader (Post-Pan), 1=Pre-FX, 2=deprecated, 3=Pre-Fader (Post-FX)
-// _undoMsg: NULL=no undo
-bool CueBuss(const char* _undoMsg, const char* _busName, int _type, bool _showRouting,
-			 int _soloDefeat, char* _trTemplatePath, bool _sendToMaster, int* _hwOuts) 
-{
-	if (!SNM_CountSelectedTracks(NULL, false))
-		return false;
-
-	WDL_FastString tmplt;
-	if (_trTemplatePath && (!FileExists(_trTemplatePath) || !LoadChunk(_trTemplatePath, &tmplt) || !tmplt.GetLength()))
-	{
-		char msg[SNM_MAX_PATH] = "";
-		lstrcpyn(msg, __LOCALIZE("Cue buss not created!\nNo track template file defined","sws_DLG_149"), sizeof(msg));
-		if (*_trTemplatePath)
-			_snprintfSafe(msg, sizeof(msg), __LOCALIZE_VERFMT("Cue buss not created!\nTrack template not found (or empty): %s","sws_DLG_149"), _trTemplatePath);
-		MessageBox(GetMainHwnd(), msg, __LOCALIZE("S&M - Error","sws_DLG_149"), MB_OK);
-		return false;
-	}
-
-	bool updated = false;
-	MediaTrack * cueTr = NULL;
-	SNM_SendPatcher* p = NULL;
-	for (int i=1; i <= GetNumTracks(); i++) // skip master
-	{
-		MediaTrack* tr = CSurf_TrackFromID(i, false);
-		if (tr && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))
-		{
-			GetSetMediaTrackInfo(tr, "I_SELECTED", &g_i0);
-
-			// add the buss track, done once!
-			if (!cueTr)
-			{
-				InsertTrackAtIndex(GetNumTracks(), false);
-				TrackList_AdjustWindows(false);
-				cueTr = CSurf_TrackFromID(GetNumTracks(), false);
-				GetSetMediaTrackInfo(cueTr, "P_NAME", (void*)_busName);
-
-				p = new SNM_SendPatcher(cueTr);
-
-				if (tmplt.GetLength())
-				{
-					WDL_FastString chunk;
-					MakeSingleTrackTemplateChunk(&tmplt, &chunk, true, true, false);
-					ApplyTrackTemplate(cueTr, &chunk, false, false, p);
-				}
-				updated = true;
-			}
-
-			// add a send
-			if (cueTr && p && tr != cueTr)
-				AddReceiveWithVolPan(tr, cueTr, _type, p);
-		}
-	}
-
-	if (cueTr && p)
-	{
-		// send to master/parent init
-		if (!tmplt.GetLength())
-		{
-			// solo defeat
-			if (_soloDefeat) {
-				char one[2] = "1";
-				updated |= (p->ParsePatch(SNM_SET_CHUNK_CHAR, 1, "TRACK", "MUTESOLO", 0, 3, one) > 0);
-			}
-			
-			// master/parend send
-			WDL_FastString mainSend;
-			mainSend.SetFormatted(SNM_MAX_CHUNK_LINE_LENGTH, "MAINSEND %d 0", _sendToMaster?1:0);
-
-			// adds hw outputs
-			if (_hwOuts)
-			{
-				int monoHWCount=0; 
-				while (GetOutputChannelName(monoHWCount)) monoHWCount++;
-
-				bool cr = false;
-				for(int i=0; i<SNM_MAX_HW_OUTS; i++)
-				{
-					if (_hwOuts[i])
-					{
-						if (!cr) {
-							mainSend.Append("\n"); 
-							cr = true;
-						}
-						if (_hwOuts[i] >= monoHWCount) 
-							mainSend.AppendFormatted(32, "HWOUT %d ", (_hwOuts[i]-monoHWCount) | 1024);
-						else
-							mainSend.AppendFormatted(32, "HWOUT %d ", _hwOuts[i]-1);
-
-						mainSend.Append("0 ");
-						mainSend.AppendFormatted(20, "%.14f ", *(double*)GetConfigVar("defhwvol"));
-						mainSend.Append("0.00000000000000 0 0 0 -1.00000000000000 -1\n");
-					}
-				}
-				if (!cr)
-					mainSend.Append("\n"); // hot
-			}
-
-			// patch both updates (no break keyword here: new empty track)
-			updated |= p->ReplaceLine("TRACK", "MAINSEND", 1, 0, mainSend.Get());
-		}
-
-		p->Commit();
-		delete p;
-
-		if (updated)
-		{
-			GetSetMediaTrackInfo(cueTr, "I_SELECTED", &g_i1);
-			UpdateTimeline();
-			RefreshRoutingsUI();
-			ScrollSelTrack(true, true);
-			if (_showRouting) 
-				Main_OnCommand(40293, 0);
-			if (_undoMsg)
-				Undo_OnStateChangeEx2(NULL, _undoMsg, UNDO_STATE_ALL, -1);
-		}
-	}
-	return updated;
-}
-
-int g_cueBussLastSettingsId = 0; // 0 for ascendant compatibility
-
-bool CueBuss(const char* _undoMsg, int _confId)
-{
-	if (_confId<0 || _confId>=SNM_MAX_CUE_BUSS_CONFS)
-		_confId = g_cueBussLastSettingsId;
-	char busName[64]="", trTemplatePath[SNM_MAX_PATH]="";
-	int reaType, soloGrp, hwOuts[SNM_MAX_HW_OUTS];
-	bool trTemplate,showRouting,sendToMaster;
-	ReadCueBusIniFile(_confId, busName, sizeof(busName), &reaType, &trTemplate, trTemplatePath, sizeof(trTemplatePath), &showRouting, &soloGrp, &sendToMaster, hwOuts);
-	bool updated = CueBuss(_undoMsg, busName, reaType, showRouting, soloGrp, trTemplate?trTemplatePath:NULL, sendToMaster, hwOuts);
-	g_cueBussLastSettingsId = _confId;
-	return updated;
-}
-
-void CueBuss(COMMAND_T* _ct) {
-	CueBuss(SWS_CMD_SHORTNAME(_ct), (int)_ct->user);
-}
-
-void ReadCueBusIniFile(int _confId, char* _busName, int _busNameSz, int* _reaType, bool* _trTemplate, char* _trTemplatePath, int _trTemplatePathSz, bool* _showRouting, int* _soloDefeat, bool* _sendToMaster, int* _hwOuts)
-{
-	if (_confId>=0 && _confId<SNM_MAX_CUE_BUSS_CONFS && _busName && _reaType && _trTemplate && _trTemplatePath && _showRouting && _soloDefeat && _sendToMaster && _hwOuts)
-	{
-		char iniSection[64]="";
-		if (_snprintfStrict(iniSection, sizeof(iniSection), "CueBuss%d", _confId+1) > 0)
-		{
-			char buf[16]="", slot[16]="";
-			GetPrivateProfileString(iniSection,"name","",_busName,_busNameSz,g_SNMIniFn.Get());
-			GetPrivateProfileString(iniSection,"reatype","3",buf,16,g_SNMIniFn.Get());
-			*_reaType = atoi(buf); // 0 if failed 
-			GetPrivateProfileString(iniSection,"track_template_enabled","0",buf,16,g_SNMIniFn.Get());
-			*_trTemplate = (atoi(buf) == 1);
-			GetPrivateProfileString(iniSection,"track_template_path","",_trTemplatePath,_trTemplatePathSz,g_SNMIniFn.Get());
-			GetPrivateProfileString(iniSection,"show_routing","1",buf,16,g_SNMIniFn.Get());
-			*_showRouting = (atoi(buf) == 1);
-			GetPrivateProfileString(iniSection,"send_to_masterparent","0",buf,16,g_SNMIniFn.Get());
-			*_sendToMaster = (atoi(buf) == 1);
-			GetPrivateProfileString(iniSection,"solo_defeat","1",buf,16,g_SNMIniFn.Get());
-			*_soloDefeat = atoi(buf);
-			for (int i=0; i<SNM_MAX_HW_OUTS; i++)
-			{
-				if (_snprintfStrict(slot, sizeof(slot), "hwout%d", i+1) > 0)
-					GetPrivateProfileString(iniSection,slot,"0",buf,sizeof(buf),g_SNMIniFn.Get());
-				else
-					*buf = '\0';
-				_hwOuts[i] = atoi(buf);
-			}
-		}
-	}
-}
-
-void SaveCueBusIniFile(int _confId, const char* _busName, int _type, bool _trTemplate, const char* _trTemplatePath, bool _showRouting, int _soloDefeat, bool _sendToMaster, int* _hwOuts)
-{
-	if (_confId>=0 && _confId<SNM_MAX_CUE_BUSS_CONFS && _busName && _trTemplatePath && _hwOuts)
-	{
-		char iniSection[64]="";
-		if (_snprintfStrict(iniSection, sizeof(iniSection), "CueBuss%d", _confId+1) > 0)
-		{
-			char buf[16]="", slot[16]="";
-			WDL_FastString escapedStr;
-			makeEscapedConfigString(_busName, &escapedStr);
-			WritePrivateProfileString(iniSection,"name",escapedStr.Get(),g_SNMIniFn.Get());
-			if (_snprintfStrict(buf, sizeof(buf), "%d" ,_type) > 0)
-				WritePrivateProfileString(iniSection,"reatype",buf,g_SNMIniFn.Get());
-			WritePrivateProfileString(iniSection,"track_template_enabled",_trTemplate ? "1" : "0",g_SNMIniFn.Get());
-			makeEscapedConfigString(_trTemplatePath, &escapedStr);
-			WritePrivateProfileString(iniSection,"track_template_path",escapedStr.Get(),g_SNMIniFn.Get());
-			WritePrivateProfileString(iniSection,"show_routing",_showRouting ? "1" : "0",g_SNMIniFn.Get());
-			WritePrivateProfileString(iniSection,"send_to_masterparent",_sendToMaster ? "1" : "0",g_SNMIniFn.Get());
-			if (_snprintfStrict(buf, sizeof(buf), "%d", _soloDefeat) > 0)
-				WritePrivateProfileString(iniSection,"solo_defeat",buf,g_SNMIniFn.Get());
-			for (int i=0; i<SNM_MAX_HW_OUTS; i++) 
-				if (_snprintfStrict(slot, sizeof(slot), "hwout%d", i+1) > 0 && _snprintfStrict(buf, sizeof(buf), "%d", _hwOuts[i]) > 0)
-					WritePrivateProfileString(iniSection,slot,_hwOuts[i]?buf:NULL,g_SNMIniFn.Get());
-		}
-	}
 }
 
 
@@ -634,6 +401,42 @@ void RemoveRoutings(COMMAND_T* _ct)
 		RefreshRoutingsUI();
 		Undo_OnStateChangeEx2(NULL, SWS_CMD_SHORTNAME(_ct), UNDO_STATE_ALL, -1); 
 	}
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// ReaScript export
+///////////////////////////////////////////////////////////////////////////////
+
+bool SNM_AddReceive(MediaTrack* _srcTr, MediaTrack* _destTr, int _type)
+{
+	if (_srcTr && _destTr && _srcTr!=_destTr && _type<=3)
+	{
+		SNM_SendPatcher p = SNM_SendPatcher(_destTr);
+		char vol[32] = "1.00000000000000";
+		char pan[32] = "0.00000000000000";
+		_snprintfSafe(vol, sizeof(vol), "%.14f", *(double*)GetConfigVar("defsendvol"));
+		return (p.AddReceive(_srcTr, _type<0 ? *(int*)GetConfigVar("defsendflag")&0xFF : _type, vol, pan) > 0);
+	}
+	return false;
+}
+
+bool SNM_RemoveReceive(MediaTrack* _tr, int _rcvIdx)
+{
+	if (_tr && _rcvIdx>=0) 	{
+		SNM_ChunkParserPatcher p(_tr);
+		return p.RemoveLine("TRACK", "AUXRECV", 1, _rcvIdx, "MIDIOUT");
+	}
+	return false;
+}
+
+bool SNM_RemoveReceivesFrom(MediaTrack* _tr, MediaTrack* _srcTr)
+{
+	if (_tr && _srcTr) {
+		SNM_SendPatcher p(_tr); 
+		return (p.RemoveReceivesFrom(_srcTr) > 0);
+	}
+	return false;
 }
 
 

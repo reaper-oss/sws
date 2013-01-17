@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Windows.cpp
 /
-/ Copyright (c) 2009-2012 Jeffos
+/ Copyright (c) 2009-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -237,8 +237,8 @@ void ShowThemeHelper(WDL_FastString* _report, HWND _hwnd, bool _mcp, bool _sel)
 			{
 				MediaTrack* tr = (MediaTrack*)GetWindowLongPtr(w, GWLP_USERDATA);
 
-				// CSurf_TrackToID() would fail here but it is ok atm: win only
-				// (IP_TRACKNUMBER is a casting nightmare on OSX)
+				// using IP_TRACKNUMBER is a casting nightmare on osx but that's ok atm: win only
+				// (CSurf_TrackToID() would fail here)
 				int trIdx = (int)GetSetMediaTrackInfo(tr, "IP_TRACKNUMBER", NULL);
 				if (trIdx && (!_sel || (_sel && *(int*)GetSetMediaTrackInfo(tr, "I_SELECTED", NULL))))
 				{
@@ -442,7 +442,7 @@ bool DumpActionList(int _type, const char* _title, const char* _lineFormat, cons
 	if (hList && currentSection)
 	{
 		char sectionURL[SNM_MAX_SECTION_NAME_LEN] = ""; 
-		if (!GetSectionNameAsURL(_type==1||_type==2, currentSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
+		if (!GetSectionURL(_type==1||_type==2, currentSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
 		{
 			MessageBox(GetMainHwnd(), __LOCALIZE("Dump failed: unknown section!","sws_mbox"), _title, MB_OK);
 			return false;
@@ -776,7 +776,7 @@ bool CycleTracksAndFXs(int _trStart, int _fxStart, int _dir, bool _selectedTrack
 
 bool FocusJob(MediaTrack* _tr, int _fx, bool _selectedTracks)
 {
-    HWND w2 = TrackFX_GetFloatingWindow(_tr,_fx);
+	HWND w2 = TrackFX_GetFloatingWindow(_tr,_fx);
 	if (SWS_IsWindow(w2)) {
 		SetForegroundWindow(w2);
 		return true;

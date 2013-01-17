@@ -1,7 +1,7 @@
 /******************************************************************************
-/ SnM_RgnPlaylistView.h
+/ SnM_RegionPlaylist.h
 /
-/ Copyright (c) 2012 Jeffos
+/ Copyright (c) 2012-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,10 +27,10 @@
 
 //#pragma once
 
-#ifndef _SNM_PLAYLISTVIEW_H_
-#define _SNM_PLAYLISTVIEW_H_
+#ifndef _SNM_REGIONPLAYLIST_H_
+#define _SNM_REGIONPLAYLIST_H_
 
-#include "SnM_Util.h"
+#include "SnM_Marker.h"
 
 
 class PlaylistMarkerRegionSubscriber : public SNM_MarkerRegionSubscriber {

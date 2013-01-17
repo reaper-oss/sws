@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_LiveConfigs.cpp
 /
-/ Copyright (c) 2010-2012 Jeffos
+/ Copyright (c) 2010-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -321,7 +321,7 @@ bool LiveConfigItem::IsDefault(bool _ignoreComment)
 { 
 	return (
 		!m_track &&
-		(_ignoreComment || !_ignoreComment && !m_desc.GetLength()) && 
+		(_ignoreComment || (!_ignoreComment && !m_desc.GetLength())) &&
 		!m_trTemplate.GetLength() &&
 		!m_fxChain.GetLength() &&
 		!m_presets.GetLength() && 
@@ -1130,11 +1130,11 @@ void SNM_LiveConfigsWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 				UpdateEnableLiveConfig(g_configId, -1);
 			break;
 		case SNM_LIVECFG_LEARN_APPLY_MSG:
-			ShowActionList(&g_SNMSection, NULL);
+			ShowActionList(&g_SNM_Section, NULL);
 			LearnAction(SNM_SECTION_1ST_CMD_ID + g_configId);
 			break;
 		case SNM_LIVECFG_LEARN_PRELOAD_MSG:
-			ShowActionList(&g_SNMSection, NULL);
+			ShowActionList(&g_SNM_Section, NULL);
 			LearnAction(SNM_SECTION_1ST_CMD_ID + SNM_LIVECFG_NB_CONFIGS + g_configId);
 			break;
 		case BTNID_LEARN:
@@ -1323,7 +1323,7 @@ void SNM_LiveConfigsWnd::AddFXSubMenu(HMENU _menu, MediaTrack* _tr, WDL_FastStri
 
 void SNM_LiveConfigsWnd::AddLearnMenu(HMENU _menu, bool _subItems)
 {
-	if (LiveConfig* lc = g_liveConfigs.Get()->Get(g_configId))
+	if (g_liveConfigs.Get()->Get(g_configId))
 	{
 		char buf[128] = "";
 		HMENU hOptMenu;
@@ -1868,7 +1868,7 @@ static project_config_extension_t g_projectconfig = {
 
 int LiveConfigViewInit()
 {
-	GetPrivateProfileString("LiveConfigs", "BigFontName", SNM_DYN_FONT_NAME, g_lcBigFontName, sizeof(g_lcBigFontName), g_SNMIniFn.Get());
+	GetPrivateProfileString("LiveConfigs", "BigFontName", SNM_DYN_FONT_NAME, g_lcBigFontName, sizeof(g_lcBigFontName), g_SNM_IniFn.Get());
 
 	g_pLiveConfigsWnd = new SNM_LiveConfigsWnd();
 	if (!g_pLiveConfigsWnd || !plugin_register("projectconfig", &g_projectconfig))
@@ -1884,7 +1884,7 @@ int LiveConfigViewInit()
 
 void LiveConfigViewExit()
 {
-	WritePrivateProfileString("LiveConfigs", "BigFontName", g_lcBigFontName, g_SNMIniFn.Get());
+	WritePrivateProfileString("LiveConfigs", "BigFontName", g_lcBigFontName, g_SNM_IniFn.Get());
 	DELETE_NULL(g_pLiveConfigsWnd);
 }
 
@@ -1998,7 +1998,10 @@ void MuteAndInitCC123AllConfigs(LiveConfig* _lc, DWORD* _muteTime, WDL_PtrList<v
 	for (int i=0; i<_lc->m_ccConfs.GetSize(); i++)
 		if (LiveConfigItem* item = _lc->m_ccConfs.Get(i))
 			if (item->m_track && _muteTracks->Find(item->m_track) < 0)
-				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates); //JFB!!!, true); // always mute
+/*JFB!!! always mute: no! e.g. using the live configs just to switch fx presets (all options disabled)
+				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates, true); // always mute
+*/
+				MuteAndInitCC123(_lc, item->m_track, _muteTime, _muteTracks, _cc123Tracks, _muteStates);
 }
 
 // just to simplify ApplyPreloadLiveConfig()

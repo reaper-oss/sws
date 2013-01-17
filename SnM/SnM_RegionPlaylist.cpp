@@ -1,7 +1,7 @@
 /******************************************************************************
-/ SnM_RgnPlaylistView.cpp
+/ SnM_RegionPlaylist.cpp
 /
-/ Copyright (c) 2012 Jeffos
+/ Copyright (c) 2012-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -359,7 +359,7 @@ void SNM_PlaylistView::SetItemText(SWS_ListItem* item, int iCol, const char* str
 
 void SNM_PlaylistView::OnItemClk(SWS_ListItem* item, int iCol, int iKeyState) {
 	if (SNM_PlaylistItem* pItem = (SNM_PlaylistItem*)item)
-		SetEditCurPos(pItem->GetPos(), g_scrollView, false);
+		SetEditCurPos2(NULL, pItem->GetPos(), g_scrollView, false);
 }
 
 void SNM_PlaylistView::OnItemDblClk(SWS_ListItem* item, int iCol) {
@@ -1511,7 +1511,7 @@ bool IsPlaylistRepeat(COMMAND_T*) {
 ///////////////////////////////////////////////////////////////////////////////
 
 //JFB nothing to see here.. please move on :)
-// (things that are not really possible with the current v4.3 api, macro-ish, etc..)
+// (doing things that are not really possible with the current v4.3 api => macro-ish, etc..)
 // _mode: 0=crop current project, 1=crop to new project tab, 2=append to current project, 3=paste at cursor position
 // note: moves/copies env points too, makes polled items, etc.. according to user prefs
 //JFB TODO? crop => markers removed
@@ -1652,7 +1652,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 	if (_mode == 2 || _mode == 3)
 	{
 //		Main_OnCommand(40289, 0); // unselect all items
-		SetEditCurPos(endPos, true, false);
+		SetEditCurPos2(NULL, endPos, true, false);
 
 		if (PreventUIRefresh)
 			PreventUIRefresh(-1);
@@ -1696,7 +1696,7 @@ void AppendPasteCropPlaylist(SNM_Playlist* _playlist, int _mode)
 	{
 		// clear time sel + edit cursor position
 		GetSet_LoopTimeRange(true, false, &g_d0, &g_d0, false);
-		SetEditCurPos(0.0, true, false);
+		SetEditCurPos2(NULL, 0.0, true, false);
 
 		if (PreventUIRefresh)
 			PreventUIRefresh(-1);
@@ -1884,11 +1884,11 @@ static project_config_extension_t g_projectconfig = {
 int RegionPlaylistInit()
 {
 	// load prefs
-	g_monitorMode = (GetPrivateProfileInt("RegionPlaylist", "MonitorMode", 0, g_SNMIniFn.Get()) == 1);
-	g_repeatPlaylist = (GetPrivateProfileInt("RegionPlaylist", "Repeat", 0, g_SNMIniFn.Get()) == 1);
-	g_scrollView = (GetPrivateProfileInt("RegionPlaylist", "ScrollView", 1, g_SNMIniFn.Get()) == 1);
-	g_seekPlay = (GetPrivateProfileInt("RegionPlaylist", "SeekPlay", 1, g_SNMIniFn.Get()) == 1);
-	GetPrivateProfileString("RegionPlaylist", "BigFontName", SNM_DYN_FONT_NAME, g_rgnplBigFontName, sizeof(g_rgnplBigFontName), g_SNMIniFn.Get());
+	g_monitorMode = (GetPrivateProfileInt("RegionPlaylist", "MonitorMode", 0, g_SNM_IniFn.Get()) == 1);
+	g_repeatPlaylist = (GetPrivateProfileInt("RegionPlaylist", "Repeat", 0, g_SNM_IniFn.Get()) == 1);
+	g_scrollView = (GetPrivateProfileInt("RegionPlaylist", "ScrollView", 1, g_SNM_IniFn.Get()) == 1);
+	g_seekPlay = (GetPrivateProfileInt("RegionPlaylist", "SeekPlay", 1, g_SNM_IniFn.Get()) == 1);
+	GetPrivateProfileString("RegionPlaylist", "BigFontName", SNM_DYN_FONT_NAME, g_rgnplBigFontName, sizeof(g_rgnplBigFontName), g_SNM_IniFn.Get());
 
 	g_pRgnPlaylistWnd = new SNM_RegionPlaylistWnd();
 	if (!g_pRgnPlaylistWnd || !plugin_register("projectconfig", &g_projectconfig))
@@ -1899,11 +1899,11 @@ int RegionPlaylistInit()
 void RegionPlaylistExit()
 {
 	// save prefs
-	WritePrivateProfileString("RegionPlaylist", "MonitorMode", g_monitorMode?"1":"0", g_SNMIniFn.Get()); 
-	WritePrivateProfileString("RegionPlaylist", "Repeat", g_repeatPlaylist?"1":"0", g_SNMIniFn.Get()); 
-	WritePrivateProfileString("RegionPlaylist", "ScrollView", g_scrollView?"1":"0", g_SNMIniFn.Get()); 
-	WritePrivateProfileString("RegionPlaylist", "SeekPlay", g_seekPlay?"1":"0", g_SNMIniFn.Get()); 
-	WritePrivateProfileString("RegionPlaylist", "BigFontName", g_rgnplBigFontName, g_SNMIniFn.Get());
+	WritePrivateProfileString("RegionPlaylist", "MonitorMode", g_monitorMode?"1":"0", g_SNM_IniFn.Get()); 
+	WritePrivateProfileString("RegionPlaylist", "Repeat", g_repeatPlaylist?"1":"0", g_SNM_IniFn.Get()); 
+	WritePrivateProfileString("RegionPlaylist", "ScrollView", g_scrollView?"1":"0", g_SNM_IniFn.Get()); 
+	WritePrivateProfileString("RegionPlaylist", "SeekPlay", g_seekPlay?"1":"0", g_SNM_IniFn.Get()); 
+	WritePrivateProfileString("RegionPlaylist", "BigFontName", g_rgnplBigFontName, g_SNM_IniFn.Get());
 
 	DELETE_NULL(g_pRgnPlaylistWnd);
 }

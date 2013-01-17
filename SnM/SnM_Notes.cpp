@@ -1,7 +1,7 @@
 /******************************************************************************
-/ SnM_NotesHelpView.cpp
+/ SnM_Notes.cpp
 /
-/ Copyright (c) 2010-2012 Jeffos
+/ Copyright (c) 2010-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -258,7 +258,7 @@ void SNM_NotesHelpWnd::OnCommand(WPARAM wParam, LPARAM lParam)
 			{
 				char link[256] = "";
 				char sectionURL[SNM_MAX_SECTION_NAME_LEN] = "";
-				if (GetSectionNameAsURL(true, g_lastActionSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
+				if (GetSectionURL(true, g_lastActionSection, sectionURL, SNM_MAX_SECTION_NAME_LEN))
 					if (_snprintfStrict(link, sizeof(link), "http://www.cockos.com/wiki/index.php/%s_%s", sectionURL, g_lastActionCustId) > 0)
 						ShellExecute(m_hwnd, "open", link , NULL, NULL, SW_SHOWNORMAL);
 			}
@@ -863,7 +863,7 @@ void LoadHelp(const char* _cmdName, char* _buf, int _bufSize)
 	{
 		// "buf" filled with null-terminated strings, double null-terminated
 		char buf[MAX_HELP_LENGTH] = "";
-		if (int sz = GetPrivateProfileSection(_cmdName,buf,sizeof(buf),g_actionHelpFn))
+		if (/*int sz = */ GetPrivateProfileSection(_cmdName,buf,sizeof(buf),g_actionHelpFn))
 		{
 //			memset(_buf, 0, _bufSize);
 
@@ -1076,7 +1076,7 @@ bool ImportSubRipFile(const char* _fn)
 	{
 		UpdateTimeline(); // redraw the ruler (andd arrange view)
 		if (firstPos > 0.0)
-			SetEditCurPos(firstPos, true, false);
+			SetEditCurPos2(NULL, firstPos, true, false);
 	}
 	return ok;
 }
@@ -1212,7 +1212,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 		// delete unused tracks
 		for (int i=0; i < g_pTrackNotes.Get()->GetSize(); i++)
 			if (SNM_TrackNotes* tn = g_pTrackNotes.Get()->Get(i))
-				if (CSurf_TrackToID(tn->m_tr, false) < 0)
+				if (!tn->m_tr || CSurf_TrackToID(tn->m_tr, false) < 0)
 					g_pTrackNotes.Get()->Delete(i--, true);
 
 		// remove non-existant markers & regions
@@ -1241,7 +1241,7 @@ static void SaveExtensionConfig(ProjectStateContext *ctx, bool isUndo, struct pr
 			if (tn->m_notes.GetLength())
 			{
 				GUID g;
-				if (CSurf_TrackToID(tn->m_tr, false) > 0)
+				if (tn->m_tr && CSurf_TrackToID(tn->m_tr, false) > 0)
 					g = *(GUID*)GetSetMediaTrackInfo(tn->m_tr, "GUID", NULL);
 				else
 					g = GUID_NULL;
@@ -1314,15 +1314,15 @@ int NotesHelpViewInit()
 	lstrcpyn(g_lastExportSubFn, GetResourcePath(), sizeof(g_lastExportSubFn));
 
 	// load prefs 
-	g_notesViewType = GetPrivateProfileInt(NOTES_INI_SEC, "Type", 0, g_SNMIniFn.Get());
-	g_locked = (GetPrivateProfileInt(NOTES_INI_SEC, "Lock", 0, g_SNMIniFn.Get()) == 1);
-	GetPrivateProfileString(NOTES_INI_SEC, "BigFontName", SNM_DYN_FONT_NAME, g_notesBigFontName, sizeof(g_notesBigFontName), g_SNMIniFn.Get());
+	g_notesViewType = GetPrivateProfileInt(NOTES_INI_SEC, "Type", 0, g_SNM_IniFn.Get());
+	g_locked = (GetPrivateProfileInt(NOTES_INI_SEC, "Lock", 0, g_SNM_IniFn.Get()) == 1);
+	GetPrivateProfileString(NOTES_INI_SEC, "BigFontName", SNM_DYN_FONT_NAME, g_notesBigFontName, sizeof(g_notesBigFontName), g_SNM_IniFn.Get());
 
 	// get the action help filename
 	char defaultHelpFn[SNM_MAX_PATH] = "";
 	if (_snprintfStrict(defaultHelpFn, sizeof(defaultHelpFn), SNM_ACTION_HELP_INI_FILE, GetResourcePath()) <= 0)
 		*defaultHelpFn = '\0';
-	GetPrivateProfileString(NOTES_INI_SEC, "Action_help_file", defaultHelpFn, g_actionHelpFn, sizeof(g_actionHelpFn), g_SNMIniFn.Get());
+	GetPrivateProfileString(NOTES_INI_SEC, "Action_help_file", defaultHelpFn, g_actionHelpFn, sizeof(g_actionHelpFn), g_SNM_IniFn.Get());
 
 	g_pNotesHelpWnd = new SNM_NotesHelpWnd();
 	if (!g_pNotesHelpWnd || !plugin_register("projectconfig", &g_projectconfig))
@@ -1334,14 +1334,14 @@ void NotesHelpViewExit()
 {
 	char tmp[4] = "";
 	if (_snprintfStrict(tmp, sizeof(tmp), "%d", g_notesViewType) > 0)
-		WritePrivateProfileString(NOTES_INI_SEC, "Type", tmp, g_SNMIniFn.Get()); 
-	WritePrivateProfileString(NOTES_INI_SEC, "Lock", g_locked?"1":"0", g_SNMIniFn.Get()); 
-	WritePrivateProfileString(NOTES_INI_SEC, "BigFontName", g_notesBigFontName, g_SNMIniFn.Get());
+		WritePrivateProfileString(NOTES_INI_SEC, "Type", tmp, g_SNM_IniFn.Get()); 
+	WritePrivateProfileString(NOTES_INI_SEC, "Lock", g_locked?"1":"0", g_SNM_IniFn.Get()); 
+	WritePrivateProfileString(NOTES_INI_SEC, "BigFontName", g_notesBigFontName, g_SNM_IniFn.Get());
 
 	// save the action help filename
 	WDL_FastString escapedStr;
 	makeEscapedConfigString(g_actionHelpFn, &escapedStr);
-	WritePrivateProfileString(NOTES_INI_SEC, "Action_help_file", escapedStr.Get(), g_SNMIniFn.Get());
+	WritePrivateProfileString(NOTES_INI_SEC, "Action_help_file", escapedStr.Get(), g_SNM_IniFn.Get());
 
 	DELETE_NULL(g_pNotesHelpWnd);
 }

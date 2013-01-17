@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Dlg.h
 /
-/ Copyright (c) 2012 Jeffos
+/ Copyright (c) 2012-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -50,8 +50,5 @@ WDL_DLGRET SNM_HookThemeColorsMessage(HWND _hwnd, UINT _uMsg, WPARAM _wParam, LP
 
 void SNM_ShowMsg(const char* _msg, const char* _title = "", HWND _hParent = NULL); 
 int PromptForInteger(const char* _title, const char* _what, int _min, int _max);
-
-void OpenCueBussDlg(COMMAND_T*);
-bool IsCueBussDlgDisplayed(COMMAND_T*);
 
 #endif

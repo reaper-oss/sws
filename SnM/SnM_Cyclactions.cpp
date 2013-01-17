@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Cyclactions.cpp
 /
-/ Copyright (c) 2011-2012 Jeffos
+/ Copyright (c) 2011-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -158,8 +158,8 @@ public:
 
 			if (loop>=0)
 				loopActions.Add(m_actions.Get(i));
-			else if (int cmd = NamedCommandLookup(cmdStr))
-				PerformMainOrMIDIAction(cmdStr, m_section);
+			else
+                PerformMainOrMIDIAction(cmdStr, m_section);
 		}
 
 		// corner-case: end of loop missing
@@ -522,13 +522,13 @@ void LoadCyclactions(bool _errMsg, bool _checkCmdIds, WDL_PtrList_DeleteOnDestro
 			if (!_cyclactions)
 				FlushCyclactions(sec);
 
-			GetPrivateProfileString(g_cyclactionIniSections[sec], "Nb_Actions", "0", buf, 32, _iniFn ? _iniFn : g_SNMCyclactionIniFn.Get());
+			GetPrivateProfileString(g_cyclactionIniSections[sec], "Nb_Actions", "0", buf, 32, _iniFn ? _iniFn : g_SNM_CyclactionIniFn.Get());
 			int nb = atoi(buf);
 			for (int j=0; j < nb; j++) 
 			{
 				if (_snprintfStrict(buf, sizeof(buf), "Action%d", j+1) > 0)
 				{
-					GetPrivateProfileString(g_cyclactionIniSections[sec], buf, EMPTY_CYCLACTION, actionBuf, MAX_CYCLATION_LEN, _iniFn ? _iniFn : g_SNMCyclactionIniFn.Get());
+					GetPrivateProfileString(g_cyclactionIniSections[sec], buf, EMPTY_CYCLACTION, actionBuf, MAX_CYCLATION_LEN, _iniFn ? _iniFn : g_SNM_CyclactionIniFn.Get());
 					// import into _cyclactions
 					if (_cyclactions)
 					{
@@ -601,7 +601,7 @@ void SaveCyclactions(WDL_PtrList_DeleteOnDestroy<Cyclaction>* _cyclactions = NUL
 			}
 			// "Nb_Actions" is a bad name now: it is a max id (kept for ascendant comp.)
 			iniSection.AppendFormatted(32, "Nb_Actions=%d\n", maxId);
-			SaveIniSection(g_cyclactionIniSections[sec], &iniSection, _iniFn ? _iniFn : g_SNMCyclactionIniFn.Get());
+			SaveIniSection(g_cyclactionIniSections[sec], &iniSection, _iniFn ? _iniFn : g_SNM_CyclactionIniFn.Get());
 		}
 	}
 }
@@ -805,7 +805,7 @@ void Apply()
 {
 	// save the consolidate undo points pref
 	g_undos = (g_pCyclactionWnd && g_pCyclactionWnd->IsConsolidatedUndo());
-	WritePrivateProfileString("Cyclactions", "Undos", g_undos ? "1" : "0", g_SNMIniFn.Get()); // in main S&M.ini file (local property)
+	WritePrivateProfileString("Cyclactions", "Undos", g_undos ? "1" : "0", g_SNM_IniFn.Get()); // in main S&M.ini file (local property)
 
 	// save/register cycle actions
 	int oldCycleId = g_editedActions[g_editedSection].Find(g_editedAction);
@@ -817,7 +817,7 @@ void Apply()
 #ifdef _WIN32
 	// force ini file cache refresh
 	// see http://support.microsoft.com/kb/68827 & http://code.google.com/p/sws-extension/issues/detail?id=397
-	WritePrivateProfileString(NULL, NULL, NULL, g_SNMCyclactionIniFn.Get());
+	WritePrivateProfileString(NULL, NULL, NULL, g_SNM_CyclactionIniFn.Get());
 #endif
 	LoadCyclactions(wasEdited, true); // + flush, unregister, re-register
 	EditModelInit();
@@ -1264,8 +1264,6 @@ void SNM_CyclactionWnd::OnResize()
 				ShowWindow(GetDlgItem(m_hwnd, IDC_LIST2), SW_SHOW);
 				break;
 			case 1: // left list view only
-				int right = m_resize.get_item(IDC_LIST2)->real_orig.right;
-				int bottom = m_resize.get_item(IDC_LIST1)->real_orig.bottom;
 				m_resize.remove_item(IDC_LIST1);
 				m_resize.remove_item(IDC_LIST2);
 				m_resize.init_item(IDC_LIST1, 0.0, 0.0, 1.0, 1.0);
@@ -1753,6 +1751,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 					{
 						char custId[SNM_MAX_ACTION_CUSTID_LEN] = "";
 						if (_snprintfStrict(custId, sizeof(custId), "_%s%d", g_cyclactionCustomIds[sec], cycleId+1) > 0)
+                        {
 							if (int cmdId = NamedCommandLookup(custId))
 							{
 								// dynamic action renaming
@@ -1764,6 +1763,7 @@ static bool ProcessExtensionLine(const char *line, ProjectStateContext *ctx, boo
 							}
 							else
 								g_cyclactions[sec].Get(cycleId)->m_performState = state;
+                        }
 					}
 				}
 			}
@@ -1814,7 +1814,7 @@ int CyclactionInit()
 	_snprintfSafe(g_lastImportFn, sizeof(g_lastImportFn), SNM_CYCLACTION_EXPORT_FILE, GetResourcePath());
 
 	// load undo pref (default == enabled for ascendant compatibility)
-	g_undos = (GetPrivateProfileInt("Cyclactions", "Undos", 1, g_SNMIniFn.Get()) == 1 ? true : false); // in main S&M.ini file (local property)
+	g_undos = (GetPrivateProfileInt("Cyclactions", "Undos", 1, g_SNM_IniFn.Get()) == 1 ? true : false); // in main S&M.ini file (local property)
 
 	// load cycle actions
 	LoadCyclactions(false, false); // do not check cmd ids (may not have been registered yet)

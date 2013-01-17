@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_ME.cpp
 /
-/ Copyright (c) 2010-2012 Jeffos
+/ Copyright (c) 2010-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -132,7 +132,7 @@ void MESetCCLanes(COMMAND_T* _ct)
 		char laneSlot[MAX_CC_LANES_LEN], slot[32] = "";
 		if (_snprintfStrict(slot, sizeof(slot), "cc_lanes_slot%d", (int)_ct->user + 1) > 0)
 		{
-			GetPrivateProfileString("MidiEditor", slot, "", laneSlot, MAX_CC_LANES_LEN, g_SNMIniFn.Get());
+			GetPrivateProfileString("MidiEditor", slot, "", laneSlot, MAX_CC_LANES_LEN, g_SNM_IniFn.Get());
 
 			int i=0; 
 			while (laneSlot[i] && i < (MAX_CC_LANES_LEN-2)) // -2: see string termination
@@ -196,7 +196,7 @@ void MESaveCCLanes(COMMAND_T* _ct)
 					// store lanes
 					char slot[32] = "";
 					if (_snprintfStrict(slot, sizeof(slot), "cc_lanes_slot%d", (int)_ct->user + 1) > 0)
-						WritePrivateProfileString("MidiEditor", slot, laneSlot, g_SNMIniFn.Get());
+						WritePrivateProfileString("MidiEditor", slot, laneSlot, g_SNM_IniFn.Get());
 				}
 			}
 		}

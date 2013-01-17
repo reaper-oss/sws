@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Track.h
 /
-/ Copyright (c) 2012 Jeffos
+/ Copyright (c) 2012-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -89,6 +89,8 @@ void StopTrackPreviews(COMMAND_T*);
 bool SendAllNotesOff(MediaTrack* _tr);
 bool SendAllNotesOff(WDL_PtrList<void>* _trs);
 void SendAllNotesOff(COMMAND_T*);
+
+bool SNM_AddTCPFXParm(MediaTrack* _tr, int _fxId, int _prmId);
 
 void ScrollSelTrack(bool _tcp, bool _mcp);
 void ScrollSelTrack(COMMAND_T*);

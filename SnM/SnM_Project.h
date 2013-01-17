@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM_Project.h
 /
-/ Copyright (c) 2012 Jeffos
+/ Copyright (c) 2012-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,17 +31,33 @@
 #define _SNM_PROJECT_H_
 
 double GetProjectLength(bool _items = true, bool _inclRgnsMkrs = false);
+
 bool InsertSilence(const char* _undoTitle, double _pos, double _len);
 void InsertSilence(COMMAND_T*);
+
 void OpenProjectPathInExplorerFinder(COMMAND_T* _ct = NULL);
+
 void SelectProject(MIDI_COMMAND_T* _ct, int _val, int _valhw, int _relmode, HWND _hwnd);
+
 void LoadOrSelectProjectSlot(int _slotType, const char* _title, int _slot, bool _newTab);
 bool AutoSaveProjectSlot(int _slotType, const char* _dirPath, WDL_PtrList<PathSlotItem>* _owSlots, bool _saveCurPrj);
 void LoadOrSelectProjectSlot(COMMAND_T*);
 void LoadOrSelectProjectTabSlot(COMMAND_T*);
+
 bool IsProjectLoaderConfValid();
 void ProjectLoaderConf(COMMAND_T*);
 void LoadOrSelectNextPreviousProject(COMMAND_T*);
+
+//class ProjectActionJob : public SNM_ScheduledJob {
+//public:
+//	ProjectActionJob(int _cmdId) : m_cmdId(_cmdId), SNM_ScheduledJob(SNM_SCHEDJOB_PRJ_ACTION, 1000) {}
+//	void Perform() { if (m_cmdId) Main_OnCommand(m_cmdId, 0); }
+//	int m_cmdId;
+//};
+
+void SetProjectStartupAction(COMMAND_T*);
+void ClearProjectStartupAction(COMMAND_T*);
+int ReaProjectInit();
 
 #endif
 

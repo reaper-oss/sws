@@ -1,7 +1,7 @@
 /******************************************************************************
 / SnM.h
 /
-/ Copyright (c) 2009-2012 Jeffos
+/ Copyright (c) 2009-2013 Jeffos
 / http://www.standingwaterstudios.com/reaper
 /
 / Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -40,7 +40,8 @@
 //#define _SNM_MISC	// not released, deprecated, tests, etc..
 //#define _SNM_WDL	// if my wdl version is used
 //#define _SNM_STANDALONE
-//#define _SNM_CSURF_PROXY
+#define _SNM_CSURF_PROXY
+#define _SNM_HOST_AW
 
 
 #define SNM_INI_FILE_VERSION		7
@@ -126,8 +127,8 @@
 #define SNM_REGION_MASK				2
 
 // scheduled job ids
-// note: [0 .. SNM_LIVECFG_NB_CONFIGS-1] are reserved for "apply live config" actions
-//       [SNM_LIVECFG_NB_CONFIGS .. 2*SNM_LIVECFG_NB_CONFIGS-1] are reserved for "preload live config" actions
+// [0 .. SNM_LIVECFG_NB_CONFIGS-1] are reserved for "apply live config" actions
+// [SNM_LIVECFG_NB_CONFIGS .. 2*SNM_LIVECFG_NB_CONFIGS-1] are reserved for "preload live config" actions
 #define SNM_SCHEDJOB_LIVECFG_APPLY			0
 #define SNM_SCHEDJOB_LIVECFG_PRELOAD		SNM_SCHEDJOB_LIVECFG_APPLY + SNM_LIVECFG_NB_CONFIGS
 #define SNM_SCHEDJOB_LIVECFG_UPDATE			SNM_SCHEDJOB_LIVECFG_PRELOAD + SNM_LIVECFG_NB_CONFIGS
@@ -138,6 +139,7 @@
 #define SNM_SCHEDJOB_TRIG_PRESET			SNM_SCHEDJOB_SEL_PRJ + 1
 #define SNM_SCHEDJOB_CYCLACTION				SNM_SCHEDJOB_TRIG_PRESET + 1
 #define SNM_SCHEDJOB_PLAYLIST_UPDATE		SNM_SCHEDJOB_CYCLACTION + 1
+#define SNM_SCHEDJOB_PRJ_ACTION				SNM_SCHEDJOB_PLAYLIST_UPDATE + 1
 
 
 /*JFB replaced with a common SWS_CMD_SHORTNAME
@@ -161,45 +163,9 @@ public:
 	bool m_isPerforming;
 };
 
-//JFB!!! learn with pitch is not supported atm: dunno how to distinguish pitch vs osc..
 class SNM_MidiActionJob : public SNM_ScheduledJob {
 public:
-	SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd) 
-		: SNM_ScheduledJob(_jobId, _approxDelayMs),m_val(_val),m_valhw(_valhw),m_relmode(_relmode),m_hwnd(_hwnd)
-	{
-		m_absval = 0; // very default (but valid) value
-		if (_valhw>=0) // osc & pitch midi events
-		{
-//			m_absval = BOUNDED(_valhw|_val<<7, 0, 16383); // for pitch
-			m_absval = _valhw && _val ? BOUNDED(16384 - (_valhw|_val<<7), 0, 16383) : 0; // for osc
-		}
-		else if (_valhw==-1 && _val>=0 && _val<=127) // cc midi events
-		{
-			switch (_relmode)
-			{ 
-				case 0: // absolute cc
-					m_absval = _val;
-					break;
-				case 1: { // relative cc, 127=-1, 1=+1
-					int delta = 0;
-					if (_val>=1 && _val<=64) delta = _val;
-					else if (_val>=65 && _val<=127) delta = _val - 128;
-					m_absval = BOUNDED(BOUNDED(_curCC,0,127)+delta, 0, 127);
-					break;
-				}
-				case 2: // relative cc, 63=-1, 65=+1
-					m_absval = BOUNDED(BOUNDED(_curCC,0,127) + (_val-64), 0, 127);
-					break;
-				case 3: { // relative cc, 65=-1, 1=+1
-					int delta = 0;
-					if (_val>=1 && _val<=63) delta = _val;
-					else if (_val>=65 && _val<=127) delta = _val - 64;
-					m_absval = BOUNDED(BOUNDED(_curCC,0,127)+delta, 0, 127);
-					break;
-				}
-			}
-		}
-	}
+	SNM_MidiActionJob(int _jobId, int _approxDelayMs, int _curCC, int _val, int _valhw, int _relmode, HWND _hwnd); 
 	virtual void Perform() {}
 	virtual int GetAbsoluteValue() { return m_absval; }
 protected:
@@ -224,6 +190,66 @@ public:
 	int m_int;
 };
 
+#ifdef _SNM_CSURF_PROXY
+
+#define SNM_CSURFMAP(x) SWS_SectionLock lock(&m_csurfsMutex); for (int i=0; i<m_csurfs.GetSize(); i++) m_csurfs.Get(i)->x;
+
+class SNM_CSurfProxy : public IReaperControlSurface
+{
+public:
+	SNM_CSurfProxy() {}
+	~SNM_CSurfProxy() { RemoveAll(); }
+	const char *GetTypeString() { return ""; }
+	const char *GetDescString() { return ""; }
+	const char *GetConfigString() { return ""; }
+	void Run() { SNM_CSURFMAP(Run()) }
+	void CloseNoReset() { SNM_CSURFMAP(CloseNoReset()) }
+	void SetTrackListChange() { SNM_CSURFMAP(SetTrackListChange()) }
+	void SetSurfaceVolume(MediaTrack *tr, double volume) { SNM_CSURFMAP(SetSurfaceVolume(tr, volume)) }
+	void SetSurfacePan(MediaTrack *tr, double pan) { SNM_CSURFMAP(SetSurfacePan(tr, pan)) }
+	void SetSurfaceMute(MediaTrack *tr, bool mute) { SNM_CSURFMAP(SetSurfaceMute(tr, mute)) }
+	void SetSurfaceSelected(MediaTrack *tr, bool sel) { SNM_CSURFMAP(SetSurfaceSelected(tr, sel)) }
+	void SetSurfaceSolo(MediaTrack *tr, bool solo) { SNM_CSURFMAP(SetSurfaceSolo(tr, solo)) }
+	void SetSurfaceRecArm(MediaTrack *tr, bool recarm) { SNM_CSURFMAP(SetSurfaceRecArm(tr, recarm)) }
+	void SetPlayState(bool play, bool pause, bool rec) { SNM_CSURFMAP(SetPlayState(play, pause, rec)) }
+	void SetRepeatState(bool rep) { SNM_CSURFMAP(SetRepeatState(rep)) }
+	void SetTrackTitle(MediaTrack *tr, const char *title) { SNM_CSURFMAP(SetTrackTitle(tr, title)) }
+	bool GetTouchState(MediaTrack *tr, int isPan) { SNM_CSURFMAP(GetTouchState(tr, isPan)) return false; }
+	void SetAutoMode(int mode) { SNM_CSURFMAP(SetAutoMode(mode)) }
+	void ResetCachedVolPanStates() { SNM_CSURFMAP(ResetCachedVolPanStates()) }
+	void OnTrackSelection(MediaTrack *tr) { SNM_CSURFMAP(OnTrackSelection(tr)) }
+	bool IsKeyDown(int key) { SNM_CSURFMAP(IsKeyDown(key)) return false; }
+	int Extended(int call, void *parm1, void *parm2, void *parm3) { 
+		SWS_SectionLock lock(&m_csurfsMutex);
+		int ret=0;
+		for (int i=0; i<m_csurfs.GetSize(); i++)
+			ret = m_csurfs.Get(i)->Extended(call, parm1, parm2, parm3) ? 1 : ret;
+		return ret;
+	}
+	void Add(IReaperControlSurface* csurf) {
+		SWS_SectionLock lock(&m_csurfsMutex);
+		if (m_csurfs.Find(csurf)<0)
+			m_csurfs.Add(csurf);
+	}
+	void Remove(IReaperControlSurface* csurf) {
+		SWS_SectionLock lock(&m_csurfsMutex);
+		m_csurfs.Delete(m_csurfs.Find(csurf), false);
+	}
+	void RemoveAll() {
+		SWS_SectionLock lock(&m_csurfsMutex);
+		for (int i=m_csurfs.GetSize(); i>=0; i--)
+			if (IReaperControlSurface* csurf = m_csurfs.Get(i)) {
+				csurf->Extended(SNM_CSURF_EXT_UNREGISTER, NULL, NULL, NULL);
+				m_csurfs.Delete(i, false);
+			}
+	}
+private:
+	WDL_PtrList<IReaperControlSurface> m_csurfs;
+	SWS_Mutex m_csurfsMutex;
+};
+
+#endif
+
 typedef struct MIDI_COMMAND_T {
 	gaccel_register_t accel;
 	const char* id;
@@ -236,16 +262,14 @@ typedef struct MIDI_COMMAND_T {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern KbdSectionInfo g_SNMSection;
-extern bool g_lastPlayState, g_lastPauseState, g_lastRecState;
-extern WDL_FastString g_SNMIniFn;
-extern WDL_FastString g_SNMCyclactionIniFn;
-extern WDL_FastString g_SNMDiffToolFn;
-extern MIDI_COMMAND_T g_SNMSection_cmdTable[];
-extern int g_SNMIniFileVersion;
-extern int g_SNMbeta;
-extern int g_lastShowImgSlot;
 
+extern KbdSectionInfo g_SNM_Section;
+extern bool g_SNM_PlayState, g_SNM_PauseState, g_SNM_RecState;
+extern int g_SNM_IniVersion, g_SNM_Beta, g_SNM_LastImgSlot;
+extern WDL_FastString g_SNM_IniFn, g_SNM_CyclactionIniFn, g_SNM_DiffToolFn;
+#ifdef _SNM_CSURF_PROXY
+extern SNM_CSurfProxy* g_SNM_CSurfProxy;
+#endif
 
 void EnableToolbarsAutoRefesh(COMMAND_T*);
 bool IsToolbarsAutoRefeshEnabled(COMMAND_T*);
@@ -266,13 +290,16 @@ void AddOrReplaceScheduledJob(SNM_ScheduledJob* _job);
 bool RegisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub);
 bool UnregisterToMarkerRegionUpdates(SNM_MarkerRegionSubscriber* _sub) ;
 
+// csurf proxy
+bool SNM_RegisterCSurf(IReaperControlSurface* _csurf);
+bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf);
+
+// csurf callbacks
 void SNM_CSurfRun();
 void SNM_CSurfSetTrackTitle();
 void SNM_CSurfSetTrackListChange();
 void SNM_CSurfSetPlayState(bool _play, bool _pause, bool _rec);
 int SNM_CSurfExtended(int _call, void* _parm1, void* _parm2, void* _parm3);
-bool SNM_RegisterCSurf(IReaperControlSurface* _csurf);
-bool SNM_UnregisterCSurf(IReaperControlSurface* _csurf);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -348,18 +375,19 @@ vezn/Q+t/AIQiCv/Q4iRxAAAAABJRU5ErkJggg==\n"
 #include "SnM_VWnd.h"
 #include "SnM_Resources.h"
 #include "SnM_Cyclactions.h"
-#include "SnM_FindView.h"
+#include "SnM_Find.h"
 #include "SnM_fx.h"
 #include "SnM_FXChain.h"
 #include "SnM_Item.h"
 #include "SnM_LiveConfigs.h"
 #include "SnM_ME.h"
 #include "SnM_Misc.h"
-#include "SnM_NotesHelpView.h"
+#include "SnM_Notes.h"
 #include "SnM_Project.h"
-#include "SnM_RgnPlaylistView.h"
+#include "SnM_RegionPlaylist.h"
 #include "SnM_Track.h"
 #include "SnM_Util.h"
 #include "SnM_Window.h"
+#include "SnM_CueBuss.h"
 
 #endif

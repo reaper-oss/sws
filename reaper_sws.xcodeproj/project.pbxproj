@@ -8,6 +8,18 @@
 
 /* Begin PBXBuildFile section */
 		1FD9691D1661424E00DECB50 /* virtwnd-slider.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FD9691C1661424E00DECB50 /* virtwnd-slider.cpp */; };
+		1FE350CA16A8A6D10032F465 /* SnM_CueBuss.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE350C016A8A6D10032F465 /* SnM_CueBuss.cpp */; };
+		1FE350CB16A8A6D10032F465 /* SnM_CueBuss.h in Headers */ = {isa = PBXBuildFile; fileRef = 1FE350C116A8A6D10032F465 /* SnM_CueBuss.h */; };
+		1FE350CC16A8A6D10032F465 /* SnM_Find.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE350C216A8A6D10032F465 /* SnM_Find.cpp */; };
+		1FE350CD16A8A6D10032F465 /* SnM_Find.h in Headers */ = {isa = PBXBuildFile; fileRef = 1FE350C316A8A6D10032F465 /* SnM_Find.h */; };
+		1FE350CE16A8A6D10032F465 /* SnM_Marker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE350C416A8A6D10032F465 /* SnM_Marker.cpp */; };
+		1FE350CF16A8A6D10032F465 /* SnM_Marker.h in Headers */ = {isa = PBXBuildFile; fileRef = 1FE350C516A8A6D10032F465 /* SnM_Marker.h */; };
+		1FE350D016A8A6D10032F465 /* SnM_Notes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE350C616A8A6D10032F465 /* SnM_Notes.cpp */; };
+		1FE350D116A8A6D10032F465 /* SnM_Notes.h in Headers */ = {isa = PBXBuildFile; fileRef = 1FE350C716A8A6D10032F465 /* SnM_Notes.h */; };
+		1FE350D216A8A6D10032F465 /* SnM_RegionPlaylist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE350C816A8A6D10032F465 /* SnM_RegionPlaylist.cpp */; };
+		1FE350D316A8A6D10032F465 /* SnM_RegionPlaylist.h in Headers */ = {isa = PBXBuildFile; fileRef = 1FE350C916A8A6D10032F465 /* SnM_RegionPlaylist.h */; };
+		1FE350D516A8AD470032F465 /* SnM_FX.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1FE350D416A8AD470032F465 /* SnM_FX.cpp */; };
+		1FE350D716A8AD520032F465 /* SnM_FX.h in Headers */ = {isa = PBXBuildFile; fileRef = 1FE350D616A8AD520032F465 /* SnM_FX.h */; };
 		22219AFD124AF1CE006CBC5D /* Macros.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22219AFB124AF1CE006CBC5D /* Macros.cpp */; };
 		22219AFE124AF1CE006CBC5D /* Macros.h in Headers */ = {isa = PBXBuildFile; fileRef = 22219AFC124AF1CE006CBC5D /* Macros.h */; };
 		22257D87108BDC6B0058CF75 /* AutoRename.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22257D6F108BDC6B0058CF75 /* AutoRename.cpp */; };
@@ -181,10 +193,6 @@
 		22F7AABA15201D8A00CC1481 /* SnM_Cyclactions.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9115201D8A00CC1481 /* SnM_Cyclactions.h */; };
 		22F7AABB15201D8A00CC1481 /* SnM_Dlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA9215201D8A00CC1481 /* SnM_Dlg.cpp */; };
 		22F7AABC15201D8A00CC1481 /* SnM_Dlg.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9315201D8A00CC1481 /* SnM_Dlg.h */; };
-		22F7AABD15201D8A00CC1481 /* SnM_FindView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA9415201D8A00CC1481 /* SnM_FindView.cpp */; };
-		22F7AABE15201D8A00CC1481 /* SnM_FindView.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9515201D8A00CC1481 /* SnM_FindView.h */; };
-		22F7AABF15201D8A00CC1481 /* SnM_fx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA9615201D8A00CC1481 /* SnM_fx.cpp */; };
-		22F7AAC015201D8A00CC1481 /* SnM_fx.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9715201D8A00CC1481 /* SnM_fx.h */; };
 		22F7AAC115201D8A00CC1481 /* SnM_FXChain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA9815201D8A00CC1481 /* SnM_FXChain.cpp */; };
 		22F7AAC215201D8A00CC1481 /* SnM_FXChain.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9915201D8A00CC1481 /* SnM_FXChain.h */; };
 		22F7AAC315201D8A00CC1481 /* SnM_Item.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AA9A15201D8A00CC1481 /* SnM_Item.cpp */; };
@@ -195,14 +203,10 @@
 		22F7AAC815201D8A00CC1481 /* SnM_ME.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AA9F15201D8A00CC1481 /* SnM_ME.h */; };
 		22F7AAC915201D8A00CC1481 /* SnM_Misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAA015201D8A00CC1481 /* SnM_Misc.cpp */; };
 		22F7AACA15201D8A00CC1481 /* SnM_Misc.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAA115201D8A00CC1481 /* SnM_Misc.h */; };
-		22F7AACB15201D8A00CC1481 /* SnM_NotesHelpView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAA215201D8A00CC1481 /* SnM_NotesHelpView.cpp */; };
-		22F7AACC15201D8A00CC1481 /* SnM_NotesHelpView.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAA315201D8A00CC1481 /* SnM_NotesHelpView.h */; };
 		22F7AACD15201D8A00CC1481 /* SnM_Project.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAA415201D8A00CC1481 /* SnM_Project.cpp */; };
 		22F7AACE15201D8A00CC1481 /* SnM_Project.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAA515201D8A00CC1481 /* SnM_Project.h */; };
 		22F7AACF15201D8A00CC1481 /* SnM_Resources.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAA615201D8A00CC1481 /* SnM_Resources.cpp */; };
 		22F7AAD015201D8A00CC1481 /* SnM_Resources.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAA715201D8A00CC1481 /* SnM_Resources.h */; };
-		22F7AAD115201D8A00CC1481 /* SnM_RgnPlaylistView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAA815201D8A00CC1481 /* SnM_RgnPlaylistView.cpp */; };
-		22F7AAD215201D8A00CC1481 /* SnM_RgnPlaylistView.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAA915201D8A00CC1481 /* SnM_RgnPlaylistView.h */; };
 		22F7AAD315201D8A00CC1481 /* SnM_Routing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAAA15201D8A00CC1481 /* SnM_Routing.cpp */; };
 		22F7AAD415201D8A00CC1481 /* SnM_Routing.h in Headers */ = {isa = PBXBuildFile; fileRef = 22F7AAAB15201D8A00CC1481 /* SnM_Routing.h */; };
 		22F7AAD515201D8A00CC1481 /* SnM_Track.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 22F7AAAC15201D8A00CC1481 /* SnM_Track.cpp */; };
@@ -317,6 +321,18 @@
 
 /* Begin PBXFileReference section */
 		1FD9691C1661424E00DECB50 /* virtwnd-slider.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "virtwnd-slider.cpp"; path = "../WDL/wingui/virtwnd-slider.cpp"; sourceTree = "<group>"; };
+		1FE350C016A8A6D10032F465 /* SnM_CueBuss.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_CueBuss.cpp; path = SnM/SnM_CueBuss.cpp; sourceTree = "<group>"; };
+		1FE350C116A8A6D10032F465 /* SnM_CueBuss.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_CueBuss.h; path = SnM/SnM_CueBuss.h; sourceTree = "<group>"; };
+		1FE350C216A8A6D10032F465 /* SnM_Find.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Find.cpp; path = SnM/SnM_Find.cpp; sourceTree = "<group>"; };
+		1FE350C316A8A6D10032F465 /* SnM_Find.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Find.h; path = SnM/SnM_Find.h; sourceTree = "<group>"; };
+		1FE350C416A8A6D10032F465 /* SnM_Marker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Marker.cpp; path = SnM/SnM_Marker.cpp; sourceTree = "<group>"; };
+		1FE350C516A8A6D10032F465 /* SnM_Marker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Marker.h; path = SnM/SnM_Marker.h; sourceTree = "<group>"; };
+		1FE350C616A8A6D10032F465 /* SnM_Notes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Notes.cpp; path = SnM/SnM_Notes.cpp; sourceTree = "<group>"; };
+		1FE350C716A8A6D10032F465 /* SnM_Notes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Notes.h; path = SnM/SnM_Notes.h; sourceTree = "<group>"; };
+		1FE350C816A8A6D10032F465 /* SnM_RegionPlaylist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_RegionPlaylist.cpp; path = SnM/SnM_RegionPlaylist.cpp; sourceTree = "<group>"; };
+		1FE350C916A8A6D10032F465 /* SnM_RegionPlaylist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_RegionPlaylist.h; path = SnM/SnM_RegionPlaylist.h; sourceTree = "<group>"; };
+		1FE350D416A8AD470032F465 /* SnM_FX.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_FX.cpp; path = SnM/SnM_FX.cpp; sourceTree = "<group>"; };
+		1FE350D616A8AD520032F465 /* SnM_FX.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_FX.h; path = SnM/SnM_FX.h; sourceTree = "<group>"; };
 		22219AFB124AF1CE006CBC5D /* Macros.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Macros.cpp; path = Misc/Macros.cpp; sourceTree = "<group>"; };
 		22219AFC124AF1CE006CBC5D /* Macros.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Macros.h; path = Misc/Macros.h; sourceTree = "<group>"; };
 		22257D6F108BDC6B0058CF75 /* AutoRename.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = AutoRename.cpp; path = Xenakios/AutoRename.cpp; sourceTree = "<group>"; };
@@ -952,35 +968,41 @@
 		22C769F410B0F03900774777 /* SnM */ = {
 			isa = PBXGroup;
 			children = (
+				22F7AAB415201D8A00CC1481 /* SnM.cpp */,
+				22F7AAB515201D8A00CC1481 /* SnM.h */,
 				22F7AA8D15201D8A00CC1481 /* SnM_Chunk.cpp */,
 				22F7AA8E15201D8A00CC1481 /* SnM_Chunk.h */,
 				22F7AA8F15201D8A00CC1481 /* SnM_ChunkParserPatcher.h */,
+				1FE350C016A8A6D10032F465 /* SnM_CueBuss.cpp */,
+				1FE350C116A8A6D10032F465 /* SnM_CueBuss.h */,
 				22F7AA9015201D8A00CC1481 /* SnM_Cyclactions.cpp */,
 				22F7AA9115201D8A00CC1481 /* SnM_Cyclactions.h */,
 				22F7AA9215201D8A00CC1481 /* SnM_Dlg.cpp */,
 				22F7AA9315201D8A00CC1481 /* SnM_Dlg.h */,
-				22F7AA9415201D8A00CC1481 /* SnM_FindView.cpp */,
-				22F7AA9515201D8A00CC1481 /* SnM_FindView.h */,
-				22F7AA9615201D8A00CC1481 /* SnM_fx.cpp */,
-				22F7AA9715201D8A00CC1481 /* SnM_fx.h */,
+				1FE350C216A8A6D10032F465 /* SnM_Find.cpp */,
+				1FE350C316A8A6D10032F465 /* SnM_Find.h */,
+				1FE350D416A8AD470032F465 /* SnM_FX.cpp */,
+				1FE350D616A8AD520032F465 /* SnM_FX.h */,
 				22F7AA9815201D8A00CC1481 /* SnM_FXChain.cpp */,
 				22F7AA9915201D8A00CC1481 /* SnM_FXChain.h */,
 				22F7AA9A15201D8A00CC1481 /* SnM_Item.cpp */,
 				22F7AA9B15201D8A00CC1481 /* SnM_Item.h */,
 				22F7AA9C15201D8A00CC1481 /* SnM_LiveConfigs.cpp */,
 				22F7AA9D15201D8A00CC1481 /* SnM_LiveConfigs.h */,
+				1FE350C416A8A6D10032F465 /* SnM_Marker.cpp */,
+				1FE350C516A8A6D10032F465 /* SnM_Marker.h */,
 				22F7AA9E15201D8A00CC1481 /* SnM_ME.cpp */,
 				22F7AA9F15201D8A00CC1481 /* SnM_ME.h */,
 				22F7AAA015201D8A00CC1481 /* SnM_Misc.cpp */,
 				22F7AAA115201D8A00CC1481 /* SnM_Misc.h */,
-				22F7AAA215201D8A00CC1481 /* SnM_NotesHelpView.cpp */,
-				22F7AAA315201D8A00CC1481 /* SnM_NotesHelpView.h */,
+				1FE350C616A8A6D10032F465 /* SnM_Notes.cpp */,
+				1FE350C716A8A6D10032F465 /* SnM_Notes.h */,
 				22F7AAA415201D8A00CC1481 /* SnM_Project.cpp */,
 				22F7AAA515201D8A00CC1481 /* SnM_Project.h */,
+				1FE350C816A8A6D10032F465 /* SnM_RegionPlaylist.cpp */,
+				1FE350C916A8A6D10032F465 /* SnM_RegionPlaylist.h */,
 				22F7AAA615201D8A00CC1481 /* SnM_Resources.cpp */,
 				22F7AAA715201D8A00CC1481 /* SnM_Resources.h */,
-				22F7AAA815201D8A00CC1481 /* SnM_RgnPlaylistView.cpp */,
-				22F7AAA915201D8A00CC1481 /* SnM_RgnPlaylistView.h */,
 				22F7AAAA15201D8A00CC1481 /* SnM_Routing.cpp */,
 				22F7AAAB15201D8A00CC1481 /* SnM_Routing.h */,
 				22F7AAAC15201D8A00CC1481 /* SnM_Track.cpp */,
@@ -991,8 +1013,6 @@
 				22F7AAB115201D8A00CC1481 /* SnM_VWnd.h */,
 				22F7AAB215201D8A00CC1481 /* SnM_Window.cpp */,
 				22F7AAB315201D8A00CC1481 /* SnM_Window.h */,
-				22F7AAB415201D8A00CC1481 /* SnM.cpp */,
-				22F7AAB515201D8A00CC1481 /* SnM.h */,
 			);
 			name = SnM;
 			sourceTree = "<group>";
@@ -1184,17 +1204,13 @@
 				22F7AAB815201D8A00CC1481 /* SnM_ChunkParserPatcher.h in Headers */,
 				22F7AABA15201D8A00CC1481 /* SnM_Cyclactions.h in Headers */,
 				22F7AABC15201D8A00CC1481 /* SnM_Dlg.h in Headers */,
-				22F7AABE15201D8A00CC1481 /* SnM_FindView.h in Headers */,
-				22F7AAC015201D8A00CC1481 /* SnM_fx.h in Headers */,
 				22F7AAC215201D8A00CC1481 /* SnM_FXChain.h in Headers */,
 				22F7AAC415201D8A00CC1481 /* SnM_Item.h in Headers */,
 				22F7AAC615201D8A00CC1481 /* SnM_LiveConfigs.h in Headers */,
 				22F7AAC815201D8A00CC1481 /* SnM_ME.h in Headers */,
 				22F7AACA15201D8A00CC1481 /* SnM_Misc.h in Headers */,
-				22F7AACC15201D8A00CC1481 /* SnM_NotesHelpView.h in Headers */,
 				22F7AACE15201D8A00CC1481 /* SnM_Project.h in Headers */,
 				22F7AAD015201D8A00CC1481 /* SnM_Resources.h in Headers */,
-				22F7AAD215201D8A00CC1481 /* SnM_RgnPlaylistView.h in Headers */,
 				22F7AAD415201D8A00CC1481 /* SnM_Routing.h in Headers */,
 				22F7AAD615201D8A00CC1481 /* SnM_Track.h in Headers */,
 				22F7AAD815201D8A00CC1481 /* SnM_Util.h in Headers */,
@@ -1227,6 +1243,12 @@
 				3879390E16202B1E000948B5 /* RprTrack.h in Headers */,
 				3879391016202B1E000948B5 /* StringUtil.h in Headers */,
 				3879391216202B1E000948B5 /* TimeMap.h in Headers */,
+				1FE350CB16A8A6D10032F465 /* SnM_CueBuss.h in Headers */,
+				1FE350CD16A8A6D10032F465 /* SnM_Find.h in Headers */,
+				1FE350CF16A8A6D10032F465 /* SnM_Marker.h in Headers */,
+				1FE350D116A8A6D10032F465 /* SnM_Notes.h in Headers */,
+				1FE350D316A8A6D10032F465 /* SnM_RegionPlaylist.h in Headers */,
+				1FE350D716A8AD520032F465 /* SnM_FX.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1447,17 +1469,13 @@
 				22F7AAB615201D8A00CC1481 /* SnM_Chunk.cpp in Sources */,
 				22F7AAB915201D8A00CC1481 /* SnM_Cyclactions.cpp in Sources */,
 				22F7AABB15201D8A00CC1481 /* SnM_Dlg.cpp in Sources */,
-				22F7AABD15201D8A00CC1481 /* SnM_FindView.cpp in Sources */,
-				22F7AABF15201D8A00CC1481 /* SnM_fx.cpp in Sources */,
 				22F7AAC115201D8A00CC1481 /* SnM_FXChain.cpp in Sources */,
 				22F7AAC315201D8A00CC1481 /* SnM_Item.cpp in Sources */,
 				22F7AAC515201D8A00CC1481 /* SnM_LiveConfigs.cpp in Sources */,
 				22F7AAC715201D8A00CC1481 /* SnM_ME.cpp in Sources */,
 				22F7AAC915201D8A00CC1481 /* SnM_Misc.cpp in Sources */,
-				22F7AACB15201D8A00CC1481 /* SnM_NotesHelpView.cpp in Sources */,
 				22F7AACD15201D8A00CC1481 /* SnM_Project.cpp in Sources */,
 				22F7AACF15201D8A00CC1481 /* SnM_Resources.cpp in Sources */,
-				22F7AAD115201D8A00CC1481 /* SnM_RgnPlaylistView.cpp in Sources */,
 				22F7AAD315201D8A00CC1481 /* SnM_Routing.cpp in Sources */,
 				22F7AAD515201D8A00CC1481 /* SnM_Track.cpp in Sources */,
 				22F7AAD715201D8A00CC1481 /* SnM_Util.cpp in Sources */,
@@ -1494,6 +1512,12 @@
 				3879391116202B1E000948B5 /* TimeMap.cpp in Sources */,
 				1FD9691D1661424E00DECB50 /* virtwnd-slider.cpp in Sources */,
 				387407D01664177E008626AA /* lice_arc.cpp in Sources */,
+				1FE350CA16A8A6D10032F465 /* SnM_CueBuss.cpp in Sources */,
+				1FE350CC16A8A6D10032F465 /* SnM_Find.cpp in Sources */,
+				1FE350CE16A8A6D10032F465 /* SnM_Marker.cpp in Sources */,
+				1FE350D016A8A6D10032F465 /* SnM_Notes.cpp in Sources */,
+				1FE350D216A8A6D10032F465 /* SnM_RegionPlaylist.cpp in Sources */,
+				1FE350D516A8AD470032F465 /* SnM_FX.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

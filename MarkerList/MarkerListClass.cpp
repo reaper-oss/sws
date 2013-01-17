@@ -32,7 +32,7 @@
 #include "../reaper/localize.h"
 #include "MarkerListClass.h"
 #include "MarkerListActions.h"
-#include "../SnM/SnM_Util.h"
+#include "../SnM/SnM_Marker.h"
 
 MarkerItem::MarkerItem(bool bReg, double dPos, double dRegEnd, const char* cName, int num, int color)
 {

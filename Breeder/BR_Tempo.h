@@ -1,7 +1,7 @@
 /******************************************************************************
-/ Breeder.h
+/ BR_Tempo.h
 /
-/ Copyright (c) 2010 Dominik Martin Drzic
+/ Copyright (c) 2013 Dominik Martin Drzic
 / http://forum.cockos.com/member.php?u=27094
 / http://www.standingwaterstudios.com/reaper
 /
@@ -25,7 +25,18 @@
 / OTHER DEALINGS IN THE SOFTWARE.
 /
 ******************************************************************************/
-
 #pragma once
 
-int BreederInit();
+void MoveTempo (COMMAND_T*);
+void EditTempo (COMMAND_T*);
+void EditTempoGradual (COMMAND_T*);
+void DeleteTempo (COMMAND_T*);
+void TempoShapeLinear (COMMAND_T*);
+void TempoShapeSquare (COMMAND_T*);
+void ConvertMarkersToTempoDialog (COMMAND_T*);
+void SelectAdjustTempoDialog (COMMAND_T*);
+void TempoShapeOptionsDialog (COMMAND_T*);
+void RandomizeTempoDialog (COMMAND_T*);
+bool IsConvertMarkersToTempoVisible (COMMAND_T*);
+bool IsSelectAdjustTempoVisible (COMMAND_T*);
+bool IsTempoShapeOptionsVisible (COMMAND_T*);

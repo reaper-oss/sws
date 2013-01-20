@@ -36,7 +36,6 @@
 #include "stdafx.h"
 #include "Adam.h"
 #include "Analysis.h"
-#include "Breeder.h" 
 #include "Context.h"
 #include "EditCursor.h"
 #include "FolderActions.h"
@@ -61,8 +60,6 @@ int MiscInit()
 	if (!AdamInit())
 		return 0;
 	if (!AnalysisInit())
-		return 0;
-	if (!BreederInit())
 		return 0;
 	if (!ContextInit())
 		return 0;

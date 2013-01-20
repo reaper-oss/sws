@@ -76,6 +76,9 @@
 #define IDD_BR_SELECT_ADJUST_TEMPO      167
 #define IDD_BR_DESELECT_TEMPO           168
 #define IDD_SNM_LIVE_CONFIG_MON         169
+#define IDD_BR_TEMPO_SHAPE_OPTIONS      170
+#define IDD_BR_RANDOMIZE_TEMPO          171
+#define IDD_BR_VERSION                  172
 #define IDB_UP                          500
 #define IDB_DOWN                        501
 #define IDB_SNM                         502
@@ -360,17 +363,37 @@
 #define IDC_BR_SEL_INVERT_PREF          1272
 #define IDC_BR_SEL_DESELECT             1273
 #define IDC_BR_SEL_DESELECT_NTH         1274
-#define IDC_BR_DESEL_NTH_TEMPO          1276
-#define IDC_BR_DESEL_CRITERIA           1277
-#define IDC_BR_CON_GRADUAL              1278
+#define IDC_BR_DESEL_NTH_TEMPO          1275
+#define IDC_BR_DESEL_CRITERIA           1276
+#define IDC_BR_CON_GRADUAL              1277
+#define IDC_BR_CON_SPLIT_RATIO          1278
+#define IDC_BR_CON_SPLIT                1279
+#define IDC_BR_CON_GROUP2               1280
+#define IDC_BR_SHAPE_SPLIT              1281
+#define IDC_BR_SHAPE_SPLIT_RATIO        1282
+#define IDC_BR_RAND_MIN                 1283
+#define IDC_BR_RAND_MAX                 1284
+#define IDC_BR_RAND_UNIT                1285
+#define IDC_BR_RAND_LIMIT_MIN           1286
+#define IDC_BR_RAND_LIMIT_MAX           1287
+#define IDC_BR_RAND_LIMIT_UNIT          1288
+#define IDC_BR_RAND_LIMIT               1289
+#define IDC_BR_RAND_SEED                1290
+#define IDC_BR_SEL_BPM_STATIC           1291
+#define IDC_BR_SEL_SIG_STATIC           1292
+#define IDC_BR_CON_MARKERS_STATIC       1293
+#define IDC_BR_CON_SIG_STATIC1          1294
+#define IDC_BR_CON_SIG_STATIC2          1295
+#define IDC_BR_VER_MESSAGE              1296
+#define IDC_BR_VER_PROGRESS             1297
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        170
+#define _APS_NEXT_RESOURCE_VALUE        173
 #define _APS_NEXT_COMMAND_VALUE         40000
-#define _APS_NEXT_CONTROL_VALUE         1279
+#define _APS_NEXT_CONTROL_VALUE         1298
 #define _APS_NEXT_SYMED_VALUE           100
 #endif
 #endif

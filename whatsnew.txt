@@ -1,7 +1,40 @@
+Automatic check for updates:
++Option can be found in REAPER > Extensions > Help > SWS Options > Check for new SWS version on startup
+ - Performed once per day
+ - Turned on by default
+
+Tempo improvements:
++Convert project markers to tempo markers:
+ - More sane results when creating gradual tempo changes (thanks to middle points)
+ - Option to split middle point into 2 points to smooth things out
++Added actions:
+ - SWS/BR: Randomize selected tempo markers...
+ - SWS/BR: Delete tempo marker (preserve overall tempo and positions if possible)
+ - SWS/BR: Set tempo marker shape to linear (preserve positions)
+ - SWS/BR: Set tempo marker shape to square (preserve positions)
+ - SWS/BR: Set tempo marker shape (options)...
+ - SWS/BR: Increase/Decrease tempo marker (preserve it's time position) (% and BPM versions)
+   => These actions are mostly intended for manipulation of linear (gradual) tempo. See documentation for more
+ - SWS/BR: Alter slope of gradual tempo marker (increase/decrease) (% and BPM versions)
+   => As the name suggest, these actions work only on gradual tempo markers. See documentation for more
+ - SWS/BR: Create project markers from selected tempo markers
+ - SWS/BR: Create project markers from notes in selected MIDI items
++Other:
+ - All dialogs under SWS/BR:
+   - options are preserved through sessions
+   - tinny OS X cosmetic fixes
+ - All existing tempo operations should be much faster when dealing with a lot of points
+ - Tinny renames of move actions for easier readability
+ - Documentations should be available (work in progress but it should be complete rather soon) on http://wiki.cockos.com/wiki/index.php/Category:Tempo|wiki.cockos.com|
+   => Big thanks to user http://forum.cockos.com/member.php?u=22191|G-Sun| for all the wiki work, suggestions and testing
+
 Added actions:
 +SWS/S&M: Set project startup action
 +SWS/S&M: Clear project startup action
++SWS/BR: Check for new SWS version...
++SWS/BR: Enable checking for new SWS version on startup
 
+Other:
 Fix for OSC & MIDI CC relative "mode 3" learn
 
 !v2.3.0 #11 (January 15, 2013)

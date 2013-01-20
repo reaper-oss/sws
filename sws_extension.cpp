@@ -49,6 +49,7 @@
 #include "Fingers/FNG_client.h"
 #include "Autorender/Autorender.h"
 #include "IX/IX.h"
+#include "Breeder/BR.h" 
 
 #define LOCALIZE_IMPORT_PREFIX "sws_"
 #ifdef LOCALIZE_IMPORT_PREFIX
@@ -798,6 +799,8 @@ extern "C"
 			ERR_RETURN("Autorender init error\n")
 		if (!IXInit())
 			ERR_RETURN("IX init error\n")
+		if (!BreederInit())
+			ERR_RETURN("Breeder init error\n")
 		if (!SNM_HasExtension())
 			if (!SNM_Init(rec)) // keep it as the last init (for cyle actions)
 				ERR_RETURN("S&M init error\n")

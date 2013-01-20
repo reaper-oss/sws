@@ -316,5 +316,6 @@ void SWSCreateExtensionsMenu(HMENU hMenu)
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable record input check", "sws_ext_menu"), NamedCommandLookup("_SWS_TOGRECINCHECK"));
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable red ruler while recording", "sws_ext_menu"), NamedCommandLookup("_SWS_RECREDRULER"));
 	AddToMenu(hOptionsSubMenu, __LOCALIZE("Enable toolbars auto refresh", "sws_ext_menu"), NamedCommandLookup("_S&M_TOOLBAR_REFRESH_ENABLE"));
+	AddToMenu(hOptionsSubMenu, __LOCALIZE("Check for new SWS version on startup", "sws_ext_menu"), NamedCommandLookup("_BR_VERSION_CHECK_ENB"));
 }
 

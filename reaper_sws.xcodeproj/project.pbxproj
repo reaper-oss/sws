@@ -75,8 +75,6 @@
 		2264CBD110FEC33700447317 /* swell-wnd.mm in Sources */ = {isa = PBXBuildFile; fileRef = 980764250F5B233C0091104D /* swell-wnd.mm */; };
 		2264CBD210FEC33800447317 /* swell.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 98B408A20F5B544A00865A09 /* swell.cpp */; };
 		2264CBD310FEC33900447317 /* swell.h in Headers */ = {isa = PBXBuildFile; fileRef = 9870F77F0F5B461C0007258C /* swell.h */; };
-		2266B2BC15F069CC006F2A0D /* Breeder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2266B2BA15F069CC006F2A0D /* Breeder.cpp */; };
-		2266B2BD15F069CC006F2A0D /* Breeder.h in Headers */ = {isa = PBXBuildFile; fileRef = 2266B2BB15F069CC006F2A0D /* Breeder.h */; };
 		2270FC7112F8551400703F85 /* RecCheck.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2270FC6F12F8551400703F85 /* RecCheck.cpp */; };
 		2270FC7212F8551400703F85 /* RecCheck.h in Headers */ = {isa = PBXBuildFile; fileRef = 2270FC7012F8551400703F85 /* RecCheck.h */; };
 		2273566712910ABF001A1570 /* EditCursor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2273566512910ABF001A1570 /* EditCursor.cpp */; };
@@ -275,6 +273,30 @@
 		3879391216202B1E000948B5 /* TimeMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 387938E416202B1E000948B5 /* TimeMap.h */; };
 		389293241601487C00F16794 /* MakeWhatsNew.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 389293231601487C00F16794 /* MakeWhatsNew.cpp */; };
 		38B8AD451601269E001F3F3C /* ReaScript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 38B8AD431601269E001F3F3C /* ReaScript.cpp */; };
+		4D859DBB16AB128700E34EAA /* BR_Misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DAD16AB128700E34EAA /* BR_Misc.cpp */; };
+		4D859DBC16AB128700E34EAA /* BR_Misc.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DAE16AB128700E34EAA /* BR_Misc.h */; };
+		4D859DBD16AB128700E34EAA /* BR_Tempo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DAF16AB128700E34EAA /* BR_Tempo.cpp */; };
+		4D859DBE16AB128700E34EAA /* BR_Tempo.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DB016AB128700E34EAA /* BR_Tempo.h */; };
+		4D859DBF16AB128700E34EAA /* BR_TempoDlg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DB116AB128700E34EAA /* BR_TempoDlg.cpp */; };
+		4D859DC016AB128700E34EAA /* BR_TempoDlg.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DB216AB128700E34EAA /* BR_TempoDlg.h */; };
+		4D859DC116AB128700E34EAA /* BR_TempoTools.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DB316AB128700E34EAA /* BR_TempoTools.cpp */; };
+		4D859DC216AB128700E34EAA /* BR_TempoTools.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DB416AB128700E34EAA /* BR_TempoTools.h */; };
+		4D859DC316AB128700E34EAA /* BR_Update.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DB516AB128700E34EAA /* BR_Update.cpp */; };
+		4D859DC416AB128700E34EAA /* BR_Update.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DB616AB128700E34EAA /* BR_Update.h */; };
+		4D859DC516AB128700E34EAA /* BR_Util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DB716AB128700E34EAA /* BR_Util.cpp */; };
+		4D859DC616AB128700E34EAA /* BR_Util.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DB816AB128700E34EAA /* BR_Util.h */; };
+		4D859DC716AB128700E34EAA /* BR.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DB916AB128700E34EAA /* BR.cpp */; };
+		4D859DC816AB128700E34EAA /* BR.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DBA16AB128700E34EAA /* BR.h */; };
+		4D859DD416AB133D00E34EAA /* asyncdns.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DCA16AB133D00E34EAA /* asyncdns.cpp */; };
+		4D859DD516AB133D00E34EAA /* asyncdns.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DCB16AB133D00E34EAA /* asyncdns.h */; };
+		4D859DD616AB133D00E34EAA /* connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DCC16AB133D00E34EAA /* connection.cpp */; };
+		4D859DD716AB133D00E34EAA /* connection.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DCD16AB133D00E34EAA /* connection.h */; };
+		4D859DD816AB133D00E34EAA /* httpget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DCE16AB133D00E34EAA /* httpget.cpp */; };
+		4D859DD916AB133D00E34EAA /* httpget.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DCF16AB133D00E34EAA /* httpget.h */; };
+		4D859DDA16AB133D00E34EAA /* jnetlib.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DD016AB133D00E34EAA /* jnetlib.h */; };
+		4D859DDB16AB133D00E34EAA /* netinc.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DD116AB133D00E34EAA /* netinc.h */; };
+		4D859DDC16AB133D00E34EAA /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D859DD216AB133D00E34EAA /* util.cpp */; };
+		4D859DDD16AB133D00E34EAA /* util.h in Headers */ = {isa = PBXBuildFile; fileRef = 4D859DD316AB133D00E34EAA /* util.h */; };
 		5A0280AF14216AE300EC8CD1 /* icontheme.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A0280AD14216AE300EC8CD1 /* icontheme.h */; };
 		5A0280B014216AE300EC8CD1 /* sws_rpf_wrapper.h in Headers */ = {isa = PBXBuildFile; fileRef = 5A0280AE14216AE300EC8CD1 /* sws_rpf_wrapper.h */; };
 		980764230F5B23180091104D /* wndsize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 980764220F5B23180091104D /* wndsize.cpp */; };
@@ -376,8 +398,6 @@
 		225130BC116101670028F26A /* padreMidiItemProcBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreMidiItemProcBase.h; path = Padre/padreMidiItemProcBase.h; sourceTree = "<group>"; };
 		225130BD116101670028F26A /* padreUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = padreUtils.cpp; path = Padre/padreUtils.cpp; sourceTree = "<group>"; };
 		225130BE116101670028F26A /* padreUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = padreUtils.h; path = Padre/padreUtils.h; sourceTree = "<group>"; };
-		2266B2BA15F069CC006F2A0D /* Breeder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Breeder.cpp; path = Misc/Breeder.cpp; sourceTree = "<group>"; };
-		2266B2BB15F069CC006F2A0D /* Breeder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Breeder.h; path = Misc/Breeder.h; sourceTree = "<group>"; };
 		2270FC6F12F8551400703F85 /* RecCheck.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RecCheck.cpp; path = Misc/RecCheck.cpp; sourceTree = "<group>"; };
 		2270FC7012F8551400703F85 /* RecCheck.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RecCheck.h; path = Misc/RecCheck.h; sourceTree = "<group>"; };
 		2273566512910ABF001A1570 /* EditCursor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EditCursor.cpp; path = Misc/EditCursor.cpp; sourceTree = "<group>"; };
@@ -490,10 +510,6 @@
 		22F7AA9115201D8A00CC1481 /* SnM_Cyclactions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Cyclactions.h; path = SnM/SnM_Cyclactions.h; sourceTree = "<group>"; };
 		22F7AA9215201D8A00CC1481 /* SnM_Dlg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Dlg.cpp; path = SnM/SnM_Dlg.cpp; sourceTree = "<group>"; };
 		22F7AA9315201D8A00CC1481 /* SnM_Dlg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Dlg.h; path = SnM/SnM_Dlg.h; sourceTree = "<group>"; };
-		22F7AA9415201D8A00CC1481 /* SnM_FindView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_FindView.cpp; path = SnM/SnM_FindView.cpp; sourceTree = "<group>"; };
-		22F7AA9515201D8A00CC1481 /* SnM_FindView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_FindView.h; path = SnM/SnM_FindView.h; sourceTree = "<group>"; };
-		22F7AA9615201D8A00CC1481 /* SnM_fx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_fx.cpp; path = SnM/SnM_fx.cpp; sourceTree = "<group>"; };
-		22F7AA9715201D8A00CC1481 /* SnM_fx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_fx.h; path = SnM/SnM_fx.h; sourceTree = "<group>"; };
 		22F7AA9815201D8A00CC1481 /* SnM_FXChain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_FXChain.cpp; path = SnM/SnM_FXChain.cpp; sourceTree = "<group>"; };
 		22F7AA9915201D8A00CC1481 /* SnM_FXChain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_FXChain.h; path = SnM/SnM_FXChain.h; sourceTree = "<group>"; };
 		22F7AA9A15201D8A00CC1481 /* SnM_Item.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Item.cpp; path = SnM/SnM_Item.cpp; sourceTree = "<group>"; };
@@ -504,14 +520,10 @@
 		22F7AA9F15201D8A00CC1481 /* SnM_ME.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_ME.h; path = SnM/SnM_ME.h; sourceTree = "<group>"; };
 		22F7AAA015201D8A00CC1481 /* SnM_Misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Misc.cpp; path = SnM/SnM_Misc.cpp; sourceTree = "<group>"; };
 		22F7AAA115201D8A00CC1481 /* SnM_Misc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Misc.h; path = SnM/SnM_Misc.h; sourceTree = "<group>"; };
-		22F7AAA215201D8A00CC1481 /* SnM_NotesHelpView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_NotesHelpView.cpp; path = SnM/SnM_NotesHelpView.cpp; sourceTree = "<group>"; };
-		22F7AAA315201D8A00CC1481 /* SnM_NotesHelpView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_NotesHelpView.h; path = SnM/SnM_NotesHelpView.h; sourceTree = "<group>"; };
 		22F7AAA415201D8A00CC1481 /* SnM_Project.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Project.cpp; path = SnM/SnM_Project.cpp; sourceTree = "<group>"; };
 		22F7AAA515201D8A00CC1481 /* SnM_Project.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Project.h; path = SnM/SnM_Project.h; sourceTree = "<group>"; };
 		22F7AAA615201D8A00CC1481 /* SnM_Resources.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Resources.cpp; path = SnM/SnM_Resources.cpp; sourceTree = "<group>"; };
 		22F7AAA715201D8A00CC1481 /* SnM_Resources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Resources.h; path = SnM/SnM_Resources.h; sourceTree = "<group>"; };
-		22F7AAA815201D8A00CC1481 /* SnM_RgnPlaylistView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_RgnPlaylistView.cpp; path = SnM/SnM_RgnPlaylistView.cpp; sourceTree = "<group>"; };
-		22F7AAA915201D8A00CC1481 /* SnM_RgnPlaylistView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_RgnPlaylistView.h; path = SnM/SnM_RgnPlaylistView.h; sourceTree = "<group>"; };
 		22F7AAAA15201D8A00CC1481 /* SnM_Routing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Routing.cpp; path = SnM/SnM_Routing.cpp; sourceTree = "<group>"; };
 		22F7AAAB15201D8A00CC1481 /* SnM_Routing.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SnM_Routing.h; path = SnM/SnM_Routing.h; sourceTree = "<group>"; };
 		22F7AAAC15201D8A00CC1481 /* SnM_Track.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SnM_Track.cpp; path = SnM/SnM_Track.cpp; sourceTree = "<group>"; };
@@ -580,6 +592,30 @@
 		387938E416202B1E000948B5 /* TimeMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TimeMap.h; path = Fingers/TimeMap.h; sourceTree = "<group>"; };
 		389293231601487C00F16794 /* MakeWhatsNew.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MakeWhatsNew.cpp; path = BuildUtils/MakeWhatsNew.cpp; sourceTree = "<group>"; };
 		38B8AD431601269E001F3F3C /* ReaScript.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ReaScript.cpp; sourceTree = "<group>"; };
+		4D859DAD16AB128700E34EAA /* BR_Misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Misc.cpp; path = Breeder/BR_Misc.cpp; sourceTree = "<group>"; };
+		4D859DAE16AB128700E34EAA /* BR_Misc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Misc.h; path = Breeder/BR_Misc.h; sourceTree = "<group>"; };
+		4D859DAF16AB128700E34EAA /* BR_Tempo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Tempo.cpp; path = Breeder/BR_Tempo.cpp; sourceTree = "<group>"; };
+		4D859DB016AB128700E34EAA /* BR_Tempo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Tempo.h; path = Breeder/BR_Tempo.h; sourceTree = "<group>"; };
+		4D859DB116AB128700E34EAA /* BR_TempoDlg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_TempoDlg.cpp; path = Breeder/BR_TempoDlg.cpp; sourceTree = "<group>"; };
+		4D859DB216AB128700E34EAA /* BR_TempoDlg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_TempoDlg.h; path = Breeder/BR_TempoDlg.h; sourceTree = "<group>"; };
+		4D859DB316AB128700E34EAA /* BR_TempoTools.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_TempoTools.cpp; path = Breeder/BR_TempoTools.cpp; sourceTree = "<group>"; };
+		4D859DB416AB128700E34EAA /* BR_TempoTools.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_TempoTools.h; path = Breeder/BR_TempoTools.h; sourceTree = "<group>"; };
+		4D859DB516AB128700E34EAA /* BR_Update.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Update.cpp; path = Breeder/BR_Update.cpp; sourceTree = "<group>"; };
+		4D859DB616AB128700E34EAA /* BR_Update.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Update.h; path = Breeder/BR_Update.h; sourceTree = "<group>"; };
+		4D859DB716AB128700E34EAA /* BR_Util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR_Util.cpp; path = Breeder/BR_Util.cpp; sourceTree = "<group>"; };
+		4D859DB816AB128700E34EAA /* BR_Util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR_Util.h; path = Breeder/BR_Util.h; sourceTree = "<group>"; };
+		4D859DB916AB128700E34EAA /* BR.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = BR.cpp; path = Breeder/BR.cpp; sourceTree = "<group>"; };
+		4D859DBA16AB128700E34EAA /* BR.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BR.h; path = Breeder/BR.h; sourceTree = "<group>"; };
+		4D859DCA16AB133D00E34EAA /* asyncdns.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = asyncdns.cpp; path = ../WDL/jnetlib/asyncdns.cpp; sourceTree = SOURCE_ROOT; };
+		4D859DCB16AB133D00E34EAA /* asyncdns.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = asyncdns.h; path = ../WDL/jnetlib/asyncdns.h; sourceTree = SOURCE_ROOT; };
+		4D859DCC16AB133D00E34EAA /* connection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = connection.cpp; path = ../WDL/jnetlib/connection.cpp; sourceTree = SOURCE_ROOT; };
+		4D859DCD16AB133D00E34EAA /* connection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = connection.h; path = ../WDL/jnetlib/connection.h; sourceTree = SOURCE_ROOT; };
+		4D859DCE16AB133D00E34EAA /* httpget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = httpget.cpp; path = ../WDL/jnetlib/httpget.cpp; sourceTree = SOURCE_ROOT; };
+		4D859DCF16AB133D00E34EAA /* httpget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = httpget.h; path = ../WDL/jnetlib/httpget.h; sourceTree = SOURCE_ROOT; };
+		4D859DD016AB133D00E34EAA /* jnetlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = jnetlib.h; path = ../WDL/jnetlib/jnetlib.h; sourceTree = SOURCE_ROOT; };
+		4D859DD116AB133D00E34EAA /* netinc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = netinc.h; path = ../WDL/jnetlib/netinc.h; sourceTree = SOURCE_ROOT; };
+		4D859DD216AB133D00E34EAA /* util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = util.cpp; path = ../WDL/jnetlib/util.cpp; sourceTree = SOURCE_ROOT; };
+		4D859DD316AB133D00E34EAA /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = util.h; path = ../WDL/jnetlib/util.h; sourceTree = SOURCE_ROOT; };
 		5A0280AD14216AE300EC8CD1 /* icontheme.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = icontheme.h; path = reaper/icontheme.h; sourceTree = "<group>"; };
 		5A0280AE14216AE300EC8CD1 /* sws_rpf_wrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sws_rpf_wrapper.h; path = reaper/sws_rpf_wrapper.h; sourceTree = "<group>"; };
 		5A2C98F412973A41005ACC49 /* sws_extension.rc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sws_extension.rc; sourceTree = "<group>"; };
@@ -662,6 +698,7 @@
 		08FB7794FE84155DC02AAC07 /* reaper_sws */ = {
 			isa = PBXGroup;
 			children = (
+				4D859DAC16AB127100E34EAA /* Breeder */,
 				22C77E6612D62EE3002F68D5 /* Fingers */,
 				22F7AAE315201E0F00CC1481 /* IX */,
 				225130B11161013E0028F26A /* Padre */,
@@ -839,8 +876,6 @@
 				22C31F22125EF71A0072434F /* Adam.h */,
 				22B22D6113FA575C00D187A9 /* Analysis.cpp */,
 				22B22D6213FA575C00D187A9 /* Analysis.h */,
-				2266B2BA15F069CC006F2A0D /* Breeder.cpp */,
-				2266B2BB15F069CC006F2A0D /* Breeder.h */,
 				229A7E7C1165744400325BC2 /* Context.cpp */,
 				229A7E7D1165744400325BC2 /* Context.h */,
 				2273566512910ABF001A1570 /* EditCursor.cpp */,
@@ -870,6 +905,7 @@
 		22AC0E0D112A7DAC0067BBE3 /* WDL */ = {
 			isa = PBXGroup;
 			children = (
+				4D859DC916AB130F00E34EAA /* jnetlib */,
 				22AF6E5312308C440017808F /* zlib */,
 				22AF6E2412308C000017808F /* libpng */,
 				22AF6E1912308BB90017808F /* lice */,
@@ -1081,6 +1117,44 @@
 			name = IX;
 			sourceTree = "<group>";
 		};
+		4D859DAC16AB127100E34EAA /* Breeder */ = {
+			isa = PBXGroup;
+			children = (
+				4D859DAD16AB128700E34EAA /* BR_Misc.cpp */,
+				4D859DAE16AB128700E34EAA /* BR_Misc.h */,
+				4D859DAF16AB128700E34EAA /* BR_Tempo.cpp */,
+				4D859DB016AB128700E34EAA /* BR_Tempo.h */,
+				4D859DB116AB128700E34EAA /* BR_TempoDlg.cpp */,
+				4D859DB216AB128700E34EAA /* BR_TempoDlg.h */,
+				4D859DB316AB128700E34EAA /* BR_TempoTools.cpp */,
+				4D859DB416AB128700E34EAA /* BR_TempoTools.h */,
+				4D859DB516AB128700E34EAA /* BR_Update.cpp */,
+				4D859DB616AB128700E34EAA /* BR_Update.h */,
+				4D859DB716AB128700E34EAA /* BR_Util.cpp */,
+				4D859DB816AB128700E34EAA /* BR_Util.h */,
+				4D859DB916AB128700E34EAA /* BR.cpp */,
+				4D859DBA16AB128700E34EAA /* BR.h */,
+			);
+			name = Breeder;
+			sourceTree = "<group>";
+		};
+		4D859DC916AB130F00E34EAA /* jnetlib */ = {
+			isa = PBXGroup;
+			children = (
+				4D859DCA16AB133D00E34EAA /* asyncdns.cpp */,
+				4D859DCB16AB133D00E34EAA /* asyncdns.h */,
+				4D859DCC16AB133D00E34EAA /* connection.cpp */,
+				4D859DCD16AB133D00E34EAA /* connection.h */,
+				4D859DCE16AB133D00E34EAA /* httpget.cpp */,
+				4D859DCF16AB133D00E34EAA /* httpget.h */,
+				4D859DD016AB133D00E34EAA /* jnetlib.h */,
+				4D859DD116AB133D00E34EAA /* netinc.h */,
+				4D859DD216AB133D00E34EAA /* util.cpp */,
+				4D859DD316AB133D00E34EAA /* util.h */,
+			);
+			name = jnetlib;
+			sourceTree = "<group>";
+		};
 		981007040F4768020072D712 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -1218,7 +1292,6 @@
 				22F7AADC15201D8A00CC1481 /* SnM_Window.h in Headers */,
 				22F7AADE15201D8A00CC1481 /* SnM.h in Headers */,
 				22F7AAE915201E2600CC1481 /* IX.h in Headers */,
-				2266B2BD15F069CC006F2A0D /* Breeder.h in Headers */,
 				387938E616202B1E000948B5 /* CommandHandler.h in Headers */,
 				387938E816202B1E000948B5 /* Envelope.h in Headers */,
 				387938EA16202B1E000948B5 /* EnvelopeCommands.h in Headers */,
@@ -1249,6 +1322,19 @@
 				1FE350D116A8A6D10032F465 /* SnM_Notes.h in Headers */,
 				1FE350D316A8A6D10032F465 /* SnM_RegionPlaylist.h in Headers */,
 				1FE350D716A8AD520032F465 /* SnM_FX.h in Headers */,
+				4D859DBC16AB128700E34EAA /* BR_Misc.h in Headers */,
+				4D859DBE16AB128700E34EAA /* BR_Tempo.h in Headers */,
+				4D859DC016AB128700E34EAA /* BR_TempoDlg.h in Headers */,
+				4D859DC216AB128700E34EAA /* BR_TempoTools.h in Headers */,
+				4D859DC416AB128700E34EAA /* BR_Update.h in Headers */,
+				4D859DC616AB128700E34EAA /* BR_Util.h in Headers */,
+				4D859DC816AB128700E34EAA /* BR.h in Headers */,
+				4D859DD516AB133D00E34EAA /* asyncdns.h in Headers */,
+				4D859DD716AB133D00E34EAA /* connection.h in Headers */,
+				4D859DD916AB133D00E34EAA /* httpget.h in Headers */,
+				4D859DDA16AB133D00E34EAA /* jnetlib.h in Headers */,
+				4D859DDB16AB133D00E34EAA /* netinc.h in Headers */,
+				4D859DDD16AB133D00E34EAA /* util.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1485,7 +1571,6 @@
 				22F7AAE815201E2600CC1481 /* IX.cpp in Sources */,
 				22F7AAEA15201E2600CC1481 /* Label.cpp in Sources */,
 				22F7AAEB15201E2600CC1481 /* PlaylistImport.cpp in Sources */,
-				2266B2BC15F069CC006F2A0D /* Breeder.cpp in Sources */,
 				38B8AD451601269E001F3F3C /* ReaScript.cpp in Sources */,
 				389293241601487C00F16794 /* MakeWhatsNew.cpp in Sources */,
 				387938E516202B1E000948B5 /* CommandHandler.cpp in Sources */,
@@ -1518,6 +1603,17 @@
 				1FE350D016A8A6D10032F465 /* SnM_Notes.cpp in Sources */,
 				1FE350D216A8A6D10032F465 /* SnM_RegionPlaylist.cpp in Sources */,
 				1FE350D516A8AD470032F465 /* SnM_FX.cpp in Sources */,
+				4D859DBB16AB128700E34EAA /* BR_Misc.cpp in Sources */,
+				4D859DBD16AB128700E34EAA /* BR_Tempo.cpp in Sources */,
+				4D859DBF16AB128700E34EAA /* BR_TempoDlg.cpp in Sources */,
+				4D859DC116AB128700E34EAA /* BR_TempoTools.cpp in Sources */,
+				4D859DC316AB128700E34EAA /* BR_Update.cpp in Sources */,
+				4D859DC516AB128700E34EAA /* BR_Util.cpp in Sources */,
+				4D859DC716AB128700E34EAA /* BR.cpp in Sources */,
+				4D859DD416AB133D00E34EAA /* asyncdns.cpp in Sources */,
+				4D859DD616AB133D00E34EAA /* connection.cpp in Sources */,
+				4D859DD816AB133D00E34EAA /* httpget.cpp in Sources */,
+				4D859DDC16AB133D00E34EAA /* util.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

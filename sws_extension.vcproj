@@ -69,7 +69,7 @@
 		/>
 	    <Tool
 		Name="VCLinkerTool"
-		AdditionalDependencies="comctl32.lib lib/tag32.lib shlwapi.lib"
+		AdditionalDependencies="comctl32.lib lib/tag32.lib shlwapi.lib wsock32.lib"
 		OutputFile="$(OutDir)\reaper_sws.dll"
 		IgnoreDefaultLibraryNames=""
 		GenerateDebugInformation="true"
@@ -155,7 +155,7 @@
 		/>
 	    <Tool
 		Name="VCLinkerTool"
-		AdditionalDependencies="comctl32.lib lib/tag64.lib shlwapi.lib"
+		AdditionalDependencies="comctl32.lib lib/tag64.lib shlwapi.lib wsock32.lib"
 		OutputFile="$(OutDir)\reaper_sws64.dll"
 		IgnoreDefaultLibraryNames=""
 		GenerateDebugInformation="true"
@@ -241,7 +241,7 @@
 		/>
 	    <Tool
 		Name="VCLinkerTool"
-		AdditionalDependencies="comctl32.lib lib/tag32.lib shlwapi.lib"
+		AdditionalDependencies="comctl32.lib lib/tag32.lib shlwapi.lib wsock32.lib"
 		OutputFile="$(OutDir)\reaper_sws.dll"
 		LinkIncremental="0"
 		AdditionalLibraryDirectories=""
@@ -330,7 +330,7 @@
 		/>
 	    <Tool
 		Name="VCLinkerTool"
-		AdditionalDependencies="comctl32.lib lib/tag64.lib shlwapi.lib"
+		AdditionalDependencies="comctl32.lib lib/tag64.lib shlwapi.lib wsock32.lib"
 		OutputFile="$(OutDir)\reaper_sws64.dll"
 		LinkIncremental="0"
 		IgnoreDefaultLibraryNames=""
@@ -2266,6 +2266,194 @@
 		    >
 		</File>
 	    </Filter>
+   		<Filter
+		Name="jnetlib"
+		>
+		<File
+			RelativePath="..\WDL\jnetlib\asyncdns.cpp"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Test|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Test|x64"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\WDL\jnetlib\asyncdns.h"
+			>
+		</File>
+		<File
+			RelativePath="..\WDL\jnetlib\connection.cpp"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Test|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Test|x64"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\WDL\jnetlib\connection.h"
+			>
+		</File>
+		<File
+			RelativePath="..\WDL\jnetlib\httpget.cpp"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Test|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Test|x64"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\WDL\jnetlib\httpget.h"
+			>
+		</File>
+		<File
+			RelativePath="..\WDL\jnetlib\jnetlib.h"
+			>
+		</File>
+		<File
+			RelativePath="..\WDL\jnetlib\netinc.h"
+			>
+		</File>
+		<File
+			RelativePath="..\WDL\jnetlib\util.cpp"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Test|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Test|x64"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="0"
+					WarningLevel="2"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath="..\WDL\jnetlib\util.h"
+			>
+		</File>
+	</Filter>
 	</Filter>
 	<Filter
 	    Name="SnM"
@@ -3227,14 +3415,6 @@
 		>
 	    </File>
 	    <File
-		RelativePath=".\Misc\Breeder.cpp"
-		>
-	    </File>
-	    <File
-		RelativePath=".\Misc\Breeder.h"
-		>
-	    </File>
-	    <File
 		RelativePath=".\Misc\Context.cpp"
 		>
 	    </File>
@@ -3365,6 +3545,66 @@
 	    <File
 		RelativePath=".\IX\todo.txt"
 		>
+	    </File>
+	</Filter>
+		<Filter
+	    Name="Breeder"
+	    >
+	    <File
+			RelativePath=".\Breeder\BR.cpp"
+			>
+	    </File>
+	    <File
+			RelativePath=".\Breeder\BR.h"
+			>
+	    </File>
+	    <File
+			RelativePath=".\Breeder\BR_Misc.cpp"
+			>
+	    </File>
+	    <File
+			RelativePath=".\Breeder\BR_Misc.h"
+			>
+	    </File>
+	    <File
+			RelativePath=".\Breeder\BR_Tempo.cpp"
+			>
+	    </File>
+	    <File
+			RelativePath=".\Breeder\BR_Tempo.h"
+			>
+	    </File>
+	    <File
+			RelativePath=".\Breeder\BR_TempoDlg.cpp"
+			>
+	    </File>
+	    <File
+			RelativePath=".\Breeder\BR_TempoDlg.h"
+			>
+	    </File>
+	    <File
+			RelativePath=".\Breeder\BR_TempoTools.cpp"
+			>
+	    </File>
+	    <File
+			RelativePath=".\Breeder\BR_TempoTools.h"
+			>
+	    </File>
+	    <File
+			RelativePath=".\Breeder\BR_Update.cpp"
+			>
+	    </File>
+	    <File
+			RelativePath=".\Breeder\BR_Update.h"
+			>
+	    </File>	    
+	    <File
+			RelativePath=".\Breeder\BR_Util.cpp"
+			>
+	    </File>
+	    <File
+			RelativePath=".\Breeder\BR_Util.h"
+			>
 	    </File>
 	</Filter>
 	<File

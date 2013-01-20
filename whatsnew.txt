@@ -1,6 +1,6 @@
 Automatic check for updates:
 +Option can be found in REAPER > Extensions > Help > SWS Options > Check for new SWS version on startup
- - Performed once per day
+ - Performed once per day (startup check is silent, user gets notified only if new version is available)
  - Turned on by default
 
 Tempo improvements:

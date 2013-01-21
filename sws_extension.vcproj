@@ -64,8 +64,8 @@
 	    />
 		<Tool
 			Name="VCPreLinkEventTool"
-			Description="Generating sws_python.py..."
-			CommandLine="perl &lt; nul&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;reascript_python.pl &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER_DIR)\plugins&quot;&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;goto end&#x0D;&#x0A;:errperl&#x0D;&#x0A;verify &gt; nul&#x0D;&#x0A;echo Warning: sws_python.py generation failed (Perl installed?)&#x0D;&#x0A;:end"
+			Description="Generating sws_python.py, copying whatsnew.txt..."
+			CommandLine="perl &lt; nul&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;reascript_python.pl &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER_DIR)\plugins&quot;&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;goto end&#x0D;&#x0A;:errperl&#x0D;&#x0A;verify &gt; nul&#x0D;&#x0A;echo Warning: sws_python.py generation failed (Perl installed?)&#x0D;&#x0A;:end&#x0D;&#x0A;copy /y &quot;whatsnew.txt&quot; &quot;$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt&quot;"
 		/>
 	    <Tool
 		Name="VCLinkerTool"
@@ -150,8 +150,8 @@
 	    />
 		<Tool
 			Name="VCPreLinkEventTool"
-			Description="Generating sws_python.py..."
-			CommandLine="perl &lt; nul&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;reascript_python.pl -x64 &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;goto end&#x0D;&#x0A;:errperl&#x0D;&#x0A;verify &gt; nul&#x0D;&#x0A;echo Warning: sws_python.py generation failed (Perl installed?)&#x0D;&#x0A;:end"
+			Description="Generating sws_python.py, copying whatsnew.txt..."
+			CommandLine="perl &lt; nul&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;reascript_python.pl -x64 &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;goto end&#x0D;&#x0A;:errperl&#x0D;&#x0A;verify &gt; nul&#x0D;&#x0A;echo Warning: sws_python.py generation failed (Perl installed?)&#x0D;&#x0A;:end&#x0D;&#x0A;copy /y &quot;whatsnew.txt&quot; &quot;$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt&quot;"
 		/>
 	    <Tool
 		Name="VCLinkerTool"
@@ -236,8 +236,8 @@
 	    />
 		<Tool
 			Name="VCPreLinkEventTool"
-			Description="Generating sws_python.py..."
-			CommandLine="perl &lt; nul&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;reascript_python.pl &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER_DIR)\plugins&quot;&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;goto end&#x0D;&#x0A;:errperl&#x0D;&#x0A;verify &gt; nul&#x0D;&#x0A;echo Warning: sws_python.py generation failed (Perl installed?)&#x0D;&#x0A;:end"
+			Description="Generating sws_python.py, copying whatsnew.txt..."
+			CommandLine="perl &lt; nul&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;reascript_python.pl &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER_DIR)\plugins&quot;&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;goto end&#x0D;&#x0A;:errperl&#x0D;&#x0A;verify &gt; nul&#x0D;&#x0A;echo Warning: sws_python.py generation failed (Perl installed?)&#x0D;&#x0A;:end&#x0D;&#x0A;copy /y &quot;whatsnew.txt&quot; &quot;$(REAPER_DIR)\plugins\reaper_sws_whatsnew.txt&quot;"
 		/>
 	    <Tool
 		Name="VCLinkerTool"
@@ -325,8 +325,8 @@
 	    />
 		<Tool
 			Name="VCPreLinkEventTool"
-			Description="Generating sws_python.py..."
-			CommandLine="perl &lt; nul&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;reascript_python.pl -x64 &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;goto end&#x0D;&#x0A;:errperl&#x0D;&#x0A;verify &gt; nul&#x0D;&#x0A;echo Warning: sws_python.py generation failed (Perl installed?)&#x0D;&#x0A;:end"
+			Description="Generating sws_python.py, copying whatsnew.txt..."
+			CommandLine="perl &lt; nul&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;reascript_python.pl -x64 &gt; &quot;$(OutDir)\sws_python.py&quot; &amp;&amp; copy /y &quot;$(OutDir)\sws_python.py&quot; &quot;$(REAPER64_DIR)\plugins&quot;&#x0D;&#x0A;if errorlevel==1 goto errperl&#x0D;&#x0A;goto end&#x0D;&#x0A;:errperl&#x0D;&#x0A;verify &gt; nul&#x0D;&#x0A;echo Warning: sws_python.py generation failed (Perl installed?)&#x0D;&#x0A;:end&#x0D;&#x0A;copy /y &quot;whatsnew.txt&quot; &quot;$(REAPER64_DIR)\plugins\reaper_sws_whatsnew.txt&quot;"
 		/>
 	    <Tool
 		Name="VCLinkerTool"

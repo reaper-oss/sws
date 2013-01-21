@@ -179,23 +179,26 @@ BEGIN
     LTEXT           "Filter:",IDC_STATIC_FILTER,3,170,20,8
 END
 
-IDD_ABOUT DIALOGEX 0, 0, 255, 195
+IDD_ABOUT DIALOGEX 0, 0, 255, 160 // update 160-> 200 to show the "Check for new versions on startup" part
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About SWS/S&M Extension"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "&Close",IDCANCEL,103,174,50,14
-    PUSHBUTTON      "&License",IDC_LICENSE,195,70,52,14
-    PUSHBUTTON      "&What's new?",IDC_INFO,195,89,52,14
-    LTEXT           "Copyright (C) 2012 Tim Payne of Standing Water Studios\r\tJ.F. Bédague (S&&M)\r\tFingers (FNG)\r\tPhilip S. Considine (IX)\rCopyright (C) 2011 Shane StClair (Autorender)\rCopyright (C) 2010 P. Bourdon (Padre)\rCopyright (C) 2009 Xenakios",IDC_STATIC,7,45,187,64
-    LTEXT           "Version String",IDC_VERSION,7,30,241,8
-    LTEXT           "SWS/S&&M Extension, a REAPER plugin.\rMerged with Xenakios Command Extensions, October 2009",IDC_STATIC,7,7,241,19
-    LTEXT           "Download the latest version:",IDC_STATIC,7,142,92,9
+    PUSHBUTTON      "&License",IDC_LICENSE,190,7,52,14
+    DEFPUSHBUTTON      "&What's new?",IDC_INFO,190,26,52,14
+    LTEXT           "SWS/S&&M Extension, a REAPER plugin.",IDC_STATIC,7,7,150,8
+    LTEXT           "Version String",IDC_VERSION,7,15,150,8
+    LTEXT           "(c) 2013 Tim Payne of Standing Water Studios\r\tJ.F. Bédague (S&&M)\r\tFingers (FNG)\r\tDominik Martin Drzic (BR)\r\tPhilip S. Considine (IX)\r(c) 2011 Shane StClair (Autorender)\r\tAdam Wathan (AW)\r(c) 2010 P. Bourdon (Padre)\r(c) 2009 Xenakios",IDC_STATIC,7,31,180,72
+    LTEXT           "Documentation is available at the SWS website:",IDC_STATIC,7,112,153,8
     CONTROL         "http://www.standingwaterstudios.com/reaper/",IDC_WEBSITE,
-                    "Button",BS_OWNERDRAW | WS_TABSTOP,7,126,241,11
+                    "Button",BS_OWNERDRAW | WS_TABSTOP,7,120,241,11
+    LTEXT           "Download the latest version:",IDC_STATIC,7,135,92,9
     CONTROL         "http://www.standingwaterstudios.com/reaper/sws_extension.exe",IDC_LATESTVER,
-                    "Button",BS_OWNERDRAW | WS_TABSTOP,7,155,241,11
-    LTEXT           "Documentation is available at the SWS website:",IDC_STATIC,7,114,153,8
+                    "Button",BS_OWNERDRAW | WS_TABSTOP,7,144,241,11
+    GROUPBOX        "Check for new versions on startup",IDC_FILTERGROUP,7,160,241,34
+    CONTROL         "Official releases",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,172,75,14
+    CONTROL         "Beta releases",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,90,172,100,14
+    PUSHBUTTON      "Check now",IDC_UPDATE,190,172,52,14
 END
 
 IDD_PROMPT DIALOGEX 0, 0, 161, 46
@@ -1885,7 +1888,8 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
+#include "version.rc2"
+
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

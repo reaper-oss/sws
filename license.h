@@ -1,9 +1,15 @@
 #pragma once
 #define LICENSE_TEXT \
-"Copyright (C) 2012 Tim Payne (SWS), Jeffos (S&M), Fingers, Philip S. Considine (IX), Dominik Martin Drzic\r\n" \
-"Copyright (C) 2011 Shane StClair, Adam Wathan\r\n" \
-"Copyright (C) 2010 P Bourdon\r\n" \
-"Copyright (C) 2009 Xenakios\r\n" \
+"Copyright (c) 2013\r\n" \
+"\tTim Payne (SWS)\r\n" \
+"\tJeffos (S&M)\r\n" \
+"\tFingers (FNG)\r\n" \
+"\tDominik Martin Drzic (BR)\r\n" \
+"\tPhilip S. Considine (IX)\r\n" \
+"Copyright (c) 2011 Shane StClair (Autorender)\r\n" \
+"\tAdam Wathan (AW)\r\n" \
+"Copyright (c) 2010 P Bourdon (Padre)\r\n" \
+"Copyright (c) 2009 Xenakios\r\n" \
 "\r\n" \
 "Permission is hereby granted, free of charge, to any person obtaining a copy\r\n" \
 "of this software and associated documentation files (the \"Software\"), to deal\r\n" \

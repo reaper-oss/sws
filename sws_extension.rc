@@ -188,7 +188,7 @@ BEGIN
     DEFPUSHBUTTON      "&What's new?",IDC_INFO,190,26,52,14
     LTEXT           "SWS/S&&M Extension, a REAPER plugin.",IDC_STATIC,7,7,150,8
     LTEXT           "Version String",IDC_VERSION,7,15,150,8
-    LTEXT           "(c) 2013 Tim Payne of Standing Water Studios\r\tJ.F. Bédague (S&&M)\r\tFingers (FNG)\r\tDominik Martin Drzic (BR)\r\tPhilip S. Considine (IX)\r(c) 2011 Shane StClair (Autorender)\r\tAdam Wathan (AW)\r(c) 2010 P. Bourdon (Padre)\r(c) 2009 Xenakios",IDC_STATIC,7,31,180,72
+    LTEXT           "(c) 2013\tTim Payne (SWS)\r\t\tJ.F. Bédague (S&&M)\r\t\tFingers (FNG)\r\t\tDominik Martin Držic (BR)\r(c) 2012\tPhilip S. Considine (IX)\r\t\tBrad Coe\r(c) 2011\tShane StClair (Autorender)\r\t\tAdam Wathan (AW)\r(c) 2010\tP. Bourdon (Padre)\r(c) 2009\tXenakios",IDC_STATIC,7,25,180,82
     LTEXT           "Documentation is available at the SWS website:",IDC_STATIC,7,112,153,8
     CONTROL         "http://www.standingwaterstudios.com/reaper/",IDC_WEBSITE,
                     "Button",BS_OWNERDRAW | WS_TABSTOP,7,120,241,11

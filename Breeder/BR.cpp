@@ -107,11 +107,6 @@ static COMMAND_T g_commandTable[] =
 	{ { DEFACCEL, "SWS/BR: Alter slope of gradual tempo marker (decrease 0.1%)" },						"BR_DEC_GR_TEMPO_0.1_PERC",			EditTempoGradual, NULL, -200},
 	{ { DEFACCEL, "SWS/BR: Alter slope of gradual tempo marker (decrease 01%)" },						"BR_DEC_GR_TEMPO_1_PERC",			EditTempoGradual, NULL, -2000},
 	
-	// Version check
-	///////////////////////////////////////////////////////////////////////
-	{ { DEFACCEL, "SWS/BR: Check for new SWS version..." },												"BR_VERSION_CHECK",					VersionCheckAction, NULL, 1},
-	{ { DEFACCEL, "SWS/BR: Enable checking for new SWS version on startup" },                      		"BR_VERSION_CHECK_ENB",				VersionCheckEnable, "Check for new SWS version on startup", 0, IsVersionCheckEnabled },
-
 	{ {}, LAST_COMMAND, },
 };
 //!WANT_LOCALIZE_1ST_STRING_END

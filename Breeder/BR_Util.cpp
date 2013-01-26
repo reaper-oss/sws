@@ -57,10 +57,10 @@ void CenterWindowInReaper (HWND hwnd, HWND zOrder, bool startUp)
 	int x = 0, y = 0;
 	RECT r; GetWindowRect(hwnd, &r);
 
-	// On startup GetWindowRect would provide the wrong data so we read the .ini instead
+	// On startup GetWindowRect could provide the wrong data so we read the .ini instead
 	if (startUp)
 	{
-		// not maximized
+		// Not maximized
 		if (GetPrivateProfileInt("Reaper", "wnd_state", 1, get_ini_file()) == 0)
 		{
 			int wnd_x = GetPrivateProfileInt("Reaper", "wnd_x", 1, get_ini_file());
@@ -70,7 +70,7 @@ void CenterWindowInReaper (HWND hwnd, HWND zOrder, bool startUp)
 			x = wnd_x + (wnd_w - r.right  + r.left)/2;
 			y = wnd_y + (wnd_h - r.bottom + r.top)/2;
 		}
-		// maximized (won't work with multiple displays if reaper is not maximized in primary display...heh)
+		// Maximized (won't work with multiple displays if reaper is not maximized in primary display...heh)
 		else
 		{
 			int wnd_w = GetSystemMetrics(SM_CXSCREEN);
@@ -86,6 +86,19 @@ void CenterWindowInReaper (HWND hwnd, HWND zOrder, bool startUp)
 		y = r1.top +  (r1.bottom - r1.top  - r.bottom + r.top)/2;
 	}
 
+	// Ensure coordinates are not offscreen (probably should add cocoa version for ifdef part)
+	if (x < 0 || y < 0)
+	{
+		x = 0;
+		y = 0;
+	}
+#ifdef _WIN32
+	if (x > GetSystemMetrics(SM_CXVIRTUALSCREEN) || y > GetSystemMetrics(SM_CYVIRTUALSCREEN))
+	{
+		x = 0;
+		y = 0;
+	}
+#endif
 	SetWindowPos(hwnd, zOrder, x, y, 0, 0, SWP_NOSIZE);
 };
 

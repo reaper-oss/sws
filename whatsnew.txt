@@ -1,7 +1,8 @@
 Automatic check for updates:
-+Option can be found in REAPER > Extensions > Help > SWS Options > Check for new SWS version on startup
++Option can be found in REAPER > Extensions > About SWS Extensions
  - Performed once per day (startup check is silent, user gets notified only if new version is available)
- - Turned on by default
+ - Turned on by default for official updates
+ - When searching manually (instead of startup search) both official and beta updates are checked
 
 Tempo improvements:
 +Convert project markers to tempo markers:
@@ -22,17 +23,16 @@ Tempo improvements:
 +Other:
  - All dialogs under SWS/BR:
    - options are preserved through sessions
-   - tinny OS X cosmetic fixes
+   - tiny OS X cosmetic fixes
  - All existing tempo operations should be much faster when dealing with a lot of points
- - Tinny renames of move actions for easier readability
- - Documentations should be available (work in progress but it should be complete rather soon) on http://wiki.cockos.com/wiki/index.php/Category:Tempo|wiki.cockos.com|
+ - Tiny renames of move actions for easier readability
+ - Documentations available on http://wiki.cockos.com/wiki/index.php/Category:Tempo|wiki.cockos.com|, namely http://wiki.cockos.com/wiki/index.php/Tempo-mapping_in_Reaper|here| and http://wiki.cockos.com/wiki/index.php/Tweaking_tempo|here|
    => Big thanks to user http://forum.cockos.com/member.php?u=22191|G-Sun| for all the wiki work, suggestions and testing
 
 Added actions:
 +SWS/S&M: Set project startup action
 +SWS/S&M: Clear project startup action
 +SWS/BR: Check for new SWS version...
-+SWS/BR: Enable checking for new SWS version on startup
 
 Other:
 Fix for OSC & MIDI CC relative "mode 3" learn

@@ -29,6 +29,7 @@
 #include "./reaper/localize.h"
 #include "./SnM/SnM_Dlg.h"
 #include "./SnM/SnM_Util.h"
+#include "./Breeder/BR_Update.h"
 #include "version.h"
 #include "license.h"
 #include "Prompt.h"
@@ -94,6 +95,9 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #ifndef _WIN32
 		SetDlgItemText(hwndDlg, IDC_LATESTVER, "http://www.standingwaterstudios.com/reaper/sws_osx.dmg");
 #endif
+		int official, beta; GetStartupSearchOptions(hwndDlg, official, beta);
+		CheckDlgButton(hwndDlg, IDC_CHECK1, !!official);
+		CheckDlgButton(hwndDlg, IDC_CHECK2, !!beta);
 	}
 	else if (uMsg == WM_DRAWITEM)
 	{
@@ -126,8 +130,13 @@ INT_PTR WINAPI doAbout(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			WhatsNew(NULL);
 		else if (wParam == IDC_LICENSE)
 			DisplayInfoBox(hwndDlg, __LOCALIZE("SWS/S&M Extension - License","sws_DLG_109"), LICENSE_TEXT);
+		else if (wParam == IDC_UPDATE)
+			VersionCheckAction(NULL);
 		else if (wParam == IDCANCEL)
+		{
+			SetStartupSearchOptions(IsDlgButtonChecked(hwndDlg, IDC_CHECK1), IsDlgButtonChecked(hwndDlg, IDC_CHECK2));
 			EndDialog(hwndDlg, 0);
+		}
 	}
 	return 0;
 }
@@ -142,6 +151,7 @@ static COMMAND_T g_commandTable[] =
 {
 	{ { DEFACCEL, "SWS: About" }, "SWS_ABOUT", OpenAboutBox, "About SWS Extensions", },
 	{ { DEFACCEL, "SWS/S&M: What's new?" }, "S&M_WHATSNEW", WhatsNew, },
+	{ { DEFACCEL, "SWS/BR: Check for new SWS version..." }, "BR_VERSION_CHECK", VersionCheckAction, },
 	{ {}, LAST_COMMAND, }, // Denote end of table
 };
 //!WANT_LOCALIZE_1ST_STRING_END

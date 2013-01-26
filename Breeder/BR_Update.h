@@ -27,9 +27,21 @@
 ******************************************************************************/
 #pragma once
 
+struct BR_Version
+{
+	int maj; 		// major
+	int min;		// minor
+	int rev;		// revision
+	int build;		// build
+	BR_Version()
+	{
+		maj = min = rev = build = 0;
+	}
+};
+
 void VersionCheckInit();
-bool IsVersionCheckEnabled(COMMAND_T*);
-void VersionCheckEnable(COMMAND_T* ct);
-void VersionCheckAction(COMMAND_T* ct);
+void VersionCheckAction(COMMAND_T*);
+void GetStartupSearchOptions(HWND hwnd, int &official, int &beta);
+void SetStartupSearchOptions(int official, int beta);
 
 

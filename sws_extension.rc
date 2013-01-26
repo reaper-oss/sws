@@ -179,13 +179,13 @@ BEGIN
     LTEXT           "Filter:",IDC_STATIC_FILTER,3,170,20,8
 END
 
-IDD_ABOUT DIALOGEX 0, 0, 255, 160 // update 160-> 200 to show the "Check for new versions on startup" part
+IDD_ABOUT DIALOGEX 0, 0, 255, 200
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About SWS/S&M Extension"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     PUSHBUTTON      "&License",IDC_LICENSE,190,7,52,14
-    DEFPUSHBUTTON      "&What's new?",IDC_INFO,190,26,52,14
+    DEFPUSHBUTTON   "&What's new?",IDC_INFO,190,26,52,14
     LTEXT           "SWS/S&&M Extension, a REAPER plugin.",IDC_STATIC,7,7,150,8
     LTEXT           "Version String",IDC_VERSION,7,15,150,8
     LTEXT           "(c) 2013\tTim Payne (SWS)\r\t\tJ.F. Bédague (S&&M)\r\t\tFingers (FNG)\r\t\tDominik Martin Držic (BR)\r(c) 2012\tPhilip S. Considine (IX)\r\t\tBrad Coe\r(c) 2011\tShane StClair (Autorender)\r\t\tAdam Wathan (AW)\r(c) 2010\tP. Bourdon (Padre)\r(c) 2009\tXenakios",IDC_STATIC,7,25,180,82
@@ -196,8 +196,8 @@ BEGIN
     CONTROL         "http://www.standingwaterstudios.com/reaper/sws_extension.exe",IDC_LATESTVER,
                     "Button",BS_OWNERDRAW | WS_TABSTOP,7,144,241,11
     GROUPBOX        "Check for new versions on startup",IDC_FILTERGROUP,7,160,241,34
-    CONTROL         "Official releases",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,172,75,14
-    CONTROL         "Beta releases",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,90,172,100,14
+    CONTROL         "Official releases",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,172,74,14
+    CONTROL         "Beta releases",IDC_CHECK2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,90,172,99,14
     PUSHBUTTON      "Check now",IDC_UPDATE,190,172,52,14
 END
 
@@ -1302,15 +1302,17 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,173,60,59,14
 END
 
-IDD_BR_VERSION DIALOGEX 0, 0, 178, 49
+IDD_BR_VERSION DIALOGEX 0, 0, 209, 55
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "SWS Update"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Proceed to download page",IDOK,6,28,111,14,WS_DISABLED
-    PUSHBUTTON      "Cancel",IDCANCEL,121,28,50,14
-    LTEXT           "",IDC_BR_VER_MESSAGE,7,7,164,8
-    CONTROL         "",IDC_BR_VER_PROGRESS,"msctls_progress32",NOT WS_VISIBLE | WS_BORDER,7,8,164,14
+    PUSHBUTTON      "Proceed to download page",IDC_BR_VER_DOWNLOAD,7,34,139,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Get official",IDC_BR_VER_OFF,7,34,68,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Get beta",IDC_BR_VER_BETA,78,34,68,14,NOT WS_VISIBLE
+    PUSHBUTTON      "Cancel",IDCANCEL,152,34,50,14
+    LTEXT           "",IDC_BR_VER_MESSAGE,7,7,195,26
+    CONTROL         "",IDC_BR_VER_PROGRESS,"msctls_progress32",WS_BORDER,7,7,195,15
 END
 
 
@@ -1818,9 +1820,9 @@ BEGIN
     IDD_BR_VERSION, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 171
+        RIGHTMARGIN, 202
         TOPMARGIN, 7
-        BOTTOMMARGIN, 42
+        BOTTOMMARGIN, 48
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -1888,8 +1890,7 @@ IDC_ZOOMDRAG            CURSOR                  "zoomdrag.cur"
 // Generated from the TEXTINCLUDE 3 resource.
 //
 #include "version.h"
-#include "version.rc2"
-
+#include "version.rc2"
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
 

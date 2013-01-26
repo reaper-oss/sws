@@ -28,98 +28,227 @@
 #include "stdafx.h"
 #include "BR_Update.h"
 #include "BR_Util.h"
+#include "../SnM/SnM_Dlg.h"
 #include "../version.h"
-#include "../../WDL/queue.h"
 #include "../../WDL/jnetlib/jnetlib.h"
 #include "../../WDL/jnetlib/httpget.h"
 #include "../reaper/localize.h"
 
-#define VERSION_CHECK_KEY	"BR - StartupVersionCheck"
-#define VERSION_TIME_KEY	"BR - StartupVersionLastCheck"
+#define STARTUP_VERSION_KEY		"BR - StartupVersionCheck"
+#define OFFICIAL_VERSION_URL	"http://sws-extension.googlecode.com/svn/tags/release/version.h"
+#define BETA_VERSION_URL		"http://sws-extension.googlecode.com/svn/trunk/version.h"
 
-// Globals
-static time_t g_searchTimeOut = 5;			// timeout for web search (default for startup, changing to 10 on user request)
-static bool g_startupSearch = true;			// startup search is turned on by the default
-static bool g_startupSearchFinished = true;	// notifies if startup search was performed
+// General settings
+static time_t g_searchTimeOut = 5;			// timeout for web search (separate for beta and official)
+static bool g_searchOfficial;				// by default official version search is performed on startup
+static bool g_searchBeta;					// while beta search is not (loaded in VersionCheckInit())
 
-static bool g_searching = false;			// notifies if search is running or not
-static double g_searchProgress = 0;			// progress of ongoing search 
-static int g_versionStatus = -2;			// status of local version (see VersionCheck for codes)
+// Thread management
+static HANDLE g_threadHandle = NULL;		// Always use StartStopThread to prevent from spawning multiple threads
+static bool g_killThread = false;
 
-// Search function and GUI
+// Used for searching
+static int g_status = -2;					// see SetVersionMessage() for codes
+static double g_progress = 0;
+static bool g_startupDone = true;
+static bool g_searching = false;
+
+// Info on remote versions
+static BR_Version g_versionO;				// official
+static BR_Version g_versionB;				// beta
+
+// Dialog parent (needed for About window)
+static HWND g_searchParent;					// Assigned in VersionChecInit() and changed by options functions (when calling from About dialog let it be parent)
+											// Why? Search dialog offers "Retry" functionality so this will let new window get created with the right parent
+
+WDL_DLGRET StartupProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+// Search function
 //////////////////////////////////////////////////////////////////////////////////////////
+int CompareVersion(BR_Version one, BR_Version two)
+{
+	// return 0 if equal
+	//		  1 if one is greater
+	//		  2 if two is greater
+	if (one.maj > two.maj)
+		return 1;
+	else if (one.maj < two.maj)
+		return 2;
+
+	if (one.min > two.min)
+		return 1;
+	else if (one.min < two.min)
+		return 2;
+
+	if (one.rev > two.rev)
+		return 1;
+	else if (one.rev < two.rev)
+		return 2;
+
+	if (one.build > two.build)
+		return 1;
+	else if (one.build < two.build)
+		return 2;
+	return 0;
+};
+
 void VersionCheck ()
 {
-	// g_versionStatus codes:  -2 -> No results yet
-	//						   -1 -> Error (no internet, code.google down?)
-	//							0 -> SWS is up to date 
-	//							1 -> Update is available
-
-	// Connect to google code
-	char* buf = NULL;
-	JNL_HTTPGet web;
-	web.addheader("User-Agent:SWS (Mozilla)");
-	web.addheader("Accept:*/*");
-	web.connect("http://sws-extension.googlecode.com/svn/trunk/version.h");
-
-	// Get remote version.h
-	time_t startTime = time(NULL);
-	while (time(NULL) - startTime <= g_searchTimeOut && g_searching)
-	{
-		// Set progress bar used in dialog
-		g_searchProgress = ((double)(time(NULL) - startTime)) / (double) g_searchTimeOut;
+	// Get local version
+	BR_Version versionL;				
+	sscanf(SWS_VERSION_STR, "%d,%d,%d,%d", &versionL.maj, &versionL.min, &versionL.rev, &versionL.build);
 	
-		// Try to get file
-		int run=web.run();
-		if (web.get_status() < 0 || web.getreplycode() >= 400)
-			break;
-		if (run >= 0)
+	// When searching by user request lookup both official and beta
+	if (g_startupDone)
+	{
+		g_searchOfficial = true;
+		g_searchBeta = true;
+	}
+
+	// Get official version and compare
+	int statusO = -1;
+	if (g_searchOfficial && !g_killThread)
+	{
+		JNL_HTTPGet web;
+		web.addheader("User-Agent:SWS (Mozilla)");
+		web.addheader("User-Agent:SWS (Mozilla)");
+		web.connect(OFFICIAL_VERSION_URL);
+		char* buf;
+
+		time_t startTime = time(NULL);
+		while (time(NULL) - startTime <= g_searchTimeOut && !g_killThread)
 		{
-			if (run == 1 && web.getreplycode() == 200) // when using only reply code, data was incomplete
-			{										   // so get data only after the connection has closed
-				int size = web.bytes_available();
-				buf = new (nothrow) char[size];
-				web.get_bytes(buf, size);
-				g_searchProgress = 1; // when version.h is received make progress 100%
+			// Set progress bar used in dialog
+			g_progress = ((double)(time(NULL) - startTime)) / (((double) g_searchTimeOut)*2);
+
+			// Try to get version.h
+			int run=web.run();
+			if (web.get_status() < 0 || web.getreplycode() >= 400)
 				break;
+			if (run >= 0)
+			{
+				if (run == 1 && web.getreplycode() == 200) //  get data only after the connection has closed
+				{
+					// Read version.h into the buffer
+					int size = web.bytes_available();
+					buf = new (nothrow) char[size];
+					web.get_bytes(buf, size);
+					
+					// Get official version number
+					g_versionO = BR_Version(); // reset to 0
+					char* token = strtok(buf, "\n");
+					while (token != NULL)
+					{
+						if (sscanf(token, "#define SWS_VERSION %d,%d,%d,%d", &g_versionO.maj, &g_versionO.min, &g_versionO.rev, &g_versionO.build)>0)
+							break;
+						token = strtok(NULL, "\n");
+					}
+					delete buf;
+
+					// Compare with local version
+					int compare = CompareVersion(g_versionO, versionL);
+					if (compare == 0 || compare == 2)
+						statusO = 0;
+					else
+						statusO = 1;
+
+					// Get out!
+					break;
+				}
 			}
+			else
+				break;
 		}
+	}
+
+	// Get beta version and compare
+	int statusB = -1;
+	if (g_searchBeta && !g_killThread)
+	{
+		JNL_HTTPGet web;
+		web.addheader("User-Agent:SWS (Mozilla)");
+		web.addheader("User-Agent:SWS (Mozilla)");
+		web.connect(BETA_VERSION_URL);
+		char* buf;
+		
+		time_t startTime = time(NULL);
+		while (time(NULL) - startTime <= g_searchTimeOut && !g_killThread)
+		{
+			// Set progress bar used in dialog
+			g_progress = 0.5 + ((double)(time(NULL) - startTime)) / (((double) g_searchTimeOut)*2);
+
+			// Try to get version.h
+			int run=web.run();
+			if (web.get_status() < 0 || web.getreplycode() >= 400)
+				break;
+			if (run >= 0)
+			{
+				if (run == 1 && web.getreplycode() == 200) //  get data only after the connection has closed
+				{
+					// Read version.h into the buffer
+					int size = web.bytes_available();
+					buf = new (nothrow) char[size];
+					web.get_bytes(buf, size);
+					
+					// Get official version number
+					g_versionB = BR_Version(); // reset to 0
+					char* token = strtok(buf, "\n");
+					while (token != NULL)
+					{
+						if (sscanf(token, "#define SWS_VERSION %d,%d,%d,%d", &g_versionB.maj, &g_versionB.min, &g_versionB.rev, &g_versionB.build)>0)
+							break;
+						token = strtok(NULL, "\n");
+					}
+					delete buf;
+
+					// Compare with local version
+					int compare = CompareVersion(g_versionB, versionL);
+					if (compare == 0 || compare == 2)
+						statusB = 0;
+					else
+						statusB = 1;
+
+					// Get out!
+					break;
+				}
+			}
+			else
+				break;
+		}
+	}
+
+	// Make progress bar 100% when done searching
+	g_progress = 1;
+	
+	// Set status according to comparison results
+	if (!g_killThread)
+	{
+		if (statusO == -1 && statusB == -1) 
+			g_status = -1;
+		else if (statusO == 1 && statusB == 1)
+		{
+			if (CompareVersion(g_versionB, g_versionO) == 0)
+				g_status = 1;
+			else
+				g_status = 3;
+		}
+		else if (statusO == 1)
+			g_status = 1;
+		else if (statusB == 1)
+			g_status = 2;		
 		else
-			break;
+			g_status = 0;
 	}
 
-	// Couldn't get anything. Set status and notify that search is finished
-	if (buf == NULL)
+	// Create modal (to prevent thread from finishing and ending dialog) dialog but only when doing startup search and update is found
+	// It has no parent so it's visible in task bar and does not stop user in interacting with reaper in anyway
+	if (!g_killThread && !g_startupDone && g_status >= 1)
 	{
-		g_versionStatus = -1;
-		g_searching = false;
-		return;
+		DialogBox (g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), NULL, StartupProc);	
+
 	}
-
-	// Get remote version number
-	char remote[256];
-	char* token = strtok(buf, "\n");
-	while (token != NULL)
-	{
-		if (sscanf(token, "#define SWS_VERSION %s", remote)>0)
-			break;
-		token = strtok(NULL, "\n");
-	}
-
-	// Get local version number
-	char local[256];
-	_snprintf(local, sizeof(local), "%d,%d,%d,%d", SWS_VERSION);
-
-	// Compare versions	and set status
-	if(strcmp(local, remote) == 0)
-		g_versionStatus = 0; // up to date
-	else		  
-		g_versionStatus = 1; // new version available
-
-	// Notify that search has finished.
 	g_searching = false;
-	if (buf != NULL)
-		delete buf;
+	g_startupDone = true;
 };
 
 DWORD WINAPI VersionCheckThread(void*)
@@ -128,106 +257,115 @@ DWORD WINAPI VersionCheckThread(void*)
 	return 0;
 }
 
-WDL_DLGRET VersionCheckProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+void StartStopThread (bool start)
 {
+	// Make running thread finish
+	if (g_threadHandle != NULL)
+	{
+		g_killThread = true;
+		WaitForSingleObject(g_threadHandle,INFINITE);
+		CloseHandle(g_threadHandle);
+		g_threadHandle = NULL;
+	}
+
+	// Reset variables
+	g_progress = 0;
+	g_status = -2;
+	g_searching = false;
+
+	// Start new search thread if requested
+	if (start)
+	{
+		g_killThread = false;
+		g_searching = true;
+		g_threadHandle = CreateThread(NULL, 0, VersionCheckThread, 0, 0, NULL);
+	}
+}
+
+// GUI
+//////////////////////////////////////////////////////////////////////////////////////////
+void SetVersionMessage(HWND hwnd, int status)
+{
+	char tmp[256] = {0};
+	
+	// Search initialized 
+	if (status == -2)
+	{
+		EnableWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), false);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), SW_SHOW);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
+	}
+
+	// No connection
+	else if (status == -1) 
+	{
+		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Connection could not be established","sws_DLG_172"));
+		SetWindowText(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), __LOCALIZE("Retry","sws_DLG_172"));
+		EnableWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), true);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_HIDE);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_BETA), SW_HIDE);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), SW_HIDE);
+	}
+
+	// Up to date
+	else if (status == 0)
+	{
+		_snprintf(tmp, sizeof(tmp), __LOCALIZE("SWS extension is up to date.","sws_DLG_172"));
+		EnableWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), false);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_HIDE);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_BETA), SW_HIDE);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), SW_HIDE);
+	}
+
+	// Official update available
+	else if (status == 1)
+	{
+		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Official update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), g_versionO.maj, g_versionO.min, g_versionO.rev, g_versionO.build);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_HIDE);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_BETA), SW_HIDE);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), SW_HIDE);
+	}
+	
+	// Beta update available
+	else if (status == 2)
+	{
+		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Beta update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), g_versionB.maj, g_versionB.min, g_versionB.rev, g_versionB.build);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_SHOW);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_HIDE);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_BETA), SW_HIDE);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), SW_HIDE);
+	}
+
+	// Both official and beta updates available
+	else if (status == 3)
+	{
+		_snprintf(tmp, sizeof(tmp), __LOCALIZE("Official update is available: Version %d.%d.%d Build #%d\nBeta update is available: Version %d.%d.%d Build #%d","sws_DLG_172"), g_versionO.maj, g_versionO.min, g_versionO.rev, g_versionO.build, g_versionB.maj, g_versionB.min, g_versionB.rev, g_versionB.build);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_OFF), SW_SHOW);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_BETA), SW_SHOW);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_DOWNLOAD), SW_HIDE);
+		ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), SW_HIDE);
+	}
+
+	SetWindowText(GetDlgItem(hwnd, IDC_BR_VER_MESSAGE), tmp);
+};
+
+WDL_DLGRET CommandProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
+		return r;
+	
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
 		{
-			// Search requested at startup. WM_SHOWWINDOW will not be executed
-			// because dialog is not shown until search is finished so we start
-			// search here
-			if (!g_startupSearchFinished)
-			{
-				CenterWindowInReaper(hwnd, HWND_TOPMOST, true);
-				g_searching = true;				
-				SetTimer(hwnd, 1, 100, NULL);
-				CreateThread(NULL, 0, VersionCheckThread, 0, 0, NULL);
-			}
-		}
-		break;
+			CenterWindowInReaper (hwnd, HWND_TOPMOST, false);
+			StartStopThread (true);
+			SetVersionMessage (hwnd, g_status);
+			SetTimer(hwnd, 1, 100, NULL);
 
-		case WM_SHOWWINDOW:
-		{
-			// Search requested by user (startup search will not send show/hide message unless finished and update is found - next if should take care of that)
-			if (LOWORD(wParam))
-			{
-				if (g_startupSearchFinished)
-				{
-					// Prepare dialog
-					KillTimer (hwnd, 1);
-					CenterWindowInReaper(hwnd, HWND_TOPMOST, false);
-					SendMessage(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), PBM_SETPOS, 0, 0); 
-					ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), SW_SHOW);
-					SetWindowText(GetDlgItem(hwnd, IDOK),__LOCALIZE("Proceed to download page","sws_DLG_172"));
-					EnableWindow(GetDlgItem(hwnd, IDOK), false);
-
-					// Set up variables and start search
-					g_searchTimeOut = 10;
-					g_versionStatus = -2;
-					g_searching = true;
-					SetTimer(hwnd, 1, 100, NULL);
-					CreateThread(NULL, 0, VersionCheckThread, 0, 0, NULL);
-				}
-			}
-
-			// Make sure everything is cleaned up when hiding window
-			else
-			{	
-				KillTimer (hwnd, 1);
-				g_searching = false;
-				g_startupSearchFinished = true; 
-				g_versionStatus = -2;
-			}
-		}
-		break;
-		
-		case WM_TIMER:
-		{
-			// Search requested at startup
-			if(!g_startupSearchFinished)
-			{
-				if (!g_searching)
-				{	
-					// Notify user only if new version has been found
-					if (g_versionStatus == 1)
-					{
-						ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), SW_HIDE);
-						SetWindowText(GetDlgItem(hwnd, IDC_BR_VER_MESSAGE),__LOCALIZE("New version of SWS extensions is available.","sws_DLG_172"));
-						EnableWindow(GetDlgItem(hwnd, IDOK), true);
-						ShowWindow(hwnd, SW_SHOW);
-					}
-					KillTimer (hwnd, 1);
-					g_versionStatus = -2;
-					g_startupSearchFinished = true;
-				}
-			}
-
-			// Search requested by user
-			else
-			{
-				if (g_searching)
-					SendMessage(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), PBM_SETPOS, (int)(g_searchProgress * 100.0), 0);
-				else
-				{	
-					// Inform user about version status
-					if (g_versionStatus <= -1)
-					{						
-						SetWindowText(GetDlgItem(hwnd, IDC_BR_VER_MESSAGE),__LOCALIZE("Connection could not be established.","sws_DLG_172"));
-						SetWindowText(GetDlgItem(hwnd, IDOK),__LOCALIZE("Retry","sws_DLG_172"));
-						EnableWindow(GetDlgItem(hwnd, IDOK), true);
-					}
-					else if (g_versionStatus == 0)
-						SetWindowText(GetDlgItem(hwnd, IDC_BR_VER_MESSAGE),__LOCALIZE("SWS extension is up to date.","sws_DLG_172"));
-					else if (g_versionStatus == 1)
-					{
-						SetWindowText(GetDlgItem(hwnd, IDC_BR_VER_MESSAGE),__LOCALIZE("New version of SWS extensions is available.","sws_DLG_172"));
-						EnableWindow(GetDlgItem(hwnd, IDOK), true);
-					}					
-					ShowWindow(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), SW_HIDE);
-					KillTimer (hwnd, 1);   			
-				}
-			}
 		}
 		break;
 
@@ -235,87 +373,193 @@ WDL_DLGRET VersionCheckProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			switch(LOWORD(wParam))
 			{
-				case IDOK:
+				case IDC_BR_VER_DOWNLOAD:
 				{
-					// Retry
-					if (g_versionStatus == -1)
+					if (g_status <= -1)
 					{
-						ShowWindow(hwnd, SW_HIDE);
-						ShowWindow(hwnd, SW_SHOW);
+						EndDialog(hwnd, 0);
+						VersionCheckAction(NULL);
 					}
-					// Proceed to download page
-					else
+					if (g_status == 1)
+					{
+						ShellExecute(NULL, "open", "http://www.standingwaterstudios.com/new.php" , NULL, NULL, SW_SHOWNORMAL);
+						EndDialog(hwnd, 0);
+					}
+					else if (g_status == 2)
 					{
 						ShellExecute(NULL, "open", "http://code.google.com/p/sws-extension/downloads/list" , NULL, NULL, SW_SHOWNORMAL);
-						ShowWindow(hwnd, SW_HIDE);
+						EndDialog(hwnd, 0);
 					}
+
 				}	
 				break;
+
+				case IDC_BR_VER_OFF:
+				{
+					ShellExecute(NULL, "open", "http://www.standingwaterstudios.com/new.php" , NULL, NULL, SW_SHOWNORMAL);
+					EndDialog(hwnd, 0);
+				}
+				break;
 				
+				case IDC_BR_VER_BETA:
+				{
+					ShellExecute(NULL, "open", "http://code.google.com/p/sws-extension/downloads/list" , NULL, NULL, SW_SHOWNORMAL);
+					EndDialog(hwnd, 0);
+				}
+				break;
+
 				case IDCANCEL:
-					ShowWindow(hwnd, SW_HIDE);
+				{
+					KillTimer(hwnd, 1);
+					EndDialog(hwnd, 0);										
+				}
 				break;
 			} 
+		}
+		break;
+
+		case WM_TIMER:
+		{
+			SendMessage(GetDlgItem(hwnd, IDC_BR_VER_PROGRESS), PBM_SETPOS, (int)(g_progress * 100.0), 0);
+			if (!g_searching)
+			{
+				SetVersionMessage(hwnd, g_status);
+				KillTimer(hwnd, 1);
+			}
+
+
 		}
 		break;
 	}
 	return 0;
 };
 
-void VersionCheckDlg(bool show)
+WDL_DLGRET StartupProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	static HWND hwnd = CreateDialog (g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), g_hwndParent, VersionCheckProc);
-	if (show)
-		ShowWindow(hwnd, SW_SHOW);
-}
+	if (INT_PTR r = SNM_HookThemeColorsMessage(hwnd, uMsg, wParam, lParam))
+		return r;
+	
+	switch(uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+			CenterWindowInReaper (hwnd, HWND_TOPMOST, false);
+			SetVersionMessage (hwnd, g_status);
+			SetTimer(hwnd, 1, 100, NULL);
 
-// Commands
+		}
+		break;
+
+		case WM_COMMAND:
+		{
+			switch(LOWORD(wParam))
+			{
+				case IDC_BR_VER_DOWNLOAD:
+				{
+					if (g_status == 1)
+					{
+						ShellExecute(NULL, "open", "http://www.standingwaterstudios.com/new.php" , NULL, NULL, SW_SHOWNORMAL);
+						EndDialog(hwnd, 0);
+					}
+					else if (g_status == 2)
+					{
+						ShellExecute(NULL, "open", "http://code.google.com/p/sws-extension/downloads/list" , NULL, NULL, SW_SHOWNORMAL);
+						EndDialog(hwnd, 0);
+					}
+
+				}	
+				break;
+
+				case IDC_BR_VER_OFF:
+				{
+					ShellExecute(NULL, "open", "http://www.standingwaterstudios.com/new.php" , NULL, NULL, SW_SHOWNORMAL);
+					EndDialog(hwnd, 0);
+				}
+				break;
+				
+				case IDC_BR_VER_BETA:
+				{
+					ShellExecute(NULL, "open", "http://code.google.com/p/sws-extension/downloads/list" , NULL, NULL, SW_SHOWNORMAL);
+					EndDialog(hwnd, 0);
+				}
+				break;
+
+				case IDCANCEL:
+				{
+					EndDialog(hwnd, 0);
+				}
+				break;
+			} 
+		}
+		break;
+
+		case WM_TIMER:
+		{
+			if (g_killThread) // make sure dialog gets closed and exits current thread if StartStopThread is called
+				EndDialog (hwnd, 0);
+		}
+		break;
+	}
+	return 0;
+};
+
+// Command and functions for ABOUT dialog (they change dialog parent)
 //////////////////////////////////////////////////////////////////////////////////////////
-bool IsVersionCheckEnabled(COMMAND_T* = NULL)
-{
-	return g_startupSearch;
-}
-
-void VersionCheckEnable(COMMAND_T* ct)
-{
-	g_startupSearch =  !g_startupSearch;
-	WritePrivateProfileString("SWS", VERSION_CHECK_KEY, g_startupSearch ? "1" : "0", get_ini_file());
-}
-
 void VersionCheckAction(COMMAND_T* ct)
 {
-	if (!g_startupSearchFinished) // stop ongoing startup search if happening (lol...what a corner case)
-	{
-		g_searching = false;
-		g_startupSearchFinished = true;
-		g_versionStatus = -2;
-	}
-	VersionCheckDlg(true);		
+	StartStopThread (false);
+	DialogBox (g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), g_searchParent, CommandProc);
+}
+
+void GetStartupSearchOptions(HWND hwnd, int &official, int &beta)
+{
+	char tmp[256];
+	GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "1 0 0", tmp, 256, get_ini_file());
+	sscanf(tmp, "%d %d", &official, &beta);
+
+	g_searchParent = hwnd;
+}
+
+void SetStartupSearchOptions(int official, int beta)
+{
+	char tmp[256]; unsigned int lastTime;
+	GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "1 0 0", tmp, 256, get_ini_file());
+	sscanf(tmp, "%*d %*d %d", &lastTime);
+	_snprintf(tmp, sizeof(tmp), "%d %d %u", official, beta, lastTime);
+	WritePrivateProfileString("SWS", STARTUP_VERSION_KEY, tmp, get_ini_file());
+
+	g_searchParent = g_hwndParent;
 }
 
 // Startup function
 //////////////////////////////////////////////////////////////////////////////////////////
 void VersionCheckInit()
-{
-	g_startupSearch = GetPrivateProfileInt("SWS", VERSION_CHECK_KEY, g_startupSearch, get_ini_file()) ? true : false;
-	if (g_startupSearch)
+{	
+	// See note at the start of file
+	g_searchParent = g_hwndParent;
+
+	// Get options
+	char tmp[256]; int official, beta; unsigned int lastTime;
+	GetPrivateProfileString("SWS", STARTUP_VERSION_KEY, "1 0 0", tmp, 256, get_ini_file());
+	sscanf(tmp, "%d %d %u", &official, &beta, &lastTime);
+	
+	g_searchOfficial = official ? true : false;
+	g_searchBeta = beta ? true : false;
+
+	if (g_searchOfficial || g_searchBeta)
 	{
-		unsigned int lastTime, currentTime = (unsigned int) time(NULL);
-		char tmp[256];
-		GetPrivateProfileString("SWS", VERSION_TIME_KEY, "0", tmp, 256, get_ini_file());
-		sscanf(tmp, "%u", &lastTime);
-		
 		// Make sure at least 24 hours have passed since last search
+		unsigned int currentTime = (unsigned int)time(NULL);
 		if (currentTime - lastTime >= 86400 || currentTime - lastTime < 0)
 		{
 			// Write current time
 			char tmp[256];
-			_snprintf(tmp, sizeof(tmp), "%u", currentTime);
-			WritePrivateProfileString("SWS", VERSION_TIME_KEY, tmp, get_ini_file());
+			_snprintf(tmp, sizeof(tmp), "%d %d %u", !!g_searchOfficial, !!g_searchBeta, currentTime);
+			WritePrivateProfileString("SWS", STARTUP_VERSION_KEY, tmp, get_ini_file());
 
 			// Start search
-			g_startupSearchFinished = false;
-			VersionCheckDlg(false);
+			g_startupDone = false;
+			StartStopThread (true);
 		}
 	}
 };

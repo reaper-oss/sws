@@ -67,21 +67,13 @@ WDL_DLGRET TempoShapeOptionsProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		{
 			// Dropdown (split ratio)
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_SHAPE_SPLIT_RATIO));
-			int x = (int)SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/8");
+			int x = (int)SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/2");
 			SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_SETITEMDATA, x, 0);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"2/8");
+			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/3");
 			SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_SETITEMDATA, x, 1);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"3/8");
+			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/4");
 			SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_SETITEMDATA, x, 2);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"4/8");
-			SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_SETITEMDATA, x, 3);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"5/8");
-			SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_SETITEMDATA, x, 4);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"6/8");
-			SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_SETITEMDATA, x, 5);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"7/8");
-			SendDlgItemMessage(hwnd, IDC_BR_SHAPE_SPLIT_RATIO, CB_SETITEMDATA, x, 6);
-			
+						
 			// Load options from .ini file
 			int split;
 			char splitRatio[128];
@@ -558,21 +550,13 @@ WDL_DLGRET ConvertMarkersToTempoProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARA
 		{
 			// Drop down
 			WDL_UTF8_HookComboBox(GetDlgItem(hwnd, IDC_BR_CON_SPLIT_RATIO));
-			int x = (int)SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/8");
+			int x = (int)SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/2");
 			SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_SETITEMDATA, x, 0);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"2/8");
+			x = (int)SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/3");
 			SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_SETITEMDATA, x, 1);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"3/8");
+			x = (int)SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"1/4");
 			SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_SETITEMDATA, x, 2);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"4/8");
-			SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_SETITEMDATA, x, 3);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"5/8");
-			SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_SETITEMDATA, x, 4);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"6/8");
-			SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_SETITEMDATA, x, 5);
-			x = (int)SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_ADDSTRING, 0, (LPARAM)"7/8");
-			SendDlgItemMessage(hwnd, IDC_BR_CON_SPLIT_RATIO, CB_SETITEMDATA, x, 6);
-
+			
 			// Load options from .ini
 			int markers, num, den, removeMarkers, timeSel, gradual, split;
 			char eNum[128], eDen[128] , eMarkers[128], splitRatio[128];

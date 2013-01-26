@@ -241,7 +241,7 @@ void VersionCheck ()
 	}
 
 	// Create modal (to prevent thread from finishing and ending dialog) dialog but only when doing startup search and update is found
-	// It has no parent so it's visible in task bar and does not stop user in interacting with reaper in anyway
+	// It has no parent so it's visible in task bar and does not stop user in interacting with reaper (not true on OS X)
 	if (!g_killThread && !g_startupDone && g_status >= 1)
 	{
 		DialogBox (g_hInst, MAKEINTRESOURCE(IDD_BR_VERSION), NULL, StartupProc);	
